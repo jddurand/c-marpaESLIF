@@ -29,10 +29,10 @@ typedef void (*genericLoggerCallback_t)(void *userDatavp, genericLoggerLevel_t l
    Exported symbols
  *************************/
 GENERICLOGGEREXPORT genericLoggerCallback_t genericLogger_defaultLogCallback(void);
-GENERICLOGGEREXPORT genericLoggerLevel_t    genericLogger_logLevel_seti(genericLogger_t *genericLoggerp, genericLoggerLevel_t logLeveli);
-GENERICLOGGEREXPORT genericLoggerLevel_t    genericLogger_logLevel_geti(genericLogger_t *genericLoggerp);
-GENERICLOGGEREXPORT genericLogger_t        *genericLogger_newp(genericLoggerCallback_t logCallbackp, void *userDatavp, genericLoggerLevel_t genericLoggerLeveli);
-GENERICLOGGEREXPORT void                    genericLogger_freev(genericLogger_t **genericLoggerpp);
+GENERICLOGGEREXPORT genericLoggerLevel_t    genericLogger_logLevel_set(genericLogger_t *genericLoggerp, genericLoggerLevel_t logLeveli);
+GENERICLOGGEREXPORT genericLoggerLevel_t    genericLogger_logLevel_get(genericLogger_t *genericLoggerp);
+GENERICLOGGEREXPORT genericLogger_t        *genericLogger_new(genericLoggerCallback_t logCallbackp, void *userDatavp, genericLoggerLevel_t genericLoggerLeveli);
+GENERICLOGGEREXPORT void                    genericLogger_free(genericLogger_t **genericLoggerpp);
 GENERICLOGGEREXPORT void                    genericLogger_log(genericLogger_t *genericLoggerp, genericLoggerLevel_t genericLoggerLeveli, const char *fmts, ...);
 
 /*************************
@@ -43,8 +43,8 @@ GENERICLOGGEREXPORT void                    genericLogger_log(genericLogger_t *g
 /* logging with no variable parameter */
 /* logging with    variable paramerer(s) */
 
-#define GENERICLOGGER_NEW(genericLoggerLeveli)                              genericLogger_newp(NULL, NULL, (genericLoggerLeveli))
-#define GENERICLOGGER_CUSTOM(logCallbackp, userDatavp, genericLoggerLeveli) genericLogger_newp((logCallbackp), (userDatavp), (genericLoggerLeveli))
+#define GENERICLOGGER_NEW(genericLoggerLeveli)                              genericLogger_new(NULL, NULL, (genericLoggerLeveli))
+#define GENERICLOGGER_CUSTOM(logCallbackp, userDatavp, genericLoggerLeveli) genericLogger_new((logCallbackp), (userDatavp), (genericLoggerLeveli))
 
 #define GENERICLOGGER_LOG(genericLoggerp, logLeveli, msgs)                  genericLogger_log((genericLoggerp), (logLeveli), (msgs))
 #define GENERICLOGGER_LOGF(genericLoggerp, logLeveli, fmts, ...)            genericLogger_log((genericLoggerp), (logLeveli), (fmts), __VA_ARGS__)
@@ -76,6 +76,6 @@ GENERICLOGGEREXPORT void                    genericLogger_log(genericLogger_t *g
 #define GENERICLOGGER_EMERGENCY(genericLoggerp, msgs)                       GENERICLOGGER_LOG ((genericLoggerp), GENERICLOGGER_LOGLEVEL_EMERGENCY, (msgs))
 #define GENERICLOGGER_EMERGENCYF(genericLoggerp, fmts, ...)                 GENERICLOGGER_LOGF((genericLoggerp), GENERICLOGGER_LOGLEVEL_EMERGENCY, (fmts), __VA_ARGS__)
 
-#define GENERICLOGGER_FREE(genericLoggerp)                                  genericLogger_freev(&(genericLoggerp));
+#define GENERICLOGGER_FREE(genericLoggerp)                                  genericLogger_free(&(genericLoggerp));
 
 #endif /* GENERICLOGGER_H */
