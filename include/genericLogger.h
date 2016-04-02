@@ -1,7 +1,7 @@
 #ifndef GENERICLOGGER_H
 #define GENERICLOGGER_H
 
-#include "config.h"
+#include "genericLoggerConfig.h"
 
 typedef enum genericLoggerLevel {
   GENERICLOGGER_LOGLEVEL_TRACE = 0,

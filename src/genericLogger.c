@@ -1,4 +1,4 @@
-#include "config.h"
+#include "genericLoggerConfig.h"
 
 #ifdef HAVE_STDIO_H
 #include <stdio.h>
