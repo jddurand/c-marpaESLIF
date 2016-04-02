@@ -1,11 +1,11 @@
 MACRO (FINDVSNPRINTF)
   FOREACH (KEYWORD "vsnprintf" "_vsnprintf" "__vsnprintf")
-    MESSAGE(STATUS "-- Looking for ${KEYWORD}")
+    MESSAGE(STATUS "Looking for ${KEYWORD}")
     TRY_COMPILE (C_HAS_${KEYWORD} ${CMAKE_CURRENT_BINARY_DIR}
       ${CMAKE_CURRENT_SOURCE_DIR}/cmake/vsnprintf.c
       COMPILE_DEFINITIONS "-DC_VSNPRINTF=${KEYWORD}")
     IF (C_HAS_${KEYWORD})
-      MESSAGE(STATUS "-- Looking for ${KEYWORD} - found")
+      MESSAGE(STATUS "Looking for ${KEYWORD} - found")
       SET (C_VSNPRINTF ${KEYWORD})
       BREAK ()
     ENDIF ()
