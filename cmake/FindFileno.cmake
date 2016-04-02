@@ -1,0 +1,14 @@
+MACRO (FINDFILENO)
+  FOREACH (KEYWORD "fileno" "_fileno" "__fileno")
+    MESSAGE(STATUS "-- Looking for ${KEYWORD}")
+    TRY_COMPILE (C_HAS_${KEYWORD} ${CMAKE_CURRENT_BINARY_DIR}
+      ${CMAKE_CURRENT_SOURCE_DIR}/cmake/fileno.c
+      COMPILE_DEFINITIONS "-DC_FILENO=${KEYWORD}")
+    IF (C_HAS_${KEYWORD})
+      MESSAGE(STATUS "-- Looking for ${KEYWORD} - found")
+      SET (C_FILENO ${KEYWORD})
+      BREAK ()
+    ENDIF ()
+  ENDFOREACH ()
+ENDMACRO ()
+FINDFILENO ()

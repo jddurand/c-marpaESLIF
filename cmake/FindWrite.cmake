@@ -1,0 +1,14 @@
+MACRO (FINDWRITE)
+  FOREACH (KEYWORD "write" "_write" "__write")
+    MESSAGE(STATUS "-- Looking for ${KEYWORD}")
+    TRY_COMPILE (C_HAS_${KEYWORD} ${CMAKE_CURRENT_BINARY_DIR}
+      ${CMAKE_CURRENT_SOURCE_DIR}/cmake/write.c
+      COMPILE_DEFINITIONS "-DC_WRITE=${KEYWORD}")
+    IF (C_HAS_${KEYWORD})
+      MESSAGE(STATUS "-- Looking for ${KEYWORD} - found")
+      SET (C_WRITE ${KEYWORD})
+      BREAK ()
+    ENDIF ()
+  ENDFOREACH ()
+ENDMACRO ()
+FINDWRITE ()
