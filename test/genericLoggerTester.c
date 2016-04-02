@@ -1,17 +1,8 @@
-#include "genericLogger.h"
-
-#ifdef HAVE_STDLIB_H
 #include <stdlib.h>
-#endif
-#ifdef HAVE_STDIO_H
 #include <stdio.h>
-#endif
-#ifdef HAVE_ERRNO_H
 #include <errno.h>
-#endif
-#ifdef HAVE_STRING_H
 #include <string.h>
-#endif
+#include "genericLogger.h"
 
 static void localLogger(void *userDatavp, genericLoggerLevel_t logLeveli, const char *msgs);
 typedef struct localStruct {
