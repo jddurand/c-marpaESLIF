@@ -66,8 +66,8 @@ FILE(GLOB lib_src src/*.c)
 FILE(GLOB include_src ${INCLUDE_OUTPUT_PATH}/*.h)
 ADD_LIBRARY (libGenericLogger OBJECT ${lib_src})
 SET_TARGET_PROPERTIES(libGenericLogger PROPERTIES POSITION_INDEPENDENT_CODE 1 VERSION ${GENERICLOGGER_VERSION} SOVERSION ${GENERICLOGGER_VERSION_MAJOR})
-ADD_LIBRARY(genericLoggerShared SHARED $<TARGET_OBJECTS:libGenericLogger>)
-ADD_LIBRARY(genericLoggerStatic STATIC $<TARGET_OBJECTS:libGenericLogger>)
+ADD_LIBRARY(genericLogger SHARED $<TARGET_OBJECTS:libGenericLogger>)
+ADD_LIBRARY(genericLogger_static STATIC $<TARGET_OBJECTS:libGenericLogger>)
 
 # ------------
 # Export flags
@@ -89,17 +89,17 @@ GENERATE_EXPORT_HEADER(libGenericLogger
 # Check
 # -----
 ENABLE_TESTING()
-ADD_TEST              (genericLoggerTestShared genericLoggerTesterShared)
+ADD_TEST              (genericLoggerTest genericLoggerTester)
 ADD_TEST              (genericLoggerTestStatic genericLoggerTesterStatic)
-ADD_EXECUTABLE        (genericLoggerTesterShared EXCLUDE_FROM_ALL test/genericLoggerTester.c)
+ADD_EXECUTABLE        (genericLoggerTester EXCLUDE_FROM_ALL test/genericLoggerTester.c)
 ADD_EXECUTABLE        (genericLoggerTesterStatic EXCLUDE_FROM_ALL test/genericLoggerTester.c)
-TARGET_LINK_LIBRARIES (genericLoggerTesterShared genericLoggerShared)
-TARGET_LINK_LIBRARIES (genericLoggerTesterStatic genericLoggerStatic)
-ADD_CUSTOM_TARGET     (check COMMAND ${CMAKE_CTEST_COMMAND} DEPENDS genericLoggerTesterShared genericLoggerTesterStatic)
+TARGET_LINK_LIBRARIES (genericLoggerTester genericLogger)
+TARGET_LINK_LIBRARIES (genericLoggerTesterStatic genericLogger_static)
+ADD_CUSTOM_TARGET     (check COMMAND ${CMAKE_CTEST_COMMAND} DEPENDS genericLoggerTester genericLoggerTesterStatic)
 
 # -------
 # Install
 # -------
-INSTALL (TARGETS genericLoggerShared LIBRARY DESTINATION lib COMPONENT libraries)
-INSTALL (TARGETS genericLoggerStatic ARCHIVE DESTINATION lib COMPONENT libraries)
+INSTALL (TARGETS genericLogger        LIBRARY DESTINATION lib COMPONENT libraries)
+INSTALL (TARGETS genericLogger_static ARCHIVE DESTINATION lib COMPONENT libraries)
 INSTALL (FILES ${INCLUDE_OUTPUT_PATH}/genericLoggerExport.h include/genericLogger.h DESTINATION include)
