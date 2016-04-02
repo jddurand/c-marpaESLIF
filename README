@@ -2,7 +2,7 @@ This a portable /generic/ logger implemented in ANSI C.
 
 The usage is:
 
-* with no user-implementation, log up to the WARN level up to stderr, i.e.:
+* with no user-implementation, log up to the WARN level and to stderr, i.e.:
 
   GENERICLOGGER_WARN (NULL, "Single message");
   GENERICLOGGER_WARNF(NULL, "%s %s", "Formatted", "Message");
