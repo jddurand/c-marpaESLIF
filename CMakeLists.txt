@@ -68,7 +68,7 @@ ADD_COMPILER_EXPORT_FLAGS ()
 # Build library
 # -------------
 FILE(GLOB lib_src src/*.c)
-FILE(GLOB include_src include/*.h ${INCLUDE_OUTPUT_PATH}/*.h)
+FILE(GLOB include_src ${INCLUDE_OUTPUT_PATH}/*.h)
 ADD_LIBRARY (genericLogger SHARED ${lib_src} ${include_src})
 SET (GENERICLOGGER_VERSION ${GENERICLOGGER_VERSION_MAJOR}.${GENERICLOGGER_VERSION_MINOR}.${GENERICLOGGER_VERSION_PATCH})
 SET_TARGET_PROPERTIES(genericLogger PROPERTIES VERSION ${GENERICLOGGER_VERSION} SOVERSION ${GENERICLOGGER_VERSION_MAJOR})
@@ -91,3 +91,9 @@ ADD_TEST              (genericLoggerTest genericLoggerTester)
 ADD_EXECUTABLE        (genericLoggerTester EXCLUDE_FROM_ALL test/genericLoggerTester.c)
 TARGET_LINK_LIBRARIES (genericLoggerTester genericLogger)
 ADD_CUSTOM_TARGET     (check COMMAND ${CMAKE_CTEST_COMMAND} DEPENDS genericLoggerTester)
+
+# -------
+# Install
+# -------
+INSTALL (TARGETS genericLogger LIBRARY DESTINATION lib)
+INSTALL (FILES ${INCLUDE_OUTPUT_PATH}/genericLoggerExport.h include/genericLogger.h DESTINATION include)
