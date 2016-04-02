@@ -7,3 +7,4 @@ Testing
 cmake_install.cmake
 genericLoggerTester
 output
+install_manifest.txt
