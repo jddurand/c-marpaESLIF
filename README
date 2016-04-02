@@ -1,4 +1,4 @@
-This a portable /generic/ logger implemented on C.
+This a portable /generic/ logger implemented in ANSI C.
 
 The usage is:
 
@@ -18,7 +18,7 @@ The usage is:
 
 * with a user-level implementation
 
-  genericLogger_t *loggerp = GENERICLOGGER_CUSTOM(userLoggerFunction, &userOpaqueData, GENERICLOGGER_LOGLEVEL_TRACE);
+  genericLogger_t *loggerp = GENERICLOGGER_CUSTOM(callback, &opaqueData, GENERICLOGGER_LOGLEVEL_TRACE);
   if (loggerp != NULL) {
     localStruct.i = 10;
     GENERICLOGGER_TRACE (loggerp, "Single message");
@@ -26,7 +26,7 @@ The usage is:
     GENERICLOGGER_FREE(loggerp);
   }
 
-  static void localLogger(void *userOpaqueData, genericLoggerLevel_t logLeveli, const char *msgs) {
+  static void callback(void *opaqueData, genericLoggerLevel_t logLeveli, const char *msgs) {
     /* It is guaranteed that user callback will be called with the formatted message */
     fprintf(stderr, "I am the local logger, msgs = %s\n", msgs);
   }
