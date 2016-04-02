@@ -65,7 +65,7 @@ static char *messageBuilder_ap(const char *fmts, va_list ap);
 /**********************/
 /* genericLogger_newp */
 /**********************/
-GENERICLOGGEREXPORT genericLogger_t *genericLogger_newp(genericLoggerCallback_t logCallbackp, void *userDatavp, genericLoggerLevel_t genericLoggerLeveli) {
+GENERICLOGGEREXPORT C_INLINE genericLogger_t *genericLogger_newp(genericLoggerCallback_t logCallbackp, void *userDatavp, genericLoggerLevel_t genericLoggerLeveli) {
   genericLogger_t *genericLoggerp = malloc(sizeof(genericLogger_t));
 
   if (genericLoggerp == NULL) {
@@ -84,7 +84,7 @@ GENERICLOGGEREXPORT genericLogger_t *genericLogger_newp(genericLoggerCallback_t 
 /**********************************/
 /* genericLogger_logLevel_seti */
 /**********************************/
-GENERICLOGGEREXPORT genericLoggerLevel_t genericLogger_logLevel_seti(genericLogger_t *genericLoggerp, genericLoggerLevel_t logLeveli) {
+GENERICLOGGEREXPORT C_INLINE genericLoggerLevel_t genericLogger_logLevel_seti(genericLogger_t *genericLoggerp, genericLoggerLevel_t logLeveli) {
   genericLoggerp->genericLoggerLeveli = logLeveli;
   return genericLoggerp->genericLoggerLeveli;
 }
@@ -92,21 +92,21 @@ GENERICLOGGEREXPORT genericLoggerLevel_t genericLogger_logLevel_seti(genericLogg
 /**********************************/
 /* genericLogger_logLevel_geti */
 /**********************************/
-GENERICLOGGEREXPORT genericLoggerLevel_t genericLogger_logLevel_geti(genericLogger_t *genericLoggerp) {
+GENERICLOGGEREXPORT C_INLINE genericLoggerLevel_t genericLogger_logLevel_geti(genericLogger_t *genericLoggerp) {
   return genericLoggerp->genericLoggerLeveli;
 }
 
 /***************************************/
 /* genericLogger_defaultLogCallback */
 /***************************************/
-GENERICLOGGEREXPORT genericLoggerCallback_t genericLogger_defaultLogCallback(void) {
+GENERICLOGGEREXPORT C_INLINE genericLoggerCallback_t genericLogger_defaultLogCallback(void) {
   return &_genericLogger_defaultCallback;
 }
 
 /***********************/
 /* genericLogger_freev */
 /***********************/
-GENERICLOGGEREXPORT void genericLogger_freev(genericLogger_t **genericLoggerpp) {
+GENERICLOGGEREXPORT C_INLINE void genericLogger_freev(genericLogger_t **genericLoggerpp) {
 
   if (genericLoggerpp != NULL) {
     if (*genericLoggerpp != NULL) {
@@ -119,7 +119,7 @@ GENERICLOGGEREXPORT void genericLogger_freev(genericLogger_t **genericLoggerpp) 
 /*************************************/
 /* _genericLogger_defaultCallback */
 /*************************************/
-static void _genericLogger_defaultCallback(void *userDatavp, genericLoggerLevel_t logLeveli, const char *msgs) {
+static C_INLINE void _genericLogger_defaultCallback(void *userDatavp, genericLoggerLevel_t logLeveli, const char *msgs) {
   /* We are NOT going to do a general log4c mechanism (this can come later), using genericLogger in fact */
   /* I.e. we are fixing the default output to be: DD/MM/YYYY hh::mm::ss PREFIX MESSAGE */
   const char   *prefixs =
@@ -155,7 +155,7 @@ static void _genericLogger_defaultCallback(void *userDatavp, genericLoggerLevel_
 /*********************/
 /* genericLogger_log */
 /*********************/
-GENERICLOGGEREXPORT void genericLogger_log(genericLogger_t *genericLoggerp, genericLoggerLevel_t genericLoggerLeveli, const char *fmts, ...) {
+GENERICLOGGEREXPORT C_INLINE void genericLogger_log(genericLogger_t *genericLoggerp, genericLoggerLevel_t genericLoggerLeveli, const char *fmts, ...) {
   va_list                  ap;
 #ifdef VA_COPY
   va_list                  ap2;
@@ -209,14 +209,14 @@ GENERICLOGGEREXPORT void genericLogger_log(genericLogger_t *genericLoggerp, gene
 /******************************/
 /* dateBuilder_internalErrors */
 /******************************/
-static char *dateBuilder_internalErrors(void) {
+static C_INLINE char *dateBuilder_internalErrors(void) {
   return (char *) _dateBuilder_internalErrors;
 }
 
 /***************/
 /* dateBuilder */
 /***************/
-static char *dateBuilder(const char *fmts) {
+static C_INLINE char *dateBuilder(const char *fmts) {
   char      *dates;
   time_t     t;
 #ifdef C_LOCALTIME_R
@@ -250,14 +250,14 @@ static char *dateBuilder(const char *fmts) {
 /*********************************/
 /* messageBuilder_internalErrors */
 /*********************************/
-static char *messageBuilder_internalErrors(void) {
+static C_INLINE char *messageBuilder_internalErrors(void) {
   return (char *) _messageBuilder_internalErrors;
 }
 
 /******************/
 /* messageBuilder */
 /******************/
-static char *messageBuilder(const char *fmts, ...) {
+static C_INLINE char *messageBuilder(const char *fmts, ...) {
   va_list ap;
 #ifdef C_VA_COPY
   va_list ap2;
@@ -280,7 +280,7 @@ static char *messageBuilder(const char *fmts, ...) {
 /*********************/
 /* messageBuilder_ap */
 /*********************/
-static char *messageBuilder_ap(const char *fmts, va_list ap) {
+static C_INLINE char *messageBuilder_ap(const char *fmts, va_list ap) {
   int     n;
   size_t  size = 4096;     /* Guess we need no more than 4096 bytes */
   char   *p, *np;
