@@ -46,20 +46,40 @@
 
 #define DATEBUILDER_MAX_SIZE sizeof(char) * (1024+1)
 
-static const char *_dateBuilder_internalErrors  = "Internal error when building date";
-static const char *_messageBuilder_internalErrors = "Internal error when building message";
-
 struct genericLogger {
   genericLoggerCallback_t  logCallbackp;
-  void                       *userDatavp;
+  void                    *userDatavp;
   genericLoggerLevel_t     genericLoggerLeveli;
 };
 
+static const char *_dateBuilder_internalErrors  = "Internal error when building date";
+static const char *_messageBuilder_internalErrors = "Internal error when building message";
+
+static void _genericLogger_defaultCallback(void *userDatavp, genericLoggerLevel_t logLeveli, const char *msgs);
 static char *dateBuilder_internalErrors(void); /* This is returning a STATIC adress */
 static char *dateBuilder(const char *fmts);
 static char *messageBuilder_internalErrors(void); /* This is returning a STATIC adress */
 static char *messageBuilder(const char *fmts, ...);
 static char *messageBuilder_ap(const char *fmts, va_list ap);
+
+/**********************/
+/* genericLogger_newp */
+/**********************/
+GENERICLOGGEREXPORT genericLogger_t *genericLogger_newp(genericLoggerCallback_t logCallbackp, void *userDatavp, genericLoggerLevel_t genericLoggerLeveli) {
+  genericLogger_t *genericLoggerp = malloc(sizeof(genericLogger_t));
+
+  if (genericLoggerp == NULL) {
+    /* Well, shall we log about this - a priori no: the caller wanted to set up a particular */
+    /* logging system, and not use our default */
+    return NULL;
+  }
+
+  genericLoggerp->logCallbackp        = logCallbackp;
+  genericLoggerp->userDatavp          = userDatavp;
+  genericLoggerp->genericLoggerLeveli = genericLoggerLeveli;
+
+  return genericLoggerp;
+}
 
 /**********************************/
 /* genericLogger_logLevel_seti */
@@ -83,10 +103,23 @@ GENERICLOGGEREXPORT genericLoggerCallback_t genericLogger_defaultLogCallback(voi
   return &_genericLogger_defaultCallback;
 }
 
+/***********************/
+/* genericLogger_freev */
+/***********************/
+GENERICLOGGEREXPORT void genericLogger_freev(genericLogger_t **genericLoggerpp) {
+
+  if (genericLoggerpp != NULL) {
+    if (*genericLoggerpp != NULL) {
+      free(*genericLoggerpp);
+      *genericLoggerpp = NULL;
+    }
+  }
+}
+
 /*************************************/
 /* _genericLogger_defaultCallback */
 /*************************************/
-GENERICLOGGEREXPORT void _genericLogger_defaultCallback(void *userDatavp, genericLoggerLevel_t logLeveli, const char *msgs) {
+static void _genericLogger_defaultCallback(void *userDatavp, genericLoggerLevel_t logLeveli, const char *msgs) {
   /* We are NOT going to do a general log4c mechanism (this can come later), using genericLogger in fact */
   /* I.e. we are fixing the default output to be: DD/MM/YYYY hh::mm::ss PREFIX MESSAGE */
   const char   *prefixs =
@@ -116,38 +149,6 @@ GENERICLOGGEREXPORT void _genericLogger_defaultCallback(void *userDatavp, generi
   }
   if (localMsgs != messageBuilder_internalErrors()) {
     free(localMsgs);
-  }
-}
-
-/**********************/
-/* genericLogger_newp */
-/**********************/
-GENERICLOGGEREXPORT genericLogger_t *genericLogger_newp(genericLoggerCallback_t logCallbackp, void *userDatavp, genericLoggerLevel_t genericLoggerLeveli) {
-  genericLogger_t *genericLoggerp = malloc(sizeof(genericLogger_t));
-
-  if (genericLoggerp == NULL) {
-    /* Well, shall we log about this - a priori no: the caller wanted to set up a particular */
-    /* logging system, and not use our default */
-    return NULL;
-  }
-
-  genericLoggerp->logCallbackp        = logCallbackp;
-  genericLoggerp->userDatavp          = userDatavp;
-  genericLoggerp->genericLoggerLeveli = genericLoggerLeveli;
-
-  return genericLoggerp;
-}
-
-/***********************/
-/* genericLogger_freev */
-/***********************/
-GENERICLOGGEREXPORT void genericLogger_freev(genericLogger_t **genericLoggerpp) {
-
-  if (genericLoggerpp != NULL) {
-    if (*genericLoggerpp != NULL) {
-      free(*genericLoggerpp);
-      *genericLoggerpp = NULL;
-    }
   }
 }
 
