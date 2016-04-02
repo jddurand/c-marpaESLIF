@@ -17,25 +17,21 @@ int main() {
   GENERICLOGGER_WARN (NULL, "Single message");
   GENERICLOGGER_WARNF(NULL, "%s %s", "Formatted", "Message");
 
-  /* With a custom logger */
-  loggerp = GENERICLOGGER_NEW(NULL, NULL, GENERICLOGGER_LOGLEVEL_TRACE);
+  /* With a wanted level, no user-level implementation */
+  loggerp = GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_TRACE);
   if (loggerp != NULL) {
     GENERICLOGGER_TRACE (loggerp, "Single message");
     GENERICLOGGER_TRACEF(loggerp, "%s %s", "Formatted", "Message");
     GENERICLOGGER_FREE(loggerp);
-  } else {
-    fprintf(stderr, "Failure to allocate a logger, %s\n", strerror(errno));
   }
 
-  /* With a callback */
-  loggerp = GENERICLOGGER_NEW(localLogger, &localStruct, GENERICLOGGER_LOGLEVEL_TRACE);
+  /* With a user-level implementation */
+  loggerp = GENERICLOGGER_CUSTOM(localLogger, &localStruct, GENERICLOGGER_LOGLEVEL_TRACE);
   if (loggerp != NULL) {
     localStruct.i = 10;
     GENERICLOGGER_TRACE (loggerp, "Single message");
     GENERICLOGGER_TRACEF(loggerp, "%s %s", "Formatted", "Message");
     GENERICLOGGER_FREE(loggerp);
-  } else {
-    fprintf(stderr, "Failure to allocate a logger, %s\n", strerror(errno));
   }
   
   return 0;
