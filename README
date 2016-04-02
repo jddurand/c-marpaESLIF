@@ -1,0 +1,32 @@
+This a portable /generic/ logger implemented on C.
+
+The usage is:
+
+* with no user-implementation, log up to the WARN level up to stderr, i.e.:
+
+  GENERICLOGGER_WARN (NULL, "Single message");
+  GENERICLOGGER_WARNF(NULL, "%s %s", "Formatted", "Message");
+
+* with a fixed level, no user-implementation:
+
+  genericLogger_t *loggerp = GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_TRACE);
+  if (loggerp != NULL) {
+    GENERICLOGGER_TRACE (loggerp, "Single message");
+    GENERICLOGGER_TRACEF(loggerp, "%s %s", "Formatted", "Message");
+    GENERICLOGGER_FREE(loggerp);
+  }
+
+* with a user-level implementation
+
+  genericLogger_t *loggerp = GENERICLOGGER_CUSTOM(userLoggerFunction, &userOpaqueData, GENERICLOGGER_LOGLEVEL_TRACE);
+  if (loggerp != NULL) {
+    localStruct.i = 10;
+    GENERICLOGGER_TRACE (loggerp, "Single message");
+    GENERICLOGGER_TRACEF(loggerp, "%s %s", "Formatted", "Message");
+    GENERICLOGGER_FREE(loggerp);
+  }
+
+  static void localLogger(void *userOpaqueData, genericLoggerLevel_t logLeveli, const char *msgs) {
+    /* It is guaranteed that user callback will be called with the formatted message */
+    fprintf(stderr, "I am the local logger, msgs = %s\n", msgs);
+  }
