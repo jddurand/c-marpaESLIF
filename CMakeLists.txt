@@ -54,8 +54,8 @@ INCLUDE (FindFileno)
 INCLUDE (FindWrite)
 INCLUDE (FindVsnprintf)
 INCLUDE (FindLocaltime_r)
-SET (CONFIG_H ${INCLUDE_OUTPUT_PATH}/config.h)
-SET (CONFIG_H_IN ${CMAKE_CURRENT_SOURCE_DIR}/include/config.h.in)
+SET (CONFIG_H ${INCLUDE_OUTPUT_PATH}/genericLoggerConfig.h)
+SET (CONFIG_H_IN ${CMAKE_CURRENT_SOURCE_DIR}/include/genericLoggerConfig.h.in)
 CONFIGURE_FILE(${CONFIG_H_IN} ${CONFIG_H})
 
 # ------------
