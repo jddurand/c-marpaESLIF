@@ -46,7 +46,6 @@
 
 #define DATEBUILDER_MAX_SIZE sizeof(char) * (1024+1)
 
-static const char *GENERICLOGGER_LOG_NO_MESSAGE = "No message";
 static const char *_dateBuilder_internalErrors  = "Internal error when building date";
 static const char *_messageBuilder_internalErrors = "Internal error when building message";
 
@@ -95,20 +94,19 @@ GENERICLOGGEREXPORT void _genericLogger_defaultCallback(void *userDatavp, generi
     (logLeveli == GENERICLOGGER_LOGLEVEL_DEBUG    ) ? "DEBUG"     :
     (logLeveli == GENERICLOGGER_LOGLEVEL_INFO     ) ? "INFO"      :
     (logLeveli == GENERICLOGGER_LOGLEVEL_NOTICE   ) ? "NOTICE"    :
-    (logLeveli == GENERICLOGGER_LOGLEVEL_WARNING  ) ? "WARNING"   :
+    (logLeveli == GENERICLOGGER_LOGLEVEL_WARNING  ) ? "WARN"      :
     (logLeveli == GENERICLOGGER_LOGLEVEL_ERROR    ) ? "ERROR"     :
     (logLeveli == GENERICLOGGER_LOGLEVEL_CRITICAL ) ? "CRITICAL"  :
     (logLeveli == GENERICLOGGER_LOGLEVEL_ALERT    ) ? "ALERT"     :
     (logLeveli == GENERICLOGGER_LOGLEVEL_EMERGENCY) ? "EMERGENCY" :
     "UNKOWN";
-  char   *dates = dateBuilder("%d/%m/%Y %H:%M:%S");
-  char   *localMsgs = messageBuilder("%s %9s %s\n", dates, prefixs, (msgs != NULL) ? (char *) msgs : (char *) GENERICLOGGER_LOG_NO_MESSAGE);
-  int filenoStderr = C_FILENO(stderr);
-  size_t bytesWriten = 0;
-  char *p = localMsgs;
-  size_t  count;
+  char   *dates        = dateBuilder("%d/%m/%Y %H:%M:%S");
+  char   *localMsgs    = messageBuilder("%s %9s %s\n", dates, prefixs, (msgs != NULL) ? msgs : "");
+  int     filenoStderr = C_FILENO(stderr);
+  size_t  bytesWriten  = 0;
+  char   *p            = localMsgs;
+  size_t  count        = strlen(p);
 
-  count = strlen(p);
   while (bytesWriten < count) {
     bytesWriten += C_WRITE(filenoStderr, p+bytesWriten, count-bytesWriten);
   }
@@ -121,9 +119,9 @@ GENERICLOGGEREXPORT void _genericLogger_defaultCallback(void *userDatavp, generi
   }
 }
 
-/********************/
+/**********************/
 /* genericLogger_newp */
-/********************/
+/**********************/
 GENERICLOGGEREXPORT genericLogger_t *genericLogger_newp(genericLoggerCallback_t logCallbackp, void *userDatavp, genericLoggerLevel_t genericLoggerLeveli) {
   genericLogger_t *genericLoggerp = malloc(sizeof(genericLogger_t));
 
@@ -133,17 +131,18 @@ GENERICLOGGEREXPORT genericLogger_t *genericLogger_newp(genericLoggerCallback_t 
     return NULL;
   }
 
-  genericLoggerp->logCallbackp      = logCallbackp;
-  genericLoggerp->userDatavp        = userDatavp;
+  genericLoggerp->logCallbackp        = logCallbackp;
+  genericLoggerp->userDatavp          = userDatavp;
   genericLoggerp->genericLoggerLeveli = genericLoggerLeveli;
 
   return genericLoggerp;
 }
 
-/*********************/
+/***********************/
 /* genericLogger_freev */
-/*********************/
+/***********************/
 GENERICLOGGEREXPORT void genericLogger_freev(genericLogger_t **genericLoggerpp) {
+
   if (genericLoggerpp != NULL) {
     if (*genericLoggerpp != NULL) {
       free(*genericLoggerpp);
@@ -152,18 +151,18 @@ GENERICLOGGEREXPORT void genericLogger_freev(genericLogger_t **genericLoggerpp) 
   }
 }
 
-/****************/
+/*********************/
 /* genericLogger_log */
-/****************/
+/*********************/
 GENERICLOGGEREXPORT void genericLogger_log(genericLogger_t *genericLoggerp, genericLoggerLevel_t genericLoggerLeveli, const char *fmts, ...) {
-  va_list                ap;
+  va_list                  ap;
 #ifdef VA_COPY
-  va_list                ap2;
+  va_list                  ap2;
 #endif
-  char                  *msgs;
-  static const char     *emptyMessages = "Empty message";
+  char                    *msgs;
+  static const char       *emptyMessages = "Empty message";
   genericLoggerCallback_t  logCallbackp;
-  void                  *userDatavp;
+  void                    *userDatavp;
   genericLoggerLevel_t     genericLoggerDefaultLogLeveli;
 
   if (genericLoggerp != NULL) {

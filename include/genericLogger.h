@@ -62,8 +62,8 @@ GENERICLOGGEREXPORT void genericLogger_log(genericLogger_t *genericLoggerp, gene
 #define GENERICLOGGER_NOTICE(genericLoggerp, msgs)               GENERICLOGGER_LOG (genericLoggerp, GENERICLOGGER_LOGLEVEL_NOTICE, msgs)
 #define GENERICLOGGER_NOTICEF(genericLoggerp, fmts, ...)         GENERICLOGGER_LOGF(genericLoggerp, GENERICLOGGER_LOGLEVEL_NOTICE, fmts, __VA_ARGS__)
 
-#define GENERICLOGGER_WARNING(genericLoggerp, msgs)              GENERICLOGGER_LOG (genericLoggerp, GENERICLOGGER_LOGLEVEL_WARNING, msgs)
-#define GENERICLOGGER_WARNINGF(genericLoggerp, fmts, ...)        GENERICLOGGER_LOGF(genericLoggerp, GENERICLOGGER_LOGLEVEL_WARNING, fmts, __VA_ARGS__)
+#define GENERICLOGGER_WARN(genericLoggerp, msgs)              GENERICLOGGER_LOG (genericLoggerp, GENERICLOGGER_LOGLEVEL_WARNING, msgs)
+#define GENERICLOGGER_WARNF(genericLoggerp, fmts, ...)        GENERICLOGGER_LOGF(genericLoggerp, GENERICLOGGER_LOGLEVEL_WARNING, fmts, __VA_ARGS__)
 
 #define GENERICLOGGER_ERROR(genericLoggerp, msgs)                GENERICLOGGER_LOG (genericLoggerp, GENERICLOGGER_LOGLEVEL_ERROR, msgs)
 #define GENERICLOGGER_ERRORF(genericLoggerp, fmts, ...)          GENERICLOGGER_LOGF(genericLoggerp, GENERICLOGGER_LOGLEVEL_ERROR, fmts, __VA_ARGS__)
