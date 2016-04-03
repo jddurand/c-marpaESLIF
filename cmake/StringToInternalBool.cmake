@@ -1,0 +1,8 @@
+MACRO(STRINGTOINTERNALBOOL name)
+  IF (${ARGN})
+    SET (${name} 1)
+  ELSE (${ARGN})
+    SET (${name} 0)
+  ENDIF (${ARGN})
+  MESSAGE(STATUS "Using ${name} ${${name}}")
+ENDMACRO(STRINGTOINTERNALBOOL)
