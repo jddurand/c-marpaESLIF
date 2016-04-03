@@ -1,5 +1,5 @@
-#ifndef GENERICLOGGER_CONFIG_H
-#define GENERICLOGGER_CONFIG_H
+#ifndef GENERICLOGGERCONFIG_H
+#define GENERICLOGGERCONFIG_H
 
 #include "genericLoggerExport.h"
 
@@ -23,4 +23,4 @@
 #cmakedefine C_VSNPRINTF       @C_VSNPRINTF@
 #cmakedefine C_LOCALTIME_R     @C_LOCALTIME_R@
 
-#endif /* GENERICLOGGER_CONFIG_H */
+#endif /* GENERICLOGGERCONFIG_H */

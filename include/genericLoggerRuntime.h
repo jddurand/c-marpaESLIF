@@ -1,5 +1,5 @@
-#ifndef GENERICLOGGER_RUNTIME_H
-#define GENERICLOGGER_RUNTIME_H
+#ifndef GENERICLOGGERRUNTIME_H
+#define GENERICLOGGERRUNTIME_H
 
 #include "genericLoggerConfig.h"
 
@@ -40,4 +40,4 @@
 #include <time.h>
 #endif
 
-#endif /* GENERICLOGGER_RUNTIME_H */
+#endif /* GENERICLOGGERRUNTIME_H */
