@@ -5,6 +5,6 @@ CTestTestfile.cmake
 Makefile
 Testing
 cmake_install.cmake
-genericLoggerTester
+genericLoggerTester*
 output
 install_manifest.txt
