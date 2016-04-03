@@ -1,5 +1,9 @@
+#if HAVE_STDLIB_H
 #include <stdlib.h>
+#endif
+#if HAVE_STDARG_H
 #include <stdarg.h>
+#endif
 
 void f (int i, ...) {
   va_list args1, args2;
