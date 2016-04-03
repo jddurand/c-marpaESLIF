@@ -63,7 +63,7 @@ CONFIGURE_FILE(${CONFIG_H_IN} ${CONFIG_H})
 # Build library
 # -------------
 FILE(GLOB lib_src src/*.c)
-FILE(GLOB include_src ${INCLUDE_OUTPUT_PATH}/*.h)
+FILE(GLOB include_src ${INCLUDE_OUTPUT_PATH}/*.h ${PROJECT_SOURCE_DIR}/include/*.h)
 ADD_LIBRARY (libGenericLogger OBJECT ${lib_src})
 SET_TARGET_PROPERTIES(libGenericLogger PROPERTIES POSITION_INDEPENDENT_CODE 1)
 ADD_LIBRARY(genericLogger SHARED $<TARGET_OBJECTS:libGenericLogger>)
