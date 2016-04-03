@@ -1,9 +1,17 @@
+INCLUDE (StringToInternalBool)
 MACRO (FINDWRITE)
+  #
+  # Dependencies
+  #
+  STRINGTOINTERNALBOOL(_HAVE_STDIO_H HAVE_STDIO_H)
+  #
+  # Test
+  #
   FOREACH (KEYWORD "write" "_write" "__write")
     MESSAGE(STATUS "Looking for ${KEYWORD}")
     TRY_COMPILE (C_HAS_${KEYWORD} ${CMAKE_CURRENT_BINARY_DIR}
       ${CMAKE_CURRENT_SOURCE_DIR}/cmake/write.c
-      COMPILE_DEFINITIONS "-DC_WRITE=${KEYWORD} -DHAVE_STDIO_H=${HAVE_STDIO_H}")
+      COMPILE_DEFINITIONS "-DC_WRITE=${KEYWORD} -DHAVE_STDIO_H=${_HAVE_STDIO_H}")
     IF (C_HAS_${KEYWORD})
       MESSAGE(STATUS "Looking for ${KEYWORD} - found")
       SET (C_WRITE ${KEYWORD})
