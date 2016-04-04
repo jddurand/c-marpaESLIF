@@ -26,17 +26,7 @@ typedef struct genericLogger genericLogger_t;
 typedef void (*genericLoggerCallback_t)(void *userDatavp, genericLoggerLevel_t logLeveli, const char *msgs);
 
 /*************************
-   Exported symbols
- *************************/
-GENERICLOGGEREXPORT genericLoggerCallback_t genericLogger_defaultLogCallback(void);
-GENERICLOGGEREXPORT genericLoggerLevel_t    genericLogger_logLevel_set(genericLogger_t *genericLoggerp, genericLoggerLevel_t logLeveli);
-GENERICLOGGEREXPORT genericLoggerLevel_t    genericLogger_logLevel_get(genericLogger_t *genericLoggerp);
-GENERICLOGGEREXPORT genericLogger_t        *genericLogger_new(genericLoggerCallback_t logCallbackp, void *userDatavp, genericLoggerLevel_t genericLoggerLeveli);
-GENERICLOGGEREXPORT void                    genericLogger_free(genericLogger_t **genericLoggerpp);
-GENERICLOGGEREXPORT void                    genericLogger_log(genericLogger_t *genericLoggerp, genericLoggerLevel_t genericLoggerLeveli, const char *fmts, ...);
-
-/*************************
-   Convenience macors
+   Convenience macros
  *************************/
 
 /* C99 has problems with empty __VA_ARGS__ so we split macros in two categories: */
@@ -77,5 +67,21 @@ GENERICLOGGEREXPORT void                    genericLogger_log(genericLogger_t *g
 #define GENERICLOGGER_EMERGENCYF(genericLoggerp, fmts, ...)                 GENERICLOGGER_LOGF((genericLoggerp), GENERICLOGGER_LOGLEVEL_EMERGENCY, (fmts), __VA_ARGS__)
 
 #define GENERICLOGGER_FREE(genericLoggerp)                                  genericLogger_free(&(genericLoggerp));
+
+#ifdef _cpluscplus
+extern "C" {
+#endif
+  /*************************
+   Exported symbols
+  *************************/
+  GENERICLOGGER_EXPORT genericLoggerCallback_t genericLogger_defaultLogCallback(void);
+  GENERICLOGGER_EXPORT genericLoggerLevel_t    genericLogger_logLevel_set(genericLogger_t *genericLoggerp, genericLoggerLevel_t logLeveli);
+  GENERICLOGGER_EXPORT genericLoggerLevel_t    genericLogger_logLevel_get(genericLogger_t *genericLoggerp);
+  GENERICLOGGER_EXPORT genericLogger_t        *genericLogger_new(genericLoggerCallback_t logCallbackp, void *userDatavp, genericLoggerLevel_t genericLoggerLeveli);
+  GENERICLOGGER_EXPORT void                    genericLogger_free(genericLogger_t **genericLoggerpp);
+  GENERICLOGGER_EXPORT void                    genericLogger_log(genericLogger_t *genericLoggerp, genericLoggerLevel_t genericLoggerLeveli, const char *fmts, ...);
+#ifdef _cpluscplus
+}
+#endif
 
 #endif /* GENERICLOGGER_H */
