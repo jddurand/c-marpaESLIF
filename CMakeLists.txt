@@ -5,6 +5,13 @@
 CMAKE_MINIMUM_REQUIRED (VERSION 2.8)
 PROJECT (genericLogger)
 
+# ---------------------------
+# Export no symbol by default
+# ---------------------------
+set(CMAKE_C_VISIBILITY_PRESET   hidden)
+set(CMAKE_CXX_VISIBILITY_PRESET hidden)
+
+
 # -------
 # Version
 # -------
@@ -59,48 +66,61 @@ SET (CONFIG_H ${INCLUDE_OUTPUT_PATH}/genericLoggerConfig.h)
 SET (CONFIG_H_IN ${CMAKE_CURRENT_SOURCE_DIR}/include/genericLoggerConfig.h.in)
 CONFIGURE_FILE(${CONFIG_H_IN} ${CONFIG_H})
 
-# -------------
-# Build library
-# -------------
-FILE(GLOB lib_src src/*.c)
-FILE(GLOB include_src ${INCLUDE_OUTPUT_PATH}/*.h ${PROJECT_SOURCE_DIR}/include/*.h)
-ADD_LIBRARY (libGenericLogger OBJECT ${lib_src})
-SET_TARGET_PROPERTIES(libGenericLogger PROPERTIES POSITION_INDEPENDENT_CODE 1)
-ADD_LIBRARY(genericLogger SHARED $<TARGET_OBJECTS:libGenericLogger>)
-SET_TARGET_PROPERTIES(genericLogger PROPERTIES VERSION ${GENERICLOGGER_VERSION} SOVERSION ${GENERICLOGGER_VERSION_MAJOR})
-ADD_LIBRARY(genericLogger_static STATIC $<TARGET_OBJECTS:libGenericLogger>)
+# ------------------------------------------------------------------------------
+# Build both static and shared libraries - Note the GENERICLOGGER_STATIC keyword
+# ------------------------------------------------------------------------------
+FILE (GLOB lib_src src/*.c)
 
-# ------------
-# Export flags
-# ------------
+ADD_LIBRARY (genericLogger        SHARED ${lib_src})
+ADD_LIBRARY (genericLogger_static STATIC ${lib_src})
+
+SET_TARGET_PROPERTIES (genericLogger        PROPERTIES COMPILE_FLAGS "-DgenericLogger_EXPORTS"
+                                                       VERSION       "${GENERICLOGGER_VERSION}"
+                                                       SOVERSION     "${GENERICLOGGER_VERSION_MAJOR}")
+SET_TARGET_PROPERTIES (genericLogger_static PROPERTIES COMPILE_FLAGS "-DGENERICLOGGER_STATIC")
+
+# ----------------------------------------------------
+# Export flags - Note the GENERICLOGGER_STATIC keyword
+# ----------------------------------------------------
 INCLUDE (GenerateExportHeader)
 ADD_COMPILER_EXPORT_FLAGS ()
-GENERATE_EXPORT_HEADER(libGenericLogger
-  EXPORT_MACRO_NAME EXPORT
-  EXPORT_FILE_NAME ${INCLUDE_OUTPUT_PATH}/genericLoggerExport.h
-  DEPRECATED_MACRO_NAME DEPRECATED
-  NO_EXPORT_MACRO_NAME NO_EXPORT
-  STATIC_DEFINE STATIC
-  NO_DEPRECATED_MACRO_NAME NO_DEPRECATED
-  DEFINE_NO_DEPRECATED
-  PREFIX_NAME GENERICLOGGER
-)
+GENERATE_EXPORT_HEADER(genericLogger
+    BASE_NAME genericLogger
+    EXPORT_MACRO_NAME GENERICLOGGER_EXPORT
+    EXPORT_FILE_NAME "${INCLUDE_OUTPUT_PATH}/genericLoggerExport.h"
+    STATIC_DEFINE GENERICLOGGER_STATIC)
 
 # -----
 # Check
 # -----
 ENABLE_TESTING()
-ADD_TEST              (genericLoggerTest genericLoggerTester)
-ADD_TEST              (genericLoggerTestStatic genericLoggerTesterStatic)
-ADD_EXECUTABLE        (genericLoggerTester EXCLUDE_FROM_ALL test/genericLoggerTester.c)
+
+ADD_EXECUTABLE        (genericLoggerTester       EXCLUDE_FROM_ALL test/genericLoggerTester.c)
 ADD_EXECUTABLE        (genericLoggerTesterStatic EXCLUDE_FROM_ALL test/genericLoggerTester.c)
-TARGET_LINK_LIBRARIES (genericLoggerTester genericLogger)
+#
+# Painful but putting the binaries produced with dynamic linking in the same directory as the
+# dynamic libraries is the only way to make sure the OS will always see the dynamic library
+# at runtime, REGARDLESS of the OS (we are thinking to Windows and Visual Studio for instance).
+# and since we must do that for the dynamic test, we do it as well for any runtime thingy, just for coherency.
+#
+SET_TARGET_PROPERTIES (genericLoggerTester       PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH})
+SET_TARGET_PROPERTIES (genericLoggerTesterStatic PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH} COMPILE_FLAGS "-DGENERICLOGGER_STATIC")
+
+TARGET_LINK_LIBRARIES (genericLoggerTester       genericLogger)
 TARGET_LINK_LIBRARIES (genericLoggerTesterStatic genericLogger_static)
+
+ADD_TEST              (NAME genericLoggerTest
+                       COMMAND genericLoggerTester
+                       WORKING_DIRECTORY ${LIBRARY_OUTPUT_PATH})
+ADD_TEST              (NAME genericLoggerTestStatic
+                       COMMAND genericLoggerTesterStatic
+                       WORKING_DIRECTORY ${LIBRARY_OUTPUT_PATH})
+
 ADD_CUSTOM_TARGET     (check COMMAND ${CMAKE_CTEST_COMMAND} DEPENDS genericLoggerTester genericLoggerTesterStatic)
 
 # -------
 # Install
 # -------
-INSTALL (TARGETS genericLogger        LIBRARY DESTINATION lib COMPONENT libraries)
-INSTALL (TARGETS genericLogger_static ARCHIVE DESTINATION lib COMPONENT libraries)
+INSTALL (TARGETS genericLogger        ARCHIVE DESTINATION lib LIBRARY DESTINATION lib RUNTIME DESTINATION bin COMPONENT libraries)
+INSTALL (TARGETS genericLogger_static ARCHIVE DESTINATION lib LIBRARY DESTINATION lib RUNTIME DESTINATION bin COMPONENT libraries)
 INSTALL (FILES ${INCLUDE_OUTPUT_PATH}/genericLoggerExport.h include/genericLogger.h DESTINATION include)
