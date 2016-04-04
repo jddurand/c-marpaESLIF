@@ -29,7 +29,7 @@ static char *messageBuilder_ap(const char *fmts, va_list ap);
 /*********************/
 /* genericLogger_new */
 /*********************/
-GENERICLOGGEREXPORT C_INLINE genericLogger_t *genericLogger_new(genericLoggerCallback_t logCallbackp, void *userDatavp, genericLoggerLevel_t genericLoggerLeveli) {
+GENERICLOGGER_EXPORT genericLogger_t *genericLogger_new(genericLoggerCallback_t logCallbackp, void *userDatavp, genericLoggerLevel_t genericLoggerLeveli) {
   genericLogger_t *genericLoggerp = malloc(sizeof(genericLogger_t));
 
   if (genericLoggerp == NULL) {
@@ -48,29 +48,29 @@ GENERICLOGGEREXPORT C_INLINE genericLogger_t *genericLogger_new(genericLoggerCal
 /******************************/
 /* genericLogger_logLevel_set */
 /******************************/
-GENERICLOGGEREXPORT C_INLINE genericLoggerLevel_t genericLogger_logLevel_set(genericLogger_t *genericLoggerp, genericLoggerLevel_t logLeveli) {
+GENERICLOGGER_EXPORT genericLoggerLevel_t genericLogger_logLevel_set(genericLogger_t *genericLoggerp, genericLoggerLevel_t logLeveli) {
   genericLoggerp->genericLoggerLeveli = logLeveli;
   return genericLoggerp->genericLoggerLeveli;
 }
 
-/*******************************/
-/* genericLogger_logLevel_geti */
-/*******************************/
-GENERICLOGGEREXPORT C_INLINE genericLoggerLevel_t genericLogger_logLevel_get(genericLogger_t *genericLoggerp) {
+/******************************/
+/* genericLogger_logLevel_get */
+/******************************/
+GENERICLOGGER_EXPORT genericLoggerLevel_t genericLogger_logLevel_get(genericLogger_t *genericLoggerp) {
   return genericLoggerp->genericLoggerLeveli;
 }
 
 /***************************************/
 /* genericLogger_defaultLogCallback */
 /***************************************/
-GENERICLOGGEREXPORT C_INLINE genericLoggerCallback_t genericLogger_defaultLogCallback(void) {
+GENERICLOGGER_EXPORT genericLoggerCallback_t genericLogger_defaultLogCallback(void) {
   return &_genericLogger_defaultCallback;
 }
 
 /**********************/
 /* genericLogger_free */
 /**********************/
-GENERICLOGGEREXPORT C_INLINE void genericLogger_free(genericLogger_t **genericLoggerpp) {
+GENERICLOGGER_EXPORT void genericLogger_free(genericLogger_t **genericLoggerpp) {
 
   if (genericLoggerpp != NULL) {
     if (*genericLoggerpp != NULL) {
@@ -119,7 +119,7 @@ static C_INLINE void _genericLogger_defaultCallback(void *userDatavp, genericLog
 /*********************/
 /* genericLogger_log */
 /*********************/
-GENERICLOGGEREXPORT C_INLINE void genericLogger_log(genericLogger_t *genericLoggerp, genericLoggerLevel_t genericLoggerLeveli, const char *fmts, ...) {
+GENERICLOGGER_EXPORT void genericLogger_log(genericLogger_t *genericLoggerp, genericLoggerLevel_t genericLoggerLeveli, const char *fmts, ...) {
   va_list                  ap;
 #ifdef VA_COPY
   va_list                  ap2;
