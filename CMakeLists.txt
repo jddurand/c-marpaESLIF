@@ -8,9 +8,9 @@ PROJECT (genericLogger)
 # ---------------------------
 # Export no symbol by default
 # ---------------------------
-set(CMAKE_C_VISIBILITY_PRESET   hidden)
-set(CMAKE_CXX_VISIBILITY_PRESET hidden)
-
+CMAKE_POLICY (SET CMP0063 NEW)
+SET (CMAKE_C_VISIBILITY_PRESET   hidden)
+SET (CMAKE_CXX_VISIBILITY_PRESET hidden)
 
 # -------
 # Version
