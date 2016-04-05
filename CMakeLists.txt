@@ -8,7 +8,9 @@ PROJECT (genericLogger)
 # ---------------------------
 # Export no symbol by default
 # ---------------------------
-CMAKE_POLICY (SET CMP0063 NEW)
+IF (POLICY CMP0063)
+  CMAKE_POLICY (SET CMP0063 NEW)
+ENDIF (POLICY CMP0063)
 SET (CMAKE_C_VISIBILITY_PRESET   hidden)
 SET (CMAKE_CXX_VISIBILITY_PRESET hidden)
 
