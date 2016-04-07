@@ -78,6 +78,7 @@ extern "C" {
   GENERICLOGGER_EXPORT genericLoggerLevel_t    genericLogger_logLevel_set(genericLogger_t *genericLoggerp, genericLoggerLevel_t logLeveli);
   GENERICLOGGER_EXPORT genericLoggerLevel_t    genericLogger_logLevel_get(genericLogger_t *genericLoggerp);
   GENERICLOGGER_EXPORT genericLogger_t        *genericLogger_new(genericLoggerCallback_t logCallbackp, void *userDatavp, genericLoggerLevel_t genericLoggerLeveli);
+  GENERICLOGGER_EXPORT genericLogger_t        *genericLogger_clone(genericLogger_t *genericLoggerp);
   GENERICLOGGER_EXPORT void                    genericLogger_free(genericLogger_t **genericLoggerpp);
   GENERICLOGGER_EXPORT void                    genericLogger_log(genericLogger_t *genericLoggerp, genericLoggerLevel_t genericLoggerLeveli, const char *fmts, ...);
 #ifdef _cpluscplus
