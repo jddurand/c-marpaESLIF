@@ -1,6 +1,19 @@
 #ifndef GENERICLOGGER_H
 #define GENERICLOGGER_H
 
+/************************************************************************************************/
+/* Naming convention:                                                                           */
+/* - all functions start with genericStreaming                                                  */
+/* - all functions with specific functionnality Xyz start with genericStreamingXyz              */
+/* - A type always end with _t                                                                  */
+/* - A variable/function that is void end with v                                                */
+/* - A variable/function that is a pointer end with p                                           */
+/* - A variable/function that is an int end with i                                              */
+/* - A variable/function that is a number acting as a boolean end with b                        */
+/* - A variable/function that is a char end with c                                              */
+/* - A variable/function that is a string (char * or char[]) end with s                         */
+/************************************************************************************************/
+
 #include "genericLoggerExport.h"
 
 typedef enum genericLoggerLevel {
@@ -33,11 +46,12 @@ typedef void (*genericLoggerCallback_t)(void *userDatavp, genericLoggerLevel_t l
 /* logging with no variable parameter */
 /* logging with    variable paramerer(s) */
 
-#define GENERICLOGGER_NEW(genericLoggerLeveli)                              genericLogger_new(NULL, NULL, (genericLoggerLeveli))
-#define GENERICLOGGER_CUSTOM(logCallbackp, userDatavp, genericLoggerLeveli) genericLogger_new((logCallbackp), (userDatavp), (genericLoggerLeveli))
+#define GENERICLOGGER_NEW(genericLoggerLeveli)                              genericLogger_newp(NULL, NULL, (genericLoggerLeveli))
+#define GENERICLOGGER_CUSTOM(logCallbackp, userDatavp, genericLoggerLeveli) genericLogger_newp((logCallbackp), (userDatavp), (genericLoggerLeveli))
+#define GENERICLOGGER_CLONE(genericLoggerp)                                 genericLogger_clonep(genericLoggerp)
 
-#define GENERICLOGGER_LOG(genericLoggerp, logLeveli, msgs)                  genericLogger_log((genericLoggerp), (logLeveli), (msgs))
-#define GENERICLOGGER_LOGF(genericLoggerp, logLeveli, fmts, ...)            genericLogger_log((genericLoggerp), (logLeveli), (fmts), __VA_ARGS__)
+#define GENERICLOGGER_LOG(genericLoggerp, logLeveli, msgs)                  genericLogger_logv((genericLoggerp), (logLeveli), (msgs))
+#define GENERICLOGGER_LOGF(genericLoggerp, logLeveli, fmts, ...)            genericLogger_logv((genericLoggerp), (logLeveli), (fmts), __VA_ARGS__)
 
 #define GENERICLOGGER_TRACE(genericLoggerp, msgs)                           GENERICLOGGER_LOG ((genericLoggerp), GENERICLOGGER_LOGLEVEL_TRACE, (msgs))
 #define GENERICLOGGER_TRACEF(genericLoggerp, fmts, ...)                     GENERICLOGGER_LOGF((genericLoggerp), GENERICLOGGER_LOGLEVEL_TRACE, (fmts), __VA_ARGS__)
@@ -66,7 +80,7 @@ typedef void (*genericLoggerCallback_t)(void *userDatavp, genericLoggerLevel_t l
 #define GENERICLOGGER_EMERGENCY(genericLoggerp, msgs)                       GENERICLOGGER_LOG ((genericLoggerp), GENERICLOGGER_LOGLEVEL_EMERGENCY, (msgs))
 #define GENERICLOGGER_EMERGENCYF(genericLoggerp, fmts, ...)                 GENERICLOGGER_LOGF((genericLoggerp), GENERICLOGGER_LOGLEVEL_EMERGENCY, (fmts), __VA_ARGS__)
 
-#define GENERICLOGGER_FREE(genericLoggerp)                                  genericLogger_free(&(genericLoggerp));
+#define GENERICLOGGER_FREE(genericLoggerp)                                  genericLogger_freev(&(genericLoggerp));
 
 #ifdef _cpluscplus
 extern "C" {
@@ -74,13 +88,13 @@ extern "C" {
   /*************************
    Exported symbols
   *************************/
-  GENERICLOGGER_EXPORT genericLoggerCallback_t genericLogger_defaultLogCallback(void);
-  GENERICLOGGER_EXPORT genericLoggerLevel_t    genericLogger_logLevel_set(genericLogger_t *genericLoggerp, genericLoggerLevel_t logLeveli);
-  GENERICLOGGER_EXPORT genericLoggerLevel_t    genericLogger_logLevel_get(genericLogger_t *genericLoggerp);
-  GENERICLOGGER_EXPORT genericLogger_t        *genericLogger_new(genericLoggerCallback_t logCallbackp, void *userDatavp, genericLoggerLevel_t genericLoggerLeveli);
-  GENERICLOGGER_EXPORT genericLogger_t        *genericLogger_clone(genericLogger_t *genericLoggerp);
-  GENERICLOGGER_EXPORT void                    genericLogger_free(genericLogger_t **genericLoggerpp);
-  GENERICLOGGER_EXPORT void                    genericLogger_log(genericLogger_t *genericLoggerp, genericLoggerLevel_t genericLoggerLeveli, const char *fmts, ...);
+  GENERICLOGGER_EXPORT genericLoggerCallback_t genericLogger_defaultLogCallbackp(void);
+  GENERICLOGGER_EXPORT genericLoggerLevel_t    genericLogger_logLevel_seti(genericLogger_t *genericLoggerp, genericLoggerLevel_t logLeveli);
+  GENERICLOGGER_EXPORT genericLoggerLevel_t    genericLogger_logLevel_geti(genericLogger_t *genericLoggerp);
+  GENERICLOGGER_EXPORT genericLogger_t        *genericLogger_newp(genericLoggerCallback_t logCallbackp, void *userDatavp, genericLoggerLevel_t genericLoggerLeveli);
+  GENERICLOGGER_EXPORT genericLogger_t        *genericLogger_clonep(genericLogger_t *genericLoggerp);
+  GENERICLOGGER_EXPORT void                    genericLogger_freev(genericLogger_t **genericLoggerpp);
+  GENERICLOGGER_EXPORT void                    genericLogger_logv(genericLogger_t *genericLoggerp, genericLoggerLevel_t genericLoggerLeveli, const char *fmts, ...);
 #ifdef _cpluscplus
 }
 #endif
