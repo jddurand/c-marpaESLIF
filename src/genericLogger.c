@@ -45,6 +45,17 @@ GENERICLOGGER_EXPORT genericLogger_t *genericLogger_new(genericLoggerCallback_t 
   return genericLoggerp;
 }
 
+/***********************/
+/* genericLogger_clone */
+/***********************/
+genericLogger_t *genericLogger_clone(genericLogger_t *genericLoggerp) {
+  if (genericLoggerp == NULL) {
+    return NULL;
+  }
+
+  return genericLogger_new(genericLoggerp->logCallbackp, genericLoggerp->userDatavp, genericLoggerp->genericLoggerLeveli);
+}
+
 /******************************/
 /* genericLogger_logLevel_set */
 /******************************/

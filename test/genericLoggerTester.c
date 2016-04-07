@@ -11,6 +11,7 @@ typedef struct localStruct {
 
 int main() {
   genericLogger_t *loggerp;
+  genericLogger_t *loggerClonep;
   localStruct_t    localStruct;
 
   /* With no logger allocated - it still work - and defaults to the WARN level */
@@ -31,6 +32,22 @@ int main() {
     localStruct.i = 10;
     GENERICLOGGER_TRACE (loggerp, "Single message");
     GENERICLOGGER_TRACEF(loggerp, "%s %s", "Formatted", "Message");
+    GENERICLOGGER_FREE(loggerp);
+  }
+
+  /* Clone */
+  loggerp = GENERICLOGGER_CUSTOM(localLogger, &localStruct, GENERICLOGGER_LOGLEVEL_TRACE);
+  if (loggerp != NULL) {
+    GENERICLOGGER_TRACE (loggerp, "Single message using parent logger");
+    GENERICLOGGER_TRACEF(loggerp, "%s %s %s", "Formatted", "Message", "using parent logger");
+    loggerClonep = genericLogger_clone(loggerp);
+    if (loggerClonep != NULL) {
+      GENERICLOGGER_TRACE (loggerClonep, "Single message using cloned logger");
+      GENERICLOGGER_TRACEF(loggerClonep, "%s %s %s", "Formatted", "Message", "using cloned logger");
+      GENERICLOGGER_FREE(loggerClonep);
+    }
+    GENERICLOGGER_TRACE (loggerp, "Single message using parent logger again");
+    GENERICLOGGER_TRACEF(loggerp, "%s %s %s", "Formatted", "Message", "using parent logger again");
     GENERICLOGGER_FREE(loggerp);
   }
   
