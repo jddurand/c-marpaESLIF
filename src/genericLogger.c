@@ -281,7 +281,7 @@ static C_INLINE char *_messageBuilder_aps(const char *fmts, va_list ap) {
     /* On not-windows, if output is negative an output error is encountered */
     if (n < 0) {
       free(p);
-      return messageBuilder_internalErrors;
+      return (char *) _messageBuilder_internalErrors;
     }
 #endif
 
