@@ -40,7 +40,7 @@ int main() {
   if (loggerp != NULL) {
     GENERICLOGGER_TRACE (loggerp, "Single message using parent logger");
     GENERICLOGGER_TRACEF(loggerp, "%s %s %s", "Formatted", "Message", "using parent logger");
-    loggerClonep = genericLogger_clone(loggerp);
+    loggerClonep = GENERICLOGGER_CLONE(loggerp);
     if (loggerClonep != NULL) {
       GENERICLOGGER_TRACE (loggerClonep, "Single message using cloned logger");
       GENERICLOGGER_TRACEF(loggerClonep, "%s %s %s", "Formatted", "Message", "using cloned logger");
