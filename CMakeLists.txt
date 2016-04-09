@@ -3,7 +3,7 @@
 #        With  make: cmake -G "UNIX Makefiles", then make install
 #
 CMAKE_MINIMUM_REQUIRED (VERSION 2.8)
-PROJECT (genericLogger)
+PROJECT (genericLogger C)
 
 # ---------------------------
 # Export no symbol by default
