@@ -60,18 +60,6 @@ SET              (CCHARDET_INCLUDE        "${CCHARDET_DIR}")
 SET              (CCHARDET_LIBRARY_TARGET "charsetdetect")
 ADD_SUBDIRECTORY ("${CCHARDET_DIR}")
 
-# --------------------------------
-# Generic Data Structures Provider
-# --------------------------------
-EXECUTE_PROCESS(
-  COMMAND "${CMAKE_COMMAND}" -E tar xzf "${PROJECT_SOURCE_DIR}/3rdparty/tar/gdsl-1.8.tar.gz"
-  WORKING_DIRECTORY "${3RDPARTY_OUTPUT_PATH}"
-)
-SET              (GDSL_DIR            "${3RDPARTY_OUTPUT_PATH}/gdsl-1.8/src")
-SET              (GDSL_INCLUDE        "${GDSL_DIR}")
-SET              (GDSL_LIBRARY_TARGET "gdsl")
-ADD_SUBDIRECTORY ("${GDSL_DIR}")
-
 # ---------------------------
 # tinycthread Thread Provider
 # ---------------------------
@@ -147,7 +135,6 @@ INCLUDE_DIRECTORIES(
   "${INCLUDE_OUTPUT_PATH}"                                # Include path for generated files (internal)
   "${PROJECT_SOURCE_DIR}/include"                         # Include path for the other headers (internal)
   "${CCHARDET_INCLUDE}"                                   # Include path for ccharset (internal)
-  "${GDSL_INCLUDE}"                                       # Include path for gdsl (internal)
   )
 IF (WINICONV_INCLUDE)
   INCLUDE_DIRECTORIES ("${WINICONV_INCLUDE}")
@@ -189,7 +176,6 @@ TARGET_LINK_LIBRARIES (tconv
   "${CCHARDET_LIBRARY_TARGET}"
   "${TINYCTHREAD_LIBRARY_TARGET}"
   "${DLFCNWIN32_LIBRARY_TARGET}"
-  "${GDSL_LIBRARY_TARGET}"
 )
 SET_TARGET_PROPERTIES (charsetdetect
                        PROPERTIES CXX_FLAGS "$CMAKE_CXX_FLAGS}"
