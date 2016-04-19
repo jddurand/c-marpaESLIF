@@ -130,11 +130,9 @@ tconv_t tconv_open_ext(const char *tocodes, const char *fromcodes, tconv_opt_t *
     break;
   case TCONV_CHARSET_CCHARDET:
     tconvp->charset.optionp             = &(tconvp->optp->charset.u.cchardet);
-    /*
     tconvp->charset.tconv_charset_newp  = tconv_charset_cchardet_new;
     tconvp->charset.tconv_charset_runp  = tconv_charset_cchardet_run;
     tconvp->charset.tconv_charset_freep = tconv_charset_cchardet_free;
-    */
     tconvp->sharedLibraryHandlep        = NULL;
     break;
   case TCONV_CHARSET_EXTERNAL:
@@ -142,6 +140,11 @@ tconv_t tconv_open_ext(const char *tocodes, const char *fromcodes, tconv_opt_t *
     tconvp->sharedLibraryHandlep        = NULL;
     break;
   case TCONV_CHARSET_PLUGIN:
+    /* ------------------------------------------------------------------ */
+    /* If the application is calling us with a plugin configuration       */
+    /* Up to the application to make this call serialized (mutex)         */
+    /* Because in general dlopen/dlclose at least many not be thread-safe */
+    /* ------------------------------------------------------------------ */
     sharedLibraryHandlep = dlopen(tconvp->optp->charset.u.plugin.filenames, RTLD_LAZY);
     if (sharedLibraryHandlep == NULL) {
       goto err;
