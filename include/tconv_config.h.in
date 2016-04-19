@@ -1,8 +1,8 @@
 #ifndef TCONV_CONFIG_H
 #define TCONV_CONFIG_H
 
-#cmakedefine TCONV_HAVE_ICU   @ICU_FOUND@
-#cmakedefine TCONV_HAVE_ICONV @ICONV_FOUND@
+#cmakedefine TCONV_HAVE_ICU   @TCONV_HAVE_ICU@
+#cmakedefine TCONV_HAVE_ICONV @TCONV_HAVE_ICONV@
 
 #cmakedefine TCONV_C_INLINE   @C_INLINE@
 
