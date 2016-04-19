@@ -118,7 +118,7 @@ tconv_t tconv_open_ext(const char *tocodes, const char *fromcodes, tconv_opt_t *
 
   /* Look to the options - at the end we always end up as if it was an */
   /* "external" thingy.                                                */
-  switch (optp->convert.converteri) {
+  switch (tconvp->optp->convert.converteri) {
   case TCONV_CHARSET_ICU:
     tconvp->charset.optionp             = &(tconvp->optp->charset.u.ICU);
     /*
