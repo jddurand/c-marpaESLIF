@@ -2,7 +2,6 @@
 #define TCONV_H
 
 #include <stddef.h>
-#include <genericLogger.h>
 
 #include "tconv_export.h"
 
@@ -111,7 +110,6 @@ typedef struct tconv_convert {
 /* Global options */
 /* -------------- */
 typedef struct tconv_opt {
-  genericLogger_t *genericLoggerp; /* Default: NULL - will always log unless -DTCONV_NTRACE */
   tconv_charset_t  charset;
   tconv_convert_t  convert;
 } tconv_opt_t;
