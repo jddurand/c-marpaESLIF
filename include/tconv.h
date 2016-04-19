@@ -19,6 +19,10 @@ TCONV_EXPORT tconv_t  tconv_open(const char *tocodes, const char *fromcodes);
 TCONV_EXPORT size_t   tconv(tconv_t tconvp, char **inbufsp, size_t *inbytesleftlp, char **outbufsp, size_t *outbytesleftlp);
 TCONV_EXPORT int      tconv_close(tconv_t tconvp);
 
+/* Built-in support */
+#include "charset/ICU.h"
+#include "charset/cchardet.h"
+
 /****************************************************/
 /* Extended version to handle backend specificities */
 /****************************************************/
@@ -26,20 +30,15 @@ TCONV_EXPORT int      tconv_close(tconv_t tconvp);
 /* ------------------------- */
 /* Charset detection options */
 /* ------------------------- */
+typedef void *(*tconv_charset_new_t)(void *optionp);
+typedef char *(*tconv_charset_run_t)(void *contextp, char *bytep, size_t bytel);
+typedef void  (*tconv_charset_free_t)(void *contextp);
 
-typedef struct tconv_charset_ICU { /*    Built-in */
-  int confidencei;                 /* Default: 10 */
-} tconv_charset_ICU_t;
-
-typedef struct tconv_charset_cchardet { /*      Built-in */
-  float confidencef;                    /* Default: 0.1f */
-} tconv_charset_cchardet_t;
-
-typedef struct tconv_charset_external {     /* External */
-  void *optionp; /* Default: NULL */
-  void *(*tconv_charset_new)(void *optionp); /* Default: NULL */
-  char *(*tconv_charset)(void *contextp, char *bytep, size_t bytel); /* Default: NULL */
-  void  (*tconv_charset_free)(void *contextp); /* Default: NULL */
+typedef struct tconv_charset_external {         /* External */
+  void *optionp;                           /* Default: NULL */
+  tconv_charset_new_t tconv_charset_newp;  /* Default: NULL */
+  tconv_charset_run_t tconv_charset_runp;  /* Default: NULL */
+  tconv_charset_free_t tconv_charset_freep; /* Default: NULL */
 } tconv_charset_external_t;
 
 typedef struct tconv_charset_plugin {     /* plugin */
@@ -51,7 +50,8 @@ typedef struct tconv_charset {
   enum { /* Default: ICU if found, else CCHARDET, else -1 */
     TCONV_CHARSET_ICU,
     TCONV_CHARSET_CCHARDET,
-    TCONV_CHARSET_X
+    TCONV_CHARSET_EXTERNAL,
+    TCONV_CHARSET_PLUGIN
   } detectori;
   union {
     tconv_charset_ICU_t       ICU;
@@ -79,11 +79,15 @@ typedef struct tconv_convert_iconv {    /* Built-in */
   short ignoreb;                   /* Default:    0 */
 } tconv_convert_iconv_t;
 
-typedef struct tconv_convert_external {     /* External */
-  void    *optionp;  /* Default: NULL */
-  void    *(*tconv_convert_open)(const char *tocode, const char *fromcode, void *optionp); /* Default: NULL */
-  size_t   (*tconv_convert)(void *contextp, char **inbuf, size_t *inbytesleft, char **outbuf, size_t *outbytesleft); /* Default: NULL */
-  int      (*tconv_convert_close)(void *contextp); /* Default: NULL */
+typedef void   *(*tconv_convert_open_t)(const char *tocode, const char *fromcode, void *optionp);
+typedef size_t  (*tconv_convert_run_t)(void *contextp, char **inbuf, size_t *inbytesleft, char **outbuf, size_t *outbytesleft);
+typedef int     (*tconv_convert_close_t)(void *contextp);
+
+typedef struct tconv_convert_external {            /* External */
+  void    *optionp;                           /* Default: NULL */
+  tconv_convert_open_t tconv_convert_openp;   /* Default: NULL */
+  tconv_convert_run_t tconv_convert_runp;     /* Default: NULL */
+  tconv_convert_close_t tconv_convert_closep; /* Default: NULL */
 } tconv_convert_external_t;
 
 typedef struct tconv_convert_plugin {     /* plugin */

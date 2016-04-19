@@ -80,7 +80,7 @@ EXECUTE_PROCESS(
   WORKING_DIRECTORY "${3RDPARTY_OUTPUT_PATH}"
   )
 SET              (CCHARDET_DIR            "${3RDPARTY_OUTPUT_PATH}/cchardet-1.0.0/src/ext/libcharsetdetect")
-SET              (CCHARDET_INCLUDE        "${CCHARDET_DIR}")
+SET              (CCHARDET_INCLUDE_DIR    "${CCHARDET_DIR}")
 SET              (CCHARDET_LIBRARY_TARGET "charsetdetect")
 FILE (GLOB lib_cchardet_src
   "${3RDPARTY_OUTPUT_PATH}/cchardet-1.0.0/src/ext/libcharsetdetect/mozilla/extensions/universalchardet/src/base/*.cpp"
@@ -102,7 +102,7 @@ EXECUTE_PROCESS(
   WORKING_DIRECTORY "${3RDPARTY_OUTPUT_PATH}"
   )
 SET              (TINYCTHREAD_DIR            "${3RDPARTY_OUTPUT_PATH}/tinycthread-remote")
-SET              (TINYCTHREAD_INCLUDE        "${TINYCTHREAD_DIR}/source")
+SET              (TINYCTHREAD_INCLUDE_DIR    "${TINYCTHREAD_DIR}/source")
 SET              (TINYCTHREAD_LIBRARY_TARGET "tinycthread")
 ADD_LIBRARY (tinycthread STATIC "${TINYCTHREAD_DIR}/source/tinycthread.c")
 
@@ -115,9 +115,11 @@ IF (WIN32 AND NOT CYGWIN)
     COMMAND "${CMAKE_COMMAND}" -E copy_directory "${PROJECT_SOURCE_DIR}/3rdparty/github/dlfcn-win32-remote" "${3RDPARTY_OUTPUT_PATH}/dlfcn-win32-remote"
     WORKING_DIRECTORY "${3RDPARTY_OUTPUT_PATH}"
     )
-  SET              (DLFCNWIN32_DIR            "${3RDPARTY_OUTPUT_PATH}/dlfcn-win32-remote")
-  SET              (DLFCNWIN32_INCLUDE        "${DLFCNWIN32_DIR}/source")
-  SET              (DLFCNWIN32_LIBRARY_TARGET "dlfcn-win32")
+  SET (DLFCNWIN32_FOUND TRUE)
+  SET (DLFCNWIN32_DIR            "${3RDPARTY_OUTPUT_PATH}/dlfcn-win32-remote")
+  SET (DLFCNWIN32_INCLUDE_DIR    "${DLFCNWIN32_DIR}")
+  SET (DLFCNWIN32_LIBRARY_TARGET "dlfcn-win32")
+  SET (DLFCNWIN32_LIBRARY_TARGET_DEPEND "psapi")
   ADD_LIBRARY (dlfcn-win32 STATIC "${DLFCNWIN32_DIR}/dlfcn.c")
 ENDIF (WIN32 AND NOT CYGWIN)
 
@@ -149,7 +151,7 @@ IF (NOT ICONV_FOUND)
     SET (WINICONV_INCLUDE        "${WINICONV_DIR}")
     SET (WINICONV_SRC            "${WINICONV_DIR}/win_iconv.c")
     SET (ICONV_FOUND TRUE)
-    SET (ICONV_INCLUDE_DIR       "${WINICONV_INCLUDE}")
+    SET (ICONV_INCLUDE_DIR "${WINICONV_INCLUDE}")
     SET (ICONV_SECOND_ARGUMENT_IS_CONST TRUE)
     SET (TCONV_HAVE_ICONV 1)
   ELSE (WIN32 AND NOT CYGWIN)
@@ -172,14 +174,18 @@ CONFIGURE_FILE    (${CONFIG_H_IN} ${CONFIG_H})
 INCLUDE_DIRECTORIES(
   "${INCLUDE_OUTPUT_PATH}"                                # Include path for generated files (internal)
   "${PROJECT_SOURCE_DIR}/include"                         # Include path for the other headers (internal)
-  "${CCHARDET_INCLUDE}"                                   # Include path for ccharset (internal)
+  "${CCHARDET_INCLUDE_DIR}"                               # Include path for ccharset (internal)
+  "${TINYCTHREAD_INCLUDE_DIR}"                            # Include path for tinycthread (internal)
   )
-IF (WINICONV_INCLUDE)
-  INCLUDE_DIRECTORIES ("${WINICONV_INCLUDE}")
-ENDIF (WINICONV_INCLUDE)
-IF (ICU_INCLUDE_DIRS)
+IF (ICU_FOUND)
   INCLUDE_DIRECTORIES ("${ICU_INCLUDE_DIRS}")
-ENDIF (ICU_INCLUDE_DIRS)
+ENDIF (ICU_FOUND)
+IF (ICONV_FOUND)
+  INCLUDE_DIRECTORIES ("${ICONV_INCLUDE_DIR}")
+ENDIF (ICONV_FOUND)
+IF (DLFCNWIN32_FOUND)
+  INCLUDE_DIRECTORIES ("${DLFCNWIN32_INCLUDE_DIR}")
+ENDIF (DLFCNWIN32_FOUND)
 
 # SET (CMAKE_CPP_FLAGS           "${CMAKE_CPP_FLAGS}                $ENV{CPPFLAGS} ${ICU_CPP_FLAGS}")
 SET (CMAKE_C_FLAGS             "${CMAKE_C_FLAGS}                  $ENV{CFLAGS}   ${ICU_C_FLAGS_SHARED}")
@@ -216,6 +222,7 @@ TARGET_LINK_LIBRARIES (tconv
   "${CCHARDET_LIBRARY_TARGET}"
   "${TINYCTHREAD_LIBRARY_TARGET}"
   "${DLFCNWIN32_LIBRARY_TARGET}"
+  "${DLFCNWIN32_LIBRARY_TARGET_DEPEND}"
 )
 SET_TARGET_PROPERTIES (tconv
                        PROPERTIES COMPILE_FLAGS "-Dtconv_EXPORTS"
