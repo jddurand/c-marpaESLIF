@@ -10,7 +10,9 @@ typedef struct tconv_charset_ICU_context {
   UCharsetDetector *uCharsetDetectorp;
 } tconv_charset_ICU_context_t;
 
+/*****************************************************************************/
 void *tconv_charset_ICU_new(void *voidp)
+/*****************************************************************************/
 {
   tconv_charset_ICU_t         *optionp  = (tconv_charset_ICU_t *) voidp;
   tconv_charset_ICU_context_t *contextp = NULL;
@@ -50,7 +52,9 @@ void *tconv_charset_ICU_new(void *voidp)
   return NULL;
 }
 
+/*****************************************************************************/
 char *tconv_charset_ICU_run(void *voidp, char *bytep, size_t bytel)
+/*****************************************************************************/
 {
   tconv_charset_ICU_context_t *contextp = (tconv_charset_ICU_context_t *) voidp;
   UCharsetDetector            *uCharsetDetectorp;
@@ -123,7 +127,9 @@ char *tconv_charset_ICU_run(void *voidp, char *bytep, size_t bytel)
   return NULL;
 }
 
+/*****************************************************************************/
 void  tconv_charset_ICU_free(void *voidp)
+/*****************************************************************************/
 {
   tconv_charset_ICU_context_t *contextp = (tconv_charset_ICU_context_t *) voidp;
   UCharsetDetector            *uCharsetDetectorp;
