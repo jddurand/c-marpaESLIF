@@ -10,7 +10,9 @@ typedef struct tconv_charset_cchardet_context {
   csd_t csdp;
 } tconv_charset_cchardet_context_t;
 
+/*****************************************************************************/
 void *tconv_charset_cchardet_new(void *voidp)
+/*****************************************************************************/
 {
   tconv_charset_cchardet_t         *optionp  = (tconv_charset_cchardet_t *) voidp;
   tconv_charset_cchardet_context_t *contextp = NULL;
@@ -46,7 +48,9 @@ void *tconv_charset_cchardet_new(void *voidp)
   return NULL;
 }
 
+/*****************************************************************************/
 char *tconv_charset_cchardet_run(void *voidp, char *bytep, size_t bytel)
+/*****************************************************************************/
 {
   tconv_charset_cchardet_context_t *contextp = (tconv_charset_cchardet_context_t *) voidp;
   int                               csdi;
@@ -94,7 +98,9 @@ char *tconv_charset_cchardet_run(void *voidp, char *bytep, size_t bytel)
   return NULL;
 }
 
+/*****************************************************************************/
 void  tconv_charset_cchardet_free(void *voidp)
+/*****************************************************************************/
 {
   tconv_charset_cchardet_context_t *contextp = (tconv_charset_cchardet_context_t *) voidp;
   csd_t                             csdp;
