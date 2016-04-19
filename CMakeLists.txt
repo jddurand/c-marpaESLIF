@@ -97,14 +97,14 @@ SET_PROPERTY (TARGET charsetdetect
 # ------------------------------------
 # tinycthread Thread Provider: builtin
 # ------------------------------------
-EXECUTE_PROCESS(
-  COMMAND "${CMAKE_COMMAND}" -E copy_directory "${PROJECT_SOURCE_DIR}/3rdparty/github/tinycthread-remote" "${3RDPARTY_OUTPUT_PATH}/tinycthread-remote"
-  WORKING_DIRECTORY "${3RDPARTY_OUTPUT_PATH}"
-  )
-SET              (TINYCTHREAD_DIR            "${3RDPARTY_OUTPUT_PATH}/tinycthread-remote")
-SET              (TINYCTHREAD_INCLUDE_DIR    "${TINYCTHREAD_DIR}/source")
-SET              (TINYCTHREAD_LIBRARY_TARGET "tinycthread")
-ADD_LIBRARY (tinycthread STATIC "${TINYCTHREAD_DIR}/source/tinycthread.c")
+# EXECUTE_PROCESS(
+#   COMMAND "${CMAKE_COMMAND}" -E copy_directory "${PROJECT_SOURCE_DIR}/3rdparty/github/tinycthread-remote" "${3RDPARTY_OUTPUT_PATH}/tinycthread-remote"
+#  WORKING_DIRECTORY "${3RDPARTY_OUTPUT_PATH}"
+#   )
+# SET              (TINYCTHREAD_DIR            "${3RDPARTY_OUTPUT_PATH}/tinycthread-remote")
+# SET              (TINYCTHREAD_INCLUDE_DIR    "${TINYCTHREAD_DIR}/source")
+# SET              (TINYCTHREAD_LIBRARY_TARGET "tinycthread")
+# ADD_LIBRARY (tinycthread STATIC "${TINYCTHREAD_DIR}/source/tinycthread.c")
 
 # -----------------------------------------
 # portable dlopen and al. Provider: builtin
@@ -175,7 +175,7 @@ INCLUDE_DIRECTORIES(
   "${INCLUDE_OUTPUT_PATH}"                                # Include path for generated files (internal)
   "${PROJECT_SOURCE_DIR}/include"                         # Include path for the other headers (internal)
   "${CCHARDET_INCLUDE_DIR}"                               # Include path for ccharset (internal)
-  "${TINYCTHREAD_INCLUDE_DIR}"                            # Include path for tinycthread (internal)
+#   "${TINYCTHREAD_INCLUDE_DIR}"                            # Include path for tinycthread (internal)
   )
 IF (ICU_FOUND)
   INCLUDE_DIRECTORIES ("${ICU_INCLUDE_DIRS}")
@@ -220,7 +220,7 @@ ADD_LIBRARY (tconv SHARED
   ${lib_src_convert_iconv})
 TARGET_LINK_LIBRARIES (tconv
   "${CCHARDET_LIBRARY_TARGET}"
-  "${TINYCTHREAD_LIBRARY_TARGET}"
+#   "${TINYCTHREAD_LIBRARY_TARGET}"
   "${DLFCNWIN32_LIBRARY_TARGET}"
   "${DLFCNWIN32_LIBRARY_TARGET_DEPEND}"
 )

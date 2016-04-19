@@ -3,6 +3,8 @@
 
 #include <stddef.h>
 
+#include "tconv_export.h"
+
 typedef struct tconv_charset_cchardet { /*      Built-in */
   float confidencef;                    /* Default: 0.1f */
 } tconv_charset_cchardet_t;
