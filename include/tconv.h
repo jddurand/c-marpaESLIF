@@ -53,6 +53,7 @@ typedef struct tconv_charset {
     TCONV_CHARSET_EXTERNAL,
     TCONV_CHARSET_PLUGIN
   } detectori;
+  size_t maxl;          /* Default: 1024. Maximum number of bytes */
   union {
     tconv_charset_ICU_t       ICU;
     tconv_charset_cchardet_t  cchardet;

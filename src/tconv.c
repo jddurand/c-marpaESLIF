@@ -85,6 +85,7 @@ tconv_opt_t *tconv_opt_default()
   optp->convert.converteri                     = -1;
   #endif
 #endif
+  optp->charset.maxl                           = 1024;
 
   return optp;
 
