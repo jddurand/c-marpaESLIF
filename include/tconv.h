@@ -22,6 +22,7 @@ TCONV_EXPORT int      tconv_close(tconv_t tconvp);
 /* Built-in support */
 #include "charset/ICU.h"
 #include "charset/cchardet.h"
+#include "convert/iconv.h"
 
 /****************************************************/
 /* Extended version to handle backend specificities */
@@ -74,14 +75,8 @@ typedef struct tconv_convert_ICU {   /* Built-in */
   void *toFallbackp;            /* Default: NULL */
 } tconv_convert_ICU_t;
 
-typedef struct tconv_convert_iconv {    /* Built-in */
-  size_t bufSizel;                 /* Default:    0 (no memory limit) */
-  short translitb;                 /* Default:    0 */
-  short ignoreb;                   /* Default:    0 */
-} tconv_convert_iconv_t;
-
-typedef void   *(*tconv_convert_open_t)(const char *tocode, const char *fromcode, void *optionp);
-typedef size_t  (*tconv_convert_run_t)(void *contextp, char **inbuf, size_t *inbytesleft, char **outbuf, size_t *outbytesleft);
+typedef void   *(*tconv_convert_open_t)(const char *tocodes, const char *fromcodes, void *optionp);
+typedef size_t  (*tconv_convert_run_t)(void *contextp, char **inbufsp, size_t *inbytesleftlp, char **outbufsp, size_t *outbytesleftlp);
 typedef int     (*tconv_convert_close_t)(void *contextp);
 
 typedef struct tconv_convert_external {            /* External */

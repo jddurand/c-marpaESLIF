@@ -78,7 +78,6 @@ tconv_opt_t *tconv_opt_default()
 #else
   #if defined(TCONV_HAVE_ICONV)
   optp->convert.converteri                     = TCONV_CONVERT_ICONV;
-  optp->convert.u.iconv.bufSizel               = 0;
   optp->convert.u.iconv.translitb              = 0;
   optp->convert.u.iconv.ignoreb                = 0;
   #else
@@ -122,11 +121,9 @@ tconv_t tconv_open_ext(const char *tocodes, const char *fromcodes, tconv_opt_t *
   switch (tconvp->optp->convert.converteri) {
   case TCONV_CHARSET_ICU:
     tconvp->charset.optionp             = &(tconvp->optp->charset.u.ICU);
-    /*
     tconvp->charset.tconv_charset_newp  = tconv_charset_ICU_new;
     tconvp->charset.tconv_charset_runp  = tconv_charset_ICU_run;
     tconvp->charset.tconv_charset_freep = tconv_charset_ICU_free;
-    */
     tconvp->sharedLibraryHandlep        = NULL;
     break;
   case TCONV_CHARSET_CCHARDET:
