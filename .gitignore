@@ -41,8 +41,15 @@ cmake_install.cmake
 install_manifest.txt
 *.vcxproj
 *.vcxproj.filters
+*.vcxproj.user
+*.opensdf
 *.sln
+*.suo
+*.sdf
 *.dir/
+Testing/
+Win32/
+ipch/
 
 # Our garbage
 output/
