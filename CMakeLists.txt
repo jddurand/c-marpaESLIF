@@ -44,25 +44,51 @@ if (("${CMAKE_C_COMPILER_ID} x" MATCHES "MSVC") OR MSVC)
   ADD_DEFINITIONS(-D_CRT_SECURE_NO_WARNINGS)
   ADD_DEFINITIONS(-D_CRT_NONSTDC_NO_DEPRECATE)
 ENDIF ()
+IF ((NOT CMAKE_BUILD_TYPE MATCHES Debug) AND (NOT CMAKE_BUILD_TYPE MATCHES RelWithDebInfo))
+  ADD_DEFINITIONS(-DTCONV_NTRACE)
+ENDIF ((NOT CMAKE_BUILD_TYPE MATCHES Debug) AND (NOT CMAKE_BUILD_TYPE MATCHES RelWithDebInfo))
+ADD_DEFINITIONS(-DTCONV_VERSION="${TCONV_VERSION}")
 
 #############################
 # Dependencies
 #############################
-# ---------------------------
-# ccharset Charset Provider
-# ---------------------------
+EXECUTE_PROCESS(COMMAND "${CMAKE_COMMAND}" -E make_directory "${3RDPARTY_OUTPUT_PATH}")
+# -----------------------------------
+# genericLogger: required
+# -----------------------------------
+FIND_PACKAGE (genericLogger)
+IF (NOT GENERICLOGGER_FOUND)
+    MESSAGE (FATAL_ERROR "genericLogger must be detected")
+ENDIF ()
+
+# ----------------------------------
+# ccharset Charset Provider: builtin
+# ----------------------------------
 EXECUTE_PROCESS(
   COMMAND "${CMAKE_COMMAND}" -E tar xzf "${PROJECT_SOURCE_DIR}/3rdparty/tar/cchardet-1.0.0.tar.gz"
   WORKING_DIRECTORY "${3RDPARTY_OUTPUT_PATH}"
-)
+  RESULT_VARIABLE CCHARDET_TAR_RESULT
+  OUTPUT_VARIABLE CCHARDET_TAR_OUTPUT
+  ERROR_VARIABLE CCHARDET_TAR_ERROR
+  )
 SET              (CCHARDET_DIR            "${3RDPARTY_OUTPUT_PATH}/cchardet-1.0.0/src/ext/libcharsetdetect")
 SET              (CCHARDET_INCLUDE        "${CCHARDET_DIR}")
 SET              (CCHARDET_LIBRARY_TARGET "charsetdetect")
-ADD_SUBDIRECTORY ("${CCHARDET_DIR}")
-
-# ---------------------------
-# tinycthread Thread Provider
-# ---------------------------
+FILE (GLOB lib_cchardet_src
+  "${3RDPARTY_OUTPUT_PATH}/cchardet-1.0.0/src/ext/libcharsetdetect/mozilla/extensions/universalchardet/src/base/*.cpp"
+  "${3RDPARTY_OUTPUT_PATH}/cchardet-1.0.0/src/ext/libcharsetdetect/charsetdetect.cpp"
+)
+ADD_LIBRARY (charsetdetect STATIC ${lib_cchardet_src})
+SET_PROPERTY (TARGET charsetdetect
+  PROPERTY
+  INCLUDE_DIRECTORIES
+  "${3RDPARTY_OUTPUT_PATH}/cchardet-1.0.0/src/ext/libcharsetdetect/mozilla/extensions/universalchardet/src/base"
+  "${3RDPARTY_OUTPUT_PATH}/cchardet-1.0.0/src/ext/libcharsetdetect/nspr-emu"
+  "${3RDPARTY_OUTPUT_PATH}/cchardet-1.0.0/src/ext/libcharsetdetect"
+  )
+# ------------------------------------
+# tinycthread Thread Provider: builtin
+# ------------------------------------
 EXECUTE_PROCESS(
   COMMAND "${CMAKE_COMMAND}" -E copy_directory "${PROJECT_SOURCE_DIR}/3rdparty/github/tinycthread-remote" "${3RDPARTY_OUTPUT_PATH}/tinycthread-remote"
   WORKING_DIRECTORY "${3RDPARTY_OUTPUT_PATH}"
@@ -72,9 +98,9 @@ SET              (TINYCTHREAD_INCLUDE        "${TINYCTHREAD_DIR}/source")
 SET              (TINYCTHREAD_LIBRARY_TARGET "tinycthread")
 ADD_LIBRARY (tinycthread STATIC "${TINYCTHREAD_DIR}/source/tinycthread.c")
 
-# --------------------------------
-# portable dlopen and al. Provider
-# --------------------------------
+# -----------------------------------------
+# portable dlopen and al. Provider: builtin
+# -----------------------------------------
 IF (WIN32 AND NOT CYGWIN)
   MESSAGE (STATUS "dlfcn-win32 third party will be used")
   EXECUTE_PROCESS(
@@ -123,9 +149,10 @@ ENDIF (NOT ICONV_FOUND)
 #############################
 # Configuration
 #############################
-SET               (CONFIG_H ${INCLUDE_OUTPUT_PATH}/tconv.h)
-SET               (CONFIG_H_IN ${CMAKE_CURRENT_SOURCE_DIR}/include/tconv.h.in)
+SET               (CONFIG_H ${INCLUDE_OUTPUT_PATH}/tconv_config.h)
+SET               (CONFIG_H_IN ${CMAKE_CURRENT_SOURCE_DIR}/include/tconv_config.h.in)
 INCLUDE           (FindInline)
+SET               (TCONV_C_INLINE "${C_INLINE}")
 CONFIGURE_FILE    (${CONFIG_H_IN} ${CONFIG_H})
 
 #############################
@@ -135,6 +162,7 @@ INCLUDE_DIRECTORIES(
   "${INCLUDE_OUTPUT_PATH}"                                # Include path for generated files (internal)
   "${PROJECT_SOURCE_DIR}/include"                         # Include path for the other headers (internal)
   "${CCHARDET_INCLUDE}"                                   # Include path for ccharset (internal)
+  "${GENERICLOGGER_INCLUDE_DIRS}"                         # Include path for genericLogger (external - required)
   )
 IF (WINICONV_INCLUDE)
   INCLUDE_DIRECTORIES ("${WINICONV_INCLUDE}")
@@ -144,11 +172,11 @@ IF (ICU_INCLUDE_DIRS)
 ENDIF (ICU_INCLUDE_DIRS)
 
 # SET (CMAKE_CPP_FLAGS           "${CMAKE_CPP_FLAGS}                $ENV{CPPFLAGS} ${ICU_CPP_FLAGS}")
-SET (CMAKE_C_FLAGS             "${CMAKE_C_FLAGS}                  $ENV{CFLAGS}   ${ICU_C_FLAGS_SHARED}")
-SET (CMAKE_CXX_FLAGS           "${CMAKE_CXX_FLAGS}                $ENV{CFLAGS}   ${ICU_CXX_FLAGS_SHARED}")
-SET (CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS_INIT} $ENV{LDFLAGS}  ${ICU_LDFLAGS}")
-SET (CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS_INIT} $ENV{LDFLAGS}  ${ICU_LDFLAGS}")
-SET (CMAKE_EXE_LINKER_FLAGS    "${CMAKE_EXE_LINKER_FLAGS_INIT}    $ENV{LDFLAGS}  ${ICU_LDFLAGS}")
+SET (CMAKE_C_FLAGS             "${CMAKE_C_FLAGS}                  $ENV{CFLAGS}   ${ICU_C_FLAGS_SHARED} ${GENERICLOGGER_C_FLAGS_SHARED}")
+SET (CMAKE_CXX_FLAGS           "${CMAKE_CXX_FLAGS}                $ENV{CFLAGS}   ${ICU_CXX_FLAGS_SHARED} ${GENERICLOGGER_C_FLAGS_SHARED}")
+SET (CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS_INIT} $ENV{LDFLAGS}  ${ICU_LDFLAGS} ${GENERICLOGGER_LDFLAGS}")
+SET (CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS_INIT} $ENV{LDFLAGS}  ${ICU_LDFLAGS} ${GENERICLOGGER_LDFLAGS}")
+SET (CMAKE_EXE_LINKER_FLAGS    "${CMAKE_EXE_LINKER_FLAGS_INIT}    $ENV{LDFLAGS}  ${ICU_LDFLAGS} ${GENERICLOGGER_LDFLAGS}")
 
 #############################
 # Makefile details
@@ -177,9 +205,6 @@ TARGET_LINK_LIBRARIES (tconv
   "${TINYCTHREAD_LIBRARY_TARGET}"
   "${DLFCNWIN32_LIBRARY_TARGET}"
 )
-SET_TARGET_PROPERTIES (charsetdetect
-                       PROPERTIES CXX_FLAGS "$CMAKE_CXX_FLAGS}"
-                       )
 SET_TARGET_PROPERTIES (tconv
                        PROPERTIES COMPILE_FLAGS "-Dtconv_EXPORTS"
                        VERSION                  "${TCONV_VERSION}"
@@ -193,7 +218,7 @@ ADD_COMPILER_EXPORT_FLAGS ()
 GENERATE_EXPORT_HEADER(tconv
     BASE_NAME tconv
     EXPORT_MACRO_NAME TCONV_EXPORT
-    EXPORT_FILE_NAME "${INCLUDE_OUTPUT_PATH}/tconvExport.h"
+    EXPORT_FILE_NAME "${INCLUDE_OUTPUT_PATH}/tconv_export.h"
     STATIC_DEFINE TCONV_STATIC)
 
 # -----
@@ -201,7 +226,7 @@ GENERATE_EXPORT_HEADER(tconv
 # -----
 ENABLE_TESTING()
 
-ADD_EXECUTABLE (tconvTester EXCLUDE_FROM_ALL test/*.c)
+ADD_EXECUTABLE (tconvTester EXCLUDE_FROM_ALL test/tconv.c)
 #
 # Painful but putting the binaries produced with dynamic linking in the same directory as the
 # dynamic libraries is the only way to make sure the OS will always see the dynamic library
