@@ -5,107 +5,99 @@
 
 #include "convert/iconv.h"
 
-typedef struct tconv_convert_iconv_context {
-  iconv_t iconvp;
-  char   *bufferp;
-  size_t  bufferl;
-} tconv_convert_iconv_context_t;
+/* Our context is iconv itself */
+typedef iconv_t tconv_convert_iconv_context_t;
 
-void *tconv_convert_iconv_new(void *voidp)
+#define TCONV_CONVERT_ICONV_TRANSLIT "//TRANSLIT"
+#define TCONV_CONVERT_ICONV_IGNORE "//IGNORE"
+
+/*****************************************************************************/
+void  *tconv_convert_iconv_open(const char *tocodes, const char *fromcodes, void *voidp)
+/*****************************************************************************/
 {
-  tconv_convert_iconv_t         *optionp  = (tconv_convert_iconv_t *) voidp;
-  tconv_convert_iconv_context_t *contextp = NULL;
-  csd_t                             csdp     = NULL;
+  tconv_convert_iconv_t *optionp     = (tconv_convert_iconv_t *) voidp;
+  char                  *realtocodes = NULL;
+  char                  *p;
+  iconv_t                iconvp;
 
-  if (optionp == NULL) {
-    errno = EINVAL;
+  
+  if ((optionp == NULL) || (tocodes == NULL) || (fromcodes == NULL)) {
     goto err;
   }
 
-  csdp = csd_open();
-  if (csdp == NULL) {
+  /* //TRANSLIT and //IGNORE are managed via the options */
+  realtocodes = strdup(tocodes);
+  if (realtocodes == NULL) {
+    goto err;
+  }
+  p = strchr(realtocodes, '/');
+  if (p != NULL) {
+    *p = '\0';
+  }
+  if (optionp->translitb != 0) {
+    p = realloc(realtocodes, strlen(realtocodes) + strlen(TCONV_CONVERT_ICONV_TRANSLIT) + 1);
+    if (p == NULL) {
+      goto err;
+    }
+    realtocodes = p;
+    strcat(realtocodes, TCONV_CONVERT_ICONV_TRANSLIT);
+  }
+  if (optionp->ignoreb != 0) {
+    p = realloc(realtocodes, strlen(realtocodes) + strlen(TCONV_CONVERT_ICONV_IGNORE) + 1);
+    if (p == NULL) {
+      goto err;
+    }
+    realtocodes = p;
+    strcat(realtocodes, TCONV_CONVERT_ICONV_IGNORE);
+  }
+
+  iconvp = iconv_open(realtocodes, fromcodes);
+  if (iconvp == NULL) {
     goto err;
   }
 
-  contextp = malloc(sizeof(tconv_convert_iconv_context_t));
-  if (contextp == NULL) {
-    goto err;
-  }
-
-  contextp->confidencef = optionp->confidencef;
-  contextp->csdp        = csdp;
-
-  return contextp;
-
+  return iconvp;
+  
  err:
   {
     int errnol = errno;
-    if (csdp != NULL) { csd_close(csdp); }
-    if (contextp != NULL) { free(contextp); }
+    if (realtocodes != NULL) { free(realtocodes); }
     errno = errnol;
   }
   return NULL;
 }
 
-char *tconv_convert_iconv_run(void *voidp, char *bytep, size_t bytel)
+/*****************************************************************************/
+size_t tconv_convert_iconv_run(void *contextp, char **inbufsp, size_t *inbytesleftlp, char **outbufsp, size_t *outbytesleftlp)
+/*****************************************************************************/
 {
-  tconv_convert_iconv_context_t *contextp = (tconv_convert_iconv_context_t *) voidp;
-  int                               csdi;
-  csd_t                             csdp;
-  float                             confidencef;
-  const char                       *converts;
+  iconv_t iconvp = (iconv_t) contextp;
 
-  if ((contextp == NULL) || (bytep == NULL) || (bytel <= 0)) {
-    errno = EFAULT;
+  if (iconvp == NULL) {
     goto err;
   }
 
-  csdp = contextp->csdp;
-  if (csdp == NULL) {
-    errno = EFAULT;
-    goto err;
-  }
-
-  csdi = csd_consider(csdp, bytep, (unsigned long) bytel);
-  if (csdi < 0) {
-    errno = ENOENT;
-    goto err;
-  } else if (csdi == 0) {
-    errno = EAGAIN;
-    goto err;
-  }
-
-  converts = csd_close2(csdp, &confidencef);
-  contextp->csdp = NULL;
-  if (converts == NULL) {
-    errno = EFAULT;
-    return NULL;
-  }
-
-  if ((strcmp(converts, "ASCII") != 0) || (strcmp(converts, "ibm850") != 0)) {
-    if (confidencef < contextp->confidencef) {
-      errno = ENOENT;
-      return NULL;
-  }
-
-    return (char *) converts;
-  }
+  return iconv(iconvp, inbufsp, inbytesleftlp, outbufsp, outbytesleftlp);
 
  err:
-  return NULL;
+  errno = EINVAL;
+  return (size_t)-1;
 }
 
-void  tconv_convert_iconv_free(void *voidp)
+/*****************************************************************************/
+int tconv_convert_iconv_close(void *contextp)
+/*****************************************************************************/
 {
-  tconv_convert_iconv_context_t *contextp = (tconv_convert_iconv_context_t *) voidp;
-  csd_t                             csdp;
+  iconv_t iconvp = (iconv_t) contextp;
 
-  if (contextp != NULL) {
-    csdp = contextp->csdp;
-    if (csdp != NULL) {
-      csd_close(csdp);
-    }
-    free(contextp);
+  if (iconvp == NULL) {
+    goto err;
   }
+
+  return iconv_close(iconvp);
+
+ err:
+  errno = EINVAL;
+  return -1;
 }
 
