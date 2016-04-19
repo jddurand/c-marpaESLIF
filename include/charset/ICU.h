@@ -3,6 +3,8 @@
 
 #include <stddef.h>
 
+#include "tconv_export.h"
+
 typedef struct tconv_charset_ICU { /*      Built-in */
   int confidencei;                 /* Default:  0.1 */
 } tconv_charset_ICU_t;
