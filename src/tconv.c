@@ -104,11 +104,11 @@ int tconv_close(tconv_t tconvp)
       }
     }
     if (tconvp->tocodes != NULL) {
-      TCONV_TRACEF(tconvp, "%s - freeing copy of %s", funcs, tconvp->tocodes);
+      TCONV_TRACEF(tconvp, "%s - freeing copy of \"to\" code %s", funcs, tconvp->tocodes);
       free(tconvp->tocodes);
     }
     if (tconvp->fromcodes != NULL) {
-      TCONV_TRACEF(tconvp, "%s - freeing copy of %s", funcs, tconvp->fromcodes);
+      TCONV_TRACEF(tconvp, "%s - freeing copy of \"from\" code %s", funcs, tconvp->fromcodes);
       free(tconvp->fromcodes);
     }
     if (tconvp->sharedLibraryHandlep != NULL) {
@@ -148,14 +148,14 @@ tconv_t tconv_open_ext(const char *tocodes, const char *fromcodes, tconv_option_
 
   /* Always keep a copy of tocodes and from*/
   if (tocodes != NULL) {
-    TCONV_TRACEF(tconvp, "%s - duplicating \"to\" codeset %s", funcs, tocodes);
+    TCONV_TRACEF(tconvp, "%s - duplicating \"to\" code %s", funcs, tocodes);
     TCONV_MALLOC(funcs, tconvp->tocodes, char *, sizeof(char) * (strlen(tocodes) + 1));
     strcpy(tconvp->tocodes, tocodes);
   } else {
     tconvp->tocodes = NULL;
   }
   if (fromcodes != NULL) {
-    TCONV_TRACEF(tconvp, "%s - duplicating \"from\" codeset %s", funcs, fromcodes);
+    TCONV_TRACEF(tconvp, "%s - duplicating \"from\" code %s", funcs, fromcodes);
     TCONV_MALLOC(funcs, tconvp->fromcodes, char *, sizeof(char) * (strlen(fromcodes) + 1));
     strcpy(tconvp->fromcodes, fromcodes);
   } else {
