@@ -32,16 +32,28 @@ struct tconv {
     GENERICLOGGER_TRACEF(tconvp->genericLoggerp, fmts, __VA_ARGS__); \
   }                                                                  \
 } while (0)
+#define TCONV_ERROR(tconvp, msgs) do {                        \
+  if ((tconvp != NULL) && (tconvp->genericLoggerp != NULL)) { \
+    GENERICLOGGER_ERROR(tconvp->genericLoggerp, msgs);        \
+  }                                                           \
+} while (0)
+#define TCONV_ERRORF(tconvp, fmts, ...) do {                         \
+    if ((tconvp != NULL) && (tconvp->genericLoggerp != NULL)) {      \
+    GENERICLOGGER_ERRORF(tconvp->genericLoggerp, fmts, __VA_ARGS__); \
+  }                                                                  \
+} while (0)
 #else
 #define TCONV_TRACE(tconvp, msgs)
 #define TCONV_TRACEF(tconvp, fmts, ...)
+#define TCONV_ERROR(tconvp, msgs)
+#define TCONV_ERRORF(tconvp, fmts, ...)
 #endif
 
 /* All our functions have an err label if necessary */
-#define TCONV_MALLOC(ptr, type, size) do {                              \
+#define TCONV_MALLOC(funcs, ptr, type, size) do {                       \
     ptr = (type) malloc(size);						\
     if (ptr == NULL) {							\
-      TCONV_TRACEF(tconvp, "malloc: %s", strerror(errno));              \
+      TCONV_ERRORF(tconvp, "%s - malloc failure, %s", strerror(errno)); \
       goto err;								\
     }									\
   } while (0)
@@ -61,20 +73,28 @@ tconv_t tconv_open(const char *tocodes, const char *fromcodes)
 int tconv_close(tconv_t tconvp)
 /****************************************************************************/
 {
+  static const char funcs[] = "tconv_close";
+  int rci = 0;
+
   if (tconvp != NULL) {
     if (tconvp->charsetContextp != NULL) {
       if (tconvp->charsetExternal.tconv_charset_freep != NULL) {
+        TCONV_TRACEF(tconvp, "%s - freeing charset engine", funcs);
         tconvp->charsetExternal.tconv_charset_freep(tconvp, tconvp->charsetContextp);
       }
     }
     if (tconvp->convertContextp != NULL) {
       if (tconvp->convertExternal.tconv_convert_freep != NULL) {
+        TCONV_TRACEF(tconvp, "%s - freeing convert engine", funcs);
         (*(tconvp->convertExternal.tconv_convert_freep))(tconvp, tconvp->convertContextp);
       }
     }
     if (tconvp->sharedLibraryHandlep != NULL) {
+      TCONV_TRACEF(tconvp, "%s - closing shared library", funcs);
       if (dlclose(tconvp->sharedLibraryHandlep) != 0) {
-        TCONV_TRACEF(tconvp, "dlclose: %s", strerror(errno));
+        TCONV_ERRORF(tconvp, "%s - dlclose failure, %s", funcs, dlerror());
+        errno = EFAULT;
+        rci = -1;
       }
     }
     free(tconvp);
@@ -87,10 +107,18 @@ int tconv_close(tconv_t tconvp)
 tconv_t tconv_open_ext(const char *tocodes, const char *fromcodes, tconv_option_t *tconvOptionp)
 /****************************************************************************/
 {
-  void            *sharedLibraryHandlep = NULL;
-  tconv_t          tconvp;
+  static const char funcs[] = "tconv_open_ext";
+  void             *sharedLibraryHandlep = NULL;
+  tconv_t           tconvp;
 
-  TCONV_MALLOC(tconvp, tconv_t, sizeof(struct tconv));
+  TCONV_MALLOC(funcs, tconvp, tconv_t, sizeof(struct tconv));
+
+  /* Get the genericLogger asap */
+  if (tconvOptionp != NULL) {
+    tconvp->genericLoggerp = tconvOptionp->genericLoggerp;
+  } else {
+    tconvp->genericLoggerp = NULL;
+  }
 
   tconvp->charsetContextp      = NULL;
   tconvp->convertContextp      = NULL;
@@ -106,9 +134,16 @@ tconv_t tconv_open_ext(const char *tocodes, const char *fromcodes, tconv_option_
         tconvp->charsetExternal = tconvOptionp->charsetp->u.external;
         break;
       case TCONV_CHARSET_PLUGIN:
+        if (tconvOptionp->charsetp->u.plugin.filenames == NULL) {
+          TCONV_ERRORF(tconvp, "%s - null charset plugin filename", funcs);
+          errno = EINVAL;
+          goto err;
+        }
+        TCONV_TRACEF(tconvp, "%s - opening shared library: %s", funcs, tconvOptionp->charsetp->u.plugin.filenames);
         tconvp->sharedLibraryHandlep = dlopen(tconvOptionp->charsetp->u.plugin.filenames, RTLD_LAZY);
         if (tconvp->sharedLibraryHandlep == NULL) {
-          TCONV_TRACEF(tconvp, "dlopen: %s", strerror(errno));
+          TCONV_ERRORF(tconvp, "%s - dlopen failure, %s", funcs, dlerror());
+          errno = EINVAL;
           goto err;
         }
         tconvp->charsetExternal.tconv_charset_newp  = dlsym(tconvp->sharedLibraryHandlep, "tconv_charset_newp");
@@ -140,6 +175,12 @@ tconv_t tconv_open_ext(const char *tocodes, const char *fromcodes, tconv_option_
       if ((tconvp->charsetExternal.tconv_charset_newp == NULL) ||
           (tconvp->charsetExternal.tconv_charset_runp == NULL) ||
           (tconvp->charsetExternal.tconv_charset_freep == NULL)) {
+        TCONV_ERRORF(tconvp,
+                     "%s - at least one charset entry point is invalid: tconv_charset_newp=%p, tconv_charset_runp=%p, tconv_charset_freep=%p",
+                     funcs,
+                     tconvp->charsetExternal.tconv_charset_newp,
+                     tconvp->charsetExternal.tconv_charset_runp,
+                     tconvp->charsetExternal.tconv_charset_freep);
         errno = EINVAL;
         goto err;
       }
@@ -152,9 +193,16 @@ tconv_t tconv_open_ext(const char *tocodes, const char *fromcodes, tconv_option_
         tconvp->convertExternal = tconvOptionp->convertp->u.external;
         break;
       case TCONV_CONVERT_PLUGIN:
+        if (tconvOptionp->convertp->u.plugin.filenames == NULL) {
+          TCONV_ERRORF(tconvp, "%s - null convert filename", funcs);
+          errno = EINVAL;
+          goto err;
+        }
+        TCONV_TRACEF(tconvp, "%s - Opening shared library: %s", funcs, tconvOptionp->convertp->u.plugin.filenames);
         tconvp->sharedLibraryHandlep = dlopen(tconvOptionp->convertp->u.plugin.filenames, RTLD_LAZY);
         if (tconvp->sharedLibraryHandlep == NULL) {
-          TCONV_TRACEF(tconvp, "dlopen: %s", strerror(errno));
+          TCONV_ERRORF(tconvp, "%s - dlopen failure, %s", funcs, dlerror());
+          errno = EINVAL;
           goto err;
         }
         tconvp->convertExternal.tconv_convert_newp  = dlsym(tconvp->sharedLibraryHandlep, "tconv_convert_newp");
@@ -188,6 +236,12 @@ tconv_t tconv_open_ext(const char *tocodes, const char *fromcodes, tconv_option_
       if ((tconvp->convertExternal.tconv_convert_newp == NULL) ||
           (tconvp->convertExternal.tconv_convert_runp == NULL) ||
           (tconvp->convertExternal.tconv_convert_freep == NULL)) {
+        TCONV_ERRORF(tconvp,
+                     "%s - at least one convert entry point is invalid: tconv_convert_newp=%p, tconv_convert_runp=%p, tconv_convert_freep=%p",
+                     funcs,
+                     tconvp->convertExternal.tconv_convert_newp,
+                     tconvp->convertExternal.tconv_convert_runp,
+                     tconvp->convertExternal.tconv_convert_freep);
         errno = EINVAL;
         goto err;
       }
