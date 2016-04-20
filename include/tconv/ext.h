@@ -10,9 +10,9 @@ typedef struct tconv *tconv_t;
 /*****************************/
 /* Charset detection options */
 /*****************************/
-typedef void *(*tconv_charset_new_t) (tconv_t tconvp, void *optionp);
-typedef char *(*tconv_charset_run_t) (tconv_t tconvp, void *contextp, char *bytep, size_t bytel);
-typedef void  (*tconv_charset_free_t)(tconv_t tconvp, void *contextp);
+typedef void *(*tconv_charset_new_t) (genericLogger_t *genericLoggerp, void *optionp);
+typedef char *(*tconv_charset_run_t) (void *contextp, char *bytep, size_t bytel);
+typedef void  (*tconv_charset_free_t)(void *contextp);
 
 /* ------------------------- */
 /* External charset          */
@@ -55,8 +55,8 @@ typedef struct tconv_charset {
   union {
     tconv_charset_external_t         external;
     tconv_charset_plugin_t           plugin;
-    tconv_charset_cchardet_option_t *cchardetOptionp;
     tconv_charset_ICU_option_t      *ICUOptionp;
+    tconv_charset_cchardet_option_t *cchardetOptionp;
   } u;
 } tconv_charset_t;
 

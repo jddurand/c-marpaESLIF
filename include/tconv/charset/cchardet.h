@@ -12,8 +12,8 @@ typedef struct tconv_charset_cchardet_option {
 #include "tconv.h"
 #include "tconv/export.h"
 
-TCONV_NO_EXPORT void *tconv_charset_cchardet_new(tconv_t tconvp, void *optionp);
-TCONV_NO_EXPORT char *tconv_charset_cchardet_run(tconv_t tconvp, void *contextp, char *bytep, size_t bytel);
-TCONV_NO_EXPORT void  tconv_charset_cchardet_free(tconv_t tconvp, void *contextp);
+TCONV_NO_EXPORT void *tconv_charset_cchardet_new(genericLogger_t *genericLoggerp, void *optionp);
+TCONV_NO_EXPORT char *tconv_charset_cchardet_run(void *contextp, char *bytep, size_t bytel);
+TCONV_NO_EXPORT void  tconv_charset_cchardet_free(void *contextp);
 
 #endif /*  TCONV_CHARSET_CCHARDET_H */
