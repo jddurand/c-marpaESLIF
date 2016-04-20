@@ -12,7 +12,7 @@ int main(int argc, char **argv)
   tconvCharset.charseti = TCONV_CONVERT_PLUGIN;
   tconvCharset.u.plugin.filenames = "TOTO";
 
-  tconvOption.charsetp = &tconvCharset;
+  tconvOption.charsetp = NULL;
   tconvOption.convertp = NULL;
   tconvOption.genericLoggerp = GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_TRACE);
 
