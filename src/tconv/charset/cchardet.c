@@ -3,7 +3,7 @@
 #include <errno.h>
 
 #include "charsetdetect.h"
-#include "charset/cchardet.h"
+#include "tconv/charset/cchardet.h"
 
 typedef struct tconv_charset_cchardet_context {
   float confidencef;
@@ -11,10 +11,10 @@ typedef struct tconv_charset_cchardet_context {
 } tconv_charset_cchardet_context_t;
 
 /*****************************************************************************/
-void *tconv_charset_cchardet_new(void *voidp)
+void *tconv_charset_cchardet_new(tconv_t tconvp, void *voidp)
 /*****************************************************************************/
 {
-  tconv_charset_cchardet_t         *optionp  = (tconv_charset_cchardet_t *) voidp;
+  tconv_charset_cchardet_option_t  *optionp  = (tconv_charset_cchardet_option_t *) voidp;
   tconv_charset_cchardet_context_t *contextp = NULL;
   csd_t                             csdp     = NULL;
 
@@ -49,7 +49,7 @@ void *tconv_charset_cchardet_new(void *voidp)
 }
 
 /*****************************************************************************/
-char *tconv_charset_cchardet_run(void *voidp, char *bytep, size_t bytel)
+char *tconv_charset_cchardet_run(tconv_t tconvp, void *voidp, char *bytep, size_t bytel)
 /*****************************************************************************/
 {
   tconv_charset_cchardet_context_t *contextp = (tconv_charset_cchardet_context_t *) voidp;
@@ -99,7 +99,7 @@ char *tconv_charset_cchardet_run(void *voidp, char *bytep, size_t bytel)
 }
 
 /*****************************************************************************/
-void  tconv_charset_cchardet_free(void *voidp)
+void  tconv_charset_cchardet_free(tconv_t tconvp, void *voidp)
 /*****************************************************************************/
 {
   tconv_charset_cchardet_context_t *contextp = (tconv_charset_cchardet_context_t *) voidp;
