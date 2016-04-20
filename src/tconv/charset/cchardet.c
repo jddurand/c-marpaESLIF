@@ -119,12 +119,14 @@ char *tconv_charset_cchardet_run(void *voidp, char *bytep, size_t bytel)
 void  tconv_charset_cchardet_free(void *voidp)
 /*****************************************************************************/
 {
+  static const char            funcs[] = "tconv_charset_cchardet_free";
   tconv_charset_cchardet_context_t *contextp = (tconv_charset_cchardet_context_t *) voidp;
   csd_t                             csdp;
 
   if (contextp != NULL) {
     csdp = contextp->csdp;
     if (csdp != NULL) {
+      TCONV_TRACEF(contextp, "%s - csd_close", funcs);
       csd_close(csdp);
     }
     free(contextp);
