@@ -14,17 +14,19 @@ int main(int argc, char **argv)
   char  *outputs = "    ";
   size_t outputl = strlen(outputs) + 1;
 
-  tconvCharset.charseti = TCONV_CONVERT_PLUGIN;
-  tconvCharset.u.plugin.filenames = "TOTO";
-
-  tconvOption.charsetp = NULL;
+  tconvOption.charsetp = &tconvCharset;
   tconvOption.convertp = NULL;
   tconvOption.genericLoggerp = GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_TRACE);
 
-  tconvp = tconv_open(NULL, NULL);
+  tconvCharset.charseti = TCONV_CHARSET_ICU;
+  tconvCharset.u.ICUOptionp = NULL;
+  tconvp = tconv_open_ext(NULL, NULL, &tconvOption);
+  tconv(tconvp, &inputs, &inputl, &outputs, &outputl);
   tconv_close(tconvp);
 
-  tconvp = tconv_open_ext("UTF-8//IGNORE//TRANSLIT", NULL, &tconvOption);
+  tconvCharset.charseti = TCONV_CHARSET_CCHARDET;
+  tconvCharset.u.cchardetOptionp = NULL;
+  tconvp = tconv_open_ext(NULL, NULL, &tconvOption);
   tconv(tconvp, &inputs, &inputl, &outputs, &outputl);
   tconv_close(tconvp);
 
