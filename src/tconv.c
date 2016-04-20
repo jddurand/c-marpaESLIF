@@ -11,22 +11,44 @@ static char *files = "tconv.c";
 
 /* Internal structure */
 struct tconv {
-  tconv_opt_t             *optp;
-  char                    *tocodes;
-  char                    *fromcodes;
-  /* At the end we always end-up in an "external" configuration */
+  void                    *charsetContextp;
+  void                    *convertContextp;
+  genericLogger_t         *genericLoggerp;
+  /* At the end, we always end up in an "external"-like configuration */
+  tconv_charset_external_t charsetExternal;
+  tconv_convert_external_t convertExternal;
+  /* For cleanup */
   void                    *sharedLibraryHandlep;
-  tconv_charset_external_t charset;
-  tconv_convert_external_t convert;
 };
+
+#ifndef TCONV_NTRACE
+#define TCONV_TRACE(tconvp, msgs) do {                        \
+  if ((tconvp != NULL) && (tconvp->genericLoggerp != NULL)) { \
+    GENERICLOGGER_TRACE(tconvp->genericLoggerp, msgs);        \
+  }                                                           \
+} while (0)
+#define TCONV_TRACEF(tconvp, fmts, ...) do {                         \
+    if ((tconvp != NULL) && (tconvp->genericLoggerp != NULL)) {      \
+    GENERICLOGGER_TRACEF(tconvp->genericLoggerp, fmts, __VA_ARGS__); \
+  }                                                                  \
+} while (0)
+#else
+#define TCONV_TRACE(tconvp, msgs)
+#define TCONV_TRACEF(tconvp, fmts, ...)
+#endif
 
 /* All our functions have an err label if necessary */
 #define TCONV_MALLOC(ptr, type, size) do {                              \
     ptr = (type) malloc(size);						\
     if (ptr == NULL) {							\
+      TCONV_TRACEF(tconvp, "malloc: %s", strerror(errno));              \
       goto err;								\
     }									\
   } while (0)
+
+static TCONV_C_INLINE _tconvDefaultOption(tconv_t tconvp);
+static TCONV_C_INLINE _tconvDefaultCharsetOption(tconv_charset_external_t *tconvCharsetExternalp);
+static TCONV_C_INLINE _tconvDefaultConvertOption(tconv_convert_external_t *tconvConvertExternalp);
 
 /****************************************************************************/
 tconv_t tconv_open(const char *tocodes, const char *fromcodes)
@@ -40,10 +62,21 @@ int tconv_close(tconv_t tconvp)
 /****************************************************************************/
 {
   if (tconvp != NULL) {
-    if (tconvp->optp                 != NULL) { free(tconvp->optp); }
-    if (tconvp->tocodes              != NULL) { free(tconvp->tocodes); }
-    if (tconvp->fromcodes            != NULL) { free(tconvp->fromcodes); }
-    if (tconvp->sharedLibraryHandlep != NULL) { dlclose(tconvp->sharedLibraryHandlep); }
+    if (tconvp->charsetContextp != NULL) {
+      if (tconvp->charsetExternal.tconv_charset_freep != NULL) {
+        tconvp->charsetExternal.tconv_charset_freep(tconvp, tconvp->charsetContextp);
+      }
+    }
+    if (tconvp->convertContextp != NULL) {
+      if (tconvp->convertExternal.tconv_convert_freep != NULL) {
+        (*(tconvp->convertExternal.tconv_convert_freep))(tconvp, tconvp->convertContextp);
+      }
+    }
+    if (tconvp->sharedLibraryHandlep != NULL) {
+      if (dlclose(tconvp->sharedLibraryHandlep) != 0) {
+        TCONV_TRACEF(tconvp, "dlclose: %s", strerror(errno));
+      }
+    }
     free(tconvp);
   }
 
@@ -51,50 +84,7 @@ int tconv_close(tconv_t tconvp)
 }
 
 /****************************************************************************/
-tconv_opt_t *tconv_opt_default()
-/****************************************************************************/
-{
-  tconv_opt_t *optp;
-
-  TCONV_MALLOC(optp, tconv_opt_t *, sizeof(tconv_opt_t));
-
-  /* C89 style */
-
-#if defined(TCONV_HAVE_ICU)
-  optp->charset.detectori                     = TCONV_CHARSET_ICU;
-  optp->charset.u.ICU.confidencei             = 10;
-#else
-  optp->charset.detectori                     = TCONV_CHARSET_CCHARDET;
-  optp->charset.u.cchardet.confidencef        = 0.1f;
-#endif
-
-#if defined(TCONV_HAVE_ICU)
-  optp->convert.converteri                     = TCONV_CONVERT_ICU;
-  optp->convert.u.ICU.bufSizel                 = 0;
-  optp->convert.u.ICU.fromCallbackp            = NULL;
-  optp->convert.u.ICU.fromFallbackp            = NULL;
-  optp->convert.u.ICU.toCallbackp              = NULL;
-  optp->convert.u.ICU.toFallbackp              = NULL;
-#else
-  #if defined(TCONV_HAVE_ICONV)
-  optp->convert.converteri                     = TCONV_CONVERT_ICONV;
-  optp->convert.u.iconv.bufSizel               = 0;
-  optp->convert.u.iconv.translitb              = 0;
-  optp->convert.u.iconv.ignoreb                = 0;
-  #else
-  optp->convert.converteri                     = -1;
-  #endif
-#endif
-  optp->charset.maxl                           = 1024;
-
-  return optp;
-
- err:
-  return NULL;
-}
-
-/****************************************************************************/
-tconv_t tconv_open_ext(const char *tocodes, const char *fromcodes, tconv_opt_t *optp)
+tconv_t tconv_open_ext(const char *tocodes, const char *fromcodes, tconv_option_t *tconvOptionp)
 /****************************************************************************/
 {
   void            *sharedLibraryHandlep = NULL;
@@ -102,80 +92,108 @@ tconv_t tconv_open_ext(const char *tocodes, const char *fromcodes, tconv_opt_t *
 
   TCONV_MALLOC(tconvp, tconv_t, sizeof(struct tconv));
 
-  tconvp->optp           = NULL;
-  tconvp->fromcodes      = NULL;
-  tconvp->tocodes        = NULL;
+  tconvp->charsetContextp      = NULL;
+  tconvp->convertContextp      = NULL;
+  tconvp->sharedLibraryHandlep = NULL;
 
-  /* We always duplicate the options */
-  if (optp != NULL) {
-    TCONV_MALLOC(tconvp->optp, tconv_opt_t *, sizeof(tconv_opt_t));
-    *(tconvp->optp) = *optp;
-  } else {
-    tconvp->optp = tconv_opt_default();
-    if (tconvp->optp == NULL) {
-      goto err;
-    }
-  }
+  /* Validate the options, if any */
+  if (tconvOptionp != NULL) {
 
-  /* Look to the options - at the end we always end up as if it was an */
-  /* "external" thingy.                                                */
-  switch (tconvp->optp->convert.converteri) {
-  case TCONV_CHARSET_ICU:
-    tconvp->charset.optionp             = &(tconvp->optp->charset.u.ICU);
-    /*
-    tconvp->charset.tconv_charset_newp  = tconv_charset_ICU_new;
-    tconvp->charset.tconv_charset_runp  = tconv_charset_ICU_run;
-    tconvp->charset.tconv_charset_freep = tconv_charset_ICU_free;
-    */
-    tconvp->sharedLibraryHandlep        = NULL;
-    break;
-  case TCONV_CHARSET_CCHARDET:
-    tconvp->charset.optionp             = &(tconvp->optp->charset.u.cchardet);
-    tconvp->charset.tconv_charset_newp  = tconv_charset_cchardet_new;
-    tconvp->charset.tconv_charset_runp  = tconv_charset_cchardet_run;
-    tconvp->charset.tconv_charset_freep = tconv_charset_cchardet_free;
-    tconvp->sharedLibraryHandlep        = NULL;
-    break;
-  case TCONV_CHARSET_EXTERNAL:
-    tconvp->charset                     = tconvp->optp->charset.u.external;
-    tconvp->sharedLibraryHandlep        = NULL;
-    break;
-  case TCONV_CHARSET_PLUGIN:
-    /* ------------------------------------------------------------------ */
-    /* If the application is calling us with a plugin configuration       */
-    /* Up to the application to make this call serialized (mutex)         */
-    /* Because in general dlopen/dlclose at least many not be thread-safe */
-    /* ------------------------------------------------------------------ */
-    sharedLibraryHandlep = dlopen(tconvp->optp->charset.u.plugin.filenames, RTLD_LAZY);
-    if (sharedLibraryHandlep == NULL) {
-      goto err;
+    /* Charset */
+    if (tconvOptionp->charsetp != NULL) {
+      switch (tconvOptionp->charsetp->charseti) {
+      case TCONV_CHARSET_EXTERNAL:
+        tconvp->charsetExternal = tconvOptionp->charsetp->u.external;
+        break;
+      case TCONV_CHARSET_PLUGIN:
+        tconvp->sharedLibraryHandlep = dlopen(tconvOptionp->charsetp->u.plugin.filenames, RTLD_LAZY);
+        if (tconvp->sharedLibraryHandlep == NULL) {
+          TCONV_TRACEF(tconvp, "dlopen: %s", strerror(errno));
+          goto err;
+        }
+        tconvp->charsetExternal.tconv_charset_newp  = dlsym(tconvp->sharedLibraryHandlep, "tconv_charset_newp");
+        tconvp->charsetExternal.tconv_charset_runp  = dlsym(tconvp->sharedLibraryHandlep, "tconv_charset_runp");
+        tconvp->charsetExternal.tconv_charset_freep = dlsym(tconvp->sharedLibraryHandlep, "tconv_charset_freep");
+        tconvp->charsetExternal.optionp             = tconvOptionp->charsetp->u.plugin.optionp;
+        break;
+      case TCONV_CHARSET_ICU:
+#ifdef TCONV_HAVE_ICU
+        tconvp->charsetExternal.tconv_charset_newp  = tconv_charset_ICU_new;
+        tconvp->charsetExternal.tconv_charset_runp  = tconv_charset_ICU_run;
+        tconvp->charsetExternal.tconv_charset_freep = tconv_charset_ICU_free;
+        tconvp->charsetExternal.optionp             = tconvOptionp->charsetp->u.cchardetOptionp;
+#endif
+        break;
+      case TCONV_CHARSET_CCHARDET:
+        tconvp->charsetExternal.tconv_charset_newp  = tconv_charset_cchardet_new;
+        tconvp->charsetExternal.tconv_charset_runp  = tconv_charset_cchardet_run;
+        tconvp->charsetExternal.tconv_charset_freep = tconv_charset_cchardet_free;
+        tconvp->charsetExternal.optionp             = tconvOptionp->charsetp->u.ICUOptionp;
+        break;
+      default:
+        tconvp->charsetExternal.tconv_charset_newp  = NULL;
+        tconvp->charsetExternal.tconv_charset_runp  = NULL;
+        tconvp->charsetExternal.tconv_charset_freep = NULL;
+        tconvp->charsetExternal.optionp             = NULL;
+        break;
+      }
+      if ((tconvp->charsetExternal.tconv_charset_newp == NULL) ||
+          (tconvp->charsetExternal.tconv_charset_runp == NULL) ||
+          (tconvp->charsetExternal.tconv_charset_freep == NULL)) {
+        errno = EINVAL;
+        goto err;
+      }
+    } else {    
+      _tconvDefaultCharsetOption(&(tconvp->charsetExternal));
     }
-    tconvp->charset.tconv_charset_newp  = dlsym(sharedLibraryHandlep, "tconv_charset_new");
-    if (tconvp->charset.tconv_charset_newp == NULL) {
-      goto err;
+    if (tconvOptionp->convertp != NULL) {
+      switch (tconvOptionp->convertp->converti) {
+      case TCONV_CONVERT_EXTERNAL:
+        tconvp->convertExternal = tconvOptionp->convertp->u.external;
+        break;
+      case TCONV_CONVERT_PLUGIN:
+        tconvp->sharedLibraryHandlep = dlopen(tconvOptionp->convertp->u.plugin.filenames, RTLD_LAZY);
+        if (tconvp->sharedLibraryHandlep == NULL) {
+          TCONV_TRACEF(tconvp, "dlopen: %s", strerror(errno));
+          goto err;
+        }
+        tconvp->convertExternal.tconv_convert_newp  = dlsym(tconvp->sharedLibraryHandlep, "tconv_convert_newp");
+        tconvp->convertExternal.tconv_convert_runp  = dlsym(tconvp->sharedLibraryHandlep, "tconv_convert_runp");
+        tconvp->convertExternal.tconv_convert_freep = dlsym(tconvp->sharedLibraryHandlep, "tconv_convert_freep");
+        tconvp->convertExternal.optionp             = tconvOptionp->convertp->u.plugin.optionp;
+        break;
+      case TCONV_CONVERT_ICU:
+#ifdef TCONV_HAVE_ICUJDD
+        tconvp->convertExternal.tconv_convert_newp  = tconv_convert_ICU_new;
+        tconvp->convertExternal.tconv_convert_runp  = tconv_convert_ICU_run;
+        tconvp->convertExternal.tconv_convert_freep = tconv_convert_ICU_free;
+        tconvp->convertExternal.optionp             = tconvOptionp->convertp->u.ICUOptionp;
+#endif
+        break;
+      case TCONV_CONVERT_ICONV:
+#ifdef TCONV_HAVE_ICONV
+        tconvp->convertExternal.tconv_convert_newp  = tconv_convert_iconv_new;
+        tconvp->convertExternal.tconv_convert_runp  = tconv_convert_iconv_run;
+        tconvp->convertExternal.tconv_convert_freep = tconv_convert_iconv_free;
+        tconvp->convertExternal.optionp             = tconvOptionp->convertp->u.iconvOptionp;
+#endif
+        break;
+      default:
+        tconvp->convertExternal.tconv_convert_newp  = NULL;
+        tconvp->convertExternal.tconv_convert_runp  = NULL;
+        tconvp->convertExternal.tconv_convert_freep = NULL;
+        tconvp->convertExternal.optionp             = NULL;
+        break;
+      }
+      if ((tconvp->convertExternal.tconv_convert_newp == NULL) ||
+          (tconvp->convertExternal.tconv_convert_runp == NULL) ||
+          (tconvp->convertExternal.tconv_convert_freep == NULL)) {
+        errno = EINVAL;
+        goto err;
+      }
+    } else {    
+      _tconvDefaultConvertOption(&(tconvp->convertExternal));
     }
-    tconvp->charset.tconv_charset_runp  = dlsym(sharedLibraryHandlep, "tconv_charset_run");
-    if (tconvp->charset.tconv_charset_runp == NULL) {
-      goto err;
-    }
-    tconvp->charset.tconv_charset_freep  = dlsym(sharedLibraryHandlep, "tconv_charset_free");
-    if (tconvp->charset.tconv_charset_freep == NULL) {
-      goto err;
-    }
-    tconvp->charset.optionp             = tconvp->optp->charset.u.plugin.optionp;
-    tconvp->sharedLibraryHandlep        = sharedLibraryHandlep;
-    break;
- default:
-   errno = EINVAL;
-   goto err;
-  }
-
-  /* We always duplicate the charsets */
-  if (tocodes != NULL) {
-    TCONV_MALLOC(tconvp->tocodes, char *, strlen(tocodes) + 1);
-  }
-  if (fromcodes != NULL) {
-    TCONV_MALLOC(tconvp->fromcodes, char *, strlen(fromcodes) + 1);
   }
 
   return tconvp;
@@ -184,9 +202,6 @@ tconv_t tconv_open_ext(const char *tocodes, const char *fromcodes, tconv_opt_t *
   {
     int errnol = errno;
     tconv_close(tconvp);
-    if (sharedLibraryHandlep != NULL) {
-      dlclose(sharedLibraryHandlep);
-    }
     errno = errnol;
   }
   return NULL;
@@ -205,3 +220,50 @@ size_t tconv(tconv_t tconvp, char **inbufsp, size_t *inbytesleftlp, char **outbu
   return (size_t)-1;
 }
 
+/****************************************************************************/
+static TCONV_C_INLINE _tconvDefaultOption(tconv_t tconvp)
+/****************************************************************************/
+{
+  tconvp->genericLoggerp = NULL;
+  _tconvDefaultCharsetOption(&(tconvp->charsetExternal));
+  _tconvDefaultConvertOption(&(tconvp->convertExternal));
+}
+
+/****************************************************************************/
+static TCONV_C_INLINE _tconvDefaultCharsetOption(tconv_charset_external_t *tconvCharsetExternalp)
+/****************************************************************************/
+{
+#ifdef TCONV_HAVE_ICU
+  tconvCharsetExternalp->tconv_charset_newp  = tconv_charset_ICU_new;
+  tconvCharsetExternalp->tconv_charset_runp  = tconv_charset_ICU_run;
+  tconvCharsetExternalp->tconv_charset_freep = tconv_charset_ICU_free;
+#else
+  tconvCharsetExternalp->tconv_charset_newp  = tconv_charset_cchardet_new;
+  tconvCharsetExternalp->tconv_charset_runp  = tconv_charset_cchardet_run;
+  tconvCharsetExternalp->tconv_charset_freep = tconv_charset_cchardet_free;
+#endif
+}
+
+/****************************************************************************/
+static TCONV_C_INLINE _tconvDefaultConvertOption(tconv_convert_external_t *tconvConvertExternalp)
+/****************************************************************************/
+{
+#ifdef TCONV_HAVE_ICUJDD
+  tconvConvertExternalp->tconv_convert_newp  = tconv_convert_ICU_new;
+  tconvConvertExternalp->tconv_convert_runp  = tconv_convert_ICU_run;
+  tconvConvertExternalp->tconv_convert_freep = tconv_convert_ICU_free;
+  tconvConvertExternalp->optionp             = NULL;
+#else
+  #ifdef TCONV_HAVE_ICONV
+  tconvConvertExternalp->tconv_convert_newp  = tconv_convert_iconv_new;
+  tconvConvertExternalp->tconv_convert_runp  = tconv_convert_iconv_run;
+  tconvConvertExternalp->tconv_convert_freep = tconv_convert_iconv_free;
+  tconvConvertExternalp->optionp             = NULL;
+  #else
+  tconvConvertExternalp->tconv_convert_newp  = NULL;
+  tconvConvertExternalp->tconv_convert_runp  = NULL;
+  tconvConvertExternalp->tconv_convert_freep = NULL;
+  tconvConvertExternalp->optionp             = NULL;
+  #endif
+#endif
+}

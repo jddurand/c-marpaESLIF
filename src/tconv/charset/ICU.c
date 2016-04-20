@@ -3,7 +3,7 @@
 #include <errno.h>
 
 #include <unicode/ucsdet.h>
-#include "charset/ICU.h"
+#include "tconv/charset/ICU.h"
 
 typedef struct tconv_charset_ICU_context {
   int               confidencei;
@@ -11,10 +11,10 @@ typedef struct tconv_charset_ICU_context {
 } tconv_charset_ICU_context_t;
 
 /*****************************************************************************/
-void *tconv_charset_ICU_new(void *voidp)
+void *tconv_charset_ICU_new(tconv_t tconvp, void *voidp)
 /*****************************************************************************/
 {
-  tconv_charset_ICU_t         *optionp  = (tconv_charset_ICU_t *) voidp;
+  tconv_charset_ICU_option_t  *optionp  = (tconv_charset_ICU_option_t *) voidp;
   tconv_charset_ICU_context_t *contextp = NULL;
   UCharsetDetector            *uCharsetDetectorp = NULL;
   UErrorCode                   uErrorCode;
@@ -53,7 +53,7 @@ void *tconv_charset_ICU_new(void *voidp)
 }
 
 /*****************************************************************************/
-char *tconv_charset_ICU_run(void *voidp, char *bytep, size_t bytel)
+char *tconv_charset_ICU_run(tconv_t tconvp, void *voidp, char *bytep, size_t bytel)
 /*****************************************************************************/
 {
   tconv_charset_ICU_context_t *contextp = (tconv_charset_ICU_context_t *) voidp;
@@ -128,7 +128,7 @@ char *tconv_charset_ICU_run(void *voidp, char *bytep, size_t bytel)
 }
 
 /*****************************************************************************/
-void  tconv_charset_ICU_free(void *voidp)
+void  tconv_charset_ICU_free(tconv_t tconvp, void *voidp)
 /*****************************************************************************/
 {
   tconv_charset_ICU_context_t *contextp = (tconv_charset_ICU_context_t *) voidp;

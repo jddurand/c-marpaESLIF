@@ -72,6 +72,14 @@ EXECUTE_PROCESS(COMMAND "${CMAKE_COMMAND}" -E make_directory "${3RDPARTY_OUTPUT_
 INCLUDE (FindInline)
 SET     (TCONV_C_INLINE "${C_INLINE}")
 
+# -----------------------------------
+# genericLogger: required
+# -----------------------------------
+FIND_PACKAGE (genericLogger)
+IF (NOT GENERICLOGGER_FOUND)
+    MESSAGE (FATAL_ERROR "genericLogger must be detected")
+ENDIF ()
+
 # ----------------------------------
 # ccharset Charset Provider: builtin
 # ----------------------------------
@@ -175,6 +183,7 @@ INCLUDE_DIRECTORIES(
   "${INCLUDE_OUTPUT_PATH}"                                # Include path for generated files (internal)
   "${PROJECT_SOURCE_DIR}/include"                         # Include path for the other headers (internal)
   "${CCHARDET_INCLUDE_DIR}"                               # Include path for ccharset (internal)
+  "${GENERICLOGGER_INCLUDE_DIRS}"                         # Include path for genericLogger (external - required)
 #   "${TINYCTHREAD_INCLUDE_DIR}"                            # Include path for tinycthread (internal)
   )
 IF (ICU_FOUND)
@@ -188,27 +197,27 @@ IF (DLFCNWIN32_FOUND)
 ENDIF (DLFCNWIN32_FOUND)
 
 # SET (CMAKE_CPP_FLAGS           "${CMAKE_CPP_FLAGS}                $ENV{CPPFLAGS} ${ICU_CPP_FLAGS}")
-SET (CMAKE_C_FLAGS             "${CMAKE_C_FLAGS}                  $ENV{CFLAGS}   ${ICU_C_FLAGS_SHARED}")
-SET (CMAKE_CXX_FLAGS           "${CMAKE_CXX_FLAGS}                $ENV{CFLAGS}   ${ICU_CXX_FLAGS_SHARED}")
-SET (CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS_INIT} $ENV{LDFLAGS}  ${ICU_LDFLAGS}")
-SET (CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS_INIT} $ENV{LDFLAGS}  ${ICU_LDFLAGS}")
-SET (CMAKE_EXE_LINKER_FLAGS    "${CMAKE_EXE_LINKER_FLAGS_INIT}    $ENV{LDFLAGS}  ${ICU_LDFLAGS}")
+SET (CMAKE_C_FLAGS             "${CMAKE_C_FLAGS}                  $ENV{CFLAGS}   ${ICU_C_FLAGS_SHARED} ${GENERICLOGGER_C_FLAGS_SHARED}")
+SET (CMAKE_CXX_FLAGS           "${CMAKE_CXX_FLAGS}                $ENV{CFLAGS}   ${ICU_CXX_FLAGS_SHARED} ${GENERICLOGGER_CXX_FLAGS_SHARED}")
+SET (CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS_INIT} $ENV{LDFLAGS}  ${ICU_LDFLAGS} ${GENERICLOGGER_LDFLAGS}")
+SET (CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS_INIT} $ENV{LDFLAGS}  ${ICU_LDFLAGS} ${GENERICLOGGER_LDFLAGS}")
+SET (CMAKE_EXE_LINKER_FLAGS    "${CMAKE_EXE_LINKER_FLAGS_INIT}    $ENV{LDFLAGS}  ${ICU_LDFLAGS} ${GENERICLOGGER_LDFLAGS}")
 
 #############################
 # Makefile details
 #############################
 FILE (GLOB lib_header include/*.h "${PROJECT_SOURCE_DIR}/output/include/*.h")
 FILE (GLOB lib_src src/*.c)
-FILE (GLOB lib_src_charset_cchardet src/charset/cchardet.c)
+FILE (GLOB lib_src_charset_cchardet src/tconv/charset/cchardet.c)
 IF (ICU_FOUND)
-  FILE (GLOB lib_src_charset_ICU src/charset/ICU.c)
-  FILE (GLOB lib_src_convert_ICU src/convert/ICU.c)
+  FILE (GLOB lib_src_charset_ICU src/tconv/charset/ICU.c)
+  FILE (GLOB lib_src_convert_ICU src/tconv/convert/ICU.c)
 ENDIF (ICU_FOUND)
 IF (ICONV_FOUND)
   IF (WINICONV_SRC)
-    FILE (GLOB lib_src_convert_iconv src/convert/iconv.c "${WINICONV_SRC}")
+    FILE (GLOB lib_src_convert_iconv src/tconv/convert/iconv.c "${WINICONV_SRC}")
   ELSE (WINICONV_SRC)
-    FILE (GLOB lib_src_convert_iconv src/convert/iconv.c)
+    FILE (GLOB lib_src_convert_iconv src/tconv/convert/iconv.c)
   ENDIF (WINICONV_SRC)
 ENDIF (ICONV_FOUND)
 ADD_LIBRARY (tconv SHARED
@@ -234,10 +243,11 @@ SET_TARGET_PROPERTIES (tconv
 # ------------
 INCLUDE (GenerateExportHeader)
 ADD_COMPILER_EXPORT_FLAGS ()
+EXECUTE_PROCESS(COMMAND "${CMAKE_COMMAND}" -E make_directory "${INCLUDE_OUTPUT_PATH}/tconv")
 GENERATE_EXPORT_HEADER(tconv
     BASE_NAME tconv
     EXPORT_MACRO_NAME TCONV_EXPORT
-    EXPORT_FILE_NAME "${INCLUDE_OUTPUT_PATH}/tconv_export.h"
+    EXPORT_FILE_NAME "${INCLUDE_OUTPUT_PATH}/tconv/export.h"
     STATIC_DEFINE TCONV_STATIC)
 
 # -----
