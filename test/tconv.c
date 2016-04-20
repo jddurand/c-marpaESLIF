@@ -19,7 +19,7 @@ int main(int argc, char **argv)
   tconvp = tconv_open(NULL, NULL);
   tconv_close(tconvp);
 
-  tconvp = tconv_open_ext(NULL, NULL, &tconvOption);
+  tconvp = tconv_open_ext("TO", "FROM", &tconvOption);
   tconv_close(tconvp);
 
   GENERICLOGGER_FREE(tconvOption.genericLoggerp);
