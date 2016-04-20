@@ -9,12 +9,19 @@
 /* For logging */
 static char *files = "tconv.c";
 
+/* Default options for built-ins */
+static tconv_charset_ICU_option_t tconv_charset_ICU_option_default = { 10 };
+static tconv_charset_ICU_option_t tconv_charset_cchardet_option_default = { 10 };
+
+
 /* Internal structure */
 struct tconv {
   void                    *charsetContextp;
   void                    *convertContextp;
   char                    *tocodes;
   char                    *fromcodes;
+  char                    *charsetBytep;
+  size_t                   charsetBytel;
   genericLogger_t         *genericLoggerp;
   /* At the end, we always end up in an "external"-like configuration */
   tconv_charset_external_t charsetExternal;
@@ -72,9 +79,9 @@ struct tconv {
     }									\
   } while (0)
 
-static TCONV_C_INLINE _tconvDefaultOption(tconv_t tconvp);
-static TCONV_C_INLINE _tconvDefaultCharsetOption(tconv_t tconvp, tconv_charset_external_t *tconvCharsetExternalp);
-static TCONV_C_INLINE _tconvDefaultConvertOption(tconv_t tconvp, tconv_convert_external_t *tconvConvertExternalp);
+static TCONV_C_INLINE void _tconvDefaultOption(tconv_t tconvp);
+static TCONV_C_INLINE void _tconvDefaultCharsetOption(tconv_t tconvp, tconv_charset_external_t *tconvCharsetExternalp);
+static TCONV_C_INLINE void _tconvDefaultConvertOption(tconv_t tconvp, tconv_convert_external_t *tconvConvertExternalp);
 
 /****************************************************************************/
 tconv_t tconv_open(const char *tocodes, const char *fromcodes)
@@ -119,6 +126,10 @@ int tconv_close(tconv_t tconvp)
         rci = -1;
       }
     }
+    if (tconvp->charsetBytep != NULL) {
+      TCONV_TRACEF(tconvp, "%s - freeing copy of first bytes", funcs);
+      free(tconvp->charsetBytep);
+    }
     free(tconvp);
   }
 
@@ -145,6 +156,8 @@ tconv_t tconv_open_ext(const char *tocodes, const char *fromcodes, tconv_option_
   tconvp->charsetContextp      = NULL;
   tconvp->convertContextp      = NULL;
   tconvp->sharedLibraryHandlep = NULL;
+  tconvp->charsetBytep         = NULL;
+  tconvp->charsetBytel         = 0;
 
   /* Always keep a copy of tocodes and from*/
   if (tocodes != NULL) {
@@ -217,15 +230,9 @@ tconv_t tconv_open_ext(const char *tocodes, const char *fromcodes, tconv_option_
         tconvp->charsetExternal.optionp             = NULL;
         break;
       }
-      if ((tconvp->charsetExternal.tconv_charset_newp == NULL) ||
-          (tconvp->charsetExternal.tconv_charset_runp == NULL) ||
-          (tconvp->charsetExternal.tconv_charset_freep == NULL)) {
-        TCONV_ERRORF(tconvp,
-                     "%s - at least one charset entry point is invalid: tconv_charset_newp=%p, tconv_charset_runp=%p, tconv_charset_freep=%p",
-                     funcs,
-                     tconvp->charsetExternal.tconv_charset_newp,
-                     tconvp->charsetExternal.tconv_charset_runp,
-                     tconvp->charsetExternal.tconv_charset_freep);
+      if (tconvp->charsetExternal.tconv_charset_runp == NULL) {
+        /* Formally, only the "run" entry point is required */
+        TCONV_ERRORF(tconvp, "%s - tconv_charset_runp is NULL", funcs);
         errno = EINVAL;
         goto err;
       }
@@ -300,6 +307,8 @@ tconv_t tconv_open_ext(const char *tocodes, const char *fromcodes, tconv_option_
       TCONV_TRACEF(tconvp, "%s - setting default converter options", funcs);
       _tconvDefaultConvertOption(tconvp, &(tconvp->convertExternal));
     }
+  } else {
+    _tconvDefaultOption(tconvp);
   }
 
   return tconvp;
@@ -317,11 +326,42 @@ tconv_t tconv_open_ext(const char *tocodes, const char *fromcodes, tconv_option_
 size_t tconv(tconv_t tconvp, char **inbufsp, size_t *inbytesleftlp, char **outbufsp, size_t *outbytesleftlp)
 /****************************************************************************/
 {
-  static const char funcs[] = "tconv";
+  static const char funcs[]         = "tconv";
+  void             *charsetContextp = NULL;
+  void             *charsetOptionp  = NULL;
+  char             *fromcodes       = NULL;
 
   if (tconvp == NULL) {
     errno = EINVAL;
     goto err;
+  }
+
+  if ((tconvp->fromcodes == NULL) &&
+      (inbufsp != NULL)           &&
+      (*inbufsp != NULL)          &&
+      (inbytesleftlp != NULL)     &&
+      (*inbytesleftlp > 0)) {
+    /* Use that to detect charset */
+    charsetOptionp = tconvp->charsetExternal.optionp;
+    if (tconvp->charsetExternal.tconv_charset_newp != NULL) {
+      TCONV_TRACEF(tconvp, "%s - initializing charset detection", funcs);
+      charsetContextp = tconvp->charsetExternal.tconv_charset_newp(tconvp, charsetOptionp);
+    }
+    tconvp->charsetContextp = charsetContextp;
+    TCONV_TRACEF(tconvp, "%s - calling charset detection", funcs);
+    fromcodes = tconvp->charsetExternal.tconv_charset_runp(tconvp, charsetContextp, *inbufsp, *inbytesleftlp);
+    if (fromcodes != NULL) {
+      TCONV_TRACEF(tconvp, "%s - charset detection returned %s", funcs, fromcodes);
+      TCONV_TRACEF(tconvp, "%s - duplicating \"to\" code %s", funcs, fromcodes);
+      TCONV_MALLOC(funcs, tconvp->fromcodes, char *, sizeof(char) * (strlen(fromcodes) + 1));
+      strcpy(tconvp->fromcodes, fromcodes);
+      if (tconvp->charsetExternal.tconv_charset_freep != NULL) {
+        /* It worked the very first time, we can remove the context right now */
+        TCONV_TRACEF(tconvp, "%s - ending charset detection", funcs);
+        tconvp->charsetExternal.tconv_charset_freep(tconvp, charsetContextp);
+      }
+      tconvp->charsetContextp = NULL;
+    }
   }
 
  err:
@@ -329,7 +369,7 @@ size_t tconv(tconv_t tconvp, char **inbufsp, size_t *inbytesleftlp, char **outbu
 }
 
 /****************************************************************************/
-static TCONV_C_INLINE _tconvDefaultOption(tconv_t tconvp)
+static TCONV_C_INLINE void _tconvDefaultOption(tconv_t tconvp)
 /****************************************************************************/
 {
   static const char funcs[] = "_tconvDefaultOption";
@@ -342,18 +382,20 @@ static TCONV_C_INLINE _tconvDefaultOption(tconv_t tconvp)
 }
 
 /****************************************************************************/
-static TCONV_C_INLINE _tconvDefaultCharsetOption(tconv_t tconvp, tconv_charset_external_t *tconvCharsetExternalp)
+static TCONV_C_INLINE void _tconvDefaultCharsetOption(tconv_t tconvp, tconv_charset_external_t *tconvCharsetExternalp)
 /****************************************************************************/
 {
   static const char funcs[] = "_tconvDefaultCharsetOption";
 
 #ifdef TCONV_HAVE_ICU
   TCONV_TRACEF(tconvp, "%s - setting default charset detector to ICU", funcs);
+  tconvCharsetExternalp->optionp             = &tconv_charset_ICU_option_default;
   tconvCharsetExternalp->tconv_charset_newp  = tconv_charset_ICU_new;
   tconvCharsetExternalp->tconv_charset_runp  = tconv_charset_ICU_run;
   tconvCharsetExternalp->tconv_charset_freep = tconv_charset_ICU_free;
 #else
   TCONV_TRACEF(tconvp, "%s - setting default charset detector to cchardet", funcs);
+  tconvCharsetExternalp->optionp             = &tconv_charset_cchardet_option_default;
   tconvCharsetExternalp->tconv_charset_newp  = tconv_charset_cchardet_new;
   tconvCharsetExternalp->tconv_charset_runp  = tconv_charset_cchardet_run;
   tconvCharsetExternalp->tconv_charset_freep = tconv_charset_cchardet_free;
@@ -361,30 +403,30 @@ static TCONV_C_INLINE _tconvDefaultCharsetOption(tconv_t tconvp, tconv_charset_e
 }
 
 /****************************************************************************/
- static TCONV_C_INLINE _tconvDefaultConvertOption(tconv_t tconvp, tconv_convert_external_t *tconvConvertExternalp)
+ static TCONV_C_INLINE void _tconvDefaultConvertOption(tconv_t tconvp, tconv_convert_external_t *tconvConvertExternalp)
 /****************************************************************************/
 {
   static const char funcs[] = "_tconvDefaultConvertOption";
 
 #ifdef TCONV_HAVE_ICUJDD
   TCONV_TRACEF(tconvp, "%s - setting default converter to ICU", funcs);
+  tconvConvertExternalp->optionp             = NULL;
   tconvConvertExternalp->tconv_convert_newp  = tconv_convert_ICU_new;
   tconvConvertExternalp->tconv_convert_runp  = tconv_convert_ICU_run;
   tconvConvertExternalp->tconv_convert_freep = tconv_convert_ICU_free;
-  tconvConvertExternalp->optionp             = NULL;
 #else
   #ifdef TCONV_HAVE_ICONV
   TCONV_TRACEF(tconvp, "%s - setting default converter to iconv", funcs);
+  tconvConvertExternalp->optionp             = NULL;
   tconvConvertExternalp->tconv_convert_newp  = tconv_convert_iconv_new;
   tconvConvertExternalp->tconv_convert_runp  = tconv_convert_iconv_run;
   tconvConvertExternalp->tconv_convert_freep = tconv_convert_iconv_free;
-  tconvConvertExternalp->optionp             = NULL;
   #else
   TCONV_TRACEF(tconvp, "%s - setting default converter to unknown", funcs);
+  tconvConvertExternalp->optionp             = NULL;
   tconvConvertExternalp->tconv_convert_newp  = NULL;
   tconvConvertExternalp->tconv_convert_runp  = NULL;
   tconvConvertExternalp->tconv_convert_freep = NULL;
-  tconvConvertExternalp->optionp             = NULL;
   #endif
 #endif
 }
