@@ -19,8 +19,8 @@ void *tconv_charset_cchardet_new(genericLogger_t *genericLoggerp, void *voidp)
 {
   static const char            funcs[] = "tconv_charset_cchardet_new";
   tconv_charset_cchardet_option_t  *optionp  = (tconv_charset_cchardet_option_t *) voidp;
-  tconv_charset_cchardet_context_t *contextp = NULL;
-  csd_t                             csdp     = NULL;
+  tconv_charset_cchardet_context_t *contextp;
+  csd_t                             csdp;
 
  /* Get logger asap */
   contextp = malloc(sizeof(tconv_charset_cchardet_context_t));
@@ -62,7 +62,7 @@ void *tconv_charset_cchardet_new(genericLogger_t *genericLoggerp, void *voidp)
 char *tconv_charset_cchardet_run(void *voidp, char *bytep, size_t bytel)
 /*****************************************************************************/
 {
-  static const char            funcs[] = "tconv_charset_cchardet_run";
+  static const char                 funcs[] = "tconv_charset_cchardet_run";
   tconv_charset_cchardet_context_t *contextp = (tconv_charset_cchardet_context_t *) voidp;
   int                               csdi;
   csd_t                             csdp;
@@ -119,7 +119,7 @@ char *tconv_charset_cchardet_run(void *voidp, char *bytep, size_t bytel)
 void  tconv_charset_cchardet_free(void *voidp)
 /*****************************************************************************/
 {
-  static const char            funcs[] = "tconv_charset_cchardet_free";
+  static const char                 funcs[] = "tconv_charset_cchardet_free";
   tconv_charset_cchardet_context_t *contextp = (tconv_charset_cchardet_context_t *) voidp;
   csd_t                             csdp;
 

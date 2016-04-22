@@ -64,9 +64,9 @@ typedef struct tconv_charset {
 /* Conversion options */
 /**********************/
 
-typedef void   *(*tconv_convert_new_t) (tconv_t tconvp, const char *tocodes, const char *fromcodes, void *optionp);
-typedef size_t  (*tconv_convert_run_t)  (tconv_t tconvp, void *contextp, char **inbufsp, size_t *inbytesleftlp, char **outbufsp, size_t *outbytesleftlp);
-typedef int     (*tconv_convert_free_t)(tconv_t tconvp, void *contextp);
+typedef void   *(*tconv_convert_new_t) (genericLogger_t *genericLoggerp, const char *tocodes, const char *fromcodes, void *optionp);
+typedef size_t  (*tconv_convert_run_t)  (void *contextp, char **inbufsp, size_t *inbytesleftlp, char **outbufsp, size_t *outbytesleftlp);
+typedef int     (*tconv_convert_free_t)(void *contextp);
 
 /* ------------------ */
 /* External converter */

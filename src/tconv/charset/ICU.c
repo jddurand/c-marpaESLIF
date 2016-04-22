@@ -19,8 +19,8 @@ void *tconv_charset_ICU_new(genericLogger_t *genericLoggerp, void *voidp)
 {
   static const char            funcs[] = "tconv_charset_ICU_new";
   tconv_charset_ICU_option_t  *optionp  = (tconv_charset_ICU_option_t *) voidp;
-  tconv_charset_ICU_context_t *contextp = NULL;
-  UCharsetDetector            *uCharsetDetectorp = NULL;
+  tconv_charset_ICU_context_t *contextp;
+  UCharsetDetector            *uCharsetDetectorp;
   UErrorCode                   uErrorCode;
 
   /* Get logger asap */
