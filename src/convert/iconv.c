@@ -56,6 +56,8 @@ void  *tconv_convert_iconv_open(const char *tocodes, const char *fromcodes, void
     goto err;
   }
 
+  free(realtocodes);
+
   return iconvp;
   
  err:
