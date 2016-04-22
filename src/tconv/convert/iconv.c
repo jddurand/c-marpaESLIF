@@ -12,43 +12,13 @@
 void  *tconv_convert_iconv_new(tconv_t tconvp, const char *tocodes, const char *fromcodes, void *voidp)
 /*****************************************************************************/
 {
-  tconv_convert_iconv_option_t *optionp     = (tconv_convert_iconv_option_t *) voidp;
-  char                         *realtocodes = NULL;
-  char                         *p;
   iconv_t                       iconvp;
-
   
-  if ((optionp == NULL) || (tocodes == NULL) || (fromcodes == NULL)) {
+  if ((tocodes == NULL) || (fromcodes == NULL)) {
     goto err;
   }
 
-  /* //TRANSLIT and //IGNORE are managed via the options */
-  realtocodes = strdup(tocodes);
-  if (realtocodes == NULL) {
-    goto err;
-  }
-  p = strchr(realtocodes, '/');
-  if (p != NULL) {
-    *p = '\0';
-  }
-  if (optionp->translitb != 0) {
-    p = realloc(realtocodes, strlen(realtocodes) + strlen(TCONV_CONVERT_ICONV_TRANSLIT) + 1);
-    if (p == NULL) {
-      goto err;
-    }
-    realtocodes = p;
-    strcat(realtocodes, TCONV_CONVERT_ICONV_TRANSLIT);
-  }
-  if (optionp->ignoreb != 0) {
-    p = realloc(realtocodes, strlen(realtocodes) + strlen(TCONV_CONVERT_ICONV_IGNORE) + 1);
-    if (p == NULL) {
-      goto err;
-    }
-    realtocodes = p;
-    strcat(realtocodes, TCONV_CONVERT_ICONV_IGNORE);
-  }
-
-  iconvp = iconv_open(realtocodes, fromcodes);
+  iconvp = iconv_open(tocodes, fromcodes);
   if (iconvp == NULL) {
     goto err;
   }
@@ -56,11 +26,7 @@ void  *tconv_convert_iconv_new(tconv_t tconvp, const char *tocodes, const char *
   return iconvp;
   
  err:
-  {
-    int errnol = errno;
-    if (realtocodes != NULL) { free(realtocodes); }
-    errno = errnol;
-  }
+  errno = EINVAL;
   return NULL;
 }
 
