@@ -5,9 +5,6 @@
 
 #include "tconv/convert/iconv.h"
 
-#define TCONV_CONVERT_ICONV_TRANSLIT "//TRANSLIT"
-#define TCONV_CONVERT_ICONV_IGNORE "//IGNORE"
-
 /*****************************************************************************/
 void  *tconv_convert_iconv_new(tconv_t tconvp, const char *tocodes, const char *fromcodes, void *voidp)
 /*****************************************************************************/
