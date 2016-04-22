@@ -3,10 +3,7 @@
 
 #include <stddef.h>
 
-typedef struct tconv_convert_iconv_option {
-  short translitb;                 /* Default:    0 */
-  short ignoreb;                   /* Default:    0 */
-} tconv_convert_iconv_option_t;
+typedef void tconv_convert_iconv_option_t; /* There is no specific iconv option */
 
 #include "tconv.h"
 #include "tconv/export.h"
