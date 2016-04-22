@@ -68,7 +68,7 @@ int tconv_close(tconv_t tconvp)
     if (tconvp->convertContextp != NULL) {
       if (tconvp->convertExternal.tconv_convert_freep != NULL) {
         TCONV_TRACEF(tconvp, "%s - freeing convert engine", funcs);
-        (*(tconvp->convertExternal.tconv_convert_freep))(tconvp, tconvp->convertContextp);
+        (*(tconvp->convertExternal.tconv_convert_freep))(tconvp->convertContextp);
       }
     }
     if (tconvp->tocodes != NULL) {
