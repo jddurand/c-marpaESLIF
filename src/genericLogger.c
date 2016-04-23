@@ -1,6 +1,7 @@
 #include "genericLoggerRuntime.h"
 
 #ifdef C_VA_COPY
+/* Used when passing a va_list on the stack to another function taking a va_list */
 #define REAL_AP ap2
 #else
 #define REAL_AP ap
@@ -129,8 +130,18 @@ static C_INLINE void _genericLogger_defaultCallbackp(void *userDatavp, genericLo
 /* genericLogger_logv */
 /**********************/
 void genericLogger_logv(genericLogger_t *genericLoggerp, genericLoggerLevel_t genericLoggerLeveli, const char *fmts, ...) {
-  va_list                  ap;
-#ifdef VA_COPY
+  va_list ap;
+
+  va_start(ap, fmts);
+  genericLogger_logapv(genericLoggerp, genericLoggerLeveli, fmts, ap);
+  va_end(ap);
+}
+
+/************************/
+/* genericLogger_logapv */
+/************************/
+void genericLogger_logapv(genericLogger_t *genericLoggerp, genericLoggerLevel_t genericLoggerLeveli, const char *fmts, va_list ap) {
+#ifdef C_VA_COPY
   va_list                  ap2;
 #endif
   char                    *msgs;
@@ -155,15 +166,13 @@ void genericLogger_logv(genericLogger_t *genericLoggerp, genericLoggerLevel_t ge
 
   if (genericLoggerLeveli >= genericLoggerDefaultLogLeveli) {
 
-    va_start(ap, fmts);
-#ifdef VA_COPY
-    VA_COPY(ap2, ap);
-    msgs = (fmts != NULL) ? _messageBuilder_aps(fmts, ap2) : (char *) emptyMessages;
-    va_end(ap2);
-#else
-    msgs = (fmts != NULL) ? _messageBuilder_aps(fmts, ap) : (char *) emptyMessages;
+#ifdef C_VA_COPY
+    C_VA_COPY(ap2, ap);
 #endif
-    va_end(ap);
+    msgs = (fmts != NULL) ? _messageBuilder_aps(fmts, REAL_AP) : (char *) emptyMessages;
+#ifdef C_VA_COPY
+    va_end(ap2);
+#endif
 
     if (msgs != _messageBuilder_internalErrors) {
       logCallbackp(userDatavp, genericLoggerLeveli, msgs);
@@ -176,7 +185,6 @@ void genericLogger_logv(genericLogger_t *genericLoggerp, genericLoggerLevel_t ge
       free(msgs);
     }
   }
-
 }
 
 /***************/
@@ -218,19 +226,10 @@ static C_INLINE char *_dateBuilders(const char *fmts) {
 /*******************/
 static C_INLINE char *_messageBuilders(const char *fmts, ...) {
   va_list ap;
-#ifdef C_VA_COPY
-  va_list ap2;
-#endif
   char   *msgs;
 
   va_start(ap, fmts);
-#ifdef C_VA_COPY
-  C_VA_COPY(ap2, ap);
-#endif
-  msgs = _messageBuilder_aps(fmts,  REAL_AP);
-#ifdef C_VA_COPY
-  va_end(ap2);
-#endif
+  msgs = _messageBuilder_aps(fmts, ap);
   va_end(ap);
 
   return msgs;

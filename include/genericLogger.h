@@ -1,6 +1,8 @@
 #ifndef GENERICLOGGER_H
 #define GENERICLOGGER_H
 
+#include <stdarg.h>
+
 /************************************************************************************************/
 /* Naming convention:                                                                           */
 /* - all functions start with genericStreaming                                                  */
@@ -52,33 +54,43 @@ typedef void (*genericLoggerCallback_t)(void *userDatavp, genericLoggerLevel_t l
 
 #define GENERICLOGGER_LOG(genericLoggerp, logLeveli, msgs)                  genericLogger_logv((genericLoggerp), (logLeveli), (msgs))
 #define GENERICLOGGER_LOGF(genericLoggerp, logLeveli, fmts, ...)            genericLogger_logv((genericLoggerp), (logLeveli), (fmts), __VA_ARGS__)
+#define GENERICLOGGER_LOGAP(genericLoggerp, logLeveli, fmts, ap)            genericLogger_logapv((genericLoggerp), (logLeveli), (fmts), (ap))
 
 #define GENERICLOGGER_TRACE(genericLoggerp, msgs)                           GENERICLOGGER_LOG ((genericLoggerp), GENERICLOGGER_LOGLEVEL_TRACE, (msgs))
 #define GENERICLOGGER_TRACEF(genericLoggerp, fmts, ...)                     GENERICLOGGER_LOGF((genericLoggerp), GENERICLOGGER_LOGLEVEL_TRACE, (fmts), __VA_ARGS__)
+#define GENERICLOGGER_TRACEAP(genericLoggerp, fmts, ap)                     GENERICLOGGER_LOGAP((genericLoggerp), GENERICLOGGER_LOGLEVEL_TRACE, (fmts), (ap))
 
 #define GENERICLOGGER_DEBUG(genericLoggerp, msgs)                           GENERICLOGGER_LOG ((genericLoggerp), GENERICLOGGER_LOGLEVEL_DEBUG, (msgs))
 #define GENERICLOGGER_DEBUGF(genericLoggerp, fmts, ...)                     GENERICLOGGER_LOGF((genericLoggerp), GENERICLOGGER_LOGLEVEL_DEBUG, (fmts), __VA_ARGS__)
+#define GENERICLOGGER_DEBUGAP(genericLoggerp, fmts, ap)                     GENERICLOGGER_LOGAP((genericLoggerp), GENERICLOGGER_LOGLEVEL_DEBUG, (fmts), (ap))
 
 #define GENERICLOGGER_INFO(genericLoggerp, msgs)                            GENERICLOGGER_LOG ((genericLoggerp), GENERICLOGGER_LOGLEVEL_INFO, (msgs))
 #define GENERICLOGGER_INFOF(genericLoggerp, fmts, ...)                      GENERICLOGGER_LOGF((genericLoggerp), GENERICLOGGER_LOGLEVEL_INFO, (fmts), __VA_ARGS__)
+#define GENERICLOGGER_INFOAP(genericLoggerp, fmts, ap)                      GENERICLOGGER_LOGAP((genericLoggerp), GENERICLOGGER_LOGLEVEL_INFO, (fmts), (ap))
 
 #define GENERICLOGGER_NOTICE(genericLoggerp, msgs)                          GENERICLOGGER_LOG ((genericLoggerp), GENERICLOGGER_LOGLEVEL_NOTICE, (msgs))
 #define GENERICLOGGER_NOTICEF(genericLoggerp, fmts, ...)                    GENERICLOGGER_LOGF((genericLoggerp), GENERICLOGGER_LOGLEVEL_NOTICE, (fmts), __VA_ARGS__)
+#define GENERICLOGGER_NOTICEAP(genericLoggerp, fmts, ap)                    GENERICLOGGER_LOGAP((genericLoggerp), GENERICLOGGER_LOGLEVEL_NOTICE, (fmts), (ap))
 
 #define GENERICLOGGER_WARN(genericLoggerp, msgs)                            GENERICLOGGER_LOG ((genericLoggerp), GENERICLOGGER_LOGLEVEL_WARNING, (msgs))
 #define GENERICLOGGER_WARNF(genericLoggerp, fmts, ...)                      GENERICLOGGER_LOGF((genericLoggerp), GENERICLOGGER_LOGLEVEL_WARNING, (fmts), __VA_ARGS__)
+#define GENERICLOGGER_WARNAP(genericLoggerp, fmts, ap)                      GENERICLOGGER_LOGAP((genericLoggerp), GENERICLOGGER_LOGLEVEL_WARNING, (fmts), (ap))
 
 #define GENERICLOGGER_ERROR(genericLoggerp, msgs)                           GENERICLOGGER_LOG ((genericLoggerp), GENERICLOGGER_LOGLEVEL_ERROR, (msgs))
 #define GENERICLOGGER_ERRORF(genericLoggerp, fmts, ...)                     GENERICLOGGER_LOGF((genericLoggerp), GENERICLOGGER_LOGLEVEL_ERROR, (fmts), __VA_ARGS__)
+#define GENERICLOGGER_ERRORAP(genericLoggerp, fmts, ap)                     GENERICLOGGER_LOGAP((genericLoggerp), GENERICLOGGER_LOGLEVEL_ERROR, (fmts), (ap))
 
 #define GENERICLOGGER_CRITICAL(genericLoggerp, msgs)                        GENERICLOGGER_LOG ((genericLoggerp), GENERICLOGGER_LOGLEVEL_CRITICAL, (msgs))
 #define GENERICLOGGER_CRITICALF(genericLoggerp, fmts, ...)                  GENERICLOGGER_LOGF((genericLoggerp), GENERICLOGGER_LOGLEVEL_CRITICAL, (fmts), __VA_ARGS__)
+#define GENERICLOGGER_CRITICALAP(genericLoggerp, fmts, ap)                  GENERICLOGGER_LOGAP((genericLoggerp), GENERICLOGGER_LOGLEVEL_CRITICAL, (fmts), (ap))
 
 #define GENERICLOGGER_ALERT(genericLoggerp, msgs)                           GENERICLOGGER_LOG ((genericLoggerp), GENERICLOGGER_LOGLEVEL_ALERT, (msgs))
 #define GENERICLOGGER_ALERTF(genericLoggerp, fmts, ...)                     GENERICLOGGER_LOGF((genericLoggerp), GENERICLOGGER_LOGLEVEL_ALERT, (fmts), __VA_ARGS__)
+#define GENERICLOGGER_ALERTAP(genericLoggerp, fmts, ap)                     GENERICLOGGER_LOGAP((genericLoggerp), GENERICLOGGER_LOGLEVEL_ALERT, (fmts), (ap))
 
 #define GENERICLOGGER_EMERGENCY(genericLoggerp, msgs)                       GENERICLOGGER_LOG ((genericLoggerp), GENERICLOGGER_LOGLEVEL_EMERGENCY, (msgs))
 #define GENERICLOGGER_EMERGENCYF(genericLoggerp, fmts, ...)                 GENERICLOGGER_LOGF((genericLoggerp), GENERICLOGGER_LOGLEVEL_EMERGENCY, (fmts), __VA_ARGS__)
+#define GENERICLOGGER_EMERGENCYAP(genericLoggerp, fmts, ap)                 GENERICLOGGER_LOGAP((genericLoggerp), GENERICLOGGER_LOGLEVEL_EMERGENCY, (fmts), (ap))
 
 #define GENERICLOGGER_FREE(genericLoggerp)                                  genericLogger_freev(&(genericLoggerp));
 
@@ -95,6 +107,7 @@ extern "C" {
   GENERICLOGGER_EXPORT genericLogger_t        *genericLogger_clonep(genericLogger_t *genericLoggerp);
   GENERICLOGGER_EXPORT void                    genericLogger_freev(genericLogger_t **genericLoggerpp);
   GENERICLOGGER_EXPORT void                    genericLogger_logv(genericLogger_t *genericLoggerp, genericLoggerLevel_t genericLoggerLeveli, const char *fmts, ...);
+  GENERICLOGGER_EXPORT void                    genericLogger_logapv(genericLogger_t *genericLoggerp, genericLoggerLevel_t genericLoggerLeveli, const char *fmts, va_list ap);
 #ifdef _cpluscplus
 }
 #endif
