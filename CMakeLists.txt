@@ -71,6 +71,8 @@ EXECUTE_PROCESS(COMMAND "${CMAKE_COMMAND}" -E make_directory "${3RDPARTY_OUTPUT_
 # ----------------------------------
 INCLUDE (FindInline)
 SET     (TCONV_C_INLINE "${C_INLINE}")
+INCLUDE (FindVaCopy)
+SET     (TCONV_C_VA_COPY "${C_VA_COPY}")
 
 # -----------------------------------
 # genericLogger: required

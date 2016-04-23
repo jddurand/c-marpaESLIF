@@ -2,17 +2,17 @@
 #define TCONV_EXT_H
 
 #include <stddef.h>
-#include "genericLogger.h"
 #include "tconv/export.h"
 
 typedef struct tconv *tconv_t;
+typedef void (*tconvTraceCallback_t)(void *userDatavp, const char *msgs);
 
 /*****************************/
 /* Charset detection options */
 /*****************************/
-typedef void *(*tconv_charset_new_t) (genericLogger_t *genericLoggerp, void *optionp);
-typedef char *(*tconv_charset_run_t) (void *contextp, char *bytep, size_t bytel);
-typedef void  (*tconv_charset_free_t)(void *contextp);
+typedef void *(*tconv_charset_new_t) (tconv_t tconvp, void *optionp);
+typedef char *(*tconv_charset_run_t) (tconv_t tconvp, void *contextp, char *bytep, size_t bytel);
+typedef void  (*tconv_charset_free_t)(tconv_t tconvp, void *contextp);
 
 /* ------------------------- */
 /* External charset          */
@@ -64,9 +64,9 @@ typedef struct tconv_charset {
 /* Conversion options */
 /**********************/
 
-typedef void   *(*tconv_convert_new_t) (genericLogger_t *genericLoggerp, const char *tocodes, const char *fromcodes, void *optionp);
-typedef size_t  (*tconv_convert_run_t)  (void *contextp, char **inbufsp, size_t *inbytesleftlp, char **outbufsp, size_t *outbytesleftlp);
-typedef int     (*tconv_convert_free_t)(void *contextp);
+typedef void   *(*tconv_convert_new_t) (tconv_t tconvp, const char *tocodes, const char *fromcodes, void *optionp);
+typedef size_t  (*tconv_convert_run_t) (tconv_t tconvp, void *contextp, char **inbufsp, size_t *inbytesleftlp, char **outbufsp, size_t *outbytesleftlp);
+typedef int     (*tconv_convert_free_t)(tconv_t tconvp, void *contextp);
 
 /* ------------------ */
 /* External converter */
@@ -114,11 +114,33 @@ typedef struct tconv_convert {
 /* Global options */
 /* -------------- */
 typedef struct tconv_option {
-  tconv_charset_t *charsetp;
-  tconv_convert_t *convertp;
-  genericLogger_t *genericLoggerp;
+  tconv_charset_t      *charsetp;
+  tconv_convert_t      *convertp;
+  /* This must be set to have tracing */
+  tconvTraceCallback_t  traceCallbackp;
+  /* This is the tracing callback opaque data, can be NULL */
+  void                 *traceUserDatavp;
 } tconv_option_t;
 
 TCONV_EXPORT tconv_t tconv_open_ext(const char *tocodes, const char *fromcodes, tconv_option_t *tconvOptionp);
+
+/**********************************************************************/
+/* For plugins wanting to trace                                       */
+/* If environment variable TCONV_ENV_TRACE exist and is a true value, */
+/* then trace is on by default, otherwise it is off by default        */
+/**********************************************************************/
+TCONV_EXPORT void tconv_trace_on(tconv_t tconvp);
+TCONV_EXPORT void tconv_trace_off(tconv_t tconvp);
+
+/**********************************************************************/
+/* Though, in any case, trace will be a no-op if this package is      */
+/* compiled with TCONV_NTRACE.                                        */
+/*                                                                    */
+/* In conclusion, the only way to have tracing is:                    */
+/* - this package is compiled without #define TCONV_NTRACE            */
+/* - trace flag is on                                                 */
+/* - traceCallbackp is set                                            */
+/**********************************************************************/
+TCONV_EXPORT void tconv_trace(tconv_t tconvp, const char *fmts, ...);
 
 #endif /* TCONV_EXT_H */

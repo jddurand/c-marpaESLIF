@@ -2,19 +2,16 @@
 #include <string.h>
 #include <errno.h>
 
-#include "genericLogger.h"
 #include "charsetdetect.h"
 #include "tconv/charset/cchardet.h"
-#include "tconv/trace.h"
 
 typedef struct tconv_charset_cchardet_context {
-  genericLogger_t *genericLoggerp;
   float            confidencef;
   csd_t            csdp;
 } tconv_charset_cchardet_context_t;
 
 /*****************************************************************************/
-void *tconv_charset_cchardet_new(genericLogger_t *genericLoggerp, void *voidp)
+void *tconv_charset_cchardet_new(tconv_t tconvp, void *voidp)
 /*****************************************************************************/
 {
   static const char            funcs[] = "tconv_charset_cchardet_new";
@@ -22,12 +19,10 @@ void *tconv_charset_cchardet_new(genericLogger_t *genericLoggerp, void *voidp)
   tconv_charset_cchardet_context_t *contextp;
   csd_t                             csdp;
 
- /* Get logger asap */
   contextp = malloc(sizeof(tconv_charset_cchardet_context_t));
   if (contextp == NULL) {
     goto err;
   }
-  contextp->genericLoggerp = genericLoggerp;
   contextp->confidencef    = 0.0f;
   contextp->csdp           = NULL;
 
@@ -36,10 +31,10 @@ void *tconv_charset_cchardet_new(genericLogger_t *genericLoggerp, void *voidp)
     goto err;
   }
 
-  TCONV_TRACEF(contextp, "%s - csd_open", funcs);
+  tconv_trace(tconvp, "%s - csd_open", funcs);
   csdp = csd_open();
   if (csdp == NULL) {
-    TCONV_ERRORF(contextp, "%s - csd_open - %s", funcs, strerror(errno));
+    tconv_trace(tconvp, "%s - csd_open - %s", funcs, strerror(errno));
     goto err;
   }
 
@@ -59,7 +54,7 @@ void *tconv_charset_cchardet_new(genericLogger_t *genericLoggerp, void *voidp)
 }
 
 /*****************************************************************************/
-char *tconv_charset_cchardet_run(void *voidp, char *bytep, size_t bytel)
+char *tconv_charset_cchardet_run(tconv_t tconvp, void *voidp, char *bytep, size_t bytel)
 /*****************************************************************************/
 {
   static const char                 funcs[] = "tconv_charset_cchardet_run";
@@ -76,39 +71,39 @@ char *tconv_charset_cchardet_run(void *voidp, char *bytep, size_t bytel)
 
   csdp = contextp->csdp;
 
-  TCONV_TRACEF(contextp, "%s - csd_consider", funcs);
+  tconv_trace(tconvp, "%s - csd_consider", funcs);
   csdi = csd_consider(csdp, bytep, (unsigned long) bytel);
   if (csdi < 0) {
-    TCONV_ERRORF(contextp, "%s - csd_consider return value is < 0", funcs);
+    tconv_trace(tconvp, "%s - csd_consider return value is < 0", funcs);
     errno = ENOENT;
     goto err;
   } else if (csdi == 0) {
-    TCONV_ERRORF(contextp, "%s - csd_consider return value is == 0", funcs);
+    tconv_trace(tconvp, "%s - csd_consider return value is == 0", funcs);
     errno = EAGAIN;
     goto err;
   }
 
-  TCONV_TRACEF(contextp, "%s - csd_close2", funcs);
+  tconv_trace(tconvp, "%s - csd_close2", funcs);
   charsets = csd_close2(csdp, &confidencef);
   contextp->csdp = NULL;
   if (charsets == NULL) {
-    TCONV_ERRORF(contextp, "%s - csd_close2 return value is NULL", funcs);
+    tconv_trace(tconvp, "%s - csd_close2 return value is NULL", funcs);
     errno = EFAULT;
     return NULL;
   }
 
   if ((strcmp(charsets, "ASCII") != 0) && (strcmp(charsets, "ibm850") != 0)) {
-    TCONV_TRACEF(contextp, "%s - confidencef %f < %f ?", funcs, confidencef, contextp->confidencef);
+    tconv_trace(tconvp, "%s - confidencef %f < %f ?", funcs, confidencef, contextp->confidencef);
     if (confidencef < contextp->confidencef) {
-      TCONV_TRACEF(contextp, "%s - too low confidence", funcs);
+      tconv_trace(tconvp, "%s - too low confidence", funcs);
       errno = ENOENT;
       return NULL;
     }
   } else {
-    TCONV_TRACEF(contextp, "%s - csd_close2 returns %s, known to not set confidence", funcs, charsets);
+    tconv_trace(tconvp, "%s - csd_close2 returns %s, known to not set confidence", funcs, charsets);
   }
 
-  TCONV_TRACEF(contextp, "%s - return %s", funcs, charsets);
+  tconv_trace(tconvp, "%s - return %s", funcs, charsets);
   return (char *) charsets;
 
  err:
@@ -116,7 +111,7 @@ char *tconv_charset_cchardet_run(void *voidp, char *bytep, size_t bytel)
 }
 
 /*****************************************************************************/
-void  tconv_charset_cchardet_free(void *voidp)
+void  tconv_charset_cchardet_free(tconv_t tconvp, void *voidp)
 /*****************************************************************************/
 {
   static const char                 funcs[] = "tconv_charset_cchardet_free";
@@ -126,7 +121,7 @@ void  tconv_charset_cchardet_free(void *voidp)
   if (contextp != NULL) {
     csdp = contextp->csdp;
     if (csdp != NULL) {
-      TCONV_TRACEF(contextp, "%s - csd_close", funcs);
+      tconv_trace(tconvp, "%s - csd_close", funcs);
       csd_close(csdp);
     }
     free(contextp);
