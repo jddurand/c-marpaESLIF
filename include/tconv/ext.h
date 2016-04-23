@@ -154,4 +154,22 @@ TCONV_EXPORT char *tconv_error_set(tconv_t tconvp, const char *msgs);
 /**********************************************************************/
 TCONV_EXPORT char *tconv_error_get(tconv_t tconvp);
 
+/**********************************************************************/
+/* Charset detection will happen until it is successful by default.   */
+/* tconv_charset_maxbyte_set() can change this setting. A 0 value is  */
+/* the default, i.e. consume until detection.                         */
+/* tconv_charset_maxbyte_get() retreive current value.                */
+/**********************************************************************/
+TCONV_EXPORT size_t tconv_charset_maxbyte_set(tconv_t tconvp, size_t maxCharsetBytel);
+TCONV_EXPORT size_t tconv_charset_maxbyte_get(tconv_t tconvp);
+
+/**********************************************************************/
+/* if charset detection fails, this is the end, unless a default      */
+/* charset is set. tconv_charset_default_set() is doing that.         */
+/* tconv_charset_default_get() retreive current value.                */
+/* The defaul is NULL.                                                */
+/**********************************************************************/
+TCONV_EXPORT char *tconv_charset_default_set(tconv_t tconvp, char *defaultCharsets);
+TCONV_EXPORT char *tconv_charset_default_get(tconv_t tconvp);
+
 #endif /* TCONV_EXT_H */

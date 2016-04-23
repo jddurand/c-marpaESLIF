@@ -12,10 +12,13 @@ int main(int argc, char **argv)
   tconv_t tconvp;
   tconv_charset_t tconvCharset;
   tconv_option_t tconvOption;
-  char  *inputs = "My Input";
-  size_t inputl = strlen(inputs) + 1;
-  char  *outputs = "    ";
-  size_t outputl = strlen(outputs) + 1;
+  char  *inputs;
+  size_t inputl;
+  char  *outputs;
+  size_t outputl;
+  char  *origInputs;
+  char  *endInputs;
+  char  *origOutputs;
 
   tconvOption.charsetp       = &tconvCharset;
   tconvOption.convertp       = NULL;
@@ -25,15 +28,37 @@ int main(int argc, char **argv)
   tconvCharset.u.ICUOptionp = NULL;
   tconvp = tconv_open_ext(NULL, NULL, &tconvOption);
   tconv_trace_on(tconvp);
-  tconv(tconvp, &inputs, &inputl, &outputs, &outputl);
+  
+  inputs = "My Input";
+  origInputs = inputs;
+  inputl = strlen(inputs) + 1;
+  endInputs = inputs + inputl;
+  outputs = "                             ";
+  outputl = strlen(outputs) + 1;
+  origOutputs = outputs;
+  while (inputs < endInputs) {
+    tconv(tconvp, &inputs, &inputl, &outputs, &outputl);
+  }
   tconv_close(tconvp);
+  printf("\"%s\" => \"%s\"\n", origInputs, origOutputs);
 
   tconvCharset.charseti = TCONV_CHARSET_CCHARDET;
   tconvCharset.u.cchardetOptionp = NULL;
   tconvp = tconv_open_ext(NULL, NULL, &tconvOption);
   tconv_trace_on(tconvp);
-  tconv(tconvp, &inputs, &inputl, &outputs, &outputl);
+  
+  inputs = "My Input";
+  origInputs = inputs;
+  inputl = strlen(inputs) + 1;
+  endInputs = inputs + inputl;
+  outputs = "                             ";
+  outputl = strlen(outputs) + 1;
+  origOutputs = outputs;
+  while (inputs < endInputs) {
+    tconv(tconvp, &inputs, &inputl, &outputs, &outputl);
+  }
   tconv_close(tconvp);
+  printf("\"%s\" => \"%s\"\n", origInputs, origOutputs);
 
   return 0;
 }
