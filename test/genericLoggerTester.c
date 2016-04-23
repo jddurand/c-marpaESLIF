@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <errno.h>
 #include <string.h>
+#include <stdarg.h>
 #include "genericLogger.h"
 
 static void localLogger(void *userDatavp, genericLoggerLevel_t logLeveli, const char *msgs);
@@ -9,20 +10,22 @@ typedef struct localStruct {
   int i;
 } localStruct_t;
 
+static void mainap(genericLogger_t *loggerp, localStruct_t *localStructp, const char *fmts, ...);
+
 int main() {
   genericLogger_t *loggerp;
   genericLogger_t *loggerClonep;
   localStruct_t    localStruct;
 
   /* With no logger allocated - it still work - and defaults to the WARN level */
-  GENERICLOGGER_WARN (NULL, "Single message");
-  GENERICLOGGER_WARNF(NULL, "%s %s", "Formatted", "Message");
+  GENERICLOGGER_WARN (NULL, "[no argument - no logger] Single message");
+  GENERICLOGGER_WARNF(NULL, "[two arguments - no logger] Formatted message: %s %s", "argument1", "argument2");
 
   /* With a wanted level, no user-level implementation */
   loggerp = GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_TRACE);
   if (loggerp != NULL) {
-    GENERICLOGGER_TRACE (loggerp, "Single message");
-    GENERICLOGGER_TRACEF(loggerp, "%s %s", "Formatted", "Message");
+    GENERICLOGGER_TRACE (loggerp, "[no argument - allocated logger] Single message");
+    GENERICLOGGER_TRACEF(loggerp, "[two arguments - allocated logger] Formatted message: %s %s", "argument1", "argument2");
     GENERICLOGGER_FREE(loggerp);
   }
 
@@ -30,28 +33,36 @@ int main() {
   loggerp = GENERICLOGGER_CUSTOM(localLogger, &localStruct, GENERICLOGGER_LOGLEVEL_TRACE);
   if (loggerp != NULL) {
     localStruct.i = 10;
-    GENERICLOGGER_TRACE (loggerp, "Single message");
-    GENERICLOGGER_TRACEF(loggerp, "%s %s", "Formatted", "Message");
+    GENERICLOGGER_TRACE (loggerp, "[no argument - custom logger] Single message");
+    GENERICLOGGER_TRACEF(loggerp, "[two arguments - custom logger] Formatted message: %s %s", "argument1", "argument2");
+    /* ap */
+    mainap(loggerp, &localStruct, "[ap argument - custom logger] Formatted message: %s %s", "argument1", "argument2");
     GENERICLOGGER_FREE(loggerp);
   }
 
   /* Clone */
   loggerp = GENERICLOGGER_CUSTOM(localLogger, &localStruct, GENERICLOGGER_LOGLEVEL_TRACE);
   if (loggerp != NULL) {
-    GENERICLOGGER_TRACE (loggerp, "Single message using parent logger");
-    GENERICLOGGER_TRACEF(loggerp, "%s %s %s", "Formatted", "Message", "using parent logger");
     loggerClonep = GENERICLOGGER_CLONE(loggerp);
     if (loggerClonep != NULL) {
-      GENERICLOGGER_TRACE (loggerClonep, "Single message using cloned logger");
-      GENERICLOGGER_TRACEF(loggerClonep, "%s %s %s", "Formatted", "Message", "using cloned logger");
+      GENERICLOGGER_TRACE (loggerClonep, "[no argument - cloned logger] Single message");
+      GENERICLOGGER_TRACEF(loggerClonep, "[two arguments - cloned logger] Formatted message: %s %s", "argument1", "argument2");
       GENERICLOGGER_FREE(loggerClonep);
     }
-    GENERICLOGGER_TRACE (loggerp, "Single message using parent logger again");
-    GENERICLOGGER_TRACEF(loggerp, "%s %s %s", "Formatted", "Message", "using parent logger again");
     GENERICLOGGER_FREE(loggerp);
   }
-  
+
   return 0;
+}
+
+static void mainap(genericLogger_t *loggerp, localStruct_t *localStructp, const char *fmts, ...) {
+  va_list ap;
+
+  localStructp->i = 20;
+
+  va_start(ap, fmts);
+  GENERICLOGGER_TRACEAP(loggerp, fmts, ap);
+  va_end(ap);
 }
 
 static void localLogger(void *userDatavp, genericLoggerLevel_t logLeveli, const char *msgs) {
