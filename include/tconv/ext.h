@@ -133,14 +133,25 @@ TCONV_EXPORT void tconv_trace_on(tconv_t tconvp);
 TCONV_EXPORT void tconv_trace_off(tconv_t tconvp);
 
 /**********************************************************************/
-/* Though, in any case, trace will be a no-op if this package is      */
-/* compiled with TCONV_NTRACE.                                        */
-/*                                                                    */
-/* In conclusion, the only way to have tracing is:                    */
-/* - this package is compiled without #define TCONV_NTRACE            */
+/* The only way to have tracing is:                                   */
 /* - trace flag is on                                                 */
 /* - traceCallbackp is set                                            */
+/* trconv itself will also trace IF it is compiled without #define    */
+/* TCONV_NTRACE, including its built-in plugins                       */
 /**********************************************************************/
 TCONV_EXPORT void tconv_trace(tconv_t tconvp, const char *fmts, ...);
+
+/**********************************************************************/
+/* Plugins can (and should) set the last error string using           */
+/* tconv_error_set(). truncated to 1023 bytes (1 is reserved for NUL).*/
+/* At every call to every engine, tconv reset the last error string.  */
+/* If any call to any engine fails, and if this string is not set,    */
+/* tconv will automatically store the result of last errno string.    */
+/**********************************************************************/
+TCONV_EXPORT char *tconv_error_set(tconv_t tconvp, const char *msgs);
+/**********************************************************************/
+/* Retreival of last error string is done via tconv_error_get         */
+/**********************************************************************/
+TCONV_EXPORT char *tconv_error_get(tconv_t tconvp);
 
 #endif /* TCONV_EXT_H */

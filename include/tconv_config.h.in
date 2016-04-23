@@ -7,4 +7,11 @@
 #cmakedefine TCONV_C_INLINE   @TCONV_C_INLINE@
 #cmakedefine TCONV_C_VA_COPY  @TCONV_C_VA_COPY@
 
+/* Convenience macro */
+#ifndef TCONV_NTRACE
+#define TCONV_TRACE(tconvp, fmts, ...) tconv_trace(tconvp, fmts, __VA_ARGS__)
+#else
+#define TCONV_TRACE(tconvp, fmts, ...)
+#endif
+
 #endif /* TCONV_CONFIG_H */
