@@ -1,8 +1,11 @@
+#include <stdio.h>
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
+#include <genericLogger.h>
 #include "tconv.h"
-#include "genericLogger.h"
+
+void _trace(void *userDatavp, const char *msgs);
 
 int main(int argc, char **argv)
 {
@@ -14,23 +17,28 @@ int main(int argc, char **argv)
   char  *outputs = "    ";
   size_t outputl = strlen(outputs) + 1;
 
-  tconvOption.charsetp = &tconvCharset;
-  tconvOption.convertp = NULL;
-  tconvOption.genericLoggerp = GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_TRACE);
+  tconvOption.charsetp       = &tconvCharset;
+  tconvOption.convertp       = NULL;
+  tconvOption.traceCallbackp = _trace;
 
   tconvCharset.charseti = TCONV_CHARSET_ICU;
   tconvCharset.u.ICUOptionp = NULL;
   tconvp = tconv_open_ext(NULL, NULL, &tconvOption);
+  tconv_trace_on(tconvp);
   tconv(tconvp, &inputs, &inputl, &outputs, &outputl);
   tconv_close(tconvp);
 
   tconvCharset.charseti = TCONV_CHARSET_CCHARDET;
   tconvCharset.u.cchardetOptionp = NULL;
   tconvp = tconv_open_ext(NULL, NULL, &tconvOption);
+  tconv_trace_on(tconvp);
   tconv(tconvp, &inputs, &inputl, &outputs, &outputl);
   tconv_close(tconvp);
 
-  GENERICLOGGER_FREE(tconvOption.genericLoggerp);
-
   return 0;
 }
+
+void _trace(void *userDatavp, const char *msgs) {
+  GENERICLOGGER_TRACE(NULL, msgs);
+}
+

@@ -4,6 +4,7 @@
 #cmakedefine TCONV_HAVE_ICU   @TCONV_HAVE_ICU@
 #cmakedefine TCONV_HAVE_ICONV @TCONV_HAVE_ICONV@
 
-#cmakedefine TCONV_C_INLINE   @C_INLINE@
+#cmakedefine TCONV_C_INLINE   @TCONV_C_INLINE@
+#cmakedefine TCONV_C_VA_COPY  @TCONV_C_VA_COPY@
 
 #endif /* TCONV_CONFIG_H */
