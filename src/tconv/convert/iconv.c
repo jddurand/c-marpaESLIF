@@ -56,7 +56,7 @@ void  *tconv_convert_iconv_new(tconv_t tconvp, const char *tocodes, const char *
 size_t tconv_convert_iconv_run(tconv_t tconvp, void *voidp, char **inbufsp, size_t *inbytesleftlp, char **outbufsp, size_t *outbytesleftlp)
 /*****************************************************************************/
 {
-  static const char                 funcs[] = "t tconv_convert_iconv_run";
+  static const char                 funcs[] = "tconv_convert_iconv_run";
   tconv_convert_iconv_context_t    *contextp = (tconv_convert_iconv_context_t *) voidp;
   size_t                            rcl;
   
@@ -80,7 +80,7 @@ size_t tconv_convert_iconv_run(tconv_t tconvp, void *voidp, char **inbufsp, size
 int tconv_convert_iconv_free(tconv_t tconvp, void *voidp)
 /*****************************************************************************/
 {
-  static const char                 funcs[] = "t tconv_convert_iconv_free";
+  static const char                 funcs[] = "tconv_convert_iconv_free";
   tconv_convert_iconv_context_t    *contextp = (tconv_convert_iconv_context_t *) voidp;
   int                               i;
 
@@ -90,7 +90,7 @@ int tconv_convert_iconv_free(tconv_t tconvp, void *voidp)
   }
 
   tconv_trace(tconvp, "%s - iconv_close(%p)", funcs, contextp->iconvp);
-  i = iconv_close((iconv_t) contextp);
+  i = iconv_close((iconv_t) contextp->iconvp);
 
   tconv_trace(tconvp, "%s - free(%p)", funcs, contextp);
   free(contextp);
