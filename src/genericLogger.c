@@ -161,7 +161,7 @@ void genericLogger_logapv(genericLogger_t *genericLoggerp, genericLoggerLevel_t 
   } else {
     userDatavp = NULL;
     logCallbackp = &_genericLogger_defaultCallbackp;
-    genericLoggerDefaultLogLeveli = GENERICLOGGER_LOGLEVEL_WARNING;
+    genericLoggerDefaultLogLeveli = GENERICLOGGER_LOGLEVEL_TRACE;
   }
 
   if (genericLoggerLeveli >= genericLoggerDefaultLogLeveli) {
