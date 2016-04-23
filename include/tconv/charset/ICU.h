@@ -12,8 +12,8 @@ typedef struct tconv_charset_ICU_option {
 #include "tconv.h"
 #include "tconv/export.h"
 
-TCONV_NO_EXPORT void *tconv_charset_ICU_new(genericLogger_t *genericLoggerp, void *optionp);
-TCONV_NO_EXPORT char *tconv_charset_ICU_run(void *contextp, char *bytep, size_t bytel);
-TCONV_NO_EXPORT void  tconv_charset_ICU_free(void *contextp);
+TCONV_NO_EXPORT void *tconv_charset_ICU_new (tconv_t tconv, void *optionp);
+TCONV_NO_EXPORT char *tconv_charset_ICU_run (tconv_t tconv, void *contextp, char *bytep, size_t bytel);
+TCONV_NO_EXPORT void  tconv_charset_ICU_free(tconv_t tconv, void *contextp);
 
 #endif /*  TCONV_CHARSET_ICU_H */
