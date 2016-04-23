@@ -3,24 +3,17 @@
 #include <errno.h>
 #include <dlfcn.h>
 #include <genericLogger.h>
-#ifndef TCONV_NTRACE
 #include <stdarg.h>
-#endif
 #include "tconv.h"
 #include "tconv_config.h"
+
+/* Maximum size for last error. */
+#define TCONV_ERROR_SIZE 1024
 
 /* For logging */
 static char *files = "tconv.c";
 #define TCONV_ENV_TRACE "TCONV_ENV_TRACE"
-#ifndef TCONV_NTRACE
-/* Inlined for performance */
-#define TCONV_TRACE(tconvp, msgs)       tconv_trace(tconvp, msgs)
-#define TCONV_TRACEF(tconvp, fmts, ...) tconv_trace(tconvp, fmts, __VA_ARGS__)
 static TCONV_C_INLINE void _tconvTraceCallbackProxy(void *userDatavp, genericLoggerLevel_t logLeveli, const char *msgs);
-#else
-#define TCONV_TRACE(tconvp, msgs)
-#define TCONV_TRACEF(tconvp, fmts, ...)
-#endif
 
 /* Default options for built-ins */
 static tconv_charset_ICU_option_t tconv_charset_ICU_option_default = { 10 };
@@ -29,34 +22,52 @@ static tconv_charset_ICU_option_t tconv_charset_cchardet_option_default = { 10 }
 
 /* Internal structure */
 struct tconv {
-  void                    *charsetContextp;
-  void                    *convertContextp;
-  char                    *tocodes;
-  char                    *fromcodes;
-  char                    *charsetBytep;
-  size_t                   charsetBytel;
-  genericLogger_t         *genericLoggerp;
-  /* At the end, we always end up in an "external"-like configuration */
-  tconv_charset_external_t charsetExternal;
-  tconv_convert_external_t convertExternal;
-  /* For cleanup */
-  void                    *sharedLibraryHandlep;
-  /* For trace */
+  /* 1. trace */
   short                    traceb;
   tconvTraceCallback_t     traceCallbackp;
   void                    *traceUserDatavp;
+  genericLogger_t         *genericLoggerp;
+  /* 2. encodings */
+  char                    *tocodes;
+  char                    *fromcodes;
+  /* 3. runtime */
+  void                    *charsetContextp;
+  void                    *convertContextp;
+  char                    *charsetBytep;
+  size_t                   charsetBytel;
+  /* 4. for cleanup */
+  void                    *sharedLibraryHandlep;
+  /* 5. options - we always end up in an "external"-like configuration */
+  tconv_charset_external_t charsetExternal;
+  tconv_convert_external_t convertExternal;
+  /* 6. last error */
+  char                     errors[TCONV_ERROR_SIZE];
 };
 
 /* All our functions have an err label if necessary */
-#define TCONV_MALLOC(funcs, ptr, type, size) do {                       \
-    ptr = (type) malloc(size);						\
-    if (ptr == NULL) {							\
-      TCONV_TRACEF(tconvp, "%s - malloc(%lld) failure, %s", funcs, (unsigned long long) size, strerror(errno)); \
+#define TCONV_MALLOC(tconvp, funcs, ptr, type, size) do {		\
+    TCONV_TRACE((tconvp), "%s - malloc(%lld)", (funcs), (unsigned long long) (size)); \
+    (ptr) = (type) malloc(size);					\
+    if ((ptr) == NULL) {						\
+      TCONV_TRACE((tconvp), "%s - malloc(%lld) failure, %s", (funcs), (unsigned long long) (size), strerror(errno)); \
       goto err;								\
+    } else {								\
+      TCONV_TRACE((tconvp), "%s - malloc(%lld) success: %p", (funcs), (unsigned long long) (size), (ptr)); \
     }									\
   } while (0)
 
-static TCONV_C_INLINE void _tconvDefaultOption(tconv_t tconvp);
+#define TCONV_STRDUP(tconvp, funcs, dst, src) do {			\
+    TCONV_TRACE((tconvp), "%s - strdup(\"%s\")", (funcs), (src));	\
+    (dst) = strdup(src);						\
+    if ((dst) == NULL) {						\
+      TCONV_TRACE((tconvp), "%s - strdup(\"%s\") failure, %s", (funcs), (src), strerror(errno)); \
+      goto err;								\
+    } else {								\
+      TCONV_TRACE((tconvp), "%s - strdup(\"%s\") success: %p", (funcs), (src), (dst)); \
+    }									\
+  } while (0)
+
+static TCONV_C_INLINE void _tconvDefaultCharsetAndConvertOptions(tconv_t tconvp);
 static TCONV_C_INLINE void _tconvDefaultCharsetOption(tconv_t tconvp, tconv_charset_external_t *tconvCharsetExternalp);
 static TCONV_C_INLINE void _tconvDefaultConvertOption(tconv_t tconvp, tconv_convert_external_t *tconvConvertExternalp);
 
@@ -71,6 +82,9 @@ tconv_t tconv_open(const char *tocodes, const char *fromcodes)
 void tconv_trace_on(tconv_t tconvp)
 /****************************************************************************/
 {
+  static const char funcs[] = "tconv_trace_on";
+  TCONV_TRACE(tconvp, "%s(%p)", funcs, tconvp);
+
   if (tconvp != NULL) {
     tconvp->traceb = 1;
   }
@@ -80,6 +94,9 @@ void tconv_trace_on(tconv_t tconvp)
 void tconv_trace_off(tconv_t tconvp)
 /****************************************************************************/
 {
+  static const char funcs[] = "tconv_trace_off";
+  TCONV_TRACE(tconvp, "%s(%p)", funcs, tconvp);
+
   if (tconvp != NULL) {
     tconvp->traceb = 0;
   }
@@ -89,15 +106,17 @@ void tconv_trace_off(tconv_t tconvp)
 void tconv_trace(tconv_t tconvp, const char *fmts, ...)
 /****************************************************************************/
 {
-#ifndef TCONV_NTRACE
   va_list ap;
+  int     errnol;
   
   if ((tconvp != NULL) && (tconvp->traceb != 0) && (tconvp->genericLoggerp != NULL)) {
+    /* In any case we do not want errno to change when doing logging */
+    errnol = errno;
     va_start(ap, fmts);
     GENERICLOGGER_LOGAP(tconvp->genericLoggerp, GENERICLOGGER_LOGLEVEL_TRACE, fmts, ap);
     va_end(ap);
+    errno = errnol;
   }
-#endif
 }
 
 /****************************************************************************/
@@ -107,39 +126,42 @@ int tconv_close(tconv_t tconvp)
   static const char funcs[] = "tconv_close";
   int rci = 0;
 
+  TCONV_TRACE(tconvp, "%s(%p)", funcs, tconvp);
+
   if (tconvp != NULL) {
     if (tconvp->charsetContextp != NULL) {
       if (tconvp->charsetExternal.tconv_charset_freep != NULL) {
-        TCONV_TRACEF(tconvp, "%s - freeing charset engine", funcs);
+        TCONV_TRACE(tconvp, "%s - freeing charset engine: %p(%p, %p)", funcs, tconvp->charsetExternal.tconv_charset_freep, tconvp, tconvp->charsetContextp);
         tconvp->charsetExternal.tconv_charset_freep(tconvp, tconvp->charsetContextp);
       }
     }
     if (tconvp->convertContextp != NULL) {
       if (tconvp->convertExternal.tconv_convert_freep != NULL) {
-        TCONV_TRACEF(tconvp, "%s - freeing convert engine", funcs);
+        TCONV_TRACE(tconvp, "%s - freeing convert engine: %s(%p, %p)", funcs, tconvp->convertExternal.tconv_convert_freep, tconvp, tconvp->convertContextp);
         tconvp->convertExternal.tconv_convert_freep(tconvp, tconvp->convertContextp);
       }
     }
     if (tconvp->tocodes != NULL) {
-      TCONV_TRACEF(tconvp, "%s - freeing copy of \"to\" code %s", funcs, tconvp->tocodes);
+      TCONV_TRACE(tconvp, "%s - freeing copy of \"to\" code %s: free(%p)", funcs, tconvp->tocodes, tconvp->tocodes);
       free(tconvp->tocodes);
     }
     if (tconvp->fromcodes != NULL) {
-      TCONV_TRACEF(tconvp, "%s - freeing copy of \"from\" code %s", funcs, tconvp->fromcodes);
+      TCONV_TRACE(tconvp, "%s - freeing copy of \"from\" code %s: free(%p)", funcs, tconvp->fromcodes, tconvp->fromcodes);
       free(tconvp->fromcodes);
     }
     if (tconvp->sharedLibraryHandlep != NULL) {
-      TCONV_TRACEF(tconvp, "%s - closing shared library", funcs);
+      TCONV_TRACE(tconvp, "%s - closing shared library: dlclose(%p)", funcs, tconvp->sharedLibraryHandlep);
       if (dlclose(tconvp->sharedLibraryHandlep) != 0) {
-        TCONV_TRACEF(tconvp, "%s - dlclose failure, %s", funcs, dlerror());
+        TCONV_TRACE(tconvp, "%s - dlclose failure, %s", funcs, dlerror());
         errno = EFAULT;
         rci = -1;
       }
     }
     if (tconvp->charsetBytep != NULL) {
-      TCONV_TRACEF(tconvp, "%s - freeing copy of first bytes", funcs);
+      TCONV_TRACE(tconvp, "%s - freeing copy of first bytes: free(%p)", funcs, tconvp->charsetBytep);
       free(tconvp->charsetBytep);
     }
+    TCONV_TRACE(tconvp, "%s - freeing tconv context: free(%p)", funcs, tconvp);
     free(tconvp);
   }
 
@@ -155,10 +177,37 @@ tconv_t tconv_open_ext(const char *tocodes, const char *fromcodes, tconv_option_
   tconv_t           tconvp               = NULL;
   char             *traces               = NULL;
 
-  TCONV_MALLOC(funcs, tconvp, tconv_t, sizeof(struct tconv));
+  /* The very initial malloc cannot be done with TCONV_MALLOC */
+  tconvp = (tconv_t) malloc(sizeof(struct tconv));
+  if (tconvp == NULL) {
+    goto err;
+  }
+  /* Make sure everything is initialized NOW regardless of what is coded after */
+  /* 1. trace */
+  tconvp->traceb          = 0;
+  tconvp->traceCallbackp  = NULL;
+  tconvp->traceUserDatavp = NULL;
+  tconvp->genericLoggerp  = NULL;
+  /* 2. encodings */
+  tconvp->tocodes   = NULL;
+  tconvp->fromcodes = NULL;
+  /* 3. runtime */
+  tconvp->charsetContextp = NULL;
+  tconvp->convertContextp = NULL;
+  tconvp->charsetBytep    = NULL;
+  tconvp->charsetBytel    = 0;
+  /* 4. for cleanup */
+  tconvp->sharedLibraryHandlep = NULL;
+  /* 5. options - we always end up in an "external"-like configuration */
+  /* charsetExternal and convertExternal do not contain malloc thingies */
+  /* 6. last error */
+  tconvp->errors[0]                    = '\0';
+  /* Last byte can never change, because we do an strncpy */
+  tconvp->errors[TCONV_ERROR_SIZE - 1] = '\0';
 
-#ifndef TCONV_NTRACE
-  /* Get the genericLogger asap */
+  /* 1. trace */
+  traces                       = getenv(TCONV_ENV_TRACE);
+  tconvp->traceb               = (traces != NULL) ? (atoi(traces) != 0 ? 1 : 0) : 0;
   if (tconvOptionp != NULL) {
     tconvp->traceCallbackp  = tconvOptionp->traceCallbackp;
     tconvp->traceUserDatavp = tconvOptionp->traceUserDatavp;
@@ -168,60 +217,54 @@ tconv_t tconv_open_ext(const char *tocodes, const char *fromcodes, tconv_option_
     tconvp->traceUserDatavp = NULL;
     tconvp->genericLoggerp  = NULL;
   }
-#else
-  /* No trace in any case */
-  tconvp->traceCallbackp  = NULL;
-  tconvp->traceUserDatavp = NULL;
-  tconvp->genericLoggerp  = NULL;
-#endif
 
-  traces                       = getenv(TCONV_ENV_TRACE);
-  tconvp->traceb               = (traces != NULL) ? (atoi(traces) != 0 ? 1 : 0) : 0;
-  tconvp->charsetContextp      = NULL;
-  tconvp->convertContextp      = NULL;
-  tconvp->sharedLibraryHandlep = NULL;
-  tconvp->charsetBytep         = NULL;
-  tconvp->charsetBytel         = 0;
+  /* We can log that only now */
+  TCONV_TRACE(tconvp, "%s - trace flag set to %d ", funcs, (int) tconvp->traceb);
 
-  /* Always keep a copy of tocodes and from*/
+  /* 2. encodings */
   if (tocodes != NULL) {
-    TCONV_TRACEF(tconvp, "%s - duplicating \"to\" code %s", funcs, tocodes);
-    TCONV_MALLOC(funcs, tconvp->tocodes, char *, sizeof(char) * (strlen(tocodes) + 1));
-    strcpy(tconvp->tocodes, tocodes);
+    TCONV_STRDUP(tconvp, funcs, tconvp->tocodes, tocodes);
   } else {
     tconvp->tocodes = NULL;
   }
   if (fromcodes != NULL) {
-    TCONV_TRACEF(tconvp, "%s - duplicating \"from\" code %s", funcs, fromcodes);
-    TCONV_MALLOC(funcs, tconvp->fromcodes, char *, sizeof(char) * (strlen(fromcodes) + 1));
-    strcpy(tconvp->fromcodes, fromcodes);
+    TCONV_STRDUP(tconvp, funcs, tconvp->fromcodes, fromcodes);
   } else {
     tconvp->fromcodes = NULL;
   }
 
-  /* Validate the options, if any */
+  /* 3. runtime */
+  tconvp->charsetContextp      = NULL;
+  tconvp->convertContextp      = NULL;
+  tconvp->charsetBytep         = NULL;
+  tconvp->charsetBytel         = 0;
+
+   /* 4. for cleanup */
+  tconvp->sharedLibraryHandlep = NULL;
+
+  /* 5. options - we always end up in an "external"-like configuration */
   if (tconvOptionp != NULL) {
 
-    TCONV_TRACEF(tconvp, "%s - validation user option", funcs);
+    TCONV_TRACE(tconvp, "%s - validation user option", funcs);
 
     /* Charset */
     if (tconvOptionp->charsetp != NULL) {
       switch (tconvOptionp->charsetp->charseti) {
       case TCONV_CHARSET_EXTERNAL:
-        TCONV_TRACEF(tconvp, "%s - charset detector type is external", funcs);
+        TCONV_TRACE(tconvp, "%s - charset detector type is external", funcs);
         tconvp->charsetExternal = tconvOptionp->charsetp->u.external;
         break;
       case TCONV_CHARSET_PLUGIN:
-        TCONV_TRACEF(tconvp, "%s - charset detector type is plugin", funcs);
+        TCONV_TRACE(tconvp, "%s - charset detector type is plugin", funcs);
         if (tconvOptionp->charsetp->u.plugin.filenames == NULL) {
-          TCONV_TRACEF(tconvp, "%s - null charset plugin filename", funcs);
+          TCONV_TRACE(tconvp, "%s - null charset plugin filename", funcs);
           errno = EINVAL;
           goto err;
         }
-        TCONV_TRACEF(tconvp, "%s - opening shared library %s", funcs, tconvOptionp->charsetp->u.plugin.filenames);
+        TCONV_TRACE(tconvp, "%s - opening shared library %s", funcs, tconvOptionp->charsetp->u.plugin.filenames);
         tconvp->sharedLibraryHandlep = dlopen(tconvOptionp->charsetp->u.plugin.filenames, RTLD_LAZY);
         if (tconvp->sharedLibraryHandlep == NULL) {
-          TCONV_TRACEF(tconvp, "%s - dlopen failure, %s", funcs, dlerror());
+          TCONV_TRACE(tconvp, "%s - dlopen failure, %s", funcs, dlerror());
           errno = EINVAL;
           goto err;
         }
@@ -232,30 +275,30 @@ tconv_t tconv_open_ext(const char *tocodes, const char *fromcodes, tconv_option_
         break;
       case TCONV_CHARSET_ICU:
 #ifdef TCONV_HAVE_ICU
-        TCONV_TRACEF(tconvp, "%s - charset detector type is built-in ICU", funcs);
+        TCONV_TRACE(tconvp, "%s - charset detector type is built-in ICU", funcs);
         tconvp->charsetExternal.tconv_charset_newp  = tconv_charset_ICU_new;
         tconvp->charsetExternal.tconv_charset_runp  = tconv_charset_ICU_run;
         tconvp->charsetExternal.tconv_charset_freep = tconv_charset_ICU_free;
         tconvp->charsetExternal.optionp             = tconvOptionp->charsetp->u.cchardetOptionp;
         if (tconvp->charsetExternal.optionp == NULL) {
-          TCONV_TRACEF(tconvp, "%s - setting default charset detector ICU option", funcs);
+          TCONV_TRACE(tconvp, "%s - setting default charset detector ICU option", funcs);
           tconvp->charsetExternal.optionp = &tconv_charset_ICU_option_default;
         }
 #endif
         break;
       case TCONV_CHARSET_CCHARDET:
-        TCONV_TRACEF(tconvp, "%s - charset detector type is built-in cchardet", funcs);
+        TCONV_TRACE(tconvp, "%s - charset detector type is built-in cchardet", funcs);
         tconvp->charsetExternal.tconv_charset_newp  = tconv_charset_cchardet_new;
         tconvp->charsetExternal.tconv_charset_runp  = tconv_charset_cchardet_run;
         tconvp->charsetExternal.tconv_charset_freep = tconv_charset_cchardet_free;
         tconvp->charsetExternal.optionp             = tconvOptionp->charsetp->u.ICUOptionp;
         if (tconvp->charsetExternal.optionp == NULL) {
-          TCONV_TRACEF(tconvp, "%s - setting default charset detector cchardet option", funcs);
+          TCONV_TRACE(tconvp, "%s - setting default charset detector cchardet option", funcs);
           tconvp->charsetExternal.optionp = &tconv_charset_cchardet_option_default;
         }
         break;
       default:
-        TCONV_TRACEF(tconvp, "%s - charset detector type is unknown", funcs);
+        TCONV_TRACE(tconvp, "%s - charset detector type is unknown", funcs);
         tconvp->charsetExternal.tconv_charset_newp  = NULL;
         tconvp->charsetExternal.tconv_charset_runp  = NULL;
         tconvp->charsetExternal.tconv_charset_freep = NULL;
@@ -264,31 +307,31 @@ tconv_t tconv_open_ext(const char *tocodes, const char *fromcodes, tconv_option_
       }
       if (tconvp->charsetExternal.tconv_charset_runp == NULL) {
         /* Formally, only the "run" entry point is required */
-        TCONV_TRACEF(tconvp, "%s - tconv_charset_runp is NULL", funcs);
+        TCONV_TRACE(tconvp, "%s - tconv_charset_runp is NULL", funcs);
         errno = EINVAL;
         goto err;
       }
     } else {    
-      TCONV_TRACEF(tconvp, "%s - setting default charset options", funcs);
+      TCONV_TRACE(tconvp, "%s - setting default charset options", funcs);
       _tconvDefaultCharsetOption(tconvp, &(tconvp->charsetExternal));
     }
     if (tconvOptionp->convertp != NULL) {
       switch (tconvOptionp->convertp->converti) {
       case TCONV_CONVERT_EXTERNAL:
-        TCONV_TRACEF(tconvp, "%s - converter type is external", funcs);
+        TCONV_TRACE(tconvp, "%s - converter type is external", funcs);
         tconvp->convertExternal = tconvOptionp->convertp->u.external;
         break;
       case TCONV_CONVERT_PLUGIN:
-        TCONV_TRACEF(tconvp, "%s - converter type is plugin", funcs);
+        TCONV_TRACE(tconvp, "%s - converter type is plugin", funcs);
         if (tconvOptionp->convertp->u.plugin.filenames == NULL) {
-          TCONV_TRACEF(tconvp, "%s - null convert filename", funcs);
+          TCONV_TRACE(tconvp, "%s - null convert filename", funcs);
           errno = EINVAL;
           goto err;
         }
-        TCONV_TRACEF(tconvp, "%s - opening shared library %s", funcs, tconvOptionp->convertp->u.plugin.filenames);
+        TCONV_TRACE(tconvp, "%s - opening shared library %s", funcs, tconvOptionp->convertp->u.plugin.filenames);
         tconvp->sharedLibraryHandlep = dlopen(tconvOptionp->convertp->u.plugin.filenames, RTLD_LAZY);
         if (tconvp->sharedLibraryHandlep == NULL) {
-          TCONV_TRACEF(tconvp, "%s - dlopen failure, %s", funcs, dlerror());
+          TCONV_TRACE(tconvp, "%s - dlopen failure, %s", funcs, dlerror());
           errno = EINVAL;
           goto err;
         }
@@ -299,7 +342,7 @@ tconv_t tconv_open_ext(const char *tocodes, const char *fromcodes, tconv_option_
         break;
       case TCONV_CONVERT_ICU:
 #ifdef TCONV_HAVE_ICUJDD
-        TCONV_TRACEF(tconvp, "%s - converter type is built-in ICU", funcs);
+        TCONV_TRACE(tconvp, "%s - converter type is built-in ICU", funcs);
         tconvp->convertExternal.tconv_convert_newp  = tconv_convert_ICU_new;
         tconvp->convertExternal.tconv_convert_runp  = tconv_convert_ICU_run;
         tconvp->convertExternal.tconv_convert_freep = tconv_convert_ICU_free;
@@ -308,7 +351,7 @@ tconv_t tconv_open_ext(const char *tocodes, const char *fromcodes, tconv_option_
         break;
       case TCONV_CONVERT_ICONV:
 #ifdef TCONV_HAVE_ICONV
-        TCONV_TRACEF(tconvp, "%s - converter type is built-in iconv", funcs);
+        TCONV_TRACE(tconvp, "%s - converter type is built-in iconv", funcs);
         tconvp->convertExternal.tconv_convert_newp  = tconv_convert_iconv_new;
         tconvp->convertExternal.tconv_convert_runp  = tconv_convert_iconv_run;
         tconvp->convertExternal.tconv_convert_freep = tconv_convert_iconv_free;
@@ -316,7 +359,7 @@ tconv_t tconv_open_ext(const char *tocodes, const char *fromcodes, tconv_option_
 #endif
         break;
       default:
-        TCONV_TRACEF(tconvp, "%s - converter type is unknown", funcs);
+        TCONV_TRACE(tconvp, "%s - converter type is unknown", funcs);
         tconvp->convertExternal.tconv_convert_newp  = NULL;
         tconvp->convertExternal.tconv_convert_runp  = NULL;
         tconvp->convertExternal.tconv_convert_freep = NULL;
@@ -326,7 +369,7 @@ tconv_t tconv_open_ext(const char *tocodes, const char *fromcodes, tconv_option_
       if ((tconvp->convertExternal.tconv_convert_newp == NULL) ||
           (tconvp->convertExternal.tconv_convert_runp == NULL) ||
           (tconvp->convertExternal.tconv_convert_freep == NULL)) {
-        TCONV_TRACEF(tconvp,
+        TCONV_TRACE(tconvp,
 		    "%s - at least one convert entry point is invalid: tconv_convert_newp=%p, tconv_convert_runp=%p, tconv_convert_freep=%p",
 		    funcs,
 		    tconvp->convertExternal.tconv_convert_newp,
@@ -336,11 +379,11 @@ tconv_t tconv_open_ext(const char *tocodes, const char *fromcodes, tconv_option_
         goto err;
       }
     } else {    
-      TCONV_TRACEF(tconvp, "%s - setting default converter options", funcs);
+      TCONV_TRACE(tconvp, "%s - setting default converter options", funcs);
       _tconvDefaultConvertOption(tconvp, &(tconvp->convertExternal));
     }
   } else {
-    _tconvDefaultOption(tconvp);
+    _tconvDefaultCharsetAndConvertOptions(tconvp);
   }
 
   return tconvp;
@@ -363,6 +406,8 @@ size_t tconv(tconv_t tconvp, char **inbufsp, size_t *inbytesleftlp, char **outbu
   void             *charsetOptionp  = NULL;
   char             *fromcodes       = NULL;
 
+  TCONV_TRACE(tconvp, "%s(%p, %p, %p, %p, %p)", funcs, tconvp, inbufsp, inbytesleftlp, outbufsp, outbytesleftlp);
+
   if (tconvp == NULL) {
     errno = EINVAL;
     goto err;
@@ -374,40 +419,55 @@ size_t tconv(tconv_t tconvp, char **inbufsp, size_t *inbytesleftlp, char **outbu
       (inbytesleftlp != NULL)     &&
       (*inbytesleftlp > 0)) {
     /* Use that to detect charset */
-    charsetOptionp = tconvp->charsetExternal.optionp;
+    /* it is legal to have no new() for charset engine, but if there is one */
+    /* it must return something */
     if (tconvp->charsetExternal.tconv_charset_newp != NULL) {
-      TCONV_TRACEF(tconvp, "%s - initializing charset detection", funcs);
+      charsetOptionp = tconvp->charsetExternal.optionp;
+      TCONV_TRACE(tconvp, "%s - initializing charset detection: %p(%p, %p)", funcs, tconvp->charsetExternal.tconv_charset_newp, tconvp, charsetOptionp);
+      tconvp->errors[0] = '\0';
       charsetContextp = tconvp->charsetExternal.tconv_charset_newp(tconvp, charsetOptionp);
+      if (charsetContextp == NULL) {
+	goto err;
+      }
     }
     tconvp->charsetContextp = charsetContextp;
-    TCONV_TRACEF(tconvp, "%s - calling charset detection", funcs);
+    TCONV_TRACE(tconvp, "%s - calling charset detection: %p(%p, %p, %p, %p)", funcs, tconvp->charsetExternal.tconv_charset_runp, tconvp, charsetContextp, *inbufsp, *inbytesleftlp);
+    /* Reset errno to be sure to no catch an EEAGAIN for any previous call */
+    tconvp->errors[0] = '\0';
+    errno = 0;
     fromcodes = tconvp->charsetExternal.tconv_charset_runp(tconvp, charsetContextp, *inbufsp, *inbytesleftlp);
     if (fromcodes != NULL) {
-      TCONV_TRACEF(tconvp, "%s - charset detection returned %s", funcs, fromcodes);
-      TCONV_TRACEF(tconvp, "%s - duplicating \"to\" code %s", funcs, fromcodes);
-      TCONV_MALLOC(funcs, tconvp->fromcodes, char *, sizeof(char) * (strlen(fromcodes) + 1));
+      TCONV_TRACE(tconvp, "%s - charset detection returned %s", funcs, fromcodes);
+      TCONV_STRDUP(tconvp, funcs, tconvp->fromcodes, fromcodes);
       strcpy(tconvp->fromcodes, fromcodes);
       if (tconvp->charsetExternal.tconv_charset_freep != NULL) {
         /* It worked the very first time, we can remove the context right now */
-        TCONV_TRACEF(tconvp, "%s - ending charset detection", funcs);
+        TCONV_TRACE(tconvp, "%s - ending charset detection: %p(%p, %p)", funcs, tconvp->charsetExternal.tconv_charset_freep, tconvp, charsetContextp);
         tconvp->charsetExternal.tconv_charset_freep(tconvp, charsetContextp);
       }
       tconvp->charsetContextp = NULL;
+    } else {
+      /* This is an error unless errno is EAGAIN */
+      if (errno != EAGAIN) {
+	goto err;
+      }
     }
   }
 
  err:
+  if (tconvp->errors[0] == '\0') {
+    tconv_error_set(tconvp, strerror(errno));
+  }
   return (size_t)-1;
 }
 
 /****************************************************************************/
-static TCONV_C_INLINE void _tconvDefaultOption(tconv_t tconvp)
+static TCONV_C_INLINE void _tconvDefaultCharsetAndConvertOptions(tconv_t tconvp)
 /****************************************************************************/
 {
-  static const char funcs[] = "_tconvDefaultOption";
+  static const char funcs[] = "_tconvDefaultCharsetAndConvertOptions";
 
-  TCONV_TRACEF(tconvp, "%s - setting a null generic logger", funcs);
-  tconvp->genericLoggerp = NULL;
+  TCONV_TRACE(tconvp, "%s(%p)", funcs, tconvp);
 
   _tconvDefaultCharsetOption(tconvp, &(tconvp->charsetExternal));
   _tconvDefaultConvertOption(tconvp, &(tconvp->convertExternal));
@@ -419,14 +479,16 @@ static TCONV_C_INLINE void _tconvDefaultCharsetOption(tconv_t tconvp, tconv_char
 {
   static const char funcs[] = "_tconvDefaultCharsetOption";
 
+  TCONV_TRACE(tconvp, "%s(%p, %p)", funcs, tconvp, tconvCharsetExternalp);
+
 #ifdef TCONV_HAVE_ICU
-  TCONV_TRACEF(tconvp, "%s - setting default charset detector to ICU", funcs);
+  TCONV_TRACE(tconvp, "%s - setting default charset detector to ICU", funcs);
   tconvCharsetExternalp->optionp             = &tconv_charset_ICU_option_default;
   tconvCharsetExternalp->tconv_charset_newp  = tconv_charset_ICU_new;
   tconvCharsetExternalp->tconv_charset_runp  = tconv_charset_ICU_run;
   tconvCharsetExternalp->tconv_charset_freep = tconv_charset_ICU_free;
 #else
-  TCONV_TRACEF(tconvp, "%s - setting default charset detector to cchardet", funcs);
+  TCONV_TRACE(tconvp, "%s - setting default charset detector to cchardet", funcs);
   tconvCharsetExternalp->optionp             = &tconv_charset_cchardet_option_default;
   tconvCharsetExternalp->tconv_charset_newp  = tconv_charset_cchardet_new;
   tconvCharsetExternalp->tconv_charset_runp  = tconv_charset_cchardet_run;
@@ -440,21 +502,23 @@ static TCONV_C_INLINE void _tconvDefaultCharsetOption(tconv_t tconvp, tconv_char
 {
   static const char funcs[] = "_tconvDefaultConvertOption";
 
+  TCONV_TRACE(tconvp, "%s(%p, %p)", funcs, tconvp, tconvConvertExternalp);
+
 #ifdef TCONV_HAVE_ICUJDD
-  TCONV_TRACEF(tconvp, "%s - setting default converter to ICU", funcs);
+  TCONV_TRACE(tconvp, "%s - setting default converter to ICU", funcs);
   tconvConvertExternalp->optionp             = NULL;
   tconvConvertExternalp->tconv_convert_newp  = tconv_convert_ICU_new;
   tconvConvertExternalp->tconv_convert_runp  = tconv_convert_ICU_run;
   tconvConvertExternalp->tconv_convert_freep = tconv_convert_ICU_free;
 #else
   #ifdef TCONV_HAVE_ICONV
-  TCONV_TRACEF(tconvp, "%s - setting default converter to iconv", funcs);
+  TCONV_TRACE(tconvp, "%s - setting default converter to iconv", funcs);
   tconvConvertExternalp->optionp             = NULL;
   tconvConvertExternalp->tconv_convert_newp  = tconv_convert_iconv_new;
   tconvConvertExternalp->tconv_convert_runp  = tconv_convert_iconv_run;
   tconvConvertExternalp->tconv_convert_freep = tconv_convert_iconv_free;
   #else
-  TCONV_TRACEF(tconvp, "%s - setting default converter to unknown", funcs);
+  TCONV_TRACE(tconvp, "%s - setting default converter to unknown", funcs);
   tconvConvertExternalp->optionp             = NULL;
   tconvConvertExternalp->tconv_convert_newp  = NULL;
   tconvConvertExternalp->tconv_convert_runp  = NULL;
@@ -463,7 +527,6 @@ static TCONV_C_INLINE void _tconvDefaultCharsetOption(tconv_t tconvp, tconv_char
 #endif
 }
 
-#ifndef TCONV_NTRACE
 /****************************************************************************/
 static TCONV_C_INLINE void _tconvTraceCallbackProxy(void *userDatavp, genericLoggerLevel_t logLeveli, const char *msgs)
 /****************************************************************************/
@@ -474,4 +537,43 @@ static TCONV_C_INLINE void _tconvTraceCallbackProxy(void *userDatavp, genericLog
     tconvp->traceCallbackp(tconvp->traceUserDatavp, msgs);
   }
 }
-#endif
+
+/****************************************************************************/
+char *tconv_error_set(tconv_t tconvp, const char *msgs)
+/****************************************************************************/
+{
+  char *errors = NULL;
+  
+  static const char funcs[] = "tconv_error_set";
+
+  TCONV_TRACE(tconvp, "%s(%p, %p)", funcs, tconvp, msgs);
+
+  if (tconvp != NULL) {
+    /* This is making sure that errors[TCONV_ERROR_SIZE - 1] is never touched */
+    strncpy(tconvp->errors, msgs, TCONV_ERROR_SIZE - 1);
+    errors = tconvp->errors;
+  }
+
+  TCONV_TRACE(tconvp, "%s - return %s", funcs, errors);
+
+  return errors;
+}
+
+/****************************************************************************/
+char *tconv_error_get(tconv_t tconvp)
+/****************************************************************************/
+{
+  char *errors = NULL;
+  
+  static const char funcs[] = "tconv_error_get";
+
+  TCONV_TRACE(tconvp, "%s(%p)", funcs, tconvp);
+
+  if (tconvp != NULL) {
+    errors = tconvp->errors;
+  }
+
+  TCONV_TRACE(tconvp, "%s - return %s", funcs, errors);
+
+  return errors;
+}

@@ -4,6 +4,8 @@
 
 #include "unicode/ucsdet.h"
 #include "tconv/charset/ICU.h"
+/* Because this is a built-in, it can take advantage of TCONV_TRACE macro */
+#include "tconv_config.h"
 
 typedef struct tconv_charset_ICU_context {
   int               confidencei;
@@ -19,41 +21,64 @@ void *tconv_charset_ICU_new(tconv_t tconvp, void *voidp)
   tconv_charset_ICU_context_t *contextp;
   UCharsetDetector            *uCharsetDetectorp;
   UErrorCode                   uErrorCode;
+  const char                  *errors;
 
+  TCONV_TRACE(tconvp, "%s(%p, %p)", funcs, tconvp, voidp);
+
+  TCONV_TRACE(tconvp, "%s - malloc(%lld)", funcs, (unsigned long long) sizeof(tconv_charset_ICU_context_t));
   contextp = malloc(sizeof(tconv_charset_ICU_context_t));
   if (contextp == NULL) {
+    TCONV_TRACE(tconvp, "%s - malloc(%lld) failure, %s", funcs, (unsigned long long) sizeof(tconv_charset_ICU_context_t), strerror(errno));
     goto err;
   }
+  TCONV_TRACE(tconvp, "%s - malloc(%lld) success: %p", funcs, (unsigned long long) sizeof(tconv_charset_ICU_context_t), contextp);
   contextp->confidencei       = 0;
   contextp->uCharsetDetectorp = NULL;
 
   if (optionp == NULL) {
+    TCONV_TRACE(tconvp, "%s - option is NULL", funcs);
     errno = EINVAL;
     goto err;
   }
 
-  tconv_trace(tconvp, "%s - ucsdet_open", funcs);
   uErrorCode = U_ZERO_ERROR;
+  TCONV_TRACE(tconvp, "%s - ucsdet_open(%p)", funcs, &uErrorCode);
   uCharsetDetectorp = ucsdet_open(&uErrorCode);
   if (U_FAILURE(uErrorCode)) {
-      tconv_trace(tconvp, "%s - ucsdet_open - %s", funcs, u_errorName(uErrorCode));
+    TCONV_TRACE(tconvp, "%s - ucsdet_open(%p) failure, %s", funcs, &uErrorCode, u_errorName(uErrorCode));
     /* errno ? */
     errno = ENOSYS;
     goto err;
   }
+  TCONV_TRACE(tconvp, "%s - ucsdet_open(%p) success: %p", funcs, &uErrorCode, uCharsetDetectorp);
 
+  TCONV_TRACE(tconvp, "%s - confidence level set to %d", funcs, optionp->confidencei);
   contextp->confidencei       = optionp->confidencei;
   contextp->uCharsetDetectorp = uCharsetDetectorp;
 
+  TCONV_TRACE(tconvp, "%s - return %p", funcs, contextp);
   return contextp;
 
  err:
   {
     int errnol = errno;
-    if (uCharsetDetectorp != NULL) { ucsdet_close(uCharsetDetectorp); }
-    if (contextp          != NULL) { free(contextp); }
+    if (uCharsetDetectorp != NULL) {
+      TCONV_TRACE(tconvp, "%s - ucsdet_close(%p)", funcs, uCharsetDetectorp);
+      ucsdet_close(uCharsetDetectorp);
+    }
+    if (contextp != NULL) {
+      TCONV_TRACE(tconvp, "%s - free(%p)", funcs, contextp);
+      free(contextp);
+    }
+    if (U_FAILURE(uErrorCode)) {
+      errors = u_errorName(uErrorCode);
+      TCONV_TRACE(tconvp, "%s - setting last error to \"%s\"", funcs, errors);
+      tconv_error_set(tconvp, errors);
+    }
+    TCONV_TRACE(tconvp, "%s - setting errno to %d (%s)", funcs, (int) errnol, strerror((int) errnol));
     errno = errnol;
   }
+  TCONV_TRACE(tconvp, "%s - return NULL", funcs);
   return NULL;
 }
 
@@ -68,6 +93,9 @@ char *tconv_charset_ICU_run(tconv_t tconvp, void *voidp, char *bytep, size_t byt
   const UCharsetMatch         *uCharsetMatchp;
   int32_t                      confidencei; 
   const char                  *charsets;
+  const char                  *errors;
+
+  TCONV_TRACE(tconvp, "%s(%p, %p, %p, %lld)", funcs, tconvp, voidp, bytep, (unsigned long long) bytel);
 
   if ((contextp == NULL) || (bytep == NULL) || (bytel <= 0)) {
     errno = EFAULT;
@@ -76,57 +104,62 @@ char *tconv_charset_ICU_run(tconv_t tconvp, void *voidp, char *bytep, size_t byt
 
   uCharsetDetectorp = contextp->uCharsetDetectorp;
 
-  tconv_trace(tconvp, "%s - ucsdet_setText", funcs);
   uErrorCode = U_ZERO_ERROR;
+  TCONV_TRACE(tconvp, "%s - ucsdet_setText(%p, %p, %lld, %p)", funcs, uCharsetDetectorp, bytep, (unsigned long long) bytel, &uErrorCode);
   ucsdet_setText(uCharsetDetectorp, bytep, bytel, &uErrorCode);
   if (U_FAILURE(uErrorCode)) {
-    tconv_trace(tconvp, "%s - ucsdet_setText - %s", funcs, u_errorName(uErrorCode));
+    TCONV_TRACE(tconvp, "%s - ucsdet_setText failure, %s", funcs, u_errorName(uErrorCode));
     /* errno ? */
     errno = ENOSYS;
     goto err;
   }
 
-  tconv_trace(tconvp, "%s - ucsdet_detect", funcs);
+  TCONV_TRACE(tconvp, "%s - ucsdet_detect", funcs);
   uErrorCode = U_ZERO_ERROR;
   uCharsetMatchp = ucsdet_detect(uCharsetDetectorp, &uErrorCode);
   if (U_FAILURE(uErrorCode)) {
-    tconv_trace(tconvp, "%s - ucsdet_detect - %s", funcs, u_errorName(uErrorCode));
+    TCONV_TRACE(tconvp, "%s - ucsdet_detect - %s", funcs, u_errorName(uErrorCode));
     /* errno ? */
     errno = ENOSYS;
     goto err;
   }
 
-  tconv_trace(tconvp, "%s - ucsdet_getName", funcs);
+  TCONV_TRACE(tconvp, "%s - ucsdet_getName", funcs);
   uErrorCode = U_ZERO_ERROR;
   charsets = ucsdet_getName(uCharsetMatchp, &uErrorCode);
   if (U_FAILURE(uErrorCode)) {
-    tconv_trace(tconvp, "%s - ucsdet_getName - %s", funcs, u_errorName(uErrorCode));
+    TCONV_TRACE(tconvp, "%s - ucsdet_getName - %s", funcs, u_errorName(uErrorCode));
     /* errno ? */
     errno = ENOSYS;
     goto err;
   }
 
-  tconv_trace(tconvp, "%s - ucsdet_getConfidence", funcs);
+  TCONV_TRACE(tconvp, "%s - ucsdet_getConfidence", funcs);
   uErrorCode = U_ZERO_ERROR;
   confidencei = ucsdet_getConfidence(uCharsetMatchp, &uErrorCode);
   if (U_FAILURE(uErrorCode)) {
-    tconv_trace(tconvp, "%s - ucsdet_getConfidence - %s", funcs, u_errorName(uErrorCode));
+    TCONV_TRACE(tconvp, "%s - ucsdet_getConfidence - %s", funcs, u_errorName(uErrorCode));
     /* errno ? */
     errno = ENOSYS;
     goto err;
   }
 
-  tconv_trace(tconvp, "%s - confidenci = %d < %d ?", funcs, confidencei, (int32_t) contextp->confidencei);
+  TCONV_TRACE(tconvp, "%s - confidenci = %d < %d ?", funcs, confidencei, (int32_t) contextp->confidencei);
   if (confidencei < (int32_t) contextp->confidencei) {
-    tconv_trace(tconvp, "%s - too low confidence", funcs);
+    TCONV_TRACE(tconvp, "%s - too low confidence", funcs);
     errno = EAGAIN;
     return NULL;
   }
 
-  tconv_trace(tconvp, "%s - return %s", funcs, charsets);
+  TCONV_TRACE(tconvp, "%s - return %s", funcs, charsets);
   return (char *) charsets;
 
  err:
+  if (U_FAILURE(uErrorCode)) {
+    errors = u_errorName(uErrorCode);
+    TCONV_TRACE(tconvp, "%s - setting last error to \"%s\"", funcs, errors);
+    tconv_error_set(tconvp, errors);
+  }
   return NULL;
 }
 
@@ -141,7 +174,7 @@ void  tconv_charset_ICU_free(tconv_t tconvp, void *voidp)
   if (contextp != NULL) {
     uCharsetDetectorp = contextp->uCharsetDetectorp;
     if (uCharsetDetectorp != NULL) {
-      tconv_trace(tconvp, "%s - ucsdet_close", funcs);
+      TCONV_TRACE(tconvp, "%s - ucsdet_close", funcs);
       ucsdet_close(uCharsetDetectorp);
     }
     free(contextp);
