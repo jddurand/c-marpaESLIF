@@ -25,9 +25,9 @@ int main(int argc, char **argv)
 
   tconvCharset.charseti = TCONV_CHARSET_ICU;
   tconvCharset.u.ICUOptionp = NULL;
-  tconvp = tconv_open_ext("ISO-8859-1", NULL, &tconvOption);
+  tconvp = tconv_open_ext("UTF-8","CP1250", &tconvOption);
   tconv_trace_on(tconvp);
-  inputs = "ßàéöø";
+  inputs = "abcčde";
   inputl = strlen(inputs) + 1;
   outputs = malloc(200);
   outputl = 200;
@@ -38,9 +38,9 @@ int main(int argc, char **argv)
 
   tconvCharset.charseti = TCONV_CHARSET_CCHARDET;
   tconvCharset.u.cchardetOptionp = NULL;
-  tconvp = tconv_open_ext("ASCII", NULL, &tconvOption);
+  tconvp = tconv_open_ext("UTF-8", NULL, &tconvOption);
   tconv_trace_on(tconvp);
-  inputs = "ßàéöø";
+  inputs = "abcčde";
   inputl = strlen(inputs) + 1;
   outputs = malloc(200);
   outputl = 200;
@@ -61,7 +61,7 @@ void _loop(tconv_t tconvp, char *inbufs, size_t inbytesleftl, char *outbufs, siz
 {
   while (inbytesleftl > 0) {
     if (tconv(tconvp, &inbufs, &inbytesleftl, &outbufs, &outbytesleftl) == (size_t)-1) {
-      fprintf(stderr, "tconv failure, %s", tconv_error(tconvp));
+      fprintf(stderr, "tconv failure, %s\n", tconv_error(tconvp));
       break;
     }
   }
