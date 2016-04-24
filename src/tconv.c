@@ -484,9 +484,11 @@ size_t tconv(tconv_t tconvp, char **inbufsp, size_t *inbytesleftlp, char **outbu
   TCONV_TRACE(tconvp, "%s - calling convert engine: %p(%p, %p, %p, %p, %p, %p)", funcs, tconvp->convertExternal.tconv_convert_runp, tconvp, convertContextp, inbufsp, inbytesleftlp, outbufsp, outbytesleftlp);
   tconvp->errors[0] = '\0';
   rcl = tconvp->convertExternal.tconv_convert_runp(tconvp, convertContextp, inbufsp, inbytesleftlp, outbufsp, outbytesleftlp);
-
+  if (rcl == (size_t)-1) {
+    goto err;
+  }
+  
   TCONV_TRACE(tconvp, "%s - return %lld", funcs, (signed long long) rcl);
-
   return rcl;
 
  err:
