@@ -20,6 +20,13 @@ void  *tconv_convert_iconv_new(tconv_t tconvp, const char *tocodes, const char *
   tconv_convert_iconv_context_t *contextp;
 
   TCONV_TRACE(tconvp, "%s - malloc(%lld)", funcs, (unsigned long long) sizeof(tconv_convert_iconv_context_t));
+
+  if ((tocodes == NULL) || (fromcodes == NULL)) {
+    TCONV_TRACE(tconvp, "%s - argument check failure, tcodes=%p fromcodes=%p", funcs, strerror(errno), tocodes, fromcodes);
+    errno = EINVAL;
+    goto err;
+  }
+  
   contextp = malloc(sizeof(tconv_convert_iconv_context_t));
   if (contextp == NULL) {
     TCONV_TRACE(tconvp, "%s - malloc failure, %s", funcs, strerror(errno));
@@ -30,7 +37,7 @@ void  *tconv_convert_iconv_new(tconv_t tconvp, const char *tocodes, const char *
 
   contextp->iconvp  = NULL;
 
-  TCONV_TRACE(tconvp, "%s - iconv_open(%p, %p)", funcs, tocodes, fromcodes);
+  TCONV_TRACE(tconvp, "%s - iconv_open(\"%s\", \"%s\")", funcs, tocodes, fromcodes);
   iconvp = iconv_open(tocodes, fromcodes);
   if (iconvp == NULL) {
     TCONV_TRACE(tconvp, "%s - iconv_open failure, %s", funcs, strerror(errno));
