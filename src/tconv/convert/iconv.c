@@ -4,6 +4,8 @@
 #include <iconv.h>
 
 #include "tconv/convert/iconv.h"
+/* Because this is a built-in, it can take advantage of TCONV_TRACE macro */
+#include "tconv_config.h"
 
 typedef struct tconv_convert_iconv_context {
   iconv_t          iconvp;
@@ -17,29 +19,29 @@ void  *tconv_convert_iconv_new(tconv_t tconvp, const char *tocodes, const char *
   iconv_t                        iconvp;
   tconv_convert_iconv_context_t *contextp;
 
-  tconv_trace(tconvp, "%s - malloc(%lld)", funcs, (unsigned long long) sizeof(tconv_convert_iconv_context_t));
+  TCONV_TRACE(tconvp, "%s - malloc(%lld)", funcs, (unsigned long long) sizeof(tconv_convert_iconv_context_t));
   contextp = malloc(sizeof(tconv_convert_iconv_context_t));
   if (contextp == NULL) {
-    tconv_trace(tconvp, "%s - malloc failure, %s", funcs, strerror(errno));
+    TCONV_TRACE(tconvp, "%s - malloc failure, %s", funcs, strerror(errno));
     goto err;
   } else {
-    tconv_trace(tconvp, "%s - malloc success: %p", funcs, contextp);
+    TCONV_TRACE(tconvp, "%s - malloc success: %p", funcs, contextp);
   }
 
   contextp->iconvp  = NULL;
 
-  tconv_trace(tconvp, "%s - iconv_open(%p, %p)", funcs, tocodes, fromcodes);
+  TCONV_TRACE(tconvp, "%s - iconv_open(%p, %p)", funcs, tocodes, fromcodes);
   iconvp = iconv_open(tocodes, fromcodes);
   if (iconvp == NULL) {
-    tconv_trace(tconvp, "%s - iconv_open failure, %s", funcs, strerror(errno));
+    TCONV_TRACE(tconvp, "%s - iconv_open failure, %s", funcs, strerror(errno));
     goto err;
   } else {
-    tconv_trace(tconvp, "%s - iconv_open success: %p", funcs, iconvp);
+    TCONV_TRACE(tconvp, "%s - iconv_open success: %p", funcs, iconvp);
   }
 
   contextp->iconvp = iconvp;
 
-  tconv_trace(tconvp, "%s - return %p", funcs, contextp);
+  TCONV_TRACE(tconvp, "%s - return %p", funcs, contextp);
   return contextp;
 
  err:
@@ -65,14 +67,14 @@ size_t tconv_convert_iconv_run(tconv_t tconvp, void *voidp, char **inbufsp, size
     goto err;
   }
 
-  tconv_trace(tconvp, "%s - iconv(%p, %p, %p, %p, %p)", funcs, contextp->iconvp, inbufsp, inbytesleftlp, outbufsp, outbytesleftlp);
+  TCONV_TRACE(tconvp, "%s - iconv(%p, %p, %p, %p, %p)", funcs, contextp->iconvp, inbufsp, inbytesleftlp, outbufsp, outbytesleftlp);
   rcl = iconv((iconv_t) contextp->iconvp, inbufsp, inbytesleftlp, outbufsp, outbytesleftlp);
 
-  tconv_trace(tconvp, "%s - return %lld", funcs, (signed long long) rcl);
+  TCONV_TRACE(tconvp, "%s - return %lld", funcs, (signed long long) rcl);
   return rcl;
 
  err:
-  tconv_trace(tconvp, "%s - return (size_t)-1", funcs);
+  TCONV_TRACE(tconvp, "%s - return (size_t)-1", funcs);
   return (size_t)-1;
 }
 
@@ -89,16 +91,16 @@ int tconv_convert_iconv_free(tconv_t tconvp, void *voidp)
     goto err;
   }
 
-  tconv_trace(tconvp, "%s - iconv_close(%p)", funcs, contextp->iconvp);
+  TCONV_TRACE(tconvp, "%s - iconv_close(%p)", funcs, contextp->iconvp);
   i = iconv_close((iconv_t) contextp->iconvp);
 
-  tconv_trace(tconvp, "%s - free(%p)", funcs, contextp);
+  TCONV_TRACE(tconvp, "%s - free(%p)", funcs, contextp);
   free(contextp);
 
-  tconv_trace(tconvp, "%s - return %d", funcs, i);
+  TCONV_TRACE(tconvp, "%s - return %d", funcs, i);
   return i;
 
  err:
-  tconv_trace(tconvp, "%s - return -1", funcs);
+  TCONV_TRACE(tconvp, "%s - return -1", funcs);
   return -1;
 }
