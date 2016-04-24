@@ -404,7 +404,7 @@ tconv_t tconv_open_ext(const char *tocodes, const char *fromcodes, tconv_option_
     tconv_close(tconvp);
     errno = errnol;
   }
-  return NULL;
+  return (tconv_t)-1;
 }
 
 /****************************************************************************/

@@ -133,6 +133,19 @@ IF (WIN32 AND NOT CYGWIN)
   ADD_LIBRARY (dlfcn-win32 STATIC "${DLFCNWIN32_DIR}/dlfcn.c")
 ENDIF (WIN32 AND NOT CYGWIN)
 
+# ---------------
+# portable getopt
+# ---------------
+EXECUTE_PROCESS(
+  COMMAND "${CMAKE_COMMAND}" -E copy_directory "${PROJECT_SOURCE_DIR}/3rdparty/github/optparse-remote" "${3RDPARTY_OUTPUT_PATH}/optparse-remote"
+  WORKING_DIRECTORY "${3RDPARTY_OUTPUT_PATH}"
+  )
+SET (OPTPARSE_FOUND TRUE)
+SET (OPTPARSE_DIR            "${3RDPARTY_OUTPUT_PATH}/optparse-remote")
+SET (OPTPARSE_INCLUDE_DIR    "${OPTPARSE_DIR}")
+SET (OPTPARSE_LIBRARY_TARGET "optparse")
+ADD_LIBRARY (optparse STATIC "${OPTPARSE_DIR}/optparse.c")
+
 # -----------------------------------
 # ICU: optional
 # -----------------------------------
@@ -271,7 +284,14 @@ SET_TARGET_PROPERTIES (tconvTester PROPERTIES
   RUNTIME_OUTPUT_DIRECTORY_MINSIZEREL     "${LIBRARY_OUTPUT_PATH}"
   RUNTIME_OUTPUT_DIRECTORY_RELWITHDEBINFO "${LIBRARY_OUTPUT_PATH}"
 )
-TARGET_LINK_LIBRARIES (tconvTester tconv)
+SET_PROPERTY (TARGET tconvTester
+  PROPERTY
+  INCLUDE_DIRECTORIES
+  "${INCLUDE_OUTPUT_PATH}"                                # Include path for generated files (internal)
+  "${PROJECT_SOURCE_DIR}/include"                         # Include path for the other headers (internal)
+  "${OPTPARSE_INCLUDE_DIR}"
+  )
+TARGET_LINK_LIBRARIES (tconvTester tconv optparse)
 ADD_TEST              (NAME tconvTest
                        COMMAND tconvTester
                        WORKING_DIRECTORY "${LIBRARY_OUTPUT_PATH}")
