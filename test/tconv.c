@@ -38,7 +38,7 @@ int main(int argc, char **argv)
 
   tconvCharset.charseti = TCONV_CHARSET_CCHARDET;
   tconvCharset.u.cchardetOptionp = NULL;
-  tconvp = tconv_open_ext("ISO-8859-1", NULL, &tconvOption);
+  tconvp = tconv_open_ext("ASCII", NULL, &tconvOption);
   tconv_trace_on(tconvp);
   inputs = "ßàéöø";
   inputl = strlen(inputs) + 1;
@@ -61,6 +61,7 @@ void _loop(tconv_t tconvp, char *inbufs, size_t inbytesleftl, char *outbufs, siz
 {
   while (inbytesleftl > 0) {
     if (tconv(tconvp, &inbufs, &inbytesleftl, &outbufs, &outbytesleftl) == (size_t)-1) {
+      fprintf(stderr, "tconv failure, %s", tconv_error(tconvp));
       break;
     }
   }

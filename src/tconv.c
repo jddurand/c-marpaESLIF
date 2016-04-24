@@ -33,10 +33,6 @@ struct tconv {
   /* 3. runtime */
   void                    *charsetContextp;
   void                    *convertContextp;
-  char                    *charsetBytep;
-  size_t                   charsetBytel;
-  size_t                   maxCharsetBytel;
-  char                    *defaultCharsets;
   /* 4. for cleanup */
   void                    *sharedLibraryHandlep;
   /* 5. options - we always end up in an "external"-like configuration */
@@ -181,14 +177,6 @@ int tconv_close(tconv_t tconvp)
         rci = -1;
       }
     }
-    if (tconvp->charsetBytep != NULL) {
-      TCONV_TRACE(tconvp, "%s - freeing copy of first bytes", funcs);
-      TCONV_FREE(tconvp, funcs, tconvp->charsetBytep);
-    }
-    if (tconvp->defaultCharsets != NULL) {
-      TCONV_TRACE(tconvp, "%s - freeing copy of \"defaultCharsets\" charset %s", funcs, tconvp->defaultCharsets);
-      TCONV_FREE(tconvp, funcs, tconvp->defaultCharsets);
-    }
     if (tconvp->genericLoggerp != NULL) {
       GENERICLOGGER_FREE(tconvp->genericLoggerp);
     }
@@ -225,10 +213,6 @@ tconv_t tconv_open_ext(const char *tocodes, const char *fromcodes, tconv_option_
   /* 3. runtime */
   tconvp->charsetContextp = NULL;
   tconvp->convertContextp = NULL;
-  tconvp->charsetBytep    = NULL;
-  tconvp->defaultCharsets = NULL;
-  tconvp->maxCharsetBytel = 0;
-  tconvp->charsetBytel    = 0;
   /* 4. for cleanup */
   tconvp->sharedLibraryHandlep = NULL;
   /* 5. options - we always end up in an "external"-like configuration */
@@ -269,8 +253,6 @@ tconv_t tconv_open_ext(const char *tocodes, const char *fromcodes, tconv_option_
   /* 3. runtime */
   tconvp->charsetContextp      = NULL;
   tconvp->convertContextp      = NULL;
-  tconvp->charsetBytep         = NULL;
-  tconvp->charsetBytel         = 0;
 
    /* 4. for cleanup */
   tconvp->sharedLibraryHandlep = NULL;
@@ -435,9 +417,6 @@ size_t tconv(tconv_t tconvp, char **inbufsp, size_t *inbytesleftlp, char **outbu
   char             *fromcodes       = NULL;
   void             *convertContextp = NULL;
   void             *convertOptionp  = NULL;
-  short             veryFirstTimeb  = 0;
-  size_t            maxCharsetBytel;
-  size_t            charsetBytel;
   size_t            rcl;
 
   TCONV_TRACE(tconvp, "%s(%p, %p, %p, %p, %p)", funcs, tconvp, inbufsp, inbytesleftlp, outbufsp, outbytesleftlp);
@@ -453,51 +432,6 @@ size_t tconv(tconv_t tconvp, char **inbufsp, size_t *inbytesleftlp, char **outbu
       (inbytesleftlp != NULL)     &&
       (*inbytesleftlp > 0)) {
     
-    maxCharsetBytel = tconvp->maxCharsetBytel;
-    TCONV_TRACE(tconvp, "%s - %lld bytes (maximum: %lld) has been already consumed for charset detection", funcs, (unsigned long long) tconvp->charsetBytel, (unsigned long long) maxCharsetBytel);
-
-    if (maxCharsetBytel > 0) {
-      if (tconvp->charsetBytel >= maxCharsetBytel) {
-	/* Reached maximum number of bytes for charset detection */
-	TCONV_TRACE(tconvp, "%s - at least %lld bytes (maximum: %lld) consumed for charset detection", funcs, (unsigned long long) tconvp->charsetBytel, (unsigned long long) maxCharsetBytel);
-	/* Is there a default charset */
-	if (tconvp->defaultCharsets == NULL) {
-	  TCONV_TRACE(tconvp, "%s - no default charset is set", funcs);
-	  errno = ENOSYS;
-	  goto err;
-	}
-	TCONV_TRACE(tconvp, "%s - duplicating default charset \"%s\" into \"from\" charset", funcs, tconvp->defaultCharsets);
-	TCONV_STRDUP(tconvp, funcs, tconvp->fromcodes, tconvp->defaultCharsets);
-      } else {
-	/* Maximum not reached */
-	if (tconvp->charsetBytel <= 0) {
-	  /* The probability that the very very first input is enough to have charset   */
-	  /* detection is high. Therefore we do not allocate this very very first time. */
-	  tconvp->charsetBytep = *inbufsp;
-	  tconvp->charsetBytel = *inbytesleftlp;
-	  veryFirstTimeb = 1;
-	} else {
-	  charsetBytel = TCONV_MIN(tconvp, tconvp->charsetBytel + *inbytesleftlp, maxCharsetBytel);
-	  TCONV_REALLOC(tconvp, funcs, tconvp->charsetBytep, char *, charsetBytel);
-	  memcpy(tconvp->charsetBytep + tconvp->charsetBytel, *inbufsp, charsetBytel - tconvp->charsetBytel);
-	  tconvp->charsetBytel = charsetBytel;
-	}
-      }
-    } else {
-      if (tconvp->charsetBytel <= 0) {
-	/* Same remark as before:                                                     */
-	tconvp->charsetBytep = *inbufsp;
-	tconvp->charsetBytel = *inbytesleftlp;
-	veryFirstTimeb = 1;
-      } else {
-	charsetBytel = tconvp->charsetBytel + *inbytesleftlp;
-	TCONV_REALLOC(tconvp, funcs, tconvp->charsetBytep, char *, charsetBytel);
-	memcpy(tconvp->charsetBytep + tconvp->charsetBytel, *inbufsp, *inbytesleftlp);
-	tconvp->charsetBytel += *inbytesleftlp;
-      }
-    }
-    
-    /* Use that to detect charset */
     /* it is legal to have no new() for charset engine, but if there is one */
     /* it must return something */
     if (tconvp->charsetExternal.tconv_charset_newp != NULL) {
@@ -510,39 +444,20 @@ size_t tconv(tconv_t tconvp, char **inbufsp, size_t *inbytesleftlp, char **outbu
       }
     }
     tconvp->charsetContextp = charsetContextp;
-    TCONV_TRACE(tconvp, "%s - calling charset detection: %p(%p, %p, %p, %p)", funcs, tconvp->charsetExternal.tconv_charset_runp, tconvp, charsetContextp, tconvp->charsetBytep, tconvp->charsetBytel);
-    /* Reset errno to be sure to no catch an EEAGAIN for any previous call */
+    TCONV_TRACE(tconvp, "%s - calling charset detection: %p(%p, %p, %p, %p)", funcs, tconvp->charsetExternal.tconv_charset_runp, tconvp, charsetContextp, *inbufsp, *inbytesleftlp);
     tconvp->errors[0] = '\0';
-    errno = 0;
-    fromcodes = tconvp->charsetExternal.tconv_charset_runp(tconvp, charsetContextp, tconvp->charsetBytep, tconvp->charsetBytel);
-    if (fromcodes != NULL) {
-      TCONV_TRACE(tconvp, "%s - charset detection returned %s", funcs, fromcodes);
-      TCONV_STRDUP(tconvp, funcs, tconvp->fromcodes, fromcodes);
-      strcpy(tconvp->fromcodes, fromcodes);
-      if (tconvp->charsetExternal.tconv_charset_freep != NULL) {
-        TCONV_TRACE(tconvp, "%s - ending charset detection: %p(%p, %p)", funcs, tconvp->charsetExternal.tconv_charset_freep, tconvp, charsetContextp);
-        tconvp->charsetExternal.tconv_charset_freep(tconvp, charsetContextp);
-      }
-      tconvp->charsetContextp = NULL;
-      if (veryFirstTimeb != 0) {
-	/* We faked an allocated buffer */
-	tconvp->charsetBytep = NULL;
-	tconvp->charsetBytel = 0;
-      }
-    } else {
-      /* This is an error unless errno is EAGAIN */
-      if (errno != EAGAIN) {
-	goto err;
-      } else {
-	/* If this the very very first time, remember those bytes */
-	TCONV_MALLOC(tconvp, funcs, tconvp->charsetBytep, char *, tconvp->charsetBytel);
-	memcpy(tconvp->charsetBytep, *inbufsp, tconvp->charsetBytel);
-	/* And fake a shift sequence */
-	*inbufsp       += tconvp->charsetBytel;
-	*inbytesleftlp -= tconvp->charsetBytel;
-	return 0;
-      }
+    fromcodes = tconvp->charsetExternal.tconv_charset_runp(tconvp, charsetContextp, *inbufsp, *inbytesleftlp);
+    if (fromcodes == NULL) {
+      goto err;
     }
+    TCONV_TRACE(tconvp, "%s - charset detection returned %s", funcs, fromcodes);
+    TCONV_STRDUP(tconvp, funcs, tconvp->fromcodes, fromcodes);
+    strcpy(tconvp->fromcodes, fromcodes);
+    if (tconvp->charsetExternal.tconv_charset_freep != NULL) {
+      TCONV_TRACE(tconvp, "%s - ending charset detection: %p(%p, %p)", funcs, tconvp->charsetExternal.tconv_charset_freep, tconvp, charsetContextp);
+      tconvp->charsetExternal.tconv_charset_freep(tconvp, charsetContextp);
+    }
+    tconvp->charsetContextp = NULL;
   }
 
   if ((tconvp->tocodes == NULL) && (tconvp->fromcodes != NULL)) {
@@ -575,11 +490,6 @@ size_t tconv(tconv_t tconvp, char **inbufsp, size_t *inbytesleftlp, char **outbu
   return rcl;
 
  err:
-  if (veryFirstTimeb != 0) {
-    /* We faked an allocated buffer */
-    tconvp->charsetBytep = NULL;
-    tconvp->charsetBytel = 0;
-  }
   if (tconvp->errors[0] == '\0') {
     tconv_error_set(tconvp, strerror(errno));
   }
@@ -684,10 +594,10 @@ char *tconv_error_set(tconv_t tconvp, const char *msgs)
 }
 
 /****************************************************************************/
-char *tconv_error_get(tconv_t tconvp)
+char *tconv_error(tconv_t tconvp)
 /****************************************************************************/
 {
-  static const char funcs[] = "tconv_error_get";
+  static const char funcs[] = "tconv_error";
   char             *errors  = NULL;
 
   TCONV_TRACE(tconvp, "%s(%p)", funcs, tconvp);
@@ -699,86 +609,4 @@ char *tconv_error_get(tconv_t tconvp)
   TCONV_TRACE(tconvp, "%s - return %s", funcs, errors);
 
   return errors;
-}
-
-/****************************************************************************/
-size_t tconv_charset_maxbyte_set(tconv_t tconvp, size_t maxCharsetBytel)
-/****************************************************************************/
-{
-  static const char funcs[]  = "tconv_charset_maxbyte_set";
-  size_t            defaultl = 0;
-
-  TCONV_TRACE(tconvp, "%s(%p, %lld)", funcs, tconvp, (unsigned long long) maxCharsetBytel);
-
-  if (tconvp != NULL) {
-    defaultl = tconvp->maxCharsetBytel = maxCharsetBytel;
-  }
-
-  TCONV_TRACE(tconvp, "%s - return %lld", funcs, (unsigned long long) defaultl);
-  return defaultl;
-}
-
-/****************************************************************************/
-size_t tconv_charset_maxbyte_get(tconv_t tconvp)
-/****************************************************************************/
-{
-  static const char funcs[]  = "tconv_charset_maxbyte_get";
-  size_t            defaultl = 0;
-
-  TCONV_TRACE(tconvp, "%s(%p)", funcs, tconvp);
-
-  if (tconvp != NULL) {
-    defaultl = tconvp->maxCharsetBytel;
-  }
-
-  TCONV_TRACE(tconvp, "%s - return %lld", funcs, (unsigned long long) defaultl);
-  return defaultl;
-}
-
-/****************************************************************************/
-char *tconv_charset_default_set(tconv_t tconvp, char *defaultCharsets)
-/****************************************************************************/
-{
-  static const char funcs[]  = "tconv_charset_default_set";
-  char             *defaults = NULL;
-
-  TCONV_TRACE(tconvp, "%s(%p, %p)", funcs, tconvp, defaultCharsets);
-
-  if (tconvp != NULL) {
-    /* Free eventual previous setting */
-    if (tconvp->defaultCharsets != NULL) {
-      TCONV_TRACE(tconvp, "%s - freeing previous copy of \"defaultCharsets\" charset %s", funcs, tconvp->defaultCharsets);
-      TCONV_FREE(tconvp, funcs, defaultCharsets);
-    }
-    if (defaultCharsets != NULL) {
-      TCONV_STRDUP(tconvp, funcs, tconvp->defaultCharsets, defaultCharsets);
-    }
-    defaults = tconvp->defaultCharsets;
-  }
-
-  TCONV_TRACE(tconvp, "%s - return %s", funcs, defaults);
-  return defaults;
-
- err:
-  return NULL;
-}
-
-/****************************************************************************/
-char *tconv_charset_default_get(tconv_t tconvp)
-/****************************************************************************/
-{
-  static const char funcs[]  = "tconv_charset_default_get";
-  char             *defaults = NULL;
-
-  TCONV_TRACE(tconvp, "%s(%p)", funcs, tconvp);
-
-  if (tconvp != NULL) {
-    defaults = tconvp->defaultCharsets;
-  }
-
-  TCONV_TRACE(tconvp, "%s - return %s", funcs, defaults);
-  return defaults;
-
- err:
-  return NULL;
 }
