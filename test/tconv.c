@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stddef.h>
 #include <errno.h>
 #include <tconv.h>
 #include <optparse.h>
@@ -16,10 +17,6 @@
 #include <io.h>
 #endif
 
-#ifndef BUFSIZ
-#define BUFSIZ 1024*1024
-#endif
-
 #ifndef EXIT_FAILURE
 #define EXIT_FAILURE 1
 #endif
@@ -28,23 +25,27 @@
 #endif
 
 void traceCallback(void *userDatavp, const char *msgs);
-void fileconvert(int outputFd, char *filenames, char *tocodes, char *fromcodes, short verbose);
+void fileconvert(int outputFd, char *filenames, char *tocodes, char *fromcodes, size_t bufsizel, short verbose);
 
 int main(int argc, char **argv) {
-  char                *fromcodes = NULL;
-  char                *tocodes = NULL;
-  char                *outputs = NULL;
-  short                verbose = 0;
-  short                help    = 0;
-  int                  longindex = 0;
+  int                  longindex  = 0;
+
+  char                *fromcodes  = NULL;
+  short                help       = 0;
+  char                *outputs    = NULL;
+  size_t              bufsizel    = 1024;
+  char                *tocodes    = NULL;
+  short                verbose    = 0;
   struct optparse_long longopts[] = {
-    {"from-code",  'f', OPTPARSE_OPTIONAL},
+    {"from-code",  'f', OPTPARSE_REQUIRED},
     {     "help",  'h', OPTPARSE_OPTIONAL},
-    {   "output",  'o', OPTPARSE_OPTIONAL},
+    {   "output",  'o', OPTPARSE_REQUIRED},
+    {  "bufsize",  's', OPTPARSE_REQUIRED},
     {  "to-code",  't', OPTPARSE_REQUIRED},
     {  "verbose",  'v', OPTPARSE_OPTIONAL},
     {0}
   };
+
   char                *args;
   int                  outputFd;
   int                  option;
@@ -55,7 +56,6 @@ int main(int argc, char **argv) {
     switch (option) {
     case 'f':
       fromcodes = options.optarg;
-      fprintf(stderr," ==> %s\n", fromcodes);
       break;
     case 'h':
       help = 1;
@@ -63,9 +63,11 @@ int main(int argc, char **argv) {
     case 'o':
       outputs = options.optarg;
       break;
+    case 's':
+      bufsizel = atoi(options.optarg);
+      break;
     case 't':
       tocodes = options.optarg;
-      fprintf(stderr," ==> %s\n", tocodes);
       break;
     case 'v':
       verbose = 1;
@@ -76,9 +78,8 @@ int main(int argc, char **argv) {
     }
   }
 
-      fprintf(stderr," ==> %s\n", fromcodes);
-      fprintf(stderr," ==> %s\n", tocodes);
-  if (help != 0) {
+  if ((help != 0) || (tocodes == NULL) || (bufsizel <= 0)) {
+    int rci = (help != 0) ? EXIT_SUCCESS : EXIT_FAILURE;
     fprintf(stderr,
 	    "Usage:\n"
 	    "\n"
@@ -86,11 +87,11 @@ int main(int argc, char **argv) {
 	    ,
 	    argv[0]
 	    );
-    exit(EXIT_SUCCESS);
+    exit(rci);
   }
   
   if (outputs != NULL) {
-    outputFd = open(outputs, O_CREAT|O_WRONLY|O_TRUNC);
+    outputFd = creat(outputs, 0644);
     if (outputFd < 0) {
       fprintf(stderr, "Failed to open %s: %s\n", outputs, strerror(errno));
       exit(EXIT_FAILURE);
@@ -100,7 +101,7 @@ int main(int argc, char **argv) {
   }
 
   while ((args = optparse_arg(&options)) != NULL) {
-    fileconvert(outputFd, args, tocodes, fromcodes, verbose);
+    fileconvert(outputFd, args, tocodes, fromcodes, bufsizel, verbose);
   }
 
   if (outputs != NULL) {
@@ -112,19 +113,32 @@ int main(int argc, char **argv) {
   exit(EXIT_SUCCESS);
 }
 
-void fileconvert(int outputFd, char *filenames, char *tocodes, char *fromcodes, short verbose) {
-  FILE          *fp     = NULL;
-  tconv_t        tconvp = NULL;
-  char           inbuf[BUFSIZ];
-  char           outbuf[BUFSIZ];
-  char          *inptr;
-  char          *outptr;
-  tconv_option_t tconvOption;
-  size_t         inleft;
-  size_t         outleft;
-  size_t         nread;
-  size_t         nconv;
-  size_t         nwrite;
+void fileconvert(int outputFd, char *filenames, char *tocodes, char *fromcodes, size_t bufsizel, short verbose) {
+  char           *inbufp  = NULL, *inbuforigp  = NULL, **inbufpp = NULL;
+  char           *outbufp = NULL, *outbuforigp = NULL;
+  size_t          inleftl  = 0, insizel  = 0, inleftorigl = 0, *inleftlp = NULL;
+  size_t          outleftl = 0, outsizel = 0;
+  FILE           *fp = NULL;
+  tconv_t         tconvp = NULL;
+  tconv_option_t  tconvOption;
+  size_t          nconvl;
+  size_t          nwritel;
+  int             eofb = 0;
+
+  inbuforigp = malloc(bufsizel);
+  if (inbuforigp == NULL) {
+    fprintf(stderr, "malloc: %s\n", strerror(errno));
+    goto end;
+  }
+  insizel = bufsizel;
+
+  /* We start with an outbuf size the same as inbuf */
+  outbuforigp = malloc(bufsizel);
+  if (outbuforigp == NULL) {
+    fprintf(stderr, "malloc: %s\n", strerror(errno));
+    goto end;
+  }
+  outsizel = bufsizel;
 
   fp = fopen(filenames, "rb");
   if (fp == NULL) {
@@ -146,32 +160,67 @@ void fileconvert(int outputFd, char *filenames, char *tocodes, char *fromcodes, 
   if (verbose != 0) {
     tconv_trace_on(tconvp);
   }
-  
-  while (! feof(fp)) {
-    nread = fread(inbuf, 1, BUFSIZ, fp);
-    if (nread <= 0) {
-      fprintf(stderr, "Failed to read from %s: %s\n", filenames, strerror(errno));
-      goto end;
+
+  while (eofb == 0) {
+    eofb = feof(fp);
+
+    if (eofb) {
+      inleftorigl = 0;
+      inbufpp     = NULL;
+      inleftlp    = NULL;
+    } else {
+      inleftorigl = fread(inbuforigp, 1, insizel, fp);
+      if (inleftorigl <= 0) {
+	fprintf(stderr, "Failed to read from %s: %s\n", filenames, strerror(errno));
+	goto end;
+      }
+      inbufpp  = &inbufp;
+      inleftlp = &inleftl;
     }
 
-    inptr   = inbuf;
-    inleft  = nread;
-    outptr  = outbuf;
-    outleft = BUFSIZ;
+    inbufp   = inbuforigp;
+    inleftl  = inleftorigl;
+    outbufp  = outbuforigp;
+    outleftl = outsizel;
 
-    while (inleft > 0) {
-      nconv = tconv(tconvp, &inptr, &inleft, &outptr, &outleft);
-      if (nconv == (size_t) -1) {
-	if (errno != EINVAL) {
+    while ((eofb != 0) || (inleftl > 0)) {
+
+      nconvl = tconv(tconvp, inbufpp, inleftlp, &outbufp, &outleftl);
+      if (nconvl == (size_t) -1) {
+	switch (errno) {
+	case E2BIG:
+	  {
+	    char *tmp;
+	    
+	    outsizel *= 2;
+	    tmp = realloc(outbuforigp, outsizel);
+	    if (tmp == NULL) {
+	      fprintf(stderr, "realloc: %s\n", strerror(errno));
+	      goto end;
+	    }
+	    outbuforigp  = tmp;
+
+	    inbufp   = inbuforigp;
+	    inleftl  = inleftorigl;
+	    outbufp  = outbuforigp;
+	    outleftl = outsizel;
+	  }
+	  break;
+	default:
 	  fprintf(stderr, "%s: %s\n", filenames, strerror(errno));
 	  goto end;
 	}
       }
+
+      if ((eofb != 0) && (nconvl >= 0)) {
+	/* Flush at EOF is ok */
+	break;
+      }
     }
 
-    if (outleft < BUFSIZ) {
-      nwrite = BUFSIZ - outleft;
-      if (write(outputFd, outbuf, nwrite) != nwrite) {
+    if (outleftl < outsizel) {
+      nwritel = outsizel - outleftl;
+      if (write(outputFd, outbuforigp, nwritel) != nwritel) {
 	fprintf(stderr, "Failed to write output: %s\n", strerror(errno));
 	goto end;
       }
@@ -193,6 +242,12 @@ void fileconvert(int outputFd, char *filenames, char *tocodes, char *fromcodes, 
     if (tconv_close(tconvp) != 0) {
       fprintf(stderr, "Failed to close tconv: %s\n", strerror(errno));
     }
+  }
+  if (outbuforigp != NULL) {
+    free(outbuforigp);
+  }
+  if (inbuforigp != NULL) {
+    free(inbuforigp);
   }
 }
 
