@@ -12,22 +12,43 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #ifndef _WIN32
-#include <unistd.h>
+#  include <unistd.h>
 #else
-#include <io.h>
+#  include <io.h>
 #endif
 
 #ifndef EXIT_FAILURE
-#define EXIT_FAILURE 1
+#  define EXIT_FAILURE 1
 #endif
 #ifndef EXIT_SUCCESS
-#define EXIT_SUCCESS 0
+#  define EXIT_SUCCESS 0
 #endif
 #ifndef O_BINARY
-#ifdef _O_BINARY
-#define O_BINARY _O_BINARY
+#  ifdef _O_BINARY
+#    define O_BINARY _O_BINARY
+#  endif
 #endif
+
+#ifndef S_IREAD
+#  ifdef S_IRUSR
+#    define S_IREAD S_IRUSR
+#  else
+#    ifdef _S_IREAD
+#      define S_IREAD _S_IREAD
+#    endif
+#  endif
 #endif
+
+#ifndef S_IWRITE
+#  ifdef S_IWUSR
+#    define S_IWRITE S_IWUSR
+#  else
+#    ifdef _S_IWRITE
+#      define S_IWRITE _S_IWRITE
+#    endif
+#  endif
+#endif
+
 
 void traceCallback(void *userDatavp, const char *msgs);
 void fileconvert(int outputFd, char *filenames, char *tocodes, char *fromcodes, size_t bufsizel, short verbose);
@@ -100,6 +121,8 @@ int main(int argc, char **argv) {
 #ifdef O_BINARY
                     |O_BINARY
 #endif
+                    ,
+                    _S_IREAD|_S_IWRITE
                     );
     if (outputFd < 0) {
       fprintf(stderr, "Failed to open %s: %s\n", outputs, strerror(errno));
