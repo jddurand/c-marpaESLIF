@@ -144,7 +144,8 @@ int tconv_close(tconv_t tconvp)
 /****************************************************************************/
 {
   static const char funcs[] = "tconv_close";
-  int rci = 0;
+  int               rci     = 0;
+  genericLogger_t  *genericLoggerp;
 
   TCONV_TRACE(tconvp, "%s(%p)", funcs, tconvp);
 
@@ -177,11 +178,19 @@ int tconv_close(tconv_t tconvp)
         rci = -1;
       }
     }
-    if (tconvp->genericLoggerp != NULL) {
-      GENERICLOGGER_FREE(tconvp->genericLoggerp);
+    /* Remember the logger to log the maxiumum as possible */
+    genericLoggerp = tconvp->genericLoggerp;
+#ifndef TCONV_NTRACE
+    if (genericLoggerp != NULL) {
+      TCONV_TRACE(tconvp, "%s - prepared to free genericLogger %p", funcs, genericLoggerp);
     }
+#endif
     TCONV_TRACE(tconvp, "%s - freeing tconv context", funcs);
     TCONV_FREE(tconvp, funcs, tconvp);
+
+    if (genericLoggerp != NULL) {
+      GENERICLOGGER_FREE(genericLoggerp);
+    }
   }
 
   return 0;
@@ -235,7 +244,12 @@ tconv_t tconv_open_ext(const char *tocodes, const char *fromcodes, tconv_option_
     tconvp->genericLoggerp  = NULL;
   }
 
-  /* We can log that only now */
+  /* From now on, we can log */
+#ifndef TCONV_NTRACE
+  if (tconvp->genericLoggerp != NULL) {
+    TCONV_TRACE(tconvp, "%s - genericLogger created: %p ", funcs, tconvp->genericLoggerp);
+  }
+#endif
   TCONV_TRACE(tconvp, "%s - trace flag set to %d ", funcs, (int) tconvp->traceb);
 
   /* 2. encodings */
@@ -396,6 +410,7 @@ tconv_t tconv_open_ext(const char *tocodes, const char *fromcodes, tconv_option_
     _tconvDefaultCharsetAndConvertOptions(tconvp);
   }
 
+  TCONV_TRACE(tconvp, "%s - return %p", funcs, tconvp);
   return tconvp;
   
  err:
