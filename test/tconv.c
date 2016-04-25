@@ -117,13 +117,12 @@ int main(int argc, char **argv) {
   }
   
   if (outputs != NULL) {
-    outputFd = open(outputs, O_RDWR|O_CREAT|O_TRUNC
+    outputFd = open(outputs,
+                      O_RDWR|O_CREAT|O_TRUNC
 #ifdef O_BINARY
-                    |O_BINARY
+                      |O_BINARY
 #endif
-                    ,
-                    _S_IREAD|_S_IWRITE
-                    );
+                      , S_IREAD|S_IWRITE);
     if (outputFd < 0) {
       fprintf(stderr, "Failed to open %s: %s\n", outputs, strerror(errno));
       exit(EXIT_FAILURE);
@@ -172,7 +171,12 @@ void fileconvert(int outputFd, char *filenames, char *tocodes, char *fromcodes, 
   }
   outsizel = bufsizel;
 
-  fd = open(filenames, O_RDONLY);
+  fd = open(filenames,
+            O_RDONLY
+#ifdef O_BINARY
+            |O_BINARY
+#endif
+            );
   if (fd < 0) {
     fprintf(stderr, "Failed to open %s: %s\n", filenames, strerror(errno));
     goto end;
