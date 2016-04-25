@@ -39,7 +39,7 @@ void  *tconv_convert_iconv_new(tconv_t tconvp, const char *tocodes, const char *
 
   TCONV_TRACE(tconvp, "%s - iconv_open(\"%s\", \"%s\")", funcs, tocodes, fromcodes);
   iconvp = iconv_open(tocodes, fromcodes);
-  if (iconvp == NULL) {
+  if (iconvp == (iconv_t) -1) {
     TCONV_TRACE(tconvp, "%s - iconv_open failure, %s", funcs, strerror(errno));
     goto err;
   } else {
