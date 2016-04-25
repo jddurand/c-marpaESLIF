@@ -23,6 +23,11 @@
 #ifndef EXIT_SUCCESS
 #define EXIT_SUCCESS 0
 #endif
+#ifndef O_BINARY
+#ifdef _O_BINARY
+#define O_BINARY _O_BINARY
+#endif
+#endif
 
 void traceCallback(void *userDatavp, const char *msgs);
 void fileconvert(int outputFd, char *filenames, char *tocodes, char *fromcodes, size_t bufsizel, short verbose);
@@ -91,7 +96,11 @@ int main(int argc, char **argv) {
   }
   
   if (outputs != NULL) {
-    outputFd = creat(outputs, 0644);
+    outputFd = open(outputs, O_RDWR|O_CREAT|O_TRUNC
+#ifdef O_BINARY
+                    |O_BINARY
+#endif
+                    );
     if (outputFd < 0) {
       fprintf(stderr, "Failed to open %s: %s\n", outputs, strerror(errno));
       exit(EXIT_FAILURE);
@@ -118,8 +127,8 @@ void fileconvert(int outputFd, char *filenames, char *tocodes, char *fromcodes, 
   char           *outbufp = NULL, *outbuforigp = NULL;
   size_t          inleftl  = 0, insizel  = 0, inleftorigl = 0, *inleftlp = NULL;
   size_t          outleftl = 0, outsizel = 0;
-  FILE           *fp = NULL;
   tconv_t         tconvp = NULL;
+  int             fd;
   tconv_option_t  tconvOption;
   size_t          nconvl;
   size_t          nwritel;
@@ -140,8 +149,8 @@ void fileconvert(int outputFd, char *filenames, char *tocodes, char *fromcodes, 
   }
   outsizel = bufsizel;
 
-  fp = fopen(filenames, "rb");
-  if (fp == NULL) {
+  fd = open(filenames, O_RDONLY);
+  if (fd < 0) {
     fprintf(stderr, "Failed to open %s: %s\n", filenames, strerror(errno));
     goto end;
   }
@@ -162,22 +171,15 @@ void fileconvert(int outputFd, char *filenames, char *tocodes, char *fromcodes, 
   }
 
   while (eofb == 0) {
-    eofb = feof(fp);
 
-    if (eofb) {
-      inleftorigl = 0;
-      inbufpp     = NULL;
-      inleftlp    = NULL;
-    } else {
-      inleftorigl = fread(inbuforigp, 1, insizel, fp);
-      if (inleftorigl <= 0) {
-	fprintf(stderr, "Failed to read from %s: %s\n", filenames, strerror(errno));
-	goto end;
-      }
-      inbufpp  = &inbufp;
-      inleftlp = &inleftl;
+    inleftorigl = read(fd, inbuforigp, insizel);
+    if (inleftorigl < 0) {
+      fprintf(stderr, "Failed to read from %s: %s\n", filenames, strerror(errno));
+      goto end;
     }
-
+    eofb = (inleftorigl == 0) ?  1 : 0;
+    inbufpp     = eofb ? NULL : &inbufp;
+    inleftlp    = eofb ? NULL : &inleftl;
     inbufp   = inbuforigp;
     inleftl  = inleftorigl;
     outbufp  = outbuforigp;
@@ -233,8 +235,8 @@ void fileconvert(int outputFd, char *filenames, char *tocodes, char *fromcodes, 
   tconvp = NULL;
 
   end:
-  if (fp != NULL) {
-    if (fclose(fp) != 0) {
+  if (fd >= 0) {
+    if (close(fd) != 0) {
       fprintf(stderr, "Failed to close %s: %s\n", filenames, strerror(errno));
     }
   }
