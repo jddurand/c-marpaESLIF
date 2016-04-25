@@ -289,7 +289,8 @@ SET_PROPERTY (TARGET tconvTester
   INCLUDE_DIRECTORIES
   "${INCLUDE_OUTPUT_PATH}"                                # Include path for generated files (internal)
   "${PROJECT_SOURCE_DIR}/include"                         # Include path for the other headers (internal)
-  "${OPTPARSE_INCLUDE_DIR}"
+  "${GENERICLOGGER_INCLUDE_DIRS}"                         # Include path for genericLogger (external - required)
+  "${OPTPARSE_INCLUDE_DIR}"                               # Include path for optparse (builtin)
   )
 TARGET_LINK_LIBRARIES (tconvTester tconv optparse)
 ADD_TEST              (NAME tconvTest
