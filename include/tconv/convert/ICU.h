@@ -3,9 +3,9 @@
 
 #include <stddef.h>
 
-typedef struct tconv_convert_icu_option {
+typedef struct tconv_convert_ICU_option {
   size_t uCharSizel;           /* Size of intermediary buffer. Default: 1024*1024 */
-} tconv_convert_icu_option_t;
+} tconv_convert_ICU_option_t;
 
 #include "tconv.h"
 #include "tconv/export.h"

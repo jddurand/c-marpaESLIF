@@ -17,7 +17,7 @@
 #define TCONV_ICU_TRANSLIT "//TRANSLIT"
 
 /* Default option */
-tconv_convert_icu_option_t tconv_convert_icu_option_default = { 1024*1024 };
+tconv_convert_ICU_option_t tconv_convert_icu_option_default = { 1024*1024 };
 
 /* Context */
 typedef struct tconv_convert_icu_context {
@@ -32,7 +32,7 @@ void  *tconv_convert_ICU_new(tconv_t tconvp, const char *tocodes, const char *fr
 /*****************************************************************************/
 {
   static const char            funcs[]        = "tconv_convert_ICU_new";
-  tconv_convert_icu_option_t  *optionp        = (tconv_convert_icu_option_t *) voidp;
+  tconv_convert_ICU_option_t  *optionp        = (tconv_convert_ICU_option_t *) voidp;
   UBool                        ignoreb        = FALSE;
   UBool                        translitb      = FALSE;
   char                        *realToCodes;
@@ -67,7 +67,7 @@ void  *tconv_convert_ICU_new(tconv_t tconvp, const char *tocodes, const char *fr
   }
   if ((translitp != NULL) && ((*(translitp+1) == '\0') || (*(translitp+1) == '/'))) {
     translitb = TRUE;
-    endTranslitp = translitb + strlen(translitb) - 1;
+    endTranslitp = translitp + strlen(translitp) - 1;
   }
   /* ... Remove options from realToCodes  */
   for (p = q = realToCodes; *p != '\0'; ++p) {    /* Note that a valid charset cannot contain \0 */
@@ -78,7 +78,7 @@ void  *tconv_convert_ICU_new(tconv_t tconvp, const char *tocodes, const char *fr
       continue;
     }
     if (p != q) {
-      *q++ = p;
+      *q++ = *p;
     }
   }
 
@@ -95,13 +95,9 @@ void  *tconv_convert_ICU_new(tconv_t tconvp, const char *tocodes, const char *fr
   }
 
   contextp->uConverterFromp             = NULL;
-  contextp->uConverterFromUCallbackp    = NULL;
-  contextp->uConverterFromUCallbackCtxp = NULL;
   contextp->ucharBufp                   = NULL;
   contextp->uTransliteratorp            = NULL;
   contextp->uConverterTop               = NULL;
-  contextp->uConverterToUCallbackp      = NULL;
-  contextp->uConverterToUCallbackCtxp   = NULL;
 
   /* Callbacks, contexts and fallback */
   fromUCallbackp = (ignoreb == TRUE) ? UCNV_TO_U_CALLBACK_SKIP : UCNV_TO_U_CALLBACK_STOP;
