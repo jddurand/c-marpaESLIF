@@ -17,7 +17,13 @@
 #define TCONV_ICU_TRANSLIT "//TRANSLIT"
 
 /* Default option */
-tconv_convert_ICU_option_t tconv_convert_icu_option_default = { 1024*1024 };
+#define TCONV_ENV_CONVERT_ICU_UCHARSIZE "TCONV_ENV_CONVERT_ICU_UCHARSIZE"
+#define TCONV_ENV_CONVERT_ICU_FALLBACK  "TCONV_ENV_CONVERT_ICU_FALLBACK"
+
+tconv_convert_ICU_option_t tconv_convert_icu_option_default = {
+  1024*1024, /* uCharSizel */
+  0          /* fallbackb */
+};
 
 /* Context */
 typedef struct tconv_convert_icu_context {
@@ -31,19 +37,25 @@ typedef struct tconv_convert_icu_context {
 void  *tconv_convert_ICU_new(tconv_t tconvp, const char *tocodes, const char *fromcodes, void *voidp)
 /*****************************************************************************/
 {
-  static const char            funcs[]        = "tconv_convert_ICU_new";
-  tconv_convert_ICU_option_t  *optionp        = (tconv_convert_ICU_option_t *) voidp;
-  UBool                        ignoreb        = FALSE;
-  UBool                        translitb      = FALSE;
-  char                        *realToCodes;
-  char                        *ignorep, *endIgnorep = NULL;
-  char                        *translitp, *endTranslitp = NULL;
-  UConverterFromUCallback      fromUCallbackp;
-  const void                  *fromuContextp;
-  UConverterToUCallback        toUCallbackp;
-  const void                  *toUContextp;
-  UBool                        fallbackb;
-  tconv_convert_icu_context_t *contextp;
+  static const char            funcs[]          = "tconv_convert_ICU_new";
+  tconv_convert_ICU_option_t  *optionp          = (tconv_convert_ICU_option_t *) voidp;
+  UBool                        ignoreb          = FALSE;
+  UBool                        translitb        = FALSE;
+  char                        *realToCodes      = NULL;
+  tconv_convert_icu_context_t *contextp         = NULL;
+  char                        *ignorep          = NULL;
+  char                        *endIgnorep       = NULL;
+  char                        *translitp        = NULL;
+  char                        *endTranslitp     = NULL;
+  UConverter                  *uConverterFromp  = NULL;
+  UChar                       *ucharBufp        = NULL;
+  UTransliterator             *uTransliteratorp = NULL;
+  UConverter                  *uConverterTop    = NULL;
+  UConverterFromUCallback      fromUCallbackp   = NULL;
+  const void                  *fromuContextp    = NULL;
+  UConverterToUCallback        toUCallbackp     = NULL;
+  const void                  *toUContextp      = NULL;
+  UBool                        fallbackb        = FALSE;
   UErrorCode                   uErrorCode;
   char                        *p, *q;
 
@@ -52,7 +64,9 @@ void  *tconv_convert_ICU_new(tconv_t tconvp, const char *tocodes, const char *fr
     goto err;
   }
 
-  /* Detect //IGNORE and //TRANSLIT option */
+  /* ----------------------------------------------------------- */
+  /* Duplicate tocodes and manage //IGNORE and //TRANSLIT option */
+  /* ----------------------------------------------------------- */
   TCONV_TRACE(tconvp, "%s - strdup(%p)", funcs, tocodes);
   realToCodes = strdup(tocodes);
   if (realToCodes == NULL) {
@@ -81,11 +95,86 @@ void  *tconv_convert_ICU_new(tconv_t tconvp, const char *tocodes, const char *fr
       *q++ = *p;
     }
   }
+  TCONV_TRACE(tconvp, "%s - realToCodes is now \"%s\"", funcs, realToCodes);
 
-  /* Get converter options */
+  /* ----------------------------------------------------------- */
+  /* Get options                                                 */
+  /* ----------------------------------------------------------- */
   if (optionp == NULL) {
     optionp = &tconv_convert_icu_option_default;
+    /* This can be overwriten with environment variables */
+    TCONV_TRACE(tconvp, "%s - getenv(\"%s\")", funcs, TCONV_ENV_CONVERT_ICU_UCHARSIZE);
+    p = getenv(TCONV_ENV_CONVERT_ICU_UCHARSIZE);
+    if (p != NULL) {
+      TCONV_TRACE(tconvp, "%s - atoi(\"%s\")", funcs, p);
+      optionp->uCharSizel = atoi(p);
+      if (optionp->uCharSizel <= 0) {
+	errno = EINVAL;
+	goto err;
+      }
+    }
+    TCONV_TRACE(tconvp, "%s - getenv(\"%s\")", funcs, TCONV_ENV_CONVERT_ICU_FALLBACK);
+    p = getenv(TCONV_ENV_CONVERT_ICU_FALLBACK);
+    if (p != NULL) {
+      TCONV_TRACE(tconvp, "%s - atoi(\"%s\")", funcs, p);
+      optionp->fallbackb = (atoi(p) != 0) ? 1 : 0;
+    }
   }
+
+  /* ----------------------------------------------------------- */
+  /* Setup the from converter                                    */
+  /* ----------------------------------------------------------- */
+  fromUCallbackp = (ignoreb == TRUE) ? UCNV_FROM_U_CALLBACK_SKIP : UCNV_FROM_U_CALLBACK_STOP;
+  fromuContextp  = NULL;
+
+  uErrorCode = U_ZERO_ERROR;
+  TCONV_TRACE(tconvp, "%s - ucnv_open(%p, %p)", funcs, fromcodes, &uErrorCode);
+  uConverterFromp = ucnv_open(fromcodes, &uErrorCode);
+  if (U_FAILURE(uErrorCode)) {
+    goto err;
+  }
+  TCONV_TRACE(tconvp, "%s - ucnv_open returned %p", funcs, uConverterFromp);
+
+  uErrorCode = U_ZERO_ERROR;
+  TCONV_TRACE(tconvp, "%s - ucnv_setFromUCallBack(%p, %p, %p, %p, %p)", funcs, uConverterFromp, fromUCallbackp, fromuContextp, NULL, NULL, &uErrorCode);
+  ucnv_setFromUCallBack(uConverterFromp, fromUCallbackp, fromuContextp, NULL, NULL, &uErrorCode);
+  if (U_FAILURE(uErrorCode)) {
+    goto err;
+  }
+
+  /* ----------------------------------------------------------- */
+  /* Setup the proxy unicode buffer                              */
+  /* ----------------------------------------------------------- */
+  TCONV_TRACE(tconvp, "%s - malloc(%lld)", funcs, (unsigned long long) (optionp->uCharSizel * sizeof(UChar)));
+  ucharBufp = (UChar *) malloc(optionp->uCharSizel * sizeof(UChar));
+  if (ucharBufp == NULL) {
+    goto err;
+  }
+  
+  /* ----------------------------------------------------------- */
+  /* Setup the to converter (there is the fallback in it)        */
+  /* ----------------------------------------------------------- */
+  toUCallbackp   = (ignoreb == TRUE) ? UCNV_TO_U_CALLBACK_SKIP   : UCNV_TO_U_CALLBACK_STOP;
+  toUContextp    = NULL;
+  fallbackb      = (optionp->fallbackb != 0) ? TRUE : FALSE;
+
+  uErrorCode = U_ZERO_ERROR;
+  TCONV_TRACE(tconvp, "%s - ucnv_open(%p, %p)", funcs, tocodes, &uErrorCode);
+  uConverterTop = ucnv_open(tocodes, &uErrorCode);
+  if (U_FAILURE(uErrorCode)) {
+    goto err;
+  }
+  TCONV_TRACE(tconvp, "%s - ucnv_open returned %p", funcs, uConverterTop);
+
+  uErrorCode = U_ZERO_ERROR;
+  TCONV_TRACE(tconvp, "%s - ucnv_setToUCallBack(%p, %p, %p, %p, %p)", funcs, uConverterTop, toUCallbackp, toUContextp, NULL, NULL, &uErrorCode);
+  ucnv_setToUCallBack(uConverterTop, toUCallbackp, toUContextp, NULL, NULL, &uErrorCode);
+  if (U_FAILURE(uErrorCode)) {
+    goto err;
+  }
+
+  TCONV_TRACE(tconvp, "%s - ucnv_setFallback(%p, %d)", funcs, uConverterTop, (int) fallbackb);
+  ucnv_setFallback(uConverterTop, fallbackb);
 
   /* Create context */
   TCONV_TRACE(tconvp, "%s - malloc(%lld)", funcs, (unsigned long long) sizeof(tconv_convert_icu_context_t));
@@ -98,32 +187,6 @@ void  *tconv_convert_ICU_new(tconv_t tconvp, const char *tocodes, const char *fr
   contextp->ucharBufp                   = NULL;
   contextp->uTransliteratorp            = NULL;
   contextp->uConverterTop               = NULL;
-
-  /* Callbacks, contexts and fallback */
-  fromUCallbackp = (ignoreb == TRUE) ? UCNV_TO_U_CALLBACK_SKIP : UCNV_TO_U_CALLBACK_STOP;
-  fromuContextp  = NULL;
-  toUCallbackp   = (ignoreb == TRUE) ? UCNV_TO_U_CALLBACK_SKIP : UCNV_TO_U_CALLBACK_STOP;
-  toUContextp    = NULL;
-  fallbackb      = translitb;
-
-  /* From converter: it always exist */
-  uErrorCode = U_ZERO_ERROR;
-  TCONV_TRACE(tconvp, "%s - ucnv_open(%p, %p)", funcs, fromcodes, &uErrorCode);
-  contextp->uConverterFromp = ucnv_open(fromcodes, &uErrorCode);
-  if (U_FAILURE(uErrorCode)) {
-    goto err;
-  }
-  TCONV_TRACE(tconvp, "%s - ucnv_open returned %p", funcs, contextp->uConverterFromp);
-
-  uErrorCode = U_ZERO_ERROR;
-  TCONV_TRACE(tconvp, "%s - ucnv_setFromUCallBack(%p, %p, %p, %p, %p)", funcs, contextp->uConverterFromp, fromUCallbackp, fromuContextp, NULL, NULL, &uErrorCode);
-  ucnv_setFromUCallBack(contextp->uConverterFromp, fromUCallbackp, fromuContextp, NULL, NULL, &uErrorCode);
-  if (U_FAILURE(uErrorCode)) {
-    goto err;
-  }
-
-  TCONV_TRACE(tconvp, "%s - ucnv_setFallback(%p, %d)", funcs, contextp->uConverterFromp, (int) fallbackb);
-  ucnv_setFallback(contextp->uConverterFromp, fallbackb);
 
   TCONV_TRACE(tconvp, "%s - icu_open(%p, %p)", funcs, tocodes, fromcodes);
   icup = icu_open(tocodes, fromcodes);
@@ -139,6 +202,15 @@ void  *tconv_convert_ICU_new(tconv_t tconvp, const char *tocodes, const char *fr
     }
     if (U_FAILURE(uErrorCode)) {
       tconv_error_set(tconvp, u_errorName(uErrorCode));
+    }
+    if (uConverterFromp != NULL) {
+      ucnv_close (uConverterFromp);
+    }
+    if (uConverterTop != NULL) {
+      ucnv_close (uConverterTop);
+    }
+    if (contextp != NULL) {
+      free(contextp);
     }
     errno = errnol;
   }
