@@ -489,7 +489,7 @@ size_t tconv(tconv_t tconvp, char **inbufsp, size_t *inbytesleftlp, char **outbu
       TCONV_TRACE(tconvp, "%s - initializing convert engine: %p(%p, %p, %p, %p)", funcs, tconvp->convertExternal.tconv_convert_newp, tconvp, tconvp->tocodes, tconvp->fromcodes, convertOptionp);
       tconvp->errors[0] = '\0';
       convertContextp = tconvp->convertExternal.tconv_convert_newp(tconvp, tconvp->tocodes, tconvp->fromcodes, convertOptionp);
-      if (convertContextp == NULL) {
+      if (convertContextp == (void *)-1) {
 	goto err;
       }
     }
@@ -558,7 +558,7 @@ static TCONV_C_INLINE void _tconvDefaultCharsetOption(tconv_t tconvp, tconv_char
 
   TCONV_TRACE(tconvp, "%s(%p, %p)", funcs, tconvp, tconvConvertExternalp);
 
-#ifdef TCONV_HAVE_ICUJDD
+#ifdef TCONV_HAVE_ICU
   TCONV_TRACE(tconvp, "%s - setting default converter to ICU", funcs);
   tconvConvertExternalp->optionp             = NULL;
   tconvConvertExternalp->tconv_convert_newp  = tconv_convert_ICU_new;
