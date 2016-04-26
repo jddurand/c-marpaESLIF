@@ -236,7 +236,7 @@ void fileconvert(int outputFd, char *filenames, char *tocodes, char *fromcodes, 
 	  }
 	  break;
 	default:
-	  fprintf(stderr, "%s: %s\n", filenames, strerror(errno));
+	  fprintf(stderr, "%s: %s\n", filenames, tconv_error(tconvp));
 	  goto end;
 	}
       }

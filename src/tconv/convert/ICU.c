@@ -6,6 +6,7 @@
 #include <unicode/ucnv.h>
 #include <unicode/utrans.h>
 #include <unicode/uset.h>
+#include <unicode/ustring.h>
 
 #include "tconv/convert/ICU.h"
 /* Because this is a built-in, it can take advantage of TCONV_TRACE macro */
@@ -15,21 +16,22 @@
 #define TCONV_ICU_TRANSLIT "//TRANSLIT"
 
 /* Default option */
-#define TCONV_ENV_CONVERT_ICU_UCHARSIZE "TCONV_ENV_CONVERT_ICU_UCHARSIZE"
+#define TCONV_ENV_CONVERT_ICU_UCHARLENGTH "TCONV_ENV_CONVERT_ICU_UCHARLENGTH"
 #define TCONV_ENV_CONVERT_ICU_FALLBACK  "TCONV_ENV_CONVERT_ICU_FALLBACK"
 
 tconv_convert_ICU_option_t tconv_convert_icu_option_default = {
-  1024*1024, /* uCharSizel */
+  1024*1024, /* uCharLengthl */
   0          /* fallbackb */
 };
 
 /* Context */
-typedef struct tconv_convert_icu_context {
+typedef struct tconv_convert_ICU_context {
   UConverter                 *uConverterFromp;  /* Input => UChar  */
-  UChar                      *ucharBufp;        /* UChar buffer    */
+  UChar                      *uCharBufp;        /* UChar buffer    */
+  size_t                      uCharLengthl;     /* Size of intermediary buffer. Default: 1024*1024 */
   UConverter                 *uConverterTop;    /* UChar => Output */
   UTransliterator            *uTransliteratorp; /* Transliteration */
-} tconv_convert_icu_context_t;
+} tconv_convert_ICU_context_t;
 
 /*****************************************************************************/
 void  *tconv_convert_ICU_new(tconv_t tconvp, const char *tocodes, const char *fromcodes, void *voidp)
@@ -40,13 +42,13 @@ void  *tconv_convert_ICU_new(tconv_t tconvp, const char *tocodes, const char *fr
   UBool                        ignoreb          = FALSE;
   UBool                        translitb        = FALSE;
   char                        *realToCodes      = NULL;
-  tconv_convert_icu_context_t *contextp         = NULL;
+  tconv_convert_ICU_context_t *contextp         = NULL;
   char                        *ignorep          = NULL;
   char                        *endIgnorep       = NULL;
   char                        *translitp        = NULL;
   char                        *endTranslitp     = NULL;
   UConverter                  *uConverterFromp  = NULL;
-  UChar                       *ucharBufp        = NULL;
+  UChar                       *uCharBufp        = NULL;
   UTransliterator             *uTransliteratorp = NULL;
   UConverter                  *uConverterTop    = NULL;
   UConverterFromUCallback      fromUCallbackp   = NULL;
@@ -66,6 +68,10 @@ void  *tconv_convert_ICU_new(tconv_t tconvp, const char *tocodes, const char *fr
   UErrorCode                   uErrorCode;
   char                        *p, *q;
   UConverterUnicodeSet         whichSet;
+#define universalTransliteratorsLength 22
+  U_STRING_DECL(universalTransliterators, "Any-Latin; Latin-ASCII", universalTransliteratorsLength);
+
+  U_STRING_INIT(universalTransliterators, "Any-Latin; Latin-ASCII", universalTransliteratorsLength);
 
   if ((tocodes == NULL) || (fromcodes == NULL)) {
     errno = EINVAL;
@@ -118,12 +124,12 @@ void  *tconv_convert_ICU_new(tconv_t tconvp, const char *tocodes, const char *fr
   if (optionp == NULL) {
     optionp = &tconv_convert_icu_option_default;
     /* This can be overwriten with environment variables */
-    TCONV_TRACE(tconvp, "%s - getenv(\"%s\")", funcs, TCONV_ENV_CONVERT_ICU_UCHARSIZE);
-    p = getenv(TCONV_ENV_CONVERT_ICU_UCHARSIZE);
+    TCONV_TRACE(tconvp, "%s - getenv(\"%s\")", funcs, TCONV_ENV_CONVERT_ICU_UCHARLENGTH);
+    p = getenv(TCONV_ENV_CONVERT_ICU_UCHARLENGTH);
     if (p != NULL) {
       TCONV_TRACE(tconvp, "%s - atoi(\"%s\")", funcs, p);
-      optionp->uCharSizel = atoi(p);
-      if (optionp->uCharSizel <= 0) {
+      optionp->uCharLengthl = atoi(p);
+      if (optionp->uCharLengthl <= 0) {
 	errno = EINVAL;
 	goto err;
       }
@@ -166,9 +172,9 @@ void  *tconv_convert_ICU_new(tconv_t tconvp, const char *tocodes, const char *fr
   /* ----------------------------------------------------------- */
   /* Setup the proxy unicode buffer                              */
   /* ----------------------------------------------------------- */
-  TCONV_TRACE(tconvp, "%s - malloc(%lld)", funcs, (unsigned long long) (optionp->uCharSizel * sizeof(UChar)));
-  ucharBufp = (UChar *) malloc(optionp->uCharSizel * sizeof(UChar));
-  if (ucharBufp == NULL) {
+  TCONV_TRACE(tconvp, "%s - malloc(%lld)", funcs, (unsigned long long) (optionp->uCharLengthl * sizeof(UChar)));
+  uCharBufp = (UChar *) malloc(optionp->uCharLengthl * sizeof(UChar));
+  if (uCharBufp == NULL) {
     goto err;
   }
   
@@ -215,6 +221,7 @@ void  *tconv_convert_ICU_new(tconv_t tconvp, const char *tocodes, const char *fr
     /* --------------------------- */
     /* Uset for the from converter */
     /* --------------------------- */
+    TCONV_TRACE(tconvp, "%s - getting \"from\" USet", funcs);
     TCONV_TRACE(tconvp, "%s - uset_openEmpty()", funcs);
     uSetFromp = uset_openEmpty();
     if (uSetFromp == NULL) { /* errno ? */
@@ -259,6 +266,7 @@ void  *tconv_convert_ICU_new(tconv_t tconvp, const char *tocodes, const char *fr
     /* ------------------------- */
     /* Uset for the to converter */
     /* ------------------------- */
+    TCONV_TRACE(tconvp, "%s - getting \"to\" USet", funcs);
     TCONV_TRACE(tconvp, "%s - uset_openEmpty()", funcs);
     uSetTop = uset_openEmpty();
     if (uSetTop == NULL) { /* errno ? */
@@ -303,6 +311,7 @@ void  *tconv_convert_ICU_new(tconv_t tconvp, const char *tocodes, const char *fr
     /* ---------------------------------------------------------------------------- */
     /* Interset the two usets (I could have used uset_retainAll(uSetFromp, uSetTop) */
     /* ---------------------------------------------------------------------------- */
+    TCONV_TRACE(tconvp, "%s - intersecting \"from\" and \"to\" USet's", funcs);
     TCONV_TRACE(tconvp, "%s - uset_openEmpty()", funcs);
     uSetp = uset_openEmpty();
     if (uSetp == NULL) { /* errno ? */
@@ -314,7 +323,6 @@ void  *tconv_convert_ICU_new(tconv_t tconvp, const char *tocodes, const char *fr
     uset_addAll(uSetp, uSetFromp);
     uset_retainAll(uSetp, uSetTop);
 
-#ifndef TCONV_NTRACE
     uErrorCode = U_ZERO_ERROR;
     TCONV_TRACE(tconvp, "%s - uset_toPattern(%p, NULL, 0, TRUE, %p)", funcs, uSetp, &uErrorCode);
     uSetPatternl = uset_toPattern(uSetp, NULL, 0, TRUE, &uErrorCode);
@@ -337,9 +345,37 @@ void  *tconv_convert_ICU_new(tconv_t tconvp, const char *tocodes, const char *fr
     p = (char *) (uSetPatterns + uSetPatternl);
     *p++ = '\0';
     *p   = '\0';
-#endif
 
-    /* Done with USet's and USetPattern's */
+    /* ---------------------------------------------------------------------------- */
+    /* Create transliterator                                                        */
+    /* ---------------------------------------------------------------------------- */
+    uErrorCode = U_ZERO_ERROR;
+    TCONV_TRACE(tconvp, "%s - uTransliteratorp(%p, %d, UTRANS_FORWARD, NULL, 0, NULL, %p)", funcs, universalTransliterators, universalTransliteratorsLength, &uErrorCode);
+    uTransliteratorp = utrans_openU(universalTransliterators,
+                                    universalTransliteratorsLength,
+                                    UTRANS_FORWARD,
+                                    NULL,
+                                    0,
+                                    NULL,
+                                    &uErrorCode);
+    if (U_FAILURE(uErrorCode)) {
+      errno = ENOSYS;
+      goto err;
+    }
+
+    /* Add a filter to this transliterator using the intersected USet's */
+    uErrorCode = U_ZERO_ERROR;
+    TCONV_TRACE(tconvp, "%s - utrans_setFilter(%p, %p, %lld, %p)", funcs, uSetPatterns, (unsigned long long) uSetPatternl, &uErrorCode);
+    utrans_setFilter(uTransliteratorp,
+                     uSetPatterns,
+                     uSetPatternl,
+                     &uErrorCode);
+    if (U_FAILURE(uErrorCode)) {
+      errno = ENOSYS;
+      goto err;
+    }
+
+      /* Cleanup */
     uset_close(uSetFromp);
     uset_close(uSetTop);
     uset_close(uSetp);
@@ -350,26 +386,27 @@ void  *tconv_convert_ICU_new(tconv_t tconvp, const char *tocodes, const char *fr
 #ifndef TCONV_NTRACE
     free(uSetPatternFroms);
     free(uSetPatternTos);
-    free(uSetPatterns);
     uSetPatternFroms = NULL;
     uSetPatternTos   = NULL;
-    uSetPatterns     = NULL;
 #endif
+    free(uSetPatterns);
+    uSetPatterns     = NULL;
   }
 
   /* ----------------------------------------------------------- */
   /* Setup the context                                           /
   /* ----------------------------------------------------------- */
-  TCONV_TRACE(tconvp, "%s - malloc(%lld)", funcs, (unsigned long long) sizeof(tconv_convert_icu_context_t));
-  contextp = (tconv_convert_icu_context_t *) malloc(sizeof(tconv_convert_icu_context_t));
+  TCONV_TRACE(tconvp, "%s - malloc(%lld)", funcs, (unsigned long long) sizeof(tconv_convert_ICU_context_t));
+  contextp = (tconv_convert_ICU_context_t *) malloc(sizeof(tconv_convert_ICU_context_t));
   if (contextp == NULL) {
     goto err;
   }
 
   contextp->uConverterFromp  = uConverterFromp;
-  contextp->ucharBufp        = ucharBufp;
-  contextp->uTransliteratorp = uTransliteratorp;
+  contextp->uCharBufp        = uCharBufp;
+  contextp->uCharLengthl     = optionp->uCharLengthl;
   contextp->uConverterTop    = uConverterTop;
+  contextp->uTransliteratorp = uTransliteratorp;
 
   TCONV_TRACE(tconvp, "%s - return %p", funcs, contextp);
   return contextp;
@@ -386,8 +423,8 @@ void  *tconv_convert_ICU_new(tconv_t tconvp, const char *tocodes, const char *fr
     if (uConverterFromp != NULL) {
       ucnv_close (uConverterFromp);
     }
-    if (ucharBufp != NULL) {
-      free(ucharBufp);
+    if (uCharBufp != NULL) {
+      free(uCharBufp);
     }
     if (uConverterTop != NULL) {
       ucnv_close (uConverterTop);
@@ -407,6 +444,9 @@ void  *tconv_convert_ICU_new(tconv_t tconvp, const char *tocodes, const char *fr
     if (uSetp != NULL) {
       uset_close(uSetp);
     }
+    if (uTransliteratorp != NULL) {
+      utrans_close(uTransliteratorp);
+    }
     if (contextp != NULL) {
       free(contextp);
     }
@@ -420,10 +460,57 @@ void  *tconv_convert_ICU_new(tconv_t tconvp, const char *tocodes, const char *fr
 size_t tconv_convert_ICU_run(tconv_t tconvp, void *voidp, char **inbufsp, size_t *inbytesleftlp, char **outbufsp, size_t *outbytesleftlp)
 /*****************************************************************************/
 {
-  static const char funcs[] = "tconv_convert_ICU_run";
-  size_t            rcl;
+  static const char            funcs[]      = "tconv_convert_ICU_run";
+  tconv_convert_ICU_context_t *contextp     = (tconv_convert_ICU_context_t *) voidp;
+  UBool                        flushb       = ((inbufsp == NULL) || (*inbufsp == NULL)) ? TRUE : FALSE;
+  UChar                       *targetp      = contextp->uCharBufp;
+  UChar                       *targetLimitp = contextp->uCharBufp + contextp->uCharLengthl; /* in units of UChar */
+  static const char           *dummys       = "";
+  char                        *sourcep      = (inbufsp != NULL) ? *inbufsp : dummys;
+  char                        *sourceLimitp = ((inbufsp != NULL) && (inbytesleftlp != NULL)) ? (*inbufsp + *inbytesleftlp) : dummys;
+  UErrorCode                   uErrorCode;
+  size_t                       rcl;
+  /* Logic here directly inherited from uconv.cpp */
+  size_t                       rd;
+  size_t                       wr;
+  uint32_t                     infoffset;
+  uint32_t                     outfoffset;
+  UBool                        willexit;
+  UBool                        fromSawEndOfBytes;
+  UBool                        toSawEndOfUnicode;
+
+  infoffset = 0;
+  outfoffset = 0;
+  rd = 0;
+  do {
+
+    willexit = FALSE;
+    infoffset += rd;
+
+    uErrorCode = U_ZERO_ERROR;
+    TCONV_TRACE(tconvp, "%s - ucnv_toUnicode(%p, %p, %p, %p, %p, NULL, %d, %p)", funcs, contextp->uConverterFromp, &targetp, targetLimitp, &sourcep, sourceLimitp, (int) flushb, &uErrorCode);
+    ucnv_toUnicode(contextp->uConverterFromp,
+                   &targetp,
+                   targetLimitp,
+                   &sourcep,
+                   sourceLimitp,
+                   NULL,
+                   flushb,
+                   &uErrorCode);
+    if ((uErrorCode != U_BUFFER_OVERFLOW_ERROR) && U_FAILURE(uErrorCode)) {
+      errno = ENOSYS;
+      goto err;
+    }
+
+  } while (fluhsb == FALSE)
 
   return 0;
+
+ err:
+  if (U_FAILURE(uErrorCode)) {
+    tconv_error_set(tconvp, u_errorName(uErrorCode));
+  }
+  return (size_t)-1;
 }
 
 /*****************************************************************************/
