@@ -21,15 +21,15 @@ void  *tconv_convert_iconv_new(tconv_t tconvp, const char *tocodes, const char *
 }
 
 /*****************************************************************************/
-size_t tconv_convert_iconv_run(tconv_t tconvp, void *voidp, char **inbufsp, size_t *inbytesleftlp, char **outbufsp, size_t *outbytesleftlp)
+size_t tconv_convert_iconv_run(tconv_t tconvp, void *voidp, char **inbufpp, size_t *inbytesleftlp, char **outbufpp, size_t *outbytesleftlp)
 /*****************************************************************************/
 {
   static const char funcs[] = "tconv_convert_iconv_run";
   iconv_t           iconvp  = (iconv_t) voidp;
   size_t            rcl;
 
-  TCONV_TRACE(tconvp, "%s - iconv(%p, %p, %p, %p, %p)", funcs, iconvp, inbufsp, inbytesleftlp, outbufsp, outbytesleftlp);
-  rcl = iconv(iconvp, inbufsp, inbytesleftlp, outbufsp, outbytesleftlp);
+  TCONV_TRACE(tconvp, "%s - iconv(%p, %p, %p, %p, %p)", funcs, iconvp, inbufpp, inbytesleftlp, outbufpp, outbytesleftlp);
+  rcl = iconv(iconvp, inbufpp, inbytesleftlp, outbufpp, outbytesleftlp);
 
 #ifndef TCONV_NTRACE
   if (rcl == (size_t)-1) {
