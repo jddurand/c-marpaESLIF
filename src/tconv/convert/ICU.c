@@ -4,7 +4,9 @@
 
 #include <unicode/uconfig.h>
 #include <unicode/ucnv.h>
+#if !UCONFIG_NO_TRANSLITERATION
 #include <unicode/utrans.h>
+#endif
 #include <unicode/uset.h>
 #include <unicode/ustring.h>
 
@@ -20,18 +22,24 @@
 #define TCONV_ENV_CONVERT_ICU_FALLBACK  "TCONV_ENV_CONVERT_ICU_FALLBACK"
 
 tconv_convert_ICU_option_t tconv_convert_icu_option_default = {
-  1024*1024, /* uCharLengthl */
-  0          /* fallbackb */
+  4096, /* uCharLengthl */
+  0     /* fallbackb */
 };
 
 /* Context */
 typedef struct tconv_convert_ICU_context {
   UConverter                 *uConverterFromp;  /* Input => UChar  */
   UChar                      *uCharBufp;        /* UChar buffer    */
-  size_t                      uCharLengthl;     /* Size of intermediary buffer. Default: 1024*1024 */
+  size_t                      uCharLengthl;     /* Length (not bytes) */
   UConverter                 *uConverterTop;    /* UChar => Output */
+#if !UCONFIG_NO_TRANSLITERATION
+  UChar                      *chunkp;
+  size_t                      chunkLengthl;     /* Length (not bytes) */
   UTransliterator            *uTransliteratorp; /* Transliteration */
+#endif
 } tconv_convert_ICU_context_t;
+
+static TCONV_C_INLINE int32_t getChunkLimit(const UChar *chunk, const size_t chunklen, const UChar *u, size_t ulen);
 
 /*****************************************************************************/
 void  *tconv_convert_ICU_new(tconv_t tconvp, const char *tocodes, const char *fromcodes, void *voidp)
@@ -49,7 +57,9 @@ void  *tconv_convert_ICU_new(tconv_t tconvp, const char *tocodes, const char *fr
   char                        *endTranslitp     = NULL;
   UConverter                  *uConverterFromp  = NULL;
   UChar                       *uCharBufp        = NULL;
+#if !UCONFIG_NO_TRANSLITERATION
   UTransliterator             *uTransliteratorp = NULL;
+#endif
   UConverter                  *uConverterTop    = NULL;
   UConverterFromUCallback      fromUCallbackp   = NULL;
   const void                  *fromuContextp    = NULL;
@@ -212,7 +222,7 @@ void  *tconv_convert_ICU_new(tconv_t tconvp, const char *tocodes, const char *fr
     TCONV_TRACE(tconvp, "%s - UCONFIG_NO_TRANSLITERATION", funcs);
     errno = ENOSYS;
     goto err;
-#endif
+#else
     whichSet = (fallbackb == TRUE) ? UCNV_ROUNDTRIP_AND_FALLBACK_SET : UCNV_ROUNDTRIP_SET;
 
     /* Transliterator is generated on-the-fly using the unicode */
@@ -375,7 +385,7 @@ void  *tconv_convert_ICU_new(tconv_t tconvp, const char *tocodes, const char *fr
       goto err;
     }
 
-      /* Cleanup */
+    /* Cleanup */
     uset_close(uSetFromp);
     uset_close(uSetTop);
     uset_close(uSetp);
@@ -391,6 +401,7 @@ void  *tconv_convert_ICU_new(tconv_t tconvp, const char *tocodes, const char *fr
 #endif
     free(uSetPatterns);
     uSetPatterns     = NULL;
+#endif /* UCONFIG_NO_TRANSLITERATION */
   }
 
   /* ----------------------------------------------------------- */
@@ -406,7 +417,11 @@ void  *tconv_convert_ICU_new(tconv_t tconvp, const char *tocodes, const char *fr
   contextp->uCharBufp        = uCharBufp;
   contextp->uCharLengthl     = optionp->uCharLengthl;
   contextp->uConverterTop    = uConverterTop;
+#if !UCONFIG_NO_TRANSLITERATION
+  contextp->chunkp           = NULL;
+  contextp->chunkLengthl     = 0;
   contextp->uTransliteratorp = uTransliteratorp;
+#endif
 
   TCONV_TRACE(tconvp, "%s - return %p", funcs, contextp);
   return contextp;
@@ -444,9 +459,11 @@ void  *tconv_convert_ICU_new(tconv_t tconvp, const char *tocodes, const char *fr
     if (uSetp != NULL) {
       uset_close(uSetp);
     }
+#if !UCONFIG_NO_TRANSLITERATION
     if (uTransliteratorp != NULL) {
       utrans_close(uTransliteratorp);
     }
+#endif
     if (contextp != NULL) {
       free(contextp);
     }
@@ -457,54 +474,136 @@ void  *tconv_convert_ICU_new(tconv_t tconvp, const char *tocodes, const char *fr
 }
 
 /*****************************************************************************/
-size_t tconv_convert_ICU_run(tconv_t tconvp, void *voidp, char **inbufsp, size_t *inbytesleftlp, char **outbufsp, size_t *outbytesleftlp)
+size_t tconv_convert_ICU_run(tconv_t tconvp, void *voidp, char **inbufpp, size_t *inbytesleftlp, char **outbufpp, size_t *outbytesleftlp)
 /*****************************************************************************/
 {
   static const char            funcs[]      = "tconv_convert_ICU_run";
   tconv_convert_ICU_context_t *contextp     = (tconv_convert_ICU_context_t *) voidp;
-  UBool                        flushb       = ((inbufsp == NULL) || (*inbufsp == NULL)) ? TRUE : FALSE;
-  UChar                       *targetp      = contextp->uCharBufp;
-  UChar                       *targetLimitp = contextp->uCharBufp + contextp->uCharLengthl; /* in units of UChar */
-  static const char           *dummys       = "";
-  char                        *sourcep      = (inbufsp != NULL) ? *inbufsp : dummys;
-  char                        *sourceLimitp = ((inbufsp != NULL) && (inbytesleftlp != NULL)) ? (*inbufsp + *inbytesleftlp) : dummys;
-  UErrorCode                   uErrorCode;
-  size_t                       rcl;
-  /* Logic here directly inherited from uconv.cpp */
+  /* The following is nothing else but uconv.cpp adapted to buffer and in C */
+  /* so the credits go to authors of uconv.cpp                              */
+  char                        *buf;
+  char                        *outbuf;
+  size_t                       bufsz;
+  UConverter                  *convfrom;
+  UConverter                  *convto;
+  UBool                        flush;
+  const char                  *cbufp;
+  const char                  *prevbufp;
+  char                        *bufp;
+  const UChar                 *unibuf;
+  const UChar                 *unibufbp;
+  UChar                       *unibufp;
   size_t                       rd;
   size_t                       wr;
-  uint32_t                     infoffset;
-  uint32_t                     outfoffset;
+  UChar                       *u;            /* String to do the transliteration */
+  int32_t                      ulen;
   UBool                        willexit;
   UBool                        fromSawEndOfBytes;
   UBool                        toSawEndOfUnicode;
+  int8_t                       sig;
+  UErrorCode                   uErrorCode;
+#if !UCONFIG_NO_TRANSLITERATION
+  UTransliterator             *t;            /* Transliterator acting on Unicode data. */
+  UChar                       *chunk;        /* One chunk of the text being collected for transformation */
+  size_t                       chunklen;
+#endif
 
-  infoffset = 0;
-  outfoffset = 0;
-  rd = 0;
+  bufsz    = contextp->uCharLengthl;
+  convfrom = contextp->uConverterFromp;
+  convto   = contextp->uConverterTop;
+  willexit = FALSE;
+  rd       = (inbytesleftlp != NULL) ? *inbytesleftlp : 0;
+  cbufp    = (inbufpp != NULL) ? *inbufpp : NULL;
+  flush    = ((inbufpp == NULL) || (*inbufpp == NULL)) ? TRUE : FALSE;
+  u        = contextp->uCharBufp;
+  buf      = (outbufpp != NULL) ? *outbufpp : NULL;
+#if !UCONFIG_NO_TRANSLITERATION
+  chunk    = contextp->chunkp;
+  chunklen = contextp->chunkLengthl;
+  t        = contextp->uTransliteratorp;
+#endif
+
+  /* convert until the input is consumed */
   do {
+    /* remember the start of the current byte-to-Unicode conversion */
+    prevbufp = cbufp;
+    unibuf   = unibufp = u;
 
-    willexit = FALSE;
-    infoffset += rd;
+    TCONV_TRACE(tconvp, "%s - ucnv_toUnicode(%p, %p, %p, %p, %p, NULL, %d, %p)", funcs, convfrom, &unibufp, unibuf + bufsz, &cbufp, buf + rd, (int) flush, &uErrorCode);
+    ucnv_toUnicode(convfrom, &unibufp, unibuf + bufsz, &cbufp, buf + rd, NULL, flush, &uErrorCode);
+    ulen = (int32_t)(unibufp - unibuf);
 
-    uErrorCode = U_ZERO_ERROR;
-    TCONV_TRACE(tconvp, "%s - ucnv_toUnicode(%p, %p, %p, %p, %p, NULL, %d, %p)", funcs, contextp->uConverterFromp, &targetp, targetLimitp, &sourcep, sourceLimitp, (int) flushb, &uErrorCode);
-    ucnv_toUnicode(contextp->uConverterFromp,
-                   &targetp,
-                   targetLimitp,
-                   &sourcep,
-                   sourceLimitp,
-                   NULL,
-                   flushb,
-                   &uErrorCode);
-    if ((uErrorCode != U_BUFFER_OVERFLOW_ERROR) && U_FAILURE(uErrorCode)) {
-      errno = ENOSYS;
-      goto err;
+    /*
+    // fromSawEndOfBytes indicates that ucnv_toUnicode() is done
+    // converting all of the input bytes.
+    // It works like this because ucnv_toUnicode() returns only under the
+    // following conditions:
+    // - an error occurred during conversion (an error code is set)
+    // - the target buffer is filled (the error code indicates an overflow)
+    // - the source is consumed
+    // That is, if the error code does not indicate a failure,
+    // not even an overflow, then the source must be consumed entirely.
+    */
+    fromSawEndOfBytes = (UBool)U_SUCCESS(uErrorCode);
+    if (uErrorCode == U_BUFFER_OVERFLOW_ERROR) {
+      uErrorCode = U_ZERO_ERROR;
+    } else if (U_FAILURE(uErrorCode)) {
+      willexit = TRUE;
+      uErrorCode = U_ZERO_ERROR; /* reset the error for the rest of the conversion. */
     }
 
-  } while (fluhsb == FALSE)
+    /*
+    // Replaced a check for whether the input was consumed by
+    // looping until it is; message key "premEndInput" now obsolete.
+    */
 
-  return 0;
+    if (ulen == 0) {
+      continue;
+    }
+#if !UCONFIG_NO_TRANSLITERATION
+    /*
+    // Transliterate/transform if needed.
+
+    // For transformation, we use chunking code -
+    // collect Unicode input until, for example, an end-of-line,
+    // then transform and output-convert that and continue collecting.
+    // This makes the transformation result independent of the buffer size
+    // while avoiding the slower keyboard mode.
+    // The end-of-chunk characters are completely included in the
+    // transformed string in case they are to be transformed themselves.
+    */
+    {
+      UChar  *out;
+      int32_t chunkLimit;
+
+      do {
+        chunkLimit = getChunkLimit(chunk, chunklen, u, ulen);
+        if (chunkLimit < 0 && flush && fromSawEndOfBytes) {
+          // use all of the rest at the end of the text
+          chunkLimit = ulen;
+        }
+        if (chunkLimit >= 0) {
+          // complete the chunk and transform it
+          chunk.append(u, 0, chunkLimit);
+          u.remove(0, chunkLimit);
+          t->transliterate(chunk);
+
+          // append the transformation result to the result and empty the chunk
+          out.append(chunk);
+          chunk.remove();
+        } else {
+          // continue collecting the chunk
+          chunk.append(u);
+          break;
+        }
+      } while (!u.isEmpty());
+
+      u = out;
+      ulen = u.length();
+    }
+#endif
+
+  } while (!fromSawEndOfBytes);
 
  err:
   if (U_FAILURE(uErrorCode)) {
@@ -520,4 +619,74 @@ int tconv_convert_ICU_free(tconv_t tconvp, void *voidp)
   static const char funcs[] = "tconv_convert_ICU_free";
 
   return 0;
+}
+
+/* 
+   Note from http://userguide.icu-project.org/strings :
+   Endianness is not an issue on this level because the interpretation of an integer is fixed within any given platform.
+*/
+enum {
+    uSP  = 0x20,         // space
+    uCR  = 0xd,          // carriage return
+    uLF  = 0xa,          // line feed
+    uNL  = 0x85,         // newline
+    uLS  = 0x2028,       // line separator
+    uPS  = 0x2029,       // paragraph separator
+    uSig = 0xfeff       // signature/BOM character
+};
+
+static const UChar paraEnds[] = {
+  0xd, 0xa, 0x85, 0x2028, 0x2029
+};
+enum {
+  iCR = 0, iLF, iNL, iLS, iPS, iCount
+};
+  
+/*****************************************************************************/
+static TCONV_C_INLINE int32_t getChunkLimit(const UChar *prev, const size_t prevlen, const UChar *s, size_t slen)
+/*****************************************************************************/
+{
+  const UChar *u     = s;
+  const UChar *limit = u + slen;
+    UChar c;
+  /*
+  // find one of
+  // CR, LF, CRLF, NL, LS, PS
+  // for paragraph ends (see UAX #13/Unicode 4)
+  // and include it in the chunk
+  // all of these characters are on the BMP
+  // do not include FF or VT in case they are part of a paragraph
+  // (important for bidi contexts)
+  */
+  /* first, see if there is a CRLF split between prev and s */
+  if ((prevlen > 0) && (prev[prevlen - 1] == paraEnd[iCR])) {
+    if ((slen > 0) && (s[0] == paraEnds[iLF])) {
+      return 1; // split CRLF, include the LF
+    } else if (slen > 0) {
+      return 0; // complete the last chunk
+    } else {
+      return -1; // wait for actual further contents to arrive
+    }
+  }
+
+  while (u < limit) {
+    c = *u++;
+    if (
+        ((c < uSP) && (c == uCR || c == uLF)) ||
+        (c == uNL) ||
+        ((c & uLS) == uLS)
+        ) {
+      if (c == uCR) {
+        // check for CRLF
+        if (u == limit) {
+          return -1; // LF may be in the next chunk
+        } else if (*u == uLF) {
+          ++u; // include the LF in this chunk
+        }
+      }
+      return (int32_t)(u - s.getBuffer());
+    }
+  }
+
+  return -1; // continue collecting the chunk
 }
