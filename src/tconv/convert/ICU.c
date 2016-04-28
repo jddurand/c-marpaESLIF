@@ -500,14 +500,11 @@ size_t tconv_convert_ICU_run(tconv_t tconvp, void *voidp, char **inbufpp, size_t
   tconv_convert_ICU_context_t *contextp     = (tconv_convert_ICU_context_t *) voidp;
   /* The following is nothing else but uconv.cpp adapted to buffer and in C */
   /* so the credits go to authors of uconv.cpp                              */
-  char                        *buf;
-  char                        *outbuf;
   size_t                       bufsz;
   UConverter                  *convfrom;
   UConverter                  *convto;
   UBool                        flush;
   const char                  *cbufp;
-  const char                  *prevbufp;
   char                        *bufp;
   const UChar                 *unibuf;
   const UChar                 *unibufbp;
@@ -516,7 +513,6 @@ size_t tconv_convert_ICU_run(tconv_t tconvp, void *voidp, char **inbufpp, size_t
   size_t                       wr;
   UChar                       *u;            /* String to do the transliteration */
   int32_t                      ulen;
-  UBool                        willexit;
   UBool                        fromSawEndOfBytes;
   UBool                        toSawEndOfUnicode;
   int8_t                       sig;
@@ -537,12 +533,10 @@ size_t tconv_convert_ICU_run(tconv_t tconvp, void *voidp, char **inbufpp, size_t
   bufsz     = contextp->uCharSizel;
   convfrom  = contextp->uConverterFromp;
   convto    = contextp->uConverterTop;
-  willexit  = FALSE;
   rd        = (inbytesleftlp != NULL) ? *inbytesleftlp : 0;
   cbufp     = (inbufpp != NULL) ? *inbufpp : NULL;
   flush     = ((inbufpp == NULL) || (*inbufpp == NULL)) ? TRUE : FALSE;
   u         = contextp->uCharBufp;
-  buf       = (outbufpp != NULL) ? *outbufpp : NULL;
 #if !UCONFIG_NO_TRANSLITERATION
   chunk         = contextp->chunkp;
   chunkcopy     = contextp->chunkcopyp;
@@ -559,11 +553,10 @@ size_t tconv_convert_ICU_run(tconv_t tconvp, void *voidp, char **inbufpp, size_t
   /* convert until the input is consumed */
   do {
     /* remember the start of the current byte-to-Unicode conversion */
-    prevbufp = cbufp;
-    unibuf   = unibufp = u;
+    unibuf = unibufp = u;
 
-    TCONV_TRACE(tconvp, "%s - ucnv_toUnicode(%p, %p, %p, %p, %p, NULL, %d, %p)", funcs, convfrom, &unibufp, unibuf + bufsz, &cbufp, buf + rd, (int) flush, &uErrorCode);
-    ucnv_toUnicode(convfrom, &unibufp, unibuf + bufsz, &cbufp, buf + rd, NULL, flush, &uErrorCode);
+    TCONV_TRACE(tconvp, "%s - ucnv_toUnicode(%p, %p, %p, %p, %p, NULL, %d, %p)", funcs, convfrom, &unibufp, unibuf + bufsz, &cbufp, cbufp + rd, (int) flush, &uErrorCode);
+    ucnv_toUnicode(convfrom, &unibufp, unibuf + bufsz, &cbufp, cbufp + rd, NULL, flush, &uErrorCode);
     ulen = (int32_t)(unibufp - unibuf);
 
     /*
@@ -581,7 +574,6 @@ size_t tconv_convert_ICU_run(tconv_t tconvp, void *voidp, char **inbufpp, size_t
     if (uErrorCode == U_BUFFER_OVERFLOW_ERROR) {
       uErrorCode = U_ZERO_ERROR;
     } else if (U_FAILURE(uErrorCode)) {
-      willexit = TRUE;
       uErrorCode = U_ZERO_ERROR; /* reset the error for the rest of the conversion. */
     }
 
@@ -710,8 +702,44 @@ size_t tconv_convert_ICU_run(tconv_t tconvp, void *voidp, char **inbufpp, size_t
       ulen = outused;
     }
 #endif
+    /*
+    // Convert the Unicode buffer into the destination codepage
+    // Again 'bufp' will be placed behind the last converted character
+    // And 'unibufp' will be placed behind the last converted unicode character
+    // At the last conversion flush should be set to true to ensure that
+    // all characters left get converted
+    */
+    unibuf = unibufbp = u;
 
-  } while (!fromSawEndOfBytes);
+    if ((outbufpp != NULL) && (outbytesleftlp != NULL)) {
+      do {
+	/*
+	// Use fromSawEndOfBytes in addition to the flush flag -
+	// it indicates whether the intermediate Unicode string
+	// contains the very last UChars for the very last input bytes.
+	*/
+	uErrorCode = U_ZERO_ERROR;
+	ucnv_fromUnicode(convto, outbufpp, *outbufpp + *outbytesleftlp,
+			 &unibufbp,
+			 unibuf + ulen,
+			 NULL,
+			 ((flush == TRUE) && (fromSawEndOfBytes == TRUE)) ? TRUE : FALSE,
+			 &uErrorCode);
+
+	/*
+	// toSawEndOfUnicode indicates that ucnv_fromUnicode() is done
+	// converting all of the intermediate UChars.
+	// See comment for fromSawEndOfBytes.
+	*/
+	toSawEndOfUnicode = (UBool) U_SUCCESS(uErrorCode);
+	if (uErrorCode == U_BUFFER_OVERFLOW_ERROR) {
+	  uErrorCode = U_ZERO_ERROR;
+	} else if (U_FAILURE(uErrorCode)) {
+	  goto err;
+	}
+      } while (toSawEndOfUnicode == FALSE);
+    }
+  } while (fromSawEndOfBytes == FALSE);
 
  err:
   if (U_FAILURE(uErrorCode)) {
