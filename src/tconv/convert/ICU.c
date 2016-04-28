@@ -560,7 +560,7 @@ size_t tconv_convert_ICU_run(tconv_t tconvp, void *voidp, char **inbufpp, size_t
     /* remember the start of the current byte-to-Unicode conversion */
     unibuf = unibufp = u;
 
-    if ((flush == TRUE) || (inbufpp != NULL) && (inbytesleftlp != NULL)) {
+    {
       static const char  *dummy = "";
       const char        **cbufpp   = (flush == TRUE) ? &dummy : (const char **) inbufpp;
       const char         *cbufendp = (flush == TRUE) ? dummy : (const char *) (*inbufpp + *inbytesleftlp);
@@ -596,9 +596,6 @@ size_t tconv_convert_ICU_run(tconv_t tconvp, void *voidp, char **inbufpp, size_t
       if ((ulen == 0) && (cbuflenl > 0)) {
         continue;
       }
-    } else {
-      fromSawEndOfBytes = TRUE;
-      ulen = 0;
     }
 
 #if !UCONFIG_NO_TRANSLITERATION
@@ -776,6 +773,8 @@ size_t tconv_convert_ICU_run(tconv_t tconvp, void *voidp, char **inbufpp, size_t
       }
     } while (toSawEndOfUnicode == FALSE);
   } while (fromSawEndOfBytes == FALSE);
+
+  return 0;
 
  err:
   if (U_FAILURE(uErrorCode)) {
