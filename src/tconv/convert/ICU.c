@@ -143,25 +143,28 @@ void  *tconv_convert_ICU_new(tconv_t tconvp, const char *tocodes, const char *fr
   /* ----------------------------------------------------------- */
   if (optionp == NULL) {
     optionp = &tconv_convert_icu_option_default;
-    /* This can be overwriten with environment variables */
-    TCONV_TRACE(tconvp, "%s - getenv(\"%s\")", funcs, TCONV_ENV_CONVERT_ICU_UCHARCAPACITY);
-    p = getenv(TCONV_ENV_CONVERT_ICU_UCHARCAPACITY);
-    if (p != NULL) {
-      TCONV_TRACE(tconvp, "%s - atoi(\"%s\")", funcs, p);
-      uCharCapacityl = atoi(p);
-      if (uCharCapacityl <= 0) {
-	errno = EINVAL;
-	goto err;
-      }
-    }
-    TCONV_TRACE(tconvp, "%s - getenv(\"%s\")", funcs, TCONV_ENV_CONVERT_ICU_FALLBACK);
-    p = getenv(TCONV_ENV_CONVERT_ICU_FALLBACK);
-    if (p != NULL) {
-      TCONV_TRACE(tconvp, "%s - atoi(\"%s\")", funcs, p);
-      optionp->fallbackb = (atoi(p) != 0) ? 1 : 0;
-    }
   }
-  fallbackb = (optionp->fallbackb != 0) ? TRUE : FALSE;
+
+  uCharCapacityl = optionp->uCharCapacityl;
+  fallbackb      = (optionp->fallbackb !=0 ) ? TRUE : FALSE;
+
+  /* These can be overwriten with environment variables */
+  TCONV_TRACE(tconvp, "%s - getenv(\"%s\")", funcs, TCONV_ENV_CONVERT_ICU_UCHARCAPACITY);
+  p = getenv(TCONV_ENV_CONVERT_ICU_UCHARCAPACITY);
+  if (p != NULL) {
+    TCONV_TRACE(tconvp, "%s - atoi(\"%s\")", funcs, p);
+    uCharCapacityl = atoi(p);
+  }
+  TCONV_TRACE(tconvp, "%s - getenv(\"%s\")", funcs, TCONV_ENV_CONVERT_ICU_FALLBACK);
+  p = getenv(TCONV_ENV_CONVERT_ICU_FALLBACK);
+  if (p != NULL) {
+    TCONV_TRACE(tconvp, "%s - atoi(\"%s\")", funcs, p);
+    fallbackb = (atoi(p) != 0) ? TRUE : FALSE;
+  }
+  if (uCharCapacityl <= 0) {
+    errno = EINVAL;
+    goto err;
+  }
 
   /* ----------------------------------------------------------- */
   /* Setup the from converter                                    */
@@ -500,11 +503,10 @@ size_t tconv_convert_ICU_run(tconv_t tconvp, void *voidp, char **inbufpp, size_t
   tconv_convert_ICU_context_t *contextp     = (tconv_convert_ICU_context_t *) voidp;
   /* The following is nothing else but uconv.cpp adapted to buffer and in C */
   /* so the credits go to authors of uconv.cpp                              */
-  size_t                       bufsz;
+  size_t                       buflenl;
   UConverter                  *convfrom;
   UConverter                  *convto;
   UBool                        flush;
-  char                        *bufp;
   const UChar                 *unibuf;
   const UChar                 *unibufbp;
   UChar                       *unibufp;
@@ -512,7 +514,6 @@ size_t tconv_convert_ICU_run(tconv_t tconvp, void *voidp, char **inbufpp, size_t
   int32_t                      ulen;
   UBool                        fromSawEndOfBytes;
   UBool                        toSawEndOfUnicode;
-  int8_t                       sig;
   UErrorCode                   uErrorCode;
 #if !UCONFIG_NO_TRANSLITERATION
   UTransliterator             *t;            /* Transliterator acting on Unicode data. */
@@ -528,12 +529,12 @@ size_t tconv_convert_ICU_run(tconv_t tconvp, void *voidp, char **inbufpp, size_t
 #endif
 
   /* In any case output must not be NULL */
-  if ((outbufpp = NULL) || (outbytesleftlp == NULL)) {
+  if ((outbufpp == NULL) || (outbytesleftlp == NULL)) {
     errno = EINVAL;
     goto err;
   }
 
-  bufsz     = contextp->uCharSizel;
+  buflenl   = contextp->uCharCapacityl;
   convfrom  = contextp->uConverterFromp;
   convto    = contextp->uConverterTop;
   flush     = ((inbufpp == NULL) || (*inbufpp == NULL)) ? TRUE : FALSE;
@@ -559,17 +560,23 @@ size_t tconv_convert_ICU_run(tconv_t tconvp, void *voidp, char **inbufpp, size_t
     /* remember the start of the current byte-to-Unicode conversion */
     unibuf = unibufp = u;
 
-    if ((inbufpp != NULL) && (inbytesleftlp != NULL)) {
-      TCONV_TRACE(tconvp, "%s - ucnv_toUnicode(%p, %p, %p, %p, %p, NULL, %d, NULL)", funcs, convfrom, &unibufp, unibuf + bufsz, inbufpp, *inbufpp + *inbytesleftlp, (int) flush);
+    if ((flush == TRUE) || (inbufpp != NULL) && (inbytesleftlp != NULL)) {
+      static const char  *dummy = "";
+      const char        **cbufpp   = (flush == TRUE) ? &dummy : (const char **) inbufpp;
+      const char         *cbufendp = (flush == TRUE) ? dummy : (const char *) (*inbufpp + *inbytesleftlp);
+      size_t              cbuflenl = (flush == TRUE) ? 0 : *inbytesleftlp;
+
+      uErrorCode = U_ZERO_ERROR;
+      TCONV_TRACE(tconvp, "%s - ucnv_toUnicode(%p, %p, %p, %p, %p, NULL, %d, %p)", funcs, convfrom, &unibufp, unibuf + buflenl, cbufpp, cbufendp, (int) flush, &uErrorCode);
       ucnv_toUnicode(convfrom,
 		     &unibufp,
-		     unibuf + bufsz,
-		     (const char **) inbufpp,
-		     *inbufpp + *inbytesleftlp,
+		     unibuf + buflenl,
+		     cbufpp,
+		     cbufendp,
 		     NULL,
 		     flush,
-		     NULL);
-      ulen = (int32_t)(unibufp - unibuf);
+		     &uErrorCode);
+      ulen = (int32_t)(unibufp - unibuf);  /* In units of UChar */
       /*
       // fromSawEndOfBytes indicates that ucnv_toUnicode() is done
       // converting all of the input bytes.
@@ -586,8 +593,8 @@ size_t tconv_convert_ICU_run(tconv_t tconvp, void *voidp, char **inbufpp, size_t
       // Replaced a check for whether the input was consumed by
       // looping until it is; message key "premEndInput" now obsolete.
       */
-      if (ulen == 0) {
-	continue;
+      if ((ulen == 0) && (cbuflenl > 0)) {
+        continue;
       }
     } else {
       fromSawEndOfBytes = TRUE;
@@ -610,7 +617,6 @@ size_t tconv_convert_ICU_run(tconv_t tconvp, void *voidp, char **inbufpp, size_t
     // transformed string in case they are to be transformed themselves.
     */
     if (t != NULL) {
-      UChar  *out;
       int32_t chunkLimit;
 
       do {
@@ -643,6 +649,8 @@ size_t tconv_convert_ICU_run(tconv_t tconvp, void *voidp, char **inbufpp, size_t
 	  }
 	  memcpy(chunk + chunkused, u, chunkLimit * sizeof(UChar));
 	  contextp->chunkUsedl = chunkused = newchunkused;
+          memmove(u, u + chunkLimit, ulen - chunkLimit);
+          ulen -= chunkLimit;
 	  /* utrans_transUChars() is not very user-friendly, in the sense that prefighting is not possible */
 	  textLength   = chunkused;
 	  textCapacity = chunkcapacity;
@@ -651,6 +659,7 @@ size_t tconv_convert_ICU_run(tconv_t tconvp, void *voidp, char **inbufpp, size_t
 	    uErrorCode   = U_ZERO_ERROR;
 	    /* Copy of original chunk if we have to retry */
 	    memcpy(chunkcopy, chunk, chunksize);
+            TCONV_TRACE(tconvp, "%s - utrans_transUChars(%p, %p, %p, %p, 0, %d, %p)", funcs, t, chunk, &textLength, textCapacity, &limit, &uErrorCode);
 	    utrans_transUChars(t, chunk, &textLength, textCapacity, 0, &limit, &uErrorCode);
 	    if (uErrorCode == U_BUFFER_OVERFLOW_ERROR) {
 	      /* Voila... Increase chunk allocated size and retry */
@@ -683,9 +692,10 @@ size_t tconv_convert_ICU_run(tconv_t tconvp, void *voidp, char **inbufpp, size_t
 	      contextp->outCapacityl = outcapacity = newoutcapacity;
 	      contextp->outp         = out;
 	    }
+            memcpy(out + outused, chunk, chunkused * sizeof(UChar));
+            contextp->outUsedl = outused = newoutused;
+            contextp->chunkUsedl = chunkused = 0;
 	  }
-	  memcpy(out + outused, chunk, chunkused * sizeof(UChar));
-	  chunkused = 0;
 	} else {
 	  /* continue collecting the chunk */
 	  int32_t newchunkused = chunkused + ulen;
@@ -705,7 +715,7 @@ size_t tconv_convert_ICU_run(tconv_t tconvp, void *voidp, char **inbufpp, size_t
 	    contextp->chunkcopyp     = chunkcopy;
 	  }
 	  memcpy(chunk + chunkused, u, ulen * sizeof(UChar));
-	  chunkused = newchunkused;
+	  contextp->chunkUsedl = chunkused = newchunkused;
 	  break;
 	}
       } while (ulen > 0);
@@ -713,7 +723,7 @@ size_t tconv_convert_ICU_run(tconv_t tconvp, void *voidp, char **inbufpp, size_t
       u = out;
       ulen = outused;
     }
-#endif
+#endif /* !UCONFIG_NO_TRANSLITERATION */
     /* ------------------------------------------------------------ */
     /* Produce output                                               */
     /* ------------------------------------------------------------ */
@@ -733,7 +743,18 @@ size_t tconv_convert_ICU_run(tconv_t tconvp, void *voidp, char **inbufpp, size_t
       // contains the very last UChars for the very last input bytes.
       */
       uErrorCode = U_ZERO_ERROR;
-      ucnv_fromUnicode(convto, outbufpp, *outbufpp + *outbytesleftlp,
+      TCONV_TRACE(tconvp, "%s - ucnv_fromUnicode(%p, %p, %p, %p, %p, NULL, %d, %p)",
+                  funcs,
+                  convto,
+                  outbufpp,
+                  *outbufpp + *outbytesleftlp,
+                  &unibufbp,
+                  unibuf + ulen,
+                  (int) (((flush == TRUE) && (fromSawEndOfBytes == TRUE)) ? TRUE : FALSE),
+                  &uErrorCode);
+      ucnv_fromUnicode(convto,
+                       outbufpp,
+                       *outbufpp + *outbytesleftlp,
 		       &unibufbp,
 		       unibuf + ulen,
 		       NULL,
@@ -767,9 +788,42 @@ size_t tconv_convert_ICU_run(tconv_t tconvp, void *voidp, char **inbufpp, size_t
 int tconv_convert_ICU_free(tconv_t tconvp, void *voidp)
 /*****************************************************************************/
 {
-  static const char funcs[] = "tconv_convert_ICU_free";
+  static const char            funcs[]  = "tconv_convert_ICU_free";
+  tconv_convert_ICU_context_t *contextp = (tconv_convert_ICU_context_t *) voidp;
+
+  if (contextp == NULL) {
+    errno = EINVAL;
+    goto err;
+  } else {
+    if (contextp->uConverterFromp != NULL) {
+      ucnv_close(contextp->uConverterFromp);
+    }
+    if (contextp->uCharBufp != NULL) {
+      free(contextp->uCharBufp);
+    }
+    if (contextp->uConverterTop != NULL) {
+      ucnv_close(contextp->uConverterTop);
+    }
+#if !UCONFIG_NO_TRANSLITERATION
+    if (contextp->chunkp != NULL) {
+      free(contextp->chunkp);
+    }
+    if (contextp->chunkcopyp != NULL) {
+      free(contextp->chunkcopyp);
+    }
+    if (contextp->outp != NULL) {
+      free(contextp->outp);
+    }
+    if (contextp->uTransliteratorp != NULL) {
+      utrans_close(contextp->uTransliteratorp);
+    }
+#endif
+  }
 
   return 0;
+
+ err:
+  return -1;
 }
 
 /* 
@@ -799,7 +853,7 @@ static TCONV_C_INLINE int32_t getChunkLimit(const UChar *prev, const size_t prev
 {
   const UChar *u     = s;
   const UChar *limit = u + slen;
-    UChar c;
+  UChar c;
   /*
   // find one of
   // CR, LF, CRLF, NL, LS, PS
@@ -835,7 +889,7 @@ static TCONV_C_INLINE int32_t getChunkLimit(const UChar *prev, const size_t prev
           ++u; // include the LF in this chunk
         }
       }
-      return (int32_t)((u - s) / sizeof(UChar));
+      return (int32_t)(u - s); /* In units of UChar */
     }
   }
 
