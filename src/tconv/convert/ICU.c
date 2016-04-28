@@ -732,9 +732,11 @@ size_t tconv_convert_ICU_run(tconv_t tconvp, void *voidp, char **inbufpp, size_t
 	// See comment for fromSawEndOfBytes.
 	*/
 	toSawEndOfUnicode = (UBool) U_SUCCESS(uErrorCode);
-	if (uErrorCode == U_BUFFER_OVERFLOW_ERROR) {
-	  uErrorCode = U_ZERO_ERROR;
-	} else if (U_FAILURE(uErrorCode)) {
+	if (U_FAILURE(uErrorCode)) {
+	  if (uErrorCode == U_BUFFER_OVERFLOW_ERROR) {
+	    uErrorCode = U_ZERO_ERROR;
+	    errno = E2BIG;
+	  }
 	  goto err;
 	}
       } while (toSawEndOfUnicode == FALSE);
