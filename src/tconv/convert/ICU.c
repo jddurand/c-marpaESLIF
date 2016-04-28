@@ -504,13 +504,10 @@ size_t tconv_convert_ICU_run(tconv_t tconvp, void *voidp, char **inbufpp, size_t
   UConverter                  *convfrom;
   UConverter                  *convto;
   UBool                        flush;
-  const char                  *cbufp;
   char                        *bufp;
   const UChar                 *unibuf;
   const UChar                 *unibufbp;
   UChar                       *unibufp;
-  size_t                       rd;
-  size_t                       wr;
   UChar                       *u;            /* String to do the transliteration */
   int32_t                      ulen;
   UBool                        fromSawEndOfBytes;
@@ -530,11 +527,15 @@ size_t tconv_convert_ICU_run(tconv_t tconvp, void *voidp, char **inbufpp, size_t
   size_t                       outsize;
 #endif
 
+  /* In any case output must not be NULL */
+  if ((outbufpp = NULL) || (outbytesleftlp == NULL)) {
+    errno = EINVAL;
+    goto err;
+  }
+
   bufsz     = contextp->uCharSizel;
   convfrom  = contextp->uConverterFromp;
   convto    = contextp->uConverterTop;
-  rd        = (inbytesleftlp != NULL) ? *inbytesleftlp : 0;
-  cbufp     = (inbufpp != NULL) ? *inbufpp : NULL;
   flush     = ((inbufpp == NULL) || (*inbufpp == NULL)) ? TRUE : FALSE;
   u         = contextp->uCharBufp;
 #if !UCONFIG_NO_TRANSLITERATION
@@ -555,98 +556,72 @@ size_t tconv_convert_ICU_run(tconv_t tconvp, void *voidp, char **inbufpp, size_t
     /* remember the start of the current byte-to-Unicode conversion */
     unibuf = unibufp = u;
 
-    TCONV_TRACE(tconvp, "%s - ucnv_toUnicode(%p, %p, %p, %p, %p, NULL, %d, %p)", funcs, convfrom, &unibufp, unibuf + bufsz, &cbufp, cbufp + rd, (int) flush, &uErrorCode);
-    ucnv_toUnicode(convfrom, &unibufp, unibuf + bufsz, &cbufp, cbufp + rd, NULL, flush, &uErrorCode);
-    ulen = (int32_t)(unibufp - unibuf);
-
-    /*
-    // fromSawEndOfBytes indicates that ucnv_toUnicode() is done
-    // converting all of the input bytes.
-    // It works like this because ucnv_toUnicode() returns only under the
-    // following conditions:
-    // - an error occurred during conversion (an error code is set)
-    // - the target buffer is filled (the error code indicates an overflow)
-    // - the source is consumed
-    // That is, if the error code does not indicate a failure,
-    // not even an overflow, then the source must be consumed entirely.
-    */
-    fromSawEndOfBytes = (UBool)U_SUCCESS(uErrorCode);
-    if (uErrorCode == U_BUFFER_OVERFLOW_ERROR) {
-      uErrorCode = U_ZERO_ERROR;
-    } else if (U_FAILURE(uErrorCode)) {
-      uErrorCode = U_ZERO_ERROR; /* reset the error for the rest of the conversion. */
-    }
-
-    /*
-    // Replaced a check for whether the input was consumed by
-    // looping until it is; message key "premEndInput" now obsolete.
-    */
-
-    if (ulen == 0) {
-      continue;
-    }
+    if ((inbufpp != NULL) && (inbytesleftlp != NULL)) {
+      TCONV_TRACE(tconvp, "%s - ucnv_toUnicode(%p, %p, %p, %p, %p, NULL, %d, NULL)", funcs, convfrom, &unibufp, unibuf + bufsz, inbufpp, *inbufpp + *inbytesleftlp, (int) flush);
+      ucnv_toUnicode(convfrom,
+		     &unibufp,
+		     unibuf + bufsz,
+		     (const char **) inbufpp,
+		     *inbufpp + *inbytesleftlp,
+		     NULL,
+		     flush,
+		     NULL);
+      ulen = (int32_t)(unibufp - unibuf);
+      /*
+      // fromSawEndOfBytes indicates that ucnv_toUnicode() is done
+      // converting all of the input bytes.
+      // It works like this because ucnv_toUnicode() returns only under the
+      // following conditions:
+      // - an error occurred during conversion (an error code is set)
+      // - the target buffer is filled (the error code indicates an overflow)
+      // - the source is consumed
+      // That is, if the error code does not indicate a failure,
+      // not even an overflow, then the source must be consumed entirely.
+      */
+      fromSawEndOfBytes = (UBool)U_SUCCESS(uErrorCode);
+      /*
+      // Replaced a check for whether the input was consumed by
+      // looping until it is; message key "premEndInput" now obsolete.
+      */
+      if (ulen == 0) {
+	continue;
+      }
 #if !UCONFIG_NO_TRANSLITERATION
-    /*
-    // Transliterate/transform if needed.
+      /*
+      // Transliterate/transform if needed.
 
-    // For transformation, we use chunking code -
-    // collect Unicode input until, for example, an end-of-line,
-    // then transform and output-convert that and continue collecting.
-    // This makes the transformation result independent of the buffer size
-    // while avoiding the slower keyboard mode.
-    // The end-of-chunk characters are completely included in the
-    // transformed string in case they are to be transformed themselves.
-    */
-    {
-      UChar  *out;
-      int32_t chunkLimit;
+      // For transformation, we use chunking code -
+      // collect Unicode input until, for example, an end-of-line,
+      // then transform and output-convert that and continue collecting.
+      // This makes the transformation result independent of the buffer size
+      // while avoiding the slower keyboard mode.
+      // The end-of-chunk characters are completely included in the
+      // transformed string in case they are to be transformed themselves.
+      */
+      {
+	UChar  *out;
+	int32_t chunkLimit;
 
-      do {
-        chunkLimit = getChunkLimit(chunk, chunkused, u, ulen);
-        if (chunkLimit < 0 && flush && fromSawEndOfBytes) {
-          /* use all of the rest at the end of the text */
-          chunkLimit = ulen;
-        }
-        if (chunkLimit >= 0) {
-          int32_t  textLength;
-	  int32_t  textCapacity;
-	  int32_t  newchunkused;
-	  int32_t  limit;
-
-	  newchunkused = chunkused + chunkLimit;
-	  /* complete the chunk and transform it */
-	  if (newchunkused > chunkcapacity) {
-	    int32_t newchunkcapacity = newchunkused;
-	    size_t  newchunksize     = newchunkcapacity * sizeof(UChar);
-
-	    chunk     = (chunk     == NULL) ? (UChar *) malloc(newchunksize) : (UChar *) realloc(chunk,     newchunksize);
-	    chunkcopy = (chunkcopy == NULL) ? (UChar *) malloc(newchunksize) : (UChar *) realloc(chunkcopy, newchunksize);
-	    if ((chunk == NULL) ||  (chunkcopy == NULL)) {
-	      goto err;
-	    }
-	    contextp->chunkSizel     = chunksize     = newchunksize;
-	    contextp->chunkCapacityl = chunkcapacity = newchunkcapacity;
-	    contextp->chunkp         = chunk;
-	    contextp->chunkcopyp     = chunkcopy;
+	do {
+	  chunkLimit = getChunkLimit(chunk, chunkused, u, ulen);
+	  if (chunkLimit < 0 && flush && fromSawEndOfBytes) {
+	    /* use all of the rest at the end of the text */
+	    chunkLimit = ulen;
 	  }
-	  memcpy(chunk + chunkused, u, chunkLimit * sizeof(UChar));
-	  contextp->chunkUsedl = chunkused = newchunkused;
-	  /* utrans_transUChars() is not very user-friendly, in the sense that prefighting is not possible */
-	  textLength   = chunkused;
-	  textCapacity = chunkcapacity;
-	  limit        = chunkused;
-	  do {
-	    uErrorCode   = U_ZERO_ERROR;
-	    /* Copy of original chunk if we have to retry */
-	    memcpy(chunkcopy, chunk, chunksize);
-	    utrans_transUChars(t, chunk, &textLength, textCapacity, 0, &limit, &uErrorCode);
-	    if (uErrorCode == U_BUFFER_OVERFLOW_ERROR) {
-	      /* Voila... Increase chunk allocated size and retry */
-	      int32_t newchunkcapacity = chunkcapacity * 2;
+	  if (chunkLimit >= 0) {
+	    int32_t  textLength;
+	    int32_t  textCapacity;
+	    int32_t  newchunkused;
+	    int32_t  limit;
+
+	    newchunkused = chunkused + chunkLimit;
+	    /* complete the chunk and transform it */
+	    if (newchunkused > chunkcapacity) {
+	      int32_t newchunkcapacity = newchunkused;
 	      size_t  newchunksize     = newchunkcapacity * sizeof(UChar);
 
-	      chunk     = (UChar *) realloc(chunk, newchunksize);
-	      chunkcopy = (UChar *) realloc(chunkcopy, newchunksize);
+	      chunk     = (chunk     == NULL) ? (UChar *) malloc(newchunksize) : (UChar *) realloc(chunk,     newchunksize);
+	      chunkcopy = (chunkcopy == NULL) ? (UChar *) malloc(newchunksize) : (UChar *) realloc(chunkcopy, newchunksize);
 	      if ((chunk == NULL) ||  (chunkcopy == NULL)) {
 		goto err;
 	      }
@@ -655,53 +630,83 @@ size_t tconv_convert_ICU_run(tconv_t tconvp, void *voidp, char **inbufpp, size_t
 	      contextp->chunkp         = chunk;
 	      contextp->chunkcopyp     = chunkcopy;
 	    }
-	  } while (uErrorCode == U_BUFFER_OVERFLOW_ERROR);  
-          /* append the transformation result to the result and empty the chunk */
-	  {
-	    int32_t  newoutused = outused + chunkused;
-	    if (newoutused > outcapacity) {
-	      int32_t newoutcapacity = newoutused;
-	      size_t  newoutsize     = newoutcapacity * sizeof(UChar);
+	    memcpy(chunk + chunkused, u, chunkLimit * sizeof(UChar));
+	    contextp->chunkUsedl = chunkused = newchunkused;
+	    /* utrans_transUChars() is not very user-friendly, in the sense that prefighting is not possible */
+	    textLength   = chunkused;
+	    textCapacity = chunkcapacity;
+	    limit        = chunkused;
+	    do {
+	      uErrorCode   = U_ZERO_ERROR;
+	      /* Copy of original chunk if we have to retry */
+	      memcpy(chunkcopy, chunk, chunksize);
+	      utrans_transUChars(t, chunk, &textLength, textCapacity, 0, &limit, &uErrorCode);
+	      if (uErrorCode == U_BUFFER_OVERFLOW_ERROR) {
+		/* Voila... Increase chunk allocated size and retry */
+		int32_t newchunkcapacity = chunkcapacity * 2;
+		size_t  newchunksize     = newchunkcapacity * sizeof(UChar);
 
-	      out = (out == NULL) ? (UChar *) malloc(newoutsize) : (UChar *) realloc(out, newoutsize);
-	      if (out == NULL) {
+		chunk     = (UChar *) realloc(chunk, newchunksize);
+		chunkcopy = (UChar *) realloc(chunkcopy, newchunksize);
+		if ((chunk == NULL) ||  (chunkcopy == NULL)) {
+		  goto err;
+		}
+		contextp->chunkSizel     = chunksize     = newchunksize;
+		contextp->chunkCapacityl = chunkcapacity = newchunkcapacity;
+		contextp->chunkp         = chunk;
+		contextp->chunkcopyp     = chunkcopy;
+	      }
+	    } while (uErrorCode == U_BUFFER_OVERFLOW_ERROR);  
+	    /* append the transformation result to the result and empty the chunk */
+	    {
+	      int32_t  newoutused = outused + chunkused;
+	      if (newoutused > outcapacity) {
+		int32_t newoutcapacity = newoutused;
+		size_t  newoutsize     = newoutcapacity * sizeof(UChar);
+
+		out = (out == NULL) ? (UChar *) malloc(newoutsize) : (UChar *) realloc(out, newoutsize);
+		if (out == NULL) {
+		  goto err;
+		}
+		contextp->outSizel     = outsize     = newoutsize;
+		contextp->outCapacityl = outcapacity = newoutcapacity;
+		contextp->outp         = out;
+	      }
+	    }
+	    memcpy(out + outused, chunk, chunkused * sizeof(UChar));
+	    chunkused = 0;
+	  } else {
+	    /* continue collecting the chunk */
+	    int32_t newchunkused = chunkused + ulen;
+
+	    if (newchunkused > chunkcapacity) {
+	      int32_t newchunkcapacity = newchunkused;
+	      size_t  newchunksize     = newchunkcapacity * sizeof(UChar);
+
+	      chunk     = (chunk     == NULL) ? (UChar *) malloc(newchunksize) : (UChar *) realloc(chunk,     newchunksize);
+	      chunkcopy = (chunkcopy == NULL) ? (UChar *) malloc(newchunksize) : (UChar *) realloc(chunkcopy, newchunksize);
+	      if ((chunk == NULL) ||  (chunkcopy == NULL)) {
 		goto err;
 	      }
-	      contextp->outSizel     = outsize     = newoutsize;
-	      contextp->outCapacityl = outcapacity = newoutcapacity;
-	      contextp->outp         = out;
+	      contextp->chunkSizel     = chunksize     = newchunksize;
+	      contextp->chunkCapacityl = chunkcapacity = newchunkcapacity;
+	      contextp->chunkp         = chunk;
+	      contextp->chunkcopyp     = chunkcopy;
 	    }
+	    memcpy(chunk + chunkused, u, ulen * sizeof(UChar));
+	    chunkused = newchunkused;
+	    break;
 	  }
-	  memcpy(out + outused, chunk, chunkused * sizeof(UChar));
-	  chunkused = 0;
-        } else {
-          /* continue collecting the chunk */
-	  int32_t newchunkused = chunkused + ulen;
+	} while (ulen > 0);
 
-	  if (newchunkused > chunkcapacity) {
-	    int32_t newchunkcapacity = newchunkused;
-	    size_t  newchunksize     = newchunkcapacity * sizeof(UChar);
-
-	    chunk     = (chunk     == NULL) ? (UChar *) malloc(newchunksize) : (UChar *) realloc(chunk,     newchunksize);
-	    chunkcopy = (chunkcopy == NULL) ? (UChar *) malloc(newchunksize) : (UChar *) realloc(chunkcopy, newchunksize);
-	    if ((chunk == NULL) ||  (chunkcopy == NULL)) {
-	      goto err;
-	    }
-	    contextp->chunkSizel     = chunksize     = newchunksize;
-	    contextp->chunkCapacityl = chunkcapacity = newchunkcapacity;
-	    contextp->chunkp         = chunk;
-	    contextp->chunkcopyp     = chunkcopy;
-	  }
-	  memcpy(chunk + chunkused, u, ulen * sizeof(UChar));
-	  chunkused = newchunkused;
-          break;
-        }
-      } while (ulen > 0);
-
-      u = out;
-      ulen = outused;
-    }
+	u = out;
+	ulen = outused;
+      }
 #endif
+    } else {
+      fromSawEndOfBytes = TRUE;
+      ulen = 0;
+    }
     /*
     // Convert the Unicode buffer into the destination codepage
     // Again 'bufp' will be placed behind the last converted character
@@ -711,36 +716,34 @@ size_t tconv_convert_ICU_run(tconv_t tconvp, void *voidp, char **inbufpp, size_t
     */
     unibuf = unibufbp = u;
 
-    if ((outbufpp != NULL) && (outbytesleftlp != NULL)) {
-      do {
-	/*
-	// Use fromSawEndOfBytes in addition to the flush flag -
-	// it indicates whether the intermediate Unicode string
-	// contains the very last UChars for the very last input bytes.
-	*/
-	uErrorCode = U_ZERO_ERROR;
-	ucnv_fromUnicode(convto, outbufpp, *outbufpp + *outbytesleftlp,
-			 &unibufbp,
-			 unibuf + ulen,
-			 NULL,
-			 ((flush == TRUE) && (fromSawEndOfBytes == TRUE)) ? TRUE : FALSE,
-			 &uErrorCode);
+    do {
+      /*
+      // Use fromSawEndOfBytes in addition to the flush flag -
+      // it indicates whether the intermediate Unicode string
+      // contains the very last UChars for the very last input bytes.
+      */
+      uErrorCode = U_ZERO_ERROR;
+      ucnv_fromUnicode(convto, outbufpp, *outbufpp + *outbytesleftlp,
+		       &unibufbp,
+		       unibuf + ulen,
+		       NULL,
+		       ((flush == TRUE) && (fromSawEndOfBytes == TRUE)) ? TRUE : FALSE,
+		       &uErrorCode);
 
-	/*
-	// toSawEndOfUnicode indicates that ucnv_fromUnicode() is done
-	// converting all of the intermediate UChars.
-	// See comment for fromSawEndOfBytes.
-	*/
-	toSawEndOfUnicode = (UBool) U_SUCCESS(uErrorCode);
-	if (U_FAILURE(uErrorCode)) {
-	  if (uErrorCode == U_BUFFER_OVERFLOW_ERROR) {
-	    uErrorCode = U_ZERO_ERROR;
-	    errno = E2BIG;
-	  }
-	  goto err;
+      /*
+      // toSawEndOfUnicode indicates that ucnv_fromUnicode() is done
+      // converting all of the intermediate UChars.
+      // See comment for fromSawEndOfBytes.
+      */
+      toSawEndOfUnicode = (UBool) U_SUCCESS(uErrorCode);
+      if (U_FAILURE(uErrorCode)) {
+	if (uErrorCode == U_BUFFER_OVERFLOW_ERROR) {
+	  uErrorCode = U_ZERO_ERROR;
+	  errno = E2BIG;
 	}
-      } while (toSawEndOfUnicode == FALSE);
-    }
+	goto err;
+      }
+    } while (toSawEndOfUnicode == FALSE);
   } while (fromSawEndOfBytes == FALSE);
 
  err:
