@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
 #include <string.h>
@@ -370,9 +369,7 @@ void  *tconv_convert_ICU_new(tconv_t tconvp, const char *tocodes, const char *fr
       goto err;
     }
     /* Make sure uSetPatterns is NULL terminated (a-la UTF-16) */
-    p = (char *) (uSetPatterns + uSetPatternl);
-    *p++ = '\0';
-    *p   = '\0';
+    uSetPatterns[uSetPatternl] = 0;  /* No endianness issue */
 
     /* ---------------------------------------------------------------------------- */
     /* Create transliterator                                                        */
@@ -393,7 +390,7 @@ void  *tconv_convert_ICU_new(tconv_t tconvp, const char *tocodes, const char *fr
 
     /* Add a filter to this transliterator using the intersected USet's */
     uErrorCode = U_ZERO_ERROR;
-    TCONV_TRACE(tconvp, "%s - utrans_setFilter(%p, %p, %lld, %p)", funcs, uSetPatterns, (unsigned long long) uSetPatternl, &uErrorCode);
+    TCONV_TRACE(tconvp, "%s - utrans_setFilter(%p, %p, %lld, %p)", funcs, uTransliteratorp, uSetPatterns, (unsigned long long) uSetPatternl, &uErrorCode);
     utrans_setFilter(uTransliteratorp,
                      uSetPatterns,
                      uSetPatternl,
@@ -628,7 +625,7 @@ size_t tconv_convert_ICU_run(tconv_t tconvp, void *voidp, char **inbufpp, size_t
 	TCONV_TRACE(tconvp, "%s - use all the chunk rest", funcs);
         chunkLimit = ulen;
       }
-      TCONV_TRACE(tconvp, "%s - chunkLimit is %lld", (unsigned long long) chunkLimit);
+      TCONV_TRACE(tconvp, "%s - chunkLimit is %lld", funcs, (unsigned long long) chunkLimit);
       if (chunkLimit >= 0) {
         int32_t  textLength;
         int32_t  textCapacity;
@@ -663,7 +660,7 @@ size_t tconv_convert_ICU_run(tconv_t tconvp, void *voidp, char **inbufpp, size_t
           uErrorCode   = U_ZERO_ERROR;
           /* Copy of original chunk if we have to retry */
           memcpy(chunkcopy, chunk, chunksize);
-          TCONV_TRACE(tconvp, "%s - utrans_transUChars(%p, %p, %p, %p, 0, %d, %p)", funcs, t, chunk, &textLength, textCapacity, &limit, &uErrorCode);
+          TCONV_TRACE(tconvp, "%s - utrans_transUChars(%p, %p, %p, %lld, 0, %p, %p)", funcs, t, chunk, &textLength, (unsigned long long) textCapacity, &limit, &uErrorCode);
           utrans_transUChars(t, chunk, &textLength, textCapacity, 0, &limit, &uErrorCode);
           if (uErrorCode == U_BUFFER_OVERFLOW_ERROR) {
             /* Voila... Increase chunk allocated size and retry */
