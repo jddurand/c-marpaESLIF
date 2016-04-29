@@ -650,7 +650,8 @@ size_t tconv_convert_ICU_run(tconv_t tconvp, void *voidp, char **inbufpp, size_t
         }
         memcpy(chunk + chunkused, u, chunkLimit * sizeof(UChar));
         contextp->chunkUsedl = chunkused = newchunkused;
-        memmove(u, u + chunkLimit, ulen - chunkLimit);
+        /* memmove(u, u + chunkLimit, (ulen - chunkLimit) * sizeof(UChar)); */
+        u += chunkLimit; /* In unit of UChar */
         ulen -= chunkLimit;
         /* utrans_transUChars() is not very user-friendly, in the sense that prefighting is not possible */
         textLength   = chunkused;
@@ -721,8 +722,10 @@ size_t tconv_convert_ICU_run(tconv_t tconvp, void *voidp, char **inbufpp, size_t
       }
     } while (ulen > 0);
 
-    u = out;
-    ulen = outused;
+    /* out is tranfered to u */
+    u                  = out;
+    ulen               = outused;
+    contextp->outUsedl = outused = 0;
   }
 #endif /* !UCONFIG_NO_TRANSLITERATION */
   /* ------------------------------------------------------------ */
