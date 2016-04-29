@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
 #include <string.h>
@@ -216,6 +217,9 @@ void  *tconv_convert_ICU_new(tconv_t tconvp, const char *tocodes, const char *fr
     goto err;
   }
   TCONV_TRACE(tconvp, "%s - ucnv_open returned %p", funcs, uConverterTop);
+  /* No need anymore of realToCodes */
+  free(realToCodes);
+  realToCodes = NULL;
 
   uErrorCode = U_ZERO_ERROR;
   TCONV_TRACE(tconvp, "%s - ucnv_setToUCallBack(%p, %p, %p, %p, %p)", funcs, uConverterTop, toUCallbackp, toUContextp, NULL, NULL, &uErrorCode);
@@ -503,17 +507,20 @@ size_t tconv_convert_ICU_run(tconv_t tconvp, void *voidp, char **inbufpp, size_t
   tconv_convert_ICU_context_t *contextp     = (tconv_convert_ICU_context_t *) voidp;
   /* The following is nothing else but uconv.cpp adapted to buffer and in C */
   /* so the credits go to authors of uconv.cpp                              */
-  size_t                       buflenl;
+  size_t                       bufsizel;
   UConverter                  *convfrom;
   UConverter                  *convto;
   UBool                        flush;
   const UChar                 *unibuf;
-  const UChar                 *unibufbp;
   UChar                       *unibufp;
   UChar                       *u;            /* String to do the transliteration */
   int32_t                      ulen;
   UBool                        toSawEndOfUnicode;
   UErrorCode                   uErrorCode;
+  char                        *inbufp;
+  size_t                       inbytesleftl;
+  char                        *outbufp;
+  size_t                       outbytesleftl;
 #if !UCONFIG_NO_TRANSLITERATION
   UTransliterator             *t;            /* Transliterator acting on Unicode data. */
   UChar                       *chunk;        /* One chunk of the text being collected for transformation */
@@ -533,7 +540,7 @@ size_t tconv_convert_ICU_run(tconv_t tconvp, void *voidp, char **inbufpp, size_t
     goto err;
   }
 
-  buflenl   = contextp->uCharCapacityl;
+  bufsizel  = contextp->uCharSizel;
   convfrom  = contextp->uConverterFromp;
   convto    = contextp->uConverterTop;
   flush     = ((inbufpp == NULL) || (*inbufpp == NULL)) ? TRUE : FALSE;
@@ -556,29 +563,44 @@ size_t tconv_convert_ICU_run(tconv_t tconvp, void *voidp, char **inbufpp, size_t
   /* ------------------------------------------------------------ */
 
   /* remember the start of the current byte-to-Unicode conversion */
-  unibuf = unibufp = u;
-
+  unibuf  = (const UChar *) u;
+  unibufp = u;
   {
-    static const char  *dummy = "";
-    const char        **cbufpp   = (flush == TRUE) ? &dummy : (const char **) inbufpp;
-    const char         *cbufendp = (flush == TRUE) ? dummy : (const char *) (*inbufpp + *inbytesleftlp);
-    size_t              cbuflenl = (flush == TRUE) ? 0 : *inbytesleftlp;
+    static const char  *dummy       = "";
+    char              **target      = (char **) &unibufp;
+    char               *targetLimit = *target + bufsizel;
+    char              **source      =  (flush == TRUE) ? (char **) &dummy : inbufpp;
+    char               *sourceLimit =  (flush == TRUE) ? (char  *)  dummy : (*source + *inbytesleftlp);
+#ifndef TCONV_NTRACE
+    char               *sourceorig  = *source;
+#endif
 
     uErrorCode = U_ZERO_ERROR;
-    TCONV_TRACE(tconvp, "%s - ucnv_toUnicode(%p, %p, %p, %p, %p, NULL, %d, %p)", funcs, convfrom, &unibufp, unibuf + buflenl, cbufpp, cbufendp, (int) flush, &uErrorCode);
-    ucnv_toUnicode(convfrom,
-                   &unibufp,
-                   unibuf + buflenl,
-                   cbufpp,
-                   cbufendp,
-                   NULL,
-                   flush,
-                   &uErrorCode);
+    TCONV_TRACE(tconvp, "%s - ucnv_toUnicode(%p, %p (i.e. a pointer to %p), %p (i.e. for a size of %lld), %p (i.e. a pointer to %p), %p (i.e. for a size of %lld), NULL, %d, %p)",
+		funcs,
+		convfrom,
+		target, *target,
+		targetLimit, (unsigned long long) (targetLimit - *target),
+		source, *source,
+		sourceLimit, (unsigned long long) (sourceLimit - *source),
+		(int) flush,
+		&uErrorCode);
+    ucnv_toUnicode(convfrom, (UChar **) target, (const UChar *) targetLimit, (const char **) source, (const char *) sourceLimit, NULL, flush, &uErrorCode);
     if ((uErrorCode != U_BUFFER_OVERFLOW_ERROR) && U_FAILURE(uErrorCode)) {
+      errno = ENOSYS;
       goto err;
     }
       
-    ulen = (int32_t)(unibufp - unibuf);  /* In units of UChar */
+    ulen = (int32_t)(unibufp - unibuf);  /* substraction is done in UChar unit */
+#ifndef TCONV_NTRACE
+    TCONV_TRACE(tconvp, "%s - ucnv_toUnicode result: %lld bytes => %lld UChar's spreaded on %lld bytes",
+		funcs,
+		(unsigned long long) (*source - sourceorig),
+		(unsigned long long) ulen,
+		(unsigned long long) ((char *) unibufp - (char *) unibuf));
+#endif
+    inbufp       = *source;
+    inbytesleftl = sourceLimit - inbufp;
   }
 
 #if !UCONFIG_NO_TRANSLITERATION
@@ -603,8 +625,10 @@ size_t tconv_convert_ICU_run(tconv_t tconvp, void *voidp, char **inbufpp, size_t
       chunkLimit = getChunkLimit(chunk, chunkused, u, ulen);
       if (chunkLimit < 0 && flush) {
         /* use all of the rest at the end of the text */
+	TCONV_TRACE(tconvp, "%s - use all the chunk rest", funcs);
         chunkLimit = ulen;
       }
+      TCONV_TRACE(tconvp, "%s - chunkLimit is %lld", (unsigned long long) chunkLimit);
       if (chunkLimit >= 0) {
         int32_t  textLength;
         int32_t  textCapacity;
@@ -714,27 +738,39 @@ size_t tconv_convert_ICU_run(tconv_t tconvp, void *voidp, char **inbufpp, size_t
   // At the last conversion flush should be set to true to ensure that
   // all characters left get converted
   */
-  unibuf = unibufbp = u;
+  unibuf  = (const UChar *) u;
+  unibufp = u;
 
   do {
+    char  **target;
+    char   *targetLimit;
+    char  **source;
+    char   *sourceLimit;
+#ifndef TCONV_NTRACE
+    char   *sourceorig;
+    char   *targetorig;
+#endif
+
+    target      = outbufpp;
+    targetLimit = *target + *outbytesleftlp;
+    source      = (char **) &unibufp;
+    sourceLimit = *source + (ulen * sizeof(UChar));
+#ifndef TCONV_NTRACE
+    sourceorig  = *source;
+    targetorig  = *target;
+#endif
+
     uErrorCode = U_ZERO_ERROR;
-    TCONV_TRACE(tconvp, "%s - ucnv_fromUnicode(%p, %p, %p, %p, %p, NULL, %d, %p)",
-                funcs,
-                convto,
-                outbufpp,
-                *outbufpp + *outbytesleftlp,
-                &unibufbp,
-                unibuf + ulen,
-                (int) flush,
-                &uErrorCode);
-    ucnv_fromUnicode(convto,
-                     outbufpp,
-                     *outbufpp + *outbytesleftlp,
-                     &unibufbp,
-                     unibuf + ulen,
-                     NULL,
-                     flush,
-                     &uErrorCode);
+    TCONV_TRACE(tconvp, "%s - ucnv_fromUnicode(%p, %p (i.e. a pointer to %p), %p (i.e. for a size of %lld), %p (i.e. a pointer to %p), %p (i.e. for a size of %lld), NULL, %d, %p)",
+		funcs,
+		convto,
+		target, *target,
+		targetLimit, (unsigned long long) (targetLimit - *target),
+		source, *source,
+		sourceLimit, (unsigned long long) (sourceLimit - *source),
+		(int) flush,
+		&uErrorCode);
+    ucnv_fromUnicode(convto, (char **) target, (const char *) targetLimit, (const UChar **) source, (const UChar *) sourceLimit, NULL, flush, &uErrorCode);
     /*
     // toSawEndOfUnicode indicates that ucnv_fromUnicode() is done
     // converting all of the intermediate UChars.
@@ -747,8 +783,30 @@ size_t tconv_convert_ICU_run(tconv_t tconvp, void *voidp, char **inbufpp, size_t
       }
       goto err;
     }
+
+    TCONV_TRACE(tconvp, "%s - ucnv_fromUnicode result: %lld UChar's spreaded on %lld bytes => %lld bytes",
+		funcs,
+		(unsigned long long) ((*source - sourceorig) / sizeof(UChar)),
+		(unsigned long long) ( *source - sourceorig                 ),
+		(unsigned long long) (*target - targetorig));
+
+    outbufp       = *target;
+    outbytesleftl = targetLimit - outbufp;
   } while (toSawEndOfUnicode == FALSE);
 
+  /* At this stage we return ok: update the pointers values */
+  if (inbufpp != NULL) {
+    *inbufpp = inbufp;
+  }
+  if (inbytesleftlp != NULL) {
+    *inbytesleftlp = inbytesleftl;
+  }
+  if (outbufpp != NULL) {
+    *outbufpp = outbufp;
+  }
+  if (outbytesleftlp != NULL) {
+    *outbytesleftlp = outbytesleftl;
+  }
   return 0;
 
  err:
@@ -791,6 +849,7 @@ int tconv_convert_ICU_free(tconv_t tconvp, void *voidp)
     if (contextp->uTransliteratorp != NULL) {
       utrans_close(contextp->uTransliteratorp);
     }
+    free(contextp);
 #endif
   }
 
