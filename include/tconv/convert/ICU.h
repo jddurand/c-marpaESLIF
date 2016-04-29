@@ -6,6 +6,7 @@
 typedef struct tconv_convert_ICU_option {
   size_t uCharCapacityl;       /* Length (note bytes) of intermediary buffer. Default: 4096 */
   short  fallbackb;            /* Use fallback mappings. Defaut: 0 */
+  int    signaturei;           /* <0: remove eventual signature, >0: add eventual signature. Default: 0 */
 } tconv_convert_ICU_option_t;
 
 #include "tconv.h"

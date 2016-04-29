@@ -20,10 +20,12 @@
 /* Default option */
 #define TCONV_ENV_CONVERT_ICU_UCHARCAPACITY "TCONV_ENV_CONVERT_ICU_UCHARCAPACITY"
 #define TCONV_ENV_CONVERT_ICU_FALLBACK  "TCONV_ENV_CONVERT_ICU_FALLBACK"
+#define TCONV_ENV_CONVERT_ICU_SIGNATURE  "TCONV_ENV_CONVERT_ICU_SIGNATURE"
 
 tconv_convert_ICU_option_t tconv_convert_icu_option_default = {
-  4096, /* uCharCapacityl */
-  0     /* fallbackb */
+  4096, /* uCharCapacityl - take care we "lie" by allocating uCharCapacityl+1 for the eventual signature */
+  0,    /* fallbackb */
+  0,    /* signaturei */
 };
 
 /* Context */
@@ -33,6 +35,8 @@ typedef struct tconv_convert_ICU_context {
   int32_t                     uCharCapacityl;   /* Allocated Length (not bytes) */
   size_t                      uCharSizel;       /* Allocated size (bytes) */
   UConverter                 *uConverterTop;    /* UChar => Output */
+  int8_t                      signaturei;
+  UBool                       firstb;
 #if !UCONFIG_NO_TRANSLITERATION
   UChar                      *chunkp;
   UChar                      *chunkcopyp;
@@ -48,6 +52,7 @@ typedef struct tconv_convert_ICU_context {
 } tconv_convert_ICU_context_t;
 
 static TCONV_C_INLINE int32_t getChunkLimit(const UChar *chunk, const size_t chunklen, const UChar *u, size_t ulen);
+static TCONV_C_INLINE int32_t cnvSigType(UConverter *cnv);
 
 /*****************************************************************************/
 void  *tconv_convert_ICU_new(tconv_t tconvp, const char *tocodes, const char *fromcodes, void *voidp)
@@ -76,6 +81,7 @@ void  *tconv_convert_ICU_new(tconv_t tconvp, const char *tocodes, const char *fr
   UConverterToUCallback        toUCallbackp     = NULL;
   const void                  *toUContextp      = NULL;
   UBool                        fallbackb        = FALSE;
+  int8_t                       signaturei       = 0;
   int32_t                      uSetPatternFroml = 0;
   UChar                       *uSetPatternFroms = NULL;
   USet                        *uSetFromp        = NULL;
@@ -147,6 +153,7 @@ void  *tconv_convert_ICU_new(tconv_t tconvp, const char *tocodes, const char *fr
 
   uCharCapacityl = optionp->uCharCapacityl;
   fallbackb      = (optionp->fallbackb !=0 ) ? TRUE : FALSE;
+  signaturei     = (optionp->signaturei < 0) ? -1 : ((optionp->signaturei > 0) ? 1 : 0);
 
   /* These can be overwriten with environment variables */
   TCONV_TRACE(tconvp, "%s - getenv(\"%s\")", funcs, TCONV_ENV_CONVERT_ICU_UCHARCAPACITY);
@@ -155,15 +162,23 @@ void  *tconv_convert_ICU_new(tconv_t tconvp, const char *tocodes, const char *fr
     TCONV_TRACE(tconvp, "%s - atoi(\"%s\")", funcs, p);
     uCharCapacityl = atoi(p);
   }
+  if (uCharCapacityl <= 0) {
+    errno = EINVAL;
+    goto err;
+  }
   TCONV_TRACE(tconvp, "%s - getenv(\"%s\")", funcs, TCONV_ENV_CONVERT_ICU_FALLBACK);
   p = getenv(TCONV_ENV_CONVERT_ICU_FALLBACK);
   if (p != NULL) {
     TCONV_TRACE(tconvp, "%s - atoi(\"%s\")", funcs, p);
     fallbackb = (atoi(p) != 0) ? TRUE : FALSE;
   }
-  if (uCharCapacityl <= 0) {
-    errno = EINVAL;
-    goto err;
+  TCONV_TRACE(tconvp, "%s - getenv(\"%s\")", funcs, TCONV_ENV_CONVERT_ICU_SIGNATURE);
+  p = getenv(TCONV_ENV_CONVERT_ICU_SIGNATURE);
+  if (p != NULL) {
+    int i;
+    TCONV_TRACE(tconvp, "%s - atoi(\"%s\")", funcs, p);
+    i = atoi(p);
+    signaturei = (i < 0) ? -1 : ((i > 0) ? 1 : 0);
   }
 
   /* ----------------------------------------------------------- */
@@ -197,7 +212,7 @@ void  *tconv_convert_ICU_new(tconv_t tconvp, const char *tocodes, const char *fr
   /* ----------------------------------------------------------- */
   uCharSizel = uCharCapacityl * sizeof(UChar);
   TCONV_TRACE(tconvp, "%s - malloc(%lld)", funcs, (unsigned long long) uCharSizel);
-  uCharBufp = (UChar *) malloc(uCharSizel);
+  uCharBufp = (UChar *) malloc(uCharSizel + sizeof(UChar));   /* + 1 for eventual signature */
   if (uCharBufp == NULL) {
     goto err;
   }
@@ -433,6 +448,8 @@ void  *tconv_convert_ICU_new(tconv_t tconvp, const char *tocodes, const char *fr
   contextp->uCharCapacityl   = uCharCapacityl;
   contextp->uCharSizel       = uCharSizel;
   contextp->uConverterTop    = uConverterTop;
+  contextp->signaturei       = signaturei;
+  contextp->firstb           = TRUE;
 #if !UCONFIG_NO_TRANSLITERATION
   contextp->chunkp           = NULL;
   contextp->chunkcopyp       = NULL;
@@ -496,6 +513,22 @@ void  *tconv_convert_ICU_new(tconv_t tconvp, const char *tocodes, const char *fr
   return (void *)-1;
 }
 
+enum {
+  uSP  = 0x20,         /* space */
+  uCR  = 0xd,          /* carriage return */
+  uLF  = 0xa,          /* line feed */
+  uNL  = 0x85,         /* newline */
+  uLS  = 0x2028,       /* line separator */
+  uPS  = 0x2029,       /* paragraph separator */
+  uSig = 0xfeff        /* signature/BOM character */
+};
+
+enum {
+  CNV_NO_FEFF,    /* cannot convert the U+FEFF Unicode signature character (BOM) */
+  CNV_WITH_FEFF,  /* can convert the U+FEFF signature character */
+  CNV_ADDS_FEFF   /* automatically adds/detects the U+FEFF signature character */
+};
+
 /*****************************************************************************/
 size_t tconv_convert_ICU_run(tconv_t tconvp, void *voidp, char **inbufpp, size_t *inbytesleftlp, char **outbufpp, size_t *outbytesleftlp)
 /*****************************************************************************/
@@ -518,6 +551,8 @@ size_t tconv_convert_ICU_run(tconv_t tconvp, void *voidp, char **inbufpp, size_t
   size_t                       inbytesleftl;
   char                        *outbufp;
   size_t                       outbytesleftl;
+  int8_t                       sig;
+  UBool                        firstb;
 #if !UCONFIG_NO_TRANSLITERATION
   UTransliterator             *t;            /* Transliterator acting on Unicode data. */
   UChar                       *chunk;        /* One chunk of the text being collected for transformation */
@@ -542,6 +577,8 @@ size_t tconv_convert_ICU_run(tconv_t tconvp, void *voidp, char **inbufpp, size_t
   convto    = contextp->uConverterTop;
   flush     = ((inbufpp == NULL) || (*inbufpp == NULL)) ? TRUE : FALSE;
   u         = contextp->uCharBufp;
+  sig       = contextp->signaturei;
+  firstb    = contextp->firstb;
 #if !UCONFIG_NO_TRANSLITERATION
   chunk         = contextp->chunkp;
   chunkcopy     = contextp->chunkcopyp;
@@ -600,20 +637,33 @@ size_t tconv_convert_ICU_run(tconv_t tconvp, void *voidp, char **inbufpp, size_t
     inbytesleftl = sourceLimit - inbufp;
   }
 
+  if (firstb) {
+    if (sig < 0) {
+      if (ulen > 0) {
+        if (u[0] == uSig) {
+          TCONV_TRACE(tconvp, "%s - removing signature", funcs);
+          u++;
+          --ulen;
+        }
+      }
+      sig = 0;
+    }
+  }
+
 #if !UCONFIG_NO_TRANSLITERATION
   /* ------------------------------------------------------------ */
   /* Transliterate                                                */
   /* ------------------------------------------------------------ */
   /*
-  // Transliterate/transform if needed.
+    Transliterate/transform if needed.
 
-  // For transformation, we use chunking code -
-  // collect Unicode input until, for example, an end-of-line,
-  // then transform and output-convert that and continue collecting.
-  // This makes the transformation result independent of the buffer size
-  // while avoiding the slower keyboard mode.
-  // The end-of-chunk characters are completely included in the
-  // transformed string in case they are to be transformed themselves.
+    For transformation, we use chunking code -
+    collect Unicode input until, for example, an end-of-line,
+    then transform and output-convert that and continue collecting.
+    This makes the transformation result independent of the buffer size
+    while avoiding the slower keyboard mode.
+    The end-of-chunk characters are completely included in the
+    transformed string in case they are to be transformed themselves.
   */
   if (t != NULL) {
     int32_t chunkLimit;
@@ -681,7 +731,7 @@ size_t tconv_convert_ICU_run(tconv_t tconvp, void *voidp, char **inbufpp, size_t
         } while (uErrorCode == U_BUFFER_OVERFLOW_ERROR);  
         /* append the transformation result to the result and empty the chunk */
         {
-          int32_t  newoutused = outused + chunkused;
+          int32_t newoutused = outused + chunkused;
           if (newoutused > outcapacity) {
             int32_t newoutcapacity = newoutused;
             size_t  newoutsize     = newoutcapacity * sizeof(UChar);
@@ -722,21 +772,73 @@ size_t tconv_convert_ICU_run(tconv_t tconvp, void *voidp, char **inbufpp, size_t
       }
     } while (ulen > 0);
 
+    /* add a U+FEFF Unicode signature character if requested */
+    /* and possible/necessary */
+    if (firstb) {
+      if (sig > 0) {
+        if (outused > 0) {
+          if ((out[0] != uSig) && (cnvSigType(convto) == CNV_WITH_FEFF)) {
+            TCONV_TRACE(tconvp, "%s - adding signature", funcs);
+            /* We are on the transliterated buffer */
+            {
+              int32_t newoutused = outused + 1;
+              if (newoutused > outcapacity) {
+                int32_t newoutcapacity = newoutused;
+                size_t  newoutsize     = newoutcapacity * sizeof(UChar);
+
+                out = (out == NULL) ? (UChar *) malloc(newoutsize) : (UChar *) realloc(out, newoutsize);
+                if (out == NULL) {
+                  goto err;
+                }
+                contextp->outSizel     = outsize     = newoutsize;
+                contextp->outCapacityl = outcapacity = newoutcapacity;
+                contextp->outp         = out;
+              }
+              memmove(out+1, out, outused * sizeof(UChar));
+              out[0] = (UChar)uSig;
+              contextp->outUsedl = outused = newoutused;
+            }
+          }
+        }
+        sig = 0;
+      }
+    }
+
     /* out is tranfered to u */
     u                  = out;
     ulen               = outused;
     contextp->outUsedl = outused = 0;
-  }
+
+  } else
 #endif /* !UCONFIG_NO_TRANSLITERATION */
+    {
+      /* add a U+FEFF Unicode signature character if requested */
+      /* and possible/necessary */
+      if (firstb) {
+        if (sig > 0) {
+          if (ulen > 0) {
+            if ((u[0] != uSig) && (cnvSigType(convto) == CNV_WITH_FEFF)) {
+              TCONV_TRACE(tconvp, "%s - adding signature", funcs);
+              /* Remember we allocated uCharCapacityl + 1 */
+              memmove(u+1, u, ulen * sizeof(UChar));
+              u[0] = (UChar)uSig;
+              ++ulen;
+            }
+          }
+          sig = 0;
+        }
+      }
+    }
+
   /* ------------------------------------------------------------ */
   /* Produce output                                               */
   /* ------------------------------------------------------------ */
   /*
-  // Convert the Unicode buffer into the destination codepage
-  // Again 'bufp' will be placed behind the last converted character
-  // And 'unibufp' will be placed behind the last converted unicode character
-  // At the last conversion flush should be set to true to ensure that
-  // all characters left get converted
+    Convert the Unicode buffer into the destination codepage
+    Again 'bufp' will be placed behind the last converted character
+    And 'unibufp' will be placed behind the last converted unicode character
+    At the last conversion flush should be set to true to ensure that
+    all characters left get converted
   */
   unibuf  = (const UChar *) u;
   unibufp = u;
@@ -772,8 +874,8 @@ size_t tconv_convert_ICU_run(tconv_t tconvp, void *voidp, char **inbufpp, size_t
 		&uErrorCode);
     ucnv_fromUnicode(convto, (char **) target, (const char *) targetLimit, (const UChar **) source, (const UChar *) sourceLimit, NULL, flush, &uErrorCode);
     /*
-    // toSawEndOfUnicode indicates that ucnv_fromUnicode() is done
-    // converting all of the intermediate UChars.
+      toSawEndOfUnicode indicates that ucnv_fromUnicode() is done
+      converting all of the intermediate UChars.
     */
     toSawEndOfUnicode = (UBool) U_SUCCESS(uErrorCode);
     if (U_FAILURE(uErrorCode)) {
@@ -793,6 +895,9 @@ size_t tconv_convert_ICU_run(tconv_t tconvp, void *voidp, char **inbufpp, size_t
     outbufp       = *target;
     outbytesleftl = targetLimit - outbufp;
   } while (toSawEndOfUnicode == FALSE);
+
+  /* Say this is not anymore the first time */
+  contextp->firstb = firstb = FALSE;
 
   /* At this stage we return ok: update the pointers values */
   if (inbufpp != NULL) {
@@ -863,16 +968,6 @@ int tconv_convert_ICU_free(tconv_t tconvp, void *voidp)
    Note from http://userguide.icu-project.org/strings :
    Endianness is not an issue on this level because the interpretation of an integer is fixed within any given platform.
 */
-enum {
-    uSP  = 0x20,         // space
-    uCR  = 0xd,          // carriage return
-    uLF  = 0xa,          // line feed
-    uNL  = 0x85,         // newline
-    uLS  = 0x2028,       // line separator
-    uPS  = 0x2029,       // paragraph separator
-    uSig = 0xfeff       // signature/BOM character
-};
-
 static const UChar paraEnds[] = {
   0xd, 0xa, 0x85, 0x2028, 0x2029
 };
@@ -888,22 +983,22 @@ static TCONV_C_INLINE int32_t getChunkLimit(const UChar *prev, const size_t prev
   const UChar *limit = u + slen;
   UChar c;
   /*
-  // find one of
-  // CR, LF, CRLF, NL, LS, PS
-  // for paragraph ends (see UAX #13/Unicode 4)
-  // and include it in the chunk
-  // all of these characters are on the BMP
-  // do not include FF or VT in case they are part of a paragraph
-  // (important for bidi contexts)
+    find one of
+    CR, LF, CRLF, NL, LS, PS
+    for paragraph ends (see UAX #13/Unicode 4)
+    and include it in the chunk
+    all of these characters are on the BMP
+    do not include FF or VT in case they are part of a paragraph
+    (important for bidi contexts)
   */
   /* first, see if there is a CRLF split between prev and s */
   if ((prevlen > 0) && (prev[prevlen - 1] == paraEnds[iCR])) {
     if ((slen > 0) && (s[0] == paraEnds[iLF])) {
-      return 1; // split CRLF, include the LF
+      return 1; /* split CRLF, include the LF */
     } else if (slen > 0) {
-      return 0; // complete the last chunk
+      return 0; /* complete the last chunk */
     } else {
-      return -1; // wait for actual further contents to arrive
+      return -1; /* wait for actual further contents to arrive */
     }
   }
 
@@ -915,16 +1010,62 @@ static TCONV_C_INLINE int32_t getChunkLimit(const UChar *prev, const size_t prev
         ((c & uLS) == uLS)
         ) {
       if (c == uCR) {
-        // check for CRLF
+        /* check for CRLF */
         if (u == limit) {
-          return -1; // LF may be in the next chunk
+          return -1; /* LF may be in the next chunk */
         } else if (*u == uLF) {
-          ++u; // include the LF in this chunk
+          ++u; /* include the LF in this chunk */
         }
       }
       return (int32_t)(u - s); /* In units of UChar */
     }
   }
 
-  return -1; // continue collecting the chunk
+  return -1; /* continue collecting the chunk */
+}
+
+/*****************************************************************************/
+static TCONV_C_INLINE int32_t cnvSigType(UConverter *cnv)
+/*****************************************************************************/
+{
+  UErrorCode err;
+  int32_t result;
+
+  /* test if the output charset can convert U+FEFF */
+  USet *set = uset_open(1, 0);
+
+  err = U_ZERO_ERROR;
+  ucnv_getUnicodeSet(cnv, set, UCNV_ROUNDTRIP_SET, &err);
+  if (U_SUCCESS(err) && uset_contains(set, uSig)) {
+    result = CNV_WITH_FEFF;
+  } else {
+    result = CNV_NO_FEFF; /* an error occurred or U+FEFF cannot be converted */
+  }
+  uset_close(set);
+
+  if (result == CNV_WITH_FEFF) {
+    /* test if the output charset emits a signature anyway */
+    const UChar a[1] = { 0x61 }; /* "a" */
+    const UChar *in;
+
+    char buffer[20];
+    char *out;
+
+    in = a;
+    out = buffer;
+    err = U_ZERO_ERROR;
+    ucnv_fromUnicode(cnv,
+                     &out, buffer + sizeof(buffer),
+                     &in, a + 1,
+                     NULL, TRUE, &err);
+    ucnv_resetFromUnicode(cnv);
+
+    if (NULL != ucnv_detectUnicodeSignature(buffer, (int32_t)(out - buffer), NULL, &err) &&
+        U_SUCCESS(err)
+        ) {
+      result = CNV_ADDS_FEFF;
+    }
+  }
+
+  return result;
 }
