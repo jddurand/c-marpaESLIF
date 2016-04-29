@@ -82,14 +82,9 @@ void  *tconv_convert_ICU_new(tconv_t tconvp, const char *tocodes, const char *fr
   const void                  *toUContextp      = NULL;
   UBool                        fallbackb        = FALSE;
   int8_t                       signaturei       = 0;
-  int32_t                      uSetPatternFroml = 0;
-  UChar                       *uSetPatternFroms = NULL;
-  USet                        *uSetFromp        = NULL;
   int32_t                      uSetPatternTol   = 0;
   UChar                       *uSetPatternTos   = NULL;
   USet                        *uSetTop          = NULL;
-  int32_t                      uSetPatternl     = 0;
-  UChar                       *uSetPatterns     = NULL;
   USet                        *uSetp            = NULL;
   UErrorCode                   uErrorCode;
   char                        *p, *q;
@@ -260,51 +255,6 @@ void  *tconv_convert_ICU_new(tconv_t tconvp, const char *tocodes, const char *fr
     /* Transliterator is generated on-the-fly using the unicode */
     /* sets from the two converters.                            */
     
-    /* --------------------------- */
-    /* Uset for the from converter */
-    /* --------------------------- */
-    TCONV_TRACE(tconvp, "%s - getting \"from\" USet", funcs);
-    TCONV_TRACE(tconvp, "%s - uset_openEmpty()", funcs);
-    uSetFromp = uset_openEmpty();
-    if (uSetFromp == NULL) { /* errno ? */
-      errno = ENOSYS;
-      goto err;
-    }
-    TCONV_TRACE(tconvp, "%s - uset_openEmpty returned %p", funcs, uSetFromp);
-
-    uErrorCode = U_ZERO_ERROR;
-    TCONV_TRACE(tconvp, "%s - ucnv_getUnicodeSet(%p, %p, %s, %p)", funcs, uConverterFromp, uSetFromp, (fallbackb == TRUE) ? "UCNV_ROUNDTRIP_AND_FALLBACK_SET" : "UCNV_ROUNDTRIP_SET", &uErrorCode);
-    ucnv_getUnicodeSet(uConverterFromp, uSetFromp, whichSet, &uErrorCode);
-    if (U_FAILURE(uErrorCode)) {
-      errno = ENOSYS;
-      goto err;
-    }
-
-#ifndef TCONV_NTRACE
-    uErrorCode = U_ZERO_ERROR;
-    TCONV_TRACE(tconvp, "%s - uset_toPattern(%p, NULL, 0, TRUE, %p)", funcs, uSetFromp, &uErrorCode);
-    uSetPatternFroml = uset_toPattern(uSetFromp, NULL, 0, TRUE, &uErrorCode);
-    if (uErrorCode != U_BUFFER_OVERFLOW_ERROR) {
-      errno = ENOSYS;
-      goto err;
-    }
-    uSetPatternFroms = malloc((uSetPatternFroml + 1) * sizeof(UChar));
-    if (uSetPatternFroms == NULL) {
-      goto err;
-    }
-    uErrorCode = U_ZERO_ERROR;
-    TCONV_TRACE(tconvp, "%s - uset_toPattern(%p, %p, %lld, TRUE, %p)", funcs, uSetFromp, uSetPatternFroms, (unsigned long long) (uSetPatternFroml + 1), &uErrorCode);
-    uset_toPattern(uSetFromp, uSetPatternFroms, uSetPatternFroml, TRUE, &uErrorCode);
-    if (U_FAILURE(uErrorCode)) {
-      errno = ENOSYS;
-      goto err;
-    }
-    /* Make sure uSetPatternFroms is NULL terminated (a-la UTF-16) */
-    p = (char *) (uSetPatternFroms + uSetPatternFroml);
-    *p++ = '\0';
-    *p   = '\0';
-#endif
-
     /* ------------------------- */
     /* Uset for the to converter */
     /* ------------------------- */
@@ -325,7 +275,6 @@ void  *tconv_convert_ICU_new(tconv_t tconvp, const char *tocodes, const char *fr
       goto err;
     }
 
-#ifndef TCONV_NTRACE
     uErrorCode = U_ZERO_ERROR;
     TCONV_TRACE(tconvp, "%s - uset_toPattern(%p, NULL, 0, TRUE, %p)", funcs, uSetTop, &uErrorCode);
     uSetPatternTol = uset_toPattern(uSetTop, NULL, 0, TRUE, &uErrorCode);
@@ -348,46 +297,9 @@ void  *tconv_convert_ICU_new(tconv_t tconvp, const char *tocodes, const char *fr
     p = (char *) (uSetPatternTos + uSetPatternTol);
     *p++ = '\0';
     *p   = '\0';
-#endif
 
     /* ---------------------------------------------------------------------------- */
-    /* Interset the two usets (I could have used uset_retainAll(uSetFromp, uSetTop) */
-    /* ---------------------------------------------------------------------------- */
-    TCONV_TRACE(tconvp, "%s - intersecting \"from\" and \"to\" USet's", funcs);
-    TCONV_TRACE(tconvp, "%s - uset_openEmpty()", funcs);
-    uSetp = uset_openEmpty();
-    if (uSetp == NULL) { /* errno ? */
-      errno = ENOSYS;
-      goto err;
-    }
-    TCONV_TRACE(tconvp, "%s - uset_openEmpty returned %p", funcs, uSetp);
-
-    uset_addAll(uSetp, uSetFromp);
-    uset_retainAll(uSetp, uSetTop);
-
-    uErrorCode = U_ZERO_ERROR;
-    TCONV_TRACE(tconvp, "%s - uset_toPattern(%p, NULL, 0, TRUE, %p)", funcs, uSetp, &uErrorCode);
-    uSetPatternl = uset_toPattern(uSetp, NULL, 0, TRUE, &uErrorCode);
-    if (uErrorCode != U_BUFFER_OVERFLOW_ERROR) {
-      errno = ENOSYS;
-      goto err;
-    }
-    uSetPatterns = malloc((uSetPatternl + 1) * sizeof(UChar));
-    if (uSetPatterns == NULL) {
-      goto err;
-    }
-    uErrorCode = U_ZERO_ERROR;
-    TCONV_TRACE(tconvp, "%s - uset_toPattern(%p, %p, %lld, TRUE, %p)", funcs, uSetp, uSetPatterns, (unsigned long long) (uSetPatternl + 1), &uErrorCode);
-    uset_toPattern(uSetp, uSetPatterns, uSetPatternl, TRUE, &uErrorCode);
-    if (U_FAILURE(uErrorCode)) {
-      errno = ENOSYS;
-      goto err;
-    }
-    /* Make sure uSetPatterns is NULL terminated (a-la UTF-16) */
-    uSetPatterns[uSetPatternl] = 0;  /* No endianness issue */
-
-    /* ---------------------------------------------------------------------------- */
-    /* Create transliterator                                                        */
+    /* Create transliterator: "[^usetto] Any-Latin; Latin-ASCII"                    */
     /* ---------------------------------------------------------------------------- */
     uErrorCode = U_ZERO_ERROR;
     TCONV_TRACE(tconvp, "%s - uTransliteratorp(%p, %d, UTRANS_FORWARD, NULL, 0, NULL, %p)", funcs, universalTransliterators, universalTransliteratorsLength, &uErrorCode);
@@ -403,12 +315,12 @@ void  *tconv_convert_ICU_new(tconv_t tconvp, const char *tocodes, const char *fr
       goto err;
     }
 
-    /* Add a filter to this transliterator using the intersected USet's */
+    /* Add a filter to this transliterator using the intersected the from pattern */
     uErrorCode = U_ZERO_ERROR;
-    TCONV_TRACE(tconvp, "%s - utrans_setFilter(%p, %p, %lld, %p)", funcs, uTransliteratorp, uSetPatterns, (unsigned long long) uSetPatternl, &uErrorCode);
+    TCONV_TRACE(tconvp, "%s - utrans_setFilter(%p, %p, %lld, %p)", funcs, uTransliteratorp, uSetPatternTos, (unsigned long long) uSetPatternTol, &uErrorCode);
     utrans_setFilter(uTransliteratorp,
-                     uSetPatterns,
-                     uSetPatternl,
+                     uSetPatternTos,
+                     uSetPatternTol,
                      &uErrorCode);
     if (U_FAILURE(uErrorCode)) {
       errno = ENOSYS;
@@ -416,21 +328,14 @@ void  *tconv_convert_ICU_new(tconv_t tconvp, const char *tocodes, const char *fr
     }
 
     /* Cleanup */
-    uset_close(uSetFromp);
     uset_close(uSetTop);
-    uset_close(uSetp);
-    uSetFromp = NULL;
-    uSetTop   = NULL;
-    uSetp     = NULL;
+    uSetTop = NULL;
 
-#ifndef TCONV_NTRACE
-    free(uSetPatternFroms);
+    uset_close(uSetp);
+    uSetp = NULL;
+
     free(uSetPatternTos);
-    uSetPatternFroms = NULL;
-    uSetPatternTos   = NULL;
-#endif
-    free(uSetPatterns);
-    uSetPatterns     = NULL;
+    uSetPatternTos = NULL;
 #endif /* UCONFIG_NO_TRANSLITERATION */
   }
 
@@ -483,12 +388,6 @@ void  *tconv_convert_ICU_new(tconv_t tconvp, const char *tocodes, const char *fr
     }
     if (uConverterTop != NULL) {
       ucnv_close (uConverterTop);
-    }
-    if (uSetPatternFroms == NULL) {
-      free(uSetPatternFroms);
-    }
-    if (uSetFromp != NULL) {
-      uset_close(uSetFromp);
     }
     if (uSetPatternTos == NULL) {
       free(uSetPatternTos);
