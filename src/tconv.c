@@ -598,6 +598,7 @@ char *tconv_error_set(tconv_t tconvp, const char *msgs)
 {
   static const char funcs[] = "tconv_error_set";
   char             *errors  = NULL;
+  int               errnol = errno;  /* Make sure errno is never changed */
 
   TCONV_TRACE(tconvp, "%s(%p, %p)", funcs, tconvp, msgs);
 
@@ -608,6 +609,8 @@ char *tconv_error_set(tconv_t tconvp, const char *msgs)
   }
 
   TCONV_TRACE(tconvp, "%s - return %s", funcs, errors);
+
+  errno = errnol;
 
   return errors;
 }
