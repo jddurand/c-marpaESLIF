@@ -1,57 +1,26 @@
 #include <iconv.h>
 
 #include "tconv/convert/iconv.h"
-/* Because this is a built-in, it can take advantage of TCONV_TRACE macro */
-#include "tconv_config.h"
 
-/* iconv interface is a direct proxy to iconv: context is iconv_t itself */
+/* iconv interface is a direct proxy to iconv */
 
 /*****************************************************************************/
 void  *tconv_convert_iconv_new(tconv_t tconvp, const char *tocodes, const char *fromcodes, void *voidp)
 /*****************************************************************************/
 {
-  static const char funcs[] = "tconv_convert_iconv_new";
-  iconv_t           iconvp;
-
-  TCONV_TRACE(tconvp, "%s - iconv_open(%p, %p)", funcs, tocodes, fromcodes);
-  iconvp = iconv_open(tocodes, fromcodes);
-
-  TCONV_TRACE(tconvp, "%s - return %p", funcs, iconvp);
-  return iconvp;
+  return iconv_open(tocodes, fromcodes);
 }
 
 /*****************************************************************************/
 size_t tconv_convert_iconv_run(tconv_t tconvp, void *voidp, char **inbufpp, size_t *inbytesleftlp, char **outbufpp, size_t *outbytesleftlp)
 /*****************************************************************************/
 {
-  static const char funcs[] = "tconv_convert_iconv_run";
-  iconv_t           iconvp  = (iconv_t) voidp;
-  size_t            rcl;
-
-  TCONV_TRACE(tconvp, "%s - iconv(%p, %p, %p, %p, %p)", funcs, iconvp, inbufpp, inbytesleftlp, outbufpp, outbytesleftlp);
-  rcl = iconv(iconvp, inbufpp, inbytesleftlp, outbufpp, outbytesleftlp);
-
-#ifndef TCONV_NTRACE
-  if (rcl == (size_t)-1) {
-    TCONV_TRACE(tconvp, "%s - return -1", funcs);
-  } else {
-    TCONV_TRACE(tconvp, "%s - return %lld", funcs, (signed long long) rcl);
-  }
-#endif
-  return rcl;
+  return iconv((iconv_t) voidp, inbufpp, inbytesleftlp, outbufpp, outbytesleftlp);
 }
 
 /*****************************************************************************/
 int tconv_convert_iconv_free(tconv_t tconvp, void *voidp)
 /*****************************************************************************/
 {
-  static const char funcs[] = "tconv_convert_iconv_free";
-  iconv_t           iconvp  = (iconv_t) voidp;
-  int               rci;
-
-  TCONV_TRACE(tconvp, "%s - iconv_close(%p)", funcs, iconvp);
-  rci = iconv_close(iconvp);
-
-  TCONV_TRACE(tconvp, "%s - return %d", funcs, rci);
-  return rci;
+  return iconv_close((iconv_t) voidp);
 }
