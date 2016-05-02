@@ -227,12 +227,8 @@ void fileconvert(int outputFd, char *filenames, char *tocodes, char *fromcodes, 
 	      fprintf(stderr, "realloc: %s\n", strerror(errno));
 	      goto end;
 	    }
-	    outbuforigp  = tmp;
-
-	    inbufp   = inbuforigp;
-	    inleftl  = inleftorigl;
-	    outbufp  = outbuforigp;
-	    outleftl = outsizel;
+	    outbuforigp = tmp;
+	    outbufp     = outbuforigp + outsizel - outleftl;
 	  }
 	  break;
 	default:
