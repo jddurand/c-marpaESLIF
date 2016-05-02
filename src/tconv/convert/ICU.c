@@ -532,7 +532,7 @@ size_t _tconv_convert_ICU_run(tconv_t tconvp, tconv_convert_ICU_context_t *conte
   UTransliterator  *uTransliteratorp  = contextp->uTransliteratorp;
 #endif
   int32_t          *fromOffsetp       = contextp->fromOffsetp;
-  const UChar      *uCharBuforigp     = (const UChar *) contextp->uCharBufp;
+  const UChar      *uCharBufOrigp     = (const UChar *) contextp->uCharBufp;
   const UChar      *uCharBufLimitp    = (const UChar *) contextp->uCharBufLimitp;
   
   const char       *inbufOrigp        = (const char *) *inbufpp;
@@ -544,7 +544,7 @@ size_t _tconv_convert_ICU_run(tconv_t tconvp, tconv_convert_ICU_context_t *conte
   const char       *outbufLimitp      = (const char *) (outbufOrigp + outbytesleftOrigl);
   /* Variables */
   UErrorCode        uErrorCode;
-  UChar            *uCharBufp         = (UChar *) uCharBuforigp;
+  UChar            *uCharBufp         = (UChar *) uCharBufOrigp;
   UBool             firstb            = contextp->firstb;
   const char       *inbufp            = (const char *) inbufOrigp;
   char             *outbufp           = *outbufpp;
@@ -578,13 +578,13 @@ size_t _tconv_convert_ICU_run(tconv_t tconvp, tconv_convert_ICU_context_t *conte
     errno = ENOSYS;
     goto err;
   }
-  up           = (UChar *) uCharBuforigp;
+  up           = (UChar *) uCharBufOrigp;
   uLengthl     = uCharBufp - up;
   inbytesleftl = inbufLimitp - inbufp;
   TCONV_TRACE(tconvp, "%s - converted %lld bytes into %lld UChars",
 	      funcs,
 	      (unsigned long long) (inbufp - inbufOrigp),
-	      (unsigned long long) (uCharBufp - uCharBuforigp));
+	      (unsigned long long) (uCharBufp - uCharBufOrigp));
   /* --------------------------------------------------------------------- */
   /* Eventually remove signature                                           */
   /* --------------------------------------------------------------------- */
@@ -631,7 +631,7 @@ size_t _tconv_convert_ICU_run(tconv_t tconvp, tconv_convert_ICU_context_t *conte
 	if (contextp->chunkUsedl > 0) {
 	  memmove(contextp->chunkp + uLengthl, contextp->chunkp, contextp->chunkUsedl);
 	}
-	memcpy(contextp->chunkp, uCharBuforigp, uLengthl);
+	memcpy(contextp->chunkp, uCharBufOrigp, uLengthl);
 	contextp->chunkUsedl += uLengthl;
       }
       /* utrans_transUChars() is not very user-friendly, in the sense  */
@@ -706,16 +706,16 @@ size_t _tconv_convert_ICU_run(tconv_t tconvp, tconv_convert_ICU_context_t *conte
   /* ------------------------------------------------------------------- */
   if (uLengthl >= 0) {  /* Can be zero when flushing */
     const char  *targetLimitp = (const char *) (outbufp + *outbytesleftlp);
-    const UChar  *sourcep = (const UChar *) uCharBuforigp;
-    const UChar  *sourceLimitp = (const UChar *) (sourcep + uLengthl);
     const int32_t targetCapacity = (int32_t) (targetLimitp - outbufp);
+
+    uCharBufp = (UChar *) uCharBufOrigp;
 
     uErrorCode = U_ZERO_ERROR;
     ucnv_fromUnicode(uConverterTop,
 		     &outbufp,
 		     targetLimitp,
-		     &sourcep,
-		     sourceLimitp,
+		     (const UChar **) &uCharBufp,
+		     uCharBufp + uLengthl,
 		     NULL,
 		     flushb,
 		     &uErrorCode);
@@ -792,7 +792,7 @@ size_t _tconv_convert_ICU_run(tconv_t tconvp, tconv_convert_ICU_context_t *conte
 
   TCONV_TRACE(tconvp, "%s - converted %lld UChars into %lld bytes",
 	      funcs,
-	      (unsigned long long) uLengthl,
+	      (unsigned long long) (uCharBufp - uCharBufOrigp),
 	      (unsigned long long) (outbufp - outbufOrigp));
 
   if (uLengthl >= 0) {
