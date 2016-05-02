@@ -37,6 +37,7 @@ typedef struct tconv_convert_ICU_context {
   int32_t                     uCharCapacityl;    /* Allocated Length (not bytes) */
   char                       *charTmpp;          /* used to reconstruct the fom converter state */
   int32_t                     charTmpCapacityl;  /* Allocated Length (not bytes) */
+  int32_t                     charTmpUsedl;      /* Used Length (not bytes) */
   UConverter                 *uConverterTop;     /* UChar => Output */
   int8_t                      signaturei;
   UBool                       firstb;
@@ -374,6 +375,7 @@ void  *tconv_convert_ICU_new(tconv_t tconvp, const char *tocodes, const char *fr
   contextp->uCharBufp         = uCharBufp;
   contextp->charTmpp          = NULL;
   contextp->charTmpCapacityl  = 0;
+  contextp->charTmpUsedl      = 0;
   contextp->fromOffsetp       = fromOffsetp;
   contextp->uCharBufLimitp    = uCharBufLimitp;
   contextp->uCharCapacityl    = uCharCapacityl;
@@ -552,7 +554,7 @@ size_t _tconv_convert_ICU_run(tconv_t tconvp, tconv_convert_ICU_context_t *conte
   int32_t           textCapacityl;
   int32_t           limitl;
   const char       *lastOkCharp;
-  int32_t           charTmpCapacityl;
+  int32_t           charTmpUsedl;
   size_t            inbytesleftl;
 
   /* --------------------------------------------------------------------- */
@@ -731,12 +733,12 @@ size_t _tconv_convert_ICU_run(tconv_t tconvp, tconv_convert_ICU_context_t *conte
 	/* necessary.                                                 */
 	ucnv_reset(contextp->uConverterTop);
 	ucnv_reset(contextp->uConverterFromp);
-	if (contextp->charTmpp != NULL) {
+	if (contextp->charTmpUsedl > 0) {
 	  /* Content of the internal UChar buffer is not an issue     */
 	  UChar       *targetp      = contextp->uCharBufp;
 	  const UChar *targetLimitp = (const UChar *) contextp->uCharBufLimitp;
 	  const char  *sourcep      = (const char*) contextp->charTmpp;
-	  const char  *sourceLimitp = (const char*) (sourcep + contextp->charTmpCapacityl);
+	  const char  *sourceLimitp = (const char*) (sourcep + contextp->charTmpUsedl);
 
 	  /* Replay the last successful char transform and its trail  */
 	  /* data.                                                    */
@@ -766,17 +768,25 @@ size_t _tconv_convert_ICU_run(tconv_t tconvp, tconv_convert_ICU_context_t *conte
     } else {
       outbytesleftl = targetLimitp - outbufp;
 
-      /* Keep a copy of the last source characters that is ok plus */
-      /* its trailing data.                                        */
-      lastOkCharp      = (const char *) (inbufOrigp + fromOffsetp[uLengthl - 1]);
-      charTmpCapacityl = (int32_t) (inbufLimitp - lastOkCharp);
+      if (uLengthl > 0) {
+	/* Keep a copy of the last source characters that is ok plus */
+	/* its trailing data.                                        */
+	lastOkCharp  = (const char *) (inbufOrigp + fromOffsetp[uLengthl - 1]);
+	charTmpUsedl = (int32_t) (inbufLimitp - lastOkCharp);
 
-      if (charTmpCapacityl > contextp->charTmpCapacityl) {
-	if (_increaseCharTmpBuffer(contextp, charTmpCapacityl) == FALSE) {
-	  goto err;
+	if (charTmpUsedl > contextp->charTmpCapacityl) {
+	  if (_increaseCharTmpBuffer(contextp, charTmpUsedl) == FALSE) {
+	    goto err;
+	  }
 	}
+      } else {
+	charTmpUsedl = 0;
       }
-      memcpy(contextp->charTmpp, lastOkCharp, charTmpCapacityl);
+      
+      contextp->charTmpUsedl = charTmpUsedl;
+      if (charTmpUsedl > 0) {
+	memcpy(contextp->charTmpp, lastOkCharp, charTmpUsedl);
+      }
     }
   }
 
