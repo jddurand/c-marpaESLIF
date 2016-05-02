@@ -579,7 +579,7 @@ size_t _tconv_convert_ICU_run(tconv_t tconvp, tconv_convert_ICU_context_t *conte
     TCONV_TRACE(tconvp, "%s - converted %lld bytes into %lld UChars",
 		funcs,
 		(unsigned long long) (inbytesleftOrigl - inbytesleftl),
-		uLengthl);
+		(unsigned long long) uLengthl);
   }
 #endif
   /* --------------------------------------------------------------------- */
