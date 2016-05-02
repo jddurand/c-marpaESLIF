@@ -488,14 +488,14 @@ size_t tconv_convert_ICU_run(tconv_t tconvp, void *voidp, char **inbufpp, size_t
   }
 
   /* Do the work by chunks */
-  while (1) {
+  do {
     chunkl = _tconv_convert_ICU_run(tconvp, contextp, &inbufp, &inbytesleftl, &outbufp, &outbytesleftl, flushb);
     if (chunkl == (size_t)-1) {
       rcl = chunkl;
       break;
     }
     rcl += chunkl;
-  }
+  } while (inbytesleftl > 0);
 
   /* Commit if success or E2BIG */
   if ((rcl >= 0) || (errno == E2BIG)) {
@@ -556,6 +556,11 @@ size_t _tconv_convert_ICU_run(tconv_t tconvp, tconv_convert_ICU_context_t *conte
   const char       *lastOkCharp;
   int32_t           charTmpUsedl;
   size_t            inbytesleftl;
+
+  TCONV_TRACE(tconvp, "%s - %lld bytes left in input, %lld bytes left in output",
+	      funcs,
+	      (unsigned long long) *inbytesleftlp,
+	      (unsigned long long) *outbytesleftlp);
 
   /* --------------------------------------------------------------------- */
   /* Input => UChar                                                        */
