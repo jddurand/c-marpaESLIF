@@ -581,14 +581,10 @@ size_t _tconv_convert_ICU_run(tconv_t tconvp, tconv_convert_ICU_context_t *conte
   up           = (UChar *) uCharBuforigp;
   uLengthl     = uCharBufp - up;
   inbytesleftl = inbufLimitp - inbufp;
-#ifndef TCONV_NTRACE
-  {
-    TCONV_TRACE(tconvp, "%s - converted %lld bytes into %lld UChars",
-		funcs,
-		(unsigned long long) (inbytesleftOrigl - inbytesleftl),
-		(unsigned long long) uLengthl);
-  }
-#endif
+  TCONV_TRACE(tconvp, "%s - converted %lld bytes into %lld UChars",
+	      funcs,
+	      (unsigned long long) (inbufp - inbufOrigp),
+	      (unsigned long long) (uCharBufp - uCharBuforigp));
   /* --------------------------------------------------------------------- */
   /* Eventually remove signature                                           */
   /* --------------------------------------------------------------------- */
@@ -712,7 +708,6 @@ size_t _tconv_convert_ICU_run(tconv_t tconvp, tconv_convert_ICU_context_t *conte
     const char  *targetLimitp = (const char *) (outbufp + *outbytesleftlp);
     const UChar  *sourcep = (const UChar *) uCharBuforigp;
     const UChar  *sourceLimitp = (const UChar *) (sourcep + uLengthl);
-    const UChar  *uCharBuforigp;
     const int32_t targetCapacity = (int32_t) (targetLimitp - outbufp);
 
     uErrorCode = U_ZERO_ERROR;
@@ -794,6 +789,11 @@ size_t _tconv_convert_ICU_run(tconv_t tconvp, tconv_convert_ICU_context_t *conte
       }
     }
   }
+
+  TCONV_TRACE(tconvp, "%s - converted %lld UChars into %lld bytes",
+	      funcs,
+	      (unsigned long long) uLengthl,
+	      (unsigned long long) (outbufp - outbufOrigp));
 
   if (uLengthl >= 0) {
     if (firstb == TRUE) {
