@@ -555,7 +555,7 @@ size_t _tconv_convert_ICU_run(tconv_t tconvp, tconv_convert_ICU_context_t *conte
 		 contextp->uCharBufLimitp,
 		 &inbufp,
 		 (const char *) (inbufp + *inbytesleftlp),
-		 NULL,
+		 contextp->offsetlp,
 		 flushb,
 		 &uErrorCode);
   if (U_FAILURE(uErrorCode) && (uErrorCode != U_BUFFER_OVERFLOW_ERROR)) {
@@ -726,7 +726,7 @@ size_t _tconv_convert_ICU_run(tconv_t tconvp, tconv_convert_ICU_context_t *conte
                    outbufLimitp,
                    (const UChar **) &uCharBufp,
                    uCharBufp + uLengthl,
-                   contextp->offsetlp,
+                   NULL,
                    flushb,
                    &uErrorCode);
 
