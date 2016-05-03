@@ -214,6 +214,7 @@ void fileconvert(int outputFd, char *filenames, char *tocodes, char *fromcodes, 
 
     while ((eofb != 0) || (inleftl > 0)) {
 
+    again:
       nconvl = tconv(tconvp, inbufpp, inleftlp, &outbufp, &outleftl);
       if (nconvl == (size_t) -1) {
 	switch (errno) {
@@ -235,6 +236,7 @@ void fileconvert(int outputFd, char *filenames, char *tocodes, char *fromcodes, 
 	  fprintf(stderr, "%s: %s\n", filenames, tconv_error(tconvp));
 	  goto end;
 	}
+	goto again;
       }
 
       if ((eofb != 0) && (nconvl >= 0)) {
