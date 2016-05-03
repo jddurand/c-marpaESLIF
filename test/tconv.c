@@ -145,31 +145,27 @@ int main(int argc, char **argv) {
 }
 
 void fileconvert(int outputFd, char *filenames, char *tocodes, char *fromcodes, size_t bufsizel, short verbose) {
-  char           *inbufp  = NULL, *inbuforigp  = NULL, **inbufpp = NULL;
-  char           *outbufp = NULL, *outbuforigp = NULL;
-  size_t          inleftl  = 0, insizel  = 0, inleftorigl = 0, *inleftlp = NULL;
-  size_t          outleftl = 0, outsizel = 0;
+  char           *inbuforigp  = NULL;
+  char           *outbuforigp = NULL;
+  size_t          outsizel = bufsizel;
   tconv_t         tconvp = NULL;
   int             fd;
   tconv_option_t  tconvOption;
   size_t          nconvl;
   size_t          nwritel;
-  int             eofb = 0;
 
   inbuforigp = malloc(bufsizel);
   if (inbuforigp == NULL) {
     fprintf(stderr, "malloc: %s\n", strerror(errno));
     goto end;
   }
-  insizel = bufsizel;
 
   /* We start with an outbuf size the same as inbuf */
-  outbuforigp = malloc(bufsizel);
+  outbuforigp = malloc(outsizel);
   if (outbuforigp == NULL) {
     fprintf(stderr, "malloc: %s\n", strerror(errno));
     goto end;
   }
-  outsizel = bufsizel;
 
   fd = open(filenames,
             O_RDONLY
@@ -197,60 +193,63 @@ void fileconvert(int outputFd, char *filenames, char *tocodes, char *fromcodes, 
     tconv_trace_on(tconvp);
   }
 
-  while (eofb == 0) {
+  while (1) {
+    char *inbufp    = inbuforigp;
+    char *outbufp   = outbuforigp;
+    size_t outleftl = outsizel;
+    short  eofb     = 0;
+    size_t inleftl  = (size_t) read(fd, inbuforigp, bufsizel);
 
-    inleftorigl = read(fd, inbuforigp, insizel);
-    if (inleftorigl < 0) {
+    
+    if (inleftl == (size_t)-1) {
       fprintf(stderr, "Failed to read from %s: %s\n", filenames, strerror(errno));
       goto end;
+    } else if (inleftl == 0) {
+      eofb = 1;
     }
-    eofb = (inleftorigl == 0) ?  1 : 0;
-    inbufpp     = eofb ? NULL : &inbufp;
-    inleftlp    = eofb ? NULL : &inleftl;
-    inbufp   = inbuforigp;
-    inleftl  = inleftorigl;
-    outbufp  = outbuforigp;
-    outleftl = outsizel;
 
-    while ((eofb != 0) || (inleftl > 0)) {
-
-    again:
-      nconvl = tconv(tconvp, inbufpp, inleftlp, &outbufp, &outleftl);
+    while (eofb || (inleftl > 0)) {
+      nconvl = tconv(tconvp, eofb ? NULL : &inbufp, eofb ? NULL : &inleftl, &outbufp, &outleftl);
       if (nconvl == (size_t) -1) {
 	switch (errno) {
 	case E2BIG:
 	  {
 	    char *tmp;
+            char *outLimitp;
 	    
-	    outsizel *= 2;
-	    tmp = realloc(outbuforigp, outsizel);
+	    tmp = realloc(outbuforigp, outsizel + bufsizel);
 	    if (tmp == NULL) {
 	      fprintf(stderr, "realloc: %s\n", strerror(errno));
 	      goto end;
 	    }
-	    outbuforigp = tmp;
-	    outbufp     = outbuforigp + outsizel - outleftl;
+	    outbuforigp = outbufp = tmp;
+            outsizel   += bufsizel;
+            outLimitp   = outbufp + outsizel;
+            outleftl   += bufsizel;
+	    outbufp     = outLimitp - outleftl;
 	  }
 	  break;
 	default:
 	  fprintf(stderr, "%s: %s\n", filenames, tconv_error(tconvp));
 	  goto end;
 	}
-	goto again;
+      } else {
+        nwritel = outsizel - outleftl;
+        if (nwritel > 0) {
+          if (write(outputFd, outbuforigp, nwritel) != nwritel) {
+            fprintf(stderr, "Failed to write output: %s\n", strerror(errno));
+            goto end;
+          }
+        }
       }
 
-      if ((eofb != 0) && (nconvl >= 0)) {
-	/* Flush at EOF is ok */
-	break;
+      if (eofb) {
+        break;
       }
     }
 
-    if (outleftl < outsizel) {
-      nwritel = outsizel - outleftl;
-      if (write(outputFd, outbuforigp, nwritel) != nwritel) {
-	fprintf(stderr, "Failed to write output: %s\n", strerror(errno));
-	goto end;
-      }
+    if (eofb) {
+      break;
     }
   }
 
