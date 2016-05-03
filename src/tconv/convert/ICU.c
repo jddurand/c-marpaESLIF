@@ -533,6 +533,8 @@ size_t _tconv_convert_ICU_run(tconv_t tconvp, tconv_convert_ICU_context_t *conte
   int32_t           limitl;
   size_t            rcl;
 
+  TCONV_TRACE(tconvp, "%s - *inbytesleftlp=%lld *outbytesleftlp=%lld flushb=%s", funcs, (unsigned long long) *inbytesleftlp, (unsigned long long) *outbytesleftlp, (flushb == TRUE) ? "TRUE" : "FALSE");
+
   /* --------------------------------------------------------------------- */
   /* Input => UChar                                                        */
   /* --------------------------------------------------------------------- */
@@ -552,7 +554,7 @@ size_t _tconv_convert_ICU_run(tconv_t tconvp, tconv_convert_ICU_context_t *conte
   up       = (UChar *) uCharBufOrigp;
   uLengthl = uCharBufp - uCharBufOrigp;
 
-  TCONV_TRACE(tconvp, "%s - %lld bytes has beeen consumed into %lld UChars", funcs, (unsigned long long) (inbufp - inbufOrigp), (unsigned long long) uLengthl);
+  TCONV_TRACE(tconvp, "%s - %lld input bytes converted to %lld UChars", funcs, (unsigned long long) (inbufp - inbufOrigp), (unsigned long long) uLengthl);
 
   /* --------------------------------------------------------------------- */
   /* Eventually remove signature                                           */
@@ -693,6 +695,9 @@ size_t _tconv_convert_ICU_run(tconv_t tconvp, tconv_convert_ICU_context_t *conte
 	  (uLengthl <= 0)
 	  ) {
 	TCONV_TRACE(tconvp, "%s - adding signature", funcs);
+	if (uLengthl > 0) {
+	  memmove(up + 1, up, uLengthl * sizeof(UChar));
+	}
 	up[0] = (UChar)uSig;
 	++uLengthl;
       }
@@ -726,7 +731,7 @@ size_t _tconv_convert_ICU_run(tconv_t tconvp, tconv_convert_ICU_context_t *conte
     rcl = u_countChar32(up, uCharBufp - up);
   }
 
-  TCONV_TRACE(tconvp, "%s - converted %lld UChars into %lld bytes",
+  TCONV_TRACE(tconvp, "%s - %lld UChars converted to %lld output bytes",
 	      funcs,
 	      (unsigned long long) (uCharBufp - up),
 	      (unsigned long long) (outbufp - outbufOrigp));
@@ -739,7 +744,14 @@ size_t _tconv_convert_ICU_run(tconv_t tconvp, tconv_convert_ICU_context_t *conte
   *inbufpp        = (char *) inbufp;
   *outbufpp       = (char *) outbufp;
   TCONV_TRACE(tconvp, "%s - Input/Output pointers and byteleft  after: %p/%p %10lld/%lld", funcs, *inbufpp, *outbufpp, (unsigned long long) *inbytesleftlp, (unsigned long long) *outbytesleftlp);
-    
+
+#ifndef TCONV_NTRACE
+  if (rcl == (size_t)-1) {
+    TCONV_TRACE(tconvp, "%s - return -1", funcs);
+  } else {
+    TCONV_TRACE(tconvp, "%s - return %lld", funcs, (unsigned long long) rcl);
+  }
+#endif
   return rcl;
 
  err:
