@@ -34,6 +34,7 @@ typedef struct tconv_convert_ICU_context {
   const UChar                *uCharBufp;         /* UChar buffer    */
   const UChar                *uCharBufLimitp;    /* UChar buffer limit */
   int32_t                     uCharCapacityl;    /* Allocated Length (not bytes) */
+  int32_t                    *offsetlp;          /* Used to recovert converter state */
   UConverter                 *uConverterTop;     /* UChar => Output */
   int8_t                      signaturei;
   UBool                       firstb;
@@ -79,6 +80,7 @@ void  *tconv_convert_ICU_new(tconv_t tconvp, const char *tocodes, const char *fr
   const UChar                 *uCharBufp        = NULL;
   const UChar                 *uCharBufLimitp   = NULL;
   int32_t                      uCharCapacityl   = 0;
+  const int32_t               *offsetlp         = NULL;
 #if !UCONFIG_NO_TRANSLITERATION
   UTransliterator             *uTransliteratorp = NULL;
 #endif
@@ -211,7 +213,12 @@ void  *tconv_convert_ICU_new(tconv_t tconvp, const char *tocodes, const char *fr
     }
     uCharBufLimitp = (const UChar *) (uCharBufp + uCharCapacityl); /* In unit of UChar */
   }
-  
+
+  offsetlp = (const int32_t *) malloc(uCharCapacityl * sizeof(int32_t));
+  if (offsetlp == NULL) {
+    goto err;
+  }
+
   /* ----------------------------------------------------------- */
   /* Setup the to converter                                      */
   /* ----------------------------------------------------------- */
@@ -362,6 +369,7 @@ void  *tconv_convert_ICU_new(tconv_t tconvp, const char *tocodes, const char *fr
   contextp->uCharBufp         = uCharBufp;
   contextp->uCharBufLimitp    = uCharBufLimitp;
   contextp->uCharCapacityl    = uCharCapacityl;
+  contextp->offsetlp          = (int32_t *) offsetlp;
   contextp->uConverterTop     = uConverterTop;
   contextp->signaturei        = signaturei;
   contextp->firstb            = TRUE;
@@ -394,7 +402,10 @@ void  *tconv_convert_ICU_new(tconv_t tconvp, const char *tocodes, const char *fr
       ucnv_close (uConverterFromp);
     }
     if (uCharBufp != NULL) {
-      free((void *)uCharBufp);
+      free((void *) uCharBufp);
+    }
+    if (offsetlp != NULL) {
+      free((void *) offsetlp);
     }
     if (uConverterTop != NULL) {
       ucnv_close (uConverterTop);
