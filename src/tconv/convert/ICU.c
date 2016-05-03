@@ -726,7 +726,7 @@ size_t _tconv_convert_ICU_run(tconv_t tconvp, tconv_convert_ICU_context_t *conte
                    outbufLimitp,
                    (const UChar **) &uCharBufp,
                    uCharBufp + uLengthl,
-                   NULL,
+                   contextp->offsetlp,
                    flushb,
                    &uErrorCode);
 
