@@ -199,8 +199,7 @@ void fileconvert(int outputFd, char *filenames, char *tocodes, char *fromcodes, 
     size_t outleftl = outsizel;
     short  eofb     = 0;
     size_t inleftl  = (size_t) read(fd, inbuforigp, bufsizel);
-
-    
+   
     if (inleftl == (size_t)-1) {
       fprintf(stderr, "Failed to read from %s: %s\n", filenames, strerror(errno));
       goto end;
@@ -209,38 +208,40 @@ void fileconvert(int outputFd, char *filenames, char *tocodes, char *fromcodes, 
     }
 
     while (eofb || (inleftl > 0)) {
+    again:
       nconvl = tconv(tconvp, eofb ? NULL : &inbufp, eofb ? NULL : &inleftl, &outbufp, &outleftl);
+
+      nwritel = outsizel - outleftl;
+      if (nwritel > 0) {
+        if (write(outputFd, outbuforigp, nwritel) != nwritel) {
+          fprintf(stderr, "Failed to write output: %s\n", strerror(errno));
+          goto end;
+        }
+        outbufp  = outbuforigp;
+        outleftl = outsizel;
+      }
+
       if (nconvl == (size_t) -1) {
 	switch (errno) {
 	case E2BIG:
 	  {
 	    char *tmp;
-            char *outLimitp;
 	    
 	    tmp = realloc(outbuforigp, outsizel + bufsizel);
 	    if (tmp == NULL) {
 	      fprintf(stderr, "realloc: %s\n", strerror(errno));
 	      goto end;
 	    }
-	    outbuforigp = outbufp = tmp;
-            outsizel   += bufsizel;
-            outLimitp   = outbufp + outsizel;
-            outleftl   += bufsizel;
-	    outbufp     = outLimitp - outleftl;
+	    outbufp    = outbuforigp = tmp;
+            outsizel  += bufsizel;
+            outleftl   = outsizel;
+            goto again;
 	  }
 	  break;
 	default:
 	  fprintf(stderr, "%s: %s\n", filenames, tconv_error(tconvp));
 	  goto end;
 	}
-      } else {
-        nwritel = outsizel - outleftl;
-        if (nwritel > 0) {
-          if (write(outputFd, outbuforigp, nwritel) != nwritel) {
-            fprintf(stderr, "Failed to write output: %s\n", strerror(errno));
-            goto end;
-          }
-        }
       }
 
       if (eofb) {
