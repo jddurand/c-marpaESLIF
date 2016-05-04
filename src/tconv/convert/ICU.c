@@ -267,6 +267,10 @@ void  *tconv_convert_ICU_new(tconv_t tconvp, const char *tocodes, const char *fr
       goto err;
     }
 
+    /* Get the complement */
+    uset_complement(uSetTop);
+
+    /* then the string representation of the complement */
     uErrorCode = U_ZERO_ERROR;
     uSetPatternTol = uset_toPattern(uSetTop, NULL, 0, TRUE, &uErrorCode);
     if (uErrorCode != U_BUFFER_OVERFLOW_ERROR) {
@@ -320,7 +324,7 @@ void  *tconv_convert_ICU_new(tconv_t tconvp, const char *tocodes, const char *fr
 	  if (U_SUCCESS(uErrorCode)) {
 	    patterns[patternCapacityl] = '\0';
 	    /* In theory the pattern should have no non-ASCII character - if false, tant pis -; */
-	    TCONV_TRACE(tconvp, "%s - filtering transliterator with \"to\" converter pattern: %s", funcs, patterns);
+	    TCONV_TRACE(tconvp, "%s - filtering transliterator with the complement of \"to\" converter pattern: %s", funcs, patterns);
 	  }
 	  free(patterns);
 	}
@@ -562,10 +566,6 @@ size_t _tconv_convert_ICU_run(tconv_t tconvp, tconv_convert_ICU_context_t *conte
 		(unsigned long long) *uLengthlp,
 		(fromSawEndOfBytesb == TRUE) ? "TRUE" : "FALSE");
 
-    if (*uLengthlp <= 0) {
-      continue;
-    }
-    
     /* --------------------------------------------------------------------- */
     /* Eventually remove signature                                           */
     /* --------------------------------------------------------------------- */
