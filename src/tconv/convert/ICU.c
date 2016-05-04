@@ -755,7 +755,6 @@ size_t _tconv_convert_ICU_run(tconv_t tconvp, tconv_convert_ICU_context_t *conte
       contextp->signaturei = 0;
     }
 
-    rcl            = 0;
     uCharBufp      = *upp;
     uCharBufLimitp = uCharBufp + *uLengthlp;
 
@@ -777,7 +776,7 @@ size_t _tconv_convert_ICU_run(tconv_t tconvp, tconv_convert_ICU_context_t *conte
       int32_t consumedl        = uCharBufp - *upp;
       int32_t remainingLengthl = *uLengthlp - consumedl;
 
-      rcl = u_countChar32(*upp, consumedl);
+      rcl += u_countChar32(*upp, consumedl);
       if (remainingLengthl > 0) {
         memmove(*upp, uCharBufp, remainingLengthl * sizeof(UChar));
       }
