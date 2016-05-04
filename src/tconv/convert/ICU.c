@@ -84,7 +84,7 @@ void  *tconv_convert_ICU_new(tconv_t tconvp, const char *tocodes, const char *fr
 #endif
   UConverter                  *uConverterTop    = NULL;
   UConverterFromUCallback      fromUCallbackp   = NULL;
-  const void                  *fromuContextp    = NULL;
+  const void                  *fromUContextp    = NULL;
   UConverterToUCallback        toUCallbackp     = NULL;
   const void                  *toUContextp      = NULL;
   UBool                        fallbackb        = FALSE;
@@ -180,8 +180,8 @@ void  *tconv_convert_ICU_new(tconv_t tconvp, const char *tocodes, const char *fr
   /* ----------------------------------------------------------- */
   /* Setup the from converter                                    */
   /* ----------------------------------------------------------- */
-  fromUCallbackp = (ignoreb == TRUE) ? UCNV_FROM_U_CALLBACK_SKIP : UCNV_FROM_U_CALLBACK_STOP;
-  fromuContextp  = NULL;
+  toUCallbackp   = (ignoreb == TRUE) ? UCNV_TO_U_CALLBACK_SKIP : UCNV_TO_U_CALLBACK_STOP;
+  toUContextp    = NULL;
 
   uErrorCode = U_ZERO_ERROR;
   uConverterFromp = ucnv_open(fromcodes, &uErrorCode);
@@ -191,7 +191,7 @@ void  *tconv_convert_ICU_new(tconv_t tconvp, const char *tocodes, const char *fr
   }
 
   uErrorCode = U_ZERO_ERROR;
-  ucnv_setFromUCallBack(uConverterFromp, fromUCallbackp, fromuContextp, NULL, NULL, &uErrorCode);
+  ucnv_setToUCallBack(uConverterFromp, toUCallbackp, toUContextp, NULL, NULL, &uErrorCode);
   if (U_FAILURE(uErrorCode)) {
     errno = ENOSYS;
     goto err;
@@ -215,8 +215,8 @@ void  *tconv_convert_ICU_new(tconv_t tconvp, const char *tocodes, const char *fr
   /* ----------------------------------------------------------- */
   /* Setup the to converter                                      */
   /* ----------------------------------------------------------- */
-  toUCallbackp   = (ignoreb == TRUE) ? UCNV_TO_U_CALLBACK_SKIP : UCNV_TO_U_CALLBACK_STOP;
-  toUContextp    = NULL;
+  fromUCallbackp = (ignoreb == TRUE) ? UCNV_FROM_U_CALLBACK_SKIP : UCNV_FROM_U_CALLBACK_STOP;
+  fromUContextp  = NULL;
 
   uErrorCode = U_ZERO_ERROR;
   uConverterTop = ucnv_open(realToCodes, &uErrorCode);
@@ -229,7 +229,7 @@ void  *tconv_convert_ICU_new(tconv_t tconvp, const char *tocodes, const char *fr
   realToCodes = NULL;
 
   uErrorCode = U_ZERO_ERROR;
-  ucnv_setToUCallBack(uConverterTop, toUCallbackp, toUContextp, NULL, NULL, &uErrorCode);
+  ucnv_setFromUCallBack(uConverterTop, fromUCallbackp, fromUContextp, NULL, NULL, &uErrorCode);
   if (U_FAILURE(uErrorCode)) {
     errno = ENOSYS;
     goto err;
