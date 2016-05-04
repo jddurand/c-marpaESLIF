@@ -63,12 +63,14 @@ int main(int argc, char **argv) {
   char                *tocodes    = NULL;
   short                verbose    = 0;
   struct optparse_long longopts[] = {
+    {  "bufsize",  'b', OPTPARSE_REQUIRED},
     {"from-code",  'f', OPTPARSE_REQUIRED},
     {     "help",  'h', OPTPARSE_OPTIONAL},
     {   "output",  'o', OPTPARSE_REQUIRED},
-    {  "bufsize",  's', OPTPARSE_REQUIRED},
     {  "to-code",  't', OPTPARSE_REQUIRED},
+    {    "usage",  'u', OPTPARSE_OPTIONAL},
     {  "verbose",  'v', OPTPARSE_OPTIONAL},
+    {  "version",  'V', OPTPARSE_OPTIONAL},
     {0}
   };
 
@@ -80,6 +82,9 @@ int main(int argc, char **argv) {
   optparse_init(&options, argv);
   while ((option = optparse_long(&options, longopts, &longindex)) != -1) {
     switch (option) {
+    case 'b':
+      bufsizel = atoi(options.optarg);
+      break;
     case 'f':
       fromcodes = options.optarg;
       break;
@@ -89,14 +94,21 @@ int main(int argc, char **argv) {
     case 'o':
       outputs = options.optarg;
       break;
-    case 's':
-      bufsizel = atoi(options.optarg);
-      break;
     case 't':
       tocodes = options.optarg;
       break;
+    case 'u':
+      printf("%s [--bufsize numberOfBytes] [--from-code fromcode] [-help] [--output filename] --to-code tocode [--usage] [--verbose] [--version] [--help] input...\n"
+	    ,
+	    argv[0]
+	    );
+      break;
     case 'v':
       verbose = 1;
+      break;
+    case 'V':
+      printf("tconv %s\n", TCONV_VERSION);
+      exit(EXIT_SUCCESS);
       break;
     case '?':
       fprintf(stderr, "%s: %s\n", argv[0], options.errmsg);
@@ -106,13 +118,10 @@ int main(int argc, char **argv) {
 
   if ((help != 0) || (tocodes == NULL) || (bufsizel <= 0)) {
     int rci = (help != 0) ? EXIT_SUCCESS : EXIT_FAILURE;
-    fprintf(stderr,
-	    "Usage:\n"
-	    "\n"
-	    "%s [--from-code fromcode] --to-code tocode [--output output] [--verbose] [--help] input\n"
-	    ,
-	    argv[0]
-	    );
+    printf("%s [--bufsize numberOfBytes] [--from-code fromcode] [-help] [--output filename] --to-code tocode [--usage] [--verbose] [--version] [--help] input...\n"
+	   ,
+	   argv[0]
+	   );
     exit(rci);
   }
   
