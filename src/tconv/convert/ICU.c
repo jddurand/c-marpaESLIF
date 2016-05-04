@@ -457,7 +457,7 @@ size_t tconv_convert_ICU_run(tconv_t tconvp, void *voidp, char **inbufpp, size_t
       &&
       ((outbufpp == NULL) || (*outbufpp == NULL))
       ) {
-    TCONV_TRACE(tconvp, "%s - reset");
+    TCONV_TRACE(tconvp, "%s - reset", funcs);
     ucnv_reset(contextp->uConverterFromp);
     ucnv_reset(contextp->uConverterTop);
     contextp->signaturei = contextp->origSignaturei;
@@ -766,7 +766,7 @@ size_t _tconv_convert_ICU_run(tconv_t tconvp, tconv_convert_ICU_context_t *conte
     ucnv_fromUnicode(contextp->uConverterTop,
                      outbufpp,
                      outbufLimitp,
-                     &uCharBufp,
+                     (const UChar **) &uCharBufp,
                      uCharBufLimitp,
                      NULL,
                      flushb,
