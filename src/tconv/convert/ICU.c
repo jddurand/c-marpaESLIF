@@ -37,6 +37,7 @@ typedef struct tconv_convert_ICU_context {
   int32_t                     uCharCapacityl;    /* Allocated Length (not bytes) */
   UConverter                 *uConverterTop;     /* UChar => Output */
   int8_t                      signaturei;
+  int8_t                      origSignaturei;
 #if !UCONFIG_NO_TRANSLITERATION
   UChar                      *chunkp;
   UChar                      *chunkCopyp;        /* Because no pre-fighting is possible with utrans_transUchars() */
@@ -45,9 +46,6 @@ typedef struct tconv_convert_ICU_context {
   UChar                      *outp;
   int32_t                     outCapacityl;      /* Used Length (not bytes) */
   int32_t                     outUsedl;          /* Used Length (not bytes) */
-  UChar                      *translitp;
-  int32_t                     translitCapacityl; /* Transformed used Length (not bytes) */
-  int32_t                     translitUsedl;     /* Transformed used Length (not bytes) */
   UTransliterator            *uTransliteratorp;  /* Transliteration */
 #endif
 } tconv_convert_ICU_context_t;
@@ -369,6 +367,7 @@ void  *tconv_convert_ICU_new(tconv_t tconvp, const char *tocodes, const char *fr
   contextp->uCharCapacityl    = uCharCapacityl;
   contextp->uConverterTop     = uConverterTop;
   contextp->signaturei        = signaturei;
+  contextp->origSignaturei    = signaturei;
 #if !UCONFIG_NO_TRANSLITERATION
   contextp->chunkp            = NULL;
   contextp->chunkCopyp        = NULL;
@@ -377,9 +376,6 @@ void  *tconv_convert_ICU_new(tconv_t tconvp, const char *tocodes, const char *fr
   contextp->outp              = NULL;
   contextp->outCapacityl      = 0;
   contextp->outUsedl          = 0;
-  contextp->translitp         = NULL;
-  contextp->translitCapacityl = 0;
-  contextp->translitUsedl     = 0;
   contextp->uTransliteratorp  = uTransliteratorp;
 #endif
 
@@ -456,17 +452,33 @@ size_t tconv_convert_ICU_run(tconv_t tconvp, void *voidp, char **inbufpp, size_t
   size_t                       outbytesleftl;
   UBool                        flushb;
 
-  /* Sanity check */
+  /* Converters reset ? */
+  if (((inbufpp == NULL) || (*inbufpp == NULL))
+      &&
+      ((outbufpp == NULL) || (*outbufpp == NULL))
+      ) {
+    TCONV_TRACE(tconvp, "%s - reset");
+    ucnv_reset(contextp->uConverterFromp);
+    ucnv_reset(contextp->uConverterTop);
+    contextp->signaturei = contextp->origSignaturei;
+    contextp->chunkUsedl = 0;
+    contextp->outUsedl = 0;
+    return 0;
+  }
+
+  /* else, outbufpp and outbytesleftlp must be non NULL */
   if ((outbufpp == NULL) || (outbytesleftlp == NULL)) {
     errno = EINVAL;
     goto err;
   }
 
   /* Prepare work variables */
-  inbufp        = (inbufpp       != NULL) ? *inbufpp       : dummys;
-  inbytesleftl  = (inbytesleftlp != NULL) ? *inbytesleftlp : 0;
+  inbufp        = ((inbufpp      != NULL) && (*inbufpp != NULL)) ? *inbufpp       : dummys;
+  inbytesleftl  = (inbytesleftlp != NULL)                        ? *inbytesleftlp : 0;
   outbufp       = *outbufpp;
   outbytesleftl = *outbytesleftlp;
+
+  /* Flush mode ? */
   flushb        = ((inbufpp != NULL) && (*inbufpp != NULL)) ? FALSE : TRUE;
   if ((flushb == TRUE) && (inbytesleftl != 0)) {
     /* make sure no byte is read in any case if this is a flush */
@@ -514,10 +526,8 @@ size_t _tconv_convert_ICU_run(tconv_t tconvp, tconv_convert_ICU_context_t *conte
   int32_t          *uLengthlp;
   UErrorCode        uErrorCode;
   UBool             fromSawEndOfBytesb;
-  UBool             toSawEndOfUnicodeb;
   int32_t           textCapacityl;
   int32_t           limitl;
-  size_t            countl;
   size_t            rcl;
 
   TCONV_TRACE(tconvp, "%s - *inbytesleftlp=%lld *outbytesleftlp=%lld flushb=%s",
@@ -749,49 +759,45 @@ size_t _tconv_convert_ICU_run(tconv_t tconvp, tconv_convert_ICU_context_t *conte
     uCharBufp      = *upp;
     uCharBufLimitp = uCharBufp + *uLengthlp;
 
-    do {
-      /* ------------------------------------------------------------------- */
-      /* UChar => Output                                                     */
-      /* ------------------------------------------------------------------- */
-      outbufOrigp = *outbufpp;
-      uErrorCode = U_ZERO_ERROR;
-      ucnv_fromUnicode(contextp->uConverterTop,
-                       outbufpp,
-                       outbufLimitp,
-                       &uCharBufp,
-                       uCharBufLimitp,
-                       NULL,
-                       flushb,
-                       &uErrorCode);
-      toSawEndOfUnicodeb = (UBool) U_SUCCESS(uErrorCode);
+    /* ------------------------------------------------------------------- */
+    /* UChar => Output                                                     */
+    /* ------------------------------------------------------------------- */
+    outbufOrigp = *outbufpp;
+    uErrorCode = U_ZERO_ERROR;
+    ucnv_fromUnicode(contextp->uConverterTop,
+                     outbufpp,
+                     outbufLimitp,
+                     &uCharBufp,
+                     uCharBufLimitp,
+                     NULL,
+                     flushb,
+                     &uErrorCode);
 
-      countl = 0;
-      if (uCharBufp != *upp) {
-	int32_t consumedl        = uCharBufp - *upp;
-	int32_t remainingLengthl = *uLengthlp - consumedl;
+    if (uCharBufp > *upp) {
+      int32_t consumedl        = uCharBufp - *upp;
+      int32_t remainingLengthl = *uLengthlp - consumedl;
 
-	countl = u_countChar32(*upp, consumedl);
-        rcl += countl;
-        if (remainingLengthl > 0) {
-          memmove(*upp, uCharBufp, remainingLengthl * sizeof(UChar));
-        }
-	*uLengthlp -= consumedl;
+      rcl = u_countChar32(*upp, consumedl);
+      if (remainingLengthl > 0) {
+        memmove(*upp, uCharBufp, remainingLengthl * sizeof(UChar));
       }
-      TCONV_TRACE(tconvp, "%s - %10lld UChars => %10lld bytes (%lld characters)",
-                  funcs,
-                  (unsigned long long) (uCharBufp - *upp),
-                  (unsigned long long) (*outbufpp - outbufOrigp),
-                  (unsigned long long) countl);
+      *uLengthlp -= consumedl;
+    }
+    TCONV_TRACE(tconvp, "%s - %10lld UChars => %10lld bytes (%lld characters), remains %lld UChars",
+                funcs,
+                (unsigned long long) (uCharBufp - *upp),
+                (unsigned long long) (*outbufpp - outbufOrigp),
+                (unsigned long long) rcl,
+                (unsigned long long) (uCharBufLimitp - uCharBufp));
 
-      if (uErrorCode == U_BUFFER_OVERFLOW_ERROR) {
-	errno   = E2BIG;
-	rcl     = (size_t)-1;
-	goto overflow;
-      } else if (U_FAILURE(uErrorCode)) {
-	goto err;
-      }
+    if (uErrorCode == U_BUFFER_OVERFLOW_ERROR) {
+      errno   = E2BIG;
+      rcl     = (size_t)-1;
+      goto overflow;
+    } else if (U_FAILURE(uErrorCode)) {
+      goto err;
+    }
 
-    } while (toSawEndOfUnicodeb == FALSE);
   } while (fromSawEndOfBytesb == FALSE);
 
  overflow:
