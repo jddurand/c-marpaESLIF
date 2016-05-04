@@ -535,6 +535,7 @@ static TCONV_C_INLINE void _tconvDefaultCharsetOption(tconv_t tconvp, tconv_char
 
   TCONV_TRACE(tconvp, "%s(%p, %p)", funcs, tconvp, tconvCharsetExternalp);
 
+  /*
 #ifdef TCONV_HAVE_ICU
   TCONV_TRACE(tconvp, "%s - setting default charset detector to ICU", funcs);
   tconvCharsetExternalp->optionp             = &tconv_charset_ICU_option_default;
@@ -542,12 +543,15 @@ static TCONV_C_INLINE void _tconvDefaultCharsetOption(tconv_t tconvp, tconv_char
   tconvCharsetExternalp->tconv_charset_runp  = tconv_charset_ICU_run;
   tconvCharsetExternalp->tconv_charset_freep = tconv_charset_ICU_free;
 #else
+  */
   TCONV_TRACE(tconvp, "%s - setting default charset detector to cchardet", funcs);
   tconvCharsetExternalp->optionp             = &tconv_charset_cchardet_option_default;
   tconvCharsetExternalp->tconv_charset_newp  = tconv_charset_cchardet_new;
   tconvCharsetExternalp->tconv_charset_runp  = tconv_charset_cchardet_run;
   tconvCharsetExternalp->tconv_charset_freep = tconv_charset_cchardet_free;
+  /*
 #endif
+  */
 }
 
 /****************************************************************************/
