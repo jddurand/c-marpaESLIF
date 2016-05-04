@@ -109,7 +109,7 @@ int main(int argc, char **argv) {
     fprintf(stderr,
 	    "Usage:\n"
 	    "\n"
-	    "%s [--from-code fromcode] --to-code tocode [--output output] [--verbose] [--help]\n"
+	    "%s [--from-code fromcode] --to-code tocode [--output output] [--verbose] [--help] input\n"
 	    ,
 	    argv[0]
 	    );
