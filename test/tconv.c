@@ -224,7 +224,8 @@ void fileconvert(int outputFd, char *filenames, char *tocodes, char *fromcodes, 
       if (nconvl == (size_t) -1) {
 	switch (errno) {
 	case E2BIG:
-	  {
+          /* We realloc only if we wrote nothing */
+	  if (nwritel <= 0) {
 	    char *tmp;
 	    
 	    tmp = realloc(outbuforigp, outsizel + bufsizel);
@@ -235,8 +236,8 @@ void fileconvert(int outputFd, char *filenames, char *tocodes, char *fromcodes, 
 	    outbufp    = outbuforigp = tmp;
             outsizel  += bufsizel;
             outleftl   = outsizel;
-            goto again;
 	  }
+          goto again;
 	  break;
 	default:
 	  fprintf(stderr, "%s: %s\n", filenames, tconv_error(tconvp));
