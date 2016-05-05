@@ -2,6 +2,6 @@ language: c
 compiler:
   - gcc
 before_script:
-  - cmake
+  - cmake .
 script:
   - make check
