@@ -2,7 +2,7 @@
 # Usage: With nmake: cmake -G "NMake Makefiles", then nmake install
 #        With  make: cmake -G "UNIX Makefiles", then make install
 #
-CMAKE_MINIMUM_REQUIRED (VERSION 2.8)
+CMAKE_MINIMUM_REQUIRED (VERSION 3.0.0 FATAL_ERROR)
 PROJECT (genericLogger C CXX)
 
 # ---------------------------
