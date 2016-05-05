@@ -7,6 +7,7 @@ addons:
       - cmake
       - cmake-data
 before_script:
+  - export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
   - sh ./install-c-genericLogger.sh
   - cmake .
 script:
