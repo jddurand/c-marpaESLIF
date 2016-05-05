@@ -4,4 +4,4 @@ before_script:
 script:
   - find output -type f
   - cat output/include/genericLoggerExport.h
-  - make check && make install
+  - make && make check && make install
