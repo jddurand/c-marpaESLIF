@@ -292,7 +292,6 @@ SET_PROPERTY (TARGET tconvTester
   "${GENERICLOGGER_INCLUDE_DIRS}"                         # Include path for genericLogger (external - required)
   "${OPTPARSE_INCLUDE_DIR}"                               # Include path for optparse (builtin)
   )
-SET_PROPERTY(TARGET tconvTester APPEND_STRING PROPERTY LINK_FLAGS "${CMAKE_EXE_LINKER_FLAGS}")
 TARGET_LINK_LIBRARIES (tconvTester tconv optparse)
 ADD_TEST              (NAME tconvTest
                        COMMAND tconvTester -t UTF-8//TRANSLIT -v "${PROJECT_SOURCE_DIR}test/tconv.c"
