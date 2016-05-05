@@ -1,6 +1,4 @@
 language: c
-compiler:
-  - gcc
 before_script:
   - cmake .
 script:
