@@ -10,5 +10,7 @@ before_script:
   - sh ./install-c-genericLogger.sh
   - cmake .
 script:
+  - export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/lib:`icu-config --ldflags-searchpath`
   - make
-  - LD_LIBRARY_FLAGS=${LD_LIBRARY_FLAGS}:/usr/local/lib:`icu-config --ldflags-searchpath` make check && sudo make install
+  - make check
+  - sudo make install
