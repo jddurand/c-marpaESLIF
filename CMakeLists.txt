@@ -5,19 +5,13 @@
 #############################
 # Global settings
 #############################
-CMAKE_MINIMUM_REQUIRED (VERSION 2.8)
+CMAKE_MINIMUM_REQUIRED (VERSION 3.0.0 FATAL_ERROR)
 PROJECT (tconv C CXX)
 
 IF (POLICY CMP0063)
-  #
-  # Honor visibility properties for all target types.
-  #
   CMAKE_POLICY (SET CMP0063 NEW)
 ENDIF ()
 IF (POLICY CMP0018)
-  #
-  # Ignore CMAKE_SHARED_LIBRARY_<Lang>_FLAGS variable.
-  #
   CMAKE_POLICY (SET CMP0018 NEW)
 ENDIF ()
 
@@ -190,6 +184,7 @@ ENDIF (NOT ICONV_FOUND)
 SET               (CONFIG_H "${INCLUDE_OUTPUT_PATH}/tconv_config.h")
 SET               (CONFIG_H_IN "${CMAKE_CURRENT_SOURCE_DIR}/include/tconv_config.h.in")
 CONFIGURE_FILE    (${CONFIG_H_IN} ${CONFIG_H})
+ADD_CUSTOM_TARGET(tconvConfig SOURCES "${CONFIG_H}")
 
 #############################
 # Configuration result impact
@@ -257,13 +252,18 @@ SET_TARGET_PROPERTIES (tconv
 # Export flags
 # ------------
 INCLUDE (GenerateExportHeader)
-ADD_COMPILER_EXPORT_FLAGS ()
 EXECUTE_PROCESS(COMMAND "${CMAKE_COMMAND}" -E make_directory "${INCLUDE_OUTPUT_PATH}/tconv")
 GENERATE_EXPORT_HEADER(tconv
     BASE_NAME tconv
     EXPORT_MACRO_NAME TCONV_EXPORT
     EXPORT_FILE_NAME "${INCLUDE_OUTPUT_PATH}/tconv/export.h"
     STATIC_DEFINE TCONV_STATIC)
+ADD_CUSTOM_TARGET(tconvExport SOURCES "${INCLUDE_OUTPUT_PATH}/tconv/export.h")
+
+# ----------------------------------------
+# Explicit dependencies on generated files
+# ----------------------------------------
+ADD_DEPENDENCIES(tconv tconvConfig tconvExport)
 
 # -----
 # Check
