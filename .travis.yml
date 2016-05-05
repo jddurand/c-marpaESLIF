@@ -8,9 +8,7 @@ addons:
       - cmake-data
 before_script:
   - sh ./install-c-genericLogger.sh
-  - sudo ldconfig /usr/local/lib
   - cmake .
 script:
-  - make VERBOSE=1
-  - make check VERBOSE=1
+  - make check
   - sudo make install
