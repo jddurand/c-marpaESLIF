@@ -126,7 +126,8 @@ va_list version of genericLogger_logv().
 
 =head2 genericLogger_logLevel_seti
 
-  genericLoggerLevel_t genericLogger_logLevel_seti(genericLogger_t *genericLoggerp, genericLoggerLevel_t logLeveli);
+  genericLoggerLevel_t genericLogger_logLevel_seti(genericLogger_t *genericLoggerp,
+                                                   genericLoggerLevel_t logLeveli);
 
 Set the log level to C<leveLeveli> and return it.
 
@@ -138,11 +139,11 @@ Return the current log level.
 
 =head1 CONVENIENCE MACROS
 
-=head2 GENERICLOGGER_NEW(genericLoggerLeveli)
+=head2 GENERICLOGGER_NEW
 
 maps to genericLogger_newp.
 
-=head2 GENERICLOGGER_CUSTOM(logCallbackp, userDatavp, genericLoggerLeveli)
+=head2 GENERICLOGGER_CUSTOM
 
 maps to genericLogger_newp with a custom log implementation.
 
@@ -178,11 +179,13 @@ maps to all log levels, where C<XXX> is one of
 
 For portability reasons, there are two different versions, depending if there are arguments or not: C<XXX> or C<XXXF>, respectively. The C<XXXAP> is when the argument is a C<va_list>.
 
-=head2 GENERICLOGGER_LEVEL_SET(genericLoggerp, level)
+The C<XXX> and C<XXXF> macros maps to genericLogger_logv(), while C<XXXAP> maps to genericLogger_logapv(), and they all hardcode the level, so that the programmer do not have to write the later.
+
+=head2 GENERICLOGGER_LEVEL_SET
 
 maps to genericLogger_logLevel_seti.
 
-=head2 GENERICLOGGER_LEVEL_GET(genericLoggerp)
+=head2 GENERICLOGGER_LEVEL_GET
 
 maps to genericLogger_logLevel_geti.
 
