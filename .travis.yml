@@ -11,5 +11,6 @@ before_script:
   - cmake .
 script:
   - make
+  - ldd output/lib/libtconv.so.1.0.0
   - make check VERBOSE=1
   - sudo make install
