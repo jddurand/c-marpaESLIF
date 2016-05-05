@@ -89,7 +89,6 @@ ADD_LIBRARY (genericLogger_static STATIC ${lib_src})
 # Export flags - Note the GENERICLOGGER_STATIC keyword
 # ----------------------------------------------------
 INCLUDE (GenerateExportHeader)
-ADD_COMPILER_EXPORT_FLAGS ()
 GENERATE_EXPORT_HEADER(genericLogger
     BASE_NAME genericLogger
     EXPORT_MACRO_NAME GENERICLOGGER_EXPORT
