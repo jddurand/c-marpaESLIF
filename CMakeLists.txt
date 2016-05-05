@@ -294,7 +294,6 @@ SET_PROPERTY (TARGET tconvTester
   "${OPTPARSE_INCLUDE_DIR}"                               # Include path for optparse (builtin)
   )
 TARGET_LINK_LIBRARIES (tconvTester tconv optparse)
-SET_TARGET_PROPERTIES(tconvTester PROPERTIES LINK_FLAGS "${CMAKE_EXE_LINKER_FLAGS}")
 ADD_TEST              (NAME tconvTest
                        COMMAND tconvTester -t UTF-8//TRANSLIT -v "${PROJECT_SOURCE_DIR}test/tconv.c"
                        WORKING_DIRECTORY "${LIBRARY_OUTPUT_PATH}")
