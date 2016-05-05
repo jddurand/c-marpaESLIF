@@ -212,7 +212,7 @@ SET (CMAKE_C_FLAGS             "${CMAKE_C_FLAGS}                  $ENV{CFLAGS}  
 SET (CMAKE_CXX_FLAGS           "${CMAKE_CXX_FLAGS}                $ENV{CFLAGS}   ${ICU_CXX_FLAGS_SHARED} ${GENERICLOGGER_CXX_FLAGS_SHARED}")
 SET (CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS_INIT} $ENV{LDFLAGS}  ${ICU_LDFLAGS} ${GENERICLOGGER_LDFLAGS}")
 SET (CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS_INIT} $ENV{LDFLAGS}  ${ICU_LDFLAGS} ${GENERICLOGGER_LDFLAGS}")
-SET (CMAKE_EXE_LINKER_FLAGS    "${CMAKE_EXE_LINKER_FLAGS_INIT}    $ENV{LDFLAGS}  ${ICU_LDFLAGS} ${GENERICLOGGER_LDFLAGS}")
+# SET (CMAKE_EXE_LINKER_FLAGS    "${CMAKE_EXE_LINKER_FLAGS_INIT}    $ENV{LDFLAGS}  ${ICU_LDFLAGS} ${GENERICLOGGER_LDFLAGS}")
 
 #############################
 # Makefile details
@@ -296,7 +296,7 @@ SET_PROPERTY (TARGET tconvTester
   "${GENERICLOGGER_INCLUDE_DIRS}"                         # Include path for genericLogger (external - required)
   "${OPTPARSE_INCLUDE_DIR}"                               # Include path for optparse (builtin)
   )
-TARGET_LINK_LIBRARIES (tconvTester tconv optparse)
+TARGET_LINK_LIBRARIES (tconvTester optparse "${GENERICLOGGER_LINK_FLAGS}" "${ICU_LINK_FLAGS}" tconv)
 ADD_TEST              (NAME tconvTest
                        COMMAND tconvTester -t UTF-8//TRANSLIT -v "${PROJECT_SOURCE_DIR}test/tconv.c"
                        WORKING_DIRECTORY "${LIBRARY_OUTPUT_PATH}")
