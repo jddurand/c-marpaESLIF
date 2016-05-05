@@ -7,7 +7,6 @@ addons:
       - cmake
       - cmake-data
 before_script:
-  - "cmake --version"
   - cmake .
 script:
-  - make check && make check && make install
+  - make check && sudo make install
