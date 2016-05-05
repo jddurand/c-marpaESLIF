@@ -10,7 +10,8 @@ before_script:
   - sh ./install-c-genericLogger.sh
   - cmake .
 script:
-  - make
+  - export LD_LIBRARY_PATH=/usr/local/lib:`icu-config --ldflags-searchpath`:$LD_LIBRARY_PATH
+  - make VERBOSE=1
   - ldd output/lib/libtconv.so.1.0.0
   - make check VERBOSE=1
   - sudo make install
