@@ -2,7 +2,7 @@ language: c
 compiler:
   - gcc
 before_script:
-  - ./install-c-genericLogger.sh
+  - sh ./install-c-genericLogger.sh
   - cmake .
 script:
   - make check
