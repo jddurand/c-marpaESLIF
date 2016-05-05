@@ -1,7 +1,7 @@
 #ifndef GENERICLOGGERRUNTIME_H
 #define GENERICLOGGERRUNTIME_H
 
-#include "genericLoggerConfig.h"
+#include "genericLogger/config.h"
 
 #ifdef HAVE_STDIO_H
 #include <stdio.h>

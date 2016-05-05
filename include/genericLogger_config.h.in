@@ -1,7 +1,7 @@
 #ifndef GENERICLOGGERCONFIG_H
 #define GENERICLOGGERCONFIG_H
 
-#include "genericLoggerExport.h"
+#include "genericLogger/export.h"
 
 #cmakedefine HAVE_STDIO_H      @HAVE_STDIO_H@
 #cmakedefine HAVE_STDDEF_H     @HAVE_STDDEF_H@
