@@ -11,4 +11,5 @@ before_script:
   - cmake .
 script:
   - make check
+  - file src/tconv.c output/lib/tconv.UTF-16.c
   - sudo make install
