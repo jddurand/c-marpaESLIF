@@ -153,4 +153,12 @@ TCONV_EXPORT void tconv_trace(tconv_t tconvp, const char *fmts, ...);
 TCONV_EXPORT char *tconv_error_set(tconv_t tconvp, const char *msgs);
 TCONV_EXPORT char *tconv_error(tconv_t tconvp);
 
+/**********************************************************************/
+/* Since origin charset may be NULL, it may be interesting to know    */
+/* what tconv think it was.                                           */
+/* Destination charset is available for symmetry.                     */
+/**********************************************************************/
+TCONV_EXPORT char *tconv_fromcode(tconv_t tconvp);
+TCONV_EXPORT char *tconv_tocode(tconv_t tconvp);
+
 #endif /* TCONV_EXT_H */

@@ -296,7 +296,7 @@ SET_PROPERTY (TARGET tconvTester
   )
 TARGET_LINK_LIBRARIES (tconvTester tconv "${GENERICLOGGER_LINK_FLAGS}" "${ICU_LINK_FLAGS}" optparse)
 ADD_TEST              (NAME tconvTest
-                       COMMAND tconvTester -t UTF-8//TRANSLIT -v "${PROJECT_SOURCE_DIR}test/tconv.c"
+                       COMMAND tconvTester -t "UTF-16//TRANSLIT" -o tconv.UTF-16.c "${PROJECT_SOURCE_DIR}/src/tconv.c"
                        WORKING_DIRECTORY "${LIBRARY_OUTPUT_PATH}")
 ADD_CUSTOM_TARGET     (check COMMAND ${CMAKE_CTEST_COMMAND} DEPENDS tconvTester)
 #
