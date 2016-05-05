@@ -2,6 +2,4 @@ language: c
 before_script:
   - cmake .
 script:
-  - find output -type f
-  - cat output/include/genericLoggerExport.h
-  - make && make check && make install
+  - make check && make install

@@ -68,28 +68,22 @@ INCLUDE (FindFileno)
 INCLUDE (FindWrite)
 INCLUDE (FindVsnprintf)
 INCLUDE (FindLocaltime_r)
+
+# ----------------------------------------------------
+# Configuration
+# ----------------------------------------------------
 SET (CONFIG_H ${INCLUDE_OUTPUT_PATH}/genericLoggerConfig.h)
 SET (CONFIG_H_IN ${CMAKE_CURRENT_SOURCE_DIR}/include/genericLoggerConfig.h.in)
 CONFIGURE_FILE(${CONFIG_H_IN} ${CONFIG_H})
-
-# ------------------------------------------------------------------------------
-# Build both static and shared libraries - Note the GENERICLOGGER_STATIC keyword
-# ------------------------------------------------------------------------------
-FILE (GLOB lib_src src/*.c)
 ADD_CUSTOM_TARGET(genericLoggerConfig SOURCES "${CONFIG_H}")
-ADD_CUSTOM_TARGET(genericLoggerExport SOURCES "${INCLUDE_OUTPUT_PATH}/genericLoggerExport.h")
-		
+
+# -----------------------------------------------------
+# Targets
+# -----------------------------------------------------
+FILE (GLOB lib_src src/*.c)
+
 ADD_LIBRARY (genericLogger        SHARED ${lib_src})
 ADD_LIBRARY (genericLogger_static STATIC ${lib_src})
-
-ADD_DEPENDENCIES(genericLogger genericLoggerConfig genericLoggerExport)
-ADD_DEPENDENCIES(genericLogger_static genericLoggerConfig genericLoggerExport)
-
-SET_TARGET_PROPERTIES(genericLogger PROPERTIES COMPILE_FLAGS "-DgenericLogger_EXPORTS"
-                                               VERSION       "${GENERICLOGGER_VERSION}"
-                                               SOVERSION     "${GENERICLOGGER_VERSION_MAJOR}")
-
-SET_TARGET_PROPERTIES(genericLogger_static PROPERTIES COMPILE_FLAGS "-DGENERICLOGGER_STATIC")
 
 # ----------------------------------------------------
 # Export flags - Note the GENERICLOGGER_STATIC keyword
@@ -101,6 +95,19 @@ GENERATE_EXPORT_HEADER(genericLogger
     EXPORT_MACRO_NAME GENERICLOGGER_EXPORT
     EXPORT_FILE_NAME "${INCLUDE_OUTPUT_PATH}/genericLoggerExport.h"
     STATIC_DEFINE GENERICLOGGER_STATIC)
+ADD_CUSTOM_TARGET(genericLoggerExport SOURCES "${INCLUDE_OUTPUT_PATH}/genericLoggerExport.h")
+
+# -----------------------------------------------------
+# Targets dependencies and properties
+# -----------------------------------------------------
+ADD_DEPENDENCIES(genericLogger genericLoggerConfig genericLoggerExport)
+ADD_DEPENDENCIES(genericLogger_static genericLoggerConfig genericLoggerExport)
+
+SET_TARGET_PROPERTIES(genericLogger PROPERTIES COMPILE_FLAGS "-DgenericLogger_EXPORTS"
+                                               VERSION       "${GENERICLOGGER_VERSION}"
+                                               SOVERSION     "${GENERICLOGGER_VERSION_MAJOR}")
+
+SET_TARGET_PROPERTIES(genericLogger_static PROPERTIES COMPILE_FLAGS "-DGENERICLOGGER_STATIC")
 
 # -----
 # Check
