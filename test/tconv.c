@@ -50,8 +50,14 @@
 #endif
 
 
+#ifndef TCONV_NTRACE
 void traceCallback(void *userDatavp, const char *msgs);
-void fileconvert(int outputFd, char *filenames, char *tocodes, char *fromcodes, size_t bufsizel, short verbose);
+#endif
+void fileconvert(int outputFd, char *filenames, char *tocodes, char *fromcodes, size_t bufsizel
+#ifndef TCONV_NTRACE
+		 , short verbose
+#endif
+		 );
 
 int main(int argc, char **argv) {
   int                  longindex  = 0;
@@ -61,7 +67,9 @@ int main(int argc, char **argv) {
   char                *outputs    = NULL;
   size_t              bufsizel    = 1024;
   char                *tocodes    = NULL;
+#ifndef TCONV_NTRACE
   short                verbose    = 0;
+#endif
   struct optparse_long longopts[] = {
     {  "bufsize",  'b', OPTPARSE_REQUIRED},
     {"from-code",  'f', OPTPARSE_REQUIRED},
@@ -69,7 +77,9 @@ int main(int argc, char **argv) {
     {   "output",  'o', OPTPARSE_REQUIRED},
     {  "to-code",  't', OPTPARSE_REQUIRED},
     {    "usage",  'u', OPTPARSE_OPTIONAL},
+#ifndef TCONV_NTRACE
     {  "verbose",  'v', OPTPARSE_OPTIONAL},
+#endif
     {  "version",  'V', OPTPARSE_OPTIONAL},
     {0}
   };
@@ -98,14 +108,20 @@ int main(int argc, char **argv) {
       tocodes = options.optarg;
       break;
     case 'u':
-      printf("%s [--bufsize numberOfBytes] [--from-code fromcode] [-help] [--output filename] --to-code tocode [--usage] [--verbose] [--version] [--help] input...\n"
+      printf("%s [--bufsize numberOfBytes] [--from-code fromcode] [-help] [--output filename] --to-code tocode [--usage] "
+#ifndef TCONV_NTRACE
+	     "[--verbose] "
+#endif
+	     "[--version] [--help] input...\n"
 	    ,
 	    argv[0]
 	    );
       break;
+#ifndef TCONV_NTRACE
     case 'v':
       verbose = 1;
       break;
+#endif
     case 'V':
       printf("tconv %s\n", TCONV_VERSION);
       exit(EXIT_SUCCESS);
@@ -118,7 +134,11 @@ int main(int argc, char **argv) {
 
   if ((help != 0) || (tocodes == NULL) || (bufsizel <= 0)) {
     int rci = (help != 0) ? EXIT_SUCCESS : EXIT_FAILURE;
-    printf("%s [--bufsize numberOfBytes] [--from-code fromcode] [-help] [--output filename] --to-code tocode [--usage] [--verbose] [--version] [--help] input...\n"
+    printf("%s [--bufsize numberOfBytes] [--from-code fromcode] [-help] [--output filename] --to-code tocode [--usage] "
+#ifndef TCONV_NTRACE
+	   "[--verbose] "
+#endif
+	   "[--version] [--help] input...\n"
 	   ,
 	   argv[0]
 	   );
@@ -141,7 +161,11 @@ int main(int argc, char **argv) {
   }
 
   while ((args = optparse_arg(&options)) != NULL) {
-    fileconvert(outputFd, args, tocodes, fromcodes, bufsizel, verbose);
+    fileconvert(outputFd, args, tocodes, fromcodes, bufsizel
+#ifndef TCONV_NTRACE
+		, verbose
+#endif
+		);
   }
 
   if (outputs != NULL) {
@@ -153,7 +177,11 @@ int main(int argc, char **argv) {
   exit(EXIT_SUCCESS);
 }
 
-void fileconvert(int outputFd, char *filenames, char *tocodes, char *fromcodes, size_t bufsizel, short verbose) {
+void fileconvert(int outputFd, char *filenames, char *tocodes, char *fromcodes, size_t bufsizel
+#ifndef TCONV_NTRACE
+		 , short verbose
+#endif
+		 ) {
   char           *inbuforigp  = NULL;
   char           *outbuforigp = NULL;
   size_t          outsizel = bufsizel;
@@ -189,7 +217,11 @@ void fileconvert(int outputFd, char *filenames, char *tocodes, char *fromcodes, 
 
   tconvOption.charsetp = NULL;
   tconvOption.convertp = NULL;
-  tconvOption.traceCallbackp = (verbose != 0) ? traceCallback : NULL;
+  tconvOption.traceCallbackp =
+#ifndef TCONV_NTRACE
+    (verbose != 0) ? traceCallback :
+#endif
+    NULL;
   tconvOption.traceUserDatavp = NULL;
   
   tconvp = tconv_open_ext(tocodes, fromcodes, &tconvOption);
@@ -198,9 +230,11 @@ void fileconvert(int outputFd, char *filenames, char *tocodes, char *fromcodes, 
     goto end;
   }
 
+#ifndef TCONV_NTRACE
   if (verbose != 0) {
     tconv_trace_on(tconvp);
   }
+#endif
 
   while (1) {
     char *inbufp    = inbuforigp;

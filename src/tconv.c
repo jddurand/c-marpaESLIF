@@ -612,7 +612,13 @@ TCONV_EXPORT char *tconv_error_set(tconv_t tconvp, const char *msgs)
     errors = tconvp->errors;
   }
 
-  TCONV_TRACE(tconvp, "%s - return %s", funcs, errors);
+#ifndef TCONV_NTRACE
+  if (errors != NULL) {
+    TCONV_TRACE(tconvp, "%s - return %s", funcs, errors);
+  } else {
+    TCONV_TRACE(tconvp, "%s - return NULL", funcs);
+  }
+#endif
 
   errno = errnol;
 
@@ -632,7 +638,60 @@ TCONV_EXPORT char *tconv_error(tconv_t tconvp)
     errors = tconvp->errors;
   }
 
-  TCONV_TRACE(tconvp, "%s - return %s", funcs, errors);
+#ifndef TCONV_NTRACE
+  if (errors != NULL) {
+    TCONV_TRACE(tconvp, "%s - return %s", funcs, errors);
+  } else {
+    TCONV_TRACE(tconvp, "%s - return NULL", funcs);
+  }
+#endif
 
   return errors;
+}
+
+/****************************************************************************/
+TCONV_EXPORT char *tconv_fromcode(tconv_t tconvp)
+/****************************************************************************/
+{
+  static const char funcs[]   = "tconv_fromcode";
+  char             *fromcodes = NULL;
+
+  TCONV_TRACE(tconvp, "%s(%p)", funcs, tconvp);
+
+  if (tconvp != NULL) {
+    fromcodes = tconvp->fromcodes;
+  }
+
+#ifndef TCONV_NTRACE
+  if (fromcodes != NULL) {
+    TCONV_TRACE(tconvp, "%s - return %s", funcs, fromcodes);
+  } else {
+    TCONV_TRACE(tconvp, "%s - return NULL", funcs);
+  }
+#endif
+
+  return fromcodes;
+}
+/****************************************************************************/
+TCONV_EXPORT char *tconv_tocode(tconv_t tconvp)
+/****************************************************************************/
+{
+  static const char funcs[]   = "tconv_tocode";
+  char             *tocodes = NULL;
+
+  TCONV_TRACE(tconvp, "%s(%p)", funcs, tconvp);
+
+  if (tconvp != NULL) {
+    tocodes = tconvp->tocodes;
+  }
+
+#ifndef TCONV_NTRACE
+  if (tocodes != NULL) {
+    TCONV_TRACE(tconvp, "%s - return %s", funcs, tocodes);
+  } else {
+    TCONV_TRACE(tconvp, "%s - return NULL", funcs);
+  }
+#endif
+
+  return tocodes;
 }
