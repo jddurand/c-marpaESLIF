@@ -1,8 +1,13 @@
 language: c
-compiler:
-  - gcc
+addons:
+  apt:
+    sources:
+      - george-edison55-precise-backports
+    packages:
+      - cmake
+      - cmake-data
 before_script:
   - sh ./install-c-genericLogger.sh
   - cmake .
 script:
-  - make check
+  - make check && sudo make install
