@@ -2,4 +2,6 @@ language: c
 before_script:
   - cmake .
 script:
-  - make check
+  - find output -type f
+  - cat output/include/genericLoggerExport.h
+  - make check VERBOSE=1
