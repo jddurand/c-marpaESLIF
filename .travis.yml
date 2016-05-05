@@ -7,8 +7,8 @@ addons:
       - cmake
       - cmake-data
 before_script:
-  - export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
   - sh ./install-c-genericLogger.sh
   - cmake .
 script:
-  - make check && sudo make install
+  - make
+  - LD_LIBRARY_FLAGS=${LD_LIBRARY_FLAGS}:/usr/local/lib:`icu-config --ldflags-searchpath` make check && sudo make install
