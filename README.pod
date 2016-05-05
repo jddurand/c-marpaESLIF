@@ -151,7 +151,11 @@ maps to genericLogger_newp with a custom log implementation.
 
 maps to genericLogger_clonep.
 
-=head2 GENERICLOGGER_XXX, GENERICLOGGER_XXXF, GENERICLOGGER_XXXAP
+=head2 GENERICLOGGER_XXX
+
+=head2 GENERICLOGGER_XXXF
+
+=head2 GENERICLOGGER_XXXAP
 
 maps to all log levels, where C<XXX> is one of
 
