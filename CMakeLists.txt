@@ -246,7 +246,6 @@ TARGET_LINK_LIBRARIES (tconv
 )
 SET_TARGET_PROPERTIES (tconv
   PROPERTIES
-  LINKER_LANGUAGE C
   COMPILE_FLAGS "-Dtconv_EXPORTS"
   VERSION       "${TCONV_VERSION}"
   SOVERSION     "${TCONV_VERSION_MAJOR}")
@@ -281,7 +280,6 @@ ADD_EXECUTABLE (tconvTester EXCLUDE_FROM_ALL test/tconv.c)
 # and since we must do that for the dynamic test, we do it as well for any runtime thingy, just for coherency.
 #
 SET_TARGET_PROPERTIES (tconvTester PROPERTIES
-  LINKER_LANGUAGE C
   RUNTIME_OUTPUT_DIRECTORY                "${LIBRARY_OUTPUT_PATH}"
   RUNTIME_OUTPUT_DIRECTORY_DEBUG          "${LIBRARY_OUTPUT_PATH}"
   RUNTIME_OUTPUT_DIRECTORY_RELEASE        "${LIBRARY_OUTPUT_PATH}"
@@ -315,8 +313,3 @@ INSTALL (FILES include/tconv.h DESTINATION include)
 INCLUDE (Pod2Man)
 ADD_MANPAGE_TARGET()
 POD2MAN(src/tconv.3 "TCONV" "3" "${TCONV_VERSION}")
-
-# ----------------------------------------------
-# The README.pod is always a copy of src/tconv.3
-# ----------------------------------------------
-# EXECUTE_PROCESS(COMMAND "${CMAKE_COMMAND}" -E copy src/tconv.3 README.pod)
