@@ -104,11 +104,9 @@ ADD_DEPENDENCIES(genericLogger_static genericLoggerConfig genericLoggerExport)
 
 SET_TARGET_PROPERTIES(genericLogger PROPERTIES COMPILE_FLAGS "-DgenericLogger_EXPORTS"
                                                VERSION       "${GENERICLOGGER_VERSION}"
-                                               SOVERSION     "${GENERICLOGGER_VERSION_MAJOR}"
-					       LINKER_LANGUAGE C)
+                                               SOVERSION     "${GENERICLOGGER_VERSION_MAJOR}")
 
-SET_TARGET_PROPERTIES(genericLogger_static PROPERTIES COMPILE_FLAGS "-DGENERICLOGGER_STATIC"
-					   LINKER_LANGUAGE C)
+SET_TARGET_PROPERTIES(genericLogger_static PROPERTIES COMPILE_FLAGS "-DGENERICLOGGER_STATIC")
 
 # -----
 # Check
@@ -123,8 +121,8 @@ ADD_EXECUTABLE        (genericLoggerTesterStatic EXCLUDE_FROM_ALL test/genericLo
 # at runtime, REGARDLESS of the OS (we are thinking to Windows and Visual Studio for instance).
 # and since we must do that for the dynamic test, we do it as well for any runtime thingy, just for coherency.
 #
-SET_TARGET_PROPERTIES (genericLoggerTester       PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH} LINKER_LANGUAGE C)
-SET_TARGET_PROPERTIES (genericLoggerTesterStatic PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH} LINKER_LANGUAGE C COMPILE_FLAGS "-DGENERICLOGGER_STATIC")
+SET_TARGET_PROPERTIES (genericLoggerTester       PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH})
+SET_TARGET_PROPERTIES (genericLoggerTesterStatic PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH} COMPILE_FLAGS "-DGENERICLOGGER_STATIC")
 
 TARGET_LINK_LIBRARIES (genericLoggerTester       genericLogger)
 TARGET_LINK_LIBRARIES (genericLoggerTesterStatic genericLogger_static)
