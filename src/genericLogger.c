@@ -1,4 +1,4 @@
-#include "genericLoggerRuntime.h"
+#include "genericLogger/runtime.h"
 
 #ifdef C_VA_COPY
 /* Used when passing a va_list on the stack to another function taking a va_list */

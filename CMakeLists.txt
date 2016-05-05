@@ -72,8 +72,8 @@ INCLUDE (FindLocaltime_r)
 # ----------------------------------------------------
 # Configuration
 # ----------------------------------------------------
-SET (CONFIG_H ${INCLUDE_OUTPUT_PATH}/genericLoggerConfig.h)
-SET (CONFIG_H_IN ${CMAKE_CURRENT_SOURCE_DIR}/include/genericLoggerConfig.h.in)
+SET (CONFIG_H ${INCLUDE_OUTPUT_PATH}/genericLogger/config.h)
+SET (CONFIG_H_IN ${CMAKE_CURRENT_SOURCE_DIR}/include/genericLogger_config.h.in)
 CONFIGURE_FILE(${CONFIG_H_IN} ${CONFIG_H})
 ADD_CUSTOM_TARGET(genericLoggerConfig SOURCES "${CONFIG_H}")
 
@@ -89,12 +89,13 @@ ADD_LIBRARY (genericLogger_static STATIC ${lib_src})
 # Export flags - Note the GENERICLOGGER_STATIC keyword
 # ----------------------------------------------------
 INCLUDE (GenerateExportHeader)
+EXECUTE_PROCESS(COMMAND "${CMAKE_COMMAND}" -E make_directory "${INCLUDE_OUTPUT_PATH}/genericLogger")
 GENERATE_EXPORT_HEADER(genericLogger
     BASE_NAME genericLogger
     EXPORT_MACRO_NAME GENERICLOGGER_EXPORT
-    EXPORT_FILE_NAME "${INCLUDE_OUTPUT_PATH}/genericLoggerExport.h"
+    EXPORT_FILE_NAME "${INCLUDE_OUTPUT_PATH}/genericLogger/export.h"
     STATIC_DEFINE GENERICLOGGER_STATIC)
-ADD_CUSTOM_TARGET(genericLoggerExport SOURCES "${INCLUDE_OUTPUT_PATH}/genericLoggerExport.h")
+ADD_CUSTOM_TARGET(genericLoggerExport SOURCES "${INCLUDE_OUTPUT_PATH}/genericLogger/export.h")
 
 # -----------------------------------------------------
 # Targets dependencies and properties
@@ -143,4 +144,5 @@ ADD_CUSTOM_TARGET     (check COMMAND ${CMAKE_CTEST_COMMAND} DEPENDS genericLogge
 # -------
 INSTALL (TARGETS genericLogger        ARCHIVE DESTINATION lib LIBRARY DESTINATION lib RUNTIME DESTINATION bin COMPONENT libraries)
 INSTALL (TARGETS genericLogger_static ARCHIVE DESTINATION lib LIBRARY DESTINATION lib RUNTIME DESTINATION bin COMPONENT libraries)
-INSTALL (FILES ${INCLUDE_OUTPUT_PATH}/genericLoggerExport.h include/genericLogger.h DESTINATION include)
+INSTALL (FILES ${INCLUDE_OUTPUT_PATH}/genericLogger/export.h DESTINATION include/genericLogger)
+INSTALL (FILES include/genericLogger.h DESTINATION include)
