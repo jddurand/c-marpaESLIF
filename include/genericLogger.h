@@ -92,6 +92,9 @@ typedef void (*genericLoggerCallback_t)(void *userDatavp, genericLoggerLevel_t l
 #define GENERICLOGGER_EMERGENCYF(genericLoggerp, fmts, ...)                 GENERICLOGGER_LOGF((genericLoggerp), GENERICLOGGER_LOGLEVEL_EMERGENCY, (fmts), __VA_ARGS__)
 #define GENERICLOGGER_EMERGENCYAP(genericLoggerp, fmts, ap)                 GENERICLOGGER_LOGAP((genericLoggerp), GENERICLOGGER_LOGLEVEL_EMERGENCY, (fmts), (ap))
 
+#define GENERICLOGGER_LEVEL_SET(genericLoggerp, level)                      genericLogger_logLevel_seti((genericLoggerp), (level));
+#define GENERICLOGGER_LEVEL_GET(genericLoggerp)                             genericLogger_logLevel_geti((genericLoggerp))
+
 #define GENERICLOGGER_FREE(genericLoggerp)                                  genericLogger_freev(&(genericLoggerp));
 
 #ifdef _cpluscplus
