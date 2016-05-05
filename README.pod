@@ -11,25 +11,36 @@ genericLogger - generic logging interface
   /* ---------------------------------- */
   /* User-defined logger implementation */
   /* ---------------------------------- */
-  typedef void       (*genericLoggerCallback_t)(void *userDatavp, genericLoggerLevel_t logLeveli, const char *msgs);
+  typedef void (*genericLoggerCallback_t)(void *userDatavp,
+                                          genericLoggerLevel_t logLeveli,
+                                          const char *msgs);
 
   /* ----------------------- */
   /* Creation, Cloning, Free */
   /* ----------------------- */
-  genericLogger_t     *genericLogger_newp(genericLoggerCallback_t logCallbackp, void *userDatavp, genericLoggerLevel_t genericLoggerLeveli);
-  genericLogger_t     *genericLogger_clonep(genericLogger_t *genericLoggerp);
-  void                 genericLogger_freev(genericLogger_t **genericLoggerpp);
+  genericLogger_t *genericLogger_newp  (genericLoggerCallback_t logCallbackp,
+                                        void *userDatavp,
+                                        genericLoggerLevel_t genericLoggerLeveli);
+  genericLogger_t *genericLogger_clonep(genericLogger_t *genericLoggerp);
+  void             genericLogger_freev (genericLogger_t **genericLoggerpp);
 
   /* ------- */
   /* Logging */
   /* ------- */
-  void                 genericLogger_logv(genericLogger_t *genericLoggerp, genericLoggerLevel_t genericLoggerLeveli, const char *fmts, ...);
-  void                 genericLogger_logapv(genericLogger_t *genericLoggerp, genericLoggerLevel_t genericLoggerLeveli, const char *fmts, va_list ap);
+  void genericLogger_logv  (genericLogger_t *genericLoggerp,
+                            genericLoggerLevel_t genericLoggerLeveli,
+                            const char *fmts,
+                            ...);
+  void genericLogger_logapv(genericLogger_t *genericLoggerp,
+                            genericLoggerLevel_t genericLoggerLeveli,
+                            const char *fmts,
+                            va_list ap);
 
   /* ---------------- */
   /* Level management */
   /* ---------------- */
-  genericLoggerLevel_t genericLogger_logLevel_seti(genericLogger_t *genericLoggerp, genericLoggerLevel_t logLeveli);
+  genericLoggerLevel_t genericLogger_logLevel_seti(genericLogger_t *genericLoggerp,
+                                                   genericLoggerLevel_t logLeveli);
   genericLoggerLevel_t genericLogger_logLevel_geti(genericLogger_t *genericLoggerp);
 
 =head1 DESCRIPTION
@@ -40,8 +51,12 @@ genericLogger is like a portable printf() with level filtering capability, desig
 
 =head2 genericLogger_newp
 
-  typedef void    (*genericLoggerCallback_t)(void *userDatavp, genericLoggerLevel_t logLeveli, const char *msgs);
-  genericLogger_t  *genericLogger_newp(genericLoggerCallback_t logCallbackp, void *userDatavp, genericLoggerLevel_t genericLoggerLeveli);
+  typedef void    (*genericLoggerCallback_t)(void *userDatavp,
+                    genericLoggerLevel_t logLeveli,
+                    const char *msgs);
+  genericLogger_t  *genericLogger_newp(genericLoggerCallback_t logCallbackp,
+                                       void *userDatavp,
+                                       genericLoggerLevel_t genericLoggerLeveli);
 
 Creates and return a generic logger.
 
@@ -93,13 +108,19 @@ Free the generic logger.
 
 =head2 genericLogger_logv
 
-  void genericLogger_logv(genericLogger_t *genericLoggerp, genericLoggerLevel_t genericLoggerLeveli, const char *fmts, ...);
+  void genericLogger_logv(genericLogger_t *genericLoggerp,
+                          genericLoggerLevel_t genericLoggerLeveli,
+                          const char *fmts,
+                          ...);
 
 Format the message using C<fmts> format string and eventual remaining parameters, and send it to the log implementation.
 
 =head2 genericLogger_logapv
 
-  void genericLogger_logapv(genericLogger_t *genericLoggerp, genericLoggerLevel_t genericLoggerLeveli, const char *fmts, va_list ap);
+  void genericLogger_logapv(genericLogger_t *genericLoggerp,
+                            genericLoggerLevel_t genericLoggerLeveli,
+                            const char *fmts,
+                            va_list ap);
 
 va_list version of genericLogger_logv().
 
