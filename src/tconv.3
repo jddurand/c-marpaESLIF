@@ -43,6 +43,20 @@ Python's L<cchardet> charset detection engine, bundled with tconv, is always ava
 If tconv is compiled with ICU support, then ICU charset and conversion engines will be available.
 If tconv is compiled with ICONV support, then ICONV conversion engine will be available.
 
+=head1 DEFAULTS
+
+=over
+
+=item charset detection
+
+The default charset detection engine is cchardet, bundled statically with tconv.
+
+=item character conversion
+
+The default character conversion engine is ICU, if tconv has been compiled with ICU support, else ICONV if compiled with ICONV support, else I<none>.
+
+=back
+
 =head1 NOTES
 
 =head2 Windows platform
@@ -63,7 +77,7 @@ It is guaranteed that tconv() will behave exactly like iconv() if the character 
 
 =item POSIX compliance
 
-By POSIX compliance, we mean that, when the output buffer is too small, iconv should stop updating the input and output pointers prior to when the limit is reached. When the character conversion engine is ICONV on an UNIX platform, it is the behaviour of this UNIX platform that happen. In any other case, the plug-ins guarantee at least that input and output pointers are left in a state that, if being called again, will correctly handle the continuation of the convertion.
+By POSIX compliance, we mean that, when the output buffer is too small, iconv should stop updating the input and output pointers prior to when the limit is reached. When the character conversion engine is ICONV on an UNIX platform, it is the behaviour of this UNIX platform that happen. In any other case, the plug-ins guarantee at least that input and output pointers are left in a state that, if being called again, will correctly handle the continuation of the conversion.
 
 =back
 

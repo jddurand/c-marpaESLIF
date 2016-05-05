@@ -315,4 +315,4 @@ POD2MAN(src/tconv.3 "TCONV" "3" "${TCONV_VERSION}")
 # ----------------------------------------------
 # The README.pod is always a copy of src/tconv.3
 # ----------------------------------------------
-EXECUTE_PROCESS(COMMAND "${CMAKE_COMMAND}" -E copy src/tconv.3 README.pod)
+# EXECUTE_PROCESS(COMMAND "${CMAKE_COMMAND}" -E copy src/tconv.3 README.pod)
