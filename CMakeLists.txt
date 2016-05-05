@@ -75,7 +75,7 @@ CONFIGURE_FILE(${CONFIG_H_IN} ${CONFIG_H})
 # ------------------------------------------------------------------------------
 # Build both static and shared libraries - Note the GENERICLOGGER_STATIC keyword
 # ------------------------------------------------------------------------------
-FILE (GLOB lib_src src/*.c)
+FILE (GLOB lib_src src/*.c "${CONFIG_H}" "${INCLUDE_OUTPUT_PATH}/genericLoggerExport.h" )
 
 ADD_LIBRARY (genericLogger        SHARED ${lib_src})
 ADD_LIBRARY (genericLogger_static STATIC ${lib_src})
