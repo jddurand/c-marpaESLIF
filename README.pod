@@ -38,7 +38,10 @@ genericLogger is like a portable printf() with level filtering capability, desig
 
 =head1 METHODS
 
-=head2 genericLogger_newp(logCallbackp, userDatavp, genericLoggerLeveli)
+=head2 genericLogger_newp
+
+  typedef void    (*genericLoggerCallback_t)(void *userDatavp, genericLoggerLevel_t logLeveli, const char *msgs);
+  genericLogger_t  *genericLogger_newp(genericLoggerCallback_t logCallbackp, void *userDatavp, genericLoggerLevel_t genericLoggerLeveli);
 
 Creates and return a generic logger.
 
@@ -74,29 +77,41 @@ If C<logCallbackp> is NULL, then a default built-in implementation is used, with
 
 Returns NULL on failure, system's errno will indicate the reason.
 
-=head2 genericLogger_clonep(genericLoggerp)
+=head2 genericLogger_clonep
+
+  genericLogger_t *genericLogger_clonep(genericLogger_t *genericLoggerp);
 
 Clone the current generic logger and return a new one. The clone becomes I<independant>, and must be freed using genericLogger_freev().
 
 Returns NULL on failure, system's errno will indicate the reason.
 
-=head2 genericLogger_freev(genericLoggerpp)
+=head2 genericLogger_freev
+
+  void genericLogger_freev(genericLogger_t **genericLoggerpp);
 
 Free the generic logger.
 
-=head2 genericLogger_logv(genericLoggerp, genericLoggerLeveli, fmts, ...)
+=head2 genericLogger_logv
+
+  void genericLogger_logv(genericLogger_t *genericLoggerp, genericLoggerLevel_t genericLoggerLeveli, const char *fmts, ...);
 
 Format the message using C<fmts> format string and eventual remaining parameters, and send it to the log implementation.
 
-=head2 void genericLogger_logapv(genericLoggerp, genericLoggerLeveli, fmts, ap);
+=head2 genericLogger_logapv(genericLoggerp, genericLoggerLeveli, fmts, ap);
+
+  void genericLogger_logapv(genericLogger_t *genericLoggerp, genericLoggerLevel_t genericLoggerLeveli, const char *fmts, va_list ap);
 
 va_list version of genericLogger_logv().
 
 =head2 genericLogger_logLevel_seti(genericLoggerp, logLeveli)
 
+  genericLoggerLevel_t genericLogger_logLevel_seti(genericLogger_t *genericLoggerp, genericLoggerLevel_t logLeveli);
+
 Set the log level to C<leveLeveli> and return it.
 
 =head2 genericLogger_logLevel_geti(genericLoggerp)
+
+  genericLoggerLevel_t genericLogger_logLevel_geti(genericLogger_t *genericLoggerp);
 
 Return the current log level.
 
