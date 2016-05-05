@@ -98,7 +98,6 @@ SET_PROPERTY (TARGET charsetdetect
   "${3RDPARTY_OUTPUT_PATH}/cchardet-1.0.0/src/ext/libcharsetdetect/nspr-emu"
   "${3RDPARTY_OUTPUT_PATH}/cchardet-1.0.0/src/ext/libcharsetdetect"
   )
-SET_TARGET_PROPERTIES (charsetdetect PROPERTIES LINKER_LANGUAGE C)
 
 # ------------------------------------
 # tinycthread Thread Provider: builtin
@@ -127,7 +126,6 @@ IF (WIN32 AND NOT CYGWIN)
   SET (DLFCNWIN32_LIBRARY_TARGET "dlfcn-win32")
   SET (DLFCNWIN32_LIBRARY_TARGET_DEPEND "psapi")
   ADD_LIBRARY (dlfcn-win32 STATIC "${DLFCNWIN32_DIR}/dlfcn.c")
-  SET_TARGET_PROPERTIES (dlfcn-win32 PROPERTIES LINKER_LANGUAGE C)
 ENDIF (WIN32 AND NOT CYGWIN)
 
 # ---------------
@@ -142,7 +140,6 @@ SET (OPTPARSE_DIR            "${3RDPARTY_OUTPUT_PATH}/optparse-remote")
 SET (OPTPARSE_INCLUDE_DIR    "${OPTPARSE_DIR}")
 SET (OPTPARSE_LIBRARY_TARGET "optparse")
 ADD_LIBRARY (optparse STATIC "${OPTPARSE_DIR}/optparse.c")
-SET_TARGET_PROPERTIES (optparse PROPERTIES LINKER_LANGUAGE C)
 
 # -----------------------------------
 # ICU: optional
@@ -251,7 +248,6 @@ SET_TARGET_PROPERTIES (tconv
                        PROPERTIES COMPILE_FLAGS "-Dtconv_EXPORTS"
                        VERSION                  "${TCONV_VERSION}"
                        SOVERSION                "${TCONV_VERSION_MAJOR}")
-SET_TARGET_PROPERTIES (tconv PROPERTIES LINKER_LANGUAGE C)
 
 # ------------
 # Export flags
@@ -276,7 +272,6 @@ ADD_DEPENDENCIES(tconv tconvConfig tconvExport)
 ENABLE_TESTING()
 
 ADD_EXECUTABLE (tconvTester EXCLUDE_FROM_ALL test/tconv.c)
-SET_TARGET_PROPERTIES (tconvTester PROPERTIES LINKER_LANGUAGE C)
 #
 # Painful but putting the binaries produced with dynamic linking in the same directory as the
 # dynamic libraries is the only way to make sure the OS will always see the dynamic library
@@ -299,6 +294,7 @@ SET_PROPERTY (TARGET tconvTester
   "${OPTPARSE_INCLUDE_DIR}"                               # Include path for optparse (builtin)
   )
 TARGET_LINK_LIBRARIES (tconvTester tconv optparse)
+SET_TARGET_PROPERTIES(tconvTester PROPERTIES LINK_FLAGS "${CMAKE_EXE_LINKER_FLAGS}")
 ADD_TEST              (NAME tconvTest
                        COMMAND tconvTester -t UTF-8//TRANSLIT -v "${PROJECT_SOURCE_DIR}test/tconv.c"
                        WORKING_DIRECTORY "${LIBRARY_OUTPUT_PATH}")
