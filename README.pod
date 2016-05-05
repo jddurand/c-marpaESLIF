@@ -97,19 +97,19 @@ Free the generic logger.
 
 Format the message using C<fmts> format string and eventual remaining parameters, and send it to the log implementation.
 
-=head2 genericLogger_logapv(genericLoggerp, genericLoggerLeveli, fmts, ap);
+=head2 genericLogger_logapv
 
   void genericLogger_logapv(genericLogger_t *genericLoggerp, genericLoggerLevel_t genericLoggerLeveli, const char *fmts, va_list ap);
 
 va_list version of genericLogger_logv().
 
-=head2 genericLogger_logLevel_seti(genericLoggerp, logLeveli)
+=head2 genericLogger_logLevel_seti
 
   genericLoggerLevel_t genericLogger_logLevel_seti(genericLogger_t *genericLoggerp, genericLoggerLevel_t logLeveli);
 
 Set the log level to C<leveLeveli> and return it.
 
-=head2 genericLogger_logLevel_geti(genericLoggerp)
+=head2 genericLogger_logLevel_geti
 
   genericLoggerLevel_t genericLogger_logLevel_geti(genericLogger_t *genericLoggerp);
 
