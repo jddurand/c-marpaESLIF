@@ -424,11 +424,11 @@ static void _usage(char *argv0, short helpb)
     printf("  Transform a file from TIS-620 to UTF-16\n");
     printf("  %s -f TIS-620 -t \"UTF-16//IGNORE//TRANSLIT\" input\n", argv0);
     printf("\n");
-    printf("  Print and validate the guessed encoding of a file\n", argv0);
-    printf("  %s -o \"\" -F input\n");
+    printf("  Print and validate the guessed encoding of a file\n");
+    printf("  %s -o \"\" -F input\n", argv0);
     printf("\n");
-    printf("  Print charset guess of all input files\n", argv0);
-    printf("  %s -g *\n");
+    printf("  Print charset guess of all input files\n");
+    printf("  %s -g *\n", argv0);
   }
 }
 
