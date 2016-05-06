@@ -267,26 +267,21 @@ ADD_CUSTOM_TARGET(tconvExport SOURCES "${INCLUDE_OUTPUT_PATH}/tconv/export.h")
 # ----------------------------------------
 ADD_DEPENDENCIES(tconv tconvConfig tconvExport)
 
-# -----
-# Check
-# -----
-ENABLE_TESTING()
-
-ADD_EXECUTABLE (tconvTester EXCLUDE_FROM_ALL test/tconv.c)
-#
-# Painful but putting the binaries produced with dynamic linking in the same directory as the
-# dynamic libraries is the only way to make sure the OS will always see the dynamic library
-# at runtime, REGARDLESS of the OS (we are thinking to Windows and Visual Studio for instance).
-# and since we must do that for the dynamic test, we do it as well for any runtime thingy, just for coherency.
-#
-SET_TARGET_PROPERTIES (tconvTester PROPERTIES
+# ----------
+# Executable
+# ----------
+ADD_EXECUTABLE(tconvExec bin/tconv.c)
+SET_TARGET_PROPERTIES(tconvExec PROPERTIES
+  OUTPUT_NAME                             "tconv"
   RUNTIME_OUTPUT_DIRECTORY                "${LIBRARY_OUTPUT_PATH}"
   RUNTIME_OUTPUT_DIRECTORY_DEBUG          "${LIBRARY_OUTPUT_PATH}"
   RUNTIME_OUTPUT_DIRECTORY_RELEASE        "${LIBRARY_OUTPUT_PATH}"
   RUNTIME_OUTPUT_DIRECTORY_MINSIZEREL     "${LIBRARY_OUTPUT_PATH}"
   RUNTIME_OUTPUT_DIRECTORY_RELWITHDEBINFO "${LIBRARY_OUTPUT_PATH}"
+  INSTALL_RPATH                           "${CMAKE_INSTALL_PREFIX}/lib"
+  INSTALL_RPATH_USE_LINK_PATH             TRUE
 )
-SET_PROPERTY (TARGET tconvTester
+SET_PROPERTY(TARGET tconvExec
   PROPERTY
   INCLUDE_DIRECTORIES
   "${INCLUDE_OUTPUT_PATH}"                                # Include path for generated files (internal)
@@ -294,19 +289,24 @@ SET_PROPERTY (TARGET tconvTester
   "${GENERICLOGGER_INCLUDE_DIRS}"                         # Include path for genericLogger (external - required)
   "${OPTPARSE_INCLUDE_DIR}"                               # Include path for optparse (builtin)
   )
-TARGET_LINK_LIBRARIES (tconvTester tconv "${GENERICLOGGER_LINK_FLAGS}" "${ICU_LINK_FLAGS}" optparse)
-ADD_TEST              (NAME tconvTest
-                       COMMAND tconvTester -t UTF-16 -o tconv.tconv-UTF-16.c "${PROJECT_SOURCE_DIR}/src/tconv.c"
-                       WORKING_DIRECTORY "${LIBRARY_OUTPUT_PATH}")
-ADD_CUSTOM_TARGET     (check COMMAND ${CMAKE_CTEST_COMMAND} DEPENDS tconvTester)
+TARGET_LINK_LIBRARIES(tconvExec tconv "${GENERICLOGGER_LINK_FLAGS}" "${ICU_LINK_FLAGS}" optparse)
+
+# -----
+# Check
+# -----
+ENABLE_TESTING()
+ADD_TEST (NAME tconvTest
+          COMMAND tconv -t UTF-16 -o tconv.tconv-UTF-16.c "${PROJECT_SOURCE_DIR}/src/tconv.c"
+          WORKING_DIRECTORY "${LIBRARY_OUTPUT_PATH}")
+ADD_CUSTOM_TARGET (check COMMAND ${CMAKE_CTEST_COMMAND} DEPENDS tconvExec)
 #
 # Please note that test is likely to fail if libraries are not already in your path
 # (I did not want to play with PATH/LD_LIBRARY_PATH/etc within cmake)
-
+#
 # -------
 # Install
 # -------
-INSTALL (TARGETS tconv ARCHIVE DESTINATION lib LIBRARY DESTINATION lib RUNTIME DESTINATION bin COMPONENT libraries)
+INSTALL (TARGETS tconv tconvExec ARCHIVE DESTINATION lib LIBRARY DESTINATION lib RUNTIME DESTINATION bin)
 INSTALL (FILES ${INCLUDE_OUTPUT_PATH}/tconv/export.h DESTINATION include/tconv)
 INSTALL (FILES include/tconv.h DESTINATION include)
 
