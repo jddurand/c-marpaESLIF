@@ -50,32 +50,43 @@
 #endif
 
 
+static void _usage(char *argv0);
 #ifndef TCONV_NTRACE
-void traceCallback(void *userDatavp, const char *msgs);
+static void traceCallback(void *userDatavp, const char *msgs);
 #endif
-void fileconvert(int outputFd, char *filenames, char *tocodes, char *fromcodes, size_t bufsizel
+static void fileconvert(int outputFd, char *filenames,
+			char *tocodes, char *fromcodes,
+			size_t bufsizel,
+			short fromPrintb, short toPrintb
 #ifndef TCONV_NTRACE
-		 , short verbose
+			, short verbose
 #endif
-		 );
+			);
 
-int main(int argc, char **argv) {
+/*****************************************************************************/
+int main(int argc, char **argv)
+/*****************************************************************************/
+{
   int                  longindex  = 0;
 
+  short                fromPrintb = 0;
   char                *fromcodes  = NULL;
-  short                help       = 0;
+  short                helpb      = 0;
   char                *outputs    = NULL;
   size_t              bufsizel    = 1024;
   char                *tocodes    = NULL;
+  short                toPrintb   = 0;
 #ifndef TCONV_NTRACE
   short                verbose    = 0;
 #endif
   struct optparse_long longopts[] = {
     {  "bufsize",  'b', OPTPARSE_REQUIRED},
     {"from-code",  'f', OPTPARSE_REQUIRED},
+    {"from-print", 'F', OPTPARSE_OPTIONAL},
     {     "help",  'h', OPTPARSE_OPTIONAL},
     {   "output",  'o', OPTPARSE_REQUIRED},
     {  "to-code",  't', OPTPARSE_REQUIRED},
+    {  "to-print", 'T', OPTPARSE_OPTIONAL},
     {    "usage",  'u', OPTPARSE_OPTIONAL},
 #ifndef TCONV_NTRACE
     {  "verbose",  'v', OPTPARSE_OPTIONAL},
@@ -98,14 +109,20 @@ int main(int argc, char **argv) {
     case 'f':
       fromcodes = options.optarg;
       break;
+    case 'F':
+      fromPrintb = 1;
+      break;
     case 'h':
-      help = 1;
+      helpb= 1;
       break;
     case 'o':
       outputs = options.optarg;
       break;
     case 't':
       tocodes = options.optarg;
+      break;
+    case 'T':
+      toPrintb = 1;
       break;
     case 'u':
       printf("%s [--bufsize numberOfBytes] [--from-code fromcode] [-help] [--output filename] --to-code tocode [--usage] "
@@ -132,8 +149,8 @@ int main(int argc, char **argv) {
     }
   }
 
-  if ((help != 0) || (tocodes == NULL) || (bufsizel <= 0)) {
-    int rci = (help != 0) ? EXIT_SUCCESS : EXIT_FAILURE;
+  if ((helpb != 0) || (tocodes == NULL) || (bufsizel <= 0)) {
+    int rci = (helpb != 0) ? EXIT_SUCCESS : EXIT_FAILURE;
     printf("%s [--bufsize numberOfBytes] [--from-code fromcode] [-help] [--output filename] --to-code tocode [--usage] "
 #ifndef TCONV_NTRACE
 	   "[--verbose] "
@@ -161,7 +178,10 @@ int main(int argc, char **argv) {
   }
 
   while ((args = optparse_arg(&options)) != NULL) {
-    fileconvert(outputFd, args, tocodes, fromcodes, bufsizel
+    fileconvert(outputFd, args,
+		tocodes, fromcodes,
+		bufsizel,
+		fromPrintb, toPrintb
 #ifndef TCONV_NTRACE
 		, verbose
 #endif
@@ -177,11 +197,17 @@ int main(int argc, char **argv) {
   exit(EXIT_SUCCESS);
 }
 
-void fileconvert(int outputFd, char *filenames, char *tocodes, char *fromcodes, size_t bufsizel
+/*****************************************************************************/
+static void fileconvert(int outputFd, char *filenames,
+			char *tocodes, char *fromcodes,
+			size_t bufsizel,
+			short fromPrintb, short toPrintb
 #ifndef TCONV_NTRACE
-		 , short verbose
+			, short verbose
 #endif
-		 ) {
+			)
+/*****************************************************************************/
+{
   char           *inbuforigp  = NULL;
   char           *outbuforigp = NULL;
   size_t          outsizel = bufsizel;
@@ -226,7 +252,7 @@ void fileconvert(int outputFd, char *filenames, char *tocodes, char *fromcodes, 
   
   tconvp = tconv_open_ext(tocodes, fromcodes, &tconvOption);
   if (tconvp == (tconv_t) -1) {
-    fprintf(stderr, "tconv_open_ext: %s\n", tconv_error(tconvp));
+    fprintf(stderr, "tconv_open_ext: %s\n", strerror(errno));
     goto end;
   }
 
@@ -254,6 +280,14 @@ void fileconvert(int outputFd, char *filenames, char *tocodes, char *fromcodes, 
     again:
       nconvl = tconv(tconvp, eofb ? NULL : &inbufp, eofb ? NULL : &inleftl, &outbufp, &outleftl);
 
+      if (fromPrintb != 0) {
+	GENERICLOGGER_INFOF(NULL, "from codeset: %s", tconv_fromcode(tconvp));
+	fromPrintb = 0;
+      }
+      if (toPrintb != 0) {
+	GENERICLOGGER_INFOF(NULL, "to codeset: %s", tconv_tocode(tconvp));
+	toPrintb = 0;
+      }
       nwritel = outsizel - outleftl;
       if (nwritel > 0) {
         if (write(outputFd, outbuforigp, nwritel) != nwritel) {
@@ -309,7 +343,7 @@ void fileconvert(int outputFd, char *filenames, char *tocodes, char *fromcodes, 
       fprintf(stderr, "Failed to close %s: %s\n", filenames, strerror(errno));
     }
   }
-  if (tconvp != NULL) {
+  if (tconvp != (tconv_t)-1) {
     if (tconv_close(tconvp) != 0) {
       fprintf(stderr, "Failed to close tconv: %s\n", strerror(errno));
     }
@@ -322,7 +356,24 @@ void fileconvert(int outputFd, char *filenames, char *tocodes, char *fromcodes, 
   }
 }
 
-void traceCallback(void *userDatavp, const char *msgs) {
+/*****************************************************************************/
+static void traceCallback(void *userDatavp, const char *msgs)
+/*****************************************************************************/
+{
   GENERICLOGGER_TRACE(NULL, msgs);
+}
+
+/*****************************************************************************/
+static void _usage(char *argv0)
+/*****************************************************************************/
+{
+  printf("%s [--bufsize numberOfBytes] [--from-code fromcode] [-help] [--output filename] --to-code tocode [--usage] "
+#ifndef TCONV_NTRACE
+	 "[--verbose] "
+#endif
+	 "[--version] [--help] input...\n"
+	 ,
+	 argv0
+	 );
 }
 
