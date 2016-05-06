@@ -17,4 +17,5 @@ script:
   - file src/tconv.c output/lib/tconv.iconv-UTF-16.c output/lib/tconv.uconv-UTF-16.c output/lib/tconv.tconv-UTF-16.c
   - diff output/lib/tconv.iconv-UTF-16.c output/lib/tconv.tconv-UTF-16.c
   - diff output/lib/tconv.uconv-UTF-16.c output/lib/tconv.tconv-UTF-16.c
+  - ./output/lib/tconvTester -g `find ./output/3rdparty/cchardet-1.0.0/test/testdata/ -type f`
   - sudo make install
