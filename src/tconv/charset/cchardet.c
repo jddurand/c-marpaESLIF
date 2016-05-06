@@ -101,10 +101,6 @@ char *tconv_charset_cchardet_run(tconv_t tconvp, void *voidp, char *bytep, size_
     TCONV_TRACE(tconvp, "%s - csd_consider return value is < 0", funcs);
     errno = ENOENT;
     goto err;
-  } else if (csdi == 0) {
-    TCONV_TRACE(tconvp, "%s - csd_consider return value is == 0", funcs);
-    errno = EAGAIN;
-    goto err;
   }
 
   TCONV_TRACE(tconvp, "%s - csd_close2(%p, %p)", funcs, csdp, &confidencef);
