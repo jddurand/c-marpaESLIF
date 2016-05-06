@@ -49,8 +49,11 @@
 #  endif
 #endif
 
+#ifndef BUFSIZ
+#define BUFSIZ 1024
+#endif
 
-static void _usage(char *argv0);
+static void _usage(char *argv0, short helpb);
 #ifndef TCONV_NTRACE
 static void traceCallback(void *userDatavp, const char *msgs);
 #endif
@@ -73,9 +76,10 @@ int main(int argc, char **argv)
   char                *fromcodes  = NULL;
   short                helpb      = 0;
   char                *outputs    = NULL;
-  size_t              bufsizel    = 1024;
+  size_t              bufsizel    = BUFSIZ;
   char                *tocodes    = NULL;
   short                toPrintb   = 0;
+  short                usageb     = 0;
 #ifndef TCONV_NTRACE
   short                verbose    = 0;
 #endif
@@ -125,14 +129,7 @@ int main(int argc, char **argv)
       toPrintb = 1;
       break;
     case 'u':
-      printf("%s [--bufsize numberOfBytes] [--from-code fromcode] [-help] [--output filename] --to-code tocode [--usage] "
-#ifndef TCONV_NTRACE
-	     "[--verbose] "
-#endif
-	     "[--version] [--help] input...\n"
-	    ,
-	    argv[0]
-	    );
+      usageb = 1;
       break;
 #ifndef TCONV_NTRACE
     case 'v':
@@ -145,33 +142,31 @@ int main(int argc, char **argv)
       break;
     case '?':
       fprintf(stderr, "%s: %s\n", argv[0], options.errmsg);
+      _usage(argv[0], 0);
       exit(EXIT_FAILURE);
     }
   }
 
-  if ((helpb != 0) || (tocodes == NULL) || (bufsizel <= 0)) {
-    int rci = (helpb != 0) ? EXIT_SUCCESS : EXIT_FAILURE;
-    printf("%s [--bufsize numberOfBytes] [--from-code fromcode] [-help] [--output filename] --to-code tocode [--usage] "
-#ifndef TCONV_NTRACE
-	   "[--verbose] "
-#endif
-	   "[--version] [--help] input...\n"
-	   ,
-	   argv[0]
-	   );
+  if ((helpb != 0) || (usageb != 0) || (bufsizel <= 0)) {
+    int rci = ((helpb != 0) || (usageb != 0)) ? EXIT_SUCCESS : EXIT_FAILURE;
+    _usage(argv[0], helpb);
     exit(rci);
   }
   
   if (outputs != NULL) {
-    outputFd = open(outputs,
+    if (strlen(outputs) > 0) {
+      outputFd = open(outputs,
                       O_RDWR|O_CREAT|O_TRUNC
 #ifdef O_BINARY
                       |O_BINARY
 #endif
                       , S_IREAD|S_IWRITE);
-    if (outputFd < 0) {
-      fprintf(stderr, "Failed to open %s: %s\n", outputs, strerror(errno));
-      exit(EXIT_FAILURE);
+      if (outputFd < 0) {
+	fprintf(stderr, "Failed to open %s: %s\n", outputs, strerror(errno));
+	exit(EXIT_FAILURE);
+      }
+    } else {
+      outputFd = -1;
     }
   } else {
     outputFd = fileno(stdout);
@@ -188,7 +183,7 @@ int main(int argc, char **argv)
 		);
   }
 
-  if (outputs != NULL) {
+  if (outputFd >= 0) {
     if (close(outputFd) != 0) {
       fprintf(stderr, "Failed to close %s: %s\n", outputs, strerror(errno));
     }
@@ -290,10 +285,12 @@ static void fileconvert(int outputFd, char *filenames,
       }
       nwritel = outsizel - outleftl;
       if (nwritel > 0) {
-        if (write(outputFd, outbuforigp, nwritel) != nwritel) {
-          fprintf(stderr, "Failed to write output: %s\n", strerror(errno));
-          goto end;
-        }
+	if (outputFd >= 0) {
+	  if (write(outputFd, outbuforigp, nwritel) != nwritel) {
+	    fprintf(stderr, "Failed to write output: %s\n", strerror(errno));
+	    goto end;
+	  }
+	}
         outbufp  = outbuforigp;
         outleftl = outsizel;
       }
@@ -364,16 +361,51 @@ static void traceCallback(void *userDatavp, const char *msgs)
 }
 
 /*****************************************************************************/
-static void _usage(char *argv0)
+static void _usage(char *argv0, short helpb)
 /*****************************************************************************/
 {
-  printf("%s [--bufsize numberOfBytes] [--from-code fromcode] [-help] [--output filename] --to-code tocode [--usage] "
+  printf("Usage:\n"
+	 "  %s [-b numberOfBytes] [-f fromcode] [-o filename] -t tocode "
+	 "[-FhTuV"
 #ifndef TCONV_NTRACE
-	 "[--verbose] "
+	 "v"
 #endif
-	 "[--version] [--help] input...\n"
+	 "] input...\n"
 	 ,
 	 argv0
 	 );
+  if (helpb != 0) {
+    printf("\n");
+    printf("  Options with arguments:\n");
+    printf("\n");
+    printf("  -b, --bufsize   BUFSIZE     Internal buffer size.       Default: %d. Must be > 0.\n", (int) BUFSIZ);
+    printf("  -f, --from-code FROM-CODE   Original code set.          Default: guessed from first read buffer.\n");
+    printf("  -o, --output    OUTPUT      Output filename.            Default: standard output. An empty value disables output.\n");
+    printf("  -t, --to-code   TO-CODE     Destination code set.       Default: FROM-CODE.\n");
+    printf("\n");
+
+    printf("  Options without argument:\n");
+    printf("\n");
+    printf("  -F, --from-print            Print original code set.\n");
+    printf("  -h, --help                  Print this help and exit.\n");
+    printf("  -T, --to-print              Print destination code set.\n");
+    printf("  -u, --usage                 Print usage and exit.\n");
+    printf("  -V, --version               Print version and exit.\n");
+#ifndef TCONV_NTRACE
+    printf("  -v, --verbose               Verbose mode.\n");
+#endif
+
+    printf("\n");
+    printf("Examples:");
+    printf("\n");
+    printf("  Validate that a file is in ISO-8859-1\n");
+    printf("  %s -f ISO-8859-1 input\n", argv0);
+    printf("\n");
+    printf("  Transform a file from TIS-620 to UTF-16\n");
+    printf("  %s -f TIS-620 -t \"UTF-16//IGNORE//TRANSLIT\" input\n", argv0);
+    printf("\n");
+    printf("  Print and validate the guessed encoding of a file\n", argv0);
+    printf("  %s -o \"\" -F input\n");
+  }
 }
 
