@@ -88,7 +88,7 @@ The argument C<genericLoggerLeveli> may be one of
 
 it is guaranteed that C<logCallbackp> will not be called whenever a message have a log level lower than C<genericLoggerLeveli>.
 
-If C<logCallbackp> is NULL, then a default built-in implementation is used, with a B<hardcoded> level set to GENERICLOGGER_LEVEL_WARNING, a B<hardcoded> format string set to C<%d/%m/%Y %H:%M:%S %9s %s> (i.e. date and time a-la-european style, a string giving the level, and the formatted message), and a B<hardcoded> output to standard error.
+If C<logCallbackp> is NULL, then a default built-in implementation is used, with a B<hardcoded> level set to GENERICLOGGER_LEVEL_TRACE (i.e. it will log everything), a B<hardcoded> format string set to C<%d/%m/%Y %H:%M:%S %9s %s> (i.e. date and time a-la-european style, a string giving the level, and the formatted message), and a B<hardcoded> output to standard error.
 
 Returns NULL on failure, system's errno will indicate the reason.
 
