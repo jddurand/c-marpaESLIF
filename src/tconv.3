@@ -23,7 +23,8 @@ When calling L<tconv_open>:
 
   tconv_open(const char *tocode, const char *fromcode)
 
-it is I<legal> to have NULL for C<tocode>. In this case the I<first chunk> of input will be used for charset detection, it is therefore recommended to use enough bytes at the very beginning. If C<tocode> is not NULL, no charset detection will occur, and tconv will behave like L<iconv(3)>, modulo the engine being used (see below).
+it is I<legal> to have NULL for C<fromcode>. In this case the I<first chunk> of input will be used for charset detection, it is therefore recommended to use enough bytes at the very beginning. If C<fromcode> is not NULL, no charset detection will occur, and tconv will behave like L<iconv(3)>, modulo the engine being used (see below).
+If C<tocode> is NULL, it will default to C<fromcode>.
 
 =head1 ENGINES
 
