@@ -11,11 +11,12 @@ before_script:
   - cmake .
 script:
   - make check
+  - sudo make install
+  - tconv -f ASCII -t UTF-16 -o output/lib/tconv.tconv-UTF-16.c src/tconv.c
   - iconv -f ASCII -t UTF-16 -o output/lib/tconv.iconv-UTF-16.c src/tconv.c
   - uconv -f ASCII -t UTF-16 -o output/lib/tconv.uconv-UTF-16.c src/tconv.c
   - ls -l src/tconv.c output/lib/tconv.iconv-UTF-16.c output/lib/tconv.uconv-UTF-16.c output/lib/tconv.tconv-UTF-16.c
   - file src/tconv.c output/lib/tconv.iconv-UTF-16.c output/lib/tconv.uconv-UTF-16.c output/lib/tconv.tconv-UTF-16.c
   - diff output/lib/tconv.iconv-UTF-16.c output/lib/tconv.tconv-UTF-16.c
   - diff output/lib/tconv.uconv-UTF-16.c output/lib/tconv.tconv-UTF-16.c
-  - ./output/lib/tconvTester -g `find ./output/3rdparty/cchardet-1.0.0/test/testdata/ -type f`
-  - sudo make install
+  - tconv -g `find ./output/3rdparty/cchardet-1.0.0/test/testdata/ -type f`
