@@ -59,8 +59,9 @@ static void traceCallback(void *userDatavp, const char *msgs);
 #endif
 static void fileconvert(int outputFd, char *filenames,
 			char *tocodes, char *fromcodes,
+			short guessb,
 			size_t bufsizel,
-			short fromPrintb, short toPrintb
+			short fromPrintb
 #ifndef TCONV_NTRACE
 			, short verbose
 #endif
@@ -74,11 +75,11 @@ int main(int argc, char **argv)
 
   short                fromPrintb = 0;
   char                *fromcodes  = NULL;
+  short                guessb     = 0;
   short                helpb      = 0;
   char                *outputs    = NULL;
   size_t              bufsizel    = BUFSIZ;
   char                *tocodes    = NULL;
-  short                toPrintb   = 0;
   short                usageb     = 0;
 #ifndef TCONV_NTRACE
   short                verbose    = 0;
@@ -87,10 +88,10 @@ int main(int argc, char **argv)
     {  "bufsize",  'b', OPTPARSE_REQUIRED},
     {"from-code",  'f', OPTPARSE_REQUIRED},
     {"from-print", 'F', OPTPARSE_OPTIONAL},
+    {     "guess", 'g', OPTPARSE_OPTIONAL},
     {     "help",  'h', OPTPARSE_OPTIONAL},
     {   "output",  'o', OPTPARSE_REQUIRED},
     {  "to-code",  't', OPTPARSE_REQUIRED},
-    {  "to-print", 'T', OPTPARSE_OPTIONAL},
     {    "usage",  'u', OPTPARSE_OPTIONAL},
 #ifndef TCONV_NTRACE
     {  "verbose",  'v', OPTPARSE_OPTIONAL},
@@ -117,16 +118,16 @@ int main(int argc, char **argv)
       fromPrintb = 1;
       break;
     case 'h':
-      helpb= 1;
+      helpb = 1;
+      break;
+    case 'g':
+      guessb = 1;
       break;
     case 'o':
       outputs = options.optarg;
       break;
     case 't':
       tocodes = options.optarg;
-      break;
-    case 'T':
-      toPrintb = 1;
       break;
     case 'u':
       usageb = 1;
@@ -137,14 +138,23 @@ int main(int argc, char **argv)
       break;
 #endif
     case 'V':
-      printf("tconv %s\n", TCONV_VERSION);
+      GENERICLOGGER_INFOF(NULL, "tconv %s", TCONV_VERSION);
       exit(EXIT_SUCCESS);
       break;
     case '?':
-      fprintf(stderr, "%s: %s\n", argv[0], options.errmsg);
+      GENERICLOGGER_ERRORF(NULL, "%s: %s", argv[0], options.errmsg);
       _usage(argv[0], 0);
       exit(EXIT_FAILURE);
+    default:
+      break;
     }
+  }
+
+  if (guessb != 0) {
+    fromPrintb = 1;
+    fromcodes = NULL;
+    tocodes = NULL;
+    outputs = "";
   }
 
   if ((helpb != 0) || (usageb != 0) || (bufsizel <= 0)) {
@@ -162,7 +172,7 @@ int main(int argc, char **argv)
 #endif
                       , S_IREAD|S_IWRITE);
       if (outputFd < 0) {
-	fprintf(stderr, "Failed to open %s: %s\n", outputs, strerror(errno));
+	GENERICLOGGER_ERRORF(NULL, "Failed to open %s: %s", outputs, strerror(errno));
 	exit(EXIT_FAILURE);
       }
     } else {
@@ -175,8 +185,9 @@ int main(int argc, char **argv)
   while ((args = optparse_arg(&options)) != NULL) {
     fileconvert(outputFd, args,
 		tocodes, fromcodes,
+		guessb,
 		bufsizel,
-		fromPrintb, toPrintb
+		fromPrintb
 #ifndef TCONV_NTRACE
 		, verbose
 #endif
@@ -185,7 +196,7 @@ int main(int argc, char **argv)
 
   if (outputFd >= 0) {
     if (close(outputFd) != 0) {
-      fprintf(stderr, "Failed to close %s: %s\n", outputs, strerror(errno));
+      GENERICLOGGER_ERRORF(NULL, "Failed to close %s: %s", outputs, strerror(errno));
     }
   }
 
@@ -195,8 +206,9 @@ int main(int argc, char **argv)
 /*****************************************************************************/
 static void fileconvert(int outputFd, char *filenames,
 			char *tocodes, char *fromcodes,
+			short guessb,
 			size_t bufsizel,
-			short fromPrintb, short toPrintb
+			short fromPrintb
 #ifndef TCONV_NTRACE
 			, short verbose
 #endif
@@ -214,14 +226,14 @@ static void fileconvert(int outputFd, char *filenames,
 
   inbuforigp = malloc(bufsizel);
   if (inbuforigp == NULL) {
-    fprintf(stderr, "malloc: %s\n", strerror(errno));
+    GENERICLOGGER_ERRORF(NULL, "malloc: %s", strerror(errno));
     goto end;
   }
 
   /* We start with an outbuf size the same as inbuf */
   outbuforigp = malloc(outsizel);
   if (outbuforigp == NULL) {
-    fprintf(stderr, "malloc: %s\n", strerror(errno));
+    GENERICLOGGER_ERRORF(NULL, "malloc: %s", strerror(errno));
     goto end;
   }
 
@@ -232,7 +244,7 @@ static void fileconvert(int outputFd, char *filenames,
 #endif
             );
   if (fd < 0) {
-    fprintf(stderr, "Failed to open %s: %s\n", filenames, strerror(errno));
+    GENERICLOGGER_ERRORF(NULL, "Failed to open %s: %s", filenames, strerror(errno));
     goto end;
   }
 
@@ -247,7 +259,7 @@ static void fileconvert(int outputFd, char *filenames,
   
   tconvp = tconv_open_ext(tocodes, fromcodes, &tconvOption);
   if (tconvp == (tconv_t) -1) {
-    fprintf(stderr, "tconv_open_ext: %s\n", strerror(errno));
+    GENERICLOGGER_ERRORF(NULL, "tconv_open_ext: %s", strerror(errno));
     goto end;
   }
 
@@ -265,29 +277,25 @@ static void fileconvert(int outputFd, char *filenames,
     size_t inleftl  = (size_t) read(fd, inbuforigp, bufsizel);
    
     if (inleftl == (size_t)-1) {
-      fprintf(stderr, "Failed to read from %s: %s\n", filenames, strerror(errno));
+      GENERICLOGGER_ERRORF(NULL, "Failed to read from %s: %s", filenames, strerror(errno));
       goto end;
     } else if (inleftl == 0) {
       eofb = 1;
     }
 
+    if (guessb) {
+      /* Force an E2BIG situation */
+      outleftl = 0;
+    }
+
     while (eofb || (inleftl > 0)) {
     again:
       nconvl = tconv(tconvp, eofb ? NULL : &inbufp, eofb ? NULL : &inleftl, &outbufp, &outleftl);
-
-      if (fromPrintb != 0) {
-	GENERICLOGGER_INFOF(NULL, "from codeset: %s", tconv_fromcode(tconvp));
-	fromPrintb = 0;
-      }
-      if (toPrintb != 0) {
-	GENERICLOGGER_INFOF(NULL, "to codeset: %s", tconv_tocode(tconvp));
-	toPrintb = 0;
-      }
       nwritel = outsizel - outleftl;
       if (nwritel > 0) {
 	if (outputFd >= 0) {
 	  if (write(outputFd, outbuforigp, nwritel) != nwritel) {
-	    fprintf(stderr, "Failed to write output: %s\n", strerror(errno));
+	    GENERICLOGGER_ERRORF(NULL, "Failed to write output: %s", strerror(errno));
 	    goto end;
 	  }
 	}
@@ -298,13 +306,20 @@ static void fileconvert(int outputFd, char *filenames,
       if (nconvl == (size_t) -1) {
 	switch (errno) {
 	case E2BIG:
+	  if (guessb != 0) {
+	    /* Print from codeset, simulate eof and exit the loop, no writing */
+	    GENERICLOGGER_INFOF(NULL, "%s: %s", filenames, tconv_fromcode(tconvp));
+	    fromPrintb = 0;
+	    eofb = 1;
+	    break;
+	  }
           /* We realloc only if we wrote nothing */
 	  if (nwritel <= 0) {
 	    char *tmp;
 	    
 	    tmp = realloc(outbuforigp, outsizel + bufsizel);
 	    if (tmp == NULL) {
-	      fprintf(stderr, "realloc: %s\n", strerror(errno));
+	      GENERICLOGGER_ERRORF(NULL, "realloc: %s", strerror(errno));
 	      goto end;
 	    }
 	    outbufp    = outbuforigp = tmp;
@@ -314,8 +329,13 @@ static void fileconvert(int outputFd, char *filenames,
           goto again;
 	  break;
 	default:
-	  fprintf(stderr, "%s: %s\n", filenames, tconv_error(tconvp));
+	  GENERICLOGGER_ERRORF(NULL, "%s: %s", filenames, tconv_error(tconvp));
 	  goto end;
+	}
+      } else {
+	if (fromPrintb != 0) {
+	  GENERICLOGGER_INFOF(NULL, "%s: %s", filenames, tconv_fromcode(tconvp));
+	  fromPrintb = 0;
 	}
       }
 
@@ -330,19 +350,19 @@ static void fileconvert(int outputFd, char *filenames,
   }
 
   if (tconv_close(tconvp) != 0) {
-    fprintf(stderr, "Failed to close tconv: %s\n", strerror(errno));
+    GENERICLOGGER_ERRORF(NULL, "Failed to close tconv: %s", strerror(errno));
   }
   tconvp = NULL;
 
   end:
   if (fd >= 0) {
     if (close(fd) != 0) {
-      fprintf(stderr, "Failed to close %s: %s\n", filenames, strerror(errno));
+      GENERICLOGGER_ERRORF(NULL, "Failed to close %s: %s", filenames, strerror(errno));
     }
   }
   if (tconvp != (tconv_t)-1) {
     if (tconv_close(tconvp) != 0) {
-      fprintf(stderr, "Failed to close tconv: %s\n", strerror(errno));
+      GENERICLOGGER_ERRORF(NULL, "Failed to close tconv: %s", strerror(errno));
     }
   }
   if (outbuforigp != NULL) {
@@ -366,7 +386,7 @@ static void _usage(char *argv0, short helpb)
 {
   printf("Usage:\n"
 	 "  %s [-b numberOfBytes] [-f fromcode] [-o filename] -t tocode "
-	 "[-FhTuV"
+	 "[-FghuV"
 #ifndef TCONV_NTRACE
 	 "v"
 #endif
@@ -387,8 +407,8 @@ static void _usage(char *argv0, short helpb)
     printf("  Options without argument:\n");
     printf("\n");
     printf("  -F, --from-print            Print original code set.\n");
+    printf("  -g, --guess                 Print codeset guess. Shortcut for -F -o \"\", having precedence the laters.\n");
     printf("  -h, --help                  Print this help and exit.\n");
-    printf("  -T, --to-print              Print destination code set.\n");
     printf("  -u, --usage                 Print usage and exit.\n");
     printf("  -V, --version               Print version and exit.\n");
 #ifndef TCONV_NTRACE
@@ -406,6 +426,9 @@ static void _usage(char *argv0, short helpb)
     printf("\n");
     printf("  Print and validate the guessed encoding of a file\n", argv0);
     printf("  %s -o \"\" -F input\n");
+    printf("\n");
+    printf("  Print charset guess of all input files\n", argv0);
+    printf("  %s -g *\n");
   }
 }
 
