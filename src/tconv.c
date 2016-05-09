@@ -19,11 +19,6 @@ static TCONV_C_INLINE void _tconvTraceCallbackProxy(void *userDatavp, genericLog
 #define TCONV_ENV_CHARSET "TCONV_ENV_CHARSET"
 #define TCONV_ENV_CONVERT "TCONV_ENV_CONVERT"
 
-/* Default options for built-ins */
-static tconv_charset_ICU_option_t tconv_charset_ICU_option_default = { 10 };
-static tconv_charset_ICU_option_t tconv_charset_cchardet_option_default = { 10 };
-
-
 /* Internal structure */
 struct tconv {
   /* 1. trace */
@@ -314,10 +309,6 @@ TCONV_EXPORT tconv_t tconv_open_ext(const char *tocodes, const char *fromcodes, 
         tconvp->charsetExternal.tconv_charset_runp  = tconv_charset_ICU_run;
         tconvp->charsetExternal.tconv_charset_freep = tconv_charset_ICU_free;
         tconvp->charsetExternal.optionp             = tconvOptionp->charsetp->u.cchardetOptionp;
-        if (tconvp->charsetExternal.optionp == NULL) {
-          TCONV_TRACE(tconvp, "%s - setting default charset detector ICU option", funcs);
-          tconvp->charsetExternal.optionp = &tconv_charset_ICU_option_default;
-        }
 #endif
         break;
       case TCONV_CHARSET_CCHARDET:
@@ -326,10 +317,6 @@ TCONV_EXPORT tconv_t tconv_open_ext(const char *tocodes, const char *fromcodes, 
         tconvp->charsetExternal.tconv_charset_runp  = tconv_charset_cchardet_run;
         tconvp->charsetExternal.tconv_charset_freep = tconv_charset_cchardet_free;
         tconvp->charsetExternal.optionp             = tconvOptionp->charsetp->u.ICUOptionp;
-        if (tconvp->charsetExternal.optionp == NULL) {
-          TCONV_TRACE(tconvp, "%s - setting default charset detector cchardet option", funcs);
-          tconvp->charsetExternal.optionp = &tconv_charset_cchardet_option_default;
-        }
         break;
       default:
         TCONV_TRACE(tconvp, "%s - charset detector type is unknown", funcs);
@@ -377,7 +364,7 @@ TCONV_EXPORT tconv_t tconv_open_ext(const char *tocodes, const char *fromcodes, 
         tconvp->convertExternal.optionp             = tconvOptionp->convertp->u.plugin.optionp;
         break;
       case TCONV_CONVERT_ICU:
-#ifdef TCONV_HAVE_ICUJDD
+#ifdef TCONV_HAVE_ICU
         TCONV_TRACE(tconvp, "%s - converter type is built-in ICU", funcs);
         tconvp->convertExternal.tconv_convert_newp  = tconv_convert_ICU_new;
         tconvp->convertExternal.tconv_convert_runp  = tconv_convert_ICU_run;
@@ -563,7 +550,7 @@ static TCONV_C_INLINE short _tconvDefaultCharsetOption(tconv_t tconvp, tconv_cha
   if  (strcmp(charsets, "ICU") == 0) {
 #ifdef TCONV_HAVE_ICU
     TCONV_TRACE(tconvp, "%s - setting default charset detector to ICU", funcs);
-    tconvCharsetExternalp->optionp             = &tconv_charset_ICU_option_default;
+    tconvCharsetExternalp->optionp             = NULL;
     tconvCharsetExternalp->tconv_charset_newp  = tconv_charset_ICU_new;
     tconvCharsetExternalp->tconv_charset_runp  = tconv_charset_ICU_run;
     tconvCharsetExternalp->tconv_charset_freep = tconv_charset_ICU_free;
@@ -572,7 +559,7 @@ static TCONV_C_INLINE short _tconvDefaultCharsetOption(tconv_t tconvp, tconv_cha
 #endif
   } else if (strcmp(charsets, "CCHARDET") == 0) {
     TCONV_TRACE(tconvp, "%s - setting default charset detector to cchardet", funcs);
-    tconvCharsetExternalp->optionp             = &tconv_charset_cchardet_option_default;
+    tconvCharsetExternalp->optionp             = NULL;
     tconvCharsetExternalp->tconv_charset_newp  = tconv_charset_cchardet_new;
     tconvCharsetExternalp->tconv_charset_runp  = tconv_charset_cchardet_run;
     tconvCharsetExternalp->tconv_charset_freep = tconv_charset_cchardet_free;
