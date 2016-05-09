@@ -7,6 +7,12 @@
 /* Because this is a built-in, it can take advantage of TCONV_TRACE macro */
 #include "tconv_config.h"
 
+static tconv_charset_cchardet_option_t tconv_charset_cchardet_option_default = {
+  10.0f
+};
+
+#define TCONV_ENV_CHARSET_CCHARDET_CONFIDENCE "TCONV_ENV_CHARSET_CCHARDET_CONFIDENCE"
+
 typedef struct tconv_charset_cchardet_context {
   float            confidencef;
   csd_t            csdp;
@@ -18,8 +24,10 @@ void *tconv_charset_cchardet_new(tconv_t tconvp, void *voidp)
 {
   static const char                 funcs[] = "tconv_charset_cchardet_new";
   tconv_charset_cchardet_option_t  *optionp  = (tconv_charset_cchardet_option_t *) voidp;
+  float                             confidencef;
   tconv_charset_cchardet_context_t *contextp;
   csd_t                             csdp;
+  char                             *p;
 
   TCONV_TRACE(tconvp, "%s(%p, %p)", funcs, tconvp, voidp);
 
@@ -30,14 +38,26 @@ void *tconv_charset_cchardet_new(tconv_t tconvp, void *voidp)
     goto err;
   }
   TCONV_TRACE(tconvp, "%s - malloc(%lld) success: %p", funcs, (unsigned long long) sizeof(tconv_charset_cchardet_context_t), contextp);
-  contextp->confidencef    = 0.0f;
   contextp->csdp           = NULL;
 
-  if (optionp == NULL) {
-    TCONV_TRACE(tconvp, "%s - option is NULL", funcs);
-    errno = EINVAL;
-    goto err;
+  if (optionp != NULL) {
+    TCONV_TRACE(tconvp, "%s - getting confidence level from option", funcs);
+    confidencef = optionp->confidencef;
+  } else {
+    /* Environment variable ? */
+    TCONV_TRACE(tconvp, "%s - getenv(\"%s\")", funcs, TCONV_ENV_CHARSET_CCHARDET_CONFIDENCE);
+    p = getenv(TCONV_ENV_CHARSET_CCHARDET_CONFIDENCE);
+    if (p != NULL) {
+      TCONV_TRACE(tconvp, "%s - getting confidence level from environment: \"%s\"", funcs, p);
+      confidencef = (float) atof(p);
+    } else {
+      /* No, then default */
+      TCONV_TRACE(tconvp, "%s - applying default confidence level", funcs);
+      confidencef = tconv_charset_cchardet_option_default.confidencef;
+    }
   }
+
+  TCONV_TRACE(tconvp, "%s - options are {confidencef=%f}", funcs, confidencef);
 
   TCONV_TRACE(tconvp, "%s - csd_open()", funcs);
   csdp = csd_open();
@@ -48,8 +68,7 @@ void *tconv_charset_cchardet_new(tconv_t tconvp, void *voidp)
     TCONV_TRACE(tconvp, "%s - csd_open() success: %p", funcs, csdp);
   }
 
-  TCONV_TRACE(tconvp, "%s - confidence level set to %f", funcs, optionp->confidencef);
-  contextp->confidencef    = optionp->confidencef;
+  contextp->confidencef    = confidencef;
   contextp->csdp           = csdp;
 
   TCONV_TRACE(tconvp, "%s - return %p", funcs, contextp);
