@@ -27,6 +27,7 @@ SET (TCONV_VERSION "${TCONV_VERSION_MAJOR}.${TCONV_VERSION_MINOR}.${TCONV_VERSIO
 SET (CMAKE_MODULE_PATH              ${PROJECT_SOURCE_DIR}/cmake)           # General module search path
 SET (INCLUDE_OUTPUT_PATH            ${PROJECT_SOURCE_DIR}/output/include)  # General include output path
 SET (LIBRARY_OUTPUT_PATH            ${PROJECT_SOURCE_DIR}/output/lib)      # General library output path
+SET (BINARY_OUTPUT_PATH             ${PROJECT_SOURCE_DIR}/output/bin)      # General binary output path
 SET (3RDPARTY_OUTPUT_PATH           ${PROJECT_SOURCE_DIR}/output/3rdparty) # General 3rdparty output path
 
 # For all outputs directories
@@ -273,11 +274,11 @@ ADD_DEPENDENCIES(tconv tconvConfig tconvExport)
 ADD_EXECUTABLE(tconvExec bin/tconv.c)
 SET_TARGET_PROPERTIES(tconvExec PROPERTIES
   OUTPUT_NAME                             "tconv"
-  RUNTIME_OUTPUT_DIRECTORY                "${LIBRARY_OUTPUT_PATH}"
-  RUNTIME_OUTPUT_DIRECTORY_DEBUG          "${LIBRARY_OUTPUT_PATH}"
-  RUNTIME_OUTPUT_DIRECTORY_RELEASE        "${LIBRARY_OUTPUT_PATH}"
-  RUNTIME_OUTPUT_DIRECTORY_MINSIZEREL     "${LIBRARY_OUTPUT_PATH}"
-  RUNTIME_OUTPUT_DIRECTORY_RELWITHDEBINFO "${LIBRARY_OUTPUT_PATH}"
+  RUNTIME_OUTPUT_DIRECTORY                "${BINARY_OUTPUT_PATH}"
+  RUNTIME_OUTPUT_DIRECTORY_DEBUG          "${BINARY_OUTPUT_PATH}"
+  RUNTIME_OUTPUT_DIRECTORY_RELEASE        "${BINARY_OUTPUT_PATH}"
+  RUNTIME_OUTPUT_DIRECTORY_MINSIZEREL     "${BINARY_OUTPUT_PATH}"
+  RUNTIME_OUTPUT_DIRECTORY_RELWITHDEBINFO "${BINARY_OUTPUT_PATH}"
   INSTALL_RPATH                           "${CMAKE_INSTALL_PREFIX}/lib"
   INSTALL_RPATH_USE_LINK_PATH             TRUE
 )
@@ -300,7 +301,8 @@ ADD_TEST (NAME tconvTest
           WORKING_DIRECTORY "${LIBRARY_OUTPUT_PATH}")
 ADD_CUSTOM_TARGET (check COMMAND ${CMAKE_CTEST_COMMAND} DEPENDS tconvExec)
 #
-# Please note that test is likely to fail if libraries are not already in your path
+# Please note that test is likely to fail if libraries are not already in your path.
+# This is why the working directory is "${LIBRARY_OUTPUT_PATH}".
 # (I did not want to play with PATH/LD_LIBRARY_PATH/etc within cmake)
 #
 # -------
