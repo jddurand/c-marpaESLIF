@@ -297,7 +297,7 @@ TARGET_LINK_LIBRARIES(tconvExec tconv "${GENERICLOGGER_LINK_FLAGS}" "${ICU_LINK_
 # -----
 ENABLE_TESTING()
 ADD_TEST (NAME tconvTest
-          COMMAND tconv -t UTF-16 -o tconv.tconv-UTF-16.c "${PROJECT_SOURCE_DIR}/src/tconv.c"
+          COMMAND ../bin/tconv -t UTF-16 -o tconv.tconv-UTF-16.c "${PROJECT_SOURCE_DIR}/src/tconv.c"
           WORKING_DIRECTORY "${LIBRARY_OUTPUT_PATH}")
 ADD_CUSTOM_TARGET (check COMMAND ${CMAKE_CTEST_COMMAND} DEPENDS tconvExec)
 #
