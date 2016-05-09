@@ -7,6 +7,12 @@
 /* Because this is a built-in, it can take advantage of TCONV_TRACE macro */
 #include "tconv_config.h"
 
+static tconv_charset_ICU_option_t tconv_charset_ICU_option_default = {
+  10
+};
+
+#define TCONV_ENV_CHARSET_ICU_CONFIDENCE "TCONV_ENV_CHARSET_ICU_CONFIDENCE"
+
 typedef struct tconv_charset_ICU_context {
   int               confidencei;
   UCharsetDetector *uCharsetDetectorp;
@@ -22,6 +28,8 @@ void *tconv_charset_ICU_new(tconv_t tconvp, void *voidp)
   UCharsetDetector            *uCharsetDetectorp;
   UErrorCode                   uErrorCode;
   const char                  *errors;
+  int                          confidencei;
+  char                        *p;
 
   TCONV_TRACE(tconvp, "%s(%p, %p)", funcs, tconvp, voidp);
 
@@ -35,11 +43,24 @@ void *tconv_charset_ICU_new(tconv_t tconvp, void *voidp)
   contextp->confidencei       = 0;
   contextp->uCharsetDetectorp = NULL;
 
-  if (optionp == NULL) {
-    TCONV_TRACE(tconvp, "%s - option is NULL", funcs);
-    errno = EINVAL;
-    goto err;
+  if (optionp != NULL) {
+    TCONV_TRACE(tconvp, "%s - getting confidence level from option", funcs);
+    confidencei = optionp->confidencei;
+  } else {
+    /* Environment variable ? */
+    TCONV_TRACE(tconvp, "%s - getenv(\"%s\")", funcs, TCONV_ENV_CHARSET_ICU_CONFIDENCE);
+    p = getenv(TCONV_ENV_CHARSET_ICU_CONFIDENCE);
+    if (p != NULL) {
+      TCONV_TRACE(tconvp, "%s - getting confidence level from environment: \"%s\"", funcs, p);
+      confidencei = atoi(p);
+    } else {
+      /* No, then default */
+      TCONV_TRACE(tconvp, "%s - getting confidence level from default", funcs);
+      confidencei = tconv_charset_ICU_option_default.confidencei;
+    }
   }
+
+  TCONV_TRACE(tconvp, "%s - options are {confidencei=%d}", funcs, confidencei);
 
   uErrorCode = U_ZERO_ERROR;
   TCONV_TRACE(tconvp, "%s - ucsdet_open(%p)", funcs, &uErrorCode);
@@ -52,8 +73,7 @@ void *tconv_charset_ICU_new(tconv_t tconvp, void *voidp)
   }
   TCONV_TRACE(tconvp, "%s - ucsdet_open(%p) success: %p", funcs, &uErrorCode, uCharsetDetectorp);
 
-  TCONV_TRACE(tconvp, "%s - confidence level set to %d", funcs, optionp->confidencei);
-  contextp->confidencei       = optionp->confidencei;
+  contextp->confidencei       = confidencei;
   contextp->uCharsetDetectorp = uCharsetDetectorp;
 
   TCONV_TRACE(tconvp, "%s - return %p", funcs, contextp);
