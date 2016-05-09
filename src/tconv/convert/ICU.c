@@ -146,33 +146,52 @@ void  *tconv_convert_ICU_new(tconv_t tconvp, const char *tocodes, const char *fr
   /* ----------------------------------------------------------- */
   /* Get options                                                 */
   /* ----------------------------------------------------------- */
-  if (optionp == NULL) {
-    optionp = &tconv_convert_icu_option_default;
+  if (optionp != NULL) {
+    TCONV_TRACE(tconvp, "%s - getting uChar capacity level from option", funcs);
+    uCharCapacityl = optionp->uCharCapacityl;
+    TCONV_TRACE(tconvp, "%s - getting fallback option from option", funcs);
+    fallbackb      = (optionp->fallbackb !=0 ) ? TRUE : FALSE;
+    TCONV_TRACE(tconvp, "%s - getting signature option from option", funcs);
+    signaturei     = (optionp->signaturei < 0) ? -1 : ((optionp->signaturei > 0) ? 1 : 0);
+  } else {
+    TCONV_TRACE(tconvp, "%s - getenv(\"%s\")", funcs, TCONV_ENV_CONVERT_ICU_UCHARCAPACITY);
+    p = getenv(TCONV_ENV_CONVERT_ICU_UCHARCAPACITY);
+    if (p != NULL) {
+      TCONV_TRACE(tconvp, "%s - getting uChar capacity level from environment: \"%s\"", funcs, p);
+      uCharCapacityl = atoi(p);
+    } else {
+      TCONV_TRACE(tconvp, "%s - getting uChar capacity level from default", funcs);
+      uCharCapacityl = tconv_convert_icu_option_default.uCharCapacityl;
+    }
+
+    TCONV_TRACE(tconvp, "%s - getenv(\"%s\")", funcs, TCONV_ENV_CONVERT_ICU_FALLBACK);
+    p = getenv(TCONV_ENV_CONVERT_ICU_FALLBACK);
+    if (p != NULL) {
+      TCONV_TRACE(tconvp, "%s - getting fallback option from environment: \"%s\"", funcs, p);
+      fallbackb = (atoi(p) != 0) ? TRUE : FALSE;
+    } else {
+      TCONV_TRACE(tconvp, "%s - getting fallback option from default", funcs);
+      fallbackb = (tconv_convert_icu_option_default.fallbackb != 0) ? TRUE : FALSE;
+    }
+
+    TCONV_TRACE(tconvp, "%s - getenv(\"%s\")", funcs, TCONV_ENV_CONVERT_ICU_SIGNATURE);
+    p = getenv(TCONV_ENV_CONVERT_ICU_SIGNATURE);
+    if (p != NULL) {
+      int i;
+      TCONV_TRACE(tconvp, "%s - getting signature option from environment: \"%s\"", funcs, p);
+      i = atoi(p);
+      signaturei = (i < 0) ? -1 : ((i > 0) ? 1 : 0);
+    } else {
+      TCONV_TRACE(tconvp, "%s - getting signature option from default", funcs);
+      signaturei = tconv_convert_icu_option_default.signaturei;
+    }
   }
 
-  uCharCapacityl = optionp->uCharCapacityl;
-  fallbackb      = (optionp->fallbackb !=0 ) ? TRUE : FALSE;
-  signaturei     = (optionp->signaturei < 0) ? -1 : ((optionp->signaturei > 0) ? 1 : 0);
-
-  /* These can be overwriten with environment variables */
-  p = getenv(TCONV_ENV_CONVERT_ICU_UCHARCAPACITY);
-  if (p != NULL) {
-    uCharCapacityl = atoi(p);
-  }
   if (uCharCapacityl <= 0) {
     errno = EINVAL;
     goto err;
   }
-  p = getenv(TCONV_ENV_CONVERT_ICU_FALLBACK);
-  if (p != NULL) {
-    fallbackb = (atoi(p) != 0) ? TRUE : FALSE;
-  }
-  p = getenv(TCONV_ENV_CONVERT_ICU_SIGNATURE);
-  if (p != NULL) {
-    int i;
-    i = atoi(p);
-    signaturei = (i < 0) ? -1 : ((i > 0) ? 1 : 0);
-  }
+
   TCONV_TRACE(tconvp, "%s - options are {uCharCapacityl=%lld, fallbackb=%s, signaturei=%d}", funcs, (unsigned long long) uCharCapacityl, (fallbackb == TRUE) ? "TRUE" : "FALSE", signaturei);
 
   /* ----------------------------------------------------------- */
