@@ -59,6 +59,7 @@ static void traceCallback(void *userDatavp, const char *msgs);
 #endif
 static void fileconvert(int outputFd, char *filenames,
 			char *tocodes, char *fromcodes,
+                        tconv_convert_t *convertp, tconv_charset_t *charsetp,
 			short guessb,
 			size_t bufsizel,
 			short fromPrintb
@@ -71,32 +72,37 @@ static void fileconvert(int outputFd, char *filenames,
 int main(int argc, char **argv)
 /*****************************************************************************/
 {
-  int                  longindex  = 0;
+  int                  longindex      = 0;
+  short                doneSomethingb = 0;
 
-  short                fromPrintb = 0;
-  char                *fromcodes  = NULL;
-  short                guessb     = 0;
-  short                helpb      = 0;
-  char                *outputs    = NULL;
-  size_t              bufsizel    = BUFSIZ;
-  char                *tocodes    = NULL;
-  short                usageb     = 0;
+  short                fromPrintb     = 0;
+  char                *fromcodes      = NULL;
+  short                guessb         = 0;
+  char                *charsetEngines = NULL;
+  char                *convertEngines = NULL;
+  short                helpb          = 0;
+  char                *outputs        = NULL;
+  size_t              bufsizel        = BUFSIZ;
+  char                *tocodes        = NULL;
+  short                usageb         = 0;
 #ifndef TCONV_NTRACE
-  short                verbose    = 0;
+  short                verbose        = 0;
 #endif
   struct optparse_long longopts[] = {
-    {  "bufsize",  'b', OPTPARSE_REQUIRED},
-    {"from-code",  'f', OPTPARSE_REQUIRED},
-    {"from-print", 'F', OPTPARSE_OPTIONAL},
-    {     "guess", 'g', OPTPARSE_OPTIONAL},
-    {     "help",  'h', OPTPARSE_OPTIONAL},
-    {   "output",  'o', OPTPARSE_REQUIRED},
-    {  "to-code",  't', OPTPARSE_REQUIRED},
-    {    "usage",  'u', OPTPARSE_OPTIONAL},
+    {       "bufsize", 'b', OPTPARSE_REQUIRED},
+    {"convert-engine", 'C', OPTPARSE_REQUIRED},
+    {     "from-code", 'f', OPTPARSE_REQUIRED},
+    {    "from-print", 'F', OPTPARSE_OPTIONAL},
+    {         "guess", 'g', OPTPARSE_OPTIONAL},
+    {"charset-engine", 'G', OPTPARSE_REQUIRED},
+    {          "help", 'h', OPTPARSE_OPTIONAL},
+    {        "output", 'o', OPTPARSE_REQUIRED},
+    {       "to-code", 't', OPTPARSE_REQUIRED},
+    {         "usage", 'u', OPTPARSE_OPTIONAL},
 #ifndef TCONV_NTRACE
-    {  "verbose",  'v', OPTPARSE_OPTIONAL},
+    {       "verbose", 'v', OPTPARSE_OPTIONAL},
 #endif
-    {  "version",  'V', OPTPARSE_OPTIONAL},
+    {       "version", 'V', OPTPARSE_OPTIONAL},
     {0}
   };
 
@@ -104,6 +110,10 @@ int main(int argc, char **argv)
   int                  outputFd;
   int                  option;
   struct optparse      options;
+  tconv_charset_t      *charsetp = NULL;
+  tconv_charset_t       charset;
+  tconv_convert_t      *convertp = NULL;
+  tconv_convert_t       convert;
 
   optparse_init(&options, argv);
   while ((option = optparse_long(&options, longopts, &longindex)) != -1) {
@@ -111,17 +121,47 @@ int main(int argc, char **argv)
     case 'b':
       bufsizel = atoi(options.optarg);
       break;
+    case 'C':
+      convertEngines = options.optarg;
+      if (strcmp(convertEngines, "ICU") == 0) {
+        convert.converti = TCONV_CONVERT_ICU;
+        convert.u.ICUOptionp = NULL;
+      } else if (strcmp(convertEngines, "ICONV") == 0) {
+        convert.converti = TCONV_CONVERT_ICONV;
+        convert.u.iconvOptionp = NULL;
+      } else {
+        convert.converti = TCONV_CONVERT_PLUGIN;
+        convert.u.plugin.optionp = NULL;
+        convert.u.plugin.filenames = convertEngines;
+      }
+      convertp = &convert;
+      break;
     case 'f':
       fromcodes = options.optarg;
       break;
     case 'F':
       fromPrintb = 1;
       break;
-    case 'h':
-      helpb = 1;
-      break;
     case 'g':
       guessb = 1;
+      break;
+    case 'G':
+      charsetEngines = options.optarg;
+      if (strcmp(charsetEngines, "ICU") == 0) {
+        charset.charseti = TCONV_CHARSET_ICU;
+        charset.u.ICUOptionp = NULL;
+      } else if (strcmp(charsetEngines, "CCHARDET") == 0) {
+        charset.charseti = TCONV_CHARSET_CCHARDET;
+        charset.u.cchardetOptionp = NULL;
+      } else {
+        charset.charseti = TCONV_CHARSET_PLUGIN;
+        charset.u.plugin.optionp = NULL;
+        charset.u.plugin.filenames = charsetEngines;
+      }
+      charsetp = &charset;
+      break;
+    case 'h':
+      helpb = 1;
       break;
     case 'o':
       outputs = options.optarg;
@@ -183,8 +223,10 @@ int main(int argc, char **argv)
   }
 
   while ((args = optparse_arg(&options)) != NULL) {
+    doneSomethingb = 1;
     fileconvert(outputFd, args,
 		tocodes, fromcodes,
+                convertp, charsetp,
 		guessb,
 		bufsizel,
 		fromPrintb
@@ -194,10 +236,15 @@ int main(int argc, char **argv)
 		);
   }
 
-  if (outputFd >= 0) {
+  if ((outputFd >= 0) && (outputFd != fileno(stdout))) {
     if (close(outputFd) != 0) {
       GENERICLOGGER_ERRORF(NULL, "Failed to close %s: %s", outputs, strerror(errno));
     }
+  }
+
+  if (doneSomethingb == 0) {
+    /* Nothing processed ? */
+    _usage(argv[0], 0);
   }
 
   exit(EXIT_SUCCESS);
@@ -206,6 +253,7 @@ int main(int argc, char **argv)
 /*****************************************************************************/
 static void fileconvert(int outputFd, char *filenames,
 			char *tocodes, char *fromcodes,
+                        tconv_convert_t *convertp, tconv_charset_t *charsetp,
 			short guessb,
 			size_t bufsizel,
 			short fromPrintb
@@ -218,7 +266,7 @@ static void fileconvert(int outputFd, char *filenames,
   char           *inbuforigp  = NULL;
   char           *outbuforigp = NULL;
   size_t          outsizel = bufsizel;
-  tconv_t         tconvp = NULL;
+  tconv_t         tconvp = (tconv_t)-1;
   int             fd;
   tconv_option_t  tconvOption;
   size_t          nconvl;
@@ -248,8 +296,8 @@ static void fileconvert(int outputFd, char *filenames,
     goto end;
   }
 
-  tconvOption.charsetp = NULL;
-  tconvOption.convertp = NULL;
+  tconvOption.charsetp = charsetp;
+  tconvOption.convertp = convertp;
   tconvOption.traceCallbackp =
 #ifndef TCONV_NTRACE
     (verbose != 0) ? traceCallback :
@@ -349,11 +397,6 @@ static void fileconvert(int outputFd, char *filenames,
     }
   }
 
-  if (tconv_close(tconvp) != 0) {
-    GENERICLOGGER_ERRORF(NULL, "Failed to close tconv: %s", strerror(errno));
-  }
-  tconvp = NULL;
-
   end:
   if (fd >= 0) {
     if (close(fd) != 0) {
@@ -385,12 +428,12 @@ static void _usage(char *argv0, short helpb)
 /*****************************************************************************/
 {
   printf("Usage:\n"
-	 "  %s [-b numberOfBytes] [-f fromcode] [-o filename] -t tocode "
-	 "[-FghuV"
+	 "  %s [-f fromcode] [-o filename] -t tocode "
+	 "[-bCFGgGuV"
 #ifndef TCONV_NTRACE
 	 "v"
 #endif
-	 "] input...\n"
+	 "] [--help] input...\n"
 	 ,
 	 argv0
 	 );
@@ -398,10 +441,12 @@ static void _usage(char *argv0, short helpb)
     printf("\n");
     printf("  Options with arguments:\n");
     printf("\n");
-    printf("  -b, --bufsize   BUFSIZE     Internal buffer size.       Default: %d. Must be > 0.\n", (int) BUFSIZ);
-    printf("  -f, --from-code FROM-CODE   Original code set.          Default: guessed from first read buffer.\n");
-    printf("  -o, --output    OUTPUT      Output filename.            Default: standard output. An empty value disables output.\n");
-    printf("  -t, --to-code   TO-CODE     Destination code set.       Default: FROM-CODE.\n");
+    printf("  -b, --bufsize        BUFSIZE    Internal buffer size.     Default: %d. Must be > 0.\n", (int) BUFSIZ);
+    printf("  -C, --convert-engine ENGINE     Convertion engine.        Default: tconv default (see notes below).\n");
+    printf("  -f, --from-code      FROM-CODE  Original code set.        Default: guessed from first read buffer.\n");
+    printf("  -G, --charset-engine ENGINE     Charset detection engine. Default: tconv default (see notes below).\n");
+    printf("  -o, --output         OUTPUT     Output filename.          Default: standard output. An empty value disables output.\n");
+    printf("  -t, --to-code        TO-CODE    Destination code set.     Default: FROM-CODE.\n");
     printf("\n");
 
     printf("  Options without argument:\n");
@@ -429,6 +474,19 @@ static void _usage(char *argv0, short helpb)
     printf("\n");
     printf("  Print charset guess of all input files\n");
     printf("  %s -g *\n", argv0);
+    printf("\n");
+    printf("NOTES\n");
+    printf("- The default convert engine is ICU if tconv has been compiled with it, else iconv if it has been compiled with it, else none.\n");
+    printf("  If the --convert-engine option value is \"ICU\", tconv is forced to use ICU, and will fail if it does not have this support.\n");
+    printf("  Similarly for iconv, if the option value is \"ICONV\".\n");
+    printf("  Any other option value will be considered like a path to a plugin, that will be loaded dynamically. Up to the plugin to be able to get options via, eventually, environment variables.\n");
+    printf("\n");
+    printf("- The default charset detection engine is cchardet and is always available. tconv optionally have support of ICU charset detection engine if it has been compiled with it.\n");
+    printf("  If the --charset-engine option value is \"CCHARDET\", tconv will use cchardet.\n");
+    printf("  If the option value is \"ICU\", tconv is forced to use ICU, and will fail if it does have this support.\n");
+    printf("  Alike the convert engine, any other option value will be considered like a path to a plugin, same remark as above for the plugin option.\n");
+    printf("\n");
+    printf("This help has been generated by tconv version %s.\n", TCONV_VERSION);
   }
 }
 
