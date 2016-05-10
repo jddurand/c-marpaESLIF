@@ -428,7 +428,7 @@ static void _usage(char *argv0, short helpb)
 /*****************************************************************************/
 {
   printf("Usage:\n"
-	 "  %s [-f fromcode] [-o filename] -t tocode "
+	 "  %s [-f FROM-CODE] [-o OUTPUT] -t TO-CODE "
 	 "[-bCFGgGuV"
 #ifndef TCONV_NTRACE
 	 "v"
@@ -452,7 +452,7 @@ static void _usage(char *argv0, short helpb)
     printf("  Options without argument:\n");
     printf("\n");
     printf("  -F, --from-print            Print original code set.\n");
-    printf("  -g, --guess                 Print codeset guess. Shortcut for -F -o \"\", having precedence the laters.\n");
+    printf("  -g, --guess                 Print codeset guess. Shortcut for -F -o \"\", though having precedence to the laters.\n");
     printf("  -h, --help                  Print this help and exit.\n");
     printf("  -u, --usage                 Print usage and exit.\n");
     printf("  -V, --version               Print version and exit.\n");
