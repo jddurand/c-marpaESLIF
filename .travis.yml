@@ -1,0 +1,6 @@
+language: c
+before_script:
+  - cmake .
+script:
+  - make check
+  - sudo make install
