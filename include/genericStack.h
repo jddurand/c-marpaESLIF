@@ -14,7 +14,7 @@
 /* a C layer. This version does not have these two constraints.        */
 /* By default it is restricted to ANSI-C data type, nevertheless       */
 /* adding others is as trivial as looking into e.g. long long below.   */
-/* Please note that, if the data can typecast to the stack, no warning */
+/* Please note that, IF the data typecast to the stack, no warning.    */
 
 /* Define GENERICSTACK_C99 to have C99 data type */
 
@@ -98,8 +98,14 @@ typedef struct genericStack {
   genericStackItem_t *items;
 } genericStack_t;
 
+/* ====================================================================== */
+/* Declaration                                                            */
+/* ====================================================================== */
 #define GENERICSTACK_DECL(stackName) genericStack_t * stackName
 
+/* ====================================================================== */
+/* Initialization                                                         */
+/* ====================================================================== */
 #define GENERICSTACK_NEW(stackName) do {				\
     stackName = malloc(sizeof(genericStack_t));                         \
     stackName->size = 0;                                                \
@@ -113,19 +119,56 @@ typedef struct genericStack {
     stackName->items = malloc(sizeof(genericStackItem_t) * (stackName->size = _size)); \
   } while (0)
 
-#define GENERICSTACK_EXTEND(stackName) do {                             \
+/* ====================================================================== */
+/* Size management, internal macro                                        */
+/* ====================================================================== */
+#define _GENERICSTACK_EXTEND(stackName) do {                            \
     if (stackName->used > stackName->size) {                            \
       stackName->items = (stackName->items != NULL) ? realloc(stackName->items, sizeof(genericStackItem_t) * stackName->used) : malloc(sizeof(genericStackItem_t) * stackName->used); \
       stackName->size = stackName->used;                                \
     }									\
   } while (0)
 
+/* ====================================================================== */
+/* SET interface                                                          */
+/* ====================================================================== */
+/* stackName is expected to an identifier                                 */
+/* index is used more than once, so it has to be cached                   */
+#define GENERICSTACK_SET_BASIC_TYPE(stackName, varType, var, itemType, dst, index) do { \
+    size_t _index_for_set = index;                                      \
+    if (_index_for_set >= stackName->used) {                            \
+      stackName->used = _index_for_set + 1;                             \
+      _GENERICSTACK_EXTEND(stackName);                                  \
+    }                                                                   \
+    stackName->items[_index_for_set].type = (itemType);                 \
+    stackName->items[_index_for_set].u.dst = (varType) (var);           \
+  } while (0)
+
+#define GENERICSTACK_SET_CHAR(stackName, var, index) GENERICSTACK_SET_BASIC_TYPE(stackName, char,   var, GENERICSTACKITEMTYPE_CHAR, c, index)
+#define GENERICSTACK_SET_SHORT(stackName, var, index)  GENERICSTACK_SET_BASIC_TYPE(stackName, short,  var, GENERICSTACKITEMTYPE_SHORT, s, index)
+#define GENERICSTACK_SET_INT(stackName, var, index)    GENERICSTACK_SET_BASIC_TYPE(stackName, int,    var, GENERICSTACKITEMTYPE_INT, i, index)
+#define GENERICSTACK_SET_LONG(stackName, var, index)   GENERICSTACK_SET_BASIC_TYPE(stackName, long,   var, GENERICSTACKITEMTYPE_LONG, l, index)
+#define GENERICSTACK_SET_FLOAT(stackName, var, index)  GENERICSTACK_SET_BASIC_TYPE(stackName, float,  var, GENERICSTACKITEMTYPE_FLOAT, f, index)
+#define GENERICSTACK_SET_DOUBLE(stackName, var, index) GENERICSTACK_SET_BASIC_TYPE(stackName, double, var, GENERICSTACKITEMTYPE_DOUBLE, d, index)
+#define GENERICSTACK_SET_PTR(stackName, var, index)    GENERICSTACK_SET_BASIC_TYPE(stackName, void *, var, GENERICSTACKITEMTYPE_PTR, p, index)
+#if GENERICSTACK_HAVE_LONG_LONG > 0
+#define GENERICSTACK_SET_LONG_LONG(stackName, var, index) GENERICSTACK_SET_BASIC_TYPE(stackName, long long, var, GENERICSTACKITEMTYPE_LONG_LONG, ll, index)
+#endif
+#if GENERICSTACK_HAVE__BOOL > 0
+#define GENERICSTACK_SET__BOOL(stackName, var, index) GENERICSTACK_SET_BASIC_TYPE(stackName, _Bool, var, GENERICSTACKITEMTYPE_LONG_LONG, b, index)
+#endif
+#if GENERICSTACK_HAVE__COMPLEX > 0
+#define GENERICSTACK_SET_FLOAT__COMPLEX(stackName, var, index) GENERICSTACK_SET_BASIC_TYPE(stackName, float _Complex, var, GENERICSTACKITEMTYPE_LONG_LONG, fc, index)
+#define GENERICSTACK_SET_DOUBLE__COMPLEX(stackName, var, index) GENERICSTACK_SET_BASIC_TYPE(stackName, double _Complex, var, GENERICSTACKITEMTYPE_LONG_LONG, dc, index)
+#define GENERICSTACK_SET_LONG_DOUBLE__COMPLEX(stackName, var, index) GENERICSTACK_SET_BASIC_TYPE(stackName, long double _Complex, var, GENERICSTACKITEMTYPE_LONG_LONG, ldc, index)
+#endif
+
+/* ====================================================================== */
+/* PUSH interface                                                         */
+/* ====================================================================== */
 #define GENERICSTACK_PUSH_BASIC_TYPE(stackName, varType, var, itemType, dst) do { \
-    size_t _i = stackName->used++;                                      \
-									\
-    GENERICSTACK_EXTEND(stackName);                                     \
-    stackName->items[_i].type = (itemType);                             \
-    stackName->items[_i].u.dst = (varType) (var);                       \
+    size_t _index_for_push = stackName->used;                           \
+    GENERICSTACK_SET_BASIC_TYPE(stackName, varType, var, itemType, dst, _index_for_push); \
   } while (0)
 
 #define GENERICSTACK_PUSH_CHAR(stackName, var)   GENERICSTACK_PUSH_BASIC_TYPE(stackName, char,   var, GENERICSTACKITEMTYPE_CHAR, c)
@@ -155,7 +198,7 @@ typedef struct genericStack {
     void *_memcpy = (void (*)()) (memcpyp);				\
     void *_free = (void (*)()) (freefp);				\
     									\
-    GENERICSTACK_EXTEND(stackName);                                     \
+    _GENERICSTACK_EXTEND(stackName);                                    \
     p = (mallocp == NULL) ? malloc(_size) : mallocp(_size);		\
     if (memcpyp == NULL) {                                              \
       memcpy(p, var, _size);                                            \
@@ -171,6 +214,9 @@ typedef struct genericStack {
 									\
   } while (0)
 
+/* ====================================================================== */
+/* POP interface                                                          */
+/* ====================================================================== */
 #define GENERICSTACK_POP_BASIC_TYPE(stackName, src) stackName->items[--stackName->used].u.src
 
 #define GENERICSTACK_POP_CHAR(stackName)   GENERICSTACK_POP_BASIC_TYPE(stackName, c)
@@ -210,6 +256,9 @@ typedef struct genericStack {
     (var) = (type) p;							\
   } while (0)
 
+/* ====================================================================== */
+/* Memory release                                                         */
+/* ====================================================================== */
 #define GENERICSTACK_FREE(stackName) do {				\
     if (stackName->size > 0) {                                          \
       while (stackName->used > 0) {                                     \
