@@ -16,6 +16,8 @@ SET (GENERICSTACK_VERSION ${GENERICSTACK_VERSION_MAJOR}.${GENERICSTACK_VERSION_M
 # ---------
 # Set paths
 # ---------
+SET (CMAKE_MODULE_PATH              ${PROJECT_SOURCE_DIR}/cmake)          # General module search path
+SET (BINARY_OUTPUT_PATH             ${PROJECT_SOURCE_DIR}/output/bin)     # General binary output path
 INCLUDE_DIRECTORIES (${PROJECT_SOURCE_DIR}/include)
 
 # -----
@@ -23,7 +25,8 @@ INCLUDE_DIRECTORIES (${PROJECT_SOURCE_DIR}/include)
 # -----
 ENABLE_TESTING()
 ADD_EXECUTABLE        (genericStackTester       EXCLUDE_FROM_ALL test/genericStack.c)
-ADD_TEST              (NAME genericStackTest    COMMAND genericStackTester)
+SET_TARGET_PROPERTIES (genericStackTester       PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${BINARY_OUTPUT_PATH})
+ADD_TEST              (NAME genericStackTest    COMMAND genericStackTester WORKING_DIRECTORY ${BINARY_OUTPUT_PATH})
 ADD_CUSTOM_TARGET     (check COMMAND ${CMAKE_CTEST_COMMAND} DEPENDS genericStackTester)
 
 # -------

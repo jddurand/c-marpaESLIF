@@ -9,7 +9,33 @@
 /* C generic stack */
 /* =============== */
 
-#define GENERICSTACK_HAVE_LONG_LONG 0
+/* Most of the generic stack implementations either assume that every  */
+/* element is of the same size, or bypass type checking going through  */
+/* a C layer. This version does not have these two constraints.        */
+/* By default it is restricted to ANSI-C data type, nevertheless       */
+/* adding others is as trivial as looking into e.g. long long below.   */
+/* Please note that, if the data can typecast to the stack, no warning */
+
+/* Define GENERICSTACK_C99 to have C99 data type */
+
+#ifdef GENERICSTACK_C99
+#  undef GENERICSTACK_HAVE_LONG_LONG
+#  define GENERICSTACK_HAVE_LONG_LONG 1
+#  undef GENERICSTACK_HAVE__BOOL
+#  define GENERICSTACK_HAVE__BOOL     1
+#  undef GENERICSTACK_HAVE__COMPLEX
+#  define GENERICSTACK_HAVE__COMPLEX  1
+#else
+#  ifndef GENERICSTACK_HAVE_LONG_LONG
+#    define GENERICSTACK_HAVE_LONG_LONG 0
+#  endif
+#  ifndef GENERICSTACK_HAVE__BOOL
+#    define GENERICSTACK_HAVE__BOOL     0
+#  endif
+#  ifndef GENERICSTACK_HAVE__COMPLEX
+#    define GENERICSTACK_HAVE__COMPLEX  0
+#  endif
+#endif
 
 typedef struct genericStackItemAny {
   void *p;
@@ -30,6 +56,14 @@ typedef enum genericStackItemType {
 #if GENERICSTACK_HAVE_LONG_LONG > 0
   GENERICSTACKITEMTYPE_LONG_LONG,
 #endif
+#if GENERICSTACK_HAVE__BOOL > 0
+  GENERICSTACKITEMTYPE__BOOL,
+#endif
+#if GENERICSTACK_HAVE__COMPLEX > 0
+  GENERICSTACKITEMTYPE_FLOAT__COMPLEX,
+  GENERICSTACKITEMTYPE_DOUBLE__COMPLEX,
+  GENERICSTACKITEMTYPE_LONG_DOUBLE__COMPLEX,
+#endif
   GENERICSTACKITEMTYPE_ANY
 } genericStackItemType_t;
 
@@ -44,7 +78,15 @@ typedef struct genericStackItem {
     double d;
     void *p;
 #if GENERICSTACK_HAVE_LONG_LONG > 0
-    long ll;
+    long long ll;
+#endif
+#if GENERICSTACK_HAVE__BOOL > 0
+    _Bool b;
+#endif
+#if GENERICSTACK_HAVE__COMPLEX > 0
+    float _Complex fc;
+    double _Complex dc;
+    long double _Complex ldc;
 #endif
     genericStackItemAny_t any;
   } u;
@@ -96,6 +138,14 @@ typedef struct genericStack {
 #if GENERICSTACK_HAVE_LONG_LONG > 0
 #define GENERICSTACK_PUSH_LONG_LONG(stackName, var) GENERICSTACK_PUSH_BASIC_TYPE(stackName, long long, var, GENERICSTACKITEMTYPE_LONG_LONG, ll)
 #endif
+#if GENERICSTACK_HAVE__BOOL > 0
+#define GENERICSTACK_PUSH__BOOL(stackName, var) GENERICSTACK_PUSH_BASIC_TYPE(stackName, _Bool, var, GENERICSTACKITEMTYPE_LONG_LONG, b)
+#endif
+#if GENERICSTACK_HAVE__COMPLEX > 0
+#define GENERICSTACK_PUSH_FLOAT__COMPLEX(stackName, var) GENERICSTACK_PUSH_BASIC_TYPE(stackName, float _Complex, var, GENERICSTACKITEMTYPE_LONG_LONG, fc)
+#define GENERICSTACK_PUSH_DOUBLE__COMPLEX(stackName, var) GENERICSTACK_PUSH_BASIC_TYPE(stackName, double _Complex, var, GENERICSTACKITEMTYPE_LONG_LONG, dc)
+#define GENERICSTACK_PUSH_LONG_DOUBLE__COMPLEX(stackName, var) GENERICSTACK_PUSH_BASIC_TYPE(stackName, long double _Complex, var, GENERICSTACKITEMTYPE_LONG_LONG, ldc)
+#endif
 
 #define GENERICSTACK_PUSH_ANY(stackName, type, var, mallocp, memcpyp, freep) do { \
     size_t _i = stackName->used++;                                      \
@@ -132,6 +182,14 @@ typedef struct genericStack {
 #define GENERICSTACK_POP_PTR(stackName)    GENERICSTACK_POP_BASIC_TYPE(stackName, p)
 #if GENERICSTACK_HAVE_LONG_LONG > 0
 #define GENERICSTACK_POP_LONG_LONG(stackName)    GENERICSTACK_POP_BASIC_TYPE(stackName, ll)
+#endif
+#if GENERICSTACK_HAVE__BOOL > 0
+#define GENERICSTACK_POP__BOOL(stackName)  GENERICSTACK_POP_BASIC_TYPE(stackName, b)
+#endif
+#if GENERICSTACK_HAVE__COMPLEX > 0
+#define GENERICSTACK_POP_FLOAT__COMPLEX(stackName)       GENERICSTACK_POP_BASIC_TYPE(stackName, fc)
+#define GENERICSTACK_POP_DOUBLE__COMPLEX(stackName)      GENERICSTACK_POP_BASIC_TYPE(stackName, dc)
+#define GENERICSTACK_POP_LONG_DOUBLE__COMPLEX(stackName) GENERICSTACK_POP_BASIC_TYPE(stackName, ldc)
 #endif
 
 #define GENERICSTACK_POP_ANY(stackName, type, var) do {                 \
