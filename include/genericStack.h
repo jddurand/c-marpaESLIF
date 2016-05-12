@@ -37,12 +37,16 @@
 #  endif
 #endif
 
+typedef void *(*genericStackMalloc_t)(size_t size);
+typedef void *(*genericStackMemcpy_t)(void *dst, void *src, size_t size);
+typedef void *(*genericStackFree_t)(void *p);
+
 typedef struct genericStackItemAny {
   void *p;
   size_t size;
-  void *(*malloc)(size_t size);
-  void *(*memcpy)(void *dst, void *src, size_t size);
-  void *(*free)(void *p);
+  genericStackMalloc_t malloc;
+  genericStackMemcpy_t memcpy;
+  genericStackFree_t free;
 } genericStackItemAny_t;
 
 typedef enum genericStackItemType {
@@ -64,7 +68,8 @@ typedef enum genericStackItemType {
   GENERICSTACKITEMTYPE_DOUBLE__COMPLEX,
   GENERICSTACKITEMTYPE_LONG_DOUBLE__COMPLEX,
 #endif
-  GENERICSTACKITEMTYPE_ANY
+  GENERICSTACKITEMTYPE_ANY,
+  _GENERICSTACKITEMTYPE_NA
 } genericStackItemType_t;
 
 typedef struct genericStackItem {
@@ -124,7 +129,11 @@ typedef struct genericStack {
 /* ====================================================================== */
 #define _GENERICSTACK_EXTEND(stackName) do {                            \
     if (stackName->used > stackName->size) {                            \
+      size_t _i_for_extend;						\
       stackName->items = (stackName->items != NULL) ? realloc(stackName->items, sizeof(genericStackItem_t) * stackName->used) : malloc(sizeof(genericStackItem_t) * stackName->used); \
+      for (_i_for_extend = stackName->size; _i_for_extend < stackName->used; _i_for_extend++) {	\
+	stackName->items[_i_for_extend].type = _GENERICSTACKITEMTYPE_NA; \
+      }									\
       stackName->size = stackName->used;                                \
     }									\
   } while (0)
@@ -190,29 +199,54 @@ typedef struct genericStack {
 #define GENERICSTACK_PUSH_LONG_DOUBLE__COMPLEX(stackName, var) GENERICSTACK_PUSH_BASIC_TYPE(stackName, long double _Complex, var, GENERICSTACKITEMTYPE_LONG_LONG, ldc)
 #endif
 
-#define GENERICSTACK_PUSH_ANY(stackName, type, var, mallocp, memcpyp, freep) do { \
+#define GENERICSTACK_PUSH_ANY(stackName, varType, var, mallocp, memcpyp, freep) do { \
     size_t _i = stackName->used++;                                      \
-    size_t _size = sizeof(type);					\
+    size_t _size = sizeof(varType);					\
     void *_p;								\
-    void *_malloc = (void (*)()) (mallocp);				\
-    void *_memcpy = (void (*)()) (memcpyp);				\
-    void *_free = (void (*)()) (freefp);				\
+    genericStackMalloc_t _malloc = (genericStackMalloc_t) (mallocp);	\
+    genericStackMemcpy_t _memcpy = (genericStackMemcpy_t) (memcpyp);	\
+    genericStackFree_t _free = (genericStackFree_t) (freep);		\
     									\
     _GENERICSTACK_EXTEND(stackName);                                    \
-    p = (mallocp == NULL) ? malloc(_size) : mallocp(_size);		\
-    if (memcpyp == NULL) {                                              \
-      memcpy(p, var, _size);                                            \
+    _p = (_malloc == NULL) ? malloc(_size) : _malloc(_size);		\
+    if (_memcpy == NULL) {                                              \
+      memcpy(_p, var, _size);						\
     } else {                                                            \
-      memcpyp(p, var, _size);                                           \
+      _memcpy(_p, var, _size);						\
     }                                                                   \
     stackName->items[_i].type = GENERICSTACKITEMTYPE_ANY;               \
-    stackName->items[_i].u.any.p = p;                                   \
+    stackName->items[_i].u.any.p = _p;					\
     stackName->items[_i].u.any.size = _size;                            \
-    stackName->items[_i].u.any.malloc = mallocp;                        \
-    stackName->items[_i].u.any.memcpy = memcpyp;                        \
-    stackName->items[_i].u.any.free = freep;                            \
+    stackName->items[_i].u.any.malloc = _malloc;                        \
+    stackName->items[_i].u.any.memcpy = _memcpy;                        \
+    stackName->items[_i].u.any.free = _free;                            \
 									\
   } while (0)
+
+/* ====================================================================== */
+/* GET interface                                                          */
+/* ====================================================================== */
+#define GENERICSTACK_GET_BASIC_TYPE(stackName, index, src) stackName->items[index].u.src
+
+#define GENERICSTACK_GET_CHAR(stackName, index)   GENERICSTACK_GET_BASIC_TYPE(stackName, index, c)
+#define GENERICSTACK_GET_SHORT(stackName, index)  GENERICSTACK_GET_BASIC_TYPE(stackName, index, s)
+#define GENERICSTACK_GET_INT(stackName, index)    GENERICSTACK_GET_BASIC_TYPE(stackName, index, i)
+#define GENERICSTACK_GET_LONG(stackName, index)   GENERICSTACK_GET_BASIC_TYPE(stackName, index, l)
+#define GENERICSTACK_GET_FLOAT(stackName, index)  GENERICSTACK_GET_BASIC_TYPE(stackName, index, f)
+#define GENERICSTACK_GET_DOUBLE(stackName, index) GENERICSTACK_GET_BASIC_TYPE(stackName, index, d)
+#define GENERICSTACK_GET_PTR(stackName, index)    GENERICSTACK_GET_BASIC_TYPE(stackName, index, p)
+#if GENERICSTACK_HAVE_LONG_LONG > 0
+#define GENERICSTACK_GET_LONG_LONG(stackName, index)    GENERICSTACK_GET_BASIC_TYPE(stackName, index, ll)
+#endif
+#if GENERICSTACK_HAVE__BOOL > 0
+#define GENERICSTACK_GET__BOOL(stackName, index)  GENERICSTACK_GET_BASIC_TYPE(stackName, index, b)
+#endif
+#if GENERICSTACK_HAVE__COMPLEX > 0
+#define GENERICSTACK_GET_FLOAT__COMPLEX(stackName, index)       GENERICSTACK_GET_BASIC_TYPE(stackName, index, fc)
+#define GENERICSTACK_GET_DOUBLE__COMPLEX(stackName, index)      GENERICSTACK_GET_BASIC_TYPE(stackName, index, dc)
+#define GENERICSTACK_GET_LONG_DOUBLE__COMPLEX(stackName, index) GENERICSTACK_GET_BASIC_TYPE(stackName, index, ldc)
+#endif
+#define GENERICSTACK_GET_ANY(stackName, index) GENERICSTACK_GET_BASIC_TYPE(stackName, index, any.p)
 
 /* ====================================================================== */
 /* POP interface                                                          */
@@ -237,24 +271,7 @@ typedef struct genericStack {
 #define GENERICSTACK_POP_DOUBLE__COMPLEX(stackName)      GENERICSTACK_POP_BASIC_TYPE(stackName, dc)
 #define GENERICSTACK_POP_LONG_DOUBLE__COMPLEX(stackName) GENERICSTACK_POP_BASIC_TYPE(stackName, ldc)
 #endif
-
-#define GENERICSTACK_POP_ANY(stackName, type, var) do {                 \
-    void *p;								\
-    genericStackItemAny_t any = stackName->items[--stackName->used].u.any; \
-									\
-    p = (any.malloc == NULL) ? malloc(any.size) : any.malloc(any.size); \
-    if (any.memcpy == NULL) {                                           \
-      memcpy(p, any.p, any.size);                                       \
-    } else {                                                            \
-      any.memcpy(p, any.p, any.size);                                   \
-    }                                                                   \
-    if (any.free == NULL) {                                             \
-      free(any.p);                                                      \
-    } else {                                                            \
-      any.free(any.p);                                                  \
-    }                                                                   \
-    (var) = (type) p;							\
-  } while (0)
+#define GENERICSTACK_POP_ANY(stackName) GENERICSTACK_POP_BASIC_TYPE(stackName, any.p)
 
 /* ====================================================================== */
 /* Memory release                                                         */
@@ -262,10 +279,15 @@ typedef struct genericStack {
 #define GENERICSTACK_FREE(stackName) do {				\
     if (stackName->size > 0) {                                          \
       while (stackName->used > 0) {                                     \
-        if (stackName->items[stackName->used - 1].type == GENERICSTACKITEMTYPE_ANY) { \
-          void *_p;                                                     \
-          GENERICSTACK_POP_ANY(stackName, void *, _p);			\
-        }                                                               \
+	size_t _index = stackName->used-- - 1;				\
+        if (stackName->items[_index].type == GENERICSTACKITEMTYPE_ANY) { \
+	  genericStackItemAny_t _any = stackName->items[_index].u.any;	\
+	  if (_any.free == NULL) {					\
+	    free(_any.p);						\
+	  } else {							\
+	    _any.free(_any.p);						\
+	  }								\
+        }								\
       }									\
       free(stackName->items);                                           \
     }                                                                   \
