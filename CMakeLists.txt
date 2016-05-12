@@ -13,6 +13,15 @@ SET (GENERICSTACK_VERSION_MINOR 0)
 SET (GENERICSTACK_VERSION_PATCH 0)
 SET (GENERICSTACK_VERSION ${GENERICSTACK_VERSION_MAJOR}.${GENERICSTACK_VERSION_MINOR}.${GENERICSTACK_VERSION_PATCH})
 
+# --------------------
+# CFLAGS customization
+# --------------------
+if (("${CMAKE_C_COMPILER_ID} x" MATCHES "MSVC") OR MSVC)
+  # Loosely based on http://www.hdfgroup.org/ftp/HDF/HDF_Current/src/unpacked/config/cmake/ConfigureChecks.cmake
+  ADD_DEFINITIONS("-D_CRT_SECURE_NO_WARNINGS")
+  ADD_DEFINITIONS("-D_CRT_NONSTDC_NO_DEPRECATE")
+ENDIF ()
+
 # ---------
 # Set paths
 # ---------
