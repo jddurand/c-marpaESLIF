@@ -37,15 +37,13 @@
 #  endif
 #endif
 
-typedef void *(*genericStackMalloc_t)(size_t size);
-typedef void *(*genericStackMemcpy_t)(void *dst, void *src, size_t size);
-typedef void *(*genericStackFree_t)(void *p);
+typedef void *(*genericStackClone_t)(void *p);
+typedef void  (*genericStackFree_t)(void *p);
 
 typedef struct genericStackItemAny {
   void *p;
   size_t size;
-  genericStackMalloc_t malloc;
-  genericStackMemcpy_t memcpy;
+  genericStackClone_t clone;
   genericStackFree_t free;
 } genericStackItemAny_t;
 
@@ -171,6 +169,19 @@ typedef struct genericStack {
 #define GENERICSTACK_SET_DOUBLE__COMPLEX(stackName, var, index) GENERICSTACK_SET_BASIC_TYPE(stackName, double _Complex, var, GENERICSTACKITEMTYPE_LONG_LONG, dc, index)
 #define GENERICSTACK_SET_LONG_DOUBLE__COMPLEX(stackName, var, index) GENERICSTACK_SET_BASIC_TYPE(stackName, long double _Complex, var, GENERICSTACKITEMTYPE_LONG_LONG, ldc, index)
 #endif
+/* It is illegal to call this macro with a NULL clonep, and it is guaranteed to crash later on if called with a NULL freep */
+#define GENERICSTACK_SET_ANY(stackName, var, clonep, freep, index) do { \
+    size_t _index_for_set = index;                                      \
+    if (_index_for_set >= stackName->used) {                            \
+      stackName->used = _index_for_set + 1;                             \
+      _GENERICSTACK_EXTEND(stackName);                                  \
+    }                                                                   \
+    stackName->items[_index_for_set].type = GENERICSTACKITEMTYPE_ANY;   \
+    stackName->items[_index_for_set].u.any.p = clonep(var);             \
+    stackName->items[_index_for_set].u.any.clone = clonep;              \
+    stackName->items[_index_for_set].u.any.free = freep;                \
+                                                                        \
+  } while (0)
 
 /* ====================================================================== */
 /* PUSH interface                                                         */
@@ -199,27 +210,15 @@ typedef struct genericStack {
 #define GENERICSTACK_PUSH_LONG_DOUBLE__COMPLEX(stackName, var) GENERICSTACK_PUSH_BASIC_TYPE(stackName, long double _Complex, var, GENERICSTACKITEMTYPE_LONG_LONG, ldc)
 #endif
 
-#define GENERICSTACK_PUSH_ANY(stackName, varType, var, mallocp, memcpyp, freep) do { \
+/* It is illegal to call this macro with a NULL clonep, and it is guaranteed to crash later one if called with a NULL freep */
+#define GENERICSTACK_PUSH_ANY(stackName, var, clonep, freep) do {       \
     size_t _i = stackName->used++;                                      \
-    size_t _size = sizeof(varType);					\
-    void *_p;								\
-    genericStackMalloc_t _malloc = (genericStackMalloc_t) (mallocp);	\
-    genericStackMemcpy_t _memcpy = (genericStackMemcpy_t) (memcpyp);	\
-    genericStackFree_t _free = (genericStackFree_t) (freep);		\
     									\
     _GENERICSTACK_EXTEND(stackName);                                    \
-    _p = (_malloc == NULL) ? malloc(_size) : _malloc(_size);		\
-    if (_memcpy == NULL) {                                              \
-      memcpy(_p, var, _size);						\
-    } else {                                                            \
-      _memcpy(_p, var, _size);						\
-    }                                                                   \
     stackName->items[_i].type = GENERICSTACKITEMTYPE_ANY;               \
-    stackName->items[_i].u.any.p = _p;					\
-    stackName->items[_i].u.any.size = _size;                            \
-    stackName->items[_i].u.any.malloc = _malloc;                        \
-    stackName->items[_i].u.any.memcpy = _memcpy;                        \
-    stackName->items[_i].u.any.free = _free;                            \
+    stackName->items[_i].u.any.p = clonep(var);                         \
+    stackName->items[_i].u.any.clone = clonep;                          \
+    stackName->items[_i].u.any.free = freep;                            \
 									\
   } while (0)
 
@@ -275,16 +274,15 @@ typedef struct genericStack {
 
 /* ====================================================================== */
 /* Memory release                                                         */
+/* We intentionnaly loop on size and not used.                            */
 /* ====================================================================== */
 #define GENERICSTACK_FREE(stackName) do {				\
     if (stackName->size > 0) {                                          \
-      while (stackName->used > 0) {                                     \
-	size_t _index = stackName->used-- - 1;				\
+      while (stackName->size > 0) {                                     \
+	size_t _index = stackName->size-- - 1;				\
         if (stackName->items[_index].type == GENERICSTACKITEMTYPE_ANY) { \
 	  genericStackItemAny_t _any = stackName->items[_index].u.any;	\
-	  if (_any.free == NULL) {					\
-	    free(_any.p);						\
-	  } else {							\
+	  if (_any.free != NULL) {					\
 	    _any.free(_any.p);						\
 	  }								\
         }								\
