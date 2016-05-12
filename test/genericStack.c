@@ -46,7 +46,7 @@ int main() {
   printf("\nNEW interface:\n");
   printf("-------------:\n\n");
   
-  GENERICSTACK_NEW        (myStack);
+  GENERICSTACK_NEW_SIZED        (myStack, 100);
   
   printf("\nPUSH interface:\n");
   printf("--------------:\n\n");

@@ -107,6 +107,20 @@ typedef struct genericStack {
 #define GENERICSTACK_DECL(stackName) genericStack_t * stackName
 
 /* ====================================================================== */
+/* Size management, internal macro                                        */
+/* ====================================================================== */
+#define _GENERICSTACK_EXTEND(stackName, wantedSize) do {                \
+    if (wantedSize > stackName->size) {                                 \
+      size_t _i_for_extend;						\
+      stackName->items = (stackName->items != NULL) ? realloc(stackName->items, sizeof(genericStackItem_t) * wantedSize) : malloc(sizeof(genericStackItem_t) * wantedSize); \
+      for (_i_for_extend = stackName->size; _i_for_extend < wantedSize; _i_for_extend++) {	\
+	stackName->items[_i_for_extend].type = _GENERICSTACKITEMTYPE_NA; \
+      }									\
+      stackName->size = wantedSize;                                     \
+    }									\
+  } while (0)
+
+/* ====================================================================== */
 /* Initialization                                                         */
 /* ====================================================================== */
 #define GENERICSTACK_NEW(stackName) do {				\
@@ -116,65 +130,50 @@ typedef struct genericStack {
     stackName->items = NULL;                                            \
   } while (0)
 
-#define GENERICSTACK_NEW_SIZED(stackName, size) do {			\
-    size_t _size = (size);						\
-    GENERICSTACK_NEW(stackName);					\
-    stackName->items = malloc(sizeof(genericStackItem_t) * (stackName->size = _size)); \
+#define GENERICSTACK_NEW_SIZED(stackName, wantedSize) do {              \
+    GENERICSTACK_NEW(stackName);                                        \
+    _GENERICSTACK_EXTEND(stackName, wantedSize);                        \
   } while (0)
 
 /* ====================================================================== */
-/* Size management, internal macro                                        */
-/* ====================================================================== */
-#define _GENERICSTACK_EXTEND(stackName) do {                            \
-    if (stackName->used > stackName->size) {                            \
-      size_t _i_for_extend;						\
-      stackName->items = (stackName->items != NULL) ? realloc(stackName->items, sizeof(genericStackItem_t) * stackName->used) : malloc(sizeof(genericStackItem_t) * stackName->used); \
-      for (_i_for_extend = stackName->size; _i_for_extend < stackName->used; _i_for_extend++) {	\
-	stackName->items[_i_for_extend].type = _GENERICSTACKITEMTYPE_NA; \
-      }									\
-      stackName->size = stackName->used;                                \
-    }									\
-  } while (0)
-
-/* ====================================================================== */
-/* SET interface                                                          */
+/* SET interface: Stack is extended on demand                             */
 /* ====================================================================== */
 /* stackName is expected to an identifier                                 */
 /* index is used more than once, so it has to be cached                   */
-#define GENERICSTACK_SET_BASIC_TYPE(stackName, varType, var, itemType, dst, index) do { \
+#define _GENERICSTACK_SET_BY_TYPE(stackName, varType, var, itemType, dst, index) do { \
     size_t _index_for_set = index;                                      \
     if (_index_for_set >= stackName->used) {                            \
       stackName->used = _index_for_set + 1;                             \
-      _GENERICSTACK_EXTEND(stackName);                                  \
+      _GENERICSTACK_EXTEND(stackName, stackName->used);                 \
     }                                                                   \
     stackName->items[_index_for_set].type = (itemType);                 \
     stackName->items[_index_for_set].u.dst = (varType) (var);           \
   } while (0)
 
-#define GENERICSTACK_SET_CHAR(stackName, var, index) GENERICSTACK_SET_BASIC_TYPE(stackName, char,   var, GENERICSTACKITEMTYPE_CHAR, c, index)
-#define GENERICSTACK_SET_SHORT(stackName, var, index)  GENERICSTACK_SET_BASIC_TYPE(stackName, short,  var, GENERICSTACKITEMTYPE_SHORT, s, index)
-#define GENERICSTACK_SET_INT(stackName, var, index)    GENERICSTACK_SET_BASIC_TYPE(stackName, int,    var, GENERICSTACKITEMTYPE_INT, i, index)
-#define GENERICSTACK_SET_LONG(stackName, var, index)   GENERICSTACK_SET_BASIC_TYPE(stackName, long,   var, GENERICSTACKITEMTYPE_LONG, l, index)
-#define GENERICSTACK_SET_FLOAT(stackName, var, index)  GENERICSTACK_SET_BASIC_TYPE(stackName, float,  var, GENERICSTACKITEMTYPE_FLOAT, f, index)
-#define GENERICSTACK_SET_DOUBLE(stackName, var, index) GENERICSTACK_SET_BASIC_TYPE(stackName, double, var, GENERICSTACKITEMTYPE_DOUBLE, d, index)
-#define GENERICSTACK_SET_PTR(stackName, var, index)    GENERICSTACK_SET_BASIC_TYPE(stackName, void *, var, GENERICSTACKITEMTYPE_PTR, p, index)
+#define GENERICSTACK_SET_CHAR(stackName, var, index) _GENERICSTACK_SET_BY_TYPE(stackName, char,   var, GENERICSTACKITEMTYPE_CHAR, c, index)
+#define GENERICSTACK_SET_SHORT(stackName, var, index)  _GENERICSTACK_SET_BY_TYPE(stackName, short,  var, GENERICSTACKITEMTYPE_SHORT, s, index)
+#define GENERICSTACK_SET_INT(stackName, var, index)    _GENERICSTACK_SET_BY_TYPE(stackName, int,    var, GENERICSTACKITEMTYPE_INT, i, index)
+#define GENERICSTACK_SET_LONG(stackName, var, index)   _GENERICSTACK_SET_BY_TYPE(stackName, long,   var, GENERICSTACKITEMTYPE_LONG, l, index)
+#define GENERICSTACK_SET_FLOAT(stackName, var, index)  _GENERICSTACK_SET_BY_TYPE(stackName, float,  var, GENERICSTACKITEMTYPE_FLOAT, f, index)
+#define GENERICSTACK_SET_DOUBLE(stackName, var, index) _GENERICSTACK_SET_BY_TYPE(stackName, double, var, GENERICSTACKITEMTYPE_DOUBLE, d, index)
+#define GENERICSTACK_SET_PTR(stackName, var, index)    _GENERICSTACK_SET_BY_TYPE(stackName, void *, var, GENERICSTACKITEMTYPE_PTR, p, index)
 #if GENERICSTACK_HAVE_LONG_LONG > 0
-#define GENERICSTACK_SET_LONG_LONG(stackName, var, index) GENERICSTACK_SET_BASIC_TYPE(stackName, long long, var, GENERICSTACKITEMTYPE_LONG_LONG, ll, index)
+#define GENERICSTACK_SET_LONG_LONG(stackName, var, index) _GENERICSTACK_SET_BY_TYPE(stackName, long long, var, GENERICSTACKITEMTYPE_LONG_LONG, ll, index)
 #endif
 #if GENERICSTACK_HAVE__BOOL > 0
-#define GENERICSTACK_SET__BOOL(stackName, var, index) GENERICSTACK_SET_BASIC_TYPE(stackName, _Bool, var, GENERICSTACKITEMTYPE_LONG_LONG, b, index)
+#define GENERICSTACK_SET__BOOL(stackName, var, index) _GENERICSTACK_SET_BY_TYPE(stackName, _Bool, var, GENERICSTACKITEMTYPE_LONG_LONG, b, index)
 #endif
 #if GENERICSTACK_HAVE__COMPLEX > 0
-#define GENERICSTACK_SET_FLOAT__COMPLEX(stackName, var, index) GENERICSTACK_SET_BASIC_TYPE(stackName, float _Complex, var, GENERICSTACKITEMTYPE_LONG_LONG, fc, index)
-#define GENERICSTACK_SET_DOUBLE__COMPLEX(stackName, var, index) GENERICSTACK_SET_BASIC_TYPE(stackName, double _Complex, var, GENERICSTACKITEMTYPE_LONG_LONG, dc, index)
-#define GENERICSTACK_SET_LONG_DOUBLE__COMPLEX(stackName, var, index) GENERICSTACK_SET_BASIC_TYPE(stackName, long double _Complex, var, GENERICSTACKITEMTYPE_LONG_LONG, ldc, index)
+#define GENERICSTACK_SET_FLOAT__COMPLEX(stackName, var, index) _GENERICSTACK_SET_BY_TYPE(stackName, float _Complex, var, GENERICSTACKITEMTYPE_LONG_LONG, fc, index)
+#define GENERICSTACK_SET_DOUBLE__COMPLEX(stackName, var, index) _GENERICSTACK_SET_BY_TYPE(stackName, double _Complex, var, GENERICSTACKITEMTYPE_LONG_LONG, dc, index)
+#define GENERICSTACK_SET_LONG_DOUBLE__COMPLEX(stackName, var, index) _GENERICSTACK_SET_BY_TYPE(stackName, long double _Complex, var, GENERICSTACKITEMTYPE_LONG_LONG, ldc, index)
 #endif
-/* It is illegal to call this macro with a NULL clonep, and it is guaranteed to crash later on if called with a NULL freep */
+/* It is illegal to call this macro with a NULL clonep */
 #define GENERICSTACK_SET_ANY(stackName, var, clonep, freep, index) do { \
     size_t _index_for_set = index;                                      \
     if (_index_for_set >= stackName->used) {                            \
       stackName->used = _index_for_set + 1;                             \
-      _GENERICSTACK_EXTEND(stackName);                                  \
+      _GENERICSTACK_EXTEND(stackName, stackName->used);                 \
     }                                                                   \
     stackName->items[_index_for_set].type = GENERICSTACKITEMTYPE_ANY;   \
     stackName->items[_index_for_set].u.any.p = clonep(var);             \
@@ -184,93 +183,73 @@ typedef struct genericStack {
   } while (0)
 
 /* ====================================================================== */
-/* PUSH interface                                                         */
-/* ====================================================================== */
-#define GENERICSTACK_PUSH_BASIC_TYPE(stackName, varType, var, itemType, dst) do { \
-    size_t _index_for_push = stackName->used;                           \
-    GENERICSTACK_SET_BASIC_TYPE(stackName, varType, var, itemType, dst, _index_for_push); \
-  } while (0)
-
-#define GENERICSTACK_PUSH_CHAR(stackName, var)   GENERICSTACK_PUSH_BASIC_TYPE(stackName, char,   var, GENERICSTACKITEMTYPE_CHAR, c)
-#define GENERICSTACK_PUSH_SHORT(stackName, var)  GENERICSTACK_PUSH_BASIC_TYPE(stackName, short,  var, GENERICSTACKITEMTYPE_SHORT, s)
-#define GENERICSTACK_PUSH_INT(stackName, var)    GENERICSTACK_PUSH_BASIC_TYPE(stackName, int,    var, GENERICSTACKITEMTYPE_INT, i)
-#define GENERICSTACK_PUSH_LONG(stackName, var)   GENERICSTACK_PUSH_BASIC_TYPE(stackName, long,   var, GENERICSTACKITEMTYPE_LONG, l)
-#define GENERICSTACK_PUSH_FLOAT(stackName, var)  GENERICSTACK_PUSH_BASIC_TYPE(stackName, float,  var, GENERICSTACKITEMTYPE_FLOAT, f)
-#define GENERICSTACK_PUSH_DOUBLE(stackName, var) GENERICSTACK_PUSH_BASIC_TYPE(stackName, double, var, GENERICSTACKITEMTYPE_DOUBLE, d)
-#define GENERICSTACK_PUSH_PTR(stackName, var)    GENERICSTACK_PUSH_BASIC_TYPE(stackName, void *, var, GENERICSTACKITEMTYPE_PTR, p)
-#if GENERICSTACK_HAVE_LONG_LONG > 0
-#define GENERICSTACK_PUSH_LONG_LONG(stackName, var) GENERICSTACK_PUSH_BASIC_TYPE(stackName, long long, var, GENERICSTACKITEMTYPE_LONG_LONG, ll)
-#endif
-#if GENERICSTACK_HAVE__BOOL > 0
-#define GENERICSTACK_PUSH__BOOL(stackName, var) GENERICSTACK_PUSH_BASIC_TYPE(stackName, _Bool, var, GENERICSTACKITEMTYPE_LONG_LONG, b)
-#endif
-#if GENERICSTACK_HAVE__COMPLEX > 0
-#define GENERICSTACK_PUSH_FLOAT__COMPLEX(stackName, var) GENERICSTACK_PUSH_BASIC_TYPE(stackName, float _Complex, var, GENERICSTACKITEMTYPE_LONG_LONG, fc)
-#define GENERICSTACK_PUSH_DOUBLE__COMPLEX(stackName, var) GENERICSTACK_PUSH_BASIC_TYPE(stackName, double _Complex, var, GENERICSTACKITEMTYPE_LONG_LONG, dc)
-#define GENERICSTACK_PUSH_LONG_DOUBLE__COMPLEX(stackName, var) GENERICSTACK_PUSH_BASIC_TYPE(stackName, long double _Complex, var, GENERICSTACKITEMTYPE_LONG_LONG, ldc)
-#endif
-
-/* It is illegal to call this macro with a NULL clonep, and it is guaranteed to crash later one if called with a NULL freep */
-#define GENERICSTACK_PUSH_ANY(stackName, var, clonep, freep) do {       \
-    size_t _i = stackName->used++;                                      \
-    									\
-    _GENERICSTACK_EXTEND(stackName);                                    \
-    stackName->items[_i].type = GENERICSTACKITEMTYPE_ANY;               \
-    stackName->items[_i].u.any.p = clonep(var);                         \
-    stackName->items[_i].u.any.clone = clonep;                          \
-    stackName->items[_i].u.any.free = freep;                            \
-									\
-  } while (0)
-
-/* ====================================================================== */
 /* GET interface                                                          */
 /* ====================================================================== */
-#define GENERICSTACK_GET_BASIC_TYPE(stackName, index, src) stackName->items[index].u.src
-
-#define GENERICSTACK_GET_CHAR(stackName, index)   GENERICSTACK_GET_BASIC_TYPE(stackName, index, c)
-#define GENERICSTACK_GET_SHORT(stackName, index)  GENERICSTACK_GET_BASIC_TYPE(stackName, index, s)
-#define GENERICSTACK_GET_INT(stackName, index)    GENERICSTACK_GET_BASIC_TYPE(stackName, index, i)
-#define GENERICSTACK_GET_LONG(stackName, index)   GENERICSTACK_GET_BASIC_TYPE(stackName, index, l)
-#define GENERICSTACK_GET_FLOAT(stackName, index)  GENERICSTACK_GET_BASIC_TYPE(stackName, index, f)
-#define GENERICSTACK_GET_DOUBLE(stackName, index) GENERICSTACK_GET_BASIC_TYPE(stackName, index, d)
-#define GENERICSTACK_GET_PTR(stackName, index)    GENERICSTACK_GET_BASIC_TYPE(stackName, index, p)
+#define GENERICSTACK_GET_CHAR(stackName, index)   stackName->items[index].u.c
+#define GENERICSTACK_GET_SHORT(stackName, index)  stackName->items[index].u.s
+#define GENERICSTACK_GET_INT(stackName, index)    stackName->items[index].u.i
+#define GENERICSTACK_GET_LONG(stackName, index)   stackName->items[index].u.l
+#define GENERICSTACK_GET_FLOAT(stackName, index)  stackName->items[index].u.f
+#define GENERICSTACK_GET_DOUBLE(stackName, index) stackName->items[index].u.d
+#define GENERICSTACK_GET_PTR(stackName, index)    stackName->items[index].u.p
 #if GENERICSTACK_HAVE_LONG_LONG > 0
-#define GENERICSTACK_GET_LONG_LONG(stackName, index)    GENERICSTACK_GET_BASIC_TYPE(stackName, index, ll)
+#define GENERICSTACK_GET_LONG_LONG(stackName, index)    stackName->items[index].u.ll
 #endif
 #if GENERICSTACK_HAVE__BOOL > 0
-#define GENERICSTACK_GET__BOOL(stackName, index)  GENERICSTACK_GET_BASIC_TYPE(stackName, index, b)
+#define GENERICSTACK_GET__BOOL(stackName, index)  stackName->items[index].u.b
 #endif
 #if GENERICSTACK_HAVE__COMPLEX > 0
-#define GENERICSTACK_GET_FLOAT__COMPLEX(stackName, index)       GENERICSTACK_GET_BASIC_TYPE(stackName, index, fc)
-#define GENERICSTACK_GET_DOUBLE__COMPLEX(stackName, index)      GENERICSTACK_GET_BASIC_TYPE(stackName, index, dc)
-#define GENERICSTACK_GET_LONG_DOUBLE__COMPLEX(stackName, index) GENERICSTACK_GET_BASIC_TYPE(stackName, index, ldc)
+#define GENERICSTACK_GET_FLOAT__COMPLEX(stackName, index)       stackName->items[index].u.fc
+#define GENERICSTACK_GET_DOUBLE__COMPLEX(stackName, index)      stackName->items[index].u.dc
+#define GENERICSTACK_GET_LONG_DOUBLE__COMPLEX(stackName, index) stackName->items[index].u.ldc
 #endif
-#define GENERICSTACK_GET_ANY(stackName, index) GENERICSTACK_GET_BASIC_TYPE(stackName, index, any.p)
+#define GENERICSTACK_GET_ANY(stackName, index) stackName->items[index].u.any.p
 
 /* ====================================================================== */
-/* POP interface                                                          */
+/* PUSH interface: built on top of SET                                    */
 /* ====================================================================== */
-#define GENERICSTACK_POP_BASIC_TYPE(stackName, src) stackName->items[--stackName->used].u.src
-
-#define GENERICSTACK_POP_CHAR(stackName)   GENERICSTACK_POP_BASIC_TYPE(stackName, c)
-#define GENERICSTACK_POP_SHORT(stackName)  GENERICSTACK_POP_BASIC_TYPE(stackName, s)
-#define GENERICSTACK_POP_INT(stackName)    GENERICSTACK_POP_BASIC_TYPE(stackName, i)
-#define GENERICSTACK_POP_LONG(stackName)   GENERICSTACK_POP_BASIC_TYPE(stackName, l)
-#define GENERICSTACK_POP_FLOAT(stackName)  GENERICSTACK_POP_BASIC_TYPE(stackName, f)
-#define GENERICSTACK_POP_DOUBLE(stackName) GENERICSTACK_POP_BASIC_TYPE(stackName, d)
-#define GENERICSTACK_POP_PTR(stackName)    GENERICSTACK_POP_BASIC_TYPE(stackName, p)
+#define GENERICSTACK_PUSH_CHAR(stackName, var)   GENERICSTACK_SET_CHAR(stackName, var, stackName->used)
+#define GENERICSTACK_PUSH_SHORT(stackName, var)  GENERICSTACK_SET_SHORT(stackName, var, stackName->used)
+#define GENERICSTACK_PUSH_INT(stackName, var)    GENERICSTACK_SET_INT(stackName, var, stackName->used)
+#define GENERICSTACK_PUSH_LONG(stackName, var)   GENERICSTACK_SET_LONG(stackName, var, stackName->used)
+#define GENERICSTACK_PUSH_FLOAT(stackName, var)  GENERICSTACK_SET_FLOAT(stackName, var, stackName->used)
+#define GENERICSTACK_PUSH_DOUBLE(stackName, var) GENERICSTACK_SET_DOUBLE(stackName, var, stackName->used)
+#define GENERICSTACK_PUSH_PTR(stackName, var)    GENERICSTACK_SET_PTR(stackName, var, stackName->used)
 #if GENERICSTACK_HAVE_LONG_LONG > 0
-#define GENERICSTACK_POP_LONG_LONG(stackName)    GENERICSTACK_POP_BASIC_TYPE(stackName, ll)
+#define GENERICSTACK_PUSH_LONG_LONG(stackName, var) GENERICSTACK_SET_LONG_LONG(stackName, var, stackName->used)
 #endif
 #if GENERICSTACK_HAVE__BOOL > 0
-#define GENERICSTACK_POP__BOOL(stackName)  GENERICSTACK_POP_BASIC_TYPE(stackName, b)
+#define GENERICSTACK_PUSH__BOOL(stackName, var) GENERICSTACK_SET__BOOL(stackName, var, stackName->used)
 #endif
 #if GENERICSTACK_HAVE__COMPLEX > 0
-#define GENERICSTACK_POP_FLOAT__COMPLEX(stackName)       GENERICSTACK_POP_BASIC_TYPE(stackName, fc)
-#define GENERICSTACK_POP_DOUBLE__COMPLEX(stackName)      GENERICSTACK_POP_BASIC_TYPE(stackName, dc)
-#define GENERICSTACK_POP_LONG_DOUBLE__COMPLEX(stackName) GENERICSTACK_POP_BASIC_TYPE(stackName, ldc)
+#define GENERICSTACK_PUSH_FLOAT__COMPLEX(stackName, var) GENERICSTACK_SET_FLOAT__COMPLEX(stackName, var, stackName->used)
+#define GENERICSTACK_PUSH_DOUBLE__COMPLEX(stackName, var) GENERICSTACK_SET_DOUBLE__COMPLEX(stackName, var, stackName->used)
+#define GENERICSTACK_PUSH_LONG_DOUBLE__COMPLEX(stackName, var) GENERICSTACK_SET_LONG_DOUBLE__COMPLEX(stackName, var, stackName->used)
 #endif
-#define GENERICSTACK_POP_ANY(stackName) GENERICSTACK_POP_BASIC_TYPE(stackName, any.p)
+#define GENERICSTACK_PUSH_ANY(stackName, var, clonep, freep) GENERICSTACK_SET_ANY(stackName, var, clonep, freep, stackName->used)
+
+/* ====================================================================== */
+/* POP interface: built on top GET                                        */
+/* ====================================================================== */
+#define GENERICSTACK_POP_CHAR(stackName)   GENERICSTACK_GET_CHAR(stackName,   --stackName->used)
+#define GENERICSTACK_POP_SHORT(stackName)  GENERICSTACK_GET_SHORT(stackName,  --stackName->used)
+#define GENERICSTACK_POP_INT(stackName)    GENERICSTACK_GET_INT(stackName,    --stackName->used)
+#define GENERICSTACK_POP_LONG(stackName)   GENERICSTACK_GET_LONG(stackName,   --stackName->used)
+#define GENERICSTACK_POP_FLOAT(stackName)  GENERICSTACK_GET_FLOAT(stackName,  --stackName->used)
+#define GENERICSTACK_POP_DOUBLE(stackName) GENERICSTACK_GET_DOUBLE(stackName, --stackName->used)
+#define GENERICSTACK_POP_PTR(stackName)    GENERICSTACK_GET_PTR(stackName,    --stackName->used)
+#if GENERICSTACK_HAVE_LONG_LONG > 0
+#define GENERICSTACK_POP_LONG_LONG(stackName)    GENERICSTACK_GET_LONG_LONG(stackName, --stackName->used)
+#endif
+#if GENERICSTACK_HAVE__BOOL > 0
+#define GENERICSTACK_POP__BOOL(stackName)  GENERICSTACK_GET__BOOL(stackName, --stackName->used)
+#endif
+#if GENERICSTACK_HAVE__COMPLEX > 0
+#define GENERICSTACK_POP_FLOAT__COMPLEX(stackName)       GENERICSTACK_GET_FLOAT__COMPLEX(stackName,       --stackName->used)
+#define GENERICSTACK_POP_DOUBLE__COMPLEX(stackName)      GENERICSTACK_GET_DOUBLE__COMPLEX(stackName,      --stackName->used)
+#define GENERICSTACK_POP_LONG_DOUBLE__COMPLEX(stackName) GENERICSTACK_GET_LONG_DOUBLE__COMPLEX(stackName, --stackName->used)
+#endif
+#define GENERICSTACK_POP_ANY(stackName) GENERICSTACK_GET_ANY(stackName, --stackName->used)
 
 /* ====================================================================== */
 /* Memory release                                                         */
