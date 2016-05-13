@@ -15,8 +15,11 @@
 /* By default it is restricted to ANSI-C data type, nevertheless       */
 /* adding others is as trivial as looking into e.g. long long below.   */
 /* Please note that, IF the data typecast to the stack, no warning.    */
-
-/* Define GENERICSTACK_C99 to have C99 data type */
+/*                                                                     */
+/* Purists will notice this is an array-based implementation. This     */
+/* choice was made because it is fits all my applications.             */
+/*                                                                     */
+/* Define GENERICSTACK_C99 to have C99 data type                       */
 
 #ifdef GENERICSTACK_C99
 #  undef GENERICSTACK_HAVE_LONG_LONG
