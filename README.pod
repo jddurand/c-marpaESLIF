@@ -60,7 +60,7 @@ Set C<var> expression result, explicitely typecasted into a C<void *>.
 
 C99 datatypes (see NOTES) may be available via:
 
-=overt
+=over
 
 =item GENERICSTACK_SET_LONG_LONG
 
@@ -123,7 +123,7 @@ Note that GENERICSTACK_GET_ANY() is functionnaly equivalent to GENERICSTACK_GET_
 
 C99 datatypes (see NOTES) may be available via:
 
-=overt
+=over
 
 =item GENERICSTACK_GET_LONG_LONG
 
