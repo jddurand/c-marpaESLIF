@@ -15,16 +15,6 @@ typedef struct myStruct2 {
   char *s;
 } myStruct2_t;
 
-void *myStruct1Clone(void *src) {
-  void *p = malloc(sizeof(myStruct1_t));
-  memcpy(p, src, sizeof(myStruct1_t));
-  return p;
-}
-
-void myStruct1Free(void *src) {
-  free(src);
-}
-
 void *myStruct2Clone(void *src) {
   void *p = malloc(sizeof(myStruct2_t));
   memcpy(p, src, sizeof(myStruct2_t));
@@ -56,7 +46,7 @@ int main() {
   printf("[ 2] float    : 30\n");   GENERICSTACK_PUSH_FLOAT (myStack, 30);
   printf("[ 3] short    : 40\n");   GENERICSTACK_PUSH_SHORT (myStack, 40);
   printf("[ 4] myStruct1: {%d}\n", myStruct1.i);
-  GENERICSTACK_PUSH_ANY   (myStack, &myStruct1, myStruct1Clone, myStruct1Free);
+  GENERICSTACK_PUSH_ANY   (myStack, &myStruct1, NULL, NULL);
   printf("[ 5] myStruct2: {%d,\"%s\"}\n", myStruct2.i, myStruct2.s);
   GENERICSTACK_PUSH_ANY   (myStack, &myStruct2, myStruct2Clone, myStruct2Free);
 
