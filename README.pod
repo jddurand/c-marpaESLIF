@@ -1,0 +1,243 @@
+=for html <a href="https://travis-ci.org/jddurand/c-genericStack"><img src="https://travis-ci.org/jddurand/c-genericStack.svg?branch=master" alt="Travis CI build status" height="18"></a> <a href="https://badge.fury.io/gh/jddurand%2Fc-genericStack"><img src="https://badge.fury.io/gh/jddurand%2Fc-genericStack.svg" alt="GitHub version" height="18"></a> <a href="http://opensource.org/licenses/MIT" rel="nofollow noreferrer"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License MIT" height="18"></a>
+
+=head1 NAME
+
+genericStack - generic stack interface
+
+=head1 DESCRIPTION
+
+genericStack is like a va_list but in user-space, embedded within a single pointer. Most of the generic stack implementations either assume every element have the same size, either hide the typecasting checks from the compiler by going through a thin C-layer. This implementation support all native C data types, in addition to a "generic" type, and let the compiler warn if needed. It is done entirely with macros. Therefore we describe MACROS instead of METHODS below.
+
+=head1 MACROS
+
+=head2 GENERICSTACK_DECL(stackName)
+
+Declare a stack with the name C<stackName>, which must be a valid C identifier.
+
+=head2 GENERICSTACK_NEW(stackName)
+
+Create an empty stack referenced with the name C<stackName>. The stack will automatically grow if needed.
+
+=head2 GENERICSTACK_NEW_SIZED(stackName, wantedSize)
+
+Create an empty stack referenced with the name C<stackName>, though pre-allocating room for C<wantedSize> elements>. The stack will also automatically grow if user if putting an element beyond C<wantedSize>.
+
+=head2 GENERICSTACK_SET_XXX(stackName, var, index)
+
+Set an entry in stack C<stackName>, at index C<index> (numbering start 0), using the result of the expression C<var>. XXX is meant to be a C datatype or I<ANY>, i.e. the exact list of macros is:
+
+=over
+
+=item GENERICSTACK_SET_CHAR
+
+=item GENERICSTACK_SET_SHORT
+
+=item GENERICSTACK_SET_INT
+
+=item GENERICSTACK_SET_LONG
+
+=item GENERICSTACK_SET_FLOAT
+
+=item GENERICSTACK_SET_DOUBLE
+
+=item GENERICSTACK_SET_PTR
+
+=item GENERICSTACK_SET_ANY
+
+=back
+
+C99 datatypes (see NOTES) may be available via:
+
+=overt
+
+=item GENERICSTACK_SET_LONG_LONG
+
+=item GENERICSTACK_SET__BOOL
+
+=item GENERICSTACK_SET_FLOAT__COMPLEX
+
+=item GENERICSTACK_SET_DOUBLE__COMPLEX
+
+=item GENERICSTACK_SET_LONG_DOUBLE__COMPLEX
+
+=back
+
+it is guaranteed that C<logCallbackp> will not be called whenever a message have a log level lower than C<genericLoggerLeveli>.
+
+If C<logCallbackp> is NULL, then a default built-in implementation is used, with a B<hardcoded> level set to GENERICLOGGER_LEVEL_TRACE (i.e. it will log everything), a B<hardcoded> format string set to C<%d/%m/%Y %H:%M:%S %9s %s> (i.e. date and time a-la-european style, a string giving the level, and the formatted message), and a B<hardcoded> output to standard error.
+
+Returns NULL on failure, system's errno will indicate the reason.
+
+=head2 genericLogger_clonep
+
+  genericLogger_t *genericLogger_clonep(genericLogger_t *genericLoggerp);
+
+Clone the current generic logger and return a new one. The clone becomes I<independant>, and must be freed using genericLogger_freev().
+
+Returns NULL on failure, system's errno will indicate the reason.
+
+=head2 genericLogger_freev
+
+  void genericLogger_freev(genericLogger_t **genericLoggerpp);
+
+Free the generic logger.
+
+=head2 genericLogger_logv
+
+  void genericLogger_logv(genericLogger_t *genericLoggerp,
+                          genericLoggerLevel_t genericLoggerLeveli,
+                          const char *fmts,
+                          ...);
+
+Format the message using C<fmts> format string and eventual remaining parameters, and send it to the log implementation.
+
+=head2 genericLogger_logapv
+
+  void genericLogger_logapv(genericLogger_t *genericLoggerp,
+                            genericLoggerLevel_t genericLoggerLeveli,
+                            const char *fmts,
+                            va_list ap);
+
+va_list version of genericLogger_logv().
+
+=head2 genericLogger_logLevel_seti
+
+  genericLoggerLevel_t genericLogger_logLevel_seti(genericLogger_t *genericLoggerp,
+                                                   genericLoggerLevel_t logLeveli);
+
+Set the log level to C<leveLeveli> and return it.
+
+=head2 genericLogger_logLevel_geti
+
+  genericLoggerLevel_t genericLogger_logLevel_geti(genericLogger_t *genericLoggerp);
+
+Return the current log level.
+
+=head1 CONVENIENCE MACROS
+
+=head2 GENERICLOGGER_NEW
+
+maps to genericLogger_newp.
+
+=head2 GENERICLOGGER_CUSTOM
+
+maps to genericLogger_newp with a custom log implementation.
+
+=head2 GENERICLOGGER_CLONE
+
+maps to genericLogger_clonep.
+
+=head2 GENERICLOGGER_XXX
+
+=head2 GENERICLOGGER_XXXF
+
+=head2 GENERICLOGGER_XXXAP
+
+maps to all log levels, where C<XXX> is one of
+
+=over
+
+=item TRACE
+
+=item DEBUG
+
+=item INFO
+
+=item NOTICE
+
+=item WARN
+
+=item ERROR
+
+=item CRITICAL
+
+=item ALERT
+
+=item EMERGENCY
+
+=back
+
+For portability reasons, there are two different versions, depending if there are arguments or not: C<XXX> or C<XXXF>, respectively. The C<XXXAP> is when the argument is a C<va_list>.
+
+The C<XXX> and C<XXXF> macros maps to genericLogger_logv(), while C<XXXAP> maps to genericLogger_logapv(), and they all hardcode the level, so that the programmer do not have to write the later.
+
+=head2 GENERICLOGGER_LEVEL_SET
+
+maps to genericLogger_logLevel_seti.
+
+=head2 GENERICLOGGER_LEVEL_GET
+
+maps to genericLogger_logLevel_geti.
+
+=head1 EXAMPLE
+
+  #include <stdio.h>
+  #include <genericStack.h>
+
+  void myFunction1(int arg1, GENERICSTACK_DECL(myStack), int argn);
+  void myFunction2(int arg1, GENERICSTACK_DECL(myStack), int argn);
+
+  typedef struct myStruct1 { int i; } myStruct1_t;
+  typedef struct myStruct2 { int i; char *s; } myStruct2_t;
+
+  void *myStruct2Clone(void *src) {
+    void *p = malloc(sizeof(myStruct2_t));
+    memcpy(p, src, sizeof(myStruct2_t));
+    ((myStruct2_t *) p)->s = strdup(((myStruct2_t *) src)->s);
+    return p;
+  }
+
+  void myStruct2Free(void *src) {
+    free(((myStruct2_t *) src)->s);
+    free(src);
+  }
+
+  int main() {
+    myStruct1_t myStruct1 = { 50 };
+    myStruct2_t myStruct2 = { 60, "70" };
+  
+    GENERICSTACK_DECL(myStack);
+
+    GENERICSTACK_NEW        (myStack);
+    GENERICSTACK_PUSH_INT   (myStack, 10);
+    GENERICSTACK_PUSH_DOUBLE(myStack, 20);
+    GENERICSTACK_PUSH_FLOAT (myStack, 30);
+    GENERICSTACK_PUSH_SHORT (myStack, 40);
+    GENERICSTACK_PUSH_ANY   (myStack, &myStruct1, NULL, NULL);
+    GENERICSTACK_PUSH_ANY   (myStack, &myStruct2, myStruct2Clone, myStruct2Free);
+
+    myFunction1             (-1, myStack, 999);
+
+    GENERICSTACK_SET_FLOAT  (myStack, 50, 10);  /* Indice 10 */
+    myFunction2             (-1, myStack, 999);
+
+    GENERICSTACK_FREE       (myStack);
+
+    return 0;
+  }
+
+  void myFunction1(int arg1, GENERICSTACK_DECL(myStack), int argn) {
+    myStruct1_t *myStruct1p;
+    myStruct2_t *myStruct2p;
+
+    printf("[ 1] double   : %f\n", (float)   GENERICSTACK_GET_DOUBLE(myStack, 1));
+    printf("[ 0] int      : %d\n",           GENERICSTACK_GET_INT   (myStack, 0));
+    printf("[ 3] short    : %d\n",           GENERICSTACK_GET_SHORT (myStack, 3));
+    printf("[ 5] myStruct2: {%d, \"%s\"}\n", ((myStruct2_t *) GENERICSTACK_GET_ANY (myStack, 5))->i,
+                                             ((myStruct2_t *) GENERICSTACK_GET_ANY (myStack, 5))->s);
+    printf("[ 4] myStruct1: {%d}\n",         ((myStruct1_t *) GENERICSTACK_GET_ANY (myStack, 4))->i);
+    printf("[ 2] float    : %f\n",           GENERICSTACK_GET_FLOAT (myStack, 2));
+  
+    myStruct2p = (myStruct2_t *)        GENERICSTACK_POP_ANY(myStack);
+    myStruct1p = (myStruct1_t *)        GENERICSTACK_POP_ANY(myStack);
+    printf("[ 5] myStruct2: {%d, \"%s\"}\n", myStruct2p->i, myStruct2p->s);
+    printf("[ 4] myStruct1: {%d}\n", myStruct1p->i);
+    printf("[ 3] short : %d\n", (int)   GENERICSTACK_POP_SHORT(myStack));
+    printf("[ 2] float : %f\n",         GENERICSTACK_POP_FLOAT(myStack));
+    printf("[ 1] double: %f\n", (float) GENERICSTACK_POP_DOUBLE(myStack));
+    printf("[ 0] int   : %d\n",         GENERICSTACK_POP_INT(myStack));
+  }
+
+  void myFunction2(int arg1, GENERICSTACK_DECL(myStack), int argn) {
+    printf("[10] float : %f\n", GENERICSTACK_GET_FLOAT (myStack, 10));
+  }
