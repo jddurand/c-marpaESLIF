@@ -95,106 +95,89 @@ If C<clonep> is NULL, C<GENERICSTACK_SET_ANY> is functionnally equivalent to GEN
 
 If C<clonep> is not NULL, then it is the clone that is set. This clone will eventually be freed when GENERICSTACK_FREE() is called, using C<freep>, if the later is not NULL (if C<freep> is NULL, a memory leak is likely to happen, unless C<clonep> function is a function that is returning its argument -;).
 
-=head2 genericLogger_clonep
+=head2 GENERICSTACK_GET_XXX(stackName, index)
 
-  genericLogger_t *genericLogger_clonep(genericLogger_t *genericLoggerp);
-
-Clone the current generic logger and return a new one. The clone becomes I<independant>, and must be freed using genericLogger_freev().
-
-Returns NULL on failure, system's errno will indicate the reason.
-
-=head2 genericLogger_freev
-
-  void genericLogger_freev(genericLogger_t **genericLoggerpp);
-
-Free the generic logger.
-
-=head2 genericLogger_logv
-
-  void genericLogger_logv(genericLogger_t *genericLoggerp,
-                          genericLoggerLevel_t genericLoggerLeveli,
-                          const char *fmts,
-                          ...);
-
-Format the message using C<fmts> format string and eventual remaining parameters, and send it to the log implementation.
-
-=head2 genericLogger_logapv
-
-  void genericLogger_logapv(genericLogger_t *genericLoggerp,
-                            genericLoggerLevel_t genericLoggerLeveli,
-                            const char *fmts,
-                            va_list ap);
-
-va_list version of genericLogger_logv().
-
-=head2 genericLogger_logLevel_seti
-
-  genericLoggerLevel_t genericLogger_logLevel_seti(genericLogger_t *genericLoggerp,
-                                                   genericLoggerLevel_t logLeveli);
-
-Set the log level to C<leveLeveli> and return it.
-
-=head2 genericLogger_logLevel_geti
-
-  genericLoggerLevel_t genericLogger_logLevel_geti(genericLogger_t *genericLoggerp);
-
-Return the current log level.
-
-=head1 CONVENIENCE MACROS
-
-=head2 GENERICLOGGER_NEW
-
-maps to genericLogger_newp.
-
-=head2 GENERICLOGGER_CUSTOM
-
-maps to genericLogger_newp with a custom log implementation.
-
-=head2 GENERICLOGGER_CLONE
-
-maps to genericLogger_clonep.
-
-=head2 GENERICLOGGER_XXX
-
-=head2 GENERICLOGGER_XXXF
-
-=head2 GENERICLOGGER_XXXAP
-
-maps to all log levels, where C<XXX> is one of
+Get an entry in stack C<stackName>, at index C<index> (numbering start 0). The data type of the entry is left as-is, letting the compiler do type promotion, and eventually warn. XXX is meant to be a C datatype or I<ANY>, i.e. the exact list of macros is:
 
 =over
 
-=item TRACE
+=item GENERICSTACK_GET_CHAR
 
-=item DEBUG
+=item GENERICSTACK_GET_SHORT
 
-=item INFO
+=item GENERICSTACK_GET_INT
 
-=item NOTICE
+=item GENERICSTACK_GET_LONG
 
-=item WARN
+=item GENERICSTACK_GET_FLOAT
 
-=item ERROR
+item GENERICSTACK_GET_DOUBLE
 
-=item CRITICAL
+=item GENERICSTACK_GET_PTR
 
-=item ALERT
+=item GENERICSTACK_GET_ANY
 
-=item EMERGENCY
+Note that GENERICSTACK_GET_ANY() is functionnaly equivalent to GENERICSTACK_GET_PTR(), i.e. it returns a C<void *>.
 
 =back
 
-For portability reasons, there are two different versions, depending if there are arguments or not: C<XXX> or C<XXXF>, respectively. The C<XXXAP> is when the argument is a C<va_list>.
+C99 datatypes (see NOTES) may be available via:
 
-The C<XXX> and C<XXXF> macros maps to genericLogger_logv(), while C<XXXAP> maps to genericLogger_logapv(), and they all hardcode the level, so that the programmer do not have to write the later.
+=overt
 
-=head2 GENERICLOGGER_LEVEL_SET
+=item GENERICSTACK_GET_LONG_LONG
 
-maps to genericLogger_logLevel_seti.
+=item GENERICSTACK_GET__BOOL
 
-=head2 GENERICLOGGER_LEVEL_GET
+=item GENERICSTACK_GET_FLOAT__COMPLEX
 
-maps to genericLogger_logLevel_geti.
+=item GENERICSTACK_GET_DOUBLE__COMPLEX
+
+=item GENERICSTACK_GET_LONG_DOUBLE__COMPLEX
+
+=back
+
+=head2 GENERICSTACK_PUSH_XXX(stackName, var)
+
+This is an interface on top of <GENERICSTACK_SET_XXX>, that it automatically pushing data on the stack, the later will increase if needed.
+
+=head2 GENERICSTACK_POP_XXX(stackName)
+
+This is an interface on top of <GENERICSTACK_GET_XXX>, that it automatically popping data from the stack (i.e. retreive the last argument, and (artificially) reduce the generic stack size.
+
+=head2 GENERICSTACK_FREE(stackName)
+
+Release all the generic stack memory.
+
+=head2 NOTES
+
+=over
+
+=item ANY datatype
+
+As stated before, the generic stack always owns a data type created with GENERICSTACK_SET_ANY() or GENERICSTACK_PUSH_ANY(). This simply mean that, I<if> the user provide both a C<clonep> and a C<freep> method, he should I<not> call himself the C<freep> method after retreiving a pointer to the clone.
+
+=item C99 datatypes
+
+C99 data types are all available if the C<GENERICSTACK_C99> macro is defined. Otherwise, partial support of C99 from the compiler support is handled like this:
+
+=over
+
+=item GENERICSTACK_HAVE_LONG_LONG
+
+If this #define is a true value, then C<long long> is supported.
+
+=item GENERICSTACK_HAVE__BOOL
+
+If this #define is a true value, then C<_Bool> is supported.
+
+=item GENERICSTACK_HAVE__COMPLEX
+
+If this #define is a true value, then C<float _Complex>, C<double _Complex> and C<long double _Complex> are supported.
+
+=back
+
+=back
 
 =head1 EXAMPLE
 
