@@ -30,19 +30,31 @@ Set an entry in stack C<stackName>, at index C<index> (numbering start 0), using
 
 =item GENERICSTACK_SET_CHAR
 
+Set C<var> expression result, explicitely typecasted into a C<char>.
+
 =item GENERICSTACK_SET_SHORT
+
+Set C<var> expression result, explicitely typecasted into a C<short>.
 
 =item GENERICSTACK_SET_INT
 
+Set C<var> expression result, explicitely typecasted into an C<int>.
+
 =item GENERICSTACK_SET_LONG
+
+Set C<var> expression result, explicitely typecasted into a C<long>.
 
 =item GENERICSTACK_SET_FLOAT
 
+Set C<var> expression result, explicitely typecasted into a C<float>.
+
 =item GENERICSTACK_SET_DOUBLE
+
+Set C<var> expression result, explicitely typecasted into a C<double>.
 
 =item GENERICSTACK_SET_PTR
 
-=item GENERICSTACK_SET_ANY
+Set C<var> expression result, explicitely typecasted into a C<void *>.
 
 =back
 
@@ -52,21 +64,36 @@ C99 datatypes (see NOTES) may be available via:
 
 =item GENERICSTACK_SET_LONG_LONG
 
+Set C<var> expression result, explicitely typecasted into a C<long long>.
+
 =item GENERICSTACK_SET__BOOL
+
+Set C<var> expression result, explicitely typecasted into a C<_Bool>.
 
 =item GENERICSTACK_SET_FLOAT__COMPLEX
 
+Set C<var> expression result, explicitely typecasted into a C<float _Complex>.
+
 =item GENERICSTACK_SET_DOUBLE__COMPLEX
+
+Set C<var> expression result, explicitely typecasted into a C<double _Complex>.
 
 =item GENERICSTACK_SET_LONG_DOUBLE__COMPLEX
 
+Set C<var> expression result, explicitely typecasted into a C<long double _Complex>.
+
 =back
 
-it is guaranteed that C<logCallbackp> will not be called whenever a message have a log level lower than C<genericLoggerLeveli>.
+=head2 GENERICSTACK_SET_ANY(stackName, var, clonep, freep, index)
 
-If C<logCallbackp> is NULL, then a default built-in implementation is used, with a B<hardcoded> level set to GENERICLOGGER_LEVEL_TRACE (i.e. it will log everything), a B<hardcoded> format string set to C<%d/%m/%Y %H:%M:%S %9s %s> (i.e. date and time a-la-european style, a string giving the level, and the formatted message), and a B<hardcoded> output to standard error.
+  typedef void *(*genericStackClone_t)(void *p);
+  typedef void  (*genericStackFree_t)(void *p);
 
-Returns NULL on failure, system's errno will indicate the reason.
+Set an entry in stack C<stackName>, at index C<index> (numbering start 0), using the result of the expression C<var> that can be a pointer to anything, including opaque storage. C<clonep>, if provided, must be a function pointer that return a clone of C<var> expression. C<freep>, if provided, must be a function pointer that free the clone.
+
+If C<clonep> is NULL, C<GENERICSTACK_SET_ANY> is functionnally equivalent to GENERICSTACK_SET_PTR()
+
+If C<clonep> is not NULL, then it is the clone that is set. This clone will eventually be freed when GENERICSTACK_FREE() is called, using C<freep>, if the later is not NULL (if C<freep> is NULL, a memory leak is likely to happen, unless C<clonep> function is a function that is returning its argument -;).
 
 =head2 genericLogger_clonep
 
