@@ -42,7 +42,6 @@ typedef void  (*genericStackFree_t)(void *p);
 
 typedef struct genericStackItemAny {
   void *p;
-  size_t size;
   genericStackClone_t clone;
   genericStackFree_t free;
 } genericStackItemAny_t;
@@ -170,15 +169,22 @@ typedef struct genericStack {
 #endif
 /* It is illegal to call this macro with a NULL clonep */
 #define GENERICSTACK_SET_ANY(stackName, var, clonep, freep, index) do { \
+    genericStackClone_t _clone = (genericStackClone_t) clonep;		\
     size_t _index_for_set = index;                                      \
     if (_index_for_set >= stackName->used) {                            \
       stackName->used = _index_for_set + 1;                             \
       _GENERICSTACK_EXTEND(stackName, stackName->used);                 \
     }                                                                   \
     stackName->items[_index_for_set].type = GENERICSTACKITEMTYPE_ANY;   \
-    stackName->items[_index_for_set].u.any.p = clonep(var);             \
-    stackName->items[_index_for_set].u.any.clone = clonep;              \
-    stackName->items[_index_for_set].u.any.free = freep;                \
+    if (_clone != NULL) {						\
+      stackName->items[_index_for_set].u.any.clone = _clone;		\
+      stackName->items[_index_for_set].u.any.free = freep;		\
+      stackName->items[_index_for_set].u.any.p = stackName->items[_index_for_set].u.any.clone(var); \
+    } else {								\
+      stackName->items[_index_for_set].u.any.clone = NULL;		\
+      stackName->items[_index_for_set].u.any.free = NULL;		\
+      stackName->items[_index_for_set].u.any.p = (void *) (var);	\
+    }									\
                                                                         \
   } while (0)
 
