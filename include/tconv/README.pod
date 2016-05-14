@@ -62,7 +62,7 @@ Function pointer opaque context.
 
 =back
 
-If C<tconvOptionp> is NULL, defaults will apply. Otherwise, if C<charsetp> is NULL, charset defaults apply, if C<convertp> is NULL convertion defaults apply and if C<traceCallbackp> is NULL, no logging is possible.
+If C<tconvOptionp> is NULL, defaults will apply. Otherwise, if C<charsetp> is NULL charset defaults apply, if C<convertp> is NULL convertion defaults apply, and if C<traceCallbackp> is NULL, no logging is possible.
 
 =head3 charset engine
 
@@ -72,11 +72,11 @@ A charset engine may support three entry points:
   typedef char *(*tconv_charset_run_t) (tconv_t tconvp, void *contextp, char *bytep, size_t bytel);
   typedef void  (*tconv_charset_free_t)(tconv_t tconvp, void *contextp);
 
-All entry points start with a C<tconv_t tconvp> pointer (that they can use to trigger logging, error setting).
+All entry points start with a C<tconvp> pointer (that they can use to trigger logging, error setting).
 
 The I<new> is optional, have a pointer to an opaque (from tconv point of view) data area, and return a charset specific opaque context.
 If I<new> is not NULL, then I<free> must not be NULL, and will be called with the charset specific context pointer returned by I<new>.
-When I<new> is NULL, the context default to NULL.
+When I<new> is NULL, the charset specific context will be NULL.
 
 The only required entry point is I<run>, with a pointer to bytes, and the number of bytes.
 
@@ -97,7 +97,7 @@ C<charsetp> must point to a structure defined as:
     } u;
   } tconv_charset_t;
 
-i.e. a charset engine can be of three types:
+i.e. a charset engine can be of four types:
 
 =over
 
@@ -124,7 +124,7 @@ The charset engine is dynamically loaded. A I<plugin> definition is:
     char *filenames;
   } tconv_charset_plugin_t;
 
-i.e. tconv will use C<filenames> as the filename of a shared library and will try to load it. C<optionp> as a pointer to a charset specific option area, and will look to three entry points C<news>, C<runs> and C<frees>:
+i.e. I<tconv> will use C<filenames> as the path of a shared library and will try to load it. C<optionp> is a pointer to a charset specific option area. I<tconv> will look to the three entry points named C<news>, C<runs> and C<frees>:
 
 =over
 
@@ -142,13 +142,13 @@ If C<frees> is NULL, environment variable C<TCONV_ENV_CHARSET_FREE>, else C<tcon
 
 =back
 
-Please note that dynamically loading a loading is not always thread-safe, and tconv will not try to adapt to this situation. Therefore, it is up to the caller to make sure that tconv_open_ext() is called within a workflow that is not affected by a non-thread-safe workflow (e.g. typically within a critical section, or at program startup).
+Please note that dynamically load is not always thread-safe, and I<tconv> will not try to adapt to this situation. Therefore, it is up to the caller to make sure that tconv_open_ext() is called within a context that is not affected by an eventual non-thread-safe workflow (e.g. typically within a critical section, or at program startup).
 
-=item TCONV_CHARSET_ICU and TCONV_CHARSET_CCHARDET
+=item TCONV_CHARSET_ICU
 
-These are built-ins provided for convenience.
+ICU built-in, availlable when I<tconv> has been compiled with ICU. If I<tconv> has not been compiled with such support, C<TCONV_CHARSET_ICU> remain available, but using it will fail.
 
-If C<ICUOptionp> is not NULL, it must be a pointer to such structure:
+If C<ICUOptionp> is not NULL, it must be a pointer to a structure defined as:
 
   typedef struct tconv_charset_ICU_option {
     int confidencei;
@@ -156,16 +156,20 @@ If C<ICUOptionp> is not NULL, it must be a pointer to such structure:
 
 where C<confidencei> is the minimum accepted confidence level. If NULL, a default of 10 is used, unless the environment variable C<TCONV_ENV_CHARSET_ICU_CONFIDENCE> is set.
 
-If C<cchardetOptionp> is not NULL, it must be a pointer to such structure:
+=item TCONV_CHARSET_CCHARDET
+
+cchardet built-in, always available.
+
+If C<cchardetOptionp> is not NULL, it must be a pointer to a structure defined as:
 
   typedef struct tconv_charset_cchardet_option {
     float confidencef;
   } tconv_charset_cchardet_option_t;
 
-where C<confidencef> is the minimum accepted confidence level. If NULL, a default of 10.0f is used. This can also be set via the environment variable C<TCONV_ENV_CHARSET_CCHARDET_CONFIDENCE>.
+where C<confidencef> is the minimum accepted confidence level. If NULL, a default of 0.4f is used. This can also be set via the environment variable C<TCONV_ENV_CHARSET_CCHARDET_CONFIDENCE>.
 
 =back
 
 =head1 SEE ALSO
 
-L<tconv(3)>
+L<tconv(3)>, L<genericLogger(3)>
