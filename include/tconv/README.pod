@@ -99,6 +99,8 @@ C<charsetp> must point to a structure defined as:
 
 i.e. a charset engine can be of three types:
 
+=over
+
 =item TCONV_CHARSET_EXTERNAL
 
 An I<external> charset engine type is a structure that give explicitly the three entry points described at the beginning of this section, and a pointer to an opaque charset specific option area. It is defined as:
@@ -161,8 +163,6 @@ If C<cchardetOptionp> is not NULL, it must be a pointer to such structure:
   } tconv_charset_cchardet_option_t;
 
 where C<confidencef> is the minimum accepted confidence level. If NULL, a default of 10.0f is used. This can also be set via the environment variable C<TCONV_ENV_CHARSET_CCHARDET_CONFIDENCE>.
-
-=back
 
 =back
 
