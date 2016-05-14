@@ -29,6 +29,9 @@ typedef struct tconv_charset_external {
 /* ------------------------- */
 typedef struct tconv_charset_plugin {
   void *optionp;
+  char *news;
+  char *runs;
+  char *frees;
   char *filenames;
 } tconv_charset_plugin_t;
 
@@ -83,6 +86,9 @@ typedef struct tconv_convert_external {
 /* ------------------ */
 typedef struct tconv_convert_plugin {
   void *optionp;
+  char *news;
+  char *runs;
+  char *frees;
   char *filenames;
 } tconv_convert_plugin_t;
 
