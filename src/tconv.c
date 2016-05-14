@@ -16,8 +16,14 @@ static char *files = "tconv.c";
 static TCONV_C_INLINE void _tconvTraceCallbackProxy(void *userDatavp, genericLoggerLevel_t logLeveli, const char *msgs);
 
 /* For options */
-#define TCONV_ENV_CHARSET "TCONV_ENV_CHARSET"
-#define TCONV_ENV_CONVERT "TCONV_ENV_CONVERT"
+#define TCONV_ENV_CHARSET      "TCONV_ENV_CHARSET"
+#define TCONV_ENV_CHARSET_NEW  "TCONV_ENV_CHARSET_NEW"
+#define TCONV_ENV_CHARSET_RUN  "TCONV_ENV_CHARSET_RUN"
+#define TCONV_ENV_CHARSET_FREE "TCONV_ENV_CHARSET_FREE"
+#define TCONV_ENV_CONVERT      "TCONV_ENV_CONVERT"
+#define TCONV_ENV_CONVERT_NEW  "TCONV_ENV_CONVERT_NEW"
+#define TCONV_ENV_CONVERT_RUN  "TCONV_ENV_CONVERT_RUN"
+#define TCONV_ENV_CONVERT_FREE "TCONV_ENV_CONVERT_FREE"
 
 /* Internal structure */
 struct tconv {
@@ -203,6 +209,12 @@ TCONV_EXPORT tconv_t tconv_open_ext(const char *tocodes, const char *fromcodes, 
   void             *sharedLibraryHandlep = NULL;
   tconv_t           tconvp               = NULL;
   char             *traces               = NULL;
+  char             *charset_news         = NULL;
+  char             *charset_runs         = NULL;
+  char             *charset_frees        = NULL;
+  char             *convert_news         = NULL;
+  char             *convert_runs         = NULL;
+  char             *convert_frees        = NULL;
 
   /* The very initial malloc cannot be done with TCONV_MALLOC */
   tconvp = (tconv_t) malloc(sizeof(struct tconv));
@@ -297,9 +309,24 @@ TCONV_EXPORT tconv_t tconv_open_ext(const char *tocodes, const char *fromcodes, 
           errno = EINVAL;
           goto err;
         }
-        tconvp->charsetExternal.tconv_charset_newp  = dlsym(tconvp->sharedLibraryHandlep, "tconv_charset_newp");
-        tconvp->charsetExternal.tconv_charset_runp  = dlsym(tconvp->sharedLibraryHandlep, "tconv_charset_runp");
-        tconvp->charsetExternal.tconv_charset_freep = dlsym(tconvp->sharedLibraryHandlep, "tconv_charset_freep");
+	if ((charset_news = tconvOptionp->charsetp->u.plugin.news) == NULL) {
+	  if ((charset_news = getenv(TCONV_ENV_CHARSET_NEW)) == NULL) {
+	    charset_news = "tconv_charset_newp";
+	  }
+	}
+	if ((charset_runs = tconvOptionp->charsetp->u.plugin.runs) == NULL) {
+	  if ((charset_runs = getenv(TCONV_ENV_CHARSET_RUN)) == NULL) {
+	    charset_runs = "tconv_charset_runp";
+	  }
+	}
+	if ((charset_frees = tconvOptionp->charsetp->u.plugin.frees) == NULL) {
+	  if ((charset_frees = getenv(TCONV_ENV_CHARSET_FREE)) == NULL) {
+	    charset_frees = "tconv_charset_freep";
+	  }
+	}
+        tconvp->charsetExternal.tconv_charset_newp  = dlsym(tconvp->sharedLibraryHandlep, charset_news);
+        tconvp->charsetExternal.tconv_charset_runp  = dlsym(tconvp->sharedLibraryHandlep, charset_runs);
+        tconvp->charsetExternal.tconv_charset_freep = dlsym(tconvp->sharedLibraryHandlep, charset_frees);
         tconvp->charsetExternal.optionp             = tconvOptionp->charsetp->u.plugin.optionp;
         break;
       case TCONV_CHARSET_ICU:
@@ -358,9 +385,24 @@ TCONV_EXPORT tconv_t tconv_open_ext(const char *tocodes, const char *fromcodes, 
           errno = EINVAL;
           goto err;
         }
-        tconvp->convertExternal.tconv_convert_newp  = dlsym(tconvp->sharedLibraryHandlep, "tconv_convert_newp");
-        tconvp->convertExternal.tconv_convert_runp  = dlsym(tconvp->sharedLibraryHandlep, "tconv_convert_runp");
-        tconvp->convertExternal.tconv_convert_freep = dlsym(tconvp->sharedLibraryHandlep, "tconv_convert_freep");
+	if ((convert_news = tconvOptionp->convertp->u.plugin.news) == NULL) {
+	  if ((convert_news = getenv(TCONV_ENV_CONVERT_NEW)) == NULL) {
+	    convert_news = "tconv_convert_newp";
+	  }
+	}
+	if ((convert_runs = tconvOptionp->convertp->u.plugin.runs) == NULL) {
+	  if ((convert_runs = getenv(TCONV_ENV_CONVERT_RUN)) == NULL) {
+	    convert_runs = "tconv_convert_runp";
+	  }
+	}
+	if ((convert_frees = tconvOptionp->convertp->u.plugin.frees) == NULL) {
+	  if ((convert_frees = getenv(TCONV_ENV_CONVERT_FREE)) == NULL) {
+	    convert_frees = "tconv_convert_freep";
+	  }
+	}
+        tconvp->convertExternal.tconv_convert_newp  = dlsym(tconvp->sharedLibraryHandlep, convert_news);
+        tconvp->convertExternal.tconv_convert_runp  = dlsym(tconvp->sharedLibraryHandlep, convert_runs);
+        tconvp->convertExternal.tconv_convert_freep = dlsym(tconvp->sharedLibraryHandlep, convert_frees);
         tconvp->convertExternal.optionp             = tconvOptionp->convertp->u.plugin.optionp;
         break;
       case TCONV_CONVERT_ICU:
