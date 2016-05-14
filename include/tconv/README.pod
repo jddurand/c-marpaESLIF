@@ -304,6 +304,62 @@ which mean that I<tconv> is then only a proxy to the iconv() with which it was c
 
 =back
 
+=head2 tconv_trace_on
+
+  void  tconv_trace_on(tconv_t tconvp);
+
+Set tracing. Then any call to tconv_trace() will trigger a call to C<traceCallbackp> given in tconv_open_ext()'s option structure.
+
+=head2 tconv_trace_off
+
+  void  tconv_trace_off(tconv_t tconvp);
+
+Unset tracing.
+
+=head2 tconv_trace
+
+  void  tconv_trace(tconv_t tconvp, const char *fmts, ...);
+
+Formats a message string and call C<traceCallbackp> if tracing is on.
+
+=head2 tconv_error_set
+
+  char *tconv_error_set(tconv_t tconvp, const char *msgs);
+
+Set a string that should a contain a more accurate description of the last error. Any engine should use that when a specific description exist. Default is use system's errno description.
+
+=head2 tconv_error
+
+  char *tconv_error(tconv_t tconvp);
+
+Get the latest value of specific error string.
+
+=head2 tconv_fromcode
+
+  char *tconv_fromcode(tconv_t tconvp);
+
+Get the source codeset.
+
+=head2 tconv_tocode
+
+  char *tconv_tocode(tconv_t tconvp);
+
+Get the destination codeset.
+
+=head1 NOTES
+
+=over
+
+=item tracing
+
+I<tconv> can trace itself, unless I<tconv> has been compiled with -DTCONV_NDEBUG, which is the default. When compiled without -DTCONV_NDEBUG, default tracing level is 0, unless environment variable C<TCONV_ENV_TRACE> is set and the value of the later is a true value.
+
+=item specific error string
+
+I<tconv> internally limit the length of such string to 1024 bytes (including NUL).
+
+=back
+
 =head1 SEE ALSO
 
 L<tconv(3)>, L<genericLogger(3)>
