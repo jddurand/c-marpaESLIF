@@ -1,0 +1,171 @@
+=head1 NAME
+
+tconv_ext - tconv extended API
+
+=head1 SYNOPSIS
+
+  #include <tconv.h>
+
+  tconv_t tconv_open_ext(const char *tocodes, const char *fromcodes, tconv_option_t *tconvOptionp);
+
+  void  tconv_trace_on(tconv_t tconvp);
+  void  tconv_trace_off(tconv_t tconvp);
+  void  tconv_trace(tconv_t tconvp, const char *fmts, ...);
+  char *tconv_error_set(tconv_t tconvp, const char *msgs);
+  char *tconv_error(tconv_t tconvp);
+  char *tconv_fromcode(tconv_t tconvp);
+  char *tconv_tocode(tconv_t tconvp);
+
+=head1 DESCRIPTION
+
+tconv extended API is providing more entry points to query or control how tconv behaves: tconv is a generic layer on top of iconv(), ICU, etc. Therefore additional semantic is needed.
+
+=head1 METHODS
+
+=head2 tconv_open_ext
+
+  tconv_t tconv_open_ext(const char *tocodes, const char *fromcodes, tconv_option_t *tconvOptionp);
+
+  typedef void (*tconvTraceCallback_t)(void *userDatavp, const char *msgs);
+  typedef struct tconv_option {
+    tconv_charset_t      *charsetp;
+    tconv_convert_t      *convertp;
+    tconvTraceCallback_t  traceCallbackp;
+    void                 *traceUserDatavp;
+  } tconv_option_t;
+
+tconv support two engine types: one for charset detection, one for character conversion. Each engine as its own option structure:
+
+=over
+
+=item charsetp
+
+Describe charset engine options.
+
+=item convertp
+
+Describe convertion engine options.
+
+=back
+
+Logging is provided through the I<genericLogger> package, and the developper may provide a function pointer with an associated context:
+
+=over
+
+=item traceCallbackp
+
+A function pointer.
+
+=item traceUserDatavp
+
+Function pointer opaque context.
+
+=back
+
+If C<tconvOptionp> is NULL, defaults will apply. Otherwise, if C<charsetp> is NULL, charset defaults apply, if C<convertp> is NULL convertion defaults apply and if C<traceCallbackp> is NULL, no logging is possible.
+
+=head3 charset engine
+
+A charset engine may support three entry points:
+
+  typedef void *(*tconv_charset_new_t) (tconv_t tconvp, void *optionp);
+  typedef char *(*tconv_charset_run_t) (tconv_t tconvp, void *contextp, char *bytep, size_t bytel);
+  typedef void  (*tconv_charset_free_t)(tconv_t tconvp, void *contextp);
+
+All entry points start with a C<tconv_t tconvp> pointer (that they can use to trigger logging, error setting).
+
+The I<new> is optional, have a pointer to an opaque (from tconv point of view) data area, and return a charset specific opaque context.
+If I<new> is not NULL, then I<free> must not be NULL, and will be called with the charset specific context pointer returned by I<new>.
+When I<new> is NULL, the context default to NULL.
+
+The only required entry point is I<run>, with a pointer to bytes, and the number of bytes.
+
+C<charsetp> must point to a structure defined as:
+
+  typedef struct tconv_charset {
+    enum {
+      TCONV_CHARSET_EXTERNAL = 0,
+      TCONV_CHARSET_PLUGIN,
+      TCONV_CHARSET_ICU,
+      TCONV_CHARSET_CCHARDET,
+    } charseti;
+    union {
+      tconv_charset_external_t         external;
+      tconv_charset_plugin_t           plugin;
+      tconv_charset_ICU_option_t      *ICUOptionp;
+      tconv_charset_cchardet_option_t *cchardetOptionp;
+    } u;
+  } tconv_charset_t;
+
+i.e. a charset engine can be of three types:
+
+=item TCONV_CHARSET_EXTERNAL
+
+An I<external> charset engine type is a structure that give explicitly the three entry points described at the beginning of this section, and a pointer to an opaque charset specific option area. It is defined as:
+
+  typedef struct tconv_charset_external {
+    void                *optionp;
+    tconv_charset_new_t  tconv_charset_newp;
+    tconv_charset_run_t  tconv_charset_runp;
+    tconv_charset_free_t tconv_charset_freep;
+  } tconv_charset_external_t;
+
+=item TCONV_CHARSET_PLUGIN
+
+The charset engine is dynamically loaded. A I<plugin> definition is:
+
+  typedef struct tconv_charset_plugin {
+    void *optionp;
+    char *news;
+    char *runs;
+    char *frees;
+    char *filenames;
+  } tconv_charset_plugin_t;
+
+i.e. tconv will use C<filenames> as the filename of a shared library and will try to load it. C<optionp> as a pointer to a charset specific option area, and will look to three entry points C<news>, C<runs> and C<frees>:
+
+=over
+
+=item news
+
+If C<news> is NULL, environment variable C<TCONV_ENV_CHARSET_NEW>, else C<tconv_charset_newp> will be looked at.
+
+=item runs
+
+If C<runs> is NULL, environment variable C<TCONV_ENV_CHARSET_RUN>, else C<tconv_charset_runp> will be looked at.
+
+=item frees
+
+If C<frees> is NULL, environment variable C<TCONV_ENV_CHARSET_FREE>, else C<tconv_charset_freep> will be looked at.
+
+=back
+
+Please note that dynamically loading a loading is not always thread-safe, and tconv will not try to adapt to this situation. Therefore, it is up to the caller to make sure that tconv_open_ext() is called within a workflow that is not affected by a non-thread-safe workflow (e.g. typically within a critical section, or at program startup).
+
+=item TCONV_CHARSET_ICU and TCONV_CHARSET_CCHARDET
+
+These are built-ins provided for convenience.
+
+If C<ICUOptionp> is not NULL, it must be a pointer to such structure:
+
+  typedef struct tconv_charset_ICU_option {
+    int confidencei;
+  } tconv_charset_ICU_option_t;
+
+where C<confidencei> is the minimum accepted confidence level. If NULL, a default of 10 is used, unless the environment variable C<TCONV_ENV_CHARSET_ICU_CONFIDENCE> is set.
+
+If C<cchardetOptionp> is not NULL, it must be a pointer to such structure:
+
+  typedef struct tconv_charset_cchardet_option {
+    float confidencef;
+  } tconv_charset_cchardet_option_t;
+
+where C<confidencef> is the minimum accepted confidence level. If NULL, a default of 10.0f is used. This can also be set via the environment variable C<TCONV_ENV_CHARSET_CCHARDET_CONFIDENCE>.
+
+=back
+
+=back
+
+=head1 SEE ALSO
+
+L<tconv(3)>
