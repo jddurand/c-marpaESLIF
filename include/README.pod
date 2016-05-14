@@ -92,4 +92,4 @@ By POSIX compliance, we mean that, when the output buffer is too small, iconv sh
 
 =head1 SEE ALSO
 
-L<iconv(3)>, L<cchardet|https://pypi.python.org/pypi/cchardet/>, L<win-iconv|https://github.com/win-iconv/win-iconv>, L<ICU|http://icu-project.org/>
+L<tconv_ext(3)>, L<iconv(3)>, L<cchardet|https://pypi.python.org/pypi/cchardet/>, L<win-iconv|https://github.com/win-iconv/win-iconv>, L<ICU|http://icu-project.org/>
