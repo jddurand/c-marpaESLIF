@@ -8,7 +8,7 @@
 #include "tconv_config.h"
 
 static tconv_charset_cchardet_option_t tconv_charset_cchardet_option_default = {
-  10.0f
+  0.4f
 };
 
 #define TCONV_ENV_CHARSET_CCHARDET_CONFIDENCE "TCONV_ENV_CHARSET_CCHARDET_CONFIDENCE"
