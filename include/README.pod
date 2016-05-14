@@ -64,11 +64,13 @@ The default character conversion engine is ICU, if tconv has been compiled with 
 
 =head1 NOTES
 
-=head2 Windows platform
+=over
+
+=item Windows platform
 
 On Windows, an ICONV-like conversion engine is always available, via the L<win-iconv> package, bundled with tconv.
 
-=head2 iconv compliance
+=item iconv compliance
 
 =over
 
@@ -83,6 +85,8 @@ It is guaranteed that tconv() will behave exactly like iconv() if the character 
 =item POSIX compliance
 
 By POSIX compliance, we mean that, when the output buffer is too small, iconv should stop updating the input and output pointers prior to when the limit is reached. When the character conversion engine is ICONV on an UNIX platform, it is the behaviour of this UNIX platform that happen. In any other case, the plug-ins guarantee at least that input and output pointers are left in a state that, if being called again, will correctly handle the continuation of the conversion.
+
+=back
 
 =back
 
