@@ -30,19 +30,23 @@ If C<tocode> is NULL, it will default to C<fromcode>.
 
 tconv support two engine types: one for charset detection, one for character conversion, please refer to the L<tconv_open_ext> documentation for technical details. Engines, whatever their type, are supposed to have three entry points: C<new>, C<run> and C<free>. They can be:
 
-=head2 external
+=over
+
+=item external
 
 The application already have the C<new>, C<run> and C<free> entry points.
 
-=head2 plugin
+=item plugin
 
 The application give the path of a shared library, and tconv will look at it.
 
-=head2 built-in
+=item built-in
 
 Python's L<cchardet> charset detection engine, bundled with tconv, is always available.
 If tconv is compiled with ICU support, then ICU charset and conversion engines will be available.
 If tconv is compiled with ICONV support, then ICONV conversion engine will be available.
+
+=back
 
 =head1 DEFAULTS
 
