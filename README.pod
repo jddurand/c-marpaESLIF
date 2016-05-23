@@ -111,7 +111,7 @@ Get an entry in stack C<stackName>, at index C<index> (numbering start 0). The d
 
 =item GENERICSTACK_GET_FLOAT
 
-item GENERICSTACK_GET_DOUBLE
+=item GENERICSTACK_GET_DOUBLE
 
 =item GENERICSTACK_GET_PTR
 
