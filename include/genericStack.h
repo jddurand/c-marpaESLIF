@@ -278,6 +278,6 @@ typedef struct genericStack {
       free(stackName->items);                                           \
     }                                                                   \
     free(stackName);                                                    \
-  } while (0);
+  } while (0)
 
 #endif /* GENERICSTACK_H */
