@@ -98,7 +98,7 @@ CHECK_INCLUDE_FILE("inttypes.h"   HAVE_INTTYPES_H)
 CHECK_INCLUDE_FILE("memory.h"     HAVE_MEMORY_H)
 CHECK_INCLUDE_FILE("memset.h"     HAVE_MEMSET_H)
 CHECK_INCLUDE_FILE("stddef.h"     HAVE_STDDEF_H)
-CHECK_INCLUDE_FILE("stdin.h"      HAVE_STDINT_H)
+CHECK_INCLUDE_FILE("stdint.h"     HAVE_STDINT_H)
 CHECK_INCLUDE_FILE("stdlib.h"     HAVE_STDLIB_H)
 CHECK_INCLUDE_FILE("strings.h"    HAVE_STRINGS_H)
 CHECK_INCLUDE_FILE("string.h"     HAVE_STRING_H)
@@ -135,13 +135,11 @@ SET (MARPA__R2_DIR            "${3RDPARTY_OUTPUT_PATH}/Marpa--R2-remote")
 SET (MARPA__R2_INCLUDE_DIR    "${MARPA__R2_DIR}")
 SET (MARPA__R2_LIBRARY_TARGET "marpa")
 FILE (GLOB lib_marpa_src "${MARPA__R2_DIR}/cpan/engine/read_only/*.c")
-ADD_LIBRARY (marpa STATIC ${lib_marpa_src})
-ADD_DEPENDENCIES(marpa marpaWrapperConfig)
 
 # ------------------
 # marpaWrapper library
 # -----------------
-FILE (GLOB lib_src src/*.c)
+FILE (GLOB lib_src ${lib_marpa_src} src/marpaWrapper/*.c)
 ADD_LIBRARY (marpaWrapper SHARED ${lib_src})
 INCLUDE_DIRECTORIES (
   "${MARPA__R2_DIR}/cpan/engine/read_only/"            # Include path for marpa
@@ -149,7 +147,7 @@ INCLUDE_DIRECTORIES (
   "${PROJECT_SOURCE_DIR}/include"                      # Include path for the other headers
   "${GENERICLOGGER_INCLUDE_DIRS}"                      # Include path for genericLogger (external - required)
   )
-TARGET_LINK_LIBRARIES (marpaWrapper "${GENERICLOGGER_LINK_FLAGS}" marpa)
+TARGET_LINK_LIBRARIES (marpaWrapper "${GENERICLOGGER_LINK_FLAGS}")
 SET_TARGET_PROPERTIES (marpaWrapper
   PROPERTIES
   COMPILE_FLAGS "-DmarpaWrapper_EXPORTS"
@@ -172,3 +170,28 @@ ADD_CUSTOM_TARGET(marpaWrapperExport SOURCES "${INCLUDE_OUTPUT_PATH}/marpaWrappe
 # Explicit dependencies on generated files
 # ----------------------------------------
 ADD_DEPENDENCIES(marpaWrapper marpaWrapperConfig marpaWrapperExport)
+SET_TARGET_PROPERTIES(marpaWrapper PROPERTIES COMPILE_FLAGS "-DmarpaWrapper_EXPORTS"
+                                               VERSION       "${MARPAWRAPPER_VERSION}"
+                                               SOVERSION     "${MARPAWRAPPER_VERSION_MAJOR}"
+                                               LINKER_LANGUAGE C)
+
+
+# -----
+# Check
+# -----
+ENABLE_TESTING()
+
+ADD_EXECUTABLE        (marpaWrapperGrammarTester EXCLUDE_FROM_ALL test/marpaWrapper/grammar.c)
+#
+# Painful but putting the binaries produced with dynamic linking in the same directory as the
+# dynamic libraries is the only way to make sure the OS will always see the dynamic library
+# at runtime, REGARDLESS of the OS (we are thinking to Windows and Visual Studio for instance).
+# and since we must do that for the dynamic test, we do it as well for any runtime thingy, just for coherency.
+#
+SET_TARGET_PROPERTIES (marpaWrapperGrammarTester       PROPERTIES LINKER_LANGUAGE C RUNTIME_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH})
+TARGET_LINK_LIBRARIES (marpaWrapperGrammarTester       marpaWrapper)
+
+ADD_TEST              (NAME marpaWrapperTest
+                       COMMAND marpaWrapperGrammarTester
+                       WORKING_DIRECTORY ${LIBRARY_OUTPUT_PATH})
+ADD_CUSTOM_TARGET     (check COMMAND ${CMAKE_CTEST_COMMAND} DEPENDS marpaWrapperGrammarTester)
