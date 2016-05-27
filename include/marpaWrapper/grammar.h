@@ -7,7 +7,9 @@
 /* ---------------- */
 /* Opaque structure */
 /* ---------------- */
-typedef struct marpaWrapperGrammar marpaWrapperGrammar_t;
+typedef struct marpaWrapperGrammar       marpaWrapperGrammar_t;
+typedef struct marpaWrapperGrammarSymbol marpaWrapperGrammarSymbol_t;
+typedef struct marpaWrapperGrammarRule   marpaWrapperGrammarRule_t;
 
 /* --------------- */
 /* General options */
