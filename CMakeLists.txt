@@ -78,10 +78,18 @@ IF (NOT GENERICLOGGER_FOUND)
     MESSAGE (FATAL_ERROR "genericLogger must be detected")
 ENDIF ()
 
+# -----------------------------------
+# genericStack: required
+# -----------------------------------
+INCLUDE(CheckIncludeFile)
+CHECK_INCLUDE_FILE("genericStack.h" HAVE_GENERICSTACK_H)
+IF (NOT HAVE_GENERICSTACK_H)
+    MESSAGE (FATAL_ERROR "genericStack must be detected")
+ENDIF ()
+
 # --------------------------------------
 # config.h (we will share it with marpa)
 # --------------------------------------
-INCLUDE(CheckIncludeFile)
 CHECK_INCLUDE_FILE("dlfcn.h"      HAVE_DLFCN_H)
 CHECK_INCLUDE_FILE("inttypes.h"   HAVE_INTTYPES_H)
 CHECK_INCLUDE_FILE("memory.h"     HAVE_MEMORY_H)
