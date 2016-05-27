@@ -30,3 +30,26 @@
 
 # Debug files
 *.dSYM/
+
+# Cmake garbage
+CMakeCache.txt
+CMakeFiles/
+CMakeScripts/
+CTestTestfile.cmake
+Makefile
+cmake_install.cmake
+install_manifest.txt
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
+*.opensdf
+*.sln
+*.suo
+*.sdf
+*.dir/
+Testing/
+Win32/
+ipch/
+
+# Our garbage
+output/
