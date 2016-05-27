@@ -114,6 +114,7 @@ IF ("${C_INLINE}" EQUAL "inline")
 ELSE ("${C_INLINE}" EQUAL "inline")
   SET (C_INLINE_IS_INLINE FALSE)
 ENDIF ("${C_INLINE}" EQUAL "inline")
+FIND_PACKAGE(NullIsZeroes)
 
 # ----------------------------------------------------
 # Configuration
@@ -139,7 +140,7 @@ FILE (GLOB lib_marpa_src "${MARPA__R2_DIR}/cpan/engine/read_only/*.c")
 # ------------------
 # marpaWrapper library
 # -----------------
-FILE (GLOB lib_src ${lib_marpa_src} src/marpaWrapper/*.c)
+FILE (GLOB lib_src ${lib_marpa_src} src/internal/*.c src/marpaWrapper/*.c)
 ADD_LIBRARY (marpaWrapper SHARED ${lib_src})
 INCLUDE_DIRECTORIES (
   "${MARPA__R2_DIR}/cpan/engine/read_only/"            # Include path for marpa

@@ -1,12 +1,14 @@
+#include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
 #include "marpa.h"
 #include "marpa_codes.h"
 
-extern const struct marpa_error_description_s marpa_error_description[];
-
+#include "config.h"
 #include "marpaWrapper/grammar.h"
+
+extern const struct marpa_error_description_s marpa_error_description[];
 
 static marpaWrapperGrammarOption_t marpaWrapperGrammarOptionDefault = {
   NULL,    /* genericLoggerp    */
@@ -14,12 +16,23 @@ static marpaWrapperGrammarOption_t marpaWrapperGrammarOptionDefault = {
   0,       /* warningIsIgnoredb */
 };
 
-/* Our context is exactly marpa's structure */
+struct marpaWrapperGrammarSymbol {
+  Marpa_Symbol_ID                   marpaSymbolIdi;
+  marpaWrapperGrammarSymbolOption_t marpaWrapperGrammarSymbolOption;
+  /* Internal work area */
+  short                             isLexemeb;
+  size_t                            lengthl;
+};
+
 typedef struct marpaWrapperGrammar {
-  int                         refi;                              /* Number of references used when cloning */
-  marpaWrapperGrammarOption_t marpaWrapperGrammarOption;
-  Marpa_Grammar               marpaGrammarp;
-  Marpa_Config                marpaConfig;
+  int                           refi;                              /* Number of references used when cloning */
+  marpaWrapperGrammarOption_t   marpaWrapperGrammarOption;
+  Marpa_Grammar                 marpaGrammarp;
+  Marpa_Config                  marpaConfig;
+
+  size_t                        sizeMarpaWrapperSymboli;           /* Allocated size */
+  size_t                        nMarpaWrapperSymboli;              /* Used size      */
+  marpaWrapperGrammarSymbol_t **marpaWrapperSymbolpp;
 };
 
 #ifndef MARPAWRAPPER_NTRACE
@@ -121,6 +134,9 @@ marpaWrapperGrammar_t *marpaWrapperGrammar_newp(marpaWrapperGrammarOption_t *mar
 
   marpaWrapperGrammarp->refi                      = 1;
   marpaWrapperGrammarp->marpaWrapperGrammarOption = *marpaWrapperGrammarOptionp;
+  marpaWrapperGrammarp->sizeMarpaWrapperSymboli   = 0;
+  marpaWrapperGrammarp->nMarpaWrapperSymboli      = 0;
+  marpaWrapperGrammarp->marpaWrapperSymbolpp      = NULL;
 
   MARPAWRAPPERGRAMMAR_TRACEF(genericLoggerp, funcs, "return %p", marpaWrapperGrammarp);
   return marpaWrapperGrammarp;

@@ -17,6 +17,7 @@
 #cmakedefine SIZEOF_INT @SIZEOF_INT@
 #cmakedefine C_INLINE @C_INLINE@
 #cmakedefine C_INLINE_IS_INLINE @C_INLINE_IS_INLINE@
+#cmakedefine NULL_IS_ZEROES @NULL_IS_ZEROES@
 #ifndef __cplusplus
 #  ifndef C_INLINE
 #    undef inline
