@@ -3,6 +3,7 @@
 #include <errno.h>
 #include "marpa.h"
 #include "marpa_codes.h"
+
 extern const struct marpa_error_description_s marpa_error_description[];
 
 #include "marpaWrapper/grammar.h"
@@ -15,13 +16,15 @@ static marpaWrapperGrammarOption_t marpaWrapperGrammarOptionDefault = {
 
 /* Our context is exactly marpa's structure */
 typedef struct marpaWrapperGrammar {
-  Marpa_Grammar marpaGrammarp;
-  Marpa_Config  marpaConfig;
+  int                         refi;                              /* Number of references used when cloning */
+  marpaWrapperGrammarOption_t marpaWrapperGrammarOption;
+  Marpa_Grammar               marpaGrammarp;
+  Marpa_Config                marpaConfig;
 };
 
 #ifndef MARPAWRAPPER_NTRACE
-#define MARPAWRAPPERGRAMMAR_TRACEF(genericLoggerp, fmts, ...) GENERICLOGGER_TRACEF(genericLoggerp, fmts " at %s:%d", __VA_ARGS__, __FILE__, __LINE__)
-#define MARPAWRAPPERGRAMMAR_TRACE(genericLoggerp, msgs) GENERICLOGGER_TRACEF(genericLoggerp, "%s at %s:%d", msgs, __FILE__, __LINE__)
+#define MARPAWRAPPERGRAMMAR_TRACEF(genericLoggerp, funcs, fmts, ...) GENERICLOGGER_TRACEF(genericLoggerp, "[%s] " fmts, funcs, __VA_ARGS__)
+#define MARPAWRAPPERGRAMMAR_TRACE(genericLoggerp, funcs, msgs) GENERICLOGGER_TRACEF(genericLoggerp, "[%s] %s", funcs, msgs)
 #else
 #define MARPAWRAPPERGRAMMAR_TRACEF
 #define MARPAWRAPPERGRAMMAR_TRACE
@@ -56,6 +59,7 @@ typedef struct marpaWrapperGrammar {
 marpaWrapperGrammar_t *marpaWrapperGrammar_newp(marpaWrapperGrammarOption_t *marpaWrapperGrammarOptionp)
 /****************************************************************************/
 {
+  const static char      funcs[] = "marpaWrapperGrammar_newp";
   marpaWrapperGrammar_t *marpaWrapperGrammarp;
   genericLogger_t       *genericLoggerp;
 #ifndef MARPAWRAPPER_NTRACE
@@ -75,7 +79,7 @@ marpaWrapperGrammar_t *marpaWrapperGrammar_newp(marpaWrapperGrammarOption_t *mar
       GENERICLOGGER_ERROR(genericLoggerp, "marpa_version failure");
       goto err;
     }
-    MARPAWRAPPERGRAMMAR_TRACEF(genericLoggerp, "marpa_version: %d.%d.%d", marpaVersionip[0], marpaVersionip[1], marpaVersionip[2]);
+    MARPAWRAPPERGRAMMAR_TRACEF(genericLoggerp, funcs, "marpa_version: %d.%d.%d", marpaVersionip[0], marpaVersionip[1], marpaVersionip[2]);
   }
 #endif
 
@@ -86,11 +90,11 @@ marpaWrapperGrammar_t *marpaWrapperGrammar_newp(marpaWrapperGrammarOption_t *mar
   }
 
   /* Initialize Marpa - always succeed as per the doc */
-  MARPAWRAPPERGRAMMAR_TRACEF(genericLoggerp, "marpa_c_init(%p)", &(marpaWrapperGrammarp->marpaConfig));
+  MARPAWRAPPERGRAMMAR_TRACEF(genericLoggerp, funcs, "marpa_c_init(%p)", &(marpaWrapperGrammarp->marpaConfig));
   marpa_c_init(&(marpaWrapperGrammarp->marpaConfig));
 
   /* Create a grammar instance */
-  MARPAWRAPPERGRAMMAR_TRACEF(genericLoggerp, "marpa_g_new(%p)", &(marpaWrapperGrammarp->marpaConfig));
+  MARPAWRAPPERGRAMMAR_TRACEF(genericLoggerp, funcs, "marpa_g_new(%p)", &(marpaWrapperGrammarp->marpaConfig));
   marpaWrapperGrammarp->marpaGrammarp = marpa_g_new(&(marpaWrapperGrammarp->marpaConfig));
   if (marpaWrapperGrammarp->marpaGrammarp == NULL) {
     MARPAWRAPPERGRAMMAR_C_ERROR(genericLoggerp, &(marpaWrapperGrammarp->marpaConfig));
@@ -98,19 +102,98 @@ marpaWrapperGrammar_t *marpaWrapperGrammar_newp(marpaWrapperGrammarOption_t *mar
   }
 
   /* Turn off obsolete features as per the doc */
-  MARPAWRAPPERGRAMMAR_TRACEF(genericLoggerp, "marpa_g_force_valued(%p)", marpaWrapperGrammarp->marpaGrammarp);
+  MARPAWRAPPERGRAMMAR_TRACEF(genericLoggerp, funcs, "marpa_g_force_valued(%p)", marpaWrapperGrammarp->marpaGrammarp);
   if (marpa_g_force_valued(marpaWrapperGrammarp->marpaGrammarp) < 0) {
     MARPAWRAPPERGRAMMAR_G_ERROR(genericLoggerp, marpaWrapperGrammarp->marpaGrammarp);
     goto err;
   }
 
+  if (genericLoggerp != NULL) {
+    MARPAWRAPPERGRAMMAR_TRACE(genericLoggerp, funcs, "Cloning genericLogger");
+
+    marpaWrapperGrammarOptionp->genericLoggerp = GENERICLOGGER_CLONE(genericLoggerp);
+    if (marpaWrapperGrammarOptionp->genericLoggerp == NULL) {
+      GENERICLOGGER_ERRORF(genericLoggerp, "Failed to clone genericLogger: %s", strerror(errno));
+      goto err;
+    }
+    /* We INTENTIONNALY do not change genericLoggerp */
+  }
+
+  marpaWrapperGrammarp->refi                      = 1;
+  marpaWrapperGrammarp->marpaWrapperGrammarOption = *marpaWrapperGrammarOptionp;
+
+  MARPAWRAPPERGRAMMAR_TRACEF(genericLoggerp, funcs, "return %p", marpaWrapperGrammarp);
   return marpaWrapperGrammarp;
 
  err:
   if (marpaWrapperGrammarp != NULL) {
+    int errnoi = errno;
+
+    if ((genericLoggerp != NULL) &&
+        (marpaWrapperGrammarOptionp->genericLoggerp != NULL) &&
+        (marpaWrapperGrammarOptionp->genericLoggerp != genericLoggerp)) {
+      MARPAWRAPPERGRAMMAR_TRACE(genericLoggerp, funcs, "Freeing cloned genericLogger");
+      GENERICLOGGER_FREE(marpaWrapperGrammarOptionp->genericLoggerp);
+    }
+
     free(marpaWrapperGrammarp);
+    errno = errnoi;
   }
 
   return NULL;
 }
 
+/****************************************************************************/
+marpaWrapperGrammar_t *marpaWrapperGrammar_clonep(marpaWrapperGrammar_t *marpaWrapperGrammarp)
+/****************************************************************************/
+{
+  const static char  funcs[] = "marpaWrapperGrammar_clonep";
+#ifndef MARPAWRAPPER_NTRACE
+  genericLogger_t   *genericLoggerp;
+#endif
+
+  if (marpaWrapperGrammarp == NULL) {
+    errno = EINVAL;
+    goto err;
+  }
+
+  /* Instead of grammar built-in reference count, we use our own counter */
+#ifndef MARPAWRAPPER_NTRACE
+  genericLoggerp = marpaWrapperGrammarp->marpaWrapperGrammarOption.genericLoggerp;
+#endif
+  MARPAWRAPPERGRAMMAR_TRACEF(genericLoggerp, funcs, "Increasing reference count from %d to %d", marpaWrapperGrammarp->refi, marpaWrapperGrammarp->refi + 1);
+  marpaWrapperGrammarp->refi++;
+
+  MARPAWRAPPERGRAMMAR_TRACEF(genericLoggerp, funcs, "return %p", marpaWrapperGrammarp);
+  return marpaWrapperGrammarp;
+
+ err:
+  return NULL;
+}
+
+/****************************************************************************/
+void marpaWrapperGrammar_freev(marpaWrapperGrammar_t *marpaWrapperGrammarp)
+/****************************************************************************/
+{
+  const static char  funcs[] = "marpaWrapperGrammar_freev";
+#ifndef MARPAWRAPPER_NTRACE
+  genericLogger_t  *genericLoggerp;
+#endif
+
+  if (marpaWrapperGrammarp != NULL) {
+#ifndef MARPAWRAPPER_NTRACE
+    genericLoggerp = marpaWrapperGrammarp->marpaWrapperGrammarOption.genericLoggerp;
+#endif
+    MARPAWRAPPERGRAMMAR_TRACEF(genericLoggerp, funcs, "Decreasing reference count from %d to %d", marpaWrapperGrammarp->refi, marpaWrapperGrammarp->refi - 1);
+    if (--marpaWrapperGrammarp->refi <= 0) {
+      MARPAWRAPPERGRAMMAR_TRACEF(genericLoggerp, funcs, "marpa_g_unref(%p)", marpaWrapperGrammarp->marpaGrammarp);
+      marpa_g_unref(marpaWrapperGrammarp->marpaGrammarp);
+      if (genericLoggerp != NULL) {
+        MARPAWRAPPERGRAMMAR_TRACE(genericLoggerp, funcs, "Freeing cloned generic logger");
+        GENERICLOGGER_FREE(marpaWrapperGrammarp->marpaWrapperGrammarOption.genericLoggerp);
+      }
+      MARPAWRAPPERGRAMMAR_TRACEF(genericLoggerp, funcs, "free(%p)", marpaWrapperGrammarp);
+      free(marpaWrapperGrammarp);
+    }
+  }
+}

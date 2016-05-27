@@ -42,9 +42,10 @@ typedef struct marpaWrapperGrammarSymbolOption {
 extern "C" {
 #endif
   marpaWrapper_EXPORT marpaWrapperGrammar_t *marpaWrapperGrammar_newp(marpaWrapperGrammarOption_t *marpaWrapperGrammarOptionp);
+  marpaWrapper_EXPORT marpaWrapperGrammar_t *marpaWrapperGrammar_clonep(marpaWrapperGrammar_t *marpaWrapperGrammarp);
   marpaWrapper_EXPORT short                  marpaWrapperGrammar_symbolb(marpaWrapperGrammar_t *marpaWrapperGrammarp, marpaWrapperGrammarSymbolOption_t *marpaWrapperGrammarSymbolOptionp);
-#ifdef __cplusplus
   marpaWrapper_EXPORT void                   marpaWrapperGrammar_freev(marpaWrapperGrammar_t *marpaWrapperGrammarp);
+#ifdef __cplusplus
 }
 #endif
 
