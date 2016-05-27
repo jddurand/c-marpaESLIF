@@ -81,6 +81,10 @@ ENDIF ()
 # genericStack: required
 # -----------------------------------
 INCLUDE(CheckIncludeFile)
+IF (GENERICSTACK_ROOT_DIR)
+  SET (CMAKE_REQUIRED_INCLUDES "${GENERICSTACK_ROOT_DIR}/include")
+ENDIF (GENERICSTACK_ROOT_DIR)
+
 CHECK_INCLUDE_FILE("genericStack.h" HAVE_GENERICSTACK_H)
 IF (NOT HAVE_GENERICSTACK_H)
     MESSAGE (FATAL_ERROR "genericStack must be detected")
