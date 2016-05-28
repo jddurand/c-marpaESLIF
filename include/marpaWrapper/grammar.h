@@ -62,8 +62,8 @@ extern "C" {
   marpaWrapper_EXPORT marpaWrapperGrammar_t       *marpaWrapperGrammar_clonep(marpaWrapperGrammar_t *marpaWrapperGrammarp);
   marpaWrapper_EXPORT void                         marpaWrapperGrammar_freev(marpaWrapperGrammar_t *marpaWrapperGrammarp);
 
-  marpaWrapper_EXPORT marpaWrapperGrammarSymbol_t *marpaWrapperGrammarSymbol_newp(marpaWrapperGrammar_t *marpaWrapperGrammarp, marpaWrapperGrammarSymbolOption_t *marpaWrapperGrammarSymbolOptionp);
-  marpaWrapper_EXPORT marpaWrapperGrammarRule_t   *marpaWrapperGrammarRule_newp(marpaWrapperGrammar_t *marpaWrapperGrammarp, marpaWrapperGrammarRuleOption_t *marpaWrapperGrammarRuleOptionp,
+  marpaWrapper_EXPORT marpaWrapperGrammarSymbol_t *marpaWrapperGrammar_newSymbolp(marpaWrapperGrammar_t *marpaWrapperGrammarp, marpaWrapperGrammarSymbolOption_t *marpaWrapperGrammarSymbolOptionp);
+  marpaWrapper_EXPORT marpaWrapperGrammarRule_t   *marpaWrapperGrammar_newRulep(marpaWrapperGrammar_t *marpaWrapperGrammarp, marpaWrapperGrammarRuleOption_t *marpaWrapperGrammarRuleOptionp,
 										marpaWrapperGrammarSymbol_t *lhsSymbolp,
 										size_t rhsSymboll, marpaWrapperGrammarSymbol_t **rhsSymbolpp
 										);

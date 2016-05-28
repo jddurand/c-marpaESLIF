@@ -254,10 +254,10 @@ void marpaWrapperGrammar_freev(marpaWrapperGrammar_t *marpaWrapperGrammarp)
 }
 
 /****************************************************************************/
-marpaWrapperGrammarSymbol_t *marpaWrapperGrammarSymbol_newp(marpaWrapperGrammar_t *marpaWrapperGrammarp, marpaWrapperGrammarSymbolOption_t *marpaWrapperGrammarSymbolOptionp)
+marpaWrapperGrammarSymbol_t *marpaWrapperGrammar_newSymbolp(marpaWrapperGrammar_t *marpaWrapperGrammarp, marpaWrapperGrammarSymbolOption_t *marpaWrapperGrammarSymbolOptionp)
 /****************************************************************************/
 {
-  const static char            funcs[] = "marpaWrapperGrammarSymbol_newp";
+  const static char            funcs[] = "marpaWrapperGrammar_newSymbolp";
   Marpa_Symbol_ID              marpaSymbolIdi;
   genericLogger_t             *genericLoggerp;
   size_t                       nSymboli;
@@ -353,13 +353,13 @@ marpaWrapperGrammarSymbol_t *marpaWrapperGrammarSymbol_newp(marpaWrapperGrammar_
 }
 
 /****************************************************************************/
-marpaWrapperGrammarRule_t *marpaWrapperGrammarRule_newp(marpaWrapperGrammar_t *marpaWrapperGrammarp, marpaWrapperGrammarRuleOption_t *marpaWrapperGrammarRuleOptionp,
+marpaWrapperGrammarRule_t *marpaWrapperGrammar_newRulep(marpaWrapperGrammar_t *marpaWrapperGrammarp, marpaWrapperGrammarRuleOption_t *marpaWrapperGrammarRuleOptionp,
 							marpaWrapperGrammarSymbol_t *lhsSymbolp,
 							size_t rhsSymboll, marpaWrapperGrammarSymbol_t **rhsSymbolpp
 							)
 /****************************************************************************/
 {
-  const static char          funcs[] = "marpaWrapperGrammarRule_newp";
+  const static char          funcs[] = "marpaWrapperGrammar_newRulep";
   Marpa_Rule_ID              marpaRuleIdi;
   genericLogger_t           *genericLoggerp;
   size_t                     nSymboli;
