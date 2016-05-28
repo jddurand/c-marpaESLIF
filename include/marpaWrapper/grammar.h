@@ -13,15 +13,6 @@ typedef struct marpaWrapperGrammar       marpaWrapperGrammar_t;
 typedef struct marpaWrapperGrammarSymbol marpaWrapperGrammarSymbol_t;
 typedef struct marpaWrapperGrammarRule   marpaWrapperGrammarRule_t;
 
-/* --------------- */
-/* General options */
-/* --------------- */
-typedef struct marpaWrapperGrammarOption {
-  genericLogger_t *genericLoggerp;        /* Default: NULL.                                      */
-  short            warningIsErrorb;       /* Default: 0. Have precedence over warningIsIgnoredb  */
-  short            warningIsIgnoredb;     /* Default: 0.                                         */
-} marpaWrapperGrammarOption_t;
-
 /* ------------------------------------------ */
 /* For every symbol there can be three events */
 /* ------------------------------------------ */
@@ -30,7 +21,24 @@ typedef enum marpaWrapperGrammarEventType {
   MARPAWRAPPERGRAMMAR_EVENTTYPE_COMPLETION = 0x01,
   MARPAWRAPPERGRAMMAR_EVENTTYPE_NULLED     = 0x02,
   MARPAWRAPPERGRAMMAR_EVENTTYPE_PREDICTION = 0x04,
+} marpaWrapperGrammarEventType_t;
+
+/* A triggered event is for a symbol, with an event type */
+typedef struct marpaWrapperGrammarEvent {
+  enum {
+    MARPAWRAPPERGRAMMAR_EVENT_COMPLETED,
+    MARPAWRAPPERGRAMMAR_EVENT_NULLED,
+    MARPAWRAPPERGRAMMAR_EVENT_EXPECTED
+  } eventType;
+  marpaWrapperGrammarSymbol_t *symbolp;
 } marpaWrapperGrammarEvent_t;
+
+/* and this is managed with an event callback */
+typedef void (*marpaWrapperGrammarEventCallback_t)(void                       *datavp,
+						   marpaWrapperGrammar_t      *marpaWrapperGrammarp,
+						   int                         nEventi,
+						   marpaWrapperGrammarEvent_t *eventpp);
+
 
 /* ------------------ */
 /* Options per symbol */
@@ -55,6 +63,17 @@ typedef struct marpaWrapperGrammarRuleOption {
   int                          minimumi;       /* Default: 0. Mininimum - must be 0 or 1                  */
 } marpaWrapperGrammarRuleOption_t;
 
+/* --------------- */
+/* General options */
+/* --------------- */
+typedef struct marpaWrapperGrammarOption {
+  genericLogger_t                   *genericLoggerp;        /* Default: NULL.                                      */
+  short                              warningIsErrorb;       /* Default: 0. Have precedence over warningIsIgnoredb  */
+  short                              warningIsIgnoredb;     /* Default: 0.                                         */
+  marpaWrapperGrammarEventCallback_t eventCallbackp;        /* Default: NULL */
+  void                              *eventCallbackDatavp;   /* Default: NULL */
+} marpaWrapperGrammarOption_t;
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -67,6 +86,7 @@ extern "C" {
 										marpaWrapperGrammarSymbol_t *lhsSymbolp,
 										size_t rhsSymboll, marpaWrapperGrammarSymbol_t **rhsSymbolpp
 										);
+  marpaWrapper_EXPORT short                        marpaWrapperGrammar_precomputeb(marpaWrapperGrammar_t *marpaWrapperGrammarp);
 #ifdef __cplusplus
 }
 #endif
