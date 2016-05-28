@@ -51,9 +51,8 @@ struct marpaWrapperGrammarRule {
 };
 
 struct marpaWrapperGrammar {
-  short                         precomputedb;                      /* Flag saying it is has be precomputed */
-  short                         haveStartb;                        /* Flag saying it a start symbol was explicitely declare */
-  int                           refi;                              /* Number of references used when cloning */
+  short                         precomputedb; /* Flag saying it is has be precomputed */
+  short                         haveStartb;   /* Flag saying it a start symbol was explicitely declare */
 
   marpaWrapperGrammarOption_t   marpaWrapperGrammarOption;
   Marpa_Grammar                 marpaGrammarp;
@@ -171,7 +170,6 @@ marpaWrapperGrammar_t *marpaWrapperGrammar_newp(marpaWrapperGrammarOption_t *mar
   }
 
   marpaWrapperGrammarp->precomputedb              = 0;
-  marpaWrapperGrammarp->refi                      = 1;
   marpaWrapperGrammarp->marpaWrapperGrammarOption = *marpaWrapperGrammarOptionp;
   marpaWrapperGrammarp->sizeSymboli               = 0;
   marpaWrapperGrammarp->nSymboli                  = 0;
@@ -202,37 +200,6 @@ marpaWrapperGrammar_t *marpaWrapperGrammar_newp(marpaWrapperGrammarOption_t *mar
 }
 
 /****************************************************************************/
-marpaWrapperGrammar_t *marpaWrapperGrammar_clonep(marpaWrapperGrammar_t *marpaWrapperGrammarp)
-/****************************************************************************/
-{
-  const static char  funcs[] = "marpaWrapperGrammar_clonep";
-  genericLogger_t   *genericLoggerp;
-
-  if (marpaWrapperGrammarp == NULL) {
-    errno = EINVAL;
-    goto err;
-  }
-
-  genericLoggerp = marpaWrapperGrammarp->marpaWrapperGrammarOption.genericLoggerp;
-
-  /* It is illegal to clone a non-precomputed grammar */
-  if (marpaWrapperGrammarp->precomputedb == 0) {
-    GENERICLOGGER_ERROR(genericLoggerp, "Cloning a non-precomputed grammar is not allowed");
-    goto err;
-  }
-
-  /* Instead of grammar built-in reference count, we use our own counter */
-  MARPAWRAPPERGRAMMAR_TRACEF(genericLoggerp, funcs, "Increasing reference count from %d to %d", marpaWrapperGrammarp->refi, marpaWrapperGrammarp->refi + 1);
-  marpaWrapperGrammarp->refi++;
-
-  MARPAWRAPPERGRAMMAR_TRACEF(genericLoggerp, funcs, "return %p", marpaWrapperGrammarp);
-  return marpaWrapperGrammarp;
-
- err:
-  return NULL;
-}
-
-/****************************************************************************/
 void marpaWrapperGrammar_freev(marpaWrapperGrammar_t *marpaWrapperGrammarp)
 /****************************************************************************/
 {
@@ -241,21 +208,18 @@ void marpaWrapperGrammar_freev(marpaWrapperGrammar_t *marpaWrapperGrammarp)
 
   if (marpaWrapperGrammarp != NULL) {
     genericLoggerp = marpaWrapperGrammarp->marpaWrapperGrammarOption.genericLoggerp;
-    MARPAWRAPPERGRAMMAR_TRACEF(genericLoggerp, funcs, "Decreasing reference count from %d to %d", marpaWrapperGrammarp->refi, marpaWrapperGrammarp->refi - 1);
-    if (--marpaWrapperGrammarp->refi <= 0) {
-      MARPAWRAPPERGRAMMAR_TRACEF(genericLoggerp, funcs, "marpa_g_unref(%p)", marpaWrapperGrammarp->marpaGrammarp);
-      marpa_g_unref(marpaWrapperGrammarp->marpaGrammarp);
-      MARPAWRAPPERGRAMMAR_TRACEF(genericLoggerp, funcs, "Freeing symbol table", marpaWrapperGrammarp->marpaGrammarp);
-      manageBuf_freev(genericLoggerp, (void ***) &(marpaWrapperGrammarp->symbolpp), &(marpaWrapperGrammarp->nSymboli));
-      MARPAWRAPPERGRAMMAR_TRACEF(genericLoggerp, funcs, "Freeing rule table", marpaWrapperGrammarp->marpaGrammarp);
-      manageBuf_freev(genericLoggerp, (void ***) &(marpaWrapperGrammarp->rulepp), &(marpaWrapperGrammarp->nRulei));
-      if (genericLoggerp != NULL) {
-        MARPAWRAPPERGRAMMAR_TRACE(genericLoggerp, funcs, "Freeing cloned generic logger");
-        GENERICLOGGER_FREE(marpaWrapperGrammarp->marpaWrapperGrammarOption.genericLoggerp);
-      }
-      MARPAWRAPPERGRAMMAR_TRACEF(genericLoggerp, funcs, "free(%p)", marpaWrapperGrammarp);
-      free(marpaWrapperGrammarp);
+    MARPAWRAPPERGRAMMAR_TRACEF(genericLoggerp, funcs, "marpa_g_unref(%p)", marpaWrapperGrammarp->marpaGrammarp);
+    marpa_g_unref(marpaWrapperGrammarp->marpaGrammarp);
+    MARPAWRAPPERGRAMMAR_TRACEF(genericLoggerp, funcs, "Freeing symbol table", marpaWrapperGrammarp->marpaGrammarp);
+    manageBuf_freev(genericLoggerp, (void ***) &(marpaWrapperGrammarp->symbolpp), &(marpaWrapperGrammarp->nSymboli));
+    MARPAWRAPPERGRAMMAR_TRACEF(genericLoggerp, funcs, "Freeing rule table", marpaWrapperGrammarp->marpaGrammarp);
+    manageBuf_freev(genericLoggerp, (void ***) &(marpaWrapperGrammarp->rulepp), &(marpaWrapperGrammarp->nRulei));
+    if (genericLoggerp != NULL) {
+      MARPAWRAPPERGRAMMAR_TRACE(genericLoggerp, funcs, "Freeing cloned generic logger");
+      GENERICLOGGER_FREE(marpaWrapperGrammarp->marpaWrapperGrammarOption.genericLoggerp);
     }
+    MARPAWRAPPERGRAMMAR_TRACEF(genericLoggerp, funcs, "free(%p)", marpaWrapperGrammarp);
+    free(marpaWrapperGrammarp);
   }
 }
 

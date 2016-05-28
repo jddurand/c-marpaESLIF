@@ -78,7 +78,6 @@ typedef struct marpaWrapperGrammarOption {
 extern "C" {
 #endif
   marpaWrapper_EXPORT marpaWrapperGrammar_t       *marpaWrapperGrammar_newp(marpaWrapperGrammarOption_t *marpaWrapperGrammarOptionp);
-  marpaWrapper_EXPORT marpaWrapperGrammar_t       *marpaWrapperGrammar_clonep(marpaWrapperGrammar_t *marpaWrapperGrammarp);
   marpaWrapper_EXPORT void                         marpaWrapperGrammar_freev(marpaWrapperGrammar_t *marpaWrapperGrammarp);
 
   marpaWrapper_EXPORT marpaWrapperGrammarSymbol_t *marpaWrapperGrammar_newSymbolp(marpaWrapperGrammar_t *marpaWrapperGrammarp, marpaWrapperGrammarSymbolOption_t *marpaWrapperGrammarSymbolOptionp);
