@@ -286,7 +286,7 @@ marpaWrapperGrammarSymbol_t *marpaWrapperGrammar_newSymbolp(marpaWrapperGrammar_
 
   /* Allocate room for the new symbol */
   nSymboli = marpaSymbolIdi + 1;
-  MARPAWRAPPERGRAMMAR_TRACEF(genericLoggerp, funcs, "Creating room in symbol table at index %d", marpaWrapperGrammarp->marpaGrammarp, (int) marpaSymbolIdi);
+  MARPAWRAPPERGRAMMAR_TRACEF(genericLoggerp, funcs, "Creating room in symbol table at index %d", (int) marpaSymbolIdi);
   if (manageBuf_createp(genericLoggerp,
 			(void ***) &(marpaWrapperGrammarp->symbolpp),
 			&(marpaWrapperGrammarp->sizeSymboli),
@@ -467,7 +467,7 @@ marpaWrapperGrammarRule_t *marpaWrapperGrammar_newRulep(marpaWrapperGrammar_t *m
 
   /* Allocate room for the new symbol */
   nRulei = marpaRuleIdi + 1;
-  MARPAWRAPPERGRAMMAR_TRACEF(genericLoggerp, funcs, "Creating room in rule table at index %d", marpaWrapperGrammarp->marpaGrammarp, (int) marpaRuleIdi);
+  MARPAWRAPPERGRAMMAR_TRACEF(genericLoggerp, funcs, "Creating room in rule table at index %d", (int) marpaRuleIdi);
   if (manageBuf_createp(genericLoggerp,
 			(void ***) &(marpaWrapperGrammarp->rulepp),
 			&(marpaWrapperGrammarp->sizeRulei),
