@@ -6,7 +6,6 @@ enum { S = 0, E, op, number, MAX_SYMBOL };
 
 int main(int argc, char **argv) {
   marpaWrapperGrammar_t       *marpaWrapperGrammarp;
-  marpaWrapperGrammar_t      *marpaWrapperGrammarClonep;
   marpaWrapperGrammarSymbol_t *symbolp[MAX_SYMBOL];
   int                         i;
 
@@ -22,9 +21,7 @@ int main(int argc, char **argv) {
     symbolp[i] = marpaWrapperGrammar_newSymbolp(marpaWrapperGrammarp, &option);
   }
 
-  marpaWrapperGrammarClonep = marpaWrapperGrammar_clonep(marpaWrapperGrammarp);
-
-  marpaWrapperGrammar_freev(marpaWrapperGrammarClonep);
+  marpaWrapperGrammar_precomputeb(marpaWrapperGrammarp);
   marpaWrapperGrammar_freev(marpaWrapperGrammarp);
 
   return 0;
