@@ -1,6 +1,8 @@
 #ifndef MARPAWRAPPER_GRAMMAR
 #define MARPAWRAPPER_GRAMMAR
 
+#include <stddef.h>
+
 #include "marpaWrapper/export.h"
 #include "genericLogger.h"
 
@@ -24,10 +26,10 @@ typedef struct marpaWrapperGrammarOption {
 /* For every symbol there can be three events */
 /* ------------------------------------------ */
 typedef enum marpaWrapperGrammarEventType {
-  MARPAWRAPPERGRAMMAR_EVENTTYPE_NONE      = 0x00,
-  MARPAWRAPPERGRAMMAR_EVENTTYPE_COMPLETED = 0x01,
-  MARPAWRAPPERGRAMMAR_EVENTTYPE_NULLED    = 0x02,
-  MARPAWRAPPERGRAMMAR_EVENTTYPE_PREDICTED = 0x04,
+  MARPAWRAPPERGRAMMAR_EVENTTYPE_NONE       = 0x00,
+  MARPAWRAPPERGRAMMAR_EVENTTYPE_COMPLETION = 0x01,
+  MARPAWRAPPERGRAMMAR_EVENTTYPE_NULLED     = 0x02,
+  MARPAWRAPPERGRAMMAR_EVENTTYPE_PREDICTION = 0x04,
 } marpaWrapperGrammarEvent_t;
 
 /* ------------------ */
@@ -40,13 +42,31 @@ typedef struct marpaWrapperGrammarSymbolOption {
   int        eventSeti;   /* Default: MARPAWRAPPERGRAMMAR_EVENTTYPE_NONE.               */
 } marpaWrapperGrammarSymbolOption_t;
 
+/* ---------------- */
+/* Options per rule */
+/* ---------------- */
+typedef struct marpaWrapperGrammarRuleOption {
+  void                        *datavp;         /* Default: NULL. User's opaque data pointer for this rule */
+  int                          ranki;          /* Default: 0. Rank                                        */
+  short                        nullRanksHighb; /* Default: 0. Null variant pattern                        */
+  short                        sequenceb;      /* Default: 0. Sequence ?                                  */
+  marpaWrapperGrammarSymbol_t *separatorSymbolp; /* Default: NULL. Eventual separator symbol              */
+  short                        properb;        /* Default: 0. Proper flag                                 */
+  int                          minimumi;       /* Default: 0. Mininimum - must be 0 or 1                  */
+} marpaWrapperGrammarRuleOption_t;
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-  marpaWrapper_EXPORT marpaWrapperGrammar_t *marpaWrapperGrammar_newp(marpaWrapperGrammarOption_t *marpaWrapperGrammarOptionp);
-  marpaWrapper_EXPORT marpaWrapperGrammar_t *marpaWrapperGrammar_clonep(marpaWrapperGrammar_t *marpaWrapperGrammarp);
-  marpaWrapper_EXPORT short                  marpaWrapperGrammar_symbolb(marpaWrapperGrammar_t *marpaWrapperGrammarp, marpaWrapperGrammarSymbolOption_t *marpaWrapperGrammarSymbolOptionp);
-  marpaWrapper_EXPORT void                   marpaWrapperGrammar_freev(marpaWrapperGrammar_t *marpaWrapperGrammarp);
+  marpaWrapper_EXPORT marpaWrapperGrammar_t       *marpaWrapperGrammar_newp(marpaWrapperGrammarOption_t *marpaWrapperGrammarOptionp);
+  marpaWrapper_EXPORT marpaWrapperGrammar_t       *marpaWrapperGrammar_clonep(marpaWrapperGrammar_t *marpaWrapperGrammarp);
+  marpaWrapper_EXPORT void                         marpaWrapperGrammar_freev(marpaWrapperGrammar_t *marpaWrapperGrammarp);
+
+  marpaWrapper_EXPORT marpaWrapperGrammarSymbol_t *marpaWrapperGrammarSymbol_newp(marpaWrapperGrammar_t *marpaWrapperGrammarp, marpaWrapperGrammarSymbolOption_t *marpaWrapperGrammarSymbolOptionp);
+  marpaWrapper_EXPORT marpaWrapperGrammarRule_t   *marpaWrapperGrammarRule_newp(marpaWrapperGrammar_t *marpaWrapperGrammarp, marpaWrapperGrammarRuleOption_t *marpaWrapperGrammarRuleOptionp,
+										marpaWrapperGrammarSymbol_t *lhsSymbolp,
+										size_t rhsSymboll, marpaWrapperGrammarSymbol_t **rhsSymbolpp
+										);
 #ifdef __cplusplus
 }
 #endif

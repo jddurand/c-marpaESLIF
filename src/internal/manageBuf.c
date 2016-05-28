@@ -8,7 +8,7 @@
 /*********************/
 /* manageBuf_createp */
 /*********************/
-void *manageBuf_createp(void ***ppp, size_t *sizeip, const size_t wantedNumberi, const size_t elementSizei) {
+void *manageBuf_createp(genericLogger_t *genericLoggerp, void ***ppp, size_t *sizeip, const size_t wantedNumberi, const size_t elementSizei) {
   size_t  sizei = *sizeip;
   size_t  origSizei = sizei;
   size_t  prevSizei;
@@ -27,6 +27,7 @@ void *manageBuf_createp(void ***ppp, size_t *sizeip, const size_t wantedNumberi,
 	sizei = 100;
 	pp = malloc(sizei * elementSizei);
 	if (pp == NULL) {
+	  GENERICLOGGER_ERRORF(genericLoggerp, "malloc failure: %s", strerror(errno));
 	  return NULL;
 	}
       } else {
@@ -34,10 +35,12 @@ void *manageBuf_createp(void ***ppp, size_t *sizeip, const size_t wantedNumberi,
 	if (sizei < prevSizei) {
 	  /* Turnaround */
 	  errno = ERANGE;
+	  GENERICLOGGER_ERRORF(genericLoggerp, "Turnaround detection: %s", strerror(errno));
 	  return NULL;
 	}
 	pp = realloc(pp, sizei * elementSizei);
 	if (pp == NULL) {
+	  GENERICLOGGER_ERRORF(genericLoggerp, "realloc failure: %s", strerror(errno));
 	  return NULL;
 	}
       }
@@ -68,7 +71,7 @@ void *manageBuf_createp(void ***ppp, size_t *sizeip, const size_t wantedNumberi,
 /*******************/
 /* manageBuf_freev */
 /*******************/
-void manageBuf_freev(void ***ppp, size_t *usedNumberip) {
+void manageBuf_freev(genericLogger_t *genericLoggerp, void ***ppp, size_t *usedNumberip) {
   void  **pp;
   size_t  i;
 
