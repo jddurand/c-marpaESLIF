@@ -317,6 +317,7 @@ marpaWrapperGrammarSymbol_t *marpaWrapperGrammar_newSymbolp(marpaWrapperGrammar_
     }
   }
 
+  MARPAWRAPPERGRAMMAR_TRACEF(genericLoggerp, funcs, "return %p", marpaWrapperSymbolp);
   return marpaWrapperSymbolp;
   
  err:
@@ -452,6 +453,9 @@ marpaWrapperGrammarRule_t *marpaWrapperGrammar_newRulep(marpaWrapperGrammar_t *m
   marpaWrapperGrammarp->nRulei = nRulei;
   marpaWrapperGrammarp->rulepp[marpaRuleIdi] = marpaWrapperRulep;
 
+  MARPAWRAPPERGRAMMAR_TRACEF(genericLoggerp, funcs, "return %p", marpaWrapperRulep);
+  return marpaWrapperRulep;
+
  err:
   if (rhsIdp != NULL) {
     int errnoi = errno;
@@ -468,6 +472,7 @@ short marpaWrapperGrammar_precomputeb(marpaWrapperGrammar_t *marpaWrapperGrammar
 {
   const static char funcs[] = "marpaWrapperGrammar_precomputeb";
   genericLogger_t  *genericLoggerp;
+  short             rcb;
 
   if (marpaWrapperGrammarp == NULL) {
     errno = EINVAL;
@@ -495,7 +500,9 @@ short marpaWrapperGrammar_precomputeb(marpaWrapperGrammar_t *marpaWrapperGrammar
   }
 
   /* Events can happen */
-  return _marpaWrapperGrammar_eventb(marpaWrapperGrammarp);
+  rcb = _marpaWrapperGrammar_eventb(marpaWrapperGrammarp);
+  MARPAWRAPPERGRAMMAR_TRACEF(genericLoggerp, funcs, "return %d", (int) rcb);
+  return rcb;
 
  err:
   return 0;
@@ -525,6 +532,7 @@ static short _marpaWrapperGrammar_eventb(marpaWrapperGrammar_t *marpaWrapperGram
 
   if (nbEventi < 0) {
     /* No event - this is not an error */
+    MARPAWRAPPERGRAMMAR_TRACE(genericLoggerp, funcs, "return 1");
     return 1;
   }
 
@@ -618,6 +626,7 @@ static short _marpaWrapperGrammar_eventb(marpaWrapperGrammar_t *marpaWrapperGram
 
   free(eventpp);
 
+  MARPAWRAPPERGRAMMAR_TRACE(genericLoggerp, funcs, "return 1");
   return 1;
 
  err:
@@ -627,6 +636,7 @@ static short _marpaWrapperGrammar_eventb(marpaWrapperGrammar_t *marpaWrapperGram
     free(eventpp);
     errno = errnoi;
   }
+  MARPAWRAPPERGRAMMAR_TRACE(genericLoggerp, funcs, "return 0");
   return 0;
 }
 
