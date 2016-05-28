@@ -14,13 +14,8 @@ int main(int argc, char **argv) {
   marpaWrapperGrammarp = marpaWrapperGrammar_newp(NULL);
   
   for (i = 0; i < MAX_SYMBOL; i++) {
-    marpaWrapperGrammarSymbolOption_t option;
-
-    option.datavp = NULL;
-    option.terminalb = 0;
-    option.startb = (i == 0) ? 1 : 0;
-    option.eventSeti = MARPAWRAPPERGRAMMAR_EVENTTYPE_NONE;
-    symbolp[i] = marpaWrapperGrammar_newSymbolp(marpaWrapperGrammarp, &option);
+    /* First symbol, i.e. E, will automatically become the start symbol */
+    symbolp[i] = marpaWrapperGrammar_newSymbolp(marpaWrapperGrammarp, NULL);
   }
 
   /* S ::= E */
