@@ -9,8 +9,8 @@
 #ifdef __cpluscplus
 extern "C" {
 #endif
-  MARPAWRAPPER_NO_EXPORT void *manageBuf_createp(genericLogger_t *genericLoggerp, void ***ppp, size_t *sizeip, const size_t wantedNumberi, const size_t elementSizei);
-  MARPAWRAPPER_NO_EXPORT void  manageBuf_freev  (genericLogger_t *genericLoggerp, void ***ppp, size_t *usedNumberip);
+  MARPAWRAPPER_NO_EXPORT void *manageBuf_createp(genericLogger_t *genericLoggerp, void ***ppp, size_t *sizelp, const size_t wantedNumberi, const size_t elementSizel);
+  MARPAWRAPPER_NO_EXPORT void  manageBuf_freev  (genericLogger_t *genericLoggerp, void ***ppp, size_t usedNumberl);
 #ifdef __cpluscplus
 }
 #endif

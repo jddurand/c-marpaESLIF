@@ -8,43 +8,43 @@
 /*********************/
 /* manageBuf_createp */
 /*********************/
-void *manageBuf_createp(genericLogger_t *genericLoggerp, void ***ppp, size_t *sizeip, const size_t wantedNumberi, const size_t elementSizei) {
-  size_t  sizei = *sizeip;
-  size_t  origSizei = sizei;
-  size_t  prevSizei;
-  void  **pp = *ppp;
+void *manageBuf_createp(genericLogger_t *genericLoggerp, void ***ppp, size_t *sizelp, const size_t wantedNumberi, const size_t elementSizel) {
+  size_t  sizel     = *sizelp;
+  size_t  origSizel = sizel;
+  void  **pp        = *ppp;
+  size_t  prevSizel;
 
   /*
    * Per def, this routine is managing an array of pointer
    */
 
-  if (sizei < wantedNumberi) {
+  if (sizel < wantedNumberi) {
 
-    prevSizei = sizei;
-    while (sizei < wantedNumberi) {
-      if (sizei <= 0) {
+    prevSizel = sizel;
+    while (sizel < wantedNumberi) {
+      if (sizel <= 0) {
 	/* Let's start at arbitrary number of elements of 100 */
-	sizei = 100;
-	pp = malloc(sizei * elementSizei);
+	sizel = 100;
+	pp = malloc(sizel * elementSizel);
 	if (pp == NULL) {
 	  GENERICLOGGER_ERRORF(genericLoggerp, "malloc failure: %s", strerror(errno));
 	  return NULL;
 	}
       } else {
-	sizei *= 2;
-	if (sizei < prevSizei) {
+	sizel *= 2;
+	if (sizel < prevSizel) {
 	  /* Turnaround */
 	  errno = ERANGE;
 	  GENERICLOGGER_ERRORF(genericLoggerp, "Turnaround detection: %s", strerror(errno));
 	  return NULL;
 	}
-	pp = realloc(pp, sizei * elementSizei);
+	pp = realloc(pp, sizel * elementSizel);
 	if (pp == NULL) {
 	  GENERICLOGGER_ERRORF(genericLoggerp, "realloc failure: %s", strerror(errno));
 	  return NULL;
 	}
       }
-      prevSizei = sizei;
+      prevSizel = sizel;
     }
   }
 
@@ -52,18 +52,18 @@ void *manageBuf_createp(genericLogger_t *genericLoggerp, void ***ppp, size_t *si
    * Pre-fill pointers with NULL
    */
 #ifdef NULL_IS_ZEROES
-  memset(&(pp[origSizei]), 0, (sizei - origSizei) * elementSizei);
+  memset(&(pp[origSizel]), 0, (sizel - origSizel) * elementSizel);
 #else
   {
     int i;
-    for (i = origSizei; i < sizei; i++) {
+    for (i = origSizel; i < sizel; i++) {
       pp[i] = NULL;
     }
   }
 #endif
 
   *ppp = pp;
-  *sizeip = sizei;
+  *sizelp = sizel;
 
   return pp;
 }
@@ -71,15 +71,15 @@ void *manageBuf_createp(genericLogger_t *genericLoggerp, void ***ppp, size_t *si
 /*******************/
 /* manageBuf_freev */
 /*******************/
-void manageBuf_freev(genericLogger_t *genericLoggerp, void ***ppp, size_t *usedNumberip) {
+void manageBuf_freev(genericLogger_t *genericLoggerp, void ***ppp, size_t usedNumberl) {
   void  **pp;
   size_t  i;
 
   if (ppp != NULL) {
     pp = *ppp;
     if (pp != NULL) {
-      if (*usedNumberip > 0) {
-        for (i = 0; i < *usedNumberip; i++) {
+      if (usedNumberl > 0) {
+        for (i = 0; i < usedNumberl; i++) {
           if (pp[i] != NULL) {
             free(pp[i]);
             pp[i] = NULL;
@@ -95,7 +95,6 @@ void manageBuf_freev(genericLogger_t *genericLoggerp, void ***ppp, size_t *usedN
       free(pp);
     }
     *ppp = NULL;
-    *usedNumberip = 0;
   }
 }
 

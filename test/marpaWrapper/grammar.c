@@ -12,61 +12,17 @@ int main(int argc, char **argv) {
   int                         i;
 
   marpaWrapperGrammarp = marpaWrapperGrammar_newp(NULL);
+  symbolp[     S] = marpaWrapperGrammar_newSymbolExtp(marpaWrapperGrammarp, NULL, 0, 1, 0);
+  symbolp[     E] = marpaWrapperGrammar_newSymbolExtp(marpaWrapperGrammarp, NULL, 0, 0, 0);
+  symbolp[    op] = marpaWrapperGrammar_newSymbolExtp(marpaWrapperGrammarp, NULL, 0, 0, 0);
+  symbolp[number] = marpaWrapperGrammar_newSymbolExtp(marpaWrapperGrammarp, NULL, 0, 0, 0);
   
-  for (i = 0; i < MAX_SYMBOL; i++) {
-    /* First symbol, i.e. E, will automatically become the start symbol */
-    symbolp[i] = marpaWrapperGrammar_newSymbolp(marpaWrapperGrammarp, NULL);
-  }
-
   /* S ::= E */
-  {
-    marpaWrapperGrammarRuleOption_t option;
-
-    option.datavp           = (void *) START_RULE;
-    option.ranki            = 0;
-    option.nullRanksHighb   = 0;
-    option.sequenceb        = 0;
-    option.separatorSymbolp = NULL;
-    option.properb          = 0;
-    option.minimumi         = 0;
-
-    rhsSymbolp[0]         = symbolp[E];
-    marpaWrapperGrammar_newRulep(marpaWrapperGrammarp, &option, symbolp[S], 1, rhsSymbolp);
-  }
-
+  marpaWrapperGrammar_newRuleExtp(marpaWrapperGrammarp, (void *) START_RULE,  0, 0, symbolp[S], symbolp[E], NULL);
   /* E ::= E op E */
-  {
-    marpaWrapperGrammarRuleOption_t option;
-
-    option.datavp           = (void *) OP_RULE;
-    option.ranki            = 0;
-    option.nullRanksHighb   = 0;
-    option.sequenceb        = 0;
-    option.separatorSymbolp = NULL;
-    option.properb          = 0;
-    option.minimumi         = 0;
-
-    rhsSymbolp[0]         = symbolp[ E];
-    rhsSymbolp[1]         = symbolp[op];
-    rhsSymbolp[2]         = symbolp[ E];
-    marpaWrapperGrammar_newRulep(marpaWrapperGrammarp, &option, symbolp[E], 3, rhsSymbolp);
-  }
-
+  marpaWrapperGrammar_newRuleExtp(marpaWrapperGrammarp, (void *) OP_RULE,     0, 0, symbolp[E], symbolp[E], symbolp[op], symbolp[E], NULL);
   /* E ::= number */
-  {
-    marpaWrapperGrammarRuleOption_t option;
-
-    option.datavp           = (void *) NUMBER_RULE;
-    option.ranki            = 0;
-    option.nullRanksHighb   = 0;
-    option.sequenceb        = 0;
-    option.separatorSymbolp = NULL;
-    option.properb          = 0;
-    option.minimumi         = 0;
-
-    rhsSymbolp[0]         = symbolp[number];
-    marpaWrapperGrammar_newRulep(marpaWrapperGrammarp, &option, symbolp[S], 1, rhsSymbolp);
-  }
+  marpaWrapperGrammar_newRuleExtp(marpaWrapperGrammarp, (void *) NUMBER_RULE, 0, 0, symbolp[E], symbolp[number], NULL);
 
   marpaWrapperGrammar_precomputeb(marpaWrapperGrammarp);
   marpaWrapperGrammar_freev(marpaWrapperGrammarp);

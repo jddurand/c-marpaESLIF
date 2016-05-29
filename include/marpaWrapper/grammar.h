@@ -2,6 +2,7 @@
 #define MARPAWRAPPER_GRAMMAR
 
 #include <stddef.h>
+#include <stdarg.h>
 
 #include "marpaWrapper/export.h"
 #include "genericLogger.h"
@@ -85,6 +86,15 @@ extern "C" {
 										marpaWrapperGrammarSymbol_t *lhsSymbolp,
 										size_t rhsSymboll, marpaWrapperGrammarSymbol_t **rhsSymbolpp
 										);
+  /* Handy methods to create symbols and rules that I find more user-friendly */
+  marpaWrapper_EXPORT marpaWrapperGrammarSymbol_t *marpaWrapperGrammar_newSymbolExtp(marpaWrapperGrammar_t *marpaWrapperGrammarp, void *datavp, short terminalb, short startb, int eventSeti);
+  marpaWrapper_EXPORT marpaWrapperGrammarRule_t   *marpaWrapperGrammar_newRuleExtp(marpaWrapperGrammar_t *marpaWrapperGrammarp, void *datavp, int ranki, short nullRanksHighb,
+										   marpaWrapperGrammarSymbol_t *lhsSymbolp, ...);
+  marpaWrapper_EXPORT marpaWrapperGrammarRule_t   *marpaWrapperGrammar_newSequenceExtp(marpaWrapperGrammar_t *marpaWrapperGrammarp, void *datavp, int ranki, short nullRanksHighb,
+										       marpaWrapperGrammarSymbol_t *lhsSymbolp,
+										       marpaWrapperGrammarSymbol_t *rhsSymbolp, int minimumi,
+										       marpaWrapperGrammarSymbol_t *separatorSymbolp, short properb);
+  
   marpaWrapper_EXPORT short                        marpaWrapperGrammar_precomputeb(marpaWrapperGrammar_t *marpaWrapperGrammarp);
 #ifdef __cplusplus
 }
