@@ -36,7 +36,6 @@ typedef struct marpaWrapperGrammarEvent {
 
 /* and this is managed with an event callback */
 typedef void (*marpaWrapperGrammarEventCallback_t)(void                       *datavp,
-						   marpaWrapperGrammar_t      *marpaWrapperGrammarp,
 						   int                         nEventi,
 						   marpaWrapperGrammarEvent_t *eventpp);
 
