@@ -12,10 +12,10 @@ int main(int argc, char **argv) {
   int                         i;
 
   marpaWrapperGrammarp = marpaWrapperGrammar_newp(NULL);
-  symbolp[     S] = marpaWrapperGrammar_newSymbolExtp(marpaWrapperGrammarp, NULL, 0, 1, MARPAWRAPPERGRAMMAR_EVENTTYPE_NONE);
-  symbolp[     E] = marpaWrapperGrammar_newSymbolExtp(marpaWrapperGrammarp, NULL, 0, 0, MARPAWRAPPERGRAMMAR_EVENTTYPE_NONE);
-  symbolp[    op] = marpaWrapperGrammar_newSymbolExtp(marpaWrapperGrammarp, NULL, 0, 0, MARPAWRAPPERGRAMMAR_EVENTTYPE_NONE);
-  symbolp[number] = marpaWrapperGrammar_newSymbolExtp(marpaWrapperGrammarp, NULL, 0, 0, MARPAWRAPPERGRAMMAR_EVENTTYPE_NONE);
+  symbolp[     S] = marpaWrapperGrammar_newSymbolExtp(marpaWrapperGrammarp, NULL, 0, 1, MARPAWRAPPERGRAMMAR_EVENTTYPE_NONE, NULL, NULL);
+  symbolp[     E] = marpaWrapperGrammar_newSymbolExtp(marpaWrapperGrammarp, NULL, 0, 0, MARPAWRAPPERGRAMMAR_EVENTTYPE_NONE, NULL, NULL);
+  symbolp[    op] = marpaWrapperGrammar_newSymbolExtp(marpaWrapperGrammarp, NULL, 0, 0, MARPAWRAPPERGRAMMAR_EVENTTYPE_NONE, NULL, NULL);
+  symbolp[number] = marpaWrapperGrammar_newSymbolExtp(marpaWrapperGrammarp, NULL, 0, 0, MARPAWRAPPERGRAMMAR_EVENTTYPE_NONE, NULL, NULL);
   
   /* S ::= E */
   marpaWrapperGrammar_newRuleExtp(marpaWrapperGrammarp, (void *) START_RULE,  0, 0, symbolp[S], symbolp[E], NULL);
