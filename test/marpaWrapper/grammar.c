@@ -3,29 +3,32 @@
 #include "marpaWrapper/grammar.h"
 
 enum { S = 0, E, op, number, MAX_SYMBOL };
-enum { START_RULE = 0, OP_RULE, NUMBER_RULE };
+enum { START_RULE = 0, OP_RULE, NUMBER_RULE, MAX_RULE };
 
 int main(int argc, char **argv) {
-  marpaWrapperGrammar_t       *marpaWrapperGrammarp;
-  marpaWrapperGrammarSymbol_t *symbolp[MAX_SYMBOL];
-  marpaWrapperGrammarSymbol_t *rhsSymbolp[3]; /* Just to have enough room */
-  int                         i;
+  marpaWrapperGrammar_t *marpaWrapperGrammarp;
+  int                    symbolip[MAX_SYMBOL];
+  int                    ruleip[MAX_RULE];
+  int                    rci = 0;
 
   marpaWrapperGrammarp = marpaWrapperGrammar_newp(NULL);
-  symbolp[     S] = marpaWrapperGrammar_newSymbolExtp(marpaWrapperGrammarp, NULL, 0, 1, MARPAWRAPPERGRAMMAR_EVENTTYPE_NONE, NULL, NULL);
-  symbolp[     E] = marpaWrapperGrammar_newSymbolExtp(marpaWrapperGrammarp, NULL, 0, 0, MARPAWRAPPERGRAMMAR_EVENTTYPE_NONE, NULL, NULL);
-  symbolp[    op] = marpaWrapperGrammar_newSymbolExtp(marpaWrapperGrammarp, NULL, 0, 0, MARPAWRAPPERGRAMMAR_EVENTTYPE_NONE, NULL, NULL);
-  symbolp[number] = marpaWrapperGrammar_newSymbolExtp(marpaWrapperGrammarp, NULL, 0, 0, MARPAWRAPPERGRAMMAR_EVENTTYPE_NONE, NULL, NULL);
-  
-  /* S ::= E */
-  marpaWrapperGrammar_newRuleExtp(marpaWrapperGrammarp, (void *) START_RULE,  0, 0, symbolp[S], symbolp[E], NULL);
-  /* E ::= E op E */
-  marpaWrapperGrammar_newRuleExtp(marpaWrapperGrammarp, (void *) OP_RULE,     0, 0, symbolp[E], symbolp[E], symbolp[op], symbolp[E], NULL);
-  /* E ::= number */
-  marpaWrapperGrammar_newRuleExtp(marpaWrapperGrammarp, (void *) NUMBER_RULE, 0, 0, symbolp[E], symbolp[number], NULL);
+  if ( /* S (start symbol automatically), E, op, number */
+      ((symbolip[     S] = MARPAWRAPPERGRAMMAR_NEWSYMBOL(marpaWrapperGrammarp)) < 0) ||
+      ((symbolip[     E] = MARPAWRAPPERGRAMMAR_NEWSYMBOL(marpaWrapperGrammarp)) < 0) ||
+      ((symbolip[    op] = MARPAWRAPPERGRAMMAR_NEWSYMBOL(marpaWrapperGrammarp)) < 0) ||
+      ((symbolip[number] = MARPAWRAPPERGRAMMAR_NEWSYMBOL(marpaWrapperGrammarp)) < 0) ||
+      /* S ::= E      */
+      /* E ::= E op E */
+      /* E ::= number */
+      ((ruleip[ START_RULE] = MARPAWRAPPERGRAMMAR_NEWRULE(marpaWrapperGrammarp, symbolip[S], symbolip[E],                            -1)) < 0) ||
+      ((ruleip[    OP_RULE] = MARPAWRAPPERGRAMMAR_NEWRULE(marpaWrapperGrammarp, symbolip[E], symbolip[E], symbolip[op], symbolip[E], -1)) < 0) ||
+      ((ruleip[NUMBER_RULE] = MARPAWRAPPERGRAMMAR_NEWRULE(marpaWrapperGrammarp, symbolip[E], symbolip[number],                       -1)) < 0)
+      ) {
+    rci = 1;
+  }
 
   marpaWrapperGrammar_precomputeb(marpaWrapperGrammarp);
   marpaWrapperGrammar_freev(marpaWrapperGrammarp);
 
-  return 0;
+  return rci;
 }
