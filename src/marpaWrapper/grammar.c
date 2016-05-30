@@ -248,10 +248,10 @@ marpaWrapperGrammarSymbol_t *marpaWrapperGrammar_newSymbolp(marpaWrapperGrammar_
     MARPAWRAPPERGRAMMAR_G_ERROR(genericLoggerp, marpaWrapperGrammarp->marpaGrammarp);
     goto err;
   }
+  MARPAWRAPPERGRAMMAR_TRACEF(genericLoggerp, funcs, "Symbol Id is %d", (int) marpaSymbolIdi);
 
   /* Allocate room for the new symbol */
   nSymboll = marpaSymbolIdi + 1;
-  MARPAWRAPPERGRAMMAR_TRACEF(genericLoggerp, funcs, "Creating room in symbol table at index %d", (int) marpaSymbolIdi);
   if (manageBuf_createp(genericLoggerp,
 			(void ***) &(marpaWrapperGrammarp->symbolpp),
 			&(marpaWrapperGrammarp->sizeSymboll),
@@ -450,7 +450,6 @@ marpaWrapperGrammarRule_t *marpaWrapperGrammar_newRulep(marpaWrapperGrammar_t *m
 
   /* Allocate room for the new symbol */
   nRulel = marpaRuleIdi + 1;
-  MARPAWRAPPERGRAMMAR_TRACEF(genericLoggerp, funcs, "Creating room in rule table at index %d", (int) marpaRuleIdi);
   if (manageBuf_createp(genericLoggerp,
 			(void ***) &(marpaWrapperGrammarp->rulepp),
 			&(marpaWrapperGrammarp->sizeRulel),
@@ -713,8 +712,8 @@ static short _marpaWrapperGrammar_eventb(marpaWrapperGrammar_t *marpaWrapperGram
       qsort(eventpp, subscribedEventi, sizeof(marpaWrapperGrammarEvent_t), &_marpaWrapperGrammar_cmpi);
     }
     if (marpaWrapperGrammarp->marpaWrapperGrammarOption.eventCallbackp != NULL) {
-      MARPAWRAPPERGRAMMAR_TRACEF(genericLoggerp, funcs, "eventCallbackp(%p, %p, %d, %p)", marpaWrapperGrammarp->marpaWrapperGrammarOption.eventCallbackDatavp, marpaWrapperGrammarp, subscribedEventi, eventpp);
-      (*marpaWrapperGrammarp->marpaWrapperGrammarOption.eventCallbackp)(marpaWrapperGrammarp->marpaWrapperGrammarOption.eventCallbackDatavp, marpaWrapperGrammarp, subscribedEventi, eventpp);
+      MARPAWRAPPERGRAMMAR_TRACEF(genericLoggerp, funcs, "eventCallbackp(%p, %d, %p)", marpaWrapperGrammarp->marpaWrapperGrammarOption.eventCallbackDatavp, subscribedEventi, eventpp);
+      (*marpaWrapperGrammarp->marpaWrapperGrammarOption.eventCallbackp)(marpaWrapperGrammarp->marpaWrapperGrammarOption.eventCallbackDatavp, subscribedEventi, eventpp);
     }
   }
 
