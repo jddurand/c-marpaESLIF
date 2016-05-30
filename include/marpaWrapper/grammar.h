@@ -96,13 +96,13 @@ extern "C" {
 										       int rhsSymboli, int minimumi, int separatorSymboli, short properb);
   
   marpaWrapper_EXPORT short                        marpaWrapperGrammar_precomputeb(marpaWrapperGrammar_t *marpaWrapperGrammarp);
-  marpaWrapper_EXPORT size_t                       marpaWrapperGrammar_events(marpaWrapperGrammar_t *marpaWrapperGrammarp, marpaWrapperGrammarEvent_t ***eventppp);
+  marpaWrapper_EXPORT size_t                       marpaWrapperGrammar_eventl(marpaWrapperGrammar_t *marpaWrapperGrammarp, marpaWrapperGrammarEvent_t **eventpp);
 #ifdef __cplusplus
 }
 #endif
 
 /* Very often, symbols and rules are created with no particular attribute */
-/* These macros are just short-hands to make like easier.                 */
+/* These macros are just short-hands to make life easier.                 */
 #define MARPAWRAPPERGRAMMAR_NEWSYMBOL(marpaWrapperGrammarp) marpaWrapperGrammar_newSymboli((marpaWrapperGrammarp), NULL)
 #define MARPAWRAPPERGRAMMAR_NEWRULE(marpaWrapperGrammarp, lhsSymboli, ...) marpaWrapperGrammar_newRuleExti((marpaWrapperGrammarp), NULL, 0, 0, (lhsSymboli), __VA_ARGS__)
 #define MARPAWRAPPERGRAMMAR_NEWSEQUENCE(marpaWrapperGrammarp, lhsSymboli, rhsSymboli, minimumi) marpaWrapperGrammar_newSequenceExti((marpaWrapperGrammarp), NULL, 0, 0, (lhsSymboli), (rhsSymboli), (minimumi), -1, 0)
