@@ -26,7 +26,11 @@ int main(int argc, char **argv) {
       ) {
     rci = 1;
   }
-
+  if (rci == 0) {
+    if (marpaWrapperGrammar_eventl(marpaWrapperGrammarp, NULL) == (size_t)-1) {
+      rci = 1;
+    }
+  }
   marpaWrapperGrammar_precomputeb(marpaWrapperGrammarp);
   marpaWrapperGrammar_freev(marpaWrapperGrammarp);
 
