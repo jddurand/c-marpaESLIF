@@ -611,6 +611,10 @@ size_t marpaWrapperGrammar_eventl(marpaWrapperGrammar_t *marpaWrapperGrammarp, m
 
   genericLoggerp = marpaWrapperGrammarp->marpaWrapperGrammarOption.genericLoggerp;
 
+  if (_marpaWrapperGrammar_eventb(marpaWrapperGrammarp) == 0) {
+    goto err;
+  }
+  
   if (eventpp != NULL) {
     *eventpp = marpaWrapperGrammarp->eventp;
   }
@@ -631,7 +635,7 @@ size_t marpaWrapperGrammar_eventl(marpaWrapperGrammar_t *marpaWrapperGrammarp, m
 static short _marpaWrapperGrammar_eventb(marpaWrapperGrammar_t *marpaWrapperGrammarp)
 /****************************************************************************/
 {
-  const static char                 funcs[] = "marpaWrapperGrammar_eventb";
+  const static char                 funcs[] = "_marpaWrapperGrammar_eventb";
   genericLogger_t                  *genericLoggerp = NULL;
   int                               nbEventi;
   int                               i;
