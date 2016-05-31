@@ -585,6 +585,11 @@ short marpaWrapperGrammar_precomputeb(marpaWrapperGrammar_t *marpaWrapperGrammar
     goto err;
   }
 
+  /* Prefetch events */
+  if (_marpaWrapperGrammar_eventb(marpaWrapperGrammarp) == 0) {
+    goto err;
+  }
+  
   MARPAWRAPPERGRAMMAR_TRACE(genericLoggerp, funcs, "return 1");
   return 1;
 
@@ -611,10 +616,6 @@ size_t marpaWrapperGrammar_eventl(marpaWrapperGrammar_t *marpaWrapperGrammarp, m
 
   genericLoggerp = marpaWrapperGrammarp->marpaWrapperGrammarOption.genericLoggerp;
 
-  if (_marpaWrapperGrammar_eventb(marpaWrapperGrammarp) == 0) {
-    goto err;
-  }
-  
   if (eventpp != NULL) {
     *eventpp = marpaWrapperGrammarp->eventp;
   }
