@@ -349,7 +349,7 @@ int marpaWrapperGrammar_newSymboli(marpaWrapperGrammar_t *marpaWrapperGrammarp, 
  err:
 #ifndef MARPAWRAPPER_NTRACE
   if (genericLoggerp != NULL) {
-    MARPAWRAPPERGRAMMAR_TRACEF(genericLoggerp, funcs, "return -1");
+    MARPAWRAPPERGRAMMAR_TRACE(genericLoggerp, funcs, "return -1");
   }
 #endif
   return -1;
@@ -483,7 +483,7 @@ int marpaWrapperGrammar_newRulei(marpaWrapperGrammar_t *marpaWrapperGrammarp, ma
  err:
 #ifndef MARPAWRAPPER_NTRACE
   if (genericLoggerp != NULL) {
-    MARPAWRAPPERGRAMMAR_TRACEF(genericLoggerp, funcs, "return -1");
+    MARPAWRAPPERGRAMMAR_TRACE(genericLoggerp, funcs, "return -1");
   }
 #endif
   return -1;
@@ -543,7 +543,7 @@ int marpaWrapperGrammar_newRuleExti(marpaWrapperGrammar_t *marpaWrapperGrammarp,
   }
 #ifndef MARPAWRAPPER_NTRACE
   if (genericLoggerp != NULL) {
-    MARPAWRAPPERGRAMMAR_TRACEF(genericLoggerp, funcs, "return -1");
+    MARPAWRAPPERGRAMMAR_TRACE(genericLoggerp, funcs, "return -1");
   }
 #endif
 
@@ -611,7 +611,7 @@ short marpaWrapperGrammar_precomputeb(marpaWrapperGrammar_t *marpaWrapperGrammar
  err:
 #ifndef MARPAWRAPPER_NTRACE
   if (genericLoggerp != NULL) {
-    MARPAWRAPPERGRAMMAR_TRACEF(genericLoggerp, funcs, "return 0");
+    MARPAWRAPPERGRAMMAR_TRACE(genericLoggerp, funcs, "return 0");
   }
 #endif
   return 0;
