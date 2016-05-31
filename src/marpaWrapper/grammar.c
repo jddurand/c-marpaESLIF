@@ -15,22 +15,16 @@ extern const struct marpa_event_description_s marpa_event_description[];
 static marpaWrapperGrammarOption_t marpaWrapperGrammarOptionDefault = {
   NULL,    /* genericLoggerp             */
   0,       /* warningIsErrorb            */
-  0,       /* warningIsIgnoredb          */
-  NULL,    /* eventDefaultCallbackp      */
-  NULL     /* eventDefaultCallbackDatavp */
+  0        /* warningIsIgnoredb          */
 };
 
 static marpaWrapperGrammarSymbolOption_t marpaWrapperGrammarSymbolOptionDefault = {
-  NULL,                               /* datavp */
   0,                                  /* terminalb */
   0,                                  /* startb */
-  MARPAWRAPPERGRAMMAR_EVENTTYPE_NONE, /* eventSeti */
-  NULL,                               /* eventCallbackp */
-  NULL                                /* eventCallbackDatavp */
+  MARPAWRAPPERGRAMMAR_EVENTTYPE_NONE  /* eventSeti */
 };
 
 static marpaWrapperGrammarRuleOption_t marpaWrapperGrammarRuleOptionDefault = {
-  NULL, /* datavp */
   0,    /* ranki */
   0,    /* nullRanksHighb */
   0,    /* sequenceb */
@@ -109,7 +103,6 @@ struct marpaWrapperGrammar {
 } while (0)
 
 static short _marpaWrapperGrammar_eventb(marpaWrapperGrammar_t *marpaWrapperGrammarp);
-static short _marpaWrapperGrammar_manageEventsb(marpaWrapperGrammar_t *marpaWrapperGrammarp);
 #define MARPAWRAPPERGRAMMAREVENT_WEIGHT(eventType) ((eventType) == MARPAWRAPPERGRAMMAR_EVENT_COMPLETED) ? -1 : (((eventType) == MARPAWRAPPERGRAMMAR_EVENT_NULLED) ? 0 : 1)
 static int _marpaWrapperGrammar_cmpi(const void *event1p, const void *event2p);
 
@@ -292,11 +285,6 @@ int marpaWrapperGrammar_newSymboli(marpaWrapperGrammar_t *marpaWrapperGrammarp, 
     marpaWrapperGrammarSymbolOptionp = &marpaWrapperGrammarSymbolOptionDefault;
   }
   marpaWrapperSymbolp->marpaWrapperGrammarSymbolOption = *marpaWrapperGrammarSymbolOptionp;
-  /* If no event callback, take the grammar default event callback */
-  if (marpaWrapperSymbolp->marpaWrapperGrammarSymbolOption.eventCallbackp == NULL) {
-    marpaWrapperSymbolp->marpaWrapperGrammarSymbolOption.eventCallbackp      = marpaWrapperGrammarp->marpaWrapperGrammarOption.eventDefaultCallbackp;
-    marpaWrapperSymbolp->marpaWrapperGrammarSymbolOption.eventCallbackDatavp = marpaWrapperGrammarp->marpaWrapperGrammarOption.eventDefaultCallbackDatavp;
-  }
 
   /* Apply options */
   if (marpaWrapperGrammarSymbolOptionp->terminalb != 0) {
@@ -356,17 +344,14 @@ int marpaWrapperGrammar_newSymboli(marpaWrapperGrammar_t *marpaWrapperGrammarp, 
 }
 
 /****************************************************************************/
-int marpaWrapperGrammar_newSymbolExti(marpaWrapperGrammar_t *marpaWrapperGrammarp, void *datavp, short terminalb, short startb, int eventSeti, marpaWrapperGrammarEventCallback_t eventCallbackp, void *eventCallbackDatavp)
+int marpaWrapperGrammar_newSymbolExti(marpaWrapperGrammar_t *marpaWrapperGrammarp, short terminalb, short startb, int eventSeti)
 /****************************************************************************/
 {
   marpaWrapperGrammarSymbolOption_t marpaWrapperGrammarSymbolOption;
 
-  marpaWrapperGrammarSymbolOption.datavp              = datavp;
   marpaWrapperGrammarSymbolOption.terminalb           = terminalb;
   marpaWrapperGrammarSymbolOption.startb              = startb;
   marpaWrapperGrammarSymbolOption.eventSeti           = eventSeti;
-  marpaWrapperGrammarSymbolOption.eventCallbackp      = eventCallbackp;
-  marpaWrapperGrammarSymbolOption.eventCallbackDatavp = eventCallbackDatavp;
 
   return marpaWrapperGrammar_newSymboli(marpaWrapperGrammarp, &marpaWrapperGrammarSymbolOption);
 }
@@ -490,7 +475,7 @@ int marpaWrapperGrammar_newRulei(marpaWrapperGrammar_t *marpaWrapperGrammarp, ma
 }
 
 /****************************************************************************/
-int marpaWrapperGrammar_newRuleExti(marpaWrapperGrammar_t *marpaWrapperGrammarp, void *datavp, int ranki, short nullRanksHighb, int lhsSymboli, ...)
+int marpaWrapperGrammar_newRuleExti(marpaWrapperGrammar_t *marpaWrapperGrammarp, int ranki, short nullRanksHighb, int lhsSymboli, ...)
 /****************************************************************************/
 {
   const static char               funcs[] = "marpaWrapperGrammar_newRuleExti";
@@ -510,7 +495,6 @@ int marpaWrapperGrammar_newRuleExti(marpaWrapperGrammar_t *marpaWrapperGrammarp,
 
   genericLoggerp = marpaWrapperGrammarp->marpaWrapperGrammarOption.genericLoggerp;
 
-  marpaWrapperGrammarRuleOption.datavp           = datavp;
   marpaWrapperGrammarRuleOption.ranki            = ranki;
   marpaWrapperGrammarRuleOption.nullRanksHighb   = nullRanksHighb;
   marpaWrapperGrammarRuleOption.sequenceb        = 0;
@@ -551,7 +535,7 @@ int marpaWrapperGrammar_newRuleExti(marpaWrapperGrammar_t *marpaWrapperGrammarp,
 }
 
 /****************************************************************************/
-int marpaWrapperGrammar_newSequenceExti(marpaWrapperGrammar_t *marpaWrapperGrammarp, void *datavp, int ranki, short nullRanksHighb,
+int marpaWrapperGrammar_newSequenceExti(marpaWrapperGrammar_t *marpaWrapperGrammarp, int ranki, short nullRanksHighb,
                                         int lhsSymboli,
                                         int rhsSymboli, int minimumi, int separatorSymboli, short properb)
 /****************************************************************************/
@@ -559,7 +543,6 @@ int marpaWrapperGrammar_newSequenceExti(marpaWrapperGrammar_t *marpaWrapperGramm
   marpaWrapperGrammarRuleOption_t marpaWrapperGrammarRuleOption;
   int                             rhsSymbolip[1] = { rhsSymboli };
   
-  marpaWrapperGrammarRuleOption.datavp           = datavp;
   marpaWrapperGrammarRuleOption.ranki            = ranki;
   marpaWrapperGrammarRuleOption.nullRanksHighb   = nullRanksHighb;
   marpaWrapperGrammarRuleOption.sequenceb        = 1;
@@ -576,7 +559,6 @@ short marpaWrapperGrammar_precomputeb(marpaWrapperGrammar_t *marpaWrapperGrammar
 {
   const static char           funcs[] = "marpaWrapperGrammar_precomputeb";
   genericLogger_t            *genericLoggerp = NULL;
-  short                       rcb;
 
   if (marpaWrapperGrammarp == NULL) {
     errno = EINVAL;
@@ -603,10 +585,8 @@ short marpaWrapperGrammar_precomputeb(marpaWrapperGrammar_t *marpaWrapperGrammar
     goto err;
   }
 
-  /* Events can happen */
-  rcb = _marpaWrapperGrammar_manageEventsb(marpaWrapperGrammarp);
-  MARPAWRAPPERGRAMMAR_TRACEF(genericLoggerp, funcs, "return %d", (int) rcb);
-  return rcb;
+  MARPAWRAPPERGRAMMAR_TRACE(genericLoggerp, funcs, "return 1");
+  return 1;
 
  err:
 #ifndef MARPAWRAPPER_NTRACE
@@ -785,40 +765,7 @@ static short _marpaWrapperGrammar_eventb(marpaWrapperGrammar_t *marpaWrapperGram
   return 0;
 }
 
-/****************************************************************************/
-static short _marpaWrapperGrammar_manageEventsb(marpaWrapperGrammar_t *marpaWrapperGrammarp)
-/****************************************************************************/
-{
-  const static char                 funcs[] = "_marpaWrapperGrammar_manageEventsb";
-  genericLogger_t                  *genericLoggerp = marpaWrapperGrammarp->marpaWrapperGrammarOption.genericLoggerp;
   marpaWrapperGrammarEvent_t       *eventp;
-  size_t                            nEventl;
-  marpaWrapperGrammarSymbol_t      *symbolp;
-  size_t                            i;
-
-  MARPAWRAPPERGRAMMAR_TRACE(genericLoggerp, funcs, "Getting events");
-
-  if (_marpaWrapperGrammar_eventb(marpaWrapperGrammarp) == 0) {
-    goto err;
-  }
-
-  nEventl = marpaWrapperGrammarp->nEventl;
-  for (i = 0, eventp = marpaWrapperGrammarp->eventp; i < nEventl; i++, eventp++) {
-    symbolp = eventp->symbolp;
-    if (symbolp->marpaWrapperGrammarSymbolOption.eventCallbackp != NULL) {
-      MARPAWRAPPERGRAMMAR_TRACEF(genericLoggerp, funcs, "(eventCallbackp=%p)(%p, %p)", symbolp->marpaWrapperGrammarSymbolOption.eventCallbackp, symbolp->marpaWrapperGrammarSymbolOption.eventCallbackDatavp, eventp);
-      (*symbolp->marpaWrapperGrammarSymbolOption.eventCallbackp)(symbolp->marpaWrapperGrammarSymbolOption.eventCallbackDatavp, eventp);
-    }
-  }
-
-  MARPAWRAPPERGRAMMAR_TRACE(genericLoggerp, funcs, "return 1");
-  return 1;
-
- err:
-  MARPAWRAPPERGRAMMAR_TRACE(genericLoggerp, funcs, "return 0");
-  return 0;
-}
-
 /****************************************************************************/
 static int _marpaWrapperGrammar_cmpi(const void *event1p, const void *event2p)
 /****************************************************************************/
