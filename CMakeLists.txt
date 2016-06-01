@@ -114,7 +114,6 @@ IF ("${C_INLINE}" EQUAL "inline")
 ELSE ("${C_INLINE}" EQUAL "inline")
   SET (C_INLINE_IS_INLINE FALSE)
 ENDIF ("${C_INLINE}" EQUAL "inline")
-FIND_PACKAGE(NullIsZeroes)
 
 # ----------------------------------------------------
 # Configuration
