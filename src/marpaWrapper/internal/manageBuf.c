@@ -4,15 +4,16 @@
 
 #include "config.h"
 #include "marpaWrapper/internal/manageBuf.h"
+#include "marpaWrapper/internal/logging.h"
 
 /*********************/
 /* manageBuf_createp */
 /*********************/
-void *manageBuf_createp(genericLogger_t *genericLoggerp, void ***ppp, size_t *sizelp, const size_t wantedNumberi, const size_t elementSizel) {
-  size_t  sizel     = *sizelp;
-  size_t  origSizel = sizel;
-  void  **pp        = *ppp;
-  size_t  prevSizel;
+void *manageBuf_createp(genericLogger_t *genericLoggerp, void **pp, size_t *sizelp, const size_t wantedNumberi, const size_t elementSizel) {
+  size_t sizel     = *sizelp;
+  size_t origSizel = sizel;
+  void  *p         = *pp;
+  size_t prevSizel;
 
   /*
    * Per def, this routine is managing an array of pointer
@@ -25,9 +26,9 @@ void *manageBuf_createp(genericLogger_t *genericLoggerp, void ***ppp, size_t *si
       if (sizel <= 0) {
 	/* Let's start at arbitrary number of elements of 100 */
 	sizel = 100;
-	pp = malloc(sizel * elementSizel);
-	if (pp == NULL) {
-	  GENERICLOGGER_ERRORF(genericLoggerp, "malloc failure: %s", strerror(errno));
+	p = malloc(sizel * elementSizel);
+	if (p == NULL) {
+	  MARPAWRAPPER_ERRORF(genericLoggerp, "malloc failure: %s", strerror(errno));
 	  return NULL;
 	}
       } else {
@@ -35,12 +36,12 @@ void *manageBuf_createp(genericLogger_t *genericLoggerp, void ***ppp, size_t *si
 	if (sizel < prevSizel) {
 	  /* Turnaround */
 	  errno = ERANGE;
-	  GENERICLOGGER_ERRORF(genericLoggerp, "Turnaround detection: %s", strerror(errno));
+	  MARPAWRAPPER_ERRORF(genericLoggerp, "Turnaround detection: %s", strerror(errno));
 	  return NULL;
 	}
-	pp = realloc(pp, sizel * elementSizel);
-	if (pp == NULL) {
-	  GENERICLOGGER_ERRORF(genericLoggerp, "realloc failure: %s", strerror(errno));
+	p = realloc(p, sizel * elementSizel);
+	if (p == NULL) {
+	  MARPAWRAPPER_ERRORF(genericLoggerp, "realloc failure: %s", strerror(errno));
 	  return NULL;
 	}
       }
@@ -48,53 +49,22 @@ void *manageBuf_createp(genericLogger_t *genericLoggerp, void ***ppp, size_t *si
     }
   }
 
-  /*
-   * Pre-fill pointers with NULL
-   */
-#ifdef NULL_IS_ZEROES
-  memset(&(pp[origSizel]), 0, (sizel - origSizel) * elementSizel);
-#else
-  {
-    int i;
-    for (i = origSizel; i < sizel; i++) {
-      pp[i] = NULL;
-    }
-  }
-#endif
-
-  *ppp = pp;
+  *pp = p;
   *sizelp = sizel;
 
-  return pp;
+  return p;
 }
 
 /*******************/
 /* manageBuf_freev */
 /*******************/
-void manageBuf_freev(genericLogger_t *genericLoggerp, void ***ppp, size_t usedNumberl) {
-  void  **pp;
-  size_t  i;
-
-  if (ppp != NULL) {
-    pp = *ppp;
-    if (pp != NULL) {
-      if (usedNumberl > 0) {
-        for (i = 0; i < usedNumberl; i++) {
-          if (pp[i] != NULL) {
-            free(pp[i]);
-            pp[i] = NULL;
-	  }
-	  /* In theory I could that */
-	  /*
-	  else {
-	    last;
-	  }
-	  */
-        }
-      }
-      free(pp);
+void manageBuf_freev(genericLogger_t *genericLoggerp, void **pp) {
+  if (pp != NULL) {
+    void *p = *pp;
+    if (p != NULL) {
+      free(p);
     }
-    *ppp = NULL;
+    *pp = NULL;
   }
 }
 
