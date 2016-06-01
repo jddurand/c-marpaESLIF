@@ -33,18 +33,18 @@ static marpaWrapperGrammarRuleOption_t marpaWrapperGrammarRuleOptionDefault = {
   0     /* minimumi */
 };
 
-struct marpaWrapperGrammarSymbol {
+typedef struct marpaWrapperGrammarSymbol {
   Marpa_Symbol_ID                   marpaSymbolIdi;
   marpaWrapperGrammarSymbolOption_t marpaWrapperGrammarSymbolOption;
   /* Internal work area */
   short                             isLexemeb;
   size_t                            lengthl;
-};
+} marpaWrapperGrammarSymbol_t;
 
-struct marpaWrapperGrammarRule {
+typedef struct marpaWrapperGrammarRule {
   Marpa_Rule_ID                   marpaRuleIdi;
   marpaWrapperGrammarRuleOption_t marpaWrapperGrammarRuleOption;
-};
+} marpaWrapperGrammarRule_t;
 
 struct marpaWrapperGrammar {
   short                         precomputedb; /* Flag saying it is has be precomputed */
@@ -721,7 +721,7 @@ static short _marpaWrapperGrammar_eventb(marpaWrapperGrammar_t *marpaWrapperGram
       eventp = &(marpaWrapperGrammarp->eventp[subscribedEventi]);
 
       eventp->eventType = MARPAWRAPPERGRAMMAR_EVENT_COMPLETED;
-      eventp->symbolp   = marpaWrapperGrammarp->symbolpp[eventValuei];
+      eventp->symboli   = marpaWrapperGrammarp->symbolpp[eventValuei]->marpaSymbolIdi;
 
       marpaWrapperGrammarp->nEventl = ++subscribedEventi;
       break;
