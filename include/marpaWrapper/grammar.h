@@ -10,9 +10,7 @@
 /* ---------------- */
 /* Opaque structure */
 /* ---------------- */
-typedef struct marpaWrapperGrammar       marpaWrapperGrammar_t;
-typedef struct marpaWrapperGrammarSymbol marpaWrapperGrammarSymbol_t;
-typedef struct marpaWrapperGrammarRule   marpaWrapperGrammarRule_t;
+typedef struct marpaWrapperGrammar marpaWrapperGrammar_t;
 
 /* ------------------------------------------ */
 /* For every symbol there can be three events */
@@ -31,7 +29,7 @@ typedef struct marpaWrapperGrammarEvent {
     MARPAWRAPPERGRAMMAR_EVENT_NULLED,
     MARPAWRAPPERGRAMMAR_EVENT_EXPECTED
   } eventType;
-  marpaWrapperGrammarSymbol_t *symbolp;
+  int symboli;
 } marpaWrapperGrammarEvent_t;
 
 /* ------------------ */
