@@ -1,17 +1,19 @@
 #include <stdlib.h>
 #include <stdio.h>
-#include "marpaWrapper/grammar.h"
+#include "marpaWrapper.h"
+#include "genericLogger.h"
 
 enum { S = 0, E, op, number, MAX_SYMBOL };
 enum { START_RULE = 0, OP_RULE, NUMBER_RULE, MAX_RULE };
 
 int main(int argc, char **argv) {
-  marpaWrapperGrammar_t *marpaWrapperGrammarp;
-  int                    symbolip[MAX_SYMBOL];
-  int                    ruleip[MAX_RULE];
-  int                    rci = 0;
+  marpaWrapperGrammar_t       *marpaWrapperGrammarp;
+  int                         symbolip[MAX_SYMBOL];
+  int                         ruleip[MAX_RULE];
+  int                         rci = 0;
+  marpaWrapperGrammarOption_t marpaWrapperGrammarOption = { GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_TRACE), 0, 0 };
 
-  marpaWrapperGrammarp = marpaWrapperGrammar_newp(NULL);
+  marpaWrapperGrammarp = marpaWrapperGrammar_newp(&marpaWrapperGrammarOption);
   if ( /* S (start symbol automatically), E, op, number */
       ((symbolip[     S] = MARPAWRAPPERGRAMMAR_NEWSYMBOL(marpaWrapperGrammarp)) < 0) ||
       ((symbolip[     E] = MARPAWRAPPERGRAMMAR_NEWSYMBOL(marpaWrapperGrammarp)) < 0) ||
