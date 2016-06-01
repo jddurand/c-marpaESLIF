@@ -9,10 +9,18 @@
 /***********************/
 typedef struct marpaWrapperRecognizer marpaWrapperRecognizer_t;
 
+/* --------------- */
+/* General options */
+/* --------------- */
+typedef struct marpaWrapperRecognizerOption {
+  genericLogger_t *genericLoggerp;             /* Default: NULL. */
+  short            latmb;                      /* Default: 1.    */
+} marpaWrapperRecognizerOption_t;
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-  marpaWrapper_EXPORT marpaWrapperRecognizer_t    *marpaWrapperRecognizer_newp(marpaWrapperGrammar_t *marpaWrapperGrammarp);
+  marpaWrapper_EXPORT marpaWrapperRecognizer_t    *marpaWrapperRecognizer_newp(marpaWrapperGrammar_t *marpaWrapperGrammarp, marpaWrapperRecognizerOption_t *marpaWrapperRecognizerOptionp);
   marpaWrapper_EXPORT void                         marpaWrapperRecognizer_freev(marpaWrapperRecognizer_t *marpaWrapperRecognizerp);
 #ifdef __cplusplus
 }
