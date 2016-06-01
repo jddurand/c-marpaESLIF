@@ -2,6 +2,7 @@
 #define MARPAWRAPPER_INTERNAL_LOGGING_H
 
 #include <stddef.h>
+#include "marpa.h"
 #include "marpa_codes.h"
 
 extern const struct marpa_error_description_s marpa_error_description[];

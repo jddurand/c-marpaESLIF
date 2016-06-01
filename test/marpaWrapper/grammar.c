@@ -39,6 +39,7 @@ int main(int argc, char **argv) {
     }
   }
   marpaWrapperGrammar_freev(marpaWrapperGrammarp);
+  GENERICLOGGER_FREE(marpaWrapperGrammarOption.genericLoggerp);
 
   return rci;
 }
