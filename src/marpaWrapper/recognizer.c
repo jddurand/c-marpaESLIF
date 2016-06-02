@@ -76,3 +76,25 @@ err:
 
   return NULL;
 }
+
+/****************************************************************************/
+void marpaWrapperRecognizer_freev(marpaWrapperRecognizer_t *marpaWrapperRecognizerp)
+/****************************************************************************/
+{
+  const static char  funcs[] = "marpaWrapperRecognizer_freev";
+  genericLogger_t  *genericLoggerp;
+
+  if (marpaWrapperRecognizerp != NULL) {
+    /* Keep a copy of the generic logger. If original is not NULL, then we have a clone of it */
+    genericLoggerp = marpaWrapperRecognizerp->marpaWrapperRecognizerOption.genericLoggerp;
+
+    MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "free(%p)", marpaWrapperRecognizerp);
+    free(marpaWrapperRecognizerp);
+
+    if (genericLoggerp != NULL) {
+      MARPAWRAPPER_TRACE(genericLoggerp, funcs, "Freeing cloned generic logger");
+      GENERICLOGGER_FREE(genericLoggerp);
+    }
+  }
+}
+
