@@ -80,6 +80,11 @@ marpaWrapperRecognizer_t *marpaWrapperRecognizer_newp(marpaWrapperGrammar_t *mar
     goto err;
   }
 
+  /* Events can happen */
+  if (marpaWrapperGrammar_eventb(marpaWrapperGrammarp) == 0) {
+    goto err;
+  }
+
   if (genericLoggerp != NULL) {
     MARPAWRAPPER_TRACE(genericLoggerp, funcs, "Cloning genericLogger");
 

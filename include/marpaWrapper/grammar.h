@@ -81,6 +81,7 @@ extern "C" {
 										       int rhsSymboli, int minimumi, int separatorSymboli, short properb);
   
   marpaWrapper_EXPORT short                        marpaWrapperGrammar_precomputeb(marpaWrapperGrammar_t *marpaWrapperGrammarp);
+  marpaWrapper_EXPORT short                        marpaWrapperGrammar_eventb(marpaWrapperGrammar_t *marpaWrapperGrammarp);
   marpaWrapper_EXPORT size_t                       marpaWrapperGrammar_eventl(marpaWrapperGrammar_t *marpaWrapperGrammarp, marpaWrapperGrammarEvent_t **eventpp);
 #ifdef __cplusplus
 }
