@@ -363,7 +363,7 @@ int marpaWrapperGrammar_newRulei(marpaWrapperGrammar_t *marpaWrapperGrammarp, ma
     if (marpaWrapperGrammarRuleOptionp->properb != 0) {
       sequenceFlagsi |= MARPA_PROPER_SEPARATION;
     }
-    MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_g_sequence_new(%p, %d, %d, %d, %d, %s)", marpaWrapperGrammarp->marpaGrammarp, lhsSymboli, (int) rhsSymbolip[0], (int) marpaWrapperGrammarRuleOptionp->separatorSymboli, marpaWrapperGrammarRuleOptionp->minimumi, ((sequenceFlagsi & MARPA_PROPER_SEPARATION) == MARPA_PROPER_SEPARATION) ? "MARPA_PROPER_SEPARATION" : "");
+    MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_g_sequence_new(%p, %d, %d, %d, %d, %s)", marpaWrapperGrammarp->marpaGrammarp, lhsSymboli, (int) rhsSymbolip[0], (int) marpaWrapperGrammarRuleOptionp->separatorSymboli, marpaWrapperGrammarRuleOptionp->minimumi, ((sequenceFlagsi & MARPA_PROPER_SEPARATION) == MARPA_PROPER_SEPARATION) ? "MARPA_PROPER_SEPARATION" : "0");
     marpaRuleIdi = marpa_g_sequence_new(marpaWrapperGrammarp->marpaGrammarp,
 					lhsSymboli,
 					(Marpa_Symbol_ID) rhsSymbolip[0],
@@ -494,6 +494,17 @@ int marpaWrapperGrammar_newSequenceExti(marpaWrapperGrammar_t *marpaWrapperGramm
 {
   marpaWrapperGrammarRuleOption_t marpaWrapperGrammarRuleOption;
   int                             rhsSymbolip[1] = { rhsSymboli };
+
+  switch (minimumi) {
+  case '*':
+    minimumi = 0;
+    break;
+  case '+':
+    minimumi = 1;
+    break;
+  default:
+    break;
+  }
   
   marpaWrapperGrammarRuleOption.ranki            = ranki;
   marpaWrapperGrammarRuleOption.nullRanksHighb   = nullRanksHighb;
