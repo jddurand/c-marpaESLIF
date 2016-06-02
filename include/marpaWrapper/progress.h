@@ -1,6 +1,8 @@
 #ifndef MARPAWRAPPER_PROGRESS
 #define MARPAWRAPPER_PROGRESS
 
+#include <stddef.h>
+#include "marpaWrapper/recognizer.h"
 #include "marpaWrapper/export.h"
 
 typedef struct marpaWrapperProgress {
@@ -13,7 +15,7 @@ typedef struct marpaWrapperProgress {
 #ifdef __cplusplus
 extern "C" {
 #endif
-  marpaWrapper_EXPORT short marpaWrapperProgressb(marpaWrapperRecognizer_t *marpaWrapperRecognizerp, int starti, int endi, size_t *nmarpaWrapperProgressip, marpaWrapperProgress_t ***marpaWrapperProgressppp);
+  marpaWrapper_EXPORT size_t marpaWrapperProgressb(marpaWrapperRecognizer_t *marpaWrapperRecognizerp, int starti, int endi, marpaWrapperProgress_t **marpaWrapperProgresspp);
 #ifdef __cplusplus
 }
 #endif
