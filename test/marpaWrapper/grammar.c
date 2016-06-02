@@ -42,6 +42,7 @@ int main(int argc, char **argv) {
   }
   
   marpaWrapperRecognizerp = marpaWrapperRecognizer_newp(marpaWrapperGrammarp, &marpaWrapperRecognizerOption);
+  marpaWrapperRecognizer_alternativeb(marpaWrapperRecognizerp, 15, 0, 0);
   marpaWrapperRecognizer_freev(marpaWrapperRecognizerp);
   GENERICLOGGER_FREE(marpaWrapperRecognizerOption.genericLoggerp);
 

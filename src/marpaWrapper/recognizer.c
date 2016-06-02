@@ -5,13 +5,9 @@
 #include "marpa.h"
 
 #include "config.h"
-#include "marpaWrapper/recognizer.h"
+#include "marpaWrapper/internal/recognizer.h"
+#include "marpaWrapper/internal/grammar.h"
 #include "marpaWrapper/internal/logging.h"
-
-struct marpaWrapperRecognizer {
-  marpaWrapperGrammar_t         *marpaWrapperGrammarp;
-  marpaWrapperRecognizerOption_t marpaWrapperRecognizerOption;
-};
 
 static marpaWrapperRecognizerOption_t marpaWrapperRecognizerOptionDefault = {
   NULL,    /* genericLoggerp   */
@@ -43,8 +39,16 @@ marpaWrapperRecognizer_t *marpaWrapperRecognizer_newp(marpaWrapperGrammar_t *mar
     goto err;
   }
 
+  /* See first instruction after this initialization block: marpaWrapperRecognizerp->marpaRecognizerp */
   marpaWrapperRecognizerp->marpaWrapperGrammarp = marpaWrapperGrammarp;
   marpaWrapperRecognizerp->marpaWrapperRecognizerOption = *marpaWrapperRecognizerOptionp;
+
+  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_r_new(%p)", marpaWrapperGrammarp->marpaGrammarp);
+  marpaWrapperRecognizerp->marpaRecognizerp = marpa_r_new(marpaWrapperGrammarp->marpaGrammarp);
+  if (marpaWrapperRecognizerp->marpaRecognizerp == NULL) {
+    MARPAWRAPPER_MARPA_G_ERROR(genericLoggerp, marpaWrapperGrammarp->marpaGrammarp);
+    goto err;
+  }
 
   if (genericLoggerp != NULL) {
     MARPAWRAPPER_TRACE(genericLoggerp, funcs, "Cloning genericLogger");
@@ -69,12 +73,47 @@ err:
       MARPAWRAPPER_TRACE(genericLoggerp, funcs, "Freeing cloned genericLogger");
       GENERICLOGGER_FREE(marpaWrapperRecognizerp->marpaWrapperRecognizerOption.genericLoggerp);
     }
+    marpaWrapperRecognizer_freev(marpaWrapperRecognizerp);
 
-    free(marpaWrapperRecognizerp);
     errno = errnoi;
   }
 
   return NULL;
+}
+
+/****************************************************************************/
+short marpaWrapperRecognizer_alternativeb(marpaWrapperRecognizer_t *marpaWrapperRecognizerp, int symboli, int valuei, int lengthi)
+/****************************************************************************/
+{
+  const static char  funcs[] = "marpaWrapperRecognizer_alternativeb";
+  genericLogger_t *genericLoggerp = NULL;
+
+  if (marpaWrapperRecognizerp == NULL) {
+    errno = EINVAL;
+    goto err;
+  }
+
+  genericLoggerp = marpaWrapperRecognizerp->marpaWrapperRecognizerOption.genericLoggerp;
+
+  if (symboli < 0) {
+    MARPAWRAPPER_ERRORF(genericLoggerp, "Invalid symbol number %d", symboli);
+    errno = EINVAL;
+    goto err;
+  }
+
+  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_r_alternative(%p, %d, %d, %d)", marpaWrapperRecognizerp->marpaRecognizerp, symboli, valuei, lengthi);
+  if (marpa_r_alternative(marpaWrapperRecognizerp->marpaRecognizerp, (Marpa_Symbol_ID) symboli, valuei, lengthi) != MARPA_ERR_NONE) {
+    MARPAWRAPPER_MARPA_G_ERROR(genericLoggerp, marpaWrapperRecognizerp->marpaWrapperGrammarp->marpaGrammarp);
+    goto err;
+    
+  }
+
+  MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return 1");
+  return 1;
+
+ err:
+  MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return 0");
+  return 0;
 }
 
 /****************************************************************************/
@@ -87,6 +126,11 @@ void marpaWrapperRecognizer_freev(marpaWrapperRecognizer_t *marpaWrapperRecogniz
   if (marpaWrapperRecognizerp != NULL) {
     /* Keep a copy of the generic logger. If original is not NULL, then we have a clone of it */
     genericLoggerp = marpaWrapperRecognizerp->marpaWrapperRecognizerOption.genericLoggerp;
+
+    if (marpaWrapperRecognizerp->marpaRecognizerp != NULL) {
+      MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_r_unref(%p)", marpaWrapperRecognizerp->marpaRecognizerp);
+      marpa_r_unref(marpaWrapperRecognizerp->marpaRecognizerp);
+    }
 
     MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "free(%p)", marpaWrapperRecognizerp);
     free(marpaWrapperRecognizerp);

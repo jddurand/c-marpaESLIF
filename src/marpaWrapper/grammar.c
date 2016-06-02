@@ -2,12 +2,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
-#include "marpa.h"
 
+#include "marpa.h"
 #include "config.h"
-#include "marpaWrapper/grammar.h"
 #include "marpaWrapper/internal/manageBuf.h"
 #include "marpaWrapper/internal/logging.h"
+#include "marpaWrapper/internal/grammar.h"
 
 static marpaWrapperGrammarOption_t marpaWrapperGrammarOptionDefault = {
   NULL,    /* genericLoggerp             */
@@ -30,43 +30,6 @@ static marpaWrapperGrammarRuleOption_t marpaWrapperGrammarRuleOptionDefault = {
   0     /* minimumi */
 };
 
-typedef struct marpaWrapperGrammarSymbol {
-  Marpa_Symbol_ID                   marpaSymbolIdi;
-  marpaWrapperGrammarSymbolOption_t marpaWrapperGrammarSymbolOption;
-  /* Internal work area */
-  short                             isLexemeb;
-  size_t                            lengthl;
-} marpaWrapperGrammarSymbol_t;
-
-typedef struct marpaWrapperGrammarRule {
-  Marpa_Rule_ID                   marpaRuleIdi;
-  marpaWrapperGrammarRuleOption_t marpaWrapperGrammarRuleOption;
-} marpaWrapperGrammarRule_t;
-
-struct marpaWrapperGrammar {
-  short                         precomputedb; /* Flag saying it is has be precomputed */
-  short                         haveStartb;   /* Flag saying it a start symbol was explicitely declare */
-
-  marpaWrapperGrammarOption_t   marpaWrapperGrammarOption;
-  Marpa_Grammar                 marpaGrammarp;
-  Marpa_Config                  marpaConfig;
-
-  /* Storage of symbols */
-  size_t                        sizeSymboll;           /* Allocated size */
-  size_t                        nSymboll;              /* Used size      */
-  marpaWrapperGrammarSymbol_t  *symbolArrayp;
-
-  /* Storage of rules */
-  size_t                        sizeRulel;           /* Allocated size */
-  size_t                        nRulel;              /* Used size      */
-  marpaWrapperGrammarRule_t    *ruleArrayp;
-
-  /* Last events list */
-  size_t                        sizeEventl;           /* Allocated size */
-  size_t                        nEventl;              /* Used size      */
-  marpaWrapperGrammarEvent_t   *eventArrayp;
-};
-
 static short _marpaWrapperGrammar_eventb(marpaWrapperGrammar_t *marpaWrapperGrammarp);
 #define MARPAWRAPPERGRAMMAREVENT_WEIGHT(eventType) ((eventType) == MARPAWRAPPERGRAMMAR_EVENT_COMPLETED) ? -1 : (((eventType) == MARPAWRAPPERGRAMMAR_EVENT_NULLED) ? 0 : 1)
 static int _marpaWrapperGrammar_cmpi(const void *event1p, const void *event2p);
@@ -77,7 +40,7 @@ marpaWrapperGrammar_t *marpaWrapperGrammar_newp(marpaWrapperGrammarOption_t *mar
 {
   const static char      funcs[] = "marpaWrapperGrammar_newp";
   marpaWrapperGrammar_t *marpaWrapperGrammarp;
-  genericLogger_t       *genericLoggerp;
+  genericLogger_t       *genericLoggerp = NULL;
 #ifndef MARPAWRAPPER_NTRACE
   int                    marpaVersionip[3];
 #endif
@@ -105,6 +68,21 @@ marpaWrapperGrammar_t *marpaWrapperGrammar_newp(marpaWrapperGrammarOption_t *mar
     goto err;
   }
 
+  marpaWrapperGrammarp->precomputedb              = 0;
+  marpaWrapperGrammarp->haveStartb                = 0;
+  marpaWrapperGrammarp->marpaWrapperGrammarOption = *marpaWrapperGrammarOptionp;
+  marpaWrapperGrammarp->marpaGrammarp             = NULL;
+  /* See first instruction after this initialization block: marpaWrapperGrammarp->marpaConfig */
+  marpaWrapperGrammarp->sizeSymboll               = 0;
+  marpaWrapperGrammarp->nSymboll                  = 0;
+  marpaWrapperGrammarp->symbolArrayp              = NULL;
+  marpaWrapperGrammarp->sizeRulel                 = 0;
+  marpaWrapperGrammarp->nRulel                    = 0;
+  marpaWrapperGrammarp->ruleArrayp                = NULL;
+  marpaWrapperGrammarp->sizeEventl                = 0;
+  marpaWrapperGrammarp->nEventl                   = 0;
+  marpaWrapperGrammarp->eventArrayp               = NULL;
+
   /* Initialize Marpa - always succeed as per the doc */
   MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_c_init(%p)", &(marpaWrapperGrammarp->marpaConfig));
   marpa_c_init(&(marpaWrapperGrammarp->marpaConfig));
@@ -123,19 +101,6 @@ marpaWrapperGrammar_t *marpaWrapperGrammar_newp(marpaWrapperGrammarOption_t *mar
     MARPAWRAPPER_MARPA_G_ERROR(genericLoggerp, marpaWrapperGrammarp->marpaGrammarp);
     goto err;
   }
-
-  marpaWrapperGrammarp->precomputedb              = 0;
-  marpaWrapperGrammarp->haveStartb                = 0;
-  marpaWrapperGrammarp->marpaWrapperGrammarOption = *marpaWrapperGrammarOptionp;
-  marpaWrapperGrammarp->sizeSymboll               = 0;
-  marpaWrapperGrammarp->nSymboll                  = 0;
-  marpaWrapperGrammarp->symbolArrayp              = NULL;
-  marpaWrapperGrammarp->sizeRulel                 = 0;
-  marpaWrapperGrammarp->nRulel                    = 0;
-  marpaWrapperGrammarp->ruleArrayp                = NULL;
-  marpaWrapperGrammarp->sizeEventl                = 0;
-  marpaWrapperGrammarp->nEventl                   = 0;
-  marpaWrapperGrammarp->eventArrayp               = NULL;
 
   if (genericLoggerp != NULL) {
     MARPAWRAPPER_TRACE(genericLoggerp, funcs, "Cloning genericLogger");
@@ -160,11 +125,12 @@ marpaWrapperGrammar_t *marpaWrapperGrammar_newp(marpaWrapperGrammarOption_t *mar
       MARPAWRAPPER_TRACE(genericLoggerp, funcs, "Freeing cloned genericLogger");
       GENERICLOGGER_FREE(marpaWrapperGrammarp->marpaWrapperGrammarOption.genericLoggerp);
     }
+    marpaWrapperGrammar_freev(marpaWrapperGrammarp);
 
-    free(marpaWrapperGrammarp);
     errno = errnoi;
   }
 
+  MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return NULL");
   return NULL;
 }
 
@@ -179,8 +145,10 @@ void marpaWrapperGrammar_freev(marpaWrapperGrammar_t *marpaWrapperGrammarp)
     /* Keep a copy of the generic logger. If original is not NULL, then we have a clone of it */
     genericLoggerp = marpaWrapperGrammarp->marpaWrapperGrammarOption.genericLoggerp;
 
-    MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_g_unref(%p)", marpaWrapperGrammarp->marpaGrammarp);
-    marpa_g_unref(marpaWrapperGrammarp->marpaGrammarp);
+    if (marpaWrapperGrammarp->marpaGrammarp != NULL) {
+      MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_g_unref(%p)", marpaWrapperGrammarp->marpaGrammarp);
+      marpa_g_unref(marpaWrapperGrammarp->marpaGrammarp);
+    }
 
     MARPAWRAPPER_TRACE(genericLoggerp, funcs, "Freeing symbol table");
     manageBuf_freev(genericLoggerp, (void **) &(marpaWrapperGrammarp->symbolArrayp));
@@ -295,11 +263,7 @@ int marpaWrapperGrammar_newSymboli(marpaWrapperGrammar_t *marpaWrapperGrammarp, 
   return (int) marpaSymbolIdi;
   
  err:
-#ifndef MARPAWRAPPER_NTRACE
-  if (genericLoggerp != NULL) {
-    MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return -1");
-  }
-#endif
+  MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return -1");
   return -1;
 }
 
@@ -421,11 +385,7 @@ int marpaWrapperGrammar_newRulei(marpaWrapperGrammar_t *marpaWrapperGrammarp, ma
   return (int) marpaRuleIdi;
 
  err:
-#ifndef MARPAWRAPPER_NTRACE
-  if (genericLoggerp != NULL) {
-    MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return -1");
-  }
-#endif
+  MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return -1");
   return -1;
 }
 
@@ -477,12 +437,8 @@ int marpaWrapperGrammar_newRuleExti(marpaWrapperGrammar_t *marpaWrapperGrammarp,
     manageBuf_freev(genericLoggerp, (void **) &rhsSymbolip);
     errno = errnoi;
   }
-#ifndef MARPAWRAPPER_NTRACE
-  if (genericLoggerp != NULL) {
-    MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return -1");
-  }
-#endif
 
+  MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return -1");
   return -1;
 }
 
@@ -557,11 +513,7 @@ short marpaWrapperGrammar_precomputeb(marpaWrapperGrammar_t *marpaWrapperGrammar
   return 1;
 
  err:
-#ifndef MARPAWRAPPER_NTRACE
-  if (genericLoggerp != NULL) {
-    MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return 0");
-  }
-#endif
+  MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return 0");
   return 0;
 }
 
@@ -589,11 +541,7 @@ size_t marpaWrapperGrammar_eventl(marpaWrapperGrammar_t *marpaWrapperGrammarp, m
   return marpaWrapperGrammarp->nEventl;
 
  err:
-#ifndef MARPAWRAPPER_NTRACE
-  if (genericLoggerp != NULL) {
-    MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return (size_t)-1");
-  }
-#endif
+  MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return (size_t)-1");
   return (size_t)-1;
 }
 
@@ -727,11 +675,8 @@ static short _marpaWrapperGrammar_eventb(marpaWrapperGrammar_t *marpaWrapperGram
     free(eventp);
     errno = errnoi;
   }
-#ifndef MARPAWRAPPER_NTRACE
-  if (genericLoggerp != NULL) {
-    MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return 0");
-  }
-#endif
+
+  MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return 0");
   return 0;
 }
 
