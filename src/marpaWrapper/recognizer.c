@@ -5,6 +5,7 @@
 #include "marpa.h"
 
 #include "config.h"
+#include "marpaWrapper/internal/manageBuf.h"
 #include "marpaWrapper/internal/recognizer.h"
 #include "marpaWrapper/internal/grammar.h"
 #include "marpaWrapper/internal/logging.h"
@@ -21,6 +22,8 @@ marpaWrapperRecognizer_t *marpaWrapperRecognizer_newp(marpaWrapperGrammar_t *mar
   const static char         funcs[] = "marpaWrapperRecognizer_newp";
   marpaWrapperRecognizer_t *marpaWrapperRecognizerp;
   genericLogger_t          *genericLoggerp;
+  int                       highestSymbolIdi;
+  size_t                    nSymboll;
 
   if (marpaWrapperGrammarp == NULL) {
     errno = EINVAL;
@@ -40,13 +43,40 @@ marpaWrapperRecognizer_t *marpaWrapperRecognizer_newp(marpaWrapperGrammar_t *mar
   }
 
   /* See first instruction after this initialization block: marpaWrapperRecognizerp->marpaRecognizerp */
-  marpaWrapperRecognizerp->marpaWrapperGrammarp = marpaWrapperGrammarp;
+  marpaWrapperRecognizerp->marpaWrapperGrammarp         = marpaWrapperGrammarp;
   marpaWrapperRecognizerp->marpaWrapperRecognizerOption = *marpaWrapperRecognizerOptionp;
+  marpaWrapperRecognizerp->sizeSymboll                  = 0;
+  marpaWrapperRecognizerp->nSymboll                     = 0;
+  marpaWrapperRecognizerp->symbolip                     = NULL;
 
   MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_r_new(%p)", marpaWrapperGrammarp->marpaGrammarp);
   marpaWrapperRecognizerp->marpaRecognizerp = marpa_r_new(marpaWrapperGrammarp->marpaGrammarp);
   if (marpaWrapperRecognizerp->marpaRecognizerp == NULL) {
     MARPAWRAPPER_MARPA_G_ERROR(genericLoggerp, marpaWrapperGrammarp->marpaGrammarp);
+    goto err;
+  }
+
+  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_r_start_input(%p)", marpaWrapperRecognizerp->marpaRecognizerp);
+  if (marpa_r_start_input(marpaWrapperRecognizerp->marpaRecognizerp) < 0) {
+    MARPAWRAPPER_MARPA_G_ERROR(genericLoggerp, marpaWrapperGrammarp->marpaGrammarp);
+    goto err;
+  }
+
+  /* Allocate room for the terminals expected output */
+  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_g_highest_symbol_id(%p)", marpaWrapperGrammarp->marpaGrammarp);
+  highestSymbolIdi = marpa_g_highest_symbol_id(marpaWrapperGrammarp->marpaGrammarp);
+  if (highestSymbolIdi < 0) {
+    MARPAWRAPPER_MARPA_G_ERROR(genericLoggerp, marpaWrapperGrammarp->marpaGrammarp);
+    goto err;
+  }
+
+  nSymboll = highestSymbolIdi + 1;
+  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "Pre-allocating room for %d symbols", nSymboll);
+  if (manageBuf_createp(genericLoggerp,
+			(void **) &(marpaWrapperRecognizerp->symbolip),
+			&(marpaWrapperRecognizerp->sizeSymboll),
+			nSymboll,
+			sizeof(int)) == NULL) {
     goto err;
   }
 
@@ -131,6 +161,9 @@ void marpaWrapperRecognizer_freev(marpaWrapperRecognizer_t *marpaWrapperRecogniz
       MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_r_unref(%p)", marpaWrapperRecognizerp->marpaRecognizerp);
       marpa_r_unref(marpaWrapperRecognizerp->marpaRecognizerp);
     }
+
+    MARPAWRAPPER_TRACE(genericLoggerp, funcs, "Freeing symbol table");
+    manageBuf_freev(genericLoggerp, (void **) &(marpaWrapperRecognizerp->symbolip));
 
     MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "free(%p)", marpaWrapperRecognizerp);
     free(marpaWrapperRecognizerp);
