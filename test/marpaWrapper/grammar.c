@@ -7,11 +7,13 @@ enum { S = 0, E, op, number, MAX_SYMBOL };
 enum { START_RULE = 0, OP_RULE, NUMBER_RULE, MAX_RULE };
 
 int main(int argc, char **argv) {
-  marpaWrapperGrammar_t       *marpaWrapperGrammarp;
-  int                         symbolip[MAX_SYMBOL];
-  int                         ruleip[MAX_RULE];
-  int                         rci = 0;
-  marpaWrapperGrammarOption_t marpaWrapperGrammarOption = { GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_TRACE), 0, 0 };
+  marpaWrapperGrammar_t         *marpaWrapperGrammarp;
+  marpaWrapperRecognizer_t      *marpaWrapperRecognizerp;
+  int                            symbolip[MAX_SYMBOL];
+  int                            ruleip[MAX_RULE];
+  int                            rci = 0;
+  marpaWrapperGrammarOption_t    marpaWrapperGrammarOption = { GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_TRACE), 0, 0 };
+  marpaWrapperRecognizerOption_t marpaWrapperRecognizerOption = { GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_TRACE), 0 };
 
   marpaWrapperGrammarp = marpaWrapperGrammar_newp(&marpaWrapperGrammarOption);
   if ( /* S (start symbol automatically), E, op, number */
@@ -38,6 +40,10 @@ int main(int argc, char **argv) {
       rci = 1;
     }
   }
+  
+  marpaWrapperRecognizerp = marpaWrapperRecognizer_newp(marpaWrapperGrammarp, &marpaWrapperRecognizerOption);
+  marpaWrapperRecognizer_freev(marpaWrapperRecognizerp);
+
   marpaWrapperGrammar_freev(marpaWrapperGrammarp);
   GENERICLOGGER_FREE(marpaWrapperGrammarOption.genericLoggerp);
 
