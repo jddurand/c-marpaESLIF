@@ -30,7 +30,6 @@ static marpaWrapperGrammarRuleOption_t marpaWrapperGrammarRuleOptionDefault = {
   0     /* minimumi */
 };
 
-static short _marpaWrapperGrammar_eventb(marpaWrapperGrammar_t *marpaWrapperGrammarp);
 #define MARPAWRAPPERGRAMMAREVENT_WEIGHT(eventType) ((eventType) == MARPAWRAPPERGRAMMAR_EVENT_COMPLETED) ? -1 : (((eventType) == MARPAWRAPPERGRAMMAR_EVENT_NULLED) ? 0 : 1)
 static int _marpaWrapperGrammar_cmpi(const void *event1p, const void *event2p);
 
@@ -505,7 +504,7 @@ short marpaWrapperGrammar_precomputeb(marpaWrapperGrammar_t *marpaWrapperGrammar
   }
 
   /* Prefetch events */
-  if (_marpaWrapperGrammar_eventb(marpaWrapperGrammarp) == 0) {
+  if (marpaWrapperGrammar_eventb(marpaWrapperGrammarp) == 0) {
     goto err;
   }
   
@@ -546,10 +545,10 @@ size_t marpaWrapperGrammar_eventl(marpaWrapperGrammar_t *marpaWrapperGrammarp, m
 }
 
 /****************************************************************************/
-static short _marpaWrapperGrammar_eventb(marpaWrapperGrammar_t *marpaWrapperGrammarp)
+short marpaWrapperGrammar_eventb(marpaWrapperGrammar_t *marpaWrapperGrammarp)
 /****************************************************************************/
 {
-  const static char                 funcs[] = "_marpaWrapperGrammar_eventb";
+  const static char                 funcs[] = "marpaWrapperGrammar_eventb";
   genericLogger_t                  *genericLoggerp = NULL;
   int                               nbEventi;
   int                               i;
@@ -626,8 +625,8 @@ static short _marpaWrapperGrammar_eventb(marpaWrapperGrammar_t *marpaWrapperGram
     case MARPA_EVENT_SYMBOL_EXPECTED: /* Only if marpa_r_expected_symbol_event_set */
     case MARPA_EVENT_SYMBOL_PREDICTED:
       /* Event value is the id of the symbol */
-      MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_g_event_value(%p)", &event);
       eventValuei = marpa_g_event_value(&event);
+      MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_g_event_value(%p) returns %d", &event, eventValuei);
       if (manageBuf_createp(genericLoggerp, (void **) &(marpaWrapperGrammarp->eventArrayp), &(marpaWrapperGrammarp->sizeEventl), subscribedEventi + 1, sizeof(marpaWrapperGrammarEvent_t)) == NULL) {
         goto err;
       }
