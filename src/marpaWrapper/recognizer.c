@@ -9,7 +9,8 @@
 #include "marpaWrapper/internal/logging.h"
 
 struct marpaWrapperRecognizer {
-  marpaWrapperGrammar_t *marpaWrapperGrammarp;
+  marpaWrapperGrammar_t         *marpaWrapperGrammarp;
+  marpaWrapperRecognizerOption_t marpaWrapperRecognizerOption;
 };
 
 static marpaWrapperRecognizerOption_t marpaWrapperRecognizerOptionDefault = {
@@ -35,12 +36,43 @@ marpaWrapperRecognizer_t *marpaWrapperRecognizer_newp(marpaWrapperGrammar_t *mar
   }
   genericLoggerp = marpaWrapperRecognizerOptionp->genericLoggerp;
 
+  /* Create a recognizer instance */
   marpaWrapperRecognizerp = malloc(sizeof(marpaWrapperRecognizer_t));
   if (marpaWrapperRecognizerp == NULL) {
-    GENERICLOGGER_ERRORF(genericLoggerp, "malloc failure: %s", strerror(errno));
+    MARPAWRAPPER_ERRORF(genericLoggerp, "malloc failure: %s", strerror(errno));
     goto err;
   }
 
+  marpaWrapperRecognizerp->marpaWrapperGrammarp = marpaWrapperGrammarp;
+  marpaWrapperRecognizerp->marpaWrapperRecognizerOption = *marpaWrapperRecognizerOptionp;
+
+  if (genericLoggerp != NULL) {
+    MARPAWRAPPER_TRACE(genericLoggerp, funcs, "Cloning genericLogger");
+
+    marpaWrapperRecognizerp->marpaWrapperRecognizerOption.genericLoggerp = GENERICLOGGER_CLONE(genericLoggerp);
+    if (marpaWrapperRecognizerp->marpaWrapperRecognizerOption.genericLoggerp == NULL) {
+      MARPAWRAPPER_ERRORF(genericLoggerp, "Failed to clone genericLogger: %s", strerror(errno));
+      goto err;
+    }
+  }
+
+  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "return %p", marpaWrapperRecognizerp);
+  return marpaWrapperRecognizerp;
+
 err:
+  if (marpaWrapperRecognizerp != NULL) {
+    int errnoi = errno;
+
+    if ((genericLoggerp != NULL) &&
+        (marpaWrapperRecognizerp->marpaWrapperRecognizerOption.genericLoggerp != NULL) &&
+        (marpaWrapperRecognizerp->marpaWrapperRecognizerOption.genericLoggerp != genericLoggerp)) {
+      MARPAWRAPPER_TRACE(genericLoggerp, funcs, "Freeing cloned genericLogger");
+      GENERICLOGGER_FREE(marpaWrapperRecognizerp->marpaWrapperRecognizerOption.genericLoggerp);
+    }
+
+    free(marpaWrapperRecognizerp);
+    errno = errnoi;
+  }
+
   return NULL;
 }
