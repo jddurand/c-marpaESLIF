@@ -185,6 +185,17 @@ short marpaWrapperRecognizer_completeb(marpaWrapperRecognizer_t *marpaWrapperRec
 }
 
 /****************************************************************************/
+short marpaWrapperRecognizer_readb(marpaWrapperRecognizer_t *marpaWrapperRecognizerp, int symboli, int valuei, int lengthi)
+/****************************************************************************/
+{
+  if (marpaWrapperRecognizer_alternativeb(marpaWrapperRecognizerp, symboli, valuei, lengthi) == 0) {
+    return 0;
+  }
+  
+  return marpaWrapperRecognizer_completeb(marpaWrapperRecognizerp);
+}
+
+/****************************************************************************/
 void marpaWrapperRecognizer_freev(marpaWrapperRecognizer_t *marpaWrapperRecognizerp)
 /****************************************************************************/
 {
