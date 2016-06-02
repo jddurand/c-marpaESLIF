@@ -158,7 +158,7 @@ marpaWrapperGrammar_t *marpaWrapperGrammar_newp(marpaWrapperGrammarOption_t *mar
         (marpaWrapperGrammarp->marpaWrapperGrammarOption.genericLoggerp != NULL) &&
         (marpaWrapperGrammarp->marpaWrapperGrammarOption.genericLoggerp != genericLoggerp)) {
       MARPAWRAPPER_TRACE(genericLoggerp, funcs, "Freeing cloned genericLogger");
-      GENERICLOGGER_FREE(marpaWrapperGrammarOptionp->genericLoggerp);
+      GENERICLOGGER_FREE(marpaWrapperGrammarp->marpaWrapperGrammarOption.genericLoggerp);
     }
 
     free(marpaWrapperGrammarp);
