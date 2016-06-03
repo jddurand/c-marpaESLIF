@@ -236,7 +236,7 @@ short marpaWrapperRecognizer_event_onoffb(marpaWrapperRecognizer_t *marpaWrapper
   }
 
   MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return 1");
-  return 0;
+  return 1;
 
  err:
   MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return 0");
@@ -244,7 +244,7 @@ short marpaWrapperRecognizer_event_onoffb(marpaWrapperRecognizer_t *marpaWrapper
 }
 
 /****************************************************************************/
-size_t marpaWrapperRecognizer_expectedb(marpaWrapperRecognizer_t *marpaWrapperRecognizerp, int **symbolArraypp)
+short marpaWrapperRecognizer_expectedb(marpaWrapperRecognizer_t *marpaWrapperRecognizerp, size_t *nSymbollp, int **symbolArraypp)
 /****************************************************************************/
 {
   const static char funcs[] = "marpaWrapperRecognizer_expectedb";
@@ -266,16 +266,25 @@ size_t marpaWrapperRecognizer_expectedb(marpaWrapperRecognizer_t *marpaWrapperRe
     goto err;
   }
 
+  if (nSymbollp != NULL) {
+    *nSymbollp = (size_t) nSymbolIdi;
+  }
   if (symbolArraypp != NULL) {
     *symbolArraypp = marpaWrapperRecognizerp->symbolip;
   }
 
-  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "return %ld", (unsigned long) nSymbolIdi);
-  return (size_t) nSymbolIdi;
+  MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return 1");
+  return 1;
 
  err:
-  MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return (size_t)-1");
-  return (size_t)-1;
+  MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return 0");
+  return 0;
+}
+
+/****************************************************************************/
+short marpaWrapperRecognizer_valueb(marpaWrapperRecognizer_t *marpaWrapperRecognizerp, short highRankOnlyb, short orderByRankb, short ambiguityb, short nullb)
+/****************************************************************************/
+{
 }
 
 /****************************************************************************/
