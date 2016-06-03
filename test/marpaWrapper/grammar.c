@@ -45,15 +45,32 @@ int main(int argc, char **argv) {
       rci = 1;
     }
   }
-  
-  marpaWrapperRecognizerp = marpaWrapperRecognizer_newp(marpaWrapperGrammarp, &marpaWrapperRecognizerOption);
-  marpaWrapperRecognizer_readb(marpaWrapperRecognizerp, symbolip[E], 0, 0);
-  marpaWrapperRecognizer_event_onoffb(marpaWrapperRecognizerp, symbolip[S], MARPAWRAPPERGRAMMAR_EVENTTYPE_PREDICTION, 0);
-  nsymboll = marpaWrapperRecognizer_expectedb(marpaWrapperRecognizerp, &symbolArrayp);
-  GENERICLOGGER_TRACEF(marpaWrapperRecognizerOption.genericLoggerp, "Number of expected symbols: %ld", (unsigned long) nsymboll);
-  if (nsymboll > 0) {
-    for (i = 0; i < nsymboll; i++) {
-      GENERICLOGGER_TRACEF(marpaWrapperRecognizerOption.genericLoggerp, "... Expected symbol No %d: %d", i, symbolArrayp[i]);
+  if (rci == 0) {
+    marpaWrapperRecognizerp = marpaWrapperRecognizer_newp(marpaWrapperGrammarp, &marpaWrapperRecognizerOption);
+    if (marpaWrapperRecognizerp == NULL) {
+      rci = 1;
+    }
+  }
+  if (rci == 0) {
+    if (marpaWrapperRecognizer_readb(marpaWrapperRecognizerp, symbolip[number], 1, 1) == 0) {
+      rci = 1;
+    }
+  }
+  if (rci == 0) {
+    if (marpaWrapperRecognizer_event_onoffb(marpaWrapperRecognizerp, symbolip[S], MARPAWRAPPERGRAMMAR_EVENTTYPE_PREDICTION, 0) == 0) {
+      rci = 1;
+    }
+  }
+  if (rci == 0) {
+    if (marpaWrapperRecognizer_expectedb(marpaWrapperRecognizerp, &nsymboll, &symbolArrayp) == 0) {
+      rci = 1;
+    } else {
+      GENERICLOGGER_TRACEF(marpaWrapperRecognizerOption.genericLoggerp, "Number of expected symbols: %ld", (unsigned long) nsymboll);
+      if (nsymboll > 0) {
+	for (i = 0; i < nsymboll; i++) {
+	  GENERICLOGGER_TRACEF(marpaWrapperRecognizerOption.genericLoggerp, "... Expected symbol No %d: %d", i, symbolArrayp[i]);
+	}
+      }
     }
   }
   marpaWrapperRecognizer_freev(marpaWrapperRecognizerp);
