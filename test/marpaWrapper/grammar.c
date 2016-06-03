@@ -41,7 +41,7 @@ int main(int argc, char **argv) {
     }
   }
   if (rci == 0) {
-    if (marpaWrapperGrammar_eventl(marpaWrapperGrammarp, &neventl, NULL) == 0) {
+    if (marpaWrapperGrammar_eventb(marpaWrapperGrammarp, &neventl, NULL) == 0) {
       rci = 1;
     }
   }
