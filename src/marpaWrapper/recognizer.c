@@ -2,8 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
-#include "marpa.h"
 
+#include "marpa.h"
 #include "config.h"
 #include "marpaWrapper/internal/manageBuf.h"
 #include "marpaWrapper/internal/recognizer.h"
@@ -193,6 +193,54 @@ short marpaWrapperRecognizer_readb(marpaWrapperRecognizer_t *marpaWrapperRecogni
   }
   
   return marpaWrapperRecognizer_completeb(marpaWrapperRecognizerp);
+}
+
+/****************************************************************************/
+short marpaWrapperRecognizer_event_onoffb(marpaWrapperRecognizer_t *marpaWrapperRecognizerp, int symboli, marpaWrapperGrammarEventType_t eventSeti, int onoffb)
+/****************************************************************************/
+{
+  const static char  funcs[] = "marpaWrapperRecognizer_event_onoffb";
+  genericLogger_t *genericLoggerp = NULL;
+
+  if (marpaWrapperRecognizerp == NULL) {
+    errno = EINVAL;
+    goto err;
+  }
+
+  if (onoffb != 0) {
+    onoffb = 1;
+  }
+
+  genericLoggerp = marpaWrapperRecognizerp->marpaWrapperRecognizerOption.genericLoggerp;
+
+  if ((eventSeti & MARPAWRAPPERGRAMMAR_EVENTTYPE_COMPLETION) == MARPAWRAPPERGRAMMAR_EVENTTYPE_COMPLETION) {
+    MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_r_completion_symbol_activate(%p, %d, %d)", marpaWrapperRecognizerp->marpaRecognizerp, symboli, onoffb);
+    if (marpa_r_completion_symbol_activate(marpaWrapperRecognizerp->marpaRecognizerp, symboli, onoffb) != onoffb) {
+      MARPAWRAPPER_MARPA_G_ERROR(genericLoggerp, marpaWrapperRecognizerp->marpaWrapperGrammarp->marpaGrammarp);
+      goto err;
+    }
+  }
+  if ((eventSeti & MARPAWRAPPERGRAMMAR_EVENTTYPE_NULLED) == MARPAWRAPPERGRAMMAR_EVENTTYPE_NULLED) {
+    MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_r_nulled_symbol_activate(%p, %d, %d)", marpaWrapperRecognizerp->marpaRecognizerp, symboli, onoffb);
+    if (marpa_r_nulled_symbol_activate(marpaWrapperRecognizerp->marpaRecognizerp, symboli, onoffb) != onoffb) {
+      MARPAWRAPPER_MARPA_G_ERROR(genericLoggerp, marpaWrapperRecognizerp->marpaWrapperGrammarp->marpaGrammarp);
+      goto err;
+    }
+  }
+  if ((eventSeti & MARPAWRAPPERGRAMMAR_EVENTTYPE_PREDICTION) == MARPAWRAPPERGRAMMAR_EVENTTYPE_PREDICTION) {
+    MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_r_prediction_symbol_activate(%p, %d, %d)", marpaWrapperRecognizerp->marpaRecognizerp, symboli, onoffb);
+    if (marpa_r_prediction_symbol_activate(marpaWrapperRecognizerp->marpaRecognizerp, symboli, onoffb) != onoffb) {
+      MARPAWRAPPER_MARPA_G_ERROR(genericLoggerp, marpaWrapperRecognizerp->marpaWrapperGrammarp->marpaGrammarp);
+      goto err;
+    }
+  }
+
+  MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return 1");
+  return 0;
+
+ err:
+  MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return 0");
+  return 0;
 }
 
 /****************************************************************************/
