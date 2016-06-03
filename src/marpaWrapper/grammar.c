@@ -504,7 +504,7 @@ short marpaWrapperGrammar_precomputeb(marpaWrapperGrammar_t *marpaWrapperGrammar
   }
 
   /* Prefetch events */
-  if (marpaWrapperGrammar_eventb(marpaWrapperGrammarp) == 0) {
+  if (marpaWrapperGrammar_eventb(marpaWrapperGrammarp, NULL, NULL) == 0) {
     goto err;
   }
   
@@ -517,38 +517,7 @@ short marpaWrapperGrammar_precomputeb(marpaWrapperGrammar_t *marpaWrapperGrammar
 }
 
 /****************************************************************************/
-short marpaWrapperGrammar_eventl(marpaWrapperGrammar_t *marpaWrapperGrammarp, size_t *eventlp, marpaWrapperGrammarEvent_t **eventpp)
-/****************************************************************************/
-{
-  const static char                 funcs[] = "marpaWrapperGrammar_eventl";
-  genericLogger_t                  *genericLoggerp = NULL;
-  size_t                            eventl;
-
-  if (marpaWrapperGrammarp == NULL) {
-    errno = EINVAL;
-    goto err;
-  }
-
-  genericLoggerp = marpaWrapperGrammarp->marpaWrapperGrammarOption.genericLoggerp;
-  eventl = marpaWrapperGrammarp->nEventl;
-
-  if (eventlp != NULL) {
-    *eventlp = eventl;
-  }
-  if (eventpp != NULL) {
-    *eventpp = (eventl > 0) ? marpaWrapperGrammarp->eventArrayp : NULL;
-  }
-
-  MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return 1");
-  return 1;
-
- err:
-  MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return 0");
-  return 0;
-}
-
-/****************************************************************************/
-short marpaWrapperGrammar_eventb(marpaWrapperGrammar_t *marpaWrapperGrammarp)
+short marpaWrapperGrammar_eventb(marpaWrapperGrammar_t *marpaWrapperGrammarp, size_t *eventlp, marpaWrapperGrammarEvent_t **eventpp)
 /****************************************************************************/
 {
   const static char                 funcs[] = "marpaWrapperGrammar_eventb";
@@ -572,100 +541,112 @@ short marpaWrapperGrammar_eventb(marpaWrapperGrammar_t *marpaWrapperGrammarp)
 
   genericLoggerp = marpaWrapperGrammarp->marpaWrapperGrammarOption.genericLoggerp;
 
-  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_g_event_count(%p)", marpaWrapperGrammarp->marpaGrammarp);
-  nbEventi = marpa_g_event_count(marpaWrapperGrammarp->marpaGrammarp);
-  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "Number of events: %d", nbEventi);
+  /* Events are always refetched if one of the output parameters is NULL */
+  if ((eventlp == NULL) || (eventpp == NULL)) {
 
-  if (nbEventi < 0) {
-    /* No event - this is not an error */
-    MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return 1");
-    return 1;
-  }
-
-  marpaWrapperGrammarp->nEventl = 0;
-
-  /* Get all events, with a distinction between warnings, and the subscriptions */
-  for (i = 0, subscribedEventi = 0; i < nbEventi; i++) {
-    
-    MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_g_event(%p, %p, %d)", marpaWrapperGrammarp->marpaGrammarp, &event, i);
-    eventType = marpa_g_event(marpaWrapperGrammarp->marpaGrammarp, &event, i);
-    if (eventType < 0) {
+    MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_g_event_count(%p)", marpaWrapperGrammarp->marpaGrammarp);
+    nbEventi = marpa_g_event_count(marpaWrapperGrammarp->marpaGrammarp);
+    if (nbEventi < 0) {
       MARPAWRAPPER_MARPA_G_ERROR(genericLoggerp, marpaWrapperGrammarp->marpaGrammarp);
       goto err;
     }
+    MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "Number of events: %d", nbEventi);
 
-    msgs = (eventType < MARPA_EVENT_COUNT) ? marpa_event_description[eventType].suggested : NULL;
-    if (msgs == NULL) {
-      MARPAWRAPPER_ERRORF(genericLoggerp, "Unknown event type %d", (int) eventType);
-      goto err;
-    }
-    MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "Event %d: %s", (int) eventType, msgs);
+    /* This variable is the number of subscribed events */
+    marpaWrapperGrammarp->nEventl = 0;
 
-    warningMsgs = NULL;
-    fatalMsgs   = NULL;
-    infoMsgs    = NULL;
+    if (nbEventi > 0) {
+      /* Get all events, with a distinction between warnings, and the subscriptions */
+      for (i = 0, subscribedEventi = 0; i < nbEventi; i++) {
+    
+        MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_g_event(%p, %p, %d)", marpaWrapperGrammarp->marpaGrammarp, &event, i);
+        eventType = marpa_g_event(marpaWrapperGrammarp->marpaGrammarp, &event, i);
+        if (eventType < 0) {
+          MARPAWRAPPER_MARPA_G_ERROR(genericLoggerp, marpaWrapperGrammarp->marpaGrammarp);
+          goto err;
+        }
 
-    switch (eventType) {
-    case MARPA_EVENT_NONE:
-      break;
-    case MARPA_EVENT_COUNTED_NULLABLE:
-      fatalMsgs = msgs;
-      break;
-    case MARPA_EVENT_EARLEY_ITEM_THRESHOLD:
-      warningMsgs = msgs;
-      break;
-    case MARPA_EVENT_EXHAUSTED:
-      infoMsgs = msgs;
-      break;
-    case MARPA_EVENT_LOOP_RULES:
-      warningMsgs = msgs;
-      break;
-    case MARPA_EVENT_NULLING_TERMINAL:
-      fatalMsgs = msgs;
-      break;
-    case MARPA_EVENT_SYMBOL_COMPLETED:
-    case MARPA_EVENT_SYMBOL_NULLED:
-    case MARPA_EVENT_SYMBOL_EXPECTED: /* Only if marpa_r_expected_symbol_event_set */
-    case MARPA_EVENT_SYMBOL_PREDICTED:
-      /* Event value is the id of the symbol */
-      eventValuei = marpa_g_event_value(&event);
-      MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_g_event_value(%p) returns %d", &event, eventValuei);
-      if (manageBuf_createp(genericLoggerp, (void **) &(marpaWrapperGrammarp->eventArrayp), &(marpaWrapperGrammarp->sizeEventl), subscribedEventi + 1, sizeof(marpaWrapperGrammarEvent_t)) == NULL) {
-        goto err;
+        msgs = (eventType < MARPA_EVENT_COUNT) ? marpa_event_description[eventType].suggested : NULL;
+        if (msgs == NULL) {
+          MARPAWRAPPER_ERRORF(genericLoggerp, "Unknown event type %d", (int) eventType);
+          goto err;
+        }
+        MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "Event %d: %s", (int) eventType, msgs);
+
+        warningMsgs = NULL;
+        fatalMsgs   = NULL;
+        infoMsgs    = NULL;
+
+        switch (eventType) {
+        case MARPA_EVENT_NONE:
+          break;
+        case MARPA_EVENT_COUNTED_NULLABLE:
+          fatalMsgs = msgs;
+          break;
+        case MARPA_EVENT_EARLEY_ITEM_THRESHOLD:
+          warningMsgs = msgs;
+          break;
+        case MARPA_EVENT_EXHAUSTED:
+          infoMsgs = msgs;
+          break;
+        case MARPA_EVENT_LOOP_RULES:
+          warningMsgs = msgs;
+          break;
+        case MARPA_EVENT_NULLING_TERMINAL:
+          fatalMsgs = msgs;
+          break;
+        case MARPA_EVENT_SYMBOL_COMPLETED:
+        case MARPA_EVENT_SYMBOL_NULLED:
+        case MARPA_EVENT_SYMBOL_EXPECTED: /* Only if marpa_r_expected_symbol_event_set */
+        case MARPA_EVENT_SYMBOL_PREDICTED:
+          /* Event value is the id of the symbol */
+          eventValuei = marpa_g_event_value(&event);
+          MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_g_event_value(%p) returns %d", &event, eventValuei);
+          if (manageBuf_createp(genericLoggerp, (void **) &(marpaWrapperGrammarp->eventArrayp), &(marpaWrapperGrammarp->sizeEventl), subscribedEventi + 1, sizeof(marpaWrapperGrammarEvent_t)) == NULL) {
+            goto err;
+          }
+          eventp = &(marpaWrapperGrammarp->eventArrayp[subscribedEventi]);
+
+          eventp->eventType = MARPAWRAPPERGRAMMAR_EVENT_COMPLETED;
+          eventp->symboli   = marpaWrapperGrammarp->symbolArrayp[eventValuei].marpaSymbolIdi;
+
+          marpaWrapperGrammarp->nEventl = ++subscribedEventi;
+          break;
+        default:
+          /* These are all the events as per this version of marpa */
+          MARPAWRAPPER_NOTICEF(genericLoggerp, "Unsupported event type %d", (int) eventType);
+          break;
+        }
+        if (warningMsgs != NULL) {
+          if (marpaWrapperGrammarp->marpaWrapperGrammarOption.warningIsErrorb != 0) {
+            MARPAWRAPPER_ERROR(genericLoggerp, warningMsgs);
+            goto err;
+          } else {
+            MARPAWRAPPER_WARN(genericLoggerp, warningMsgs);
+          }
+        } else if (fatalMsgs != NULL) {
+          MARPAWRAPPER_ERROR(genericLoggerp, fatalMsgs);
+          goto err;
+        } else if (infoMsgs != NULL) {
+          MARPAWRAPPER_INFO(genericLoggerp, infoMsgs);
+        }
       }
-      eventp = &(marpaWrapperGrammarp->eventArrayp[subscribedEventi]);
 
-      eventp->eventType = MARPAWRAPPERGRAMMAR_EVENT_COMPLETED;
-      eventp->symboli   = marpaWrapperGrammarp->symbolArrayp[eventValuei].marpaSymbolIdi;
-
-      marpaWrapperGrammarp->nEventl = ++subscribedEventi;
-      break;
-    default:
-      /* These are all the events as per this version of marpa */
-      MARPAWRAPPER_NOTICEF(genericLoggerp, "Unsupported event type %d", (int) eventType);
-      break;
-    }
-    if (warningMsgs != NULL) {
-      if (marpaWrapperGrammarp->marpaWrapperGrammarOption.warningIsErrorb != 0) {
-	MARPAWRAPPER_ERROR(genericLoggerp, warningMsgs);
-	goto err;
-      } else {
-	MARPAWRAPPER_WARN(genericLoggerp, warningMsgs);
+      if (subscribedEventi > 0) {
+        if (subscribedEventi > 1) {
+          /* Sort the events */
+          qsort(marpaWrapperGrammarp->eventArrayp, subscribedEventi, sizeof(marpaWrapperGrammarEvent_t), &_marpaWrapperGrammar_cmpi);
+        }
       }
-    } else if (fatalMsgs != NULL) {
-      MARPAWRAPPER_ERROR(genericLoggerp, fatalMsgs);
-      goto err;
-    } else if (infoMsgs != NULL) {
-      MARPAWRAPPER_INFO(genericLoggerp, infoMsgs);
+
     }
   }
 
-
-  if (subscribedEventi > 0) {
-    if (subscribedEventi > 1) {
-      /* Sort the events */
-      qsort(marpaWrapperGrammarp->eventArrayp, subscribedEventi, sizeof(marpaWrapperGrammarEvent_t), &_marpaWrapperGrammar_cmpi);
-    }
+  if (eventlp != NULL) {
+    *eventlp = marpaWrapperGrammarp->nEventl;
+  }
+  if (eventpp != NULL) {
+    *eventpp = (marpaWrapperGrammarp->nEventl > 0) ? marpaWrapperGrammarp->eventArrayp : NULL;
   }
 
   MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return 1");
