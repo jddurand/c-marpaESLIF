@@ -12,6 +12,9 @@ int main(int argc, char **argv) {
   int                            symbolip[MAX_SYMBOL];
   int                            ruleip[MAX_RULE];
   int                            rci = 0;
+  int                           *symbolArrayp = NULL;
+  size_t                         nsymboll;
+  int                            i;
   marpaWrapperGrammarOption_t    marpaWrapperGrammarOption = { GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_TRACE), 0, 0 };
   marpaWrapperRecognizerOption_t marpaWrapperRecognizerOption = { GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_TRACE), 0 };
   marpaWrapperGrammarSymbolOption_t marpaWrapperGrammarSymbolOption = { 0, 0, MARPAWRAPPERGRAMMAR_EVENTTYPE_PREDICTION };
@@ -45,6 +48,13 @@ int main(int argc, char **argv) {
   marpaWrapperRecognizerp = marpaWrapperRecognizer_newp(marpaWrapperGrammarp, &marpaWrapperRecognizerOption);
   marpaWrapperRecognizer_readb(marpaWrapperRecognizerp, symbolip[E], 0, 0);
   marpaWrapperRecognizer_event_onoffb(marpaWrapperRecognizerp, symbolip[S], MARPAWRAPPERGRAMMAR_EVENTTYPE_PREDICTION, 0);
+  nsymboll = marpaWrapperRecognizer_expectedb(marpaWrapperRecognizerp, &symbolArrayp);
+  GENERICLOGGER_TRACEF(marpaWrapperRecognizerOption.genericLoggerp, "Number of expected symbols: %ld", (unsigned long) nsymboll);
+  if (nsymboll > 0) {
+    for (i = 0; i < nsymboll; i++) {
+      GENERICLOGGER_TRACEF(marpaWrapperRecognizerOption.genericLoggerp, "... Expected symbol No %d: %d", i, symbolArrayp[i]);
+    }
+  }
   marpaWrapperRecognizer_freev(marpaWrapperRecognizerp);
   GENERICLOGGER_FREE(marpaWrapperRecognizerOption.genericLoggerp);
 
