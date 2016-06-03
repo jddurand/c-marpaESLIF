@@ -13,6 +13,7 @@ int main(int argc, char **argv) {
   int                            ruleip[MAX_RULE];
   int                            rci = 0;
   int                           *symbolArrayp = NULL;
+  size_t                         neventl;
   size_t                         nsymboll;
   int                            i;
   marpaWrapperGrammarOption_t    marpaWrapperGrammarOption = { GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_TRACE), 0, 0 };
@@ -40,7 +41,7 @@ int main(int argc, char **argv) {
     }
   }
   if (rci == 0) {
-    if (marpaWrapperGrammar_eventl(marpaWrapperGrammarp, NULL) == (size_t)-1) {
+    if (marpaWrapperGrammar_eventl(marpaWrapperGrammarp, &neventl, NULL) == 0) {
       rci = 1;
     }
   }
