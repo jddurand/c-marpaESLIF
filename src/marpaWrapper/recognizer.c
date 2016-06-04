@@ -12,7 +12,7 @@
 
 static marpaWrapperRecognizerOption_t marpaWrapperRecognizerOptionDefault = {
   NULL,    /* genericLoggerp   */
-  1        /* latmb            */
+  0        /* latmb            */
 };
 
 static int alternativeCmpByLengthi(const void *p1, const void *p2);
