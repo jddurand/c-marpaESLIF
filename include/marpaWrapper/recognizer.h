@@ -14,7 +14,7 @@ typedef struct marpaWrapperRecognizer marpaWrapperRecognizer_t;
 /* --------------- */
 typedef struct marpaWrapperRecognizerOption {
   genericLogger_t *genericLoggerp;             /* Default: NULL. */
-  short            latmb;                      /* Default: 1.    */
+  short            latmb;                      /* Default: 0.    */
 } marpaWrapperRecognizerOption_t;
 
 #ifdef __cplusplus
