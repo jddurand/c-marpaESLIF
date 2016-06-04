@@ -17,19 +17,20 @@ int main(int argc, char **argv) {
   size_t                         nsymboll;
   int                            i;
   marpaWrapperGrammarOption_t    marpaWrapperGrammarOption = { GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_TRACE), 0, 0 };
-  marpaWrapperRecognizerOption_t marpaWrapperRecognizerOption = { GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_TRACE), 0 };
-  marpaWrapperGrammarSymbolOption_t marpaWrapperGrammarSymbolOption = { 0, 0, MARPAWRAPPERGRAMMAR_EVENTTYPE_PREDICTION };
+  marpaWrapperRecognizerOption_t marpaWrapperRecognizerOption = { GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_TRACE), 1 /* latm */};
+  marpaWrapperGrammarSymbolOption_t marpaWrapperGrammarSymbolTerminalOption    = { 1 /* terminal */, 0 /* start */, MARPAWRAPPERGRAMMAR_EVENTTYPE_PREDICTION };
+  marpaWrapperGrammarSymbolOption_t marpaWrapperGrammarSymbolNonTerminalOption = { 0 /* terminal */, 0 /* start */, MARPAWRAPPERGRAMMAR_EVENTTYPE_PREDICTION };
 
   marpaWrapperGrammarp = marpaWrapperGrammar_newp(&marpaWrapperGrammarOption);
   if ( /* S (start symbol automatically), E, op, number */
-      ((symbolip[     S] = marpaWrapperGrammar_newSymboli(marpaWrapperGrammarp, &marpaWrapperGrammarSymbolOption)) < 0) ||
-      ((symbolip[     E] = marpaWrapperGrammar_newSymboli(marpaWrapperGrammarp, &marpaWrapperGrammarSymbolOption)) < 0) ||
-      ((symbolip[    op] = MARPAWRAPPERGRAMMAR_NEWSYMBOL(marpaWrapperGrammarp)) < 0) ||
-      ((symbolip[number] = MARPAWRAPPERGRAMMAR_NEWSYMBOL(marpaWrapperGrammarp)) < 0) ||
-      /* S ::= E*     */
+      ((symbolip[     S] = marpaWrapperGrammar_newSymboli(marpaWrapperGrammarp, &marpaWrapperGrammarSymbolNonTerminalOption)) < 0) ||
+      ((symbolip[     E] = marpaWrapperGrammar_newSymboli(marpaWrapperGrammarp, &marpaWrapperGrammarSymbolNonTerminalOption)) < 0) ||
+      ((symbolip[    op] = marpaWrapperGrammar_newSymboli(marpaWrapperGrammarp, &marpaWrapperGrammarSymbolNonTerminalOption)) < 0) ||
+      ((symbolip[number] = marpaWrapperGrammar_newSymboli(marpaWrapperGrammarp, &marpaWrapperGrammarSymbolNonTerminalOption)) < 0) ||
+      /* S ::= E      */
       /* E ::= E op E */
       /* E ::= number */
-      ((ruleip[ START_RULE] = MARPAWRAPPERGRAMMAR_NEWSEQUENCE(marpaWrapperGrammarp, symbolip[S], symbolip[E], '*')) < 0) ||
+      ((ruleip[ START_RULE] = MARPAWRAPPERGRAMMAR_NEWRULE(marpaWrapperGrammarp, symbolip[S], symbolip[E],                            -1)) < 0) ||
       ((ruleip[    OP_RULE] = MARPAWRAPPERGRAMMAR_NEWRULE(marpaWrapperGrammarp, symbolip[E], symbolip[E], symbolip[op], symbolip[E], -1)) < 0) ||
       ((ruleip[NUMBER_RULE] = MARPAWRAPPERGRAMMAR_NEWRULE(marpaWrapperGrammarp, symbolip[E], symbolip[number],                       -1)) < 0)
       ) {
@@ -41,7 +42,7 @@ int main(int argc, char **argv) {
     }
   }
   if (rci == 0) {
-    if (marpaWrapperGrammar_eventb(marpaWrapperGrammarp, &neventl, NULL) == 0) {
+    if (marpaWrapperGrammar_eventb(marpaWrapperGrammarp, &neventl, NULL, 0) == 0) {
       rci = 1;
     }
   }
@@ -51,8 +52,17 @@ int main(int argc, char **argv) {
       rci = 1;
     }
   }
+
   if (rci == 0) {
-    if (marpaWrapperRecognizer_readb(marpaWrapperRecognizerp, symbolip[number], 1, 1) == 0) {
+    if ((marpaWrapperRecognizer_alternativeb(marpaWrapperRecognizerp, symbolip[     S], 1 /* value */, 1 /* length */) == 0) ||
+	(marpaWrapperRecognizer_alternativeb(marpaWrapperRecognizerp, symbolip[     E], 2 /* value */, 1 /* length */) == 0) ||
+	(marpaWrapperRecognizer_alternativeb(marpaWrapperRecognizerp, symbolip[    op], 3 /* value */, 1 /* length */) == 0) ||
+	(marpaWrapperRecognizer_alternativeb(marpaWrapperRecognizerp, symbolip[number], 4 /* value */, 1 /* length */) == 0)) {
+      rci = 1;
+    }
+  }
+  if (rci == 0) {
+    if (marpaWrapperRecognizer_completeb(marpaWrapperRecognizerp) == 0) {
       rci = 1;
     }
   }

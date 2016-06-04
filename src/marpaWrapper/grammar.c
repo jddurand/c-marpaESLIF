@@ -504,7 +504,7 @@ short marpaWrapperGrammar_precomputeb(marpaWrapperGrammar_t *marpaWrapperGrammar
   }
 
   /* Prefetch events */
-  if (marpaWrapperGrammar_eventb(marpaWrapperGrammarp, NULL, NULL) == 0) {
+  if (marpaWrapperGrammar_eventb(marpaWrapperGrammarp, NULL, NULL, 1) == 0) {
     goto err;
   }
   
@@ -517,7 +517,7 @@ short marpaWrapperGrammar_precomputeb(marpaWrapperGrammar_t *marpaWrapperGrammar
 }
 
 /****************************************************************************/
-short marpaWrapperGrammar_eventb(marpaWrapperGrammar_t *marpaWrapperGrammarp, size_t *eventlp, marpaWrapperGrammarEvent_t **eventpp)
+short marpaWrapperGrammar_eventb(marpaWrapperGrammar_t *marpaWrapperGrammarp, size_t *eventlp, marpaWrapperGrammarEvent_t **eventpp, short forceReloadb)
 /****************************************************************************/
 {
   const static char                 funcs[] = "marpaWrapperGrammar_eventb";
@@ -541,9 +541,11 @@ short marpaWrapperGrammar_eventb(marpaWrapperGrammar_t *marpaWrapperGrammarp, si
 
   genericLoggerp = marpaWrapperGrammarp->marpaWrapperGrammarOption.genericLoggerp;
 
-  /* Events are always refetched if one of the output parameters is NULL */
-  if ((eventlp == NULL) || (eventpp == NULL)) {
+  /* Events are always fetched when necessary internally. External API can nevertheless */
+  /* force the refresh on demand.                                                       */
+  if (forceReloadb != 0) {
 
+    MARPAWRAPPER_TRACE(genericLoggerp, funcs, "Updating cached event list");
     MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_g_event_count(%p)", marpaWrapperGrammarp->marpaGrammarp);
     nbEventi = marpa_g_event_count(marpaWrapperGrammarp->marpaGrammarp);
     if (nbEventi < 0) {
@@ -640,6 +642,8 @@ short marpaWrapperGrammar_eventb(marpaWrapperGrammar_t *marpaWrapperGrammarp, si
       }
 
     }
+  } else {
+    MARPAWRAPPER_TRACE(genericLoggerp, funcs, "Using cached event list");
   }
 
   if (eventlp != NULL) {
