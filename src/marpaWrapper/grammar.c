@@ -124,6 +124,7 @@ marpaWrapperGrammar_t *marpaWrapperGrammar_newp(marpaWrapperGrammarOption_t *mar
       MARPAWRAPPER_TRACE(genericLoggerp, funcs, "Freeing cloned genericLogger");
       GENERICLOGGER_FREE(marpaWrapperGrammarp->marpaWrapperGrammarOption.genericLoggerp);
     }
+    marpaWrapperGrammarp->marpaWrapperGrammarOption.genericLoggerp = NULL;
     marpaWrapperGrammar_freev(marpaWrapperGrammarp);
 
     errno = errnoi;

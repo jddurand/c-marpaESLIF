@@ -7,6 +7,7 @@
 
 extern const struct marpa_error_description_s marpa_error_description[];
 extern const struct marpa_event_description_s marpa_event_description[];
+extern const struct marpa_step_type_description_s marpa_step_type_description[];
 
 #ifndef MARPAWRAPPER_NTRACE
 #define MARPAWRAPPER_TRACEF(genericLoggerp, funcs, fmts, ...) do { if ((genericLoggerp) != NULL) { GENERICLOGGER_TRACEF(genericLoggerp, "[%s] " fmts, funcs, __VA_ARGS__); } } while (0)
@@ -54,6 +55,17 @@ extern const struct marpa_event_description_s marpa_event_description[];
       MARPAWRAPPER_ERRORF((genericLoggerp), "%s: %s", s.name, s.suggested); \
     } else {                                                            \
       MARPAWRAPPER_ERRORF((genericLoggerp), "Unknown marpa error code %d", marpaErrorCodei); \
+    }                                                                   \
+} while (0)
+
+#define MARPAWRAPPER_MARPA_STEP_TRACE(genericLoggerp, funcs, stepi) do { \
+    Marpa_Step_Type marpaStepi = (Marpa_Step_Type) (stepi);		\
+									\
+    if (marpaStepi < MARPA_STEP_COUNT) {				\
+      struct marpa_step_type_description_s s = marpa_step_type_description[marpaStepi]; \
+      MARPAWRAPPER_TRACEF((genericLoggerp), (funcs), "%s", s.name);	\
+    } else {                                                            \
+      MARPAWRAPPER_TRACEF((genericLoggerp), (funcs), "Unknown marpa step type %d", marpaStepi); \
     }                                                                   \
 } while (0)
 
