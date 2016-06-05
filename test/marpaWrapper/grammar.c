@@ -43,10 +43,7 @@ int main(int argc, char **argv) {
 								  1 /* highRankOnlyb */,
 								  1 /* orderByRankb */,
 								  1 /* ambiguousb */,
-								  0 /* nullb */,
-								  NULL /* valueRuleCallbackDefault */,
-								  NULL /* valueSymbolCallbackDefault */,
-								  NULL /* valueNullingCallback */
+								  0 /* nullb */
   };
 
   marpaWrapperGrammarSymbolOption_t marpaWrapperGrammarSymbolTerminalOption    = { 1 /* terminal */, 0 /* start */, MARPAWRAPPERGRAMMAR_EVENTTYPE_PREDICTION };
