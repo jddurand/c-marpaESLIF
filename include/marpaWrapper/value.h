@@ -13,7 +13,10 @@ typedef struct marpaWrapperValue marpaWrapperValue_t;
 
 /* Callbacks */
 /* --------- */
-typedef int (*marpaWrapperValueCallback_t)(void *userDatap, genericStack_t *stackp);
+typedef short (*marpaWrapperValueRuleCallback_t)(void *userDatavp, int rulei, int arg0i, int argni, int resulti);
+typedef short (*marpaWrapperValueSymbolCallback_t)(void *userDatavp, int symboli, int argi, int resulti);
+typedef short (*marpaWrapperValueNullingCallback_t)(void *userDatavp, int symboli, int resulti);
+typedef short (*marpaWrapperValueCallback_t)(void *userDatavp);
 
 
 /* --------------- */
@@ -25,16 +28,17 @@ typedef struct marpaWrapperValueOption {
   short                              orderByRankb;               /* Default: 1 */
   short                              ambiguousb;                 /* Default: 0 */
   short                              nullb;                      /* Default: 0 */
-  marpaWrapperValueCallback_t        valueRuleCallbackDefault;   /* Default: NULL */
-  marpaWrapperValueCallback_t        valueSymbolCallbackDefault; /* Default: NULL */
-  marpaWrapperValueCallback_t        valueNullingCallback;       /* Default: NULL */
 } marpaWrapperValueOption_t;
 
 #ifdef __cplusplus
 extern "C" {
 #endif
   marpaWrapper_EXPORT marpaWrapperValue_t *marpaWrapperValue_newp(marpaWrapperRecognizer_t *marpaWrapperRecognizerp, marpaWrapperValueOption_t *marpaWrapperValueOptionp);
-  marpaWrapper_EXPORT short                marpaWrapperValue_valueb(marpaWrapperValue_t *marpaWrapperValuep, void *userDatap);
+  marpaWrapper_EXPORT short                marpaWrapperValue_valueb(marpaWrapperValue_t               *marpaWrapperValuep,
+								    void                              *userDatavp,
+								    marpaWrapperValueRuleCallback_t    ruleCallbackp,
+								    marpaWrapperValueSymbolCallback_t  symbolCallbackp,
+								    marpaWrapperValueNullingCallback_t nullingCallbackp);
   marpaWrapper_EXPORT void                 marpaWrapperValue_freev(marpaWrapperValue_t *marpaWrapperValuep);
 #ifdef __cplusplus
 }

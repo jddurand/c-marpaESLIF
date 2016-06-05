@@ -74,11 +74,11 @@ EXECUTE_PROCESS(COMMAND "${CMAKE_COMMAND}" -E make_directory "${3RDPARTY_OUTPUT_
 # -----------------------------------
 FIND_PACKAGE (genericLogger)
 IF (NOT GENERICLOGGER_FOUND)
-    MESSAGE (FATAL_ERROR "genericLogger must be detected")
+    MESSAGE (_ERROR "genericLogger must be detected")
 ENDIF ()
 
 # -----------------------------------
-# genericStack: required
+# genericStack: required for test
 # -----------------------------------
 INCLUDE(CheckIncludeFile)
 IF (GENERICSTACK_ROOT_DIR)
@@ -87,7 +87,7 @@ ENDIF (GENERICSTACK_ROOT_DIR)
 
 CHECK_INCLUDE_FILE("genericStack.h" HAVE_GENERICSTACK_H)
 IF (NOT HAVE_GENERICSTACK_H)
-    MESSAGE (FATAL_ERROR "genericStack must be detected")
+    MESSAGE (STATUS "genericStack must be detected for tests")
 ENDIF ()
 
 # --------------------------------------
@@ -176,22 +176,24 @@ SET_TARGET_PROPERTIES(marpaWrapper PROPERTIES COMPILE_FLAGS "-DmarpaWrapper_EXPO
                                                LINKER_LANGUAGE C)
 
 
-# -----
-# Check
-# -----
-ENABLE_TESTING()
+IF (HAVE_GENERICSTACK_H)
+  # -----
+  # Check
+  # -----
+  ENABLE_TESTING()
 
-ADD_EXECUTABLE        (marpaWrapperGrammarTester EXCLUDE_FROM_ALL test/marpaWrapper/grammar.c)
-#
-# Painful but putting the binaries produced with dynamic linking in the same directory as the
-# dynamic libraries is the only way to make sure the OS will always see the dynamic library
-# at runtime, REGARDLESS of the OS (we are thinking to Windows and Visual Studio for instance).
-# and since we must do that for the dynamic test, we do it as well for any runtime thingy, just for coherency.
-#
-SET_TARGET_PROPERTIES (marpaWrapperGrammarTester       PROPERTIES LINKER_LANGUAGE C RUNTIME_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH})
-TARGET_LINK_LIBRARIES (marpaWrapperGrammarTester       marpaWrapper)
+  ADD_EXECUTABLE        (marpaWrapperGrammarTester EXCLUDE_FROM_ALL test/marpaWrapper/grammar.c)
+  #
+  # Painful but putting the binaries produced with dynamic linking in the same directory as the
+  # dynamic libraries is the only way to make sure the OS will always see the dynamic library
+  # at runtime, REGARDLESS of the OS (we are thinking to Windows and Visual Studio for instance).
+  # and since we must do that for the dynamic test, we do it as well for any runtime thingy, just for coherency.
+  #
+  SET_TARGET_PROPERTIES (marpaWrapperGrammarTester       PROPERTIES LINKER_LANGUAGE C RUNTIME_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH})
+  TARGET_LINK_LIBRARIES (marpaWrapperGrammarTester       marpaWrapper)
 
-ADD_TEST              (NAME marpaWrapperTest
-                       COMMAND marpaWrapperGrammarTester
-                       WORKING_DIRECTORY ${LIBRARY_OUTPUT_PATH})
-ADD_CUSTOM_TARGET     (check COMMAND ${CMAKE_CTEST_COMMAND} DEPENDS marpaWrapperGrammarTester)
+  ADD_TEST              (NAME marpaWrapperTest
+    COMMAND marpaWrapperGrammarTester
+    WORKING_DIRECTORY ${LIBRARY_OUTPUT_PATH})
+  ADD_CUSTOM_TARGET     (check COMMAND ${CMAKE_CTEST_COMMAND} DEPENDS marpaWrapperGrammarTester)
+ENDIF (HAVE_GENERICSTACK_H)

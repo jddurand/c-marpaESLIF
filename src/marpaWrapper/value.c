@@ -15,10 +15,7 @@ static marpaWrapperValueOption_t marpaWrapperValueOptionDefault = {
   1,                              /* highRankOnlyb */
   1,                              /* orderByRankb */
   0,                              /* ambiguousb */
-  0,                              /* nullb */
-  NULL,                           /* valueRuleCallbackDefault */
-  NULL,                           /* valueSymbolCallbackDefault */
-  NULL                            /* valueNullingCallback */
+  0                               /* nullb */
 };
 
 /****************************************************************************/
@@ -121,12 +118,6 @@ marpaWrapperValue_t *marpaWrapperValue_newp(marpaWrapperRecognizer_t *marpaWrapp
     goto err;
   }
 
-  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_t_next(%p)", marpaWrapperValuep->marpaTreep);
-  if (marpa_t_next(marpaWrapperValuep->marpaTreep) < 0) {
-    MARPAWRAPPER_MARPA_G_ERROR(genericLoggerp, marpaWrapperRecognizerp->marpaWrapperGrammarp->marpaGrammarp);
-    goto err;
-  }
-
   if (genericLoggerp != NULL) {
     MARPAWRAPPER_TRACE(genericLoggerp, funcs, "Cloning genericLogger");
 
@@ -150,12 +141,182 @@ err:
       MARPAWRAPPER_TRACE(genericLoggerp, funcs, "Freeing cloned genericLogger");
       GENERICLOGGER_FREE(marpaWrapperValuep->marpaWrapperValueOption.genericLoggerp);
     }
+    marpaWrapperValuep->marpaWrapperValueOption.genericLoggerp = NULL;
     marpaWrapperValue_freev(marpaWrapperValuep);
 
     errno = errnoi;
   }
 
   return NULL;
+}
+
+/****************************************************************************/
+short marpaWrapperValue_valueb(marpaWrapperValue_t               *marpaWrapperValuep,
+			       void                              *userDatavp,
+			       marpaWrapperValueRuleCallback_t    ruleCallbackp,
+			       marpaWrapperValueSymbolCallback_t  symbolCallbackp,
+			       marpaWrapperValueNullingCallback_t nullingCallbackp)
+/****************************************************************************/
+{
+  const static char funcs[] = "marpaWrapperValue_valueb";
+  genericLogger_t  *genericLoggerp = NULL;
+  int               tnexti;
+  Marpa_Value       marpaValuep = NULL;
+  int               nexti;
+  Marpa_Step_Type   stepi;
+  Marpa_Rule_ID     marpaRuleIdi;
+  Marpa_Symbol_ID   marpaSymbolIdi;
+  int               argFirsti;
+  int               argLasti;
+  int               argResulti;
+  int               tokenValuei;
+  size_t            nValueInputi;
+
+  if (marpaWrapperValuep == NULL) {
+    errno = EINVAL;
+    goto err;
+  }
+
+  genericLoggerp = marpaWrapperValuep->marpaWrapperValueOption.genericLoggerp;
+
+  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_t_next(%p)", marpaWrapperValuep->marpaTreep);
+  tnexti = marpa_t_next(marpaWrapperValuep->marpaTreep);
+  if (tnexti < -1) {
+    MARPAWRAPPER_MARPA_G_ERROR(genericLoggerp, marpaWrapperValuep->marpaWrapperRecognizerp->marpaWrapperGrammarp->marpaGrammarp);
+    goto err;
+  } else if (tnexti == -1) {
+    MARPAWRAPPER_TRACE(genericLoggerp, funcs, "Tree iterator exhausted");
+    goto done;
+  }
+
+  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_v_new(%p)", marpaWrapperValuep->marpaTreep);
+  marpaValuep = marpa_v_new(marpaWrapperValuep->marpaTreep);
+
+  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_v_valued_force(%p)", marpaValuep);
+  if (marpa_v_valued_force(marpaValuep) < 0) {
+    MARPAWRAPPER_MARPA_G_ERROR(genericLoggerp, marpaWrapperValuep->marpaWrapperRecognizerp->marpaWrapperGrammarp->marpaGrammarp);
+    goto err;
+  }
+
+  nexti = 1;
+  while (nexti != 0) {
+    MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_v_step(%p)", marpaValuep);
+    stepi = marpa_v_step(marpaValuep);
+    if (stepi < 0) {
+      MARPAWRAPPER_MARPA_G_ERROR(genericLoggerp, marpaWrapperValuep->marpaWrapperRecognizerp->marpaWrapperGrammarp->marpaGrammarp);
+      goto err;
+    }
+
+    MARPAWRAPPER_MARPA_STEP_TRACE(genericLoggerp, funcs, stepi);
+
+    switch (stepi) {
+    case MARPA_STEP_RULE:
+
+      MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_v_rule(%p)", marpaValuep);
+      marpaRuleIdi = marpa_v_rule(marpaValuep);
+
+      MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_v_arg_0(%p)", marpaValuep);
+      argFirsti = marpa_v_arg_0(marpaValuep);
+
+      MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_v_arg_n(%p)", marpaValuep);
+      argLasti = marpa_v_arg_n(marpaValuep);
+
+      MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_v_result(%p)", marpaValuep);
+      argResulti = marpa_v_result(marpaValuep);
+
+      nValueInputi = argLasti - argFirsti + 1;
+      MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "Rule %d: Stack [%d..%d] -> Stack %d", (int) marpaRuleIdi, argFirsti, argLasti, argResulti);
+
+      if (ruleCallbackp == NULL) {
+	MARPAWRAPPER_ERROR(genericLoggerp, "A rule value callback is required");
+	goto err;
+      }
+
+      if (ruleCallbackp(userDatavp, (int) marpaRuleIdi, argFirsti, argLasti, argResulti) == 0) {
+	MARPAWRAPPER_ERRORF(genericLoggerp, "Rule No %d value callback failure", (int) marpaRuleIdi);
+	goto err;
+      }
+
+      break;
+    case MARPA_STEP_TOKEN:
+
+      MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_v_token(%p)", marpaValuep);
+      marpaSymbolIdi = marpa_v_token(marpaValuep);
+
+      MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_v_token_value(%p)", marpaValuep);
+      tokenValuei = marpa_v_token_value(marpaValuep);
+
+      MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_v_result(%p)", marpaValuep);
+      argResulti = marpa_v_result(marpaValuep);
+
+      MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "Symbol %d: Stack %d -> Stack %d", (int) marpaSymbolIdi, tokenValuei, argResulti);
+
+      if (symbolCallbackp == NULL) {
+	MARPAWRAPPER_ERROR(genericLoggerp, "A symbol value callback is required");
+	goto err;
+      }
+
+      if (symbolCallbackp(userDatavp, (int) marpaSymbolIdi, tokenValuei, argResulti) == 0) {
+	MARPAWRAPPER_ERRORF(genericLoggerp, "Symbol No %d value callback failure", (int) marpaSymbolIdi);
+	goto err;
+      }
+
+      break;
+    case MARPA_STEP_NULLING_SYMBOL:
+
+      MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_v_symbol(%p)", marpaValuep);
+      marpaSymbolIdi = marpa_v_symbol(marpaValuep);
+
+      MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_v_result(%p)", marpaValuep);
+      argResulti = marpa_v_result(marpaValuep);
+
+      MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "Nulling symbol %d-> Stack %d", (int) marpaSymbolIdi, argResulti);
+
+      if (nullingCallbackp == NULL) {
+	MARPAWRAPPER_ERROR(genericLoggerp, "A nulling symbol value callback is required");
+	goto err;
+      }
+
+      if (nullingCallbackp(userDatavp, (int) marpaSymbolIdi, argResulti) == 0) {
+	MARPAWRAPPER_ERRORF(genericLoggerp, "Nulling symbol No %d value callback failure", (int) marpaSymbolIdi);
+	goto err;
+      }
+
+      break;
+    case MARPA_STEP_INACTIVE:
+      nexti = 0;
+      break;
+    case MARPA_STEP_INITIAL:
+      break;
+    default:
+      break;
+    }
+  }
+  
+  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_v_unref(%p)", marpaValuep);
+  marpa_v_unref(marpaValuep);
+
+  MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return 1");
+  return 1;
+  
+ done:
+  if (marpaValuep != NULL) {
+    MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_v_unref(%p)", marpaValuep);
+    marpa_v_unref(marpaValuep);
+  }
+
+  MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return 0");
+  return 0;
+  
+ err:
+  if (marpaValuep != NULL) {
+    int errnoi = errno;
+    MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_v_unref(%p)", marpaValuep);
+    marpa_v_unref(marpaValuep);
+    errno = errnoi;
+  }
+  MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return -1");
+  return -1;
 }
 
 /****************************************************************************/
