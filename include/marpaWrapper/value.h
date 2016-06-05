@@ -13,9 +13,7 @@ typedef struct marpaWrapperValue marpaWrapperValue_t;
 
 /* Callbacks */
 /* --------- */
-typedef int   (*marpaWrapperValueRuleCallback_t)(void *userDatap, genericStack_t *stackp, int rulei, size_t nValuel, int *valueip);
-typedef int   (*marpaWrapperValueSymbolCallback_t)(void *userDatap, genericStack_t *stackp, int symboli);
-typedef int   (*marpaWrapperValueNullingCallback_t)(void *userDatap, genericStack_t *stackp, int symboli);
+typedef int (*marpaWrapperValueCallback_t)(void *userDatap, genericStack_t *stackp);
 
 
 /* --------------- */
@@ -23,20 +21,20 @@ typedef int   (*marpaWrapperValueNullingCallback_t)(void *userDatap, genericStac
 /* --------------- */
 typedef struct marpaWrapperValueOption {
   genericLogger_t                   *genericLoggerp;             /* Default: NULL */
-  short                              highRankOnlyb;              /* Default: 0 */
-  short                              orderByRankb;               /* Default: 0 */
+  short                              highRankOnlyb;              /* Default: 1 */
+  short                              orderByRankb;               /* Default: 1 */
   short                              ambiguousb;                 /* Default: 0 */
   short                              nullb;                      /* Default: 0 */
-  marpaWrapperValueRuleCallback_t    valueRuleCallbackDefault;   /* Default: NULL */
-  marpaWrapperValueSymbolCallback_t  valueSymbolCallbackDefault; /* Default: NULL */
-  marpaWrapperValueNullingCallback_t valueNullingCallback;       /* Default: NULL */
+  marpaWrapperValueCallback_t        valueRuleCallbackDefault;   /* Default: NULL */
+  marpaWrapperValueCallback_t        valueSymbolCallbackDefault; /* Default: NULL */
+  marpaWrapperValueCallback_t        valueNullingCallback;       /* Default: NULL */
 } marpaWrapperValueOption_t;
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-  marpaWrapper_EXPORT marpaWrapperValue_t *marpaWrapperValue_newp(marpaWrapperGrammar_t *marpaWrapperGrammarp, marpaWrapperValueOption_t *marpaWrapperValueOptionp);
-  marpaWrapper_EXPORT short                marpaWrapperValue_valueb(marpaWrapperValue_t *marpaWrapperValuep, void *userDatap, );
+  marpaWrapper_EXPORT marpaWrapperValue_t *marpaWrapperValue_newp(marpaWrapperRecognizer_t *marpaWrapperRecognizerp, marpaWrapperValueOption_t *marpaWrapperValueOptionp);
+  marpaWrapper_EXPORT short                marpaWrapperValue_valueb(marpaWrapperValue_t *marpaWrapperValuep, void *userDatap);
   marpaWrapper_EXPORT void                 marpaWrapperValue_freev(marpaWrapperValue_t *marpaWrapperValuep);
 #ifdef __cplusplus
 }
