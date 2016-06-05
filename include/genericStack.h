@@ -177,14 +177,20 @@ typedef struct genericStack {
 #define GENERICSTACK_SET_DOUBLE__COMPLEX(stackName, var, index) _GENERICSTACK_SET_BY_TYPE(stackName, double _Complex, var, GENERICSTACKITEMTYPE_LONG_LONG, dc, index)
 #define GENERICSTACK_SET_LONG_DOUBLE__COMPLEX(stackName, var, index) _GENERICSTACK_SET_BY_TYPE(stackName, long double _Complex, var, GENERICSTACKITEMTYPE_LONG_LONG, ldc, index)
 #endif
-/* It is illegal to call this macro with a NULL clonep */
+/* Having an internal member u.any.clone is only used to make the compiler check the callback complies to the prototype */
 #define GENERICSTACK_SET_ANY(stackName, var, clonep, freep, index) do { \
-    genericStackClone_t _clone = (genericStackClone_t) clonep;		\
+    genericStackClone_t _clone = clonep;				\
     size_t _index_for_set = index;                                      \
     if (_index_for_set >= stackName->used) {                            \
       stackName->used = _index_for_set + 1;                             \
       _GENERICSTACK_EXTEND(stackName, stackName->used);                 \
     }                                                                   \
+    if (stackName->items[_index_for_set].type == GENERICSTACKITEMTYPE_ANY) { \
+      genericStackItemAny_t _any = stackName->items[_index_for_set].u.any; \
+      if ((_any.p != NULL) && ((_any.free != NULL))) {			\
+	stackName->items[_index_for_set].u.any.free(stackName->items[_index_for_set].u.any.p); \
+      }									\
+    }									\
     stackName->items[_index_for_set].type = GENERICSTACKITEMTYPE_ANY;   \
     if (_clone != NULL) {						\
       stackName->items[_index_for_set].u.any.clone = _clone;		\
