@@ -388,7 +388,7 @@ short marpaWrapperRecognizer_expectedb(marpaWrapperRecognizer_t *marpaWrapperRec
 }
 
 /****************************************************************************/
-short marpaWrapperRecognizer_progressb(marpaWrapperRecognizer_t *marpaWrapperRecognizerp, int starti, int endi, size_t *nProgresslp, marpaWrapperRecognizerProgress_t **progresspp)
+short marpaWrapperRecognizer_progressb(marpaWrapperRecognizer_t *marpaWrapperRecognizerp, int starti, int lengthi, size_t *nProgresslp, marpaWrapperRecognizerProgress_t **progresspp)
 /****************************************************************************/
 {
   const static char   funcs[] = "marpaWrapperRecognizer_progressb";
@@ -397,7 +397,7 @@ short marpaWrapperRecognizer_progressb(marpaWrapperRecognizer_t *marpaWrapperRec
   Marpa_Earleme       marpEarlemei;
   Marpa_Rule_ID       rulei;
   int                 realStarti = starti;
-  int                 realEndi = endi;
+  int                 realEndi;
   int                 positioni;
   size_t              nProgressl;
   int                 nbItemsi;
@@ -410,6 +410,12 @@ short marpaWrapperRecognizer_progressb(marpaWrapperRecognizer_t *marpaWrapperRec
 
   genericLoggerp = marpaWrapperRecognizerp->marpaWrapperRecognizerOption.genericLoggerp;
 
+  if (lengthi < 0) {
+    MARPAWRAPPER_ERRORF(genericLoggerp, "lengthi is %d but must be > 0", lengthi);
+    errno = EINVAL;
+    goto err;
+  }
+  
   /* This function always succeed as per doc */
   MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_r_latest_earley_set(%p)", marpaWrapperRecognizerp->marpaRecognizerp);
   marpaLatestEarleySetIdi = marpa_r_latest_earley_set(marpaWrapperRecognizerp->marpaRecognizerp);
@@ -422,17 +428,9 @@ short marpaWrapperRecognizer_progressb(marpaWrapperRecognizer_t *marpaWrapperRec
     goto err;
   }
 
-  if (realEndi < 0) {
-    realEndi += (marpaLatestEarleySetIdi + 1);
-  }
-  if ((realEndi < 0) || (realEndi > marpaLatestEarleySetIdi)) {
-    MARPAWRAPPER_ERRORF(genericLoggerp, "endi must be in range [%d-%d]", (int) (-(marpaLatestEarleySetIdi+1)), (int) marpaLatestEarleySetIdi);
-    errno = EINVAL;
-    goto err;
-  }
-
+  realEndi = realStarti + lengthi - 1;
   if (realStarti > realEndi) {
-    MARPAWRAPPER_ERRORF(genericLoggerp, "[starti,endi] range [%d,%d] evaluated to [%d-%d]", starti, endi, realStarti, realEndi);
+    MARPAWRAPPER_ERRORF(genericLoggerp, "[starti,lengthi] range [%d,%d] evaluated to [%d-%d]", starti, lengthi, realStarti, realEndi);
     errno = EINVAL;
     goto err;
   }
