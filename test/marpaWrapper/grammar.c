@@ -12,6 +12,7 @@ static char *symbolDescription(void *userDatavp, int symboli);
 int main(int argc, char **argv) {
   marpaWrapperGrammar_t         *marpaWrapperGrammarp;
   marpaWrapperRecognizer_t      *marpaWrapperRecognizerp;
+  marpaWrapperValue_t           *marpaWrapperValuep;
   int                            symbolip[MAX_SYMBOL];
   int                            ruleip[MAX_RULE];
   int                            rci = 0;
@@ -19,8 +20,24 @@ int main(int argc, char **argv) {
   size_t                         neventl;
   size_t                         nsymboll;
   int                            i;
-  marpaWrapperGrammarOption_t    marpaWrapperGrammarOption = { GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_TRACE), 0, 0 };
-  marpaWrapperRecognizerOption_t marpaWrapperRecognizerOption = { GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_TRACE), 1 /* latm */};
+  
+  marpaWrapperGrammarOption_t    marpaWrapperGrammarOption    = { GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_TRACE),
+								  0 /* warningIsErrorb */,
+								  0 /* warningIsIgnoredb */
+  };
+  marpaWrapperRecognizerOption_t marpaWrapperRecognizerOption = { GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_TRACE),
+								  1 /* latm */
+  };
+  marpaWrapperValueOption_t      marpaWrapperValueOption      = { GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_TRACE),
+								  1 /* highRankOnlyb */,
+								  1 /* orderByRankb */,
+								  0 /* ambiguousb */,
+								  0 /* nullb */,
+								  NULL /* valueRuleCallbackDefault */,
+								  NULL /* valueSymbolCallbackDefault */,
+								  NULL /* valueNullingCallback */
+  };
+
   marpaWrapperGrammarSymbolOption_t marpaWrapperGrammarSymbolTerminalOption    = { 1 /* terminal */, 0 /* start */, MARPAWRAPPERGRAMMAR_EVENTTYPE_PREDICTION };
   marpaWrapperGrammarSymbolOption_t marpaWrapperGrammarSymbolNonTerminalOption = { 0 /* terminal */, 0 /* start */, MARPAWRAPPERGRAMMAR_EVENTTYPE_PREDICTION };
 
@@ -56,16 +73,11 @@ int main(int argc, char **argv) {
     }
   }
 
+  /* ------ */
+  /* number */
+  /* ------ */
   if (rci == 0) {
-    if ((marpaWrapperRecognizer_alternativeb(marpaWrapperRecognizerp, symbolip[     S], 1 /* value */, 1 /* length */) == 0) ||
-	(marpaWrapperRecognizer_alternativeb(marpaWrapperRecognizerp, symbolip[     E], 2 /* value */, 1 /* length */) == 0) ||
-	(marpaWrapperRecognizer_alternativeb(marpaWrapperRecognizerp, symbolip[    op], 3 /* value */, 1 /* length */) == 0) ||
-	(marpaWrapperRecognizer_alternativeb(marpaWrapperRecognizerp, symbolip[number], 4 /* value */, 1 /* length */) == 0)) {
-      rci = 1;
-    }
-  }
-  if (rci == 0) {
-    if (marpaWrapperRecognizer_completeb(marpaWrapperRecognizerp) == 0) {
+    if (marpaWrapperRecognizer_readb(marpaWrapperRecognizerp, symbolip[number], 1 /* value */, 1 /* length */) == 0) {
       rci = 1;
     }
   }
@@ -74,6 +86,33 @@ int main(int argc, char **argv) {
       rci = 1;
     }
   }
+  /* -- */
+  /* op */
+  /* -- */
+  if (rci == 0) {
+    if (marpaWrapperRecognizer_readb(marpaWrapperRecognizerp, symbolip[op], 2 /* value */, 1 /* length */) == 0) {
+      rci = 1;
+    }
+  }
+  if (rci == 0) {
+    if (marpaWrapperRecognizer_progressLogb(marpaWrapperRecognizerp, -1, 1, GENERICLOGGER_LOGLEVEL_INFO, (void *) symbolip, symbolDescription) == 0) {
+      rci = 1;
+    }
+  }
+  /* ------ */
+  /* number */
+  /* ------ */
+  if (rci == 0) {
+    if (marpaWrapperRecognizer_readb(marpaWrapperRecognizerp, symbolip[number], 3 /* value */, 1 /* length */) == 0) {
+      rci = 1;
+    }
+  }
+  if (rci == 0) {
+    if (marpaWrapperRecognizer_progressLogb(marpaWrapperRecognizerp, -1, 1, GENERICLOGGER_LOGLEVEL_INFO, (void *) symbolip, symbolDescription) == 0) {
+      rci = 1;
+    }
+  }
+
   if (rci == 0) {
     if (marpaWrapperRecognizer_event_onoffb(marpaWrapperRecognizerp, symbolip[S], MARPAWRAPPERGRAMMAR_EVENTTYPE_PREDICTION, 0) == 0) {
       rci = 1;
@@ -91,6 +130,17 @@ int main(int argc, char **argv) {
       }
     }
   }
+
+  if (rci == 0) {
+    marpaWrapperValuep = marpaWrapperValue_newp(marpaWrapperRecognizerp, &marpaWrapperValueOption);
+    if (marpaWrapperValuep == NULL) {
+      rci = 1;
+    }
+  }
+
+  marpaWrapperValue_freev(marpaWrapperValuep);
+  GENERICLOGGER_FREE(marpaWrapperValueOption.genericLoggerp);
+
   marpaWrapperRecognizer_freev(marpaWrapperRecognizerp);
   GENERICLOGGER_FREE(marpaWrapperRecognizerOption.genericLoggerp);
 

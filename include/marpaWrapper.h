@@ -3,5 +3,6 @@
 
 #include "marpaWrapper/grammar.h"
 #include "marpaWrapper/recognizer.h"
+#include "marpaWrapper/value.h"
 
 #endif /* MARPAWRAPPER_H */
