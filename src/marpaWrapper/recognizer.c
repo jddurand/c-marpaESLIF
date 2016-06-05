@@ -514,10 +514,13 @@ short marpaWrapperRecognizer_progressLogb(marpaWrapperRecognizer_t *marpaWrapper
   genericLogger_t  *genericLoggerp = NULL;
   int               ruleLengthi;
   Marpa_Symbol_ID   lhsi, rhsi;
+  Marpa_Earleme     earlemei;     
   char             *descriptionLHSs, *descriptionRHSs;
   size_t            lengthDescriptionLHSi;
-  int               positioni;
-  char             *tmps = NULL;
+  int               positioni, rulei;
+  char             *lefts;
+  char             *middles;
+  char              rtypec;
   
   if (marpaWrapperRecognizerp == NULL) {
     errno = EINVAL;
@@ -541,6 +544,13 @@ short marpaWrapperRecognizer_progressLogb(marpaWrapperRecognizer_t *marpaWrapper
 			     marpaWrapperRecognizerp->progressp[i].positioni
 			     );
 	} else {
+	  /* MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_r_earleme(%p, %d)", marpaWrapperRecognizerp->marpaRecognizerp, marpaWrapperRecognizerp->progressp[i].earleySetIdi); */
+	  earlemei = marpa_r_earleme(marpaWrapperRecognizerp->marpaRecognizerp, (Marpa_Earley_Set_ID) marpaWrapperRecognizerp->progressp[i].earleySetIdi);
+	  if (earlemei < 0) {
+	    MARPAWRAPPER_MARPA_G_ERROR(genericLoggerp, marpaWrapperRecognizerp->marpaWrapperGrammarp->marpaGrammarp);
+	    goto err;
+	  }
+
 	  /* MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_g_rule_lhs(%p, %d)", marpaWrapperRecognizerp->marpaWrapperGrammarp->marpaGrammarp, marpaWrapperRecognizerp->progressp[i].rulei); */
 	  lhsi = marpa_g_rule_lhs(marpaWrapperRecognizerp->marpaWrapperGrammarp->marpaGrammarp, (Marpa_Rule_ID) marpaWrapperRecognizerp->progressp[i].rulei);
 	  if (lhsi < 0) {
@@ -559,37 +569,18 @@ short marpaWrapperRecognizer_progressLogb(marpaWrapperRecognizer_t *marpaWrapper
 	    goto err;
 	  }
 
-	  if (ruleLengthi == 0) {
-	    /* The whole description can be done on one line */
-	    genericLogger_logv(genericLoggerp, logleveli, "%s ::= .", descriptionLHSs);
-	  } else if (ruleLengthi == 1) {
-	    positioni = marpaWrapperRecognizerp->progressp[0].rulei;
+	  /* Description is split on multiple lines */
+	  lengthDescriptionLHSi = strlen(descriptionLHSs);
 
-	    /* The whole description can be done on one line */
-	    /* MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_g_rule_rhs(%p, %d, %d)", marpaWrapperRecognizerp->marpaWrapperGrammarp->marpaGrammarp, marpaWrapperRecognizerp->progressp[i].rulei, 0); */
-	    rhsi = marpa_g_rule_rhs(marpaWrapperRecognizerp->marpaWrapperGrammarp->marpaGrammarp, (Marpa_Rule_ID) marpaWrapperRecognizerp->progressp[i].rulei, 0);
-	    if (rhsi < 0) {
-	      MARPAWRAPPER_MARPA_G_ERROR(genericLoggerp, marpaWrapperRecognizerp->marpaWrapperGrammarp->marpaGrammarp);
-	      goto err;
-	    }
-	    descriptionRHSs = symbolDescriptionCallbackp(userDatavp, rhsi);
-	    if ((descriptionRHSs == NULL) || (strlen(descriptionRHSs) <= 0)) {
-	      descriptionRHSs = "?";
-	    }
-	    genericLogger_logv(genericLoggerp, logleveli, "%s ::= %s %s",
-			       descriptionLHSs,
-			       (positioni == 0) ? "." : descriptionRHSs,
-			       (positioni == 0) ? descriptionRHSs : "."
-			       );
-	  } else {
-	    /* Description is split on multiple lines */
-	    lengthDescriptionLHSi = strlen(descriptionLHSs);
-	    positioni = marpaWrapperRecognizerp->progressp[i].rulei;
+	  positioni = marpaWrapperRecognizerp->progressp[i].positioni;
+	  rulei     = marpaWrapperRecognizerp->progressp[i].rulei;
 
-	    for (ix = 0; ix < ruleLengthi; ix++) {
-	      char *lefts = (ix == 0) ? descriptionLHSs : " ";
-	      char *middles = (ix == 0) ? "::=" : "   ";
-	      
+	  for (ix = 0; ix < ruleLengthi; ix++) {
+	    lefts = (ix == 0) ? descriptionLHSs : " ";
+	    middles = (ix == 0) ? "::=" : "   ";
+	    rtypec = ((positioni < 0) || (positioni >= ruleLengthi)) ? 'F' : ((positioni > 0) ? 'R' : 'P');
+
+	    if (ruleLengthi > 0) {
 	      /* MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_g_rule_rhs(%p, %d, %d)", marpaWrapperRecognizerp->marpaWrapperGrammarp->marpaGrammarp, marpaWrapperRecognizerp->progressp[i].rulei, ix); */
 	      rhsi = marpa_g_rule_rhs(marpaWrapperRecognizerp->marpaWrapperGrammarp->marpaGrammarp, (Marpa_Rule_ID) marpaWrapperRecognizerp->progressp[i].rulei, ix);
 	      if (rhsi < 0) {
@@ -600,17 +591,19 @@ short marpaWrapperRecognizer_progressLogb(marpaWrapperRecognizer_t *marpaWrapper
 	      if ((descriptionRHSs == NULL) || (strlen(descriptionRHSs) <= 0)) {
 		descriptionRHSs = "?";
 	      }
-	      if (positioni == ix) {
-		genericLogger_logv(genericLoggerp, logleveli, "%*s %s . %s", (int) lengthDescriptionLHSi, lefts, middles, descriptionRHSs);
-	      } else if (positioni < 0) {
-		if (ix == (ruleLengthi - 1)) {
-		  genericLogger_logv(genericLoggerp, logleveli, "%*s %s %s .", (int) lengthDescriptionLHSi, lefts, middles, descriptionRHSs);
-		} else {
-		  genericLogger_logv(genericLoggerp, logleveli, "%*s %s %s", (int) lengthDescriptionLHSi, lefts, middles, descriptionRHSs);
-		}
+	    } else {
+	      descriptionRHSs = "";
+	    }
+	    if (positioni == ix) {
+	      genericLogger_logv(genericLoggerp, logleveli, "[%c%d] %*s %s . %s", rtypec, rulei, (int) lengthDescriptionLHSi, lefts, middles, descriptionRHSs);
+	    } else if (positioni < 0) {
+	      if (ix == (ruleLengthi - 1)) {
+		genericLogger_logv(genericLoggerp, logleveli, "[%c%d] %*s %s %s .", rtypec, rulei, (int) lengthDescriptionLHSi, lefts, middles, descriptionRHSs);
 	      } else {
-		genericLogger_logv(genericLoggerp, logleveli, "%*s %s %s", (int) lengthDescriptionLHSi, lefts, middles, descriptionRHSs);
+		genericLogger_logv(genericLoggerp, logleveli, "[%c%d] %*s %s %s", rtypec, rulei, (int) lengthDescriptionLHSi, lefts, middles, descriptionRHSs);
 	      }
+	    } else {
+	      genericLogger_logv(genericLoggerp, logleveli, "[%c%d] %*s %s %s", rtypec, rulei, (int) lengthDescriptionLHSi, lefts, middles, descriptionRHSs);
 	    }
 	  }
 	}
@@ -618,18 +611,10 @@ short marpaWrapperRecognizer_progressLogb(marpaWrapperRecognizer_t *marpaWrapper
     }
   }
 
-  if (tmps != NULL) {
-    free(tmps);
-  }
   MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return 1");
   return 1;
 
  err:
-  if (tmps != NULL) {
-    int errnoi = errno;
-    free(tmps);
-    errno = errnoi;
-  }
   MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return 0");
   return 0;
 }

@@ -70,7 +70,7 @@ int main(int argc, char **argv) {
     }
   }
   if (rci == 0) {
-    if (marpaWrapperRecognizer_progressLogb(marpaWrapperRecognizerp, -1, 1, GENERICLOGGER_LOGLEVEL_INFO, (void *) symbolip, symbolDescription) == 0) {
+    if (marpaWrapperRecognizer_progressLogb(marpaWrapperRecognizerp, 0, 1, GENERICLOGGER_LOGLEVEL_INFO, (void *) symbolip, symbolDescription) == 0) {
       rci = 1;
     }
   }
