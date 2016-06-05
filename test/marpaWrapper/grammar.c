@@ -5,6 +5,9 @@
 
 enum { S = 0, E, op, number, MAX_SYMBOL };
 enum { START_RULE = 0, OP_RULE, NUMBER_RULE, MAX_RULE };
+static char *desc[] = { "S", "E", "op", "number", "?" };
+
+static char *symbolDescription(void *userDatavp, int symboli);
 
 int main(int argc, char **argv) {
   marpaWrapperGrammar_t         *marpaWrapperGrammarp;
@@ -67,6 +70,11 @@ int main(int argc, char **argv) {
     }
   }
   if (rci == 0) {
+    if (marpaWrapperRecognizer_progressLogb(marpaWrapperRecognizerp, -1, 1, GENERICLOGGER_LOGLEVEL_INFO, (void *) symbolip, symbolDescription) == 0) {
+      rci = 1;
+    }
+  }
+  if (rci == 0) {
     if (marpaWrapperRecognizer_event_onoffb(marpaWrapperRecognizerp, symbolip[S], MARPAWRAPPERGRAMMAR_EVENTTYPE_PREDICTION, 0) == 0) {
       rci = 1;
     }
@@ -91,3 +99,18 @@ int main(int argc, char **argv) {
 
   return rci;
 }
+
+static char *symbolDescription(void *userDatavp, int symboli)
+{
+  int *symbolip = (int *) userDatavp;
+  int  i;
+
+  for (i = 0; i < MAX_SYMBOL; i++) {
+    if (symboli == symbolip[i]) {
+      return desc[i];
+    }
+  }
+
+  return desc[MAX_SYMBOL];
+}
+
