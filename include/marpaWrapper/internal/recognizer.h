@@ -30,6 +30,11 @@ struct marpaWrapperRecognizer {
   size_t                               sizeAlternativeokl; /* Allocated size */
   size_t                               nAlternativeokl;    /* Used size      */
   marpaWrapperRecognizerAlternative_t *alternativeokip;
+
+  /* Progress storage */
+  size_t                               sizeProgressl; /* Allocated size */
+  size_t                               nProgressl;    /* Used size      */
+  marpaWrapperRecognizerProgress_t    *progressp;
 };
 
 #endif /* MARPAWRAPPER_INTERNAL_RECOGNIZER_H */
