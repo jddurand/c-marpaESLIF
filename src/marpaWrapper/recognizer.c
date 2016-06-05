@@ -437,7 +437,7 @@ short marpaWrapperRecognizer_progressb(marpaWrapperRecognizer_t *marpaWrapperRec
     goto err;
   }
 
-  MARPAWRAPPER_ERRORF(genericLoggerp, "Asking for progress report in early set range [%d-%d]", realStarti, realEndi);
+  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "Asking for progress report in early set range [%d-%d]", realStarti, realEndi);
   marpaEarleySetIdStarti = (Marpa_Earley_Set_ID) realStarti;
   marpaEarleySetIdEndi   = (Marpa_Earley_Set_ID) realEndi;
   nProgressl = 0;
@@ -514,7 +514,7 @@ short marpaWrapperRecognizer_progressLogb(marpaWrapperRecognizer_t *marpaWrapper
   genericLogger_t  *genericLoggerp = NULL;
   int               ruleLengthi;
   Marpa_Symbol_ID   lhsi, rhsi;
-  Marpa_Earleme     earlemei;     
+  Marpa_Earleme     earlemei, earlemeorigi;     
   char             *descriptionLHSs, *descriptionRHSs;
   size_t            lengthDescriptionLHSi;
   int               positioni, rulei;
@@ -547,6 +547,11 @@ short marpaWrapperRecognizer_progressLogb(marpaWrapperRecognizer_t *marpaWrapper
 	  /* MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_r_earleme(%p, %d)", marpaWrapperRecognizerp->marpaRecognizerp, marpaWrapperRecognizerp->progressp[i].earleySetIdi); */
 	  earlemei = marpa_r_earleme(marpaWrapperRecognizerp->marpaRecognizerp, (Marpa_Earley_Set_ID) marpaWrapperRecognizerp->progressp[i].earleySetIdi);
 	  if (earlemei < 0) {
+	    MARPAWRAPPER_MARPA_G_ERROR(genericLoggerp, marpaWrapperRecognizerp->marpaWrapperGrammarp->marpaGrammarp);
+	    goto err;
+	  }
+	  earlemeorigi = marpa_r_earleme(marpaWrapperRecognizerp->marpaRecognizerp, (Marpa_Earley_Set_ID) marpaWrapperRecognizerp->progressp[i].earleySetOrigIdi);
+	  if (earlemeorigi < 0) {
 	    MARPAWRAPPER_MARPA_G_ERROR(genericLoggerp, marpaWrapperRecognizerp->marpaWrapperGrammarp->marpaGrammarp);
 	    goto err;
 	  }
@@ -595,15 +600,15 @@ short marpaWrapperRecognizer_progressLogb(marpaWrapperRecognizer_t *marpaWrapper
 	      descriptionRHSs = "";
 	    }
 	    if (positioni == ix) {
-	      genericLogger_logv(genericLoggerp, logleveli, "[%c%d] %*s %s . %s", rtypec, rulei, (int) lengthDescriptionLHSi, lefts, middles, descriptionRHSs);
+	      genericLogger_logv(genericLoggerp, logleveli, "[%c%d@%d..%d] %*s %s . %s", rtypec, rulei, earlemeorigi, earlemei, (int) lengthDescriptionLHSi, lefts, middles, descriptionRHSs);
 	    } else if (positioni < 0) {
 	      if (ix == (ruleLengthi - 1)) {
-		genericLogger_logv(genericLoggerp, logleveli, "[%c%d] %*s %s %s .", rtypec, rulei, (int) lengthDescriptionLHSi, lefts, middles, descriptionRHSs);
+		genericLogger_logv(genericLoggerp, logleveli, "[%c%d@%d..%d] %*s %s %s .", rtypec, rulei, earlemeorigi, earlemei, (int) lengthDescriptionLHSi, lefts, middles, descriptionRHSs);
 	      } else {
-		genericLogger_logv(genericLoggerp, logleveli, "[%c%d] %*s %s %s", rtypec, rulei, (int) lengthDescriptionLHSi, lefts, middles, descriptionRHSs);
+		genericLogger_logv(genericLoggerp, logleveli, "[%c%d@%d..%d] %*s %s %s", rtypec, rulei, earlemeorigi, earlemei, (int) lengthDescriptionLHSi, lefts, middles, descriptionRHSs);
 	      }
 	    } else {
-	      genericLogger_logv(genericLoggerp, logleveli, "[%c%d] %*s %s %s", rtypec, rulei, (int) lengthDescriptionLHSi, lefts, middles, descriptionRHSs);
+	      genericLogger_logv(genericLoggerp, logleveli, "[%c%d@%d..%d] %*s %s %s", rtypec, rulei, earlemeorigi, earlemei, (int) lengthDescriptionLHSi, lefts, middles, descriptionRHSs);
 	    }
 	  }
 	}
