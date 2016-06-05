@@ -19,6 +19,14 @@ static char *symbolDescription(void *userDatavp, int symboli);
 static short valueRuleCallback(void *userDatavp, int rulei, int arg0i, int argni, int resulti);
 static short valueSymbolCallback(void *userDatavp, int symboli, int argi, int resulti);
 
+typedef struct stackValueAndDescription {
+  int i;
+  char s[100];
+} stackValueAndDescription_t;
+
+static void *stackValueAndDescriptionClone(void *p);
+static void stackValueAndDescriptionFree(void *p);
+
 int main(int argc, char **argv) {
   marpaWrapperGrammar_t         *marpaWrapperGrammarp;
   marpaWrapperRecognizer_t      *marpaWrapperRecognizerp;
@@ -201,8 +209,8 @@ int main(int argc, char **argv) {
 				    valueRuleCallback,
 				    valueSymbolCallback,
 				    NULL) > 0) {
-      GENERICLOGGER_INFOF(valueContext.genericLoggerp, "=> %d", GENERICSTACK_GET_INT(valueContext.outputStackp, 0));
-      
+      stackValueAndDescription_t *resultp = GENERICSTACK_GET_ANY(valueContext.outputStackp, 0);
+      GENERICLOGGER_INFOF(valueContext.genericLoggerp, "%s => %d", resultp->s, resultp->i);
     }
   }
 
@@ -238,10 +246,11 @@ static char *symbolDescription(void *userDatavp, int symboli)
 }
 
 static short valueRuleCallback(void *userDatavp, int rulei, int arg0i, int argni, int resulti) {
-  valueContext_t *valueContextp   = (valueContext_t *) userDatavp;
-  genericStack_t *genericStackp   = valueContextp->outputStackp;
-  genericLogger_t *genericLoggerp = valueContextp->genericLoggerp;
-  int            *ruleip          = valueContextp->ruleip;
+  valueContext_t             *valueContextp   = (valueContext_t *) userDatavp;
+  genericStack_t             *genericStackp   = valueContextp->outputStackp;
+  genericLogger_t            *genericLoggerp = valueContextp->genericLoggerp;
+  int                        *ruleip          = valueContextp->ruleip;
+  stackValueAndDescription_t  result;
 
   if (rulei >= MAX_RULE) {
     return 0;
@@ -250,47 +259,51 @@ static short valueRuleCallback(void *userDatavp, int rulei, int arg0i, int argni
   switch (rulei) {
   case START_RULE:
     {
-      int vari = GENERICSTACK_GET_INT(genericStackp, arg0i);
-      GENERICLOGGER_TRACEF(genericLoggerp, "START_RULE: %d at output stack No %d -> %d at output stack No %d", vari, arg0i, vari, resulti);
-      GENERICSTACK_SET_INT(genericStackp, vari, resulti);
+      stackValueAndDescription_t *varp = GENERICSTACK_GET_ANY(genericStackp, arg0i);
+
+      result = *varp;
+      GENERICLOGGER_TRACEF(genericLoggerp, "START_RULE: {s=%s,i=%d} at output stack No %d -> {s=%s,i=%d} at output stack No %d", varp->s, varp->i, arg0i, result.s, result.i, resulti);
+      GENERICSTACK_SET_ANY(genericStackp, &result, stackValueAndDescriptionClone, stackValueAndDescriptionFree, resulti);
     }
     break;
   case OP_RULE:
     {
-      int  var1i = GENERICSTACK_GET_INT(genericStackp, arg0i);
-      char var2c = GENERICSTACK_GET_CHAR(genericStackp, arg0i+1);
-      int  var2i = GENERICSTACK_GET_INT(genericStackp, arg0i+2);
-      int  var3i;
+      stackValueAndDescription_t *var1p = GENERICSTACK_GET_ANY(genericStackp,  arg0i  );
+      char                        var2c = GENERICSTACK_GET_CHAR(genericStackp, arg0i+1);
+      stackValueAndDescription_t *var3p = GENERICSTACK_GET_ANY(genericStackp,  arg0i+2);
 
+      sprintf(result.s, "(%s %c %s)", var1p->s, var2c, var3p->s);
       switch (var2c) {
       case '+':
-	var3i = var1i + var2i;
+	result.i = var1p->i + var3p->i;
 	break;
       case '-':
-	var3i = var1i - var2i;
+	result.i = var1p->i - var3p->i;
 	break;
       case '*':
-	var3i = var1i * var2i;
+	result.i = var1p->i * var3p->i;
 	break;
       case '/':
-	var3i = var1i / var2i;
+	result.i = var1p->i / var3p->i;
 	break;
       case '%':
-	var3i = var1i % var2i;
+	result.i = var1p->i % var3p->i;
 	break;
       default:
 	GENERICLOGGER_ERRORF(genericLoggerp, "op %c !?", var2c);
 	return 0;
       }
-      GENERICLOGGER_TRACEF(genericLoggerp, "OP_RULE: %d%c%d at output stack [%d-%d] -> %d at output stack No %d", var1i, var2c, var2i, arg0i, argni, var3i, resulti);
-      GENERICSTACK_SET_INT(genericStackp, var3i, resulti);
+      GENERICLOGGER_TRACEF(genericLoggerp, "OP_RULE: {s=%s,i=%d} %c {s=%s,i=%i} at output stack [%d-%d] -> {s=%s,i=%d} at output stack No %d", var1p->s, var1p->i, var2c, var3p->s, var3p->i, arg0i, argni, result.s, result.i, resulti);
+      GENERICSTACK_SET_ANY(genericStackp, &result, stackValueAndDescriptionClone, stackValueAndDescriptionFree, resulti);
     }
     break;
   case NUMBER_RULE:
     {
-      int vari = GENERICSTACK_GET_INT(genericStackp, arg0i);
-      GENERICLOGGER_TRACEF(genericLoggerp, "NUMBER_RULE: %d at output stack No %d -> %d at output stack No %d", vari, arg0i, vari, resulti);
-      GENERICSTACK_SET_INT(genericStackp, vari, resulti);
+      stackValueAndDescription_t *varp = GENERICSTACK_GET_ANY(genericStackp, arg0i);
+
+      result = *varp;
+      GENERICLOGGER_TRACEF(genericLoggerp, "START_RULE: {s=%s,i=%d} at output stack No %d -> {s=%s,i=%d} at output stack No %d", varp->s, varp->i, arg0i, result.s, result.i, resulti);
+      GENERICSTACK_SET_ANY(genericStackp, &result, stackValueAndDescriptionClone, stackValueAndDescriptionFree, resulti);
     }
     break;
   default:
@@ -302,11 +315,12 @@ static short valueRuleCallback(void *userDatavp, int rulei, int arg0i, int argni
 }
 
 static short valueSymbolCallback(void *userDatavp, int symboli, int argi, int resulti) {
-  valueContext_t *valueContextp   = (valueContext_t *) userDatavp;
-  genericStack_t *inputStackp   = valueContextp->inputStackp;
-  genericStack_t *outputStackp   = valueContextp->outputStackp;
-  genericLogger_t *genericLoggerp = valueContextp->genericLoggerp;
-  int            *symbolip        = valueContextp->symbolip;
+  valueContext_t             *valueContextp   = (valueContext_t *) userDatavp;
+  genericStack_t             *inputStackp   = valueContextp->inputStackp;
+  genericStack_t             *outputStackp   = valueContextp->outputStackp;
+  genericLogger_t            *genericLoggerp = valueContextp->genericLoggerp;
+  int                        *symbolip        = valueContextp->symbolip;
+  stackValueAndDescription_t  result;
 
   if (symboli >= MAX_SYMBOL) {
     return 0;
@@ -323,8 +337,11 @@ static short valueSymbolCallback(void *userDatavp, int symboli, int argi, int re
   case number:
     {
       int vari = GENERICSTACK_GET_INT(inputStackp, argi);
-      GENERICLOGGER_TRACEF(genericLoggerp, "number: %d at input stack No %d -> output stack No %d", vari, argi, resulti);
-      GENERICSTACK_SET_INT(outputStackp, vari, resulti);
+
+      result.i = vari;
+      sprintf(result.s, "%d", vari);
+      GENERICLOGGER_TRACEF(genericLoggerp, "number: %d at input stack No %d -> {s=%s,i=%d} at output stack No %d", vari, argi, result.s, result.i, resulti);
+      GENERICSTACK_SET_ANY(outputStackp, &result, stackValueAndDescriptionClone, stackValueAndDescriptionFree, resulti);
     }
     break;
   default:
@@ -333,5 +350,20 @@ static short valueSymbolCallback(void *userDatavp, int symboli, int argi, int re
   }
 
   return 1;
+}
+
+static void *stackValueAndDescriptionClone(void *p) {
+  stackValueAndDescription_t *p1 = (stackValueAndDescription_t *) p;
+  stackValueAndDescription_t *p2 = malloc(sizeof(stackValueAndDescription_t));
+
+  *p2 = *p1;
+
+  return p2;
+}
+
+static void stackValueAndDescriptionFree(void *p) {
+  stackValueAndDescription_t *p1 = (stackValueAndDescription_t *) p;
+
+  free(p1);
 }
 
