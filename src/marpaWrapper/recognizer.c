@@ -119,6 +119,7 @@ err:
       MARPAWRAPPER_TRACE(genericLoggerp, funcs, "Freeing cloned genericLogger");
       GENERICLOGGER_FREE(marpaWrapperRecognizerp->marpaWrapperRecognizerOption.genericLoggerp);
     }
+    marpaWrapperRecognizerp->marpaWrapperRecognizerOption.genericLoggerp = NULL;
     marpaWrapperRecognizer_freev(marpaWrapperRecognizerp);
 
     errno = errnoi;
