@@ -127,9 +127,11 @@ typedef struct genericStack {
 /* ====================================================================== */
 #define GENERICSTACK_NEW(stackName) do {				\
     stackName = malloc(sizeof(genericStack_t));                         \
-    stackName->size = 0;                                                \
-    stackName->used = 0;                                                \
-    stackName->items = NULL;                                            \
+    if (stackName != NULL) {						\
+      stackName->size = 0;						\
+      stackName->used = 0;						\
+      stackName->items = NULL;						\
+    }									\
   } while (0)
 
 #define GENERICSTACK_NEW_SIZED(stackName, wantedSize) do {              \
@@ -265,19 +267,22 @@ typedef struct genericStack {
 /* We intentionnaly loop on size and not used.                            */
 /* ====================================================================== */
 #define GENERICSTACK_FREE(stackName) do {				\
-    if (stackName->size > 0) {                                          \
-      while (stackName->size > 0) {                                     \
-	size_t _index = stackName->size-- - 1;				\
-        if (stackName->items[_index].type == GENERICSTACKITEMTYPE_ANY) { \
-	  genericStackItemAny_t _any = stackName->items[_index].u.any;	\
-	  if (_any.free != NULL) {					\
-	    _any.free(_any.p);						\
+    if (stackName != NULL) {						\
+      if (stackName->size > 0) {					\
+	while (stackName->size > 0) {					\
+	  size_t _index = stackName->size-- - 1;			\
+	  if (stackName->items[_index].type == GENERICSTACKITEMTYPE_ANY) { \
+	    genericStackItemAny_t _any = stackName->items[_index].u.any; \
+	    if (_any.free != NULL) {					\
+	      _any.free(_any.p);					\
+	    }								\
 	  }								\
-        }								\
+	}								\
+	free(stackName->items);						\
       }									\
-      free(stackName->items);                                           \
-    }                                                                   \
-    free(stackName);                                                    \
+      free(stackName);							\
+      stackName = NULL;							\
+    }									\
   } while (0)
 
 #endif /* GENERICSTACK_H */
