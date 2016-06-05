@@ -140,6 +140,11 @@ typedef struct genericStack {
   } while (0)
 
 /* ====================================================================== */
+/* Used size                                                              */
+/* ====================================================================== */
+#define GENERICSTACK_SIZE(stackName) stackName->used
+
+/* ====================================================================== */
 /* SET interface: Stack is extended on demand                             */
 /* ====================================================================== */
 /* stackName is expected to an identifier                                 */
