@@ -1,7 +1,6 @@
 #ifndef MARPAWRAPPER_VALUE_H
 #define MARPAWRAPPER_VALUE_H
 
-#include "genericStack.h"
 #include "genericLogger.h"
 #include "marpaWrapper/recognizer.h"
 #include "marpaWrapper/export.h"
