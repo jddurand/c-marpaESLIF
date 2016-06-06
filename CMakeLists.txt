@@ -73,15 +73,15 @@ ENDIF ()
 # -----------------------------------
 # genericStack: required for test
 # -----------------------------------
-INCLUDE(CheckIncludeFile)
-CHECK_INCLUDE_FILE("genericStack.h" HAVE_GENERICSTACK_H)
-IF (NOT HAVE_GENERICSTACK_H)
+FIND_PACKAGE (genericStack)
+IF (NOT GENERICSTACK_FOUND)
     MESSAGE (STATUS "genericStack must be detected for tests")
 ENDIF ()
 
 # --------------------------------------
 # config.h (we will share it with marpa)
 # --------------------------------------
+INCLUDE(CheckIncludeFile)
 CHECK_INCLUDE_FILE("dlfcn.h"      HAVE_DLFCN_H)
 CHECK_INCLUDE_FILE("inttypes.h"   HAVE_INTTYPES_H)
 CHECK_INCLUDE_FILE("memory.h"     HAVE_MEMORY_H)
@@ -130,13 +130,22 @@ FILE (GLOB lib_marpa_src "${MARPA__R2_DIR}/cpan/engine/read_only/*.c")
 # -----------------
 FILE (GLOB lib_src ${lib_marpa_src} src/marpaWrapper/internal/*.c src/marpaWrapper/*.c)
 ADD_LIBRARY (marpaWrapper SHARED ${lib_src})
-INCLUDE_DIRECTORIES (
-  "${MARPA__R2_DIR}/cpan/engine/read_only/"            # Include path for marpa
-  "${INCLUDE_OUTPUT_PATH}"                             # Include path for generated files
-  "${PROJECT_SOURCE_DIR}/include"                      # Include path for the other headers
-  "${GENERICLOGGER_INCLUDE_DIRS}"                      # Include path for genericLogger (external - required)
-  "${GENERICSTACK_ROOT_DIR}/include"                   # Include path for genericStack (external - optional)
-  )
+IF (GENERICSTACK_FOUND)
+  INCLUDE_DIRECTORIES (
+    "${MARPA__R2_DIR}/cpan/engine/read_only/"            # Include path for marpa
+    "${INCLUDE_OUTPUT_PATH}"                             # Include path for generated files
+    "${PROJECT_SOURCE_DIR}/include"                      # Include path for the other headers
+    "${GENERICLOGGER_INCLUDE_DIRS}"                      # Include path for genericLogger (external - required)
+    "${GENERICSTACK_INCLUDE_DIRS}"                       # Include path for genericStack (external - optional)
+    )
+ELSE (GENERICSTACK_FOUND)
+  INCLUDE_DIRECTORIES (
+    "${MARPA__R2_DIR}/cpan/engine/read_only/"            # Include path for marpa
+    "${INCLUDE_OUTPUT_PATH}"                             # Include path for generated files
+    "${PROJECT_SOURCE_DIR}/include"                      # Include path for the other headers
+    "${GENERICLOGGER_INCLUDE_DIRS}"                      # Include path for genericLogger (external - required)
+    )
+ENDIF (GENERICSTACK_FOUND)
 TARGET_LINK_LIBRARIES (marpaWrapper "${GENERICLOGGER_LINK_FLAGS}")
 SET_TARGET_PROPERTIES (marpaWrapper
   PROPERTIES
@@ -166,7 +175,7 @@ SET_TARGET_PROPERTIES(marpaWrapper PROPERTIES COMPILE_FLAGS "-DmarpaWrapper_EXPO
                                                LINKER_LANGUAGE C)
 
 
-IF (HAVE_GENERICSTACK_H)
+IF (GENERICSTACK_FOUND)
   # -----
   # Check
   # -----
@@ -186,7 +195,7 @@ IF (HAVE_GENERICSTACK_H)
     COMMAND marpaWrapperTester
     WORKING_DIRECTORY ${LIBRARY_OUTPUT_PATH})
   ADD_CUSTOM_TARGET     (check COMMAND ${CMAKE_CTEST_COMMAND} DEPENDS marpaWrapperTester)
-ENDIF (HAVE_GENERICSTACK_H)
+ENDIF (GENERICSTACK_FOUND)
 
 # -------
 # Install
