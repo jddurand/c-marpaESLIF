@@ -191,7 +191,7 @@ short marpaWrapperRecognizer_completeb(marpaWrapperRecognizer_t *marpaWrapperRec
   size_t            nAlternativel, nSymboll, nAlternativeokl, nAlternativeok2l;
   size_t            i, j;
   short             latmb;
-  size_t            lengthi;
+  int               lengthi;
   
   if (marpaWrapperRecognizerp == NULL) {
     errno = EINVAL;
@@ -355,7 +355,6 @@ short marpaWrapperRecognizer_expectedb(marpaWrapperRecognizer_t *marpaWrapperRec
   const static char funcs[] = "marpaWrapperRecognizer_expectedb";
   genericLogger_t  *genericLoggerp = NULL;
   int               nSymbolIdi;
-  int               i;
 
   if (marpaWrapperRecognizerp == NULL) {
     errno = EINVAL;
@@ -509,7 +508,8 @@ short marpaWrapperRecognizer_progressLogb(marpaWrapperRecognizer_t *marpaWrapper
 /****************************************************************************/
 {
   const static char funcs[] = "marpaWrapperRecognizer_progressLogb";
-  size_t            i, ix;
+  size_t            i;
+  int               ix;
   genericLogger_t  *genericLoggerp = NULL;
   int               ruleLengthi;
   Marpa_Symbol_ID   lhsi, rhsi;

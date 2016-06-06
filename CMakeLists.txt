@@ -57,13 +57,6 @@ ADD_DEFINITIONS("-DMARPA_LIB_MICRO_VERSION=MARPA_MICRO_VERSION")
 ADD_DEFINITIONS("-DMARPA_LIB_MINOR_VERSION=MARPA_MINOR_VERSION")
 ADD_DEFINITIONS(-DMARPAWRAPPER_VERSION="${MARPAWRAPPER_VERSION}")
 
-# ---------
-# Set paths
-# ---------
-SET (CMAKE_MODULE_PATH              ${PROJECT_SOURCE_DIR}/cmake)          # General module search path
-SET (INCLUDE_OUTPUT_PATH            ${PROJECT_SOURCE_DIR}/output/include) # General include output path
-SET (LIBRARY_OUTPUT_PATH            ${PROJECT_SOURCE_DIR}/output/lib)     # General library output path
-
 #############################
 # Dependencies
 #############################
@@ -81,10 +74,6 @@ ENDIF ()
 # genericStack: required for test
 # -----------------------------------
 INCLUDE(CheckIncludeFile)
-IF (GENERICSTACK_ROOT_DIR)
-  SET (CMAKE_REQUIRED_INCLUDES "${GENERICSTACK_ROOT_DIR}/include")
-ENDIF (GENERICSTACK_ROOT_DIR)
-
 CHECK_INCLUDE_FILE("genericStack.h" HAVE_GENERICSTACK_H)
 IF (NOT HAVE_GENERICSTACK_H)
     MESSAGE (STATUS "genericStack must be detected for tests")
@@ -146,6 +135,7 @@ INCLUDE_DIRECTORIES (
   "${INCLUDE_OUTPUT_PATH}"                             # Include path for generated files
   "${PROJECT_SOURCE_DIR}/include"                      # Include path for the other headers
   "${GENERICLOGGER_INCLUDE_DIRS}"                      # Include path for genericLogger (external - required)
+  "${GENERICSTACK_ROOT_DIR}/include"                   # Include path for genericStack (external - optional)
   )
 TARGET_LINK_LIBRARIES (marpaWrapper "${GENERICLOGGER_LINK_FLAGS}")
 SET_TARGET_PROPERTIES (marpaWrapper
