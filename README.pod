@@ -1,0 +1,110 @@
+=for html <a href="https://travis-ci.org/jddurand/c-marpaWrapper"><img src="https://travis-ci.org/jddurand/c-marpaWrapper.svg?branch=master" alt="Travis CI build status" height="18"></a> <a href="https://badge.fury.io/gh/jddurand%2Fc-marpaWrapper"><img src="https://badge.fury.io/gh/jddurand%2Fc-marpaWrapper.svg" alt="GitHub version" height="18"></a> <a href="http://opensource.org/licenses/MIT" rel="nofollow noreferrer"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License MIT" height="18"></a>
+
+=head1 NAME
+
+marpaWrapper - alternate interface to libmarpa
+
+=head1 DESCRIPTION
+
+marpaWrapper is a thin interface on top of L<libmarpa|https://jeffreykegler.github.io/Marpa-web-site/libmarpa.html>. Alike the original, there are three explicit namespaces: the grammar, the recognizer and the value.
+
+=head1 SYNOPSIS
+
+  #include <marpaWrapper.h>
+
+=head1 GRAMMAR METHODS
+
+=head2 marpaWrapperGrammar_newp
+
+  typedef struct marpaWrapperGrammarOption {
+    genericLogger_t *genericLoggerp;             /* Default: NULL.                                      */
+    short            warningIsErrorb;            /* Default: 0. Have precedence over warningIsIgnoredb  */
+    short            warningIsIgnoredb;          /* Default: 0.                                         */
+  } marpaWrapperGrammarOption_t;
+
+  marpaWrapperGrammar_t *marpaWrapperGrammar_newp(marpaWrapperGrammarOption_t *marpaWrapperGrammarOptionp)
+
+Instanciate a grammar wrapper, and takes an eventual pointer to a C<marpaWrapperGrammarOption_t> structure describing grammar options. This structure contains the following members:
+
+=over
+
+=item genericLoggerp
+
+An eventual generic logger. If NULL, the grammar will never log.
+
+=item warningIsErrorb
+
+A flag saying that any grammar warning should be treated as an error. Any true value enable this flag. Only 0 can disable it. It has precedence over the next member:
+
+=item warningIsIgnoredb
+
+A flag saying that any grammar warning should be ignored. Any true value enable this flag. Only 0 can disable it.
+
+=back
+
+C<NULL> is returned in case of failure.
+
+=head2 marpaWrapperGrammar_newSymboli
+
+  typedef enum marpaWrapperGrammarEventType {
+    MARPAWRAPPERGRAMMAR_EVENTTYPE_NONE       = 0x00,
+    MARPAWRAPPERGRAMMAR_EVENTTYPE_COMPLETION = 0x01,
+    MARPAWRAPPERGRAMMAR_EVENTTYPE_NULLED     = 0x02,
+    MARPAWRAPPERGRAMMAR_EVENTTYPE_PREDICTION = 0x04,
+  } marpaWrapperGrammarEventType_t;
+
+  typedef struct marpaWrapperGrammarSymbolOption {
+    short  terminalb;             /* Default: 0. Eventually force symbol to be terminal         */
+    short  startb;                /* Default: 0. Eventually force symbol to be the start symbol */
+    int    eventSeti;             /* Default: MARPAWRAPPERGRAMMAR_EVENTTYPE_NONE.               */
+  } marpaWrapperGrammarSymbolOption_t;
+
+  marpaWrapperGrammar_newSymboli(marpaWrapperGrammar_t *marpaWrapperGrammarp, marpaWrapperGrammarSymbolOption_t *marpaWrapperGrammarSymbolOptionp)
+
+Creates a new symbol. Takes an eventual pointer to a C<marpaWrapperGrammarSymbolOption_t> structure describing symbol options. Such structure contain:
+
+=over
+
+=item terminalb
+
+If this is a true value, it forces the grammar to treat this symbol as a terminal.
+
+=item startb
+
+If this is a true value, it forces the grammar to treat this symbol as the start symbol. Default is to take the very first symbol created as the starting point.
+
+=item eventSeti
+
+A bitwise mask of the following constant values:
+
+=over
+
+=item MARPAWRAPPERGRAMMAR_EVENTTYPE_COMPLETION
+
+This symbol can generate a completed event.
+
+=item MARPAWRAPPERGRAMMAR_EVENTTYPE_NULLED
+
+This symbol can generate a nulling event.
+
+=item MARPAWRAPPERGRAMMAR_EVENTTYPE_PREDICTION
+
+This symbol can generate a predicted event.
+
+=back
+
+A false value is equivalent to MARPAWRAPPERGRAMMAR_EVENTTYPE_NONE, i.e. no event set on this symbol at creation time.
+
+A positive integer is returned on success, -1 on failure. End-user can profit from the fact that the returned number always start at 0 for the very first symbol, and increases by one at every new symbol.
+
+The macro C<MARPAWRAPPERGRAMMAR_NEWSYMBOL(marpaWrapperGrammarp)> exist for convenience, and is stricly equivalent to the call C<marpaWrapperGrammar_newSymboli((marpaWrapperGrammarp), NULL)>.
+
+=back
+
+=head1 RECOGNIZER METHODS
+
+=head1 VALUES METHODS
+
+=head2 SEE ALSO
+
+L<libmarpa|https://jeffreykegler.github.io/Marpa-web-site/libmarpa.html>, L<genericLogger|https://github.com/jddurand/c-genericLogger>, L<genericStack|https://github.com/jddurand/c-genericStack>
