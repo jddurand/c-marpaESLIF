@@ -15,7 +15,7 @@ static marpaWrapperRecognizerOption_t marpaWrapperRecognizerOptionDefault = {
   0        /* latmb            */
 };
 
-static C_INLINE int alternativeCmpByLengthi(const void *p1, const void *p2);
+static inline int alternativeCmpByLengthi(const void *p1, const void *p2);
 
 /****************************************************************************/
 marpaWrapperRecognizer_t *marpaWrapperRecognizer_newp(marpaWrapperGrammar_t *marpaWrapperGrammarp, marpaWrapperRecognizerOption_t *marpaWrapperRecognizerOptionp)
@@ -662,7 +662,7 @@ void marpaWrapperRecognizer_freev(marpaWrapperRecognizer_t *marpaWrapperRecogniz
 }
 
 /****************************************************************************/
-static C_INLINE int alternativeCmpByLengthi(const void *p1, const void *p2)
+static inline int alternativeCmpByLengthi(const void *p1, const void *p2)
 /****************************************************************************/
 {
   marpaWrapperRecognizerAlternative_t *a1p = (marpaWrapperRecognizerAlternative_t *) p1;
