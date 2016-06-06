@@ -31,7 +31,7 @@ static marpaWrapperGrammarRuleOption_t marpaWrapperGrammarRuleOptionDefault = {
 };
 
 #define MARPAWRAPPERGRAMMAREVENT_WEIGHT(eventType) ((eventType) == MARPAWRAPPERGRAMMAR_EVENT_COMPLETED) ? -1 : (((eventType) == MARPAWRAPPERGRAMMAR_EVENT_NULLED) ? 0 : 1)
-static C_INLINE int _marpaWrapperGrammar_cmpi(const void *event1p, const void *event2p);
+static inline int _marpaWrapperGrammar_cmpi(const void *event1p, const void *event2p);
 
 /****************************************************************************/
 marpaWrapperGrammar_t *marpaWrapperGrammar_newp(marpaWrapperGrammarOption_t *marpaWrapperGrammarOptionp)
@@ -669,7 +669,7 @@ short marpaWrapperGrammar_eventb(marpaWrapperGrammar_t *marpaWrapperGrammarp, si
 }
 
 /****************************************************************************/
-static C_INLINE int _marpaWrapperGrammar_cmpi(const void *event1p, const void *event2p)
+static inline int _marpaWrapperGrammar_cmpi(const void *event1p, const void *event2p)
 /****************************************************************************/
 {
   int w1i = MARPAWRAPPERGRAMMAREVENT_WEIGHT(((marpaWrapperGrammarEvent_t *) event1p)->eventType);
