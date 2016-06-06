@@ -182,18 +182,33 @@ IF (HAVE_GENERICSTACK_H)
   # -----
   ENABLE_TESTING()
 
-  ADD_EXECUTABLE        (marpaWrapperGrammarTester EXCLUDE_FROM_ALL test/marpaWrapper/grammar.c)
+  ADD_EXECUTABLE        (marpaWrapperTester EXCLUDE_FROM_ALL test/marpaWrapperTester.c)
   #
   # Painful but putting the binaries produced with dynamic linking in the same directory as the
   # dynamic libraries is the only way to make sure the OS will always see the dynamic library
   # at runtime, REGARDLESS of the OS (we are thinking to Windows and Visual Studio for instance).
   # and since we must do that for the dynamic test, we do it as well for any runtime thingy, just for coherency.
   #
-  SET_TARGET_PROPERTIES (marpaWrapperGrammarTester       PROPERTIES LINKER_LANGUAGE C RUNTIME_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH})
-  TARGET_LINK_LIBRARIES (marpaWrapperGrammarTester       marpaWrapper)
+  SET_TARGET_PROPERTIES (marpaWrapperTester       PROPERTIES LINKER_LANGUAGE C RUNTIME_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH})
+  TARGET_LINK_LIBRARIES (marpaWrapperTester       marpaWrapper)
 
   ADD_TEST              (NAME marpaWrapperTest
-    COMMAND marpaWrapperGrammarTester
+    COMMAND marpaWrapperTester
     WORKING_DIRECTORY ${LIBRARY_OUTPUT_PATH})
-  ADD_CUSTOM_TARGET     (check COMMAND ${CMAKE_CTEST_COMMAND} DEPENDS marpaWrapperGrammarTester)
+  ADD_CUSTOM_TARGET     (check COMMAND ${CMAKE_CTEST_COMMAND} DEPENDS marpaWrapperTester)
 ENDIF (HAVE_GENERICSTACK_H)
+
+# -------
+# Install
+# -------
+INSTALL (TARGETS marpaWrapper ARCHIVE DESTINATION lib LIBRARY DESTINATION lib RUNTIME DESTINATION bin COMPONENT libraries)
+INSTALL (FILES ${INCLUDE_OUTPUT_PATH}/marpaWrapper/export.h DESTINATION include/marpaWrapper)
+FILE (GLOB include_marpa_src "include/marpaWrapper/*.h")
+INSTALL (FILES ${include_marpa_src} DESTINATION include)
+INSTALL (FILES include/marpaWrapper.h DESTINATION include)
+
+IF (UNIX)
+  INCLUDE (Pod2Man)
+  ADD_MANPAGE_TARGET()
+  POD2MAN(README.pod "MARPAWRAPPER" "3" "${MARPAWRAPPER_VERSION}")
+ENDIF (UNIX)
