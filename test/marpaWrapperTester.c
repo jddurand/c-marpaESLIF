@@ -54,9 +54,6 @@ int main(int argc, char **argv) {
 								  0 /* nullb */
   };
 
-  marpaWrapperGrammarSymbolOption_t marpaWrapperGrammarSymbolTerminalOption    = { 1 /* terminal */, 0 /* start */, MARPAWRAPPERGRAMMAR_EVENTTYPE_PREDICTION };
-  marpaWrapperGrammarSymbolOption_t marpaWrapperGrammarSymbolNonTerminalOption = { 0 /* terminal */, 0 /* start */, MARPAWRAPPERGRAMMAR_EVENTTYPE_PREDICTION };
-
   GENERICSTACK_NEW(valueContext.inputStackp);
   if (valueContext.inputStackp == NULL) {
     perror("GENERICSTACK_NEW");
@@ -70,10 +67,10 @@ int main(int argc, char **argv) {
 
   marpaWrapperGrammarp = marpaWrapperGrammar_newp(&marpaWrapperGrammarOption);
   if ( /* S (start symbol automatically), E, op, number */
-      ((symbolip[     S] = marpaWrapperGrammar_newSymboli(marpaWrapperGrammarp, &marpaWrapperGrammarSymbolNonTerminalOption)) < 0) ||
-      ((symbolip[     E] = marpaWrapperGrammar_newSymboli(marpaWrapperGrammarp, &marpaWrapperGrammarSymbolNonTerminalOption)) < 0) ||
-      ((symbolip[    op] = marpaWrapperGrammar_newSymboli(marpaWrapperGrammarp, &marpaWrapperGrammarSymbolNonTerminalOption)) < 0) ||
-      ((symbolip[number] = marpaWrapperGrammar_newSymboli(marpaWrapperGrammarp, &marpaWrapperGrammarSymbolNonTerminalOption)) < 0) ||
+      ((symbolip[     S] = MARPAWRAPPERGRAMMAR_NEWSYMBOL(marpaWrapperGrammarp)) < 0) ||
+      ((symbolip[     E] = MARPAWRAPPERGRAMMAR_NEWSYMBOL(marpaWrapperGrammarp)) < 0) ||
+      ((symbolip[    op] = MARPAWRAPPERGRAMMAR_NEWSYMBOL(marpaWrapperGrammarp)) < 0) ||
+      ((symbolip[number] = MARPAWRAPPERGRAMMAR_NEWSYMBOL(marpaWrapperGrammarp)) < 0) ||
       /* S ::= E      */
       /* E ::= E op E */
       /* E ::= number */
