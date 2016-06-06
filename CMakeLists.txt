@@ -67,7 +67,7 @@ EXECUTE_PROCESS(COMMAND "${CMAKE_COMMAND}" -E make_directory "${3RDPARTY_OUTPUT_
 # -----------------------------------
 FIND_PACKAGE (genericLogger)
 IF (NOT GENERICLOGGER_FOUND)
-    MESSAGE (_ERROR "genericLogger must be detected")
+    MESSAGE (FATAL_ERROR "genericLogger must be detected")
 ENDIF ()
 
 # -----------------------------------
