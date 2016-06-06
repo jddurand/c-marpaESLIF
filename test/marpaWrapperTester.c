@@ -37,7 +37,7 @@ int main(int argc, char **argv) {
   int                           *symbolArrayp = NULL;
   size_t                         neventl;
   size_t                         nsymboll;
-  int                            i;
+  size_t                         i;
   valueContext_t                 valueContext = { symbolip, ruleip, NULL, NULL, GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_TRACE) };
   
   marpaWrapperGrammarOption_t    marpaWrapperGrammarOption    = { GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_TRACE),
