@@ -216,6 +216,180 @@ Destructor of the grammar wrapper pointed by C<marpaWrapperGrammarp>.
 
 =head1 RECOGNIZER METHODS
 
+There is one notion to know about in the recognizer: it has an internal I<position>, that is called below an I<Earley Set Id>: initially 0, every completion of alternatives advances that position. This notion exposes some internals of the wrapped L<libmarpa|https://jeffreykegler.github.io/Marpa-web-site/libmarpa.html>, that is an L<Earley Parser|https://en.wikipedia.org/wiki/Earley_parser>.
+
+=head2 marpaWrapperRecognizer_newp
+
+  typedef struct marpaWrapperRecognizerOption {
+    genericLogger_t *genericLoggerp;             /* Default: NULL. */
+    short            latmb;                      /* Default: 0.    */
+  } marpaWrapperRecognizerOption_t;
+
+   marpaWrapperRecognizer_t *marpaWrapperRecognizer_newp(marpaWrapperGrammar_t *marpaWrapperGrammarp,
+                                                         marpaWrapperRecognizerOption_t *marpaWrapperRecognizerOptionp);
+
+Instanciate a recognizer wrapper, using a grammar pointer that must be precomputed, and takes an eventual pointer to a C<marpaWrapperRecognizerOption_t> structure describing recognizer options. This structure contains the following members:
+
+=over
+
+=item genericLoggerp
+
+An eventual generic logger. If NULL, the recognizer will never log.
+
+=item latmb
+
+If a true value, all alternatives will be filtered to only expected symbols and only the longests of them will be pushed.
+
+=back
+
+C<NULL> is returned in case of failure.
+
+=head2 marpaWrapperRecognizer_alternativeb
+
+  short marpaWrapperRecognizer_alternativeb(marpaWrapperRecognizer_t *marpaWrapperRecognizerp,
+                                            int symboli,
+                                            int valuei,
+                                            int lengthi)
+
+Pushes symbol number C<symboli> as an alternative, with a value C<valuei> that must be a positive integer (up to the end-user to associate this to something else - typically using C<valuei> as an index in an array of I<user-only-knows> other values), and a length C<lengthi> that must also be a positive integer.
+
+Returns 1 on success, 0 on failure.
+
+=head2 marpaWrapperRecognizer_completeb
+
+  short marpaWrapperRecognizer_completeb(marpaWrapperRecognizer_t *marpaWrapperRecognizerp)
+
+Ends an alternative serie. Returns 1 on success, 0 on failure.
+
+=head2 marpaWrapperRecognizer_readb
+
+  short marpaWrapperRecognizer_readb(marpaWrapperRecognizer_t *marpaWrapperRecognizerp,
+                                     int symboli,
+                                     int valuei,
+                                     int lengthi)
+
+Convenient method that is combining calls to C<marpaWrapperRecognizer_alternativeb> and C<marpaWrapperRecognizer_completeb> on a single symbol, useful when the end-user knows there is only one alternative.
+
+Returns 1 on success, 0 on failure.
+
+=head2 marpaWrapperRecognizer_event_onoffb
+
+  short marpaWrapperRecognizer_event_onoffb(marpaWrapperRecognizer_t *marpaWrapperRecognizerp,
+                                            int symboli,
+                                            marpaWrapperGrammarEventType_t eventSeti,
+                                            int onoffb);
+
+Sets on or off an event on symbol number C<symboli>, using a bit-wise C<eventSeti>, and a flag C<onoffb>. Any true value for C<onoffb> is interpreted as event being set, a false value (i.e. 0) meaning the event is unset. The parameter C<eventSeti> has the same meaning as when creating a symbol, i.e. it is a logical I<OR> between:
+
+A bitwise mask of the following constant values:
+
+=over
+
+=item MARPAWRAPPERGRAMMAR_EVENTTYPE_COMPLETION
+
+This symbol can generate a completed event.
+
+=item MARPAWRAPPERGRAMMAR_EVENTTYPE_NULLED
+
+This symbol can generate a nulling event.
+
+=item MARPAWRAPPERGRAMMAR_EVENTTYPE_PREDICTION
+
+This symbol can generate a predicted event.
+
+=back
+
+Returns 1 on success, 0 on failure.
+
+=head2 marpaWrapperRecognizer_expectedb
+
+  short marpaWrapperRecognizer_expectedb(marpaWrapperRecognizer_t *marpaWrapperRecognizerp,
+                                         size_t *nSymbollp,
+                                         int **symbolArraypp)
+
+Gets the list of expected symbols, the number of them being stored in C<*nSymbollp> and their identifier in the C<*symbolArraypp> array. End-user must not free the array, it is owned by the recognizer wrapper.
+
+Returns 1 on success, 0 on failure.
+
+=head2 marpaWrapperRecognizer_progressb
+
+  typedef struct marpaWrapperRecognizerProgress {
+    int earleySetIdi;
+    int earleySetOrigIdi;
+    int rulei;
+    int positioni;
+  } marpaWrapperRecognizerProgress_t;
+
+  short marpaWrapperRecognizer_progressb(marpaWrapperRecognizer_t *marpaWrapperRecognizerp,
+                                         int starti,
+                                         int lengthi,
+                                         size_t *nProgresslp,
+                                         marpaWrapperRecognizerProgress_t **progresspp)
+
+Given an I<recognizer position set> C<starti>, and C<lengthi> beyond, this method returns C<*nProgresslp> progress lines, each of them being indexed in the array C<*progresspp>. C<starti> follow the perl's L<splice|http://perldoc.perl.org/functions/splice.html> method conventions, i.e.: if C<starti> is negative, start that far from the end of all positions. Every progress line is a C<marpaWrapperRecognizerProgress_t> structure that contain:
+
+=over
+
+=item earleySetIdi
+
+Current I<earley position set>
+
+=item earleySetOrigIdi
+
+Original I<earley position set>
+
+=item rulei
+
+Rule identifier, as returned by C<marpaWrapperGrammar_newRulei>, C<marpaWrapperGrammar_newRuleExti> or C<marpaWrapperGrammar_newSequenceExti>
+
+=item positioni
+
+Position inside C<rulei>, where a value C<-1> means rule completion.
+
+=back
+
+Returns 1 on success, 0 on failure.
+
+=head2 marpaWrapperRecognizer_progressLogb
+
+  typedef char *(symbolDescriptionCallback_t)(void *userDatavp, int symboli);
+
+  marpaWrapperRecognizer_progressLogb(marpaWrapperRecognizer_t *marpaWrapperRecognizerp,
+                                      int starti, int lengthi,
+                                      genericLoggerLevel_t logleveli,
+                                      void *userDatavp,
+                                      symbolDescriptionCallback_t symbolDescriptionCallbackp)
+
+Convenient method that is using the eventual generic logger specified at object instance phase: if the generic logger is set, then this method will call it with the logging level C<logleveli>, using a symbol description returned by callback C<symbolDescriptionCallbackp>. C<userDatavp> is an opaque pointer, typically used to propagate a userspace context, the callback will be used for every symbol identifier C<symboli>. If no callback, or if the callback returns C<NULL>, the hardcoded symbol description C<?> is used.
+
+Every call to the generic logger will have this format: C<[%c%d@%d..%d] %s> where first C<%c> character is:
+
+=over
+
+=item 'F'
+
+Rule is finished
+
+=item 'R'
+
+Rule is being recognized
+
+=item 'P'
+
+Rule is being predicted
+
+=back
+
+The second item C<%d> is the current rule identifier. Then C<%d..%d> is the I<earleme identifier> corresponding to C<earleySetOrigIdi> followed by the I<earleme identifier> corresponding to C<earleySetIdi>. The rest is the rule description: there are as many calls to the logger as there are RHS. Position will show as the C<.> dot character. Please note that in the usual I<token-stream> model, the I<earleme identifier> is the same as the I<earley set identifier>.
+
+Returns 1 on success, 0 on failure.
+
+=head2 marpaWrapperRecognizer_freev
+
+  void marpaWrapperRecognizer_freev(marpaWrapperRecognizer_t *marpaWrapperRecognizerp)
+
+Destructor of the recognizer wrapper pointed by C<marpaWrapperRecognizerp>.
+
 =head1 VALUES METHODS
 
 =head2 SEE ALSO
