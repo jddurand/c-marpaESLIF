@@ -392,6 +392,115 @@ Destructor of the recognizer wrapper pointed by C<marpaWrapperRecognizerp>.
 
 =head1 VALUES METHODS
 
-=head2 SEE ALSO
+=head2 marpaWrapperValue_newp
+
+  typedef struct marpaWrapperValueOption {
+    genericLogger_t                   *genericLoggerp;             /* Default: NULL */
+    short                              highRankOnlyb;              /* Default: 1 */
+    short                              orderByRankb;               /* Default: 1 */
+    short                              ambiguousb;                 /* Default: 0 */
+    short                              nullb;                      /* Default: 0 */
+  } marpaWrapperValueOption_t;
+
+  marpaWrapperValue_t *marpaWrapperValue_newp(marpaWrapperRecognizer_t *marpaWrapperRecognizerp,
+                                              marpaWrapperValueOption_t *marpaWrapperValueOptionp)
+
+Instanciate a value wrapper, and takes an eventual pointer to a C<marpaWrapperValueOption_t> structure describing value options. This structure contains the following members:
+
+=over
+
+=item genericLoggerp
+
+An eventual generic logger. If NULL, the grammar will never log.
+
+=item highRankOnlyb
+
+Only rules with highest rank will be considered.
+
+=item orderByRankb
+
+Different parse tree values are returned ordered by rank.
+
+=item ambiguousb
+
+Allows a parse to be ambiguous.
+
+=item nullb
+
+Allows a parse to be undefined.
+
+=back
+
+C<NULL> is returned in case of failure.
+
+=head2 marpaWrapperValue_valueb
+
+  typedef short (*marpaWrapperValueRuleCallback_t)(void *userDatavp, int rulei, int arg0i, int argni, int resulti);
+  typedef short (*marpaWrapperValueSymbolCallback_t)(void *userDatavp, int symboli, int argi, int resulti);
+  typedef short (*marpaWrapperValueNullingCallback_t)(void *userDatavp, int symboli, int resulti);
+
+  short marpaWrapperValue_valueb(marpaWrapperValue_t               *marpaWrapperValuep,
+                                 void                              *userDatavp,
+                                 marpaWrapperValueRuleCallback_t    ruleCallbackp,
+                                 marpaWrapperValueSymbolCallback_t  symbolCallbackp,
+                                 marpaWrapperValueNullingCallback_t nullingCallbackp)
+
+Get the current parse tree value. It is recommended to set the three different callbacks to valid function pointers. Every callback will be called with C<userDatavp> as first argument, typically used to propagate user context, and with C<resulti> as last argument, which is the destination indice in a I<output> generic stack.
+
+The C<ruleCallbackp> callback also has:
+
+=over
+
+=item rulei
+
+Rule identifier
+
+=item arg0i
+
+low indice in the I<output> generic stack, used as input for this rule
+
+=item argni
+
+high indice in the I<output> generic stack, used as input for this rule
+
+=back
+
+The C<symbolCallbackp> callback has:
+
+=over
+
+=item symboli
+
+Symbol identifier
+
+=item argi
+
+indice in the I<input> generic stack
+
+=back
+
+The C<nullingCallbackp> callback has:
+
+=over
+
+=item symboli
+
+Symbol identifier
+
+=back
+
+A typical portable implemententation is using a generic stack that distinguishes between user input (i.e. the lexing phase) and parse tree values: user input has its own generic stack, and a parse tree value have its own as well. In such implemention, only the symbol callback should take data from the I<input> generic stack (at indice C<argi>>, and put result in the I<output>, i.e. the parse tree value, generic stack (at indice C<resulti>). All the other methods deal only with the I<output> generic stack.
+
+A typical usage is:
+
+  while (marpaWrapperValue_valueb(marpaWrapperValuep, ...) > 0) {
+    /* Output is in indice 0 of output stack */
+  }
+
+An example of generic stack with indice is the L<genericStack|https://github.com/jddurand/c-genericStack> package, used in the test-suite of marpaWrapper.
+
+Returns -1 on failure, 0 when there is no more parse value, and 1 on success.
+
+=head1 SEE ALSO
 
 L<libmarpa|https://jeffreykegler.github.io/Marpa-web-site/libmarpa.html>, L<genericLogger|https://github.com/jddurand/c-genericLogger>, L<genericStack|https://github.com/jddurand/c-genericStack>
