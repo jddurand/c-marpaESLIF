@@ -59,7 +59,8 @@ C<NULL> is returned in case of failure.
     int    eventSeti;             /* Default: MARPAWRAPPERGRAMMAR_EVENTTYPE_NONE.               */
   } marpaWrapperGrammarSymbolOption_t;
 
-  marpaWrapperGrammar_newSymboli(marpaWrapperGrammar_t *marpaWrapperGrammarp, marpaWrapperGrammarSymbolOption_t *marpaWrapperGrammarSymbolOptionp)
+  marpaWrapperGrammar_newSymboli(marpaWrapperGrammar_t *marpaWrapperGrammarp,
+                                 marpaWrapperGrammarSymbolOption_t *marpaWrapperGrammarSymbolOptionp)
 
 Creates a new symbol. Takes an eventual pointer to a C<marpaWrapperGrammarSymbolOption_t> structure describing symbol options. Such structure contain:
 
@@ -100,6 +101,54 @@ A positive integer is returned on success, -1 on failure. End-user can profit fr
 The macro C<MARPAWRAPPERGRAMMAR_NEWSYMBOL(marpaWrapperGrammarp)> exist for convenience, and is stricly equivalent to the call C<marpaWrapperGrammar_newSymboli((marpaWrapperGrammarp), NULL)>.
 
 =back
+
+=head2 marpaWrapperGrammar_newRulei
+
+  typedef struct marpaWrapperGrammarRuleOption {
+    int    ranki;          /* Default: 0. Rank                                        */
+    short  nullRanksHighb; /* Default: 0. Null variant pattern                        */
+    short  sequenceb;      /* Default: 0. Sequence ?                                  */
+    int    separatorSymboli; /* Default: -1. Eventual separator symbol                */
+    short  properb;        /* Default: 0. Proper flag                                 */
+    int    minimumi;       /* Default: 0. Mininimum - must be 0 or 1                  */
+  } marpaWrapperGrammarRuleOption_t;
+
+  int marpaWrapperGrammar_newRulei(marpaWrapperGrammar_t *marpaWrapperGrammarp,
+                                   marpaWrapperGrammarRuleOption_t *marpaWrapperGrammarRuleOptionp,
+                                   int lhsSymboli,
+                                   size_t rhsSymboll, int *rhsSymbolip)
+
+Creates a new rule, with LHS symbol C<lhsSymboli>, and C<rhsSymboll> symbols, stored in the array C<rhsSymbolip>. The pointer to an eventual C<marpaWrapperGrammarRuleOption_t> structure give the following options:
+
+=over
+
+=item ranki
+
+Rule priority.
+
+=item nullRanksHighb
+
+Null variants pattern. If 0, nulled symbols rank low, else nulled symbols rank high.
+
+=item sequenceb
+
+If a true value, identifies this rule as being a sequence. Then there must be one RHS symbol, and the following next members take effect:
+
+=item separatorSymboli
+
+If positive or zero, this is the symbol Id of a separator.
+
+=item properb
+
+When it is a true value, says that the separation is proper, i.e. trailing separator is not allowed.
+
+=item minimumi
+
+When it is 0 or '*', says the sequence repeats at least zero time. If 1 or '+', says it repeat at least one time.
+
+=back
+
+A positive integer is returned on success, -1 on failure. End-user can profit from the fact that the returned number always start at 0 for the very first rule, and increases by one at every new symbol.
 
 =head1 RECOGNIZER METHODS
 
