@@ -102,6 +102,12 @@ The macro C<MARPAWRAPPERGRAMMAR_NEWSYMBOL(marpaWrapperGrammarp)> exist for conve
 
 =back
 
+=head2 marpaWrapperGrammar_newSymbolExti
+
+  int marpaWrapperGrammar_newSymbolExti(marpaWrapperGrammar_t *marpaWrapperGrammarp, short terminalb, short startb, int eventSeti)
+
+Alternate way to create a symbol, where all the options are explicitely given as parameters. C<terminalb>, C<startb> and C<eventSeti> have the same meaning as in the C<marpaWrapperGrammarSymbolOption_t> structure.
+
 =head2 marpaWrapperGrammar_newRulei
 
   typedef struct marpaWrapperGrammarRuleOption {
@@ -149,6 +155,45 @@ When it is 0 or '*', says the sequence repeats at least zero time. If 1 or '+', 
 =back
 
 A positive integer is returned on success, -1 on failure. End-user can profit from the fact that the returned number always start at 0 for the very first rule, and increases by one at every new symbol.
+
+=head2 marpaWrapperGrammar_newRuleExti
+
+  int marpaWrapperGrammar_newRuleExti(marpaWrapperGrammar_t *marpaWrapperGrammarp, int ranki, short nullRanksHighb, int lhsSymboli, ...)
+
+Alternate way to create a rule that is not sequence. The variadic parameter C<...> must end with -1 to identify the end of the RHS list.
+
+The macro C<MARPAWRAPPERGRAMMAR_NEWRULE(marpaWrapperGrammarp, lhsSymboli, ...)>, doing exactly this call, exist for convenience.
+
+=head2 marpaWrapperGrammar_newSequenceExti
+
+  int marpaWrapperGrammar_newSequenceExti(marpaWrapperGrammar_t *marpaWrapperGrammarp, int ranki, short nullRanksHighb, int lhsSymboli, int rhsSymboli, int minimumi, int separatorSymboli, short properb)
+
+Alternate way to create a sequence.
+
+The macro C<MARPAWRAPPERGRAMMAR_NEWSEQUENCE(marpaWrapperGrammarp, lhsSymboli, rhsSymboli, minimumi)>, exist for convenience, and is equivalent to calling C<marpaWrapperGrammar_newSequenceExti((marpaWrapperGrammarp), 0, 0, (lhsSymboli), (rhsSymboli), (minimumi), -1, 0)>.
+
+=head2 marpaWrapperGrammar_eventb
+
+  typedef struct marpaWrapperGrammarEvent {
+    enum {
+      MARPAWRAPPERGRAMMAR_EVENT_COMPLETED,
+      MARPAWRAPPERGRAMMAR_EVENT_NULLED,
+      MARPAWRAPPERGRAMMAR_EVENT_EXPECTED
+    } eventType;
+    int symboli;
+  } marpaWrapperGrammarEvent_t;
+
+  short marpaWrapperGrammar_eventb(marpaWrapperGrammar_t *marpaWrapperGrammarp, size_t *eventlp, marpaWrapperGrammarEvent_t **eventpp, short forceReloadb)
+
+Return the list of events. NUmber of events is stored in C<eventlp>, and C<eventpp> is the list itself. This list of owned by the grammar and must B<not> be freed by the caller. Events are alwasy pre-fetched whenever necessary, that is the C<forceReloadb> parameter should be 0 in all situations. Nevertheless, a true value for C<forceReloadb> is allowed.
+
+Returns 0 on failure, 1 on success.
+
+=head2 marpaWrapperGrammar_precomputeb
+
+  short marpaWrapperGrammar_precomputeb(marpaWrapperGrammar_t *marpaWrapperGrammarp)
+
+Compute the grammar. Return 0 on failure, 1 on success. Eventual events are automatically fetched.
 
 =head1 RECOGNIZER METHODS
 
