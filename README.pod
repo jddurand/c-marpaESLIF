@@ -222,7 +222,7 @@ There is one notion to know about in the recognizer: it has an internal I<positi
 
   typedef struct marpaWrapperRecognizerOption {
     genericLogger_t *genericLoggerp;             /* Default: NULL. */
-    short            latmb;                      /* Default: 0.    */
+    short            latmb;                      /* Default: 1.    */
   } marpaWrapperRecognizerOption_t;
 
    marpaWrapperRecognizer_t *marpaWrapperRecognizer_newp(marpaWrapperGrammar_t *marpaWrapperGrammarp,
@@ -238,7 +238,7 @@ An eventual generic logger. If NULL, the recognizer will never log.
 
 =item latmb
 
-If a true value, all alternatives will be filtered to only expected symbols and only the longests of them will be pushed.
+If a true value, all alternatives will be filtered to only expected symbols and only the longests of them will be pushed. latm stands for Longest Acceptable Token Match.
 
 =back
 
