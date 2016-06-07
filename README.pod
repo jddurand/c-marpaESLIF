@@ -501,6 +501,12 @@ An example of generic stack with indice is the L<genericStack|https://github.com
 
 Returns -1 on failure, 0 when there is no more parse value, and 1 on success.
 
+=head2 marpaWrapperValue_freev
+
+  void marpaWrapperValue_freev(marpaWrapperValue_t *marpaWrapperValuep)
+
+Destructor of the value wrapper pointed by C<marpaWrapperValuep>.
+
 =head1 SEE ALSO
 
 L<libmarpa|https://jeffreykegler.github.io/Marpa-web-site/libmarpa.html>, L<genericLogger|https://github.com/jddurand/c-genericLogger>, L<genericStack|https://github.com/jddurand/c-genericStack>
