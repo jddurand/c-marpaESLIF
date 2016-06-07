@@ -227,14 +227,11 @@ short marpaWrapperValue_valueb(marpaWrapperValue_t               *marpaWrapperVa
       nValueInputi = argLasti - argFirsti + 1;
       MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "Rule %d: Stack [%d..%d] -> Stack %d", (int) marpaRuleIdi, argFirsti, argLasti, argResulti);
 
-      if (ruleCallbackp == NULL) {
-	MARPAWRAPPER_ERROR(genericLoggerp, "A rule value callback is required");
-	goto err;
-      }
-
-      if (ruleCallbackp(userDatavp, (int) marpaRuleIdi, argFirsti, argLasti, argResulti) == 0) {
-	MARPAWRAPPER_ERRORF(genericLoggerp, "Rule No %d value callback failure", (int) marpaRuleIdi);
-	goto err;
+      if (ruleCallbackp != NULL) {
+	if (ruleCallbackp(userDatavp, (int) marpaRuleIdi, argFirsti, argLasti, argResulti) == 0) {
+	  MARPAWRAPPER_ERRORF(genericLoggerp, "Rule No %d value callback failure", (int) marpaRuleIdi);
+	  goto err;
+	}
       }
 
       break;
@@ -251,14 +248,11 @@ short marpaWrapperValue_valueb(marpaWrapperValue_t               *marpaWrapperVa
 
       MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "Symbol %d: Stack %d -> Stack %d", (int) marpaSymbolIdi, tokenValuei, argResulti);
 
-      if (symbolCallbackp == NULL) {
-	MARPAWRAPPER_ERROR(genericLoggerp, "A symbol value callback is required");
-	goto err;
-      }
-
-      if (symbolCallbackp(userDatavp, (int) marpaSymbolIdi, tokenValuei, argResulti) == 0) {
-	MARPAWRAPPER_ERRORF(genericLoggerp, "Symbol No %d value callback failure", (int) marpaSymbolIdi);
-	goto err;
+      if (symbolCallbackp != NULL) {
+	if (symbolCallbackp(userDatavp, (int) marpaSymbolIdi, tokenValuei, argResulti) == 0) {
+	  MARPAWRAPPER_ERRORF(genericLoggerp, "Symbol No %d value callback failure", (int) marpaSymbolIdi);
+	  goto err;
+	}
       }
 
       break;
@@ -272,14 +266,11 @@ short marpaWrapperValue_valueb(marpaWrapperValue_t               *marpaWrapperVa
 
       MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "Nulling symbol %d-> Stack %d", (int) marpaSymbolIdi, argResulti);
 
-      if (nullingCallbackp == NULL) {
-	MARPAWRAPPER_ERROR(genericLoggerp, "A nulling symbol value callback is required");
-	goto err;
-      }
-
-      if (nullingCallbackp(userDatavp, (int) marpaSymbolIdi, argResulti) == 0) {
-	MARPAWRAPPER_ERRORF(genericLoggerp, "Nulling symbol No %d value callback failure", (int) marpaSymbolIdi);
-	goto err;
+      if (nullingCallbackp != NULL) {
+	if (nullingCallbackp(userDatavp, (int) marpaSymbolIdi, argResulti) == 0) {
+	  MARPAWRAPPER_ERRORF(genericLoggerp, "Nulling symbol No %d value callback failure", (int) marpaSymbolIdi);
+	  goto err;
+	}
       }
 
       break;
