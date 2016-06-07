@@ -104,7 +104,10 @@ The macro C<MARPAWRAPPERGRAMMAR_NEWSYMBOL(marpaWrapperGrammarp)> exist for conve
 
 =head2 marpaWrapperGrammar_newSymbolExti
 
-  int marpaWrapperGrammar_newSymbolExti(marpaWrapperGrammar_t *marpaWrapperGrammarp, short terminalb, short startb, int eventSeti)
+  int marpaWrapperGrammar_newSymbolExti(marpaWrapperGrammar_t *marpaWrapperGrammarp,
+                                        short terminalb,
+                                        short startb,
+                                        int eventSeti)
 
 Alternate way to create a symbol, where all the options are explicitely given as parameters. C<terminalb>, C<startb> and C<eventSeti> have the same meaning as in the C<marpaWrapperGrammarSymbolOption_t> structure.
 
@@ -158,7 +161,10 @@ A positive integer is returned on success, -1 on failure. End-user can profit fr
 
 =head2 marpaWrapperGrammar_newRuleExti
 
-  int marpaWrapperGrammar_newRuleExti(marpaWrapperGrammar_t *marpaWrapperGrammarp, int ranki, short nullRanksHighb, int lhsSymboli, ...)
+  int marpaWrapperGrammar_newRuleExti(marpaWrapperGrammar_t *marpaWrapperGrammarp,
+                                      int ranki,
+                                      short nullRanksHighb,
+                                      int lhsSymboli, ...)
 
 Alternate way to create a rule that is not sequence. The variadic parameter C<...> must end with -1 to identify the end of the RHS list.
 
@@ -166,7 +172,14 @@ The macro C<MARPAWRAPPERGRAMMAR_NEWRULE(marpaWrapperGrammarp, lhsSymboli, ...)>,
 
 =head2 marpaWrapperGrammar_newSequenceExti
 
-  int marpaWrapperGrammar_newSequenceExti(marpaWrapperGrammar_t *marpaWrapperGrammarp, int ranki, short nullRanksHighb, int lhsSymboli, int rhsSymboli, int minimumi, int separatorSymboli, short properb)
+  int marpaWrapperGrammar_newSequenceExti(marpaWrapperGrammar_t *marpaWrapperGrammarp,
+                                          int ranki,
+                                          short nullRanksHighb,
+                                          int lhsSymboli,
+                                          int rhsSymboli,
+                                          int minimumi,
+                                          int separatorSymboli,
+                                          short properb)
 
 Alternate way to create a sequence.
 
