@@ -98,7 +98,7 @@ A false value is equivalent to MARPAWRAPPERGRAMMAR_EVENTTYPE_NONE, i.e. no event
 
 A positive integer is returned on success, -1 on failure. End-user can profit from the fact that the returned number always start at 0 for the very first symbol, and increases by one at every new symbol.
 
-The macro C<MARPAWRAPPERGRAMMAR_NEWSYMBOL(marpaWrapperGrammarp)> exist for convenience, and is stricly equivalent to the call C<marpaWrapperGrammar_newSymboli((marpaWrapperGrammarp), NULL)>.
+The macro C<MARPAWRAPPERGRAMMAR_NEWSYMBOL(marpaWrapperGrammarp)> exist for convenience, and is stricly equivalent to the call C<marpaWrapperGrammar_newSymboli(marpaWrapperGrammarp, NULL)>.
 
 =back
 
@@ -157,7 +157,7 @@ When it is 0 or '*', says the sequence repeats at least zero time. If 1 or '+', 
 
 =back
 
-A positive integer is returned on success, -1 on failure. End-user can profit from the fact that the returned number always start at 0 for the very first rule, and increases by one at every new symbol.
+A positive integer is returned on success, -1 on failure. End-user can profit from the fact that the returned number always start at 0 for the very first rule, and increases by one at every new rule.
 
 =head2 marpaWrapperGrammar_newRuleExti
 
@@ -168,7 +168,7 @@ A positive integer is returned on success, -1 on failure. End-user can profit fr
 
 Alternate way to create a rule that is not sequence. The variadic parameter C<...> must end with -1 to identify the end of the RHS list.
 
-The macro C<MARPAWRAPPERGRAMMAR_NEWRULE(marpaWrapperGrammarp, lhsSymboli, ...)>, doing exactly this call, exist for convenience.
+The macro C<MARPAWRAPPERGRAMMAR_NEWRULE(marpaWrapperGrammarp, lhsSymboli, ...)> exist for convenience, and is strictly equivalent to C<marpaWrapperGrammar_newRuleExti(marpaWrapperGrammarp, 0, 0, lhsSymboli, ...)>.
 
 =head2 marpaWrapperGrammar_newSequenceExti
 
@@ -183,7 +183,7 @@ The macro C<MARPAWRAPPERGRAMMAR_NEWRULE(marpaWrapperGrammarp, lhsSymboli, ...)>,
 
 Alternate way to create a sequence.
 
-The macro C<MARPAWRAPPERGRAMMAR_NEWSEQUENCE(marpaWrapperGrammarp, lhsSymboli, rhsSymboli, minimumi)>, exist for convenience, and is equivalent to calling C<marpaWrapperGrammar_newSequenceExti((marpaWrapperGrammarp), 0, 0, (lhsSymboli), (rhsSymboli), (minimumi), -1, 0)>.
+The macro C<MARPAWRAPPERGRAMMAR_NEWSEQUENCE(marpaWrapperGrammarp, lhsSymboli, rhsSymboli, minimumi)>, exist for convenience, and is equivalent to calling C<marpaWrapperGrammar_newSequenceExti(marpaWrapperGrammarp, 0, 0, lhsSymboli, rhsSymboli, minimumi, -1, 0)>.
 
 =head2 marpaWrapperGrammar_eventb
 
@@ -198,7 +198,7 @@ The macro C<MARPAWRAPPERGRAMMAR_NEWSEQUENCE(marpaWrapperGrammarp, lhsSymboli, rh
 
   short marpaWrapperGrammar_eventb(marpaWrapperGrammar_t *marpaWrapperGrammarp, size_t *eventlp, marpaWrapperGrammarEvent_t **eventpp, short forceReloadb)
 
-Return the list of events. NUmber of events is stored in C<eventlp>, and C<eventpp> is the list itself. This list of owned by the grammar and must B<not> be freed by the caller. Events are alwasy pre-fetched whenever necessary, that is the C<forceReloadb> parameter should be 0 in all situations. Nevertheless, a true value for C<forceReloadb> is allowed.
+Return the list of events. Number of events is stored in C<eventlp>, and C<eventpp> is the list itself. This list of owned by the grammar and must B<not> be freed by the caller. Events are always pre-fetched whenever necessary, that is the C<forceReloadb> parameter should be 0 in all situations. Nevertheless, a true value for C<forceReloadb> is allowed.
 
 Returns 0 on failure, 1 on success.
 
@@ -207,6 +207,12 @@ Returns 0 on failure, 1 on success.
   short marpaWrapperGrammar_precomputeb(marpaWrapperGrammar_t *marpaWrapperGrammarp)
 
 Compute the grammar. Return 0 on failure, 1 on success. Eventual events are automatically fetched.
+
+=head2 marpaWrapperGrammar_freev
+
+  void marpaWrapperGrammar_freev(marpaWrapperGrammar_t *marpaWrapperGrammarp)
+
+Destructor of the grammar wrapper pointed by C<marpaWrapperGrammarp>.
 
 =head1 RECOGNIZER METHODS
 
