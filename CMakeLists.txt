@@ -203,7 +203,7 @@ ENDIF (GENERICSTACK_FOUND)
 INSTALL (TARGETS marpaWrapper ARCHIVE DESTINATION lib LIBRARY DESTINATION lib RUNTIME DESTINATION bin COMPONENT libraries)
 INSTALL (FILES ${INCLUDE_OUTPUT_PATH}/marpaWrapper/export.h DESTINATION include/marpaWrapper)
 FILE (GLOB include_marpa_src "include/marpaWrapper/*.h")
-INSTALL (FILES ${include_marpa_src} DESTINATION include)
+INSTALL (FILES ${include_marpa_src} DESTINATION include/marpaWrapper)
 INSTALL (FILES include/marpaWrapper.h DESTINATION include)
 
 IF (UNIX)
