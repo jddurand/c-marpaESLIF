@@ -16,7 +16,7 @@ SET (CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 SET (MARPAWRAPPER_VERSION_MAJOR 1)
 SET (MARPAWRAPPER_VERSION_MINOR 0)
-SET (MARPAWRAPPER_VERSION_PATCH 1)
+SET (MARPAWRAPPER_VERSION_PATCH 2)
 SET (MARPAWRAPPER_VERSION "${MARPAWRAPPER_VERSION_MAJOR}.${MARPAWRAPPER_VERSION_MINOR}.${MARPAWRAPPER_VERSION_PATCH}")
 
 SET (CMAKE_MODULE_PATH              ${PROJECT_SOURCE_DIR}/cmake)           # General module search path
@@ -128,7 +128,7 @@ FILE (GLOB lib_marpa_src "${MARPA__R2_DIR}/cpan/engine/read_only/*.c")
 # ------------------
 # marpaWrapper library
 # -----------------
-FILE (GLOB lib_src ${lib_marpa_src} src/marpaWrapper/internal/*.c src/marpaWrapper/*.c)
+FILE (GLOB lib_src ${lib_marpa_src} src/internal/*.c src/*.c)
 ADD_LIBRARY (marpaWrapper SHARED ${lib_src})
 IF (GENERICSTACK_FOUND)
   INCLUDE_DIRECTORIES (

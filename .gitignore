@@ -54,3 +54,4 @@ ipch/
 # Our garbage
 *~
 output/
+*.gz

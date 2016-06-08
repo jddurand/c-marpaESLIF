@@ -58,6 +58,7 @@ extern const struct marpa_step_type_description_s marpa_step_type_description[];
     }                                                                   \
 } while (0)
 
+#ifndef MARPAWRAPPER_NTRACE
 #define MARPAWRAPPER_MARPA_STEP_TRACE(genericLoggerp, funcs, stepi) do { \
     Marpa_Step_Type marpaStepi = (Marpa_Step_Type) (stepi);		\
 									\
@@ -68,5 +69,8 @@ extern const struct marpa_step_type_description_s marpa_step_type_description[];
       MARPAWRAPPER_TRACEF((genericLoggerp), (funcs), "Unknown marpa step type %d", marpaStepi); \
     }                                                                   \
 } while (0)
+#else
+#define MARPAWRAPPER_MARPA_STEP_TRACE(genericLoggerp, funcs, stepi)
+#endif
 
 #endif /* MARPAWRAPPER_INTERNAL_LOGGING_H */
