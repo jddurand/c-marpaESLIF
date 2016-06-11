@@ -36,7 +36,8 @@ int main() {
   printf("\nNEW interface:\n");
   printf("-------------:\n\n");
   
-  GENERICSTACK_NEW_SIZED        (myStack, 100);
+  GENERICSTACK_NEW_SIZED(myStack, 100);
+  if (GENERICSTACK_ERROR(myStack)) { return 1; }
   
   printf("\nPUSH interface:\n");
   printf("--------------:\n\n");
@@ -46,19 +47,21 @@ int main() {
   printf("[ 2] float    : 30\n");   GENERICSTACK_PUSH_FLOAT (myStack, 30);
   printf("[ 3] short    : 40\n");   GENERICSTACK_PUSH_SHORT (myStack, 40);
   printf("[ 4] myStruct1: {%d}\n", myStruct1.i);
-  GENERICSTACK_PUSH_ANY   (myStack, &myStruct1, NULL, NULL);
+  GENERICSTACK_PUSH_ANY(myStack, &myStruct1, NULL, NULL);
+  if (GENERICSTACK_ERROR(myStack)) { return 1; }
   printf("[ 5] myStruct2: {%d,\"%s\"}\n", myStruct2.i, myStruct2.s);
-  GENERICSTACK_PUSH_ANY   (myStack, &myStruct2, myStruct2Clone, myStruct2Free);
+  GENERICSTACK_PUSH_ANY(myStack, &myStruct2, myStruct2Clone, myStruct2Free);
+  if (GENERICSTACK_ERROR(myStack)) { return 1; }
 
   myFunction1(-1, myStack, 999);
 
   printf("\nSET interface:\n");
   printf("-------------:\n\n");
   
-  printf("[10] float : 50\n"); GENERICSTACK_SET_FLOAT  (myStack, 50, 10);
+  printf("[10] float : 50\n"); GENERICSTACK_SET_FLOAT(myStack, 50, 10);
+  if (GENERICSTACK_ERROR(myStack)) { return 1; }
 
   myFunction2(-1, myStack, 999);
-
   myFunction3(-1, myStack, 999);
 
   return 0;
