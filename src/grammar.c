@@ -610,7 +610,7 @@ short marpaWrapperGrammar_eventb(marpaWrapperGrammar_t *marpaWrapperGrammarp, si
           }
           eventp = &(marpaWrapperGrammarp->eventArrayp[subscribedEventi]);
 
-          eventp->eventType = MARPAWRAPPERGRAMMAR_EVENT_COMPLETED;
+          eventp->eventType = (eventType == MARPA_EVENT_SYMBOL_COMPLETED) ? MARPAWRAPPERGRAMMAR_EVENT_COMPLETED : ((eventType == MARPA_EVENT_SYMBOL_NULLED) ? MARPAWRAPPERGRAMMAR_EVENT_NULLED : MARPAWRAPPERGRAMMAR_EVENT_EXPECTED);
           eventp->symboli   = marpaWrapperGrammarp->symbolArrayp[eventValuei].marpaSymbolIdi;
 
           marpaWrapperGrammarp->nEventl = ++subscribedEventi;
