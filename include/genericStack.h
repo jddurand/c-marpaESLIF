@@ -101,6 +101,7 @@ typedef struct genericStack {
   size_t size;
   size_t used;
   genericStackItem_t *items;
+  short  error;
 } genericStack_t;
 
 /* ====================================================================== */
@@ -109,16 +110,32 @@ typedef struct genericStack {
 #define GENERICSTACK_DECL(stackName) genericStack_t * stackName
 
 /* ====================================================================== */
+/* Error detection                                                        */
+/* ====================================================================== */
+#define GENERICSTACK_ERROR(stackName) ((stackName == NULL) || (stackName->error != 0))
+
+/* ====================================================================== */
 /* Size management, internal macro                                        */
 /* ====================================================================== */
 #define _GENERICSTACK_EXTEND(stackName, wantedSize) do {                \
     if (wantedSize > stackName->size) {                                 \
       size_t _i_for_extend;						\
-      stackName->items = (stackName->items != NULL) ? realloc(stackName->items, sizeof(genericStackItem_t) * wantedSize) : malloc(sizeof(genericStackItem_t) * wantedSize); \
-      for (_i_for_extend = stackName->size; _i_for_extend < wantedSize; _i_for_extend++) {	\
-	stackName->items[_i_for_extend].type = _GENERICSTACKITEMTYPE_NA; \
+      genericStackItem_t *_items = stackName->items;			\
+      _items = (_items != NULL) ?					\
+	realloc(_items, sizeof(genericStackItem_t) * wantedSize)	\
+	:								\
+	malloc(sizeof(genericStackItem_t) * wantedSize);		\
+      if (_items == NULL) {						\
+	stackName->error = 1;						\
+      } else {								\
+	for (_i_for_extend = stackName->size;				\
+	     _i_for_extend < wantedSize;				\
+	     _i_for_extend++) {						\
+	  _items[_i_for_extend].type = _GENERICSTACKITEMTYPE_NA;	\
+	}								\
+	stackName->items = _items;					\
+	stackName->size = wantedSize;					\
       }									\
-      stackName->size = wantedSize;                                     \
     }									\
   } while (0)
 
@@ -131,12 +148,15 @@ typedef struct genericStack {
       stackName->size = 0;						\
       stackName->used = 0;						\
       stackName->items = NULL;						\
+      stackName->error = 0;						\
     }									\
   } while (0)
 
 #define GENERICSTACK_NEW_SIZED(stackName, wantedSize) do {              \
     GENERICSTACK_NEW(stackName);                                        \
-    _GENERICSTACK_EXTEND(stackName, wantedSize);                        \
+    if (! GENERICSTACK_ERROR(stackName)) {				\
+      _GENERICSTACK_EXTEND(stackName, wantedSize);			\
+    }									\
   } while (0)
 
 /* ====================================================================== */
@@ -154,9 +174,11 @@ typedef struct genericStack {
     if (_index_for_set >= stackName->used) {                            \
       stackName->used = _index_for_set + 1;                             \
       _GENERICSTACK_EXTEND(stackName, stackName->used);                 \
-    }                                                                   \
-    stackName->items[_index_for_set].type = (itemType);                 \
-    stackName->items[_index_for_set].u.dst = (varType) (var);           \
+    }									\
+    if (! GENERICSTACK_ERROR(stackName)) {				\
+      stackName->items[_index_for_set].type = (itemType);		\
+      stackName->items[_index_for_set].u.dst = (varType) (var);		\
+    }									\
   } while (0)
 
 #define GENERICSTACK_SET_CHAR(stackName, var, index) _GENERICSTACK_SET_BY_TYPE(stackName, char,   var, GENERICSTACKITEMTYPE_CHAR, c, index)
@@ -185,23 +207,24 @@ typedef struct genericStack {
       stackName->used = _index_for_set + 1;                             \
       _GENERICSTACK_EXTEND(stackName, stackName->used);                 \
     }                                                                   \
-    if (stackName->items[_index_for_set].type == GENERICSTACKITEMTYPE_ANY) { \
-      genericStackItemAny_t _any = stackName->items[_index_for_set].u.any; \
-      if ((_any.p != NULL) && ((_any.free != NULL))) {			\
-	stackName->items[_index_for_set].u.any.free(stackName->items[_index_for_set].u.any.p); \
+    if (! GENERICSTACK_ERROR(stackName)) {				\
+      if (stackName->items[_index_for_set].type == GENERICSTACKITEMTYPE_ANY) { \
+	genericStackItemAny_t _any = stackName->items[_index_for_set].u.any; \
+	if ((_any.p != NULL) && ((_any.free != NULL))) {		\
+	  stackName->items[_index_for_set].u.any.free(stackName->items[_index_for_set].u.any.p); \
+	}								\
+      }									\
+      stackName->items[_index_for_set].type = GENERICSTACKITEMTYPE_ANY;	\
+      if (_clone != NULL) {						\
+	stackName->items[_index_for_set].u.any.clone = _clone;		\
+	stackName->items[_index_for_set].u.any.free = freep;		\
+	stackName->items[_index_for_set].u.any.p = stackName->items[_index_for_set].u.any.clone(var); \
+      } else {								\
+	stackName->items[_index_for_set].u.any.clone = NULL;		\
+	stackName->items[_index_for_set].u.any.free = NULL;		\
+	stackName->items[_index_for_set].u.any.p = (void *) (var);	\
       }									\
     }									\
-    stackName->items[_index_for_set].type = GENERICSTACKITEMTYPE_ANY;   \
-    if (_clone != NULL) {						\
-      stackName->items[_index_for_set].u.any.clone = _clone;		\
-      stackName->items[_index_for_set].u.any.free = freep;		\
-      stackName->items[_index_for_set].u.any.p = stackName->items[_index_for_set].u.any.clone(var); \
-    } else {								\
-      stackName->items[_index_for_set].u.any.clone = NULL;		\
-      stackName->items[_index_for_set].u.any.free = NULL;		\
-      stackName->items[_index_for_set].u.any.p = (void *) (var);	\
-    }									\
-                                                                        \
   } while (0)
 
 /* ====================================================================== */
