@@ -149,6 +149,22 @@ This is an interface on top of <GENERICSTACK_GET_XXX>, that it automatically pop
 
 Release all the generic stack memory.
 
+=head2 GENERICSTACK_ERROR(stackName)
+
+Return a true value if there is an error. Should be called after every call to:
+
+=over
+
+=item GENERICSTACK_NEW(stackName)
+
+=item GENERICSTACK_NEW_SIZED(stackName, wantedSize)
+
+=item GENERICSTACK_SET_XXX(stackName, var, index)
+
+=item GENERICSTACK_PUSH_XXX(stackName, var)
+
+=back
+
 =head2 NOTES
 
 =over
@@ -209,16 +225,31 @@ If this #define is a true value, then C<float _Complex>, C<double _Complex> and 
     GENERICSTACK_DECL(myStack);
 
     GENERICSTACK_NEW        (myStack);
+    if (GENERICSTACK_ERROR(myStack)) { return 1; }
+
     GENERICSTACK_PUSH_INT   (myStack, 10);
+    if (GENERICSTACK_ERROR(myStack)) { return 1; }
+
     GENERICSTACK_PUSH_DOUBLE(myStack, 20);
+    if (GENERICSTACK_ERROR(myStack)) { return 1; }
+
     GENERICSTACK_PUSH_FLOAT (myStack, 30);
+    if (GENERICSTACK_ERROR(myStack)) { return 1; }
+
     GENERICSTACK_PUSH_SHORT (myStack, 40);
+    if (GENERICSTACK_ERROR(myStack)) { return 1; }
+
     GENERICSTACK_PUSH_ANY   (myStack, &myStruct1, NULL, NULL);
+    if (GENERICSTACK_ERROR(myStack)) { return 1; }
+
     GENERICSTACK_PUSH_ANY   (myStack, &myStruct2, myStruct2Clone, myStruct2Free);
+    if (GENERICSTACK_ERROR(myStack)) { return 1; }
 
     myFunction1             (-1, myStack, 999);
 
     GENERICSTACK_SET_FLOAT  (myStack, 50, 10);  /* Indice 10 */
+    if (GENERICSTACK_ERROR(myStack)) { return 1; }
+
     myFunction2             (-1, myStack, 999);
 
     GENERICSTACK_FREE       (myStack);
