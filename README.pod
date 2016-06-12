@@ -322,11 +322,11 @@ Returns 1 on success, 0 on failure.
 
   short marpaWrapperRecognizer_progressb(marpaWrapperRecognizer_t *marpaWrapperRecognizerp,
                                          int starti,
-                                         int lengthi,
+                                         int endi,
                                          size_t *nProgresslp,
                                          marpaWrapperRecognizerProgress_t **progresspp)
 
-Given an I<recognizer position set> C<starti>, and C<lengthi> beyond, this method returns C<*nProgresslp> progress lines, each of them being indexed in the array C<*progresspp>. C<starti> follow the perl's L<splice|http://perldoc.perl.org/functions/splice.html> method conventions, i.e.: if C<starti> is negative, start that far from the end of all positions. Every progress line is a C<marpaWrapperRecognizerProgress_t> structure that contain:
+Given two I<recognizer position set>s C<starti> and C<endi>, this method returns C<*nProgresslp> progress lines, each of them being indexed in the array C<*progresspp>. C<starti> and C<endi> follow the perl's L<splice|http://perldoc.perl.org/functions/splice.html> method conventions for an offset, i.e.: if the value is negative, start that far from the end of all positions. A full parse progress report is consequencly obtained by specifying C<0> for C<starti>, and C<-1> for C<endi>. Every progress line is a C<marpaWrapperRecognizerProgress_t> structure that contain:
 
 =over
 
@@ -355,7 +355,7 @@ Returns 1 on success, 0 on failure.
   typedef char *(symbolDescriptionCallback_t)(void *userDatavp, int symboli);
 
   marpaWrapperRecognizer_progressLogb(marpaWrapperRecognizer_t *marpaWrapperRecognizerp,
-                                      int starti, int lengthi,
+                                      int starti, int endi,
                                       genericLoggerLevel_t logleveli,
                                       void *userDatavp,
                                       symbolDescriptionCallback_t symbolDescriptionCallbackp)

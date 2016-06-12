@@ -28,9 +28,9 @@ static void *stackValueAndDescriptionClone(void *p);
 static void stackValueAndDescriptionFree(void *p);
 
 int main(int argc, char **argv) {
-  marpaWrapperGrammar_t         *marpaWrapperGrammarp;
-  marpaWrapperRecognizer_t      *marpaWrapperRecognizerp;
-  marpaWrapperValue_t           *marpaWrapperValuep;
+  marpaWrapperGrammar_t         *marpaWrapperGrammarp = NULL;
+  marpaWrapperRecognizer_t      *marpaWrapperRecognizerp = NULL;
+  marpaWrapperValue_t           *marpaWrapperValuep = NULL;
   int                            symbolip[MAX_SYMBOL];
   int                            ruleip[MAX_RULE];
   int                            rci = 0;
@@ -106,7 +106,7 @@ int main(int argc, char **argv) {
   /* --------------------------------------------------------------- */
   
   if (rci == 0) {
-    if (marpaWrapperRecognizer_progressLogb(marpaWrapperRecognizerp, -1, 1, GENERICLOGGER_LOGLEVEL_INFO, (void *) symbolip, symbolDescription) == 0) {
+    if (marpaWrapperRecognizer_progressLogb(marpaWrapperRecognizerp, 0, -1, GENERICLOGGER_LOGLEVEL_INFO, (void *) symbolip, symbolDescription) == 0) {
       rci = 1;
     }
   }
@@ -211,13 +211,19 @@ int main(int argc, char **argv) {
     }
   }
 
-  marpaWrapperValue_freev(marpaWrapperValuep);
+  if (marpaWrapperValuep != NULL) {
+    marpaWrapperValue_freev(marpaWrapperValuep);
+  }
   GENERICLOGGER_FREE(marpaWrapperValueOption.genericLoggerp);
 
-  marpaWrapperRecognizer_freev(marpaWrapperRecognizerp);
+  if (marpaWrapperRecognizerp != NULL) {
+    marpaWrapperRecognizer_freev(marpaWrapperRecognizerp);
+  }
   GENERICLOGGER_FREE(marpaWrapperRecognizerOption.genericLoggerp);
 
-  marpaWrapperGrammar_freev(marpaWrapperGrammarp);
+  if (marpaWrapperGrammarp != NULL) {
+    marpaWrapperGrammar_freev(marpaWrapperGrammarp);
+  }
   GENERICLOGGER_FREE(marpaWrapperGrammarOption.genericLoggerp);
 
   GENERICLOGGER_FREE(valueContext.genericLoggerp);
