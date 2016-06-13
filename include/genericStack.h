@@ -200,14 +200,17 @@ typedef struct genericStack {
 #define GENERICSTACK_SET_LONG_DOUBLE__COMPLEX(stackName, var, index) _GENERICSTACK_SET_BY_TYPE(stackName, long double _Complex, var, GENERICSTACKITEMTYPE_LONG_LONG, ldc, index)
 #endif
 /* Having an internal member u.any.clone is only used to make the compiler check the callback complies to the prototype */
+/* We assume that if var is not NULL, then it is an error tha the clone returns NULL */
+/* and if var is NULL, then it is not necessary to call the clone.                   */
 #define GENERICSTACK_SET_ANY(stackName, var, clonep, freep, index) do { \
-    genericStackClone_t _clone = clonep;				\
+    genericStackClone_t _clonep = clonep;				\
     size_t _index_for_set = index;                                      \
     if (_index_for_set >= stackName->used) {                            \
       stackName->used = _index_for_set + 1;                             \
       _GENERICSTACK_EXTEND(stackName, stackName->used);                 \
     }                                                                   \
     if (! GENERICSTACK_ERROR(stackName)) {				\
+      void *_var = (void *) (var);                                      \
       if (stackName->items[_index_for_set].type == GENERICSTACKITEMTYPE_ANY) { \
 	genericStackItemAny_t _any = stackName->items[_index_for_set].u.any; \
 	if ((_any.p != NULL) && ((_any.free != NULL))) {		\
@@ -215,14 +218,21 @@ typedef struct genericStack {
 	}								\
       }									\
       stackName->items[_index_for_set].type = GENERICSTACKITEMTYPE_ANY;	\
-      if (_clone != NULL) {						\
-	stackName->items[_index_for_set].u.any.clone = _clone;		\
+      if (_clonep != NULL) {						\
+	stackName->items[_index_for_set].u.any.clone = _clonep;		\
 	stackName->items[_index_for_set].u.any.free = freep;		\
-	stackName->items[_index_for_set].u.any.p = stackName->items[_index_for_set].u.any.clone(var); \
+        if (_var == NULL) {                                             \
+          stackName->items[_index_for_set].u.any.p = NULL;              \
+        } else {                                                        \
+          stackName->items[_index_for_set].u.any.p = stackName->items[_index_for_set].u.any.clone(_var); \
+          if (stackName->items[_index_for_set].u.any.p == NULL) {       \
+            stackName->error = 1;                                       \
+          }                                                             \
+        }                                                               \
       } else {								\
 	stackName->items[_index_for_set].u.any.clone = NULL;		\
 	stackName->items[_index_for_set].u.any.free = NULL;		\
-	stackName->items[_index_for_set].u.any.p = (void *) (var);	\
+	stackName->items[_index_for_set].u.any.p = _var;                \
       }									\
     }									\
   } while (0)
