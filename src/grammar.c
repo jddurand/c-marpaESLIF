@@ -12,7 +12,8 @@
 static marpaWrapperGrammarOption_t marpaWrapperGrammarOptionDefault = {
   NULL,    /* genericLoggerp             */
   0,       /* warningIsErrorb            */
-  0        /* warningIsIgnoredb          */
+  0,       /* warningIsIgnoredb          */
+  0,       /* autorankb                  */
 };
 
 static marpaWrapperGrammarSymbolOption_t marpaWrapperGrammarSymbolOptionDefault = {
@@ -22,12 +23,12 @@ static marpaWrapperGrammarSymbolOption_t marpaWrapperGrammarSymbolOptionDefault 
 };
 
 static marpaWrapperGrammarRuleOption_t marpaWrapperGrammarRuleOptionDefault = {
-  0,    /* ranki */
-  0,    /* nullRanksHighb */
-  0,    /* sequenceb */
+   0,   /* ranki */
+   0,   /* nullRanksHighb */
+   0,   /* sequenceb */
   -1,   /* separatorSymboli */
-  0,    /* properb */
-  0     /* minimumi */
+   0,   /* properb */
+   0    /* minimumi */
 };
 
 #define MARPAWRAPPERGRAMMAREVENT_WEIGHT(eventType) ((eventType) == MARPAWRAPPERGRAMMAR_EVENT_COMPLETED) ? -1 : (((eventType) == MARPAWRAPPERGRAMMAR_EVENT_NULLED) ? 0 : 1)
@@ -173,11 +174,12 @@ void marpaWrapperGrammar_freev(marpaWrapperGrammar_t *marpaWrapperGrammarp)
 int marpaWrapperGrammar_newSymboli(marpaWrapperGrammar_t *marpaWrapperGrammarp, marpaWrapperGrammarSymbolOption_t *marpaWrapperGrammarSymbolOptionp)
 /****************************************************************************/
 {
-  const static char            funcs[] = "marpaWrapperGrammar_newSymboli";
-  Marpa_Symbol_ID              marpaSymbolIdi;
-  genericLogger_t             *genericLoggerp = NULL;
-  size_t                       nSymboll;
-  marpaWrapperGrammarSymbol_t *marpaWrapperSymbolp;
+  const static char                 funcs[] = "marpaWrapperGrammar_newSymboli";
+  Marpa_Symbol_ID                   marpaSymbolIdi;
+  genericLogger_t                  *genericLoggerp = NULL;
+  size_t                            nSymboll;
+  marpaWrapperGrammarSymbol_t      *marpaWrapperSymbolp;
+  marpaWrapperGrammarSymbolOption_t marpaWrapperGrammarSymbolOption;
 
   if (marpaWrapperGrammarp == NULL) {
     errno = EINVAL;
@@ -210,12 +212,14 @@ int marpaWrapperGrammar_newSymboli(marpaWrapperGrammar_t *marpaWrapperGrammarp, 
   /* Fill the symbol structure */
   marpaWrapperSymbolp->marpaSymbolIdi = marpaSymbolIdi;
   if (marpaWrapperGrammarSymbolOptionp == NULL) {
-    marpaWrapperGrammarSymbolOptionp = &marpaWrapperGrammarSymbolOptionDefault;
+    marpaWrapperGrammarSymbolOption = marpaWrapperGrammarSymbolOptionDefault;
+  } else {
+    marpaWrapperGrammarSymbolOption = *marpaWrapperGrammarSymbolOptionp;
   }
-  marpaWrapperSymbolp->marpaWrapperGrammarSymbolOption = *marpaWrapperGrammarSymbolOptionp;
 
   /* Apply options */
-  if (marpaWrapperGrammarSymbolOptionp->terminalb != 0) {
+
+  if (marpaWrapperGrammarSymbolOption.terminalb != 0) {
     MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_g_symbol_is_terminal_set(%p, %d, %d)", marpaWrapperGrammarp->marpaGrammarp, (int) marpaWrapperSymbolp->marpaSymbolIdi, (int) 1);
     if (marpa_g_symbol_is_terminal_set(marpaWrapperGrammarp->marpaGrammarp, marpaWrapperSymbolp->marpaSymbolIdi, 1) != 1) {
       MARPAWRAPPER_MARPA_G_ERROR(genericLoggerp, marpaWrapperGrammarp->marpaGrammarp);
@@ -223,7 +227,7 @@ int marpaWrapperGrammar_newSymboli(marpaWrapperGrammar_t *marpaWrapperGrammarp, 
     }
   }
 
-  if (marpaWrapperGrammarSymbolOptionp->startb != 0) {
+  if (marpaWrapperGrammarSymbolOption.startb != 0) {
     MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_g_start_symbol_set(%p, %d)", marpaWrapperGrammarp->marpaGrammarp, (int) marpaWrapperSymbolp->marpaSymbolIdi);
     if (marpa_g_start_symbol_set(marpaWrapperGrammarp->marpaGrammarp, marpaWrapperSymbolp->marpaSymbolIdi) < 0) {
       MARPAWRAPPER_MARPA_G_ERROR(genericLoggerp, marpaWrapperGrammarp->marpaGrammarp);
@@ -232,7 +236,7 @@ int marpaWrapperGrammar_newSymboli(marpaWrapperGrammar_t *marpaWrapperGrammarp, 
     marpaWrapperGrammarp->haveStartb = 1;
   }
 
-  if ((marpaWrapperGrammarSymbolOptionp->eventSeti & MARPAWRAPPERGRAMMAR_EVENTTYPE_COMPLETION) == MARPAWRAPPERGRAMMAR_EVENTTYPE_COMPLETION) {
+  if ((marpaWrapperGrammarSymbolOption.eventSeti & MARPAWRAPPERGRAMMAR_EVENTTYPE_COMPLETION) == MARPAWRAPPERGRAMMAR_EVENTTYPE_COMPLETION) {
     MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_g_symbol_is_completion_event_set(%p, %d, %d)", marpaWrapperGrammarp->marpaGrammarp, (int) marpaWrapperSymbolp->marpaSymbolIdi, (int) 1);
     if (marpa_g_symbol_is_completion_event_set(marpaWrapperGrammarp->marpaGrammarp, marpaWrapperSymbolp->marpaSymbolIdi, 1) != 1) {
       MARPAWRAPPER_MARPA_G_ERROR(genericLoggerp, marpaWrapperGrammarp->marpaGrammarp);
@@ -240,7 +244,7 @@ int marpaWrapperGrammar_newSymboli(marpaWrapperGrammar_t *marpaWrapperGrammarp, 
     }
   }
 
-  if ((marpaWrapperGrammarSymbolOptionp->eventSeti & MARPAWRAPPERGRAMMAR_EVENTTYPE_NULLED) == MARPAWRAPPERGRAMMAR_EVENTTYPE_NULLED) {
+  if ((marpaWrapperGrammarSymbolOption.eventSeti & MARPAWRAPPERGRAMMAR_EVENTTYPE_NULLED) == MARPAWRAPPERGRAMMAR_EVENTTYPE_NULLED) {
     MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_g_symbol_is_nulled_event_set(%p, %d, %d)", marpaWrapperGrammarp->marpaGrammarp, (int) marpaWrapperSymbolp->marpaSymbolIdi, (int) 1);
     if (marpa_g_symbol_is_nulled_event_set(marpaWrapperGrammarp->marpaGrammarp, marpaWrapperSymbolp->marpaSymbolIdi, 1) != 1) {
       MARPAWRAPPER_MARPA_G_ERROR(genericLoggerp, marpaWrapperGrammarp->marpaGrammarp);
@@ -248,7 +252,7 @@ int marpaWrapperGrammar_newSymboli(marpaWrapperGrammar_t *marpaWrapperGrammarp, 
     }
   }
 
-  if ((marpaWrapperGrammarSymbolOptionp->eventSeti & MARPAWRAPPERGRAMMAR_EVENTTYPE_PREDICTION) == MARPAWRAPPERGRAMMAR_EVENTTYPE_PREDICTION) {
+  if ((marpaWrapperGrammarSymbolOption.eventSeti & MARPAWRAPPERGRAMMAR_EVENTTYPE_PREDICTION) == MARPAWRAPPERGRAMMAR_EVENTTYPE_PREDICTION) {
     MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_g_symbol_is_prediction_event_set(%p, %d, %d)", marpaWrapperGrammarp->marpaGrammarp, (int) marpaWrapperSymbolp->marpaSymbolIdi, (int) 1);
     if (marpa_g_symbol_is_prediction_event_set(marpaWrapperGrammarp->marpaGrammarp, marpaWrapperSymbolp->marpaSymbolIdi, 1) != 1) {
       MARPAWRAPPER_MARPA_G_ERROR(genericLoggerp, marpaWrapperGrammarp->marpaGrammarp);
@@ -256,8 +260,7 @@ int marpaWrapperGrammar_newSymboli(marpaWrapperGrammar_t *marpaWrapperGrammarp, 
     }
   }
 
-  marpaWrapperSymbolp->isLexemeb = 0;
-  marpaWrapperSymbolp->lengthl   = 0;
+  marpaWrapperSymbolp->marpaWrapperGrammarSymbolOption = marpaWrapperGrammarSymbolOption;
 
   MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "return %d", (int) marpaSymbolIdi);
   return (int) marpaSymbolIdi;
@@ -287,12 +290,15 @@ int marpaWrapperGrammar_newRulei(marpaWrapperGrammar_t *marpaWrapperGrammarp, ma
                                  )
 /****************************************************************************/
 {
-  const static char          funcs[] = "marpaWrapperGrammar_newRulei";
-  Marpa_Rule_ID              marpaRuleIdi;
-  genericLogger_t           *genericLoggerp = NULL;
-  marpaWrapperGrammarRule_t *marpaWrapperRulep;
-  int                        sequenceFlagsi;
-  size_t                     nRulel;
+  const static char              funcs[] = "marpaWrapperGrammar_newRulei";
+  Marpa_Rule_ID                  marpaRuleIdi;
+  genericLogger_t                *genericLoggerp = NULL;
+  marpaWrapperGrammarRule_t      *marpaWrapperRulep;
+  int                             sequenceFlagsi;
+  size_t                          nRulel;
+  size_t                          i;
+  Marpa_Symbol_ID                 marpaLhsIdi;
+  marpaWrapperGrammarRuleOption_t marpaWrapperGrammarRuleOption;
 
   if (marpaWrapperGrammarp == NULL) {
     errno = EINVAL;
@@ -303,36 +309,61 @@ int marpaWrapperGrammar_newRulei(marpaWrapperGrammar_t *marpaWrapperGrammarp, ma
 
   /* Check parameters - Some depend on marpaWrapperGrammarRuleOptionp */
   if (marpaWrapperGrammarRuleOptionp == NULL) {
-    marpaWrapperGrammarRuleOptionp = &marpaWrapperGrammarRuleOptionDefault;
+    marpaWrapperGrammarRuleOption = marpaWrapperGrammarRuleOptionDefault;
+  } else {
+    marpaWrapperGrammarRuleOption = *marpaWrapperGrammarRuleOptionp;
   }
 
   if (lhsSymboli < 0) {
     MARPAWRAPPER_ERROR(genericLoggerp, "Bad LHS symbol Id");
     goto err;
   }
-  if (marpaWrapperGrammarRuleOptionp->sequenceb != 0) {
+  if (marpaWrapperGrammarRuleOption.sequenceb != 0) {
     if (rhsSymboll != 1) {
       MARPAWRAPPER_ERROR(genericLoggerp, "A sequence must have exactly one RHS");
       goto err;
     }
-    if ((marpaWrapperGrammarRuleOptionp->minimumi != 0) && (marpaWrapperGrammarRuleOptionp->minimumi != 1)) {
+    if ((marpaWrapperGrammarRuleOption.minimumi != 0) && (marpaWrapperGrammarRuleOption.minimumi != 1)) {
       MARPAWRAPPER_ERROR(genericLoggerp, "A sequence must have a minimum of exactly 0 or 1");
       goto err;
     }
   }
 
-  /* Create rule; it either a sequence, either a list of RHS */
-  if (marpaWrapperGrammarRuleOptionp->sequenceb != 0) {
+  if (marpaWrapperGrammarp->marpaWrapperGrammarOption.autorankb != 0) {
+    if (marpaWrapperGrammarRuleOption.ranki != 0) {
+      MARPAWRAPPER_INFOF(genericLoggerp, "Rule rank %d is ignored when autorank is on", marpaWrapperGrammarRuleOption.ranki);
+    }
+    /* We have to scan all the rules to find the latest, and the use the latest minus one as rank */
+    if (marpaWrapperGrammarp->nRulel > 0) {
+      for (i = 0; i < marpaWrapperGrammarp->nRulel; i++) {
+	marpaRuleIdi = marpaWrapperGrammarp->ruleArrayp[i].marpaRuleIdi;
+	marpaLhsIdi = marpa_g_rule_lhs(marpaWrapperGrammarp->marpaGrammarp, marpaRuleIdi);
+	if (marpaLhsIdi < 0) {
+	  MARPAWRAPPER_MARPA_G_ERROR(genericLoggerp, marpaWrapperGrammarp->marpaGrammarp);
+	  goto err;
+	}
+	if (marpaLhsIdi == (Marpa_Symbol_ID) lhsSymboli) {
+	  /* Another rule with the same LHS already exist, and this is the rule No i */
+	  marpaWrapperGrammarRuleOption.ranki = marpaWrapperGrammarp->ruleArrayp[i].marpaWrapperGrammarRuleOption.ranki;
+	}
+      }
+    }
+    marpaWrapperGrammarRuleOption.ranki--;
+    MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "Autosetted rule rank to %d", marpaWrapperGrammarRuleOption.ranki);
+  }
+
+    /* Create rule; it is either a sequence, either a list of RHS */
+  if (marpaWrapperGrammarRuleOption.sequenceb != 0) {
     sequenceFlagsi = 0;
-    if (marpaWrapperGrammarRuleOptionp->properb != 0) {
+    if (marpaWrapperGrammarRuleOption.properb != 0) {
       sequenceFlagsi |= MARPA_PROPER_SEPARATION;
     }
-    MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_g_sequence_new(%p, %d, %d, %d, %d, %s)", marpaWrapperGrammarp->marpaGrammarp, lhsSymboli, (int) rhsSymbolip[0], (int) marpaWrapperGrammarRuleOptionp->separatorSymboli, marpaWrapperGrammarRuleOptionp->minimumi, ((sequenceFlagsi & MARPA_PROPER_SEPARATION) == MARPA_PROPER_SEPARATION) ? "MARPA_PROPER_SEPARATION" : "0");
+    MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_g_sequence_new(%p, %d, %d, %d, %d, %s)", marpaWrapperGrammarp->marpaGrammarp, lhsSymboli, (int) rhsSymbolip[0], (int) marpaWrapperGrammarRuleOption.separatorSymboli, marpaWrapperGrammarRuleOption.minimumi, ((sequenceFlagsi & MARPA_PROPER_SEPARATION) == MARPA_PROPER_SEPARATION) ? "MARPA_PROPER_SEPARATION" : "0");
     marpaRuleIdi = marpa_g_sequence_new(marpaWrapperGrammarp->marpaGrammarp,
 					lhsSymboli,
 					(Marpa_Symbol_ID) rhsSymbolip[0],
-					(Marpa_Symbol_ID) marpaWrapperGrammarRuleOptionp->separatorSymboli,
-					marpaWrapperGrammarRuleOptionp->minimumi,
+					(Marpa_Symbol_ID) marpaWrapperGrammarRuleOption.separatorSymboli,
+					marpaWrapperGrammarRuleOption.minimumi,
 					sequenceFlagsi);
   } else {
     MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_g_rule_new(%p, %d, %p, %d)", marpaWrapperGrammarp->marpaGrammarp, lhsSymboli, rhsSymbolip, (int) rhsSymboll);
@@ -348,16 +379,16 @@ int marpaWrapperGrammar_newRulei(marpaWrapperGrammar_t *marpaWrapperGrammarp, ma
   }
 
   /* Apply options */
-  if (marpaWrapperGrammarRuleOptionp->ranki != 0) {
-    MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_g_rule_rank_set(%p, %d, %d)", marpaWrapperGrammarp->marpaGrammarp, (int) marpaRuleIdi, marpaWrapperGrammarRuleOptionp->ranki);
-    marpa_g_rule_rank_set(marpaWrapperGrammarp->marpaGrammarp, marpaRuleIdi, marpaWrapperGrammarRuleOptionp->ranki);
+  if (marpaWrapperGrammarRuleOption.ranki != 0) {
+    MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_g_rule_rank_set(%p, %d, %d)", marpaWrapperGrammarp->marpaGrammarp, (int) marpaRuleIdi, marpaWrapperGrammarRuleOption.ranki);
+    marpa_g_rule_rank_set(marpaWrapperGrammarp->marpaGrammarp, marpaRuleIdi, marpaWrapperGrammarRuleOption.ranki);
     if (marpa_g_error(marpaWrapperGrammarp->marpaGrammarp, NULL) != MARPA_ERR_NONE) {
       MARPAWRAPPER_MARPA_G_ERROR(genericLoggerp, marpaWrapperGrammarp->marpaGrammarp);
       goto err;
     }
   }
 
-  if (marpaWrapperGrammarRuleOptionp->nullRanksHighb != 0) {
+  if (marpaWrapperGrammarRuleOption.nullRanksHighb != 0) {
     MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_g_rule_null_high_set(%p, %d, %d)", marpaWrapperGrammarp->marpaGrammarp, (int) marpaRuleIdi, 1);
     if (marpa_g_rule_null_high_set(marpaWrapperGrammarp->marpaGrammarp, marpaRuleIdi, 1) < 0) {
       MARPAWRAPPER_MARPA_G_ERROR(genericLoggerp, marpaWrapperGrammarp->marpaGrammarp);
@@ -365,7 +396,7 @@ int marpaWrapperGrammar_newRulei(marpaWrapperGrammar_t *marpaWrapperGrammarp, ma
     }
   }
 
-  /* Allocate room for the new symbol */
+  /* Allocate room for the new rule */
   nRulel = marpaRuleIdi + 1;
   if (manageBuf_createp(genericLoggerp,
 			(void **) &(marpaWrapperGrammarp->ruleArrayp),
@@ -377,7 +408,7 @@ int marpaWrapperGrammar_newRulei(marpaWrapperGrammar_t *marpaWrapperGrammarp, ma
 
   marpaWrapperRulep = &(marpaWrapperGrammarp->ruleArrayp[marpaRuleIdi]);
   marpaWrapperRulep->marpaRuleIdi                  = marpaRuleIdi;
-  marpaWrapperRulep->marpaWrapperGrammarRuleOption = *marpaWrapperGrammarRuleOptionp;
+  marpaWrapperRulep->marpaWrapperGrammarRuleOption = marpaWrapperGrammarRuleOption;
 
   marpaWrapperGrammarp->nRulel = nRulel;
 

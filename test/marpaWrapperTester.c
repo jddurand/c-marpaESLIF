@@ -42,15 +42,14 @@ int main(int argc, char **argv) {
   
   marpaWrapperGrammarOption_t    marpaWrapperGrammarOption    = { GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_TRACE),
 								  0 /* warningIsErrorb */,
-								  0 /* warningIsIgnoredb */
+								  0 /* warningIsIgnoredb */,
+								  0 /* autorankb */
   };
-  marpaWrapperRecognizerOption_t marpaWrapperRecognizerOption = { GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_TRACE),
-								  1 /* latm */
-  };
+  marpaWrapperRecognizerOption_t marpaWrapperRecognizerOption = { GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_TRACE) };
   marpaWrapperValueOption_t      marpaWrapperValueOption      = { GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_TRACE),
 								  1 /* highRankOnlyb */,
 								  1 /* orderByRankb */,
-								  1 /* ambiguousb */,
+								  1 /* ambiguousb - We KNOW in this test is is ambiguous */,
 								  0 /* nullb */
   };
 

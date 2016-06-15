@@ -60,6 +60,7 @@ typedef struct marpaWrapperGrammarOption {
   genericLogger_t *genericLoggerp;             /* Default: NULL.                                      */
   short            warningIsErrorb;            /* Default: 0. Have precedence over warningIsIgnoredb  */
   short            warningIsIgnoredb;          /* Default: 0.                                         */
+  short            autorankb;                  /* Default: 0.                                         */
 } marpaWrapperGrammarOption_t;
 
 #ifdef __cplusplus
