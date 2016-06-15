@@ -127,8 +127,6 @@ short marpaWrapperRecognizer_alternativeb(marpaWrapperRecognizer_t *marpaWrapper
 {
   const static char                   funcs[] = "marpaWrapperRecognizer_alternativeb";
   genericLogger_t                    *genericLoggerp = NULL;
-  size_t                              nAlternativel;
-  marpaWrapperRecognizerAlternative_t alternative;
   
   if (marpaWrapperRecognizerp == NULL) {
     errno = EINVAL;
@@ -163,9 +161,6 @@ short marpaWrapperRecognizer_completeb(marpaWrapperRecognizer_t *marpaWrapperRec
 {
   const static char funcs[] = "marpaWrapperRecognizer_completeb";
   genericLogger_t  *genericLoggerp = NULL;
-  size_t            nAlternativel, nSymboll, nAlternativeokl, nAlternativeok2l;
-  size_t            i, j;
-  int               lengthi;
   
   if (marpaWrapperRecognizerp == NULL) {
     errno = EINVAL;
