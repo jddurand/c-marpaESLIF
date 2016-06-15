@@ -8,9 +8,6 @@
 typedef struct marpaWrapperGrammarSymbol {
   Marpa_Symbol_ID                   marpaSymbolIdi;
   marpaWrapperGrammarSymbolOption_t marpaWrapperGrammarSymbolOption;
-  /* Internal work area */
-  short                             isLexemeb;
-  size_t                            lengthl;
 } marpaWrapperGrammarSymbol_t;
 
 typedef struct marpaWrapperGrammarRule {

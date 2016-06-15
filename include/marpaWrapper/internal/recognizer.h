@@ -21,16 +21,6 @@ struct marpaWrapperRecognizer {
   size_t                        nSymboll;           /* Used size      */
   int                          *symbolip;
 
-  /* Storage of symbols given as alternative */
-  size_t                               sizeAlternativel; /* Allocated size */
-  size_t                               nAlternativel;    /* Used size      */
-  marpaWrapperRecognizerAlternative_t *alternativeip;
-
-  /* Temporary storage of accepted symbols given as alternative */
-  size_t                               sizeAlternativeokl; /* Allocated size */
-  size_t                               nAlternativeokl;    /* Used size      */
-  marpaWrapperRecognizerAlternative_t *alternativeokip;
-
   /* Progress storage */
   size_t                               sizeProgressl; /* Allocated size */
   size_t                               nProgressl;    /* Used size      */

@@ -20,6 +20,7 @@ marpaWrapper is a thin interface on top of L<libmarpa|https://jeffreykegler.gith
     genericLogger_t *genericLoggerp;             /* Default: NULL.                                      */
     short            warningIsErrorb;            /* Default: 0. Have precedence over warningIsIgnoredb  */
     short            warningIsIgnoredb;          /* Default: 0.                                         */
+    short            autorankb;                  /* Default: 0.                                         */
   } marpaWrapperGrammarOption_t;
 
   marpaWrapperGrammar_t *marpaWrapperGrammar_newp(marpaWrapperGrammarOption_t *marpaWrapperGrammarOptionp)
@@ -39,6 +40,10 @@ A flag saying that any grammar warning should be treated as an error. Any true v
 =item warningIsIgnoredb
 
 A flag saying that any grammar warning should be ignored. Any true value enable this flag. Only 0 can disable it.
+
+=item warningIsIgnoredb
+
+A flag saying that rules are automatically ranked. Then when a rule is created, its eventual initial rank is I<ignored>, and set automatically: rules sharing the same LHS have a decreasing rank as they are created.
 
 =back
 
@@ -222,7 +227,6 @@ There is one notion to know about in the recognizer: it has an internal I<positi
 
   typedef struct marpaWrapperRecognizerOption {
     genericLogger_t *genericLoggerp;             /* Default: NULL. */
-    short            latmb;                      /* Default: 1.    */
   } marpaWrapperRecognizerOption_t;
 
    marpaWrapperRecognizer_t *marpaWrapperRecognizer_newp(marpaWrapperGrammar_t *marpaWrapperGrammarp,
@@ -235,10 +239,6 @@ Instanciate a recognizer wrapper, using a grammar pointer that must be precomput
 =item genericLoggerp
 
 An eventual generic logger. If NULL, the recognizer will never log.
-
-=item latmb
-
-If a true value, all alternatives will be filtered to only expected symbols and only the longests of them will be pushed. latm stands for Longest Acceptable Token Match.
 
 =back
 

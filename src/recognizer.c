@@ -11,8 +11,7 @@
 #include "marpaWrapper/internal/logging.h"
 
 static marpaWrapperRecognizerOption_t marpaWrapperRecognizerOptionDefault = {
-  NULL,    /* genericLoggerp   */
-  1        /* latmb            */
+  NULL     /* genericLoggerp   */
 };
 
 static inline int alternativeCmpByLengthi(const void *p1, const void *p2);
@@ -50,12 +49,6 @@ marpaWrapperRecognizer_t *marpaWrapperRecognizer_newp(marpaWrapperGrammar_t *mar
   marpaWrapperRecognizerp->sizeSymboll                  = 0;
   marpaWrapperRecognizerp->nSymboll                     = 0;
   marpaWrapperRecognizerp->symbolip                     = NULL;
-  marpaWrapperRecognizerp->sizeAlternativel             = 0;
-  marpaWrapperRecognizerp->nAlternativel                = 0;
-  marpaWrapperRecognizerp->alternativeip                = NULL;
-  marpaWrapperRecognizerp->sizeAlternativeokl           = 0;
-  marpaWrapperRecognizerp->nAlternativeokl              = 0;
-  marpaWrapperRecognizerp->alternativeokip              = NULL;
   marpaWrapperRecognizerp->sizeProgressl                = 0;
   marpaWrapperRecognizerp->nProgressl                   = 0;
   marpaWrapperRecognizerp->progressp                    = NULL;
@@ -150,28 +143,10 @@ short marpaWrapperRecognizer_alternativeb(marpaWrapperRecognizer_t *marpaWrapper
     goto err;
   }
 
-  if (marpaWrapperRecognizerp->marpaWrapperRecognizerOption.latmb != 0) {
-    /* Cache this alternative */
-    nAlternativel = marpaWrapperRecognizerp->nAlternativel;
-    if (manageBuf_createp(genericLoggerp,
-			  (void **) &(marpaWrapperRecognizerp->alternativeip),
-			  &(marpaWrapperRecognizerp->sizeAlternativel),
-			  nAlternativel + 1,
-			  sizeof(marpaWrapperRecognizerAlternative_t)) == NULL) {
-      goto err;
-    }
-    alternative.symboli = symboli;
-    alternative.valuei  = valuei;
-    alternative.lengthi = lengthi;
-    marpaWrapperRecognizerp->alternativeip[nAlternativel] = alternative;
-    marpaWrapperRecognizerp->nAlternativel = ++nAlternativel;
-    MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "Remembering alternative No %d", (int) nAlternativel);
-  } else {
-    MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_r_alternative(%p, %d, %d, %d)", marpaWrapperRecognizerp->marpaRecognizerp, symboli, valuei, lengthi);
-    if (marpa_r_alternative(marpaWrapperRecognizerp->marpaRecognizerp, (Marpa_Symbol_ID) symboli, valuei, lengthi) != MARPA_ERR_NONE) {
-      MARPAWRAPPER_MARPA_G_ERROR(genericLoggerp, marpaWrapperRecognizerp->marpaWrapperGrammarp->marpaGrammarp);
-      goto err;
-    }
+  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_r_alternative(%p, %d, %d, %d)", marpaWrapperRecognizerp->marpaRecognizerp, symboli, valuei, lengthi);
+  if (marpa_r_alternative(marpaWrapperRecognizerp->marpaRecognizerp, (Marpa_Symbol_ID) symboli, valuei, lengthi) != MARPA_ERR_NONE) {
+    MARPAWRAPPER_MARPA_G_ERROR(genericLoggerp, marpaWrapperRecognizerp->marpaWrapperGrammarp->marpaGrammarp);
+    goto err;
   }
 
   MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return 1");
@@ -190,7 +165,6 @@ short marpaWrapperRecognizer_completeb(marpaWrapperRecognizer_t *marpaWrapperRec
   genericLogger_t  *genericLoggerp = NULL;
   size_t            nAlternativel, nSymboll, nAlternativeokl, nAlternativeok2l;
   size_t            i, j;
-  short             latmb;
   int               lengthi;
   
   if (marpaWrapperRecognizerp == NULL) {
@@ -199,76 +173,6 @@ short marpaWrapperRecognizer_completeb(marpaWrapperRecognizer_t *marpaWrapperRec
   }
 
   genericLoggerp = marpaWrapperRecognizerp->marpaWrapperRecognizerOption.genericLoggerp;
-
-  if ((latmb = marpaWrapperRecognizerp->marpaWrapperRecognizerOption.latmb) != 0) {
-    nAlternativel = marpaWrapperRecognizerp->nAlternativel;
-    /* If there are alternatives */
-    if (nAlternativel > 0) {
-      MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "Using %d cached alternatives", (int) nAlternativel);
-      /* We want to make sure we get the correct list of expected symbols */
-      if (marpaWrapperRecognizer_expectedb(marpaWrapperRecognizerp, NULL, NULL) == 0) {
-	goto err;
-      }
-      nSymboll = marpaWrapperRecognizerp->nSymboll;
-      MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "Number of expected symbols is %d", (int) nSymboll);
-      if (nSymboll > 0) {
-	/* Get only accepted alternatives */
-	nAlternativeokl = 0;
-	for (i = 0; i < nSymboll; i++) {
-	  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "... Looking if symbol No %d is an alternative", marpaWrapperRecognizerp->symbolip[i]);
-	  for (j = 0; j < nAlternativel; j++) {
-	    if (marpaWrapperRecognizerp->alternativeip[j].symboli == marpaWrapperRecognizerp->symbolip[i]) {
-	      if (manageBuf_createp(genericLoggerp,
-				    (void **) &(marpaWrapperRecognizerp->alternativeokip),
-				    &(marpaWrapperRecognizerp->sizeAlternativeokl),
-				    nAlternativeokl + 1,
-				    sizeof(marpaWrapperRecognizerAlternative_t)) == NULL) {
-		goto err;
-	      }
-	      MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "Alternative No %d is symbol No %d, length %d", (int) j, marpaWrapperRecognizerp->alternativeip[j].symboli, marpaWrapperRecognizerp->alternativeip[j].lengthi);
-	      marpaWrapperRecognizerp->alternativeokip[nAlternativeokl] = marpaWrapperRecognizerp->alternativeip[j];
-	      marpaWrapperRecognizerp->nAlternativeokl = ++nAlternativeokl;
-	    }
-	  }
-	}
-	if (nAlternativeokl > 0) {
-	  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "%d alternatives accepted", (int) nAlternativeokl);
-	  /* Sort them by length */
-	  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "Sorting %d alternatives by length", (int) nAlternativeokl);
-	  qsort(marpaWrapperRecognizerp->alternativeokip, nAlternativeokl, sizeof(marpaWrapperRecognizerAlternative_t), alternativeCmpByLengthi);
-	  lengthi = marpaWrapperRecognizerp->alternativeokip[0].lengthi;
-	  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "Filtering %d alternatives using max length %d", (int) nAlternativeokl, lengthi);
-	  /* And push only the longest alternatives, we temporarly set off latmb to false */
-	  marpaWrapperRecognizerp->marpaWrapperRecognizerOption.latmb = 0;
-	  for (i = 0, nAlternativeok2l = 0; i < nAlternativeokl; i++) {
-	    if (marpaWrapperRecognizerp->alternativeokip[i].lengthi < lengthi) {
-	      break;
-	    }
-	    MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "Pushing symbol %d, value %d, length %d",
-				marpaWrapperRecognizerp->alternativeokip[i].symboli,
-				marpaWrapperRecognizerp->alternativeokip[i].valuei,
-				marpaWrapperRecognizerp->alternativeokip[i].lengthi);
-	    if (marpaWrapperRecognizer_alternativeb(marpaWrapperRecognizerp,
-						    marpaWrapperRecognizerp->alternativeokip[i].symboli,
-						    marpaWrapperRecognizerp->alternativeokip[i].valuei,
-						    marpaWrapperRecognizerp->alternativeokip[i].lengthi) == 0) {
-	      marpaWrapperRecognizerp->marpaWrapperRecognizerOption.latmb = latmb;
-	      goto err;
-	    }
-	    nAlternativeok2l++;
-	  }
-	  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "Pushed %d alternatives", (int) nAlternativeok2l);
-	} else {
-	  MARPAWRAPPER_TRACE(genericLoggerp, funcs, "No symbol accepted");
-	}
-	marpaWrapperRecognizerp->marpaWrapperRecognizerOption.latmb = latmb;
-      }
-    } else {
-      MARPAWRAPPER_TRACE(genericLoggerp, funcs, "No cached alternative");
-    }
-    /* Get ready for next round */
-    marpaWrapperRecognizerp->nAlternativel = 0;
-  }
 
   MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_r_earleme_complete(%p)", marpaWrapperRecognizerp->marpaRecognizerp);
   if (marpa_r_earleme_complete(marpaWrapperRecognizerp->marpaRecognizerp) < 0) {
@@ -641,12 +545,6 @@ void marpaWrapperRecognizer_freev(marpaWrapperRecognizer_t *marpaWrapperRecogniz
 
     MARPAWRAPPER_TRACE(genericLoggerp, funcs, "Freeing symbol table");
     manageBuf_freev(genericLoggerp, (void **) &(marpaWrapperRecognizerp->symbolip));
-
-    MARPAWRAPPER_TRACE(genericLoggerp, funcs, "Freeing alternative symbol table");
-    manageBuf_freev(genericLoggerp, (void **) &(marpaWrapperRecognizerp->alternativeip));
-
-    MARPAWRAPPER_TRACE(genericLoggerp, funcs, "Freeing ok alternative symbol table");
-    manageBuf_freev(genericLoggerp, (void **) &(marpaWrapperRecognizerp->alternativeokip));
 
     MARPAWRAPPER_TRACE(genericLoggerp, funcs, "Freeing progress table");
     manageBuf_freev(genericLoggerp, (void **) &(marpaWrapperRecognizerp->progressp));
