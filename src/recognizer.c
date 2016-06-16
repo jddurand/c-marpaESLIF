@@ -413,7 +413,7 @@ short marpaWrapperRecognizer_progressLogb(marpaWrapperRecognizer_t *marpaWrapper
   int               ruleLengthi;
   Marpa_Symbol_ID   lhsi, rhsi;
   Marpa_Earleme     earlemei, earlemeorigi;     
-  char             *descriptionLHSs, *descriptionRHSs;
+  char             *descriptionLHSs, *descriptionRHSs, *trailingDescriptionRHSs;
   size_t            lengthDescriptionLHSi;
   int               positioni, rulei;
   char             *lefts;
@@ -494,19 +494,39 @@ short marpaWrapperRecognizer_progressLogb(marpaWrapperRecognizer_t *marpaWrapper
 	      if ((descriptionRHSs == NULL) || (strlen(descriptionRHSs) <= 0)) {
 		descriptionRHSs = "?";
 	      }
+              /* Is it a sequence ? */
+              if (ruleLengthi == 1) {
+                if (((size_t) rulei) < marpaWrapperRecognizerp->marpaWrapperGrammarp->nRulel) {
+                  if (marpaWrapperRecognizerp->marpaWrapperGrammarp->ruleArrayp[rulei].marpaWrapperGrammarRuleOption.sequenceb != 0) {
+                    if (marpaWrapperRecognizerp->marpaWrapperGrammarp->ruleArrayp[rulei].marpaWrapperGrammarRuleOption.minimumi == 0) {
+                      trailingDescriptionRHSs = "*";
+                    } else {
+                      trailingDescriptionRHSs = "+";
+                    }
+                  } else {
+                    trailingDescriptionRHSs = "";
+                  }
+                } else {
+                  MARPAWRAPPER_ERRORF(genericLoggerp, "Rule Symbol Id is %d >= %ld", rulei, (unsigned long) marpaWrapperRecognizerp->marpaWrapperGrammarp->nRulel);
+                  trailingDescriptionRHSs = "*";
+                }
+              } else {
+                trailingDescriptionRHSs = "";
+              }
 	    } else {
 	      descriptionRHSs = "";
+              trailingDescriptionRHSs = "";
 	    }
 	    if (positioni == ix) {
-	      genericLogger_logv(genericLoggerp, logleveli, "[%c%d@%d..%d] %*s %s . %s", rtypec, rulei, earlemeorigi, earlemei, (int) lengthDescriptionLHSi, lefts, middles, descriptionRHSs);
+	      genericLogger_logv(genericLoggerp, logleveli, "[%c%d@%d..%d] %*s %s . %s%s", rtypec, rulei, earlemeorigi, earlemei, (int) lengthDescriptionLHSi, lefts, middles, descriptionRHSs, trailingDescriptionRHSs);
 	    } else if (positioni < 0) {
 	      if (ix == (ruleLengthi - 1)) {
-		genericLogger_logv(genericLoggerp, logleveli, "[%c%d@%d..%d] %*s %s %s .", rtypec, rulei, earlemeorigi, earlemei, (int) lengthDescriptionLHSi, lefts, middles, descriptionRHSs);
+		genericLogger_logv(genericLoggerp, logleveli, "[%c%d@%d..%d] %*s %s %s%s .", rtypec, rulei, earlemeorigi, earlemei, (int) lengthDescriptionLHSi, lefts, middles, descriptionRHSs, trailingDescriptionRHSs);
 	      } else {
-		genericLogger_logv(genericLoggerp, logleveli, "[%c%d@%d..%d] %*s %s %s", rtypec, rulei, earlemeorigi, earlemei, (int) lengthDescriptionLHSi, lefts, middles, descriptionRHSs);
+		genericLogger_logv(genericLoggerp, logleveli, "[%c%d@%d..%d] %*s %s %s%s", rtypec, rulei, earlemeorigi, earlemei, (int) lengthDescriptionLHSi, lefts, middles, descriptionRHSs, trailingDescriptionRHSs);
 	      }
 	    } else {
-	      genericLogger_logv(genericLoggerp, logleveli, "[%c%d@%d..%d] %*s %s %s", rtypec, rulei, earlemeorigi, earlemei, (int) lengthDescriptionLHSi, lefts, middles, descriptionRHSs);
+	      genericLogger_logv(genericLoggerp, logleveli, "[%c%d@%d..%d] %*s %s %s%s", rtypec, rulei, earlemeorigi, earlemei, (int) lengthDescriptionLHSi, lefts, middles, descriptionRHSs, trailingDescriptionRHSs);
 	    }
 	  }
 	}
