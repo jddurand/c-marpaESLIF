@@ -13,7 +13,7 @@ static marpaWrapperGrammarOption_t marpaWrapperGrammarOptionDefault = {
   NULL,    /* genericLoggerp             */
   0,       /* warningIsErrorb            */
   0,       /* warningIsIgnoredb          */
-  0,       /* autorankb                  */
+  0        /* autorankb                  */
 };
 
 static marpaWrapperGrammarSymbolOption_t marpaWrapperGrammarSymbolOptionDefault = {
