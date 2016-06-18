@@ -227,6 +227,7 @@ There is one notion to know about in the recognizer: it has an internal I<positi
 
   typedef struct marpaWrapperRecognizerOption {
     genericLogger_t *genericLoggerp;             /* Default: NULL. */
+    short            disableThresholdb;          /* Default: 0.    */
   } marpaWrapperRecognizerOption_t;
 
    marpaWrapperRecognizer_t *marpaWrapperRecognizer_newp(marpaWrapperGrammar_t *marpaWrapperGrammarp,
@@ -239,6 +240,10 @@ Instanciate a recognizer wrapper, using a grammar pointer that must be precomput
 =item genericLoggerp
 
 An eventual generic logger. If NULL, the recognizer will never log.
+
+=item disableThresholdb
+
+If this is a true value, disable Earley item warning threshold.
 
 =back
 
@@ -260,6 +265,12 @@ Returns 1 on success, 0 on failure.
   short marpaWrapperRecognizer_completeb(marpaWrapperRecognizer_t *marpaWrapperRecognizerp)
 
 Ends an alternative serie. Returns 1 on success, 0 on failure.
+
+=head2 marpaWrapperRecognizer_cleanb
+
+  short marpaWrapperRecognizer_cleanb(marpaWrapperRecognizer_t *marpaWrapperRecognizerp)
+
+Reject rule previously recognized or predicted, and terminals previously scanned. Returns 1 on success, 0 on failure.
 
 =head2 marpaWrapperRecognizer_readb
 
