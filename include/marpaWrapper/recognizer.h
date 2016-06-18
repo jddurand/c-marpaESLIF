@@ -14,6 +14,7 @@ typedef struct marpaWrapperRecognizer marpaWrapperRecognizer_t;
 /* --------------- */
 typedef struct marpaWrapperRecognizerOption {
   genericLogger_t *genericLoggerp;             /* Default: NULL. */
+  short            disableThresholdb;          /* Default: 0.    */
 } marpaWrapperRecognizerOption_t;
 
 typedef struct marpaWrapperRecognizerProgress {
@@ -23,7 +24,7 @@ typedef struct marpaWrapperRecognizerProgress {
   int positioni;
 } marpaWrapperRecognizerProgress_t;
 
-typedef char *(symbolDescriptionCallback_t)(void *userDatavp, int symboli);
+typedef char *(*symbolDescriptionCallback_t)(void *userDatavp, int symboli);
 
 #ifdef __cplusplus
 extern "C" {
@@ -31,6 +32,7 @@ extern "C" {
   marpaWrapper_EXPORT marpaWrapperRecognizer_t    *marpaWrapperRecognizer_newp(marpaWrapperGrammar_t *marpaWrapperGrammarp, marpaWrapperRecognizerOption_t *marpaWrapperRecognizerOptionp);
   marpaWrapper_EXPORT short                        marpaWrapperRecognizer_alternativeb(marpaWrapperRecognizer_t *marpaWrapperRecognizerp, int symboli, int valuei, int lengthi);
   marpaWrapper_EXPORT short                        marpaWrapperRecognizer_completeb(marpaWrapperRecognizer_t *marpaWrapperRecognizerp);
+  marpaWrapper_EXPORT short                        marpaWrapperRecognizer_cleanb(marpaWrapperRecognizer_t *marpaWrapperRecognizerp);
   marpaWrapper_EXPORT short                        marpaWrapperRecognizer_readb(marpaWrapperRecognizer_t *marpaWrapperRecognizerp, int symboli, int valuei, int lengthi);
   marpaWrapper_EXPORT short                        marpaWrapperRecognizer_event_onoffb(marpaWrapperRecognizer_t *marpaWrapperRecognizerp, int symboli, marpaWrapperGrammarEventType_t eventSeti, int onoffb);
   marpaWrapper_EXPORT short                        marpaWrapperRecognizer_expectedb(marpaWrapperRecognizer_t *marpaWrapperRecognizerp, size_t *nSymbollp, int **symbolArraypp);
