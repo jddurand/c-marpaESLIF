@@ -11,7 +11,8 @@
 #include "marpaWrapper/internal/logging.h"
 
 static marpaWrapperRecognizerOption_t marpaWrapperRecognizerOptionDefault = {
-  NULL     /* genericLoggerp   */
+  NULL,    /* genericLoggerp   */
+  0        /* disableThresholdb */
 };
 
 static inline int alternativeCmpByLengthi(const void *p1, const void *p2);
@@ -58,6 +59,13 @@ marpaWrapperRecognizer_t *marpaWrapperRecognizer_newp(marpaWrapperGrammar_t *mar
   if (marpaWrapperRecognizerp->marpaRecognizerp == NULL) {
     MARPAWRAPPER_MARPA_G_ERROR(genericLoggerp, marpaWrapperGrammarp->marpaGrammarp);
     goto err;
+  }
+
+  /* Apply options */
+  if (marpaWrapperRecognizerp->marpaWrapperRecognizerOption.disableThresholdb != 0) {
+    MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_r_earley_item_warning_threshold_set(%p, -1)", marpaWrapperRecognizerp->marpaRecognizerp);
+    /* Always succeed as per the doc */
+    marpa_r_earley_item_warning_threshold_set(marpaWrapperRecognizerp->marpaRecognizerp, -1);
   }
 
   MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_r_start_input(%p)", marpaWrapperRecognizerp->marpaRecognizerp);
@@ -171,6 +179,39 @@ short marpaWrapperRecognizer_completeb(marpaWrapperRecognizer_t *marpaWrapperRec
 
   MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_r_earleme_complete(%p)", marpaWrapperRecognizerp->marpaRecognizerp);
   if (marpa_r_earleme_complete(marpaWrapperRecognizerp->marpaRecognizerp) < 0) {
+    MARPAWRAPPER_MARPA_G_ERROR(genericLoggerp, marpaWrapperRecognizerp->marpaWrapperGrammarp->marpaGrammarp);
+    goto err;
+  }
+
+  /* Events can happen */
+  if (marpaWrapperGrammar_eventb(marpaWrapperRecognizerp->marpaWrapperGrammarp, NULL, NULL, 1) == 0) {
+    goto err;
+  }
+
+  MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return 1");
+  return 1;
+
+ err:
+  MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return 0");
+  return 0;
+}
+
+/****************************************************************************/
+short marpaWrapperRecognizer_cleanb(marpaWrapperRecognizer_t *marpaWrapperRecognizerp)
+/****************************************************************************/
+{
+  const static char funcs[] = "marpaWrapperRecognizer_cleanb";
+  genericLogger_t  *genericLoggerp = NULL;
+
+  if (marpaWrapperRecognizerp == NULL) {
+    errno = EINVAL;
+    goto err;
+  }
+
+  genericLoggerp = marpaWrapperRecognizerp->marpaWrapperRecognizerOption.genericLoggerp;
+
+  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_r_cleanb(%p)", marpaWrapperRecognizerp->marpaRecognizerp);
+  if (marpa_r_clean(marpaWrapperRecognizerp->marpaRecognizerp) < 0) {
     MARPAWRAPPER_MARPA_G_ERROR(genericLoggerp, marpaWrapperRecognizerp->marpaWrapperGrammarp->marpaGrammarp);
     goto err;
   }
