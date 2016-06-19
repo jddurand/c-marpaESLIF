@@ -35,6 +35,12 @@ marpaWrapperValue_t *marpaWrapperValue_newp(marpaWrapperRecognizer_t *marpaWrapp
     goto err;
   }
 
+  /* Impossible if we are already valuating it */
+  if (marpaWrapperRecognizerp->treeModeb != MARPAWRAPPERRECOGNIZERTREEMODE_NA) {
+    MARPAWRAPPER_ERROR(genericLoggerp, "Already in valuation mode");
+    goto err;
+  }
+
   if (marpaWrapperValueOptionp == NULL) {
     marpaWrapperValueOptionp = &marpaWrapperValueOptionDefault;
   }
@@ -128,6 +134,10 @@ marpaWrapperValue_t *marpaWrapperValue_newp(marpaWrapperRecognizer_t *marpaWrapp
     }
   }
 
+  /* Say we are in tree mode */
+  MARPAWRAPPER_TRACE(genericLoggerp, funcs, "Flagging tree mode to TREE");
+  marpaWrapperRecognizerp->treeModeb = MARPAWRAPPERRECOGNIZERTREEMODE_TREE;
+
   MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "return %p", marpaWrapperValuep);
   return marpaWrapperValuep;
 
@@ -145,6 +155,10 @@ err:
     marpaWrapperValue_freev(marpaWrapperValuep);
 
     errno = errnoi;
+  }
+
+  if (marpaWrapperRecognizerp != NULL) {
+    marpaWrapperRecognizerp->treeModeb = MARPAWRAPPERRECOGNIZERTREEMODE_NA;
   }
 
   return NULL;
@@ -334,6 +348,11 @@ void marpaWrapperValue_freev(marpaWrapperValue_t *marpaWrapperValuep)
     if (marpaWrapperValuep->marpaBocagep != NULL) {
       MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_b_unref(%p)", marpaWrapperValuep->marpaBocagep);
       marpa_b_unref(marpaWrapperValuep->marpaBocagep);
+    }
+
+    if (marpaWrapperValuep->marpaWrapperRecognizerp != NULL) {
+      MARPAWRAPPER_TRACE(genericLoggerp, funcs, "Flagging tree mode to NA");
+      marpaWrapperValuep->marpaWrapperRecognizerp->treeModeb = MARPAWRAPPERRECOGNIZERTREEMODE_NA;
     }
 
     MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "free(%p)", marpaWrapperValuep);
