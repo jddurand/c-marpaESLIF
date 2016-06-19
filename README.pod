@@ -266,12 +266,6 @@ Returns 1 on success, 0 on failure.
 
 Ends an alternative serie. Returns 1 on success, 0 on failure.
 
-=head2 marpaWrapperRecognizer_cleanb
-
-  short marpaWrapperRecognizer_cleanb(marpaWrapperRecognizer_t *marpaWrapperRecognizerp)
-
-Reject rule previously recognized or predicted, and terminals previously scanned. Returns 1 on success, 0 on failure. Keep in mind that this is a wrapper on a method marked untested by the marpa library bundled within this package.
-
 =head2 marpaWrapperRecognizer_readb
 
   short marpaWrapperRecognizer_readb(marpaWrapperRecognizer_t *marpaWrapperRecognizerp,

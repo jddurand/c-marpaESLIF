@@ -15,8 +15,6 @@ static marpaWrapperRecognizerOption_t marpaWrapperRecognizerOptionDefault = {
   0        /* disableThresholdb */
 };
 
-static inline int alternativeCmpByLengthi(const void *p1, const void *p2);
-
 /****************************************************************************/
 marpaWrapperRecognizer_t *marpaWrapperRecognizer_newp(marpaWrapperGrammar_t *marpaWrapperGrammarp, marpaWrapperRecognizerOption_t *marpaWrapperRecognizerOptionp)
 /****************************************************************************/
@@ -53,6 +51,7 @@ marpaWrapperRecognizer_t *marpaWrapperRecognizer_newp(marpaWrapperGrammar_t *mar
   marpaWrapperRecognizerp->sizeProgressl                = 0;
   marpaWrapperRecognizerp->nProgressl                   = 0;
   marpaWrapperRecognizerp->progressp                    = NULL;
+  marpaWrapperRecognizerp->treeModeb                    = MARPAWRAPPERRECOGNIZERTREEMODE_NA;
 
   MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_r_new(%p)", marpaWrapperGrammarp->marpaGrammarp);
   marpaWrapperRecognizerp->marpaRecognizerp = marpa_r_new(marpaWrapperGrammarp->marpaGrammarp);
@@ -179,39 +178,6 @@ short marpaWrapperRecognizer_completeb(marpaWrapperRecognizer_t *marpaWrapperRec
 
   MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_r_earleme_complete(%p)", marpaWrapperRecognizerp->marpaRecognizerp);
   if (marpa_r_earleme_complete(marpaWrapperRecognizerp->marpaRecognizerp) < 0) {
-    MARPAWRAPPER_MARPA_G_ERROR(genericLoggerp, marpaWrapperRecognizerp->marpaWrapperGrammarp->marpaGrammarp);
-    goto err;
-  }
-
-  /* Events can happen */
-  if (marpaWrapperGrammar_eventb(marpaWrapperRecognizerp->marpaWrapperGrammarp, NULL, NULL, 1) == 0) {
-    goto err;
-  }
-
-  MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return 1");
-  return 1;
-
- err:
-  MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return 0");
-  return 0;
-}
-
-/****************************************************************************/
-short marpaWrapperRecognizer_cleanb(marpaWrapperRecognizer_t *marpaWrapperRecognizerp)
-/****************************************************************************/
-{
-  const static char funcs[] = "marpaWrapperRecognizer_cleanb";
-  genericLogger_t  *genericLoggerp = NULL;
-
-  if (marpaWrapperRecognizerp == NULL) {
-    errno = EINVAL;
-    goto err;
-  }
-
-  genericLoggerp = marpaWrapperRecognizerp->marpaWrapperRecognizerOption.genericLoggerp;
-
-  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_r_cleanb(%p)", marpaWrapperRecognizerp->marpaRecognizerp);
-  if (marpa_r_clean(marpaWrapperRecognizerp->marpaRecognizerp) < 0) {
     MARPAWRAPPER_MARPA_G_ERROR(genericLoggerp, marpaWrapperRecognizerp->marpaWrapperGrammarp->marpaGrammarp);
     goto err;
   }
@@ -614,20 +580,3 @@ void marpaWrapperRecognizer_freev(marpaWrapperRecognizer_t *marpaWrapperRecogniz
     }
   }
 }
-
-/****************************************************************************/
-static inline int alternativeCmpByLengthi(const void *p1, const void *p2)
-/****************************************************************************/
-{
-  marpaWrapperRecognizerAlternative_t *a1p = (marpaWrapperRecognizerAlternative_t *) p1;
-  marpaWrapperRecognizerAlternative_t *a2p = (marpaWrapperRecognizerAlternative_t *) p2;
-
-  if (a1p->lengthi < a2p->lengthi) {
-    return 1;
-  } else if (a1p->lengthi > a2p->lengthi) {
-    return -1;
-  } else {
-    return 0;
-  }
-}
- 
