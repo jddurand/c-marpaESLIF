@@ -329,4 +329,28 @@ typedef struct genericStack {
     }									\
   } while (0)
 
+/* ====================================================================== */
+/* In some rare occasions user might want to get the basic type           */
+/* from an item type.                                                     */
+/* ====================================================================== */
+#define GENERICSTACKITEMTYPE2TYPE_CHAR   char
+#define GENERICSTACKITEMTYPE2TYPE_SHORT  short
+#define GENERICSTACKITEMTYPE2TYPE_INT    int
+#define GENERICSTACKITEMTYPE2TYPE_LONG   long
+#define GENERICSTACKITEMTYPE2TYPE_FLOAT  float
+#define GENERICSTACKITEMTYPE2TYPE_DOUBLE double
+#define GENERICSTACKITEMTYPE2TYPE_PTR    void *
+#if GENERICSTACK_HAVE_LONG_LONG
+  #define GENERICSTACKITEMTYPE2TYPE_LONG_LONG long long
+#endif
+#if GENERICSTACK_HAVE__BOOL
+  #define GENERICSTACKITEMTYPE2TYPE__BOOL _Bool
+#endif
+#if GENERICSTACK_HAVE__COMPLEX
+  #define GENERICSTACKITEMTYPE2TYPE_FLOAT__COMPLEX       float _Complex
+  #define GENERICSTACKITEMTYPE2TYPE_DOUBLE__COMPLEX      double _Complex
+  #define GENERICSTACKITEMTYPE2TYPE_LONG_DOUBLE__COMPLEX long double _Complex
+#endif
+#define GENERICSTACKITEMTYPE2TYPE_ANY void *
+
 #endif /* GENERICSTACK_H */
