@@ -333,6 +333,8 @@ typedef struct genericStack {
 /* In some rare occasions user might want to get the basic type           */
 /* from an item type.                                                     */
 /* ====================================================================== */
+#define GENERICSTACKITEMTYPE(stackName, index) stackName->items[index].type
+
 #define GENERICSTACKITEMTYPE2TYPE_CHAR   char
 #define GENERICSTACKITEMTYPE2TYPE_SHORT  short
 #define GENERICSTACKITEMTYPE2TYPE_INT    int
