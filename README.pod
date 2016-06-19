@@ -165,6 +165,10 @@ Return a true value if there is an error. Should be called after every call to:
 
 =back
 
+=head2 GENERICSTACKITEMTYPE(stackName, index)
+
+Returns the type of the item at position C<index> within stack C<stackName>.
+
 =head2 GENERICSTACKITEMTYPE2TYPE_XXX
 
 Generates a basic C type from the item type C<XXX>, for example:
