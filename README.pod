@@ -165,7 +165,25 @@ Return a true value if there is an error. Should be called after every call to:
 
 =back
 
-=head2 NOTES
+=head2 GENERICSTACKITEMTYPE2TYPE_XXX
+
+Generates a basic C type from the item type C<XXX>, for example:
+
+=over
+
+=item GENERICSTACKITEMTYPE2TYPE_CHAR
+
+generates C<char>
+
+=item GENERICSTACKITEMTYPE2TYPE_SHORT
+
+generates C<short>
+
+=back
+
+and so on.
+
+=head1 NOTES
 
 =over
 
