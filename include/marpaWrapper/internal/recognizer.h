@@ -11,6 +11,12 @@ typedef struct marpaWrapperRecognizerAlternative {
   int lengthi;
 } marpaWrapperRecognizerAlternative_t;
 
+typedef enum marpaWrapperRecognizerTreeMode {
+  MARPAWRAPPERRECOGNIZERTREEMODE_NA = 0,
+  MARPAWRAPPERRECOGNIZERTREEMODE_TREE,
+  MARPAWRAPPERRECOGNIZERTREEMODE_FOREST
+} marpaWrapperRecognizerTreeMode_t;
+
 struct marpaWrapperRecognizer {
   Marpa_Recognizer               marpaRecognizerp;
   marpaWrapperGrammar_t         *marpaWrapperGrammarp;
@@ -25,6 +31,8 @@ struct marpaWrapperRecognizer {
   size_t                               sizeProgressl; /* Allocated size */
   size_t                               nProgressl;    /* Used size      */
   marpaWrapperRecognizerProgress_t    *progressp;
+
+  marpaWrapperRecognizerTreeMode_t     treeModeb;     /* Indicates that we are already in tree mode */
 };
 
 #endif /* MARPAWRAPPER_INTERNAL_RECOGNIZER_H */

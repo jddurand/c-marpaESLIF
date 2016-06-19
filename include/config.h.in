@@ -18,6 +18,9 @@
 #cmakedefine C_INLINE @C_INLINE@
 #cmakedefine C_INLINE_IS_INLINE @C_INLINE_IS_INLINE@
 #cmakedefine NULL_IS_ZEROES @NULL_IS_ZEROES@
+#cmakedefine C_VA_COPY @C_VA_COPY@
+#cmakedefine C_VSNPRINTF @C_VSNPRINTF@
+
 #ifndef __cplusplus
 #  ifndef C_INLINE
 #    undef inline
