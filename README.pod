@@ -1,0 +1,44 @@
+=for html <a href="https://travis-ci.org/jddurand/c-genericHash"><img src="https://travis-ci.org/jddurand/c-genericHash.svg?branch=master" alt="Travis CI build status" height="18"></a> <a href="https://badge.fury.io/gh/jddurand%2Fc-genericHash"><img src="https://badge.fury.io/gh/jddurand%2Fc-genericHash.svg" alt="GitHub version" height="18"></a> <a href="http://opensource.org/licenses/MIT" rel="nofollow noreferrer"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License MIT" height="18"></a>
+
+=head1 NAME
+
+genericHash - generic hash interface
+
+=head1 DESCRIPTION
+
+genericHash looks like a subset of perl-like hashes, done in macros. Perl-like means that for one given key, there is one possible value. It is generic in the sense that hashing function and comparison functions are explicitely externalized. It is built on top of L<genericStack|https://github.com/jddurand/c-genericStack>.
+
+=head1 MACROS
+
+=head2 GENERICHASH_NEW(hashName, indFunctionp, cmpFunctionp)
+
+Create an empty hash on the heap, where C<indFunctionp> and C<cmpFunctionp> are hashing and comparison functions, respectively. Their prototypes are:
+
+  typedef size_t (*genericHashIndFunction_t)(void *userDatavp, genericStackItemType_t itemType, void *p);
+  typedef short  (*genericHashCmpFunction_t)(void *userDatavp, genericStackItemType_t itemType, void *p1, void *p2);
+
+and for every data, C<indFunctionp> is used to return a hash indice. The number of rows in the hash will always increase automatically, whenever needed, and never decrease. To handle the case of collisions, C<cmpFunctionp> is called and must return a true value if data content matches. Within a hash row, the number of elements decrease and increase automatically.
+
+=head2 GENERICHASH_NEW_SIZED(hashName, indFunctionp, cmpFunctionp, wantedSize, wantedSubSize)
+
+Like the new method, but creates an initial C<wantedSize> number of rows, and declares every row to have an initial C<wantedSubSize> number of elements.
+
+=head2 GENERICHASH_SET(hashName, userDatavp, itemType, value)
+
+Set an entry in hash C<hashName>, using the data C<value> which is of type C<itemType>. The C<userDatavp> variable is the context that will propagated to callback functions.
+
+=head2 GENERICHASH_FIND(hashName, userDatavp, wantedType, wantedVar, findResult, got)
+
+Search for the data C<wantedVar> of type C<wantedType> in hash C<hashName>. The value 1 or 0 or stored in C<findResult> if success or not, respectively. The found value is pushed into C<got>. The C<userDatavp> variable is the context that will propagated to callback functions.
+
+=head2 GENERICHASH_REMOVE(hashName, userDatavp, wantedType, wantedVar, findResult, got)
+
+Remove for the data C<wantedVar> of type C<wantedType> in hash C<hashName>. The value 1 or 0 or stored in C<findResult> if data was found or not, respectively. The removed value is pushed into C<got>. The C<userDatavp> variable is the context that will propagated to callback functions.
+
+=head2 GENERICHASH_FREE(hashName)
+
+Releases the hash.
+
+=head1 SEE ALSO
+
+L<genericStack|https://github.com/jddurand/c-genericStack>
