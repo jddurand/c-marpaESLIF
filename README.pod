@@ -84,6 +84,10 @@ Set C<var> expression result, explicitely typecasted into a C<long double _Compl
 
 =back
 
+=head2 GENERICSTACK_SET_NA(stackName, index)
+
+Specific macro that removes any association at position C<index>.
+
 =head2 GENERICSTACK_GET_XXX(stackName, index)
 
 Get an entry in stack C<stackName>, at index C<index> (numbering start 0). The data type of the entry is left as-is, letting the compiler do type promotion, and eventually warn. XXX is meant to be a C datatype, i.e. the exact list of macros is:
