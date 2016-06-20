@@ -284,6 +284,7 @@ typedef struct genericStack {
 #define GENERICSTACK_GET_DOUBLE__COMPLEX(stackName, index)      (_GENERICSTACK_REDUCE_SIZE(stackName), stackName->items[index].u.dc)
 #define GENERICSTACK_GET_LONG_DOUBLE__COMPLEX(stackName, index) (_GENERICSTACK_REDUCE_SIZE(stackName), stackName->items[index].u.ldc)
 #endif
+#define GENERICSTACK_GET_NA(stackName, index) (_GENERICSTACK_REDUCE_SIZE(stackName), index)
 
 /* ====================================================================== */
 /* PUSH interface: built on top of SET                                    */
@@ -306,6 +307,7 @@ typedef struct genericStack {
 #define GENERICSTACK_PUSH_DOUBLE__COMPLEX(stackName, var) GENERICSTACK_SET_DOUBLE__COMPLEX(stackName, var, stackName->used)
 #define GENERICSTACK_PUSH_LONG_DOUBLE__COMPLEX(stackName, var) GENERICSTACK_SET_LONG_DOUBLE__COMPLEX(stackName, var, stackName->used)
 #endif
+#define GENERICSTACK_PUSH_NA(stackName) GENERICSTACK_SET_NA(stackName, stackName->used)
 
 /* ====================================================================== */
 /* POP interface: built on top GET                                        */
@@ -328,6 +330,7 @@ typedef struct genericStack {
 #define GENERICSTACK_POP_DOUBLE__COMPLEX(stackName)      GENERICSTACK_GET_DOUBLE__COMPLEX(stackName,      --stackName->used)
 #define GENERICSTACK_POP_LONG_DOUBLE__COMPLEX(stackName) GENERICSTACK_GET_LONG_DOUBLE__COMPLEX(stackName, --stackName->used)
 #endif
+#define GENERICSTACK_POP_NA(stackName) GENERICSTACK_GET_NA(stackName, --stackName->used)
 
 /* ====================================================================== */
 /* Memory release                                                         */
