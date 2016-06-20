@@ -5,20 +5,20 @@ typedef struct myContext {
   genericLogger_t *genericLoggerp;
 } myContext_t;
 
-static size_t myHashFunction(void *userDatavp, genericStackItemType_t itemType, void *p);
-static short  myHashCmpAnyFunction(void *userDatavp, genericStackItemType_t itemType, void *p1, void *p2);
+static size_t myHashIndFunction(void *userDatavp, genericStackItemType_t itemType, void *p);
+static short  myHashCmpFunction(void *userDatavp, genericStackItemType_t itemType, void *p1, void *p2);
 
 int main(int argc, char **argv) {
   myContext_t      myContext;
   myContext_t     *myContextp = &myContext;
   int              rci = 0;
   genericLogger_t *genericLoggerp = GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_TRACE);
-  GENERICHASH_DECL(myHashp);
+  genericHash_t   *myHashp;
   short            findResultb;
 
   myContext.genericLoggerp = genericLoggerp;
 
-  GENERICHASH_NEW(myHashp, myHashFunction);
+  GENERICHASH_NEW(myHashp, myHashIndFunction, myHashCmpFunction);
   if (GENERICHASH_ERROR(myHashp)) {
     GENERICLOGGER_ERROR(genericLoggerp, "Error when creating generic hash");
     rci = 1;
@@ -26,17 +26,17 @@ int main(int argc, char **argv) {
   }
   GENERICLOGGER_TRACEF(genericLoggerp, "Created hash at %p", myHashp);
 
-  GENERICHASH_INSERT(myHashp, myContextp, PTR, myContextp);
-  GENERICHASH_INSERT(myHashp, myContextp, PTR, myContextp);
-  GENERICHASH_INSERT(myHashp, myContextp, PTR, myContextp);
+  GENERICHASH_SET(myHashp, myContextp, PTR, myContextp);
+  GENERICHASH_SET(myHashp, myContextp, PTR, myContextp);
+  GENERICHASH_SET(myHashp, myContextp, PTR, myContextp);
   GENERICLOGGER_TRACEF(genericLoggerp, "... Inserted PTR %p", myContextp);
 
   GENERICLOGGER_TRACEF(genericLoggerp, "... Looking for PTR %p", myContextp);
-  GENERICHASH_FIND(myHashp, myContextp, PTR, myContextp, myHashCmpAnyFunction, findResultb);
+  GENERICHASH_FIND(myHashp, myContextp, PTR, myContextp, findResultb);
   if (! findResultb) {
     GENERICLOGGER_ERRORF(genericLoggerp, "... Failed to find PTR %p", myContextp);
   } else {
-    GENERICLOGGER_ERRORF(genericLoggerp, "... Success searching for PTR %p", myContextp);
+    GENERICLOGGER_TRACEF(genericLoggerp, "... Success searching for PTR %p", myContextp);
   }
 
   rci = 0;
@@ -54,7 +54,7 @@ int main(int argc, char **argv) {
   exit(rci);
 }
 
-static size_t myHashFunction(void *userDatavp, genericStackItemType_t itemType, void *p) {
+static size_t myHashIndFunction(void *userDatavp, genericStackItemType_t itemType, void *p) {
   myContext_t     *myContextp = (myContext_t *) userDatavp;
   genericLogger_t *genericLoggerp = myContextp->genericLoggerp;
   size_t           rcl = (size_t)-1;
@@ -84,7 +84,7 @@ static size_t myHashFunction(void *userDatavp, genericStackItemType_t itemType, 
   return rcl;
 }
 
-static short  myHashCmpAnyFunction(void *userDatavp, genericStackItemType_t itemType, void *p1, void *p2) {
+static short  myHashCmpFunction(void *userDatavp, genericStackItemType_t itemType, void *p1, void *p2) {
   myContext_t     *myContextp = (myContext_t *) userDatavp;
   genericLogger_t *genericLoggerp = myContextp->genericLoggerp;
   short            rcb = 0;
