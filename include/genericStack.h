@@ -21,6 +21,7 @@
 /*                                                                     */
 /* Define GENERICSTACK_C99 to have C99 data type                       */
 
+
 #ifdef GENERICSTACK_C99
 #  undef GENERICSTACK_HAVE_LONG_LONG
 #  define GENERICSTACK_HAVE_LONG_LONG 1
@@ -102,6 +103,8 @@ typedef struct genericStack {
   size_t used;
   genericStackItem_t *items;
   short  error;
+  size_t tmpsize;
+  genericStackItem_t *tmpitems;
 } genericStack_t;
 
 /* ====================================================================== */
@@ -237,28 +240,54 @@ typedef struct genericStack {
     }									\
   } while (0)
 
+
+/* ====================================================================== */
+/* Internal reduce of size before a GET that decrements stackName->use.   */
+/* It is used with the GET interface, so have to fit in a single line     */
+/* ====================================================================== */
+#define _GENERICSTACK_REDUCE_SIZE(stackName)				\
+  (stackName->used > 0) ?						\
+  (									\
+   (stackName->used <= (stackName->tmpsize = (size_t) (stackName->size / 2))) ? \
+   (									\
+    ((stackName->tmpitems = (genericStackItem_t *) realloc(stackName->items, stackName->tmpsize * sizeof(genericStackItem_t))) != NULL) ? \
+    (									\
+     stackName->items = stackName->tmpitems, stackName->size = stackName->tmpsize \
+									) \
+    :									\
+    0									\
+									) \
+   :									\
+   0									\
+									) \
+  :									\
+  (\
+   free(stackName->items), stackName->items = NULL, stackName->size = stackName->used = 0 \
+   )
+
 /* ====================================================================== */
 /* GET interface                                                          */
+/* Last executed statement in the {} is its return value                  */
 /* ====================================================================== */
-#define GENERICSTACK_GET_CHAR(stackName, index)   stackName->items[index].u.c
-#define GENERICSTACK_GET_SHORT(stackName, index)  stackName->items[index].u.s
-#define GENERICSTACK_GET_INT(stackName, index)    stackName->items[index].u.i
-#define GENERICSTACK_GET_LONG(stackName, index)   stackName->items[index].u.l
-#define GENERICSTACK_GET_FLOAT(stackName, index)  stackName->items[index].u.f
-#define GENERICSTACK_GET_DOUBLE(stackName, index) stackName->items[index].u.d
-#define GENERICSTACK_GET_PTR(stackName, index)    stackName->items[index].u.p
+#define GENERICSTACK_GET_CHAR(stackName, index)   (_GENERICSTACK_REDUCE_SIZE(stackName), stackName->items[index].u.c)
+#define GENERICSTACK_GET_SHORT(stackName, index)  (_GENERICSTACK_REDUCE_SIZE(stackName), stackName->items[index].u.s)
+#define GENERICSTACK_GET_INT(stackName, index)    (_GENERICSTACK_REDUCE_SIZE(stackName), stackName->items[index].u.i)
+#define GENERICSTACK_GET_LONG(stackName, index)   (_GENERICSTACK_REDUCE_SIZE(stackName), stackName->items[index].u.l)
+#define GENERICSTACK_GET_FLOAT(stackName, index)  (_GENERICSTACK_REDUCE_SIZE(stackName), stackName->items[index].u.f)
+#define GENERICSTACK_GET_DOUBLE(stackName, index) (_GENERICSTACK_REDUCE_SIZE(stackName), stackName->items[index].u.d)
+#define GENERICSTACK_GET_PTR(stackName, index)    (_GENERICSTACK_REDUCE_SIZE(stackName), stackName->items[index].u.p)
 #if GENERICSTACK_HAVE_LONG_LONG > 0
-#define GENERICSTACK_GET_LONG_LONG(stackName, index)    stackName->items[index].u.ll
+#define GENERICSTACK_GET_LONG_LONG(stackName, index)    (_GENERICSTACK_REDUCE_SIZE(stackName), stackName->items[index].u.ll)
 #endif
 #if GENERICSTACK_HAVE__BOOL > 0
 #define GENERICSTACK_GET__BOOL(stackName, index)  stackName->items[index].u.b
 #endif
 #if GENERICSTACK_HAVE__COMPLEX > 0
-#define GENERICSTACK_GET_FLOAT__COMPLEX(stackName, index)       stackName->items[index].u.fc
-#define GENERICSTACK_GET_DOUBLE__COMPLEX(stackName, index)      stackName->items[index].u.dc
-#define GENERICSTACK_GET_LONG_DOUBLE__COMPLEX(stackName, index) stackName->items[index].u.ldc
+#define GENERICSTACK_GET_FLOAT__COMPLEX(stackName, index)       (_GENERICSTACK_REDUCE_SIZE(stackName), stackName->items[index].u.fc)
+#define GENERICSTACK_GET_DOUBLE__COMPLEX(stackName, index)      (_GENERICSTACK_REDUCE_SIZE(stackName), stackName->items[index].u.dc)
+#define GENERICSTACK_GET_LONG_DOUBLE__COMPLEX(stackName, index) (_GENERICSTACK_REDUCE_SIZE(stackName), stackName->items[index].u.ldc)
 #endif
-#define GENERICSTACK_GET_ANY(stackName, index) stackName->items[index].u.any.p
+#define GENERICSTACK_GET_ANY(stackName, index) (_GENERICSTACK_REDUCE_SIZE(stackName), stackName->items[index].u.any.p)
 
 /* ====================================================================== */
 /* PUSH interface: built on top of SET                                    */
