@@ -87,10 +87,31 @@ typedef struct genericHash {
 	}								\
       }									\
     } else {								\
-      short _foundResultb;                                              \
+      size_t _subStackused;                                             \
+                                                                        \
       _subStackp = (genericStack_t *) GENERICSTACK_GET_PTR(hashName->stackp, _subStackIndex); \
-      GENERICHASH_REMOVE(hashName, userDatavp, itemType, _var, _foundResultb); \
-      GENERICSTACK_PUSH_##itemType(_subStackp, _var);			\
+      _subStackused = GENERICSTACK_USED(_subStackp);			\
+      if (_subStackused > 0) {                                          \
+        size_t _i;                                                      \
+                                                                        \
+        for (_i = 0; _i < _subStackused; _i++) {                        \
+          GENERICSTACKITEMTYPE2TYPE_##itemType _gotVar;                 \
+                                                                        \
+          if (GENERICSTACKITEMTYPE(_subStackp, _i) != _varType) {       \
+            continue;                                                   \
+          }								\
+          _gotVar = GENERICSTACK_GET_##itemType(_subStackp, _i);      \
+          if (hashName->cmpFunctionp(_userDatavp, _varType, (void *) &_var, (void *) &_gotVar)) { \
+            GENERICSTACK_SET_##itemType(_subStackp, _var, _i);          \
+            break;							\
+          }								\
+        }								\
+        if (_i >= _subStackused) {                                      \
+          GENERICSTACK_PUSH_##itemType(_subStackp, _var);               \
+        }                                                               \
+      } else {                                                          \
+        GENERICSTACK_PUSH_##itemType(_subStackp, _var);			\
+      }                                                                 \
       if (GENERICSTACK_ERROR(_subStackp)) {				\
 	hashName->error = 1;						\
       }									\
