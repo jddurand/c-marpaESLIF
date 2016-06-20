@@ -1,12 +1,12 @@
-=for html <a href="https://travis-ci.org/jddurand/c-genericHash"><img src="https://travis-ci.org/jddurand/c-genericHash.svg?branch=master" alt="Travis CI build status" height="18"></a> <a href="https://badge.fury.io/gh/jddurand%2Fc-genericHash"><img src="https://badge.fury.io/gh/jddurand%2Fc-genericHash.svg" alt="GitHub version" height="18"></a> <a href="http://opensource.org/licenses/MIT" rel="nofollow noreferrer"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License MIT" height="18"></a>
+=for html <a href="https://travis-ci.org/jddurand/c-genericStack"><img src="https://travis-ci.org/jddurand/c-genericStack.svg?branch=master" alt="Travis CI build status" height="18"></a> <a href="https://badge.fury.io/gh/jddurand%2Fc-genericStack"><img src="https://badge.fury.io/gh/jddurand%2Fc-genericStack.svg" alt="GitHub version" height="18"></a> <a href="http://opensource.org/licenses/MIT" rel="nofollow noreferrer"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License MIT" height="18"></a>
 
 =head1 NAME
 
-genericHash - generic hash interface
+genericStack - generic stack interface
 
 =head1 DESCRIPTION
 
-genericHash is a basic perl-like generic hash, perl-like means that for a single key there is a single value. It is writen entirely with macros, and is generic in the sense that hashing function and comparison function are left to the end-user.
+genericStack is a set of macros to manage a stack. It is is generic in the sense that it is not restricted to one type of variable.
 
 =head1 SYNPOSIS
 
@@ -203,6 +203,10 @@ C99 data types are all available if the C<GENERICSTACK_C99> macro is defined. Ot
 =item Usage
 
 This genericStack should fit ok for small up to medium size stacks, not I<huge> stacks because of its internal usage of an array instead of a linked list. The later implementation is not that hard, but left as an exercise to the reader.
+
+=item Memory management
+
+This genericStack does not manipulate any memory but the one it need.
 
 =over
 
