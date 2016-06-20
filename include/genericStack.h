@@ -226,6 +226,18 @@ typedef struct genericStack {
 #define GENERICSTACK_SET_LONG_DOUBLE__COMPLEX(stackName, var, index) _GENERICSTACK_SET_BY_TYPE(stackName, long double _Complex, var, GENERICSTACKITEMTYPE_LONG_LONG, ldc, index)
 #endif
 
+/* Special case for NA: there is not associated data */
+#define GENERICSTACK_SET_NA(stackName, index) do {                     \
+    size_t _index_for_set = index;                                      \
+    if (_index_for_set >= stackName->used) {                            \
+      stackName->used = _index_for_set + 1;                             \
+      _GENERICSTACK_EXTEND(stackName, stackName->used);                 \
+    }									\
+    if (! GENERICSTACK_ERROR(stackName)) {				\
+      stackName->items[_index_for_set].type = _GENERICSTACKITEMTYPE_NA; \
+    }									\
+  } while (0)
+
 /* ====================================================================== */
 /* Internal reduce of size before a GET that decrements stackName->use.   */
 /* It is used with the GET interface, so have to fit in a single line     */
