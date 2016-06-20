@@ -227,7 +227,7 @@ typedef struct genericStack {
 #endif
 
 /* Special case for NA: there is not associated data */
-#define GENERICSTACK_SET_NA(stackName, index) do {                     \
+#define GENERICSTACK_SET_NA(stackName, index) do {                      \
     size_t _index_for_set = index;                                      \
     if (_index_for_set >= stackName->used) {                            \
       stackName->used = _index_for_set + 1;                             \
