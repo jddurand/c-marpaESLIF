@@ -15,26 +15,16 @@ typedef struct myStruct2 {
   char *s;
 } myStruct2_t;
 
-void *myStruct2Clone(void *src) {
-  void *p = malloc(sizeof(myStruct2_t));
-  fprintf(stderr, "+++++++ myStruct2Clone called\n");
-  memcpy(p, src, sizeof(myStruct2_t));
-  ((myStruct2_t *) p)->s = strdup(((myStruct2_t *) src)->s);
-  return p;
-}
-
-void myStruct2Free(void *src) {
-  fprintf(stderr, "+++++++ myStruct2Free called\n");
-  free(((myStruct2_t *) src)->s);
-  free(src);
-}
-
 int main() {
   myStruct1_t     myStruct1 = { 50 };
   myStruct2_t     myStruct2 = { 60, "70" };
   genericStack_t *myStackp;
 
   GENERICSTACK_NEW(myStackp); if (GENERICSTACK_ERROR(myStackp)) { return 1; }
+
+  printf("\NEW interface:\n");
+  printf("--------------:\n\n");
+  printf("Initial use/size: %d/%d\n", GENERICSTACK_USED(myStackp), GENERICSTACK_SIZE(myStackp));
 
   printf("\nPUSH interface:\n");
   printf("--------------:\n\n");
@@ -46,12 +36,16 @@ int main() {
   printf("[ 4] myStruct1: {%d}\n", myStruct1.i);                     GENERICSTACK_PUSH_PTR(myStackp, &myStruct1); if (GENERICSTACK_ERROR(myStackp)) { return 1; }
   printf("[ 5] myStruct2: {%d,\"%s\"}\n", myStruct2.i, myStruct2.s); GENERICSTACK_PUSH_PTR(myStackp, &myStruct2); if (GENERICSTACK_ERROR(myStackp)) { return 1; }
 
+  printf("Current use/size: %d/%d\n", GENERICSTACK_USED(myStackp), GENERICSTACK_SIZE(myStackp));
+
   myFunction1(myStackp);
 
   printf("\nSET interface:\n");
   printf("-------------:\n\n");
   
   printf("[10] float : 50\n"); GENERICSTACK_SET_FLOAT(myStackp, 50, 10); if (GENERICSTACK_ERROR(myStackp)) { return 1; }
+
+  printf("Current use/size: %d/%d\n", GENERICSTACK_USED(myStackp), GENERICSTACK_SIZE(myStackp));
 
   myFunction2(myStackp);
   myFunction3(myStackp);
@@ -72,6 +66,8 @@ void myFunction1(genericStack_t *myStackp) {
   printf("[ 4] myStruct1: {%d}\n",         ((myStruct1_t *) GENERICSTACK_GET_PTR (myStackp, 4))->i);
   printf("[ 2] float    : %f\n",         GENERICSTACK_GET_FLOAT (myStackp, 2));
   
+  printf("Current use/size: %d/%d\n", GENERICSTACK_USED(myStackp), GENERICSTACK_SIZE(myStackp));
+
   printf("\nPOP interface:\n");
   printf("-------------:\n\n");
   myStruct2p = (myStruct2_t *) GENERICSTACK_POP_PTR(myStackp);
@@ -82,6 +78,9 @@ void myFunction1(genericStack_t *myStackp) {
   printf("[ 2] float : %f\n",         GENERICSTACK_POP_FLOAT(myStackp));
   printf("[ 1] double: %f\n", (float) GENERICSTACK_POP_DOUBLE(myStackp));
   printf("[ 0] int   : %d\n",         GENERICSTACK_POP_INT(myStackp));
+
+  printf("Current use/size: %d/%d\n", GENERICSTACK_USED(myStackp), GENERICSTACK_SIZE(myStackp));
+
 }
 
 void myFunction2(genericStack_t *myStackp) {
