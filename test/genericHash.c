@@ -39,6 +39,14 @@ int main(int argc, char **argv) {
     GENERICLOGGER_TRACEF(genericLoggerp, "... Success searching for PTR %p", myContextp);
   }
 
+  GENERICLOGGER_TRACEF(genericLoggerp, "... Removing PTR %p", myContextp);
+  GENERICHASH_FIND(myHashp, myContextp, PTR, myContextp, findResultb);
+  if (! findResultb) {
+    GENERICLOGGER_TRACEF(genericLoggerp, "... Failed to find PTR %p", myContextp);
+  } else {
+    GENERICLOGGER_ERROR(genericLoggerp, "... Success searching for PTR %p", myContextp);
+  }
+
   rci = 0;
   goto done;
 
