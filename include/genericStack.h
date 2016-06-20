@@ -9,6 +9,7 @@
 /* C generic stack */
 /* =============== */
 
+/* ------------------------------------------------------------------- */
 /* Most of the generic stack implementations either assume that every  */
 /* element is of the same size, or bypass type checking going through  */
 /* a C layer. This version does not have these two constraints.        */
@@ -20,7 +21,20 @@
 /* choice was made because it is fits all my applications.             */
 /*                                                                     */
 /* Define GENERICSTACK_C99 to have C99 data type                       */
+/* ------------------------------------------------------------------- */
 
+#ifndef GENERICSTACK_INCREASE_BUCKET
+#define GENERICSTACK_INCREASE_BUCKET 1000 /* Subjective number */
+#endif
+
+/* ------------------------------------------------------------------- */
+/* Memory increases on demand using the following algorithm:           */
+/* - current size is multiplied by 2                                   */
+/* - the increase cannot be greater than GENERICSTACK_INCREASE_BUCKET  */
+/*   unless: + the stack is originally empty                           */
+/*           + user ask for a greater indice                           */
+/* Memory always decreases by a factor 2 if the usage is <= size/2     */
+/* ------------------------------------------------------------------- */
 
 #ifdef GENERICSTACK_C99
 #  undef GENERICSTACK_HAVE_LONG_LONG
@@ -44,12 +58,6 @@
 typedef void *(*genericStackClone_t)(void *p);
 typedef void  (*genericStackFree_t)(void *p);
 
-typedef struct genericStackItemAny {
-  void *p;
-  genericStackClone_t clone;
-  genericStackFree_t free;
-} genericStackItemAny_t;
-
 typedef enum genericStackItemType {
   GENERICSTACKITEMTYPE_CHAR,
   GENERICSTACKITEMTYPE_SHORT,
@@ -69,7 +77,6 @@ typedef enum genericStackItemType {
   GENERICSTACKITEMTYPE_DOUBLE__COMPLEX,
   GENERICSTACKITEMTYPE_LONG_DOUBLE__COMPLEX,
 #endif
-  GENERICSTACKITEMTYPE_ANY,
   _GENERICSTACKITEMTYPE_NA
 } genericStackItemType_t;
 
@@ -94,7 +101,6 @@ typedef struct genericStackItem {
     double _Complex dc;
     long double _Complex ldc;
 #endif
-    genericStackItemAny_t any;
   } u;
 } genericStackItem_t;
 
@@ -108,36 +114,44 @@ typedef struct genericStack {
 } genericStack_t;
 
 /* ====================================================================== */
-/* Declaration                                                            */
-/* ====================================================================== */
-#define GENERICSTACK_DECL(stackName) genericStack_t * stackName
-
-/* ====================================================================== */
 /* Error detection                                                        */
 /* ====================================================================== */
 #define GENERICSTACK_ERROR(stackName) ((stackName == NULL) || (stackName->error != 0))
 
 /* ====================================================================== */
 /* Size management, internal macro                                        */
+/* We check for size_t turnaround heuristically - should work IMHO        */
 /* ====================================================================== */
 #define _GENERICSTACK_EXTEND(stackName, wantedSize) do {                \
-    if (wantedSize > stackName->size) {                                 \
+    size_t _wantedSize = (size_t) (wantedSize);                         \
+    size_t _currentSize = (size_t) stackName->size;                     \
+    if (_wantedSize > _currentSize) {                                   \
+      size_t _newSize;                                                  \
       size_t _i_for_extend;						\
       genericStackItem_t *_items = stackName->items;			\
-      _items = (_items != NULL) ?					\
-	realloc(_items, sizeof(genericStackItem_t) * wantedSize)	\
+                                                                        \
+      if (_currentSize <= 0) {                                          \
+        _newSize = _wantedSize;                                         \
+      } else {                                                          \
+        _newSize = _currentSize * 2;                                    \
+        if ((_newSize < _currentSize) || (_newSize < _wantedSize)) {    \
+          _newSize = _wantedSize;                                       \
+        }                                                               \
+      }                                                                 \
+      _items = (_items == NULL) ?					\
+	malloc(sizeof(genericStackItem_t) * _newSize)                   \
 	:								\
-	malloc(sizeof(genericStackItem_t) * wantedSize);		\
+	realloc(_items, sizeof(genericStackItem_t) * _newSize);         \
       if (_items == NULL) {						\
 	stackName->error = 1;						\
       } else {								\
 	for (_i_for_extend = stackName->size;				\
-	     _i_for_extend < wantedSize;				\
+	     _i_for_extend < _newSize;                                  \
 	     _i_for_extend++) {						\
 	  _items[_i_for_extend].type = _GENERICSTACKITEMTYPE_NA;	\
 	}								\
 	stackName->items = _items;					\
-	stackName->size = wantedSize;					\
+	stackName->size = _newSize;					\
       }									\
     }									\
   } while (0)
@@ -145,14 +159,18 @@ typedef struct genericStack {
 /* ====================================================================== */
 /* Initialization                                                         */
 /* ====================================================================== */
+#define GENERICSTACK_INIT(stackName) do {                               \
+  if (stackName != NULL) {						\
+    stackName->size = 0;						\
+    stackName->used = 0;						\
+    stackName->items = NULL;						\
+    stackName->error = 0;						\
+  }                                                                     \
+  } while (0)
+
 #define GENERICSTACK_NEW(stackName) do {				\
     stackName = malloc(sizeof(genericStack_t));                         \
-    if (stackName != NULL) {						\
-      stackName->size = 0;						\
-      stackName->used = 0;						\
-      stackName->items = NULL;						\
-      stackName->error = 0;						\
-    }									\
+    GENERICSTACK_INIT(stackName);                                       \
   } while (0)
 
 #define GENERICSTACK_NEW_SIZED(stackName, wantedSize) do {              \
@@ -202,44 +220,6 @@ typedef struct genericStack {
 #define GENERICSTACK_SET_DOUBLE__COMPLEX(stackName, var, index) _GENERICSTACK_SET_BY_TYPE(stackName, double _Complex, var, GENERICSTACKITEMTYPE_LONG_LONG, dc, index)
 #define GENERICSTACK_SET_LONG_DOUBLE__COMPLEX(stackName, var, index) _GENERICSTACK_SET_BY_TYPE(stackName, long double _Complex, var, GENERICSTACKITEMTYPE_LONG_LONG, ldc, index)
 #endif
-/* Having an internal member u.any.clone is only used to make the compiler check the callback complies to the prototype */
-/* We assume that if var is not NULL, then it is an error tha the clone returns NULL */
-/* and if var is NULL, then it is not necessary to call the clone.                   */
-#define GENERICSTACK_SET_ANY(stackName, var, clonep, freep, index) do { \
-    genericStackClone_t _clonep = clonep;				\
-    size_t _index_for_set = index;                                      \
-    if (_index_for_set >= stackName->used) {                            \
-      stackName->used = _index_for_set + 1;                             \
-      _GENERICSTACK_EXTEND(stackName, stackName->used);                 \
-    }                                                                   \
-    if (! GENERICSTACK_ERROR(stackName)) {				\
-      void *_var = (void *) (var);                                      \
-      if (stackName->items[_index_for_set].type == GENERICSTACKITEMTYPE_ANY) { \
-	genericStackItemAny_t _any = stackName->items[_index_for_set].u.any; \
-	if ((_any.p != NULL) && ((_any.free != NULL))) {		\
-	  stackName->items[_index_for_set].u.any.free(stackName->items[_index_for_set].u.any.p); \
-	}								\
-      }									\
-      stackName->items[_index_for_set].type = GENERICSTACKITEMTYPE_ANY;	\
-      if (_clonep != NULL) {						\
-	stackName->items[_index_for_set].u.any.clone = _clonep;		\
-	stackName->items[_index_for_set].u.any.free = freep;		\
-        if (_var == NULL) {                                             \
-          stackName->items[_index_for_set].u.any.p = NULL;              \
-        } else {                                                        \
-          stackName->items[_index_for_set].u.any.p = stackName->items[_index_for_set].u.any.clone(_var); \
-          if (stackName->items[_index_for_set].u.any.p == NULL) {       \
-            stackName->error = 1;                                       \
-          }                                                             \
-        }                                                               \
-      } else {								\
-	stackName->items[_index_for_set].u.any.clone = NULL;		\
-	stackName->items[_index_for_set].u.any.free = NULL;		\
-	stackName->items[_index_for_set].u.any.p = _var;                \
-      }									\
-    }									\
-  } while (0)
-
 
 /* ====================================================================== */
 /* Internal reduce of size before a GET that decrements stackName->use.   */
@@ -262,7 +242,7 @@ typedef struct genericStack {
 									) \
   :									\
   (\
-   free(stackName->items), stackName->items = NULL, stackName->size = stackName->used = 0 \
+   (stackName->items != NULL) ? free(stackName->items) : 0, stackName->items = NULL, stackName->size = stackName->used = 0 \
    )
 
 /* ====================================================================== */
@@ -287,7 +267,6 @@ typedef struct genericStack {
 #define GENERICSTACK_GET_DOUBLE__COMPLEX(stackName, index)      (_GENERICSTACK_REDUCE_SIZE(stackName), stackName->items[index].u.dc)
 #define GENERICSTACK_GET_LONG_DOUBLE__COMPLEX(stackName, index) (_GENERICSTACK_REDUCE_SIZE(stackName), stackName->items[index].u.ldc)
 #endif
-#define GENERICSTACK_GET_ANY(stackName, index) (_GENERICSTACK_REDUCE_SIZE(stackName), stackName->items[index].u.any.p)
 
 /* ====================================================================== */
 /* PUSH interface: built on top of SET                                    */
@@ -310,7 +289,6 @@ typedef struct genericStack {
 #define GENERICSTACK_PUSH_DOUBLE__COMPLEX(stackName, var) GENERICSTACK_SET_DOUBLE__COMPLEX(stackName, var, stackName->used)
 #define GENERICSTACK_PUSH_LONG_DOUBLE__COMPLEX(stackName, var) GENERICSTACK_SET_LONG_DOUBLE__COMPLEX(stackName, var, stackName->used)
 #endif
-#define GENERICSTACK_PUSH_ANY(stackName, var, clonep, freep) GENERICSTACK_SET_ANY(stackName, var, clonep, freep, stackName->used)
 
 /* ====================================================================== */
 /* POP interface: built on top GET                                        */
@@ -333,7 +311,6 @@ typedef struct genericStack {
 #define GENERICSTACK_POP_DOUBLE__COMPLEX(stackName)      GENERICSTACK_GET_DOUBLE__COMPLEX(stackName,      --stackName->used)
 #define GENERICSTACK_POP_LONG_DOUBLE__COMPLEX(stackName) GENERICSTACK_GET_LONG_DOUBLE__COMPLEX(stackName, --stackName->used)
 #endif
-#define GENERICSTACK_POP_ANY(stackName) GENERICSTACK_GET_ANY(stackName, --stackName->used)
 
 /* ====================================================================== */
 /* Memory release                                                         */
@@ -341,17 +318,8 @@ typedef struct genericStack {
 /* ====================================================================== */
 #define GENERICSTACK_FREE(stackName) do {				\
     if (stackName != NULL) {						\
-      if (stackName->size > 0) {					\
-	while (stackName->size > 0) {					\
-	  size_t _index = stackName->size-- - 1;			\
-	  if (stackName->items[_index].type == GENERICSTACKITEMTYPE_ANY) { \
-	    genericStackItemAny_t _any = stackName->items[_index].u.any; \
-	    if (_any.free != NULL) {					\
-	      _any.free(_any.p);					\
-	    }								\
-	  }								\
-	}								\
-	free(stackName->items);						\
+      if (stackName->items != NULL) {                                   \
+        free(stackName->items);						\
       }									\
       free(stackName);							\
       stackName = NULL;							\
@@ -382,6 +350,5 @@ typedef struct genericStack {
   #define GENERICSTACKITEMTYPE2TYPE_DOUBLE__COMPLEX      double _Complex
   #define GENERICSTACKITEMTYPE2TYPE_LONG_DOUBLE__COMPLEX long double _Complex
 #endif
-#define GENERICSTACKITEMTYPE2TYPE_ANY void *
 
 #endif /* GENERICSTACK_H */

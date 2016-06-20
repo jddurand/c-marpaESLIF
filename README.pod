@@ -24,7 +24,7 @@ Create an empty stack referenced with the name C<stackName>, though pre-allocati
 
 =head2 GENERICSTACK_SET_XXX(stackName, var, index)
 
-Set an entry in stack C<stackName>, at index C<index> (numbering start 0), using the result of the expression C<var>. XXX is meant to be a C datatype or I<ANY>, i.e. the exact list of macros is:
+Set an entry in stack C<stackName>, at index C<index> (numbering start 0), using the result of the expression C<var>. XXX is meant to be a C datatype, i.e. the exact list of macros is:
 
 =over
 
@@ -84,20 +84,9 @@ Set C<var> expression result, explicitely typecasted into a C<long double _Compl
 
 =back
 
-=head2 GENERICSTACK_SET_ANY(stackName, var, clonep, freep, index)
-
-  typedef void *(*genericStackClone_t)(void *p);
-  typedef void  (*genericStackFree_t)(void *p);
-
-Set an entry in stack C<stackName>, at index C<index> (numbering start 0), using the result of the expression C<var> that can be a pointer to anything, including opaque storage. C<clonep>, if provided, must be a function pointer that return a clone of C<var> expression. C<freep>, if provided, must be a function pointer that free the clone.
-
-If C<clonep> is NULL, C<GENERICSTACK_SET_ANY> is functionnally equivalent to GENERICSTACK_SET_PTR()
-
-If C<clonep> is not NULL, then it is the clone that is set. This clone will eventually be freed when GENERICSTACK_FREE() is called, using C<freep>, if the later is not NULL (if C<freep> is NULL, a memory leak is likely to happen, unless C<clonep> function is a function that is returning its argument -;).
-
 =head2 GENERICSTACK_GET_XXX(stackName, index)
 
-Get an entry in stack C<stackName>, at index C<index> (numbering start 0). The data type of the entry is left as-is, letting the compiler do type promotion, and eventually warn. XXX is meant to be a C datatype or I<ANY>, i.e. the exact list of macros is:
+Get an entry in stack C<stackName>, at index C<index> (numbering start 0). The data type of the entry is left as-is, letting the compiler do type promotion, and eventually warn. XXX is meant to be a C datatype, i.e. the exact list of macros is:
 
 =over
 
@@ -114,10 +103,6 @@ Get an entry in stack C<stackName>, at index C<index> (numbering start 0). The d
 =item GENERICSTACK_GET_DOUBLE
 
 =item GENERICSTACK_GET_PTR
-
-=item GENERICSTACK_GET_ANY
-
-Note that GENERICSTACK_GET_ANY() is functionnaly equivalent to GENERICSTACK_GET_PTR(), i.e. it returns a C<void *>.
 
 =back
 
@@ -191,10 +176,6 @@ and so on.
 
 =over
 
-=item ANY datatype
-
-As stated before, the generic stack always owns a data type created with GENERICSTACK_SET_ANY() or GENERICSTACK_PUSH_ANY(). This simply mean that, I<if> the user provide both a C<clonep> and a C<freep> method, he should I<not> call himself the C<freep> method after retreiving a pointer to the clone.
-
 =item C99 datatypes
 
 C99 data types are all available if the C<GENERICSTACK_C99> macro is defined. Otherwise, partial support of C99 from the compiler support is handled like this:
@@ -220,87 +201,103 @@ If this #define is a true value, then C<float _Complex>, C<double _Complex> and 
 =head1 EXAMPLE
 
   #include <stdio.h>
-  #include <genericStack.h>
-
-  void myFunction1(int arg1, GENERICSTACK_DECL(myStack), int argn);
-  void myFunction2(int arg1, GENERICSTACK_DECL(myStack), int argn);
-
-  typedef struct myStruct1 { int i; } myStruct1_t;
-  typedef struct myStruct2 { int i; char *s; } myStruct2_t;
-
+  #include <stdlib.h>
+  #include "genericStack.h"
+  
+  void myFunction1(genericStack_t *myStackp);
+  void myFunction2(genericStack_t *myStackp);
+  void myFunction3(genericStack_t *myStackp);
+  
+  typedef struct myStruct1 {
+    int i;
+  } myStruct1_t;
+  
+  typedef struct myStruct2 {
+    int i;
+    char *s;
+  } myStruct2_t;
+  
   void *myStruct2Clone(void *src) {
     void *p = malloc(sizeof(myStruct2_t));
+    fprintf(stderr, "+++++++ myStruct2Clone called\n");
     memcpy(p, src, sizeof(myStruct2_t));
     ((myStruct2_t *) p)->s = strdup(((myStruct2_t *) src)->s);
     return p;
   }
-
+  
   void myStruct2Free(void *src) {
+    fprintf(stderr, "+++++++ myStruct2Free called\n");
     free(((myStruct2_t *) src)->s);
     free(src);
   }
-
-  int main() {
-    myStruct1_t myStruct1 = { 50 };
-    myStruct2_t myStruct2 = { 60, "70" };
   
-    GENERICSTACK_DECL(myStack);
-
-    GENERICSTACK_NEW        (myStack);
-    if (GENERICSTACK_ERROR(myStack)) { return 1; }
-
-    GENERICSTACK_PUSH_INT   (myStack, 10);
-    if (GENERICSTACK_ERROR(myStack)) { return 1; }
-
-    GENERICSTACK_PUSH_DOUBLE(myStack, 20);
-    if (GENERICSTACK_ERROR(myStack)) { return 1; }
-
-    GENERICSTACK_PUSH_FLOAT (myStack, 30);
-    if (GENERICSTACK_ERROR(myStack)) { return 1; }
-
-    GENERICSTACK_PUSH_SHORT (myStack, 40);
-    if (GENERICSTACK_ERROR(myStack)) { return 1; }
-
-    GENERICSTACK_PUSH_ANY   (myStack, &myStruct1, NULL, NULL);
-    if (GENERICSTACK_ERROR(myStack)) { return 1; }
-
-    GENERICSTACK_PUSH_ANY   (myStack, &myStruct2, myStruct2Clone, myStruct2Free);
-    if (GENERICSTACK_ERROR(myStack)) { return 1; }
-
-    myFunction1             (-1, myStack, 999);
-
-    GENERICSTACK_SET_FLOAT  (myStack, 50, 10);  /* Indice 10 */
-    if (GENERICSTACK_ERROR(myStack)) { return 1; }
-
-    myFunction2             (-1, myStack, 999);
-
-    GENERICSTACK_FREE       (myStack);
-
+  int main() {
+    myStruct1_t     myStruct1 = { 50 };
+    myStruct2_t     myStruct2 = { 60, "70" };
+    genericStack_t *myStackp;
+  
+    GENERICSTACK_NEW(myStackp); if (GENERICSTACK_ERROR(myStackp)) { return 1; }
+  
+    printf("\nPUSH interface:\n");
+    printf("--------------:\n\n");
+    
+    printf("[ 0] int      : 10\n");                                    GENERICSTACK_PUSH_INT   (myStackp, 10);      if (GENERICSTACK_ERROR(myStackp)) { return 1; }
+    printf("[ 1] double   : 20\n");                                    GENERICSTACK_PUSH_DOUBLE(myStackp, 20);      if (GENERICSTACK_ERROR(myStackp)) { return 1; }
+    printf("[ 2] float    : 30\n");                                    GENERICSTACK_PUSH_FLOAT (myStackp, 30);      if (GENERICSTACK_ERROR(myStackp)) { return 1; }
+    printf("[ 3] short    : 40\n");                                    GENERICSTACK_PUSH_SHORT (myStackp, 40);      if (GENERICSTACK_ERROR(myStackp)) { return 1; }
+    printf("[ 4] myStruct1: {%d}\n", myStruct1.i);                     GENERICSTACK_PUSH_PTR(myStackp, &myStruct1); if (GENERICSTACK_ERROR(myStackp)) { return 1; }
+    printf("[ 5] myStruct2: {%d,\"%s\"}\n", myStruct2.i, myStruct2.s); GENERICSTACK_PUSH_PTR(myStackp, &myStruct2); if (GENERICSTACK_ERROR(myStackp)) { return 1; }
+  
+    myFunction1(myStackp);
+  
+    printf("\nSET interface:\n");
+    printf("-------------:\n\n");
+    
+    printf("[10] float : 50\n"); GENERICSTACK_SET_FLOAT(myStackp, 50, 10); if (GENERICSTACK_ERROR(myStackp)) { return 1; }
+  
+    myFunction2(myStackp);
+    myFunction3(myStackp);
+  
     return 0;
   }
-
-  void myFunction1(int arg1, GENERICSTACK_DECL(myStack), int argn) {
+  
+  void myFunction1(genericStack_t *myStackp) {
     myStruct1_t *myStruct1p;
     myStruct2_t *myStruct2p;
-
-    printf("[ 1] double   : %f\n", (float)   GENERICSTACK_GET_DOUBLE(myStack, 1));
-    printf("[ 0] int      : %d\n",           GENERICSTACK_GET_INT   (myStack, 0));
-    printf("[ 3] short    : %d\n",           GENERICSTACK_GET_SHORT (myStack, 3));
-    printf("[ 5] myStruct2: {%d, \"%s\"}\n", ((myStruct2_t *) GENERICSTACK_GET_ANY (myStack, 5))->i,
-                                             ((myStruct2_t *) GENERICSTACK_GET_ANY (myStack, 5))->s);
-    printf("[ 4] myStruct1: {%d}\n",         ((myStruct1_t *) GENERICSTACK_GET_ANY (myStack, 4))->i);
-    printf("[ 2] float    : %f\n",           GENERICSTACK_GET_FLOAT (myStack, 2));
-  
-    myStruct2p = (myStruct2_t *)        GENERICSTACK_POP_ANY(myStack);
-    myStruct1p = (myStruct1_t *)        GENERICSTACK_POP_ANY(myStack);
+    
+    printf("\nGET interface:\n");
+    printf("-------------:\n\n");
+    printf("[ 1] double   : %f\n", (float) GENERICSTACK_GET_DOUBLE(myStackp, 1));
+    printf("[ 0] int      : %d\n",         GENERICSTACK_GET_INT   (myStackp, 0));
+    printf("[ 3] short    : %d\n",         GENERICSTACK_GET_SHORT (myStackp, 3));
+    printf("[ 5] myStruct2: {%d, \"%s\"}\n", ((myStruct2_t *) GENERICSTACK_GET_PTR (myStackp, 5))->i, ((myStruct2_t *) GENERICSTACK_GET_PTR (myStackp, 5))->s);
+    printf("[ 4] myStruct1: {%d}\n",         ((myStruct1_t *) GENERICSTACK_GET_PTR (myStackp, 4))->i);
+    printf("[ 2] float    : %f\n",         GENERICSTACK_GET_FLOAT (myStackp, 2));
+    
+    printf("\nPOP interface:\n");
+    printf("-------------:\n\n");
+    myStruct2p = (myStruct2_t *) GENERICSTACK_POP_PTR(myStackp);
     printf("[ 5] myStruct2: {%d, \"%s\"}\n", myStruct2p->i, myStruct2p->s);
+    myStruct1p = (myStruct1_t *) GENERICSTACK_POP_PTR(myStackp);
     printf("[ 4] myStruct1: {%d}\n", myStruct1p->i);
-    printf("[ 3] short : %d\n", (int)   GENERICSTACK_POP_SHORT(myStack));
-    printf("[ 2] float : %f\n",         GENERICSTACK_POP_FLOAT(myStack));
-    printf("[ 1] double: %f\n", (float) GENERICSTACK_POP_DOUBLE(myStack));
-    printf("[ 0] int   : %d\n",         GENERICSTACK_POP_INT(myStack));
+    printf("[ 3] short : %d\n", (int)   GENERICSTACK_POP_SHORT(myStackp));
+    printf("[ 2] float : %f\n",         GENERICSTACK_POP_FLOAT(myStackp));
+    printf("[ 1] double: %f\n", (float) GENERICSTACK_POP_DOUBLE(myStackp));
+    printf("[ 0] int   : %d\n",         GENERICSTACK_POP_INT(myStackp));
   }
-
-  void myFunction2(int arg1, GENERICSTACK_DECL(myStack), int argn) {
-    printf("[10] float : %f\n", GENERICSTACK_GET_FLOAT (myStack, 10));
+  
+  void myFunction2(genericStack_t *myStackp) {
+    
+    printf("\nGET interface:\n");
+    printf("-------------:\n\n");
+    printf("[10] float : %f\n",         GENERICSTACK_GET_FLOAT (myStackp, 10));
   }
+  
+  void myFunction3(genericStack_t *myStackp) {
+    
+    printf("\nFREE interface:\n");
+    printf("--------------:\n\n");
+  
+    GENERICSTACK_FREE(myStackp);
+  }
+  
