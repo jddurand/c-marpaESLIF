@@ -368,4 +368,29 @@ typedef struct genericStack {
   #define GENERICSTACKITEMTYPE2TYPE_LONG_DOUBLE__COMPLEX long double _Complex
 #endif
 
+/* ====================================================================== */
+/* Switches two entries                                                   */
+/* We support a "negative index", which mean start by far from the end.   */
+/* ====================================================================== */
+#define GENERICSTACK_SWITCH(stackName, i1, i2) do {                     \
+    int _index1 = (int) (i1);                                           \
+    int _index2 = (int) (i2);                                           \
+                                                                        \
+    if (_index1 < 0) {                                                  \
+      _index1 = stackName->used + _index1;                              \
+    }                                                                   \
+    if (_index2 < 0) {                                                  \
+      _index2 = stackName->used + _index2;                              \
+    }                                                                   \
+                                                                        \
+    if ((_index1 < 0) || (((size_t) _index1) >= stackName->used) ||     \
+        (_index2 < 0) || (((size_t) _index2) >= stackName->used)) {     \
+      stackName->error = 1;                                             \
+    } else if (_index1 != _index2) {                                    \
+      genericStackItem_t _item = stackName->items[_index1];             \
+      stackName->items[_index1] = stackName->items[_index2];            \
+      stackName->items[_index2] = _item;                                \
+    }                                                                   \
+  } while (0)
+
 #endif /* GENERICSTACK_H */
