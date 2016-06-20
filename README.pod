@@ -8,6 +8,14 @@ genericHash - generic hash interface
 
 genericHash looks like a subset of perl-like hashes, done in macros. Perl-like means that for one given key, there is one possible value. It is generic in the sense that hashing function and comparison functions are explicitely externalized. It is built on top of L<genericStack|https://github.com/jddurand/c-genericStack>.
 
+=head1 SYNOPSIS
+
+  #include <genericHash.h>
+
+  genericHash_t *myHashp;
+
+genericHash looks like a subset of perl-like hashes, done in macros. Perl-like means that for one given key, there is one possible value. It is generic in the sense that hashing function and comparison functions are explicitely externalized. It is built on top of L<genericStack|https://github.com/jddurand/c-genericStack>.
+
 =head1 MACROS
 
 =head2 GENERICHASH_NEW(hashName, indFunctionp, cmpFunctionp)
