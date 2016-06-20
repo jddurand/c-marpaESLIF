@@ -11,6 +11,7 @@ static short  myHashCmpFunction(void *userDatavp, genericStackItemType_t itemTyp
 int main(int argc, char **argv) {
   myContext_t      myContext;
   myContext_t     *myContextp = &myContext;
+  myContext_t     *myContextFoundp;
   int              rci = 0;
   genericLogger_t *genericLoggerp = GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_TRACE);
   genericHash_t   *myHashp;
@@ -33,25 +34,33 @@ int main(int argc, char **argv) {
   GENERICLOGGER_TRACEF(genericLoggerp, "... Inserted PTR %p", myContextp);
 
   GENERICLOGGER_TRACEF(genericLoggerp, "... Looking for PTR %p", myContextp);
-  GENERICHASH_FIND(myHashp, myContextp, PTR, myContextp, findResultb);
+  GENERICHASH_FIND(myHashp, myContextp, PTR, myContextp, findResultb, myContextFoundp);
   if (! findResultb) {
     GENERICLOGGER_ERRORF(genericLoggerp, "... Failed to find PTR %p", myContextp);
   } else {
-    GENERICLOGGER_TRACEF(genericLoggerp, "... Success searching for PTR %p", myContextp);
+    if (myContextp == myContextFoundp) {
+      GENERICLOGGER_TRACEF(genericLoggerp, "... Success searching for PTR %p", myContextFoundp);
+    } else {
+      GENERICLOGGER_TRACEF(genericLoggerp, "... Success searching for PTR but found a bad pointer %p", myContextFoundp);
+    }
   }
 
   GENERICLOGGER_TRACEF(genericLoggerp, "... Removing PTR %p", myContextp);
-  GENERICHASH_REMOVE(myHashp, myContextp, PTR, myContextp, removeResultb);
+  GENERICHASH_REMOVE(myHashp, myContextp, PTR, myContextp, removeResultb, myContextFoundp);
   if (! removeResultb) {
     GENERICLOGGER_ERRORF(genericLoggerp, "... Failed to remove PTR %p", myContextp);
   } else {
-    GENERICLOGGER_TRACEF(genericLoggerp, "... Success removing PTR %p", myContextp);
-    GENERICLOGGER_TRACEF(genericLoggerp, "... Looking again for PTR %p", myContextp);
-    GENERICHASH_FIND(myHashp, myContextp, PTR, myContextp, findResultb);
-    if (! findResultb) {
-      GENERICLOGGER_TRACEF(genericLoggerp, "... Failed to find PTR %p", myContextp);
+    if (myContextp == myContextFoundp) {
+      GENERICLOGGER_TRACEF(genericLoggerp, "... Success removing PTR %p", myContextFoundp);
     } else {
-      GENERICLOGGER_ERRORF(genericLoggerp, "... Success searching for PTR %p", myContextp);
+      GENERICLOGGER_TRACEF(genericLoggerp, "... Success removing PTR but found a bad pointer %p", myContextFoundp);
+    }
+    GENERICLOGGER_TRACEF(genericLoggerp, "... Looking again for PTR %p", myContextp);
+    GENERICHASH_FIND(myHashp, myContextp, PTR, myContextp, findResultb, myContextFoundp);
+    if (! findResultb) {
+      GENERICLOGGER_TRACEF(genericLoggerp, "... Failed to find PTR %p and this is ok", myContextp);
+    } else {
+      GENERICLOGGER_ERRORF(genericLoggerp, "... Unexpected success searching for PTR %p, got %p", myContextp, myContextFoundp);
     }
   }
 

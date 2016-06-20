@@ -124,55 +124,49 @@ typedef struct genericHash {
 /* wanted variable and result must be C identifiers                       */
 /* Removal takes care to not let a sparse entry in the stack              */
 /* ====================================================================== */
-#define _GENERICHASH_FIND_REMOVE(hashName, userDatavp, wantedType, wantedValue, result, remove) do { \
+#define _GENERICHASH_FIND_REMOVE(hashName, userDatavp, wantedType, wantedValue, findResult, got, remove) do { \
     genericStackItemType_t                 _wantedType = GENERICSTACKITEMTYPE_##wantedType; \
     GENERICSTACKITEMTYPE2TYPE_##wantedType _wantedVar = (GENERICSTACKITEMTYPE2TYPE_##wantedType) (wantedValue); \
-    void   *_userDatavp = (void *) userDatavp;			\
+    void   *_userDatavp = (void *) userDatavp;				\
     size_t  _subStackIndex = hashName->indFunctionp(_userDatavp, _wantedType, (void *) &_wantedVar); \
+    findResult = 0;							\
 									\
     if (_subStackIndex == (size_t) -1) {				\
       hashName->error = 1;						\
-      (result) = 0;							\
-    } else if ((_subStackIndex >= GENERICSTACK_USED(hashName->stackp))	\
-               ||							\
-               (GENERICSTACKITEMTYPE(hashName->stackp, _subStackIndex) != GENERICSTACKITEMTYPE_PTR)) { \
-      (result) = 0;							\
-    } else {								\
+    } else if ((_subStackIndex < GENERICSTACK_USED(hashName->stackp))	\
+               &&							\
+               (GENERICSTACKITEMTYPE(hashName->stackp, _subStackIndex) == GENERICSTACKITEMTYPE_PTR)) { \
       genericStack_t *_subStackp;					\
       size_t          _subStackused;					\
 									\
       _subStackp = (genericStack_t *) GENERICSTACK_GET_PTR(hashName->stackp, _subStackIndex); \
       _subStackused = GENERICSTACK_USED(_subStackp);			\
-      if (_subStackused <= 0) {                                         \
-        (result) = 0;							\
-      } else {                                                          \
+      if (_subStackused > 0) {						\
         size_t _i;                                                      \
-        short  _result;                                                 \
 	                                                                \
         for (_i = 0; _i < _subStackused; _i++) {                        \
           GENERICSTACKITEMTYPE2TYPE_##wantedType _gotVar;               \
-          if (GENERICSTACKITEMTYPE(_subStackp, _i) != _wantedType) {  \
+          if (GENERICSTACKITEMTYPE(_subStackp, _i) != _wantedType) {	\
             continue;                                                   \
           }								\
           _gotVar = GENERICSTACK_GET_##wantedType(_subStackp, _i);      \
-          _result = hashName->cmpFunctionp(_userDatavp, _wantedType, (void *) &_wantedVar, (void *) &_gotVar); \
-          if (_result) {						\
+          if (hashName->cmpFunctionp(_userDatavp, _wantedType, (void *) &_wantedVar, (void *) &_gotVar)) { \
+	    findResult = 1;						\
+	    got = GENERICSTACK_GET_##wantedType(_subStackp, _i);	\
             if (remove) {						\
               GENERICSTACK_SET_NA(_subStackp, _i);                      \
               GENERICSTACK_SWITCH(_subStackp, _i, -1);                  \
               GENERICSTACK_POP_NA(_subStackp);                          \
-            }                                                           \
+	    }								\
             break;							\
           }								\
         }								\
-									\
-        (result) = _result;						\
       }									\
     }									\
 } while (0)
 
-#define GENERICHASH_FIND(hashName, userDatavp, wantedType, wantedVar, result) _GENERICHASH_FIND_REMOVE(hashName, (userDatavp), wantedType, (wantedVar), result, 0)
-#define GENERICHASH_REMOVE(hashName, userDatavp, wantedType, wantedVar, result) _GENERICHASH_FIND_REMOVE(hashName, (userDatavp), wantedType, (wantedVar), result, 1)
+#define GENERICHASH_FIND(hashName, userDatavp, wantedType, wantedVar, findResult, got) _GENERICHASH_FIND_REMOVE(hashName, (userDatavp), wantedType, wantedVar, findResult, got, 0)
+#define GENERICHASH_REMOVE(hashName, userDatavp, wantedType, wantedVar, findResult, got) _GENERICHASH_FIND_REMOVE(hashName, userDatavp, wantedType, wantedVar, findResult, got, 1)
 
 /* ====================================================================== */
 /* Memory release                                                         */
