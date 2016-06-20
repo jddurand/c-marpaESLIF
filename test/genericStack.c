@@ -2,9 +2,9 @@
 #include <stdlib.h>
 #include "genericStack.h"
 
-void myFunction1(genericStack_t *myStackp);
-void myFunction2(genericStack_t *myStackp);
-void myFunction3(genericStack_t *myStackp);
+short myFunction1(genericStack_t *myStackp);
+short myFunction2(genericStack_t *myStackp);
+short myFunction3(genericStack_t *myStackp);
 
 typedef struct myStruct1 {
   int i;
@@ -22,7 +22,7 @@ int main() {
 
   GENERICSTACK_NEW(myStackp); if (GENERICSTACK_ERROR(myStackp)) { return 1; }
 
-  printf("\NEW interface:\n");
+  printf("\nNEW interface:\n");
   printf("--------------:\n\n");
   printf("Initial use/size: %d/%d\n", GENERICSTACK_USED(myStackp), GENERICSTACK_SIZE(myStackp));
 
@@ -38,7 +38,7 @@ int main() {
 
   printf("Current use/size: %d/%d\n", GENERICSTACK_USED(myStackp), GENERICSTACK_SIZE(myStackp));
 
-  myFunction1(myStackp);
+  if (myFunction1(myStackp) == 0) { return 1; }
 
   printf("\nSET interface:\n");
   printf("-------------:\n\n");
@@ -48,13 +48,13 @@ int main() {
 
   printf("Current use/size: %d/%d\n", GENERICSTACK_USED(myStackp), GENERICSTACK_SIZE(myStackp));
 
-  myFunction2(myStackp);
-  myFunction3(myStackp);
+  if (myFunction2(myStackp) == 0) { return 1; }
+  if (myFunction3(myStackp) == 0) { return 1; }
 
   return 0;
 }
 
-void myFunction1(genericStack_t *myStackp) {
+short myFunction1(genericStack_t *myStackp) {
   myStruct1_t *myStruct1p;
   myStruct2_t *myStruct2p;
   
@@ -69,6 +69,17 @@ void myFunction1(genericStack_t *myStackp) {
   
   printf("Current use/size: %d/%d\n", GENERICSTACK_USED(myStackp), GENERICSTACK_SIZE(myStackp));
 
+  printf("\nSWITCH interface:\n");
+  printf("------------------:\n\n");
+  GENERICSTACK_SWITCH(myStackp, 5, 2); if (GENERICSTACK_ERROR(myStackp)) { return 1; }
+  printf("[ 2] myStruct2: {%d, \"%s\"}\n", ((myStruct2_t *) GENERICSTACK_GET_PTR (myStackp, 2))->i, ((myStruct2_t *) GENERICSTACK_GET_PTR (myStackp, 2))->s);
+  printf("[ 5] float    : %f\n",         GENERICSTACK_GET_FLOAT (myStackp, 5));
+
+  printf("\n...SWITCH again:\n");
+  GENERICSTACK_SWITCH(myStackp, 5, 2); if (GENERICSTACK_ERROR(myStackp)) { return 1; }
+  printf("[ 2] float    : %f\n",         GENERICSTACK_GET_FLOAT (myStackp, 2));
+  printf("[ 5] myStruct2: {%d, \"%s\"}\n", ((myStruct2_t *) GENERICSTACK_GET_PTR (myStackp, 5))->i, ((myStruct2_t *) GENERICSTACK_GET_PTR (myStackp, 5))->s);
+
   printf("\nPOP interface:\n");
   printf("-------------:\n\n");
   myStruct2p = (myStruct2_t *) GENERICSTACK_POP_PTR(myStackp);
@@ -82,20 +93,25 @@ void myFunction1(genericStack_t *myStackp) {
 
   printf("Current use/size: %d/%d\n", GENERICSTACK_USED(myStackp), GENERICSTACK_SIZE(myStackp));
 
+  return 1;
 }
 
-void myFunction2(genericStack_t *myStackp) {
+short myFunction2(genericStack_t *myStackp) {
   
   printf("\nGET interface:\n");
   printf("-------------:\n\n");
   printf("[10] float : %f\n",         GENERICSTACK_GET_FLOAT (myStackp, 10));
+
+  return 1;
 }
 
-void myFunction3(genericStack_t *myStackp) {
+short myFunction3(genericStack_t *myStackp) {
   
   printf("\nFREE interface:\n");
   printf("--------------:\n\n");
 
   GENERICSTACK_FREE(myStackp);
+
+  return 1;
 }
 
