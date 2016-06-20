@@ -35,6 +35,7 @@ int main() {
   printf("[ 3] short    : 40\n");                                    GENERICSTACK_PUSH_SHORT (myStackp, 40);      if (GENERICSTACK_ERROR(myStackp)) { return 1; }
   printf("[ 4] myStruct1: {%d}\n", myStruct1.i);                     GENERICSTACK_PUSH_PTR(myStackp, &myStruct1); if (GENERICSTACK_ERROR(myStackp)) { return 1; }
   printf("[ 5] myStruct2: {%d,\"%s\"}\n", myStruct2.i, myStruct2.s); GENERICSTACK_PUSH_PTR(myStackp, &myStruct2); if (GENERICSTACK_ERROR(myStackp)) { return 1; }
+  printf("[ 6] N/A\n");                                              GENERICSTACK_PUSH_NA    (myStackp);          if (GENERICSTACK_ERROR(myStackp)) { return 1; }
 
   printf("Current use/size: %d/%d\n", GENERICSTACK_USED(myStackp), GENERICSTACK_SIZE(myStackp));
 
@@ -80,8 +81,12 @@ short myFunction1(genericStack_t *myStackp) {
   printf("[ 2] float    : %f\n",         GENERICSTACK_GET_FLOAT (myStackp, 2));
   printf("[ 5] myStruct2: {%d, \"%s\"}\n", ((myStruct2_t *) GENERICSTACK_GET_PTR (myStackp, 5))->i, ((myStruct2_t *) GENERICSTACK_GET_PTR (myStackp, 5))->s);
 
+  fprintf(stderr, "myStackp->used=%d\n", (int) myStackp->used);
+
   printf("\nPOP interface:\n");
   printf("-------------:\n\n");
+  printf("[ 6] N/A\n");  GENERICSTACK_POP_NA(myStackp);
+  fprintf(stderr, "myStackp->used=%d\n", (int) myStackp->used);
   myStruct2p = (myStruct2_t *) GENERICSTACK_POP_PTR(myStackp);
   printf("[ 5] myStruct2: {%d, \"%s\"}\n", myStruct2p->i, myStruct2p->s);
   myStruct1p = (myStruct1_t *) GENERICSTACK_POP_PTR(myStackp);
