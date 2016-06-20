@@ -8,7 +8,9 @@ genericStack - generic stack interface
 
 genericStack is a set of macros to manage a stack. It is is generic in the sense that it is not restricted to one type of variable. It is recommended to always use valid C identifiers in these macros.
 
-=head1 SYNPOSIS
+=head1 SYNOPSIS
+
+  #include <genericStack.h>
 
   genericStack_t myStack, *myStackp = &myStack;
 
