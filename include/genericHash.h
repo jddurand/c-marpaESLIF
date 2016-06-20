@@ -57,7 +57,7 @@ typedef struct genericHash {
 #define GENERICHASH_NEW_SIZED(hashName, indFunctionp, cmpFunctionp, wantedSize, wantedSubSize) _GENERICHASH_NEW_SIZED(hashName, indFunctionp, cmpFunctionp, (wantedSize), (wantedSubSize)) 
 
 /* ====================================================================== */
-/* Insert in the hash                                                     */
+/* Set in the hash                                                        */
 /* ====================================================================== */
 #define GENERICHASH_SET(hashName, userDatavp, itemType, value) do {	\
     void                                *_userDatavp = (void *) userDatavp; \
@@ -87,7 +87,9 @@ typedef struct genericHash {
 	}								\
       }									\
     } else {								\
+      short _foundResultb;                                              \
       _subStackp = (genericStack_t *) GENERICSTACK_GET_PTR(hashName->stackp, _subStackIndex); \
+      GENERICHASH_REMOVE(hashName, userDatavp, itemType, _var, _foundResultb); \
       GENERICSTACK_PUSH_##itemType(_subStackp, _var);			\
       if (GENERICSTACK_ERROR(_subStackp)) {				\
 	hashName->error = 1;						\
@@ -99,6 +101,7 @@ typedef struct genericHash {
 /* Find and eventually remove in the hash                                 */
 /*                                                                        */
 /* wanted variable and result must be C identifiers                       */
+/* Removal takes care to not let a sparse entry in the stack              */
 /* ====================================================================== */
 #define _GENERICHASH_FIND_REMOVE(hashName, userDatavp, wantedType, wantedValue, result, remove) do { \
     genericStackItemType_t                 _wantedType = GENERICSTACKITEMTYPE_##wantedType; \
@@ -135,6 +138,8 @@ typedef struct genericHash {
           if (_result) {						\
             if (remove) {						\
               GENERICSTACK_SET_NA(_subStackp, _i);                      \
+              GENERICSTACK_SWITCH(_subStackp, _i, -1);                  \
+              GENERICSTACK_POP_NA(_subStackp);                          \
             }                                                           \
             break;							\
           }								\
