@@ -6,7 +6,7 @@ genericStack - generic stack interface
 
 =head1 DESCRIPTION
 
-genericStack is a set of macros to manage a stack. It is is generic in the sense that it is not restricted to one type of variable.
+genericStack is a set of macros to manage a stack. It is is generic in the sense that it is not restricted to one type of variable. It is recommended to always use valid C identifiers in these macros.
 
 =head1 SYNPOSIS
 
@@ -22,9 +22,9 @@ genericStack is a set of macros to manage a stack. It is is generic in the sense
 
 =head1 MACROS
 
-=head2 GENERICSTACK_DECL(stackName)
+=head2 GENERICSTACK_INIT(stackName)
 
-Declare a stack with the name C<stackName>, which must be a valid C identifier.
+Initialize a stack pointer.
 
 =head2 GENERICSTACK_NEW(stackName)
 
