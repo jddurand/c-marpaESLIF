@@ -249,17 +249,17 @@ typedef struct genericStack {
    (									\
     ((stackName->tmpitems = (genericStackItem_t *) realloc(stackName->items, stackName->tmpsize * sizeof(genericStackItem_t))) != NULL) ? \
     (									\
-     stackName->items = stackName->tmpitems, stackName->size = stackName->tmpsize \
+     (void)(stackName->items = stackName->tmpitems, stackName->size = stackName->tmpsize) \
 									) \
     :									\
-    0									\
+    (void)0								\
 									) \
    :									\
-   0									\
+   (void)0								\
 									) \
   :									\
-  (\
-   (stackName->items != NULL) ? free(stackName->items) : 0, stackName->items = NULL, stackName->size = stackName->used = 0 \
+  (void)(								\
+   (stackName->items != NULL) ? free(stackName->items) : (void)0, stackName->items = NULL, stackName->size = stackName->used = 0 \
    )
 
 /* ====================================================================== */
