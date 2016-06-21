@@ -222,8 +222,9 @@ typedef struct genericStack {
       _GENERICSTACK_EXTEND(stackName, stackName->used);                 \
     }									\
     if (! GENERICSTACK_ERROR(stackName)) {				\
-      stackName->items[_index_for_set].type = (itemType);		\
-      stackName->items[_index_for_set].u.dst = (varType) (var);		\
+      genericStackItem_t *_item = stackName->items + _index_for_set;	\
+      _item->type = (itemType);						\
+      _item->u.dst = (varType) (var);					\
     }									\
   } while (0)
 
