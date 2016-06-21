@@ -59,6 +59,7 @@ typedef void *(*genericStackClone_t)(void *p);
 typedef void  (*genericStackFree_t)(void *p);
 
 typedef enum genericStackItemType {
+  _GENERICSTACKITEMTYPE_NA = 0,    /* Not a hasard it is explicitely 0 */
   GENERICSTACKITEMTYPE_CHAR,
   GENERICSTACKITEMTYPE_SHORT,
   GENERICSTACKITEMTYPE_INT,
@@ -77,8 +78,10 @@ typedef enum genericStackItemType {
   GENERICSTACKITEMTYPE_DOUBLE__COMPLEX,
   GENERICSTACKITEMTYPE_LONG_DOUBLE__COMPLEX,
 #endif
-  _GENERICSTACKITEMTYPE_NA
+  _GENERICSTACKITEMTYPE_MAX
 } genericStackItemType_t;
+
+static genericStackItemType_t genericStackItemTypeNA = _GENERICSTACKITEMTYPE_NA;
 
 typedef struct genericStackItem {
   genericStackItemType_t type;
@@ -111,6 +114,7 @@ typedef struct genericStack {
   short  error;
   size_t tmpsize;
   genericStackItem_t *tmpitems;
+  short NA_is_0_bytes;
 } genericStack_t;
 
 /* ====================================================================== */
@@ -127,8 +131,8 @@ typedef struct genericStack {
     size_t _currentSize = (size_t) stackName->size;                     \
     if (_wantedSize > _currentSize) {                                   \
       size_t _newSize;                                                  \
-      size_t _i_for_extend;						\
       genericStackItem_t *_items = stackName->items;			\
+      short _memsetb = 0;						\
                                                                         \
       if (_currentSize <= 0) {                                          \
         _newSize = _wantedSize;                                         \
@@ -138,17 +142,24 @@ typedef struct genericStack {
           _newSize = _wantedSize;                                       \
         }                                                               \
       }                                                                 \
-      _items = (_items == NULL) ?					\
-	malloc(sizeof(genericStackItem_t) * _newSize)                   \
-	:								\
-	realloc(_items, sizeof(genericStackItem_t) * _newSize);         \
+      if (_items == NULL) {						\
+	_items = calloc(_newSize, sizeof(genericStackItem_t));		\
+      } else {								\
+	_memsetb = 1;							\
+	_items = realloc(_items, sizeof(genericStackItem_t) * _newSize); \
+      }									\
       if (_items == NULL) {						\
 	stackName->error = 1;						\
       } else {								\
-	for (_i_for_extend = stackName->size;				\
-	     _i_for_extend < _newSize;                                  \
-	     _i_for_extend++) {						\
-	  _items[_i_for_extend].type = _GENERICSTACKITEMTYPE_NA;	\
+	if ((_memsetb != 0) && (stackName->NA_is_0_bytes != 0)) {	\
+	  memset(&(_items[stackName->size]), 0, _newSize - stackName->size); \
+	} else {							\
+	  size_t _i_for_extend;						\
+	  for (_i_for_extend = stackName->size;				\
+	       _i_for_extend < _newSize;				\
+	       _i_for_extend++) {					\
+	    _items[_i_for_extend].type = _GENERICSTACKITEMTYPE_NA;	\
+	  }								\
 	}								\
 	stackName->items = _items;					\
 	stackName->size = _newSize;					\
@@ -160,12 +171,21 @@ typedef struct genericStack {
 /* Initialization                                                         */
 /* ====================================================================== */
 #define GENERICSTACK_INIT(stackName) do {                               \
-  if (stackName != NULL) {						\
-    stackName->size = 0;						\
-    stackName->used = 0;						\
-    stackName->items = NULL;						\
-    stackName->error = 0;						\
-  }                                                                     \
+    if (stackName != NULL) {						\
+      stackName->size = 0;						\
+      stackName->used = 0;						\
+      stackName->items = NULL;						\
+      stackName->error = 0;						\
+      {									\
+	genericStackItemType_t *_t = (genericStackItemType_t *) calloc(1, sizeof(genericStackItemType_t)); \
+	if (_t == NULL) {						\
+	  stackName->error = 1;						\
+	} else {							\
+	  stackName->NA_is_0_bytes = ((*_t) == _GENERICSTACKITEMTYPE_NA) ? 1 : 0; \
+	  free(_t);							\
+	}								\
+      }									\
+    }									\
   } while (0)
 
 #define GENERICSTACK_NEW(stackName) do {				\
