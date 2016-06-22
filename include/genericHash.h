@@ -10,11 +10,12 @@ typedef size_t (*genericHashIndFunction_t)(void *userDatavp, genericStackItemTyp
 typedef short  (*genericHashCmpFunction_t)(void *userDatavp, genericStackItemType_t itemType, void *p1, void *p2);
 
 typedef struct genericHash {
-  short                    error;
   size_t                   wantedSubSize;
   genericHashIndFunction_t indFunctionp;
   genericHashCmpFunction_t cmpFunctionp;
   genericStack_t          *stackp;
+  short                    error;
+  short                    unique;
 } genericHash_t;
 
 
@@ -31,7 +32,7 @@ typedef struct genericHash {
 /* thisWantedSize is an estimated number of rows in the hash's rows       */
 /* ====================================================================== */
 /* hashName must be a valid C identifier */
-#define _GENERICHASH_NEW_SIZED(hashName, thisIndFunctionp, thisCmpFunctionp, wantedSize, thisWantedSubSize) do { \
+#define _GENERICHASH_NEW_SIZED(hashName, thisIndFunctionp, thisCmpFunctionp, thisUnique, wantedSize, thisWantedSubSize) do { \
     genericHashIndFunction_t _indFunctionp = (genericHashIndFunction_t) (thisIndFunctionp); \
     genericHashCmpFunction_t _cmpFunctionp = (genericHashCmpFunction_t) (thisCmpFunctionp); \
                                                                         \
@@ -40,10 +41,11 @@ typedef struct genericHash {
     } else {								\
       hashName = malloc(sizeof(genericHash_t));				\
       if (hashName != NULL) {						\
-	hashName->error = 0;						\
 	hashName->wantedSubSize = (thisWantedSubSize);			\
 	hashName->indFunctionp = _indFunctionp;                         \
 	hashName->cmpFunctionp = _cmpFunctionp;                         \
+	hashName->error = 0;						\
+	hashName->unique = thisUnique;                                  \
 	GENERICSTACK_NEW_SIZED(hashName->stackp, (wantedSize));		\
 	if (GENERICSTACK_ERROR(hashName->stackp)) {			\
 	  free(hashName);						\
@@ -53,8 +55,8 @@ typedef struct genericHash {
     }									\
   } while (0)
 
-#define GENERICHASH_NEW(hashName, indFunctionp, cmpFunctionp) _GENERICHASH_NEW_SIZED(hashName, indFunctionp, cmpFunctionp, 0, 0)
-#define GENERICHASH_NEW_SIZED(hashName, indFunctionp, cmpFunctionp, wantedSize, wantedSubSize) _GENERICHASH_NEW_SIZED(hashName, indFunctionp, cmpFunctionp, (wantedSize), (wantedSubSize)) 
+#define GENERICHASH_NEW(hashName, indFunctionp, cmpFunctionp, thisUnique) _GENERICHASH_NEW_SIZED(hashName, indFunctionp, cmpFunctionp, thisUnique, 0, 0)
+#define GENERICHASH_NEW_SIZED(hashName, indFunctionp, cmpFunctionp, thisUnique, wantedSize, wantedSubSize) _GENERICHASH_NEW_SIZED(hashName, indFunctionp, cmpFunctionp, thisUnique, (wantedSize), (wantedSubSize)) 
 
 /* ====================================================================== */
 /* Set in the hash                                                        */
@@ -85,30 +87,34 @@ typedef struct genericHash {
 	}								\
       }									\
     } else {								\
-      size_t _subStackused;                                             \
       genericStack_t *_subStackp = (genericStack_t *) GENERICSTACK_GET_PTR(hashName->stackp, _subStackIndex); \
-									\
-      _subStackused = GENERICSTACK_USED(_subStackp);			\
-      if (_subStackused > 0) {                                          \
-        size_t _i;                                                      \
                                                                         \
-        for (_i = 0; _i < _subStackused; _i++) {                        \
-          GENERICSTACKITEMTYPE2TYPE_##itemType _gotVar;                 \
+      if (! hashName->unique) {                                         \
+        GENERICSTACK_PUSH_##itemType(_subStackp, _var);                 \
+      } else {                                                          \
+        size_t _subStackused = GENERICSTACK_USED(_subStackp);           \
                                                                         \
-          if (GENERICSTACKITEMTYPE(_subStackp, _i) != GENERICSTACKITEMTYPE_##itemType) { \
-            continue;                                                   \
+        if (_subStackused > 0) {                                        \
+          size_t _i;                                                    \
+                                                                        \
+          for (_i = 0; _i < _subStackused; _i++) {                      \
+            GENERICSTACKITEMTYPE2TYPE_##itemType _gotVar;               \
+                                                                        \
+              if (GENERICSTACKITEMTYPE(_subStackp, _i) != GENERICSTACKITEMTYPE_##itemType) { \
+                continue;                                               \
+              }								\
+              _gotVar = GENERICSTACK_GET_##itemType(_subStackp, _i);    \
+                if (hashName->cmpFunctionp((void *) userDatavp, GENERICSTACKITEMTYPE_##itemType, (void *) &_var, (void *) &_gotVar)) { \
+                  GENERICSTACK_SET_##itemType(_subStackp, _var, _i);    \
+                    break;                                              \
+                }                                                       \
           }								\
-          _gotVar = GENERICSTACK_GET_##itemType(_subStackp, _i);      \
-          if (hashName->cmpFunctionp((void *) userDatavp, GENERICSTACKITEMTYPE_##itemType, (void *) &_var, (void *) &_gotVar)) { \
-            GENERICSTACK_SET_##itemType(_subStackp, _var, _i);          \
-            break;							\
-          }								\
-        }								\
-        if (_i >= _subStackused) {                                      \
+          if (_i >= _subStackused) {                                    \
+            GENERICSTACK_PUSH_##itemType(_subStackp, _var);             \
+          }                                                             \
+        } else {                                                        \
           GENERICSTACK_PUSH_##itemType(_subStackp, _var);               \
         }                                                               \
-      } else {                                                          \
-        GENERICSTACK_PUSH_##itemType(_subStackp, _var);			\
       }                                                                 \
       if (GENERICSTACK_ERROR(_subStackp)) {				\
 	hashName->error = 1;						\
