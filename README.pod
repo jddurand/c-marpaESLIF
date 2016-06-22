@@ -31,15 +31,27 @@ Like the new method, but creates an initial C<wantedSize> number of rows, and de
 
 =head2 GENERICHASH_SET(hashName, userDatavp, itemType, value)
 
-Set an entry in hash C<hashName>, using the data C<value> which is of type C<itemType>. The C<userDatavp> variable is the context that will propagated to callback functions.
+Set an entry in hash C<hashName>, using the data C<value> which is of type C<itemType>. The C<userDatavp> variable is the context that will propagated to callback functions: the indice callback is always used, the comparison callback is used if the hash have the unique flag.
+
+=head2 GENERICHASH_SET_BY_IND(hashName, userDatavp, itemType, ind, value)
+
+Same as GENERICHASH_SET, but at the row number C<ind>, pre-calculated by the user.
 
 =head2 GENERICHASH_FIND(hashName, userDatavp, wantedType, wantedVar, findResult, got)
 
 Search for the data C<wantedVar> of type C<wantedType> in hash C<hashName>. The value 1 or 0 or stored in C<findResult> if success or not, respectively. The found value is pushed into C<got>. The C<userDatavp> variable is the context that will propagated to callback functions.
 
+=head2 GENERICHASH_FIND_BY_IND(hashName, userDatavp, wantedType, wantedInd, wantedVar, findResult, got)
+
+Same as GENERICHASH_FIND, but at the row number C<ind>, pre-calculated by the user.
+
 =head2 GENERICHASH_REMOVE(hashName, userDatavp, wantedType, wantedVar, findResult, got)
 
 Remove for the data C<wantedVar> of type C<wantedType> in hash C<hashName>. The value 1 or 0 or stored in C<findResult> if data was found or not, respectively. The removed value is pushed into C<got>. The C<userDatavp> variable is the context that will propagated to callback functions.
+
+=head2 GENERICHASH_REMOVE_BY_IND(hashName, userDatavp, wantedType, wantedInd, wantedVar, findResult, got)
+
+Same as GENERICHASH_REMOVE, but at the row number C<ind>, pre-calculated by the user.
 
 =head2 GENERICHASH_FREE(hashName)
 

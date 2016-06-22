@@ -33,8 +33,25 @@ int main(int argc, char **argv) {
   GENERICHASH_SET(myHashp, myContextp, PTR, myContextp);
   GENERICLOGGER_TRACEF(genericLoggerp, "... Inserted PTR %p", myContextp);
 
+  GENERICHASH_SET_BY_IND(myHashp, myContextp, PTR, myHashIndFunction(myContextp, GENERICSTACKITEMTYPE_PTR, &myContextp), myContextp);
+  GENERICHASH_SET_BY_IND(myHashp, myContextp, PTR, myHashIndFunction(myContextp, GENERICSTACKITEMTYPE_PTR, &myContextp), myContextp);
+  GENERICHASH_SET_BY_IND(myHashp, myContextp, PTR, myHashIndFunction(myContextp, GENERICSTACKITEMTYPE_PTR, &myContextp), myContextp);
+  GENERICLOGGER_TRACEF(genericLoggerp, "... Inserted PTR %p using IND", myContextp);
+
   GENERICLOGGER_TRACEF(genericLoggerp, "... Looking for PTR %p", myContextp);
   GENERICHASH_FIND(myHashp, myContextp, PTR, myContextp, findResultb, myContextFoundp);
+  if (! findResultb) {
+    GENERICLOGGER_ERRORF(genericLoggerp, "... Failed to find PTR %p", myContextp);
+  } else {
+    if (myContextp == myContextFoundp) {
+      GENERICLOGGER_TRACEF(genericLoggerp, "... Success searching for PTR %p", myContextFoundp);
+    } else {
+      GENERICLOGGER_TRACEF(genericLoggerp, "... Success searching for PTR but found a bad pointer %p", myContextFoundp);
+    }
+  }
+
+  GENERICLOGGER_TRACEF(genericLoggerp, "... Looking for PTR %p using IND", myContextp);
+  GENERICHASH_FIND_BY_IND(myHashp, myContextp, PTR, myHashIndFunction(myContextp, GENERICSTACKITEMTYPE_PTR, &myContextp), myContextp, findResultb, myContextFoundp);
   if (! findResultb) {
     GENERICLOGGER_ERRORF(genericLoggerp, "... Failed to find PTR %p", myContextp);
   } else {

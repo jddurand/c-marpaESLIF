@@ -2,6 +2,7 @@
 #define GENERICHASH_H
 
 #include <stdio.h>
+#include <errno.h>
 #include <genericStack.h>
 
 /* A hash is nothing else but a generic stack of generic stacks */
@@ -36,7 +37,7 @@ typedef struct genericHash {
     genericHashIndFunction_t _indFunctionp = (genericHashIndFunction_t) (thisIndFunctionp); \
     genericHashCmpFunction_t _cmpFunctionp = (genericHashCmpFunction_t) (thisCmpFunctionp); \
                                                                         \
-    if ((_indFunctionp == NULL) || (_cmpFunctionp == NULL)) {           \
+    if (_cmpFunctionp == NULL) {					\
       hashName = NULL;							\
     } else {								\
       hashName = malloc(sizeof(genericHash_t));				\
@@ -61,15 +62,32 @@ typedef struct genericHash {
 /* ====================================================================== */
 /* Set in the hash                                                        */
 /* ====================================================================== */
+#define GENERICHASH_SET_BY_IND(hashName, userDatavp, itemType, ind, value) do { \
+    GENERICSTACKITEMTYPE2TYPE_##itemType _var = (GENERICSTACKITEMTYPE2TYPE_##itemType) (value);	\
+    size_t _subStackIndex = (size_t) (ind);				\
+    if (_subStackIndex == (size_t) -1) {				\
+      errno = EINVAL;							\
+      hashName->error = 1;						\
+    } else {								\
+      _GENERICHASH_SET_BY_IND(hashName, userDatavp, itemType, _subStackIndex, _var); \
+    }									\
+  } while (0)
+
 #define GENERICHASH_SET(hashName, userDatavp, itemType, value) do {	\
     GENERICSTACKITEMTYPE2TYPE_##itemType _var = (GENERICSTACKITEMTYPE2TYPE_##itemType) (value);	\
-    size_t                               _subStackIndex = hashName->indFunctionp((void *) userDatavp, GENERICSTACKITEMTYPE_##itemType, (void *) &_var); \
-									\
+    size_t _subStackIndex = hashName->indFunctionp((void *) userDatavp, GENERICSTACKITEMTYPE_##itemType, (void *) &_var); \
     if (_subStackIndex == (size_t) -1) {				\
+      errno = EINVAL;							\
       hashName->error = 1;						\
-    } else if ((_subStackIndex >= GENERICSTACK_USED(hashName->stackp))	\
-	       ||							\
-	       (GENERICSTACKITEMTYPE(hashName->stackp, _subStackIndex) != GENERICSTACKITEMTYPE_PTR)) { \
+    } else {								\
+      _GENERICHASH_SET_BY_IND(hashName, userDatavp, itemType, _subStackIndex, _var); \
+    }									\
+  } while (0)
+
+#define _GENERICHASH_SET_BY_IND(hashName, userDatavp, itemType, _subStackIndex, _var) do { \
+    if ((_subStackIndex >= GENERICSTACK_USED(hashName->stackp))		\
+	||								\
+	(GENERICSTACKITEMTYPE(hashName->stackp, _subStackIndex) != GENERICSTACKITEMTYPE_PTR)) { \
       genericStack_t *_subStackp;					\
       GENERICSTACK_NEW_SIZED(_subStackp, hashName->wantedSubSize);	\
       if (GENERICSTACK_ERROR(_subStackp)) {				\
@@ -128,9 +146,29 @@ typedef struct genericHash {
 /* wanted variable and result must be C identifiers                       */
 /* Removal takes care to not let a sparse entry in the stack              */
 /* ====================================================================== */
+#define _GENERICHASH_FIND_REMOVE_BY_IND(hashName, userDatavp, wantedType, wantedInd, wantedValue, findResult, got, remove) do { \
+    GENERICSTACKITEMTYPE2TYPE_##wantedType _wantedVar = (GENERICSTACKITEMTYPE2TYPE_##wantedType) (wantedValue); \
+    size_t _subStackIndex = (size_t) (wantedInd);			\
+    if (_subStackIndex == (size_t) -1) {				\
+      errno = EINVAL;							\
+      hashName->error = 1;						\
+    } else {								\
+      __GENERICHASH_FIND_REMOVE_BY_IND(hashName, userDatavp, wantedType, _subStackIndex, _wantedVar, findResult, got, remove); \
+    }									\
+  } while (0)
+
 #define _GENERICHASH_FIND_REMOVE(hashName, userDatavp, wantedType, wantedValue, findResult, got, remove) do { \
     GENERICSTACKITEMTYPE2TYPE_##wantedType _wantedVar = (GENERICSTACKITEMTYPE2TYPE_##wantedType) (wantedValue); \
     size_t  _subStackIndex = hashName->indFunctionp((void *) userDatavp, GENERICSTACKITEMTYPE_##wantedType, (void *) &_wantedVar); \
+    if (_subStackIndex == (size_t) -1) {				\
+      errno = EINVAL;							\
+      hashName->error = 1;						\
+    } else {								\
+      __GENERICHASH_FIND_REMOVE_BY_IND(hashName, userDatavp, wantedType, _subStackIndex, _wantedVar, findResult, got, remove); \
+    }									\
+  } while (0)
+
+#define __GENERICHASH_FIND_REMOVE_BY_IND(hashName, userDatavp, wantedType, _subStackIndex, _wantedVar, findResult, got, remove) do { \
     findResult = 0;							\
 									\
     if (_subStackIndex == (size_t) -1) {				\
@@ -169,6 +207,9 @@ typedef struct genericHash {
 
 #define GENERICHASH_FIND(hashName, userDatavp, wantedType, wantedVar, findResult, got) _GENERICHASH_FIND_REMOVE(hashName, (userDatavp), wantedType, wantedVar, findResult, got, 0)
 #define GENERICHASH_REMOVE(hashName, userDatavp, wantedType, wantedVar, findResult, got) _GENERICHASH_FIND_REMOVE(hashName, userDatavp, wantedType, wantedVar, findResult, got, 1)
+
+#define GENERICHASH_FIND_BY_IND(hashName, userDatavp, wantedType, wantedInd, wantedVar, findResult, got) _GENERICHASH_FIND_REMOVE_BY_IND(hashName, (userDatavp), wantedType, wantedInd, wantedVar, findResult, got, 0)
+#define GENERICHASH_REMOVE_BY_IND(hashName, userDatavp, wantedType, wantedInd, wantedVar, findResult, got) _GENERICHASH_FIND_REMOVE_BY_IND(hashName, userDatavp, wantedType, wantedInd, wantedVar, findResult, got, 1)
 
 /* ====================================================================== */
 /* Memory release                                                         */
