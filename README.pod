@@ -6,7 +6,7 @@ genericHash - generic hash interface
 
 =head1 DESCRIPTION
 
-genericHash looks like a subset of perl-like hashes, done in macros. Perl-like means that for one given key, there is one possible value. It is generic in the sense that hashing function and comparison functions are explicitely externalized. It is built on top of L<genericStack|https://github.com/jddurand/c-genericStack>.
+genericHash exposes hashing function and comparison functions. It is built on top of L<genericStack|https://github.com/jddurand/c-genericStack>.
 
 =head1 SYNOPSIS
 
@@ -14,18 +14,16 @@ genericHash looks like a subset of perl-like hashes, done in macros. Perl-like m
 
   genericHash_t *myHashp;
 
-genericHash looks like a subset of perl-like hashes, done in macros. Perl-like means that for one given key, there is one possible value. It is generic in the sense that hashing function and comparison functions are explicitely externalized. It is built on top of L<genericStack|https://github.com/jddurand/c-genericStack>.
-
 =head1 MACROS
 
-=head2 GENERICHASH_NEW(hashName, indFunctionp, cmpFunctionp)
+=head2 GENERICHASH_NEW(hashName, indFunctionp, cmpFunctionp, unique)
 
 Create an empty hash on the heap, where C<indFunctionp> and C<cmpFunctionp> are hashing and comparison functions, respectively. Their prototypes are:
 
   typedef size_t (*genericHashIndFunction_t)(void *userDatavp, genericStackItemType_t itemType, void *p);
   typedef short  (*genericHashCmpFunction_t)(void *userDatavp, genericStackItemType_t itemType, void *p1, void *p2);
 
-and for every data, C<indFunctionp> is used to return a hash indice. The number of rows in the hash will always increase automatically, whenever needed, and never decrease. To handle the case of collisions, C<cmpFunctionp> is called and must return a true value if data content matches. Within a hash row, the number of elements decrease and increase automatically.
+and for every data, C<indFunctionp> is used to return a hash indice. This indice function receive a I<pointer> to the original data. The number of rows in the hash will always increase automatically, whenever needed, and never decrease. To handle the case of collisions, C<cmpFunctionp> is called and must return a true value when the key of the two values I<pointed by> C<p1> and C<p2> matches. Within a hash row, the number of elements decrease and increase automatically. C<unique>, when true, has a performance impact on the hash, because it internally makes sure that a given key can appear only once, using both the C<indFunctionp> (to get the row indice in the hash) and C<cmpFunctionp> functions (to compare keys).
 
 =head2 GENERICHASH_NEW_SIZED(hashName, indFunctionp, cmpFunctionp, wantedSize, wantedSubSize)
 
