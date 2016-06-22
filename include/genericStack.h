@@ -151,14 +151,16 @@ typedef struct genericStack {
       if (_items == NULL) {						\
 	stackName->error = 1;						\
       } else {								\
-	if ((_memsetb != 0) && (stackName->NA_is_0_bytes != 0)) {	\
-	  memset(&(_items[stackName->size]), 0, _newSize - stackName->size); \
-	} else {							\
-	  size_t _i_for_extend;						\
-	  for (_i_for_extend = stackName->size;				\
-	       _i_for_extend < _newSize;				\
-	       _i_for_extend++) {					\
-	    _items[_i_for_extend].type = _GENERICSTACKITEMTYPE_NA;	\
+	if (_memsetb != 0) {						\
+	  if (stackName->NA_is_0_bytes != 0) {				\
+	    memset(&(_items[stackName->size]), 0, _newSize - stackName->size); \
+	  } else {							\
+	    size_t _i_for_extend;					\
+	    for (_i_for_extend = stackName->size;			\
+		 _i_for_extend < _newSize;				\
+		 _i_for_extend++) {					\
+	      _items[_i_for_extend].type = _GENERICSTACKITEMTYPE_NA;	\
+	    }								\
 	  }								\
 	}								\
 	stackName->items = _items;					\
