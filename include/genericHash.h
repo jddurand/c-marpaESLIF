@@ -60,24 +60,22 @@ typedef struct genericHash {
 /* Set in the hash                                                        */
 /* ====================================================================== */
 #define GENERICHASH_SET(hashName, userDatavp, itemType, value) do {	\
-    void                                *_userDatavp = (void *) userDatavp; \
-    genericStackItemType_t               _varType = GENERICSTACKITEMTYPE_##itemType; \
     GENERICSTACKITEMTYPE2TYPE_##itemType _var = (GENERICSTACKITEMTYPE2TYPE_##itemType) (value);	\
-    size_t                               _subStackIndex = hashName->indFunctionp(_userDatavp, _varType, (void *) &_var); \
-    genericStack_t *_subStackp;                                         \
+    size_t                               _subStackIndex = hashName->indFunctionp((void *) userDatavp, GENERICSTACKITEMTYPE_##itemType, (void *) &_var); \
 									\
     if (_subStackIndex == (size_t) -1) {				\
       hashName->error = 1;						\
-    } else if ((_subStackIndex >= GENERICSTACK_USED(hashName->stackp)) \
-	       ||						      \
+    } else if ((_subStackIndex >= GENERICSTACK_USED(hashName->stackp))	\
+	       ||							\
 	       (GENERICSTACKITEMTYPE(hashName->stackp, _subStackIndex) != GENERICSTACKITEMTYPE_PTR)) { \
+      genericStack_t *_subStackp;					\
       GENERICSTACK_NEW_SIZED(_subStackp, hashName->wantedSubSize);	\
       if (GENERICSTACK_ERROR(_subStackp)) {				\
 	hashName->error = 1;						\
       } else {								\
-	GENERICSTACK_SET_PTR(hashName->stackp, _subStackp, _subStackIndex);	\
+	GENERICSTACK_SET_PTR(hashName->stackp, _subStackp, _subStackIndex); \
 	if (GENERICSTACK_ERROR(hashName->stackp)) {			\
-	  GENERICSTACK_FREE(_subStackp);					\
+	  GENERICSTACK_FREE(_subStackp);				\
 	  hashName->error = 1;						\
 	} else {							\
 	  GENERICSTACK_PUSH_##itemType(_subStackp, _var);		\
@@ -88,8 +86,8 @@ typedef struct genericHash {
       }									\
     } else {								\
       size_t _subStackused;                                             \
-                                                                        \
-      _subStackp = (genericStack_t *) GENERICSTACK_GET_PTR(hashName->stackp, _subStackIndex); \
+      genericStack_t *_subStackp = (genericStack_t *) GENERICSTACK_GET_PTR(hashName->stackp, _subStackIndex); \
+									\
       _subStackused = GENERICSTACK_USED(_subStackp);			\
       if (_subStackused > 0) {                                          \
         size_t _i;                                                      \
@@ -97,11 +95,11 @@ typedef struct genericHash {
         for (_i = 0; _i < _subStackused; _i++) {                        \
           GENERICSTACKITEMTYPE2TYPE_##itemType _gotVar;                 \
                                                                         \
-          if (GENERICSTACKITEMTYPE(_subStackp, _i) != _varType) {       \
+          if (GENERICSTACKITEMTYPE(_subStackp, _i) != GENERICSTACKITEMTYPE_##itemType) { \
             continue;                                                   \
           }								\
           _gotVar = GENERICSTACK_GET_##itemType(_subStackp, _i);      \
-          if (hashName->cmpFunctionp(_userDatavp, _varType, (void *) &_var, (void *) &_gotVar)) { \
+          if (hashName->cmpFunctionp((void *) userDatavp, GENERICSTACKITEMTYPE_##itemType, (void *) &_var, (void *) &_gotVar)) { \
             GENERICSTACK_SET_##itemType(_subStackp, _var, _i);          \
             break;							\
           }								\
@@ -125,10 +123,8 @@ typedef struct genericHash {
 /* Removal takes care to not let a sparse entry in the stack              */
 /* ====================================================================== */
 #define _GENERICHASH_FIND_REMOVE(hashName, userDatavp, wantedType, wantedValue, findResult, got, remove) do { \
-    genericStackItemType_t                 _wantedType = GENERICSTACKITEMTYPE_##wantedType; \
     GENERICSTACKITEMTYPE2TYPE_##wantedType _wantedVar = (GENERICSTACKITEMTYPE2TYPE_##wantedType) (wantedValue); \
-    void   *_userDatavp = (void *) userDatavp;				\
-    size_t  _subStackIndex = hashName->indFunctionp(_userDatavp, _wantedType, (void *) &_wantedVar); \
+    size_t  _subStackIndex = hashName->indFunctionp((void *) userDatavp, GENERICSTACKITEMTYPE_##wantedType, (void *) &_wantedVar); \
     findResult = 0;							\
 									\
     if (_subStackIndex == (size_t) -1) {				\
@@ -146,11 +142,11 @@ typedef struct genericHash {
 	                                                                \
         for (_i = 0; _i < _subStackused; _i++) {                        \
           GENERICSTACKITEMTYPE2TYPE_##wantedType _gotVar;               \
-          if (GENERICSTACKITEMTYPE(_subStackp, _i) != _wantedType) {	\
+          if (GENERICSTACKITEMTYPE(_subStackp, _i) != GENERICSTACKITEMTYPE_##wantedType) {	\
             continue;                                                   \
           }								\
           _gotVar = GENERICSTACK_GET_##wantedType(_subStackp, _i);      \
-          if (hashName->cmpFunctionp(_userDatavp, _wantedType, (void *) &_wantedVar, (void *) &_gotVar)) { \
+          if (hashName->cmpFunctionp((void *) userDatavp, GENERICSTACKITEMTYPE_##wantedType, (void *) &_wantedVar, (void *) &_gotVar)) { \
 	    findResult = 1;						\
 	    got = GENERICSTACK_GET_##wantedType(_subStackp, _i);	\
             if (remove) {						\
