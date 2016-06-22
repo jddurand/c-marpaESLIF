@@ -20,7 +20,7 @@ int main(int argc, char **argv) {
 
   myContext.genericLoggerp = genericLoggerp;
 
-  GENERICHASH_NEW(myHashp, myHashIndFunction, myHashCmpFunction);
+  GENERICHASH_NEW(myHashp, myHashIndFunction, myHashCmpFunction, 1);
   if (GENERICHASH_ERROR(myHashp)) {
     GENERICLOGGER_ERROR(genericLoggerp, "Error when creating generic hash");
     rci = 1;
