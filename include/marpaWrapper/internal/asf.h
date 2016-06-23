@@ -2,8 +2,15 @@
 #define MARPAWRAPPER_INTERNAL_ASF_H
 
 #include <stddef.h>
+#include <genericHash.h>
 #include "marpaWrapper/asf.h"
 #include "marpa.h"
+
+typedef struct marpaWrapperAsfNidset {
+  int    id;
+  size_t nIdl;
+  int   *idip;
+} marpaWrapperAsfNidset_t;
 
 struct marpaWrapperAsf {
   genericLogger_t          *genericLoggerp;
@@ -21,6 +28,14 @@ struct marpaWrapperAsf {
   size_t                        sizeOrNodeAndNodeIdl;     /* Allocated size */
   size_t                        nOrNodeAndNodeIdl;        /* Used size      */
   int                         **orNodeAndNodeIdipp;
+
+  /* Memoization of visited glades */
+  genericHash_t                *intsetHashp;
+  size_t                        sizeNidsetl;     /* Allocated size */
+  size_t                        nNidsetl;        /* Used size      */
+  marpaWrapperAsfNidset_t      *nidsetp;
+
+  int                           nextIntseti;
 
 };
 
