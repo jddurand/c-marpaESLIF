@@ -71,6 +71,14 @@ IF (NOT GENERICLOGGER_FOUND)
 ENDIF ()
 
 # -----------------------------------
+# genericHash: required
+# -----------------------------------
+FIND_PACKAGE (genericHash)
+IF (NOT GENERICHASH_FOUND)
+    MESSAGE (FATAL_ERROR "genericHash must be detected")
+ENDIF ()
+
+# -----------------------------------
 # genericStack: required for test
 # -----------------------------------
 FIND_PACKAGE (genericStack)
@@ -138,6 +146,7 @@ IF (GENERICSTACK_FOUND)
     "${INCLUDE_OUTPUT_PATH}"                             # Include path for generated files
     "${PROJECT_SOURCE_DIR}/include"                      # Include path for the other headers
     "${GENERICLOGGER_INCLUDE_DIRS}"                      # Include path for genericLogger (external - required)
+    "${GENERICHASH_INCLUDE_DIRS}"                        # Include path for genericHash (external - required)
     "${GENERICSTACK_INCLUDE_DIRS}"                       # Include path for genericStack (external - optional)
     )
 ELSE (GENERICSTACK_FOUND)
@@ -146,6 +155,7 @@ ELSE (GENERICSTACK_FOUND)
     "${INCLUDE_OUTPUT_PATH}"                             # Include path for generated files
     "${PROJECT_SOURCE_DIR}/include"                      # Include path for the other headers
     "${GENERICLOGGER_INCLUDE_DIRS}"                      # Include path for genericLogger (external - required)
+    "${GENERICHASH_INCLUDE_DIRS}"                        # Include path for genericHash (external - required)
     )
 ENDIF (GENERICSTACK_FOUND)
 TARGET_LINK_LIBRARIES (marpaWrapper "${GENERICLOGGER_LINK_FLAGS}")
