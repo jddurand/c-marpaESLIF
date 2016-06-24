@@ -2,6 +2,7 @@
 #define MARPAWRAPPER_INTERNAL_ASF_H
 
 #include <stddef.h>
+#include <genericStack.h>
 #include <genericHash.h>
 #include "marpaWrapper/asf.h"
 #include "marpa.h"
@@ -31,9 +32,7 @@ struct marpaWrapperAsf {
 
   /* Memoization of visited glades */
   genericHash_t                *intsetHashp;
-  size_t                        sizeNidsetl;     /* Allocated size */
-  size_t                        nNidsetl;        /* Used size      */
-  marpaWrapperAsfNidset_t      *nidsetp;
+  genericStack_t               *nidsetStackp;
 
   int                           nextIntseti;
 
