@@ -105,9 +105,7 @@ marpaWrapperAsf_t *marpaWrapperAsf_newp(marpaWrapperRecognizer_t *marpaWrapperRe
   marpaWrapperAsfp->nOrNodeAndNodeIdl       = 0;
   marpaWrapperAsfp->orNodeAndNodeIdipp      = NULL;
   marpaWrapperAsfp->intsetHashp             = NULL;
-  marpaWrapperAsfp->sizeNidsetl             = 0;
-  marpaWrapperAsfp->nNidsetl                = 0;
-  marpaWrapperAsfp->nidsetp                 = 0;
+  marpaWrapperAsfp->nidsetStackp            = NULL;
   marpaWrapperAsfp->nextIntseti             = 0;
 
   GENERICHASH_NEW_SIZED(marpaWrapperAsfp->intsetHashp, NULL, _marpaWrapperAsf_cmpIntsetFunction, 1, MARPAWRAPPERASF_INTSET_MAXROWS, 0);
@@ -339,10 +337,12 @@ short marpaWrapperAsf_traverseb(marpaWrapperAsf_t *marpaWrapperAsfp, traverserCa
 void marpaWrapperAsf_freev(marpaWrapperAsf_t *marpaWrapperAsfp)
 /****************************************************************************/
 {
-  const static char funcs[] = "marpaWrapperAsf_freev";
-  genericLogger_t  *genericLoggerp;
-  size_t            orNodeAndNodeIdi;
-  size_t            i;
+  const static char        funcs[] = "marpaWrapperAsf_freev";
+  genericLogger_t         *genericLoggerp;
+  size_t                   orNodeAndNodeIdi;
+  size_t                   i;
+  size_t                   nidsetStackl;
+  marpaWrapperAsfNidset_t *nidsetp;
 
   if (marpaWrapperAsfp != NULL) {
     /* Keep a copy of the generic logger. If original is not NULL, then we have a clone of it */
@@ -381,16 +381,20 @@ void marpaWrapperAsf_freev(marpaWrapperAsf_t *marpaWrapperAsfp)
     MARPAWRAPPER_TRACE(genericLoggerp, funcs, "Freeing intset hash");
     GENERICHASH_FREE(marpaWrapperAsfp->intsetHashp);
     
-    MARPAWRAPPER_TRACE(genericLoggerp, funcs, "Freeing Nidset array");
+    MARPAWRAPPER_TRACE(genericLoggerp, funcs, "Freeing Nidset stack");
+    nidsetStackl = GENERICSTACK_USED(marpaWrapperAsfp->nidsetStackp);
     /* Every node also have an array inside */
-    if (marpaWrapperAsfp->nNidsetl > 0) {
-      for (i = 0; i < marpaWrapperAsfp->nNidsetl; i++) {
-	if (marpaWrapperAsfp->nidsetp[i].idip != NULL) {
-	  free(marpaWrapperAsfp->nidsetp[i].idip);
+    if (nidsetStackl > 0) {
+      for (i = 0; i < nidsetStackl; i++) {
+	if (GENERICSTACK_IS_PTR(marpaWrapperAsfp->nidsetStackp, i)) {
+	  nidsetp = GENERICSTACK_GET_PTR(marpaWrapperAsfp->nidsetStackp, i);
+	  if (nidsetp->idip != NULL) {
+	    free(nidsetp->idip);
+	  }
+	  free(nidsetp);
 	}
       }
     }
-    manageBuf_freev(genericLoggerp, (void **) &(marpaWrapperAsfp->nidsetp));
     
     MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "free(%p)", marpaWrapperAsfp);
     free(marpaWrapperAsfp);
@@ -456,30 +460,19 @@ static inline marpaWrapperAsfNidset_t *_marpaWrapperAsf_nidsetObtainb(marpaWrapp
   const static char        funcs[] = "_marpaWrapperAsf_nidsetObtainb";
   genericLogger_t         *genericLoggerp = marpaWrapperAsfp->genericLoggerp;
   int                      intsetIdi;
-  int                      nidseti;
-  size_t                   nNidsetl;
-  marpaWrapperAsfNidset_t *nidsetp;
+  marpaWrapperAsfNidset_t *nidsetp = NULL;
   size_t                   i;
 
   if (_marpaWrapperAsf_intsetIdb(marpaWrapperAsfp, &intsetIdi, nIdl, idip) == 0) {
     goto err;
   }
-  
-  nNidsetl = (size_t) (intsetIdi + 1);
-  /* Per construction this is always ok, but who knows */
-  if (marpaWrapperAsfp->nNidsetl >= nNidsetl) {
-    nidsetp = &(marpaWrapperAsfp->nidsetp[intsetIdi]);
-  } else {
-    if (manageBuf_createp(genericLoggerp,
-			  (void **) &(marpaWrapperAsfp->nidsetp),
-			  &(marpaWrapperAsfp->sizeNidsetl),
-			  nNidsetl,
-			  sizeof(marpaWrapperAsfNidset_t)) == NULL) {
-      MARPAWRAPPER_ERRORF(genericLoggerp, "Internal error on nidsetp, %s", strerror(errno));
+
+  if (! GENERICSTACK_IS_PTR(marpaWrapperAsfp->nidsetStackp, intsetIdi)) {
+    nidsetp = malloc(sizeof(marpaWrapperAsfNidset_t));
+    if (nidsetp == NULL) {
+      MARPAWRAPPER_ERRORF(genericLoggerp, "malloc failure: %s", strerror(errno));
       goto err;
     }
-    marpaWrapperAsfp->nNidsetl = nNidsetl;
-    nidsetp = &(marpaWrapperAsfp->nidsetp[intsetIdi]);
     nidsetp->id = intsetIdi;
     if (nIdl <= 0) {
       nidsetp->nIdl = 0;
@@ -493,13 +486,25 @@ static inline marpaWrapperAsfNidset_t *_marpaWrapperAsf_nidsetObtainb(marpaWrapp
       }
       memcpy(nidsetp->idip, idip, nIdl);
       qsort(nidsetp->idip, nIdl, sizeof(int), _marpaWrapperAsf_idCmpi);
+      GENERICSTACK_SET_PTR(marpaWrapperAsfp->nidsetStackp, nidsetp, intsetIdi);
+      if (GENERICSTACK_ERROR(marpaWrapperAsfp->nidsetStackp)) {
+	MARPAWRAPPER_ERRORF(genericLoggerp, "nidset stack error: %s", strerror(errno));
+	goto err;
+      }
     }
+  } else {
+    nidsetp = GENERICSTACK_GET_PTR(marpaWrapperAsfp->nidsetStackp, intsetIdi);
   }
 
   goto done;
 
  err:
-  nidsetp = NULL;
+  if (nidsetp != NULL) {
+    if (nidsetp->idip != NULL) {
+      free(nidsetp->idip);
+    }
+    free(nidsetp);
+  }
 
  done:
   
