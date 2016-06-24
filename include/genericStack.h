@@ -419,4 +419,28 @@ typedef struct genericStack {
     }                                                                   \
   } while (0)
 
+/* ====================================================================== */
+/* More easy macros                                                       */
+/* ====================================================================== */
+#define GENERICSTACK_EXISTS(stackName, i) ((stackName != NULL) && (stackName->used > i))
+#define GENERICSTACK_IS_NA(stackName, i) (GENERICSTACK_EXISTS(stackName, i) && (stackName->items[i].type == _GENERICSTACKITEMTYPE_NA))
+#define GENERICSTACK_IS_CHAR(stackName, i) (GENERICSTACK_EXISTS(stackName, i) && (stackName->items[i].type == GENERICSTACKITEMTYPE_CHAR))
+#define GENERICSTACK_IS_SHORT(stackName, i) (GENERICSTACK_EXISTS(stackName, i) && (stackName->items[i].type == GENERICSTACKITEMTYPE_SHORT))
+#define GENERICSTACK_IS_INT(stackName, i) (GENERICSTACK_EXISTS(stackName, i) && (stackName->items[i].type == GENERICSTACKITEMTYPE_INT))
+#define GENERICSTACK_IS_LONG(stackName, i) (GENERICSTACK_EXISTS(stackName, i) && (stackName->items[i].type == GENERICSTACKITEMTYPE_LONG))
+#define GENERICSTACK_IS_FLOAT(stackName, i) (GENERICSTACK_EXISTS(stackName, i) && (stackName->items[i].type == GENERICSTACKITEMTYPE_FLOAT))
+#define GENERICSTACK_IS_DOUBLE(stackName, i) (GENERICSTACK_EXISTS(stackName, i) && (stackName->items[i].type == GENERICSTACKITEMTYPE_DOUBLE))
+#define GENERICSTACK_IS_PTR(stackName, i) (GENERICSTACK_EXISTS(stackName, i) && (stackName->items[i].type == GENERICSTACKITEMTYPE_PTR))
+#if GENERICSTACK_HAVE_LONG_LONG
+#define GENERICSTACK_IS_LONG_LONG(stackName, i) (GENERICSTACK_EXISTS(stackName, i) && (stackName->items[i].type == GENERICSTACKITEMTYPE_LONG_LONG))
+#endif
+#if GENERICSTACK_HAVE__BOOL
+#define GENERICSTACK_IS__BOOL(stackName, i) (GENERICSTACK_EXISTS(stackName, i) && (stackName->items[i].type == GENERICSTACKITEMTYPE__BOOL))
+#endif
+#if GENERICSTACK_HAVE__COMPLEX
+#define GENERICSTACK_IS_FLOAT__COMPLEX(stackName, i) (GENERICSTACK_EXISTS(stackName, i) && (stackName->items[i].type == GENERICSTACKITEMTYPE_FLOAT__COMPLEX))
+#define GENERICSTACK_IS_DOUBLE__COMPLEX(stackName, i) (GENERICSTACK_EXISTS(stackName, i) && (stackName->items[i].type == GENERICSTACKITEMTYPE_DOUBLE__COMPLEX))
+#define GENERICSTACK_IS_LONG_DOUBLE__COMPLEX(stackName, i) (GENERICSTACK_EXISTS(stackName, i) && (stackName->items[i].type == GENERICSTACKITEMTYPE_LONG_DOUBLE__COMPLEX))
+#endif
+
 #endif /* GENERICSTACK_H */
