@@ -5,6 +5,7 @@
 short myFunction1(genericStack_t *myStackp);
 short myFunction2(genericStack_t *myStackp);
 short myFunction3(genericStack_t *myStackp);
+short myFunction4(genericStack_t *myStackp);
 
 typedef struct myStruct1 {
   int i;
@@ -51,6 +52,7 @@ int main() {
 
   if (myFunction2(myStackp) == 0) { return 1; }
   if (myFunction3(myStackp) == 0) { return 1; }
+  if (myFunction4(myStackp) == 0) { return 1; }
 
   return 0;
 }
@@ -111,6 +113,24 @@ short myFunction2(genericStack_t *myStackp) {
 }
 
 short myFunction3(genericStack_t *myStackp) {
+  short rcb = 1;
+  
+  printf("\nEXISTS and IF interfaces:\n");
+  printf("--------------------------:\n\n");
+  printf("EXISTS : %s\n",                     (rcb = GENERICSTACK_EXISTS(myStackp, 10)    ? 1 : 0) ? "OK" : "KO");
+  if (rcb != 0) { printf("IS_NA : %s\n",      (rcb = GENERICSTACK_IS_NA(myStackp, 10)     ? 0 : 1) ? "OK" : "KO"); }
+  if (rcb != 0) { printf("IS_CHAR : %s\n",    (rcb = GENERICSTACK_IS_CHAR(myStackp, 10)   ? 0 : 1) ? "OK" : "KO"); }
+  if (rcb != 0) { printf("IS_SHORT : %s\n",   (rcb = GENERICSTACK_IS_SHORT(myStackp, 10)  ? 0 : 1) ? "OK" : "KO"); }
+  if (rcb != 0) { printf("IS_INT : %s\n",     (rcb = GENERICSTACK_IS_INT(myStackp, 10)    ? 0 : 1) ? "OK" : "KO"); }
+  if (rcb != 0) { printf("IS_LONG : %s\n",    (rcb = GENERICSTACK_IS_LONG(myStackp, 10)   ? 0 : 1) ? "OK" : "KO"); }
+  if (rcb != 0) { printf("IS_FLOAT : %s\n",   (rcb = GENERICSTACK_IS_FLOAT(myStackp, 10)  ? 1 : 0) ? "OK" : "KO"); }
+  if (rcb != 0) { printf("IS_DOUBLE : %s\n",  (rcb = GENERICSTACK_IS_DOUBLE(myStackp, 10) ? 0 : 1) ? "OK" : "KO"); }
+  if (rcb != 0) { printf("IS_PTR : %s\n",     (rcb = GENERICSTACK_IS_PTR(myStackp, 10)    ? 0 : 1) ? "OK" : "KO"); }
+
+  return rcb;
+}
+
+short myFunction4(genericStack_t *myStackp) {
   
   printf("\nFREE interface:\n");
   printf("--------------:\n\n");
