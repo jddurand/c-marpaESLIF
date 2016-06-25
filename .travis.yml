@@ -10,6 +10,7 @@ addons:
 before_script:
   - sh ./install-c-genericLogger.sh
   - sh ./install-c-genericStack.sh
+  - sh ./install-c-genericHash.sh
   - cmake .
 script:
   - make check
