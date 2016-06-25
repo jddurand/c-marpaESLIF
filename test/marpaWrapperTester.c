@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <errno.h>
 #include "marpaWrapper.h"
 #include "genericLogger.h"
 #include "genericStack.h"
@@ -8,6 +9,7 @@ enum { S = 0, E, op, number, MAX_SYMBOL };
 enum { START_RULE = 0, OP_RULE, NUMBER_RULE, MAX_RULE };
 static char *desc[] = { "S", "E", "op", "number", "?" };
 typedef struct valueContext {
+  marpaWrapperRecognizer_t *marpaWrapperRecognizerp;
   int             *symbolip;
   int             *ruleip;
   genericStack_t  *inputStackp;
@@ -18,14 +20,12 @@ typedef struct valueContext {
 static char *symbolDescription(void *userDatavp, int symboli);
 static short valueRuleCallback(void *userDatavp, int rulei, int arg0i, int argni, int resulti);
 static short valueSymbolCallback(void *userDatavp, int symboli, int argi, int resulti);
+static short dumpStacks(valueContext_t *valueContextp);
 
 typedef struct stackValueAndDescription {
   int i;
   char s[100];
 } stackValueAndDescription_t;
-
-static void *stackValueAndDescriptionClone(void *p);
-static void stackValueAndDescriptionFree(void *p);
 
 int main(int argc, char **argv) {
   marpaWrapperGrammar_t         *marpaWrapperGrammarp = NULL;
@@ -38,7 +38,8 @@ int main(int argc, char **argv) {
   size_t                         neventl;
   size_t                         nsymboll;
   size_t                         i;
-  valueContext_t                 valueContext = { symbolip, ruleip, NULL, NULL, GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_TRACE) };
+  size_t                         outputStackSizel;
+  valueContext_t                 valueContext = { NULL, symbolip, ruleip, NULL, NULL, GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_TRACE) };
   
   marpaWrapperGrammarOption_t    marpaWrapperGrammarOption    = { GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_TRACE),
 								  0 /* warningIsErrorb */,
@@ -96,16 +97,22 @@ int main(int argc, char **argv) {
     }
   }
 
-  /* We use the stack indices directly into Marpa, and Marpa does not like indice 0 which means "unvalued". */
-  /* Nevertheless, during the value phase, indice 0 will be used                                            */
-  GENERICSTACK_PUSH_PTR(valueContext.inputStackp, NULL);
+  if (rci == 0) {
+    valueContext.marpaWrapperRecognizerp = marpaWrapperRecognizerp;
+    /* We use the stack indices directly into Marpa, and Marpa does not like indice 0 which means "unvalued". */
+    /* Nevertheless, during the value phase, indice 0 will be used                                            */
+    GENERICSTACK_PUSH_PTR(valueContext.inputStackp, NULL);
+    if (GENERICSTACK_ERROR(valueContext.inputStackp)) {
+      rci = 1;
+    }
+  }
 
   /* --------------------------------------------------------------- */
   /* 2 - 0 * 3 + 1                                                   */
   /* --------------------------------------------------------------- */
   
   if (rci == 0) {
-    if (marpaWrapperRecognizer_progressLogb(marpaWrapperRecognizerp, 0, -1, GENERICLOGGER_LOGLEVEL_INFO, (void *) symbolip, symbolDescription) == 0) {
+    if (marpaWrapperRecognizer_progressLogb(marpaWrapperRecognizerp, 0, -1, GENERICLOGGER_LOGLEVEL_INFO, NULL, symbolDescription) == 0) {
       rci = 1;
     }
   }
@@ -113,63 +120,98 @@ int main(int argc, char **argv) {
   /* ------ */
   /* number */
   /* ------ */
-  GENERICSTACK_PUSH_INT(valueContext.inputStackp, 2);
   if (rci == 0) {
-    if (marpaWrapperRecognizer_readb(marpaWrapperRecognizerp, symbolip[number], GENERICSTACK_SIZE(valueContext.inputStackp) - 1 /* value */, 1 /* length */) == 0) {
+    GENERICSTACK_PUSH_INT(valueContext.inputStackp, 2);
+    if (GENERICSTACK_ERROR(valueContext.inputStackp)) {
+      rci = 1;
+    }
+  }
+  if (rci == 0) {
+    if (marpaWrapperRecognizer_readb(marpaWrapperRecognizerp, symbolip[number], GENERICSTACK_USED(valueContext.inputStackp) - 1 /* value */, 1 /* length */) == 0) {
       rci = 1;
     }
   }
   /* -- */
   /* op */
   /* -- */
-  GENERICSTACK_PUSH_CHAR(valueContext.inputStackp, '-');
   if (rci == 0) {
-    if (marpaWrapperRecognizer_readb(marpaWrapperRecognizerp, symbolip[op], GENERICSTACK_SIZE(valueContext.inputStackp) - 1 /* value */, 1 /* length */) == 0) {
+    GENERICSTACK_PUSH_CHAR(valueContext.inputStackp, '-');
+    if (GENERICSTACK_ERROR(valueContext.inputStackp)) {
+      rci = 1;
+    }
+  }
+  if (rci == 0) {
+    if (marpaWrapperRecognizer_readb(marpaWrapperRecognizerp, symbolip[op], GENERICSTACK_USED(valueContext.inputStackp) - 1 /* value */, 1 /* length */) == 0) {
       rci = 1;
     }
   }
   /* ------ */
   /* number */
   /* ------ */
-  GENERICSTACK_PUSH_INT(valueContext.inputStackp, 0);
   if (rci == 0) {
-    if (marpaWrapperRecognizer_readb(marpaWrapperRecognizerp, symbolip[number], GENERICSTACK_SIZE(valueContext.inputStackp) - 1 /* value */, 1 /* length */) == 0) {
+    GENERICSTACK_PUSH_INT(valueContext.inputStackp, 0);
+    if (GENERICSTACK_ERROR(valueContext.inputStackp)) {
+      rci = 1;
+    }
+  }
+  if (rci == 0) {
+    if (marpaWrapperRecognizer_readb(marpaWrapperRecognizerp, symbolip[number], GENERICSTACK_USED(valueContext.inputStackp) - 1 /* value */, 1 /* length */) == 0) {
       rci = 1;
     }
   }
   /* -- */
   /* op */
   /* -- */
-  GENERICSTACK_PUSH_CHAR(valueContext.inputStackp, '*');
   if (rci == 0) {
-    if (marpaWrapperRecognizer_readb(marpaWrapperRecognizerp, symbolip[op], GENERICSTACK_SIZE(valueContext.inputStackp) - 1 /* value */, 1 /* length */) == 0) {
+    GENERICSTACK_PUSH_CHAR(valueContext.inputStackp, '*');
+    if (GENERICSTACK_ERROR(valueContext.inputStackp)) {
+      rci = 1;
+    }
+  }
+  if (rci == 0) {
+    if (marpaWrapperRecognizer_readb(marpaWrapperRecognizerp, symbolip[op], GENERICSTACK_USED(valueContext.inputStackp) - 1 /* value */, 1 /* length */) == 0) {
       rci = 1;
     }
   }
   /* ------ */
   /* number */
   /* ------ */
-  GENERICSTACK_PUSH_INT(valueContext.inputStackp, 3);
   if (rci == 0) {
-    if (marpaWrapperRecognizer_readb(marpaWrapperRecognizerp, symbolip[number], GENERICSTACK_SIZE(valueContext.inputStackp) - 1 /* value */, 1 /* length */) == 0) {
+    GENERICSTACK_PUSH_INT(valueContext.inputStackp, 3);
+    if (GENERICSTACK_ERROR(valueContext.inputStackp)) {
+      rci = 1;
+    }
+  }
+  if (rci == 0) {
+    if (marpaWrapperRecognizer_readb(marpaWrapperRecognizerp, symbolip[number], GENERICSTACK_USED(valueContext.inputStackp) - 1 /* value */, 1 /* length */) == 0) {
       rci = 1;
     }
   }
   /* -- */
   /* op */
   /* -- */
-  GENERICSTACK_PUSH_CHAR(valueContext.inputStackp, '+');
   if (rci == 0) {
-    if (marpaWrapperRecognizer_readb(marpaWrapperRecognizerp, symbolip[op], GENERICSTACK_SIZE(valueContext.inputStackp) - 1 /* value */, 1 /* length */) == 0) {
+    GENERICSTACK_PUSH_CHAR(valueContext.inputStackp, '+');
+    if (GENERICSTACK_ERROR(valueContext.inputStackp)) {
+      rci = 1;
+    }
+  }
+  if (rci == 0) {
+    if (marpaWrapperRecognizer_readb(marpaWrapperRecognizerp, symbolip[op], GENERICSTACK_USED(valueContext.inputStackp) - 1 /* value */, 1 /* length */) == 0) {
       rci = 1;
     }
   }
   /* ------ */
   /* number */
   /* ------ */
-  GENERICSTACK_PUSH_INT(valueContext.inputStackp, 1);
   if (rci == 0) {
-    if (marpaWrapperRecognizer_readb(marpaWrapperRecognizerp, symbolip[number], GENERICSTACK_SIZE(valueContext.inputStackp) - 1 /* value */, 1 /* length */) == 0) {
+    GENERICSTACK_PUSH_INT(valueContext.inputStackp, 1);
+    if (GENERICSTACK_ERROR(valueContext.inputStackp)) {
+      rci = 1;
+    }
+  }
+  if (rci == 0) {
+    if (marpaWrapperRecognizer_readb(marpaWrapperRecognizerp, symbolip[number], GENERICSTACK_USED(valueContext.inputStackp) - 1 /* value */, 1 /* length */) == 0) {
       rci = 1;
     }
   }
@@ -186,7 +228,23 @@ int main(int argc, char **argv) {
       GENERICLOGGER_TRACEF(marpaWrapperRecognizerOption.genericLoggerp, "Number of expected symbols: %ld", (unsigned long) nsymboll);
       if (nsymboll > 0) {
 	for (i = 0; i < nsymboll; i++) {
-	  GENERICLOGGER_TRACEF(marpaWrapperRecognizerOption.genericLoggerp, "... Expected symbol No %d: %d", i, symbolArrayp[i]);
+	  switch (symbolArrayp[i]) {
+	  case S:
+	    GENERICLOGGER_TRACEF(marpaWrapperRecognizerOption.genericLoggerp, "... Expected symbol No %d: S", i);
+	    break;
+	  case E:
+	    GENERICLOGGER_TRACEF(marpaWrapperRecognizerOption.genericLoggerp, "... Expected symbol No %d: E", i);
+	    break;
+	  case op:
+	    GENERICLOGGER_TRACEF(marpaWrapperRecognizerOption.genericLoggerp, "... Expected symbol No %d: op", i);
+	    break;
+	  case number:
+	    GENERICLOGGER_TRACEF(marpaWrapperRecognizerOption.genericLoggerp, "... Expected symbol No %d: number", i);
+	    break;
+	  default:
+	    GENERICLOGGER_TRACEF(marpaWrapperRecognizerOption.genericLoggerp, "... Expected symbol No %d: ????", i);
+	    break;
+	  }
 	}
       }
     }
@@ -205,7 +263,7 @@ int main(int argc, char **argv) {
 				    valueRuleCallback,
 				    valueSymbolCallback,
 				    NULL) > 0) {
-      stackValueAndDescription_t *resultp = GENERICSTACK_GET_ANY(valueContext.outputStackp, 0);
+      stackValueAndDescription_t *resultp = GENERICSTACK_GET_PTR(valueContext.outputStackp, 0);
       GENERICLOGGER_INFOF(valueContext.genericLoggerp, "%s => %d", resultp->s, resultp->i);
     }
   }
@@ -226,20 +284,30 @@ int main(int argc, char **argv) {
   GENERICLOGGER_FREE(marpaWrapperGrammarOption.genericLoggerp);
 
   GENERICLOGGER_FREE(valueContext.genericLoggerp);
+
+  /* Input stack has no inner PTR */
   GENERICSTACK_FREE(valueContext.inputStackp);
+
+  /* Output stack have somme inner PTR */
+  outputStackSizel = GENERICSTACK_USED(valueContext.outputStackp);
+  if (outputStackSizel > 0) {
+    for (i = 0; i < outputStackSizel; i++) {
+      if (GENERICSTACK_IS_PTR(valueContext.outputStackp, i)) {
+	free(GENERICSTACK_GET_PTR(valueContext.outputStackp, i));
+      }
+    }
+  }
   GENERICSTACK_FREE(valueContext.outputStackp);
   
   return rci;
 }
 
-/* One have to know that swmbol and rule indices always start at 0 and increase by 1   */
+/* One have to know that symbol and rule indices always start at 0 and increase by 1   */
 /* so, even if the "safe" way would be to loop on the int array, it is by construction */
 /* as safe to just check if the indice is below the maximum.                           */
 
 static char *symbolDescription(void *userDatavp, int symboli)
 {
-  int *symbolip = (int *) userDatavp;
-
   if (symboli < MAX_SYMBOL) {
     return desc[symboli];
   }
@@ -248,102 +316,162 @@ static char *symbolDescription(void *userDatavp, int symboli)
 }
 
 static short valueRuleCallback(void *userDatavp, int rulei, int arg0i, int argni, int resulti) {
+  static const char           funcs[] = "valueRuleCallback";
   valueContext_t             *valueContextp   = (valueContext_t *) userDatavp;
-  genericStack_t             *genericStackp   = valueContextp->outputStackp;
+  marpaWrapperRecognizer_t   *marpaWrapperRecognizerp = valueContextp->marpaWrapperRecognizerp;
+  genericStack_t             *outputStackp   = valueContextp->outputStackp;
   genericLogger_t            *genericLoggerp = valueContextp->genericLoggerp;
   int                        *ruleip          = valueContextp->ruleip;
-  stackValueAndDescription_t  result;
+  stackValueAndDescription_t *resultp         = NULL;
+  short                       rcb;
+
+  GENERICLOGGER_TRACEF(genericLoggerp, "[%s] Stacks before:", funcs);
+  dumpStacks(valueContextp);
 
   if (rulei >= MAX_RULE) {
-    return 0;
+    goto err;
+  }
+
+  resultp = malloc(sizeof(stackValueAndDescription_t));
+  if (resultp == NULL) {
+    GENERICLOGGER_ERRORF(genericLoggerp, "malloc error, %s", strerror(errno));
+    goto err;
   }
 
   switch (rulei) {
   case START_RULE:
     {
-      stackValueAndDescription_t *varp = GENERICSTACK_GET_ANY(genericStackp, arg0i);
+      stackValueAndDescription_t *varp = GENERICSTACK_GET_PTR(outputStackp, arg0i);
 
-      result = *varp;
-      GENERICLOGGER_TRACEF(genericLoggerp, "START_RULE: {s=%s,i=%d} at output stack No %d -> {s=%s,i=%d} at output stack No %d", varp->s, varp->i, arg0i, result.s, result.i, resulti);
-      GENERICSTACK_SET_ANY(genericStackp, &result, stackValueAndDescriptionClone, stackValueAndDescriptionFree, resulti);
+      *resultp = *varp;
+      GENERICLOGGER_TRACEF(genericLoggerp, "[%s] START_RULE: {s=%s,i=%d} at output stack No %d -> {s=%s,i=%d} at output stack No %d", funcs, varp->s, varp->i, arg0i, resultp->s, resultp->i, resulti);
     }
     break;
   case OP_RULE:
     {
-      stackValueAndDescription_t *var1p = GENERICSTACK_GET_ANY(genericStackp,  arg0i  );
-      char                        var2c = GENERICSTACK_GET_CHAR(genericStackp, arg0i+1);
-      stackValueAndDescription_t *var3p = GENERICSTACK_GET_ANY(genericStackp,  arg0i+2);
+      stackValueAndDescription_t *var1p = GENERICSTACK_GET_PTR(outputStackp,  arg0i  );
+      char                        var2c = GENERICSTACK_GET_CHAR(outputStackp, arg0i+1);
+      stackValueAndDescription_t *var3p = GENERICSTACK_GET_PTR(outputStackp,  arg0i+2);
 
-      sprintf(result.s, "(%s %c %s)", var1p->s, var2c, var3p->s);
+      sprintf(resultp->s, "(%s %c %s)", var1p->s, var2c, var3p->s);
       switch (var2c) {
       case '+':
-	result.i = var1p->i + var3p->i;
+	resultp->i = var1p->i + var3p->i;
 	break;
       case '-':
-	result.i = var1p->i - var3p->i;
+	resultp->i = var1p->i - var3p->i;
 	break;
       case '*':
-	result.i = var1p->i * var3p->i;
+	resultp->i = var1p->i * var3p->i;
 	break;
       case '/':
-	result.i = var1p->i / var3p->i;
+	resultp->i = var1p->i / var3p->i;
 	break;
       case '%':
-	result.i = var1p->i % var3p->i;
+	resultp->i = var1p->i % var3p->i;
 	break;
       default:
 	GENERICLOGGER_ERRORF(genericLoggerp, "op %c !?", var2c);
-	return 0;
+	goto err;
       }
-      GENERICLOGGER_TRACEF(genericLoggerp, "OP_RULE: {s=%s,i=%d} %c {s=%s,i=%i} at output stack [%d-%d] -> {s=%s,i=%d} at output stack No %d", var1p->s, var1p->i, var2c, var3p->s, var3p->i, arg0i, argni, result.s, result.i, resulti);
-      GENERICSTACK_SET_ANY(genericStackp, &result, stackValueAndDescriptionClone, stackValueAndDescriptionFree, resulti);
+      GENERICLOGGER_TRACEF(genericLoggerp, "[%s] OP_RULE: {s=%s,i=%d} %c {s=%s,i=%i} at output stack [%d-%d] -> {s=%s,i=%d} at output stack No %d", funcs, var1p->s, var1p->i, var2c, var3p->s, var3p->i, arg0i, argni, resultp->s, resultp->i, resulti);
     }
     break;
   case NUMBER_RULE:
     {
-      stackValueAndDescription_t *varp = GENERICSTACK_GET_ANY(genericStackp, arg0i);
+      stackValueAndDescription_t *varp = GENERICSTACK_GET_PTR(outputStackp, arg0i);
 
-      result = *varp;
-      GENERICLOGGER_TRACEF(genericLoggerp, "START_RULE: {s=%s,i=%d} at output stack No %d -> {s=%s,i=%d} at output stack No %d", varp->s, varp->i, arg0i, result.s, result.i, resulti);
-      GENERICSTACK_SET_ANY(genericStackp, &result, stackValueAndDescriptionClone, stackValueAndDescriptionFree, resulti);
+      *resultp = *varp;
+      GENERICLOGGER_TRACEF(genericLoggerp, "[%s] START_RULE: {s=%s,i=%d} at output stack No %d -> {s=%s,i=%d} at output stack No %d", funcs, varp->s, varp->i, arg0i, resultp->s, resultp->i, resulti);
     }
     break;
   default:
     GENERICLOGGER_ERRORF(genericLoggerp, "Rule %d !?", rulei);
-    return 0;
+    goto err;
   }
 
-  return 1;
+  if (GENERICSTACK_IS_PTR(outputStackp, resulti)) {
+    free(GENERICSTACK_GET_PTR(outputStackp, resulti));
+    GENERICSTACK_SET_NA(outputStackp, resulti);
+  }
+  GENERICSTACK_SET_PTR(outputStackp, resultp, resulti);
+  if (GENERICSTACK_ERROR(outputStackp)) {
+    GENERICLOGGER_ERRORF(genericLoggerp, "generic stack error, %s", strerror(errno));
+    goto err;
+  }
+  rcb = 1;
+  goto done;
+
+ err:
+  if (resultp != NULL) {
+    free(resultp);
+  }
+  rcb = 0;
+
+ done:
+  GENERICLOGGER_TRACEF(genericLoggerp, "[%s] Stacks after:", funcs);
+  dumpStacks(valueContextp);
+  return rcb;
 }
 
 static short valueSymbolCallback(void *userDatavp, int symboli, int argi, int resulti) {
+  static const char           funcs[] = "valueSymbolCallback";
   valueContext_t             *valueContextp   = (valueContext_t *) userDatavp;
-  genericStack_t             *inputStackp   = valueContextp->inputStackp;
-  genericStack_t             *outputStackp   = valueContextp->outputStackp;
-  genericLogger_t            *genericLoggerp = valueContextp->genericLoggerp;
+  marpaWrapperRecognizer_t   *marpaWrapperRecognizerp = valueContextp->marpaWrapperRecognizerp;
+  genericStack_t             *inputStackp     = valueContextp->inputStackp;
+  genericStack_t             *outputStackp    = valueContextp->outputStackp;
+  genericLogger_t            *genericLoggerp  = valueContextp->genericLoggerp;
   int                        *symbolip        = valueContextp->symbolip;
-  stackValueAndDescription_t  result;
+  stackValueAndDescription_t *resultp         = NULL;
+  short                       rcb;
+
+  GENERICLOGGER_TRACEF(genericLoggerp, "[%s] Stacks before:", funcs);
+  dumpStacks(valueContextp);
 
   if (symboli >= MAX_SYMBOL) {
-    return 0;
+    goto err;
   }
 
   switch (symboli) {
   case op:
     {
       char varc = GENERICSTACK_GET_CHAR(inputStackp, argi);
-      GENERICLOGGER_TRACEF(genericLoggerp, "op: '%c' at input stack No %d -> output stack No %d", varc, argi, resulti);
+      GENERICLOGGER_TRACEF(genericLoggerp, "[%s] op: operator '0x%x' at input stack No %d -> output stack No %d", funcs, varc, argi, resulti);
+
+      if (GENERICSTACK_IS_PTR(outputStackp, resulti)) {
+	free(GENERICSTACK_GET_PTR(outputStackp, resulti));
+	GENERICSTACK_SET_NA(outputStackp, resulti);
+      }
+
       GENERICSTACK_SET_CHAR(outputStackp, varc, resulti);
+      if (GENERICSTACK_ERROR(outputStackp)) {
+	GENERICLOGGER_ERRORF(genericLoggerp, "generic stack error, %s", strerror(errno));
+      }
     }
     break;
   case number:
     {
       int vari = GENERICSTACK_GET_INT(inputStackp, argi);
 
-      result.i = vari;
-      sprintf(result.s, "%d", vari);
-      GENERICLOGGER_TRACEF(genericLoggerp, "number: %d at input stack No %d -> {s=%s,i=%d} at output stack No %d", vari, argi, result.s, result.i, resulti);
-      GENERICSTACK_SET_ANY(outputStackp, &result, stackValueAndDescriptionClone, stackValueAndDescriptionFree, resulti);
+      resultp = malloc(sizeof(stackValueAndDescription_t));
+      if (resultp == NULL) {
+	GENERICLOGGER_ERRORF(genericLoggerp, "malloc error, %s", strerror(errno));
+	goto err;
+      }
+
+      resultp->i = vari;
+      sprintf(resultp->s, "%d", vari);
+      GENERICLOGGER_TRACEF(genericLoggerp, "[%s] number: value %d at input stack No %d -> {s=%s,i=%d} at output stack No %d", funcs, vari, argi, resultp->s, resultp->i, resulti);
+
+      if (GENERICSTACK_IS_PTR(outputStackp, resulti)) {
+	free(GENERICSTACK_GET_PTR(outputStackp, resulti));
+	GENERICSTACK_SET_NA(outputStackp, resulti);
+      }
+
+      GENERICSTACK_SET_PTR(outputStackp, resultp, resulti);
+      if (GENERICSTACK_ERROR(outputStackp)) {
+	GENERICLOGGER_ERRORF(genericLoggerp, "generic stack error, %s", strerror(errno));
+      }
     }
     break;
   default:
@@ -351,21 +479,78 @@ static short valueSymbolCallback(void *userDatavp, int symboli, int argi, int re
     return 0;
   }
 
-  return 1;
+  rcb = 1;
+  goto done;
+
+ err:
+  if (resultp != NULL) {
+    free(resultp);
+  }
+  rcb = 0;
+
+ done:
+  GENERICLOGGER_TRACEF(genericLoggerp, "[%s] Stacks after:", funcs);
+  dumpStacks(valueContextp);
+  return rcb;
 }
 
-static void *stackValueAndDescriptionClone(void *p) {
-  stackValueAndDescription_t *p1 = (stackValueAndDescription_t *) p;
-  stackValueAndDescription_t *p2 = malloc(sizeof(stackValueAndDescription_t));
+static short dumpStacks(valueContext_t *valueContextp)
+{
+  static const char           funcs[] = "dumpStacks";
+  genericStack_t             *inputStackp     = valueContextp->inputStackp;
+  genericStack_t             *outputStackp    = valueContextp->outputStackp;
+  genericLogger_t            *genericLoggerp  = valueContextp->genericLoggerp;
+  size_t                      inputStackSizel = GENERICSTACK_USED(inputStackp);
+  size_t                      outputStackSizel = GENERICSTACK_USED(outputStackp);
+  size_t                      i;
 
-  *p2 = *p1;
+  if (inputStackSizel > 0) {
+    for (i = 0; i < inputStackSizel; i++) {
+      if (GENERICSTACK_IS_NA(inputStackp, i)) {
+	GENERICLOGGER_TRACEF(genericLoggerp, "[%s] ... input stack No %d is NA", funcs, i);
+      } else if (GENERICSTACK_IS_CHAR(inputStackp, i)) {
+	GENERICLOGGER_TRACEF(genericLoggerp, "[%s] ... input stack No %d is CHAR", funcs, i);
+      } else if (GENERICSTACK_IS_SHORT(inputStackp, i)) {
+	GENERICLOGGER_TRACEF(genericLoggerp, "[%s] ... input stack No %d is SHORT", funcs, i);
+      } else if (GENERICSTACK_IS_INT(inputStackp, i)) {
+	GENERICLOGGER_TRACEF(genericLoggerp, "[%s] ... input stack No %d is INT", funcs, i);
+      } else if (GENERICSTACK_IS_LONG(inputStackp, i)) {
+	GENERICLOGGER_TRACEF(genericLoggerp, "[%s] ... input stack No %d is LONG", funcs, i);
+      } else if (GENERICSTACK_IS_FLOAT(inputStackp, i)) {
+	GENERICLOGGER_TRACEF(genericLoggerp, "[%s] ... input stack No %d is FLOAT", funcs, i);
+      } else if (GENERICSTACK_IS_DOUBLE(inputStackp, i)) {
+	GENERICLOGGER_TRACEF(genericLoggerp, "[%s] ... input stack No %d is DOUBLE", funcs, i);
+      } else if (GENERICSTACK_IS_PTR(inputStackp, i)) {
+	GENERICLOGGER_TRACEF(genericLoggerp, "[%s] ... input stack No %d is PTR", funcs, i);
+      } else {
+	GENERICLOGGER_TRACEF(genericLoggerp, "[%s] ... input stack No %d is ?????", funcs, i);
+      }
+    }
+  }
 
-  return p2;
-}
-
-static void stackValueAndDescriptionFree(void *p) {
-  stackValueAndDescription_t *p1 = (stackValueAndDescription_t *) p;
-
-  free(p1);
+  if (outputStackSizel > 0) {
+    for (i = 0; i < outputStackSizel; i++) {
+      if (GENERICSTACK_IS_NA(outputStackp, i)) {
+	GENERICLOGGER_TRACEF(genericLoggerp, "[%s] ... output stack No %d is NA", funcs, i);
+      } else if (GENERICSTACK_IS_CHAR(outputStackp, i)) {
+	GENERICLOGGER_TRACEF(genericLoggerp, "[%s] ... output stack No %d is CHAR", funcs, i);
+      } else if (GENERICSTACK_IS_SHORT(outputStackp, i)) {
+	GENERICLOGGER_TRACEF(genericLoggerp, "[%s] ... output stack No %d is SHORT", funcs, i);
+      } else if (GENERICSTACK_IS_INT(outputStackp, i)) {
+	GENERICLOGGER_TRACEF(genericLoggerp, "[%s] ... output stack No %d is INT", funcs, i);
+      } else if (GENERICSTACK_IS_LONG(outputStackp, i)) {
+	GENERICLOGGER_TRACEF(genericLoggerp, "[%s] ... output stack No %d is LONG", funcs, i);
+      } else if (GENERICSTACK_IS_FLOAT(outputStackp, i)) {
+	GENERICLOGGER_TRACEF(genericLoggerp, "[%s] ... output stack No %d is FLOAT", funcs, i);
+      } else if (GENERICSTACK_IS_DOUBLE(outputStackp, i)) {
+	GENERICLOGGER_TRACEF(genericLoggerp, "[%s] ... output stack No %d is DOUBLE", funcs, i);
+      } else if (GENERICSTACK_IS_PTR(outputStackp, i)) {
+	stackValueAndDescription_t *p = GENERICSTACK_GET_PTR(outputStackp, i);
+	GENERICLOGGER_TRACEF(genericLoggerp, "[%s] ... output stack No %d is PTR {\"%s\", %d}", funcs, i, p->s, p->i);
+      } else {
+	GENERICLOGGER_TRACEF(genericLoggerp, "[%s] ... output stack No %d is ?????", funcs, i);
+      }
+    }
+  }
 }
 

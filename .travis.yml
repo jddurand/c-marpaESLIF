@@ -13,4 +13,5 @@ before_script:
   - cmake .
 script:
   - make check
+  - ./output/lib/marpaWrapperTester
   - sudo make install
