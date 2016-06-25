@@ -460,14 +460,16 @@ static inline marpaWrapperAsfNidset_t *_marpaWrapperAsf_nidsetObtainb(marpaWrapp
   const static char        funcs[] = "_marpaWrapperAsf_nidsetObtainb";
   genericLogger_t         *genericLoggerp = marpaWrapperAsfp->genericLoggerp;
   int                      intsetIdi;
-  marpaWrapperAsfNidset_t *nidsetp = NULL;
+  marpaWrapperAsfNidset_t *nidsetp;
   size_t                   i;
 
   if (_marpaWrapperAsf_intsetIdb(marpaWrapperAsfp, &intsetIdi, nIdl, idip) == 0) {
     goto err;
   }
 
-  if (! GENERICSTACK_IS_PTR(marpaWrapperAsfp->nidsetStackp, intsetIdi)) {
+  if (GENERICSTACK_IS_PTR(marpaWrapperAsfp->nidsetStackp, intsetIdi)) {
+    nidsetp = GENERICSTACK_GET_PTR(marpaWrapperAsfp->nidsetStackp, intsetIdi);
+  } else {
     nidsetp = malloc(sizeof(marpaWrapperAsfNidset_t));
     if (nidsetp == NULL) {
       MARPAWRAPPER_ERRORF(genericLoggerp, "malloc failure: %s", strerror(errno));
@@ -492,8 +494,6 @@ static inline marpaWrapperAsfNidset_t *_marpaWrapperAsf_nidsetObtainb(marpaWrapp
 	goto err;
       }
     }
-  } else {
-    nidsetp = GENERICSTACK_GET_PTR(marpaWrapperAsfp->nidsetStackp, intsetIdi);
   }
 
   goto done;
@@ -504,6 +504,7 @@ static inline marpaWrapperAsfNidset_t *_marpaWrapperAsf_nidsetObtainb(marpaWrapp
       free(nidsetp->idip);
     }
     free(nidsetp);
+    nidsetp = NULL;
   }
 
  done:
