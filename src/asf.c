@@ -6,7 +6,6 @@
 
 #include "marpa.h"
 #include "config.h"
-#include "marpaWrapper/internal/manageBuf.h"
 #include "marpaWrapper/internal/asf.h"
 #include "marpaWrapper/internal/recognizer.h"
 #include "marpaWrapper/internal/grammar.h"
@@ -18,6 +17,11 @@
 
 #undef MARPAWRAPPERASF_INTSET_MODULO
 #define MARPAWRAPPERASF_INTSET_MODULO (MARPAWRAPPERASF_INTSET_MAXROWS - 1)
+
+#ifndef MARPAWRAPPERASF_NID_LEAF_BASE
+#define MARPAWRAPPERASF_NID_LEAF_BASE -43
+#endif
+
 
 #ifdef C_VA_COPY
 /* Used when passing a va_list on the stack to another function taking a va_list */
@@ -33,43 +37,86 @@ static marpaWrapperAsfOption_t marpaWrapperAsfOptionDefault = {
    1,     /* orderByRankb */
 };
 
+static char *marpaWrapperAsfIdsets[_MARPAWRAPPERASFIDSET_IDSETE_MAX] = {
+  "nidset",
+  "powerset"
+};
+
+static char *marpaWrapperAsfIdsetUpfirsts[_MARPAWRAPPERASFIDSET_IDSETE_MAX] = {
+  "Nidset",
+  "Powerset"
+};
+
 typedef struct marpaWrapperAfsAndNodeIdAndPredecessorId {
   Marpa_And_Node_ID andNodeIdi;
   Marpa_And_Node_ID andNodePredecessorIdi;
 } marpaWrapperAfsAndNodeIdAndPredecessorId_t;
 
-static inline short                    _marpaWrapperAsf_peak(marpaWrapperAsf_t *marpaWrapperAsfp);
-static inline int                      _marpaWrapperAsf_andNodeIdAndPredecessorIdCmpi(const void *p1, const void *p2);
-static inline marpaWrapperAsfNidset_t *_marpaWrapperAsf_nidsetObtainb(marpaWrapperAsf_t *marpaWrapperAsfp, size_t nIdl, int *idip);
-static inline short                    _marpaWrapperAsf_intsetIdb(marpaWrapperAsf_t *marpaWrapperAsfp, int *intsetIdip, size_t nIdl, int *idip);
-static inline char                    *_marpaWrapperAsf_stringBuilders(char *fmts, ...);
-static inline char                    *_marpaWrapperAsf_stringBuilder_aps(char *fmts, va_list ap);
-static inline short                    _marpaWrapperAsf_cmpIntsetFunction(void *userDatavp, genericStackItemType_t itemType, void *p1, void *p2);
-static inline unsigned long            _marpaWrapperAsf_djb2(unsigned char *str);
-static inline int                      _marpaWrapperAsf_idCmpi(const void *p1, const void *p2);
+static inline void                       _marpaWrapperAsf_orNode_freev(marpaWrapperAsf_t *marpaWrapperAsfp);
+static inline void                       _marpaWrapperAsf_glade_freev(marpaWrapperAsf_t *marpaWrapperAsfp);
+static inline short                      _marpaWrapperAsf_peak(marpaWrapperAsf_t *marpaWrapperAsfp);
+static inline int                        _marpaWrapperAsf_andNodeIdAndPredecessorIdCmpi(const void *p1, const void *p2);
+static inline short                      _marpaWrapperAsf_intsetIdb(marpaWrapperAsf_t *marpaWrapperAsfp, int *intsetIdip, size_t countl, int *idip);
+static inline char                      *_marpaWrapperAsf_stringBuilders(char *fmts, ...);
+static inline char                      *_marpaWrapperAsf_stringBuilder_aps(char *fmts, va_list ap);
+static inline short                      _marpaWrapperAsf_cmpIntsetFunction(void *userDatavp, genericStackItemType_t itemType, void *p1, void *p2);
+static inline unsigned long              _marpaWrapperAsf_djb2(unsigned char *str);
+static inline int                        _marpaWrapperAsf_idCmpi(const void *p1, const void *p2);
+
+static inline marpaWrapperAsfIdset_t    *_marpaWrapperAsf_idset_obtainb(marpaWrapperAsf_t *marpaWrapperAsfp, marpaWrapperAsfIdsete_t idsete, size_t countl, int *idip);
+static inline int                       *_marpaWrapperAsf_idset_idip(marpaWrapperAsf_t *marpaWrapperAsfp, marpaWrapperAsfIdsete_t idsete, marpaWrapperAsfIdset_t *idsetp);
+static inline int                        _marpaWrapperAsf_idset_idi_by_ixi(marpaWrapperAsf_t *marpaWrapperAsfp, marpaWrapperAsfIdsete_t idsete, marpaWrapperAsfIdset_t *idsetp, int ixi);
+static inline size_t                     _marpaWrapperAsf_idset_countl(marpaWrapperAsf_t *marpaWrapperAsfp, marpaWrapperAsfIdsete_t idsete, marpaWrapperAsfIdset_t *idsetp);
+static inline int                        _marpaWrapperAsf_idset_idi(marpaWrapperAsf_t *marpaWrapperAsfp, marpaWrapperAsfIdsete_t idsete, marpaWrapperAsfIdset_t *idsetp);
+static inline char                      *_marpaWrapperAsf_idset_showb(marpaWrapperAsf_t *marpaWrapperAsfp, marpaWrapperAsfIdsete_t idsete, marpaWrapperAsfIdset_t *idsetp);
+static inline void                       _marpaWrapperAsf_idset_freev(marpaWrapperAsf_t *marpaWrapperAsfp, marpaWrapperAsfIdsete_t idsete);
+
+static inline marpaWrapperAsfNidset_t   *_marpaWrapperAsf_nidset_obtainb(marpaWrapperAsf_t *marpaWrapperAsfp, size_t countl, int *idip);
+static inline int                       *_marpaWrapperAsf_nidset_idip(marpaWrapperAsf_t *marpaWrapperAsfp, marpaWrapperAsfIdset_t *idsetp);
+static inline int                        _marpaWrapperAsf_nidset_idi_by_ixi(marpaWrapperAsf_t *marpaWrapperAsfp, marpaWrapperAsfIdset_t *idsetp, int ixi);
+static inline size_t                     _marpaWrapperAsf_nidset_countlb(marpaWrapperAsf_t *marpaWrapperAsfp, marpaWrapperAsfIdset_t *idsetp);
+static inline int                        _marpaWrapperAsf_nidset_idi(marpaWrapperAsf_t *marpaWrapperAsfp, marpaWrapperAsfIdset_t *idsetp);
+static inline char                      *_marpaWrapperAsf_nidset_showb(marpaWrapperAsf_t *marpaWrapperAsfp, marpaWrapperAsfIdset_t *idsetp);
+static inline void                       _marpaWrapperAsf_nidset_freev(marpaWrapperAsf_t *marpaWrapperAsfp, genericStack_t *stackp);
+
+static inline marpaWrapperAsfPowerset_t *_marpaWrapperAsf_powerset_obtainb(marpaWrapperAsf_t *marpaWrapperAsfp, size_t countl, int *idip);
+static inline int                       *_marpaWrapperAsf_powerset_idip(marpaWrapperAsf_t *marpaWrapperAsfp, marpaWrapperAsfIdset_t *idsetp);
+static inline int                        _marpaWrapperAsf_powerset_idi_by_ixi(marpaWrapperAsf_t *marpaWrapperAsfp, marpaWrapperAsfIdset_t *idsetp, int ixi);
+static inline size_t                     _marpaWrapperAsf_powerset_countlb(marpaWrapperAsf_t *marpaWrapperAsfp, marpaWrapperAsfIdset_t *idsetp);
+static inline int                        _marpaWrapperAsf_powerset_idi(marpaWrapperAsf_t *marpaWrapperAsfp, marpaWrapperAsfIdset_t *idsetp);
+static inline char                      *_marpaWrapperAsf_powerset_showb(marpaWrapperAsf_t *marpaWrapperAsfp, marpaWrapperAsfIdset_t *idsetp);
+static inline void                       _marpaWrapperAsf_powerset_freev(marpaWrapperAsf_t *marpaWrapperAsfp, genericStack_t *stackp);
+
+static inline marpaWrapperAsfNook_t     *_marpaWrapperAsf_nook_newp(marpaWrapperAsf_t *marpaWrapperAsfp, int orNodeIdi, int parentOrNodeIdi);
+static inline void                       _marpaWrapperAsf_nook_freev(marpaWrapperAsf_t *marpaWrapperAsfp);
+static inline short                      _marpaWrapperAsf_nook_has_semantic_causeb(marpaWrapperAsf_t *marpaWrapperAsfp, marpaWrapperAsfNook_t *nookp);
+static inline short                      _marpaWrapperAsf_setLastChoiceb(marpaWrapperAsf_t *marpaWrapperAsfp, int **choiceipp, marpaWrapperAsfNook_t *nookp);
+static inline short                      _marpaWrapperAsf_nook_incrementb(marpaWrapperAsf_t *marpaWrapperAsfp, int **choiceipp, marpaWrapperAsfNook_t *nookp);
+
+static inline short                      _marpaWrapperAsf_glade_obtainb(marpaWrapperAsf_t *marpaWrapperAsfp, size_t gladei);
 
 /****************************************************************************/
 marpaWrapperAsf_t *marpaWrapperAsf_newp(marpaWrapperRecognizer_t *marpaWrapperRecognizerp, marpaWrapperAsfOption_t *marpaWrapperAsfOptionp)
 /****************************************************************************/
 {
-  const static char                           funcs[] = "marpaWrapperAsf_newp";
-  marpaWrapperAsf_t                          *marpaWrapperAsfp;
-  genericLogger_t                            *genericLoggerp;
+  const static char                           funcs[]                    = "marpaWrapperAsf_newp";
+  marpaWrapperAsf_t                          *marpaWrapperAsfp           = NULL;
+  marpaWrapperAsfOrNode_t                    *orNodep                    = NULL;
+  marpaWrapperAfsAndNodeIdAndPredecessorId_t *andNodeIdAndPredecessorIdp = NULL;
+  genericLogger_t                            *genericLoggerp             = NULL;
   Marpa_Earley_Set_ID                         marpaLatestEarleySetIdi;
   int                                         highRankOnlyFlagi;
   int                                         ambiguousi;
   int                                         nulli;
-  int                                         orNodeAndNodeCounti;
+  int                                         andNodeCounti;
   Marpa_Or_Node_ID                            orNodei;
   int                                         ix;
   Marpa_And_Node_ID                           andNodeIdi;
-  size_t                                      nAndNodeIdl;
+  int                                        *andNodep;
   size_t                                      sizeAndNodeIdAndPredecessorIdl = 0;
   size_t                                      nAndNodeIdAndPredecessorIdl = 0;
-  marpaWrapperAfsAndNodeIdAndPredecessorId_t *andNodeIdAndPredecessorIdp = NULL;
   Marpa_And_Node_ID                           andNodePredecessorIdi;
   int                                        *orNodeAndNodeIdip;
-  
   
   if (marpaWrapperRecognizerp == NULL) {
     errno = EINVAL;
@@ -98,21 +145,15 @@ marpaWrapperAsf_t *marpaWrapperAsf_newp(marpaWrapperRecognizer_t *marpaWrapperRe
   marpaWrapperAsfp->marpaWrapperAsfOption   = *marpaWrapperAsfOptionp;
   marpaWrapperAsfp->marpaBocagep            = NULL;
   marpaWrapperAsfp->marpaOrderp             = NULL;
-  marpaWrapperAsfp->sizeAndNodeIdl          = 0;
-  marpaWrapperAsfp->nAndNodeIdl             = 0;
-  marpaWrapperAsfp->andNodeIdip             = NULL;
-  marpaWrapperAsfp->sizeOrNodeAndNodeIdl    = 0;
-  marpaWrapperAsfp->nOrNodeAndNodeIdl       = 0;
-  marpaWrapperAsfp->orNodeAndNodeIdipp      = NULL;
+  marpaWrapperAsfp->orNodeStackp            = NULL;
   marpaWrapperAsfp->intsetHashp             = NULL;
   marpaWrapperAsfp->nidsetStackp            = NULL;
+  marpaWrapperAsfp->powersetStackp          = NULL;
+  marpaWrapperAsfp->nookStackp              = NULL;
+  marpaWrapperAsfp->lastNidsetp             = NULL;
+  marpaWrapperAsfp->lastPowersetp           = NULL;
+  marpaWrapperAsfp->gladeStackp             = NULL;
   marpaWrapperAsfp->nextIntseti             = 0;
-
-  GENERICHASH_NEW_SIZED(marpaWrapperAsfp->intsetHashp, NULL, _marpaWrapperAsf_cmpIntsetFunction, 1, MARPAWRAPPERASF_INTSET_MAXROWS, 0);
-  if (GENERICHASH_ERROR(marpaWrapperAsfp->intsetHashp)) {
-    MARPAWRAPPER_ERRORF(genericLoggerp, "Intset hash initialization error, %s", strerror(errno));
-    goto err;
-  }
 
   /* Always succeed as per the doc */
   MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_r_latest_earley_set(%p)", marpaWrapperRecognizerp->marpaRecognizerp);
@@ -170,6 +211,42 @@ marpaWrapperAsf_t *marpaWrapperAsf_newp(marpaWrapperRecognizer_t *marpaWrapperRe
     goto err;
   }
   
+  GENERICSTACK_NEW(marpaWrapperAsfp->orNodeStackp);
+  if (GENERICSTACK_ERROR(marpaWrapperAsfp->orNodeStackp)) {
+    MARPAWRAPPER_ERRORF(genericLoggerp, "orNode stack initialization error, %s", strerror(errno));
+    goto err;
+  }
+
+  GENERICHASH_NEW_SIZED(marpaWrapperAsfp->intsetHashp, NULL, _marpaWrapperAsf_cmpIntsetFunction, 1, MARPAWRAPPERASF_INTSET_MAXROWS, 0);
+  if (GENERICHASH_ERROR(marpaWrapperAsfp->intsetHashp)) {
+    MARPAWRAPPER_ERRORF(genericLoggerp, "Intset hash initialization error, %s", strerror(errno));
+    goto err;
+  }
+
+  GENERICSTACK_NEW(marpaWrapperAsfp->nidsetStackp);
+  if (GENERICSTACK_ERROR(marpaWrapperAsfp->nidsetStackp)) {
+    MARPAWRAPPER_ERRORF(genericLoggerp, "Nidset stack initialization error, %s", strerror(errno));
+    goto err;
+  }
+
+  GENERICSTACK_NEW(marpaWrapperAsfp->powersetStackp);
+  if (GENERICSTACK_ERROR(marpaWrapperAsfp->powersetStackp)) {
+    MARPAWRAPPER_ERRORF(genericLoggerp, "Powerset stack initialization error, %s", strerror(errno));
+    goto err;
+  }
+
+  GENERICSTACK_NEW(marpaWrapperAsfp->nookStackp);
+  if (GENERICSTACK_ERROR(marpaWrapperAsfp->nookStackp)) {
+    MARPAWRAPPER_ERRORF(genericLoggerp, "Nook stack initialization error, %s", strerror(errno));
+    goto err;
+  }
+
+  GENERICSTACK_NEW(marpaWrapperAsfp->gladeStackp);
+  if (GENERICSTACK_ERROR(marpaWrapperAsfp->gladeStackp)) {
+    MARPAWRAPPER_ERRORF(genericLoggerp, "glade stack initialization error, %s", strerror(errno));
+    goto err;
+  }
+
   if (genericLoggerp != NULL) {
     MARPAWRAPPER_TRACE(genericLoggerp, funcs, "Cloning genericLogger");
 
@@ -185,88 +262,74 @@ marpaWrapperAsf_t *marpaWrapperAsf_newp(marpaWrapperRecognizer_t *marpaWrapperRe
   marpaWrapperRecognizerp->treeModeb = MARPAWRAPPERRECOGNIZERTREEMODE_FOREST;
 
   /* Get all the primary AND nodes */
-  nAndNodeIdl = 0;
   for (orNodei = 0; ; orNodei++) {
-    orNodeAndNodeCounti = _marpa_o_or_node_and_node_count(marpaWrapperAsfp->marpaOrderp, orNodei);
-    MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "OR Node Id %d says there are %d AND nodes", orNodei, orNodeAndNodeCounti);
-    if (orNodeAndNodeCounti == -1) {
-      orNodeAndNodeCounti = 0;
+    MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "_marpa_o_or_node_and_node_count(%p, %d)", marpaWrapperAsfp->marpaOrderp, (int) orNodei);
+    andNodeCounti = _marpa_o_or_node_and_node_count(marpaWrapperAsfp->marpaOrderp, orNodei);
+    MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "OR Node Id %d says there are %d AND nodes", orNodei, andNodeCounti);
+    if (andNodeCounti == -1) {
+      andNodeCounti = 0;
     }
-    if (orNodeAndNodeCounti < 0) {
+    if (andNodeCounti < 0) {
       MARPAWRAPPER_ERRORF(genericLoggerp, "Invalid OR Node Id %d", orNodei);
       goto err;
     }
-    if (orNodeAndNodeCounti == 0) {
+    if (andNodeCounti == 0) {
       break;
     }
-    if (manageBuf_createp(genericLoggerp,
-			  (void **) &(marpaWrapperAsfp->orNodeAndNodeIdipp),
-			  &(marpaWrapperAsfp->sizeOrNodeAndNodeIdl),
-			  orNodei + 1,
-			  sizeof(int *)) == NULL) {
-      MARPAWRAPPER_ERRORF(genericLoggerp, "Internal error on orNodeAndNodeIdipp, %s", strerror(errno));
+
+    orNodep = malloc(sizeof(marpaWrapperAsfOrNode_t));
+    if (orNodep == NULL) {
+      MARPAWRAPPER_ERRORF(genericLoggerp, "malloc failure: %s", strerror(errno));
       goto err;
     }
-    marpaWrapperAsfp->orNodeAndNodeIdipp[orNodei] = NULL;
-    marpaWrapperAsfp->nOrNodeAndNodeIdl = orNodei + 1;
-
-    nAndNodeIdl = 0;
-    for (ix = 0; ix < orNodeAndNodeCounti; ix++) {
-      andNodeIdi = _marpa_o_or_node_and_node_id_by_ix(marpaWrapperAsfp->marpaOrderp, orNodei, ix);
-
-      if (manageBuf_createp(genericLoggerp,
-			    (void **) &(marpaWrapperAsfp->andNodeIdip),
-			    &(marpaWrapperAsfp->sizeAndNodeIdl),
-			    nAndNodeIdl + 1,
-			    sizeof(int)) == NULL) {
-	MARPAWRAPPER_ERRORF(genericLoggerp, "Internal error on andNodeIdip, %s", strerror(errno));
-	goto err;
-      }
-      marpaWrapperAsfp->andNodeIdip[nAndNodeIdl] = (int) andNodeIdi;
-      marpaWrapperAsfp->nAndNodeIdl = ++nAndNodeIdl;
-    }
-    if (nAndNodeIdl > 0) {
-      /* Sort the AND Node Ids or this OR Node */
-      if (manageBuf_createp(genericLoggerp,
-			    (void **) &(andNodeIdAndPredecessorIdp),
-			    &(sizeAndNodeIdAndPredecessorIdl),
-			    nAndNodeIdl,
-			    sizeof(int *)) == NULL) {
-	MARPAWRAPPER_ERRORF(genericLoggerp, "Internal error on andNodeIdAndPredecessorIdp, %s", strerror(errno));
-	goto err;
-      }
-      nAndNodeIdAndPredecessorIdl = nAndNodeIdl;
-
-      for (ix = 0; ix < nAndNodeIdl; ix++) {
-	andNodeIdAndPredecessorIdp[ix].andNodeIdi = marpaWrapperAsfp->andNodeIdip[ix];
-	andNodePredecessorIdi = _marpa_b_and_node_predecessor(marpaWrapperAsfp->marpaBocagep, marpaWrapperAsfp->andNodeIdip[ix]);
-	if (andNodePredecessorIdi < -1) {
-	  MARPAWRAPPER_MARPA_G_ERROR(genericLoggerp, marpaWrapperRecognizerp->marpaWrapperGrammarp->marpaGrammarp);
-	  goto err;
-	}
-	andNodeIdAndPredecessorIdp[ix].andNodePredecessorIdi = andNodePredecessorIdi;
-      }
-      qsort(andNodeIdAndPredecessorIdp, nAndNodeIdl, sizeof(marpaWrapperAfsAndNodeIdAndPredecessorId_t), _marpaWrapperAsf_andNodeIdAndPredecessorIdCmpi);
-    }
-    
-    /* Commit the sorted array into orNodeAndNodeIdipp */
-    orNodeAndNodeIdip = malloc((nAndNodeIdl + 1) * sizeof(int));
-    if (orNodeAndNodeIdip == NULL) {
+    andNodep = malloc(andNodeCounti * sizeof(int));
+    if (andNodep == NULL) {
       MARPAWRAPPER_ERRORF(genericLoggerp, "malloc failure: %s", strerror(errno));
       goto err;
     }
 
-    marpaWrapperAsfp->orNodeAndNodeIdipp[orNodei] = orNodeAndNodeIdip;
-    if (nAndNodeIdl > 0) {
-      for (ix = 0; ix < nAndNodeIdl; ix++) {
-	orNodeAndNodeIdip[ix] = andNodeIdAndPredecessorIdp[ix].andNodeIdi;
-      }
+    orNodep->nAndNodel = (size_t) andNodeCounti;
+    orNodep->andNodep = andNodep;
+
+    /* Prepare the sort the AND Node Ids or this OR Node using predecessor Id */
+    andNodeIdAndPredecessorIdp = malloc(andNodeCounti * sizeof(marpaWrapperAfsAndNodeIdAndPredecessorId_t));
+    if (andNodeIdAndPredecessorIdp == NULL) {
+      MARPAWRAPPER_ERRORF(genericLoggerp, "malloc failure: %s", strerror(errno));
+      goto err;
     }
-    /* Last element */
-    orNodeAndNodeIdip[ix] = -1;
+
+    for (ix = 0; ix < andNodeCounti; ix++) {
+      MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "_marpa_o_or_node_and_node_id_by_ix(%p, %d, %d)", marpaWrapperAsfp->marpaOrderp, (int) orNodei, (int) ix);
+      andNodeIdi            = _marpa_o_or_node_and_node_id_by_ix(marpaWrapperAsfp->marpaOrderp, orNodei, ix);
+      MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "_marpa_b_and_node_predecessor(%p, %d);", marpaWrapperAsfp->marpaBocagep, (int) andNodeIdi);
+      andNodePredecessorIdi = _marpa_b_and_node_predecessor(marpaWrapperAsfp->marpaBocagep, andNodeIdi);
+      if (andNodePredecessorIdi < -1) {
+	MARPAWRAPPER_MARPA_G_ERROR(genericLoggerp, marpaWrapperRecognizerp->marpaWrapperGrammarp->marpaGrammarp);
+	goto err;
+      }
+
+      andNodeIdAndPredecessorIdp[ix].andNodeIdi            = andNodeIdi;
+      andNodeIdAndPredecessorIdp[ix].andNodePredecessorIdi = andNodePredecessorIdi;
+    }
+
+    qsort(andNodeIdAndPredecessorIdp,
+	  (size_t) andNodeCounti,
+	  sizeof(marpaWrapperAfsAndNodeIdAndPredecessorId_t),
+	  _marpaWrapperAsf_andNodeIdAndPredecessorIdCmpi);
+    
+    for (ix = 0; ix < andNodeCounti; ix++) {
+      andNodep[ix] = andNodeIdAndPredecessorIdp[ix].andNodeIdi;
+    }
 
     free(andNodeIdAndPredecessorIdp);
     andNodeIdAndPredecessorIdp = NULL;
+
+    GENERICSTACK_SET_PTR(marpaWrapperAsfp->orNodeStackp, orNodep, orNodei);
+    if (GENERICSTACK_ERROR(marpaWrapperAsfp->orNodeStackp)) {
+      MARPAWRAPPER_ERRORF(genericLoggerp, "orNode stack failure: %s", strerror(errno));
+      goto err;
+    }
+
   }
 
   if (genericLoggerp != NULL) {
@@ -294,6 +357,13 @@ err:
     }
     marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp = NULL;
 
+    if (orNodep != NULL) {
+      if (orNodep->andNodep != NULL) {
+	free(orNodep->andNodep);
+      }
+      free(orNodep);
+    }
+
     if (andNodeIdAndPredecessorIdp != NULL) {
       free(andNodeIdAndPredecessorIdp);
     }
@@ -301,8 +371,6 @@ err:
     marpaWrapperAsf_freev(marpaWrapperAsfp);
     errno = errnoi;
   }
-
-  manageBuf_freev(genericLoggerp, (void **) &(andNodeIdAndPredecessorIdp));
 
   if (marpaWrapperRecognizerp != NULL) {
     marpaWrapperRecognizerp->treeModeb = MARPAWRAPPERRECOGNIZERTREEMODE_NA;
@@ -340,9 +408,6 @@ void marpaWrapperAsf_freev(marpaWrapperAsf_t *marpaWrapperAsfp)
   const static char        funcs[] = "marpaWrapperAsf_freev";
   genericLogger_t         *genericLoggerp;
   size_t                   orNodeAndNodeIdi;
-  size_t                   i;
-  size_t                   nidsetStackl;
-  marpaWrapperAsfNidset_t *nidsetp;
 
   if (marpaWrapperAsfp != NULL) {
     /* Keep a copy of the generic logger. If original is not NULL, then we have a clone of it */
@@ -363,38 +428,23 @@ void marpaWrapperAsf_freev(marpaWrapperAsf_t *marpaWrapperAsfp)
       marpaWrapperAsfp->marpaWrapperRecognizerp->treeModeb = MARPAWRAPPERRECOGNIZERTREEMODE_NA;
     }
 
-    MARPAWRAPPER_TRACE(genericLoggerp, funcs, "Freeing AND Node Ids table");
-    manageBuf_freev(genericLoggerp, (void **) &(marpaWrapperAsfp->andNodeIdip));
+    MARPAWRAPPER_TRACE(genericLoggerp, funcs, "Freeing orNode stack");
+    _marpaWrapperAsf_orNode_freev(marpaWrapperAsfp);
     
-    MARPAWRAPPER_TRACE(genericLoggerp, funcs, "Freeing OR Node Ids table");
-    /* Every OR Node is itself an array allocated on the heap */
-    if (marpaWrapperAsfp->nOrNodeAndNodeIdl > 0) {
-      for (orNodeAndNodeIdi = 0; orNodeAndNodeIdi < marpaWrapperAsfp->nOrNodeAndNodeIdl; orNodeAndNodeIdi++) {
-	if (marpaWrapperAsfp->orNodeAndNodeIdipp[orNodeAndNodeIdi] != NULL) {
-	  free(marpaWrapperAsfp->orNodeAndNodeIdipp[orNodeAndNodeIdi]);
-	}
-      }
-    }
-    MARPAWRAPPER_TRACE(genericLoggerp, funcs, "Freeing OR and AND Node Ids table");
-    manageBuf_freev(genericLoggerp, (void **) &(marpaWrapperAsfp->orNodeAndNodeIdipp));
-
     MARPAWRAPPER_TRACE(genericLoggerp, funcs, "Freeing intset hash");
     GENERICHASH_FREE(marpaWrapperAsfp->intsetHashp);
     
     MARPAWRAPPER_TRACE(genericLoggerp, funcs, "Freeing Nidset stack");
-    nidsetStackl = GENERICSTACK_USED(marpaWrapperAsfp->nidsetStackp);
-    /* Every node also have an array inside */
-    if (nidsetStackl > 0) {
-      for (i = 0; i < nidsetStackl; i++) {
-	if (GENERICSTACK_IS_PTR(marpaWrapperAsfp->nidsetStackp, i)) {
-	  nidsetp = GENERICSTACK_GET_PTR(marpaWrapperAsfp->nidsetStackp, i);
-	  if (nidsetp->idip != NULL) {
-	    free(nidsetp->idip);
-	  }
-	  free(nidsetp);
-	}
-      }
-    }
+    _marpaWrapperAsf_nidset_freev(marpaWrapperAsfp, marpaWrapperAsfp->nidsetStackp);
+    
+    MARPAWRAPPER_TRACE(genericLoggerp, funcs, "Freeing Powerset stack");
+    _marpaWrapperAsf_powerset_freev(marpaWrapperAsfp, marpaWrapperAsfp->powersetStackp);
+    
+    MARPAWRAPPER_TRACE(genericLoggerp, funcs, "Freeing Nook stack");
+    _marpaWrapperAsf_nook_freev(marpaWrapperAsfp);
+    
+    MARPAWRAPPER_TRACE(genericLoggerp, funcs, "Freeing glade stack");
+    _marpaWrapperAsf_glade_freev(marpaWrapperAsfp);
     
     MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "free(%p)", marpaWrapperAsfp);
     free(marpaWrapperAsfp);
@@ -407,15 +457,67 @@ void marpaWrapperAsf_freev(marpaWrapperAsf_t *marpaWrapperAsfp)
 }
 
 /****************************************************************************/
+static inline void _marpaWrapperAsf_orNode_freev(marpaWrapperAsf_t *marpaWrapperAsfp)
+/****************************************************************************/
+{
+  const static char        funcs[]        = "_marpaWrapperAsf_orNode_freev";
+  genericLogger_t         *genericLoggerp = marpaWrapperAsfp->genericLoggerp;
+  genericStack_t          *stackp         = marpaWrapperAsfp->orNodeStackp;
+  size_t                   orNodeUsedl;
+  size_t                   i;
+  marpaWrapperAsfOrNode_t *orNodep;
+
+  orNodeUsedl = GENERICSTACK_USED(stackp);
+  if (orNodeUsedl > 0) {
+    for (i = 0; i < orNodeUsedl; i++) {
+      if (GENERICSTACK_IS_PTR(stackp, i)) {
+	orNodep = GENERICSTACK_GET_PTR(stackp, i);
+	if (orNodep->andNodep != NULL) {
+	  free(orNodep->andNodep);
+	}
+      }
+    }
+  }
+  GENERICSTACK_FREE(stackp);
+}
+
+/****************************************************************************/
+static inline void _marpaWrapperAsf_glade_freev(marpaWrapperAsf_t *marpaWrapperAsfp)
+/****************************************************************************/
+{
+  const static char        funcs[]        = "_marpaWrapperAsf_glade_freev";
+  genericLogger_t         *genericLoggerp = marpaWrapperAsfp->genericLoggerp;
+  genericStack_t          *stackp         = marpaWrapperAsfp->gladeStackp;
+  size_t                   gladeUsedl;
+  size_t                   i;
+  marpaWrapperAsfGlade_t  *gladep;
+
+  gladeUsedl = GENERICSTACK_USED(stackp);
+  if (gladeUsedl > 0) {
+    for (i = 0; i < gladeUsedl; i++) {
+      if (GENERICSTACK_IS_PTR(stackp, i)) {
+	gladep = GENERICSTACK_GET_PTR(stackp, i);
+	if (gladep->symbolip != NULL) {
+	  free(gladep->symbolip);
+	}
+      }
+    }
+  }
+  GENERICSTACK_FREE(stackp);
+}
+
+/****************************************************************************/
 static inline short _marpaWrapperAsf_peak(marpaWrapperAsf_t *marpaWrapperAsfp)
 /****************************************************************************/
 {
-  const static char        funcs[] = "_marpaWrapperAsf_peak";
+  const static char        funcs[]        = "_marpaWrapperAsf_peak";
   genericLogger_t         *genericLoggerp = marpaWrapperAsfp->genericLoggerp;
+  marpaWrapperAsfGlade_t  *gladep         = NULL;
   int                      augmentOrNodeIdi;
   int                      augmentAndNodeIdi;
   int                      startOrNodeIdi;
-  marpaWrapperAsfNidset_t *baseNidseti;
+  marpaWrapperAsfNidset_t *baseNidsetp;
+  marpaWrapperAsfOrNode_t *orNodep;
 
   augmentOrNodeIdi = (int) _marpa_b_top_or_node(marpaWrapperAsfp->marpaBocagep);
   if (augmentOrNodeIdi < -1) {
@@ -423,22 +525,56 @@ static inline short _marpaWrapperAsf_peak(marpaWrapperAsf_t *marpaWrapperAsfp)
     goto err;
   }
 
-  augmentAndNodeIdi = marpaWrapperAsfp->orNodeAndNodeIdipp[augmentOrNodeIdi][0];
+  if (! GENERICSTACK_IS_PTR(marpaWrapperAsfp->orNodeStackp, augmentOrNodeIdi)) {
+    MARPAWRAPPER_ERROR(genericLoggerp, "augmentOrNodeIdi is not in the orNode stack");
+    goto err;
+  }
+
+  orNodep = GENERICSTACK_GET_PTR(marpaWrapperAsfp->orNodeStackp, augmentOrNodeIdi);
+  if (orNodep->nAndNodel <= 0) {
+    MARPAWRAPPER_ERROR(genericLoggerp, "No AND node at this orNode stack");
+    goto err;
+  }
+  augmentAndNodeIdi = orNodep->andNodep[0];
+  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "_marpa_b_and_node_cause(%p, %d);", marpaWrapperAsfp->marpaBocagep, augmentAndNodeIdi);
   startOrNodeIdi = _marpa_b_and_node_cause(marpaWrapperAsfp->marpaBocagep, augmentAndNodeIdi);
   if (startOrNodeIdi < -1) {
     MARPAWRAPPER_MARPA_G_ERROR(genericLoggerp, marpaWrapperAsfp->marpaWrapperRecognizerp->marpaWrapperGrammarp->marpaGrammarp);
     goto err;
   }
 
-  baseNidseti = _marpaWrapperAsf_nidsetObtainb(marpaWrapperAsfp, 1, &startOrNodeIdi);
-  if (baseNidseti == NULL) {
+  baseNidsetp = _marpaWrapperAsf_nidset_obtainb(marpaWrapperAsfp, 1, &startOrNodeIdi);
+  if (baseNidsetp == NULL) {
     goto err;
   }
+
+  gladep = malloc(sizeof(marpaWrapperAsfGlade_t));
+  if (gladep == NULL) {
+    MARPAWRAPPER_ERRORF(genericLoggerp, "malloc failure: %s", strerror(errno));
+    goto err;
+  }
+  gladep->idi         = _marpaWrapperAsf_nidset_idi(marpaWrapperAsfp, baseNidsetp);
+  gladep->nSymboll    = 0;
+  gladep->symbolip    = NULL;
+  gladep->registeredb = 1;
+  GENERICSTACK_SET_PTR(marpaWrapperAsfp->gladeStackp, gladep, 0);
+  if (GENERICSTACK_ERROR(marpaWrapperAsfp->gladeStackp)) {
+    MARPAWRAPPER_ERRORF(genericLoggerp, "glade stack failure: %s", strerror(errno));
+    goto err;
+  }
+
+  /* We cannot obtain the flag if it is not registered */
   
   MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "return 1", 0);
   return 1;
 
  err:
+  if (gladep != NULL) {
+    if (gladep->symbolip != NULL) {
+      free(gladep->symbolip);
+    }
+    free(gladep);    
+  }
   MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "return 0", 0);
   return 0;
 }
@@ -454,67 +590,7 @@ static inline int _marpaWrapperAsf_andNodeIdAndPredecessorIdCmpi(const void *p1,
 }
 
 /****************************************************************************/
-static inline marpaWrapperAsfNidset_t *_marpaWrapperAsf_nidsetObtainb(marpaWrapperAsf_t *marpaWrapperAsfp, size_t nIdl, int *idip)
-/****************************************************************************/
-{
-  const static char        funcs[] = "_marpaWrapperAsf_nidsetObtainb";
-  genericLogger_t         *genericLoggerp = marpaWrapperAsfp->genericLoggerp;
-  int                      intsetIdi;
-  marpaWrapperAsfNidset_t *nidsetp;
-  size_t                   i;
-
-  if (_marpaWrapperAsf_intsetIdb(marpaWrapperAsfp, &intsetIdi, nIdl, idip) == 0) {
-    goto err;
-  }
-
-  if (GENERICSTACK_IS_PTR(marpaWrapperAsfp->nidsetStackp, intsetIdi)) {
-    nidsetp = GENERICSTACK_GET_PTR(marpaWrapperAsfp->nidsetStackp, intsetIdi);
-  } else {
-    nidsetp = malloc(sizeof(marpaWrapperAsfNidset_t));
-    if (nidsetp == NULL) {
-      MARPAWRAPPER_ERRORF(genericLoggerp, "malloc failure: %s", strerror(errno));
-      goto err;
-    }
-    nidsetp->id = intsetIdi;
-    if (nIdl <= 0) {
-      nidsetp->nIdl = 0;
-      nidsetp->idip = NULL;
-    } else {
-      nidsetp->nIdl = nIdl;
-      nidsetp->idip = malloc(sizeof(int) * nIdl);
-      if (nidsetp->idip == NULL) {
-	MARPAWRAPPER_ERRORF(genericLoggerp, "malloc failure: %s", strerror(errno));
-	goto err;
-      }
-      memcpy(nidsetp->idip, idip, nIdl);
-      qsort(nidsetp->idip, nIdl, sizeof(int), _marpaWrapperAsf_idCmpi);
-      GENERICSTACK_SET_PTR(marpaWrapperAsfp->nidsetStackp, nidsetp, intsetIdi);
-      if (GENERICSTACK_ERROR(marpaWrapperAsfp->nidsetStackp)) {
-	MARPAWRAPPER_ERRORF(genericLoggerp, "nidset stack error: %s", strerror(errno));
-	goto err;
-      }
-    }
-  }
-
-  goto done;
-
- err:
-  if (nidsetp != NULL) {
-    if (nidsetp->idip != NULL) {
-      free(nidsetp->idip);
-    }
-    free(nidsetp);
-    nidsetp = NULL;
-  }
-
- done:
-  
-  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "return %p", nidsetp);
-  return nidsetp;
-}
-
-/****************************************************************************/
-static inline short _marpaWrapperAsf_intsetIdb(marpaWrapperAsf_t *marpaWrapperAsfp, int *intsetIdip, size_t nIdl, int *idip)
+static inline short _marpaWrapperAsf_intsetIdb(marpaWrapperAsf_t *marpaWrapperAsfp, int *intsetIdip, size_t countl, int *idip)
 /****************************************************************************/
 {
   const static char        funcs[] = "_marpaWrapperAsf_intsetIdb";
@@ -528,10 +604,10 @@ static inline short _marpaWrapperAsf_intsetIdb(marpaWrapperAsf_t *marpaWrapperAs
   int                      intsetIdi;
   size_t                   keyi;
 
-  if (nIdl <= 0) {
+  if (countl <= 0) {
     keys = (char *) staticKeys;
   } else {
-    for (idl = 0; idl < nIdl; idl++) {
+    for (idl = 0; idl < countl; idl++) {
       if (keys == NULL) {
 	keys = _marpaWrapperAsf_stringBuilders("%d", idip[idl]);
 	if (keys == NULL) {
@@ -718,3 +794,481 @@ static inline int _marpaWrapperAsf_idCmpi(const void *p1, const void *p2)
   return (a1 < a2) ? -1 : ((a1 > a2) ? 1 : 0);
 }
 
+/****************************************************************************/
+static inline marpaWrapperAsfIdset_t *_marpaWrapperAsf_idset_obtainb(marpaWrapperAsf_t *marpaWrapperAsfp, marpaWrapperAsfIdsete_t idsete, size_t countl, int *idip)
+/****************************************************************************/
+{
+  const static char        funcs[] = "_marpaWrapperAsf_idset_obtainb";
+  genericLogger_t         *genericLoggerp = marpaWrapperAsfp->genericLoggerp;
+  genericStack_t          *stackp         = (idsete == MARPAWRAPPERASFIDSET_NIDSET) ? marpaWrapperAsfp->nidsetStackp : marpaWrapperAsfp->powersetStackp;
+  char                    *idsets         = marpaWrapperAsfIdsets[idsete];
+  marpaWrapperAsfIdset_t  *idsetp         = NULL;
+  int                      intsetIdi;
+  size_t                   i;
+
+  if (_marpaWrapperAsf_intsetIdb(marpaWrapperAsfp, &intsetIdi, countl, idip) == 0) {
+    goto err;
+  }
+
+  if (GENERICSTACK_IS_PTR(stackp, intsetIdi)) {
+    idsetp = GENERICSTACK_GET_PTR(stackp, intsetIdi);
+  } else {
+    idsetp = malloc(sizeof(marpaWrapperAsfIdset_t));
+    if (idsetp == NULL) {
+      MARPAWRAPPER_ERRORF(genericLoggerp, "malloc failure: %s", strerror(errno));
+      goto err;
+    }
+    idsetp->idi = intsetIdi;
+    if (countl <= 0) {
+      idsetp->countl = 0;
+      idsetp->idip   = NULL;
+    } else {
+      idsetp->countl = countl;
+      idsetp->idip   = malloc(sizeof(int) * countl);
+      if (idsetp->idip == NULL) {
+	MARPAWRAPPER_ERRORF(genericLoggerp, "malloc failure: %s", strerror(errno));
+	goto err;
+      }
+      memcpy(idsetp->idip, idip, countl);
+      qsort(idsetp->idip, countl, sizeof(int), _marpaWrapperAsf_idCmpi);
+      GENERICSTACK_SET_PTR(stackp, idsetp, intsetIdi);
+      if (GENERICSTACK_ERROR(stackp)) {
+	MARPAWRAPPER_ERRORF(genericLoggerp, "%s genericStack error: %s", idsets, strerror(errno));
+	goto err;
+      }
+    }
+  }
+
+  goto done;
+
+ err:
+  if (idsetp != NULL) {
+    if (idsetp->idip != NULL) {
+      free(idsetp->idip);
+    }
+    free(idsetp);
+    idsetp = NULL;
+  }
+
+ done:
+
+  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "return %p", idsetp);
+  return idsetp;
+}
+
+/****************************************************************************/
+static inline int *_marpaWrapperAsf_idset_idip(marpaWrapperAsf_t *marpaWrapperAsfp, marpaWrapperAsfIdsete_t idsete, marpaWrapperAsfIdset_t *idsetp)
+/****************************************************************************/
+{
+  const static char        funcs[]        = "_marpaWrapperAsf_idset_idipb";
+  genericLogger_t         *genericLoggerp = marpaWrapperAsfp->genericLoggerp;
+
+  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "%s: return %p", marpaWrapperAsfIdsets[idsete], idsetp->idip);
+  return idsetp->idip;
+}
+
+/****************************************************************************/
+static inline int _marpaWrapperAsf_idset_idi_by_ixi(marpaWrapperAsf_t *marpaWrapperAsfp, marpaWrapperAsfIdsete_t idsete, marpaWrapperAsfIdset_t *idsetp, int ixi)
+/****************************************************************************/
+{
+  const static char        funcs[]        = "_marpaWrapperAsf_idset_idi_by_ixi";
+  genericLogger_t         *genericLoggerp = marpaWrapperAsfp->genericLoggerp;
+
+  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "%s: return %d", marpaWrapperAsfIdsets[idsete], idsetp->idip[ixi]);
+  return idsetp->idip[ixi];
+}
+
+/****************************************************************************/
+static inline size_t _marpaWrapperAsf_idset_countl(marpaWrapperAsf_t *marpaWrapperAsfp, marpaWrapperAsfIdsete_t idsete, marpaWrapperAsfIdset_t *idsetp)
+/****************************************************************************/
+{
+  const static char        funcs[]        = "_marpaWrapperAsf_idset_idi_by_ixi";
+  genericLogger_t         *genericLoggerp = marpaWrapperAsfp->genericLoggerp;
+
+  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "%s: return %d", marpaWrapperAsfIdsets[idsete], (int) idsetp->countl);
+  return idsetp->countl;
+}
+
+/****************************************************************************/
+static inline int _marpaWrapperAsf_idset_idi(marpaWrapperAsf_t *marpaWrapperAsfp, marpaWrapperAsfIdsete_t idsete, marpaWrapperAsfIdset_t *idsetp)
+/****************************************************************************/
+{
+  const static char        funcs[]        = "_marpaWrapperAsf_idset_idi_by_ixi";
+  genericLogger_t         *genericLoggerp = marpaWrapperAsfp->genericLoggerp;
+
+  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "%s: return %d", marpaWrapperAsfIdsets[idsete], (int) idsetp->idi);
+  return idsetp->idi;
+}
+
+/****************************************************************************/
+static inline char *_marpaWrapperAsf_idset_showb(marpaWrapperAsf_t *marpaWrapperAsfp, marpaWrapperAsfIdsete_t idsete, marpaWrapperAsfIdset_t *idsetp)
+/****************************************************************************/
+{
+  const static char        funcs[]        = "_marpaWrapperAsf_idset_showb";
+  genericLogger_t         *genericLoggerp = marpaWrapperAsfp->genericLoggerp;
+  char                    *idsets         = marpaWrapperAsfIdsets[idsete];
+  char                    *Idsets         = marpaWrapperAsfIdsetUpfirsts[idsete];
+  int                      idi            = _marpaWrapperAsf_idset_idi(marpaWrapperAsfp, idsete, idsetp);
+  int                     *idip           = _marpaWrapperAsf_idset_idip(marpaWrapperAsfp, idsete, idsetp);
+  size_t                   countl         = _marpaWrapperAsf_idset_countl(marpaWrapperAsfp, idsete, idsetp);
+  char                    *shows;
+  size_t                   idl;
+  char                    *showNexts;
+
+  shows = _marpaWrapperAsf_stringBuilders("%s #%d:", Idsets, idi);
+  if (shows == NULL) {
+    MARPAWRAPPER_ERRORF(genericLoggerp, "%s: _marpaWrapperAsf_stringBuilders error: %s", idsets, strerror(errno));
+    goto err;
+  }
+  if (countl > 0) {
+    for (idl = 0; idl < countl; idl++) {
+      showNexts = _marpaWrapperAsf_stringBuilders("%s %d", shows, _marpaWrapperAsf_idset_idi_by_ixi(marpaWrapperAsfp, idsete, idsetp, (int) idl));
+      if (showNexts == NULL) {
+	MARPAWRAPPER_ERRORF(genericLoggerp, "%s: _marpaWrapperAsf_stringBuilders error: %s", idsets, strerror(errno));
+	goto err;
+      }
+      shows = showNexts;
+      free(showNexts);
+    }
+  }
+
+  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "%s: return \"%s\"", idsets, shows);
+  return shows;
+
+ err:
+  if (shows != NULL) {
+    free(shows);
+  }
+  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "%s: return NULL", idsets);
+  return NULL;
+}
+
+/****************************************************************************/
+static inline void _marpaWrapperAsf_idset_freev(marpaWrapperAsf_t *marpaWrapperAsfp, marpaWrapperAsfIdsete_t idsete)
+/****************************************************************************/
+{
+  const static char        funcs[]        = "_marpaWrapperAsf_idset_freeb";
+  genericLogger_t         *genericLoggerp = marpaWrapperAsfp->genericLoggerp;
+  genericStack_t          *stackp         = (idsete == MARPAWRAPPERASFIDSET_NIDSET) ? marpaWrapperAsfp->nidsetStackp : marpaWrapperAsfp->powersetStackp;
+  char                    *idsets         = marpaWrapperAsfIdsets[idsete];
+  size_t                   idsetUsedl;
+  size_t                   i;
+  marpaWrapperAsfIdset_t  *idsetp;
+
+  idsetUsedl = GENERICSTACK_USED(stackp);
+  /* Every idset may have an array inside */
+  if (idsetUsedl > 0) {
+    for (i = 0; i < idsetUsedl; i++) {
+      if (GENERICSTACK_IS_PTR(stackp, i)) {
+	idsetp = GENERICSTACK_GET_PTR(stackp, i);
+	if (idsetp->idip != NULL) {
+	  free(idsetp->idip);
+	}
+	free(idsetp);
+      }
+    }
+  }
+  GENERICSTACK_FREE(stackp);
+}
+
+/****************************************************************************/
+static inline marpaWrapperAsfNidset_t *_marpaWrapperAsf_nidset_obtainb(marpaWrapperAsf_t *marpaWrapperAsfp, size_t countl, int *idip)
+/****************************************************************************/
+{
+  return _marpaWrapperAsf_idset_obtainb(marpaWrapperAsfp, MARPAWRAPPERASFIDSET_NIDSET, countl, idip);
+}
+
+/****************************************************************************/
+static inline int *_marpaWrapperAsf_nidset_idip(marpaWrapperAsf_t *marpaWrapperAsfp, marpaWrapperAsfIdset_t *idsetp)
+/****************************************************************************/
+{
+  return _marpaWrapperAsf_idset_idip(marpaWrapperAsfp, MARPAWRAPPERASFIDSET_NIDSET, idsetp);
+}
+
+/****************************************************************************/
+static inline int _marpaWrapperAsf_nidset_idi_by_ixi(marpaWrapperAsf_t *marpaWrapperAsfp, marpaWrapperAsfIdset_t *idsetp, int ixi)
+/****************************************************************************/
+{
+  return _marpaWrapperAsf_idset_idi_by_ixi(marpaWrapperAsfp, MARPAWRAPPERASFIDSET_NIDSET, idsetp, ixi);
+}
+
+/****************************************************************************/
+static inline size_t _marpaWrapperAsf_nidset_countlb(marpaWrapperAsf_t *marpaWrapperAsfp, marpaWrapperAsfIdset_t *idsetp)
+/****************************************************************************/
+{
+  return _marpaWrapperAsf_idset_countl(marpaWrapperAsfp, MARPAWRAPPERASFIDSET_NIDSET, idsetp);
+}
+
+/****************************************************************************/
+static inline int _marpaWrapperAsf_nidset_idi(marpaWrapperAsf_t *marpaWrapperAsfp, marpaWrapperAsfIdset_t *idsetp)
+/****************************************************************************/
+{
+  return _marpaWrapperAsf_idset_idi(marpaWrapperAsfp, MARPAWRAPPERASFIDSET_NIDSET, idsetp);
+}
+
+/****************************************************************************/
+static inline char *_marpaWrapperAsf_nidset_showb(marpaWrapperAsf_t *marpaWrapperAsfp, marpaWrapperAsfIdset_t *idsetp)
+/****************************************************************************/
+{
+  return _marpaWrapperAsf_idset_showb(marpaWrapperAsfp, MARPAWRAPPERASFIDSET_NIDSET, idsetp);
+}
+
+/****************************************************************************/
+static inline void _marpaWrapperAsf_nidset_freev(marpaWrapperAsf_t *marpaWrapperAsfp, genericStack_t *stackp)
+/****************************************************************************/
+{
+  _marpaWrapperAsf_idset_freev(marpaWrapperAsfp, MARPAWRAPPERASFIDSET_NIDSET);
+}
+
+/****************************************************************************/
+static inline marpaWrapperAsfPowerset_t *_marpaWrapperAsf_powerset_obtainb(marpaWrapperAsf_t *marpaWrapperAsfp, size_t countl, int *idip)
+/****************************************************************************/
+{
+  return _marpaWrapperAsf_idset_obtainb(marpaWrapperAsfp, MARPAWRAPPERASFIDSET_POWERSET, countl, idip);
+}
+
+/****************************************************************************/
+static inline int *_marpaWrapperAsf_powerset_idip(marpaWrapperAsf_t *marpaWrapperAsfp, marpaWrapperAsfIdset_t *idsetp)
+/****************************************************************************/
+{
+  return _marpaWrapperAsf_idset_idip(marpaWrapperAsfp, MARPAWRAPPERASFIDSET_POWERSET, idsetp);
+}
+
+/****************************************************************************/
+static inline int _marpaWrapperAsf_powerset_idi_by_ixi(marpaWrapperAsf_t *marpaWrapperAsfp, marpaWrapperAsfIdset_t *idsetp, int ixi)
+/****************************************************************************/
+{
+  return _marpaWrapperAsf_idset_idi_by_ixi(marpaWrapperAsfp, MARPAWRAPPERASFIDSET_POWERSET, idsetp, ixi);
+}
+
+/****************************************************************************/
+static inline size_t _marpaWrapperAsf_powerset_countlb(marpaWrapperAsf_t *marpaWrapperAsfp, marpaWrapperAsfIdset_t *idsetp)
+/****************************************************************************/
+{
+  return _marpaWrapperAsf_idset_countl(marpaWrapperAsfp, MARPAWRAPPERASFIDSET_POWERSET, idsetp);
+}
+
+/****************************************************************************/
+static inline int _marpaWrapperAsf_powerset_idi(marpaWrapperAsf_t *marpaWrapperAsfp, marpaWrapperAsfIdset_t *idsetp)
+/****************************************************************************/
+{
+  return _marpaWrapperAsf_idset_idi(marpaWrapperAsfp, MARPAWRAPPERASFIDSET_POWERSET, idsetp);
+}
+
+/****************************************************************************/
+static inline char *_marpaWrapperAsf_powerset_showb(marpaWrapperAsf_t *marpaWrapperAsfp, marpaWrapperAsfIdset_t *idsetp)
+/****************************************************************************/
+{
+  return _marpaWrapperAsf_idset_showb(marpaWrapperAsfp, MARPAWRAPPERASFIDSET_POWERSET, idsetp);
+}
+
+/****************************************************************************/
+static inline void _marpaWrapperAsf_powerset_freev(marpaWrapperAsf_t *marpaWrapperAsfp, genericStack_t *stackp)
+/****************************************************************************/
+{
+  _marpaWrapperAsf_idset_freev(marpaWrapperAsfp, MARPAWRAPPERASFIDSET_POWERSET);
+}
+
+/****************************************************************************/
+static inline marpaWrapperAsfNook_t *_marpaWrapperAsf_nook_newp(marpaWrapperAsf_t *marpaWrapperAsfp, int orNodeIdi, int parentOrNodeIdi)
+/****************************************************************************/
+{
+  const static char        funcs[]        = "_marpaWrapperAsf_nook_newp";
+  genericLogger_t         *genericLoggerp = marpaWrapperAsfp->genericLoggerp;
+  marpaWrapperAsfNook_t   *nookp;
+
+  nookp = malloc(sizeof(marpaWrapperAsfNook_t));
+  if (nookp == NULL) {
+    MARPAWRAPPER_ERRORF(genericLoggerp, "malloc failure: %s", strerror(errno));
+    goto err;
+  }
+
+  nookp->orNodeIdi       = orNodeIdi;
+  nookp->firstChoicei    = 0;
+  nookp->lastChoicei     = 0;
+  nookp->parentOrNodeIdi = parentOrNodeIdi;
+
+  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "return %p", nookp);
+  return NULL;
+
+ err:
+  MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return NULL");
+  return NULL;
+}
+
+/****************************************************************************/
+static inline void _marpaWrapperAsf_nook_freev(marpaWrapperAsf_t *marpaWrapperAsfp)
+/****************************************************************************/
+{
+  const static char        funcs[]        = "_marpaWrapperAsf_nook_freeb";
+  genericLogger_t         *genericLoggerp = marpaWrapperAsfp->genericLoggerp;
+  genericStack_t          *stackp         = marpaWrapperAsfp->nookStackp;
+  size_t                   nookUsedl;
+  size_t                   i;
+  marpaWrapperAsfIdset_t  *nookp;
+
+  nookUsedl = GENERICSTACK_USED(stackp);
+  if (nookUsedl > 0) {
+    for (i = 0; i < nookUsedl; i++) {
+      if (GENERICSTACK_IS_PTR(stackp, i)) {
+	nookp = GENERICSTACK_GET_PTR(stackp, i);
+	free(nookp);
+      }
+    }
+  }
+  GENERICSTACK_FREE(stackp);
+}
+
+/****************************************************************************/
+static inline short _marpaWrapperAsf_nook_has_semantic_causeb(marpaWrapperAsf_t *marpaWrapperAsfp, marpaWrapperAsfNook_t *nookp)
+/****************************************************************************/
+{
+  const static char        funcs[]                  = "_marpaWrapperAsf_setLastChoiceb";
+  genericLogger_t         *genericLoggerp           = marpaWrapperAsfp->genericLoggerp;
+  int                       orNodeIdi               = nookp->orNodeIdi;
+  marpaWrapperRecognizer_t *marpaWrapperRecognizerp = marpaWrapperAsfp->marpaWrapperRecognizerp;
+  marpaWrapperGrammar_t    *marpaWrapperGrammarp    = marpaWrapperRecognizerp->marpaWrapperGrammarp;
+  Marpa_Grammar             marpaGrammarp           = marpaWrapperGrammarp->marpaGrammarp;
+  Marpa_Bocage              marpaBocagep            = marpaWrapperAsfp->marpaBocagep;
+  Marpa_IRL_ID              irlIdi;
+  int                       predotPositioni;
+  Marpa_Symbol_ID           predotIsyIdi;
+  short                    rcb;
+
+  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "_marpa_b_or_node_irl(%p, %d)", marpaBocagep, orNodeIdi);
+  irlIdi = _marpa_b_or_node_irl(marpaBocagep, orNodeIdi);
+  
+  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "_marpa_b_or_node_position(%p, %d)", marpaBocagep, orNodeIdi);
+  predotPositioni = _marpa_b_or_node_position(marpaBocagep, orNodeIdi) - 1;
+
+  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "_marpa_g_irl_rhs(%p, %d, %d)", marpaGrammarp, (int) irlIdi, predotPositioni);
+  predotIsyIdi = _marpa_g_irl_rhs(marpaGrammarp, irlIdi, predotPositioni);
+
+  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "_marpa_g_nsy_is_semantic(%p, %d)", marpaGrammarp, (int) predotIsyIdi);
+  rcb = (_marpa_g_nsy_is_semantic(marpaGrammarp, predotIsyIdi) != 0) ? 1 : 0;
+
+  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "return %d", (int) rcb);
+  return rcb;
+}
+
+/****************************************************************************/
+static inline short _marpaWrapperAsf_setLastChoiceb(marpaWrapperAsf_t *marpaWrapperAsfp, int **choiceipp, marpaWrapperAsfNook_t *nookp)
+/****************************************************************************/
+{
+  const static char        funcs[]            = "_marpaWrapperAsf_setLastChoiceb";
+  genericLogger_t         *genericLoggerp     = marpaWrapperAsfp->genericLoggerp;
+  genericStack_t          *orNodeStackp       = marpaWrapperAsfp->orNodeStackp;
+  int                      orNodeIdi          = nookp->orNodeIdi;
+  int                      choicei            = nookp->firstChoicei;
+  short                    rcb                = 1;
+  marpaWrapperAsfOrNode_t *orNodep;
+
+  if (! GENERICSTACK_IS_PTR(orNodeStackp, orNodeIdi)) {
+    MARPAWRAPPER_ERRORF(genericLoggerp, "No entry in orNode stack at indice %d", orNodeIdi);
+    goto err;
+  }
+  orNodep = GENERICSTACK_GET_PTR(orNodeStackp, orNodeIdi);
+
+  if (choicei >= orNodep->nAndNodel) {
+    MARPAWRAPPER_TRACE(genericLoggerp, funcs, "No last choice available");
+    *choiceipp = NULL;
+  } else {
+    if (_marpaWrapperAsf_nook_has_semantic_causeb(marpaWrapperAsfp, nookp)) {
+      marpaWrapperRecognizer_t *marpaWrapperRecognizerp = marpaWrapperAsfp->marpaWrapperRecognizerp;
+      marpaWrapperGrammar_t    *marpaWrapperGrammarp    = marpaWrapperRecognizerp->marpaWrapperGrammarp;
+      Marpa_Bocage              marpaBocagep            = marpaWrapperAsfp->marpaBocagep;
+      int                       andNodeIdi              = orNodep->andNodep[choicei];
+      int                       currentPredecessori;
+      int                       nextPredecessori;
+
+      MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "_marpa_b_and_node_predecessor(%p, %d)", marpaBocagep, andNodeIdi);
+      currentPredecessori = _marpa_b_and_node_predecessor(marpaBocagep, andNodeIdi);
+      if (currentPredecessori < 0) {
+	currentPredecessori = -1;
+      }
+      while (1) {
+	if (++choicei >= orNodep->nAndNodel) {
+	  break;
+	}
+	andNodeIdi = orNodep->andNodep[choicei];
+	MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "_marpa_b_and_node_predecessor(%p, %d)", marpaBocagep, andNodeIdi);
+	nextPredecessori = _marpa_b_and_node_predecessor(marpaBocagep, andNodeIdi);
+	if (nextPredecessori < 0) {
+	  nextPredecessori = -1;
+	}
+	if (currentPredecessori != nextPredecessori) {
+	  break;
+	}
+      }
+      --choicei;
+    }
+    nookp->lastChoicei = choicei;
+    MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "Last choice set to %d", choicei);
+    *choiceipp = &(nookp->lastChoicei);
+  }
+
+  MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return 1");
+  return 1;
+
+ err:
+  MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return 0");
+  return 0;
+}
+
+/****************************************************************************/
+static inline short _marpaWrapperAsf_nook_incrementb(marpaWrapperAsf_t *marpaWrapperAsfp, int **choiceipp, marpaWrapperAsfNook_t *nookp)
+/****************************************************************************/
+{
+  const static char        funcs[]            = "_marpaWrapperAsf_setLastChoiceb";
+  genericLogger_t         *genericLoggerp     = marpaWrapperAsfp->genericLoggerp;
+
+  nookp->firstChoicei = nookp->lastChoicei + 1;
+
+  if (_marpaWrapperAsf_setLastChoiceb(marpaWrapperAsfp, choiceipp, nookp) == 0) {
+    goto err;
+  }
+
+  MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return 1");
+  return 1;
+
+ err:
+  MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return 0");
+  return 0;
+}
+
+/****************************************************************************/
+static inline short _marpaWrapperAsf_glade_obtainb(marpaWrapperAsf_t *marpaWrapperAsfp, size_t gladei)
+/****************************************************************************/
+{
+  const static char        funcs[]            = "_marpaWrapperAsf_glade_obtainb";
+  genericLogger_t         *genericLoggerp     = marpaWrapperAsfp->genericLoggerp;
+  int                      factoringMaxi      = marpaWrapperAsfp->marpaWrapperAsfOption.factoringMaxi;
+  genericStack_t          *gladeStackp        = marpaWrapperAsfp->gladeStackp;
+  marpaWrapperAsfGlade_t  *gladep;
+
+  if ((! GENERICSTACK_IS_PTR(gladeStackp, gladei)) || ((gladep = GENERICSTACK_GET_PTR(gladeStackp, gladei))->registeredb == 0)) {
+    MARPAWRAPPER_ERRORF(genericLoggerp, "Attempt to use an invalid glade, one whose ID is %d", gladei);
+    goto err;
+  }
+
+  /* Setup the glade if not already done */
+  if (gladep->nSymboll <= 0) {
+    marpaWrapperAsfNidset_t *baseNidsetp;
+    int                      choicepointi;
+    int                      choicepointPowserseti;
+
+    if (! GENERICSTACK_IS_PTR(marpaWrapperAsfp->nidsetStackp, gladei)) {
+      MARPAWRAPPER_ERRORF(genericLoggerp, "No nidset at glade id %d", gladei);
+      goto err;
+    }
+
+    baseNidsetp = GENERICSTACK_GET_PTR(marpaWrapperAsfp->nidsetStackp, gladei);
+  }
+
+  MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return 1");
+  return 1;
+
+ err:
+  MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return 0");
+  return 0;
+}
