@@ -43,6 +43,11 @@ typedef struct marpaWrapperAsfNook {
   int parentOrNodeIdi;
 } marpaWrapperAsfNook_t;
 
+typedef struct marpaWrapperAsfSourceData {
+  int sortIxi;
+  int sourceNidi;
+} marpaWrapperAsfSourceData_t;
+
 struct marpaWrapperAsf {
   genericLogger_t           *genericLoggerp;
   marpaWrapperRecognizer_t  *marpaWrapperRecognizerp;
@@ -61,7 +66,11 @@ struct marpaWrapperAsf {
   genericStack_t            *gladeStackp;
 
   /* Memoization of choices */
-  int                           nextIntseti;
+  int                        nextIntseti;
+
+  /* Current choice point */
+  genericStack_t           *factoringStackp;
+  genericStack_t           *orNodeInUseStackp;
 };
 
 #endif /* MARPAWRAPPER_INTERNAL_ASF_H */

@@ -15,7 +15,6 @@ typedef struct marpaWrapperAsf marpaWrapperAsf_t;
 /* --------------- */
 typedef struct marpaWrapperAsfOption {
   genericLogger_t *genericLoggerp;             /* Default: NULL. */
-  int              factoringMaxi;              /* Default: 42    */
   short            highRankOnlyb;              /* Default: 1 */
   short            orderByRankb;               /* Default: 1 */
   short            ambiguousb;                 /* Default: 0 */
