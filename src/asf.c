@@ -1553,15 +1553,15 @@ static inline short _marpaWrapperAsf_glade_obtainb(marpaWrapperAsf_t *marpaWrapp
     }
 
     /* For a token, where will not be multiple factorings or nids, it is assumed, for a token */
-    /* From now on, at indice >= 2, factoringsStackp can contain pointers to array */
+    /* From now on, at indice >= 2, factoringsStackp can contain inner generic stacks
     /* ---------------------------------------------------------------------------- */
 #define _marpaWrapperAsf_glade_obtainb_free_factoringsStackp		\
     if (GENERICSTACK_USED(factoringsStackp) > 2) {			\
       size_t factoringsl;                                               \
       for (factoringsl = 2; factoringsl < GENERICSTACK_USED(factoringsStackp); factoringsl++) {	\
-	int *p = GENERICSTACK_GET_PTR(factoringsStackp, factoringsl);	\
-	if (p != NULL) {						\
-	  free(p);							\
+	if (GENERICSTACK_IS_PTR(factoringsStackp, factoringsl)) {	\
+	  genericStack_t *p = GENERICSTACK_GET_PTR(factoringsStackp, factoringsl); \
+	  GENERICSTACK_FREE(p);						\
 	}								\
       }									\
     }									\
@@ -1572,7 +1572,7 @@ static inline short _marpaWrapperAsf_glade_obtainb(marpaWrapperAsf_t *marpaWrapp
       marpaWrapperAsfNidset_t *baseNidsetp = _marpaWrapperAsf_nidset_obtainb(marpaWrapperAsfp, 1, &choicepointNidi);
       int                      gladeidi;
       marpaWrapperAsfGlade_t  *gladep;
-      int                     *arrayp;
+      genericStack_t          *localStackp;
 
       if (baseNidsetp == NULL) {
 	GENERICSTACK_FREE(factoringsStackp);
@@ -1587,16 +1587,22 @@ static inline short _marpaWrapperAsf_glade_obtainb(marpaWrapperAsf_t *marpaWrapp
       gladep = GENERICSTACK_GET_PTR(marpaWrapperAsfp->gladeStackp, gladeidi);
       gladep->registeredb = 1;
 
-      arrayp = malloc(sizeof(int));
-      if (arrayp == NULL) {
-	MARPAWRAPPER_ERRORF(genericLoggerp, "malloc error, %s", strerror(errno));
+      GENERICSTACK_NEW(localStackp);
+      if (GENERICSTACK_ERROR(localStackp)) {
+	MARPAWRAPPER_ERRORF(genericLoggerp, "localStackp initialization failure, %s", strerror(errno));
 	_marpaWrapperAsf_glade_obtainb_free_factoringsStackp;
 	goto err;
       }
-      arrayp[0] = gladeidi;
-      GENERICSTACK_PUSH_PTR(factoringsStackp, arrayp);
+      GENERICSTACK_PUSH_INT(localStackp, gladeidi);
+      if (GENERICSTACK_ERROR(localStackp)) {
+	MARPAWRAPPER_ERRORF(genericLoggerp, "localStackp push failure, %s", strerror(errno));
+	_marpaWrapperAsf_glade_obtainb_free_factoringsStackp;
+	goto err;
+      }
+      GENERICSTACK_PUSH_PTR(factoringsStackp, localStackp);
       if (GENERICSTACK_ERROR(factoringsStackp)) {
 	MARPAWRAPPER_ERRORF(genericLoggerp, "Failure to push factoringsStackp, %s", strerror(errno));
+	GENERICSTACK_FREE(localStackp);
 	_marpaWrapperAsf_glade_obtainb_free_factoringsStackp;
 	goto err;
       }
@@ -1663,9 +1669,14 @@ static inline short _marpaWrapperAsf_glade_obtainb(marpaWrapperAsf_t *marpaWrapp
 	      goto err;
 	    }
 	  }
-	  {
+
+	  GENERICSTACK_PUSH_PTR(factoringsStackp, localFactoringStackp);
+	  if (GENERICSTACK_ERROR(factoringsStackp)) {
+	    MARPAWRAPPER_ERROR(genericLoggerp, "Failure to push in factoringsStackp");
+	    GENERICSTACK_FREE(localFactoringStackp);
+	    _marpaWrapperAsf_glade_obtainb_free_factoringsStackp;
+	    goto err;
 	  }
-	  /* JDD HERE SHOULD BE AN ARRAY OR A STACK ? A STACK */
 	}
       }
       /* JDD */
