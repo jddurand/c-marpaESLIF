@@ -55,8 +55,10 @@ typedef struct marpaWrapperAfsAndNodeIdAndPredecessorId {
   Marpa_And_Node_ID andNodePredecessorIdi;
 } marpaWrapperAfsAndNodeIdAndPredecessorId_t;
 
-static inline void                       _marpaWrapperAsf_orNode_freev(marpaWrapperAsf_t *marpaWrapperAsfp);
-static inline void                       _marpaWrapperAsf_glade_freev(marpaWrapperAsf_t *marpaWrapperAsfp);
+static inline void                       _marpaWrapperAsf_orNodeStackp_freev(marpaWrapperAsf_t *marpaWrapperAsfp);
+static inline void                       _marpaWrapperAsf_gladeStackp_freev(marpaWrapperAsf_t *marpaWrapperAsfp);
+static inline void                       _marpaWrapperAsf_factoringStackp_freev(marpaWrapperAsf_t *marpaWrapperAsfp);
+static inline short                      _marpaWrapperAsf_factoringStackp_resetb(marpaWrapperAsf_t *marpaWrapperAsfp);
 static inline short                      _marpaWrapperAsf_peak(marpaWrapperAsf_t *marpaWrapperAsfp);
 static inline int                        _marpaWrapperAsf_andNodeIdAndPredecessorIdCmpi(const void *p1, const void *p2);
 static inline short                      _marpaWrapperAsf_intsetIdb(marpaWrapperAsf_t *marpaWrapperAsfp, int *intsetIdip, size_t countl, int *idip);
@@ -93,7 +95,8 @@ static inline char                      *_marpaWrapperAsf_powerset_showb(marpaWr
 static inline void                       _marpaWrapperAsf_powerset_freev(marpaWrapperAsf_t *marpaWrapperAsfp, genericStack_t *stackp);
 
 static inline marpaWrapperAsfNook_t     *_marpaWrapperAsf_nook_newp(marpaWrapperAsf_t *marpaWrapperAsfp, int orNodeIdi, int parentOrNodeIdi);
-static inline void                       _marpaWrapperAsf_nook_freev(marpaWrapperAsf_t *marpaWrapperAsfp);
+static inline void                       _marpaWrapperAsf_nook_freev(marpaWrapperAsf_t *marpaWrapperAsfp, marpaWrapperAsfNook_t *nookp);
+static inline void                       _marpaWrapperAsf_nookStackp_freev(marpaWrapperAsf_t *marpaWrapperAsfp);
 static inline short                      _marpaWrapperAsf_nook_has_semantic_causeb(marpaWrapperAsf_t *marpaWrapperAsfp, marpaWrapperAsfNook_t *nookp);
 static inline short                      _marpaWrapperAsf_setLastChoiceb(marpaWrapperAsf_t *marpaWrapperAsfp, int **choiceipp, marpaWrapperAsfNook_t *nookp);
 static inline short                      _marpaWrapperAsf_nook_incrementb(marpaWrapperAsf_t *marpaWrapperAsfp, int **choiceipp, marpaWrapperAsfNook_t *nookp);
@@ -107,6 +110,7 @@ static inline int                        _marpaWrapperAsf_nid_rule_idi(marpaWrap
 /* Specific to powerset */
 static inline marpaWrapperAsfNidset_t   *_marpaWrapperAsf_powerset_nidsetp(marpaWrapperAsf_t *marpaWrapperAsfp, marpaWrapperAsfPowerset_t *powersetp, int ixi);
 static inline short                      _marpaWrapperAsf_glade_obtainb(marpaWrapperAsf_t *marpaWrapperAsfp, size_t gladei);
+static inline short                      _marpaWrapperAsf_firsrt_factoringb(marpaWrapperAsf_t *marpaWrapperAsfp, int nidOfChoicePointi, short *firstFactoringb);
 
 /****************************************************************************/
 marpaWrapperAsf_t *marpaWrapperAsf_newp(marpaWrapperRecognizer_t *marpaWrapperRecognizerp, marpaWrapperAsfOption_t *marpaWrapperAsfOptionp)
@@ -456,7 +460,7 @@ void marpaWrapperAsf_freev(marpaWrapperAsf_t *marpaWrapperAsfp)
     }
 
     MARPAWRAPPER_TRACE(genericLoggerp, funcs, "Freeing orNode stack");
-    _marpaWrapperAsf_orNode_freev(marpaWrapperAsfp);
+    _marpaWrapperAsf_orNodeStackp_freev(marpaWrapperAsfp);
     
     MARPAWRAPPER_TRACE(genericLoggerp, funcs, "Freeing intset hash");
     GENERICHASH_FREE(marpaWrapperAsfp->intsetHashp);
@@ -468,13 +472,13 @@ void marpaWrapperAsf_freev(marpaWrapperAsf_t *marpaWrapperAsfp)
     _marpaWrapperAsf_powerset_freev(marpaWrapperAsfp, marpaWrapperAsfp->powersetStackp);
     
     MARPAWRAPPER_TRACE(genericLoggerp, funcs, "Freeing Nook stack");
-    _marpaWrapperAsf_nook_freev(marpaWrapperAsfp);
+    _marpaWrapperAsf_nookStackp_freev(marpaWrapperAsfp);
     
     MARPAWRAPPER_TRACE(genericLoggerp, funcs, "Freeing glade stack");
-    _marpaWrapperAsf_glade_freev(marpaWrapperAsfp);
+    _marpaWrapperAsf_gladeStackp_freev(marpaWrapperAsfp);
     
     MARPAWRAPPER_TRACE(genericLoggerp, funcs, "Freeing factoring stack");
-    GENERICSTACK_FREE(marpaWrapperAsfp->factoringStackp);
+    _marpaWrapperAsf_factoringStackp_freev(marpaWrapperAsfp);
     
     MARPAWRAPPER_TRACE(genericLoggerp, funcs, "Freeing orNodeInUse stack");
     GENERICSTACK_FREE(marpaWrapperAsfp->orNodeInUseStackp);
@@ -490,10 +494,10 @@ void marpaWrapperAsf_freev(marpaWrapperAsf_t *marpaWrapperAsfp)
 }
 
 /****************************************************************************/
-static inline void _marpaWrapperAsf_orNode_freev(marpaWrapperAsf_t *marpaWrapperAsfp)
+static inline void _marpaWrapperAsf_orNodeStackp_freev(marpaWrapperAsf_t *marpaWrapperAsfp)
 /****************************************************************************/
 {
-  const static char        funcs[]        = "_marpaWrapperAsf_orNode_freev";
+  const static char        funcs[]        = "_marpaWrapperAsf_orNodeStackp_freev";
   genericLogger_t         *genericLoggerp = marpaWrapperAsfp->genericLoggerp;
   genericStack_t          *stackp         = marpaWrapperAsfp->orNodeStackp;
   size_t                   orNodeUsedl;
@@ -513,10 +517,10 @@ static inline void _marpaWrapperAsf_orNode_freev(marpaWrapperAsf_t *marpaWrapper
 }
 
 /****************************************************************************/
-static inline void _marpaWrapperAsf_glade_freev(marpaWrapperAsf_t *marpaWrapperAsfp)
+static inline void _marpaWrapperAsf_gladeStackp_freev(marpaWrapperAsf_t *marpaWrapperAsfp)
 /****************************************************************************/
 {
-  const static char        funcs[]        = "_marpaWrapperAsf_glade_freev";
+  const static char        funcs[]        = "_marpaWrapperAsf_gladeStackp_freev";
   genericLogger_t         *genericLoggerp = marpaWrapperAsfp->genericLoggerp;
   genericStack_t          *stackp         = marpaWrapperAsfp->gladeStackp;
   size_t                   gladeUsedl;
@@ -533,6 +537,60 @@ static inline void _marpaWrapperAsf_glade_freev(marpaWrapperAsf_t *marpaWrapperA
     }
   }
   GENERICSTACK_FREE(stackp);
+}
+
+/****************************************************************************/
+static inline void _marpaWrapperAsf_factoringStackp_freev(marpaWrapperAsf_t *marpaWrapperAsfp)
+/****************************************************************************/
+{
+  const static char            funcs[]        = "_marpaWrapperAsf_factoringStackp_freev";
+  genericLogger_t             *genericLoggerp = marpaWrapperAsfp->genericLoggerp;
+  genericStack_t              *stackp         = marpaWrapperAsfp->factoringStackp;
+  size_t                       factoringUsedl;
+  size_t                       i;
+  genericStack_t              *nookStackp;
+  size_t                       nookUsedl;
+  size_t                       j;
+  marpaWrapperAsfNook_t       *nookp;
+
+  factoringUsedl = GENERICSTACK_USED(stackp);
+  for (i = 0; i < factoringUsedl; i++) {
+    if (GENERICSTACK_IS_PTR(stackp, i)) {
+      nookStackp = GENERICSTACK_GET_PTR(stackp, i);
+      if (nookStackp != NULL) {
+	nookUsedl = GENERICSTACK_USED(nookStackp);
+	for (j = 0; i < nookUsedl; i++) {
+	  if (GENERICSTACK_IS_PTR(nookStackp, j)) {
+	    nookp = GENERICSTACK_GET_PTR(nookStackp, j);
+	    _marpaWrapperAsf_nook_freev(marpaWrapperAsfp, nookp);
+	  }
+	}
+      }
+    }
+  }
+  GENERICSTACK_FREE(stackp);
+}
+
+/****************************************************************************/
+static inline short _marpaWrapperAsf_factoringStackp_resetb(marpaWrapperAsf_t *marpaWrapperAsfp)
+/****************************************************************************/
+{
+  const static char            funcs[]        = "_marpaWrapperAsf_factoringStackp_resetb";
+  genericLogger_t             *genericLoggerp = marpaWrapperAsfp->genericLoggerp;
+
+  _marpaWrapperAsf_factoringStackp_freev(marpaWrapperAsfp);
+  GENERICSTACK_NEW(marpaWrapperAsfp->factoringStackp);
+  if (GENERICSTACK_ERROR(marpaWrapperAsfp->factoringStackp)) {
+    MARPAWRAPPER_ERRORF(genericLoggerp, "factoringStack reset failure: %s", strerror(errno));
+    goto err;
+  }
+
+  MARPAWRAPPER_ERROR(genericLoggerp, "return 1");
+  return 1;
+
+ err:
+  MARPAWRAPPER_ERROR(genericLoggerp, "return 0");
+  return 0;
 }
 
 /****************************************************************************/
@@ -1122,7 +1180,16 @@ static inline marpaWrapperAsfNook_t *_marpaWrapperAsf_nook_newp(marpaWrapperAsf_
 }
 
 /****************************************************************************/
-static inline void _marpaWrapperAsf_nook_freev(marpaWrapperAsf_t *marpaWrapperAsfp)
+static inline void _marpaWrapperAsf_nook_freev(marpaWrapperAsf_t *marpaWrapperAsfp, marpaWrapperAsfNook_t *nookp)
+/****************************************************************************/
+{
+  if (nookp != NULL) {
+    free(nookp);
+  }
+}
+
+/****************************************************************************/
+static inline void _marpaWrapperAsf_nookStackp_freev(marpaWrapperAsf_t *marpaWrapperAsfp)
 /****************************************************************************/
 {
   const static char        funcs[]        = "_marpaWrapperAsf_nook_freeb";
@@ -1486,10 +1553,7 @@ static inline short _marpaWrapperAsf_glade_obtainb(marpaWrapperAsf_t *marpaWrapp
     goto err;
   }
   /* Reset factoring stack */
-  GENERICSTACK_FREE(marpaWrapperAsfp->factoringStackp);
-  GENERICSTACK_NEW(marpaWrapperAsfp->factoringStackp);
-  if (GENERICSTACK_ERROR(marpaWrapperAsfp->factoringStackp)) {
-    MARPAWRAPPER_ERRORF(genericLoggerp, "factoringStack reset failure: %s", strerror(errno));
+  if (_marpaWrapperAsf_factoringStackp_resetb(marpaWrapperAsfp) == 0) {
     goto err;
   }
 
@@ -1502,10 +1566,7 @@ static inline short _marpaWrapperAsf_glade_obtainb(marpaWrapperAsf_t *marpaWrapp
     int                      nidixi;
     
     /* Reset factoring stack */
-    GENERICSTACK_FREE(marpaWrapperAsfp->factoringStackp);
-    GENERICSTACK_NEW(marpaWrapperAsfp->factoringStackp);
-    if (GENERICSTACK_ERROR(marpaWrapperAsfp->factoringStackp)) {
-      MARPAWRAPPER_ERRORF(genericLoggerp, "factoringStackp reset failure: %s", strerror(errno));
+    if (_marpaWrapperAsf_factoringStackp_resetb(marpaWrapperAsfp) == 0) {
       goto err;
     }
 
@@ -1618,3 +1679,71 @@ static inline short _marpaWrapperAsf_glade_obtainb(marpaWrapperAsf_t *marpaWrapp
   MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return 0");
   return 0;
 }
+
+/****************************************************************************/
+static inline short _marpaWrapperAsf_firsrt_factoringb(marpaWrapperAsf_t *marpaWrapperAsfp, int nidOfChoicePointi, short *firstFactoringb)
+/****************************************************************************/
+{
+  const static char            funcs[]                = "_marpaWrapperAsf_glade_obtainb";
+  genericLogger_t             *genericLoggerp         = marpaWrapperAsfp->genericLoggerp;
+  genericStack_t              *nookStackp             = NULL;
+  marpaWrapperAsfOrNode_t     *orNodep;
+  marpaWrapperAsfNook_t       *nookp;
+
+  /* Current NID of current SYMCH */
+  /* The caller should ensure that we are never called unless the current NIS is for a rule */
+  if (nidOfChoicePointi < 0) {
+    MARPAWRAPPER_ERRORF(genericLoggerp, "First factoring called for negative NID %d", nidOfChoicePointi);
+      goto err;
+  }
+
+  /* Due to skipping, even the top OR node can have no valid choices */
+  if ((! GENERICSTACK_IS_PTR(marpaWrapperAsfp->orNodeStackp, nidOfChoicePointi)) ||
+      (((orNodep = GENERICSTACK_GET_PTR(marpaWrapperAsfp->orNodeStackp, nidOfChoicePointi))->nAndNodel) <= 0)) {
+    if (_marpaWrapperAsf_factoringStackp_resetb(marpaWrapperAsfp) == 0) {
+      goto err;
+    }
+    *firstFactoringb = 0;
+  } else {
+    GENERICSTACK_SET_SHORT(marpaWrapperAsfp->orNodeInUseStackp, 1, nidOfChoicePointi);
+    if (GENERICSTACK_ERROR(marpaWrapperAsfp->orNodeInUseStackp)) {
+      MARPAWRAPPER_ERRORF(genericLoggerp, "orNodeInUseStackp failure: %s", strerror(errno));
+      goto err;
+    }
+  }
+
+  nookp = _marpaWrapperAsf_nook_newp(marpaWrapperAsfp, nidOfChoicePointi, -1);
+  if (nookp == NULL) {
+    goto err;
+  }
+  if (_marpaWrapperAsf_factoringStackp_resetb(marpaWrapperAsfp) == 0) {
+    goto err;
+  }
+  GENERICSTACK_NEW(nookStackp);
+  if (GENERICSTACK_ERROR(nookStackp)) {
+    MARPAWRAPPER_ERRORF(genericLoggerp, "nookStackp initialization failure: %s", strerror(errno));
+    goto err;
+  }
+  GENERICSTACK_PUSH_PTR(nookStackp, nookp);
+  if (GENERICSTACK_ERROR(nookStackp)) {
+    MARPAWRAPPER_ERRORF(genericLoggerp, "nookStackp push failure: %s", strerror(errno));
+    goto err;
+  }
+
+  GENERICSTACK_PUSH_PTR(marpaWrapperAsfp->factoringStackp, nookStackp);
+  if (GENERICSTACK_ERROR(nookStackp)) {
+    MARPAWRAPPER_ERRORF(genericLoggerp, "factoringStackp push failure: %s", strerror(errno));
+    goto err;
+  }
+
+  /* Iterate as long as we cannot finish this stack */
+ 
+  MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return 1");
+  return 0;
+
+ err:
+  GENERICSTACK_FREE(nookStackp);
+  MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return 0");
+  return 0;
+}
+
