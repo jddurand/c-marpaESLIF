@@ -37,10 +37,14 @@ typedef struct marpaWrapperAsfOrNode {
 } marpaWrapperAsfOrNode_t;
 
 typedef struct marpaWrapperAsfNook {
-  int orNodeIdi;
-  int firstChoicei;
-  int lastChoicei;
-  int parentOrNodeIdi;
+  int   orNodeIdi;
+  int   firstChoicei;
+  int   lastChoicei;
+  int   parentOrNodeIdi;
+  short isCauseb;
+  short isPredecessorb;
+  short causeIsExpandedb;
+  short predecessorIsExpandedb;
 } marpaWrapperAsfNook_t;
 
 typedef struct marpaWrapperAsfSourceData {
@@ -60,7 +64,6 @@ struct marpaWrapperAsf {
   genericHash_t             *intsetHashp;
   genericStack_t            *nidsetStackp;
   genericStack_t            *powersetStackp;
-  genericStack_t            *nookStackp;
   marpaWrapperAsfNidset_t   *lastNidsetp;
   marpaWrapperAsfPowerset_t *lastPowersetp;
   genericStack_t            *gladeStackp;
