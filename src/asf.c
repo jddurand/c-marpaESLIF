@@ -1505,10 +1505,8 @@ static inline short _marpaWrapperAsf_glade_obtainb(marpaWrapperAsf_t *marpaWrapp
   if (choicepointPowsersetp == NULL) {
     goto err;
   }
-  /* Reset factoring stack */
-  if (_marpaWrapperAsf_factoringStackp_resetb(marpaWrapperAsfp) == 0) {
-    goto err;
-  }
+  /* Free factoring stack */
+  _marpaWrapperAsf_factoringStackp_freev(marpaWrapperAsfp);
 
   /* Check if choicepoint alrady seen ? */
   symchCountl = _marpaWrapperAsf_powerset_countl(marpaWrapperAsfp, choicepointPowsersetp);
@@ -1518,10 +1516,8 @@ static inline short _marpaWrapperAsf_glade_obtainb(marpaWrapperAsf_t *marpaWrapp
     size_t                   nidcountl;
     int                      nidixi;
     
-    /* Reset factoring stack */
-    if (_marpaWrapperAsf_factoringStackp_resetb(marpaWrapperAsfp) == 0) {
-      goto err;
-    }
+    /* Free factoring stack */
+    _marpaWrapperAsf_factoringStackp_freev(marpaWrapperAsfp);
 
     symchNidsetp = _marpaWrapperAsf_powerset_nidsetp(marpaWrapperAsfp, choicepointPowsersetp, symchIxl);
     if (symchNidsetp == NULL) {
@@ -1608,6 +1604,7 @@ static inline short _marpaWrapperAsf_glade_obtainb(marpaWrapperAsf_t *marpaWrapp
     nidcountl = _marpaWrapperAsf_nidset_countl(marpaWrapperAsfp, symchNidsetp);
     for (nidixi = 0; nidixi < (int) nidcountl; nidixi++) {
       choicepointNidi = _marpaWrapperAsf_nidset_idi_by_ixi(marpaWrapperAsfp, symchNidsetp, nidixi);
+      /* JDD */
     }
   }
 
@@ -1715,6 +1712,11 @@ static inline short _marpaWrapperAsf_factoring_finishb(marpaWrapperAsf_t *marpaW
   size_t                    worklistUsedl;
   size_t                    worklistStackl;
   size_t                    worklistLastl;
+
+  if (marpaWrapperAsfp->factoringStackp == NULL) {
+    MARPAWRAPPER_ERROR(genericLoggerp, "factoringStackp is NULL");
+    goto err;
+  }
 
   GENERICSTACK_NEW_SIZED(worklistStackp, GENERICSTACK_USED(marpaWrapperAsfp->factoringStackp));
   if (GENERICSTACK_ERROR(worklistStackp)) {
