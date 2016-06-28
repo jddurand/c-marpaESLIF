@@ -23,10 +23,10 @@ typedef enum marpaWrapperAsfIdsete {
 } marpaWrapperAsfIdsete_t;
 
 typedef struct marpaWrapperAsfGlade {
-  int   idi;
-  size_t nSymboll;
-  int   *symbolip;
-  short registeredb;
+  int             idi;
+  genericStack_t *symbolStackp;
+  genericStack_t *symchesStackp;
+  short           registeredb;
 } marpaWrapperAsfGlade_t;
 
 typedef int *andNodeStack_t;
