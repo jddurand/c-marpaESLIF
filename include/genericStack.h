@@ -127,44 +127,44 @@ typedef struct genericStack {
 /* We check for size_t turnaround heuristically - should work IMHO        */
 /* ====================================================================== */
 #define _GENERICSTACK_EXTEND(stackName, wantedSize) do {                \
-    size_t _wantedSize = (size_t) (wantedSize);                         \
-    size_t _currentSize = (size_t) stackName->size;                     \
-    if (_wantedSize > _currentSize) {                                   \
-      size_t _newSize;                                                  \
-      genericStackItem_t *_items = stackName->items;			\
-      short _memsetb = 0;						\
+    size_t _genericStackExtend_wantedSize = (size_t) (wantedSize);      \
+    size_t _genericStackExtend_currentSize = (size_t) stackName->size;  \
+    if (_genericStackExtend_wantedSize > _genericStackExtend_currentSize) { \
+      size_t _genericStackExtend_newSize;                               \
+      genericStackItem_t *_genericStackExtend_items = stackName->items; \
+      short _genericStackExtend_memsetb = 0;                            \
                                                                         \
-      if (_currentSize <= 0) {                                          \
-        _newSize = _wantedSize;                                         \
+      if (_genericStackExtend_currentSize <= 0) {                       \
+        _genericStackExtend_newSize = _genericStackExtend_wantedSize;   \
       } else {                                                          \
-        _newSize = _currentSize * 2;                                    \
-        if ((_newSize < _currentSize) || (_newSize < _wantedSize)) {    \
-          _newSize = _wantedSize;                                       \
+        _genericStackExtend_newSize = _genericStackExtend_currentSize * 2; \
+        if ((_genericStackExtend_newSize < _genericStackExtend_currentSize) || (_genericStackExtend_newSize < _genericStackExtend_wantedSize)) { \
+          _genericStackExtend_newSize = _genericStackExtend_wantedSize; \
         }                                                               \
       }                                                                 \
-      if (_items == NULL) {						\
-	_items = calloc(_newSize, sizeof(genericStackItem_t));		\
+      if (_genericStackExtend_items == NULL) {                          \
+	_genericStackExtend_items = calloc(_genericStackExtend_newSize, sizeof(genericStackItem_t)); \
       } else {								\
-	_memsetb = 1;							\
-	_items = realloc(_items, sizeof(genericStackItem_t) * _newSize); \
+	_genericStackExtend_memsetb = 1;							\
+	_genericStackExtend_items = realloc(_genericStackExtend_items, sizeof(genericStackItem_t) * _genericStackExtend_newSize); \
       }									\
-      if (_items == NULL) {						\
+      if (_genericStackExtend_items == NULL) {                          \
 	stackName->error = 1;						\
       } else {								\
-	if (_memsetb != 0) {						\
+	if (_genericStackExtend_memsetb != 0) {                         \
 	  if (stackName->NA_is_0_bytes != 0) {				\
-	    memset(&(_items[stackName->size]), 0, _newSize - stackName->size); \
+	    memset(&(_genericStackExtend_items[stackName->size]), 0, _genericStackExtend_newSize - stackName->size); \
 	  } else {							\
 	    size_t _i_for_extend;					\
 	    for (_i_for_extend = stackName->size;			\
-		 _i_for_extend < _newSize;				\
+		 _i_for_extend < _genericStackExtend_newSize;           \
 		 _i_for_extend++) {					\
-	      _items[_i_for_extend].type = _GENERICSTACKITEMTYPE_NA;	\
+	      _genericStackExtend_items[_i_for_extend].type = _GENERICSTACKITEMTYPE_NA;	\
 	    }								\
 	  }								\
 	}								\
-	stackName->items = _items;					\
-	stackName->size = _newSize;					\
+	stackName->items = _genericStackExtend_items;                   \
+	stackName->size = _genericStackExtend_newSize;                  \
       }									\
     }									\
   } while (0)
@@ -179,12 +179,12 @@ typedef struct genericStack {
       stackName->items = NULL;						\
       stackName->error = 0;						\
       {									\
-	genericStackItemType_t *_t = (genericStackItemType_t *) calloc(1, sizeof(genericStackItemType_t)); \
-	if (_t == NULL) {						\
+	genericStackItemType_t *_genericStackInit_t = (genericStackItemType_t *) calloc(1, sizeof(genericStackItemType_t)); \
+	if (_genericStackInit_t == NULL) {                              \
 	  stackName->error = 1;						\
 	} else {							\
-	  stackName->NA_is_0_bytes = ((*_t) == _GENERICSTACKITEMTYPE_NA) ? 1 : 0; \
-	  free(_t);							\
+	  stackName->NA_is_0_bytes = ((*_genericStackInit_t) == _GENERICSTACKITEMTYPE_NA) ? 1 : 0; \
+	  free(_genericStackInit_t);                                    \
 	}								\
       }									\
     }									\
@@ -218,13 +218,19 @@ typedef struct genericStack {
 /* stackName is expected to an identifier                                 */
 /* index is used more than once, so it has to be cached                   */
 #define _GENERICSTACK_SET_BY_TYPE(stackName, varType, var, itemType, dst, index) do { \
-    size_t _index_for_set = index;                                      \
-    if (_index_for_set >= stackName->used) {                            \
-      stackName->used = _index_for_set + 1;                             \
-      _GENERICSTACK_EXTEND(stackName, stackName->used);                 \
+    size_t _genericStackSetByType_indexForSet = index;                  \
+    if (_genericStackSetByType_indexForSet >= stackName->used) {        \
+      size_t _genericStackSetByType_wantedSize = _genericStackSetByType_indexForSet + 1; \
+      size_t _genericStackSetByType_isForGap;                           \
+                                                                        \
+      _GENERICSTACK_EXTEND(stackName, _genericStackSetByType_wantedSize); \
+      for (_genericStackSetByType_isForGap = stackName->used; _genericStackSetByType_isForGap < _genericStackSetByType_indexForSet; _genericStackSetByType_isForGap++) { \
+        stackName->items[_genericStackSetByType_isForGap].type = _GENERICSTACKITEMTYPE_NA;   \
+      }                                                                 \
+      stackName->used = _genericStackSetByType_wantedSize;              \
     }									\
     if (! GENERICSTACK_ERROR(stackName)) {				\
-      genericStackItem_t *_item = stackName->items + _index_for_set;	\
+      genericStackItem_t *_item = stackName->items + _genericStackSetByType_indexForSet; \
       _item->type = (itemType);						\
       _item->u.dst = (varType) (var);					\
     }									\
@@ -250,14 +256,20 @@ typedef struct genericStack {
 #endif
 
 /* Special case for NA: there is not associated data */
-#define GENERICSTACK_SET_NA(stackName, index) do {                      \
-    size_t _index_for_set = index;                                      \
-    if (_index_for_set >= stackName->used) {                            \
-      stackName->used = _index_for_set + 1;                             \
-      _GENERICSTACK_EXTEND(stackName, stackName->used);                 \
+#define GENERICSTACK_SET_NA(stackName, index) do {                  \
+    size_t _genericStackSetNA_indexForSet = index;                  \
+    if (_genericStackSetNA_indexForSet >= stackName->used) {            \
+      size_t _genericStackSetNA_wantedSize = _genericStackSetNA_indexForSet + 1; \
+      size_t _genericStackSetNA_isForGap;                               \
+                                                                        \
+      _GENERICSTACK_EXTEND(stackName, _genericStackSetNA_wantedSize);   \
+      for (_genericStackSetNA_isForGap = stackName->used; _genericStackSetNA_isForGap < _genericStackSetNA_indexForSet; _genericStackSetNA_isForGap++) { \
+        stackName->items[_genericStackSetNA_isForGap].type = _GENERICSTACKITEMTYPE_NA; \
+      }                                                                 \
+      stackName->used = _genericStackSetNA_wantedSize;                  \
     }									\
     if (! GENERICSTACK_ERROR(stackName)) {				\
-      stackName->items[_index_for_set].type = _GENERICSTACKITEMTYPE_NA; \
+      stackName->items[_genericStackSetNA_indexForSet].type = _GENERICSTACKITEMTYPE_NA; \
     }									\
   } while (0)
 
@@ -399,23 +411,23 @@ typedef struct genericStack {
 /* We support a "negative index", which mean start by far from the end.   */
 /* ====================================================================== */
 #define GENERICSTACK_SWITCH(stackName, i1, i2) do {                     \
-    int _index1 = (int) (i1);                                           \
-    int _index2 = (int) (i2);                                           \
+    int _genericStackSwitch_index1 = (int) (i1);                        \
+    int _genericStackSwitch_index2 = (int) (i2);                        \
                                                                         \
-    if (_index1 < 0) {                                                  \
-      _index1 = stackName->used + _index1;                              \
+    if (_genericStackSwitch_index1 < 0) {                               \
+      _genericStackSwitch_index1 = stackName->used + _genericStackSwitch_index1; \
     }                                                                   \
-    if (_index2 < 0) {                                                  \
-      _index2 = stackName->used + _index2;                              \
+    if (_genericStackSwitch_index2 < 0) {                               \
+      _genericStackSwitch_index2 = stackName->used + _genericStackSwitch_index2; \
     }                                                                   \
                                                                         \
-    if ((_index1 < 0) || (((size_t) _index1) >= stackName->used) ||     \
-        (_index2 < 0) || (((size_t) _index2) >= stackName->used)) {     \
+    if ((_genericStackSwitch_index1 < 0) || (((size_t) _genericStackSwitch_index1) >= stackName->used) || \
+        (_genericStackSwitch_index2 < 0) || (((size_t) _genericStackSwitch_index2) >= stackName->used)) { \
       stackName->error = 1;                                             \
-    } else if (_index1 != _index2) {                                    \
-      genericStackItem_t _item = stackName->items[_index1];             \
-      stackName->items[_index1] = stackName->items[_index2];            \
-      stackName->items[_index2] = _item;                                \
+    } else if (_genericStackSwitch_index1 != _genericStackSwitch_index2) { \
+      genericStackItem_t _item = stackName->items[_genericStackSwitch_index1]; \
+      stackName->items[_genericStackSwitch_index1] = stackName->items[_genericStackSwitch_index2]; \
+      stackName->items[_genericStackSwitch_index2] = _item;             \
     }                                                                   \
   } while (0)
 
