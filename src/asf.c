@@ -2060,9 +2060,9 @@ static inline short _marpaWrapperAsf_glade_id_factorsb(marpaWrapperAsf_t *marpaW
   genericStack_t           *andNodeIdStackp         = NULL;
   genericStack_t           *causeNidsStackp         = NULL;
   int                      *causeNidsp              = NULL;
-  int                       factorIxi;
+  size_t                    factorIxl;
   marpaWrapperAsfNook_t    *nookp;
-  int                       orNodeIdi;
+  size_t                    orNodeIdl;
   marpaWrapperAsfOrNode_t  *orNodep;
   size_t                    nAndNodel;
   int                      *andNodep;
@@ -2081,22 +2081,22 @@ static inline short _marpaWrapperAsf_glade_id_factorsb(marpaWrapperAsf_t *marpaW
     goto err;
   }
   
-  for (factorIxi = 0; factorIxi <= GENERICSTACK_USED(marpaWrapperAsfp->factoringStackp)-1; factorIxi++) {
-    if (! GENERICSTACK_IS_PTR(marpaWrapperAsfp->factoringStackp, factorIxi)) {
-      MARPAWRAPPER_ERRORF(genericLoggerp, "Not a pointer at indice %d of factoringStackp", factorIxi);
+  for (factorIxl = 0; factorIxl <= GENERICSTACK_USED(marpaWrapperAsfp->factoringStackp)-1; factorIxl++) {
+    if (! GENERICSTACK_IS_PTR(marpaWrapperAsfp->factoringStackp, factorIxl)) {
+      MARPAWRAPPER_ERRORF(genericLoggerp, "Not a pointer at indice %d of factoringStackp", factorIxl);
       goto err;
     }
-    nookp = GENERICSTACK_GET_PTR(marpaWrapperAsfp->factoringStackp, factorIxi);
+    nookp = GENERICSTACK_GET_PTR(marpaWrapperAsfp->factoringStackp, factorIxl);
     if (_marpaWrapperAsf_nook_has_semantic_causeb(marpaWrapperAsfp, nookp) == 0) {
       continue;
     }
 
-    orNodeIdi = nookp->orNodeIdi;
-    if (! GENERICSTACK_IS_PTR(marpaWrapperAsfp->orNodeStackp, orNodeIdi)) {
-      MARPAWRAPPER_ERRORF(genericLoggerp, "Not a pointer at indice %d of orNodeStackp", orNodeIdi);
+    orNodeIdl = (size_t) nookp->orNodeIdi;
+    if (! GENERICSTACK_IS_PTR(marpaWrapperAsfp->orNodeStackp, orNodeIdl)) {
+      MARPAWRAPPER_ERRORF(genericLoggerp, "Not a pointer at indice %d of orNodeStackp", orNodeIdl);
       goto err;
     }
-    orNodep = GENERICSTACK_GET_PTR(marpaWrapperAsfp->orNodeStackp, orNodeIdi);
+    orNodep = GENERICSTACK_GET_PTR(marpaWrapperAsfp->orNodeStackp, orNodeIdl);
     nAndNodel = orNodep->nAndNodel;
     andNodep = orNodep->andNodep;
     GENERICSTACK_NEW(andNodeIdStackp);
@@ -2105,7 +2105,7 @@ static inline short _marpaWrapperAsf_glade_id_factorsb(marpaWrapperAsf_t *marpaW
       goto err;
     }
     for (choicei = nookp->firstChoicei; choicei <= nookp->lastChoicei; choicei++) {
-      if ((choicei < 0) || (choicei > nAndNodel)) {
+      if ((choicei < 0) || ((size_t) choicei > nAndNodel)) {
 	MARPAWRAPPER_ERRORF(genericLoggerp, "andNode %d out of range [%d..%d[", choicei, 0, (int) nAndNodel);
 	goto err;
       }
@@ -2242,7 +2242,6 @@ static inline short _marpaWrapperAsf_and_nodes_to_cause_nidsp(marpaWrapperAsf_t 
     }
   }
   
- done:
   GENERICHASH_FREE(causesHashp);
   *causeNidsStackpp = causeNidsStackp;
   MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "return 1, *causeNidsStackpp=%p", *causeNidsStackpp);
@@ -2287,7 +2286,6 @@ static inline short _marpaWrapperAsf_next_factoringb(marpaWrapperAsf_t *marpaWra
     }
   }
 
- done:
   *factoringbp = factoringb;
   MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "return 1, *factorinbp=%d", *factoringbp);
   return 1;
