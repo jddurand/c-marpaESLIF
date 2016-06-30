@@ -24,8 +24,8 @@ typedef enum marpaWrapperAsfIdsete {
 
 typedef struct marpaWrapperAsfGlade {
   int             idi;
-  genericStack_t *symbolStackp;
   genericStack_t *symchesStackp;
+  short           visitedb;
   short           registeredb;
 } marpaWrapperAsfGlade_t;
 
