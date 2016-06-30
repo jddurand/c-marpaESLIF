@@ -125,7 +125,7 @@ size_t                                   _marpaWrapperAsf_indAndNodesl(void *use
 static inline short                      _marpaWrapperAsf_cmpAndNodesb(void *userDatavp, genericStackItemType_t itemType, void *p1, void *p2);
 static inline short                      _marpaWrapperAsf_and_nodes_to_cause_nidsp(marpaWrapperAsf_t *marpaWrapperAsfp, genericStack_t *andNodeIdStackp, genericStack_t **causeNidsStackpp);
 static inline short                      _marpaWrapperAsf_glade_is_visitedb(marpaWrapperAsf_t *marpaWrapperAsfp, int gladeIdi);
-static inline short                      _marpaWrapperAsf_glade_symch_count(marpaWrapperAsf_t *marpaWrapperAsfp, int gladeIdi, size_t *countlp);
+static inline short                      _marpaWrapperAsf_glade_symch_countb(marpaWrapperAsf_t *marpaWrapperAsfp, int gladeIdi, size_t *countlp);
 
 /****************************************************************************/
 marpaWrapperAsf_t *marpaWrapperAsf_newp(marpaWrapperRecognizer_t *marpaWrapperRecognizerp, marpaWrapperAsfOption_t *marpaWrapperAsfOptionp)
@@ -2314,10 +2314,10 @@ static inline short _marpaWrapperAsf_glade_is_visitedb(marpaWrapperAsf_t *marpaW
 }
 
 /****************************************************************************/
-static inline short _marpaWrapperAsf_glade_symch_count(marpaWrapperAsf_t *marpaWrapperAsfp, int gladeIdi, size_t *countlp)
+static inline short _marpaWrapperAsf_glade_symch_countb(marpaWrapperAsf_t *marpaWrapperAsfp, int gladeIdi, size_t *countlp)
 /****************************************************************************/
 {
-  const static char        funcs[]        = "_marpaWrapperAsf_glade_is_visitedb";
+  const static char        funcs[]        = "_marpaWrapperAsf_glade_symch_countb";
   genericLogger_t         *genericLoggerp = marpaWrapperAsfp->genericLoggerp;
   short                    rcb            = 0;
   marpaWrapperAsfGlade_t  *gladep;
