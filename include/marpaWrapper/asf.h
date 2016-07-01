@@ -25,9 +25,10 @@ typedef short (*traverserCallback_t)(void *userDatavp, marpaWrapperGlade_t *marp
 #ifdef __cplusplus
 extern "C" {
 #endif
-  marpaWrapper_EXPORT marpaWrapperAsf_t    *marpaWrapperAsf_newp(marpaWrapperRecognizer_t *marpaWrapperRecognizerp, marpaWrapperAsfOption_t *marpaWrapperAsfOptionp);
-  marpaWrapper_EXPORT short                 marpaWrapperAsf_traverseb(marpaWrapperAsf_t *marpaWrapperAsfp, traverserCallback_t traverserCallbackp);
-  marpaWrapper_EXPORT void                  marpaWrapperAsf_freev(marpaWrapperAsf_t *marpaWrapperAsfp);
+  marpaWrapper_EXPORT marpaWrapperAsf_t     *marpaWrapperAsf_newp(marpaWrapperRecognizer_t *marpaWrapperRecognizerp, marpaWrapperAsfOption_t *marpaWrapperAsfOptionp);
+  marpaWrapper_EXPORT short                  marpaWrapperAsf_traverseb(marpaWrapperAsf_t *marpaWrapperAsfp, traverserCallback_t traverserCallbackp);
+  marpaWrapper_EXPORT marpaWrapperGrammar_t *marpaWrapperAsf_grammarp(marpaWrapperAsf_t *marpaWrapperAsfp);
+  marpaWrapper_EXPORT void                   marpaWrapperAsf_freev(marpaWrapperAsf_t *marpaWrapperAsfp);
 #ifdef __cplusplus
 }
 #endif

@@ -120,6 +120,7 @@ size_t                                   _marpaWrapperAsf_indAndNodesl(void *use
 static inline short                      _marpaWrapperAsf_cmpAndNodesb(void *userDatavp, genericStackItemType_t itemType, void *p1, void *p2);
 static inline short                      _marpaWrapperAsf_and_nodes_to_cause_nidsp(marpaWrapperAsf_t *marpaWrapperAsfp, genericStack_t *andNodeIdStackp, genericStack_t **causeNidsStackpp);
 static inline short                      _marpaWrapperAsf_glade_is_visitedb(marpaWrapperAsf_t *marpaWrapperAsfp, int gladeIdi);
+static inline void                       _marpaWrapperAsf_glade_visited_clearb(marpaWrapperAsf_t *marpaWrapperAsfp, int *gladeIdip);
 static inline short                      _marpaWrapperAsf_glade_symch_countb(marpaWrapperAsf_t *marpaWrapperAsfp, int gladeIdi, size_t *countlp);
 static inline short                      _marpaWrapperAsf_glade_symbol_idb(marpaWrapperAsf_t *marpaWrapperAsfp, int gladeIdi, int *symbolIdip);
 
@@ -2346,6 +2347,30 @@ static inline short _marpaWrapperAsf_glade_is_visitedb(marpaWrapperAsf_t *marpaW
 }
 
 /****************************************************************************/
+static inline void _marpaWrapperAsf_glade_visited_clearb(marpaWrapperAsf_t *marpaWrapperAsfp, int *gladeIdip)
+/****************************************************************************/
+{
+  const static char        funcs[]        = "_marpaWrapperAsf_glade_visited_clearb";
+  genericLogger_t         *genericLoggerp = marpaWrapperAsfp->genericLoggerp;
+  size_t                   i;
+  marpaWrapperAsfGlade_t  *gladep;
+
+  if (gladeIdip != NULL) {
+    if (GENERICSTACK_IS_PTR(marpaWrapperAsfp->gladeStackp, (size_t) *gladeIdip)) {
+      gladep = GENERICSTACK_GET_PTR(marpaWrapperAsfp->gladeStackp, (size_t) *gladeIdip);
+      gladep->visitedb = 0;
+    }
+  } else {
+    for (i = 0; i < GENERICSTACK_USED(marpaWrapperAsfp->gladeStackp); i++) {
+      if (GENERICSTACK_IS_PTR(marpaWrapperAsfp->gladeStackp, i)) {
+	gladep = GENERICSTACK_GET_PTR(marpaWrapperAsfp->gladeStackp, i);
+	gladep->visitedb = 0;
+      }
+    }
+  }
+}
+
+/****************************************************************************/
 static inline short _marpaWrapperAsf_glade_symch_countb(marpaWrapperAsf_t *marpaWrapperAsfp, int gladeIdi, size_t *countlp)
 /****************************************************************************/
 {
@@ -2394,3 +2419,17 @@ static inline short _marpaWrapperAsf_glade_symbol_idb(marpaWrapperAsf_t *marpaWr
   MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return 0");
   return 0;
 }
+
+/****************************************************************************/
+marpaWrapperGrammar_t *marpaWrapperAsf_grammarp(marpaWrapperAsf_t *marpaWrapperAsfp)
+/****************************************************************************/
+{
+  const static char         funcs[]                 = "_marpaWrapperAsf_and_nodes_to_cause_nidsp";
+  genericLogger_t          *genericLoggerp          = marpaWrapperAsfp->genericLoggerp;
+  marpaWrapperRecognizer_t *marpaWrapperRecognizerp = marpaWrapperAsfp->marpaWrapperRecognizerp;
+  marpaWrapperGrammar_t    *marpaWrapperGrammarp    = marpaWrapperRecognizerp->marpaWrapperGrammarp;
+
+  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "return %p", marpaWrapperGrammarp);
+  return marpaWrapperGrammarp;
+}
+
