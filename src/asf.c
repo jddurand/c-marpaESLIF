@@ -176,20 +176,25 @@ marpaWrapperAsf_t *marpaWrapperAsf_newp(marpaWrapperRecognizer_t *marpaWrapperRe
     goto err;
   }
 
-  marpaWrapperAsfp->marpaWrapperRecognizerp = marpaWrapperRecognizerp;
-  marpaWrapperAsfp->marpaWrapperAsfOption   = *marpaWrapperAsfOptionp;
-  marpaWrapperAsfp->marpaBocagep            = NULL;
-  marpaWrapperAsfp->marpaOrderp             = NULL;
-  marpaWrapperAsfp->orNodeStackp            = NULL;
-  marpaWrapperAsfp->intsetHashp             = NULL;
-  marpaWrapperAsfp->nidsetStackp            = NULL;
-  marpaWrapperAsfp->powersetStackp          = NULL;
-  marpaWrapperAsfp->lastNidsetp             = NULL;
-  marpaWrapperAsfp->lastPowersetp           = NULL;
-  marpaWrapperAsfp->gladeStackp             = NULL;
-  marpaWrapperAsfp->factoringStackp         = NULL;
-  marpaWrapperAsfp->orNodeInUseStackp       = NULL;
-  marpaWrapperAsfp->nextIntseti             = 0;
+  marpaWrapperAsfp->marpaWrapperRecognizerp     = marpaWrapperRecognizerp;
+  marpaWrapperAsfp->marpaWrapperAsfOption       = *marpaWrapperAsfOptionp;
+  marpaWrapperAsfp->marpaBocagep                = NULL;
+  marpaWrapperAsfp->marpaOrderp                 = NULL;
+  marpaWrapperAsfp->orNodeStackp                = NULL;
+  marpaWrapperAsfp->intsetHashp                 = NULL;
+  marpaWrapperAsfp->nidsetStackp                = NULL;
+  marpaWrapperAsfp->powersetStackp              = NULL;
+  marpaWrapperAsfp->lastNidsetp                 = NULL;
+  marpaWrapperAsfp->lastPowersetp               = NULL;
+  marpaWrapperAsfp->gladeStackp                 = NULL;
+  marpaWrapperAsfp->factoringStackp             = NULL;
+  marpaWrapperAsfp->orNodeInUseStackp           = NULL;
+  marpaWrapperAsfp->nextIntseti                 = 0;
+  marpaWrapperAsfp->traverse.traverserCallbackp = NULL;
+  marpaWrapperAsfp->traverse.userDatavp         = NULL;
+  marpaWrapperAsfp->traverse.values             = NULL;
+  marpaWrapperAsfp->traverse.symchIxi           = -1;
+  marpaWrapperAsfp->traverse.factoringIxi       = -1;
 
   /* Always succeed as per the doc */
   MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_r_latest_earley_set(%p)", marpaWrapperRecognizerp->marpaRecognizerp);
@@ -425,7 +430,7 @@ err:
 }
 
 /****************************************************************************/
-short marpaWrapperAsf_traverseb(marpaWrapperAsf_t *marpaWrapperAsfp, traverserCallback_t traverserCallbackp)
+short marpaWrapperAsf_traverseb(marpaWrapperAsf_t *marpaWrapperAsfp, traverserCallback_t traverserCallbackp, void *userDatavp)
 /****************************************************************************/
 {
   const static char funcs[] = "marpaWrapperAsf_traverseb";
@@ -437,6 +442,9 @@ short marpaWrapperAsf_traverseb(marpaWrapperAsf_t *marpaWrapperAsfp, traverserCa
   }
 
   genericLoggerp = marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp;
+
+  marpaWrapperAsfp->traverse.traverserCallbackp = traverserCallbackp;
+  marpaWrapperAsfp->traverse.userDatavp         = userDatavp;
 
   MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return 1");
   return 1;
