@@ -52,28 +52,41 @@ typedef struct marpaWrapperAsfSourceData {
   int sourceNidi;
 } marpaWrapperAsfSourceData_t;
 
+
+
+typedef struct marpaWrapperAstTraverse {
+  traverserCallback_t  traverserCallbackp;
+  void                *userDatavp;
+  genericStack_t      *values;
+  int                  symchIxi;
+  int                  factoringIxi;
+} marpaWrapperAstTraverse_t;
+
 struct marpaWrapperAsf {
-  genericLogger_t           *genericLoggerp;
-  marpaWrapperRecognizer_t  *marpaWrapperRecognizerp;
-  marpaWrapperAsfOption_t    marpaWrapperAsfOption;
-  Marpa_Bocage               marpaBocagep;
-  Marpa_Order                marpaOrderp;
+  genericLogger_t            *genericLoggerp;
+  marpaWrapperRecognizer_t   *marpaWrapperRecognizerp;
+  marpaWrapperAsfOption_t     marpaWrapperAsfOption;
+  Marpa_Bocage                marpaBocagep;
+  Marpa_Order                 marpaOrderp;
 
   /* Memoization */
-  genericStack_t            *orNodeStackp;
-  genericHash_t             *intsetHashp;
-  genericStack_t            *nidsetStackp;
-  genericStack_t            *powersetStackp;
-  marpaWrapperAsfNidset_t   *lastNidsetp;
-  marpaWrapperAsfPowerset_t *lastPowersetp;
-  genericStack_t            *gladeStackp;
+  genericStack_t             *orNodeStackp;
+  genericHash_t              *intsetHashp;
+  genericStack_t             *nidsetStackp;
+  genericStack_t             *powersetStackp;
+  marpaWrapperAsfNidset_t    *lastNidsetp;
+  marpaWrapperAsfPowerset_t  *lastPowersetp;
+  genericStack_t             *gladeStackp;
 
   /* Memoization of choices */
   int                        nextIntseti;
 
   /* Current choice point */
-  genericStack_t           *factoringStackp;
-  genericStack_t           *orNodeInUseStackp;
+  genericStack_t            *factoringStackp;
+  genericStack_t            *orNodeInUseStackp;
+
+  /* Traverse context */
+  marpaWrapperAstTraverse_t traverse;
 };
 
 #endif /* MARPAWRAPPER_INTERNAL_ASF_H */
