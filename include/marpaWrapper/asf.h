@@ -9,6 +9,7 @@
 /* Opaque object types */
 /***********************/
 typedef struct marpaWrapperAsf marpaWrapperAsf_t;
+typedef struct marpaWrapperAsfGlade marpaWrapperAsfGlade_t;
 
 /* --------------- */
 /* General options */
@@ -20,13 +21,15 @@ typedef struct marpaWrapperAsfOption {
   short            ambiguousb;                 /* Default: 0 */
 } marpaWrapperAsfOption_t;
 
-typedef short (*traverserCallback_t)(void *userDatavp, void **valuep);
+typedef marpaWrapperAsfGlade_t (*traverserCallback_t)(void *userDatavp, void **valuep);
 
 #ifdef __cplusplus
 extern "C" {
 #endif
   marpaWrapper_EXPORT marpaWrapperAsf_t     *marpaWrapperAsf_newp(marpaWrapperRecognizer_t *marpaWrapperRecognizerp, marpaWrapperAsfOption_t *marpaWrapperAsfOptionp);
   marpaWrapper_EXPORT short                  marpaWrapperAsf_traverseb(marpaWrapperAsf_t *marpaWrapperAsfp, traverserCallback_t traverserCallbackp, void *userDatavp);
+  marpaWrapper_EXPORT short                  marpaWrapperAsf_rh_lengthb(marpaWrapperAsf_t *marpaWrapperAsfp, marpaWrapperAsfGlade_t *gladep, size_t lengthlp);
+  marpaWrapper_EXPORT genericStack_t        *marpaWrapperAsf_allchoicesp(marpaWrapperAsf_t *marpaWrapperAsfp, marpaWrapperAsfGlade_t *gladep);
   marpaWrapper_EXPORT marpaWrapperGrammar_t *marpaWrapperAsf_grammarp(marpaWrapperAsf_t *marpaWrapperAsfp);
   marpaWrapper_EXPORT void                   marpaWrapperAsf_freev(marpaWrapperAsf_t *marpaWrapperAsfp);
 #ifdef __cplusplus

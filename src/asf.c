@@ -64,7 +64,7 @@ static inline void                       _marpaWrapperAsf_symchesStackp_freev(ma
 static inline void                       _marpaWrapperAsf_factoringStackp_freev(marpaWrapperAsf_t *marpaWrapperAsfp);
 static inline void                       _marpaWrapperAsf_factoringsStackp_freev(marpaWrapperAsf_t *marpaWrapperAsfp, genericStack_t *factoringsStackp);
 static inline short                      _marpaWrapperAsf_factoringStackp_resetb(marpaWrapperAsf_t *marpaWrapperAsfp);
-static inline short                      _marpaWrapperAsf_peak(marpaWrapperAsf_t *marpaWrapperAsfp, int *gladeIdip);
+static inline short                      _marpaWrapperAsf_peakb(marpaWrapperAsf_t *marpaWrapperAsfp, int *gladeIdip);
 static inline int                        _marpaWrapperAsf_andNodeIdAndPredecessorIdCmpi(const void *p1, const void *p2);
 static inline short                      _marpaWrapperAsf_intsetIdb(marpaWrapperAsf_t *marpaWrapperAsfp, int *intsetIdip, size_t countl, int *idip);
 static inline char                      *_marpaWrapperAsf_stringBuilders(char *fmts, ...);
@@ -192,7 +192,7 @@ marpaWrapperAsf_t *marpaWrapperAsf_newp(marpaWrapperRecognizer_t *marpaWrapperRe
   marpaWrapperAsfp->nextIntseti                 = 0;
   marpaWrapperAsfp->traverse.traverserCallbackp = NULL;
   marpaWrapperAsfp->traverse.userDatavp         = NULL;
-  marpaWrapperAsfp->traverse.values             = NULL;
+  marpaWrapperAsfp->traverse.valuep             = NULL;
   marpaWrapperAsfp->traverse.symchIxi           = -1;
   marpaWrapperAsfp->traverse.factoringIxi       = -1;
 
@@ -433,8 +433,10 @@ err:
 short marpaWrapperAsf_traverseb(marpaWrapperAsf_t *marpaWrapperAsfp, traverserCallback_t traverserCallbackp, void *userDatavp)
 /****************************************************************************/
 {
-  const static char funcs[] = "marpaWrapperAsf_traverseb";
-  genericLogger_t  *genericLoggerp = NULL;
+  const static char       funcs[] = "marpaWrapperAsf_traverseb";
+  genericLogger_t        *genericLoggerp = NULL;
+  int                     gladeIdi;
+  marpaWrapperAsfGlade_t *gladep;
 
   if (marpaWrapperAsfp == NULL) {
     errno = EINVAL;
@@ -443,8 +445,24 @@ short marpaWrapperAsf_traverseb(marpaWrapperAsf_t *marpaWrapperAsfp, traverserCa
 
   genericLoggerp = marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp;
 
+  if (_marpaWrapperAsf_peakb(marpaWrapperAsfp, &gladeIdi) == 0) {
+    goto err;
+  }
+  gladep = _marpaWrapperAsf_glade_obtainp(marpaWrapperAsfp, (size_t) gladeIdi);
+  if (gladep == NULL) {
+    goto err;
+  }
+
   marpaWrapperAsfp->traverse.traverserCallbackp = traverserCallbackp;
   marpaWrapperAsfp->traverse.userDatavp         = userDatavp;
+  GENERICSTACK_NEW(marpaWrapperAsfp->traverse.valuep);
+  if (GENERICSTACK_ERROR(marpaWrapperAsfp->traverse.valuep)) {
+    MARPAWRAPPER_ERRORF(genericLoggerp, "marpaWrapperAsfp->traverse.valuep initialization failure: %s", strerror(errno));
+    goto err;
+  }
+  marpaWrapperAsfp->traverse.gladep       = gladep;
+  marpaWrapperAsfp->traverse.symchIxi     = 0;
+  marpaWrapperAsfp->traverse.factoringIxi = 0;
 
   MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return 1");
   return 1;
@@ -651,10 +669,10 @@ static inline short _marpaWrapperAsf_factoringStackp_resetb(marpaWrapperAsf_t *m
 }
 
 /****************************************************************************/
-static inline short _marpaWrapperAsf_peak(marpaWrapperAsf_t *marpaWrapperAsfp, int *gladeIdip)
+static inline short _marpaWrapperAsf_peakb(marpaWrapperAsf_t *marpaWrapperAsfp, int *gladeIdip)
 /****************************************************************************/
 {
-  const static char        funcs[]        = "_marpaWrapperAsf_peak";
+  const static char        funcs[]        = "_marpaWrapperAsf_peakb";
   genericLogger_t         *genericLoggerp = marpaWrapperAsfp->genericLoggerp;
   marpaWrapperAsfGlade_t  *gladep         = NULL;
   int                      augmentOrNodeIdi;
@@ -2441,3 +2459,8 @@ marpaWrapperGrammar_t *marpaWrapperAsf_grammarp(marpaWrapperAsf_t *marpaWrapperA
   return marpaWrapperGrammarp;
 }
 
+/****************************************************************************/
+short marpaWrapperAsf_rh_lengthb(marpaWrapperAsf_t *marpaWrapperAsfp, marpaWrapperAsfGlade_t *gladep, size_t lengthlp)
+/****************************************************************************/
+{
+}
