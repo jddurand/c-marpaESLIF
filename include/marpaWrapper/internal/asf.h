@@ -22,12 +22,12 @@ typedef enum marpaWrapperAsfIdsete {
   _MARPAWRAPPERASFIDSET_IDSETE_MAX
 } marpaWrapperAsfIdsete_t;
 
-typedef struct marpaWrapperAsfGlade {
+struct marpaWrapperAsfGlade {
   int             idi;
   genericStack_t *symchesStackp;
   short           visitedb;
   short           registeredb;
-} marpaWrapperAsfGlade_t;
+};
 
 typedef int *andNodeStack_t;
 
@@ -55,11 +55,12 @@ typedef struct marpaWrapperAsfSourceData {
 
 
 typedef struct marpaWrapperAstTraverse {
-  traverserCallback_t  traverserCallbackp;
-  void                *userDatavp;
-  genericStack_t      *values;
-  int                  symchIxi;
-  int                  factoringIxi;
+  traverserCallback_t     traverserCallbackp;
+  void                   *userDatavp;
+  genericStack_t         *valuep;
+  marpaWrapperAsfGlade_t *gladep;
+  int                     symchIxi;
+  int                     factoringIxi;
 } marpaWrapperAstTraverse_t;
 
 struct marpaWrapperAsf {
