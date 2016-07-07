@@ -616,7 +616,7 @@ static inline void _marpaWrapperAsf_factoringStackp_freev(marpaWrapperAsf_t *mar
         }
       }
     }
-    /* Note: GENERICSTACK_FREE() is always restting the pointer as well */
+    /* Note: GENERICSTACK_FREE() is always resetting the pointer as well */
     GENERICSTACK_FREE(marpaWrapperAsfp->factoringStackp);
     /* I.e. here marpaWrapperAsfp->factoringStackp is NULL */
   }
@@ -2441,6 +2441,9 @@ static inline short _marpaWrapperAsf_glade_symbol_idb(marpaWrapperAsf_t *marpaWr
     goto err;
   }
   
+  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "return 1, symbolIdi=%d", (int) *symbolIdip);
+  return 1;
+
  err:
   MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return 0");
   return 0;
@@ -2460,7 +2463,57 @@ marpaWrapperGrammar_t *marpaWrapperAsf_grammarp(marpaWrapperAsf_t *marpaWrapperA
 }
 
 /****************************************************************************/
-short marpaWrapperAsf_rh_lengthb(marpaWrapperAsf_t *marpaWrapperAsfp, marpaWrapperAsfGlade_t *gladep, size_t lengthlp)
+short marpaWrapperAsf_rh_lengthb(marpaWrapperAsf_t *marpaWrapperAsfp, size_t *lengthlp)
 /****************************************************************************/
 {
+  const static char         funcs[]                 = "marpaWrapperAsf_rh_lengthb";
+  genericLogger_t          *genericLoggerp          = marpaWrapperAsfp->genericLoggerp;
+  marpaWrapperAsfGlade_t   *gladep;
+  int                       symchIxi;
+  genericStack_t           *factoringsStackp;
+  int                       ruleIdi;
+  int                       factoringIxi;
+  genericStack_t           *factoringStackp;
+
+  gladep = marpaWrapperAsfp->traverse.gladep;
+  if (gladep == NULL) {
+    MARPAWRAPPER_ERROR(genericLoggerp, "Current glade is NULL");
+    goto err;
+  }
+  symchIxi = marpaWrapperAsfp->traverse.symchIxi;
+  if (! GENERICSTACK_IS_PTR(gladep->symchesStackp, symchIxi)) {
+    MARPAWRAPPER_ERRORF(genericLoggerp, "No symch at indice %d of current glade", symchIxi);
+    goto err;
+  }
+  factoringsStackp = GENERICSTACK_GET_PTR(gladep->symchesStackp, symchIxi);
+  if (! GENERICSTACK_IS_INT(factoringsStackp, 0)) {
+    MARPAWRAPPER_ERRORF(genericLoggerp, "Not an integer at indice 0 of factoringsStackp", 0);
+    goto err;
+  }
+  ruleIdi = GENERICSTACK_GET_INT(factoringsStackp, 0);
+  if (ruleIdi < 0) {
+    MARPAWRAPPER_ERROR(genericLoggerp, "rh_length called for a token -- that is not allowed");
+    goto err;
+  }
+  factoringIxi = marpaWrapperAsfp->traverse.factoringIxi;
+  /*
+    factoringsStackp always start with an int, then a pointer, then an array of factoringStackp
+   */
+  factoringIxi += 2;
+  if (! GENERICSTACK_IS_PTR(factoringsStackp, factoringIxi)) {
+    MARPAWRAPPER_ERRORF(genericLoggerp, "Not an pointer at indice %d of factoringsStackp", factoringIxi);
+    goto err;
+  }
+  factoringStackp = GENERICSTACK_GET_PTR(factoringsStackp, factoringIxi);
+  /*
+   * Then it is a list of of glade ids
+   */
+  *lengthlp = GENERICSTACK_USED(factoringStackp);
+  
+  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "return 1, lengthl = %d", (int) *lengthlp);
+  return 1;
+
+ err:
+  MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return 0");
+  return 0;
 }
