@@ -176,25 +176,23 @@ marpaWrapperAsf_t *marpaWrapperAsf_newp(marpaWrapperRecognizer_t *marpaWrapperRe
     goto err;
   }
 
-  marpaWrapperAsfp->marpaWrapperRecognizerp     = marpaWrapperRecognizerp;
-  marpaWrapperAsfp->marpaWrapperAsfOption       = *marpaWrapperAsfOptionp;
-  marpaWrapperAsfp->marpaBocagep                = NULL;
-  marpaWrapperAsfp->marpaOrderp                 = NULL;
-  marpaWrapperAsfp->orNodeStackp                = NULL;
-  marpaWrapperAsfp->intsetHashp                 = NULL;
-  marpaWrapperAsfp->nidsetStackp                = NULL;
-  marpaWrapperAsfp->powersetStackp              = NULL;
-  marpaWrapperAsfp->lastNidsetp                 = NULL;
-  marpaWrapperAsfp->lastPowersetp               = NULL;
-  marpaWrapperAsfp->gladeStackp                 = NULL;
-  marpaWrapperAsfp->factoringStackp             = NULL;
-  marpaWrapperAsfp->orNodeInUseStackp           = NULL;
-  marpaWrapperAsfp->nextIntseti                 = 0;
-  marpaWrapperAsfp->traverse.traverserCallbackp = NULL;
-  marpaWrapperAsfp->traverse.userDatavp         = NULL;
-  marpaWrapperAsfp->traverse.valuep             = NULL;
-  marpaWrapperAsfp->traverse.symchIxi           = -1;
-  marpaWrapperAsfp->traverse.factoringIxi       = -1;
+  marpaWrapperAsfp->marpaWrapperRecognizerp = marpaWrapperRecognizerp;
+  marpaWrapperAsfp->marpaWrapperAsfOption   = *marpaWrapperAsfOptionp;
+  marpaWrapperAsfp->marpaBocagep            = NULL;
+  marpaWrapperAsfp->marpaOrderp             = NULL;
+  marpaWrapperAsfp->orNodeStackp            = NULL;
+  marpaWrapperAsfp->intsetHashp             = NULL;
+  marpaWrapperAsfp->nidsetStackp            = NULL;
+  marpaWrapperAsfp->powersetStackp          = NULL;
+  marpaWrapperAsfp->lastNidsetp             = NULL;
+  marpaWrapperAsfp->lastPowersetp           = NULL;
+  marpaWrapperAsfp->gladeStackp             = NULL;
+  marpaWrapperAsfp->factoringStackp         = NULL;
+  marpaWrapperAsfp->orNodeInUseStackp       = NULL;
+  marpaWrapperAsfp->nextIntseti             = 0;
+  marpaWrapperAsfp->traverserCallbackp      = NULL;
+  marpaWrapperAsfp->userDatavp              = NULL;
+  marpaWrapperAsfp->lastValuesStackp        = NULL;
 
   /* Always succeed as per the doc */
   MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_r_latest_earley_set(%p)", marpaWrapperRecognizerp->marpaRecognizerp);
@@ -430,13 +428,15 @@ err:
 }
 
 /****************************************************************************/
-short marpaWrapperAsf_traverseb(marpaWrapperAsf_t *marpaWrapperAsfp, traverserCallback_t traverserCallbackp, void *userDatavp)
+void *marpaWrapperAsf_traversep(marpaWrapperAsf_t *marpaWrapperAsfp, traverserCallback_t traverserCallbackp, void *userDatavp)
 /****************************************************************************/
 {
-  const static char       funcs[] = "marpaWrapperAsf_traverseb";
-  genericLogger_t        *genericLoggerp = NULL;
-  int                     gladeIdi;
-  marpaWrapperAsfGlade_t *gladep;
+  const static char           funcs[] = "marpaWrapperAsf_traverseb";
+  genericLogger_t            *genericLoggerp = NULL;
+  int                         gladeIdi;
+  marpaWrapperAsfGlade_t     *gladep;
+  marpaWrapperAsfTraverser_t *traverserp = NULL;
+  void                       *valuep;
 
   if (marpaWrapperAsfp == NULL) {
     errno = EINVAL;
@@ -453,21 +453,35 @@ short marpaWrapperAsf_traverseb(marpaWrapperAsf_t *marpaWrapperAsfp, traverserCa
     goto err;
   }
 
-  marpaWrapperAsfp->traverse.traverserCallbackp = traverserCallbackp;
-  marpaWrapperAsfp->traverse.userDatavp         = userDatavp;
-  GENERICSTACK_NEW(marpaWrapperAsfp->traverse.valuep);
-  if (GENERICSTACK_ERROR(marpaWrapperAsfp->traverse.valuep)) {
-    MARPAWRAPPER_ERRORF(genericLoggerp, "marpaWrapperAsfp->traverse.valuep initialization failure: %s", strerror(errno));
+  marpaWrapperAsfp->traverserCallbackp = traverserCallbackp;
+  marpaWrapperAsfp->userDatavp         = userDatavp;
+
+  traverserp = malloc(sizeof(marpaWrapperAsfTraverser_t));
+  if (traverserp == NULL) {
+    MARPAWRAPPER_ERRORF(genericLoggerp, "malloc error: %s", strerror(errno));
     goto err;
   }
-  marpaWrapperAsfp->traverse.gladep       = gladep;
-  marpaWrapperAsfp->traverse.symchIxi     = 0;
-  marpaWrapperAsfp->traverse.factoringIxi = 0;
+  traverserp->marpaWrapperAsfp = marpaWrapperAsfp;
+  GENERICSTACK_NEW(traverserp->valuep);
+  if (GENERICSTACK_ERROR(traverserp->valuep)) {
+    MARPAWRAPPER_ERRORF(genericLoggerp, "traverserp->valuep initialization failure: %s", strerror(errno));
+    goto err;
+  }
+  traverserp->gladep       = gladep;
+  traverserp->symchIxi     = 0;
+  traverserp->factoringIxi = 0;
+  valuep = marpaWrapperAsfp->traverserCallbackp(traverserp, marpaWrapperAsfp->userDatavp);
+  GENERICSTACK_FREE(traverserp->valuep);
+  free(traverserp);
 
-  MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return 1");
-  return 1;
+  MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return %p");
+  return valuep;
 
  err:
+  if (traverserp != NULL) {
+    GENERICSTACK_FREE(traverserp->valuep);
+    free(traverserp);
+  }
   MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return 0");
   return 0;
 }
@@ -518,6 +532,9 @@ void marpaWrapperAsf_freev(marpaWrapperAsf_t *marpaWrapperAsfp)
     
     MARPAWRAPPER_TRACE(genericLoggerp, funcs, "Freeing orNodeInUse stack");
     GENERICSTACK_FREE(marpaWrapperAsfp->orNodeInUseStackp);
+    
+    MARPAWRAPPER_TRACE(genericLoggerp, funcs, "Freeing last values stack");
+    GENERICSTACK_FREE(marpaWrapperAsfp->lastValuesStackp);
     
     MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "free(%p)", marpaWrapperAsfp);
     free(marpaWrapperAsfp);
@@ -1493,7 +1510,7 @@ static inline marpaWrapperAsfNidset_t *_marpaWrapperAsf_powerset_nidsetp(marpaWr
 static inline marpaWrapperAsfGlade_t *_marpaWrapperAsf_glade_obtainp(marpaWrapperAsf_t *marpaWrapperAsfp, size_t gladei)
 /****************************************************************************/
 {
-  const static char            funcs[]                = "_marpaWrapperAsf_glade_obtainb";
+  const static char            funcs[]                = "_marpaWrapperAsf_glade_obtainp";
   genericLogger_t             *genericLoggerp         = marpaWrapperAsfp->genericLoggerp;
   marpaWrapperAsfSourceData_t *sourceDatap            = NULL;
   size_t                       nidWithCurrentSortIxil = 0;
@@ -2454,20 +2471,30 @@ marpaWrapperGrammar_t *marpaWrapperAsf_grammarp(marpaWrapperAsf_t *marpaWrapperA
 /****************************************************************************/
 {
   const static char         funcs[]                 = "_marpaWrapperAsf_and_nodes_to_cause_nidsp";
-  genericLogger_t          *genericLoggerp          = marpaWrapperAsfp->genericLoggerp;
-  marpaWrapperRecognizer_t *marpaWrapperRecognizerp = marpaWrapperAsfp->marpaWrapperRecognizerp;
-  marpaWrapperGrammar_t    *marpaWrapperGrammarp    = marpaWrapperRecognizerp->marpaWrapperGrammarp;
+  genericLogger_t          *genericLoggerp;
+  marpaWrapperRecognizer_t *marpaWrapperRecognizerp;
+  marpaWrapperGrammar_t    *marpaWrapperGrammarp;
+
+  if (marpaWrapperAsfp == NULL) {
+    errno = EINVAL;
+    return NULL;
+  }
+
+  genericLoggerp          = marpaWrapperAsfp->genericLoggerp;
+  marpaWrapperRecognizerp = marpaWrapperAsfp->marpaWrapperRecognizerp;
+  marpaWrapperGrammarp    = marpaWrapperRecognizerp->marpaWrapperGrammarp;
 
   MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "return %p", marpaWrapperGrammarp);
   return marpaWrapperGrammarp;
 }
 
 /****************************************************************************/
-short marpaWrapperAsf_rh_lengthb(marpaWrapperAsf_t *marpaWrapperAsfp, size_t *lengthlp)
+short marpaWrapperAsf_rh_lengthb(marpaWrapperAsfTraverser_t *traverserp, size_t *lengthlp)
 /****************************************************************************/
 {
-  const static char         funcs[]                 = "marpaWrapperAsf_rh_lengthb";
-  genericLogger_t          *genericLoggerp          = marpaWrapperAsfp->genericLoggerp;
+  const static char         funcs[] = "marpaWrapperAsf_rh_lengthb";
+  marpaWrapperAsf_t        *marpaWrapperAsfp;
+  genericLogger_t          *genericLoggerp;
   marpaWrapperAsfGlade_t   *gladep;
   int                       symchIxi;
   genericStack_t           *factoringsStackp;
@@ -2475,12 +2502,20 @@ short marpaWrapperAsf_rh_lengthb(marpaWrapperAsf_t *marpaWrapperAsfp, size_t *le
   int                       factoringIxi;
   genericStack_t           *factoringStackp;
 
-  gladep = marpaWrapperAsfp->traverse.gladep;
+  if (traverserp == NULL) {
+    errno = EINVAL;
+    return 0;
+  }
+
+  marpaWrapperAsfp = traverserp->marpaWrapperAsfp;
+  genericLoggerp = marpaWrapperAsfp->genericLoggerp;
+
+  gladep = traverserp->gladep;
   if (gladep == NULL) {
     MARPAWRAPPER_ERROR(genericLoggerp, "Current glade is NULL");
     goto err;
   }
-  symchIxi = marpaWrapperAsfp->traverse.symchIxi;
+  symchIxi = traverserp->symchIxi;
   if (! GENERICSTACK_IS_PTR(gladep->symchesStackp, symchIxi)) {
     MARPAWRAPPER_ERRORF(genericLoggerp, "No symch at indice %d of current glade", symchIxi);
     goto err;
@@ -2492,22 +2527,16 @@ short marpaWrapperAsf_rh_lengthb(marpaWrapperAsf_t *marpaWrapperAsfp, size_t *le
   }
   ruleIdi = GENERICSTACK_GET_INT(factoringsStackp, 0);
   if (ruleIdi < 0) {
-    MARPAWRAPPER_ERROR(genericLoggerp, "rh_length called for a token -- that is not allowed");
+    MARPAWRAPPER_ERRORF(genericLoggerp, "%s called for a token -- that is not allowed", funcs);
     goto err;
   }
-  factoringIxi = marpaWrapperAsfp->traverse.factoringIxi;
-  /*
-    factoringsStackp always start with an int, then a pointer, then an array of factoringStackp
-   */
-  factoringIxi += 2;
+  factoringIxi = traverserp->factoringIxi;
   if (! GENERICSTACK_IS_PTR(factoringsStackp, factoringIxi)) {
     MARPAWRAPPER_ERRORF(genericLoggerp, "Not an pointer at indice %d of factoringsStackp", factoringIxi);
     goto err;
   }
   factoringStackp = GENERICSTACK_GET_PTR(factoringsStackp, factoringIxi);
-  /*
-   * Then it is a list of of glade ids
-   */
+
   *lengthlp = GENERICSTACK_USED(factoringStackp);
   
   MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "return 1, lengthl = %d", (int) *lengthlp);
@@ -2516,4 +2545,185 @@ short marpaWrapperAsf_rh_lengthb(marpaWrapperAsf_t *marpaWrapperAsfp, size_t *le
  err:
   MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return 0");
   return 0;
+}
+
+/****************************************************************************/
+genericStack_t *marpaWrapperAsf_rh_valuesp(marpaWrapperAsfTraverser_t *traverserp)
+/****************************************************************************/
+{
+  const static char         funcs[] = "marpaWrapperAsf_rh_valuesp";
+  marpaWrapperAsf_t        *marpaWrapperAsfp;
+  genericLogger_t          *genericLoggerp;
+  size_t                    lengthl;
+  size_t                    i;
+  void                     *valuep;
+
+  if (traverserp == NULL) {
+    errno = EINVAL;
+    return NULL;
+  }
+
+  marpaWrapperAsfp = traverserp->marpaWrapperAsfp;
+  genericLoggerp = marpaWrapperAsfp->genericLoggerp;
+
+  GENERICSTACK_FREE(marpaWrapperAsfp->lastValuesStackp);
+  GENERICSTACK_INIT(marpaWrapperAsfp->lastValuesStackp);
+  if (GENERICSTACK_ERROR(marpaWrapperAsfp->lastValuesStackp)) {
+    MARPAWRAPPER_ERRORF(genericLoggerp, "lastValuesStackp initialization error, %s", strerror(errno));
+    goto err;
+  }
+
+  if (marpaWrapperAsf_rh_lengthb(traverserp, &lengthl) == 0) {
+    goto err;
+  }
+
+  for (i = 0; i < lengthl; i++) {
+    /* Note that we impose that a value is not NULL */
+    valuep = marpaWrapperAsf_rh_valuep(traverserp, i);
+    if (valuep == NULL) {
+      goto err;
+    }
+    GENERICSTACK_PUSH_PTR(marpaWrapperAsfp->lastValuesStackp, valuep);
+    if (GENERICSTACK_ERROR(marpaWrapperAsfp->lastValuesStackp)) {
+      MARPAWRAPPER_ERRORF(genericLoggerp, "lastValuesStackp push error, %s", strerror(errno));
+      goto err;
+    }
+  }
+
+  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "return %p", marpaWrapperAsfp->lastValuesStackp);
+  return marpaWrapperAsfp->lastValuesStackp;
+
+ err:
+  MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return NULL");
+  return NULL;
+}
+
+/****************************************************************************/
+void *marpaWrapperAsf_rh_valuep(marpaWrapperAsfTraverser_t *traverserp, size_t rhIxi)
+/****************************************************************************/
+{
+  const static char           funcs[]         = "marpaWrapperAsf_rh_valueb";
+  void                       *valuep          = NULL;
+  marpaWrapperAsfTraverser_t *childTraverserp = NULL;
+  marpaWrapperAsf_t          *marpaWrapperAsfp;
+  marpaWrapperAsfGlade_t     *gladep;
+  genericLogger_t            *genericLoggerp;
+  int                         symchIxi;
+  genericStack_t             *factoringsStackp;
+  int                         ruleIdi;
+  int                         factoringIxi;
+  genericStack_t             *factoringStackp;
+  size_t                      maxRhixl;
+  int                         maxRhixi;
+  marpaWrapperAsfGlade_t     *downGladep;
+  int                         downGladeIdi;
+
+  if (traverserp == NULL) {
+    errno = EINVAL;
+    return 0;
+  }
+
+  marpaWrapperAsfp = traverserp->marpaWrapperAsfp;
+  genericLoggerp = marpaWrapperAsfp->genericLoggerp;
+
+  gladep = traverserp->gladep;
+  if (gladep == NULL) {
+    MARPAWRAPPER_ERROR(genericLoggerp, "Current glade is NULL");
+    goto err;
+  }
+  symchIxi = traverserp->symchIxi;
+  if (! GENERICSTACK_IS_PTR(gladep->symchesStackp, symchIxi)) {
+    MARPAWRAPPER_ERRORF(genericLoggerp, "No symch at indice %d of current glade", symchIxi);
+    goto err;
+  }
+  factoringsStackp = GENERICSTACK_GET_PTR(gladep->symchesStackp, symchIxi);
+  if (! GENERICSTACK_IS_INT(factoringsStackp, 0)) {
+    MARPAWRAPPER_ERRORF(genericLoggerp, "Not an integer at indice 0 of factoringsStackp", 0);
+    goto err;
+  }
+  ruleIdi = GENERICSTACK_GET_INT(factoringsStackp, 0);
+  if (ruleIdi < 0) {
+    MARPAWRAPPER_ERRORF(genericLoggerp, "%s called for a token -- that is not allowed", funcs);
+    goto err;
+  }
+  factoringIxi = traverserp->factoringIxi;
+  if (! GENERICSTACK_IS_PTR(factoringsStackp, factoringIxi)) {
+    MARPAWRAPPER_ERRORF(genericLoggerp, "Not an pointer at indice %d of factoringsStackp", factoringIxi);
+    goto err;
+  }
+  factoringStackp = GENERICSTACK_GET_PTR(factoringsStackp, factoringIxi);
+
+  maxRhixl = GENERICSTACK_USED(factoringStackp);
+  /*
+   * Nullables have no RHS
+   */
+  if (maxRhixl <= 0) {
+    MARPAWRAPPER_TRACE(genericLoggerp, funcs, "Nullable case");
+    goto ok;
+  }
+  maxRhixi = (int) (maxRhixl - 1);
+  if (rhIxi > maxRhixi) {
+    MARPAWRAPPER_ERRORF(genericLoggerp, "rhIxi should be in range [0..%d]", maxRhixi);
+    goto err;
+  }
+  if (! GENERICSTACK_IS_INT(factoringStackp, rhIxi)) {
+    MARPAWRAPPER_ERROR(genericLoggerp, "Not an int in factoringStackp");
+    goto err;
+  }
+  downGladeIdi = GENERICSTACK_GET_INT(factoringStackp, rhIxi);
+  if (GENERICSTACK_IS_PTR(traverserp->valuep, downGladeIdi)) {
+    /* Already memoized */
+    MARPAWRAPPER_TRACE(genericLoggerp, funcs, "Memoized value");
+    valuep = GENERICSTACK_GET_PTR(traverserp->valuep, downGladeIdi);
+    goto ok;
+  }
+  downGladep = _marpaWrapperAsf_glade_obtainp(marpaWrapperAsfp, downGladeIdi);
+  if (downGladep == NULL) {
+    MARPAWRAPPER_ERRORF(genericLoggerp, "No glade found for glade ID %d", downGladeIdi);
+    goto err;
+  }
+  /*
+   * Do a shallow a clone
+   */
+  childTraverserp = malloc(sizeof(marpaWrapperAsfTraverser_t));
+  if (childTraverserp == NULL) {
+    MARPAWRAPPER_ERRORF(genericLoggerp, "malloc error, %s", strerror(errno));
+    goto err;
+  }
+  GENERICSTACK_NEW(childTraverserp->valuep);
+  if (GENERICSTACK_ERROR(childTraverserp->valuep)) {
+    MARPAWRAPPER_ERRORF(genericLoggerp, "childTraverserp->valuep initialization failure error, %s", strerror(errno));
+    goto err;   
+  }
+  childTraverserp->marpaWrapperAsfp = marpaWrapperAsfp;
+  childTraverserp->gladep           = downGladep;
+  childTraverserp->symchIxi         = 0;
+  childTraverserp->factoringIxi     = 0;
+  valuep = marpaWrapperAsfp->traverserCallbackp(childTraverserp, marpaWrapperAsfp->userDatavp);
+  GENERICSTACK_FREE(traverserp->valuep);
+  free(traverserp);
+  traverserp = NULL;
+
+  if (valuep == NULL) {
+    MARPAWRAPPER_ERROR(genericLoggerp, "The ASF traversing method returned undef -- that is not allowed");
+    goto err;   
+  }
+
+  GENERICSTACK_SET_PTR(traverserp->valuep, valuep, downGladeIdi);
+  if (GENERICSTACK_ERROR(traverserp->valuep)) {
+    MARPAWRAPPER_ERRORF(genericLoggerp, "Failure to set value in traverser", strerror(errno));
+    goto err;   
+  }
+
+ok:
+  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "return %p", valuep);
+  return valuep;
+
+ err:
+  if (childTraverserp != NULL) {
+    GENERICSTACK_FREE(childTraverserp->valuep);
+    free(childTraverserp);
+  }
+  MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return NULL");
+  return NULL;
 }
