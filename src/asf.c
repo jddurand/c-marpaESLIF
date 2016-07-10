@@ -2805,6 +2805,7 @@ genericStack_t *marpaWrapperAsf_rh_allChoicesStackp(marpaWrapperAsfTraverser_t *
     MARPAWRAPPER_ERRORF(genericLoggerp, "marpaWrapperAsfp->lastAllChoicesStackp push error, %s", strerror(errno));
     goto err;
   }
+  emptyStackp = NULL;
 
   for (rhIxl = 0; rhIxl < GENERICSTACK_USED(valuesStackp); rhIxl++) {
     GENERICSTACK_NEW(newResultsStackp);
@@ -2826,13 +2827,13 @@ genericStack_t *marpaWrapperAsf_rh_allChoicesStackp(marpaWrapperAsfTraverser_t *
       }
       childValuep = GENERICSTACK_GET_PTR(valuesStackp, rhIxl);
 
-      GENERICSTACK_INIT(tmpp);
-      if (GENERICSTACK_ERROR(tmpp)) {
-	MARPAWRAPPER_ERRORF(genericLoggerp, "tmpp initialization failure, %s", strerror(errno));
-	goto err;
-      }
       for (newValuel = 0; newValuel < GENERICSTACK_USED(childValuep); newValuel++) {
 	newValuep = GENERICSTACK_GET_PTR(childValuep, newValuel);
+	GENERICSTACK_INIT(tmpp);
+	if (GENERICSTACK_ERROR(tmpp)) {
+	  MARPAWRAPPER_ERRORF(genericLoggerp, "tmpp initialization failure, %s", strerror(errno));
+	  goto err;
+	}
 	for (tmpl = 0; tmpl < GENERICSTACK_USED(oldResultp); tmpl++) {
 	  GENERICSTACK_PUSH_PTR(tmpp, GENERICSTACK_GET_PTR(oldResultp, tmpl));
 	  if (GENERICSTACK_ERROR(tmpp)) {
@@ -2850,6 +2851,7 @@ genericStack_t *marpaWrapperAsf_rh_allChoicesStackp(marpaWrapperAsfTraverser_t *
 	  MARPAWRAPPER_ERRORF(genericLoggerp, "newResultsStackp push failure, %s", strerror(errno));
 	  goto err;
 	}
+	tmpp = NULL;
       }
     }
 
