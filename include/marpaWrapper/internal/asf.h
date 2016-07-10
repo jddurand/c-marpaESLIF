@@ -81,6 +81,7 @@ struct marpaWrapperAsf {
 
   /* To avoid user to free the list of traverse values */
   genericStack_t             *lastValuesStackp;
+  genericStack_t             *lastAllChoicesStackp;
 };
 
 struct marpaWrapperAsfTraverser {
