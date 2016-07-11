@@ -2983,7 +2983,7 @@ short marpaWrapperAsf_rh_ruleIdb(marpaWrapperAsfTraverser_t *traverserp, int *ru
   }
   ruleIdi = GENERICSTACK_GET_INT(factoringsStackp, 0);
   if (ruleIdi < 0) {
-    MARPAWRAPPER_ERRORF(genericLoggerp, "Negative rule id");
+    MARPAWRAPPER_ERROR(genericLoggerp, "Negative rule id");
     goto err;   
   }
   *ruleIdip = ruleIdi;
