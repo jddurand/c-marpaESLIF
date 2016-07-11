@@ -3092,3 +3092,34 @@ short marpaWrapperAsf_nextSymchb(marpaWrapperAsfTraverser_t *traverserp, int *sy
   MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return 0");
   return 0;
 }
+
+/****************************************************************************/
+short marpaWrapperAsf_nextb(marpaWrapperAsfTraverser_t *traverserp, int *idip)
+/****************************************************************************/
+{
+  const static char         funcs[]          = "marpaWrapperAsf_nextFactoringb";
+  marpaWrapperAsf_t        *marpaWrapperAsfp;
+  genericLogger_t          *genericLoggerp;
+
+  if (traverserp == NULL) {
+    errno = EINVAL;
+    return 0;
+  }
+
+  marpaWrapperAsfp = traverserp->marpaWrapperAsfp;
+  genericLoggerp = marpaWrapperAsfp->genericLoggerp;
+
+  if (marpaWrapperAsf_nextFactoringb(traverserp, idip) == 0) {
+    if (marpaWrapperAsf_nextSymchb(traverserp, idip) == 0) {
+      goto err;
+    }
+  }
+
+  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "return 1, *idip=%d", *idip);
+  return 1;
+
+ err:
+  MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return 0");
+  return 0;
+}
+

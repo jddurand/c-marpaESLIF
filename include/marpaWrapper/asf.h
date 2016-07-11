@@ -35,6 +35,7 @@ extern "C" {
   marpaWrapper_EXPORT short                  marpaWrapperAsf_rh_ruleIdb(marpaWrapperAsfTraverser_t *traverserp, int *ruleIdip);
   marpaWrapper_EXPORT short                  marpaWrapperAsf_nextFactoringb(marpaWrapperAsfTraverser_t *traverserp, int *factoringIxip);
   marpaWrapper_EXPORT short                  marpaWrapperAsf_nextSymchb(marpaWrapperAsfTraverser_t *traverserp, int *symchIxip);
+  marpaWrapper_EXPORT short                  marpaWrapperAsf_nextb(marpaWrapperAsfTraverser_t *traverserp, int *idip);
   marpaWrapper_EXPORT genericStack_t        *marpaWrapperAsf_rh_valuesStackp(marpaWrapperAsfTraverser_t *traverserp);
   marpaWrapper_EXPORT genericStack_t        *marpaWrapperAsf_rh_allChoicesStackp(marpaWrapperAsfTraverser_t *traverserp);
   marpaWrapper_EXPORT void                  *marpaWrapperAsf_rh_valuep(marpaWrapperAsfTraverser_t *traverserp, size_t rhIxi);
