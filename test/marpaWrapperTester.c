@@ -20,7 +20,7 @@ typedef struct valueContext {
 static char *symbolDescription(void *userDatavp, int symboli);
 static short valueRuleCallback(void *userDatavp, int rulei, int arg0i, int argni, int resulti);
 static short valueSymbolCallback(void *userDatavp, int symboli, int argi, int resulti);
-static short dumpStacks(valueContext_t *valueContextp);
+static void  dumpStacks(valueContext_t *valueContextp);
 
 typedef struct stackValueAndDescription {
   int i;
@@ -390,11 +390,11 @@ static short valueRuleCallback(void *userDatavp, int rulei, int arg0i, int argni
     goto err;
   }
 
-  if (GENERICSTACK_IS_PTR(outputStackp, resulti)) {
-    free(GENERICSTACK_GET_PTR(outputStackp, resulti));
+  if (GENERICSTACK_IS_PTR(outputStackp, (size_t) resulti)) {
+    free(GENERICSTACK_GET_PTR(outputStackp, (size_t) resulti));
     GENERICSTACK_SET_NA(outputStackp, resulti);
   }
-  GENERICSTACK_SET_PTR(outputStackp, resultp, resulti);
+  GENERICSTACK_SET_PTR(outputStackp, resultp, (size_t) resulti);
   if (GENERICSTACK_ERROR(outputStackp)) {
     GENERICLOGGER_ERRORF(genericLoggerp, "generic stack error, %s", strerror(errno));
     goto err;
@@ -438,12 +438,12 @@ static short valueSymbolCallback(void *userDatavp, int symboli, int argi, int re
       char varc = GENERICSTACK_GET_CHAR(inputStackp, argi);
       GENERICLOGGER_TRACEF(genericLoggerp, "[%s] op: operator '0x%x' at input stack No %d -> output stack No %d", funcs, varc, argi, resulti);
 
-      if (GENERICSTACK_IS_PTR(outputStackp, resulti)) {
-	free(GENERICSTACK_GET_PTR(outputStackp, resulti));
-	GENERICSTACK_SET_NA(outputStackp, resulti);
+      if (GENERICSTACK_IS_PTR(outputStackp, (size_t) resulti)) {
+	free(GENERICSTACK_GET_PTR(outputStackp, (size_t) resulti));
+	GENERICSTACK_SET_NA(outputStackp, (size_t) resulti);
       }
 
-      GENERICSTACK_SET_CHAR(outputStackp, varc, resulti);
+      GENERICSTACK_SET_CHAR(outputStackp, varc, (size_t) resulti);
       if (GENERICSTACK_ERROR(outputStackp)) {
 	GENERICLOGGER_ERRORF(genericLoggerp, "generic stack error, %s", strerror(errno));
       }
@@ -463,12 +463,12 @@ static short valueSymbolCallback(void *userDatavp, int symboli, int argi, int re
       sprintf(resultp->s, "%d", vari);
       GENERICLOGGER_TRACEF(genericLoggerp, "[%s] number: value %d at input stack No %d -> {s=%s,i=%d} at output stack No %d", funcs, vari, argi, resultp->s, resultp->i, resulti);
 
-      if (GENERICSTACK_IS_PTR(outputStackp, resulti)) {
-	free(GENERICSTACK_GET_PTR(outputStackp, resulti));
-	GENERICSTACK_SET_NA(outputStackp, resulti);
+      if (GENERICSTACK_IS_PTR(outputStackp, (size_t) resulti)) {
+	free(GENERICSTACK_GET_PTR(outputStackp, (size_t) resulti));
+	GENERICSTACK_SET_NA(outputStackp, (size_t) resulti);
       }
 
-      GENERICSTACK_SET_PTR(outputStackp, resultp, resulti);
+      GENERICSTACK_SET_PTR(outputStackp, resultp, (size_t) resulti);
       if (GENERICSTACK_ERROR(outputStackp)) {
 	GENERICLOGGER_ERRORF(genericLoggerp, "generic stack error, %s", strerror(errno));
       }
@@ -494,7 +494,7 @@ static short valueSymbolCallback(void *userDatavp, int symboli, int argi, int re
   return rcb;
 }
 
-static short dumpStacks(valueContext_t *valueContextp)
+static void dumpStacks(valueContext_t *valueContextp)
 {
   static const char           funcs[] = "dumpStacks";
   genericStack_t             *inputStackp     = valueContextp->inputStackp;
