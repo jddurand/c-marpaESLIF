@@ -2542,7 +2542,7 @@ short marpaWrapperAsf_rh_lengthb(marpaWrapperAsfTraverser_t *traverserp, size_t 
     goto err;
   }
   symchIxi = traverserp->symchIxi;
-  if (! GENERICSTACK_IS_PTR(gladep->symchesStackp, symchIxi)) {
+  if (! GENERICSTACK_IS_PTR(gladep->symchesStackp, (size_t) symchIxi)) {
     MARPAWRAPPER_ERRORF(genericLoggerp, "No symch at indice %d of current glade", symchIxi);
     goto err;
   }
@@ -2557,7 +2557,7 @@ short marpaWrapperAsf_rh_lengthb(marpaWrapperAsfTraverser_t *traverserp, size_t 
     goto err;
   }
   factoringIxi = traverserp->factoringIxi;
-  if (! GENERICSTACK_IS_PTR(factoringsStackp, factoringIxi)) {
+  if (! GENERICSTACK_IS_PTR(factoringsStackp, (size_t) factoringIxi)) {
     MARPAWRAPPER_ERRORF(genericLoggerp, "Not an pointer at indice %d of factoringsStackp", factoringIxi);
     goto err;
   }
@@ -2625,7 +2625,7 @@ genericStack_t *marpaWrapperAsf_rh_valuesStackp(marpaWrapperAsfTraverser_t *trav
 }
 
 /****************************************************************************/
-void *marpaWrapperAsf_rh_valuep(marpaWrapperAsfTraverser_t *traverserp, size_t rhIxi)
+void *marpaWrapperAsf_rh_valuep(marpaWrapperAsfTraverser_t *traverserp, size_t rhIxl)
 /****************************************************************************/
 {
   const static char           funcs[]         = "marpaWrapperAsf_rh_valueb";
@@ -2658,7 +2658,7 @@ void *marpaWrapperAsf_rh_valuep(marpaWrapperAsfTraverser_t *traverserp, size_t r
     goto err;
   }
   symchIxi = traverserp->symchIxi;
-  if (! GENERICSTACK_IS_PTR(gladep->symchesStackp, symchIxi)) {
+  if (! GENERICSTACK_IS_PTR(gladep->symchesStackp, (size_t) symchIxi)) {
     MARPAWRAPPER_ERRORF(genericLoggerp, "No symch at indice %d of current glade", symchIxi);
     goto err;
   }
@@ -2673,7 +2673,7 @@ void *marpaWrapperAsf_rh_valuep(marpaWrapperAsfTraverser_t *traverserp, size_t r
     goto err;
   }
   factoringIxi = traverserp->factoringIxi;
-  if (! GENERICSTACK_IS_PTR(factoringsStackp, factoringIxi)) {
+  if (! GENERICSTACK_IS_PTR(factoringsStackp, (size_t) factoringIxi)) {
     MARPAWRAPPER_ERRORF(genericLoggerp, "Not an pointer at indice %d of factoringsStackp", factoringIxi);
     goto err;
   }
@@ -2688,16 +2688,16 @@ void *marpaWrapperAsf_rh_valuep(marpaWrapperAsfTraverser_t *traverserp, size_t r
     goto ok;
   }
   maxRhixi = (int) (maxRhixl - 1);
-  if (rhIxi > maxRhixi) {
-    MARPAWRAPPER_ERRORF(genericLoggerp, "rhIxi should be in range [0..%d]", maxRhixi);
+  if (rhIxl > (size_t) maxRhixi) {
+    MARPAWRAPPER_ERRORF(genericLoggerp, "rhIxl should be in range [0..%d]", maxRhixi);
     goto err;
   }
-  if (! GENERICSTACK_IS_INT(factoringStackp, rhIxi)) {
+  if (! GENERICSTACK_IS_INT(factoringStackp, rhIxl)) {
     MARPAWRAPPER_ERROR(genericLoggerp, "Not an int in factoringStackp");
     goto err;
   }
-  downGladeIdi = GENERICSTACK_GET_INT(factoringStackp, rhIxi);
-  if (GENERICSTACK_IS_PTR(traverserp->valuep, downGladeIdi)) {
+  downGladeIdi = GENERICSTACK_GET_INT(factoringStackp, rhIxl);
+  if (GENERICSTACK_IS_PTR(traverserp->valuep, (size_t) downGladeIdi)) {
     /* Already memoized */
     MARPAWRAPPER_TRACE(genericLoggerp, funcs, "Memoized value");
     valuep = GENERICSTACK_GET_PTR(traverserp->valuep, downGladeIdi);
