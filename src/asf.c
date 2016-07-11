@@ -113,7 +113,7 @@ static inline marpaWrapperAsfGlade_t    *_marpaWrapperAsf_glade_obtainp(marpaWra
 static inline short                      _marpaWrapperAsf_first_factoringb(marpaWrapperAsf_t *marpaWrapperAsfp, int nidOfChoicePointi, short *firstFactoringbp);
 static inline short                      _marpaWrapperAsf_factoring_finishb(marpaWrapperAsf_t *marpaWrapperAsfp, int nidOfChoicePointi, short *factoringFinishbp);
 static inline short                      _marpaWrapperAsf_factoring_iterateb(marpaWrapperAsf_t *marpaWrapperAsfp, short *factoringIteratebp);
-static inline short _marpaWrapperAsf_next_factoringb(marpaWrapperAsf_t *marpaWrapperAsfp, int nidOfChoicePointi, short *factoringbp);
+static inline short                      _marpaWrapperAsf_next_factoringb(marpaWrapperAsf_t *marpaWrapperAsfp, int nidOfChoicePointi, short *factoringbp);
 
 /* Specific to glade */
 static inline short                      _marpaWrapperAsf_glade_id_factorsb(marpaWrapperAsf_t *marpaWrapperAsfp, genericStack_t **stackpp);
@@ -3037,6 +3037,55 @@ short marpaWrapperAsf_nextFactoringb(marpaWrapperAsfTraverser_t *traverserp, int
   *factoringIxip = traverserp->factoringIxi = ++factoringIxi;
 
   MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "return 1, *factoringIxip=%d", *factoringIxip);
+  return 1;
+
+ err:
+  MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return 0");
+  return 0;
+}
+
+/****************************************************************************/
+short marpaWrapperAsf_nextSymchb(marpaWrapperAsfTraverser_t *traverserp, int *symchIxip)
+/****************************************************************************/
+{
+  const static char         funcs[]          = "marpaWrapperAsf_nextFactoringb";
+  marpaWrapperAsf_t        *marpaWrapperAsfp;
+  genericLogger_t          *genericLoggerp;
+  marpaWrapperAsfGlade_t   *gladep;
+  int                       gladeIdi;
+  int                       symchIxi;
+  int                       lastSymchi;
+  size_t                    countl;
+
+  if (traverserp == NULL) {
+    errno = EINVAL;
+    return 0;
+  }
+
+  marpaWrapperAsfp = traverserp->marpaWrapperAsfp;
+  genericLoggerp = marpaWrapperAsfp->genericLoggerp;
+
+  gladep = traverserp->gladep;
+  if (gladep == NULL) {
+    MARPAWRAPPER_ERROR(genericLoggerp, "Current glade is NULL");
+    goto err;
+  }
+  gladeIdi = gladep->idi;
+  symchIxi = traverserp->symchIxi;
+
+  if (_marpaWrapperAsf_glade_symch_countb(marpaWrapperAsfp, gladeIdi, &countl) == 0) {
+    goto err;
+  }
+  lastSymchi = ((int) countl) - 1;
+
+  if (symchIxi >= lastSymchi) {
+    MARPAWRAPPER_ERRORF(genericLoggerp, "Current symchIxi %d is >= last symch indice %d", symchIxi, lastSymchi);
+    goto err;
+  }
+  *symchIxip = traverserp->symchIxi = ++symchIxi;
+  traverserp->factoringIxi = 0;
+
+  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "return 1, *symchIxip=%d", *symchIxip);
   return 1;
 
  err:
