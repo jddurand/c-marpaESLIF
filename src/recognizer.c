@@ -580,3 +580,24 @@ void marpaWrapperRecognizer_freev(marpaWrapperRecognizer_t *marpaWrapperRecogniz
     }
   }
 }
+
+/****************************************************************************/
+marpaWrapperGrammar_t *marpaWrapperRecognizer_grammarp(marpaWrapperRecognizer_t *marpaWrapperRecognizerp)
+/****************************************************************************/
+{
+  const static char         funcs[]                 = "marpaWrapperRecognizer_grammarp";
+  genericLogger_t          *genericLoggerp;
+  marpaWrapperGrammar_t    *marpaWrapperGrammarp;
+
+  if (marpaWrapperRecognizerp == NULL) {
+    errno = EINVAL;
+    return NULL;
+  }
+
+  genericLoggerp       = marpaWrapperRecognizerp->marpaWrapperRecognizerOption.genericLoggerp;
+  marpaWrapperGrammarp = marpaWrapperRecognizerp->marpaWrapperGrammarp;
+
+  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "return %p", marpaWrapperGrammarp);
+  return marpaWrapperGrammarp;
+}
+
