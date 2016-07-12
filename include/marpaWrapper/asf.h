@@ -28,19 +28,21 @@ typedef void *(*traverserCallback_t)(marpaWrapperAsfTraverser_t *traverserp, voi
 #ifdef __cplusplus
 extern "C" {
 #endif
-  marpaWrapper_EXPORT marpaWrapperAsf_t     *marpaWrapperAsf_newp(marpaWrapperRecognizer_t *marpaWrapperRecognizerp, marpaWrapperAsfOption_t *marpaWrapperAsfOptionp);
-  marpaWrapper_EXPORT void                  *marpaWrapperAsf_traversep(marpaWrapperAsf_t *marpaWrapperAsfp, traverserCallback_t traverserCallbackp, void *userDatavp);
-  marpaWrapper_EXPORT short                  marpaWrapperAsf_rh_lengthb(marpaWrapperAsfTraverser_t *traverserp, size_t *lengthlp);
-  marpaWrapper_EXPORT short                  marpaWrapperAsf_rh_symbolIdb(marpaWrapperAsfTraverser_t *traverserp, int *symbolIdip);
-  marpaWrapper_EXPORT short                  marpaWrapperAsf_rh_ruleIdb(marpaWrapperAsfTraverser_t *traverserp, int *ruleIdip);
-  marpaWrapper_EXPORT short                  marpaWrapperAsf_nextFactoringb(marpaWrapperAsfTraverser_t *traverserp, int *factoringIxip);
-  marpaWrapper_EXPORT short                  marpaWrapperAsf_nextSymchb(marpaWrapperAsfTraverser_t *traverserp, int *symchIxip);
-  marpaWrapper_EXPORT short                  marpaWrapperAsf_nextb(marpaWrapperAsfTraverser_t *traverserp, int *idip);
-  marpaWrapper_EXPORT genericStack_t        *marpaWrapperAsf_rh_valuesStackp(marpaWrapperAsfTraverser_t *traverserp);
-  marpaWrapper_EXPORT genericStack_t        *marpaWrapperAsf_rh_allChoicesStackp(marpaWrapperAsfTraverser_t *traverserp);
-  marpaWrapper_EXPORT void                  *marpaWrapperAsf_rh_valuep(marpaWrapperAsfTraverser_t *traverserp, size_t rhIxi);
-  marpaWrapper_EXPORT marpaWrapperGrammar_t *marpaWrapperAsf_grammarp(marpaWrapperAsf_t *marpaWrapperAsfp);
-  marpaWrapper_EXPORT void                   marpaWrapperAsf_freev(marpaWrapperAsf_t *marpaWrapperAsfp);
+  marpaWrapper_EXPORT marpaWrapperAsf_t        *marpaWrapperAsf_newp(marpaWrapperRecognizer_t *marpaWrapperRecognizerp, marpaWrapperAsfOption_t *marpaWrapperAsfOptionp);
+  marpaWrapper_EXPORT void                     *marpaWrapperAsf_traversep(marpaWrapperAsf_t *marpaWrapperAsfp, traverserCallback_t traverserCallbackp, void *userDatavp);
+  marpaWrapper_EXPORT short                     marpaWrapperAsf_traverse_rh_lengthb(marpaWrapperAsfTraverser_t *traverserp, size_t *lengthlp);
+  marpaWrapper_EXPORT short                     marpaWrapperAsf_traverse_rh_symbolIdb(marpaWrapperAsfTraverser_t *traverserp, int *symbolIdip);
+  marpaWrapper_EXPORT short                     marpaWrapperAsf_traverse_rh_ruleIdb(marpaWrapperAsfTraverser_t *traverserp, int *ruleIdip);
+  marpaWrapper_EXPORT short                     marpaWrapperAsf_traverse_nextFactoringb(marpaWrapperAsfTraverser_t *traverserp, int *factoringIxip);
+  marpaWrapper_EXPORT short                     marpaWrapperAsf_traverse_nextSymchb(marpaWrapperAsfTraverser_t *traverserp, int *symchIxip);
+  marpaWrapper_EXPORT short                     marpaWrapperAsf_traverse_nextb(marpaWrapperAsfTraverser_t *traverserp, int *idip);
+  marpaWrapper_EXPORT genericStack_t           *marpaWrapperAsf_traverse_rh_valuesStackp(marpaWrapperAsfTraverser_t *traverserp);
+  marpaWrapper_EXPORT genericStack_t           *marpaWrapperAsf_traverse_rh_allChoicesStackp(marpaWrapperAsfTraverser_t *traverserp);
+  marpaWrapper_EXPORT void                     *marpaWrapperAsf_traverse_rh_valuep(marpaWrapperAsfTraverser_t *traverserp, size_t rhIxi);
+  marpaWrapper_EXPORT void                     *marpaWrapperAsf_traverse_rh_valuep(marpaWrapperAsfTraverser_t *traverserp, size_t rhIxi);
+  marpaWrapper_EXPORT marpaWrapperAsf_t        *marpaWrapperAsf_traverse_asfp(marpaWrapperAsfTraverser_t *traverserp);
+  marpaWrapper_EXPORT marpaWrapperRecognizer_t *marpaWrapperAsf_recognizerp(marpaWrapperAsf_t *marpaWrapperAsfp);
+  marpaWrapper_EXPORT void                      marpaWrapperAsf_freev(marpaWrapperAsf_t *marpaWrapperAsfp);
 #ifdef __cplusplus
 }
 #endif
