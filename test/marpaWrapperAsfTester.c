@@ -307,6 +307,11 @@ int main(int argc, char **argv) {
 static void *traverserCallback(marpaWrapperAsfTraverser_t *traverserp, void *userDatavp)
 /********************************************************************************/
 {
+  char funcs[] = "traverserCallback";
+  traverseContext_t *traverseContextp = (traverseContext_t *) userDatavp;
+  genericLogger_t *genericLoggerp = traverseContextp->genericLoggerp;
+
+  GENERICLOGGER_TRACEF(genericLoggerp, "[%s] return NULL", funcs);
   return NULL;
 }
 
