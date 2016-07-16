@@ -46,11 +46,13 @@ int main(int argc, char **argv) {
 								  0 /* warningIsIgnoredb */,
 								  0 /* autorankb */
   };
-  marpaWrapperRecognizerOption_t marpaWrapperRecognizerOption = { GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_TRACE) };
+  marpaWrapperRecognizerOption_t marpaWrapperRecognizerOption = { GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_TRACE),
+								  0 /* disableThresholdb */
+  };
   marpaWrapperValueOption_t      marpaWrapperValueOption      = { GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_TRACE),
 								  1 /* highRankOnlyb */,
 								  1 /* orderByRankb */,
-								  1 /* ambiguousb - We KNOW in this test is is ambiguous */,
+								  1 /* ambiguousb - We KNOW this test is ambiguous */,
 								  0 /* nullb */
   };
 

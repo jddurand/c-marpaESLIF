@@ -300,16 +300,6 @@ marpaWrapperAsf_t *marpaWrapperAsf_newp(marpaWrapperRecognizer_t *marpaWrapperRe
     goto err;
   }
 
-  if (genericLoggerp != NULL) {
-    MARPAWRAPPER_TRACE(genericLoggerp, funcs, "Cloning genericLogger");
-
-    marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp = GENERICLOGGER_CLONE(genericLoggerp);
-    if (marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp == NULL) {
-      MARPAWRAPPER_ERRORF(genericLoggerp, "Failed to clone genericLogger: %s", strerror(errno));
-      goto err;
-    }
-  }
-
   /* Say we are in forest mode */
   MARPAWRAPPER_TRACE(genericLoggerp, funcs, "Flagging tree mode to FOREST");
   marpaWrapperRecognizerp->treeModeb = MARPAWRAPPERRECOGNIZERTREEMODE_FOREST;
@@ -585,16 +575,19 @@ static inline void _marpaWrapperAsf_orNodeStackp_freev(marpaWrapperAsf_t *marpaW
   size_t                   i;
   marpaWrapperAsfOrNode_t *orNodep;
 
-  orNodeUsedl = GENERICSTACK_USED(marpaWrapperAsfp->orNodeStackp);
-  for (i = 0; i < orNodeUsedl; i++) {
-    if (GENERICSTACK_IS_PTR(marpaWrapperAsfp->orNodeStackp, i)) {
-      orNodep = GENERICSTACK_GET_PTR(marpaWrapperAsfp->orNodeStackp, i);
-      if (orNodep->andNodep != NULL) {
-	free(orNodep->andNodep);
+  if (marpaWrapperAsfp->orNodeStackp != NULL) {
+    orNodeUsedl = GENERICSTACK_USED(marpaWrapperAsfp->orNodeStackp);
+    for (i = 0; i < orNodeUsedl; i++) {
+      if (GENERICSTACK_IS_PTR(marpaWrapperAsfp->orNodeStackp, i)) {
+	orNodep = GENERICSTACK_GET_PTR(marpaWrapperAsfp->orNodeStackp, i);
+	if (orNodep->andNodep != NULL) {
+	  free(orNodep->andNodep);
+	}
+	free(orNodep);
       }
     }
+    GENERICSTACK_FREE(marpaWrapperAsfp->orNodeStackp);
   }
-  GENERICSTACK_FREE(marpaWrapperAsfp->orNodeStackp);
 }
 
 /****************************************************************************/
@@ -607,17 +600,19 @@ static inline void _marpaWrapperAsf_gladeStackp_freev(marpaWrapperAsf_t *marpaWr
   size_t                   i;
   marpaWrapperAsfGlade_t  *gladep;
 
-  gladeUsedl = GENERICSTACK_USED(marpaWrapperAsfp->gladeStackp);
-  for (i = 0; i < gladeUsedl; i++) {
-    if (GENERICSTACK_IS_PTR(marpaWrapperAsfp->gladeStackp, i)) {
-      gladep = GENERICSTACK_GET_PTR(marpaWrapperAsfp->gladeStackp, i);
-      if (gladep->symchesStackp != NULL) {
-	_marpaWrapperAsf_symchesStackp_freev(marpaWrapperAsfp, gladep->symchesStackp);
+  if (marpaWrapperAsfp->gladeStackp != NULL) {
+    gladeUsedl = GENERICSTACK_USED(marpaWrapperAsfp->gladeStackp);
+    for (i = 0; i < gladeUsedl; i++) {
+      if (GENERICSTACK_IS_PTR(marpaWrapperAsfp->gladeStackp, i)) {
+	gladep = GENERICSTACK_GET_PTR(marpaWrapperAsfp->gladeStackp, i);
+	if (gladep->symchesStackp != NULL) {
+	  _marpaWrapperAsf_symchesStackp_freev(marpaWrapperAsfp, gladep->symchesStackp);
+	}
+	free(gladep);
       }
-      free(gladep);
     }
+    GENERICSTACK_FREE(marpaWrapperAsfp->gladeStackp);
   }
-  GENERICSTACK_FREE(marpaWrapperAsfp->gladeStackp);
 }
 
 /****************************************************************************/
@@ -1179,18 +1174,20 @@ static inline void _marpaWrapperAsf_idset_freev(marpaWrapperAsf_t *marpaWrapperA
   size_t                   i;
   marpaWrapperAsfIdset_t  *idsetp;
 
-  idsetUsedl = GENERICSTACK_USED((*stackpp));
-  /* Every idset may have an array inside */
-  for (i = 0; i < idsetUsedl; i++) {
-    if (GENERICSTACK_IS_PTR((*stackpp), i)) {
-      idsetp = GENERICSTACK_GET_PTR((*stackpp), i);
-      if (idsetp->idip != NULL) {
-	free(idsetp->idip);
+  if (*stackpp != NULL) {
+    idsetUsedl = GENERICSTACK_USED((*stackpp));
+    /* Every idset may have an array inside */
+    for (i = 0; i < idsetUsedl; i++) {
+      if (GENERICSTACK_IS_PTR((*stackpp), i)) {
+	idsetp = GENERICSTACK_GET_PTR((*stackpp), i);
+	if (idsetp->idip != NULL) {
+	  free(idsetp->idip);
+	}
+	free(idsetp);
       }
-      free(idsetp);
     }
+    GENERICSTACK_FREE((*stackpp));
   }
-  GENERICSTACK_FREE((*stackpp));
 }
 
 /****************************************************************************/

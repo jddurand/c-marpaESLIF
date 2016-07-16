@@ -79,11 +79,11 @@ IF (NOT GENERICHASH_FOUND)
 ENDIF ()
 
 # -----------------------------------
-# genericStack: required for test
+# genericStack: required
 # -----------------------------------
 FIND_PACKAGE (genericStack)
 IF (NOT GENERICSTACK_FOUND)
-    MESSAGE (STATUS "genericStack must be detected for tests")
+    MESSAGE (STATUS "genericStack must be detected")
 ENDIF ()
 
 # --------------------------------------
@@ -179,20 +179,28 @@ IF (GENERICSTACK_FOUND)
   # -----
   ENABLE_TESTING()
 
-  ADD_EXECUTABLE        (marpaWrapperTester EXCLUDE_FROM_ALL test/marpaWrapperTester.c)
   #
   # Painful but putting the binaries produced with dynamic linking in the same directory as the
   # dynamic libraries is the only way to make sure the OS will always see the dynamic library
   # at runtime, REGARDLESS of the OS (we are thinking to Windows and Visual Studio for instance).
   # and since we must do that for the dynamic test, we do it as well for any runtime thingy, just for coherency.
   #
-  SET_TARGET_PROPERTIES (marpaWrapperTester       PROPERTIES LINKER_LANGUAGE C RUNTIME_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH})
-  TARGET_LINK_LIBRARIES (marpaWrapperTester       marpaWrapper)
+  ADD_EXECUTABLE        (marpaWrapperTester EXCLUDE_FROM_ALL test/marpaWrapperTester.c)
+  SET_TARGET_PROPERTIES (marpaWrapperTester PROPERTIES LINKER_LANGUAGE C RUNTIME_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH})
+  TARGET_LINK_LIBRARIES (marpaWrapperTester marpaWrapper)
 
   ADD_TEST              (NAME marpaWrapperTest
     COMMAND marpaWrapperTester
     WORKING_DIRECTORY ${LIBRARY_OUTPUT_PATH})
-  ADD_CUSTOM_TARGET     (check COMMAND ${CMAKE_CTEST_COMMAND} DEPENDS marpaWrapperTester)
+
+  ADD_EXECUTABLE        (marpaWrapperAsfTester EXCLUDE_FROM_ALL test/marpaWrapperAsfTester.c)
+  SET_TARGET_PROPERTIES (marpaWrapperAsfTester PROPERTIES LINKER_LANGUAGE C RUNTIME_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH})
+  TARGET_LINK_LIBRARIES (marpaWrapperAsfTester marpaWrapper)
+  ADD_TEST              (NAME marpaWrapperAsfTest
+    COMMAND marpaWrapperAsfTester
+    WORKING_DIRECTORY ${LIBRARY_OUTPUT_PATH})
+
+  ADD_CUSTOM_TARGET     (check COMMAND ${CMAKE_CTEST_COMMAND} DEPENDS marpaWrapperTester marpaWrapperAsfTester)
 ENDIF (GENERICSTACK_FOUND)
 
 # -------
