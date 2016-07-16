@@ -89,7 +89,11 @@ typedef struct genericHash {
 	||								\
 	(GENERICSTACKITEMTYPE(hashName->stackp, _subStackIndex) != GENERICSTACKITEMTYPE_PTR)) { \
       genericStack_t *_subStackp;					\
-      GENERICSTACK_NEW_SIZED(_subStackp, hashName->wantedSubSize);	\
+      if  (hashName->wantedSubSize > 0) {				\
+	GENERICSTACK_NEW_SIZED(_subStackp, hashName->wantedSubSize);	\
+      } else {								\
+	GENERICSTACK_NEW(_subStackp);					\
+      }									\
       if (GENERICSTACK_ERROR(_subStackp)) {				\
 	hashName->error = 1;						\
       } else {								\
