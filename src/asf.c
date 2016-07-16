@@ -701,11 +701,11 @@ static inline short _marpaWrapperAsf_factoringStackp_resetb(marpaWrapperAsf_t *m
     goto err;
   }
 
-  MARPAWRAPPER_ERROR(genericLoggerp, "return 1");
+  MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return 1");
   return 1;
 
  err:
-  MARPAWRAPPER_ERROR(genericLoggerp, "return 0");
+  MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return 0");
   return 0;
 }
 
@@ -1312,7 +1312,7 @@ static inline marpaWrapperAsfNook_t *_marpaWrapperAsf_nook_newp(marpaWrapperAsf_
   nookp->predecessorIsExpandedb = 0;
 
   MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "return %p", nookp);
-  return NULL;
+  return nookp;
 
  err:
   MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return NULL");
@@ -1978,7 +1978,7 @@ static inline short _marpaWrapperAsf_first_factoringb(marpaWrapperAsf_t *marpaWr
  done:
 
   MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "return 1, *firstFactoringbp=%d", (int) *firstFactoringbp);
-  return 0;
+  return 1;
 
  err:
   MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return 0");
@@ -3114,7 +3114,7 @@ marpaWrapperAsf_t *marpaWrapperAsf_traverse_asfp(marpaWrapperAsfTraverser_t *tra
   marpaWrapperAsfp = traverserp->marpaWrapperAsfp;
   genericLoggerp = marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp;
 
-  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "return 1, marpaWrapperAsfp=%p", marpaWrapperAsfp);
+  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "return %p", marpaWrapperAsfp);
   return marpaWrapperAsfp;
 
  err:
