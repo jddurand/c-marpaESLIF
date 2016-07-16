@@ -53,7 +53,6 @@ typedef struct marpaWrapperAsfSourceData {
 } marpaWrapperAsfSourceData_t;
 
 struct marpaWrapperAsf {
-  genericLogger_t             *genericLoggerp;
   marpaWrapperRecognizer_t    *marpaWrapperRecognizerp;
   marpaWrapperAsfOption_t      marpaWrapperAsfOption;
   Marpa_Bocage                 marpaBocagep;
