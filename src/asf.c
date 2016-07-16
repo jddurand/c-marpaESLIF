@@ -1033,7 +1033,7 @@ static inline marpaWrapperAsfIdset_t *_marpaWrapperAsf_idset_obtainb(marpaWrappe
 	MARPAWRAPPER_ERRORF(genericLoggerp, "malloc failure: %s", strerror(errno));
 	goto err;
       }
-      memcpy(idsetp->idip, idip, countl);
+      memcpy(idsetp->idip, idip, countl * sizeof(int));
       qsort(idsetp->idip, countl, sizeof(int), _marpaWrapperAsf_idCmpi);
       GENERICSTACK_SET_PTR((*stackpp), idsetp, intsetIdi);
       if (GENERICSTACK_ERROR((*stackpp))) {
@@ -1084,8 +1084,8 @@ static inline short _marpaWrapperAsf_idset_idi_by_ixib(marpaWrapperAsf_t *marpaW
   }
 
   *idip = idsetp->idip[ixi];
-  
-  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "%s: return 1, *idip=%d", marpaWrapperAsfIdsets[idsete], idsetp->idip[ixi]);
+
+  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "%s: return 1, *idip=%d", marpaWrapperAsfIdsets[idsete], *idip);
   return 1;
 
  err:
