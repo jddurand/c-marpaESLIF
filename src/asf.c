@@ -549,7 +549,7 @@ static inline void _marpaWrapperAsf_lastAllChoices_freev(marpaWrapperAsf_t *marp
 /****************************************************************************/
 {
   const static char        funcs[]        = "_marpaWrapperAsf_lastAllChoices_freev";
-  genericLogger_t         *genericLoggerp = marpaWrapperAsfp->genericLoggerp;
+  genericLogger_t         *genericLoggerp = marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp;
   size_t                   i;
   genericStack_t          *stackp;
 
@@ -570,7 +570,7 @@ static inline void _marpaWrapperAsf_orNodeStackp_freev(marpaWrapperAsf_t *marpaW
 /****************************************************************************/
 {
   const static char        funcs[]        = "_marpaWrapperAsf_orNodeStackp_freev";
-  genericLogger_t         *genericLoggerp = marpaWrapperAsfp->genericLoggerp;
+  genericLogger_t         *genericLoggerp = marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp;
   size_t                   orNodeUsedl;
   size_t                   i;
   marpaWrapperAsfOrNode_t *orNodep;
@@ -595,7 +595,7 @@ static inline void _marpaWrapperAsf_gladeStackp_freev(marpaWrapperAsf_t *marpaWr
 /****************************************************************************/
 {
   const static char        funcs[]        = "_marpaWrapperAsf_gladeStackp_freev";
-  genericLogger_t         *genericLoggerp = marpaWrapperAsfp->genericLoggerp;
+  genericLogger_t         *genericLoggerp = marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp;
   size_t                   gladeUsedl;
   size_t                   i;
   marpaWrapperAsfGlade_t  *gladep;
@@ -620,7 +620,7 @@ static inline void _marpaWrapperAsf_symchesStackp_freev(marpaWrapperAsf_t *marpa
 /****************************************************************************/
 {
   const static char        funcs[]        = "_marpaWrapperAsf_symchesStackp_freev";
-  genericLogger_t         *genericLoggerp = marpaWrapperAsfp->genericLoggerp;
+  genericLogger_t         *genericLoggerp = marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp;
   size_t                   symchesUsedl;
   size_t                   i;
   genericStack_t          *factoringsStackp;
@@ -642,7 +642,7 @@ static inline void _marpaWrapperAsf_factoringStackp_freev(marpaWrapperAsf_t *mar
 /****************************************************************************/
 {
   const static char        funcs[]        = "_marpaWrapperAsf_factoringStackp_freev";
-  genericLogger_t         *genericLoggerp = marpaWrapperAsfp->genericLoggerp;
+  genericLogger_t         *genericLoggerp = marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp;
   size_t                   factoringUsedl;
   size_t                   i;
   marpaWrapperAsfNook_t   *nookp;
@@ -668,7 +668,7 @@ static inline void _marpaWrapperAsf_factoringsStackp_freev(marpaWrapperAsf_t *ma
 /****************************************************************************/
 {
   const static char        funcs[]        = "_marpaWrapperAsf_factoringsStackp_freev";
-  genericLogger_t         *genericLoggerp = marpaWrapperAsfp->genericLoggerp;
+  genericLogger_t         *genericLoggerp = marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp;
   size_t                   factoringsUsedl;
   size_t                   i;
   genericStack_t          *localStackp;
@@ -692,7 +692,7 @@ static inline short _marpaWrapperAsf_factoringStackp_resetb(marpaWrapperAsf_t *m
 /****************************************************************************/
 {
   const static char            funcs[]        = "_marpaWrapperAsf_factoringStackp_resetb";
-  genericLogger_t             *genericLoggerp = marpaWrapperAsfp->genericLoggerp;
+  genericLogger_t             *genericLoggerp = marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp;
 
   _marpaWrapperAsf_factoringStackp_freev(marpaWrapperAsfp);
   GENERICSTACK_NEW(marpaWrapperAsfp->factoringStackp);
@@ -714,7 +714,7 @@ static inline short _marpaWrapperAsf_peakb(marpaWrapperAsf_t *marpaWrapperAsfp, 
 /****************************************************************************/
 {
   const static char        funcs[]        = "_marpaWrapperAsf_peakb";
-  genericLogger_t         *genericLoggerp = marpaWrapperAsfp->genericLoggerp;
+  genericLogger_t         *genericLoggerp = marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp;
   marpaWrapperAsfGlade_t  *gladep         = NULL;
   int                      augmentOrNodeIdi;
   int                      augmentAndNodeIdi;
@@ -799,7 +799,7 @@ static inline short _marpaWrapperAsf_intsetIdb(marpaWrapperAsf_t *marpaWrapperAs
 /****************************************************************************/
 {
   const static char        funcs[] = "_marpaWrapperAsf_intsetIdb";
-  genericLogger_t         *genericLoggerp = marpaWrapperAsfp->genericLoggerp;
+  genericLogger_t         *genericLoggerp = marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp;
   const static char       *staticKeys = "";
   char                    *keys = NULL;
   char                    *keyNexts;
@@ -840,7 +840,7 @@ static inline short _marpaWrapperAsf_intsetIdb(marpaWrapperAsf_t *marpaWrapperAs
   }
   if (! findResultb) {
     intsetIdi = marpaWrapperAsfp->nextIntseti++;
-    GENERICHASH_SET_BY_IND(marpaWrapperAsfp->intsetHashp, marpaWrapperAsfp, INT, keys, intsetIdi);
+    GENERICHASH_SET_BY_IND(marpaWrapperAsfp->intsetHashp, marpaWrapperAsfp, INT, intsetIdi, keys);
     if (GENERICHASH_ERROR(marpaWrapperAsfp->intsetHashp)) {
       MARPAWRAPPER_ERRORF(genericLoggerp, "intset hash set failure: %s", strerror(errno));
       goto err;
@@ -1004,7 +1004,7 @@ static inline marpaWrapperAsfIdset_t *_marpaWrapperAsf_idset_obtainb(marpaWrappe
 /****************************************************************************/
 {
   const static char        funcs[] = "_marpaWrapperAsf_idset_obtainb";
-  genericLogger_t         *genericLoggerp = marpaWrapperAsfp->genericLoggerp;
+  genericLogger_t         *genericLoggerp = marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp;
   genericStack_t         **stackpp = (idsete == MARPAWRAPPERASFIDSET_NIDSET) ? &(marpaWrapperAsfp->nidsetStackp) : &(marpaWrapperAsfp->powersetStackp);
   char                    *idsets  = marpaWrapperAsfIdsets[idsete];
   marpaWrapperAsfIdset_t  *idsetp   = NULL;
@@ -1065,7 +1065,7 @@ static inline int *_marpaWrapperAsf_idset_idip(marpaWrapperAsf_t *marpaWrapperAs
 /****************************************************************************/
 {
   const static char        funcs[]        = "_marpaWrapperAsf_idset_idipb";
-  genericLogger_t         *genericLoggerp = marpaWrapperAsfp->genericLoggerp;
+  genericLogger_t         *genericLoggerp = marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp;
 
   MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "%s: return %p", marpaWrapperAsfIdsets[idsete], idsetp->idip);
   return idsetp->idip;
@@ -1076,7 +1076,7 @@ static inline short _marpaWrapperAsf_idset_idi_by_ixib(marpaWrapperAsf_t *marpaW
 /****************************************************************************/
 {
   const static char        funcs[]        = "_marpaWrapperAsf_idset_idi_by_ixib";
-  genericLogger_t         *genericLoggerp = marpaWrapperAsfp->genericLoggerp;
+  genericLogger_t         *genericLoggerp = marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp;
 
   if ((size_t) ixi >= idsetp->countl) {
     MARPAWRAPPER_ERRORF(genericLoggerp, "%s: indice %d out of range [0..%d[", marpaWrapperAsfIdsets[idsete], ixi, (int) idsetp->countl);
@@ -1099,7 +1099,7 @@ static inline size_t _marpaWrapperAsf_idset_countl(marpaWrapperAsf_t *marpaWrapp
 /****************************************************************************/
 {
   const static char        funcs[]        = "_marpaWrapperAsf_idset_countl";
-  genericLogger_t         *genericLoggerp = marpaWrapperAsfp->genericLoggerp;
+  genericLogger_t         *genericLoggerp = marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp;
 
   MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "%s: return %d", marpaWrapperAsfIdsets[idsete], (int) idsetp->countl);
   return idsetp->countl;
@@ -1110,7 +1110,7 @@ static inline int _marpaWrapperAsf_idset_idi(marpaWrapperAsf_t *marpaWrapperAsfp
 /****************************************************************************/
 {
   const static char        funcs[]        = "_marpaWrapperAsf_idset_idi";
-  genericLogger_t         *genericLoggerp = marpaWrapperAsfp->genericLoggerp;
+  genericLogger_t         *genericLoggerp = marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp;
 
   MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "%s: return %d", marpaWrapperAsfIdsets[idsete], (int) idsetp->idi);
   return idsetp->idi;
@@ -1121,7 +1121,7 @@ static inline char *_marpaWrapperAsf_idset_showb(marpaWrapperAsf_t *marpaWrapper
 /****************************************************************************/
 {
   const static char        funcs[]        = "_marpaWrapperAsf_idset_showb";
-  genericLogger_t         *genericLoggerp = marpaWrapperAsfp->genericLoggerp;
+  genericLogger_t         *genericLoggerp = marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp;
   char                    *idsets         = marpaWrapperAsfIdsets[idsete];
   char                    *Idsets         = marpaWrapperAsfIdsetUpfirsts[idsete];
   int                      idi            = _marpaWrapperAsf_idset_idi(marpaWrapperAsfp, idsete, idsetp);
@@ -1167,7 +1167,7 @@ static inline void _marpaWrapperAsf_idset_freev(marpaWrapperAsf_t *marpaWrapperA
 /****************************************************************************/
 {
   const static char        funcs[]        = "_marpaWrapperAsf_idset_freeb";
-  genericLogger_t         *genericLoggerp = marpaWrapperAsfp->genericLoggerp;
+  genericLogger_t         *genericLoggerp = marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp;
   genericStack_t         **stackpp        = (idsete == MARPAWRAPPERASFIDSET_NIDSET) ? &(marpaWrapperAsfp->nidsetStackp) : &(marpaWrapperAsfp->powersetStackp);
   char                    *idsets         = marpaWrapperAsfIdsets[idsete];
   size_t                   idsetUsedl;
@@ -1293,7 +1293,7 @@ static inline marpaWrapperAsfNook_t *_marpaWrapperAsf_nook_newp(marpaWrapperAsf_
 /****************************************************************************/
 {
   const static char        funcs[]        = "_marpaWrapperAsf_nook_newp";
-  genericLogger_t         *genericLoggerp = marpaWrapperAsfp->genericLoggerp;
+  genericLogger_t         *genericLoggerp = marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp;
   marpaWrapperAsfNook_t   *nookp;
 
   nookp = malloc(sizeof(marpaWrapperAsfNook_t));
@@ -1324,7 +1324,7 @@ static inline short _marpaWrapperAsf_nook_has_semantic_causeb(marpaWrapperAsf_t 
 /****************************************************************************/
 {
   const static char        funcs[]                  = "_marpaWrapperAsf_nook_has_semantic_causeb";
-  genericLogger_t         *genericLoggerp           = marpaWrapperAsfp->genericLoggerp;
+  genericLogger_t         *genericLoggerp           = marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp;
   int                       orNodeIdi               = nookp->orNodeIdi;
   marpaWrapperRecognizer_t *marpaWrapperRecognizerp = marpaWrapperAsfp->marpaWrapperRecognizerp;
   marpaWrapperGrammar_t    *marpaWrapperGrammarp    = marpaWrapperRecognizerp->marpaWrapperGrammarp;
@@ -1356,7 +1356,7 @@ static inline short _marpaWrapperAsf_setLastChoiceb(marpaWrapperAsf_t *marpaWrap
 /****************************************************************************/
 {
   const static char        funcs[]            = "_marpaWrapperAsf_setLastChoiceb";
-  genericLogger_t         *genericLoggerp     = marpaWrapperAsfp->genericLoggerp;
+  genericLogger_t         *genericLoggerp     = marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp;
   int                      orNodeIdi          = nookp->orNodeIdi;
   int                      choicei            = nookp->firstChoicei;
   short                    rcb                = 1;
@@ -1419,7 +1419,7 @@ static inline short _marpaWrapperAsf_nook_incrementb(marpaWrapperAsf_t *marpaWra
 /****************************************************************************/
 {
   const static char        funcs[]            = "_marpaWrapperAsf_setLastChoiceb";
-  genericLogger_t         *genericLoggerp     = marpaWrapperAsfp->genericLoggerp;
+  genericLogger_t         *genericLoggerp     = marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp;
   int                     *choiceip;
   short                    rcb;
 
@@ -1436,7 +1436,7 @@ static inline short _marpaWrapperAsf_symch_factoring_countb(marpaWrapperAsf_t *m
 /****************************************************************************/
 {
   const static char        funcs[]            = "_marpaWrapperAsf_symch_factoring_countb";
-  genericLogger_t         *genericLoggerp     = marpaWrapperAsfp->genericLoggerp;
+  genericLogger_t         *genericLoggerp     = marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp;
   marpaWrapperAsfGlade_t  *gladep;
   genericStack_t          *symchesStackp;
   genericStack_t          *factoringsStackp;
@@ -1471,7 +1471,7 @@ static inline int _marpaWrapperAsf_nidset_sort_ixi(marpaWrapperAsf_t *marpaWrapp
 /****************************************************************************/
 {
   const static char        funcs[]            = "_marpaWrapperAsf_nidset_sort_ixi";
-  genericLogger_t         *genericLoggerp     = marpaWrapperAsfp->genericLoggerp;
+  genericLogger_t         *genericLoggerp     = marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp;
   marpaWrapperRecognizer_t *marpaWrapperRecognizerp = marpaWrapperAsfp->marpaWrapperRecognizerp;
   marpaWrapperGrammar_t    *marpaWrapperGrammarp    = marpaWrapperRecognizerp->marpaWrapperGrammarp;
   Marpa_Grammar             marpaGrammarp           = marpaWrapperGrammarp->marpaGrammarp;
@@ -1523,7 +1523,7 @@ static inline int _marpaWrapperAsf_nid_rule_idi(marpaWrapperAsf_t *marpaWrapperA
 /****************************************************************************/
 {
   const static char         funcs[]                 = "_marpaWrapperAsf_powerset_nidsetp";
-  genericLogger_t          *genericLoggerp          = marpaWrapperAsfp->genericLoggerp;
+  genericLogger_t          *genericLoggerp          = marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp;
   int                       idi                     = -1;
 
   if (nidi >= 0) {
@@ -1544,7 +1544,7 @@ static inline marpaWrapperAsfNidset_t *_marpaWrapperAsf_powerset_nidsetp(marpaWr
 /****************************************************************************/
 {
   const static char        funcs[]            = "_marpaWrapperAsf_powerset_nidsetp";
-  genericLogger_t         *genericLoggerp     = marpaWrapperAsfp->genericLoggerp;
+  genericLogger_t         *genericLoggerp     = marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp;
   marpaWrapperAsfNidset_t *nidsetp            = NULL;
   size_t                   countl;
   int                      idi;
@@ -1572,7 +1572,7 @@ static inline marpaWrapperAsfGlade_t *_marpaWrapperAsf_glade_obtainp(marpaWrappe
 /****************************************************************************/
 {
   const static char            funcs[]                = "_marpaWrapperAsf_glade_obtainp";
-  genericLogger_t             *genericLoggerp         = marpaWrapperAsfp->genericLoggerp;
+  genericLogger_t             *genericLoggerp         = marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp;
   marpaWrapperAsfSourceData_t *sourceDatap            = NULL;
   size_t                       nidWithCurrentSortIxil = 0;
   int                         *nidWithCurrentSortIxip = NULL;
@@ -1915,7 +1915,7 @@ static inline short _marpaWrapperAsf_first_factoringb(marpaWrapperAsf_t *marpaWr
 /****************************************************************************/
 {
   const static char            funcs[]                = "_marpaWrapperAsf_first_factoringb";
-  genericLogger_t             *genericLoggerp         = marpaWrapperAsfp->genericLoggerp;
+  genericLogger_t             *genericLoggerp         = marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp;
   marpaWrapperAsfOrNode_t     *orNodep;
   marpaWrapperAsfNook_t       *nookp;
 
@@ -1990,7 +1990,7 @@ static inline short _marpaWrapperAsf_factoring_finishb(marpaWrapperAsf_t *marpaW
 /****************************************************************************/
 {
   const static char         funcs[]                 = "_marpaWrapperAsf_factoring_finishb";
-  genericLogger_t          *genericLoggerp          = marpaWrapperAsfp->genericLoggerp;
+  genericLogger_t          *genericLoggerp          = marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp;
   marpaWrapperRecognizer_t *marpaWrapperRecognizerp = marpaWrapperAsfp->marpaWrapperRecognizerp;
   marpaWrapperGrammar_t    *marpaWrapperGrammarp    = marpaWrapperRecognizerp->marpaWrapperGrammarp;
   Marpa_Grammar             marpaGrammarp           = marpaWrapperGrammarp->marpaGrammarp;
@@ -2124,7 +2124,7 @@ static inline short _marpaWrapperAsf_factoring_iterateb(marpaWrapperAsf_t *marpa
 /****************************************************************************/
 {
   const static char         funcs[]                 = "_marpaWrapperAsf_factoring_iterateb";
-  genericLogger_t          *genericLoggerp          = marpaWrapperAsfp->genericLoggerp;
+  genericLogger_t          *genericLoggerp          = marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp;
   marpaWrapperAsfNook_t    *topNookp;
   marpaWrapperAsfNook_t    *parentNookp;
   int                       stackIxOfParentNooki;
@@ -2187,7 +2187,7 @@ static inline short _marpaWrapperAsf_glade_id_factorsb(marpaWrapperAsf_t *marpaW
 /****************************************************************************/
 {
   const static char         funcs[]                 = "_marpaWrapperAsf_glade_id_factorsb";
-  genericLogger_t          *genericLoggerp          = marpaWrapperAsfp->genericLoggerp;
+  genericLogger_t          *genericLoggerp          = marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp;
   genericStack_t           *stackp                  = NULL;
   marpaWrapperRecognizer_t *marpaWrapperRecognizerp = marpaWrapperAsfp->marpaWrapperRecognizerp;
   marpaWrapperGrammar_t    *marpaWrapperGrammarp    = marpaWrapperRecognizerp->marpaWrapperGrammarp;
@@ -2328,7 +2328,7 @@ static inline short _marpaWrapperAsf_and_nodes_to_cause_nidsp(marpaWrapperAsf_t 
 /****************************************************************************/
 {
   const static char         funcs[]                 = "_marpaWrapperAsf_and_nodes_to_cause_nidsp";
-  genericLogger_t          *genericLoggerp          = marpaWrapperAsfp->genericLoggerp;
+  genericLogger_t          *genericLoggerp          = marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp;
   marpaWrapperRecognizer_t *marpaWrapperRecognizerp = marpaWrapperAsfp->marpaWrapperRecognizerp;
   marpaWrapperGrammar_t    *marpaWrapperGrammarp    = marpaWrapperRecognizerp->marpaWrapperGrammarp;
   Marpa_Grammar             marpaGrammarp           = marpaWrapperGrammarp->marpaGrammarp;
@@ -2395,7 +2395,7 @@ static inline short _marpaWrapperAsf_next_factoringb(marpaWrapperAsf_t *marpaWra
 /****************************************************************************/
 {
   const static char         funcs[]                 = "_marpaWrapperAsf_next_factoringb";
-  genericLogger_t          *genericLoggerp          = marpaWrapperAsfp->genericLoggerp;
+  genericLogger_t          *genericLoggerp          = marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp;
   short                     factoringb              = 0;
 
   if (marpaWrapperAsfp->factoringStackp == NULL) {
@@ -2437,7 +2437,7 @@ static inline short _marpaWrapperAsf_glade_is_visitedb(marpaWrapperAsf_t *marpaW
 /****************************************************************************/
 {
   const static char        funcs[]        = "_marpaWrapperAsf_glade_is_visitedb";
-  genericLogger_t         *genericLoggerp = marpaWrapperAsfp->genericLoggerp;
+  genericLogger_t         *genericLoggerp = marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp;
   short                    rcb            = 0;
   marpaWrapperAsfGlade_t  *gladep;
 
@@ -2455,7 +2455,7 @@ static inline void _marpaWrapperAsf_glade_visited_clearb(marpaWrapperAsf_t *marp
 /****************************************************************************/
 {
   const static char        funcs[]        = "_marpaWrapperAsf_glade_visited_clearb";
-  genericLogger_t         *genericLoggerp = marpaWrapperAsfp->genericLoggerp;
+  genericLogger_t         *genericLoggerp = marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp;
   size_t                   i;
   marpaWrapperAsfGlade_t  *gladep;
 
@@ -2479,7 +2479,7 @@ static inline short _marpaWrapperAsf_glade_symch_countb(marpaWrapperAsf_t *marpa
 /****************************************************************************/
 {
   const static char        funcs[]        = "_marpaWrapperAsf_glade_symch_countb";
-  genericLogger_t         *genericLoggerp = marpaWrapperAsfp->genericLoggerp;
+  genericLogger_t         *genericLoggerp = marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp;
   short                    rcb            = 0;
   marpaWrapperAsfGlade_t  *gladep;
 
@@ -2504,7 +2504,7 @@ static inline short _marpaWrapperAsf_glade_symbol_idb(marpaWrapperAsf_t *marpaWr
 /****************************************************************************/
 {
   const static char        funcs[]        = "_marpaWrapperAsf_glade_symbol_idb";
-  genericLogger_t         *genericLoggerp = marpaWrapperAsfp->genericLoggerp;
+  genericLogger_t         *genericLoggerp = marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp;
   short                    rcb            = 0;
   int                      nid0;
   marpaWrapperAsfNidset_t *nidsetp;
@@ -2547,7 +2547,7 @@ short marpaWrapperAsf_traverse_rh_lengthb(marpaWrapperAsfTraverser_t *traverserp
   }
 
   marpaWrapperAsfp = traverserp->marpaWrapperAsfp;
-  genericLoggerp = marpaWrapperAsfp->genericLoggerp;
+  genericLoggerp = marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp;
 
   gladep = traverserp->gladep;
   if (gladep == NULL) {
@@ -2603,7 +2603,7 @@ genericStack_t *marpaWrapperAsf_traverse_rh_valuesStackp(marpaWrapperAsfTraverse
   }
 
   marpaWrapperAsfp = traverserp->marpaWrapperAsfp;
-  genericLoggerp = marpaWrapperAsfp->genericLoggerp;
+  genericLoggerp = marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp;
 
   GENERICSTACK_FREE(marpaWrapperAsfp->lastValuesStackp);
   GENERICSTACK_INIT(marpaWrapperAsfp->lastValuesStackp);
@@ -2663,7 +2663,7 @@ void *marpaWrapperAsf_traverse_rh_valuep(marpaWrapperAsfTraverser_t *traverserp,
   }
 
   marpaWrapperAsfp = traverserp->marpaWrapperAsfp;
-  genericLoggerp = marpaWrapperAsfp->genericLoggerp;
+  genericLoggerp = marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp;
 
   gladep = traverserp->gladep;
   if (gladep == NULL) {
@@ -2792,7 +2792,7 @@ genericStack_t *marpaWrapperAsf_traverse_rh_allChoicesStackp(marpaWrapperAsfTrav
   }
 
   marpaWrapperAsfp = traverserp->marpaWrapperAsfp;
-  genericLoggerp = marpaWrapperAsfp->genericLoggerp;
+  genericLoggerp = marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp;
 
   valuesStackp = marpaWrapperAsf_traverse_rh_valuesStackp(traverserp);
   if (valuesStackp == NULL) {
@@ -2900,7 +2900,7 @@ short marpaWrapperAsf_traverse_rh_symbolIdb(marpaWrapperAsfTraverser_t *traverse
   }
 
   marpaWrapperAsfp = traverserp->marpaWrapperAsfp;
-  genericLoggerp = marpaWrapperAsfp->genericLoggerp;
+  genericLoggerp = marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp;
 
   gladep = traverserp->gladep;
   if (gladep == NULL) {
@@ -2939,7 +2939,7 @@ short marpaWrapperAsf_traverse_rh_ruleIdb(marpaWrapperAsfTraverser_t *traverserp
   }
 
   marpaWrapperAsfp = traverserp->marpaWrapperAsfp;
-  genericLoggerp = marpaWrapperAsfp->genericLoggerp;
+  genericLoggerp = marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp;
 
   gladep = traverserp->gladep;
   if (gladep == NULL) {
@@ -2990,7 +2990,7 @@ short marpaWrapperAsf_traverse_nextFactoringb(marpaWrapperAsfTraverser_t *traver
   }
 
   marpaWrapperAsfp = traverserp->marpaWrapperAsfp;
-  genericLoggerp = marpaWrapperAsfp->genericLoggerp;
+  genericLoggerp = marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp;
 
   gladep = traverserp->gladep;
   if (gladep == NULL) {
@@ -3038,7 +3038,7 @@ short marpaWrapperAsf_traverse_nextSymchb(marpaWrapperAsfTraverser_t *traverserp
   }
 
   marpaWrapperAsfp = traverserp->marpaWrapperAsfp;
-  genericLoggerp = marpaWrapperAsfp->genericLoggerp;
+  genericLoggerp = marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp;
 
   gladep = traverserp->gladep;
   if (gladep == NULL) {
@@ -3082,7 +3082,7 @@ short marpaWrapperAsf_traverse_nextb(marpaWrapperAsfTraverser_t *traverserp, int
   }
 
   marpaWrapperAsfp = traverserp->marpaWrapperAsfp;
-  genericLoggerp = marpaWrapperAsfp->genericLoggerp;
+  genericLoggerp = marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp;
 
   if (marpaWrapperAsf_traverse_nextFactoringb(traverserp, idip) == 0) {
     if (marpaWrapperAsf_traverse_nextSymchb(traverserp, idip) == 0) {
@@ -3112,7 +3112,7 @@ marpaWrapperAsf_t *marpaWrapperAsf_traverse_asfp(marpaWrapperAsfTraverser_t *tra
   }
 
   marpaWrapperAsfp = traverserp->marpaWrapperAsfp;
-  genericLoggerp = marpaWrapperAsfp->genericLoggerp;
+  genericLoggerp = marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp;
 
   MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "return 1, marpaWrapperAsfp=%p", marpaWrapperAsfp);
   return marpaWrapperAsfp;
@@ -3136,7 +3136,7 @@ marpaWrapperRecognizer_t *marpaWrapperAsf_recognizerp(marpaWrapperAsf_t *marpaWr
     return NULL;
   }
 
-  genericLoggerp          = marpaWrapperAsfp->genericLoggerp;
+  genericLoggerp          = marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp;
   marpaWrapperRecognizerp = marpaWrapperAsfp->marpaWrapperRecognizerp;
   marpaWrapperGrammarp    = marpaWrapperRecognizerp->marpaWrapperGrammarp;
 

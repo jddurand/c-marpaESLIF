@@ -5,6 +5,8 @@
 #include "genericLogger.h"
 #include "genericStack.h"
 
+static void *traverserCallback(marpaWrapperAsfTraverser_t *traverserp, void *userDatavp);
+
 enum { S = 0, NP, VP, period, NN, NNS, DT, CC, VBZ, MAX_SYMBOL };
 enum { S_RULE = 0,
        NP_RULE01,
@@ -20,7 +22,6 @@ enum { S_RULE = 0,
        MAX_RULE };
 
 typedef struct traverseContext {
-  marpaWrapperRecognizer_t *marpaWrapperRecognizerp;
   marpaWrapperAsf_t        *marpaWrapperAsfp;
   int                      *symbolip;
   int                      *ruleip;
@@ -39,7 +40,8 @@ int main(int argc, char **argv) {
   int                           *symbolArrayp = NULL;
   size_t                         i;
   size_t                         outputStackSizel;
-  traverseContext_t              traverseContext = { NULL, NULL, symbolip, ruleip, NULL, NULL, GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_TRACE) };
+  void                          *valuep;
+  traverseContext_t              traverseContext = { NULL, symbolip, ruleip, NULL, NULL, GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_TRACE) };
   
   marpaWrapperGrammarOption_t    marpaWrapperGrammarOption    = { GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_TRACE),
 								  0 /* warningIsErrorb */,
@@ -138,7 +140,6 @@ int main(int argc, char **argv) {
   }
 
   if (rci == 0) {
-    traverseContext.marpaWrapperRecognizerp = marpaWrapperRecognizerp;
     /* We use the stack indices directly into Marpa, and Marpa does not like indice 0 which means "unvalued". */
     /* Nevertheless, during the value phase, indice 0 will be used                                            */
     GENERICSTACK_PUSH_PTR(traverseContext.inputStackp, NULL);
@@ -273,6 +274,12 @@ int main(int argc, char **argv) {
     }
   }
 
+  /* -------------------------- */
+  /* Do the parse tree traverse */
+  /* -------------------------- */
+  traverseContext.marpaWrapperAsfp = marpaWrapperAsfp;
+  valuep = marpaWrapperAsf_traversep(marpaWrapperAsfp, traverserCallback, &traverseContext);
+ 
   if (marpaWrapperAsfp != NULL) {
     marpaWrapperAsf_freev(marpaWrapperAsfp);
   }
@@ -295,3 +302,11 @@ int main(int argc, char **argv) {
   
   return rci;
 }
+
+/********************************************************************************/
+static void *traverserCallback(marpaWrapperAsfTraverser_t *traverserp, void *userDatavp)
+/********************************************************************************/
+{
+  return NULL;
+}
+
