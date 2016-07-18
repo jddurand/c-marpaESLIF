@@ -245,18 +245,18 @@ typedef struct genericHash {
 /* ====================================================================== */
 /* Find and eventually remove in the hash                                 */
 /* ====================================================================== */
-#define _GENERICHASH_FIND_REMOVE(hashName, userDatavp, keyType, _keyVal, valType, valValp, findResult, remove) do { \
+#define _GENERICHASH_FIND_REMOVE(hashName, userDatavp, keyType, keyVal, valType, valValp, findResult, remove) do { \
 									\
     if (hashName->keyIndFunctionp == NULL) {				\
       errno = EINVAL;							\
       hashName->error = 1;						\
     } else {								\
-      size_t _subStackIndex = hashName->keyIndFunctionp((void *) userDatavp, GENERICSTACKITEMTYPE_##keyType, (void **) &_keyVal); \
-      _GENERICHASH_FIND_REMOVE_BY_IND(hashName, userDatavp, keyType, _keyVal, valType, valValp, findResult, _subStackIndex, remove); \
+      size_t _subStackIndex = hashName->keyIndFunctionp((void *) userDatavp, GENERICSTACKITEMTYPE_##keyType, (void **) &keyVal); \
+      _GENERICHASH_FIND_REMOVE_BY_IND(hashName, userDatavp, keyType, keyVal, valType, valValp, findResult, _subStackIndex, remove); \
     }									\
   } while (0)
 
-#define _GENERICHASH_FIND_REMOVE_BY_IND(hashName, userDatavp, keyType, _keyVal, valType, valValp, findResult, _subStackIndex, remove) do { \
+#define _GENERICHASH_FIND_REMOVE_BY_IND(hashName, userDatavp, keyType, keyVal, valType, valValp, findResult, _subStackIndex, remove) do { \
 									\
     if (_subStackIndex == (size_t) -1) {				\
       errno = EINVAL;							\
@@ -285,11 +285,11 @@ typedef struct genericHash {
 									\
 	    _gotKeyVal = GENERICSTACK_GET_##keyType(_subKeyStackp, _i); \
             if ((GENERICSTACKITEMTYPE_##keyType == GENERICSTACKITEMTYPE_PTR) && (hashName->keyCmpFunctionp != NULL)) { \
-              if (! hashName->keyCmpFunctionp((void *) userDatavp, (void *) _keyVal, (void *) _gotKeyVal)) { \
+              if (! hashName->keyCmpFunctionp((void *) userDatavp, (void *) keyVal, (void *) _gotKeyVal)) { \
 		continue;						\
 	      }								\
 	    } else {							\
-	      if (_keyVal != _gotKeyVal) {				\
+	      if (keyVal != _gotKeyVal) {				\
 		continue;						\
 	      }								\
 	    }								\
@@ -300,7 +300,7 @@ typedef struct genericHash {
             }                                                           \
             if (remove) {                                               \
               if ((GENERICSTACKITEMTYPE_##keyType == GENERICSTACKITEMTYPE_PTR) && ((void *) _gotKeyVal != NULL) && (hashName->keyFreeFunctionp != NULL)) { \
-                hashName->keyFreeFunctionp((void *) userDatavp, _gotKeyVal); \
+                hashName->keyFreeFunctionp((void *) userDatavp, (void *) _gotKeyVal); \
               }								\
               GENERICSTACK_SET_NA(_subKeyStackp, _i);			\
               GENERICSTACK_SWITCH(_subKeyStackp, _i, -1);		\
@@ -350,13 +350,13 @@ typedef struct genericHash {
             for (_j = 0; _j < _subStackused; _j++) {			\
               if ((GENERICSTACKITEMTYPE(_subKeyStackp, _j) == GENERICSTACKITEMTYPE_PTR) && (hashName->keyFreeFunctionp != NULL)) { \
                 GENERICSTACKITEMTYPE2TYPE_PTR _keyValp = GENERICSTACK_GET_PTR(_subKeyStackp, _j); \
-                if (! GENERICSTACK_ERROR(_subKeyStackp)) {              \
+                if (! GENERICSTACK_ERROR(_subKeyStackp) && (_keyValp != NULL)) { \
                   hashName->keyFreeFunctionp(userDatavp, _keyValp);     \
                 }                                                       \
               }                                                         \
               if ((GENERICSTACKITEMTYPE(_subValStackp, _j) == GENERICSTACKITEMTYPE_PTR) && (hashName->valFreeFunctionp != NULL)) { \
                 GENERICSTACKITEMTYPE2TYPE_PTR _valValp = GENERICSTACK_GET_PTR(_subValStackp, _j); \
-                if (! GENERICSTACK_ERROR(_subValStackp)) {              \
+                if (! GENERICSTACK_ERROR(_subValStackp) && (_valValp != NULL)) { \
                   hashName->valFreeFunctionp(userDatavp, _valValp);     \
                 }                                                       \
               }                                                         \
