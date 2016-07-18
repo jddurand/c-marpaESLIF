@@ -94,18 +94,22 @@ typedef struct genericHash {
 #define _GENERICHASH_COPY(hashName, userDatavp, keyType, keyVal, keyValCopy, valType, valVal, valValCopy) do { \
 									\
     if ((GENERICSTACKITEMTYPE_##keyType == GENERICSTACKITEMTYPE_PTR) && (hashName->keyCopyFunctionp != NULL)) { \
-      keyValCopy = hashName->keyCopyFunctionp((void *) userDatavp, (void *) &keyVal); \
-      if ((keyVal != NULL) && (keyValCopy == NULL)) {                   \
+      void *_p = hashName->keyCopyFunctionp((void *) userDatavp, (void *) &keyVal); \
+      if (((void *) keyVal != NULL) && (_p == NULL)) {                  \
 	hashName->error = 1;						\
-      }									\
+      } else {                                                          \
+        keyValCopy = (GENERICSTACKITEMTYPE2TYPE_##keyType) _p;          \
+      }                                                                 \
     } else {								\
       keyValCopy = keyVal;						\
     }									\
     if ((GENERICSTACKITEMTYPE_##valType == GENERICSTACKITEMTYPE_PTR) && (hashName->valCopyFunctionp != NULL)) { \
-      valValCopy = hashName->valCopyFunctionp((void *) userDatavp, (void *) &valVal); \
-      if ((valVal != NULL) && (valValCopy == NULL)) {                   \
+      void *_p = hashName->valCopyFunctionp((void *) userDatavp, (void *) &valVal); \
+      if (((void *) valVal != NULL) && (_p == NULL)) {                  \
 	hashName->error = 1;						\
-      }									\
+      } else {                                                          \
+        valValCopy = (GENERICSTACKITEMTYPE2TYPE_##valType) _p;          \
+      }                                                                 \
     } else {								\
       valValCopy = valVal;						\
     }									\
@@ -114,15 +118,15 @@ typedef struct genericHash {
 /* ====================================================================== */
 /* Push internal variables in the hash                                    */
 /* ====================================================================== */
-#define _GENERICHASH_PUSH(hashName, userDatavp, keyType, keyVal, valType, valVal) do { \
+#define _GENERICHASH_PUSH(hashName, userDatavp, keyType, keyVal, valType, valVal, subKeyStackp, subValStackp) do { \
     GENERICSTACKITEMTYPE2TYPE_##keyType _keyValCopy;			\
     GENERICSTACKITEMTYPE2TYPE_##valType _valValCopy;			\
 									\
     _GENERICHASH_COPY(hashName, userDatavp, keyType, keyVal, _keyValCopy, valType, valVal, _valValCopy); \
     if (hashName->error == 0) {						\
-      GENERICSTACK_PUSH_##keyType(_subKeyStackp, _keyValCopy);		\
-      GENERICSTACK_PUSH_##valType(_subValStackp, _valValCopy);		\
-      if (GENERICSTACK_ERROR(_subKeyStackp) || GENERICSTACK_ERROR(_subValStackp)) { \
+      GENERICSTACK_PUSH_##keyType(subKeyStackp, _keyValCopy);		\
+      GENERICSTACK_PUSH_##valType(subValStackp, _valValCopy);		\
+      if (GENERICSTACK_ERROR(subKeyStackp) || GENERICSTACK_ERROR(subValStackp)) { \
 	hashName->error = 1;						\
       }									\
     }									\
@@ -131,15 +135,15 @@ typedef struct genericHash {
 /* ====================================================================== */
 /* Set internal variables in the hash                                     */
 /* ====================================================================== */
-#define _GENERICHASH_SET(hashName, userDatavp, keyType, keyVal, valType, valVal, index) do { \
+#define _GENERICHASH_SET(hashName, userDatavp, keyType, keyVal, valType, valVal, subKeyStackp, subValStackp, index) do { \
     GENERICSTACKITEMTYPE2TYPE_##keyType _keyValCopy;			\
     GENERICSTACKITEMTYPE2TYPE_##valType _valValCopy;			\
 									\
     _GENERICHASH_COPY(hashName, userDatavp, keyType, keyVal, _keyValCopy, valType, valVal, _valValCopy); \
     if (hashName->error == 0) {						\
-      GENERICSTACK_SET_##keyType(_subKeyStackp, _keyValCopy, index);	\
-      GENERICSTACK_SET_##valType(_subValStackp, _valValCopy, index);	\
-      if (GENERICSTACK_ERROR(_subKeyStackp) || GENERICSTACK_ERROR(_subValStackp)) { \
+      GENERICSTACK_SET_##keyType(subKeyStackp, _keyValCopy, index);	\
+      GENERICSTACK_SET_##valType(subValStackp, _valValCopy, index);	\
+      if (GENERICSTACK_ERROR(subKeyStackp) || GENERICSTACK_ERROR(subValStackp)) { \
 	hashName->error = 1;						\
       }									\
     }									\
@@ -187,7 +191,7 @@ typedef struct genericHash {
 	    GENERICSTACK_SET_NA(hashName->valStackp, subStackIndex);	\
 	    hashName->error = 1;					\
 	  } else {							\
-	    _GENERICHASH_PUSH(hashName, userDatavp, keyType, _keyVal, valType, _valVal); \
+	    _GENERICHASH_PUSH(hashName, userDatavp, keyType, _keyVal, valType, _valVal, _subKeyStackp, _subValStackp); \
 	  }								\
 	}								\
       } else {								\
@@ -227,11 +231,11 @@ typedef struct genericHash {
 	      }								\
 	    }								\
 		    							\
-	    _GENERICHASH_SET(hashName, userDatavp, keyType, _keyVal, valType, _valVal, _i); \
+	    _GENERICHASH_SET(hashName, userDatavp, keyType, _keyVal, valType, _valVal, _subKeyStackp, _subValStackp, _i); \
 	    break;							\
 	  }								\
 	  if (_i >= _subStackused) {					\
-	    _GENERICHASH_PUSH(hashName, userDatavp, keyType, _keyVal, valType, _valVal); \
+	    _GENERICHASH_PUSH(hashName, userDatavp, keyType, _keyVal, valType, _valVal, _subKeyStackp, _subValStackp); \
 	  }								\
 	}								\
       }									\
