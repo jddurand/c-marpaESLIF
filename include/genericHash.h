@@ -163,7 +163,7 @@ typedef struct genericHash {
     GENERICSTACKITEMTYPE2TYPE_##keyType _keyVal = (GENERICSTACKITEMTYPE2TYPE_##keyType) (keyVal); \
     hashName->error = 0;						\
 									\
-    if (subStackIndex == (size_t) -1) {					\
+    if (subStackIndex < 0 ) {                                           \
       errno = EINVAL;							\
       hashName->error = 1;						\
     } else {								\
