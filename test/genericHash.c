@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include "genericHash.h"
 #include <genericLogger.h>
 
@@ -5,10 +6,23 @@ typedef struct myContext {
   genericLogger_t *genericLoggerp;
 } myContext_t;
 
-static size_t myHashIndFunction(void *userDatavp, genericStackItemType_t itemType, void *p);
-static short  myHashCmpFunction(void *userDatavp, genericStackItemType_t itemType, void *p1, void *p2);
+static size_t myHashIndFunction(void *userDatavp, genericStackItemType_t itemType, void **pp);
+static short  myHashKeyCmpFunction(void *userDatavp, void *p1, void *p2);
+static void  *myHashCopyFunction(void *userDatavp, void *p);
+static void   myHashFreeFunction(void *userDatavp, void *p);
+static int    myHashTest(short withAllocb);
 
 int main(int argc, char **argv) {
+  if (myHashTest(0) == 0) {
+    return 1;
+  }
+  if (myHashTest(1) == 0) {
+    return 1;
+  }
+  return 0;
+}
+
+static int myHashTest(short withAllocb) {
   myContext_t      myContext;
   myContext_t     *myContextp = &myContext;
   myContext_t     *myContextFoundp;
@@ -20,30 +34,44 @@ int main(int argc, char **argv) {
 
   myContext.genericLoggerp = genericLoggerp;
 
-  GENERICHASH_NEW(myHashp, myHashIndFunction, myHashCmpFunction, 1);
+  GENERICHASH_NEW(myHashp, myHashIndFunction);
   if (GENERICHASH_ERROR(myHashp)) {
     GENERICLOGGER_ERROR(genericLoggerp, "Error when creating generic hash");
     rci = 1;
     goto err;
   }
-  GENERICLOGGER_TRACEF(genericLoggerp, "Created hash at %p", myHashp);
+  if (withAllocb) {
+    GENERICHASH_KEYCMPFUNCTION(myHashp) = myHashKeyCmpFunction;
+    GENERICHASH_KEYCOPYFUNCTION(myHashp) = myHashCopyFunction;
+    GENERICHASH_KEYFREEFUNCTION(myHashp) = myHashFreeFunction;
+    GENERICHASH_VALCOPYFUNCTION(myHashp) = myHashCopyFunction;
+    GENERICHASH_VALFREEFUNCTION(myHashp) = myHashFreeFunction;
+  }
+  GENERICLOGGER_TRACEF(genericLoggerp, "Created hash at %p, alloc mode=%d", myHashp, (int) withAllocb);
 
-  GENERICHASH_SET(myHashp, myContextp, PTR, myContextp);
-  GENERICHASH_SET(myHashp, myContextp, PTR, myContextp);
-  GENERICHASH_SET(myHashp, myContextp, PTR, myContextp);
-  GENERICLOGGER_TRACEF(genericLoggerp, "... Inserted PTR %p", myContextp);
+  /* hash->{myContextp} = myContextp */
+  GENERICHASH_SET(myHashp, myContextp, PTR, myContextp, PTR, myContextp);
+  /* hash->{myContextp} = myContextp */
+  GENERICHASH_SET(myHashp, myContextp, PTR, myContextp, PTR, myContextp);
+  /* hash->{myContextp} = myContextp */
+  GENERICHASH_SET(myHashp, myContextp, PTR, myContextp, PTR, myContextp);
+  GENERICLOGGER_TRACEF(genericLoggerp, "... Inserted PTR %p indexed by itself", myContextp);
 
-  GENERICHASH_SET_BY_IND(myHashp, myContextp, PTR, myHashIndFunction(myContextp, GENERICSTACKITEMTYPE_PTR, &myContextp), myContextp);
-  GENERICHASH_SET_BY_IND(myHashp, myContextp, PTR, myHashIndFunction(myContextp, GENERICSTACKITEMTYPE_PTR, &myContextp), myContextp);
-  GENERICHASH_SET_BY_IND(myHashp, myContextp, PTR, myHashIndFunction(myContextp, GENERICSTACKITEMTYPE_PTR, &myContextp), myContextp);
+  /* hash->{NULL} = NULL */
+  GENERICHASH_SET(myHashp, myContextp, PTR, NULL, PTR, NULL);
+  GENERICLOGGER_TRACE(genericLoggerp, "... Inserted NULL indexed by NULL");
+
+  GENERICHASH_SET(myHashp, myContextp, PTR, myContextp, PTR, myContextp);
+  GENERICLOGGER_TRACEF(genericLoggerp, "... Inserted PTR %p without using IND", myContextp);
+  GENERICHASH_SET_BY_IND(myHashp, myContextp, PTR, myContextp, PTR, myContextp, myHashIndFunction(myContextp, GENERICSTACKITEMTYPE_PTR, &myContextp));
   GENERICLOGGER_TRACEF(genericLoggerp, "... Inserted PTR %p using IND", myContextp);
 
   GENERICLOGGER_TRACEF(genericLoggerp, "... Looking for PTR %p", myContextp);
-  GENERICHASH_FIND(myHashp, myContextp, PTR, myContextp, findResultb, myContextFoundp);
+  GENERICHASH_FIND(myHashp, myContextp, PTR, myContextp, PTR, &myContextFoundp, findResultb);
   if (! findResultb) {
-    GENERICLOGGER_ERRORF(genericLoggerp, "... Failed to find PTR %p", myContextp);
+    GENERICLOGGER_ERRORF(genericLoggerp, "... Failed to find PTR %p in keys", myContextp);
   } else {
-    if (myContextp == myContextFoundp) {
+    if (myContextp->genericLoggerp == myContextFoundp->genericLoggerp) {
       GENERICLOGGER_TRACEF(genericLoggerp, "... Success searching for PTR %p", myContextFoundp);
     } else {
       GENERICLOGGER_TRACEF(genericLoggerp, "... Success searching for PTR but found a bad pointer %p", myContextFoundp);
@@ -51,11 +79,11 @@ int main(int argc, char **argv) {
   }
 
   GENERICLOGGER_TRACEF(genericLoggerp, "... Looking for PTR %p using IND", myContextp);
-  GENERICHASH_FIND_BY_IND(myHashp, myContextp, PTR, myHashIndFunction(myContextp, GENERICSTACKITEMTYPE_PTR, &myContextp), myContextp, findResultb, myContextFoundp);
+  GENERICHASH_FIND_BY_IND(myHashp, myContextp, PTR, myContextp, PTR, &myContextFoundp, findResultb, myHashIndFunction(myContextp, GENERICSTACKITEMTYPE_PTR, &myContextp));
   if (! findResultb) {
     GENERICLOGGER_ERRORF(genericLoggerp, "... Failed to find PTR %p", myContextp);
   } else {
-    if (myContextp == myContextFoundp) {
+    if (myContextp->genericLoggerp == myContextFoundp->genericLoggerp) {
       GENERICLOGGER_TRACEF(genericLoggerp, "... Success searching for PTR %p", myContextFoundp);
     } else {
       GENERICLOGGER_TRACEF(genericLoggerp, "... Success searching for PTR but found a bad pointer %p", myContextFoundp);
@@ -63,92 +91,121 @@ int main(int argc, char **argv) {
   }
 
   GENERICLOGGER_TRACEF(genericLoggerp, "... Removing PTR %p", myContextp);
-  GENERICHASH_REMOVE(myHashp, myContextp, PTR, myContextp, removeResultb, myContextFoundp);
+  GENERICHASH_FIND(myHashp, myContextp, PTR, myContextp, PTR, &myContextFoundp, removeResultb);
   if (! removeResultb) {
     GENERICLOGGER_ERRORF(genericLoggerp, "... Failed to remove PTR %p", myContextp);
   } else {
-    if (myContextp == myContextFoundp) {
+    if (myContextp->genericLoggerp == myContextFoundp->genericLoggerp) {
+      /* Because we are using shallow pointers in this test, no need to free */
       GENERICLOGGER_TRACEF(genericLoggerp, "... Success removing PTR %p", myContextFoundp);
     } else {
       GENERICLOGGER_TRACEF(genericLoggerp, "... Success removing PTR but found a bad pointer %p", myContextFoundp);
     }
     GENERICLOGGER_TRACEF(genericLoggerp, "... Looking again for PTR %p", myContextp);
-    GENERICHASH_FIND(myHashp, myContextp, PTR, myContextp, findResultb, myContextFoundp);
-    if (! findResultb) {
+    GENERICHASH_FIND(myHashp, myContextp, PTR, myContextp, PTR, &myContextFoundp, removeResultb);
+    if (! removeResultb) {
       GENERICLOGGER_TRACEF(genericLoggerp, "... Failed to find PTR %p and this is ok", myContextp);
     } else {
       GENERICLOGGER_ERRORF(genericLoggerp, "... Unexpected success searching for PTR %p, got %p", myContextp, myContextFoundp);
     }
   }
 
-  rci = 0;
+  rci = 1;
   goto done;
 
  err:
-  rci = 1;
+  rci = 0;
 
  done:
   GENERICLOGGER_TRACEF(genericLoggerp, "Freeing hash at %p", myHashp);
-  GENERICHASH_FREE(myHashp);
+  GENERICHASH_FREE(myHashp, myContextp);
   
   GENERICLOGGER_INFOF(genericLoggerp, "exit %d", rci);
   GENERICLOGGER_FREE(genericLoggerp);
-  exit(rci);
+
+  return rci;
 }
 
-static size_t myHashIndFunction(void *userDatavp, genericStackItemType_t itemType, void *p) {
+/*********************************************************************/
+static size_t myHashIndFunction(void *userDatavp, genericStackItemType_t itemType, void **pp)
+/*********************************************************************/
+{
+  char             funcs[] = "myHashIndFunction";
   myContext_t     *myContextp = (myContext_t *) userDatavp;
   genericLogger_t *genericLoggerp = myContextp->genericLoggerp;
   size_t           rcl = (size_t)-1;
 
-  GENERICLOGGER_TRACEF(genericLoggerp, "... Computing index of object of type %d pointed by %p", (int) itemType, p);
+  GENERICLOGGER_TRACEF(genericLoggerp, "... [%s] Computing index of object of type %d pointed by %p", funcs, (int) itemType, pp);
 
   switch (itemType) {
   case GENERICSTACKITEMTYPE_PTR:
     {
-      void **pp = (void **) p;
-      int    absi;
+      void *p = *pp;
+      int   absi;
 
-      p = *pp;
-
-      GENERICLOGGER_TRACEF(genericLoggerp, "... ... PTR content is %p", p);
+      GENERICLOGGER_TRACEF(genericLoggerp, "... ... [%s] PTR content is %p", funcs, p);
       absi = abs((int) p);
       rcl = (size_t) (absi % 50);
-      GENERICLOGGER_TRACEF(genericLoggerp, "... ... Index %d", (int) rcl);
+      GENERICLOGGER_TRACEF(genericLoggerp, "... ... [%s] Index %d", funcs, (int) rcl);
     }
     break;
   default:
-    GENERICLOGGER_TRACEF(genericLoggerp, "... Unsupported object type %d", (int) itemType);
+    GENERICLOGGER_TRACEF(genericLoggerp, "... [%s] Unsupported object type %d", funcs, (int) itemType);
     break;
   }
   
-  GENERICLOGGER_TRACEF(genericLoggerp, "... Return %d", (int) rcl);
+  GENERICLOGGER_TRACEF(genericLoggerp, "... [%s] Return %d", funcs, (int) rcl);
   return rcl;
 }
 
-static short  myHashCmpFunction(void *userDatavp, genericStackItemType_t itemType, void *p1, void *p2) {
+/*********************************************************************/
+static short myHashKeyCmpFunction(void *userDatavp, void *p1, void *p2)
+/*********************************************************************/
+{
+  char             funcs[] = "myHashKeyCmpFunction";
   myContext_t     *myContextp = (myContext_t *) userDatavp;
   genericLogger_t *genericLoggerp = myContextp->genericLoggerp;
   short            rcb = 0;
+  myContext_t     *c1 = (myContext_t *) p1;
+  myContext_t     *c2 = (myContext_t *) p2;
 
-  GENERICLOGGER_TRACEF(genericLoggerp, "... Doing a comparison of objects of type %d pointed by %p and %p", (int) itemType, p1, p2);
+  GENERICLOGGER_TRACEF(genericLoggerp, "... [%s] Doing a comparison of pointers %p and %p", funcs, p1, p2);
 
-  switch (itemType) {
-  case GENERICSTACKITEMTYPE_PTR:
-    {
-      void **pp1 = (void **) p1;
-      void **pp2 = (void **) p2;
-
-      GENERICLOGGER_TRACEF(genericLoggerp, "... ... PTR contents are %p and %p", *pp1, *pp2);
-      rcb = (*pp1 == *pp2);
-    }
-    break;
-  default:
-    GENERICLOGGER_TRACEF(genericLoggerp, "... Unsupported object type %d", (int) itemType);
-    break;
+  if ((c1 != NULL) && (c2 != NULL)) {
+    rcb = (c1->genericLoggerp == c2->genericLoggerp);
   }
   
-  GENERICLOGGER_TRACEF(genericLoggerp, "... Return %d", (int) rcb);
+  GENERICLOGGER_TRACEF(genericLoggerp, "... [%s] Return %d", funcs, (int) rcb);
   return rcb;
 }
 
+/*********************************************************************/
+static void  *myHashCopyFunction(void *userDatavp, void *p)
+/*********************************************************************/
+{
+  char             funcs[] = "myHashCopyFunction";
+  myContext_t     *myContextp = (myContext_t *) userDatavp;
+  genericLogger_t *genericLoggerp = myContextp->genericLoggerp;
+  myContext_t     *c = malloc(sizeof(myContext_t));
+
+  if (c == NULL) {
+    GENERICLOGGER_ERRORF(genericLoggerp, "... [%s] malloc error, %s", funcs, strerror(errno));
+  } else {
+    c->genericLoggerp = myContextp->genericLoggerp;
+  }
+
+  GENERICLOGGER_TRACEF(genericLoggerp, "... [%s] Return malloced area %p", funcs, c);
+  return c;
+}
+
+/*********************************************************************/
+static void  myHashFreeFunction(void *userDatavp, void *p)
+/*********************************************************************/
+{
+  char             funcs[] = "myHashFreeFunction";
+  myContext_t     *myContextp = (myContext_t *) userDatavp;
+  genericLogger_t *genericLoggerp = myContextp->genericLoggerp;
+
+  GENERICLOGGER_ERRORF(genericLoggerp, "... [%s] Freeing malloced area %p", funcs, p);
+  free(p);
+}
