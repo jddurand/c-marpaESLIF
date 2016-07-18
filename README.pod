@@ -6,7 +6,7 @@ genericHash - generic hash interface
 
 =head1 DESCRIPTION
 
-genericHash exposes hashing function and comparison functions. It is built on top of L<genericStack|https://github.com/jddurand/c-genericStack>.
+genericHash is an ANSI set of macros exposing key hashing and comparison functions, as well as key/value copying and freeing functions. It is built on top of L<genericStack|https://github.com/jddurand/c-genericStack>.
 
 =head1 SYNOPSIS
 
@@ -16,12 +16,30 @@ genericHash exposes hashing function and comparison functions. It is built on to
 
 =head1 MACROS
 
-=head2 GENERICHASH_NEW(hashName, indFunctionp, cmpFunctionp, unique)
+=head2 C<GENERICHASH_NEW>(hashName, indFunctionp)
 
-Create an empty hash on the heap, where C<indFunctionp> and C<cmpFunctionp> are hashing and comparison functions, respectively. Their prototypes are:
+Alias to C<GENERICHASH_NEW_ALL>(hashName, keyIndFunctionp, keyCmpFunctionp, keyCopyFunctionp, keyFreeFunctionp, valCopyFunctionp, valFreeFunctionp, wantedSize, thisWantedSubSize), see below.
 
-  typedef size_t (*genericHashIndFunction_t)(void *userDatavp, genericStackItemType_t itemType, void *p);
-  typedef short  (*genericHashCmpFunction_t)(void *userDatavp, genericStackItemType_t itemType, void *p1, void *p2);
+=head2 C<GENERICHASH_NEW_ALL>(hashName, keyIndFunctionp, keyCmpFunctionp, keyCopyFunctionp, keyFreeFunctionp, valCopyFunctionp, valFreeFunctionp, wantedSize, thisWantedSubSize)
+
+Create an empty hash on the heap, where function pointer prototypes are:
+
+  typedef size_t (*genericHashKeyIndFunction_t)(void *userDatavp, genericStackItemType_t itemType, void *p);
+  typedef short  (*genericHashKeyCmpFunction_t)(void *userDatavp, void *p1, void *p2);
+  typedef void  *(*genericHashKeyCopyFunction_t)(void *userDatavp, void *p);
+  typedef void   (*genericHashKeyFreeFunction_t)(void *userDatavp, void *p);
+  typedef void  *(*genericHashValCopyFunction_t)(void *userDatavp, void *p);
+  typedef void   (*genericHashValFreeFunction_t)(void *userDatavp, void *p);
+
+All these functions are called with a context C<userDatavp> that is passed as-is through macros.
+
+=over
+
+=item C<keyIndFunctionp>
+
+Mandatory. C<itemType> is inherited from genericStack, e.g. it can be C<GENERICSTACKITEMTYPE_CHAR>, C<GENERICSTACKITEMTYPE_PTR>, etc... 
+
+=back
 
 and for every data, C<indFunctionp> is used to return a hash indice. This indice function receive a I<pointer> to the original data. The number of rows in the hash will always increase automatically, whenever needed, and never decrease. To handle the case of collisions, C<cmpFunctionp> is called and must return a true value when the key of the two values I<pointed by> C<p1> and C<p2> matches. Within a hash row, the number of elements decrease and increase automatically. C<unique>, when true, has a performance impact on the hash, because it internally makes sure that a given key can appear only once, using both the C<indFunctionp> (to get the row indice in the hash) and C<cmpFunctionp> functions (to compare keys).
 
