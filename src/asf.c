@@ -2293,6 +2293,7 @@ static inline short _marpaWrapperAsf_glade_id_factorsb(marpaWrapperAsf_t *marpaW
       }
       GENERICSTACK_PUSH_INT(andNodeIdStackp, andNodep[choicei]);
     }
+    GENERICSTACK_FREE(causeNidsStackp);
     if (_marpaWrapperAsf_and_nodes_to_cause_nidsp(marpaWrapperAsfp, andNodeIdStackp, &causeNidsStackp) == 0) {
       goto err;
     }
