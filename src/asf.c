@@ -128,8 +128,8 @@ static inline short                      _marpaWrapperAsf_glade_symbol_idb(marpa
 /* Specific to nook */
 static inline marpaWrapperAsfNook_t     *_marpaWrapperAsf_nook_newp(marpaWrapperAsf_t *marpaWrapperAsfp, int orNodeIdi, int parentOrNodeIdi);
 static inline short                      _marpaWrapperAsf_nook_has_semantic_causeb(marpaWrapperAsf_t *marpaWrapperAsfp, marpaWrapperAsfNook_t *nookp);
-static inline short                      _marpaWrapperAsf_setLastChoiceb(marpaWrapperAsf_t *marpaWrapperAsfp, int **choiceipp, marpaWrapperAsfNook_t *nookp);
-static inline short                      _marpaWrapperAsf_nook_incrementb(marpaWrapperAsf_t *marpaWrapperAsfp, marpaWrapperAsfNook_t *nookp);
+static inline short                      _marpaWrapperAsf_setLastChoiceb(marpaWrapperAsf_t *marpaWrapperAsfp, short *haveLastChoicebp, marpaWrapperAsfNook_t *nookp);
+static inline short                      _marpaWrapperAsf_nook_incrementb(marpaWrapperAsf_t *marpaWrapperAsfp, marpaWrapperAsfNook_t *nookp, short *haveLastChoicebp);
 
 /* Specific to symch */
 static inline short                      _marpaWrapperAsf_symch_factoring_countb(marpaWrapperAsf_t *marpaWrapperAsfp, int gladeIdi, int symchIxi, int *factoringCountip);
@@ -825,7 +825,6 @@ static inline short _marpaWrapperAsf_intsetIdb(marpaWrapperAsf_t *marpaWrapperAs
   genericLogger_t         *genericLoggerp = marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp;
   const static char       *staticKeys = "";
   char                    *keys = NULL;
-  char                    *keyNexts;
   size_t                   idl;
   short                    rcb;
   short                    findResultb;
@@ -842,13 +841,13 @@ static inline short _marpaWrapperAsf_intsetIdb(marpaWrapperAsf_t *marpaWrapperAs
 	  goto err;
 	}
       } else {
-	keyNexts = _marpaWrapperAsf_stringBuilders("%s %d", keys, idip[idl]);
+	char *keyNexts = _marpaWrapperAsf_stringBuilders("%s %d", keys, idip[idl]);
 	if (keyNexts == NULL) {
 	  MARPAWRAPPER_ERRORF(genericLoggerp, "_marpaWrapperAsf_stringBuilders error: %s", strerror(errno));
 	  goto err;
 	}
+        free(keys);
 	keys = keyNexts;
-	free(keyNexts);
       }
     }
   }
@@ -1378,14 +1377,13 @@ static inline short _marpaWrapperAsf_nook_has_semantic_causeb(marpaWrapperAsf_t 
 }
 
 /****************************************************************************/
-static inline short _marpaWrapperAsf_setLastChoiceb(marpaWrapperAsf_t *marpaWrapperAsfp, int **choiceipp, marpaWrapperAsfNook_t *nookp)
+static inline short _marpaWrapperAsf_setLastChoiceb(marpaWrapperAsf_t *marpaWrapperAsfp, short *haveLastChoicebp, marpaWrapperAsfNook_t *nookp)
 /****************************************************************************/
 {
   const static char        funcs[]            = "_marpaWrapperAsf_setLastChoiceb";
   genericLogger_t         *genericLoggerp     = marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp;
   int                      orNodeIdi          = nookp->orNodeIdi;
   int                      choicei            = nookp->firstChoicei;
-  short                    rcb                = 1;
   marpaWrapperAsfOrNode_t *orNodep;
 
   if (! GENERICSTACK_IS_PTR(marpaWrapperAsfp->orNodeStackp, (size_t) orNodeIdi)) {
@@ -1396,7 +1394,7 @@ static inline short _marpaWrapperAsf_setLastChoiceb(marpaWrapperAsf_t *marpaWrap
 
   if (choicei >= (int) orNodep->nAndNodel) {
     MARPAWRAPPER_TRACE(genericLoggerp, funcs, "No last choice available");
-    *choiceipp = NULL;
+    *haveLastChoicebp = 0;
   } else {
     if (_marpaWrapperAsf_nook_has_semantic_causeb(marpaWrapperAsfp, nookp)) {
       marpaWrapperRecognizer_t *marpaWrapperRecognizerp = marpaWrapperAsfp->marpaWrapperRecognizerp;
@@ -1429,10 +1427,10 @@ static inline short _marpaWrapperAsf_setLastChoiceb(marpaWrapperAsf_t *marpaWrap
     }
     nookp->lastChoicei = choicei;
     MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "Last choice set to %d", choicei);
-    *choiceipp = &(nookp->lastChoicei);
+    *haveLastChoicebp = 1;
   }
 
-  MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return 1");
+  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "return 1, *haveLastChoicebp=%d", (int) *haveLastChoicebp);
   return 1;
 
  err:
@@ -1441,20 +1439,24 @@ static inline short _marpaWrapperAsf_setLastChoiceb(marpaWrapperAsf_t *marpaWrap
 }
 
 /****************************************************************************/
-static inline short _marpaWrapperAsf_nook_incrementb(marpaWrapperAsf_t *marpaWrapperAsfp, marpaWrapperAsfNook_t *nookp)
+static inline short _marpaWrapperAsf_nook_incrementb(marpaWrapperAsf_t *marpaWrapperAsfp, marpaWrapperAsfNook_t *nookp, short *haveLastChoicebp)
 /****************************************************************************/
 {
-  const static char        funcs[]            = "_marpaWrapperAsf_nook_incrementb_setLastChoiceb";
+  const static char        funcs[]            = "_marpaWrapperAsf_nook_incrementb";
   genericLogger_t         *genericLoggerp     = marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp;
-  int                     *choiceip;
-  short                    rcb;
 
   nookp->firstChoicei = nookp->lastChoicei + 1;
 
-  rcb = _marpaWrapperAsf_setLastChoiceb(marpaWrapperAsfp, &choiceip, nookp);
+  if (_marpaWrapperAsf_setLastChoiceb(marpaWrapperAsfp, haveLastChoicebp, nookp) == 0) {
+    goto err;
+  }
 
-  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "return %d", (int) rcb);
-  return rcb;
+  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "return 1, *haveLastChoicebp=%d", (int) *haveLastChoicebp);
+  return 1;
+
+ err:
+  MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return 0");
+  return 0;
 }
 
 /****************************************************************************/
@@ -2097,7 +2099,7 @@ static inline short _marpaWrapperAsf_factoring_finishb(marpaWrapperAsf_t *marpaW
 
     workingChoicei = workNookp->firstChoicei;;
     if (workingChoicei >= (int) orNodep->nAndNodel) {
-      MARPAWRAPPER_ERRORF(genericLoggerp, "No andNode at indice %d of andNodep", workingChoicei);
+      MARPAWRAPPER_ERRORF(genericLoggerp, "No andNode at indice %d of orNodep->andNodep", workingChoicei);
       goto err;
     }
     workAndNodeIdi = orNodep->andNodep[workingChoicei];
@@ -2177,11 +2179,12 @@ static inline short _marpaWrapperAsf_factoring_iterateb(marpaWrapperAsf_t *marpa
 {
   const static char         funcs[]                 = "_marpaWrapperAsf_factoring_iterateb";
   genericLogger_t          *genericLoggerp          = marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp;
-  marpaWrapperAsfNook_t    *topNookp = NULL;
+  marpaWrapperAsfNook_t    *topNookp;
   marpaWrapperAsfNook_t    *parentNookp;
   int                       stackIxOfParentNooki;
   int                       orNodei;
   size_t                    factoringStackl;
+  short                     haveLastChoiceb;
 
   while (1) {
     factoringStackl = GENERICSTACK_USED(marpaWrapperAsfp->factoringStackp);
@@ -2196,7 +2199,10 @@ static inline short _marpaWrapperAsf_factoring_iterateb(marpaWrapperAsf_t *marpa
       goto err;
     }
     topNookp = GENERICSTACK_GET_PTR(marpaWrapperAsfp->factoringStackp, factoringStackl - 1);
-    if (_marpaWrapperAsf_nook_incrementb(marpaWrapperAsfp, topNookp) != 0) {
+    if (_marpaWrapperAsf_nook_incrementb(marpaWrapperAsfp, topNookp, &haveLastChoiceb) == 0) {
+      goto err;
+    }
+    if (haveLastChoiceb == 1) {
       break;
     }
 
@@ -2222,11 +2228,13 @@ static inline short _marpaWrapperAsf_factoring_iterateb(marpaWrapperAsf_t *marpa
       MARPAWRAPPER_ERRORF(genericLoggerp, "failure to set NULL at indice %d of orNodeInUseStackp", orNodei);
       goto err;
     }
+    /* On the top of the stack, this is topNookp per definition */
     GENERICSTACK_POP_PTR(marpaWrapperAsfp->factoringStackp);
     if (GENERICSTACK_ERROR(marpaWrapperAsfp->factoringStackp)) {
       MARPAWRAPPER_ERROR(genericLoggerp, "failure to pop from factoringStackp");
       goto err;
     }
+    free(topNookp);
   }
 
   *factoringIteratebp = 1;
