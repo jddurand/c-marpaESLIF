@@ -31,8 +31,8 @@ extern "C" {
   marpaWrapper_EXPORT marpaWrapperAsf_t        *marpaWrapperAsf_newp(marpaWrapperRecognizer_t *marpaWrapperRecognizerp, marpaWrapperAsfOption_t *marpaWrapperAsfOptionp);
   marpaWrapper_EXPORT void                     *marpaWrapperAsf_traversep(marpaWrapperAsf_t *marpaWrapperAsfp, traverserCallback_t traverserCallbackp, void *userDatavp);
   marpaWrapper_EXPORT short                     marpaWrapperAsf_traverse_rh_lengthb(marpaWrapperAsfTraverser_t *traverserp, size_t *lengthlp);
-  marpaWrapper_EXPORT short                     marpaWrapperAsf_traverse_rh_symbolIdb(marpaWrapperAsfTraverser_t *traverserp, int *symbolIdip);
-  marpaWrapper_EXPORT short                     marpaWrapperAsf_traverse_rh_ruleIdb(marpaWrapperAsfTraverser_t *traverserp, int *ruleIdip);
+  marpaWrapper_EXPORT short                     marpaWrapperAsf_traverse_symbolIdb(marpaWrapperAsfTraverser_t *traverserp, int *symbolIdip);
+  marpaWrapper_EXPORT short                     marpaWrapperAsf_traverse_ruleIdb(marpaWrapperAsfTraverser_t *traverserp, int *ruleIdip);
   marpaWrapper_EXPORT short                     marpaWrapperAsf_traverse_nextFactoringb(marpaWrapperAsfTraverser_t *traverserp, int *factoringIxip);
   marpaWrapper_EXPORT short                     marpaWrapperAsf_traverse_nextSymchb(marpaWrapperAsfTraverser_t *traverserp, int *symchIxip);
   marpaWrapper_EXPORT short                     marpaWrapperAsf_traverse_nextb(marpaWrapperAsfTraverser_t *traverserp, int *idip);
