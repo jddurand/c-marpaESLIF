@@ -63,7 +63,7 @@ static int myHashTest(short withAllocb) {
 
   GENERICHASH_SET(myHashp, myContextp, PTR, myContextp, PTR, myContextp);
   GENERICLOGGER_TRACEF(genericLoggerp, "... Inserted PTR %p without using IND", myContextp);
-  GENERICHASH_SET_BY_IND(myHashp, myContextp, PTR, myContextp, PTR, myContextp, myHashIndFunction(myContextp, GENERICSTACKITEMTYPE_PTR, &myContextp));
+  GENERICHASH_SET_BY_IND(myHashp, myContextp, PTR, myContextp, PTR, myContextp, myHashIndFunction(myContextp, GENERICSTACKITEMTYPE_PTR, (void **) &myContextp));
   GENERICLOGGER_TRACEF(genericLoggerp, "... Inserted PTR %p using IND", myContextp);
 
   GENERICLOGGER_TRACEF(genericLoggerp, "... Looking for PTR %p", myContextp);
@@ -79,7 +79,7 @@ static int myHashTest(short withAllocb) {
   }
 
   GENERICLOGGER_TRACEF(genericLoggerp, "... Looking for PTR %p using IND", myContextp);
-  GENERICHASH_FIND_BY_IND(myHashp, myContextp, PTR, myContextp, PTR, &myContextFoundp, findResultb, myHashIndFunction(myContextp, GENERICSTACKITEMTYPE_PTR, &myContextp));
+  GENERICHASH_FIND_BY_IND(myHashp, myContextp, PTR, myContextp, PTR, &myContextFoundp, findResultb, myHashIndFunction(myContextp, GENERICSTACKITEMTYPE_PTR, (void **) &myContextp));
   if (! findResultb) {
     GENERICLOGGER_ERRORF(genericLoggerp, "... Failed to find PTR %p", myContextp);
   } else {
