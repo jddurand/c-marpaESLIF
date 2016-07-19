@@ -484,7 +484,7 @@ void *marpaWrapperAsf_traversep(marpaWrapperAsf_t *marpaWrapperAsfp, traverserCa
   GENERICSTACK_FREE(traverserp->valuep);
   free(traverserp);
 
-  MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return %p");
+  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "return %p", valuep);
   return valuep;
 
  err:
@@ -492,8 +492,8 @@ void *marpaWrapperAsf_traversep(marpaWrapperAsf_t *marpaWrapperAsfp, traverserCa
     GENERICSTACK_FREE(traverserp->valuep);
     free(traverserp);
   }
-  MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return 0");
-  return 0;
+  MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return NULL");
+  return NULL;
 }
 
 /****************************************************************************/
@@ -1615,6 +1615,7 @@ static inline marpaWrapperAsfGlade_t *_marpaWrapperAsf_glade_obtainp(marpaWrappe
   size_t                       symchIxl;
   int                          choicepointNidi;
   int                          symchRuleIdi;
+  genericStack_t              *factoring = NULL;
 
   if ((! GENERICSTACK_IS_PTR(marpaWrapperAsfp->gladeStackp, gladel)) || ((gladep = GENERICSTACK_GET_PTR(marpaWrapperAsfp->gladeStackp, gladel))->registeredb == 0)) {
     MARPAWRAPPER_ERRORF(genericLoggerp, "Attempt to use an invalid glade, one whose ID is %d", gladel);
@@ -1728,8 +1729,7 @@ static inline marpaWrapperAsfGlade_t *_marpaWrapperAsf_glade_obtainp(marpaWrappe
   }
   symchCountl = _marpaWrapperAsf_powerset_countl(marpaWrapperAsfp, choicepointPowsersetp);
   for (symchIxl = 0; symchIxl < symchCountl; symchIxl++) {
-    genericStack_t          *factoringsStackp;
-    genericStack_t          *factoring;
+    genericStack_t          *factoringsStackp = NULL;
     marpaWrapperAsfNidset_t *symchNidsetp;
     size_t                   nidcountl;
     int                      nidixi;
@@ -1770,10 +1770,10 @@ static inline marpaWrapperAsfGlade_t *_marpaWrapperAsf_glade_obtainp(marpaWrappe
       marpaWrapperAsfNidset_t *baseNidsetp = _marpaWrapperAsf_nidset_obtainb(marpaWrapperAsfp, 1, &choicepointNidi);
       int                      gladeidi;
       marpaWrapperAsfGlade_t  *gladep;
-      genericStack_t          *localStackp;
+      genericStack_t          *localStackp = NULL;
 
       if (baseNidsetp == NULL) {
-	GENERICSTACK_FREE(factoringsStackp);
+	_marpaWrapperAsf_factoringsStackp_freev(marpaWrapperAsfp, factoringsStackp);
 	goto err;
       }
       gladeidi = _marpaWrapperAsf_nidset_idi(marpaWrapperAsfp, baseNidsetp);
@@ -1794,6 +1794,7 @@ static inline marpaWrapperAsfGlade_t *_marpaWrapperAsf_glade_obtainp(marpaWrappe
       GENERICSTACK_PUSH_INT(localStackp, gladeidi);
       if (GENERICSTACK_ERROR(localStackp)) {
 	MARPAWRAPPER_ERRORF(genericLoggerp, "localStackp push failure, %s", strerror(errno));
+        GENERICSTACK_FREE(localStackp);
 	_marpaWrapperAsf_factoringsStackp_freev(marpaWrapperAsfp, factoringsStackp);
 	goto err;
       }
@@ -1805,6 +1806,7 @@ static inline marpaWrapperAsfGlade_t *_marpaWrapperAsf_glade_obtainp(marpaWrappe
 	goto err;
       }
       /* localStackp is now in factoringsStackp */
+      localStackp = NULL;
       GENERICSTACK_PUSH_PTR(symchesStackp, factoringsStackp);
       if (GENERICSTACK_ERROR(symchesStackp)) {
 	MARPAWRAPPER_ERRORF(genericLoggerp, "Failure to push symchesStack, %s", strerror(errno));
@@ -1812,6 +1814,7 @@ static inline marpaWrapperAsfGlade_t *_marpaWrapperAsf_glade_obtainp(marpaWrappe
 	goto err;
       }
       /* factoringsStackp is now in symchesStackp */
+      factoringsStackp = NULL;
       continue;
     }
 
@@ -1833,13 +1836,14 @@ static inline marpaWrapperAsfGlade_t *_marpaWrapperAsf_glade_obtainp(marpaWrappe
 	goto err;
       }
 
+      GENERICSTACK_FREE(factoring);
       if (_marpaWrapperAsf_glade_id_factorsb(marpaWrapperAsfp, &factoring) == 0) {
 	goto err;
       }
 
       while (factoring != NULL) {
 	if (GENERICSTACK_USED(factoringsStackp) > MARPAWRAPPERASF_FACTORING_MAX) {
-	  /* Update factorings omitted flag */
+	  /* Update factorings omitted flag - this indice is already allocated: factoringsStackp cannot change*/
 	  GENERICSTACK_SET_INT(factoringsStackp, 1, 1);
 	  if (GENERICSTACK_ERROR(factoringsStackp)) {
 	    MARPAWRAPPER_ERROR(genericLoggerp, "Failure to set omitted flag in local factoring");
@@ -1874,16 +1878,17 @@ static inline marpaWrapperAsfGlade_t *_marpaWrapperAsf_glade_obtainp(marpaWrappe
             }
           }
 
-	  GENERICSTACK_PUSH_PTR(factoringsStackp, localFactoringStackp);
-	  if (GENERICSTACK_ERROR(factoringsStackp)) {
-	    MARPAWRAPPER_ERROR(genericLoggerp, "Failure to push in factoringsStackp");
-	    GENERICSTACK_FREE(localFactoringStackp);
-	    goto err;
-	  }
+          GENERICSTACK_PUSH_PTR(factoringsStackp, localFactoringStackp);
+          if (GENERICSTACK_ERROR(factoringsStackp)) {
+            MARPAWRAPPER_ERROR(genericLoggerp, "Failure to push in factoringsStackp");
+            GENERICSTACK_FREE(localFactoringStackp);
+            goto err;
+          }
 
 	  if (_marpaWrapperAsf_next_factoringb(marpaWrapperAsfp, choicepointNidi, &factoringb) == 0) {
 	    goto err;
 	  }
+          GENERICSTACK_FREE(factoring);
 	  if (_marpaWrapperAsf_glade_id_factorsb(marpaWrapperAsfp, &factoring) == 0) {
 	    goto err;
 	  }
@@ -1893,12 +1898,20 @@ static inline marpaWrapperAsfGlade_t *_marpaWrapperAsf_glade_obtainp(marpaWrappe
 	break;
       }
     }
-    
+    GENERICSTACK_PUSH_PTR(symchesStackp, factoringsStackp);
+    if (GENERICSTACK_ERROR(symchesStackp)) {
+      MARPAWRAPPER_ERRORF(genericLoggerp, "Failure to push symchesStack, %s", strerror(errno));
+      _marpaWrapperAsf_factoringsStackp_freev(marpaWrapperAsfp, factoringsStackp);
+      goto err;
+    }
+    /* factoringsStackp is now in symchesStackp */
+    factoringsStackp = NULL;
   }
 
   /* Replace current symches */
   _marpaWrapperAsf_symchesStackp_freev(marpaWrapperAsfp, gladep->symchesStackp);
   gladep->symchesStackp = symchesStackp;
+  symchesStackp = NULL;
   gladep->idi = gladel;
 
   GENERICSTACK_SET_PTR(marpaWrapperAsfp->gladeStackp, gladep, gladel);
@@ -1907,11 +1920,16 @@ static inline marpaWrapperAsfGlade_t *_marpaWrapperAsf_glade_obtainp(marpaWrappe
     goto err;
   }
 
- done:
-  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "return %p", gladep);
-  return gladep;
+  goto done;
 
  err:
+  if (gladep != NULL) {
+    _marpaWrapperAsf_symchesStackp_freev(marpaWrapperAsfp, gladep->symchesStackp);
+    free(gladep);
+    gladep = NULL;
+  }
+
+ done:
   if (sourceDatap != NULL) {
     free(sourceDatap);
   }
@@ -1924,10 +1942,13 @@ static inline marpaWrapperAsfGlade_t *_marpaWrapperAsf_glade_obtainp(marpaWrappe
   if (symbolip != NULL) {
     free(symbolip);
   }
-  _marpaWrapperAsf_symchesStackp_freev(marpaWrapperAsfp, symchesStackp);
+  GENERICSTACK_FREE(factoring);
+  if (symchesStackp != NULL) {
+    _marpaWrapperAsf_symchesStackp_freev(marpaWrapperAsfp, symchesStackp);
+  }
 
-  MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return NULL");
-  return NULL;
+  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "return %p", gladep);
+  return gladep;
 }
 
 /****************************************************************************/
@@ -1937,7 +1958,7 @@ static inline short _marpaWrapperAsf_first_factoringb(marpaWrapperAsf_t *marpaWr
   const static char            funcs[]                = "_marpaWrapperAsf_first_factoringb";
   genericLogger_t             *genericLoggerp         = marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp;
   marpaWrapperAsfOrNode_t     *orNodep;
-  marpaWrapperAsfNook_t       *nookp;
+  marpaWrapperAsfNook_t       *nookp = NULL;
 
   /* Current NID of current SYMCH */
   /* The caller should ensure that we are never called unless the current NIS is for a rule */
@@ -1972,6 +1993,8 @@ static inline short _marpaWrapperAsf_first_factoringb(marpaWrapperAsf_t *marpaWr
     MARPAWRAPPER_ERRORF(genericLoggerp, "factoringStackp push failure: %s", strerror(errno));
     goto err;
   }
+  /* nookp is now in marpaWrapperAsfp->factoringStackp */
+  nookp = NULL;
 
   /* Iterate as long as we cannot finish this stack */
   while (1) {
@@ -1996,11 +2019,14 @@ static inline short _marpaWrapperAsf_first_factoringb(marpaWrapperAsf_t *marpaWr
   *firstFactoringbp = 1;
 
  done:
-
   MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "return 1, *firstFactoringbp=%d", (int) *firstFactoringbp);
   return 1;
 
  err:
+  if (nookp != NULL) {
+    free(nookp);
+  }
+
   MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return 0");
   return 0;
 }
@@ -2792,7 +2818,7 @@ void *marpaWrapperAsf_traverse_rh_valuep(marpaWrapperAsfTraverser_t *traverserp,
   traverserp = NULL;
 
   if (valuep == NULL) {
-    MARPAWRAPPER_ERROR(genericLoggerp, "The ASF traversing method returned undef -- that is not allowed");
+    MARPAWRAPPER_ERROR(genericLoggerp, "The ASF traversing method returned NULL -- that is not allowed");
     goto err;   
   }
 
