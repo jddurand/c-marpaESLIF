@@ -2980,10 +2980,10 @@ genericStack_t *marpaWrapperAsf_traverse_rh_allChoicesStackp(marpaWrapperAsfTrav
 }
 
 /****************************************************************************/
-short marpaWrapperAsf_traverse_rh_symbolIdb(marpaWrapperAsfTraverser_t *traverserp, int *symbolIdip)
+short marpaWrapperAsf_traverse_symbolIdb(marpaWrapperAsfTraverser_t *traverserp, int *symbolIdip)
 /****************************************************************************/
 {
-  const static char         funcs[]          = "marpaWrapperAsf_traverse_rh_symbolIdb";
+  const static char         funcs[]          = "marpaWrapperAsf_traverse_symbolIdb";
   marpaWrapperAsf_t        *marpaWrapperAsfp;
   genericLogger_t          *genericLoggerp;
   marpaWrapperAsfGlade_t   *gladep;
@@ -3017,16 +3017,15 @@ short marpaWrapperAsf_traverse_rh_symbolIdb(marpaWrapperAsfTraverser_t *traverse
 }
 
 /****************************************************************************/
-short marpaWrapperAsf_traverse_rh_ruleIdb(marpaWrapperAsfTraverser_t *traverserp, int *ruleIdip)
+short marpaWrapperAsf_traverse_ruleIdb(marpaWrapperAsfTraverser_t *traverserp, int *ruleIdip)
 /****************************************************************************/
 {
-  const static char         funcs[]          = "marpaWrapperAsf_traverse_rh_ruleIdb";
+  const static char         funcs[]          = "marpaWrapperAsf_traverse_ruleIdb";
   marpaWrapperAsf_t        *marpaWrapperAsfp;
   genericLogger_t          *genericLoggerp;
   marpaWrapperAsfGlade_t   *gladep;
   int                       symchIxi;
   genericStack_t           *factoringsStackp;
-  int                       ruleIdi;
 
   if (traverserp == NULL) {
     errno = EINVAL;
@@ -3051,12 +3050,7 @@ short marpaWrapperAsf_traverse_rh_ruleIdb(marpaWrapperAsfTraverser_t *traverserp
     MARPAWRAPPER_ERRORF(genericLoggerp, "Null factorings stack at symch indice %d", symchIxi);
     goto err;
   }
-  ruleIdi = GENERICSTACK_GET_INT(factoringsStackp, 0);
-  if (ruleIdi < 0) {
-    MARPAWRAPPER_ERROR(genericLoggerp, "Negative rule id");
-    goto err;   
-  }
-  *ruleIdip = ruleIdi;
+  *ruleIdip = GENERICSTACK_GET_INT(factoringsStackp, 0);
 
   MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "return 1, *ruleIdip=%d", *ruleIdip);
   return 1;
