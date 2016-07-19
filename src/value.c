@@ -35,16 +35,16 @@ marpaWrapperValue_t *marpaWrapperValue_newp(marpaWrapperRecognizer_t *marpaWrapp
     goto err;
   }
 
+  if (marpaWrapperValueOptionp == NULL) {
+    marpaWrapperValueOptionp = &marpaWrapperValueOptionDefault;
+  }
+  genericLoggerp = marpaWrapperValueOptionp->genericLoggerp;
+
   /* Impossible if we are already valuating it */
   if (marpaWrapperRecognizerp->treeModeb != MARPAWRAPPERRECOGNIZERTREEMODE_NA) {
     MARPAWRAPPER_ERROR(genericLoggerp, "Already in valuation mode");
     goto err;
   }
-
-  if (marpaWrapperValueOptionp == NULL) {
-    marpaWrapperValueOptionp = &marpaWrapperValueOptionDefault;
-  }
-  genericLoggerp = marpaWrapperValueOptionp->genericLoggerp;
 
   /* Create a value instance */
   marpaWrapperValuep = malloc(sizeof(marpaWrapperValue_t));
