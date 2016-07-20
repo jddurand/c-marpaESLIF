@@ -38,8 +38,6 @@ extern "C" {
   marpaWrapper_EXPORT short                        marpaWrapperRecognizer_progressb(marpaWrapperRecognizer_t *marpaWrapperRecognizerp, int starti, int endi, size_t *nProgresslp, marpaWrapperRecognizerProgress_t **progresspp);
   marpaWrapper_EXPORT short                        marpaWrapperRecognizer_progressLogb(marpaWrapperRecognizer_t *marpaWrapperRecognizerp, int starti, int endi, genericLoggerLevel_t logleveli, void *userDatavp, symbolDescriptionCallback_t symbolDescriptionCallbackp);
   marpaWrapper_EXPORT marpaWrapperGrammar_t       *marpaWrapperRecognizer_grammarp(marpaWrapperRecognizer_t *marpaWrapperRecognizerp);
-  marpaWrapper_EXPORT short                        marpaWrapperRecognizer_earleySetsToValueb(marpaWrapperRecognizer_t *marpaWrapperRecognizerp, int startEarleySeti, int lengthInParseLocationsi);
-  marpaWrapper_EXPORT short                        marpaWrapperRecognizer_latestEarleysetValueb(marpaWrapperRecognizer_t *marpaWrapperRecognizerp, int indicei);
   marpaWrapper_EXPORT void                         marpaWrapperRecognizer_freev(marpaWrapperRecognizer_t *marpaWrapperRecognizerp);
 #ifdef __cplusplus
 }
