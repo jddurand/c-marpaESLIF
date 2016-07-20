@@ -33,13 +33,11 @@ extern "C" {
   marpaWrapper_EXPORT short                     marpaWrapperAsf_traverse_rh_lengthb(marpaWrapperAsfTraverser_t *traverserp, size_t *lengthlp);
   marpaWrapper_EXPORT short                     marpaWrapperAsf_traverse_symbolIdb(marpaWrapperAsfTraverser_t *traverserp, int *symbolIdip);
   marpaWrapper_EXPORT short                     marpaWrapperAsf_traverse_ruleIdb(marpaWrapperAsfTraverser_t *traverserp, int *ruleIdip);
-  marpaWrapper_EXPORT short                     marpaWrapperAsf_traverse_span(marpaWrapperAsfTraverser_t *traverserp, int *startip, int *lengthip);
   marpaWrapper_EXPORT short                     marpaWrapperAsf_traverse_nextFactoringb(marpaWrapperAsfTraverser_t *traverserp, int *factoringIxip);
   marpaWrapper_EXPORT short                     marpaWrapperAsf_traverse_nextSymchb(marpaWrapperAsfTraverser_t *traverserp, int *symchIxip);
   marpaWrapper_EXPORT short                     marpaWrapperAsf_traverse_nextb(marpaWrapperAsfTraverser_t *traverserp, int *idip);
   marpaWrapper_EXPORT genericStack_t           *marpaWrapperAsf_traverse_rh_valuesStackp(marpaWrapperAsfTraverser_t *traverserp);
   marpaWrapper_EXPORT genericStack_t           *marpaWrapperAsf_traverse_rh_allChoicesStackp(marpaWrapperAsfTraverser_t *traverserp);
-  marpaWrapper_EXPORT void                     *marpaWrapperAsf_traverse_rh_valuep(marpaWrapperAsfTraverser_t *traverserp, size_t rhIxi);
   marpaWrapper_EXPORT void                     *marpaWrapperAsf_traverse_rh_valuep(marpaWrapperAsfTraverser_t *traverserp, size_t rhIxi);
   marpaWrapper_EXPORT marpaWrapperAsf_t        *marpaWrapperAsf_traverse_asfp(marpaWrapperAsfTraverser_t *traverserp);
   marpaWrapper_EXPORT marpaWrapperRecognizer_t *marpaWrapperAsf_recognizerp(marpaWrapperAsf_t *marpaWrapperAsfp);
