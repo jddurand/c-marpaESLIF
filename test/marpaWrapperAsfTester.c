@@ -330,6 +330,7 @@ static void *pruning_traverserCallback(marpaWrapperAsfTraverser_t *traverserp, v
 
   /* A token is a single choice, and we know enough to fully Penn-tag it */
   if (ruleIdi < 0) {
+    /*
     my $literal = $glade->literal();
       my $penn_tag = penn_tag($symbol_name);
       return "($penn_tag $literal)";
@@ -345,6 +346,8 @@ static void *pruning_traverserCallback(marpaWrapperAsfTraverser_t *traverserp, v
       $join_ws = qq{\n   } if $symbol_name eq 'S';
       my $penn_tag = penn_tag($symbol_name);
       return "($penn_tag " . ( join $join_ws, @return_value ) . ')';
+    */
+  }
 
   GENERICLOGGER_TRACEF(genericLoggerp, "[%s] return NULL", funcs);
   return NULL;
