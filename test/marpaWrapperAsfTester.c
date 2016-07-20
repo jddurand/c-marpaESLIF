@@ -5,7 +5,17 @@
 #include "genericLogger.h"
 #include "genericStack.h"
 
-static void *traverserCallback(marpaWrapperAsfTraverser_t *traverserp, void *userDatavp);
+typedef struct traverseContext {
+  marpaWrapperAsf_t        *marpaWrapperAsfp;
+  int                      *symbolip;
+  int                      *ruleip;
+  genericStack_t           *inputStackp;
+  genericStack_t           *outputStackp;
+  genericLogger_t          *genericLoggerp;
+} traverseContext_t;
+
+static char *penn_tag(traverseContext_t *traverseContextp, int symbolIdi);
+static void *pruning_traverserCallback(marpaWrapperAsfTraverser_t *traverserp, void *userDatavp);
 
 enum { S = 0, NP, VP, period, NN, NNS, DT, CC, VBZ, MAX_SYMBOL };
 enum { S_RULE = 0,
@@ -20,15 +30,6 @@ enum { S_RULE = 0,
        VP_RULE04,
        VP_RULE05,
        MAX_RULE };
-
-typedef struct traverseContext {
-  marpaWrapperAsf_t        *marpaWrapperAsfp;
-  int                      *symbolip;
-  int                      *ruleip;
-  genericStack_t           *inputStackp;
-  genericStack_t           *outputStackp;
-  genericLogger_t          *genericLoggerp;
-} traverseContext_t;
 
 int main(int argc, char **argv) {
   marpaWrapperGrammar_t         *marpaWrapperGrammarp = NULL;
@@ -278,7 +279,7 @@ int main(int argc, char **argv) {
   /* Do the parse tree traverse */
   /* -------------------------- */
   traverseContext.marpaWrapperAsfp = marpaWrapperAsfp;
-  valuep = marpaWrapperAsf_traversep(marpaWrapperAsfp, traverserCallback, &traverseContext);
+  valuep = marpaWrapperAsf_traversep(marpaWrapperAsfp, pruning_traverserCallback, &traverseContext);
  
   if (marpaWrapperAsfp != NULL) {
     marpaWrapperAsf_freev(marpaWrapperAsfp);
@@ -304,14 +305,98 @@ int main(int argc, char **argv) {
 }
 
 /********************************************************************************/
-static void *traverserCallback(marpaWrapperAsfTraverser_t *traverserp, void *userDatavp)
+static void *pruning_traverserCallback(marpaWrapperAsfTraverser_t *traverserp, void *userDatavp)
 /********************************************************************************/
 {
-  char funcs[] = "traverserCallback";
+  char               funcs[] = "pruning_traverserCallback";
   traverseContext_t *traverseContextp = (traverseContext_t *) userDatavp;
-  genericLogger_t *genericLoggerp = traverseContextp->genericLoggerp;
+  genericLogger_t   *genericLoggerp = traverseContextp->genericLoggerp;
+  int                ruleIdi;
+  int                symbolIdi;
+  char              *symbolNames;
+
+  /* This routine converts the glade into a list of Penn-tagged elements.  It is called recursively */
+
+  if (marpaWrapperAsf_traverse_ruleIdb(traverserp, &ruleIdi) == 0) {
+    goto err;
+  }
+  if (marpaWrapperAsf_traverse_symbolIdb(traverserp, &symbolIdi) == 0) {
+    goto err;
+  }
+  symbolNames = penn_tag(traverseContextp, symbolIdi);
+  if (symbolNames == NULL) {
+    goto err;
+  }
+
+  /* A token is a single choice, and we know enough to fully Penn-tag it */
+  if (ruleIdi < 0) {
+    my $literal = $glade->literal();
+      my $penn_tag = penn_tag($symbol_name);
+      return "($penn_tag $literal)";
+      }
+
+      my $length = $glade->rh_length();
+      my @return_value = map { $glade->rh_value($_) } 0 .. $length - 1;
+
+      # Special case for the start rule
+      return (join q{ }, @return_value) . "\n" if  $symbol_name eq '[:start]' ;
+
+      my $join_ws = q{ };
+      $join_ws = qq{\n   } if $symbol_name eq 'S';
+      my $penn_tag = penn_tag($symbol_name);
+      return "($penn_tag " . ( join $join_ws, @return_value ) . ')';
 
   GENERICLOGGER_TRACEF(genericLoggerp, "[%s] return NULL", funcs);
   return NULL;
+
+ err:
+  if (symbolNames != NULL) {
+    free(symbolNames);
+  }
 }
 
+/********************************************************************************/
+static char *penn_tag(traverseContext_t *traverseContextp, int symbolIdi)
+/********************************************************************************/
+{
+  char *s;
+  
+  switch (symbolIdi) {
+  case S:
+    s = strdup("S");
+    break;
+  case NP:
+    s = strdup("NP");
+    break;
+  case VP:
+    s = strdup("VP");
+    break;
+  case period:
+    s = strdup(".");
+    break;
+  case NN:
+    s = strdup("NN");
+    break;
+  case NNS:
+    s = strdup("NNS");
+    break;
+  case DT:
+    s = strdup("DT");
+    break;
+  case CC:
+    s = strdup("CC");
+    break;
+  case VBZ:
+    s = strdup("VBZ");
+    break;
+  default:
+    s = NULL;
+    break;
+  }
+
+  if (s == NULL) {
+    GENERICLOGGER_ERRORF(traverseContextp->genericLoggerp, "SymbolIdi=%d returns NULL description", symbolIdi);
+  }
+
+  return s;
+}
