@@ -33,6 +33,7 @@ struct marpaWrapperRecognizer {
   marpaWrapperRecognizerProgress_t    *progressp;
 
   marpaWrapperRecognizerTreeMode_t     treeModeb;     /* Indicates that we are already in tree mode */
+  short                                haveVariableLengthTokenb; /* Used in forest mode */
 };
 
 #endif /* MARPAWRAPPER_INTERNAL_RECOGNIZER_H */
