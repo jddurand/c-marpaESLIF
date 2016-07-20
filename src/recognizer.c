@@ -52,6 +52,7 @@ marpaWrapperRecognizer_t *marpaWrapperRecognizer_newp(marpaWrapperGrammar_t *mar
   marpaWrapperRecognizerp->nProgressl                   = 0;
   marpaWrapperRecognizerp->progressp                    = NULL;
   marpaWrapperRecognizerp->treeModeb                    = MARPAWRAPPERRECOGNIZERTREEMODE_NA;
+  marpaWrapperRecognizerp->haveVariableLengthTokenb     = 0;
 
   MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_r_new(%p)", marpaWrapperGrammarp->marpaGrammarp);
   marpaWrapperRecognizerp->marpaRecognizerp = marpa_r_new(marpaWrapperGrammarp->marpaGrammarp);
@@ -152,6 +153,14 @@ short marpaWrapperRecognizer_alternativeb(marpaWrapperRecognizer_t *marpaWrapper
   if (marpa_r_alternative(marpaWrapperRecognizerp->marpaRecognizerp, (Marpa_Symbol_ID) symboli, valuei, lengthi) != MARPA_ERR_NONE) {
     MARPAWRAPPER_MARPA_G_ERROR(genericLoggerp, marpaWrapperRecognizerp->marpaWrapperGrammarp->marpaGrammarp);
     goto err;
+  }
+
+  /* Remember that a token have a length > 1 */
+  if (lengthi > 1) {
+    if (marpaWrapperRecognizerp->haveVariableLengthTokenb == 0) {
+      MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "Remembering that at least one token have a length > 1");
+      marpaWrapperRecognizerp->haveVariableLengthTokenb = 1;
+    }
   }
 
   MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return 1");

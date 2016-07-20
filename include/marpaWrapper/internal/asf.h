@@ -85,7 +85,7 @@ struct marpaWrapperAsf {
 
 struct marpaWrapperAsfTraverser {
   marpaWrapperAsf_t      *marpaWrapperAsfp;
-  genericStack_t         *valuep;
+  genericStack_t         *valueStackp;
   marpaWrapperAsfGlade_t *gladep;
   int                     symchIxi;
   int                     factoringIxi;

@@ -15,7 +15,7 @@ typedef struct traverseContext {
 } traverseContext_t;
 
 static char *penn_tag(traverseContext_t *traverseContextp, int symbolIdi);
-static void *pruning_traverserCallback(marpaWrapperAsfTraverser_t *traverserp, void *userDatavp);
+static int pruning_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, void *userDatavp);
 
 enum { S = 0, NP, VP, period, NN, NNS, DT, CC, VBZ, MAX_SYMBOL };
 enum { S_RULE = 0,
@@ -41,7 +41,7 @@ int main(int argc, char **argv) {
   int                           *symbolArrayp = NULL;
   size_t                         i;
   size_t                         outputStackSizel;
-  void                          *valuep;
+  int                            valuei;
   traverseContext_t              traverseContext = { NULL, symbolip, ruleip, NULL, NULL, GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_TRACE) };
   
   marpaWrapperGrammarOption_t    marpaWrapperGrammarOption    = { GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_TRACE),
@@ -279,7 +279,7 @@ int main(int argc, char **argv) {
   /* Do the parse tree traverse */
   /* -------------------------- */
   traverseContext.marpaWrapperAsfp = marpaWrapperAsfp;
-  valuep = marpaWrapperAsf_traversep(marpaWrapperAsfp, pruning_traverserCallback, &traverseContext);
+  valuei = marpaWrapperAsf_traversei(marpaWrapperAsfp, pruning_traverserCallbacki, &traverseContext);
  
   if (marpaWrapperAsfp != NULL) {
     marpaWrapperAsf_freev(marpaWrapperAsfp);
@@ -305,24 +305,29 @@ int main(int argc, char **argv) {
 }
 
 /********************************************************************************/
-static void *pruning_traverserCallback(marpaWrapperAsfTraverser_t *traverserp, void *userDatavp)
+static int pruning_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, void *userDatavp)
 /********************************************************************************/
 {
-  char               funcs[] = "pruning_traverserCallback";
+  char               funcs[] = "pruning_traverserCallbacki";
   traverseContext_t *traverseContextp = (traverseContext_t *) userDatavp;
   genericLogger_t   *genericLoggerp = traverseContextp->genericLoggerp;
   int                ruleIdi;
   int                symbolIdi;
-  char              *symbolNames;
+  char              *symbolNames = NULL;
 
   /* This routine converts the glade into a list of Penn-tagged elements.  It is called recursively */
 
-  if (marpaWrapperAsf_traverse_ruleIdb(traverserp, &ruleIdi) == 0) {
+  ruleIdi = marpaWrapperAsf_traverse_ruleIdi(traverserp);
+  if (ruleIdi < 0) {
     goto err;
   }
-  if (marpaWrapperAsf_traverse_symbolIdb(traverserp, &symbolIdi) == 0) {
+  GENERICLOGGER_TRACEF(genericLoggerp, "[%s] ruleIdi=%d", funcs, ruleIdi);
+  symbolIdi = marpaWrapperAsf_traverse_symbolIdi(traverserp);
+  if (symbolIdi < 0) {
     goto err;
   }
+  GENERICLOGGER_TRACEF(genericLoggerp, "[%s] symbolIdi=%d", funcs, symbolIdi);
+
   symbolNames = penn_tag(traverseContextp, symbolIdi);
   if (symbolNames == NULL) {
     goto err;
@@ -349,13 +354,16 @@ static void *pruning_traverserCallback(marpaWrapperAsfTraverser_t *traverserp, v
     */
   }
 
-  GENERICLOGGER_TRACEF(genericLoggerp, "[%s] return NULL", funcs);
-  return NULL;
+  GENERICLOGGER_TRACEF(genericLoggerp, "[%s] return -1", funcs);
+  return -1;
 
  err:
   if (symbolNames != NULL) {
     free(symbolNames);
   }
+
+  GENERICLOGGER_TRACEF(genericLoggerp, "[%s] return -1", funcs);
+  return -1;
 }
 
 /********************************************************************************/
