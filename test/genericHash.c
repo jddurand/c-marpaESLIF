@@ -6,7 +6,7 @@ typedef struct myContext {
   genericLogger_t *genericLoggerp;
 } myContext_t;
 
-static size_t myHashIndFunction(void *userDatavp, genericStackItemType_t itemType, void **pp);
+static size_t myHashIndFunction(void *userDatavp, genericStackItemType_t itemType, void *p);
 static short  myHashKeyCmpFunction(void *userDatavp, void *p1, void *p2);
 static void  *myHashCopyFunction(void *userDatavp, void *p);
 static void   myHashFreeFunction(void *userDatavp, void *p);
@@ -120,14 +120,14 @@ static int myHashTest(short withAllocb) {
   GENERICLOGGER_TRACEF(genericLoggerp, "Freeing hash at %p", myHashp);
   GENERICHASH_FREE(myHashp, myContextp);
   
-  GENERICLOGGER_INFOF(genericLoggerp, "exit %d", rci);
+  GENERICLOGGER_INFOF(genericLoggerp, "return %d", rci);
   GENERICLOGGER_FREE(genericLoggerp);
 
   return rci;
 }
 
 /*********************************************************************/
-static size_t myHashIndFunction(void *userDatavp, genericStackItemType_t itemType, void **pp)
+static size_t myHashIndFunction(void *userDatavp, genericStackItemType_t itemType, void *p)
 /*********************************************************************/
 {
   char             funcs[] = "myHashIndFunction";
@@ -135,16 +135,18 @@ static size_t myHashIndFunction(void *userDatavp, genericStackItemType_t itemTyp
   genericLogger_t *genericLoggerp = myContextp->genericLoggerp;
   size_t           rcl = (size_t)-1;
 
-  GENERICLOGGER_TRACEF(genericLoggerp, "... [%s] Computing index of object of type %d pointed by %p", funcs, (int) itemType, pp);
+  GENERICLOGGER_TRACEF(genericLoggerp, "... [%s] Computing index of object of type %d pointed by %p", funcs, (int) itemType, p);
 
   switch (itemType) {
   case GENERICSTACKITEMTYPE_PTR:
     {
-      void *p = *pp;
-      int   absi;
+      myContext_t **cpp = (myContext_t **) p;
+      myContext_t *cp = *cpp;
+      int  i  = (int) cp;
+      int  absi;
 
-      GENERICLOGGER_TRACEF(genericLoggerp, "... ... [%s] PTR content is %p", funcs, p);
-      absi = abs((int) p);
+      GENERICLOGGER_TRACEF(genericLoggerp, "... ... [%s] PTR is %p", funcs, cp);
+      absi = abs(i);
       rcl = (size_t) (absi % 50);
       GENERICLOGGER_TRACEF(genericLoggerp, "... ... [%s] Index %d", funcs, (int) rcl);
     }
@@ -166,13 +168,15 @@ static short myHashKeyCmpFunction(void *userDatavp, void *p1, void *p2)
   myContext_t     *myContextp = (myContext_t *) userDatavp;
   genericLogger_t *genericLoggerp = myContextp->genericLoggerp;
   short            rcb = 0;
-  myContext_t     *c1 = (myContext_t *) p1;
-  myContext_t     *c2 = (myContext_t *) p2;
+  myContext_t    **c1pp = (myContext_t **) p1;
+  myContext_t    **c2pp = (myContext_t **) p2;
+  myContext_t     *c1p = *c1pp;
+  myContext_t     *c2p = *c2pp;
 
-  GENERICLOGGER_TRACEF(genericLoggerp, "... [%s] Doing a comparison of pointers %p and %p", funcs, p1, p2);
+  GENERICLOGGER_TRACEF(genericLoggerp, "... [%s] Doing a comparison of pointers %p and %p", funcs, c1p, c2p);
 
-  if ((c1 != NULL) && (c2 != NULL)) {
-    rcb = (c1->genericLoggerp == c2->genericLoggerp);
+  if ((c1p != NULL) && (c2p != NULL)) {
+    rcb = (c1p->genericLoggerp == c2p->genericLoggerp);
   }
   
   GENERICLOGGER_TRACEF(genericLoggerp, "... [%s] Return %d", funcs, (int) rcb);
@@ -180,21 +184,26 @@ static short myHashKeyCmpFunction(void *userDatavp, void *p1, void *p2)
 }
 
 /*********************************************************************/
-static void  *myHashCopyFunction(void *userDatavp, void *p)
+static void *myHashCopyFunction(void *userDatavp, void *p)
 /*********************************************************************/
 {
   char             funcs[] = "myHashCopyFunction";
   myContext_t     *myContextp = (myContext_t *) userDatavp;
   genericLogger_t *genericLoggerp = myContextp->genericLoggerp;
-  myContext_t     *c = malloc(sizeof(myContext_t));
+  myContext_t    **cpp = (myContext_t **) p;
+  myContext_t     *cp = *cpp;
+  myContext_t     *c = NULL;
 
-  if (c == NULL) {
-    GENERICLOGGER_ERRORF(genericLoggerp, "... [%s] malloc error, %s", funcs, strerror(errno));
-  } else {
-    c->genericLoggerp = myContextp->genericLoggerp;
+  if (cp != NULL) {
+    c = malloc(sizeof(myContext_t));
+    if (c == NULL) {
+      GENERICLOGGER_ERRORF(genericLoggerp, "... [%s] malloc error, %s", funcs, strerror(errno));
+    } else {
+      c->genericLoggerp = cp->genericLoggerp;
+    }
   }
 
-  GENERICLOGGER_TRACEF(genericLoggerp, "... [%s] Return malloced area %p", funcs, c);
+  GENERICLOGGER_TRACEF(genericLoggerp, "... [%s] Return %p", funcs, c);
   return c;
 }
 
@@ -204,8 +213,12 @@ static void  myHashFreeFunction(void *userDatavp, void *p)
 {
   char             funcs[] = "myHashFreeFunction";
   myContext_t     *myContextp = (myContext_t *) userDatavp;
+  myContext_t    **cpp = (myContext_t **) p;
+  myContext_t     *cp = *cpp;
   genericLogger_t *genericLoggerp = myContextp->genericLoggerp;
 
-  GENERICLOGGER_ERRORF(genericLoggerp, "... [%s] Freeing malloced area %p", funcs, p);
-  free(p);
+  if (cp != NULL) {
+    GENERICLOGGER_ERRORF(genericLoggerp, "... [%s] Freeing malloced area %p", funcs, cp);
+    free(cp);
+  }
 }
