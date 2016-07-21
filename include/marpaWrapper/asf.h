@@ -33,7 +33,7 @@ extern "C" {
 #endif
   marpaWrapper_EXPORT marpaWrapperAsf_t        *marpaWrapperAsf_newp(marpaWrapperRecognizer_t *marpaWrapperRecognizerp, marpaWrapperAsfOption_t *marpaWrapperAsfOptionp);
   marpaWrapper_EXPORT int                       marpaWrapperAsf_traversei(marpaWrapperAsf_t *marpaWrapperAsfp, traverserCallback_t traverserCallbackp, void *userDatavp);
-  marpaWrapper_EXPORT short                     marpaWrapperAsf_traverse_rh_lengthb(marpaWrapperAsfTraverser_t *traverserp, size_t *lengthlp);
+  marpaWrapper_EXPORT size_t                    marpaWrapperAsf_traverse_rh_lengthl(marpaWrapperAsfTraverser_t *traverserp);
   marpaWrapper_EXPORT int                       marpaWrapperAsf_traverse_symbolIdi(marpaWrapperAsfTraverser_t *traverserp);
   marpaWrapper_EXPORT int                       marpaWrapperAsf_traverse_ruleIdi(marpaWrapperAsfTraverser_t *traverserp);
   marpaWrapper_EXPORT short                     marpaWrapperAsf_traverse_nextFactoringb(marpaWrapperAsfTraverser_t *traverserp, int *factoringIxip);
