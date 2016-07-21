@@ -314,6 +314,7 @@ static int pruning_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, vo
   genericLogger_t   *genericLoggerp = traverseContextp->genericLoggerp;
   int                ruleIdi;
   int                symbolIdi;
+  genericStack_t    *returnValueStackp = NULL;
 
   /* This routine converts the glade into a list of Penn-tagged elements.  It is called recursively */
 
@@ -347,7 +348,6 @@ static int pruning_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, vo
   } else {
     size_t          lengthl;
     size_t          rhIxi;
-    genericStack_t *returnValueStackp;   
     char *ruleNames = NULL;
     
     GENERICSTACK_NEW(returnValueStackp);
@@ -402,6 +402,7 @@ static int pruning_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, vo
   return -1;
 
  err:
+  GENERICSTACK_FREE(returnValueStackp);
   GENERICLOGGER_TRACEF(genericLoggerp, "[%s] return -1", funcs);
   return -1;
 }
