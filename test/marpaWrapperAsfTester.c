@@ -14,7 +14,8 @@ typedef struct traverseContext {
   genericLogger_t          *genericLoggerp;
 } traverseContext_t;
 
-static char *penn_tag(traverseContext_t *traverseContextp, int symbolIdi);
+static char *penn_tag_symbols(traverseContext_t *traverseContextp, int symbolIdi);
+static char *penn_tag_rules(traverseContext_t *traverseContextp, int ruleIdi);
 static int pruning_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, void *userDatavp);
 
 enum { S = 0, NP, VP, period, NN, NNS, DT, CC, VBZ, MAX_SYMBOL };
@@ -313,7 +314,6 @@ static int pruning_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, vo
   genericLogger_t   *genericLoggerp = traverseContextp->genericLoggerp;
   int                ruleIdi;
   int                symbolIdi;
-  char              *symbolNames = NULL;
 
   /* This routine converts the glade into a list of Penn-tagged elements.  It is called recursively */
 
@@ -328,13 +328,38 @@ static int pruning_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, vo
   }
   GENERICLOGGER_TRACEF(genericLoggerp, "[%s] symbolIdi=%d", funcs, symbolIdi);
 
-  symbolNames = penn_tag(traverseContextp, symbolIdi);
-  if (symbolNames == NULL) {
-    goto err;
-  }
-
   /* A token is a single choice, and we know enough to fully Penn-tag it */
   if (ruleIdi < 0) {
+    int   tokenValuei;
+    char *symbolNames = NULL;
+    
+    symbolNames = penn_tag_symbols(traverseContextp, symbolIdi);
+    if (symbolNames == NULL) {
+      goto err;
+    }
+
+    GENERICLOGGER_TRACEF(genericLoggerp, "[%s] Looking at token %d value", funcs, symbolIdi);
+    tokenValuei = marpaWrapperAsf_traverse_rh_valuei(traverserp, 0);
+    if (tokenValuei < 0) {
+      goto err;
+    }
+
+  } else {
+    genericStack_t *valuesStackp;   
+    char *ruleNames = NULL;
+    
+    ruleNames = penn_tag_rules(traverseContextp, ruleIdi);
+    if (ruleNames == NULL) {
+      goto err;
+    }
+
+    GENERICLOGGER_TRACEF(genericLoggerp, "[%s] Looking at rule %d RHS values", funcs, ruleIdi);
+    valuesStackp = marpaWrapperAsf_traverse_rh_valuesStackp(traverserp);
+    if (valuesStackp == NULL) {
+      goto err;
+    }
+  }
+  
     /*
     my $literal = $glade->literal();
       my $penn_tag = penn_tag($symbol_name);
@@ -352,22 +377,17 @@ static int pruning_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, vo
       my $penn_tag = penn_tag($symbol_name);
       return "($penn_tag " . ( join $join_ws, @return_value ) . ')';
     */
-  }
 
   GENERICLOGGER_TRACEF(genericLoggerp, "[%s] return -1", funcs);
   return -1;
 
  err:
-  if (symbolNames != NULL) {
-    free(symbolNames);
-  }
-
   GENERICLOGGER_TRACEF(genericLoggerp, "[%s] return -1", funcs);
   return -1;
 }
 
 /********************************************************************************/
-static char *penn_tag(traverseContext_t *traverseContextp, int symbolIdi)
+static char *penn_tag_symbols(traverseContext_t *traverseContextp, int symbolIdi)
 /********************************************************************************/
 {
   char *s;
@@ -407,6 +427,42 @@ static char *penn_tag(traverseContext_t *traverseContextp, int symbolIdi)
 
   if (s == NULL) {
     GENERICLOGGER_ERRORF(traverseContextp->genericLoggerp, "SymbolIdi=%d returns NULL description", symbolIdi);
+  }
+
+  return s;
+}
+
+/********************************************************************************/
+static char *penn_tag_rules(traverseContext_t *traverseContextp, int ruleIdi)
+/********************************************************************************/
+{
+  char *s;
+  
+  switch (ruleIdi) {
+  case S_RULE:
+    s = strdup("S_RULE");
+    break;
+  case NP_RULE01:
+  case NP_RULE02:
+  case NP_RULE03:
+  case NP_RULE04:
+  case NP_RULE05:
+    s = strdup("NP");
+    break;
+  case VP_RULE01:
+  case VP_RULE02:
+  case VP_RULE03:
+  case VP_RULE04:
+  case VP_RULE05:
+    s = strdup("VP");
+    break;
+  default:
+    s = NULL;
+    break;
+  }
+
+  if (s == NULL) {
+    GENERICLOGGER_ERRORF(traverseContextp->genericLoggerp, "ruleIdi=%d returns NULL description", ruleIdi);
   }
 
   return s;
