@@ -345,19 +345,39 @@ static int pruning_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, vo
     }
 
   } else {
-    genericStack_t *valuesStackp;   
+    size_t          lengthl;
+    size_t          rhIxi;
+    genericStack_t *returnValueStackp;   
     char *ruleNames = NULL;
     
+    GENERICSTACK_NEW(returnValueStackp);
+    if (GENERICSTACK_ERROR(returnValueStackp)) {
+      GENERICLOGGER_ERRORF(genericLoggerp, "returnValueStackp initialization failure, %s", strerror(errno));
+      goto err;
+    }
+
+    lengthl = marpaWrapperAsf_traverse_rh_lengthl(traverserp);
+    if (lengthl == (size_t) -1) {
+      goto err;
+    }
+
+    for (rhIxi = 0; rhIxi <= lengthl - 1; rhIxi++) {
+      int valuei = marpaWrapperAsf_traverse_rh_valuei(traverserp, rhIxi);
+      if (valuei < 0) {
+        goto err;
+      }
+      GENERICSTACK_PUSH_INT(returnValueStackp, valuei);
+      if (GENERICSTACK_ERROR(returnValueStackp)) {
+        GENERICLOGGER_ERRORF(genericLoggerp, "returnValueStackp push failure, %s", strerror(errno));
+        goto err;
+      }
+    }
+
     ruleNames = penn_tag_rules(traverseContextp, ruleIdi);
     if (ruleNames == NULL) {
       goto err;
     }
 
-    GENERICLOGGER_TRACEF(genericLoggerp, "[%s] Looking at rule %d RHS values", funcs, ruleIdi);
-    valuesStackp = marpaWrapperAsf_traverse_rh_valuesStackp(traverserp);
-    if (valuesStackp == NULL) {
-      goto err;
-    }
   }
   
     /*

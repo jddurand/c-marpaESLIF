@@ -126,7 +126,7 @@ static inline short                      _marpaWrapperAsf_and_nodes_to_cause_nid
 static inline short                      _marpaWrapperAsf_glade_is_visitedb(marpaWrapperAsf_t *marpaWrapperAsfp, int gladeIdi);
 static inline void                       _marpaWrapperAsf_glade_visited_clearb(marpaWrapperAsf_t *marpaWrapperAsfp, int *gladeIdip);
 static inline short                      _marpaWrapperAsf_glade_symch_countb(marpaWrapperAsf_t *marpaWrapperAsfp, int gladeIdi, size_t *countlp);
-static inline short                      _marpaWrapperAsf_glade_symbol_idb(marpaWrapperAsf_t *marpaWrapperAsfp, int gladeIdi, int *symbolIdip);
+static inline int                        _marpaWrapperAsf_glade_symbol_idi(marpaWrapperAsf_t *marpaWrapperAsfp, int gladeIdi);
 static inline short                      _marpaWrapperAsf_glade_spanb(marpaWrapperAsf_t *marpaWrapperAsfp, int gladeIdi, int *spanIdip);
 
 /* Specific to nook */
@@ -381,8 +381,10 @@ marpaWrapperAsf_t *marpaWrapperAsf_newp(marpaWrapperRecognizer_t *marpaWrapperRe
 	  sizeof(marpaWrapperAfsAndNodeIdAndPredecessorId_t),
 	  _marpaWrapperAsf_andNodeIdAndPredecessorIdCmpi);
     
+    MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "OR_NODE[%3d]", orNodei);
     for (ixi = 0; ixi < andNodeCounti; ixi++) {
       andNodep[ixi] = andNodeIdAndPredecessorIdp[ixi].andNodeIdi;
+      MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "\tAND_NODE[%3d]: %3d", ixi, andNodep[ixi]);
     }
 
     free(andNodeIdAndPredecessorIdp);
@@ -824,7 +826,31 @@ static inline int _marpaWrapperAsf_andNodeIdAndPredecessorIdCmpi(const void *p1,
   marpaWrapperAfsAndNodeIdAndPredecessorId_t *a1 = (marpaWrapperAfsAndNodeIdAndPredecessorId_t *) p1;
   marpaWrapperAfsAndNodeIdAndPredecessorId_t *a2 = (marpaWrapperAfsAndNodeIdAndPredecessorId_t *) p2;
 
-  return (a1->andNodePredecessorIdi < a2->andNodePredecessorIdi) ? -1 : ((a1->andNodePredecessorIdi > a2->andNodePredecessorIdi) ? 1 : 0);
+  return
+    (a1->andNodePredecessorIdi < a2->andNodePredecessorIdi)
+    ?
+    -1
+    :
+    (
+     (a1->andNodePredecessorIdi > a2->andNodePredecessorIdi)
+     ?
+     1
+     :
+     (
+      (a1->andNodeIdi < a2->andNodeIdi)
+      ?
+      -1
+      :
+      (
+       (a1->andNodeIdi > a2->andNodeIdi)
+       ?
+       1
+       :
+       0
+       )
+      )
+     )
+    ;
 }
 
 /****************************************************************************/
@@ -1517,9 +1543,10 @@ static inline int _marpaWrapperAsf_nidset_sort_ixi(marpaWrapperAsf_t *marpaWrapp
   int                       rci;
   
   if (nidi >= 0) {
-    int irlIdi = _marpa_b_or_node_irl(marpaBocagep, nidi);
-    
-    rci = _marpa_g_source_xrl(marpaGrammarp, irlIdi);
+    Marpa_IRL_ID  irlIdi = _marpa_b_or_node_irl(marpaBocagep, nidi);
+    Marpa_Rule_ID xrlIdi = _marpa_g_source_xrl(marpaGrammarp, irlIdi);
+
+    rci = (int) xrlIdi;
   } else {
     int andNodeIdi = _marpaWrapperAsf_nid_to_and_nodei(nidi);
     int tokenNsyIdi = _marpa_b_and_node_symbol(marpaBocagep, andNodeIdi);
@@ -1578,6 +1605,38 @@ static inline int _marpaWrapperAsf_nid_token_idi(marpaWrapperAsf_t *marpaWrapper
 }
 
 /****************************************************************************/
+static inline int _marpaWrapperAsf_nid_symbol_idi(marpaWrapperAsf_t *marpaWrapperAsfp, int nidi)
+/****************************************************************************/
+{
+  const static char         funcs[]                 = "_marpaWrapperAsf_nid_symbol_idi";
+  genericLogger_t          *genericLoggerp          = marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp;
+  int                       idi                     = -1;
+  int                       tokenIdi;
+
+  tokenIdi = _marpaWrapperAsf_nid_token_idi(marpaWrapperAsfp, nidi);
+  if (tokenIdi >= 0) {
+    idi = tokenIdi;
+  } else {
+    if (nidi < 0) {
+      MARPAWRAPPER_ERRORF(genericLoggerp, "No symbol ID for node ID: %d", nidi);
+    } else {
+      marpaWrapperRecognizer_t *marpaWrapperRecognizerp = marpaWrapperAsfp->marpaWrapperRecognizerp;
+      marpaWrapperGrammar_t    *marpaWrapperGrammarp    = marpaWrapperRecognizerp->marpaWrapperGrammarp;
+      Marpa_Grammar             marpaGrammarp           = marpaWrapperGrammarp->marpaGrammarp;
+      Marpa_Bocage              marpaBocagep            = marpaWrapperAsfp->marpaBocagep;
+      Marpa_IRL_ID              irlIdi                  = _marpa_b_or_node_irl(marpaBocagep, nidi);
+      Marpa_Rule_ID             xrlIdi                  = _marpa_g_source_xrl(marpaGrammarp, irlIdi);
+      Marpa_Symbol_ID           lhsIdi                  = marpa_g_rule_lhs(marpaGrammarp, xrlIdi);
+
+      idi = (int) lhsIdi;
+    }
+  }
+
+  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "return %d", idi);
+  return idi;
+}
+
+/****************************************************************************/
 static inline int _marpaWrapperAsf_nid_rule_idi(marpaWrapperAsf_t *marpaWrapperAsfp, int nidi)
 /****************************************************************************/
 {
@@ -1602,7 +1661,7 @@ static inline int _marpaWrapperAsf_nid_rule_idi(marpaWrapperAsf_t *marpaWrapperA
 static inline short _marpaWrapperAsf_nid_spanb(marpaWrapperAsf_t *marpaWrapperAsfp, int nidi, int *spanIdip)
 /****************************************************************************/
 {
-  const static char         funcs[]                 = "_marpaWrapperAsf_nid_rule_idi";
+  const static char         funcs[]                 = "_marpaWrapperAsf_nid_rule_spanb";
   genericLogger_t          *genericLoggerp          = marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp;
   int                       idi                     = -1;
 
@@ -2687,7 +2746,7 @@ static inline short _marpaWrapperAsf_glade_symch_countb(marpaWrapperAsf_t *marpa
 }
 
 /****************************************************************************/
-static inline short _marpaWrapperAsf_glade_symbol_idb(marpaWrapperAsf_t *marpaWrapperAsfp, int gladeIdi, int *symbolIdip)
+static inline int _marpaWrapperAsf_glade_symbol_idi(marpaWrapperAsf_t *marpaWrapperAsfp, int gladeIdi)
 /****************************************************************************/
 {
   const static char        funcs[]        = "_marpaWrapperAsf_glade_symbol_idb";
@@ -2695,6 +2754,7 @@ static inline short _marpaWrapperAsf_glade_symbol_idb(marpaWrapperAsf_t *marpaWr
   short                    rcb            = 0;
   int                      nid0;
   marpaWrapperAsfNidset_t *nidsetp;
+  int                      symbolIdi;
 
   if (! GENERICSTACK_IS_PTR(marpaWrapperAsfp->nidsetStackp, (size_t) gladeIdi)) {
     MARPAWRAPPER_ERRORF(genericLoggerp, "No glade found for glade ID %d", gladeIdi);
@@ -2706,12 +2766,17 @@ static inline short _marpaWrapperAsf_glade_symbol_idb(marpaWrapperAsf_t *marpaWr
     goto err;
   }
   
-  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "return 1, symbolIdi=%d", *symbolIdip);
-  return 1;
+  symbolIdi = _marpaWrapperAsf_nid_symbol_idi(marpaWrapperAsfp, nid0);
+  if (symbolIdi < 0) {
+    goto err;
+  }
+
+  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "return %d", symbolIdi);
+  return symbolIdi;
 
  err:
-  MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return 0");
-  return 0;
+  MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return -1");
+  return -1;
 }
 
 /****************************************************************************/
@@ -2747,10 +2812,10 @@ static inline short _marpaWrapperAsf_glade_spanb(marpaWrapperAsf_t *marpaWrapper
 }
 
 /****************************************************************************/
-short marpaWrapperAsf_traverse_rh_lengthb(marpaWrapperAsfTraverser_t *traverserp, size_t *lengthlp)
+size_t marpaWrapperAsf_traverse_rh_lengthl(marpaWrapperAsfTraverser_t *traverserp)
 /****************************************************************************/
 {
-  const static char         funcs[] = "marpaWrapperAsf_traverse_rh_lengthb";
+  const static char         funcs[] = "marpaWrapperAsf_traverse_rh_lengthl";
   marpaWrapperAsf_t        *marpaWrapperAsfp;
   genericLogger_t          *genericLoggerp;
   marpaWrapperAsfGlade_t   *gladep;
@@ -2759,19 +2824,15 @@ short marpaWrapperAsf_traverse_rh_lengthb(marpaWrapperAsfTraverser_t *traverserp
   int                       ruleIdi;
   int                       factoringIxi;
   genericStack_t           *factoringStackp;
+  size_t                    lengthl;
 
   if (traverserp == NULL) {
     errno = EINVAL;
-    return 0;
+    return (size_t) -1;
   }
 
   marpaWrapperAsfp = traverserp->marpaWrapperAsfp;
   genericLoggerp = marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp;
-
-  if (lengthlp == NULL) {
-    MARPAWRAPPER_ERROR(genericLoggerp, "lengthlp is NULL");
-    goto err;
-  }
 
   gladep = traverserp->gladep;
   if (gladep == NULL) {
@@ -2793,21 +2854,23 @@ short marpaWrapperAsf_traverse_rh_lengthb(marpaWrapperAsfTraverser_t *traverserp
     MARPAWRAPPER_ERRORF(genericLoggerp, "%s called for a token -- that is not allowed", funcs);
     goto err;
   }
-  factoringIxi = traverserp->factoringIxi;
+
+  /* symchesStackp contains entries that are in the form (rule_id, xxx, @factorings) */
+  factoringIxi = traverserp->factoringIxi + 2;
   if (! GENERICSTACK_IS_PTR(factoringsStackp, (size_t) factoringIxi)) {
     MARPAWRAPPER_ERRORF(genericLoggerp, "Not a pointer at indice %d of factoringsStackp", factoringIxi);
     goto err;
   }
   factoringStackp = GENERICSTACK_GET_PTR(factoringsStackp, factoringIxi);
 
-  *lengthlp = GENERICSTACK_USED(factoringStackp);
+  lengthl = GENERICSTACK_USED(factoringStackp);
   
-  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "return 1, lengthl = %d", (int) *lengthlp);
-  return 1;
+  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "return 1, lengthl = %d", (int) lengthl);
+  return lengthl;
 
  err:
-  MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return 0");
-  return 0;
+  MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return (size_t) -1");
+  return (size_t) -1;
 }
 
 /****************************************************************************/
@@ -2836,7 +2899,8 @@ genericStack_t *marpaWrapperAsf_traverse_rh_valuesStackp(marpaWrapperAsfTraverse
     goto err;
   }
 
-  if (marpaWrapperAsf_traverse_rh_lengthb(traverserp, &lengthl) == 0) {
+  lengthl = marpaWrapperAsf_traverse_rh_lengthl(traverserp);
+  if (lengthl < 0) {
     goto err;
   }
 
@@ -2921,7 +2985,8 @@ int marpaWrapperAsf_traverse_rh_valuei(marpaWrapperAsfTraverser_t *traverserp, s
     /* The span ID is the indice in the input stack */
     goto ok;
   }
-  factoringIxi = traverserp->factoringIxi;
+  /* symchesStackp contains entries in the form: (rule_id, xxx, @factorings) */
+  factoringIxi = traverserp->factoringIxi + 2;
   if (! GENERICSTACK_IS_PTR(factoringsStackp, (size_t) factoringIxi)) {
     MARPAWRAPPER_ERRORF(genericLoggerp, "Not an pointer at indice %d of factoringsStackp", factoringIxi);
     goto err;
@@ -3146,7 +3211,8 @@ int marpaWrapperAsf_traverse_symbolIdi(marpaWrapperAsfTraverser_t *traverserp)
   }
   gladeIdi = gladep->idi;
 
-  if (_marpaWrapperAsf_glade_symbol_idb(marpaWrapperAsfp, gladeIdi, &symbolIdi) == 0) {
+  symbolIdi = _marpaWrapperAsf_glade_symbol_idi(marpaWrapperAsfp, gladeIdi);
+  if (symbolIdi < 0) {
     goto err;
   }
 
