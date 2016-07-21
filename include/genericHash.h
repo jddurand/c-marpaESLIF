@@ -7,12 +7,12 @@
 
 /* A hash is nothing else but a generic stack of generic stacks */
 
-typedef size_t (*genericHashKeyIndFunction_t)(void *userDatavp, genericStackItemType_t itemType, void *p);
-typedef short  (*genericHashKeyCmpFunction_t)(void *userDatavp, void *p1, void *p2);
-typedef void  *(*genericHashKeyCopyFunction_t)(void *userDatavp, void *p);
-typedef void   (*genericHashKeyFreeFunction_t)(void *userDatavp, void *p);
-typedef void  *(*genericHashValCopyFunction_t)(void *userDatavp, void *p);
-typedef void   (*genericHashValFreeFunction_t)(void *userDatavp, void *p);
+typedef size_t (*genericHashKeyIndFunction_t)(void *userDatavp, genericStackItemType_t itemType, void **pp);
+typedef short  (*genericHashKeyCmpFunction_t)(void *userDatavp, void **pp1, void **pp2);
+typedef void  *(*genericHashKeyCopyFunction_t)(void *userDatavp, void **pp);
+typedef void   (*genericHashKeyFreeFunction_t)(void *userDatavp, void **pp);
+typedef void  *(*genericHashValCopyFunction_t)(void *userDatavp, void **pp);
+typedef void   (*genericHashValFreeFunction_t)(void *userDatavp, void **pp);
 
 typedef struct genericHash {
   size_t                       wantedSubSize;
