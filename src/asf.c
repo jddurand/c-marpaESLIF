@@ -71,7 +71,6 @@ static inline int                        _marpaWrapperAsf_andNodeIdAndPredecesso
 static inline short                      _marpaWrapperAsf_intsetIdb(marpaWrapperAsf_t *marpaWrapperAsfp, int *intsetIdip, size_t countl, int *idip);
 static inline char                      *_marpaWrapperAsf_stringBuilders(char *fmts, ...);
 static inline char                      *_marpaWrapperAsf_stringBuilder_aps(char *fmts, va_list ap);
-static inline short                      _marpaWrapperAsf_cmpIntsetFunction(void *userDatavp, genericStackItemType_t itemType, void *p1, void *p2);
 static inline int                        _marpaWrapperAsf_idCmpi(const void *p1, const void *p2);
 
 static inline marpaWrapperAsfIdset_t    *_marpaWrapperAsf_idset_obtainb(marpaWrapperAsf_t *marpaWrapperAsfp, marpaWrapperAsfIdsete_t idsete, size_t countl, int *idip);
@@ -121,7 +120,6 @@ static inline short                      _marpaWrapperAsf_next_factoringb(marpaW
 /* Specific to glade */
 static inline short                      _marpaWrapperAsf_glade_id_factorsb(marpaWrapperAsf_t *marpaWrapperAsfp, genericStack_t **stackpp);
 size_t                                   _marpaWrapperAsf_indAndNodesl(void *userDatavp, genericStackItemType_t itemType, void **pp);
-static inline short                      _marpaWrapperAsf_cmpAndNodesb(void *userDatavp, genericStackItemType_t itemType, void *p1, void *p2);
 static inline short                      _marpaWrapperAsf_and_nodes_to_cause_nidsp(marpaWrapperAsf_t *marpaWrapperAsfp, genericStack_t *andNodeIdStackp, genericStack_t **causeNidsStackpp);
 static inline short                      _marpaWrapperAsf_glade_is_visitedb(marpaWrapperAsf_t *marpaWrapperAsfp, int gladeIdi);
 static inline void                       _marpaWrapperAsf_glade_visited_clearb(marpaWrapperAsf_t *marpaWrapperAsfp, int *gladeIdip);
@@ -140,9 +138,9 @@ static inline short                      _marpaWrapperAsf_symch_factoring_countb
 
 /* Specific to intset */
 size_t                                   _marpaWrapperAsf_intset_keyIndFunction(void *userDatavp, genericStackItemType_t itemType, void **pp);
-short                                    _marpaWrapperAsf_intset_keyCmpFunction(void *userDatavp, void *p1, void *p2);
-void                                    *_marpaWrapperAsf_intset_keyCopyFunction(void *userDatavp, void *p);
-void                                     _marpaWrapperAsf_intset_keyFreeFunction(void *userDatavp, void *p);
+short                                    _marpaWrapperAsf_intset_keyCmpFunction(void *userDatavp, void **pp1, void **pp2);
+void                                    *_marpaWrapperAsf_intset_keyCopyFunction(void *userDatavp, void **pp);
+void                                     _marpaWrapperAsf_intset_keyFreeFunction(void *userDatavp, void **pp);
 
 /* General */
 static inline unsigned long              _marpaWrapperAsf_djb2(unsigned char *str);
@@ -1045,20 +1043,6 @@ static inline char *_marpaWrapperAsf_stringBuilder_aps(char *fmts, va_list ap)
 
   /* Should never happen */
   return NULL;
-}
-
-/****************************************************************************/
-static inline short  _marpaWrapperAsf_cmpIntsetFunction(void *userDatavp, genericStackItemType_t itemType, void *p1, void *p2)
-/****************************************************************************/
-{
-  return (* (int *) p1) == (* (int *) p2);
-}
-
-/****************************************************************************/
-static inline short  _marpaWrapperAsf_cmpNidsetFunction(void *userDatavp, genericStackItemType_t itemType, void *p1, void *p2)
-/****************************************************************************/
-{
-  return (* (int *) p1) == (* (int *) p2);
 }
 
 /****************************************************************************/
@@ -2579,13 +2563,6 @@ size_t _marpaWrapperAsf_indAndNodesl(void *userDatavp, genericStackItemType_t it
 }
 
 /****************************************************************************/
-static inline short _marpaWrapperAsf_cmpAndNodesb(void *userDatavp, genericStackItemType_t itemType, void *p1, void *p2)
-/****************************************************************************/
-{
-  return ((* ((int *) p1)) == (* ((int *) p2))) ? 1 : 0;
-}
-
-/****************************************************************************/
 static inline short _marpaWrapperAsf_and_nodes_to_cause_nidsp(marpaWrapperAsf_t *marpaWrapperAsfp, genericStack_t *andNodeIdStackp, genericStack_t **causeNidsStackpp)
 /****************************************************************************/
 {
@@ -3510,24 +3487,24 @@ size_t _marpaWrapperAsf_intset_keyIndFunction(void *userDatavp, genericStackItem
 }
 
 /****************************************************************************/
-short _marpaWrapperAsf_intset_keyCmpFunction(void *userDatavp, void *p1, void *p2)
+short _marpaWrapperAsf_intset_keyCmpFunction(void *userDatavp, void **pp1, void **pp2)
 /****************************************************************************/
 {
-  return ! strcmp((char *) p1, (char *) p2);
+  return ! strcmp((char *) *pp1, (char *) *pp2);
 }
 
 /****************************************************************************/
-void *_marpaWrapperAsf_intset_keyCopyFunction(void *userDatavp, void *p)
+void *_marpaWrapperAsf_intset_keyCopyFunction(void *userDatavp, void **pp)
 /****************************************************************************/
 {
-  return strdup((char *) p);
+  return strdup((char *) *pp);
 }
 
 /****************************************************************************/
-void _marpaWrapperAsf_intset_keyFreeFunction(void *userDatavp, void *p)
+void _marpaWrapperAsf_intset_keyFreeFunction(void *userDatavp, void **pp)
 /****************************************************************************/
 {
-  free(p);
+  free((char *) *pp);
 }
 
 /****************************************************************************/
