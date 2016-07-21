@@ -7,7 +7,7 @@
 
 /* A hash is nothing else but a generic stack of generic stacks */
 
-typedef size_t (*genericHashKeyIndFunction_t)(void *userDatavp, genericStackItemType_t itemType, void **pp);
+typedef size_t (*genericHashKeyIndFunction_t)(void *userDatavp, genericStackItemType_t itemType, void *p);
 typedef short  (*genericHashKeyCmpFunction_t)(void *userDatavp, void *p1, void *p2);
 typedef void  *(*genericHashKeyCopyFunction_t)(void *userDatavp, void *p);
 typedef void   (*genericHashKeyFreeFunction_t)(void *userDatavp, void *p);
@@ -94,7 +94,7 @@ typedef struct genericHash {
 #define _GENERICHASH_COPY(hashName, userDatavp, keyType, keyVal, keyValCopy, valType, valVal, valValCopy) do { \
 									\
     if ((GENERICSTACKITEMTYPE_##keyType == GENERICSTACKITEMTYPE_PTR) && (hashName->keyCopyFunctionp != NULL)) { \
-      void *_p = hashName->keyCopyFunctionp((void *) userDatavp, (void *) &keyVal); \
+      void *_p = hashName->keyCopyFunctionp((void *) userDatavp, (void **) &keyVal); \
       if (((void *) keyVal != NULL) && (_p == NULL)) {                  \
 	hashName->error = 1;						\
       } else {                                                          \
@@ -104,7 +104,7 @@ typedef struct genericHash {
       keyValCopy = keyVal;						\
     }									\
     if ((GENERICSTACKITEMTYPE_##valType == GENERICSTACKITEMTYPE_PTR) && (hashName->valCopyFunctionp != NULL)) { \
-      void *_p = hashName->valCopyFunctionp((void *) userDatavp, (void *) &valVal); \
+      void *_p = hashName->valCopyFunctionp((void *) userDatavp, (void **) &valVal); \
       if (((void *) valVal != NULL) && (_p == NULL)) {                  \
 	hashName->error = 1;						\
       } else {                                                          \
@@ -212,7 +212,7 @@ typedef struct genericHash {
 									\
 	    _gotKeyVal = GENERICSTACK_GET_##keyType(_subKeyStackp, _i); \
 	    if ((GENERICSTACKITEMTYPE_##keyType == GENERICSTACKITEMTYPE_PTR) && (hashName->keyCmpFunctionp != NULL)) {	\
-	      if (! hashName->keyCmpFunctionp((void *) userDatavp, (void *) _keyVal, (void *) _gotKeyVal)) { \
+	      if (! hashName->keyCmpFunctionp((void *) userDatavp, (void **) &_keyVal, (void **) &_gotKeyVal)) { \
 		continue;						\
 	      }								\
 	    } else {							\
@@ -222,12 +222,12 @@ typedef struct genericHash {
 	    }								\
 									\
 	    if ((GENERICSTACKITEMTYPE_##keyType == GENERICSTACKITEMTYPE_PTR) && ((void *) _gotKeyVal != NULL) && (hashName->keyFreeFunctionp != NULL)) { \
-	      hashName->keyFreeFunctionp((void *) userDatavp, (void *) _gotKeyVal); \
+	      hashName->keyFreeFunctionp((void *) userDatavp, (void **) &_gotKeyVal); \
 	    }								\
 	    if ((GENERICSTACKITEMTYPE(_subValStackp, _i) == GENERICSTACKITEMTYPE_PTR)) { \
 	      GENERICSTACKITEMTYPE2TYPE_PTR _gotValVal = GENERICSTACK_GET_PTR(_subValStackp, _i); \
 	      if ((_gotValVal != NULL) && (hashName->valFreeFunctionp != NULL)) { \
-		hashName->valFreeFunctionp((void *) userDatavp, _gotValVal); \
+		hashName->valFreeFunctionp((void *) userDatavp, (void **) &_gotValVal); \
 	      }								\
 	    }								\
 		    							\
@@ -285,7 +285,7 @@ typedef struct genericHash {
 									\
 	    _gotKeyVal = GENERICSTACK_GET_##keyType(_subKeyStackp, _i); \
             if ((GENERICSTACKITEMTYPE_##keyType == GENERICSTACKITEMTYPE_PTR) && (hashName->keyCmpFunctionp != NULL)) { \
-              if (! hashName->keyCmpFunctionp((void *) userDatavp, (void *) keyVal, (void *) _gotKeyVal)) { \
+              if (! hashName->keyCmpFunctionp((void *) userDatavp, (void **) &keyVal, (void **) &_gotKeyVal)) { \
 		continue;						\
 	      }								\
 	    } else {							\
@@ -300,7 +300,7 @@ typedef struct genericHash {
             }                                                           \
             if (remove) {                                               \
               if ((GENERICSTACKITEMTYPE_##keyType == GENERICSTACKITEMTYPE_PTR) && ((void *) _gotKeyVal != NULL) && (hashName->keyFreeFunctionp != NULL)) { \
-                hashName->keyFreeFunctionp((void *) userDatavp, (void *) _gotKeyVal); \
+                hashName->keyFreeFunctionp((void *) userDatavp, (void **) &_gotKeyVal); \
               }								\
               GENERICSTACK_SET_NA(_subKeyStackp, _i);			\
               GENERICSTACK_SWITCH(_subKeyStackp, _i, -1);		\
@@ -310,7 +310,7 @@ typedef struct genericHash {
                 if ((GENERICSTACKITEMTYPE(_subValStackp, _i) == GENERICSTACKITEMTYPE_PTR) && (hashName->valFreeFunctionp == NULL)) { \
                   GENERICSTACKITEMTYPE2TYPE_PTR _valVal = GENERICSTACK_GET_PTR(_subValStackp, _i); \
                   if (_valVal != NULL) {                                \
-                    hashName->valFreeFunctionp((void *) userDatavp, _valVal); \
+                    hashName->valFreeFunctionp((void *) userDatavp, (void **) &_valVal); \
                   }                                                     \
                 }                                                       \
               }                                                         \
@@ -351,13 +351,13 @@ typedef struct genericHash {
               if ((GENERICSTACKITEMTYPE(_subKeyStackp, _j) == GENERICSTACKITEMTYPE_PTR) && (hashName->keyFreeFunctionp != NULL)) { \
                 GENERICSTACKITEMTYPE2TYPE_PTR _keyValp = GENERICSTACK_GET_PTR(_subKeyStackp, _j); \
                 if (! GENERICSTACK_ERROR(_subKeyStackp) && (_keyValp != NULL)) { \
-                  hashName->keyFreeFunctionp(userDatavp, _keyValp);     \
+                  hashName->keyFreeFunctionp(userDatavp, (void **) &_keyValp); \
                 }                                                       \
               }                                                         \
               if ((GENERICSTACKITEMTYPE(_subValStackp, _j) == GENERICSTACKITEMTYPE_PTR) && (hashName->valFreeFunctionp != NULL)) { \
                 GENERICSTACKITEMTYPE2TYPE_PTR _valValp = GENERICSTACK_GET_PTR(_subValStackp, _j); \
                 if (! GENERICSTACK_ERROR(_subValStackp) && (_valValp != NULL)) { \
-                  hashName->valFreeFunctionp(userDatavp, _valValp);     \
+                  hashName->valFreeFunctionp(userDatavp, (void **) &_valValp); \
                 }                                                       \
               }                                                         \
             }                                                           \
