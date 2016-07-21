@@ -331,7 +331,7 @@ int marpaWrapperGrammar_newRulei(marpaWrapperGrammar_t *marpaWrapperGrammarp, ma
 
   if (marpaWrapperGrammarp->marpaWrapperGrammarOption.autorankb != 0) {
     if (marpaWrapperGrammarRuleOption.ranki != 0) {
-      MARPAWRAPPER_INFOF(genericLoggerp, "Rule rank %d is ignored when autorank is on", marpaWrapperGrammarRuleOption.ranki);
+      MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "Rule rank %d is ignored when autorank is on", marpaWrapperGrammarRuleOption.ranki);
     }
     /* We have to scan all the rules to find the latest, and the use the latest minus one as rank */
     if (marpaWrapperGrammarp->nRulel > 0) {

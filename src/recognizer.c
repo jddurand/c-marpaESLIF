@@ -158,7 +158,7 @@ short marpaWrapperRecognizer_alternativeb(marpaWrapperRecognizer_t *marpaWrapper
   /* Remember that a token have a length > 1 */
   if (lengthi > 1) {
     if (marpaWrapperRecognizerp->haveVariableLengthTokenb == 0) {
-      MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "Remembering that at least one token have a length > 1");
+      MARPAWRAPPER_TRACE(genericLoggerp, funcs, "Remembering that at least one token have a length > 1");
       marpaWrapperRecognizerp->haveVariableLengthTokenb = 1;
     }
   }
