@@ -318,16 +318,19 @@ static int pruning_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, vo
 
   /* This routine converts the glade into a list of Penn-tagged elements.  It is called recursively */
 
+  GENERICLOGGER_TRACEF(genericLoggerp, "[%s] => marpaWrapperAsf_traverse_ruleIdi(traverserp=%p)", funcs, traverserp);
   ruleIdi = marpaWrapperAsf_traverse_ruleIdi(traverserp);
   if (ruleIdi < 0) {
     goto err;
   }
-  GENERICLOGGER_TRACEF(genericLoggerp, "[%s] ruleIdi=%d", funcs, ruleIdi);
+  GENERICLOGGER_TRACEF(genericLoggerp, "[%s] <= ruleIdi=%d", funcs, ruleIdi);
+
+  GENERICLOGGER_TRACEF(genericLoggerp, "[%s] => marpaWrapperAsf_traverse_symbolIdi(traverserp=%p)", funcs, traverserp);
   symbolIdi = marpaWrapperAsf_traverse_symbolIdi(traverserp);
   if (symbolIdi < 0) {
     goto err;
   }
-  GENERICLOGGER_TRACEF(genericLoggerp, "[%s] symbolIdi=%d", funcs, symbolIdi);
+  GENERICLOGGER_TRACEF(genericLoggerp, "[%s] <= symbolIdi=%d", funcs, symbolIdi);
 
   /* A token is a single choice, and we know enough to fully Penn-tag it */
   if (ruleIdi < 0) {
@@ -339,11 +342,12 @@ static int pruning_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, vo
       goto err;
     }
 
-    GENERICLOGGER_TRACEF(genericLoggerp, "[%s] Looking at token %d value", funcs, symbolIdi);
+    GENERICLOGGER_TRACEF(genericLoggerp, "[%s] => marpaWrapperAsf_traverse_rh_valuei(traverserp=%p, 0)", funcs, traverserp);
     tokenValuei = marpaWrapperAsf_traverse_rh_valuei(traverserp, 0);
     if (tokenValuei < 0) {
       goto err;
     }
+    GENERICLOGGER_TRACEF(genericLoggerp, "[%s] <= tokenValuei=%d", funcs, tokenValuei);
 
   } else {
     size_t          lengthl;
@@ -356,13 +360,18 @@ static int pruning_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, vo
       goto err;
     }
 
+    GENERICLOGGER_TRACEF(genericLoggerp, "[%s] => marpaWrapperAsf_traverse_rh_lengthl(traverserp=%p)", funcs, traverserp);
     lengthl = marpaWrapperAsf_traverse_rh_lengthl(traverserp);
     if (lengthl == (size_t) -1) {
       goto err;
     }
+    GENERICLOGGER_TRACEF(genericLoggerp, "[%s] <= lengthl=%d", funcs, (int) lengthl);
 
     for (rhIxi = 0; rhIxi <= lengthl - 1; rhIxi++) {
-      int valuei = marpaWrapperAsf_traverse_rh_valuei(traverserp, rhIxi);
+      int valuei;
+
+      GENERICLOGGER_TRACEF(genericLoggerp, "[%s] => marpaWrapperAsf_traverse_rh_valuei(traverserp=%p, rhIxi=%d)", funcs, traverserp, rhIxi);
+      valuei = marpaWrapperAsf_traverse_rh_valuei(traverserp, rhIxi);
       if (valuei < 0) {
         goto err;
       }
