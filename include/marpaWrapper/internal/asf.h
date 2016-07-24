@@ -63,16 +63,10 @@ struct marpaWrapperAsf {
   genericHash_t               *intsetHashp;
   genericStack_t              *nidsetStackp;
   genericStack_t              *powersetStackp;
-  marpaWrapperAsfNidset_t     *lastNidsetp;
-  marpaWrapperAsfPowerset_t   *lastPowersetp;
   genericStack_t              *gladeStackp;
 
   /* Memoization of choices */
   int                         nextIntseti;
-
-  /* Current choice point */
-  genericStack_t             *factoringStackp;
-  genericStack_t             *orNodeInUseStackp;
 
   /* Traverser callback */
   traverserCallback_t         traverserCallbackp;
@@ -82,6 +76,11 @@ struct marpaWrapperAsf {
   genericStack_t             *lastValuesStackp;
   genericStack_t             *lastAllChoicesStackp;
 };
+
+typedef struct marpaWrapperAsfChoicePoint {
+  genericStack_t         *factoringStackp;
+  genericStack_t         *orNodeInUseStackp;
+} marpaWrapperAsfChoicePoint_t;
 
 struct marpaWrapperAsfTraverser {
   marpaWrapperAsf_t      *marpaWrapperAsfp;
