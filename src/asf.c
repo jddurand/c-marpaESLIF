@@ -2870,10 +2870,10 @@ size_t marpaWrapperAsf_traverse_rh_lengthl(marpaWrapperAsfTraverser_t *traverser
   int                       symchIxi;
   genericStack_t           *factoringsStackp;
   genericStack_t           *downFactoringsStackp;
-  int                       ruleIdi;
+  int                       downRuleIdi;
   int                       factoringIxi;
+  size_t                    realFactoringIxl;
   genericStack_t           *factoringStackp;
-  genericStack_t           *localFactoringStackp;
   size_t                    lengthl;
 
   if (traverserp == NULL) {
@@ -2896,39 +2896,33 @@ size_t marpaWrapperAsf_traverse_rh_lengthl(marpaWrapperAsfTraverser_t *traverser
     goto err;
   }
   factoringsStackp = GENERICSTACK_GET_PTR(gladep->symchesStackp, symchIxi);
-  /* factoringsStackp is (symchRuleIdi, PTR, downFactoringsStackp) */
+  /* factoringsStackp is (symchRuleIdi, PTR, downFactoringsStackp[0], downFactoringsStackp[1], ... ) */
   if (! GENERICSTACK_IS_INT(factoringsStackp, 0)) {
     MARPAWRAPPER_ERRORF(genericLoggerp, "Not an integer at indice 0 of factoringsStackp", 0);
     _marpaWrapperAsf_dump_stack(marpaWrapperAsfp, "symchesStackp", gladep->symchesStackp);
     _marpaWrapperAsf_dump_stack(marpaWrapperAsfp, "factoringsStackp", factoringsStackp);
     goto err;
   }
-  if (! GENERICSTACK_IS_PTR(factoringsStackp, 2)) {
-    MARPAWRAPPER_ERRORF(genericLoggerp, "Not a pointer at indice 2 of factoringsStackp", 0);
+
+  factoringIxi = traverserp->factoringIxi;
+  realFactoringIxl = 2 + factoringIxi;
+  if (! GENERICSTACK_IS_PTR(factoringsStackp, realFactoringIxl)) {
+    MARPAWRAPPER_ERRORF(genericLoggerp, "Not a pointer at indice 2+%d of factoringsStackp", factoringIxi);
     _marpaWrapperAsf_dump_stack(marpaWrapperAsfp, "symchesStackp", gladep->symchesStackp);
     _marpaWrapperAsf_dump_stack(marpaWrapperAsfp, "factoringsStackp", factoringsStackp);
     goto err;
   }
-  ruleIdi              = GENERICSTACK_GET_INT(factoringsStackp, 0);
-  downFactoringsStackp = GENERICSTACK_GET_PTR(factoringsStackp, 2);
-  if (ruleIdi < 0) {
+  downRuleIdi          = GENERICSTACK_GET_INT(factoringsStackp, 0);
+  downFactoringsStackp = GENERICSTACK_GET_PTR(factoringsStackp, realFactoringIxl);
+  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "downRuleIdi is %d", downRuleIdi);
+
+  if (downRuleIdi < 0) {
     MARPAWRAPPER_ERRORF(genericLoggerp, "%s called for a token -- that is not allowed", funcs);
     goto err;
   }
 
-  /* downFactoringsStackp is a stack of localFactoringStackp */
-  factoringIxi = traverserp->factoringIxi;
-  if (! GENERICSTACK_IS_PTR(downFactoringsStackp, (size_t) factoringIxi)) {
-    MARPAWRAPPER_ERRORF(genericLoggerp, "Not a pointer at indice %d of downFactoringsStackp", factoringIxi);
-    _marpaWrapperAsf_dump_stack(marpaWrapperAsfp, "symchesStackp", gladep->symchesStackp);
-    _marpaWrapperAsf_dump_stack(marpaWrapperAsfp, "factoringsStackp", factoringsStackp);
-    _marpaWrapperAsf_dump_stack(marpaWrapperAsfp, "downFactoringsStackp", downFactoringsStackp);
-    goto err;
-  }
-  localFactoringStackp = GENERICSTACK_GET_PTR(downFactoringsStackp, factoringIxi);
-
-  /* localFactoringStackp is a stack of gladeIdi */
-  lengthl = GENERICSTACK_USED(localFactoringStackp);
+  /* downFactoringsStackp is a stack of gladeIdi */
+  lengthl = GENERICSTACK_USED(downFactoringsStackp);
   
   MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "return 1, lengthl = %d", (int) lengthl);
   return lengthl;
@@ -3003,10 +2997,10 @@ int marpaWrapperAsf_traverse_rh_valuei(marpaWrapperAsfTraverser_t *traverserp, s
   int                         symchIxi;
   genericStack_t             *factoringsStackp;
   genericStack_t             *downFactoringsStackp;
-  int                         ruleIdi;
+  int                         downRuleIdi;
   int                         factoringIxi;
+  size_t                      realFactoringIxl;
   genericStack_t             *factoringStackp;
-  genericStack_t             *localFactoringStackp;
   size_t                      maxRhixl;
   int                         maxRhixi;
   marpaWrapperAsfGlade_t     *downGladep;
@@ -3034,25 +3028,28 @@ int marpaWrapperAsf_traverse_rh_valuei(marpaWrapperAsfTraverser_t *traverserp, s
     goto err;
   }
   factoringsStackp = GENERICSTACK_GET_PTR(gladep->symchesStackp, symchIxi);
-  /* factoringsStackp is (symchRuleIdi, PTR, downFactoringsStackp) */
+  /* factoringsStackp is (symchRuleIdi, PTR, downFactoringsStackp[0], downFactoringsStackp[1], ... ) */
   if (! GENERICSTACK_IS_INT(factoringsStackp, 0)) {
     MARPAWRAPPER_ERRORF(genericLoggerp, "Not an integer at indice 0 of factoringsStackp", 0);
     _marpaWrapperAsf_dump_stack(marpaWrapperAsfp, "symchesStackp", gladep->symchesStackp);
     _marpaWrapperAsf_dump_stack(marpaWrapperAsfp, "factoringsStackp", factoringsStackp);
     goto err;
   }
-  if (! GENERICSTACK_IS_PTR(factoringsStackp, 0)) {
-    MARPAWRAPPER_ERRORF(genericLoggerp, "Not a pointer at indice 2 of factoringsStackp", 0);
+
+  factoringIxi = traverserp->factoringIxi;
+  realFactoringIxl = 2 + factoringIxi;
+  if (! GENERICSTACK_IS_PTR(factoringsStackp, realFactoringIxl)) {
+    MARPAWRAPPER_ERRORF(genericLoggerp, "Not a pointer at indice 2+%d of factoringsStackp", factoringIxi);
     _marpaWrapperAsf_dump_stack(marpaWrapperAsfp, "symchesStackp", gladep->symchesStackp);
     _marpaWrapperAsf_dump_stack(marpaWrapperAsfp, "factoringsStackp", factoringsStackp);
     goto err;
   }
   /* symchesStackp contains entries in the form: (rule_id, xxx, @factorings) */
-  ruleIdi              = GENERICSTACK_GET_INT(factoringsStackp, 0);
-  downFactoringsStackp = GENERICSTACK_GET_PTR(factoringsStackp, 2);
+  downRuleIdi          = GENERICSTACK_GET_INT(factoringsStackp, 0);
+  downFactoringsStackp = GENERICSTACK_GET_PTR(factoringsStackp, realFactoringIxl);
 
-  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "Current ruleIdi is %d", ruleIdi);
-  if (ruleIdi < 0) {
+  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "downRuleIdi is %d", downRuleIdi);
+  if (downRuleIdi < 0) {
     marpaWrapperRecognizer_t *marpaWrapperRecognizerp = marpaWrapperAsfp->marpaWrapperRecognizerp;
     int                       spanIdi;
     
@@ -3069,20 +3066,9 @@ int marpaWrapperAsf_traverse_rh_valuei(marpaWrapperAsfTraverser_t *traverserp, s
     /* The span ID is the indice in the input stack */
     goto ok;
   }
-  factoringIxi = traverserp->factoringIxi;
-  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "Current factoringIxi is %d", factoringIxi);
 
-  /* downFactoringsStackp is a stack of localFactoringStackp */
-  if (! GENERICSTACK_IS_PTR(downFactoringsStackp, (size_t) factoringIxi)) {
-    MARPAWRAPPER_ERRORF(genericLoggerp, "Not an pointer at indice %d of downFactoringsStackp", factoringIxi);
-    _marpaWrapperAsf_dump_stack(marpaWrapperAsfp, "symchesStackp", gladep->symchesStackp);
-    _marpaWrapperAsf_dump_stack(marpaWrapperAsfp, "downFactoringsStackp", downFactoringsStackp);
-    goto err;
-  }
-  localFactoringStackp = GENERICSTACK_GET_PTR(downFactoringsStackp, factoringIxi);
-  /* localFactoringStackp is a stack of gladeIdi */
-
-  maxRhixl = GENERICSTACK_USED(localFactoringStackp);
+  _marpaWrapperAsf_dump_stack(marpaWrapperAsfp, "symchesStackp", downFactoringsStackp);
+  maxRhixl = GENERICSTACK_USED(downFactoringsStackp);
   /*
    * Nullables have no RHS
    */
@@ -3095,11 +3081,11 @@ int marpaWrapperAsf_traverse_rh_valuei(marpaWrapperAsfTraverser_t *traverserp, s
     MARPAWRAPPER_ERRORF(genericLoggerp, "rhIxl should be in range [0..%d]", maxRhixi);
     goto err;
   }
-  if (! GENERICSTACK_IS_INT(localFactoringStackp, rhIxl)) {
-    MARPAWRAPPER_ERROR(genericLoggerp, "Not an int in localFactoringStackp");
+  if (! GENERICSTACK_IS_INT(downFactoringsStackp, rhIxl)) {
+    MARPAWRAPPER_ERROR(genericLoggerp, "Not an int in downFactoringsStackp");
     goto err;
   }
-  downGladeIdi = GENERICSTACK_GET_INT(localFactoringStackp, rhIxl);
+  downGladeIdi = GENERICSTACK_GET_INT(downFactoringsStackp, rhIxl);
   MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "Current downGladeIdi is %d", downGladeIdi);
   if (GENERICSTACK_IS_INT(traverserp->valueStackp, (size_t) downGladeIdi)) {
     /* Already memoized */
