@@ -18,8 +18,9 @@ static char *penn_tag_symbols(traverseContext_t *traverseContextp, int symbolIdi
 static char *penn_tag_rules(traverseContext_t *traverseContextp, int ruleIdi);
 static int pruning_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, void *userDatavp);
 
-enum { S = 0, NP, VP, period, NN, NNS, DT, CC, VBZ, MAX_SYMBOL };
-enum { S_RULE = 0,
+enum { START = 0, S, NP, VP, period, NN, NNS, DT, CC, VBZ, MAX_SYMBOL };
+enum { START_RULE = 0,
+       S_RULE,
        NP_RULE01,
        NP_RULE02,
        NP_RULE03,
@@ -71,61 +72,89 @@ int main(int argc, char **argv) {
   }
 
   marpaWrapperGrammarp = marpaWrapperGrammar_newp(&marpaWrapperGrammarOption);
-  if ( /* S (start symbol automatically), E, op, number */
-      ((symbolip[     S] = MARPAWRAPPERGRAMMAR_NEWSYMBOL(marpaWrapperGrammarp)) < 0) ||
-      ((symbolip[    NP] = MARPAWRAPPERGRAMMAR_NEWSYMBOL(marpaWrapperGrammarp)) < 0) ||
-      ((symbolip[    VP] = MARPAWRAPPERGRAMMAR_NEWSYMBOL(marpaWrapperGrammarp)) < 0) ||
-      ((symbolip[period] = MARPAWRAPPERGRAMMAR_NEWSYMBOL(marpaWrapperGrammarp)) < 0) ||
-      ((symbolip[    NN] = MARPAWRAPPERGRAMMAR_NEWSYMBOL(marpaWrapperGrammarp)) < 0) ||
-      ((symbolip[   NNS] = MARPAWRAPPERGRAMMAR_NEWSYMBOL(marpaWrapperGrammarp)) < 0) ||
-      ((symbolip[    DT] = MARPAWRAPPERGRAMMAR_NEWSYMBOL(marpaWrapperGrammarp)) < 0) ||
-      ((symbolip[    CC] = MARPAWRAPPERGRAMMAR_NEWSYMBOL(marpaWrapperGrammarp)) < 0) ||
-      ((symbolip[   VBZ] = MARPAWRAPPERGRAMMAR_NEWSYMBOL(marpaWrapperGrammarp)) < 0) ||
-      ((symbolip[    VP] = MARPAWRAPPERGRAMMAR_NEWSYMBOL(marpaWrapperGrammarp)) < 0) ||
+  if ( /* start, S, NP, VP, period, NN, NNS, DT, CC, VBZ */
+      ((symbolip[ START] = MARPAWRAPPERGRAMMAR_NEWSYMBOL(marpaWrapperGrammarp)) < 0)
+      ||
+      ((symbolip[     S] = MARPAWRAPPERGRAMMAR_NEWSYMBOL(marpaWrapperGrammarp)) < 0)
+      ||
+      ((symbolip[    NP] = MARPAWRAPPERGRAMMAR_NEWSYMBOL(marpaWrapperGrammarp)) < 0)
+      ||
+      ((symbolip[    VP] = MARPAWRAPPERGRAMMAR_NEWSYMBOL(marpaWrapperGrammarp)) < 0)
+      ||
+      ((symbolip[period] = MARPAWRAPPERGRAMMAR_NEWSYMBOL(marpaWrapperGrammarp)) < 0)
+      ||
+      ((symbolip[    NN] = MARPAWRAPPERGRAMMAR_NEWSYMBOL(marpaWrapperGrammarp)) < 0)
+      ||
+      ((symbolip[   NNS] = MARPAWRAPPERGRAMMAR_NEWSYMBOL(marpaWrapperGrammarp)) < 0)
+      ||
+      ((symbolip[    DT] = MARPAWRAPPERGRAMMAR_NEWSYMBOL(marpaWrapperGrammarp)) < 0)
+      ||
+      ((symbolip[    CC] = MARPAWRAPPERGRAMMAR_NEWSYMBOL(marpaWrapperGrammarp)) < 0)
+      ||
+      ((symbolip[   VBZ] = MARPAWRAPPERGRAMMAR_NEWSYMBOL(marpaWrapperGrammarp)) < 0)
+      ||
+      ((symbolip[    VP] = MARPAWRAPPERGRAMMAR_NEWSYMBOL(marpaWrapperGrammarp)) < 0)
+      ||
       /* S   ::= NP  VP  period */
       ((ruleip[S_RULE]   = MARPAWRAPPERGRAMMAR_NEWRULE(marpaWrapperGrammarp,
 						       symbolip[S],
-						       symbolip[NP], symbolip[VP], symbolip[period], -1)) < 0) ||
+						       symbolip[NP], symbolip[VP], symbolip[period], -1)) < 0)
+      ||
       /* NP  ::= NN  */
       ((ruleip[NP_RULE01] = MARPAWRAPPERGRAMMAR_NEWRULE(marpaWrapperGrammarp,
 						       symbolip[NP],
-						       symbolip[NN], -1)) < 0) ||
+						       symbolip[NN], -1)) < 0)
+      ||
       /* NP  ::= NNS  */
       ((ruleip[NP_RULE02]   = MARPAWRAPPERGRAMMAR_NEWRULE(marpaWrapperGrammarp,
 						       symbolip[NP],
-						       symbolip[NNS], -1)) < 0) ||
+						       symbolip[NNS], -1)) < 0)
+      ||
       /* NP  ::= DT NN */
       ((ruleip[NP_RULE03]   = MARPAWRAPPERGRAMMAR_NEWRULE(marpaWrapperGrammarp,
 						       symbolip[NP],
-						       symbolip[DT], symbolip[NN], -1)) < 0) ||
+						       symbolip[DT], symbolip[NN], -1)) < 0)
+      ||
       /* NP  ::= NN NNS */
       ((ruleip[NP_RULE04]   = MARPAWRAPPERGRAMMAR_NEWRULE(marpaWrapperGrammarp,
 						       symbolip[NP],
-						       symbolip[NN], symbolip[NNS], -1)) < 0) ||
+						       symbolip[NN], symbolip[NNS], -1)) < 0)
+      ||
       /* NP  ::= NNS CC NNS */
       ((ruleip[NP_RULE05]   = MARPAWRAPPERGRAMMAR_NEWRULE(marpaWrapperGrammarp,
 						       symbolip[NP],
-						       symbolip[NNS], symbolip[CC], symbolip[NNS], -1)) < 0) ||
+						       symbolip[NNS], symbolip[CC], symbolip[NNS], -1)) < 0)
+      ||
       /* VP  ::= VBZ NP */
       ((ruleip[VP_RULE01]   = MARPAWRAPPERGRAMMAR_NEWRULE(marpaWrapperGrammarp,
 						       symbolip[VP],
-						       symbolip[VBZ], symbolip[NP], -1)) < 0) ||
+						       symbolip[VBZ], symbolip[NP], -1)) < 0)
+      ||
       /* VP  ::= VP VBZ NNS */
       ((ruleip[VP_RULE02]   = MARPAWRAPPERGRAMMAR_NEWRULE(marpaWrapperGrammarp,
 						       symbolip[VP],
-						       symbolip[VP], symbolip[VBZ], symbolip[NNS], -1)) < 0) ||
+						       symbolip[VP], symbolip[VBZ], symbolip[NNS], -1)) < 0)
+      ||
       /* VP  ::= VP CC VP */
       ((ruleip[VP_RULE03]   = MARPAWRAPPERGRAMMAR_NEWRULE(marpaWrapperGrammarp,
 						       symbolip[VP],
-						       symbolip[VP], symbolip[CC], symbolip[VP], -1)) < 0) ||
+						       symbolip[VP], symbolip[CC], symbolip[VP], -1)) < 0)
+      ||
       /* VP  ::= VP VP CC VP */
       ((ruleip[VP_RULE04]   = MARPAWRAPPERGRAMMAR_NEWRULE(marpaWrapperGrammarp,
 						       symbolip[VP],
-						       symbolip[VP], symbolip[VP], symbolip[CC], symbolip[VP], -1)) < 0) ||
+						       symbolip[VP], symbolip[VP], symbolip[CC], symbolip[VP], -1)) < 0)
+      ||
       /* VP  ::= VBZ */
       ((ruleip[VP_RULE05]   = MARPAWRAPPERGRAMMAR_NEWRULE(marpaWrapperGrammarp,
 						       symbolip[VP],
 						       symbolip[VBZ], -1)) < 0)
+      ||
+      /* start  ::= S */
+      ((ruleip[START_RULE]  = MARPAWRAPPERGRAMMAR_NEWRULE(marpaWrapperGrammarp,
+						       symbolip[START],
+						       symbolip[S],
+						       -1)) < 0)
        ) {
     rci = 1;
   }
@@ -331,6 +360,7 @@ static int pruning_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, vo
     goto err;
   }
   GENERICLOGGER_TRACEF(genericLoggerp, "[%s] <= symbolIdi=%d", funcs, symbolIdi);
+  fgetc(stdin);
 
   /* A token is a single choice, and we know enough to fully Penn-tag it */
   if (ruleIdi < 0) {
@@ -423,6 +453,9 @@ static char *penn_tag_symbols(traverseContext_t *traverseContextp, int symbolIdi
   char *s;
   
   switch (symbolIdi) {
+  case START:
+    s = strdup("[:start:]");
+    break;
   case S:
     s = strdup("S");
     break;
