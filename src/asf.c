@@ -78,7 +78,7 @@ static inline int                       *_marpaWrapperAsf_idset_idip(marpaWrappe
 static inline short                      _marpaWrapperAsf_idset_idi_by_ixib(marpaWrapperAsf_t *marpaWrapperAsfp, marpaWrapperAsfIdsete_t idsete, marpaWrapperAsfIdset_t *idsetp, int ixi, int *idip);
 static inline size_t                     _marpaWrapperAsf_idset_countl(marpaWrapperAsf_t *marpaWrapperAsfp, marpaWrapperAsfIdsete_t idsete, marpaWrapperAsfIdset_t *idsetp);
 static inline int                        _marpaWrapperAsf_idset_idi(marpaWrapperAsf_t *marpaWrapperAsfp, marpaWrapperAsfIdsete_t idsete, marpaWrapperAsfIdset_t *idsetp);
-static inline char                      *_marpaWrapperAsf_idset_shows(marpaWrapperAsf_t *marpaWrapperAsfp, marpaWrapperAsfIdsete_t idsete, marpaWrapperAsfIdset_t *idsetp);
+static inline void                       _marpaWrapperAsf_idset_trace(marpaWrapperAsf_t *marpaWrapperAsfp, marpaWrapperAsfIdsete_t idsete, marpaWrapperAsfIdset_t *idsetp);
 static inline void                       _marpaWrapperAsf_idset_freev(marpaWrapperAsf_t *marpaWrapperAsfp, marpaWrapperAsfIdsete_t idsete);
 
 static inline marpaWrapperAsfNidset_t   *_marpaWrapperAsf_nidset_obtainp(marpaWrapperAsf_t *marpaWrapperAsfp, size_t countl, int *idip);
@@ -86,7 +86,7 @@ static inline int                       *_marpaWrapperAsf_nidset_idip(marpaWrapp
 static inline short                      _marpaWrapperAsf_nidset_idi_by_ixib(marpaWrapperAsf_t *marpaWrapperAsfp, marpaWrapperAsfIdset_t *idsetp, int ixi, int *idip);
 static inline size_t                     _marpaWrapperAsf_nidset_countl(marpaWrapperAsf_t *marpaWrapperAsfp, marpaWrapperAsfIdset_t *idsetp);
 static inline int                        _marpaWrapperAsf_nidset_idi(marpaWrapperAsf_t *marpaWrapperAsfp, marpaWrapperAsfIdset_t *idsetp);
-static inline char                      *_marpaWrapperAsf_nidset_shows(marpaWrapperAsf_t *marpaWrapperAsfp, marpaWrapperAsfIdset_t *idsetp);
+static inline void                       _marpaWrapperAsf_nidset_trace(marpaWrapperAsf_t *marpaWrapperAsfp, marpaWrapperAsfIdset_t *idsetp);
 static inline void                       _marpaWrapperAsf_nidset_freev(marpaWrapperAsf_t *marpaWrapperAsfp);
 
 /* Generic nidset/powerset methods */
@@ -96,7 +96,7 @@ static inline int                       *_marpaWrapperAsf_powerset_idip(marpaWra
 static inline short                      _marpaWrapperAsf_powerset_idi_by_ixib(marpaWrapperAsf_t *marpaWrapperAsfp, marpaWrapperAsfIdset_t *idsetp, int ixi, int *idip);
 static inline size_t                     _marpaWrapperAsf_powerset_countl(marpaWrapperAsf_t *marpaWrapperAsfp, marpaWrapperAsfIdset_t *idsetp);
 static inline int                        _marpaWrapperAsf_powerset_idi(marpaWrapperAsf_t *marpaWrapperAsfp, marpaWrapperAsfIdset_t *idsetp);
-static inline char                      *_marpaWrapperAsf_powerset_shows(marpaWrapperAsf_t *marpaWrapperAsfp, marpaWrapperAsfIdset_t *idsetp);
+static inline void                       _marpaWrapperAsf_powerset_trace(marpaWrapperAsf_t *marpaWrapperAsfp, marpaWrapperAsfIdset_t *idsetp);
 static inline void                       _marpaWrapperAsf_powerset_freev(marpaWrapperAsf_t *marpaWrapperAsfp);
 
 /* Specific to nid */
@@ -1165,10 +1165,10 @@ static inline int _marpaWrapperAsf_idset_idi(marpaWrapperAsf_t *marpaWrapperAsfp
 }
 
 /****************************************************************************/
-static inline char *_marpaWrapperAsf_idset_shows(marpaWrapperAsf_t *marpaWrapperAsfp, marpaWrapperAsfIdsete_t idsete, marpaWrapperAsfIdset_t *idsetp)
+static inline void _marpaWrapperAsf_idset_trace(marpaWrapperAsf_t *marpaWrapperAsfp, marpaWrapperAsfIdsete_t idsete, marpaWrapperAsfIdset_t *idsetp)
 /****************************************************************************/
 {
-  const static char        funcs[]        = "_marpaWrapperAsf_idset_shows";
+  const static char        funcs[]        = "_marpaWrapperAsf_idset_trace";
   genericLogger_t         *genericLoggerp = marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp;
   char                    *idsets         = marpaWrapperAsfIdsets[idsete];
   char                    *Idsets         = marpaWrapperAsfIdsetUpfirsts[idsete];
@@ -1190,24 +1190,27 @@ static inline char *_marpaWrapperAsf_idset_shows(marpaWrapperAsf_t *marpaWrapper
     if (_marpaWrapperAsf_idset_idi_by_ixib(marpaWrapperAsfp, idsete, idsetp, (int) idl, &idiByIxi) == 0) {
       goto err;
     }
-    showNexts = _marpaWrapperAsf_stringBuilders("%s %d", shows, idiByIxi);
+    if (idl == 0) {
+      showNexts = _marpaWrapperAsf_stringBuilders("%s %d", shows, idiByIxi);
+    } else {
+      showNexts = _marpaWrapperAsf_stringBuilders("%s, %d", shows, idiByIxi);
+    }
     if (showNexts == NULL) {
       MARPAWRAPPER_ERRORF(genericLoggerp, "%s: _marpaWrapperAsf_stringBuilders error: %s", idsets, strerror(errno));
       goto err;
     }
+    free(shows);
     shows = showNexts;
-    free(showNexts);
   }
 
   MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "%s: return \"%s\"", idsets, shows);
-  return shows;
+  free(shows);
+  return;
 
  err:
   if (shows != NULL) {
     free(shows);
   }
-  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "%s: return NULL", idsets);
-  return NULL;
 }
 
 /****************************************************************************/
@@ -1274,10 +1277,10 @@ static inline int _marpaWrapperAsf_nidset_idi(marpaWrapperAsf_t *marpaWrapperAsf
 }
 
 /****************************************************************************/
-static inline char *_marpaWrapperAsf_nidset_shows(marpaWrapperAsf_t *marpaWrapperAsfp, marpaWrapperAsfIdset_t *idsetp)
+static inline void _marpaWrapperAsf_nidset_trace(marpaWrapperAsf_t *marpaWrapperAsfp, marpaWrapperAsfIdset_t *idsetp)
 /****************************************************************************/
 {
-  return _marpaWrapperAsf_idset_shows(marpaWrapperAsfp, MARPAWRAPPERASFIDSET_NIDSET, idsetp);
+  _marpaWrapperAsf_idset_trace(marpaWrapperAsfp, MARPAWRAPPERASFIDSET_NIDSET, idsetp);
 }
 
 /****************************************************************************/
@@ -1323,10 +1326,10 @@ static inline int _marpaWrapperAsf_powerset_idi(marpaWrapperAsf_t *marpaWrapperA
 }
 
 /****************************************************************************/
-static inline char *_marpaWrapperAsf_powerset_shows(marpaWrapperAsf_t *marpaWrapperAsfp, marpaWrapperAsfIdset_t *idsetp)
+static inline void _marpaWrapperAsf_powerset_trace(marpaWrapperAsf_t *marpaWrapperAsfp, marpaWrapperAsfIdset_t *idsetp)
 /****************************************************************************/
 {
-  return _marpaWrapperAsf_idset_shows(marpaWrapperAsfp, MARPAWRAPPERASFIDSET_POWERSET, idsetp);
+  _marpaWrapperAsf_idset_trace(marpaWrapperAsfp, MARPAWRAPPERASFIDSET_POWERSET, idsetp);
 }
 
 /****************************************************************************/
@@ -2546,13 +2549,9 @@ static inline short _marpaWrapperAsf_glade_id_factorsb(marpaWrapperAsf_t *marpaW
     if (baseNidsetp == NULL) {
       goto err;
     }
-    {
-      char *shows = _marpaWrapperAsf_idset_shows(marpaWrapperAsfp, MARPAWRAPPERASFIDSET_NIDSET, baseNidsetp);
-      if (shows != NULL) {
-	MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "%s", shows);
-	free(shows);
-      }
-    }
+#ifndef MARPAWRAPPER_NTRACE
+    _marpaWrapperAsf_idset_trace(marpaWrapperAsfp, MARPAWRAPPERASFIDSET_NIDSET, baseNidsetp);
+#endif
     gladeIdi = _marpaWrapperAsf_nidset_idi(marpaWrapperAsfp, baseNidsetp);
     if (! GENERICSTACK_IS_PTR(marpaWrapperAsfp->gladeStackp, (size_t) gladeIdi)) {
       marpaWrapperAsfGlade_t *gladep;
