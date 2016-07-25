@@ -936,7 +936,7 @@ static inline short _marpaWrapperAsf_intsetIdb(marpaWrapperAsf_t *marpaWrapperAs
   if ((keys != NULL) && (keys != staticKeys)) {
     free(keys);
   }
-  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "return %d", (int) rcb);
+  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "return %d, *intsetIdip=%d", (int) rcb, *intsetIdip);
   return rcb;
 }
 
@@ -1063,6 +1063,7 @@ static inline marpaWrapperAsfIdset_t *_marpaWrapperAsf_idset_obtainp(marpaWrappe
   }
 
   if (GENERICSTACK_IS_PTR((*stackpp), (size_t) intsetIdi)) {
+    MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "%s: indice %d already generated", idsets, intsetIdi);
     idsetp = GENERICSTACK_GET_PTR((*stackpp), intsetIdi);
   } else {
     idsetp = malloc(sizeof(marpaWrapperAsfIdset_t));
@@ -1104,7 +1105,7 @@ static inline marpaWrapperAsfIdset_t *_marpaWrapperAsf_idset_obtainp(marpaWrappe
 
  done:
 
-  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "return %p", idsetp);
+  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "%s: return %p", idsets, idsetp);
   return idsetp;
 }
 
