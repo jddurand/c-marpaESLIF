@@ -44,17 +44,17 @@ int main(int argc, char **argv) {
   size_t                         i;
   size_t                         outputStackSizel;
   int                            valuei;
-  traverseContext_t              traverseContext = { NULL, symbolip, ruleip, NULL, NULL, GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_TRACE) };
+  traverseContext_t              traverseContext = { NULL, symbolip, ruleip, NULL, NULL, GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_DEBUG) };
   
-  marpaWrapperGrammarOption_t    marpaWrapperGrammarOption    = { GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_TRACE),
+  marpaWrapperGrammarOption_t    marpaWrapperGrammarOption    = { GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_DEBUG),
 								  0 /* warningIsErrorb */,
 								  0 /* warningIsIgnoredb */,
 								  0 /* autorankb */
   };
-  marpaWrapperRecognizerOption_t marpaWrapperRecognizerOption = { GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_TRACE),
+  marpaWrapperRecognizerOption_t marpaWrapperRecognizerOption = { GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_DEBUG),
 								  0 /* disableThresholdb */
   };
-  marpaWrapperAsfOption_t        marpaWrapperAsfOption        = { GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_TRACE),
+  marpaWrapperAsfOption_t        marpaWrapperAsfOption        = { GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_DEBUG),
 								  0 /* highRankOnlyb */,
 								  0 /* orderByRankb */,
 								  1 /* ambiguousb */
@@ -347,20 +347,19 @@ static int pruning_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, vo
 
   /* This routine converts the glade into a list of Penn-tagged elements.  It is called recursively */
 
-  GENERICLOGGER_TRACEF(genericLoggerp, "[%s] => marpaWrapperAsf_traverse_ruleIdi(traverserp=%p)", funcs, traverserp);
+  GENERICLOGGER_DEBUGF(genericLoggerp, "[%s] => marpaWrapperAsf_traverse_ruleIdi(traverserp=%p)", funcs, traverserp);
   ruleIdi = marpaWrapperAsf_traverse_ruleIdi(traverserp);
   if (ruleIdi < 0) {
     goto err;
   }
-  GENERICLOGGER_TRACEF(genericLoggerp, "[%s] <= ruleIdi=%d", funcs, ruleIdi);
+  GENERICLOGGER_DEBUGF(genericLoggerp, "[%s] <= ruleIdi=%d", funcs, ruleIdi);
 
-  GENERICLOGGER_TRACEF(genericLoggerp, "[%s] => marpaWrapperAsf_traverse_symbolIdi(traverserp=%p)", funcs, traverserp);
+  GENERICLOGGER_DEBUGF(genericLoggerp, "[%s] => marpaWrapperAsf_traverse_symbolIdi(traverserp=%p)", funcs, traverserp);
   symbolIdi = marpaWrapperAsf_traverse_symbolIdi(traverserp);
   if (symbolIdi < 0) {
     goto err;
   }
-  GENERICLOGGER_TRACEF(genericLoggerp, "[%s] <= symbolIdi=%d", funcs, symbolIdi);
-  fgetc(stdin);
+  GENERICLOGGER_DEBUGF(genericLoggerp, "[%s] <= symbolIdi=%d", funcs, symbolIdi);
 
   /* A token is a single choice, and we know enough to fully Penn-tag it */
   if (ruleIdi < 0) {
@@ -372,35 +371,43 @@ static int pruning_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, vo
       goto err;
     }
 
-    GENERICLOGGER_TRACEF(genericLoggerp, "[%s] => marpaWrapperAsf_traverse_rh_valuei(traverserp=%p, 0)", funcs, traverserp);
+    GENERICLOGGER_DEBUGF(genericLoggerp, "[%s] ...symbol %s", funcs, symbolNames);
+
+    GENERICLOGGER_DEBUGF(genericLoggerp, "[%s] => marpaWrapperAsf_traverse_rh_valuei(traverserp=%p, 0)", funcs, traverserp);
     tokenValuei = marpaWrapperAsf_traverse_rh_valuei(traverserp, 0);
     if (tokenValuei < 0) {
       goto err;
     }
-    GENERICLOGGER_TRACEF(genericLoggerp, "[%s] <= tokenValuei=%d", funcs, tokenValuei);
+    GENERICLOGGER_DEBUGF(genericLoggerp, "[%s] <= tokenValuei=%d", funcs, tokenValuei);
 
   } else {
     size_t          lengthl;
     size_t          rhIxi;
     char *ruleNames = NULL;
     
+    ruleNames = penn_tag_rules(traverseContextp, ruleIdi);
+    if (ruleNames == NULL) {
+      goto err;
+    }
+
+    GENERICLOGGER_DEBUGF(genericLoggerp, "[%s] ...rule %s", funcs, ruleNames);
     GENERICSTACK_NEW(returnValueStackp);
     if (GENERICSTACK_ERROR(returnValueStackp)) {
       GENERICLOGGER_ERRORF(genericLoggerp, "returnValueStackp initialization failure, %s", strerror(errno));
       goto err;
     }
 
-    GENERICLOGGER_TRACEF(genericLoggerp, "[%s] => marpaWrapperAsf_traverse_rh_lengthl(traverserp=%p)", funcs, traverserp);
+    GENERICLOGGER_DEBUGF(genericLoggerp, "[%s] => marpaWrapperAsf_traverse_rh_lengthl(traverserp=%p)", funcs, traverserp);
     lengthl = marpaWrapperAsf_traverse_rh_lengthl(traverserp);
     if (lengthl == (size_t) -1) {
       goto err;
     }
-    GENERICLOGGER_TRACEF(genericLoggerp, "[%s] <= lengthl=%d", funcs, (int) lengthl);
+    GENERICLOGGER_DEBUGF(genericLoggerp, "[%s] <= lengthl=%d", funcs, (int) lengthl);
 
     for (rhIxi = 0; rhIxi <= lengthl - 1; rhIxi++) {
       int valuei;
 
-      GENERICLOGGER_TRACEF(genericLoggerp, "[%s] => marpaWrapperAsf_traverse_rh_valuei(traverserp=%p, rhIxi=%d)", funcs, traverserp, rhIxi);
+      GENERICLOGGER_DEBUGF(genericLoggerp, "[%s] => marpaWrapperAsf_traverse_rh_valuei(traverserp=%p, rhIxi=%d)", funcs, traverserp, rhIxi);
       valuei = marpaWrapperAsf_traverse_rh_valuei(traverserp, rhIxi);
       if (valuei < 0) {
         goto err;
@@ -410,11 +417,6 @@ static int pruning_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, vo
         GENERICLOGGER_ERRORF(genericLoggerp, "returnValueStackp push failure, %s", strerror(errno));
         goto err;
       }
-    }
-
-    ruleNames = penn_tag_rules(traverseContextp, ruleIdi);
-    if (ruleNames == NULL) {
-      goto err;
     }
 
   }
@@ -437,12 +439,12 @@ static int pruning_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, vo
       return "($penn_tag " . ( join $join_ws, @return_value ) . ')';
     */
 
-  GENERICLOGGER_TRACEF(genericLoggerp, "[%s] return -1", funcs);
+  GENERICLOGGER_DEBUGF(genericLoggerp, "[%s] return -1", funcs);
   return -1;
 
  err:
   GENERICSTACK_FREE(returnValueStackp);
-  GENERICLOGGER_TRACEF(genericLoggerp, "[%s] return -1", funcs);
+  GENERICLOGGER_DEBUGF(genericLoggerp, "[%s] return -1", funcs);
   return -1;
 }
 
@@ -502,6 +504,9 @@ static char *penn_tag_rules(traverseContext_t *traverseContextp, int ruleIdi)
   char *s;
   
   switch (ruleIdi) {
+  case START_RULE:
+    s = strdup("[:start:]");
+    break;
   case S_RULE:
     s = strdup("S_RULE");
     break;
