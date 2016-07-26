@@ -36,6 +36,8 @@ sub pruning_traverser {
     
     # A token is a single choice, and we know enough to fully Penn-tag it
     if ( not defined $rule_id ) {
+	my ($start, $length) = $glade->span();
+	print STDERR "... (\$start, \$length) = ($start, $length)\n";
 	my $literal = $glade->literal();
 	my $penn_tag = penn_tag($symbol_name);
 	return "($penn_tag $literal)";
