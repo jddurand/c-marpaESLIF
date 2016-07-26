@@ -3080,6 +3080,8 @@ int marpaWrapperAsf_traverse_rh_valuei(marpaWrapperAsfTraverser_t *traverserp, s
       goto err;
     }
     /* The span ID is the indice in the input stack */
+    valuei = spanIdi;
+
     goto ok;
   }
 

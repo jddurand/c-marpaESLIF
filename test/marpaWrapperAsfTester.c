@@ -329,6 +329,10 @@ int main(int argc, char **argv) {
 
   /* Input stack has no inner PTR */
   GENERICSTACK_FREE(traverseContext.inputStackp);
+  /* But output stack is an arrat of strings */
+  while (GENERICSTACK_USED(traverseContext.outputStackp) > 0) {
+    free(GENERICSTACK_POP_PTR(traverseContext.outputStackp));
+  }
   GENERICSTACK_FREE(traverseContext.outputStackp);
   
   return rci;
@@ -341,80 +345,94 @@ static int pruning_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, vo
   char               funcs[] = "pruning_traverserCallbacki";
   traverseContext_t *traverseContextp = (traverseContext_t *) userDatavp;
   genericLogger_t   *genericLoggerp = traverseContextp->genericLoggerp;
+  char              *symbolNames = NULL;
+  char              *ruleNames = NULL;
   int                ruleIdi;
   int                symbolIdi;
-  genericStack_t    *returnValueStackp = NULL;
+  int                rci = -1;
 
   /* This routine converts the glade into a list of Penn-tagged elements.  It is called recursively */
 
-  GENERICLOGGER_DEBUGF(genericLoggerp, "[%s] => marpaWrapperAsf_traverse_ruleIdi(traverserp=%p)", funcs, traverserp);
   ruleIdi = marpaWrapperAsf_traverse_ruleIdi(traverserp);
-  if (ruleIdi < 0) {
-    goto err;
-  }
-  GENERICLOGGER_DEBUGF(genericLoggerp, "[%s] <= ruleIdi=%d", funcs, ruleIdi);
-
-  GENERICLOGGER_DEBUGF(genericLoggerp, "[%s] => marpaWrapperAsf_traverse_symbolIdi(traverserp=%p)", funcs, traverserp);
   symbolIdi = marpaWrapperAsf_traverse_symbolIdi(traverserp);
-  if (symbolIdi < 0) {
-    goto err;
-  }
-  GENERICLOGGER_DEBUGF(genericLoggerp, "[%s] <= symbolIdi=%d", funcs, symbolIdi);
+  GENERICLOGGER_DEBUGF(genericLoggerp, "[%s] => ruleIdi=%d, symbolIdi=%d", funcs, ruleIdi, symbolIdi);
 
   /* A token is a single choice, and we know enough to fully Penn-tag it */
   if (ruleIdi < 0) {
-    int   tokenValuei;
-    char *symbolNames = NULL;
+    int     spanIdi;
+    size_t  indicel;
+    char   *tokenValues;
+    size_t  lengthl;
+    char   *strings;
     
+    if (symbolIdi < 0) {
+      GENERICLOGGER_ERRORF(genericLoggerp, "[%s][%d:%d] ...symbolIdi is < 0", funcs, ruleIdi, symbolIdi);
+      goto err;
+    }
+
     symbolNames = penn_tag_symbols(traverseContextp, symbolIdi);
     if (symbolNames == NULL) {
+      GENERICLOGGER_ERRORF(genericLoggerp, "[%s][%d:%d] ...symbolNames is NULL", funcs, ruleIdi, symbolIdi);
       goto err;
     }
 
-    GENERICLOGGER_DEBUGF(genericLoggerp, "[%s] ...symbol %s", funcs, symbolNames);
+    GENERICLOGGER_DEBUGF(genericLoggerp, "[%s][%d:%d] ...symbol %s", funcs, ruleIdi, symbolIdi, symbolNames);
 
-    GENERICLOGGER_DEBUGF(genericLoggerp, "[%s] => marpaWrapperAsf_traverse_rh_valuei(traverserp=%p, 0)", funcs, traverserp);
-    tokenValuei = marpaWrapperAsf_traverse_rh_valuei(traverserp, 0);
-    if (tokenValuei < 0) {
+    spanIdi = marpaWrapperAsf_traverse_rh_valuei(traverserp, 0);
+    if (spanIdi < 0) {
+      GENERICLOGGER_ERRORF(genericLoggerp, "[%s][%d:%d] ...spanIdi is %d < 0", funcs, ruleIdi, symbolIdi, spanIdi);
       goto err;
     }
-    GENERICLOGGER_DEBUGF(genericLoggerp, "[%s] <= tokenValuei=%d", funcs, tokenValuei);
+    GENERICLOGGER_DEBUGF(genericLoggerp, "[%s][%d:%d] ... spanIdi=%d", funcs, ruleIdi, symbolIdi, spanIdi);
 
+    /* The spanId correspond to the inputstack indice spanId+1 */
+    indicel = spanIdi + 1;
+    if (! GENERICSTACK_IS_PTR(traverseContextp->inputStackp, indicel)) {
+      GENERICLOGGER_ERRORF(genericLoggerp, "[%s][%d:%d] ...Nothing at input stack indice %d", funcs, ruleIdi, symbolIdi, (int) indicel);
+      goto err;
+    }
+    tokenValues = GENERICSTACK_GET_PTR(traverseContextp->inputStackp, indicel);
+    GENERICLOGGER_DEBUGF(genericLoggerp, "[%s][%d:%d] ... Token is \"%s\"", funcs, ruleIdi, symbolIdi, tokenValues);
+    /* We want to generate the string "(penntag literal)" */
+    lengthl = 1 + strlen(symbolNames) + 1 + strlen(tokenValues) + 1 + 1;
+    strings = malloc(lengthl);
+    if (strings == NULL) {
+      GENERICLOGGER_ERRORF(genericLoggerp, "[%s][%d:%d] ...malloc failure: %s", funcs, ruleIdi, symbolIdi, strerror(errno));
+      goto err;
+    }
+    sprintf(strings, "(%s %s)", symbolNames, tokenValues);
+    GENERICSTACK_PUSH_PTR(traverseContextp->outputStackp, strings);
+    if (GENERICSTACK_ERROR(traverseContextp->outputStackp)) {
+      GENERICLOGGER_ERRORF(genericLoggerp, "[%s][%d:%d] ...traverseContextp->outputStackp push failure: %s", funcs, ruleIdi, symbolIdi, strerror(errno));
+      goto err;
+    }
+    rci = (int) (GENERICSTACK_USED(traverseContextp->outputStackp) - 1);
+    GENERICLOGGER_DEBUGF(genericLoggerp, "[%s][%d:%d] ... Returning \"%s\" pushed at indice %d of output stack", funcs, ruleIdi, symbolIdi, strings, rci);
+    
   } else {
-    size_t          lengthl;
-    size_t          rhIxi;
-    char *ruleNames = NULL;
+    size_t  lengthl;
+    size_t  rhIxi;
     
     ruleNames = penn_tag_rules(traverseContextp, ruleIdi);
     if (ruleNames == NULL) {
+      GENERICLOGGER_ERRORF(genericLoggerp, "[%s][%d:%d] ...ruleNames is NULL", funcs, ruleIdi, symbolIdi);
       goto err;
     }
+    GENERICLOGGER_DEBUGF(genericLoggerp, "[%s][%d:%d] ...rule %s", funcs, ruleIdi, symbolIdi, ruleNames);
 
-    GENERICLOGGER_DEBUGF(genericLoggerp, "[%s] ...rule %s", funcs, ruleNames);
-    GENERICSTACK_NEW(returnValueStackp);
-    if (GENERICSTACK_ERROR(returnValueStackp)) {
-      GENERICLOGGER_ERRORF(genericLoggerp, "returnValueStackp initialization failure, %s", strerror(errno));
-      goto err;
-    }
-
-    GENERICLOGGER_DEBUGF(genericLoggerp, "[%s] => marpaWrapperAsf_traverse_rh_lengthl(traverserp=%p)", funcs, traverserp);
     lengthl = marpaWrapperAsf_traverse_rh_lengthl(traverserp);
     if (lengthl == (size_t) -1) {
+      GENERICLOGGER_ERRORF(genericLoggerp, "[%s][%d:%d] ...lengthl is (size_t)-1", funcs, ruleIdi, symbolIdi);
       goto err;
     }
-    GENERICLOGGER_DEBUGF(genericLoggerp, "[%s] <= lengthl=%d", funcs, (int) lengthl);
+    GENERICLOGGER_DEBUGF(genericLoggerp, "[%s][%d:%d] ... lengthl=%d", funcs, ruleIdi, symbolIdi, (int) lengthl);
 
     for (rhIxi = 0; rhIxi <= lengthl - 1; rhIxi++) {
       int valuei;
 
-      GENERICLOGGER_DEBUGF(genericLoggerp, "[%s] => marpaWrapperAsf_traverse_rh_valuei(traverserp=%p, rhIxi=%d)", funcs, traverserp, rhIxi);
       valuei = marpaWrapperAsf_traverse_rh_valuei(traverserp, rhIxi);
       if (valuei < 0) {
-        goto err;
-      }
-      GENERICSTACK_PUSH_INT(returnValueStackp, valuei);
-      if (GENERICSTACK_ERROR(returnValueStackp)) {
-        GENERICLOGGER_ERRORF(genericLoggerp, "returnValueStackp push failure, %s", strerror(errno));
+	GENERICLOGGER_ERRORF(genericLoggerp, "[%s][%d:%d] ...valuei is %d < 0", funcs, ruleIdi, symbolIdi, valuei);
         goto err;
       }
     }
@@ -439,13 +457,22 @@ static int pruning_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, vo
       return "($penn_tag " . ( join $join_ws, @return_value ) . ')';
     */
 
-  GENERICLOGGER_DEBUGF(genericLoggerp, "[%s] return -1", funcs);
-  return -1;
-
+  goto done;
+  
  err:
-  GENERICSTACK_FREE(returnValueStackp);
-  GENERICLOGGER_DEBUGF(genericLoggerp, "[%s] return -1", funcs);
-  return -1;
+  rci = -1;
+
+ done:
+  if (ruleNames != NULL) {
+    free(ruleNames);
+  }
+  if (symbolNames != NULL) {
+    free(symbolNames);
+  }
+
+  GENERICLOGGER_DEBUGF(genericLoggerp, "[%s][%d:%d] return %d", funcs, ruleIdi, symbolIdi, rci);
+  return rci;
+
 }
 
 /********************************************************************************/
