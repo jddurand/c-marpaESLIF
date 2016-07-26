@@ -1048,10 +1048,10 @@ static inline char *_marpaWrapperAsf_stringBuilder_aps(char *fmts, va_list ap)
 static inline int _marpaWrapperAsf_idCmpi(const void *p1, const void *p2)
 /****************************************************************************/
 {
-  int *a1 = (int *) p1;
-  int *a2 = (int *) p2;
+  int i1 = * ((int *) p1);
+  int i2 = * ((int *) p2);
 
-  return (a1 < a2) ? -1 : ((a1 > a2) ? 1 : 0);
+  return (i1 < i2) ? -1 : ((i1 > i2) ? 1 : 0);
 }
 
 /****************************************************************************/
