@@ -412,6 +412,7 @@ static int pruning_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, vo
   } else {
     size_t  lengthl;
     size_t  rhIxi;
+    size_t  indicel;
     
     ruleNames = penn_tag_rules(traverseContextp, ruleIdi);
     if (ruleNames == NULL) {
@@ -428,13 +429,23 @@ static int pruning_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, vo
     GENERICLOGGER_DEBUGF(genericLoggerp, "[%s][%d:%d] ... lengthl=%d", funcs, ruleIdi, symbolIdi, (int) lengthl);
 
     for (rhIxi = 0; rhIxi <= lengthl - 1; rhIxi++) {
-      int valuei;
+      int   valuei;
+      char *values;
 
       valuei = marpaWrapperAsf_traverse_rh_valuei(traverserp, rhIxi);
       if (valuei < 0) {
 	GENERICLOGGER_ERRORF(genericLoggerp, "[%s][%d:%d] ...valuei is %d < 0", funcs, ruleIdi, symbolIdi, valuei);
         goto err;
       }
+
+      /* We expect valuei to be in outputStack */
+      indicel = valuei;
+      if (! GENERICSTACK_IS_PTR(traverseContextp->outputStackp, indicel)) {
+	GENERICLOGGER_ERRORF(genericLoggerp, "[%s][%d:%d] ...Nothing at output stack indice %d", funcs, ruleIdi, symbolIdi, (int) indicel);
+	goto err;
+      }
+      values = GENERICSTACK_GET_PTR(traverseContextp->outputStackp, indicel);
+      GENERICLOGGER_DEBUGF(genericLoggerp, "[%s][%d:%d] ... Value is \"%s\" for rh No %d", funcs, ruleIdi, symbolIdi, values, rhIxi);
     }
 
   }
