@@ -866,19 +866,28 @@ static inline short _marpaWrapperAsf_intsetIdb(marpaWrapperAsf_t *marpaWrapperAs
   short                    rcb;
   short                    findResultb;
   int                      intsetIdi;
+  int                     *localIdip = NULL;
 
   if (countl <= 0) {
     keys = (char *) staticKeys;
   } else {
+    localIdip = malloc(sizeof(int) * countl);
+    if (localIdip == NULL) {
+      MARPAWRAPPER_ERRORF(genericLoggerp, "malloc failure: %s", strerror(errno));
+      goto err;
+    }
+    memcpy(localIdip, idip, sizeof(int) * countl);
+    qsort(localIdip, countl, sizeof(int), _marpaWrapperAsf_idCmpi);
+
     for (idl = 0; idl < countl; idl++) {
       if (keys == NULL) {
-	keys = _marpaWrapperAsf_stringBuilders("%d", idip[idl]);
+	keys = _marpaWrapperAsf_stringBuilders("%d", localIdip[idl]);
 	if (keys == NULL) {
 	  MARPAWRAPPER_ERRORF(genericLoggerp, "_marpaWrapperAsf_stringBuilders error: %s", strerror(errno));
 	  goto err;
 	}
       } else {
-	char *keyNexts = _marpaWrapperAsf_stringBuilders("%s %d", keys, idip[idl]);
+	char *keyNexts = _marpaWrapperAsf_stringBuilders("%s %d", keys, localIdip[idl]);
 	if (keyNexts == NULL) {
 	  MARPAWRAPPER_ERRORF(genericLoggerp, "_marpaWrapperAsf_stringBuilders error: %s", strerror(errno));
 	  goto err;
@@ -889,6 +898,7 @@ static inline short _marpaWrapperAsf_intsetIdb(marpaWrapperAsf_t *marpaWrapperAs
     }
   }
 
+  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "Looking for key \"%s\" intsetHashp", keys);
   GENERICHASH_FIND(marpaWrapperAsfp->intsetHashp,
                    marpaWrapperAsfp,
                    PTR,
@@ -902,15 +912,8 @@ static inline short _marpaWrapperAsf_intsetIdb(marpaWrapperAsf_t *marpaWrapperAs
   }
   if (! findResultb) {
 
-    if ((keys != NULL) && (keys != staticKeys)) {
-      free(keys);
-    }
     intsetIdi = marpaWrapperAsfp->nextIntseti++;
-    keys = _marpaWrapperAsf_stringBuilders("%d", intsetIdi);
-    if (keys == NULL) {
-      MARPAWRAPPER_ERRORF(genericLoggerp, "_marpaWrapperAsf_stringBuilders error: %s", strerror(errno));
-      goto err;
-    }
+    MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "Creating next intset id \"%s\" => %d", keys, intsetIdi);
     GENERICHASH_SET(marpaWrapperAsfp->intsetHashp,
                     marpaWrapperAsfp,
                     PTR,
@@ -921,6 +924,8 @@ static inline short _marpaWrapperAsf_intsetIdb(marpaWrapperAsf_t *marpaWrapperAs
       MARPAWRAPPER_ERRORF(genericLoggerp, "intset hash set failure: %s", strerror(errno));
       goto err;
     }
+  } else {
+    MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "Found intset id %d", intsetIdi);
   }
 
   *intsetIdip = intsetIdi;
@@ -932,7 +937,9 @@ static inline short _marpaWrapperAsf_intsetIdb(marpaWrapperAsf_t *marpaWrapperAs
   rcb = 0;
 
  done:
-  
+  if (localIdip != NULL) {
+    free(localIdip);
+  }
   if ((keys != NULL) && (keys != staticKeys)) {
     free(keys);
   }
@@ -2539,6 +2546,7 @@ static inline short _marpaWrapperAsf_glade_id_factorsb(marpaWrapperAsf_t *marpaW
 
 	for (i = 0; i < GENERICSTACK_USED(causeNidsStackp); i++) {
 	  causeNidsp[i] = GENERICSTACK_GET_INT(causeNidsStackp, i);
+	  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "... causeNidsp[%d] = %d", (int) i, causeNidsp[i]);
 	}
       }
     }
@@ -2554,6 +2562,7 @@ static inline short _marpaWrapperAsf_glade_id_factorsb(marpaWrapperAsf_t *marpaW
     _marpaWrapperAsf_idset_trace(marpaWrapperAsfp, MARPAWRAPPERASFIDSET_NIDSET, baseNidsetp);
 #endif
     gladeIdi = _marpaWrapperAsf_nidset_idi(marpaWrapperAsfp, baseNidsetp);
+    MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "... gladeIdi = %d", gladeIdi);
     if (! GENERICSTACK_IS_PTR(marpaWrapperAsfp->gladeStackp, (size_t) gladeIdi)) {
       marpaWrapperAsfGlade_t *gladep;
 
@@ -3715,4 +3724,3 @@ static inline void _marpaWrapperAsf_choicepoint_freev(marpaWrapperAsf_t *marpaWr
     free(choicepointp);
   }
 }
-
