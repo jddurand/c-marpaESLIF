@@ -16,66 +16,86 @@ genericHash is an ANSI set of macros exposing key hashing and comparison functio
 
 =head1 MACROS
 
-=head2 C<GENERICHASH_NEW>(hashName, indFunctionp)
+=head2 GENERICHASH_NEW(hashName, indFunctionp
 
-Alias to C<GENERICHASH_NEW_ALL>(hashName, keyIndFunctionp, keyCmpFunctionp, keyCopyFunctionp, keyFreeFunctionp, valCopyFunctionp, valFreeFunctionp, wantedSize, thisWantedSubSize), see below.
+Alias to GENERICHASH_NEW_ALL(hashName, keyIndFunctionp, keyCmpFunctionp, keyCopyFunctionp, keyFreeFunctionp, valCopyFunctionp, valFreeFunctionp, wantedSize, wantedSubSize), see below.
 
-=head2 C<GENERICHASH_NEW_ALL>(hashName, keyIndFunctionp, keyCmpFunctionp, keyCopyFunctionp, keyFreeFunctionp, valCopyFunctionp, valFreeFunctionp, wantedSize, thisWantedSubSize)
+=head2 GENERICHASH_NEW_ALL(hashName, keyIndFunctionp, keyCmpFunctionp, keyCopyFunctionp, keyFreeFunctionp, valCopyFunctionp, valFreeFunctionp, wantedSize, wantedSubSize)
 
 Create an empty hash on the heap, where function pointer prototypes are:
 
-  typedef size_t (*genericHashKeyIndFunction_t)(void *userDatavp, genericStackItemType_t itemType, void *p);
-  typedef short  (*genericHashKeyCmpFunction_t)(void *userDatavp, void *p1, void *p2);
-  typedef void  *(*genericHashKeyCopyFunction_t)(void *userDatavp, void *p);
-  typedef void   (*genericHashKeyFreeFunction_t)(void *userDatavp, void *p);
-  typedef void  *(*genericHashValCopyFunction_t)(void *userDatavp, void *p);
-  typedef void   (*genericHashValFreeFunction_t)(void *userDatavp, void *p);
+  typedef size_t (*genericHashKeyIndFunction_t)(void *userDatavp, genericStackItemType_t itemType, void **pp);
+  typedef short  (*genericHashKeyCmpFunction_t)(void *userDatavp, void **pp1, void **pp2);
+  typedef void  *(*genericHashKeyCopyFunction_t)(void *userDatavp, void **pp);
+  typedef void   (*genericHashKeyFreeFunction_t)(void *userDatavp, void **pp);
+  typedef void  *(*genericHashValCopyFunction_t)(void *userDatavp, void **pp);
+  typedef void   (*genericHashValFreeFunction_t)(void *userDatavp, void **pp);
 
-All these functions are called with a context C<userDatavp> that is passed as-is through macros.
+All these functions are called with a context C<userDatavp> that is passed as-is through macros described below. The generic pointers are I<always> pointers to data, i.e. pointer to char, pointer to pointer, etc... Take care, nothing prevent the pointer content to be a C<NULL> pointer itself, depending on the context (see below).
 
 =over
 
 =item C<keyIndFunctionp>
 
-Mandatory. C<itemType> is inherited from genericStack, e.g. it can be C<GENERICSTACKITEMTYPE_CHAR>, C<GENERICSTACKITEMTYPE_PTR>, etc... 
+  typedef size_t (*genericHashKeyIndFunction_t)(void *userDatavp, genericStackItemType_t itemType, void **pp);
+
+Mandatory. This function returns the indice in the hash. C<itemType> is generated using genericStack constants, e.g. it can be C<GENERICSTACKITEMTYPE_CHAR>, C<GENERICSTACKITEMTYPE_PTR>, etc... C<*pp> is a I<pointer> to the data, regardless of its type, i.e. it can be a pointer to char, a pointer to a pointer, etc...
+
+=item C<keyCmpFunctionp>
+
+  typedef short  (*genericHashKeyCmpFunction_t)(void *userDatavp, void **pp1, void **pp2);
+
+Optional. When not C<NULL>, this function is called I<only> when the engine need to know if two opaque pointers refer to identical objects, and to handle collisions within the same hash row. This mean that the item type is implicitly C<GENERICSTACKITEMTYPE_PTR>, and the function is called with two pointers of pointer. If the function returns a true value, the two keys are considered equal. If this function pointer is C<NULL>, direct pointer comparison is done.
+
+=item C<keyCopyFunctionp>
+
+  typedef void  *(*genericHashKeyCopyFunction_t)(void *userDatavp, void **pp);
+
+Optional. When not C<NULL>, this function is called I<only> when the engine need to insert data that is an opaque pointer. This mean that the item type is implicitly C<GENERICSTACKITEMTYPE_PTR>. This function must return a non C<NULL> if the data pointed to by C<*p> is non C<NULL>. If this function pointer is C<NULL>, direct pointer copy is done.
+
+=item C<keyFreeFunctionp>
+
+  typedef void   (*genericHashKeyFreeFunction_t)(void *userDatavp, void **pp);
+
+Optional. When not C<NULL>, this is called I<only> when the engine need to free data that is an opaque pointer.
+
+=item C<valCopyFunctionp>
+
+  typedef void  *(*genericHashValCopyFunction_t)(void *userDatavp, void **pp);
+
+Optional. Same description as C<keyCopyFunctionp>, but for values.
+
+=item C<valFreeFunctionp>
+
+  typedef void   (*genericHashValFreeFunction_t)(void *userDatavp, void **pp);
+
+Optional. Same description as C<keyFreeFunctionp>, but for values.
+
+=item C<wantedSize>
+
+Optional. Initial number of hash rows.
+
+=item C<wantedSubSize>
+
+Optional. Initial number of columns within a hash row.
 
 =back
 
-and for every data, C<indFunctionp> is used to return a hash indice. This indice function receive a I<pointer> to the original data. The number of rows in the hash will always increase automatically, whenever needed, and never decrease. To handle the case of collisions, C<cmpFunctionp> is called and must return a true value when the key of the two values I<pointed by> C<p1> and C<p2> matches. Within a hash row, the number of elements decrease and increase automatically. C<unique>, when true, has a performance impact on the hash, because it internally makes sure that a given key can appear only once, using both the C<indFunctionp> (to get the row indice in the hash) and C<cmpFunctionp> functions (to compare keys).
+=head2 GENERICHASH_SET(hashName, userDatavp, keyType, keyVal, valType, valVal)
 
-  It is legal to say C<NULL> for C<indFunctionp>, but then the user will have to always call the I<_BY_IND> macros. C<cmpFunctionp> must not be a null function pointer.
+Set an entry in hash C<hashName>, using the key C<keyVal> of type C<keyType>, and value C<valVal> of type C<valType>. C<keyType> and C<valType> must be I<shorthands> for genericStack constants, i.e. C<CHAR>, C<PTR>, etc...
 
-=head2 GENERICHASH_NEW_SIZED(hashName, indFunctionp, cmpFunctionp, wantedSize, wantedSubSize)
+=head2 GENERICHASH_FIND(hashName, userDatavp, keyType, keyVal, valType, valValp, findResult)
 
-Like the new method, but creates an initial C<wantedSize> number of rows, and declares every row to have an initial C<wantedSubSize> number of elements.
+Find an entry in hash C<hashName>, using the key C<keyVal> of type C<keyType>, and expecting a value of type C<valType>. C<valValp> must be a pointer, eventually C<NULL>. If successful, the content of C<valValp> is filled with the found value. C<findResult> must be a valid C identifier, in which a true or a false will be set. C<keyType> and C<valType> must be I<shorthands> for genericStack constants, i.e. C<CHAR>, C<PTR>, etc...
 
-=head2 GENERICHASH_SET(hashName, userDatavp, itemType, value)
+=head2 GENERICHASH_REMOVE(hashName, userDatavp, keyType, keyVal, valType, valValp, findResult)
 
-Set an entry in hash C<hashName>, using the data C<value> which is of type C<itemType>. The C<userDatavp> variable is the context that will propagated to callback functions: the indice callback is always used, the comparison callback is used if the hash have the unique flag.
-
-=head2 GENERICHASH_SET_BY_IND(hashName, userDatavp, itemType, ind, value)
-
-Same as GENERICHASH_SET, but at the row number C<ind>, pre-calculated by the user.
-
-=head2 GENERICHASH_FIND(hashName, userDatavp, wantedType, wantedVar, findResult, got)
-
-Search for the data C<wantedVar> of type C<wantedType> in hash C<hashName>. The value 1 or 0 or stored in C<findResult> if success or not, respectively. The found value is pushed into C<got>. The C<userDatavp> variable is the context that will propagated to callback functions.
-
-=head2 GENERICHASH_FIND_BY_IND(hashName, userDatavp, wantedType, wantedInd, wantedVar, findResult, got)
-
-Same as GENERICHASH_FIND, but at the row number C<ind>, pre-calculated by the user.
-
-=head2 GENERICHASH_REMOVE(hashName, userDatavp, wantedType, wantedVar, findResult, got)
-
-Remove for the data C<wantedVar> of type C<wantedType> in hash C<hashName>. The value 1 or 0 or stored in C<findResult> if data was found or not, respectively. The removed value is pushed into C<got>. The C<userDatavp> variable is the context that will propagated to callback functions.
-
-=head2 GENERICHASH_REMOVE_BY_IND(hashName, userDatavp, wantedType, wantedInd, wantedVar, findResult, got)
-
-Same as GENERICHASH_REMOVE, but at the row number C<ind>, pre-calculated by the user.
+Remove an entry in hash C<hashName>, using the key C<keyVal> of type C<keyType>, and expecting a value of type C<valType>. C<valValp> must be a pointer, eventually C<NULL>. If successful, the content of C<valValp> is filled with the found value. When C<valValp> is C<NULL>, key and data are explicitely removed, eventually calling the free callback functions. C<keyType> and C<valType> must be I<shorthands> for genericStack constants, i.e. C<CHAR>, C<PTR>, etc...
 
 =head2 GENERICHASH_FREE(hashName)
 
-Releases the hash.
+Releases the hash. This may call the free callback functions.
 
 =head1 SEE ALSO
 
