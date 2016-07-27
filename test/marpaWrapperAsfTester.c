@@ -16,8 +16,8 @@ typedef struct traverseContext {
 
 static char *penn_tag_symbols(traverseContext_t *traverseContextp, int symbolIdi);
 static char *penn_tag_rules(traverseContext_t *traverseContextp, int ruleIdi);
-static int pruning_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, void *userDatavp);
-static int full_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, void *userDatavp);
+static short pruning_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, void *userDatavp, int *valueip);
+static short full_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, void *userDatavp, int *valueip);
 
 enum { START = 0, S, NP, VP, period, NN, NNS, DT, CC, VBZ, MAX_SYMBOL };
 enum { START_RULE = 0,
@@ -308,8 +308,7 @@ int main(int argc, char **argv) {
     perror("GENERICSTACK_NEW");
     exit(1);
   }
-  valuei = marpaWrapperAsf_traversei(marpaWrapperAsfp, pruning_traverserCallbacki, &traverseContext);
-  if (valuei >= 0) {
+  if (marpaWrapperAsf_traverseb(marpaWrapperAsfp, pruning_traverserCallbacki, &traverseContext, &valuei)) {
     GENERICLOGGER_INFOF(traverseContext.genericLoggerp, "Pruning traverser returns:\n%s", GENERICSTACK_GET_PTR(traverseContext.outputStackp, (size_t) valuei));
   }
   /* Output stack is an array of strings */
@@ -324,8 +323,7 @@ int main(int argc, char **argv) {
     perror("GENERICSTACK_NEW");
     exit(1);
   }
-  valuei = marpaWrapperAsf_traversei(marpaWrapperAsfp, full_traverserCallbacki, &traverseContext);
-  if (valuei >= 0) {
+  if (marpaWrapperAsf_traverseb(marpaWrapperAsfp, full_traverserCallbacki, &traverseContext, &valuei)) {
     genericStack_t *stringStackp;
     size_t          i;
     GENERICLOGGER_INFO(traverseContext.genericLoggerp, "full traverser returns:");
@@ -368,7 +366,7 @@ int main(int argc, char **argv) {
 }
 
 /********************************************************************************/
-static int pruning_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, void *userDatavp)
+static short pruning_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, void *userDatavp, int *valueip)
 /********************************************************************************/
 {
   char               funcs[] = "pruning_traverserCallbacki";
@@ -377,22 +375,22 @@ static int pruning_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, vo
   char              *symbolNames = NULL;
   char              *ruleNames = NULL;
   genericStack_t    *rhStackp = NULL;
+  short              rcb = 0;
+  int                valuei;
   int                ruleIdi;
   int                symbolIdi;
-  int                rci = -1;
   size_t             stringl;
   char              *strings;
 
   /* This routine converts the glade into a list of Penn-tagged elements.  It is called recursively */
 
-  ruleIdi = marpaWrapperAsf_traverse_ruleIdi(traverserp);
-  symbolIdi = marpaWrapperAsf_traverse_symbolIdi(traverserp);
-  GENERICLOGGER_DEBUGF(genericLoggerp, "[%s] => ruleIdi=%d, symbolIdi=%d", funcs, ruleIdi, symbolIdi);
-
-  if (symbolIdi < 0) {
-    GENERICLOGGER_ERRORF(genericLoggerp, "[%s][%d:%d] ... symbolIdi is < 0", funcs, ruleIdi, symbolIdi);
+  if (! marpaWrapperAsf_traverse_ruleIdb(traverserp, &ruleIdi)) {
     goto err;
   }
+  if (! marpaWrapperAsf_traverse_symbolIdb(traverserp, &symbolIdi)) {
+    goto err;
+  }
+  GENERICLOGGER_DEBUGF(genericLoggerp, "[%s] => ruleIdi=%d, symbolIdi=%d", funcs, ruleIdi, symbolIdi);
 
   symbolNames = penn_tag_symbols(traverseContextp, symbolIdi);
   if (symbolNames == NULL) {
@@ -408,9 +406,7 @@ static int pruning_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, vo
     size_t  indicel;
     char   *tokenValues;
     
-    spanIdi = marpaWrapperAsf_traverse_rh_valuei(traverserp, 0);
-    if (spanIdi < 0) {
-      GENERICLOGGER_ERRORF(genericLoggerp, "[%s][%d:%d] ... spanIdi is %d < 0", funcs, ruleIdi, symbolIdi, spanIdi);
+    if (! marpaWrapperAsf_traverse_rh_valueb(traverserp, 0, &spanIdi)) {
       goto err;
     }
     GENERICLOGGER_DEBUGF(genericLoggerp, "[%s][%d:%d] ... spanIdi=%d", funcs, ruleIdi, symbolIdi, spanIdi);
@@ -460,9 +456,7 @@ static int pruning_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, vo
       int   valuei;
       char *values;
 
-      valuei = marpaWrapperAsf_traverse_rh_valuei(traverserp, rhIxi);
-      if (valuei < 0) {
-	GENERICLOGGER_ERRORF(genericLoggerp, "[%s][%d:%d] ... valuei is %d < 0", funcs, ruleIdi, symbolIdi, valuei);
+      if (! marpaWrapperAsf_traverse_rh_valueb(traverserp, rhIxi, &valuei)) {
         goto err;
       }
 
@@ -553,13 +547,18 @@ static int pruning_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, vo
     GENERICLOGGER_ERRORF(genericLoggerp, "[%s][%d:%d] ... traverseContextp->outputStackp push failure: %s", funcs, ruleIdi, symbolIdi, strerror(errno));
     goto err;
   }
-  rci = (int) (GENERICSTACK_USED(traverseContextp->outputStackp) - 1);
-  GENERICLOGGER_DEBUGF(genericLoggerp, "[%s][%d:%d] ... Returning \"%s\" pushed at indice %d of output stack", funcs, ruleIdi, symbolIdi, strings, rci);
+  valuei = (int) (GENERICSTACK_USED(traverseContextp->outputStackp) - 1);
+  GENERICLOGGER_DEBUGF(genericLoggerp, "[%s][%d:%d] ... Returning \"%s\" pushed at indice %d of output stack", funcs, ruleIdi, symbolIdi, strings, valuei);
 
+  if (valueip != NULL) {
+    *valueip = valuei;
+  }
+
+  rcb = 1;
   goto done;
   
  err:
-  rci = -1;
+  rcb = 0;
 
  done:
   if (ruleNames != NULL) {
@@ -571,8 +570,8 @@ static int pruning_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, vo
   /* rhStackp contains only integers */
   GENERICSTACK_FREE(rhStackp);
 
-  GENERICLOGGER_DEBUGF(genericLoggerp, "[%s][%d:%d] return %d", funcs, ruleIdi, symbolIdi, rci);
-  return rci;
+  GENERICLOGGER_DEBUGF(genericLoggerp, "[%s][%d:%d] return %d", funcs, ruleIdi, symbolIdi, (int) rcb);
+  return rcb;
 
 }
 
@@ -580,7 +579,7 @@ static int pruning_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, vo
 /* This traverser always return a valuei that is an indice in traversep->outputStackp */
 /* At this indice there is a stack of strings.                                        */
 /********************************************************************************/
-static int full_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, void *userDatavp)
+static short full_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, void *userDatavp, int *valueip)
 /********************************************************************************/
 {
   char               funcs[] = "full_traverserCallbacki";
@@ -591,12 +590,14 @@ static int full_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, void 
   genericStack_t    *stringStackp = NULL;
   int                ruleIdi;
   int                symbolIdi;
-  int                rci = -1;
+  short              rcb = 0;
+  int                valuei;
+  short              nextb;
 
   /* This routine converts the glade into a list of Penn-tagged elements.  It is called recursively */
 
-  ruleIdi = marpaWrapperAsf_traverse_ruleIdi(traverserp);
-  symbolIdi = marpaWrapperAsf_traverse_symbolIdi(traverserp);
+  marpaWrapperAsf_traverse_ruleIdb(traverserp, &ruleIdi);
+  marpaWrapperAsf_traverse_symbolIdb(traverserp, &symbolIdi);
   GENERICLOGGER_DEBUGF(genericLoggerp, "[%s] => ruleIdi=%d, symbolIdi=%d", funcs, ruleIdi, symbolIdi);
 
   symbolNames = penn_tag_symbols(traverseContextp, symbolIdi);
@@ -606,12 +607,16 @@ static int full_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, void 
 
   /* A token is a single choice, and we know enough to fully Penn-tag it */
   if (ruleIdi < 0) {
-    int     spanIdi     = marpaWrapperAsf_traverse_rh_valuei(traverserp, 0);
-    size_t  indicel     = spanIdi + 1; /* The spanId correspond to the inputstack indice spanId+1 */
-    char   *tokenValues = GENERICSTACK_GET_PTR(traverseContextp->inputStackp, indicel);
+    int     spanIdi;
+    size_t  indicel;
+    char   *tokenValues;
     size_t  stringl;
     char   *strings;
     
+    marpaWrapperAsf_traverse_rh_valueb(traverserp, 0, &spanIdi);
+    indicel     = spanIdi + 1; /* The spanId correspond to the inputstack indice spanId+1 */
+    tokenValues = GENERICSTACK_GET_PTR(traverseContextp->inputStackp, indicel);
+
     GENERICLOGGER_DEBUGF(genericLoggerp, "[%s][%d:%d] ... spanIdi=%d", funcs, ruleIdi, symbolIdi, spanIdi);
     GENERICLOGGER_DEBUGF(genericLoggerp, "[%s][%d:%d] ... Token is \"%s\"", funcs, ruleIdi, symbolIdi, tokenValues);
 
@@ -655,9 +660,12 @@ static int full_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, void 
 
         for (i = 0; i < GENERICSTACK_USED(resultStackp); i++) {
           genericStack_t *oldResultStackp = GENERICSTACK_GET_PTR(resultStackp, i);
-          int             childValuei     = marpaWrapperAsf_traverse_rh_valuei(traverserp, rhIxi);
-          genericStack_t *childValueStackp = GENERICSTACK_GET_PTR(traverseContextp->outputStackp, (size_t) childValuei);
+          int             childValuei;
+          genericStack_t *childValueStackp;
           size_t          j;
+
+	  marpaWrapperAsf_traverse_rh_valueb(traverserp, rhIxi, &childValuei);
+          childValueStackp = GENERICSTACK_GET_PTR(traverseContextp->outputStackp, (size_t) childValuei);
 
           for (j = 0; j < GENERICSTACK_USED(childValueStackp); j++) {
             char           *newValues = GENERICSTACK_GET_PTR(childValueStackp, j);
@@ -761,7 +769,8 @@ static int full_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, void 
         }
         GENERICSTACK_FREE(resultStackp);
 
-        if (marpaWrapperAsf_traverse_nextb(traverserp) == 0) {
+        marpaWrapperAsf_traverse_nextb(traverserp, &nextb);
+	if (! nextb) {
           break;
         }
       }
@@ -770,9 +779,22 @@ static int full_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, void 
   
   /* Return value is a list of choices */
   GENERICSTACK_PUSH_PTR(traverseContextp->outputStackp, stringStackp);
-  rci = (int) (GENERICSTACK_USED(traverseContextp->outputStackp) - 1);
-  GENERICLOGGER_DEBUGF(genericLoggerp, "[%s][%d:%d] ... Returning list of choices pushed at indice %d of output stack", funcs, ruleIdi, symbolIdi, rci);
+  valuei = (int) (GENERICSTACK_USED(traverseContextp->outputStackp) - 1);
+  GENERICLOGGER_DEBUGF(genericLoggerp, "[%s][%d:%d] ... Returning list of choices pushed at indice %d of output stack", funcs, ruleIdi, symbolIdi, valuei);
 
+  if (valueip != NULL) {
+    *valueip = valuei;
+  }
+
+  rcb = 1;
+
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  
   if (ruleNames != NULL) {
     free(ruleNames);
   }
@@ -780,8 +802,8 @@ static int full_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, void 
     free(symbolNames);
   }
 
-  GENERICLOGGER_DEBUGF(genericLoggerp, "[%s][%d:%d] return %d", funcs, ruleIdi, symbolIdi, rci);
-  return rci;
+  GENERICLOGGER_DEBUGF(genericLoggerp, "[%s][%d:%d] return %d", funcs, ruleIdi, symbolIdi, (int) rcb);
+  return rcb;
 
 }
 
