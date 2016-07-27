@@ -328,7 +328,7 @@ int main(int argc, char **argv) {
   if (valuei >= 0) {
     genericStack_t *stringStackp;
     size_t          i;
-    GENERICLOGGER_INFOF(traverseContext.genericLoggerp, "full traverser returns:");
+    GENERICLOGGER_INFO(traverseContext.genericLoggerp, "full traverser returns:");
 
     stringStackp = GENERICSTACK_GET_PTR(traverseContext.outputStackp, (size_t) valuei);
     for (i = 0; i < GENERICSTACK_USED(stringStackp); i++) {
