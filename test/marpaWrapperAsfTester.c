@@ -17,6 +17,7 @@ typedef struct traverseContext {
 static char *penn_tag_symbols(traverseContext_t *traverseContextp, int symbolIdi);
 static char *penn_tag_rules(traverseContext_t *traverseContextp, int ruleIdi);
 static int pruning_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, void *userDatavp);
+static int full_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, void *userDatavp);
 
 enum { START = 0, S, NP, VP, period, NN, NNS, DT, CC, VBZ, MAX_SYMBOL };
 enum { START_RULE = 0,
@@ -41,8 +42,6 @@ int main(int argc, char **argv) {
   int                            ruleip[MAX_RULE];
   int                            rci = 0;
   int                           *symbolArrayp = NULL;
-  size_t                         i;
-  size_t                         outputStackSizel;
   int                            valuei;
   traverseContext_t              traverseContext = { NULL, symbolip, ruleip, NULL, NULL, GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_DEBUG) };
   
@@ -62,11 +61,6 @@ int main(int argc, char **argv) {
 
   GENERICSTACK_NEW(traverseContext.inputStackp);
   if (traverseContext.inputStackp == NULL) {
-    perror("GENERICSTACK_NEW");
-    exit(1);
-  }
-  GENERICSTACK_NEW(traverseContext.outputStackp);
-  if (traverseContext.outputStackp == NULL) {
     perror("GENERICSTACK_NEW");
     exit(1);
   }
@@ -306,10 +300,50 @@ int main(int argc, char **argv) {
   /* -------------------------- */
   /* Do the parse tree traverse */
   /* -------------------------- */
-  traverseContext.marpaWrapperAsfp = marpaWrapperAsfp;
-  valuei = marpaWrapperAsf_traversei(marpaWrapperAsfp, pruning_traverserCallbacki, &traverseContext);
 
-  GENERICLOGGER_INFOF(traverseContext.genericLoggerp, "Pruning traverser returns:\n%s", GENERICSTACK_GET_PTR(traverseContext.outputStackp, (size_t) valuei));
+  /* Pruning traverser */
+  traverseContext.marpaWrapperAsfp = marpaWrapperAsfp;
+  GENERICSTACK_NEW(traverseContext.outputStackp);
+  if (traverseContext.outputStackp == NULL) {
+    perror("GENERICSTACK_NEW");
+    exit(1);
+  }
+  valuei = marpaWrapperAsf_traversei(marpaWrapperAsfp, pruning_traverserCallbacki, &traverseContext);
+  if (valuei >= 0) {
+    GENERICLOGGER_INFOF(traverseContext.genericLoggerp, "Pruning traverser returns:\n%s", GENERICSTACK_GET_PTR(traverseContext.outputStackp, (size_t) valuei));
+  }
+  /* Output stack is an array of strings */
+  while (GENERICSTACK_USED(traverseContext.outputStackp) > 0) {
+    free(GENERICSTACK_POP_PTR(traverseContext.outputStackp));
+  }
+  GENERICSTACK_FREE(traverseContext.outputStackp);
+
+  /* Full traverser */
+  GENERICSTACK_NEW(traverseContext.outputStackp);
+  if (traverseContext.outputStackp == NULL) {
+    perror("GENERICSTACK_NEW");
+    exit(1);
+  }
+  valuei = marpaWrapperAsf_traversei(marpaWrapperAsfp, full_traverserCallbacki, &traverseContext);
+  if (valuei >= 0) {
+    genericStack_t *stringStackp;
+    size_t          i;
+    GENERICLOGGER_INFOF(traverseContext.genericLoggerp, "full traverser returns:");
+
+    stringStackp = GENERICSTACK_GET_PTR(traverseContext.outputStackp, (size_t) valuei);
+    for (i = 0; i < GENERICSTACK_USED(stringStackp); i++) {
+      GENERICLOGGER_INFOF(traverseContext.genericLoggerp, "Indice %d:\n%s", i, GENERICSTACK_GET_PTR(stringStackp, i));
+    }    
+  }
+  /* Output stack is an array of array of strings */
+  while (GENERICSTACK_USED(traverseContext.outputStackp) > 0) {
+    genericStack_t *stringStackp = GENERICSTACK_POP_PTR(traverseContext.outputStackp);
+    while (GENERICSTACK_USED(stringStackp) > 0) {
+      free(GENERICSTACK_POP_PTR(stringStackp));
+    }
+    GENERICSTACK_FREE(stringStackp);
+  }
+  GENERICSTACK_FREE(traverseContext.outputStackp);
  
   if (marpaWrapperAsfp != NULL) {
     marpaWrapperAsf_freev(marpaWrapperAsfp);
@@ -329,11 +363,6 @@ int main(int argc, char **argv) {
 
   /* Input stack has no inner PTR */
   GENERICSTACK_FREE(traverseContext.inputStackp);
-  /* But output stack is an arrat of strings */
-  while (GENERICSTACK_USED(traverseContext.outputStackp) > 0) {
-    free(GENERICSTACK_POP_PTR(traverseContext.outputStackp));
-  }
-  GENERICSTACK_FREE(traverseContext.outputStackp);
   
   return rci;
 }
@@ -361,17 +390,17 @@ static int pruning_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, vo
   GENERICLOGGER_DEBUGF(genericLoggerp, "[%s] => ruleIdi=%d, symbolIdi=%d", funcs, ruleIdi, symbolIdi);
 
   if (symbolIdi < 0) {
-    GENERICLOGGER_ERRORF(genericLoggerp, "[%s][%d:%d] ...symbolIdi is < 0", funcs, ruleIdi, symbolIdi);
+    GENERICLOGGER_ERRORF(genericLoggerp, "[%s][%d:%d] ... symbolIdi is < 0", funcs, ruleIdi, symbolIdi);
     goto err;
   }
 
   symbolNames = penn_tag_symbols(traverseContextp, symbolIdi);
   if (symbolNames == NULL) {
-    GENERICLOGGER_ERRORF(genericLoggerp, "[%s][%d:%d] ...symbolNames is NULL", funcs, ruleIdi, symbolIdi);
+    GENERICLOGGER_ERRORF(genericLoggerp, "[%s][%d:%d] ... symbolNames is NULL", funcs, ruleIdi, symbolIdi);
     goto err;
   }
 
-  GENERICLOGGER_DEBUGF(genericLoggerp, "[%s][%d:%d] ...symbol %s", funcs, ruleIdi, symbolIdi, symbolNames);
+  GENERICLOGGER_DEBUGF(genericLoggerp, "[%s][%d:%d] ... symbol %s", funcs, ruleIdi, symbolIdi, symbolNames);
 
   /* A token is a single choice, and we know enough to fully Penn-tag it */
   if (ruleIdi < 0) {
@@ -381,7 +410,7 @@ static int pruning_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, vo
     
     spanIdi = marpaWrapperAsf_traverse_rh_valuei(traverserp, 0);
     if (spanIdi < 0) {
-      GENERICLOGGER_ERRORF(genericLoggerp, "[%s][%d:%d] ...spanIdi is %d < 0", funcs, ruleIdi, symbolIdi, spanIdi);
+      GENERICLOGGER_ERRORF(genericLoggerp, "[%s][%d:%d] ... spanIdi is %d < 0", funcs, ruleIdi, symbolIdi, spanIdi);
       goto err;
     }
     GENERICLOGGER_DEBUGF(genericLoggerp, "[%s][%d:%d] ... spanIdi=%d", funcs, ruleIdi, symbolIdi, spanIdi);
@@ -389,7 +418,7 @@ static int pruning_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, vo
     /* The spanId correspond to the inputstack indice spanId+1 */
     indicel = spanIdi + 1;
     if (! GENERICSTACK_IS_PTR(traverseContextp->inputStackp, indicel)) {
-      GENERICLOGGER_ERRORF(genericLoggerp, "[%s][%d:%d] ...Nothing at input stack indice %d", funcs, ruleIdi, symbolIdi, (int) indicel);
+      GENERICLOGGER_ERRORF(genericLoggerp, "[%s][%d:%d] ... Nothing at input stack indice %d", funcs, ruleIdi, symbolIdi, (int) indicel);
       goto err;
     }
     tokenValues = GENERICSTACK_GET_PTR(traverseContextp->inputStackp, indicel);
@@ -398,7 +427,7 @@ static int pruning_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, vo
     stringl = 1 + strlen(symbolNames) + 1 + strlen(tokenValues) + 1 + 1;
     strings = malloc(stringl);
     if (strings == NULL) {
-      GENERICLOGGER_ERRORF(genericLoggerp, "[%s][%d:%d] ...malloc failure: %s", funcs, ruleIdi, symbolIdi, strerror(errno));
+      GENERICLOGGER_ERRORF(genericLoggerp, "[%s][%d:%d] ... malloc failure: %s", funcs, ruleIdi, symbolIdi, strerror(errno));
       goto err;
     }
     sprintf(strings, "(%s %s)", symbolNames, tokenValues);
@@ -410,21 +439,21 @@ static int pruning_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, vo
     
     ruleNames = penn_tag_rules(traverseContextp, ruleIdi);
     if (ruleNames == NULL) {
-      GENERICLOGGER_ERRORF(genericLoggerp, "[%s][%d:%d] ...ruleNames is NULL", funcs, ruleIdi, symbolIdi);
+      GENERICLOGGER_ERRORF(genericLoggerp, "[%s][%d:%d] ... ruleNames is NULL", funcs, ruleIdi, symbolIdi);
       goto err;
     }
-    GENERICLOGGER_DEBUGF(genericLoggerp, "[%s][%d:%d] ...rule %s", funcs, ruleIdi, symbolIdi, ruleNames);
+    GENERICLOGGER_DEBUGF(genericLoggerp, "[%s][%d:%d] ... rule %s", funcs, ruleIdi, symbolIdi, ruleNames);
 
     lengthl = marpaWrapperAsf_traverse_rh_lengthl(traverserp);
     if (lengthl == (size_t) -1) {
-      GENERICLOGGER_ERRORF(genericLoggerp, "[%s][%d:%d] ...lengthl is (size_t)-1", funcs, ruleIdi, symbolIdi);
+      GENERICLOGGER_ERRORF(genericLoggerp, "[%s][%d:%d] ... lengthl is (size_t)-1", funcs, ruleIdi, symbolIdi);
       goto err;
     }
     GENERICLOGGER_DEBUGF(genericLoggerp, "[%s][%d:%d] ... lengthl=%d", funcs, ruleIdi, symbolIdi, (int) lengthl);
 
     GENERICSTACK_NEW(rhStackp);
     if (GENERICSTACK_ERROR(rhStackp)) {
-      GENERICLOGGER_ERRORF(genericLoggerp, "[%s][%d:%d] ...rhStackp initialization failure: %s", funcs, ruleIdi, symbolIdi, strerror(errno));
+      GENERICLOGGER_ERRORF(genericLoggerp, "[%s][%d:%d] ... rhStackp initialization failure: %s", funcs, ruleIdi, symbolIdi, strerror(errno));
       goto err;
     }
     for (rhIxi = 0; rhIxi <= lengthl - 1; rhIxi++) {
@@ -433,14 +462,14 @@ static int pruning_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, vo
 
       valuei = marpaWrapperAsf_traverse_rh_valuei(traverserp, rhIxi);
       if (valuei < 0) {
-	GENERICLOGGER_ERRORF(genericLoggerp, "[%s][%d:%d] ...valuei is %d < 0", funcs, ruleIdi, symbolIdi, valuei);
+	GENERICLOGGER_ERRORF(genericLoggerp, "[%s][%d:%d] ... valuei is %d < 0", funcs, ruleIdi, symbolIdi, valuei);
         goto err;
       }
 
       /* We expect valuei to be in outputStack */
       indicel = valuei;
       if (! GENERICSTACK_IS_PTR(traverseContextp->outputStackp, indicel)) {
-	GENERICLOGGER_ERRORF(genericLoggerp, "[%s][%d:%d] ...Nothing at output stack indice %d", funcs, ruleIdi, symbolIdi, (int) indicel);
+	GENERICLOGGER_ERRORF(genericLoggerp, "[%s][%d:%d] ... Nothing at output stack indice %d", funcs, ruleIdi, symbolIdi, (int) indicel);
 	goto err;
       }
       values = GENERICSTACK_GET_PTR(traverseContextp->outputStackp, indicel);
@@ -448,7 +477,7 @@ static int pruning_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, vo
 
       GENERICSTACK_PUSH_INT(rhStackp, valuei);
       if (GENERICSTACK_ERROR(rhStackp)) {
-	GENERICLOGGER_ERRORF(genericLoggerp, "[%s][%d:%d] ...rhStackp push failure: %s", funcs, ruleIdi, symbolIdi, strerror(errno));
+	GENERICLOGGER_ERRORF(genericLoggerp, "[%s][%d:%d] ... rhStackp push failure: %s", funcs, ruleIdi, symbolIdi, strerror(errno));
 	goto err;
       }
     }
@@ -469,7 +498,7 @@ static int pruning_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, vo
       stringl++; /* newline */
       strings = malloc(++stringl); /* null character */
       if (strings == NULL) {
-	GENERICLOGGER_ERRORF(genericLoggerp, "[%s][%d:%d] ...malloc failure: %s", funcs, ruleIdi, symbolIdi, strerror(errno));
+	GENERICLOGGER_ERRORF(genericLoggerp, "[%s][%d:%d] ... malloc failure: %s", funcs, ruleIdi, symbolIdi, strerror(errno));
 	goto err;
       }
 
@@ -502,7 +531,7 @@ static int pruning_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, vo
       stringl += 1; /* ")" */
       strings = malloc(++stringl); /* null character */
       if (strings == NULL) {
-	GENERICLOGGER_ERRORF(genericLoggerp, "[%s][%d:%d] ...malloc failure: %s", funcs, ruleIdi, symbolIdi, strerror(errno));
+	GENERICLOGGER_ERRORF(genericLoggerp, "[%s][%d:%d] ... malloc failure: %s", funcs, ruleIdi, symbolIdi, strerror(errno));
 	goto err;
       }
       strcpy(strings, "(");
@@ -521,7 +550,7 @@ static int pruning_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, vo
   
   GENERICSTACK_PUSH_PTR(traverseContextp->outputStackp, strings);
   if (GENERICSTACK_ERROR(traverseContextp->outputStackp)) {
-    GENERICLOGGER_ERRORF(genericLoggerp, "[%s][%d:%d] ...traverseContextp->outputStackp push failure: %s", funcs, ruleIdi, symbolIdi, strerror(errno));
+    GENERICLOGGER_ERRORF(genericLoggerp, "[%s][%d:%d] ... traverseContextp->outputStackp push failure: %s", funcs, ruleIdi, symbolIdi, strerror(errno));
     goto err;
   }
   rci = (int) (GENERICSTACK_USED(traverseContextp->outputStackp) - 1);
@@ -541,6 +570,215 @@ static int pruning_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, vo
   }
   /* rhStackp contains only integers */
   GENERICSTACK_FREE(rhStackp);
+
+  GENERICLOGGER_DEBUGF(genericLoggerp, "[%s][%d:%d] return %d", funcs, ruleIdi, symbolIdi, rci);
+  return rci;
+
+}
+
+/* For code clarity I removed the error checkings in the full traverser               */
+/* This traverser always return a valuei that is an indice in traversep->outputStackp */
+/* At this indice there is a stack of strings.                                        */
+/********************************************************************************/
+static int full_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, void *userDatavp)
+/********************************************************************************/
+{
+  char               funcs[] = "full_traverserCallbacki";
+  traverseContext_t *traverseContextp = (traverseContext_t *) userDatavp;
+  genericLogger_t   *genericLoggerp = traverseContextp->genericLoggerp;
+  char              *symbolNames = NULL;
+  char              *ruleNames = NULL;
+  genericStack_t    *stringStackp = NULL;
+  int                ruleIdi;
+  int                symbolIdi;
+  int                rci = -1;
+
+  /* This routine converts the glade into a list of Penn-tagged elements.  It is called recursively */
+
+  ruleIdi = marpaWrapperAsf_traverse_ruleIdi(traverserp);
+  symbolIdi = marpaWrapperAsf_traverse_symbolIdi(traverserp);
+  GENERICLOGGER_DEBUGF(genericLoggerp, "[%s] => ruleIdi=%d, symbolIdi=%d", funcs, ruleIdi, symbolIdi);
+
+  symbolNames = penn_tag_symbols(traverseContextp, symbolIdi);
+  GENERICLOGGER_DEBUGF(genericLoggerp, "[%s][%d:%d] ... symbol %s", funcs, ruleIdi, symbolIdi, symbolNames);
+
+  GENERICSTACK_NEW(stringStackp);
+
+  /* A token is a single choice, and we know enough to fully Penn-tag it */
+  if (ruleIdi < 0) {
+    int     spanIdi     = marpaWrapperAsf_traverse_rh_valuei(traverserp, 0);
+    size_t  indicel     = spanIdi + 1; /* The spanId correspond to the inputstack indice spanId+1 */
+    char   *tokenValues = GENERICSTACK_GET_PTR(traverseContextp->inputStackp, indicel);
+    size_t  stringl;
+    char   *strings;
+    
+    GENERICLOGGER_DEBUGF(genericLoggerp, "[%s][%d:%d] ... spanIdi=%d", funcs, ruleIdi, symbolIdi, spanIdi);
+    GENERICLOGGER_DEBUGF(genericLoggerp, "[%s][%d:%d] ... Token is \"%s\"", funcs, ruleIdi, symbolIdi, tokenValues);
+
+    /* We want to generate the string "(penntag literal)" */
+    stringl = 1 + strlen(symbolNames) + 1 + strlen(tokenValues) + 1 + 1;
+    strings = malloc(stringl);
+    sprintf(strings, "(%s %s)", symbolNames, tokenValues);
+
+    /* We return a stack of string containing only one string */
+    GENERICSTACK_PUSH_PTR(stringStackp, strings);
+    
+  } else {
+    ruleNames = penn_tag_rules(traverseContextp, ruleIdi);
+    GENERICLOGGER_DEBUGF(genericLoggerp, "[%s][%d:%d] ... rule %s", funcs, ruleIdi, symbolIdi, ruleNames);
+
+    /* Our result will be a list of choices */
+    while (1) {
+      size_t         lengthl;
+      size_t         rhIxi;
+      genericStack_t *resultStackp;
+    
+      /* The results at each position are a list of chocies, so
+         to produce a new result list, we need to take a Cartesian
+         printf("format string" ,a0,a1);oduct of all the choices */
+
+      lengthl = marpaWrapperAsf_traverse_rh_lengthl(traverserp);
+      GENERICLOGGER_DEBUGF(genericLoggerp, "[%s][%d:%d] ... lengthl=%d", funcs, ruleIdi, symbolIdi, (int) lengthl);
+
+      GENERICSTACK_NEW(resultStackp);
+      {
+        genericStack_t *emptyStackp;
+        GENERICSTACK_NEW(emptyStackp);
+        GENERICSTACK_PUSH_PTR(resultStackp, emptyStackp);
+      }
+
+      for (rhIxi = 0; rhIxi <= lengthl - 1; rhIxi++) {
+        genericStack_t *newResultStackp;
+        size_t          i;
+
+        GENERICSTACK_NEW(newResultStackp);
+
+        for (i = 0; i < GENERICSTACK_USED(resultStackp); i++) {
+          genericStack_t *oldResultStackp = GENERICSTACK_GET_PTR(resultStackp, i);
+          int             childValuei     = marpaWrapperAsf_traverse_rh_valuei(traverserp, rhIxi);
+          genericStack_t *childValueStackp = GENERICSTACK_GET_PTR(traverseContextp->outputStackp, (size_t) childValuei);
+          size_t          j;
+
+          for (j = 0; j < GENERICSTACK_USED(childValueStackp); j++) {
+            char           *newValues = GENERICSTACK_GET_PTR(childValueStackp, j);
+            size_t          k;
+            genericStack_t *stackp;
+
+            GENERICSTACK_NEW(stackp);
+
+            for (k = 0; k < GENERICSTACK_USED(oldResultStackp); k++) {
+              GENERICSTACK_PUSH_PTR(stackp, GENERICSTACK_GET_PTR(oldResultStackp, k));
+            }
+            GENERICSTACK_PUSH_PTR(stackp, newValues);
+            GENERICSTACK_PUSH_PTR(newResultStackp, stackp);
+          }
+        }
+
+        while (GENERICSTACK_USED(resultStackp) > 0) {
+          genericStack_t *stackp = GENERICSTACK_POP_PTR(resultStackp);
+          GENERICSTACK_FREE(stackp);
+        }
+        GENERICSTACK_FREE(resultStackp);
+        resultStackp = newResultStackp;
+      }
+
+      /* Here resultStackp is a stack of stacks of shallow pointers */
+
+      /* Special case for the start rule */
+      if (symbolIdi == START) {
+        size_t  i;
+
+        for (i = 0; i < GENERICSTACK_USED(resultStackp); i++) {
+          genericStack_t *stackp = GENERICSTACK_GET_PTR(resultStackp, i);
+          size_t          j;
+          size_t          stringl;
+          char           *strings;
+
+          /* All rh values are concatenated */
+          stringl = 0;
+          for (j = 0; j < GENERICSTACK_USED(stackp); j++) {
+            char *values = GENERICSTACK_GET_PTR(stackp, j);
+            stringl += strlen(values);
+          }
+          strings = malloc(++stringl); /* null character */
+          strings[0] = '\0';
+          for (j = 0; j < GENERICSTACK_USED(stackp); j++) {
+            char *values = GENERICSTACK_GET_PTR(stackp, j);
+            strcat(strings, values);
+          }
+          GENERICSTACK_PUSH_PTR(stringStackp, strings);
+        }
+        while (GENERICSTACK_USED(resultStackp) > 0) {
+          genericStack_t *stackp = GENERICSTACK_POP_PTR(resultStackp);
+          GENERICSTACK_FREE(stackp);
+        }
+        GENERICSTACK_FREE(resultStackp);
+        break;
+
+      } else {
+        char           *joinWs = " ";
+        size_t          i;
+
+        if (symbolIdi == S) {
+          joinWs = "\n  ";
+        }
+
+        for (i = 0; i < GENERICSTACK_USED(resultStackp); i++) {
+          genericStack_t *stackp = GENERICSTACK_GET_PTR(resultStackp, i);
+          size_t          j;
+          size_t          stringl;
+          char           *strings;
+
+          /* All rh values are concatenated and enclosed in "(penntag XXX)" */
+          stringl = 1 + strlen(symbolNames) + 1;
+          for (j = 0; j < GENERICSTACK_USED(stackp); j++) {
+            char *values = GENERICSTACK_GET_PTR(stackp, j);
+            if (j > 0) {
+              stringl += strlen(joinWs);
+            }
+            stringl += strlen(values);
+          }
+          stringl++;
+          strings = malloc(++stringl); /* null character */
+          strings[0] = '\0';
+          strcat(strings, "(");
+          strcat(strings, symbolNames);
+          strcat(strings, " ");
+          for (j = 0; j < GENERICSTACK_USED(stackp); j++) {
+            char *values = GENERICSTACK_GET_PTR(stackp, j);
+            if (j > 0) {
+              strcat(strings, joinWs);
+              stringl += strlen(joinWs);
+            }
+            strcat(strings, values);
+          }
+          strcat(strings, ")");
+          GENERICSTACK_PUSH_PTR(stringStackp, strings);
+        }
+        while (GENERICSTACK_USED(resultStackp) > 0) {
+          genericStack_t *stackp = GENERICSTACK_POP_PTR(resultStackp);
+          GENERICSTACK_FREE(stackp);
+        }
+        GENERICSTACK_FREE(resultStackp);
+
+        if (marpaWrapperAsf_traverse_nextb(traverserp) == 0) {
+          break;
+        }
+      }
+    }
+  }
+  
+  /* Return value is a list of choices */
+  GENERICSTACK_PUSH_PTR(traverseContextp->outputStackp, stringStackp);
+  rci = (int) (GENERICSTACK_USED(traverseContextp->outputStackp) - 1);
+  GENERICLOGGER_DEBUGF(genericLoggerp, "[%s][%d:%d] ... Returning list of choices pushed at indice %d of output stack", funcs, ruleIdi, symbolIdi, rci);
+
+  if (ruleNames != NULL) {
+    free(ruleNames);
+  }
+  if (symbolNames != NULL) {
+    free(symbolNames);
+  }
 
   GENERICLOGGER_DEBUGF(genericLoggerp, "[%s][%d:%d] return %d", funcs, ruleIdi, symbolIdi, rci);
   return rci;
