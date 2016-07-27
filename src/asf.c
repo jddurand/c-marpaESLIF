@@ -134,7 +134,7 @@ static inline short                      _marpaWrapperAsf_setLastChoiceb(marpaWr
 static inline short                      _marpaWrapperAsf_nook_incrementb(marpaWrapperAsf_t *marpaWrapperAsfp, marpaWrapperAsfNook_t *nookp, short *haveLastChoicebp);
 
 /* Specific to symch */
-static inline short                      _marpaWrapperAsf_symch_factoring_countb(marpaWrapperAsf_t *marpaWrapperAsfp, int gladeIdi, int symchIxi, int *factoringCountip);
+static inline short                      _marpaWrapperAsf_symch_factoring_countb(marpaWrapperAsf_t *marpaWrapperAsfp, int gladeIdi, int symchIxi, size_t *factoringCountlp);
 
 /* Specific to intset */
 size_t                                   _marpaWrapperAsf_intset_keyIndFunction(void *userDatavp, genericStackItemType_t itemType, void **pp);
@@ -147,6 +147,8 @@ static inline unsigned long              _marpaWrapperAsf_djb2(unsigned char *st
 static inline int                        _marpaWrapperAsf_token_es_spani(marpaWrapperAsf_t *marpaWrapperAsfp, int andNodeIdi, int *lengthip);
 static inline int                        _marpaWrapperAsf_or_node_es_spani(marpaWrapperAsf_t *marpaWrapperAsfp, int choicepointi, int *lengthip);
 static inline void                       _marpaWrapperAsf_dump_stack(marpaWrapperAsf_t *marpaWrapperAsfp, char *what, genericStack_t *stackp);
+static inline short                      _marpaWrapperAsf_traverse_nextFactoringb(marpaWrapperAsfTraverser_t *traverserp, int *factoringIxip);
+static inline short                      _marpaWrapperAsf_traverse_nextSymchb(marpaWrapperAsfTraverser_t *traverserp, int *symchIxip);
 
 /* Specific to choicepoint */
 static inline marpaWrapperAsfChoicePoint_t *_marpaWrapperAsf_choicepoint_newp(marpaWrapperAsf_t *marpaWrapperAsfp);
@@ -1506,7 +1508,7 @@ static inline short _marpaWrapperAsf_nook_incrementb(marpaWrapperAsf_t *marpaWra
 }
 
 /****************************************************************************/
-static inline short _marpaWrapperAsf_symch_factoring_countb(marpaWrapperAsf_t *marpaWrapperAsfp, int gladeIdi, int symchIxi, int *factoringCountip)
+static inline short _marpaWrapperAsf_symch_factoring_countb(marpaWrapperAsf_t *marpaWrapperAsfp, int gladeIdi, int symchIxi, size_t *factoringCountlp)
 /****************************************************************************/
 {
   const static char        funcs[]            = "_marpaWrapperAsf_symch_factoring_countb";
@@ -1531,9 +1533,9 @@ static inline short _marpaWrapperAsf_symch_factoring_countb(marpaWrapperAsf_t *m
   }
   /* factoringsStackp is (symchRuleIdi, PTR, stack of gladeIdi) */
   /* This is length - 2 */
-  *factoringCountip = GENERICSTACK_USED(factoringsStackp) - 2;
+  *factoringCountlp = GENERICSTACK_USED(factoringsStackp) - 2;
 
-  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "return 1, *factoringCountip=%d", *factoringCountip);
+  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "return 1, *factoringCountlp=%d", (int) *factoringCountlp);
   return 1;
 
  err:
@@ -2898,7 +2900,6 @@ size_t marpaWrapperAsf_traverse_rh_lengthl(marpaWrapperAsfTraverser_t *traverser
   int                       downRuleIdi;
   int                       factoringIxi;
   size_t                    realFactoringIxl;
-  genericStack_t           *factoringStackp;
   size_t                    lengthl;
 
   if (traverserp == NULL) {
@@ -3025,7 +3026,6 @@ int marpaWrapperAsf_traverse_rh_valuei(marpaWrapperAsfTraverser_t *traverserp, s
   int                         ruleIdi;
   int                         factoringIxi;
   size_t                      realFactoringIxl;
-  genericStack_t             *factoringStackp;
   size_t                      maxRhixl;
   int                         maxRhixi;
   marpaWrapperAsfGlade_t     *downGladep;
@@ -3377,7 +3377,7 @@ int marpaWrapperAsf_traverse_ruleIdi(marpaWrapperAsfTraverser_t *traverserp)
 }
 
 /****************************************************************************/
-short marpaWrapperAsf_traverse_nextFactoringb(marpaWrapperAsfTraverser_t *traverserp, int *factoringIxip)
+static inline short _marpaWrapperAsf_traverse_nextFactoringb(marpaWrapperAsfTraverser_t *traverserp, int *factoringIxip)
 /****************************************************************************/
 {
   const static char         funcs[]          = "marpaWrapperAsf_traverse_nextFactoringb";
@@ -3387,6 +3387,7 @@ short marpaWrapperAsf_traverse_nextFactoringb(marpaWrapperAsfTraverser_t *traver
   int                       gladeIdi;
   int                       symchIxi;
   int                       lastFactoringi;
+  size_t                    countFactoringl;
   int                       factoringIxi;
 
   if (traverserp == NULL) {
@@ -3410,13 +3411,15 @@ short marpaWrapperAsf_traverse_nextFactoringb(marpaWrapperAsfTraverser_t *traver
   gladeIdi = gladep->idi;
   symchIxi = traverserp->symchIxi;
 
-  if (_marpaWrapperAsf_symch_factoring_countb(marpaWrapperAsfp, gladeIdi, symchIxi, &lastFactoringi) == 0) {
+  if (_marpaWrapperAsf_symch_factoring_countb(marpaWrapperAsfp, gladeIdi, symchIxi, &countFactoringl) == 0) {
     goto err;
   }
+  lastFactoringi = (int) (countFactoringl - 1);
 
   factoringIxi = traverserp->factoringIxi;
   if (factoringIxi >= lastFactoringi) {
-    MARPAWRAPPER_ERRORF(genericLoggerp, "Current factoringIxi %d is >= last factoring indice %d", factoringIxi, lastFactoringi);
+    /* This is not formally an internal error: user asked for the next factoring and there is none */
+    MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "Current factoringIxi %d is >= last factoring indice %d", factoringIxi, lastFactoringi);
     goto err;
   }
   *factoringIxip = traverserp->factoringIxi = ++factoringIxi;
@@ -3430,7 +3433,7 @@ short marpaWrapperAsf_traverse_nextFactoringb(marpaWrapperAsfTraverser_t *traver
 }
 
 /****************************************************************************/
-short marpaWrapperAsf_traverse_nextSymchb(marpaWrapperAsfTraverser_t *traverserp, int *symchIxip)
+static inline short _marpaWrapperAsf_traverse_nextSymchb(marpaWrapperAsfTraverser_t *traverserp, int *symchIxip)
 /****************************************************************************/
 {
   const static char         funcs[]          = "marpaWrapperAsf_traverse_nextSymchb";
@@ -3466,10 +3469,11 @@ short marpaWrapperAsf_traverse_nextSymchb(marpaWrapperAsfTraverser_t *traverserp
   if (_marpaWrapperAsf_glade_symch_countb(marpaWrapperAsfp, gladeIdi, &countl) == 0) {
     goto err;
   }
-  lastSymchi = ((int) countl) - 1;
+  lastSymchi = (int) (countl - 1);
 
   if (symchIxi >= lastSymchi) {
-    MARPAWRAPPER_ERRORF(genericLoggerp, "Current symchIxi %d is >= last symch indice %d", symchIxi, lastSymchi);
+    /* This is not formally an internal error: this is part of calls behind nextb() */
+    MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "Current symchIxi %d is >= last symch indice %d", symchIxi, lastSymchi);
     goto err;
   }
   *symchIxip = traverserp->symchIxi = ++symchIxi;
@@ -3484,12 +3488,13 @@ short marpaWrapperAsf_traverse_nextSymchb(marpaWrapperAsfTraverser_t *traverserp
 }
 
 /****************************************************************************/
-short marpaWrapperAsf_traverse_nextb(marpaWrapperAsfTraverser_t *traverserp, int *idip)
+short marpaWrapperAsf_traverse_nextb(marpaWrapperAsfTraverser_t *traverserp)
 /****************************************************************************/
 {
   const static char         funcs[]          = "marpaWrapperAsf_traverse_nextb";
   marpaWrapperAsf_t        *marpaWrapperAsfp;
   genericLogger_t          *genericLoggerp;
+  int                       idi;
 
   if (traverserp == NULL) {
     errno = EINVAL;
@@ -3499,18 +3504,13 @@ short marpaWrapperAsf_traverse_nextb(marpaWrapperAsfTraverser_t *traverserp, int
   marpaWrapperAsfp = traverserp->marpaWrapperAsfp;
   genericLoggerp = marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp;
 
-  if (idip == NULL) {
-    MARPAWRAPPER_ERROR(genericLoggerp, "idip is NULL");
-    goto err;
-  }
-
-  if (marpaWrapperAsf_traverse_nextFactoringb(traverserp, idip) == 0) {
-    if (marpaWrapperAsf_traverse_nextSymchb(traverserp, idip) == 0) {
+  if (_marpaWrapperAsf_traverse_nextFactoringb(traverserp, &idi) == 0) {
+    if (_marpaWrapperAsf_traverse_nextSymchb(traverserp, &idi) == 0) {
       goto err;
     }
   }
 
-  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "return 1, *idip=%d", *idip);
+  MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return 1");
   return 1;
 
  err:
