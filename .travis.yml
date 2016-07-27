@@ -15,4 +15,5 @@ before_script:
 script:
   - make check
   - ./output/lib/marpaWrapperTester
+  - ./output/lib/marpaWrapperAsfTester
   - sudo make install
