@@ -6,7 +6,7 @@ marpaWrapper - alternate interface to libmarpa
 
 =head1 DESCRIPTION
 
-marpaWrapper is a thin interface on top of L<libmarpa|https://jeffreykegler.github.io/Marpa-web-site/libmarpa.html>. Alike the original, there are three explicit namespaces: the grammar, the recognizer and the value.
+marpaWrapper is a thin interface on top of L<libmarpa|https://jeffreykegler.github.io/Marpa-web-site/libmarpa.html>. Alike the original, there are four explicit namespaces: the grammar, the recognizer, the value and the forest tree.
 
 =head1 SYNOPSIS
 
@@ -256,7 +256,7 @@ C<NULL> is returned in case of failure.
                                             int valuei,
                                             int lengthi)
 
-Pushes symbol number C<symboli> as an alternative, with a value C<valuei> that must be a positive integer (up to the end-user to associate this to something else - typically using C<valuei> as an index in an array of I<user-only-knows> other values), and a length C<lengthi> that must also be a positive integer.
+Pushes symbol number C<symboli> as an alternative, with a value C<valuei> that must be a positive integer (up to the end-user to associate this to something else - typically using C<valuei> as an index in an array of I<user-only-knows> other values), and a length C<lengthi> that must also be a positive integer. Please note that C<lengthi>, here, is I<not> the length in the input stream, but becayse Marpa has support to overlapping tokens, i.e. this is the length I<within> the grammar - almost any application will want to use the value C<1>.
 
 Returns 1 on success, 0 on failure.
 
@@ -511,6 +511,125 @@ Returns -1 on failure, 0 when there is no more parse value, and 1 on success.
   void marpaWrapperValue_freev(marpaWrapperValue_t *marpaWrapperValuep)
 
 Destructor of the value wrapper pointed by C<marpaWrapperValuep>.
+
+=head1 FOREST TREE METHODS
+
+User will nagivate in a parse tree forest, and will be able to get all possible alternatives at a given point, eventually rejecting those unwanted. Internally, the wrapper will maintain a node within the parse tree forest, from where nagivation goes on.
+
+=head2 marpaWrapperValue_newp
+
+  typedef struct marpaWrapperAsfOption {
+    genericLogger_t *genericLoggerp;             /* Default: NULL. */
+    short            highRankOnlyb;              /* Default: 1 */
+    short            orderByRankb;               /* Default: 1 */
+    short            ambiguousb;                 /* Default: 0 */
+  } marpaWrapperAsfOption_t;
+
+  marpaWrapperAsf_t *marpaWrapperAsf_newp(marpaWrapperRecognizer_t *marpaWrapperRecognizerp,
+                                          marpaWrapperAsfOption_t *marpaWrapperAsfOptionp)
+
+Instanciate a forest tree wrapper, and takes an eventual pointer to a C<marpaWrapperAsfOption_t> structure describing value options. This structure contains the following members:
+
+=over
+
+=item genericLoggerp
+
+An eventual generic logger. If NULL, the forest tree will never log.
+
+=item highRankOnlyb
+
+Only rules with highest rank will be considered.
+
+=item orderByRankb
+
+Different parse tree values are returned ordered by rank.
+
+=item ambiguousb
+
+Allows a parse to be ambiguous.
+
+=back
+
+C<NULL> is returned in case of failure.
+
+=head2 marpaWrapperAsf_traverseb
+
+  typedef short (*traverserCallback_t)(marpaWrapperAsfTraverser_t *traverserp, void *userDatavp, int *valueip);
+
+  short marpaWrapperAsf_traverseb(marpaWrapperAsf_t *marpaWrapperAsfp,
+                                  traverserCallback_t traverserCallbackp,
+                                  void *userDatavp,
+                                  int *valueip)
+
+Call for a forest tree, using the C<traverserCallbackp> callback function pointer, the later C<userDatavp> as an opaque pointer, typically used to propagate user context. In case of failure, this method returns a false value, else it propagates the traverser callback value in the C<*valueip> integer pointer. This value is typically an indice in an output stack, managed in the user-space. Traverser itself returns a false value in case of failure, and fills its C<*valueip> argument otherwise.
+
+=head2 marpaWrapperAsf_traverse_rh_lengthl
+
+  size_t marpaWrapperAsf_traverse_rh_lengthl(marpaWrapperAsfTraverser_t *traverserp)
+
+Returns the number of RHS symbols at the current node, (size_t)-1 in case of failure. In particular, this will fail if it is called for a token.
+
+=head2 marpaWrapperAsf_traverse_symbolIdb
+
+  short marpaWrapperAsf_traverse_symbolIdb(marpaWrapperAsfTraverser_t *traverserp, int *symbolIdip)
+
+If it returns a true value, then current symbol Id in filled in C<*symbolIdip>.
+
+=head2 marpaWrapperAsf_traverse_ruleIdb
+
+  short marpaWrapperAsf_traverse_ruleIdb(marpaWrapperAsfTraverser_t *traverserp, int *ruleIdip)
+
+If it returns a true value, then current symbol Id in filled in C<*ruleIdip>. Please note that if current node is a token, it is not an application failure to get the value -1 in C<*ruleIdip>. Therefore, traversers will typically distinguish cases where C<*ruleIdip> is >= 0 or not.
+
+=head2 marpaWrapperAsf_traverse_nextb
+
+  short marpaWrapperAsf_traverse_nextb(marpaWrapperAsfTraverser_t *traverserp, short *nextbp)
+
+If it returns a true value, then C<*nextbp> contains a true value if there is another alternative, a false value otherwise.
+
+=head2 marpaWrapperAsf_traverse_rh_valuesStackp
+
+  genericStack_t *marpaWrapperAsf_traverse_rh_valuesStackp(marpaWrapperAsfTraverser_t *traverserp);
+
+Returns a stack of all current RHS values, a C<NULL> value in case of faillure. In particular this will fail if current node is a token.
+
+=head2 marpaWrapperAsf_traverse_rh_allChoicesStackp
+
+  genericStack_t *marpaWrapperAsf_traverse_rh_allChoicesStackp(marpaWrapperAsfTraverser_t *traverserp)
+
+Returns a new result list produced by taking a Cartesian product of the parse results (which are a list of choices) at the current position, C<NULL> in case of faillure.
+
+=head2 marpaWrapperAsf_traverse_rh_valueb
+
+  short marpaWrapperAsf_traverse_rh_valueb(marpaWrapperAsfTraverser_t *traverserp, size_t rhIxi, int *valueip)
+
+If it is returns a true value, then the user-space value of RH rule number C<rhIxi> in filled in C<*valueip>.
+
+=head2 marpaWrapperAsf_recognizerp
+
+  marpaWrapperRecognizer_t *marpaWrapperAsf_recognizerp(marpaWrapperAsf_t *marpaWrapperAsfp)
+
+Convenient method that returns the recognizer wrapper, C<NULL> if failure.
+
+=head2 marpaWrapperAsf_freev
+
+  void marpaWrapperAsf_freev(marpaWrapperAsf_t *marpaWrapperAsfp)
+
+Destructor of the value wrapper pointed by C<marpaWrapperAsfp>.
+
+=head1 NOTES
+
+=over
+
+=item Vaue and Forest Tree methods
+
+They are both exclusive. I.e. once you enter the value method, you cannot call for a forest tree, vice and versa.
+
+=item Forest Tree constraint
+
+A technical limitation on getting the value associated to a lexeme imposes that forest tree is possible only if C<lengthi> parameter of any call to C<marpaWrapperRecognizer_alternativeb> is the value C<1>. This is the case for almost any application.
+
+=back
 
 =head1 SEE ALSO
 
