@@ -3,14 +3,12 @@
 
 #include <genericStack.h>
 #include "marpaWrapper/recognizer.h"
-#include "marpaWrapper/glade.h"
 #include "marpaWrapper/export.h"
 
 /***********************/
 /* Opaque object types */
 /***********************/
 typedef struct marpaWrapperAsf          marpaWrapperAsf_t;
-typedef struct marpaWrapperAsfGlade     marpaWrapperAsfGlade_t;
 typedef struct marpaWrapperAsfTraverser marpaWrapperAsfTraverser_t;
 
 /* --------------- */

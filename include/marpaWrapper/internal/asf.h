@@ -22,12 +22,12 @@ typedef enum marpaWrapperAsfIdsete {
   _MARPAWRAPPERASFIDSET_IDSETE_MAX
 } marpaWrapperAsfIdsete_t;
 
-struct marpaWrapperAsfGlade {
+typedef struct marpaWrapperAsfGlade {
   int             idi;
   genericStack_t *symchesStackp;
   short           visitedb;
   short           registeredb;
-};
+} marpaWrapperAsfGlade_t;
 
 typedef int *andNodeStack_t;
 
