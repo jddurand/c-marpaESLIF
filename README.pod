@@ -16,7 +16,7 @@ genericHash is an ANSI set of macros exposing key hashing and comparison functio
 
 =head1 MACROS
 
-=head2 GENERICHASH_NEW(hashName, indFunctionp
+=head2 GENERICHASH_NEW(hashName, indFunctionp)
 
 Alias to GENERICHASH_NEW_ALL(hashName, keyIndFunctionp, keyCmpFunctionp, keyCopyFunctionp, keyFreeFunctionp, valCopyFunctionp, valFreeFunctionp, wantedSize, wantedSubSize), see below.
 
