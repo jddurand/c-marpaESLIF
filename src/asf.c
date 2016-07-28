@@ -3215,8 +3215,8 @@ genericStack_t *marpaWrapperAsf_traverse_rh_allChoicesStackp(marpaWrapperAsfTrav
   /*
    * Initialize lastAllChoicesStackp to an empty cartesian product
    */
-  GENERICSTACK_FREE(marpaWrapperAsfp->lastAllChoicesStackp);
-  GENERICSTACK_INIT(marpaWrapperAsfp->lastAllChoicesStackp);
+  _marpaWrapperAsf_lastAllChoices_freev(marpaWrapperAsfp);
+  GENERICSTACK_NEW(marpaWrapperAsfp->lastAllChoicesStackp);
   if (GENERICSTACK_ERROR(marpaWrapperAsfp->lastAllChoicesStackp)) {
     MARPAWRAPPER_ERRORF(genericLoggerp, "marpaWrapperAsfp->lastAllChoicesStackp initialization error, %s", strerror(errno));
     goto err;
@@ -3255,7 +3255,7 @@ genericStack_t *marpaWrapperAsf_traverse_rh_allChoicesStackp(marpaWrapperAsfTrav
 
       for (newValuel = 0; newValuel < GENERICSTACK_USED(childValuep); newValuel++) {
 	newValuep = GENERICSTACK_GET_PTR(childValuep, newValuel);
-	GENERICSTACK_INIT(tmpp);
+	GENERICSTACK_NEW(tmpp);
 	if (GENERICSTACK_ERROR(tmpp)) {
 	  MARPAWRAPPER_ERRORF(genericLoggerp, "tmpp initialization failure, %s", strerror(errno));
 	  goto err;
