@@ -587,18 +587,6 @@ If it returns a true value, then current symbol Id in filled in C<*ruleIdip>. Pl
 
 If it returns a true value, then C<*nextbp> contains a true value if there is another alternative, a false value otherwise.
 
-=head2 marpaWrapperAsf_traverse_rh_valuesStackp
-
-  genericStack_t *marpaWrapperAsf_traverse_rh_valuesStackp(marpaWrapperAsfTraverser_t *traverserp);
-
-Returns a stack of all current RHS values, a C<NULL> value in case of faillure. In particular this will fail if current node is a token.
-
-=head2 marpaWrapperAsf_traverse_rh_allChoicesStackp
-
-  genericStack_t *marpaWrapperAsf_traverse_rh_allChoicesStackp(marpaWrapperAsfTraverser_t *traverserp)
-
-Returns a new result list produced by taking a Cartesian product of the parse results (which are a list of choices) at the current position, C<NULL> in case of faillure.
-
 =head2 marpaWrapperAsf_traverse_rh_valueb
 
   short marpaWrapperAsf_traverse_rh_valueb(marpaWrapperAsfTraverser_t *traverserp, size_t rhIxi, int *valueip)
