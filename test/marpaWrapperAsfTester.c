@@ -629,6 +629,7 @@ static short full_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, voi
     GENERICSTACK_PUSH_PTR(stringStackp, strings);
     
   } else {
+  marpaWrapperAsf_traverse_rh_allChoicesStackp(traverserp);
     ruleNames = penn_tag_rules(traverseContextp, ruleIdi);
     GENERICLOGGER_DEBUGF(genericLoggerp, "[%s][%d:%d] ... rule %s", funcs, ruleIdi, symbolIdi, ruleNames);
 
