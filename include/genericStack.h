@@ -57,6 +57,10 @@
 
 typedef void *(*genericStackClone_t)(void *p);
 typedef void  (*genericStackFree_t)(void *p);
+typedef struct genericStackItemTypeArray {
+  void *p;
+  size_t lengthl;
+} genericStackItemTypeArray_t;
 
 typedef enum genericStackItemType {
   _GENERICSTACKITEMTYPE_NA = 0,    /* Not a hasard it is explicitely 0 */
@@ -67,6 +71,7 @@ typedef enum genericStackItemType {
   GENERICSTACKITEMTYPE_FLOAT,
   GENERICSTACKITEMTYPE_DOUBLE,
   GENERICSTACKITEMTYPE_PTR,
+  GENERICSTACKITEMTYPE_ARRAY,
 #if GENERICSTACK_HAVE_LONG_LONG
   GENERICSTACKITEMTYPE_LONG_LONG,
 #endif
@@ -93,6 +98,7 @@ typedef struct genericStackItem {
     float f;
     double d;
     void *p;
+    genericStackItemTypeArray_t a;
 #if GENERICSTACK_HAVE_LONG_LONG > 0
     long long ll;
 #endif
@@ -243,6 +249,7 @@ typedef struct genericStack {
 #define GENERICSTACK_SET_FLOAT(stackName, var, index)  _GENERICSTACK_SET_BY_TYPE(stackName, float,  var, GENERICSTACKITEMTYPE_FLOAT, f, index)
 #define GENERICSTACK_SET_DOUBLE(stackName, var, index) _GENERICSTACK_SET_BY_TYPE(stackName, double, var, GENERICSTACKITEMTYPE_DOUBLE, d, index)
 #define GENERICSTACK_SET_PTR(stackName, var, index)    _GENERICSTACK_SET_BY_TYPE(stackName, void *, var, GENERICSTACKITEMTYPE_PTR, p, index)
+#define GENERICSTACK_SET_ARRAY(stackName, var, index)  _GENERICSTACK_SET_BY_TYPE(stackName, genericStackItemTypeArray_t, var, GENERICSTACKITEMTYPE_PTR, a, index)
 #if GENERICSTACK_HAVE_LONG_LONG > 0
 #define GENERICSTACK_SET_LONG_LONG(stackName, var, index) _GENERICSTACK_SET_BY_TYPE(stackName, long long, var, GENERICSTACKITEMTYPE_LONG_LONG, ll, index)
 #endif
@@ -308,6 +315,7 @@ typedef struct genericStack {
 #define GENERICSTACK_GET_FLOAT(stackName, index)  (_GENERICSTACK_REDUCE_SIZE(stackName), stackName->items[index].u.f)
 #define GENERICSTACK_GET_DOUBLE(stackName, index) (_GENERICSTACK_REDUCE_SIZE(stackName), stackName->items[index].u.d)
 #define GENERICSTACK_GET_PTR(stackName, index)    (_GENERICSTACK_REDUCE_SIZE(stackName), stackName->items[index].u.p)
+#define GENERICSTACK_GET_ARRAY(stackName, index)  (_GENERICSTACK_REDUCE_SIZE(stackName), stackName->items[index].u.a)
 #if GENERICSTACK_HAVE_LONG_LONG > 0
 #define GENERICSTACK_GET_LONG_LONG(stackName, index)    (_GENERICSTACK_REDUCE_SIZE(stackName), stackName->items[index].u.ll)
 #endif
@@ -331,6 +339,7 @@ typedef struct genericStack {
 #define GENERICSTACK_PUSH_FLOAT(stackName, var)  GENERICSTACK_SET_FLOAT(stackName, var, stackName->used)
 #define GENERICSTACK_PUSH_DOUBLE(stackName, var) GENERICSTACK_SET_DOUBLE(stackName, var, stackName->used)
 #define GENERICSTACK_PUSH_PTR(stackName, var)    GENERICSTACK_SET_PTR(stackName, var, stackName->used)
+#define GENERICSTACK_PUSH_ARRAY(stackName, var)  GENERICSTACK_SET_ARRAY(stackName, var, stackName->used)
 #if GENERICSTACK_HAVE_LONG_LONG > 0
 #define GENERICSTACK_PUSH_LONG_LONG(stackName, var) GENERICSTACK_SET_LONG_LONG(stackName, var, stackName->used)
 #endif
@@ -354,6 +363,7 @@ typedef struct genericStack {
 #define GENERICSTACK_POP_FLOAT(stackName)  GENERICSTACK_GET_FLOAT(stackName,  --stackName->used)
 #define GENERICSTACK_POP_DOUBLE(stackName) GENERICSTACK_GET_DOUBLE(stackName, --stackName->used)
 #define GENERICSTACK_POP_PTR(stackName)    GENERICSTACK_GET_PTR(stackName,    --stackName->used)
+#define GENERICSTACK_POP_ARRAY(stackName)  GENERICSTACK_GET_ARRAY(stackName,  --stackName->used)
 #if GENERICSTACK_HAVE_LONG_LONG > 0
 #define GENERICSTACK_POP_LONG_LONG(stackName)    GENERICSTACK_GET_LONG_LONG(stackName, --stackName->used)
 #endif
@@ -394,6 +404,9 @@ typedef struct genericStack {
 #define GENERICSTACKITEMTYPE2TYPE_FLOAT  float
 #define GENERICSTACKITEMTYPE2TYPE_DOUBLE double
 #define GENERICSTACKITEMTYPE2TYPE_PTR    void *
+#define GENERICSTACKITEMTYPE2TYPE_ARRAY  genericStackItemTypeArray_t
+#define GENERICSTACKITEMTYPE_ARRAY_PTR(a) (a).p
+#define GENERICSTACKITEMTYPE_ARRAY_LENGTH(a) (a).lengthl
 #if GENERICSTACK_HAVE_LONG_LONG
   #define GENERICSTACKITEMTYPE2TYPE_LONG_LONG long long
 #endif
@@ -443,6 +456,7 @@ typedef struct genericStack {
 #define GENERICSTACK_IS_FLOAT(stackName, i) (GENERICSTACK_EXISTS(stackName, i) && (stackName->items[i].type == GENERICSTACKITEMTYPE_FLOAT))
 #define GENERICSTACK_IS_DOUBLE(stackName, i) (GENERICSTACK_EXISTS(stackName, i) && (stackName->items[i].type == GENERICSTACKITEMTYPE_DOUBLE))
 #define GENERICSTACK_IS_PTR(stackName, i) (GENERICSTACK_EXISTS(stackName, i) && (stackName->items[i].type == GENERICSTACKITEMTYPE_PTR))
+#define GENERICSTACK_IS_ARRAY(stackName, i) (GENERICSTACK_EXISTS(stackName, i) && (stackName->items[i].type == GENERICSTACKITEMTYPE_ARRAY))
 #if GENERICSTACK_HAVE_LONG_LONG
 #define GENERICSTACK_IS_LONG_LONG(stackName, i) (GENERICSTACK_EXISTS(stackName, i) && (stackName->items[i].type == GENERICSTACKITEMTYPE_LONG_LONG))
 #endif
