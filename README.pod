@@ -225,13 +225,21 @@ nevertheless, the convenient macros should be used:
 
 The array type.
 
-=item GENERICSTACKITEMTYPE_ARRAY_PTR(a)
+=item GENERICSTACK_ARRAY_PTR(a)
 
 Pointer associated to the array. Can be an l-value.
 
-=item GENERICSTACKITEMTYPE_ARRAY_LENGTH(a)
+=item GENERICSTACK_ARRAYP_PTR(a)
+
+Idem, except that C<a> is now a I<pointer> to the array structure.
+
+=item GENERICSTACK_ARRAY_LENGTH(a)
 
 Length associated to the array. Can be an l-value.
+
+=item GENERICSTACK_ARRAYP_LENGTH(a)
+
+Idem, except that C<a> is now a I<pointer> to the array structure.
 
 =back
 

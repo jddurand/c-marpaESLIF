@@ -409,10 +409,10 @@ typedef struct genericStack {
 #define GENERICSTACKITEMTYPE2TYPE_PTR    void *
 #define GENERICSTACKITEMTYPE2TYPE_ARRAY  genericStackItemTypeArray_t
 #define GENERICSTACKITEMTYPE2TYPE_ARRAYP  genericStackItemTypeArray_t *
-#define GENERICSTACKITEMTYPE_ARRAY_PTR(a) (a).p
-#define GENERICSTACKITEMTYPE_ARRAYP_PTR(a) (a)->p
-#define GENERICSTACKITEMTYPE_ARRAY_LENGTH(a) (a).lengthl
-#define GENERICSTACKITEMTYPE_ARRAYP_LENGTH(a) (a)->lengthl
+#define GENERICSTACK_ARRAY_PTR(a) (a).p
+#define GENERICSTACK_ARRAYP_PTR(a) (a)->p
+#define GENERICSTACK_ARRAY_LENGTH(a) (a).lengthl
+#define GENERICSTACK_ARRAYP_LENGTH(a) (a)->lengthl
 #if GENERICSTACK_HAVE_LONG_LONG
   #define GENERICSTACKITEMTYPE2TYPE_LONG_LONG long long
 #endif
