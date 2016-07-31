@@ -249,7 +249,8 @@ typedef struct genericStack {
 #define GENERICSTACK_SET_FLOAT(stackName, var, index)  _GENERICSTACK_SET_BY_TYPE(stackName, float,  var, GENERICSTACKITEMTYPE_FLOAT, f, index)
 #define GENERICSTACK_SET_DOUBLE(stackName, var, index) _GENERICSTACK_SET_BY_TYPE(stackName, double, var, GENERICSTACKITEMTYPE_DOUBLE, d, index)
 #define GENERICSTACK_SET_PTR(stackName, var, index)    _GENERICSTACK_SET_BY_TYPE(stackName, void *, var, GENERICSTACKITEMTYPE_PTR, p, index)
-#define GENERICSTACK_SET_ARRAY(stackName, var, index)  _GENERICSTACK_SET_BY_TYPE(stackName, genericStackItemTypeArray_t, var, GENERICSTACKITEMTYPE_PTR, a, index)
+#define GENERICSTACK_SET_ARRAY(stackName, var, index)  _GENERICSTACK_SET_BY_TYPE(stackName, genericStackItemTypeArray_t, var, GENERICSTACKITEMTYPE_ARRAY, a, index)
+#define GENERICSTACK_SET_ARRAYP(stackName, var, index)  _GENERICSTACK_SET_BY_TYPE(stackName, genericStackItemTypeArray_t, *(var), GENERICSTACKITEMTYPE_ARRAY, a, index)
 #if GENERICSTACK_HAVE_LONG_LONG > 0
 #define GENERICSTACK_SET_LONG_LONG(stackName, var, index) _GENERICSTACK_SET_BY_TYPE(stackName, long long, var, GENERICSTACKITEMTYPE_LONG_LONG, ll, index)
 #endif
@@ -316,6 +317,7 @@ typedef struct genericStack {
 #define GENERICSTACK_GET_DOUBLE(stackName, index) (_GENERICSTACK_REDUCE_SIZE(stackName), stackName->items[index].u.d)
 #define GENERICSTACK_GET_PTR(stackName, index)    (_GENERICSTACK_REDUCE_SIZE(stackName), stackName->items[index].u.p)
 #define GENERICSTACK_GET_ARRAY(stackName, index)  (_GENERICSTACK_REDUCE_SIZE(stackName), stackName->items[index].u.a)
+#define GENERICSTACK_GET_ARRAYP(stackName, index) (_GENERICSTACK_REDUCE_SIZE(stackName), &(stackName->items[index].u.a))
 #if GENERICSTACK_HAVE_LONG_LONG > 0
 #define GENERICSTACK_GET_LONG_LONG(stackName, index)    (_GENERICSTACK_REDUCE_SIZE(stackName), stackName->items[index].u.ll)
 #endif
@@ -340,6 +342,7 @@ typedef struct genericStack {
 #define GENERICSTACK_PUSH_DOUBLE(stackName, var) GENERICSTACK_SET_DOUBLE(stackName, var, stackName->used)
 #define GENERICSTACK_PUSH_PTR(stackName, var)    GENERICSTACK_SET_PTR(stackName, var, stackName->used)
 #define GENERICSTACK_PUSH_ARRAY(stackName, var)  GENERICSTACK_SET_ARRAY(stackName, var, stackName->used)
+#define GENERICSTACK_PUSH_ARRAYP(stackName, var) GENERICSTACK_SET_ARRAYP(stackName, var, stackName->used)
 #if GENERICSTACK_HAVE_LONG_LONG > 0
 #define GENERICSTACK_PUSH_LONG_LONG(stackName, var) GENERICSTACK_SET_LONG_LONG(stackName, var, stackName->used)
 #endif
@@ -405,8 +408,11 @@ typedef struct genericStack {
 #define GENERICSTACKITEMTYPE2TYPE_DOUBLE double
 #define GENERICSTACKITEMTYPE2TYPE_PTR    void *
 #define GENERICSTACKITEMTYPE2TYPE_ARRAY  genericStackItemTypeArray_t
+#define GENERICSTACKITEMTYPE2TYPE_ARRAYP  genericStackItemTypeArray_t *
 #define GENERICSTACKITEMTYPE_ARRAY_PTR(a) (a).p
+#define GENERICSTACKITEMTYPE_ARRAYP_PTR(a) (a)->p
 #define GENERICSTACKITEMTYPE_ARRAY_LENGTH(a) (a).lengthl
+#define GENERICSTACKITEMTYPE_ARRAYP_LENGTH(a) (a)->lengthl
 #if GENERICSTACK_HAVE_LONG_LONG
   #define GENERICSTACKITEMTYPE2TYPE_LONG_LONG long long
 #endif
