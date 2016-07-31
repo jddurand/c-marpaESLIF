@@ -72,7 +72,11 @@ Set C<var> expression result, explicitely typecasted into a C<void *>.
 
 =item GENERICSTACK_SET_ARRAY
 
-Set C<var>, that is an internal structure containing both a pointer and a length.
+Set C<var>, that is an internal structure containing both a pointer and a length to fully describe an array.
+
+=item GENERICSTACK_SET_ARRAYP
+
+Set C<*var>, that is an internal structure containing both a pointer and a length to fully describe an array.
 
 =back
 
@@ -108,7 +112,7 @@ Specific macro that removes any association at position C<index>.
 
 =head2 GENERICSTACK_GET_XXX(stackName, index)
 
-Get an entry in stack C<stackName>, at index C<index> (numbering start 0). The data type of the entry is left as-is, letting the compiler do type promotion, and eventually warn. XXX is meant to be a C datatype, i.e. the exact list of macros is:
+Get an entry in stack C<stackName>, at index C<index> (numbering start 0). The data type of the entry is left as-is, letting the compiler do type promotion, and eventually warn. XXX is meant to be a C datatype, an array, or an array pointer, i.e. the exact list of macros is:
 
 =over
 
@@ -127,6 +131,10 @@ Get an entry in stack C<stackName>, at index C<index> (numbering start 0). The d
 =item GENERICSTACK_GET_PTR
 
 =item GENERICSTACK_GET_ARRAY
+
+=item GENERICSTACK_GET_ARRAYP
+
+Returns a I<pointer> to the array element.
 
 =back
 
@@ -230,6 +238,20 @@ Length associated to the array. Can be an l-value.
 =head1 NOTES
 
 =over
+
+=item ARRAY and ARRAYP interfaces
+
+Whenever ARRAYP interface exist, it means its argument is a I<pointer> to the array internal structure. That is, for example:
+
+  *GENERICSTACK_GET_ARRAYP(stackName, indice)
+
+and
+
+  GENERICSTACK_GET_ARRAY(stackName, indice)
+
+will return the same information.
+
+There is no GENERICSTACK_POP_ARRAYP, because when popped, the structure describing an array leave only in user-space, no more within the generic stack.
 
 =item C99 datatypes
 
