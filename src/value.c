@@ -23,7 +23,7 @@ marpaWrapperValue_t *marpaWrapperValue_newp(marpaWrapperRecognizer_t *marpaWrapp
 /****************************************************************************/
 {
   const static char     funcs[] = "marpaWrapperValue_newp";
-  marpaWrapperValue_t  *marpaWrapperValuep;
+  marpaWrapperValue_t  *marpaWrapperValuep = NULL;
   genericLogger_t      *genericLoggerp;
   Marpa_Earley_Set_ID   marpaLatestEarleySetIdi;
   int                   highRankOnlyFlagi;

@@ -39,7 +39,7 @@ marpaWrapperGrammar_t *marpaWrapperGrammar_newp(marpaWrapperGrammarOption_t *mar
 /****************************************************************************/
 {
   const static char      funcs[] = "marpaWrapperGrammar_newp";
-  marpaWrapperGrammar_t *marpaWrapperGrammarp;
+  marpaWrapperGrammar_t *marpaWrapperGrammarp = NULL;
   genericLogger_t       *genericLoggerp = NULL;
 #ifndef MARPAWRAPPER_NTRACE
   int                    marpaVersionip[3];
