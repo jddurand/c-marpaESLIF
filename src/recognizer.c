@@ -20,7 +20,7 @@ marpaWrapperRecognizer_t *marpaWrapperRecognizer_newp(marpaWrapperGrammar_t *mar
 /****************************************************************************/
 {
   const static char         funcs[] = "marpaWrapperRecognizer_newp";
-  marpaWrapperRecognizer_t *marpaWrapperRecognizerp;
+  marpaWrapperRecognizer_t *marpaWrapperRecognizerp = NULL;
   genericLogger_t          *genericLoggerp;
   int                       highestSymbolIdi;
   size_t                    nSymboll;
