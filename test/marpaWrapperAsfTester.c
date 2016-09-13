@@ -19,19 +19,13 @@ static char *penn_tag_rules(traverseContext_t *traverseContextp, int ruleIdi);
 static short pruning_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, void *userDatavp, int *valueip);
 static short full_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, void *userDatavp, int *valueip);
 
-enum { START = 0, S, NP, VP, period, NN, NNS, DT, CC, VBZ, MAX_SYMBOL };
+enum { START = 0,
+       NOTWANTED,
+       WANTED,
+       MAX_SYMBOL };
+
 enum { START_RULE = 0,
-       S_RULE,
-       NP_RULE01,
-       NP_RULE02,
-       NP_RULE03,
-       NP_RULE04,
-       NP_RULE05,
-       VP_RULE01,
-       VP_RULE02,
-       VP_RULE03,
-       VP_RULE04,
-       VP_RULE05,
+       NOTWANTED_RULE,
        MAX_RULE };
 
 int main(int argc, char **argv) {
@@ -66,87 +60,23 @@ int main(int argc, char **argv) {
   }
 
   marpaWrapperGrammarp = marpaWrapperGrammar_newp(&marpaWrapperGrammarOption);
-  if ( /* start, S, NP, VP, period, NN, NNS, DT, CC, VBZ */
+  if ( /* START, NOTWANTED, WANTED */
       ((symbolip[ START] = MARPAWRAPPERGRAMMAR_NEWSYMBOL(marpaWrapperGrammarp)) < 0)
       ||
-      ((symbolip[     S] = MARPAWRAPPERGRAMMAR_NEWSYMBOL(marpaWrapperGrammarp)) < 0)
+      ((symbolip[NOTWANTED] = MARPAWRAPPERGRAMMAR_NEWSYMBOL(marpaWrapperGrammarp)) < 0)
       ||
-      ((symbolip[    NP] = MARPAWRAPPERGRAMMAR_NEWSYMBOL(marpaWrapperGrammarp)) < 0)
+      ((symbolip[WANTED] = MARPAWRAPPERGRAMMAR_NEWSYMBOL(marpaWrapperGrammarp)) < 0)
       ||
-      ((symbolip[    VP] = MARPAWRAPPERGRAMMAR_NEWSYMBOL(marpaWrapperGrammarp)) < 0)
+      /* START ::= NOTWANTED WANTED */
+      ((ruleip[START_RULE] = MARPAWRAPPERGRAMMAR_NEWRULE(marpaWrapperGrammarp,
+							symbolip[START],
+							symbolip[NOTWANTED],
+							symbolip[WANTED], -1)) < 0)
       ||
-      ((symbolip[period] = MARPAWRAPPERGRAMMAR_NEWSYMBOL(marpaWrapperGrammarp)) < 0)
-      ||
-      ((symbolip[    NN] = MARPAWRAPPERGRAMMAR_NEWSYMBOL(marpaWrapperGrammarp)) < 0)
-      ||
-      ((symbolip[   NNS] = MARPAWRAPPERGRAMMAR_NEWSYMBOL(marpaWrapperGrammarp)) < 0)
-      ||
-      ((symbolip[    DT] = MARPAWRAPPERGRAMMAR_NEWSYMBOL(marpaWrapperGrammarp)) < 0)
-      ||
-      ((symbolip[    CC] = MARPAWRAPPERGRAMMAR_NEWSYMBOL(marpaWrapperGrammarp)) < 0)
-      ||
-      ((symbolip[   VBZ] = MARPAWRAPPERGRAMMAR_NEWSYMBOL(marpaWrapperGrammarp)) < 0)
-      ||
-      /* S   ::= NP  VP  period */
-      ((ruleip[S_RULE]   = MARPAWRAPPERGRAMMAR_NEWRULE(marpaWrapperGrammarp,
-						       symbolip[S],
-						       symbolip[NP], symbolip[VP], symbolip[period], -1)) < 0)
-      ||
-      /* NP  ::= NN  */
-      ((ruleip[NP_RULE01] = MARPAWRAPPERGRAMMAR_NEWRULE(marpaWrapperGrammarp,
-						       symbolip[NP],
-						       symbolip[NN], -1)) < 0)
-      ||
-      /* NP  ::= NNS  */
-      ((ruleip[NP_RULE02]   = MARPAWRAPPERGRAMMAR_NEWRULE(marpaWrapperGrammarp,
-						       symbolip[NP],
-						       symbolip[NNS], -1)) < 0)
-      ||
-      /* NP  ::= DT NN */
-      ((ruleip[NP_RULE03]   = MARPAWRAPPERGRAMMAR_NEWRULE(marpaWrapperGrammarp,
-						       symbolip[NP],
-						       symbolip[DT], symbolip[NN], -1)) < 0)
-      ||
-      /* NP  ::= NN NNS */
-      ((ruleip[NP_RULE04]   = MARPAWRAPPERGRAMMAR_NEWRULE(marpaWrapperGrammarp,
-						       symbolip[NP],
-						       symbolip[NN], symbolip[NNS], -1)) < 0)
-      ||
-      /* NP  ::= NNS CC NNS */
-      ((ruleip[NP_RULE05]   = MARPAWRAPPERGRAMMAR_NEWRULE(marpaWrapperGrammarp,
-						       symbolip[NP],
-						       symbolip[NNS], symbolip[CC], symbolip[NNS], -1)) < 0)
-      ||
-      /* VP  ::= VBZ NP */
-      ((ruleip[VP_RULE01]   = MARPAWRAPPERGRAMMAR_NEWRULE(marpaWrapperGrammarp,
-						       symbolip[VP],
-						       symbolip[VBZ], symbolip[NP], -1)) < 0)
-      ||
-      /* VP  ::= VP VBZ NNS */
-      ((ruleip[VP_RULE02]   = MARPAWRAPPERGRAMMAR_NEWRULE(marpaWrapperGrammarp,
-						       symbolip[VP],
-						       symbolip[VP], symbolip[VBZ], symbolip[NNS], -1)) < 0)
-      ||
-      /* VP  ::= VP CC VP */
-      ((ruleip[VP_RULE03]   = MARPAWRAPPERGRAMMAR_NEWRULE(marpaWrapperGrammarp,
-						       symbolip[VP],
-						       symbolip[VP], symbolip[CC], symbolip[VP], -1)) < 0)
-      ||
-      /* VP  ::= VP VP CC VP */
-      ((ruleip[VP_RULE04]   = MARPAWRAPPERGRAMMAR_NEWRULE(marpaWrapperGrammarp,
-						       symbolip[VP],
-						       symbolip[VP], symbolip[VP], symbolip[CC], symbolip[VP], -1)) < 0)
-      ||
-      /* VP  ::= VBZ */
-      ((ruleip[VP_RULE05]   = MARPAWRAPPERGRAMMAR_NEWRULE(marpaWrapperGrammarp,
-						       symbolip[VP],
-						       symbolip[VBZ], -1)) < 0)
-      ||
-      /* start  ::= S */
-      ((ruleip[START_RULE]  = MARPAWRAPPERGRAMMAR_NEWRULE(marpaWrapperGrammarp,
-						       symbolip[START],
-						       symbolip[S],
-						       -1)) < 0)
+      /* NOTWANTED  ::= WANTED  */
+      ((ruleip[NOTWANTED_RULE]   = MARPAWRAPPERGRAMMAR_NEWRULE(marpaWrapperGrammarp,
+						       symbolip[NOTWANTED],
+						       symbolip[WANTED], -1)) < 0)
        ) {
     rci = 1;
   }
@@ -171,121 +101,36 @@ int main(int argc, char **argv) {
     }
   }
 
-  /* --------------------------------------------------------------- */
-  /* a panda eats shoots and leaves.                                 */
-  /* --------------------------------------------------------------- */
+  /* ------------------------------------ */
+  /* KOKO                                 */
+  /* ------------------------------------ */
   
-  /* - */
-  /* a */
-  /* - */
+  /* -- */
+  /* KO */
+  /* -- */
   if (rci == 0) {
-    GENERICSTACK_PUSH_PTR(traverseContext.inputStackp, "a");
+    GENERICSTACK_PUSH_PTR(traverseContext.inputStackp, "KO");
     if (GENERICSTACK_ERROR(traverseContext.inputStackp)) {
       rci = 1;
     }
   }
   if (rci == 0) {
-    if (marpaWrapperRecognizer_readb(marpaWrapperRecognizerp, symbolip[DT], GENERICSTACK_USED(traverseContext.inputStackp) - 1 /* value */, 1 /* length */) == 0) {
+    if (marpaWrapperRecognizer_readb(marpaWrapperRecognizerp, symbolip[WANTED], GENERICSTACK_USED(traverseContext.inputStackp) - 1 /* value */, 1 /* length */) == 0) {
       rci = 1;
     }
   }
 
-  /* ----- */
-  /* panda */
-  /* ----- */
+  /* -- */
+  /* KO */
+  /* -- */
   if (rci == 0) {
-    GENERICSTACK_PUSH_PTR(traverseContext.inputStackp, "panda");
+    GENERICSTACK_PUSH_PTR(traverseContext.inputStackp, "OK");
     if (GENERICSTACK_ERROR(traverseContext.inputStackp)) {
       rci = 1;
     }
   }
   if (rci == 0) {
-    if (marpaWrapperRecognizer_readb(marpaWrapperRecognizerp, symbolip[NN], GENERICSTACK_USED(traverseContext.inputStackp) - 1 /* value */, 1 /* length */) == 0) {
-      rci = 1;
-    }
-  }
-
-  /* ---- */
-  /* eats */
-  /* ---- */
-  if (rci == 0) {
-    GENERICSTACK_PUSH_PTR(traverseContext.inputStackp, "eats");
-    if (GENERICSTACK_ERROR(traverseContext.inputStackp)) {
-      rci = 1;
-    }
-  }
-  if (rci == 0) {
-    if (marpaWrapperRecognizer_readb(marpaWrapperRecognizerp, symbolip[VBZ], GENERICSTACK_USED(traverseContext.inputStackp) - 1 /* value */, 1 /* length */) == 0) {
-      rci = 1;
-    }
-  }
-
-  /* ------ */
-  /* shoots */
-  /* ------ */
-  if (rci == 0) {
-    GENERICSTACK_PUSH_PTR(traverseContext.inputStackp, "shoots");
-    if (GENERICSTACK_ERROR(traverseContext.inputStackp)) {
-      rci = 1;
-    }
-  }
-  if (rci == 0) {
-    if ((marpaWrapperRecognizer_alternativeb(marpaWrapperRecognizerp, symbolip[NNS], GENERICSTACK_USED(traverseContext.inputStackp) - 1 /* value */, 1 /* length */) == 0)
-	||
-	(marpaWrapperRecognizer_alternativeb(marpaWrapperRecognizerp, symbolip[VBZ], GENERICSTACK_USED(traverseContext.inputStackp) - 1 /* value */, 1 /* length */) == 0)
-	||
-	(marpaWrapperRecognizer_completeb(marpaWrapperRecognizerp) == 0)
-	) {
-      rci = 1;
-    }
-  }
-
-  /* --- */
-  /* and */
-  /* --- */
-  if (rci == 0) {
-    GENERICSTACK_PUSH_PTR(traverseContext.inputStackp, "and");
-    if (GENERICSTACK_ERROR(traverseContext.inputStackp)) {
-      rci = 1;
-    }
-  }
-  if (rci == 0) {
-    if (marpaWrapperRecognizer_readb(marpaWrapperRecognizerp, symbolip[CC], GENERICSTACK_USED(traverseContext.inputStackp) - 1 /* value */, 1 /* length */) == 0) {
-      rci = 1;
-    }
-  }
-
-  /* ------ */
-  /* leaves */
-  /* ------ */
-  if (rci == 0) {
-    GENERICSTACK_PUSH_PTR(traverseContext.inputStackp, "leaves");
-    if (GENERICSTACK_ERROR(traverseContext.inputStackp)) {
-      rci = 1;
-    }
-  }
-  if (rci == 0) {
-    if ((marpaWrapperRecognizer_alternativeb(marpaWrapperRecognizerp, symbolip[NNS], GENERICSTACK_USED(traverseContext.inputStackp) - 1 /* value */, 1 /* length */) == 0)
-	||
-	(marpaWrapperRecognizer_alternativeb(marpaWrapperRecognizerp, symbolip[VBZ], GENERICSTACK_USED(traverseContext.inputStackp) - 1 /* value */, 1 /* length */) == 0)
-	||
-	(marpaWrapperRecognizer_completeb(marpaWrapperRecognizerp) == 0)
-	) {
-      rci = 1;
-    }
-  }
-
-  /* ------ */
-  /* period */
-  /* ------ */
-  if (rci == 0) {
-    GENERICSTACK_PUSH_PTR(traverseContext.inputStackp, ".");
-    if (GENERICSTACK_ERROR(traverseContext.inputStackp)) {
-      rci = 1;
-    }
-  }
-  if (rci == 0) {
-    if (marpaWrapperRecognizer_readb(marpaWrapperRecognizerp, symbolip[period], GENERICSTACK_USED(traverseContext.inputStackp) - 1 /* value */, 1 /* length */) == 0) {
+    if (marpaWrapperRecognizer_readb(marpaWrapperRecognizerp, symbolip[WANTED], GENERICSTACK_USED(traverseContext.inputStackp) - 1 /* value */, 1 /* length */) == 0) {
       rci = 1;
     }
   }
@@ -509,10 +354,6 @@ static short pruning_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, 
       char  *joinWs = " ";
       size_t i;
 
-      if (symbolIdi == S) {
-	joinWs = "\n  ";
-      }
-
       /* All rh values are concatenated with joinWs in between, the whole beeing enclosed in (penntag XXX) */
       stringl = 1 + strlen(symbolNames) + 1; /* "(penntag " */
       for (i = 0; i < GENERICSTACK_USED(rhStackp); i++) {
@@ -656,6 +497,10 @@ static short full_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, voi
         genericStack_t *newResultStackp;
         size_t          i;
 
+	if (ruleIdi == START_RULE && rhIxi == 0) {
+	    continue;
+	}
+
         GENERICSTACK_NEW(newResultStackp);
 
         for (i = 0; i < GENERICSTACK_USED(resultStackp); i++) {
@@ -726,10 +571,6 @@ static short full_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, voi
       } else {
         char           *joinWs = " ";
         size_t          i;
-
-        if (symbolIdi == S) {
-          joinWs = "\n  ";
-        }
 
         for (i = 0; i < GENERICSTACK_USED(resultStackp); i++) {
           genericStack_t *stackp = GENERICSTACK_GET_PTR(resultStackp, i);
@@ -819,32 +660,11 @@ static char *penn_tag_symbols(traverseContext_t *traverseContextp, int symbolIdi
   case START:
     s = strdup("[:start:]");
     break;
-  case S:
-    s = strdup("S");
+  case NOTWANTED:
+    s = strdup("NOTWANTED");
     break;
-  case NP:
-    s = strdup("NP");
-    break;
-  case VP:
-    s = strdup("VP");
-    break;
-  case period:
-    s = strdup(".");
-    break;
-  case NN:
-    s = strdup("NN");
-    break;
-  case NNS:
-    s = strdup("NNS");
-    break;
-  case DT:
-    s = strdup("DT");
-    break;
-  case CC:
-    s = strdup("CC");
-    break;
-  case VBZ:
-    s = strdup("VBZ");
+  case WANTED:
+    s = strdup("WANTED");
     break;
   default:
     s = NULL;
@@ -866,24 +686,10 @@ static char *penn_tag_rules(traverseContext_t *traverseContextp, int ruleIdi)
   
   switch (ruleIdi) {
   case START_RULE:
-    s = strdup("[Internal Start Rule]");
+    s = strdup("START RULE");
     break;
-  case S_RULE:
-    s = strdup("S_RULE");
-    break;
-  case NP_RULE01:
-  case NP_RULE02:
-  case NP_RULE03:
-  case NP_RULE04:
-  case NP_RULE05:
-    s = strdup("NP");
-    break;
-  case VP_RULE01:
-  case VP_RULE02:
-  case VP_RULE03:
-  case VP_RULE04:
-  case VP_RULE05:
-    s = strdup("VP");
+  case NOTWANTED_RULE:
+    s = strdup("NOTWANTED_RULE");
     break;
   default:
     s = NULL;

@@ -153,6 +153,10 @@ static inline short                      _marpaWrapperAsf_traverse_nextSymchb(ma
 static inline marpaWrapperAsfChoicePoint_t *_marpaWrapperAsf_choicepoint_newp(marpaWrapperAsf_t *marpaWrapperAsfp);
 static inline void                          _marpaWrapperAsf_choicepoint_freev(marpaWrapperAsf_t *marpaWrapperAsfp, marpaWrapperAsfChoicePoint_t *choicepointp);
 
+/* Specific to value using the ASF */
+static inline short                       _marpaWrapperAsf_valueTraverserb(marpaWrapperAsfTraverser_t *traverserp, void *userDatavp, int *valueip);
+
+
 /****************************************************************************/
 marpaWrapperAsf_t *marpaWrapperAsf_newp(marpaWrapperRecognizer_t *marpaWrapperRecognizerp, marpaWrapperAsfOption_t *marpaWrapperAsfOptionp)
 /****************************************************************************/
@@ -3192,6 +3196,43 @@ short marpaWrapperAsf_traverse_ruleIdb(marpaWrapperAsfTraverser_t *traverserp, i
 }
 
 /****************************************************************************/
+short marpaWrapperAsf_traverse_gladeIdb(marpaWrapperAsfTraverser_t *traverserp, int *gladeIdip)
+/****************************************************************************/
+{
+  const static char         funcs[]          = "marpaWrapperAsf_traverse_gladeIdb";
+  marpaWrapperAsf_t        *marpaWrapperAsfp;
+  genericLogger_t          *genericLoggerp;
+  marpaWrapperAsfGlade_t   *gladep;
+  int                       gladeIdi;
+
+  if (traverserp == NULL) {
+    errno = EINVAL;
+    return 0;
+  }
+
+  marpaWrapperAsfp = traverserp->marpaWrapperAsfp;
+  genericLoggerp = marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp;
+
+  gladep = traverserp->gladep;
+  if (gladep == NULL) {
+    MARPAWRAPPER_ERROR(genericLoggerp, "Current glade is NULL");
+    goto err;
+  }
+  gladeIdi = gladep->idi;
+
+  if (gladeIdip != NULL) {
+    *gladeIdip = gladeIdi;
+  }
+
+  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "return 1, *gladeIdip=%d", gladeIdi);
+  return 1;
+
+ err:
+  MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return 0");
+  return 0;
+}
+
+/****************************************************************************/
 static inline short _marpaWrapperAsf_traverse_nextFactoringb(marpaWrapperAsfTraverser_t *traverserp, int *factoringIxip)
 /****************************************************************************/
 {
@@ -3553,4 +3594,61 @@ static inline void _marpaWrapperAsf_choicepoint_freev(marpaWrapperAsf_t *marpaWr
     GENERICSTACK_FREE(choicepointp->orNodeInUseStackp);
     free(choicepointp);
   }
+}
+
+/****************************************************************************/
+short marpaWrapperAsf_valueb(marpaWrapperAsf_t                    *marpaWrapperAsfp,
+			     void                                 *userDatavp,
+			     marpaWrapperAsfValueRuleCallback_t    ruleCallbackp,
+			     marpaWrapperAsfValueSymbolCallback_t  symbolCallbackp,
+			     marpaWrapperAsfValueNullingCallback_t nullingCallbackp)
+/****************************************************************************/
+{
+  const static char             funcs[]        = "marpaWrapperAsf_valueb";
+  genericLogger_t              *genericLoggerp = marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp;
+  short                         rcb;
+  marpaWrapperAsfValueContext_t marpaWrapperAsfValueContext;
+
+  marpaWrapperAsfValueContext.userDatavp       = userDatavp;
+  marpaWrapperAsfValueContext.ruleCallbackp    = ruleCallbackp;
+  marpaWrapperAsfValueContext.symbolCallbackp  = symbolCallbackp;
+  marpaWrapperAsfValueContext.nullingCallbackp = nullingCallbackp;
+  
+  rcb = marpaWrapperAsf_traverseb(marpaWrapperAsfp, _marpaWrapperAsf_valueTraverserb, &marpaWrapperAsfValueContext, NULL);
+
+  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "return %d", (int) rcb);
+  return rcb;
+}
+
+/****************************************************************************/
+static inline short _marpaWrapperAsf_valueTraverserb(marpaWrapperAsfTraverser_t *traverserp, void *userDatavp, int *valueip)
+/****************************************************************************/
+{
+  const static char              funcs[]                      = "_marpaWrapperAsf_valueTraverser";
+  marpaWrapperAsf_t             *marpaWrapperAsfp             = marpaWrapperAsf_traverse_asfp(traverserp);
+  genericLogger_t               *genericLoggerp               = marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp;
+  marpaWrapperAsfValueContext_t *marpaWrapperAsfValueContextp = (marpaWrapperAsfValueContext_t *) userDatavp;
+  short                          rcb;
+  int                            rulei;
+  int                            symboli;
+
+  if (! marpaWrapperAsf_traverse_ruleIdb(traverserp, &rulei)) {
+    goto err;
+  }
+  if (! marpaWrapperAsf_traverse_symbolIdb(traverserp, &symboli)) {
+    goto err;
+  }
+
+  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "Level %d - Rule %d, symbol %d", rulei, symboli);
+
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+
+  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "return %d", (int) rcb);
+  return rcb;
 }

@@ -3,6 +3,7 @@
 
 #include <genericStack.h>
 #include "marpaWrapper/recognizer.h"
+#include "marpaWrapper/value.h"
 #include "marpaWrapper/export.h"
 
 /***********************/
@@ -10,6 +11,13 @@
 /***********************/
 typedef struct marpaWrapperAsf          marpaWrapperAsf_t;
 typedef struct marpaWrapperAsfTraverser marpaWrapperAsfTraverser_t;
+
+/* --------- */
+/* Callbacks */
+/* --------- */
+typedef short (*marpaWrapperAsfValueRuleCallback_t)(void *userDatavp, int rulei, int arg0i, int argni, int resulti, short *skipbp);
+typedef short (*marpaWrapperAsfValueSymbolCallback_t)(void *userDatavp, int symboli, int argi, int resulti, short *skipbp);
+typedef short (*marpaWrapperAsfValueNullingCallback_t)(void *userDatavp, int symboli, int resulti, short *skipbp);
 
 /* --------------- */
 /* General options */
@@ -34,11 +42,18 @@ extern "C" {
   marpaWrapper_EXPORT size_t                    marpaWrapperAsf_traverse_rh_lengthl(marpaWrapperAsfTraverser_t *traverserp);
   marpaWrapper_EXPORT short                     marpaWrapperAsf_traverse_symbolIdb(marpaWrapperAsfTraverser_t *traverserp, int *symbolIdi);
   marpaWrapper_EXPORT short                     marpaWrapperAsf_traverse_ruleIdb(marpaWrapperAsfTraverser_t *traverserp, int *ruleIdip);
+  marpaWrapper_EXPORT short                     marpaWrapperAsf_traverse_gladeIdb(marpaWrapperAsfTraverser_t *traverserp, int *gladeIdi);
   marpaWrapper_EXPORT short                     marpaWrapperAsf_traverse_nextb(marpaWrapperAsfTraverser_t *traverserp, short *nextbp);
   marpaWrapper_EXPORT short                     marpaWrapperAsf_traverse_rh_valueb(marpaWrapperAsfTraverser_t *traverserp, size_t rhIxi, int *valueip);
   marpaWrapper_EXPORT marpaWrapperAsf_t        *marpaWrapperAsf_traverse_asfp(marpaWrapperAsfTraverser_t *traverserp);
   marpaWrapper_EXPORT marpaWrapperRecognizer_t *marpaWrapperAsf_recognizerp(marpaWrapperAsf_t *marpaWrapperAsfp);
   marpaWrapper_EXPORT void                      marpaWrapperAsf_freev(marpaWrapperAsf_t *marpaWrapperAsfp);
+  /* Generic helper to compute the using only the ASF API */
+  marpaWrapper_EXPORT short                     marpaWrapperAsf_valueb(marpaWrapperAsf_t                    *marpaWrapperAsfp,
+								       void                                 *userDatavp,
+								       marpaWrapperAsfValueRuleCallback_t    ruleCallbackp,
+								       marpaWrapperAsfValueSymbolCallback_t  symbolCallbackp,
+								       marpaWrapperAsfValueNullingCallback_t nullingCallbackp);
 #ifdef __cplusplus
 }
 #endif
