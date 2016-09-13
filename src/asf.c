@@ -3613,6 +3613,12 @@ short marpaWrapperAsf_valueb(marpaWrapperAsf_t                    *marpaWrapperA
   marpaWrapperAsfValueContext.ruleCallbackp    = ruleCallbackp;
   marpaWrapperAsfValueContext.symbolCallbackp  = symbolCallbackp;
   marpaWrapperAsfValueContext.nullingCallbackp = nullingCallbackp;
+  marpaWrapperAsfValueContext.valuei           = 0;    /* Output always goes at output stack indice 0 */
+  marpaWrapperAsfValueContext.arg0i            = -1;   /* Unknown yet */
+  marpaWrapperAsfValueContext.argni            = -1;   /* Unknown yet */
+  marpaWrapperAsfValueContext.nulledb          = -1;   /* Unknown yet */
+  marpaWrapperAsfValueContext.parentp          = NULL;
+  marpaWrapperAsfValueContext.childStackp      = NULL; /* Unknown yet */
   
   rcb = marpaWrapperAsf_traverseb(marpaWrapperAsfp, _marpaWrapperAsf_valueTraverserb, &marpaWrapperAsfValueContext, NULL);
 
