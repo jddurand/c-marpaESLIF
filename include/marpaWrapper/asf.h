@@ -42,7 +42,6 @@ extern "C" {
   marpaWrapper_EXPORT size_t                    marpaWrapperAsf_traverse_rh_lengthl(marpaWrapperAsfTraverser_t *traverserp);
   marpaWrapper_EXPORT short                     marpaWrapperAsf_traverse_symbolIdb(marpaWrapperAsfTraverser_t *traverserp, int *symbolIdi);
   marpaWrapper_EXPORT short                     marpaWrapperAsf_traverse_ruleIdb(marpaWrapperAsfTraverser_t *traverserp, int *ruleIdip);
-  marpaWrapper_EXPORT short                     marpaWrapperAsf_traverse_gladeIdb(marpaWrapperAsfTraverser_t *traverserp, int *gladeIdi);
   marpaWrapper_EXPORT short                     marpaWrapperAsf_traverse_nextb(marpaWrapperAsfTraverser_t *traverserp, short *nextbp);
   marpaWrapper_EXPORT short                     marpaWrapperAsf_traverse_rh_valueb(marpaWrapperAsfTraverser_t *traverserp, size_t rhIxi, int *valueip);
   marpaWrapper_EXPORT marpaWrapperAsf_t        *marpaWrapperAsf_traverse_asfp(marpaWrapperAsfTraverser_t *traverserp);

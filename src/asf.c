@@ -3196,43 +3196,6 @@ short marpaWrapperAsf_traverse_ruleIdb(marpaWrapperAsfTraverser_t *traverserp, i
 }
 
 /****************************************************************************/
-short marpaWrapperAsf_traverse_gladeIdb(marpaWrapperAsfTraverser_t *traverserp, int *gladeIdip)
-/****************************************************************************/
-{
-  const static char         funcs[]          = "marpaWrapperAsf_traverse_gladeIdb";
-  marpaWrapperAsf_t        *marpaWrapperAsfp;
-  genericLogger_t          *genericLoggerp;
-  marpaWrapperAsfGlade_t   *gladep;
-  int                       gladeIdi;
-
-  if (traverserp == NULL) {
-    errno = EINVAL;
-    return 0;
-  }
-
-  marpaWrapperAsfp = traverserp->marpaWrapperAsfp;
-  genericLoggerp = marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp;
-
-  gladep = traverserp->gladep;
-  if (gladep == NULL) {
-    MARPAWRAPPER_ERROR(genericLoggerp, "Current glade is NULL");
-    goto err;
-  }
-  gladeIdi = gladep->idi;
-
-  if (gladeIdip != NULL) {
-    *gladeIdip = gladeIdi;
-  }
-
-  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "return 1, *gladeIdip=%d", gladeIdi);
-  return 1;
-
- err:
-  MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return 0");
-  return 0;
-}
-
-/****************************************************************************/
 static inline short _marpaWrapperAsf_traverse_nextFactoringb(marpaWrapperAsfTraverser_t *traverserp, int *factoringIxip)
 /****************************************************************************/
 {
