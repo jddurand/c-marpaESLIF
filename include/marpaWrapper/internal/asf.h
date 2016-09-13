@@ -86,4 +86,14 @@ struct marpaWrapperAsfTraverser {
   int                     factoringIxi;
 };
 
+/* Internal structure used for valuation using the ASF */
+typedef struct marpaWrapperAsfValueContext {
+  /* Copy of the marpaWrapperAsf_valueb() parameters */
+  void                                 *userDatavp;
+  marpaWrapperAsfValueRuleCallback_t    ruleCallbackp;
+  marpaWrapperAsfValueSymbolCallback_t  symbolCallbackp;
+  marpaWrapperAsfValueNullingCallback_t nullingCallbackp;
+  /* Current context */
+} marpaWrapperAsfValueContext_t;
+
 #endif /* MARPAWRAPPER_INTERNAL_ASF_H */
