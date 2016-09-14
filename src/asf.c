@@ -3600,7 +3600,7 @@ short marpaWrapperAsf_valueb(marpaWrapperAsf_t                    *marpaWrapperA
   marpaWrapperAsfValueContext.valueNullingCallbackp = valueNullingCallbackp;
   GENERICSTACK_NEW(marpaWrapperAsfValueContext.parentRuleiStackp);
   if (GENERICSTACK_ERROR(marpaWrapperAsfValueContext.parentRuleiStackp)) {
-    MARPAWRAPPER_TRACEF(genericLoggerp, "parentRuleiStackp initialization failure, %s", strerror(errno));
+    MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "parentRuleiStackp initialization failure, %s", strerror(errno));
   }
   
   rcb = marpaWrapperAsf_traverseb(marpaWrapperAsfp, _marpaWrapperAsf_valueTraverserb, &marpaWrapperAsfValueContext, &valuei);
@@ -3765,6 +3765,6 @@ static inline short _marpaWrapperAsf_valueTraverserb(marpaWrapperAsfTraverser_t 
   rcb = 0;
 
  done:
-  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "return %d, *valueip=%d", (int) rcb, valuei);
+  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "return %d, *valueip=%d", (int) rcb, *valueip);
   return rcb;
 }
