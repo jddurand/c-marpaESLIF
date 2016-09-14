@@ -15,7 +15,7 @@ typedef struct marpaWrapperAsfTraverser marpaWrapperAsfTraverser_t;
 /* --------- */
 /* Callbacks */
 /* --------- */
-typedef short (*marpaWrapperAsfRuleCallback_t)(void *userDatavp, int rulei);
+typedef short (*marpaWrapperAsfOkRuleCallback_t)(void *userDatavp, genericStack_t *parentRuleiStackp, int rulei);
 
 /* --------------- */
 /* General options */
@@ -48,10 +48,11 @@ extern "C" {
   /* Generic helper to compute the using only the ASF API */
   marpaWrapper_EXPORT short                     marpaWrapperAsf_valueb(marpaWrapperAsf_t                    *marpaWrapperAsfp,
 								       void                                 *userDatavp,
-								       marpaWrapperAsfRuleCallback_t         okRuleCallbackp,
+								       marpaWrapperAsfOkRuleCallback_t       okRuleCallbackp,
 								       marpaWrapperValueRuleCallback_t       valueRuleCallbackp,
 								       marpaWrapperValueSymbolCallback_t     valueRymbolCallbackp,
-								       marpaWrapperValueNullingCallback_t    valueNullingCallbackp);
+								       marpaWrapperValueNullingCallback_t    valueNullingCallbackp,
+								       int                                  *valueip);
 #ifdef __cplusplus
 }
 #endif

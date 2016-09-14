@@ -18,6 +18,10 @@ static char *penn_tag_symbols(traverseContext_t *traverseContextp, int symbolIdi
 static char *penn_tag_rules(traverseContext_t *traverseContextp, int ruleIdi);
 static short pruning_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, void *userDatavp, int *valueip);
 static short full_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, void *userDatavp, int *valueip);
+static short okRuleCallback(void *userDatavp, int rulei);
+static short valueRuleCallback(void *userDatavp, int rulei, int arg0i, int argni, int resulti);
+static short valueSymbolCallback(void *userDatavp, int symboli, int argi, int resulti);
+static short valueNullingCallback(void *userDatavp, int symboli, int resulti);
 
 enum { START = 0, S, NP, VP, period, NN, NNS, DT, CC, VBZ, MAX_SYMBOL };
 enum { START_RULE = 0,
@@ -343,6 +347,22 @@ int main(int argc, char **argv) {
   }
   GENERICSTACK_FREE(traverseContext.outputStackp);
  
+  /* Value-like traverser */
+  traverseContext.marpaWrapperAsfp = marpaWrapperAsfp;
+  GENERICSTACK_NEW(traverseContext.outputStackp);
+  if (traverseContext.outputStackp == NULL) {
+    perror("GENERICSTACK_NEW");
+    exit(1);
+  }
+  if (marpaWrapperAsf_valueb(marpaWrapperAsfp, value_traverserCallbacki, &traverseContext, &valuei)) {
+    GENERICLOGGER_INFOF(traverseContext.genericLoggerp, "Pruning traverser returns:\n%s", GENERICSTACK_GET_PTR(traverseContext.outputStackp, (size_t) valuei));
+  }
+  /* Output stack is an array of strings */
+  while (GENERICSTACK_USED(traverseContext.outputStackp) > 0) {
+    free(GENERICSTACK_POP_PTR(traverseContext.outputStackp));
+  }
+  GENERICSTACK_FREE(traverseContext.outputStackp);
+
   if (marpaWrapperAsfp != NULL) {
     marpaWrapperAsf_freev(marpaWrapperAsfp);
   }
