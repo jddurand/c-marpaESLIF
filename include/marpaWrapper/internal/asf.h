@@ -94,15 +94,8 @@ typedef struct marpaWrapperAsfValueContext {
   marpaWrapperValueRuleCallback_t       valueRuleCallbackp;
   marpaWrapperValueSymbolCallback_t     valueSymbolCallbackp;
   marpaWrapperValueNullingCallback_t    valueNullingCallbackp;
-  /* Current context: the most general form of a rule is terms of stack is: */
+  /* We maintain where outputs goes in the stack */
   int                                   valuei;
-  int                                   arg0i;
-  int                                   argni;
-  short                                 nulledb;
-  /* and output may feed a parent */
-  struct marpaWrapperAsfValueContext   *parentp;
-  /* and we may very well have children as well of course */
-  genericStack_t                       *childStackp;
 } marpaWrapperAsfValueContext_t;
 
 #endif /* MARPAWRAPPER_INTERNAL_ASF_H */
