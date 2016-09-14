@@ -3579,11 +3579,6 @@ short marpaWrapperAsf_valueb(marpaWrapperAsf_t                    *marpaWrapperA
   marpaWrapperAsfValueContext.valueSymbolCallbackp  = valueSymbolCallbackp;
   marpaWrapperAsfValueContext.valueNullingCallbackp = valueNullingCallbackp;
   marpaWrapperAsfValueContext.valuei                = 0;    /* Output always goes at output stack indice 0 */
-  marpaWrapperAsfValueContext.arg0i                 = -1;   /* Unknown yet */
-  marpaWrapperAsfValueContext.argni                 = -1;   /* Unknown yet */
-  marpaWrapperAsfValueContext.nulledb               = -1;   /* Unknown yet */
-  marpaWrapperAsfValueContext.parentp               = NULL;
-  marpaWrapperAsfValueContext.childStackp           = NULL; /* Unknown yet */
   
   rcb = marpaWrapperAsf_traverseb(marpaWrapperAsfp, _marpaWrapperAsf_valueTraverserb, &marpaWrapperAsfValueContext, NULL);
   
@@ -3608,7 +3603,6 @@ static inline short _marpaWrapperAsf_valueTraverserb(marpaWrapperAsfTraverser_t 
   size_t                                rhIxi;
   short                                 nextb;
   int                                   nbRuleOki;
-  short                                 ruleOkb;
 
   if (! marpaWrapperAsf_traverse_ruleIdb(traverserp, &marpaRuleIdi)) {
     goto err;
@@ -3671,12 +3665,14 @@ static inline short _marpaWrapperAsf_valueTraverserb(marpaWrapperAsfTraverser_t 
 	  goto err;
 	}
 	if (! ValueNullingCallbackp(marpaWrapperAsfValueContextp->userDatavp, marpaRuleIdi, marpaWrapperAsfValueContextp->valuei)) {
-	  MARPAWRAPPER_ERRORF(genericLoggerp, "Rule No %d nulling value callback failure", marpaSymbolIdi);
+	  MARPAWRAPPER_ERRORF(genericLoggerp, "Rule No %d nulling callback failure", marpaSymbolIdi);
 	  goto err;
 	}
       } else {
 	marpaWrapperValueRuleCallback_t valueRuleCallbackp = marpaWrapperAsfValueContextp->valueRuleCallbackp;
-	int                             valuei;
+	int                             valuei = marpaWrapperAsfValueContextp->valuei;
+	int                             arg0i = valuei + 1;
+	int                             argni = arg0i + (int) (lengthl - 1);
 
 	if (valueRuleCallbackp == NULL) {
 	  MARPAWRAPPER_ERROR(genericLoggerp, "Nulling rule callback is a null function pointer");
@@ -3684,10 +3680,17 @@ static inline short _marpaWrapperAsf_valueTraverserb(marpaWrapperAsfTraverser_t 
 	}
 	
 	for (rhIxi = 0; rhIxi <= lengthl - 1; rhIxi++) {
-	  /* This is a rule with RHS'es: we collect the results in the stack */
-	  if (! marpaWrapperAsf_traverse_rh_valueb(traverserp, rhIxi, &valuei)) {
+	  /* This is a rule with RHS'es: we collect the results in the stack. */
+	  marpaWrapperAsfValueContextp->valuei = arg0i + rhIxi;
+	  /* We know exactly about the stack is, this is why last argument is NULL */
+	  if (! marpaWrapperAsf_traverse_rh_valueb(traverserp, rhIxi, NULL)) {
 	    goto err;
 	  }
+	}
+
+	if (! valueRuleCallbackp(marpaWrapperAsfValueContextp->userDatavp, marpaRuleIdi, arg0i, argni, valuei)) {
+	  MARPAWRAPPER_ERRORF(genericLoggerp, "Rule No %d value callback failure", marpaSymbolIdi);
+	  goto err;
 	}
       }
 
