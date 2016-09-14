@@ -3217,10 +3217,13 @@ static inline short _marpaWrapperAsf_traverse_nextFactoringb(marpaWrapperAsfTrav
   marpaWrapperAsfp = traverserp->marpaWrapperAsfp;
   genericLoggerp = marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp;
 
+  /* Never happens */
+  /*
   if (factoringIxip == NULL) {
     MARPAWRAPPER_ERROR(genericLoggerp, "factoringIxip is NULL");
     goto err;
   }
+  */
 
   gladep = traverserp->gladep;
   if (gladep == NULL) {
