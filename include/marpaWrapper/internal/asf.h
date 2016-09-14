@@ -96,8 +96,6 @@ typedef struct marpaWrapperAsfValueContext {
   marpaWrapperValueNullingCallback_t    valueNullingCallbackp;
   /* Parent stack */
   genericStack_t                       *parentRuleiStackp;
-  /* Current stack indice */
-  int                                   valuei;
 } marpaWrapperAsfValueContext_t;
 
 #endif /* MARPAWRAPPER_INTERNAL_ASF_H */
