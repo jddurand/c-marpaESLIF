@@ -3603,8 +3603,6 @@ short marpaWrapperAsf_valueb(marpaWrapperAsf_t                    *marpaWrapperA
     MARPAWRAPPER_TRACEF(genericLoggerp, "parentRuleiStackp initialization failure, %s", strerror(errno));
   }
   
-  marpaWrapperAsfValueContext.valuei                = 0;
-  
   rcb = marpaWrapperAsf_traverseb(marpaWrapperAsfp, _marpaWrapperAsf_valueTraverserb, &marpaWrapperAsfValueContext, &valuei);
   goto done;
 
@@ -3630,7 +3628,6 @@ static inline short _marpaWrapperAsf_valueTraverserb(marpaWrapperAsfTraverser_t 
   marpaWrapperAsf_t                    *marpaWrapperAsfp             = marpaWrapperAsf_traverse_asfp(traverserp);
   genericLogger_t                      *genericLoggerp               = marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp;
   marpaWrapperAsfValueContext_t        *marpaWrapperAsfValueContextp = (marpaWrapperAsfValueContext_t *) userDatavp;
-  int                                   valuei                       = marpaWrapperAsfValueContextp->valuei;
   short                                 rcb;
   int                                   marpaRuleIdi;
   int                                   marpaSymbolIdi;
@@ -3663,10 +3660,13 @@ static inline short _marpaWrapperAsf_valueTraverserb(marpaWrapperAsfTraverser_t 
       MARPAWRAPPER_ERROR(genericLoggerp, "Value symbol callback is a null function pointer");
       goto err;
     }
-    if (! valueSymbolCallbackp(marpaWrapperAsfValueContextp->userDatavp, marpaSymbolIdi, tokenValuei, valuei)) {
+    if (! valueSymbolCallbackp(marpaWrapperAsfValueContextp->userDatavp, marpaSymbolIdi, tokenValuei, *valueip)) {
       MARPAWRAPPER_ERRORF(genericLoggerp, "Symbol No %d value callback failure", marpaSymbolIdi);
       goto err;
     }
+
+    /* A token act as a single alternative */
+    nbAlternativeOki = 1;
   } else {
     /* This is a rule */
     marpaWrapperAsfOkRuleCallback_t    okRuleCallbackp = marpaWrapperAsfValueContextp->okRuleCallbackp;
@@ -3682,8 +3682,8 @@ static inline short _marpaWrapperAsf_valueTraverserb(marpaWrapperAsfTraverser_t 
     while (1) {
       /* Check if this rule is accepted */
       if (! okRuleCallbackp(marpaWrapperAsfValueContextp->userDatavp, marpaWrapperAsfValueContextp->parentRuleiStackp, marpaRuleIdi)) {
-	MARPAWRAPPER_ERRORF(genericLoggerp, "Rule No %d ok callback failure", marpaRuleIdi);
-	goto err;
+	MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "Rule No %d ok callback failure", marpaRuleIdi);
+	goto nextRule;
       }
       if (++nbAlternativeOki > 0) {
 	MARPAWRAPPER_ERROR(genericLoggerp, "More than one alternative");
@@ -3697,27 +3697,29 @@ static inline short _marpaWrapperAsf_valueTraverserb(marpaWrapperAsfTraverser_t 
       if (lengthl <= 0) {
 	
 	/* This is a nulling rule */
-	if (! ValueNullingCallbackp(marpaWrapperAsfValueContextp->userDatavp, marpaRuleIdi, valuei)) {
+	if (! ValueNullingCallbackp(marpaWrapperAsfValueContextp->userDatavp, marpaRuleIdi, *valueip)) {
 	  MARPAWRAPPER_ERRORF(genericLoggerp, "Rule No %d nulling callback failure", marpaSymbolIdi);
 	  goto err;
 	}
       } else {
 	marpaWrapperValueRuleCallback_t valueRuleCallbackp = marpaWrapperAsfValueContextp->valueRuleCallbackp;
-	int                             arg0i = valuei + 1;
-	int                             argni = arg0i + (int) (lengthl - 1);
+	int                             valuei             = *valueip;
+	int                             arg0i              = valuei + 1;
+	int                             argni              = arg0i + (int) (lengthl - 1);
 
 	for (rhIxi = 0; rhIxi <= lengthl - 1; rhIxi++) {
-	  if (! marpaWrapperAsf_traverse_rh_valueb(traverserp, rhIxi, NULL)) {
+	  ++valuei;
+	  if (! marpaWrapperAsf_traverse_rh_valueb(traverserp, rhIxi, &valuei)) {
 	    goto err;
 	  }
-	  marpaWrapperAsfValueContextp->valuei = ++valuei;
 	}
-	if (valueRuleCallbackp(marpaWrapperAsfValueContextp->userDatavp, marpaRuleIdi, arg0i, argni, valuei)) {
+	if (valueRuleCallbackp(marpaWrapperAsfValueContextp->userDatavp, marpaRuleIdi, arg0i, argni, *valueip)) {
 	  MARPAWRAPPER_ERRORF(genericLoggerp, "Rule No %d value callback failure", marpaSymbolIdi);
 	  goto err;
 	}
       }
 
+    nextRule:
       /* Check for another alternative */
       if (! marpaWrapperAsf_traverse_nextb(traverserp, &nextb)) {
 	goto err;
@@ -3738,6 +3740,12 @@ static inline short _marpaWrapperAsf_valueTraverserb(marpaWrapperAsfTraverser_t 
     }
 
   }
+
+  /* If no alternative was accepted, we say so to our caller. */
+  /* This can happen only when dealing with rules.            */
+  if (nbAlternativeOki <= 0) {
+    *valueip = -1;
+  }
   
   rcb = 1;
   goto done;
@@ -3746,11 +3754,6 @@ static inline short _marpaWrapperAsf_valueTraverserb(marpaWrapperAsfTraverser_t 
   rcb = 0;
 
  done:
-  if (rcb) {
-    if (valueip != NULL) {
-      *valueip = valuei;
-    }
-  }
   MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "return %d, *valueip=%d", (int) rcb, valuei);
   return rcb;
 }
