@@ -3706,16 +3706,27 @@ static inline short _marpaWrapperAsf_valueTraverserb(marpaWrapperAsfTraverser_t 
 	int                             valuei             = *valueip;
 	int                             arg0i              = valuei + 1;
 	int                             argni              = arg0i + (int) (lengthl - 1);
+	short                           okb                = 1;
+	int                             localValuei        = valuei;
 
 	for (rhIxi = 0; rhIxi <= lengthl - 1; rhIxi++) {
-	  ++valuei;
-	  if (! marpaWrapperAsf_traverse_rh_valueb(traverserp, rhIxi, &valuei)) {
+
+	  ++localValuei;
+	  if (! marpaWrapperAsf_traverse_rh_valueb(traverserp, rhIxi, &localValuei)) {
 	    goto err;
 	  }
+	  if (localValuei < 0) {
+	    /* This child rule was rejected, so do we */
+	    okb = 0;
+	    --nbAlternativeOki;
+	    break;
+	  }
 	}
-	if (valueRuleCallbackp(marpaWrapperAsfValueContextp->userDatavp, marpaRuleIdi, arg0i, argni, *valueip)) {
-	  MARPAWRAPPER_ERRORF(genericLoggerp, "Rule No %d value callback failure", marpaSymbolIdi);
-	  goto err;
+	if (okb != 0) {
+	  if (valueRuleCallbackp(marpaWrapperAsfValueContextp->userDatavp, marpaRuleIdi, arg0i, argni, *valueip)) {
+	    MARPAWRAPPER_ERRORF(genericLoggerp, "Rule No %d value callback failure", marpaSymbolIdi);
+	    goto err;
+	  }
 	}
       }
 
