@@ -90,9 +90,10 @@ struct marpaWrapperAsfTraverser {
 typedef struct marpaWrapperAsfValueContext {
   /* Copy of the marpaWrapperAsf_valueb() parameters */
   void                                 *userDatavp;
-  marpaWrapperAsfValueRuleCallback_t    ruleCallbackp;
-  marpaWrapperAsfValueSymbolCallback_t  symbolCallbackp;
-  marpaWrapperAsfValueNullingCallback_t nullingCallbackp;
+  marpaWrapperAsfRuleCallback_t         okRuleCallbackp;
+  marpaWrapperValueRuleCallback_t       valueRuleCallbackp;
+  marpaWrapperValueSymbolCallback_t     valueSymbolCallbackp;
+  marpaWrapperValueNullingCallback_t    valueNullingCallbackp;
   /* Current context: the most general form of a rule is terms of stack is: */
   int                                   valuei;
   int                                   arg0i;
