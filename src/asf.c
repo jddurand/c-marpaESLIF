@@ -3685,7 +3685,7 @@ static inline short _marpaWrapperAsf_valueTraverserb(marpaWrapperAsfTraverser_t 
 	MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "Rule No %d ok callback failure", marpaRuleIdi);
 	goto nextRule;
       }
-      if (++nbAlternativeOki > 0) {
+      if (++nbAlternativeOki > 1) {
 	MARPAWRAPPER_ERROR(genericLoggerp, "More than one alternative");
 	goto err;
       }
