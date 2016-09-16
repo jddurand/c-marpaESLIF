@@ -329,9 +329,7 @@ static short okRuleCallback(void *userDatavp, genericStack_t *parentRuleiStackp,
     *okbp = okb;
   }
 
-  if (! rcb) {
-    GENERICLOGGER_TRACEF(genericLoggerp, "okRuleCallback called for rule %s says not ok", descs);
-  }
+  GENERICLOGGER_TRACEF(genericLoggerp, "okRuleCallback called for rule %s: okb is %d", descs, (int) okb);
   return rcb;
 
  err:
