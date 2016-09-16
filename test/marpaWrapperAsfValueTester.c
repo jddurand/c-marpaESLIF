@@ -50,7 +50,7 @@ int main(int argc, char **argv) {
   marpaWrapperRecognizerOption_t marpaWrapperRecognizerOption = { GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_DEBUG),
 								  0 /* disableThresholdb */
   };
-  marpaWrapperAsfOption_t        marpaWrapperAsfOption        = { GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_TRACE),
+  marpaWrapperAsfOption_t        marpaWrapperAsfOption        = { GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_INFO),
 								  0 /* highRankOnlyb */,
 								  0 /* orderByRankb */,
 								  1 /* ambiguousb */
@@ -329,7 +329,9 @@ static short okRuleCallback(void *userDatavp, genericStack_t *parentRuleiStackp,
     *okbp = okb;
   }
 
-  GENERICLOGGER_TRACEF(genericLoggerp, "okRuleCallback called for rule %s: okb is %d", descs, (int) okb);
+  if (! rcb) {
+    GENERICLOGGER_TRACEF(genericLoggerp, "okRuleCallback called for rule %s says not ok", descs);
+  }
   return rcb;
 
  err:
