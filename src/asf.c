@@ -3656,7 +3656,7 @@ static inline short _marpaWrapperAsf_valueTraverserb(marpaWrapperAsfTraverser_t 
     goto err;
   }
 
-  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "Rule %d, symbol %d, wanted indice in the output stack: %d", marpaRuleIdi, marpaSymbolIdi, wantedValuei);
+  MARPAWRAPPER_INFOF(genericLoggerp, "Rule %d, symbol %d, wanted indice in the output stack: %d", marpaRuleIdi, marpaSymbolIdi, wantedValuei);
 
   if (marpaRuleIdi < 0) {
     marpaWrapperValueSymbolCallback_t valueSymbolCallbackp = marpaWrapperAsfValueContextp->valueSymbolCallbackp;
@@ -3695,7 +3695,7 @@ static inline short _marpaWrapperAsf_valueTraverserb(marpaWrapperAsfTraverser_t 
 	goto err;
       }
       if (! okb) {
-	MARPAWRAPPER_TRACEF(genericLoggerp, "Rule No %d ok callback reject", marpaRuleIdi);
+	MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "Rule No %d ok callback reject", marpaRuleIdi);
 	goto nextRule;
       }
       if (++nbAlternativeOki > 1) {
@@ -3727,7 +3727,6 @@ static inline short _marpaWrapperAsf_valueTraverserb(marpaWrapperAsfTraverser_t 
 	  MARPAWRAPPER_ERRORF(genericLoggerp, "Rule No %d value callback failure", marpaSymbolIdi);
 	  goto err;
 	}
-	wantedValuei = marpaWrapperAsfValueContextp->wantedValuei;
       }
 
     nextRule:
