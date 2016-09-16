@@ -3576,7 +3576,7 @@ short marpaWrapperAsf_valueb(marpaWrapperAsf_t                    *marpaWrapperA
   genericLogger_t              *genericLoggerp;
   short                         rcb;
   marpaWrapperAsfValueContext_t marpaWrapperAsfValueContext;
-  int                           valuei = -1;
+  int                           valuei = 0;
 
   if (marpaWrapperAsfp == NULL) {
     errno = EINVAL;
@@ -3602,7 +3602,7 @@ short marpaWrapperAsf_valueb(marpaWrapperAsf_t                    *marpaWrapperA
   if (GENERICSTACK_ERROR(marpaWrapperAsfValueContext.parentRuleiStackp)) {
     MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "parentRuleiStackp initialization failure, %s", strerror(errno));
   }
-  
+  /* In this model, valuei is not an output but is used in input */
   rcb = marpaWrapperAsf_traverseb(marpaWrapperAsfp, _marpaWrapperAsf_valueTraverserb, &marpaWrapperAsfValueContext, &valuei);
   goto done;
 
