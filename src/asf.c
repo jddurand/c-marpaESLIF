@@ -3600,6 +3600,7 @@ short marpaWrapperAsf_valueb(marpaWrapperAsf_t                    *marpaWrapperA
   marpaWrapperAsfValueContext.valueNullingCallbackp = valueNullingCallbackp;
   marpaWrapperAsfValueContext.parentRuleiStackp     = NULL;
   marpaWrapperAsfValueContext.wantedValuei          = 0;
+  marpaWrapperAsfValueContext.leveli                = 0;
 
   GENERICSTACK_NEW(marpaWrapperAsfValueContext.parentRuleiStackp);
   if (GENERICSTACK_ERROR(marpaWrapperAsfValueContext.parentRuleiStackp)) {
@@ -3649,6 +3650,8 @@ static inline short _marpaWrapperAsf_valueTraverserb(marpaWrapperAsfTraverser_t 
   int                                arg0i;
   int                                argni;
 
+  marpaWrapperAsfValueContextp->leveli++;
+  
   if (! marpaWrapperAsf_traverse_ruleIdb(traverserp, &marpaRuleIdi)) {
     goto err;
   }
@@ -3656,7 +3659,7 @@ static inline short _marpaWrapperAsf_valueTraverserb(marpaWrapperAsfTraverser_t 
     goto err;
   }
 
-  MARPAWRAPPER_INFOF(genericLoggerp, "Rule %d, symbol %d, wanted indice in the output stack: %d", marpaRuleIdi, marpaSymbolIdi, wantedValuei);
+  MARPAWRAPPER_INFOF(genericLoggerp, "[%3d] Rule %d, symbol %d, wanted indice in the output stack: %d", marpaWrapperAsfValueContextp->leveli, marpaRuleIdi, marpaSymbolIdi, wantedValuei);
 
   if (marpaRuleIdi < 0) {
     marpaWrapperValueSymbolCallback_t valueSymbolCallbackp = marpaWrapperAsfValueContextp->valueSymbolCallbackp;
@@ -3766,11 +3769,13 @@ static inline short _marpaWrapperAsf_valueTraverserb(marpaWrapperAsfTraverser_t 
 
 #ifndef MARPAWRAPPER_NTRACE
   if (rcb) {
-    MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "return %d, *valueip=%d", (int) rcb, wantedValuei);
+    MARPAWRAPPER_INFOF(genericLoggerp, "[%3d] return %d, *valueip=%d", marpaWrapperAsfValueContextp->leveli, (int) rcb, wantedValuei);
   } else {
-    MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "return %d", (int) rcb);
+    MARPAWRAPPER_INFOF(genericLoggerp, "[%3d] return %d", marpaWrapperAsfValueContextp->leveli, (int) rcb);
   }
 #endif
   
+  marpaWrapperAsfValueContextp->leveli--;
+
   return rcb;
 }
