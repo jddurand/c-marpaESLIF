@@ -15,7 +15,7 @@ typedef struct marpaWrapperAsfTraverser marpaWrapperAsfTraverser_t;
 /* --------- */
 /* Callbacks */
 /* --------- */
-typedef short (*marpaWrapperAsfOkRuleCallback_t)(void *userDatavp, genericStack_t *parentRuleiStackp, int rulei);
+typedef short (*marpaWrapperAsfOkRuleCallback_t)(void *userDatavp, genericStack_t *parentRuleiStackp, int rulei, short *okbp);
 
 /* --------------- */
 /* General options */

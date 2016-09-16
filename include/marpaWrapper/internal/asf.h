@@ -94,8 +94,10 @@ typedef struct marpaWrapperAsfValueContext {
   marpaWrapperValueRuleCallback_t       valueRuleCallbackp;
   marpaWrapperValueSymbolCallback_t     valueSymbolCallbackp;
   marpaWrapperValueNullingCallback_t    valueNullingCallbackp;
-  /* Parent stack */
+  /* Parent rule ID stack */
   genericStack_t                       *parentRuleiStackp;
+  /* Current wanted indice in the output stack */
+  int                                   wantedValuei;
 } marpaWrapperAsfValueContext_t;
 
 #endif /* MARPAWRAPPER_INTERNAL_ASF_H */
