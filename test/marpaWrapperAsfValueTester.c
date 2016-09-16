@@ -16,7 +16,7 @@ typedef struct traverseContext {
 
 static char *penn_tag_symbols(traverseContext_t *traverseContextp, int symbolIdi);
 static char *penn_tag_rules(traverseContext_t *traverseContextp, int ruleIdi);
-static short okRuleCallback(void *userDatavp, genericStack_t *parentRuleiStackp, int rulei);
+static short okRuleCallback(void *userDatavp, genericStack_t *parentRuleiStackp, int rulei, short *okbp);
 static short valueRuleCallback(void *userDatavp, int rulei, int arg0i, int argni, int resulti);
 static short valueSymbolCallback(void *userDatavp, int symboli, int argi, int resulti);
 static short valueNullingCallback(void *userDatavp, int symboli, int resulti);
@@ -309,16 +309,32 @@ static char *penn_tag_rules(traverseContext_t *traverseContextp, int ruleIdi)
 }
 
 /********************************************************************************/
-static short okRuleCallback(void *userDatavp, genericStack_t *parentRuleiStackp, int rulei)
+static short okRuleCallback(void *userDatavp, genericStack_t *parentRuleiStackp, int rulei, short *okbp)
 /********************************************************************************/
 {
   traverseContext_t *traverseContextp = (traverseContext_t *) userDatavp;
   genericLogger_t   *genericLoggerp = traverseContextp->genericLoggerp;
-  short              rcb = (rulei == FIRST_RULE02) ? 0 : 1;
+  short              okb = (rulei == FIRST_RULE02) ? 0 : 1;
+  short              rcb = 1;
+  char              *descs;
+
+  descs = penn_tag_rules(traverseContextp, rulei);
+  if (descs == NULL) {
+    GENERICLOGGER_ERRORF(genericLoggerp, "valueRuleCallback description failure for rule %d", rulei);
+    goto err;
+  }
   
-  GENERICLOGGER_TRACEF(genericLoggerp, "okRuleCallback called for rule %s, return %d", penn_tag_rules(traverseContextp, rulei), (int) rcb);
   /* We want to rejected first ::= 'B' */
-  return (rulei == FIRST_RULE02) ? 0 : 1;
+  if (okbp != NULL) {
+    *okbp = okb;
+  }
+
+  GENERICLOGGER_TRACEF(genericLoggerp, "okRuleCallback called for rule %s: okb is %d", descs, (int) okb);
+  return rcb;
+
+ err:
+  GENERICLOGGER_WARNF(genericLoggerp, "okRuleCallback failure for rule %d", rulei);
+  return 0;
 }
 
 /********************************************************************************/
@@ -327,9 +343,59 @@ static short valueRuleCallback(void *userDatavp, int rulei, int arg0i, int argni
 {
   traverseContext_t *traverseContextp = (traverseContext_t *) userDatavp;
   genericLogger_t   *genericLoggerp = traverseContextp->genericLoggerp;
+  int                i;
+  char              *p;
+  char              *q;
+  char              *descs;
+  char              *tmp;
 
-  GENERICLOGGER_TRACEF(genericLoggerp, "valueRuleCallback called for rule %s, stack [%d..%d] => stack %d", penn_tag_rules(traverseContextp, rulei), arg0i, argni, resulti);
+  descs = penn_tag_rules(traverseContextp, rulei);
+  if (descs == NULL) {
+    GENERICLOGGER_ERRORF(genericLoggerp, "valueRuleCallback description failure for rule %d", rulei);
+    goto err;
+  }
 
+  /* "(descs" */
+  p = (char *) malloc(1 + strlen(descs) + 1);
+  if (p == NULL) {
+    GENERICLOGGER_TRACEF(genericLoggerp, "valueSymbolCallback strdup, %s", strerror(errno));
+    goto err;
+  }
+  strcpy(p, "(");
+  strcat(p, descs);
+  for (i = arg0i; i <= argni; i++) {
+    q = GENERICSTACK_GET_PTR(traverseContextp->outputStackp, i);
+    if (GENERICSTACK_ERROR(traverseContextp->outputStackp)) {
+      GENERICLOGGER_TRACEF(genericLoggerp, "valueSymbolCallback outputStackp get failure, %s", strerror(errno));
+      goto err;
+    }
+    tmp = (char *) realloc(p, strlen(p) + 1 /* space */ + strlen(q) /* value*/ + 1 /* 0 */);
+    if (tmp == NULL) {
+      GENERICLOGGER_ERRORF(genericLoggerp, "valueRuleCallback realloc failure, %s", strerror(errno));
+      goto err;
+    }
+    p = tmp;
+    strcat(p, " ");
+    strcat(p, q);
+  }
+  /* Append ")" */
+  tmp = (char *) realloc(p, strlen(p) + 2);
+  if (tmp == NULL) {
+    GENERICLOGGER_ERRORF(genericLoggerp, "valueRuleCallback realloc failure, %s", strerror(errno));
+    goto err;
+  }
+  p = tmp;
+  strcat(p, ")");
+  GENERICSTACK_SET_PTR(traverseContextp->outputStackp, p, resulti);
+  if (GENERICSTACK_ERROR(traverseContextp->outputStackp)) {
+    GENERICLOGGER_TRACEF(genericLoggerp, "valueSymbolCallback outputStackp set failure, %s", strerror(errno));
+    goto err;
+  }
+
+  GENERICLOGGER_TRACEF(genericLoggerp, "valueRuleCallback called for rule %s, stack [%d..%d] => stack %d \"%s\" ", descs, arg0i, argni, resulti, p);
+  return 1;
+
+ err:
   return 0;
 }
 
@@ -339,9 +405,42 @@ static short valueSymbolCallback(void *userDatavp, int symboli, int argi, int re
 {
   traverseContext_t *traverseContextp = (traverseContext_t *) userDatavp;
   genericLogger_t   *genericLoggerp = traverseContextp->genericLoggerp;
+  char              *s;
+  char              *p;
+  char              *descs;
 
-  GENERICLOGGER_TRACEF(genericLoggerp, "valueSymbolCallback called for symbol %s, stack %d => stack %d", penn_tag_symbols(traverseContextp, symboli), argi, resulti);
+  descs = penn_tag_symbols(traverseContextp, symboli);
+  if (descs == NULL) {
+    GENERICLOGGER_ERRORF(genericLoggerp, "valueSymbolCallback description failure for symbol %d", symboli);
+    goto err;
+  }
 
+  s = GENERICSTACK_GET_PTR(traverseContextp->inputStackp, argi);
+  if (GENERICSTACK_ERROR(traverseContextp->inputStackp)) {
+    GENERICLOGGER_TRACEF(genericLoggerp, "valueSymbolCallback inputStackp get failure, %s", strerror(errno));
+    goto err;
+  }
+  /* We generate "(descs s)" */
+  p = (char *) malloc(1 + strlen(descs) + 1 + strlen(s) + 1 + 1);
+  if (p == NULL) {
+    GENERICLOGGER_TRACEF(genericLoggerp, "valueSymbolCallback strdup, %s", strerror(errno));
+    goto err;
+  }
+  strcpy(p, "(");
+  strcat(p, descs);
+  strcat(p, " ");
+  strcat(p, s);
+  strcat(p, ")");
+  GENERICSTACK_SET_PTR(traverseContextp->outputStackp, p, resulti);
+  if (GENERICSTACK_ERROR(traverseContextp->outputStackp)) {
+    GENERICLOGGER_TRACEF(genericLoggerp, "valueSymbolCallback outputStackp set failure, %s", strerror(errno));
+    goto err;
+  }
+
+  GENERICLOGGER_TRACEF(genericLoggerp, "valueSymbolCallback called for symbol %s, stack %d \"%s\" => stack %d \"%s\" ", descs, argi, s, resulti, p);
+  return 1;
+
+ err:
   return 0;
 }
 
@@ -354,5 +453,6 @@ static short valueNullingCallback(void *userDatavp, int symboli, int resulti)
 
   GENERICLOGGER_TRACEF(genericLoggerp, "valueNullingCallback called for symbol %s => stack %d", penn_tag_symbols(traverseContextp, symboli), resulti);
 
+  GENERICLOGGER_ERROR(genericLoggerp, "valueNullingCallback is not supported in this test");
   return 0;
 }

@@ -3576,7 +3576,7 @@ short marpaWrapperAsf_valueb(marpaWrapperAsf_t                    *marpaWrapperA
   genericLogger_t              *genericLoggerp;
   short                         rcb;
   marpaWrapperAsfValueContext_t marpaWrapperAsfValueContext;
-  int                           valuei = 0;
+  int                           valuei;
 
   if (marpaWrapperAsfp == NULL) {
     errno = EINVAL;
@@ -3598,11 +3598,15 @@ short marpaWrapperAsf_valueb(marpaWrapperAsf_t                    *marpaWrapperA
   marpaWrapperAsfValueContext.valueRuleCallbackp    = valueRuleCallbackp;
   marpaWrapperAsfValueContext.valueSymbolCallbackp  = valueSymbolCallbackp;
   marpaWrapperAsfValueContext.valueNullingCallbackp = valueNullingCallbackp;
+  marpaWrapperAsfValueContext.parentRuleiStackp     = NULL;
+  marpaWrapperAsfValueContext.wantedValuei          = 0;
+
   GENERICSTACK_NEW(marpaWrapperAsfValueContext.parentRuleiStackp);
   if (GENERICSTACK_ERROR(marpaWrapperAsfValueContext.parentRuleiStackp)) {
-    MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "parentRuleiStackp initialization failure, %s", strerror(errno));
+    MARPAWRAPPER_ERRORF(genericLoggerp, "parentRuleiStackp initialization failure, %s", strerror(errno));
+    goto err;
   }
-  /* In this model, valuei is not an output but is used in input */
+
   rcb = marpaWrapperAsf_traverseb(marpaWrapperAsfp, _marpaWrapperAsf_valueTraverserb, &marpaWrapperAsfValueContext, &valuei);
   goto done;
 
@@ -3624,19 +3628,26 @@ short marpaWrapperAsf_valueb(marpaWrapperAsf_t                    *marpaWrapperA
 static inline short _marpaWrapperAsf_valueTraverserb(marpaWrapperAsfTraverser_t *traverserp, void *userDatavp, int *valueip)
 /****************************************************************************/
 {
-  const static char                     funcs[]                      = "_marpaWrapperAsf_valueTraverser";
-  marpaWrapperAsf_t                    *marpaWrapperAsfp             = marpaWrapperAsf_traverse_asfp(traverserp);
-  genericLogger_t                      *genericLoggerp               = marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp;
-  marpaWrapperAsfValueContext_t        *marpaWrapperAsfValueContextp = (marpaWrapperAsfValueContext_t *) userDatavp;
-  short                                 rcb;
-  int                                   marpaRuleIdi;
-  int                                   marpaSymbolIdi;
-  int                                   spani;
-  int                                   tokenValuei;
-  size_t                                lengthl;
-  size_t                                rhIxi;
-  short                                 nextb;
-  int                                   nbAlternativeOki;
+  const static char                  funcs[]                      = "_marpaWrapperAsf_valueTraverser";
+  marpaWrapperAsf_t                 *marpaWrapperAsfp             = marpaWrapperAsf_traverse_asfp(traverserp);
+  genericLogger_t                   *genericLoggerp               = marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp;
+  marpaWrapperAsfValueContext_t     *marpaWrapperAsfValueContextp = (marpaWrapperAsfValueContext_t *) userDatavp;
+  marpaWrapperValueRuleCallback_t    valueRuleCallbackp           = marpaWrapperAsfValueContextp->valueRuleCallbackp;
+  marpaWrapperAsfOkRuleCallback_t    okRuleCallbackp              = marpaWrapperAsfValueContextp->okRuleCallbackp;
+  marpaWrapperValueNullingCallback_t valueNullingCallbackp        = marpaWrapperAsfValueContextp->valueNullingCallbackp;
+  int                                wantedValuei                 = marpaWrapperAsfValueContextp->wantedValuei;
+  short                              rcb;
+  int                                marpaRuleIdi;
+  int                                marpaSymbolIdi;
+  int                                spani;
+  int                                tokenValuei;
+  size_t                             lengthl;
+  size_t                             rhIxi;
+  short                              okb;
+  short                              nextb;
+  int                                nbAlternativeOki;
+  int                                arg0i;
+  int                                argni;
 
   if (! marpaWrapperAsf_traverse_ruleIdb(traverserp, &marpaRuleIdi)) {
     goto err;
@@ -3645,7 +3656,7 @@ static inline short _marpaWrapperAsf_valueTraverserb(marpaWrapperAsfTraverser_t 
     goto err;
   }
 
-  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "Rule %d, symbol %d", marpaRuleIdi, marpaSymbolIdi);
+  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "Rule %d, symbol %d, wanted indice in the output stack: %d", marpaRuleIdi, marpaSymbolIdi, wantedValuei);
 
   if (marpaRuleIdi < 0) {
     marpaWrapperValueSymbolCallback_t valueSymbolCallbackp = marpaWrapperAsfValueContextp->valueSymbolCallbackp;
@@ -3660,7 +3671,7 @@ static inline short _marpaWrapperAsf_valueTraverserb(marpaWrapperAsfTraverser_t 
       MARPAWRAPPER_ERROR(genericLoggerp, "Value symbol callback is a null function pointer");
       goto err;
     }
-    if (! valueSymbolCallbackp(marpaWrapperAsfValueContextp->userDatavp, marpaSymbolIdi, tokenValuei, *valueip)) {
+    if (! valueSymbolCallbackp(marpaWrapperAsfValueContextp->userDatavp, marpaSymbolIdi, tokenValuei, wantedValuei)) {
       MARPAWRAPPER_ERRORF(genericLoggerp, "Symbol No %d value callback failure", marpaSymbolIdi);
       goto err;
     }
@@ -3669,8 +3680,6 @@ static inline short _marpaWrapperAsf_valueTraverserb(marpaWrapperAsfTraverser_t 
     nbAlternativeOki = 1;
   } else {
     /* This is a rule */
-    marpaWrapperAsfOkRuleCallback_t    okRuleCallbackp = marpaWrapperAsfValueContextp->okRuleCallbackp;
-    marpaWrapperValueNullingCallback_t ValueNullingCallbackp = marpaWrapperAsfValueContextp->valueNullingCallbackp;
     
     GENERICSTACK_PUSH_INT(marpaWrapperAsfValueContextp->parentRuleiStackp, marpaRuleIdi);
     if (GENERICSTACK_ERROR(marpaWrapperAsfValueContextp->parentRuleiStackp)) {
@@ -3681,8 +3690,12 @@ static inline short _marpaWrapperAsf_valueTraverserb(marpaWrapperAsfTraverser_t 
     nbAlternativeOki = 0;
     while (1) {
       /* Check if this rule is accepted */
-      if (! okRuleCallbackp(marpaWrapperAsfValueContextp->userDatavp, marpaWrapperAsfValueContextp->parentRuleiStackp, marpaRuleIdi)) {
-	MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "Rule No %d ok callback failure", marpaRuleIdi);
+      if (! okRuleCallbackp(marpaWrapperAsfValueContextp->userDatavp, marpaWrapperAsfValueContextp->parentRuleiStackp, marpaRuleIdi, &okb)) {
+	MARPAWRAPPER_ERRORF(genericLoggerp, "Rule No %d ok callback failure", marpaRuleIdi);
+	goto err;
+      }
+      if (! okb) {
+	MARPAWRAPPER_TRACEF(genericLoggerp, "Rule No %d ok callback reject", marpaRuleIdi);
 	goto nextRule;
       }
       if (++nbAlternativeOki > 1) {
@@ -3697,37 +3710,24 @@ static inline short _marpaWrapperAsf_valueTraverserb(marpaWrapperAsfTraverser_t 
       if (lengthl <= 0) {
 	
 	/* This is a nulling rule */
-	if (! ValueNullingCallbackp(marpaWrapperAsfValueContextp->userDatavp, marpaRuleIdi, *valueip)) {
+	if (! valueNullingCallbackp(marpaWrapperAsfValueContextp->userDatavp, marpaRuleIdi, wantedValuei)) {
 	  MARPAWRAPPER_ERRORF(genericLoggerp, "Rule No %d nulling callback failure", marpaSymbolIdi);
 	  goto err;
 	}
       } else {
-	marpaWrapperValueRuleCallback_t valueRuleCallbackp = marpaWrapperAsfValueContextp->valueRuleCallbackp;
-	int                             valuei             = *valueip;
-	int                             arg0i              = valuei + 1;
-	int                             argni              = arg0i + (int) (lengthl - 1);
-	short                           okb                = 1;
-	int                             localValuei        = valuei;
-
 	for (rhIxi = 0; rhIxi <= lengthl - 1; rhIxi++) {
-
-	  ++localValuei;
-	  if (! marpaWrapperAsf_traverse_rh_valueb(traverserp, rhIxi, &localValuei)) {
-	    goto err;
-	  }
-	  if (localValuei < 0) {
-	    /* This child rule was rejected, so do we */
-	    okb = 0;
-	    --nbAlternativeOki;
-	    break;
-	  }
-	}
-	if (okb != 0) {
-	  if (valueRuleCallbackp(marpaWrapperAsfValueContextp->userDatavp, marpaRuleIdi, arg0i, argni, *valueip)) {
-	    MARPAWRAPPER_ERRORF(genericLoggerp, "Rule No %d value callback failure", marpaSymbolIdi);
+	  marpaWrapperAsfValueContextp->wantedValuei++;
+	  if (! marpaWrapperAsf_traverse_rh_valueb(traverserp, rhIxi, NULL)) {
 	    goto err;
 	  }
 	}
+	arg0i = wantedValuei + 1;
+	argni = wantedValuei + (int) (lengthl);
+	if (! valueRuleCallbackp(marpaWrapperAsfValueContextp->userDatavp, marpaRuleIdi, arg0i, argni, wantedValuei)) {
+	  MARPAWRAPPER_ERRORF(genericLoggerp, "Rule No %d value callback failure", marpaSymbolIdi);
+	  goto err;
+	}
+	wantedValuei = marpaWrapperAsfValueContextp->wantedValuei;
       }
 
     nextRule:
@@ -3752,12 +3752,6 @@ static inline short _marpaWrapperAsf_valueTraverserb(marpaWrapperAsfTraverser_t 
 
   }
 
-  /* If no alternative was accepted, we say so to our caller. */
-  /* This can happen only when dealing with rules.            */
-  if (nbAlternativeOki <= 0) {
-    *valueip = -1;
-  }
-  
   rcb = 1;
   goto done;
 
@@ -3765,6 +3759,19 @@ static inline short _marpaWrapperAsf_valueTraverserb(marpaWrapperAsfTraverser_t 
   rcb = 0;
 
  done:
-  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "return %d, *valueip=%d", (int) rcb, *valueip);
+  if (rcb) {
+    if (valueip != NULL) {
+      *valueip = wantedValuei;
+    }
+  }
+
+#ifndef MARPAWRAPPER_NTRACE
+  if (rcb) {
+    MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "return %d, *valueip=%d", (int) rcb, wantedValuei);
+  } else {
+    MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "return %d", (int) rcb);
+  }
+#endif
+  
   return rcb;
 }
