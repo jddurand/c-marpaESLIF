@@ -98,6 +98,8 @@ typedef struct marpaWrapperAsfValueContext {
   genericStack_t                       *parentRuleiStackp;
   /* Current wanted indice in the output stack */
   int                                   wantedValuei;
+  /* For logging, keep track of recursivity level */
+  int                                   leveli;
 } marpaWrapperAsfValueContext_t;
 
 #endif /* MARPAWRAPPER_INTERNAL_ASF_H */
