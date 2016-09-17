@@ -19,6 +19,29 @@ static char *penn_tag_rules(traverseContext_t *traverseContextp, int ruleIdi);
 static short pruning_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, void *userDatavp, int *valueip);
 static short full_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, void *userDatavp, int *valueip);
 
+/*
+      S   ::= NP  VP  period
+
+      NP  ::= NN
+            | NNS
+            | DT  NN
+            | NN  NNS
+            | NNS CC NNS
+
+      VP  ::= VBZ NP
+            | VP VBZ NNS
+            | VP CC VP
+            | VP VP CC VP
+            | VBZ
+
+      period ~ '.'
+      CC     ~ 'and'
+      DT     ~ 'a' | 'an'
+      NN     ~ 'panda'
+      NNS    ~ 'shoots' | 'leaves'
+      VBZ    ~ 'eats' | 'shoots' | 'leaves'
+*/
+
 enum { START = 0, S, NP, VP, period, NN, NNS, DT, CC, VBZ, MAX_SYMBOL };
 enum { START_RULE = 0,
        S_RULE,
