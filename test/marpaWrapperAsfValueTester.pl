@@ -29,6 +29,7 @@ sub full_traverser {
     my $symbol_name = $panda_grammar->symbol_name($symbol_id);
 
     print STDERR "[full_traverserCallbacki] => ruleIdi=" . ($rule_id // -1) . ", symbolIdi=$symbol_id\n";
+    print STDERR "[full_traverserCallbacki] ... symbol $symbol_name\n";
 
     # A token is a single choice, and we know enough to fully Penn-tag it
     if ( not defined $rule_id ) {
@@ -37,7 +38,8 @@ sub full_traverser {
 	return ["($penn_tag $literal)"];
     } ## end if ( not defined $rule_id )
 
-    print STDERR "[full_traverserCallbacki] ... symbol $symbol_name\n";
+    my $rule_name = $panda_grammar->rule_name($rule_id);
+    print STDERR "[full_traverserCallbacki] ... rule $symbol_name\n";
 
     # Our result will be a list of choices
     my @return_value = ();
