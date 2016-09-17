@@ -16,13 +16,27 @@ typedef struct traverseContext {
 
 static char *penn_tag_symbols(traverseContext_t *traverseContextp, int symbolIdi);
 static char *penn_tag_rules(traverseContext_t *traverseContextp, int ruleIdi);
+static short full_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, void *userDatavp, int *valueip);
 static short okRuleCallback(void *userDatavp, genericStack_t *parentRuleiStackp, int rulei, short *okbp);
 static short valueRuleCallback(void *userDatavp, int rulei, int arg0i, int argni, int resulti);
 static short valueSymbolCallback(void *userDatavp, int symboli, int argi, int resulti);
 static short valueNullingCallback(void *userDatavp, int symboli, int resulti);
 
-enum { START = 0, FIRSTS, FIRST, SECONDS, SECOND, A, B, C, MAX_SYMBOL };
+/*
+  S ::= firsts seconds
+
+  firsts ::= first+
+  seconds ::= second+
+  first  ::= A | B
+  second ::= B | C
+
+  A ~ 'a'
+  B ~ 'b'
+  C ~ 'c'
+*/
+enum { START = 0, S, FIRSTS, FIRST, SECONDS, SECOND, A, B, C, MAX_SYMBOL };
 enum { START_RULE = 0,
+       S_RULE,
        FIRSTS_RULE,
        FIRST_RULE01,
        FIRST_RULE02,
@@ -63,8 +77,10 @@ int main(int argc, char **argv) {
   }
 
   marpaWrapperGrammarp = marpaWrapperGrammar_newp(&marpaWrapperGrammarOption);
-  if ( /* start, S, NP, VP, period, NN, NNS, DT, CC, VBZ */
+  if ( /* start, S, FIRSTS, FIRST, SECONDS, SECOND, A, B, C */
       ((symbolip[ START]  = MARPAWRAPPERGRAMMAR_NEWSYMBOL(marpaWrapperGrammarp)) < 0)
+      ||
+      ((symbolip[     S]  = MARPAWRAPPERGRAMMAR_NEWSYMBOL(marpaWrapperGrammarp)) < 0)
       ||
       ((symbolip[FIRSTS]  = MARPAWRAPPERGRAMMAR_NEWSYMBOL(marpaWrapperGrammarp)) < 0)
       ||
@@ -81,7 +97,7 @@ int main(int argc, char **argv) {
       ((symbolip[      C] = MARPAWRAPPERGRAMMAR_NEWSYMBOL(marpaWrapperGrammarp)) < 0)
       ||
       /* S   ::= FIRSTS SECONDS */
-      ((ruleip[START_RULE]   = MARPAWRAPPERGRAMMAR_NEWRULE(marpaWrapperGrammarp, symbolip[START], symbolip[FIRSTS], symbolip[SECONDS], -1)) < 0)
+      ((ruleip[S_RULE]   = MARPAWRAPPERGRAMMAR_NEWRULE(marpaWrapperGrammarp, symbolip[S], symbolip[FIRSTS], symbolip[SECONDS], -1)) < 0)
       ||
       /* FIRSTS  ::= FIRST+  */
       ((ruleip[FIRSTS_RULE] = MARPAWRAPPERGRAMMAR_NEWSEQUENCE(marpaWrapperGrammarp, symbolip[FIRSTS], symbolip[FIRST], 1)) < 0)
@@ -98,7 +114,13 @@ int main(int argc, char **argv) {
       ((ruleip[SECOND_RULE01] = MARPAWRAPPERGRAMMAR_NEWRULE(marpaWrapperGrammarp, symbolip[SECOND], symbolip[B], -1)) < 0)
       ||
       ((ruleip[SECOND_RULE02] = MARPAWRAPPERGRAMMAR_NEWRULE(marpaWrapperGrammarp, symbolip[SECOND], symbolip[C], -1)) < 0)
-       ) {
+      ||
+      /* start  ::= S */
+      ((ruleip[START_RULE]  = MARPAWRAPPERGRAMMAR_NEWRULE(marpaWrapperGrammarp,
+							  symbolip[START],
+							  symbolip[S],
+							  -1)) < 0)
+        ) {
     rci = 1;
   }
   if (rci == 0) {
@@ -136,7 +158,9 @@ int main(int argc, char **argv) {
     }
   }
   if (rci == 0) {
-    if (marpaWrapperRecognizer_readb(marpaWrapperRecognizerp, symbolip[A], GENERICSTACK_USED(traverseContext.inputStackp) - 1 /* value */, 1 /* length */) == 0) {
+    if (marpaWrapperRecognizer_readb(marpaWrapperRecognizerp, symbolip[A],
+				     GENERICSTACK_USED(traverseContext.inputStackp) - 1 /* value */,
+				     1 /* length */) == 0) {
       rci = 1;
     }
   }
@@ -151,7 +175,9 @@ int main(int argc, char **argv) {
     }
   }
   if (rci == 0) {
-    if (marpaWrapperRecognizer_readb(marpaWrapperRecognizerp, symbolip[B], GENERICSTACK_USED(traverseContext.inputStackp) - 1 /* value */, 1 /* length */) == 0) {
+    if (marpaWrapperRecognizer_readb(marpaWrapperRecognizerp, symbolip[B],
+				     GENERICSTACK_USED(traverseContext.inputStackp) - 1 /* value */,
+				     1 /* length */) == 0) {
       rci = 1;
     }
   }
@@ -166,7 +192,9 @@ int main(int argc, char **argv) {
     }
   }
   if (rci == 0) {
-    if (marpaWrapperRecognizer_readb(marpaWrapperRecognizerp, symbolip[C], GENERICSTACK_USED(traverseContext.inputStackp) - 1 /* value */, 1 /* length */) == 0) {
+    if (marpaWrapperRecognizer_readb(marpaWrapperRecognizerp, symbolip[C],
+				     GENERICSTACK_USED(traverseContext.inputStackp) - 1 /* value */,
+				     1 /* length */) == 0) {
       rci = 1;
     }
   }
@@ -181,6 +209,32 @@ int main(int argc, char **argv) {
   /* -------------------------- */
   /* Do the parse tree traverse */
   /* -------------------------- */
+
+  /* Full traverser */
+  GENERICSTACK_NEW(traverseContext.outputStackp);
+  if (traverseContext.outputStackp == NULL) {
+    perror("GENERICSTACK_NEW");
+    exit(1);
+  }
+  if (marpaWrapperAsf_traverseb(marpaWrapperAsfp, full_traverserCallbacki, &traverseContext, &valuei)) {
+    genericStack_t *stringStackp;
+    size_t          i;
+    GENERICLOGGER_INFO(traverseContext.genericLoggerp, "full traverser returns:");
+
+    stringStackp = GENERICSTACK_GET_PTR(traverseContext.outputStackp, (size_t) valuei);
+    for (i = 0; i < GENERICSTACK_USED(stringStackp); i++) {
+      GENERICLOGGER_INFOF(traverseContext.genericLoggerp, "Indice %d:\n%s", i, GENERICSTACK_GET_PTR(stringStackp, i));
+    }    
+  }
+  /* Output stack is an array of array of strings */
+  while (GENERICSTACK_USED(traverseContext.outputStackp) > 0) {
+    genericStack_t *stringStackp = GENERICSTACK_POP_PTR(traverseContext.outputStackp);
+    while (GENERICSTACK_USED(stringStackp) > 0) {
+      free(GENERICSTACK_POP_PTR(stringStackp));
+    }
+    GENERICSTACK_FREE(stringStackp);
+  }
+  GENERICSTACK_FREE(traverseContext.outputStackp);
 
   /* Pruning traverser */
   traverseContext.marpaWrapperAsfp = marpaWrapperAsfp;
@@ -235,17 +289,20 @@ static char *penn_tag_symbols(traverseContext_t *traverseContextp, int symbolIdi
   case START:
     s = strdup("[:start:]");
     break;
+  case S:
+    s = strdup("S");
+    break;
   case FIRSTS:
-    s = strdup("FIRSTS");
+    s = strdup("firsts");
     break;
   case FIRST:
-    s = strdup("FIRST");
+    s = strdup("first");
     break;
   case SECONDS:
-    s = strdup("SECONDS");
+    s = strdup("seconds");
     break;
   case SECOND:
-    s = strdup("SECOND");
+    s = strdup("second");
     break;
   case A:
     s = strdup("A");
@@ -277,6 +334,9 @@ static char *penn_tag_rules(traverseContext_t *traverseContextp, int ruleIdi)
   switch (ruleIdi) {
   case START_RULE:
     s = strdup("[Internal Start Rule]");
+    break;
+  case S_RULE:
+    s = strdup("S_RULE");
     break;
   case FIRSTS_RULE:
     s = strdup("FIRSTS_RULE");
@@ -455,4 +515,236 @@ static short valueNullingCallback(void *userDatavp, int symboli, int resulti)
 
   GENERICLOGGER_ERROR(genericLoggerp, "valueNullingCallback is not supported in this test");
   return 0;
+}
+
+/* Copy of full traverser of marpaWrapperAsfTester.c, to show what are all the parse trees */
+/********************************************************************************/
+static short full_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, void *userDatavp, int *valueip)
+/********************************************************************************/
+{
+  char               funcs[] = "full_traverserCallbacki";
+  traverseContext_t *traverseContextp = (traverseContext_t *) userDatavp;
+  genericLogger_t   *genericLoggerp = traverseContextp->genericLoggerp;
+  char              *symbolNames = NULL;
+  char              *ruleNames = NULL;
+  genericStack_t    *stringStackp = NULL;
+  int                ruleIdi;
+  int                symbolIdi;
+  short              rcb = 0;
+  int                valuei;
+  short              nextb;
+
+  /* This routine converts the glade into a list of Penn-tagged elements.  It is called recursively */
+
+  marpaWrapperAsf_traverse_ruleIdb(traverserp, &ruleIdi);
+  marpaWrapperAsf_traverse_symbolIdb(traverserp, &symbolIdi);
+  GENERICLOGGER_DEBUGF(genericLoggerp, "[%s] => ruleIdi=%d, symbolIdi=%d", funcs, ruleIdi, symbolIdi);
+
+  symbolNames = penn_tag_symbols(traverseContextp, symbolIdi);
+  GENERICLOGGER_DEBUGF(genericLoggerp, "[%s][%d:%d] ... symbol %s", funcs, ruleIdi, symbolIdi, symbolNames);
+
+  GENERICSTACK_NEW(stringStackp);
+
+  /* A token is a single choice, and we know enough to fully Penn-tag it */
+  if (ruleIdi < 0) {
+    int     spanIdi;
+    size_t  indicel;
+    char   *tokenValues;
+    size_t  stringl;
+    char   *strings;
+    
+    marpaWrapperAsf_traverse_rh_valueb(traverserp, 0, &spanIdi);
+    indicel     = spanIdi + 1; /* The spanId correspond to the inputstack indice spanId+1 */
+    tokenValues = GENERICSTACK_GET_PTR(traverseContextp->inputStackp, indicel);
+
+    GENERICLOGGER_DEBUGF(genericLoggerp, "[%s][%d:%d] ... spanIdi=%d", funcs, ruleIdi, symbolIdi, spanIdi);
+    GENERICLOGGER_DEBUGF(genericLoggerp, "[%s][%d:%d] ... Token is \"%s\"", funcs, ruleIdi, symbolIdi, tokenValues);
+
+    /* We want to generate the string "(penntag literal)" */
+    stringl = 1 + strlen(symbolNames) + 1 + strlen(tokenValues) + 1 + 1;
+    strings = malloc(stringl);
+    sprintf(strings, "(%s %s)", symbolNames, tokenValues);
+
+    /* We return a stack of string containing only one string */
+    GENERICSTACK_PUSH_PTR(stringStackp, strings);
+    
+  } else {
+    ruleNames = penn_tag_rules(traverseContextp, ruleIdi);
+    GENERICLOGGER_DEBUGF(genericLoggerp, "[%s][%d:%d] ... rule %s", funcs, ruleIdi, symbolIdi, ruleNames);
+
+    /* Our result will be a list of choices */
+    while (1) {
+      size_t         lengthl;
+      size_t         rhIxi;
+      genericStack_t *resultStackp;
+    
+      /* The results at each position are a list of chocies, so
+         to produce a new result list, we need to take a Cartesian
+         printf("format string" ,a0,a1);oduct of all the choices */
+
+      lengthl = marpaWrapperAsf_traverse_rh_lengthl(traverserp);
+      GENERICLOGGER_DEBUGF(genericLoggerp, "[%s][%d:%d] ... lengthl=%d", funcs, ruleIdi, symbolIdi, (int) lengthl);
+
+      GENERICSTACK_NEW(resultStackp);
+      {
+        genericStack_t *emptyStackp;
+        GENERICSTACK_NEW(emptyStackp);
+        GENERICSTACK_PUSH_PTR(resultStackp, emptyStackp);
+      }
+
+      for (rhIxi = 0; rhIxi <= lengthl - 1; rhIxi++) {
+        genericStack_t *newResultStackp;
+        size_t          i;
+
+        GENERICSTACK_NEW(newResultStackp);
+
+        for (i = 0; i < GENERICSTACK_USED(resultStackp); i++) {
+          genericStack_t *oldResultStackp = GENERICSTACK_GET_PTR(resultStackp, i);
+          int             childValuei;
+          genericStack_t *childValueStackp;
+          size_t          j;
+
+	  marpaWrapperAsf_traverse_rh_valueb(traverserp, rhIxi, &childValuei);
+          childValueStackp = GENERICSTACK_GET_PTR(traverseContextp->outputStackp, (size_t) childValuei);
+
+          for (j = 0; j < GENERICSTACK_USED(childValueStackp); j++) {
+            char           *newValues = GENERICSTACK_GET_PTR(childValueStackp, j);
+            size_t          k;
+            genericStack_t *stackp;
+
+            GENERICSTACK_NEW(stackp);
+
+            for (k = 0; k < GENERICSTACK_USED(oldResultStackp); k++) {
+              GENERICSTACK_PUSH_PTR(stackp, GENERICSTACK_GET_PTR(oldResultStackp, k));
+            }
+            GENERICSTACK_PUSH_PTR(stackp, newValues);
+            GENERICSTACK_PUSH_PTR(newResultStackp, stackp);
+          }
+        }
+
+        while (GENERICSTACK_USED(resultStackp) > 0) {
+          genericStack_t *stackp = GENERICSTACK_POP_PTR(resultStackp);
+          GENERICSTACK_FREE(stackp);
+        }
+        GENERICSTACK_FREE(resultStackp);
+        resultStackp = newResultStackp;
+      }
+
+      /* Here resultStackp is a stack of stacks of shallow pointers */
+
+      /* Special case for the start rule */
+      if (symbolIdi == START) {
+        size_t  i;
+
+        for (i = 0; i < GENERICSTACK_USED(resultStackp); i++) {
+          genericStack_t *stackp = GENERICSTACK_GET_PTR(resultStackp, i);
+          size_t          j;
+          size_t          stringl;
+          char           *strings;
+
+          /* All rh values are concatenated */
+          stringl = 0;
+          for (j = 0; j < GENERICSTACK_USED(stackp); j++) {
+            char *values = GENERICSTACK_GET_PTR(stackp, j);
+            stringl += strlen(values);
+          }
+          strings = malloc(++stringl); /* null character */
+          strings[0] = '\0';
+          for (j = 0; j < GENERICSTACK_USED(stackp); j++) {
+            char *values = GENERICSTACK_GET_PTR(stackp, j);
+            strcat(strings, values);
+          }
+          GENERICSTACK_PUSH_PTR(stringStackp, strings);
+        }
+        while (GENERICSTACK_USED(resultStackp) > 0) {
+          genericStack_t *stackp = GENERICSTACK_POP_PTR(resultStackp);
+          GENERICSTACK_FREE(stackp);
+        }
+        GENERICSTACK_FREE(resultStackp);
+        break;
+
+      } else {
+        char           *joinWs = " ";
+        size_t          i;
+
+        if (symbolIdi == S) {
+          joinWs = "\n  ";
+        }
+
+        for (i = 0; i < GENERICSTACK_USED(resultStackp); i++) {
+          genericStack_t *stackp = GENERICSTACK_GET_PTR(resultStackp, i);
+          size_t          j;
+          size_t          stringl;
+          char           *strings;
+
+          /* All rh values are concatenated and enclosed in "(penntag XXX)" */
+          stringl = 1 + strlen(symbolNames) + 1;
+          for (j = 0; j < GENERICSTACK_USED(stackp); j++) {
+            char *values = GENERICSTACK_GET_PTR(stackp, j);
+            if (j > 0) {
+              stringl += strlen(joinWs);
+            }
+            stringl += strlen(values);
+          }
+          stringl++;
+          strings = malloc(++stringl); /* null character */
+          strings[0] = '\0';
+          strcat(strings, "(");
+          strcat(strings, symbolNames);
+          strcat(strings, " ");
+          for (j = 0; j < GENERICSTACK_USED(stackp); j++) {
+            char *values = GENERICSTACK_GET_PTR(stackp, j);
+            if (j > 0) {
+              strcat(strings, joinWs);
+              stringl += strlen(joinWs);
+            }
+            strcat(strings, values);
+          }
+          strcat(strings, ")");
+          GENERICSTACK_PUSH_PTR(stringStackp, strings);
+        }
+        while (GENERICSTACK_USED(resultStackp) > 0) {
+          genericStack_t *stackp = GENERICSTACK_POP_PTR(resultStackp);
+          GENERICSTACK_FREE(stackp);
+        }
+        GENERICSTACK_FREE(resultStackp);
+
+        marpaWrapperAsf_traverse_nextb(traverserp, &nextb);
+	if (! nextb) {
+          break;
+        }
+      }
+    }
+  }
+  
+  /* Return value is a list of choices */
+  GENERICSTACK_PUSH_PTR(traverseContextp->outputStackp, stringStackp);
+  valuei = (int) (GENERICSTACK_USED(traverseContextp->outputStackp) - 1);
+  GENERICLOGGER_DEBUGF(genericLoggerp, "[%s][%d:%d] ... Returning list of choices pushed at indice %d of output stack", funcs, ruleIdi, symbolIdi, valuei);
+
+  if (valueip != NULL) {
+    *valueip = valuei;
+  }
+
+  rcb = 1;
+
+  goto done;
+
+  /*
+ err:
+  rcb = 0;
+  */
+
+ done:
+  
+  if (ruleNames != NULL) {
+    free(ruleNames);
+  }
+  if (symbolNames != NULL) {
+    free(symbolNames);
+  }
+
+  GENERICLOGGER_DEBUGF(genericLoggerp, "[%s][%d:%d] return %d", funcs, ruleIdi, symbolIdi, (int) rcb);
+  return rcb;
+
 }

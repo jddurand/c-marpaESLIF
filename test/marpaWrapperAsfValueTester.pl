@@ -5,7 +5,7 @@ use Marpa::R2;
 
 my $dsl = do { local $/; <DATA>};
 my $panda_grammar = Marpa::R2::Scanless::G->new({ source => \$dsl } );
-my $panda_recce = Marpa::R2::Scanless::R->new( { grammar => $panda_grammar } );
+my $panda_recce = Marpa::R2::Scanless::R->new( { grammar => $panda_grammar, trace_terminals => 1 } );
 
 my $sentence = 'abc';
 $panda_recce->read( \$sentence );
@@ -28,12 +28,16 @@ sub full_traverser {
     my $symbol_id   = $glade->symbol_id();
     my $symbol_name = $panda_grammar->symbol_name($symbol_id);
 
+    print STDERR "[full_traverserCallbacki] => ruleIdi=" . ($rule_id // -1) . ", symbolIdi=$symbol_id\n";
+
     # A token is a single choice, and we know enough to fully Penn-tag it
     if ( not defined $rule_id ) {
 	my $literal = $glade->literal();
 	my $penn_tag = penn_tag($symbol_name);
 	return ["($penn_tag $literal)"];
     } ## end if ( not defined $rule_id )
+
+    print STDERR "[full_traverserCallbacki] ... symbol $symbol_name\n";
 
     # Our result will be a list of choices
     my @return_value = ();
