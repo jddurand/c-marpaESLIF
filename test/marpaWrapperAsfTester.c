@@ -43,8 +43,7 @@ static short full_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, voi
 */
 
 enum { START = 0, S, NP, VP, period, NN, NNS, DT, CC, VBZ, MAX_SYMBOL };
-enum { START_RULE = 0,
-       S_RULE,
+enum { S_RULE = 0,
        NP_RULE01,
        NP_RULE02,
        NP_RULE03,
@@ -55,6 +54,7 @@ enum { START_RULE = 0,
        VP_RULE03,
        VP_RULE04,
        VP_RULE05,
+       START_RULE,
        MAX_RULE };
 
 int main(int argc, char **argv) {
