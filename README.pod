@@ -599,21 +599,36 @@ If it is returns a true value, then the user-space value of RH rule number C<rhI
 
 Convenient method that returns the recognizer wrapper, C<NULL> if failure.
 
-=head2 
+=head2 marpaWrapperAsf_prunedValueb
 
+  typedef short (*marpaWrapperAsfOkSymbolCallback_t)(void *userDatavp, genericStack_t *parentRuleiStackp, int symboli, int argi);
   typedef short (*marpaWrapperAsfOkRuleCallback_t)(void *userDatavp, genericStack_t *parentRuleiStackp, int rulei);
 
-  short marpaWrapperAsf_valueb(marpaWrapperAsf_t                    *marpaWrapperAsfp,
-                               void                                 *userDatavp,
-                               marpaWrapperAsfOkRuleCallback_t       okRuleCallbackp,
-                               marpaWrapperValueRuleCallback_t       valueRuleCallbackp,
-                               marpaWrapperValueSymbolCallback_t     valueSymbolCallbackp,
-                               marpaWrapperValueNullingCallback_t    valueNullingCallbackp,
-                               int                                  *valueip)
+  short marpaWrapperAsf_prunedValueb(marpaWrapperAsf_t                    *marpaWrapperAsfp,
+                                     void                                 *userDatavp,
+                                     marpaWrapperAsfOkRuleCallback_t       okRuleCallbackp,
+                                     marpaWrapperValueRuleCallback_t       valueRuleCallbackp,
+                                     marpaWrapperValueSymbolCallback_t     valueSymbolCallbackp,
+                                     marpaWrapperValueNullingCallback_t    valueNullingCallbackp,
+                                     int                                  *valueip)
 
-An example of how to use the ASF API. This method simulate the value namespace, by pruning the ASF using the C<okRuleCallack> function pointer. C<okRuleCallack> is called with the stack of parent rule IDs in C<parentRuleiStackp>, and for the current rule in C<rulei>. Even if the ASF is instanciated with a false <ambiguousb> value, it is then possible to get a single value from an ambiguous parse. A typical usage of C<marpaWrapperAsf_valueb> is a grammar that has a notion of I<exclusion>, e.g. EBNF. This method will not accept that the <okRuleCallbackp> return a true more than once is there are more than once alternative at a certain point in the ASF.
+An example of how to use the ASF API. This method simulate the value namespace, by pruning the ASF to return a single value:
 
-Returns a true value on success, a false value on failure. In case of success, C<*valueip> will contain the indice in the output stack that have the final result.
+=over
+
+=item C<okRuleCallackp>
+
+Return 0 in case of failure, a positive value if success, a negative value if reject. It is called for the symbol number C<symboli> and the input at indice C<argi> in the input stack. Context in terms of parent rule IDs is in <parentRuleiStackp>.
+
+=item CvalueRuleCallbackp>
+
+Return 0 in case of failure, a positive value if success, a negative value if reject. It is called for the rule number rulei<symboli> and the context in terms of parent rule IDs is in <parentRuleiStackp>.
+
+=back
+
+All the I<value> function pointers have the same semantics as in the value namespace. Even if the ASF is instanciated with a false <ambiguousb> value, and the parse tree is ambiguous, it is then possible to get a single value from it. A typical usage of C<marpaWrapperAsf_prunedValueb> is a grammar that has a notion of I<exclusion>, e.g. EBNF.
+
+Returns a true value on success, a false value on failure. In case of success, the final result is always at the indice 0 of output stack.
 
 =head2 marpaWrapperAsf_freev
 

@@ -3563,17 +3563,16 @@ static inline void _marpaWrapperAsf_choicepoint_freev(marpaWrapperAsf_t *marpaWr
 }
 
 /****************************************************************************/
-short marpaWrapperAsf_valueb(marpaWrapperAsf_t                    *marpaWrapperAsfp,
-			     void                                 *userDatavp,
-			     marpaWrapperAsfOkSymbolCallback_t     okSymbolCallbackp,
-			     marpaWrapperAsfOkRuleCallback_t       okRuleCallbackp,
-			     marpaWrapperValueRuleCallback_t       valueRuleCallbackp,
-			     marpaWrapperValueSymbolCallback_t     valueSymbolCallbackp,
-			     marpaWrapperValueNullingCallback_t    valueNullingCallbackp,
-			     int                                  *valueip)
+short marpaWrapperAsf_prunedValueb(marpaWrapperAsf_t                    *marpaWrapperAsfp,
+                                   void                                 *userDatavp,
+                                   marpaWrapperAsfOkSymbolCallback_t     okSymbolCallbackp,
+                                   marpaWrapperAsfOkRuleCallback_t       okRuleCallbackp,
+                                   marpaWrapperValueRuleCallback_t       valueRuleCallbackp,
+                                   marpaWrapperValueSymbolCallback_t     valueSymbolCallbackp,
+                                   marpaWrapperValueNullingCallback_t    valueNullingCallbackp)
 /****************************************************************************/
 {
-  const static char             funcs[] = "marpaWrapperAsf_valueb";
+  const static char             funcs[] = "marpaWrapperAsf_prunedValueb";
   genericLogger_t              *genericLoggerp;
   short                         rcb;
   marpaWrapperAsfValueContext_t marpaWrapperAsfValueContext;
@@ -3614,19 +3613,20 @@ short marpaWrapperAsf_valueb(marpaWrapperAsf_t                    *marpaWrapperA
   }
 
   rcb = marpaWrapperAsf_traverseb(marpaWrapperAsfp, _marpaWrapperAsf_valueTraverserb, &marpaWrapperAsfValueContext, &valuei);
+  if (rcb) {
+    if (valuei < 0) {
+      /* All alternatives were rejected */
+      goto err;
+    }
+  }
   goto done;
 
  err:
   rcb = 0;
 
  done:
-  if (rcb != 0) {
-    if (valueip != NULL) {
-      *valueip = valuei;
-    }
-  }
   GENERICSTACK_FREE(marpaWrapperAsfValueContext.parentRuleiStackp);
-  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "return %d, *valueip=%d", (int) rcb, valuei);
+  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "return %d", (int) rcb);
   return rcb;
 }
 
@@ -3643,7 +3643,7 @@ static inline short _marpaWrapperAsf_valueTraverserb(marpaWrapperAsfTraverser_t 
 /* It is possible to reject both a symbol and a rule.                       */
 /****************************************************************************/
 {
-  const static char                  funcs[]                      = "_marpaWrapperAsf_valueTraverser";
+  const static char                  funcs[]                      = "_marpaWrapperAsf_valueTraverserb";
   marpaWrapperAsf_t                 *marpaWrapperAsfp             = marpaWrapperAsf_traverse_asfp(traverserp);
   genericLogger_t                   *genericLoggerp               = marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp;
   marpaWrapperAsfValueContext_t     *marpaWrapperAsfValueContextp = (marpaWrapperAsfValueContext_t *) userDatavp;
@@ -3675,13 +3675,19 @@ static inline short _marpaWrapperAsf_valueTraverserb(marpaWrapperAsfTraverser_t 
     goto err;
   }
 
-  MARPAWRAPPER_INFOF(genericLoggerp, "[%3d] Rule %d, symbol %d, wanted indice in the output stack: %d", marpaWrapperAsfValueContextp->leveli, marpaRuleIdi, marpaSymbolIdi, wantedOutputStacki);
+  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "[%3d] Rule %d, symbol %d, wanted indice in the output stack: %d", marpaWrapperAsfValueContextp->leveli, marpaRuleIdi, marpaSymbolIdi, wantedOutputStacki);
 
   if (marpaRuleIdi < 0) {
     /* This is a token */
 
+    /* Get its value */
+    if (! marpaWrapperAsf_traverse_rh_valueb(traverserp, 0, &spani)) {
+      goto err;
+    }
+    tokenValuei = spani + 1;
+
     /* Check if it is ok */
-    rcb = okSymbolCallbackp(marpaWrapperAsfValueContextp->userDatavp, marpaWrapperAsfValueContextp->parentRuleiStackp, marpaSymbolIdi);
+    rcb = okSymbolCallbackp(marpaWrapperAsfValueContextp->userDatavp, marpaWrapperAsfValueContextp->parentRuleiStackp, marpaSymbolIdi, tokenValuei);
     if (rcb < 0) {
       MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "Symbol No %d value callback says reject", marpaSymbolIdi);
       goto reject;
@@ -3690,11 +3696,6 @@ static inline short _marpaWrapperAsf_valueTraverserb(marpaWrapperAsfTraverser_t 
       goto err;
     }
 
-    /* Get its value */
-    if (! marpaWrapperAsf_traverse_rh_valueb(traverserp, 0, &spani)) {
-      goto err;
-    }
-    tokenValuei = spani + 1;
     if (! valueSymbolCallbackp(marpaWrapperAsfValueContextp->userDatavp, marpaSymbolIdi, tokenValuei, wantedOutputStacki)) {
       MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "Symbol No %d value callback says failure", marpaSymbolIdi);
       goto err;
@@ -3717,75 +3718,78 @@ static inline short _marpaWrapperAsf_valueTraverserb(marpaWrapperAsfTraverser_t 
       /* Check if it is ok */
       rcb = okRuleCallbackp(marpaWrapperAsfValueContextp->userDatavp, marpaWrapperAsfValueContextp->parentRuleiStackp, marpaRuleIdi);
       if (rcb < 0) {
-	MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "Rule No %d value callback says reject", marpaRuleIdi);
-	goto reject;
+        MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "Rule No %d value callback says reject", marpaRuleIdi);
+	if (nbAlternativeOki == 0) {
+	  nbAlternativeOki = -1;
+	}
+        goto reject;
       } else if (rcb == 0) {
-	MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "Rule No %d value callback says failure", marpaRuleIdi);
-	goto err;
+        MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "Rule No %d value callback says failure", marpaRuleIdi);
+        goto err;
       }
 
       /* Rule length */
       lengthl = marpaWrapperAsf_traverse_rh_lengthl(traverserp);
       if (lengthl == (size_t) -1) {
-	goto err;
+        goto err;
       }
 
       /* Rule value */
       if (lengthl <= 0) {
-	
-	/* This is a nulling rule */
-	if (! valueNullingCallbackp(marpaWrapperAsfValueContextp->userDatavp, marpaRuleIdi, wantedOutputStacki)) {
-	  MARPAWRAPPER_ERRORF(genericLoggerp, "Rule No %d nulling callback failure", marpaRuleIdi);
-	  goto err;
-	}
+        
+        /* This is a nulling rule */
+        if (! valueNullingCallbackp(marpaWrapperAsfValueContextp->userDatavp, marpaRuleIdi, wantedOutputStacki)) {
+          MARPAWRAPPER_ERRORF(genericLoggerp, "Rule No %d nulling callback failure", marpaRuleIdi);
+          goto err;
+        }
       } else {
-	int   localWantedOutputStacki = marpaWrapperAsfValueContextp->freeOutputStacki;
-	short localRcb;
-	
-	/* We "reserve" the space in the stack for subsequent recursive rules */
-	marpaWrapperAsfValueContextp->freeOutputStacki += (int) lengthl;
-	for (rhIxi = 0; rhIxi <= lengthl - 1; rhIxi++) {
-	  
-	  marpaWrapperAsfValueContextp->wantedOutputStacki = localWantedOutputStacki;
-	  localRcb = marpaWrapperAsf_traverse_rh_valueb(traverserp, rhIxi, &localWantedOutputStacki);
-	  marpaWrapperAsfValueContextp->wantedOutputStacki = wantedOutputStacki;
-	  
-	  if (! localRcb) {
-	    goto err;
-	  }
-	  if (localWantedOutputStacki < 0) {
-	    /* There is rejection below: go to next alternative */
-	    MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "Rule No %d traversal is hitting a reject", marpaRuleIdi);
-	    /* We do not change next free indice in the output stack so that user can free what is now a garbage */
-	    goto nextRule;
-	  }
-	  localWantedOutputStacki++;
-	}
-	argni = --localWantedOutputStacki;
-	arg0i = argni - (int) (lengthl - 1);
-	if (! valueRuleCallbackp(marpaWrapperAsfValueContextp->userDatavp, marpaRuleIdi, arg0i, argni, wantedOutputStacki)) {
-	  MARPAWRAPPER_ERRORF(genericLoggerp, "Rule No %d value callback failure", marpaSymbolIdi);
-	  goto err;
-	}
+        int   localWantedOutputStacki = marpaWrapperAsfValueContextp->freeOutputStacki + 1;
+        short localRcb;
+        
+        /* We "reserve" the space in the stack for subsequent recursive rules */
+        marpaWrapperAsfValueContextp->freeOutputStacki += (int) lengthl;
+        for (rhIxi = 0; rhIxi <= lengthl - 1; rhIxi++) {
+          
+          marpaWrapperAsfValueContextp->wantedOutputStacki = localWantedOutputStacki;
+          localRcb = marpaWrapperAsf_traverse_rh_valueb(traverserp, rhIxi, &localWantedOutputStacki);
+          marpaWrapperAsfValueContextp->wantedOutputStacki = wantedOutputStacki;
+          
+          if (! localRcb) {
+            goto err;
+          }
+          if (localWantedOutputStacki < 0) {
+            /* There is rejection below: go to next alternative */
+            MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "Rule No %d traversal is hitting a reject", marpaRuleIdi);
+            /* We do not change next free indice in the output stack so that user can free what is now a garbage */
+            goto nextRule;
+          }
+          localWantedOutputStacki++;
+        }
+        argni = --localWantedOutputStacki;
+        arg0i = argni - (int) (lengthl - 1);
+        if (! valueRuleCallbackp(marpaWrapperAsfValueContextp->userDatavp, marpaRuleIdi, arg0i, argni, wantedOutputStacki)) {
+          MARPAWRAPPER_ERRORF(genericLoggerp, "Rule No %d value callback failure", marpaSymbolIdi);
+          goto err;
+        }
       }
 
       /* Prune the number of accepted alternatives */
-      if (++nbAlternativeOki > 1) {
-	MARPAWRAPPER_ERROR(genericLoggerp, "More than one alternative");
-	goto err;
+      if (++nbAlternativeOki == 1) {
+	MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "Rule No %d value callback success: ignoring other alternatives", marpaSymbolIdi);
+	break;
       }
 
     nextRule:
       /* Check for another alternative */
       if (! marpaWrapperAsf_traverse_nextb(traverserp, &nextb)) {
-	goto err;
+        goto err;
       }
       if (! nextb) {
-	break;
+        break;
       }
       /* There is another alternative: get the ruleId */
       if (! marpaWrapperAsf_traverse_ruleIdb(traverserp, &marpaRuleIdi)) {
-	goto err;
+        goto err;
       }
     }
 
@@ -3797,8 +3801,8 @@ static inline short _marpaWrapperAsf_valueTraverserb(marpaWrapperAsfTraverser_t 
 
   }
 
-  if (nbAlternativeOki <= 0) {
-    /* A single alternative that was rejected */
+  if (nbAlternativeOki < 0) {
+    /* All alternatives were rejected */
     wantedOutputStacki = -1;
   }
   rcb = 1;
