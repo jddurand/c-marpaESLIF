@@ -21,7 +21,7 @@ SET (CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 SET (TCONV_VERSION_MAJOR 1)
 SET (TCONV_VERSION_MINOR 0)
-SET (TCONV_VERSION_PATCH 0)
+SET (TCONV_VERSION_PATCH 1)
 SET (TCONV_VERSION "${TCONV_VERSION_MAJOR}.${TCONV_VERSION_MINOR}.${TCONV_VERSION_PATCH}")
 
 SET (CMAKE_MODULE_PATH              ${PROJECT_SOURCE_DIR}/cmake)           # General module search path
@@ -311,6 +311,11 @@ ADD_CUSTOM_TARGET (check COMMAND ${CMAKE_CTEST_COMMAND} DEPENDS tconvExec)
 INSTALL (TARGETS tconv tconvExec ARCHIVE DESTINATION lib LIBRARY DESTINATION lib RUNTIME DESTINATION bin)
 INSTALL (FILES ${INCLUDE_OUTPUT_PATH}/tconv/export.h DESTINATION include/tconv)
 INSTALL (FILES include/tconv.h DESTINATION include)
+INSTALL (FILES include/tconv/ext.h DESTINATION include/tconv)
+INSTALL (FILES include/tconv/convert/ICU.h DESTINATION include/tconv/convert)
+INSTALL (FILES include/tconv/convert/iconv.h DESTINATION include/tconv/convert)
+INSTALL (FILES include/tconv/charset/ICU.h DESTINATION include/tconv/charset)
+INSTALL (FILES include/tconv/charset/cchardet.h DESTINATION include/tconv/charset)
 
 IF (UNIX)
   INCLUDE (Pod2Man)

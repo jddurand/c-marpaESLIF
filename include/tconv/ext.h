@@ -2,7 +2,7 @@
 #define TCONV_EXT_H
 
 #include <stddef.h>
-#include "tconv/export.h"
+#include <tconv/export.h>
 
 typedef struct tconv *tconv_t;
 typedef void (*tconvTraceCallback_t)(void *userDatavp, const char *msgs);
@@ -38,8 +38,8 @@ typedef struct tconv_charset_plugin {
 /* ------------------------- */
 /* Buit-in charset           */
 /* ------------------------- */
-#include "tconv/charset/cchardet.h"
-#include "tconv/charset/ICU.h"
+#include <tconv/charset/cchardet.h>
+#include <tconv/charset/ICU.h>
 
 /* ------------------------------- */
 /* Global charset option structure */
@@ -95,8 +95,8 @@ typedef struct tconv_convert_plugin {
 /* ------------------ */
 /* Built-in converter */
 /* ------------------ */
-#include "tconv/convert/iconv.h"
-#include "tconv/convert/ICU.h"
+#include <tconv/convert/iconv.h>
+#include <tconv/convert/ICU.h>
 
 /* --------------------------------- */
 /* Global converter option structure */

@@ -9,8 +9,7 @@ typedef struct tconv_convert_ICU_option {
   int    signaturei;           /* <0: remove eventual signature, >0: add eventual signature. Default: 0 */
 } tconv_convert_ICU_option_t;
 
-#include "tconv.h"
-#include "tconv/export.h"
+#include <tconv.h>
 
 TCONV_NO_EXPORT void  *tconv_convert_ICU_new (tconv_t tconv, const char *tocodes, const char *fromcodes, void *optionp);
 TCONV_NO_EXPORT size_t tconv_convert_ICU_run (tconv_t tconv, void *contextp, char **inbufsp, size_t *inbytesleftlp, char **outbufsp, size_t *outbytesleftlp);
