@@ -3660,7 +3660,6 @@ static inline short _marpaWrapperAsf_valueTraverserb(marpaWrapperAsfTraverser_t 
   int                                tokenValuei;
   size_t                             lengthl;
   size_t                             rhIxi;
-  short                              okb;
   short                              nextb;
   int                                nbAlternativeOki;
   int                                arg0i;
