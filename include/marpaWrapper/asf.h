@@ -2,9 +2,7 @@
 #define MARPAWRAPPER_ASF_H
 
 #include <genericStack.h>
-#include "marpaWrapper/recognizer.h"
-#include "marpaWrapper/value.h"
-#include "marpaWrapper/export.h"
+#include <marpaWrapper/value.h>
 
 /***********************/
 /* Opaque object types */
