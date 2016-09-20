@@ -1,8 +1,7 @@
 #ifndef MARPAWRAPPER_RECOGNIZER_H
 #define MARPAWRAPPER_RECOGNIZER_H
 
-#include "marpaWrapper/grammar.h"
-#include "marpaWrapper/export.h"
+#include <marpaWrapper/grammar.h>
 
 /***********************/
 /* Opaque object types */
