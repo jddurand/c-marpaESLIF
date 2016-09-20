@@ -77,7 +77,9 @@ static inline int                       *_marpaWrapperAsf_idset_idip(marpaWrappe
 static inline short                      _marpaWrapperAsf_idset_idi_by_ixib(marpaWrapperAsf_t *marpaWrapperAsfp, marpaWrapperAsfIdsete_t idsete, marpaWrapperAsfIdset_t *idsetp, int ixi, int *idip);
 static inline size_t                     _marpaWrapperAsf_idset_countl(marpaWrapperAsf_t *marpaWrapperAsfp, marpaWrapperAsfIdsete_t idsete, marpaWrapperAsfIdset_t *idsetp);
 static inline int                        _marpaWrapperAsf_idset_idi(marpaWrapperAsf_t *marpaWrapperAsfp, marpaWrapperAsfIdsete_t idsete, marpaWrapperAsfIdset_t *idsetp);
+#ifndef MARPAWRAPPER_NTRACE
 static inline void                       _marpaWrapperAsf_idset_trace(marpaWrapperAsf_t *marpaWrapperAsfp, marpaWrapperAsfIdsete_t idsete, marpaWrapperAsfIdset_t *idsetp);
+#endif
 static inline void                       _marpaWrapperAsf_idset_freev(marpaWrapperAsf_t *marpaWrapperAsfp, marpaWrapperAsfIdsete_t idsete);
 
 static inline marpaWrapperAsfNidset_t   *_marpaWrapperAsf_nidset_obtainp(marpaWrapperAsf_t *marpaWrapperAsfp, size_t countl, int *idip);
@@ -85,7 +87,9 @@ static inline int                       *_marpaWrapperAsf_nidset_idip(marpaWrapp
 static inline short                      _marpaWrapperAsf_nidset_idi_by_ixib(marpaWrapperAsf_t *marpaWrapperAsfp, marpaWrapperAsfIdset_t *idsetp, int ixi, int *idip);
 static inline size_t                     _marpaWrapperAsf_nidset_countl(marpaWrapperAsf_t *marpaWrapperAsfp, marpaWrapperAsfIdset_t *idsetp);
 static inline int                        _marpaWrapperAsf_nidset_idi(marpaWrapperAsf_t *marpaWrapperAsfp, marpaWrapperAsfIdset_t *idsetp);
+#ifndef MARPAWRAPPER_NTRACE
 static inline void                       _marpaWrapperAsf_nidset_trace(marpaWrapperAsf_t *marpaWrapperAsfp, marpaWrapperAsfIdset_t *idsetp);
+#endif
 static inline void                       _marpaWrapperAsf_nidset_freev(marpaWrapperAsf_t *marpaWrapperAsfp);
 
 /* Generic nidset/powerset methods */
@@ -95,7 +99,9 @@ static inline int                       *_marpaWrapperAsf_powerset_idip(marpaWra
 static inline short                      _marpaWrapperAsf_powerset_idi_by_ixib(marpaWrapperAsf_t *marpaWrapperAsfp, marpaWrapperAsfIdset_t *idsetp, int ixi, int *idip);
 static inline size_t                     _marpaWrapperAsf_powerset_countl(marpaWrapperAsf_t *marpaWrapperAsfp, marpaWrapperAsfIdset_t *idsetp);
 static inline int                        _marpaWrapperAsf_powerset_idi(marpaWrapperAsf_t *marpaWrapperAsfp, marpaWrapperAsfIdset_t *idsetp);
+#ifndef MARPAWRAPPER_NTRACE
 static inline void                       _marpaWrapperAsf_powerset_trace(marpaWrapperAsf_t *marpaWrapperAsfp, marpaWrapperAsfIdset_t *idsetp);
+#endif
 static inline void                       _marpaWrapperAsf_powerset_freev(marpaWrapperAsf_t *marpaWrapperAsfp);
 
 /* Specific to nid */
@@ -1153,6 +1159,7 @@ static inline int _marpaWrapperAsf_idset_idi(marpaWrapperAsf_t *marpaWrapperAsfp
   return idsetp->idi;
 }
 
+#ifndef MARPAWRAPPER_NTRACE
 /****************************************************************************/
 static inline void _marpaWrapperAsf_idset_trace(marpaWrapperAsf_t *marpaWrapperAsfp, marpaWrapperAsfIdsete_t idsete, marpaWrapperAsfIdset_t *idsetp)
 /****************************************************************************/
@@ -1201,6 +1208,7 @@ static inline void _marpaWrapperAsf_idset_trace(marpaWrapperAsf_t *marpaWrapperA
     free(shows);
   }
 }
+#endif
 
 /****************************************************************************/
 static inline void _marpaWrapperAsf_idset_freev(marpaWrapperAsf_t *marpaWrapperAsfp, marpaWrapperAsfIdsete_t idsete)
@@ -1265,12 +1273,14 @@ static inline int _marpaWrapperAsf_nidset_idi(marpaWrapperAsf_t *marpaWrapperAsf
   return _marpaWrapperAsf_idset_idi(marpaWrapperAsfp, MARPAWRAPPERASFIDSET_NIDSET, idsetp);
 }
 
+#ifndef MARPAWRAPPER_NTRACE
 /****************************************************************************/
 static inline void _marpaWrapperAsf_nidset_trace(marpaWrapperAsf_t *marpaWrapperAsfp, marpaWrapperAsfIdset_t *idsetp)
 /****************************************************************************/
 {
   _marpaWrapperAsf_idset_trace(marpaWrapperAsfp, MARPAWRAPPERASFIDSET_NIDSET, idsetp);
 }
+#endif
 
 /****************************************************************************/
 static inline void _marpaWrapperAsf_nidset_freev(marpaWrapperAsf_t *marpaWrapperAsfp)
@@ -1314,12 +1324,14 @@ static inline int _marpaWrapperAsf_powerset_idi(marpaWrapperAsf_t *marpaWrapperA
   return _marpaWrapperAsf_idset_idi(marpaWrapperAsfp, MARPAWRAPPERASFIDSET_POWERSET, idsetp);
 }
 
+#ifndef MARPAWRAPPER_NTRACE
 /****************************************************************************/
 static inline void _marpaWrapperAsf_powerset_trace(marpaWrapperAsf_t *marpaWrapperAsfp, marpaWrapperAsfIdset_t *idsetp)
 /****************************************************************************/
 {
   _marpaWrapperAsf_idset_trace(marpaWrapperAsfp, MARPAWRAPPERASFIDSET_POWERSET, idsetp);
 }
+#endif
 
 /****************************************************************************/
 static inline void _marpaWrapperAsf_powerset_freev(marpaWrapperAsf_t *marpaWrapperAsfp)
