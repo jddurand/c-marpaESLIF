@@ -885,7 +885,7 @@ static inline short _marpaWrapperAsf_intsetIdb(marpaWrapperAsf_t *marpaWrapperAs
     }
   }
 
-  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "Looking for key \"%s\" intsetHashp", keys);
+  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "Looking for key \"%s\" in intsetHashp", keys);
   GENERICHASH_FIND(marpaWrapperAsfp->intsetHashp,
                    marpaWrapperAsfp,
                    PTR,
