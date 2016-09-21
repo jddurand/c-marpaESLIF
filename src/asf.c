@@ -293,7 +293,7 @@ marpaWrapperAsf_t *marpaWrapperAsf_newp(marpaWrapperRecognizer_t *marpaWrapperRe
   GENERICHASH_NEW_ALL(marpaWrapperAsfp->intsetHashp,
                       _marpaWrapperAsf_intset_keyIndFunction,
                       _marpaWrapperAsf_intset_keyCmpFunction,
-                      _marpaWrapperAsf_intset_keyCopyFunction,
+                      NULL, /* We already allocate key on the heap: no need to copy it */
                       _marpaWrapperAsf_intset_keyFreeFunction,
                       NULL,  /* The value type will always be INT: no need */
                       NULL,  /* for a copy not a free functions for the value */
@@ -903,6 +903,9 @@ static inline short _marpaWrapperAsf_intsetIdb(marpaWrapperAsf_t *marpaWrapperAs
     if (GENERICHASH_ERROR(marpaWrapperAsfp->intsetHashp)) {
       MARPAWRAPPER_ERRORF(genericLoggerp, "intset hash set failure: %s", strerror(errno));
       goto err;
+    } else {
+      /* The hash is keeping key pointer: we must not free it */
+      localIdip = NULL;
     }
   } else {
     MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "Found intset id %d", intsetIdi);
@@ -3486,23 +3489,6 @@ short _marpaWrapperAsf_intset_keyCmpFunction(void *userDatavp, void **pp1, void 
   MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return 1");
 #endif
   return 1;
-}
-
-/****************************************************************************/
-void *_marpaWrapperAsf_intset_keyCopyFunction(void *userDatavp, void **pp)
-/****************************************************************************/
-{
-  int   *idip   = (int *) *pp;
-  int    sizi   = idip[0];
-  size_t bytesl = (size_t) (++sizi * sizeof(int));
-  int   *newp   = (int *) malloc(bytesl);
-
-  if (newp == NULL) {
-    return NULL;
-  }
-
-  memcpy(newp, idip, bytesl);
-  return newp;
 }
 
 /****************************************************************************/
