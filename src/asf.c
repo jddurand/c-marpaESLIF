@@ -169,6 +169,10 @@ static inline void                          _marpaWrapperAsf_choicepoint_freev(m
 /* Specific to value using the ASF */
 static inline short                       _marpaWrapperAsf_valueTraverserb(marpaWrapperAsfTraverser_t *traverserp, void *userDatavp, int *valueip);
 
+/* For my very internal purpose */
+#ifndef MARPAWRAPPER_NTRACE
+static void _marpaWrapperAsf_dumpintsetHashpv(marpaWrapperAsf_t *marpaWrapperAsfp);
+#endif
 
 /****************************************************************************/
 marpaWrapperAsf_t *marpaWrapperAsf_newp(marpaWrapperRecognizer_t *marpaWrapperRecognizerp, marpaWrapperAsfOption_t *marpaWrapperAsfOptionp)
@@ -545,6 +549,9 @@ void marpaWrapperAsf_freev(marpaWrapperAsf_t *marpaWrapperAsfp)
     _marpaWrapperAsf_orNodeStackp_freev(marpaWrapperAsfp);
     
     MARPAWRAPPER_TRACE(genericLoggerp, funcs, "Freeing intset hash");
+#ifndef MARPAWRAPPER_NTRACE
+    _marpaWrapperAsf_dumpintsetHashpv(marpaWrapperAsfp);
+#endif
     GENERICHASH_FREE(marpaWrapperAsfp->intsetHashp, marpaWrapperAsfp);
     
     MARPAWRAPPER_TRACE(genericLoggerp, funcs, "Freeing Nidset stack");
@@ -3424,17 +3431,15 @@ size_t _marpaWrapperAsf_intset_keyIndFunction(void *userDatavp, genericStackItem
   genericLogger_t   *genericLoggerp   = marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp;
 #endif
   /* *pp is an array of int, with size at indice 0                                    */
-  /* Note that by construction, in fact everything is unsigned. This mean that idip[] */
-  /* never contains negative numbers, which mean that &0xFFFF is equivalent to %65536 */
   int   *idip = (int *) *pp;
   int    sizi = idip[0];
   int    sumi = 0;
   int    i;
   size_t rcl;
+  int    locali;
 
   for (i = 1; i <= sizi; i++) {
-    int locali = idip[i];
-    sumi += MARPAWRAPPER_MIN(locali, half_int_max);
+    sumi ^= idip[i];
 #ifndef MARPAWRAPPER_NTRACE
     MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "idip[%d]=%d => sumi=%d", i, idip[i], sumi);
 #endif
@@ -3896,3 +3901,45 @@ static inline short _marpaWrapperAsf_valueTraverserb(marpaWrapperAsfTraverser_t 
 
   return rcb;
 }
+
+#ifndef MARPAWRAPPER_NTRACE
+/****************************************************************************/
+static void _marpaWrapperAsf_dumpintsetHashpv(marpaWrapperAsf_t *marpaWrapperAsfp)
+/****************************************************************************/
+{
+  static const char  funcs[]         = "dumpStacks";
+  genericLogger_t   *genericLoggerp  = marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp;
+  genericHash_t     *intsetHashp     = marpaWrapperAsfp->intsetHashp;
+  int                i;
+  int                j;
+  int                k;
+  int               *idip;
+  size_t             nInRowl;
+
+  for (i = 0; i < GENERICSTACK_USED(intsetHashp->keyStackp); i++) {
+    genericStack_t *subStackp;
+
+    if (! GENERICSTACK_IS_PTR(intsetHashp->keyStackp, i)) {
+      continue;
+    }
+
+    subStackp = GENERICSTACK_GET_PTR(intsetHashp->keyStackp, i);
+    nInRowl = 0;
+    for (j = 0; j < GENERICSTACK_USED(subStackp); j++) {
+
+      if (! GENERICSTACK_IS_PTR(subStackp, j)) {
+	continue;
+      }
+      ++nInRowl;
+      idip = GENERICSTACK_GET_PTR(subStackp, j);
+      MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "Row %6d column %6d", i, j);
+      for (k = 1; k <= idip[0]; k++) {
+	MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "   %d", idip[k]);
+      }
+    }
+    if (nInRowl > 1) {
+      MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "Row %6d has %ld collisions", i, (int) nInRowl);
+    }
+  }
+}
+#endif
