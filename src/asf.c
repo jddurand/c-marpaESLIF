@@ -3,6 +3,7 @@
 #include <string.h>
 #include <errno.h>
 #include <stdarg.h>
+#include <limits.h> /* For INT_MAX */
 
 #include "marpa.h"
 #include "config.h"
@@ -12,11 +13,13 @@
 #include "marpaWrapper/internal/logging.h"
 
 #ifndef MARPAWRAPPERASF_INTSET_MAXROWS
-#define MARPAWRAPPERASF_INTSET_MAXROWS 65536
+#define MARPAWRAPPERASF_INTSET_MAXROWS 65536   /* x &0xFFFF */
 #endif
 
 #undef MARPAWRAPPERASF_INTSET_MODULO
-#define MARPAWRAPPERASF_INTSET_MODULO (MARPAWRAPPERASF_INTSET_MAXROWS - 1)
+/* x mod 65536 is x & 0xffff when x is unsigned */
+/* #define MARPAWRAPPERASF_INTSET_MODULO (MARPAWRAPPERASF_INTSET_MAXROWS - 1) */
+#define MARPAWRAPPERASF_INTSET_MODULO(x) ((x) & 0xFFFF)
 
 #ifndef MARPAWRAPPERASF_FACTORING_MAX
 #define MARPAWRAPPERASF_FACTORING_MAX 42
@@ -36,6 +39,10 @@
 #else
 #define REAL_AP ap
 #endif
+
+const static int half_int_max = INT_MAX / 2;
+#undef MARPAWRAPPER_MIN
+#define MARPAWRAPPER_MIN(a,b) ((a) < half_int_max ? (a) : (b))
 
 static marpaWrapperAsfOption_t marpaWrapperAsfOptionDefault = {
   NULL,   /* genericLoggerp */
@@ -288,8 +295,8 @@ marpaWrapperAsf_t *marpaWrapperAsf_newp(marpaWrapperRecognizer_t *marpaWrapperRe
                       _marpaWrapperAsf_intset_keyCmpFunction,
                       _marpaWrapperAsf_intset_keyCopyFunction,
                       _marpaWrapperAsf_intset_keyFreeFunction,
-                      NULL,
-                      NULL,
+                      NULL,  /* The value type will always be INT: no need */
+                      NULL,  /* for a copy not a free functions for the value */
                       MARPAWRAPPERASF_INTSET_MAXROWS,
                       0);
   if (GENERICHASH_ERROR(marpaWrapperAsfp->intsetHashp)) {
@@ -847,49 +854,35 @@ static inline short _marpaWrapperAsf_intsetIdb(marpaWrapperAsf_t *marpaWrapperAs
 {
   const static char        funcs[] = "_marpaWrapperAsf_intsetIdb";
   genericLogger_t         *genericLoggerp = marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp;
-  const static char       *staticKeys = "";
-  char                    *keys = NULL;
   size_t                   idl;
   short                    rcb;
   short                    findResultb;
   int                      intsetIdi;
   int                     *localIdip = NULL;
 
-  if (countl <= 0) {
-    keys = (char *) staticKeys;
-  } else {
-    localIdip = malloc(sizeof(int) * countl);
-    if (localIdip == NULL) {
-      MARPAWRAPPER_ERRORF(genericLoggerp, "malloc failure: %s", strerror(errno));
-      goto err;
-    }
-    memcpy(localIdip, idip, sizeof(int) * countl);
-    qsort(localIdip, countl, sizeof(int), _marpaWrapperAsf_idCmpi);
+  /* Note: look to the callers, you will see that it can never happen than countl is <= 0 or idip is NULL */
+  /* This method is responsible of memoization and is called very often. We create a local array of ints  */
+  /* of size countl+1, and store countl at indice 0.                                                      */
 
-    for (idl = 0; idl < countl; idl++) {
-      if (keys == NULL) {
-	keys = _marpaWrapperAsf_stringBuilders("%d", localIdip[idl]);
-	if (keys == NULL) {
-	  MARPAWRAPPER_ERRORF(genericLoggerp, "_marpaWrapperAsf_stringBuilders error: %s", strerror(errno));
-	  goto err;
-	}
-      } else {
-	char *keyNexts = _marpaWrapperAsf_stringBuilders("%s %d", keys, localIdip[idl]);
-	if (keyNexts == NULL) {
-	  MARPAWRAPPER_ERRORF(genericLoggerp, "_marpaWrapperAsf_stringBuilders error: %s", strerror(errno));
-	  goto err;
-	}
-        free(keys);
-	keys = keyNexts;
-      }
-    }
+  localIdip = malloc(sizeof(int) * (countl + 1));
+  if (localIdip == NULL) {
+    MARPAWRAPPER_ERRORF(genericLoggerp, "malloc failure: %s", strerror(errno));
+    goto err;
   }
+  *localIdip++ = (int) countl;
+  memcpy(localIdip, idip, sizeof(int) * countl);
+  qsort(localIdip--, countl, sizeof(int), _marpaWrapperAsf_idCmpi);
 
-  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "Looking for key \"%s\" in intsetHashp", keys);
+#ifndef MARPAWRAPPER_NTRACE
+  MARPAWRAPPER_TRACE(genericLoggerp, funcs, "Looking for this context:");
+  for (idl = 1; idl <= countl; idl++) {
+    MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "   idi[0]=%d", localIdip[idl]);
+  }
+#endif
   GENERICHASH_FIND(marpaWrapperAsfp->intsetHashp,
                    marpaWrapperAsfp,
                    PTR,
-                   keys,
+                   localIdip,
                    INT,
                    &intsetIdi,
                    findResultb);
@@ -900,11 +893,11 @@ static inline short _marpaWrapperAsf_intsetIdb(marpaWrapperAsf_t *marpaWrapperAs
   if (! findResultb) {
 
     intsetIdi = marpaWrapperAsfp->nextIntseti++;
-    MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "Creating next intset id \"%s\" => %d", keys, intsetIdi);
+    MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "Creating next intset id %d", intsetIdi);
     GENERICHASH_SET(marpaWrapperAsfp->intsetHashp,
                     marpaWrapperAsfp,
                     PTR,
-                    keys,
+                    localIdip,
                     INT,
                     intsetIdi);
     if (GENERICHASH_ERROR(marpaWrapperAsfp->intsetHashp)) {
@@ -926,9 +919,6 @@ static inline short _marpaWrapperAsf_intsetIdb(marpaWrapperAsf_t *marpaWrapperAs
  done:
   if (localIdip != NULL) {
     free(localIdip);
-  }
-  if ((keys != NULL) && (keys != staticKeys)) {
-    free(keys);
   }
   MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "return %d, *intsetIdip=%d", (int) rcb, *intsetIdip);
   return rcb;
@@ -3425,28 +3415,101 @@ static inline unsigned long _marpaWrapperAsf_djb2(unsigned char *str)
 size_t _marpaWrapperAsf_intset_keyIndFunction(void *userDatavp, genericStackItemType_t itemType, void **pp)
 /****************************************************************************/
 {
-  return (size_t) _marpaWrapperAsf_djb2((unsigned char *) *pp) % MARPAWRAPPERASF_INTSET_MODULO;
+#ifndef MARPAWRAPPER_NTRACE
+  const static char  funcs[]          = "_marpaWrapperAsf_intset_keyIndFunction";
+  marpaWrapperAsf_t *marpaWrapperAsfp = (marpaWrapperAsf_t *) userDatavp;
+  genericLogger_t   *genericLoggerp   = marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp;
+#endif
+  /* *pp is an array of int, with size at indice 0                                    */
+  /* Note that by construction, in fact everything is unsigned. This mean that idip[] */
+  /* never contains negative numbers, which mean that &0xFFFF is equivalent to %65536 */
+  int   *idip = (int *) *pp;
+  int    sizi = idip[0];
+  int    sumi = 0;
+  int    i;
+  size_t rcl;
+
+  for (i = 1; i <= sizi; i++) {
+    int locali = idip[i];
+    sumi += MARPAWRAPPER_MIN(locali, half_int_max);
+#ifndef MARPAWRAPPER_NTRACE
+    MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "idip[%d]=%d => sumi=%d", i, idip[i], sumi);
+#endif
+  }
+
+  rcl = MARPAWRAPPERASF_INTSET_MODULO(sumi);
+#ifndef MARPAWRAPPER_NTRACE
+  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "sumi=%d => indice %ld", i, sumi, (unsigned long) rcl);
+#endif
+
+  return rcl;
 }
 
 /****************************************************************************/
 short _marpaWrapperAsf_intset_keyCmpFunction(void *userDatavp, void **pp1, void **pp2)
 /****************************************************************************/
 {
-  return ! strcmp((char *) *pp1, (char *) *pp2);
+#ifndef MARPAWRAPPER_NTRACE
+  const static char  funcs[]          = "_marpaWrapperAsf_intset_keyCmpFunction";
+  marpaWrapperAsf_t *marpaWrapperAsfp = (marpaWrapperAsf_t *) userDatavp;
+  genericLogger_t   *genericLoggerp   = marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp;
+#endif
+  int *idi1p = (int *) *pp1;
+  int *idi2p = (int *) *pp2;
+  int  siz1i = idi1p[0];
+  int  siz2i = idi2p[0];
+  int  i;
+
+#ifndef MARPAWRAPPER_NTRACE
+  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "size1 %d == size2 %d ?", siz1i, siz2i);
+#endif
+  if (siz1i != siz2i) {
+#ifndef MARPAWRAPPER_NTRACE
+    MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return 0");
+#endif
+    return 0;
+  }
+  /* By definition elements are ordered */
+  for (i = 1; i <= siz1i; i++) {
+#ifndef MARPAWRAPPER_NTRACE
+    MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "idi1[%d] %d == idi2[%d] %d ?", i, idi1p[i], i, idi2p[i]);
+#endif
+    if (idi1p[i] != idi2p[i]) {
+#ifndef MARPAWRAPPER_NTRACE
+      MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return 0");
+#endif
+      return 0;
+    }
+  }
+
+#ifndef MARPAWRAPPER_NTRACE
+  MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return 1");
+#endif
+  return 1;
 }
 
 /****************************************************************************/
 void *_marpaWrapperAsf_intset_keyCopyFunction(void *userDatavp, void **pp)
 /****************************************************************************/
 {
-  return strdup((char *) *pp);
+  int   *idip   = (int *) *pp;
+  int    sizi   = idip[0];
+  size_t bytesl = (size_t) (++sizi * sizeof(int));
+  int   *newp   = (int *) malloc(bytesl);
+
+  if (newp == NULL) {
+    return NULL;
+  }
+
+  memcpy(newp, idip, bytesl);
+  return newp;
 }
 
 /****************************************************************************/
 void _marpaWrapperAsf_intset_keyFreeFunction(void *userDatavp, void **pp)
 /****************************************************************************/
 {
-  free((char *) *pp);
+  free((int *) *pp);
 }
 
 /****************************************************************************/
