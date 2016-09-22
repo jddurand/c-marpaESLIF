@@ -2171,9 +2171,10 @@ static inline marpaWrapperAsfGlade_t *_marpaWrapperAsf_glade_obtainp(marpaWrappe
 static inline short _marpaWrapperAsf_first_factoringb(marpaWrapperAsf_t *marpaWrapperAsfp, marpaWrapperAsfChoicePoint_t *choicepointp, int nidOfChoicePointi, short *firstFactoringbp)
 /****************************************************************************/
 {
-  const static char            funcs[]         = "_marpaWrapperAsf_first_factoringb";
-  genericLogger_t             *genericLoggerp  = marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp;
-  marpaWrapperAsfNook_t       *nookp           = NULL;
+  const static char            funcs[]           = "_marpaWrapperAsf_first_factoringb";
+  genericLogger_t             *genericLoggerp    = marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp;
+  marpaWrapperAsfNook_t       *nookp             = NULL;
+  genericStack_t              *orNodeInUseStackp = choicepointp->orNodeInUseStackp;
   marpaWrapperAsfOrNode_t     *orNodep;
 
   /* Current NID of current SYMCH */
@@ -2191,8 +2192,8 @@ static inline short _marpaWrapperAsf_first_factoringb(marpaWrapperAsf_t *marpaWr
     goto done;
   }
 
-  GENERICSTACK_SET_SHORT(choicepointp->orNodeInUseStackp, 1, nidOfChoicePointi);
-  if (GENERICSTACK_ERROR(choicepointp->orNodeInUseStackp)) {
+  GENERICSTACK_SET_SHORT(orNodeInUseStackp, 1, nidOfChoicePointi);
+  if (GENERICSTACK_ERROR(orNodeInUseStackp)) {
     MARPAWRAPPER_ERRORF(genericLoggerp, "orNodeInUseStackp failure: %s", strerror(errno));
     goto err;
   }
