@@ -2479,6 +2479,8 @@ static inline short _marpaWrapperAsf_glade_id_factorsb(marpaWrapperAsf_t *marpaW
   int                       choicei;
   marpaWrapperAsfNidset_t  *baseNidsetp;
   int                       gladeIdi;
+  int                       choicepointpMaxIndice;
+  genericStack_t           *choicepointpFactoringStackp;
   
   if (choicepointp->factoringStackp == NULL) {
     goto done;
@@ -2489,23 +2491,25 @@ static inline short _marpaWrapperAsf_glade_id_factorsb(marpaWrapperAsf_t *marpaW
     MARPAWRAPPER_ERROR(genericLoggerp, "Failure to initalize stackp");
     goto err;
   }
-  
-  for (factorIxi = 0; factorIxi <= (int) (GENERICSTACK_USED(choicepointp->factoringStackp)-1); factorIxi++) {
-    if (! GENERICSTACK_IS_PTR(choicepointp->factoringStackp, (size_t) factorIxi)) {
+
+  choicepointpFactoringStackp = choicepointp->factoringStackp;
+  choicepointpMaxIndice = (int) (GENERICSTACK_USED(choicepointpFactoringStackp)-1);
+  for (factorIxi = 0; factorIxi <= choicepointpMaxIndice; factorIxi++) {
+    nookp = GENERICSTACK_GET_PTR(choicepointpFactoringStackp, (size_t) factorIxi);
+    if (GENERICSTACK_ERROR(choicepointpFactoringStackp)) {
       MARPAWRAPPER_ERRORF(genericLoggerp, "Not a pointer at indice %d of factoringStackp", factorIxi);
       goto err;
     }
-    nookp = GENERICSTACK_GET_PTR(choicepointp->factoringStackp, (size_t) factorIxi);
     if (_marpaWrapperAsf_nook_has_semantic_causeb(marpaWrapperAsfp, nookp) == 0) {
       continue;
     }
 
     orNodeIdl = (size_t) nookp->orNodeIdi;
-    if (! GENERICSTACK_IS_PTR(marpaWrapperAsfp->orNodeStackp, orNodeIdl)) {
+    orNodep = GENERICSTACK_GET_PTR(marpaWrapperAsfp->orNodeStackp, orNodeIdl);
+    if (GENERICSTACK_ERROR(marpaWrapperAsfp->orNodeStackp)) {
       MARPAWRAPPER_ERRORF(genericLoggerp, "Not a pointer at indice %d of orNodeStackp", orNodeIdl);
       goto err;
     }
-    orNodep = GENERICSTACK_GET_PTR(marpaWrapperAsfp->orNodeStackp, orNodeIdl);
     nAndNodel = orNodep->nAndNodel;
     andNodep = orNodep->andNodep;
     GENERICSTACK_NEW(andNodeIdStackp);
@@ -2520,6 +2524,10 @@ static inline short _marpaWrapperAsf_glade_id_factorsb(marpaWrapperAsf_t *marpaW
 	goto err;
       }
       GENERICSTACK_PUSH_INT(andNodeIdStackp, andNodep[choicei]);
+      if (GENERICSTACK_ERROR(andNodeIdStackp)) {
+	MARPAWRAPPER_ERRORF(genericLoggerp, "generic stack push failure to andNodeIdStackp, %s", strerror(errno));
+	goto err;
+      }
     }
     GENERICSTACK_FREE(causeNidsStackp);
     if (_marpaWrapperAsf_and_nodes_to_cause_nidsp(marpaWrapperAsfp, andNodeIdStackp, &causeNidsStackp) == 0) {
