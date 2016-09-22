@@ -1047,7 +1047,7 @@ static inline marpaWrapperAsfIdset_t *_marpaWrapperAsf_idset_obtainp(marpaWrappe
 {
   const static char        funcs[] = "_marpaWrapperAsf_idset_obtainp";
   genericLogger_t         *genericLoggerp = marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp;
-  genericStack_t         **stackpp = (idsete == MARPAWRAPPERASFIDSET_NIDSET) ? &(marpaWrapperAsfp->nidsetStackp) : &(marpaWrapperAsfp->powersetStackp);
+  genericStack_t          *stackp = (idsete == MARPAWRAPPERASFIDSET_NIDSET) ? marpaWrapperAsfp->nidsetStackp : marpaWrapperAsfp->powersetStackp;
   char                    *idsets  = marpaWrapperAsfIdsets[idsete];
   marpaWrapperAsfIdset_t  *idsetp   = NULL;
   int                      intsetIdi;
@@ -1056,9 +1056,9 @@ static inline marpaWrapperAsfIdset_t *_marpaWrapperAsf_idset_obtainp(marpaWrappe
     goto err;
   }
 
-  if (GENERICSTACK_IS_PTR((*stackpp), (size_t) intsetIdi)) {
+  if (GENERICSTACK_IS_PTR((stackp), (size_t) intsetIdi)) {
     MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "%s: indice %d already generated", idsets, intsetIdi);
-    idsetp = GENERICSTACK_GET_PTR((*stackpp), intsetIdi);
+    idsetp = GENERICSTACK_GET_PTR(stackp, intsetIdi);
   } else {
     idsetp = malloc(sizeof(marpaWrapperAsfIdset_t));
     if (idsetp == NULL) {
@@ -1078,8 +1078,8 @@ static inline marpaWrapperAsfIdset_t *_marpaWrapperAsf_idset_obtainp(marpaWrappe
       }
       memcpy(idsetp->idip, idip, countl * sizeof(int));
       qsort(idsetp->idip, countl, sizeof(int), _marpaWrapperAsf_idCmpi);
-      GENERICSTACK_SET_PTR((*stackpp), idsetp, intsetIdi);
-      if (GENERICSTACK_ERROR((*stackpp))) {
+      GENERICSTACK_SET_PTR(stackp, idsetp, intsetIdi);
+      if (GENERICSTACK_ERROR(stackp)) {
 	MARPAWRAPPER_ERRORF(genericLoggerp, "%s genericStack error: %s", idsets, strerror(errno));
 	goto err;
       }
@@ -1218,23 +1218,26 @@ static inline void _marpaWrapperAsf_idset_freev(marpaWrapperAsf_t *marpaWrapperA
   genericLogger_t         *genericLoggerp = marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp;
   genericStack_t         **stackpp        = (idsete == MARPAWRAPPERASFIDSET_NIDSET) ? &(marpaWrapperAsfp->nidsetStackp) : &(marpaWrapperAsfp->powersetStackp);
   char                    *idsets         = marpaWrapperAsfIdsets[idsete];
+  genericStack_t          *stackp;
   size_t                   idsetUsedl;
   size_t                   i;
   marpaWrapperAsfIdset_t  *idsetp;
 
   if (*stackpp != NULL) {
-    idsetUsedl = GENERICSTACK_USED((*stackpp));
+    stackp = *stackpp;
+    idsetUsedl = GENERICSTACK_USED(stackp);
     /* Every idset may have an array inside */
     for (i = 0; i < idsetUsedl; i++) {
-      if (GENERICSTACK_IS_PTR((*stackpp), i)) {
-	idsetp = GENERICSTACK_GET_PTR((*stackpp), i);
+      if (GENERICSTACK_IS_PTR(stackp, i)) {
+	idsetp = GENERICSTACK_GET_PTR(stackp, i);
 	if (idsetp->idip != NULL) {
 	  free(idsetp->idip);
 	}
 	free(idsetp);
       }
     }
-    GENERICSTACK_FREE((*stackpp));
+    GENERICSTACK_FREE(stackp);
+    *stackpp = NULL;
   }
 }
 
