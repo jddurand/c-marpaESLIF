@@ -3447,7 +3447,6 @@ size_t _marpaWrapperAsf_intset_keyIndFunction(void *userDatavp, genericStackItem
   int    sumi = 0;
   int    i;
   size_t rcl;
-  int    locali;
 
   for (i = 1; i <= sizi; i++) {
     sumi ^= idip[i];
@@ -3921,8 +3920,8 @@ static void _marpaWrapperAsf_dumpintsetHashpv(marpaWrapperAsf_t *marpaWrapperAsf
   static const char  funcs[]         = "dumpStacks";
   genericLogger_t   *genericLoggerp  = marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp;
   genericHash_t     *intsetHashp     = marpaWrapperAsfp->intsetHashp;
-  int                i;
-  int                j;
+  size_t             i;
+  size_t             j;
   int                k;
   int               *idip;
   size_t             nInRowl;
