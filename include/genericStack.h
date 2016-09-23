@@ -312,7 +312,7 @@ typedef struct genericStack {
 
 /* ====================================================================== */
 /* GET interface                                                          */
-/* Last executed statement in the {} is its return value                  */
+/* Last executed statement in the () is its return value                  */
 /* ====================================================================== */
 #define GENERICSTACK_GET_CHAR(stackName, index)   (_GENERICSTACK_REDUCE_SIZE(stackName), (stackName)->items[index].u.c)
 #define GENERICSTACK_GET_SHORT(stackName, index)  (_GENERICSTACK_REDUCE_SIZE(stackName), (stackName)->items[index].u.s)
