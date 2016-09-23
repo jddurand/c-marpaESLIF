@@ -247,6 +247,26 @@ typedef struct genericStack {
     }									\
   } while (0)
 
+/* It appears that come compilers (like cl) does not like some casts */
+#define _GENERICSTACK_SET_BY_TYPE_NOCAST(stackName, var, itemType, dst, index) do { \
+    size_t _genericStackSetByType_indexForSet = (index);                  \
+    if (_genericStackSetByType_indexForSet >= (stackName)->used) {        \
+      size_t _genericStackSetByType_wantedSize = _genericStackSetByType_indexForSet + 1; \
+      size_t _genericStackSetByType_isForGap;                           \
+                                                                        \
+      _GENERICSTACK_EXTEND((stackName), _genericStackSetByType_wantedSize); \
+      for (_genericStackSetByType_isForGap = (stackName)->used; _genericStackSetByType_isForGap < _genericStackSetByType_indexForSet; _genericStackSetByType_isForGap++) { \
+        (stackName)->items[_genericStackSetByType_isForGap].type = _GENERICSTACKITEMTYPE_NA;   \
+      }                                                                 \
+      (stackName)->used = _genericStackSetByType_wantedSize;		\
+    }									\
+    if (! GENERICSTACK_ERROR((stackName))) {				\
+      genericStackItem_t *_item = (stackName)->items + _genericStackSetByType_indexForSet; \
+      _item->type = (itemType);						\
+      _item->u.dst = (var);						\
+    }									\
+  } while (0)
+
 #define GENERICSTACK_SET_CHAR(stackName, var, index) _GENERICSTACK_SET_BY_TYPE((stackName), char,   var, GENERICSTACKITEMTYPE_CHAR, c, index)
 #define GENERICSTACK_SET_SHORT(stackName, var, index)  _GENERICSTACK_SET_BY_TYPE((stackName), short,  var, GENERICSTACKITEMTYPE_SHORT, s, index)
 #define GENERICSTACK_SET_INT(stackName, var, index)    _GENERICSTACK_SET_BY_TYPE((stackName), int,    var, GENERICSTACKITEMTYPE_INT, i, index)
@@ -254,8 +274,8 @@ typedef struct genericStack {
 #define GENERICSTACK_SET_FLOAT(stackName, var, index)  _GENERICSTACK_SET_BY_TYPE((stackName), float,  var, GENERICSTACKITEMTYPE_FLOAT, f, index)
 #define GENERICSTACK_SET_DOUBLE(stackName, var, index) _GENERICSTACK_SET_BY_TYPE((stackName), double, var, GENERICSTACKITEMTYPE_DOUBLE, d, index)
 #define GENERICSTACK_SET_PTR(stackName, var, index)    _GENERICSTACK_SET_BY_TYPE((stackName), void *, var, GENERICSTACKITEMTYPE_PTR, p, index)
-#define GENERICSTACK_SET_ARRAY(stackName, var, index)  _GENERICSTACK_SET_BY_TYPE((stackName), genericStackItemTypeArray_t, var, GENERICSTACKITEMTYPE_ARRAY, a, index)
-#define GENERICSTACK_SET_ARRAYP(stackName, var, index)  _GENERICSTACK_SET_BY_TYPE((stackName), genericStackItemTypeArray_t, *(var), GENERICSTACKITEMTYPE_ARRAY, a, index)
+#define GENERICSTACK_SET_ARRAY(stackName, var, index)  _GENERICSTACK_SET_BY_TYPE_NOCAST((stackName), var, GENERICSTACKITEMTYPE_ARRAY, a, index)
+#define GENERICSTACK_SET_ARRAYP(stackName, var, index)  _GENERICSTACK_SET_BY_TYPE_NOCAST((stackName), *(var), GENERICSTACKITEMTYPE_ARRAY, a, index)
 #if GENERICSTACK_HAVE_LONG_LONG > 0
 #define GENERICSTACK_SET_LONG_LONG(stackName, var, index) _GENERICSTACK_SET_BY_TYPE((stackName), long long, var, GENERICSTACKITEMTYPE_LONG_LONG, ll, index)
 #endif
