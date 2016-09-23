@@ -124,9 +124,14 @@ typedef struct genericStack {
 } genericStack_t;
 
 /* ====================================================================== */
-/* Error detection                                                        */
+/* Error detection and reset                                              */
 /* ====================================================================== */
 #define GENERICSTACK_ERROR(stackName) (((stackName) == NULL) || ((stackName)->error != 0))
+#define GENERICSTACK_ERROR_RESET(stackName) do {			\
+    if ((stackName) != NULL) {						\
+      (stackName)->error = 0;						\
+    }									\
+  } while (0)
 
 /* ====================================================================== */
 /* Size management, internal macro                                        */

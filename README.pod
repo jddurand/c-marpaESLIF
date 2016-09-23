@@ -182,6 +182,10 @@ Return a true value if there is an error. Should be called after every call to:
 
 =back
 
+=head2 GENERICSTACK_ERROR_RESET(stackName)
+
+Reset error to a false value.
+
 =head2 GENERICSTACK_SWITCH(stackName, i1, i2)
 
 Switches items at positions C<i1> and C<i2>.
