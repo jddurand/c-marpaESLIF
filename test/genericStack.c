@@ -29,8 +29,8 @@ int main() {
   GENERICSTACK_ARRAYP_LENGTH(&array2) = 20;
   GENERICSTACK_ARRAYP_PTR(&array2) = malloc(GENERICSTACK_ARRAYP_LENGTH(&array2));
 
-  GENERICSTACK_ERROR_RESET(myStackp);  /* Not meaningful here, but just to test it */
   GENERICSTACK_NEW(myStackp); if (GENERICSTACK_ERROR(myStackp)) { return 1; }
+  GENERICSTACK_ERROR_RESET(myStackp);  /* Not meaningful here, but just to test it */
 
   printf("\nNEW interface:\n");
   printf("--------------:\n\n");
