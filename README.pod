@@ -565,9 +565,9 @@ Call for a forest tree, using the C<traverserCallbackp> callback function pointe
 
 =head2 marpaWrapperAsf_traverse_rh_lengthl
 
-  size_t marpaWrapperAsf_traverse_rh_lengthl(marpaWrapperAsfTraverser_t *traverserp)
+  int marpaWrapperAsf_traverse_rh_lengthi(marpaWrapperAsfTraverser_t *traverserp)
 
-Returns the number of RHS symbols at the current node, (size_t)-1 in case of failure. In particular, this will fail if it is called for a token.
+Returns the number of RHS symbols at the current node, -1 in case of failure. In particular, this will fail if it is called for a token. A Nulling rule returns a zero length.
 
 =head2 marpaWrapperAsf_traverse_symbolIdb
 
@@ -589,7 +589,7 @@ If it returns a true value, then C<*nextbp> contains a true value if there is an
 
 =head2 marpaWrapperAsf_traverse_rh_valueb
 
-  short marpaWrapperAsf_traverse_rh_valueb(marpaWrapperAsfTraverser_t *traverserp, size_t rhIxi, int *valueip)
+  short marpaWrapperAsf_traverse_rh_valueb(marpaWrapperAsfTraverser_t *traverserp, int rhIxi, int *valueip)
 
 If it is returns a true value, then the user-space value of RH rule number C<rhIxi> in filled in C<*valueip>.
 
