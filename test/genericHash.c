@@ -6,7 +6,7 @@ typedef struct myContext {
   genericLogger_t *genericLoggerp;
 } myContext_t;
 
-static size_t myHashIndFunction(void *userDatavp, genericStackItemType_t itemType, void **pp);
+static int    myHashIndFunction(void *userDatavp, genericStackItemType_t itemType, void **pp);
 static short  myHashKeyCmpFunction(void *userDatavp, void **pp1, void **pp2);
 static void  *myHashKeyCopyFunction(void *userDatavp, void **pp);
 static void   myHashKeyFreeFunction(void *userDatavp, void **pp);
@@ -142,13 +142,13 @@ static int myHashTest(short withAllocb) {
 }
 
 /*********************************************************************/
-static size_t myHashIndFunction(void *userDatavp, genericStackItemType_t itemType, void **pp)
+static int myHashIndFunction(void *userDatavp, genericStackItemType_t itemType, void **pp)
 /*********************************************************************/
 {
   char             funcs[] = "myHashIndFunction";
   myContext_t     *myContextp = (myContext_t *) userDatavp;
   genericLogger_t *genericLoggerp = myContextp->genericLoggerp;
-  size_t           rcl = (size_t)-1;
+  int              rcl = -1;
 
   GENERICLOGGER_TRACEF(genericLoggerp, "... [%s] Computing index of object of type %d pointed by %p", funcs, (int) itemType, pp);
 
@@ -161,7 +161,7 @@ static size_t myHashIndFunction(void *userDatavp, genericStackItemType_t itemTyp
 
       GENERICLOGGER_TRACEF(genericLoggerp, "... ... [%s] PTR is %p", funcs, cp);
       absi = abs(i);
-      rcl = (size_t) (absi % 50);
+      rcl = (absi % 50);
       GENERICLOGGER_TRACEF(genericLoggerp, "... ... [%s] Index %d", funcs, (int) rcl);
     }
     break;
@@ -275,8 +275,8 @@ static void  myHashValFreeFunction(void *userDatavp, void **pp)
 static void myHashDump(myContext_t *myContextp, genericHash_t *myHashp)
 /*********************************************************************/
 {
-  size_t i;
-  size_t j;
+  int i;
+  int j;
 
   GENERICLOGGER_TRACE(myContextp->genericLoggerp, "Hash Dump");
   for (i = 0; i < GENERICSTACK_USED(myHashp->keyStackp); i++) {
