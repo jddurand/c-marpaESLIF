@@ -575,15 +575,13 @@ static inline void _marpaWrapperAsf_orNodeStackp_freev(marpaWrapperAsf_t *marpaW
   if (marpaWrapperAsfp->orNodeStackp != NULL) {
     orNodeUsedi = GENERICSTACK_USED(marpaWrapperAsfp->orNodeStackp);
     for (i = 0; i < orNodeUsedi; i++) {
-      orNodep = GENERICSTACK_GET_PTR(marpaWrapperAsfp->orNodeStackp, i);
-      if (GENERICSTACK_ERROR(marpaWrapperAsfp->orNodeStackp)) {
-	GENERICSTACK_ERROR_RESET(marpaWrapperAsfp->orNodeStackp);
-	continue;
+      if (GENERICSTACK_IS_PTR(marpaWrapperAsfp->orNodeStackp, i)) {
+	orNodep = GENERICSTACK_GET_PTR(marpaWrapperAsfp->orNodeStackp, i);
+	if (orNodep->andNodep != NULL) {
+	  free(orNodep->andNodep);
+	}
+	free(orNodep);
       }
-      if (orNodep->andNodep != NULL) {
-	free(orNodep->andNodep);
-      }
-      free(orNodep);
     }
     GENERICSTACK_FREE(marpaWrapperAsfp->orNodeStackp);
   }
@@ -749,11 +747,11 @@ static inline short _marpaWrapperAsf_peakb(marpaWrapperAsf_t *marpaWrapperAsfp, 
     goto err;
   }
 
-  orNodep = GENERICSTACK_GET_PTR(orNodeStackp, augmentOrNodeIdi);
-  if (GENERICSTACK_ERROR(orNodeStackp)) {
-    MARPAWRAPPER_ERRORF(genericLoggerp, "marpaWrapperAsfp->orNodeStackp get failure, %s", strerror(errno));
+  if (! GENERICSTACK_IS_PTR(orNodeStackp, augmentOrNodeIdi)) {
+    MARPAWRAPPER_ERRORF(genericLoggerp, "marpaWrapperAsfp->orNodeStackp not a pointer at indice %d", augmentOrNodeIdi);
     goto err;
   }
+  orNodep = GENERICSTACK_GET_PTR(orNodeStackp, augmentOrNodeIdi);
 
   if (orNodep->nAndNodei <= 0) {
     MARPAWRAPPER_ERROR(genericLoggerp, "No AND node at this orNode stack");
@@ -2436,21 +2434,24 @@ static inline short _marpaWrapperAsf_glade_id_factorsb(marpaWrapperAsf_t *marpaW
   choicepointpFactoringStackp = choicepointp->factoringStackp;
   choicepointpMaxIndice = GENERICSTACK_USED(choicepointpFactoringStackp) - 1;
   for (factorIxi = 0; factorIxi <= choicepointpMaxIndice; factorIxi++) {
-    nookp = GENERICSTACK_GET_PTR(choicepointpFactoringStackp,  factorIxi);
-    if (GENERICSTACK_ERROR(choicepointpFactoringStackp)) {
+
+    if (! GENERICSTACK_IS_PTR(choicepointpFactoringStackp,  factorIxi)) {
       MARPAWRAPPER_ERRORF(genericLoggerp, "Not a pointer at indice %d of factoringStackp", factorIxi);
       goto err;
     }
+    nookp = GENERICSTACK_GET_PTR(choicepointpFactoringStackp,  factorIxi);
     if (_marpaWrapperAsf_nook_has_semantic_causeb(marpaWrapperAsfp, nookp) == 0) {
       continue;
     }
 
     orNodeIdi = nookp->orNodeIdi;
-    orNodep = GENERICSTACK_GET_PTR(orNodeStackp, orNodeIdi);
-    if (GENERICSTACK_ERROR(orNodeStackp)) {
+
+    if (! GENERICSTACK_GET_PTR(orNodeStackp, orNodeIdi)) {
       MARPAWRAPPER_ERRORF(genericLoggerp, "Not a pointer at indice %d of orNodeStackp", orNodeIdi);
       goto err;
     }
+    orNodep = GENERICSTACK_GET_PTR(orNodeStackp, orNodeIdi);
+
     nAndNodei = orNodep->nAndNodei;
     andNodep = orNodep->andNodep;
     GENERICSTACK_NEW(andNodeIdStackp);
