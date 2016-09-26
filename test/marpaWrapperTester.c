@@ -37,8 +37,8 @@ int main(int argc, char **argv) {
   int                           *symbolArrayp = NULL;
   size_t                         neventl;
   size_t                         nsymboll;
-  size_t                         i;
-  size_t                         outputStackSizel;
+  int                            i;
+  int                            outputStackSizei;
   valueContext_t                 valueContext = { NULL, symbolip, ruleip, NULL, NULL, GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_TRACE) };
   
   marpaWrapperGrammarOption_t    marpaWrapperGrammarOption    = { GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_TRACE),
@@ -229,7 +229,7 @@ int main(int argc, char **argv) {
     } else {
       GENERICLOGGER_TRACEF(marpaWrapperRecognizerOption.genericLoggerp, "Number of expected symbols: %ld", (unsigned long) nsymboll);
       if (nsymboll > 0) {
-	for (i = 0; i < nsymboll; i++) {
+	for (i = 0; i < (int) nsymboll; i++) {
 	  switch (symbolArrayp[i]) {
 	  case S:
 	    GENERICLOGGER_TRACEF(marpaWrapperRecognizerOption.genericLoggerp, "... Expected symbol No %d: S", i);
@@ -291,9 +291,9 @@ int main(int argc, char **argv) {
   GENERICSTACK_FREE(valueContext.inputStackp);
 
   /* Output stack have somme inner PTR */
-  outputStackSizel = GENERICSTACK_USED(valueContext.outputStackp);
-  if (outputStackSizel > 0) {
-    for (i = 0; i < outputStackSizel; i++) {
+  outputStackSizei = GENERICSTACK_USED(valueContext.outputStackp);
+  if (outputStackSizei > 0) {
+    for (i = 0; i < outputStackSizei; i++) {
       if (GENERICSTACK_IS_PTR(valueContext.outputStackp, i)) {
 	free(GENERICSTACK_GET_PTR(valueContext.outputStackp, i));
       }
@@ -392,11 +392,11 @@ static short valueRuleCallback(void *userDatavp, int rulei, int arg0i, int argni
     goto err;
   }
 
-  if (GENERICSTACK_IS_PTR(outputStackp, (size_t) resulti)) {
-    free(GENERICSTACK_GET_PTR(outputStackp, (size_t) resulti));
+  if (GENERICSTACK_IS_PTR(outputStackp, resulti)) {
+    free(GENERICSTACK_GET_PTR(outputStackp, resulti));
     GENERICSTACK_SET_NA(outputStackp, resulti);
   }
-  GENERICSTACK_SET_PTR(outputStackp, resultp, (size_t) resulti);
+  GENERICSTACK_SET_PTR(outputStackp, resultp, resulti);
   if (GENERICSTACK_ERROR(outputStackp)) {
     GENERICLOGGER_ERRORF(genericLoggerp, "generic stack error, %s", strerror(errno));
     goto err;
@@ -440,12 +440,12 @@ static short valueSymbolCallback(void *userDatavp, int symboli, int argi, int re
       char varc = GENERICSTACK_GET_CHAR(inputStackp, argi);
       GENERICLOGGER_TRACEF(genericLoggerp, "[%s] op: operator '0x%x' at input stack No %d -> output stack No %d", funcs, varc, argi, resulti);
 
-      if (GENERICSTACK_IS_PTR(outputStackp, (size_t) resulti)) {
-	free(GENERICSTACK_GET_PTR(outputStackp, (size_t) resulti));
-	GENERICSTACK_SET_NA(outputStackp, (size_t) resulti);
+      if (GENERICSTACK_IS_PTR(outputStackp, resulti)) {
+	free(GENERICSTACK_GET_PTR(outputStackp, resulti));
+	GENERICSTACK_SET_NA(outputStackp, resulti);
       }
 
-      GENERICSTACK_SET_CHAR(outputStackp, varc, (size_t) resulti);
+      GENERICSTACK_SET_CHAR(outputStackp, varc, resulti);
       if (GENERICSTACK_ERROR(outputStackp)) {
 	GENERICLOGGER_ERRORF(genericLoggerp, "generic stack error, %s", strerror(errno));
       }
@@ -465,12 +465,12 @@ static short valueSymbolCallback(void *userDatavp, int symboli, int argi, int re
       sprintf(resultp->s, "%d", vari);
       GENERICLOGGER_TRACEF(genericLoggerp, "[%s] number: value %d at input stack No %d -> {s=%s,i=%d} at output stack No %d", funcs, vari, argi, resultp->s, resultp->i, resulti);
 
-      if (GENERICSTACK_IS_PTR(outputStackp, (size_t) resulti)) {
-	free(GENERICSTACK_GET_PTR(outputStackp, (size_t) resulti));
-	GENERICSTACK_SET_NA(outputStackp, (size_t) resulti);
+      if (GENERICSTACK_IS_PTR(outputStackp, resulti)) {
+	free(GENERICSTACK_GET_PTR(outputStackp, resulti));
+	GENERICSTACK_SET_NA(outputStackp, resulti);
       }
 
-      GENERICSTACK_SET_PTR(outputStackp, resultp, (size_t) resulti);
+      GENERICSTACK_SET_PTR(outputStackp, resultp, resulti);
       if (GENERICSTACK_ERROR(outputStackp)) {
 	GENERICLOGGER_ERRORF(genericLoggerp, "generic stack error, %s", strerror(errno));
       }
@@ -502,12 +502,12 @@ static void dumpStacks(valueContext_t *valueContextp)
   genericStack_t             *inputStackp     = valueContextp->inputStackp;
   genericStack_t             *outputStackp    = valueContextp->outputStackp;
   genericLogger_t            *genericLoggerp  = valueContextp->genericLoggerp;
-  size_t                      inputStackSizel = GENERICSTACK_USED(inputStackp);
-  size_t                      outputStackSizel = GENERICSTACK_USED(outputStackp);
-  size_t                      i;
+  int                         inputStackSizei = GENERICSTACK_USED(inputStackp);
+  int                         outputStackSizei = GENERICSTACK_USED(outputStackp);
+  int                         i;
 
-  if (inputStackSizel > 0) {
-    for (i = 0; i < inputStackSizel; i++) {
+  if (inputStackSizei > 0) {
+    for (i = 0; i < inputStackSizei; i++) {
       if (GENERICSTACK_IS_NA(inputStackp, i)) {
 	GENERICLOGGER_TRACEF(genericLoggerp, "[%s] ... input stack No %d is NA", funcs, i);
       } else if (GENERICSTACK_IS_CHAR(inputStackp, i)) {
@@ -530,8 +530,8 @@ static void dumpStacks(valueContext_t *valueContextp)
     }
   }
 
-  if (outputStackSizel > 0) {
-    for (i = 0; i < outputStackSizel; i++) {
+  if (outputStackSizei > 0) {
+    for (i = 0; i < outputStackSizei; i++) {
       if (GENERICSTACK_IS_NA(outputStackp, i)) {
 	GENERICLOGGER_TRACEF(genericLoggerp, "[%s] ... output stack No %d is NA", funcs, i);
       } else if (GENERICSTACK_IS_CHAR(outputStackp, i)) {

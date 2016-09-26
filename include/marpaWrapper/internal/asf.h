@@ -9,7 +9,7 @@
 
 typedef struct marpaWrapperAsfIdset {
   int    idi;
-  size_t countl;
+  int    counti;
   int   *idip;
 } marpaWrapperAsfIdset_t;
 
@@ -32,7 +32,7 @@ typedef struct marpaWrapperAsfGlade {
 typedef int *andNodeStack_t;
 
 typedef struct marpaWrapperAsfOrNode {
-  size_t  nAndNodel;
+  int     nAndNodei;
   int    *andNodep;
 } marpaWrapperAsfOrNode_t;
 
