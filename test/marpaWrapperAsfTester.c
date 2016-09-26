@@ -83,7 +83,7 @@ int main(int argc, char **argv) {
   marpaWrapperRecognizerOption_t marpaWrapperRecognizerOption = { GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_DEBUG),
 								  0 /* disableThresholdb */
   };
-  marpaWrapperAsfOption_t        marpaWrapperAsfOption        = { GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_TRACE),
+  marpaWrapperAsfOption_t        marpaWrapperAsfOption        = { GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_DEBUG),
 								  0 /* highRankOnlyb */,
 								  0 /* orderByRankb */,
 								  1 /* ambiguousb */
@@ -339,7 +339,7 @@ int main(int argc, char **argv) {
     exit(1);
   }
   if (marpaWrapperAsf_traverseb(marpaWrapperAsfp, pruning_traverserCallbacki, &traverseContext, &valuei)) {
-    GENERICLOGGER_INFOF(traverseContext.genericLoggerp, "Pruning traverser returns:\n%s", GENERICSTACK_GET_PTR(traverseContext.outputStackp, (size_t) valuei));
+    GENERICLOGGER_INFOF(traverseContext.genericLoggerp, "Pruning traverser returns:\n%s", GENERICSTACK_GET_PTR(traverseContext.outputStackp, valuei));
   } else {
     GENERICLOGGER_ERROR(traverseContext.genericLoggerp, "marpaWrapperAsf_traverseb (pruning) failure");
   }
@@ -353,10 +353,10 @@ int main(int argc, char **argv) {
   }
   if (marpaWrapperAsf_traverseb(marpaWrapperAsfp, full_traverserCallbacki, &traverseContext, &valuei)) {
     genericStack_t *stringStackp;
-    size_t          i;
+    int             i;
     GENERICLOGGER_INFO(traverseContext.genericLoggerp, "full traverser returns:");
 
-    stringStackp = GENERICSTACK_GET_PTR(traverseContext.outputStackp, (size_t) valuei);
+    stringStackp = GENERICSTACK_GET_PTR(traverseContext.outputStackp, valuei);
     for (i = 0; i < GENERICSTACK_USED(stringStackp); i++) {
       GENERICLOGGER_INFOF(traverseContext.genericLoggerp, "Indice %d:\n%s", i, GENERICSTACK_GET_PTR(stringStackp, i));
     }    
@@ -444,7 +444,7 @@ static short pruning_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, 
   /* A token is a single choice, and we know enough to fully Penn-tag it */
   if (ruleIdi < 0) {
     int     spanIdi;
-    size_t  indicel;
+    int     indicei;
     char   *tokenValues;
     
     if (! marpaWrapperAsf_traverse_rh_valueb(traverserp, 0, &spanIdi)) {
@@ -453,12 +453,12 @@ static short pruning_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, 
     GENERICLOGGER_DEBUGF(genericLoggerp, "[%s][%d:%d] ... spanIdi=%d", funcs, ruleIdi, symbolIdi, spanIdi);
 
     /* The spanId correspond to the inputstack indice spanId+1 */
-    indicel = spanIdi + 1;
-    if (! GENERICSTACK_IS_PTR(traverseContextp->inputStackp, indicel)) {
-      GENERICLOGGER_ERRORF(genericLoggerp, "[%s][%d:%d] ... Nothing at input stack indice %d", funcs, ruleIdi, symbolIdi, (int) indicel);
+    indicei = spanIdi + 1;
+    if (! GENERICSTACK_IS_PTR(traverseContextp->inputStackp, indicei)) {
+      GENERICLOGGER_ERRORF(genericLoggerp, "[%s][%d:%d] ... Nothing at input stack indice %d", funcs, ruleIdi, symbolIdi, (int) indicei);
       goto err;
     }
-    tokenValues = GENERICSTACK_GET_PTR(traverseContextp->inputStackp, indicel);
+    tokenValues = GENERICSTACK_GET_PTR(traverseContextp->inputStackp, indicei);
     GENERICLOGGER_DEBUGF(genericLoggerp, "[%s][%d:%d] ... Token is \"%s\"", funcs, ruleIdi, symbolIdi, tokenValues);
     /* We want to generate the string "(penntag literal)" */
     stringl = 1 + strlen(symbolNames) + 1 + strlen(tokenValues) + 1 + 1;
@@ -470,9 +470,9 @@ static short pruning_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, 
     sprintf(strings, "(%s %s)", symbolNames, tokenValues);
     
   } else {
-    size_t  lengthl;
-    size_t  rhIxi;
-    size_t  indicel;
+    int     lengthi;
+    int     rhIxi;
+    int     indicei;
     
     ruleNames = penn_tag_rules(traverseContextp, ruleIdi);
     if (ruleNames == NULL) {
@@ -481,19 +481,19 @@ static short pruning_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, 
     }
     GENERICLOGGER_DEBUGF(genericLoggerp, "[%s][%d:%d] ... rule %s", funcs, ruleIdi, symbolIdi, ruleNames);
 
-    lengthl = marpaWrapperAsf_traverse_rh_lengthl(traverserp);
-    if (lengthl == (size_t) -1) {
-      GENERICLOGGER_ERRORF(genericLoggerp, "[%s][%d:%d] ... lengthl is (size_t)-1", funcs, ruleIdi, symbolIdi);
+    lengthi = marpaWrapperAsf_traverse_rh_lengthi(traverserp);
+    if (lengthi < 0) {
+      GENERICLOGGER_ERRORF(genericLoggerp, "[%s][%d:%d] ... lengthl is < 0", funcs, ruleIdi, symbolIdi);
       goto err;
     }
-    GENERICLOGGER_DEBUGF(genericLoggerp, "[%s][%d:%d] ... lengthl=%d", funcs, ruleIdi, symbolIdi, (int) lengthl);
+    GENERICLOGGER_DEBUGF(genericLoggerp, "[%s][%d:%d] ... lengthi=%d", funcs, ruleIdi, symbolIdi, lengthi);
 
     GENERICSTACK_NEW(rhStackp);
     if (GENERICSTACK_ERROR(rhStackp)) {
       GENERICLOGGER_ERRORF(genericLoggerp, "[%s][%d:%d] ... rhStackp initialization failure: %s", funcs, ruleIdi, symbolIdi, strerror(errno));
       goto err;
     }
-    for (rhIxi = 0; rhIxi <= lengthl - 1; rhIxi++) {
+    for (rhIxi = 0; rhIxi <= lengthi - 1; rhIxi++) {
       int   valuei;
       char *values;
 
@@ -502,12 +502,12 @@ static short pruning_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, 
       }
 
       /* We expect valuei to be in outputStack */
-      indicel = valuei;
-      if (! GENERICSTACK_IS_PTR(traverseContextp->outputStackp, indicel)) {
-	GENERICLOGGER_ERRORF(genericLoggerp, "[%s][%d:%d] ... Nothing at output stack indice %d", funcs, ruleIdi, symbolIdi, (int) indicel);
+      indicei = valuei;
+      if (! GENERICSTACK_IS_PTR(traverseContextp->outputStackp, indicei)) {
+	GENERICLOGGER_ERRORF(genericLoggerp, "[%s][%d:%d] ... Nothing at output stack indice %d", funcs, ruleIdi, symbolIdi, (int) indicei);
 	goto err;
       }
-      values = GENERICSTACK_GET_PTR(traverseContextp->outputStackp, indicel);
+      values = GENERICSTACK_GET_PTR(traverseContextp->outputStackp, indicei);
       GENERICLOGGER_DEBUGF(genericLoggerp, "[%s][%d:%d] ... Value is \"%s\" for rh No %d", funcs, ruleIdi, symbolIdi, values, rhIxi);
 
       GENERICSTACK_PUSH_INT(rhStackp, valuei);
@@ -519,12 +519,12 @@ static short pruning_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, 
 
     /* Special case for the start rule */
     if (symbolIdi == START) {
-      size_t  i;
+      int  i;
 
       /* All rh values are concatenated with a space in between and a newline at the end */
       stringl = 0;
       for (i = 0; i < GENERICSTACK_USED(rhStackp); i++) {
-	size_t rhValuei = GENERICSTACK_GET_INT(rhStackp, i);
+	int rhValuei = GENERICSTACK_GET_INT(rhStackp, i);
 	if (i > 0) {
 	  stringl++;
 	}
@@ -539,7 +539,7 @@ static short pruning_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, 
 
       strings[0] = '\0';
       for (i = 0; i < GENERICSTACK_USED(rhStackp); i++) {
-	size_t rhValuei = GENERICSTACK_GET_INT(rhStackp, i);
+	int rhValuei = GENERICSTACK_GET_INT(rhStackp, i);
 	if (i > 0) {
 	  strcat(strings, " ");
 	}
@@ -548,7 +548,7 @@ static short pruning_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, 
       strcat(strings, "\n");
     } else {
       char  *joinWs = " ";
-      size_t i;
+      int    i;
 
       if (symbolIdi == S) {
 	joinWs = "\n  ";
@@ -557,7 +557,7 @@ static short pruning_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, 
       /* All rh values are concatenated with joinWs in between, the whole beeing enclosed in (penntag XXX) */
       stringl = 1 + strlen(symbolNames) + 1; /* "(penntag " */
       for (i = 0; i < GENERICSTACK_USED(rhStackp); i++) {
-	size_t rhValuei = GENERICSTACK_GET_INT(rhStackp, i);
+	int rhValuei = GENERICSTACK_GET_INT(rhStackp, i);
 	if (i > 0) {
 	  stringl += strlen(joinWs);
 	}
@@ -573,7 +573,7 @@ static short pruning_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, 
       strcat(strings, symbolNames);
       strcat(strings, " ");
       for (i = 0; i < GENERICSTACK_USED(rhStackp); i++) {
-	size_t rhValuei = GENERICSTACK_GET_INT(rhStackp, i);
+	int rhValuei = GENERICSTACK_GET_INT(rhStackp, i);
 	if (i > 0) {
 	  strcat(strings, joinWs);
 	}
@@ -649,14 +649,14 @@ static short full_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, voi
   /* A token is a single choice, and we know enough to fully Penn-tag it */
   if (ruleIdi < 0) {
     int     spanIdi;
-    size_t  indicel;
+    int     indicei;
     char   *tokenValues;
     size_t  stringl;
     char   *strings;
     
     marpaWrapperAsf_traverse_rh_valueb(traverserp, 0, &spanIdi);
-    indicel     = spanIdi + 1; /* The spanId correspond to the inputstack indice spanId+1 */
-    tokenValues = GENERICSTACK_GET_PTR(traverseContextp->inputStackp, indicel);
+    indicei     = spanIdi + 1; /* The spanId correspond to the inputstack indice spanId+1 */
+    tokenValues = GENERICSTACK_GET_PTR(traverseContextp->inputStackp, indicei);
 
     GENERICLOGGER_DEBUGF(genericLoggerp, "[%s][%d:%d] ... spanIdi=%d", funcs, ruleIdi, symbolIdi, spanIdi);
     GENERICLOGGER_DEBUGF(genericLoggerp, "[%s][%d:%d] ... Token is \"%s\"", funcs, ruleIdi, symbolIdi, tokenValues);
@@ -675,16 +675,16 @@ static short full_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, voi
 
     /* Our result will be a list of choices */
     while (1) {
-      size_t         lengthl;
-      size_t         rhIxi;
+      int             lengthi;
+      int             rhIxi;
       genericStack_t *resultStackp;
     
       /* The results at each position are a list of chocies, so
          to produce a new result list, we need to take a Cartesian
          printf("format string" ,a0,a1);oduct of all the choices */
 
-      lengthl = marpaWrapperAsf_traverse_rh_lengthl(traverserp);
-      GENERICLOGGER_DEBUGF(genericLoggerp, "[%s][%d:%d] ... lengthl=%d", funcs, ruleIdi, symbolIdi, (int) lengthl);
+      lengthi = marpaWrapperAsf_traverse_rh_lengthi(traverserp);
+      GENERICLOGGER_DEBUGF(genericLoggerp, "[%s][%d:%d] ... lengthi=%d", funcs, ruleIdi, symbolIdi, lengthi);
 
       GENERICSTACK_NEW(resultStackp);
       {
@@ -693,9 +693,9 @@ static short full_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, voi
         GENERICSTACK_PUSH_PTR(resultStackp, emptyStackp);
       }
 
-      for (rhIxi = 0; rhIxi <= lengthl - 1; rhIxi++) {
+      for (rhIxi = 0; rhIxi <= lengthi - 1; rhIxi++) {
         genericStack_t *newResultStackp;
-        size_t          i;
+        int             i;
 
         GENERICSTACK_NEW(newResultStackp);
 
@@ -703,14 +703,14 @@ static short full_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, voi
           genericStack_t *oldResultStackp = GENERICSTACK_GET_PTR(resultStackp, i);
           int             childValuei;
           genericStack_t *childValueStackp;
-          size_t          j;
+          int             j;
 
 	  marpaWrapperAsf_traverse_rh_valueb(traverserp, rhIxi, &childValuei);
-          childValueStackp = GENERICSTACK_GET_PTR(traverseContextp->outputStackp, (size_t) childValuei);
+          childValueStackp = GENERICSTACK_GET_PTR(traverseContextp->outputStackp, childValuei);
 
           for (j = 0; j < GENERICSTACK_USED(childValueStackp); j++) {
             char           *newValues = GENERICSTACK_GET_PTR(childValueStackp, j);
-            size_t          k;
+            int             k;
             genericStack_t *stackp;
 
             GENERICSTACK_NEW(stackp);
@@ -735,11 +735,11 @@ static short full_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, voi
 
       /* Special case for the start rule */
       if (symbolIdi == START) {
-        size_t  i;
+        int  i;
 
         for (i = 0; i < GENERICSTACK_USED(resultStackp); i++) {
           genericStack_t *stackp = GENERICSTACK_GET_PTR(resultStackp, i);
-          size_t          j;
+          int             j;
           size_t          stringl;
           char           *strings;
 
@@ -766,7 +766,7 @@ static short full_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, voi
 
       } else {
         char           *joinWs = " ";
-        size_t          i;
+        int             i;
 
         if (symbolIdi == S) {
           joinWs = "\n  ";
@@ -774,7 +774,7 @@ static short full_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, voi
 
         for (i = 0; i < GENERICSTACK_USED(resultStackp); i++) {
           genericStack_t *stackp = GENERICSTACK_GET_PTR(resultStackp, i);
-          size_t          j;
+          int             j;
           size_t          stringl;
           char           *strings;
 
@@ -942,12 +942,12 @@ static char *penn_tag_rules(traverseContext_t *traverseContextp, int ruleIdi)
 static void freeStringStackv(genericStack_t *stringStackp)
 /********************************************************************************/
 {
-  size_t i;
-  size_t usedl;
+  int i;
+  int usedi;
 
-  usedl = GENERICSTACK_USED(stringStackp);
+  usedi = GENERICSTACK_USED(stringStackp);
   if (! GENERICSTACK_ERROR(stringStackp)) {
-    for (i = 0; i < usedl; i++) {
+    for (i = 0; i < usedi; i++) {
       if (GENERICSTACK_IS_PTR(stringStackp, i)) {
 	free(GENERICSTACK_GET_PTR(stringStackp, i));
       }
@@ -960,12 +960,12 @@ static void freeStringStackv(genericStack_t *stringStackp)
 static void freeStringArrayStackv(genericStack_t *stringArrayStackp)
 /********************************************************************************/
 {
-  size_t i;
-  size_t usedl;
+  int i;
+  int usedi;
 
-  usedl = GENERICSTACK_USED(stringArrayStackp);
+  usedi = GENERICSTACK_USED(stringArrayStackp);
   if (! GENERICSTACK_ERROR(stringArrayStackp)) {
-    for (i = 0; i < usedl; i++) {
+    for (i = 0; i < usedi; i++) {
       if (GENERICSTACK_IS_PTR(stringArrayStackp, i)) {
 	freeStringStackv(GENERICSTACK_GET_PTR(stringArrayStackp, i));
       }
@@ -1085,6 +1085,7 @@ static short valueRuleCallback(void *userDatavp, int rulei, int arg0i, int argni
   }
   for (i = arg0i; i <= argni; i++) {
     q = GENERICSTACK_GET_PTR(traverseContextp->outputStackp, i);
+    GENERICLOGGER_DEBUGF(genericLoggerp, "[rule No %d][%s] PTR at indice %d is %p %s", rulei, descs, i, q, q != NULL ? q : "(null)");
     if (GENERICSTACK_ERROR(traverseContextp->outputStackp)) {
       GENERICLOGGER_ERRORF(genericLoggerp, "[valueRuleCallback] outputStackp get failure, %s", strerror(errno));
       goto err;

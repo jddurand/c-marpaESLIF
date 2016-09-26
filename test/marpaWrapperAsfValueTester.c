@@ -221,10 +221,10 @@ int main(int argc, char **argv) {
   }
   if (marpaWrapperAsf_traverseb(marpaWrapperAsfp, full_traverserCallbacki, &traverseContext, &valuei)) {
     genericStack_t *stringStackp;
-    size_t          i;
+    int             i;
     GENERICLOGGER_INFO(traverseContext.genericLoggerp, "full traverser returns:");
 
-    stringStackp = GENERICSTACK_GET_PTR(traverseContext.outputStackp, (size_t) valuei);
+    stringStackp = GENERICSTACK_GET_PTR(traverseContext.outputStackp, valuei);
     for (i = 0; i < GENERICSTACK_USED(stringStackp); i++) {
       GENERICLOGGER_INFOF(traverseContext.genericLoggerp, "Indice %d:\n%s", i, GENERICSTACK_GET_PTR(stringStackp, i));
     }    
@@ -597,14 +597,14 @@ static short full_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, voi
   /* A token is a single choice, and we know enough to fully Penn-tag it */
   if (ruleIdi < 0) {
     int     spanIdi;
-    size_t  indicel;
+    int     indicei;
     char   *tokenValues;
     size_t  stringl;
     char   *strings;
     
     marpaWrapperAsf_traverse_rh_valueb(traverserp, 0, &spanIdi);
-    indicel     = spanIdi + 1; /* The spanId correspond to the inputstack indice spanId+1 */
-    tokenValues = GENERICSTACK_GET_PTR(traverseContextp->inputStackp, indicel);
+    indicei     = spanIdi + 1; /* The spanId correspond to the inputstack indice spanId+1 */
+    tokenValues = GENERICSTACK_GET_PTR(traverseContextp->inputStackp, indicei);
 
     GENERICLOGGER_DEBUGF(genericLoggerp, "[%s][%d:%d] ... spanIdi=%d", funcs, ruleIdi, symbolIdi, spanIdi);
     GENERICLOGGER_DEBUGF(genericLoggerp, "[%s][%d:%d] ... Token is \"%s\"", funcs, ruleIdi, symbolIdi, tokenValues);
@@ -623,16 +623,16 @@ static short full_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, voi
 
     /* Our result will be a list of choices */
     while (1) {
-      size_t         lengthl;
-      size_t         rhIxi;
+      int             lengthi;
+      int             rhIxi;
       genericStack_t *resultStackp;
     
       /* The results at each position are a list of chocies, so
          to produce a new result list, we need to take a Cartesian
          printf("format string" ,a0,a1);oduct of all the choices */
 
-      lengthl = marpaWrapperAsf_traverse_rh_lengthl(traverserp);
-      GENERICLOGGER_DEBUGF(genericLoggerp, "[%s][%d:%d] ... lengthl=%d", funcs, ruleIdi, symbolIdi, (int) lengthl);
+      lengthi = marpaWrapperAsf_traverse_rh_lengthi(traverserp);
+      GENERICLOGGER_DEBUGF(genericLoggerp, "[%s][%d:%d] ... lengthi=%d", funcs, ruleIdi, symbolIdi, lengthi);
 
       GENERICSTACK_NEW(resultStackp);
       {
@@ -641,9 +641,9 @@ static short full_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, voi
         GENERICSTACK_PUSH_PTR(resultStackp, emptyStackp);
       }
 
-      for (rhIxi = 0; rhIxi <= lengthl - 1; rhIxi++) {
+      for (rhIxi = 0; rhIxi <= lengthi - 1; rhIxi++) {
         genericStack_t *newResultStackp;
-        size_t          i;
+        int             i;
 
         GENERICSTACK_NEW(newResultStackp);
 
@@ -651,14 +651,14 @@ static short full_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, voi
           genericStack_t *oldResultStackp = GENERICSTACK_GET_PTR(resultStackp, i);
           int             childValuei;
           genericStack_t *childValueStackp;
-          size_t          j;
+          int             j;
 
 	  marpaWrapperAsf_traverse_rh_valueb(traverserp, rhIxi, &childValuei);
           childValueStackp = GENERICSTACK_GET_PTR(traverseContextp->outputStackp, (size_t) childValuei);
 
           for (j = 0; j < GENERICSTACK_USED(childValueStackp); j++) {
             char           *newValues = GENERICSTACK_GET_PTR(childValueStackp, j);
-            size_t          k;
+            int             k;
             genericStack_t *stackp;
 
             GENERICSTACK_NEW(stackp);
@@ -683,11 +683,11 @@ static short full_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, voi
 
       /* Special case for the start rule */
       if (symbolIdi == START) {
-        size_t  i;
+        int i;
 
         for (i = 0; i < GENERICSTACK_USED(resultStackp); i++) {
           genericStack_t *stackp = GENERICSTACK_GET_PTR(resultStackp, i);
-          size_t          j;
+          int             j;
           size_t          stringl;
           char           *strings;
 
@@ -713,8 +713,8 @@ static short full_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, voi
         break;
 
       } else {
-        char           *joinWs = " ";
-        size_t          i;
+        char *joinWs = " ";
+        int   i;
 
         if (symbolIdi == S) {
           joinWs = "\n  ";
@@ -722,7 +722,7 @@ static short full_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, voi
 
         for (i = 0; i < GENERICSTACK_USED(resultStackp); i++) {
           genericStack_t *stackp = GENERICSTACK_GET_PTR(resultStackp, i);
-          size_t          j;
+          int             j;
           size_t          stringl;
           char           *strings;
 
@@ -802,12 +802,12 @@ static short full_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, voi
 static void freeStringStackv(genericStack_t *stringStackp)
 /********************************************************************************/
 {
-  size_t i;
-  size_t usedl;
+  int i;
+  int usedi;
 
-  usedl = GENERICSTACK_USED(stringStackp);
+  usedi = GENERICSTACK_USED(stringStackp);
   if (! GENERICSTACK_ERROR(stringStackp)) {
-    for (i = 0; i < usedl; i++) {
+    for (i = 0; i < usedi; i++) {
       if (GENERICSTACK_IS_PTR(stringStackp, i)) {
 	free(GENERICSTACK_GET_PTR(stringStackp, i));
       }
@@ -820,12 +820,12 @@ static void freeStringStackv(genericStack_t *stringStackp)
 static void freeStringArrayStackv(genericStack_t *stringArrayStackp)
 /********************************************************************************/
 {
-  size_t i;
-  size_t usedl;
+  int i;
+  int usedi;
 
-  usedl = GENERICSTACK_USED(stringArrayStackp);
+  usedi = GENERICSTACK_USED(stringArrayStackp);
   if (! GENERICSTACK_ERROR(stringArrayStackp)) {
-    for (i = 0; i < usedl; i++) {
+    for (i = 0; i < usedi; i++) {
       if (GENERICSTACK_IS_PTR(stringArrayStackp, i)) {
 	freeStringStackv(GENERICSTACK_GET_PTR(stringArrayStackp, i));
       }
