@@ -3585,7 +3585,7 @@ static inline void _marpaWrapperAsf_dump_stack(marpaWrapperAsf_t *marpaWrapperAs
     MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "%s stack length is %d", what, (int) GENERICSTACK_USED(stackp));
     for (i = 0; i < GENERICSTACK_USED(stackp); i++) {
       switch (GENERICSTACKITEMTYPE(stackp, i)) {
-      case _GENERICSTACKITEMTYPE_NA:
+      case GENERICSTACKITEMTYPE_NA:
 	MARPAWRAPPER_TRACE(genericLoggerp, funcs, "... stackp[%d] is NA");
 	break;
       case GENERICSTACKITEMTYPE_CHAR:
