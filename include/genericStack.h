@@ -130,7 +130,7 @@ const static size_t __genericStack_max_initial_indice = (size_t) -1; /* Not used
 #if GENERICSTACK_DEFAULT_LENGTH > 0
 #define _GENERICSTACK_DECLARE_INITIAL_ITEMS()			\
   genericStackItem_t  defaultItems[GENERICSTACK_DEFAULT_LENGTH];	\
-  genericStackItem_t *initialItems;
+  genericStackItem_t *initialItems
 #ifdef GENERICSTACK_ZERO_INT_IS_NOT_ZERO_BYTES
 #define _GENERICSTACK_INIT_INITIAL_ITEMS(stackName)	\
   stackName->initialItems = stackName->defaultItems;	\
@@ -141,7 +141,7 @@ const static size_t __genericStack_max_initial_indice = (size_t) -1; /* Not used
 #endif
 #else
 #define _GENERICSTACK_DECLARE_INITIAL_ITEMS()	\
-  genericStackItem_t *initialItems;
+  genericStackItem_t *initialItems
 #define _GENERICSTACK_INIT_INITIAL_ITEMS(stackName)	\
   stackName->initialItems = NULL;
 #endif
