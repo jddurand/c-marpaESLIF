@@ -71,12 +71,12 @@ typedef struct genericHash {
         hashName->valCopyFunctionp = _valCopyFunctionp;			\
         hashName->valFreeFunctionp = _valFreeFunctionp;			\
         hashName->error = 0;						\
-        GENERICSTACK_NEW_SIZED(hashName->keyStackp, hashName->wantedSubSize); \
+        GENERICSTACK_NEW_SIZED(hashName->keyStackp, wantedSize);	\
         if (GENERICSTACK_ERROR(hashName->keyStackp)) {			\
           free(hashName);                                               \
           hashName = NULL;						\
         }                                                               \
-        GENERICSTACK_NEW_SIZED(hashName->valStackp, hashName->wantedSubSize); \
+        GENERICSTACK_NEW_SIZED(hashName->valStackp, wantedSize);	\
         if (GENERICSTACK_ERROR(hashName->valStackp)) {			\
           GENERICSTACK_FREE(hashName->keyStackp);                       \
           free(hashName);                                               \
