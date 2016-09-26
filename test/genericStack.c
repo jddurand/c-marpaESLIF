@@ -29,37 +29,48 @@ int main() {
   GENERICSTACK_ARRAYP_LENGTH(&array2) = 20;
   GENERICSTACK_ARRAYP_PTR(&array2) = malloc(GENERICSTACK_ARRAYP_LENGTH(&array2));
 
-  GENERICSTACK_NEW(myStackp); if (GENERICSTACK_ERROR(myStackp)) { return 1; }
+  /* GENERICSTACK_NEW(myStackp); if (GENERICSTACK_ERROR(myStackp)) { return 1; } */
+  GENERICSTACK_NEW_SIZED(myStackp, 65536); if (GENERICSTACK_ERROR(myStackp)) { return 1; }
   GENERICSTACK_ERROR_RESET(myStackp);  /* Not meaningful here, but just to test it */
 
   printf("\nNEW interface:\n");
   printf("--------------:\n\n");
-  printf("Initial use/size: %d/%d\n", (int) GENERICSTACK_USED(myStackp), (int) GENERICSTACK_SIZE(myStackp));
+  printf("... Use/size: %d/%d (initial+heap=%d+%d)\n", (int) GENERICSTACK_USED(myStackp), (int) GENERICSTACK_LENGTH(myStackp), (int) GENERICSTACK_INITIAL_LENGTH(myStackp), (int) GENERICSTACK_HEAP_LENGTH(myStackp));
 
   printf("\nPUSH interface:\n");
   printf("--------------:\n\n");
   
   printf("[ 0] int      : 10\n");                                    GENERICSTACK_PUSH_INT   (myStackp, 10);      if (GENERICSTACK_ERROR(myStackp)) { return 1; }
+  printf("... Use/size: %d/%d (initial+heap=%d+%d)\n", (int) GENERICSTACK_USED(myStackp), (int) GENERICSTACK_LENGTH(myStackp), (int) GENERICSTACK_INITIAL_LENGTH(myStackp), (int) GENERICSTACK_HEAP_LENGTH(myStackp));
   printf("[ 1] double   : 20\n");                                    GENERICSTACK_PUSH_DOUBLE(myStackp, 20);      if (GENERICSTACK_ERROR(myStackp)) { return 1; }
+  printf("... Use/size: %d/%d (initial+heap=%d+%d)\n", (int) GENERICSTACK_USED(myStackp), (int) GENERICSTACK_LENGTH(myStackp), (int) GENERICSTACK_INITIAL_LENGTH(myStackp), (int) GENERICSTACK_HEAP_LENGTH(myStackp));
   printf("[ 2] float    : 30\n");                                    GENERICSTACK_PUSH_FLOAT (myStackp, 30);      if (GENERICSTACK_ERROR(myStackp)) { return 1; }
+  printf("... Use/size: %d/%d (initial+heap=%d+%d)\n", (int) GENERICSTACK_USED(myStackp), (int) GENERICSTACK_LENGTH(myStackp), (int) GENERICSTACK_INITIAL_LENGTH(myStackp), (int) GENERICSTACK_HEAP_LENGTH(myStackp));
   printf("[ 3] short    : 40\n");                                    GENERICSTACK_PUSH_SHORT (myStackp, 40);      if (GENERICSTACK_ERROR(myStackp)) { return 1; }
+  printf("... Use/size: %d/%d (initial+heap=%d+%d)\n", (int) GENERICSTACK_USED(myStackp), (int) GENERICSTACK_LENGTH(myStackp), (int) GENERICSTACK_INITIAL_LENGTH(myStackp), (int) GENERICSTACK_HEAP_LENGTH(myStackp));
   printf("[ 4] myStruct1: {%d}\n", myStruct1.i);                     GENERICSTACK_PUSH_PTR(myStackp, &myStruct1); if (GENERICSTACK_ERROR(myStackp)) { return 1; }
+  printf("... Use/size: %d/%d (initial+heap=%d+%d)\n", (int) GENERICSTACK_USED(myStackp), (int) GENERICSTACK_LENGTH(myStackp), (int) GENERICSTACK_INITIAL_LENGTH(myStackp), (int) GENERICSTACK_HEAP_LENGTH(myStackp));
   printf("[ 5] myStruct2: {%d,\"%s\"}\n", myStruct2.i, myStruct2.s); GENERICSTACK_PUSH_PTR(myStackp, &myStruct2); if (GENERICSTACK_ERROR(myStackp)) { return 1; }
+  printf("... Use/size: %d/%d (initial+heap=%d+%d)\n", (int) GENERICSTACK_USED(myStackp), (int) GENERICSTACK_LENGTH(myStackp), (int) GENERICSTACK_INITIAL_LENGTH(myStackp), (int) GENERICSTACK_HEAP_LENGTH(myStackp));
   printf("[ 6] N/A\n");                                              GENERICSTACK_PUSH_NA    (myStackp);          if (GENERICSTACK_ERROR(myStackp)) { return 1; }
+  printf("... Use/size: %d/%d (initial+heap=%d+%d)\n", (int) GENERICSTACK_USED(myStackp), (int) GENERICSTACK_LENGTH(myStackp), (int) GENERICSTACK_INITIAL_LENGTH(myStackp), (int) GENERICSTACK_HEAP_LENGTH(myStackp));
   printf("[ 7] Array\n");                                            GENERICSTACK_PUSH_ARRAY (myStackp, array);   if (GENERICSTACK_ERROR(myStackp)) { return 1; }
-  printf("[ 7] Arrayp\n");                                           GENERICSTACK_PUSH_ARRAYP(myStackp, &array2); if (GENERICSTACK_ERROR(myStackp)) { return 1; }
-
-  printf("Current use/size: %d/%d\n", (int) GENERICSTACK_USED(myStackp), (int) GENERICSTACK_SIZE(myStackp));
+  printf("... Use/size: %d/%d (initial+heap=%d+%d)\n", (int) GENERICSTACK_USED(myStackp), (int) GENERICSTACK_LENGTH(myStackp), (int) GENERICSTACK_INITIAL_LENGTH(myStackp), (int) GENERICSTACK_HEAP_LENGTH(myStackp));
+  printf("[ 8] Arrayp\n");                                           GENERICSTACK_PUSH_ARRAYP(myStackp, &array2); if (GENERICSTACK_ERROR(myStackp)) { return 1; }
+  printf("... Use/size: %d/%d (initial+heap=%d+%d)\n", (int) GENERICSTACK_USED(myStackp), (int) GENERICSTACK_LENGTH(myStackp), (int) GENERICSTACK_INITIAL_LENGTH(myStackp), (int) GENERICSTACK_HEAP_LENGTH(myStackp));
 
   if (myFunction1(myStackp) == 0) { return 1; }
 
   printf("\nSET interface:\n");
   printf("-------------:\n\n");
   
+  GENERICSTACK_DUMP(myStackp);
   printf("[10] float : 50\n"); GENERICSTACK_SET_FLOAT(myStackp, 50, 10); if (GENERICSTACK_ERROR(myStackp)) { return 1; }
+  printf("... Use/size: %d/%d (initial+heap=%d+%d)\n", (int) GENERICSTACK_USED(myStackp), (int) GENERICSTACK_LENGTH(myStackp), (int) GENERICSTACK_INITIAL_LENGTH(myStackp), (int) GENERICSTACK_HEAP_LENGTH(myStackp));
+  GENERICSTACK_DUMP(myStackp);
   printf("[16] N/A\n"); GENERICSTACK_SET_NA(myStackp, 16); if (GENERICSTACK_ERROR(myStackp)) { return 1; }
-
-  printf("Current use/size: %d/%d\n", (int) GENERICSTACK_USED(myStackp), (int) GENERICSTACK_SIZE(myStackp));
+  printf("... Use/size: %d/%d (initial+heap=%d+%d)\n", (int) GENERICSTACK_USED(myStackp), (int) GENERICSTACK_LENGTH(myStackp), (int) GENERICSTACK_INITIAL_LENGTH(myStackp), (int) GENERICSTACK_HEAP_LENGTH(myStackp));
+  GENERICSTACK_DUMP(myStackp);
 
   if (myFunction2(myStackp) == 0) { return 1; }
   if (myFunction3(myStackp) == 0) { return 1; }
@@ -75,66 +86,74 @@ short myFunction1(genericStack_t *myStackp) {
   printf("\nGET interface:\n");
   printf("-------------:\n\n");
   printf("[ 1] double   : %f\n", (float) GENERICSTACK_GET_DOUBLE(myStackp, 1));
+  printf("... Use/size: %d/%d (initial+heap=%d+%d)\n", (int) GENERICSTACK_USED(myStackp), (int) GENERICSTACK_LENGTH(myStackp), (int) GENERICSTACK_INITIAL_LENGTH(myStackp), (int) GENERICSTACK_HEAP_LENGTH(myStackp));
   printf("[ 0] int      : %d\n",         GENERICSTACK_GET_INT   (myStackp, 0));
+  printf("... Use/size: %d/%d (initial+heap=%d+%d)\n", (int) GENERICSTACK_USED(myStackp), (int) GENERICSTACK_LENGTH(myStackp), (int) GENERICSTACK_INITIAL_LENGTH(myStackp), (int) GENERICSTACK_HEAP_LENGTH(myStackp));
   printf("[ 3] short    : %d\n",         GENERICSTACK_GET_SHORT (myStackp, 3));
+  printf("... Use/size: %d/%d (initial+heap=%d+%d)\n", (int) GENERICSTACK_USED(myStackp), (int) GENERICSTACK_LENGTH(myStackp), (int) GENERICSTACK_INITIAL_LENGTH(myStackp), (int) GENERICSTACK_HEAP_LENGTH(myStackp));
   printf("[ 5] myStruct2: {%d, \"%s\"}\n", ((myStruct2_t *) GENERICSTACK_GET_PTR (myStackp, 5))->i, ((myStruct2_t *) GENERICSTACK_GET_PTR (myStackp, 5))->s);
+  printf("... Use/size: %d/%d (initial+heap=%d+%d)\n", (int) GENERICSTACK_USED(myStackp), (int) GENERICSTACK_LENGTH(myStackp), (int) GENERICSTACK_INITIAL_LENGTH(myStackp), (int) GENERICSTACK_HEAP_LENGTH(myStackp));
   printf("[ 4] myStruct1: {%d}\n",         ((myStruct1_t *) GENERICSTACK_GET_PTR (myStackp, 4))->i);
+  printf("... Use/size: %d/%d (initial+heap=%d+%d)\n", (int) GENERICSTACK_USED(myStackp), (int) GENERICSTACK_LENGTH(myStackp), (int) GENERICSTACK_INITIAL_LENGTH(myStackp), (int) GENERICSTACK_HEAP_LENGTH(myStackp));
   printf("[ 7] Array    : {%p,%d}\n",    GENERICSTACK_ARRAY_PTR(GENERICSTACK_GET_ARRAY(myStackp, 7)), (int) GENERICSTACK_ARRAY_LENGTH(GENERICSTACK_GET_ARRAY(myStackp, 7)));
+  printf("... Use/size: %d/%d (initial+heap=%d+%d)\n", (int) GENERICSTACK_USED(myStackp), (int) GENERICSTACK_LENGTH(myStackp), (int) GENERICSTACK_INITIAL_LENGTH(myStackp), (int) GENERICSTACK_HEAP_LENGTH(myStackp));
   printf("[ 8] Arrayp   : {%p,%d}\n",    GENERICSTACK_ARRAYP_PTR(GENERICSTACK_GET_ARRAYP(myStackp, 8)), (int) GENERICSTACK_ARRAYP_LENGTH(GENERICSTACK_GET_ARRAYP(myStackp, 8)));
+  printf("... Use/size: %d/%d (initial+heap=%d+%d)\n", (int) GENERICSTACK_USED(myStackp), (int) GENERICSTACK_LENGTH(myStackp), (int) GENERICSTACK_INITIAL_LENGTH(myStackp), (int) GENERICSTACK_HEAP_LENGTH(myStackp));
   printf("[ 2] float    : %f\n",         GENERICSTACK_GET_FLOAT (myStackp, 2));
+  printf("... Use/size: %d/%d (initial+heap=%d+%d)\n", (int) GENERICSTACK_USED(myStackp), (int) GENERICSTACK_LENGTH(myStackp), (int) GENERICSTACK_INITIAL_LENGTH(myStackp), (int) GENERICSTACK_HEAP_LENGTH(myStackp));
   
-  printf("Current use/size: %d/%d\n", (int) GENERICSTACK_USED(myStackp), (int) GENERICSTACK_SIZE(myStackp));
-
   printf("\nSWITCH interface:\n");
   printf("------------------:\n\n");
   GENERICSTACK_SWITCH(myStackp, 5, 2); if (GENERICSTACK_ERROR(myStackp)) { return 1; }
   printf("[ 2] myStruct2: {%d, \"%s\"}\n", ((myStruct2_t *) GENERICSTACK_GET_PTR (myStackp, 2))->i, ((myStruct2_t *) GENERICSTACK_GET_PTR (myStackp, 2))->s);
+  printf("... Use/size: %d/%d (initial+heap=%d+%d)\n", (int) GENERICSTACK_USED(myStackp), (int) GENERICSTACK_LENGTH(myStackp), (int) GENERICSTACK_INITIAL_LENGTH(myStackp), (int) GENERICSTACK_HEAP_LENGTH(myStackp));
   printf("[ 5] float    : %f\n",         GENERICSTACK_GET_FLOAT (myStackp, 5));
+  printf("... Use/size: %d/%d (initial+heap=%d+%d)\n", (int) GENERICSTACK_USED(myStackp), (int) GENERICSTACK_LENGTH(myStackp), (int) GENERICSTACK_INITIAL_LENGTH(myStackp), (int) GENERICSTACK_HEAP_LENGTH(myStackp));
 
   printf("\n...SWITCH again:\n");
   GENERICSTACK_SWITCH(myStackp, 5, 2); if (GENERICSTACK_ERROR(myStackp)) { return 1; }
   printf("[ 2] float    : %f\n",         GENERICSTACK_GET_FLOAT (myStackp, 2));
+  printf("... Use/size: %d/%d (initial+heap=%d+%d)\n", (int) GENERICSTACK_USED(myStackp), (int) GENERICSTACK_LENGTH(myStackp), (int) GENERICSTACK_INITIAL_LENGTH(myStackp), (int) GENERICSTACK_HEAP_LENGTH(myStackp));
   printf("[ 5] myStruct2: {%d, \"%s\"}\n", ((myStruct2_t *) GENERICSTACK_GET_PTR (myStackp, 5))->i, ((myStruct2_t *) GENERICSTACK_GET_PTR (myStackp, 5))->s);
-
-  fprintf(stderr, "GENERICSTACK_USED(myStackp)=%d\n", (int) GENERICSTACK_USED(myStackp));
+  printf("... Use/size: %d/%d (initial+heap=%d+%d)\n", (int) GENERICSTACK_USED(myStackp), (int) GENERICSTACK_LENGTH(myStackp), (int) GENERICSTACK_INITIAL_LENGTH(myStackp), (int) GENERICSTACK_HEAP_LENGTH(myStackp));
 
   printf("\nPOP interface:\n");
   printf("-------------:\n\n");
-  printf("Current use/size: %d/%d\n", (int) GENERICSTACK_USED(myStackp), (int) GENERICSTACK_SIZE(myStackp));
+  printf("Current use/size: %d/%d\n", (int) GENERICSTACK_USED(myStackp), (int) GENERICSTACK_LENGTH(myStackp));
   {
     GENERICSTACKITEMTYPE2TYPE_ARRAY array;
-    printf("[ 7] POP Array\n");  array = GENERICSTACK_POP_ARRAY(myStackp);
-    printf("Current use/size: %d/%d\n", (int) GENERICSTACK_USED(myStackp), (int) GENERICSTACK_SIZE(myStackp));
+    printf("[ 8] POP Array\n");  array = GENERICSTACK_POP_ARRAY(myStackp);
+    printf("... Use/size: %d/%d (initial+heap=%d+%d)\n", (int) GENERICSTACK_USED(myStackp), (int) GENERICSTACK_LENGTH(myStackp), (int) GENERICSTACK_INITIAL_LENGTH(myStackp), (int) GENERICSTACK_HEAP_LENGTH(myStackp));
     free(GENERICSTACK_ARRAY_PTR(array));
   }
   {
     GENERICSTACKITEMTYPE2TYPE_ARRAY array;
     printf("[ 7] POP Array\n");  array = GENERICSTACK_POP_ARRAY(myStackp);
-    printf("Current use/size: %d/%d\n", (int) GENERICSTACK_USED(myStackp), (int) GENERICSTACK_SIZE(myStackp));
+    printf("... Use/size: %d/%d (initial+heap=%d+%d)\n", (int) GENERICSTACK_USED(myStackp), (int) GENERICSTACK_LENGTH(myStackp), (int) GENERICSTACK_INITIAL_LENGTH(myStackp), (int) GENERICSTACK_HEAP_LENGTH(myStackp));
     free(GENERICSTACK_ARRAY_PTR(array));
   }
   printf("[ 6] POP N/A\n");  GENERICSTACK_POP_NA(myStackp);
-  printf("Current use/size: %d/%d\n", (int) GENERICSTACK_USED(myStackp), (int) GENERICSTACK_SIZE(myStackp));
+  printf("... Use/size: %d/%d (initial+heap=%d+%d)\n", (int) GENERICSTACK_USED(myStackp), (int) GENERICSTACK_LENGTH(myStackp), (int) GENERICSTACK_INITIAL_LENGTH(myStackp), (int) GENERICSTACK_HEAP_LENGTH(myStackp));
 
   myStruct2p = (myStruct2_t *) GENERICSTACK_POP_PTR(myStackp);
   printf("[ 5] POP myStruct2: {%d, \"%s\"}\n", myStruct2p->i, myStruct2p->s);
-  printf("Current use/size: %d/%d\n", (int) GENERICSTACK_USED(myStackp), (int) GENERICSTACK_SIZE(myStackp));
+  printf("... Use/size: %d/%d (initial+heap=%d+%d)\n", (int) GENERICSTACK_USED(myStackp), (int) GENERICSTACK_LENGTH(myStackp), (int) GENERICSTACK_INITIAL_LENGTH(myStackp), (int) GENERICSTACK_HEAP_LENGTH(myStackp));
 
   myStruct1p = (myStruct1_t *) GENERICSTACK_POP_PTR(myStackp);
   printf("[ 4] POP myStruct1: {%d}\n", myStruct1p->i);
-  printf("Current use/size: %d/%d\n", (int) GENERICSTACK_USED(myStackp), (int) GENERICSTACK_SIZE(myStackp));
+  printf("... Use/size: %d/%d (initial+heap=%d+%d)\n", (int) GENERICSTACK_USED(myStackp), (int) GENERICSTACK_LENGTH(myStackp), (int) GENERICSTACK_INITIAL_LENGTH(myStackp), (int) GENERICSTACK_HEAP_LENGTH(myStackp));
 
   printf("[ 3] POP short : %d\n", (int)   GENERICSTACK_POP_SHORT(myStackp));
-  printf("Current use/size: %d/%d\n", (int) GENERICSTACK_USED(myStackp), (int) GENERICSTACK_SIZE(myStackp));
+  printf("... Use/size: %d/%d (initial+heap=%d+%d)\n", (int) GENERICSTACK_USED(myStackp), (int) GENERICSTACK_LENGTH(myStackp), (int) GENERICSTACK_INITIAL_LENGTH(myStackp), (int) GENERICSTACK_HEAP_LENGTH(myStackp));
 
   printf("[ 2] POP float : %f\n",         GENERICSTACK_POP_FLOAT(myStackp));
-  printf("Current use/size: %d/%d\n", (int) GENERICSTACK_USED(myStackp), (int) GENERICSTACK_SIZE(myStackp));
+  printf("... Use/size: %d/%d (initial+heap=%d+%d)\n", (int) GENERICSTACK_USED(myStackp), (int) GENERICSTACK_LENGTH(myStackp), (int) GENERICSTACK_INITIAL_LENGTH(myStackp), (int) GENERICSTACK_HEAP_LENGTH(myStackp));
 
   printf("[ 1] POP double: %f\n", (float) GENERICSTACK_POP_DOUBLE(myStackp));
-  printf("Current use/size: %d/%d\n", (int) GENERICSTACK_USED(myStackp), (int) GENERICSTACK_SIZE(myStackp));
+  printf("... Use/size: %d/%d (initial+heap=%d+%d)\n", (int) GENERICSTACK_USED(myStackp), (int) GENERICSTACK_LENGTH(myStackp), (int) GENERICSTACK_INITIAL_LENGTH(myStackp), (int) GENERICSTACK_HEAP_LENGTH(myStackp));
 
   printf("[ 0] POP int   : %d\n",         GENERICSTACK_POP_INT(myStackp));
-  printf("Current use/size: %d/%d\n", (int) GENERICSTACK_USED(myStackp), (int) GENERICSTACK_SIZE(myStackp));
+  printf("... Use/size: %d/%d (initial+heap=%d+%d)\n", (int) GENERICSTACK_USED(myStackp), (int) GENERICSTACK_LENGTH(myStackp), (int) GENERICSTACK_INITIAL_LENGTH(myStackp), (int) GENERICSTACK_HEAP_LENGTH(myStackp));
 
   return 1;
 }
@@ -144,6 +163,7 @@ short myFunction2(genericStack_t *myStackp) {
   printf("\nGET interface:\n");
   printf("-------------:\n\n");
   printf("[10] float : %f\n",         GENERICSTACK_GET_FLOAT (myStackp, 10));
+  printf("... Use/size: %d/%d (initial+heap=%d+%d)\n", (int) GENERICSTACK_USED(myStackp), (int) GENERICSTACK_LENGTH(myStackp), (int) GENERICSTACK_INITIAL_LENGTH(myStackp), (int) GENERICSTACK_HEAP_LENGTH(myStackp));
 
   return 1;
 }
@@ -155,14 +175,24 @@ short myFunction3(genericStack_t *myStackp) {
   printf("--------------------------:\n\n");
   printf("EXISTS : %s\n",                     (rcb = GENERICSTACK_EXISTS(myStackp, 10)    ? 1 : 0) ? "OK" : "KO");
   if (rcb != 0) { printf("IS_ARRAY : %s\n",   (rcb = GENERICSTACK_IS_ARRAY(myStackp, 10)  ? 0 : 1) ? "OK" : "KO"); }
+  printf("... Use/size: %d/%d (initial+heap=%d+%d)\n", (int) GENERICSTACK_USED(myStackp), (int) GENERICSTACK_LENGTH(myStackp), (int) GENERICSTACK_INITIAL_LENGTH(myStackp), (int) GENERICSTACK_HEAP_LENGTH(myStackp));
   if (rcb != 0) { printf("IS_NA : %s\n",      (rcb = GENERICSTACK_IS_NA(myStackp, 10)     ? 0 : 1) ? "OK" : "KO"); }
+  GENERICSTACK_DUMP(myStackp);
+  printf("... Use/size: %d/%d (initial+heap=%d+%d)\n", (int) GENERICSTACK_USED(myStackp), (int) GENERICSTACK_LENGTH(myStackp), (int) GENERICSTACK_INITIAL_LENGTH(myStackp), (int) GENERICSTACK_HEAP_LENGTH(myStackp));
   if (rcb != 0) { printf("IS_CHAR : %s\n",    (rcb = GENERICSTACK_IS_CHAR(myStackp, 10)   ? 0 : 1) ? "OK" : "KO"); }
+  printf("... Use/size: %d/%d (initial+heap=%d+%d)\n", (int) GENERICSTACK_USED(myStackp), (int) GENERICSTACK_LENGTH(myStackp), (int) GENERICSTACK_INITIAL_LENGTH(myStackp), (int) GENERICSTACK_HEAP_LENGTH(myStackp));
   if (rcb != 0) { printf("IS_SHORT : %s\n",   (rcb = GENERICSTACK_IS_SHORT(myStackp, 10)  ? 0 : 1) ? "OK" : "KO"); }
+  printf("... Use/size: %d/%d (initial+heap=%d+%d)\n", (int) GENERICSTACK_USED(myStackp), (int) GENERICSTACK_LENGTH(myStackp), (int) GENERICSTACK_INITIAL_LENGTH(myStackp), (int) GENERICSTACK_HEAP_LENGTH(myStackp));
   if (rcb != 0) { printf("IS_INT : %s\n",     (rcb = GENERICSTACK_IS_INT(myStackp, 10)    ? 0 : 1) ? "OK" : "KO"); }
+  printf("... Use/size: %d/%d (initial+heap=%d+%d)\n", (int) GENERICSTACK_USED(myStackp), (int) GENERICSTACK_LENGTH(myStackp), (int) GENERICSTACK_INITIAL_LENGTH(myStackp), (int) GENERICSTACK_HEAP_LENGTH(myStackp));
   if (rcb != 0) { printf("IS_LONG : %s\n",    (rcb = GENERICSTACK_IS_LONG(myStackp, 10)   ? 0 : 1) ? "OK" : "KO"); }
+  printf("... Use/size: %d/%d (initial+heap=%d+%d)\n", (int) GENERICSTACK_USED(myStackp), (int) GENERICSTACK_LENGTH(myStackp), (int) GENERICSTACK_INITIAL_LENGTH(myStackp), (int) GENERICSTACK_HEAP_LENGTH(myStackp));
   if (rcb != 0) { printf("IS_FLOAT : %s\n",   (rcb = GENERICSTACK_IS_FLOAT(myStackp, 10)  ? 1 : 0) ? "OK" : "KO"); }
+  printf("... Use/size: %d/%d (initial+heap=%d+%d)\n", (int) GENERICSTACK_USED(myStackp), (int) GENERICSTACK_LENGTH(myStackp), (int) GENERICSTACK_INITIAL_LENGTH(myStackp), (int) GENERICSTACK_HEAP_LENGTH(myStackp));
   if (rcb != 0) { printf("IS_DOUBLE : %s\n",  (rcb = GENERICSTACK_IS_DOUBLE(myStackp, 10) ? 0 : 1) ? "OK" : "KO"); }
+  printf("... Use/size: %d/%d (initial+heap=%d+%d)\n", (int) GENERICSTACK_USED(myStackp), (int) GENERICSTACK_LENGTH(myStackp), (int) GENERICSTACK_INITIAL_LENGTH(myStackp), (int) GENERICSTACK_HEAP_LENGTH(myStackp));
   if (rcb != 0) { printf("IS_PTR : %s\n",     (rcb = GENERICSTACK_IS_PTR(myStackp, 10)    ? 0 : 1) ? "OK" : "KO"); }
+  printf("... Use/size: %d/%d (initial+heap=%d+%d)\n", (int) GENERICSTACK_USED(myStackp), (int) GENERICSTACK_LENGTH(myStackp), (int) GENERICSTACK_INITIAL_LENGTH(myStackp), (int) GENERICSTACK_HEAP_LENGTH(myStackp));
 
   return rcb;
 }
