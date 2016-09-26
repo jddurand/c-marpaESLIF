@@ -3,7 +3,6 @@
 
 #include <stdlib.h>       /* For malloc, free */
 #include <string.h>       /* For memcpy */
-#include <stddef.h>       /* For size_t */
 
 /* =============== */
 /* C generic stack */
@@ -36,9 +35,9 @@
 #define GENERICSTACK_DEFAULT_LENGTH 128 /* Subjective number */
 #endif
 #if GENERICSTACK_DEFAULT_LENGTH > 0
-const static size_t __genericStack_max_initial_indice = GENERICSTACK_DEFAULT_LENGTH - 1;
+const static int __genericStack_max_initial_indice = GENERICSTACK_DEFAULT_LENGTH - 1;
 #else
-const static size_t __genericStack_max_initial_indice = (size_t) -1; /* Not used */
+const static int __genericStack_max_initial_indice = -1; /* Not used */
 #endif
 
 /* ====================================================================== */
@@ -56,8 +55,8 @@ const static size_t __genericStack_max_initial_indice = (size_t) -1; /* Not used
 #define _GENERICSTACK_NA_MEMSET(stackName, indiceStart, indiceEnd) do {	\
     if (indiceStart <= indiceEnd) {					\
       if (indiceStart <= __genericStack_max_initial_indice) {		\
-	size_t _i_for_memset;						\
-	size_t _i_for_memset_max = (indiceEnd >= __genericStack_max_initial_indice) ? __genericStack_max_initial_indice : indiceEnd; \
+	int _i_for_memset;						\
+	int _i_for_memset_max = (indiceEnd >= __genericStack_max_initial_indice) ? __genericStack_max_initial_indice : indiceEnd; \
 	for (_i_for_memset = indiceStart;				\
 	     _i_for_memset <= _i_for_memset_max;			\
 	     _i_for_extend++) {						\
@@ -65,8 +64,8 @@ const static size_t __genericStack_max_initial_indice = (size_t) -1; /* Not used
 	}								\
       }									\
       if (indiceEnd > __genericStack_max_initial_indice) {		\
-	size_t _i_for_memset_min = (indiceStart <= __genericStack_max_initial_indice) ? 0 : indiceStart - __genericStack_max_initial_indice - 1; \
-	size_t _i_for_memset_max = indiceEnd - __genericStack_max_initial_indice - 1; \
+	int _i_for_memset_min = (indiceStart <= __genericStack_max_initial_indice) ? 0 : indiceStart - __genericStack_max_initial_indice - 1; \
+	int _i_for_memset_max = indiceEnd - __genericStack_max_initial_indice - 1; \
 	for (_i_for_memset = _i_for_memset_min;				\
 	     _i_for_memset <= _i_for_memset_max;			\
 	     _i_for_extend++) {						\
@@ -96,32 +95,28 @@ const static size_t __genericStack_max_initial_indice = (size_t) -1; /* Not used
 #define _GENERICSTACK_NA_MEMSET(stackName, indiceStart, indiceEnd) do {	\
     if (indiceStart <= indiceEnd) {					\
       if (indiceStart <= __genericStack_max_initial_indice) {		\
-	size_t _i_for_memset_max = (indiceEnd >= __genericStack_max_initial_indice) ? __genericStack_max_initial_indice : indiceEnd; \
-	size_t _full_length;						\
+	int _i_for_memset_max = (indiceEnd >= __genericStack_max_initial_indice) ? __genericStack_max_initial_indice : indiceEnd; \
+	int _full_length;						\
 									\
 	_full_length = _i_for_memset_max;				\
 	_full_length -= indiceStart;					\
 	memset(&(stackName->initialItems[indiceStart]), '\0', ++_full_length * sizeof(genericStackItem_t)); \
       }									\
       if (indiceEnd > __genericStack_max_initial_indice) {		\
-	size_t _i_for_memset_min = (indiceStart <= __genericStack_max_initial_indice) ? 0 : indiceStart - __genericStack_max_initial_indice - 1; \
-	size_t _i_for_memset_max = indiceEnd - __genericStack_max_initial_indice - 1; \
-	size_t _full_length;						\
+	int _i_for_memset_min = (indiceStart <= __genericStack_max_initial_indice) ? 0 : indiceStart - __genericStack_max_initial_indice - 1; \
+	int _i_for_memset_max = indiceEnd - __genericStack_max_initial_indice - 1; \
+	int _full_length = _i_for_memset_max - _i_for_memset_min + 1;	\
 									\
-	_full_length = _i_for_memset_max;				\
-	_full_length -= _i_for_memset_min;				\
-	memset(&(stackName->heapItems[_i_for_memset_min]), '\0', ++_full_length * sizeof(genericStackItem_t)); \
+	memset(&(stackName->heapItems[_i_for_memset_min]), '\0', _full_length * sizeof(genericStackItem_t)); \
       }									\
     }									\
   } while (0)
 #else /* GENERICSTACK_DEFAULT_LENGTH */
 #define _GENERICSTACK_NA_MEMSET(stackName, indiceStart, indiceEnd) do {	\
     if (indiceStart <= indiceEnd) {					\
-      size_t _full_length;						\
+      int _full_length = indiceEnd - indiceStart + 1;			\
 									\
-      _full_length = indiceEnd;						\
-      _full_length -= indiceStart;					\
-      memset(&(stackName->heapItems[indiceStart]), '\0', ++_full_length * sizeof(genericStackItem_t)); \
+      memset(&(stackName->heapItems[indiceStart]), '\0', _full_length * sizeof(genericStackItem_t)); \
     }									\
   } while (0)
 #endif /* GENERICSTACK_DEFAULT_LENGTH */
@@ -169,7 +164,7 @@ typedef void *(*genericStackClone_t)(void *p);
 typedef void  (*genericStackFree_t)(void *p);
 typedef struct genericStackItemTypeArray {
   void *p;
-  size_t lengthl;
+  int lengthl;
 } genericStackItemTypeArray_t;
 
 typedef enum genericStackItemType {
@@ -222,12 +217,12 @@ typedef struct genericStackItem {
 } genericStackItem_t;
 
 typedef struct genericStack {
-  size_t heapLength;
-  size_t used;
+  int heapLength;
+  int used;
   genericStackItem_t *heapItems;
   short  error;
-  size_t tmpIndex;
-  size_t tmpSize;
+  int tmpIndex;
+  int tmpSize;
   genericStackItem_t *tmpItems;
   _GENERICSTACK_DECLARE_INITIAL_ITEMS();
 } genericStack_t;
@@ -253,7 +248,7 @@ typedef struct genericStack {
 #define _GENERICSTACK_ITEM_DST(stackName, index, what) (((stackName->tmpIndex = index) >= GENERICSTACK_DEFAULT_LENGTH) ? stackName->heapItems[stackName->tmpIndex - GENERICSTACK_DEFAULT_LENGTH].what : stackName->initialItems[stackName->tmpIndex].what)
 #define _GENERICSTACK_ITEM_DST_ADDR(stackName, index, what) (((stackName->tmpIndex = index) >= GENERICSTACK_DEFAULT_LENGTH) ? &(stackName->heapItems[stackName->tmpIndex - GENERICSTACK_DEFAULT_LENGTH].what) : &(stackName->initialItems[stackName->tmpIndex].what))
 #define _GENERICSTACK_ITEM_DST_SET(stackName, index, what, val) do {	\
-    size_t _tmpIndex = (size_t) index;					\
+    int _tmpIndex = index;						\
     if (_tmpIndex >= GENERICSTACK_DEFAULT_LENGTH) {			\
       stackName->heapItems[_tmpIndex - GENERICSTACK_DEFAULT_LENGTH].what = val; \
     } else {								\
@@ -283,16 +278,16 @@ typedef struct genericStack {
 
 /* ====================================================================== */
 /* Size management, internal macro                                        */
-/* We check for size_t turnaround heuristically - should work IMHO        */
+/* We check for int turnaround heuristically.                             */
 /* ====================================================================== */
 #define _GENERICSTACK_EXTEND(stackName, wantedLength) do {		\
-    size_t _genericStackExtend_wantedLength = (size_t) wantedLength;	\
-    size_t _genericStackExtend_currentLength = GENERICSTACK_LENGTH(stackName); \
+    int _genericStackExtend_wantedLength = wantedLength;		\
+    int _genericStackExtend_currentLength = GENERICSTACK_LENGTH(stackName); \
     if ((_genericStackExtend_wantedLength > GENERICSTACK_DEFAULT_LENGTH) &&	\
 	(_genericStackExtend_wantedLength > _genericStackExtend_currentLength)) { \
-      size_t _genericStackExtend_wantedHeapLength = _genericStackExtend_wantedLength - GENERICSTACK_DEFAULT_LENGTH; \
-      size_t _genericStackExtend_currentHeapLength = _genericStackExtend_currentLength - GENERICSTACK_DEFAULT_LENGTH; \
-      size_t _genericStackExtend_newHeapLength;				\
+      int _genericStackExtend_wantedHeapLength = _genericStackExtend_wantedLength - GENERICSTACK_DEFAULT_LENGTH; \
+      int _genericStackExtend_currentHeapLength = _genericStackExtend_currentLength - GENERICSTACK_DEFAULT_LENGTH; \
+      int _genericStackExtend_newHeapLength;				\
       genericStackItem_t *_genericStackExtend_heapItems = stackName->heapItems; \
       short _genericStackExtend_memsetb;				\
                                                                         \
@@ -363,8 +358,8 @@ typedef struct genericStack {
 /* stackName is expected to an identifier                                 */
 /* index is used more than once, so it has to be cached                   */
 #define _GENERICSTACK_SET_BY_TYPE(stackName, varType, var, itemType, dst, index) do { \
-    size_t _genericStackSetByType_indexForSet = index;                  \
-    size_t _genericStackSetByType_wantedLength = _genericStackSetByType_indexForSet + 1; \
+    int _genericStackSetByType_indexForSet = index;			\
+    int _genericStackSetByType_wantedLength = _genericStackSetByType_indexForSet + 1; \
 									\
     if (_genericStackSetByType_wantedLength > GENERICSTACK_LENGTH(stackName)) { \
                                                                         \
@@ -392,8 +387,8 @@ typedef struct genericStack {
 
 /* It appears that come compilers (like cl) does not like some casts */
 #define _GENERICSTACK_SET_BY_TYPE_NOCAST(stackName, var, itemType, dst, index) do { \
-    size_t _genericStackSetByType_indexForSet = index;                  \
-    size_t _genericStackSetByType_wantedLength = _genericStackSetByType_indexForSet + 1; \
+    int _genericStackSetByType_indexForSet = index;			\
+    int _genericStackSetByType_wantedLength = _genericStackSetByType_indexForSet + 1; \
 									\
     if (_genericStackSetByType_wantedLength > GENERICSTACK_LENGTH(stackName)) { \
                                                                         \
@@ -442,8 +437,8 @@ typedef struct genericStack {
 
 /* Special case for NA: there is not associated data */
 #define GENERICSTACK_SET_NA(stackName, index) do {			\
-    size_t _genericStackSetByType_indexForSet = index;                  \
-    size_t _genericStackSetByType_wantedLength = _genericStackSetByType_indexForSet + 1; \
+    int _genericStackSetByType_indexForSet = index;			\
+    int _genericStackSetByType_wantedLength = _genericStackSetByType_indexForSet + 1; \
 									\
     if (_genericStackSetByType_wantedLength > GENERICSTACK_LENGTH(stackName)) { \
                                                                         \
@@ -474,7 +469,7 @@ typedef struct genericStack {
 #define _GENERICSTACK_REDUCE_LENGTH(stackName)				\
   (stackName->used > GENERICSTACK_DEFAULT_LENGTH) ?			\
   (									\
-   ((stackName->used - GENERICSTACK_DEFAULT_LENGTH) <= (stackName->tmpSize = (size_t) (stackName->heapLength / 2))) ? \
+   ((stackName->used - GENERICSTACK_DEFAULT_LENGTH) <= (stackName->tmpSize = (stackName->heapLength / 2))) ? \
    (									\
     ((stackName->tmpItems = (genericStackItem_t *) realloc(stackName->heapItems, stackName->tmpSize * sizeof(genericStackItem_t))) != NULL) ? \
     (									\
@@ -628,8 +623,8 @@ typedef struct genericStack {
       _genericStackSwitch_index2 = (stackName)->used + _genericStackSwitch_index2; \
     }                                                                   \
                                                                         \
-    if ((_genericStackSwitch_index1 < 0) || (((size_t) _genericStackSwitch_index1) >= (stackName)->used) || \
-        (_genericStackSwitch_index2 < 0) || (((size_t) _genericStackSwitch_index2) >= (stackName)->used)) { \
+    if ((_genericStackSwitch_index1 < 0) || ((_genericStackSwitch_index1) >= (stackName)->used) || \
+        (_genericStackSwitch_index2 < 0) || ((_genericStackSwitch_index2) >= (stackName)->used)) { \
       (stackName)->error = 1;                                             \
     } else if (_genericStackSwitch_index1 != _genericStackSwitch_index2) { \
       genericStackItem_t _item = _GENERICSTACK_ITEM((stackName), _genericStackSwitch_index1); \
@@ -667,7 +662,7 @@ typedef struct genericStack {
 /* Dump macro for development purpose. Fixed to stderr.                   */
 /* ====================================================================== */
 #define GENERICSTACK_DUMP(stackName) do {				\
-    size_t _i_for_dump;							\
+    int _i_for_dump;							\
     fprintf(stderr, "GENERIC STACK DUMP\n");				\
     fprintf(stderr, "------------------\n");				\
     fprintf(stderr, "Initial available Length  : %d\n", GENERICSTACK_INITIAL_LENGTH(stackName)); \
