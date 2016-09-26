@@ -316,8 +316,8 @@ typedef struct genericStack {
 	stackName->heapLength = _genericStackExtend_newHeapLength;	\
       }									\
     }									\
-    if (GENERICSTACK_DEFAULT_LENGTH > 0) {				\
-      if (GENERICSTACK_USED(stackName) <= GENERICSTACK_DEFAULT_LENGTH) { \
+    if ((GENERICSTACK_DEFAULT_LENGTH > 0) && (_genericStackExtend_wantedLength > GENERICSTACK_DEFAULT_LENGTH)) { \
+      if (GENERICSTACK_USED(stackName) < GENERICSTACK_DEFAULT_LENGTH) { \
 	if (GENERICSTACK_USED(stackName) <= 0) { \
 	  _GENERICSTACK_NA_MEMSET(stackName, 0, __genericStack_max_initial_indice); \
 	} else {							\
