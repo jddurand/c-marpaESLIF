@@ -33,10 +33,20 @@ INCLUDE_DIRECTORIES (${PROJECT_SOURCE_DIR}/include)
 # Check
 # -----
 ENABLE_TESTING()
-ADD_EXECUTABLE        (genericStackTester       EXCLUDE_FROM_ALL test/genericStack.c)
-SET_TARGET_PROPERTIES (genericStackTester       PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${BINARY_OUTPUT_PATH})
-ADD_TEST              (NAME genericStackTest    COMMAND genericStackTester WORKING_DIRECTORY ${BINARY_OUTPUT_PATH})
-ADD_CUSTOM_TARGET     (check COMMAND ${CMAKE_CTEST_COMMAND} DEPENDS genericStackTester)
+
+ADD_EXECUTABLE        (genericStackTesterDefaultInitialStack       EXCLUDE_FROM_ALL test/genericStack_defaultinitialstack.c)
+SET_TARGET_PROPERTIES (genericStackTesterDefaultInitialStack       PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${BINARY_OUTPUT_PATH})
+ADD_TEST              (NAME genericStackTestDefaultInitialStack    COMMAND genericStackTesterDefaultInitialStack WORKING_DIRECTORY ${BINARY_OUTPUT_PATH})
+
+ADD_EXECUTABLE        (genericStackTesterSmallInitialStack       EXCLUDE_FROM_ALL test/genericStack_smallinitialstack.c)
+SET_TARGET_PROPERTIES (genericStackTesterSmallInitialStack       PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${BINARY_OUTPUT_PATH})
+ADD_TEST              (NAME genericStackTestSmallInitialStack    COMMAND genericStackTesterSmallInitialStack WORKING_DIRECTORY ${BINARY_OUTPUT_PATH})
+
+ADD_EXECUTABLE        (genericStackTesterNoInitialStack       EXCLUDE_FROM_ALL test/genericStack_noinitialstack.c)
+SET_TARGET_PROPERTIES (genericStackTesterNoInitialStack       PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${BINARY_OUTPUT_PATH})
+ADD_TEST              (NAME genericStackTestNoInitialStack    COMMAND genericStackTesterNoInitialStack WORKING_DIRECTORY ${BINARY_OUTPUT_PATH})
+
+ADD_CUSTOM_TARGET     (check COMMAND ${CMAKE_CTEST_COMMAND} DEPENDS genericStackTesterDefaultInitialStack genericStackTesterSmallInitialStack genericStackTesterNoInitialStack)
 
 # -------
 # Install
