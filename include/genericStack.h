@@ -321,7 +321,7 @@ typedef struct genericStack {
 	if (GENERICSTACK_USED(stackName) <= 0) { \
 	  _GENERICSTACK_NA_MEMSET(stackName, 0, __genericStack_max_initial_indice); \
 	} else {							\
-	  _GENERICSTACK_NA_MEMSET(stackName, GENERICSTACK_USED(stackName) - 1, __genericStack_max_initial_indice); \
+	  _GENERICSTACK_NA_MEMSET(stackName, GENERICSTACK_USED(stackName), __genericStack_max_initial_indice); \
 	}								\
       }									\
     }									\
