@@ -123,7 +123,7 @@ static inline short                      _marpaWrapperAsf_next_factoringb(marpaW
 /* Specific to glade */
 static inline short                      _marpaWrapperAsf_glade_id_factorsb(marpaWrapperAsf_t *marpaWrapperAsfp, marpaWrapperAsfChoicePoint_t *choicepointp, genericStack_t **stackpp);
 int                                      _marpaWrapperAsf_indAndNodesi(void *userDatavp, genericStackItemType_t itemType, void **pp);
-static inline short                      _marpaWrapperAsf_and_nodes_to_cause_nidsp(marpaWrapperAsf_t *marpaWrapperAsfp, genericStack_t *andNodeIdStackp, genericStack_t **causeNidsStackpp);
+static inline short                      _marpaWrapperAsf_and_nodes_to_cause_nidsp(marpaWrapperAsf_t *marpaWrapperAsfp, genericStack_t *andNodeIdStackp, genericStack_t *causeNidsStackp);
 static inline short                      _marpaWrapperAsf_glade_is_visitedb(marpaWrapperAsf_t *marpaWrapperAsfp, int gladeIdi);
 static inline void                       _marpaWrapperAsf_glade_visited_clearb(marpaWrapperAsf_t *marpaWrapperAsfp, int *gladeIdip);
 static inline short                      _marpaWrapperAsf_glade_symch_countb(marpaWrapperAsf_t *marpaWrapperAsfp, int gladeIdi, int *countip);
@@ -2413,8 +2413,10 @@ static inline short _marpaWrapperAsf_glade_id_factorsb(marpaWrapperAsf_t *marpaW
   marpaWrapperGrammar_t    *marpaWrapperGrammarp    = marpaWrapperRecognizerp->marpaWrapperGrammarp;
   Marpa_Grammar             marpaGrammarp           = marpaWrapperGrammarp->marpaGrammarp;
   Marpa_Bocage              marpaBocagep            = marpaWrapperAsfp->marpaBocagep;
-  genericStack_t           *andNodeIdStackp         = NULL;
-  genericStack_t           *causeNidsStackp         = NULL;
+  genericStack_t            andNodeIdStack;
+  genericStack_t           *andNodeIdStackp         = &andNodeIdStack;
+  genericStack_t            causeNidsStack;
+  genericStack_t           *causeNidsStackp         = &causeNidsStack;
   int                      *causeNidsp              = NULL;
   int                       factorIxi;
   marpaWrapperAsfNook_t    *nookp;
@@ -2432,6 +2434,9 @@ static inline short _marpaWrapperAsf_glade_id_factorsb(marpaWrapperAsf_t *marpaW
     goto done;
   }
 
+  GENERICSTACK_INIT(andNodeIdStackp);
+  GENERICSTACK_INIT(causeNidsStackp);
+  
   GENERICSTACK_NEW(stackp);
   if (GENERICSTACK_ERROR(stackp)) {
     MARPAWRAPPER_ERROR(genericLoggerp, "Failure to initalize stackp");
@@ -2453,7 +2458,7 @@ static inline short _marpaWrapperAsf_glade_id_factorsb(marpaWrapperAsf_t *marpaW
 
     orNodeIdi = nookp->orNodeIdi;
 
-    if (! GENERICSTACK_GET_PTR(orNodeStackp, orNodeIdi)) {
+    if (! GENERICSTACK_IS_PTR(orNodeStackp, orNodeIdi)) {
       MARPAWRAPPER_ERRORF(genericLoggerp, "Not a pointer at indice %d of orNodeStackp", orNodeIdi);
       goto err;
     }
@@ -2461,11 +2466,8 @@ static inline short _marpaWrapperAsf_glade_id_factorsb(marpaWrapperAsf_t *marpaW
 
     nAndNodei = orNodep->nAndNodei;
     andNodep = orNodep->andNodep;
-    GENERICSTACK_NEW(andNodeIdStackp);
-    if (GENERICSTACK_ERROR(andNodeIdStackp)) {
-      MARPAWRAPPER_ERROR(genericLoggerp, "Failure to initalize andNodeIdStackp");
-      goto err;
-    }
+    GENERICSTACK_USED(andNodeIdStackp) = 0;
+
     MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "nook of OR_NODE %d first choice and last choice are %d and %d", nookp->orNodeIdi, nookp->firstChoicei, nookp->lastChoicei);
     for (choicei = nookp->firstChoicei; choicei <= nookp->lastChoicei; choicei++) {
       if ((choicei < 0) || (choicei > nAndNodei)) {
@@ -2478,11 +2480,11 @@ static inline short _marpaWrapperAsf_glade_id_factorsb(marpaWrapperAsf_t *marpaW
 	goto err;
       }
     }
-    GENERICSTACK_FREE(causeNidsStackp);
-    if (_marpaWrapperAsf_and_nodes_to_cause_nidsp(marpaWrapperAsfp, andNodeIdStackp, &causeNidsStackp) == 0) {
+    GENERICSTACK_USED(causeNidsStackp) = 0;
+    if (_marpaWrapperAsf_and_nodes_to_cause_nidsp(marpaWrapperAsfp, andNodeIdStackp, causeNidsStackp) == 0) {
       goto err;
     }
-    GENERICSTACK_FREE(andNodeIdStackp);
+    GENERICSTACK_USED(andNodeIdStackp) = 0;
 
     if (GENERICSTACK_USED(causeNidsStackp) <= 0) {
       causeNidsp = NULL;
@@ -2545,16 +2547,12 @@ static inline short _marpaWrapperAsf_glade_id_factorsb(marpaWrapperAsf_t *marpaW
   
  done:
   *stackpp = stackp;
-  GENERICSTACK_FREE(andNodeIdStackp);
-  GENERICSTACK_FREE(causeNidsStackp);
   _marpaWrapperAsf_dump_stack(marpaWrapperAsfp, "Glade id factors", *stackpp);
   MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "return 1, *stackpp=%p", *stackpp);
   return 1;
 
  err:
   GENERICSTACK_FREE(stackp);
-  GENERICSTACK_FREE(andNodeIdStackp);
-  GENERICSTACK_FREE(causeNidsStackp);
   if (causeNidsp != NULL) {
     free(causeNidsp);
   }
@@ -2570,7 +2568,7 @@ int _marpaWrapperAsf_indAndNodesi(void *userDatavp, genericStackItemType_t itemT
 }
 
 /****************************************************************************/
-static inline short _marpaWrapperAsf_and_nodes_to_cause_nidsp(marpaWrapperAsf_t *marpaWrapperAsfp, genericStack_t *andNodeIdStackp, genericStack_t **causeNidsStackpp)
+static inline short _marpaWrapperAsf_and_nodes_to_cause_nidsp(marpaWrapperAsf_t *marpaWrapperAsfp, genericStack_t *andNodeIdStackp, genericStack_t *causeNidsStackp)
 /****************************************************************************/
 {
   const static char         funcs[]                 = "_marpaWrapperAsf_and_nodes_to_cause_nidsp";
@@ -2579,7 +2577,6 @@ static inline short _marpaWrapperAsf_and_nodes_to_cause_nidsp(marpaWrapperAsf_t 
   marpaWrapperGrammar_t    *marpaWrapperGrammarp    = marpaWrapperRecognizerp->marpaWrapperGrammarp;
   Marpa_Grammar             marpaGrammarp           = marpaWrapperGrammarp->marpaGrammarp;
   Marpa_Bocage              marpaBocagep            = marpaWrapperAsfp->marpaBocagep;
-  genericStack_t           *causeNidsStackp         = NULL;
   genericHash_t            *causesHashp             = NULL;
   int                       i;
   int                       andNodeIdi;
@@ -2587,12 +2584,6 @@ static inline short _marpaWrapperAsf_and_nodes_to_cause_nidsp(marpaWrapperAsf_t 
   int                       goti;
   short                     findResultb;
 
-  GENERICSTACK_NEW(causeNidsStackp);
-  if (GENERICSTACK_ERROR(causeNidsStackp)) {
-    MARPAWRAPPER_ERROR(genericLoggerp, "Failure to initalize causeNidsStackp");
-    goto err;
-  }
-  
   GENERICHASH_NEW(causesHashp, _marpaWrapperAsf_indAndNodesi);
   if (GENERICHASH_ERROR(causesHashp)) {
     MARPAWRAPPER_ERROR(genericLoggerp, "Failure to initalize causesHashp");
@@ -2640,15 +2631,13 @@ static inline short _marpaWrapperAsf_and_nodes_to_cause_nidsp(marpaWrapperAsf_t 
   }
   
   GENERICHASH_FREE(causesHashp, marpaWrapperAsfp);
-  *causeNidsStackpp = causeNidsStackp;
   _marpaWrapperAsf_dump_stack(marpaWrapperAsfp, "<============= andNodeIdStackp", andNodeIdStackp);
   _marpaWrapperAsf_dump_stack(marpaWrapperAsfp, "=============> causeNidsStackp", causeNidsStackp);
-  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "return 1, *causeNidsStackpp=%p", *causeNidsStackpp);
+  MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return 1");
   return 1;
 
  err:
   GENERICHASH_FREE(causesHashp, marpaWrapperAsfp);
-  GENERICSTACK_FREE(causeNidsStackp);
   MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return 0");
   return 0;
 }
