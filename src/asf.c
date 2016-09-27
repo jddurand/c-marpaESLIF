@@ -1737,7 +1737,7 @@ static inline marpaWrapperAsfGlade_t *_marpaWrapperAsf_glade_obtainp(marpaWrappe
   int                         *symchIdip              = NULL;
   short                        thisNidEndb            = 0;
   int                         *symbolip               = NULL;
-  genericStack_t              *factoring              = NULL;
+  genericStack_t              *factoringStackp        = NULL;
   genericStack_t              *symchesStackp          = NULL;
   genericStack_t              *factoringsStackp       = NULL;
   marpaWrapperAsfChoicePoint_t *choicepointp = NULL;
@@ -1991,12 +1991,12 @@ static inline marpaWrapperAsfGlade_t *_marpaWrapperAsf_glade_obtainp(marpaWrappe
 	goto err;
       }
 
-      GENERICSTACK_FREE(factoring);
-      if (_marpaWrapperAsf_glade_id_factorsb(marpaWrapperAsfp, choicepointp, &factoring) == 0) {
+      GENERICSTACK_FREE(factoringStackp);
+      if (_marpaWrapperAsf_glade_id_factorsb(marpaWrapperAsfp, choicepointp, &factoringStackp) == 0) {
 	goto err;
       }
 
-      while (factoring != NULL) {
+      while (factoringStackp != NULL) {
 	if (GENERICSTACK_USED(factoringsStackp) > MARPAWRAPPERASF_FACTORING_MAX) {
 	  /* Update factorings omitted flag - this indice is already allocated: factoringsStackp cannot change*/
 	  GENERICSTACK_SET_INT(factoringsStackp, 1, 1);
@@ -2016,15 +2016,15 @@ static inline marpaWrapperAsfGlade_t *_marpaWrapperAsf_glade_obtainp(marpaWrappe
 	    MARPAWRAPPER_ERROR(genericLoggerp, "Failure to initalize localFactoringStackp");
 	    goto err;
 	  }
-          if (GENERICSTACK_USED(factoring) > 0) {
-            for (itemIxi = GENERICSTACK_USED(factoring) - 1; itemIxi >= 0; itemIxi--) {
-              if (! GENERICSTACK_IS_INT(factoring, itemIxi)) {
+          if (GENERICSTACK_USED(factoringStackp) > 0) {
+            for (itemIxi = GENERICSTACK_USED(factoringStackp) - 1; itemIxi >= 0; itemIxi--) {
+              if (! GENERICSTACK_IS_INT(factoringStackp, itemIxi)) {
                 MARPAWRAPPER_ERRORF(genericLoggerp, "Indice %d is not an int", itemIxi);
                 GENERICSTACK_FREE(localFactoringStackp);
                 goto err;
               }
 	    
-              GENERICSTACK_PUSH_INT(localFactoringStackp, GENERICSTACK_GET_INT(factoring,  itemIxi));
+              GENERICSTACK_PUSH_INT(localFactoringStackp, GENERICSTACK_GET_INT(factoringStackp,  itemIxi));
               if (GENERICSTACK_ERROR(localFactoringStackp)) {
                 MARPAWRAPPER_ERROR(genericLoggerp, "Failure to push in localFactoringStackp");
                 GENERICSTACK_FREE(localFactoringStackp);
@@ -2044,8 +2044,8 @@ static inline marpaWrapperAsfGlade_t *_marpaWrapperAsf_glade_obtainp(marpaWrappe
 	  if (_marpaWrapperAsf_next_factoringb(marpaWrapperAsfp, choicepointp, choicepointNidi, &factoringb) == 0) {
 	    goto err;
 	  }
-          GENERICSTACK_FREE(factoring);
-	  if (_marpaWrapperAsf_glade_id_factorsb(marpaWrapperAsfp, choicepointp, &factoring) == 0) {
+          GENERICSTACK_FREE(factoringStackp);
+	  if (_marpaWrapperAsf_glade_id_factorsb(marpaWrapperAsfp, choicepointp, &factoringStackp) == 0) {
 	    goto err;
 	  }
 	}
@@ -2097,7 +2097,7 @@ static inline marpaWrapperAsfGlade_t *_marpaWrapperAsf_glade_obtainp(marpaWrappe
   if (symbolip != NULL) {
     free(symbolip);
   }
-  GENERICSTACK_FREE(factoring);
+  GENERICSTACK_FREE(factoringStackp);
   _marpaWrapperAsf_factoringsStackp_freev(marpaWrapperAsfp, factoringsStackp);
   _marpaWrapperAsf_choicepoint_freev(marpaWrapperAsfp, choicepointp);
 
