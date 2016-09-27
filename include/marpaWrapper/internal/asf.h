@@ -71,6 +71,10 @@ struct marpaWrapperAsf {
   /* Traverser callback */
   traverserCallback_t         traverserCallbackp;
   void                       *userDatavp;
+
+  /* For optimizations, internal generic stacks of methods */
+  /* that do not recurse are setted once */
+  genericStack_t             *worklistStackp;
 };
 
 typedef struct marpaWrapperAsfChoicePoint {
