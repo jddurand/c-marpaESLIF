@@ -142,7 +142,6 @@ static inline short                      _marpaWrapperAsf_symch_factoring_countb
 /* Specific to intset */
 int                                      _marpaWrapperAsf_intset_keyIndFunctioni(void *userDatavp, genericStackItemType_t itemType, void **pp);
 short                                    _marpaWrapperAsf_intset_keyCmpFunctionb(void *userDatavp, void **pp1, void **pp2);
-void                                    *_marpaWrapperAsf_intset_keyCopyFunctionv(void *userDatavp, void **pp);
 void                                     _marpaWrapperAsf_intset_keyFreeFunctionv(void *userDatavp, void **pp);
 
 /* General */
