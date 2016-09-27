@@ -75,6 +75,10 @@ struct marpaWrapperAsf {
   /* For optimizations, internal generic stacks of methods */
   /* that do not recurse are setted once */
   genericStack_t             *worklistStackp;
+
+  /* For optimization of intset memoization */
+  int                        *intsetidp;
+  int                         intsetcounti;
 };
 
 typedef struct marpaWrapperAsfChoicePoint {

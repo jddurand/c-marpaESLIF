@@ -220,6 +220,8 @@ marpaWrapperAsf_t *marpaWrapperAsf_newp(marpaWrapperRecognizer_t *marpaWrapperRe
   marpaWrapperAsfp->traverserCallbackp      = NULL;
   marpaWrapperAsfp->userDatavp              = NULL;
   marpaWrapperAsfp->worklistStackp          = NULL;
+  marpaWrapperAsfp->intsetidp               = NULL;
+  marpaWrapperAsfp->intsetcounti            = 0;
 
   /* Always succeed as per the doc */
   MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_r_latest_earley_set(%p)", marpaWrapperRecognizerp->marpaRecognizerp);
@@ -286,7 +288,7 @@ marpaWrapperAsf_t *marpaWrapperAsf_newp(marpaWrapperRecognizer_t *marpaWrapperRe
   GENERICHASH_NEW_ALL(marpaWrapperAsfp->intsetHashp,
                       _marpaWrapperAsf_intset_keyIndFunctioni,
                       _marpaWrapperAsf_intset_keyCmpFunctionb,
-                      NULL, /* We already allocate key on the heap: no need to copy it */
+                      NULL, /* Key copy is only used when replacing a key, we make sure this never happen */
                       _marpaWrapperAsf_intset_keyFreeFunctionv,
                       NULL,  /* The value type will always be INT: no need */
                       NULL,  /* for a copy not a free functions for the value */
@@ -561,6 +563,11 @@ void marpaWrapperAsf_freev(marpaWrapperAsf_t *marpaWrapperAsfp)
     MARPAWRAPPER_TRACE(genericLoggerp, funcs, "Freeing worklist stack");
     GENERICSTACK_FREE(marpaWrapperAsfp->worklistStackp);
     
+    if (marpaWrapperAsfp->intsetidp != NULL) {
+      MARPAWRAPPER_TRACE(genericLoggerp, funcs, "Freeing intsetidp");
+      free(marpaWrapperAsfp->intsetidp);
+    }
+
     MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "free(%p)", marpaWrapperAsfp);
     free(marpaWrapperAsfp);
 
@@ -859,19 +866,28 @@ static inline short _marpaWrapperAsf_intsetIdb(marpaWrapperAsf_t *marpaWrapperAs
 {
   const static char        funcs[] = "_marpaWrapperAsf_intsetIdb";
   genericLogger_t         *genericLoggerp = marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp;
-  short                    rcb;
   short                    findResultb;
   int                      intsetIdi;
-  int                     *localIdip = NULL;
+  int                     *localIdip;
+  int                     *insertIdip;
 
   /* This method is responsible of memoization and is called very often. We create a local array of ints  */
   /* of size counti+1, and store counti at indice 0.                                                      */
-
-  localIdip = malloc(sizeof(int) * (counti + 1));
-  if (localIdip == NULL) {
-    MARPAWRAPPER_ERRORF(genericLoggerp, "malloc failure: %s", strerror(errno));
-    goto err;
+  if (counti > marpaWrapperAsfp->intsetcounti) {
+    if (marpaWrapperAsfp->intsetcounti <= 0) {
+      localIdip = marpaWrapperAsfp->intsetidp = (int *) malloc(sizeof(int) * (counti + 1));
+    } else {
+      localIdip = marpaWrapperAsfp->intsetidp = realloc(marpaWrapperAsfp->intsetidp, sizeof(int) * (counti + 1));
+    }
+    if (localIdip == NULL) {
+      MARPAWRAPPER_ERRORF(genericLoggerp, "malloc failure: %s", strerror(errno));
+      goto err;
+    }
+    marpaWrapperAsfp->intsetcounti = counti;
+  } else {
+    localIdip = marpaWrapperAsfp->intsetidp;
   }
+
   *localIdip = counti;
   if (counti > 0) {
     memcpy(++localIdip, idip, sizeof(int) * counti);
@@ -901,21 +917,24 @@ static inline short _marpaWrapperAsf_intsetIdb(marpaWrapperAsf_t *marpaWrapperAs
     goto err;
   }
   if (! findResultb) {
-
+    size_t sizl = sizeof(int) * (counti + 1);
+    insertIdip = (int *) malloc(sizl);
+    if (insertIdip == NULL) {
+      MARPAWRAPPER_ERRORF(genericLoggerp, "malloc failure: %s", strerror(errno));
+      goto err;
+    }
+    memcpy(insertIdip, localIdip, sizl);
     intsetIdi = marpaWrapperAsfp->nextIntseti++;
     MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "Creating next intset id %d", intsetIdi);
     GENERICHASH_SET(marpaWrapperAsfp->intsetHashp,
                     marpaWrapperAsfp,
                     PTR,
-                    localIdip,
+                    insertIdip,
                     INT,
                     intsetIdi);
     if (GENERICHASH_ERROR(marpaWrapperAsfp->intsetHashp)) {
       MARPAWRAPPER_ERRORF(genericLoggerp, "intset hash set failure: %s", strerror(errno));
       goto err;
-    } else {
-      /* The hash is keeping key pointer: we must not free it */
-      localIdip = NULL;
     }
   } else {
     MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "Found intset id %d", intsetIdi);
@@ -923,18 +942,12 @@ static inline short _marpaWrapperAsf_intsetIdb(marpaWrapperAsf_t *marpaWrapperAs
 
   *intsetIdip = intsetIdi;
 
-  rcb = 1;
-  goto done;
+  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "return 1, *intsetIdip=%d", *intsetIdip);
+  return 1;
 
  err:
-  rcb = 0;
-
- done:
-  if (localIdip != NULL) {
-    free(localIdip);
-  }
-  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "return %d, *intsetIdip=%d", (int) rcb, *intsetIdip);
-  return rcb;
+  MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return 0");
+  return 0;
 }
 
 /****************************************************************************/
