@@ -12,21 +12,28 @@ genericStack is a set of macros to manage a stack. It is is generic in the sense
 
   #include <genericStack.h>
 
-  genericStack_t myStack, *myStackp = &myStack;
+  genericStack_t myStack, *myStackp;
 
-  /* The generic stack can be on the stack -; */
+  /* The generic stack can be on the stack */
+  myStackp = &myStack;
   GENERICSTACK_INIT(myStackp);
+  /* ... */
+  GENERICSTACK_RESET(myStackp);
 
   /* ... or on the heap */
   GENERICSTACK_NEW(myStackp);
-  /* Stack manipulation */
+  /* ... */
   GENERICSTACK_FREE(myStackp);
 
 =head1 MACROS
 
 =head2 GENERICSTACK_INIT(stackName)
 
-Initialize a stack pointer.
+Initialize a stack pointer that is on the stack. Memory will be released with GENERICSTACK_RESET(stackName).
+
+=head2 GENERICSTACK_INIT_SIZED(stackName, wantedSize)
+
+Create an empty stack referenced with the name C<stackName> itself on the stack, though pre-allocating room for C<wantedSize> elements>. The stack will also automatically grow if user if putting an element beyond C<wantedSize>.
 
 =head2 GENERICSTACK_NEW(stackName)
 
@@ -168,7 +175,11 @@ Check if item at indice C<index> is of type <XXX>, and returns a true or false v
 
 =head2 GENERICSTACK_FREE(stackName)
 
-Release all the generic stack memory.
+Releases a stack that is on the heap.
+
+=head2 GENERICSTACK_RESET(stackName)
+
+Releases a stack that is on the stack.
 
 =head2 GENERICSTACK_ERROR(stackName)
 
