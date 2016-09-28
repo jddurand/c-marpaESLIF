@@ -2,10 +2,10 @@
 #include <stdlib.h>
 #include "genericStack.h"
 
-short myFunction1(genericStack_t *myStackp);
-short myFunction2(genericStack_t *myStackp);
-short myFunction3(genericStack_t *myStackp);
-short myFunction4(genericStack_t *myStackp);
+static short myFunction1(genericStack_t *myStackp);
+static short myFunction2(genericStack_t *myStackp);
+static short myFunction3(genericStack_t *myStackp);
+static short subMain(genericStack_t *myStackp);
 
 typedef struct myStruct1 {
   int i;
@@ -16,10 +16,41 @@ typedef struct myStruct2 {
   char *s;
 } myStruct2_t;
 
-int main() {
+int main(int argc, char **argv) {
+  genericStack_t  stackOnStack;
+  genericStack_t *myStackp;
+
+  printf("==================:\n");
+  printf("STACK on the stack:\n");
+  printf("==================:\n\n");
+  myStackp = &stackOnStack;
+  GENERICSTACK_INIT_SIZED(myStackp, 65536); if (GENERICSTACK_ERROR(myStackp)) { return 1; }
+  if (subMain(myStackp)) {
+    GENERICSTACK_RESET(myStackp);
+    return 1;
+  }
+  printf("\nRESET interface:\n");
+  printf("---------------:\n\n");
+  GENERICSTACK_RESET(myStackp);
+  
+  printf("=================:\n");
+  printf("STACK on the heap:\n");
+  printf("=================:\n\n");
+  GENERICSTACK_NEW_SIZED(myStackp, 65536); if (GENERICSTACK_ERROR(myStackp)) { return 1; }
+  if (subMain(myStackp)) {
+    GENERICSTACK_RESET(myStackp);
+    return 1;
+  }
+  printf("\nFREE interface:\n");
+  printf("----------------:\n\n");
+  GENERICSTACK_FREE(myStackp);
+
+  return 0;
+}
+
+static short subMain(genericStack_t *myStackp) {
   myStruct1_t     myStruct1 = { 50 };
   myStruct2_t     myStruct2 = { 60, "70" };
-  genericStack_t *myStackp;
   GENERICSTACKITEMTYPE2TYPE_ARRAY array;
   GENERICSTACKITEMTYPE2TYPE_ARRAY array2;
 
@@ -29,11 +60,9 @@ int main() {
   GENERICSTACK_ARRAYP_LENGTH(&array2) = 20;
   GENERICSTACK_ARRAYP_PTR(&array2) = malloc(GENERICSTACK_ARRAYP_LENGTH(&array2));
 
-  /* GENERICSTACK_NEW(myStackp); if (GENERICSTACK_ERROR(myStackp)) { return 1; } */
-  GENERICSTACK_NEW_SIZED(myStackp, 65536); if (GENERICSTACK_ERROR(myStackp)) { return 1; }
   GENERICSTACK_ERROR_RESET(myStackp);  /* Not meaningful here, but just to test it */
 
-  printf("\nNEW interface:\n");
+  printf("\nUSED/LENGTH interface:\n");
   printf("--------------:\n\n");
   printf("... Use/size: %d/%d (initial+heap=%d+%d)\n", (int) GENERICSTACK_USED(myStackp), (int) GENERICSTACK_LENGTH(myStackp), (int) GENERICSTACK_INITIAL_LENGTH(myStackp), (int) GENERICSTACK_HEAP_LENGTH(myStackp));
 
@@ -74,12 +103,11 @@ int main() {
 
   if (myFunction2(myStackp) == 0) { return 1; }
   if (myFunction3(myStackp) == 0) { return 1; }
-  if (myFunction4(myStackp) == 0) { return 1; }
 
   return 0;
 }
 
-short myFunction1(genericStack_t *myStackp) {
+static short myFunction1(genericStack_t *myStackp) {
   myStruct1_t *myStruct1p;
   myStruct2_t *myStruct2p;
   
@@ -158,7 +186,7 @@ short myFunction1(genericStack_t *myStackp) {
   return 1;
 }
 
-short myFunction2(genericStack_t *myStackp) {
+static short myFunction2(genericStack_t *myStackp) {
   
   printf("\nGET interface:\n");
   printf("-------------:\n\n");
@@ -168,7 +196,7 @@ short myFunction2(genericStack_t *myStackp) {
   return 1;
 }
 
-short myFunction3(genericStack_t *myStackp) {
+static short myFunction3(genericStack_t *myStackp) {
   short rcb = 1;
   
   printf("\nEXISTS and IF interfaces:\n");
@@ -196,14 +224,3 @@ short myFunction3(genericStack_t *myStackp) {
 
   return rcb;
 }
-
-short myFunction4(genericStack_t *myStackp) {
-  
-  printf("\nFREE interface:\n");
-  printf("--------------:\n\n");
-
-  GENERICSTACK_FREE(myStackp);
-
-  return 1;
-}
-

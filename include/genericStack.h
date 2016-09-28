@@ -352,6 +352,13 @@ typedef struct genericStack {
     }									\
   } while (0)
 
+#define GENERICSTACK_INIT_SIZED(stackName, wantedLength) do {		\
+    GENERICSTACK_INIT((stackName));					\
+    if (! GENERICSTACK_ERROR(stackName)) {				\
+      _GENERICSTACK_EXTEND((stackName), (wantedLength));		\
+    }									\
+  } while (0)
+
 /* ====================================================================== */
 /* SET interface: Stack is extended on demand, gap is eventually filled   */
 /* ====================================================================== */
@@ -574,6 +581,17 @@ typedef struct genericStack {
       }									\
       free((stackName));						\
       (stackName) = NULL;						\
+    }									\
+  } while (0)
+
+#define GENERICSTACK_RESET(stackName) do {				\
+    if ((stackName) != NULL) {						\
+      if ((stackName)->heapItems != NULL) {				\
+        free((stackName)->heapItems);					\
+        (stackName)->heapItems = NULL;					\
+      }									\
+      (stackName)->heapLength = 0;					\
+      (stackName)->used = 0;						\
     }									\
   } while (0)
 
