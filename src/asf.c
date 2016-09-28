@@ -870,9 +870,9 @@ static inline short _marpaWrapperAsf_intsetIdb(marpaWrapperAsf_t *marpaWrapperAs
   int                      intsetIdi;
   int                     *localIdip;
   int                     *insertIdip;
+  int                      indicei;
 
-  /* This method is responsible of memoization and is called very often. We create a local array of ints  */
-  /* of size counti+1, and store counti at indice 0.                                                      */
+  /* This method is responsible of memoization and is called very often */
   if (counti > marpaWrapperAsfp->intsetcounti) {
     if (marpaWrapperAsfp->intsetcounti <= 0) {
       localIdip = marpaWrapperAsfp->intsetidp = (int *) malloc(sizeof(int) * (counti + 1));
@@ -905,13 +905,17 @@ static inline short _marpaWrapperAsf_intsetIdb(marpaWrapperAsf_t *marpaWrapperAs
     }
   }
 #endif
-  GENERICHASH_FIND(marpaWrapperAsfp->intsetHashp,
-                   marpaWrapperAsfp,
-                   PTR,
-                   localIdip,
-                   INT,
-                   &intsetIdi,
-                   findResultb);
+  /* If we are going to insert, we want to precompute indice instead of letting */
+  /* the hash macros doing it for the find(), and then for the set().           */
+  indicei = _marpaWrapperAsf_intset_keyIndFunctioni((void *) marpaWrapperAsfp, GENERICSTACKITEMTYPE_PTR, (void **) &localIdip);
+  GENERICHASH_FIND_BY_IND(marpaWrapperAsfp->intsetHashp,
+			  marpaWrapperAsfp,
+			  PTR,
+			  localIdip,
+			  INT,
+			  &intsetIdi,
+			  findResultb,
+			  indicei);
   if (GENERICHASH_ERROR(marpaWrapperAsfp->intsetHashp)) {
     MARPAWRAPPER_ERRORF(genericLoggerp, "intset hash find failure: %s", strerror(errno));
     goto err;
@@ -925,19 +929,20 @@ static inline short _marpaWrapperAsf_intsetIdb(marpaWrapperAsf_t *marpaWrapperAs
     }
     memcpy(insertIdip, localIdip, sizl);
     intsetIdi = marpaWrapperAsfp->nextIntseti++;
-    MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "Creating next intset id %d", intsetIdi);
-    GENERICHASH_SET(marpaWrapperAsfp->intsetHashp,
-                    marpaWrapperAsfp,
-                    PTR,
-                    insertIdip,
-                    INT,
-                    intsetIdi);
+    MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "Creating next intset id %d at hash row indice %d", intsetIdi, indicei);
+    GENERICHASH_SET_BY_IND(marpaWrapperAsfp->intsetHashp,
+			   marpaWrapperAsfp,
+			   PTR,
+			   insertIdip,
+			   INT,
+			   intsetIdi,
+			   indicei);
     if (GENERICHASH_ERROR(marpaWrapperAsfp->intsetHashp)) {
       MARPAWRAPPER_ERRORF(genericLoggerp, "intset hash set failure: %s", strerror(errno));
       goto err;
     }
   } else {
-    MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "Found intset id %d", intsetIdi);
+    MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "Found intset id %d at hash row %d", intsetIdi, indicei);
   }
 
   *intsetIdip = intsetIdi;
