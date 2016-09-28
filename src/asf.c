@@ -454,8 +454,12 @@ short marpaWrapperAsf_traverseb(marpaWrapperAsf_t *marpaWrapperAsfp, traverserCa
   genericLogger_t            *genericLoggerp = NULL;
   int                         gladeIdi;
   marpaWrapperAsfGlade_t     *gladep;
-  marpaWrapperAsfTraverser_t *traverserp = NULL;
+  marpaWrapperAsfTraverser_t  traverser;
   int                         valuei;
+  genericStack_t              valueStack;
+  genericStack_t             *valueStackp = &valueStack;
+
+  GENERICSTACK_INIT(valueStackp);
 
   if (marpaWrapperAsfp == NULL) {
     errno = EINVAL;
@@ -480,38 +484,25 @@ short marpaWrapperAsf_traverseb(marpaWrapperAsf_t *marpaWrapperAsfp, traverserCa
   marpaWrapperAsfp->traverserCallbackp = traverserCallbackp;
   marpaWrapperAsfp->userDatavp         = userDatavp;
 
-  traverserp = malloc(sizeof(marpaWrapperAsfTraverser_t));
-  if (traverserp == NULL) {
-    MARPAWRAPPER_ERRORF(genericLoggerp, "malloc error: %s", strerror(errno));
-    goto err;
-  }
-  traverserp->marpaWrapperAsfp = marpaWrapperAsfp;
-  GENERICSTACK_NEW(traverserp->valueStackp);
-  if (GENERICSTACK_ERROR(traverserp->valueStackp)) {
-    MARPAWRAPPER_ERRORF(genericLoggerp, "traverserp->valueStackp initialization failure: %s", strerror(errno));
-    goto err;
-  }
-  traverserp->gladep       = gladep;
-  traverserp->symchIxi     = 0;
-  traverserp->factoringIxi = 0;
+  traverser.marpaWrapperAsfp = marpaWrapperAsfp;
+  traverser.valueStackp      = valueStackp;
+  traverser.gladep           = gladep;
+  traverser.symchIxi         = 0;
+  traverser.factoringIxi     = 0;
   MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "Calling traverser for glade %d", gladep->idi);
-  if (! marpaWrapperAsfp->traverserCallbackp(traverserp, marpaWrapperAsfp->userDatavp, &valuei)) {
+  if (! marpaWrapperAsfp->traverserCallbackp(&traverser, marpaWrapperAsfp->userDatavp, &valuei)) {
     goto err;
   }
-  GENERICSTACK_FREE(traverserp->valueStackp);
-  free(traverserp);
 
   if (valueip != NULL) {
     *valueip = valuei;
   }
+  GENERICSTACK_RESET(valueStackp);
   MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return 1");
   return 1;
 
  err:
-  if (traverserp != NULL) {
-    GENERICSTACK_FREE(traverserp->valueStackp);
-    free(traverserp);
-  }
+  GENERICSTACK_RESET(valueStackp);
   MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return 0");
   return 0;
 }
@@ -2467,13 +2458,13 @@ static inline short _marpaWrapperAsf_glade_id_factorsb(marpaWrapperAsf_t *marpaW
   int                       choicepointpMaxIndice;
   genericStack_t           *choicepointpFactoringStackp;
   
+  GENERICSTACK_INIT(andNodeIdStackp);
+  GENERICSTACK_INIT(causeNidsStackp);
+  
   if (choicepointp->factoringStackp == NULL) {
     goto done;
   }
 
-  GENERICSTACK_INIT(andNodeIdStackp);
-  GENERICSTACK_INIT(causeNidsStackp);
-  
   GENERICSTACK_NEW(stackp);
   if (GENERICSTACK_ERROR(stackp)) {
     MARPAWRAPPER_ERROR(genericLoggerp, "Failure to initalize stackp");
@@ -2583,12 +2574,17 @@ static inline short _marpaWrapperAsf_glade_id_factorsb(marpaWrapperAsf_t *marpaW
   }
   
  done:
+  GENERICSTACK_RESET(andNodeIdStackp);
+  GENERICSTACK_RESET(causeNidsStackp);
+  
   *stackpp = stackp;
   _marpaWrapperAsf_dump_stack(marpaWrapperAsfp, "Glade id factors", *stackpp);
   MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "return 1, *stackpp=%p", *stackpp);
   return 1;
 
  err:
+  GENERICSTACK_RESET(andNodeIdStackp);
+  GENERICSTACK_RESET(causeNidsStackp);  
   GENERICSTACK_FREE(stackp);
   if (causeNidsp != NULL) {
     free(causeNidsp);
@@ -2937,7 +2933,9 @@ short marpaWrapperAsf_traverse_rh_valueb(marpaWrapperAsfTraverser_t *traverserp,
 /****************************************************************************/
 {
   const static char           funcs[]         = "marpaWrapperAsf_traverse_rh_valueb";
-  marpaWrapperAsfTraverser_t *childTraverserp = NULL;
+  marpaWrapperAsfTraverser_t  childTraverser;
+  genericStack_t              childValueStack;
+  genericStack_t             *childValueStackp = &childValueStack;
   int                         valuei;
   marpaWrapperAsf_t          *marpaWrapperAsfp;
   marpaWrapperAsfGlade_t     *gladep;
@@ -2952,9 +2950,11 @@ short marpaWrapperAsf_traverse_rh_valueb(marpaWrapperAsfTraverser_t *traverserp,
   marpaWrapperAsfGlade_t     *downGladep;
   int                         downGladeIdi;
 
+  GENERICSTACK_INIT(childValueStackp);
+
   if (traverserp == NULL) {
     errno = EINVAL;
-    return 0;
+    goto err;
   }
 
   marpaWrapperAsfp = traverserp->marpaWrapperAsfp;
@@ -3050,29 +3050,17 @@ short marpaWrapperAsf_traverse_rh_valueb(marpaWrapperAsfTraverser_t *traverserp,
     goto err;
   }
   /*
-   * Do a shallow a clone
+   * Do a shallow clone
    */
-  childTraverserp = malloc(sizeof(marpaWrapperAsfTraverser_t));
-  if (childTraverserp == NULL) {
-    MARPAWRAPPER_ERRORF(genericLoggerp, "malloc error, %s", strerror(errno));
-    goto err;
-  }
-  GENERICSTACK_NEW(childTraverserp->valueStackp);
-  if (GENERICSTACK_ERROR(childTraverserp->valueStackp)) {
-    MARPAWRAPPER_ERRORF(genericLoggerp, "childTraverserp->valueStackp initialization failure error, %s", strerror(errno));
-    goto err;   
-  }
-  childTraverserp->marpaWrapperAsfp = marpaWrapperAsfp;
-  childTraverserp->gladep           = downGladep;
-  childTraverserp->symchIxi         = 0;
-  childTraverserp->factoringIxi     = 0;
+  childTraverser.marpaWrapperAsfp = marpaWrapperAsfp;
+  childTraverser.valueStackp      = childValueStackp;
+  childTraverser.gladep           = downGladep;
+  childTraverser.symchIxi         = 0;
+  childTraverser.factoringIxi     = 0;
   MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "Calling traverser for downglade %d", downGladep->idi);
-  if (! marpaWrapperAsfp->traverserCallbackp(childTraverserp, marpaWrapperAsfp->userDatavp, &valuei)) {
+  if (! marpaWrapperAsfp->traverserCallbackp(&childTraverser, marpaWrapperAsfp->userDatavp, &valuei)) {
     goto err;
   }
-  GENERICSTACK_FREE(childTraverserp->valueStackp);
-  free(childTraverserp);
-  childTraverserp = NULL;
 
   GENERICSTACK_SET_INT(traverserp->valueStackp, valuei, downGladeIdi);
   if (GENERICSTACK_ERROR(traverserp->valueStackp)) {
@@ -3081,6 +3069,7 @@ short marpaWrapperAsf_traverse_rh_valueb(marpaWrapperAsfTraverser_t *traverserp,
   }
 
 ok:
+  GENERICSTACK_RESET(childValueStackp);
   if (valueip != NULL) {
     *valueip = valuei;
   }
@@ -3089,10 +3078,7 @@ ok:
   return 1;
 
  err:
-  if (childTraverserp != NULL) {
-    GENERICSTACK_FREE(childTraverserp->valueStackp);
-    free(childTraverserp);
-  }
+  GENERICSTACK_RESET(childValueStackp);
   MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return 0");
   return 0;
 }
