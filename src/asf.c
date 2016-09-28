@@ -871,6 +871,8 @@ static inline short _marpaWrapperAsf_intsetIdb(marpaWrapperAsf_t *marpaWrapperAs
   int                     *localIdip;
   int                     *insertIdip;
   int                      indicei;
+  int                      idi0i;
+  int                      idi1i;
 
   /* This method is responsible of memoization and is called very often */
   if (counti > marpaWrapperAsfp->intsetcounti) {
@@ -890,8 +892,26 @@ static inline short _marpaWrapperAsf_intsetIdb(marpaWrapperAsf_t *marpaWrapperAs
 
   *localIdip = counti;
   if (counti > 0) {
-    memcpy(++localIdip, idip, sizeof(int) * counti);
-    qsort(localIdip--, (size_t) counti, sizeof(int), _marpaWrapperAsf_idCmpi);
+    switch (counti) {
+    case 1:
+      localIdip[1] = idip[0];
+      break;
+    case 2:
+      idi0i = idip[0];
+      idi1i = idip[1];
+      if (idi0i < idi1i) {
+	localIdip[1] = idi0i;
+	localIdip[2] = idi1i;
+      } else {
+	localIdip[1] = idi1i;
+	localIdip[2] = idi0i;
+      }
+      break;
+    default:
+      memcpy(++localIdip, idip, sizeof(int) * counti);
+      qsort(localIdip--, (size_t) counti, sizeof(int), _marpaWrapperAsf_idCmpi);
+      break;
+    }
   }
 
 #ifndef MARPAWRAPPER_NTRACE
