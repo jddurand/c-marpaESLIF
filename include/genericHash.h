@@ -197,46 +197,41 @@ typedef struct genericHash {
       } else {								\
 	genericStack_t *_subKeyStackp = (genericStack_t *) GENERICSTACK_GET_PTR(hashName->keyStackp, subStackIndex); \
 	genericStack_t *_subValStackp = (genericStack_t *) GENERICSTACK_GET_PTR(hashName->valStackp, subStackIndex); \
+	int             _subStackused = GENERICSTACK_USED(_subKeyStackp); \
+	int             _i;						\
 									\
-	if (GENERICSTACK_ERROR(hashName->keyStackp) || GENERICSTACK_ERROR(hashName->valStackp)) { \
-	  hashName->error = 1;						\
-	} else {							\
-	  int _subStackused = GENERICSTACK_USED(_subKeyStackp);		\
-	  int _i;							\
+	for (_i = 0; _i < _subStackused; _i++) {			\
+	  GENERICSTACKITEMTYPE2TYPE_##keyType _gotKeyVal;		\
+	  if ((GENERICSTACKITEMTYPE(_subKeyStackp, _i) != GENERICSTACKITEMTYPE_##keyType)) { \
+	    continue;							\
+	  }								\
 									\
-	  for (_i = 0; _i < _subStackused; _i++) {			\
-	    GENERICSTACKITEMTYPE2TYPE_##keyType _gotKeyVal;		\
-	    if ((GENERICSTACKITEMTYPE(_subKeyStackp, _i) != GENERICSTACKITEMTYPE_##keyType)) { \
+	  _gotKeyVal = GENERICSTACK_GET_##keyType(_subKeyStackp, _i);	\
+	  if ((GENERICSTACKITEMTYPE_##keyType == GENERICSTACKITEMTYPE_PTR) && (hashName->keyCmpFunctionp != NULL)) { \
+	    if (! hashName->keyCmpFunctionp((void *) userDatavp, (void **) &_keyVal, (void **) &_gotKeyVal)) { \
 	      continue;							\
 	    }								\
+	  } else {							\
+	    if (_keyVal != _gotKeyVal) {				\
+	      continue;							\
+	    }								\
+	  }								\
 									\
-	    _gotKeyVal = GENERICSTACK_GET_##keyType(_subKeyStackp, _i); \
-	    if ((GENERICSTACKITEMTYPE_##keyType == GENERICSTACKITEMTYPE_PTR) && (hashName->keyCmpFunctionp != NULL)) {	\
-	      if (! hashName->keyCmpFunctionp((void *) userDatavp, (void **) &_keyVal, (void **) &_gotKeyVal)) { \
-		continue;						\
-	      }								\
-	    } else {							\
-	      if (_keyVal != _gotKeyVal) {				\
-		continue;						\
-	      }								\
+	  if ((GENERICSTACKITEMTYPE_##keyType == GENERICSTACKITEMTYPE_PTR) && ((void *) _gotKeyVal != NULL) && (hashName->keyFreeFunctionp != NULL)) { \
+	    hashName->keyFreeFunctionp((void *) userDatavp, (void **) &_gotKeyVal); \
+	  }								\
+	  if ((GENERICSTACKITEMTYPE(_subValStackp, _i) == GENERICSTACKITEMTYPE_PTR)) { \
+	    GENERICSTACKITEMTYPE2TYPE_PTR _gotValVal = GENERICSTACK_GET_PTR(_subValStackp, _i); \
+	    if ((_gotValVal != NULL) && (hashName->valFreeFunctionp != NULL)) { \
+	      hashName->valFreeFunctionp((void *) userDatavp, (void **) &_gotValVal); \
 	    }								\
-									\
-	    if ((GENERICSTACKITEMTYPE_##keyType == GENERICSTACKITEMTYPE_PTR) && ((void *) _gotKeyVal != NULL) && (hashName->keyFreeFunctionp != NULL)) { \
-	      hashName->keyFreeFunctionp((void *) userDatavp, (void **) &_gotKeyVal); \
-	    }								\
-	    if ((GENERICSTACKITEMTYPE(_subValStackp, _i) == GENERICSTACKITEMTYPE_PTR)) { \
-	      GENERICSTACKITEMTYPE2TYPE_PTR _gotValVal = GENERICSTACK_GET_PTR(_subValStackp, _i); \
-	      if ((_gotValVal != NULL) && (hashName->valFreeFunctionp != NULL)) { \
-		hashName->valFreeFunctionp((void *) userDatavp, (void **) &_gotValVal); \
-	      }								\
-	    }								\
+	  }								\
 		    							\
-	    _GENERICHASH_SET(hashName, userDatavp, keyType, _keyVal, valType, _valVal, _subKeyStackp, _subValStackp, _i); \
-	    break;							\
-	  }								\
-	  if (_i >= _subStackused) {					\
-	    _GENERICHASH_PUSH(hashName, userDatavp, keyType, _keyVal, valType, _valVal, _subKeyStackp, _subValStackp); \
-	  }								\
+	  _GENERICHASH_SET(hashName, userDatavp, keyType, _keyVal, valType, _valVal, _subKeyStackp, _subValStackp, _i); \
+	  break;							\
+	}								\
+	if (_i >= _subStackused) {					\
+	  _GENERICHASH_PUSH(hashName, userDatavp, keyType, _keyVal, valType, _valVal, _subKeyStackp, _subValStackp); \
 	}								\
       }									\
     }									\
@@ -269,57 +264,52 @@ typedef struct genericHash {
 	  (GENERICSTACKITEMTYPE(hashName->keyStackp, _subStackIndex) == GENERICSTACKITEMTYPE_PTR)) { \
 	genericStack_t *_subKeyStackp = (genericStack_t *) GENERICSTACK_GET_PTR(hashName->keyStackp, _subStackIndex); \
 	genericStack_t *_subValStackp = (genericStack_t *) GENERICSTACK_GET_PTR(hashName->valStackp, _subStackIndex); \
+	int             _subStackused = GENERICSTACK_USED(_subKeyStackp); \
+	int _i;								\
 									\
-	if (GENERICSTACK_ERROR(hashName->keyStackp) || GENERICSTACK_ERROR(hashName->valStackp)) { \
-	  hashName->error = 1;						\
-	} else {							\
-	  int _subStackused = GENERICSTACK_USED(_subKeyStackp);		\
-	  int _i;							\
+	for (_i = 0; _i < _subStackused; _i++) {			\
+	  GENERICSTACKITEMTYPE2TYPE_##keyType _gotKeyVal;		\
 									\
-	  for (_i = 0; _i < _subStackused; _i++) {			\
-            GENERICSTACKITEMTYPE2TYPE_##keyType _gotKeyVal;		\
+	  if ((GENERICSTACKITEMTYPE(_subKeyStackp, _i) != GENERICSTACKITEMTYPE_##keyType)) { \
+	    continue;							\
+	  }								\
 									\
-            if ((GENERICSTACKITEMTYPE(_subKeyStackp, _i) != GENERICSTACKITEMTYPE_##keyType)) { \
+	  _gotKeyVal = GENERICSTACK_GET_##keyType(_subKeyStackp, _i);	\
+	  if ((GENERICSTACKITEMTYPE_##keyType == GENERICSTACKITEMTYPE_PTR) && (hashName->keyCmpFunctionp != NULL)) { \
+	    if (! hashName->keyCmpFunctionp((void *) userDatavp, (void **) &keyVal, (void **) &_gotKeyVal)) { \
 	      continue;							\
 	    }								\
+	  } else {							\
+	    if (keyVal != _gotKeyVal) {					\
+	      continue;							\
+	    }								\
+	  }								\
+	  findResult = 1;						\
+                                                                        \
+	  if (valValp != NULL) {					\
+	    *valValp = GENERICSTACK_GET_##valType(_subValStackp, _i);	\
+	  }								\
+	  if (remove) {							\
+	    if ((GENERICSTACKITEMTYPE_##keyType == GENERICSTACKITEMTYPE_PTR) && ((void *) _gotKeyVal != NULL) && (hashName->keyFreeFunctionp != NULL)) { \
+	      hashName->keyFreeFunctionp((void *) userDatavp, (void **) &_gotKeyVal); \
+	    }								\
+	    GENERICSTACK_SET_NA(_subKeyStackp, _i);			\
+	    GENERICSTACK_SWITCH(_subKeyStackp, _i, -1);			\
+	    GENERICSTACK_POP_NA(_subKeyStackp);				\
 									\
-	    _gotKeyVal = GENERICSTACK_GET_##keyType(_subKeyStackp, _i); \
-            if ((GENERICSTACKITEMTYPE_##keyType == GENERICSTACKITEMTYPE_PTR) && (hashName->keyCmpFunctionp != NULL)) { \
-              if (! hashName->keyCmpFunctionp((void *) userDatavp, (void **) &keyVal, (void **) &_gotKeyVal)) { \
-		continue;						\
-	      }								\
-	    } else {							\
-	      if (keyVal != _gotKeyVal) {				\
-		continue;						\
+	    if (valValp == NULL) {					\
+	      if ((GENERICSTACKITEMTYPE(_subValStackp, _i) == GENERICSTACKITEMTYPE_PTR) && (hashName->valFreeFunctionp == NULL)) { \
+		GENERICSTACKITEMTYPE2TYPE_PTR _valVal = GENERICSTACK_GET_PTR(_subValStackp, _i); \
+		if (_valVal != NULL) {					\
+		  hashName->valFreeFunctionp((void *) userDatavp, (void **) &_valVal); \
+		}							\
 	      }								\
 	    }								\
-            findResult = 1;                                             \
-                                                                        \
-            if (valValp != NULL) {                                      \
-              *valValp = GENERICSTACK_GET_##valType(_subValStackp, _i); \
-            }                                                           \
-            if (remove) {                                               \
-              if ((GENERICSTACKITEMTYPE_##keyType == GENERICSTACKITEMTYPE_PTR) && ((void *) _gotKeyVal != NULL) && (hashName->keyFreeFunctionp != NULL)) { \
-                hashName->keyFreeFunctionp((void *) userDatavp, (void **) &_gotKeyVal); \
-              }								\
-              GENERICSTACK_SET_NA(_subKeyStackp, _i);			\
-              GENERICSTACK_SWITCH(_subKeyStackp, _i, -1);		\
-              GENERICSTACK_POP_NA(_subKeyStackp);			\
-									\
-              if (valValp == NULL) {                                    \
-                if ((GENERICSTACKITEMTYPE(_subValStackp, _i) == GENERICSTACKITEMTYPE_PTR) && (hashName->valFreeFunctionp == NULL)) { \
-                  GENERICSTACKITEMTYPE2TYPE_PTR _valVal = GENERICSTACK_GET_PTR(_subValStackp, _i); \
-                  if (_valVal != NULL) {                                \
-                    hashName->valFreeFunctionp((void *) userDatavp, (void **) &_valVal); \
-                  }                                                     \
-                }                                                       \
-              }                                                         \
-              GENERICSTACK_SET_NA(_subValStackp, _i);			\
-              GENERICSTACK_SWITCH(_subValStackp, _i, -1);		\
-              GENERICSTACK_POP_NA(_subValStackp);			\
-            }                                                           \
-            break;							\
-          }								\
+	    GENERICSTACK_SET_NA(_subValStackp, _i);			\
+	    GENERICSTACK_SWITCH(_subValStackp, _i, -1);			\
+	    GENERICSTACK_POP_NA(_subValStackp);				\
+	  }								\
+	  break;							\
         }								\
       }									\
     }									\
@@ -339,29 +329,27 @@ typedef struct genericHash {
       int _usedl  = GENERICSTACK_USED(hashName->keyStackp);		\
       int _i;								\
       for (_i = 0; _i < _usedl; _i++) {					\
-	if (GENERICSTACKITEMTYPE(hashName->keyStackp, _i) == GENERICSTACKITEMTYPE_PTR) { \
+	if ((GENERICSTACKITEMTYPE(hashName->keyStackp, _i) == GENERICSTACKITEMTYPE_PTR) && \
+	    (GENERICSTACKITEMTYPE(hashName->valStackp, _i) == GENERICSTACKITEMTYPE_PTR)) { \
           genericStack_t *_subKeyStackp = (genericStack_t *) GENERICSTACK_GET_PTR(hashName->keyStackp, _i); \
           genericStack_t *_subValStackp = (genericStack_t *) GENERICSTACK_GET_PTR(hashName->valStackp, _i); \
+	  int             _subStackused = GENERICSTACK_USED(_subKeyStackp); \
+	  int             _j;						\
                                                                         \
-          if (! GENERICSTACK_ERROR(hashName->keyStackp) && ! GENERICSTACK_ERROR(hashName->valStackp)) { \
-            int _subStackused = GENERICSTACK_USED(_subKeyStackp);	\
-            int _j;							\
-                                                                        \
-            for (_j = 0; _j < _subStackused; _j++) {			\
-              if ((GENERICSTACKITEMTYPE(_subKeyStackp, _j) == GENERICSTACKITEMTYPE_PTR) && (hashName->keyFreeFunctionp != NULL)) { \
-                GENERICSTACKITEMTYPE2TYPE_PTR _keyValp = GENERICSTACK_GET_PTR(_subKeyStackp, _j); \
-                if (! GENERICSTACK_ERROR(_subKeyStackp) && (_keyValp != NULL)) { \
-                  hashName->keyFreeFunctionp(userDatavp, (void **) &_keyValp); \
-                }                                                       \
-              }                                                         \
-              if ((GENERICSTACKITEMTYPE(_subValStackp, _j) == GENERICSTACKITEMTYPE_PTR) && (hashName->valFreeFunctionp != NULL)) { \
-                GENERICSTACKITEMTYPE2TYPE_PTR _valValp = GENERICSTACK_GET_PTR(_subValStackp, _j); \
-                if (! GENERICSTACK_ERROR(_subValStackp) && (_valValp != NULL)) { \
-                  hashName->valFreeFunctionp(userDatavp, (void **) &_valValp); \
-                }                                                       \
-              }                                                         \
-            }                                                           \
-          }                                                             \
+	  for (_j = 0; _j < _subStackused; _j++) {			\
+	    if ((GENERICSTACKITEMTYPE(_subKeyStackp, _j) == GENERICSTACKITEMTYPE_PTR) && (hashName->keyFreeFunctionp != NULL)) { \
+	      GENERICSTACKITEMTYPE2TYPE_PTR _keyValp = GENERICSTACK_GET_PTR(_subKeyStackp, _j); \
+	      if (_keyValp != NULL) {					\
+		hashName->keyFreeFunctionp(userDatavp, (void **) &_keyValp); \
+	      }								\
+	    }								\
+	    if ((GENERICSTACKITEMTYPE(_subValStackp, _j) == GENERICSTACKITEMTYPE_PTR) && (hashName->valFreeFunctionp != NULL)) { \
+	      GENERICSTACKITEMTYPE2TYPE_PTR _valValp = GENERICSTACK_GET_PTR(_subValStackp, _j); \
+	      if (_valValp != NULL) {					\
+		hashName->valFreeFunctionp(userDatavp, (void **) &_valValp); \
+	      }								\
+	    }								\
+	  }								\
           GENERICSTACK_FREE(_subKeyStackp);                             \
           GENERICSTACK_FREE(_subValStackp);                             \
         }                                                               \
