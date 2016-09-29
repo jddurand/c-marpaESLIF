@@ -79,6 +79,14 @@ IF (NOT GENERICHASH_FOUND)
 ENDIF ()
 
 # -----------------------------------
+# genericSparseArray: required
+# -----------------------------------
+FIND_PACKAGE (genericSparseArray)
+IF (NOT GENERICSPARSEARRAY_FOUND)
+    MESSAGE (FATAL_ERROR "genericSparseArray must be detected")
+ENDIF ()
+
+# -----------------------------------
 # genericStack: required
 # -----------------------------------
 FIND_PACKAGE (genericStack)
@@ -134,6 +142,7 @@ IF (GENERICSTACK_FOUND)
     "${GENERICLOGGER_INCLUDE_DIRS}"                      # Include path for genericLogger (external - required)
     "${GENERICHASH_INCLUDE_DIRS}"                        # Include path for genericHash (external - required)
     "${GENERICSTACK_INCLUDE_DIRS}"                       # Include path for genericStack (external - optional)
+    "${GENERICSPARSEARRAY_INCLUDE_DIRS}"                 # Include path for genericHash (external - required)
     )
 ELSE (GENERICSTACK_FOUND)
   INCLUDE_DIRECTORIES (
@@ -142,6 +151,7 @@ ELSE (GENERICSTACK_FOUND)
     "${PROJECT_SOURCE_DIR}/include"                      # Include path for the other headers
     "${GENERICLOGGER_INCLUDE_DIRS}"                      # Include path for genericLogger (external - required)
     "${GENERICHASH_INCLUDE_DIRS}"                        # Include path for genericHash (external - required)
+    "${GENERICSPARSEARRAY_INCLUDE_DIRS}"                 # Include path for genericHash (external - required)
     )
 ENDIF (GENERICSTACK_FOUND)
 TARGET_LINK_LIBRARIES (marpaWrapper "${GENERICLOGGER_LINK_FLAGS}")
