@@ -100,8 +100,9 @@ typedef struct genericHash {
 #define _GENERICHASH_COPY(hashName, userDatavp, keyType, keyVal, keyValCopy, valType, valVal, valValCopy) do { \
 									\
     if ((GENERICSTACKITEMTYPE_##keyType == GENERICSTACKITEMTYPE_PTR) && (hashName->keyCopyFunctionp != NULL)) { \
-      void *_p = hashName->keyCopyFunctionp((void *) userDatavp, (void **) &keyVal); \
-      if (((void *) keyVal != NULL) && (_p == NULL)) {                  \
+      void *_keyValForCopy = (void *) (keyVal);				\
+      void *_p = hashName->keyCopyFunctionp((void *) userDatavp, (void **) &_keyValForCopy); \
+      if ((_keyValForCopy != NULL) && (_p == NULL)) {			\
 	hashName->error = 1;						\
       } else {                                                          \
         keyValCopy = (GENERICSTACKITEMTYPE2TYPE_##keyType) _p;          \
@@ -110,8 +111,9 @@ typedef struct genericHash {
       keyValCopy = keyVal;						\
     }									\
     if ((GENERICSTACKITEMTYPE_##valType == GENERICSTACKITEMTYPE_PTR) && (hashName->valCopyFunctionp != NULL)) { \
-      void *_p = hashName->valCopyFunctionp((void *) userDatavp, (void **) &valVal); \
-      if (((void *) valVal != NULL) && (_p == NULL)) {                  \
+      void *_valValForCopy = (void *) (valVal);				\
+      void *_p = hashName->valCopyFunctionp((void *) userDatavp, (void **) &_valValForCopy); \
+      if ((_valValForCopy != NULL) && (_p == NULL)) {				\
 	hashName->error = 1;						\
       } else {                                                          \
         valValCopy = (GENERICSTACKITEMTYPE2TYPE_##valType) _p;          \
