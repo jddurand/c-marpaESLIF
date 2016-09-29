@@ -138,7 +138,7 @@ static inline short                      _marpaWrapperAsf_next_factoringb(marpaW
 
 /* Specific to glade */
 static inline short                      _marpaWrapperAsf_glade_id_factorsb(marpaWrapperAsf_t *marpaWrapperAsfp, marpaWrapperAsfChoicePoint_t *choicepointp, genericStack_t **stackpp);
-int                                      _marpaWrapperAsf_indAndNodesi(void *userDatavp, genericStackItemType_t itemType, void **pp);
+int                                      _marpaWrapperAsf_causesHash_indi(void *userDatavp, genericStackItemType_t itemType, void **pp);
 static inline short                      _marpaWrapperAsf_and_nodes_to_cause_nidsp(marpaWrapperAsf_t *marpaWrapperAsfp, genericStack_t *andNodeIdStackp, genericStack_t *causeNidsStackp);
 static inline short                      _marpaWrapperAsf_glade_is_visitedb(marpaWrapperAsf_t *marpaWrapperAsfp, int gladeIdi);
 static inline void                       _marpaWrapperAsf_glade_visited_clearb(marpaWrapperAsf_t *marpaWrapperAsfp, int *gladeIdip);
@@ -2659,7 +2659,7 @@ static inline short _marpaWrapperAsf_glade_id_factorsb(marpaWrapperAsf_t *marpaW
 }
 
 /****************************************************************************/
-int _marpaWrapperAsf_indAndNodesi(void *userDatavp, genericStackItemType_t itemType, void **pp)
+int _marpaWrapperAsf_causesHash_indi(void *userDatavp, genericStackItemType_t itemType, void **pp)
 /****************************************************************************/
 {
   return abs(* ((int *) pp)) % MARPAWRAPPERASF_CAUSESHASH_SIZE;
@@ -2680,9 +2680,10 @@ static inline short _marpaWrapperAsf_and_nodes_to_cause_nidsp(marpaWrapperAsf_t 
   int                       andNodeIdi;
   int                       causeNidi;
   int                       goti;
+  int                       indicei;
   short                     findResultb;
 
-  GENERICHASH_NEW(causesHashp, _marpaWrapperAsf_indAndNodesi);
+  GENERICHASH_NEW(causesHashp, _marpaWrapperAsf_causesHash_indi);
   if (GENERICHASH_ERROR(causesHashp)) {
     MARPAWRAPPER_ERROR(genericLoggerp, "Failure to initalize causesHashp");
     goto err;
@@ -2698,13 +2699,18 @@ static inline short _marpaWrapperAsf_and_nodes_to_cause_nidsp(marpaWrapperAsf_t 
     if (causeNidi < 0) {
       causeNidi = _marpaWrapperAsf_and_node_to_nidi(andNodeIdi);
     }
-    GENERICHASH_FIND(causesHashp,
-                     marpaWrapperAsfp,
-                     INT,
-                     causeNidi,
-                     INT,
-                     &goti,
-                     findResultb);
+    /* If we are going to insert, we want to precompute indice instead of letting */
+    /* the hash macros doing it for the find(), and then for the set().           */
+    indicei = _marpaWrapperAsf_causesHash_indi((void *) marpaWrapperAsfp, GENERICSTACKITEMTYPE_PTR, (void **) &causeNidi);
+
+    GENERICHASH_FIND_BY_IND(causesHashp,
+			    marpaWrapperAsfp,
+			    INT,
+			    causeNidi,
+			    INT,
+			    &goti,
+			    findResultb,
+			    indicei);
     if (GENERICHASH_ERROR(causesHashp)) {
       MARPAWRAPPER_ERROR(genericLoggerp, "Error looking into causesHashp");
       goto err;
@@ -2712,15 +2718,16 @@ static inline short _marpaWrapperAsf_and_nodes_to_cause_nidsp(marpaWrapperAsf_t 
     if (! findResultb) {
       GENERICSTACK_PUSH_INT(causeNidsStackp, causeNidi);
       if (GENERICSTACK_ERROR(causeNidsStackp)) {
-	MARPAWRAPPER_ERROR(genericLoggerp, "Failure to pushd to causeNidsStackp");
+	MARPAWRAPPER_ERROR(genericLoggerp, "Failure to push to causeNidsStackp");
 	goto err;
       }
-      GENERICHASH_SET(causesHashp,
-                      marpaWrapperAsfp,
-                      INT,
-                      causeNidi,
-                      INT,
-                      1);
+      GENERICHASH_SET_BY_IND(causesHashp,
+			     marpaWrapperAsfp,
+			     INT,
+			     causeNidi,
+			     INT,
+			     1,
+			     indicei);
       if (GENERICHASH_ERROR(causesHashp)) {
         MARPAWRAPPER_ERROR(genericLoggerp, "Error setting into causesHashp");
         goto err;
