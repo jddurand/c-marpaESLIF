@@ -84,7 +84,7 @@ struct marpaWrapperAsf {
 
 typedef struct marpaWrapperAsfChoicePoint {
   genericStack_t         *factoringStackp;
-  genericStack_t         *orNodeInUseStackp;
+  genericSparseArray_t   *orNodeInUseSparseArrayp;
 } marpaWrapperAsfChoicePoint_t;
 
 struct marpaWrapperAsfTraverser {
