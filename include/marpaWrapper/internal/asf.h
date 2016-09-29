@@ -4,6 +4,7 @@
 #include <stddef.h>
 #include <genericStack.h>
 #include <genericHash.h>
+#include <genericSparseArray.h>
 #include "marpaWrapper/asf.h"
 #include "marpa.h"
 
@@ -61,8 +62,8 @@ struct marpaWrapperAsf {
   /* Memoization */
   genericStack_t              *orNodeStackp;
   genericHash_t               *intsetHashp;
-  genericStack_t              *nidsetStackp;
-  genericStack_t              *powersetStackp;
+  genericSparseArray_t        *nidsetSparseArrayp;
+  genericSparseArray_t        *powersetSparseArrayp;
   genericStack_t              *gladeStackp;
 
   /* Memoization of choices */
