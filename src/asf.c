@@ -142,6 +142,7 @@ static inline short                      _marpaWrapperAsf_symch_factoring_countb
 /* Specific to intset */
 int                                      _marpaWrapperAsf_intset_keyIndFunctioni(void *userDatavp, genericStackItemType_t itemType, void **pp);
 short                                    _marpaWrapperAsf_intset_keyCmpFunctionb(void *userDatavp, void **pp1, void **pp2);
+void                                    *_marpaWrapperAsf_intset_keyCopyFunctionp(void *userDatavp, void **pp);
 void                                     _marpaWrapperAsf_intset_keyFreeFunctionv(void *userDatavp, void **pp);
 
 /* General */
@@ -288,7 +289,7 @@ marpaWrapperAsf_t *marpaWrapperAsf_newp(marpaWrapperRecognizer_t *marpaWrapperRe
   GENERICHASH_NEW_ALL(marpaWrapperAsfp->intsetHashp,
                       _marpaWrapperAsf_intset_keyIndFunctioni,
                       _marpaWrapperAsf_intset_keyCmpFunctionb,
-                      NULL, /* Key copy is only used when replacing a key, we make sure this never happen */
+                      _marpaWrapperAsf_intset_keyCopyFunctionp,
                       _marpaWrapperAsf_intset_keyFreeFunctionv,
                       NULL,  /* The value type will always be INT: no need */
                       NULL,  /* for a copy not a free functions for the value */
@@ -860,7 +861,6 @@ static inline short _marpaWrapperAsf_intsetIdb(marpaWrapperAsf_t *marpaWrapperAs
   short                    findResultb;
   int                      intsetIdi;
   int                     *localIdip;
-  int                     *insertIdip;
   int                      indicei;
   int                      idi0i;
   int                      idi1i;
@@ -932,19 +932,12 @@ static inline short _marpaWrapperAsf_intsetIdb(marpaWrapperAsf_t *marpaWrapperAs
     goto err;
   }
   if (! findResultb) {
-    size_t sizl = sizeof(int) * (counti + 1);
-    insertIdip = (int *) malloc(sizl);
-    if (insertIdip == NULL) {
-      MARPAWRAPPER_ERRORF(genericLoggerp, "malloc failure: %s", strerror(errno));
-      goto err;
-    }
-    memcpy(insertIdip, localIdip, sizl);
     intsetIdi = marpaWrapperAsfp->nextIntseti++;
     MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "Creating next intset id %d at hash row indice %d", intsetIdi, indicei);
     GENERICHASH_SET_BY_IND(marpaWrapperAsfp->intsetHashp,
 			   marpaWrapperAsfp,
 			   PTR,
-			   insertIdip,
+			   localIdip,
 			   INT,
 			   intsetIdi,
 			   indicei);
@@ -3396,6 +3389,8 @@ int _marpaWrapperAsf_intset_keyIndFunctioni(void *userDatavp, genericStackItemTy
 /****************************************************************************/
 {
 #ifndef MARPAWRAPPER_NTRACE
+  /* For performance, this block, used only in TRACE mode, is compiled only if */
+  /* compiled with support of tracing at this level.                           */
   const static char  funcs[]          = "_marpaWrapperAsf_intset_keyIndFunctioni";
   marpaWrapperAsf_t *marpaWrapperAsfp = (marpaWrapperAsf_t *) userDatavp;
   genericLogger_t   *genericLoggerp   = marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp;
@@ -3431,6 +3426,8 @@ short _marpaWrapperAsf_intset_keyCmpFunctionb(void *userDatavp, void **pp1, void
 /****************************************************************************/
 {
 #ifndef MARPAWRAPPER_NTRACE
+  /* For performance, this block, used only in TRACE mode, is compiled only if */
+  /* compiled with support of tracing at this level.                           */
   const static char  funcs[]          = "_marpaWrapperAsf_intset_keyCmpFunctionb";
   marpaWrapperAsf_t *marpaWrapperAsfp = (marpaWrapperAsf_t *) userDatavp;
   genericLogger_t   *genericLoggerp   = marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp;
@@ -3442,7 +3439,7 @@ short _marpaWrapperAsf_intset_keyCmpFunctionb(void *userDatavp, void **pp1, void
   int  i;
 
 #ifndef MARPAWRAPPER_NTRACE
-  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "size1 %d == size2 %d ?", siz1i, siz2i);
+  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "siz1i %d == siz2i %d ?", siz1i, siz2i);
 #endif
   if (siz1i != siz2i) {
 #ifndef MARPAWRAPPER_NTRACE
@@ -3450,6 +3447,9 @@ short _marpaWrapperAsf_intset_keyCmpFunctionb(void *userDatavp, void **pp1, void
 #endif
     return 0;
   } else if (siz1i == 0) {
+#ifndef MARPAWRAPPER_NTRACE
+    MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return 1");
+#endif
     return 1;
   }
   
@@ -3470,6 +3470,46 @@ short _marpaWrapperAsf_intset_keyCmpFunctionb(void *userDatavp, void **pp1, void
   MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return 1");
 #endif
   return 1;
+}
+
+/****************************************************************************/
+void *_marpaWrapperAsf_intset_keyCopyFunctionp(void *userDatavp, void **pp)
+/****************************************************************************/
+{
+#ifndef MARPAWRAPPER_NTRACE
+  /* For performance, this block, used only in TRACE mode, is compiled only if */
+  /* compiled with support of tracing at this level.                           */
+  const static char  funcs[]          = "_marpaWrapperAsf_intset_keyCopyFunctionp";
+  marpaWrapperAsf_t *marpaWrapperAsfp = (marpaWrapperAsf_t *) userDatavp;
+  genericLogger_t   *genericLoggerp   = marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp;
+#endif
+  int   *idip = (int *) *pp;
+  int    sizi = idip[0];
+  size_t sizl = sizeof(int) * (sizi + 1);
+  int   *rcp = NULL;
+
+#ifndef MARPAWRAPPER_NTRACE
+  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "sizi %d", siz1i);
+#endif
+
+  rcp = malloc(sizl);
+  if (rcp == NULL) {
+#ifndef MARPAWRAPPER_NTRACE
+    MARPAWRAPPER_ERRORF(genericLoggerp, "malloc failure: %s", strerror(errno));
+#endif
+    goto err;
+  }
+  memcpy(rcp, idip, sizl);
+#ifndef MARPAWRAPPER_NTRACE
+  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "return %p", rcp);
+#endif
+  return rcp;
+
+ err:
+#ifndef MARPAWRAPPER_NTRACE
+  MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return NULL");
+#endif
+  return rcp;
 }
 
 /****************************************************************************/
