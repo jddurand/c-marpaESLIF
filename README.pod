@@ -85,17 +85,53 @@ Optional. Initial number of columns within a hash row.
 
 Set an entry in hash C<hashName>, using the key C<keyVal> of type C<keyType>, and value C<valVal> of type C<valType>. C<keyType> and C<valType> must be I<shorthands> for genericStack constants, i.e. C<CHAR>, C<PTR>, etc...
 
+=head2 GENERICHASH_SET_BY_IND(hashName, userDatavp, keyType, keyVal, valType, valVal, subStackIndex)
+
+Same as GENERICHASH_SET, but bypasses the call to key indice function, by setting it explicitely in the C<subStackIndex> variable.
+
 =head2 GENERICHASH_FIND(hashName, userDatavp, keyType, keyVal, valType, valValp, findResult)
 
 Find an entry in hash C<hashName>, using the key C<keyVal> of type C<keyType>, and expecting a value of type C<valType>. C<valValp> must be a pointer, eventually C<NULL>. If successful, the content of C<valValp> is filled with the found value. C<findResult> must be a valid C identifier, in which a true or a false will be set. C<keyType> and C<valType> must be I<shorthands> for genericStack constants, i.e. C<CHAR>, C<PTR>, etc...
+
+=head2 GENERICHASH_FIND_BY_IND(hashName, userDatavp, keyType, keyVal, valType, valValp, findResult, index)
+
+Same as GENERICHASH_FIND, but bypasses the call to key indice function, by setting it explicitely in the C<subStackIndex> variable.
 
 =head2 GENERICHASH_REMOVE(hashName, userDatavp, keyType, keyVal, valType, valValp, findResult)
 
 Remove an entry in hash C<hashName>, using the key C<keyVal> of type C<keyType>, and expecting a value of type C<valType>. C<valValp> must be a pointer, eventually C<NULL>. If successful, the content of C<valValp> is filled with the found value. When C<valValp> is C<NULL>, key and data are explicitely removed, eventually calling the free callback functions. C<keyType> and C<valType> must be I<shorthands> for genericStack constants, i.e. C<CHAR>, C<PTR>, etc...
 
+=head2 GENERICHASH_REMOVE_BY_IND(hashName, userDatavp, keyType, keyVal, valType, valValp, findResult, index)
+
+Same as GENERICHASH_REMOVE, but bypasses the call to key indice function, by setting it explicitely in the C<subStackIndex> variable.
+
 =head2 GENERICHASH_FREE(hashName)
 
 Releases the hash. This may call the free callback functions.
+
+=head2 GENERICHASH_ERROR(hashName)
+
+Returns a true value if the hash an error, a false value otherwise.
+
+=head2 GENERICHASH_KEYCMPFUNCTION(hashName)
+
+Accessor to the key comparison function.
+
+=head2 GENERICHASH_KEYCOPYFUNCTION(hashName)
+
+Accessor to the key copy function.
+
+=head2 GENERICHASH_KEYFREEFUNCTION(hashName)
+
+Accessor to the key free function.
+
+=head2 GENERICHASH_VALCOPYFUNCTION(hashName)
+
+Accessor to the val copy function.
+
+=head2 GENERICHASH_VALFREEFUNCTION(hashName)
+
+Accessor to the val free function.
 
 =head1 SEE ALSO
 
