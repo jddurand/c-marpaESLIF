@@ -121,6 +121,10 @@ Releases a hash allocated on the heap via GENERICHASH_NEW_ALL. This may call the
 
 Releases a hash initialized on the stack via GENERICHASH_INIT_ALL. This may call the free callback functions.
 
+=head2 GENERICHASH_RELAX(hashName)
+
+Sets back the hash to its initial state, without releasing all internal allocated memory. This is the most efficient way to <reuse> a hash.
+
 =head2 GENERICHASH_ERROR(hashName)
 
 Returns a true value if the hash an error, a false value otherwise.

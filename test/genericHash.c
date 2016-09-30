@@ -35,6 +35,7 @@ static int myHashTest(short withAllocb) {
   genericHash_t   *myHashp;
   short            findResultb;
   short            removeResultb;
+  int              i;
 
   myContext.genericLoggerp = genericLoggerp;
 
@@ -56,79 +57,91 @@ static int myHashTest(short withAllocb) {
     GENERICHASH_VALCOPYFUNCTION(myHashp) = myHashValCopyFunction;
     GENERICHASH_VALFREEFUNCTION(myHashp) = myHashValFreeFunction;
   }
-  GENERICLOGGER_TRACEF(genericLoggerp, "Created hash at %p, alloc mode=%d", myHashp, (int) withAllocb);
-  myHashDump(myContextp, myHashp);
+  if (withAllocb) {
+    GENERICLOGGER_TRACEF(genericLoggerp, "Created hash at %p, alloc mode=%d", myHashp, (int) withAllocb);
+  } else {
+    GENERICLOGGER_TRACEF(genericLoggerp, "Initialized hash at %p, alloc mode=%d", myHashp, (int) withAllocb);
+  }
+
+  for (i = 0; i < 1; i++) {
+    myHashDump(myContextp, myHashp);
   
-  /* hash->{myContextp} = myContextp */
-  GENERICHASH_SET(myHashp, myContextp, PTR, myContextp, PTR, myContextp);
-  GENERICLOGGER_TRACEF(genericLoggerp, "... Setted PTR %p indexed by itself", myContextp);
-  myHashDump(myContextp, myHashp);
-  /* hash->{myContextp} = myContextp */
-  GENERICHASH_SET(myHashp, myContextp, PTR, myContextp, PTR, myContextp);
-  GENERICLOGGER_TRACEF(genericLoggerp, "... Setted again PTR %p indexed by itself", myContextp);
-  myHashDump(myContextp, myHashp);
-  /* hash->{myContextp} = myContextp */
-  GENERICHASH_SET(myHashp, myContextp, PTR, myContextp, PTR, myContextp);
-  GENERICLOGGER_TRACEF(genericLoggerp, "... Setted again PTR %p indexed by itself", myContextp);
-  myHashDump(myContextp, myHashp);
+    /* hash->{myContextp} = myContextp */
+    GENERICHASH_SET(myHashp, myContextp, PTR, myContextp, PTR, myContextp);
+    GENERICLOGGER_TRACEF(genericLoggerp, "... Setted PTR %p indexed by itself", myContextp);
+    myHashDump(myContextp, myHashp);
+    /* hash->{myContextp} = myContextp */
+    GENERICHASH_SET(myHashp, myContextp, PTR, myContextp, PTR, myContextp);
+    GENERICLOGGER_TRACEF(genericLoggerp, "... Setted again PTR %p indexed by itself", myContextp);
+    myHashDump(myContextp, myHashp);
+    /* hash->{myContextp} = myContextp */
+    GENERICHASH_SET(myHashp, myContextp, PTR, myContextp, PTR, myContextp);
+    GENERICLOGGER_TRACEF(genericLoggerp, "... Setted again PTR %p indexed by itself", myContextp);
+    myHashDump(myContextp, myHashp);
 
-  /* hash->{NULL} = NULL */
-  GENERICHASH_SET(myHashp, myContextp, PTR, NULL, PTR, NULL);
-  GENERICLOGGER_TRACE(genericLoggerp, "... Setted NULL indexed by NULL");
-  myHashDump(myContextp, myHashp);
+    /* hash->{NULL} = NULL */
+    GENERICHASH_SET(myHashp, myContextp, PTR, NULL, PTR, NULL);
+    GENERICLOGGER_TRACE(genericLoggerp, "... Setted NULL indexed by NULL");
+    myHashDump(myContextp, myHashp);
 
-  GENERICHASH_SET(myHashp, myContextp, PTR, myContextp, PTR, myContextp);
-  GENERICLOGGER_TRACEF(genericLoggerp, "... Setted again PTR %p indexed by itself", myContextp);
-  myHashDump(myContextp, myHashp);
-  GENERICHASH_SET_BY_IND(myHashp, myContextp, PTR, myContextp, PTR, myContextp, myHashIndFunction(myContextp, GENERICSTACKITEMTYPE_PTR, (void **) &myContextp));
-  GENERICLOGGER_TRACEF(genericLoggerp, "... Setted again PTR %p using IND indexed by itself", myContextp);
-  myHashDump(myContextp, myHashp);
+    GENERICHASH_SET(myHashp, myContextp, PTR, myContextp, PTR, myContextp);
+    GENERICLOGGER_TRACEF(genericLoggerp, "... Setted again PTR %p indexed by itself", myContextp);
+    myHashDump(myContextp, myHashp);
+    GENERICHASH_SET_BY_IND(myHashp, myContextp, PTR, myContextp, PTR, myContextp, myHashIndFunction(myContextp, GENERICSTACKITEMTYPE_PTR, (void **) &myContextp));
+    GENERICLOGGER_TRACEF(genericLoggerp, "... Setted again PTR %p using IND indexed by itself", myContextp);
+    myHashDump(myContextp, myHashp);
 
-  GENERICLOGGER_TRACEF(genericLoggerp, "... Looking for PTR %p", myContextp);
-  GENERICHASH_FIND(myHashp, myContextp, PTR, myContextp, PTR, &myContextFoundp, findResultb);
-  if (! findResultb) {
-    GENERICLOGGER_ERRORF(genericLoggerp, "... Failed to find PTR %p in keys", myContextp);
-  } else {
-    if (myContextp->genericLoggerp == myContextFoundp->genericLoggerp) {
-      GENERICLOGGER_TRACEF(genericLoggerp, "... Success searching for PTR %p", myContextFoundp);
+    GENERICLOGGER_TRACEF(genericLoggerp, "... Looking for PTR %p", myContextp);
+    GENERICHASH_FIND(myHashp, myContextp, PTR, myContextp, PTR, &myContextFoundp, findResultb);
+    if (! findResultb) {
+      GENERICLOGGER_ERRORF(genericLoggerp, "... Failed to find PTR %p in keys", myContextp);
     } else {
-      GENERICLOGGER_TRACEF(genericLoggerp, "... Success searching for PTR but found a bad pointer %p", myContextFoundp);
-    }
-  }
-
-  GENERICLOGGER_TRACEF(genericLoggerp, "... Looking for PTR %p using IND", myContextp);
-  GENERICHASH_FIND_BY_IND(myHashp, myContextp, PTR, myContextp, PTR, &myContextFoundp, findResultb, myHashIndFunction(myContextp, GENERICSTACKITEMTYPE_PTR, (void **) &myContextp));
-  if (! findResultb) {
-    GENERICLOGGER_ERRORF(genericLoggerp, "... Failed to find PTR %p", myContextp);
-  } else {
-    if (myContextp->genericLoggerp == myContextFoundp->genericLoggerp) {
-      GENERICLOGGER_TRACEF(genericLoggerp, "... Success searching for PTR %p", myContextFoundp);
-    } else {
-      GENERICLOGGER_TRACEF(genericLoggerp, "... Success searching for PTR but found a bad pointer %p", myContextFoundp);
-    }
-  }
-
-  GENERICLOGGER_TRACEF(genericLoggerp, "... Removing PTR %p", myContextp);
-  GENERICHASH_REMOVE(myHashp, myContextp, PTR, myContextp, PTR, &myContextFoundp, removeResultb);
-  myHashDump(myContextp, myHashp);
-  if (! removeResultb) {
-    GENERICLOGGER_ERRORF(genericLoggerp, "... Failed to remove PTR %p", myContextp);
-  } else {
-    if (myContextp->genericLoggerp == myContextFoundp->genericLoggerp) {
-      if (withAllocb) {
-	myHashValFreeFunction(myContextp, (void **) &myContextFoundp);
+      if (myContextp->genericLoggerp == myContextFoundp->genericLoggerp) {
+	GENERICLOGGER_TRACEF(genericLoggerp, "... Success searching for PTR %p", myContextFoundp);
+      } else {
+	GENERICLOGGER_TRACEF(genericLoggerp, "... Success searching for PTR but found a bad pointer %p", myContextFoundp);
       }
-      GENERICLOGGER_TRACEF(genericLoggerp, "... Success removing PTR %p", myContextFoundp);
-    } else {
-      GENERICLOGGER_TRACEF(genericLoggerp, "... Success removing PTR but found a bad pointer %p", myContextFoundp);
     }
-    GENERICLOGGER_TRACEF(genericLoggerp, "... Looking again for PTR %p", myContextp);
-    GENERICHASH_FIND(myHashp, myContextp, PTR, myContextp, PTR, &myContextFoundp, removeResultb);
+
+    GENERICLOGGER_TRACEF(genericLoggerp, "... Looking for PTR %p using IND", myContextp);
+    GENERICHASH_FIND_BY_IND(myHashp, myContextp, PTR, myContextp, PTR, &myContextFoundp, findResultb, myHashIndFunction(myContextp, GENERICSTACKITEMTYPE_PTR, (void **) &myContextp));
+    if (! findResultb) {
+      GENERICLOGGER_ERRORF(genericLoggerp, "... Failed to find PTR %p", myContextp);
+    } else {
+      if (myContextp->genericLoggerp == myContextFoundp->genericLoggerp) {
+	GENERICLOGGER_TRACEF(genericLoggerp, "... Success searching for PTR %p", myContextFoundp);
+      } else {
+	GENERICLOGGER_TRACEF(genericLoggerp, "... Success searching for PTR but found a bad pointer %p", myContextFoundp);
+      }
+    }
+
+    GENERICLOGGER_TRACEF(genericLoggerp, "... Removing PTR %p", myContextp);
+    GENERICHASH_REMOVE(myHashp, myContextp, PTR, myContextp, PTR, &myContextFoundp, removeResultb);
+    myHashDump(myContextp, myHashp);
     if (! removeResultb) {
-      GENERICLOGGER_TRACEF(genericLoggerp, "... Failed to find PTR %p and this is ok", myContextp);
+      GENERICLOGGER_ERRORF(genericLoggerp, "... Failed to remove PTR %p", myContextp);
     } else {
-      GENERICLOGGER_ERRORF(genericLoggerp, "... Unexpected success searching for PTR %p, got %p", myContextp, myContextFoundp);
+      if (myContextp->genericLoggerp == myContextFoundp->genericLoggerp) {
+	if (withAllocb) {
+	  myHashValFreeFunction(myContextp, (void **) &myContextFoundp);
+	}
+	GENERICLOGGER_TRACEF(genericLoggerp, "... Success removing PTR %p", myContextFoundp);
+      } else {
+	GENERICLOGGER_TRACEF(genericLoggerp, "... Success removing PTR but found a bad pointer %p", myContextFoundp);
+      }
+      GENERICLOGGER_TRACEF(genericLoggerp, "... Looking again for PTR %p", myContextp);
+      GENERICHASH_FIND(myHashp, myContextp, PTR, myContextp, PTR, &myContextFoundp, removeResultb);
+      if (! removeResultb) {
+	GENERICLOGGER_TRACEF(genericLoggerp, "... Failed to find PTR %p and this is ok", myContextp);
+      } else {
+	GENERICLOGGER_ERRORF(genericLoggerp, "... Unexpected success searching for PTR %p, got %p", myContextp, myContextFoundp);
+      }
     }
+
+    GENERICLOGGER_TRACE(genericLoggerp, ".........................");
+    GENERICLOGGER_TRACE(genericLoggerp, "... Relaxing the hash ...");
+    GENERICLOGGER_TRACE(genericLoggerp, ".........................");
+    GENERICHASH_RELAX(myHashp, myContextp);
   }
 
   rci = 1;
@@ -138,10 +151,11 @@ static int myHashTest(short withAllocb) {
   rci = 0;
 
  done:
-  GENERICLOGGER_TRACEF(genericLoggerp, "Freeing hash at %p", myHashp);
   if (withAllocb) {
+    GENERICLOGGER_TRACEF(genericLoggerp, "Freeing hash at %p", myHashp);
     GENERICHASH_FREE(myHashp, myContextp);
   } else {
+    GENERICLOGGER_TRACEF(genericLoggerp, "Resetting hash at %p", myHashp);
     GENERICHASH_RESET(myHashp, myContextp);
   }
   
@@ -298,6 +312,19 @@ static void myHashDump(myContext_t *myContextp, genericHash_t *myHashp)
     }
     subKeyStackp = GENERICSTACK_GET_PTR(myHashp->keyStackp, i);
     subValStackp = GENERICSTACK_GET_PTR(myHashp->valStackp, i);
+
+    GENERICLOGGER_TRACEF(myContextp->genericLoggerp, "[Row=%d] Key used/length/initial length/heap length=%d/%d/%d/%d",
+			 i,
+			 GENERICSTACK_USED(subKeyStackp),
+			 GENERICSTACK_LENGTH(subKeyStackp),
+			 GENERICSTACK_INITIAL_LENGTH(subKeyStackp),
+			 GENERICSTACK_HEAP_LENGTH(subKeyStackp));
+    GENERICLOGGER_TRACEF(myContextp->genericLoggerp, "[Row=%d] Val used/length/initial length/heap length=%d/%d/%d/%d",
+			 i,
+			 GENERICSTACK_USED(subValStackp),
+			 GENERICSTACK_LENGTH(subValStackp),
+			 GENERICSTACK_INITIAL_LENGTH(subValStackp),
+			 GENERICSTACK_HEAP_LENGTH(subValStackp));
 
     for (j = 0; j < GENERICSTACK_USED(subKeyStackp); j++) {
       myContext_t *key;
