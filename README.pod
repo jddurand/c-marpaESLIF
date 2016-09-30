@@ -81,6 +81,14 @@ Optional. Initial number of columns within a hash row.
 
 =back
 
+=head2 GENERICHASH_INIT(hashName, indFunctionp)
+
+Alias to GENERICHASH_INIT_ALL(hashName, keyIndFunctionp, keyCmpFunctionp, keyCopyFunctionp, keyFreeFunctionp, valCopyFunctionp, valFreeFunctionp, wantedSize, wantedSubSize), see below.
+
+=head2 GENERICHASH_INIT_ALL(hashName, keyIndFunctionp, keyCmpFunctionp, keyCopyFunctionp, keyFreeFunctionp, valCopyFunctionp, valFreeFunctionp, wantedSize, wantedSubSize)
+
+Create an empty hash on the stack, where function pointer prototypes have the same meaning as in GENERICHASH_NEW_ALL.
+
 =head2 GENERICHASH_SET(hashName, userDatavp, keyType, keyVal, valType, valVal)
 
 Set an entry in hash C<hashName>, using the key C<keyVal> of type C<keyType>, and value C<valVal> of type C<valType>. C<keyType> and C<valType> must be I<shorthands> for genericStack constants, i.e. C<CHAR>, C<PTR>, etc...
@@ -107,11 +115,19 @@ Same as GENERICHASH_REMOVE, but bypasses the call to key indice function, by set
 
 =head2 GENERICHASH_FREE(hashName)
 
-Releases the hash. This may call the free callback functions.
+Releases a hash allocated on the heap via GENERICHASH_NEW_ALL. This may call the free callback functions.
+
+=head2 GENERICHASH_RESET(hashName)
+
+Releases a hash initialized on the stack via GENERICHASH_INIT_ALL. This may call the free callback functions.
 
 =head2 GENERICHASH_ERROR(hashName)
 
 Returns a true value if the hash an error, a false value otherwise.
+
+=head2 GENERICHASH_USED(hashName)
+
+Returns the number of elements in the hash. Take case, also it is legal from syntax point of view to use it an a lvalue, do not modify it.
 
 =head2 GENERICHASH_KEYCMPFUNCTION(hashName)
 

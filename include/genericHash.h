@@ -27,6 +27,7 @@ typedef struct genericHash {
   genericStack_t              *keyStackp;
   genericStack_t               valStack;
   genericStack_t              *valStackp;
+  int                          used;
   short                        error;
 } genericHash_t;
 
@@ -73,26 +74,70 @@ typedef struct genericHash {
         hashName->valCopyFunctionp = _valCopyFunctionp;			\
         hashName->valFreeFunctionp = _valFreeFunctionp;			\
         hashName->error = 0;						\
+        hashName->used = 0;						\
 									\
         hashName->keyStackp = &(hashName->keyStack);			\
         GENERICSTACK_INIT_SIZED(hashName->keyStackp, wantedSize);	\
         if (GENERICSTACK_ERROR(hashName->keyStackp)) {			\
           free(hashName);                                               \
           hashName = NULL;						\
+        } else {							\
+	  hashName->valStackp = &(hashName->valStack);			\
+	  GENERICSTACK_INIT_SIZED(hashName->valStackp, wantedSize);	\
+	  if (GENERICSTACK_ERROR(hashName->valStackp)) {		\
+	    GENERICSTACK_RESET(hashName->keyStackp);			\
+	    free(hashName);						\
+	    hashName = NULL;						\
+	  }								\
         }                                                               \
+      }									\
+    }                                                                   \
+  } while (0)
+
+#define GENERICHASH_INIT_ALL(hashName, thisKeyIndFunctionp, thisKeyCmpFunctionp, thisKeyCopyFunctionp, thisKeyFreeFunctionp, thisValCopyFunctionp, thisValFreeFunctionp, wantedSize, thisWantedSubSize) do { \
+    genericHashKeyIndFunction_t  _keyIndFunctionp  = (genericHashKeyIndFunction_t)  (thisKeyIndFunctionp); \
+    genericHashKeyCmpFunction_t  _keyCmpFunctionp  = (genericHashKeyCmpFunction_t)  (thisKeyCmpFunctionp); \
+    genericHashKeyCopyFunction_t _keyCopyFunctionp = (genericHashKeyCopyFunction_t) (thisKeyCopyFunctionp); \
+    genericHashKeyFreeFunction_t _keyFreeFunctionp = (genericHashKeyFreeFunction_t) (thisKeyFreeFunctionp); \
+    genericHashValCopyFunction_t _valCopyFunctionp = (genericHashValCopyFunction_t) (thisValCopyFunctionp); \
+    genericHashValFreeFunction_t _valFreeFunctionp = (genericHashValFreeFunction_t) (thisValFreeFunctionp); \
+    									\
+    hashName->error = 0;						\
+    hashName->used = 0;							\
+    									\
+    if (_keyIndFunctionp == NULL) {                                     \
+      hashName->error = 1;						\
+    } else {                                                            \
+      hashName->wantedSubSize    = (thisWantedSubSize);			\
+      hashName->keyIndFunctionp  = _keyIndFunctionp;			\
+      hashName->keyCmpFunctionp  = _keyCmpFunctionp;			\
+      hashName->keyCopyFunctionp = _keyCopyFunctionp;			\
+      hashName->keyFreeFunctionp = _keyFreeFunctionp;			\
+      hashName->valCopyFunctionp = _valCopyFunctionp;			\
+      hashName->valFreeFunctionp = _valFreeFunctionp;			\
 									\
+      hashName->keyStackp = &(hashName->keyStack);			\
+      GENERICSTACK_INIT_SIZED(hashName->keyStackp, wantedSize);		\
+      if (GENERICSTACK_ERROR(hashName->keyStackp)) {			\
+	hashName->error = 1;						\
+      } else {								\
         hashName->valStackp = &(hashName->valStack);			\
         GENERICSTACK_INIT_SIZED(hashName->valStackp, wantedSize);	\
         if (GENERICSTACK_ERROR(hashName->valStackp)) {			\
           GENERICSTACK_RESET(hashName->keyStackp);			\
-          free(hashName);                                               \
-          hashName = NULL;						\
+	  hashName->error = 1;						\
         }                                                               \
       }									\
     }                                                                   \
   } while (0)
 
 #define GENERICHASH_NEW(hashName, thisKeyIndFunctionp) GENERICHASH_NEW_ALL(hashName, thisKeyIndFunctionp, NULL, NULL, NULL, NULL, NULL, 0, 0)
+#define GENERICHASH_INIT(hashName, thisKeyIndFunctionp) GENERICHASH_INIT_ALL(hashName, thisKeyIndFunctionp, NULL, NULL, NULL, NULL, NULL, 0, 0)
+
+/* ====================================================================== */
+/* Usage. Take care alos this is an lvalue, this must never be modified.  */
+/* ====================================================================== */
+#define GENERICHASH_USED(hashName) (hashName)->used
 
 /* ====================================================================== */
 /* Copy key/value to internal variables                                   */
@@ -136,6 +181,8 @@ typedef struct genericHash {
       GENERICSTACK_PUSH_##valType(subValStackp, _valValCopy);		\
       if (GENERICSTACK_ERROR(subKeyStackp) || GENERICSTACK_ERROR(subValStackp)) { \
 	hashName->error = 1;						\
+      } else {								\
+	hashName->used++;						\
       }									\
     }									\
   } while (0)
@@ -316,6 +363,7 @@ typedef struct genericHash {
 	    GENERICSTACK_SET_NA(_subValStackp, _i);			\
 	    GENERICSTACK_SWITCH(_subValStackp, _i, -1);			\
 	    GENERICSTACK_POP_NA(_subValStackp);				\
+	    hashName->used--;						\
 	  }								\
 	  break;							\
         }								\
@@ -367,6 +415,39 @@ typedef struct genericHash {
       free(hashName);							\
       hashName = NULL;							\
     }									\
+  } while (0)
+
+#define GENERICHASH_RESET(hashName, userDatavp) do {			\
+    int _usedl  = GENERICSTACK_USED(hashName->keyStackp);		\
+    int _i;								\
+    for (_i = 0; _i < _usedl; _i++) {					\
+      if ((GENERICSTACKITEMTYPE(hashName->keyStackp, _i) == GENERICSTACKITEMTYPE_PTR) && \
+	  (GENERICSTACKITEMTYPE(hashName->valStackp, _i) == GENERICSTACKITEMTYPE_PTR)) { \
+	genericStack_t *_subKeyStackp = (genericStack_t *) GENERICSTACK_GET_PTR(hashName->keyStackp, _i); \
+	genericStack_t *_subValStackp = (genericStack_t *) GENERICSTACK_GET_PTR(hashName->valStackp, _i); \
+	int             _subStackused = GENERICSTACK_USED(_subKeyStackp); \
+	int             _j;						\
+                                                                        \
+	for (_j = 0; _j < _subStackused; _j++) {			\
+	  if ((GENERICSTACKITEMTYPE(_subKeyStackp, _j) == GENERICSTACKITEMTYPE_PTR) && (hashName->keyFreeFunctionp != NULL)) { \
+	    GENERICSTACKITEMTYPE2TYPE_PTR _keyValp = GENERICSTACK_GET_PTR(_subKeyStackp, _j); \
+	    if (_keyValp != NULL) {					\
+	      hashName->keyFreeFunctionp(userDatavp, (void **) &_keyValp); \
+	    }								\
+	  }								\
+	  if ((GENERICSTACKITEMTYPE(_subValStackp, _j) == GENERICSTACKITEMTYPE_PTR) && (hashName->valFreeFunctionp != NULL)) { \
+	    GENERICSTACKITEMTYPE2TYPE_PTR _valValp = GENERICSTACK_GET_PTR(_subValStackp, _j); \
+	    if (_valValp != NULL) {					\
+	      hashName->valFreeFunctionp(userDatavp, (void **) &_valValp); \
+	    }								\
+	  }								\
+	}								\
+	GENERICSTACK_FREE(_subKeyStackp);				\
+	GENERICSTACK_FREE(_subValStackp);				\
+      }									\
+    }									\
+    GENERICSTACK_RESET(hashName->keyStackp);				\
+    GENERICSTACK_RESET(hashName->valStackp);				\
   } while (0)
 
 #endif /* GENERICHASH_H */

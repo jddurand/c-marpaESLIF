@@ -31,13 +31,19 @@ static int myHashTest(short withAllocb) {
   myContext_t     *myContextFoundp;
   int              rci = 0;
   genericLogger_t *genericLoggerp = GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_TRACE);
+  genericHash_t    myHash;
   genericHash_t   *myHashp;
   short            findResultb;
   short            removeResultb;
 
   myContext.genericLoggerp = genericLoggerp;
 
-  GENERICHASH_NEW(myHashp, myHashIndFunction);
+  if (withAllocb) {
+    GENERICHASH_NEW(myHashp, myHashIndFunction);
+  } else {
+    myHashp = &myHash;
+    GENERICHASH_INIT(myHashp, myHashIndFunction);
+  }
   if (GENERICHASH_ERROR(myHashp)) {
     GENERICLOGGER_ERROR(genericLoggerp, "Error when creating generic hash");
     rci = 1;
@@ -55,7 +61,7 @@ static int myHashTest(short withAllocb) {
   
   /* hash->{myContextp} = myContextp */
   GENERICHASH_SET(myHashp, myContextp, PTR, myContextp, PTR, myContextp);
-  GENERICLOGGER_TRACEF(genericLoggerp, "... Pushed PTR %p indexed by itself", myContextp);
+  GENERICLOGGER_TRACEF(genericLoggerp, "... Setted PTR %p indexed by itself", myContextp);
   myHashDump(myContextp, myHashp);
   /* hash->{myContextp} = myContextp */
   GENERICHASH_SET(myHashp, myContextp, PTR, myContextp, PTR, myContextp);
@@ -68,7 +74,7 @@ static int myHashTest(short withAllocb) {
 
   /* hash->{NULL} = NULL */
   GENERICHASH_SET(myHashp, myContextp, PTR, NULL, PTR, NULL);
-  GENERICLOGGER_TRACE(genericLoggerp, "... Pushed NULL indexed by NULL");
+  GENERICLOGGER_TRACE(genericLoggerp, "... Setted NULL indexed by NULL");
   myHashDump(myContextp, myHashp);
 
   GENERICHASH_SET(myHashp, myContextp, PTR, myContextp, PTR, myContextp);
@@ -133,7 +139,11 @@ static int myHashTest(short withAllocb) {
 
  done:
   GENERICLOGGER_TRACEF(genericLoggerp, "Freeing hash at %p", myHashp);
-  GENERICHASH_FREE(myHashp, myContextp);
+  if (withAllocb) {
+    GENERICHASH_FREE(myHashp, myContextp);
+  } else {
+    GENERICHASH_RESET(myHashp, myContextp);
+  }
   
   GENERICLOGGER_INFOF(genericLoggerp, "return %d", rci);
   GENERICLOGGER_FREE(genericLoggerp);
@@ -278,7 +288,7 @@ static void myHashDump(myContext_t *myContextp, genericHash_t *myHashp)
   int i;
   int j;
 
-  GENERICLOGGER_TRACE(myContextp->genericLoggerp, "Hash Dump");
+  GENERICLOGGER_TRACEF(myContextp->genericLoggerp, "Hash Dump (used: %d)", GENERICHASH_USED(myHashp));
   for (i = 0; i < GENERICSTACK_USED(myHashp->keyStackp); i++) {
     genericStack_t *subKeyStackp;
     genericStack_t *subValStackp;
