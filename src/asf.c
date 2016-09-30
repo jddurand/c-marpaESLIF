@@ -248,6 +248,7 @@ marpaWrapperAsf_t *marpaWrapperAsf_newp(marpaWrapperRecognizer_t *marpaWrapperRe
   marpaWrapperAsfp->causeNidsp              = NULL;
   marpaWrapperAsfp->causeNidsi              = 0;
   marpaWrapperAsfp->gladeObtainTmpStackp    = NULL;
+  marpaWrapperAsfp->causesHashp             = NULL;
 
   /* Always succeed as per the doc */
   MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_r_latest_earley_set(%p)", marpaWrapperRecognizerp->marpaRecognizerp);
@@ -368,6 +369,12 @@ marpaWrapperAsf_t *marpaWrapperAsf_newp(marpaWrapperRecognizer_t *marpaWrapperRe
   GENERICSTACK_NEW(marpaWrapperAsfp->gladeObtainTmpStackp);
   if (GENERICSTACK_ERROR(marpaWrapperAsfp->gladeObtainTmpStackp)) {
     MARPAWRAPPER_ERRORF(genericLoggerp, "gladeObtainTmpStackp stack initialization error, %s", strerror(errno));
+    goto err;
+  }
+
+  GENERICHASH_NEW(marpaWrapperAsfp->causesHashp, _marpaWrapperAsf_causesHash_indi);
+  if (GENERICHASH_ERROR(marpaWrapperAsfp->causesHashp)) {
+    MARPAWRAPPER_ERRORF(genericLoggerp, "causesHashp hash initialization error, %s", strerror(errno));
     goto err;
   }
 
@@ -614,6 +621,9 @@ void marpaWrapperAsf_freev(marpaWrapperAsf_t *marpaWrapperAsfp)
 
     MARPAWRAPPER_TRACE(genericLoggerp, funcs, "Freeing gladeObtainTmpStackp");
     GENERICSTACK_FREE(marpaWrapperAsfp->gladeObtainTmpStackp);
+
+    MARPAWRAPPER_TRACE(genericLoggerp, funcs, "Freeing causesHashp");
+    GENERICHASH_FREE(marpaWrapperAsfp->causesHashp, marpaWrapperAsfp);
 
     MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "free(%p)", marpaWrapperAsfp);
     free(marpaWrapperAsfp);
@@ -2708,7 +2718,7 @@ static inline short _marpaWrapperAsf_and_nodes_to_cause_nidsp(marpaWrapperAsf_t 
   marpaWrapperGrammar_t    *marpaWrapperGrammarp    = marpaWrapperRecognizerp->marpaWrapperGrammarp;
   Marpa_Grammar             marpaGrammarp           = marpaWrapperGrammarp->marpaGrammarp;
   Marpa_Bocage              marpaBocagep            = marpaWrapperAsfp->marpaBocagep;
-  genericHash_t            *causesHashp             = NULL;
+  genericHash_t            *causesHashp             = marpaWrapperAsfp->causesHashp;
   int                       i;
   int                       andNodeIdi;
   int                       causeNidi;
@@ -2716,11 +2726,7 @@ static inline short _marpaWrapperAsf_and_nodes_to_cause_nidsp(marpaWrapperAsf_t 
   int                       indicei;
   short                     findResultb;
 
-  GENERICHASH_NEW(causesHashp, _marpaWrapperAsf_causesHash_indi);
-  if (GENERICHASH_ERROR(causesHashp)) {
-    MARPAWRAPPER_ERROR(genericLoggerp, "Failure to initalize causesHashp");
-    goto err;
-  }
+  GENERICHASH_RELAX(causesHashp, marpaWrapperAsfp);
 
   for (i = 0; i < GENERICSTACK_USED(andNodeIdStackp); i++) {
     if (! GENERICSTACK_IS_INT(andNodeIdStackp, i)) {
@@ -2768,7 +2774,6 @@ static inline short _marpaWrapperAsf_and_nodes_to_cause_nidsp(marpaWrapperAsf_t 
     }
   }
   
-  GENERICHASH_FREE(causesHashp, marpaWrapperAsfp);
 #ifndef MARPAWRAPPER_NTRACE
   _marpaWrapperAsf_dump_stack(marpaWrapperAsfp, "<============= andNodeIdStackp", andNodeIdStackp);
   _marpaWrapperAsf_dump_stack(marpaWrapperAsfp, "=============> causeNidsStackp", causeNidsStackp);
@@ -2777,7 +2782,6 @@ static inline short _marpaWrapperAsf_and_nodes_to_cause_nidsp(marpaWrapperAsf_t 
   return 1;
 
  err:
-  GENERICHASH_FREE(causesHashp, marpaWrapperAsfp);
   MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return 0");
   return 0;
 }
