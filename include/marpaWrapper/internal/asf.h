@@ -82,6 +82,9 @@ struct marpaWrapperAsf {
   int                         intsetcounti;
   int                        *causeNidsp;
   int                         causeNidsi;
+
+  /* For optimization of _marpaWrapperAsf_glade_obtainp() */
+  genericStack_t             *gladeObtainTmpStackp;
 };
 
 typedef struct marpaWrapperAsfChoicePoint {
