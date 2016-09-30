@@ -80,6 +80,8 @@ struct marpaWrapperAsf {
   /* For optimization of intset memoization */
   int                        *intsetidp;
   int                         intsetcounti;
+  int                        *causeNidsp;
+  int                         causeNidsi;
 };
 
 typedef struct marpaWrapperAsfChoicePoint {
