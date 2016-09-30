@@ -243,6 +243,8 @@ marpaWrapperAsf_t *marpaWrapperAsf_newp(marpaWrapperRecognizer_t *marpaWrapperRe
   marpaWrapperAsfp->worklistStackp          = NULL;
   marpaWrapperAsfp->intsetidp               = NULL;
   marpaWrapperAsfp->intsetcounti            = 0;
+  marpaWrapperAsfp->causeNidsp              = NULL;
+  marpaWrapperAsfp->causeNidsi              = 0;
 
   /* Always succeed as per the doc */
   MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_r_latest_earley_set(%p)", marpaWrapperRecognizerp->marpaRecognizerp);
@@ -596,6 +598,11 @@ void marpaWrapperAsf_freev(marpaWrapperAsf_t *marpaWrapperAsfp)
       free(marpaWrapperAsfp->intsetidp);
     }
 
+    if (marpaWrapperAsfp->causeNidsp != NULL) {
+      MARPAWRAPPER_TRACE(genericLoggerp, funcs, "Freeing causeNidsp");
+      free(marpaWrapperAsfp->causeNidsp);
+    }
+
     MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "free(%p)", marpaWrapperAsfp);
     free(marpaWrapperAsfp);
 
@@ -894,49 +901,56 @@ static inline short _marpaWrapperAsf_intsetIdb(marpaWrapperAsf_t *marpaWrapperAs
 {
   const static char        funcs[] = "_marpaWrapperAsf_intsetIdb";
   genericLogger_t         *genericLoggerp = marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp;
+  int                      intsetcounti = counti + 1;
   short                    findResultb;
   int                      intsetIdi;
-  int                     *localIdip;
+  int                     *intsetidp;
   int                      indicei;
   int                      idi0i;
   int                      idi1i;
 
   /* This method is responsible of memoization and is called very often */
-  if (counti > marpaWrapperAsfp->intsetcounti) {
+  if (intsetcounti > marpaWrapperAsfp->intsetcounti) {
     if (marpaWrapperAsfp->intsetcounti <= 0) {
-      localIdip = marpaWrapperAsfp->intsetidp = (int *) malloc(sizeof(int) * (counti + 1));
+      intsetidp = marpaWrapperAsfp->intsetidp = (int *) malloc(sizeof(int) * intsetcounti);
+      if (intsetidp == NULL) {
+	MARPAWRAPPER_ERRORF(genericLoggerp, "malloc failure: %s", strerror(errno));
+	goto err;
+      }
     } else {
-      localIdip = marpaWrapperAsfp->intsetidp = realloc(marpaWrapperAsfp->intsetidp, sizeof(int) * (counti + 1));
+      intsetidp = realloc(marpaWrapperAsfp->intsetidp, sizeof(int) * intsetcounti);
+      if (intsetidp == NULL) {
+	MARPAWRAPPER_ERRORF(genericLoggerp, "realloc failure: %s", strerror(errno));
+	goto err;
+      } else {
+	marpaWrapperAsfp->intsetidp = intsetidp;
+      }
     }
-    if (localIdip == NULL) {
-      MARPAWRAPPER_ERRORF(genericLoggerp, "malloc failure: %s", strerror(errno));
-      goto err;
-    }
-    marpaWrapperAsfp->intsetcounti = counti;
+    marpaWrapperAsfp->intsetcounti = intsetcounti;
   } else {
-    localIdip = marpaWrapperAsfp->intsetidp;
+    intsetidp = marpaWrapperAsfp->intsetidp;
   }
 
-  *localIdip = counti;
+  *intsetidp = counti;
   if (counti > 0) {
     switch (counti) {
     case 1:
-      localIdip[1] = idip[0];
+      intsetidp[1] = idip[0];
       break;
     case 2:
       idi0i = idip[0];
       idi1i = idip[1];
       if (idi0i < idi1i) {
-	localIdip[1] = idi0i;
-	localIdip[2] = idi1i;
+	intsetidp[1] = idi0i;
+	intsetidp[2] = idi1i;
       } else {
-	localIdip[1] = idi1i;
-	localIdip[2] = idi0i;
+	intsetidp[1] = idi1i;
+	intsetidp[2] = idi0i;
       }
       break;
     default:
-      memcpy(++localIdip, idip, sizeof(int) * counti);
-      qsort(localIdip--, (size_t) counti, sizeof(int), _marpaWrapperAsf_idCmpi);
+      memcpy(++intsetidp, idip, sizeof(int) * counti);
+      qsort(intsetidp--, (size_t) counti, sizeof(int), _marpaWrapperAsf_idCmpi);
       break;
     }
   }
@@ -947,18 +961,18 @@ static inline short _marpaWrapperAsf_intsetIdb(marpaWrapperAsf_t *marpaWrapperAs
     MARPAWRAPPER_TRACE(genericLoggerp, funcs, "Looking for this context:");
     if (counti > 0) {
       for (idi = 1; idi <= counti; idi++) {
-	MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "   idi[0]=%d", localIdip[idi]);
+	MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "   idi[0]=%d", intsetidp[idi]);
       }
     }
   }
 #endif
   /* If we are going to insert, we want to precompute indice instead of letting */
   /* the hash macros doing it for the find(), and then for the set().           */
-  indicei = _marpaWrapperAsf_intset_keyIndFunctioni((void *) marpaWrapperAsfp, GENERICSTACKITEMTYPE_PTR, (void **) &localIdip);
+  indicei = _marpaWrapperAsf_intset_keyIndFunctioni((void *) marpaWrapperAsfp, GENERICSTACKITEMTYPE_PTR, (void **) &intsetidp);
   GENERICHASH_FIND_BY_IND(marpaWrapperAsfp->intsetHashp,
 			  marpaWrapperAsfp,
 			  PTR,
-			  localIdip,
+			  intsetidp,
 			  INT,
 			  &intsetIdi,
 			  findResultb,
@@ -973,7 +987,7 @@ static inline short _marpaWrapperAsf_intsetIdb(marpaWrapperAsf_t *marpaWrapperAs
     GENERICHASH_SET_BY_IND(marpaWrapperAsfp->intsetHashp,
 			   marpaWrapperAsfp,
 			   PTR,
-			   localIdip,
+			   intsetidp,
 			   INT,
 			   intsetIdi,
 			   indicei);
@@ -2510,7 +2524,7 @@ static inline short _marpaWrapperAsf_glade_id_factorsb(marpaWrapperAsf_t *marpaW
   genericStack_t           *andNodeIdStackp         = &andNodeIdStack;
   genericStack_t            causeNidsStack;
   genericStack_t           *causeNidsStackp         = &causeNidsStack;
-  int                      *causeNidsp              = NULL;
+  int                      *causeNidsp;
   int                       factorIxi;
   marpaWrapperAsfNook_t    *nookp;
   int                       orNodeIdi;
@@ -2582,24 +2596,35 @@ static inline short _marpaWrapperAsf_glade_id_factorsb(marpaWrapperAsf_t *marpaW
     if (GENERICSTACK_USED(causeNidsStackp) <= 0) {
       causeNidsp = NULL;
     } else {
-      causeNidsp = malloc(GENERICSTACK_USED(causeNidsStackp) * sizeof(int));
-      if (causeNidsp == NULL) {
-	MARPAWRAPPER_ERRORF(genericLoggerp, "malloc failure, %s", strerror(errno));
-	goto err;
-      } else {
-	int i;
+      int i;
 
-	for (i = 0; i < GENERICSTACK_USED(causeNidsStackp); i++) {
-	  causeNidsp[i] = GENERICSTACK_GET_INT(causeNidsStackp, i);
-	  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "... causeNidsp[%d] = %d", i, causeNidsp[i]);
+      if (GENERICSTACK_USED(causeNidsStackp) > marpaWrapperAsfp->causeNidsi) {
+	if (marpaWrapperAsfp->causeNidsi <= 0) {
+	  causeNidsp = marpaWrapperAsfp->causeNidsp = (int *) malloc(sizeof(int) * GENERICSTACK_USED(causeNidsStackp));
+	  if (causeNidsp == NULL) {
+	    MARPAWRAPPER_ERRORF(genericLoggerp, "malloc failure: %s", strerror(errno));
+	    goto err;
+	  }
+	} else {
+	  causeNidsp = realloc(marpaWrapperAsfp->causeNidsp, sizeof(int) * GENERICSTACK_USED(causeNidsStackp));
+	  if (causeNidsp == NULL) {
+	    MARPAWRAPPER_ERRORF(genericLoggerp, "malloc failure: %s", strerror(errno));
+	    goto err;
+	  } else {
+	    marpaWrapperAsfp->causeNidsp = causeNidsp;
+	  }
 	}
+	marpaWrapperAsfp->causeNidsi = GENERICSTACK_USED(causeNidsStackp);
+      } else {
+	causeNidsp = marpaWrapperAsfp->causeNidsp;
+      }
+
+      for (i = 0; i < GENERICSTACK_USED(causeNidsStackp); i++) {
+	causeNidsp[i] = GENERICSTACK_GET_INT(causeNidsStackp, i);
+	MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "... causeNidsp[%d] = %d", i, causeNidsp[i]);
       }
     }
     baseNidsetp = _marpaWrapperAsf_nidset_obtainp(marpaWrapperAsfp, GENERICSTACK_USED(causeNidsStackp), causeNidsp);
-    if (causeNidsp != NULL) {
-      free(causeNidsp);
-      causeNidsp = NULL;
-    }
     if (baseNidsetp == NULL) {
       goto err;
     }
@@ -2651,9 +2676,6 @@ static inline short _marpaWrapperAsf_glade_id_factorsb(marpaWrapperAsf_t *marpaW
   GENERICSTACK_RESET(andNodeIdStackp);
   GENERICSTACK_RESET(causeNidsStackp);  
   GENERICSTACK_FREE(stackp);
-  if (causeNidsp != NULL) {
-    free(causeNidsp);
-  }
   MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return 0");
   return 0;
 }
