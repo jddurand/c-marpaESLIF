@@ -63,7 +63,7 @@ static int myHashTest(short withAllocb) {
     GENERICLOGGER_TRACEF(genericLoggerp, "Initialized hash at %p, alloc mode=%d", myHashp, (int) withAllocb);
   }
 
-  for (i = 0; i < 1; i++) {
+  for (i = 0; i < 2; i++) {
     myHashDump(myContextp, myHashp);
   
     /* hash->{myContextp} = myContextp */
