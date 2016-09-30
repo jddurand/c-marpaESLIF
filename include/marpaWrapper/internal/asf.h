@@ -85,6 +85,9 @@ struct marpaWrapperAsf {
 
   /* For optimization of _marpaWrapperAsf_glade_obtainp() */
   genericStack_t             *gladeObtainTmpStackp;
+
+  /* For optimization of _marpaWrapperAsf_and_nodes_to_cause_nidsp() */
+  genericHash_t              *causesHashp;
 };
 
 typedef struct marpaWrapperAsfChoicePoint {
