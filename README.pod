@@ -199,7 +199,7 @@ Return the total number of available items.
 
 =head2 GENERICSTACK_USED(stackName)
 
-Return the total used items.
+Return the total used items. This can be used as l-value, the effect is to pretend that the stack is empty I<without> releasing internal memory, the later will be reused if necessary. If you believe that the internal size of the stack (in particular the memory allocated on the heap) fit the whole lifetime of the stack, this is by far more effcient than doing sequences of FREE (or RESET) followed by NEW (or INIT, respectively).
 
 =head2 GENERICSTACK_DUMP(stackName)
 
