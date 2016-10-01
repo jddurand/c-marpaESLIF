@@ -63,7 +63,7 @@ static void _marpaESLIF_free_grammarv(marpaESLIF_t *marpaESLIFp, marpaESLIF_gram
   const static char    *funcs = "_marpaESLIF_free_grammarv";
 
   if (grammarp != NULL) {
-    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "... Freeing grammar name is %s", grammarp->descs != NULL ? grammarp->descs : "(null)");
+    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Freeing grammar %s", grammarp->descs != NULL ? grammarp->descs : "(null)");
     if (grammarp->descs != NULL) {
       free(grammarp->descs);
     }
