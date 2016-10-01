@@ -29,8 +29,24 @@
 #define MARPAWRAPPERASF_NID_LEAF_BASE (-MARPAWRAPPERASF_FACTORING_MAX - 1)
 #endif
 
+/* The number of causes for a given nidset is very often a number quite small */
+/* there the default genericStack available memory will suffice to indice     */
+/* eveyrthing. If not memory will be allocated anyway.                        */
 #ifndef MARPAWRAPPERASF_CAUSESHASH_SIZE
-#define MARPAWRAPPERASF_CAUSESHASH_SIZE 2048
+#if GENERICSTACK_DEFAULT_LENGTH > 0
+#define MARPAWRAPPERASF_CAUSESHASH_SIZE GENERICSTACK_DEFAULT_LENGTH
+#else
+#define MARPAWRAPPERASF_CAUSESHASH_SIZE 128  /* Subjective number */
+#endif
+#endif
+
+/* Same argument for value stack */
+#ifndef MARPAWRAPPERASF_VALUESPARSEARRAY_SIZE
+#if GENERICSTACK_DEFAULT_LENGTH > 0
+#define MARPAWRAPPERASF_VALUESPARSEARRAY_SIZE GENERICSTACK_DEFAULT_LENGTH
+#else
+#define MARPAWRAPPERASF_VALUESPARSEARRAY_SIZE 128  /* Subjective number */
+#endif
 #endif
 
 #ifndef MARPAWRAPPERASF_NIDSETSPARSEARRAY_SIZE
@@ -167,6 +183,7 @@ void                                     _marpaWrapperAsf_intset_keyFreeFunction
 /* General */
 void                                     _marpaWrapperAsf_idset_sparseArrayFreev(void *userDatavp, void **pp);
 static inline unsigned long              _marpaWrapperAsf_djb2(unsigned char *str);
+static inline unsigned long              _marpaWrapperAsf_djb2_s(unsigned char *str, int lengthi);
 static inline int                        _marpaWrapperAsf_token_es_spani(marpaWrapperAsf_t *marpaWrapperAsfp, int andNodeIdi, int *lengthip);
 static inline int                        _marpaWrapperAsf_or_node_es_spani(marpaWrapperAsf_t *marpaWrapperAsfp, int choicepointi, int *lengthip);
 #ifndef MARPAWRAPPER_NTRACE
@@ -181,6 +198,9 @@ static inline void                          _marpaWrapperAsf_choicepoint_freev(m
 
 /* Specific to value using the ASF */
 static inline short                       _marpaWrapperAsf_valueTraverserb(marpaWrapperAsfTraverser_t *traverserp, void *userDatavp, int *valueip);
+
+/* Specific to value sparse array */
+int                                      _marpaWrapperAsf_valueSparseArray_indi(void *userDatavp, genericStackItemType_t itemType, void **pp);
 
 /* For my very internal purpose */
 #ifndef MARPAWRAPPER_NTRACE
@@ -511,10 +531,10 @@ short marpaWrapperAsf_traverseb(marpaWrapperAsf_t *marpaWrapperAsfp, traverserCa
   marpaWrapperAsfGlade_t     *gladep;
   marpaWrapperAsfTraverser_t  traverser;
   int                         valuei;
-  genericStack_t              valueStack;
-  genericStack_t             *valueStackp = &valueStack;
+  genericSparseArray_t        valueSparseArray;
+  genericSparseArray_t       *valueSparseArrayp = &valueSparseArray;
 
-  GENERICSTACK_INIT(valueStackp);
+  GENERICSPARSEARRAY_INIT(valueSparseArrayp, _marpaWrapperAsf_valueSparseArray_indi);
 
   if (marpaWrapperAsfp == NULL) {
     errno = EINVAL;
@@ -539,11 +559,11 @@ short marpaWrapperAsf_traverseb(marpaWrapperAsf_t *marpaWrapperAsfp, traverserCa
   marpaWrapperAsfp->traverserCallbackp = traverserCallbackp;
   marpaWrapperAsfp->userDatavp         = userDatavp;
 
-  traverser.marpaWrapperAsfp = marpaWrapperAsfp;
-  traverser.valueStackp      = valueStackp;
-  traverser.gladep           = gladep;
-  traverser.symchIxi         = 0;
-  traverser.factoringIxi     = 0;
+  traverser.marpaWrapperAsfp  = marpaWrapperAsfp;
+  traverser.valueSparseArrayp = valueSparseArrayp;
+  traverser.gladep            = gladep;
+  traverser.symchIxi          = 0;
+  traverser.factoringIxi      = 0;
   MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "Calling traverser for glade %d", gladep->idi);
   if (! marpaWrapperAsfp->traverserCallbackp(&traverser, marpaWrapperAsfp->userDatavp, &valuei)) {
     goto err;
@@ -552,12 +572,12 @@ short marpaWrapperAsf_traverseb(marpaWrapperAsf_t *marpaWrapperAsfp, traverserCa
   if (valueip != NULL) {
     *valueip = valuei;
   }
-  GENERICSTACK_RESET(valueStackp);
+  GENERICSPARSEARRAY_RESET(valueSparseArrayp, marpaWrapperAsfp);
   MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return 1");
   return 1;
 
  err:
-  GENERICSTACK_RESET(valueStackp);
+  GENERICSPARSEARRAY_RESET(valueSparseArrayp, marpaWrapperAsfp);
   MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return 0");
   return 0;
 }
@@ -921,9 +941,10 @@ static inline int _marpaWrapperAsf_andNodeIdAndPredecessorIdCmpi(const void *p1,
 static inline short _marpaWrapperAsf_intsetIdb(marpaWrapperAsf_t *marpaWrapperAsfp, int *intsetIdip, int counti, int *idip)
 /****************************************************************************/
 {
-  const static char        funcs[] = "_marpaWrapperAsf_intsetIdb";
+  const static char        funcs[]        = "_marpaWrapperAsf_intsetIdb";
   genericLogger_t         *genericLoggerp = marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp;
-  int                      intsetcounti = counti + 1;
+  genericHash_t           *intsetHashp    = marpaWrapperAsfp->intsetHashp;
+  int                      intsetcounti   = counti + 1;
   short                    findResultb;
   int                      intsetIdi;
   int                     *intsetidp;
@@ -991,7 +1012,7 @@ static inline short _marpaWrapperAsf_intsetIdb(marpaWrapperAsf_t *marpaWrapperAs
   /* If we are going to insert, we want to precompute indice instead of letting */
   /* the hash macros doing it for the find(), and then for the set().           */
   indicei = _marpaWrapperAsf_intset_keyIndFunctioni((void *) marpaWrapperAsfp, GENERICSTACKITEMTYPE_PTR, (void **) &intsetidp);
-  GENERICHASH_FIND_BY_IND(marpaWrapperAsfp->intsetHashp,
+  GENERICHASH_FIND_BY_IND(intsetHashp,
 			  marpaWrapperAsfp,
 			  PTR,
 			  intsetidp,
@@ -999,21 +1020,21 @@ static inline short _marpaWrapperAsf_intsetIdb(marpaWrapperAsf_t *marpaWrapperAs
 			  &intsetIdi,
 			  findResultb,
 			  indicei);
-  if (GENERICHASH_ERROR(marpaWrapperAsfp->intsetHashp)) {
+  if (GENERICHASH_ERROR(intsetHashp)) {
     MARPAWRAPPER_ERRORF(genericLoggerp, "intset hash find failure: %s", strerror(errno));
     goto err;
   }
   if (! findResultb) {
     intsetIdi = marpaWrapperAsfp->nextIntseti++;
     MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "Creating next intset id %d at hash row indice %d", intsetIdi, indicei);
-    GENERICHASH_SET_BY_IND(marpaWrapperAsfp->intsetHashp,
+    GENERICHASH_SET_BY_IND(intsetHashp,
 			   marpaWrapperAsfp,
 			   PTR,
 			   intsetidp,
 			   INT,
 			   intsetIdi,
 			   indicei);
-    if (GENERICHASH_ERROR(marpaWrapperAsfp->intsetHashp)) {
+    if (GENERICHASH_ERROR(intsetHashp)) {
       MARPAWRAPPER_ERRORF(genericLoggerp, "intset hash set failure: %s", strerror(errno));
       goto err;
     }
@@ -2705,7 +2726,8 @@ static inline short _marpaWrapperAsf_glade_id_factorsb(marpaWrapperAsf_t *marpaW
 int _marpaWrapperAsf_causesHash_indi(void *userDatavp, genericStackItemType_t itemType, void **pp)
 /****************************************************************************/
 {
-  return abs(* ((int *) pp)) % MARPAWRAPPERASF_CAUSESHASH_SIZE;
+  return _marpaWrapperAsf_djb2_s((unsigned char *) pp, sizeof(int)) % MARPAWRAPPERASF_CAUSESHASH_SIZE;
+  /* return abs(* ((int *) pp)) % MARPAWRAPPERASF_CAUSESHASH_SIZE; */
 }
 
 /****************************************************************************/
@@ -3058,9 +3080,10 @@ short marpaWrapperAsf_traverse_rh_valueb(marpaWrapperAsfTraverser_t *traverserp,
 /****************************************************************************/
 {
   const static char           funcs[]         = "marpaWrapperAsf_traverse_rh_valueb";
+  genericSparseArray_t       *valueSparseArrayp;
   marpaWrapperAsfTraverser_t  childTraverser;
-  genericStack_t              childValueStack;
-  genericStack_t             *childValueStackp = &childValueStack;
+  genericSparseArray_t        childValueSparseArray;
+  genericSparseArray_t       *childValueSparseArrayp = &childValueSparseArray;
   int                         valuei;
   marpaWrapperAsf_t          *marpaWrapperAsfp;
   marpaWrapperAsfGlade_t     *gladep;
@@ -3074,16 +3097,18 @@ short marpaWrapperAsf_traverse_rh_valueb(marpaWrapperAsfTraverser_t *traverserp,
   int                         maxRhixi;
   marpaWrapperAsfGlade_t     *downGladep;
   int                         downGladeIdi;
+  short                       findResultb;
 
-  GENERICSTACK_INIT(childValueStackp);
+  GENERICSPARSEARRAY_INIT(childValueSparseArrayp, _marpaWrapperAsf_valueSparseArray_indi);
 
   if (traverserp == NULL) {
     errno = EINVAL;
     goto err;
   }
 
-  marpaWrapperAsfp = traverserp->marpaWrapperAsfp;
-  genericLoggerp = marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp;
+  marpaWrapperAsfp  = traverserp->marpaWrapperAsfp;
+  valueSparseArrayp = traverserp->valueSparseArrayp;
+  genericLoggerp    = marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp;
 
   gladep = traverserp->gladep;
   if (gladep == NULL) {
@@ -3169,10 +3194,14 @@ short marpaWrapperAsf_traverse_rh_valueb(marpaWrapperAsfTraverser_t *traverserp,
   }
   downGladeIdi = GENERICSTACK_GET_INT(downFactoringsStackp, rhIxi);
   MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "Current downGladeIdi is %d", downGladeIdi);
-  if (GENERICSTACK_IS_INT(traverserp->valueStackp,  downGladeIdi)) {
+  GENERICSPARSEARRAY_FIND(valueSparseArrayp, marpaWrapperAsfp, downGladeIdi, INT, &valuei, findResultb);
+  if (GENERICSPARSEARRAY_ERROR(valueSparseArrayp)) {
+    MARPAWRAPPER_ERRORF(genericLoggerp, "valueSparseArrayp find failure, %s", strerror(errno));
+    goto err;
+  }
+  if (findResultb) {
     /* Already memoized */
-    MARPAWRAPPER_TRACE(genericLoggerp, funcs, "Memoized value");
-    valuei = GENERICSTACK_GET_INT(traverserp->valueStackp, downGladeIdi);
+    MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "Memoized valuei=%d", valuei);
     goto ok;
   }
   downGladep = _marpaWrapperAsf_glade_obtainp(marpaWrapperAsfp, downGladeIdi);
@@ -3183,24 +3212,24 @@ short marpaWrapperAsf_traverse_rh_valueb(marpaWrapperAsfTraverser_t *traverserp,
   /*
    * Do a shallow clone
    */
-  childTraverser.marpaWrapperAsfp = marpaWrapperAsfp;
-  childTraverser.valueStackp      = childValueStackp;
-  childTraverser.gladep           = downGladep;
-  childTraverser.symchIxi         = 0;
-  childTraverser.factoringIxi     = 0;
+  childTraverser.marpaWrapperAsfp  = marpaWrapperAsfp;
+  childTraverser.valueSparseArrayp = childValueSparseArrayp;
+  childTraverser.gladep            = downGladep;
+  childTraverser.symchIxi          = 0;
+  childTraverser.factoringIxi      = 0;
   MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "Calling traverser for downglade %d", downGladep->idi);
   if (! marpaWrapperAsfp->traverserCallbackp(&childTraverser, marpaWrapperAsfp->userDatavp, &valuei)) {
     goto err;
   }
 
-  GENERICSTACK_SET_INT(traverserp->valueStackp, valuei, downGladeIdi);
-  if (GENERICSTACK_ERROR(traverserp->valueStackp)) {
-    MARPAWRAPPER_ERRORF(genericLoggerp, "Failure to set value in traverser", strerror(errno));
+  GENERICSPARSEARRAY_SET(valueSparseArrayp, marpaWrapperAsfp, downGladeIdi, INT, valuei);
+  if (GENERICSPARSEARRAY_ERROR(valueSparseArrayp)) {
+    MARPAWRAPPER_ERRORF(genericLoggerp, "valueSparseArrayp set failure, %s", strerror(errno));
     goto err;   
   }
 
 ok:
-  GENERICSTACK_RESET(childValueStackp);
+  GENERICSPARSEARRAY_RESET(childValueSparseArrayp, marpaWrapperAsfp);
   if (valueip != NULL) {
     *valueip = valuei;
   }
@@ -3209,7 +3238,7 @@ ok:
   return 1;
 
  err:
-  GENERICSTACK_RESET(childValueStackp);
+  GENERICSPARSEARRAY_RESET(childValueSparseArrayp, marpaWrapperAsfp);
   MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return 0");
   return 0;
 }
@@ -3529,6 +3558,22 @@ static inline unsigned long _marpaWrapperAsf_djb2(unsigned char *str)
   int c;
 
   while (c = *str++) {
+    hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
+  }
+
+  return hash;
+}
+
+/****************************************************************************/
+static inline unsigned long _marpaWrapperAsf_djb2_s(unsigned char *str, int lengthi)
+/****************************************************************************/
+{
+  unsigned long hash = 5381;
+  int c;
+  int i;
+
+  for (i = 0; i < lengthi; i++) {
+    c = *str++;
     hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
   }
 
@@ -4111,3 +4156,12 @@ static void _marpaWrapperAsf_dumpintsetHashpv(marpaWrapperAsf_t *marpaWrapperAsf
   }
 }
 #endif
+
+/****************************************************************************/
+int _marpaWrapperAsf_valueSparseArray_indi(void *userDatavp, genericStackItemType_t itemType, void **pp)
+/****************************************************************************/
+{
+  return _marpaWrapperAsf_djb2_s((unsigned char *) pp, sizeof(int)) % MARPAWRAPPERASF_VALUESPARSEARRAY_SIZE;
+  /* return abs(* ((int *) pp)) % MARPAWRAPPERASF_CAUSESHASH_SIZE; */
+}
+

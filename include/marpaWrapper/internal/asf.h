@@ -97,7 +97,7 @@ typedef struct marpaWrapperAsfChoicePoint {
 
 struct marpaWrapperAsfTraverser {
   marpaWrapperAsf_t      *marpaWrapperAsfp;
-  genericStack_t         *valueStackp;
+  genericSparseArray_t   *valueSparseArrayp;
   marpaWrapperAsfGlade_t *gladep;
   int                     symchIxi;
   int                     factoringIxi;
