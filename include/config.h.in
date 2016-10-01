@@ -1,0 +1,17 @@
+#ifndef MARPAESLIF_CONFIG_H
+#define MARPAESLIF_CONFIG_H
+
+#cmakedefine C_INLINE @C_INLINE@
+#cmakedefine C_INLINE_IS_INLINE @C_INLINE_IS_INLINE@
+#ifndef __cplusplus
+#  ifndef C_INLINE
+#    undef inline
+#  else
+#    ifndef C_INLINE_IS_INLINE
+/* Next line is never executed when inline is "inline" */
+#      define inline @C_INLINE@
+#    endif
+#  endif
+#endif
+
+#endif /* MARPAESLIF_CONFIG_H */
