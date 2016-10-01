@@ -1,0 +1,20 @@
+language: c
+sudo: required
+addons:
+  apt:
+    sources:
+      - george-edison55-precise-backports
+    packages:
+      - cmake
+      - cmake-data
+before_script:
+  - sh ./install-c-genericLogger.sh
+  - sh ./install-c-genericStack.sh
+  - sh ./install-c-genericHash.sh
+  - sh ./install-c-genericSparseArray.sh
+  - sh ./install-c-marpaWrapper.sh
+  - cmake .
+script:
+  - make check
+  - ./output/lib/marpaESLIFTester
+  - sudo make install
