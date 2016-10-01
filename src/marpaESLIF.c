@@ -38,11 +38,12 @@ static short _marpaESLIF_bootstrap_grammarb(marpaESLIF_t *marpaESLIFp)
     goto err;
   }
 
-  grammarp->idi        = 0;   /* Start grammar is level 0 */
-  grammarp->descs      = NULL;
-  grammarp->ruleStackp = NULL;
-  grammarp->previousp  = NULL;
-  grammarp->nextp      = NULL;
+  grammarp->idi          = 0;   /* Start grammar is level 0 */
+  grammarp->descs        = NULL;
+  grammarp->symbolStackp = NULL;
+  grammarp->ruleStackp   = NULL;
+  grammarp->previousp    = NULL;
+  grammarp->nextp        = NULL;
   
   rcb = 1;
   goto done;
@@ -61,14 +62,14 @@ static void _marpaESLIF_free_grammarv(marpaESLIF_t *marpaESLIFp, marpaESLIF_gram
 {
   const static char    *funcs = "_marpaESLIF_free_grammarv";
 
-  MARPAESLIF_TRACE(marpaESLIFp, funcs, "Freeing grammar");
-
   if (grammarp != NULL) {
-    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "... Grammar name is %s", grammarp->descs != NULL ? grammarp->descs : "(null)");
+    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "... Freeing grammar name is %s", grammarp->descs != NULL ? grammarp->descs : "(null)");
     if (grammarp->descs != NULL) {
       free(grammarp->descs);
     }
+    _marpaESLIF_free_symbolStackv(marpaESLIFp, grammarp->symbolStackp);
     _marpaESLIF_free_ruleStackv(marpaESLIFp, grammarp->ruleStackp);
+    _marpaESLIF_free_grammarv(marpaESLIFp, grammarp->nextp);
     free(grammarp);
   }
 }
@@ -79,9 +80,8 @@ static void _marpaESLIF_free_ruleStackv(marpaESLIF_t *marpaESLIFp, genericStack_
 {
   const static char    *funcs = "_marpaESLIF_free_ruleStackv";
 
-  MARPAESLIF_TRACE(marpaESLIFp, funcs, "Freeing rule stack");
-
   if (ruleStackp != NULL) {
+    MARPAESLIF_TRACE(marpaESLIFp, funcs, "Freeing rule stack");
     while (GENERICSTACK_USED(ruleStackp) > 0) {
       if (GENERICSTACK_IS_PTR(ruleStackp, GENERICSTACK_USED(ruleStackp) - 1)) {
 	marpaESLIF_rule_t *rulep = (marpaESLIF_rule_t *) GENERICSTACK_POP_PTR(ruleStackp);
@@ -98,10 +98,8 @@ static void _marpaESLIF_free_rulev(marpaESLIF_t *marpaESLIFp, marpaESLIF_rule_t 
 {
   const static char    *funcs = "_marpaESLIF_free_rulev";
 
-  MARPAESLIF_TRACE(marpaESLIFp, funcs, "Freeing rule");
-
   if (rulep != NULL) {
-    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "... Rule is %s", rulep->descs != NULL ? rulep->descs : "(null)");
+    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Freeing rule %s", rulep->descs != NULL ? rulep->descs : "(null)");
     if (rulep->descs != NULL) {
       free(rulep->descs);
     }
@@ -118,10 +116,8 @@ static void _marpaESLIF_free_symbolv(marpaESLIF_t *marpaESLIFp, marpaESLIF_symbo
 {
   const static char    *funcs = "_marpaESLIF_free_symbolv";
 
-  MARPAESLIF_TRACE(marpaESLIFp, funcs, "Freeing symbol");
-
   if (symbolp != NULL) {
-    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "... Symbol is %s", symbolp->descs != NULL ? symbolp->descs : "(null)");
+    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Freeing symbol %s", symbolp->descs != NULL ? symbolp->descs : "(null)");
     if (symbolp->descs != NULL) {
       free(symbolp->descs);
     }
@@ -149,9 +145,8 @@ static void _marpaESLIF_free_symbolStackv(marpaESLIF_t *marpaESLIFp, genericStac
 {
   const static char    *funcs = "_marpaESLIF_free_symbolStackv";
 
-  MARPAESLIF_TRACE(marpaESLIFp, funcs, "Freeing symbol stack");
-
   if (symbolStackp != NULL) {
+    MARPAESLIF_TRACE(marpaESLIFp, funcs, "Freeing symbol stack");
     while (GENERICSTACK_USED(symbolStackp) > 0) {
       if (GENERICSTACK_IS_PTR(symbolStackp, GENERICSTACK_USED(symbolStackp) - 1)) {
 	marpaESLIF_symbol_t *symbolp = (marpaESLIF_symbol_t *) GENERICSTACK_POP_PTR(symbolStackp);
@@ -168,10 +163,8 @@ static void _marpaESLIF_free_terminalv(marpaESLIF_t *marpaESLIFp, marpaESLIF_ter
 {
   const static char    *funcs = "_marpaESLIF_free_terminalv";
 
-  MARPAESLIF_TRACE(marpaESLIFp, funcs, "Freeing terminal");
-
   if (terminalp != NULL) {
-    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "... Terminal is %s", terminalp->descs != NULL ? terminalp->descs : "(null)");
+    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Freeing terminal %s", terminalp->descs != NULL ? terminalp->descs : "(null)");
     if (terminalp->descs != NULL) {
       free(terminalp->descs);
     }
