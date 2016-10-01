@@ -129,8 +129,6 @@ static void _marpaESLIF_free_symbolv(marpaESLIF_t *marpaESLIFp, marpaESLIF_symbo
       case MARPAESLIF_SYMBOL_TYPE_META:
 	_marpaESLIF_free_rulev(marpaESLIFp, symbolp->u.rulep);
 	break;
-      case MARPAESLIF_SYMBOL_TYPE_NA:
-	break;
       default:
 	break;
       }
@@ -167,6 +165,20 @@ static void _marpaESLIF_free_terminalv(marpaESLIF_t *marpaESLIFp, marpaESLIF_ter
     MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Freeing terminal %s", terminalp->descs != NULL ? terminalp->descs : "(null)");
     if (terminalp->descs != NULL) {
       free(terminalp->descs);
+    }
+    switch (terminalp->type) {
+    case MARPAESLIF_TERMINAL_TYPE_STRING:
+      if (terminalp->u.regexp != NULL) {
+	uregex_close(terminalp->u.regexp);
+      }
+      break;
+    case MARPAESLIF_TERMINAL_TYPE_REGEXP:
+      if (terminalp->u.stringp != NULL) {
+	free(terminalp->u.stringp);
+      }
+      break;
+    default:
+      break;
     }
     free(terminalp);
   }

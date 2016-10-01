@@ -2,12 +2,15 @@
 #define MARPAESLIF_INTERNAL_GRAMMAR_H
 
 #include <genericStack.h>
+#include <unicode/uregex.h>
+#include <unicode/ustring.h>
 
-typedef enum   marpaESLIF_symbol_type marpaESLIF_symbol_type_t;
-typedef struct marpaESLIF_terminal    marpaESLIF_terminal_t;
-typedef struct marpaESLIF_symbol      marpaESLIF_symbol_t;
-typedef struct marpaESLIF_rule        marpaESLIF_rule_t;
-typedef struct marpaESLIF_grammar     marpaESLIF_grammar_t;
+typedef enum   marpaESLIF_symbol_type   marpaESLIF_symbol_type_t;
+typedef enum   marpaESLIF_terminal_type marpaESLIF_terminal_type_t;
+typedef struct marpaESLIF_terminal      marpaESLIF_terminal_t;
+typedef struct marpaESLIF_symbol        marpaESLIF_symbol_t;
+typedef struct marpaESLIF_rule          marpaESLIF_rule_t;
+typedef struct marpaESLIF_grammar       marpaESLIF_grammar_t;
 
 /* Symbol types */
 enum marpaESLIF_symbol_type {
@@ -16,10 +19,22 @@ enum marpaESLIF_symbol_type {
   MARPAESLIF_SYMBOL_TYPE_META
 };
 
+/* Terminal types */
+enum marpaESLIF_terminal_type {
+  MARPAESLIF_TERMINAL_TYPE_NA = 0,
+  MARPAESLIF_TERMINAL_TYPE_STRING,   /* String */
+  MARPAESLIF_TERMINAL_TYPE_REGEXP    /* Regular expression */
+};
+
 /* A terminal */
 struct marpaESLIF_terminal {
-  int                      idi;   /* Terminal Id */
-  char                    *descs; /* Terminal description */
+  int                        idi;   /* Terminal Id */
+  char                      *descs; /* Terminal description */
+  marpaESLIF_terminal_type_t type;  /* Terminal type */
+  union {
+    URegularExpression *regexp;   /* Explicit ICU implementation */
+    UChar              *stringp;  /* Ditto */
+  } u;
 };
 
 /* A symbol */
