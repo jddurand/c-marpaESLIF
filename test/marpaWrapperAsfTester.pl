@@ -2,7 +2,6 @@
 use strict;
 use diagnostics;
 use Marpa::R2;
-use Data::Scan::Printer;
 
 our $dsl = do { local $/; <DATA> };
 
@@ -40,14 +39,12 @@ sub pruning_traverser {
     my $symbol_id   = $glade->symbol_id();
     my $symbol_name = $panda_grammar->symbol_name($symbol_id);
 
-    print STDERR "ruleIdi=" . ($rule_id // 'undef') . "\n";
-    print STDERR "symbolIdi=$symbol_id\n";
-
+    print STDERR "ruleIdi=" . ($rule_id // 'undef') . ", symbolIdi=$symbol_id\n";
     
     # A token is a single choice, and we know enough to fully Penn-tag it
     if ( not defined $rule_id ) {
 	my ($start, $length) = $glade->span();
-	print STDERR "... (\$start, \$length) = ($start, $length)\n";
+	# print STDERR "... (\$start, \$length) = ($start, $length)\n";
 	my $literal = $glade->literal();
 	my $penn_tag = penn_tag($symbol_name);
 	return "($penn_tag $literal)";
