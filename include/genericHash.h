@@ -341,8 +341,9 @@ typedef struct genericHash {
 	  }								\
 	  findResult = 1;						\
                                                                         \
-	  if (valValp != NULL) {					\
-	    *valValp = GENERICSTACK_GET_##valType(_subValStackp, _i);	\
+	  if ((valValp) != NULL) {					\
+	    GENERICSTACKITEMTYPE2TYPE_##valType *_valValp = (GENERICSTACKITEMTYPE2TYPE_##valType *) (valValp); \
+	    *_valValp = GENERICSTACK_GET_##valType(_subValStackp, _i);	\
 	  }								\
 	  if (remove) {							\
 	    if ((GENERICSTACKITEMTYPE_##keyType == GENERICSTACKITEMTYPE_PTR) && ((void *) _gotKeyVal != NULL) && (hashName->keyFreeFunctionp != NULL)) { \
@@ -352,7 +353,7 @@ typedef struct genericHash {
 	    GENERICSTACK_SWITCH(_subKeyStackp, _i, -1);			\
 	    GENERICSTACK_POP_NA(_subKeyStackp);				\
 									\
-	    if (valValp == NULL) {					\
+	    if ((valValp) == NULL) {					\
 	      if ((GENERICSTACKITEMTYPE(_subValStackp, _i) == GENERICSTACKITEMTYPE_PTR) && (hashName->valFreeFunctionp == NULL)) { \
 		GENERICSTACKITEMTYPE2TYPE_PTR _valVal = GENERICSTACK_GET_PTR(_subValStackp, _i); \
 		if (_valVal != NULL) {					\
