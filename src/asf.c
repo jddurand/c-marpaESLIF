@@ -40,7 +40,7 @@
 #endif
 #endif
 
-/* Same argument for value stack */
+/* Same argument for all the sparse arrays below */
 #ifndef MARPAWRAPPERASF_VALUESPARSEARRAY_SIZE
 #if GENERICSTACK_DEFAULT_LENGTH > 0
 #define MARPAWRAPPERASF_VALUESPARSEARRAY_SIZE GENERICSTACK_DEFAULT_LENGTH
@@ -50,15 +50,27 @@
 #endif
 
 #ifndef MARPAWRAPPERASF_NIDSETSPARSEARRAY_SIZE
-#define MARPAWRAPPERASF_NIDSETSPARSEARRAY_SIZE 4096
+#if GENERICSTACK_DEFAULT_LENGTH > 0
+#define MARPAWRAPPERASF_NIDSETSPARSEARRAY_SIZE GENERICSTACK_DEFAULT_LENGTH
+#else
+#define MARPAWRAPPERASF_NIDSETSPARSEARRAY_SIZE 128  /* Subjective number */
+#endif
 #endif
 
 #ifndef MARPAWRAPPERASF_POWERSETSPARSEARRAY_SIZE
-#define MARPAWRAPPERASF_POWERSETSPARSEARRAY_SIZE 4096
+#if GENERICSTACK_DEFAULT_LENGTH > 0
+#define MARPAWRAPPERASF_POWERSETSPARSEARRAY_SIZE GENERICSTACK_DEFAULT_LENGTH
+#else
+#define MARPAWRAPPERASF_POWERSETSPARSEARRAY_SIZE 128  /* Subjective number */
+#endif
 #endif
 
 #ifndef MARPAWRAPPERASF_ORNODEINUSESPARSEARRAY_SIZE
-#define MARPAWRAPPERASF_ORNODEINUSESPARSEARRAY_SIZE 4096
+#if GENERICSTACK_DEFAULT_LENGTH > 0
+#define MARPAWRAPPERASF_ORNODEINUSESPARSEARRAY_SIZE GENERICSTACK_DEFAULT_LENGTH
+#else
+#define MARPAWRAPPERASF_ORNODEINUSESPARSEARRAY_SIZE 128  /* Subjective number */
+#endif
 #endif
 
 #ifdef C_VA_COPY
@@ -1295,8 +1307,9 @@ static inline void _marpaWrapperAsf_idset_freev(marpaWrapperAsf_t *marpaWrapperA
 int _marpaWrapperAsf_nidset_sparseArrayIndi(void *userDatavp, genericStackItemType_t itemType, void **pp)
 /****************************************************************************/
 {
+  return _marpaWrapperAsf_djb2_s((unsigned char *) pp, sizeof(int)) % MARPAWRAPPERASF_NIDSETSPARSEARRAY_SIZE;
   /* We know what we are doing, i.e. that *pp is a positive int */
-  return (* ((int *) pp)) % MARPAWRAPPERASF_NIDSETSPARSEARRAY_SIZE;
+  /* return (* ((int *) pp)) % MARPAWRAPPERASF_NIDSETSPARSEARRAY_SIZE; */
 }
 
 /****************************************************************************/
@@ -1352,8 +1365,9 @@ static inline void _marpaWrapperAsf_nidset_freev(marpaWrapperAsf_t *marpaWrapper
 int _marpaWrapperAsf_powerset_sparseArrayIndi(void *userDatavp, genericStackItemType_t itemType, void **pp)
 /****************************************************************************/
 {
+  return _marpaWrapperAsf_djb2_s((unsigned char *) pp, sizeof(int)) % MARPAWRAPPERASF_POWERSETSPARSEARRAY_SIZE;
   /* We know what we are doing, i.e. that *pp is a positive int */
-  return (* ((int *) pp)) % MARPAWRAPPERASF_POWERSETSPARSEARRAY_SIZE;
+  /* return (* ((int *) pp)) % MARPAWRAPPERASF_POWERSETSPARSEARRAY_SIZE; */
 }
 
 /****************************************************************************/
@@ -1409,8 +1423,9 @@ static inline void _marpaWrapperAsf_powerset_freev(marpaWrapperAsf_t *marpaWrapp
 int _marpaWrapperAsf_orNodeInUse_sparseArrayIndi(void *userDatavp, genericStackItemType_t itemType, void **pp)
 /****************************************************************************/
 {
+  return _marpaWrapperAsf_djb2_s((unsigned char *) pp, sizeof(int)) % MARPAWRAPPERASF_ORNODEINUSESPARSEARRAY_SIZE;
   /* We know what we are doing, i.e. that *pp is a positive int */
-  return (* ((int *) pp)) % MARPAWRAPPERASF_ORNODEINUSESPARSEARRAY_SIZE;
+  /* return (* ((int *) pp)) % MARPAWRAPPERASF_ORNODEINUSESPARSEARRAY_SIZE; */
 }
 
 /****************************************************************************/
