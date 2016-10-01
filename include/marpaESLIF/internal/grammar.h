@@ -23,7 +23,7 @@ typedef struct marpaESLIF_grammar {
   int                        idi;        /* Grammar Id */
   char                      *descs;      /* Grammar description */
   genericStack_t            *ruleStackp; /* Stack of rules */
-  struct marpaESLIF_grammar *subGrammar; /* Lexer is a sub-grammar */
+  struct marpaESLIF_grammar *lexerp;     /* Lexer is a sub-grammar */
 } marpaESLIF_rule_t;
 
 #endif /* MARPAESLIF_INTERNAL_GRAMMAR_H */
