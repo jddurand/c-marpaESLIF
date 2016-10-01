@@ -76,6 +76,14 @@ IF (NOT MARPAWRAPPER_FOUND)
 ENDIF ()
 
 # -----------------------------------
+# ICU: required
+# -----------------------------------
+FIND_PACKAGE (ICU)
+IF (NOT ICU_FOUND)
+    MESSAGE (FATAL_ERROR "ICU must be detected")
+ENDIF ()
+
+# -----------------------------------
 # tconv: required
 # -----------------------------------
 FIND_PACKAGE (tconv)
@@ -101,6 +109,14 @@ SET (CONFIG_H_IN ${CMAKE_CURRENT_SOURCE_DIR}/include/config.h.in)
 CONFIGURE_FILE(${CONFIG_H_IN} ${CONFIG_H})
 ADD_CUSTOM_TARGET(marpaESLIFConfig SOURCES "${CONFIG_H}")
 
+# ---------------------------------------------------
+# Compilation flags: ICU imposes sometimes some flags
+# ---------------------------------------------------
+SET (CMAKE_C_FLAGS             "${CMAKE_C_FLAGS}                  $ENV{CFLAGS}   ${ICU_C_FLAGS_SHARED}")
+SET (CMAKE_CXX_FLAGS           "${CMAKE_CXX_FLAGS}                $ENV{CFLAGS}   ${ICU_CXX_FLAGS_SHARED}")
+SET (CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS_INIT} $ENV{LDFLAGS}  ${ICU_LDFLAGS}")
+SET (CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS_INIT} $ENV{LDFLAGS}  ${ICU_LDFLAGS}")
+
 # ------------------
 # marpaESLIF library
 # -----------------
@@ -113,8 +129,9 @@ INCLUDE_DIRECTORIES (
   "${GENERICSTACK_INCLUDE_DIRS}"                       # Include path for genericStack (external - required)
   "${MARPAWRAPPER_INCLUDE_DIRS}"                       # Include path for marpaWrapper (external - required)
   "${TCONV_INCLUDE_DIRS}"                              # Include path for tconv (external - required)
+  "${ICU_INCLUDE_DIRS}"                                # Include path for ICU (external - required)
   )
-TARGET_LINK_LIBRARIES (marpaESLIF "${GENERICLOGGER_LINK_FLAGS}" "${MARPAWRAPPER_LINK_FLAGS}" "${TCONV_LINK_FLAGS}")
+TARGET_LINK_LIBRARIES (marpaESLIF "${GENERICLOGGER_LINK_FLAGS}" "${MARPAWRAPPER_LINK_FLAGS}" "${TCONV_LINK_FLAGS}" "${ICU_LINK_FLAGS}")
 SET_TARGET_PROPERTIES (marpaESLIF
   PROPERTIES
   COMPILE_FLAGS "-DmarpaESLIF_EXPORTS"
