@@ -169,7 +169,7 @@ static void _marpaESLIF_free_terminalv(marpaESLIF_t *marpaESLIFp, marpaESLIF_ter
     switch (terminalp->type) {
     case MARPAESLIF_TERMINAL_TYPE_STRING:
       if (terminalp->u.regexp != NULL) {
-	uregex_close(terminalp->u.regexp);
+	pcre2_code_free(terminalp->u.regexp);
       }
       break;
     case MARPAESLIF_TERMINAL_TYPE_REGEXP:

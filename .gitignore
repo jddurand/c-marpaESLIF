@@ -55,3 +55,4 @@ ipch/
 *~
 output/
 *.gz
+pcre2/

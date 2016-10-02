@@ -51,6 +51,11 @@ IF (NOT CMAKE_BUILD_TYPE MATCHES Debug)
 ENDIF (NOT CMAKE_BUILD_TYPE MATCHES Debug)
 ADD_DEFINITIONS(-DMARPAESLIF_VERSION="${MARPAESLIF_VERSION}")
 
+#############################
+# Dependencies
+#############################
+EXECUTE_PROCESS(COMMAND "${CMAKE_COMMAND}" -E make_directory "${3RDPARTY_OUTPUT_PATH}")
+
 # -----------------------------------
 # genericLogger: required
 # -----------------------------------
@@ -76,20 +81,23 @@ IF (NOT MARPAWRAPPER_FOUND)
 ENDIF ()
 
 # -----------------------------------
-# ICU: required
-# -----------------------------------
-FIND_PACKAGE (ICU)
-IF (NOT ICU_FOUND)
-    MESSAGE (FATAL_ERROR "ICU must be detected")
-ENDIF ()
-
-# -----------------------------------
 # tconv: required
 # -----------------------------------
 FIND_PACKAGE (tconv)
 IF (NOT TCONV_FOUND)
     MESSAGE (FATAL_ERROR "tconv must be detected")
 ENDIF ()
+
+# -----------------------------------
+# PCRE2: built-in
+# -----------------------------------
+MESSAGE (STATUS "Using built-in PCRE2")
+EXECUTE_PROCESS(
+  COMMAND "${CMAKE_COMMAND}" -E tar xzf "${PROJECT_SOURCE_DIR}/3rdparty/tar/pcre2-10.22.tar.gz"
+  WORKING_DIRECTORY "${3RDPARTY_OUTPUT_PATH}"
+  )
+INCLUDE(cmake/BuildPCRE2.cmake)
+ADD_DEFINITIONS(-DPCRE2_CODE_UNIT_WIDTH=8)
 
 # --------------------------------------
 # config.h (we will share it with marpa)
@@ -109,14 +117,6 @@ SET (CONFIG_H_IN ${CMAKE_CURRENT_SOURCE_DIR}/include/config.h.in)
 CONFIGURE_FILE(${CONFIG_H_IN} ${CONFIG_H})
 ADD_CUSTOM_TARGET(marpaESLIFConfig SOURCES "${CONFIG_H}")
 
-# ---------------------------------------------------
-# Compilation flags: ICU imposes sometimes some flags
-# ---------------------------------------------------
-SET (CMAKE_C_FLAGS             "${CMAKE_C_FLAGS}                  $ENV{CFLAGS}   ${ICU_C_FLAGS_SHARED}")
-SET (CMAKE_CXX_FLAGS           "${CMAKE_CXX_FLAGS}                $ENV{CFLAGS}   ${ICU_CXX_FLAGS_SHARED}")
-SET (CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS_INIT} $ENV{LDFLAGS}  ${ICU_LDFLAGS}")
-SET (CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS_INIT} $ENV{LDFLAGS}  ${ICU_LDFLAGS}")
-
 # ------------------
 # marpaESLIF library
 # -----------------
@@ -129,9 +129,9 @@ INCLUDE_DIRECTORIES (
   "${GENERICSTACK_INCLUDE_DIRS}"                       # Include path for genericStack (external - required)
   "${MARPAWRAPPER_INCLUDE_DIRS}"                       # Include path for marpaWrapper (external - required)
   "${TCONV_INCLUDE_DIRS}"                              # Include path for tconv (external - required)
-  "${ICU_INCLUDE_DIRS}"                                # Include path for ICU (external - required)
+  "${PCRE2_INCLUDE_DIRS}"                              # Include path for PCRE2 (external - required or built-in)
   )
-TARGET_LINK_LIBRARIES (marpaESLIF "${GENERICLOGGER_LINK_FLAGS}" "${MARPAWRAPPER_LINK_FLAGS}" "${TCONV_LINK_FLAGS}" "${ICU_LINK_FLAGS}")
+TARGET_LINK_LIBRARIES (marpaESLIF "${GENERICLOGGER_LINK_FLAGS}" "${MARPAWRAPPER_LINK_FLAGS}" "${TCONV_LINK_FLAGS}" "${PCRE2_LINK_FLAGS}")
 SET_TARGET_PROPERTIES (marpaESLIF
   PROPERTIES
   COMPILE_FLAGS "-DmarpaESLIF_EXPORTS"
@@ -153,7 +153,8 @@ ADD_CUSTOM_TARGET(marpaESLIFExport SOURCES "${INCLUDE_OUTPUT_PATH}/marpaESLIF/ex
 # ----------------------------------------
 # Explicit dependencies on generated files
 # ----------------------------------------
-ADD_DEPENDENCIES(marpaESLIF marpaESLIFConfig marpaESLIFExport)
+ADD_DEPENDENCIES(marpaESLIF marpaESLIFConfig marpaESLIFExport pcre2)
+
 SET_TARGET_PROPERTIES(marpaESLIF PROPERTIES COMPILE_FLAGS "-DmarpaESLIF_EXPORTS"
                                                VERSION       "${MARPAESLIF_VERSION}"
                                                SOVERSION     "${MARPAESLIF_VERSION_MAJOR}"
