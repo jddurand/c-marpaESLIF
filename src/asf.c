@@ -3700,7 +3700,7 @@ void *_marpaWrapperAsf_intset_keyCopyFunctionp(void *userDatavp, void **pp)
   int   *rcp = NULL;
 
 #ifndef MARPAWRAPPER_NTRACE
-  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "sizi %d", sizl);
+  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "sizi %ld", (unsigned long) sizl);
 #endif
 
   rcp = malloc(sizl);
