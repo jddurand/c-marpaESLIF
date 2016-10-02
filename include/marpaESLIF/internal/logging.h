@@ -1,5 +1,6 @@
 #ifndef MARPAESLIF_INTERNAL_LOGGING_H
 #define MARPAESLIF_INTERNAL_LOGGING_H
+#include <stdio.h>
 
 #undef  MARPAESLIF2LOG
 #define MARPAESLIF2LOG(marpaESLIFp, rest) do {				\

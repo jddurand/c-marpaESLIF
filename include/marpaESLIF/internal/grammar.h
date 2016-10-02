@@ -43,8 +43,6 @@ struct marpaESLIF_terminal {
 
 /* A symbol */
 struct marpaESLIF_symbol {
-  int                      idi;   /* Symbol Id */
-  char                    *descs; /* Symbol description */
   marpaESLIF_symbol_type_t type;  /* Symbol type */
   union {
     marpaESLIF_terminal_t *terminalp; /* Symbol is a terminal */
@@ -64,8 +62,6 @@ struct marpaESLIF_rule {
 
 /* A grammar */
 struct marpaESLIF_grammar {
-  int                   idi;                   /* Grammar Id */
-  char                 *descs;                 /* Grammar description */
   marpaWrapperGrammar_t *marpaWrapperGrammarp; /* Grammar implementation */
   genericStack_t       *symbolStackp;          /* Stack of symbols */
   genericStack_t       *ruleStackp;            /* Stack of rules */
