@@ -26,14 +26,19 @@ enum marpaESLIF_terminal_type {
 };
 
 /* A terminal */
+typedef void *(*marpaESLIF_terminal_initializer_t)(marpaESLIF_t *marpaESLIFp, marpaESLIF_terminal_t *terminalp);
+typedef PCRE2_SPTR *(*marpaESLIF_terminal_matcher_t)(marpaESLIF_t *marpaESLIFp, marpaESLIF_terminal_t *terminalp);
 struct marpaESLIF_terminal {
-  int                        idi;   /* Terminal Id */
-  char                      *descs; /* Terminal description */
-  marpaESLIF_terminal_type_t type;  /* Terminal type */
+  int                        idi;                 /* Terminal Id */
+  char                      *descs;               /* Terminal description */
+  marpaESLIF_terminal_type_t type;                /* Terminal type */
   union {
-    pcre2_code  *regexp;            /* Explicit PCRE2 implementation */
-    PCRE2_SPTR8 *stringp;           /* Explicit UTF-8 implementation */
+    pcre2_code *regexp;                          /* Explicit PCRE2 implementation */
+    char       *stringp;                         /* UTF-8 string */
+    size_t      stringl;                         /* UTF-8 length in bytes */
   } u;
+  marpaESLIF_terminal_initializer_t initializerp; /* Run-time initializer */
+  marpaESLIF_terminal_matcher_t     matcherp;     /* Run-time matcher */
 };
 
 /* A symbol */
@@ -59,12 +64,13 @@ struct marpaESLIF_rule {
 
 /* A grammar */
 struct marpaESLIF_grammar {
-  int                   idi;          /* Grammar Id */
-  char                 *descs;        /* Grammar description */
-  genericStack_t       *symbolStackp; /* Stack of symbols */
-  genericStack_t       *ruleStackp;   /* Stack of rules */
-  marpaESLIF_grammar_t *previousp;    /* Previous eventual grammar */
-  marpaESLIF_grammar_t *nextp;        /* Lexer is a sub-grammar */
+  int                   idi;                   /* Grammar Id */
+  char                 *descs;                 /* Grammar description */
+  marpaWrapperGrammar_t *marpaWrapperGrammarp; /* Grammar implementation */
+  genericStack_t       *symbolStackp;          /* Stack of symbols */
+  genericStack_t       *ruleStackp;            /* Stack of rules */
+  marpaESLIF_grammar_t *previousp;             /* Previous eventual grammar */
+  marpaESLIF_grammar_t *nextp;                 /* Lexer is a sub-grammar */
 };
 
 #endif /* MARPAESLIF_INTERNAL_GRAMMAR_H */
