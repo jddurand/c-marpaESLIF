@@ -2,8 +2,7 @@
 #define MARPAESLIF_INTERNAL_GRAMMAR_H
 
 #include <genericStack.h>
-#include <unicode/uregex.h>
-#include <unicode/ustring.h>
+#include <pcre2.h>
 
 typedef enum   marpaESLIF_symbol_type   marpaESLIF_symbol_type_t;
 typedef enum   marpaESLIF_terminal_type marpaESLIF_terminal_type_t;
@@ -32,8 +31,8 @@ struct marpaESLIF_terminal {
   char                      *descs; /* Terminal description */
   marpaESLIF_terminal_type_t type;  /* Terminal type */
   union {
-    URegularExpression *regexp;   /* Explicit ICU implementation */
-    UChar              *stringp;  /* Ditto */
+    pcre2_code  *regexp;            /* Explicit PCRE2 implementation */
+    PCRE2_SPTR8 *stringp;           /* Explicit UTF-8 implementation */
   } u;
 };
 
