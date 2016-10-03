@@ -1,4 +1,4 @@
-a# CMakeLists.txt
+# CMakeLists.txt
 #
 #
 # This file enables PCRE2 to be built with the CMake configuration and build
