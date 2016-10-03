@@ -39,7 +39,6 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
   const static char                *funcs = "_marpaESLIF_terminal_newp";
   marpaESLIF_terminal_t            *terminalp;
   marpaWrapperGrammarSymbolOption_t marpaWrapperGrammarSymbolOption;
-  PCRE2_SPTR                        pcre2_pattern;
   int                               errornumber;
   PCRE2_SIZE                        erroroffset;
   PCRE2_UCHAR                       errorBuffer[256];
@@ -148,7 +147,6 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_grammarb(marpaESLIF_t 
   int                         i;
   genericStack_t             *symbolStackp;
   marpaESLIF_terminal_t      *terminalp;
-  marpaESLIF_symbol_t        *symbolp;
 
   MARPAESLIF_TRACE(marpaESLIFp, funcs, "Bootstrapping internal grammar");
 
