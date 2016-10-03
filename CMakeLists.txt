@@ -89,14 +89,18 @@ IF (NOT TCONV_FOUND)
 ENDIF ()
 
 # -----------------------------------
-# PCRE2: built-in
+# PCRE2: found or built-in
 # -----------------------------------
-MESSAGE (STATUS "Using built-in PCRE2")
-EXECUTE_PROCESS(
-  COMMAND "${CMAKE_COMMAND}" -E tar xzf "${PROJECT_SOURCE_DIR}/3rdparty/tar/pcre2-10.22.tar.gz"
-  WORKING_DIRECTORY "${3RDPARTY_OUTPUT_PATH}"
-  )
-INCLUDE(cmake/BuildPCRE2.cmake)
+FIND_PACKAGE (PCRE2)
+IF (NOT PCRE2_FOUND)
+    MESSAGE (STATUS "Using built-in PCRE2")
+    EXECUTE_PROCESS(
+      COMMAND "${CMAKE_COMMAND}" -E tar xzf "${PROJECT_SOURCE_DIR}/3rdparty/tar/pcre2-10.22.tar.gz"
+      WORKING_DIRECTORY "${3RDPARTY_OUTPUT_PATH}"
+      )
+    INCLUDE(cmake/BuildPCRE2.cmake)
+ENDIF (NOT PCRE2_FOUND)
+# In any case, we want to use only the 8 bits version, that is always compiled everywhere AFAIK
 ADD_DEFINITIONS(-DPCRE2_CODE_UNIT_WIDTH=8)
 
 # --------------------------------------
@@ -131,7 +135,7 @@ INCLUDE_DIRECTORIES (
   "${TCONV_INCLUDE_DIRS}"                              # Include path for tconv (external - required)
   "${PCRE2_INCLUDE_DIRS}"                              # Include path for PCRE2 (external - required or built-in)
   )
-TARGET_LINK_LIBRARIES (marpaESLIF "${GENERICLOGGER_LINK_FLAGS}" "${MARPAWRAPPER_LINK_FLAGS}" "${TCONV_LINK_FLAGS}" "${PCRE2_LINK_FLAGS}")
+TARGET_LINK_LIBRARIES (marpaESLIF ${GENERICLOGGER_LIBRARIES} ${MARPAWRAPPER_LIBRARIES} ${TCONV_LIBRARIES} ${PCRE2_LIBRARIES})
 SET_TARGET_PROPERTIES (marpaESLIF
   PROPERTIES
   COMPILE_FLAGS "-DmarpaESLIF_EXPORTS"

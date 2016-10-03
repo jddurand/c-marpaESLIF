@@ -3,6 +3,7 @@
 #include <string.h>
 #include <marpaESLIF.h>
 #include <marpaWrapper.h>
+#include "config.h"
 #include "marpaESLIF/internal/grammar.h"
 #include "marpaESLIF/internal/logging.h"
 
