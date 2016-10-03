@@ -69,4 +69,6 @@ struct marpaESLIF_grammar {
   marpaESLIF_grammar_t *nextp;                 /* Lexer is a sub-grammar */
 };
 
+#include "marpaESLIF/internal/eslif.h"
+
 #endif /* MARPAESLIF_INTERNAL_GRAMMAR_H */
