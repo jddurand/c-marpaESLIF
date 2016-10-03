@@ -100,18 +100,6 @@ SET_PROPERTY (TARGET charsetdetect
   "${3RDPARTY_OUTPUT_PATH}/cchardet-1.0.0/src/ext/libcharsetdetect"
   )
 
-# ------------------------------------
-# tinycthread Thread Provider: builtin
-# ------------------------------------
-# EXECUTE_PROCESS(
-#   COMMAND "${CMAKE_COMMAND}" -E copy_directory "${PROJECT_SOURCE_DIR}/3rdparty/github/tinycthread-remote" "${3RDPARTY_OUTPUT_PATH}/tinycthread-remote"
-#  WORKING_DIRECTORY "${3RDPARTY_OUTPUT_PATH}"
-#   )
-# SET              (TINYCTHREAD_DIR            "${3RDPARTY_OUTPUT_PATH}/tinycthread-remote")
-# SET              (TINYCTHREAD_INCLUDE_DIR    "${TINYCTHREAD_DIR}/source")
-# SET              (TINYCTHREAD_LIBRARY_TARGET "tinycthread")
-# ADD_LIBRARY (tinycthread STATIC "${TINYCTHREAD_DIR}/source/tinycthread.c")
-
 # -----------------------------------------
 # portable dlopen and al. Provider: builtin
 # -----------------------------------------
@@ -173,6 +161,7 @@ IF (NOT ICONV_FOUND)
     SET (ICONV_INCLUDE_DIR "${WINICONV_INCLUDE}")
     SET (ICONV_SECOND_ARGUMENT_IS_CONST TRUE)
     SET (TCONV_HAVE_ICONV 1)
+    SET (ICONV_LIBRARIES "")
   ELSE (WIN32 AND NOT CYGWIN)
     MESSAGE (STATUS "Iconv is not detected")
   ENDIF (WIN32 AND NOT CYGWIN)
@@ -196,7 +185,6 @@ INCLUDE_DIRECTORIES(
   "${PROJECT_SOURCE_DIR}/include"                         # Include path for the other headers (internal)
   "${CCHARDET_INCLUDE_DIR}"                               # Include path for ccharset (internal)
   "${GENERICLOGGER_INCLUDE_DIRS}"                         # Include path for genericLogger (external - required)
-#   "${TINYCTHREAD_INCLUDE_DIR}"                            # Include path for tinycthread (internal)
   )
 IF (ICU_FOUND)
   INCLUDE_DIRECTORIES ("${ICU_INCLUDE_DIRS}")
@@ -208,12 +196,8 @@ IF (DLFCNWIN32_FOUND)
   INCLUDE_DIRECTORIES ("${DLFCNWIN32_INCLUDE_DIR}")
 ENDIF (DLFCNWIN32_FOUND)
 
-# SET (CMAKE_CPP_FLAGS           "${CMAKE_CPP_FLAGS}                $ENV{CPPFLAGS} ${ICU_CPP_FLAGS}")
-SET (CMAKE_C_FLAGS             "${CMAKE_C_FLAGS}                  $ENV{CFLAGS}   ${ICU_C_FLAGS_SHARED} ${GENERICLOGGER_C_FLAGS_SHARED}")
-SET (CMAKE_CXX_FLAGS           "${CMAKE_CXX_FLAGS}                $ENV{CFLAGS}   ${ICU_CXX_FLAGS_SHARED} ${GENERICLOGGER_CXX_FLAGS_SHARED}")
-SET (CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS_INIT} $ENV{LDFLAGS}  ${ICU_LDFLAGS} ${GENERICLOGGER_LDFLAGS}")
-SET (CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS_INIT} $ENV{LDFLAGS}  ${ICU_LDFLAGS} ${GENERICLOGGER_LDFLAGS}")
-# SET (CMAKE_EXE_LINKER_FLAGS    "${CMAKE_EXE_LINKER_FLAGS_INIT}    $ENV{LDFLAGS}  ${ICU_LDFLAGS} ${GENERICLOGGER_LDFLAGS}")
+SET (CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}   $ENV{CFLAGS} ${ICU_C_FLAGS_SHARED}   ${GENERICLOGGER_C_FLAGS_SHARED}")
+SET (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{CFLAGS} ${ICU_CXX_FLAGS_SHARED} ${GENERICLOGGER_CXX_FLAGS_SHARED}")
 
 #############################
 # Makefile details
@@ -224,6 +208,8 @@ FILE (GLOB lib_src_charset_cchardet src/tconv/charset/cchardet.c)
 IF (ICU_FOUND)
   FILE (GLOB lib_src_charset_ICU src/tconv/charset/ICU.c)
   FILE (GLOB lib_src_convert_ICU src/tconv/convert/ICU.c)
+ELSE (ICU_FOUND)
+  SET(ICU_LIBRARIES "")
 ENDIF (ICU_FOUND)
 IF (ICONV_FOUND)
   IF (WINICONV_SRC)
@@ -241,9 +227,11 @@ ADD_LIBRARY (tconv SHARED
   ${lib_src_convert_iconv})
 TARGET_LINK_LIBRARIES (tconv
   "${CCHARDET_LIBRARY_TARGET}"
-#   "${TINYCTHREAD_LIBRARY_TARGET}"
   "${DLFCNWIN32_LIBRARY_TARGET}"
   "${DLFCNWIN32_LIBRARY_TARGET_DEPEND}"
+  "${GENERICLOGGER_LIBRARIES}"
+  "${ICU_LIBRARIES}"
+  "${ICONV_LIBRARIES}"
 )
 SET_TARGET_PROPERTIES (tconv
   PROPERTIES
@@ -290,7 +278,7 @@ SET_PROPERTY(TARGET tconvExec
   "${GENERICLOGGER_INCLUDE_DIRS}"                         # Include path for genericLogger (external - required)
   "${OPTPARSE_INCLUDE_DIR}"                               # Include path for optparse (builtin)
   )
-TARGET_LINK_LIBRARIES(tconvExec tconv "${GENERICLOGGER_LINK_FLAGS}" "${ICU_LINK_FLAGS}" optparse)
+TARGET_LINK_LIBRARIES(tconvExec tconv optparse)
 
 # -----
 # Check
