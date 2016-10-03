@@ -52,4 +52,5 @@ Win32/
 ipch/
 
 # Our garbage
+*~
 output/
