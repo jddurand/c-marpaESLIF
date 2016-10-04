@@ -334,7 +334,7 @@ static inline void _marpaESLIF_ruleStack_freev(marpaESLIF_t *marpaESLIFp, generi
   const static char    *funcs = "_marpaESLIF_ruleStack_freev";
 
   if (ruleStackp != NULL) {
-    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Freeing rule stack at %p, ruleStackp");
+    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Freeing rule stack at %p, ruleStackp", ruleStackp);
     while (GENERICSTACK_USED(ruleStackp) > 0) {
       if (GENERICSTACK_IS_PTR(ruleStackp, GENERICSTACK_USED(ruleStackp) - 1)) {
 	marpaESLIF_rule_t *rulep = (marpaESLIF_rule_t *) GENERICSTACK_POP_PTR(ruleStackp);
