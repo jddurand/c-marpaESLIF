@@ -18,10 +18,15 @@ struct marpaESLIF {
   void                 *uint32p;
 };
 /* Highest probability is that ui is the implementation of uint32 */
-#define MARPAESLIF_UINT32_EQ(marpaESLIFp, value) (			\
-						  (((marpaESLIFp)->uint32p == &((marpaESLIFp)->ui)) && ((marpaESLIFp)->ui == (value))) \
-						  ||			\
-						  (((marpaESLIFp)->uint32p == &((marpaESLIFp)->ul)) && ((marpaESLIFp)->ul == (value))) \
+#define MARPAESLIF_UINT32_EQ(marpaESLIFp, value) (((marpaESLIFp)->uint32p == &((marpaESLIFp)->ui)) ?                                 \
+						  ((marpaESLIFp)->ui == (value))                                                     \
+						  :			                                                             \
+						  (			                                                             \
+						   ((marpaESLIFp)->uint32p == &((marpaESLIFp)->ul)) ?                                \
+						   ((marpaESLIFp)->ul == (value))                                                    \
+						   :			                                                             \
+						   0			                                                             \
+						  )                                                                                  \
 						 )
 
 marpaESLIFOption_t marpaESLIFOption_default = {
