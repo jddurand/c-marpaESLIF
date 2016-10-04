@@ -118,7 +118,6 @@ struct marpaESLIF_symbol {
     marpaESLIF_terminal_t *terminalp; /* Symbol is a terminal */
     marpaESLIF_rule_t     *rulep;     /* Symbol is a meta identifier, i.e. a rule */
   } u;
-  short shallowb;                 /* If true, pointer above is a shallow copy */
 };
 
 /* A rule */
