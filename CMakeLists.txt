@@ -114,6 +114,36 @@ ELSE ("${C_INLINE}" EQUAL "inline")
 ENDIF ("${C_INLINE}" EQUAL "inline")
 
 # ----------------------------------------------------
+# Host compiler - based on https://github.com/legatoproject/legato-af/blob/master/3rdParty/jansson-2.6/CMakeLists.txt
+# ----------------------------------------------------
+INCLUDE(CheckIncludeFile)
+# Make sure we have HAVE for the headers used by CheckTypeSize as per documentation
+CHECK_INCLUDE_FILE("sys/types.h"  HAVE_SYS_TYPES_H)
+CHECK_INCLUDE_FILE("stdint.h"     HAVE_STDINT_H)
+CHECK_INCLUDE_FILE("stddef.h"     HAVE_STDDEF_H)
+ 
+INCLUDE (CheckTypeSize)
+CHECK_TYPE_SIZE (uint32_t UINT32_T)
+CHECK_TYPE_SIZE (__uint32 __UINT32)
+CHECK_TYPE_SIZE ("unsigned long" UNSIGNED_LONG_INT)
+CHECK_TYPE_SIZE ("unsigned int" UNSIGNED_INT)
+IF (HAVE_UINT32_T)
+   MESSAGE (STATUS "Unsigned 32-bit integer type is uint32_t")
+   SET (MARPSESLIF_UINT32_T uint32_t)
+ELSEIF (HAVE___UINT32)
+   MESSAGE (STATUS "Unsigned 32-bit integer type is __uint32")
+   SET (MARPSESLIF_UINT32 __uint32)
+ELSEIF (HAVE_UNSIGNED_LONG_INT AND (${UNSIGNED_LONG_INT} EQUAL 4))
+   MESSAGE (STATUS "Unsigned 32-bit integer type is unsigned long")
+   SET (MARPSESLIF_UINT32 "unsigned long")
+ELSEIF (HAVE_UNSIGNED_INT AND (${UNSIGNED_INT} EQUAL 4))
+   MESSAGE (STATUS "Unsigned 32-bit integer type is unsigned int")
+   SET (MARPSESLIF_UINT32 "unsigned int")
+ELSE ()
+   MESSAGE (FATAL_ERROR "Could not detect a valid unsigned 32-bit integer type")
+ENDIF ()
+
+# ----------------------------------------------------
 # Configuration
 # ----------------------------------------------------
 SET (CONFIG_H ${INCLUDE_OUTPUT_PATH}/config.h)
