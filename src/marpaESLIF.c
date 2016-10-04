@@ -19,11 +19,9 @@ marpaESLIFOption_t marpaESLIFOption_default = {
 };
 
 static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *marpaESLIFGrammarp, short startb, int eventSeti, char *descs, marpaESLIF_terminal_type_t type, marpaESLIF_uint32_t opti, PCRE2_SPTR originp, PCRE2_SIZE originl);
-static inline void                   _marpaESLIF_terminal_initv(marpaESLIF_t *marpaESLIFp, marpaESLIF_terminal_t *terminalp);
 static inline void                   _marpaESLIF_terminal_freev(marpaESLIF_t *marpaESLIFp, marpaESLIF_terminal_t *terminalp);
 
 static inline marpaESLIF_grammar_t  *_marpaESLIF_grammar_newp(marpaESLIF_t *marpaESLIFp, marpaWrapperGrammarOption_t *marpaWrapperGrammarOptionp, marpaESLIF_grammar_t *previousp);
-static inline void                   _marpaESLIF_grammar_initv(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *marpaESLIFGrammarp);
 static inline void                   _marpaESLIF_grammar_freev(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *marpaESLIFGrammarp);
 
 static inline genericStack_t        *_marpaESLIF_ruleStack_newp(marpaESLIF_t *marpaESLIFp);
@@ -32,14 +30,12 @@ static inline void                   _marpaESLIF_ruleStack_freev(marpaESLIF_t *m
 static inline void                   _marpaESLIF_rule_freev(marpaESLIF_t *marpaESLIFp, marpaESLIF_rule_t *rulep);
 
 static inline marpaESLIF_symbol_t   *_marpaESLIF_symbol_newp(marpaESLIF_t *marpaESLIFp);
-static inline void                   _marpaESLIF_symbol_initv(marpaESLIF_t *marpaESLIFp, marpaESLIF_symbol_t *symbolp);
 static inline void                   _marpaESLIF_symbol_freev(marpaESLIF_t *marpaESLIFp, marpaESLIF_symbol_t *symbolp);
 
 static inline genericStack_t        *_marpaESLIF_symbolStack_newp(marpaESLIF_t *marpaESLIFp);
 static inline void                   _marpaESLIF_symbolStack_freev(marpaESLIF_t *marpaESLIFp, genericStack_t *symbolStackp);
 
 static inline marpaESLIF_grammar_t  *_marpaESLIF_bootstrap_grammarb(marpaESLIF_t *marpaESLIFp);
-static inline void                   _marpaESLIF_initv(marpaESLIF_t *marpaESLIFp, marpaESLIFOption_t *marpaESLIFOptionp);
 
 /*****************************************************************************/
 static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *marpaESLIFGrammarp, short startb, int eventSeti, char *descs, marpaESLIF_terminal_type_t type, marpaESLIF_uint32_t opti, PCRE2_SPTR originp, PCRE2_SIZE originl)
@@ -62,7 +58,11 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
     goto err;
   }
 
-  _marpaESLIF_terminal_initv(marpaESLIFp, terminalp);
+  terminalp->idi          = -1;
+  terminalp->descs        = NULL;
+  terminalp->type         = MARPAESLIF_TERMINAL_TYPE_NA;
+  terminalp->initializerp = NULL;
+  terminalp->matcherp     = NULL;
 
   marpaWrapperGrammarSymbolOption.terminalb = 1;
   marpaWrapperGrammarSymbolOption.startb    = startb;
@@ -164,17 +164,6 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
 }
 
 /*****************************************************************************/
-static inline void _marpaESLIF_terminal_initv(marpaESLIF_t *marpaESLIFp, marpaESLIF_terminal_t *terminalp)
-/*****************************************************************************/
-{
-  terminalp->idi          = -1;
-  terminalp->descs        = NULL;
-  terminalp->type         = MARPAESLIF_TERMINAL_TYPE_NA;
-  terminalp->initializerp = NULL;
-  terminalp->matcherp     = NULL;
-}
-
-/*****************************************************************************/
 static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_grammarb(marpaESLIF_t *marpaESLIFp)
 /*****************************************************************************/
 {
@@ -267,7 +256,11 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_grammar_newp(marpaESLIF_t *marpa
     goto err;
   }
 
-  _marpaESLIF_grammar_initv(marpaESLIFp, grammarp);
+  grammarp->marpaWrapperGrammarp = NULL;
+  grammarp->symbolStackp         = NULL;
+  grammarp->ruleStackp           = NULL;
+  grammarp->previousp            = NULL;
+  grammarp->nextp                = NULL;
 
   grammarp->marpaWrapperGrammarp = marpaWrapperGrammar_newp(marpaWrapperGrammarOptionp);
   if (grammarp->marpaWrapperGrammarp == NULL) {
@@ -292,17 +285,6 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_grammar_newp(marpaESLIF_t *marpa
  done:
   MARPAESLIF_TRACEF(marpaESLIFp, funcs, "return %p", grammarp);
   return grammarp;
-}
-
-/*****************************************************************************/
-static inline void _marpaESLIF_grammar_initv(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *marpaESLIFGrammarp)
-/*****************************************************************************/
-{
-  marpaESLIFGrammarp->marpaWrapperGrammarp = NULL;
-  marpaESLIFGrammarp->symbolStackp         = NULL;
-  marpaESLIFGrammarp->ruleStackp           = NULL;
-  marpaESLIFGrammarp->previousp            = NULL;
-  marpaESLIFGrammarp->nextp                = NULL;
 }
 
 /*****************************************************************************/
@@ -396,18 +378,11 @@ static inline marpaESLIF_symbol_t *_marpaESLIF_symbol_newp(marpaESLIF_t *marpaES
     goto done;
   }
 
-  _marpaESLIF_symbol_initv(marpaESLIFp, symbolp);
+  symbolp->type = MARPAESLIF_SYMBOL_TYPE_NA;
 
  done:
   MARPAESLIF_TRACEF(marpaESLIFp, funcs, "return %p", symbolp);
   return symbolp;
-}
-
-/*****************************************************************************/
-static inline void _marpaESLIF_symbol_initv(marpaESLIF_t *marpaESLIFp, marpaESLIF_symbol_t *symbolp)
-/*****************************************************************************/
-{
-  symbolp->type     = MARPAESLIF_SYMBOL_TYPE_NA;
 }
 
 /*****************************************************************************/
@@ -500,14 +475,6 @@ static inline void _marpaESLIF_terminal_freev(marpaESLIF_t *marpaESLIFp, marpaES
 }
 
 /*****************************************************************************/
-static inline void _marpaESLIF_initv(marpaESLIF_t *marpaESLIFp, marpaESLIFOption_t *marpaESLIFOptionp)
-/*****************************************************************************/
-{
-  marpaESLIFp->option = *marpaESLIFOptionp;
-  marpaESLIFp->internalGrammarp = NULL;
-}
-
-/*****************************************************************************/
 marpaESLIF_t *marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptionp)
 /*****************************************************************************/
 {
@@ -535,7 +502,8 @@ marpaESLIF_t *marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptionp)
     }
   }
 
-  _marpaESLIF_initv(marpaESLIFp, marpaESLIFOptionp);
+  marpaESLIFp->option = *marpaESLIFOptionp;
+  marpaESLIFp->internalGrammarp = NULL;
   
   /* Create internal ESLIF grammar - it is important to set the option first */
   marpaESLIFp->internalGrammarp = _marpaESLIF_bootstrap_grammarb(marpaESLIFp);
