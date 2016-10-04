@@ -12,38 +12,13 @@ struct marpaESLIF {
   marpaESLIF_grammar_t *internalGrammarp;
   marpaESLIF_grammar_t *externalGrammarp;
   marpaESLIFOption_t    option;
-  /* Internal variable to get the result of pcre2_config */
-  unsigned int          ui;
-  unsigned long         ul;
-  void                 *uint32p;
 };
-/* Highest probability is that ui is the implementation of uint32 */
-#define MARPAESLIF_UINT32_EQ(marpaESLIFp, value) (((marpaESLIFp)->uint32p == &((marpaESLIFp)->ui)) ?                                 \
-						  ((marpaESLIFp)->ui == (value))                                                     \
-						  :			                                                             \
-						  (			                                                             \
-						   ((marpaESLIFp)->uint32p == &((marpaESLIFp)->ul)) ?                                \
-						   ((marpaESLIFp)->ul == (value))                                                    \
-						   :			                                                             \
-						   0			                                                             \
-						  )                                                                                  \
-						 )
-#define MARPAESLIF_REGEXP_OPT_CASELESS(opt)  ((((opt) & MARPAESLIF_REGEXP_OPTION_CASELESS)  == MARPAESLIF_REGEXP_OPTION_CASELESS)  ? PCRE2_CASELESS  : 0) /* i modifier */
-#define MARPAESLIF_REGEXP_OPT_MULTILINE(opt) ((((opt) & MARPAESLIF_REGEXP_OPTION_MULTILINE) == MARPAESLIF_REGEXP_OPTION_MULTILINE) ? PCRE2_MULTILINE : 0) /* m modifier */
-#define MARPAESLIF_REGEXP_OPT_DOTALL(opt)    ((((opt) & MARPAESLIF_REGEXP_OPTION_DOTALL)    == MARPAESLIF_REGEXP_OPTION_DOTALL)    ? PCRE2_DOTALL    : 0) /* s modifier */
-#define MARPAESLIF_REGEXP_OPT(opt)					\
-  MARPAESLIF_REGEXP_OPT_CASELESS(opti)					\
-  |									\
-  MARPAESLIF_REGEXP_OPT_MULTILINE(opti)					\
-  |									\
-  MARPAESLIF_REGEXP_OPT_DOTALL(opti)
-
 
 marpaESLIFOption_t marpaESLIFOption_default = {
   NULL               /* genericLoggerp */
 };
 
-static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *marpaESLIFGrammarp, short startb, int eventSeti, char *descs, marpaESLIF_terminal_type_t type, int opti, PCRE2_SPTR originp, PCRE2_SIZE originl);
+static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *marpaESLIFGrammarp, short startb, int eventSeti, char *descs, marpaESLIF_terminal_type_t type, marpaESLIF_uint32_t opti, PCRE2_SPTR originp, PCRE2_SIZE originl);
 static inline void                   _marpaESLIF_terminal_initv(marpaESLIF_t *marpaESLIFp, marpaESLIF_terminal_t *terminalp);
 static inline void                   _marpaESLIF_terminal_freev(marpaESLIF_t *marpaESLIFp, marpaESLIF_terminal_t *terminalp);
 
@@ -59,15 +34,17 @@ static inline marpaESLIF_grammar_t  *_marpaESLIF_bootstrap_grammarb(marpaESLIF_t
 static inline void                   _marpaESLIF_initv(marpaESLIF_t *marpaESLIFp, marpaESLIFOption_t *marpaESLIFOptionp);
 
 /*****************************************************************************/
-static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *marpaESLIFGrammarp, short startb, int eventSeti, char *descs, marpaESLIF_terminal_type_t type, int opti, PCRE2_SPTR originp, PCRE2_SIZE originl)
+static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *marpaESLIFGrammarp, short startb, int eventSeti, char *descs, marpaESLIF_terminal_type_t type, marpaESLIF_uint32_t opti, PCRE2_SPTR originp, PCRE2_SIZE originl)
 /*****************************************************************************/
 {
   const static char                *funcs = "_marpaESLIF_terminal_newp";
   marpaESLIF_terminal_t            *terminalp;
   marpaWrapperGrammarSymbolOption_t marpaWrapperGrammarSymbolOption;
-  int                               errornumber;
-  PCRE2_SIZE                        erroroffset;
-  PCRE2_UCHAR                       errorBuffer[256];
+  marpaESLIF_uint32_t               pcre2Optioni;
+  int                               pcre2Errornumberi;
+  PCRE2_SIZE                        pcre2ErrorOffsetl;
+  PCRE2_UCHAR                       pcre2ErrorBuffer[256];
+  int                               i;
 
   terminalp = (marpaESLIF_terminal_t *) malloc(sizeof(marpaESLIF_terminal_t));
   if (terminalp == NULL) {
@@ -121,25 +98,27 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
       MARPAESLIF_ERROR(marpaESLIFp, "Invalid terminal origin");
       goto err;
     }
+    pcre2Optioni = PCRE2_ANCHORED;      /* In our case, regexp are always anchored */
+    for (i = 0; i < _MARPAESLIF_REGEXP_OPTION_UNGREEDY_ID_MAX; i++) {
+      if ((opti & marpaESLIF_regexp_option_map[i].opti) == marpaESLIF_regexp_option_map[i].opti) {
+	pcre2Optioni |= marpaESLIF_regexp_option_map[i].pcre2Optioni;
+      }
+    }
     terminalp->u.regex.regexp = pcre2_compile(
 					      originp,      /* An UTF-8 pattern */
 					      originl,      /* containing originl code units (!= code points) - in UTF-8 a code unit is a byte */
-					      PCRE2_ANCHORED /* Always anchored */
-					      |
-					      MARPAESLIF_REGEXP_OPT(opti),
-					      &errornumber, /* for error number */
-					      &erroroffset, /* for error offset */
+					      pcre2Optioni,
+					      &pcre2Errornumberi, /* for error number */
+					      &pcre2ErrorOffsetl, /* for error offset */
 					      NULL);        /* use default compile context */
     if (terminalp->u.regex.regexp == NULL) {
-      pcre2_get_error_message(errornumber, errorBuffer, sizeof(errorBuffer));
-      MARPAESLIF_ERRORF(marpaESLIFp, "PCRE2 regexp compilation failure at offset %d: %s", (int) erroroffset, errorBuffer);
+      pcre2_get_error_message(pcre2Errornumberi, pcre2ErrorBuffer, sizeof(pcre2ErrorBuffer));
+      MARPAESLIF_ERRORF(marpaESLIFp, "PCRE2 regexp compilation failure at offset %ld: %s", (unsigned long) pcre2ErrorOffsetl, pcre2ErrorBuffer);
       goto err;
     }
     /* Determine if we can do JIT */
 #ifdef PCRE2_CONFIG_JIT
-    if ((marpaESLIFp->uint32p != NULL)                              &&
-	(pcre2_config(PCRE2_CONFIG_JIT, marpaESLIFp->uint32p) >= 0) &&
-	MARPAESLIF_UINT32_EQ(marpaESLIFp, 1)) {
+    if ((pcre2_config(PCRE2_CONFIG_JIT, &pcre2Optioni) >= 0) && (pcre2Optioni == 1)) {
 #ifdef PCRE2_JIT_COMPLETE
       terminalp->u.regex.jitCompleteb = (pcre2_jit_compile(terminalp->u.regex.regexp, PCRE2_JIT_COMPLETE) == 0) ? 1 : 0;
 #else
@@ -223,7 +202,7 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_grammarb(marpaESLIF_t 
 					    MARPAWRAPPERGRAMMAR_EVENTTYPE_NONE,
 					    bootstrap_grammar_L0_symbols[i].descs,
 					    bootstrap_grammar_L0_symbols[i].terminalType,
-					    bootstrap_grammar_L0_symbols[i].opti,
+					    bootstrap_grammar_L0_symbols[i].optioni,
 					    bootstrap_grammar_L0_symbols[i].originp,
 					    strlen(bootstrap_grammar_L0_symbols[i].originp));
       if (terminalp == NULL) {
@@ -247,6 +226,7 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_grammarb(marpaESLIF_t 
   marpaESLIFGrammarp = NULL;
 
  done:
+  GENERICSTACK_FREE(symbolStackp);
   MARPAESLIF_TRACEF(marpaESLIFp, funcs, "return %p", marpaESLIFGrammarp);
   return marpaESLIFGrammarp;
 }
@@ -275,14 +255,6 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_grammar_newp(marpaESLIF_t *marpa
   grammarp->symbolStackp = symbolStackp;
   grammarp->ruleStackp   = ruleStackp;
   grammarp->previousp    = previousp;
-  /* Determine if we have an uint32_t compatible thingy */
-  if (sizeof(marpaESLIFp->ui) == 4) {
-    marpaESLIFp->uint32p = &(marpaESLIFp->ui);
-  } else if (sizeof(marpaESLIFp->ul) == 4) {
-    marpaESLIFp->uint32p = &(marpaESLIFp->ul);
-  } else {
-    marpaESLIFp->uint32p = NULL;
-  }
 
   goto done;
 
