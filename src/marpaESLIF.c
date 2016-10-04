@@ -37,6 +37,8 @@ static inline void                   _marpaESLIF_symbolStack_freev(marpaESLIF_t 
 
 static inline marpaESLIF_grammar_t  *_marpaESLIF_bootstrap_grammarb(marpaESLIF_t *marpaESLIFp);
 
+static inline marpaESLIF_matcher_value_t _marpaESLIF_matcheri(marpaESLIF_t *marpaESLIFp, marpaESLIF_terminal_t *terminalp, char *inputp, size_t inputl);
+
 /*****************************************************************************/
 static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *marpaESLIFGrammarp, short startb, int eventSeti, char *descs, marpaESLIF_terminal_type_t type, marpaESLIF_uint32_t opti, PCRE2_SPTR originp, PCRE2_SIZE originl)
 /*****************************************************************************/
@@ -61,8 +63,6 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
   terminalp->idi          = -1;
   terminalp->descs        = NULL;
   terminalp->type         = MARPAESLIF_TERMINAL_TYPE_NA;
-  terminalp->initializerp = NULL;
-  terminalp->matcherp     = NULL;
 
   marpaWrapperGrammarSymbolOption.terminalb = 1;
   marpaWrapperGrammarSymbolOption.startb    = startb;
@@ -538,3 +538,21 @@ void marpaESLIF_freev(marpaESLIF_t *marpaESLIFp)
   }
 }
 
+/*****************************************************************************/
+static inline marpaESLIF_matcher_value_t _marpaESLIF_matcheri(marpaESLIF_t *marpaESLIFp, marpaESLIF_terminal_t *terminalp, char *inputp, size_t inputl)
+{
+  const static char    *funcs = "_marpaESLIF_matcher";
+  /*********************************************************************************/
+  /* A matcher tries to match a terminal v.s. input that is eventually incomplete. */
+  /* It return 1 on success, 0 on failure, -1 if more data is needed.              */
+  /*********************************************************************************/
+
+  switch (terminalp->type) {
+  case MARPAESLIF_TERMINAL_TYPE_STRING:
+    break;
+  case MARPAESLIF_TERMINAL_TYPE_REGEXP:
+    break;
+  default:
+    break;
+  }
+}
