@@ -14,11 +14,11 @@ typedef struct bootstrap_grammar_L0_symbols {
   marpaESLIF_rule_t          rule;
 } bootstrap_grammar_L0_symbols_t;
 bootstrap_grammar_L0_symbols_t bootstrap_grammar_L0_symbols[] = {
-  { "<reserved event name>",     MARPAESLIF_SYMBOL_TYPE_TERMINAL, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEXP_OPTION_NA,  ":symbol" },
-  { "whitespace",                MARPAESLIF_SYMBOL_TYPE_TERMINAL, MARPAESLIF_TERMINAL_TYPE_REGEXP,  MARPAESLIF_REGEXP_OPTION_NA,  "[\\s]+" },
-  { "hash",                      MARPAESLIF_SYMBOL_TYPE_TERMINAL, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEXP_OPTION_NA,  "#" },
-  { "<vertical space char>",     MARPAESLIF_SYMBOL_TYPE_TERMINAL, MARPAESLIF_TERMINAL_TYPE_REGEXP,  MARPAESLIF_REGEXP_OPTION_UTF, "[\\x{A}\\x{B}\\x{C}\\x{D}\\x{2028}\\x{2029}]" },
-  { "<hash comment char>",       MARPAESLIF_SYMBOL_TYPE_TERMINAL, MARPAESLIF_TERMINAL_TYPE_REGEXP,  MARPAESLIF_REGEXP_OPTION_UTF, "[^\\x{A}\\x{B}\\x{C}\\x{D}\\x{2028}\\x{2029}]" }
+  { "<reserved event name>",     MARPAESLIF_SYMBOL_TYPE_TERMINAL, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEXP_OPTION_NA, ":symbol" },
+  { "whitespace",                MARPAESLIF_SYMBOL_TYPE_TERMINAL, MARPAESLIF_TERMINAL_TYPE_REGEXP,  MARPAESLIF_REGEXP_OPTION_NA, "[\\s]+" },
+  { "hash",                      MARPAESLIF_SYMBOL_TYPE_TERMINAL, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEXP_OPTION_NA, "#" },
+  { "<vertical space char>",     MARPAESLIF_SYMBOL_TYPE_TERMINAL, MARPAESLIF_TERMINAL_TYPE_REGEXP,  MARPAESLIF_REGEXP_OPTION_NA, "(*UTF)[\\x{A}\\x{B}\\x{C}\\x{D}\\x{2028}\\x{2029}]" },
+  { "<hash comment char>",       MARPAESLIF_SYMBOL_TYPE_TERMINAL, MARPAESLIF_TERMINAL_TYPE_REGEXP,  MARPAESLIF_REGEXP_OPTION_NA, "(*UTF)[^\\x{A}\\x{B}\\x{C}\\x{D}\\x{2028}\\x{2029}]" }
 };
 
 #endif /* MARPAESLIF_INTERNAL_ESLIF_H */

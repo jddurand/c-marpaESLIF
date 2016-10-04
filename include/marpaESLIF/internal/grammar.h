@@ -40,11 +40,9 @@ struct marpaESLIF_string {
 /* A regexp */
 typedef enum marpaESLIF_regexp_option {
   MARPAESLIF_REGEXP_OPTION_NA        = 0x00,
-  MARPAESLIF_REGEXP_OPTION_UTF       = 0x01,
-  MARPAESLIF_REGEXP_OPTION_CASELESS  = 0x02,
-  MARPAESLIF_REGEXP_OPTION_MULTILINE = 0x04,
-  MARPAESLIF_REGEXP_OPTION_DOTALL    = 0x08,
-  MARPAESLIF_REGEXP_OPTION_EXTENDED  = 0x10
+  MARPAESLIF_REGEXP_OPTION_CASELESS  = 0x01, /* i modifier */
+  MARPAESLIF_REGEXP_OPTION_MULTILINE = 0x02, /* m modifier */
+  MARPAESLIF_REGEXP_OPTION_DOTALL    = 0x04  /* s modifier */
 } marpaESLIF_regexp_option;
 struct marpaESLIF_regexp {
   pcre2_code *regexp;         /* Compiled regexp */
