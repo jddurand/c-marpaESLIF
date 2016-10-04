@@ -43,6 +43,8 @@ typedef enum marpaESLIF_regexp_option {
   MARPAESLIF_REGEXP_OPTION_UTF       = 0x01,
   MARPAESLIF_REGEXP_OPTION_CASELESS  = 0x02,
   MARPAESLIF_REGEXP_OPTION_MULTILINE = 0x04,
+  MARPAESLIF_REGEXP_OPTION_DOTALL    = 0x08,
+  MARPAESLIF_REGEXP_OPTION_EXTENDED  = 0x10
 } marpaESLIF_regexp_option;
 struct marpaESLIF_regexp {
   pcre2_code *regexp;         /* Compiled regexp */
