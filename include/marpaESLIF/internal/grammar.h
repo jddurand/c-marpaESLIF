@@ -31,11 +31,19 @@ enum marpaESLIF_terminal_type {
 typedef void *(*marpaESLIF_terminal_initializer_t)(marpaESLIF_t *marpaESLIFp, marpaESLIF_terminal_t *terminalp);
 typedef PCRE2_SPTR *(*marpaESLIF_terminal_matcher_t)(marpaESLIF_t *marpaESLIFp, marpaESLIF_terminal_t *terminalp);
 
+/* A string */
 struct marpaESLIF_string {
   char   *stringp; /* UTF-8 string */
   size_t  stringl; /* UTF-8 length in bytes */
 };
 
+/* A regexp */
+typedef enum marpaESLIF_regexp_option {
+  MARPAESLIF_REGEXP_OPTION_NA        = 0x00,
+  MARPAESLIF_REGEXP_OPTION_UTF       = 0x01,
+  MARPAESLIF_REGEXP_OPTION_CASELESS  = 0x02,
+  MARPAESLIF_REGEXP_OPTION_MULTILINE = 0x04,
+} marpaESLIF_regexp_option;
 struct marpaESLIF_regexp {
   pcre2_code *regexp;         /* Compiled regexp */
 #ifdef PCRE2_CONFIG_JIT
