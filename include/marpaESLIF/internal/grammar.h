@@ -27,10 +27,6 @@ enum marpaESLIF_terminal_type {
   MARPAESLIF_TERMINAL_TYPE_REGEXP    /* Regular expression */
 };
 
-/* A terminal */
-typedef void *(*marpaESLIF_terminal_initializer_t)(marpaESLIF_t *marpaESLIFp, marpaESLIF_terminal_t *terminalp);
-typedef PCRE2_SPTR *(*marpaESLIF_terminal_matcher_t)(marpaESLIF_t *marpaESLIFp, marpaESLIF_terminal_t *terminalp);
-
 /* A string */
 struct marpaESLIF_string {
   char   *stringp; /* UTF-8 string */
@@ -104,8 +100,6 @@ struct marpaESLIF_terminal {
     marpaESLIF_regexp_t     regex;
     marpaESLIF_string_t     string;
   } u;
-  marpaESLIF_terminal_initializer_t initializerp; /* Run-time initializer */
-  marpaESLIF_terminal_matcher_t     matcherp;     /* Run-time matcher */
 };
 
 /* A symbol */
@@ -134,6 +128,13 @@ struct marpaESLIF_grammar {
   marpaESLIF_grammar_t *previousp;             /* Previous eventual grammar */
   marpaESLIF_grammar_t *nextp;                 /* Lexer is a sub-grammar */
 };
+
+/* Matcher return values */
+typedef enum marpaESLIF_matcher_value {
+  MARPAESLIF_MATCH_AGAIN   = -1,
+  MARPAESLIF_MATCH_FAILURE =  0,
+  MARPAESLIF_MATCH_OK      =  1
+} marpaESLIF_matcher_value_t;
 
 #include "marpaESLIF/internal/eslif.h"
 
