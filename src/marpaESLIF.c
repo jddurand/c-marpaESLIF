@@ -28,21 +28,15 @@ struct marpaESLIF {
 						   0			                                                             \
 						  )                                                                                  \
 						 )
-#define MARPAESLIF_REGEXP_OPT_UTF(opt)       ((((opt) & MARPAESLIF_REGEXP_OPTION_UTF)       == MARPAESLIF_REGEXP_OPTION_UTF)       ? PCRE2_UTF       : 0)
 #define MARPAESLIF_REGEXP_OPT_CASELESS(opt)  ((((opt) & MARPAESLIF_REGEXP_OPTION_CASELESS)  == MARPAESLIF_REGEXP_OPTION_CASELESS)  ? PCRE2_CASELESS  : 0) /* i modifier */
 #define MARPAESLIF_REGEXP_OPT_MULTILINE(opt) ((((opt) & MARPAESLIF_REGEXP_OPTION_MULTILINE) == MARPAESLIF_REGEXP_OPTION_MULTILINE) ? PCRE2_MULTILINE : 0) /* m modifier */
 #define MARPAESLIF_REGEXP_OPT_DOTALL(opt)    ((((opt) & MARPAESLIF_REGEXP_OPTION_DOTALL)    == MARPAESLIF_REGEXP_OPTION_DOTALL)    ? PCRE2_DOTALL    : 0) /* s modifier */
-#define MARPAESLIF_REGEXP_OPT_EXTENDED(opt)  ((((opt) & MARPAESLIF_REGEXP_OPTION_EXTENDED)  == MARPAESLIF_REGEXP_OPTION_EXTENDED)  ? PCRE2_EXTENDED  : 0) /* x modifier */
 #define MARPAESLIF_REGEXP_OPT(opt)					\
-  MARPAESLIF_REGEXP_OPT_UTF(opti)					\
-  |									\
   MARPAESLIF_REGEXP_OPT_CASELESS(opti)					\
   |									\
   MARPAESLIF_REGEXP_OPT_MULTILINE(opti)					\
   |									\
-  MARPAESLIF_REGEXP_OPT_DOTALL(opti)					\
-  |									\
-  MARPAESLIF_REGEXP_OPT_EXTENDED(opti)
+  MARPAESLIF_REGEXP_OPT_DOTALL(opti)
 
 
 marpaESLIFOption_t marpaESLIFOption_default = {
