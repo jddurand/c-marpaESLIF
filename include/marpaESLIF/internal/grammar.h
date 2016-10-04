@@ -4,6 +4,8 @@
 #include <genericStack.h>
 #include <pcre2.h>
 
+typedef struct marpaESLIF_regexp        marpaESLIF_regexp_t;
+typedef struct marpaESLIF_string        marpaESLIF_string_t;
 typedef enum   marpaESLIF_symbol_type   marpaESLIF_symbol_type_t;
 typedef enum   marpaESLIF_terminal_type marpaESLIF_terminal_type_t;
 typedef struct marpaESLIF_terminal      marpaESLIF_terminal_t;
@@ -28,14 +30,27 @@ enum marpaESLIF_terminal_type {
 /* A terminal */
 typedef void *(*marpaESLIF_terminal_initializer_t)(marpaESLIF_t *marpaESLIFp, marpaESLIF_terminal_t *terminalp);
 typedef PCRE2_SPTR *(*marpaESLIF_terminal_matcher_t)(marpaESLIF_t *marpaESLIFp, marpaESLIF_terminal_t *terminalp);
+
+struct marpaESLIF_string {
+  char   *stringp; /* UTF-8 string */
+  size_t  stringl; /* UTF-8 length in bytes */
+};
+
+struct marpaESLIF_regexp {
+  pcre2_code *regexp;         /* Compiled regexp */
+#ifdef PCRE2_CONFIG_JIT
+  short       jitCompleteb;   /* Eventual optimized JIT */
+  short       jitPartialb;
+#endif
+};
+
 struct marpaESLIF_terminal {
   int                        idi;                 /* Terminal Id */
   char                      *descs;               /* Terminal description */
   marpaESLIF_terminal_type_t type;                /* Terminal type */
   union {
-    pcre2_code *regexp;                          /* Explicit PCRE2 implementation */
-    char       *stringp;                         /* UTF-8 string */
-    size_t      stringl;                         /* UTF-8 length in bytes */
+    marpaESLIF_regexp_t     regex;
+    marpaESLIF_string_t     string;
   } u;
   marpaESLIF_terminal_initializer_t initializerp; /* Run-time initializer */
   marpaESLIF_terminal_matcher_t     matcherp;     /* Run-time matcher */
