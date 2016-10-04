@@ -9,9 +9,20 @@
 
 /* ESLIF is the internal and external grammars, plus the options */
 struct marpaESLIF {
-  marpaESLIF_grammar_t *internalGrammarp; /* This is the ESLIF itself */
+  marpaESLIF_grammar_t *internalGrammarp;
+  marpaESLIF_grammar_t *externalGrammarp;
   marpaESLIFOption_t    option;
+  /* Internal variable to get the result of pcre2_config */
+  unsigned int          ui;
+  unsigned long         ul;
+  void                 *uint32p;
 };
+/* Highest probability is that ui is the implementation of uint32 */
+#define MARPAESLIF_UINT32_EQ(marpaESLIFp, value) (			\
+						  (((marpaESLIFp)->uint32p == &((marpaESLIFp)->ui)) && ((marpaESLIFp)->ui == (value))) \
+						  ||			\
+						  (((marpaESLIFp)->uint32p == &((marpaESLIFp)->ul)) && ((marpaESLIFp)->ul == (value))) \
+						 )
 
 marpaESLIFOption_t marpaESLIFOption_default = {
   NULL               /* genericLoggerp */
@@ -81,12 +92,13 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
       MARPAESLIF_ERROR(marpaESLIFp, "Invalid terminal origin");
       goto err;
     }
-    terminalp->u.stringp = (char *) malloc((size_t) originl);
-    if (terminalp->u.stringp == NULL) {
+    terminalp->u.string.stringp = (char *) malloc((size_t) originl);
+    if (terminalp->u.string.stringp == NULL) {
       MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
       goto err;
     }
-    memcpy((void *) terminalp->u.stringp, originp, (size_t) originl);
+    memcpy((void *) terminalp->u.string.stringp, originp, (size_t) originl);
+    terminalp->u.string.stringl = originl;
     break;
 
   case MARPAESLIF_TERMINAL_TYPE_REGEXP:
@@ -94,18 +106,38 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
       MARPAESLIF_ERROR(marpaESLIFp, "Invalid terminal origin");
       goto err;
     }
-    terminalp->u.regexp = pcre2_compile(
-					originp,      /* An UTF-8 pattern */
-					originl,      /* containing originl code units (!= code points) - in UTF-8 a code unit is a byte */
-					0,            /* default options */
-					&errornumber, /* for error number */
-					&erroroffset, /* for error offset */
-					NULL);        /* use default compile context */
-    if (terminalp->u.regexp == NULL) {
+    terminalp->u.regex.regexp = pcre2_compile(
+					      originp,      /* An UTF-8 pattern */
+					      originl,      /* containing originl code units (!= code points) - in UTF-8 a code unit is a byte */
+					      PCRE2_UTF|PCRE2_ANCHORED, /* Always in UTF-8 mode and anchored */
+					      &errornumber, /* for error number */
+					      &erroroffset, /* for error offset */
+					      NULL);        /* use default compile context */
+    if (terminalp->u.regex.regexp == NULL) {
       pcre2_get_error_message(errornumber, errorBuffer, sizeof(errorBuffer));
       MARPAESLIF_ERRORF(marpaESLIFp, "PCRE2 regexp compilation failure at offset %d: %s", (int) erroroffset, errorBuffer);
       goto err;
     }
+    /* Determine if we can do JIT */
+#ifdef PCRE2_CONFIG_JIT
+    if ((marpaESLIFp->uint32p != NULL)                              &&
+	(pcre2_config(PCRE2_CONFIG_JIT, marpaESLIFp->uint32p) >= 0) &&
+	MARPAESLIF_UINT32_EQ(marpaESLIFp, 1)) {
+#ifdef PCRE2_JIT_COMPLETE
+      terminalp->u.regex.jitCompleteb = (pcre2_jit_compile(terminalp->u.regex.regexp, PCRE2_JIT_COMPLETE) == 0) ? 1 : 0;
+#else
+      terminalp->u.regex.jitCompleteb = 0;
+#endif
+#ifdef PCRE2_JIT_PARTIAL_HARD
+      terminalp->u.regex.jitPartialb = (pcre2_jit_compile(terminalp->u.regex.regexp, PCRE2_JIT_PARTIAL_HARD) == 0) ? 1 : 0;
+#else
+      terminalp->u.regex.jitPartialb = 0;
+#endif
+    } else {
+      terminalp->u.regex.jitCompleteb = 0;
+      terminalp->u.regex.jitPartialb = 0;
+    }
+#endif
     break;
 
   default:
@@ -225,6 +257,14 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_grammar_newp(marpaESLIF_t *marpa
   grammarp->symbolStackp = symbolStackp;
   grammarp->ruleStackp   = ruleStackp;
   grammarp->previousp    = previousp;
+  /* Determine if we have an uint32_t compatible thingy */
+  if (sizeof(marpaESLIFp->ui) == 4) {
+    marpaESLIFp->uint32p = &(marpaESLIFp->ui);
+  } else if (sizeof(marpaESLIFp->ul) == 4) {
+    marpaESLIFp->uint32p = &(marpaESLIFp->ul);
+  } else {
+    marpaESLIFp->uint32p = NULL;
+  }
 
   goto done;
 
@@ -359,13 +399,13 @@ static inline void _marpaESLIF_terminal_freev(marpaESLIF_t *marpaESLIFp, marpaES
     }
     switch (terminalp->type) {
     case MARPAESLIF_TERMINAL_TYPE_STRING:
-      if (terminalp->u.stringp != NULL) {
-	free((void *) terminalp->u.stringp);
+      if (terminalp->u.string.stringp != NULL) {
+	free((void *) terminalp->u.string.stringp);
       }
       break;
     case MARPAESLIF_TERMINAL_TYPE_REGEXP:
-      if (terminalp->u.regexp != NULL) {
-	pcre2_code_free(terminalp->u.regexp);
+      if (terminalp->u.regex.regexp != NULL) {
+	pcre2_code_free(terminalp->u.regex.regexp);
       }
       break;
     default:
