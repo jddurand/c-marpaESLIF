@@ -114,7 +114,7 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
     terminalp->u.regex.regexp = pcre2_compile(
 					      originp,      /* An UTF-8 pattern */
 					      originl,      /* containing originl code units (!= code points) - in UTF-8 a code unit is a byte */
-					      PCRE2_UTF|PCRE2_ANCHORED, /* Always in UTF-8 mode and anchored */
+					      PCRE2_ANCHORED, /* Always anchored */
 					      &errornumber, /* for error number */
 					      &erroroffset, /* for error offset */
 					      NULL);        /* use default compile context */
