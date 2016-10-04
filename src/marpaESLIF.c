@@ -108,7 +108,7 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
       MARPAESLIF_ERROR(marpaESLIFp, "Invalid terminal origin");
       goto err;
     }
-    pcre2Optioni = PCRE2_ANCHORED;      /* In our case, regexp are always anchored */
+    pcre2Optioni = PCRE2_ANCHORED|PCRE2_UTF;      /* In our case, regexp are always anchored and in UTF mode */
     for (i = 0; i < _MARPAESLIF_REGEXP_OPTION_UNGREEDY_ID_MAX; i++) {
       if ((opti & marpaESLIF_regexp_option_map[i].opti) == marpaESLIF_regexp_option_map[i].opti) {
 	pcre2Optioni |= marpaESLIF_regexp_option_map[i].pcre2Optioni;
