@@ -105,6 +105,9 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
   switch (type) {
 
   case MARPAESLIF_TERMINAL_TYPE_STRING:
+    terminalp->u.string.stringp = NULL;
+    terminalp->u.string.stringl = 0;
+    
     if ((originp == NULL) || (originl <= 0)) {
       MARPAESLIF_ERROR(marpaESLIFp, "Invalid terminal origin");
       goto err;
@@ -119,6 +122,13 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
     break;
 
   case MARPAESLIF_TERMINAL_TYPE_REGEXP:
+    terminalp->u.regex.regexp      = NULL;
+    terminalp->u.regex.match_datap = NULL;
+#ifdef PCRE2_CONFIG_JIT
+    terminalp->u.regex.jitCompleteb = 0;
+    terminalp->u.regex.jitPartialb  = 0;
+#endif
+    
     if ((originp == NULL) || (originl <= 0)) {
       MARPAESLIF_ERROR(marpaESLIFp, "Invalid terminal origin");
       goto err;
@@ -139,6 +149,11 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
     if (terminalp->u.regex.regexp == NULL) {
       pcre2_get_error_message(pcre2Errornumberi, pcre2ErrorBuffer, sizeof(pcre2ErrorBuffer));
       MARPAESLIF_ERRORF(marpaESLIFp, "pcre2_compile failure at offset %ld: %s", (unsigned long) pcre2ErrorOffsetl, pcre2ErrorBuffer);
+      goto err;
+    }
+    terminalp->u.regex.match_datap = pcre2_match_data_create_from_pattern(terminalp->u.regex.regexp, NULL /* Default memory allocation */);
+    if (terminalp->u.regex.match_datap == NULL) {
+      MARPAESLIF_ERRORF(marpaESLIFp, "pcre2_match_data_create_from_pattern failure, %s", strerror(errno));
       goto err;
     }
     /* Determine if we can do JIT */
@@ -481,6 +496,9 @@ static inline void _marpaESLIF_terminal_freev(marpaESLIF_t *marpaESLIFp, marpaES
       }
       break;
     case MARPAESLIF_TERMINAL_TYPE_REGEXP:
+      if (terminalp->u.regex.match_datap != NULL) {
+	pcre2_match_data_free(terminalp->u.regex.match_datap);
+      }
       if (terminalp->u.regex.regexp != NULL) {
 	pcre2_code_free(terminalp->u.regex.regexp);
       }
@@ -561,12 +579,10 @@ static inline marpaESLIF_matcher_value_t _marpaESLIF_matcheri(marpaESLIF_t *marp
 /*****************************************************************************/
 {
   const static char         *funcs             = "_marpaESLIF_matcher";
-  pcre2_match_data          *pcre2_match_datap = NULL;
   marpaESLIF_matcher_value_t rci;
   marpaESLIF_string_t        marpaESLIF_string;
   marpaESLIF_regex_t         marpaESLIF_regex;
   int                        pcre2Errornumberi;
-  PCRE2_SIZE                 pcre2ErrorOffsetl;
   PCRE2_UCHAR                pcre2ErrorBuffer[256];
  
   /*********************************************************************************/
@@ -588,14 +604,7 @@ static inline marpaESLIF_matcher_value_t _marpaESLIF_matcheri(marpaESLIF_t *marp
       break;
       
     case MARPAESLIF_TERMINAL_TYPE_REGEXP:
-      pcre2_match_datap = pcre2_match_data_create(1, /* ovecsize - we are just interested by the full match */ 
-						  NULL /* memory magement - use the default (malloc) */
-						  );
-      if (pcre2_match_datap == NULL) {
-	MARPAESLIF_ERRORF(marpaESLIFp, "pcre2_match_data_create failure, %s", strerror(errno));
-	goto err;
-      }
- marpaESLIF_regex = terminalp->u.regex;
+      marpaESLIF_regex = terminalp->u.regex;
       if (eofb) {
 	/* --------------------------------------------------------- */
 	/* EOF mode.                                                 */
@@ -604,13 +613,13 @@ static inline marpaESLIF_matcher_value_t _marpaESLIF_matcheri(marpaESLIF_t *marp
 	/* --------------------------------------------------------- */
 #ifdef PCRE2_CONFIG_JIT
 	if (marpaESLIF_regex.jitCompleteb) {
-	  pcre2Errornumberi = pcre2_jit_match(marpaESLIF_regex.regexp, /* code */
-					      (PCRE2_SPTR) inputp,     /* subject */
-					      (PCRE2_SIZE) inputl,     /* length */
-					      (PCRE2_SIZE) 0,          /* startoffset */
-					      PCRE2_NOTEMPTY_ATSTART,  /* options - this one is supported in JIT mode */
-					      pcre2_match_datap,       /* match data - allocated only for the full match */
-					      NULL                     /* match context - used default */
+	  pcre2Errornumberi = pcre2_jit_match(marpaESLIF_regex.regexp,      /* code */
+					      (PCRE2_SPTR) inputp,          /* subject */
+					      (PCRE2_SIZE) inputl,          /* length */
+					      (PCRE2_SIZE) 0,               /* startoffset */
+					      PCRE2_NOTEMPTY_ATSTART,       /* options - this one is supported in JIT mode */
+					      marpaESLIF_regex.match_datap, /* match data */
+					      NULL                          /* match context - used default */
 					      );
 	  if (pcre2Errornumberi == PCRE2_ERROR_JIT_STACKLIMIT) {
 	    /* Back luck, out of stack for JIT */
@@ -620,13 +629,13 @@ static inline marpaESLIF_matcher_value_t _marpaESLIF_matcheri(marpaESLIF_t *marp
 	  }
 	} else {
 	eof_nojitcomplete:
-	  pcre2Errornumberi = pcre2_match(marpaESLIF_regex.regexp, /* code */
-					  (PCRE2_SPTR) inputp,     /* subject */
-					  (PCRE2_SIZE) inputl,     /* length */
-					  (PCRE2_SIZE) 0,          /* startoffset */
-					  PCRE2_NOTEMPTY_ATSTART,  /* options - this one is supported in JIT mode */
-					  pcre2_match_datap,       /* match data - allocated only for the full match */
-					  NULL                     /* match context - used default */
+	  pcre2Errornumberi = pcre2_match(marpaESLIF_regex.regexp,      /* code */
+					  (PCRE2_SPTR) inputp,          /* subject */
+					  (PCRE2_SIZE) inputl,          /* length */
+					  (PCRE2_SIZE) 0,               /* startoffset */
+					  PCRE2_NOTEMPTY_ATSTART,       /* options - this one is supported in JIT mode */
+					  marpaESLIF_regex.match_datap, /* match data */
+					  NULL                          /* match context - used default */
 					  );
 	}
 #else
@@ -659,10 +668,6 @@ static inline marpaESLIF_matcher_value_t _marpaESLIF_matcheri(marpaESLIF_t *marp
   rci = MARPAESLIF_MATCH_FAILURE;
 
  done:
-  if (pcre2_match_datap != NULL) {
-    pcre2_match_data_free(pcre2_match_datap);
-  }
-  
   MARPAESLIF_TRACEF(marpaESLIFp, funcs, "return %s", (rci == MARPAESLIF_MATCH_FAILURE) ? "MARPAESLIF_MATCH_FAILURE" : ((rci == MARPAESLIF_MATCH_OK) ? "MARPAESLIF_MATCH_OK" : "MARPAESLIF_MATCH_AGAIN"));
   return rci;
 }

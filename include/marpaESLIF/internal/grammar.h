@@ -85,7 +85,8 @@ struct marpaESLIF_regexp_option_map {
 };
 
 struct marpaESLIF_regexp {
-  pcre2_code *regexp;         /* Compiled regexp */
+  pcre2_code       *regexp;      /* Compiled regexp */
+  pcre2_match_data *match_datap; /* Match data */
 #ifdef PCRE2_CONFIG_JIT
   short       jitCompleteb;   /* Eventual optimized JIT */
   short       jitPartialb;
