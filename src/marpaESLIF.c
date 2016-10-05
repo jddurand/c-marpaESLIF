@@ -633,10 +633,20 @@ static inline marpaESLIF_matcher_value_t _marpaESLIF_matcheri(marpaESLIF_t *marp
 					  (PCRE2_SPTR) inputp,          /* subject */
 					  (PCRE2_SIZE) inputl,          /* length */
 					  (PCRE2_SIZE) 0,               /* startoffset */
-					  PCRE2_NOTEMPTY_ATSTART,       /* options - this one is supported in JIT mode */
+					  PCRE2_NOTEMPTY_ATSTART,       /* options */
 					  marpaESLIF_regex.match_datap, /* match data */
 					  NULL                          /* match context - used default */
 					  );
+	}
+	if (pcre2Errornumberi < 0) {
+	  /* Only PCRE2_ERROR_NOMATCH is an acceptable error */
+	  if (pcre2Errornumberi != PCRE2_ERROR_NOMATCH) {
+	    pcre2_get_error_message(pcre2Errornumberi, pcre2ErrorBuffer, sizeof(pcre2ErrorBuffer));
+	    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Uncaught pcre2 match failure: %s", pcre2ErrorBuffer);
+	  }
+	  rci = MARPAESLIF_MATCH_FAILURE;
+	} else {
+	  rci = MARPAESLIF_MATCH_OK;
 	}
 #else
 #endif
@@ -656,7 +666,8 @@ static inline marpaESLIF_matcher_value_t _marpaESLIF_matcheri(marpaESLIF_t *marp
       }
       break;
     default:
-      break;
+      MARPAESLIF_ERRORF(marpaESLIFp, funcs, "Unsupported terminal type %d", terminalp->type);
+      goto err;
     }
   } else {
     rci = MARPAESLIF_MATCH_FAILURE;
