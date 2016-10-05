@@ -39,7 +39,7 @@ static inline void                   _marpaESLIF_symbolStack_freev(marpaESLIF_t 
 
 static inline marpaESLIF_grammar_t  *_marpaESLIF_bootstrap_grammarb(marpaESLIF_t *marpaESLIFp);
 
-static inline marpaESLIF_matcher_value_t _marpaESLIF_matcheri(marpaESLIF_t *marpaESLIFp, marpaESLIF_terminal_t *terminalp, char *inputp, size_t inputl, short eofb);
+static inline short                  _marpaESLIF_matcheri(marpaESLIF_t *marpaESLIFp, marpaESLIF_terminal_t *terminalp, char *inputp, size_t inputl, short eofb, marpaESLIF_matcher_value_t *rcip);
 
 const static  char                  *_marpaESLIF_utf82printableascii_defaultp = "<!NOT TRANSLATED!>";
 #ifndef MARPAESLIF_NTRACE
@@ -575,10 +575,11 @@ void marpaESLIF_freev(marpaESLIF_t *marpaESLIFp)
 }
 
 /*****************************************************************************/
-static inline marpaESLIF_matcher_value_t _marpaESLIF_matcheri(marpaESLIF_t *marpaESLIFp, marpaESLIF_terminal_t *terminalp, char *inputp, size_t inputl, short eofb)
+static inline short _marpaESLIF_matcheri(marpaESLIF_t *marpaESLIFp, marpaESLIF_terminal_t *terminalp, char *inputp, size_t inputl, short eofb, marpaESLIF_matcher_value_t *rcip)
 /*****************************************************************************/
 {
-  const static char         *funcs             = "_marpaESLIF_matcher";
+  const static char         *funcs = "_marpaESLIF_matcher";
+  short                      rcb   = 1;
   marpaESLIF_matcher_value_t rci;
   marpaESLIF_string_t        marpaESLIF_string;
   marpaESLIF_regex_t         marpaESLIF_regex;
@@ -642,7 +643,7 @@ static inline marpaESLIF_matcher_value_t _marpaESLIF_matcheri(marpaESLIF_t *marp
 	  /* Only PCRE2_ERROR_NOMATCH is an acceptable error */
 	  if (pcre2Errornumberi != PCRE2_ERROR_NOMATCH) {
 	    pcre2_get_error_message(pcre2Errornumberi, pcre2ErrorBuffer, sizeof(pcre2ErrorBuffer));
-	    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Uncaught pcre2 match failure: %s", pcre2ErrorBuffer);
+	    MARPAESLIF_WARNF(marpaESLIFp, "Uncaught pcre2 match failure: %s", pcre2ErrorBuffer);
 	  }
 	  rci = MARPAESLIF_MATCH_FAILURE;
 	} else {
@@ -670,16 +671,20 @@ static inline marpaESLIF_matcher_value_t _marpaESLIF_matcheri(marpaESLIF_t *marp
       goto err;
     }
   } else {
-    rci = MARPAESLIF_MATCH_FAILURE;
+    rci = eofb ? MARPAESLIF_MATCH_FAILURE : MARPAESLIF_MATCH_AGAIN;
   }
 
+  MARPAESLIF_TRACEF(marpaESLIFp, funcs, "return 1, *rcip=%s", (rci == MARPAESLIF_MATCH_FAILURE) ? "MARPAESLIF_MATCH_FAILURE" : ((rci == MARPAESLIF_MATCH_OK) ? "MARPAESLIF_MATCH_OK" : "MARPAESLIF_MATCH_AGAIN"));
+  if (rcip != NULL) {
+    *rcip = rci;
+  }
   goto done;
 
  err:
-  rci = MARPAESLIF_MATCH_FAILURE;
+  MARPAESLIF_TRACE(marpaESLIFp, funcs, "return 0");
+  rcb = 0;
 
  done:
-  MARPAESLIF_TRACEF(marpaESLIFp, funcs, "return %s", (rci == MARPAESLIF_MATCH_FAILURE) ? "MARPAESLIF_MATCH_FAILURE" : ((rci == MARPAESLIF_MATCH_OK) ? "MARPAESLIF_MATCH_OK" : "MARPAESLIF_MATCH_AGAIN"));
   return rci;
 }
 
