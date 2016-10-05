@@ -138,7 +138,7 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
 					      NULL);        /* use default compile context */
     if (terminalp->u.regex.regexp == NULL) {
       pcre2_get_error_message(pcre2Errornumberi, pcre2ErrorBuffer, sizeof(pcre2ErrorBuffer));
-      MARPAESLIF_ERRORF(marpaESLIFp, "PCRE2 regexp compilation failure at offset %ld: %s", (unsigned long) pcre2ErrorOffsetl, pcre2ErrorBuffer);
+      MARPAESLIF_ERRORF(marpaESLIFp, "pcre2_compile failure at offset %ld: %s", (unsigned long) pcre2ErrorOffsetl, pcre2ErrorBuffer);
       goto err;
     }
     /* Determine if we can do JIT */
@@ -565,6 +565,9 @@ static inline marpaESLIF_matcher_value_t _marpaESLIF_matcheri(marpaESLIF_t *marp
   marpaESLIF_matcher_value_t rci;
   marpaESLIF_string_t        marpaESLIF_string;
   marpaESLIF_regex_t         marpaESLIF_regex;
+  int                        pcre2Errornumberi;
+  PCRE2_SIZE                 pcre2ErrorOffsetl;
+  PCRE2_UCHAR                pcre2ErrorBuffer[256];
  
   /*********************************************************************************/
   /* A matcher tries to match a terminal v.s. input that is eventually incomplete. */
@@ -601,15 +604,30 @@ static inline marpaESLIF_matcher_value_t _marpaESLIF_matcheri(marpaESLIF_t *marp
 	/* --------------------------------------------------------- */
 #ifdef PCRE2_CONFIG_JIT
 	if (marpaESLIF_regex.jitCompleteb) {
-	  pcre2_jit_match(marpaESLIF_regex.regexp, /* code */
-			  (PCRE2_SPTR) inputp,     /* subject */
-			  (PCRE2_SIZE) inputl,     /* length */
-			  (PCRE2_SIZE) 0,          /* startoffset */
-			  PCRE2_NOTEMPTY_ATSTART,  /* options - this one is supported in JIT mode */
-			  pcre2_match_datap,       /* match data - allocated only for the full match */
-			  NULL                     /* match context - used default */
-			  );
+	  pcre2Errornumberi = pcre2_jit_match(marpaESLIF_regex.regexp, /* code */
+					      (PCRE2_SPTR) inputp,     /* subject */
+					      (PCRE2_SIZE) inputl,     /* length */
+					      (PCRE2_SIZE) 0,          /* startoffset */
+					      PCRE2_NOTEMPTY_ATSTART,  /* options - this one is supported in JIT mode */
+					      pcre2_match_datap,       /* match data - allocated only for the full match */
+					      NULL                     /* match context - used default */
+					      );
+	  if (pcre2Errornumberi == PCRE2_ERROR_JIT_STACKLIMIT) {
+	    /* Back luck, out of stack for JIT */
+	    pcre2_get_error_message(pcre2Errornumberi, pcre2ErrorBuffer, sizeof(pcre2ErrorBuffer));
+	    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "pcre2_jit_match failure: %s - switching to non-JIT version", pcre2ErrorBuffer);
+	    goto eof_nojitcomplete;
+	  }
 	} else {
+	eof_nojitcomplete:
+	  pcre2Errornumberi = pcre2_match(marpaESLIF_regex.regexp, /* code */
+					  (PCRE2_SPTR) inputp,     /* subject */
+					  (PCRE2_SIZE) inputl,     /* length */
+					  (PCRE2_SIZE) 0,          /* startoffset */
+					  PCRE2_NOTEMPTY_ATSTART,  /* options - this one is supported in JIT mode */
+					  pcre2_match_datap,       /* match data - allocated only for the full match */
+					  NULL                     /* match context - used default */
+					  );
 	}
 #else
 #endif
