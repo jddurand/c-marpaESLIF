@@ -586,6 +586,8 @@ static inline short _marpaESLIF_matcheri(marpaESLIF_t *marpaESLIFp, marpaESLIF_t
   marpaESLIF_regex_t         marpaESLIF_regex;
   int                        pcre2Errornumberi;
   PCRE2_UCHAR                pcre2ErrorBuffer[256];
+  PCRE2_SIZE                *pcre2_ovectorp;
+  size_t                     matchLengthl;
  
   /*********************************************************************************/
   /* A matcher tries to match a terminal v.s. input that is eventually incomplete. */
@@ -629,7 +631,7 @@ static inline short _marpaESLIF_matcheri(marpaESLIF_t *marpaESLIFp, marpaESLIF_t
 					    (PCRE2_SPTR) inputp,          /* subject */
 					    (PCRE2_SIZE) inputl,          /* length */
 					    (PCRE2_SIZE) 0,               /* startoffset */
-					    PCRE2_NOTEMPTY_ATSTART,       /* options - this one is supported in JIT mode */
+					    PCRE2_NOTEMPTY,               /* options - this one is supported in JIT mode */
 					    marpaESLIF_regex.match_datap, /* match data */
 					    NULL                          /* match context - used default */
 					    );
@@ -646,7 +648,7 @@ static inline short _marpaESLIF_matcheri(marpaESLIF_t *marpaESLIFp, marpaESLIF_t
 					(PCRE2_SPTR) inputp,          /* subject */
 					(PCRE2_SIZE) inputl,          /* length */
 					(PCRE2_SIZE) 0,               /* startoffset */
-					PCRE2_NOTEMPTY_ATSTART,       /* options */
+					PCRE2_NOTEMPTY,               /* options */
 					marpaESLIF_regex.match_datap, /* match data */
 					NULL                          /* match context - used default */
 					);
@@ -667,8 +669,27 @@ static inline short _marpaESLIF_matcheri(marpaESLIF_t *marpaESLIFp, marpaESLIF_t
       } else {
 	if (pcre2Errornumberi >= 0) {
 	  /* Full match is successful */
+	  /* Check the length of matched data */
+	  pcre2_ovectorp = pcre2_get_ovector_pointer(marpaESLIF_regex.match_datap);
+	  if (pcre2_ovectorp == NULL) {
+	    MARPAESLIF_ERROR(marpaESLIFp, "pcre2_get_ovector_pointer returned NULL");
+	    goto err;
+	  }
+	  /* We said PCRE2_NOTEMPTY so this cannot be empty */
+	  matchLengthl = pcre2_ovectorp[1] - pcre2_ovectorp[0];
+	  if (matchLengthl <= 0) {
+	    MARPAESLIF_ERROR(marpaESLIFp, "Empty match when it is configured as not possible");
+	    goto err;
+	  }
+	  if (matchLengthl >= inputl) {
+	    /* But end of the buffer is reached, and we are not at the eof */
+	    rci = MARPAESLIF_MATCH_AGAIN;
+	  } else {
+	    /* And end of the buffer is not reached */
+	    rci = MARPAESLIF_MATCH_OK;
+	  }
 	} else {
-	  /* Do partial match */
+	  /* Do a partial match */
 	}
       }
       break;
