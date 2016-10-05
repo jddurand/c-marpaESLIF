@@ -4,7 +4,7 @@
 #include <genericStack.h>
 #include <pcre2.h>
 
-typedef struct marpaESLIF_regexp        marpaESLIF_regexp_t;
+typedef struct marpaESLIF_regexp        marpaESLIF_regex_t;
 typedef struct marpaESLIF_string        marpaESLIF_string_t;
 typedef enum   marpaESLIF_symbol_type   marpaESLIF_symbol_type_t;
 typedef enum   marpaESLIF_terminal_type marpaESLIF_terminal_type_t;
@@ -98,7 +98,7 @@ struct marpaESLIF_terminal {
   char                      *asciidescs;          /* Terminal description (ASCII) */
   marpaESLIF_terminal_type_t type;                /* Terminal type */
   union {
-    marpaESLIF_regexp_t     regex;
+    marpaESLIF_regex_t      regex;
     marpaESLIF_string_t     string;
   } u;
 };
