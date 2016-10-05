@@ -95,6 +95,7 @@ struct marpaESLIF_regexp {
 struct marpaESLIF_terminal {
   int                        idi;                 /* Terminal Id */
   char                      *descs;               /* Terminal description */
+  char                      *asciidescs;          /* Terminal description (ASCII) */
   marpaESLIF_terminal_type_t type;                /* Terminal type */
   union {
     marpaESLIF_regexp_t     regex;
@@ -115,6 +116,7 @@ struct marpaESLIF_symbol {
 struct marpaESLIF_rule {
   int                  idi;             /* Rule Id */
   char                *descs;           /* Rule description */
+  char                *asciidescs;      /* Rule description (ASCII) */
   marpaESLIF_symbol_t *lhsp;            /* LHS symbol */
   genericStack_t      *rhsStackp;       /* Stack of RHS symbols */
   genericStack_t      *exceptionStackp; /* Stack of Exceptions symbols */

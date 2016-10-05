@@ -13,6 +13,9 @@ typedef struct bootstrap_grammar_L0_symbols {
   marpaESLIF_terminal_t      terminal;
   marpaESLIF_rule_t          rule;
 } bootstrap_grammar_L0_symbols_t;
+
+/* Here it is very important that all the string constants are UTF-8 compatible - this is the case */
+
 bootstrap_grammar_L0_symbols_t bootstrap_grammar_L0_symbols[] = {
   { "<reserved event name>",          MARPAESLIF_SYMBOL_TYPE_TERMINAL, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEXP_OPTION_NA, ":symbol" },
   { "whitespace",                     MARPAESLIF_SYMBOL_TYPE_TERMINAL, MARPAESLIF_TERMINAL_TYPE_REGEXP,  MARPAESLIF_REGEXP_OPTION_NA, "[\\s]+" },
