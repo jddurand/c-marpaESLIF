@@ -4,6 +4,7 @@
 #include <marpaESLIF.h>
 #include <marpaWrapper.h>
 #include <tconv.h>
+#include <ctype.h>
 #include "config.h"
 #include "marpaESLIF/internal/grammar.h"
 #include "marpaESLIF/internal/logging.h"
@@ -44,6 +45,7 @@ const static  char                  *_marpaESLIF_utf82printableascii_defaultp = 
 #ifndef MARPAESLIF_NTRACE
 static        void                   _marpaESLIF_tconvTraceCallback(void *userDatavp, const char *msgs);
 #endif
+
 static inline char                  *_marpaESLIF_utf82printableascii_newp(marpaESLIF_t *marpaESLIFp, char *descs, size_t descl);
 static inline void                   _marpaESLIF_utf82printableascii_freev(marpaESLIF_t *marpaESLIFp, char *utf82printableasciip);
 
@@ -605,7 +607,8 @@ static inline char *_marpaESLIF_utf82printableascii_newp(marpaESLIF_t *marpaESLI
   char              *outbufp;
   size_t             outleftl;
   size_t             nconvl;
-  size_t             nwritel;
+  char              *p;
+  unsigned char      c;
 
   /* ------- Our input is always a well formed UTF-8 */
 #ifndef MARPAESLIF_NTRACE
@@ -683,6 +686,15 @@ static inline char *_marpaESLIF_utf82printableascii_newp(marpaESLIF_t *marpaESLI
 
   rcp = outbuforigp;
 
+  /* Remove by hand any ASCII character not truely printable.      */
+  /* Only the historical ASCII table [0-127] is a portable thingy. */
+  p = outbuforigp;
+  while ((c = (unsigned char) *p) != '\0') {
+    if ((c >= 128) || (! isprint(c & 0xFF))) {
+      *p = ' ';
+    }
+    p++;
+  }
   goto done;
 
  fallback:
