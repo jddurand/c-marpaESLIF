@@ -622,7 +622,8 @@ static inline char *_marpaESLIF_utf82printableascii_newp(marpaESLIF_t *marpaESLI
 #endif
 
   /* We start with an output buffer of the same size of input buffer */
-  outbuforigp = (char *) malloc(descl);
+  /* We want to make sure the ASCII string is always ending with 0.  */
+  outbuforigp = (char *) calloc(descl + 1, 1);
   if (outbuforigp == NULL) {
     MARPAESLIF_TRACEF(marpaESLIFp, funcs, "malloc failure, %s", strerror(errno));
     goto fallback;
@@ -659,12 +660,13 @@ static inline char *_marpaESLIF_utf82printableascii_newp(marpaESLIF_t *marpaESLI
 	MARPAESLIF_TRACE(marpaESLIFp, funcs, "size_t flip");
 	goto fallback;
       }
-      tmp = realloc(outbuforigp, outbuforigl);
+      tmp = realloc(outbuforigp, outbuforigl + 1);
       if (tmp == NULL) {
 	MARPAESLIF_TRACEF(marpaESLIFp, funcs, "realloc failure, %s", strerror(errno));
 	goto fallback;
       }
       outbuforigp = tmp;
+      outbuforigp[outbuforigl] = '\0';
       outleftl   += deltal;
     }
 
