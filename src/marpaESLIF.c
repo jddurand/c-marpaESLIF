@@ -3,6 +3,7 @@
 #include <string.h>
 #include <marpaESLIF.h>
 #include <marpaWrapper.h>
+#include <tconv.h>
 #include "config.h"
 #include "marpaESLIF/internal/grammar.h"
 #include "marpaESLIF/internal/logging.h"
@@ -18,7 +19,7 @@ marpaESLIFOption_t marpaESLIFOption_default = {
   NULL               /* genericLoggerp */
 };
 
-static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *marpaESLIFGrammarp, short startb, int eventSeti, char *descs, marpaESLIF_terminal_type_t type, marpaESLIF_uint32_t opti, PCRE2_SPTR originp, PCRE2_SIZE originl);
+static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *marpaESLIFGrammarp, short startb, int eventSeti, char *descs, size_t descl, marpaESLIF_terminal_type_t type, marpaESLIF_uint32_t opti, PCRE2_SPTR originp, PCRE2_SIZE originl);
 static inline void                   _marpaESLIF_terminal_freev(marpaESLIF_t *marpaESLIFp, marpaESLIF_terminal_t *terminalp);
 
 static inline marpaESLIF_grammar_t  *_marpaESLIF_grammar_newp(marpaESLIF_t *marpaESLIFp, marpaWrapperGrammarOption_t *marpaWrapperGrammarOptionp, marpaESLIF_grammar_t *previousp);
@@ -39,8 +40,15 @@ static inline marpaESLIF_grammar_t  *_marpaESLIF_bootstrap_grammarb(marpaESLIF_t
 
 static inline marpaESLIF_matcher_value_t _marpaESLIF_matcheri(marpaESLIF_t *marpaESLIFp, marpaESLIF_terminal_t *terminalp, char *inputp, size_t inputl);
 
+const static  char                  *_marpaESLIF_utf82printableascii_defaultp = "<!NOT TRANSLATED!>";
+#ifndef MARPAESLIF_NTRACE
+static        void                   _marpaESLIF_tconvTraceCallback(void *userDatavp, const char *msgs);
+#endif
+static inline char                  *_marpaESLIF_utf82printableascii_newp(marpaESLIF_t *marpaESLIFp, char *descs, size_t descl);
+static inline void                   _marpaESLIF_utf82printableascii_freev(marpaESLIF_t *marpaESLIFp, char *utf82printableasciip);
+
 /*****************************************************************************/
-static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *marpaESLIFGrammarp, short startb, int eventSeti, char *descs, marpaESLIF_terminal_type_t type, marpaESLIF_uint32_t opti, PCRE2_SPTR originp, PCRE2_SIZE originl)
+static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *marpaESLIFGrammarp, short startb, int eventSeti, char *descs, size_t descl, marpaESLIF_terminal_type_t type, marpaESLIF_uint32_t opti, PCRE2_SPTR originp, PCRE2_SIZE originl)
 /*****************************************************************************/
 {
   const static char                *funcs = "_marpaESLIF_terminal_newp";
@@ -62,6 +70,7 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
 
   terminalp->idi          = -1;
   terminalp->descs        = NULL;
+  terminalp->asciidescs   = NULL;
   terminalp->type         = MARPAESLIF_TERMINAL_TYPE_NA;
 
   marpaWrapperGrammarSymbolOption.terminalb = 1;
@@ -74,16 +83,20 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
     goto err;
   }
 
-  /* ----------- Terminal Description ------------ */
+  /* -------- Terminal UTF-8 Description -------- */
   if (descs == NULL) {
     MARPAESLIF_ERROR(marpaESLIFp, "No terminal description");
     goto err;
   }
-  terminalp->descs = strdup(descs);
+  terminalp->descs = (char *) malloc(descl);
   if (terminalp->descs == NULL) {
     MARPAESLIF_ERRORF(marpaESLIFp, "strdup failure, %s", strerror(errno));
     goto err;
   }
+  memcpy(terminalp->descs, descs, descl);
+
+  /* --------- Terminal ASCII Description -------- */
+  terminalp->asciidescs = _marpaESLIF_utf82printableascii_newp(marpaESLIFp, descs, descl);
 
   /* ----------- Terminal Implementation ------------ */
   terminalp->type = type;
@@ -201,6 +214,7 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_grammarb(marpaESLIF_t 
 					    0, /* startb */
 					    MARPAWRAPPERGRAMMAR_EVENTTYPE_NONE,
 					    bootstrap_grammar_L0_symbols[i].descs,
+					    strlen(bootstrap_grammar_L0_symbols[i].descs) + 1,  /* Bootstrap's descs is a C string */
 					    bootstrap_grammar_L0_symbols[i].terminalType,
 					    bootstrap_grammar_L0_symbols[i].optioni,
 					    bootstrap_grammar_L0_symbols[i].originp,
@@ -352,10 +366,11 @@ static inline void _marpaESLIF_rule_freev(marpaESLIF_t *marpaESLIFp, marpaESLIF_
   const static char    *funcs = "_marpaESLIF_rule_freev";
 
   if (rulep != NULL) {
-    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Freeing rule %s at %p", rulep->descs != NULL ? rulep->descs : "(null)", rulep);
+    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Freeing rule %s at %p", rulep->asciidescs != NULL ? rulep->asciidescs : "(null)", rulep);
     if (rulep->descs != NULL) {
       free(rulep->descs);
     }
+    _marpaESLIF_utf82printableascii_freev(marpaESLIFp, rulep->asciidescs);
     _marpaESLIF_symbol_freev(marpaESLIFp, rulep->lhsp);
     _marpaESLIF_symbolStack_freev(marpaESLIFp, rulep->rhsStackp);
     _marpaESLIF_symbolStack_freev(marpaESLIFp, rulep->exceptionStackp);
@@ -452,10 +467,11 @@ static inline void _marpaESLIF_terminal_freev(marpaESLIF_t *marpaESLIFp, marpaES
   const static char    *funcs = "_marpaESLIF_terminal_freev";
 
   if (terminalp != NULL) {
-    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Freeing terminal %s at %p", terminalp->descs != NULL ? terminalp->descs : "(null)", terminalp);
+    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Freeing terminal %s at %p", terminalp->asciidescs != NULL ? terminalp->asciidescs : "(null)", terminalp);
     if (terminalp->descs != NULL) {
       free(terminalp->descs);
     }
+    _marpaESLIF_utf82printableascii_freev(marpaESLIFp, terminalp->asciidescs);
     switch (terminalp->type) {
     case MARPAESLIF_TERMINAL_TYPE_STRING:
       if (terminalp->u.string.stringp != NULL) {
@@ -540,8 +556,11 @@ void marpaESLIF_freev(marpaESLIF_t *marpaESLIFp)
 
 /*****************************************************************************/
 static inline marpaESLIF_matcher_value_t _marpaESLIF_matcheri(marpaESLIF_t *marpaESLIFp, marpaESLIF_terminal_t *terminalp, char *inputp, size_t inputl)
+/*****************************************************************************/
 {
-  const static char    *funcs = "_marpaESLIF_matcher";
+  const static char *funcs       = "_marpaESLIF_matcher";
+  marpaESLIF_matcher_value_t rci = MARPAESLIF_MATCH_FAILURE;
+
   /*********************************************************************************/
   /* A matcher tries to match a terminal v.s. input that is eventually incomplete. */
   /* It return 1 on success, 0 on failure, -1 if more data is needed.              */
@@ -554,5 +573,140 @@ static inline marpaESLIF_matcher_value_t _marpaESLIF_matcheri(marpaESLIF_t *marp
     break;
   default:
     break;
+  }
+}
+
+#ifndef MARPAESLIF_NTRACE
+/*****************************************************************************/
+static void _marpaESLIF_tconvTraceCallback(void *userDatavp, const char *msgs)
+/*****************************************************************************/
+{
+  const static char *funcs       = "_marpaESLIF_tconvTraceCallback";
+  marpaESLIF_t *marpaESLIFp = (marpaESLIF_t *) userDatavp;
+
+  MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s", msgs);
+}
+#endif
+
+/*****************************************************************************/
+static inline char *_marpaESLIF_utf82printableascii_newp(marpaESLIF_t *marpaESLIFp, char *descs, size_t descl)
+/*****************************************************************************/
+{
+  const static char *funcs       = "_marpaESLIF_utf82printableascii_newp";
+  char              *rcp         = (char *) _marpaESLIF_utf82printableascii_defaultp;
+  tconv_t            tconvp      = NULL;
+  char              *inbuforigp  = descs;
+  size_t             inleftorigl = descl;
+  char              *outbuforigp = NULL;
+  size_t             outbuforigl = 0;
+  tconv_option_t     tconvOption = { NULL /* charsetp */, NULL /* convertp */, NULL /* traceCallbackp */, NULL /* traceUserDatavp */ };
+  char              *inbufp;
+  size_t             inleftl;
+  char              *outbufp;
+  size_t             outleftl;
+  size_t             nconvl;
+  size_t             nwritel;
+
+  /* ------- Our input is always a well formed UTF-8 */
+#ifndef MARPAESLIF_NTRACE
+  tconvOption.traceCallbackp  = _marpaESLIF_tconvTraceCallback;
+  tconvOption.traceUserDatavp = marpaESLIFp;
+#endif
+  tconvp = tconv_open_ext("ASCII//TRANSLIT//IGNORE", "UTF-8", &tconvOption);
+  if (tconvp == NULL) {
+    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "tconv_open failure, %s", strerror(errno));
+    goto fallback;
+  }
+#ifndef MARPAESLIF_NTRACE
+  tconv_trace_on(tconvp);
+#endif
+
+  /* We start with an output buffer of the same size of input buffer */
+  outbuforigp = (char *) malloc(descl);
+  if (outbuforigp == NULL) {
+    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "malloc failure, %s", strerror(errno));
+    goto fallback;
+  }
+  outbuforigl = descl;
+
+  /* We want to translate descriptions in trace or error cases - these are short things, and */
+  /* it does not really harm if we redo the whole translation stuff in case of E2BIG:        */
+  /* - in trace mode it is documented that performance is awful                              */
+  /* - in error mode this call will happen once                                              */
+
+  inbufp   = inbuforigp;
+  inleftl  = inleftorigl;
+  outbufp  = outbuforigp;
+  outleftl = outbuforigl;
+  
+  while (1) {
+
+    nconvl = tconv(tconvp, (inbufp != NULL) ? &inbufp : NULL, &inleftl, &outbufp, &outleftl);
+
+    if (nconvl == (size_t) -1) {
+      char  *tmp;
+      size_t deltal = outbuforigl;
+      
+      /* The only acceptable error is E2BIG */
+      if (errno != E2BIG) {
+	MARPAESLIF_TRACEF(marpaESLIFp, funcs, "tconv failure, %s", strerror(errno));
+	goto fallback;
+      }
+      /* Try to alloc more */
+      outbuforigl *= 2;
+      /* Will this ever happen ? */
+      if (outbuforigl < descl) {
+	MARPAESLIF_TRACE(marpaESLIFp, funcs, "size_t flip");
+	goto fallback;
+      }
+      tmp = realloc(outbuforigp, outbuforigl);
+      if (tmp == NULL) {
+	MARPAESLIF_TRACEF(marpaESLIFp, funcs, "realloc failure, %s", strerror(errno));
+	goto fallback;
+      }
+      outbuforigp = tmp;
+      outleftl   += deltal;
+    }
+
+    if (inbufp == NULL) {
+      /* This was the last round */
+      break;
+    }
+
+    if (inleftl <= 0) {
+      /* Next round is the last one */
+      inbufp = NULL;
+    }
+  }
+
+  rcp = outbuforigp;
+
+  goto done;
+
+ fallback:
+  if (outbuforigp != NULL) {
+    free(outbuforigp);
+  }
+
+ done:
+  if (tconvp != NULL) {
+    if (tconv_close(tconvp) != 0) {
+      MARPAESLIF_TRACEF(marpaESLIFp, funcs, "tconv_close failure, %s", strerror(errno));
+    }
+  }
+
+  MARPAESLIF_TRACEF(marpaESLIFp, funcs, "return \"%s\"", rcp);
+  return rcp;
+}
+
+/*****************************************************************************/
+static inline void _marpaESLIF_utf82printableascii_freev(marpaESLIF_t *marpaESLIFp, char *utf82printableasciip)
+/*****************************************************************************/
+{
+  const static char *funcs       = "_marpaESLIF_utf82printableascii_freev";
+
+  if ((utf82printableasciip != NULL) && (utf82printableasciip != _marpaESLIF_utf82printableascii_defaultp)) {
+    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Freeing ASCII description \"%s\"", utf82printableasciip);
+    free(utf82printableasciip);
   }
 }
