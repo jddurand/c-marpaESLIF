@@ -10,9 +10,6 @@ typedef struct bootstrap_grammar_L0_symbols {
   marpaESLIF_uint32_t        optioni;             /* Terminal option */
   PCRE2_SPTR                 originp;             /* UTF-8 encoding */
   PCRE2_SPTR                 substitutionp;       /* UTF-8 encoding */
-  marpaESLIF_symbol_t        symbol;              /* Filled on the fly at bootstrap */
-  marpaESLIF_terminal_t      terminal;            /* Ditto */
-  marpaESLIF_rule_t          rule;                /* Ditto */
 } bootstrap_grammar_L0_symbols_t;
 
 /* Here it is very important that all the string constants are UTF-8 compatible - this is the case */

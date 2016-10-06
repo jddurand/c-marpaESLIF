@@ -605,6 +605,8 @@ static inline short _marpaESLIF_matcheri(marpaESLIF_t *marpaESLIFp, marpaESLIF_t
   PCRE2_UCHAR                pcre2ErrorBuffer[256];
   PCRE2_SIZE                *pcre2_ovectorp;
   size_t                     matchLengthl;
+  PCRE2_UCHAR                pcre2_substitutep;
+  PCRE2_SIZE                 pcre2_substitutel;
  
   /*********************************************************************************/
   /* A matcher tries to match a terminal v.s. input that is eventually incomplete. */
@@ -629,6 +631,9 @@ static inline short _marpaESLIF_matcheri(marpaESLIF_t *marpaESLIFp, marpaESLIF_t
       /* --------------------------------------------------------- */
       /* EOF mode:                                                 */
       /* return full match status: OK or FAILURE.                  */
+      /*                                                           */
+      /* Please note that substitution is supported only in the    */
+      /* full match case.                                          */
       /* --------------------------------------------------------- */
       /* NOT EOF mode:                                             */
       /* If the full match is successful:                          */
