@@ -606,8 +606,10 @@ void marpaESLIF_freev(marpaESLIF_t *marpaESLIFp)
 static inline short _marpaESLIF_matcheri(marpaESLIF_t *marpaESLIFp, marpaESLIF_terminal_t *terminalp, char *inputp, size_t inputl, short eofb, marpaESLIF_matcher_value_t *rcip, char **outputpp, size_t *outputlp)
 /*****************************************************************************/
 {
-  const static char         *funcs = "_marpaESLIF_matcher";
-  short                      rcb   = 1;
+  const static char         *funcs             = "_marpaESLIF_matcher";
+  short                      rcb               = 1;
+  PCRE2_UCHAR               *pcre2_substitutep = NULL;
+  PCRE2_SIZE                 pcre2_substitutel = MARPAESLIF_INITIAL_REPLACEMENT_LENGTH; /* In code units, not bytes, though in UTF-8 a code unit is one byte -; */
   marpaESLIF_matcher_value_t rci;
   marpaESLIF_string_t        marpaESLIF_string;
   marpaESLIF_regex_t         marpaESLIF_regex;
@@ -615,8 +617,6 @@ static inline short _marpaESLIF_matcheri(marpaESLIF_t *marpaESLIFp, marpaESLIF_t
   PCRE2_UCHAR                pcre2ErrorBuffer[256];
   PCRE2_SIZE                *pcre2_ovectorp;
   size_t                     matchLengthl;
-  PCRE2_UCHAR               *pcre2_substitutep;
-  PCRE2_SIZE                 pcre2_substitutel = MARPAESLIF_INITIAL_REPLACEMENT_LENGTH; /* In code units, not bytes, though in UTF-8 a code unit is one byte -; */
   PCRE2_SIZE                 pcre2_substituteoutputl;
   PCRE2_UCHAR               *tmpp;
  
@@ -645,7 +645,7 @@ static inline short _marpaESLIF_matcheri(marpaESLIF_t *marpaESLIFp, marpaESLIF_t
       if (marpaESLIF_regex.substitutionp != NULL) {
 	pcre2_substitutep = (PCRE2_UCHAR *) malloc(pcre2_substitutel);
 	if (pcre2_substitutep == NULL) {
-	  MARPAESLIF_TRACEF(marpaESLIFp, funcs, "malloc failure, %s", strerror(errno));
+	  MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s - malloc failure, %s", terminalp->asciidescs, strerror(errno));
 	  goto err;
 	}
       }
@@ -696,7 +696,7 @@ static inline short _marpaESLIF_matcheri(marpaESLIF_t *marpaESLIFp, marpaESLIF_t
 	    /* Please note that is NOT documented how internally pcre2_substitute() reacts in this case... */
 	    /* This is why it is coded explicitely here. */
 	    pcre2_get_error_message(pcre2Errornumberi, pcre2ErrorBuffer, sizeof(pcre2ErrorBuffer));
-	    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "pcre2_substitute failure: %s - switching to non-JIT version", pcre2ErrorBuffer);
+	    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s - pcre2_substitute failure: %s - switching to non-JIT version", terminalp->asciidescs, pcre2ErrorBuffer);
 	    optioni |= PCRE2_NO_JIT;
 	    continue;
 	  }
@@ -710,12 +710,12 @@ static inline short _marpaESLIF_matcheri(marpaESLIF_t *marpaESLIFp, marpaESLIF_t
 
 	    /* Detect overflow -; */
 	    if (pcre2_substituteoutputl < pcre2_substitutel) {
-	      MARPAESLIF_ERROR(marpaESLIFp, "PCRE2_SIZE overflow detected");
+	      MARPAESLIF_ERRORF(marpaESLIFp, "%s - PCRE2_SIZE overflow detected", terminalp->asciidescs);
 	      goto err;
 	    }
 	    tmpp = realloc(pcre2_substitutep, pcre2_substituteoutputl);
 	    if (tmpp == NULL) {
-	      MARPAESLIF_ERRORF(marpaESLIFp, "realloc failure, %s", strerror(errno));
+	      MARPAESLIF_ERRORF(marpaESLIFp, "%s - realloc failure, %s", terminalp->asciidescs, strerror(errno));
 	      goto err;
 	    }
 	    pcre2_substitutep = tmpp;
@@ -734,7 +734,7 @@ static inline short _marpaESLIF_matcheri(marpaESLIF_t *marpaESLIFp, marpaESLIF_t
 	      /* fine for us.                                                                 */
 	      tmpp = realloc(pcre2_substitutep, pcre2_substituteoutputl);
 	      if (tmpp == NULL) {
-		MARPAESLIF_TRACEF(marpaESLIFp, funcs, "realloc failure (non fatal), %s", strerror(errno));
+		MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s - realloc failure (non fatal), %s", terminalp->asciidescs, strerror(errno));
 	      } else {
 		pcre2_substitutep = tmpp;
 		pcre2_substitutel = pcre2_substituteoutputl;
@@ -758,7 +758,7 @@ static inline short _marpaESLIF_matcheri(marpaESLIF_t *marpaESLIFp, marpaESLIF_t
 	  if (pcre2Errornumberi == PCRE2_ERROR_JIT_STACKLIMIT) {
 	    /* Back luck, out of stack for JIT */
 	    pcre2_get_error_message(pcre2Errornumberi, pcre2ErrorBuffer, sizeof(pcre2ErrorBuffer));
-	    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "pcre2_jit_match failure: %s - switching to non-JIT version", pcre2ErrorBuffer);
+	    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s - pcre2_jit_match failure: %s - switching to non-JIT version", terminalp->asciidescs, pcre2ErrorBuffer);
 	    goto eof_nojitcomplete;
 	  }
 	} else {
@@ -783,24 +783,24 @@ static inline short _marpaESLIF_matcheri(marpaESLIF_t *marpaESLIFp, marpaESLIF_t
 	  /* if there was no match -; */
 	  if (pcre2Errornumberi != PCRE2_ERROR_NOMATCH) {
 	    pcre2_get_error_message(pcre2Errornumberi, pcre2ErrorBuffer, sizeof(pcre2ErrorBuffer));
-	    MARPAESLIF_WARNF(marpaESLIFp, "Uncaught pcre2 match failure: %s", pcre2ErrorBuffer);
+	    MARPAESLIF_WARNF(marpaESLIFp, "%s - Uncaught pcre2 match failure: %s", terminalp->asciidescs, pcre2ErrorBuffer);
 	  }
 	  rci = MARPAESLIF_MATCH_FAILURE;
 	} else {
 	  /* Check the length of matched data */
 	  if (pcre2_get_ovector_count(marpaESLIF_regex.match_datap) <= 0) {
-	    MARPAESLIF_ERROR(marpaESLIFp, "pcre2_get_ovector_count returned no number of pairs of values");
+	    MARPAESLIF_ERRORF(marpaESLIFp, "%s - pcre2_get_ovector_count returned no number of pairs of values", terminalp->asciidescs);
 	    goto err;
 	  }
 	  pcre2_ovectorp = pcre2_get_ovector_pointer(marpaESLIF_regex.match_datap);
 	  if (pcre2_ovectorp == NULL) {
-	    MARPAESLIF_ERROR(marpaESLIFp, "pcre2_get_ovector_pointer returned NULL");
+	    MARPAESLIF_ERRORF(marpaESLIFp, "%s - pcre2_get_ovector_pointer returned NULL", terminalp->asciidescs);
 	    goto err;
 	  }
 	  /* We said PCRE2_NOTEMPTY so this cannot be empty */
 	  matchLengthl = pcre2_ovectorp[1] - pcre2_ovectorp[0];
 	  if (matchLengthl <= 0) {
-	    MARPAESLIF_ERROR(marpaESLIFp, "Empty match when it is configured as not possible");
+	    MARPAESLIF_ERRORF(marpaESLIFp, "%s - Empty match when it is configured as not possible", terminalp->asciidescs);
 	    goto err;
 	  }
 	  /* Very good -; */
@@ -811,18 +811,18 @@ static inline short _marpaESLIF_matcheri(marpaESLIF_t *marpaESLIFp, marpaESLIF_t
 	  /* Full match is successful (this include an eventual substitution, that is also a full match). */
 	  /* Check the length of matched data */
 	  if (pcre2_get_ovector_count(marpaESLIF_regex.match_datap) <= 0) {
-	    MARPAESLIF_ERROR(marpaESLIFp, "pcre2_get_ovector_count returned no number of pairs of values");
+	    MARPAESLIF_ERRORF(marpaESLIFp, "%s - pcre2_get_ovector_count returned no number of pairs of values", terminalp->asciidescs);
 	    goto err;
 	  }
 	  pcre2_ovectorp = pcre2_get_ovector_pointer(marpaESLIF_regex.match_datap);
 	  if (pcre2_ovectorp == NULL) {
-	    MARPAESLIF_ERROR(marpaESLIFp, "pcre2_get_ovector_pointer returned NULL");
+	    MARPAESLIF_ERRORF(marpaESLIFp, "%s - pcre2_get_ovector_pointer returned NULL", terminalp->asciidescs);
 	    goto err;
 	  }
 	  /* We said PCRE2_NOTEMPTY so this cannot be empty */
 	  matchLengthl = pcre2_ovectorp[1] - pcre2_ovectorp[0];
 	  if (matchLengthl <= 0) {
-	    MARPAESLIF_ERROR(marpaESLIFp, "Empty match when it is configured as not possible");
+	    MARPAESLIF_ERRORF(marpaESLIFp, "%s - Empty match when it is configured as not possible", terminalp->asciidescs);
 	    goto err;
 	  }
 	  if (matchLengthl >= inputl) {
@@ -849,7 +849,7 @@ static inline short _marpaESLIF_matcheri(marpaESLIF_t *marpaESLIFp, marpaESLIF_t
 	    if (pcre2Errornumberi == PCRE2_ERROR_JIT_STACKLIMIT) {
 	      /* Back luck, out of stack for JIT */
 	      pcre2_get_error_message(pcre2Errornumberi, pcre2ErrorBuffer, sizeof(pcre2ErrorBuffer));
-	      MARPAESLIF_TRACEF(marpaESLIFp, funcs, "pcre2_jit_match failure: %s - switching to non-JIT version", pcre2ErrorBuffer);
+	      MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s - pcre2_jit_match failure: %s - switching to non-JIT version", terminalp->asciidescs, pcre2ErrorBuffer);
 	      goto eof_nojitpartial;
 	    }
 	  } else {
@@ -880,7 +880,7 @@ static inline short _marpaESLIF_matcheri(marpaESLIF_t *marpaESLIFp, marpaESLIF_t
       }
       break;
     default:
-      MARPAESLIF_ERRORF(marpaESLIFp, funcs, "Unsupported terminal type %d", terminalp->type);
+      MARPAESLIF_ERRORF(marpaESLIFp, funcs, "%s - Unsupported terminal type %d", terminalp->asciidescs, terminalp->type);
       goto err;
     }
   } else {
@@ -908,7 +908,7 @@ static inline short _marpaESLIF_matcheri(marpaESLIF_t *marpaESLIFp, marpaESLIF_t
 	char *outputp = (char *) malloc(matchLengthl);
 	/* Matched input is starting at inputp and its length is in matchLengthl */
 	if (outputp == NULL) {
-	  MARPAESLIF_TRACEF(marpaESLIFp, funcs, "malloc failure, %s", strerror(errno));
+	  MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s - malloc failure, %s", terminalp->asciidescs, strerror(errno));
 	  goto err;
 	}
 	memcpy(outputp, inputp, matchLengthl);
@@ -917,11 +917,11 @@ static inline short _marpaESLIF_matcheri(marpaESLIF_t *marpaESLIFp, marpaESLIF_t
     }
   }
 
-  MARPAESLIF_TRACEF(marpaESLIFp, funcs, "return 1, status is %s", (rci == MARPAESLIF_MATCH_FAILURE) ? "MARPAESLIF_MATCH_FAILURE" : ((rci == MARPAESLIF_MATCH_OK) ? "MARPAESLIF_MATCH_OK" : "MARPAESLIF_MATCH_AGAIN"));
+  MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s - return 1, status is %s", terminalp->asciidescs, (rci == MARPAESLIF_MATCH_FAILURE) ? "MARPAESLIF_MATCH_FAILURE" : ((rci == MARPAESLIF_MATCH_OK) ? "MARPAESLIF_MATCH_OK" : "MARPAESLIF_MATCH_AGAIN"));
   goto done;
 
  err:
-  MARPAESLIF_TRACE(marpaESLIFp, funcs, "return 0");
+  MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s - return 0", terminalp->asciidescs);
   rcb = 0;
 
  done:
