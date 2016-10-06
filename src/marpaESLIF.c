@@ -20,7 +20,7 @@ marpaESLIFOption_t marpaESLIFOption_default = {
   NULL               /* genericLoggerp */
 };
 
-static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *marpaESLIFGrammarp, short startb, int eventSeti, char *descs, size_t descl, marpaESLIF_terminal_type_t type, marpaESLIF_uint32_t opti, PCRE2_SPTR originp, PCRE2_SIZE originl);
+static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *marpaESLIFGrammarp, short startb, int eventSeti, char *descs, size_t descl, marpaESLIF_terminal_type_t type, marpaESLIF_uint32_t opti, PCRE2_SPTR originp, PCRE2_SIZE originl, PCRE2_SPTR substitutionp, PCRE2_SIZE substitutionl);
 static inline void                   _marpaESLIF_terminal_freev(marpaESLIF_t *marpaESLIFp, marpaESLIF_terminal_t *terminalp);
 
 static inline marpaESLIF_grammar_t  *_marpaESLIF_grammar_newp(marpaESLIF_t *marpaESLIFp, marpaWrapperGrammarOption_t *marpaWrapperGrammarOptionp, marpaESLIF_grammar_t *previousp);
@@ -50,7 +50,7 @@ static inline char                  *_marpaESLIF_utf82printableascii_newp(marpaE
 static inline void                   _marpaESLIF_utf82printableascii_freev(marpaESLIF_t *marpaESLIFp, char *utf82printableasciip);
 
 /*****************************************************************************/
-static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *marpaESLIFGrammarp, short startb, int eventSeti, char *descs, size_t descl, marpaESLIF_terminal_type_t type, marpaESLIF_uint32_t opti, PCRE2_SPTR originp, PCRE2_SIZE originl)
+static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *marpaESLIFGrammarp, short startb, int eventSeti, char *descs, size_t descl, marpaESLIF_terminal_type_t type, marpaESLIF_uint32_t opti, PCRE2_SPTR originp, PCRE2_SIZE originl, PCRE2_SPTR substitutionp, PCRE2_SIZE substitutionl)
 /*****************************************************************************/
 {
   const static char                *funcs = "_marpaESLIF_terminal_newp";
@@ -123,6 +123,8 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
 
   case MARPAESLIF_TERMINAL_TYPE_REGEX:
     terminalp->u.regex.patternp      = NULL;
+    terminalp->u.regex.substitutionp = NULL;
+    terminalp->u.regex.substitutionl = 0;
     terminalp->u.regex.match_datap   = NULL;
 #ifdef PCRE2_CONFIG_JIT
     terminalp->u.regex.jitCompleteb = 0;
@@ -132,6 +134,15 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
     if ((originp == NULL) || (originl <= 0)) {
       MARPAESLIF_ERROR(marpaESLIFp, "Invalid terminal origin");
       goto err;
+    }
+    if ((substitutionp != NULL) && (substitutionl > 0)) {
+      terminalp->u.regex.substitutionp = (PCRE2_SPTR) malloc((size_t) substitutionl);
+      if (terminalp->u.regex.substitutionp == NULL) {
+	MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
+	goto err;
+      }
+      memcpy((void *) terminalp->u.regex.substitutionp, substitutionp, substitutionl);
+      terminalp->u.regex.substitutionl = substitutionl;
     }
     pcre2Optioni = PCRE2_ANCHORED|PCRE2_UTF;      /* In our case, patterns are always anchored and in UTF mode */
     for (i = 0; i < _MARPAESLIF_REGEX_OPTION_UNGREEDY_ID_MAX; i++) {
@@ -236,7 +247,10 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_grammarb(marpaESLIF_t 
 					    bootstrap_grammar_L0_symbols[i].terminalType,
 					    bootstrap_grammar_L0_symbols[i].optioni,
 					    bootstrap_grammar_L0_symbols[i].originp,
-					    strlen(bootstrap_grammar_L0_symbols[i].originp));
+					    (bootstrap_grammar_L0_symbols[i].originp != NULL) ? strlen(bootstrap_grammar_L0_symbols[i].originp) : 0,
+					    bootstrap_grammar_L0_symbols[i].substitutionp,
+					    (bootstrap_grammar_L0_symbols[i].substitutionp != NULL) ? strlen(bootstrap_grammar_L0_symbols[i].substitutionp) : 0
+					    );
       if (terminalp == NULL) {
 	goto err;
       }
@@ -502,6 +516,9 @@ static inline void _marpaESLIF_terminal_freev(marpaESLIF_t *marpaESLIFp, marpaES
       }
       if (terminalp->u.regex.patternp != NULL) {
 	pcre2_code_free(terminalp->u.regex.patternp);
+      }
+      if (terminalp->u.regex.substitutionp != NULL) {
+	free((void *) terminalp->u.regex.substitutionp);
       }
       break;
     default:

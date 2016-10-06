@@ -86,6 +86,8 @@ struct marpaESLIF_regex_option_map {
 
 struct marpaESLIF_regex {
   pcre2_code       *patternp;      /* Compiled pattern */
+  PCRE2_SPTR        substitutionp; /* Substitution pointer */
+  PCRE2_SIZE        substitutionl; /* Substitution length */
   pcre2_match_data *match_datap;   /* Match data */
 #ifdef PCRE2_CONFIG_JIT
   short       jitCompleteb;   /* Eventual optimized JIT */
