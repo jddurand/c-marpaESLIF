@@ -9,6 +9,10 @@
 #include "marpaESLIF/internal/grammar.h"
 #include "marpaESLIF/internal/logging.h"
 
+#ifndef MARPAESLIF_INITIAL_REPLACEMENT_LENGTH
+#define MARPAESLIF_INITIAL_REPLACEMENT_LENGTH 8096  /* Subjective number */
+#endif
+
 /* ESLIF is the internal and external grammars, plus the options */
 struct marpaESLIF {
   marpaESLIF_grammar_t *internalGrammarp;
@@ -605,7 +609,7 @@ static inline short _marpaESLIF_matcheri(marpaESLIF_t *marpaESLIFp, marpaESLIF_t
   PCRE2_UCHAR                pcre2ErrorBuffer[256];
   PCRE2_SIZE                *pcre2_ovectorp;
   size_t                     matchLengthl;
-  PCRE2_UCHAR                pcre2_substitutep;
+  PCRE2_UCHAR               *pcre2_substitutep;
   PCRE2_SIZE                 pcre2_substitutel;
  
   /*********************************************************************************/
@@ -628,6 +632,15 @@ static inline short _marpaESLIF_matcheri(marpaESLIF_t *marpaESLIFp, marpaESLIF_t
       
     case MARPAESLIF_TERMINAL_TYPE_REGEX:
       marpaESLIF_regex = terminalp->u.regex;
+
+      /* If there is substitution, prepare memory. */
+      if (marpaESLIF_regex.substitutionp != NULL) {
+	pcre2_substitutep = (PCRE2_UCHAR *) malloc(MARPAESLIF_INITIAL_REPLACEMENT_LENGTH);
+	if (pcre2_substitutep == NULL) {
+	  MARPAESLIF_TRACEF(marpaESLIFp, funcs, "malloc failure, %s", strerror(errno));
+	  goto err;
+	}
+      }
       /* --------------------------------------------------------- */
       /* EOF mode:                                                 */
       /* return full match status: OK or FAILURE.                  */
@@ -790,6 +803,9 @@ static inline short _marpaESLIF_matcheri(marpaESLIF_t *marpaESLIFp, marpaESLIF_t
   goto done;
 
  err:
+  if (pcre2_substitutep != NULL) {
+    free((void *) pcre2_substitutep);
+  }
   MARPAESLIF_TRACE(marpaESLIFp, funcs, "return 0");
   rcb = 0;
 
