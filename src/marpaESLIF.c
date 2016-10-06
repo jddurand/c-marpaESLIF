@@ -653,8 +653,7 @@ static inline short _marpaESLIF_matcheri(marpaESLIF_t *marpaESLIFp, marpaESLIF_t
       /* - if it reaches the end of the buffer, return EGAIN.      */
       /* - if it does not reach the end of the buffer, return OK.  */
       /* Else if the partial match is successul:                   */
-      /* - if it reaches the end of the buffer, return EGAIN.      */
-      /* - else, return FAILURE.                                   */
+      /* - return EGAIN.                                           */
       /* Else                                                      */
       /* - return FAILURE.                                         */
       /*                                                           */
@@ -762,25 +761,7 @@ static inline short _marpaESLIF_matcheri(marpaESLIF_t *marpaESLIFp, marpaESLIF_t
 	  /* Only PCRE2_ERROR_NOMATCH is an acceptable error */
 	  if (pcre2Errornumberi == PCRE2_ERROR_PARTIAL) {
 	    /* Partial match is successful */
-	    /* Check the length of matched data */
-	    pcre2_ovectorp = pcre2_get_ovector_pointer(marpaESLIF_regex.match_datap);
-	    if (pcre2_ovectorp == NULL) {
-	      MARPAESLIF_ERROR(marpaESLIFp, "pcre2_get_ovector_pointer returned NULL");
-	      goto err;
-	    }
-	    /* We said PCRE2_NOTEMPTY so this cannot be empty */
-	    matchLengthl = pcre2_ovectorp[1] - pcre2_ovectorp[0];
-	    if (matchLengthl <= 0) {
-	      MARPAESLIF_ERROR(marpaESLIFp, "Empty match when it is configured as not possible");
-	      goto err;
-	    }
-	    if (matchLengthl >= inputl) {
-	      /* But end of the buffer is reached, and we are not at the eof */
-	      rci = MARPAESLIF_MATCH_AGAIN;
-	    } else {
-	      /* And end of the buffer is not reached */
-	      rci = MARPAESLIF_MATCH_FAILURE;
-	    }
+	    rci = MARPAESLIF_MATCH_AGAIN;
 	  } else {
 	    /* Partial match is not successful */
 	    rci = MARPAESLIF_MATCH_FAILURE;
