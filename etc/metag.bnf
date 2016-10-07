@@ -15,86 +15,110 @@
 #
 # ESLIF 2016 Jean-Damien Durand
 #
-:default ::= action => [start,length,values]
-lexeme default =
-  action => [start,length,value]
+# ESLIF can read Marpa::R2's SLIF with the following additions or restrictions:
+# - autorank                 added
+# - double quoted name       added
+# - blessing                 ignored
+# - latm                     only latm => 1 is supported
+# - forgiving                only forgiving => 1 is supported
+# - current lexer is...      ignored
+# - regexp and substitution  added
+# - C style comments         added
+# - Cplusplus style comments added
+# - double quoted strings    added
+# - strings have no restriction on escaping and content - they just have to be correctly delimited
+#
+:default   ::= action => [start,length,values]
+lexeme default =  action => [start,length,value]
 
-:start ::= statements
-statements ::= statement+
-statement ::= <start rule> | <empty rule>
-  | <null statement> | <statement group>
-  | <priority rule> | <quantified rule>
-  | <discard rule> | <default rule>
-  | <lexeme default statement>
-  | <discard default statement>
-  | <lexeme rule>
-  | <completion event declaration>
-  | <nulled event declaration>
-  | <prediction event declaration>
-  | <current lexer statement>
-  | <inaccessible statement>
+:start                           ::= statements
 
-<null statement> ::= ';'
-<statement group> ::= ('{') statements '}'
-<start rule> ::= (':start' <op declare bnf>) symbol
-<start rule> ::= ('start' 'symbol' 'is') symbol
-<default rule> ::= ':default' <op declare bnf> <adverb list>
-<lexeme default statement> ::= ('lexeme' 'default' '=') <adverb list>
-<discard default statement> ::= ('discard' 'default' '=') <adverb list>
-<priority rule> ::= lhs <op declare> priorities
-<empty rule> ::= lhs <op declare> <adverb list>
-<quantified rule> ::= lhs <op declare> <single symbol> quantifier <adverb list>
-<discard rule> ::= (':discard' <op declare match>) <single symbol> <adverb list>
-<lexeme rule> ::= (':lexeme' <op declare match>) symbol <adverb list>
+statements                       ::= statement+
+statement                        ::= <start rule>
+                                 | <empty rule>
+                                 | <null statement>
+                                 | <statement group>
+                                 | <priority rule>
+                                 | <quantified rule>
+                                 | <discard rule>
+                                 | <default rule>
+                                 | <lexeme default statement>
+                                 | <discard default statement>
+                                 | <lexeme rule>
+                                 | <completion event declaration>
+                                 | <nulled event declaration>
+                                 | <prediction event declaration>
+                                 | <current lexer statement>
+                                 | <inaccessible statement>
+
+<start rule>                   ::= (':start' <op declare top grammar>) symbol
+<empty rule>                   ::= lhs <op declare> <adverb list>
+<null statement>               ::= ';'
+<statement group>              ::= ('{') statements ('}')
+<priority rule>                ::= lhs <op declare> priorities
+<quantified rule>              ::= lhs <op declare> <single symbol> quantifier <adverb list>
+<discard rule>                 ::= (':discard' <op declare sub grammar>) <single symbol> <adverb list>
+<default rule>                 ::= ':default' <op declare top grammar> <adverb list>
+<lexeme default statement>     ::= ('lexeme' 'default' '=') <adverb list>
+<discard default statement>    ::= ('discard' 'default' '=') <adverb list>
+<lexeme rule>                  ::= (':lexeme' <op declare sub grammar>) symbol <adverb list>
 <completion event declaration> ::= ('event') <event initialization> ('=' 'completed') <symbol name>
-<nulled event declaration> ::= ('event') <event initialization> ('=' 'nulled') <symbol name>
+<nulled event declaration>     ::= ('event') <event initialization> ('=' 'nulled') <symbol name>
 <prediction event declaration> ::= ('event') <event initialization> ('=' 'predicted') <symbol name>
-<current lexer statement> ::= ('current' 'lexer' 'is') <lexer name>
+<current lexer statement>      ::= ('current' 'lexer' 'is') <lexer name>
+<inaccessible statement>       ::= ('inaccessible' 'is') <inaccessible treatment> ('by' 'default')
+<inaccessible treatment>       ::= 'warn' | 'ok' | 'fatal'
 
-<inaccessible statement> ::= ('inaccessible' 'is') <inaccessible treatment> ('by' 'default')
-<inaccessible treatment> ::= 'warn' | 'ok' | 'fatal'
+<op declare>                   ::= <op declare top grammar>
+                                 | <op declare sub grammar>
 
-<op declare> ::= <op declare bnf> | <op declare match>
-priorities ::= alternatives+
-    separator => <op loosen> proper => 1
-alternatives ::= alternative+
-    separator => <op equal priority> proper => 1
-alternative ::= rhs <adverb list>
+priorities                     ::= alternatives+ separator => <op loosen>         proper => 1
+alternatives                   ::= alternative+  separator => <op equal priority> proper => 1
+alternative                    ::= rhs <adverb list>
 
-<adverb list> ::= <adverb list items>
-<adverb list items> ::= <adverb item>*
-<adverb item> ::=
-      action
-    | <left association> | <right association> | <group association>
-    | <separator specification> | <proper specification>
-    | <rank specification> | <null ranking specification>
-    | <priority specification> | <pause specification> | <event specification>
-    | naming | <null adverb>
+<adverb list>                  ::= <adverb list items>
+<adverb list items>            ::= <adverb item>*
+<adverb item>                  ::= action
+                                 | autorank
+                                 | <left association>
+                                 | <right association>
+                                 | <group association>
+                                 | <separator specification>
+                                 | <proper specification>
+                                 | <rank specification>
+                                 | <null ranking specification>
+                                 | <priority specification>
+                                 | <pause specification>
+                                 | <latm specification>
+                                 | blessing
+                                 | naming
+                                 | <null adverb>
 
-<null adverb> ::= ','
-action ::= ('action' '=>') <action name>
-<left association> ::= ('assoc' '=>' 'left')
-<right association> ::= ('assoc' '=>' 'right')
-<group association> ::= ('assoc' '=>' 'group')
-<separator specification> ::= ('separator' '=>') <single symbol>
-<proper specification> ::= ('proper' '=>') boolean
-<rank specification> ::= ('rank' '=>') <signed integer>
-<null ranking specification> ::= ('null-ranking' '=>') <null ranking constant>
-<null ranking specification> ::= ('null' 'rank' '=>') <null ranking constant>
-<null ranking constant> ::= 'low' | 'high'
-<priority specification> ::= ('priority' '=>') <signed integer>
-<pause specification> ::= ('pause' '=>') <before or after>
+action                         ::= ('action' '=>') <action name>
+autorank                       ::= ('autorank' '=>') boolean
+<left association>             ::= ('assoc' '=>' 'left')
+<right association>            ::= ('assoc' '=>' 'right')
+<group association>            ::= ('assoc' '=>' 'group')
+<separator specification>      ::= ('separator' '=>') <single symbol>
+<proper specification>         ::= ('proper' '=>') boolean
+<rank specification>           ::= ('rank' '=>') <signed integer>
+<null ranking specification>   ::= ('null-ranking' '=>') <null ranking constant>
+<null ranking specification>   ::= ('null' 'rank' '=>') <null ranking constant>
+<null ranking constant>        ::= 'low' | 'high'
+<priority specification>       ::= ('priority' '=>') <signed integer>
+<pause specification>          ::= ('pause' '=>') <before or after>
+<event specification>          ::= ('event' '=>') <event initialization>
+<event initialization>         ::= <event name> <event initializer>
+<event initializer>            ::= ('=') <on or off>
+<on or off>                    ::= 'on' | 'off'
+<event initializer>            ::= # empty
+<latm specification>           ::= ('forgiving' '=>') true
+<latm specification>           ::= ('latm' '=>') true
+<blessing>                     ::= ('bless' '=>') <blessing name>
+naming                         ::= ('name' '=>') <alternative name>
+<null adverb>                  ::= ','
 
-<event specification> ::= ('event' '=>') <event initialization>
-<event initialization> ::= <event name> <event initializer>
-<event initializer> ::= ('=') <on or off>
-<on or off> ::= 'on' | 'off'
-<event initializer> ::= # empty
-
-<naming> ::= ('name' '=>') <alternative name>
-
-<alternative name> ::= <standard name> | <single quoted name>
-<lexer name> ::= <standard name> | <single quoted name>
+<alternative name>             ::= <standard name> | <single quoted name>
 
 <event name> ::= <standard name>
     | <single quoted name>
@@ -104,7 +128,7 @@ action ::= ('action' '=>') <action name>
 lhs ::= <symbol name>
 rhs ::= <rhs primary>+
 <rhs primary> ::= <single symbol>
-<rhs primary> ::= <single quoted string>
+<rhs primary> ::= <quoted string>
 <rhs primary> ::= <parenthesized rhs primary list>
 <parenthesized rhs primary list> ::= ('(') <rhs primary list> (')')
 <rhs primary list> ::= <rhs primary>+
@@ -127,8 +151,8 @@ whitespace ~ [\s]+
 :discard ~ <cplusplus comment>
 <cplusplus comment> ~ /\/\/[^\v]*(?:\v|\z)/ # Same remark
 
-<op declare bnf> ~ '::='
-<op declare match> ~ '~'
+<op declare top grammar> ~ '::='
+<op declare sub grammar> ~ '~'
 <op loosen> ~ '||'
 <op equal priority> ~ '|'
 quantifier ::= '*' | '+'
@@ -138,6 +162,7 @@ quantifier ::= '*' | '+'
 <sign> ~ [+-]
 <integer> ~ [\d]+
 
+true    ~ '1'
 boolean ~ [01]
 
 <reserved action name> ~ '::' <one or more word characters>
@@ -168,12 +193,9 @@ boolean ~ [01]
   | 'name' | 'lhs' | 'symbol' | 'rule' 
   | 'value' | 'values'
 
-# In single quoted strings and character classes
-# no escaping or internal newlines, and disallow empty string
-
-<single quoted string> ~ ['] <string without single quote or vertical space> ['] <character class modifiers>
-<single quoted name> ~ ['] <string without single quote or vertical space> [']
-<string without single quote or vertical space> ~ [^'\x{0A}\x{0B}\x{0C}\x{0D}\x{0085}\x{2028}\x{2029}]+
+<single quoted string> ~ /'([^\\']*(?:\\.[^\\']*)*)'/s   # s modifier to match newline
+<double quoted string> ~ /"([^\\"]*(?:\\.[^\\"]*)*)"/s   # s modifier to match newline
+<quoted string> ~ <single quoted string> | <double quoted string>
 
 <character class> ~ '[' <cc elements> ']' <character class modifiers>
 <cc elements> ~ <cc element>+
