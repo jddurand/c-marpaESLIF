@@ -17,8 +17,8 @@ typedef struct bootstrap_grammar_L0_symbols {
 bootstrap_grammar_L0_symbols_t bootstrap_grammar_L0_symbols[] = {
   { "<reserved event name>",          MARPAESLIF_SYMBOL_TYPE_TERMINAL, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,     ":symbol", NULL },
   { "whitespace",                     MARPAESLIF_SYMBOL_TYPE_TERMINAL, MARPAESLIF_TERMINAL_TYPE_REGEX,   MARPAESLIF_REGEX_OPTION_NA,     "[\\s]+", NULL },
-  { "<perl comment>",                 MARPAESLIF_SYMBOL_TYPE_TERMINAL, MARPAESLIF_TERMINAL_TYPE_REGEX,   MARPAESLIF_REGEX_OPTION_NA,     "#[^\\v]*(?:\\v|\\z)", NULL },
-  { "<cplusplus comment>",            MARPAESLIF_SYMBOL_TYPE_TERMINAL, MARPAESLIF_TERMINAL_TYPE_REGEX,   MARPAESLIF_REGEX_OPTION_NA,     "//[^\\v]*(?:\\v|\\z)", NULL },
+  { "<perl comment>",                 MARPAESLIF_SYMBOL_TYPE_TERMINAL, MARPAESLIF_TERMINAL_TYPE_REGEX,   MARPAESLIF_REGEX_OPTION_NA,     "#[^\\n]*(?:\\n|\\z)", NULL },
+  { "<cplusplus comment>",            MARPAESLIF_SYMBOL_TYPE_TERMINAL, MARPAESLIF_TERMINAL_TYPE_REGEX,   MARPAESLIF_REGEX_OPTION_NA,     "//[^\\n]*(?:\\n|\\z)", NULL },
   { "<c comment>",                    MARPAESLIF_SYMBOL_TYPE_TERMINAL, MARPAESLIF_TERMINAL_TYPE_REGEX,   MARPAESLIF_REGEX_OPTION_NA,     "/\\*(?:[^\\*]+|\\*(?!/))*\\*/", NULL },
   { "<op declare bnf>",               MARPAESLIF_SYMBOL_TYPE_TERMINAL, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,     "::=", NULL },
   { "<op declare match>",             MARPAESLIF_SYMBOL_TYPE_TERMINAL, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,     "~", NULL },
@@ -41,10 +41,20 @@ bootstrap_grammar_L0_symbols_t bootstrap_grammar_L0_symbols[] = {
   { "<left bracket>",                 MARPAESLIF_SYMBOL_TYPE_TERMINAL, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,     "[", NULL },
   { "<right bracket>",                MARPAESLIF_SYMBOL_TYPE_TERMINAL, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,     "]", NULL },
   { "comma",                          MARPAESLIF_SYMBOL_TYPE_TERMINAL, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,     ",", NULL },
+  /* Taken from Regexp::Common::delimited, $RE{delimited}{-delim=>"/"}{-cdelim=>"/"} */
+  /* Perl stringified version is: (?:(?|(?:\/)(?:[^\\\/]*(?:\\.[^\\\/]*)*)(?:\/))) */
   { "<regular expression>",           MARPAESLIF_SYMBOL_TYPE_TERMINAL, MARPAESLIF_TERMINAL_TYPE_REGEX,   MARPAESLIF_REGEX_OPTION_DOTALL, "/([^\\/]*(?:\\.[^\\/]*)*)/", NULL },
+  /* Copy paste of the inner match of previous regexp */
   { "<substitution expression>",      MARPAESLIF_SYMBOL_TYPE_TERMINAL, MARPAESLIF_TERMINAL_TYPE_REGEX,   MARPAESLIF_REGEX_OPTION_DOTALL, "/([^\\/]*(?:\\.[^\\/]*)*)/([^\\/]*(?:\\.[^\\/]*)*)/", NULL },
-  { "<single quoted string>",         MARPAESLIF_SYMBOL_TYPE_TERMINAL, MARPAESLIF_TERMINAL_TYPE_REGEX,   MARPAESLIF_REGEX_OPTION_DOTALL, "'([^\\']*(?:\\.[^\\']*)*)'", NULL },
-  { "<double quoted string>",         MARPAESLIF_SYMBOL_TYPE_TERMINAL, MARPAESLIF_TERMINAL_TYPE_REGEX,   MARPAESLIF_REGEX_OPTION_DOTALL, "\"([^\\\"]*(?:\\.[^\\\"]*)*)\"", NULL }
+  /* Taken from Regexp::Common::delimited, $RE{delimited}{-delim=>"'"}{-cdelim=>"'"} */
+  /* Perl stringified version is: (?:(?|(?:\')(?:[^\\\']*(?:\\.[^\\\']*)*)(?:\'))) */
+  { "<single quoted string>",         MARPAESLIF_SYMBOL_TYPE_TERMINAL, MARPAESLIF_TERMINAL_TYPE_REGEX,   MARPAESLIF_REGEX_OPTION_DOTALL, "'([^\\']*(?:\\.[^\\']*)+)'", NULL },
+  /* Taken from Regexp::Common::delimited, $RE{delimited}{-delim=>"'"}{-cdelim=>"'"} */
+  /* Perl stringified version is: (?:(?|(?:\")(?:[^\\\"]*(?:\\.[^\\\"]*)*)(?:\"))) */
+  { "<double quoted string>",         MARPAESLIF_SYMBOL_TYPE_TERMINAL, MARPAESLIF_TERMINAL_TYPE_REGEX,   MARPAESLIF_REGEX_OPTION_DOTALL, "\"([^\\\"]*(?:\\.[^\\\"]*)+)\"", NULL },
+  /* Taken from Regexp::Common::delimited, $RE{delimited}{-delim=>"["}{-cdelim=>"]"} */
+  /* Perl stringified version is: (?:(?|(?:\[)(?:[^\\\]]*(?:\\.[^\\\]]*)*)(?:\]))) */
+  { "<character class>",              MARPAESLIF_SYMBOL_TYPE_TERMINAL, MARPAESLIF_TERMINAL_TYPE_REGEX,   MARPAESLIF_REGEX_OPTION_DOTALL, "[[^\\\\\\]]*(?:\\\\.[^\\\\\\]]*)*]", NULL },
 };
 
 #endif /* MARPAESLIF_INTERNAL_ESLIF_H */

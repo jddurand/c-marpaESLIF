@@ -120,102 +120,97 @@ naming                         ::= ('name' '=>') <alternative name>
 
 <alternative name>             ::= <standard name> | <single quoted name>
 
-<event name> ::= <standard name>
-    | <single quoted name>
-    | <reserved event name>
+<event name>        ::= <standard name>
+                      | <quoted name>
+                      | <reserved event name>
 <reserved event name> ~ ':symbol'
 
-lhs ::= <symbol name>
-rhs ::= <rhs primary>+
-<rhs primary> ::= <single symbol>
-<rhs primary> ::= <quoted string>
-<rhs primary> ::= <parenthesized rhs primary list>
+lhs                              ::= <symbol name>
+rhs                              ::= <rhs primary>+
+<rhs primary>                    ::= <single symbol>
+<rhs primary>                    ::= <quoted string>
+<rhs primary>                    ::= <parenthesized rhs primary list>
 <parenthesized rhs primary list> ::= ('(') <rhs primary list> (')')
-<rhs primary list> ::= <rhs primary>+
-<single symbol> ::=
-    symbol
-  | <character class>
-symbol ::= <symbol name>
-<symbol name> ::= <bare name>
-<symbol name> ::= <bracketed name>
-<action name> ::= <Perl name>
-<action name> ::= <reserved action name>
-<action name> ::= <array descriptor>
+<rhs primary list>               ::= <rhs primary>+
+
+<single symbol> ::=  symbol
+                  | <character class>
+symbol          ::= <symbol name>
+<symbol name>   ::= <bare name>
+<symbol name>   ::= <bracketed name>
+
+<action name>   ::= <Perl name>
+<action name>   ::= <reserved action name>
+<action name>   ::= <array descriptor>
 
 :discard ~ whitespace
 whitespace ~ [\s]+
 
-# allow comments
+# allow perl comments
 :discard ~ <perl comment>
-<perl comment> ~ /#[^\v]*(?:\v|\z)/    # \z is to match a comment at the very end without a vertical space
+<perl comment> ~ /#[^\n]*(?:\n|\z)/    # \z is to match a comment at the very end without a vertical space
+// Allow cpluscplus comments
 :discard ~ <cplusplus comment>
-<cplusplus comment> ~ /\/\/[^\v]*(?:\v|\z)/ # Same remark
+<cplusplus comment> ~ /\/\/[^\n]*(?:\n|\z)/ # Same remark
+/* Allow
+   C comments */
+:discard ~ <c comment>
+<c comment> ~ /\/\*(?:[^\*]+|\*(?!\/))*\*\//
 
 <op declare top grammar> ~ '::='
 <op declare sub grammar> ~ '~'
-<op loosen> ~ '||'
-<op equal priority> ~ '|'
-quantifier ::= '*' | '+'
-<before or after> ~ 'before' | 'after'
+<op loosen>              ~ '||'
+<op equal priority>      ~ '|'
+quantifier             ::= '*' | '+'
+<before or after>        ~ 'before' | 'after'
 
-<signed integer> ~ <integer> | <sign> <integer>
-<sign> ~ [+-]
-<integer> ~ [\d]+
+<signed integer>         ~ <integer> | <sign> <integer>
+<sign>                   ~ [+-]
+<integer>                ~ [\d]+     # By default, a character class by default never matched characters whose code points are greater than 127. So [\d] is [0-9]
 
-true    ~ '1'
-boolean ~ [01]
+true                     ~ '1'
+boolean                  ~ [01]
 
-<reserved action name> ~ '::' <one or more word characters>
-<one or more word characters> ~ [\w]+
-<zero or more word characters> ~ [\w]*
+<reserved action name>         ~ '::' <one or more word characters>
+<one or more word characters>  ~ [\w]+  # \w is  [a-zA-Z0-9_]
+<zero or more word characters> ~ [\w]*  # \w is  [a-zA-Z0-9_]
 
 # Perl identifiers allow an initial digit, which makes them slightly more liberal than Perl bare names
 # but equivalent to Perl names with sigils.
 <Perl identifier> ~ [\w]+
-<double colon> ~ '::'
-<Perl name> ~ <Perl identifier>+ separator => <double colon> proper => 1
+<double colon>    ~ '::'
+<Perl name>       ~ <Perl identifier>+ separator => <double colon> proper => 1
 
-<bare name> ~ [\w]+
-<standard name> ~ [a-zA-Z] <zero or more word characters>
-<bracketed name> ~ '<' <bracketed name string> '>'
+<bare name>             ~ [\w]+
+<standard name>         ~ [a-zA-Z] <zero or more word characters>
+<bracketed name>        ~ '<' <bracketed name string> '>'
 <bracketed name string> ~ [\s\w]+
 
-<array descriptor> ~ <array descriptor left bracket> <result item descriptor list> <array descriptor right bracket>
-<array descriptor left bracket> ~ '[' 
-<array descriptor left bracket> ~ '[' whitespace
-<array descriptor right bracket> ~ ']' 
-<array descriptor right bracket> ~ whitespace ']' 
-<result item descriptor list> ~ <result item descriptor>* separator => <result item descriptor separator>
+<array descriptor>                 ~ <array descriptor left bracket> <result item descriptor list> <array descriptor right bracket>
+<array descriptor left bracket>    ~ '[' 
+<array descriptor left bracket>    ~ '[' whitespace
+<array descriptor right bracket>   ~ ']' 
+<array descriptor right bracket>   ~ whitespace ']' 
+<result item descriptor list>      ~ <result item descriptor>* separator => <result item descriptor separator>
 <result item descriptor separator> ~ [,]
 <result item descriptor separator> ~ [,] whitespace
-<result item descriptor> ~ 'start' | 'length'
-  | 'g1start' | 'g1length'
-  | 'name' | 'lhs' | 'symbol' | 'rule' 
-  | 'value' | 'values'
+<result item descriptor>           ~ 'start'
+                                   | 'length'
+                                   | 'g1start'
+                                   | 'g1length'
+                                   | 'name'
+                                   | 'lhs'
+                                   | 'symbol'
+                                   | 'rule' 
+                                   | 'value'
+                                   | 'values'
 
-<single quoted string> ~ /'([^\\']*(?:\\.[^\\']*)*)'/s   # s modifier to match newline
-<double quoted string> ~ /"([^\\"]*(?:\\.[^\\"]*)*)"/s   # s modifier to match newline
-<quoted string> ~ <single quoted string> | <double quoted string>
+<single quoted string> ~ /'([^\\']*(?:\\.[^\\']*)+)'/s   # s modifier to match newline - we never match ''
+<double quoted string> ~ /"([^\\"]*(?:\\.[^\\"]*)+)"/s   # s modifier to match newline - we never match ""
+<quoted string>        ~ <single quoted string> | <double quoted string>
 
-<character class> ~ '[' <cc elements> ']' <character class modifiers>
-<cc elements> ~ <cc element>+
-<cc element> ~ <safe cc character>
-# hex 5d is right square bracket
-<safe cc character> ~ [^\x{5d}\x{0A}\x{0B}\x{0C}\x{0D}\x{0085}\x{2028}\x{2029}]
-<cc element> ~ <escaped cc character>
-<escaped cc character> ~ '\' <horizontal character>
-<cc element> ~ <posix char class>
-<cc element> ~ <negated posix char class>
-<character class modifiers> ~ <character class modifier>*
-<character class modifier> ~ ':ic'
-<character class modifier> ~ ':i'
+<character class>           ~ /\[[^\\\]]*(?:\\.[^\\\]]*)*\]/ <character class modifiers>
+<character class modifiers>  ~ ':' <regexp match modifiers>
 
-# [=xyz=] and [.xyz.] are parsed by Perl, but then currently cause an exception.
-# Catching Perl exceptions is inconvenient for Marpa,
-# so we reject them syntactically instead.
-<posix char class> ~ '[:' <posix char class name> ':]'
-<negated posix char class> ~ '[:^' <posix char class name> ':]'
-<posix char class name> ~ [[:alnum:]]+
-
-# a horizontal character is any character that is not vertical space
-<horizontal character> ~ [^\x{A}\x{B}\x{C}\x{D}\x{2028}\x{2029}]
+<regexp match modifier> ~ [eijmnsxADJUc]  # c is added for Marpa::R2 compatibility and is meaningless
+<regexp match modifiers> ~ <regexp match modifier>*
