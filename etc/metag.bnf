@@ -148,7 +148,7 @@ whitespace ~ [\s]+
 
 # allow perl comments
 :discard ~ <perl comment>
-<perl comment> ~ /#[^\n]*(?:\n|\z)/    # \z is to match a comment at the very end without a vertical space
+<perl comment> ~ /#[^\n]*(?:\n|\z)/ # \z is to match a comment at the very end without a vertical space
 // Allow cpluscplus comments
 :discard ~ <cplusplus comment>
 <cplusplus comment> ~ /\/\/[^\n]*(?:\n|\z)/ # Same remark
@@ -205,12 +205,17 @@ boolean                  ~ [01]
                                    | 'value'
                                    | 'values'
 
-<single quoted string> ~ /'([^\\']*(?:\\.[^\\']*)+)'/s   # s modifier to match newline - we never match ''
-<double quoted string> ~ /"([^\\"]*(?:\\.[^\\"]*)+)"/s   # s modifier to match newline - we never match ""
+<single quoted string> ~ /'[^\']*(?:\.[^\']*)*'/s   # s modifier to match newline - we never match ''
+<double quoted string> ~ /"[^\"]*(?:\.[^\"]*)*"/s   # s modifier to match newline - we never match ""
 <quoted string>        ~ <single quoted string> | <double quoted string>
 
-<character class>           ~ /\[[^\\\]]*(?:\\.[^\\\]]*)*\]/ <character class modifiers>
-<character class modifiers>  ~ ':' <regexp match modifiers>
+<character class regexp>    ~ /\[(?:[^\\]]*(?:\.[^\\]]*)*)\]/
+<character class>           ~ <character class regexp> <character class modifiers>
+<character class modifiers> ~ /:[eijmnsxADJUc]*/   # c is added for Marpa::R2 compatibility and is meaningless
 
-<regexp match modifier> ~ [eijmnsxADJUc]  # c is added for Marpa::R2 compatibility and is meaningless
-<regexp match modifiers> ~ <regexp match modifier>*
+<regular expression>           ~ /\/[^\\/]*(?:\.[^\\/]*)*\// <regular expression modifiers>
+<regular expression modifiers> ~ [eijmnsxADJU]*
+
+<substitution expression>           ~ /\/[^\\/]*(?:\.[^\\/]*)*\/[^\\/]*(?:\.[^\\/]*)*\// <substitution expression modifiers>
+<substitution expression modifiers> ~ [eijmnsxADJUgzZ]*
+
