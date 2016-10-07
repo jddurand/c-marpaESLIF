@@ -149,7 +149,7 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
       terminalp->u.regex.substitutionl = substitutionl;
     }
     pcre2Optioni = PCRE2_ANCHORED|PCRE2_UTF;      /* In our case, patterns are always anchored and in UTF mode */
-    for (i = 0; i < _MARPAESLIF_REGEX_OPTION_UNGREEDY_ID_MAX; i++) {
+    for (i = 0; i < _MARPAESLIF_REGEX_OPTION_ID_MAX; i++) {
       if ((opti & marpaESLIF_regex_option_map[i].opti) == marpaESLIF_regex_option_map[i].opti) {
 	pcre2Optioni |= marpaESLIF_regex_option_map[i].pcre2Optioni;
       }
