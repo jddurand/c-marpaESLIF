@@ -24,7 +24,7 @@ marpaESLIFOption_t marpaESLIFOption_default = {
   NULL               /* genericLoggerp */
 };
 
-static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *marpaESLIFGrammarp, short startb, int eventSeti, char *descs, size_t descl, marpaESLIF_terminal_type_t type, marpaESLIF_uint32_t opti, PCRE2_SPTR originp, PCRE2_SIZE originl, PCRE2_SPTR substitutionp, PCRE2_SIZE substitutionl);
+static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *marpaESLIFGrammarp, short startb, int eventSeti, char *descs, size_t descl, marpaESLIF_terminal_type_t type, marpaESLIF_uint32_t opti, PCRE2_SPTR originp, PCRE2_SIZE originl, PCRE2_SPTR substitutionp, PCRE2_SIZE substitutionl, char *testFullMatchs, char *testPartialMatchs);
 static inline void                   _marpaESLIF_terminal_freev(marpaESLIF_t *marpaESLIFp, marpaESLIF_terminal_t *terminalp);
 
 static inline marpaESLIF_grammar_t  *_marpaESLIF_grammar_newp(marpaESLIF_t *marpaESLIFp, marpaWrapperGrammarOption_t *marpaWrapperGrammarOptionp, marpaESLIF_grammar_t *previousp);
@@ -54,7 +54,7 @@ static inline char                  *_marpaESLIF_utf82printableascii_newp(marpaE
 static inline void                   _marpaESLIF_utf82printableascii_freev(marpaESLIF_t *marpaESLIFp, char *utf82printableasciip);
 
 /*****************************************************************************/
-static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *marpaESLIFGrammarp, short startb, int eventSeti, char *descs, size_t descl, marpaESLIF_terminal_type_t type, marpaESLIF_uint32_t opti, PCRE2_SPTR originp, PCRE2_SIZE originl, PCRE2_SPTR substitutionp, PCRE2_SIZE substitutionl)
+static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *marpaESLIFGrammarp, short startb, int eventSeti, char *descs, size_t descl, marpaESLIF_terminal_type_t type, marpaESLIF_uint32_t opti, PCRE2_SPTR originp, PCRE2_SIZE originl, PCRE2_SPTR substitutionp, PCRE2_SIZE substitutionl, char *testFullMatchs, char *testPartialMatchs)
 /*****************************************************************************/
 {
   const static char                *funcs = "_marpaESLIF_terminal_newp";
@@ -113,12 +113,12 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
     terminalp->u.string.stringl = 0;
     
     if ((originp == NULL) || (originl <= 0)) {
-      MARPAESLIF_ERROR(marpaESLIFp, "Invalid terminal origin");
+      MARPAESLIF_ERRORF(marpaESLIFp, "%s - invalid terminal origin", terminalp->asciidescs);
       goto err;
     }
     terminalp->u.string.stringp = (char *) malloc((size_t) originl);
     if (terminalp->u.string.stringp == NULL) {
-      MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
+      MARPAESLIF_ERRORF(marpaESLIFp, "%s - malloc failure, %s", terminalp->asciidescs, strerror(errno));
       goto err;
     }
     memcpy((void *) terminalp->u.string.stringp, originp, (size_t) originl);
@@ -136,22 +136,28 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
 #endif
     
     if ((originp == NULL) || (originl <= 0)) {
-      MARPAESLIF_ERROR(marpaESLIFp, "Invalid terminal origin");
+      MARPAESLIF_ERRORF(marpaESLIFp, "%s - invalid terminal origin", terminalp->asciidescs);
       goto err;
     }
     if ((substitutionp != NULL) && (substitutionl > 0)) {
       terminalp->u.regex.substitutionp = (PCRE2_SPTR) malloc((size_t) substitutionl);
       if (terminalp->u.regex.substitutionp == NULL) {
-	MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
+	MARPAESLIF_ERRORF(marpaESLIFp, "%s - malloc failure, %s", terminalp->asciidescs, strerror(errno));
 	goto err;
       }
       memcpy((void *) terminalp->u.regex.substitutionp, substitutionp, substitutionl);
       terminalp->u.regex.substitutionl = substitutionl;
     }
-    pcre2Optioni = PCRE2_ANCHORED|PCRE2_UTF;      /* In our case, patterns are always anchored and in UTF mode */
+    pcre2Optioni = PCRE2_ANCHORED|PCRE2_UTF;      /* By default patterns are always anchored and in UTF mode - only UTF mode can be removed via the 'a' modifier */
     for (i = 0; i < _MARPAESLIF_REGEX_OPTION_ID_MAX; i++) {
       if ((opti & marpaESLIF_regex_option_map[i].opti) == marpaESLIF_regex_option_map[i].opti) {
-	pcre2Optioni |= marpaESLIF_regex_option_map[i].pcre2Optioni;
+	/* It is important to process pcre2OptionNoti first */
+	if (marpaESLIF_regex_option_map[i].pcre2OptionNoti != 0) {
+	  pcre2Optioni &= ~marpaESLIF_regex_option_map[i].pcre2OptionNoti;
+	}
+	if (marpaESLIF_regex_option_map[i].pcre2Optioni != 0) {
+	  pcre2Optioni |= marpaESLIF_regex_option_map[i].pcre2Optioni;
+	}
       }
     }
     terminalp->u.regex.patternp = pcre2_compile(
@@ -163,7 +169,7 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
 						NULL);        /* use default compile context */
     if (terminalp->u.regex.patternp == NULL) {
       pcre2_get_error_message(pcre2Errornumberi, pcre2ErrorBuffer, sizeof(pcre2ErrorBuffer));
-      MARPAESLIF_ERRORF(marpaESLIFp, "pcre2_compile failure at offset %ld: %s", (unsigned long) pcre2ErrorOffsetl, pcre2ErrorBuffer);
+      MARPAESLIF_ERRORF(marpaESLIFp, "%s - pcre2_compile failure at offset %ld: %s", terminalp->asciidescs, (unsigned long) pcre2ErrorOffsetl, pcre2ErrorBuffer);
       goto err;
     }
     if (terminalp->u.regex.substitutionp != NULL) {
@@ -175,7 +181,7 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
 							       NULL /* Default memory allocation */);
     }
     if (terminalp->u.regex.match_datap == NULL) {
-      MARPAESLIF_ERRORF(marpaESLIFp, "pcre2_match_data_create_from_pattern failure, %s", strerror(errno));
+      MARPAESLIF_ERRORF(marpaESLIFp, "%s - pcre2_match_data_create_from_pattern failure, %s", terminalp->asciidescs, strerror(errno));
       goto err;
     }
     /* Determine if we can do JIT */
@@ -199,11 +205,48 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
     break;
 
   default:
-    MARPAESLIF_ERRORF(marpaESLIFp, "Unsupported terminal type %d", type);
+    MARPAESLIF_ERRORF(marpaESLIFp, "%s - unsupported terminal type %d", terminalp->asciidescs, type);
     goto err;
     break;
   }
 
+#ifndef MARPAESLIF_NTRACE
+  if (testFullMatchs != NULL) {
+    marpaESLIF_matcher_value_t rci;
+    char                      *outputp;
+    size_t                     outputl;
+
+    if (! _marpaESLIF_matcheri(marpaESLIFp, terminalp, testFullMatchs, strlen(testFullMatchs), 1, &rci, &outputp, &outputl)) {
+      MARPAESLIF_ERRORF(marpaESLIFp, "%s - testing full match: matcher general failure", terminalp->asciidescs);
+      goto err;
+    }
+    if (rci != MARPAESLIF_MATCH_OK) {
+      MARPAESLIF_ERRORF(marpaESLIFp, "%s - testing full match: matcher returned rci = %d", terminalp->asciidescs, rci);
+      goto err;
+    }
+    if (outputp == NULL) {
+      MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s - testing full match is successful on %s but result is NULL", terminalp->asciidescs, testFullMatchs);
+      goto err;
+    }
+    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s - testing full match is successful on %s, result is %s", terminalp->asciidescs, testFullMatchs, outputp);
+    free(outputp);
+  }
+  if (testPartialMatchs != NULL) {
+    marpaESLIF_matcher_value_t rci;
+    char                      *outputp;
+    size_t                     outputl;
+
+    if (! _marpaESLIF_matcheri(marpaESLIFp, terminalp, testPartialMatchs, strlen(testPartialMatchs), 0, &rci, &outputp, &outputl)) {
+      MARPAESLIF_ERRORF(marpaESLIFp, "%s - testing partial match: matcher general failure", terminalp->asciidescs);
+      goto err;
+    }
+    if (rci != MARPAESLIF_MATCH_AGAIN) {
+      MARPAESLIF_ERRORF(marpaESLIFp, "%s - testing partial match: matcher returned rci = %d", terminalp->asciidescs, rci);
+      goto err;
+    }
+    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s - testing partial match is successful on %s when not at EOF", terminalp->asciidescs, testFullMatchs);
+  }
+#endif
   goto done;
   
  err:
@@ -259,7 +302,9 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_grammarb(marpaESLIF_t 
 					    bootstrap_grammar_L0_symbols[i].originp,
 					    (bootstrap_grammar_L0_symbols[i].originp != NULL) ? strlen(bootstrap_grammar_L0_symbols[i].originp) : 0,
 					    bootstrap_grammar_L0_symbols[i].substitutionp,
-					    (bootstrap_grammar_L0_symbols[i].substitutionp != NULL) ? strlen(bootstrap_grammar_L0_symbols[i].substitutionp) : 0
+					    (bootstrap_grammar_L0_symbols[i].substitutionp != NULL) ? strlen(bootstrap_grammar_L0_symbols[i].substitutionp) : 0,
+					    bootstrap_grammar_L0_symbols[i].testFullMatchs,
+					    bootstrap_grammar_L0_symbols[i].testPartialMatchs
 					    );
       if (terminalp == NULL) {
 	goto err;
@@ -632,9 +677,15 @@ static inline short _marpaESLIF_matcheri(marpaESLIF_t *marpaESLIFp, marpaESLIF_t
     case MARPAESLIF_TERMINAL_TYPE_STRING:
       marpaESLIF_string = terminalp->u.string;
       if (inputl >= marpaESLIF_string.stringl) {
-	rci = (memcmp(inputp, marpaESLIF_string.stringp, marpaESLIF_string.stringl) == 0) ? MARPAESLIF_MATCH_OK : MARPAESLIF_MATCH_FAILURE;
+	if (memcmp(inputp, marpaESLIF_string.stringp, marpaESLIF_string.stringl) == 0) {
+	  rci = MARPAESLIF_MATCH_OK;
+	  matchLengthl = marpaESLIF_string.stringl;
+	} else {
+	  rci = MARPAESLIF_MATCH_FAILURE;
+	}
       } else {
-	rci = (memcmp(inputp, marpaESLIF_string.stringp, inputl) == 0) ? MARPAESLIF_MATCH_AGAIN : MARPAESLIF_MATCH_FAILURE;
+	/* Partial match never returns OK -; */
+	rci = (memcmp(inputp, marpaESLIF_string.stringp, inputl) == 0) ? (eofb ? MARPAESLIF_MATCH_FAILURE : MARPAESLIF_MATCH_AGAIN) : MARPAESLIF_MATCH_FAILURE;
       }
       break;
       
@@ -899,19 +950,20 @@ static inline short _marpaESLIF_matcheri(marpaESLIF_t *marpaESLIFp, marpaESLIF_t
       *outputlp = (pcre2_substitutep != NULL) ? pcre2_substitutel : matchLengthl;
     }
     if (outputpp != NULL) {
-      /* When there is a substitution result, memory was already allocated */
+      /* When there is a substitution result, memory was already allocated, trailing zero included */
       if (pcre2_substitutep != NULL) {
 	*outputpp = pcre2_substitutep;
 	/* Prevent a memory free at the end of this routine */
 	pcre2_substitutep = NULL;
       } else {
-	char *outputp = (char *) malloc(matchLengthl);
+	char *outputp = (char *) malloc(matchLengthl + 1);
 	/* Matched input is starting at inputp and its length is in matchLengthl */
 	if (outputp == NULL) {
 	  MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s - malloc failure, %s", terminalp->asciidescs, strerror(errno));
 	  goto err;
 	}
 	memcpy(outputp, inputp, matchLengthl);
+	outputp[matchLengthl] = '\0'; /* Trailing zero in any case (even if there CAN BE other zeroes before) */
 	*outputpp = outputp;
       }
     }
@@ -929,7 +981,7 @@ static inline short _marpaESLIF_matcheri(marpaESLIF_t *marpaESLIFp, marpaESLIF_t
   if (pcre2_substitutep != NULL) {
     free((void *) pcre2_substitutep);
   }
-  return rci;
+  return 1;
 }
 
 #ifndef MARPAESLIF_NTRACE

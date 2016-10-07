@@ -28,6 +28,28 @@
 # - double quoted strings    added
 # - strings have no restriction on escaping and content - they just have to be correctly delimited
 #
+# ----------------------------------------------------------------------------------------------
+# Please note that there is a very big difference between using apparently equivalent regexp and
+# character class with a quantifier:
+# a character class with a quantifier is reinterpreted as a rule sequence
+# a regexp is never reinterpreted.
+#
+# The rule that always apply is: a match can NEVER be of zero length.
+# Therefore, suppose that the input is 'abc', the statements:
+# lhs ::= /[0-9]*/ will NEVER appear in the parse tree
+# lhs ::= [0-9]*   will appear in the parse tree, because [0-9]* is reinterpreted as a sequence of
+#                  [0-9], with a minimum number of sequences to 0 (true in this case)
+# lhs ::= [0-9]+   will NEVER appear in the parse tree, because [0-9]+ is reinterpreted as a sequence of
+#                  [0-9], with a minimum number of sequences to 1 (false in this case)
+# ----------------------------------------------------------------------------------------------
+#
+# In any case, matches are anchored and in UTF mode by default. Anchoring cannot be changed.
+# But UTF mode can be switched off with the /a modifier.
+#
+# Exhaustive list of modifiers are:
+# eijmnsxDJugzZaN
+# -------------------------------------------------------------------------------------------------
+
 :default   ::= action => [start,length,values]
 lexeme default =  action => [start,length,value]
 
@@ -211,11 +233,11 @@ boolean                  ~ [01]
 
 <character class regexp>    ~ /\[(?:[^\\]]*(?:\.[^\\]]*)*)\]/
 <character class>           ~ <character class regexp> <character class modifiers>
-<character class modifiers> ~ /:[eijmnsxADJUc]*/   # c is added for Marpa::R2 compatibility and is meaningless
+<character class modifiers> ~ /:[eijmnsxDJUuaNc]*/   # c is added for Marpa::R2 compatibility and is meaningless
 
 <regular expression>           ~ /\/[^\\/]*(?:\.[^\\/]*)*\// <regular expression modifiers>
-<regular expression modifiers> ~ [eijmnsxADJU]*
+<regular expression modifiers> ~ [eijmnsxDJUuaN]*
 
 <substitution expression>           ~ /\/[^\\/]*(?:\.[^\\/]*)*\/[^\\/]*(?:\.[^\\/]*)*\// <substitution expression modifiers>
-<substitution expression modifiers> ~ [eijmnsxADJUgzZ]*
+<substitution expression modifiers> ~ [eijmnsxDJUugzZaN]*
 
