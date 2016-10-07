@@ -91,8 +91,8 @@ struct marpaESLIF_regex_option_map {
   { MARPAESLIF_REGEX_OPTION_SUBSTITUTE_GLOBAL,        "g", PCRE2_SUBSTITUTE_GLOBAL,                  0 },
   { MARPAESLIF_REGEX_OPTION_SUBSTITUTE_UNKNOWN_UNSET, "z", PCRE2_SUBSTITUTE_UNKNOWN_UNSET,           0 },
   { MARPAESLIF_REGEX_OPTION_SUBSTITUTE_UNSET_EMPTY,   "Z", PCRE2_SUBSTITUTE_UNSET_EMPTY,             0 },
-  { MARPAESLIF_REGEX_OPTION_NO_UTF,                   "a", PCRE2_NEVER_UTF,                          PCRE2_UTF },
-  { MARPAESLIF_REGEX_OPTION_NO_UCP,                   "N", PCRE2_NEVER_UCP,                          PCRE2_UCP },
+  { MARPAESLIF_REGEX_OPTION_NO_UTF,                   "a", 0,                                        PCRE2_UTF },
+  { MARPAESLIF_REGEX_OPTION_NO_UCP,                   "N", 0,                                        PCRE2_UCP },
 };
 
 struct marpaESLIF_regex {
