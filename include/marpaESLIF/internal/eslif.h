@@ -51,18 +51,47 @@ typedef enum bootstrap_grammar_L0_enum {
   /* ----- Non terminals ------ */
   L0_META_RESERVED_EVENT_NAME,
   L0_META_WHITESPACE,
+  L0_META_PERL_COMMENT,
+  L0_META_CPLUSPLUS_COMMENT,
+  L0_META_C_COMMENT,
+  L0_META_OP_DECLARE_ANY_GRAMMAR,
   L0_META_OP_DECLARE_TOP_GRAMMAR,
   L0_META_OP_DECLARE_LEX_GRAMMAR,
+  L0_META_OP_LOOSER,
+  L0_META_OP_EQUAL_PRIORITY,
   L0_META_BEFORE_OR_AFTER,
   L0_META_SIGNED_INTEGER,
+  L0_META_SIGN,
+  L0_META_INTEGER,
+  L0_META_TRUE,
+  L0_META_BOOLEAN,
+  L0_META_WORD_CHARACTER,
   L0_META_RESERVED_ACTION_NAME,
   L0_META_ONE_OR_MORE_WORD_CHARACTERS,
   L0_META_ZERO_OR_MORE_WORD_CHARACTERS,
+  L0_META_PERL_IDENTIFIER,
+  L0_META_DOUBLE_COLON,
   L0_META_PERL_NAME,
   L0_META_BARE_NAME,
   L0_META_STANDARD_NAME,
   L0_META_BRACKETED_NAME,
-  L0_META_ARRAY_DESCRIPTOR
+  L0_META_BRACKETED_NAME_STRING,
+  L0_META_ARRAY_DESCRIPTOR,
+  L0_META_ARRAY_DESCRIPTOR_LEFT_BRACKET,
+  L0_META_ARRAY_DESCRIPTOR_RIGHT_BRACKET,
+  L0_META_RESULT_ITEM_DESCRIPTOR_LIST,
+  L0_META_RESULT_ITEM_DESCRIPTOR_SEPARATOR,
+  L0_META_RESULT_ITEM_DESCRIPTOR,
+  L0_META_SINGLED_QUOTED_STRING,
+  L0_META_DOUBLE_QUOTED_STRING,
+  L0_META_QUOTED_STRING,
+  L0_META_CHARACTER_CLASS_REGEXP,
+  L0_META_CHARACTER_CLASS,
+  L0_META_CHARACTER_CLASS_MODIFIERS,
+  L0_META_REGULAR_EXPRESSION,
+  L0_META_REGULAR_EXPRESSION_MODIFIERS,
+  L0_META_SUBSTITUTIONS_EXPRESSION,
+  L0_META_SUBSTITUTIONS_EXPRESSION_MODIFIERS
 } bootstrap_grammar_L0_enum_t;
 
 typedef struct bootstrap_grammar_L0_terminal {
@@ -81,22 +110,67 @@ typedef struct bootstrap_grammar_L0_meta {
   char                      *descs;               /* Description */
 } bootstrap_grammar_L0_meta_t;
 
+typedef enum bootstrap_grammar_rule_type {
+  MARPAESLIF_RULE_TYPE_ALTERNATIVE,
+  MARPAESLIF_RULE_TYPE_SEQUENCE
+} bootstrap_grammar_rule_type_t;
+
+typedef struct bootstrap_grammar_rule {
+  int                           lhsi;
+  char                         *descs;
+  bootstrap_grammar_rule_type_t type;
+  size_t                        nrhsl;
+  int                           rhsip[10]; /* 10 is arbitrary - just to make C happy */
+  int                           minimumi;
+  int                           separatori;
+  short                         properb;
+} bootstrap_grammar_rule_t;
+
 /* All non-terminals are listed here */
 bootstrap_grammar_L0_meta_t bootstrap_grammar_L0_metas[] = {
-  { L0_META_RESERVED_EVENT_NAME,          "<meta reserved event name>" },
-  { L0_META_WHITESPACE,                   "<meta whitespace>" },
-  { L0_META_OP_DECLARE_TOP_GRAMMAR,       "<op declare top grammar>" },
-  { L0_META_OP_DECLARE_LEX_GRAMMAR,       "<op declare lex grammar>" },
-  { L0_META_BEFORE_OR_AFTER,              "<before or after>" },
-  { L0_META_SIGNED_INTEGER,               "<signed integer>" },
-  { L0_META_RESERVED_ACTION_NAME,         "<reserved action name>" },
-  { L0_META_ONE_OR_MORE_WORD_CHARACTERS,  "<one or more word characters>" },
-  { L0_META_ZERO_OR_MORE_WORD_CHARACTERS, "<zero or more word characters>" },
-  { L0_META_PERL_NAME,                    "<Perl name>" },
-  { L0_META_BARE_NAME,                    "<Bare name>" },
-  { L0_META_STANDARD_NAME,                "<standard name>" },
-  { L0_META_BRACKETED_NAME,               "<bracketed name>" },
-  { L0_META_ARRAY_DESCRIPTOR,             "<array descriptor>" }
+  { L0_META_RESERVED_EVENT_NAME,                "<meta reserved event name>" },
+  { L0_META_WHITESPACE,                         "<meta whitespace>" },
+  { L0_META_PERL_COMMENT,                       "<meta perl comment>" },
+  { L0_META_CPLUSPLUS_COMMENT,                  "<meta cplusplus comment>" },
+  { L0_META_C_COMMENT,                          "<meta c comment>" },
+  { L0_META_OP_DECLARE_ANY_GRAMMAR,             "<meta op declare any grammar>" },
+  { L0_META_OP_DECLARE_TOP_GRAMMAR,             "<meta op declare top grammar>" },
+  { L0_META_OP_DECLARE_LEX_GRAMMAR,             "<meta op declare lex grammar>" },
+  { L0_META_OP_LOOSER,                          "<meta op looser>" },
+  { L0_META_OP_EQUAL_PRIORITY,                  "<meta op equal priority>" },
+  { L0_META_BEFORE_OR_AFTER,                    "<meta before or after>" },
+  { L0_META_SIGNED_INTEGER,                     "<meta signed integer>" },
+  { L0_META_SIGN,                               "<meta sign>" },
+  { L0_META_INTEGER,                            "<meta integer>" },
+  { L0_META_TRUE,                               "<meta true>" },
+  { L0_META_BOOLEAN,                            "<meta boolean>" },
+  { L0_META_WORD_CHARACTER,                     "<meta word character>" },
+  { L0_META_RESERVED_ACTION_NAME,               "<meta reserved action name>" },
+  { L0_META_ONE_OR_MORE_WORD_CHARACTERS,        "<meta one or more word characters>" },
+  { L0_META_ZERO_OR_MORE_WORD_CHARACTERS,       "<meta zero or more word characters>" },
+  { L0_META_PERL_IDENTIFIER,                    "<meta perl identifier>" },
+  { L0_META_DOUBLE_COLON,                       "<meta double colon>" },
+  { L0_META_PERL_NAME,                          "<meta perl name>" },
+  { L0_META_BARE_NAME,                          "<meta bare name>" },
+  { L0_META_STANDARD_NAME,                      "<meta standard name>" },
+  { L0_META_BRACKETED_NAME,                     "<meta bracketed name>" },
+  { L0_META_BRACKETED_NAME_STRING,              "<meta bracketed name string>" },
+  { L0_META_ARRAY_DESCRIPTOR,                   "<meta array descriptor>" },
+  { L0_META_ARRAY_DESCRIPTOR_LEFT_BRACKET,      "<meta array descriptor left bracket>" },
+  { L0_META_ARRAY_DESCRIPTOR_RIGHT_BRACKET,     "<meta array descriptor right bracket>" },
+  { L0_META_RESULT_ITEM_DESCRIPTOR_LIST,        "<meta result item descriptor list>" },
+  { L0_META_RESULT_ITEM_DESCRIPTOR_SEPARATOR,   "<meta result item descriptor separator>" },
+  { L0_META_RESULT_ITEM_DESCRIPTOR,             "<meta result item descriptor>" },
+  { L0_META_SINGLED_QUOTED_STRING,              "<meta singled quoted string>" },
+  { L0_META_DOUBLE_QUOTED_STRING,               "<meta double quoted string>" },
+  { L0_META_QUOTED_STRING,                      "<meta quoted string>" },
+  { L0_META_CHARACTER_CLASS_REGEXP,             "<meta character class regexp>" },
+  { L0_META_CHARACTER_CLASS,                    "<meta character class>" },
+  { L0_META_CHARACTER_CLASS_MODIFIERS,          "<meta character class modifiers>" },
+  { L0_META_REGULAR_EXPRESSION,                 "<meta regular expression>" },
+  { L0_META_REGULAR_EXPRESSION_MODIFIERS,       "<meta regular expression modifiers>" },
+  { L0_META_SUBSTITUTIONS_EXPRESSION,           "<meta substitutions expression>" },
+  { L0_META_SUBSTITUTIONS_EXPRESSION_MODIFIERS, "<meta substitutions expression modifiers>" }
 };
 
 /* Here it is very important that all the string constants are UTF-8 compatible - this is the case */
@@ -475,4 +549,8 @@ bootstrap_grammar_L0_terminal_t bootstrap_grammar_L0_terminals[] = {
   },
 };
 
+bootstrap_grammar_rule_t bootstrap_grammar_L0_rules[] = {
+  { L0_META_RESERVED_EVENT_NAME, "<rule reserved event name>", MARPAESLIF_RULE_TYPE_ALTERNATIVE,     1, { L0_TERMINAL_RESERVED_EVENT_NAME },       -1,         -1,      -1 },
+  { L0_META_WHITESPACE,          "<rule whitespace>",          MARPAESLIF_RULE_TYPE_ALTERNATIVE,     1, { L0_TERMINAL_WHITESPACE          },       -1,         -1,      -1 }
+};
 #endif /* MARPAESLIF_INTERNAL_ESLIF_H */
