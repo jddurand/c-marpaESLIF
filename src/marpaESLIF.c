@@ -27,6 +27,9 @@ marpaESLIFOption_t marpaESLIFOption_default = {
 static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *marpaESLIFGrammarp, short startb, int eventSeti, char *descs, size_t descl, marpaESLIF_terminal_type_t type, marpaESLIF_uint32_t opti, PCRE2_SPTR originp, PCRE2_SIZE originl, PCRE2_SPTR substitutionp, PCRE2_SIZE substitutionl, char *testFullMatchs, char *testPartialMatchs);
 static inline void                   _marpaESLIF_terminal_freev(marpaESLIF_t *marpaESLIFp, marpaESLIF_terminal_t *terminalp);
 
+static inline marpaESLIF_meta_t     *_marpaESLIF_meta_newp(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *marpaESLIFGrammarp, short startb, int eventSeti, char *descs, size_t descl);
+static inline void                   _marpaESLIF_meta_freev(marpaESLIF_t *marpaESLIFp, marpaESLIF_meta_t *metap);
+
 static inline marpaESLIF_grammar_t  *_marpaESLIF_grammar_newp(marpaESLIF_t *marpaESLIFp, marpaWrapperGrammarOption_t *marpaWrapperGrammarOptionp, marpaESLIF_grammar_t *previousp);
 static inline void                   _marpaESLIF_grammar_freev(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *marpaESLIFGrammarp);
 
@@ -259,16 +262,90 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
 }
 
 /*****************************************************************************/
+static inline marpaESLIF_meta_t *_marpaESLIF_meta_newp(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *marpaESLIFGrammarp, short startb, int eventSeti, char *descs, size_t descl)
+/*****************************************************************************/
+{
+  const static char                *funcs = "_marpaESLIF_meta_newp";
+  marpaESLIF_meta_t                *metap;
+  marpaWrapperGrammarSymbolOption_t marpaWrapperGrammarSymbolOption;
+
+  MARPAESLIF_TRACE(marpaESLIFp, funcs, "Building meta");
+
+  metap = (marpaESLIF_meta_t *) malloc(sizeof(marpaESLIF_meta_t));
+  if (metap == NULL) {
+    MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
+    goto err;
+  }
+
+  metap->idi          = -1;
+  metap->descs        = NULL;
+  metap->asciidescs   = NULL;
+
+  marpaWrapperGrammarSymbolOption.terminalb = 0;
+  marpaWrapperGrammarSymbolOption.startb    = startb;
+  marpaWrapperGrammarSymbolOption.eventSeti = eventSeti;
+
+  /* ----------- Meta Identifier ------------ */
+  metap->idi = marpaWrapperGrammar_newSymboli(marpaESLIFGrammarp->marpaWrapperGrammarp, &marpaWrapperGrammarSymbolOption);
+  if (metap->idi < 0) {
+    goto err;
+  }
+
+  /* -------- Meta UTF-8 Description -------- */
+  if (descs == NULL) {
+    MARPAESLIF_ERROR(marpaESLIFp, "No meta description");
+    goto err;
+  }
+  metap->descs = (char *) malloc(descl);
+  if (metap->descs == NULL) {
+    MARPAESLIF_ERRORF(marpaESLIFp, "strdup failure, %s", strerror(errno));
+    goto err;
+  }
+  memcpy(metap->descs, descs, descl);
+
+  /* --------- Meta ASCII Description -------- */
+  metap->asciidescs = _marpaESLIF_utf82printableascii_newp(marpaESLIFp, descs, descl);
+
+  goto done;
+
+ err:
+  _marpaESLIF_meta_freev(marpaESLIFp, metap);
+  metap = NULL;
+
+ done:
+  MARPAESLIF_TRACEF(marpaESLIFp, funcs, "return %p", metap);
+  return metap;
+}
+
+/*****************************************************************************/
+static inline void _marpaESLIF_meta_freev(marpaESLIF_t *marpaESLIFp, marpaESLIF_meta_t *metap)
+/*****************************************************************************/
+{
+  const static char    *funcs = "_marpaESLIF_meta_freev";
+
+  if (metap != NULL) {
+    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Freeing meta %s at %p", metap->asciidescs != NULL ? metap->asciidescs : "(null)", metap);
+    if (metap->descs != NULL) {
+      free(metap->descs);
+    }
+    _marpaESLIF_utf82printableascii_freev(marpaESLIFp, metap->asciidescs);
+    free(metap);
+  }
+}
+
+/*****************************************************************************/
 static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_grammarb(marpaESLIF_t *marpaESLIFp)
 /*****************************************************************************/
 {
-  const static char          *funcs              = "_marpaESLIF_bootstrap_grammarp";
-  marpaESLIF_symbol_t        *symbolp            = NULL;
+  const static char          *funcs                               = "_marpaESLIF_bootstrap_grammarp";
+  marpaESLIF_symbol_t        *symbolp                             = NULL;
+  int                         bootstrap_grammar_L0_terminalsi     = sizeof(bootstrap_grammar_L0_terminals) / sizeof(bootstrap_grammar_L0_terminals[0]);
+  int                         bootstrap_grammar_L0_metasi         = sizeof(bootstrap_grammar_L0_metas) / sizeof(bootstrap_grammar_L0_metas[0]);
   marpaESLIF_grammar_t       *marpaESLIFGrammarp;
   marpaWrapperGrammarOption_t marpaWrapperGrammarOption;
-  int                         bootstrap_grammar_L0_symboli = sizeof(bootstrap_grammar_L0_terminals) / sizeof(bootstrap_grammar_L0_terminals[0]);
   int                         i;
   marpaESLIF_terminal_t      *terminalp;
+  marpaESLIF_meta_t          *metap;
 
 
   MARPAESLIF_TRACE(marpaESLIFp, funcs, "Bootstrapping internal grammar");
@@ -282,7 +359,9 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_grammarb(marpaESLIF_t 
   if (marpaESLIFGrammarp == NULL) {
     goto err;
   }
-  for (i = 0; i < bootstrap_grammar_L0_symboli; i++) {
+
+  /* First the terminals */
+  for (i = 0; i < bootstrap_grammar_L0_terminalsi; i++) {
     symbolp = _marpaESLIF_symbol_newp(marpaESLIFp);
     if (symbolp == NULL) {
       goto err;
@@ -316,6 +395,41 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_grammarb(marpaESLIF_t 
     symbolp->u.terminalp = terminalp;
 
     GENERICSTACK_SET_PTR(marpaESLIFGrammarp->symbolStackp, symbolp, terminalp->idi);
+    if (GENERICSTACK_ERROR(marpaESLIFGrammarp->symbolStackp)) {
+      MARPAESLIF_ERRORF(marpaESLIFp, "symbolStackp push failure, %s", strerror(errno));
+      goto err;
+    }
+    /* Push is ok: symbolp is in marpaESLIFGrammarp->symbolStackp */
+    symbolp = NULL;
+  }
+
+  /* Then the non-terminals */
+  for (i = 0; i < bootstrap_grammar_L0_metasi; i++) {
+    symbolp = _marpaESLIF_symbol_newp(marpaESLIFp);
+    if (symbolp == NULL) {
+      goto err;
+    }
+
+    metap = _marpaESLIF_meta_newp(marpaESLIFp,
+				  marpaESLIFGrammarp,
+				  0, /* startb */
+				  MARPAWRAPPERGRAMMAR_EVENTTYPE_NONE,
+				  bootstrap_grammar_L0_metas[i].descs,
+				  strlen(bootstrap_grammar_L0_metas[i].descs) + 1 /* Bootstrap's descs is a C string */
+				  );
+    if (metap == NULL) {
+      goto err;
+    }
+    /* When bootstrapping the grammar, we expect meta IDs to be exactly the value of the enum */
+    if (metap->idi != bootstrap_grammar_L0_metas[i].idi) {
+      MARPAESLIF_ERRORF(marpaESLIFp, "Got symbol ID %d from Marpa while we were expecting %d", metap->idi, bootstrap_grammar_L0_metas[i].idi);
+      goto err;
+    }
+
+    symbolp->type    = MARPAESLIF_SYMBOL_TYPE_META;
+    symbolp->u.metap = metap;
+
+    GENERICSTACK_SET_PTR(marpaESLIFGrammarp->symbolStackp, symbolp, metap->idi);
     if (GENERICSTACK_ERROR(marpaESLIFGrammarp->symbolStackp)) {
       MARPAESLIF_ERRORF(marpaESLIFp, "symbolStackp push failure, %s", strerror(errno));
       goto err;
@@ -494,7 +608,7 @@ static inline void _marpaESLIF_symbol_freev(marpaESLIF_t *marpaESLIFp, marpaESLI
       _marpaESLIF_terminal_freev(marpaESLIFp, symbolp->u.terminalp);
       break;
     case MARPAESLIF_SYMBOL_TYPE_META:
-      _marpaESLIF_rule_freev(marpaESLIFp, symbolp->u.rulep);
+      _marpaESLIF_meta_freev(marpaESLIFp, symbolp->u.metap);
       break;
     default:
       break;
