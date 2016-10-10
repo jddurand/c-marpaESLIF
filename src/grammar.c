@@ -32,7 +32,8 @@ static marpaWrapperGrammarRuleOption_t marpaWrapperGrammarRuleOptionDefault = {
 };
 
 #define MARPAWRAPPERGRAMMAREVENT_WEIGHT(eventType) ((eventType) == MARPAWRAPPERGRAMMAR_EVENT_COMPLETED) ? -1 : (((eventType) == MARPAWRAPPERGRAMMAR_EVENT_NULLED) ? 0 : 1)
-static inline int _marpaWrapperGrammar_cmpi(const void *event1p, const void *event2p);
+static inline int   _marpaWrapperGrammar_cmpi(const void *event1p, const void *event2p);
+static inline short _marpaWrapperGrammar_precomputeb(marpaWrapperGrammar_t *marpaWrapperGrammarp, int *startip);
 
 /****************************************************************************/
 marpaWrapperGrammar_t *marpaWrapperGrammar_newp(marpaWrapperGrammarOption_t *marpaWrapperGrammarOptionp)
@@ -507,8 +508,23 @@ int marpaWrapperGrammar_newSequenceExti(marpaWrapperGrammar_t *marpaWrapperGramm
 short marpaWrapperGrammar_precomputeb(marpaWrapperGrammar_t *marpaWrapperGrammarp)
 /****************************************************************************/
 {
-  const static char           funcs[] = "marpaWrapperGrammar_precomputeb";
+  return _marpaWrapperGrammar_precomputeb(marpaWrapperGrammarp, NULL);
+}
+
+/****************************************************************************/
+short marpaWrapperGrammar_precompute_startb(marpaWrapperGrammar_t *marpaWrapperGrammarp, int starti)
+/****************************************************************************/
+{
+  return _marpaWrapperGrammar_precomputeb(marpaWrapperGrammarp, &starti);
+}
+
+/****************************************************************************/
+static inline short _marpaWrapperGrammar_precomputeb(marpaWrapperGrammar_t *marpaWrapperGrammarp, int *startip)
+/****************************************************************************/
+{
+  const static char           funcs[]        = "marpaWrapperGrammar_precomputeb";
   genericLogger_t            *genericLoggerp = NULL;
+  int                         starti;
 
   if (marpaWrapperGrammarp == NULL) {
     errno = EINVAL;
@@ -517,9 +533,24 @@ short marpaWrapperGrammar_precomputeb(marpaWrapperGrammar_t *marpaWrapperGrammar
 
   genericLoggerp = marpaWrapperGrammarp->marpaWrapperGrammarOption.genericLoggerp;
 
-  if ((marpaWrapperGrammarp->haveStartb == 0) && (marpaWrapperGrammarp->nSymboll > 0)) {
+  if (startip != NULL) {
+    /* Start symbol out of bounds ? */
+    starti = *startip;
+    if ((starti < 0) || (((size_t) starti) >= marpaWrapperGrammarp->nSymboll)) {
+      if (marpaWrapperGrammarp->nSymboll > 0) {
+	MARPAWRAPPER_ERRORF(genericLoggerp, "Start symbol is out of range: %d but should be in [0..%d]", starti, marpaWrapperGrammarp->nSymboll - 1);
+      } else {
+	MARPAWRAPPER_ERRORF(genericLoggerp, "Start symbol is out of range: %d but there is no symbol", starti);
+      }
+      goto err;
+    }
+  } else {
     /* Use arbitrarily first symbol as start symbol */
-    marpaWrapperGrammarSymbol_t *marpaWrapperSymbolp = &(marpaWrapperGrammarp->symbolArrayp[0]);
+    starti = 0;
+  }
+
+  if (((marpaWrapperGrammarp->haveStartb == 0) || (startip != NULL)) && (marpaWrapperGrammarp->nSymboll > 0)) {
+    marpaWrapperGrammarSymbol_t *marpaWrapperSymbolp = &(marpaWrapperGrammarp->symbolArrayp[starti]);
 
     MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_g_start_symbol_set(%p, %d)", marpaWrapperGrammarp->marpaGrammarp, (int) marpaWrapperSymbolp->marpaSymbolIdi);
     if (marpa_g_start_symbol_set(marpaWrapperGrammarp->marpaGrammarp, marpaWrapperSymbolp->marpaSymbolIdi) < 0) {
