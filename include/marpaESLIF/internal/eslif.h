@@ -30,6 +30,9 @@ bootstrap_grammar_L0_symbols_t bootstrap_grammar_L0_symbols[] = {
    print "FOR /: $copy\n";
   */
   /* --------------------------------------------------------------------------------------------------------------------------------- */
+  /*                                                             TERMINALS                                                             */
+  /* --------------------------------------------------------------------------------------------------------------------------------- */
+  /* --------------------------------------------------------------------------------------------------------------------------------- */
   { "<reserved event name>",               MARPAESLIF_SYMBOL_TYPE_TERMINAL, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
     ":symbol", NULL,
 #ifndef MARPAESLIF_NTRACE
@@ -92,7 +95,16 @@ bootstrap_grammar_L0_symbols_t bootstrap_grammar_L0_symbols[] = {
 #endif
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
-  { "<op declare bnf>",                    MARPAESLIF_SYMBOL_TYPE_TERMINAL, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+  { "<op declare top grammar>",            MARPAESLIF_SYMBOL_TYPE_TERMINAL, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+    ":[0]:=", NULL,
+#ifndef MARPAESLIF_NTRACE
+    ":[0]:=", ":["
+#else
+    NULL, NULL
+#endif
+  },
+  /* --------------------------------------------------------------------------------------------------------------------------------- */
+  { "<op declare top grammar alias>",      MARPAESLIF_SYMBOL_TYPE_TERMINAL, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
     "::=", NULL,
 #ifndef MARPAESLIF_NTRACE
     "::=", "::"
@@ -101,7 +113,16 @@ bootstrap_grammar_L0_symbols_t bootstrap_grammar_L0_symbols[] = {
 #endif
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
-  { "<op declare match>",                  MARPAESLIF_SYMBOL_TYPE_TERMINAL, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+  { "<op declare lex grammar>",            MARPAESLIF_SYMBOL_TYPE_TERMINAL, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+    ":[1]:=", NULL,
+#ifndef MARPAESLIF_NTRACE
+    ":[1]:=", ":["
+#else
+    NULL, NULL
+#endif
+  },
+  /* --------------------------------------------------------------------------------------------------------------------------------- */
+  { "<op declare lex grammar alias>",      MARPAESLIF_SYMBOL_TYPE_TERMINAL, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
     "~", NULL,
 #ifndef MARPAESLIF_NTRACE
     "~", NULL
@@ -126,21 +147,6 @@ bootstrap_grammar_L0_symbols_t bootstrap_grammar_L0_symbols[] = {
 #else
     "|", NULL
 #endif
-  },
-  /* --------------------------------------------------------------------------------------------------------------------------------- */
-  { "<minus char>",                        MARPAESLIF_SYMBOL_TYPE_TERMINAL, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
-    "-", NULL,
-    NULL, NULL
-  },
-  /* --------------------------------------------------------------------------------------------------------------------------------- */
-  { "<star char>",                         MARPAESLIF_SYMBOL_TYPE_TERMINAL, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
-    "*", NULL,
-    NULL, NULL
-  },
-  /* --------------------------------------------------------------------------------------------------------------------------------- */
-  { "<plus char>",                         MARPAESLIF_SYMBOL_TYPE_TERMINAL, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
-    "+", NULL,
-    NULL, NULL
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
   { "before",                              MARPAESLIF_SYMBOL_TYPE_TERMINAL, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
@@ -168,13 +174,13 @@ bootstrap_grammar_L0_symbols_t bootstrap_grammar_L0_symbols[] = {
     NULL, NULL
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
-  { "<double colon>",                      MARPAESLIF_SYMBOL_TYPE_TERMINAL, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
-    "::", NULL,
+  { "<word character>",                    MARPAESLIF_SYMBOL_TYPE_TERMINAL, MARPAESLIF_TERMINAL_TYPE_REGEX,   MARPAESLIF_REGEX_OPTION_NA,
+    "[\\w]", NULL,
     NULL, NULL
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
-  { "<word character>",                    MARPAESLIF_SYMBOL_TYPE_TERMINAL, MARPAESLIF_TERMINAL_TYPE_REGEX,   MARPAESLIF_REGEX_OPTION_NA,
-    "[\\w]", NULL,
+  { "<double colon>",                      MARPAESLIF_SYMBOL_TYPE_TERMINAL, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+    "::", NULL,
     NULL, NULL
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
@@ -183,12 +189,12 @@ bootstrap_grammar_L0_symbols_t bootstrap_grammar_L0_symbols[] = {
     NULL, NULL
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
-  { "<left bracket>",                      MARPAESLIF_SYMBOL_TYPE_TERMINAL, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+  { "<left curly>",                        MARPAESLIF_SYMBOL_TYPE_TERMINAL, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
     "<", NULL,
     NULL, NULL
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
-  { "<right bracket>",                     MARPAESLIF_SYMBOL_TYPE_TERMINAL, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+  { "<right curly>",                       MARPAESLIF_SYMBOL_TYPE_TERMINAL, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
     ">", NULL,
     NULL, NULL
   },
@@ -211,6 +217,80 @@ bootstrap_grammar_L0_symbols_t bootstrap_grammar_L0_symbols[] = {
   { "comma",                               MARPAESLIF_SYMBOL_TYPE_TERMINAL, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
     ",", NULL,
     NULL, NULL
+  },
+  /* --------------------------------------------------------------------------------------------------------------------------------- */
+  { "start",                               MARPAESLIF_SYMBOL_TYPE_TERMINAL, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+    "start", NULL,
+    NULL, NULL
+  },
+  /* --------------------------------------------------------------------------------------------------------------------------------- */
+  { "length",                              MARPAESLIF_SYMBOL_TYPE_TERMINAL, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+    "length", NULL,
+    NULL, NULL
+  },
+  /* --------------------------------------------------------------------------------------------------------------------------------- */
+  { "g1start",                             MARPAESLIF_SYMBOL_TYPE_TERMINAL, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+    "g1start", NULL,
+    NULL, NULL
+  },
+  /* --------------------------------------------------------------------------------------------------------------------------------- */
+  { "g1length",                            MARPAESLIF_SYMBOL_TYPE_TERMINAL, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+    "g1length", NULL,
+    NULL, NULL
+  },
+  /* --------------------------------------------------------------------------------------------------------------------------------- */
+  { "name",                                MARPAESLIF_SYMBOL_TYPE_TERMINAL, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+    "name", NULL,
+    NULL, NULL
+  },
+  /* --------------------------------------------------------------------------------------------------------------------------------- */
+  { "lhs",                                 MARPAESLIF_SYMBOL_TYPE_TERMINAL, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+    "lhs", NULL,
+    NULL, NULL
+  },
+  /* --------------------------------------------------------------------------------------------------------------------------------- */
+  { "symbol",                              MARPAESLIF_SYMBOL_TYPE_TERMINAL, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+    "symbol", NULL,
+    NULL, NULL
+  },
+  /* --------------------------------------------------------------------------------------------------------------------------------- */
+  { "rule",                                MARPAESLIF_SYMBOL_TYPE_TERMINAL, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+    "rule", NULL,
+    NULL, NULL
+  },
+  /* --------------------------------------------------------------------------------------------------------------------------------- */
+  { "value",                               MARPAESLIF_SYMBOL_TYPE_TERMINAL, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+    "value", NULL,
+    NULL, NULL
+  },
+  /* --------------------------------------------------------------------------------------------------------------------------------- */
+  { "values",                              MARPAESLIF_SYMBOL_TYPE_TERMINAL, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+    "values", NULL,
+    NULL, NULL
+  },
+  /* --------------------------------------------------------------------------------------------------------------------------------- */
+  /* Taken from Regexp::Common::delimited, $RE{delimited}{-delim=>"'"}{-cdelim=>"'"} */
+  /* Perl stringified version is: (?:(?|(?:\')(?:[^\\\']*(?:\\.[^\\\']*)*)(?:\'))) */
+  /* Simplified to (without the [/"'] escapes) "[^\\"]*(?:\\.[^\\"]*)*" */
+  { "<single quoted string>",              MARPAESLIF_SYMBOL_TYPE_TERMINAL, MARPAESLIF_TERMINAL_TYPE_REGEX,   MARPAESLIF_REGEX_OPTION_DOTALL,
+    "'[^\\']*(?:\\.[^\\']*)*'", NULL,
+#ifndef MARPAESLIF_NTRACE
+    "'A string'", "'"
+#else
+    NULL, NULL
+#endif
+  },
+  /* --------------------------------------------------------------------------------------------------------------------------------- */
+  /* Taken from Regexp::Common::delimited, $RE{delimited}{-delim=>"'"}{-cdelim=>"'"} */
+  /* Perl stringified version is: (?:(?|(?:\")(?:[^\\\"]*(?:\\.[^\\\"]*)*)(?:\"))) */
+  /* Simplified to (without the [/"'] escapes) "[^\\"]*(?:\\.[^\\"]*)*" */
+  { "<double quoted string>",              MARPAESLIF_SYMBOL_TYPE_TERMINAL, MARPAESLIF_TERMINAL_TYPE_REGEX,   MARPAESLIF_REGEX_OPTION_DOTALL,
+    "\"[^\\\"]*(?:\\.[^\\\"]*)*\"", NULL,
+#ifndef MARPAESLIF_NTRACE
+    "\"A string\"", "\""
+#else
+    NULL, NULL
+#endif
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
   /* Taken from Regexp::Common::delimited, $RE{delimited}{-delim=>"/"}{-cdelim=>"/"} */
@@ -244,30 +324,6 @@ bootstrap_grammar_L0_symbols_t bootstrap_grammar_L0_symbols[] = {
     "[eijmnsxDJUugzZaN]", NULL,
 #ifndef MARPAESLIF_NTRACE
     "e", ""
-#else
-    NULL, NULL
-#endif
-  },
-  /* --------------------------------------------------------------------------------------------------------------------------------- */
-  /* Taken from Regexp::Common::delimited, $RE{delimited}{-delim=>"'"}{-cdelim=>"'"} */
-  /* Perl stringified version is: (?:(?|(?:\')(?:[^\\\']*(?:\\.[^\\\']*)*)(?:\'))) */
-  /* Simplified to (without the [/"'] escapes) "[^\\"]*(?:\\.[^\\"]*)*" */
-  { "<single quoted string>",              MARPAESLIF_SYMBOL_TYPE_TERMINAL, MARPAESLIF_TERMINAL_TYPE_REGEX,   MARPAESLIF_REGEX_OPTION_DOTALL,
-    "'[^\\']*(?:\\.[^\\']*)*'", NULL,
-#ifndef MARPAESLIF_NTRACE
-    "'A string'", "'"
-#else
-    NULL, NULL
-#endif
-  },
-  /* --------------------------------------------------------------------------------------------------------------------------------- */
-  /* Taken from Regexp::Common::delimited, $RE{delimited}{-delim=>"'"}{-cdelim=>"'"} */
-  /* Perl stringified version is: (?:(?|(?:\")(?:[^\\\"]*(?:\\.[^\\\"]*)*)(?:\"))) */
-  /* Simplified to (without the [/"'] escapes) "[^\\"]*(?:\\.[^\\"]*)*" */
-  { "<double quoted string>",              MARPAESLIF_SYMBOL_TYPE_TERMINAL, MARPAESLIF_TERMINAL_TYPE_REGEX,   MARPAESLIF_REGEX_OPTION_DOTALL,
-    "\"[^\\\"]*(?:\\.[^\\\"]*)*\"", NULL,
-#ifndef MARPAESLIF_NTRACE
-    "\"A string\"", "\""
 #else
     NULL, NULL
 #endif

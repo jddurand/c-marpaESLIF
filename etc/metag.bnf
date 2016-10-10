@@ -74,17 +74,17 @@ statement                        ::= <start rule>
                                  | <inaccessible statement>
                                  | <exception statement>
 
-<start rule>                   ::= (':start' <op declare top grammar>) symbol
+<start rule>                   ::= (':start' <op declare>) symbol
 <empty rule>                   ::= lhs <op declare> <adverb list>
 <null statement>               ::= ';'
 <statement group>              ::= ('{') statements ('}')
 <priority rule>                ::= lhs <op declare> priorities
 <quantified rule>              ::= lhs <op declare> <single symbol> quantifier <adverb list>
-<discard rule>                 ::= (':discard' <op declare sub grammar>) <single symbol> <adverb list>
-<default rule>                 ::= ':default' <op declare top grammar> <adverb list>
+<discard rule>                 ::= (':discard' <op declare>) <single symbol> <adverb list>
+<default rule>                 ::= ':default' <op declare> <adverb list>
 <lexeme default statement>     ::= ('lexeme' 'default' '=') <adverb list>
 <discard default statement>    ::= ('discard' 'default' '=') <adverb list>
-<lexeme rule>                  ::= (':lexeme' <op declare sub grammar>) symbol <adverb list>
+<lexeme rule>                  ::= (':lexeme' <op declare>) symbol <adverb list>
 <completion event declaration> ::= ('event') <event initialization> ('=' 'completed') <symbol name>
 <nulled event declaration>     ::= ('event') <event initialization> ('=' 'nulled') <symbol name>
 <prediction event declaration> ::= ('event') <event initialization> ('=' 'predicted') <symbol name>
@@ -94,7 +94,7 @@ statement                        ::= <start rule>
 <exception statement>          ::= lhs <op declare> <rhs primary> '-' <parenthesized rhs exception list>
 
 <op declare>                   ::= <op declare top grammar>
-                                 | <op declare sub grammar>
+                                 | <op declare lex grammar>
 
 priorities                     ::= alternatives+ separator => <op loosen>         proper => 1
 alternatives                   ::= alternative+  separator => <op equal priority> proper => 1
@@ -196,10 +196,9 @@ whitespace ~ [\s]+
 
 <op declare any grammar> ~ /:\[\d+\]:=/
 <op declare top grammar> ~ '::=' | ':[0]:=' # ::= is an alias for the top grammar
-<op declare sub grammar> ~ '~'   | ':[1]:=' #   ~ is an alias for the lexer grammar
+<op declare lex grammar> ~ '~'   | ':[1]:=' #   ~ is an alias for the lexer grammar
 <op loosen>              ~ '||'
 <op equal priority>      ~ '|'
-quantifier             ::= '*' | '+'
 <before or after>        ~ 'before' | 'after'
 
 <signed integer>         ~ <integer> | <sign> <integer>
