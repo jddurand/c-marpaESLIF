@@ -9,6 +9,7 @@ typedef struct marpaESLIF_string        marpaESLIF_string_t;
 typedef enum   marpaESLIF_symbol_type   marpaESLIF_symbol_type_t;
 typedef enum   marpaESLIF_terminal_type marpaESLIF_terminal_type_t;
 typedef struct marpaESLIF_terminal      marpaESLIF_terminal_t;
+typedef struct marpaESLIF_meta          marpaESLIF_meta_t;
 typedef struct marpaESLIF_symbol        marpaESLIF_symbol_t;
 typedef struct marpaESLIF_rule          marpaESLIF_rule_t;
 typedef struct marpaESLIF_grammar       marpaESLIF_grammar_t;
@@ -117,12 +118,18 @@ struct marpaESLIF_terminal {
   } u;
 };
 
+struct marpaESLIF_meta {
+  int                        idi;                 /* Non-terminal Id */
+  char                      *descs;               /* Non-terminal description */
+  char                      *asciidescs;          /* Non-terminal description (ASCII) */
+};
+
 /* A symbol */
 struct marpaESLIF_symbol {
   marpaESLIF_symbol_type_t type;  /* Symbol type */
   union {
     marpaESLIF_terminal_t *terminalp; /* Symbol is a terminal */
-    marpaESLIF_rule_t     *rulep;     /* Symbol is a meta identifier, i.e. a rule */
+    marpaESLIF_meta_t      *metap;    /* Symbol is a meta identifier, i.e. a rule */
   } u;
 };
 

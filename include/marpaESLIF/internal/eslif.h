@@ -2,7 +2,7 @@
 #define MARPAESLIF_INTERNAL_ESLIF_H
 
 /* It is very important here to list all the terminals first, and in order compatible */
-/* with bootstrap_grammar_L0_terminal[] */
+/* with bootstrap_grammar_L0_terminals[] and bootstrap_grammar_L0_rules[] */
 typedef enum bootstrap_grammar_L0_enum {
   L0_RESERVED_EVENT_NAME = 0,
   L0_WHITESPACE,
@@ -10,10 +10,10 @@ typedef enum bootstrap_grammar_L0_enum {
   L0_CPLUSCPLUS_COMMENT,
   L0_C_COMMENT,
   L0_OP_DECLARE_ANY_GRAMMAR,
-  L0_OP_DECLARE_TOP_GRAMMAR,
-  L0_OP_DECLARE_TOP_GRAMMAR_ALIAS,
-  L0_OP_DECLARE_LEX_GRAMMAR,
-  L0_OP_DECLARE_LEX_GRAMMAR_ALIAS,
+  L0_OP_DECLARE_TOP_GRAMMAR_MATCH,
+  L0_OP_DECLARE_TOP_GRAMMAR_MATCH_ALIAS,
+  L0_OP_DECLARE_LEX_GRAMMAR_MATCH,
+  L0_OP_DECLARE_LEX_GRAMMAR_MATCH_ALIAS,
   L0_OP_LOOSEN,
   L0_OP_EQUAL_PRIORITY,
   L0_BEFORE,
@@ -47,7 +47,12 @@ typedef enum bootstrap_grammar_L0_enum {
   L0_SUBSTITUTION_EXPRESSION,
   L0_SUBSTITUTION_EXPRESSION_MODIFIER,
   L0_CHARACTER_CLASS_REGEXP,
-  L0_CHARACTER_CLASS_MODIFIER
+  L0_CHARACTER_CLASS_MODIFIER,
+  /* ----- Non terminals ------ */
+  L0_OP_DECLARE_TOP_GRAMMAR,
+  L0_OP_DECLARE_LEX_GRAMMAR,
+  L0_BEFORE_OR_AFTER,
+  L0_SIGNED_INTEGER
 } bootstrap_grammar_L0_enum_t;
 
 typedef struct bootstrap_grammar_L0_terminal {
@@ -60,6 +65,19 @@ typedef struct bootstrap_grammar_L0_terminal {
   char                      *testFullMatchs;
   char                      *testPartialMatchs;
 } bootstrap_grammar_L0_terminal_t;
+
+typedef struct bootstrap_grammar_L0_meta {
+  bootstrap_grammar_L0_enum_t idi;                /* Identifier */
+  char                      *descs;               /* Description */
+} bootstrap_grammar_L0_meta_t;
+
+/* All non-terminals are listed here */
+bootstrap_grammar_L0_meta_t bootstrap_grammar_L0_metas[] = {
+  { L0_OP_DECLARE_TOP_GRAMMAR, "<op declare top grammar>" },
+  { L0_OP_DECLARE_LEX_GRAMMAR, "<op declare lex grammar>" },
+  { L0_BEFORE_OR_AFTER,        "<before or after>" },
+  { L0_SIGNED_INTEGER,         "<signed integer>" }
+};
 
 /* Here it is very important that all the string constants are UTF-8 compatible - this is the case */
 
@@ -148,8 +166,8 @@ bootstrap_grammar_L0_terminal_t bootstrap_grammar_L0_terminals[] = {
 #endif
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
-  { L0_OP_DECLARE_TOP_GRAMMAR,
-    "<op declare top grammar>",            MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+  { L0_OP_DECLARE_TOP_GRAMMAR_MATCH,
+    "<op declare top grammar match>",      MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
     ":[0]:=", NULL,
 #ifndef MARPAESLIF_NTRACE
     ":[0]:=", ":["
@@ -158,8 +176,8 @@ bootstrap_grammar_L0_terminal_t bootstrap_grammar_L0_terminals[] = {
 #endif
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
-  { L0_OP_DECLARE_TOP_GRAMMAR_ALIAS,
-    "<op declare top grammar alias>",      MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+  { L0_OP_DECLARE_TOP_GRAMMAR_MATCH_ALIAS,
+    "<op declare top grammar match alias>", MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
     "::=", NULL,
 #ifndef MARPAESLIF_NTRACE
     "::=", "::"
@@ -168,8 +186,8 @@ bootstrap_grammar_L0_terminal_t bootstrap_grammar_L0_terminals[] = {
 #endif
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
-  { L0_OP_DECLARE_LEX_GRAMMAR,
-    "<op declare lex grammar>",            MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+  { L0_OP_DECLARE_LEX_GRAMMAR_MATCH,
+    "<op declare lex grammar match>",       MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
     ":[1]:=", NULL,
 #ifndef MARPAESLIF_NTRACE
     ":[1]:=", ":["
@@ -178,8 +196,8 @@ bootstrap_grammar_L0_terminal_t bootstrap_grammar_L0_terminals[] = {
 #endif
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
-  { L0_OP_DECLARE_LEX_GRAMMAR_ALIAS,
-    "<op declare lex grammar alias>",      MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+  { L0_OP_DECLARE_LEX_GRAMMAR_MATCH_ALIAS,
+    "<op declare lex grammar match alias>", MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
     "~", NULL,
 #ifndef MARPAESLIF_NTRACE
     "~", NULL
