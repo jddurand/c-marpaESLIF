@@ -139,10 +139,10 @@ struct marpaESLIF_rule {
 /* A grammar */
 struct marpaESLIF_grammar {
   marpaWrapperGrammar_t *marpaWrapperGrammarp; /* Grammar implementation */
-  genericStack_t       *symbolStackp;          /* Stack of symbols */
-  genericStack_t       *ruleStackp;            /* Stack of rules */
-  marpaESLIF_grammar_t *previousp;             /* Previous eventual grammar */
-  marpaESLIF_grammar_t *nextp;                 /* Lexer is a sub-grammar */
+  genericStack_t        *symbolStackp;         /* Stack of symbols */
+  genericStack_t        *ruleStackp;           /* Stack of rules */
+  marpaESLIF_grammar_t  *previousp;            /* Previous eventual grammar */
+  marpaESLIF_grammar_t  *nextp;                /* Next eventual sub-grammar */
 };
 
 /* Matcher return values */
