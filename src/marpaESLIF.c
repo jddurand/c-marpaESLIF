@@ -306,6 +306,12 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_grammarb(marpaESLIF_t 
     if (terminalp == NULL) {
       goto err;
     }
+    /* When bootstrapping the grammar, we expect terminal IDs to be exactly the value of the enum */
+    if (terminalp->idi != bootstrap_grammar_L0_terminals[i].idi) {
+      MARPAESLIF_ERRORF(marpaESLIFp, "Got symbol ID %d from Marpa while we were expecting %d", terminalp->idi, bootstrap_grammar_L0_terminals[i].idi);
+      goto err;
+    }
+
     symbolp->type        = MARPAESLIF_SYMBOL_TYPE_TERMINAL;
     symbolp->u.terminalp = terminalp;
 
