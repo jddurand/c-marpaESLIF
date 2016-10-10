@@ -652,6 +652,7 @@ static inline short _marpaESLIF_matcheri(marpaESLIF_t *marpaESLIFp, marpaESLIF_t
   size_t                     matchLengthl;
   PCRE2_SIZE                 pcre2_substituteoutputl;
   PCRE2_UCHAR               *tmpp;
+  PCRE2_SIZE                 tmpl;
  
   /*********************************************************************************/
   /* A matcher tries to match a terminal v.s. input that is eventually incomplete. */
@@ -768,15 +769,16 @@ static inline short _marpaESLIF_matcheri(marpaESLIF_t *marpaESLIFp, marpaESLIF_t
 	    /* We will exit the do {} while () loop: either match or uncauchgt failure */
 	    if (pcre2Errornumberi >= 1) {
 	      /* At least one match: this is a success */
-	      /* We try to release non-needed memory. realloc() failure here is not fatal.    */
-	      /* Please note that pcre2_substituteoutputl exclude the trailing zero, which is */
-	      /* fine for us.                                                                 */
-	      tmpp = realloc(pcre2_substitutep, pcre2_substituteoutputl);
+	      /* We try to release non-needed memory. realloc() failure here is not fatal. */
+	      /* Please note that pcre2_substituteoutputl exclude the trailing zero, so we */
+	      /* are sure that pcre2_substituteoutputl+1 number of ok, as per the doc.     */
+	      tmpl = pcre2_substituteoutputl + 1;
+	      tmpp = realloc(pcre2_substitutep, tmpl);
 	      if (tmpp == NULL) {
 		MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s - realloc failure (non fatal), %s", terminalp->asciidescs, strerror(errno));
 	      } else {
 		pcre2_substitutep = tmpp;
-		pcre2_substitutel = pcre2_substituteoutputl;
+		pcre2_substitutel = tmpl;
 	      }
 	    }
 	    break;

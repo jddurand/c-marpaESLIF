@@ -86,7 +86,7 @@ bootstrap_grammar_L0_terminals_t bootstrap_grammar_L0_terminals[] = {
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
   { "<op declare any grammar>",            MARPAESLIF_TERMINAL_TYPE_REGEX,   MARPAESLIF_REGEX_OPTION_NA,
-    ":\\[\\d+\\]:=", NULL,
+    ":\\[(\\d+)\\]:=", "$1",
 #ifndef MARPAESLIF_NTRACE
     ":[0123]:=", ":[0"
 #else
