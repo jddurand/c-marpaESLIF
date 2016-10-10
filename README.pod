@@ -213,6 +213,12 @@ Returns 0 on failure, 1 on success.
 
 Compute the grammar. Return 0 on failure, 1 on success. Eventual events are automatically fetched.
 
+=head2 marpaWrapperGrammar_precompute_startb
+
+  short marpaWrapperGrammar_precomputeb(marpaWrapperGrammar_t *marpaWrapperGrammarp, int starti)
+
+Compute the grammar by fixing beforehand the start symbol to C<starti>, regardless if a symbol was marked previously as being the start symbol or not. Return 0 on failure, 1 on success. Eventual events are automatically fetched.
+
 =head2 marpaWrapperGrammar_freev
 
   void marpaWrapperGrammar_freev(marpaWrapperGrammar_t *marpaWrapperGrammarp)
