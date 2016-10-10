@@ -266,7 +266,7 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_grammarb(marpaESLIF_t 
   marpaESLIF_symbol_t        *symbolp            = NULL;
   marpaESLIF_grammar_t       *marpaESLIFGrammarp;
   marpaWrapperGrammarOption_t marpaWrapperGrammarOption;
-  int                         bootstrap_grammar_L0_symboli = sizeof(bootstrap_grammar_L0_symbols) / sizeof(bootstrap_grammar_L0_symbols[0]);
+  int                         bootstrap_grammar_L0_symboli = sizeof(bootstrap_grammar_L0_terminals) / sizeof(bootstrap_grammar_L0_terminals[0]);
   int                         i;
   marpaESLIF_terminal_t      *terminalp;
 
@@ -288,46 +288,34 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_grammarb(marpaESLIF_t 
       goto err;
     }
 
-    switch (bootstrap_grammar_L0_symbols[i].symbolType) {
-
-    case MARPAESLIF_SYMBOL_TYPE_TERMINAL:
-      terminalp = _marpaESLIF_terminal_newp(marpaESLIFp,
-					    marpaESLIFGrammarp,
-					    0, /* startb */
-					    MARPAWRAPPERGRAMMAR_EVENTTYPE_NONE,
-					    bootstrap_grammar_L0_symbols[i].descs,
-					    strlen(bootstrap_grammar_L0_symbols[i].descs) + 1,  /* Bootstrap's descs is a C string */
-					    bootstrap_grammar_L0_symbols[i].terminalType,
-					    bootstrap_grammar_L0_symbols[i].optioni,
-					    bootstrap_grammar_L0_symbols[i].originp,
-					    (bootstrap_grammar_L0_symbols[i].originp != NULL) ? strlen(bootstrap_grammar_L0_symbols[i].originp) : 0,
-					    bootstrap_grammar_L0_symbols[i].substitutionp,
-					    (bootstrap_grammar_L0_symbols[i].substitutionp != NULL) ? strlen(bootstrap_grammar_L0_symbols[i].substitutionp) : 0,
-					    bootstrap_grammar_L0_symbols[i].testFullMatchs,
-					    bootstrap_grammar_L0_symbols[i].testPartialMatchs
-					    );
-      if (terminalp == NULL) {
-	goto err;
-      }
-      symbolp->type        = bootstrap_grammar_L0_symbols[i].symbolType;
-      symbolp->u.terminalp = terminalp;
-
-      GENERICSTACK_SET_PTR(marpaESLIFGrammarp->symbolStackp, symbolp, terminalp->idi);
-      if (GENERICSTACK_ERROR(marpaESLIFGrammarp->symbolStackp)) {
-	MARPAESLIF_ERRORF(marpaESLIFp, "symbolStackp push failure, %s", strerror(errno));
-	goto err;
-      }
-      /* Push is ok: symbolp is in marpaESLIFGrammarp->symbolStackp */
-      symbolp = NULL;
-      break;
-
-    case MARPAESLIF_SYMBOL_TYPE_META:
-      break;
-
-    default:
-      MARPAESLIF_ERRORF(marpaESLIFp, "Bad description of internal grammar: symbolType=%d", bootstrap_grammar_L0_symbols[i].symbolType);
-      break;
+    terminalp = _marpaESLIF_terminal_newp(marpaESLIFp,
+					  marpaESLIFGrammarp,
+					  0, /* startb */
+					  MARPAWRAPPERGRAMMAR_EVENTTYPE_NONE,
+					  bootstrap_grammar_L0_terminals[i].descs,
+					  strlen(bootstrap_grammar_L0_terminals[i].descs) + 1,  /* Bootstrap's descs is a C string */
+					  bootstrap_grammar_L0_terminals[i].terminalType,
+					  bootstrap_grammar_L0_terminals[i].optioni,
+					  bootstrap_grammar_L0_terminals[i].originp,
+					  (bootstrap_grammar_L0_terminals[i].originp != NULL) ? strlen(bootstrap_grammar_L0_terminals[i].originp) : 0,
+					  bootstrap_grammar_L0_terminals[i].substitutionp,
+					  (bootstrap_grammar_L0_terminals[i].substitutionp != NULL) ? strlen(bootstrap_grammar_L0_terminals[i].substitutionp) : 0,
+					  bootstrap_grammar_L0_terminals[i].testFullMatchs,
+					  bootstrap_grammar_L0_terminals[i].testPartialMatchs
+					  );
+    if (terminalp == NULL) {
+      goto err;
     }
+    symbolp->type        = MARPAESLIF_SYMBOL_TYPE_TERMINAL;
+    symbolp->u.terminalp = terminalp;
+
+    GENERICSTACK_SET_PTR(marpaESLIFGrammarp->symbolStackp, symbolp, terminalp->idi);
+    if (GENERICSTACK_ERROR(marpaESLIFGrammarp->symbolStackp)) {
+      MARPAESLIF_ERRORF(marpaESLIFp, "symbolStackp push failure, %s", strerror(errno));
+      goto err;
+    }
+    /* Push is ok: symbolp is in marpaESLIFGrammarp->symbolStackp */
+    symbolp = NULL;
   }
 
   goto done;
