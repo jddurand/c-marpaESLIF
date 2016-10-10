@@ -85,22 +85,38 @@ bootstrap_grammar_L0_symbols_t bootstrap_grammar_L0_symbols[] = {
   /* --------------------------------------------------------------------------------------------------------------------------------- */
   { "<op declare bnf>",                    MARPAESLIF_SYMBOL_TYPE_TERMINAL, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
     "::=", NULL,
+#ifndef MARPAESLIF_NTRACE
+    "::=", "::"
+#else
     NULL, NULL
+#endif
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
   { "<op declare match>",                  MARPAESLIF_SYMBOL_TYPE_TERMINAL, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
     "~", NULL,
+#ifndef MARPAESLIF_NTRACE
+    "~", NULL
+#else
     NULL, NULL
+#endif
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
   { "<op loosen>",                         MARPAESLIF_SYMBOL_TYPE_TERMINAL, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
     "||", NULL,
+#ifndef MARPAESLIF_NTRACE
     NULL, NULL
+#else
+    "||", "|"
+#endif
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
   { "<op equal priority>",                 MARPAESLIF_SYMBOL_TYPE_TERMINAL, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
     "|", NULL,
+#ifndef MARPAESLIF_NTRACE
     NULL, NULL
+#else
+    "|", NULL
+#endif
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
   { "<star char>",                         MARPAESLIF_SYMBOL_TYPE_TERMINAL, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
@@ -143,13 +159,8 @@ bootstrap_grammar_L0_symbols_t bootstrap_grammar_L0_symbols[] = {
     NULL, NULL
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
-  { "<one or more word characters>",       MARPAESLIF_SYMBOL_TYPE_TERMINAL, MARPAESLIF_TERMINAL_TYPE_REGEX,   MARPAESLIF_REGEX_OPTION_NA,
-    "[\\w]+", NULL,
-    NULL, NULL
-  },
-  /* --------------------------------------------------------------------------------------------------------------------------------- */
-  { "<zero or more word characters>",      MARPAESLIF_SYMBOL_TYPE_TERMINAL, MARPAESLIF_TERMINAL_TYPE_REGEX,   MARPAESLIF_REGEX_OPTION_NA,
-    "[\\w]*", NULL,
+  { "<word character>",                    MARPAESLIF_SYMBOL_TYPE_TERMINAL, MARPAESLIF_TERMINAL_TYPE_REGEX,   MARPAESLIF_REGEX_OPTION_NA,
+    "[\\w]", NULL,
     NULL, NULL
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
@@ -193,23 +204,35 @@ bootstrap_grammar_L0_symbols_t bootstrap_grammar_L0_symbols[] = {
   /* Simplified to (without the [/"'] escapes) /[^\\/]*(?:\\.[^\\/]*)!*!/ */   /* REMOVE THE ! character - this is C compilers -; */
   { "<regular expression>",                MARPAESLIF_SYMBOL_TYPE_TERMINAL, MARPAESLIF_TERMINAL_TYPE_REGEX,   MARPAESLIF_REGEX_OPTION_DOTALL,
     "/[^\\/]*(?:\\.[^\\/]*)*/", NULL,
+#ifndef MARPAESLIF_NTRACE
+    "/a(b)c/", "/a("
+#else
     NULL, NULL
+#endif
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
-  { "<regular expression modifiers>",      MARPAESLIF_SYMBOL_TYPE_TERMINAL, MARPAESLIF_TERMINAL_TYPE_REGEX,   MARPAESLIF_REGEX_OPTION_NA,
-    "[eijmnsxADJU]*", NULL,
+  { "<regular expression modifier>",       MARPAESLIF_SYMBOL_TYPE_TERMINAL, MARPAESLIF_TERMINAL_TYPE_REGEX,   MARPAESLIF_REGEX_OPTION_NA,
+    "[eijmnsxDJUuaN]", NULL,
     NULL, NULL
   },
   /* Copy paste of the inner match of previous regexp */
   /* --------------------------------------------------------------------------------------------------------------------------------- */
   { "<substitution expression>",           MARPAESLIF_SYMBOL_TYPE_TERMINAL, MARPAESLIF_TERMINAL_TYPE_REGEX,   MARPAESLIF_REGEX_OPTION_DOTALL,
     "/[^\\/]*(?:\\.[^\\/]*)*/[^\\/]*(?:\\.[^\\/]*)*/", NULL,
+#ifndef MARPAESLIF_NTRACE
+    "/a(b)c/d$1f/", "/a(b)c/d$"
+#else
     NULL, NULL
+#endif
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
-  { "<substitution expression modifiers>", MARPAESLIF_SYMBOL_TYPE_TERMINAL, MARPAESLIF_TERMINAL_TYPE_REGEX,   MARPAESLIF_REGEX_OPTION_NA,
-    "[eijmnsxADJUgzZ]*", NULL,
+  { "<substitution expression modifier>",  MARPAESLIF_SYMBOL_TYPE_TERMINAL, MARPAESLIF_TERMINAL_TYPE_REGEX,   MARPAESLIF_REGEX_OPTION_NA,
+    "[eijmnsxDJUugzZaN]", NULL,
+#ifndef MARPAESLIF_NTRACE
+    "e", ""
+#else
     NULL, NULL
+#endif
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
   /* Taken from Regexp::Common::delimited, $RE{delimited}{-delim=>"'"}{-cdelim=>"'"} */
@@ -217,7 +240,11 @@ bootstrap_grammar_L0_symbols_t bootstrap_grammar_L0_symbols[] = {
   /* Simplified to (without the [/"'] escapes) "[^\\"]*(?:\\.[^\\"]*)*" */
   { "<single quoted string>",              MARPAESLIF_SYMBOL_TYPE_TERMINAL, MARPAESLIF_TERMINAL_TYPE_REGEX,   MARPAESLIF_REGEX_OPTION_DOTALL,
     "'[^\\']*(?:\\.[^\\']*)*'", NULL,
+#ifndef MARPAESLIF_NTRACE
+    "'A string'", "'"
+#else
     NULL, NULL
+#endif
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
   /* Taken from Regexp::Common::delimited, $RE{delimited}{-delim=>"'"}{-cdelim=>"'"} */
@@ -225,18 +252,26 @@ bootstrap_grammar_L0_symbols_t bootstrap_grammar_L0_symbols[] = {
   /* Simplified to (without the [/"'] escapes) "[^\\"]*(?:\\.[^\\"]*)*" */
   { "<double quoted string>",              MARPAESLIF_SYMBOL_TYPE_TERMINAL, MARPAESLIF_TERMINAL_TYPE_REGEX,   MARPAESLIF_REGEX_OPTION_DOTALL,
     "\"[^\\\"]*(?:\\.[^\\\"]*)*\"", NULL,
+#ifndef MARPAESLIF_NTRACE
+    "\"A string\"", "\""
+#else
     NULL, NULL
+#endif
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
   /* Taken from Regexp::Common::delimited, $RE{delimited}{-delim=>"["}{-cdelim=>"]"} */
   /* Perl stringified version is: (?:(?|(?:\[)(?:[^\\\]]*(?:\\.[^\\\]]*)*)(?:\]))) */
   { "<character class regexp>",            MARPAESLIF_SYMBOL_TYPE_TERMINAL, MARPAESLIF_TERMINAL_TYPE_REGEX,   MARPAESLIF_REGEX_OPTION_DOTALL,
-    "\\[(?:[^\\\\]]*(?:\\.[^\\\\]]*)*)\\]", NULL,
+    "\\[[^\\\\\\]]*(?:\\\\.[^\\\\\\]]*)*\\]", NULL,
+#ifndef MARPAESLIF_NTRACE
+    "[a-z]","[a-z"
+#else
     NULL, NULL
-  },
+#endif
+    },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
-  { "<character class modifiers>",         MARPAESLIF_SYMBOL_TYPE_TERMINAL, MARPAESLIF_TERMINAL_TYPE_REGEX,   MARPAESLIF_REGEX_OPTION_NA,
-    ":[eijmnsxADJUc]*", NULL,
+  { "<character class modifier>",          MARPAESLIF_SYMBOL_TYPE_TERMINAL, MARPAESLIF_TERMINAL_TYPE_REGEX,   MARPAESLIF_REGEX_OPTION_NA,
+    ":[eijmnsxDJUuaNc]*", NULL,
     NULL, NULL
   },
 };

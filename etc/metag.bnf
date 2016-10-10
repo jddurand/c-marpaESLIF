@@ -193,17 +193,18 @@ quantifier             ::= '*' | '+'
 true                     ~ '1'
 boolean                  ~ [01]
 
+<word character>               ~ [\w]   # \w is  [a-zA-Z0-9_]
 <reserved action name>         ~ '::' <one or more word characters>
-<one or more word characters>  ~ [\w]+  # \w is  [a-zA-Z0-9_]
-<zero or more word characters> ~ [\w]*  # \w is  [a-zA-Z0-9_]
+<one or more word characters>  ~ <word character>+
+<zero or more word characters> ~ <word character>*
 
 # Perl identifiers allow an initial digit, which makes them slightly more liberal than Perl bare names
 # but equivalent to Perl names with sigils.
-<Perl identifier> ~ [\w]+
+<Perl identifier> ~ <word character>+
 <double colon>    ~ '::'
 <Perl name>       ~ <Perl identifier>+ separator => <double colon> proper => 1
 
-<bare name>             ~ [\w]+
+<bare name>             ~ <word character>+
 <standard name>         ~ [a-zA-Z] <zero or more word characters>
 <bracketed name>        ~ '<' <bracketed name string> '>'
 <bracketed name string> ~ [\s\w]+
