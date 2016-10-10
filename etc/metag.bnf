@@ -72,6 +72,7 @@ statement                        ::= <start rule>
                                  | <prediction event declaration>
                                  | <current lexer statement>
                                  | <inaccessible statement>
+                                 | <exception statement>
 
 <start rule>                   ::= (':start' <op declare top grammar>) symbol
 <empty rule>                   ::= lhs <op declare> <adverb list>
@@ -90,6 +91,7 @@ statement                        ::= <start rule>
 <current lexer statement>      ::= ('current' 'lexer' 'is') <lexer name>
 <inaccessible statement>       ::= ('inaccessible' 'is') <inaccessible treatment> ('by' 'default')
 <inaccessible treatment>       ::= 'warn' | 'ok' | 'fatal'
+<exception statement>          ::= lhs <op declare> <rhs primary> '-' <parenthesized rhs exception list>
 
 <op declare>                   ::= <op declare top grammar>
                                  | <op declare sub grammar>
@@ -155,8 +157,21 @@ rhs                              ::= <rhs primary>+
 <parenthesized rhs primary list> ::= ('(') <rhs primary list> (')')
 <rhs primary list>               ::= <rhs primary>+
 
+<parenthesized rhs exception list> ::= ('(') <rhs exception list> (')')
+<rhs exception list>             ::= <rhs exception>+
+#
+# An exception cannot be a meta identifier.
+# Note that having a regular expression with substitution is meaningless
+# therefore it is not added to the candidates for <rhs exception>
+#
+<rhs exception>                  ::= <quoted string>
+<rhs exception>                  ::= <character class>
+<rhs exception>                  ::= <regular expression>
+
 <single symbol> ::=  symbol
                   | <character class>
+                  | <regular expression>
+                  | <substitution expression>
 symbol          ::= <symbol name>
 <symbol name>   ::= <bare name>
 <symbol name>   ::= <bracketed name>
@@ -179,8 +194,9 @@ whitespace ~ [\s]+
 :discard ~ <c comment>
 <c comment> ~ /\/\*(?:[^\*]+|\*(?!\/))*\*\//
 
-<op declare top grammar> ~ '::='
-<op declare sub grammar> ~ '~'
+<op declare any grammar> ~ /:\[\d+\]:=/
+<op declare top grammar> ~ '::=' | ':[0]:=' # ::= is an alias for the top grammar
+<op declare sub grammar> ~ '~'   | ':[1]:=' #   ~ is an alias for the lexer grammar
 <op loosen>              ~ '||'
 <op equal priority>      ~ '|'
 quantifier             ::= '*' | '+'

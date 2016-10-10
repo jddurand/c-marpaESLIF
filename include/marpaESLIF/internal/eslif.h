@@ -83,6 +83,15 @@ bootstrap_grammar_L0_symbols_t bootstrap_grammar_L0_symbols[] = {
 #endif
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
+  { "<op declare any grammar>",            MARPAESLIF_SYMBOL_TYPE_TERMINAL, MARPAESLIF_TERMINAL_TYPE_REGEX,   MARPAESLIF_REGEX_OPTION_NA,
+    ":\\[\\d+\\]:=", NULL,
+#ifndef MARPAESLIF_NTRACE
+    ":[0123]:=", ":[0"
+#else
+    NULL, NULL
+#endif
+  },
+  /* --------------------------------------------------------------------------------------------------------------------------------- */
   { "<op declare bnf>",                    MARPAESLIF_SYMBOL_TYPE_TERMINAL, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
     "::=", NULL,
 #ifndef MARPAESLIF_NTRACE
@@ -117,6 +126,11 @@ bootstrap_grammar_L0_symbols_t bootstrap_grammar_L0_symbols[] = {
 #else
     "|", NULL
 #endif
+  },
+  /* --------------------------------------------------------------------------------------------------------------------------------- */
+  { "<minus char>",                        MARPAESLIF_SYMBOL_TYPE_TERMINAL, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+    "-", NULL,
+    NULL, NULL
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
   { "<star char>",                         MARPAESLIF_SYMBOL_TYPE_TERMINAL, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
