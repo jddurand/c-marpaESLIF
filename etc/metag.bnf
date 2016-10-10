@@ -194,7 +194,7 @@ whitespace ~ [\s]+
 :discard ~ <c comment>
 <c comment> ~ /\/\*(?:[^\*]+|\*(?!\/))*\*\//
 
-<op declare any grammar> ~ /:\[\d+\]:=/
+<op declare any grammar> ~ /:\[\d+\]:=/$1/
 <op declare top grammar> ~ '::=' | ':[0]:=' # ::= is an alias for the top grammar
 <op declare lex grammar> ~ '~'   | ':[1]:=' #   ~ is an alias for the lexer grammar
 <op loosen>              ~ '||'
