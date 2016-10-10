@@ -52,7 +52,15 @@ typedef enum bootstrap_grammar_L0_enum {
   L0_OP_DECLARE_TOP_GRAMMAR,
   L0_OP_DECLARE_LEX_GRAMMAR,
   L0_BEFORE_OR_AFTER,
-  L0_SIGNED_INTEGER
+  L0_SIGNED_INTEGER,
+  L0_RESERVED_ACTION_NAME,
+  L0_ONE_OR_MORE_WORD_CHARACTERS,
+  L0_ZERO_OR_MORE_WORD_CHARACTERS,
+  L0_PERL_NAME,
+  L0_BARE_NAME,
+  L0_STANDARD_NAME,
+  L0_BRACKETED_NAME,
+  L0_ARRAY_DESCRIPTOR
 } bootstrap_grammar_L0_enum_t;
 
 typedef struct bootstrap_grammar_L0_terminal {
@@ -73,10 +81,18 @@ typedef struct bootstrap_grammar_L0_meta {
 
 /* All non-terminals are listed here */
 bootstrap_grammar_L0_meta_t bootstrap_grammar_L0_metas[] = {
-  { L0_OP_DECLARE_TOP_GRAMMAR, "<op declare top grammar>" },
-  { L0_OP_DECLARE_LEX_GRAMMAR, "<op declare lex grammar>" },
-  { L0_BEFORE_OR_AFTER,        "<before or after>" },
-  { L0_SIGNED_INTEGER,         "<signed integer>" }
+  { L0_OP_DECLARE_TOP_GRAMMAR,       "<op declare top grammar>" },
+  { L0_OP_DECLARE_LEX_GRAMMAR,       "<op declare lex grammar>" },
+  { L0_BEFORE_OR_AFTER,              "<before or after>" },
+  { L0_SIGNED_INTEGER,               "<signed integer>" },
+  { L0_RESERVED_ACTION_NAME,         "<reserved action name>" },
+  { L0_ONE_OR_MORE_WORD_CHARACTERS,  "<one or more word characters>" },
+  { L0_ZERO_OR_MORE_WORD_CHARACTERS, "<zero or more word characters>" },
+  { L0_PERL_NAME,                    "<Perl name>" },
+  { L0_BARE_NAME,                    "<Bare name>" },
+  { L0_STANDARD_NAME,                "<standard name>" },
+  { L0_BRACKETED_NAME,               "<bracketed name>" },
+  { L0_ARRAY_DESCRIPTOR,             "<array descriptor>" }
 };
 
 /* Here it is very important that all the string constants are UTF-8 compatible - this is the case */
