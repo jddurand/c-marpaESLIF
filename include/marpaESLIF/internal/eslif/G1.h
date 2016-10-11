@@ -635,6 +635,23 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
 
 bootstrap_grammar_rule_t bootstrap_grammar_G1_rules[] = {
   { G1_META_STATEMENTS,                       "<rule statements>",                         MARPAESLIF_RULE_TYPE_SEQUENCE,    1, { G1_META_STATEMENT                            },        0,                   -1,      -1 },
+  { G1_META_STATEMENT,                        "<rule statement 01>",                       MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_START_RULE                           },       -1,                   -1,      -1 },
+  { G1_META_STATEMENT,                        "<rule statement 02>",                       MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_EMPTY_RULE                           },       -1,                   -1,      -1 },
+  { G1_META_STATEMENT,                        "<rule statement 03>",                       MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_NULL_STATEMENT                       },       -1,                   -1,      -1 },
+  { G1_META_STATEMENT,                        "<rule statement 04>",                       MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_STATEMENT_GROUP                      },       -1,                   -1,      -1 },
+  { G1_META_STATEMENT,                        "<rule statement 05>",                       MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_PRIORITY_RULE                        },       -1,                   -1,      -1 },
+  { G1_META_STATEMENT,                        "<rule statement 06>",                       MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_QUANTIFIED_RULE                      },       -1,                   -1,      -1 },
+  { G1_META_STATEMENT,                        "<rule statement 07>",                       MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_DISCARD_RULE                         },       -1,                   -1,      -1 },
+  { G1_META_STATEMENT,                        "<rule statement 08>",                       MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_DEFAULT_RULE                         },       -1,                   -1,      -1 },
+  { G1_META_STATEMENT,                        "<rule statement 09>",                       MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_LEXEME_DEFAULT_STATEMENT             },       -1,                   -1,      -1 },
+  { G1_META_STATEMENT,                        "<rule statement 10>",                       MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_DISCARD_DEFAULT_STATEMENT            },       -1,                   -1,      -1 },
+  { G1_META_STATEMENT,                        "<rule statement 11>",                       MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_LEXEME_RULE                          },       -1,                   -1,      -1 },
+  { G1_META_STATEMENT,                        "<rule statement 12>",                       MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_COMPLETION_EVENT_DECLARATION         },       -1,                   -1,      -1 },
+  { G1_META_STATEMENT,                        "<rule statement 13>",                       MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_NULLED_EVENT_DECLARATION             },       -1,                   -1,      -1 },
+  { G1_META_STATEMENT,                        "<rule statement 14>",                       MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_PREDICTION_EVENT_DECLARATION         },       -1,                   -1,      -1 },
+  { G1_META_STATEMENT,                        "<rule statement 15>",                       MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_CURRENT_LEXER_STATEMENT              },       -1,                   -1,      -1 },
+  { G1_META_STATEMENT,                        "<rule statement 16>",                       MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_INACCESSIBLE_STATEMENT               },       -1,                   -1,      -1 },
+  { G1_META_STATEMENT,                        "<rule statement 17>",                       MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_EXCEPTION_STATEMENT                  },       -1,                   -1,      -1 }
 };
 
 #endif /* MARPAESLIF_INTERNAL_ESLIF_G1_H */
