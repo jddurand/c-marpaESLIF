@@ -606,5 +606,6 @@ bootstrap_grammar_rule_t bootstrap_grammar_L0_rules[] = {
   { L0_META_ARRAY_DESCRIPTOR_RIGHT_BRACKET,  "<rule array descriptor right bracket 1>", MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_ARRAY_DESCRIPTOR_RIGHT_BRACKET },       -1,                   -1,      -1 },
   { L0_META_ARRAY_DESCRIPTOR_RIGHT_BRACKET,  "<rule array descriptor right bracket 2>", MARPAESLIF_RULE_TYPE_ALTERNATIVE, 2, { L0_META_WHITESPACE,
                                                                                                                                L0_TERMINAL_ARRAY_DESCRIPTOR_RIGHT_BRACKET },       -1,                   -1,      -1 },
+  { L0_META_RESULT_ITEM_DESCRIPTOR_LIST,     "<rule result item descriptor list>",      MARPAESLIF_RULE_TYPE_SEQUENCE,    1, { L0_META_RESULT_ITEM_DESCRIPTOR             },        0, L0_META_RESULT_ITEM_DESCRIPTOR_SEPARATOR, 0 },
 };
 #endif /* MARPAESLIF_INTERNAL_ESLIF_H */
