@@ -225,6 +225,60 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
 #else
     NULL, NULL
 #endif
+  },
+  { G1_TERMINAL__DISCARD,
+    "<terminal :discard>",        MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+    ":discard", NULL,
+#ifndef MARPAESLIF_NTRACE
+    ":discard", ":dis"
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL__DEFAULT,
+    "<terminal :default>",        MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+    ":default", NULL,
+#ifndef MARPAESLIF_NTRACE
+    ":default", ":def"
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_LEXEME,
+    "<terminal lexeme>",          MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+    "lexeme", NULL,
+#ifndef MARPAESLIF_NTRACE
+    "lexeme", "lexe"
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_DEFAULT,
+    "<terminal default>",         MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+    "default", NULL,
+#ifndef MARPAESLIF_NTRACE
+    "default", "def"
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_EQUAL,
+    "<terminal equal>",           MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+    "=", NULL,
+#ifndef MARPAESLIF_NTRACE
+    "=", ""
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_DISCARD,
+    "<terminal discard>",         MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+    "discard", NULL,
+#ifndef MARPAESLIF_NTRACE
+    "discard", "dis"
+#else
+    NULL, NULL
+#endif
   }
 };
 

@@ -389,14 +389,14 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_grammarp(marpaESLIF_t 
 								   int bootstrap_grammar_rulei, bootstrap_grammar_rule_t *bootstrap_grammar_rulep)
 /*****************************************************************************/
 {
-  const static char          *funcs                               = "_marpaESLIF_bootstrap_grammarp";
-  marpaESLIF_symbol_t        *symbolp                             = NULL;
-  marpaESLIF_rule_t          *rulep                               = NULL;
+  const static char          *funcs     = "_marpaESLIF_bootstrap_grammarp";
+  marpaESLIF_symbol_t        *symbolp   = NULL;
+  marpaESLIF_rule_t          *rulep     = NULL;
+  marpaESLIF_terminal_t      *terminalp = NULL;
+  marpaESLIF_meta_t          *metap     = NULL;
   marpaESLIF_grammar_t       *marpaESLIFGrammarp;
   marpaWrapperGrammarOption_t marpaWrapperGrammarOption;
   int                         i;
-  marpaESLIF_terminal_t      *terminalp;
-  marpaESLIF_meta_t          *metap;
 
   MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Bootstrapping grammar at level %d", leveli);
 
@@ -443,8 +443,10 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_grammarp(marpaESLIF_t 
 
     symbolp->type        = MARPAESLIF_SYMBOL_TYPE_TERMINAL;
     symbolp->u.terminalp = terminalp;
+    /* Terminal is now in symbol */
+    terminalp = NULL;
 
-    GENERICSTACK_SET_PTR(marpaESLIFGrammarp->symbolStackp, symbolp, terminalp->idi);
+    GENERICSTACK_SET_PTR(marpaESLIFGrammarp->symbolStackp, symbolp, symbolp->u.terminalp->idi);
     if (GENERICSTACK_ERROR(marpaESLIFGrammarp->symbolStackp)) {
       MARPAESLIF_ERRORF(marpaESLIFp, "symbolStackp push failure, %s", strerror(errno));
       goto err;
@@ -478,8 +480,10 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_grammarp(marpaESLIF_t 
 
     symbolp->type    = MARPAESLIF_SYMBOL_TYPE_META;
     symbolp->u.metap = metap;
+    /* Terminal is now in symbol */
+    metap = NULL;
 
-    GENERICSTACK_SET_PTR(marpaESLIFGrammarp->symbolStackp, symbolp, metap->idi);
+    GENERICSTACK_SET_PTR(marpaESLIFGrammarp->symbolStackp, symbolp, symbolp->u.metap->idi);
     if (GENERICSTACK_ERROR(marpaESLIFGrammarp->symbolStackp)) {
       MARPAESLIF_ERRORF(marpaESLIFp, "symbolStackp push failure, %s", strerror(errno));
       goto err;
@@ -522,6 +526,8 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_grammarp(marpaESLIF_t 
   goto done;
   
  err:
+  _marpaESLIF_terminal_freev(marpaESLIFp, terminalp);
+  _marpaESLIF_meta_freev(marpaESLIFp, metap);
   _marpaESLIF_rule_freev(marpaESLIFp, rulep);
   _marpaESLIF_symbol_freev(marpaESLIFp, symbolp);
   _marpaESLIF_grammar_freev(marpaESLIFp, marpaESLIFGrammarp);
