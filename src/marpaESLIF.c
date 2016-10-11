@@ -13,7 +13,8 @@
 #define MARPAESLIF_INITIAL_REPLACEMENT_LENGTH 8096  /* Subjective number */
 #endif
 
-/* ESLIF is the internal and external grammars, plus the options */
+/* ESLIF is the internal and external grammars, plus the options. */
+/* Every grammar is in reality a stack of grammars: 0 is Marpa::R2's G1, 1 is Marpa::R2's L0, and so on */
 struct marpaESLIF {
   marpaESLIF_grammar_t *internalGrammarp;
   marpaESLIF_grammar_t *externalGrammarp;
@@ -46,8 +47,12 @@ static inline genericStack_t        *_marpaESLIF_symbolStack_newp(marpaESLIF_t *
 static inline void                   _marpaESLIF_symbolStack_freev(marpaESLIF_t *marpaESLIFp, genericStack_t *symbolStackp);
 
 static inline marpaESLIF_grammar_t  *_marpaESLIF_bootstrap_grammar_L0p(marpaESLIF_t *marpaESLIFp);
+static inline marpaESLIF_grammar_t  *_marpaESLIF_bootstrap_grammar_G1p(marpaESLIF_t *marpaESLIFp);
 static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_grammarp(marpaESLIF_t *marpaESLIFp,
 								   int leveli,
+								   short warningIsErrorb,
+								   short warningIsIgnoredb,
+								   short autorankb,
 								   int bootstrap_grammar_terminali, bootstrap_grammar_terminal_t *bootstrap_grammar_terminalp,
 								   int bootstrap_grammar_metai, bootstrap_grammar_meta_t *bootstrap_grammar_metap,
 								   int bootstrap_grammar_rulei, bootstrap_grammar_rule_t *bootstrap_grammar_rulep);
@@ -345,6 +350,9 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_grammar_L0p(marpaESLIF
 {
   return _marpaESLIF_bootstrap_grammarp(marpaESLIFp,
 					1, /* L0 in Marpa::R2 terminology is level No 1 for us */
+					0, /* warningIsErrorb */
+					1, /* warningIsIgnoredb */
+					0, /* autorankb */
 					sizeof(bootstrap_grammar_L0_terminals) / sizeof(bootstrap_grammar_L0_terminals[0]),
 					bootstrap_grammar_L0_terminals,
 					sizeof(bootstrap_grammar_L0_metas) / sizeof(bootstrap_grammar_L0_metas[0]),
@@ -354,8 +362,28 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_grammar_L0p(marpaESLIF
 }
 
 /*****************************************************************************/
+static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_grammar_G1p(marpaESLIF_t *marpaESLIFp)
+/*****************************************************************************/
+{
+  return _marpaESLIF_bootstrap_grammarp(marpaESLIFp,
+					0, /* G1 in Marpa::R2 terminology is level No 0 for us */
+					0, /* warningIsErrorb */
+					1, /* warningIsIgnoredb */
+					0, /* autorankb */
+					sizeof(bootstrap_grammar_G1_terminals) / sizeof(bootstrap_grammar_G1_terminals[0]),
+					bootstrap_grammar_G1_terminals,
+					sizeof(bootstrap_grammar_G1_metas) / sizeof(bootstrap_grammar_G1_metas[0]),
+					bootstrap_grammar_G1_metas,
+					sizeof(bootstrap_grammar_G1_rules) / sizeof(bootstrap_grammar_G1_rules[0]),
+					bootstrap_grammar_G1_rules);
+}
+
+/*****************************************************************************/
 static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_grammarp(marpaESLIF_t *marpaESLIFp,
 								   int leveli,
+								   short warningIsErrorb,
+								   short warningIsIgnoredb,
+								   short autorankb,
 								   int bootstrap_grammar_terminali, bootstrap_grammar_terminal_t *bootstrap_grammar_terminalp,
 								   int bootstrap_grammar_metai, bootstrap_grammar_meta_t *bootstrap_grammar_metap,
 								   int bootstrap_grammar_rulei, bootstrap_grammar_rule_t *bootstrap_grammar_rulep)
@@ -373,9 +401,9 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_grammarp(marpaESLIF_t 
   MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Bootstrapping grammar at level %d", leveli);
 
   marpaWrapperGrammarOption.genericLoggerp    = marpaESLIFp->option.genericLoggerp;
-  marpaWrapperGrammarOption.warningIsErrorb   = 0;
-  marpaWrapperGrammarOption.warningIsIgnoredb = 1; /* In the internal L0, it is normal to ignore warnings (symbol not reachable etc...) */
-  marpaWrapperGrammarOption.autorankb         = 0;
+  marpaWrapperGrammarOption.warningIsErrorb   = warningIsErrorb;
+  marpaWrapperGrammarOption.warningIsIgnoredb = warningIsIgnoredb;
+  marpaWrapperGrammarOption.autorankb         = autorankb;
   
   marpaESLIFGrammarp = _marpaESLIF_grammar_newp(marpaESLIFp, &marpaWrapperGrammarOption, NULL);
   if (marpaESLIFGrammarp == NULL) {
