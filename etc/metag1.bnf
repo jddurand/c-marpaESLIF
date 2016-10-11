@@ -1,0 +1,123 @@
+statements                       ::= statement+
+statement                        ::= <start rule>
+                                 | <empty rule>
+                                 | <null statement>
+                                 | <statement group>
+                                 | <priority rule>
+                                 | <quantified rule>
+                                 | <discard rule>
+                                 | <default rule>
+                                 | <lexeme default statement>
+                                 | <discard default statement>
+                                 | <lexeme rule>
+                                 | <completion event declaration>
+                                 | <nulled event declaration>
+                                 | <prediction event declaration>
+                                 | <current lexer statement>
+                                 | <inaccessible statement>
+                                 | <exception statement>
+
+<start rule>                   ::= (':start' <op declare>) symbol
+<empty rule>                   ::= lhs <op declare> <adverb list>
+<null statement>               ::= ';'
+<statement group>              ::= ('{') statements ('}')
+<priority rule>                ::= lhs <op declare> priorities
+<quantified rule>              ::= lhs <op declare> <single symbol> quantifier <adverb list>
+<discard rule>                 ::= (':discard' <op declare>) <single symbol> <adverb list>
+<default rule>                 ::= ':default' <op declare> <adverb list>
+<lexeme default statement>     ::= ('lexeme' 'default' '=') <adverb list>
+<discard default statement>    ::= ('discard' 'default' '=') <adverb list>
+<lexeme rule>                  ::= (':lexeme' <op declare>) symbol <adverb list>
+<completion event declaration> ::= ('event') <event initialization> ('=' 'completed') <symbol name>
+<nulled event declaration>     ::= ('event') <event initialization> ('=' 'nulled') <symbol name>
+<prediction event declaration> ::= ('event') <event initialization> ('=' 'predicted') <symbol name>
+<current lexer statement>      ::= ('current' 'lexer' 'is') <lexer name>
+<inaccessible statement>       ::= ('inaccessible' 'is') <inaccessible treatment> ('by' 'default')
+<inaccessible treatment>       ::= 'warn' | 'ok' | 'fatal'
+<exception statement>          ::= lhs <op declare> <rhs primary> '-' <parenthesized rhs exception list>
+
+<op declare>                   ::= <op declare top grammar>
+                                 | <op declare lex grammar>
+
+priorities                     ::= alternatives+ separator => <op loosen>         proper => 1
+alternatives                   ::= alternative+  separator => <op equal priority> proper => 1
+alternative                    ::= rhs <adverb list>
+
+<adverb list>                  ::= <adverb list items>
+<adverb list items>            ::= <adverb item>*
+<adverb item>                  ::= action
+                                 | autorank
+                                 | <left association>
+                                 | <right association>
+                                 | <group association>
+                                 | <separator specification>
+                                 | <proper specification>
+                                 | <rank specification>
+                                 | <null ranking specification>
+                                 | <priority specification>
+                                 | <pause specification>
+                                 | <latm specification>
+                                 | blessing
+                                 | naming
+                                 | <null adverb>
+
+action                         ::= ('action' '=>') <action name>
+autorank                       ::= ('autorank' '=>') boolean
+<left association>             ::= ('assoc' '=>' 'left')
+<right association>            ::= ('assoc' '=>' 'right')
+<group association>            ::= ('assoc' '=>' 'group')
+<separator specification>      ::= ('separator' '=>') <single symbol>
+<proper specification>         ::= ('proper' '=>') boolean
+<rank specification>           ::= ('rank' '=>') <signed integer>
+<null ranking specification>   ::= ('null-ranking' '=>') <null ranking constant>
+<null ranking specification>   ::= ('null' 'rank' '=>') <null ranking constant>
+<null ranking constant>        ::= 'low' | 'high'
+<priority specification>       ::= ('priority' '=>') <signed integer>
+<pause specification>          ::= ('pause' '=>') <before or after>
+<event specification>          ::= ('event' '=>') <event initialization>
+<event initialization>         ::= <event name> <event initializer>
+<event initializer>            ::= ('=') <on or off>
+<on or off>                    ::= 'on' | 'off'
+<event initializer>            ::= # empty
+<latm specification>           ::= ('forgiving' '=>') true
+<latm specification>           ::= ('latm' '=>') true
+<blessing>                     ::= ('bless' '=>') <blessing name>
+naming                         ::= ('name' '=>') <alternative name>
+<null adverb>                  ::= ','
+
+<alternative name>             ::= <standard name> | <single quoted name>
+
+<event name>        ::= <standard name>
+                      | <quoted name>
+                      | <reserved event name>
+
+lhs                              ::= <symbol name>
+rhs                              ::= <rhs primary>+
+<rhs primary>                    ::= <single symbol>
+<rhs primary>                    ::= <quoted string>
+<rhs primary>                    ::= <parenthesized rhs primary list>
+<parenthesized rhs primary list> ::= ('(') <rhs primary list> (')')
+<rhs primary list>               ::= <rhs primary>+
+
+<parenthesized rhs exception list> ::= ('(') <rhs exception list> (')')
+<rhs exception list>             ::= <rhs exception>+
+#
+# An exception cannot be a meta identifier.
+# Note that having a regular expression with substitution is meaningless
+# therefore it is not added to the candidates for <rhs exception>
+#
+<rhs exception>                  ::= <quoted string>
+<rhs exception>                  ::= <character class>
+<rhs exception>                  ::= <regular expression>
+
+<single symbol> ::=  symbol
+                  | <character class>
+                  | <regular expression>
+                  | <substitution expression>
+symbol          ::= <symbol name>
+<symbol name>   ::= <bare name>
+<symbol name>   ::= <bracketed name>
+
+<action name>   ::= <Perl name>
+<action name>   ::= <reserved action name>
+<action name>   ::= <array descriptor>

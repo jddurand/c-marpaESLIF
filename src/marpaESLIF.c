@@ -47,7 +47,7 @@ static inline void                   _marpaESLIF_symbolStack_freev(marpaESLIF_t 
 
 static inline marpaESLIF_grammar_t  *_marpaESLIF_bootstrap_grammar_L0p(marpaESLIF_t *marpaESLIFp);
 static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_grammarp(marpaESLIF_t *marpaESLIFp,
-								   bootstrap_level_t bootstrap_level,
+								   int leveli,
 								   int bootstrap_grammar_terminali, bootstrap_grammar_terminal_t *bootstrap_grammar_terminalp,
 								   int bootstrap_grammar_metai, bootstrap_grammar_meta_t *bootstrap_grammar_metap,
 								   int bootstrap_grammar_rulei, bootstrap_grammar_rule_t *bootstrap_grammar_rulep);
@@ -344,7 +344,7 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_grammar_L0p(marpaESLIF
 /*****************************************************************************/
 {
   return _marpaESLIF_bootstrap_grammarp(marpaESLIFp,
-					BOOTSTRAP_LEVEL_L0,
+					1, /* L0 in Marpa::R2 terminology is level No 1 for us */
 					sizeof(bootstrap_grammar_L0_terminals) / sizeof(bootstrap_grammar_L0_terminals[0]),
 					bootstrap_grammar_L0_terminals,
 					sizeof(bootstrap_grammar_L0_metas) / sizeof(bootstrap_grammar_L0_metas[0]),
@@ -355,7 +355,7 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_grammar_L0p(marpaESLIF
 
 /*****************************************************************************/
 static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_grammarp(marpaESLIF_t *marpaESLIFp,
-								   bootstrap_level_t bootstrap_level,
+								   int leveli,
 								   int bootstrap_grammar_terminali, bootstrap_grammar_terminal_t *bootstrap_grammar_terminalp,
 								   int bootstrap_grammar_metai, bootstrap_grammar_meta_t *bootstrap_grammar_metap,
 								   int bootstrap_grammar_rulei, bootstrap_grammar_rule_t *bootstrap_grammar_rulep)
@@ -370,7 +370,7 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_grammarp(marpaESLIF_t 
   marpaESLIF_terminal_t      *terminalp;
   marpaESLIF_meta_t          *metap;
 
-  MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Bootstrapping internal %s grammar", (bootstrap_level == BOOTSTRAP_LEVEL_G1) ? "G1" : ((bootstrap_level == BOOTSTRAP_LEVEL_L0) ? "L0" : "??"));
+  MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Bootstrapping grammar at level %d", leveli);
 
   marpaWrapperGrammarOption.genericLoggerp    = marpaESLIFp->option.genericLoggerp;
   marpaWrapperGrammarOption.warningIsErrorb   = 0;
