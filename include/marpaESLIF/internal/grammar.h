@@ -145,6 +145,7 @@ struct marpaESLIF_rule {
 
 /* A grammar */
 struct marpaESLIF_grammar {
+  int                    leveli;               /* Grammar level */
   marpaWrapperGrammar_t *marpaWrapperGrammarp; /* Grammar implementation */
   genericStack_t        *symbolStackp;         /* Stack of symbols */
   genericStack_t        *ruleStackp;           /* Stack of rules */
