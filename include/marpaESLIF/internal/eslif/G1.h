@@ -279,6 +279,357 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
 #else
     NULL, NULL
 #endif
+  },
+  { G1_TERMINAL__LEXEME,
+    "<terminal :lexeme>",         MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+    ":lexeme", NULL,
+#ifndef MARPAESLIF_NTRACE
+    ":lexeme", ":lexe"
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_EVENT,
+    "<terminal event>",           MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+    "event", NULL,
+#ifndef MARPAESLIF_NTRACE
+    "event", "eve"
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_COMPLETED,
+    "<terminal completed>",           MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+    "completed", NULL,
+#ifndef MARPAESLIF_NTRACE
+    "completed", "comp"
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_NULLED,
+    "<terminal nulled>",           MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+    "nulled", NULL,
+#ifndef MARPAESLIF_NTRACE
+    "nulled", "nul"
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_PREDICTED,
+    "<terminal predicted>",           MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+    "predicted", NULL,
+#ifndef MARPAESLIF_NTRACE
+    "predicted", "pre"
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_CURRENT,
+    "<terminal current>",           MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+    "current", NULL,
+#ifndef MARPAESLIF_NTRACE
+    "current", "cur"
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_LEXER,
+    "<terminal lexer>",           MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+    "lexer", NULL,
+#ifndef MARPAESLIF_NTRACE
+    "lexer", "lex"
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_IS,
+    "<terminal is>",           MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+    "is", NULL,
+#ifndef MARPAESLIF_NTRACE
+    "is", "i"
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_INACCESSIBLE,
+    "<terminal inaccessible>",           MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+    "inaccessible", NULL,
+#ifndef MARPAESLIF_NTRACE
+    "inaccessible", "inac"
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_BY,
+    "<terminal by>",           MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+    "by", NULL,
+#ifndef MARPAESLIF_NTRACE
+    "by", "b"
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_WARN,
+    "<terminal warn>",           MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+    "warn", NULL,
+#ifndef MARPAESLIF_NTRACE
+    "warn", "wa"
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_OK,
+    "<terminal ok>",           MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+    "ok", NULL,
+#ifndef MARPAESLIF_NTRACE
+    "ok", "o"
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_FATAL,
+    "<terminal fatal>",           MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+    "fatal", NULL,
+#ifndef MARPAESLIF_NTRACE
+    "fatal", "fata"
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_MINUS,
+    "<terminal ->",           MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+    "-", NULL,
+#ifndef MARPAESLIF_NTRACE
+    "-", ""
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_ACTION,
+    "<terminal action>",           MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+    "action", NULL,
+#ifndef MARPAESLIF_NTRACE
+    "action", "act"
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_THEN,
+    "<terminal =>>",           MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+    "=>", NULL,
+#ifndef MARPAESLIF_NTRACE
+    "=>", "="
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_AUTORANK,
+    "<terminal autorank>",           MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+    "autorank", NULL,
+#ifndef MARPAESLIF_NTRACE
+    "autorank", "auto"
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_ASSOC,
+    "<terminal assoc>",           MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+    "assoc", NULL,
+#ifndef MARPAESLIF_NTRACE
+    "assoc", "asso"
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_LEFT,
+    "<terminal left>",           MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+    "left", NULL,
+#ifndef MARPAESLIF_NTRACE
+    "left", "lef"
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_RIGHT,
+    "<terminal right>",           MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+    "right", NULL,
+#ifndef MARPAESLIF_NTRACE
+    "right", "r"
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_GROUP,
+    "<terminal group>",           MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+    "group", NULL,
+#ifndef MARPAESLIF_NTRACE
+    "group", "gr"
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_SEPARATOR,
+    "<terminal separator>",           MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+    "separator", NULL,
+#ifndef MARPAESLIF_NTRACE
+    "separator", "sep"
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_PROPER,
+    "<terminal proper>",           MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+    "proper", NULL,
+#ifndef MARPAESLIF_NTRACE
+    "proper", "pro"
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_RANK,
+    "<terminal rank>",           MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+    "rank", NULL,
+#ifndef MARPAESLIF_NTRACE
+    "rank", "ra"
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_NULL_RANKING,
+    "<terminal null-ranking>",           MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+    "null-ranking", NULL,
+#ifndef MARPAESLIF_NTRACE
+    "null-ranking", "null-"
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_NULL,
+    "<terminal null>",           MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+    "null", NULL,
+#ifndef MARPAESLIF_NTRACE
+    "null", "nul"
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_LOW,
+    "<terminal low>",           MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+    "low", NULL,
+#ifndef MARPAESLIF_NTRACE
+    "low", "lo"
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_HIGH,
+    "<terminal high>",           MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+    "high", NULL,
+#ifndef MARPAESLIF_NTRACE
+    "high", "hi"
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_PRIORITY,
+    "<terminal priority>",           MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+    "priority", NULL,
+#ifndef MARPAESLIF_NTRACE
+    "priority", "prio"
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_PAUSE,
+    "<terminal pause>",           MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+    "pause", NULL,
+#ifndef MARPAESLIF_NTRACE
+    "pause", "pa"
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_ON,
+    "<terminal on>",           MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+    "on", NULL,
+#ifndef MARPAESLIF_NTRACE
+    "on", "o"
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_OFF,
+    "<terminal off>",           MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+    "off", NULL,
+#ifndef MARPAESLIF_NTRACE
+    "off", "of"
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_FORGIVING,
+    "<terminal forgiving>",           MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+    "forgiving", NULL,
+#ifndef MARPAESLIF_NTRACE
+    "forgiving", "for"
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_LATM,
+    "<terminal latm>",           MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+    "latm", NULL,
+#ifndef MARPAESLIF_NTRACE
+    "latm", "lat"
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_BLESS,
+    "<terminal bless>",           MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+    "bless", NULL,
+#ifndef MARPAESLIF_NTRACE
+    "bless", "bl"
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_NAME,
+    "<terminal name>",           MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+    "name", NULL,
+#ifndef MARPAESLIF_NTRACE
+    "name", "nam"
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_COMMA,
+    "<terminal ,",           MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+    ",", NULL,
+#ifndef MARPAESLIF_NTRACE
+    ",", ""
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_LPAREN,
+    "<terminal (",           MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+    "(", NULL,
+#ifndef MARPAESLIF_NTRACE
+    "(", ""
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_RPAREN,
+    "<terminal )",           MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+    ")", NULL,
+#ifndef MARPAESLIF_NTRACE
+    ")", ""
+#else
+    NULL, NULL
+#endif
   }
 };
 
