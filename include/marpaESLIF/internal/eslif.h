@@ -7,19 +7,20 @@ typedef enum bootstrap_grammar_L0_enum {
   L0_TERMINAL_RESERVED_EVENT_NAME = 0,
   L0_TERMINAL_WHITESPACE,
   L0_TERMINAL_PERL_COMMENT,
-  L0_TERMINAL_CPLUSCPLUS_COMMENT,
+  L0_TERMINAL_CPLUSPLUS_COMMENT,
   L0_TERMINAL_C_COMMENT,
   L0_TERMINAL_OP_DECLARE_ANY_GRAMMAR,
-  L0_TERMINAL_OP_DECLARE_TOP_GRAMMAR_MATCH,
-  L0_TERMINAL_OP_DECLARE_TOP_GRAMMAR_MATCH_ALIAS,
-  L0_TERMINAL_OP_DECLARE_LEX_GRAMMAR_MATCH,
-  L0_TERMINAL_OP_DECLARE_LEX_GRAMMAR_MATCH_ALIAS,
+  L0_TERMINAL_OP_DECLARE_TOP_GRAMMAR,
+  L0_TERMINAL_OP_DECLARE_TOP_GRAMMAR_ALIAS,
+  L0_TERMINAL_OP_DECLARE_LEX_GRAMMAR,
+  L0_TERMINAL_OP_DECLARE_LEX_GRAMMAR_ALIAS,
   L0_TERMINAL_OP_LOOSEN,
   L0_TERMINAL_OP_EQUAL_PRIORITY,
   L0_TERMINAL_BEFORE,
   L0_TERMINAL_AFTER,
   L0_TERMINAL_SIGN,
   L0_TERMINAL_INTEGER,
+  L0_TERMINAL_TRUE,
   L0_TERMINAL_BOOLEAN,
   L0_TERMINAL_WORD_CHARACTER,
   L0_TERMINAL_DOUBLE_COLON,
@@ -27,8 +28,8 @@ typedef enum bootstrap_grammar_L0_enum {
   L0_TERMINAL_LEFT_CURLY,
   L0_TERMINAL_RIGHT_CURLY,
   L0_TERMINAL_BRACKETED_NAME_STRING,
-  L0_TERMINAL_LEFT_BRACKET,
-  L0_TERMINAL_RIGHT_BRACKET,
+  L0_TERMINAL_ARRAY_DESCRIPTOR_LEFT_BRACKET,
+  L0_TERMINAL_ARRAY_DESCRIPTOR_RIGHT_BRACKET,
   L0_TERMINAL_COMMA,
   L0_TERMINAL_START,
   L0_TERMINAL_LENGTH,
@@ -57,7 +58,7 @@ typedef enum bootstrap_grammar_L0_enum {
   L0_META_OP_DECLARE_ANY_GRAMMAR,
   L0_META_OP_DECLARE_TOP_GRAMMAR,
   L0_META_OP_DECLARE_LEX_GRAMMAR,
-  L0_META_OP_LOOSER,
+  L0_META_OP_LOOSEN,
   L0_META_OP_EQUAL_PRIORITY,
   L0_META_BEFORE_OR_AFTER,
   L0_META_SIGNED_INTEGER,
@@ -136,7 +137,7 @@ bootstrap_grammar_L0_meta_t bootstrap_grammar_L0_metas[] = {
   { L0_META_OP_DECLARE_ANY_GRAMMAR,             "<meta op declare any grammar>" },
   { L0_META_OP_DECLARE_TOP_GRAMMAR,             "<meta op declare top grammar>" },
   { L0_META_OP_DECLARE_LEX_GRAMMAR,             "<meta op declare lex grammar>" },
-  { L0_META_OP_LOOSER,                          "<meta op looser>" },
+  { L0_META_OP_LOOSEN,                          "<meta op loosen>" },
   { L0_META_OP_EQUAL_PRIORITY,                  "<meta op equal priority>" },
   { L0_META_BEFORE_OR_AFTER,                    "<meta before or after>" },
   { L0_META_SIGNED_INTEGER,                     "<meta signed integer>" },
@@ -227,7 +228,7 @@ bootstrap_grammar_L0_terminal_t bootstrap_grammar_L0_terminals[] = {
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
   /* <perl comment> adapted for C++ (//) only */
-  { L0_TERMINAL_CPLUSCPLUS_COMMENT,
+  { L0_TERMINAL_CPLUSPLUS_COMMENT,
     "<terminal cplusplus comment>",                 MARPAESLIF_TERMINAL_TYPE_REGEX,   MARPAESLIF_REGEX_OPTION_NA,
     "//[^\\n]*(?:\\n|\\z)", NULL,
 #ifndef MARPAESLIF_NTRACE
@@ -260,8 +261,8 @@ bootstrap_grammar_L0_terminal_t bootstrap_grammar_L0_terminals[] = {
 #endif
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
-  { L0_TERMINAL_OP_DECLARE_TOP_GRAMMAR_MATCH,
-    "<terminal op declare top grammar match>",      MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+  { L0_TERMINAL_OP_DECLARE_TOP_GRAMMAR,
+    "<terminal op declare top grammar>",      MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
     ":[0]:=", NULL,
 #ifndef MARPAESLIF_NTRACE
     ":[0]:=", ":["
@@ -270,8 +271,8 @@ bootstrap_grammar_L0_terminal_t bootstrap_grammar_L0_terminals[] = {
 #endif
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
-  { L0_TERMINAL_OP_DECLARE_TOP_GRAMMAR_MATCH_ALIAS,
-    "<terminal op declare top grammar match alias>", MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+  { L0_TERMINAL_OP_DECLARE_TOP_GRAMMAR_ALIAS,
+    "<terminal op declare top grammar alias>", MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
     "::=", NULL,
 #ifndef MARPAESLIF_NTRACE
     "::=", "::"
@@ -280,8 +281,8 @@ bootstrap_grammar_L0_terminal_t bootstrap_grammar_L0_terminals[] = {
 #endif
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
-  { L0_TERMINAL_OP_DECLARE_LEX_GRAMMAR_MATCH,
-    "<terminal op declare lex grammar match>",       MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+  { L0_TERMINAL_OP_DECLARE_LEX_GRAMMAR,
+    "<terminal op declare lex grammar>",       MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
     ":[1]:=", NULL,
 #ifndef MARPAESLIF_NTRACE
     ":[1]:=", ":["
@@ -290,8 +291,8 @@ bootstrap_grammar_L0_terminal_t bootstrap_grammar_L0_terminals[] = {
 #endif
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
-  { L0_TERMINAL_OP_DECLARE_LEX_GRAMMAR_MATCH_ALIAS,
-    "<terminal op declare lex grammar match alias>", MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+  { L0_TERMINAL_OP_DECLARE_LEX_GRAMMAR_ALIAS,
+    "<terminal op declare lex grammar alias>", MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
     "~", NULL,
 #ifndef MARPAESLIF_NTRACE
     "~", NULL
@@ -344,6 +345,16 @@ bootstrap_grammar_L0_terminal_t bootstrap_grammar_L0_terminals[] = {
     NULL, NULL
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
+  { L0_TERMINAL_TRUE,
+    "<terminal true>",                              MARPAESLIF_TERMINAL_TYPE_STRING,   MARPAESLIF_REGEX_OPTION_NA,
+    "1", NULL,
+#ifndef MARPAESLIF_NTRACE
+    "1", ""
+#else
+    NULL, NULL
+#endif
+  },
+  /* --------------------------------------------------------------------------------------------------------------------------------- */
   { L0_TERMINAL_BOOLEAN,
     "<terminal boolean>",                           MARPAESLIF_TERMINAL_TYPE_REGEX,   MARPAESLIF_REGEX_OPTION_NA,
     "[01]", NULL,
@@ -386,14 +397,14 @@ bootstrap_grammar_L0_terminal_t bootstrap_grammar_L0_terminals[] = {
     NULL, NULL
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
-  { L0_TERMINAL_LEFT_BRACKET,
-    "<terminal left bracket>",                      MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+  { L0_TERMINAL_ARRAY_DESCRIPTOR_LEFT_BRACKET,
+    "<terminal array descriptor left bracket>",     MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
     "[", NULL,
     NULL, NULL
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
-  { L0_TERMINAL_RIGHT_BRACKET,
-    "<terminal right bracket>",                     MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+  { L0_TERMINAL_ARRAY_DESCRIPTOR_RIGHT_BRACKET,
+    "<terminal array descriptor right bracket>",    MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
     "]", NULL,
     NULL, NULL
   },
@@ -550,7 +561,50 @@ bootstrap_grammar_L0_terminal_t bootstrap_grammar_L0_terminals[] = {
 };
 
 bootstrap_grammar_rule_t bootstrap_grammar_L0_rules[] = {
-  { L0_META_RESERVED_EVENT_NAME, "<rule reserved event name>", MARPAESLIF_RULE_TYPE_ALTERNATIVE,     1, { L0_TERMINAL_RESERVED_EVENT_NAME },       -1,         -1,      -1 },
-  { L0_META_WHITESPACE,          "<rule whitespace>",          MARPAESLIF_RULE_TYPE_ALTERNATIVE,     1, { L0_TERMINAL_WHITESPACE          },       -1,         -1,      -1 }
+  { L0_META_RESERVED_EVENT_NAME,            "<rule reserved event name>",               MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_RESERVED_EVENT_NAME            },       -1,                   -1,      -1 },
+  { L0_META_WHITESPACE,                     "<rule whitespace>",                        MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_WHITESPACE                     },       -1,                   -1,      -1 },
+  { L0_META_PERL_COMMENT,                   "<rule perl comment>",                      MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_PERL_COMMENT                   },       -1,                   -1,      -1 },
+  { L0_META_CPLUSPLUS_COMMENT,              "<rule cplusplus comment>",                 MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_CPLUSPLUS_COMMENT              },       -1,                   -1,      -1 },
+  { L0_META_C_COMMENT,                      "<rule c comment>",                         MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_C_COMMENT                      },       -1,                   -1,      -1 },
+  { L0_META_OP_DECLARE_ANY_GRAMMAR,         "<rule op declare any grammar>",            MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_OP_DECLARE_ANY_GRAMMAR         },       -1,                   -1,      -1 },
+  { L0_META_OP_DECLARE_TOP_GRAMMAR,         "<rule op declare top grammar>",            MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_OP_DECLARE_TOP_GRAMMAR         },       -1,                   -1,      -1 },
+  { L0_META_OP_DECLARE_TOP_GRAMMAR,         "<rule op declare top grammar alias>",      MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_OP_DECLARE_TOP_GRAMMAR_ALIAS   },       -1,                   -1,      -1 },
+  { L0_META_OP_DECLARE_LEX_GRAMMAR,         "<rule op declare lex grammar>",            MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_OP_DECLARE_LEX_GRAMMAR         },       -1,                   -1,      -1 },
+  { L0_META_OP_DECLARE_LEX_GRAMMAR,         "<rule op declare lex grammar alias>",      MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_OP_DECLARE_LEX_GRAMMAR_ALIAS   },       -1,                   -1,      -1 },
+  { L0_META_OP_LOOSEN,                      "<rule op loosen>",                         MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_OP_LOOSEN                      },       -1,                   -1,      -1 },
+  { L0_META_OP_EQUAL_PRIORITY,              "<rule op equal priority>",                 MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_OP_EQUAL_PRIORITY              },       -1,                   -1,      -1 },
+  { L0_META_BEFORE_OR_AFTER,                "<rule before or after 1>",                 MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_BEFORE                         },       -1,                   -1,      -1 },
+  { L0_META_BEFORE_OR_AFTER,                "<rule before or after 2>",                 MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_AFTER                          },       -1,                   -1,      -1 },
+  { L0_META_SIGNED_INTEGER,                 "<rule signed integer 1>",                  MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_META_INTEGER                            },       -1,                   -1,      -1 },
+  { L0_META_SIGNED_INTEGER,                 "<rule signed integer 2>",                  MARPAESLIF_RULE_TYPE_ALTERNATIVE, 2, { L0_META_SIGN,
+                                                                                                                               L0_META_INTEGER                            },       -1,                   -1,      -1 },
+  { L0_META_SIGN,                           "<rule sign>",                              MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_SIGN                           },       -1,                   -1,      -1 },
+  { L0_META_INTEGER,                        "<rule integer>",                           MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_INTEGER                        },       -1,                   -1,      -1 },
+  { L0_META_TRUE,                           "<rule true>",                              MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_TRUE                           },       -1,                   -1,      -1 },
+  { L0_META_BOOLEAN,                        "<rule boolean>",                           MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_BOOLEAN                        },       -1,                   -1,      -1 },
+  { L0_META_WORD_CHARACTER     ,            "<rule word character>",                    MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_WORD_CHARACTER                 },       -1,                   -1,      -1 },
+  { L0_META_RESERVED_ACTION_NAME,           "<rule reserved action name>",              MARPAESLIF_RULE_TYPE_ALTERNATIVE, 2, { L0_TERMINAL_DOUBLE_COLON,
+                                                                                                                               L0_META_ONE_OR_MORE_WORD_CHARACTERS        },       -1,                   -1,      -1 },
+  { L0_META_ONE_OR_MORE_WORD_CHARACTERS,    "<rule one more word characters>",          MARPAESLIF_RULE_TYPE_SEQUENCE,    1, { L0_META_WORD_CHARACTER                     },        1,                   -1,      -1 },
+  { L0_META_ZERO_OR_MORE_WORD_CHARACTERS,   "<rule zero more word characters>",         MARPAESLIF_RULE_TYPE_SEQUENCE,    1, { L0_META_WORD_CHARACTER                     },        0,                   -1,      -1 },
+  { L0_META_PERL_IDENTIFIER,                "<rule perl identifier>",                   MARPAESLIF_RULE_TYPE_SEQUENCE,    1, { L0_META_WORD_CHARACTER                     },        1,                   -1,      -1 },
+  { L0_META_DOUBLE_COLON,                   "<rule double colon>",                      MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_DOUBLE_COLON                   },       -1,                   -1,      -1 },
+  { L0_META_PERL_NAME,                      "<rule perl name>",                         MARPAESLIF_RULE_TYPE_SEQUENCE,    1, { L0_META_PERL_IDENTIFIER                    },        1, L0_META_DOUBLE_COLON,       1 },
+  { L0_META_BARE_NAME,                      "<rule bare name>",                         MARPAESLIF_RULE_TYPE_SEQUENCE,    1, { L0_META_WORD_CHARACTER                     },        1,                   -1,      -1 },
+  { L0_META_STANDARD_NAME,                  "<rule standard name>",                     MARPAESLIF_RULE_TYPE_ALTERNATIVE, 2, { L0_TERMINAL_LATIN_ALPHABET_LETTER,
+                                                                                                                               L0_META_ZERO_OR_MORE_WORD_CHARACTERS       },       -1,                   -1,      -1 },
+  { L0_META_BRACKETED_NAME,                 "<rule bracketed name>",                    MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { L0_TERMINAL_LEFT_CURLY,
+                                                                                                                               L0_META_BRACKETED_NAME_STRING,
+                                                                                                                               L0_TERMINAL_RIGHT_CURLY                    },       -1,                   -1,      -1 },
+  { L0_META_BRACKETED_NAME_STRING,          "<rule bracketed name string>",             MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_BRACKETED_NAME_STRING          },       -1,                   -1,      -1 },
+  { L0_META_ARRAY_DESCRIPTOR,               "<rule array descriptor>",                  MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { L0_META_ARRAY_DESCRIPTOR_LEFT_BRACKET,
+                                                                                                                               L0_META_RESULT_ITEM_DESCRIPTOR_LIST,
+                                                                                                                               L0_META_ARRAY_DESCRIPTOR_RIGHT_BRACKET     },       -1,                   -1,      -1 },
+  { L0_META_ARRAY_DESCRIPTOR_LEFT_BRACKET,  "<rule array descriptor left bracket 1>",   MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_ARRAY_DESCRIPTOR_LEFT_BRACKET  },       -1,                   -1,      -1 },
+  { L0_META_ARRAY_DESCRIPTOR_LEFT_BRACKET,  "<rule array descriptor left bracket 2>",   MARPAESLIF_RULE_TYPE_ALTERNATIVE, 2, { L0_TERMINAL_ARRAY_DESCRIPTOR_LEFT_BRACKET,
+                                                                                                                               L0_META_WHITESPACE                         },       -1,                   -1,      -1 },
+  { L0_META_ARRAY_DESCRIPTOR_RIGHT_BRACKET,  "<rule array descriptor right bracket 1>", MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_ARRAY_DESCRIPTOR_RIGHT_BRACKET },       -1,                   -1,      -1 },
+  { L0_META_ARRAY_DESCRIPTOR_RIGHT_BRACKET,  "<rule array descriptor right bracket 2>", MARPAESLIF_RULE_TYPE_ALTERNATIVE, 2, { L0_META_WHITESPACE,
+                                                                                                                               L0_TERMINAL_ARRAY_DESCRIPTOR_RIGHT_BRACKET },       -1,                   -1,      -1 },
 };
 #endif /* MARPAESLIF_INTERNAL_ESLIF_H */
