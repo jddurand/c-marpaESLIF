@@ -190,12 +190,38 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
   /* --------------------------------------------------------------------------------------------------------------------------------- */
   /*                                                             TERMINALS                                                             */
   /* --------------------------------------------------------------------------------------------------------------------------------- */
-  /* --------------------------------------------------------------------------------------------------------------------------------- */
   { G1_TERMINAL__START,
     "<terminal :start>",               MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
     ":start", NULL,
 #ifndef MARPAESLIF_NTRACE
     ":start", ":sta"
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_SEMICOLON,
+    "<terminal ;>",               MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+    ";", NULL,
+#ifndef MARPAESLIF_NTRACE
+    ";", ""
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_LEFT_BRACKET,
+    "<terminal {>",               MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+    "{", NULL,
+#ifndef MARPAESLIF_NTRACE
+    "{", ""
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_RIGHT_BRACKET,
+    "<terminal }>",               MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+    "}", NULL,
+#ifndef MARPAESLIF_NTRACE
+    "}", ""
 #else
     NULL, NULL
 #endif
