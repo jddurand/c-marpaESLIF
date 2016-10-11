@@ -48,7 +48,8 @@ typedef enum bootstrap_grammar_L0_enum {
   L0_TERMINAL_SUBSTITUTION_EXPRESSION,
   L0_TERMINAL_SUBSTITUTION_EXPRESSION_MODIFIER,
   L0_TERMINAL_CHARACTER_CLASS_REGEXP,
-  L0_TERMINAL_CHARACTER_CLASS_MODIFIER,
+  L0_TERMINAL_CHARACTER_CLASS_MODIFIER_STANDARD,
+  L0_TERMINAL_CHARACTER_CLASS_MODIFIER_COMPAT,
   /* ----- Non terminals ------ */
   L0_META_RESERVED_EVENT_NAME,
   L0_META_WHITESPACE,
@@ -83,19 +84,20 @@ typedef enum bootstrap_grammar_L0_enum {
   L0_META_RESULT_ITEM_DESCRIPTOR_LIST,
   L0_META_RESULT_ITEM_DESCRIPTOR_SEPARATOR,
   L0_META_RESULT_ITEM_DESCRIPTOR,
-  L0_META_SINGLED_QUOTED_STRING,
+  L0_META_SINGLE_QUOTED_STRING,
   L0_META_DOUBLE_QUOTED_STRING,
   L0_META_QUOTED_STRING,
   L0_META_CHARACTER_CLASS_REGEXP,
   L0_META_CHARACTER_CLASS,
+  L0_META_CHARACTER_CLASS_MODIFIER,
   L0_META_CHARACTER_CLASS_MODIFIERS,
   L0_META_REGULAR_EXPRESSION,
   L0_META_REGULAR_EXPRESSION_MODIFIERS,
-  L0_META_SUBSTITUTIONS_EXPRESSION,
-  L0_META_SUBSTITUTIONS_EXPRESSION_MODIFIERS
+  L0_META_SUBSTITUTION_EXPRESSION,
+  L0_META_SUBSTITUTION_EXPRESSION_MODIFIERS
 } bootstrap_grammar_L0_enum_t;
 
-typedef struct bootstrap_grammar_L0_terminal {
+typedef struct bootstrap_grammar_terminal {
   bootstrap_grammar_L0_enum_t idi;                /* Identifier */
   char                      *descs;               /* Description */
   marpaESLIF_terminal_type_t terminalType;        /* Terminal type */
@@ -104,12 +106,12 @@ typedef struct bootstrap_grammar_L0_terminal {
   PCRE2_SPTR                 substitutionp;       /* UTF-8 encoding */
   char                      *testFullMatchs;
   char                      *testPartialMatchs;
-} bootstrap_grammar_L0_terminal_t;
+} bootstrap_grammar_terminal_t;
 
-typedef struct bootstrap_grammar_L0_meta {
+typedef struct bootstrap_grammar_meta {
   bootstrap_grammar_L0_enum_t idi;                /* Identifier */
   char                      *descs;               /* Description */
-} bootstrap_grammar_L0_meta_t;
+} bootstrap_grammar_meta_t;
 
 typedef enum bootstrap_grammar_rule_type {
   MARPAESLIF_RULE_TYPE_ALTERNATIVE,
@@ -127,8 +129,13 @@ typedef struct bootstrap_grammar_rule {
   short                         properb;
 } bootstrap_grammar_rule_t;
 
+typedef enum bootstrap_level {
+  BOOTSTRAP_LEVEL_G1,
+  BOOTSTRAP_LEVEL_L0
+} bootstrap_level_t;
+
 /* All non-terminals are listed here */
-bootstrap_grammar_L0_meta_t bootstrap_grammar_L0_metas[] = {
+bootstrap_grammar_meta_t bootstrap_grammar_L0_metas[] = {
   { L0_META_RESERVED_EVENT_NAME,                "<meta reserved event name>" },
   { L0_META_WHITESPACE,                         "<meta whitespace>" },
   { L0_META_PERL_COMMENT,                       "<meta perl comment>" },
@@ -162,21 +169,22 @@ bootstrap_grammar_L0_meta_t bootstrap_grammar_L0_metas[] = {
   { L0_META_RESULT_ITEM_DESCRIPTOR_LIST,        "<meta result item descriptor list>" },
   { L0_META_RESULT_ITEM_DESCRIPTOR_SEPARATOR,   "<meta result item descriptor separator>" },
   { L0_META_RESULT_ITEM_DESCRIPTOR,             "<meta result item descriptor>" },
-  { L0_META_SINGLED_QUOTED_STRING,              "<meta singled quoted string>" },
+  { L0_META_SINGLE_QUOTED_STRING,               "<meta single quoted string>" },
   { L0_META_DOUBLE_QUOTED_STRING,               "<meta double quoted string>" },
   { L0_META_QUOTED_STRING,                      "<meta quoted string>" },
   { L0_META_CHARACTER_CLASS_REGEXP,             "<meta character class regexp>" },
   { L0_META_CHARACTER_CLASS,                    "<meta character class>" },
+  { L0_META_CHARACTER_CLASS_MODIFIER,           "<meta character class modifier>" },
   { L0_META_CHARACTER_CLASS_MODIFIERS,          "<meta character class modifiers>" },
   { L0_META_REGULAR_EXPRESSION,                 "<meta regular expression>" },
   { L0_META_REGULAR_EXPRESSION_MODIFIERS,       "<meta regular expression modifiers>" },
-  { L0_META_SUBSTITUTIONS_EXPRESSION,           "<meta substitutions expression>" },
-  { L0_META_SUBSTITUTIONS_EXPRESSION_MODIFIERS, "<meta substitutions expression modifiers>" }
+  { L0_META_SUBSTITUTION_EXPRESSION,            "<meta substitution expression>" },
+  { L0_META_SUBSTITUTION_EXPRESSION_MODIFIERS,  "<meta substitution expression modifiers>" }
 };
 
 /* Here it is very important that all the string constants are UTF-8 compatible - this is the case */
 
-bootstrap_grammar_L0_terminal_t bootstrap_grammar_L0_terminals[] = {
+bootstrap_grammar_terminal_t bootstrap_grammar_L0_terminals[] = {
   /* From perl stringified version to C and // versions: */
   /*
    my $this = q{STRINGIFIED_VERSION_WITHOUT_THE_SLASH_AND_QUOTE_ESCAPES};
@@ -553,9 +561,15 @@ bootstrap_grammar_L0_terminal_t bootstrap_grammar_L0_terminals[] = {
 #endif
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
-  { L0_TERMINAL_CHARACTER_CLASS_MODIFIER,
-    "<terminal character class modifier>",          MARPAESLIF_TERMINAL_TYPE_REGEX,   MARPAESLIF_REGEX_OPTION_NA,
-    ":[eijmnsxDJUuaNc]*", NULL,
+  { L0_TERMINAL_CHARACTER_CLASS_MODIFIER_STANDARD,
+    "<terminal character class modifier standard>", MARPAESLIF_TERMINAL_TYPE_REGEX,   MARPAESLIF_REGEX_OPTION_NA,
+    ":[eijmnsxDJUuaN]", NULL,
+    NULL, NULL
+  },
+  /* --------------------------------------------------------------------------------------------------------------------------------- */
+  { L0_TERMINAL_CHARACTER_CLASS_MODIFIER_COMPAT,
+    "<terminal character class modifier compat>",   MARPAESLIF_TERMINAL_TYPE_STRING,   MARPAESLIF_REGEX_OPTION_NA,
+    ":ic", NULL,
     NULL, NULL
   },
 };
@@ -619,6 +633,20 @@ bootstrap_grammar_rule_t bootstrap_grammar_L0_rules[] = {
   { L0_META_RESULT_ITEM_DESCRIPTOR,           "<rule result item descriptor  7>",          MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_SYMBOL                           },       -1,                   -1,      -1 },
   { L0_META_RESULT_ITEM_DESCRIPTOR,           "<rule result item descriptor  8>",          MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_RULE                             },       -1,                   -1,      -1 },
   { L0_META_RESULT_ITEM_DESCRIPTOR,           "<rule result item descriptor  9>",          MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_VALUE                            },       -1,                   -1,      -1 },
-  { L0_META_RESULT_ITEM_DESCRIPTOR,           "<rule result item descriptor 10>",          MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_VALUES                           },       -1,                   -1,      -1 }
+  { L0_META_RESULT_ITEM_DESCRIPTOR,           "<rule result item descriptor 10>",          MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_VALUES                           },       -1,                   -1,      -1 },
+  { L0_META_SINGLE_QUOTED_STRING,             "<rule single quoted string>",               MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_SINGLE_QUOTED_STRING             },       -1,                   -1,      -1 },
+  { L0_META_DOUBLE_QUOTED_STRING,             "<rule double quoted string>",               MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_DOUBLE_QUOTED_STRING             },       -1,                   -1,      -1 },
+  { L0_META_QUOTED_STRING,                    "<rule quoted string>",                      MARPAESLIF_RULE_TYPE_ALTERNATIVE, 2, { L0_META_SINGLE_QUOTED_STRING,
+																  L0_META_DOUBLE_QUOTED_STRING                 },       -1,                   -1,      -1 },
+  { L0_META_CHARACTER_CLASS_REGEXP,           "<rule character class regexp>",             MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_CHARACTER_CLASS_REGEXP           },       -1,                   -1,      -1 },
+  { L0_META_CHARACTER_CLASS,                  "<rule character class>",                    MARPAESLIF_RULE_TYPE_ALTERNATIVE, 2, { L0_META_CHARACTER_CLASS_REGEXP,
+																  L0_META_CHARACTER_CLASS_MODIFIERS            },       -1,                   -1,      -1 },
+  { L0_META_CHARACTER_CLASS_MODIFIER,         "<rule character class modifier standard>",  MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_CHARACTER_CLASS_MODIFIER_STANDARD},       -1,                   -1,      -1 },
+  { L0_META_CHARACTER_CLASS_MODIFIER,         "<rule character class modifier compat>",    MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_CHARACTER_CLASS_MODIFIER_COMPAT  },       -1,                   -1,      -1 },
+  { L0_META_CHARACTER_CLASS_MODIFIERS,        "<rule character class modifiers>",          MARPAESLIF_RULE_TYPE_SEQUENCE,    1, { L0_META_CHARACTER_CLASS_MODIFIER             },        0,                   -1,       0 },
+  { L0_META_REGULAR_EXPRESSION,               "<rule regular expression>",                 MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_REGULAR_EXPRESSION               },       -1,                   -1,      -1 },
+  { L0_META_REGULAR_EXPRESSION_MODIFIERS,     "<rule regular expression modifiers>",       MARPAESLIF_RULE_TYPE_SEQUENCE,    1, { L0_TERMINAL_REGULAR_EXPRESSION_MODIFIER      },        0,                   -1,       0 },
+  { L0_META_SUBSTITUTION_EXPRESSION,          "<rule substitution expression>",            MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_SUBSTITUTION_EXPRESSION          },       -1,                   -1,      -1 },
+  { L0_META_SUBSTITUTION_EXPRESSION_MODIFIERS,"<rule substitution expression modifiers>",  MARPAESLIF_RULE_TYPE_SEQUENCE,    1, { L0_TERMINAL_SUBSTITUTION_EXPRESSION_MODIFIER },        0,                   -1,       0 }
 };
 #endif /* MARPAESLIF_INTERNAL_ESLIF_H */

@@ -247,9 +247,11 @@ boolean                  ~ [01]
 <double quoted string> ~ /"[^\"]*(?:\.[^\"]*)*"/s   # s modifier to match newline - we never match ""
 <quoted string>        ~ <single quoted string> | <double quoted string>
 
-<character class regexp>    ~ /\[(?:[^\\]]*(?:\.[^\\]]*)*)\]/
-<character class>           ~ <character class regexp> <character class modifiers>
-<character class modifiers> ~ /:[eijmnsxDJUuaNc]*/   # c is added for Marpa::R2 compatibility and is meaningless
+<character class regexp>      ~ /\[(?:[^\\]]*(?:\.[^\\]]*)*)\]/
+<character class>             ~ <character class regexp> <character class modifiers>
+<character class modifier>    ~ /:[eijmnsxDJUuaN]/
+<character class modifier>    ~ ':ic'   # :ic is added for Marpa::R2 compatibility and is meaningless
+<character class modifiers>   ~ <character class modifier>*
 
 <regular expression>           ~ /\/[^\\/]*(?:\.[^\\/]*)*\// <regular expression modifiers>
 <regular expression modifiers> ~ [eijmnsxDJUuaN]*
