@@ -50,7 +50,9 @@ boolean                             ~ [01]
 
 <character class regexp>            ~ /\[(?:[^\\]]*(?:\.[^\\]]*)*)\]/
 <character class>                   ~ <character class regexp> <character class modifiers>
-<character class modifiers>         ~ /:[eijmnsxDJUuaNc]*/   # c is added for Marpa::R2 compatibility and is meaningless
+<character class modifier>          ~ /:[eijmnsxDJUuaN]/
+<character class modifier>          ~ ':ic'   # :ic is added for Marpa::R2 compatibility and is meaningless
+<character class modifiers>         ~ <character class modifier>*
 
 <regular expression>                ~ /\/[^\\/]*(?:\.[^\\/]*)*\// <regular expression modifiers>
 <regular expression modifiers>      ~ [eijmnsxDJUuaN]*
