@@ -49,6 +49,12 @@ A flag saying that rules are automatically ranked. Then when a rule is created, 
 
 C<NULL> is returned in case of failure.
 
+=head2 marpaWrapperGrammar_clonep
+
+  marpaWrapperGrammar_t *marpaWrapperGrammar_clonep(marpaWrapperGrammar_t *marpaWrapperGrammarOriginp);
+
+Clone a yet existing C<marpaWrapperGrammarOriginp> grammar. This clone is guaranteed to have the same symbol and rule ids, event and start symbol settings as the original at the time of this call. A cloned grammar is never precomputed.
+
 =head2 marpaWrapperGrammar_newSymboli
 
   typedef enum marpaWrapperGrammarEventType {

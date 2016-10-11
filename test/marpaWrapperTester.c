@@ -29,6 +29,7 @@ typedef struct stackValueAndDescription {
 
 int main(int argc, char **argv) {
   marpaWrapperGrammar_t         *marpaWrapperGrammarp = NULL;
+  marpaWrapperGrammar_t         *marpaWrapperGrammarOriginalp = NULL;
   marpaWrapperRecognizer_t      *marpaWrapperRecognizerp = NULL;
   marpaWrapperValue_t           *marpaWrapperValuep = NULL;
   int                            symbolip[MAX_SYMBOL];
@@ -83,8 +84,16 @@ int main(int argc, char **argv) {
     rci = 1;
   }
   if (rci == 0) {
-    if (marpaWrapperGrammar_precomputeb(marpaWrapperGrammarp) == 0) {
+    /* We will work on a cloned grammar */
+    marpaWrapperGrammar_t *marpaWrapperGrammarClonep = marpaWrapperGrammar_clonep(marpaWrapperGrammarp);
+    if (marpaWrapperGrammarClonep == NULL) {
       rci = 1;
+    } else {
+      marpaWrapperGrammarOriginalp = marpaWrapperGrammarp;
+      marpaWrapperGrammarp         = marpaWrapperGrammarClonep;
+      if (marpaWrapperGrammar_precomputeb(marpaWrapperGrammarp) == 0) {
+	rci = 1;
+      }
     }
   }
   if (rci == 0) {
@@ -282,6 +291,9 @@ int main(int argc, char **argv) {
 
   if (marpaWrapperGrammarp != NULL) {
     marpaWrapperGrammar_freev(marpaWrapperGrammarp);
+  }
+  if (marpaWrapperGrammarOriginalp != NULL) {
+    marpaWrapperGrammar_freev(marpaWrapperGrammarOriginalp);
   }
   GENERICLOGGER_FREE(marpaWrapperGrammarOption.genericLoggerp);
 
