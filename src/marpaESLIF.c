@@ -607,27 +607,27 @@ static inline short _marpaESLIF_validate_grammarb(marpaESLIF_t *marpaESLIFp)
             goto err;
           }
           nextGrammarp = GENERICSTACK_GET_PTR(grammarStackp, grammari+1);
-          ruleStackp = nextGrammarp->ruleStackp;
-          isLhsb = 0;
-          for (rulei = 0; rulei < GENERICSTACK_USED(ruleStackp); rulei++) {
-            if (! GENERICSTACK_IS_PTR(ruleStackp, rulei)) {
-              /* Should never happen, but who knows */
-              continue;
-            }
-            rulep = (marpaESLIF_rule_t *) GENERICSTACK_GET_PTR(ruleStackp, rulei);
-            lhsp = rulep->lhsp;
-            if (lhsp->descl == symbolp->descl) {
-              if (memcmp(lhsp->descs, symbolp->descs, symbolp->descl) == 0) {
-                /* Found */
-                isLhsb = 1;
-                break;
-              }
+        }
+        ruleStackp = nextGrammarp->ruleStackp;
+        isLhsb = 0;
+        for (rulei = 0; rulei < GENERICSTACK_USED(ruleStackp); rulei++) {
+          if (! GENERICSTACK_IS_PTR(ruleStackp, rulei)) {
+            /* Should never happen, but who knows */
+            continue;
+          }
+          rulep = (marpaESLIF_rule_t *) GENERICSTACK_GET_PTR(ruleStackp, rulei);
+          lhsp = rulep->lhsp;
+          if (lhsp->descl == symbolp->descl) {
+            if (memcmp(lhsp->descs, symbolp->descs, symbolp->descl) == 0) {
+              /* Found */
+              isLhsb = 1;
+              break;
             }
           }
-          if (! isLhsb) {
-            MARPAESLIF_ERRORF(marpaESLIFp, "Symbol %s at grammar level %d need to be an LHS symbol in grammar at level %d", symbolp->asciidescs, grammari, grammari + 1);
-            goto err;
-          }
+        }
+        if (! isLhsb) {
+          MARPAESLIF_ERRORF(marpaESLIFp, "Symbol %s at grammar level %d need to be an LHS symbol in grammar at level %d", symbolp->asciidescs, grammari, grammari + 1);
+          goto err;
         }
       }
     }
