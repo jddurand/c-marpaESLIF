@@ -140,12 +140,13 @@ struct marpaESLIF_rule {
   char                *asciidescs;      /* Rule description (ASCII) */
   marpaESLIF_symbol_t *lhsp;            /* LHS symbol */
   genericStack_t      *rhsStackp;       /* Stack of RHS symbols */
+  genericStack_t      *maskStackp;      /* Stack of RHS mask */
   genericStack_t      *exceptionStackp; /* Stack of Exceptions symbols */
 };
 
 /* A grammar */
 struct marpaESLIF_grammar {
-  int                    leveli;               /* Grammar level */
+  unsigned int           leveli;               /* Grammar level */
   marpaWrapperGrammar_t *marpaWrapperGrammarp; /* Grammar implementation */
   genericStack_t        *symbolStackp;         /* Stack of symbols */
   genericStack_t        *ruleStackp;           /* Stack of rules */

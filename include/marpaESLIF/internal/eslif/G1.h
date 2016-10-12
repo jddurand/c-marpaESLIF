@@ -55,6 +55,8 @@ typedef enum bootstrap_grammar_G1_enum {
   G1_TERMINAL_COMMA,
   G1_TERMINAL_LPAREN,
   G1_TERMINAL_RPAREN,
+  G1_TERMINAL_STAR,
+  G1_TERMINAL_PLUS,
   /* ----- Non terminals ------ */
   G1_META_STATEMENTS,
   G1_META_STATEMENT,
@@ -77,9 +79,14 @@ typedef enum bootstrap_grammar_G1_enum {
   G1_META_INACCESSIBLE_TREATMENT,
   G1_META_EXCEPTION_STATEMENT,
   G1_META_OP_DECLARE,
+  G1_META_OP_DECLARE_ANY_GRAMMAR,
+  G1_META_OP_DECLARE_TOP_GRAMMAR,
+  G1_META_OP_DECLARE_LEX_GRAMMAR,
+  G1_META_OP_LOOSEN,
+  G1_META_OP_EQUAL_PRIORITY,
   G1_META_PRIORITIES,
   G1_META_ALTERNATIVES,
-  G1_META_ALTERNATIVE_,
+  G1_META_ALTERNATIVE,
   G1_META_ADVERB_LIST,
   G1_META_ADVERB_LIST_ITEMS,
   G1_META_ADVERB_ITEM,
@@ -104,6 +111,7 @@ typedef enum bootstrap_grammar_G1_enum {
   G1_META_NAMING,
   G1_META_NULL_ADVERB,
   G1_META_ALTERNATIVE_NAME,
+  G1_META_LEXER_NAME,
   G1_META_EVENT_NAME,
   G1_META_LHS,
   G1_META_RHS,
@@ -116,7 +124,8 @@ typedef enum bootstrap_grammar_G1_enum {
   G1_META_SINGLE_SYMBOL,
   G1_META_SYMBOL,
   G1_META_SYMBOL_NAME,
-  G1_META_ACTION_NAME
+  G1_META_ACTION_NAME,
+  G1_META_QUANTIFIER
 } bootstrap_grammar_G1_enum_t;
 
 /* All non-terminals are listed here */
@@ -142,9 +151,14 @@ bootstrap_grammar_meta_t bootstrap_grammar_G1_metas[] = {
   { G1_META_INACCESSIBLE_TREATMENT,           "<meta inaccessible treatment>" },
   { G1_META_EXCEPTION_STATEMENT,              "<meta exception statement>" },
   { G1_META_OP_DECLARE,                       "<meta op declare>" },
+  { G1_META_OP_DECLARE_ANY_GRAMMAR,           "<meta op declare any grammar>" },
+  { G1_META_OP_DECLARE_TOP_GRAMMAR,           "<meta op declare top grammar>" },
+  { G1_META_OP_DECLARE_LEX_GRAMMAR,           "<meta op declare lex grammar>" },
+  { G1_META_OP_LOOSEN,                        "<meta op loosen>" },
+  { G1_META_OP_EQUAL_PRIORITY,                "<meta op equal priority>" },
   { G1_META_PRIORITIES,                       "<meta priorities>" },
   { G1_META_ALTERNATIVES,                     "<meta alternatives>" },
-  { G1_META_ALTERNATIVE_,                     "<meta alternative >" },
+  { G1_META_ALTERNATIVE,                      "<meta alternative>" },
   { G1_META_ADVERB_LIST,                      "<meta adverb list>" },
   { G1_META_ADVERB_LIST_ITEMS,                "<meta adverb list items>" },
   { G1_META_ADVERB_ITEM,                      "<meta adverb item>" },
@@ -169,6 +183,7 @@ bootstrap_grammar_meta_t bootstrap_grammar_G1_metas[] = {
   { G1_META_NAMING,                           "<meta naming>" },
   { G1_META_NULL_ADVERB,                      "<meta null adverb>" },
   { G1_META_ALTERNATIVE_NAME,                 "<meta alternative name>" },
+  { G1_META_LEXER_NAME,                       "<meta lexer name>" },
   { G1_META_EVENT_NAME,                       "<meta event name>" },
   { G1_META_LHS,                              "<meta lhs>" },
   { G1_META_RHS,                              "<meta rhs>" },
@@ -182,6 +197,7 @@ bootstrap_grammar_meta_t bootstrap_grammar_G1_metas[] = {
   { G1_META_SYMBOL,                           "<meta symbol>" },
   { G1_META_SYMBOL_NAME,                      "<meta symbol name>" },
   { G1_META_ACTION_NAME,                      "<meta action name>" },
+  { G1_META_QUANTIFIER,                       "<meta quantifier>" }
 };
 
 /* Here it is very important that all the string constants are UTF-8 compatible - this is the case */
@@ -605,7 +621,7 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
 #endif
   },
   { G1_TERMINAL_COMMA,
-    "<terminal ,",           MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+    "<terminal ,>",          MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
     ",", NULL,
 #ifndef MARPAESLIF_NTRACE
     ",", ""
@@ -614,7 +630,7 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
 #endif
   },
   { G1_TERMINAL_LPAREN,
-    "<terminal (",           MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+    "<terminal (>",          MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
     "(", NULL,
 #ifndef MARPAESLIF_NTRACE
     "(", ""
@@ -623,10 +639,28 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
 #endif
   },
   { G1_TERMINAL_RPAREN,
-    "<terminal )",           MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+    "<terminal )>",          MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
     ")", NULL,
 #ifndef MARPAESLIF_NTRACE
     ")", ""
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_STAR,
+    "<terminal *>",           MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+    "*", NULL,
+#ifndef MARPAESLIF_NTRACE
+    "*", ""
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_PLUS,
+    "<terminal +>",           MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+    "+", NULL,
+#ifndef MARPAESLIF_NTRACE
+    "+", ""
 #else
     NULL, NULL
 #endif
@@ -634,24 +668,98 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
 };
 
 bootstrap_grammar_rule_t bootstrap_grammar_G1_rules[] = {
-  { G1_META_STATEMENTS,                       "<rule statements>",                         MARPAESLIF_RULE_TYPE_SEQUENCE,    1, { G1_META_STATEMENT                            },        0,                   -1,      -1 },
-  { G1_META_STATEMENT,                        "<rule statement 01>",                       MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_START_RULE                           },       -1,                   -1,      -1 },
-  { G1_META_STATEMENT,                        "<rule statement 02>",                       MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_EMPTY_RULE                           },       -1,                   -1,      -1 },
-  { G1_META_STATEMENT,                        "<rule statement 03>",                       MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_NULL_STATEMENT                       },       -1,                   -1,      -1 },
-  { G1_META_STATEMENT,                        "<rule statement 04>",                       MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_STATEMENT_GROUP                      },       -1,                   -1,      -1 },
-  { G1_META_STATEMENT,                        "<rule statement 05>",                       MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_PRIORITY_RULE                        },       -1,                   -1,      -1 },
-  { G1_META_STATEMENT,                        "<rule statement 06>",                       MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_QUANTIFIED_RULE                      },       -1,                   -1,      -1 },
-  { G1_META_STATEMENT,                        "<rule statement 07>",                       MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_DISCARD_RULE                         },       -1,                   -1,      -1 },
-  { G1_META_STATEMENT,                        "<rule statement 08>",                       MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_DEFAULT_RULE                         },       -1,                   -1,      -1 },
-  { G1_META_STATEMENT,                        "<rule statement 09>",                       MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_LEXEME_DEFAULT_STATEMENT             },       -1,                   -1,      -1 },
-  { G1_META_STATEMENT,                        "<rule statement 10>",                       MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_DISCARD_DEFAULT_STATEMENT            },       -1,                   -1,      -1 },
-  { G1_META_STATEMENT,                        "<rule statement 11>",                       MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_LEXEME_RULE                          },       -1,                   -1,      -1 },
-  { G1_META_STATEMENT,                        "<rule statement 12>",                       MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_COMPLETION_EVENT_DECLARATION         },       -1,                   -1,      -1 },
-  { G1_META_STATEMENT,                        "<rule statement 13>",                       MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_NULLED_EVENT_DECLARATION             },       -1,                   -1,      -1 },
-  { G1_META_STATEMENT,                        "<rule statement 14>",                       MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_PREDICTION_EVENT_DECLARATION         },       -1,                   -1,      -1 },
-  { G1_META_STATEMENT,                        "<rule statement 15>",                       MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_CURRENT_LEXER_STATEMENT              },       -1,                   -1,      -1 },
-  { G1_META_STATEMENT,                        "<rule statement 16>",                       MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_INACCESSIBLE_STATEMENT               },       -1,                   -1,      -1 },
-  { G1_META_STATEMENT,                        "<rule statement 17>",                       MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_EXCEPTION_STATEMENT                  },       -1,                   -1,      -1 }
+  { G1_META_STATEMENTS,                       "<rule statements>",                         MARPAESLIF_RULE_TYPE_SEQUENCE,    1, { G1_META_STATEMENT                            }, { 1 },        0,                   -1,      -1 },
+  { G1_META_STATEMENT,                        "<rule statement 01>",                       MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_START_RULE                           }, { 1 },       -1,                   -1,      -1 },
+  { G1_META_STATEMENT,                        "<rule statement 02>",                       MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_EMPTY_RULE                           }, { 1 },       -1,                   -1,      -1 },
+  { G1_META_STATEMENT,                        "<rule statement 03>",                       MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_NULL_STATEMENT                       }, { 1 },       -1,                   -1,      -1 },
+  { G1_META_STATEMENT,                        "<rule statement 04>",                       MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_STATEMENT_GROUP                      }, { 1 },       -1,                   -1,      -1 },
+  { G1_META_STATEMENT,                        "<rule statement 05>",                       MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_PRIORITY_RULE                        }, { 1 },       -1,                   -1,      -1 },
+  { G1_META_STATEMENT,                        "<rule statement 06>",                       MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_QUANTIFIED_RULE                      }, { 1 },       -1,                   -1,      -1 },
+  { G1_META_STATEMENT,                        "<rule statement 07>",                       MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_DISCARD_RULE                         }, { 1 },       -1,                   -1,      -1 },
+  { G1_META_STATEMENT,                        "<rule statement 08>",                       MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_DEFAULT_RULE                         }, { 1 },       -1,                   -1,      -1 },
+  { G1_META_STATEMENT,                        "<rule statement 09>",                       MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_LEXEME_DEFAULT_STATEMENT             }, { 1 },       -1,                   -1,      -1 },
+  { G1_META_STATEMENT,                        "<rule statement 10>",                       MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_DISCARD_DEFAULT_STATEMENT            }, { 1 },       -1,                   -1,      -1 },
+  { G1_META_STATEMENT,                        "<rule statement 11>",                       MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_LEXEME_RULE                          }, { 1 },       -1,                   -1,      -1 },
+  { G1_META_STATEMENT,                        "<rule statement 12>",                       MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_COMPLETION_EVENT_DECLARATION         }, { 1 },       -1,                   -1,      -1 },
+  { G1_META_STATEMENT,                        "<rule statement 13>",                       MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_NULLED_EVENT_DECLARATION             }, { 1 },       -1,                   -1,      -1 },
+  { G1_META_STATEMENT,                        "<rule statement 14>",                       MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_PREDICTION_EVENT_DECLARATION         }, { 1 },       -1,                   -1,      -1 },
+  { G1_META_STATEMENT,                        "<rule statement 15>",                       MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_CURRENT_LEXER_STATEMENT              }, { 1 },       -1,                   -1,      -1 },
+  { G1_META_STATEMENT,                        "<rule statement 16>",                       MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_INACCESSIBLE_STATEMENT               }, { 1 },       -1,                   -1,      -1 },
+  { G1_META_STATEMENT,                        "<rule statement 17>",                       MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_EXCEPTION_STATEMENT                  }, { 1 },       -1,                   -1,      -1 },
+  { G1_META_START_RULE,                       "<rule start rule>",                         MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_TERMINAL__START,
+                                                                                                                                  G1_META_OP_DECLARE,
+                                                                                                                                  G1_META_SYMBOL                               }, { 0, 0, 1 }, -1,                   -1,      -1 },
+  { G1_META_EMPTY_RULE,                       "<rule empty rule>",                         MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_META_LHS,
+                                                                                                                                  G1_META_OP_DECLARE,
+                                                                                                                                  G1_META_ADVERB_LIST                          }, { 1, 1, 1 }, -1,                   -1,      -1 },
+  { G1_META_NULL_STATEMENT,                   "<rule null statement>",                     MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL_SEMICOLON                        }, { 1 },       -1,                   -1,      -1 },
+  { G1_META_STATEMENT_GROUP,                  "<rule statement group>",                    MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_TERMINAL_LEFT_BRACKET,
+                                                                                                                                  G1_META_STATEMENTS,
+                                                                                                                                  G1_TERMINAL_RIGHT_BRACKET                    }, { 0, 1, 0 }, -1,                   -1,      -1 },
+  { G1_META_PRIORITY_RULE,                    "<rule priority rule>",                      MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_META_LHS,
+                                                                                                                                  G1_META_OP_DECLARE,
+                                                                                                                                  G1_META_PRIORITIES                           }, { 1, 1, 1 }, -1,                   -1,      -1 },
+  { G1_META_QUANTIFIED_RULE,                  "<rule quantified rule>",                    MARPAESLIF_RULE_TYPE_ALTERNATIVE, 5, { G1_META_LHS,
+                                                                                                                                  G1_META_OP_DECLARE,
+                                                                                                                                  G1_META_SINGLE_SYMBOL,
+                                                                                                                                  G1_META_QUANTIFIER,
+                                                                                                                                  G1_META_ADVERB_LIST                          }, {1,1,1,1,1 },-1,                   -1,      -1 },
+  { G1_META_DISCARD_RULE,                     "<rule discard rule>",                       MARPAESLIF_RULE_TYPE_ALTERNATIVE, 4, { G1_TERMINAL__DISCARD,
+                                                                                                                                  G1_META_OP_DECLARE,
+                                                                                                                                  G1_META_SINGLE_SYMBOL,
+                                                                                                                                  G1_META_ADVERB_LIST                          }, {0,0,1,1 },  -1,                   -1,      -1 },
+  { G1_META_DEFAULT_RULE,                     "<rule default rule>",                       MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_TERMINAL__DEFAULT,
+                                                                                                                                  G1_META_OP_DECLARE,
+                                                                                                                                  G1_META_ADVERB_LIST                          }, { 1, 1, 1 }, -1,                   -1,      -1 },
+  { G1_META_LEXEME_DEFAULT_STATEMENT,         "<rule lexeme default statement>",           MARPAESLIF_RULE_TYPE_ALTERNATIVE, 4, { G1_TERMINAL_LEXEME,
+                                                                                                                                  G1_TERMINAL_DEFAULT,
+                                                                                                                                  G1_TERMINAL_EQUAL,
+                                                                                                                                  G1_META_ADVERB_LIST                          }, {0,0,0,1 },  -1,                   -1,      -1 },
+  { G1_META_DISCARD_DEFAULT_STATEMENT,        "<rule discard default statement>",          MARPAESLIF_RULE_TYPE_ALTERNATIVE, 4, { G1_TERMINAL_DISCARD,
+                                                                                                                                  G1_TERMINAL_DEFAULT,
+                                                                                                                                  G1_TERMINAL_EQUAL,
+                                                                                                                                  G1_META_ADVERB_LIST                          }, {0,0,0,1 },  -1,                   -1,      -1 },
+  { G1_META_LEXEME_RULE,                      "<rule lexeme rule>",                        MARPAESLIF_RULE_TYPE_ALTERNATIVE, 4, { G1_TERMINAL__LEXEME,
+                                                                                                                                  G1_META_OP_DECLARE,
+                                                                                                                                  G1_META_SYMBOL,
+                                                                                                                                  G1_META_ADVERB_LIST                          }, {0,0,1,1 },  -1,                   -1,      -1 },
+  { G1_META_COMPLETION_EVENT_DECLARATION,     "<rule completion event declaration>",       MARPAESLIF_RULE_TYPE_ALTERNATIVE, 5, { G1_TERMINAL_EVENT,
+                                                                                                                                  G1_META_EVENT_INITIALIZATION,
+                                                                                                                                  G1_TERMINAL_EQUAL,
+                                                                                                                                  G1_TERMINAL_COMPLETED,
+                                                                                                                                  G1_META_SYMBOL_NAME                          }, {0,1,0,0,1}, -1,                   -1,      -1 },
+  { G1_META_NULLED_EVENT_DECLARATION,         "<rule nulled event declaration>",           MARPAESLIF_RULE_TYPE_ALTERNATIVE, 5, { G1_TERMINAL_EVENT,
+                                                                                                                                  G1_META_EVENT_INITIALIZATION,
+                                                                                                                                  G1_TERMINAL_EQUAL,
+                                                                                                                                  G1_TERMINAL_NULLED,
+                                                                                                                                  G1_META_SYMBOL_NAME                          }, {0,1,0,0,1}, -1,                   -1,      -1 },
+  { G1_META_PREDICTION_EVENT_DECLARATION,     "<rule nulled predicted declaration>",       MARPAESLIF_RULE_TYPE_ALTERNATIVE, 5, { G1_TERMINAL_EVENT,
+                                                                                                                                  G1_META_EVENT_INITIALIZATION,
+                                                                                                                                  G1_TERMINAL_EQUAL,
+                                                                                                                                  G1_TERMINAL_PREDICTED,
+                                                                                                                                  G1_META_SYMBOL_NAME                          }, {0,1,0,0,1}, -1,                   -1,      -1 },
+  { G1_META_CURRENT_LEXER_STATEMENT,          "<rule current lexer statement>",            MARPAESLIF_RULE_TYPE_ALTERNATIVE, 4, { G1_TERMINAL_CURRENT,
+                                                                                                                                  G1_TERMINAL_LEXER,
+                                                                                                                                  G1_TERMINAL_IS,
+                                                                                                                                  G1_META_LEXER_NAME                           }, {0,0,0,1},   -1,                   -1,      -1 },
+  { G1_META_INACCESSIBLE_STATEMENT,           "<rule inaccessible statement>",             MARPAESLIF_RULE_TYPE_ALTERNATIVE, 5, { G1_TERMINAL_INACCESSIBLE,
+                                                                                                                                  G1_TERMINAL_IS,
+                                                                                                                                  G1_META_INACCESSIBLE_TREATMENT,
+                                                                                                                                  G1_TERMINAL_BY,
+                                                                                                                                  G1_TERMINAL_DEFAULT                          }, {0,0,1,0,0}, -1,                   -1,      -1 },
+  { G1_META_INACCESSIBLE_TREATMENT,           "<rule inaccessible treatment 1>",           MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL_WARN                             }, { 1 },       -1,                   -1,      -1 },
+  { G1_META_INACCESSIBLE_TREATMENT,           "<rule inaccessible treatment 2>",           MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL_OK                               }, { 1 },       -1,                   -1,      -1 },
+  { G1_META_INACCESSIBLE_TREATMENT,           "<rule inaccessible treatment 3>",           MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL_FATAL                            }, { 1 },       -1,                   -1,      -1 },
+  { G1_META_INACCESSIBLE_STATEMENT,           "<rule exception statement>",                MARPAESLIF_RULE_TYPE_ALTERNATIVE, 5, { G1_META_LHS,
+                                                                                                                                  G1_META_OP_DECLARE,
+                                                                                                                                  G1_META_RHS_PRIMARY,
+                                                                                                                                  G1_TERMINAL_MINUS,
+                                                                                                                                  G1_META_PARENTHESIZED_RHS_EXCEPTION_LIST     }, {1,1,1,1,1}, -1,                   -1,      -1 },
+  { G1_META_OP_DECLARE,                       "<rule op declare 1>",                       MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_OP_DECLARE_TOP_GRAMMAR               }, { 1 },       -1,                   -1,      -1 },
+  { G1_META_OP_DECLARE,                       "<rule op declare 2>",                       MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_OP_DECLARE_LEX_GRAMMAR               }, { 1 },       -1,                   -1,      -1 },
+  { G1_META_OP_DECLARE,                       "<rule op declare 3>",                       MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_OP_DECLARE_ANY_GRAMMAR               }, { 1 },       -1,                   -1,      -1 },
+  { G1_META_PRIORITIES,                       "<rule priorities>",                         MARPAESLIF_RULE_TYPE_SEQUENCE,    1, { G1_META_ALTERNATIVES                         }, { 1 },        1,    G1_META_OP_LOOSEN,       1 },
+  { G1_META_ALTERNATIVES,                     "<rule alternatives>",                       MARPAESLIF_RULE_TYPE_SEQUENCE,    1, { G1_META_ALTERNATIVE                          }, { 1 },        1,G1_META_OP_EQUAL_PRIORITY,   1 }
 };
 
 #endif /* MARPAESLIF_INTERNAL_ESLIF_G1_H */
