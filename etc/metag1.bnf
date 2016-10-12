@@ -38,6 +38,7 @@ statement                        ::= <start rule>
 
 <op declare>                   ::= <op declare top grammar>
                                  | <op declare lex grammar>
+                                 | <op declare any grammar>
 
 priorities                     ::= alternatives+ separator => <op loosen>         proper => 1
 alternatives                   ::= alternative+  separator => <op equal priority> proper => 1
