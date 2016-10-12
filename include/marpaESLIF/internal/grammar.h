@@ -143,6 +143,7 @@ struct marpaESLIF_symbol {
 struct marpaESLIF_rule {
   int                  idi;             /* Rule Id */
   char                *descs;           /* Rule description */
+  size_t               descl;
   char                *asciidescs;      /* Rule description (ASCII) */
   marpaESLIF_symbol_t *lhsp;            /* LHS symbol */
   genericStack_t      *rhsStackp;       /* Stack of RHS symbols */
