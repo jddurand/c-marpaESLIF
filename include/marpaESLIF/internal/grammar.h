@@ -129,8 +129,10 @@ struct marpaESLIF_symbol {
   marpaESLIF_symbol_type_t type;  /* Symbol type */
   union {
     marpaESLIF_terminal_t *terminalp; /* Symbol is a terminal */
-    marpaESLIF_meta_t      *metap;    /* Symbol is a meta identifier, i.e. a rule */
+    marpaESLIF_meta_t     *metap;     /* Symbol is a meta identifier, i.e. a rule */
   } u;
+  short                    isLhsb;
+  char                    *asciidescs; /* Shallow pointer to the asciidecs from the union members */
 };
 
 /* A rule */

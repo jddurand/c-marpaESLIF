@@ -56,6 +56,7 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_grammarp(marpaESLIF_t 
 								   int bootstrap_grammar_terminali, bootstrap_grammar_terminal_t *bootstrap_grammar_terminalp,
 								   int bootstrap_grammar_metai, bootstrap_grammar_meta_t *bootstrap_grammar_metap,
 								   int bootstrap_grammar_rulei, bootstrap_grammar_rule_t *bootstrap_grammar_rulep);
+static inline short                  _marpaESLIF_validate_grammarb(marpaESLIF_t *marpaESLIFp);
 
 static inline short                  _marpaESLIF_matcheri(marpaESLIF_t *marpaESLIFp, marpaESLIF_terminal_t *terminalp, char *inputcp, size_t inputl, short eofb, marpaESLIF_matcher_value_t *rcip, char **outputpp, size_t *outputlp);
 
@@ -443,6 +444,7 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_grammarp(marpaESLIF_t 
 
     symbolp->type        = MARPAESLIF_SYMBOL_TYPE_TERMINAL;
     symbolp->u.terminalp = terminalp;
+    symbolp->asciidescs  = terminalp->asciidescs;
     /* Terminal is now in symbol */
     terminalp = NULL;
 
@@ -478,8 +480,9 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_grammarp(marpaESLIF_t 
       goto err;
     }
 
-    symbolp->type    = MARPAESLIF_SYMBOL_TYPE_META;
-    symbolp->u.metap = metap;
+    symbolp->type       = MARPAESLIF_SYMBOL_TYPE_META;
+    symbolp->u.metap    = metap;
+    symbolp->asciidescs = metap->asciidescs;
     /* Terminal is now in symbol */
     metap = NULL;
 
@@ -537,6 +540,75 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_grammarp(marpaESLIF_t 
  done:
   MARPAESLIF_TRACEF(marpaESLIFp, funcs, "return %p", marpaESLIFGrammarp);
   return marpaESLIFGrammarp;
+}
+
+/*****************************************************************************/
+static inline short _marpaESLIF_validate_grammarb(marpaESLIF_t *marpaESLIFp)
+/*****************************************************************************/
+{
+  const static char    *funcs         = "_marpaESLIF_validate_grammarb";
+  genericStack_t       *grammarStackp = marpaESLIFp->grammarStackp;
+  genericStack_t       *symbolStackp;
+  genericStack_t       *ruleStackp;
+  int                   grammari;
+  marpaESLIF_symbol_t  *symbolp;
+  int                   symboli;
+  marpaESLIF_grammar_t *grammarp;
+  marpaESLIF_grammar_t *nextGrammarp;
+ 
+  MARPAESLIF_TRACE(marpaESLIFp, funcs, "Validating ESLIF grammar");
+
+  /* The rules are:
+
+   - There must be a grammar at level 0
+   - At any grammar level n, if a symbol never appear as an LHS of a rule, then
+     it must be an LHS of grammar at level n+1, which must de-factor must exist
+     
+     It is not illegal to have sparse items in grammarStackp, provided that until the
+     hole is reached, the whole is valid. Grammars after the hole are ignored per def.
+  */
+  if (! GENERICSTACK_IS_PTR(grammarStackp, 0)) {
+    MARPAESLIF_ERRORF(marpaESLIFp, "No top-level grammar");
+    goto err;
+  }
+
+  for (grammari = 0; grammari < GENERICSTACK_USED(grammarStackp); grammari++) {
+    /* De-facto, we always look at grammar level 0 at least */
+    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Looking at grammar level %d", grammari);
+
+    grammarp = (marpaESLIF_grammar_t *) GENERICSTACK_GET_PTR(grammarStackp, grammari);
+    nextGrammarp = NULL;
+
+    /* Loop on symbols */
+    symbolStackp = grammarp->symbolStackp;
+    ruleStackp = grammarp->ruleStackp;
+    for (symboli = 0; symboli < GENERICSTACK_USED(symbolStackp); symboli++) {
+      if (! GENERICSTACK_IS_PTR(symbolStackp, symboli)) {
+        /* Should never happen, but who knows */
+        continue;
+      }
+      symbolp = (marpaESLIF_symbol_t *) GENERICSTACK_GET_PTR(symbolStackp, symboli);
+      /* Only meta symbols should be looked at: if not an LHS then it is a dependency on a LHS of a sub-grammar */
+      if ((symbolp->type == MARPAESLIF_SYMBOL_TYPE_META) && (! symbolp->isLhsb)) {
+        if (nextGrammarp == NULL) {
+          if (! GENERICSTACK_IS_PTR(grammarStackp, grammari+1)) {
+            MARPAESLIF_ERRORF(marpaESLIFp, "Symbol %s need a grammar definition at level %d", symbolp->asciidescs, grammari + 1);
+            goto err;
+          }
+        }
+      }
+    }
+  }
+
+  goto done;
+  
+ err:
+  MARPAESLIF_TRACE(marpaESLIFp, funcs, "return 0");
+  return 0;
+
+ done:
+  MARPAESLIF_TRACE(marpaESLIFp, funcs, "return 1");
+  return 1;
 }
 
 /*****************************************************************************/
@@ -650,11 +722,15 @@ static inline void _marpaESLIF_ruleStack_freev(marpaESLIF_t *marpaESLIFp, generi
 static inline marpaESLIF_rule_t *_marpaESLIF_rule_newp(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *marpaESLIFGrammarp, char *descs, size_t descl, int lhsi, size_t nrhsl, int *rhsip, short *maskbp, size_t nexceptionl, int *exceptionip, int ranki, short nullRanksHighb, short sequenceb, int minimumi, int separatori, short properb)
 /*****************************************************************************/
 {
-  const static char               *funcs = "_marpaESLIF_rule_newp";
+  const static char               *funcs        = "_marpaESLIF_rule_newp";
+  genericStack_t                  *symbolStackp = marpaESLIFGrammarp->symbolStackp;
+  short                            symbolFoundb = 0;
+  marpaESLIF_symbol_t             *symbolp;
   marpaESLIF_rule_t               *rulep;
   marpaWrapperGrammarRuleOption_t  marpaWrapperGrammarRuleOption;
   size_t                           i;
   short                            maskb;
+  int                              symboli;
 
   MARPAESLIF_TRACE(marpaESLIFp, funcs, "Building rule");
 
@@ -671,6 +747,34 @@ static inline marpaESLIF_rule_t *_marpaESLIF_rule_newp(marpaESLIF_t *marpaESLIFp
   rulep->rhsStackp       = NULL;
   rulep->maskStackp      = NULL;
   rulep->exceptionStackp = NULL;
+
+  /* Look to the symbol itself, and remember it is an LHS - this is used when validating the grammar */
+  for (symboli = 0; symboli < GENERICSTACK_USED(symbolStackp); symboli++) {
+    if (! GENERICSTACK_IS_PTR(symbolStackp, symboli)) {
+      /* Should never happen, but who knows */
+      continue;
+    }
+    symbolp = (marpaESLIF_symbol_t *) GENERICSTACK_GET_PTR(symbolStackp, symboli);
+    switch (symbolp->type) {
+    case MARPAESLIF_SYMBOL_TYPE_TERMINAL:
+      symbolFoundb = (symbolp->u.terminalp->idi == lhsi);
+      break;
+    case MARPAESLIF_SYMBOL_TYPE_META:
+      symbolFoundb = (symbolp->u.metap->idi == lhsi);
+      break;
+    default:
+      MARPAESLIF_ERRORF(marpaESLIFp, "Symbol of type N/A", symbolp->type);
+      goto err;
+    }
+    if (symbolFoundb) {
+      break;
+    }
+  }
+  if (! symbolFoundb) {
+    MARPAESLIF_ERRORF(marpaESLIFp, "LHS symbol No %d does not exist", lhsi);
+    goto err;
+  }
+  symbolp->isLhsb = 1;
 
   GENERICSTACK_NEW(rulep->rhsStackp);
   if (GENERICSTACK_ERROR(rulep->rhsStackp)) {
@@ -803,7 +907,10 @@ static inline marpaESLIF_symbol_t *_marpaESLIF_symbol_newp(marpaESLIF_t *marpaES
     goto done;
   }
 
-  symbolp->type = MARPAESLIF_SYMBOL_TYPE_NA;
+  symbolp->type   = MARPAESLIF_SYMBOL_TYPE_NA;
+  /* Union itself is undetermined at this stage */
+  symbolp->isLhsb = 0;
+  symbolp->asciidescs =  NULL;
 
  done:
   MARPAESLIF_TRACEF(marpaESLIFp, funcs, "return %p", symbolp);
@@ -971,6 +1078,10 @@ marpaESLIF_t *marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptionp)
   }
   marpaESLIFGrammarp = NULL; /* Ditto */
 
+  /* Validate all the grammars together */
+  if (! _marpaESLIF_validate_grammarb(marpaESLIFp)) {
+    goto err;
+  }
   goto done;
   
  err:
