@@ -580,7 +580,7 @@ static inline short _marpaESLIF_validate_grammarb(marpaESLIF_t *marpaESLIFp)
      hole is reached, the whole is valid. Grammars after the hole are ignored per def.
   */
   if (! GENERICSTACK_IS_PTR(grammarStackp, 0)) {
-    MARPAESLIF_ERRORF(marpaESLIFp, "No top-level grammar");
+    MARPAESLIF_ERROR(marpaESLIFp, "No top-level grammar");
     goto err;
   }
 
