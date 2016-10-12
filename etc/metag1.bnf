@@ -86,11 +86,14 @@ autorank                       ::= ('autorank' '=>') boolean
 naming                         ::= ('name' '=>') <alternative name>
 <null adverb>                  ::= ','
 
-<alternative name>             ::= <standard name> | <single quoted name>
+<alternative name>             ::= <standard name> | <quoted name>
 
 <event name>        ::= <standard name>
                       | <quoted name>
                       | <reserved event name>
+
+<blessing name> ::= <standard name>
+<blessing name> ::= <reserved blessing name>
 
 lhs                              ::= <symbol name>
 rhs                              ::= <rhs primary>+
@@ -122,3 +125,5 @@ symbol          ::= <symbol name>
 <action name>   ::= <Perl name>
 <action name>   ::= <reserved action name>
 <action name>   ::= <array descriptor>
+
+quantifier      ::= '*' | '+'
