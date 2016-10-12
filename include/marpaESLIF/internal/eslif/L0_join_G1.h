@@ -18,5 +18,11 @@
 #define L0_JOIN_G1_META_PERL_NAME                        "<meta perl name>"
 #define L0_JOIN_G1_META_RESERVED_ACTION_NAME             "<meta reserved action name>"
 #define L0_JOIN_G1_META_ARRAY_DESCRIPTOR                 "<meta array descriptor>"
+#define L0_JOIN_G1_META_OP_DECLARE_ANY_GRAMMAR           "<meta op declare any grammar>"
+#define L0_JOIN_G1_META_OP_DECLARE_TOP_GRAMMAR           "<meta op declare top grammar>"
+#define L0_JOIN_G1_META_OP_DECLARE_LEX_GRAMMAR           "<meta op declare lex grammar>"
+#define L0_JOIN_G1_META_OP_LOOSEN                        "<meta op loosen>"
+#define L0_JOIN_G1_META_OP_EQUAL_PRIORITY                "<meta op equal priority>"
+#define L0_JOIN_G1_META_RESERVED_BLESSING_NAME           "<meta reserved blessing name>"
 
 #endif /* MARPAESLIF_INTERNAL_ESLIF_L0_JOIN_G1_H */
