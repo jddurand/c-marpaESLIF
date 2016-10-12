@@ -788,7 +788,7 @@ bootstrap_grammar_rule_t bootstrap_grammar_G1_rules[] = {
   { G1_META_INACCESSIBLE_TREATMENT,           "<rule inaccessible treatment 1>",           MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL_WARN                             }, { 1 },       -1,                   -1,      -1 },
   { G1_META_INACCESSIBLE_TREATMENT,           "<rule inaccessible treatment 2>",           MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL_OK                               }, { 1 },       -1,                   -1,      -1 },
   { G1_META_INACCESSIBLE_TREATMENT,           "<rule inaccessible treatment 3>",           MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL_FATAL                            }, { 1 },       -1,                   -1,      -1 },
-  { G1_META_INACCESSIBLE_STATEMENT,           "<rule exception statement>",                MARPAESLIF_RULE_TYPE_ALTERNATIVE, 5, { G1_META_LHS,
+  { G1_META_EXCEPTION_STATEMENT,              "<rule exception statement>",                MARPAESLIF_RULE_TYPE_ALTERNATIVE, 5, { G1_META_LHS,
                                                                                                                                   G1_META_OP_DECLARE,
                                                                                                                                   G1_META_RHS_PRIMARY,
                                                                                                                                   G1_TERMINAL_MINUS,

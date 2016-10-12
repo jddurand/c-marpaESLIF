@@ -444,6 +444,8 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_grammarp(marpaESLIF_t 
 
     symbolp->type        = MARPAESLIF_SYMBOL_TYPE_TERMINAL;
     symbolp->u.terminalp = terminalp;
+    symbolp->descs       = terminalp->descs;
+    symbolp->descl       = terminalp->descl;
     symbolp->asciidescs  = terminalp->asciidescs;
     /* Terminal is now in symbol */
     terminalp = NULL;
@@ -482,6 +484,8 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_grammarp(marpaESLIF_t 
 
     symbolp->type       = MARPAESLIF_SYMBOL_TYPE_META;
     symbolp->u.metap    = metap;
+    symbolp->descs      = metap->descs;
+    symbolp->descl      = metap->descl;
     symbolp->asciidescs = metap->asciidescs;
     /* Terminal is now in symbol */
     metap = NULL;
@@ -553,8 +557,12 @@ static inline short _marpaESLIF_validate_grammarb(marpaESLIF_t *marpaESLIFp)
   int                   grammari;
   marpaESLIF_symbol_t  *symbolp;
   int                   symboli;
+  marpaESLIF_rule_t    *rulep;
+  int                   rulei;
   marpaESLIF_grammar_t *grammarp;
   marpaESLIF_grammar_t *nextGrammarp;
+  short                 isLhsb;
+  marpaESLIF_symbol_t  *lhsp;
  
   MARPAESLIF_TRACE(marpaESLIFp, funcs, "Validating ESLIF grammar");
 
@@ -581,7 +589,6 @@ static inline short _marpaESLIF_validate_grammarb(marpaESLIF_t *marpaESLIFp)
 
     /* Loop on symbols */
     symbolStackp = grammarp->symbolStackp;
-    ruleStackp = grammarp->ruleStackp;
     for (symboli = 0; symboli < GENERICSTACK_USED(symbolStackp); symboli++) {
       if (! GENERICSTACK_IS_PTR(symbolStackp, symboli)) {
         /* Should never happen, but who knows */
@@ -592,7 +599,29 @@ static inline short _marpaESLIF_validate_grammarb(marpaESLIF_t *marpaESLIFp)
       if ((symbolp->type == MARPAESLIF_SYMBOL_TYPE_META) && (! symbolp->isLhsb)) {
         if (nextGrammarp == NULL) {
           if (! GENERICSTACK_IS_PTR(grammarStackp, grammari+1)) {
-            MARPAESLIF_ERRORF(marpaESLIFp, "Symbol %s need a grammar definition at level %d", symbolp->asciidescs, grammari + 1);
+            MARPAESLIF_ERRORF(marpaESLIFp, "Symbol %s at grammar level %d need a grammar definition at level %d", symbolp->asciidescs, grammari, grammari + 1);
+            goto err;
+          }
+          nextGrammarp = GENERICSTACK_GET_PTR(grammarStackp, grammari+1);
+          ruleStackp = nextGrammarp->ruleStackp;
+          isLhsb = 0;
+          for (rulei = 0; rulei < GENERICSTACK_USED(ruleStackp); rulei++) {
+            if (! GENERICSTACK_IS_PTR(ruleStackp, rulei)) {
+              /* Should never happen, but who knows */
+              continue;
+            }
+            rulep = (marpaESLIF_rule_t *) GENERICSTACK_GET_PTR(ruleStackp, rulei);
+            lhsp = rulep->lhsp;
+            if (lhsp->descl == symbolp->descl) {
+              if (memcmp(lhsp->descs, symbolp->descs, symbolp->descl) == 0) {
+                /* Found */
+                isLhsb = 1;
+                break;
+              }
+            }
+          }
+          if (! isLhsb) {
+            MARPAESLIF_ERRORF(marpaESLIFp, "Symbol %s at grammar level %d need to be an LHS symbol in grammar at level %d", symbolp->asciidescs, grammari, grammari + 1);
             goto err;
           }
         }
@@ -775,6 +804,7 @@ static inline marpaESLIF_rule_t *_marpaESLIF_rule_newp(marpaESLIF_t *marpaESLIFp
     goto err;
   }
   symbolp->isLhsb = 1;
+  rulep->lhsp = symbolp;
 
   GENERICSTACK_NEW(rulep->rhsStackp);
   if (GENERICSTACK_ERROR(rulep->rhsStackp)) {
@@ -910,6 +940,8 @@ static inline marpaESLIF_symbol_t *_marpaESLIF_symbol_newp(marpaESLIF_t *marpaES
   symbolp->type   = MARPAESLIF_SYMBOL_TYPE_NA;
   /* Union itself is undetermined at this stage */
   symbolp->isLhsb = 0;
+  symbolp->descs =  NULL;
+  symbolp->descl =  0;
   symbolp->asciidescs =  NULL;
 
  done:
@@ -924,6 +956,7 @@ static inline void _marpaESLIF_symbol_freev(marpaESLIF_t *marpaESLIFp, marpaESLI
   const static char    *funcs = "_marpaESLIF_symbol_freev";
 
   if (symbolp != NULL) {
+    /* descs and asciidescs are shallow pointers */
     MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Freeing symbol at %p", symbolp);
     switch (symbolp->type) {
     case MARPAESLIF_SYMBOL_TYPE_TERMINAL:

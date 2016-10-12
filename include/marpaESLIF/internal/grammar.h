@@ -109,7 +109,8 @@ struct marpaESLIF_regex {
 
 struct marpaESLIF_terminal {
   int                        idi;                 /* Terminal Id */
-  char                      *descs;               /* Terminal description */
+  char                      *descs;               /* Terminal description as per the user */
+  size_t                     descl;
   char                      *asciidescs;          /* Terminal description (ASCII) */
   marpaESLIF_terminal_type_t type;                /* Terminal type */
   union {
@@ -120,7 +121,8 @@ struct marpaESLIF_terminal {
 
 struct marpaESLIF_meta {
   int                        idi;                 /* Non-terminal Id */
-  char                      *descs;               /* Non-terminal description */
+  char                      *descs;               /* Non-terminal description as per the user */
+  size_t                     descl;
   char                      *asciidescs;          /* Non-terminal description (ASCII) */
 };
 
@@ -132,6 +134,8 @@ struct marpaESLIF_symbol {
     marpaESLIF_meta_t     *metap;     /* Symbol is a meta identifier, i.e. a rule */
   } u;
   short                    isLhsb;
+  char                    *descs;      /* Terminal description as per the user */
+  size_t                   descl;
   char                    *asciidescs; /* Shallow pointer to the asciidecs from the union members */
 };
 
