@@ -448,6 +448,7 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_grammarp(marpaESLIF_t 
 
     symbolp->type        = MARPAESLIF_SYMBOL_TYPE_TERMINAL;
     symbolp->u.terminalp = terminalp;
+    symbolp->idi         = terminalp->idi;
     symbolp->descs       = terminalp->descs;
     symbolp->descl       = terminalp->descl;
     symbolp->asciidescs  = terminalp->asciidescs;
@@ -488,6 +489,7 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_grammarp(marpaESLIF_t 
 
     symbolp->type       = MARPAESLIF_SYMBOL_TYPE_META;
     symbolp->u.metap    = metap;
+    symbolp->idi        = metap->idi;
     symbolp->descs      = metap->descs;
     symbolp->descl      = metap->descl;
     symbolp->asciidescs = metap->asciidescs;
@@ -554,20 +556,21 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_grammarp(marpaESLIF_t 
 static inline short _marpaESLIF_validate_grammarb(marpaESLIF_t *marpaESLIFp)
 /*****************************************************************************/
 {
-  const static char    *funcs         = "_marpaESLIF_validate_grammarb";
-  genericStack_t       *grammarStackp = marpaESLIFp->grammarStackp;
-  genericStack_t       *symbolStackp;
-  genericStack_t       *ruleStackp;
-  int                   grammari;
-  marpaESLIF_symbol_t  *symbolp;
-  int                   symboli;
-  marpaESLIF_rule_t    *rulep;
-  int                   rulei;
-  marpaESLIF_grammar_t *grammarp;
-  marpaESLIF_grammar_t *nextGrammarp;
-  short                 isLhsb;
-  marpaESLIF_symbol_t  *lhsp;
- 
+  const static char     *funcs                     = "_marpaESLIF_validate_grammarb";
+  genericStack_t        *grammarStackp             = marpaESLIFp->grammarStackp;
+  marpaWrapperGrammar_t *marpaWrapperGrammarClonep = NULL;
+  genericStack_t        *symbolStackp;
+  genericStack_t        *ruleStackp;
+  int                    grammari;
+  marpaESLIF_symbol_t   *symbolp;
+  int                    symboli;
+  marpaESLIF_rule_t     *rulep;
+  int                    rulei;
+  marpaESLIF_grammar_t  *grammarp;
+  marpaESLIF_grammar_t  *nextGrammarp;
+  short                  isLhsb;
+  marpaESLIF_symbol_t   *lhsp;
+
   MARPAESLIF_TRACE(marpaESLIFp, funcs, "Validating ESLIF grammar");
 
   /* The rules are:
@@ -628,6 +631,15 @@ static inline short _marpaESLIF_validate_grammarb(marpaESLIF_t *marpaESLIFp)
         if (! isLhsb) {
           MARPAESLIF_ERRORF(marpaESLIFp, "Symbol %s at grammar level %d need to be an LHS symbol in grammar at level %d", symbolp->asciidescs, grammari, grammari + 1);
           goto err;
+        } else {
+          MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Cloning and precomputing grammar at level %d with start symbol %s (ID %d)", grammari + 1, symbolp->asciidescs, lhsp->idi);
+          marpaWrapperGrammarClonep = marpaWrapperGrammar_clonep(nextGrammarp->marpaWrapperGrammarp);
+          if (marpaWrapperGrammarClonep == NULL) {
+            goto err;
+          }
+          if (! marpaWrapperGrammar_precompute_startb(marpaWrapperGrammarClonep, lhsp->idi)) {
+            goto err;
+          }
         }
       }
     }
@@ -636,6 +648,7 @@ static inline short _marpaESLIF_validate_grammarb(marpaESLIF_t *marpaESLIFp)
   goto done;
   
  err:
+  marpaWrapperGrammar_freev(marpaWrapperGrammarClonep);
   MARPAESLIF_TRACE(marpaESLIFp, funcs, "return 0");
   return 0;
 
@@ -946,6 +959,7 @@ static inline marpaESLIF_symbol_t *_marpaESLIF_symbol_newp(marpaESLIF_t *marpaES
   symbolp->type   = MARPAESLIF_SYMBOL_TYPE_NA;
   /* Union itself is undetermined at this stage */
   symbolp->isLhsb = 0;
+  symbolp->idi   =  -1;
   symbolp->descs =  NULL;
   symbolp->descl =  0;
   symbolp->asciidescs =  NULL;
