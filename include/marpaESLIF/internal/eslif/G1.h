@@ -759,7 +759,26 @@ bootstrap_grammar_rule_t bootstrap_grammar_G1_rules[] = {
   { G1_META_OP_DECLARE,                       "<rule op declare 2>",                       MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_OP_DECLARE_LEX_GRAMMAR               }, { 1 },       -1,                   -1,      -1 },
   { G1_META_OP_DECLARE,                       "<rule op declare 3>",                       MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_OP_DECLARE_ANY_GRAMMAR               }, { 1 },       -1,                   -1,      -1 },
   { G1_META_PRIORITIES,                       "<rule priorities>",                         MARPAESLIF_RULE_TYPE_SEQUENCE,    1, { G1_META_ALTERNATIVES                         }, { 1 },        1,    G1_META_OP_LOOSEN,       1 },
-  { G1_META_ALTERNATIVES,                     "<rule alternatives>",                       MARPAESLIF_RULE_TYPE_SEQUENCE,    1, { G1_META_ALTERNATIVE                          }, { 1 },        1,G1_META_OP_EQUAL_PRIORITY,   1 }
+  { G1_META_ALTERNATIVES,                     "<rule alternatives>",                       MARPAESLIF_RULE_TYPE_SEQUENCE,    1, { G1_META_ALTERNATIVE                          }, { 1 },        1,G1_META_OP_EQUAL_PRIORITY,   1 },
+  { G1_META_ALTERNATIVE,                      "<rule alternative>",                        MARPAESLIF_RULE_TYPE_ALTERNATIVE, 2, { G1_META_RHS,
+                                                                                                                                  G1_META_ADVERB_LIST                          }, { 1, 1},     -1,                   -1,      -1 },
+  { G1_META_ADVERB_LIST,                      "<rule adverb list>",                        MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_ADVERB_LIST_ITEMS                    }, { 1 },       -1,                   -1,      -1 },
+  { G1_META_ADVERB_LIST_ITEMS,                "<rule adverb list items>",                  MARPAESLIF_RULE_TYPE_SEQUENCE,    1, { G1_META_ADVERB_ITEM                          }, { 1 },        0,                   -1,       1 },
+  { G1_META_ADVERB_ITEM,                      "<rule adverb item 01>",                     MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_ACTION                               }, { 1 },       -1,                   -1,      -1 },
+  { G1_META_ADVERB_ITEM,                      "<rule adverb item 02>",                     MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_AUTORANK                             }, { 1 },       -1,                   -1,      -1 },
+  { G1_META_ADVERB_ITEM,                      "<rule adverb item 03>",                     MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_LEFT_ASSOCIATION                     }, { 1 },       -1,                   -1,      -1 },
+  { G1_META_ADVERB_ITEM,                      "<rule adverb item 04>",                     MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_RIGHT_ASSOCIATION                    }, { 1 },       -1,                   -1,      -1 },
+  { G1_META_ADVERB_ITEM,                      "<rule adverb item 05>",                     MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_GROUP_ASSOCIATION                    }, { 1 },       -1,                   -1,      -1 },
+  { G1_META_ADVERB_ITEM,                      "<rule adverb item 06>",                     MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_SEPARATOR_ASSOCIATION                }, { 1 },       -1,                   -1,      -1 },
+  { G1_META_ADVERB_ITEM,                      "<rule adverb item 07>",                     MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_PROPER_ASSOCIATION                   }, { 1 },       -1,                   -1,      -1 },
+  { G1_META_ADVERB_ITEM,                      "<rule adverb item 08>",                     MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_RANK_SPECIFICATION                   }, { 1 },       -1,                   -1,      -1 },
+  { G1_META_ADVERB_ITEM,                      "<rule adverb item 09>",                     MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_NULL_RANKING_CONSTANT                }, { 1 },       -1,                   -1,      -1 },
+  { G1_META_ADVERB_ITEM,                      "<rule adverb item 10>",                     MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_PRIORITY_SPECIFICATION               }, { 1 },       -1,                   -1,      -1 },
+  { G1_META_ADVERB_ITEM,                      "<rule adverb item 11>",                     MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_PAUSE_SPECIFICATION                  }, { 1 },       -1,                   -1,      -1 },
+  { G1_META_ADVERB_ITEM,                      "<rule adverb item 12>",                     MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_LATM_SPECIFICATION                   }, { 1 },       -1,                   -1,      -1 },
+  { G1_META_ADVERB_ITEM,                      "<rule adverb item 13>",                     MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_BLESSING                             }, { 1 },       -1,                   -1,      -1 },
+  { G1_META_ADVERB_ITEM,                      "<rule adverb item 14>",                     MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_NAMING                               }, { 1 },       -1,                   -1,      -1 },
+  { G1_META_ADVERB_ITEM,                      "<rule adverb item 15>",                     MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_NULL_ADVERB                          }, { 1 },       -1,                   -1,      -1 }
 };
 
 #endif /* MARPAESLIF_INTERNAL_ESLIF_G1_H */
