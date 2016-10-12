@@ -134,6 +134,7 @@ struct marpaESLIF_symbol {
     marpaESLIF_meta_t     *metap;     /* Symbol is a meta identifier, i.e. a rule */
   } u;
   short                    isLhsb;
+  int                      idi;
   char                    *descs;      /* Terminal description as per the user */
   size_t                   descl;
   char                    *asciidescs; /* Shallow pointer to the asciidecs from the union members */
