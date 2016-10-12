@@ -91,6 +91,7 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
 
   terminalp->idi          = -1;
   terminalp->descs        = NULL;
+  terminalp->descl        = 0;
   terminalp->asciidescs   = NULL;
   terminalp->type         = MARPAESLIF_TERMINAL_TYPE_NA;
 
@@ -115,6 +116,7 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
     goto err;
   }
   memcpy(terminalp->descs, descs, descl);
+  terminalp->descl = descl;
 
   /* --------- Terminal ASCII Description -------- */
   terminalp->asciidescs = _marpaESLIF_utf82printableascii_newp(marpaESLIFp, descs, descl);
@@ -291,6 +293,7 @@ static inline marpaESLIF_meta_t *_marpaESLIF_meta_newp(marpaESLIF_t *marpaESLIFp
 
   metap->idi          = -1;
   metap->descs        = NULL;
+  metap->descl        = 0;
   metap->asciidescs   = NULL;
 
   marpaWrapperGrammarSymbolOption.terminalb = 0;
@@ -314,6 +317,7 @@ static inline marpaESLIF_meta_t *_marpaESLIF_meta_newp(marpaESLIF_t *marpaESLIFp
     goto err;
   }
   memcpy(metap->descs, descs, descl);
+  metap->descl = descl;
 
   /* --------- Meta ASCII Description -------- */
   metap->asciidescs = _marpaESLIF_utf82printableascii_newp(marpaESLIFp, descs, descl);
@@ -771,6 +775,7 @@ static inline marpaESLIF_rule_t *_marpaESLIF_rule_newp(marpaESLIF_t *marpaESLIFp
 
   rulep->idi             = -1;
   rulep->descs           = NULL;
+  rulep->descl           = 0;
   rulep->asciidescs      = NULL;
   rulep->lhsp            = NULL;
   rulep->rhsStackp       = NULL;
@@ -881,6 +886,7 @@ static inline marpaESLIF_rule_t *_marpaESLIF_rule_newp(marpaESLIF_t *marpaESLIFp
     goto err;
   }
   memcpy(rulep->descs, descs, descl);
+  rulep->descl = descl;
 
   /* --------- Meta ASCII Description -------- */
   rulep->asciidescs = _marpaESLIF_utf82printableascii_newp(marpaESLIFp, descs, descl);
