@@ -632,16 +632,22 @@ static inline short _marpaESLIF_validate_grammarb(marpaESLIF_t *marpaESLIFp)
           MARPAESLIF_ERRORF(marpaESLIFp, "Symbol %s at grammar level %d need to be an LHS symbol in grammar at level %d", symbolp->asciidescs, grammari, grammari + 1);
           goto err;
         } else {
-          MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Cloning and precomputing grammar at level %d with start symbol %s (ID %d)", grammari + 1, symbolp->asciidescs, lhsp->idi);
+          MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Cloning and precomputing grammar at level %d with start symbol %s", grammari + 1, symbolp->asciidescs);
           marpaWrapperGrammarClonep = marpaWrapperGrammar_clonep(nextGrammarp->marpaWrapperGrammarp);
           if (marpaWrapperGrammarClonep == NULL) {
+            MARPAESLIF_ERRORF(marpaESLIFp, "Failure to clone grammar at level %d", grammari + 1);
             goto err;
           }
           if (! marpaWrapperGrammar_precompute_startb(marpaWrapperGrammarClonep, lhsp->idi)) {
+            MARPAESLIF_ERRORF(marpaESLIFp, "Failure to precompute grammar at level %d with start symbol %s", grammari + 1, symbolp->asciidescs);
             goto err;
           }
         }
       }
+    }
+    if (nextGrammarp == NULL) {
+      /* No need of a grammar next, whatever its level */
+      break;
     }
   }
 
