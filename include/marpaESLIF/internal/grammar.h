@@ -14,7 +14,7 @@ typedef struct  marpaESLIF_symbol        marpaESLIF_symbol_t;
 typedef struct  marpaESLIF_rule          marpaESLIF_rule_t;
 typedef struct  marpaESLIF_grammar       marpaESLIF_grammar_t;
 typedef enum    marpaESLIF_matcher_value marpaESLIF_matcher_value_t;
-typedef short (*marpaESLIF_matcher_t)   (marpaESLIF_t *marpaESLIFp, marpaESLIF_terminal_t *terminalp, char *inputcp, size_t inputl, short eofb, marpaESLIF_matcher_value_t *rcip, char **outputpp, size_t *outputlp);
+typedef short (*marpaESLIF_matcher_t)   (marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *marpaESLIFGrammarp, marpaESLIF_terminal_t *terminalp, char *inputcp, size_t inputl, short eofb, marpaESLIF_matcher_value_t *rcip, char **outputpp, size_t *outputlp);
 
 /* Symbol types */
 enum marpaESLIF_symbol_type {
