@@ -809,6 +809,22 @@ static inline marpaESLIF_rule_t *_marpaESLIF_rule_newp(marpaESLIF_t *marpaESLIFp
   rulep->maskStackp      = NULL;
   rulep->exceptionStackp = NULL;
 
+  /* -------- Meta UTF-8 Description -------- */
+  if (descs == NULL) {
+    MARPAESLIF_ERROR(marpaESLIFp, "No rule description");
+    goto err;
+  }
+  rulep->descs = (char *) malloc(descl);
+  if (rulep->descs == NULL) {
+    MARPAESLIF_ERRORF(marpaESLIFp, "strdup failure, %s", strerror(errno));
+    goto err;
+  }
+  memcpy(rulep->descs, descs, descl);
+  rulep->descl = descl;
+
+  /* --------- Meta ASCII Description -------- */
+  rulep->asciidescs = _marpaESLIF_utf82printableascii_newp(marpaESLIFp, descs, descl);
+
   /* Look to the symbol itself, and remember it is an LHS - this is used when validating the grammar */
   for (symboli = 0; symboli < GENERICSTACK_USED(symbolStackp); symboli++) {
     if (! GENERICSTACK_IS_PTR(symbolStackp, symboli)) {
@@ -824,7 +840,7 @@ static inline marpaESLIF_rule_t *_marpaESLIF_rule_newp(marpaESLIF_t *marpaESLIFp
       symbolFoundb = (symbolp->u.metap->idi == lhsi);
       break;
     default:
-      MARPAESLIF_ERRORF(marpaESLIFp, "Symbol of type N/A", symbolp->type);
+      MARPAESLIF_ERRORF(marpaESLIFp, "At grammar level %d, rule %s: LHS symbols is of type N/A", marpaESLIFGrammarp->leveli, rulep->asciidescs, symbolp->type);
       goto err;
     }
     if (symbolFoundb) {
@@ -832,7 +848,7 @@ static inline marpaESLIF_rule_t *_marpaESLIF_rule_newp(marpaESLIF_t *marpaESLIFp
     }
   }
   if (! symbolFoundb) {
-    MARPAESLIF_ERRORF(marpaESLIFp, "LHS symbol No %d does not exist", lhsi);
+    MARPAESLIF_ERRORF(marpaESLIFp, "At grammar level %d, rule %s: LHS symbol does not exist", marpaESLIFGrammarp->leveli, rulep->asciidescs, lhsi);
     goto err;
   }
   symbolp->isLhsb = 1;
@@ -859,7 +875,7 @@ static inline marpaESLIF_rule_t *_marpaESLIF_rule_newp(marpaESLIF_t *marpaESLIFp
   /* Fill rhs symbol stack */
   for (i = 0; i < nrhsl; i++) {
     if (! GENERICSTACK_IS_PTR(marpaESLIFGrammarp->symbolStackp, rhsip[i])) {
-      MARPAESLIF_ERRORF(marpaESLIFp, "No such symbol %d", rhsip[i]);
+      MARPAESLIF_ERRORF(marpaESLIFp, "At grammar level %d, rule %s: No such RHS symbol No %d", marpaESLIFGrammarp->leveli, rulep->asciidescs, rhsip[i]);
       goto err;
     }
     GENERICSTACK_PUSH_PTR(rulep->rhsStackp, GENERICSTACK_GET_PTR(marpaESLIFGrammarp->symbolStackp, rhsip[i]));
@@ -879,7 +895,7 @@ static inline marpaESLIF_rule_t *_marpaESLIF_rule_newp(marpaESLIF_t *marpaESLIFp
   /* Fill exception symbol stack */
   for (i = 0; i < nexceptionl; i++) {
     if (! GENERICSTACK_IS_PTR(marpaESLIFGrammarp->symbolStackp, exceptionip[i])) {
-      MARPAESLIF_ERRORF(marpaESLIFp, "No such symbol %d", exceptionip[i]);
+      MARPAESLIF_ERRORF(marpaESLIFp, "At grammar level %d, rule %s: No such RHS exception symbol No %d", marpaESLIFGrammarp->leveli, rulep->asciidescs, exceptionip[i]);
       goto err;
     }
     GENERICSTACK_PUSH_PTR(rulep->exceptionStackp, GENERICSTACK_GET_PTR(marpaESLIFGrammarp->symbolStackp, exceptionip[i]));
@@ -901,22 +917,6 @@ static inline marpaESLIF_rule_t *_marpaESLIF_rule_newp(marpaESLIF_t *marpaESLIFp
   if (rulep->idi < 0) {
     goto err;
   }
-
-  /* -------- Meta UTF-8 Description -------- */
-  if (descs == NULL) {
-    MARPAESLIF_ERROR(marpaESLIFp, "No rule description");
-    goto err;
-  }
-  rulep->descs = (char *) malloc(descl);
-  if (rulep->descs == NULL) {
-    MARPAESLIF_ERRORF(marpaESLIFp, "strdup failure, %s", strerror(errno));
-    goto err;
-  }
-  memcpy(rulep->descs, descs, descl);
-  rulep->descl = descl;
-
-  /* --------- Meta ASCII Description -------- */
-  rulep->asciidescs = _marpaESLIF_utf82printableascii_newp(marpaESLIFp, descs, descl);
 
   goto done;
 
