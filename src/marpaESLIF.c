@@ -58,7 +58,8 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_grammarp(marpaESLIF_t 
 								   int bootstrap_grammar_rulei, bootstrap_grammar_rule_t *bootstrap_grammar_rulep);
 static inline short                  _marpaESLIF_validate_grammarb(marpaESLIF_t *marpaESLIFp);
 
-static inline short                  _marpaESLIF_matcheri(marpaESLIF_t *marpaESLIFp, marpaESLIF_terminal_t *terminalp, char *inputcp, size_t inputl, short eofb, marpaESLIF_matcher_value_t *rcip, char **outputpp, size_t *outputlp);
+static inline short                  _marpaESLIF_terminal_string_matcheri(marpaESLIF_t *marpaESLIFp, marpaESLIF_terminal_t *terminalp, char *inputcp, size_t inputl, short eofb, marpaESLIF_matcher_value_t *rcip, char **outputpp, size_t *outputlp);
+static inline short                  _marpaESLIF_terminal_regex_matcheri(marpaESLIF_t *marpaESLIFp, marpaESLIF_terminal_t *terminalp, char *inputcp, size_t inputl, short eofb, marpaESLIF_matcher_value_t *rcip, char **outputpp, size_t *outputlp);
 
 const static  char                  *_marpaESLIF_utf82printableascii_defaultp = "<!NOT TRANSLATED!>";
 #ifndef MARPAESLIF_NTRACE
@@ -94,6 +95,7 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
   terminalp->descl        = 0;
   terminalp->asciidescs   = NULL;
   terminalp->type         = MARPAESLIF_TERMINAL_TYPE_NA;
+  terminalp->matcherp     = NULL;
 
   marpaWrapperGrammarSymbolOption.terminalb = 1;
   marpaWrapperGrammarSymbolOption.startb    = startb;
@@ -128,6 +130,7 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
   case MARPAESLIF_TERMINAL_TYPE_STRING:
     terminalp->u.string.stringp = NULL;
     terminalp->u.string.stringl = 0;
+    terminalp->matcherp = _marpaESLIF_terminal_string_matcheri;
     
     if ((originp == NULL) || (originl <= 0)) {
       MARPAESLIF_ERRORF(marpaESLIFp, "%s - invalid terminal origin", terminalp->asciidescs);
@@ -151,6 +154,7 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
     terminalp->u.regex.jitCompleteb = 0;
     terminalp->u.regex.jitPartialb  = 0;
 #endif
+    terminalp->matcherp = _marpaESLIF_terminal_regex_matcheri;
     
     if ((originp == NULL) || (originl <= 0)) {
       MARPAESLIF_ERRORF(marpaESLIFp, "%s - invalid terminal origin", terminalp->asciidescs);
@@ -233,7 +237,7 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
     char                      *outputp;
     size_t                     outputl;
 
-    if (! _marpaESLIF_matcheri(marpaESLIFp, terminalp, testFullMatchs, strlen(testFullMatchs), 1, &rci, &outputp, &outputl)) {
+    if (! terminalp->matcherp(marpaESLIFp, terminalp, testFullMatchs, strlen(testFullMatchs), 1, &rci, &outputp, &outputl)) {
       MARPAESLIF_ERRORF(marpaESLIFp, "%s - testing full match: matcher general failure", terminalp->asciidescs);
       goto err;
     }
@@ -253,7 +257,7 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
     char                      *outputp;
     size_t                     outputl;
 
-    if (! _marpaESLIF_matcheri(marpaESLIFp, terminalp, testPartialMatchs, strlen(testPartialMatchs), 0, &rci, &outputp, &outputl)) {
+    if (! terminalp->matcherp(marpaESLIFp, terminalp, testPartialMatchs, strlen(testPartialMatchs), 0, &rci, &outputp, &outputl)) {
       MARPAESLIF_ERRORF(marpaESLIFp, "%s - testing partial match: matcher general failure", terminalp->asciidescs);
       goto err;
     }
@@ -295,6 +299,7 @@ static inline marpaESLIF_meta_t *_marpaESLIF_meta_newp(marpaESLIF_t *marpaESLIFp
   metap->descs        = NULL;
   metap->descl        = 0;
   metap->asciidescs   = NULL;
+  metap->matcherp     = NULL;
 
   marpaWrapperGrammarSymbolOption.terminalb = 0;
   marpaWrapperGrammarSymbolOption.startb    = startb;
@@ -345,6 +350,7 @@ static inline void _marpaESLIF_meta_freev(marpaESLIF_t *marpaESLIFp, marpaESLIF_
       free(metap->descs);
     }
     _marpaESLIF_utf82printableascii_freev(marpaESLIFp, metap->asciidescs);
+    /* All the rest are shallow pointers */
     free(metap);
   }
 }
@@ -452,6 +458,7 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_grammarp(marpaESLIF_t 
     symbolp->descs       = terminalp->descs;
     symbolp->descl       = terminalp->descl;
     symbolp->asciidescs  = terminalp->asciidescs;
+    symbolp->matcherp    = terminalp->matcherp;
     /* Terminal is now in symbol */
     terminalp = NULL;
 
@@ -493,6 +500,7 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_grammarp(marpaESLIF_t 
     symbolp->descs      = metap->descs;
     symbolp->descl      = metap->descl;
     symbolp->asciidescs = metap->asciidescs;
+    symbolp->matcherp   = metap->matcherp;
     /* Terminal is now in symbol */
     metap = NULL;
 
@@ -982,7 +990,7 @@ static inline void _marpaESLIF_symbol_freev(marpaESLIF_t *marpaESLIFp, marpaESLI
   const static char    *funcs = "_marpaESLIF_symbol_freev";
 
   if (symbolp != NULL) {
-    /* descs and asciidescs are shallow pointers */
+    /* All pointers are the top level of this structure are shallow pointers */
     MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Freeing symbol at %p", symbolp);
     switch (symbolp->type) {
     case MARPAESLIF_SYMBOL_TYPE_TERMINAL:
@@ -1183,7 +1191,75 @@ void marpaESLIF_freev(marpaESLIF_t *marpaESLIFp)
 }
 
 /*****************************************************************************/
-static inline short _marpaESLIF_matcheri(marpaESLIF_t *marpaESLIFp, marpaESLIF_terminal_t *terminalp, char *inputcp, size_t inputl, short eofb, marpaESLIF_matcher_value_t *rcip, char **outputpp, size_t *outputlp)
+static inline short _marpaESLIF_terminal_string_matcheri(marpaESLIF_t *marpaESLIFp, marpaESLIF_terminal_t *terminalp, char *inputcp, size_t inputl, short eofb, marpaESLIF_matcher_value_t *rcip, char **outputpp, size_t *outputlp)
+/*****************************************************************************/
+{
+  const static char         *funcs             = "_marpaESLIF_matcher";
+  short                      rcb               = 1;
+  marpaESLIF_matcher_value_t rci;
+  marpaESLIF_string_t        marpaESLIF_string;
+  size_t                     matchLengthl;
+ 
+  /*********************************************************************************/
+  /* A matcher tries to match a terminal v.s. input that is eventually incomplete. */
+  /* It return 1 on success, 0 on failure, -1 if more data is needed.              */
+  /*********************************************************************************/
+
+  if (inputl > 0) {
+
+    marpaESLIF_string = terminalp->u.string;
+    if (inputl >= marpaESLIF_string.stringl) {
+      if (memcmp(inputcp, marpaESLIF_string.stringp, marpaESLIF_string.stringl) == 0) {
+        rci = MARPAESLIF_MATCH_OK;
+        matchLengthl = marpaESLIF_string.stringl;
+      } else {
+        rci = MARPAESLIF_MATCH_FAILURE;
+      }
+    } else {
+      /* Partial match never returns OK -; */
+      rci = (memcmp(inputcp, marpaESLIF_string.stringp, inputl) == 0) ? (eofb ? MARPAESLIF_MATCH_FAILURE : MARPAESLIF_MATCH_AGAIN) : MARPAESLIF_MATCH_FAILURE;
+    }
+  } else {
+    rci = eofb ? MARPAESLIF_MATCH_FAILURE : MARPAESLIF_MATCH_AGAIN;
+  }
+
+  if (rcip != NULL) {
+    *rcip = rci;
+  }
+
+  if (rci == MARPAESLIF_MATCH_OK) {
+    /* It is important to handle outputlp before outputpp, see below    */
+    /* Note that when rci is MARPAESLIF_MATCH_OK, it is guaranteed that */
+    /* matchLenthl is set to a value > 0 (while substitutel may be 0).  */
+    if (outputlp != NULL) {
+      *outputlp = matchLengthl;
+    }
+    if (outputpp != NULL) {
+      char *outputp = (char *) malloc(matchLengthl + 1);
+      /* Matched input is starting at inputcp and its length is in matchLengthl */
+      if (outputp == NULL) {
+        MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s - malloc failure, %s", terminalp->asciidescs, strerror(errno));
+        goto err;
+      }
+      memcpy(outputp, inputcp, matchLengthl);
+      outputp[matchLengthl] = '\0'; /* Trailing zero in any case (even if there CAN BE other zeroes before) */
+      *outputpp = outputp;
+    }
+  }
+
+  MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s - return 1, status is %s", terminalp->asciidescs, (rci == MARPAESLIF_MATCH_FAILURE) ? "MARPAESLIF_MATCH_FAILURE" : ((rci == MARPAESLIF_MATCH_OK) ? "MARPAESLIF_MATCH_OK" : "MARPAESLIF_MATCH_AGAIN"));
+  goto done;
+
+ err:
+  MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s - return 0", terminalp->asciidescs);
+  rcb = 0;
+
+ done:
+  return 1;
+}
+
+/*****************************************************************************/
+static inline short _marpaESLIF_terminal_regex_matcheri(marpaESLIF_t *marpaESLIFp, marpaESLIF_terminal_t *terminalp, char *inputcp, size_t inputl, short eofb, marpaESLIF_matcher_value_t *rcip, char **outputpp, size_t *outputlp)
 /*****************************************************************************/
 {
   const static char         *funcs             = "_marpaESLIF_matcher";
@@ -1208,268 +1284,245 @@ static inline short _marpaESLIF_matcheri(marpaESLIF_t *marpaESLIFp, marpaESLIF_t
 
   if (inputl > 0) {
 
-    switch (terminalp->type) {
-      
-    case MARPAESLIF_TERMINAL_TYPE_STRING:
-      marpaESLIF_string = terminalp->u.string;
-      if (inputl >= marpaESLIF_string.stringl) {
-	if (memcmp(inputcp, marpaESLIF_string.stringp, marpaESLIF_string.stringl) == 0) {
-	  rci = MARPAESLIF_MATCH_OK;
-	  matchLengthl = marpaESLIF_string.stringl;
-	} else {
-	  rci = MARPAESLIF_MATCH_FAILURE;
-	}
-      } else {
-	/* Partial match never returns OK -; */
-	rci = (memcmp(inputcp, marpaESLIF_string.stringp, inputl) == 0) ? (eofb ? MARPAESLIF_MATCH_FAILURE : MARPAESLIF_MATCH_AGAIN) : MARPAESLIF_MATCH_FAILURE;
-      }
-      break;
-      
-    case MARPAESLIF_TERMINAL_TYPE_REGEX:
-      marpaESLIF_regex = terminalp->u.regex;
+    marpaESLIF_regex = terminalp->u.regex;
 
-      /* If there is substitution, prepare memory. */
-      if (marpaESLIF_regex.substitutionp != NULL) {
-	pcre2_substitutep = (PCRE2_UCHAR *) malloc(pcre2_substitutel);
-	if (pcre2_substitutep == NULL) {
-	  MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s - malloc failure, %s", terminalp->asciidescs, strerror(errno));
-	  goto err;
-	}
+    /* If there is substitution, prepare memory. */
+    if (marpaESLIF_regex.substitutionp != NULL) {
+      pcre2_substitutep = (PCRE2_UCHAR *) malloc(pcre2_substitutel);
+      if (pcre2_substitutep == NULL) {
+        MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s - malloc failure, %s", terminalp->asciidescs, strerror(errno));
+        goto err;
       }
-      /* --------------------------------------------------------- */
-      /* EOF mode:                                                 */
-      /* return full match status: OK or FAILURE.                  */
-      /*                                                           */
-      /* Please note that substitution is supported only in the    */
-      /* full match case.                                          */
-      /* For substitution, except the error cases, no replacement  */
-      /* means PCRE2_ERROR_NOMATCH.                                */
-      /* --------------------------------------------------------- */
-      /* NOT EOF mode:                                             */
-      /* If the full match is successful:                          */
-      /* - if it reaches the end of the buffer, return EGAIN.      */
-      /* - if it does not reach the end of the buffer, return OK.  */
-      /* Else if the partial match is successul:                   */
-      /* - return EGAIN.                                           */
-      /* Else                                                      */
-      /* - return FAILURE.                                         */
-      /*                                                           */
-      /* In conclusion we always start with the full match.        */
-      /* --------------------------------------------------------- */
-      if (pcre2_substitutep != NULL) {
-	/* When there is substitution, only pcre2_substitute() is supported. */
-	/* JIT will be used automatically if available.                      */
-	marpaESLIF_uint32_t optioni =
-	  PCRE2_NOTEMPTY
-	  |
-	  PCRE2_SUBSTITUTE_OVERFLOW_LENGTH; /* If the output is PCRE2_ERROR_NOMEMORY, then wanted length is in pcre2_substitutel */
-	do {
-	  pcre2_substituteoutputl = pcre2_substitutel;
-	  pcre2Errornumberi = pcre2_substitute(marpaESLIF_regex.patternp,      /* code */
-					       (PCRE2_SPTR) inputcp,            /* subject */
-					       (PCRE2_SIZE) inputl,            /* length */
-					       (PCRE2_SIZE) 0,                 /* startoffset */
-					       optioni,                        /* options */
-					       marpaESLIF_regex.match_datap,   /* match data */
-					       NULL,                           /* match context - used default */
-					       marpaESLIF_regex.substitutionp, /* Substitute specification */
-					       marpaESLIF_regex.substitutionl, /* Substitute specification length (UTF-8: number of bytes) */
-					       pcre2_substitutep,
-					      &pcre2_substituteoutputl
-					       );
+    }
+    /* --------------------------------------------------------- */
+    /* EOF mode:                                                 */
+    /* return full match status: OK or FAILURE.                  */
+    /*                                                           */
+    /* Please note that substitution is supported only in the    */
+    /* full match case.                                          */
+    /* For substitution, except the error cases, no replacement  */
+    /* means PCRE2_ERROR_NOMATCH.                                */
+    /* --------------------------------------------------------- */
+    /* NOT EOF mode:                                             */
+    /* If the full match is successful:                          */
+    /* - if it reaches the end of the buffer, return EGAIN.      */
+    /* - if it does not reach the end of the buffer, return OK.  */
+    /* Else if the partial match is successul:                   */
+    /* - return EGAIN.                                           */
+    /* Else                                                      */
+    /* - return FAILURE.                                         */
+    /*                                                           */
+    /* In conclusion we always start with the full match.        */
+    /* --------------------------------------------------------- */
+    if (pcre2_substitutep != NULL) {
+      /* When there is substitution, only pcre2_substitute() is supported. */
+      /* JIT will be used automatically if available.                      */
+      marpaESLIF_uint32_t optioni =
+        PCRE2_NOTEMPTY
+        |
+        PCRE2_SUBSTITUTE_OVERFLOW_LENGTH; /* If the output is PCRE2_ERROR_NOMEMORY, then wanted length is in pcre2_substitutel */
+      do {
+        pcre2_substituteoutputl = pcre2_substitutel;
+        pcre2Errornumberi = pcre2_substitute(marpaESLIF_regex.patternp,      /* code */
+                                             (PCRE2_SPTR) inputcp,            /* subject */
+                                             (PCRE2_SIZE) inputl,            /* length */
+                                             (PCRE2_SIZE) 0,                 /* startoffset */
+                                             optioni,                        /* options */
+                                             marpaESLIF_regex.match_datap,   /* match data */
+                                             NULL,                           /* match context - used default */
+                                             marpaESLIF_regex.substitutionp, /* Substitute specification */
+                                             marpaESLIF_regex.substitutionl, /* Substitute specification length (UTF-8: number of bytes) */
+                                             pcre2_substitutep,
+                                             &pcre2_substituteoutputl
+                                             );
 #ifdef PCRE2_CONFIG_JIT
-	  if (marpaESLIF_regex.jitCompleteb && (pcre2Errornumberi == PCRE2_ERROR_JIT_STACKLIMIT) && ((optioni & PCRE2_NO_JIT) != PCRE2_NO_JIT)) {
-	    /* Back luck, out of stack for JIT - retry without JIT. */
-	    /* Please note that is NOT documented how internally pcre2_substitute() reacts in this case... */
-	    /* This is why it is coded explicitely here. */
-	    pcre2_get_error_message(pcre2Errornumberi, pcre2ErrorBuffer, sizeof(pcre2ErrorBuffer));
-	    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s - pcre2_substitute failure: %s - switching to non-JIT version", terminalp->asciidescs, pcre2ErrorBuffer);
-	    optioni |= PCRE2_NO_JIT;
-	    continue;
-	  }
+        if (marpaESLIF_regex.jitCompleteb && (pcre2Errornumberi == PCRE2_ERROR_JIT_STACKLIMIT) && ((optioni & PCRE2_NO_JIT) != PCRE2_NO_JIT)) {
+          /* Back luck, out of stack for JIT - retry without JIT. */
+          /* Please note that is NOT documented how internally pcre2_substitute() reacts in this case... */
+          /* This is why it is coded explicitely here. */
+          pcre2_get_error_message(pcre2Errornumberi, pcre2ErrorBuffer, sizeof(pcre2ErrorBuffer));
+          MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s - pcre2_substitute failure: %s - switching to non-JIT version", terminalp->asciidescs, pcre2ErrorBuffer);
+          optioni |= PCRE2_NO_JIT;
+          continue;
+        }
 #endif
-	  switch (pcre2Errornumberi) {
-	  case PCRE2_ERROR_NOMEMORY:
-	    /* We will continue the do {} while () loop */
+        switch (pcre2Errornumberi) {
+        case PCRE2_ERROR_NOMEMORY:
+          /* We will continue the do {} while () loop */
 
-	    /* pcre2_substituteoutputl contains the minimum length needed, include space for a trailing zero */
-	    /* Here length is a code unit, i.e. a byte since we are in UTF-8. */
+          /* pcre2_substituteoutputl contains the minimum length needed, include space for a trailing zero */
+          /* Here length is a code unit, i.e. a byte since we are in UTF-8. */
 
-	    /* Detect overflow -; */
-	    if (pcre2_substituteoutputl < pcre2_substitutel) {
-	      MARPAESLIF_ERRORF(marpaESLIFp, "%s - PCRE2_SIZE overflow detected", terminalp->asciidescs);
-	      goto err;
-	    }
-	    tmpp = realloc(pcre2_substitutep, pcre2_substituteoutputl);
-	    if (tmpp == NULL) {
-	      MARPAESLIF_ERRORF(marpaESLIFp, "%s - realloc failure, %s", terminalp->asciidescs, strerror(errno));
-	      goto err;
-	    }
-	    pcre2_substitutep = tmpp;
-	    pcre2_substitutel = pcre2_substituteoutputl;
-	    break;
-	  case 0:
-	    /* We will exit the do {} while () loop: no match */
-	    pcre2Errornumberi = PCRE2_ERROR_NOMATCH;
-	    break;
-	  default:
-	    /* We will exit the do {} while () loop: either match or uncauchgt failure */
-	    if (pcre2Errornumberi >= 1) {
-	      /* At least one match: this is a success */
-	      /* We try to release non-needed memory. realloc() failure here is not fatal. */
-	      /* Please note that pcre2_substituteoutputl exclude the trailing zero, so we */
-	      /* are sure that pcre2_substituteoutputl+1 number of ok, as per the doc.     */
-	      tmpl = pcre2_substituteoutputl + 1;
-	      tmpp = realloc(pcre2_substitutep, tmpl);
-	      if (tmpp == NULL) {
-		MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s - realloc failure (non fatal), %s", terminalp->asciidescs, strerror(errno));
-	      } else {
-		pcre2_substitutep = tmpp;
-		pcre2_substitutel = tmpl;
-	      }
-	    }
-	    break;
-	  }
-	  /* Loop until we have enough memory - any other value is causing a loop exit. */
-	} while (pcre2Errornumberi == PCRE2_ERROR_NOMEMORY);
+          /* Detect overflow -; */
+          if (pcre2_substituteoutputl < pcre2_substitutel) {
+            MARPAESLIF_ERRORF(marpaESLIFp, "%s - PCRE2_SIZE overflow detected", terminalp->asciidescs);
+            goto err;
+          }
+          tmpp = realloc(pcre2_substitutep, pcre2_substituteoutputl);
+          if (tmpp == NULL) {
+            MARPAESLIF_ERRORF(marpaESLIFp, "%s - realloc failure, %s", terminalp->asciidescs, strerror(errno));
+            goto err;
+          }
+          pcre2_substitutep = tmpp;
+          pcre2_substitutel = pcre2_substituteoutputl;
+          break;
+        case 0:
+          /* We will exit the do {} while () loop: no match */
+          pcre2Errornumberi = PCRE2_ERROR_NOMATCH;
+          break;
+        default:
+          /* We will exit the do {} while () loop: either match or uncauchgt failure */
+          if (pcre2Errornumberi >= 1) {
+            /* At least one match: this is a success */
+            /* We try to release non-needed memory. realloc() failure here is not fatal. */
+            /* Please note that pcre2_substituteoutputl exclude the trailing zero, so we */
+            /* are sure that pcre2_substituteoutputl+1 number of ok, as per the doc.     */
+            tmpl = pcre2_substituteoutputl + 1;
+            tmpp = realloc(pcre2_substitutep, tmpl);
+            if (tmpp == NULL) {
+              MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s - realloc failure (non fatal), %s", terminalp->asciidescs, strerror(errno));
+            } else {
+              pcre2_substitutep = tmpp;
+              pcre2_substitutel = tmpl;
+            }
+          }
+          break;
+        }
+        /* Loop until we have enough memory - any other value is causing a loop exit. */
+      } while (pcre2Errornumberi == PCRE2_ERROR_NOMEMORY);
+    } else {
+#ifdef PCRE2_CONFIG_JIT
+      if (marpaESLIF_regex.jitCompleteb) {
+        pcre2Errornumberi = pcre2_jit_match(marpaESLIF_regex.patternp,     /* code */
+                                            (PCRE2_SPTR) inputcp,          /* subject */
+                                            (PCRE2_SIZE) inputl,          /* length */
+                                            (PCRE2_SIZE) 0,               /* startoffset */
+                                            PCRE2_NOTEMPTY,               /* options - this one is supported in JIT mode */
+                                            marpaESLIF_regex.match_datap, /* match data */
+                                            NULL                          /* match context - used default */
+                                            );
+        if (pcre2Errornumberi == PCRE2_ERROR_JIT_STACKLIMIT) {
+          /* Back luck, out of stack for JIT */
+          pcre2_get_error_message(pcre2Errornumberi, pcre2ErrorBuffer, sizeof(pcre2ErrorBuffer));
+          MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s - pcre2_jit_match failure: %s - switching to non-JIT version", terminalp->asciidescs, pcre2ErrorBuffer);
+          goto eof_nojitcomplete;
+        }
       } else {
-#ifdef PCRE2_CONFIG_JIT
-	if (marpaESLIF_regex.jitCompleteb) {
-	  pcre2Errornumberi = pcre2_jit_match(marpaESLIF_regex.patternp,     /* code */
-					      (PCRE2_SPTR) inputcp,          /* subject */
-					      (PCRE2_SIZE) inputl,          /* length */
-					      (PCRE2_SIZE) 0,               /* startoffset */
-					      PCRE2_NOTEMPTY,               /* options - this one is supported in JIT mode */
-					      marpaESLIF_regex.match_datap, /* match data */
-					      NULL                          /* match context - used default */
-					      );
-	  if (pcre2Errornumberi == PCRE2_ERROR_JIT_STACKLIMIT) {
-	    /* Back luck, out of stack for JIT */
-	    pcre2_get_error_message(pcre2Errornumberi, pcre2ErrorBuffer, sizeof(pcre2ErrorBuffer));
-	    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s - pcre2_jit_match failure: %s - switching to non-JIT version", terminalp->asciidescs, pcre2ErrorBuffer);
-	    goto eof_nojitcomplete;
-	  }
-	} else {
-	eof_nojitcomplete:
+      eof_nojitcomplete:
 #endif
-	  pcre2Errornumberi = pcre2_match(marpaESLIF_regex.patternp,    /* code */
-					  (PCRE2_SPTR) inputcp,          /* subject */
-					  (PCRE2_SIZE) inputl,          /* length */
-					  (PCRE2_SIZE) 0,               /* startoffset */
-					  PCRE2_NOTEMPTY,               /* options */
-					  marpaESLIF_regex.match_datap, /* match data */
-					  NULL                          /* match context - used default */
-					  );
+        pcre2Errornumberi = pcre2_match(marpaESLIF_regex.patternp,    /* code */
+                                        (PCRE2_SPTR) inputcp,          /* subject */
+                                        (PCRE2_SIZE) inputl,          /* length */
+                                        (PCRE2_SIZE) 0,               /* startoffset */
+                                        PCRE2_NOTEMPTY,               /* options */
+                                        marpaESLIF_regex.match_datap, /* match data */
+                                        NULL                          /* match context - used default */
+                                        );
 #ifdef PCRE2_CONFIG_JIT
-	}
-#endif
       }
-      if (eofb) {
-	if (pcre2Errornumberi < 0) {
-	  /* Only PCRE2_ERROR_NOMATCH is an acceptable error. */
-	  /* In case of substitution, remember we overwrote pcre2Errornumberi to PCRE2_ERROR_NOMATCH */
-	  /* if there was no match -; */
-	  if (pcre2Errornumberi != PCRE2_ERROR_NOMATCH) {
-	    pcre2_get_error_message(pcre2Errornumberi, pcre2ErrorBuffer, sizeof(pcre2ErrorBuffer));
-	    MARPAESLIF_WARNF(marpaESLIFp, "%s - Uncaught pcre2 match failure: %s", terminalp->asciidescs, pcre2ErrorBuffer);
-	  }
-	  rci = MARPAESLIF_MATCH_FAILURE;
-	} else {
-	  /* Check the length of matched data */
-	  if (pcre2_get_ovector_count(marpaESLIF_regex.match_datap) <= 0) {
-	    MARPAESLIF_ERRORF(marpaESLIFp, "%s - pcre2_get_ovector_count returned no number of pairs of values", terminalp->asciidescs);
-	    goto err;
-	  }
-	  pcre2_ovectorp = pcre2_get_ovector_pointer(marpaESLIF_regex.match_datap);
-	  if (pcre2_ovectorp == NULL) {
-	    MARPAESLIF_ERRORF(marpaESLIFp, "%s - pcre2_get_ovector_pointer returned NULL", terminalp->asciidescs);
-	    goto err;
-	  }
-	  /* We said PCRE2_NOTEMPTY so this cannot be empty */
-	  matchLengthl = pcre2_ovectorp[1] - pcre2_ovectorp[0];
-	  if (matchLengthl <= 0) {
-	    MARPAESLIF_ERRORF(marpaESLIFp, "%s - Empty match when it is configured as not possible", terminalp->asciidescs);
-	    goto err;
-	  }
-	  /* Very good -; */
-	  rci = MARPAESLIF_MATCH_OK;
-	}
+#endif
+    }
+    if (eofb) {
+      if (pcre2Errornumberi < 0) {
+        /* Only PCRE2_ERROR_NOMATCH is an acceptable error. */
+        /* In case of substitution, remember we overwrote pcre2Errornumberi to PCRE2_ERROR_NOMATCH */
+        /* if there was no match -; */
+        if (pcre2Errornumberi != PCRE2_ERROR_NOMATCH) {
+          pcre2_get_error_message(pcre2Errornumberi, pcre2ErrorBuffer, sizeof(pcre2ErrorBuffer));
+          MARPAESLIF_WARNF(marpaESLIFp, "%s - Uncaught pcre2 match failure: %s", terminalp->asciidescs, pcre2ErrorBuffer);
+        }
+        rci = MARPAESLIF_MATCH_FAILURE;
       } else {
-	if (pcre2Errornumberi >= 0) {
-	  /* Full match is successful (this include an eventual substitution, that is also a full match). */
-	  /* Check the length of matched data */
-	  if (pcre2_get_ovector_count(marpaESLIF_regex.match_datap) <= 0) {
-	    MARPAESLIF_ERRORF(marpaESLIFp, "%s - pcre2_get_ovector_count returned no number of pairs of values", terminalp->asciidescs);
-	    goto err;
-	  }
-	  pcre2_ovectorp = pcre2_get_ovector_pointer(marpaESLIF_regex.match_datap);
-	  if (pcre2_ovectorp == NULL) {
-	    MARPAESLIF_ERRORF(marpaESLIFp, "%s - pcre2_get_ovector_pointer returned NULL", terminalp->asciidescs);
-	    goto err;
-	  }
-	  /* We said PCRE2_NOTEMPTY so this cannot be empty */
-	  matchLengthl = pcre2_ovectorp[1] - pcre2_ovectorp[0];
-	  if (matchLengthl <= 0) {
-	    MARPAESLIF_ERRORF(marpaESLIFp, "%s - Empty match when it is configured as not possible", terminalp->asciidescs);
-	    goto err;
-	  }
-	  if (matchLengthl >= inputl) {
-	    /* But end of the buffer is reached, and we are not at the eof! We have to ask for more bytes. */
-	    rci = MARPAESLIF_MATCH_AGAIN;
-	  } else {
-	    /* And end of the buffer is not reached */
-	    rci = MARPAESLIF_MATCH_OK;
-	  }
-	} else {
-	  /* Do a partial match. This section cannot return MARPAESLIF_MATCH_OK. */
-#ifdef PCRE2_CONFIG_JIT
-	  if (marpaESLIF_regex.jitPartialb) {
-	    pcre2Errornumberi = pcre2_jit_match(marpaESLIF_regex.patternp,     /* code */
-						(PCRE2_SPTR) inputcp,          /* subject */
-						(PCRE2_SIZE) inputl,          /* length */
-						(PCRE2_SIZE) 0,               /* startoffset */
-						PCRE2_NOTEMPTY                /* options - this one is supported in JIT mode */
-						|
-						PCRE2_PARTIAL_HARD,           /* and this one as well, we want partial match to have precedence */
-						marpaESLIF_regex.match_datap, /* match data */
-						NULL                          /* match context - used default */
-						);
-	    if (pcre2Errornumberi == PCRE2_ERROR_JIT_STACKLIMIT) {
-	      /* Back luck, out of stack for JIT */
-	      pcre2_get_error_message(pcre2Errornumberi, pcre2ErrorBuffer, sizeof(pcre2ErrorBuffer));
-	      MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s - pcre2_jit_match failure: %s - switching to non-JIT version", terminalp->asciidescs, pcre2ErrorBuffer);
-	      goto eof_nojitpartial;
-	    }
-	  } else {
-	  eof_nojitpartial:
-#endif
-	    pcre2Errornumberi = pcre2_match(marpaESLIF_regex.patternp,    /* code */
-					    (PCRE2_SPTR) inputcp,          /* subject */
-					    (PCRE2_SIZE) inputl,          /* length */
-					    (PCRE2_SIZE) 0,               /* startoffset */
-					    PCRE2_NOTEMPTY                /* options */
-					    |
-					    PCRE2_PARTIAL_HARD,           /* we want partial match to have precedence */
-					    marpaESLIF_regex.match_datap, /* match data */
-					    NULL                          /* match context - used default */
-					    );
-#ifdef PCRE2_CONFIG_JIT
-	  }
-#endif
-	  /* Only PCRE2_ERROR_PARTIAL is an acceptable error */
-	  if (pcre2Errornumberi == PCRE2_ERROR_PARTIAL) {
-	    /* Partial match is successful */
-	    rci = MARPAESLIF_MATCH_AGAIN;
-	  } else {
-	    /* Partial match is not successful */
-	    rci = MARPAESLIF_MATCH_FAILURE;
-	  }
-	}
+        /* Check the length of matched data */
+        if (pcre2_get_ovector_count(marpaESLIF_regex.match_datap) <= 0) {
+          MARPAESLIF_ERRORF(marpaESLIFp, "%s - pcre2_get_ovector_count returned no number of pairs of values", terminalp->asciidescs);
+          goto err;
+        }
+        pcre2_ovectorp = pcre2_get_ovector_pointer(marpaESLIF_regex.match_datap);
+        if (pcre2_ovectorp == NULL) {
+          MARPAESLIF_ERRORF(marpaESLIFp, "%s - pcre2_get_ovector_pointer returned NULL", terminalp->asciidescs);
+          goto err;
+        }
+        /* We said PCRE2_NOTEMPTY so this cannot be empty */
+        matchLengthl = pcre2_ovectorp[1] - pcre2_ovectorp[0];
+        if (matchLengthl <= 0) {
+          MARPAESLIF_ERRORF(marpaESLIFp, "%s - Empty match when it is configured as not possible", terminalp->asciidescs);
+          goto err;
+        }
+        /* Very good -; */
+        rci = MARPAESLIF_MATCH_OK;
       }
-      break;
-    default:
-      MARPAESLIF_ERRORF(marpaESLIFp, funcs, "%s - Unsupported terminal type %d", terminalp->asciidescs, terminalp->type);
-      goto err;
+    } else {
+      if (pcre2Errornumberi >= 0) {
+        /* Full match is successful (this include an eventual substitution, that is also a full match). */
+        /* Check the length of matched data */
+        if (pcre2_get_ovector_count(marpaESLIF_regex.match_datap) <= 0) {
+          MARPAESLIF_ERRORF(marpaESLIFp, "%s - pcre2_get_ovector_count returned no number of pairs of values", terminalp->asciidescs);
+          goto err;
+        }
+        pcre2_ovectorp = pcre2_get_ovector_pointer(marpaESLIF_regex.match_datap);
+        if (pcre2_ovectorp == NULL) {
+          MARPAESLIF_ERRORF(marpaESLIFp, "%s - pcre2_get_ovector_pointer returned NULL", terminalp->asciidescs);
+          goto err;
+        }
+        /* We said PCRE2_NOTEMPTY so this cannot be empty */
+        matchLengthl = pcre2_ovectorp[1] - pcre2_ovectorp[0];
+        if (matchLengthl <= 0) {
+          MARPAESLIF_ERRORF(marpaESLIFp, "%s - Empty match when it is configured as not possible", terminalp->asciidescs);
+          goto err;
+        }
+        if (matchLengthl >= inputl) {
+          /* But end of the buffer is reached, and we are not at the eof! We have to ask for more bytes. */
+          rci = MARPAESLIF_MATCH_AGAIN;
+        } else {
+          /* And end of the buffer is not reached */
+          rci = MARPAESLIF_MATCH_OK;
+        }
+      } else {
+        /* Do a partial match. This section cannot return MARPAESLIF_MATCH_OK. */
+#ifdef PCRE2_CONFIG_JIT
+        if (marpaESLIF_regex.jitPartialb) {
+          pcre2Errornumberi = pcre2_jit_match(marpaESLIF_regex.patternp,     /* code */
+                                              (PCRE2_SPTR) inputcp,          /* subject */
+                                              (PCRE2_SIZE) inputl,          /* length */
+                                              (PCRE2_SIZE) 0,               /* startoffset */
+                                              PCRE2_NOTEMPTY                /* options - this one is supported in JIT mode */
+                                              |
+                                              PCRE2_PARTIAL_HARD,           /* and this one as well, we want partial match to have precedence */
+                                              marpaESLIF_regex.match_datap, /* match data */
+                                              NULL                          /* match context - used default */
+                                              );
+          if (pcre2Errornumberi == PCRE2_ERROR_JIT_STACKLIMIT) {
+            /* Back luck, out of stack for JIT */
+            pcre2_get_error_message(pcre2Errornumberi, pcre2ErrorBuffer, sizeof(pcre2ErrorBuffer));
+            MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s - pcre2_jit_match failure: %s - switching to non-JIT version", terminalp->asciidescs, pcre2ErrorBuffer);
+            goto eof_nojitpartial;
+          }
+        } else {
+        eof_nojitpartial:
+#endif
+          pcre2Errornumberi = pcre2_match(marpaESLIF_regex.patternp,    /* code */
+                                          (PCRE2_SPTR) inputcp,          /* subject */
+                                          (PCRE2_SIZE) inputl,          /* length */
+                                          (PCRE2_SIZE) 0,               /* startoffset */
+                                          PCRE2_NOTEMPTY                /* options */
+                                          |
+                                          PCRE2_PARTIAL_HARD,           /* we want partial match to have precedence */
+                                          marpaESLIF_regex.match_datap, /* match data */
+                                          NULL                          /* match context - used default */
+                                          );
+#ifdef PCRE2_CONFIG_JIT
+        }
+#endif
+        /* Only PCRE2_ERROR_PARTIAL is an acceptable error */
+        if (pcre2Errornumberi == PCRE2_ERROR_PARTIAL) {
+          /* Partial match is successful */
+          rci = MARPAESLIF_MATCH_AGAIN;
+        } else {
+          /* Partial match is not successful */
+          rci = MARPAESLIF_MATCH_FAILURE;
+        }
+      }
     }
   } else {
     rci = eofb ? MARPAESLIF_MATCH_FAILURE : MARPAESLIF_MATCH_AGAIN;
