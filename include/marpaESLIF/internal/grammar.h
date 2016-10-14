@@ -4,15 +4,17 @@
 #include <genericStack.h>
 #include <pcre2.h>
 
-typedef struct marpaESLIF_regex         marpaESLIF_regex_t;
-typedef struct marpaESLIF_string        marpaESLIF_string_t;
-typedef enum   marpaESLIF_symbol_type   marpaESLIF_symbol_type_t;
-typedef enum   marpaESLIF_terminal_type marpaESLIF_terminal_type_t;
-typedef struct marpaESLIF_terminal      marpaESLIF_terminal_t;
-typedef struct marpaESLIF_meta          marpaESLIF_meta_t;
-typedef struct marpaESLIF_symbol        marpaESLIF_symbol_t;
-typedef struct marpaESLIF_rule          marpaESLIF_rule_t;
-typedef struct marpaESLIF_grammar       marpaESLIF_grammar_t;
+typedef struct  marpaESLIF_regex         marpaESLIF_regex_t;
+typedef struct  marpaESLIF_string        marpaESLIF_string_t;
+typedef enum    marpaESLIF_symbol_type   marpaESLIF_symbol_type_t;
+typedef enum    marpaESLIF_terminal_type marpaESLIF_terminal_type_t;
+typedef struct  marpaESLIF_terminal      marpaESLIF_terminal_t;
+typedef struct  marpaESLIF_meta          marpaESLIF_meta_t;
+typedef struct  marpaESLIF_symbol        marpaESLIF_symbol_t;
+typedef struct  marpaESLIF_rule          marpaESLIF_rule_t;
+typedef struct  marpaESLIF_grammar       marpaESLIF_grammar_t;
+typedef enum    marpaESLIF_matcher_value marpaESLIF_matcher_value_t;
+typedef short (*marpaESLIF_matcher_t)   (marpaESLIF_t *marpaESLIFp, marpaESLIF_terminal_t *terminalp, char *inputcp, size_t inputl, short eofb, marpaESLIF_matcher_value_t *rcip, char **outputpp, size_t *outputlp);
 
 /* Symbol types */
 enum marpaESLIF_symbol_type {
@@ -113,6 +115,7 @@ struct marpaESLIF_terminal {
   size_t                     descl;
   char                      *asciidescs;          /* Terminal description (ASCII) */
   marpaESLIF_terminal_type_t type;                /* Terminal type */
+  marpaESLIF_matcher_t       matcherp;            /* Terminal matcher */
   union {
     marpaESLIF_regex_t      regex;
     marpaESLIF_string_t     string;
@@ -124,6 +127,14 @@ struct marpaESLIF_meta {
   char                      *descs;               /* Non-terminal description as per the user */
   size_t                     descl;
   char                      *asciidescs;          /* Non-terminal description (ASCII) */
+  marpaESLIF_matcher_t       matcherp;            /* Non-terminal matcher */
+};
+
+/* Matcher return values */
+enum marpaESLIF_matcher_value {
+  MARPAESLIF_MATCH_AGAIN   = -1,
+  MARPAESLIF_MATCH_FAILURE =  0,
+  MARPAESLIF_MATCH_OK      =  1
 };
 
 /* A symbol */
@@ -138,6 +149,7 @@ struct marpaESLIF_symbol {
   char                    *descs;      /* Terminal description as per the user */
   size_t                   descl;
   char                    *asciidescs; /* Shallow pointer to the asciidecs from the union members */
+  marpaESLIF_matcher_t     matcherp;
 };
 
 /* A rule */
@@ -161,13 +173,6 @@ struct marpaESLIF_grammar {
   marpaESLIF_grammar_t  *previousp;            /* Previous eventual grammar */
   marpaESLIF_grammar_t  *nextp;                /* Next eventual sub-grammar */
 };
-
-/* Matcher return values */
-typedef enum marpaESLIF_matcher_value {
-  MARPAESLIF_MATCH_AGAIN   = -1,
-  MARPAESLIF_MATCH_FAILURE =  0,
-  MARPAESLIF_MATCH_OK      =  1
-} marpaESLIF_matcher_value_t;
 
 #include "marpaESLIF/internal/eslif.h"
 
