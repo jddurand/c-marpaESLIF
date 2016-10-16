@@ -323,11 +323,12 @@ static inline marpaESLIF_meta_t *_marpaESLIF_meta_newp(marpaESLIF_t *marpaESLIFp
     goto err;
   }
 
-  metap->idi          = -1;
-  metap->descs        = NULL;
-  metap->descl        = 0;
-  metap->asciidescs   = NULL;
-  metap->matcherip    = NULL;
+  metap->idi                       = -1;
+  metap->descs                     = NULL;
+  metap->descl                     = 0;
+  metap->asciidescs                = NULL;
+  metap->matcherip                 = NULL;
+  metap->marpaWrapperGrammarClonep = NULL; /* Eventuallwy changed when validating the grammar */
 
   marpaWrapperGrammarSymbolOption.terminalb = 0;
   marpaWrapperGrammarSymbolOption.startb    = startb;
@@ -376,6 +377,9 @@ static inline void _marpaESLIF_meta_freev(marpaESLIF_t *marpaESLIFp, marpaESLIF_
     MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Freeing meta %s at %p", metap->asciidescs != NULL ? metap->asciidescs : "(null)", metap);
     if (metap->descs != NULL) {
       free(metap->descs);
+    }
+    if (metap->marpaWrapperGrammarClonep != NULL) {
+      marpaWrapperGrammar_freev(metap->marpaWrapperGrammarClonep);
     }
     _marpaESLIF_utf82printableascii_freev(marpaESLIFp, metap->asciidescs);
     /* All the rest are shallow pointers */
@@ -595,6 +599,7 @@ static inline short _marpaESLIF_validate_grammarb(marpaESLIF_t *marpaESLIFp)
   const static char     *funcs                     = "_marpaESLIF_validate_grammarb";
   genericStack_t        *grammarStackp             = marpaESLIFp->grammarStackp;
   marpaWrapperGrammar_t *marpaWrapperGrammarClonep = NULL;
+  marpaESLIF_meta_t     *metap;
   genericStack_t        *symbolStackp;
   genericStack_t        *ruleStackp;
   int                    grammari;
@@ -640,6 +645,7 @@ static inline short _marpaESLIF_validate_grammarb(marpaESLIF_t *marpaESLIFp)
       symbolp = (marpaESLIF_symbol_t *) GENERICSTACK_GET_PTR(symbolStackp, symboli);
       /* Only meta symbols should be looked at: if not an LHS then it is a dependency on a LHS of a sub-grammar */
       if ((symbolp->type == MARPAESLIF_SYMBOL_TYPE_META) && (! symbolp->isLhsb)) {
+        metap = symbolp->u.metap;
         if (nextGrammarp == NULL) {
           if (! GENERICSTACK_IS_PTR(grammarStackp, grammari+1)) {
             MARPAESLIF_ERRORF(marpaESLIFp, "Symbol %s at grammar level %d need a grammar definition at level %d", symbolp->asciidescs, grammari, grammari + 1);
@@ -678,6 +684,7 @@ static inline short _marpaESLIF_validate_grammarb(marpaESLIF_t *marpaESLIFp)
             MARPAESLIF_ERRORF(marpaESLIFp, "Failure to precompute grammar at level %d with start symbol %s", grammari + 1, symbolp->asciidescs);
             goto err;
           }
+          metap->marpaWrapperGrammarClonep = marpaWrapperGrammarClonep;
         }
       }
     }

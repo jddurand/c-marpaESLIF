@@ -123,11 +123,12 @@ struct marpaESLIF_terminal {
 };
 
 struct marpaESLIF_meta {
-  int                        idi;                 /* Non-terminal Id */
-  char                      *descs;               /* Non-terminal description as per the user */
+  int                        idi;                       /* Non-terminal Id */
+  char                      *descs;                     /* Non-terminal description as per the user */
   size_t                     descl;
-  char                      *asciidescs;          /* Non-terminal description (ASCII) */
-  marpaESLIF_matcher_t       matcherip;            /* Non-terminal matcher */
+  char                      *asciidescs;                /* Non-terminal description (ASCII) */
+  marpaESLIF_matcher_t       matcherip;                 /* Non-terminal matcher */
+  marpaWrapperGrammar_t     *marpaWrapperGrammarClonep; /* Eventual cloned grammar */
 };
 
 /* Matcher return values */
