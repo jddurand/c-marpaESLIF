@@ -115,7 +115,7 @@ struct marpaESLIF_terminal {
   size_t                     descl;
   char                      *asciidescs;          /* Terminal description (ASCII) */
   marpaESLIF_terminal_type_t type;                /* Terminal type */
-  marpaESLIF_matcher_t       matcherp;            /* Terminal matcher */
+  marpaESLIF_matcher_t       matcherip;           /* Terminal matcher */
   union {
     marpaESLIF_regex_t      regex;
     marpaESLIF_string_t     string;
@@ -127,7 +127,7 @@ struct marpaESLIF_meta {
   char                      *descs;               /* Non-terminal description as per the user */
   size_t                     descl;
   char                      *asciidescs;          /* Non-terminal description (ASCII) */
-  marpaESLIF_matcher_t       matcherp;            /* Non-terminal matcher */
+  marpaESLIF_matcher_t       matcherip;            /* Non-terminal matcher */
 };
 
 /* Matcher return values */
@@ -149,7 +149,7 @@ struct marpaESLIF_symbol {
   char                    *descs;      /* Terminal description as per the user */
   size_t                   descl;
   char                    *asciidescs; /* Shallow pointer to the asciidecs from the union members */
-  marpaESLIF_matcher_t     matcherp;
+  marpaESLIF_matcher_t     matcherip;
 };
 
 /* A rule */
@@ -166,6 +166,7 @@ struct marpaESLIF_rule {
 
 /* A grammar */
 struct marpaESLIF_grammar {
+  marpaESLIF_t          *marpaESLIFp;          /* Shallow pointer to top marpaESLIFp */
   unsigned int           leveli;               /* Grammar level */
   marpaWrapperGrammar_t *marpaWrapperGrammarp; /* Grammar implementation */
   genericStack_t        *symbolStackp;         /* Stack of symbols */
