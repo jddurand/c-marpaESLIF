@@ -417,6 +417,7 @@ Destructor of the recognizer wrapper pointed by C<marpaWrapperRecognizerp>.
     short                              orderByRankb;               /* Default: 1 */
     short                              ambiguousb;                 /* Default: 0 */
     short                              nullb;                      /* Default: 0 */
+    int                                maxParsesi;                 /* Default: 0 */
   } marpaWrapperValueOption_t;
 
   marpaWrapperValue_t *marpaWrapperValue_newp(marpaWrapperRecognizer_t *marpaWrapperRecognizerp,
@@ -445,6 +446,10 @@ Allows a parse to be ambiguous.
 =item nullb
 
 Allows a parse to be undefined.
+
+=item maxParsesi
+
+Limit the number of parse trees traversals. A value lower or equal to zero mean this is unlimited.
 
 =back
 
@@ -535,6 +540,7 @@ User will nagivate in a parse tree forest, and will be able to get all possible 
     short            highRankOnlyb;              /* Default: 1 */
     short            orderByRankb;               /* Default: 1 */
     short            ambiguousb;                 /* Default: 0 */
+    int              maxParsesi;                 /* Default: 0 */
   } marpaWrapperAsfOption_t;
 
   marpaWrapperAsf_t *marpaWrapperAsf_newp(marpaWrapperRecognizer_t *marpaWrapperRecognizerp,
@@ -559,6 +565,10 @@ Different parse tree values are returned ordered by rank.
 =item ambiguousb
 
 Allows a parse to be ambiguous.
+
+=item maxParsesi
+
+Limit the number of parse trees traversals. A value lower or equal to zero mean this is unlimited.
 
 =back
 

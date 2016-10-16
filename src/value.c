@@ -15,7 +15,8 @@ static marpaWrapperValueOption_t marpaWrapperValueOptionDefault = {
   1,                              /* highRankOnlyb */
   1,                              /* orderByRankb */
   0,                              /* ambiguousb */
-  0                               /* nullb */
+  0,                              /* nullb */
+  0                               /* maxParsesi */
 };
 
 /****************************************************************************/
@@ -185,6 +186,7 @@ short marpaWrapperValue_valueb(marpaWrapperValue_t               *marpaWrapperVa
   int               argResulti;
   int               tokenValuei;
   size_t            nValueInputi;
+  int               nParsesi;
 
   if (marpaWrapperValuep == NULL) {
     errno = EINVAL;
@@ -202,6 +204,14 @@ short marpaWrapperValue_valueb(marpaWrapperValue_t               *marpaWrapperVa
     MARPAWRAPPER_TRACE(genericLoggerp, funcs, "Tree iterator exhausted");
     goto done;
   }
+
+  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_t_parse_count(%p)", marpaWrapperValuep->marpaTreep);
+  nParsesi = marpa_t_parse_count(marpaWrapperValuep->marpaTreep);
+  if ((marpaWrapperValuep->marpaWrapperValueOption.maxParsesi > 0) && (nParsesi > marpaWrapperValuep->marpaWrapperValueOption.maxParsesi)) {
+    MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "Maximum number of parse trees is reached: %d", marpaWrapperValuep->marpaWrapperValueOption.maxParsesi);
+    goto done;
+  }
+  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "Number of parse trees: %d, max=%d", nParsesi, marpaWrapperValuep->marpaWrapperValueOption.maxParsesi);
 
   MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_v_new(%p)", marpaWrapperValuep->marpaTreep);
   marpaValuep = marpa_v_new(marpaWrapperValuep->marpaTreep);

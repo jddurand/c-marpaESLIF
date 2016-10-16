@@ -88,6 +88,8 @@ static marpaWrapperAsfOption_t marpaWrapperAsfOptionDefault = {
   NULL,   /* genericLoggerp */
    1,     /* highRankOnlyb */
    1,     /* orderByRankb */
+   0,     /* ambiguousb */
+   0      /* maxParsesi */
 };
 
 static char *marpaWrapperAsfIdsets[_MARPAWRAPPERASFIDSET_IDSETE_MAX] = {
@@ -266,6 +268,8 @@ marpaWrapperAsf_t *marpaWrapperAsf_newp(marpaWrapperRecognizer_t *marpaWrapperRe
   marpaWrapperAsfp->marpaWrapperAsfOption   = *marpaWrapperAsfOptionp;
   marpaWrapperAsfp->marpaBocagep            = NULL;
   marpaWrapperAsfp->marpaOrderp             = NULL;
+  marpaWrapperAsfp->recursionLeveli         = 0;
+  marpaWrapperAsfp->nParsesi                = 0;
   marpaWrapperAsfp->orNodeStackp            = NULL;
   marpaWrapperAsfp->intsetHashp             = NULL;
   marpaWrapperAsfp->nidsetSparseArrayp      = NULL;
@@ -576,10 +580,13 @@ short marpaWrapperAsf_traverseb(marpaWrapperAsf_t *marpaWrapperAsfp, traverserCa
   traverser.gladep            = gladep;
   traverser.symchIxi          = 0;
   traverser.factoringIxi      = 0;
+
   MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "Calling traverser for glade %d", gladep->idi);
+  marpaWrapperAsfp->recursionLeveli++;
   if (! marpaWrapperAsfp->traverserCallbackp(&traverser, marpaWrapperAsfp->userDatavp, &valuei)) {
     goto err;
   }
+  marpaWrapperAsfp->recursionLeveli--;
 
   if (valueip != NULL) {
     *valueip = valuei;
@@ -2447,6 +2454,8 @@ static inline short _marpaWrapperAsf_factoring_finishb(marpaWrapperAsf_t *marpaW
       MARPAWRAPPER_ERRORF(genericLoggerp, "orNodeInUseSparseArrayp find failure, %s", strerror(errno));
       goto err;
     }
+    /* GCC seem to badly optimize this statement: if (findResultb && orNodeInUsedb), always doing the && */
+    /* even if findResultb is 0 */
     if (findResultb && orNodeInUsedb) {
       *factoringFinishbp = 0;
       goto done;
@@ -3477,6 +3486,7 @@ short marpaWrapperAsf_traverse_nextb(marpaWrapperAsfTraverser_t *traverserp, sho
   genericLogger_t          *genericLoggerp;
   int                       idi;
   short                     nextb = 1;
+  short                     maxParseb = 0;
 
   if (traverserp == NULL) {
     errno = EINVAL;
@@ -3486,15 +3496,29 @@ short marpaWrapperAsf_traverse_nextb(marpaWrapperAsfTraverser_t *traverserp, sho
   marpaWrapperAsfp = traverserp->marpaWrapperAsfp;
   genericLoggerp = marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp;
 
-  if (_marpaWrapperAsf_traverse_nextFactoringb(traverserp, &idi) == 0) {
-    goto err;
+  if (marpaWrapperAsfp->recursionLeveli == 1) {
+    /* This is the "top" level */
+    ++marpaWrapperAsfp->nParsesi;
+    if ((marpaWrapperAsfp->marpaWrapperAsfOption.maxParsesi > 0) && (marpaWrapperAsfp->nParsesi > marpaWrapperAsfp->marpaWrapperAsfOption.maxParsesi)) {
+      MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "Maximum number of parse trees is reached: %d", marpaWrapperAsfp->marpaWrapperAsfOption.maxParsesi);
+      nextb = 0;
+      maxParseb = 1;
+    } else {
+      MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "Number of parse trees: %d, max=%d", marpaWrapperAsfp->nParsesi, marpaWrapperAsfp->marpaWrapperAsfOption.maxParsesi);
+    }
   }
-  if (idi < 0) {
-    if (_marpaWrapperAsf_traverse_nextSymchb(traverserp, &idi) == 0) {
+
+  if (! maxParseb) {
+    if (_marpaWrapperAsf_traverse_nextFactoringb(traverserp, &idi) == 0) {
       goto err;
     }
     if (idi < 0) {
-      nextb = 0;
+      if (_marpaWrapperAsf_traverse_nextSymchb(traverserp, &idi) == 0) {
+        goto err;
+      }
+      if (idi < 0) {
+        nextb = 0;
+      }
     }
   }
 
