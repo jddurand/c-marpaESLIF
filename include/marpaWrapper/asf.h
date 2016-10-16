@@ -24,6 +24,7 @@ typedef struct marpaWrapperAsfOption {
   short            highRankOnlyb;              /* Default: 1 */
   short            orderByRankb;               /* Default: 1 */
   short            ambiguousb;                 /* Default: 0 */
+  int              maxParsesi;                 /* Default: 0 */
 } marpaWrapperAsfOption_t;
 
 /* A traverser always returns a false or a true value, and a "user-space" value in *valueip.  */

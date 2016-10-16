@@ -23,6 +23,7 @@ typedef struct marpaWrapperValueOption {
   short                              orderByRankb;               /* Default: 1 */
   short                              ambiguousb;                 /* Default: 0 */
   short                              nullb;                      /* Default: 0 */
+  int                                maxParsesi;                 /* Default: 0 */
 } marpaWrapperValueOption_t;
 
 #ifdef __cplusplus
