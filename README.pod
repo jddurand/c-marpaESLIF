@@ -21,6 +21,7 @@ marpaWrapper is a thin interface on top of L<libmarpa|https://jeffreykegler.gith
     short            warningIsErrorb;            /* Default: 0. Have precedence over warningIsIgnoredb  */
     short            warningIsIgnoredb;          /* Default: 0.                                         */
     short            autorankb;                  /* Default: 0.                                         */
+    short            exhaustionEventb;           /* Default: 0.                                         */
   } marpaWrapperGrammarOption_t;
 
   marpaWrapperGrammar_t *marpaWrapperGrammar_newp(marpaWrapperGrammarOption_t *marpaWrapperGrammarOptionp)
@@ -44,6 +45,14 @@ A flag saying that any grammar warning should be ignored. Any true value enable 
 =item warningIsIgnoredb
 
 A flag saying that rules are automatically ranked. Then when a rule is created, its eventual initial rank is I<ignored>, and set automatically: rules sharing the same LHS have a decreasing rank as they are created.
+
+=item autorankb
+
+Automatic assign rule ranks. In such a cause the eventual rank number on a rule is always ignored. Rules are autoranked by their order of in the grammar. The latest the rule, the lower its rank.
+
+=item exhaustionEventb
+
+Generate an MARPAWRAPPERGRAMMAR_EVENT_EXHAUSTED event when parse tree is exhausted. Unless this option is set, an info message is always generated.
 
 =back
 
@@ -202,9 +211,10 @@ The macro C<MARPAWRAPPERGRAMMAR_NEWSEQUENCE(marpaWrapperGrammarp, lhsSymboli, rh
     enum {
       MARPAWRAPPERGRAMMAR_EVENT_COMPLETED,
       MARPAWRAPPERGRAMMAR_EVENT_NULLED,
-      MARPAWRAPPERGRAMMAR_EVENT_EXPECTED
+      MARPAWRAPPERGRAMMAR_EVENT_EXPECTED,
+      MARPAWRAPPERGRAMMAR_EVENT_EXHAUSTED
     } eventType;
-    int symboli;
+    int symboli; /* -1 in case of exhaustion, symbolId otherwise */
   } marpaWrapperGrammarEvent_t;
 
   short marpaWrapperGrammar_eventb(marpaWrapperGrammar_t *marpaWrapperGrammarp, size_t *eventlp, marpaWrapperGrammarEvent_t **eventpp, short forceReloadb)
