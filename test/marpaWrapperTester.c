@@ -54,7 +54,8 @@ int main(int argc, char **argv) {
 								  1 /* highRankOnlyb */,
 								  1 /* orderByRankb */,
 								  1 /* ambiguousb - We KNOW this test is ambiguous */,
-								  0 /* nullb */
+								  0 /* nullb */,
+								  0 /* maxParsesi */
   };
 
   GENERICSTACK_NEW(valueContext.inputStackp);

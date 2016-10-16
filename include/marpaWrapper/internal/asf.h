@@ -58,6 +58,8 @@ struct marpaWrapperAsf {
   marpaWrapperAsfOption_t      marpaWrapperAsfOption;
   Marpa_Bocage                 marpaBocagep;
   Marpa_Order                  marpaOrderp;
+  int                          recursionLeveli;
+  int                          nParsesi;
 
   /* Memoization */
   genericStack_t              *orNodeStackp;

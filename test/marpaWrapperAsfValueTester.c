@@ -70,7 +70,8 @@ int main(int argc, char **argv) {
   marpaWrapperAsfOption_t        marpaWrapperAsfOption        = { GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_DEBUG),
 								  0 /* highRankOnlyb */,
 								  0 /* orderByRankb */,
-								  1 /* ambiguousb */
+								  1 /* ambiguousb */,
+								  0 /* maxParsesi */
   };
 
   GENERICSTACK_NEW(traverseContext.inputStackp);
