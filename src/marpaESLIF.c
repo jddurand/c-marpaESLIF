@@ -91,8 +91,8 @@ const static  char                  *_marpaESLIF_utf82printableascii_defaultp = 
 static        void                   _marpaESLIF_tconvTraceCallback(void *userDatavp, const char *msgs);
 #endif
 
-static inline char                  *_marpaESLIF_utf8_newp(marpaESLIF_t *marpaESLIFp, char *encodings, char *descs, size_t descl, size_t *utf8lp);
-static inline void                   _marpaESLIF_utf8_freev(marpaESLIF_t *marpaESLIFp, char *utf8s);
+static inline char                  *_marpaESLIF_tconv_newp(marpaESLIF_t *marpaESLIFp, char *toEncodings, char *fromEncodings, char *descs, size_t descl, size_t *utf8lp);
+static inline void                   _marpaESLIF_tconv_freev(marpaESLIF_t *marpaESLIFp, char *utf8s);
 
 static inline char                  *_marpaESLIF_utf82printableascii_newp(marpaESLIF_t *marpaESLIFp, char *descs, size_t descl);
 static inline void                   _marpaESLIF_utf82printableascii_freev(marpaESLIF_t *marpaESLIFp, char *utf82printableasciip);
@@ -1628,122 +1628,29 @@ static inline char *_marpaESLIF_utf82printableascii_newp(marpaESLIF_t *marpaESLI
 /*****************************************************************************/
 {
   const static char *funcs       = "_marpaESLIF_utf82printableascii_newp";
-  char              *rcp         = (char *) _marpaESLIF_utf82printableascii_defaultp;
-  tconv_t            tconvp      = NULL;
-  char              *inbuforigp  = descs;
-  size_t             inleftorigl = descl;
-  char              *outbuforigp = NULL;
-  size_t             outbuforigl = 0;
-  tconv_option_t     tconvOption = { NULL /* charsetp */, NULL /* convertp */, NULL /* traceCallbackp */, NULL /* traceUserDatavp */ };
-  char              *inbufp;
-  size_t             inleftl;
-  char              *outbufp;
-  size_t             outleftl;
-  size_t             nconvl;
   char              *p;
+  char              *utf8s;
+  size_t             utf8l;
   unsigned char      c;
 
-  /* ------- Our input is always a well formed UTF-8 */
-#ifndef MARPAESLIF_NTRACE
-  tconvOption.traceCallbackp  = _marpaESLIF_tconvTraceCallback;
-  tconvOption.traceUserDatavp = marpaESLIFp;
-#endif
-  tconvp = tconv_open_ext("ASCII//TRANSLIT//IGNORE", "UTF-8", &tconvOption);
-  if (tconvp == NULL) {
-    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "tconv_open failure, %s", strerror(errno));
-    goto fallback;
-  }
-#ifndef MARPAESLIF_NTRACE
-  tconv_trace_on(tconvp);
-#endif
-
-  /* We start with an output buffer of the same size of input buffer */
-  /* We want to make sure the ASCII string is always ending with 0.  */
-  outbuforigp = (char *) calloc(descl + 1, 1);
-  if (outbuforigp == NULL) {
-    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "calloc failure, %s", strerror(errno));
-    goto fallback;
-  }
-  outbuforigl = descl;
-
-  /* We want to translate descriptions in trace or error cases - these are short things, and */
-  /* it does not really harm if we redo the whole translation stuff in case of E2BIG:        */
-  /* - in trace mode it is documented that performance is awful                              */
-  /* - in error mode this call will happen once                                              */
-
-  inbufp   = inbuforigp;
-  inleftl  = inleftorigl;
-  outbufp  = outbuforigp;
-  outleftl = outbuforigl;
-  
-  while (1) {
-
-    nconvl = tconv(tconvp, (inbufp != NULL) ? &inbufp : NULL, &inleftl, &outbufp, &outleftl);
-
-    if (nconvl == (size_t) -1) {
-      char  *tmp;
-      size_t deltal = outbuforigl;
-      
-      /* The only acceptable error is E2BIG */
-      if (errno != E2BIG) {
-	MARPAESLIF_TRACEF(marpaESLIFp, funcs, "tconv failure, %s", strerror(errno));
-	goto fallback;
+  utf8s = _marpaESLIF_tconv_newp(marpaESLIFp, "ASCII//TRANSLIT//IGNORE", "UTF-8", descs, descl, &utf8l);
+  if (utf8s == NULL) {
+    utf8s = (char *) _marpaESLIF_utf82printableascii_defaultp;
+    utf8l = strlen(utf8s);
+  } else {
+    /* Remove by hand any ASCII character not truely printable.      */
+    /* Only the historical ASCII table [0-127] is a portable thingy. */
+    p = utf8s;
+    while ((c = (unsigned char) *p) != '\0') {
+      if ((c >= 128) || (! isprint(c & 0xFF))) {
+        *p = ' ';
       }
-      /* Try to alloc more */
-      outbuforigl *= 2;
-      /* Will this ever happen ? */
-      if (outbuforigl < descl) {
-	MARPAESLIF_TRACE(marpaESLIFp, funcs, "size_t flip");
-	goto fallback;
-      }
-      tmp = realloc(outbuforigp, outbuforigl + 1);
-      if (tmp == NULL) {
-	MARPAESLIF_TRACEF(marpaESLIFp, funcs, "realloc failure, %s", strerror(errno));
-	goto fallback;
-      }
-      outbuforigp = tmp;
-      outbuforigp[outbuforigl] = '\0';
-      outleftl   += deltal;
-    }
-
-    if (inbufp == NULL) {
-      /* This was the last round */
-      break;
-    }
-
-    if (inleftl <= 0) {
-      /* Next round is the last one */
-      inbufp = NULL;
+      p++;
     }
   }
 
-  rcp = outbuforigp;
-
-  /* Remove by hand any ASCII character not truely printable.      */
-  /* Only the historical ASCII table [0-127] is a portable thingy. */
-  p = outbuforigp;
-  while ((c = (unsigned char) *p) != '\0') {
-    if ((c >= 128) || (! isprint(c & 0xFF))) {
-      *p = ' ';
-    }
-    p++;
-  }
-  goto done;
-
- fallback:
-  if (outbuforigp != NULL) {
-    free(outbuforigp);
-  }
-
- done:
-  if (tconvp != NULL) {
-    if (tconv_close(tconvp) != 0) {
-      MARPAESLIF_TRACEF(marpaESLIFp, funcs, "tconv_close failure, %s", strerror(errno));
-    }
-  }
-
-  MARPAESLIF_TRACEF(marpaESLIFp, funcs, "return \"%s\"", rcp);
-  return rcp;
+  MARPAESLIF_TRACEF(marpaESLIFp, funcs, "return \"%s\"", utf8s);
+  return utf8s;
 }
 
 /*****************************************************************************/
@@ -1759,7 +1666,7 @@ static inline void _marpaESLIF_utf82printableascii_freev(marpaESLIF_t *marpaESLI
 }
 
 /*****************************************************************************/
-static inline char *_marpaESLIF_utf8_newp(marpaESLIF_t *marpaESLIFp, char *encodings, char *descs, size_t descl, size_t *utf8lp)
+static inline char *_marpaESLIF_tconv_newp(marpaESLIF_t *marpaESLIFp, char *toEncodings, char *fromEncodings, char *descs, size_t descl, size_t *utf8lp)
 /*****************************************************************************/
 {
   const static char *funcs       = "_marpaESLIF_utf8_newp";
@@ -1783,7 +1690,7 @@ static inline char *_marpaESLIF_utf8_newp(marpaESLIF_t *marpaESLIFp, char *encod
   tconvOption.traceCallbackp  = _marpaESLIF_tconvTraceCallback;
   tconvOption.traceUserDatavp = marpaESLIFp;
 #endif
-  tconvp = tconv_open_ext("UTF-8", encodings, &tconvOption);
+  tconvp = tconv_open_ext(toEncodings, fromEncodings, &tconvOption);
   if (tconvp == NULL) {
     MARPAESLIF_TRACEF(marpaESLIFp, funcs, "tconv_open failure, %s", strerror(errno));
     goto err;
@@ -1793,11 +1700,13 @@ static inline char *_marpaESLIF_utf8_newp(marpaESLIF_t *marpaESLIFp, char *encod
 #endif
 
   /* We start with an output buffer of the same size of input buffer */
-  outbuforigp = (char *) malloc(descl);
+  /* Whatever the destination encoding, we always reserve one byte more to place a NUL */
+  outbuforigp = (char *) malloc(descl + 1);
   if (outbuforigp == NULL) {
     MARPAESLIF_TRACEF(marpaESLIFp, funcs, "malloc failure, %s", strerror(errno));
     goto err;
   }
+  outbuforigp[descl] = '\0';
   outbuforigl = descl;
 
   /* We want to translate descriptions in trace or error cases - these are short things, and */
@@ -1831,11 +1740,12 @@ static inline char *_marpaESLIF_utf8_newp(marpaESLIF_t *marpaESLIFp, char *encod
 	goto err;
       }
       /* No + 1 : it is legal to have \0 and we are not doing to print this */
-      tmp = realloc(outbuforigp, outbuforigl);
+      tmp = realloc(outbuforigp, outbuforigl + 1);
       if (tmp == NULL) {
 	MARPAESLIF_TRACEF(marpaESLIFp, funcs, "realloc failure, %s", strerror(errno));
 	goto err;
       }
+      outbuforigp[outbuforigl] = '\0';
       outbuforigp = tmp;
       outleftl   += deltal;
     }
@@ -1870,14 +1780,14 @@ static inline char *_marpaESLIF_utf8_newp(marpaESLIF_t *marpaESLIFp, char *encod
 }
 
 /*****************************************************************************/
-static inline void _marpaESLIF_utf8_freev(marpaESLIF_t *marpaESLIFp, char *utf8s)
+static inline void _marpaESLIF_tconv_freev(marpaESLIF_t *marpaESLIFp, char *p)
 /*****************************************************************************/
 {
-  const static char *funcs = "_marpaESLIF_utf8_freev";
+  const static char *funcs = "_marpaESLIF_tconv_freev";
 
-  if (utf8s != NULL) {
-    MARPAESLIF_TRACE(marpaESLIFp, funcs, "Freeing UTF8 string");
-    free(utf8s);
+  if (p != NULL) {
+    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Freeing converted string at %p", p);
+    free(p);
   }
 }
 
@@ -1912,7 +1822,7 @@ marpaESLIFGrammar_t *marpaESLIFGrammar_newp(marpaESLIF_t *marpaESLIFp, marpaESLI
   marpaESLIFGrammarp->grammarp                = NULL;
 
   /* We want to parse the incoming grammar in UTF-8 */
-  utf8s = _marpaESLIF_utf8_newp(marpaESLIFp, marpaESLIFGrammarOptionp->encodings, marpaESLIFGrammarOptionp->grammarcp, marpaESLIFGrammarOptionp->grammarl, &utf8l);
+  utf8s = _marpaESLIF_tconv_newp(marpaESLIFp, "UTF-8", marpaESLIFGrammarOptionp->encodings, marpaESLIFGrammarOptionp->grammarcp, marpaESLIFGrammarOptionp->grammarl, &utf8l);
   if (utf8s == NULL) {
     goto err;
   }
@@ -1924,7 +1834,7 @@ marpaESLIFGrammar_t *marpaESLIFGrammar_newp(marpaESLIF_t *marpaESLIFp, marpaESLI
   marpaESLIFGrammarp = NULL;
 
  done:
-  _marpaESLIF_utf8_freev(marpaESLIFp, utf8s);
+  _marpaESLIF_tconv_freev(marpaESLIFp, utf8s);
   MARPAESLIF_TRACEF(marpaESLIFp, funcs, "return %p", marpaESLIFGrammarp);
   return marpaESLIFGrammarp;
 }
