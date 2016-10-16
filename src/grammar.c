@@ -13,7 +13,8 @@ static marpaWrapperGrammarOption_t marpaWrapperGrammarOptionDefault = {
   NULL,    /* genericLoggerp             */
   0,       /* warningIsErrorb            */
   0,       /* warningIsIgnoredb          */
-  0        /* autorankb                  */
+  0,       /* autorankb                  */
+  0        /* exhaustionEventb           */
 };
 
 static marpaWrapperGrammarSymbolOption_t marpaWrapperGrammarSymbolOptionDefault = {
@@ -749,7 +750,20 @@ short marpaWrapperGrammar_eventb(marpaWrapperGrammar_t *marpaWrapperGrammarp, si
           warningMsgs = msgs;
           break;
         case MARPA_EVENT_EXHAUSTED:
-          infoMsgs = msgs;
+          if (marpaWrapperGrammarp->marpaWrapperGrammarOption.exhaustionEventb) {
+            /* Generate an event */
+            if (manageBuf_createp(genericLoggerp, (void **) &(marpaWrapperGrammarp->eventArrayp), &(marpaWrapperGrammarp->sizeEventl), subscribedEventi + 1, sizeof(marpaWrapperGrammarEvent_t)) == NULL) {
+              goto err;
+            }
+            eventp = &(marpaWrapperGrammarp->eventArrayp[subscribedEventi]);
+
+            eventp->eventType = MARPAWRAPPERGRAMMAR_EVENT_EXHAUSTED;
+            eventp->symboli   = -1; /* No symbol associated to such event */
+
+            marpaWrapperGrammarp->nEventl = ++subscribedEventi;
+          } else {
+            infoMsgs = msgs;
+          }
           break;
         case MARPA_EVENT_LOOP_RULES:
           warningMsgs = msgs;

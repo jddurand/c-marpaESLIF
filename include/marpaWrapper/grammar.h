@@ -19,17 +19,18 @@ typedef enum marpaWrapperGrammarEventType {
   MARPAWRAPPERGRAMMAR_EVENTTYPE_NONE       = 0x00,
   MARPAWRAPPERGRAMMAR_EVENTTYPE_COMPLETION = 0x01,
   MARPAWRAPPERGRAMMAR_EVENTTYPE_NULLED     = 0x02,
-  MARPAWRAPPERGRAMMAR_EVENTTYPE_PREDICTION = 0x04,
+  MARPAWRAPPERGRAMMAR_EVENTTYPE_PREDICTION = 0x04
 } marpaWrapperGrammarEventType_t;
 
-/* A triggered event is for a symbol, with an event type */
+/* Possile triggered events */
 typedef struct marpaWrapperGrammarEvent {
   enum {
     MARPAWRAPPERGRAMMAR_EVENT_COMPLETED,
     MARPAWRAPPERGRAMMAR_EVENT_NULLED,
-    MARPAWRAPPERGRAMMAR_EVENT_EXPECTED
+    MARPAWRAPPERGRAMMAR_EVENT_EXPECTED,
+    MARPAWRAPPERGRAMMAR_EVENT_EXHAUSTED
   } eventType;
-  int symboli;
+  int symboli; /* -1 in case of exhaustion, symbolId otherwise */
 } marpaWrapperGrammarEvent_t;
 
 /* ------------------ */
@@ -61,6 +62,7 @@ typedef struct marpaWrapperGrammarOption {
   short            warningIsErrorb;            /* Default: 0. Have precedence over warningIsIgnoredb  */
   short            warningIsIgnoredb;          /* Default: 0.                                         */
   short            autorankb;                  /* Default: 0.                                         */
+  short            exhaustionEventb;           /* Default: 0.                                         */
 } marpaWrapperGrammarOption_t;
 
 #ifdef __cplusplus
