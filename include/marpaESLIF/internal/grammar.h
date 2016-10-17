@@ -151,6 +151,9 @@ struct marpaESLIF_symbol {
   size_t                      descl;
   char                       *asciidescs; /* Shallow pointer to the asciidecs from the union members */
   marpaESLIF_matcher_t        matcherip;
+  short                       pauseb;      /* -1: before, 0: NA, 1: after */
+  short                       pauseIsOnb;  /* 0: off, 1: on */
+  char                       *pausecp;     /* Pause event name, can be NULL (unnamed event) */
 };
 
 /* A rule */
