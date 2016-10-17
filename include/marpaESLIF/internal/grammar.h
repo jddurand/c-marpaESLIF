@@ -14,7 +14,7 @@ typedef struct  marpaESLIF_symbol        marpaESLIF_symbol_t;
 typedef struct  marpaESLIF_rule          marpaESLIF_rule_t;
 typedef struct  marpaESLIF_grammar       marpaESLIF_grammar_t;
 typedef enum    marpaESLIF_matcher_value marpaESLIF_matcher_value_t;
-typedef short (*marpaESLIF_matcher_t)   (marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *marpaESLIFGrammarp, marpaESLIF_terminal_t *terminalp, char *inputcp, size_t inputl, short eofb, marpaESLIF_matcher_value_t *rcip, char **outputpp, size_t *outputlp);
+typedef short (*marpaESLIF_matcher_t)(marpaESLIF_t *marpaESLIFp, marpaWrapperGrammar_t *marpaWrapperGrammarp, marpaESLIF_terminal_t *terminalp, marpaESLIF_meta_t *metap, char *inputcp, size_t inputl, short eofb, marpaESLIF_matcher_value_t *rcip, char **outputpp, size_t *outputlp);
 
 /* Symbol types */
 enum marpaESLIF_symbol_type {
@@ -110,15 +110,15 @@ struct marpaESLIF_regex {
 };
 
 struct marpaESLIF_terminal {
-  int                        idi;                 /* Terminal Id */
-  char                      *descs;               /* Terminal description as per the user */
-  size_t                     descl;
-  char                      *asciidescs;          /* Terminal description (ASCII) */
-  marpaESLIF_terminal_type_t type;                /* Terminal type */
-  marpaESLIF_matcher_t       matcherip;           /* Terminal matcher */
+  int                         idi;                 /* Terminal Id */
+  char                       *descs;               /* Terminal description as per the user */
+  size_t                      descl;
+  char                       *asciidescs;          /* Terminal description (ASCII) */
+  marpaESLIF_terminal_type_t  type;                /* Terminal type */
+  marpaESLIF_matcher_t        matcherip;           /* Terminal matcher */
   union {
-    marpaESLIF_regex_t      regex;
-    marpaESLIF_string_t     string;
+    marpaESLIF_regex_t        regex;
+    marpaESLIF_string_t       string;
   } u;
 };
 
@@ -140,17 +140,17 @@ enum marpaESLIF_matcher_value {
 
 /* A symbol */
 struct marpaESLIF_symbol {
-  marpaESLIF_symbol_type_t type;  /* Symbol type */
+  marpaESLIF_symbol_type_t    type;  /* Symbol type */
   union {
-    marpaESLIF_terminal_t *terminalp; /* Symbol is a terminal */
-    marpaESLIF_meta_t     *metap;     /* Symbol is a meta identifier, i.e. a rule */
+    marpaESLIF_terminal_t    *terminalp; /* Symbol is a terminal */
+    marpaESLIF_meta_t        *metap;     /* Symbol is a meta identifier, i.e. a rule */
   } u;
-  short                    isLhsb;
-  int                      idi;
-  char                    *descs;      /* Terminal description as per the user */
-  size_t                   descl;
-  char                    *asciidescs; /* Shallow pointer to the asciidecs from the union members */
-  marpaESLIF_matcher_t     matcherip;
+  short                       isLhsb;
+  int                         idi;
+  char                       *descs;      /* Terminal description as per the user */
+  size_t                      descl;
+  char                       *asciidescs; /* Shallow pointer to the asciidecs from the union members */
+  marpaESLIF_matcher_t        matcherip;
 };
 
 /* A rule */
