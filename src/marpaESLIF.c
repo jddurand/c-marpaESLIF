@@ -111,7 +111,7 @@ static inline void                   _marpaESLIF_tconv_freev(marpaESLIF_t *marpa
 static inline char                  *_marpaESLIF_utf82printableascii_newp(marpaESLIF_t *marpaESLIFp, char *descs, size_t descl);
 static inline void                   _marpaESLIF_utf82printableascii_freev(marpaESLIF_t *marpaESLIFp, char *utf82printableasciip);
 static        short                 _marpaESLIFReader_grammarReader(void *userDatavp, char **inputcpp, size_t *inputlp, short *eofbp);
-static inline short                 _marpaESLIFRecognizer_resumeb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, short ignoreEventsBeforeb);
+static inline short                 _marpaESLIFRecognizer_resumeb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, short ignoreEventsb);
 
 /*****************************************************************************/
 static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *marpaESLIFGrammarp, short startb, int eventSeti, char *descs, size_t descl, marpaESLIF_terminal_type_t type, marpaESLIF_uint32_t opti, PCRE2_SPTR originp, PCRE2_SIZE originl, PCRE2_SPTR substitutionp, PCRE2_SIZE substitutionl, char *testFullMatchs, char *testPartialMatchs)
@@ -2002,7 +2002,7 @@ short marpaESLIFRecognizer_resumeb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp
 }
 
 /*****************************************************************************/
-static inline short _marpaESLIFRecognizer_resumeb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, short ignoreEventsBeforeb)
+static inline short _marpaESLIFRecognizer_resumeb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, short ignoreEventsb)
 /*****************************************************************************/
 {
   const static char          *funcs              = "_marpaESLIFRecognizer_resumeb";
@@ -2070,7 +2070,7 @@ static inline short _marpaESLIFRecognizer_resumeb(marpaESLIFRecognizer_t *marpaE
       break;
     case MARPAESLIF_MATCH_OK:
       /* If there is a pause before, push the event name as a shallow pointer in the event stack unless pre-events are ignored */
-      if ((! ignoreEventsBeforeb) && symbolp->pauseIsOnb && (symbolp->pauseb < 0)) {
+      if ((! ignoreEventsb) && symbolp->pauseIsOnb && (symbolp->pauseb < 0)) {
         GENERICSTACK_PUSH_PTR(marpaESLIFRecognizerp->eventStackp, symbolp->pausecp);
         if (GENERICSTACK_ERROR(marpaESLIFRecognizerp->eventStackp)) {
           MARPAESLIF_ERRORF(marpaESLIFp, "%s - eventStackp push failure, %s", symbolp->asciidescs, strerror(errno));
@@ -2090,7 +2090,7 @@ static inline short _marpaESLIFRecognizer_resumeb(marpaESLIFRecognizer_t *marpaE
     }
   }
   
-  if (! ignoreEventsBeforeb) {
+  if (! ignoreEventsb) {
     /* Collect grammar native events and push them in the events stack */
     if (! marpaWrapperGrammar_eventb(grammarp->marpaWrapperGrammarp, &grammarEventl, &grammarEventp, 0)) {
       goto err;
@@ -2108,6 +2108,11 @@ static inline short _marpaESLIFRecognizer_resumeb(marpaESLIFRecognizer_t *marpaE
           goto err;
         }
         symbolp = GENERICSTACK_GET_PTR(symbolStackp, symboli);
+        GENERICSTACK_PUSH_PTR(marpaESLIFRecognizerp->eventStackp, symbolp->pausecp);
+        if (GENERICSTACK_ERROR(marpaESLIFRecognizerp->eventStackp)) {
+          MARPAESLIF_ERRORF(marpaESLIFp, "%s - eventStackp push failure, %s", symbolp->asciidescs, strerror(errno));
+          goto err;
+        }
         break;
       case MARPAWRAPPERGRAMMAR_EVENT_EXHAUSTED:
         /* symboli will be -1 as per marpaWrapper spec */
@@ -2192,6 +2197,12 @@ short marpaESLIFRecognizer_expectedb(marpaESLIFRecognizer_t *marpaESLIFRecognize
 /*****************************************************************************/
 {
   return marpaWrapperRecognizer_expectedb(marpaESLIFRecognizerp->marpaWrapperRecognizerp, nSymbollp, symbolArraypp);
+}
+
+/*****************************************************************************/
+short marpaWrapperGrammar_eventb(marpaWrapperGrammar_t *marpaWrapperGrammarp, size_t *eventlp, marpaWrapperGrammarEvent_t **eventpp, short forceReloadb)
+/*****************************************************************************/
+{
 }
 
 /*****************************************************************************/
