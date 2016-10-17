@@ -18,7 +18,7 @@ typedef struct marpaESLIFGrammarOption {
   char   *encodings;        /* Input encoding. Default: NULL */
 } marpaESLIFGrammarOption_t;
 
-typedef short (*marpaESLIFReader_t)(void *userDatavp, char **inputcpp, size_t *inputlp);
+typedef short (*marpaESLIFReader_t)(void *userDatavp, char **inputcpp, size_t *inputlp, short *eofbp);
 typedef struct marpaESLIFRecognizerOption {
   void                *userDatavp;                 /* User specific context */
   marpaESLIFReader_t   marpaESLIFReaderCallbackp;  /* Reader */
