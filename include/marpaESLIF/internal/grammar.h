@@ -14,7 +14,8 @@ typedef struct  marpaESLIF_symbol        marpaESLIF_symbol_t;
 typedef struct  marpaESLIF_rule          marpaESLIF_rule_t;
 typedef struct  marpaESLIF_grammar       marpaESLIF_grammar_t;
 typedef enum    marpaESLIF_matcher_value marpaESLIF_matcher_value_t;
-typedef short (*marpaESLIF_matcher_t)(marpaESLIF_t *marpaESLIFp, marpaWrapperGrammar_t *marpaWrapperGrammarp, marpaESLIF_terminal_t *terminalp, marpaESLIF_meta_t *metap, char *inputcp, size_t inputl, short eofb, marpaESLIF_matcher_value_t *rcip, char **outputpp, size_t *outputlp);
+typedef short (*marpaESLIF_matcher_t)(marpaESLIF_t *marpaESLIFp, marpaWrapperGrammar_t *marpaWrapperGrammarp, marpaESLIF_terminal_t *terminalp, marpaESLIF_meta_t *metap, char *inputcp, size_t inputl, short eofb, marpaESLIF_matcher_value_t *rcip, size_t *matchedlp, char **outputpp, size_t *outputlp);
+typedef enum    marpaESLIF_event_type    marpaESLIF_event_type_t;
 
 /* Symbol types */
 enum marpaESLIF_symbol_type {
@@ -138,6 +139,15 @@ enum marpaESLIF_matcher_value {
   MARPAESLIF_MATCH_OK      =  1
 };
 
+enum marpaESLIF_event_type {
+  MARPAESLIF_EVENT_TYPE_NA        = 0x00,
+  MARPAESLIF_EVENT_TYPE_COMPLETED = 0x01, /* Grammar event */
+  MARPAESLIF_EVENT_TYPE_NULLED    = 0x02, /* Grammar event */
+  MARPAESLIF_EVENT_TYPE_EXPECTED  = 0x04, /* Grammar event */
+  MARPAESLIF_EVENT_TYPE_BEFORE    = 0x08, /* ESLIF lexeme event */
+  MARPAESLIF_EVENT_TYPE_AFTER     = 0x10  /* ESLIF lexeme event */
+};
+
 /* A symbol */
 struct marpaESLIF_symbol {
   marpaESLIF_symbol_type_t    type;  /* Symbol type */
@@ -147,13 +157,15 @@ struct marpaESLIF_symbol {
   } u;
   short                       isLhsb;
   int                         idi;
-  char                       *descs;      /* Terminal description as per the user */
+  char                       *descs;           /* Terminal description as per the user */
   size_t                      descl;
-  char                       *asciidescs; /* Shallow pointer to the asciidecs from the union members */
+  char                       *asciidescs;      /* Shallow pointer to the asciidecs from the union members */
   marpaESLIF_matcher_t        matcherip;
-  short                       pauseb;      /* -1: before, 0: NA, 1: after */
-  short                       pauseIsOnb;  /* 0: off, 1: on */
-  char                       *pausecp;     /* Pause event name, can be NULL (unnamed event) */
+  short                       pauseb;          /* -1: before, 0: NA, 1: after */
+  short                       pauseIsOnb;      /* 0: off, 1: on */
+  char                       *pauses;          /* Pause event name in native encoding */
+  size_t                     *pausel;          /* Pause event name length in bytes */
+  char                       *asciipauses;     /* Pause event name in native encoding */
 };
 
 /* A rule */
@@ -177,6 +189,9 @@ struct marpaESLIF_grammar {
   genericStack_t        *ruleStackp;           /* Stack of rules */
   marpaESLIF_grammar_t  *previousp;            /* Previous eventual grammar */
   marpaESLIF_grammar_t  *nextp;                /* Next eventual sub-grammar */
+  char                  *exhausteds;           /* Exhaustion event name in native encoding */
+  size_t                *exhaustedl;           /* Pause event name length in bytes */
+  char                  *asciiexhausteds;      /* Exhaustion event name in native encoding */
 };
 
 #include "marpaESLIF/internal/eslif.h"
