@@ -40,8 +40,8 @@ typedef struct marpaESLIFString {
 } marpaESLIFString_t;
 
 typedef struct marpaESLIFAlternative {
-  void  *p;                         /* Opaque value         */
-  void (*freep)(void *);            /* Eventual free method */
+  void  *p;                                 /* Opaque value         */
+  void (*freep)(void *userDatavp, void *p); /* Eventual free method */
 } marpaESLIFAlternative_t;
 
 #ifdef __cplusplus

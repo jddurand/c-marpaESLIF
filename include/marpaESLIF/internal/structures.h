@@ -1,21 +1,23 @@
-#ifndef MARPAESLIF_INTERNAL_GRAMMAR_H
-#define MARPAESLIF_INTERNAL_GRAMMAR_H
+#ifndef MARPAESLIF_INTERNAL_STRUCTURES_H
+#define MARPAESLIF_INTERNAL_STRUCTURES_H
 
 #include <genericStack.h>
 #include <pcre2.h>
 
-typedef struct  marpaESLIF_regex         marpaESLIF_regex_t;
-typedef struct  marpaESLIF_string        marpaESLIF_string_t;
-typedef enum    marpaESLIF_symbol_type   marpaESLIF_symbol_type_t;
-typedef enum    marpaESLIF_terminal_type marpaESLIF_terminal_type_t;
-typedef struct  marpaESLIF_terminal      marpaESLIF_terminal_t;
-typedef struct  marpaESLIF_meta          marpaESLIF_meta_t;
-typedef struct  marpaESLIF_symbol        marpaESLIF_symbol_t;
-typedef struct  marpaESLIF_rule          marpaESLIF_rule_t;
-typedef struct  marpaESLIF_grammar       marpaESLIF_grammar_t;
-typedef enum    marpaESLIF_matcher_value marpaESLIF_matcher_value_t;
+typedef struct  marpaESLIF_regex           marpaESLIF_regex_t;
+typedef struct  marpaESLIF_string          marpaESLIF_string_t;
+typedef enum    marpaESLIF_symbol_type     marpaESLIF_symbol_type_t;
+typedef enum    marpaESLIF_terminal_type   marpaESLIF_terminal_type_t;
+typedef struct  marpaESLIF_terminal        marpaESLIF_terminal_t;
+typedef struct  marpaESLIF_meta            marpaESLIF_meta_t;
+typedef struct  marpaESLIF_symbol          marpaESLIF_symbol_t;
+typedef struct  marpaESLIF_rule            marpaESLIF_rule_t;
+typedef struct  marpaESLIF_grammar         marpaESLIF_grammar_t;
+typedef enum    marpaESLIF_matcher_value   marpaESLIF_matcher_value_t;
 typedef short (*marpaESLIF_matcher_t)(marpaESLIF_t *marpaESLIFp, marpaWrapperGrammar_t *marpaWrapperGrammarp, marpaESLIF_terminal_t *terminalp, marpaESLIF_meta_t *metap, char *inputcp, size_t inputl, short eofb, marpaESLIF_matcher_value_t *rcip, size_t *matchedlp, char **outputpp, size_t *outputlp);
-typedef enum    marpaESLIF_event_type    marpaESLIF_event_type_t;
+typedef enum    marpaESLIF_event_type      marpaESLIF_event_type_t;
+typedef struct  marpaESLIF_readerContext   marpaESLIF_readerContext_t;
+typedef struct  marpaESLIF_alternative     marpaESLIF_alternative_t;
 
 /* Symbol types */
 enum marpaESLIF_symbol_type {
@@ -194,6 +196,68 @@ struct marpaESLIF_grammar {
   char                  *asciiexhausteds;      /* Exhaustion event name in native encoding */
 };
 
+/* Internal reader context when parsing a grammar */
+struct marpaESLIF_readerContext {
+  marpaESLIF_t *marpaESLIFp;
+  char         *utf8s;
+  size_t        utf8l;
+  char         *p;
+};
+
+/* Internal structure to remember the alternatives */
+struct marpaESLIF_alternative {
+  marpaESLIF_symbol_t     *symbolp;
+  marpaESLIFAlternative_t *alternativep;
+};
+
+/* ----------------------------------- */
+/* Definition of the opaque structures */
+/* ----------------------------------- */
+struct marpaESLIF {
+  genericStack_t     *grammarStackp;
+  marpaESLIFOption_t  option;
+};
+
+struct marpaESLIFGrammar {
+  marpaESLIF_t             *marpaESLIFp;
+  marpaESLIFGrammarOption_t marpaESLIFGrammarOption;
+  marpaESLIF_grammar_t     *grammarp;
+};
+
+struct marpaESLIFRecognizer {
+  marpaESLIF_t                *marpaESLIFp;
+  marpaESLIFGrammar_t         *marpaESLIFGrammarp;
+  marpaESLIFRecognizerOption_t marpaESLIFRecognizerOption;
+  marpaWrapperRecognizer_t    *marpaWrapperRecognizerp;
+  genericStack_t              *valueStackp;
+  char                        *inputcp;
+  size_t                       inputl;
+  short                        eofb;
+  short                        scanb;
+  marpaESLIFString_t          *stringArrayp;    /* For the events */
+  size_t                       stringArrayl;
+  genericStack_t              *alternativeStackp; /* Current alternatives */
+};
+
+/* ------------------------------------------- */
+/* Definition of the default option structures */
+/* ------------------------------------------- */
+marpaESLIFOption_t marpaESLIFOption_default = {
+  NULL               /* genericLoggerp */
+};
+
+marpaESLIFGrammarOption_t marpaESLIFGrammarOption_default = {
+  NULL, /* grammarcp */
+  0,    /* grammarl */
+  NULL  /* encodings */
+};
+
+marpaESLIFRecognizerOption_t marpaESLIFRecognizerOption_default = {
+  NULL,              /* userDatavp */
+  NULL,              /* marpaESLIFReaderCallbackp */
+  0                  /* disableThresholdb */
+};
+
 #include "marpaESLIF/internal/eslif.h"
 
-#endif /* MARPAESLIF_INTERNAL_GRAMMAR_H */
+#endif /* MARPAESLIF_INTERNAL_STRUCTURES_H */
