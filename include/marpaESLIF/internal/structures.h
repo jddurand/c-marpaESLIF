@@ -14,7 +14,7 @@ typedef struct  marpaESLIF_symbol          marpaESLIF_symbol_t;
 typedef struct  marpaESLIF_rule            marpaESLIF_rule_t;
 typedef struct  marpaESLIF_grammar         marpaESLIF_grammar_t;
 typedef enum    marpaESLIF_matcher_value   marpaESLIF_matcher_value_t;
-typedef short (*marpaESLIF_matcher_t)(marpaESLIF_t *marpaESLIFp, marpaWrapperGrammar_t *marpaWrapperGrammarp, marpaESLIF_terminal_t *terminalp, marpaESLIF_meta_t *metap, char *inputcp, size_t inputl, short eofb, marpaESLIF_matcher_value_t *rcip, size_t *matchedlp, char **outputpp, size_t *outputlp);
+typedef short (*marpaESLIF_matcher_t)(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaWrapperGrammar_t *marpaWrapperGrammarp, marpaESLIF_terminal_t *terminalp, marpaESLIF_meta_t *metap, char *inputcp, size_t inputl, short eofb, marpaESLIF_matcher_value_t *rcip, size_t *matchedlp, char **outputpp, size_t *outputlp);
 typedef enum    marpaESLIF_event_type      marpaESLIF_event_type_t;
 typedef struct  marpaESLIF_readerContext   marpaESLIF_readerContext_t;
 typedef struct  marpaESLIF_alternative     marpaESLIF_alternative_t;
@@ -166,8 +166,11 @@ struct marpaESLIF_symbol {
   short                       pauseb;          /* -1: before, 0: NA, 1: after */
   short                       pauseIsOnb;      /* 0: off, 1: on */
   char                       *pauses;          /* Pause event name in native encoding */
-  size_t                     *pausel;          /* Pause event name length in bytes */
-  char                       *asciipauses;     /* Pause event name in native encoding */
+  size_t                      pausel;          /* Pause event name length in bytes */
+  char                       *asciipauses;     /* Pause event name in ASCII encoding */
+  char                       *events;          /* Grammar event name in native encoding */
+  size_t                      eventl;          /* Grammar event name length in bytes */
+  char                       *asciievents;     /* Grammar event name in ASCII encoding */
 };
 
 /* A rule */
@@ -189,11 +192,7 @@ struct marpaESLIF_grammar {
   marpaWrapperGrammar_t *marpaWrapperGrammarp; /* Grammar implementation */
   genericStack_t        *symbolStackp;         /* Stack of symbols */
   genericStack_t        *ruleStackp;           /* Stack of rules */
-  marpaESLIF_grammar_t  *previousp;            /* Previous eventual grammar */
-  marpaESLIF_grammar_t  *nextp;                /* Next eventual sub-grammar */
-  char                  *exhausteds;           /* Exhaustion event name in native encoding */
-  size_t                *exhaustedl;           /* Pause event name length in bytes */
-  char                  *asciiexhausteds;      /* Exhaustion event name in native encoding */
+  genericStack_t        *discardSymbolStackp;  /* Stack of discard symbols - take care it contains SHALLOW pointers to symbols */
 };
 
 /* Internal reader context when parsing a grammar */
@@ -201,13 +200,12 @@ struct marpaESLIF_readerContext {
   marpaESLIF_t *marpaESLIFp;
   char         *utf8s;
   size_t        utf8l;
-  char         *p;
 };
 
 /* Internal structure to remember the alternatives */
 struct marpaESLIF_alternative {
   marpaESLIF_symbol_t     *symbolp;
-  marpaESLIFAlternative_t *alternativep;
+  marpaESLIFAlternative_t *marpaESLIFAlternativep;
 };
 
 /* ----------------------------------- */
@@ -220,8 +218,7 @@ struct marpaESLIF {
 
 struct marpaESLIFGrammar {
   marpaESLIF_t             *marpaESLIFp;
-  marpaESLIFGrammarOption_t marpaESLIFGrammarOption;
-  marpaESLIF_grammar_t     *grammarp;
+  marpaESLIF_grammar_t     *grammarp;  /* This is a SHALLOW copy of first grammar of marpaESLIFp */
 };
 
 struct marpaESLIFRecognizer {
@@ -230,11 +227,11 @@ struct marpaESLIFRecognizer {
   marpaESLIFRecognizerOption_t marpaESLIFRecognizerOption;
   marpaWrapperRecognizer_t    *marpaWrapperRecognizerp;
   genericStack_t              *valueStackp;
-  char                        *inputcp;
+  char                        *inputs;
   size_t                       inputl;
   short                        eofb;
   short                        scanb;
-  marpaESLIFString_t          *stringArrayp;    /* For the events */
+  marpaESLIFString_t          *stringArrayp;      /* For the events */
   size_t                       stringArrayl;
   genericStack_t              *alternativeStackp; /* Current alternatives */
 };
@@ -247,7 +244,7 @@ marpaESLIFOption_t marpaESLIFOption_default = {
 };
 
 marpaESLIFGrammarOption_t marpaESLIFGrammarOption_default = {
-  NULL, /* grammarcp */
+  NULL, /* grammars */
   0,    /* grammarl */
   NULL  /* encodings */
 };
@@ -255,7 +252,8 @@ marpaESLIFGrammarOption_t marpaESLIFGrammarOption_default = {
 marpaESLIFRecognizerOption_t marpaESLIFRecognizerOption_default = {
   NULL,              /* userDatavp */
   NULL,              /* marpaESLIFReaderCallbackp */
-  0                  /* disableThresholdb */
+  0,                 /* disableThresholdb */
+  0,                 /* exhaustedb */
 };
 
 #include "marpaESLIF/internal/eslif.h"

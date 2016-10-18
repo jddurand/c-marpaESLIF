@@ -24,5 +24,9 @@
 #define L0_JOIN_G1_META_OP_LOOSEN                        "<meta op loosen>"
 #define L0_JOIN_G1_META_OP_EQUAL_PRIORITY                "<meta op equal priority>"
 #define L0_JOIN_G1_META_RESERVED_BLESSING_NAME           "<meta reserved blessing name>"
+#define L0_JOIN_G1_META_WHITESPACE                       "<meta whitespace>"
+#define L0_JOIN_G1_META_PERL_COMMENT                     "<meta perl comment>"
+#define L0_JOIN_G1_META_CPLUSPLUS_COMMENT                "<meta cplusplus comment>"
+#define L0_JOIN_G1_META_C_COMMENT                        "<meta c comment>"
 
 #endif /* MARPAESLIF_INTERNAL_ESLIF_L0_JOIN_G1_H */
