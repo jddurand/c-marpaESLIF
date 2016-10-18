@@ -419,6 +419,9 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_grammarp(marpaESLIF_t 
   marpaESLIF_grammar_t       *grammarp;
   marpaWrapperGrammarOption_t marpaWrapperGrammarOption;
   int                         i;
+  int                         j;
+  int                         symboli;
+  char                       *descs;
 
   MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Bootstrapping grammar at level %d", (int) leveli);
 
@@ -444,7 +447,7 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_grammarp(marpaESLIF_t 
 					  0, /* startb */
 					  MARPAWRAPPERGRAMMAR_EVENTTYPE_NONE,
 					  bootstrap_grammar_terminalp[i].descs,
-					  strlen(bootstrap_grammar_terminalp[i].descs) + 1,  /* Bootstrap's descs is a C string */
+					  strlen(bootstrap_grammar_terminalp[i].descs),
 					  bootstrap_grammar_terminalp[i].terminalType,
 					  bootstrap_grammar_terminalp[i].optioni,
 					  bootstrap_grammar_terminalp[i].originp,
@@ -494,7 +497,7 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_grammarp(marpaESLIF_t 
 				  bootstrap_grammar_metap[i].startb,
 				  MARPAWRAPPERGRAMMAR_EVENTTYPE_NONE,
 				  bootstrap_grammar_metap[i].descs,
-				  strlen(bootstrap_grammar_metap[i].descs) + 1 /* Bootstrap's descs is a C string */
+				  strlen(bootstrap_grammar_metap[i].descs)
 				  );
     if (metap == NULL) {
       goto err;
@@ -517,7 +520,7 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_grammarp(marpaESLIF_t 
 
     GENERICSTACK_SET_PTR(grammarp->symbolStackp, symbolp, symbolp->u.metap->idi);
     if (GENERICSTACK_ERROR(grammarp->symbolStackp)) {
-      MARPAESLIF_ERRORF(marpaESLIFp, "symbolStackp push failure, %s", strerror(errno));
+      MARPAESLIF_ERRORF(marpaESLIFp, "symbolStackp set failure, %s", strerror(errno));
       goto err;
     }
     /* Push is ok: symbolp is in grammarp->symbolStackp */
@@ -526,10 +529,17 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_grammarp(marpaESLIF_t 
 
   /* Then the rules */
   for (i = 0; i < bootstrap_grammar_rulei; i++) {
+    if (bootstrap_grammar_rulep[i].discardb) {
+      /* Grammar should have already made sure that a discard rule can have only one RHS */
+      if (bootstrap_grammar_rulep[i].nrhsl != 1) {
+        MARPAESLIF_ERRORF(marpaESLIFp, "A discard rule must have exactly one RHS");
+        goto err;
+      }
+    }
     rulep = _marpaESLIF_rule_newp(marpaESLIFp,
 				  grammarp,
 				  bootstrap_grammar_rulep[i].descs,
-				  strlen(bootstrap_grammar_rulep[i].descs) + 1, /* Bootstrap's descs is a C string */
+				  strlen(bootstrap_grammar_rulep[i].descs),
 				  bootstrap_grammar_rulep[i].lhsi,
 				  bootstrap_grammar_rulep[i].nrhsl,
 				  bootstrap_grammar_rulep[i].rhsip,
@@ -546,13 +556,35 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_grammarp(marpaESLIF_t 
     if (rulep == NULL) {
       goto err;
     }
-
-    GENERICSTACK_SET_PTR(grammarp->ruleStackp, rulep, rulep->idi);
-    if (GENERICSTACK_ERROR(grammarp->ruleStackp)) {
-      MARPAESLIF_ERRORF(marpaESLIFp, "ruleStackp push failure, %s", strerror(errno));
-      goto err;
+    if (bootstrap_grammar_rulep[i].discardb) {
+      symboli = bootstrap_grammar_rulep[i].rhsip[0];
+      descs = NULL;
+      for (j = 0; j < bootstrap_grammar_metai; j++) {
+        if (bootstrap_grammar_metap[j].idi == symboli) {
+          descs = bootstrap_grammar_metap[j].descs;
+        }
+      }
+      if (descs == NULL) {
+        MARPAESLIF_ERROR(marpaESLIFp, "Cannot find description of RHS of a discard rule");
+        goto err;
+      }
+      symbolp = _marpaESLIFRecognizer_symbol_desc_to_ptr(marpaESLIFp, grammarp, descs, strlen(descs));
+      if (symbolp == NULL) {
+        goto err;
+      }
+      GENERICSTACK_PUSH_PTR(grammarp->discardSymbolStackp, symbolp);
+      if (GENERICSTACK_ERROR(grammarp->discardSymbolStackp)) {
+        MARPAESLIF_ERRORF(marpaESLIFp, "discardSymbolStackp push failure, %s", strerror(errno));
+        goto err;
+      }
+    } else {
+      GENERICSTACK_SET_PTR(grammarp->ruleStackp, rulep, rulep->idi);
+      if (GENERICSTACK_ERROR(grammarp->ruleStackp)) {
+        MARPAESLIF_ERRORF(marpaESLIFp, "ruleStackp set failure, %s", strerror(errno));
+        goto err;
+      }
     }
-    /* Push is ok: rulep is in grammarp->ruleStackp */
+    /* Push is ok: rulep is in grammarp->ruleStackp or grammarp->discardSymbolStackp */
     rulep = NULL;
   }
 
@@ -2166,8 +2198,11 @@ static inline short _marpaESLIFRecognizer_resumeb(marpaESLIFRecognizer_t *marpaE
     }
   }
   
-  /* No alternative ? Per def this is the end (exhaustion case is handled when collection grammar events) */
+  /* No alternative ? Per def if this is the end (exhaustion support is handled when collecting grammar events) this is ok */
   if (GENERICSTACK_USED(marpaESLIFRecognizerp->alternativeStackp) <= 0) {
+    if (! eofb) {
+      /* Try to match the discard symbols */
+    }
     goto exhaustion;
   }
 

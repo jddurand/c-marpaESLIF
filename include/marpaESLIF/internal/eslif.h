@@ -33,6 +33,7 @@ typedef struct bootstrap_grammar_rule {
   int                           minimumi;
   int                           separatori;
   short                         properb;
+  short                         discardb;
 } bootstrap_grammar_rule_t;
 
 #include "marpaESLIF/internal/eslif/L0.h"
