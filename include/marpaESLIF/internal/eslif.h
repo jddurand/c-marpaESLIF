@@ -15,6 +15,7 @@ typedef struct bootstrap_grammar_terminal {
 typedef struct bootstrap_grammar_meta {
   int   idi;                /* Identifier */
   char *descs;              /* Description */
+  short startb;             /* Start symbol ? */
 } bootstrap_grammar_meta_t;
 
 typedef enum bootstrap_grammar_rule_type {
