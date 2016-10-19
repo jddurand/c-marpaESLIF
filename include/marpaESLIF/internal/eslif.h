@@ -16,6 +16,7 @@ typedef struct bootstrap_grammar_meta {
   int   idi;                /* Identifier */
   char *descs;              /* Description */
   short startb;             /* Start symbol ? */
+  short discardb;           /* Discard symbol ? */
 } bootstrap_grammar_meta_t;
 
 typedef enum bootstrap_grammar_rule_type {
@@ -33,7 +34,6 @@ typedef struct bootstrap_grammar_rule {
   int                           minimumi;
   int                           separatori;
   short                         properb;
-  short                         discardb;
 } bootstrap_grammar_rule_t;
 
 #include "marpaESLIF/internal/eslif/L0.h"
