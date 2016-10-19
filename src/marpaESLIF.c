@@ -2004,7 +2004,7 @@ short marpaESLIFRecognizer_scanb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp)
   marpaESLIF_t *marpaESLIFp = marpaESLIFRecognizerp->marpaESLIFp;
 
   if (marpaESLIFRecognizerp->scanb) {
-    MARPAESLIF_ERROR(marpaESLIFp, "Scan can be one once only");
+    MARPAESLIF_ERROR(marpaESLIFp, "Scan can be done one once only");
     return 0;
   }
 
