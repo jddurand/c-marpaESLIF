@@ -18,6 +18,7 @@ typedef short (*marpaESLIF_matcher_t)(marpaESLIF_t *marpaESLIFp, marpaESLIFGramm
 typedef enum    marpaESLIF_event_type      marpaESLIF_event_type_t;
 typedef struct  marpaESLIF_readerContext   marpaESLIF_readerContext_t;
 typedef struct  marpaESLIF_alternative     marpaESLIF_alternative_t;
+typedef struct  marpaESLIF_valueContext    marpaESLIF_valueContext_t;
 
 /* Symbol types */
 enum marpaESLIF_symbol_type {
@@ -210,12 +211,17 @@ struct marpaESLIF_alternative {
   marpaESLIFAlternative_t *marpaESLIFAlternativep;
 };
 
+/* Internal sructure to have value context information */
+struct marpaESLIF_valueContext {
+  int ruleIdi;
+};
+
 /* ----------------------------------- */
 /* Definition of the opaque structures */
 /* ----------------------------------- */
 struct marpaESLIF {
   genericStack_t     *grammarStackp;
-  marpaESLIFOption_t  option;
+  marpaESLIFOption_t  marpaESLIFOption;
 };
 
 struct marpaESLIFGrammar {
@@ -223,19 +229,26 @@ struct marpaESLIFGrammar {
   marpaESLIF_grammar_t     *grammarp;  /* This is a SHALLOW copy of first grammar of marpaESLIFp */
 };
 
+struct marpaESLIFValue {
+  marpaESLIF_t             *marpaESLIFp;
+  marpaESLIFRecognizer_t   *marpaESLIFRecognizerp;
+  marpaESLIFValueOption_t   marpaESLIFValueOption;
+  marpaWrapperValue_t      *marpaWrapperValuep;
+  marpaESLIF_valueContext_t context;
+};
+
 struct marpaESLIFRecognizer {
   marpaESLIF_t                *marpaESLIFp;
   marpaESLIFGrammar_t         *marpaESLIFGrammarp;
   marpaESLIFRecognizerOption_t marpaESLIFRecognizerOption;
   marpaWrapperRecognizer_t    *marpaWrapperRecognizerp;
-  genericStack_t              *valueStackp;
+  genericStack_t              *inputStackp;
   char                        *inputs;
   size_t                       inputl;
   short                        eofb;
   short                        scanb;
   marpaESLIFString_t          *stringArrayp;      /* For the events */
   size_t                       stringArrayl;
-  genericStack_t              *alternativeStackp; /* Current alternatives */
   marpaESLIFRecognizer_t      *parentRecognizerp;
 };
 
@@ -257,6 +270,18 @@ marpaESLIFRecognizerOption_t marpaESLIFRecognizerOption_default = {
   NULL,              /* marpaESLIFReaderCallbackp */
   0,                 /* disableThresholdb */
   0,                 /* exhaustedb */
+  0,                 /* latmb */
+  0                  /* rejectionb */
+};
+
+marpaESLIFValueOption_t marpaESLIFValueOption_default = {
+  NULL, /* userDatacp */
+  NULL, /* valueCallbackp */
+  1,    /* highRankOnlyb */
+  1,    /* orderByRankb */
+  0,    /* ambiguousb */
+  0,    /* nullb */
+  0     /* maxParsesi */
 };
 
 #include "marpaESLIF/internal/eslif.h"
