@@ -34,12 +34,17 @@ boolean                             ~ [01]
 <result item descriptor list>       ~ <result item descriptor>* separator => <result item descriptor separator>
 <result item descriptor separator>  ~ [,]
 <result item descriptor separator>  ~ [,] whitespace
-<result item descriptor>            ~ 'start'
-                                    | 'length'
-                                    | 'g1start'
-                                    | 'g1length'
-                                    | 'name'
-                                    | 'lhs'
+#<result item descriptor>            ~ 'start'
+#                                    | 'length'
+#                                    | 'g1start'
+#                                    | 'g1length'
+#                                    | 'name'
+#                                    | 'lhs'
+#                                    | 'symbol'
+#                                    | 'rule' 
+#                                    | 'value'
+#                                    | 'values'
+<result item descriptor>            ~ 'name'
                                     | 'symbol'
                                     | 'rule' 
                                     | 'value'
