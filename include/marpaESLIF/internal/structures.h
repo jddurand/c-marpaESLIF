@@ -234,6 +234,7 @@ struct marpaESLIFValue {
   marpaESLIFRecognizer_t   *marpaESLIFRecognizerp;
   marpaESLIFValueOption_t   marpaESLIFValueOption;
   marpaWrapperValue_t      *marpaWrapperValuep;
+  genericStack_t           *outputStackp;
   marpaESLIF_valueContext_t context;
 };
 
