@@ -4,7 +4,7 @@
 
 #undef  MARPAESLIF2LOG
 #define MARPAESLIF2LOG(marpaESLIFp, rest) do {				\
-    genericLogger_t *genericLoggerp = ((marpaESLIFp) != NULL) ? (marpaESLIFp)->option.genericLoggerp : NULL; \
+    genericLogger_t *genericLoggerp = ((marpaESLIFp) != NULL) ? (marpaESLIFp)->marpaESLIFOption.genericLoggerp : NULL; \
     if (genericLoggerp != NULL) {					\
       rest;								\
     }									\
