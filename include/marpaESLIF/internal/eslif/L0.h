@@ -33,12 +33,12 @@ typedef enum bootstrap_grammar_L0_enum {
   L0_TERMINAL_ARRAY_DESCRIPTOR_LEFT_BRACKET,
   L0_TERMINAL_ARRAY_DESCRIPTOR_RIGHT_BRACKET,
   L0_TERMINAL_COMMA,
-  L0_TERMINAL_START,
-  L0_TERMINAL_LENGTH,
-  L0_TERMINAL_G1START,
-  L0_TERMINAL_G1LENGTH,
+  /* L0_TERMINAL_START, */
+  /* L0_TERMINAL_LENGTH, */
+  /* L0_TERMINAL_G1START, */
+  /* L0_TERMINAL_G1LENGTH, */
   L0_TERMINAL_NAME,
-  L0_TERMINAL_LHS,
+  /* L0_TERMINAL_LHS, */
   L0_TERMINAL_SYMBOL,
   L0_TERMINAL_RULE,
   L0_TERMINAL_VALUE,
@@ -376,29 +376,37 @@ bootstrap_grammar_terminal_t bootstrap_grammar_L0_terminals[] = {
     NULL, NULL
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
+  /*
   { L0_TERMINAL_START,
     "<terminal start>",                             MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
     "start", NULL,
     NULL, NULL
   },
+  */
   /* --------------------------------------------------------------------------------------------------------------------------------- */
+  /*
   { L0_TERMINAL_LENGTH,
     "<terminal length>",                            MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
     "length", NULL,
     NULL, NULL
   },
+  */
   /* --------------------------------------------------------------------------------------------------------------------------------- */
+  /*
   { L0_TERMINAL_G1START,
     "<terminal g1start>",                           MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
     "g1start", NULL,
     NULL, NULL
   },
+  */
   /* --------------------------------------------------------------------------------------------------------------------------------- */
+  /*
   { L0_TERMINAL_G1LENGTH,
     "<terminal g1length>",                          MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
     "g1length", NULL,
     NULL, NULL
   },
+  */
   /* --------------------------------------------------------------------------------------------------------------------------------- */
   { L0_TERMINAL_NAME,
     "<terminal name>",                              MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
@@ -406,11 +414,13 @@ bootstrap_grammar_terminal_t bootstrap_grammar_L0_terminals[] = {
     NULL, NULL
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
+  /*
   { L0_TERMINAL_LHS,
     "<terminal lhs>",                               MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
     "lhs", NULL,
     NULL, NULL
   },
+  */
   /* --------------------------------------------------------------------------------------------------------------------------------- */
   { L0_TERMINAL_SYMBOL,
     "<terminal symbol>",                            MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
@@ -577,12 +587,12 @@ bootstrap_grammar_rule_t bootstrap_grammar_L0_rules[] = {
   { L0_META_RESULT_ITEM_DESCRIPTOR_SEPARATOR, "<rule result item descriptor separator 1>", MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_COMMA                            }, { 1 },       -1,                   -1,      -1 },
   { L0_META_RESULT_ITEM_DESCRIPTOR_SEPARATOR, "<rule result item descriptor separator 2>", MARPAESLIF_RULE_TYPE_ALTERNATIVE, 2, { L0_TERMINAL_COMMA,
                                                                                                                                   L0_META_WHITESPACE                           }, { 1, 1 },    -1,                   -1,      -1 },
-  { L0_META_RESULT_ITEM_DESCRIPTOR,           "<rule result item descriptor  1>",          MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_START                            }, { 1 },       -1,                   -1,      -1 },
-  { L0_META_RESULT_ITEM_DESCRIPTOR,           "<rule result item descriptor  2>",          MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_LENGTH                           }, { 1 },       -1,                   -1,      -1 },
-  { L0_META_RESULT_ITEM_DESCRIPTOR,           "<rule result item descriptor  3>",          MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_G1START                          }, { 1 },       -1,                   -1,      -1 },
-  { L0_META_RESULT_ITEM_DESCRIPTOR,           "<rule result item descriptor  4>",          MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_G1LENGTH                         }, { 1 },       -1,                   -1,      -1 },
+  /*{ L0_META_RESULT_ITEM_DESCRIPTOR,           "<rule result item descriptor  1>",          MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_START                            }, { 1 },       -1,                   -1,      -1 }, */
+  /*{ L0_META_RESULT_ITEM_DESCRIPTOR,           "<rule result item descriptor  2>",          MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_LENGTH                           }, { 1 },       -1,                   -1,      -1 }, */
+  /* { L0_META_RESULT_ITEM_DESCRIPTOR,           "<rule result item descriptor  3>",          MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_G1START                          }, { 1 },       -1,                   -1,      -1 }, */
+  /* { L0_META_RESULT_ITEM_DESCRIPTOR,           "<rule result item descriptor  4>",          MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_G1LENGTH                         }, { 1 },       -1,                   -1,      -1 }, */
   { L0_META_RESULT_ITEM_DESCRIPTOR,           "<rule result item descriptor  5>",          MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_NAME                             }, { 1 },       -1,                   -1,      -1 },
-  { L0_META_RESULT_ITEM_DESCRIPTOR,           "<rule result item descriptor  6>",          MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_LHS                              }, { 1 },       -1,                   -1,      -1 },
+  /* { L0_META_RESULT_ITEM_DESCRIPTOR,           "<rule result item descriptor  6>",          MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_LHS                              }, { 1 },       -1,                   -1,      -1 }, */
   { L0_META_RESULT_ITEM_DESCRIPTOR,           "<rule result item descriptor  7>",          MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_SYMBOL                           }, { 1 },       -1,                   -1,      -1 },
   { L0_META_RESULT_ITEM_DESCRIPTOR,           "<rule result item descriptor  8>",          MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_RULE                             }, { 1 },       -1,                   -1,      -1 },
   { L0_META_RESULT_ITEM_DESCRIPTOR,           "<rule result item descriptor  9>",          MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_VALUE                            }, { 1 },       -1,                   -1,      -1 },

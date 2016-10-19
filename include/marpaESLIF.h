@@ -55,7 +55,17 @@ typedef struct marpaESLIFAlternative {
   void (*freeCallbackp)(void *userDatavp, void *p); /* Eventual free method  */
 } marpaESLIFAlternative_t;
 
-typedef short (*marpaESLIFValueCallback_t)(void *userDatavp, char *names, size_t namel, genericStack_t *argumentStackp);
+/* A custom user action is getting a generic stack in input and returns a generic stack  */
+/* as well, with a pointer to an eventual free method. This free method will have to     */
+/* free the CONTENT of the stack an the stack itself (with GENERICSTACK_FREE()).         */
+/* In the absence of a free method, marpaESLIF will call GENERICSTACK_FREE(), leaving to */
+/* potential memory leaks if the stack returned by the action contains allocated things. */
+typedef struct marpaESLIFActionReturn {
+  genericStack_t *genericStackp;
+  void  *userDatavp;                                /* User specific context */
+  void (*freeCallbackp)(void *userDatavp, genericStack_t *genericStackp); /* Eventual free method  */
+} marpaESLIFActionReturn_t;
+typedef marpaESLIFActionReturn_t *(*marpaESLIFValueCallback_t)(void *userDatavp, char *names, size_t namel, genericStack_t *argumentStackp);
 
 typedef struct marpaESLIFValueOption {
   void                      *userDatavp;            /* User specific context */

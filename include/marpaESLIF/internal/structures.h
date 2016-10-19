@@ -16,6 +16,8 @@ typedef struct  marpaESLIF_grammar         marpaESLIF_grammar_t;
 typedef enum    marpaESLIF_matcher_value   marpaESLIF_matcher_value_t;
 typedef short (*marpaESLIF_matcher_t)(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaWrapperGrammar_t *marpaWrapperGrammarp, marpaESLIF_terminal_t *terminalp, marpaESLIF_meta_t *metap, char *inputcp, size_t inputl, short eofb, marpaESLIF_matcher_value_t *rcip, size_t *matchedlp, char **outputpp, size_t *outputlp);
 typedef enum    marpaESLIF_event_type      marpaESLIF_event_type_t;
+typedef enum    marpaESLIF_action_type     marpaESLIF_action_type_t;
+typedef enum    marpaESLIF_array_type      marpaESLIF_array_type_t;
 typedef struct  marpaESLIF_readerContext   marpaESLIF_readerContext_t;
 typedef struct  marpaESLIF_alternative     marpaESLIF_alternative_t;
 typedef struct  marpaESLIF_valueContext    marpaESLIF_valueContext_t;
@@ -142,6 +144,7 @@ enum marpaESLIF_matcher_value {
   MARPAESLIF_MATCH_OK      =  1
 };
 
+/* Event types */
 enum marpaESLIF_event_type {
   MARPAESLIF_EVENT_TYPE_NA        = 0x00,
   MARPAESLIF_EVENT_TYPE_COMPLETED = 0x01, /* Grammar event */
@@ -149,6 +152,25 @@ enum marpaESLIF_event_type {
   MARPAESLIF_EVENT_TYPE_EXPECTED  = 0x04, /* Grammar event */
   MARPAESLIF_EVENT_TYPE_BEFORE    = 0x08, /* ESLIF lexeme event */
   MARPAESLIF_EVENT_TYPE_AFTER     = 0x10  /* ESLIF lexeme event */
+};
+
+/* Action types */
+enum marpaESLIF_action_type {
+  MARPAESLIF_ACTION_TYPE_NA        = 0x00,
+  MARPAESLIF_ACTION_TYPE_ARRAY     = 0x01, /* ::array */
+  MARPAESLIF_ACTION_TYPE_FIRST     = 0x02, /* ::first */
+  MARPAESLIF_ACTION_TYPE_UNDEF     = 0x04, /* ::undef */
+  MARPAESLIF_ACTION_TYPE_COMPOSITE = 0x08  /* [] */
+};
+
+/* Array action types */
+enum marpaESLIF_array_type {
+  MARPAESLIF_ARRAY_TYPE_NA       = 0x00,
+  MARPAESLIF_ARRAY_TYPE_NAME     = 0x01, /* name */
+  MARPAESLIF_ARRAY_TYPE_RULE     = 0x02, /* rule */
+  MARPAESLIF_ARRAY_TYPE_SYMBOL   = 0x04, /* symbol */
+  MARPAESLIF_ARRAY_TYPE_VALUE    = 0x08, /* value */
+  MARPAESLIF_ARRAY_TYPE_VALUES   = 0x08, /* values: a synonym for value */
 };
 
 /* A symbol */
