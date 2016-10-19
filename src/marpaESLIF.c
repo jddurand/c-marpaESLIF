@@ -2858,15 +2858,21 @@ marpaESLIFValue_t *marpaESLIFValue_newp(marpaESLIFRecognizer_t *marpaESLIFRecogn
   marpaESLIFValuep->marpaESLIFRecognizerp = marpaESLIFRecognizerp;
   marpaESLIFValuep->marpaESLIFValueOption = *marpaESLIFValueOptionp;
   marpaESLIFValuep->marpaWrapperValuep    = NULL;
+  marpaESLIFValuep->outputStackp          = NULL;
   marpaESLIFValuep->context.ruleIdi       = -1;
 
+  GENERICSTACK_NEW(marpaESLIFValuep->outputStackp);
+  if (GENERICSTACK_ERROR(marpaESLIFValuep->outputStackp)) {
+    MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
+    goto err;
+  }
+  
   marpaWrapperValueOption.genericLoggerp = marpaESLIFp->marpaESLIFOption.genericLoggerp;
   marpaWrapperValueOption.highRankOnlyb  = marpaESLIFValueOptionp->highRankOnlyb;
   marpaWrapperValueOption.orderByRankb   = marpaESLIFValueOptionp->orderByRankb;
   marpaWrapperValueOption.ambiguousb     = marpaESLIFValueOptionp->ambiguousb;
   marpaWrapperValueOption.nullb          = marpaESLIFValueOptionp->nullb;
   marpaWrapperValueOption.maxParsesi     = marpaESLIFValueOptionp->maxParsesi;
-
   marpaWrapperValuep = marpaWrapperValue_newp(marpaESLIFRecognizerp->marpaWrapperRecognizerp, &marpaWrapperValueOption);
   if (marpaWrapperValuep == NULL) {
     goto err;
@@ -2904,6 +2910,7 @@ void marpaESLIFValue_freev(marpaESLIFValue_t *marpaESLIFValuep)
     if (marpaWrapperValuep != NULL) {
       marpaWrapperValue_freev(marpaWrapperValuep);
     }
+    GENERICSTACK_FREE(marpaESLIFValuep->outputStackp);
     free(marpaESLIFValuep);
   }
 }
@@ -2920,6 +2927,58 @@ static short _marpaESLIFValueRuleCallback(void *userDatavp, int rulei, int arg0i
 static short _marpaESLIFValueSymbolCallback(void *userDatavp, int symboli, int argi, int resulti)
 /*****************************************************************************/
 {
+  const static char       *funcs                 = "marpaESLIFValueSymbolCallback";
+  marpaESLIFValue_t       *marpaESLIFValuep      = (marpaESLIFValue_t *) userDatavp;
+  marpaESLIF_t            *marpaESLIFp           = marpaESLIFValuep->marpaESLIFp;
+  marpaESLIFRecognizer_t  *marpaESLIFRecognizerp = marpaESLIFValuep->marpaESLIFRecognizerp;
+  marpaESLIFGrammar_t     *marpaESLIFGrammarp    = marpaESLIFRecognizerp->marpaESLIFGrammarp;
+  marpaESLIF_grammar_t    *grammarp              = marpaESLIFGrammarp->grammarp;
+  genericStack_t          *inputStackp           = marpaESLIFRecognizerp->inputStackp;
+  genericStack_t          *outputStackp          = marpaESLIFValuep->outputStackp;
+  char                    *tmps                  = NULL;
+  marpaESLIFAlternative_t *marpaESLIFAlternativep;
+  size_t                   matchedl;
+  short                   rcb;
+
+  if (! GENERICSTACK_IS_PTR(inputStackp, argi)) {
+    MARPAESLIF_ERRORF(marpaESLIFp, "No such entry in inputStackp at indice %d", argi);
+    goto err;
+  }
+  marpaESLIFAlternativep = (marpaESLIFAlternative_t *) GENERICSTACK_GET_PTR(inputStackp, argi);
+  matchedl = marpaESLIFAlternativep->matchedl;
+  
+  /* If we are generating a value from a sub-grammar, the symbol value is the matched text       */
+  /* and in this case, outputl is equal to matchedl, outputp being the input in user's encoding. */
+  /* Per def, in a subgrammar, it is impossible to have matchedl <= 0.                           */
+  /* But on the top grammar, it obeys to the lexeme default value in the grammar.                */
+  if (grammarp->leveli > 0) {
+    tmps = (char *) malloc(matchedl);
+    if (tmps == NULL) {
+      MARPAESLIF_ERRORF(marpaESLIFp, "No such entry in inputStackp at indice %d", argi);
+      goto err;
+    }
+    memcpy(tmps, marpaESLIFAlternativep, matchedl);
+    GENERICSTACK_SET_PTR(outputStackp, tmps, resulti);
+    if (GENERICSTACK_ERROR(outputStackp)) {
+      MARPAESLIF_ERRORF(marpaESLIFp, "outputStackp set failure, %s", strerror(errno));
+      goto err;
+    }
+    tmps = NULL;
+  } else {
+  }
+
+  rcb = 1;
+  goto done;
+
+ err:
+  if (tmps != NULL) {
+    free(tmps);
+  }
+  rcb = 0;
+
+ done:
+  MARPAESLIF_TRACEF(marpaESLIFp, funcs, "return %d", (int) rcb);
+  return rcb;
 }
 
 /*****************************************************************************/
