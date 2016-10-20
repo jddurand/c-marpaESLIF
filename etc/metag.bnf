@@ -22,7 +22,7 @@
 # - latm                     only latm => 1 is supported
 # - forgiving                only forgiving => 1 is supported
 # - current lexer is...      ignored
-# - regexp and substitution  added
+# - regexp                   added
 # - C style comments         added
 # - Cplusplus style comments added
 # - double quoted strings    added
@@ -162,8 +162,6 @@ rhs                              ::= <rhs primary>+
 <rhs exception list>             ::= <rhs exception>+
 #
 # An exception cannot be a meta identifier.
-# Note that having a regular expression with substitution is meaningless
-# therefore it is not added to the candidates for <rhs exception>
 #
 <rhs exception>                  ::= <quoted string>
 <rhs exception>                  ::= <character class>
@@ -172,7 +170,6 @@ rhs                              ::= <rhs primary>+
 <single symbol> ::=  symbol
                   | <character class>
                   | <regular expression>
-                  | <substitution expression>
 symbol          ::= <symbol name>
 <symbol name>   ::= <bare name>
 <symbol name>   ::= <bracketed name>
@@ -257,7 +254,3 @@ boolean                  ~ [01]
 
 <regular expression>           ~ /\/[^\\/]*(?:\.[^\\/]*)*\// <regular expression modifiers>
 <regular expression modifiers> ~ [eijmnsxDJUuaN]*
-
-<substitution expression>           ~ /\/[^\\/]*(?:\.[^\\/]*)*\/[^\\/]*(?:\.[^\\/]*)*\// <substitution expression modifiers>
-<substitution expression modifiers> ~ [eijmnsxDJUugzZaN]*
-

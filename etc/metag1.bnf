@@ -107,8 +107,6 @@ rhs                              ::= <rhs primary>+
 <rhs exception list>             ::= <rhs exception>+
 #
 # An exception cannot be a meta identifier.
-# Note that having a regular expression with substitution is meaningless
-# therefore it is not added to the candidates for <rhs exception>
 #
 <rhs exception>                  ::= <quoted string>
 <rhs exception>                  ::= <character class>
@@ -117,7 +115,6 @@ rhs                              ::= <rhs primary>+
 <single symbol> ::=  symbol
                   | <character class>
                   | <regular expression>
-                  | <substitution expression>
 symbol          ::= <symbol name>
 <symbol name>   ::= <bare name>
 <symbol name>   ::= <bracketed name>

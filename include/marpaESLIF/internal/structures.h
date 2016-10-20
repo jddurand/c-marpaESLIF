@@ -14,7 +14,7 @@ typedef struct  marpaESLIF_symbol          marpaESLIF_symbol_t;
 typedef struct  marpaESLIF_rule            marpaESLIF_rule_t;
 typedef struct  marpaESLIF_grammar         marpaESLIF_grammar_t;
 typedef enum    marpaESLIF_matcher_value   marpaESLIF_matcher_value_t;
-typedef short (*marpaESLIF_matcher_t)(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaWrapperGrammar_t *marpaWrapperGrammarp, marpaESLIF_terminal_t *terminalp, marpaESLIF_meta_t *metap, char *inputcp, size_t inputl, short eofb, marpaESLIF_matcher_value_t *rcip, size_t *matchedlp, char **outputpp, size_t *outputlp);
+typedef short (*marpaESLIF_matcher_t)(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaWrapperGrammar_t *marpaWrapperGrammarp, marpaESLIF_terminal_t *terminalp, marpaESLIF_meta_t *metap, char *inputcp, size_t inputl, short eofb, marpaESLIF_matcher_value_t *rcip, marpaESLIFActionValue_t *marpaESLIFActionValuep);
 typedef enum    marpaESLIF_event_type      marpaESLIF_event_type_t;
 typedef enum    marpaESLIF_action_type     marpaESLIF_action_type_t;
 typedef enum    marpaESLIF_array_type      marpaESLIF_array_type_t;
@@ -44,22 +44,19 @@ struct marpaESLIF_string {
 
 /* Regex modifiers - we take JPCRE2 matching semantics, c.f. https://neurobin.org/projects/softwares/libs/jpcre2/ */
 typedef enum marpaESLIF_regex_option {
-  MARPAESLIF_REGEX_OPTION_NA                       = 0x0000,
-  MARPAESLIF_REGEX_OPTION_MATCH_UNSET_BACKREF      = 0x0001, /* e */
-  MARPAESLIF_REGEX_OPTION_CASELESS                 = 0x0002, /* i */
-  MARPAESLIF_REGEX_OPTION_JAVASCRIPT               = 0x0004, /* j */
-  MARPAESLIF_REGEX_OPTION_MULTILINE                = 0x0008, /* m */
-  MARPAESLIF_REGEX_OPTION_UCP                      = 0x0010, /* n */
-  MARPAESLIF_REGEX_OPTION_DOTALL                   = 0x0020, /* s */
-  MARPAESLIF_REGEX_OPTION_EXTENDED                 = 0x0040, /* x */
-  MARPAESLIF_REGEX_OPTION_DOLLAR_ENDONLY           = 0x0080, /* D */
-  MARPAESLIF_REGEX_OPTION_DUPNAMES                 = 0x0100, /* J */
-  MARPAESLIF_REGEX_OPTION_UNGREEDY                 = 0x0200, /* U */
-  MARPAESLIF_REGEX_OPTION_SUBSTITUTE_GLOBAL        = 0x0400, /* g */
-  MARPAESLIF_REGEX_OPTION_SUBSTITUTE_UNKNOWN_UNSET = 0x0800, /* z */
-  MARPAESLIF_REGEX_OPTION_SUBSTITUTE_UNSET_EMPTY   = 0x1000, /* Z */
-  MARPAESLIF_REGEX_OPTION_NO_UTF                   = 0x2000, /* a */
-  MARPAESLIF_REGEX_OPTION_NO_UCP                   = 0x4000  /* N */
+  MARPAESLIF_REGEX_OPTION_NA                       = 0x000,
+  MARPAESLIF_REGEX_OPTION_MATCH_UNSET_BACKREF      = 0x001, /* e */
+  MARPAESLIF_REGEX_OPTION_CASELESS                 = 0x002, /* i */
+  MARPAESLIF_REGEX_OPTION_JAVASCRIPT               = 0x004, /* j */
+  MARPAESLIF_REGEX_OPTION_MULTILINE                = 0x008, /* m */
+  MARPAESLIF_REGEX_OPTION_UCP                      = 0x010, /* n */
+  MARPAESLIF_REGEX_OPTION_DOTALL                   = 0x020, /* s */
+  MARPAESLIF_REGEX_OPTION_EXTENDED                 = 0x040, /* x */
+  MARPAESLIF_REGEX_OPTION_DOLLAR_ENDONLY           = 0x080, /* D */
+  MARPAESLIF_REGEX_OPTION_DUPNAMES                 = 0x100, /* J */
+  MARPAESLIF_REGEX_OPTION_UNGREEDY                 = 0x200, /* U */
+  MARPAESLIF_REGEX_OPTION_NO_UTF                   = 0x400, /* a */
+  MARPAESLIF_REGEX_OPTION_NO_UCP                   = 0x800  /* N */
 } marpaESLIF_regex_option_t;
 
 typedef enum marpaESLIF_regex_option_id {
@@ -73,9 +70,6 @@ typedef enum marpaESLIF_regex_option_id {
   MARPAESLIF_REGEX_OPTION_DOLLAR_ENDONLY_ID,
   MARPAESLIF_REGEX_OPTION_DUPNAMES_ID,
   MARPAESLIF_REGEX_OPTION_UNGREEDY_ID,
-  MARPAESLIF_REGEX_OPTION_SUBSTITUTE_GLOBAL_ID,
-  MARPAESLIF_REGEX_OPTION_SUBSTITUTE_UNKNOWN_UNSET_ID,
-  MARPAESLIF_REGEX_OPTION_SUBSTITUTE_UNSET_EMPTY_ID,
   MARPAESLIF_REGEX_OPTION_NO_UTF_ID,
   MARPAESLIF_REGEX_OPTION_NO_UCP_ID,
   _MARPAESLIF_REGEX_OPTION_ID_MAX
@@ -97,17 +91,12 @@ struct marpaESLIF_regex_option_map {
   { MARPAESLIF_REGEX_OPTION_DOLLAR_ENDONLY,           "D", PCRE2_DOLLAR_ENDONLY,                     0 },
   { MARPAESLIF_REGEX_OPTION_DUPNAMES,                 "J", PCRE2_DUPNAMES,                           0 },
   { MARPAESLIF_REGEX_OPTION_UNGREEDY,                 "U", PCRE2_UNGREEDY,                           0 },
-  { MARPAESLIF_REGEX_OPTION_SUBSTITUTE_GLOBAL,        "g", PCRE2_SUBSTITUTE_GLOBAL,                  0 },
-  { MARPAESLIF_REGEX_OPTION_SUBSTITUTE_UNKNOWN_UNSET, "z", PCRE2_SUBSTITUTE_UNKNOWN_UNSET,           0 },
-  { MARPAESLIF_REGEX_OPTION_SUBSTITUTE_UNSET_EMPTY,   "Z", PCRE2_SUBSTITUTE_UNSET_EMPTY,             0 },
   { MARPAESLIF_REGEX_OPTION_NO_UTF,                   "a", 0,                                        PCRE2_UTF },
   { MARPAESLIF_REGEX_OPTION_NO_UCP,                   "N", 0,                                        PCRE2_UCP },
 };
 
 struct marpaESLIF_regex {
   pcre2_code       *patternp;      /* Compiled pattern */
-  PCRE2_SPTR        substitutionp; /* Substitution pointer */
-  PCRE2_SIZE        substitutionl; /* Substitution length */
   pcre2_match_data *match_datap;   /* Match data */
 #ifdef PCRE2_CONFIG_JIT
   short       jitCompleteb;   /* Eventual optimized JIT */
@@ -230,7 +219,7 @@ struct marpaESLIF_readerContext {
 /* Internal structure to remember the alternatives */
 struct marpaESLIF_alternative {
   marpaESLIF_symbol_t     *symbolp;
-  marpaESLIFAlternative_t *marpaESLIFAlternativep;
+  marpaESLIFActionValue_t *marpaESLIFActionValuep;
 };
 
 /* Internal sructure to have value context information */
@@ -248,7 +237,8 @@ struct marpaESLIF {
 
 struct marpaESLIFGrammar {
   marpaESLIF_t             *marpaESLIFp;
-  marpaESLIF_grammar_t     *grammarp;  /* This is a SHALLOW copy of first grammar of marpaESLIFp */
+  marpaESLIF_grammar_t     *grammarp;         /* This is a SHALLOW copy of first grammar of marpaESLIFp */
+  marpaESLIFValue_t        *marpaESLIFValuep; /* Because of the marpaESLIFGrammar_parseb() method we have to maintain a marpaESLIFValue */
 };
 
 struct marpaESLIFValue {
