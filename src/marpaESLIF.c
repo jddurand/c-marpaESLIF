@@ -1949,6 +1949,7 @@ static inline short _marpaESLIFRecognizer_resumeb(marpaESLIFRecognizer_t *marpaE
   size_t                           inputl                  = marpaESLIFRecognizerp->inputl;
   short                            eofb                    = marpaESLIFRecognizerp->eofb;
   short                            latmb                   = marpaESLIFRecognizerp->marpaESLIFRecognizerOption.latmb;
+  short                            exhaustedb              = 0;
   size_t                           maxMatchedl;
   genericStack_t                   matchedStack;
   genericStack_t                  *matchedStackp = &matchedStack;
@@ -1963,7 +1964,6 @@ static inline short _marpaESLIFRecognizer_resumeb(marpaESLIFRecognizer_t *marpaE
   marpaESLIF_matcher_value_t       rci;
   size_t                           matchedl;
   short                            rcb;
-  short                            exhaustedb;
   short                            continueb;
   GENERICSTACKITEMTYPE2TYPE_ARRAYP arrayp;
   marpaESLIF_string_t             *marpaESLIF_stringp;
