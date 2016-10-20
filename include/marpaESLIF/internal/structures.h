@@ -14,12 +14,11 @@ typedef struct  marpaESLIF_symbol          marpaESLIF_symbol_t;
 typedef struct  marpaESLIF_rule            marpaESLIF_rule_t;
 typedef struct  marpaESLIF_grammar         marpaESLIF_grammar_t;
 typedef enum    marpaESLIF_matcher_value   marpaESLIF_matcher_value_t;
-typedef short (*marpaESLIF_matcher_t)(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaWrapperGrammar_t *marpaWrapperGrammarp, marpaESLIF_terminal_t *terminalp, marpaESLIF_meta_t *metap, char *inputcp, size_t inputl, short eofb, marpaESLIF_matcher_value_t *rcip, marpaESLIFActionValue_t *marpaESLIFActionValuep);
+typedef short (*marpaESLIF_matcher_t)(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaWrapperGrammar_t *marpaWrapperGrammarp, marpaESLIF_terminal_t *terminalp, marpaESLIF_meta_t *metap, char *inputcp, size_t inputl, short eofb, marpaESLIF_matcher_value_t *rcip, genericStack_t *stackp, size_t *matchedLengthlp);
 typedef enum    marpaESLIF_event_type      marpaESLIF_event_type_t;
 typedef enum    marpaESLIF_action_type     marpaESLIF_action_type_t;
 typedef enum    marpaESLIF_array_type      marpaESLIF_array_type_t;
 typedef struct  marpaESLIF_readerContext   marpaESLIF_readerContext_t;
-typedef struct  marpaESLIF_alternative     marpaESLIF_alternative_t;
 typedef struct  marpaESLIF_valueContext    marpaESLIF_valueContext_t;
 
 /* Symbol types */
@@ -216,13 +215,7 @@ struct marpaESLIF_readerContext {
   size_t        utf8l;
 };
 
-/* Internal structure to remember the alternatives */
-struct marpaESLIF_alternative {
-  marpaESLIF_symbol_t     *symbolp;
-  marpaESLIFActionValue_t *marpaESLIFActionValuep;
-};
-
-/* Internal sructure to have value context information */
+/* Internal structure to have value context information */
 struct marpaESLIF_valueContext {
   int ruleIdi;
 };
@@ -246,7 +239,6 @@ struct marpaESLIFValue {
   marpaESLIFRecognizer_t   *marpaESLIFRecognizerp;
   marpaESLIFValueOption_t   marpaESLIFValueOption;
   marpaWrapperValue_t      *marpaWrapperValuep;
-  genericStack_t           *outputStackp;
   marpaESLIF_valueContext_t context;
 };
 
@@ -287,14 +279,15 @@ marpaESLIFRecognizerOption_t marpaESLIFRecognizerOption_default = {
   0                  /* rejectionb */
 };
 
-marpaESLIFValueOption_t marpaESLIFValueOption_default = {
-  NULL, /* userDatacp */
-  NULL, /* valueCallbackp */
-  1,    /* highRankOnlyb */
-  1,    /* orderByRankb */
-  0,    /* ambiguousb */
-  0,    /* nullb */
-  0     /* maxParsesi */
+marpaESLIFValueOption_t marpaESLIFValueOption_default_template = {
+  NULL, /* userDatavp - filled at run-time */
+  NULL, /* valueCallbackp - filled at run-time */
+  1, /* highRankOnlyb */
+  1, /* orderByRankb */
+  0, /* ambiguousb */
+  0, /* nullb */
+  0, /* maxParsesi */
+  NULL /* outputStackp */
 };
 
 #include "marpaESLIF/internal/eslif.h"
