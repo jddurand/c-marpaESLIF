@@ -163,8 +163,8 @@ const static int __genericStack_max_initial_indice = -1; /* Not used */
 typedef void *(*genericStackClone_t)(void *p);
 typedef void  (*genericStackFree_t)(void *p);
 typedef struct genericStackItemTypeArray {
-  void *p;
-  int lengthl;
+  void   *p;
+  size_t lengthl;
 } genericStackItemTypeArray_t;
 
 typedef enum genericStackItemType {
