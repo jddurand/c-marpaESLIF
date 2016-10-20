@@ -62,7 +62,3 @@ boolean                             ~ [01]
 
 <regular expression>                ~ /\/[^\\/]*(?:\.[^\\/]*)*\// <regular expression modifiers>
 <regular expression modifiers>      ~ [eijmnsxDJUuaN]*
-
-<substitution expression>           ~ /\/[^\\/]*(?:\.[^\\/]*)*\/[^\\/]*(?:\.[^\\/]*)*\// <substitution expression modifiers>
-<substitution expression modifiers> ~ [eijmnsxDJUugzZaN]*
-
