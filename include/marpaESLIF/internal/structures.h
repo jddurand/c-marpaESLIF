@@ -14,7 +14,7 @@ typedef struct  marpaESLIF_symbol          marpaESLIF_symbol_t;
 typedef struct  marpaESLIF_rule            marpaESLIF_rule_t;
 typedef struct  marpaESLIF_grammar         marpaESLIF_grammar_t;
 typedef enum    marpaESLIF_matcher_value   marpaESLIF_matcher_value_t;
-typedef short (*marpaESLIF_matcher_t)(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaWrapperGrammar_t *marpaWrapperGrammarp, marpaESLIF_terminal_t *terminalp, marpaESLIF_meta_t *metap, char *inputcp, size_t inputl, short eofb, marpaESLIF_matcher_value_t *rcip, genericStack_t *stackp, size_t *matchedLengthlp);
+typedef short (*marpaESLIF_matcher_t)(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaWrapperGrammar_t *marpaWrapperGrammarp, marpaESLIF_terminal_t *terminalp, marpaESLIF_meta_t *metap, char *inputcp, size_t inputl, short eofb, marpaESLIF_matcher_value_t *rcip, genericStack_t *stackp);
 typedef enum    marpaESLIF_event_type      marpaESLIF_event_type_t;
 typedef enum    marpaESLIF_action_type     marpaESLIF_action_type_t;
 typedef enum    marpaESLIF_array_type      marpaESLIF_array_type_t;
@@ -208,11 +208,13 @@ struct marpaESLIF_grammar {
   genericStack_t        *discardSymbolStackp;         /* Stack of discard symbols - take care it contains SHALLOW pointers to symbols */
 };
 
-/* Internal reader context when parsing a grammar */
+/* Internal reader context when parsing a grammar. Everything is in utf8s so the reader can say ok to any stream callback */
 struct marpaESLIF_readerContext {
   marpaESLIF_t *marpaESLIFp;
   char         *utf8s;
   size_t        utf8l;
+  char         *p;      /* Current position */
+  char         *markp;  /* Marked position - no notion of limit here */
 };
 
 /* Internal structure to have value context information */
@@ -231,7 +233,6 @@ struct marpaESLIF {
 struct marpaESLIFGrammar {
   marpaESLIF_t             *marpaESLIFp;
   marpaESLIF_grammar_t     *grammarp;         /* This is a SHALLOW copy of first grammar of marpaESLIFp */
-  marpaESLIFValue_t        *marpaESLIFValuep; /* Because of the marpaESLIFGrammar_parseb() method we have to maintain a marpaESLIFValue */
 };
 
 struct marpaESLIFValue {
@@ -247,7 +248,7 @@ struct marpaESLIFRecognizer {
   marpaESLIFGrammar_t         *marpaESLIFGrammarp;
   marpaESLIFRecognizerOption_t marpaESLIFRecognizerOption;
   marpaWrapperRecognizer_t    *marpaWrapperRecognizerp;
-  genericStack_t              *inputStackp;
+  genericStack_t              *lexemeInputStackp;  /* Internal input stack of lexemes */
   char                        *inputs;
   size_t                       inputl;
   short                        eofb;
@@ -273,6 +274,10 @@ marpaESLIFGrammarOption_t marpaESLIFGrammarOption_default = {
 marpaESLIFRecognizerOption_t marpaESLIFRecognizerOption_default = {
   NULL,              /* userDatavp */
   NULL,              /* marpaESLIFReaderCallbackp */
+  NULL,              /* marpaESLIFSkipperCallbackp */
+  NULL,              /* marpaESLIFMarkerCallbackp */
+  NULL,              /* marpaESLIFResetterCallbackp */
+  NULL,              /* marpaESLIFCloserCallbackp */
   0,                 /* disableThresholdb */
   0,                 /* exhaustedb */
   0,                 /* latmb */
