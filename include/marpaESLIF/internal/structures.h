@@ -252,8 +252,8 @@ struct marpaESLIFRecognizer {
   size_t                       inputl;
   short                        eofb;
   short                        scanb;
-  marpaESLIFString_t          *stringArrayp;      /* For the events */
-  size_t                       stringArrayl;
+  marpaESLIFEvent_t           *eventArrayp;      /* For the events */
+  size_t                       eventArrayl;
   marpaESLIFRecognizer_t      *parentRecognizerp;
 };
 
