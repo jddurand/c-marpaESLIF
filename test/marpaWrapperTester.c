@@ -41,6 +41,8 @@ int main(int argc, char **argv) {
   int                            i;
   int                            outputStackSizei;
   valueContext_t                 valueContext = { NULL, symbolip, ruleip, NULL, NULL, GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_TRACE) };
+  int                            symbolPropertyBitSet;
+  int                            rulePropertyBitSet;
   
   marpaWrapperGrammarOption_t    marpaWrapperGrammarOption    = { GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_TRACE),
 								  0 /* warningIsErrorb */,
@@ -101,6 +103,22 @@ int main(int argc, char **argv) {
   if (rci == 0) {
     if (marpaWrapperGrammar_eventb(marpaWrapperGrammarp, &neventl, NULL, 0) == 0) {
       rci = 1;
+    }
+  }
+  if (rci == 0) {
+    if (marpaWrapperGrammar_symbolPropertyb(marpaWrapperGrammarp, symbolip[S], &symbolPropertyBitSet) == 0) {
+      if ((symbolPropertyBitSet & MARPAWRAPPER_SYMBOL_IS_START) != MARPAWRAPPER_SYMBOL_IS_START) {
+        perror("symbolip[S] does not have the MARPAWRAPPER_SYMBOL_IS_START bit set");
+        rci = 1;
+      }
+    }
+  }
+  if (rci == 0) {
+    if (marpaWrapperGrammar_rulePropertyb(marpaWrapperGrammarp, ruleip[NUMBER_RULE], &rulePropertyBitSet) == 0) {
+      if ((rulePropertyBitSet & MARPAWRAPPER_RULE_IS_PRODUCTIVE) != MARPAWRAPPER_RULE_IS_PRODUCTIVE) {
+        perror("ruleip[NUMBER_RULE] does not have the MARPAWRAPPER_RULE_IS_PRODUCTIVE bit set");
+        rci = 1;
+      }
     }
   }
   if (rci == 0) {

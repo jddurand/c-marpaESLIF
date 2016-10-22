@@ -851,3 +851,162 @@ static inline int _marpaWrapperGrammar_cmpi(const void *event1p, const void *eve
   return (w1i < w2i) ? -1 : ((w1i > w2i) ? 1 : 0);
 }
 
+/****************************************************************************/
+short marpaWrapperGrammar_symbolPropertyb(marpaWrapperGrammar_t *marpaWrapperGrammarp, int symboli, int *marpaWrapperSymbolPropertyBitSetp)
+/****************************************************************************/
+{
+  const static char                 funcs[] = "marpaWrapperGrammar_eventb";
+  genericLogger_t                  *genericLoggerp = NULL;
+  Marpa_Grammar                     marpaGrammarp;
+  int                               accessiblei;
+  int                               nullablei;
+  int                               nullingi;
+  int                               productivei;
+  int                               starti;
+  int                               terminali;
+  int                               marpaWrapperSymbolPropertyBitSet;
+
+  if (marpaWrapperGrammarp == NULL) {
+    errno = EINVAL;
+    goto err;
+  }
+
+  genericLoggerp = marpaWrapperGrammarp->marpaWrapperGrammarOption.genericLoggerp;
+  marpaGrammarp  = marpaWrapperGrammarp->marpaGrammarp;
+
+  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_g_symbol_is_accessible(%p)", marpaGrammarp);
+  accessiblei = marpa_g_symbol_is_accessible(marpaGrammarp, symboli);
+  if (accessiblei < 0) {
+    MARPAWRAPPER_MARPA_G_ERROR(genericLoggerp, marpaGrammarp);
+    goto err;
+  }
+
+  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_g_symbol_is_nullable(%p)", marpaGrammarp);
+  nullablei = marpa_g_symbol_is_nullable(marpaGrammarp, symboli);
+  if (nullablei < 0) {
+    MARPAWRAPPER_MARPA_G_ERROR(genericLoggerp, marpaGrammarp);
+    goto err;
+  }
+
+  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_g_symbol_is_nulling(%p)", marpaGrammarp);
+  nullingi = marpa_g_symbol_is_nulling(marpaGrammarp, symboli);
+  if (nullingi < 0) {
+    MARPAWRAPPER_MARPA_G_ERROR(genericLoggerp, marpaGrammarp);
+    goto err;
+  }
+
+  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_g_symbol_is_productive(%p)", marpaGrammarp);
+  productivei = marpa_g_symbol_is_productive(marpaGrammarp, symboli);
+  if (productivei < 0) {
+    MARPAWRAPPER_MARPA_G_ERROR(genericLoggerp, marpaGrammarp);
+    goto err;
+  }
+
+  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_g_symbol_is_start(%p)", marpaGrammarp);
+  starti = marpa_g_symbol_is_start(marpaGrammarp, symboli);
+  if (starti < 0) {
+    MARPAWRAPPER_MARPA_G_ERROR(genericLoggerp, marpaGrammarp);
+    goto err;
+  }
+
+  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_g_symbol_is_terminal(%p)", marpaGrammarp);
+  terminali = marpa_g_symbol_is_terminal(marpaGrammarp, symboli);
+  if (terminali < 0) {
+    MARPAWRAPPER_MARPA_G_ERROR(genericLoggerp, marpaGrammarp);
+    goto err;
+  }
+
+  if (marpaWrapperSymbolPropertyBitSetp != NULL) {
+    marpaWrapperSymbolPropertyBitSet = 0;
+    if (accessiblei != 0) { marpaWrapperSymbolPropertyBitSet |= MARPAWRAPPER_SYMBOL_IS_ACCESSIBLE; }
+    if (nullablei != 0)   { marpaWrapperSymbolPropertyBitSet |= MARPAWRAPPER_SYMBOL_IS_NULLABLE;   }
+    if (nullingi != 0)    { marpaWrapperSymbolPropertyBitSet |= MARPAWRAPPER_SYMBOL_IS_NULLING;    }
+    if (productivei != 0) { marpaWrapperSymbolPropertyBitSet |= MARPAWRAPPER_SYMBOL_IS_PRODUCTIVE; }
+    if (starti != 0)      { marpaWrapperSymbolPropertyBitSet |= MARPAWRAPPER_SYMBOL_IS_START;      }
+    if (terminali != 0)   { marpaWrapperSymbolPropertyBitSet |= MARPAWRAPPER_SYMBOL_IS_TERMINAL;   }
+    *marpaWrapperSymbolPropertyBitSetp = marpaWrapperSymbolPropertyBitSet;
+  }
+
+  MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return 1");
+  return 1;
+
+ err:
+  MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return 0");
+  return 0;
+}
+
+/****************************************************************************/
+short marpaWrapperGrammar_rulePropertyb(marpaWrapperGrammar_t *marpaWrapperGrammarp, int rulei, int *marpaWrapperRulePropertyBitSetp)
+/****************************************************************************/
+{
+  const static char                 funcs[] = "marpaWrapperGrammar_eventb";
+  genericLogger_t                  *genericLoggerp = NULL;
+  Marpa_Grammar                     marpaGrammarp;
+  int                               accessiblei;
+  int                               nullablei;
+  int                               nullingi;
+  int                               loopi;
+  int                               productivei;
+  int                               marpaWrapperRulePropertyBitSet;
+
+  if (marpaWrapperGrammarp == NULL) {
+    errno = EINVAL;
+    goto err;
+  }
+
+  genericLoggerp = marpaWrapperGrammarp->marpaWrapperGrammarOption.genericLoggerp;
+  marpaGrammarp  = marpaWrapperGrammarp->marpaGrammarp;
+
+  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_g_rule_is_accessible(%p)", marpaGrammarp);
+  accessiblei = marpa_g_rule_is_accessible(marpaGrammarp, rulei);
+  if (accessiblei < 0) {
+    MARPAWRAPPER_MARPA_G_ERROR(genericLoggerp, marpaGrammarp);
+    goto err;
+  }
+
+  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_g_rule_is_nullable(%p)", marpaGrammarp);
+  nullablei = marpa_g_rule_is_nullable(marpaGrammarp, rulei);
+  if (nullablei < 0) {
+    MARPAWRAPPER_MARPA_G_ERROR(genericLoggerp, marpaGrammarp);
+    goto err;
+  }
+
+  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_g_rule_is_nulling(%p)", marpaGrammarp);
+  nullingi = marpa_g_rule_is_nulling(marpaGrammarp, rulei);
+  if (nullingi < 0) {
+    MARPAWRAPPER_MARPA_G_ERROR(genericLoggerp, marpaGrammarp);
+    goto err;
+  }
+
+  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_g_rule_is_loop(%p)", marpaGrammarp);
+  loopi = marpa_g_rule_is_loop(marpaGrammarp, rulei);
+  if (loopi < 0) {
+    MARPAWRAPPER_MARPA_G_ERROR(genericLoggerp, marpaGrammarp);
+    goto err;
+  }
+
+  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_g_rule_is_productive(%p)", marpaGrammarp);
+  productivei = marpa_g_rule_is_productive(marpaGrammarp, rulei);
+  if (productivei < 0) {
+    MARPAWRAPPER_MARPA_G_ERROR(genericLoggerp, marpaGrammarp);
+    goto err;
+  }
+
+  if (marpaWrapperRulePropertyBitSetp != NULL) {
+    marpaWrapperRulePropertyBitSet = 0;
+    if (accessiblei != 0) { marpaWrapperRulePropertyBitSet |= MARPAWRAPPER_RULE_IS_ACCESSIBLE; }
+    if (nullablei != 0)   { marpaWrapperRulePropertyBitSet |= MARPAWRAPPER_RULE_IS_NULLABLE;   }
+    if (nullingi != 0)    { marpaWrapperRulePropertyBitSet |= MARPAWRAPPER_RULE_IS_NULLING;    }
+    if (loopi != 0)       { marpaWrapperRulePropertyBitSet |= MARPAWRAPPER_RULE_IS_LOOP;       }
+    if (productivei != 0) { marpaWrapperRulePropertyBitSet |= MARPAWRAPPER_RULE_IS_PRODUCTIVE; }
+    *marpaWrapperRulePropertyBitSetp = marpaWrapperRulePropertyBitSet;
+  }
+
+  MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return 1");
+  return 1;
+
+ err:
+  MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return 0");
+  return 0;
+}
+

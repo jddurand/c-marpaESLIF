@@ -65,6 +65,23 @@ typedef struct marpaWrapperGrammarOption {
   short            exhaustionEventb;           /* Default: 0.                                         */
 } marpaWrapperGrammarOption_t;
 
+typedef enum marpaWrapperSymbolProperty {
+  MARPAWRAPPER_SYMBOL_IS_ACCESSIBLE = 0x01,
+  MARPAWRAPPER_SYMBOL_IS_NULLABLE   = 0x02,
+  MARPAWRAPPER_SYMBOL_IS_NULLING    = 0x04,
+  MARPAWRAPPER_SYMBOL_IS_PRODUCTIVE = 0x08,
+  MARPAWRAPPER_SYMBOL_IS_START      = 0x10,
+  MARPAWRAPPER_SYMBOL_IS_TERMINAL   = 0x20
+} marpaWrapperSymbolProperty_t;
+
+typedef enum marpaWrapperRuleProperty {
+  MARPAWRAPPER_RULE_IS_ACCESSIBLE = 0x01,
+  MARPAWRAPPER_RULE_IS_NULLABLE   = 0x02,
+  MARPAWRAPPER_RULE_IS_NULLING    = 0x04,
+  MARPAWRAPPER_RULE_IS_LOOP       = 0x08,
+  MARPAWRAPPER_RULE_IS_PRODUCTIVE = 0x10
+} marpaWrapperRuleProperty_t;
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -73,10 +90,12 @@ extern "C" {
   marpaWrapper_EXPORT void                   marpaWrapperGrammar_freev(marpaWrapperGrammar_t *marpaWrapperGrammarp);
 
   marpaWrapper_EXPORT int                    marpaWrapperGrammar_newSymboli(marpaWrapperGrammar_t *marpaWrapperGrammarp, marpaWrapperGrammarSymbolOption_t *marpaWrapperGrammarSymbolOptionp);
+  marpaWrapper_EXPORT short                  marpaWrapperGrammar_symbolPropertyb(marpaWrapperGrammar_t *marpaWrapperGrammarp, int symboli, int *marpaWrapperSymbolPropertyBitSetp);
   marpaWrapper_EXPORT int                    marpaWrapperGrammar_newRulei(marpaWrapperGrammar_t *marpaWrapperGrammarp, marpaWrapperGrammarRuleOption_t *marpaWrapperGrammarRuleOptionp,
 										int lhsSymboli,
 										size_t rhsSymboll, int *rhsSymbolip
 										);
+  marpaWrapper_EXPORT short                  marpaWrapperGrammar_rulePropertyb(marpaWrapperGrammar_t *marpaWrapperGrammarp, int rulei, int *marpaWrapperRulePropertyBitSetp);
   /* Handy methods to create symbols and rules that I find more user-friendly */
   marpaWrapper_EXPORT int                    marpaWrapperGrammar_newSymbolExti(marpaWrapperGrammar_t *marpaWrapperGrammarp, short terminalb, short startb, int eventSeti);
   marpaWrapper_EXPORT int                    marpaWrapperGrammar_newRuleExti(marpaWrapperGrammar_t *marpaWrapperGrammarp, int ranki, short nullRanksHighb, int lhsSymboli, ...);
