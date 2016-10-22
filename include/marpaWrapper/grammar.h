@@ -82,11 +82,19 @@ typedef enum marpaWrapperRuleProperty {
   MARPAWRAPPER_RULE_IS_PRODUCTIVE = 0x10
 } marpaWrapperRuleProperty_t;
 
+typedef short (*marpaWrapperGrammar_symbolOptionSetter_t)(void *userDatavp, int symboli, marpaWrapperGrammarSymbolOption_t *marpaWrapperGrammarSymbolOptionp);
+typedef short (*marpaWrapperGrammar_ruleOptionSetter_t)(void *userDatavp, int rulei, marpaWrapperGrammarRuleOption_t *marpaWrapperGrammarRuleOptionp);
+typedef struct marpaWrapperGrammarCloneOption {
+  void                                    *userDatavp;          /* Default: NULL. User context */
+  marpaWrapperGrammar_symbolOptionSetter_t symbolOptionSetterp; /* Default: NULL. Overwrite event symbol option */
+  marpaWrapperGrammar_ruleOptionSetter_t   ruleOptionSetterp;   /* Default: NULL. Overwrite event rule option */
+} marpaWrapperGrammarCloneOption_t;
+
 #ifdef __cplusplus
 extern "C" {
 #endif
   marpaWrapper_EXPORT marpaWrapperGrammar_t *marpaWrapperGrammar_newp(marpaWrapperGrammarOption_t *marpaWrapperGrammarOptionp);
-  marpaWrapper_EXPORT marpaWrapperGrammar_t *marpaWrapperGrammar_clonep(marpaWrapperGrammar_t *marpaWrapperGrammarOriginp);
+  marpaWrapper_EXPORT marpaWrapperGrammar_t *marpaWrapperGrammar_clonep(marpaWrapperGrammar_t *marpaWrapperGrammarOriginp, marpaWrapperGrammarCloneOption_t *marpaWrapperGrammarCloneOptionp);
   marpaWrapper_EXPORT void                   marpaWrapperGrammar_freev(marpaWrapperGrammar_t *marpaWrapperGrammarp);
 
   marpaWrapper_EXPORT int                    marpaWrapperGrammar_newSymboli(marpaWrapperGrammar_t *marpaWrapperGrammarp, marpaWrapperGrammarSymbolOption_t *marpaWrapperGrammarSymbolOptionp);
