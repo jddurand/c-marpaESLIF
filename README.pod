@@ -122,6 +122,51 @@ The macro C<MARPAWRAPPERGRAMMAR_NEWSYMBOL(marpaWrapperGrammarp)> exist for conve
 
 =back
 
+=head2 marpaWrapperGrammar_symbolPropertyb
+
+  typedef enum marpaWrapperSymbolProperty {
+    MARPAWRAPPER_SYMBOL_IS_ACCESSIBLE = 0x01,
+    MARPAWRAPPER_SYMBOL_IS_NULLABLE   = 0x02,
+    MARPAWRAPPER_SYMBOL_IS_NULLING    = 0x04,
+    MARPAWRAPPER_SYMBOL_IS_PRODUCTIVE = 0x08,
+    MARPAWRAPPER_SYMBOL_IS_START      = 0x10,
+    MARPAWRAPPER_SYMBOL_IS_TERMINAL   = 0x20
+  } marpaWrapperSymbolProperty_t;
+
+  short marpaWrapperGrammar_symbolPropertyb(marpaWrapperGrammar_t *marpaWrapperGrammarp, int symboli, int *marpaWrapperSymbolPropertyBitSetp)
+
+Inspect properties of symbol C<symboli>, putting a bitset result in the value pointed by C<marpaWrapperSymbolPropertyBitSetp>, which can be NULL. Bitset can have the following bits (quoted directly from marpa documentation):
+
+=over
+
+=item MARPAWRAPPER_SYMBOL_IS_ACCESSIBLE
+
+A symbol is I<accessible> if it can be reached from the start symbol.
+
+=item MARPAWRAPPER_SYMBOL_IS_NULLABLE
+
+A symbol is I<nullable> if it sometimes produces the empty string. A B<nulling> symbol is always a B<nullable> symbol, but not all B<nullable> symbols are B<nulling> symbols.
+
+=item MARPAWRAPPER_SYMBOL_IS_NULLING
+
+A symbol is I<nulling> if it always produces the empty string.
+
+=item MARPAWRAPPER_SYMBOL_IS_PRODUCTIVE
+
+A symbol is I<productive> if it can produce a string of terminals. All nullable symbols are considered productive.
+
+=item MARPAWRAPPER_SYMBOL_IS_START
+
+Symbol C<symboli> is the start symbol.
+
+=item MARPAWRAPPER_SYMBOL_IS_TERMINAL
+
+Symbol C<symboli> has been created explicitely as a I<terminal>.
+
+=back
+
+Returns 0 on failure, 1 on success.
+
 =head2 marpaWrapperGrammar_newSymbolExti
 
   int marpaWrapperGrammar_newSymbolExti(marpaWrapperGrammar_t *marpaWrapperGrammarp,
@@ -178,6 +223,48 @@ When it is 0 or '*', says the sequence repeats at least zero time. If 1 or '+', 
 =back
 
 A positive integer is returned on success, -1 on failure. End-user can profit from the fact that the returned number always start at 0 for the very first rule, and increases by one at every new rule.
+
+=head2 marpaWrapperGrammar_rulePropertyb
+
+  typedef enum marpaWrapperRuleProperty {
+    MARPAWRAPPER_RULE_IS_ACCESSIBLE = 0x01,
+    MARPAWRAPPER_RULE_IS_NULLABLE   = 0x02,
+    MARPAWRAPPER_RULE_IS_NULLING    = 0x04,
+    MARPAWRAPPER_RULE_IS_LOOP       = 0x08,
+    MARPAWRAPPER_RULE_IS_PRODUCTIVE = 0x10
+  } marpaWrapperRuleProperty_t;
+
+  short marpaWrapperGrammar_rulePropertyb(marpaWrapperGrammar_t *marpaWrapperGrammarp, int rulei, int *marpaWrapperRulePropertyBitSetp)
+
+Inspect properties of rule C<rulei>, putting a bitset result in the value pointed by C<marpaWrapperRulePropertyBitSetp>, which can be NULL. Bitset can have the following bits (quoted directly from marpa documentation):
+
+=over
+
+=item MARPAWRAPPER_RULE_IS_ACCESSIBLE
+
+A rule is I<accessible> if it can be reached from the start symbol. A rule is accessible if and only if its LHS symbol is accessible. The start rule is always an accessible rule.
+
+=item MARPAWRAPPER_RULE_IS_NULLABLE
+
+A rule is I<nullable> if it sometimes produces the empty string. A B<nulling> rule is always a B<nullable> rule, but not all B<nullable> rules are B<nulling> rules.
+
+=item MARPAWRAPPER_RULE_IS_NULLING
+
+A rule is I<nulling> if it always produces the empty string.
+
+=item MARPAWRAPPER_RULE_IS_LOOP
+
+A rule is a loop rule if it non-trivially produces the string of length one which consists only of its LHS symbol. Such a derivation takes the parse back to where it started, hence the term "loop". "Non-trivially" means the zero-step derivation does not count — the derivation must have at least one step.
+
+The presence of a loop rule makes a grammar infinitely ambiguous, and applications will typically want to treat them as fatal errors. But nothing forces an application to do this, and Marpa will successfully parse and evaluate grammars with loop rules.
+
+=item MARPAWRAPPER_RULE_IS_PRODUCTIVE
+
+A rule is I<productive> if it can produce a string of terminals. A rule is productive if and only if all the symbols on its RHS are productive. The empty string counts as a string of terminals, so that a nullable rule is always a productive rule. For that same reason, an empty rule is considered productive.
+
+=back
+
+Returns 0 on failure, 1 on success.
 
 =head2 marpaWrapperGrammar_newRuleExti
 
