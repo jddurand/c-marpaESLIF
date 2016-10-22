@@ -118,7 +118,7 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
   marpaESLIF_matcher_value_t        rci;
 #endif
 
-  MARPAESLIF_TRACE(marpaESLIFp, funcs, "Building terminal");
+  /* MARPAESLIF_TRACE(marpaESLIFp, funcs, "Building terminal"); */
 
   terminalp = (marpaESLIF_terminal_t *) malloc(sizeof(marpaESLIF_terminal_t));
   if (terminalp == NULL) {
@@ -285,9 +285,7 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
   terminalp = NULL;
 
  done:
-#ifndef MARPAESLIF_NTRACE
-#endif
-  MARPAESLIF_TRACEF(marpaESLIFp, funcs, "return %p", terminalp);
+  /* MARPAESLIF_TRACEF(marpaESLIFp, funcs, "return %p", terminalp); */
   return terminalp;
 }
 
@@ -299,7 +297,7 @@ static inline marpaESLIF_meta_t *_marpaESLIF_meta_newp(marpaESLIF_t *marpaESLIFp
   marpaESLIF_meta_t                *metap;
   marpaWrapperGrammarSymbolOption_t marpaWrapperGrammarSymbolOption;
 
-  MARPAESLIF_TRACE(marpaESLIFp, funcs, "Building meta");
+  /* MARPAESLIF_TRACE(marpaESLIFp, funcs, "Building meta"); */
 
   metap = (marpaESLIF_meta_t *) malloc(sizeof(marpaESLIF_meta_t));
   if (metap == NULL) {
@@ -347,7 +345,7 @@ static inline marpaESLIF_meta_t *_marpaESLIF_meta_newp(marpaESLIF_t *marpaESLIFp
   metap = NULL;
 
  done:
-  MARPAESLIF_TRACEF(marpaESLIFp, funcs, "return %p", metap);
+  /* MARPAESLIF_TRACEF(marpaESLIFp, funcs, "return %p", metap); */
   return metap;
 }
 
@@ -594,7 +592,7 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_grammarp(marpaESLIF_t 
   grammarp = NULL;
 
  done:
-  MARPAESLIF_TRACEF(marpaESLIFp, funcs, "return %p", grammarp);
+  /* MARPAESLIF_TRACEF(marpaESLIFp, funcs, "return %p", grammarp); */
   return grammarp;
 }
 
@@ -618,7 +616,7 @@ static inline short _marpaESLIF_validate_grammarb(marpaESLIF_t *marpaESLIFp)
   short                  isLhsb;
   marpaESLIF_symbol_t   *lhsp;
 
-  MARPAESLIF_TRACE(marpaESLIFp, funcs, "Validating ESLIF grammar");
+  /* MARPAESLIF_TRACE(marpaESLIFp, funcs, "Validating ESLIF grammar"); */
 
   /* The rules are:
 
@@ -734,11 +732,11 @@ static inline short _marpaESLIF_validate_grammarb(marpaESLIF_t *marpaESLIFp)
   
  err:
   marpaWrapperGrammar_freev(marpaWrapperGrammarClonep);
-  MARPAESLIF_TRACE(marpaESLIFp, funcs, "return 0");
+  /* MARPAESLIF_TRACE(marpaESLIFp, funcs, "return 0"); */
   return 0;
 
  done:
-  MARPAESLIF_TRACE(marpaESLIFp, funcs, "return 1");
+  /* MARPAESLIF_TRACE(marpaESLIFp, funcs, "return 1"); */
   return 1;
 }
 
@@ -749,7 +747,7 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_grammar_newp(marpaESLIF_t *marpa
   const static char    *funcs    = "_marpaESLIF_grammar_newp";
   marpaESLIF_grammar_t *grammarp;
 
-  MARPAESLIF_TRACE(marpaESLIFp, funcs, "Building ESLIF grammar");
+  /* MARPAESLIF_TRACE(marpaESLIFp, funcs, "Building ESLIF grammar"); */
 
   grammarp = (marpaESLIF_grammar_t *) malloc(sizeof(marpaESLIF_grammar_t));
   if (grammarp == NULL) {
@@ -793,7 +791,7 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_grammar_newp(marpaESLIF_t *marpa
   grammarp = NULL;
 
  done:
-  MARPAESLIF_TRACEF(marpaESLIFp, funcs, "return %p", grammarp);
+  /* MARPAESLIF_TRACEF(marpaESLIFp, funcs, "return %p", grammarp); */
   return grammarp;
 }
 
@@ -874,7 +872,7 @@ static inline marpaESLIF_rule_t *_marpaESLIF_rule_newp(marpaESLIF_t *marpaESLIFp
   short                            maskb;
   int                              symboli;
 
-  MARPAESLIF_TRACE(marpaESLIFp, funcs, "Building rule");
+  /* MARPAESLIF_TRACE(marpaESLIFp, funcs, "Building rule"); */
 
   rulep = (marpaESLIF_rule_t *) malloc(sizeof(marpaESLIF_rule_t));
   if (rulep == NULL) {
@@ -1007,7 +1005,7 @@ static inline marpaESLIF_rule_t *_marpaESLIF_rule_newp(marpaESLIF_t *marpaESLIFp
   rulep = NULL;
 
  done:
-  MARPAESLIF_TRACEF(marpaESLIFp, funcs, "return %p", rulep);
+  /* MARPAESLIF_TRACEF(marpaESLIFp, funcs, "return %p", rulep); */
   return rulep;
 }
 
@@ -1041,7 +1039,7 @@ static inline marpaESLIF_symbol_t *_marpaESLIF_symbol_newp(marpaESLIF_t *marpaES
   const static char   *funcs = "_marpaESLIF_symbol_newp";
   marpaESLIF_symbol_t *symbolp;
 
-  MARPAESLIF_TRACE(marpaESLIFp, funcs, "Building symbol");
+  /* MARPAESLIF_TRACE(marpaESLIFp, funcs, "Building symbol"); */
 
   symbolp = (marpaESLIF_symbol_t *) malloc(sizeof(marpaESLIF_symbol_t));
   if (symbolp == NULL) {
@@ -1067,7 +1065,7 @@ static inline marpaESLIF_symbol_t *_marpaESLIF_symbol_newp(marpaESLIF_t *marpaES
   symbolp->asciievents     = NULL;
 
  done:
-  MARPAESLIF_TRACEF(marpaESLIFp, funcs, "return %p", symbolp);
+  /* MARPAESLIF_TRACEF(marpaESLIFp, funcs, "return %p", symbolp); */
   return symbolp;
 }
 
