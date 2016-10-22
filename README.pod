@@ -60,9 +60,35 @@ C<NULL> is returned in case of failure.
 
 =head2 marpaWrapperGrammar_clonep
 
-  marpaWrapperGrammar_t *marpaWrapperGrammar_clonep(marpaWrapperGrammar_t *marpaWrapperGrammarOriginp);
+  typedef short (*marpaWrapperGrammar_symbolOptionSetter_t)(void *userDatavp, int symboli, marpaWrapperGrammarSymbolOption_t *marpaWrapperGrammarSymbolOptionp);
+  typedef short (*marpaWrapperGrammar_ruleOptionSetter_t)(void *userDatavp, int rulei, marpaWrapperGrammarRuleOption_t *marpaWrapperGrammarRuleOptionp);
+  typedef struct marpaWrapperGrammarCloneOption {
+    void                                    *userDatavp;          /* Default: NULL. User context */
+    marpaWrapperGrammar_symbolOptionSetter_t symbolOptionSetterp; /* Default: NULL. Overwrite event symbol option */
+    marpaWrapperGrammar_ruleOptionSetter_t   ruleOptionSetterp;   /* Default: NULL. Overwrite event rule option */
+  } marpaWrapperGrammarCloneOption_t;
 
-Clone a yet existing C<marpaWrapperGrammarOriginp> grammar. This clone is guaranteed to have the same symbol and rule ids, event and start symbol settings as the original at the time of this call. A cloned grammar is never precomputed.
+  marpaWrapperGrammar_t *marpaWrapperGrammar_clonep(marpaWrapperGrammar_t *marpaWrapperGrammarOriginp, marpaWrapperGrammarCloneOption_t *marpaWrapperGrammarCloneOptionp);
+
+Clone a yet existing C<marpaWrapperGrammarOriginp> grammar. This clone is guaranteed to have the same symbol and rule ids as the original. The C<marpaWrapperGrammarCloneOptionp> can be C<NULL>, otherwise it is used to specify callback routines to modify symbol and rule options, leaving responsibility to the caller to have something that can be created.
+
+C<marpaWrapperGrammarCloneOptionp> content is:
+
+=over 
+
+=item C<userDatavp>
+
+User context that will be used as-us within the callbacks.
+
+=item C<symbolOptionSetterp>
+
+Symbol option callback setter. If it is C<NULL>, symbols are cloned as the original, otherwise C<marpaWrapperGrammarSymbolOptionp> is an input/output variable pointer containing the options of the symbol C<symboli>.
+
+=item C<ruleOptionSetterp>
+
+Rule option callback setter. As for symbols, if it is C<NULL>, rules are also cloned as the original, otherwise C<marpaWrapperGrammarRuleOptionp> is an input/output variable pointer containing the options of the rule C<rulei>.
+
+=back
 
 =head2 marpaWrapperGrammar_newSymboli
 

@@ -21,6 +21,14 @@ static char *symbolDescription(void *userDatavp, int symboli);
 static short valueRuleCallback(void *userDatavp, int rulei, int arg0i, int argni, int resulti);
 static short valueSymbolCallback(void *userDatavp, int symboli, int argi, int resulti);
 static void  dumpStacks(valueContext_t *valueContextp);
+static short symbolOptionSetter(void *userDatavp, int symboli, marpaWrapperGrammarSymbolOption_t *marpaWrapperGrammarSymbolOptionp);
+static short ruleOptionSetter(void *userDatavp, int symboli, marpaWrapperGrammarRuleOption_t *marpaWrapperGrammarRuleOptionp);
+
+static marpaWrapperGrammarCloneOption_t marpaWrapperGrammarCloneOption = {
+  NULL,
+  symbolOptionSetter,
+  ruleOptionSetter,
+};
 
 typedef struct stackValueAndDescription {
   int i;
@@ -89,7 +97,10 @@ int main(int argc, char **argv) {
   }
   if (rci == 0) {
     /* We will work on a cloned grammar */
-    marpaWrapperGrammar_t *marpaWrapperGrammarClonep = marpaWrapperGrammar_clonep(marpaWrapperGrammarp);
+    genericLogger_t *tmpLoggerp = GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_TRACE);
+    marpaWrapperGrammarCloneOption.userDatavp = (void *) tmpLoggerp;
+    marpaWrapperGrammar_t *marpaWrapperGrammarClonep = marpaWrapperGrammar_clonep(marpaWrapperGrammarp, &marpaWrapperGrammarCloneOption);
+    GENERICLOGGER_FREE(tmpLoggerp);
     if (marpaWrapperGrammarClonep == NULL) {
       rci = 1;
     } else {
@@ -588,3 +599,16 @@ static void dumpStacks(valueContext_t *valueContextp)
   }
 }
 
+static short symbolOptionSetter(void *userDatavp, int symboli, marpaWrapperGrammarSymbolOption_t *marpaWrapperGrammarSymbolOptionp)
+{
+  genericLogger_t *genericLoggerp = (genericLogger_t *) userDatavp;
+  GENERICLOGGER_TRACEF(genericLoggerp, "symbolOptionSetter clone callback for symboli %d", symboli);
+  return 1;
+}
+
+static short ruleOptionSetter(void *userDatavp, int rulei, marpaWrapperGrammarRuleOption_t *marpaWrapperGrammarRuleOptionp)
+{
+  genericLogger_t *genericLoggerp = (genericLogger_t *) userDatavp;
+  GENERICLOGGER_TRACEF(genericLoggerp, "ruleOptionSetter clone callback for rulei %d", rulei);
+  return 1;
+}

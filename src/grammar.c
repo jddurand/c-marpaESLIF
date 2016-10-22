@@ -32,6 +32,12 @@ static marpaWrapperGrammarRuleOption_t marpaWrapperGrammarRuleOptionDefault = {
    0    /* minimumi */
 };
 
+static marpaWrapperGrammarCloneOption_t marpaWrapperGrammarCloneOptionDefault = {
+  NULL, /* userDatavp */
+  NULL, /* symbolOptionSetterp */
+  NULL  /* ruleOptionSetterp */
+};
+
 #define MARPAWRAPPERGRAMMAREVENT_WEIGHT(eventType) ((eventType) == MARPAWRAPPERGRAMMAR_EVENT_COMPLETED) ? -1 : (((eventType) == MARPAWRAPPERGRAMMAR_EVENT_NULLED) ? 0 : 1)
 static inline int   _marpaWrapperGrammar_cmpi(const void *event1p, const void *event2p);
 static inline short _marpaWrapperGrammar_precomputeb(marpaWrapperGrammar_t *marpaWrapperGrammarp, int *startip);
@@ -138,23 +144,29 @@ marpaWrapperGrammar_t *marpaWrapperGrammar_newp(marpaWrapperGrammarOption_t *mar
 }
 
 /****************************************************************************/
-marpaWrapperGrammar_t *marpaWrapperGrammar_clonep(marpaWrapperGrammar_t *marpaWrapperGrammarOriginp)
+marpaWrapperGrammar_t *marpaWrapperGrammar_clonep(marpaWrapperGrammar_t *marpaWrapperGrammarOriginp, marpaWrapperGrammarCloneOption_t *marpaWrapperGrammarCloneOptionp)
 /****************************************************************************/
 {
-  const static char      funcs[]              = "marpaWrapperGrammar_clonep";
-  marpaWrapperGrammar_t *marpaWrapperGrammarp = NULL;
-  genericLogger_t       *genericLoggerp       = NULL;
-  int                   *rhsSymbolip          = NULL;
-  size_t                 i;
-  int                    marpaSymbolIdi;
-  int                    marpaRuleIdi;
-  int                    lhsSymboli;
-  int                    ruleLengthi;
-  int                    j;
+  const static char                 funcs[]              = "marpaWrapperGrammar_clonep";
+  marpaWrapperGrammar_t            *marpaWrapperGrammarp = NULL;
+  genericLogger_t                  *genericLoggerp       = NULL;
+  int                              *rhsSymbolip          = NULL;
+  size_t                            i;
+  int                               marpaSymbolIdi;
+  int                               marpaRuleIdi;
+  int                               lhsSymboli;
+  int                               ruleLengthi;
+  int                               j;
+  marpaWrapperGrammarSymbolOption_t marpaWrapperGrammarSymbolOption;
+  marpaWrapperGrammarRuleOption_t   marpaWrapperGrammarRuleOption;
 
   if (marpaWrapperGrammarOriginp == NULL) {
     errno = EINVAL;
     return NULL;
+  }
+
+  if (marpaWrapperGrammarCloneOptionp == NULL) {
+    marpaWrapperGrammarCloneOptionp = &marpaWrapperGrammarCloneOptionDefault;
   }
 
   genericLoggerp = marpaWrapperGrammarOriginp->marpaWrapperGrammarOption.genericLoggerp;
@@ -168,7 +180,18 @@ marpaWrapperGrammar_t *marpaWrapperGrammar_clonep(marpaWrapperGrammar_t *marpaWr
 
   /* Create the symbols - verifying IDs are identical - per def event set is similar */
   for (i = 0; i < marpaWrapperGrammarOriginp->nSymboll; i++) {
-    marpaSymbolIdi = marpaWrapperGrammar_newSymboli(marpaWrapperGrammarp, &(marpaWrapperGrammarOriginp->symbolArrayp[i].marpaWrapperGrammarSymbolOption));
+    marpaWrapperGrammarSymbolOption = marpaWrapperGrammarOriginp->symbolArrayp[i].marpaWrapperGrammarSymbolOption;
+    if (marpaWrapperGrammarCloneOptionp->symbolOptionSetterp != NULL) {
+      if (! marpaWrapperGrammarCloneOptionp->symbolOptionSetterp(marpaWrapperGrammarCloneOptionp->userDatavp,
+                                                                 marpaWrapperGrammarOriginp->symbolArrayp[i].marpaSymbolIdi,
+                                                                 &marpaWrapperGrammarSymbolOption)) {
+        goto err;
+      }
+    }
+    marpaSymbolIdi = marpaWrapperGrammar_newSymboli(marpaWrapperGrammarp, &marpaWrapperGrammarSymbolOption);
+    if (marpaSymbolIdi < 0) {
+      goto err;
+    }
     if (marpaSymbolIdi != marpaWrapperGrammarOriginp->symbolArrayp[i].marpaSymbolIdi) {
       MARPAWRAPPER_ERRORF(genericLoggerp, "Cloned symbol ID is %d instead of %d", marpaSymbolIdi, marpaWrapperGrammarOriginp->symbolArrayp[i].marpaSymbolIdi);
       goto err;
@@ -206,11 +229,22 @@ marpaWrapperGrammar_t *marpaWrapperGrammar_clonep(marpaWrapperGrammar_t *marpaWr
       }
     }
     /* - Create the rule */
+    marpaWrapperGrammarRuleOption = marpaWrapperGrammarOriginp->ruleArrayp[i].marpaWrapperGrammarRuleOption;
+    if (marpaWrapperGrammarCloneOptionp->ruleOptionSetterp != NULL) {
+      if (! marpaWrapperGrammarCloneOptionp->ruleOptionSetterp(marpaWrapperGrammarCloneOptionp->userDatavp,
+                                                               marpaWrapperGrammarOriginp->ruleArrayp[i].marpaRuleIdi,
+                                                               &marpaWrapperGrammarRuleOption)) {
+        goto err;
+      }
+    }
     marpaRuleIdi = marpaWrapperGrammar_newRulei(marpaWrapperGrammarp,
-						&(marpaWrapperGrammarOriginp->ruleArrayp[i].marpaWrapperGrammarRuleOption),
+						&marpaWrapperGrammarRuleOption,
 						lhsSymboli,
 						(size_t) ruleLengthi,
 						rhsSymbolip);
+    if (marpaRuleIdi < 0) {
+      goto err;
+    }
     if (marpaRuleIdi != marpaWrapperGrammarOriginp->ruleArrayp[i].marpaRuleIdi) {
       MARPAWRAPPER_ERRORF(genericLoggerp, "Cloned rule ID is %d instead of %d", marpaRuleIdi, marpaWrapperGrammarOriginp->ruleArrayp[i].marpaRuleIdi);
       goto err;
