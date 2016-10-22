@@ -254,7 +254,7 @@ A rule is I<nulling> if it always produces the empty string.
 
 =item MARPAWRAPPER_RULE_IS_LOOP
 
-A rule is a loop rule if it non-trivially produces the string of length one which consists only of its LHS symbol. Such a derivation takes the parse back to where it started, hence the term "loop". "Non-trivially" means the zero-step derivation does not count — the derivation must have at least one step.
+A rule is a loop rule if it non-trivially produces the string of length one which consists only of its LHS symbol. Such a derivation takes the parse back to where it started, hence the term "loop". "Non-trivially" means the zero-step derivation does not count - the derivation must have at least one step.
 
 The presence of a loop rule makes a grammar infinitely ambiguous, and applications will typically want to treat them as fatal errors. But nothing forces an application to do this, and Marpa will successfully parse and evaluate grammars with loop rules.
 
