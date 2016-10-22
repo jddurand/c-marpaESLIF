@@ -46,7 +46,7 @@ static inline short _marpaWrapperGrammar_precomputeb(marpaWrapperGrammar_t *marp
 marpaWrapperGrammar_t *marpaWrapperGrammar_newp(marpaWrapperGrammarOption_t *marpaWrapperGrammarOptionp)
 /****************************************************************************/
 {
-  const static char      funcs[] = "marpaWrapperGrammar_newp";
+  MARPAWRAPPER_FUNCS(marpaWrapperGrammar_newp);
   marpaWrapperGrammar_t *marpaWrapperGrammarp = NULL;
   genericLogger_t       *genericLoggerp = NULL;
 #ifndef MARPAWRAPPER_NTRACE
@@ -147,7 +147,7 @@ marpaWrapperGrammar_t *marpaWrapperGrammar_newp(marpaWrapperGrammarOption_t *mar
 marpaWrapperGrammar_t *marpaWrapperGrammar_clonep(marpaWrapperGrammar_t *marpaWrapperGrammarOriginp, marpaWrapperGrammarCloneOption_t *marpaWrapperGrammarCloneOptionp)
 /****************************************************************************/
 {
-  const static char                 funcs[]              = "marpaWrapperGrammar_clonep";
+  MARPAWRAPPER_FUNCS(marpaWrapperGrammar_clonep);
   marpaWrapperGrammar_t            *marpaWrapperGrammarp = NULL;
   genericLogger_t                  *genericLoggerp       = NULL;
   int                              *rhsSymbolip          = NULL;
@@ -272,7 +272,7 @@ marpaWrapperGrammar_t *marpaWrapperGrammar_clonep(marpaWrapperGrammar_t *marpaWr
 void marpaWrapperGrammar_freev(marpaWrapperGrammar_t *marpaWrapperGrammarp)
 /****************************************************************************/
 {
-  const static char  funcs[] = "marpaWrapperGrammar_freev";
+  MARPAWRAPPER_FUNCS(marpaWrapperGrammar_freev);
   genericLogger_t  *genericLoggerp;
 
   if (marpaWrapperGrammarp != NULL) {
@@ -307,7 +307,7 @@ void marpaWrapperGrammar_freev(marpaWrapperGrammar_t *marpaWrapperGrammarp)
 int marpaWrapperGrammar_newSymboli(marpaWrapperGrammar_t *marpaWrapperGrammarp, marpaWrapperGrammarSymbolOption_t *marpaWrapperGrammarSymbolOptionp)
 /****************************************************************************/
 {
-  const static char                 funcs[] = "marpaWrapperGrammar_newSymboli";
+  MARPAWRAPPER_FUNCS(marpaWrapperGrammar_newSymboli);
   Marpa_Symbol_ID                   marpaSymbolIdi;
   genericLogger_t                  *genericLoggerp = NULL;
   size_t                            nSymboll;
@@ -423,7 +423,7 @@ int marpaWrapperGrammar_newRulei(marpaWrapperGrammar_t *marpaWrapperGrammarp, ma
                                  )
 /****************************************************************************/
 {
-  const static char               funcs[] = "marpaWrapperGrammar_newRulei";
+  MARPAWRAPPER_FUNCS(marpaWrapperGrammar_newRulei);
   Marpa_Rule_ID                   marpaRuleIdi;
   genericLogger_t                *genericLoggerp = NULL;
   marpaWrapperGrammarRule_t      *marpaWrapperRulep;
@@ -557,7 +557,7 @@ int marpaWrapperGrammar_newRulei(marpaWrapperGrammar_t *marpaWrapperGrammarp, ma
 int marpaWrapperGrammar_newRuleExti(marpaWrapperGrammar_t *marpaWrapperGrammarp, int ranki, short nullRanksHighb, int lhsSymboli, ...)
 /****************************************************************************/
 {
-  const static char               funcs[] = "marpaWrapperGrammar_newRuleExti";
+  MARPAWRAPPER_FUNCS(marpaWrapperGrammar_newRuleExti);
   marpaWrapperGrammarRuleOption_t marpaWrapperGrammarRuleOption;
   genericLogger_t                *genericLoggerp = NULL;
   size_t                          sizeSymboll = 0;
@@ -654,7 +654,7 @@ short marpaWrapperGrammar_precompute_startb(marpaWrapperGrammar_t *marpaWrapperG
 static inline short _marpaWrapperGrammar_precomputeb(marpaWrapperGrammar_t *marpaWrapperGrammarp, int *startip)
 /****************************************************************************/
 {
-  const static char           funcs[]        = "marpaWrapperGrammar_precomputeb";
+  MARPAWRAPPER_FUNCS(marpaWrapperGrammar_precomputeb);
   genericLogger_t            *genericLoggerp = NULL;
   int                         starti;
 
@@ -715,8 +715,9 @@ static inline short _marpaWrapperGrammar_precomputeb(marpaWrapperGrammar_t *marp
 short marpaWrapperGrammar_eventb(marpaWrapperGrammar_t *marpaWrapperGrammarp, size_t *eventlp, marpaWrapperGrammarEvent_t **eventpp, short forceReloadb)
 /****************************************************************************/
 {
-  const static char                 funcs[] = "marpaWrapperGrammar_eventb";
+  MARPAWRAPPER_FUNCS(marpaWrapperGrammar_eventb);
   genericLogger_t                  *genericLoggerp = NULL;
+  marpaWrapperGrammarEvent_t       *eventp         = NULL;
   int                               nbEventi;
   int                               i;
   int                               subscribedEventi;
@@ -727,7 +728,6 @@ short marpaWrapperGrammar_eventb(marpaWrapperGrammar_t *marpaWrapperGrammarp, si
   Marpa_Event_Type                  eventType;
   Marpa_Event                       event;
   int                               eventValuei;
-  marpaWrapperGrammarEvent_t       *eventp;
 
   if (marpaWrapperGrammarp == NULL) {
     errno = EINVAL;
@@ -889,7 +889,7 @@ static inline int _marpaWrapperGrammar_cmpi(const void *event1p, const void *eve
 short marpaWrapperGrammar_symbolPropertyb(marpaWrapperGrammar_t *marpaWrapperGrammarp, int symboli, int *marpaWrapperSymbolPropertyBitSetp)
 /****************************************************************************/
 {
-  const static char                 funcs[] = "marpaWrapperGrammar_eventb";
+  MARPAWRAPPER_FUNCS(marpaWrapperGrammar_symbolPropertyb);
   genericLogger_t                  *genericLoggerp = NULL;
   Marpa_Grammar                     marpaGrammarp;
   int                               accessiblei;
@@ -973,7 +973,7 @@ short marpaWrapperGrammar_symbolPropertyb(marpaWrapperGrammar_t *marpaWrapperGra
 short marpaWrapperGrammar_rulePropertyb(marpaWrapperGrammar_t *marpaWrapperGrammarp, int rulei, int *marpaWrapperRulePropertyBitSetp)
 /****************************************************************************/
 {
-  const static char                 funcs[] = "marpaWrapperGrammar_eventb";
+  MARPAWRAPPER_FUNCS(marpaWrapperGrammar_rulePropertyb);
   genericLogger_t                  *genericLoggerp = NULL;
   Marpa_Grammar                     marpaGrammarp;
   int                               accessiblei;

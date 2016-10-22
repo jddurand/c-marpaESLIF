@@ -23,7 +23,7 @@ static marpaWrapperValueOption_t marpaWrapperValueOptionDefault = {
 marpaWrapperValue_t *marpaWrapperValue_newp(marpaWrapperRecognizer_t *marpaWrapperRecognizerp, marpaWrapperValueOption_t *marpaWrapperValueOptionp)
 /****************************************************************************/
 {
-  const static char     funcs[] = "marpaWrapperValue_newp";
+  MARPAWRAPPER_FUNCS(marpaWrapperValue_newp);
   marpaWrapperValue_t  *marpaWrapperValuep = NULL;
   genericLogger_t      *genericLoggerp;
   Marpa_Earley_Set_ID   marpaLatestEarleySetIdi;
@@ -173,7 +173,7 @@ short marpaWrapperValue_valueb(marpaWrapperValue_t               *marpaWrapperVa
 			       marpaWrapperValueNullingCallback_t nullingCallbackp)
 /****************************************************************************/
 {
-  const static char funcs[] = "marpaWrapperValue_valueb";
+  MARPAWRAPPER_FUNCS(marpaWrapperValue_valueb);
   genericLogger_t  *genericLoggerp = NULL;
   int               tnexti;
   Marpa_Value       marpaValuep = NULL;
@@ -185,7 +185,6 @@ short marpaWrapperValue_valueb(marpaWrapperValue_t               *marpaWrapperVa
   int               argLasti;
   int               argResulti;
   int               tokenValuei;
-  size_t            nValueInputi;
   int               nParsesi;
 
   if (marpaWrapperValuep == NULL) {
@@ -248,7 +247,6 @@ short marpaWrapperValue_valueb(marpaWrapperValue_t               *marpaWrapperVa
       MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_v_result(%p)", marpaValuep);
       argResulti = marpa_v_result(marpaValuep);
 
-      nValueInputi = argLasti - argFirsti + 1;
       MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "Rule %d: Stack [%d..%d] -> Stack %d", (int) marpaRuleIdi, argFirsti, argLasti, argResulti);
 
       if (ruleCallbackp != NULL) {
@@ -338,7 +336,7 @@ short marpaWrapperValue_valueb(marpaWrapperValue_t               *marpaWrapperVa
 void marpaWrapperValue_freev(marpaWrapperValue_t *marpaWrapperValuep)
 /****************************************************************************/
 {
-  const static char  funcs[] = "marpaWrapperValue_freev";
+  MARPAWRAPPER_FUNCS(marpaWrapperValue_freev);
   genericLogger_t  *genericLoggerp;
 
   if (marpaWrapperValuep != NULL) {
