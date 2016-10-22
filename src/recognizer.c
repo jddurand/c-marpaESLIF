@@ -19,7 +19,7 @@ static marpaWrapperRecognizerOption_t marpaWrapperRecognizerOptionDefault = {
 marpaWrapperRecognizer_t *marpaWrapperRecognizer_newp(marpaWrapperGrammar_t *marpaWrapperGrammarp, marpaWrapperRecognizerOption_t *marpaWrapperRecognizerOptionp)
 /****************************************************************************/
 {
-  const static char         funcs[] = "marpaWrapperRecognizer_newp";
+  MARPAWRAPPER_FUNCS(marpaWrapperRecognizer_newp);
   marpaWrapperRecognizer_t *marpaWrapperRecognizerp = NULL;
   genericLogger_t          *genericLoggerp;
   int                       highestSymbolIdi;
@@ -133,8 +133,8 @@ err:
 short marpaWrapperRecognizer_alternativeb(marpaWrapperRecognizer_t *marpaWrapperRecognizerp, int symboli, int valuei, int lengthi)
 /****************************************************************************/
 {
-  const static char                   funcs[] = "marpaWrapperRecognizer_alternativeb";
-  genericLogger_t                    *genericLoggerp = NULL;
+  MARPAWRAPPER_FUNCS(marpaWrapperRecognizer_alternativeb);
+  genericLogger_t *genericLoggerp = NULL;
   
   if (marpaWrapperRecognizerp == NULL) {
     errno = EINVAL;
@@ -175,8 +175,8 @@ short marpaWrapperRecognizer_alternativeb(marpaWrapperRecognizer_t *marpaWrapper
 short marpaWrapperRecognizer_completeb(marpaWrapperRecognizer_t *marpaWrapperRecognizerp)
 /****************************************************************************/
 {
-  const static char funcs[] = "marpaWrapperRecognizer_completeb";
-  genericLogger_t  *genericLoggerp = NULL;
+  MARPAWRAPPER_FUNCS(marpaWrapperRecognizer_completeb);
+  genericLogger_t *genericLoggerp = NULL;
   
   if (marpaWrapperRecognizerp == NULL) {
     errno = EINVAL;
@@ -219,8 +219,8 @@ short marpaWrapperRecognizer_readb(marpaWrapperRecognizer_t *marpaWrapperRecogni
 short marpaWrapperRecognizer_event_onoffb(marpaWrapperRecognizer_t *marpaWrapperRecognizerp, int symboli, marpaWrapperGrammarEventType_t eventSeti, int onoffb)
 /****************************************************************************/
 {
-  const static char funcs[] = "marpaWrapperRecognizer_event_onoffb";
-  genericLogger_t  *genericLoggerp = NULL;
+  MARPAWRAPPER_FUNCS(marpaWrapperRecognizer_event_onoffb);
+  genericLogger_t *genericLoggerp = NULL;
 
   if (marpaWrapperRecognizerp == NULL) {
     errno = EINVAL;
@@ -267,9 +267,9 @@ short marpaWrapperRecognizer_event_onoffb(marpaWrapperRecognizer_t *marpaWrapper
 short marpaWrapperRecognizer_expectedb(marpaWrapperRecognizer_t *marpaWrapperRecognizerp, size_t *nSymbollp, int **symbolArraypp)
 /****************************************************************************/
 {
-  const static char funcs[] = "marpaWrapperRecognizer_expectedb";
-  genericLogger_t  *genericLoggerp = NULL;
-  int               nSymbolIdi;
+  MARPAWRAPPER_FUNCS(marpaWrapperRecognizer_expectedb);
+  genericLogger_t *genericLoggerp = NULL;
+  int              nSymbolIdi;
 
   if (marpaWrapperRecognizerp == NULL) {
     errno = EINVAL;
@@ -306,7 +306,7 @@ short marpaWrapperRecognizer_expectedb(marpaWrapperRecognizer_t *marpaWrapperRec
 short marpaWrapperRecognizer_progressb(marpaWrapperRecognizer_t *marpaWrapperRecognizerp, int starti, int endi, size_t *nProgresslp, marpaWrapperRecognizerProgress_t **progresspp)
 /****************************************************************************/
 {
-  const static char   funcs[] = "marpaWrapperRecognizer_progressb";
+  MARPAWRAPPER_FUNCS(marpaWrapperRecognizer_progressb);
   genericLogger_t    *genericLoggerp = NULL;
   Marpa_Earley_Set_ID marpaLatestEarleySetIdi;
   Marpa_Earley_Set_ID marpaEarleySetIdStarti;
@@ -426,7 +426,7 @@ short marpaWrapperRecognizer_progressb(marpaWrapperRecognizer_t *marpaWrapperRec
 short marpaWrapperRecognizer_progressLogb(marpaWrapperRecognizer_t *marpaWrapperRecognizerp, int starti, int endi, genericLoggerLevel_t logleveli, void *userDatavp, symbolDescriptionCallback_t symbolDescriptionCallbackp)
 /****************************************************************************/
 {
-  const static char funcs[] = "marpaWrapperRecognizer_progressLogb";
+  MARPAWRAPPER_FUNCS(marpaWrapperRecognizer_progressLogb);
   size_t            i;
   int               ix;
   genericLogger_t  *genericLoggerp = NULL;
@@ -566,7 +566,7 @@ short marpaWrapperRecognizer_progressLogb(marpaWrapperRecognizer_t *marpaWrapper
 void marpaWrapperRecognizer_freev(marpaWrapperRecognizer_t *marpaWrapperRecognizerp)
 /****************************************************************************/
 {
-  const static char  funcs[] = "marpaWrapperRecognizer_freev";
+  MARPAWRAPPER_FUNCS(marpaWrapperRecognizer_freev);
   genericLogger_t  *genericLoggerp;
 
   if (marpaWrapperRecognizerp != NULL) {
@@ -598,9 +598,9 @@ void marpaWrapperRecognizer_freev(marpaWrapperRecognizer_t *marpaWrapperRecogniz
 marpaWrapperGrammar_t *marpaWrapperRecognizer_grammarp(marpaWrapperRecognizer_t *marpaWrapperRecognizerp)
 /****************************************************************************/
 {
-  const static char         funcs[]                 = "marpaWrapperRecognizer_grammarp";
-  genericLogger_t          *genericLoggerp;
-  marpaWrapperGrammar_t    *marpaWrapperGrammarp;
+  MARPAWRAPPER_FUNCS(marpaWrapperRecognizer_grammarp);
+  genericLogger_t       *genericLoggerp;
+  marpaWrapperGrammar_t *marpaWrapperGrammarp;
 
   if (marpaWrapperRecognizerp == NULL) {
     errno = EINVAL;
