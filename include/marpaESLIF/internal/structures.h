@@ -249,13 +249,14 @@ struct marpaESLIFRecognizer {
   marpaESLIFRecognizerOption_t marpaESLIFRecognizerOption;
   marpaWrapperRecognizer_t    *marpaWrapperRecognizerp;
   genericStack_t              *lexemeInputStackp;  /* Internal input stack of lexemes */
+  marpaESLIFEvent_t           *eventArrayp;      /* For the events */
+  size_t                       eventArrayl;
+  marpaESLIFRecognizer_t      *parentRecognizerp;
   char                        *inputs;
   size_t                       inputl;
   short                        eofb;
   short                        scanb;
-  marpaESLIFEvent_t           *eventArrayp;      /* For the events */
-  size_t                       eventArrayl;
-  marpaESLIFRecognizer_t      *parentRecognizerp;
+  short                        discardb; /* discard mode */
 };
 
 /* ------------------------------------------- */
