@@ -27,6 +27,8 @@
 # - Cplusplus style comments added
 # - double quoted strings    added
 # - strings have no restriction on escaping and content - they just have to be correctly delimited
+# - grammar description      added
+# - grammar reference        added
 #
 # ----------------------------------------------------------------------------------------------
 # Please note that there is a very big difference between using apparently equivalent regexp and
@@ -57,6 +59,7 @@ lexeme default =  action => [start,length,value]
 
 statements                       ::= statement+
 statement                        ::= <start rule>
+                                 | <desc rule>
                                  | <empty rule>
                                  | <null statement>
                                  | <statement group>
@@ -75,6 +78,8 @@ statement                        ::= <start rule>
                                  | <exception statement>
 
 <start rule>                   ::= (':start' <op declare>) symbol
+<descs rule>                   ::= (':desc' <op declare>) <quoted string>
+<descs rule>                   ::= (':desc' <op declare>) <integer>
 <empty rule>                   ::= lhs <op declare> <adverb list>
 <null statement>               ::= ';'
 <statement group>              ::= ('{') statements ('}')
@@ -153,6 +158,9 @@ naming                         ::= ('name' '=>') <alternative name>
 lhs                              ::= <symbol name>
 rhs                              ::= <rhs primary>+
 <rhs primary>                    ::= <single symbol>
+<rhs primary>                    ::= <single symbol> ('<') <grammar reference> ('>')
+<grammar reference>              ::= <quoted string>
+<grammar reference>              ::= <signed integer>
 <rhs primary>                    ::= <quoted string>
 <rhs primary>                    ::= <parenthesized rhs primary list>
 <parenthesized rhs primary list> ::= ('(') <rhs primary list> (')')
@@ -242,9 +250,13 @@ boolean                  ~ [01]
                                    | 'value'
                                    | 'values'
 
-<single quoted string> ~ /'[^\']*(?:\.[^\']*)*'/s   # s modifier to match newline - we never match ''
-<double quoted string> ~ /"[^\"]*(?:\.[^\"]*)*"/s   # s modifier to match newline - we never match ""
-<quoted string>        ~ <single quoted string> | <double quoted string>
+<single quoted string>              ~ /'[^\']*(?:\.[^\']*)*'/s /* s modifier to match newline - we never match '' */ <character class modifiers>
+<double quoted string>              ~ /"[^\"]*(?:\.[^\"]*)*"/s /* s modifier to match newline - we never match "" */ <character class modifiers>
+<quoted string>                     ~ <single quoted string> | <double quoted string>
+
+<single quoted name>                ~ /'[^\']*(?:\.[^\']*)*'/s /* s modifier to match newline - we never match '' */
+<double quoted name>                ~ /"[^\"]*(?:\.[^\"]*)*"/s /* s modifier to match newline - we never match "" */
+<quoted name>                       ~ <single quoted name> | <double quoted name>
 
 <character class regexp>      ~ /\[(?:[^\\]]*(?:\.[^\\]]*)*)\]/
 <character class>             ~ <character class regexp> <character class modifiers>
