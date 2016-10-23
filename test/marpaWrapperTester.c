@@ -264,6 +264,11 @@ int main(int argc, char **argv) {
     }
   }
   if (rci == 0) {
+    if (marpaWrapperRecognizer_exhaustedb(marpaWrapperRecognizerp, NULL) == 0) {
+      rci = 1;
+    }
+  }
+  if (rci == 0) {
     if (marpaWrapperRecognizer_expectedb(marpaWrapperRecognizerp, &nsymboll, &symbolArrayp) == 0) {
       rci = 1;
     } else {

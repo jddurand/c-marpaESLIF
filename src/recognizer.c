@@ -303,6 +303,36 @@ short marpaWrapperRecognizer_expectedb(marpaWrapperRecognizer_t *marpaWrapperRec
 }
 
 /****************************************************************************/
+short marpaWrapperRecognizer_exhaustedb(marpaWrapperRecognizer_t *marpaWrapperRecognizerp, short *exhaustedbp)
+/****************************************************************************/
+{
+  MARPAWRAPPER_FUNCS(marpaWrapperRecognizer_exhaustedb);
+  genericLogger_t    *genericLoggerp = NULL;
+  short               exhaustedb;
+
+  if (marpaWrapperRecognizerp == NULL) {
+    errno = EINVAL;
+    goto err;
+  }
+
+  genericLoggerp = marpaWrapperRecognizerp->marpaWrapperRecognizerOption.genericLoggerp;
+
+  /* This function always succeed as per doc */
+  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_r_is_exhausted(%p)", marpaWrapperRecognizerp->marpaRecognizerp);
+  exhaustedb = (marpa_r_is_exhausted(marpaWrapperRecognizerp->marpaRecognizerp) != 0) ? 1 : 0;
+
+  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "return 1 (*exhaustedbp=%d)", (int) exhaustedb);
+  if (exhaustedbp != NULL) {
+    *exhaustedbp = exhaustedb;
+  }
+  return 1;
+
+ err:
+  MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return 0");
+  return 0;
+}
+
+/****************************************************************************/
 short marpaWrapperRecognizer_progressb(marpaWrapperRecognizer_t *marpaWrapperRecognizerp, int starti, int endi, size_t *nProgresslp, marpaWrapperRecognizerProgress_t **progresspp)
 /****************************************************************************/
 {
