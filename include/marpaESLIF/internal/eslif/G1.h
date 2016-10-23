@@ -876,7 +876,7 @@ bootstrap_grammar_rule_t bootstrap_grammar_G1_rules[] = {
   { G1_META_OP_DECLARE,                       "<rule op declare 1>",                       MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_OP_DECLARE_TOP_GRAMMAR               }, { 1 },            -1,                        -1, -1 },
   { G1_META_OP_DECLARE,                       "<rule op declare 2>",                       MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_OP_DECLARE_LEX_GRAMMAR               }, { 1 },            -1,                        -1, -1 },
   { G1_META_OP_DECLARE,                       "<rule op declare 3>",                       MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_OP_DECLARE_ANY_GRAMMAR               }, { 1 },            -1,                        -1, -1 },
-  { G1_META_PRIORITIES,                       "<rule priorities>",                         MARPAESLIF_RULE_TYPE_SEQUENCE,    1, { G1_META_ALTERNATIVES                         }, { 1 },             1, G1_META_OP_LOOSEN,          1 },
+  { G1_META_PRIORITIES,                       "<rule priorities>",                         MARPAESLIF_RULE_TYPE_SEQUENCE,    1, { G1_META_ALTERNATIVES                         }, { 1 },             1,         G1_META_OP_LOOSEN,  1 },
   /*
     lhsi                                      descs                                        type                          nrhsl  { rhsi }                                       }  { mask }    minimumi                 separatori propertb
   */
