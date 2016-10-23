@@ -451,6 +451,14 @@ Gets the list of expected symbols, the number of them being stored in C<*nSymbol
 
 Returns 1 on success, 0 on failure.
 
+=head2 marpaWrapperRecognizer_exhaustedb
+
+  short marpaWrapperRecognizer_exhaustedb(marpaWrapperRecognizer_t *marpaWrapperRecognizerp, short *exhaustedbp)
+
+Gets the exhaustion status of the recognizer into the value pointed by C<exhaustedbp> if it not C<NULL>. A true value means the recognizer is exhausted, a false value means it is not.
+
+Returns 1 on success, 0 on failure.
+
 =head2 marpaWrapperRecognizer_progressb
 
   typedef struct marpaWrapperRecognizerProgress {
