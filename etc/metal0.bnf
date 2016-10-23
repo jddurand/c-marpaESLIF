@@ -54,6 +54,10 @@ boolean                             ~ [01]
 <double quoted string>              ~ /"[^\"]*(?:\.[^\"]*)*"/s /* s modifier to match newline - we never match "" */ <character class modifiers>
 <quoted string>                     ~ <single quoted string> | <double quoted string>
 
+<single quoted name>                ~ /'[^\']*(?:\.[^\']*)*'/s /* s modifier to match newline - we never match '' */
+<double quoted name>                ~ /"[^\"]*(?:\.[^\"]*)*"/s /* s modifier to match newline - we never match "" */
+<quoted name>                       ~ <single quoted name> | <double quoted name>
+
 <character class regexp>            ~ /\[(?:[^\\]]*(?:\.[^\\]]*)*)\]/
 <character class>                   ~ <character class regexp> <character class modifiers>
 <character class modifier>          ~ /:[eijmnsxDJUuaN]/

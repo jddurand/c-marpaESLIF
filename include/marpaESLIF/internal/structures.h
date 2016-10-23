@@ -14,12 +14,13 @@ typedef struct  marpaESLIF_symbol          marpaESLIF_symbol_t;
 typedef struct  marpaESLIF_rule            marpaESLIF_rule_t;
 typedef struct  marpaESLIF_grammar         marpaESLIF_grammar_t;
 typedef enum    marpaESLIF_matcher_value   marpaESLIF_matcher_value_t;
-typedef short (*marpaESLIF_matcher_t)(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaWrapperGrammar_t *marpaWrapperGrammarp, marpaESLIF_terminal_t *terminalp, marpaESLIF_meta_t *metap, char *inputcp, size_t inputl, short eofb, marpaESLIF_matcher_value_t *rcip, genericStack_t *stackp);
+typedef short (*marpaESLIFGrammar_matcher_t)(marpaESLIFGrammar_t *marpaESLIFGrammarp, int grammarLeveli, marpaWrapperGrammar_t *marpaWrapperGrammarp, marpaESLIF_terminal_t *terminalp, marpaESLIF_meta_t *metap, char *inputcp, size_t inputl, short eofb, marpaESLIF_matcher_value_t *rcip, genericStack_t *stackp);
 typedef enum    marpaESLIF_event_type      marpaESLIF_event_type_t;
 typedef enum    marpaESLIF_action_type     marpaESLIF_action_type_t;
 typedef enum    marpaESLIF_array_type      marpaESLIF_array_type_t;
 typedef struct  marpaESLIF_readerContext   marpaESLIF_readerContext_t;
 typedef struct  marpaESLIF_valueContext    marpaESLIF_valueContext_t;
+typedef struct  marpaESLIF_cloneContext    marpaESLIF_cloneContext_t;
 
 /* Symbol types */
 enum marpaESLIF_symbol_type {
@@ -109,7 +110,7 @@ struct marpaESLIF_terminal {
   size_t                      descl;
   char                       *asciidescs;          /* Terminal description (ASCII) */
   marpaESLIF_terminal_type_t  type;                /* Terminal type */
-  marpaESLIF_matcher_t        matcherbp;           /* Terminal matcher */
+  marpaESLIFGrammar_matcher_t matcherbp;           /* Terminal matcher */
   union {
     marpaESLIF_regex_t        regex;
     marpaESLIF_string_t       string;
@@ -117,12 +118,12 @@ struct marpaESLIF_terminal {
 };
 
 struct marpaESLIF_meta {
-  int                        idi;                       /* Non-terminal Id */
-  char                      *descs;                     /* Non-terminal description as per the user */
-  size_t                     descl;
-  char                      *asciidescs;                /* Non-terminal description (ASCII) */
-  marpaESLIF_matcher_t       matcherbp;                 /* Non-terminal matcher */
-  marpaWrapperGrammar_t     *marpaWrapperGrammarClonep; /* Eventual cloned grammar */
+  int                          idi;                       /* Non-terminal Id */
+  char                        *descs;                     /* Non-terminal description as per the user */
+  size_t                       descl;
+  char                        *asciidescs;                /* Non-terminal description (ASCII) */
+  marpaESLIFGrammar_matcher_t  matcherbp;                 /* Non-terminal matcher */
+  marpaWrapperGrammar_t       *marpaWrapperGrammarClonep; /* Eventual cloned grammar */
 };
 
 /* Matcher return values */
@@ -163,25 +164,31 @@ enum marpaESLIF_array_type {
 
 /* A symbol */
 struct marpaESLIF_symbol {
-  marpaESLIF_symbol_type_t    type;  /* Symbol type */
+  marpaESLIF_symbol_type_t     type;  /* Symbol type */
   union {
-    marpaESLIF_terminal_t    *terminalp; /* Symbol is a terminal */
-    marpaESLIF_meta_t        *metap;     /* Symbol is a meta identifier, i.e. a rule */
+    marpaESLIF_terminal_t     *terminalp; /* Symbol is a terminal */
+    marpaESLIF_meta_t         *metap;     /* Symbol is a meta identifier, i.e. a rule */
   } u;
-  short                       isLhsb;
-  int                         idi;
-  char                       *descs;           /* Terminal description as per the user */
-  size_t                      descl;
-  char                       *asciidescs;      /* Shallow pointer to the asciidecs from the union members */
-  marpaESLIF_matcher_t        matcherbp;
-  short                       pauseb;          /* -1: before, 0: NA, 1: after */
-  short                       pauseIsOnb;      /* 0: off, 1: on */
-  char                       *pauses;          /* Pause event name in native encoding */
-  size_t                      pausel;          /* Pause event name length in bytes */
-  char                       *asciipauses;     /* Pause event name in ASCII encoding */
-  char                       *events;          /* Grammar event name in native encoding */
-  size_t                      eventl;          /* Grammar event name length in bytes */
-  char                       *asciievents;     /* Grammar event name in ASCII encoding */
+  short                        startb;             /* Start symbol ? */
+  short                        discardb;           /* Discard symbol ? */
+  short                        lhsb;               /* Is an LHS somewhere in its grammar ? */
+  int                          idi;                /* Marpa ID */
+  char                        *descs;              /* Terminal description in user's encoding */
+  size_t                       descl;              /* Length in bytesd of this terminal description */
+  char                        *asciidescs;         /* Shallow pointer to the asciidecs from the union members */
+  marpaESLIFGrammar_matcher_t  matcherbp;          /* Matcher function pointer */
+  short                        pauseb;             /* -1: before, 0: NA, 1: after */
+  short                        pauseIsOnb;         /* 0: off, 1: on */
+  char                        *pauses;             /* Pause event name in native encoding */
+  size_t                       pausel;             /* Pause event name length in bytes */
+  char                        *asciipauses;        /* Pause event name in ASCII encoding */
+  char                        *events;             /* Grammar event name in native encoding */
+  size_t                       eventl;             /* Grammar event name length in bytes */
+  char                        *asciievents;        /* Grammar event name in ASCII encoding */
+  int                          lookupLevelDeltai;  /* Referenced grammar delta level */
+  char                        *lookupGrammarNamep; /* Referenced grammar (string in user's encoding) */
+  size_t                       lookupGrammarNamel; /* Referenced grammar (number of bytes of string in user's encoding) */
+  int                          resolvedLeveli;     /* Referenced grammar level */
 };
 
 /* A rule */
@@ -199,13 +206,15 @@ struct marpaESLIF_rule {
 /* A grammar */
 struct marpaESLIF_grammar {
   marpaESLIF_t          *marpaESLIFp;                 /* Shallow pointer to top marpaESLIFp */
-  unsigned int           leveli;                      /* Grammar level */
+  int                    leveli;                      /* Grammar level */
+  char                  *descs;                       /* Grammar description */
+  size_t                 descl;
+  char                  *asciidescs;                  /* Terminal description (ASCII) */
   marpaWrapperGrammar_t *marpaWrapperGrammarStartp;   /* Grammar implementation at :start */
   marpaWrapperGrammar_t *marpaWrapperGrammarDiscardp; /* Grammar implementation at :discard */
   marpaESLIF_symbol_t   *discardSymbolp;              /* Discard symbol, used at grammar validation */
   genericStack_t        *symbolStackp;                /* Stack of symbols */
   genericStack_t        *ruleStackp;                  /* Stack of rules */
-  genericStack_t        *discardSymbolStackp;         /* Stack of discard symbols - take care it contains SHALLOW pointers to symbols */
 };
 
 /* Internal reader context when parsing a grammar. Everything is in utf8s so the reader can say ok to any stream callback */
@@ -222,17 +231,24 @@ struct marpaESLIF_valueContext {
   int ruleIdi;
 };
 
+/* Internal structure to have clone context information */
+struct marpaESLIF_cloneContext {
+  marpaESLIF_t         *marpaESLIFp;
+  marpaESLIF_grammar_t *grammarp;
+};
+
 /* ----------------------------------- */
 /* Definition of the opaque structures */
 /* ----------------------------------- */
 struct marpaESLIF {
-  genericStack_t     *grammarStackp;
-  marpaESLIFOption_t  marpaESLIFOption;
+  marpaESLIFGrammar_t *marpaESLIFGrammarp;  /* ESLIF has its own grammar -; */
+  marpaESLIFOption_t   marpaESLIFOption;
 };
 
 struct marpaESLIFGrammar {
   marpaESLIF_t             *marpaESLIFp;
-  marpaESLIF_grammar_t     *grammarp;         /* This is a SHALLOW copy of first grammar of marpaESLIFp */
+  genericStack_t           *grammarStackp;
+  marpaESLIF_grammar_t     *grammarp;         /* This is a SHALLOW copy of current grammar in grammarStackp, defaulting to the top grammar */
 };
 
 struct marpaESLIFValue {
@@ -252,6 +268,7 @@ struct marpaESLIFRecognizer {
   marpaESLIFEvent_t           *eventArrayp;      /* For the events */
   size_t                       eventArrayl;
   marpaESLIFRecognizer_t      *parentRecognizerp;
+  unsigned long                resumeCounterl; /* Internal counter for tracing - no functional impact */
   char                        *inputs;
   size_t                       inputl;
   short                        eofb;

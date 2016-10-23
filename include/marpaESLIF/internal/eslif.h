@@ -28,8 +28,8 @@ typedef struct bootstrap_grammar_rule {
   char                         *descs;
   bootstrap_grammar_rule_type_t type;
   size_t                        nrhsl;
-  int                           rhsip[10];  /* 10 is arbitrary - just to make C happy */
-  short                         maskbp[10]; /* Ditto */
+  int                           rhsip[10];               /* 10 is arbitrary - just to make C happy */
+  short                         maskbp[10];              /* Ditto */
   int                           minimumi;
   int                           separatori;
   short                         properb;

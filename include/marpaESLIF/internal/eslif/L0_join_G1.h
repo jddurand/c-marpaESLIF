@@ -4,6 +4,7 @@
 /* The join between two grammars is the description of symbol */
 #define L0_JOIN_G1_META_BOOLEAN                          "<meta boolean>"
 #define L0_JOIN_G1_META_SIGNED_INTEGER                   "<meta signed integer>"
+#define L0_JOIN_G1_META_INTEGER                          "<meta integer>"
 #define L0_JOIN_G1_META_BEFORE_OR_AFTER                  "<meta before or after>"
 #define L0_JOIN_G1_META_TRUE                             "<meta true>"
 #define L0_JOIN_G1_META_STANDARD_NAME                    "<meta standard name>"
