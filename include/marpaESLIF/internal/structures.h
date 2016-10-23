@@ -274,6 +274,7 @@ struct marpaESLIFRecognizer {
   short                        eofb;
   short                        scanb;
   short                        discardb; /* discard mode */
+  short                        haveLexemeb;
 };
 
 /* ------------------------------------------- */
