@@ -2200,6 +2200,7 @@ marpaESLIFGrammar_t *marpaESLIFGrammar_newp(marpaESLIF_t *marpaESLIFp, marpaESLI
   goto done;
 
  err:
+  marpaESLIFGrammar_freev(marpaESLIFGrammarp);
   marpaESLIFGrammarp = NULL;
 
  done:
@@ -3425,11 +3426,9 @@ static short _marpaESLIFValueRuleCallback(void *userDatavp, int rulei, int arg0i
     }
   }
 
-  /* It can happen that resulti is in the range [arg0i..argni] */
-  if ((resulti >= arg0i) && (resulti <= argni)) {
-    if (! _marpaESLIF_lexemeStack_ix_resetb(marpaESLIFRecognizerp, outputStackp, resulti)) {
-      goto err;
-    }
+  /* It can happen that resulti is already existing in the output stack */
+  if (! _marpaESLIF_lexemeStack_ix_resetb(marpaESLIFRecognizerp, outputStackp, resulti)) {
+    goto err;
   }
   GENERICSTACK_SET_ARRAY(outputStackp, array, resulti);
   if (GENERICSTACK_ERROR(outputStackp)) {
@@ -3504,6 +3503,10 @@ static short _marpaESLIFValueSymbolCallback(void *userDatavp, int symboli, int a
     GENERICSTACK_ARRAY_LENGTH(array) = sizel;
   }
 
+  /* It can happen that resulti is already existing in the output stack */
+  if (! _marpaESLIF_lexemeStack_ix_resetb(marpaESLIFRecognizerp, outputStackp, resulti)) {
+    goto err;
+  }
   GENERICSTACK_SET_ARRAY(outputStackp, array, resulti);
   if (GENERICSTACK_ERROR(outputStackp)) {
     MARPAESLIF_ERRORF(marpaESLIFp, "outputStackp push failure, %s", strerror(errno));
@@ -3546,6 +3549,10 @@ static short _marpaESLIFValueNullingCallback(void *userDatavp, int symboli, int 
   symbolp = (marpaESLIF_symbol_t *) GENERICSTACK_GET_PTR(symbolStackp, symboli);
   MARPAESLIFVALUE_TRACEF(marpaESLIFValuep, funcs, "%s -> [%d]", symbolp->asciidescs, resulti);
 
+  /* It can happen that resulti is already existing in the output stack */
+  if (! _marpaESLIF_lexemeStack_ix_resetb(marpaESLIFRecognizerp, outputStackp, resulti)) {
+    goto err;
+  }
   GENERICSTACK_SET_PTR(outputStackp, NULL, resulti);
   if (GENERICSTACK_ERROR(outputStackp)) {
     MARPAESLIF_ERRORF(marpaESLIFp, "outputStackp push failure, %s", strerror(errno));
