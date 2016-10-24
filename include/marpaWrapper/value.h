@@ -35,6 +35,7 @@ extern "C" {
 								    marpaWrapperValueRuleCallback_t    ruleCallbackp,
 								    marpaWrapperValueSymbolCallback_t  symbolCallbackp,
 								    marpaWrapperValueNullingCallback_t nullingCallbackp);
+  marpaWrapper_EXPORT short                marpaWrapperValue_g1startb(marpaWrapperValue_t *marpaWrapperValuep, int *g1startip);
   marpaWrapper_EXPORT void                 marpaWrapperValue_freev(marpaWrapperValue_t *marpaWrapperValuep);
 #ifdef __cplusplus
 }

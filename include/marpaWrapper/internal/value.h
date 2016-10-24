@@ -11,6 +11,7 @@ struct marpaWrapperValue {
   Marpa_Bocage                  marpaBocagep;
   Marpa_Order                   marpaOrderp;
   Marpa_Tree                    marpaTreep;
+  Marpa_Value                   marpaValuep;
 };
 
 #endif /* MARPAWRAPPER_INTERNAL_VALUE_H */
