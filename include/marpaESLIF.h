@@ -36,6 +36,7 @@ typedef struct marpaESLIFRecognizerOption {
   short                exhaustedb;                  /* Exhaustion event. Default: 0 */
   short                latmb;                       /* Longest acceptable token match mode. Default: 0 */
   short                rejectionb;                  /* Rejection event. Default: 0 */
+  short                rememberb;                   /* Remember the entire input. Default: 0 */
 } marpaESLIFRecognizerOption_t;
 
 typedef enum marpaESLIFEventType {
@@ -59,7 +60,7 @@ typedef short (*marpaESLIFActionCallback_t)(void *userDatavp, char *names, size_
 
 typedef struct marpaESLIFValueOption {
   void                      *userDatavp;            /* User specific context */
-  marpaESLIFActionCallback_t valueCallbackp;        /* User's value callback */
+  marpaESLIFActionCallback_t actionCallbackp;       /* User's action callback when the callback is named */
   short                      highRankOnlyb;         /* Default: 1 */
   short                      orderByRankb;          /* Default: 1 */
   short                      ambiguousb;            /* Default: 0 */
@@ -83,6 +84,7 @@ extern "C" {
   marpaESLIF_EXPORT void                    marpaESLIFRecognizer_eventb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, size_t *stringArraylp, marpaESLIFEvent_t **eventArraypp);
   marpaESLIF_EXPORT void                    marpaESLIFRecognizer_freev(marpaESLIFRecognizer_t *marpaESLIFRecognizerp);
   marpaESLIF_EXPORT short                   marpaESLIFGrammar_parseb(marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaESLIFRecognizerOption_t *marpaESLIFRecognizerOptionp, marpaESLIFValueOption_t *marpaESLIFValueOptionp, short *exhaustedbp);
+  marpaESLIF_EXPORT short                   marpaESLIFGrammar_parse_by_grammarb(marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaESLIFRecognizerOption_t *marpaESLIFRecognizerOptionp, marpaESLIFValueOption_t *marpaESLIFValueOptionp, short *exhaustedbp, char *descs, size_t descl, int leveli);
   marpaESLIF_EXPORT void                    marpaESLIFGrammar_freev(marpaESLIFGrammar_t *marpaESLIFGrammarp);
   marpaESLIF_EXPORT marpaESLIFValue_t      *marpaESLIFValue_newp(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueOption_t *marpaESLIFValueOptionp);
   marpaESLIF_EXPORT short                   marpaESLIFValue_valueb(marpaESLIFValue_t *marpaESLIFValuep);
