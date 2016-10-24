@@ -377,17 +377,17 @@ static short valueRuleCallback(void *userDatavp, int rulei, int arg0i, int argni
   int                        *ruleip          = valueContextp->ruleip;
   stackValueAndDescription_t *resultp         = NULL;
   short                       rcb;
-  int                         g1starti;
-  int                         g1lengthi;
+  int                         starti;
+  int                         lengthi;
 
-  if (! marpaWrapperValue_g1startb(marpaWrapperValuep, &g1starti)) {
+  if (! marpaWrapperValue_value_startb(marpaWrapperValuep, &starti)) {
     goto err;
   }
-  if (! marpaWrapperValue_g1lengthb(marpaWrapperValuep, &g1lengthi)) {
+  if (! marpaWrapperValue_value_lengthb(marpaWrapperValuep, &lengthi)) {
     goto err;
   }
 
-  GENERICLOGGER_TRACEF(genericLoggerp, "[%s] G1 start/end: %d/%d", funcs, g1starti, g1lengthi);
+  GENERICLOGGER_TRACEF(genericLoggerp, "[%s] Earleme Set Id start/end: %d/%d", funcs, starti, lengthi);
   GENERICLOGGER_TRACEF(genericLoggerp, "[%s] Stacks before:", funcs);
   dumpStacks(valueContextp);
 
@@ -488,17 +488,17 @@ static short valueSymbolCallback(void *userDatavp, int symboli, int argi, int re
   int                        *symbolip        = valueContextp->symbolip;
   stackValueAndDescription_t *resultp         = NULL;
   short                       rcb;
-  int                         g1starti;
-  int                         g1lengthi;
+  int                         starti;
+  int                         lengthi;
 
-  if (! marpaWrapperValue_g1startb(marpaWrapperValuep, &g1starti)) {
+  if (! marpaWrapperValue_value_startb(marpaWrapperValuep, &starti)) {
     goto err;
   }
-  if (! marpaWrapperValue_g1lengthb(marpaWrapperValuep, &g1lengthi)) {
+  if (! marpaWrapperValue_value_lengthb(marpaWrapperValuep, &lengthi)) {
     goto err;
   }
 
-  GENERICLOGGER_TRACEF(genericLoggerp, "[%s] G1 start/end: %d/%d", funcs, g1starti, g1lengthi);
+  GENERICLOGGER_TRACEF(genericLoggerp, "[%s] Earleme Set Id start/end: %d/%d", funcs, starti, lengthi);
   GENERICLOGGER_TRACEF(genericLoggerp, "[%s] Stacks before:", funcs);
   dumpStacks(valueContextp);
 

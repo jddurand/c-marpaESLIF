@@ -654,6 +654,26 @@ An example of generic stack with indice is the L<genericStack|https://github.com
 
 Returns -1 on failure, 0 when there is no more parse value, and 1 on success.
 
+=head2 marpaWrapperValue_value_startb
+
+  short marpaWrapperValue_value_startb(marpaWrapperValue_t *marpaWrapperValuep, int *startip)
+
+Get the Start Earleme Set Id in the value pointed by C<startip>, if it is not C<NULL>.
+
+This method will always fail if it is called outside of a value callback. This mean that you have to arrange to get C<marpaWrapperValuep> via the opaque context of the callbacks.
+
+Returns a true value value, a false value on failure.
+
+=head2 marpaWrapperValue_value_lengthb
+
+  short marpaWrapperValue_value_lengthb(marpaWrapperValue_t *marpaWrapperValuep, int *lengthip)
+
+Get the Length Earleme Set Id in the value pointed by C<lengthip>, if it is not C<NULL>.
+
+This method will always fail if it is called outside of a value callback. This mean that you have to arrange to get C<marpaWrapperValuep> via the opaque context of the callbacks.
+
+Returns a true value value, a false value on failure.
+
 =head2 marpaWrapperValue_freev
 
   void marpaWrapperValue_freev(marpaWrapperValue_t *marpaWrapperValuep)
@@ -664,7 +684,7 @@ Destructor of the value wrapper pointed by C<marpaWrapperValuep>.
 
 User will nagivate in a parse tree forest, and will be able to get all possible alternatives at a given point, eventually rejecting those unwanted. Internally, the wrapper will maintain a node within the parse tree forest, from where nagivation goes on.
 
-=head2 marpaWrapperValue_newp
+=head2 marpaWrapperAsf_newp
 
   typedef struct marpaWrapperAsfOption {
     genericLogger_t *genericLoggerp;             /* Default: NULL. */
