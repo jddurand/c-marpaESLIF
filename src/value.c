@@ -371,10 +371,12 @@ short marpaWrapperValue_g1startb(marpaWrapperValue_t *marpaWrapperValuep, int *g
   step_type = marpa_v_step_type(marpaWrapperValuep->marpaValuep);
   switch (step_type) {
   case MARPA_STEP_RULE:
+    MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_v_rule_start_es_id(%p)", marpaWrapperValuep->marpaValuep);
     start_earley_set = marpa_v_rule_start_es_id(marpaWrapperValuep->marpaValuep);
     break;
   case MARPA_STEP_TOKEN:
   case MARPA_STEP_NULLING_SYMBOL:
+    MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_v_token_start_es_id(%p)", marpaWrapperValuep->marpaValuep);
     start_earley_set = marpa_v_token_start_es_id(marpaWrapperValuep->marpaValuep);
     break;
   default:
@@ -384,6 +386,63 @@ short marpaWrapperValue_g1startb(marpaWrapperValue_t *marpaWrapperValuep, int *g
 
   if (g1startip != NULL) {
     *g1startip = (int) start_earley_set;
+  }
+  MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return 1");
+  return 1;
+
+ err:
+  MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return 0");
+  return 0;
+}
+
+/****************************************************************************/
+short marpaWrapperValue_g1lengthb(marpaWrapperValue_t *marpaWrapperValuep, int *g1lengthip)
+/****************************************************************************/
+{
+  MARPAWRAPPER_FUNCS(marpaWrapperValue_g1lengthb);
+  genericLogger_t    *genericLoggerp = NULL;
+  Marpa_Step_Type     step_type;
+  Marpa_Earley_Set_ID start_earley_set;
+  Marpa_Earley_Set_ID end_earley_set;
+  int                 g1lengthi;
+
+  if (marpaWrapperValuep == NULL) {
+    errno = EINVAL;
+    goto err;
+  }
+
+  if (marpaWrapperValuep->marpaValuep == NULL) {
+    MARPAWRAPPER_ERRORF(genericLoggerp, "marpaWrapperValue_g1lengthb() called outside of marpaWrapperValue_valueb()");
+    goto err;
+  }
+
+  genericLoggerp = marpaWrapperValuep->marpaWrapperValueOption.genericLoggerp;
+  step_type = marpa_v_step_type(marpaWrapperValuep->marpaValuep);
+  switch (step_type) {
+  case MARPA_STEP_RULE:
+    MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_v_rule_start_es_id(%p)", marpaWrapperValuep->marpaValuep);
+    start_earley_set = marpa_v_rule_start_es_id(marpaWrapperValuep->marpaValuep);
+    MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_v_es_id(%p)", marpaWrapperValuep->marpaValuep);
+    end_earley_set = marpa_v_es_id(marpaWrapperValuep->marpaValuep);
+    g1lengthi = end_earley_set - start_earley_set + 1;
+    break;
+  case MARPA_STEP_NULLING_SYMBOL:
+    g1lengthi = 0;
+    break;
+  case MARPA_STEP_TOKEN:
+    MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_v_token_start_es_id(%p)", marpaWrapperValuep->marpaValuep);
+    start_earley_set = marpa_v_token_start_es_id(marpaWrapperValuep->marpaValuep);
+    MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_v_es_id(%p)", marpaWrapperValuep->marpaValuep);
+    end_earley_set = marpa_v_es_id(marpaWrapperValuep->marpaValuep);
+    g1lengthi = end_earley_set - start_earley_set + 1;
+    break;
+  default:
+    MARPAWRAPPER_WARNF(genericLoggerp, "Unsupported step type %d", (int) step_type);
+    goto err;
+  }
+
+  if (g1lengthip != NULL) {
+    *g1lengthip = g1lengthi;
   }
   MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return 1");
   return 1;
