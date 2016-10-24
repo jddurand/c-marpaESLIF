@@ -51,6 +51,10 @@ Testing/
 Win32/
 ipch/
 
+# Code::Blocks garbage
+*.cbp
+*.layout
+
 # Our garbage
 *~
 output/
