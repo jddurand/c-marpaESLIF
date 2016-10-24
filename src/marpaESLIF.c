@@ -45,6 +45,7 @@ static inline void                   _marpaESLIF_grammar_freev(marpaESLIF_gramma
 static inline void                   _marpaESLIF_ruleStack_freev(genericStack_t *ruleStackp);
 static inline void                   _marpaESLIF_lexemeStack_freev(genericStack_t *lexemeStackp);
 static inline void                   _marpaESLIF_lexemeStack_resetv(genericStack_t *lexemeStackp);
+static inline short                  _marpaESLIF_lexemeStack_ix_resetb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, genericStack_t *lexemeStackp, int ix);
 static inline short                  _marpaESLIFRecognizer_lexemeStack_ix_sizeb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, genericStack_t *lexemeStackp, int ix, size_t *sizelp);
 static inline short                  _marpaESLIFRecognizer_lexemeStack_ix_p(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, genericStack_t *lexemeStackp, int ix, char **pp);
 static inline const char            *_marpaESLIF_genericStack_ix_types(genericStack_t *stackp, int ix);
@@ -1085,6 +1086,38 @@ static inline void _marpaESLIF_lexemeStack_resetv(genericStack_t *lexemeStackp)
       }
     }
   }
+}
+
+/*****************************************************************************/
+static inline short _marpaESLIF_lexemeStack_ix_resetb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, genericStack_t *lexemeStackp, int ix)
+/*****************************************************************************/
+{
+  const static char *funcs = "_marpaESLIF_lexemeStack_ix_resetb";
+  short              rcb;
+
+  if (lexemeStackp != NULL) {
+    if (GENERICSTACK_IS_ARRAY(lexemeStackp, ix)) {
+      GENERICSTACKITEMTYPE2TYPE_ARRAY array = GENERICSTACK_GET_ARRAY(lexemeStackp, ix);
+      MARPAESLIF_TRACEF(marpaESLIFRecognizerp->marpaESLIFp, funcs, "Resetting at indice %d of lexemeStackp", ix);
+      if (GENERICSTACK_ARRAY_PTR(array) != NULL) {
+        free(GENERICSTACK_ARRAY_PTR(array));
+      }
+      GENERICSTACK_SET_NA(lexemeStackp, ix);
+      if (GENERICSTACK_ERROR(lexemeStackp)) {
+        MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "lexemeStackp set failure, %s", strerror(errno));
+        goto err;
+      }
+    }
+  }
+
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  return rcb;
 }
 
 /*****************************************************************************/
@@ -3392,6 +3425,12 @@ static short _marpaESLIFValueRuleCallback(void *userDatavp, int rulei, int arg0i
     }
   }
 
+  /* It can happen that resulti is in the range [arg0i..argni] */
+  if ((resulti >= arg0i) && (resulti <= argni)) {
+    if (! _marpaESLIF_lexemeStack_ix_resetb(marpaESLIFRecognizerp, outputStackp, resulti)) {
+      goto err;
+    }
+  }
   GENERICSTACK_SET_ARRAY(outputStackp, array, resulti);
   if (GENERICSTACK_ERROR(outputStackp)) {
     MARPAESLIF_ERRORF(marpaESLIFp, "outputStackp push failure, %s", strerror(errno));
