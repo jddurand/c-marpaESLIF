@@ -412,6 +412,25 @@ Convenient method that is combining calls to C<marpaWrapperRecognizer_alternativ
 
 Returns 1 on success, 0 on failure.
 
+=head2 marpaWrapperRecognizer_latestb
+
+  short marpaWrapperRecognizer_latestb(marpaWrapperRecognizer_t *marpaWrapperRecognizerp, int *earleySetIdip)
+
+Put the latest Earleme Set Id in the value pointed by C<earleySetIdip>, if it is not C<NULL>. The user is foreseen to keep track of any associated data, and use the methods C<marpaWrapperValue_value_startb()> and C<marpaWrapperValue_value_lengthb()> to process some Earleme Set Id related information during valuation.
+
+Returns 1 on success, 0 on failure.
+
+=head2 marpaWrapperRecognizer_readb
+
+  short marpaWrapperRecognizer_readb(marpaWrapperRecognizer_t *marpaWrapperRecognizerp,
+                                     int symboli,
+                                     int valuei,
+                                     int lengthi)
+
+Convenient method that is combining calls to C<marpaWrapperRecognizer_alternativeb> and C<marpaWrapperRecognizer_completeb> on a single symbol, useful when the end-user knows there is only one alternative.
+
+Returns 1 on success, 0 on failure.
+
 =head2 marpaWrapperRecognizer_event_onoffb
 
   short marpaWrapperRecognizer_event_onoffb(marpaWrapperRecognizer_t *marpaWrapperRecognizerp,

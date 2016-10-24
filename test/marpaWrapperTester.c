@@ -174,6 +174,14 @@ int main(int argc, char **argv) {
       rci = 1;
     }
   }
+  if (rci == 0) {
+    int earleySetIdi;
+    if (marpaWrapperRecognizer_latestb(marpaWrapperRecognizerp, &earleySetIdi) == 0) {
+      rci = 1;
+    } else {
+      GENERICLOGGER_TRACEF(marpaWrapperRecognizerOption.genericLoggerp, "... Latest Earleme Set ID: %d", earleySetIdi);
+    }
+  }
   /* -- */
   /* op */
   /* -- */
@@ -186,6 +194,14 @@ int main(int argc, char **argv) {
   if (rci == 0) {
     if (marpaWrapperRecognizer_readb(marpaWrapperRecognizerp, symbolip[op], GENERICSTACK_USED(valueContext.inputStackp) - 1 /* value */, 1 /* length */) == 0) {
       rci = 1;
+    }
+  }
+  if (rci == 0) {
+    int earleySetIdi;
+    if (marpaWrapperRecognizer_latestb(marpaWrapperRecognizerp, &earleySetIdi) == 0) {
+      rci = 1;
+    } else {
+      GENERICLOGGER_TRACEF(marpaWrapperRecognizerOption.genericLoggerp, "... Latest Earleme Set ID: %d", earleySetIdi);
     }
   }
   /* ------ */
@@ -202,6 +218,14 @@ int main(int argc, char **argv) {
       rci = 1;
     }
   }
+  if (rci == 0) {
+    int earleySetIdi;
+    if (marpaWrapperRecognizer_latestb(marpaWrapperRecognizerp, &earleySetIdi) == 0) {
+      rci = 1;
+    } else {
+      GENERICLOGGER_TRACEF(marpaWrapperRecognizerOption.genericLoggerp, "... Latest Earleme Set ID: %d", earleySetIdi);
+    }
+  }
   /* -- */
   /* op */
   /* -- */
@@ -214,6 +238,14 @@ int main(int argc, char **argv) {
   if (rci == 0) {
     if (marpaWrapperRecognizer_readb(marpaWrapperRecognizerp, symbolip[op], GENERICSTACK_USED(valueContext.inputStackp) - 1 /* value */, 1 /* length */) == 0) {
       rci = 1;
+    }
+  }
+  if (rci == 0) {
+    int earleySetIdi;
+    if (marpaWrapperRecognizer_latestb(marpaWrapperRecognizerp, &earleySetIdi) == 0) {
+      rci = 1;
+    } else {
+      GENERICLOGGER_TRACEF(marpaWrapperRecognizerOption.genericLoggerp, "... Latest Earleme Set ID: %d", earleySetIdi);
     }
   }
   /* ------ */
@@ -230,6 +262,14 @@ int main(int argc, char **argv) {
       rci = 1;
     }
   }
+  if (rci == 0) {
+    int earleySetIdi;
+    if (marpaWrapperRecognizer_latestb(marpaWrapperRecognizerp, &earleySetIdi) == 0) {
+      rci = 1;
+    } else {
+      GENERICLOGGER_TRACEF(marpaWrapperRecognizerOption.genericLoggerp, "... Latest Earleme Set ID: %d", earleySetIdi);
+    }
+  }
   /* -- */
   /* op */
   /* -- */
@@ -244,6 +284,14 @@ int main(int argc, char **argv) {
       rci = 1;
     }
   }
+  if (rci == 0) {
+    int earleySetIdi;
+    if (marpaWrapperRecognizer_latestb(marpaWrapperRecognizerp, &earleySetIdi) == 0) {
+      rci = 1;
+    } else {
+      GENERICLOGGER_TRACEF(marpaWrapperRecognizerOption.genericLoggerp, "... Latest Earleme Set ID: %d", earleySetIdi);
+    }
+  }
   /* ------ */
   /* number */
   /* ------ */
@@ -256,6 +304,14 @@ int main(int argc, char **argv) {
   if (rci == 0) {
     if (marpaWrapperRecognizer_readb(marpaWrapperRecognizerp, symbolip[number], GENERICSTACK_USED(valueContext.inputStackp) - 1 /* value */, 1 /* length */) == 0) {
       rci = 1;
+    }
+  }
+  if (rci == 0) {
+    int earleySetIdi;
+    if (marpaWrapperRecognizer_latestb(marpaWrapperRecognizerp, &earleySetIdi) == 0) {
+      rci = 1;
+    } else {
+      GENERICLOGGER_TRACEF(marpaWrapperRecognizerOption.genericLoggerp, "... Latest Earleme Set ID: %d", earleySetIdi);
     }
   }
 
