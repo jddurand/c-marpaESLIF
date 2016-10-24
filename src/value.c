@@ -363,7 +363,7 @@ short marpaWrapperValue_value_startb(marpaWrapperValue_t *marpaWrapperValuep, in
   }
 
   if (marpaWrapperValuep->marpaValuep == NULL) {
-    MARPAWRAPPER_ERRORF(genericLoggerp, "marpaWrapperValue_value_startb() called outside of marpaWrapperValue_valueb()");
+    MARPAWRAPPER_ERROR(genericLoggerp, "marpaWrapperValue_value_startb() called outside of marpaWrapperValue_valueb()");
     goto err;
   }
 
@@ -412,7 +412,7 @@ short marpaWrapperValue_value_lengthb(marpaWrapperValue_t *marpaWrapperValuep, i
   }
 
   if (marpaWrapperValuep->marpaValuep == NULL) {
-    MARPAWRAPPER_ERRORF(genericLoggerp, "marpaWrapperValue_value_lengthb() called outside of marpaWrapperValue_valueb()");
+    MARPAWRAPPER_ERROR(genericLoggerp, "marpaWrapperValue_value_lengthb() called outside of marpaWrapperValue_valueb()");
     goto err;
   }
 
