@@ -21,6 +21,7 @@ typedef enum    marpaESLIF_array_type      marpaESLIF_array_type_t;
 typedef struct  marpaESLIF_readerContext   marpaESLIF_readerContext_t;
 typedef struct  marpaESLIF_valueContext    marpaESLIF_valueContext_t;
 typedef struct  marpaESLIF_cloneContext    marpaESLIF_cloneContext_t;
+typedef struct  marpaESLIF_action          marpaESLIF_action_t;
 
 /* Symbol types */
 enum marpaESLIF_symbol_type {
@@ -145,21 +146,36 @@ enum marpaESLIF_event_type {
 
 /* Action types */
 enum marpaESLIF_action_type {
-  MARPAESLIF_ACTION_TYPE_NA        = 0x00,
-  MARPAESLIF_ACTION_TYPE_ARRAY     = 0x01, /* ::array */
-  MARPAESLIF_ACTION_TYPE_FIRST     = 0x02, /* ::first */
-  MARPAESLIF_ACTION_TYPE_UNDEF     = 0x04, /* ::undef */
-  MARPAESLIF_ACTION_TYPE_COMPOSITE = 0x08  /* [] */
+  MARPAESLIF_ACTION_TYPE_NA = 0,
+  MARPAESLIF_ACTION_TYPE_ARRAY,      /* ::array */
+  MARPAESLIF_ACTION_TYPE_FIRST,      /* ::first */
+  MARPAESLIF_ACTION_TYPE_UNDEF,      /* ::undef */
+  MARPAESLIF_ACTION_TYPE_COMPOSITE,  /* [] */
+  MARPAESLIF_ACTION_TYPE_NAME        /* c.f. action callback */
 };
 
 /* Array action types */
 enum marpaESLIF_array_type {
-  MARPAESLIF_ARRAY_TYPE_NA       = 0x00,
-  MARPAESLIF_ARRAY_TYPE_NAME     = 0x01, /* name */
-  MARPAESLIF_ARRAY_TYPE_RULE     = 0x02, /* rule */
-  MARPAESLIF_ARRAY_TYPE_SYMBOL   = 0x04, /* symbol */
-  MARPAESLIF_ARRAY_TYPE_VALUE    = 0x08, /* value */
-  MARPAESLIF_ARRAY_TYPE_VALUES   = 0x08, /* values: a synonym for value */
+  MARPAESLIF_ARRAY_TYPE_NA = 0,
+  MARPAESLIF_ARRAY_TYPE_START,    /* start */
+  MARPAESLIF_ARRAY_TYPE_LENGTH,   /* length */
+  MARPAESLIF_ARRAY_TYPE_G1START,  /* g1start */
+  MARPAESLIF_ARRAY_TYPE_G1LENGTH, /* g1length */
+  MARPAESLIF_ARRAY_TYPE_NAME,     /* name */
+  MARPAESLIF_ARRAY_TYPE_LHS,      /* rule */
+  MARPAESLIF_ARRAY_TYPE_RULE,     /* rule */
+  MARPAESLIF_ARRAY_TYPE_SYMBOL,   /* symbol */
+  MARPAESLIF_ARRAY_TYPE_VALUE,    /* value */
+  MARPAESLIF_ARRAY_TYPE_VALUES,   /* values: a synonym for value */
+};
+
+/* Action description */
+struct marpaESLIF_action {
+  marpaESLIF_action_type_t type;
+  union {
+    genericStack_t      *compositeStackp; /* Only when type is MARPAESLIF_ACTION_TYPE_COMPOSITE */
+    marpaESLIF_string_t *stringp;         /* Only when type is MARPAESLIF_ACTION_TYPE_NAME */
+  } u;
 };
 
 /* A symbol */
@@ -202,6 +218,7 @@ struct marpaESLIF_rule {
   genericStack_t      *rhsStackp;       /* Stack of RHS symbols */
   genericStack_t      *maskStackp;      /* Stack of RHS mask */
   genericStack_t      *exceptionStackp; /* Stack of Exceptions symbols */
+  marpaESLIF_string_t *actionp;         /* Associated action */
 };
 
 /* A grammar */
@@ -270,12 +287,26 @@ struct marpaESLIFRecognizer {
   size_t                       eventArrayl;
   marpaESLIFRecognizer_t      *parentRecognizerp;
   unsigned long                resumeCounterl; /* Internal counter for tracing - no functional impact */
-  char                        *inputs;
-  size_t                       inputl;
-  short                        eofb;
-  short                        scanb;
-  short                        discardb; /* discard mode */
-  short                        haveLexemeb;
+
+  char                        *buffers;        /* Pointer to allocated buffer containing input */
+  size_t                       bufferl;        /* Number of valid bytes in this buffer (!= allocated size in the exceptional case of a realloc failure) */
+  short                        eofb;           /* EOF flag */
+  char                       **buffersp;       /* Pointer to allocated buffer - for sharing with eventual parent recognizers */
+  size_t                      *bufferlp;       /* Ditto for the size */
+  short                       *eofbp;          /* Ditto for the EOF flag */
+
+  char                        *remembers;      /* Same logic as with the buffer */
+  size_t                       rememberl;
+  char                       **remembersp;
+  size_t                      *rememberlp;
+
+  size_t                       parentDeltal;   /* Parent original delta - used to recovert parent current pointer at our free */
+  char                        *inputs;         /* Current pointer in input - specific to every recognizer */
+  size_t                       inputl;         /* Current remaining bytes - specific to every recognizer */
+  short                        scanb;          /* Prevent resume before a call to scan */
+  short                        discardb;       /* discard mode */
+  short                        haveLexemeb;    /* Remember if this recognizer have at least one lexeme */
+
 };
 
 /* ------------------------------------------- */
@@ -301,18 +332,19 @@ marpaESLIFRecognizerOption_t marpaESLIFRecognizerOption_default = {
   0,                 /* disableThresholdb */
   0,                 /* exhaustedb */
   0,                 /* latmb */
-  0                  /* rejectionb */
+  0,                 /* rejectionb */
+  0                  /* rememberInputb */
 };
 
 marpaESLIFValueOption_t marpaESLIFValueOption_default_template = {
   NULL, /* userDatavp - filled at run-time */
   NULL, /* valueCallbackp - filled at run-time */
-  1, /* highRankOnlyb */
-  1, /* orderByRankb */
-  0, /* ambiguousb */
-  0, /* nullb */
-  0, /* maxParsesi */
-  NULL /* outputStackp */
+  1,    /* highRankOnlyb */
+  1,    /* orderByRankb */
+  0,    /* ambiguousb */
+  0,    /* nullb */
+  0,    /* maxParsesi */
+  NULL  /* outputStackp */
 };
 
 #include "marpaESLIF/internal/eslif.h"
