@@ -378,13 +378,16 @@ static short valueRuleCallback(void *userDatavp, int rulei, int arg0i, int argni
   stackValueAndDescription_t *resultp         = NULL;
   short                       rcb;
   int                         g1starti;
-
+  int                         g1lengthi;
 
   if (! marpaWrapperValue_g1startb(marpaWrapperValuep, &g1starti)) {
     goto err;
   }
+  if (! marpaWrapperValue_g1lengthb(marpaWrapperValuep, &g1lengthi)) {
+    goto err;
+  }
 
-  GENERICLOGGER_TRACEF(genericLoggerp, "[%s] G1 start: %d", funcs, g1starti);
+  GENERICLOGGER_TRACEF(genericLoggerp, "[%s] G1 start/end: %d/%d", funcs, g1starti, g1lengthi);
   GENERICLOGGER_TRACEF(genericLoggerp, "[%s] Stacks before:", funcs);
   dumpStacks(valueContextp);
 
@@ -478,13 +481,24 @@ static short valueSymbolCallback(void *userDatavp, int symboli, int argi, int re
   static const char           funcs[] = "valueSymbolCallback";
   valueContext_t             *valueContextp   = (valueContext_t *) userDatavp;
   marpaWrapperRecognizer_t   *marpaWrapperRecognizerp = valueContextp->marpaWrapperRecognizerp;
+  marpaWrapperValue_t        *marpaWrapperValuep = valueContextp->marpaWrapperValuep;
   genericStack_t             *inputStackp     = valueContextp->inputStackp;
   genericStack_t             *outputStackp    = valueContextp->outputStackp;
   genericLogger_t            *genericLoggerp  = valueContextp->genericLoggerp;
   int                        *symbolip        = valueContextp->symbolip;
   stackValueAndDescription_t *resultp         = NULL;
   short                       rcb;
+  int                         g1starti;
+  int                         g1lengthi;
 
+  if (! marpaWrapperValue_g1startb(marpaWrapperValuep, &g1starti)) {
+    goto err;
+  }
+  if (! marpaWrapperValue_g1lengthb(marpaWrapperValuep, &g1lengthi)) {
+    goto err;
+  }
+
+  GENERICLOGGER_TRACEF(genericLoggerp, "[%s] G1 start/end: %d/%d", funcs, g1starti, g1lengthi);
   GENERICLOGGER_TRACEF(genericLoggerp, "[%s] Stacks before:", funcs);
   dumpStacks(valueContextp);
 
