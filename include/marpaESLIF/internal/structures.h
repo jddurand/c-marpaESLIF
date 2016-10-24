@@ -198,6 +198,7 @@ struct marpaESLIF_rule {
   size_t               descl;
   char                *asciidescs;      /* Rule description (ASCII) */
   marpaESLIF_symbol_t *lhsp;            /* LHS symbol */
+  marpaESLIF_symbol_t *separatorp;      /* Eventual separator symbol */
   genericStack_t      *rhsStackp;       /* Stack of RHS symbols */
   genericStack_t      *maskStackp;      /* Stack of RHS mask */
   genericStack_t      *exceptionStackp; /* Stack of Exceptions symbols */
