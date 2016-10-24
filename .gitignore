@@ -39,6 +39,8 @@ CTestTestfile.cmake
 Makefile
 cmake_install.cmake
 install_manifest.txt
+
+# Visual Studio garbage
 *.vcxproj
 *.vcxproj.filters
 *.vcxproj.user
