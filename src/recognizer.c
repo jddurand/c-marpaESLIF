@@ -205,6 +205,37 @@ short marpaWrapperRecognizer_completeb(marpaWrapperRecognizer_t *marpaWrapperRec
 }
 
 /****************************************************************************/
+short marpaWrapperRecognizer_latestb(marpaWrapperRecognizer_t *marpaWrapperRecognizerp, int *earleySetIdip)
+/****************************************************************************/
+{
+  MARPAWRAPPER_FUNCS(marpaWrapperRecognizer_latestb);
+  genericLogger_t *genericLoggerp = NULL;
+  Marpa_Earley_Set_ID earleySetIdi;
+
+  if (marpaWrapperRecognizerp == NULL) {
+    errno = EINVAL;
+    goto err;
+  }
+
+  genericLoggerp = marpaWrapperRecognizerp->marpaWrapperRecognizerOption.genericLoggerp;
+
+  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_r_latest_earley_set(%p)", marpaWrapperRecognizerp->marpaRecognizerp);
+  /* This method always succeed as per the doc */
+  earleySetIdi = marpa_r_latest_earley_set(marpaWrapperRecognizerp->marpaRecognizerp);
+
+  if (earleySetIdip != NULL) {
+    *earleySetIdip = (int) earleySetIdi;
+  }
+
+  MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return 1");
+  return 1;
+
+ err:
+  MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return 0");
+  return 0;
+}
+
+/****************************************************************************/
 short marpaWrapperRecognizer_readb(marpaWrapperRecognizer_t *marpaWrapperRecognizerp, int symboli, int valuei, int lengthi)
 /****************************************************************************/
 {
