@@ -10,11 +10,12 @@ enum { START_RULE = 0, OP_RULE, NUMBER_RULE, MAX_RULE };
 static char *desc[] = { "S", "E", "op", "number", "?" };
 typedef struct valueContext {
   marpaWrapperRecognizer_t *marpaWrapperRecognizerp;
-  int             *symbolip;
-  int             *ruleip;
-  genericStack_t  *inputStackp;
-  genericStack_t  *outputStackp;
-  genericLogger_t *genericLoggerp;
+  marpaWrapperValue_t      *marpaWrapperValuep;
+  int                      *symbolip;
+  int                      *ruleip;
+  genericStack_t           *inputStackp;
+  genericStack_t           *outputStackp;
+  genericLogger_t          *genericLoggerp;
 } valueContext_t;
 
 static char *symbolDescription(void *userDatavp, int symboli);
@@ -48,7 +49,7 @@ int main(int argc, char **argv) {
   size_t                         nsymboll;
   int                            i;
   int                            outputStackSizei;
-  valueContext_t                 valueContext = { NULL, symbolip, ruleip, NULL, NULL, GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_TRACE) };
+  valueContext_t                 valueContext = { NULL, NULL, symbolip, ruleip, NULL, NULL, GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_TRACE) };
   int                            symbolPropertyBitSet;
   int                            rulePropertyBitSet;
   
@@ -305,6 +306,7 @@ int main(int argc, char **argv) {
   }
 
   if (rci == 0) {
+    valueContext.marpaWrapperValuep = marpaWrapperValuep;
     while (marpaWrapperValue_valueb(marpaWrapperValuep,
 				    (void *) &valueContext,
 				    valueRuleCallback,
@@ -369,12 +371,20 @@ static short valueRuleCallback(void *userDatavp, int rulei, int arg0i, int argni
   static const char           funcs[] = "valueRuleCallback";
   valueContext_t             *valueContextp   = (valueContext_t *) userDatavp;
   marpaWrapperRecognizer_t   *marpaWrapperRecognizerp = valueContextp->marpaWrapperRecognizerp;
+  marpaWrapperValue_t        *marpaWrapperValuep = valueContextp->marpaWrapperValuep;
   genericStack_t             *outputStackp   = valueContextp->outputStackp;
   genericLogger_t            *genericLoggerp = valueContextp->genericLoggerp;
   int                        *ruleip          = valueContextp->ruleip;
   stackValueAndDescription_t *resultp         = NULL;
   short                       rcb;
+  int                         g1starti;
 
+
+  if (! marpaWrapperValue_g1startb(marpaWrapperValuep, &g1starti)) {
+    goto err;
+  }
+
+  GENERICLOGGER_TRACEF(genericLoggerp, "[%s] G1 start: %d", funcs, g1starti);
   GENERICLOGGER_TRACEF(genericLoggerp, "[%s] Stacks before:", funcs);
   dumpStacks(valueContextp);
 
