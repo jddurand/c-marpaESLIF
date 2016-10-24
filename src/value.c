@@ -349,10 +349,10 @@ short marpaWrapperValue_valueb(marpaWrapperValue_t               *marpaWrapperVa
 }
 
 /****************************************************************************/
-short marpaWrapperValue_g1startb(marpaWrapperValue_t *marpaWrapperValuep, int *g1startip)
+short marpaWrapperValue_value_startb(marpaWrapperValue_t *marpaWrapperValuep, int *startip)
 /****************************************************************************/
 {
-  MARPAWRAPPER_FUNCS(marpaWrapperValue_g1startb);
+  MARPAWRAPPER_FUNCS(marpaWrapperValue_value_startb);
   genericLogger_t  *genericLoggerp = NULL;
   Marpa_Step_Type step_type;
   Marpa_Earley_Set_ID start_earley_set;
@@ -363,7 +363,7 @@ short marpaWrapperValue_g1startb(marpaWrapperValue_t *marpaWrapperValuep, int *g
   }
 
   if (marpaWrapperValuep->marpaValuep == NULL) {
-    MARPAWRAPPER_ERRORF(genericLoggerp, "marpaWrapperValue_g1startb() called outside of marpaWrapperValue_valueb()");
+    MARPAWRAPPER_ERRORF(genericLoggerp, "marpaWrapperValue_value_startb() called outside of marpaWrapperValue_valueb()");
     goto err;
   }
 
@@ -384,8 +384,8 @@ short marpaWrapperValue_g1startb(marpaWrapperValue_t *marpaWrapperValuep, int *g
     goto err;
   }
 
-  if (g1startip != NULL) {
-    *g1startip = (int) start_earley_set;
+  if (startip != NULL) {
+    *startip = (int) start_earley_set;
   }
   MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return 1");
   return 1;
@@ -396,15 +396,15 @@ short marpaWrapperValue_g1startb(marpaWrapperValue_t *marpaWrapperValuep, int *g
 }
 
 /****************************************************************************/
-short marpaWrapperValue_g1lengthb(marpaWrapperValue_t *marpaWrapperValuep, int *g1lengthip)
+short marpaWrapperValue_value_lengthb(marpaWrapperValue_t *marpaWrapperValuep, int *lengthip)
 /****************************************************************************/
 {
-  MARPAWRAPPER_FUNCS(marpaWrapperValue_g1lengthb);
+  MARPAWRAPPER_FUNCS(marpaWrapperValue_value_lengthb);
   genericLogger_t    *genericLoggerp = NULL;
   Marpa_Step_Type     step_type;
   Marpa_Earley_Set_ID start_earley_set;
   Marpa_Earley_Set_ID end_earley_set;
-  int                 g1lengthi;
+  int                 lengthi;
 
   if (marpaWrapperValuep == NULL) {
     errno = EINVAL;
@@ -412,7 +412,7 @@ short marpaWrapperValue_g1lengthb(marpaWrapperValue_t *marpaWrapperValuep, int *
   }
 
   if (marpaWrapperValuep->marpaValuep == NULL) {
-    MARPAWRAPPER_ERRORF(genericLoggerp, "marpaWrapperValue_g1lengthb() called outside of marpaWrapperValue_valueb()");
+    MARPAWRAPPER_ERRORF(genericLoggerp, "marpaWrapperValue_value_lengthb() called outside of marpaWrapperValue_valueb()");
     goto err;
   }
 
@@ -424,25 +424,25 @@ short marpaWrapperValue_g1lengthb(marpaWrapperValue_t *marpaWrapperValuep, int *
     start_earley_set = marpa_v_rule_start_es_id(marpaWrapperValuep->marpaValuep);
     MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_v_es_id(%p)", marpaWrapperValuep->marpaValuep);
     end_earley_set = marpa_v_es_id(marpaWrapperValuep->marpaValuep);
-    g1lengthi = end_earley_set - start_earley_set + 1;
+    lengthi = end_earley_set - start_earley_set + 1;
     break;
   case MARPA_STEP_NULLING_SYMBOL:
-    g1lengthi = 0;
+    lengthi = 0;
     break;
   case MARPA_STEP_TOKEN:
     MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_v_token_start_es_id(%p)", marpaWrapperValuep->marpaValuep);
     start_earley_set = marpa_v_token_start_es_id(marpaWrapperValuep->marpaValuep);
     MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_v_es_id(%p)", marpaWrapperValuep->marpaValuep);
     end_earley_set = marpa_v_es_id(marpaWrapperValuep->marpaValuep);
-    g1lengthi = end_earley_set - start_earley_set + 1;
+    lengthi = end_earley_set - start_earley_set + 1;
     break;
   default:
     MARPAWRAPPER_WARNF(genericLoggerp, "Unsupported step type %d", (int) step_type);
     goto err;
   }
 
-  if (g1lengthip != NULL) {
-    *g1lengthip = g1lengthi;
+  if (lengthip != NULL) {
+    *lengthip = lengthi;
   }
   MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return 1");
   return 1;
