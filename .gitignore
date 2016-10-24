@@ -52,6 +52,8 @@ install_manifest.txt
 Testing/
 Win32/
 ipch/
+*.psess
+*.vsp
 
 # Code::Blocks garbage
 *.cbp
