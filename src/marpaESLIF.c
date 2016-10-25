@@ -2044,7 +2044,7 @@ static inline void _marpaESLIF_utf82printableascii_freev(char *utf82printableasc
 }
 
 /*****************************************************************************/
-static inline char *_marpaESLIF_tconv_newp(marpaESLIF_t *marpaESLIFp, char *toEncodings, char *fromEncodings, char *descs, size_t descl, size_t *utf8lp)
+static inline char *_marpaESLIF_tconv_newp(marpaESLIF_t *marpaESLIFp, char *toEncodings, char *fromEncodings, char *descs, size_t descl, size_t *desclp)
 /*****************************************************************************/
 {
   const static char *funcs       = "_marpaESLIF_utf8_newp";
@@ -2140,7 +2140,7 @@ static inline char *_marpaESLIF_tconv_newp(marpaESLIF_t *marpaESLIFp, char *toEn
   }
 
   rcp = outbuforigp;
-  *utf8lp = outbuforigl;
+  *desclp = outbuforigl;
   goto done;
 
  err:
