@@ -48,7 +48,7 @@ typedef struct marpaESLIFEvent {
   size_t                eventl;                     /* Length in bytes                        */
 } marpaESLIFEvent_t;
 
-typedef short (*marpaESLIFActionCallback_t)(void *userDatavp, char *names, size_t namel, int arg0i, int argni, int resulti);
+typedef short (*marpaESLIFActionCallback_t)(void *userDatavp, char *names, size_t namel, char *inputs, size_t inputl, int arg0i, int argni, int resulti);
 
 typedef struct marpaESLIFValueOption {
   void                      *userDatavp;            /* User specific context */
