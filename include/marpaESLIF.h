@@ -14,6 +14,16 @@ typedef struct marpaESLIFGrammar    marpaESLIFGrammar_t;
 typedef struct marpaESLIFRecognizer marpaESLIFRecognizer_t;
 typedef struct marpaESLIFValue      marpaESLIFValue_t;
 
+/* A string */
+typedef struct marpaESLIFString {
+  char   *bytep;            /* pointer bytes */
+  size_t  bytel;            /* number of bytes */
+  char   *encodings;        /* Encoding of previous bytes, itself being writen in ASCII encoding, NUL byte terminated - never NULL if bytep is not NULL */
+  char   *asciis;           /* ASCII (un-translatable bytes are changed to a replacement character) translation of previous bytes, NUL byte terminated - never NULL if bytep is not NULL */
+  short   shallowb;         /* If true, all pointers are shallow copies */
+  struct marpaESLIFString *stringp; /* Origin if shallow is true */
+} marpaESLIFString_t;
+
 typedef struct marpaESLIFGrammarOption {
   char   *grammars;         /* Grammar */
   size_t  grammarl;         /* Grammar length in bytes */
@@ -44,8 +54,7 @@ typedef enum marpaESLIFEventType {
 
 typedef struct marpaESLIFEvent {
   marpaESLIFEventType_t type;
-  char                 *events;                     /* Point to event name in user's encoding. NULL if exhaustion */
-  size_t                eventl;                     /* Length in bytes                        */
+  marpaESLIFString_t   *stringp; /* Pointer to event name as per the user - NULL if exhaustion */
 } marpaESLIFEvent_t;
 
 typedef short (*marpaESLIFActionCallback_t)(void *userDatavp, char *names, size_t namel, char *inputs, size_t inputl, int arg0i, int argni, int resulti);

@@ -5,7 +5,7 @@
 #include <pcre2.h>
 
 typedef struct  marpaESLIF_regex           marpaESLIF_regex_t;
-typedef struct  marpaESLIF_string          marpaESLIF_string_t;
+typedef         marpaESLIFString_t         marpaESLIF_string_t;
 typedef enum    marpaESLIF_symbol_type     marpaESLIF_symbol_type_t;
 typedef enum    marpaESLIF_terminal_type   marpaESLIF_terminal_type_t;
 typedef struct  marpaESLIF_terminal        marpaESLIF_terminal_t;
@@ -37,27 +37,22 @@ enum marpaESLIF_terminal_type {
   MARPAESLIF_TERMINAL_TYPE_REGEX     /* Regular expression */
 };
 
-/* A string */
-struct marpaESLIF_string {
-  char   *bytep; /* pointer bytes */
-  size_t  bytel; /* number of bytes */
-};
-
 /* Regex modifiers - we take JPCRE2 matching semantics, c.f. https://neurobin.org/projects/softwares/libs/jpcre2/ */
 typedef enum marpaESLIF_regex_option {
-  MARPAESLIF_REGEX_OPTION_NA                       = 0x000,
-  MARPAESLIF_REGEX_OPTION_MATCH_UNSET_BACKREF      = 0x001, /* e */
-  MARPAESLIF_REGEX_OPTION_CASELESS                 = 0x002, /* i */
-  MARPAESLIF_REGEX_OPTION_JAVASCRIPT               = 0x004, /* j */
-  MARPAESLIF_REGEX_OPTION_MULTILINE                = 0x008, /* m */
-  MARPAESLIF_REGEX_OPTION_UCP                      = 0x010, /* n */
-  MARPAESLIF_REGEX_OPTION_DOTALL                   = 0x020, /* s */
-  MARPAESLIF_REGEX_OPTION_EXTENDED                 = 0x040, /* x */
-  MARPAESLIF_REGEX_OPTION_DOLLAR_ENDONLY           = 0x080, /* D */
-  MARPAESLIF_REGEX_OPTION_DUPNAMES                 = 0x100, /* J */
-  MARPAESLIF_REGEX_OPTION_UNGREEDY                 = 0x200, /* U */
-  MARPAESLIF_REGEX_OPTION_NO_UTF                   = 0x400, /* a */
-  MARPAESLIF_REGEX_OPTION_NO_UCP                   = 0x800  /* N */
+  MARPAESLIF_REGEX_OPTION_NA                       = 0x0000,
+  MARPAESLIF_REGEX_OPTION_MATCH_UNSET_BACKREF      = 0x0001, /* e */
+  MARPAESLIF_REGEX_OPTION_CASELESS                 = 0x0002, /* i */
+  MARPAESLIF_REGEX_OPTION_JAVASCRIPT               = 0x0004, /* j */
+  MARPAESLIF_REGEX_OPTION_MULTILINE                = 0x0008, /* m */
+  MARPAESLIF_REGEX_OPTION_UCP                      = 0x0010, /* n */
+  MARPAESLIF_REGEX_OPTION_DOTALL                   = 0x0020, /* s */
+  MARPAESLIF_REGEX_OPTION_EXTENDED                 = 0x0040, /* x */
+  MARPAESLIF_REGEX_OPTION_DOLLAR_ENDONLY           = 0x0080, /* D */
+  MARPAESLIF_REGEX_OPTION_DUPNAMES                 = 0x0100, /* J */
+  MARPAESLIF_REGEX_OPTION_UNGREEDY                 = 0x0200, /* U */
+  MARPAESLIF_REGEX_OPTION_NO_UTF                   = 0x0400, /* a */
+  MARPAESLIF_REGEX_OPTION_NO_UCP                   = 0x0800, /* N */
+  MARPAESLIF_REGEX_OPTION_UTF                      = 0x1000, /* u */
 } marpaESLIF_regex_option_t;
 
 typedef enum marpaESLIF_regex_option_id {
@@ -73,6 +68,7 @@ typedef enum marpaESLIF_regex_option_id {
   MARPAESLIF_REGEX_OPTION_UNGREEDY_ID,
   MARPAESLIF_REGEX_OPTION_NO_UTF_ID,
   MARPAESLIF_REGEX_OPTION_NO_UCP_ID,
+  MARPAESLIF_REGEX_OPTION_UTF_ID,
   _MARPAESLIF_REGEX_OPTION_ID_MAX
 } marpaESLIF_regex_option_id_t;
 
@@ -94,6 +90,7 @@ struct marpaESLIF_regex_option_map {
   { MARPAESLIF_REGEX_OPTION_UNGREEDY,                 "U", PCRE2_UNGREEDY,                           0 },
   { MARPAESLIF_REGEX_OPTION_NO_UTF,                   "a", 0,                                        PCRE2_UTF },
   { MARPAESLIF_REGEX_OPTION_NO_UCP,                   "N", 0,                                        PCRE2_UCP },
+  { MARPAESLIF_REGEX_OPTION_UTF,                      "u", PCRE2_UTF,                                0 }
 };
 
 struct marpaESLIF_regex {
@@ -103,12 +100,12 @@ struct marpaESLIF_regex {
   short       jitCompleteb;   /* Eventual optimized JIT */
   short       jitPartialb;
 #endif
+  short       utf8b; /* Is UTF mode enabled in that pattern ? */
 };
 
 struct marpaESLIF_terminal {
   int                         idi;                 /* Terminal Id */
   marpaESLIF_string_t        *descp;               /* Terminal description */
-  char                       *asciidescs;          /* Terminal description (ASCII) */
   marpaESLIF_terminal_type_t  type;                /* Terminal type */
   marpaESLIFGrammar_matcher_t matcherbp;           /* Terminal matcher */
   union {
@@ -120,7 +117,6 @@ struct marpaESLIF_terminal {
 struct marpaESLIF_meta {
   int                          idi;                       /* Non-terminal Id */
   marpaESLIF_string_t         *descp;                     /* Non-terminal description */
-  char                        *asciidescs;                /* Non-terminal description (ASCII) */
   marpaESLIFGrammar_matcher_t  matcherbp;                 /* Non-terminal matcher */
   marpaWrapperGrammar_t       *marpaWrapperGrammarClonep; /* Eventual cloned grammar */
 };
@@ -188,7 +184,6 @@ struct marpaESLIF_symbol {
   short                        lhsb;                /* Is an LHS somewhere in its grammar ? */
   int                          idi;                 /* Marpa ID */
   marpaESLIF_string_t         *descp;               /* Symbol description */
-  char                        *asciidescs;          /* Shallow pointer to the asciidecs from the union members */
   marpaESLIFGrammar_matcher_t  matcherbp;           /* Matcher function pointer */
   short                        pauseb;              /* -1: before, 0: NA, 1: after */
   short                        pauseIsOnb;          /* 0: off, 1: on */
@@ -207,7 +202,6 @@ struct marpaESLIF_symbol {
 struct marpaESLIF_rule {
   int                  idi;             /* Rule Id */
   marpaESLIF_string_t *descp;           /* Rule description */
-  char                *asciidescs;      /* Rule description (ASCII) */
   char                *asciishows;      /* Rule show (ASCII) */
   marpaESLIF_symbol_t *lhsp;            /* LHS symbol */
   marpaESLIF_symbol_t *separatorp;      /* Eventual separator symbol */
@@ -227,7 +221,6 @@ struct marpaESLIF_grammar {
   marpaESLIF_t          *marpaESLIFp;                 /* Shallow pointer to top marpaESLIFp */
   int                    leveli;                      /* Grammar level */
   marpaESLIF_string_t   *descp;                       /* Grammar description */
-  char                  *asciidescs;                  /* Terminal description (ASCII) */
   marpaWrapperGrammar_t *marpaWrapperGrammarStartp;   /* Grammar implementation at :start */
   marpaWrapperGrammar_t *marpaWrapperGrammarDiscardp; /* Grammar implementation at :discard */
   marpaESLIF_symbol_t   *discardSymbolp;              /* Discard symbol, used at grammar validation */
