@@ -88,10 +88,6 @@ static inline void                   _marpaESLIF_tconv_freev(char *utf8s);
 static inline char                  *_marpaESLIF_utf82printableascii_newp(marpaESLIF_t *marpaESLIFp, char *descs, size_t descl);
 static inline void                   _marpaESLIF_utf82printableascii_freev(char *utf82printableasciip);
 static        short                  _marpaESLIFReader_grammarReader(void *userDatavp, char **inputsp, size_t *inputlp, short *eofbp);
-static        short                  _marpaESLIFReader_grammarSkipper(void *userDatavp, size_t inputl);
-static        short                  _marpaESLIFReader_grammarMarker(void *userDatavp, size_t limitl);
-static        short                  _marpaESLIFReader_grammarResetter(void *userDatavp);
-static        short                  _marpaESLIFReader_grammarCloser(void *userDatavp);
 static inline short                  _marpaESLIFRecognizer_resumeb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, short ignorePreviousEventsb, short *continuebp, short *exhaustedbp);
 static inline marpaESLIF_symbol_t   *_marpaESLIFRecognizer_symbol_findp(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *descs, size_t descl);
 static inline marpaESLIF_grammar_t  *_marpaESLIFGrammar_grammar_findp(marpaESLIFGrammar_t *marpaESLIFGrammarp, char *descs, size_t descl, int leveli);
@@ -976,6 +972,7 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_grammar_newp(marpaESLIF_t *marpa
   grammarp->discardSymbolp              = NULL;
   grammarp->symbolStackp                = NULL;
   grammarp->ruleStackp                  = NULL;
+  grammarp->defaultActionp              = NULL;
 
   grammarp->marpaWrapperGrammarStartp = marpaWrapperGrammar_newp(marpaWrapperGrammarOptionp);
   if (grammarp->marpaWrapperGrammarStartp == NULL) {
@@ -1343,6 +1340,7 @@ static inline marpaESLIF_symbol_t *_marpaESLIF_symbol_newp(marpaESLIF_t *marpaES
   symbolp->lookupGrammarNamep = NULL;
   symbolp->lookupGrammarNamel = 0;
   symbolp->resolvedLeveli     = -1; /* This will be overwriten by _marpaESLIFGrammar_validateb() and used only when symbol is a lexeme from another grammar */
+  symbolp->priorityi          = 0; /* Default priority is 0 */
 
  done:
   /* MARPAESLIF_TRACEF(marpaESLIFp, funcs, "return %p", symbolp); */
@@ -2153,14 +2151,9 @@ marpaESLIFGrammar_t *marpaESLIFGrammar_newp(marpaESLIF_t *marpaESLIFp, marpaESLI
   marpaESLIF_readerContext.utf8s       = utf8s;       /* Full buffer already known */
   marpaESLIF_readerContext.utf8l       = utf8l;       /* Full buffer size */
   marpaESLIF_readerContext.p           = utf8s;       /* Reader current position */
-  marpaESLIF_readerContext.markp       = NULL;        /* Marked position */
 
   marpaESLIFRecognizerOption.userDatavp                  = (void *) &marpaESLIF_readerContext;
   marpaESLIFRecognizerOption.marpaESLIFReaderCallbackp   = _marpaESLIFReader_grammarReader;
-  marpaESLIFRecognizerOption.marpaESLIFSkipperCallbackp  = _marpaESLIFReader_grammarSkipper;
-  marpaESLIFRecognizerOption.marpaESLIFMarkerCallbackp   = _marpaESLIFReader_grammarMarker;
-  marpaESLIFRecognizerOption.marpaESLIFResetterCallbackp = _marpaESLIFReader_grammarResetter;
-  marpaESLIFRecognizerOption.marpaESLIFCloserCallbackp   = _marpaESLIFReader_grammarCloser;
   marpaESLIFRecognizerOption.disableThresholdb           = 1; /* No threshold warning when parsing a grammar */
   marpaESLIFRecognizerOption.exhaustedb                  = 0; /* Exhaustion is not allowed */
   marpaESLIFRecognizerOption.latmb                       = 1; /* Our internal grammar is working in latm mode */
@@ -2262,6 +2255,8 @@ static inline short _marpaESLIFRecognizer_resumeb(marpaESLIFRecognizer_t *marpaE
   marpaESLIFRecognizerOption_t     marpaESLIFRecognizerOptionDiscard = marpaESLIFRecognizerp->marpaESLIFRecognizerOption; /* Things overwriten, see below */
   short                            continueb;
   size_t                           maxMatchedl;
+  int                              maxPriorityi;
+  short                            maxPriorityInitializedb = 0;
   genericStack_t                  *matchedStackp;
   genericStack_t                  *alternativeStackp;
   int                              alternativeOki;
@@ -2471,8 +2466,8 @@ static inline short _marpaESLIFRecognizer_resumeb(marpaESLIFRecognizer_t *marpaE
   /* Generate the eventual pre-lexeme events */
   /* Switch to user space now */
 
-  /* Push alternatives - there are as many entries in alternativeStackp than the number of expected symbols */
-  /* We have done it like this to be able to recover symbolp easily. */
+  /* Prepare filterings */
+  maxPriorityInitializedb = 0;
   for (symboll = 0; symboll < nSymboll; symboll++) {
     symboli = symbolArrayp[symboll];
     if (! GENERICSTACK_IS_PTR(symbolStackp, symboli)) {
@@ -2500,6 +2495,47 @@ static inline short _marpaESLIFRecognizer_resumeb(marpaESLIFRecognizer_t *marpaE
                                     (unsigned long) maxMatchedl);
         continue;
       }      
+    }
+
+    if ((! maxPriorityInitializedb) || (symbolp->priorityi > maxPriorityi)) {
+      maxPriorityi = symbolp->priorityi;
+    }
+  }
+  
+  /* Push alternatives - there are as many entries in alternativeStackp than the number of expected symbols */
+  /* We have done it like this to be able to recover symbolp easily. */
+  for (symboll = 0; symboll < nSymboll; symboll++) {
+    symboli = symbolArrayp[symboll];
+    if (! GENERICSTACK_IS_PTR(symbolStackp, symboli)) {
+      MARPAESLIF_ERRORF(marpaESLIFp, "No such symbol ID %d", symboli);
+      goto err;
+    }
+    symbolp = GENERICSTACK_GET_PTR(symbolStackp, symboli);
+
+    if (GENERICSTACK_IS_NA(alternativeStackp, (int) symboll)) {
+      continue;
+    }
+
+    if (! _marpaESLIFRecognizer_lexemeStack_ix_sizeb(marpaESLIFRecognizerp, alternativeStackp, (int) symboll, &sizel)) {
+      goto err;
+    }
+
+    if (latmb) {
+      /* If latm mode is true, keep only the longests alternatives */
+      /* Already traced few lines higher */
+      if (sizel < maxMatchedl) {
+        continue;
+      }      
+    }
+
+    if (symbolp->priorityi < maxPriorityi) {
+        MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp,
+                                    funcs,
+                                    "Alternative %s is out-prioritized (priority %d < max priority %ld)",
+                                    symbolp->asciidescs,
+                                    symbolp->priorityi,
+                                    maxPriorityi);
+        continue;
     }
 
     /* Commit in the lexeme input stack */
@@ -2738,75 +2774,6 @@ static short _marpaESLIFReader_grammarReader(void *userDatavp, char **inputsp, s
 #endif
 
   MARPAESLIF_TRACEF(marpaESLIFp, funcs, "return 1 (*inputsp=%p, *inputlp=%ld, *eofbp=%d)", *inputsp, (unsigned long) *inputlp, (int) *eofbp);
-  return 1;
-}
-
-/*****************************************************************************/
-static short _marpaESLIFReader_grammarSkipper(void *userDatavp, size_t inputl)
-/*****************************************************************************/
-{
-  const static char          *funcs                     = "marpaESLIFReader_grammarSkipper";
-  marpaESLIF_readerContext_t *marpaESLIF_readerContextp = (marpaESLIF_readerContext_t *) userDatavp;
-  marpaESLIF_t               *marpaESLIFp               = marpaESLIF_readerContextp->marpaESLIFp;
-
-  if (marpaESLIF_readerContextp->p == NULL) {
-    MARPAESLIF_ERRORF(marpaESLIFp, funcs, "Stream is closed");
-    return 0;
-  }
-  
-  MARPAESLIF_TRACEF(marpaESLIFp, funcs, "return 1 (inputl=%ld)", (unsigned long) inputl);
-  return 1;
-}
-
-/*****************************************************************************/
-static short _marpaESLIFReader_grammarMarker(void *userDatavp, size_t limitl)
-/*****************************************************************************/
-{
-  const static char          *funcs                     = "marpaESLIFReader_grammarMarker";
-  marpaESLIF_readerContext_t *marpaESLIF_readerContextp = (marpaESLIF_readerContext_t *) userDatavp;
-  marpaESLIF_t               *marpaESLIFp               = marpaESLIF_readerContextp->marpaESLIFp;
-
-  if (marpaESLIF_readerContextp->p == NULL) {
-    MARPAESLIF_ERRORF(marpaESLIFp, funcs, "Stream is closed");
-    return 0;
-  }
-  
-  marpaESLIF_readerContextp->markp  = marpaESLIF_readerContextp->p;
-
-  MARPAESLIF_TRACEF(marpaESLIFp, funcs, "return 1 (limitl=%ld)", (unsigned long) limitl);
-  return 1;
-}
-
-/*****************************************************************************/
-static short _marpaESLIFReader_grammarResetter(void *userDatavp)
-/*****************************************************************************/
-{
-  const static char          *funcs                     = "marpaESLIFReader_grammarMarker";
-  marpaESLIF_readerContext_t *marpaESLIF_readerContextp = (marpaESLIF_readerContext_t *) userDatavp;
-  marpaESLIF_t               *marpaESLIFp               = marpaESLIF_readerContextp->marpaESLIFp;
-
-  if (marpaESLIF_readerContextp->p == NULL) {
-    MARPAESLIF_ERRORF(marpaESLIFp, funcs, "Stream is closed");
-    return 0;
-  }
-  
-  marpaESLIF_readerContextp->p      = marpaESLIF_readerContextp->markp;
-
-  MARPAESLIF_TRACE(marpaESLIFp, funcs, "return 1");
-  return 1;
-}
-
-/*****************************************************************************/
-static short _marpaESLIFReader_grammarCloser(void *userDatavp)
-/*****************************************************************************/
-{
-  const static char          *funcs                     = "marpaESLIFReader_grammarCloser";
-  marpaESLIF_readerContext_t *marpaESLIF_readerContextp = (marpaESLIF_readerContext_t *) userDatavp;
-  marpaESLIF_t               *marpaESLIFp               = marpaESLIF_readerContextp->marpaESLIFp;
-
-  marpaESLIF_readerContextp->p = NULL;
-
-  MARPAESLIF_TRACE(marpaESLIFp, funcs, "return 1");
   return 1;
 }
 
@@ -3116,25 +3083,9 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGramm
     goto err;
   }
 
-  /* We request all the stream callbacks */
+  /* We request a stream reader callback */
   if (marpaESLIFRecognizerOptionp->marpaESLIFReaderCallbackp == NULL) {
     MARPAESLIF_ERROR(marpaESLIFp, "Null reader callback");
-    goto err;
-  }
-  if (marpaESLIFRecognizerOptionp->marpaESLIFSkipperCallbackp == NULL) {
-    MARPAESLIF_ERROR(marpaESLIFp, "Null skipper callback");
-    goto err;
-  }
-  if (marpaESLIFRecognizerOptionp->marpaESLIFMarkerCallbackp == NULL) {
-    MARPAESLIF_ERROR(marpaESLIFp, "Null marker callback");
-    goto err;
-  }
-  if (marpaESLIFRecognizerOptionp->marpaESLIFResetterCallbackp == NULL) {
-    MARPAESLIF_ERROR(marpaESLIFp, "Null resetter callback");
-    goto err;
-  }
-  if (marpaESLIFRecognizerOptionp->marpaESLIFCloserCallbackp == NULL) {
-    MARPAESLIF_ERROR(marpaESLIFp, "Null closer callback");
     goto err;
   }
   
@@ -4021,7 +3972,7 @@ static inline short _marpaESLIFRecognizer_readb(marpaESLIFRecognizer_t *marpaESL
 
       if (marpaESLIFRecognizerp->parentRecognizerp == NULL) {
         /* When we are not in remember mode, buffer management is different: we can crunch data at any time */
-        /* Unless we are a child reognizer: our parent is stucked on ints {inputs,inputl} tuple. */
+        /* Unless we are a child reognizer: our parent is stucked on its {inputs,inputl} tuple. */
         /* We decide abritrarily than when inputl is < half of buffer size, the later can be reduced */
         size_t bufferl2 = (size_t) (bufferl / (size_t) 2);
 

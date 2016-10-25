@@ -21,17 +21,9 @@ typedef struct marpaESLIFGrammarOption {
 } marpaESLIFGrammarOption_t;
 
 typedef short (*marpaESLIFReader_t)(void *userDatavp, char **inputcpp, size_t *inputlp, short *eofbp);
-typedef short (*marpaESLIFSkipper_t)(void *userDatavp, size_t inputl);
-typedef short (*marpaESLIFMarker_t)(void *userDatavp, size_t limitl);
-typedef short (*marpaESLIFResetter_t)(void *userDatavp);
-typedef short (*marpaESLIFCloser_t)(void *userDatavp);
 typedef struct marpaESLIFRecognizerOption {
   void                *userDatavp;                  /* User specific context */
   marpaESLIFReader_t   marpaESLIFReaderCallbackp;   /* Reader */
-  marpaESLIFSkipper_t  marpaESLIFSkipperCallbackp;  /* Skipper */
-  marpaESLIFMarker_t   marpaESLIFMarkerCallbackp;   /* Marker */
-  marpaESLIFResetter_t marpaESLIFResetterCallbackp; /* Resetter */
-  marpaESLIFCloser_t   marpaESLIFCloserCallbackp;   /* Closer */
   short                disableThresholdb;           /* Default: 0 */
   short                exhaustedb;                  /* Exhaustion event. Default: 0 */
   short                latmb;                       /* Longest acceptable token match mode. Default: 0 */
