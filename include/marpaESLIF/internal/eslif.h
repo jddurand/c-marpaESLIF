@@ -6,7 +6,7 @@ typedef struct bootstrap_grammar_terminal {
   char                      *descs;               /* Description */
   marpaESLIF_terminal_type_t terminalType;        /* Terminal type */
   marpaESLIF_uint32_t        optioni;             /* Terminal option */
-  PCRE2_SPTR                 originp;             /* UTF-8 encoding */
+  char                      *originp;             /* ASCII UTF-8 compatible encoding */
   char                      *testFullMatchs;
   char                      *testPartialMatchs;
 } bootstrap_grammar_terminal_t;

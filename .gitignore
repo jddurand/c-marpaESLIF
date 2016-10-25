@@ -59,6 +59,9 @@ ipch/
 *.cbp
 *.layout
 
+# Valgrind garbage
+*.out.*
+
 # Our garbage
 *~
 output/
