@@ -214,12 +214,18 @@ struct marpaESLIF_rule {
   char                *descs;           /* Rule description */
   size_t               descl;
   char                *asciidescs;      /* Rule description (ASCII) */
+  char                *asciishows;      /* Rule show (ASCII) */
   marpaESLIF_symbol_t *lhsp;            /* LHS symbol */
   marpaESLIF_symbol_t *separatorp;      /* Eventual separator symbol */
   genericStack_t      *rhsStackp;       /* Stack of RHS symbols */
   genericStack_t      *maskStackp;      /* Stack of RHS mask */
   genericStack_t      *exceptionStackp; /* Stack of Exceptions symbols */
   marpaESLIF_string_t *actionp;         /* Associated action */
+  int                  ranki;
+  short                nullRanksHighb;
+  short                sequenceb;
+  short                properb;
+  int                  minimumi;
 };
 
 /* A grammar */
@@ -235,6 +241,9 @@ struct marpaESLIF_grammar {
   genericStack_t        *symbolStackp;                /* Stack of symbols */
   genericStack_t        *ruleStackp;                  /* Stack of rules */
   marpaESLIF_string_t   *defaultActionp;              /* Default action */
+  int                    starti;                      /* Default start symbol ID - filled during grammar validation */
+  int                   *ruleip;                      /* Array of rule IDs - filled by grammar validation */
+  size_t                 rulel;                       /* Size of the rule IDs array - filled by grammar validation */
 };
 
 /* Internal reader context when parsing a grammar. Everything is in utf8s so the reader can say ok to any stream callback */
