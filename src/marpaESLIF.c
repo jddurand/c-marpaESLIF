@@ -3781,7 +3781,7 @@ void marpaESLIFValue_freev(marpaESLIFValue_t *marpaESLIFValuep)
 static short _marpaESLIFValueRuleCallback(void *userDatavp, int rulei, int arg0i, int argni, int resulti)
 /*****************************************************************************/
 {
-  const static char              *funcs                 = "marpaESLIFValueRuleCallback";
+  const static char              *funcs                 = "_marpaESLIFValueRuleCallback";
   marpaESLIFValue_t              *marpaESLIFValuep      = (marpaESLIFValue_t *) userDatavp;
   marpaESLIF_t                   *marpaESLIFp           = marpaESLIFValuep->marpaESLIFp;
   marpaESLIFRecognizer_t         *marpaESLIFRecognizerp = marpaESLIFValuep->marpaESLIFRecognizerp;
@@ -3878,7 +3878,7 @@ static short _marpaESLIFValueRuleCallback(void *userDatavp, int rulei, int arg0i
 static short _marpaESLIFValueSymbolCallback(void *userDatavp, int symboli, int argi, int resulti)
 /*****************************************************************************/
 {
-  const static char              *funcs                 = "marpaESLIFValueSymbolCallback";
+  const static char              *funcs                 = "_marpaESLIFValueSymbolCallback";
   marpaESLIFValue_t              *marpaESLIFValuep      = (marpaESLIFValue_t *) userDatavp;
   marpaESLIF_t                   *marpaESLIFp           = marpaESLIFValuep->marpaESLIFp;
   marpaESLIFRecognizer_t         *marpaESLIFRecognizerp = marpaESLIFValuep->marpaESLIFRecognizerp;
@@ -3954,7 +3954,7 @@ static short _marpaESLIFValueSymbolCallback(void *userDatavp, int symboli, int a
 static short _marpaESLIFValueNullingCallback(void *userDatavp, int symboli, int resulti)
 /*****************************************************************************/
 {
-  const static char              *funcs                 = "marpaESLIFValueNullingCallback";
+  const static char              *funcs                 = "_marpaESLIFValueNullingCallback";
   marpaESLIFValue_t              *marpaESLIFValuep      = (marpaESLIFValue_t *) userDatavp;
   marpaESLIF_t                   *marpaESLIFp           = marpaESLIFValuep->marpaESLIFp;
   marpaESLIFRecognizer_t         *marpaESLIFRecognizerp = marpaESLIFValuep->marpaESLIFRecognizerp;
