@@ -205,6 +205,7 @@ struct marpaESLIF_symbol {
   char                        *lookupGrammarNamep; /* Referenced grammar (string in user's encoding) */
   size_t                       lookupGrammarNamel; /* Referenced grammar (number of bytes of string in user's encoding) */
   int                          resolvedLeveli;     /* Referenced grammar level */
+  int                          priorityi;          /* Symbol priority */
 };
 
 /* A rule */
@@ -233,6 +234,7 @@ struct marpaESLIF_grammar {
   marpaESLIF_symbol_t   *discardSymbolp;              /* Discard symbol, used at grammar validation */
   genericStack_t        *symbolStackp;                /* Stack of symbols */
   genericStack_t        *ruleStackp;                  /* Stack of rules */
+  marpaESLIF_string_t   *defaultActionp;              /* Default action */
 };
 
 /* Internal reader context when parsing a grammar. Everything is in utf8s so the reader can say ok to any stream callback */
@@ -241,7 +243,6 @@ struct marpaESLIF_readerContext {
   char         *utf8s;
   size_t        utf8l;
   char         *p;      /* Current position */
-  char         *markp;  /* Marked position - no notion of limit here */
 };
 
 /* Internal structure to have value context information */
@@ -325,10 +326,6 @@ marpaESLIFGrammarOption_t marpaESLIFGrammarOption_default = {
 marpaESLIFRecognizerOption_t marpaESLIFRecognizerOption_default = {
   NULL,              /* userDatavp */
   NULL,              /* marpaESLIFReaderCallbackp */
-  NULL,              /* marpaESLIFSkipperCallbackp */
-  NULL,              /* marpaESLIFMarkerCallbackp */
-  NULL,              /* marpaESLIFResetterCallbackp */
-  NULL,              /* marpaESLIFCloserCallbackp */
   0,                 /* disableThresholdb */
   0,                 /* exhaustedb */
   0,                 /* latmb */
