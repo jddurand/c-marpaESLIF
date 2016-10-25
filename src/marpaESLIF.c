@@ -2531,7 +2531,7 @@ static inline short _marpaESLIFRecognizer_resumeb(marpaESLIFRecognizer_t *marpaE
     if (symbolp->priorityi < maxPriorityi) {
         MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp,
                                     funcs,
-                                    "Alternative %s is out-prioritized (priority %d < max priority %ld)",
+                                    "Alternative %s is out-prioritized (priority %d < max priority %d)",
                                     symbolp->asciidescs,
                                     symbolp->priorityi,
                                     maxPriorityi);
