@@ -18,10 +18,14 @@ typedef struct marpaESLIFValue      marpaESLIFValue_t;
 typedef struct marpaESLIFString {
   char   *bytep;            /* pointer bytes */
   size_t  bytel;            /* number of bytes */
-  char   *encodings;        /* Encoding of previous bytes, itself being writen in ASCII encoding, NUL byte terminated - never NULL if bytep is not NULL */
+  char   *encodings;        /* Encoding of previous bytes, itself being writen in ASCII encoding, NUL byte terminated */
   char   *asciis;           /* ASCII (un-translatable bytes are changed to a replacement character) translation of previous bytes, NUL byte terminated - never NULL if bytep is not NULL */
   short   shallowb;         /* If true, all pointers are shallow copies */
   struct marpaESLIFString *stringp; /* Origin if shallow is true */
+  /*
+   * Remark: the encodings and asciis pointers are not NULL only when ESLIF know that the buffer is associated to a "description". I.e.
+   * this is happening ONLY when parsing the grammar. Raw data never have non-NULL asciis or encodings.
+   */
 } marpaESLIFString_t;
 
 typedef struct marpaESLIFGrammarOption {
@@ -30,7 +34,7 @@ typedef struct marpaESLIFGrammarOption {
   char   *encodings;        /* Input encoding. Default: NULL */
 } marpaESLIFGrammarOption_t;
 
-typedef short (*marpaESLIFReader_t)(void *userDatavp, char **inputcpp, size_t *inputlp, short *eofbp);
+typedef short (*marpaESLIFReader_t)(void *userDatavp, char **inputcpp, size_t *inputlp, short *eofbp, char **encodingsp);
 typedef struct marpaESLIFRecognizerOption {
   void                *userDatavp;                  /* User specific context */
   marpaESLIFReader_t   marpaESLIFReaderCallbackp;   /* Reader */
