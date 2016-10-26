@@ -78,8 +78,7 @@ static inline marpaESLIF_grammar_t  *_marpaESLIF_bootstrap_grammarp(marpaESLIF_t
                                                                     int bootstrap_grammar_rulei, bootstrap_grammar_rule_t *bootstrap_grammar_rulep);
 static inline short                  _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIFGrammar);
 
-static inline short                  _marpaESLIFGrammar_terminal_string_matcherb(marpaESLIFGrammar_t *marpaESLIFGrammarp, int grammarLeveli, marpaWrapperGrammar_t *marpaWrapperGrammarp, marpaESLIF_terminal_t *terminalp, marpaESLIF_meta_t *metap, char *inputs, size_t inputl, short eofb, marpaESLIF_matcher_value_t *rcip, genericStack_t *outputStackp);
-static inline short                  _marpaESLIFGrammar_terminal_regex_matcherb(marpaESLIFGrammar_t *marpaESLIF_grammarp, int grammarLeveli, marpaWrapperGrammar_t *marpaWrapperGrammarp, marpaESLIF_terminal_t *terminalp, marpaESLIF_meta_t *metap, char *inputs, size_t inputl, short eofb, marpaESLIF_matcher_value_t *rcip, genericStack_t *outputStackp);
+static inline short                  _marpaESLIFGrammar_regex_matcherb(marpaESLIFGrammar_t *marpaESLIF_grammarp, marpaESLIF_terminal_t *terminalp, char *inputs, size_t inputl, short eofb, marpaESLIF_matcher_value_t *rcip, genericStack_t *outputStackp);
 static inline short                  _marpaESLIFGrammar_meta_matcherb(marpaESLIFGrammar_t *marpaESLIFGrammarp, int grammarLeveli, marpaWrapperGrammar_t *marpaWrapperGrammarp, marpaESLIF_terminal_t *terminalp, marpaESLIF_meta_t *metap, marpaESLIFRecognizer_t *marpaESLIFRecognizerParentp, marpaESLIF_matcher_value_t *rcip, genericStack_t *outputStackp, short *exhaustedbp);
 static inline short                  _marpaESLIFRecognizer_symbol_matcherb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIF_symbol_t *symbolp, marpaESLIF_matcher_value_t *rcip, genericStack_t *outputStackp, short *exhaustedbp);
 
@@ -119,7 +118,8 @@ static inline void                   _marpaESLIFGrammar_freev(marpaESLIFGrammar_
 static        char                  *_marpaESLIFGrammar_symbolDescriptionCallback(void *userDatavp, int symboli);
 static        short                  _marpaESLIFGrammar_symbolOptionSetterOnlyStartCompletionEvent(void *userDatavp, int symboli, marpaWrapperGrammarSymbolOption_t *marpaWrapperGrammarSymbolOptionp);
 static inline void                   _marpaESLIF_rule_createshowv(marpaESLIF_t *marpaESLIFp, marpaESLIF_rule_t *rulep, char *asciishows, size_t *asciishowlp);
-
+static inline int                    _marpaESLIF_utf82ordi(PCRE2_SPTR8 utf8bytes, marpaESLIF_uint32_t *uint32p);
+  
 /*****************************************************************************/
 static inline marpaESLIF_string_t *_marpaESLIF_string_newp(marpaESLIF_t *marpaESLIFp, char *encodings, char *bytep, size_t bytel)
 /*****************************************************************************/
@@ -308,19 +308,17 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
   PCRE2_SIZE                        pcre2ErrorOffsetl;
   PCRE2_UCHAR                       pcre2ErrorBuffer[256];
   int                               i;
-  int                               j;
   marpaESLIFGrammar_t               marpaESLIFGrammar;
   char                             *inputs;
   size_t                            inputl;
   marpaESLIF_matcher_value_t        rci;
   GENERICSTACKITEMTYPE2TYPE_ARRAYP  arrayp;
-  marpaESLIF_uint32_t               utf8i;
   marpaESLIF_uint32_t               codepointi;
   short                             utfflagb;
   size_t                            stringl;
   char                             *tmps;
-  int                               hexdigiti;
-  unsigned char                    *cp;
+  size_t                            hexdigitl;
+  int                               utf82ordi;
 
   /* MARPAESLIF_TRACE(marpaESLIFp, funcs, "Building terminal"); */
 
@@ -332,9 +330,6 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
 
   terminalp->idi          = -1;
   terminalp->descp        = NULL;
-  terminalp->type         = MARPAESLIF_TERMINAL_TYPE_NA;
-  terminalp->matcherbp    = NULL;
-
 
   /* ----------- Terminal Identifier ------------ */
   if (grammarp != NULL) { /* Here is the bootstrap dependency with grammarp == NULL */
@@ -354,7 +349,6 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
   }
 
   /* ----------- Terminal Implementation ------------ */
-  terminalp->type = type;
   switch (type) {
 
   case MARPAESLIF_TERMINAL_TYPE_STRING:
@@ -372,7 +366,7 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
       goto err;
     }
     while (inputl > 0) {
-      if (! _marpaESLIFGrammar_terminal_regex_matcherb(&marpaESLIFGrammar, 0 /* grammarLeveli */, NULL /* marpaWrapperGrammarp */, marpaESLIFp->anycharp /* terminalp */, NULL /* metap */, inputs, inputl, 1 /* eofb */, &rci, outputStackp)) {
+      if (! _marpaESLIFGrammar_regex_matcherb(&marpaESLIFGrammar, marpaESLIFp->anycharp, inputs, inputl, 1 /* eofb */, &rci, outputStackp)) {
         goto err;
       }
       if (rci != MARPAESLIF_MATCH_OK) {
@@ -397,28 +391,31 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
         goto err;
       }
       arrayp = GENERICSTACK_GET_ARRAYP(outputStackp, i);
-      cp = GENERICSTACK_ARRAYP_PTR(arrayp);
-      utf8i = 0;
-      codepointi = 0;
-      hexdigiti = 4; /* We add \x{...} around, i.e. 4 ASCII characters more */
-      for (j = 0; j < GENERICSTACK_ARRAYP_LENGTH(arrayp); j++) {
-        if ((hexdigiti + 2) < hexdigiti) {
-          MARPAESLIF_ERROR(marpaESLIFp, "int turnaround");
-          goto err;
-        }
-        hexdigiti += 2; /* Minimum number of hex digits needed to completely represent this character */
-        utf8i <<= 8;
-        utf8i += *cp++;
-      }
-      if (! utfflagb) {
-        utfflagb = (utf8i > 0xFF);
-      }
-      /* Generate the ASCII representation */
-      if ((stringl + (size_t) hexdigiti) < stringl) {
-        MARPAESLIF_ERROR(marpaESLIFp, "size_t turnaround");
+      /* Get the code point from the UTF-8 representation */
+      utf82ordi = _marpaESLIF_utf82ordi((PCRE2_SPTR8) GENERICSTACK_ARRAYP_PTR(arrayp), &codepointi);
+      if (utf82ordi <= 0) {
+        MARPAESLIF_ERRORF(marpaESLIFp, "Malformed UTF-8 character at offset %d", -utf82ordi);
+        goto err;
+      } else if (utf82ordi != (int) GENERICSTACK_ARRAYP_LENGTH(arrayp)) {
+        MARPAESLIF_ERRORF(marpaESLIFp, "Not all bytes consumed: %d instead of %d", utf82ordi, (int) GENERICSTACK_ARRAYP_LENGTH(arrayp));
         goto err;
       }
-      stringl += (size_t) hexdigiti;
+      /* Determine the number of hex digits to fully represent the code point, remembering if we need PCRE2_UTF flag */
+      hexdigitl = 4; /* \x{} */
+      if ((codepointi & 0xFF000000) != 0x00000000) {
+        hexdigitl += 8;
+        utfflagb = 1;
+      } else if ((codepointi & 0x00FF0000) != 0x00000000) {
+        hexdigitl += 6;
+        utfflagb = 1;
+      } else if ((codepointi & 0x0000FF00) != 0x00000000) {
+        hexdigitl += 4;
+        utfflagb = 1;
+      } else {
+        hexdigitl += 2;
+      }
+      /* Append the ASCII representation */
+      stringl += hexdigitl;
       if (strings == NULL) {
         strings = (char *) malloc(stringl + 1);
         if (strings == NULL) {
@@ -435,15 +432,14 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
         strings = tmps;
       }
       strings[stringl] = '\0'; /* Make sure the end always NUL ended */
-      hexdigiti -= 4; /* Remember we added 4 to allocate space for \x{...} */
-      sprintf(strings + strlen(strings), "\\x{%*x}", hexdigiti, (unsigned int) utf8i);
+      hexdigitl -= 4; /* \x{} */
+      sprintf(strings + strlen(strings), "\\x{%0*x}", (int) hexdigitl, codepointi);
     }
     /* Done - now we can generate a regexp out of that UTF-8 compatible string */
     MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s content string converted to regex %s (UTF=%d)", terminalp->descp->asciis, strings, utfflagb);
     /* ************************************ */
     /* THERE IS NO BREAK INTENTIONNALY HERE */
     /* ************************************ */
-    terminalp->type = MARPAESLIF_TERMINAL_TYPE_REGEX;
     utf8s = strings;
     utf8l = stringl;
     /* opti for string is compatible with opti for regex - just that the lexer accept less options - in particular the UTF flag */
@@ -453,13 +449,12 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
     /* break; */
 
   case MARPAESLIF_TERMINAL_TYPE_REGEX:
-    terminalp->u.regex.patternp      = NULL;
-    terminalp->u.regex.match_datap   = NULL;
+    terminalp->regex.patternp      = NULL;
+    terminalp->regex.match_datap   = NULL;
 #ifdef PCRE2_CONFIG_JIT
-    terminalp->u.regex.jitCompleteb = 0;
-    terminalp->u.regex.jitPartialb  = 0;
+    terminalp->regex.jitCompleteb = 0;
+    terminalp->regex.jitPartialb  = 0;
 #endif
-    terminalp->matcherbp = _marpaESLIFGrammar_terminal_regex_matcherb;
     
     if ((utf8s == NULL) || (utf8l <= 0)) {
       MARPAESLIF_ERRORF(marpaESLIFp, "%s - invalid terminal origin", terminalp->descp->asciis);
@@ -480,21 +475,21 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
 	}
       }
     }
-    terminalp->u.regex.patternp = pcre2_compile(
-						(PCRE2_SPTR) utf8s,      /* An UTF-8 pattern */
-						(PCRE2_SIZE) utf8l,      /* In code units (!= code points) - in UTF-8 a code unit is a byte */
-						pcre2Optioni,
-						&pcre2Errornumberi, /* for error number */
-						&pcre2ErrorOffsetl, /* for error offset */
-						NULL);        /* use default compile context */
-    if (terminalp->u.regex.patternp == NULL) {
+    terminalp->regex.patternp = pcre2_compile(
+                                              (PCRE2_SPTR) utf8s,      /* An UTF-8 pattern */
+                                              (PCRE2_SIZE) utf8l,      /* In code units (!= code points) - in UTF-8 a code unit is a byte */
+                                              pcre2Optioni,
+                                              &pcre2Errornumberi, /* for error number */
+                                              &pcre2ErrorOffsetl, /* for error offset */
+                                              NULL);        /* use default compile context */
+    if (terminalp->regex.patternp == NULL) {
       pcre2_get_error_message(pcre2Errornumberi, pcre2ErrorBuffer, sizeof(pcre2ErrorBuffer));
       MARPAESLIF_ERRORF(marpaESLIFp, "%s - pcre2_compile failure at offset %ld: %s", terminalp->descp->asciis, (unsigned long) pcre2ErrorOffsetl, pcre2ErrorBuffer);
       goto err;
     }
-    terminalp->u.regex.match_datap = pcre2_match_data_create(1 /* We are interested in the string that matched the full pattern */,
+    terminalp->regex.match_datap = pcre2_match_data_create(1 /* We are interested in the string that matched the full pattern */,
                                                              NULL /* Default memory allocation */);
-    if (terminalp->u.regex.match_datap == NULL) {
+    if (terminalp->regex.match_datap == NULL) {
       MARPAESLIF_ERRORF(marpaESLIFp, "%s - pcre2_match_data_create_from_pattern failure, %s", terminalp->descp->asciis, strerror(errno));
       goto err;
     }
@@ -502,29 +497,29 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
 #ifdef PCRE2_CONFIG_JIT
     if ((pcre2_config(PCRE2_CONFIG_JIT, &pcre2Optioni) >= 0) && (pcre2Optioni == 1)) {
 #ifdef PCRE2_JIT_COMPLETE
-      terminalp->u.regex.jitCompleteb = (pcre2_jit_compile(terminalp->u.regex.patternp, PCRE2_JIT_COMPLETE) == 0) ? 1 : 0;
+      terminalp->regex.jitCompleteb = (pcre2_jit_compile(terminalp->regex.patternp, PCRE2_JIT_COMPLETE) == 0) ? 1 : 0;
 #else
-      terminalp->u.regex.jitCompleteb = 0;
+      terminalp->regex.jitCompleteb = 0;
 #endif
 #ifdef PCRE2_JIT_PARTIAL_HARD
-      terminalp->u.regex.jitPartialb = (pcre2_jit_compile(terminalp->u.regex.patternp, PCRE2_JIT_PARTIAL_HARD) == 0) ? 1 : 0;
+      terminalp->regex.jitPartialb = (pcre2_jit_compile(terminalp->regex.patternp, PCRE2_JIT_PARTIAL_HARD) == 0) ? 1 : 0;
 #else
-      terminalp->u.regex.jitPartialb = 0;
+      terminalp->regex.jitPartialb = 0;
 #endif /*  PCRE2_CONFIG_JIT */
     } else {
-      terminalp->u.regex.jitCompleteb = 0;
-      terminalp->u.regex.jitPartialb = 0;
+      terminalp->regex.jitCompleteb = 0;
+      terminalp->regex.jitPartialb = 0;
     }
 #endif /*  PCRE2_CONFIG_JIT */
     /* And in the UTF mode is on */
-    pcre2Errornumberi = pcre2_pattern_info(terminalp->u.regex.patternp, PCRE2_INFO_ALLOPTIONS, &pcre2Optioni);
+    pcre2Errornumberi = pcre2_pattern_info(terminalp->regex.patternp, PCRE2_INFO_ALLOPTIONS, &pcre2Optioni);
     if (pcre2Errornumberi != 0) {
       pcre2_get_error_message(pcre2Errornumberi, pcre2ErrorBuffer, sizeof(pcre2ErrorBuffer));
       MARPAESLIF_ERRORF(marpaESLIFp, "%s - pcre2_pattern_info failure: %s", terminalp->descp->asciis, pcre2ErrorBuffer);
       goto err;
     }
-    terminalp->u.regex.utf8b = ((pcre2Optioni & PCRE2_UTF) == PCRE2_UTF);
-    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s - UTF mode is %s", terminalp->descp->asciis, terminalp->u.regex.utf8b ? "on" : "off");
+    terminalp->regex.utf8b = ((pcre2Optioni & PCRE2_UTF) == PCRE2_UTF);
+    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s - UTF mode is %s", terminalp->descp->asciis, terminalp->regex.utf8b ? "on" : "off");
     break;
 
   default:
@@ -542,10 +537,11 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
     marpaESLIFGrammar.grammarp      = grammarp;
 
     /* Look to the implementations of terminal matchers: they NEVER use leveli, nor marpaWrapperGrammarp, nor grammarStackp -; */
+    /* Also, note that we always end up with a regex. */
     
     if (testFullMatchs != NULL) {
 
-      if (! terminalp->matcherbp(&marpaESLIFGrammar, 0, NULL, terminalp, NULL, testFullMatchs, strlen(testFullMatchs), 1, &rci, NULL)) {
+      if (! _marpaESLIFGrammar_regex_matcherb(&marpaESLIFGrammar, terminalp, testFullMatchs, strlen(testFullMatchs), 1, &rci, NULL)) {
         MARPAESLIF_ERRORF(marpaESLIFp, "%s - testing full match: matcher general failure", terminalp->descp->asciis);
         goto err;
       }
@@ -558,7 +554,7 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
 
     if (testPartialMatchs != NULL) {
 
-      if (! terminalp->matcherbp(&marpaESLIFGrammar, 0, NULL, terminalp, NULL, testPartialMatchs, strlen(testPartialMatchs), 0, &rci, NULL)) {
+      if (! _marpaESLIFGrammar_regex_matcherb(&marpaESLIFGrammar, terminalp, testPartialMatchs, strlen(testPartialMatchs), 0, &rci, NULL)) {
         MARPAESLIF_ERRORF(marpaESLIFp, "%s - testing partial match: matcher general failure", terminalp->descp->asciis);
         goto err;
       }
@@ -575,14 +571,14 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
   goto done;
   
  err:
-  if (strings != NULL) {
-    free(strings);
-  }
-  _marpaESLIF_lexemeStack_resetv(outputStackp);
   _marpaESLIF_terminal_freev(terminalp);
   terminalp = NULL;
 
  done:
+  if (strings != NULL) {
+    free(strings);
+  }
+  _marpaESLIF_lexemeStack_resetv(outputStackp);
   /* MARPAESLIF_TRACEF(marpaESLIFp, funcs, "return %p", terminalp); */
   return terminalp;
 }
@@ -605,7 +601,6 @@ static inline marpaESLIF_meta_t *_marpaESLIF_meta_newp(marpaESLIF_t *marpaESLIFp
 
   metap->idi                       = -1;
   metap->descp                     = NULL;
-  metap->matcherbp                 = NULL;
   metap->marpaWrapperGrammarClonep = NULL; /* Eventually changed when validating the grammar */
 
   marpaWrapperGrammarSymbolOption.terminalb = 0;
@@ -754,7 +749,6 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_grammarp(marpaESLIF_t 
     symbolp->u.terminalp = terminalp;
     symbolp->idi         = terminalp->idi;
     symbolp->descp       = terminalp->descp;
-    symbolp->matcherbp   = terminalp->matcherbp;
     /* Terminal is now in symbol */
     terminalp = NULL;
 
@@ -794,7 +788,6 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_grammarp(marpaESLIF_t 
     symbolp->u.metap    = metap;
     symbolp->idi        = metap->idi;
     symbolp->descp      = metap->descp;
-    symbolp->matcherbp  = metap->matcherbp;
     /* Terminal is now in symbol */
     metap = NULL;
 
@@ -1623,7 +1616,6 @@ static inline marpaESLIF_symbol_t *_marpaESLIF_symbol_newp(marpaESLIF_t *marpaES
   symbolp->lhsb                 = 0;
   symbolp->idi                  = -1;
   symbolp->descp                = NULL;
-  symbolp->matcherbp            = NULL;
   symbolp->pauseb               = 0;
   symbolp->pauseIsOnb           = 0;
   symbolp->pausep               = NULL;
@@ -1689,20 +1681,11 @@ static inline void _marpaESLIF_terminal_freev(marpaESLIF_terminal_t *terminalp)
 {
   if (terminalp != NULL) {
     _marpaESLIF_string_freev(terminalp->descp);
-    switch (terminalp->type) {
-    case MARPAESLIF_TERMINAL_TYPE_STRING:
-      _marpaESLIF_string_freev(terminalp->u.stringp);
-      break;
-    case MARPAESLIF_TERMINAL_TYPE_REGEX:
-      if (terminalp->u.regex.match_datap != NULL) {
-	pcre2_match_data_free(terminalp->u.regex.match_datap);
-      }
-      if (terminalp->u.regex.patternp != NULL) {
-	pcre2_code_free(terminalp->u.regex.patternp);
-      }
-      break;
-    default:
-      break;
+    if (terminalp->regex.match_datap != NULL) {
+      pcre2_match_data_free(terminalp->regex.match_datap);
+    }
+    if (terminalp->regex.patternp != NULL) {
+      pcre2_code_free(terminalp->regex.patternp);
     }
     free(terminalp);
   }
@@ -1831,73 +1814,10 @@ void marpaESLIF_freev(marpaESLIF_t *marpaESLIFp)
 }
 
 /*****************************************************************************/
-static inline short _marpaESLIFGrammar_terminal_string_matcherb(marpaESLIFGrammar_t *marpaESLIFGrammarp, int grammarLeveli, marpaWrapperGrammar_t *marpaWrapperGrammarp, marpaESLIF_terminal_t *terminalp, marpaESLIF_meta_t *metap, char *inputs, size_t inputl, short eofb, marpaESLIF_matcher_value_t *rcip, genericStack_t *outputStackp)
+static inline short _marpaESLIFGrammar_regex_matcherb(marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaESLIF_terminal_t *terminalp, char *inputs, size_t inputl, short eofb, marpaESLIF_matcher_value_t *rcip, genericStack_t *outputStackp)
 /*****************************************************************************/
 {
-  const static char          *funcs = "_marpaESLIFGrammar_terminal_string_matcherb";
-  marpaESLIF_t               *marpaESLIFp = marpaESLIFGrammarp->marpaESLIFp;
-  marpaESLIF_matcher_value_t  rci;
-  marpaESLIF_string_t        *stringp = terminalp->u.stringp;
-
-  /*********************************************************************************/
-  /* A matcher tries to match a terminal v.s. input that is eventually incomplete. */
-  /* It return 1 on success, 0 on failure, -1 if more data is needed.              */
-  /*                                                                               */
-  /* When a string terminal is created in the grammar, it's always stored in UTF-8 */
-  /* therefore the input must be in UTF-8 as well. We make sure that eventual BOM  */
-  /* in input is discarded. There is no UTF-8 BOM in the string pattern.           */
-  /*                                                                               */
-  /* This is STRING matcher: we think in terms of characters here. Therefore the   */
-  /* input has to be in UTF-8.                                                     */
-  /* Then we do a memcmp() outself, believed to be faster than PCRE2 pattern.      */
-  /*********************************************************************************/
-
-  if (inputl > 0) {
-
-    if (inputl >= stringp->bytel) {
-      if (memcmp(inputs, stringp->bytep, stringp->bytel) == 0) { /* Per def a terminal have bytel > 0 */
-        rci = MARPAESLIF_MATCH_OK;
-      } else {
-        rci = MARPAESLIF_MATCH_FAILURE;
-      }
-    } else {
-      /* Partial match never returns OK -; */
-      rci = (memcmp(inputs, stringp->bytep, inputl) == 0) ? (eofb ? MARPAESLIF_MATCH_FAILURE : MARPAESLIF_MATCH_AGAIN) : MARPAESLIF_MATCH_FAILURE;
-    }
-  } else {
-    rci = eofb ? MARPAESLIF_MATCH_FAILURE : MARPAESLIF_MATCH_AGAIN;
-  }
-
-  if (rcip != NULL) {
-    *rcip = rci;
-  }
-
-  if (rci == MARPAESLIF_MATCH_OK) {
-    if (outputStackp != NULL) {
-      /* Symbol callback will realize it is a PTR, i.e. a pointer to a marpaESLIF_string_t */
-      GENERICSTACK_PUSH_PTR(outputStackp, stringp);
-      if (GENERICSTACK_ERROR(outputStackp)) {
-        MARPAESLIF_ERRORF(marpaESLIFp, "stack push failure, %s", strerror(errno));
-        goto err;
-      }
-    }
-  }
-
-  goto done;
-
- err:
-  return 0;
-
- done:
-  /* Here it is guaranteed that tmps is always NULL as well */
-  return 1;
-}
-
-/*****************************************************************************/
-static inline short _marpaESLIFGrammar_terminal_regex_matcherb(marpaESLIFGrammar_t *marpaESLIFGrammarp, int grammarLeveli, marpaWrapperGrammar_t *marpaWrapperGrammarp, marpaESLIF_terminal_t *terminalp, marpaESLIF_meta_t *metap, char *inputs, size_t inputl, short eofb, marpaESLIF_matcher_value_t *rcip, genericStack_t *outputStackp)
-/*****************************************************************************/
-{
-  const static char              *funcs = "_marpaESLIFGrammar_terminal_regex_matcherb";
+  const static char              *funcs = "_marpaESLIFGrammar_regex_matcherb";
   marpaESLIF_t                   *marpaESLIFp = marpaESLIFGrammarp->marpaESLIFp;
   char                           *tmps  = NULL;
   marpaESLIF_matcher_value_t      rci;
@@ -1911,30 +1831,11 @@ static inline short _marpaESLIFGrammar_terminal_regex_matcherb(marpaESLIFGrammar
   /*********************************************************************************/
   /* A matcher tries to match a terminal v.s. input that is eventually incomplete. */
   /* It return 1 on success, 0 on failure, -1 if more data is needed.              */
-  /*                                                                               */
-  /* There is a fundamental difference between regex matching and string matching: */
-  /* Even in the regex pattern was compiled using the grammar source converted in  */
-  /* UTF-8, we did that ONLY because we are using the UTF-8 API of PCRE2, which is */
-  /* expecting CHARACTERS in the pattern. Okay, this for the pattern.              */
-  /* Now comes the subject: if the pattern was NOT compiled with UTF support, then */
-  /* this mean we work on binary data. If the pattern was compiled with UTF, then  */
-  /* we work on characters.                                                        */
-  /* If its exactly for this reason that the input to this method is the input     */
-  /* AS-IS from the stream. We have to check the pattern properties first.         */
-  /* So, back to the pattern property. If we had the full control on it with only  */
-  /* the modifiers, things would be easy:                                          */
-  /* - "u" modifier   set PCRE2_UTF                                                */
-  /* - "a" modifier unset PCRE2_UTF                                                */
-  /* (Note that the "n" and "N" modifiers are irrelevant here)                     */
-  /* But the user can change the pattern behaviour without our knowledge, using    */
-  /* the (*XXX) hooks. This is why a call to pcre2_pattern_info() is always done   */
-  /* AFTER pattern is compiled. This information is used to set the utf8b flag     */
-  /* in the marpaESLIF_regex_t type.                                               */
   /*********************************************************************************/
 
   if (inputl > 0) {
 
-    marpaESLIF_regex = terminalp->u.regex;
+    marpaESLIF_regex = terminalp->regex;
 
     /* --------------------------------------------------------- */
     /* EOF mode:                                                 */
@@ -2181,16 +2082,13 @@ static inline short _marpaESLIFRecognizer_symbol_matcherb(marpaESLIFRecognizer_t
   switch (symbolp->type) {
   case MARPAESLIF_SYMBOL_TYPE_TERMINAL:
     /* A terminal matcher NEVER updates the stream : inputs, inputl and eof can be passed as is. */
-    rcb = symbolp->matcherbp(marpaESLIFRecognizerp->marpaESLIFGrammarp,
-                             -1, /* grammarLeveli */
-                             NULL /* marpaESLIFGrammarp->grammarp->marpaWrapperGrammarStartp */,
-                             symbolp->u.terminalp,
-                             NULL /* metap */,
-                             marpaESLIFRecognizerp->inputs,
-                             marpaESLIFRecognizerp->inputl,
-                             marpaESLIFRecognizerp->eofb,
-                             rcip,
-                             outputStackp);
+    rcb = _marpaESLIFGrammar_regex_matcherb(marpaESLIFRecognizerp->marpaESLIFGrammarp,
+                                            symbolp->u.terminalp,
+                                            marpaESLIFRecognizerp->inputs,
+                                            marpaESLIFRecognizerp->inputl,
+                                            marpaESLIFRecognizerp->eofb,
+                                            rcip,
+                                            outputStackp);
       break;
     case MARPAESLIF_SYMBOL_TYPE_META:
       /* A terminal matcher MAY recursively call other recognizers, reading new data, etc... : this will update current recognizer inputs, inputl and eof. */
@@ -4805,4 +4703,104 @@ static inline void _marpaESLIF_rule_createshowv(marpaESLIF_t *marpaESLIFp, marpa
   if (asciishowlp != NULL) {
     *asciishowlp = asciishowl;
   }
+}
+
+/*****************************************************************************/
+static inline int _marpaESLIF_utf82ordi(PCRE2_SPTR8 utf8bytes, marpaESLIF_uint32_t *uint32p)
+/*****************************************************************************/
+/* This is a copy of utf2ord from pcre2test.c
+-----------------------------------------------------------------------------
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+    * Redistributions of source code must retain the above copyright notice,
+      this list of conditions and the following disclaimer.
+
+    * Redistributions in binary form must reproduce the above copyright
+      notice, this list of conditions and the following disclaimer in the
+      documentation and/or other materials provided with the distribution.
+
+    * Neither the name of the University of Cambridge nor the names of its
+      contributors may be used to endorse or promote products derived from
+      this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+POSSIBILITY OF SUCH DAMAGE.
+-----------------------------------------------------------------------------
+/* This function reads one or more bytes that represent a UTF-8 character,
+and returns the codepoint of that character. Note that the function supports
+the original UTF-8 definition of RFC 2279, allowing for values in the range 0
+to 0x7fffffff, up to 6 bytes long. This makes it possible to generate
+codepoints greater than 0x10ffff which are useful for testing PCRE2's error
+checking, and also for generating 32-bit non-UTF data values above the UTF
+limit.
+
+Argument:
+  utf8bytes   a pointer to the byte vector
+  vptr        a pointer to an int to receive the value
+
+Returns:      >  0 => the number of bytes consumed
+              -6 to 0 => malformed UTF-8 character at offset = (-return)
+*/
+/*****************************************************************************/
+{
+  marpaESLIF_uint32_t c = *utf8bytes++;
+  marpaESLIF_uint32_t d = c;
+  int i, j, s;
+  const int utf8_table1[] = { 0x7f, 0x7ff, 0xffff, 0x1fffff, 0x3ffffff, 0x7fffffff};
+  const int utf8_table3[] = { 0xff, 0x1f, 0x0f, 0x07, 0x03, 0x01};
+  const int utf8_table1_size = sizeof(utf8_table1) / sizeof(int);
+
+  for (i = -1; i < 6; i++) {               /* i is number of additional bytes */
+    if ((d & 0x80) == 0) break;
+    d <<= 1;
+  }
+
+  if (i == -1) {
+    /* ascii character */
+    *uint32p = c;
+    return 1;
+  }
+  if (i == 0 || i == 6) {
+    return 0;
+  } /* invalid UTF-8 */
+
+  /* i now has a value in the range 1-5 */
+
+  s = 6*i;
+  d = (c & utf8_table3[i]) << s;
+
+  for (j = 0; j < i; j++) {
+    c = *utf8bytes++;
+    if ((c & 0xc0) != 0x80) {
+      return -(j+1);
+    }
+    s -= 6;
+    d |= (c & 0x3f) << s;
+  }
+
+  /* Check that encoding was the correct unique one */
+
+  for (j = 0; j < utf8_table1_size; j++) {
+    if (d <= (uint32_t)utf8_table1[j]) {
+      break;
+    }
+  }
+  if (j != i) {
+    return -(i+1);
+  }
+
+  /* Valid value */
+
+  *uint32p = d;
+  return i+1;
 }
