@@ -16,7 +16,6 @@ typedef struct  marpaESLIF_symbol          marpaESLIF_symbol_t;
 typedef struct  marpaESLIF_rule            marpaESLIF_rule_t;
 typedef struct  marpaESLIF_grammar         marpaESLIF_grammar_t;
 typedef enum    marpaESLIF_matcher_value   marpaESLIF_matcher_value_t;
-typedef short (*marpaESLIFGrammar_matcher_t)(marpaESLIFGrammar_t *marpaESLIFGrammarp, int grammarLeveli, marpaWrapperGrammar_t *marpaWrapperGrammarp, marpaESLIF_terminal_t *terminalp, marpaESLIF_meta_t *metap, char *inputcp, size_t inputl, short eofb, marpaESLIF_matcher_value_t *rcip, genericStack_t *stackp);
 typedef enum    marpaESLIF_event_type      marpaESLIF_event_type_t;
 typedef enum    marpaESLIF_action_type     marpaESLIF_action_type_t;
 typedef enum    marpaESLIF_array_type      marpaESLIF_array_type_t;
@@ -54,7 +53,7 @@ typedef enum marpaESLIF_regex_option {
   MARPAESLIF_REGEX_OPTION_UNGREEDY                 = 0x0200, /* U */
   MARPAESLIF_REGEX_OPTION_NO_UTF                   = 0x0400, /* a */
   MARPAESLIF_REGEX_OPTION_NO_UCP                   = 0x0800, /* N */
-  MARPAESLIF_REGEX_OPTION_UTF                      = 0x1000, /* u */
+  MARPAESLIF_REGEX_OPTION_UTF                      = 0x1000  /* u */
 } marpaESLIF_regex_option_t;
 
 typedef enum marpaESLIF_regex_option_id {
@@ -109,18 +108,12 @@ struct marpaESLIF_regex {
 struct marpaESLIF_terminal {
   int                         idi;                 /* Terminal Id */
   marpaESLIF_string_t        *descp;               /* Terminal description */
-  marpaESLIF_terminal_type_t  type;                /* Terminal type */
-  marpaESLIFGrammar_matcher_t matcherbp;           /* Terminal matcher */
-  union {
-    marpaESLIF_regex_t        regex;
-    marpaESLIF_string_t      *stringp;
-  } u;
+  marpaESLIF_regex_t          regex;
 };
 
 struct marpaESLIF_meta {
   int                          idi;                       /* Non-terminal Id */
   marpaESLIF_string_t         *descp;                     /* Non-terminal description */
-  marpaESLIFGrammar_matcher_t  matcherbp;                 /* Non-terminal matcher */
   marpaWrapperGrammar_t       *marpaWrapperGrammarClonep; /* Eventual cloned grammar */
 };
 
@@ -187,7 +180,6 @@ struct marpaESLIF_symbol {
   short                        lhsb;                /* Is an LHS somewhere in its grammar ? */
   int                          idi;                 /* Marpa ID */
   marpaESLIF_string_t         *descp;               /* Symbol description */
-  marpaESLIFGrammar_matcher_t  matcherbp;           /* Matcher function pointer */
   short                        pauseb;              /* -1: before, 0: NA, 1: after */
   short                        pauseIsOnb;          /* 0: off, 1: on */
   marpaESLIF_string_t         *pausep;              /* Pause event name in native encoding */

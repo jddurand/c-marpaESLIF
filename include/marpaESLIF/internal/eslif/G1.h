@@ -265,7 +265,7 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
   /* --------------------------------------------------------------------------------------------------------------------------------- */
   { G1_TERMINAL__START,
     "<G1 terminal :start>",               MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
-    ":st" "\xe0\xa4\x80" "art",
+    ":start",
 #ifndef MARPAESLIF_NTRACE
     ":start", ":sta"
 #else
