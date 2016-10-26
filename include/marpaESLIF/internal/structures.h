@@ -23,6 +23,7 @@ typedef struct  marpaESLIF_readerContext   marpaESLIF_readerContext_t;
 typedef struct  marpaESLIF_valueContext    marpaESLIF_valueContext_t;
 typedef struct  marpaESLIF_cloneContext    marpaESLIF_cloneContext_t;
 typedef struct  marpaESLIF_action          marpaESLIF_action_t;
+typedef struct  marpaESLIF_encode          marpaESLIF_encode_t;
 
 /* Symbol types */
 enum marpaESLIF_symbol_type {
@@ -286,12 +287,14 @@ struct marpaESLIFRecognizer {
   char                        *encodings;      /* Encoding information as per the user */
   char                        *utf8s;          /* Pointer to converted buffer */
   size_t                       utf8l;          /* Number of bytes in the converted buffer */
+  genericStack_t              *encodeStackp;   /* Encoding information */
   char                       **buffersp;       /* Pointer to allocated buffer - for sharing with eventual parent recognizers */
   size_t                      *bufferlp;       /* Ditto for the size */
-  char                       **encodingsp;     /* Dirro for the encoding information */
-  char                       **utf8sp;         /* Dirro for the utf8 buffer */
-  size_t                      *utf8lp;         /* Ditto for the utf8 buffer size */
   short                       *eofbp;          /* Ditto for the EOF flag */
+  char                       **encodingsp;     /* Ditto for the encoding information */
+  char                       **utf8sp;         /* Ditto for the utf8 buffer */
+  size_t                      *utf8lp;         /* Ditto for the utf8 buffer size */
+  genericStack_t             **encodeStackpp;  /* Encoding information */
 
   char                        *remembers;      /* Same logic as with the buffer */
   size_t                       rememberl;
@@ -305,6 +308,16 @@ struct marpaESLIFRecognizer {
   short                        discardb;       /* discard mode */
   short                        haveLexemeb;    /* Remember if this recognizer have at least one lexeme */
 
+};
+
+/* We support multiple encodings within a stream - and can ever recover from encoding trouble. */
+/* Anyway, doing so requires to be able to map a byte range to an encoding.                    */
+/* This is how we arrange the software to always call PCRE2 with the option PCRE2_NO_UTF_CHECK */
+/* on the subject: we know what we are doing when dealing with UTF-8.                          */
+struct  marpaESLIF_encode {
+  void *offsetp;
+  size_t lengthl;
+  char *encodings;
 };
 
 /* ------------------------------------------- */

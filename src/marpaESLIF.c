@@ -51,6 +51,8 @@ static inline void                   _marpaESLIF_grammar_freev(marpaESLIF_gramma
 static inline void                   _marpaESLIF_ruleStack_freev(genericStack_t *ruleStackp);
 static inline void                   _marpaESLIF_lexemeStack_freev(genericStack_t *lexemeStackp);
 static inline void                   _marpaESLIF_lexemeStack_resetv(genericStack_t *lexemeStackp);
+static inline void                   _marpaESLIF_encodeStack_freev(genericStack_t *encodeStackp);
+static inline void                   _marpaESLIF_encodeStack_resetv(genericStack_t *encodeStackp);
 static inline short                  _marpaESLIFRecognizer_lexemeStack_ix_resetb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, genericStack_t *lexemeStackp, int ix);
 static inline short                  _marpaESLIFRecognizer_lexemeStack_ix_sizeb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, genericStack_t *lexemeStackp, int ix, size_t *sizelp);
 static inline short                  _marpaESLIFRecognizer_lexemeStack_ix_p(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, genericStack_t *lexemeStackp, int ix, char **pp);
@@ -1409,6 +1411,39 @@ static inline void _marpaESLIF_lexemeStack_resetv(genericStack_t *lexemeStackp)
         }
       } else {
 	GENERICSTACK_USED(lexemeStackp)--;
+      }
+    }
+  }
+}
+
+/*****************************************************************************/
+static inline void _marpaESLIF_encodeStack_freev(genericStack_t *encodeStackp)
+/*****************************************************************************/
+{
+  if (encodeStackp != NULL) {
+    _marpaESLIF_lexemeStack_resetv(encodeStackp);
+    GENERICSTACK_FREE(encodeStackp);
+  }
+}
+
+/*****************************************************************************/
+static inline void _marpaESLIF_encodeStack_resetv(genericStack_t *encodeStackp)
+/*****************************************************************************/
+{
+  marpaESLIF_encode_t *encodep;
+
+  if (encodeStackp != NULL) {
+    while (GENERICSTACK_USED(encodeStackp) > 0) {
+      if (GENERICSTACK_IS_PTR(encodeStackp, GENERICSTACK_USED(encodeStackp) - 1)) {
+        encodep = GENERICSTACK_GET_PTR(encodeStackp, GENERICSTACK_USED(encodeStackp) - 1);
+        if (encodep != NULL) {
+          if (encodep->encodings != NULL) {
+            free(encodep->encodings);
+          }
+          free(encodep);
+        }
+      } else {
+	GENERICSTACK_USED(encodeStackp)--;
       }
     }
   }
@@ -3236,6 +3271,7 @@ void marpaESLIFRecognizer_freev(marpaESLIFRecognizer_t *marpaESLIFRecognizerp)
       if (marpaESLIFRecognizerp->utf8s != NULL) {
         free(marpaESLIFRecognizerp->utf8s);
       }
+      _marpaESLIF_encodeStack_freev(marpaESLIFRecognizerp->encodeStackp);
     } else {
       /* Parent's "current" position have to be updated */
       marpaESLIFRecognizerParentp->inputs = *(marpaESLIFRecognizerp->buffersp) + marpaESLIFRecognizerp->parentDeltal;
@@ -3685,16 +3721,18 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGramm
   marpaESLIFRecognizerp->encodings                  = NULL;
   marpaESLIFRecognizerp->utf8s                      = NULL;
   marpaESLIFRecognizerp->utf8l                      = 0;
+  marpaESLIFRecognizerp->encodeStackp               = NULL;
   marpaESLIFRecognizerp->remembers                  = NULL;
   marpaESLIFRecognizerp->rememberl                  = 0;
   /* If this is a parent recognizer get its stream information */
   if (marpaESLIFRecognizerParentp != NULL) {
     marpaESLIFRecognizerp->buffersp                   = marpaESLIFRecognizerParentp->buffersp;
     marpaESLIFRecognizerp->bufferlp                   = marpaESLIFRecognizerParentp->bufferlp;
+    marpaESLIFRecognizerp->eofbp                      = marpaESLIFRecognizerParentp->eofbp;
     marpaESLIFRecognizerp->encodingsp                 = marpaESLIFRecognizerParentp->encodingsp;
     marpaESLIFRecognizerp->utf8sp                     = marpaESLIFRecognizerParentp->utf8sp;
     marpaESLIFRecognizerp->utf8lp                     = marpaESLIFRecognizerParentp->utf8lp;
-    marpaESLIFRecognizerp->eofbp                      = marpaESLIFRecognizerParentp->eofbp;
+    marpaESLIFRecognizerp->encodeStackpp              = marpaESLIFRecognizerParentp->encodeStackpp;
     marpaESLIFRecognizerp->remembersp                 = marpaESLIFRecognizerParentp->remembersp;
     marpaESLIFRecognizerp->rememberlp                 = marpaESLIFRecognizerParentp->rememberlp;
     marpaESLIFRecognizerp->parentDeltal               = marpaESLIFRecognizerParentp->inputs - *(marpaESLIFRecognizerParentp->buffersp);
@@ -3704,10 +3742,11 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGramm
   } else {
     marpaESLIFRecognizerp->buffersp                   = &(marpaESLIFRecognizerp->buffers);
     marpaESLIFRecognizerp->bufferlp                   = &(marpaESLIFRecognizerp->bufferl);
+    marpaESLIFRecognizerp->eofbp                      = &(marpaESLIFRecognizerp->eofb);
     marpaESLIFRecognizerp->encodingsp                 = &(marpaESLIFRecognizerp->encodings);
     marpaESLIFRecognizerp->utf8sp                     = &(marpaESLIFRecognizerp->utf8s);
     marpaESLIFRecognizerp->utf8lp                     = &(marpaESLIFRecognizerp->utf8l);
-    marpaESLIFRecognizerp->eofbp                      = &(marpaESLIFRecognizerp->eofb);
+    marpaESLIFRecognizerp->encodeStackpp              = &(marpaESLIFRecognizerParentp->encodeStackp);
     marpaESLIFRecognizerp->remembersp                 = &(marpaESLIFRecognizerp->remembers);
     marpaESLIFRecognizerp->rememberlp                 = &(marpaESLIFRecognizerp->rememberl);
     marpaESLIFRecognizerp->parentDeltal               = 0;
@@ -3746,6 +3785,14 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGramm
   if (GENERICSTACK_ERROR(marpaESLIFRecognizerp->lexemeInputStackp)) {
     MARPAESLIF_ERRORF(marpaESLIFp, "lexemeInputStackp push failure, %s", strerror(errno));
     goto err;
+  }
+
+  if (marpaESLIFRecognizerParentp == NULL) {
+    GENERICSTACK_NEW(marpaESLIFRecognizerp->encodeStackp);
+    if (marpaESLIFRecognizerp->encodeStackp == NULL) {
+      MARPAESLIF_ERRORF(marpaESLIFp, "encodeStackp initialization failure, %s", strerror(errno));
+      goto err;
+    }
   }
 
   goto done;
