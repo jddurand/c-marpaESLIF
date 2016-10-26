@@ -283,8 +283,14 @@ struct marpaESLIFRecognizer {
   char                        *buffers;        /* Pointer to allocated buffer containing input */
   size_t                       bufferl;        /* Number of valid bytes in this buffer (!= allocated size in the exceptional case of a realloc failure) */
   short                        eofb;           /* EOF flag */
+  char                        *encodings;      /* Encoding information as per the user */
+  char                        *utf8s;          /* Pointer to converted buffer */
+  size_t                       utf8l;          /* Number of bytes in the converted buffer */
   char                       **buffersp;       /* Pointer to allocated buffer - for sharing with eventual parent recognizers */
   size_t                      *bufferlp;       /* Ditto for the size */
+  char                       **encodingsp;     /* Dirro for the encoding information */
+  char                       **utf8sp;         /* Dirro for the utf8 buffer */
+  size_t                      *utf8lp;         /* Ditto for the utf8 buffer size */
   short                       *eofbp;          /* Ditto for the EOF flag */
 
   char                        *remembers;      /* Same logic as with the buffer */
