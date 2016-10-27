@@ -277,6 +277,9 @@ struct marpaESLIFValue {
 };
 
 struct marpaESLIFRecognizer {
+  /* The variables starting with "_" are not supposed to ever be accessed  */
+  /* except in very precise situations (typically the new()/free() or when */
+  /* faking a new() method). */
   marpaESLIF_t                *marpaESLIFp;
   marpaESLIFGrammar_t         *marpaESLIFGrammarp;
   marpaESLIFRecognizerOption_t marpaESLIFRecognizerOption;
@@ -287,10 +290,10 @@ struct marpaESLIFRecognizer {
   marpaESLIFRecognizer_t      *parentRecognizerp;
   unsigned long                resumeCounterl; /* Internal counter for tracing - no functional impact */
 
-  char                        *buffers;        /* Pointer to allocated buffer containing input */
-  size_t                       bufferl;        /* Number of valid bytes in this buffer (!= allocated size in the exceptional case of a realloc failure) */
-  short                        eofb;           /* EOF flag */
-  short                        convertedb;     /* A flag to say if input was converted. If any regex requires characters and this flag is off, this will be an error */
+  char                        *_buffers;       /* Pointer to allocated buffer containing input */
+  size_t                       _bufferl;       /* Number of valid bytes in this buffer (!= allocated size in the exceptional case of a realloc failure) */
+  short                        _eofb;          /* EOF flag */
+  short                        _convertedb;    /* A flag to say if input was converted. If any regex requires characters and this flag is off, this will be an error */
 
   int                          leveli;         /* Recognizer level (!= grammar level) */
 
