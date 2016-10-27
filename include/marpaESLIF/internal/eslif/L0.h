@@ -504,9 +504,10 @@ bootstrap_grammar_terminal_t bootstrap_grammar_L0_terminals[] = {
   /* --------------------------------------------------------------------------------------------------------------------------------- */
   /* Taken from Regexp::Common::delimited, $RE{delimited}{-delim=>"["}{-cdelim=>"]"} */
   /* Perl stringified version is: (?:(?|(?:\[)(?:[^\\\]]*(?:\\.[^\\\]]*)*)(?:\]))) */
+  /* I have added [ in the exclusions -; */
   { L0_TERMINAL_CHARACTER_CLASS_REGEXP,
     "<L0 terminal character class regexp>",            MARPAESLIF_TERMINAL_TYPE_REGEX,   MARPAESLIF_REGEX_OPTION_DOTALL,
-    "\\[[^\\\\\\]]*(?:\\\\.[^\\\\\\]]*)*\\]",
+    "\\[[^\\\\\\[\\]]*(?:\\\\.[^\\\\\\[\\]]*)*\\]",
 #ifndef MARPAESLIF_NTRACE
     "[a-z]","[a-z"
 #else
