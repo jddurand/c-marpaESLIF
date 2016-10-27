@@ -53,7 +53,8 @@ typedef enum marpaESLIF_regex_option {
   MARPAESLIF_REGEX_OPTION_UNGREEDY                 = 0x0200, /* U */
   MARPAESLIF_REGEX_OPTION_NO_UTF                   = 0x0400, /* a */
   MARPAESLIF_REGEX_OPTION_NO_UCP                   = 0x0800, /* N */
-  MARPAESLIF_REGEX_OPTION_UTF                      = 0x1000  /* u */
+  MARPAESLIF_REGEX_OPTION_UTF                      = 0x1000, /* u */
+  MARPAESLIF_REGEX_OPTION_BINARY                   = 0x2000, /* b */
 } marpaESLIF_regex_option_t;
 
 typedef enum marpaESLIF_regex_option_id {
@@ -70,6 +71,7 @@ typedef enum marpaESLIF_regex_option_id {
   MARPAESLIF_REGEX_OPTION_NO_UTF_ID,
   MARPAESLIF_REGEX_OPTION_NO_UCP_ID,
   MARPAESLIF_REGEX_OPTION_UTF_ID,
+  MARPAESLIF_REGEX_OPTION_BINARY_ID,
   _MARPAESLIF_REGEX_OPTION_ID_MAX
 } marpaESLIF_regex_option_id_t;
 
@@ -92,7 +94,8 @@ struct marpaESLIF_regex_option_map {
   { MARPAESLIF_REGEX_OPTION_UNGREEDY,                 "U", "PCRE2_UNGREEDY",                           PCRE2_UNGREEDY,                           0 },
   { MARPAESLIF_REGEX_OPTION_NO_UTF,                   "a", "PCRE2_UTF",                                0,                                        PCRE2_UTF },
   { MARPAESLIF_REGEX_OPTION_NO_UCP,                   "N", "PCRE2_UCP",                                0,                                        PCRE2_UCP },
-  { MARPAESLIF_REGEX_OPTION_UTF,                      "u", "PCRE2_UTF",                                PCRE2_UTF, 0 }
+  { MARPAESLIF_REGEX_OPTION_UTF,                      "u", "PCRE2_UTF",                                PCRE2_UTF,                                0 },
+  { MARPAESLIF_REGEX_OPTION_BINARY,                   "b", "PCRE2_NEVER_UTF",                          PCRE2_NEVER_UTF,                          PCRE2_UTF }
 };
 
 struct marpaESLIF_regex {
