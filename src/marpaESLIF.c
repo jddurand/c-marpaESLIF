@@ -4048,13 +4048,6 @@ marpaESLIFValue_t *marpaESLIFValue_newp(marpaESLIFRecognizer_t *marpaESLIFRecogn
   marpaWrapperValueOption.maxParsesi     = marpaESLIFValueOptionp->maxParsesi;
   marpaWrapperValuep = marpaWrapperValue_newp(marpaESLIFRecognizerp->marpaWrapperRecognizerp, &marpaWrapperValueOption);
   if (marpaWrapperValuep == NULL) {
-#ifndef MARPAESLIF_NTRACE
-    marpaWrapperRecognizer_progressLogb(marpaESLIFRecognizerp->marpaWrapperRecognizerp,
-                                        0, -1,
-                                        GENERICLOGGER_LOGLEVEL_TRACE,
-                                        marpaESLIFRecognizerp->marpaESLIFGrammarp,
-                                        _marpaESLIFGrammar_symbolDescriptionCallback);
-#endif
     goto err;
   }
 
