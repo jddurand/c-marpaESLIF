@@ -2,7 +2,9 @@
 #define MARPAESLIF_INTERNAL_LOGGING_H
 #include <stdio.h>
 
-#undef  MARPAESLIF2LOG
+#define MARPAESLIF_LOC_FMT "[v%s/%s:%d]"
+#define MARPAESLIF_LOC_VAR MARPAESLIF_VERSION, funcs, __LINE__
+
 #define MARPAESLIF2LOG(marpaESLIFp, rest) do {				\
     genericLogger_t *genericLoggerp = ((marpaESLIFp) != NULL) ? (marpaESLIFp)->marpaESLIFOption.genericLoggerp : NULL; \
     if (genericLoggerp != NULL) {					\
@@ -14,13 +16,13 @@
 #define MARPAESLIF_TRACEF(marpaESLIFp, funcs, fmts, ...) MARPAESLIF2LOG(marpaESLIFp, GENERICLOGGER_TRACEF(genericLoggerp, "[%s] " fmts, funcs, __VA_ARGS__))
 #define MARPAESLIF_TRACE(marpaESLIFp, funcs, msgs)       MARPAESLIF2LOG(marpaESLIFp, GENERICLOGGER_TRACEF(genericLoggerp, "[%s] %s", funcs, msgs))
 #define MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, fmts, ...) \
-  MARPAESLIF2LOG(marpaESLIFRecognizerp->marpaESLIFp, GENERICLOGGER_TRACEF(genericLoggerp, "[Level %2d Iter %3ld][%s%-43s] " fmts, marpaESLIFRecognizerp->marpaESLIFGrammarp->grammarp->leveli, marpaESLIFRecognizerp->resumeCounterl, marpaESLIFRecognizerp->discardb ? "~" : " ", funcs, __VA_ARGS__))
+  MARPAESLIF2LOG(marpaESLIFRecognizerp->marpaESLIFp, GENERICLOGGER_TRACEF(genericLoggerp, "[Level %2d Iter %3ld][%s%-43s] " fmts, marpaESLIFRecognizerp->marpaESLIFGrammarp->grammarp->leveli, marpaESLIFRecognizerp->resumeCounterl, marpaESLIFRecognizerp->discardb ? "!" : " ", funcs, __VA_ARGS__))
 #define MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, msgs) \
-  MARPAESLIF2LOG(marpaESLIFRecognizerp->marpaESLIFp, GENERICLOGGER_TRACEF(genericLoggerp, "[Level %2d Iter %3ld][%s%-43s] %s", marpaESLIFRecognizerp->marpaESLIFGrammarp->grammarp->leveli, marpaESLIFRecognizerp->resumeCounterl, marpaESLIFRecognizerp->discardb ? "~" : " ", funcs, msgs))
+  MARPAESLIF2LOG(marpaESLIFRecognizerp->marpaESLIFp, GENERICLOGGER_TRACEF(genericLoggerp, "[Level %2d Iter %3ld][%s%-43s] %s", marpaESLIFRecognizerp->marpaESLIFGrammarp->grammarp->leveli, marpaESLIFRecognizerp->resumeCounterl, marpaESLIFRecognizerp->discardb ? "!" : " ", funcs, msgs))
 #define MARPAESLIFVALUE_TRACEF(marpaESLIFValuep, funcs, fmts, ...) \
-  MARPAESLIF2LOG(marpaESLIFValuep->marpaESLIFRecognizerp->marpaESLIFp, GENERICLOGGER_TRACEF(genericLoggerp, "[Level %2d         ][%s%-43s] " fmts, marpaESLIFValuep->marpaESLIFRecognizerp->marpaESLIFGrammarp->grammarp->leveli, marpaESLIFValuep->marpaESLIFRecognizerp->discardb ? "~" : " ", funcs, __VA_ARGS__))
+  MARPAESLIF2LOG(marpaESLIFValuep->marpaESLIFRecognizerp->marpaESLIFp, GENERICLOGGER_TRACEF(genericLoggerp, "[Level %2d         ][%s%-43s] " fmts, marpaESLIFValuep->marpaESLIFRecognizerp->marpaESLIFGrammarp->grammarp->leveli, marpaESLIFValuep->marpaESLIFRecognizerp->discardb ? "!" : " ", funcs, __VA_ARGS__))
 #define MARPAESLIFVALUE_TRACE(marpaESLIFValuep, funcs, msgs)       \
-  MARPAESLIF2LOG(marpaESLIFValuep->marpaESLIFRecognizerp->marpaESLIFp, GENERICLOGGER_TRACEF(genericLoggerp, "[Level %2d         ][%s%-43s] %s", marpaESLIFValuep->marpaESLIFRecognizerp->marpaESLIFGrammarp->grammarp->leveli, marpaESLIFValuep->marpaESLIFRecognizerp->discardb ? "~" : " ", funcs, msgs))
+  MARPAESLIF2LOG(marpaESLIFValuep->marpaESLIFRecognizerp->marpaESLIFp, GENERICLOGGER_TRACEF(genericLoggerp, "[Level %2d         ][%s%-43s] %s", marpaESLIFValuep->marpaESLIFRecognizerp->marpaESLIFGrammarp->grammarp->leveli, marpaESLIFValuep->marpaESLIFRecognizerp->discardb ? "!" : " ", funcs, msgs))
 #else
 #define MARPAESLIF_TRACEF(marpaESLIFp, funcs, fmts, ...)
 #define MARPAESLIF_TRACE(marpaESLIFp, funcs, msgs)
