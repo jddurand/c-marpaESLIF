@@ -507,11 +507,11 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
       if ((opti & marpaESLIF_regex_option_map[i].opti) == marpaESLIF_regex_option_map[i].opti) {
 	/* It is important to process pcre2OptionNoti first */
 	if (marpaESLIF_regex_option_map[i].pcre2OptionNoti != 0) {
-          MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s has regex modifier %s: removing %s", terminalp->descp->asciis, marpaESLIF_regex_option_map[i].modifiers, marpaESLIF_regex_option_map[i].pcre2modifiers);
+          MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s has regex modifier %s: removing %s", terminalp->descp->asciis, marpaESLIF_regex_option_map[i].modifiers, marpaESLIF_regex_option_map[i].pcre2OptionNots);
 	  pcre2Optioni &= ~marpaESLIF_regex_option_map[i].pcre2OptionNoti;
 	}
 	if (marpaESLIF_regex_option_map[i].pcre2Optioni != 0) {
-          MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s has regex modifier %s: adding %s", terminalp->descp->asciis, marpaESLIF_regex_option_map[i].modifiers, marpaESLIF_regex_option_map[i].pcre2modifiers);
+          MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s has regex modifier %s: adding %s", terminalp->descp->asciis, marpaESLIF_regex_option_map[i].modifiers, marpaESLIF_regex_option_map[i].pcre2Options);
 	  pcre2Optioni |= marpaESLIF_regex_option_map[i].pcre2Optioni;
 	}
       }
