@@ -282,6 +282,9 @@ struct marpaESLIFRecognizer {
   size_t                       bufferl;        /* Number of valid bytes in this buffer (!= allocated size in the exceptional case of a realloc failure) */
   short                        eofb;           /* EOF flag */
   short                        convertedb;     /* A flag to say if input was converted. If any regex requires characters and this flag is off, this will be an error */
+
+  int                          leveli;         /* Recognizer level (!= grammar level) */
+
   char                       **buffersp;       /* Pointer to allocated buffer - for sharing with eventual parent recognizers */
   size_t                      *bufferlp;       /* Ditto for the size */
   short                       *eofbp;          /* Ditto for the EOF flag */
