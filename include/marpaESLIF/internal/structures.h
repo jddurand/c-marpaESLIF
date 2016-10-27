@@ -4,7 +4,8 @@
 #include <genericStack.h>
 #include <pcre2.h>
 
-#define INTERNAL_ANYCHAR_PATTERN "." /* This ASCII string is UTF-8 compatible */
+#define INTERNAL_ANYCHAR_PATTERN "."         /* This ASCII string is UTF-8 compatible */
+#define INTERNAL_UTF8BOM_PATTERN "\\x{FEFF}" /* FEFF Unicode code point i.e. EFBBBF in UTF-8 encoding */
 
 typedef struct  marpaESLIF_regex           marpaESLIF_regex_t;
 typedef         marpaESLIFString_t         marpaESLIF_string_t;
@@ -257,7 +258,8 @@ struct marpaESLIF_cloneContext {
 struct marpaESLIF {
   marpaESLIFGrammar_t   *marpaESLIFGrammarp;  /* ESLIF has its own grammar -; */
   marpaESLIFOption_t     marpaESLIFOption;
-  marpaESLIF_terminal_t *anycharp;     /* internal regex */
+  marpaESLIF_terminal_t *anycharp;            /* internal regex for match any character */
+  marpaESLIF_terminal_t *utf8bomp;            /* Internal regex for match UTF-8 BOM */
 };
 
 struct marpaESLIFGrammar {
