@@ -340,16 +340,16 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
   /* NULL pointer for it in _marpaESLIFRecognizer_newp(), the default will apply.   */
 
   marpaESLIFRecognizerParent.marpaESLIFp = marpaESLIFp;
-  marpaESLIFRecognizerParent.eofb        = 1;
-  marpaESLIFRecognizerParent.eofbp       = &(marpaESLIFRecognizerParent.eofb);
-  marpaESLIFRecognizerParent.buffers     = NULL;
-  marpaESLIFRecognizerParent.buffersp    = &(marpaESLIFRecognizerParent.buffers);
-  marpaESLIFRecognizerParent.bufferl     = 0;
-  marpaESLIFRecognizerParent.bufferlp    = &(marpaESLIFRecognizerParent.bufferl);
+  marpaESLIFRecognizerParent._eofb       = 1;
+  marpaESLIFRecognizerParent.eofbp       = &(marpaESLIFRecognizerParent._eofb);
+  marpaESLIFRecognizerParent._buffers    = NULL;
+  marpaESLIFRecognizerParent.buffersp    = &(marpaESLIFRecognizerParent._buffers);
+  marpaESLIFRecognizerParent._bufferl    = 0;
+  marpaESLIFRecognizerParent.bufferlp    = &(marpaESLIFRecognizerParent._bufferl);
   /* We game after grammar was ALREADY converted to UTF-8, i.e. we are sure this is */
   /* already converted - I told you this is tricky -;                               */
-  marpaESLIFRecognizerParent.convertedb  = 1;
-  marpaESLIFRecognizerParent.convertedbp = &(marpaESLIFRecognizerParent.convertedb);
+  marpaESLIFRecognizerParent._convertedb = 1;
+  marpaESLIFRecognizerParent.convertedbp = &(marpaESLIFRecognizerParent._convertedb);
 
   /* MARPAESLIF_TRACE(marpaESLIFp, funcs, "Building terminal"); */
 
@@ -3019,8 +3019,10 @@ static inline short _marpaESLIFRecognizer_resumeb(marpaESLIFRecognizer_t *marpaE
       }
     }
 
-    /* Discard failure - this is an error unless lexemes were read and exhaustion or eof flags are true */
-    if (marpaESLIFRecognizerp->haveLexemeb && (marpaESLIFRecognizerp->marpaESLIFRecognizerOption.exhaustedb || *(marpaESLIFRecognizerp->eofbp))) {
+    /* Discard failure - this is an error unless lexemes were read and:
+       - exhaustion is on, or
+       - eof flags is true and all the data is consumed */
+    if (marpaESLIFRecognizerp->haveLexemeb && (marpaESLIFRecognizerp->marpaESLIFRecognizerOption.exhaustedb || (*(marpaESLIFRecognizerp->eofbp) && (marpaESLIFRecognizerp->inputl <= 0)))) {
       continueb = 0;
       rcb = 1;
       goto done;
@@ -3206,20 +3208,20 @@ static inline short _marpaESLIFRecognizer_resumeb(marpaESLIFRecognizer_t *marpaE
         }
       }
       /* If there is some information before, show it */
-      if ((marpaESLIFRecognizerp->inputs != NULL) && (marpaESLIFRecognizerp->buffers != NULL) && (marpaESLIFRecognizerp->inputs > marpaESLIFRecognizerp->buffers)) {
+      if ((marpaESLIFRecognizerp->inputs != NULL) && ((*marpaESLIFRecognizerp->buffersp) != NULL) && (marpaESLIFRecognizerp->inputs > *(marpaESLIFRecognizerp->buffersp))) {
         char  *dumps;
         size_t dumpl;
 
-        if ((marpaESLIFRecognizerp->inputs - marpaESLIFRecognizerp->buffers) > 128) {
+        if ((marpaESLIFRecognizerp->inputs - *(marpaESLIFRecognizerp->buffersp)) > 128) {
           dumps = marpaESLIFRecognizerp->inputs - 128;
           dumpl = 128;
         } else {
-          dumps = marpaESLIFRecognizerp->buffers;
-          dumpl = marpaESLIFRecognizerp->inputs - marpaESLIFRecognizerp->buffers;
+          dumps = *(marpaESLIFRecognizerp->buffersp);
+          dumpl = marpaESLIFRecognizerp->inputs - *(marpaESLIFRecognizerp->buffersp);
         }
         _marpaESLIFRecognizer_hexdumpv(marpaESLIFRecognizerp,
                                        "",
-                                       marpaESLIFRecognizerp->convertedb ? "UTF-8 converted data before the failure" : "Raw data before the failure",
+                                       *(marpaESLIFRecognizerp->convertedbp) ? "UTF-8 converted data before the failure" : "Raw data before the failure",
                                        dumps,
                                        dumpl,
                                        0 /* traceb */);
@@ -3234,7 +3236,7 @@ static inline short _marpaESLIFRecognizer_resumeb(marpaESLIFRecognizer_t *marpaE
         dumpl = marpaESLIFRecognizerp->inputl > 128 ? 128 : marpaESLIFRecognizerp->inputl;
         _marpaESLIFRecognizer_hexdumpv(marpaESLIFRecognizerp,
                                        "",
-                                       marpaESLIFRecognizerp->convertedb ? "UTF-8 converted data after the failure" : "Raw data after the failure",
+                                       *(marpaESLIFRecognizerp->convertedbp) ? "UTF-8 converted data after the failure" : "Raw data after the failure",
                                        dumps,
                                        dumpl,
                                        0 /* traceb */);
@@ -3325,8 +3327,8 @@ void marpaESLIFRecognizer_freev(marpaESLIFRecognizer_t *marpaESLIFRecognizerp)
     }
     if (marpaESLIFRecognizerParentp == NULL) {
       /* The "buffer" area is managed by the parent recognizer */
-      if (marpaESLIFRecognizerp->buffers != NULL) {
-        free(marpaESLIFRecognizerp->buffers);
+      if (marpaESLIFRecognizerp->_buffers != NULL) {
+        free(marpaESLIFRecognizerp->_buffers);
       }
     } else {
       /* Parent's "current" position have to be updated */
@@ -3757,10 +3759,10 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGramm
   marpaESLIFRecognizerp->eventArrayl                = 0;
   marpaESLIFRecognizerp->parentRecognizerp          = marpaESLIFRecognizerParentp;
   marpaESLIFRecognizerp->resumeCounterl             = 0;
-  marpaESLIFRecognizerp->buffers                    = NULL;
-  marpaESLIFRecognizerp->bufferl                    = 0;
-  marpaESLIFRecognizerp->eofb                       = 0;
-  marpaESLIFRecognizerp->convertedb                 = 0;
+  marpaESLIFRecognizerp->_buffers                   = NULL;
+  marpaESLIFRecognizerp->_bufferl                   = 0;
+  marpaESLIFRecognizerp->_eofb                      = 0;
+  marpaESLIFRecognizerp->_convertedb                = 0;
   /* If this is a parent recognizer get its stream information */
   if (marpaESLIFRecognizerParentp != NULL) {
     marpaESLIFRecognizerp->leveli                     = marpaESLIFRecognizerParentp->leveli + 1;
@@ -3774,10 +3776,10 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGramm
     marpaESLIFRecognizerp->inputl                     = marpaESLIFRecognizerParentp->inputl;
   } else {
     marpaESLIFRecognizerp->leveli                     = 0;
-    marpaESLIFRecognizerp->buffersp                   = &(marpaESLIFRecognizerp->buffers);
-    marpaESLIFRecognizerp->bufferlp                   = &(marpaESLIFRecognizerp->bufferl);
-    marpaESLIFRecognizerp->eofbp                      = &(marpaESLIFRecognizerp->eofb);
-    marpaESLIFRecognizerp->convertedbp                = &(marpaESLIFRecognizerp->convertedb);
+    marpaESLIFRecognizerp->buffersp                   = &(marpaESLIFRecognizerp->_buffers);
+    marpaESLIFRecognizerp->bufferlp                   = &(marpaESLIFRecognizerp->_bufferl);
+    marpaESLIFRecognizerp->eofbp                      = &(marpaESLIFRecognizerp->_eofb);
+    marpaESLIFRecognizerp->convertedbp                = &(marpaESLIFRecognizerp->_convertedb);
     marpaESLIFRecognizerp->parentDeltal               = 0;
     /* New recognizer is starting nowhere for the moment - it will ask for more data, c.f. recognizer's read() */
     marpaESLIFRecognizerp->inputs                     = NULL;
