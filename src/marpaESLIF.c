@@ -103,7 +103,6 @@ static inline void                   _marpaESLIF_freeCallbackv(void *userDatavp,
 static inline void                   _marpaESLIFRecognizer_reset_events(marpaESLIFRecognizer_t *marpaESLIFRecognizerp);
 static inline short                  _marpaESLIFRecognizer_grammar_eventsb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, short *completedbp, short *nulledbp, short *predictedbp, short *exhaustedbp);
 static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaESLIFRecognizerOption_t *marpaESLIFRecognizerOptionp, short discardb, marpaESLIFRecognizer_t *marpaESLIFRecognizerParentp, short fakeb);
-static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_fakep(marpaESLIF_t *marpaESLIFp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp);
 static inline short                  _marpaESLIFGrammar_parseb(marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaESLIFRecognizerOption_t *marpaESLIFRecognizerOptionp, marpaESLIFValueOption_t *marpaESLIFValueOptionp, short discardb, marpaESLIFRecognizer_t *marpaESLIFRecognizerParentp, short *exhaustedbp);
 static        void                   _marpaESLIF_generateStringWithLoggerCallback(void *userDatavp, genericLoggerLevel_t logLeveli, const char *msgs);
 static inline void                   _marpaESLIFRecognizer_hexdumpv(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *headers, char *asciidescs, const char *p, size_t lengthl, short traceb);
@@ -342,6 +341,7 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
 
   marpaESLIFRecognizerParent.marpaESLIFp = marpaESLIFp;
   marpaESLIFRecognizerParent.eofb        = 1;
+  marpaESLIFRecognizerParent.eofbp       = &(marpaESLIFRecognizerParent.eofb);
   marpaESLIFRecognizerParent.buffers     = NULL;
   marpaESLIFRecognizerParent.buffersp    = &(marpaESLIFRecognizerParent.buffers);
   marpaESLIFRecognizerParent.bufferl     = 0;
@@ -2160,7 +2160,7 @@ static inline short _marpaESLIFRecognizer_symbol_matcherb(marpaESLIFRecognizer_t
                                                symbolp->u.terminalp,
                                                marpaESLIFRecognizerp->inputs,
                                                marpaESLIFRecognizerp->inputl,
-                                               marpaESLIFRecognizerp->eofb,
+                                               *(marpaESLIFRecognizerp->eofbp),
                                                rcip,
                                                outputStackp);
       break;
@@ -2778,29 +2778,6 @@ marpaESLIFRecognizer_t *marpaESLIFRecognizer_newp(marpaESLIFGrammar_t *marpaESLI
 }
 
 /*****************************************************************************/
- static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_fakep(marpaESLIF_t *marpaESLIFp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp)
-/*****************************************************************************/
-{
-  if (marpaESLIFRecognizerp == NULL) {
-    MARPAESLIF_ERROR(marpaESLIFp, "Cannot create fake recognizer: marpaESLIFRecognizerp is NULL");
-    return NULL;
-  }
-
-  marpaESLIFRecognizerp->marpaESLIFp = marpaESLIFp;
-  marpaESLIFRecognizerp->eofb        = 1;
-  marpaESLIFRecognizerp->buffers     = NULL;
-  marpaESLIFRecognizerp->buffersp    = &(marpaESLIFRecognizerp->buffers);
-  marpaESLIFRecognizerp->bufferl     = 0;
-  marpaESLIFRecognizerp->bufferlp    = &(marpaESLIFRecognizerp->bufferl);
-  /* We game after grammar was ALREADY converted to UTF-8, i.e. we are sure this is */
-  /* already converted - I told you this is tricky -;                               */
-  marpaESLIFRecognizerp->convertedb  = 1;
-  marpaESLIFRecognizerp->convertedbp = &(marpaESLIFRecognizerp->convertedb);
-
-  return marpaESLIFRecognizerp;
-}
-
-/*****************************************************************************/
 short marpaESLIFRecognizer_scanb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, short initialEventsb, short *continuebp, short *exhaustedbp)
 /*****************************************************************************/
 {
@@ -3042,8 +3019,8 @@ static inline short _marpaESLIFRecognizer_resumeb(marpaESLIFRecognizer_t *marpaE
       }
     }
 
-    /* Discard failure - this is an error unless lexemes were read and exhaustion flag is true */
-    if (marpaESLIFRecognizerp->haveLexemeb && marpaESLIFRecognizerp->marpaESLIFRecognizerOption.exhaustedb) {
+    /* Discard failure - this is an error unless lexemes were read and exhaustion or eof flags are true */
+    if (marpaESLIFRecognizerp->haveLexemeb && (marpaESLIFRecognizerp->marpaESLIFRecognizerOption.exhaustedb || *(marpaESLIFRecognizerp->eofbp))) {
       continueb = 0;
       rcb = 1;
       goto done;
@@ -3759,7 +3736,7 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGramm
 
   /* We request a stream reader callback unless eof flag is set by an eventual parent recognizer */
   if (marpaESLIFRecognizerOptionp->marpaESLIFReaderCallbackp == NULL) {
-    if ((marpaESLIFRecognizerParentp == NULL) || ! marpaESLIFRecognizerParentp->eofb) {
+    if ((marpaESLIFRecognizerParentp == NULL) || ! *(marpaESLIFRecognizerParentp->eofbp)) {
       MARPAESLIF_ERROR(marpaESLIFp, "Null reader callback");
       goto err;
     }
