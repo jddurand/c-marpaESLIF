@@ -3900,7 +3900,6 @@ static void _marpaESLIF_generateStringWithLoggerCallback(void *userDatavp, gener
 {
   _marpaESLIF_stringGenerator_t *contextp = (_marpaESLIF_stringGenerator_t *) userDatavp;
   char                         *tmps;
-  size_t                        l;
 
   if (contextp->s == NULL) {
     /* First time */
@@ -3915,7 +3914,6 @@ static void _marpaESLIF_generateStringWithLoggerCallback(void *userDatavp, gener
     }
   } else if (contextp->okb) {
     /* Only if previous round was ok */
-    l = contextp->l;
     contextp->l = strlen(contextp->s) + strlen(msgs) + 1;
     tmps = (char *) realloc(contextp->s, contextp->l);
     if (tmps != NULL) {
@@ -4183,7 +4181,7 @@ static short _marpaESLIFValueRuleCallback(void *userDatavp, int rulei, int arg0i
 
  done:
   /* MARPAESLIFVALUE_TRACEF(marpaESLIFValuep, funcs, "return %d", (int) rcb); */
-  return 1;
+  return rcb;
 }
 
 /*****************************************************************************/
@@ -4259,7 +4257,7 @@ static short _marpaESLIFValueSymbolCallback(void *userDatavp, int symboli, int a
 
  done:
   /* MARPAESLIFVALUE_TRACEF(marpaESLIFValuep, funcs, "return %d", (int) rcb); */
-  return 1;
+  return rcb;
 }
 
 /*****************************************************************************/
@@ -4302,7 +4300,7 @@ static short _marpaESLIFValueNullingCallback(void *userDatavp, int symboli, int 
 
  done:
   /* MARPAESLIFVALUE_TRACEF(marpaESLIFValuep, funcs, "return %d", (int) rcb); */
-  return 1;
+  return rcb;
 }
 
 
