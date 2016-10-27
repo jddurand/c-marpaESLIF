@@ -299,11 +299,6 @@ struct marpaESLIFRecognizer {
   short                       *eofbp;          /* Ditto for the EOF flag */
   short                       *convertedbp;    /* Ditto for the conversion flag */
 
-  char                        *remembers;      /* Same logic as with the buffer */
-  size_t                       rememberl;
-  char                       **remembersp;
-  size_t                      *rememberlp;
-
   size_t                       parentDeltal;   /* Parent original delta - used to recovert parent current pointer at our free */
   char                        *inputs;         /* Current pointer in input - specific to every recognizer */
   size_t                       inputl;         /* Current remaining bytes - specific to every recognizer */
@@ -331,8 +326,7 @@ marpaESLIFRecognizerOption_t marpaESLIFRecognizerOption_default = {
   0,                 /* disableThresholdb */
   0,                 /* exhaustedb */
   0,                 /* latmb */
-  0,                 /* rejectionb */
-  0                  /* rememberInputb */
+  0                  /* rejectionb */
 };
 
 marpaESLIFValueOption_t marpaESLIFValueOption_default_template = {
