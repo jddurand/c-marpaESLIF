@@ -103,6 +103,7 @@ static inline void                   _marpaESLIF_freeCallbackv(void *userDatavp,
 static inline void                   _marpaESLIFRecognizer_reset_events(marpaESLIFRecognizer_t *marpaESLIFRecognizerp);
 static inline short                  _marpaESLIFRecognizer_grammar_eventsb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, short *completedbp, short *nulledbp, short *predictedbp, short *exhaustedbp);
 static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaESLIFRecognizerOption_t *marpaESLIFRecognizerOptionp, short discardb, marpaESLIFRecognizer_t *marpaESLIFRecognizerParentp, short fakeb);
+static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_fakep(marpaESLIF_t *marpaESLIFp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp);
 static inline short                  _marpaESLIFGrammar_parseb(marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaESLIFRecognizerOption_t *marpaESLIFRecognizerOptionp, marpaESLIFValueOption_t *marpaESLIFValueOptionp, short discardb, marpaESLIFRecognizer_t *marpaESLIFRecognizerParentp, short *exhaustedbp);
 static        void                   _marpaESLIF_generateStringWithLoggerCallback(void *userDatavp, genericLoggerLevel_t logLeveli, const char *msgs);
 static inline void                   _marpaESLIFRecognizer_hexdumpv(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *headers, char *asciidescs, const char *p, size_t lengthl, short traceb);
@@ -305,7 +306,7 @@ static inline short _marpaESLIF_string_eqb(marpaESLIF_string_t *string1p, marpaE
 /*****************************************************************************/
 static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, int eventSeti, char *descs, size_t descl, marpaESLIF_terminal_type_t type, marpaESLIF_uint32_t opti, char *utf8s, size_t utf8l, char *testFullMatchs, char *testPartialMatchs)
 /*****************************************************************************/
-/* This method is bootstraped at marpaESLIFp creation itself to have the internal anycharp regexp terminal, with grammarp being NULL... */
+/* This method is bootstraped at marpaESLIFp creation itself to have the internal regexps, with grammarp being NULL... */
 /*****************************************************************************/
 {
   const static char                *funcs = "_marpaESLIF_terminal_newp";
@@ -340,6 +341,7 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
   /* NULL pointer for it in _marpaESLIFRecognizer_newp(), the default will apply    */
   /* i.e. remembering mode is off.                                                  */
 
+  marpaESLIFRecognizerParent.marpaESLIFp = marpaESLIFp;
   marpaESLIFRecognizerParent.eofb        = 1;
   marpaESLIFRecognizerParent.buffers     = NULL;
   marpaESLIFRecognizerParent.buffersp    = &(marpaESLIFRecognizerParent.buffers);
@@ -419,7 +421,7 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
         goto err;
       }
       if (! GENERICSTACK_IS_ARRAY(outputStackp, GENERICSTACK_USED(outputStackp) - 1)) {
-        MARPAESLIF_ERRORF(marpaESLIFp, "Bad type %s in output stack at indice 0", _marpaESLIF_genericStack_ix_types(outputStackp, GENERICSTACK_USED(outputStackp) - 1));
+        MARPAESLIF_ERRORF(marpaESLIFp, "Bad type %s in output stack at indice %d", _marpaESLIF_genericStack_ix_types(outputStackp, GENERICSTACK_USED(outputStackp) - 1), (int) GENERICSTACK_USED(outputStackp));
         goto err;
       }
       arrayp = GENERICSTACK_GET_ARRAYP(outputStackp, GENERICSTACK_USED(outputStackp) - 1);
@@ -1773,11 +1775,15 @@ marpaESLIF_t *marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptionp)
   marpaESLIFp->marpaESLIFOption   = *marpaESLIFOptionp;
   marpaESLIFp->marpaESLIFGrammarp = NULL;
   marpaESLIFp->anycharp           = NULL;
+  marpaESLIFp->utf8bomp           = NULL;
 
-  /* Create internal anychar PCRE2 regex */
-
+  /* Create internal anychar regexes */
   marpaESLIFp->anycharp = _marpaESLIF_terminal_newp(marpaESLIFp, NULL /* grammarp */, 0, INTERNAL_ANYCHAR_PATTERN /* *descs */, strlen(INTERNAL_ANYCHAR_PATTERN) /* descl */, MARPAESLIF_TERMINAL_TYPE_REGEX, MARPAESLIF_REGEX_OPTION_DOTALL|MARPAESLIF_REGEX_OPTION_UTF, INTERNAL_ANYCHAR_PATTERN /* utf8s */, strlen(INTERNAL_ANYCHAR_PATTERN) /* utf8l */, NULL /* testFullMatchs */, NULL /* testPartialMatchs */);
   if (marpaESLIFp->anycharp == NULL) {
+    goto err;
+  }
+  marpaESLIFp->utf8bomp = _marpaESLIF_terminal_newp(marpaESLIFp, NULL /* grammarp */, 0, INTERNAL_UTF8BOM_PATTERN /* *descs */, strlen(INTERNAL_UTF8BOM_PATTERN) /* descl */, MARPAESLIF_TERMINAL_TYPE_REGEX, MARPAESLIF_REGEX_OPTION_UTF, INTERNAL_UTF8BOM_PATTERN /* utf8s */, strlen(INTERNAL_UTF8BOM_PATTERN) /* utf8l */, NULL /* testFullMatchs */, NULL /* testPartialMatchs */);
+  if (marpaESLIFp->utf8bomp == NULL) {
     goto err;
   }
   
@@ -1859,6 +1865,7 @@ void marpaESLIF_freev(marpaESLIF_t *marpaESLIFp)
   if (marpaESLIFp != NULL) {
     marpaESLIFGrammar_freev(marpaESLIFp->marpaESLIFGrammarp);
     _marpaESLIF_terminal_freev(marpaESLIFp->anycharp);
+    _marpaESLIF_terminal_freev(marpaESLIFp->utf8bomp);
     free(marpaESLIFp);
   }
 }
@@ -2226,17 +2233,21 @@ static void _marpaESLIF_tconvTraceCallback(void *userDatavp, const char *msgs)
 static inline char *_marpaESLIF_utf82printableascii_newp(marpaESLIF_t *marpaESLIFp, char *descs, size_t descl)
 /*****************************************************************************/
 {
-  const static char *funcs  = "_marpaESLIF_utf82printableascii_newp";
-  size_t             asciil;
-  char              *p;
-  char              *asciis;
-  unsigned char      c;
+  const static char      *funcs  = "_marpaESLIF_utf82printableascii_newp";
+  size_t                  asciil;
+  char                   *p;
+  char                   *asciis;
+  unsigned char           c;
 
   asciis = _marpaESLIF_charconvp(marpaESLIFp, "ASCII//TRANSLIT//IGNORE", "UTF-8", descs, descl, &asciil, NULL);
   if (asciis == NULL) {
     asciis = (char *) _marpaESLIF_utf82printableascii_defaultp;
     asciil = strlen(asciis);
   } else {
+    /* We are doing this only on descriptions - which are always small amount of bytes  */
+    /* (will the user ever write a description taking megabytes !?). Therefore if it ok */
+    /* to remove by hand bom and realloc if necessary.                                  */
+
     /* Remove by hand any ASCII character not truely printable.      */
     /* Only the historical ASCII table [0-127] is a portable thingy. */
     p = asciis;
@@ -2766,6 +2777,29 @@ marpaESLIFRecognizer_t *marpaESLIFRecognizer_newp(marpaESLIFGrammar_t *marpaESLI
 /*****************************************************************************/
 {
   return _marpaESLIFRecognizer_newp(marpaESLIFGrammarp, marpaESLIFRecognizerOptionp, 0 /* discardb */, NULL /* marpaESLIFRecognizerParentp */, 0 /* fakeb */);
+}
+
+/*****************************************************************************/
+ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_fakep(marpaESLIF_t *marpaESLIFp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp)
+/*****************************************************************************/
+{
+  if (marpaESLIFRecognizerp == NULL) {
+    MARPAESLIF_ERROR(marpaESLIFp, "Cannot create fake recognizer: marpaESLIFRecognizerp is NULL");
+    return NULL;
+  }
+
+  marpaESLIFRecognizerp->marpaESLIFp = marpaESLIFp;
+  marpaESLIFRecognizerp->eofb        = 1;
+  marpaESLIFRecognizerp->buffers     = NULL;
+  marpaESLIFRecognizerp->buffersp    = &(marpaESLIFRecognizerp->buffers);
+  marpaESLIFRecognizerp->bufferl     = 0;
+  marpaESLIFRecognizerp->bufferlp    = &(marpaESLIFRecognizerp->bufferl);
+  /* We game after grammar was ALREADY converted to UTF-8, i.e. we are sure this is */
+  /* already converted - I told you this is tricky -;                               */
+  marpaESLIFRecognizerp->convertedb  = 1;
+  marpaESLIFRecognizerp->convertedbp = &(marpaESLIFRecognizerp->convertedb);
+
+  return marpaESLIFRecognizerp;
 }
 
 /*****************************************************************************/
@@ -4568,16 +4602,20 @@ static inline short _marpaESLIFRecognizer_readb(marpaESLIFRecognizer_t *marpaESL
   Remember the semantics: from our point of view, reader is reading NEW data. We always append.
 */
 {
-  marpaESLIFRecognizerOption_t  marpaESLIFRecognizerOption = marpaESLIFRecognizerp->marpaESLIFRecognizerOption;
-  char                         *inputs                     = NULL;
-  char                         *encodings                  = NULL;
-  size_t                        inputl                     = 0;
-  short                         eofb                       = 0;
-  short                         characterStreamb           = 0;
-  short                         rcb;
-  char                         *utf8s;
-  size_t                        utf8l;
-  char                         *fromEncodings;
+  marpaESLIFRecognizerOption_t       marpaESLIFRecognizerOption = marpaESLIFRecognizerp->marpaESLIFRecognizerOption;
+  char                              *inputs                     = NULL;
+  char                              *encodings                  = NULL;
+  size_t                             inputl                     = 0;
+  short                              eofb                       = 0;
+  short                              characterStreamb           = 0;
+  char                              *utf8s                      = NULL;
+  size_t                             utf8l;
+  short                              rcb;
+  char                              *fromEncodings;
+  marpaESLIF_matcher_value_t         rci;
+  genericStack_t                     outputStack;
+  genericStack_t                    *outputStackp = NULL;
+  GENERICSTACKITEMTYPE2TYPE_ARRAYP  arrayp;
 
   if (! marpaESLIFRecognizerOption.marpaESLIFReaderCallbackp(marpaESLIFRecognizerOption.userDatavp, &inputs, &inputl, &eofb, &characterStreamb, &encodings)) {
     MARPAESLIF_ERROR(marpaESLIFRecognizerp->marpaESLIFp, "reader failure");
@@ -4598,7 +4636,32 @@ static inline short _marpaESLIFRecognizer_readb(marpaESLIFRecognizer_t *marpaESL
       }
       inputs = utf8s;
       inputl = utf8l;
+
+      /* Remember NOW it has been converted. This has an impact on the regex call below */
       *(marpaESLIFRecognizerp->convertedbp) = 1;
+
+      /* Remove eventually the BOM */
+      outputStackp = &outputStack;
+      GENERICSTACK_INIT(outputStackp);
+      if (GENERICSTACK_ERROR(outputStackp)) {
+        goto err;
+      }
+      if (! _marpaESLIFRecognizer_regex_matcherb(marpaESLIFRecognizerp, marpaESLIFRecognizerp->marpaESLIFp->utf8bomp, inputs, inputl, 1 /* eofb */, &rci, outputStackp)) {
+        goto err;
+      }
+      if (rci == MARPAESLIF_MATCH_OK) {
+        if (! GENERICSTACK_IS_ARRAY(outputStackp, 0)) {
+          MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "Bad type %s in output stack at indice 0", _marpaESLIF_genericStack_ix_types(outputStackp, 0));
+          goto err;
+        }
+        arrayp = GENERICSTACK_GET_ARRAYP(outputStackp, 0);
+        inputs += GENERICSTACK_ARRAYP_LENGTH(arrayp);
+        inputl -= GENERICSTACK_ARRAYP_LENGTH(arrayp);
+        if (inputl <= 0) {
+          /* Only the BOM !? */
+          goto empty_without_bom;
+        }
+      }
     } else {
       *(marpaESLIFRecognizerp->convertedbp) = 0;
     }
@@ -4701,6 +4764,7 @@ static inline short _marpaESLIFRecognizer_readb(marpaESLIFRecognizer_t *marpaESL
     /* all the children are executed -; */
   }
 
+ empty_without_bom:
   rcb = 1;
   (*marpaESLIFRecognizerp->eofbp) = eofb;
   goto done;
@@ -4709,6 +4773,12 @@ static inline short _marpaESLIFRecognizer_readb(marpaESLIFRecognizer_t *marpaESL
   rcb = 0;
 
  done:
+  if (outputStackp != NULL) {
+    GENERICSTACK_RESET(outputStackp);
+  }
+  if (utf8s != NULL) {
+    free(utf8s);
+  }
   return rcb;
 }
 
