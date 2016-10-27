@@ -42,7 +42,6 @@ typedef struct marpaESLIFRecognizerOption {
   short                exhaustedb;                  /* Exhaustion event. Default: 0 */
   short                latmb;                       /* Longest acceptable token match mode. Default: 0 */
   short                rejectionb;                  /* Rejection event. Default: 0 */
-  short                rememberb;                   /* Remember the entire input. Default: 0 */
 } marpaESLIFRecognizerOption_t;
 
 typedef enum marpaESLIFEventType {
