@@ -9,13 +9,15 @@ typedef struct bootstrap_grammar_terminal {
   char                      *utf8s;               /* ASCII UTF-8 compatible encoding */
   char                      *testFullMatchs;
   char                      *testPartialMatchs;
+  char                      *actions;
 } bootstrap_grammar_terminal_t;
 
 typedef struct bootstrap_grammar_meta {
-  int   idi;                /* Identifier */
-  char *descs;              /* Description */
-  short startb;             /* Start symbol ? */
-  short discardb;           /* Discard symbol ? */
+  int    idi;                /* Identifier */
+  char  *descs;              /* Description */
+  short  startb;             /* Start symbol ? */
+  short  discardb;           /* Discard symbol ? */
+  char  *actions;
 } bootstrap_grammar_meta_t;
 
 typedef enum bootstrap_grammar_rule_type {
@@ -33,6 +35,7 @@ typedef struct bootstrap_grammar_rule {
   int                           minimumi;
   int                           separatori;
   short                         properb;
+  char                         *actions;
 } bootstrap_grammar_rule_t;
 
 #include "marpaESLIF/internal/eslif/L0.h"

@@ -118,6 +118,7 @@ struct marpaESLIF_terminal {
   int                         idi;                 /* Terminal Id */
   marpaESLIF_string_t        *descp;               /* Terminal description */
   marpaESLIF_regex_t          regex;
+  marpaESLIF_action_t        *actionp;
 };
 
 struct marpaESLIF_meta {
@@ -146,11 +147,12 @@ enum marpaESLIF_event_type {
 /* Action types */
 enum marpaESLIF_action_type {
   MARPAESLIF_ACTION_TYPE_NA = 0,
-  MARPAESLIF_ACTION_TYPE_ARRAY,      /* ::array */
-  MARPAESLIF_ACTION_TYPE_FIRST,      /* ::first */
-  MARPAESLIF_ACTION_TYPE_UNDEF,      /* ::undef */
-  MARPAESLIF_ACTION_TYPE_COMPOSITE,  /* [] */
-  MARPAESLIF_ACTION_TYPE_NAME        /* c.f. action callback */
+  MARPAESLIF_ACTION_TYPE_ARRAY,          /* ::array */
+  MARPAESLIF_ACTION_TYPE_FIRST,          /* ::first */
+  MARPAESLIF_ACTION_TYPE_UNDEF,          /* ::undef */
+  MARPAESLIF_ACTION_TYPE_COMPOSITE,      /* [] */
+  MARPAESLIF_ACTION_TYPE_NAME,           /* c.f. action callback */
+  MARPAESLIF_ACTION_TYPE_INTERNAL_LEXEME /* Internal action that is always producing a "lexeme", i.e. an genericStack's array item - c.f. lexemeStack in the source */
 };
 
 /* Array action types */
@@ -172,8 +174,8 @@ enum marpaESLIF_array_type {
 struct marpaESLIF_action {
   marpaESLIF_action_type_t type;
   union {
-    genericStack_t      *compositeStackp; /* Only when type is MARPAESLIF_ACTION_TYPE_COMPOSITE */
-    marpaESLIF_string_t *namep;           /* Only when type is MARPAESLIF_ACTION_TYPE_NAME */
+    genericStack_t      *stackp;  /* Only when type is MARPAESLIF_ACTION_TYPE_COMPOSITE */
+    marpaESLIF_string_t *stringp;  /* Only when type is MARPAESLIF_ACTION_TYPE_NAME */
   } u;
 };
 
