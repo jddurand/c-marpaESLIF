@@ -1779,6 +1779,7 @@ marpaESLIF_t *marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptionp)
   marpaESLIFp->marpaESLIFGrammarp = NULL;
   marpaESLIFp->anycharp           = NULL;
   marpaESLIFp->utf8bomp           = NULL;
+  marpaESLIFp->newlinep           = NULL;
 
   /* Create internal anychar regexes */
   marpaESLIFp->anycharp = _marpaESLIF_terminal_newp(marpaESLIFp, NULL /* grammarp */, 0, INTERNAL_ANYCHAR_PATTERN /* *descs */, strlen(INTERNAL_ANYCHAR_PATTERN) /* descl */, MARPAESLIF_TERMINAL_TYPE_REGEX, MARPAESLIF_REGEX_OPTION_DOTALL|MARPAESLIF_REGEX_OPTION_UTF, INTERNAL_ANYCHAR_PATTERN /* utf8s */, strlen(INTERNAL_ANYCHAR_PATTERN) /* utf8l */, NULL /* testFullMatchs */, NULL /* testPartialMatchs */);
@@ -1787,6 +1788,11 @@ marpaESLIF_t *marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptionp)
   }
   marpaESLIFp->utf8bomp = _marpaESLIF_terminal_newp(marpaESLIFp, NULL /* grammarp */, 0, INTERNAL_UTF8BOM_PATTERN /* *descs */, strlen(INTERNAL_UTF8BOM_PATTERN) /* descl */, MARPAESLIF_TERMINAL_TYPE_REGEX, MARPAESLIF_REGEX_OPTION_UTF, INTERNAL_UTF8BOM_PATTERN /* utf8s */, strlen(INTERNAL_UTF8BOM_PATTERN) /* utf8l */, NULL /* testFullMatchs */, NULL /* testPartialMatchs */);
   if (marpaESLIFp->utf8bomp == NULL) {
+    goto err;
+  }
+  /* Please note that the newline regexp does NOT require UTF-8 correctness -; */
+  marpaESLIFp->newlinep = _marpaESLIF_terminal_newp(marpaESLIFp, NULL /* grammarp */, 0, INTERNAL_NEWLINE_PATTERN /* *descs */, strlen(INTERNAL_NEWLINE_PATTERN) /* descl */, MARPAESLIF_TERMINAL_TYPE_REGEX, MARPAESLIF_REGEX_OPTION_NA, INTERNAL_NEWLINE_PATTERN /* utf8s */, strlen(INTERNAL_NEWLINE_PATTERN) /* utf8l */, NULL /* testFullMatchs */, NULL /* testPartialMatchs */);
+  if (marpaESLIFp->newlinep == NULL) {
     goto err;
   }
   
@@ -1869,6 +1875,7 @@ void marpaESLIF_freev(marpaESLIF_t *marpaESLIFp)
     marpaESLIFGrammar_freev(marpaESLIFp->marpaESLIFGrammarp);
     _marpaESLIF_terminal_freev(marpaESLIFp->anycharp);
     _marpaESLIF_terminal_freev(marpaESLIFp->utf8bomp);
+    _marpaESLIF_terminal_freev(marpaESLIFp->newlinep);
     free(marpaESLIFp);
   }
 }
@@ -2477,6 +2484,7 @@ marpaESLIFGrammar_t *marpaESLIFGrammar_newp(marpaESLIF_t *marpaESLIFp, marpaESLI
   marpaESLIFRecognizerOption.exhaustedb                  = 0; /* Exhaustion is not allowed */
   marpaESLIFRecognizerOption.latmb                       = 1; /* Our internal grammar is working in latm mode */
   marpaESLIFRecognizerOption.rejectionb                  = 1; /* Our internal grammar have no rejection */
+  marpaESLIFRecognizerOption.newlineb                    = 1; /* Grammars are short - we can count line/columns numbers */
 
   GENERICSTACK_NEW(outputStackp);
   if (GENERICSTACK_ERROR(outputStackp)) {
@@ -2849,6 +2857,9 @@ static inline short _marpaESLIFRecognizer_resumeb(marpaESLIFRecognizer_t *marpaE
   marpaESLIF_string_t             *marpaESLIF_stringp;
   int                              valuei;
   size_t                           sizel;
+  marpaESLIF_terminal_t           *newlinep;
+  char                            *linep;
+  size_t                           linel;
 
 #undef MARPAESLIFRECOGNIZER_COLLECT_EVENTS
 #define MARPAESLIFRECOGNIZER_COLLECT_EVENTS(forceb, exhaustedbp)  do {  \
@@ -2882,6 +2893,7 @@ static inline short _marpaESLIFRecognizer_resumeb(marpaESLIFRecognizer_t *marpaE
   marpaESLIFRecognizerp->resumeCounterl++; /* Increment internal counter for tracing */
   marpaESLIFRecognizerOptionDiscard.disableThresholdb = 1; /* If discard, prepare the option to disable threshold */
   marpaESLIFRecognizerOptionDiscard.exhaustedb        = 1; /* ... and have the exhausted event */
+  marpaESLIFRecognizerOptionDiscard.newlineb          = 0; /* ... and not count line/column numbers */
 
   if (initialEventsb) {
     MARPAESLIFRECOGNIZER_COLLECT_EVENTS(0, &exhaustedb);
@@ -3167,6 +3179,39 @@ static inline short _marpaESLIFRecognizer_resumeb(marpaESLIFRecognizer_t *marpaE
     goto err;
   }
 
+  /* If newline counting is on, so do we - only at first level */
+  if (marpaESLIFRecognizerp->marpaESLIFRecognizerOption.newlineb && (marpaESLIFRecognizerp->leveli == 0)) {
+    newlinep = marpaESLIFRecognizerp->marpaESLIFp->newlinep;
+    linep = marpaESLIFRecognizerp->inputs;
+    linel = marpaESLIFRecognizerp->inputl;
+
+    while (1) {
+      /* We can re-use matchedStack -; */
+      _marpaESLIF_lexemeStack_resetv(matchedStackp);
+      if (! _marpaESLIFRecognizer_regex_matcherb(marpaESLIFRecognizerp,
+                                                 newlinep,
+                                                 linep,
+                                                 linel,
+                                                 *(marpaESLIFRecognizerp->eofbp),
+                                                 &rci,
+                                                 matchedStackp)) {
+        goto err;
+      }
+      if (rci != MARPAESLIF_MATCH_OK) {
+        break;
+      }
+      if (! GENERICSTACK_IS_ARRAY(matchedStackp, 0)) {
+        MARPAESLIF_ERRORF(marpaESLIFp, "Bad type %s in matched stack at indice 0", _marpaESLIF_genericStack_ix_types(alternativeStackp, 0));
+        goto err;
+      }
+      arrayp = GENERICSTACK_GET_ARRAYP(matchedStackp, 0);
+      matchedl = GENERICSTACK_ARRAYP_LENGTH(arrayp);
+      linep += matchedl;
+      linel -= matchedl;
+      marpaESLIFRecognizerp->linel++;
+    }
+  }
+
   /* Remember this recognizer have at least one lexeme */
   marpaESLIFRecognizerp->haveLexemeb = 1;
   
@@ -3241,7 +3286,10 @@ static inline short _marpaESLIFRecognizer_resumeb(marpaESLIFRecognizer_t *marpaE
                                        dumpl,
                                        0 /* traceb */);
       }
-      MARPAESLIF_ERROR(marpaESLIFRecognizerp->marpaESLIFp, "<<<<<RECOGNIZER FAILURE HERE>>>>");
+      MARPAESLIF_ERROR(marpaESLIFRecognizerp->marpaESLIFp, "<<<<< RECOGNIZER FAILURE HERE >>>>");
+      if (marpaESLIFRecognizerp->marpaESLIFRecognizerOption.newlineb) {
+        MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "<<<<< LINE %ld >>>>", (unsigned long) marpaESLIFRecognizerp->linel);
+      }
       /* If there is some information after, show it */
       if ((marpaESLIFRecognizerp->inputs != NULL) && (marpaESLIFRecognizerp->inputl > 0)) {
         char  *dumps;
@@ -3803,6 +3851,8 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGramm
   marpaESLIFRecognizerp->scanb                      = 0;
   marpaESLIFRecognizerp->discardb                   = discardb;
   marpaESLIFRecognizerp->haveLexemeb                = 0;
+  marpaESLIFRecognizerp->linel                      = 1;
+  marpaESLIFRecognizerp->columnl                    = 1;
 
   marpaWrapperRecognizerOption.genericLoggerp       = marpaESLIFp->marpaESLIFOption.genericLoggerp;
   marpaWrapperRecognizerOption.disableThresholdb    = marpaESLIFRecognizerOptionp->disableThresholdb;

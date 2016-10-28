@@ -4,8 +4,9 @@
 #include <genericStack.h>
 #include <pcre2.h>
 
-#define INTERNAL_ANYCHAR_PATTERN "."         /* This ASCII string is UTF-8 compatible */
-#define INTERNAL_UTF8BOM_PATTERN "\\x{FEFF}" /* FEFF Unicode code point i.e. EFBBBF in UTF-8 encoding */
+#define INTERNAL_ANYCHAR_PATTERN "."                    /* This ASCII string is UTF-8 compatible */
+#define INTERNAL_UTF8BOM_PATTERN "\\x{FEFF}"            /* FEFF Unicode code point i.e. EFBBBF in UTF-8 encoding */
+#define INTERNAL_NEWLINE_PATTERN "(*BSR_UNICODE).*?\\R" /* newline as per unicode - we do .*? because our regexps are always anchored */
 
 typedef struct  marpaESLIF_regex           marpaESLIF_regex_t;
 typedef         marpaESLIFString_t         marpaESLIF_string_t;
@@ -260,6 +261,7 @@ struct marpaESLIF {
   marpaESLIFOption_t     marpaESLIFOption;
   marpaESLIF_terminal_t *anycharp;            /* internal regex for match any character */
   marpaESLIF_terminal_t *utf8bomp;            /* Internal regex for match UTF-8 BOM */
+  marpaESLIF_terminal_t *newlinep;            /* Internal regex for match newline */
 };
 
 struct marpaESLIFGrammar {
@@ -308,6 +310,8 @@ struct marpaESLIFRecognizer {
   short                        scanb;          /* Prevent resume before a call to scan */
   short                        discardb;       /* discard mode */
   short                        haveLexemeb;    /* Remember if this recognizer have at least one lexeme */
+  size_t                       linel;          /* Line number */
+  size_t                       columnl;        /* Column number */
 };
 
 /* ------------------------------------------- */
@@ -329,7 +333,8 @@ marpaESLIFRecognizerOption_t marpaESLIFRecognizerOption_default = {
   0,                 /* disableThresholdb */
   0,                 /* exhaustedb */
   0,                 /* latmb */
-  0                  /* rejectionb */
+  0,                 /* rejectionb */
+  0                  /* newlineb */
 };
 
 marpaESLIFValueOption_t marpaESLIFValueOption_default_template = {
