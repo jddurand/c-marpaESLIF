@@ -3031,7 +3031,7 @@ static inline short _marpaESLIFRecognizer_resumeb(marpaESLIFRecognizer_t *marpaE
         /* Discard symbol got matched. Retry our our own match */
         /* This our own stack, so we know that per definition output will an genericStack's ARRAY at indice 0 of matchedStackp */
         if (! GENERICSTACK_IS_ARRAY(matchedStackp, 0)) {
-          MARPAESLIF_ERRORF(marpaESLIFp, "Bad type %s in matched stack at indice 0", _marpaESLIF_genericStack_ix_types(alternativeStackp, 0));
+          MARPAESLIF_ERRORF(marpaESLIFp, "Bad type %s in matched stack at indice 0", _marpaESLIF_genericStack_ix_types(matchedStackp, 0));
           goto err;
         }
         arrayp = GENERICSTACK_GET_ARRAYP(matchedStackp, 0);
@@ -3201,7 +3201,7 @@ static inline short _marpaESLIFRecognizer_resumeb(marpaESLIFRecognizer_t *marpaE
         break;
       }
       if (! GENERICSTACK_IS_ARRAY(matchedStackp, 0)) {
-        MARPAESLIF_ERRORF(marpaESLIFp, "Bad type %s in matched stack at indice 0", _marpaESLIF_genericStack_ix_types(alternativeStackp, 0));
+        MARPAESLIF_ERRORF(marpaESLIFp, "Bad type %s in matched stack at indice 0", _marpaESLIF_genericStack_ix_types(matchedStackp, 0));
         goto err;
       }
       arrayp = GENERICSTACK_GET_ARRAYP(matchedStackp, 0);
