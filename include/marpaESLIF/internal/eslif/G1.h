@@ -267,10 +267,11 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
     "<G1 terminal :start>",               MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
     ":start",
 #ifndef MARPAESLIF_NTRACE
-    ":start", ":sta"
+    ":start", ":sta",
 #else
-    NULL, NULL
+    NULL, NULL,
 #endif
+    "G1_TERMINAL__START"
   },
   { G1_TERMINAL__DESC,
     "<G1 terminal :desc>",               MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
