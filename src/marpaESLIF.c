@@ -121,6 +121,7 @@ static        char                  *_marpaESLIFGrammar_symbolDescriptionCallbac
 static        short                  _marpaESLIFGrammar_symbolOptionSetterOnlyStartCompletionEvent(void *userDatavp, int symboli, marpaWrapperGrammarSymbolOption_t *marpaWrapperGrammarSymbolOptionp);
 static inline void                   _marpaESLIF_rule_createshowv(marpaESLIF_t *marpaESLIFp, marpaESLIF_rule_t *rulep, char *asciishows, size_t *asciishowlp);
 static inline int                    _marpaESLIF_utf82ordi(PCRE2_SPTR8 utf8bytes, marpaESLIF_uint32_t *uint32p);
+static inline short                  _marpaESLIFRecognizer_matchPostProcessingb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, size_t matchl);
 
 /*****************************************************************************/
 static inline marpaESLIF_string_t *_marpaESLIF_string_newp(marpaESLIF_t *marpaESLIFp, char *encodings, char *bytep, size_t bytel, short asciib)
@@ -2857,9 +2858,6 @@ static inline short _marpaESLIFRecognizer_resumeb(marpaESLIFRecognizer_t *marpaE
   marpaESLIF_string_t             *marpaESLIF_stringp;
   int                              valuei;
   size_t                           sizel;
-  marpaESLIF_terminal_t           *newlinep;
-  char                            *linep;
-  size_t                           linel;
 
 #undef MARPAESLIFRECOGNIZER_COLLECT_EVENTS
 #define MARPAESLIFRECOGNIZER_COLLECT_EVENTS(forceb, exhaustedbp)  do {  \
@@ -3036,6 +3034,10 @@ static inline short _marpaESLIFRecognizer_resumeb(marpaESLIFRecognizer_t *marpaE
         }
         arrayp = GENERICSTACK_GET_ARRAYP(matchedStackp, 0);
         matchedl = GENERICSTACK_ARRAYP_LENGTH(arrayp);
+        /* New line processing, etc... */
+        if (! _marpaESLIFRecognizer_matchPostProcessingb(marpaESLIFRecognizerp, matchedl)) {
+          goto err;
+        }
         MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Advancing stream internal position by %ld bytes", (unsigned long) matchedl);
         marpaESLIFRecognizerp->inputs += matchedl;
         marpaESLIFRecognizerp->inputl -= matchedl;
@@ -3179,42 +3181,13 @@ static inline short _marpaESLIFRecognizer_resumeb(marpaESLIFRecognizer_t *marpaE
     goto err;
   }
 
-  /* If newline counting is on, so do we - only at first level */
-  if (marpaESLIFRecognizerp->marpaESLIFRecognizerOption.newlineb && (marpaESLIFRecognizerp->leveli == 0)) {
-    newlinep = marpaESLIFRecognizerp->marpaESLIFp->newlinep;
-    linep = marpaESLIFRecognizerp->inputs;
-    linel = marpaESLIFRecognizerp->inputl;
-
-    while (1) {
-      /* We can re-use matchedStack -; */
-      _marpaESLIF_lexemeStack_resetv(matchedStackp);
-      if (! _marpaESLIFRecognizer_regex_matcherb(marpaESLIFRecognizerp,
-                                                 newlinep,
-                                                 linep,
-                                                 linel,
-                                                 *(marpaESLIFRecognizerp->eofbp),
-                                                 &rci,
-                                                 matchedStackp)) {
-        goto err;
-      }
-      if (rci != MARPAESLIF_MATCH_OK) {
-        break;
-      }
-      if (! GENERICSTACK_IS_ARRAY(matchedStackp, 0)) {
-        MARPAESLIF_ERRORF(marpaESLIFp, "Bad type %s in matched stack at indice 0", _marpaESLIF_genericStack_ix_types(matchedStackp, 0));
-        goto err;
-      }
-      arrayp = GENERICSTACK_GET_ARRAYP(matchedStackp, 0);
-      matchedl = GENERICSTACK_ARRAYP_LENGTH(arrayp);
-      linep += matchedl;
-      linel -= matchedl;
-      marpaESLIFRecognizerp->linel++;
-    }
-  }
-
   /* Remember this recognizer have at least one lexeme */
   marpaESLIFRecognizerp->haveLexemeb = 1;
   
+  /* New line processing, etc... */
+  if (! _marpaESLIFRecognizer_matchPostProcessingb(marpaESLIFRecognizerp, maxMatchedl)) {
+    goto err;
+  }
   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Advancing stream internal position by %ld bytes", (unsigned long) maxMatchedl);
   marpaESLIFRecognizerp->inputs += maxMatchedl;
   marpaESLIFRecognizerp->inputl -= maxMatchedl;
@@ -3286,9 +3259,16 @@ static inline short _marpaESLIFRecognizer_resumeb(marpaESLIFRecognizer_t *marpaE
                                        dumpl,
                                        0 /* traceb */);
       }
-      MARPAESLIF_ERROR(marpaESLIFRecognizerp->marpaESLIFp, "<<<<< RECOGNIZER FAILURE HERE >>>>");
       if (marpaESLIFRecognizerp->marpaESLIFRecognizerOption.newlineb) {
-        MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "<<<<< LINE %ld >>>>", (unsigned long) marpaESLIFRecognizerp->linel);
+        if (marpaESLIFRecognizerp->columnl > 0) {
+          /* Column is known (in terms of character count) */
+          MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "<<<<< RECOGNIZER FAILURE AFTER LINE No %ld COLUMN No %ld, HERE: >>>>", (unsigned long) marpaESLIFRecognizerp->linel, (unsigned long) marpaESLIFRecognizerp->columnl);
+        } else {
+          /* Column is not known */
+          MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "<<<<< RECOGNIZER FAILURE AFTER LINE No %ld, HERE: >>>>", (unsigned long) marpaESLIFRecognizerp->linel);
+        }
+      } else {
+        MARPAESLIF_ERROR(marpaESLIFRecognizerp->marpaESLIFp, "<<<<< RECOGNIZER FAILURE HERE: >>>>");
       }
       /* If there is some information after, show it */
       if ((marpaESLIFRecognizerp->inputs != NULL) && (marpaESLIFRecognizerp->inputl > 0)) {
@@ -3852,7 +3832,7 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGramm
   marpaESLIFRecognizerp->discardb                   = discardb;
   marpaESLIFRecognizerp->haveLexemeb                = 0;
   marpaESLIFRecognizerp->linel                      = 1;
-  marpaESLIFRecognizerp->columnl                    = 1;
+  marpaESLIFRecognizerp->columnl                    = 0;
 
   marpaWrapperRecognizerOption.genericLoggerp       = marpaESLIFp->marpaESLIFOption.genericLoggerp;
   marpaWrapperRecognizerOption.disableThresholdb    = marpaESLIFRecognizerOptionp->disableThresholdb;
@@ -5023,4 +5003,107 @@ Returns:      >  0 => the number of bytes consumed
 
   *uint32p = d;
   return i+1;
+}
+
+/*****************************************************************************/
+static inline short _marpaESLIFRecognizer_matchPostProcessingb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, size_t matchl)
+/*****************************************************************************/
+{
+  marpaESLIF_terminal_t            *newlinep;
+  marpaESLIF_terminal_t            *anycharp;
+  char                             *linep;
+  size_t                            linel;
+  size_t                            matchedl;
+  genericStack_t                    lexemeStack;
+  genericStack_t                   *lexemeStackp = NULL;
+  GENERICSTACKITEMTYPE2TYPE_ARRAYP  arrayp;
+  marpaESLIF_matcher_value_t        rci;
+  short                             rcb;
+
+  /* If newline counting is on, so do we - only at first level */
+  if (marpaESLIFRecognizerp->marpaESLIFRecognizerOption.newlineb && (marpaESLIFRecognizerp->leveli == 0)) {
+    newlinep = marpaESLIFRecognizerp->marpaESLIFp->newlinep;
+    anycharp = marpaESLIFRecognizerp->marpaESLIFp->anycharp;
+    linep = marpaESLIFRecognizerp->inputs;
+    linel = matchl;
+    lexemeStackp = &lexemeStack;
+
+    GENERICSTACK_INIT(lexemeStackp);
+    if (GENERICSTACK_ERROR(lexemeStackp)) {
+      MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "lexemeStackp intialization error, %s", strerror(errno));
+      goto err;
+    }
+
+    /* Check newline */
+    while (1) {
+      _marpaESLIF_lexemeStack_resetv(lexemeStackp);
+      /* We count newlines only when a discard or a complete has happened. So by definition */
+      /* character sequences are complete. This is why we fake EOF to true. */
+      if (! _marpaESLIFRecognizer_regex_matcherb(marpaESLIFRecognizerp,
+                                                 newlinep,
+                                                 linep,
+                                                 linel,
+                                                 1, /* eofb */
+                                                 &rci,
+                                                 lexemeStackp)) {
+        goto err;
+      }
+      if (rci != MARPAESLIF_MATCH_OK) {
+        break;
+      }
+      if (! GENERICSTACK_IS_ARRAY(lexemeStackp, 0)) {
+        MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "Bad type %s in matched stack at indice 0", _marpaESLIF_genericStack_ix_types(lexemeStackp, 0));
+        goto err;
+      }
+      arrayp = GENERICSTACK_GET_ARRAYP(lexemeStackp, 0);
+      matchedl = GENERICSTACK_ARRAYP_LENGTH(arrayp);
+      linep += matchedl;
+      linel -= matchedl;
+      /* A new line, reset column count */
+      marpaESLIFRecognizerp->linel++;
+      marpaESLIFRecognizerp->columnl = 0;
+    }
+
+    if (linel > 0) {
+      /* Count characters */
+      while (1) {
+        /* We can re-use lexemeStack -; */
+        _marpaESLIF_lexemeStack_resetv(lexemeStackp);
+        /* We count newlines only when a discard or a complete has happened. So by definition */
+        /* character sequences are complete. This is why we fake EOF to true. */
+        if (! _marpaESLIFRecognizer_regex_matcherb(marpaESLIFRecognizerp,
+                                                   anycharp,
+                                                   linep,
+                                                   linel,
+                                                   1, /* eofb */
+                                                   &rci,
+                                                   lexemeStackp)) {
+          goto err;
+        }
+        if (rci != MARPAESLIF_MATCH_OK) {
+          break;
+        }
+        if (! GENERICSTACK_IS_ARRAY(lexemeStackp, 0)) {
+          MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "Bad type %s in matched stack at indice 0", _marpaESLIF_genericStack_ix_types(lexemeStackp, 0));
+          goto err;
+        }
+        arrayp = GENERICSTACK_GET_ARRAYP(lexemeStackp, 0);
+        matchedl = GENERICSTACK_ARRAYP_LENGTH(arrayp);
+        linep += matchedl;
+        linel -= matchedl;
+        /* A new character */
+        marpaESLIFRecognizerp->columnl++;
+      }
+    }
+  }
+
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  _marpaESLIF_lexemeStack_resetv(lexemeStackp);
+  return rcb;
 }
