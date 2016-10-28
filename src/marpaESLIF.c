@@ -34,6 +34,9 @@ const static char *GENERICSTACKITEMTYPE_PTR_STRING     = "PTR";
 const static char *GENERICSTACKITEMTYPE_ARRAY_STRING   = "ARRAY";
 const static char *GENERICSTACKITEMTYPE_UNKNOWN_STRING = "UNKNOWN";
 
+const marpaESLIF_uint32_t pcre2_option_binary_default = PCRE2_NOTEMPTY;
+const marpaESLIF_uint32_t pcre2_option_char_default   = PCRE2_NOTEMPTY|PCRE2_NO_UTF_CHECK;
+
 static inline marpaESLIF_string_t   *_marpaESLIF_string_newp(marpaESLIF_t *marpaESLIFp, char *encodings, char *bytep, size_t bytel, short asciib);
 static inline marpaESLIF_string_t   *_marpaESLIF_string_shallowp(marpaESLIF_t *marpaESLIFp, marpaESLIF_string_t *stringp);
 static inline marpaESLIF_string_t   *_marpaESLIF_string_clonep(marpaESLIF_t *marpaESLIFp, marpaESLIF_string_t *stringp);
@@ -1883,7 +1886,8 @@ static inline short _marpaESLIFRecognizer_regex_matcherb(marpaESLIFRecognizer_t 
   PCRE2_SIZE                     *pcre2_ovectorp;
   size_t                          matchedLengthl;
   GENERICSTACKITEMTYPE2TYPE_ARRAY array;
- 
+  marpaESLIF_uint32_t             pcre2_option;
+
   /*********************************************************************************/
   /* A matcher tries to match a terminal v.s. input that is eventually incomplete. */
   /* It return 1 on success, 0 on failure, -1 if more data is needed.              */
@@ -1893,7 +1897,7 @@ static inline short _marpaESLIFRecognizer_regex_matcherb(marpaESLIFRecognizer_t 
 
     marpaESLIF_regex = terminalp->regex;
 
-    /* If the regexp is working in UTF mode then we require that character conversion */
+    /* If the regexp is working in UTF mode then we check that character conversion   */
     /* was done. This is how we are sure that calling regexp with PCRE2_NO_UTF_CHECK  */
     /* is ok: we have done ourself the UTF-8 validation on the subject.               */
     /* This is a boost in performance also when we are using the built-in PCRE2: the  */
@@ -1901,9 +1905,12 @@ static inline short _marpaESLIFRecognizer_regex_matcherb(marpaESLIFRecognizer_t 
     /* by default, unless PCRE2_NO_UTF_CHECK is set.                                  */
     if (marpaESLIF_regex.utfb) {
       if (! (*marpaESLIFRecognizerp->convertedbp)) {
-        MARPAESLIF_ERROR(marpaESLIFp, "Input has not been converted to UTF-8: please specify encoding information in your reader, and/or set the character stream flag");
-        goto err;
+        pcre2_option = pcre2_option_binary_default;  /* PCRE2 will do UTF-8 correctness match */
+      } else {
+        pcre2_option = pcre2_option_char_default;    /* PCRE2 will not do UTF-8 correctness match */
       }
+    } else {
+      pcre2_option = pcre2_option_binary_default;    /* PCRE2 will do UTF-8 correctness match */
     }
 
     /* --------------------------------------------------------- */
@@ -1927,9 +1934,7 @@ static inline short _marpaESLIFRecognizer_regex_matcherb(marpaESLIFRecognizer_t 
                                           (PCRE2_SPTR) inputs,          /* subject */
                                           (PCRE2_SIZE) inputl,          /* length */
                                           (PCRE2_SIZE) 0,               /* startoffset */
-                                          PCRE2_NOTEMPTY                /* An empty match is a failure */
-                                          |
-                                          PCRE2_NO_UTF_CHECK,           /* No UTF check in any check (JIT mode bypasses this option AFAIK) */
+                                          pcre2_option,                 /* options */
                                           marpaESLIF_regex.match_datap, /* match data */
                                           NULL                          /* match context - used default */
                                           );
@@ -1945,9 +1950,7 @@ static inline short _marpaESLIFRecognizer_regex_matcherb(marpaESLIFRecognizer_t 
                                       (PCRE2_SPTR) inputs,          /* subject */
                                       (PCRE2_SIZE) inputl,          /* length */
                                       (PCRE2_SIZE) 0,               /* startoffset */
-                                      PCRE2_NOTEMPTY                /* An empty match is a failure */
-                                      |
-                                      PCRE2_NO_UTF_CHECK,           /* No UTF check in any check (JIT mode bypasses this option AFAIK) */
+                                      pcre2_option,                 /* options */
                                       marpaESLIF_regex.match_datap, /* match data */
                                       NULL                          /* match context - used default */
                                       );
