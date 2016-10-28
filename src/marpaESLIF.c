@@ -34,8 +34,9 @@ const static char *GENERICSTACKITEMTYPE_PTR_STRING     = "PTR";
 const static char *GENERICSTACKITEMTYPE_ARRAY_STRING   = "ARRAY";
 const static char *GENERICSTACKITEMTYPE_UNKNOWN_STRING = "UNKNOWN";
 
-const marpaESLIF_uint32_t pcre2_option_binary_default = PCRE2_NOTEMPTY;
-const marpaESLIF_uint32_t pcre2_option_char_default   = PCRE2_NOTEMPTY|PCRE2_NO_UTF_CHECK;
+const marpaESLIF_uint32_t pcre2_option_binary_default  = PCRE2_NOTEMPTY;
+const marpaESLIF_uint32_t pcre2_option_char_default    = PCRE2_NOTEMPTY|PCRE2_NO_UTF_CHECK;
+const marpaESLIF_uint32_t pcre2_option_partial_default = PCRE2_NOTEMPTY|PCRE2_PARTIAL_HARD;  /* No PCRE2_NO_UTF_CHECK c.f. regex_match to know why */
 
 static inline marpaESLIF_string_t   *_marpaESLIF_string_newp(marpaESLIF_t *marpaESLIFp, char *encodings, char *bytep, size_t bytel, short asciib);
 static inline marpaESLIF_string_t   *_marpaESLIF_string_shallowp(marpaESLIF_t *marpaESLIFp, marpaESLIF_string_t *stringp);
@@ -1904,16 +1905,16 @@ static inline short _marpaESLIFRecognizer_regex_matcherb(marpaESLIFRecognizer_t 
     /* This is a boost in performance also when we are using the built-in PCRE2: the  */
     /* later is never compiled with JIT support, which mean that UTF checking is done */
     /* by default, unless PCRE2_NO_UTF_CHECK is set.                                  */
-    if (marpaESLIF_regex.utfb) {
+    if (marpaESLIF_regex.utfb) {                     /* UTF-8 correctness is required */
       if (! *(marpaESLIFRecognizerp->utfbp)) {
-        pcre2_option = pcre2_option_binary_default;  /* PCRE2 will do UTF-8 correctness match */
+        pcre2_option = pcre2_option_binary_default;  /* We have do no conversion : PCRE2 will check */
         binmodeb = 1;
       } else {
-        pcre2_option = pcre2_option_char_default;    /* PCRE2 will not do UTF-8 correctness match */
+        pcre2_option = pcre2_option_char_default;    /* We made sure this is ok */
         binmodeb = 0;
       }
     } else {
-      pcre2_option = pcre2_option_binary_default;    /* PCRE2 will do UTF-8 correctness match */
+      pcre2_option = pcre2_option_binary_default;    /* Not needed */
       binmodeb = 1;
     }
 
@@ -1962,18 +1963,21 @@ static inline short _marpaESLIFRecognizer_regex_matcherb(marpaESLIFRecognizer_t 
     }
 #endif
 
+    /* In any case - set UTF buffer correctness if needed and if possible */
+    if (binmodeb && marpaESLIF_regex.utfb) {
+      if ((pcre2Errornumberi >= 0) || (pcre2Errornumberi == PCRE2_ERROR_NOMATCH)) {
+        /* Either regex is successful, either it failed with the accepted failure code PCRE2_ERROR_NOMATCH */
+        MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s - UTF-8 correctess successful and remembered", terminalp->descp->asciis);
+        *(marpaESLIFRecognizerp->utfbp) = 1;
+      }
+    }
+
     if (eofb) {
       if (pcre2Errornumberi < 0) {
         /* Only PCRE2_ERROR_NOMATCH is an acceptable error. */
         if (pcre2Errornumberi != PCRE2_ERROR_NOMATCH) {
           pcre2_get_error_message(pcre2Errornumberi, pcre2ErrorBuffer, sizeof(pcre2ErrorBuffer));
           MARPAESLIF_WARNF(marpaESLIFp, "%s - Uncaught pcre2 match failure: %s", terminalp->descp->asciis, pcre2ErrorBuffer);
-        } else {
-          /* In particular this mean that UTF-8 correctness was done successfully! No need */
-          /* to re-check at any regexp invocation later. */
-          if (binmodeb) {
-            *(marpaESLIFRecognizerp->utfbp) = 1;
-          }
         }
         rci = MARPAESLIF_MATCH_FAILURE;
       } else {
@@ -2024,15 +2028,15 @@ static inline short _marpaESLIFRecognizer_regex_matcherb(marpaESLIFRecognizer_t 
         }
       } else {
         /* Do a partial match. This section cannot return MARPAESLIF_MATCH_OK. */
+        /* Please note that we NEVER ask for UTF-8 correctness here, because previous section */
+        /* made sure it has always been done. */
 #ifdef PCRE2_CONFIG_JIT
         if (marpaESLIF_regex.jitPartialb) {
-          pcre2Errornumberi = pcre2_jit_match(marpaESLIF_regex.patternp,     /* code */
+          pcre2Errornumberi = pcre2_jit_match(marpaESLIF_regex.patternp,    /* code */
                                               (PCRE2_SPTR) inputs,          /* subject */
                                               (PCRE2_SIZE) inputl,          /* length */
                                               (PCRE2_SIZE) 0,               /* startoffset */
-                                              PCRE2_NOTEMPTY                /* options - this one is supported in JIT mode */
-                                              |
-                                              PCRE2_PARTIAL_HARD,           /* and this one as well, we want partial match to have precedence */
+                                              pcre2_option_partial_default, /* options - this one is supported in JIT mode */
                                               marpaESLIF_regex.match_datap, /* match data */
                                               NULL                          /* match context - used default */
                                               );
@@ -2048,9 +2052,7 @@ static inline short _marpaESLIFRecognizer_regex_matcherb(marpaESLIFRecognizer_t 
                                           (PCRE2_SPTR) inputs,          /* subject */
                                           (PCRE2_SIZE) inputl,          /* length */
                                           (PCRE2_SIZE) 0,               /* startoffset */
-                                          PCRE2_NOTEMPTY                /* options */
-                                          |
-                                          PCRE2_PARTIAL_HARD,           /* we want partial match to have precedence */
+                                          pcre2_option_partial_default, /* options - this one is supported in JIT mode */
                                           marpaESLIF_regex.match_datap, /* match data */
                                           NULL                          /* match context - used default */
                                           );
