@@ -104,7 +104,7 @@ static const  char                  *_marpaESLIF_utf82printableascii_defaultp = 
 static        void                   _marpaESLIF_tconvTraceCallback(void *userDatavp, const char *msgs);
 #endif
 
-static inline char                  *_marpaESLIF_charconvp(marpaESLIF_t *marpaESLIFp, char *toEncodings, char *fromEncodings, char *srcs, size_t srcl, size_t *dstlp, char **fromEncodingsp);
+static inline char                  *_marpaESLIF_charconvp(marpaESLIF_t *marpaESLIFp, char *toEncodings, char *fromEncodings, char *srcs, size_t srcl, size_t *dstlp, char **fromEncodingsp, tconv_t tconvp);
 
 static inline char                  *_marpaESLIF_utf82printableascii_newp(marpaESLIF_t *marpaESLIFp, char *descs, size_t descl);
 static inline void                   _marpaESLIF_utf82printableascii_freev(char *utf82printableasciip);
@@ -195,7 +195,7 @@ static inline marpaESLIF_string_t *_marpaESLIF_string_newp(marpaESLIF_t *marpaES
   }
 
   if (asciib) {
-    stringp->asciis = dstasciis = _marpaESLIF_charconvp(marpaESLIFp, "ASCII//TRANSLIT//IGNORE", encodings, bytep, bytel, NULL, &(stringp->encodings));
+    stringp->asciis = dstasciis = _marpaESLIF_charconvp(marpaESLIFp, "ASCII//TRANSLIT//IGNORE", encodings, bytep, bytel, NULL, &(stringp->encodings), NULL /* tconvp */);
     if (dstasciis == NULL) {
       goto err;
     }
@@ -2590,7 +2590,7 @@ static inline char *_marpaESLIF_utf82printableascii_newp(marpaESLIF_t *marpaESLI
   char                   *asciis;
   unsigned char           c;
 
-  asciis = _marpaESLIF_charconvp(marpaESLIFp, "ASCII//TRANSLIT//IGNORE", "UTF-8", descs, descl, &asciil, NULL);
+  asciis = _marpaESLIF_charconvp(marpaESLIFp, "ASCII//TRANSLIT//IGNORE", "UTF-8", descs, descl, &asciil, NULL /* fromEncodingsp */, NULL /* tconvp */);
   if (asciis == NULL) {
     asciis = (char *) _marpaESLIF_utf82printableascii_defaultp;
     asciil = strlen(asciis);
@@ -2624,11 +2624,11 @@ static inline void _marpaESLIF_utf82printableascii_freev(char *asciis)
 }
 
 /*****************************************************************************/
-static inline char *_marpaESLIF_charconvp(marpaESLIF_t *marpaESLIFp, char *toEncodings, char *fromEncodings, char *srcs, size_t srcl, size_t *dstlp, char **fromEncodingsp)
+static inline char *_marpaESLIF_charconvp(marpaESLIF_t *marpaESLIFp, char *toEncodings, char *fromEncodings, char *srcs, size_t srcl, size_t *dstlp, char **fromEncodingsp, tconv_t tconvp)
 /*****************************************************************************/
 {
   static const char *funcs       = "_marpaESLIF_utf8_newp";
-  tconv_t            tconvp      = NULL;
+  short              tconvb      = (tconvp != NULL);
   char              *inbuforigp  = srcs;
   size_t             inleftorigl = srcl;
   char              *outbuforigp = NULL;
@@ -2646,10 +2646,12 @@ static inline char *_marpaESLIF_charconvp(marpaESLIF_t *marpaESLIFp, char *toEnc
   tconvOption.traceCallbackp  = _marpaESLIF_tconvTraceCallback;
   tconvOption.traceUserDatavp = marpaESLIFp;
 #endif
-  tconvp = tconv_open_ext(toEncodings, fromEncodings, &tconvOption);
-  if (tconvp == NULL) {
-    MARPAESLIF_ERRORF(marpaESLIFp, "tconv_open failure, %s", strerror(errno));
-    goto err;
+  if (! tconvb) {
+    tconvp = tconv_open_ext(toEncodings, fromEncodings, &tconvOption);
+    if (tconvp == NULL) {
+      MARPAESLIF_ERRORF(marpaESLIFp, "tconv_open failure, %s", strerror(errno));
+      goto err;
+    }
   }
 #ifndef MARPAESLIF_NTRACE
   tconv_trace_on(tconvp);
@@ -2756,9 +2758,11 @@ static inline char *_marpaESLIF_charconvp(marpaESLIF_t *marpaESLIFp, char *toEnc
   rcp = NULL;
 
  done:
-  if (tconvp != NULL) {
-    if (tconv_close(tconvp) != 0) {
-      MARPAESLIF_ERRORF(marpaESLIFp, "tconv_close failure, %s", strerror(errno));
+  if (! tconvb) {
+    if (tconvp != NULL) {
+      if (tconv_close(tconvp) != 0) {
+        MARPAESLIF_ERRORF(marpaESLIFp, "tconv_close failure, %s", strerror(errno));
+      }
     }
   }
 
@@ -5332,7 +5336,7 @@ static inline short _marpaESLIFRecognizer_readb(marpaESLIFRecognizer_t *marpaESL
       /* Input is systematically converted into UTF-8. If user said "UTF-8" it is equivalent to                                                            */
       /* an UTF-8 validation. The user MUST send a buffer information that contain full characters.                                                        */
       /* ************************************************************************************************************************************************* */
-      utf8s = _marpaESLIF_charconvp(marpaESLIFRecognizerp->marpaESLIFp, "UTF-8", encodings, inputs, inputl, &utf8l, NULL /* fromEncodingsp */);
+      utf8s = _marpaESLIF_charconvp(marpaESLIFRecognizerp->marpaESLIFp, "UTF-8", encodings, inputs, inputl, &utf8l, NULL /* fromEncodingsp */, NULL /* tconvp */);
       if (utf8s == NULL) {
         goto err;
       }
