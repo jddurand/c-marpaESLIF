@@ -2,7 +2,6 @@
 #define MARPAESLIF_H
 
 #include <genericLogger.h>
-#include <genericStack.h>
 #include <marpaESLIF/export.h>
 
 typedef struct marpaESLIFOption {
@@ -61,17 +60,19 @@ typedef struct marpaESLIFEvent {
   marpaESLIFString_t   *stringp; /* Pointer to event name as per the user - NULL if exhaustion */
 } marpaESLIFEvent_t;
 
-typedef short (*marpaESLIFActionCallback_t)(void *userDatavp, char *names, size_t namel, char *inputs, size_t inputl, int arg0i, int argni, int resulti);
-
+typedef short (*marpaESLIFValueRuleCallback_t)(void *userDatavp, int rulei, int arg0i, int argni, int resulti);
+typedef short (*marpaESLIFValueSymbolCallback_t)(void *userDatavp, genericStack_t *lexemeStackp, int symboli, int argi, int resulti);
+typedef short (*marpaESLIFValueNullingCallback_t)(void *userDatavp, int symboli, int resulti);
 typedef struct marpaESLIFValueOption {
-  void                      *userDatavp;            /* User specific context */
-  marpaESLIFActionCallback_t actionCallbackp;       /* User's action callback when the callback is named */
-  short                      highRankOnlyb;         /* Default: 1 */
-  short                      orderByRankb;          /* Default: 1 */
-  short                      ambiguousb;            /* Default: 0 */
-  short                      nullb;                 /* Default: 0 */
-  int                        maxParsesi;            /* Default: 0 */
-  genericStack_t            *outputStackp;          /* A stack that only user knows about */
+  void                             *userDatavp;            /* User specific context */
+  marpaESLIFValueRuleCallback_t     ruleCallbackp;
+  marpaESLIFValueSymbolCallback_t   symbolCallbackp;
+  marpaESLIFValueNullingCallback_t  nullingCallbackp;
+  short                             highRankOnlyb;         /* Default: 1 */
+  short                             orderByRankb;          /* Default: 1 */
+  short                             ambiguousb;            /* Default: 0 */
+  short                             nullb;                 /* Default: 0 */
+  int                               maxParsesi;            /* Default: 0 */
 } marpaESLIFValueOption_t;
 
 typedef char *(*marpaESLISymbolDescriptionCallback_t)(void *userDatavp, int symboli);
@@ -107,6 +108,7 @@ extern "C" {
   marpaESLIF_EXPORT void                    marpaESLIFGrammar_freev(marpaESLIFGrammar_t *marpaESLIFGrammarp);
 
   marpaESLIF_EXPORT marpaESLIFRecognizer_t *marpaESLIFRecognizer_newp(marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaESLIFRecognizerOption_t *marpaESLIFRecognizerOption);
+  marpaESLIF_EXPORT marpaESLIFGrammar_t    *marpaESLIFRecognizer_grammarp(marpaESLIFRecognizer_t *marpaESLIFRecognizerp);
   marpaESLIF_EXPORT short                   marpaESLIFRecognizer_scanb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, short initialEventsb, short *continuebp, short *exhaustedbp);
   marpaESLIF_EXPORT short                   marpaESLIFRecognizer_resumeb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, short *continuebp, short *exhaustedbp);
   marpaESLIF_EXPORT short                   marpaESLIFRecognizer_alternativeb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *symbolnamecp, size_t symbolnamel, int valuei);
@@ -118,8 +120,8 @@ extern "C" {
   marpaESLIF_EXPORT void                    marpaESLIFRecognizer_freev(marpaESLIFRecognizer_t *marpaESLIFRecognizerp);
 
   marpaESLIF_EXPORT marpaESLIFValue_t      *marpaESLIFValue_newp(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueOption_t *marpaESLIFValueOptionp);
+  marpaESLIF_EXPORT marpaESLIFRecognizer_t *marpaESLIFValue_recognizerp(marpaESLIFValue_t *marpaESLIFValuep);
   marpaESLIF_EXPORT short                   marpaESLIFValue_valueb(marpaESLIFValue_t *marpaESLIFValuep);
-  marpaESLIF_EXPORT int                     marpaESLIFValue_rulei(marpaESLIFValue_t *marpaESLIFValuep);
   marpaESLIF_EXPORT marpaESLIFGrammar_t    *marpaESLIFValue_grammarp(marpaESLIFValue_t *marpaESLIFValuep);
   marpaESLIF_EXPORT void                    marpaESLIFValue_freev(marpaESLIFValue_t *marpaESLIFValuep);
 
