@@ -2,6 +2,7 @@
 #define MARPAESLIF_H
 
 #include <genericLogger.h>
+#include <genericStack.h>
 #include <marpaESLIF/export.h>
 
 typedef struct marpaESLIFOption {
