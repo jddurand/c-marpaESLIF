@@ -14,6 +14,15 @@ typedef struct marpaESLIFGrammar    marpaESLIFGrammar_t;
 typedef struct marpaESLIFRecognizer marpaESLIFRecognizer_t;
 typedef struct marpaESLIFValue      marpaESLIFValue_t;
 
+/* A lexeme */
+typedef struct marpaESLIFLexeme {
+  /* It totally depend on how you defined the lexeme. It at least one component requires a character, */
+  /* then bytep will point to a well-formed UTF-8 string of bytel bytes. Else this is the raw bytes */
+  /* from the input stream. */
+  char   *bytep;            /* pointer bytes */
+  size_t  bytel;            /* number of bytes */
+} marpaESLIFLexeme_t;
+
 /* A string */
 typedef struct marpaESLIFString {
   char   *bytep;            /* pointer bytes */
