@@ -246,7 +246,8 @@ struct marpaESLIF_readerContext {
 
 /* Internal structure to have value context information */
 struct marpaESLIF_valueContext {
-  int ruleIdi;
+  marpaESLIFGrammar_t    *marpaESLIFGrammarp;
+  genericStack_t          outputStack;
 };
 
 /* Internal structure to have clone context information */
@@ -277,7 +278,6 @@ struct marpaESLIFValue {
   marpaESLIFRecognizer_t   *marpaESLIFRecognizerp;
   marpaESLIFValueOption_t   marpaESLIFValueOption;
   marpaWrapperValue_t      *marpaWrapperValuep;
-  marpaESLIF_valueContext_t context;
 };
 
 struct marpaESLIFRecognizer {
@@ -292,7 +292,8 @@ struct marpaESLIFRecognizer {
   marpaESLIFEvent_t           *eventArrayp;      /* For the events */
   size_t                       eventArrayl;
   marpaESLIFRecognizer_t      *parentRecognizerp;
-  unsigned long                resumeCounterl; /* Internal counter for tracing - no functional impact */
+  int                          resumeCounteri;    /* Internal counter for tracing - no functional impact */
+  int                          callstackCounteri; /* Internal counter for tracing - no functional impact */
 
   char                        *_buffers;       /* Pointer to allocated buffer containing input */
   size_t                       _bufferl;       /* Number of valid bytes in this buffer (!= allocated size in the exceptional case of a realloc failure) */
@@ -341,13 +342,14 @@ marpaESLIFRecognizerOption_t marpaESLIFRecognizerOption_default = {
 
 marpaESLIFValueOption_t marpaESLIFValueOption_default_template = {
   NULL, /* userDatavp - filled at run-time */
-  NULL, /* valueCallbackp - filled at run-time */
+  NULL, /* ruleCallbackp */
+  NULL, /* symbolCallbackp */
+  NULL, /* nullingCallbackp */
   1,    /* highRankOnlyb */
   1,    /* orderByRankb */
   0,    /* ambiguousb */
   0,    /* nullb */
-  0,    /* maxParsesi */
-  NULL  /* outputStackp */
+  0     /* maxParsesi */
 };
 
 #include "marpaESLIF/internal/eslif.h"
