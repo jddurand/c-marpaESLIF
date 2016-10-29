@@ -23,6 +23,8 @@ typedef struct _marpaESLIF_stringGenerator {
   short         okb;
 } _marpaESLIF_stringGenerator_t;
 
+static const char *FILENAMES                           = "marpaESLIF.c"; /* For logging */
+
 static const char *GENERICSTACKITEMTYPE_NA_STRING      = "NA";
 static const char *GENERICSTACKITEMTYPE_CHAR_STRING    = "CHAR";
 static const char *GENERICSTACKITEMTYPE_SHORT_STRING   = "SHORT";
@@ -1471,8 +1473,12 @@ static inline void _marpaESLIFrecognizer_lexemeStack_resetv(marpaESLIFRecognizer
 
   if (lexemeStackp != NULL) {
 
-    marpaESLIFRecognizerp->callstackCounteri++;
-    MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
+    /* This is vicious but it can happen that we are called with marpaESLIFRecognizerp == NULL, in case of */
+    /* error recovery - c.f. _marpaESLIF_terminal_newp. */
+    if (marpaESLIFRecognizerp != NULL) {
+      marpaESLIFRecognizerp->callstackCounteri++;
+      MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
+    }
 
     usedi = (int) GENERICSTACK_USED(lexemeStackp);
     for (i = usedi - 1; i >= 0; i--) {
@@ -1485,8 +1491,10 @@ static inline void _marpaESLIFrecognizer_lexemeStack_resetv(marpaESLIFRecognizer
       GENERICSTACK_USED(lexemeStackp)--;
     }
 
-    MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "return");
-    marpaESLIFRecognizerp->callstackCounteri--;
+    if (marpaESLIFRecognizerp != NULL) {
+      MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "return");
+      marpaESLIFRecognizerp->callstackCounteri--;
+    }
   }
 
 }
@@ -1498,20 +1506,34 @@ static inline short _marpaESLIFRecognizer_lexemeStack_i_resetb(marpaESLIFRecogni
   static const char *funcs = "_marpaESLIFRecognizer_lexemeStack_i_resetb";
   short              rcb;
 
-  marpaESLIFRecognizerp->callstackCounteri++;
-  MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
+  /* This is vicious but it can happen that we are called with marpaESLIFRecognizerp == NULL, in case of */
+  /* error recovery - c.f. _marpaESLIF_terminal_newp. */
+  if (marpaESLIFRecognizerp != NULL) {
+    marpaESLIFRecognizerp->callstackCounteri++;
+    MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
+  }
 
   if (lexemeStackp != NULL) {
     if (GENERICSTACK_IS_ARRAY(lexemeStackp, i)) {
       GENERICSTACKITEMTYPE2TYPE_ARRAY array = GENERICSTACK_GET_ARRAY(lexemeStackp, i);
       if (GENERICSTACK_ARRAY_PTR(array) != NULL) {
-        MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Freeing %p->[%d] = {%p, %d}", lexemeStackp, i, GENERICSTACK_ARRAY_PTR(array), GENERICSTACK_ARRAY_LENGTH(array));
+#ifndef MARPAESLIF_NTRACE
+        if (marpaESLIFRecognizerp != NULL) {
+          MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Freeing %p->[%d] = {%p, %d}", lexemeStackp, i, GENERICSTACK_ARRAY_PTR(array), GENERICSTACK_ARRAY_LENGTH(array));
+        }
+#endif
         free(GENERICSTACK_ARRAY_PTR(array));
       }
-      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Resetting %p->[%d]", lexemeStackp, i);
+#ifndef MARPAESLIF_NTRACE
+        if (marpaESLIFRecognizerp != NULL) {
+          MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Resetting %p->[%d]", lexemeStackp, i);
+        }
+#endif
       GENERICSTACK_SET_NA(lexemeStackp, i);
       if (GENERICSTACK_ERROR(lexemeStackp)) {
-        MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "lexemeStackp %p->[%d] set failure, %s", lexemeStackp, i, strerror(errno));
+        if (marpaESLIFRecognizerp != NULL) {
+          MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "lexemeStackp %p->[%d] set failure, %s", lexemeStackp, i, strerror(errno));
+        }
         goto err;
       }
     }
@@ -1524,8 +1546,10 @@ static inline short _marpaESLIFRecognizer_lexemeStack_i_resetb(marpaESLIFRecogni
   rcb = 0;
 
  done:
-  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
-  marpaESLIFRecognizerp->callstackCounteri--;
+  if (marpaESLIFRecognizerp != NULL) {
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
+    marpaESLIFRecognizerp->callstackCounteri--;
+  }
   return rcb;
 }
 
@@ -3332,7 +3356,7 @@ static inline short _marpaESLIFRecognizer_resumeb(marpaESLIFRecognizer_t *marpaE
           goto err;
         }
       } else {
-        _marpaESLIF_grammarStack_resetv(localOutputStackp);
+        _marpaESLIFrecognizer_lexemeStack_resetv(marpaESLIFRecognizerp, localOutputStackp);
       }
       marpaESLIFValueOptionDiscard.userDatavp       = (void *) &discardValueContext; /* Take care: internal mode i.e. callbacks are called with marpaESLIFValuep */
       marpaESLIFValueOptionDiscard.ruleCallbackp    = _marpaESLIFValueRuleCallbackInternalLexeme;
@@ -3501,7 +3525,7 @@ static inline short _marpaESLIFRecognizer_resumeb(marpaESLIFRecognizer_t *marpaE
  done:
   _marpaESLIFrecognizer_lexemeStack_resetv(marpaESLIFRecognizerp, alternativeStackp);
   _marpaESLIFrecognizer_lexemeStack_resetv(marpaESLIFRecognizerp, matchedStackp);
-  _marpaESLIF_grammarStack_resetv(localOutputStackp);
+  _marpaESLIFrecognizer_lexemeStack_resetv(marpaESLIFRecognizerp, localOutputStackp);
   if (rcb) {
     if (exhaustedbp != NULL) {
       *exhaustedbp = exhaustedb;
