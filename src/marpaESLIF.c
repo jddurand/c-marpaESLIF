@@ -3758,6 +3758,15 @@ void marpaESLIFRecognizer_freev(marpaESLIFRecognizer_t *marpaESLIFRecognizerp)
       if (marpaESLIFRecognizerp->_buffers != NULL) {
         free(marpaESLIFRecognizerp->_buffers);
       }
+      /* As well, as encoding and current converter */
+      if (marpaESLIFRecognizerp->_encodings != NULL) {
+        free(marpaESLIFRecognizerp->_encodings);
+      }
+      /* The situation where _tconvp is different than NULL should never happen except in case */
+      /* of error processing */
+      if (marpaESLIFRecognizerp->_tconvp != NULL) {
+        tconv_close(marpaESLIFRecognizerp->_tconvp);
+      }
     } else {
       /* Parent's "current" position have to be updated */
       marpaESLIFRecognizerParentp->inputs = *(marpaESLIFRecognizerp->buffersp) + marpaESLIFRecognizerp->parentDeltal;
@@ -4216,6 +4225,8 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGramm
   marpaESLIFRecognizerp->_bufferl                   = 0;
   marpaESLIFRecognizerp->_eofb                      = fakeb;  /* In fake mode, always make sure there is no reader needed */
   marpaESLIFRecognizerp->_utfb                      = 0;
+  marpaESLIFRecognizerp->_encodings                 = 0;
+  marpaESLIFRecognizerp->_tconvp                    = NULL;
   /* If this is a parent recognizer get its stream information */
   if (marpaESLIFRecognizerParentp != NULL) {
     marpaESLIFRecognizerp->leveli                     = marpaESLIFRecognizerParentp->leveli + 1;
@@ -4223,6 +4234,8 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGramm
     marpaESLIFRecognizerp->bufferlp                   = marpaESLIFRecognizerParentp->bufferlp;
     marpaESLIFRecognizerp->eofbp                      = marpaESLIFRecognizerParentp->eofbp;
     marpaESLIFRecognizerp->utfbp                      = marpaESLIFRecognizerParentp->utfbp;
+    marpaESLIFRecognizerp->encodingsp                 = marpaESLIFRecognizerParentp->encodingsp;
+    marpaESLIFRecognizerp->tconvpp                    = marpaESLIFRecognizerParentp->tconvpp;
     marpaESLIFRecognizerp->parentDeltal               = marpaESLIFRecognizerParentp->inputs - *(marpaESLIFRecognizerParentp->buffersp);
     /* New recognizer is starting at the parent's inputs pointer */
     marpaESLIFRecognizerp->inputs                     = marpaESLIFRecognizerParentp->inputs;
@@ -4233,6 +4246,8 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGramm
     marpaESLIFRecognizerp->bufferlp                   = &(marpaESLIFRecognizerp->_bufferl);
     marpaESLIFRecognizerp->eofbp                      = &(marpaESLIFRecognizerp->_eofb);
     marpaESLIFRecognizerp->utfbp                      = &(marpaESLIFRecognizerp->_utfb);
+    marpaESLIFRecognizerp->encodingsp                 = &(marpaESLIFRecognizerp->_encodings);
+    marpaESLIFRecognizerp->tconvpp                    = &(marpaESLIFRecognizerp->_tconvp);
     marpaESLIFRecognizerp->parentDeltal               = 0;
     /* New recognizer is starting nowhere for the moment - it will ask for more data, c.f. recognizer's read() */
     marpaESLIFRecognizerp->inputs                     = NULL;
@@ -5293,9 +5308,30 @@ static inline short _marpaESLIFRecognizer_readb(marpaESLIFRecognizer_t *marpaESL
     size_t deltal = marpaESLIFRecognizerp->inputs - *(marpaESLIFRecognizerp->buffersp);
 
     if (characterStreamb) {
-      /* User says this is a stream of characters */
-      /* Input is systematically converted into UTF-8. If user said "UTF-8" it is equivalent to */
-      /* an UTF-8 validation. The user MUST send a buffer information that contain full characters.          */
+      /* ************************************************************************************************************************************************* */
+      /* User say this is a stream of characters.                                                                                                          */
+      /* ************************************************************************************************************************************************* */
+      /* Here are the possible cases:                                                                                                                      */
+      /* - Previous read was a stream of characters (*(marpaESLIFRecognizerp->utfbp) is true).                                                             */
+      /*   [We MUST have the input encodings in *(marpaESLIFRecognizerp->encogdinsp) and a current conversion engine in *(marpaESLIFRecognizerp->tconvpp)] */
+      /*   - user gave encoding (encodings != NULL)                                                                                                        */
+      /*     - If encodings and *(marpaESLIFRecognizerp->encodingsp) differ, current conversion engine is flushed. A new one start.                        */
+      /*       >> This mode does not support incomplete characters in the input streaming.                                                                 */
+      /*     - If encodings and *(marpaESLIFRecognizerp->encodingsp) are the same, current conversion engine continue.                                     */
+      /*       >> This mode support incomplete characters in the input streaming.                                                                          */
+      /*   - user gave NO encoding (encodings == NULL)                                                                                                     */
+      /*     - It is assumed that current conversion can continue.                                                                                         */
+      /*       >> This mode support incomplete characters in the input streaming.                                                                          */
+      /* - Previous read was NOT a stream of characters (*(marpaESLIFRecognizerp->utfbp) is false).                                                        */
+      /*   [Input encodings in *(marpaESLIFRecognizerp->encoginsp) should be NULL and current conversion in *(marpaESLIFRecognizerp->tconvpp) as well.]    */
+      /*   - user gave encoding (encodings != NULL)                                                                                                        */
+      /*     - This is used as-is in the call to _marpaESLIF_charconvp(). Current encoding and conversion engine are initialized.                          */
+      /*   - user gave NO encoding (encodings == NULL)                                                                                                     */ 
+      /*     - Idem: this is used as-is in the call to _marpaESLIF_charconvp(). Guessed Current encoding and conversion engine are initialized.            */
+      /*                                                                                                                                                   */
+      /* Input is systematically converted into UTF-8. If user said "UTF-8" it is equivalent to                                                            */
+      /* an UTF-8 validation. The user MUST send a buffer information that contain full characters.                                                        */
+      /* ************************************************************************************************************************************************* */
       utf8s = _marpaESLIF_charconvp(marpaESLIFRecognizerp->marpaESLIFp, "UTF-8", encodings, inputs, inputl, &utf8l, NULL /* fromEncodingsp */);
       if (utf8s == NULL) {
         goto err;
@@ -5328,6 +5364,17 @@ static inline short _marpaESLIFRecognizer_readb(marpaESLIFRecognizer_t *marpaESL
         }
       }
     } else {
+      /* ************************************************************************************************************************************************* */
+      /* User say this is not a stream of characters.                                                                                                      */
+      /* ************************************************************************************************************************************************* */
+      /* Here are the possible cases:                                                                                                                      */
+      /* - Previous read was a stream of characters (*(marpaESLIFRecognizerp->utfbp) is true).                                                             */
+      /*   [We MUST have the input encodings in *(marpaESLIFRecognizerp->encogdinsp) and a current conversion engine in *(marpaESLIFRecognizerp->tconvpp)] */
+      /*   - Current encoding is flushed.                                                                                                                  */
+      /*   - Data is appended as-is.                                                                                                                       */
+      /* - Previous read was NOT a stream of characters (*(marpaESLIFRecognizerp->utfbp) is false).                                                        */
+      /*   - Data is appended as-is.                                                                                                                       */
+      /* ************************************************************************************************************************************************* */
       *(marpaESLIFRecognizerp->utfbp) = 0;
     }
 
@@ -5923,7 +5970,7 @@ static inline short _marpaESLIFValue_createLexemeArrayb(marpaESLIFValue_t *marpa
 
   marpaESLIFLexemeArrayl = (size_t) (argni - arg0i);
   if (marpaESLIFLexemeArrayl <= 0) {
-    /* Nothing to do -; */
+    /* Nothing to do -; This should never happen btw because we are called in symbol callback context... */
     rcb = 1;
     goto done;
   }

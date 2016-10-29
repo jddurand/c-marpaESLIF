@@ -3,6 +3,7 @@
 
 #include <genericStack.h>
 #include <pcre2.h>
+#include <tconv.h>
 
 #define INTERNAL_ANYCHAR_PATTERN "."                    /* This ASCII string is UTF-8 compatible */
 #define INTERNAL_UTF8BOM_PATTERN "\\x{FEFF}"            /* FEFF Unicode code point i.e. EFBBBF in UTF-8 encoding */
@@ -315,6 +316,11 @@ struct marpaESLIFRecognizer {
   short                        haveLexemeb;    /* Remember if this recognizer have at least one lexeme */
   size_t                       linel;          /* Line number */
   size_t                       columnl;        /* Column number */
+
+  char                        *_encodings;     /* Current encoding */
+  tconv_t                      _tconvp;        /* current converter */
+  char                       **encodingsp;     /* Pointer to current encoding - shared between recognizers */
+  tconv_t                     *tconvpp;        /* Pointer to current converted - shared between recognizers */
 };
 
 /* ------------------------------------------- */
