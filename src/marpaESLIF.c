@@ -364,11 +364,7 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
   size_t                            matchedl;
   char                             *matchedp;
 
-  /* A bit tricky to fake a recognizer from scratch, but here are options to set -; */
-  /* Basically, you look to the method _marpaESLIFRecognizer_readb() and set all    */
-  /* members that need to be dereferenced.                                          */
-  /* There is also a dependency on marpaESLIFRecognizerOption, but since we send a  */
-  /* NULL pointer for it in _marpaESLIFRecognizer_newp(), the default will apply.   */
+  /* Please note the "fakeb" parameter below */
 
   terminalp = (marpaESLIF_terminal_t *) malloc(sizeof(marpaESLIF_terminal_t));
   if (terminalp == NULL) {
