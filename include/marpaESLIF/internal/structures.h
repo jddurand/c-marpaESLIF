@@ -300,7 +300,8 @@ struct marpaESLIFRecognizer {
   size_t                       _bufferl;       /* Number of valid bytes in this buffer (!= allocated size) */
   size_t                       _bufferallocl;  /* Number of allocated bytes in this buffer (!= valid bytes) */
   short                        _eofb;          /* EOF flag */
-  short                        _utfb;          /* A flag to say if input was converted to UTF-8, which means buffers is a clean UTF-8 sequence of characters */
+  short                        _utfb;          /* A flag to say if input is UTF-8 correct. Automatically true if _charconv is true. Can set be regex engine as well. */
+  short                        _charconvb;     /* A flag to say if latest stream chunk was converted to UTF-8 */
 
   int                          leveli;         /* Recognizer level (!= grammar level) */
 
@@ -308,7 +309,8 @@ struct marpaESLIFRecognizer {
   size_t                      *bufferlp;       /* Ditto for the size */
   size_t                      *bufferalloclp;  /* Ditto for the allocated size */
   short                       *eofbp;          /* Ditto for the EOF flag */
-  short                       *utfbp;          /* Ditto for the conversion flag */
+  short                       *utfbp;          /* Ditto for the UTF-8 correctness flag */
+  short                       *charconvbp;     /* Ditto for the character conversion flag */
 
   size_t                       parentDeltal;   /* Parent original delta - used to recovert parent current pointer at our free */
   char                        *inputs;         /* Current pointer in input - specific to every recognizer */
@@ -321,9 +323,11 @@ struct marpaESLIFRecognizer {
   size_t                       bufsizl;        /* Effective bufsizl */
   size_t                       buftriggerl;    /* Minimum number of bytes to trigger crunch of data */
 
-  char                        *_encodings;     /* Current encoding */
-  tconv_t                      _tconvp;        /* current converter */
+  char                        *_encodings;     /* Current encoding. Always != NULL when _charconvb is true. Always NULL when charconvb is false. */
+  marpaESLIF_terminal_t       *_encodingp;     /* Terminal case-insensitive version of current encoding. Always != NULL when _charconvb is true. Always NULL when charconvb is false. */
+  tconv_t                      _tconvp;        /* current converter. Always != NULL when _charconvb is true. Always NULL when charconvb is false. */
   char                       **encodingsp;     /* Pointer to current encoding - shared between recognizers */
+  marpaESLIF_terminal_t      **encodingpp;     /* Pointer to terminal case-insensitive version of current encoding */
   tconv_t                     *tconvpp;        /* Pointer to current converted - shared between recognizers */
 };
 
