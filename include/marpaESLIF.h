@@ -6,7 +6,7 @@
 #include <marpaESLIF/export.h>
 
 typedef struct marpaESLIFOption {
-  genericLogger_t *genericLoggerp;
+  genericLogger_t *genericLoggerp;  /* Logger. Default: NULL */
 } marpaESLIFOption_t;
 
 typedef struct marpaESLIF           marpaESLIF_t;
@@ -52,6 +52,7 @@ typedef struct marpaESLIFRecognizerOption {
   short                latmb;                       /* Longest acceptable token match mode. Default: 0 */
   short                rejectionb;                  /* Rejection event. Default: 0 */
   short                newlineb;                    /* Count line/column numbers. Default: 0 */
+  size_t               bufsizl;                     /* Minimum buffer size: Default: MARPAESLIF_BUFSIZ */
 } marpaESLIFRecognizerOption_t;
 
 typedef enum marpaESLIFEventType {

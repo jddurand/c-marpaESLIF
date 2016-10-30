@@ -316,6 +316,7 @@ struct marpaESLIFRecognizer {
   short                        haveLexemeb;    /* Remember if this recognizer have at least one lexeme */
   size_t                       linel;          /* Line number */
   size_t                       columnl;        /* Column number */
+  size_t                       bufsizl;        /* Effective bufsizl */
 
   char                        *_encodings;     /* Current encoding */
   tconv_t                      _tconvp;        /* current converter */
@@ -327,7 +328,7 @@ struct marpaESLIFRecognizer {
 /* Definition of the default option structures */
 /* ------------------------------------------- */
 marpaESLIFOption_t marpaESLIFOption_default = {
-  NULL               /*  __ */
+  NULL               /* genericLoggerp */
 };
 
 marpaESLIFGrammarOption_t marpaESLIFGrammarOption_default = {
@@ -343,7 +344,8 @@ marpaESLIFRecognizerOption_t marpaESLIFRecognizerOption_default = {
   0,                 /* exhaustedb */
   0,                 /* latmb */
   0,                 /* rejectionb */
-  0                  /* newlineb */
+  0,                 /* newlineb */
+  MARPAESLIF_BUFSIZ  /* bufsizl */
 };
 
 marpaESLIFValueOption_t marpaESLIFValueOption_default_template = {

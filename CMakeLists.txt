@@ -51,6 +51,21 @@ IF (NOT CMAKE_BUILD_TYPE MATCHES Debug)
 ENDIF (NOT CMAKE_BUILD_TYPE MATCHES Debug)
 ADD_DEFINITIONS(-DMARPAESLIF_VERSION="${MARPAESLIF_VERSION}")
 
+# --------------
+# Buffering size
+# --------------
+IF (NOT MARPAESLIF_BUFSIZ)
+  SET (MARPAESLIF_BUFSIZ "1048576" CACHE STRING "Buffering size")
+  MARK_AS_ADVANCED (MARPAESLIF_BUFSIZ)
+ENDIF ()
+ADD_DEFINITIONS(-DMARPAESLIF_BUFSIZ=${MARPAESLIF_BUFSIZ})
+
+MESSAGE(STATUS "-----------------------------------------")
+MESSAGE(STATUS "Setup MARPAESLIF:")
+MESSAGE(STATUS "           VERSION: ${MARPAESLIF_VERSION}")
+MESSAGE(STATUS "            BUFSIZ: ${MARPAESLIF_BUFSIZ}")
+MESSAGE(STATUS "-----------------------------------------")
+
 #############################
 # Dependencies
 #############################
