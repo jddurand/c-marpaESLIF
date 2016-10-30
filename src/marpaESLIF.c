@@ -4976,9 +4976,6 @@ static short _marpaESLIFValueRuleCallbackInternalGrammar(void *userDatavp, int r
 /*****************************************************************************/
 {
   static const char               *funcs                 = "_marpaESLIFValueRuleCallbackInternalGrammar";
-  marpaESLIF_valueContext_t       *valueContextp         = (marpaESLIF_valueContext_t *) userDatavp;
-  marpaESLIFGrammar_t             *marpaESLIFGrammarp    = valueContextp->marpaESLIFGrammarp;
-  genericStack_t                  *outputStackp          = &(valueContextp->outputStack);
 
   /* TO DO */
   return 0;
@@ -4988,13 +4985,59 @@ static short _marpaESLIFValueRuleCallbackInternalGrammar(void *userDatavp, int r
 static short _marpaESLIFValueSymbolCallbackInternalGrammar(void *userDatavp, genericStack_t *lexemeStackp, int symboli, int argi, int resulti)
 /*****************************************************************************/
 {
-  static const char               *funcs                 = "_marpaESLIFValueSymboCallbackGrammar";
-  marpaESLIF_valueContext_t       *valueContextp         = (marpaESLIF_valueContext_t *) userDatavp;
-  marpaESLIFGrammar_t             *marpaESLIFGrammarp    = valueContextp->marpaESLIFGrammarp;
-  genericStack_t                  *outputStackp          = &(valueContextp->outputStack);
+  static const char         *funcs                 = "_marpaESLIFValueSymbolCallbackInternalGrammar";
+  marpaESLIFValue_t         *marpaESLIFValuep      = (marpaESLIFValue_t *) userDatavp;
+  marpaESLIFRecognizer_t    *marpaESLIFRecognizerp = marpaESLIFValuep->marpaESLIFRecognizerp;
+  marpaESLIF_valueContext_t *valueContextp         = (marpaESLIF_valueContext_t *) marpaESLIFValuep->marpaESLIFValueOption.userDatavp;
+  genericStack_t            *outputStackp          = &(valueContextp->outputStack);
+  marpaESLIFGrammar_t       *marpaESLIFGrammarp    = marpaESLIFRecognizerp->marpaESLIFGrammarp; /* We are BUILDING the grammar: there is no grammar yet in valueContextp->marpaESLIFGrammarp */
+  marpaESLIF_t              *marpaESLIFp           = marpaESLIFRecognizerp->marpaESLIFp;
+#ifndef MARPAESLIF_NTRACE
+  marpaESLIF_grammar_t      *grammarp              = marpaESLIFGrammarp->grammarp;
+  genericStack_t            *symbolStackp          = grammarp->symbolStackp;
+  marpaESLIF_symbol_t       *symbolp;
+#endif
+  short                      rcb;
+
+  marpaESLIFRecognizerp->callstackCounteri++;
+  MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
+
+#ifndef MARPAESLIF_NTRACE
+  if (! GENERICSTACK_IS_PTR(symbolStackp, symboli)) {
+    MARPAESLIF_ERRORF(marpaESLIFp, "No such symbol No %d", symboli);
+    goto err;
+  }
+  symbolp = (marpaESLIF_symbol_t *) GENERICSTACK_GET_PTR(symbolStackp, symboli);
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%p->[%d] -> %p->[%d] %s", lexemeStackp, argi, outputStackp, resulti, symbolp->descp->asciis);
+#endif
+
+#ifndef MARPAESLIF_NTRACE
+  if (! GENERICSTACK_IS_PTR(symbolStackp, symboli)) {
+    MARPAESLIF_ERRORF(marpaESLIFp, "No such symbol No %d", symboli);
+    goto err;
+  }
+  symbolp = (marpaESLIF_symbol_t *) GENERICSTACK_GET_PTR(symbolStackp, symboli);
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%p->[%d] %s", outputStackp, resulti, symbolp->descp->asciis);
+#endif
 
   /* TO DO */
-  return 0;
+  MARPAESLIF_ERRORF(marpaESLIFp, "%p->[%d] %s", outputStackp, resulti, symbolp->descp->asciis);
+  MARPAESLIF_ERROR(marpaESLIFp, "TO DO");
+  goto err;
+
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+#ifndef MARPAESLIF_NTRACE
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%p->[%d] -> %p->[%d] %s: %s", lexemeStackp, argi, outputStackp, resulti, symbolp->descp->asciis, rcb ? "OK" : "KO");
+#endif
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
+  marpaESLIFRecognizerp->callstackCounteri--;
+  return rcb;
 }
 
 /*****************************************************************************/
