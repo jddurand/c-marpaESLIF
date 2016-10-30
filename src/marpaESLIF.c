@@ -5319,7 +5319,7 @@ static inline short _marpaESLIFRecognizer_readb(marpaESLIFRecognizer_t *marpaESL
       /* User say this is a stream of characters.                                                                                                          */
       /* ************************************************************************************************************************************************* */
       /* Here are the possible cases:                                                                                                                      */
-      /* - Previous read was a stream of characters (*(marpaESLIFRecognizerp->utfbp) is true).                                                             */
+      /* - Previous read was a stream of characters (*(marpaESLIFRecognizerp->charconvbp) is true).                                                        */
       /*   [We MUST have the current input encodings in *(marpaESLIFRecognizerp->encodingsp) and a conversion engine in *(marpaESLIFRecognizerp->tconvpp)] */
       /*   [We MUST have a fake terminal associated to input encoding]                                                                                     */
       /*   - user gave encoding (encodings != NULL)                                                                                                        */
@@ -5332,7 +5332,7 @@ static inline short _marpaESLIFRecognizer_readb(marpaESLIFRecognizer_t *marpaESL
       /*   - user gave NO encoding (encodings == NULL)                                                                                                     */
       /*     - It is assumed that current conversion can continue.                                                                                         */
       /*       >> This mode support incomplete characters in the input streaming.                                                                          */
-      /* - Previous read was NOT a stream of characters (*(marpaESLIFRecognizerp->utfbp) is false).                                                        */
+      /* - Previous read was NOT a stream of characters (*(marpaESLIFRecognizerp->charconvbp) is false).                                                   */
       /*   [Input encodings in *(marpaESLIFRecognizerp->encodingsp) should be NULL and current conversion in *(marpaESLIFRecognizerp->tconvpp) as well.]   */
       /*   - user gave encoding (encodings != NULL) or not                                                                                                 */
       /*     - This is used as-is in the call to _marpaESLIF_charconvp(). Current encoding and conversion engine are initialized.                          */
@@ -5342,7 +5342,7 @@ static inline short _marpaESLIFRecognizer_readb(marpaESLIFRecognizer_t *marpaESL
       /* ************************************************************************************************************************************************* */
       if (*(marpaESLIFRecognizerp->charconvbp)) {
         /* ************************************************************************************************************************************************* */
-        /* - Previous read was a stream of characters (*(marpaESLIFRecognizerp->utfbp) is true).                                                             */
+        /* - Previous read was a stream of characters (*(marpaESLIFRecognizerp->charconvbp) is true).                                                        */
         /* ************************************************************************************************************************************************* */
         if (*(marpaESLIFRecognizerp->encodingsp) == NULL) {
           MARPAESLIF_ERROR(marpaESLIFp, "Previous encoding is unknown");
@@ -5400,7 +5400,7 @@ static inline short _marpaESLIFRecognizer_readb(marpaESLIFRecognizer_t *marpaESL
         }
       } else {
         /* ************************************************************************************************************************************************* */
-        /* - Previous read was NOT a stream of characters (*(marpaESLIFRecognizerp->utfbp) is false).                                                        */
+        /* - Previous read was NOT a stream of characters (*(marpaESLIFRecognizerp->charconvbp) is false).                                                   */
         /* ************************************************************************************************************************************************* */
         /* Start a new conversion engine */
         if (! _marpaESLIFRecognizer_start_charconvp(marpaESLIFRecognizerp, encodingOfEncodings, encodings, encodingl, inputs, inputl)) {
@@ -5412,16 +5412,16 @@ static inline short _marpaESLIFRecognizer_readb(marpaESLIFRecognizer_t *marpaESL
       /* User say this is not a stream of characters.                                                                                                      */
       /* ************************************************************************************************************************************************* */
       /* Here are the possible cases:                                                                                                                      */
-      /* - Previous read was a stream of characters (*(marpaESLIFRecognizerp->utfbp) is true).                                                             */
+      /* - Previous read was a stream of characters (*(marpaESLIFRecognizerp->charconvbp) is true).                                                        */
       /*   [We MUST have the input encodings in *(marpaESLIFRecognizerp->encodingsp) and a current conversion engine in *(marpaESLIFRecognizerp->tconvpp)] */
       /*   - Current encoding is flushed.                                                                                                                  */
       /*   - Data is appended as-is.                                                                                                                       */
-      /* - Previous read was NOT a stream of characters (*(marpaESLIFRecognizerp->utfbp) is false).                                                        */
+      /* - Previous read was NOT a stream of characters (*(marpaESLIFRecognizerp->charconvbp) is false).                                                   */
       /*   - Data is appended as-is.                                                                                                                       */
       /* ************************************************************************************************************************************************* */
       if (*(marpaESLIFRecognizerp->charconvbp)) {
         /* ************************************************************************************************************************************************* */
-        /* - Previous read was a stream of characters (*(marpaESLIFRecognizerp->utfbp) is true).                                                             */
+        /* - Previous read was a stream of characters (*(marpaESLIFRecognizerp->charconvbp) is true).                                                        */
         /* ************************************************************************************************************************************************* */
         /* Flush current conversion engine */
         if (! _marpaESLIFRecognizer_flush_charconv(marpaESLIFRecognizerp)) {
@@ -5433,7 +5433,7 @@ static inline short _marpaESLIFRecognizer_readb(marpaESLIFRecognizer_t *marpaESL
         }
       } else {
         /* ************************************************************************************************************************************************* */
-        /* - Previous read was NOT a stream of characters (*(marpaESLIFRecognizerp->utfbp) is false).                                                        */
+        /* - Previous read was NOT a stream of characters (*(marpaESLIFRecognizerp->charconvbp) is false).                                                   */
         /* ************************************************************************************************************************************************* */
         /* Data is appended as-is */
         if (! _marpaESLIFRecognizer_appendDatab(marpaESLIFRecognizerp, inputs, inputl)) {
