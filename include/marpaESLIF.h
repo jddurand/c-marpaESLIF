@@ -52,7 +52,9 @@ typedef struct marpaESLIFRecognizerOption {
   short                latmb;                       /* Longest acceptable token match mode. Default: 0 */
   short                rejectionb;                  /* Rejection event. Default: 0 */
   short                newlineb;                    /* Count line/column numbers. Default: 0 */
-  size_t               bufsizl;                     /* Minimum buffer size: Default: MARPAESLIF_BUFSIZ */
+  size_t               bufsizl;                     /* Minimum stream buffer size: Default: MARPAESLIF_BUFSIZ */
+  unsigned int         buftriggerperci;             /* Excess number of bytes, in percentage of bufsizl, where stream buffer size is reduced. Default: 50 */
+  unsigned int         bufaddperci;                 /* Policy of minimum of bytes for increase, in percentage of current allocated size, when stream buffer size need to augment. Default: 50 */
 } marpaESLIFRecognizerOption_t;
 
 typedef enum marpaESLIFEventType {

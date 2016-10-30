@@ -2003,7 +2003,7 @@ marpaESLIF_t *marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptionp)
   genericLogger_t       *genericLoggerp;
 
   if (marpaESLIFOptionp == NULL) {
-    marpaESLIFOptionp = &marpaESLIFOption_default;
+    marpaESLIFOptionp = &marpaESLIFOption_default_template;
   }
 
   genericLoggerp = marpaESLIFOptionp->genericLoggerp;
@@ -2784,14 +2784,14 @@ marpaESLIFGrammar_t *marpaESLIFGrammar_newp(marpaESLIF_t *marpaESLIFp, marpaESLI
   genericStack_t                   *localOutputStackp  = NULL;
   marpaESLIFGrammar_t              *marpaESLIFGrammarp = NULL;
   marpaESLIF_readerContext_t        marpaESLIF_readerContext;
-  marpaESLIFRecognizerOption_t      marpaESLIFRecognizerOption;
-  marpaESLIFValueOption_t           marpaESLIFValueOption = marpaESLIFValueOption_default_template;
+  marpaESLIFRecognizerOption_t      marpaESLIFRecognizerOption = marpaESLIFRecognizerOption_default_template;
+  marpaESLIFValueOption_t           marpaESLIFValueOption      = marpaESLIFValueOption_default_template;
   marpaESLIF_valueContext_t         valueContext;
 
   /* MARPAESLIF_TRACE(marpaESLIFp, funcs, "Building Grammar"); */
 
   if (marpaESLIFGrammarOptionp == NULL) {
-    marpaESLIFGrammarOptionp = &marpaESLIFGrammarOption_default;
+    marpaESLIFGrammarOptionp = &marpaESLIFGrammarOption_default_template;
   }
 
   if (marpaESLIFGrammarOptionp->grammars == NULL) {
@@ -2819,12 +2819,11 @@ marpaESLIFGrammar_t *marpaESLIFGrammar_newp(marpaESLIF_t *marpaESLIFp, marpaESLI
   marpaESLIF_readerContext.marpaESLIFp = marpaESLIFp;
   marpaESLIF_readerContext.marpaESLIFGrammarOptionp = marpaESLIFGrammarOptionp;
 
+  /* Overwrite things not setted in the template, or with which we want a change */
   marpaESLIFRecognizerOption.userDatavp                  = (void *) &marpaESLIF_readerContext;
   marpaESLIFRecognizerOption.marpaESLIFReaderCallbackp   = _marpaESLIFReader_grammarReader;
   marpaESLIFRecognizerOption.disableThresholdb           = 1; /* No threshold warning when parsing a grammar */
-  marpaESLIFRecognizerOption.exhaustedb                  = 0; /* Exhaustion is not allowed */
   marpaESLIFRecognizerOption.latmb                       = 1; /* Our internal grammar is working in latm mode */
-  marpaESLIFRecognizerOption.rejectionb                  = 1; /* Our internal grammar have no rejection */
   marpaESLIFRecognizerOption.newlineb                    = 1; /* Grammars are short - we can count line/columns numbers */
 
   valueContext.marpaESLIFGrammarp = marpaESLIFGrammarp;
@@ -4196,7 +4195,7 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGramm
 #endif
   
   if (marpaESLIFRecognizerOptionp == NULL) {
-    marpaESLIFRecognizerOptionp = &marpaESLIFRecognizerOption_default;
+    marpaESLIFRecognizerOptionp = &marpaESLIFRecognizerOption_default_template;
   }
 
   if (marpaESLIFGrammarp == NULL) {
@@ -4232,6 +4231,7 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGramm
   marpaESLIFRecognizerp->callstackCounteri          = 0;
   marpaESLIFRecognizerp->_buffers                   = NULL;
   marpaESLIFRecognizerp->_bufferl                   = 0;
+  marpaESLIFRecognizerp->_bufferallocl              = 0;
   marpaESLIFRecognizerp->_eofb                      = fakeb;  /* In fake mode, always make sure there is no reader needed */
   marpaESLIFRecognizerp->_utfb                      = 0;
   marpaESLIFRecognizerp->_encodings                 = 0;
@@ -4241,6 +4241,7 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGramm
     marpaESLIFRecognizerp->leveli                     = marpaESLIFRecognizerParentp->leveli + 1;
     marpaESLIFRecognizerp->buffersp                   = marpaESLIFRecognizerParentp->buffersp;
     marpaESLIFRecognizerp->bufferlp                   = marpaESLIFRecognizerParentp->bufferlp;
+    marpaESLIFRecognizerp->bufferalloclp              = marpaESLIFRecognizerParentp->bufferalloclp;
     marpaESLIFRecognizerp->eofbp                      = marpaESLIFRecognizerParentp->eofbp;
     marpaESLIFRecognizerp->utfbp                      = marpaESLIFRecognizerParentp->utfbp;
     marpaESLIFRecognizerp->encodingsp                 = marpaESLIFRecognizerParentp->encodingsp;
@@ -4250,10 +4251,12 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGramm
     marpaESLIFRecognizerp->inputs                     = marpaESLIFRecognizerParentp->inputs;
     marpaESLIFRecognizerp->inputl                     = marpaESLIFRecognizerParentp->inputl;
     marpaESLIFRecognizerp->bufsizl                    = marpaESLIFRecognizerParentp->bufsizl;
+    marpaESLIFRecognizerp->buftriggerl                = marpaESLIFRecognizerParentp->buftriggerl;
   } else {
     marpaESLIFRecognizerp->leveli                     = 0;
     marpaESLIFRecognizerp->buffersp                   = &(marpaESLIFRecognizerp->_buffers);
     marpaESLIFRecognizerp->bufferlp                   = &(marpaESLIFRecognizerp->_bufferl);
+    marpaESLIFRecognizerp->bufferalloclp              = &(marpaESLIFRecognizerp->_bufferallocl);
     marpaESLIFRecognizerp->eofbp                      = &(marpaESLIFRecognizerp->_eofb);
     marpaESLIFRecognizerp->utfbp                      = &(marpaESLIFRecognizerp->_utfb);
     marpaESLIFRecognizerp->encodingsp                 = &(marpaESLIFRecognizerp->_encodings);
@@ -4271,6 +4274,7 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGramm
         goto err;
       }
     }
+    marpaESLIFRecognizerp->buftriggerl                = (marpaESLIFRecognizerp->bufsizl * (100 + marpaESLIFRecognizerp->marpaESLIFRecognizerOption.buftriggerperci)) / 100;
   }
   marpaESLIFRecognizerp->scanb                      = 0;
   marpaESLIFRecognizerp->discardb                   = discardb;
@@ -5397,68 +5401,9 @@ static inline short _marpaESLIFRecognizer_readb(marpaESLIFRecognizer_t *marpaESL
       *(marpaESLIFRecognizerp->utfbp) = 0;
     }
 
-    buffers = *(marpaESLIFRecognizerp->buffersp);
-    bufferl = *(marpaESLIFRecognizerp->bufferlp);
-
-    if (marpaESLIFRecognizerp->parentRecognizerp == NULL) {
-      /* We can crunch data at any time. */
-      /* Unless we are a child reognizer: our parent is stucked on its {inputs,inputl} tuple. */
-      /* We decide abritrarily than when inputl is < half of buffer size, the later can be reduced */
-      size_t bufferl2 = (size_t) (bufferl / (size_t) 2);
-
-      if (marpaESLIFRecognizerp->inputl < bufferl2) {
-        size_t newbufferl = bufferl - marpaESLIFRecognizerp->inputl;
-        char  *tmps;
-
-        /* This mean that buffers is not NULL and its size is at least two bytes btw */
-        memmove(buffers, buffers + marpaESLIFRecognizerp->inputl, newbufferl);
-        /* Try to realloc */
-        tmps = realloc(buffers, newbufferl);
-        if (tmps == NULL) {
-          /* We could have continue, this is not truely fatal - but we are in a bad shape anyway -; */
-          MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "realloc failure, %s", strerror(errno));
-          goto err;
-        }
-        *(marpaESLIFRecognizerp->buffersp) = tmps;
-        *(marpaESLIFRecognizerp->bufferlp) = newbufferl;
-        marpaESLIFRecognizerp->inputs  = *(marpaESLIFRecognizerp->buffersp);
-        /* inputl does not change yet - we just crunched data */
-        buffers = tmps;
-        bufferl = newbufferl;
-      }
+    if (! _marpaESLIFRecognizer_appendDatab(marpaESLIFRecognizerp, inputs, inputl)) {
+      goto err;
     }
-
-    /* Append data, as we do in the remembering mode */
-    if (buffers == NULL) {
-      /* First time we put in the buffer */
-      buffers = (char *) malloc(inputl);
-      if (buffers == NULL) {
-        MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "malloc failure, %s", strerror(errno));
-        goto err;
-      }
-    } else {
-      char *tmps = realloc(buffers, bufferl + inputl);
-      if (tmps == NULL) {
-        MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "realloc failure, %s", strerror(errno));
-        goto err;
-      }
-      buffers = tmps;
-    }
-    memcpy(buffers + bufferl, inputs, inputl);
-    bufferl += inputl;
-
-    (*marpaESLIFRecognizerp->buffersp) = buffers;
-    (*marpaESLIFRecognizerp->bufferlp) = bufferl;
-
-    /* Update current pointers */
-    marpaESLIFRecognizerp->inputs = (*marpaESLIFRecognizerp->buffersp) + deltal;
-    marpaESLIFRecognizerp->inputl = (*marpaESLIFRecognizerp->bufferlp) - deltal;
-
-    /* Please see the free method for the impact on parent's current pointer in input   */
-    /* This need to be done once only, at return, this is why it is done at free level. */
-    /* Note that when we create a grand child we strip off ALL events, so the user can */
-    /* never got control back until we are finished. I.e. until all the free methods of */
-    /* all the children are executed -; */
   }
 
  empty_without_bom:
@@ -6027,11 +5972,17 @@ static inline short _marpaESLIFValue_createLexemeArrayb(marpaESLIFValue_t *marpa
 static inline short _marpaESLIFRecognizer_appendDatab(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *datas, size_t datal)
 /*****************************************************************************/
 {
-  static const char *funcs   = "_marpaESLIFRecognizer_appendDatab";
-  char              *buffers = *(marpaESLIFRecognizerp->buffersp);
-  size_t             bufferl = *(marpaESLIFRecognizerp->bufferlp);
-  size_t             deltal  = marpaESLIFRecognizerp->inputs - *(marpaESLIFRecognizerp->buffersp);
-  size_t             newbufferl;
+  static const char *funcs        = "_marpaESLIFRecognizer_appendDatab";
+  char              *buffers      = *(marpaESLIFRecognizerp->buffersp);
+  size_t             bufferallocl = *(marpaESLIFRecognizerp->bufferalloclp);
+  size_t             bufferl      = *(marpaESLIFRecognizerp->bufferlp);
+  size_t             inputl       = marpaESLIFRecognizerp->inputl;
+  size_t             deltal       = marpaESLIFRecognizerp->inputs - buffers;
+  size_t             bufsizl      = marpaESLIFRecognizerp->bufsizl;
+  size_t             buftriggerl  = marpaESLIFRecognizerp->buftriggerl;
+  unsigned int       bufaddperci  = marpaESLIFRecognizerp->marpaESLIFRecognizerOption.bufaddperci;
+  size_t             wantedl;
+  size_t             minwantedl;
   char              *tmps;
   short              rcb;
 
@@ -6041,53 +5992,73 @@ static inline short _marpaESLIFRecognizer_appendDatab(marpaESLIFRecognizer_t *ma
   if (marpaESLIFRecognizerp->parentRecognizerp == NULL) {
     /* We can crunch data at any time. */
 
-    if (marpaESLIFRecognizerp->inputl >= marpaESLIFRecognizerp->bufsizl) {
-      newbufferl = bufferl - marpaESLIFRecognizerp->inputl;
+    if ((bufferallocl > buftriggerl) /* If we allocated more than the trigger */
+        &&                           /* and */
+        (inputl < bufsizl)           /* there is less remaining bytes to process than minimum buffer size */
+        ) {
+      /* ... then we can realloc to minimum buffer size */
 
-      /* This mean that buffers is not NULL and its size is at least marpaESLIFRecognizerp->bufsizl */
-      memmove(buffers, buffers + marpaESLIFRecognizerp->inputl, newbufferl);
+      /* Before reallocating, we need to move the remaining bytes at the beginning */
+      memmove(buffers, buffers + inputl, inputl);
       /* Try to realloc */
-      tmps = realloc(buffers, newbufferl);
+      wantedl = bufsizl;
+      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Resizing internal buffer size from %ld bytes to %ld bytes", (unsigned long) bufferallocl, (unsigned long) wantedl);
+      tmps = realloc(buffers, wantedl);
       if (tmps == NULL) {
         /* We could have continue, this is not truely fatal - but we are in a bad shape anyway -; */
         MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "realloc failure, %s", strerror(errno));
         goto err;
       }
-      *(marpaESLIFRecognizerp->buffersp) = tmps;
-      *(marpaESLIFRecognizerp->bufferlp) = newbufferl;
+      buffers      = *(marpaESLIFRecognizerp->buffersp)      = tmps;        /* Buffer pointer */
+      bufferallocl = *(marpaESLIFRecognizerp->bufferalloclp) = wantedl;     /* Allocated size */
+      bufferl      = *(marpaESLIFRecognizerp->bufferlp)      = inputl;      /* Number of valid bytes */
       /* Pointer inside internal buffer is back to the beginning */
-      marpaESLIFRecognizerp->inputs      = *(marpaESLIFRecognizerp->buffersp);
-      /* inputl does not change yet - we just crunched data */
-      buffers = tmps;
-      bufferl = newbufferl;
+      marpaESLIFRecognizerp->inputs = buffers;
     }
   }
 
   /* Append data */
   if (buffers == NULL) {
     /* First time we put in the buffer */
-    buffers = (char *) malloc(datal);
-    if (buffers == NULL) {
+    wantedl = (bufsizl < datal) ? datal : bufsizl;
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Creating an internal buffer of %ld bytes", (unsigned long) wantedl);
+    tmps = (char *) malloc(wantedl);
+    if (tmps == NULL) {
       MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "malloc failure, %s", strerror(errno));
       goto err;
     }
+    buffers      = *(marpaESLIFRecognizerp->buffersp)      = tmps;        /* Buffer pointer */
+    bufferallocl = *(marpaESLIFRecognizerp->bufferalloclp) = wantedl;     /* Allocated size */
+    bufferl      = *(marpaESLIFRecognizerp->bufferlp)      = 0;           /* Number of valid bytes */
+    /* Pointer inside internal buffer is at the beginning */
+    marpaESLIFRecognizerp->inputs = buffers;
   } else {
-    char *tmps = realloc(buffers, bufferl + datal);
-    if (tmps == NULL) {
-      MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "realloc failure, %s", strerror(errno));
-      goto err;
+    wantedl = bufferl + datal;
+    if (wantedl > bufferallocl) {
+      /* We need more bytes than what has been allocated. Apply augment policy */
+      minwantedl = (bufferallocl * (1 + bufaddperci)) / 100;
+      if (wantedl < minwantedl) {
+        wantedl = minwantedl;
+      }
+      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Resizing an internal buffer from %ld bytes to %ld bytes", (unsigned long) bufferl, (unsigned long) wantedl);
+      tmps = realloc(buffers, wantedl);
+      if (tmps == NULL) {
+        MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "realloc failure, %s", strerror(errno));
+        goto err;
+      }
+      buffers      = *(marpaESLIFRecognizerp->buffersp)      = tmps;        /* Buffer pointer */
+      bufferallocl = *(marpaESLIFRecognizerp->bufferalloclp) = wantedl;     /* Allocated size */
+      /* Pointer inside internal buffer is moving */
+      marpaESLIFRecognizerp->inputs = buffers + deltal;
     }
-    buffers = tmps;
   }
+
+  /* In any case, append data just after the valid bytes */
   memcpy(buffers + bufferl, datas, datal);
-  bufferl += datal;
 
-  (*marpaESLIFRecognizerp->buffersp) = buffers;
-  (*marpaESLIFRecognizerp->bufferlp) = bufferl;
-
-  /* Update current pointers */
-  marpaESLIFRecognizerp->inputs = (*marpaESLIFRecognizerp->buffersp) + deltal;
-  marpaESLIFRecognizerp->inputl = (*marpaESLIFRecognizerp->bufferlp) - deltal;
+  /* Commit number of valid bytes, and number of remaining bytes to process */
+  (*marpaESLIFRecognizerp->bufferlp) += datal;
+  marpaESLIFRecognizerp->inputl      += datal;
 
   /* Please see the free method for the impact on parent's current pointer in input   */
   /* This need to be done once only, at return, this is why it is done at free level. */
