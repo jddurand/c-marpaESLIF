@@ -2590,7 +2590,7 @@ static inline char *_marpaESLIF_charconvp(marpaESLIF_t *marpaESLIFp, char *toEnc
 /* _marpaESLIF_charconvp is ALWAYS returning a non-NULL pointer in case of success (it allocates always one byte more, and put a NUL in it). */
 /* Still, the number of converted bytes remain correct. */
 {
-  static const char *funcs       = "_marpaESLIF_utf8_newp";
+  static const char *funcs       = "_marpaESLIF_charconvp";
   char              *inbuforigp  = srcs;
   size_t             inleftorigl = srcl;
   char              *outbuforigp = NULL;
