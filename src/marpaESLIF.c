@@ -57,14 +57,12 @@ static inline void                   _marpaESLIF_grammar_freev(marpaESLIF_gramma
 
 static inline void                   _marpaESLIF_ruleStack_freev(genericStack_t *ruleStackp);
 static inline void                   _marpaESLIFrecognizer_lexemeStack_freev(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, genericStack_t *lexemeStackp);
-static inline void                   _marpaESLIFrecognizer_lexemeStack_resetv(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, genericStack_t *lexemeStackp, short freeonlyb);
-static inline void                   _marpaESLIFrecognizer_lexemeStack_forgetv(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, genericStack_t *lexemeStackp);
+static inline void                   _marpaESLIFrecognizer_lexemeStack_resetv(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, genericStack_t *lexemeStackp);
 
 static inline void                   _marpaESLIF_grammarStack_freev(genericStack_t *grammarStackp);
 static inline void                   _marpaESLIF_grammarStack_resetv(genericStack_t *grammarStackp);
 
-static inline short                  _marpaESLIFRecognizer_lexemeStack_i_resetb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, genericStack_t *lexemeStackp, int i, short freeonlyb);
-static inline short                  _marpaESLIFRecognizer_lexemeStack_i_forgetb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, genericStack_t *lexemeStackp, int i);
+static inline short                  _marpaESLIFRecognizer_lexemeStack_i_resetb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, genericStack_t *lexemeStackp, int i);
 static inline short                  _marpaESLIFRecognizer_lexemeStack_i_sizeb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, genericStack_t *lexemeStackp, int i, size_t *sizelp);
 static inline short                  _marpaESLIFRecognizer_lexemeStack_i_p_and_sizeb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, genericStack_t *lexemeStackp, int i, char **pp, size_t *sizelp);
 static inline short                  _marpaESLIFRecognizer_lexemeStack_i_setarraypb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, genericStack_t *lexemeStackp, int i, GENERICSTACKITEMTYPE2TYPE_ARRAYP arrayp);
@@ -608,7 +606,7 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
   if (strings != NULL) {
     free(strings);
   }
-  _marpaESLIFrecognizer_lexemeStack_forgetv(marpaESLIFRecognizerp, localOutputStackp);
+  _marpaESLIFrecognizer_lexemeStack_resetv(marpaESLIFRecognizerp, localOutputStackp);
   marpaESLIFRecognizer_freev(marpaESLIFRecognizerp);
   /* MARPAESLIF_TRACEF(marpaESLIFp, funcs, "return %p", terminalp); */
   return terminalp;
@@ -1400,7 +1398,7 @@ static inline void _marpaESLIFrecognizer_lexemeStack_freev(marpaESLIFRecognizer_
     marpaESLIFRecognizerp->callstackCounteri++;
     MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
 
-    _marpaESLIFrecognizer_lexemeStack_resetv(marpaESLIFRecognizerp, lexemeStackp, 0 /* freeonlyb */);
+    _marpaESLIFrecognizer_lexemeStack_resetv(marpaESLIFRecognizerp, lexemeStackp);
     GENERICSTACK_FREE(lexemeStackp);
 
     MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "return");
@@ -1429,7 +1427,7 @@ static inline void _marpaESLIF_grammarStack_resetv(genericStack_t *grammarStackp
 }
 
 /*****************************************************************************/
-static inline void _marpaESLIFrecognizer_lexemeStack_resetv(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, genericStack_t *lexemeStackp, short freeonlyb)
+static inline void _marpaESLIFrecognizer_lexemeStack_resetv(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, genericStack_t *lexemeStackp)
 /*****************************************************************************/
 {
   static const char *funcs = "_marpaESLIFrecognizer_lexemeStack_resetv";
@@ -1442,7 +1440,7 @@ static inline void _marpaESLIFrecognizer_lexemeStack_resetv(marpaESLIFRecognizer
     /* error recovery - c.f. _marpaESLIF_terminal_newp. */
     if (marpaESLIFRecognizerp != NULL) {
       marpaESLIFRecognizerp->callstackCounteri++;
-      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "start (freeonlyb=%d)", (int) freeonlyb);
+      MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
     }
 
     usedi = (int) GENERICSTACK_USED(lexemeStackp);
@@ -1452,7 +1450,7 @@ static inline void _marpaESLIFrecognizer_lexemeStack_resetv(marpaESLIFRecognizer
       /* frees() only something that it recognizes, and afterwards set it to NA - and the */
       /* to NA cannot fail, because this place place in stack memory is already there. */
       /* Anyway, suppose that it would fail, I repeat, at most there is a memory leak */
-      _marpaESLIFRecognizer_lexemeStack_i_resetb(marpaESLIFRecognizerp, lexemeStackp, i, freeonlyb);
+      _marpaESLIFRecognizer_lexemeStack_i_resetb(marpaESLIFRecognizerp, lexemeStackp, i);
       GENERICSTACK_USED(lexemeStackp)--;
     }
 
@@ -1465,31 +1463,7 @@ static inline void _marpaESLIFrecognizer_lexemeStack_resetv(marpaESLIFRecognizer
 }
 
 /*****************************************************************************/
-static inline void _marpaESLIFrecognizer_lexemeStack_forgetv(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, genericStack_t *lexemeStackp)
-/*****************************************************************************/
-/* This is a simplified version of _marpaESLIFrecognizer_lexemeStack_resetv that is not setting NA - only the caller knows. */
-/* In theory this should be called ONLY for stacks that are on... the stack - never propagated outside of the calling method */
-/*****************************************************************************/
-{
-  static const char *funcs = "_marpaESLIFrecognizer_lexemeStack_forgetv";
-
-  /* This is vicious but it can happen that we are called with marpaESLIFRecognizerp == NULL, in case of */
-  /* error recovery - c.f. _marpaESLIF_terminal_newp. */
-  if (marpaESLIFRecognizerp != NULL) {
-    marpaESLIFRecognizerp->callstackCounteri++;
-    MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
-  }
-
-  _marpaESLIFrecognizer_lexemeStack_resetv(marpaESLIFRecognizerp, lexemeStackp, 1 /* freeonlyb */);
-
-  if (marpaESLIFRecognizerp != NULL) {
-    MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "return");
-    marpaESLIFRecognizerp->callstackCounteri--;
-  }
-}
-
-/*****************************************************************************/
-static inline short _marpaESLIFRecognizer_lexemeStack_i_resetb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, genericStack_t *lexemeStackp, int i, short freeonlyb)
+static inline short _marpaESLIFRecognizer_lexemeStack_i_resetb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, genericStack_t *lexemeStackp, int i)
 /*****************************************************************************/
 {
   static const char *funcs = "_marpaESLIFRecognizer_lexemeStack_i_resetb";
@@ -1499,7 +1473,7 @@ static inline short _marpaESLIFRecognizer_lexemeStack_i_resetb(marpaESLIFRecogni
   /* error recovery - c.f. _marpaESLIF_terminal_newp. */
   if (marpaESLIFRecognizerp != NULL) {
     marpaESLIFRecognizerp->callstackCounteri++;
-    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "start (freeonlyb=%d)", (int) freeonlyb);
+    MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
   }
 
   if (lexemeStackp != NULL) {
@@ -1513,19 +1487,17 @@ static inline short _marpaESLIFRecognizer_lexemeStack_i_resetb(marpaESLIFRecogni
 #endif
         free(GENERICSTACK_ARRAY_PTR(array));
       }
-      if (! freeonlyb) {
 #ifndef MARPAESLIF_NTRACE
-        if (marpaESLIFRecognizerp != NULL) {
-          MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Resetting %p->[%d]", lexemeStackp, i);
-        }
+      if (marpaESLIFRecognizerp != NULL) {
+        MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Resetting %p->[%d]", lexemeStackp, i);
+      }
 #endif
-        GENERICSTACK_SET_NA(lexemeStackp, i);
-        if (GENERICSTACK_ERROR(lexemeStackp)) {
-          if (marpaESLIFRecognizerp != NULL) {
-            MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "lexemeStackp %p->[%d] set failure, %s", lexemeStackp, i, strerror(errno));
+      GENERICSTACK_SET_NA(lexemeStackp, i);
+      if (GENERICSTACK_ERROR(lexemeStackp)) {
+        if (marpaESLIFRecognizerp != NULL) {
+          MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "lexemeStackp %p->[%d] set failure, %s", lexemeStackp, i, strerror(errno));
           }
-          goto err;
-        }
+        goto err;
       }
     }
   }
@@ -1545,33 +1517,6 @@ static inline short _marpaESLIFRecognizer_lexemeStack_i_resetb(marpaESLIFRecogni
 }
 
 /*****************************************************************************/
-static inline short _marpaESLIFRecognizer_lexemeStack_i_forgetb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, genericStack_t *lexemeStackp, int i)
-/*****************************************************************************/
-/* Simplified version of _marpaESLIFRecognizer_lexemeStack_i_resetb that is not setting NA - only the caller knows. */
-/* In theory this should be called ONLY for stacks that are on... the stack - never propagated outside of the calling method */
-/*****************************************************************************/
-{
-  static const char *funcs = "_marpaESLIFRecognizer_lexemeStack_i_forgetb";
-  short              rcb;
-
-  /* This is vicious but it can happen that we are called with marpaESLIFRecognizerp == NULL, in case of */
-  /* error recovery - c.f. _marpaESLIF_terminal_newp. */
-  if (marpaESLIFRecognizerp != NULL) {
-    marpaESLIFRecognizerp->callstackCounteri++;
-    MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
-  }
-
-  rcb = _marpaESLIFRecognizer_lexemeStack_i_resetb(marpaESLIFRecognizerp, lexemeStackp, i, 1 /* freeonlyb */);
-
-  if (marpaESLIFRecognizerp != NULL) {
-    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
-    marpaESLIFRecognizerp->callstackCounteri--;
-  }
-
-  return rcb;
-}
-
-/*****************************************************************************/
 static inline short _marpaESLIFRecognizer_lexemeStack_i_setarraypb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, genericStack_t *lexemeStackp, int i, GENERICSTACKITEMTYPE2TYPE_ARRAYP arrayp)
 /*****************************************************************************/
 {
@@ -1581,7 +1526,7 @@ static inline short _marpaESLIFRecognizer_lexemeStack_i_setarraypb(marpaESLIFRec
   marpaESLIFRecognizerp->callstackCounteri++;
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
 
-  if (! _marpaESLIFRecognizer_lexemeStack_i_resetb(marpaESLIFRecognizerp, lexemeStackp, i, 0 /* freeonlyb */)) {
+  if (! _marpaESLIFRecognizer_lexemeStack_i_resetb(marpaESLIFRecognizerp, lexemeStackp, i)) {
     goto err;
   }
   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Setting %p->[%d] = {%p, %d}", lexemeStackp, i, GENERICSTACK_ARRAYP_PTR(arrayp), GENERICSTACK_ARRAYP_LENGTH(arrayp));
@@ -2504,7 +2449,7 @@ static inline short _marpaESLIFRecognizer_meta_matcherb(marpaESLIFRecognizer_t *
   rcb = 0;
 
  done:
-  _marpaESLIFrecognizer_lexemeStack_forgetv(marpaESLIFRecognizerp, localOutputStackp);
+  _marpaESLIFrecognizer_lexemeStack_resetv(marpaESLIFRecognizerp, localOutputStackp);
   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
   marpaESLIFRecognizerp->callstackCounteri--;
   return rcb;
@@ -3325,7 +3270,7 @@ static inline short _marpaESLIFRecognizer_resumeb(marpaESLIFRecognizer_t *marpaE
     symbolp = GENERICSTACK_GET_PTR(symbolStackp, symboli);
     MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Trying to match %s", symbolp->descp->asciis);
   match_again:
-    _marpaESLIFrecognizer_lexemeStack_forgetv(marpaESLIFRecognizerp, matchedStackp);
+    _marpaESLIFrecognizer_lexemeStack_resetv(marpaESLIFRecognizerp, matchedStackp);
     if (! _marpaESLIFRecognizer_symbol_matcherb(marpaESLIFRecognizerp, symbolp, &rci, matchedStackp, &exhaustedb)) {
       if (! _marpaESLIFRecognizer_lexemeStack_i_setb(marpaESLIFRecognizerp, alternativeStackp, (int) symboll, NULL, 0)) {
         goto err;
@@ -3390,7 +3335,7 @@ static inline short _marpaESLIFRecognizer_resumeb(marpaESLIFRecognizer_t *marpaE
           goto err;
         }
       } else {
-        _marpaESLIFrecognizer_lexemeStack_forgetv(marpaESLIFRecognizerp, localOutputStackp);
+        _marpaESLIFrecognizer_lexemeStack_resetv(marpaESLIFRecognizerp, localOutputStackp);
       }
       marpaESLIFValueOptionDiscard.userDatavp       = (void *) &discardValueContext; /* Take care: internal mode i.e. callbacks are called with marpaESLIFValuep */
       marpaESLIFValueOptionDiscard.ruleCallbackp    = _marpaESLIFValueRuleCallbackInternalLexeme;
@@ -3557,9 +3502,9 @@ static inline short _marpaESLIFRecognizer_resumeb(marpaESLIFRecognizer_t *marpaE
   rcb = 0;
 
  done:
-  _marpaESLIFrecognizer_lexemeStack_forgetv(marpaESLIFRecognizerp, alternativeStackp);
-  _marpaESLIFrecognizer_lexemeStack_forgetv(marpaESLIFRecognizerp, matchedStackp);
-  _marpaESLIFrecognizer_lexemeStack_forgetv(marpaESLIFRecognizerp, localOutputStackp);
+  _marpaESLIFrecognizer_lexemeStack_resetv(marpaESLIFRecognizerp, alternativeStackp);
+  _marpaESLIFrecognizer_lexemeStack_resetv(marpaESLIFRecognizerp, matchedStackp);
+  _marpaESLIFrecognizer_lexemeStack_resetv(marpaESLIFRecognizerp, localOutputStackp);
   if (rcb) {
     if (exhaustedbp != NULL) {
       *exhaustedbp = exhaustedb;
@@ -5809,7 +5754,7 @@ static inline short _marpaESLIFRecognizer_matchPostProcessingb(marpaESLIFRecogni
 
     /* Check newline */
     while (1) {
-      _marpaESLIFrecognizer_lexemeStack_forgetv(marpaESLIFRecognizerp, lexemeStackp);
+      _marpaESLIFrecognizer_lexemeStack_resetv(marpaESLIFRecognizerp, lexemeStackp);
       /* We count newlines only when a discard or a complete has happened. So by definition */
       /* character sequences are complete. This is why we fake EOF to true. */
       if (! _marpaESLIFRecognizer_regex_matcherb(marpaESLIFRecognizerp,
@@ -5842,7 +5787,7 @@ static inline short _marpaESLIFRecognizer_matchPostProcessingb(marpaESLIFRecogni
       /* Count characters */
       while (1) {
         /* We can re-use lexemeStack -; */
-        _marpaESLIFrecognizer_lexemeStack_forgetv(marpaESLIFRecognizerp, lexemeStackp);
+        _marpaESLIFrecognizer_lexemeStack_resetv(marpaESLIFRecognizerp, lexemeStackp);
         /* We count newlines only when a discard or a complete has happened. So by definition */
         /* character sequences are complete. This is why we fake EOF to true. */
         if (! _marpaESLIFRecognizer_regex_matcherb(marpaESLIFRecognizerp,
@@ -5879,7 +5824,7 @@ static inline short _marpaESLIFRecognizer_matchPostProcessingb(marpaESLIFRecogni
   rcb = 0;
 
  done:
-  _marpaESLIFrecognizer_lexemeStack_forgetv(marpaESLIFRecognizerp, lexemeStackp);
+  _marpaESLIFrecognizer_lexemeStack_resetv(marpaESLIFRecognizerp, lexemeStackp);
 
   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
   marpaESLIFRecognizerp->callstackCounteri--;
@@ -6234,7 +6179,7 @@ static inline short _marpaESLIFRecognizer_encoding_eqb(marpaESLIFRecognizer_t *m
   if (utf8s != NULL) {
     free(utf8s);
   }
-  _marpaESLIFrecognizer_lexemeStack_forgetv(marpaESLIFRecognizerParentp, localOutputStackp);
+  _marpaESLIFrecognizer_lexemeStack_resetv(marpaESLIFRecognizerParentp, localOutputStackp);
   marpaESLIFRecognizer_freev(marpaESLIFRecognizerp);
 
   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerParentp, funcs, "return %d", (int) rcb);
