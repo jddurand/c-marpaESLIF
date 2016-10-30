@@ -297,7 +297,8 @@ struct marpaESLIFRecognizer {
   int                          callstackCounteri; /* Internal counter for tracing - no functional impact */
 
   char                        *_buffers;       /* Pointer to allocated buffer containing input */
-  size_t                       _bufferl;       /* Number of valid bytes in this buffer (!= allocated size in the exceptional case of a realloc failure) */
+  size_t                       _bufferl;       /* Number of valid bytes in this buffer (!= allocated size) */
+  size_t                       _bufferallocl;  /* Number of allocated bytes in this buffer (!= valid bytes) */
   short                        _eofb;          /* EOF flag */
   short                        _utfb;          /* A flag to say if input was converted to UTF-8, which means buffers is a clean UTF-8 sequence of characters */
 
@@ -305,6 +306,7 @@ struct marpaESLIFRecognizer {
 
   char                       **buffersp;       /* Pointer to allocated buffer - for sharing with eventual parent recognizers */
   size_t                      *bufferlp;       /* Ditto for the size */
+  size_t                      *bufferalloclp;  /* Ditto for the allocated size */
   short                       *eofbp;          /* Ditto for the EOF flag */
   short                       *utfbp;          /* Ditto for the conversion flag */
 
@@ -317,6 +319,7 @@ struct marpaESLIFRecognizer {
   size_t                       linel;          /* Line number */
   size_t                       columnl;        /* Column number */
   size_t                       bufsizl;        /* Effective bufsizl */
+  size_t                       buftriggerl;    /* Minimum number of bytes to trigger crunch of data */
 
   char                        *_encodings;     /* Current encoding */
   tconv_t                      _tconvp;        /* current converter */
@@ -327,17 +330,17 @@ struct marpaESLIFRecognizer {
 /* ------------------------------------------- */
 /* Definition of the default option structures */
 /* ------------------------------------------- */
-marpaESLIFOption_t marpaESLIFOption_default = {
+marpaESLIFOption_t marpaESLIFOption_default_template = {
   NULL               /* genericLoggerp */
 };
 
-marpaESLIFGrammarOption_t marpaESLIFGrammarOption_default = {
+marpaESLIFGrammarOption_t marpaESLIFGrammarOption_default_template = {
   NULL, /* grammars */
   0,    /* grammarl */
   NULL  /* encodings */
 };
 
-marpaESLIFRecognizerOption_t marpaESLIFRecognizerOption_default = {
+marpaESLIFRecognizerOption_t marpaESLIFRecognizerOption_default_template = {
   NULL,              /* userDatavp */
   NULL,              /* marpaESLIFReaderCallbackp */
   0,                 /* disableThresholdb */
@@ -345,7 +348,9 @@ marpaESLIFRecognizerOption_t marpaESLIFRecognizerOption_default = {
   0,                 /* latmb */
   0,                 /* rejectionb */
   0,                 /* newlineb */
-  MARPAESLIF_BUFSIZ  /* bufsizl */
+  MARPAESLIF_BUFSIZ, /* bufsizl */
+  50,                /* buftriggerperci */
+  50                 /* bufaddperci */
 };
 
 marpaESLIFValueOption_t marpaESLIFValueOption_default_template = {
