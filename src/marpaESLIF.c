@@ -134,11 +134,11 @@ static        short                  _marpaESLIFValueSymbolCallbackInternalWrapp
 static        short                  _marpaESLIFValueNullingCallbackInternalWrapper(void *userDatavp, int symboli, int resulti);
 
 static        short                  _marpaESLIFValueRuleCallbackInternalLexeme(void *userDatavp, int rulei, int arg0i, int argni, int resulti);
-static        short                  _marpaESLIFValueSymbolCallbackInternalLexeme(void *userDatavp, char *bytep, size_t bytel, int symboli, int argi, int resulti);
+static        short                  _marpaESLIFValueSymbolCallbackInternalLexeme(void *userDatavp, char *bytep, size_t bytel, int symboli, int resulti);
 static        short                  _marpaESLIFValueNullingCallbackInternalLexeme(void *userDatavp, int symboli, int resulti);
 
 static        short                  _marpaESLIFValueRuleCallbackInternalGrammar(void *userDatavp, int rulei, int arg0i, int argni, int resulti);
-static        short                  _marpaESLIFValueSymbolCallbackInternalGrammar(void *userDatavp, char *bytep, size_t bytel, int symboli, int argi, int resulti);
+static        short                  _marpaESLIFValueSymbolCallbackInternalGrammar(void *userDatavp, char *bytep, size_t bytel, int symboli, int resulti);
 static        short                  _marpaESLIFValueNullingCallbackInternalGrammar(void *userDatavp, int symboli, int resulti);
 
 static inline void                   _marpaESLIFGrammar_freev(marpaESLIFGrammar_t *marpaESLIFGrammarp, short onStackb);
@@ -4669,7 +4669,7 @@ static short _marpaESLIFValueSymbolCallbackWrapper(void *userDatavp, int symboli
   if (! _marpaESLIFRecognizer_lexemeStack_i_p_and_sizeb(marpaESLIFRecognizerp, marpaESLIFRecognizerp->lexemeInputStackp, argi, &bytep, &bytel)) {
     goto err;
   }
-  rcb = symbolCallbackp(marpaESLIFValueOption.userDatavp, bytep, bytel, symboli, argi, resulti);
+  rcb = symbolCallbackp(marpaESLIFValueOption.userDatavp, bytep, bytel, symboli, resulti);
   goto done;
 
  err:
@@ -4959,7 +4959,7 @@ static short _marpaESLIFValueRuleCallbackInternalLexeme(void *userDatavp, int ru
 }
 
 /*****************************************************************************/
-static short _marpaESLIFValueSymbolCallbackInternalLexeme(void *userDatavp, char *bytep, size_t bytel, int symboli, int argi, int resulti)
+static short _marpaESLIFValueSymbolCallbackInternalLexeme(void *userDatavp, char *bytep, size_t bytel, int symboli, int resulti)
 /*****************************************************************************/
 {
   static const char         *funcs                    = "_marpaESLIFValueSymbolCallbackInternalLexeme";
@@ -5048,7 +5048,7 @@ static short _marpaESLIFValueRuleCallbackInternalGrammar(void *userDatavp, int r
 }
 
 /*****************************************************************************/
-static short _marpaESLIFValueSymbolCallbackInternalGrammar(void *userDatavp, char *bytep, size_t bytel, int symboli, int argi, int resulti)
+static short _marpaESLIFValueSymbolCallbackInternalGrammar(void *userDatavp, char *bytep, size_t bytel, int symboli, int resulti)
 /*****************************************************************************/
 {
   static const char         *funcs                    = "_marpaESLIFValueSymbolCallbackInternalGrammar";
