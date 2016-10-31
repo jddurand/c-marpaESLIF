@@ -24,8 +24,6 @@ typedef enum bootstrap_grammar_G1_enum {
   G1_TERMINAL_COMPLETED,
   G1_TERMINAL_NULLED,
   G1_TERMINAL_PREDICTED,
-  G1_TERMINAL_CURRENT,
-  G1_TERMINAL_LEXER,
   G1_TERMINAL_IS,
   G1_TERMINAL_INACCESSIBLE,
   G1_TERMINAL_BY,
@@ -80,7 +78,6 @@ typedef enum bootstrap_grammar_G1_enum {
   G1_META_COMPLETION_EVENT_DECLARATION,
   G1_META_NULLED_EVENT_DECLARATION,
   G1_META_PREDICTION_EVENT_DECLARATION,
-  G1_META_CURRENT_LEXER_STATEMENT,
   G1_META_INACCESSIBLE_STATEMENT,
   G1_META_INACCESSIBLE_TREATMENT,
   G1_META_EXCEPTION_STATEMENT,
@@ -113,12 +110,9 @@ typedef enum bootstrap_grammar_G1_enum {
   G1_META_EVENT_INITIALIZER,
   G1_META_ON_OR_OFF,
   G1_META_LATM_SPECIFICATION,
-  G1_META_BLESSING,
-  G1_META_BLESSING_NAME,
   G1_META_NAMING,
   G1_META_NULL_ADVERB,
   G1_META_ALTERNATIVE_NAME,
-  G1_META_LEXER_NAME,
   G1_META_EVENT_NAME,
   G1_META_LHS,
   G1_META_RHS,
@@ -141,7 +135,6 @@ typedef enum bootstrap_grammar_G1_enum {
   G1_META_BEFORE_OR_AFTER,
   G1_META_TRUE,
   G1_META_STANDARD_NAME,
-  G1_META_RESERVED_BLESSING_NAME,
   G1_META_QUOTED_NAME,
   G1_META_RESERVED_EVENT_NAME,
   G1_META_QUOTED_STRING,
@@ -150,9 +143,7 @@ typedef enum bootstrap_grammar_G1_enum {
   G1_META_SUBSTITUTION_EXPRESSION,
   G1_META_BARE_NAME,
   G1_META_BRACKETED_NAME,
-  G1_META_PERL_NAME,
-  G1_META_RESERVED_ACTION_NAME,
-  G1_META_ARRAY_DESCRIPTOR,
+  G1_META_ASCII_GRAPH_NAME,
   G1_META_WHITESPACE,
   G1_META_PERL_COMMENT,
   G1_META_CPLUSPLUS_COMMENT,
@@ -178,7 +169,6 @@ bootstrap_grammar_meta_t bootstrap_grammar_G1_metas[] = {
   { G1_META_COMPLETION_EVENT_DECLARATION,     "<G1 meta completion event declaration>", 0, 0 },
   { G1_META_NULLED_EVENT_DECLARATION,         "<G1 meta nulled event declaration>", 0, 0 },
   { G1_META_PREDICTION_EVENT_DECLARATION,     "<G1 meta prediction event declaration>", 0, 0 },
-  { G1_META_CURRENT_LEXER_STATEMENT,          "<G1 meta current lexer statement>", 0, 0 },
   { G1_META_INACCESSIBLE_STATEMENT,           "<G1 meta inaccessible statement>", 0, 0 },
   { G1_META_INACCESSIBLE_TREATMENT,           "<G1 meta inaccessible treatment>", 0, 0 },
   { G1_META_EXCEPTION_STATEMENT,              "<G1 meta exception statement>", 0, 0 },
@@ -211,12 +201,9 @@ bootstrap_grammar_meta_t bootstrap_grammar_G1_metas[] = {
   { G1_META_EVENT_INITIALIZER,                "<G1 meta event initializer>", 0, 0 },
   { G1_META_ON_OR_OFF,                        "<G1 meta on or off>", 0, 0 },
   { G1_META_LATM_SPECIFICATION,               "<G1 meta latm specification>", 0, 0 },
-  { G1_META_BLESSING,                         "<G1 meta blessing>", 0, 0 },
-  { G1_META_BLESSING_NAME,                    "<G1 meta blessing name>", 0, 0 },
   { G1_META_NAMING,                           "<G1 meta naming>", 0, 0 },
   { G1_META_NULL_ADVERB,                      "<G1 meta null adverb>", 0, 0 },
   { G1_META_ALTERNATIVE_NAME,                 "<G1 meta alternative name>", 0, 0 },
-  { G1_META_LEXER_NAME,                       "<G1 meta lexer name>", 0, 0 },
   { G1_META_EVENT_NAME,                       "<G1 meta event name>", 0, 0 },
   { G1_META_LHS,                              "<G1 meta lhs>", 0, 0 },
   { G1_META_RHS,                              "<G1 meta rhs>", 0, 0 },
@@ -239,7 +226,6 @@ bootstrap_grammar_meta_t bootstrap_grammar_G1_metas[] = {
   { G1_META_BEFORE_OR_AFTER,                  L0_JOIN_G1_META_BEFORE_OR_AFTER, 0, 0 },
   { G1_META_TRUE,                             L0_JOIN_G1_META_TRUE, 0, 0 },
   { G1_META_STANDARD_NAME,                    L0_JOIN_G1_META_STANDARD_NAME, 0, 0 },
-  { G1_META_RESERVED_BLESSING_NAME,           L0_JOIN_G1_META_RESERVED_BLESSING_NAME, 0, 0 },
   { G1_META_QUOTED_NAME,                      L0_JOIN_G1_META_QUOTED_NAME, 0, 0 },
   { G1_META_RESERVED_EVENT_NAME,              L0_JOIN_G1_META_RESERVED_EVENT_NAME, 0, 0 },
   { G1_META_QUOTED_STRING,                    L0_JOIN_G1_META_QUOTED_STRING, 0, 0 },
@@ -248,9 +234,7 @@ bootstrap_grammar_meta_t bootstrap_grammar_G1_metas[] = {
   { G1_META_SUBSTITUTION_EXPRESSION,          L0_JOIN_G1_META_SUBSTITUTION_EXPRESSION, 0, 0 },
   { G1_META_BARE_NAME,                        L0_JOIN_G1_META_BARE_NAME, 0, 0 },
   { G1_META_BRACKETED_NAME,                   L0_JOIN_G1_META_BRACKETED_NAME, 0, 0 },
-  { G1_META_PERL_NAME,                        L0_JOIN_G1_META_PERL_NAME, 0, 0 },
-  { G1_META_RESERVED_ACTION_NAME,             L0_JOIN_G1_META_RESERVED_ACTION_NAME, 0, 0 },
-  { G1_META_ARRAY_DESCRIPTOR,                 L0_JOIN_G1_META_ARRAY_DESCRIPTOR, 0, 0 },
+  { G1_META_ASCII_GRAPH_NAME,                 L0_JOIN_G1_META_ASCII_GRAPH_NAME, 0, 0 },
   { G1_META_WHITESPACE,                       L0_JOIN_G1_META_WHITESPACE, 0, 0 },
   { G1_META_PERL_COMMENT,                     L0_JOIN_G1_META_PERL_COMMENT, 0, 0 },
   { G1_META_CPLUSPLUS_COMMENT,                L0_JOIN_G1_META_CPLUSPLUS_COMMENT, 0, 0 },
@@ -404,24 +388,6 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
     "predicted",
 #ifndef MARPAESLIF_NTRACE
     "predicted", "pre"
-#else
-    NULL, NULL
-#endif
-  },
-  { G1_TERMINAL_CURRENT,
-    "<G1 terminal current>",           MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
-    "current",
-#ifndef MARPAESLIF_NTRACE
-    "current", "cur"
-#else
-    NULL, NULL
-#endif
-  },
-  { G1_TERMINAL_LEXER,
-    "<G1 terminal lexer>",           MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
-    "lexer",
-#ifndef MARPAESLIF_NTRACE
-    "lexer", "lex"
 #else
     NULL, NULL
 #endif
@@ -781,7 +747,6 @@ bootstrap_grammar_rule_t bootstrap_grammar_G1_rules[] = {
     lhsi                                      descs                                        type                          nrhsl  { rhsi }                                       }  { mask }    minimumi                 separatori properb
   */
   { G1_META_STATEMENT,                        "<G1 rule statement 15>",                       MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_PREDICTION_EVENT_DECLARATION         }, { 0 },            -1,                        -1, -1 },
-  { G1_META_STATEMENT,                        "<G1 rule statement 16>",                       MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_CURRENT_LEXER_STATEMENT              }, { 0 },            -1,                        -1, -1 },
   { G1_META_STATEMENT,                        "<G1 rule statement 17>",                       MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_INACCESSIBLE_STATEMENT               }, { 0 },            -1,                        -1, -1 },
   { G1_META_STATEMENT,                        "<G1 rule statement 18>",                       MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_EXCEPTION_STATEMENT                  }, { 0 },            -1,                        -1, -1 },
   { G1_META_START_RULE,                       "<G1 rule start rule>",                         MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_TERMINAL__START,
@@ -854,10 +819,6 @@ bootstrap_grammar_rule_t bootstrap_grammar_G1_rules[] = {
   /*
     lhsi                                      descs                                        type                          nrhsl  { rhsi }                                       }  { mask }    minimumi                 separatori properb
   */
-  { G1_META_CURRENT_LEXER_STATEMENT,          "<G1 rule current lexer statement>",            MARPAESLIF_RULE_TYPE_ALTERNATIVE, 4, { G1_TERMINAL_CURRENT,
-                                                                                                                                  G1_TERMINAL_LEXER,
-                                                                                                                                  G1_TERMINAL_IS,
-                                                                                                                                  G1_META_LEXER_NAME                           }, { 1, 1, 1, 0},    -1,                        -1, -1 },
   { G1_META_INACCESSIBLE_STATEMENT,           "<G1 rule inaccessible statement>",             MARPAESLIF_RULE_TYPE_ALTERNATIVE, 5, { G1_TERMINAL_INACCESSIBLE,
                                                                                                                                   G1_TERMINAL_IS,
                                                                                                                                   G1_META_INACCESSIBLE_TREATMENT,
@@ -907,7 +868,6 @@ bootstrap_grammar_rule_t bootstrap_grammar_G1_rules[] = {
     lhsi                                      descs                                        type                          nrhsl  { rhsi }                                       }  { mask }    minimumi                 separatori properb
   */
   { G1_META_ADVERB_ITEM,                      "<G1 rule adverb item 12>",                     MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_LATM_SPECIFICATION                   }, { 0 },            -1,                        -1, -1 },
-  { G1_META_ADVERB_ITEM,                      "<G1 rule adverb item 13>",                     MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_BLESSING                             }, { 0 },            -1,                        -1, -1 },
   { G1_META_ADVERB_ITEM,                      "<G1 rule adverb item 14>",                     MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_NAMING                               }, { 0 },            -1,                        -1, -1 },
   { G1_META_ADVERB_ITEM,                      "<G1 rule adverb item 15>",                     MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_NULL_ADVERB                          }, { 0 },            -1,                        -1, -1 },
   { G1_META_ACTION,                           "<G1 rule action>",                             MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_TERMINAL_ACTION,
@@ -980,9 +940,6 @@ bootstrap_grammar_rule_t bootstrap_grammar_G1_rules[] = {
   { G1_META_LATM_SPECIFICATION,               "<G1 rule latm specification 1>",               MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_TERMINAL_LATM,
                                                                                                                                   G1_TERMINAL_THEN,
                                                                                                                                   G1_META_TRUE                                 }, { 1, 1, 0},       -1,                        -1, -1 },
-  { G1_META_BLESSING,                         "<G1 rule blessing>",                           MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_TERMINAL_BLESS,
-                                                                                                                                  G1_TERMINAL_THEN,
-                                                                                                                                  G1_META_BLESSING_NAME                        }, { 1, 1, 0},       -1,                        -1, -1 },
   { G1_META_NAMING,                           "<G1 rule naming>",                             MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_TERMINAL_NAME,
                                                                                                                                   G1_TERMINAL_THEN,
                                                                                                                                   G1_META_ALTERNATIVE_NAME                     }, { 1, 1, 0},       -1,                        -1, -1 },
@@ -992,16 +949,12 @@ bootstrap_grammar_rule_t bootstrap_grammar_G1_rules[] = {
     lhsi                                      descs                                        type                          nrhsl  { rhsi }                                       }  { mask }    minimumi                 separatori properb
   */
   { G1_META_ALTERNATIVE_NAME,                 "<G1 rule alternative name 2>",                 MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_QUOTED_NAME                          }, { 0 },            -1,                        -1, -1 },
-  { G1_META_LEXER_NAME,                       "<G1 rule lexer name 1>",                       MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_STANDARD_NAME                        }, { 0 },            -1,                        -1, -1 },
-  { G1_META_LEXER_NAME,                       "<G1 rule lexer name 2>",                       MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_QUOTED_NAME                          }, { 0 },            -1,                        -1, -1 },
   { G1_META_EVENT_NAME,                       "<G1 rule event name 1>",                       MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_STANDARD_NAME                        }, { 0 },            -1,                        -1, -1 },
   { G1_META_EVENT_NAME,                       "<G1 rule event name 2>",                       MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_QUOTED_NAME                          }, { 0 },            -1,                        -1, -1 },
   /*
     lhsi                                      descs                                        type                          nrhsl  { rhsi }                                       }  { mask }    minimumi                 separatori properb
   */
   { G1_META_EVENT_NAME,                       "<G1 rule event name 3>",                       MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_RESERVED_EVENT_NAME                  }, { 0 },            -1,                        -1, -1 },
-  { G1_META_BLESSING_NAME,                    "<G1 rule blessing name 1>",                    MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_STANDARD_NAME                        }, { 0 },            -1,                        -1, -1 },
-  { G1_META_BLESSING_NAME,                    "<G1 rule blessing name 2>",                    MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_RESERVED_BLESSING_NAME               }, { 0 },            -1,                        -1, -1 },
   { G1_META_LHS,                              "<G1 rule lhs>",                                MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_SYMBOL_NAME                          }, { 0 },            -1,                        -1, -1 },
   { G1_META_RHS,                              "<G1 rule rhs>",                                MARPAESLIF_RULE_TYPE_SEQUENCE,    1, { G1_META_RHS_PRIMARY                          }, { 0 },             1,                        -1,  0 },
   /*
@@ -1037,9 +990,7 @@ bootstrap_grammar_rule_t bootstrap_grammar_G1_rules[] = {
   */
   { G1_META_SYMBOL_NAME,                      "<G1 rule symbol name 1>",                      MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_BARE_NAME                            }, { 0 },            -1,                        -1, -1 },
   { G1_META_SYMBOL_NAME,                      "<G1 rule symbol name 2>",                      MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_BRACKETED_NAME                       }, { 0 },            -1,                        -1, -1 },
-  { G1_META_ACTION_NAME,                      "<G1 rule action name 1>",                      MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_PERL_NAME                            }, { 0 },            -1,                        -1, -1 },
-  { G1_META_ACTION_NAME,                      "<G1 rule action name 2>",                      MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_RESERVED_ACTION_NAME                 }, { 0 },            -1,                        -1, -1 },
-  { G1_META_ACTION_NAME,                      "<G1 rule action name 3>",                      MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_ARRAY_DESCRIPTOR                     }, { 0 },            -1,                        -1, -1 },
+  { G1_META_ACTION_NAME,                      "<G1 rule action name 1>",                      MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_ASCII_GRAPH_NAME                     }, { 0 },            -1,                        -1, -1 },
   /*
     lhsi                                      descs                                        type                          nrhsl  { rhsi }                                       }  { mask }    minimumi                 separatori properb
   */
