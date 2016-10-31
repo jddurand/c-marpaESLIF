@@ -20,12 +20,10 @@ typedef struct  marpaESLIF_rule            marpaESLIF_rule_t;
 typedef struct  marpaESLIF_grammar         marpaESLIF_grammar_t;
 typedef enum    marpaESLIF_matcher_value   marpaESLIF_matcher_value_t;
 typedef enum    marpaESLIF_event_type      marpaESLIF_event_type_t;
-typedef enum    marpaESLIF_action_type     marpaESLIF_action_type_t;
 typedef enum    marpaESLIF_array_type      marpaESLIF_array_type_t;
 typedef struct  marpaESLIF_readerContext   marpaESLIF_readerContext_t;
 typedef struct  marpaESLIF_valueContext    marpaESLIF_valueContext_t;
 typedef struct  marpaESLIF_cloneContext    marpaESLIF_cloneContext_t;
-typedef struct  marpaESLIF_action          marpaESLIF_action_t;
 
 /* Symbol types */
 enum marpaESLIF_symbol_type {
@@ -119,7 +117,6 @@ struct marpaESLIF_terminal {
   int                         idi;                 /* Terminal Id */
   marpaESLIF_string_t        *descp;               /* Terminal description */
   marpaESLIF_regex_t          regex;
-  marpaESLIF_action_t        *actionp;
 };
 
 struct marpaESLIF_meta {
@@ -145,41 +142,6 @@ enum marpaESLIF_event_type {
   MARPAESLIF_EVENT_TYPE_AFTER     = 0x10  /* ESLIF lexeme event */
 };
 
-/* Action types */
-enum marpaESLIF_action_type {
-  MARPAESLIF_ACTION_TYPE_NA = 0,
-  MARPAESLIF_ACTION_TYPE_ARRAY,          /* ::array */
-  MARPAESLIF_ACTION_TYPE_FIRST,          /* ::first */
-  MARPAESLIF_ACTION_TYPE_UNDEF,          /* ::undef */
-  MARPAESLIF_ACTION_TYPE_COMPOSITE,      /* [] */
-  MARPAESLIF_ACTION_TYPE_NAME,           /* c.f. action callback */
-  MARPAESLIF_ACTION_TYPE_INTERNAL_LEXEME /* Internal action that is always producing a "lexeme", i.e. an genericStack's array item - c.f. lexemeStack in the source */
-};
-
-/* Array action types */
-enum marpaESLIF_array_type {
-  MARPAESLIF_ARRAY_TYPE_NA = 0,
-  MARPAESLIF_ARRAY_TYPE_START,    /* start */
-  MARPAESLIF_ARRAY_TYPE_LENGTH,   /* length */
-  MARPAESLIF_ARRAY_TYPE_G1START,  /* g1start */
-  MARPAESLIF_ARRAY_TYPE_G1LENGTH, /* g1length */
-  MARPAESLIF_ARRAY_TYPE_NAME,     /* name */
-  MARPAESLIF_ARRAY_TYPE_LHS,      /* rule */
-  MARPAESLIF_ARRAY_TYPE_RULE,     /* rule */
-  MARPAESLIF_ARRAY_TYPE_SYMBOL,   /* symbol */
-  MARPAESLIF_ARRAY_TYPE_VALUE,    /* value */
-  MARPAESLIF_ARRAY_TYPE_VALUES,   /* values: a synonym for value */
-};
-
-/* Action description */
-struct marpaESLIF_action {
-  marpaESLIF_action_type_t type;
-  union {
-    genericStack_t      *stackp;  /* Only when type is MARPAESLIF_ACTION_TYPE_COMPOSITE */
-    marpaESLIF_string_t *stringp;  /* Only when type is MARPAESLIF_ACTION_TYPE_NAME */
-  } u;
-};
-
 /* A symbol */
 struct marpaESLIF_symbol {
   marpaESLIF_symbol_type_t     type;  /* Symbol type */
@@ -202,7 +164,7 @@ struct marpaESLIF_symbol {
   marpaESLIF_string_t         *lookupGrammarStringp; /* Referenced grammar (string in user's encoding) */
   int                          resolvedLeveli;      /* Referenced grammar level */
   int                          priorityi;           /* Symbol priority */
-  marpaESLIF_action_t         *actionp;             /* Action */
+  marpaESLIF_string_t         *actionp;             /* Action */
 };
 
 /* A rule */
@@ -215,7 +177,7 @@ struct marpaESLIF_rule {
   genericStack_t      *rhsStackp;       /* Stack of RHS symbols */
   genericStack_t      *maskStackp;      /* Stack of RHS mask */
   genericStack_t      *exceptionStackp; /* Stack of Exceptions symbols */
-  marpaESLIF_action_t *actionp;         /* Associated action */
+  marpaESLIF_string_t *actionp;         /* Action */
   int                  ranki;
   short                nullRanksHighb;
   short                sequenceb;
@@ -233,7 +195,8 @@ struct marpaESLIF_grammar {
   marpaESLIF_symbol_t   *discardSymbolp;              /* Discard symbol, used at grammar validation */
   genericStack_t        *symbolStackp;                /* Stack of symbols */
   genericStack_t        *ruleStackp;                  /* Stack of rules */
-  marpaESLIF_action_t   *actionp;                     /* Default action */
+  marpaESLIF_string_t   *defaultSymbolActionp;        /* Default action for symbols */
+  marpaESLIF_string_t   *defaultRuleActionp;          /* Default action for rules */
   int                    starti;                      /* Default start symbol ID - filled during grammar validation */
   int                   *ruleip;                      /* Array of rule IDs - filled by grammar validation */
   size_t                 rulel;                       /* Size of the rule IDs array - filled by grammar validation */

@@ -46,7 +46,7 @@ static inline marpaESLIF_string_t   *_marpaESLIF_string_newp(marpaESLIF_t *marpa
 static inline marpaESLIF_string_t   *_marpaESLIF_string_clonep(marpaESLIF_t *marpaESLIFp, marpaESLIF_string_t *stringp);
 static inline void                   _marpaESLIF_string_freev(marpaESLIF_string_t *stringp);
 static inline short                  _marpaESLIF_string_eqb(marpaESLIF_string_t *string1p, marpaESLIF_string_t *string2p);
-static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, int eventSeti, char *descEncodings, char *descs, size_t descl, marpaESLIF_terminal_type_t type, marpaESLIF_uint32_t opti, char *utf8s, size_t utf8l, char *testFullMatchs, char *testPartialMatchs, marpaESLIF_action_type_t actionType, genericStack_t *actionStackp, char *actionEncodings, char *actions, size_t actionl);
+static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, int eventSeti, char *descEncodings, char *descs, size_t descl, marpaESLIF_terminal_type_t type, marpaESLIF_uint32_t opti, char *utf8s, size_t utf8l, char *testFullMatchs, char *testPartialMatchs);
 static inline void                   _marpaESLIF_terminal_freev(marpaESLIF_terminal_t *terminalp);
 
 static inline marpaESLIF_meta_t     *_marpaESLIF_meta_newp(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, int eventSeti, char *descs, size_t descl);
@@ -147,8 +147,6 @@ static        short                  _marpaESLIFGrammar_symbolOptionSetterOnlySt
 static inline void                   _marpaESLIF_rule_createshowv(marpaESLIF_t *marpaESLIFp, marpaESLIF_rule_t *rulep, char *asciishows, size_t *asciishowlp);
 static inline int                    _marpaESLIF_utf82ordi(PCRE2_SPTR8 utf8bytes, marpaESLIF_uint32_t *uint32p);
 static inline short                  _marpaESLIFRecognizer_matchPostProcessingb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, size_t matchl);
-static inline marpaESLIF_action_t   *_marpaESLIF_action_newp(marpaESLIF_t *marpaESLIFp, marpaESLIF_action_type_t type, genericStack_t *actionStackp, char *encodings, char *bytep, size_t bytel);
-static inline void                   _marpaESLIF_action_freev(marpaESLIF_action_t *actionp);
 static inline short                  _marpaESLIFValue_valueb(marpaESLIFValue_t *marpaESLIFValuep, short internalb);
 static inline short                  _marpaESLIFRecognizer_appendDatab(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *datas, size_t datal);
 static inline short                  _marpaESLIFRecognizer_encoding_eqb(marpaESLIFRecognizer_t *marpaESLIFRecognizerParentp, marpaESLIF_terminal_t *terminalp, char *encodings, char *inputs, size_t inputl);
@@ -297,7 +295,7 @@ static inline short _marpaESLIF_string_eqb(marpaESLIF_string_t *string1p, marpaE
 }
 
 /*****************************************************************************/
-static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, int eventSeti, char *descEncodings, char *descs, size_t descl, marpaESLIF_terminal_type_t type, marpaESLIF_uint32_t opti, char *utf8s, size_t utf8l, char *testFullMatchs, char *testPartialMatchs, marpaESLIF_action_type_t actionType, genericStack_t *actionStackp, char *actionEncodings, char *actions, size_t actionl)
+static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, int eventSeti, char *descEncodings, char *descs, size_t descl, marpaESLIF_terminal_type_t type, marpaESLIF_uint32_t opti, char *utf8s, size_t utf8l, char *testFullMatchs, char *testPartialMatchs)
 /*****************************************************************************/
 /* This method is bootstraped at marpaESLIFp creation itself to have the internal regexps, with grammarp being NULL... */
 /*****************************************************************************/
@@ -344,7 +342,6 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
   terminalp->regex.jitPartialb   = 0;
 #endif
   terminalp->regex.utfb          = 0;
-  terminalp->actionp             = NULL;
 
   /* ----------- Terminal Identifier ------------ */
   if (grammarp != NULL) { /* Here is the bootstrap dependency with grammarp == NULL */
@@ -765,12 +762,7 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_grammarp(marpaESLIF_t 
 					  bootstrap_grammar_terminalp[i].utf8s,
 					  (bootstrap_grammar_terminalp[i].utf8s != NULL) ? strlen(bootstrap_grammar_terminalp[i].utf8s) : 0,
 					  bootstrap_grammar_terminalp[i].testFullMatchs,
-					  bootstrap_grammar_terminalp[i].testPartialMatchs,
-                                          MARPAESLIF_ACTION_TYPE_NAME,
-                                          NULL, /* actionStackp */
-                                          NULL, /* actionEncodings */
-					  bootstrap_grammar_terminalp[i].actions,
-					  (bootstrap_grammar_terminalp[i].actions != NULL) ? strlen(bootstrap_grammar_terminalp[i].actions) : 0
+					  bootstrap_grammar_terminalp[i].testPartialMatchs
 					  );
     if (terminalp == NULL) {
       goto err;
@@ -1295,7 +1287,8 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_grammar_newp(marpaESLIF_t *marpa
   grammarp->discardSymbolp              = NULL;
   grammarp->symbolStackp                = NULL;
   grammarp->ruleStackp                  = NULL;
-  grammarp->actionp                     = NULL;
+  grammarp->defaultSymbolActionp        = NULL;
+  grammarp->defaultRuleActionp          = NULL;
   grammarp->starti                      = 0;    /* Filled during grammar validation */
   grammarp->ruleip                      = NULL; /* Filled by grammar validation */
   grammarp->rulel                       = 0;    /* Filled by grammar validation */
@@ -2003,12 +1996,7 @@ marpaESLIF_t *marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptionp)
                                                     INTERNAL_ANYCHAR_PATTERN, /* utf8s */
                                                     strlen(INTERNAL_ANYCHAR_PATTERN), /* utf8l */
                                                     NULL, /* testFullMatchs */
-                                                    NULL, /* testPartialMatchs */
-                                                    MARPAESLIF_ACTION_TYPE_INTERNAL_LEXEME, /* actionType */
-                                                    NULL, /* actionStackp */
-                                                    NULL, /* actionEncodings */
-                                                    NULL, /* actions */
-                                                    0 /* actionl */
+                                                    NULL  /* testPartialMatchs */
                                                     );
   if (marpaESLIFp->anycharp == NULL) {
     goto err;
@@ -2026,12 +2014,7 @@ marpaESLIF_t *marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptionp)
                                                     INTERNAL_UTF8BOM_PATTERN, /* utf8s */
                                                     strlen(INTERNAL_UTF8BOM_PATTERN), /* utf8l */
                                                     NULL, /* testFullMatchs */
-                                                    NULL, /* testPartialMatchs */
-                                                    MARPAESLIF_ACTION_TYPE_INTERNAL_LEXEME, /* actionType */
-                                                    NULL, /* actionStackp */
-                                                    NULL, /* actionEncodings */
-                                                    NULL, /* actions */
-                                                    0 /* actionl */
+                                                    NULL  /* testPartialMatchs */
                                                     );
   if (marpaESLIFp->utf8bomp == NULL) {
     goto err;
@@ -2050,12 +2033,7 @@ marpaESLIF_t *marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptionp)
                                                     INTERNAL_NEWLINE_PATTERN, /* utf8s */
                                                     strlen(INTERNAL_NEWLINE_PATTERN), /* utf8l */
                                                     NULL, /* testFullMatchs */
-                                                    NULL, /* testPartialMatchs */
-                                                    MARPAESLIF_ACTION_TYPE_INTERNAL_LEXEME, /* actionType */
-                                                    NULL, /* actionStackp */
-                                                    NULL, /* actionEncodings */
-                                                    NULL, /* actions */
-                                                    0 /* actionl */
+                                                    NULL  /* testPartialMatchs */
                                                     );
   if (marpaESLIFp->newlinep == NULL) {
     goto err;
@@ -5972,66 +5950,6 @@ static inline short _marpaESLIFRecognizer_matchPostProcessingb(marpaESLIFRecogni
 }
 
 /*****************************************************************************/
-static inline marpaESLIF_action_t *_marpaESLIF_action_newp(marpaESLIF_t *marpaESLIFp, marpaESLIF_action_type_t type, genericStack_t *actionStackp, char *encodings, char *bytep, size_t bytel)
-/*****************************************************************************/
-{
-  marpaESLIF_action_t *actionp;
-
-  actionp = (marpaESLIF_action_t *) malloc(sizeof(marpaESLIF_action_t));
-  if (actionp == NULL) {
-    MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
-    goto err;
-  }
-
-  actionp->type = MARPAESLIF_ACTION_TYPE_NA;
-  /* Rest is undef at this stage */
-
-  switch (type) {
-  case MARPAESLIF_ACTION_TYPE_NA:         /* None */
-  case MARPAESLIF_ACTION_TYPE_ARRAY:      /* ::array */
-  case MARPAESLIF_ACTION_TYPE_FIRST:      /* ::first */
-  case MARPAESLIF_ACTION_TYPE_UNDEF:      /* ::undef */
-    break;
-  case MARPAESLIF_ACTION_TYPE_COMPOSITE:  /* [] */
-    break;
-  case MARPAESLIF_ACTION_TYPE_NAME:       /* c.f. action callback */
-    break;
-  case MARPAESLIF_ACTION_TYPE_INTERNAL_LEXEME: /* Internal action that is always produce a "lexeme", i.e. an genericStack's array item */
-    break;
-  default:
-    MARPAESLIF_ERRORF(marpaESLIFp, "Unsupported action type %d", type);
-    goto err;    
-  }
-  
-  goto done;
-  
- err:
-  _marpaESLIF_action_freev(actionp);
-  actionp = NULL;
-
- done:
-  return actionp;
-}
-
-/*****************************************************************************/
-static inline void _marpaESLIF_action_freev(marpaESLIF_action_t *actionp)
-/*****************************************************************************/
-{
-  if (actionp != NULL) {
-    switch (actionp->type) {
-    case MARPAESLIF_ACTION_TYPE_COMPOSITE:
-      break;
-    case MARPAESLIF_ACTION_TYPE_NAME:
-      _marpaESLIF_string_freev(actionp->u.stringp);
-      break;
-    default:
-      break;
-    }
-    free(actionp);
-  }
-}
-
-/*****************************************************************************/
 short marpaESLIFRecognizer_progressLogb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, int starti, int endi, genericLoggerLevel_t logleveli, void *userDatavp, marpaESLISymbolDescriptionCallback_t symbolDescriptionCallbackp)
 /*****************************************************************************/
 {
@@ -6430,12 +6348,7 @@ static inline short _marpaESLIFRecognizer_start_charconvp(marpaESLIFRecognizer_t
                                                                    encodingutf8s, /* utf8s */
                                                                    encodingutf8l, /* utf8l */
                                                                    NULL, /* testFullMatchs */
-                                                                   NULL, /* testPartialMatchs */
-                                                                   MARPAESLIF_ACTION_TYPE_NA, /* actionType */
-                                                                   NULL, /* actionStackp */
-                                                                   NULL, /* actionEncodings */
-                                                                   NULL, /* actions */
-                                                                   0 /* actionl */
+                                                                   NULL  /* testPartialMatchs */
                                                                    );
   if (*(marpaESLIFRecognizerp->encodingpp) == NULL) {
     goto err;

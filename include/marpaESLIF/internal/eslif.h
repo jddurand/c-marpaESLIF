@@ -9,15 +9,15 @@ typedef struct bootstrap_grammar_terminal {
   char                      *utf8s;               /* ASCII UTF-8 compatible encoding */
   char                      *testFullMatchs;
   char                      *testPartialMatchs;
-  char                      *actions;
 } bootstrap_grammar_terminal_t;
 
 typedef struct bootstrap_grammar_meta {
-  int    idi;                /* Identifier */
-  char  *descs;              /* Description */
-  short  startb;             /* Start symbol ? */
-  short  discardb;           /* Discard symbol ? */
-  char  *actions;
+  int    idi;                  /* Identifier */
+  char  *descs;                /* Description */
+  short  startb;               /* Start symbol ? */
+  short  discardb;             /* Discard symbol ? */
+  char  *defaultSymbolactions; /* Default symbol action */
+  char  *defaultRuleactions;   /* Default rule action */
 } bootstrap_grammar_meta_t;
 
 typedef enum bootstrap_grammar_rule_type {
@@ -30,8 +30,8 @@ typedef struct bootstrap_grammar_rule {
   char                         *descs;
   bootstrap_grammar_rule_type_t type;
   size_t                        nrhsl;
-  int                           rhsip[10];               /* 10 is arbitrary - just to make C happy */
-  short                         maskbp[10];              /* Ditto */
+  int                           rhsip[10];  /* 10 is arbitrary - just to make C happy */
+  short                         maskbp[10]; /* Ditto */
   int                           minimumi;
   int                           separatori;
   short                         properb;
