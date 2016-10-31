@@ -4,58 +4,31 @@ whitespace                          ~ [\s]+
 <cplusplus comment>                 ~ /\/\/[^\n]*(?:\n|\z)/ # Same remark
 <c comment>                         ~ /\/\*(?:[^\*]+|\*(?!\/))*\*\//
 <op declare any grammar>            ~ /:\[\d+\]:=/
-<op declare top grammar>            ~ ':[0]:=' | '::=' # ::= is an alias for the top grammar
-<op declare lex grammar>            ~ ':[1]:=' | '~'   #   ~ is an alias for the lexer grammar
+<op declare top grammar>            ~ ':[0]:=' | '::=' # ::= is an alias for the grammar at level 0 (top grammar)
+<op declare lex grammar>            ~ ':[1]:=' | '~'   #   ~ is an alias for the grammar at level 1 (lex grammar)
 <op loosen>                         ~ '||'
 <op equal priority>                 ~ '|'
 <before or after>                   ~ 'before' | 'after'
 <signed integer>                    ~ <integer> | <sign> <integer>
 <sign>                              ~ [+-]
-<integer>                           ~ [\d]+     # By default, a character class by default never matched characters whose code points are greater than 127. So [\d] is [0-9]
+<integer>                           ~ [\d]+  # By default, a character class never match character with code point greater than 127. So [\d] is [0-9]
 true                                ~ '1'
 boolean                             ~ [01]
 <word character>                    ~ [\w]   # \w is  [a-zA-Z0-9_]
-<reserved action name>              ~ '::' <one or more word characters>
-<reserved blessing name>            ~ '::' <one or more word characters>
 <one or more word characters>       ~ <word character>+
 <zero or more word characters>      ~ <word character>*
 <Perl identifier>                   ~ <word character>+
-<double colon>                      ~ '::'
-<Perl name>                         ~ <Perl identifier>+ separator => <double colon> proper => 1
+<ascii graph name>                  ~ /[[:graph:]]+/
 <bare name>                         ~ <word character>+
 <standard name>                     ~ [a-zA-Z] <zero or more word characters>
 <bracketed name>                    ~ '<' <bracketed name string> '>'
 <bracketed name string>             ~ [\s\w]+
-<array descriptor>                  ~ <array descriptor left bracket> <result item descriptor list> <array descriptor right bracket>
-<array descriptor left bracket>     ~ '[' 
-<array descriptor left bracket>     ~ '[' whitespace
-<array descriptor right bracket>    ~ ']' 
-<array descriptor right bracket>    ~ whitespace ']' 
-<result item descriptor list>       ~ <result item descriptor>* separator => <result item descriptor separator>
-<result item descriptor separator>  ~ [,]
-<result item descriptor separator>  ~ [,] whitespace
-#<result item descriptor>            ~ 'start'
-#                                    | 'length'
-#                                    | 'g1start'
-#                                    | 'g1length'
-#                                    | 'name'
-#                                    | 'lhs'
-#                                    | 'symbol'
-#                                    | 'rule' 
-#                                    | 'value'
-#                                    | 'values'
-<result item descriptor>            ~ 'name'
-                                    | 'symbol'
-                                    | 'rule' 
-                                    | 'value'
-                                    | 'values'
-
-<single quoted string>              ~ /'[^\']*(?:\.[^\']*)*'/s /* s modifier to match newline - we never match '' */ <character class modifiers>
-<double quoted string>              ~ /"[^\"]*(?:\.[^\"]*)*"/s /* s modifier to match newline - we never match "" */ <character class modifiers>
+<single quoted string>              ~ /'[^\']*(?:\.[^\']*)*'/s /* s modifier to match newline - we never match '' via PCRE2_NOTEMPTY flag */ <character class modifiers>
+<double quoted string>              ~ /"[^\"]*(?:\.[^\"]*)*"/s /* s modifier to match newline - we never match "" via PCRE2_NOTEMPTY flag */ <character class modifiers>
 <quoted string>                     ~ <single quoted string> | <double quoted string>
 
-<single quoted name>                ~ /'[^\']*(?:\.[^\']*)*'/s /* s modifier to match newline - we never match '' */
-<double quoted name>                ~ /"[^\"]*(?:\.[^\"]*)*"/s /* s modifier to match newline - we never match "" */
+<single quoted name>                ~ /'[^\']*(?:\.[^\']*)*'/s /* s modifier to match newline - we never match '' via PCRE2_NOTEMPTY flag */
+<double quoted name>                ~ /"[^\"]*(?:\.[^\"]*)*"/s /* s modifier to match newline - we never match "" via PCRE2_NOTEMPTY flag */
 <quoted name>                       ~ <single quoted name> | <double quoted name>
 
 <character class regexp>            ~ /\[(?:[^\\]]*(?:\.[^\\]]*)*)\]/

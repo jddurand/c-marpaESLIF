@@ -18,10 +18,13 @@
 # ESLIF can read Marpa::R2's SLIF with the following additions or restrictions:
 # - autorank                 added
 # - double quoted name       added
-# - blessing                 ignored
-# - latm                     only latm => 1 is supported
-# - forgiving                only forgiving => 1 is supported
-# - current lexer is...      ignored
+# - blessing                 removed
+# - reserved action name     removed
+# - action name              revisited to contain only ascii graph characters (so that UTF-8 == ASCII -;)
+# - array descriptor         removed
+# - lexer name               removed
+# - latm                     only latm => 1 is supported if calling scan()
+# - forgiving                only forgiving => 1 is supported if calling scan()
 # - regexp                   added
 # - C style comments         added
 # - Cplusplus style comments added
@@ -73,7 +76,6 @@ statement                        ::= <start rule>
                                  | <completion event declaration>
                                  | <nulled event declaration>
                                  | <prediction event declaration>
-                                 | <current lexer statement>
                                  | <inaccessible statement>
                                  | <exception statement>
 
@@ -93,7 +95,6 @@ statement                        ::= <start rule>
 <completion event declaration> ::= ('event') <event initialization> ('=' 'completed') <symbol name>
 <nulled event declaration>     ::= ('event') <event initialization> ('=' 'nulled') <symbol name>
 <prediction event declaration> ::= ('event') <event initialization> ('=' 'predicted') <symbol name>
-<current lexer statement>      ::= ('current' 'lexer' 'is') <lexer name>
 <inaccessible statement>       ::= ('inaccessible' 'is') <inaccessible treatment> ('by' 'default')
 <inaccessible treatment>       ::= 'warn' | 'ok' | 'fatal'
 <exception statement>          ::= lhs <op declare> <rhs primary> '-' <parenthesized rhs exception list>
@@ -119,7 +120,6 @@ alternative                    ::= rhs <adverb list>
                                  | <priority specification>
                                  | <pause specification>
                                  | <latm specification>
-                                 | blessing
                                  | naming
                                  | <null adverb>
 
@@ -143,12 +143,10 @@ autorank                       ::= ('autorank' '=>') boolean
 <event initializer>            ::= # empty
 <latm specification>           ::= ('forgiving' '=>') true
 <latm specification>           ::= ('latm' '=>') true
-<blessing>                     ::= ('bless' '=>') <blessing name>
 naming                         ::= ('name' '=>') <alternative name>
 <null adverb>                  ::= ','
 
 <alternative name>             ::= <standard name> | <single quoted name>
-<lexer name>                   ::= <standard name> | <single quoted name>
 
 <event name>        ::= <standard name>
                       | <quoted name>
@@ -182,9 +180,7 @@ symbol          ::= <symbol name>
 <symbol name>   ::= <bare name>
 <symbol name>   ::= <bracketed name>
 
-<action name>   ::= <Perl name>
-<action name>   ::= <reserved action name>
-<action name>   ::= <array descriptor>
+<action name>   ::= <ascii name>
 
 :discard ~ whitespace
 whitespace ~ [\s]+
@@ -216,7 +212,6 @@ true                     ~ '1'
 boolean                  ~ [01]
 
 <word character>               ~ [\w]   # \w is  [a-zA-Z0-9_]
-<reserved action name>         ~ '::' <one or more word characters>
 <one or more word characters>  ~ <word character>+
 <zero or more word characters> ~ <word character>*
 
@@ -230,25 +225,6 @@ boolean                  ~ [01]
 <standard name>         ~ [a-zA-Z] <zero or more word characters>
 <bracketed name>        ~ '<' <bracketed name string> '>'
 <bracketed name string> ~ [\s\w]+
-
-<array descriptor>                 ~ <array descriptor left bracket> <result item descriptor list> <array descriptor right bracket>
-<array descriptor left bracket>    ~ '[' 
-<array descriptor left bracket>    ~ '[' whitespace
-<array descriptor right bracket>   ~ ']' 
-<array descriptor right bracket>   ~ whitespace ']' 
-<result item descriptor list>      ~ <result item descriptor>* separator => <result item descriptor separator>
-<result item descriptor separator> ~ [,]
-<result item descriptor separator> ~ [,] whitespace
-<result item descriptor>           ~ 'start'
-                                   | 'length'
-                                   | 'g1start'
-                                   | 'g1length'
-                                   | 'name'
-                                   | 'lhs'
-                                   | 'symbol'
-                                   | 'rule' 
-                                   | 'value'
-                                   | 'values'
 
 <single quoted string>              ~ /'[^\']*(?:\.[^\']*)*'/s /* s modifier to match newline - we never match '' */ <character class modifiers>
 <double quoted string>              ~ /"[^\"]*(?:\.[^\"]*)*"/s /* s modifier to match newline - we never match "" */ <character class modifiers>
