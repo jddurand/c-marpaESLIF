@@ -3467,7 +3467,7 @@ static inline short _marpaESLIFRecognizer_resumeb(marpaESLIFRecognizer_t *marpaE
   if (! _marpaESLIFRecognizer_completeb(marpaESLIFRecognizerp)) {
 #ifndef MARPAESLIF_NTRACE
     marpaESLIFRecognizer_progressLogb(marpaESLIFRecognizerp,
-                                      0,
+                                      -1,
                                       -1,
                                       GENERICLOGGER_LOGLEVEL_TRACE,
                                       marpaESLIFGrammarp,
@@ -4655,6 +4655,10 @@ static short _marpaESLIFValueSymbolCallbackWrapper(void *userDatavp, int symboli
   marpaESLIFValueSymbolCallback_t  symbolCallbackp       = marpaESLIFValueOption.symbolCallbackp;
   char                            *bytep;
   size_t                           bytel;
+  /*
+  int                              starti;
+  int                              lengthi;
+  */
   short                            rcb;
   
   marpaESLIFRecognizerp->callstackCounteri++;
@@ -4669,10 +4673,30 @@ static short _marpaESLIFValueSymbolCallbackWrapper(void *userDatavp, int symboli
   if (! _marpaESLIFRecognizer_lexemeStack_i_p_and_sizeb(marpaESLIFRecognizerp, marpaESLIFRecognizerp->lexemeInputStackp, argi, &bytep, &bytel)) {
     goto err;
   }
-  rcb = symbolCallbackp(marpaESLIFValueOption.userDatavp, bytep, bytel, symboli, resulti);
+  if (! symbolCallbackp(marpaESLIFValueOption.userDatavp, bytep, bytel, symboli, resulti)) {
+    goto err;
+  }
+
+  rcb = 1;
   goto done;
 
  err:
+  /* If we were generating the value of the top level recognizer, modulo discard that is also at same level, log the error */
+  if ((marpaESLIFRecognizerp->leveli == 0) && (! marpaESLIFRecognizerp->discardb)) {
+    /*
+    if (marpaESLIFValue_value_startb(marpaESLIFValuep, &starti) &&
+        marpaESLIFValue_value_lengthb(marpaESLIFValuep, &lengthi)) {
+    */
+      marpaESLIFRecognizer_progressLogb(marpaESLIFValuep->marpaESLIFRecognizerp,
+                                        -1,
+                                        -1,
+                                        GENERICLOGGER_LOGLEVEL_ERROR,
+                                        marpaESLIFRecognizerp->marpaESLIFGrammarp,
+                                        _marpaESLIFGrammar_symbolDescriptionCallback);
+    /*
+    }
+    */
+  }
   rcb = 0;
 
  done:
@@ -6418,3 +6442,16 @@ static inline short _marpaESLIFRecognizer_start_charconvp(marpaESLIFRecognizer_t
   return rcb;
 }
 
+/*****************************************************************************/
+short marpaESLIFValue_value_startb(marpaESLIFValue_t *marpaESLIFValuep, int *startip)
+/*****************************************************************************/
+{
+  return marpaWrapperValue_value_startb(marpaESLIFValuep->marpaWrapperValuep, startip);
+}
+
+/*****************************************************************************/
+short marpaESLIFValue_value_lengthb(marpaESLIFValue_t *marpaESLIFValuep, int *lengthip)
+/*****************************************************************************/
+{
+  return marpaWrapperValue_value_lengthb(marpaESLIFValuep->marpaWrapperValuep, lengthip);
+}
