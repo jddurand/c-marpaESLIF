@@ -1362,7 +1362,8 @@ static inline void _marpaESLIF_grammar_freev(marpaESLIF_grammar_t *grammarp)
     if (grammarp->ruleip != NULL) {
       free(grammarp->ruleip);
     }
-    /* TO DO : actionp */
+    _marpaESLIF_string_freev(grammarp->defaultSymbolActionp);
+    _marpaESLIF_string_freev(grammarp->defaultRuleActionp);
     free(grammarp);
   }
 }
@@ -1847,7 +1848,7 @@ static inline void _marpaESLIF_rule_freev(marpaESLIF_rule_t *rulep)
     GENERICSTACK_FREE(rulep->maskStackp);
     GENERICSTACK_FREE(rulep->rhsStackp);
     GENERICSTACK_FREE(rulep->exceptionStackp);
-    /* TO DO : actionp */
+    _marpaESLIF_string_freev(rulep->actionp);
     free(rulep);
   }
 }
@@ -1911,7 +1912,7 @@ static inline void _marpaESLIF_symbol_freev(marpaESLIF_symbol_t *symbolp)
     _marpaESLIF_utf82printableascii_freev(symbolp->asciipauses);
     _marpaESLIF_string_freev(symbolp->eventp);
     _marpaESLIF_utf82printableascii_freev(symbolp->asciievents);
-    /* TO DO : actionp */
+    _marpaESLIF_string_freev(symbolp->actionp);
     free(symbolp);
   }
 }
