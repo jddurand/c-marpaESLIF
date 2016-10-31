@@ -4655,10 +4655,8 @@ static short _marpaESLIFValueSymbolCallbackWrapper(void *userDatavp, int symboli
   marpaESLIFValueSymbolCallback_t  symbolCallbackp       = marpaESLIFValueOption.symbolCallbackp;
   char                            *bytep;
   size_t                           bytel;
-  /*
   int                              starti;
   int                              lengthi;
-  */
   short                            rcb;
   
   marpaESLIFRecognizerp->callstackCounteri++;
@@ -4682,21 +4680,19 @@ static short _marpaESLIFValueSymbolCallbackWrapper(void *userDatavp, int symboli
 
  err:
   /* If we were generating the value of the top level recognizer, modulo discard that is also at same level, log the error */
+  /*
   if ((marpaESLIFRecognizerp->leveli == 0) && (! marpaESLIFRecognizerp->discardb)) {
-    /*
     if (marpaESLIFValue_value_startb(marpaESLIFValuep, &starti) &&
         marpaESLIFValue_value_lengthb(marpaESLIFValuep, &lengthi)) {
-    */
       marpaESLIFRecognizer_progressLogb(marpaESLIFValuep->marpaESLIFRecognizerp,
-                                        -1,
-                                        -1,
+                                        starti,
+                                        starti,
                                         GENERICLOGGER_LOGLEVEL_ERROR,
                                         marpaESLIFRecognizerp->marpaESLIFGrammarp,
                                         _marpaESLIFGrammar_symbolDescriptionCallback);
-    /*
     }
-    */
   }
+  */
   rcb = 0;
 
  done:
