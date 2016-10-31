@@ -245,12 +245,6 @@ struct marpaESLIF_readerContext {
   marpaESLIFGrammarOption_t *marpaESLIFGrammarOptionp;
 };
 
-/* Internal structure to have value context information */
-struct marpaESLIF_valueContext {
-  marpaESLIFGrammar_t    *marpaESLIFGrammarp;
-  genericStack_t          outputStack;
-};
-
 /* Internal structure to have clone context information */
 struct marpaESLIF_cloneContext {
   marpaESLIF_t         *marpaESLIFp;
