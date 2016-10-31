@@ -14,15 +14,6 @@ typedef struct marpaESLIFGrammar    marpaESLIFGrammar_t;
 typedef struct marpaESLIFRecognizer marpaESLIFRecognizer_t;
 typedef struct marpaESLIFValue      marpaESLIFValue_t;
 
-/* A lexeme */
-typedef struct marpaESLIFLexeme {
-  /* It totally depend on how you defined the lexeme. It at least one component requires a character, */
-  /* then bytep will point to a well-formed UTF-8 string of bytel bytes. Else this is the raw bytes */
-  /* from the input stream. */
-  char   *bytep;            /* pointer bytes */
-  size_t  bytel;            /* number of bytes */
-} marpaESLIFLexeme_t;
-
 /* A string */
 typedef struct marpaESLIFString {
   char   *bytep;            /* pointer bytes */
@@ -73,7 +64,7 @@ typedef struct marpaESLIFEvent {
 } marpaESLIFEvent_t;
 
 typedef short (*marpaESLIFValueRuleCallback_t)(void *userDatavp, int rulei, int arg0i, int argni, int resulti);
-typedef short (*marpaESLIFValueSymbolCallback_t)(void *userDatavp, genericStack_t *lexemeStackp, int symboli, int argi, int resulti);
+typedef short (*marpaESLIFValueSymbolCallback_t)(void *userDatavp, char *bytep, size_t bytel, int symboli, int argi, int resulti);
 typedef short (*marpaESLIFValueNullingCallback_t)(void *userDatavp, int symboli, int resulti);
 typedef struct marpaESLIFValueOption {
   void                             *userDatavp;            /* User specific context */
