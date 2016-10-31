@@ -299,7 +299,7 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
 #ifndef MARPAESLIF_NTRACE
     ":discard", ":dis"
 #else
-    NULL, NULL
+    NULL, NULL, "action_G1_TERMINAL__DISCARD",
 #endif
   },
   { G1_TERMINAL__DEFAULT,

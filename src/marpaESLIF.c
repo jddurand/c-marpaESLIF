@@ -343,6 +343,8 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
   terminalp->regex.jitCompleteb  = 0;
   terminalp->regex.jitPartialb   = 0;
 #endif
+  terminalp->regex.utfb          = 0;
+  terminalp->actionp             = NULL;
 
   /* ----------- Terminal Identifier ------------ */
   if (grammarp != NULL) { /* Here is the bootstrap dependency with grammarp == NULL */
@@ -5117,9 +5119,33 @@ static short _marpaESLIFValueSymbolCallbackInternalGrammar(void *userDatavp, cha
   marpaESLIFGrammar_t       *marpaESLIFGrammarp       = marpaESLIFRecognizerp->marpaESLIFGrammarp;
   genericStack_t            *outputStackp             = marpaESLIF_valueContextp->outputStackp;
   short                      rcb;
+#ifndef MARPAESLIF_NTRACE
+  marpaESLIF_grammar_t      *grammarp              = marpaESLIFGrammarp->grammarp;
+  genericStack_t            *symbolStackp          = grammarp->symbolStackp;
+  marpaESLIF_symbol_t       *symbolp;
+#endif
+
+  marpaESLIFRecognizerp->callstackCounteri++;
+  MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
+
+#ifndef MARPAESLIF_NTRACE
+  if (! GENERICSTACK_IS_PTR(symbolStackp, symboli)) {
+    MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "No such symbol No %d", symboli);
+    goto err;
+  }
+  symbolp = (marpaESLIF_symbol_t *) GENERICSTACK_GET_PTR(symbolStackp, symboli);
+#endif
 
   /* TO DO */
   rcb = 0;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
+  marpaESLIFRecognizerp->callstackCounteri--;
   return rcb;
 }
 
