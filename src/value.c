@@ -353,14 +353,16 @@ short marpaWrapperValue_value_startb(marpaWrapperValue_t *marpaWrapperValuep, in
 /****************************************************************************/
 {
   MARPAWRAPPER_FUNCS(marpaWrapperValue_value_startb);
-  genericLogger_t  *genericLoggerp = NULL;
-  Marpa_Step_Type step_type;
+  genericLogger_t    *genericLoggerp = NULL;
+  Marpa_Step_Type     step_type;
   Marpa_Earley_Set_ID start_earley_set;
 
   if (marpaWrapperValuep == NULL) {
     errno = EINVAL;
     goto err;
   }
+
+  genericLoggerp = marpaWrapperValuep->marpaWrapperValueOption.genericLoggerp;
 
   if (marpaWrapperValuep->marpaValuep == NULL) {
     MARPAWRAPPER_ERROR(genericLoggerp, "marpaWrapperValue_value_startb() called outside of marpaWrapperValue_valueb()");
@@ -410,6 +412,8 @@ short marpaWrapperValue_value_lengthb(marpaWrapperValue_t *marpaWrapperValuep, i
     errno = EINVAL;
     goto err;
   }
+
+  genericLoggerp = marpaWrapperValuep->marpaWrapperValueOption.genericLoggerp;
 
   if (marpaWrapperValuep->marpaValuep == NULL) {
     MARPAWRAPPER_ERROR(genericLoggerp, "marpaWrapperValue_value_lengthb() called outside of marpaWrapperValue_valueb()");
