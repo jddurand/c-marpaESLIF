@@ -4791,6 +4791,8 @@ static short _marpaESLIFValueSymbolCallbackWrapper(void *userDatavp, int symboli
   if (grammarp->defaultSymbolActionp == NULL) {
     MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "No lexeme action for grammar at level %d (%s), please use: lexeme default = action => action_name", grammarp->leveli, grammarp->descp->asciis);
     goto err;
+  } else {
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Symbol action: %s", grammarp->defaultSymbolActionp);
   }
   
   /* Look if there is a rule callback */
