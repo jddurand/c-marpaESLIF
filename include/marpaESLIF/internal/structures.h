@@ -23,6 +23,7 @@ typedef enum    marpaESLIF_event_type      marpaESLIF_event_type_t;
 typedef enum    marpaESLIF_array_type      marpaESLIF_array_type_t;
 typedef struct  marpaESLIF_readerContext   marpaESLIF_readerContext_t;
 typedef struct  marpaESLIF_lexemeContext   marpaESLIF_lexemeContext_t;
+typedef struct  marpaESLIF_grammarContext  marpaESLIF_grammarContext_t;
 typedef struct  marpaESLIF_cloneContext    marpaESLIF_cloneContext_t;
 typedef enum    marpaESLIF_valueMode       marpaESLIF_valueMode_t;
 
@@ -213,14 +214,23 @@ struct marpaESLIF_readerContext {
 /* This is used in three contexts:
    - discard grammar
    - meta symbol that appears to be a terminal
-   - generation of grammar
+
+   Both are using the "lexeme" mode, in which any action set in the grammar is ignored
+   in favour of concatenating everything that matched.
 */
 struct marpaESLIF_lexemeContext {
-  /* Fields that are used by all the possible contexts listed upper: */
-  marpaESLIFValue_t    *marpaESLIFValuep;
+  marpaESLIFValue_t    *marpaESLIFValuep; /* Filled by LexemeWrapper's */
+  genericStack_t        outputStack;
   genericStack_t       *outputStackp;
-  /* Fields used ONLY by the generation of the grammar: */
-  int                   lastGrammarLeveli;  /* '::=', '~', /:\[\d+\]/ */
+};
+
+/* Internal structure to have value context information */
+/* This is used in the grammar generation context */
+struct marpaESLIF_grammarContext {
+  marpaESLIFValue_t    *marpaESLIFValuep; /* Filled by GrammarWrapper's */
+  genericStack_t        outputStack;
+  genericStack_t       *outputStackp;
+  int                   lastGrammarLeveli;
   char                 *lastAsciiGraphNames;
 };
 
