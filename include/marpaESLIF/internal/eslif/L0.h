@@ -174,7 +174,7 @@ __DATA__
   /* Taken from Regexp::Common::comment, $RE{comment}{Perl} */
   /* Perl stringified version is: (?:(?:#)(?:[^\n]*)(?:\n)) */
   /* \z added to match the end of the buffer (ESLIF will ask more data if this is not EOF as well) */
-  { L0_TERMINAL_PERL_COMMENT, MARPAESLIF_TERMINAL_TYPE_REGEX,   MARPAESLIF_REGEX_OPTION_NA,
+  { L0_TERMINAL_PERL_COMMENT, MARPAESLIF_TERMINAL_TYPE_REGEX, MARPAESLIF_REGEX_OPTION_UTF,
     "(?:(?:#)(?:[^\\n]*)(?:\\n|\\z))",
 #ifndef MARPAESLIF_NTRACE
     "# Comment up to the end of the buffer", "# Again a comment"
@@ -186,7 +186,7 @@ __DATA__
   /* Taken from Regexp::Common::comment, $RE{comment}{'C++'}, which includes the C language comment */
   /* Perl stringified version is: (?:(?:(?://)(?:[^\n]*)(?:\n))|(?:(?:\/\*)(?:(?:[^\*]+|\*(?!\/))*)(?:\*\/))) */
   /* \z added to match the end of the buffer in the // mode (ESLIF will ask more data if this is not EOF as well) */
-  { L0_TERMINAL_CPLUSPLUS_COMMENT, MARPAESLIF_TERMINAL_TYPE_REGEX,   MARPAESLIF_REGEX_OPTION_NA,
+  { L0_TERMINAL_CPLUSPLUS_COMMENT, MARPAESLIF_TERMINAL_TYPE_REGEX, MARPAESLIF_REGEX_OPTION_UTF,
     "(?:(?:(?://)(?:[^\\n]*)(?:\\n|\\z))|(?:(?:\\/\\*)(?:(?:[^\\*]+|\\*(?!\\/))*)(?:\\*\\/)))",
 #ifndef MARPAESLIF_NTRACE
     "// Comment up to the end of the buffer", "// Again a comment"
@@ -356,7 +356,7 @@ __DATA__
   /* --------------------------------------------------------------------------------------------------------------------------------- */
   /* Taken from Regexp::Common::delimited, $RE{delimited}{-delim=>q{'"\{}}{-cdelim=>q{'"\}}} */
   /* Perl stringified version is: (?:(?|(?:\')(?:[^\\\']*(?:\\.[^\\\']*)*)(?:\')|(?:\")(?:[^\\\"]*(?:\\.[^\\\"]*)*)(?:\")|(?:\{)(?:[^\\\}]*(?:\\.[^\\\}]*)*)(?:\}))) */
-  { L0_TERMINAL_QUOTED_STRING, MARPAESLIF_TERMINAL_TYPE_REGEX, MARPAESLIF_REGEX_OPTION_DOTALL,
+  { L0_TERMINAL_QUOTED_STRING, MARPAESLIF_TERMINAL_TYPE_REGEX, MARPAESLIF_REGEX_OPTION_DOTALL|MARPAESLIF_REGEX_OPTION_UTF,
     "(?:(?|(?:\\')(?:[^\\\\\\']*(?:\\\\.[^\\\\\\']*)*)(?:\\')|(?:\\\")(?:[^\\\\\\\"]*(?:\\\\.[^\\\\\\\"]*)*)(?:\\\")|(?:\\{)(?:[^\\\\\\}]*(?:\\\\.[^\\\\\\}]*)*)(?:\\})))",
 #ifndef MARPAESLIF_NTRACE
     "'A string'", "'"
@@ -367,7 +367,7 @@ __DATA__
   /* --------------------------------------------------------------------------------------------------------------------------------- */
   /* Taken from Regexp::Common::delimited, $RE{delimited}{-delim=>"/"}{-cdelim=>"/"} */
   /* Perl stringified version is: (?:(?|(?:\/)(?:[^\\\/]*(?:\\.[^\\\/]*)*)(?:\/))) */
-  { L0_TERMINAL_REGULAR_EXPRESSION, MARPAESLIF_TERMINAL_TYPE_REGEX,   MARPAESLIF_REGEX_OPTION_DOTALL,
+  { L0_TERMINAL_REGULAR_EXPRESSION, MARPAESLIF_TERMINAL_TYPE_REGEX, MARPAESLIF_REGEX_OPTION_DOTALL|MARPAESLIF_REGEX_OPTION_UTF,
     "(?:(?|(?:\\/)(?:[^\\\\\\/]*(?:\\\\.[^\\\\\\/]*)*)(?:\\/)))",
 #ifndef MARPAESLIF_NTRACE
     "/a(b)c/", "/a("
@@ -376,7 +376,7 @@ __DATA__
 #endif
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
-  { L0_TERMINAL_REGULAR_EXPRESSION_MODIFIER, MARPAESLIF_TERMINAL_TYPE_REGEX,   MARPAESLIF_REGEX_OPTION_NA,
+  { L0_TERMINAL_REGULAR_EXPRESSION_MODIFIER, MARPAESLIF_TERMINAL_TYPE_REGEX, MARPAESLIF_REGEX_OPTION_UTF,
     "[eijmnsxDJUuaN]",
     NULL, NULL
   },
@@ -384,7 +384,7 @@ __DATA__
   /* Taken from Regexp::Common::balanced, $RE{balanced}{-parens=>'[]'} */
   /* Perl stringified version is: (?^:((?:\[(?:(?>[^\[\]]+)|(?-1))*\]))) */
   /* Perl stringified version is revisited without the (?^:XXX): ((?:\[(?:(?>[^\[\]]+)|(?-1))*\])) */
-  { L0_TERMINAL_CHARACTER_CLASS_REGEXP, MARPAESLIF_TERMINAL_TYPE_REGEX,   MARPAESLIF_REGEX_OPTION_DOTALL,
+  { L0_TERMINAL_CHARACTER_CLASS_REGEXP, MARPAESLIF_TERMINAL_TYPE_REGEX, MARPAESLIF_REGEX_OPTION_UTF,
     "((?:\\[(?:(?>[^\\[\\]]+)|(?-1))*\\]))",
 #ifndef MARPAESLIF_NTRACE
     "[[:alnum]]","[a-z"
@@ -393,7 +393,7 @@ __DATA__
 #endif
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
-  { L0_TERMINAL_CHARACTER_CLASS_MODIFIER_STANDARD, MARPAESLIF_TERMINAL_TYPE_REGEX,   MARPAESLIF_REGEX_OPTION_NA,
+  { L0_TERMINAL_CHARACTER_CLASS_MODIFIER_STANDARD, MARPAESLIF_TERMINAL_TYPE_REGEX, MARPAESLIF_REGEX_OPTION_UTF,
     ":[eijmnsxDJUuaN]",
     NULL, NULL
   },
