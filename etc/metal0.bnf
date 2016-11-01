@@ -23,14 +23,8 @@ boolean                             ~ [01]
 <standard name>                     ~ [a-zA-Z] <zero or more word characters>
 <bracketed name>                    ~ '<' <bracketed name string> '>'
 <bracketed name string>             ~ [\s\w]+
-<single quoted string>              ~ /'[^\']*(?:\.[^\']*)*'/s /* s modifier to match newline - we never match '' via PCRE2_NOTEMPTY flag */ <character class modifiers>
-<double quoted string>              ~ /"[^\"]*(?:\.[^\"]*)*"/s /* s modifier to match newline - we never match "" via PCRE2_NOTEMPTY flag */ <character class modifiers>
-<quoted string>                     ~ <single quoted string> | <double quoted string>
-
-<single quoted name>                ~ /'[^\']*(?:\.[^\']*)*'/s /* s modifier to match newline - we never match '' via PCRE2_NOTEMPTY flag */
-<double quoted name>                ~ /"[^\"]*(?:\.[^\"]*)*"/s /* s modifier to match newline - we never match "" via PCRE2_NOTEMPTY flag */
-<quoted name>                       ~ <single quoted name> | <double quoted name>
-
+<quoted string>                     ~ /(?:(?|(?:\')(?:[^\\\']*(?:\\.[^\\\']*)*)(?:\')|(?:\")(?:[^\\\"]*(?:\\.[^\\\"]*)*)(?:\")|(?:\{)(?:[^\\\}]*(?:\\.[^\\\}]*)*)(?:\})))/s /* s modifier to match newline - we never match "" */ <character class modifiers>
+<quoted name>                       ~ /(?:(?|(?:\')(?:[^\\\']*(?:\\.[^\\\']*)*)(?:\')|(?:\")(?:[^\\\"]*(?:\\.[^\\\"]*)*)(?:\")|(?:\{)(?:[^\\\}]*(?:\\.[^\\\}]*)*)(?:\})))/s /* s modifier to match newline - we never match "" */
 <character class regexp>            ~ /\[(?:[^\\]]*(?:\.[^\\]]*)*)\]/
 <character class>                   ~ <character class regexp> <character class modifiers>
 <character class modifier>          ~ /:[eijmnsxDJUuaN]/

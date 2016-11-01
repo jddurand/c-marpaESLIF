@@ -17,7 +17,7 @@
 #
 # ESLIF can read Marpa::R2's SLIF with the following additions or restrictions:
 # - autorank                 added
-# - double quoted name       added
+# - quoted name              added
 # - blessing                 removed
 # - reserved action name     removed
 # - action name              revisited to contain only ascii graph characters (so that UTF-8 == ASCII -;)
@@ -26,10 +26,9 @@
 # - latm                     only latm => 1 is supported if calling scan()
 # - forgiving                only forgiving => 1 is supported if calling scan()
 # - regexp                   added
-# - C style comments         added
-# - Cplusplus style comments added
-# - double quoted strings    added
-# - strings have no restriction on escaping and content - they just have to be correctly delimited
+# - C++ style comments       added
+# - quoted strings           added
+# - strings have no restriction on escaping and content - they just have to be correctly delimited by '', "" or {}, escaping by \ inside
 # - grammar description      added
 # - grammar reference        added
 #
@@ -146,7 +145,7 @@ autorank                       ::= ('autorank' '=>') boolean
 naming                         ::= ('name' '=>') <alternative name>
 <null adverb>                  ::= ','
 
-<alternative name>             ::= <standard name> | <single quoted name>
+<alternative name>             ::= <standard name> | <quoted name>
 
 <event name>        ::= <standard name>
                       | <quoted name>
@@ -187,10 +186,10 @@ whitespace ~ [\s]+
 
 # allow perl comments
 :discard ~ <perl comment>
-<perl comment> ~ /#[^\n]*(?:\n|\z)/ # \z is to match a comment at the very end without a vertical space
+<perl comment> ~ /(?:(?:#)(?:[^\\n]*)(?:\\n|\\z))/ # \z is to match a comment at the very end without a vertical space
 // Allow cpluscplus comments
 :discard ~ <cplusplus comment>
-<cplusplus comment> ~ /\/\/[^\n]*(?:\n|\z)/ # Same remark
+<cplusplus comment> ~ /(?:(?:(?://)(?:[^\\n]*)(?:\\n|\\z))|(?:(?:\\/\\*)(?:(?:[^\\*]+|\\*(?!\\/))*)(?:\\*\\/)))/ # Same remark
 /* Allow
    C comments */
 :discard ~ <c comment>
@@ -226,13 +225,8 @@ boolean                  ~ [01]
 <bracketed name>        ~ '<' <bracketed name string> '>'
 <bracketed name string> ~ [\s\w]+
 
-<single quoted string>              ~ /'[^\']*(?:\.[^\']*)*'/s /* s modifier to match newline - we never match '' */ <character class modifiers>
-<double quoted string>              ~ /"[^\"]*(?:\.[^\"]*)*"/s /* s modifier to match newline - we never match "" */ <character class modifiers>
-<quoted string>                     ~ <single quoted string> | <double quoted string>
-
-<single quoted name>                ~ /'[^\']*(?:\.[^\']*)*'/s /* s modifier to match newline - we never match '' */
-<double quoted name>                ~ /"[^\"]*(?:\.[^\"]*)*"/s /* s modifier to match newline - we never match "" */
-<quoted name>                       ~ <single quoted name> | <double quoted name>
+<quoted string>         ~ /(?:(?|(?:\')(?:[^\\\']*(?:\\.[^\\\']*)*)(?:\')|(?:\")(?:[^\\\"]*(?:\\.[^\\\"]*)*)(?:\")|(?:\{)(?:[^\\\}]*(?:\\.[^\\\}]*)*)(?:\})))/s /* s modifier to match newline - we never match "" */ <character class modifiers>
+<quoted name>         ~ /(?:(?|(?:\')(?:[^\\\']*(?:\\.[^\\\']*)*)(?:\')|(?:\")(?:[^\\\"]*(?:\\.[^\\\"]*)*)(?:\")|(?:\{)(?:[^\\\}]*(?:\\.[^\\\}]*)*)(?:\})))/s /* s modifier to match newline - we never match "" */
 
 <character class regexp>      ~ /\[(?:[^\\]]*(?:\.[^\\]]*)*)\]/
 <character class>             ~ <character class regexp> <character class modifiers>

@@ -381,9 +381,7 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
       goto err;
     }
     if (type == MARPAESLIF_TERMINAL_TYPE_STRING) {
-      /* Generate a a-la-perl description, which I like -; */
-      /* i.e. : q{XXX} */
-      /* Try to be clever, using ' or ", otherwise fall back to the (unsupported) q{} version */
+      /* Try to be clever, using ' or ", otherwise fall back to the q{} version (without escaping {}) */
       if (strchr(content2descp->asciis, '\'') == NULL) {
         /* 'XXX' */
         generatedasciis = (char *) malloc(1 + strlen(content2descp->asciis) + 1 + 1);
@@ -405,27 +403,26 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
         strcat(generatedasciis, content2descp->asciis);
         strcat(generatedasciis, "\"");
       } else {
-        /* q{XXX} */
-        generatedasciis = (char *) malloc(2 + strlen(content2descp->asciis) + 1 + 1);
+        /* {XXX} */
+        generatedasciis = (char *) malloc(1 + strlen(content2descp->asciis) + 1 + 1);
         if (generatedasciis == NULL) {
           MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
           goto err;
         }
-        strcpy(generatedasciis, "q{");
+        strcpy(generatedasciis, "{");
         strcat(generatedasciis, content2descp->asciis);
         strcat(generatedasciis, "}");
       }
     } else {
-      /* Generate a a-la-perl description, which I like -; */
-      /* i.e. : (?^:XXX) */
-      generatedasciis = (char *) malloc(4 + strlen(content2descp->asciis) + 1 + 1);
+      /* /XXX/ (without escaping) */
+      generatedasciis = (char *) malloc(1 + strlen(content2descp->asciis) + 1 + 1);
       if (generatedasciis == NULL) {
         MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
         goto err;
       }
-      strcpy(generatedasciis, "(?^:");
+      strcpy(generatedasciis, "/");
       strcat(generatedasciis, content2descp->asciis);
-      strcat(generatedasciis, ")");
+      strcat(generatedasciis, "/");
     }
     terminalp->descp = _marpaESLIF_string_newp(marpaESLIFp, "ASCII", generatedasciis, strlen(generatedasciis), 1);
   } else {
@@ -2177,7 +2174,7 @@ marpaESLIF_t *marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptionp)
  done:
   _marpaESLIF_grammar_freev(grammarp);
 #ifndef MARPAESLIF_NTRACE
-  if (genericLoggerp != NULL) {
+  if ((marpaESLIFp != NULL) && (genericLoggerp != NULL)) {
     int     grammari;
     int    *ruleip;
     size_t  rulel;
