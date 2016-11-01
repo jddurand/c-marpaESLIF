@@ -13,7 +13,6 @@
 #define L0_JOIN_G1_META_QUOTED_STRING                    "<L0/G1 meta quoted string>"
 #define L0_JOIN_G1_META_CHARACTER_CLASS                  "<L0/G1 meta character class>"
 #define L0_JOIN_G1_META_REGULAR_EXPRESSION               "<L0/G1 meta regular expression>"
-#define L0_JOIN_G1_META_SUBSTITUTION_EXPRESSION          "<L0/G1 meta substitution expression>"
 #define L0_JOIN_G1_META_BARE_NAME                        "<L0/G1 meta bare name>"
 #define L0_JOIN_G1_META_BRACKETED_NAME                   "<L0/G1 meta bracketed name>"
 #define L0_JOIN_G1_META_ASCII_GRAPH_NAME                 "<L0/G1 meta ascii graph name>"
@@ -25,6 +24,5 @@
 #define L0_JOIN_G1_META_WHITESPACE                       "<L0/G1 meta whitespace>"
 #define L0_JOIN_G1_META_PERL_COMMENT                     "<L0/G1 meta perl comment>"
 #define L0_JOIN_G1_META_CPLUSPLUS_COMMENT                "<L0/G1 meta cplusplus comment>"
-#define L0_JOIN_G1_META_C_COMMENT                        "<L0/G1 meta c comment>"
 
 #endif /* MARPAESLIF_INTERNAL_ESLIF_L0_JOIN_G1_H */

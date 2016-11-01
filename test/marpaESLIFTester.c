@@ -177,7 +177,7 @@ const static char *metags = "# Copyright 2015 Jeffrey Kegler\n"
 "# hex 5d is right square bracket\n"
 "<safe cc character> ~ [^\\x{5d}\\x{0A}\\x{0B}\\x{0C}\\x{0D}\\x{0085}\\x{2028}\\x{2029}]\n"
 "<cc element> ~ <escaped cc character>\n"
-"<escaped cc character> ~ '\\' <horizontal character>\n"
+"<escaped cc character> ~ '\\\\' <horizontal character>\n"
 "<cc element> ~ <posix char class>\n"
 "<cc element> ~ <negated posix char class>\n"
 "<character class modifiers> ~ <character class modifier>*\n"
@@ -202,7 +202,7 @@ int main() {
   marpaESLIFGrammarOption_t marpaESLIFGrammarOption;
   int                       exiti;
 
-  marpaESLIFOption.genericLoggerp = GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_TRACE);
+  marpaESLIFOption.genericLoggerp = GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_DEBUG);
   marpaESLIFp = marpaESLIF_newp(&marpaESLIFOption);
   if (marpaESLIFp == NULL) {
     goto err;

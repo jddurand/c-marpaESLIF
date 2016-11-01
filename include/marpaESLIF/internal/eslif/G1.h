@@ -140,14 +140,12 @@ typedef enum bootstrap_grammar_G1_enum {
   G1_META_QUOTED_STRING,
   G1_META_CHARACTER_CLASS,
   G1_META_REGULAR_EXPRESSION,
-  G1_META_SUBSTITUTION_EXPRESSION,
   G1_META_BARE_NAME,
   G1_META_BRACKETED_NAME,
   G1_META_ASCII_GRAPH_NAME,
   G1_META_WHITESPACE,
   G1_META_PERL_COMMENT,
-  G1_META_CPLUSPLUS_COMMENT,
-  G1_META_C_COMMENT
+  G1_META_CPLUSPLUS_COMMENT
 } bootstrap_grammar_G1_enum_t;
 
 /* All non-terminals are listed here */
@@ -231,14 +229,12 @@ bootstrap_grammar_meta_t bootstrap_grammar_G1_metas[] = {
   { G1_META_QUOTED_STRING,                    L0_JOIN_G1_META_QUOTED_STRING, 0, 0 },
   { G1_META_CHARACTER_CLASS,                  L0_JOIN_G1_META_CHARACTER_CLASS, 0, 0 },
   { G1_META_REGULAR_EXPRESSION,               L0_JOIN_G1_META_REGULAR_EXPRESSION, 0, 0 },
-  { G1_META_SUBSTITUTION_EXPRESSION,          L0_JOIN_G1_META_SUBSTITUTION_EXPRESSION, 0, 0 },
   { G1_META_BARE_NAME,                        L0_JOIN_G1_META_BARE_NAME, 0, 0 },
   { G1_META_BRACKETED_NAME,                   L0_JOIN_G1_META_BRACKETED_NAME, 0, 0 },
   { G1_META_ASCII_GRAPH_NAME,                 L0_JOIN_G1_META_ASCII_GRAPH_NAME, 0, 0 },
   { G1_META_WHITESPACE,                       L0_JOIN_G1_META_WHITESPACE, 0, 0 },
   { G1_META_PERL_COMMENT,                     L0_JOIN_G1_META_PERL_COMMENT, 0, 0 },
-  { G1_META_CPLUSPLUS_COMMENT,                L0_JOIN_G1_META_CPLUSPLUS_COMMENT, 0, 0 },
-  { G1_META_C_COMMENT,                        L0_JOIN_G1_META_C_COMMENT, 0, 0 }
+  { G1_META_CPLUSPLUS_COMMENT,                L0_JOIN_G1_META_CPLUSPLUS_COMMENT, 0, 0 }
 };
 
 /* Here it is very important that all the string constants are UTF-8 compatible - this is the case */
@@ -930,7 +926,6 @@ bootstrap_grammar_rule_t bootstrap_grammar_G1_rules[] = {
   { G1_META_SINGLE_SYMBOL,                    "<G1 rule single symbol 1>",                    MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_SYMBOL_NAME                          }, { 0 },            -1,                        -1, -1 },
   { G1_META_SINGLE_SYMBOL,                    "<G1 rule single symbol 2>",                    MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_CHARACTER_CLASS                      }, { 0 },            -1,                        -1, -1 },
   { G1_META_SINGLE_SYMBOL,                    "<G1 rule single symbol 3>",                    MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_REGULAR_EXPRESSION                   }, { 0 },            -1,                        -1, -1 },
-  { G1_META_SINGLE_SYMBOL,                    "<G1 rule single symbol 4>",                    MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_SUBSTITUTION_EXPRESSION              }, { 0 },            -1,                        -1, -1 },
   { G1_META_SYMBOL,                           "<G1 rule symbol>",                             MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_SYMBOL_NAME                          }, { 0 },            -1,                        -1, -1 },
   /*
     lhsi                                      descs                                        type                          nrhsl  { rhsi }                                       }  { mask }    minimumi                 separatori properb
@@ -945,11 +940,7 @@ bootstrap_grammar_rule_t bootstrap_grammar_G1_rules[] = {
   { G1_META_QUANTIFIER,                       "<G1 rule quantifier 2>",                       MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL_PLUS                             }, { 0 },            -1,                        -1, -1 },
   { G1_META_DISCARD,                          "<G1 rule discard 1>",                          MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_WHITESPACE                           }, { 0 },            -1,                        -1, -1 },
   { G1_META_DISCARD,                          "<G1 rule discard 2>",                          MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_PERL_COMMENT                         }, { 0 },            -1,                        -1, -1 },
-  { G1_META_DISCARD,                          "<G1 rule discard 3>",                          MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_CPLUSPLUS_COMMENT                    }, { 0 },            -1,                        -1, -1 },
-  /*
-    lhsi                                      descs                                        type                          nrhsl  { rhsi }                                       }  { mask }    minimumi                 separatori properb
-  */
-  { G1_META_DISCARD,                          "<G1 rule discard 4>",                          MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_C_COMMENT                            }, { 0 },            -1,                        -1, -1 }
+  { G1_META_DISCARD,                          "<G1 rule discard 3>",                          MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_CPLUSPLUS_COMMENT                    }, { 0 },            -1,                        -1, -1 }
 };
 
 #endif /* MARPAESLIF_INTERNAL_ESLIF_G1_H */
