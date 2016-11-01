@@ -154,8 +154,7 @@ bootstrap_grammar_terminal_t bootstrap_grammar_L0_terminals[] = {
   /*                                                             TERMINALS                                                             */
   /* --------------------------------------------------------------------------------------------------------------------------------- */
   /* --------------------------------------------------------------------------------------------------------------------------------- */
-  { L0_TERMINAL_RESERVED_EVENT_NAME,
-    "<L0 terminal reserved event name>",               MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+  { L0_TERMINAL_RESERVED_EVENT_NAME, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
     ":symbol",
 #ifndef MARPAESLIF_NTRACE
     ":symbol", ":symb"
@@ -164,8 +163,7 @@ bootstrap_grammar_terminal_t bootstrap_grammar_L0_terminals[] = {
 #endif
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
-  { L0_TERMINAL_WHITESPACE,
-    "<L0 terminal whitespace>",                        MARPAESLIF_TERMINAL_TYPE_REGEX,   MARPAESLIF_REGEX_OPTION_NA,
+  { L0_TERMINAL_WHITESPACE, MARPAESLIF_TERMINAL_TYPE_REGEX,   MARPAESLIF_REGEX_OPTION_NA,
     "[\\s]+",
 #ifndef MARPAESLIF_NTRACE
     "\x09\x20xxx", "\x09\x20"
@@ -178,8 +176,7 @@ bootstrap_grammar_terminal_t bootstrap_grammar_L0_terminals[] = {
   /* Perl stringified version is: (?:(?:#)(?:[^\n]*)(?:\n)) */
   /* Simplified to (without the [/'"] escapes): #[^\n]*\n */
   /* I add \\z to match the end of buffer */
-  { L0_TERMINAL_PERL_COMMENT,
-    "<L0 terminal perl comment>",                      MARPAESLIF_TERMINAL_TYPE_REGEX,   MARPAESLIF_REGEX_OPTION_NA,
+  { L0_TERMINAL_PERL_COMMENT, MARPAESLIF_TERMINAL_TYPE_REGEX,   MARPAESLIF_REGEX_OPTION_NA,
     "#[^\\n]*(?:\\n|\\z)",
 #ifndef MARPAESLIF_NTRACE
     "# Comment up to the end of the buffer", "# Again a comment"
@@ -189,8 +186,7 @@ bootstrap_grammar_terminal_t bootstrap_grammar_L0_terminals[] = {
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
   /* <perl comment> adapted for C++ (//) only */
-  { L0_TERMINAL_CPLUSPLUS_COMMENT,
-    "<L0 terminal cplusplus comment>",                 MARPAESLIF_TERMINAL_TYPE_REGEX,   MARPAESLIF_REGEX_OPTION_NA,
+  { L0_TERMINAL_CPLUSPLUS_COMMENT, MARPAESLIF_TERMINAL_TYPE_REGEX,   MARPAESLIF_REGEX_OPTION_NA,
     "//[^\\n]*(?:\\n|\\z)",
 #ifndef MARPAESLIF_NTRACE
     "// Comment up to the end of the buffer", "// Again a comment"
@@ -202,8 +198,7 @@ bootstrap_grammar_terminal_t bootstrap_grammar_L0_terminals[] = {
   /* Taken from Regexp::Common::comment, $RE{comment}{C} */
   /* Perl stringified version is: (?:(?:\/\*)(?:(?:[^\*]+|\*(?!\/))*)(?:\*\/)) */
   /* Simplified to (without the [/"'] escapes) /\*(?:[^\*]+|\*(?!/))*\!*!/ */   /* REMOVE THE ! character - this is C compilers -; */
-  { L0_TERMINAL_C_COMMENT,
-    "<L0 terminal c comment>",                         MARPAESLIF_TERMINAL_TYPE_REGEX,   MARPAESLIF_REGEX_OPTION_NA,
+  { L0_TERMINAL_C_COMMENT, MARPAESLIF_TERMINAL_TYPE_REGEX,   MARPAESLIF_REGEX_OPTION_NA,
     "/\\*(?:[^\\*]+|\\*(?!/))*\\*/",
 #ifndef MARPAESLIF_NTRACE
     "/* Comment including a newline \n here (too late) */", "/* Comment is starting"
@@ -212,8 +207,7 @@ bootstrap_grammar_terminal_t bootstrap_grammar_L0_terminals[] = {
 #endif
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
-  { L0_TERMINAL_OP_DECLARE_ANY_GRAMMAR,
-    "<L0 terminal op declare any grammar>",            MARPAESLIF_TERMINAL_TYPE_REGEX,   MARPAESLIF_REGEX_OPTION_NA,
+  { L0_TERMINAL_OP_DECLARE_ANY_GRAMMAR, MARPAESLIF_TERMINAL_TYPE_REGEX,   MARPAESLIF_REGEX_OPTION_NA,
     ":\\[(\\d+)\\]:=",
 #ifndef MARPAESLIF_NTRACE
     ":[0123]:=", ":[0"
@@ -222,8 +216,7 @@ bootstrap_grammar_terminal_t bootstrap_grammar_L0_terminals[] = {
 #endif
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
-  { L0_TERMINAL_OP_DECLARE_TOP_GRAMMAR,
-    "<L0 terminal op declare top grammar>",       MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+  { L0_TERMINAL_OP_DECLARE_TOP_GRAMMAR, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
     "::=",
 #ifndef MARPAESLIF_NTRACE
     "::=", "::"
@@ -232,8 +225,7 @@ bootstrap_grammar_terminal_t bootstrap_grammar_L0_terminals[] = {
 #endif
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
-  { L0_TERMINAL_OP_DECLARE_LEX_GRAMMAR,
-    "<L0 terminal op declare lex grammar>",       MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+  { L0_TERMINAL_OP_DECLARE_LEX_GRAMMAR, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
     "~",
 #ifndef MARPAESLIF_NTRACE
     "~", NULL
@@ -242,8 +234,7 @@ bootstrap_grammar_terminal_t bootstrap_grammar_L0_terminals[] = {
 #endif
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
-  { L0_TERMINAL_OP_LOOSEN,
-    "<L0 terminal op loosen>",                         MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+  { L0_TERMINAL_OP_LOOSEN, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
     "||",
 #ifndef MARPAESLIF_NTRACE
     NULL, NULL
@@ -252,8 +243,7 @@ bootstrap_grammar_terminal_t bootstrap_grammar_L0_terminals[] = {
 #endif
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
-  { L0_TERMINAL_OP_EQUAL_PRIORITY,
-    "<L0 terminal op equal priority>",                 MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+  { L0_TERMINAL_OP_EQUAL_PRIORITY, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
     "|",
 #ifndef MARPAESLIF_NTRACE
     NULL, NULL
@@ -262,32 +252,27 @@ bootstrap_grammar_terminal_t bootstrap_grammar_L0_terminals[] = {
 #endif
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
-  { L0_TERMINAL_BEFORE,
-    "<L0 terminal before>",                              MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+  { L0_TERMINAL_BEFORE, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
     "before",
     NULL, NULL
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
-  { L0_TERMINAL_AFTER,
-    "<L0 terminal after>",                               MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+  { L0_TERMINAL_AFTER, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
     "after",
     NULL, NULL
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
-  { L0_TERMINAL_SIGN,
-    "<L0 terminal sign>",                              MARPAESLIF_TERMINAL_TYPE_REGEX,   MARPAESLIF_REGEX_OPTION_NA,
+  { L0_TERMINAL_SIGN, MARPAESLIF_TERMINAL_TYPE_REGEX,   MARPAESLIF_REGEX_OPTION_NA,
     "[+-]",
     NULL, NULL
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
-  { L0_TERMINAL_INTEGER,
-    "<L0 terminal integer>",                           MARPAESLIF_TERMINAL_TYPE_REGEX,   MARPAESLIF_REGEX_OPTION_NA,
+  { L0_TERMINAL_INTEGER, MARPAESLIF_TERMINAL_TYPE_REGEX,   MARPAESLIF_REGEX_OPTION_NA,
     "[\\d]+",
     NULL, NULL
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
-  { L0_TERMINAL_TRUE,
-    "<L0 terminal true>",                              MARPAESLIF_TERMINAL_TYPE_STRING,   MARPAESLIF_REGEX_OPTION_NA,
+  { L0_TERMINAL_TRUE, MARPAESLIF_TERMINAL_TYPE_STRING,   MARPAESLIF_REGEX_OPTION_NA,
     "1",
 #ifndef MARPAESLIF_NTRACE
     "1", ""
@@ -296,104 +281,87 @@ bootstrap_grammar_terminal_t bootstrap_grammar_L0_terminals[] = {
 #endif
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
-  { L0_TERMINAL_BOOLEAN,
-    "<L0 terminal boolean>",                           MARPAESLIF_TERMINAL_TYPE_REGEX,   MARPAESLIF_REGEX_OPTION_NA,
+  { L0_TERMINAL_BOOLEAN, MARPAESLIF_TERMINAL_TYPE_REGEX,   MARPAESLIF_REGEX_OPTION_NA,
     "[01]",
     NULL, NULL
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
-  { L0_TERMINAL_WORD_CHARACTER,
-    "<L0 terminal word character>",                    MARPAESLIF_TERMINAL_TYPE_REGEX,   MARPAESLIF_REGEX_OPTION_NA,
+  { L0_TERMINAL_WORD_CHARACTER, MARPAESLIF_TERMINAL_TYPE_REGEX,   MARPAESLIF_REGEX_OPTION_NA,
     "[\\w]",
     NULL, NULL
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
-  { L0_TERMINAL_LATIN_ALPHABET_LETTER,
-    "<L0 terminal latin alphabet letter>",             MARPAESLIF_TERMINAL_TYPE_REGEX,   MARPAESLIF_REGEX_OPTION_NA,
+  { L0_TERMINAL_LATIN_ALPHABET_LETTER, MARPAESLIF_TERMINAL_TYPE_REGEX,   MARPAESLIF_REGEX_OPTION_NA,
     "[a-zA-Z]",
     NULL, NULL
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
-  { L0_TERMINAL_LEFT_CURLY,
-    "<L0 terminal left curly>",                        MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+  { L0_TERMINAL_LEFT_CURLY, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
     "<",
     NULL, NULL
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
-  { L0_TERMINAL_RIGHT_CURLY,
-    "<L0 terminal right curly>",                       MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+  { L0_TERMINAL_RIGHT_CURLY, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
     ">",
     NULL, NULL
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
-  { L0_TERMINAL_BRACKETED_NAME_STRING,
-    "<L0 terminal bracketed name string>",             MARPAESLIF_TERMINAL_TYPE_REGEX,   MARPAESLIF_REGEX_OPTION_NA,
+  { L0_TERMINAL_BRACKETED_NAME_STRING, MARPAESLIF_TERMINAL_TYPE_REGEX,   MARPAESLIF_REGEX_OPTION_NA,
     "[\\s\\w]+",
     NULL, NULL
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
-  { L0_TERMINAL_COMMA,
-    "<L0 terminal comma>",                             MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+  { L0_TERMINAL_COMMA, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
     ",",
     NULL, NULL
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
-  { L0_TERMINAL_START,
-    "<L0 terminal start>",                             MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+  { L0_TERMINAL_START, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
     "start",
     NULL, NULL
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
-  { L0_TERMINAL_LENGTH,
-    "<L0 terminal length>",                            MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+  { L0_TERMINAL_LENGTH, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
     "length",
     NULL, NULL
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
-  { L0_TERMINAL_G1START,
-    "<L0 terminal g1start>",                           MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+  { L0_TERMINAL_G1START, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
     "g1start",
     NULL, NULL
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
-  { L0_TERMINAL_G1LENGTH,
-    "<L0 terminal g1length>",                          MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+  { L0_TERMINAL_G1LENGTH, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
     "g1length",
     NULL, NULL
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
-  { L0_TERMINAL_NAME,
-    "<L0 terminal name>",                              MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+  { L0_TERMINAL_NAME, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
     "name",
     NULL, NULL
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
-  { L0_TERMINAL_LHS,
-    "<L0 terminal lhs>",                               MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+  { L0_TERMINAL_LHS, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
     "lhs",
     NULL, NULL
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
-  { L0_TERMINAL_SYMBOL,
-    "<L0 terminal symbol>",                            MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+  { L0_TERMINAL_SYMBOL, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
     "symbol",
     NULL, NULL
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
-  { L0_TERMINAL_RULE,
-    "<L0 terminal rule>",                              MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+  { L0_TERMINAL_RULE, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
     "rule",
     NULL, NULL
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
-  { L0_TERMINAL_VALUE,
-    "<L0 terminal value>",                             MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+  { L0_TERMINAL_VALUE, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
     "value",
     NULL, NULL
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
-  { L0_TERMINAL_VALUES,
-    "<L0 terminal values>",                            MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+  { L0_TERMINAL_VALUES, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
     "values",
     NULL, NULL
   },
@@ -401,8 +369,7 @@ bootstrap_grammar_terminal_t bootstrap_grammar_L0_terminals[] = {
   /* Taken from Regexp::Common::delimited, $RE{delimited}{-delim=>"'"}{-cdelim=>"'"} */
   /* Perl stringified version is: (?:(?|(?:\')(?:[^\\\']*(?:\\.[^\\\']*)*)(?:\'))) */
   /* Simplified to (without the [/"'] escapes) "[^\\"]*(?:\\.[^\\"]*)*" */
-  { L0_TERMINAL_SINGLE_QUOTED_STRING,
-    "<L0 terminal single quoted string>",              MARPAESLIF_TERMINAL_TYPE_REGEX,   MARPAESLIF_REGEX_OPTION_DOTALL,
+  { L0_TERMINAL_SINGLE_QUOTED_STRING, MARPAESLIF_TERMINAL_TYPE_REGEX,   MARPAESLIF_REGEX_OPTION_DOTALL,
     "'[^\\']*(?:\\.[^\\']*)*'",
 #ifndef MARPAESLIF_NTRACE
     "'A string'", "'"
@@ -414,8 +381,7 @@ bootstrap_grammar_terminal_t bootstrap_grammar_L0_terminals[] = {
   /* Taken from Regexp::Common::delimited, $RE{delimited}{-delim=>"'"}{-cdelim=>"'"} */
   /* Perl stringified version is: (?:(?|(?:\")(?:[^\\\"]*(?:\\.[^\\\"]*)*)(?:\"))) */
   /* Simplified to (without the [/"'] escapes) "[^\\"]*(?:\\.[^\\"]*)*" */
-  { L0_TERMINAL_DOUBLE_QUOTED_STRING,
-    "<L0 terminal double quoted string>",              MARPAESLIF_TERMINAL_TYPE_REGEX,   MARPAESLIF_REGEX_OPTION_DOTALL,
+  { L0_TERMINAL_DOUBLE_QUOTED_STRING, MARPAESLIF_TERMINAL_TYPE_REGEX,   MARPAESLIF_REGEX_OPTION_DOTALL,
     "\"[^\\\"]*(?:\\.[^\\\"]*)*\"",
 #ifndef MARPAESLIF_NTRACE
     "\"A string\"", "\""
@@ -427,8 +393,7 @@ bootstrap_grammar_terminal_t bootstrap_grammar_L0_terminals[] = {
   /* Taken from Regexp::Common::delimited, $RE{delimited}{-delim=>"/"}{-cdelim=>"/"} */
   /* Perl stringified version is: (?:(?|(?:\/)(?:[^\\\/]*(?:\\.[^\\\/]*)*)(?:\/))) */
   /* Simplified to (without the [/"'] escapes) /[^\\/]*(?:\\.[^\\/]*)!*!/ */   /* REMOVE THE ! character - this is C compilers -; */
-  { L0_TERMINAL_REGULAR_EXPRESSION,
-    "<L0 terminal regular expression>",                MARPAESLIF_TERMINAL_TYPE_REGEX,   MARPAESLIF_REGEX_OPTION_DOTALL,
+  { L0_TERMINAL_REGULAR_EXPRESSION, MARPAESLIF_TERMINAL_TYPE_REGEX,   MARPAESLIF_REGEX_OPTION_DOTALL,
     "/[^\\/]*(?:\\.[^\\/]*)*/",
 #ifndef MARPAESLIF_NTRACE
     "/a(b)c/", "/a("
@@ -437,15 +402,13 @@ bootstrap_grammar_terminal_t bootstrap_grammar_L0_terminals[] = {
 #endif
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
-  { L0_TERMINAL_REGULAR_EXPRESSION_MODIFIER,
-    "<L0 terminal regular expression modifier>",       MARPAESLIF_TERMINAL_TYPE_REGEX,   MARPAESLIF_REGEX_OPTION_NA,
+  { L0_TERMINAL_REGULAR_EXPRESSION_MODIFIER, MARPAESLIF_TERMINAL_TYPE_REGEX,   MARPAESLIF_REGEX_OPTION_NA,
     "[eijmnsxDJUuaN]",
     NULL, NULL
   },
   /* Copy paste of the inner match of previous regexp */
   /* --------------------------------------------------------------------------------------------------------------------------------- */
-  { L0_TERMINAL_SUBSTITUTION_EXPRESSION,
-    "<L0 terminal substitution expression>",           MARPAESLIF_TERMINAL_TYPE_REGEX,   MARPAESLIF_REGEX_OPTION_DOTALL,
+  { L0_TERMINAL_SUBSTITUTION_EXPRESSION, MARPAESLIF_TERMINAL_TYPE_REGEX,   MARPAESLIF_REGEX_OPTION_DOTALL,
     "/[^\\/]*(?:\\.[^\\/]*)*/[^\\/]*(?:\\.[^\\/]*)*/",
 #ifndef MARPAESLIF_NTRACE
     "/a(b)c/d$1f/", "/a(b)c/d$"
@@ -454,8 +417,7 @@ bootstrap_grammar_terminal_t bootstrap_grammar_L0_terminals[] = {
 #endif
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
-  { L0_TERMINAL_SUBSTITUTION_EXPRESSION_MODIFIER,
-    "<L0 terminal substitution expression modifier>",  MARPAESLIF_TERMINAL_TYPE_REGEX,   MARPAESLIF_REGEX_OPTION_NA,
+  { L0_TERMINAL_SUBSTITUTION_EXPRESSION_MODIFIER, MARPAESLIF_TERMINAL_TYPE_REGEX,   MARPAESLIF_REGEX_OPTION_NA,
     "[eijmnsxDJUugzZaN]",
 #ifndef MARPAESLIF_NTRACE
     "e", ""
@@ -466,8 +428,7 @@ bootstrap_grammar_terminal_t bootstrap_grammar_L0_terminals[] = {
   /* --------------------------------------------------------------------------------------------------------------------------------- */
   /* Taken from Regexp::Common::balanced, $RE{balanced}{-parens=>'[]'} */
   /* Perl stringified version is: ((?:\[(?:(?>[^\[\]]+)|(?-1))*\])) */
-  { L0_TERMINAL_CHARACTER_CLASS_REGEXP,
-    "<L0 terminal character class regexp>",            MARPAESLIF_TERMINAL_TYPE_REGEX,   MARPAESLIF_REGEX_OPTION_DOTALL,
+  { L0_TERMINAL_CHARACTER_CLASS_REGEXP, MARPAESLIF_TERMINAL_TYPE_REGEX,   MARPAESLIF_REGEX_OPTION_DOTALL,
     "((?:\\[(?:(?>[^\\[\\]]+)|(?-1))*\\]))",
 #ifndef MARPAESLIF_NTRACE
     "[[:alnum]]","[a-z"
@@ -476,20 +437,17 @@ bootstrap_grammar_terminal_t bootstrap_grammar_L0_terminals[] = {
 #endif
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
-  { L0_TERMINAL_CHARACTER_CLASS_MODIFIER_STANDARD,
-    "<L0 terminal character class modifier standard>", MARPAESLIF_TERMINAL_TYPE_REGEX,   MARPAESLIF_REGEX_OPTION_NA,
+  { L0_TERMINAL_CHARACTER_CLASS_MODIFIER_STANDARD, MARPAESLIF_TERMINAL_TYPE_REGEX,   MARPAESLIF_REGEX_OPTION_NA,
     ":[eijmnsxDJUuaN]",
     NULL, NULL
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
-  { L0_TERMINAL_CHARACTER_CLASS_MODIFIER_COMPAT,
-    "<L0 terminal character class modifier compat>",   MARPAESLIF_TERMINAL_TYPE_STRING,   MARPAESLIF_REGEX_OPTION_NA,
+  { L0_TERMINAL_CHARACTER_CLASS_MODIFIER_COMPAT, MARPAESLIF_TERMINAL_TYPE_STRING,   MARPAESLIF_REGEX_OPTION_NA,
     ":ic",
     NULL, NULL
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
-  { L0_TERMINAL_ASCII_GRAPH_CHARACTERS,
-    "<L0 terminal ascii graph characters>",   MARPAESLIF_TERMINAL_TYPE_REGEX,   MARPAESLIF_REGEX_OPTION_NA,
+  { L0_TERMINAL_ASCII_GRAPH_CHARACTERS, MARPAESLIF_TERMINAL_TYPE_REGEX,   MARPAESLIF_REGEX_OPTION_NA,
     "[[:ascii:]]+",
     NULL, NULL
   }

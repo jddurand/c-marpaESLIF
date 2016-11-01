@@ -3,7 +3,6 @@
 
 typedef struct bootstrap_grammar_terminal {
   int                        idi;                 /* Identifier */
-  char                      *descs;               /* Description */
   marpaESLIF_terminal_type_t terminalType;        /* Terminal type */
   marpaESLIF_uint32_t        optioni;             /* Terminal option */
   char                      *utf8s;               /* ASCII UTF-8 compatible encoding */
