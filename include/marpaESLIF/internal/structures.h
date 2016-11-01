@@ -219,7 +219,6 @@ struct marpaESLIF_readerContext {
    in favour of concatenating everything that matched.
 */
 struct marpaESLIF_lexemeContext {
-  marpaESLIFValue_t    *marpaESLIFValuep; /* Filled by LexemeWrapper's */
   genericStack_t        outputStack;
   genericStack_t       *outputStackp;
 };
@@ -227,7 +226,6 @@ struct marpaESLIF_lexemeContext {
 /* Internal structure to have value context information */
 /* This is used in the grammar generation context */
 struct marpaESLIF_grammarContext {
-  marpaESLIFValue_t    *marpaESLIFValuep; /* Filled by GrammarWrapper's */
   genericStack_t        outputStack;
   genericStack_t       *outputStackp;
   int                   lastGrammarLeveli;
@@ -314,13 +312,6 @@ struct marpaESLIFRecognizer {
   char                       **encodingsp;     /* Pointer to current encoding - shared between recognizers */
   marpaESLIF_terminal_t      **encodingpp;     /* Pointer to terminal case-insensitive version of current encoding */
   tconv_t                     *tconvpp;        /* Pointer to current converted - shared between recognizers */
-};
-
-/* Value modes */
-enum marpaESLIF_valueMode {
-  MARPAESLIF_VALUE_MODE_API = 0,
-  MARPAESLIF_VALUE_MODE_LEXEME,
-  MARPAESLIF_VALUE_MODE_GRAMMAR
 };
 
 /* ------------------------------------------- */
