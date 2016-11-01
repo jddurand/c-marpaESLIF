@@ -448,7 +448,7 @@ bootstrap_grammar_terminal_t bootstrap_grammar_L0_terminals[] = {
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
   { L0_TERMINAL_ASCII_GRAPH_CHARACTERS, MARPAESLIF_TERMINAL_TYPE_REGEX,   MARPAESLIF_REGEX_OPTION_NA,
-    "[[:ascii:]]+",
+    "[[:graph:]]+",
     NULL, NULL
   }
 };
