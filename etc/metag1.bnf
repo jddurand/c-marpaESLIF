@@ -16,21 +16,21 @@ statement                        ::= <start rule>
                                  | <inaccessible statement>
                                  | <exception statement>
 
-<start rule>                   ::= (':start' <op declare>) symbol
+<start rule>                   ::= ':start' <op declare> symbol
 <empty rule>                   ::= lhs <op declare> <adverb list>
 <null statement>               ::= ';'
-<statement group>              ::= ('{') statements ('}')
+<statement group>              ::= '{' statements '}'
 <priority rule>                ::= lhs <op declare> priorities
 <quantified rule>              ::= lhs <op declare> <single symbol> quantifier <adverb list>
-<discard rule>                 ::= (':discard' <op declare>) <single symbol> <adverb list>
+<discard rule>                 ::= ':discard' <op declare> <single symbol> <adverb list>
 <default rule>                 ::= ':default' <op declare> <adverb list>
-<lexeme default statement>     ::= ('lexeme' 'default' '=') <adverb list>
-<discard default statement>    ::= ('discard' 'default' '=') <adverb list>
-<lexeme rule>                  ::= (':lexeme' <op declare>) symbol <adverb list>
-<completion event declaration> ::= ('event') <event initialization> ('=' 'completed') <symbol name>
-<nulled event declaration>     ::= ('event') <event initialization> ('=' 'nulled') <symbol name>
-<prediction event declaration> ::= ('event') <event initialization> ('=' 'predicted') <symbol name>
-<inaccessible statement>       ::= ('inaccessible' 'is') <inaccessible treatment> ('by' 'default')
+<lexeme default statement>     ::= 'lexeme' 'default' '=' <adverb list>
+<discard default statement>    ::= 'discard' 'default' '=' <adverb list>
+<lexeme rule>                  ::= ':lexeme' <op declare> symbol <adverb list>
+<completion event declaration> ::= 'event' <event initialization> '=' 'completed' <symbol name>
+<nulled event declaration>     ::= 'event' <event initialization> '=' 'nulled' <symbol name>
+<prediction event declaration> ::= 'event' <event initialization> '=' 'predicted' <symbol name>
+<inaccessible statement>       ::= 'inaccessible' 'is' <inaccessible treatment> 'by' 'default'
 <inaccessible treatment>       ::= 'warn' | 'ok' | 'fatal'
 <exception statement>          ::= lhs <op declare> <rhs primary> '-' <parenthesized rhs exception list>
 
@@ -59,27 +59,27 @@ alternative                    ::= rhs <adverb list>
                                  | naming
                                  | <null adverb>
 
-action                         ::= ('action' '=>') <action name>
-autorank                       ::= ('autorank' '=>') boolean
-<left association>             ::= ('assoc' '=>' 'left')
-<right association>            ::= ('assoc' '=>' 'right')
-<group association>            ::= ('assoc' '=>' 'group')
-<separator specification>      ::= ('separator' '=>') <single symbol>
-<proper specification>         ::= ('proper' '=>') boolean
-<rank specification>           ::= ('rank' '=>') <signed integer>
-<null ranking specification>   ::= ('null-ranking' '=>') <null ranking constant>
-<null ranking specification>   ::= ('null' 'rank' '=>') <null ranking constant>
+action                         ::= 'action' '=>' <action name>
+autorank                       ::= 'autorank' '=>' boolean
+<left association>             ::= 'assoc' '=>' 'left'
+<right association>            ::= 'assoc' '=>' 'right'
+<group association>            ::= 'assoc' '=>' 'group'
+<separator specification>      ::= 'separator' '=>' <single symbol>
+<proper specification>         ::= 'proper' '=>' boolean
+<rank specification>           ::= 'rank' '=>' <signed integer>
+<null ranking specification>   ::= 'null-ranking' '=>' <null ranking constant>
+<null ranking specification>   ::= 'null' 'rank' '=>' <null ranking constant>
 <null ranking constant>        ::= 'low' | 'high'
-<priority specification>       ::= ('priority' '=>') <signed integer>
-<pause specification>          ::= ('pause' '=>') <before or after>
-<event specification>          ::= ('event' '=>') <event initialization>
+<priority specification>       ::= 'priority' '=>' <signed integer>
+<pause specification>          ::= 'pause' '=>' <before or after>
+<event specification>          ::= 'event' '=>' <event initialization>
 <event initialization>         ::= <event name> <event initializer>
-<event initializer>            ::= ('=') <on or off>
+<event initializer>            ::= '=' <on or off>
 <on or off>                    ::= 'on' | 'off'
 <event initializer>            ::= # empty
-<latm specification>           ::= ('forgiving' '=>') true
-<latm specification>           ::= ('latm' '=>') true
-naming                         ::= ('name' '=>') <alternative name>
+<latm specification>           ::= 'forgiving' '=>' true
+<latm specification>           ::= 'latm' '=>' true
+naming                         ::= 'name' '=>' <alternative name>
 <null adverb>                  ::= ','
 
 <alternative name>             ::= <standard name> | <quoted name>
@@ -92,11 +92,9 @@ lhs                              ::= <symbol name>
 rhs                              ::= <rhs primary>+
 <rhs primary>                    ::= <single symbol>
 <rhs primary>                    ::= <quoted string>
-<rhs primary>                    ::= <parenthesized rhs primary list>
-<parenthesized rhs primary list> ::= ('(') <rhs primary list> (')')
 <rhs primary list>               ::= <rhs primary>+
 
-<parenthesized rhs exception list> ::= ('(') <rhs exception list> (')')
+<parenthesized rhs exception list> ::= '(' <rhs exception list> ')'
 <rhs exception list>             ::= <rhs exception>+
 #
 # An exception cannot be a meta identifier.

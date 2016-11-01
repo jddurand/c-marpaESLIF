@@ -1,6 +1,10 @@
 #ifndef MARPAESLIF_INTERNAL_ESLIF_H
 #define MARPAESLIF_INTERNAL_ESLIF_H
 
+#define INTERNAL_DEFAULT_SYMBOL_LEXEME_ACTION "transfert_to_outputStack"
+#define INTERNAL_RULE_OP_DECLARE_ANY_GRAMMAR  "op_declare_any_grammar"
+#define INTERNAL_RULE_ASCII_GRAPH_NAME        "ascii_graph_name"
+
 typedef struct bootstrap_grammar_terminal {
   int                        idi;                 /* Identifier */
   marpaESLIF_terminal_type_t terminalType;        /* Terminal type */

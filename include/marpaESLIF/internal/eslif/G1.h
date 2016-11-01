@@ -117,7 +117,6 @@ typedef enum bootstrap_grammar_G1_enum {
   G1_META_LHS,
   G1_META_RHS,
   G1_META_RHS_PRIMARY,
-  G1_META_PARENTHESIZED_RHS_PRIMARY_LIST,
   G1_META_RHS_PRIMARY_LIST,
   G1_META_PARENTHESIZED_RHS_EXCEPTION_LIST,
   G1_META_RHS_EXCEPTION_LIST,
@@ -206,7 +205,6 @@ bootstrap_grammar_meta_t bootstrap_grammar_G1_metas[] = {
   { G1_META_LHS,                              "<G1 meta lhs>", 0, 0 },
   { G1_META_RHS,                              "<G1 meta rhs>", 0, 0 },
   { G1_META_RHS_PRIMARY,                      "<G1 meta rhs primary>", 0, 0 },
-  { G1_META_PARENTHESIZED_RHS_PRIMARY_LIST,   "<G1 meta parenthesized rhs primary list>", 0, 0 },
   { G1_META_RHS_PRIMARY_LIST,                 "<G1 meta rhs primary list>", 0, 0 },
   { G1_META_PARENTHESIZED_RHS_EXCEPTION_LIST, "<G1 meta parenthesized rhs exception list>", 0, 0 },
   { G1_META_RHS_EXCEPTION_LIST,               "<G1 meta rhs exception list>", 0, 0 },
@@ -771,7 +769,7 @@ bootstrap_grammar_rule_t bootstrap_grammar_G1_rules[] = {
   { G1_META_INACCESSIBLE_TREATMENT,           "<G1 rule inaccessible treatment 2>",           MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL_OK                               }, { 0 },            -1,                        -1, -1 },
   { G1_META_INACCESSIBLE_TREATMENT,           "<G1 rule inaccessible treatment 3>",           MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL_FATAL                            }, { 0 },            -1,                        -1, -1 },
   /*
-    lhsi                                      descs                                        type                          nrhsl  { rhsi }                                       }  { mask }    minimumi                 separatori properb
+    lhsi                                      descs                                        type                          nrhsl  { rhsi }                                       }  { mask }    minimumi                 separatori properb  actions
   */
   { G1_META_EXCEPTION_STATEMENT,              "<G1 rule exception statement>",                MARPAESLIF_RULE_TYPE_ALTERNATIVE, 5, { G1_META_LHS,
                                                                                                                                   G1_META_OP_DECLARE,
@@ -780,7 +778,7 @@ bootstrap_grammar_rule_t bootstrap_grammar_G1_rules[] = {
                                                                                                                                   G1_META_PARENTHESIZED_RHS_EXCEPTION_LIST     }, { 0, 0, 0, 0, 0}, -1,                        -1, -1 },
   { G1_META_OP_DECLARE,                       "<G1 rule op declare 1>",                       MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_OP_DECLARE_TOP_GRAMMAR               }, { 0 },            -1,                        -1, -1 },
   { G1_META_OP_DECLARE,                       "<G1 rule op declare 2>",                       MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_OP_DECLARE_LEX_GRAMMAR               }, { 0 },            -1,                        -1, -1 },
-  { G1_META_OP_DECLARE,                       "<G1 rule op declare 3>",                       MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_OP_DECLARE_ANY_GRAMMAR               }, { 0 },            -1,                        -1, -1 },
+  { G1_META_OP_DECLARE,                       "<G1 rule op declare 3>",                       MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_OP_DECLARE_ANY_GRAMMAR               }, { 0 },            -1,                        -1, -1, INTERNAL_RULE_OP_DECLARE_ANY_GRAMMAR },
   { G1_META_PRIORITIES,                       "<G1 rule priorities>",                         MARPAESLIF_RULE_TYPE_SEQUENCE,    1, { G1_META_ALTERNATIVES                         }, { 0 },             1,         G1_META_OP_LOOSEN,  1 },
   /*
     lhsi                                      descs                                        type                          nrhsl  { rhsi }                                       }  { mask }    minimumi                 separatori properb
@@ -905,10 +903,6 @@ bootstrap_grammar_rule_t bootstrap_grammar_G1_rules[] = {
   */
   { G1_META_RHS_PRIMARY,                      "<G1 rule rhs primary 1>",                      MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_SINGLE_SYMBOL                        }, { 0 },            -1,                        -1, -1 },
   { G1_META_RHS_PRIMARY,                      "<G1 rule rhs primary 2>",                      MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_QUOTED_STRING                        }, { 0 },            -1,                        -1, -1 },
-  { G1_META_RHS_PRIMARY,                      "<G1 rule rhs primary 3>",                      MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_PARENTHESIZED_RHS_PRIMARY_LIST       }, { 0 },            -1,                        -1, -1 },
-  { G1_META_PARENTHESIZED_RHS_PRIMARY_LIST,   "<G1 rule parenthesized rhs primary list>",     MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_TERMINAL_LPAREN,
-                                                                                                                                  G1_META_RHS_PRIMARY_LIST,
-                                                                                                                                  G1_TERMINAL_RPAREN                           }, { 1, 0, 1},       -1,                        -1, -1 },
   { G1_META_RHS_PRIMARY_LIST,                 "<G1 rule rhs primary list>",                   MARPAESLIF_RULE_TYPE_SEQUENCE,    1, { G1_META_RHS_PRIMARY                          }, { 0 },             1,                        -1,  0 },
   /*
     lhsi                                      descs                                        type                          nrhsl  { rhsi }                                       }  { mask }    minimumi                 separatori properb
@@ -928,11 +922,11 @@ bootstrap_grammar_rule_t bootstrap_grammar_G1_rules[] = {
   { G1_META_SINGLE_SYMBOL,                    "<G1 rule single symbol 3>",                    MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_REGULAR_EXPRESSION                   }, { 0 },            -1,                        -1, -1 },
   { G1_META_SYMBOL,                           "<G1 rule symbol>",                             MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_SYMBOL_NAME                          }, { 0 },            -1,                        -1, -1 },
   /*
-    lhsi                                      descs                                        type                          nrhsl  { rhsi }                                       }  { mask }    minimumi                 separatori properb
+    lhsi                                      descs                                        type                          nrhsl  { rhsi }                                       }  { mask }    minimumi                 separatori properb actions
   */
   { G1_META_SYMBOL_NAME,                      "<G1 rule symbol name 1>",                      MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_BARE_NAME                            }, { 0 },            -1,                        -1, -1 },
   { G1_META_SYMBOL_NAME,                      "<G1 rule symbol name 2>",                      MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_BRACKETED_NAME                       }, { 0 },            -1,                        -1, -1 },
-  { G1_META_ACTION_NAME,                      "<G1 rule action name 1>",                      MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_ASCII_GRAPH_NAME                     }, { 0 },            -1,                        -1, -1 },
+  { G1_META_ACTION_NAME,                      "<G1 rule action name>",                        MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_ASCII_GRAPH_NAME                     }, { 0 },            -1,                        -1, -1, INTERNAL_RULE_ASCII_GRAPH_NAME },
   /*
     lhsi                                      descs                                        type                          nrhsl  { rhsi }                                       }  { mask }    minimumi                 separatori properb
   */
