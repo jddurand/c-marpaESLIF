@@ -305,6 +305,8 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
   genericStack_t                   *localOutputStackp     = NULL;
   char                             *strings               = NULL;
   marpaESLIFRecognizer_t           *marpaESLIFRecognizerp = NULL;
+  marpaESLIF_string_t              *content2descp         = NULL;
+  char                             *generatedasciis       = NULL;
   marpaESLIF_terminal_t            *terminalp;
   marpaWrapperGrammarSymbolOption_t marpaWrapperGrammarSymbolOption;
   marpaESLIF_uint32_t               pcre2Optioni;
@@ -324,7 +326,24 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
   int                               utf82ordi;
   size_t                            matchedl;
   char                             *matchedp;
+  char                             *asciis;
 
+  /* Check some required parameters */
+  if ((utf8s == NULL) || (utf8l <= 0)) {
+    MARPAESLIF_ERRORF(marpaESLIFp, "%s: Invalid terminal origin", terminalp->descp->asciis);
+    goto err;
+  }
+
+  switch (type) {
+  case MARPAESLIF_TERMINAL_TYPE_STRING:
+  case MARPAESLIF_TERMINAL_TYPE_REGEX:
+    break;
+  default:
+    MARPAESLIF_ERRORF(marpaESLIFp, "%s: Unsupported terminal type %d", terminalp->descp->asciis, type);
+    goto err;
+    break;
+  }
+  
   /* Please note the "fakeb" parameter below */
 
   terminalp = (marpaESLIF_terminal_t *) malloc(sizeof(marpaESLIF_terminal_t));
@@ -355,7 +374,63 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
   }
 
   /* ----------- Terminal Description ------------ */
-  terminalp->descp = _marpaESLIF_string_newp(marpaESLIFp, descEncodings, descs, descl, 1);
+  if (descs == NULL) {
+    /* Get an ASCII version of the content */
+    content2descp = _marpaESLIF_string_newp(marpaESLIFp, "UTF-8", utf8s, utf8l, 1);
+    if (content2descp == NULL) {
+      goto err;
+    }
+    if (type == MARPAESLIF_TERMINAL_TYPE_STRING) {
+      /* Generate a a-la-perl description, which I like -; */
+      /* i.e. : q{XXX} */
+      /* Try to be clever, using ' or ", otherwise fall back to the (unsupported) q{} version */
+      if (strchr(content2descp->asciis, '\'') == NULL) {
+        /* 'XXX' */
+        generatedasciis = (char *) malloc(1 + strlen(content2descp->asciis) + 1 + 1);
+        if (generatedasciis == NULL) {
+          MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
+          goto err;
+        }
+        strcpy(generatedasciis, "'");
+        strcat(generatedasciis, content2descp->asciis);
+        strcat(generatedasciis, "'");
+      } else if (strchr(content2descp->asciis, '"') == NULL) {
+        /* "XXX" */
+        generatedasciis = (char *) malloc(1 + strlen(content2descp->asciis) + 1 + 1);
+        if (generatedasciis == NULL) {
+          MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
+          goto err;
+        }
+        strcpy(generatedasciis, "\"");
+        strcat(generatedasciis, content2descp->asciis);
+        strcat(generatedasciis, "\"");
+      } else {
+        /* q{XXX} */
+        generatedasciis = (char *) malloc(2 + strlen(content2descp->asciis) + 1 + 1);
+        if (generatedasciis == NULL) {
+          MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
+          goto err;
+        }
+        strcpy(generatedasciis, "q{");
+        strcat(generatedasciis, content2descp->asciis);
+        strcat(generatedasciis, "}");
+      }
+    } else {
+      /* Generate a a-la-perl description, which I like -; */
+      /* i.e. : (?^:XXX) */
+      generatedasciis = (char *) malloc(4 + strlen(content2descp->asciis) + 1 + 1);
+      if (generatedasciis == NULL) {
+        MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
+        goto err;
+      }
+      strcpy(generatedasciis, "(?^:");
+      strcat(generatedasciis, content2descp->asciis);
+      strcat(generatedasciis, ")");
+    }
+    terminalp->descp = _marpaESLIF_string_newp(marpaESLIFp, "ASCII", generatedasciis, strlen(generatedasciis), 1);
+  } else {
+    terminalp->descp = _marpaESLIF_string_newp(marpaESLIFp, descEncodings, descs, descl, 1);
+  }
   if (terminalp->descp == NULL) {
     goto err;
   }
@@ -477,10 +552,6 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
 
   case MARPAESLIF_TERMINAL_TYPE_REGEX:
     
-    if ((utf8s == NULL) || (utf8l <= 0)) {
-      MARPAESLIF_ERRORF(marpaESLIFp, "%s: Invalid terminal origin", terminalp->descp->asciis);
-      goto err;
-    }
     pcre2Optioni = PCRE2_ANCHORED;      /* By default patterns are always anchored and only that */
     for (i = 0; i < _MARPAESLIF_REGEX_OPTION_ID_MAX; i++) {
       if ((opti & marpaESLIF_regex_option_map[i].opti) == marpaESLIF_regex_option_map[i].opti) {
@@ -604,6 +675,10 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
   if (strings != NULL) {
     free(strings);
   }
+  if (generatedasciis != NULL) {
+    free(generatedasciis);
+  }
+  _marpaESLIF_string_freev(content2descp);
   _marpaESLIFrecognizer_lexemeStack_resetv(marpaESLIFRecognizerp, localOutputStackp);
   marpaESLIFRecognizer_freev(marpaESLIFRecognizerp);
   /* MARPAESLIF_TRACEF(marpaESLIFp, funcs, "return %p", terminalp); */
@@ -755,8 +830,8 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_grammarp(marpaESLIF_t 
 					  grammarp,
 					  MARPAWRAPPERGRAMMAR_EVENTTYPE_NONE,
                                           NULL, /* descEncodings */
-					  bootstrap_grammar_terminalp[i].descs,
-					  strlen(bootstrap_grammar_terminalp[i].descs),
+					  NULL, /* descs */
+                                          0, /* descl */
 					  bootstrap_grammar_terminalp[i].terminalType,
 					  bootstrap_grammar_terminalp[i].optioni,
 					  bootstrap_grammar_terminalp[i].utf8s,
