@@ -22,8 +22,9 @@ typedef enum    marpaESLIF_matcher_value   marpaESLIF_matcher_value_t;
 typedef enum    marpaESLIF_event_type      marpaESLIF_event_type_t;
 typedef enum    marpaESLIF_array_type      marpaESLIF_array_type_t;
 typedef struct  marpaESLIF_readerContext   marpaESLIF_readerContext_t;
-typedef struct  marpaESLIF_valueContext    marpaESLIF_valueContext_t;
+typedef struct  marpaESLIF_lexemeContext   marpaESLIF_lexemeContext_t;
 typedef struct  marpaESLIF_cloneContext    marpaESLIF_cloneContext_t;
+typedef enum    marpaESLIF_valueMode       marpaESLIF_valueMode_t;
 
 /* Symbol types */
 enum marpaESLIF_symbol_type {
@@ -209,9 +210,18 @@ struct marpaESLIF_readerContext {
 };
 
 /* Internal structure to have value context information */
-struct marpaESLIF_valueContext {
+/* This is used in three contexts:
+   - discard grammar
+   - meta symbol that appears to be a terminal
+   - generation of grammar
+*/
+struct marpaESLIF_lexemeContext {
+  /* Fields that are used by all the possible contexts listed upper: */
   marpaESLIFValue_t    *marpaESLIFValuep;
   genericStack_t       *outputStackp;
+  /* Fields used ONLY by the generation of the grammar: */
+  int                   lastGrammarLeveli;  /* '::=', '~', /:\[\d+\]/ */
+  char                 *lastAsciiGraphNames;
 };
 
 /* Internal structure to have clone context information */
@@ -229,6 +239,8 @@ struct marpaESLIF {
   marpaESLIF_terminal_t *anycharp;            /* internal regex for match any character */
   marpaESLIF_terminal_t *utf8bomp;            /* Internal regex for match UTF-8 BOM */
   marpaESLIF_terminal_t *newlinep;            /* Internal regex for match newline */
+  marpaESLIF_string_t   *defaultLexemeActionp;  /* Default action for symbols and rules when collectin lexemes */
+  marpaESLIF_string_t   *defaultRuleLexemeActionp;    /* Default action for rules when collectin lexemes */
 };
 
 struct marpaESLIFGrammar {
@@ -292,6 +304,13 @@ struct marpaESLIFRecognizer {
   char                       **encodingsp;     /* Pointer to current encoding - shared between recognizers */
   marpaESLIF_terminal_t      **encodingpp;     /* Pointer to terminal case-insensitive version of current encoding */
   tconv_t                     *tconvpp;        /* Pointer to current converted - shared between recognizers */
+};
+
+/* Value modes */
+enum marpaESLIF_valueMode {
+  MARPAESLIF_VALUE_MODE_API = 0,
+  MARPAESLIF_VALUE_MODE_LEXEME,
+  MARPAESLIF_VALUE_MODE_GRAMMAR
 };
 
 /* ------------------------------------------- */
