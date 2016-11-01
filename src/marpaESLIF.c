@@ -4774,6 +4774,8 @@ static short _marpaESLIFValueSymbolCallbackWrapper(void *userDatavp, int symboli
   marpaESLIFRecognizer_t          *marpaESLIFRecognizerp = marpaESLIFValuep->marpaESLIFRecognizerp;
   marpaESLIFValueOption_t          marpaESLIFValueOption = marpaESLIFValuep->marpaESLIFValueOption;
   marpaESLIFValueSymbolCallback_t  symbolCallbackp       = marpaESLIFValueOption.symbolCallbackp;
+  marpaESLIFGrammar_t             *marpaESLIFGrammarp    = marpaESLIFRecognizerp->marpaESLIFGrammarp;
+  marpaESLIF_grammar_t            *grammarp              = marpaESLIFGrammarp->grammarp;
   char                            *bytep;
   size_t                           bytel;
 #ifndef MARPAESLIF_NTRACE
@@ -4785,6 +4787,12 @@ static short _marpaESLIFValueSymbolCallbackWrapper(void *userDatavp, int symboli
   marpaESLIFRecognizerp->callstackCounteri++;
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
 
+  /* Look if there a lexeme action in the grammar */
+  if (grammarp->defaultSymbolActionp == NULL) {
+    MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "No lexeme action for grammar at level %d (%s), please use: lexeme default = action => action_name", grammarp->leveli, grammarp->descp->asciis);
+    goto err;
+  }
+  
   /* Look if there is a rule callback */
   if (symbolCallbackp == NULL) {
     MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "No symbol value callback");
