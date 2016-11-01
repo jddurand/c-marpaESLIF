@@ -100,7 +100,7 @@ struct marpaESLIF_regex_option_map {
   { MARPAESLIF_REGEX_OPTION_NO_UCP,                   "N", NULL,                                       0,                                        "PCRE2_UCP",       PCRE2_UCP },
   { MARPAESLIF_REGEX_OPTION_UTF,                      "u", "PCRE2_UTF",                                PCRE2_UTF,                                NULL,              0 },
   { MARPAESLIF_REGEX_OPTION_BINARY,                   "b", "PCRE2_NEVER_UTF",                          PCRE2_NEVER_UTF,                          "PCRE2_UTF",       PCRE2_UTF },
-  { MARPAESLIF_REGEX_OPTION_CHARACTER,                "b", "PCRE2_UTF",                                PCRE2_UTF,                                "PCRE2_NEVER_UTF", PCRE2_NEVER_UTF }
+  { MARPAESLIF_REGEX_OPTION_CHARACTER,                "c", "PCRE2_UTF",                                PCRE2_UTF,                                "PCRE2_NEVER_UTF", PCRE2_NEVER_UTF }
 };
 
 struct marpaESLIF_regex {

@@ -327,6 +327,7 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
   size_t                            matchedl;
   char                             *matchedp;
   char                             *asciis;
+  int                               regexdescriptori;
 
   /* Check some required parameters */
   if ((utf8s == NULL) || (utf8l <= 0)) {
@@ -424,6 +425,9 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
       strcat(generatedasciis, content2descp->asciis);
       strcat(generatedasciis, "/");
     }
+    /*
+     * Look to modifiers
+     */
     terminalp->descp = _marpaESLIF_string_newp(marpaESLIFp, "ASCII", generatedasciis, strlen(generatedasciis), 1);
   } else {
     terminalp->descp = _marpaESLIF_string_newp(marpaESLIFp, descEncodings, descs, descl, 1);
@@ -608,6 +612,34 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
     }
     terminalp->regex.utfb = ((pcre2Optioni & PCRE2_UTF) == PCRE2_UTF);
     MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s: UTF mode is %s", terminalp->descp->asciis, terminalp->regex.utfb ? "on" : "off");
+
+    /* If opti is set, revisit the automatic description */
+    if ((pcre2Optioni != PCRE2_ANCHORED) & (generatedasciis != NULL)) {
+      regexdescriptori =  0;
+      for (i = 0; i < _MARPAESLIF_REGEX_OPTION_ID_MAX; i++) {
+        if ((opti & marpaESLIF_regex_option_map[i].opti) == marpaESLIF_regex_option_map[i].opti) {
+          regexdescriptori++;
+        }
+      }
+      if (regexdescriptori > 0) {
+        free(generatedasciis);
+        generatedasciis = (char *) malloc(strlen(terminalp->descp->asciis) + regexdescriptori + 1);
+        if (generatedasciis == NULL) {
+          MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
+          goto err;
+        }
+        strcpy(generatedasciis, terminalp->descp->asciis);
+        for (i = 0; i < _MARPAESLIF_REGEX_OPTION_ID_MAX; i++) {
+          if ((opti & marpaESLIF_regex_option_map[i].opti) == marpaESLIF_regex_option_map[i].opti) {
+            strcat(generatedasciis, marpaESLIF_regex_option_map[i].modifiers);
+          }
+        }
+        /* No need for a new call to string */
+        free(terminalp->descp->asciis);
+        terminalp->descp->asciis = generatedasciis;
+        generatedasciis = NULL;
+      }
+    }
     break;
 
   default:
@@ -6521,4 +6553,3 @@ short marpaESLIFGrammar_grammari(marpaESLIFGrammar_t *marpaESLIFGrammarp, int *g
 
   return 1;
 }
-
