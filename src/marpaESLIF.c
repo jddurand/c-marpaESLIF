@@ -5220,7 +5220,7 @@ static short _marpaESLIFValueRuleCallbackGrammar(void *userDatavp, marpaESLIFVal
     goto err;
   }
 
-  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Action %s", actions);
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s", actions);
 
   if (strcmp(actions, G1_RULE_OP_DECLARE_3) == 0) {
     /*
@@ -5233,7 +5233,7 @@ static short _marpaESLIFValueRuleCallbackGrammar(void *userDatavp, marpaESLIFVal
     if (! _marpaESLIF_grammarContext_get_asciib(marpaESLIFp, outputStackp, itemTypeStackp, arg0i, &asciis)) {
       goto err;
     }
-    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Action %s: outputStackp->[%d] <= \"%s\"", actions, arg0i, asciis);
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: outputStackp->[%d] <= \"%s\"", actions, arg0i, asciis);
 
     asciis += 2;    /* Skip ":[" */
     /* By construction this cannot be < 0 - we made sure the string is ASCII (via the grammar) and NUL terminated (via the symbol callback) */
@@ -5250,10 +5250,10 @@ static short _marpaESLIFValueRuleCallbackGrammar(void *userDatavp, marpaESLIFVal
         goto err;
       }
       out_grammarp = NULL; /* out_grammarp is now in out_grammarStackp */
-      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Action %s: Created grammar at level %d", actions, grammarLeveli);
+      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: Created grammar at level %d", actions, grammarLeveli);
     }
 
-    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Action %s: outputStackp->[%d] => %d", actions, resulti, grammarLeveli);
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: outputStackp->[%d] => %d", actions, resulti, grammarLeveli);
     if (! _marpaESLIF_grammarContext_set_intb(marpaESLIFp, outputStackp, itemTypeStackp, resulti, grammarLeveli)) {
       goto err;
     }
@@ -5324,7 +5324,7 @@ static short _marpaESLIFValueSymbolCallbackGrammar(void *userDatavp, marpaESLIFV
     goto err;
   }
 
-  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Action %s", actions);
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s", actions);
 
   /* We ALWAYS add an internal "hiden" (i.e. not counted in the number of bytes) NUL, not only for ease of debugging, but also */
   /* because some operations on pure ASCII strings need a NUL byte terminated string (for example: atoi()). */
@@ -5339,7 +5339,7 @@ static short _marpaESLIFValueSymbolCallbackGrammar(void *userDatavp, marpaESLIFV
     asciis[bytel] = '\0';
     memcpy(asciis, bytep, bytel);
 
-    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Action %s: outputStackp->[%d] => \"%s\"", actions, resulti, asciis);
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: outputStackp->[%d] => \"%s\"", actions, resulti, asciis);
 
     if (! _marpaESLIF_grammarContext_set_asciib(marpaESLIFp, outputStackp, itemTypeStackp, resulti, asciis)) {
       goto err;
@@ -6769,7 +6769,7 @@ static inline short _marpaESLIF_grammarContext_i_resetb(marpaESLIF_t *marpaESLIF
         if (GENERICSTACK_IS_PTR(outputStackp, i)) {
           asciis = (char *) GENERICSTACK_GET_PTR(outputStackp, i);
           if (asciis != NULL) {
-            MARPAESLIF_DEBUGF(marpaESLIFp, "[%s] Freeing ASCII_STRING at outputStackp->[%d]", funcs, i);
+            free(asciis);
           }
         }
         break;
@@ -6855,7 +6855,6 @@ done:                                                                   \
     goto err;                                                           \
   }                                                                     \
                                                                         \
-  MARPAESLIF_DEBUGF(marpaESLIFp, "[%s] Setted %s to outputStackp->[%d]", funcs, #itemType, i); \
   rcb = 1;                                                              \
   goto done;                                                            \
                                                                         \
