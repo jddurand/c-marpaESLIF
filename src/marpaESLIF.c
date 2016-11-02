@@ -5253,10 +5253,76 @@ static short _marpaESLIFValueRuleCallbackGrammar(void *userDatavp, marpaESLIFVal
       MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: Created grammar at level %d", actions, grammarLeveli);
     }
 
-    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: outputStackp->[%d] => %d", actions, resulti, grammarLeveli);
     if (! _marpaESLIF_grammarContext_set_intb(marpaESLIFp, outputStackp, itemTypeStackp, resulti, grammarLeveli)) {
       goto err;
     }
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: outputStackp->[%d] => %d", actions, resulti, grammarLeveli);
+
+  } else if (strcmp(actions, G1_RULE_ACTION_NAME) == 0) {
+    /*
+     * ---------------------------------------------------------------------------------------------
+     * <action name>  ::= <ascii name>
+     * ---------------------------------------------------------------------------------------------
+     */
+    if (! _marpaESLIF_grammarContext_get_asciib(marpaESLIFp, outputStackp, itemTypeStackp, arg0i, &asciis)) {
+      goto err;
+    }
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: outputStackp->[%d] <= \"%s\"", actions, arg0i, asciis);
+
+    asciis = strdup(asciis);
+    if (asciis == NULL) {
+      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "strdup failure, %s", strerror(errno));
+      goto err;
+    }
+
+    if (! _marpaESLIF_grammarContext_set_asciib(marpaESLIFp, outputStackp, itemTypeStackp, resulti, asciis)) {
+      goto err;
+    }
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: outputStackp->[%d] => \"%s\"", actions, resulti, asciis);
+
+  } else if (strcmp(actions, G1_RULE_ACTION) == 0) {
+    /*
+     * ---------------------------------------------------------------------------------------------
+     * action ::= 'action' '=>' <action name>
+     * ---------------------------------------------------------------------------------------------
+     */
+    if (! _marpaESLIF_grammarContext_get_asciib(marpaESLIFp, outputStackp, itemTypeStackp, argni, &asciis)) {
+      goto err;
+    }
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: outputStackp->[%d] <= \"%s\"", actions, arg0i, asciis);
+
+    asciis = strdup(asciis);
+    if (asciis == NULL) {
+      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "strdup failure, %s", strerror(errno));
+      goto err;
+    }
+
+    if (! _marpaESLIF_grammarContext_set_asciib(marpaESLIFp, outputStackp, itemTypeStackp, resulti, asciis)) {
+      goto err;
+    }
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: outputStackp->[%d] => \"%s\"", actions, resulti, asciis);
+
+  } else if (strcmp(actions, G1_RULE_ADVERB_ITEM_01) == 0) {
+    /*
+     * ---------------------------------------------------------------------------------------------
+     * <adverb item> ::= action
+     * ---------------------------------------------------------------------------------------------
+     */
+    if (! _marpaESLIF_grammarContext_get_asciib(marpaESLIFp, outputStackp, itemTypeStackp, arg0i, &asciis)) {
+      goto err;
+    }
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: outputStackp->[%d] <= \"%s\"", actions, arg0i, asciis);
+
+    asciis = strdup(asciis);
+    if (asciis == NULL) {
+      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "strdup failure, %s", strerror(errno));
+      goto err;
+    }
+
+    if (! _marpaESLIF_grammarContext_set_asciib(marpaESLIFp, outputStackp, itemTypeStackp, resulti, asciis)) {
+      goto err;
+    }
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: outputStackp->[%d] => \"%s\"", actions, resulti, asciis);
 
   } else {
     MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "Unknown rule action %s", actions);
