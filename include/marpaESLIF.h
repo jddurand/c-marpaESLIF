@@ -26,9 +26,11 @@ typedef struct marpaESLIFString {
 } marpaESLIFString_t;
 
 typedef struct marpaESLIFGrammarOption {
-  char   *grammars;         /* Grammar */
-  size_t  grammarl;         /* Grammar length in bytes */
-  char   *encodings;        /* Input encoding. Default: NULL */
+  char   *grammars;            /* Grammar */
+  size_t  grammarl;            /* Grammar length in bytes */
+  char   *encodings;           /* Input encoding. Default: NULL */
+  size_t  encodingl;           /* Length of encoding itself. Default: 0 */
+  char   *encodingOfEncodings; /* Encoding of encoding, in ASCII encoding. Default: NULL. */
 } marpaESLIFGrammarOption_t;
 
 /* The reader can return encoding information, giving eventual encoding of this information in encodingOfEncodingsp, starting at *encodingsp, spreaded over *encodinglp bytes */

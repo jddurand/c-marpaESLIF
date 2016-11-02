@@ -338,7 +338,9 @@ marpaESLIFOption_t marpaESLIFOption_default_template = {
 marpaESLIFGrammarOption_t marpaESLIFGrammarOption_default_template = {
   NULL, /* grammars */
   0,    /* grammarl */
-  NULL  /* encodings */
+  NULL, /* encodings */
+  0,    /* encodingl */
+  NULL, /* encodingOfEncodings */
 };
 
 marpaESLIFRecognizerOption_t marpaESLIFRecognizerOption_default_template = {
