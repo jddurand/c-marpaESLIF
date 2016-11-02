@@ -2884,12 +2884,21 @@ marpaESLIFGrammar_t *marpaESLIFGrammar_newp(marpaESLIF_t *marpaESLIFp, marpaESLI
   marpaESLIF_grammarContext.outputStackp        = NULL;
   marpaESLIF_grammarContext.lastGrammarLeveli   = 0;
   marpaESLIF_grammarContext.lastAsciiGraphNames = NULL;
+  marpaESLIF_grammarContext.marpaESLIFGrammar.marpaESLIFp   = marpaESLIFp;
+  marpaESLIF_grammarContext.marpaESLIFGrammar.grammarStackp = NULL;
+  marpaESLIF_grammarContext.marpaESLIFGrammar.grammarp      = NULL;
 
   marpaESLIF_grammarContext.outputStackp = &(marpaESLIF_grammarContext.outputStack);
   GENERICSTACK_INIT(marpaESLIF_grammarContext.outputStackp);
   if (GENERICSTACK_ERROR(marpaESLIF_grammarContext.outputStackp)) {
     MARPAESLIF_ERRORF(marpaESLIFp, "marpaESLIF_grammarContext.outputStackp initialization failure, %s", strerror(errno));
     marpaESLIF_grammarContext.outputStackp = NULL;
+    goto err;
+  }
+
+  GENERICSTACK_NEW(marpaESLIF_grammarContext.marpaESLIFGrammar.grammarStackp); /* NEW and not INIT because this will survive in case of success */
+  if (GENERICSTACK_ERROR(marpaESLIF_grammarContext.outputStackp)) {
+    MARPAESLIF_ERRORF(marpaESLIFp, "marpaESLIF_grammarContext.marpaESLIFGrammar.grammarStackp initialization failure, %s", strerror(errno));
     goto err;
   }
 
@@ -6637,6 +6646,7 @@ static inline void _marpaESLIF_grammarContext_resetv(marpaESLIF_t *marpaESLIFp, 
     if (marpaESLIF_grammarContextp->lastAsciiGraphNames != NULL) {
       free(marpaESLIF_grammarContextp->lastAsciiGraphNames);
     }
+    _marpaESLIFGrammar_freev(&(marpaESLIF_grammarContextp->marpaESLIFGrammar), 1 /* onStackb */);
   }
 }
 
