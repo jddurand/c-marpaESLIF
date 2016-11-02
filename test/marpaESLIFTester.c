@@ -208,9 +208,11 @@ int main() {
     goto err;
   }
 
-  marpaESLIFGrammarOption.grammars  = (char *) metags;
-  marpaESLIFGrammarOption.grammarl  = strlen(metags);
-  marpaESLIFGrammarOption.encodings = NULL;
+  marpaESLIFGrammarOption.grammars            = (char *) metags;
+  marpaESLIFGrammarOption.grammarl            = strlen(metags);
+  marpaESLIFGrammarOption.encodings           = NULL;
+  marpaESLIFGrammarOption.encodingl           = 0;
+  marpaESLIFGrammarOption.encodingOfEncodings = NULL;
   marpaESLIFGrammarp = marpaESLIFGrammar_newp(marpaESLIFp, &marpaESLIFGrammarOption);
   if (marpaESLIFGrammarp == NULL) {
     goto err;
