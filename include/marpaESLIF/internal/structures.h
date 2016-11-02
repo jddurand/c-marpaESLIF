@@ -26,6 +26,7 @@ typedef struct  marpaESLIF_lexemeContext   marpaESLIF_lexemeContext_t;
 typedef struct  marpaESLIF_grammarContext  marpaESLIF_grammarContext_t;
 typedef struct  marpaESLIF_cloneContext    marpaESLIF_cloneContext_t;
 typedef enum    marpaESLIF_valueMode       marpaESLIF_valueMode_t;
+typedef enum    marpaESLIF_grammarItemType marpaESLIF_grammarItemType_t;
 
 /* Symbol types */
 enum marpaESLIF_symbol_type {
@@ -312,14 +313,25 @@ struct marpaESLIF_lexemeContext {
   genericStack_t       *outputStackp;
 };
 
+enum marpaESLIF_grammarItemType {
+  MARPAESLIF_GRAMMARITEMTYPE_NA = 0,
+  MARPAESLIF_GRAMMARITEMTYPE_ASCII_STRING,
+  MARPAESLIF_GRAMMARITEMTYPE_INT,
+};
+
 /* Internal structure to have value context information */
 /* This is used in the grammar generation context */
+/* We maintain in parallel thress stacks:
+   - the outputStack as per Marpa,
+   - a description of what is at every indice of this outputStack
+   - grammars
+/* Grammar themselves are in grammarStackp */
 struct marpaESLIF_grammarContext {
-  genericStack_t        outputStack;
-  genericStack_t       *outputStackp;
-  int                   lastGrammarLeveli;
-  char                 *lastAsciiGraphNames;
-  marpaESLIFGrammar_t   marpaESLIFGrammar;
+  genericStack_t              outputStack; /* This stack is temporary: GENERICSTACK_INIT() */
+  genericStack_t             *outputStackp;
+  genericStack_t              itemTypeStack; /* This stack is temporary: GENERICSTACK_INIT() */
+  genericStack_t             *itemTypeStackp;
+  genericStack_t             *grammarStackp; /* This stack will have to survive if success: GENERICSTACK_NEW() */
 };
 
 /* Internal structure to have clone context information */
@@ -333,14 +345,6 @@ struct marpaESLIF_cloneContext {
 /* ------------------------------------------- */
 marpaESLIFOption_t marpaESLIFOption_default_template = {
   NULL               /* genericLoggerp */
-};
-
-marpaESLIFGrammarOption_t marpaESLIFGrammarOption_default_template = {
-  NULL, /* grammars */
-  0,    /* grammarl */
-  NULL, /* encodings */
-  0,    /* encodingl */
-  NULL, /* encodingOfEncodings */
 };
 
 marpaESLIFRecognizerOption_t marpaESLIFRecognizerOption_default_template = {
