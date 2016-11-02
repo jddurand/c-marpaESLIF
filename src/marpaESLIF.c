@@ -4748,7 +4748,14 @@ short marpaESLIFValue_valueb(marpaESLIFValue_t *marpaESLIFValuep)
   static const char      *funcs                 = "_marpaESLIFValue_valueb";
   marpaESLIFRecognizer_t *marpaESLIFRecognizerp = marpaESLIFValuep->marpaESLIFRecognizerp;
   short                   rcb;
+  /* JDD */
+  genericLoggerLevel_t    logleveli = genericLogger_logLevel_geti(marpaESLIFValuep->marpaESLIFp->marpaESLIFOption.genericLoggerp);
 
+  /* JDD */
+  if (marpaESLIFValuep->marpaESLIFValueOption.ruleCallbackp == _marpaESLIFValueRuleCallbackGrammar) {
+    genericLogger_logLevel_seti(marpaESLIFValuep->marpaESLIFp->marpaESLIFOption.genericLoggerp, GENERICLOGGER_LOGLEVEL_TRACE);
+  }
+  
   marpaESLIFRecognizerp->callstackCounteri++;
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
 
@@ -4760,6 +4767,12 @@ short marpaESLIFValue_valueb(marpaESLIFValue_t *marpaESLIFValuep)
 
   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
   marpaESLIFRecognizerp->callstackCounteri--;
+
+  /* JDD */
+  if (marpaESLIFValuep->marpaESLIFValueOption.ruleCallbackp == _marpaESLIFValueRuleCallbackGrammar) {
+    genericLogger_logLevel_seti(marpaESLIFValuep->marpaESLIFp->marpaESLIFOption.genericLoggerp, logleveli);
+  }
+
   return rcb;
 }
 
@@ -5182,7 +5195,6 @@ static short _marpaESLIFValueRuleCallbackGrammar(void *userDatavp, marpaESLIFVal
   marpaESLIF_grammar_t         *grammarp                   = marpaESLIFGrammarp->grammarp;
   genericStack_t               *ruleStackp                 = grammarp->ruleStackp;
   marpaESLIF_rule_t            *rulep;
-  char                         *ruleshows;
 #endif
 
   marpaESLIFRecognizerp->callstackCounteri++;
@@ -5198,11 +5210,6 @@ static short _marpaESLIFValueRuleCallbackGrammar(void *userDatavp, marpaESLIFVal
     MARPAESLIF_ERRORF(marpaESLIFp, "Null rule pointer for rule number %d", rulei);
     goto err;
   }
-  if (! marpaESLIFGrammar_ruleshowformb(marpaESLIFGrammarp, rulei, &ruleshows)) {
-    MARPAESLIF_ERRORF(marpaESLIFp, "Null rule show for rule %s", rulep->descp->asciis);
-    goto err;
-  }
-  MARPAESLIF_TRACEF(marpaESLIFp, funcs, "==> Rule %s ", ruleshows);
 #endif
 
   /* Every action that is not a discard nor a grammar used for lexeme discovery, i.e. any action */
@@ -5212,6 +5219,8 @@ static short _marpaESLIFValueRuleCallbackGrammar(void *userDatavp, marpaESLIFVal
     MARPAESLIF_ERRORF(marpaESLIFp, "No action for rule %s", rulep->descp->asciis);
     goto err;
   }
+
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Action %s", actions);
 
   if (strcmp(actions, G1_RULE_OP_DECLARE_3) == 0) {
     /*
@@ -5224,6 +5233,8 @@ static short _marpaESLIFValueRuleCallbackGrammar(void *userDatavp, marpaESLIFVal
     if (! _marpaESLIF_grammarContext_get_asciib(marpaESLIFp, outputStackp, itemTypeStackp, arg0i, &asciis)) {
       goto err;
     }
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Action %s: outputStackp->[%d] <= \"%s\"", actions, arg0i, asciis);
+
     asciis += 2;    /* Skip ":[" */
     /* By construction this cannot be < 0 - we made sure the string is ASCII (via the grammar) and NUL terminated (via the symbol callback) */
     grammarLeveli = atoi(asciis);
@@ -5239,9 +5250,10 @@ static short _marpaESLIFValueRuleCallbackGrammar(void *userDatavp, marpaESLIFVal
         goto err;
       }
       out_grammarp = NULL; /* out_grammarp is now in out_grammarStackp */
-      MARPAESLIF_DEBUGF(marpaESLIFValuep->marpaESLIFp, "[%s] %s: Created grammar at level %d", funcs, actions, grammarLeveli);
+      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Action %s: Created grammar at level %d", actions, grammarLeveli);
     }
 
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Action %s: outputStackp->[%d] => %d", actions, resulti, grammarLeveli);
     if (! _marpaESLIF_grammarContext_set_intb(marpaESLIFp, outputStackp, itemTypeStackp, resulti, grammarLeveli)) {
       goto err;
     }
@@ -5312,6 +5324,8 @@ static short _marpaESLIFValueSymbolCallbackGrammar(void *userDatavp, marpaESLIFV
     goto err;
   }
 
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Action %s", actions);
+
   /* We ALWAYS add an internal "hiden" (i.e. not counted in the number of bytes) NUL, not only for ease of debugging, but also */
   /* because some operations on pure ASCII strings need a NUL byte terminated string (for example: atoi()). */
 
@@ -5324,6 +5338,8 @@ static short _marpaESLIFValueSymbolCallbackGrammar(void *userDatavp, marpaESLIFV
     }
     asciis[bytel] = '\0';
     memcpy(asciis, bytep, bytel);
+
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Action %s: outputStackp->[%d] => \"%s\"", actions, resulti, asciis);
 
     if (! _marpaESLIF_grammarContext_set_asciib(marpaESLIFp, outputStackp, itemTypeStackp, resulti, asciis)) {
       goto err;
@@ -6729,6 +6745,8 @@ static inline void _marpaESLIF_grammarContext_resetv(marpaESLIF_t *marpaESLIFp, 
         grammarp = (marpaESLIF_grammar_t *) GENERICSTACK_GET_PTR(grammarStackp, i);
         _marpaESLIF_grammar_freev(grammarp);
       }
+      /* We know it is on the "heap" */
+      GENERICSTACK_FREE(grammarStackp);
     }
   }
 }
