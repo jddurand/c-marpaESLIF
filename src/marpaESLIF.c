@@ -5650,7 +5650,7 @@ static inline short _marpaESLIFRecognizer_readb(marpaESLIFRecognizer_t *marpaESL
   }
 
   /* We maintain here a very special thing: if there is EOF at the very first read, this mean that the user gave the whole stream */
-  /* in ONE step: then removing PCRE2_ANCHOR is allowed. */
+  /* in ONE step: then removing PCRE2_ANCHORED is allowed. */
   if (*(marpaESLIFRecognizerp->nextReadIsFirstReadbp)) {
     *(marpaESLIFRecognizerp->noAnchorIsOkbp) = eofb;
     *(marpaESLIFRecognizerp->nextReadIsFirstReadbp) = 0; /* Next read will not be the first read */
