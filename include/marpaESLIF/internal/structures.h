@@ -204,40 +204,6 @@ struct marpaESLIF_grammar {
   size_t                 rulel;                       /* Size of the rule IDs array - filled by grammar validation */
 };
 
-/* Internal reader context when parsing a grammar. Everything is in utf8s so the reader can say ok to any stream callback */
-struct marpaESLIF_readerContext {
-  marpaESLIF_t              *marpaESLIFp;
-  marpaESLIFGrammarOption_t *marpaESLIFGrammarOptionp;
-};
-
-/* Internal structure to have value context information */
-/* This is used in three contexts:
-   - discard grammar
-   - meta symbol that appears to be a terminal
-
-   Both are using the "lexeme" mode, in which any action set in the grammar is ignored
-   in favour of concatenating everything that matched.
-*/
-struct marpaESLIF_lexemeContext {
-  genericStack_t        outputStack;
-  genericStack_t       *outputStackp;
-};
-
-/* Internal structure to have value context information */
-/* This is used in the grammar generation context */
-struct marpaESLIF_grammarContext {
-  genericStack_t        outputStack;
-  genericStack_t       *outputStackp;
-  int                   lastGrammarLeveli;
-  char                 *lastAsciiGraphNames;
-};
-
-/* Internal structure to have clone context information */
-struct marpaESLIF_cloneContext {
-  marpaESLIF_t         *marpaESLIFp;
-  marpaESLIF_grammar_t *grammarp;
-};
-
 /* ----------------------------------- */
 /* Definition of the opaque structures */
 /* ----------------------------------- */
@@ -312,6 +278,45 @@ struct marpaESLIFRecognizer {
   char                       **encodingsp;     /* Pointer to current encoding - shared between recognizers */
   marpaESLIF_terminal_t      **encodingpp;     /* Pointer to terminal case-insensitive version of current encoding */
   tconv_t                     *tconvpp;        /* Pointer to current converted - shared between recognizers */
+};
+
+/* ------------------------------- */
+/* Definition of internal contexts */
+/* ------------------------------- */
+
+/* Internal reader context when parsing a grammar. Everything is in utf8s so the reader can say ok to any stream callback */
+struct marpaESLIF_readerContext {
+  marpaESLIF_t              *marpaESLIFp;
+  marpaESLIFGrammarOption_t *marpaESLIFGrammarOptionp;
+};
+
+/* Internal structure to have value context information */
+/* This is used in three contexts:
+   - discard grammar
+   - meta symbol that appears to be a terminal
+
+   Both are using the "lexeme" mode, in which any action set in the grammar is ignored
+   in favour of concatenating everything that matched.
+*/
+struct marpaESLIF_lexemeContext {
+  genericStack_t        outputStack;
+  genericStack_t       *outputStackp;
+};
+
+/* Internal structure to have value context information */
+/* This is used in the grammar generation context */
+struct marpaESLIF_grammarContext {
+  genericStack_t        outputStack;
+  genericStack_t       *outputStackp;
+  int                   lastGrammarLeveli;
+  char                 *lastAsciiGraphNames;
+  marpaESLIFGrammar_t   marpaESLIFGrammar;
+};
+
+/* Internal structure to have clone context information */
+struct marpaESLIF_cloneContext {
+  marpaESLIF_t         *marpaESLIFp;
+  marpaESLIF_grammar_t *grammarp;
 };
 
 /* ------------------------------------------- */
