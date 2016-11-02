@@ -153,6 +153,8 @@ static inline short                  _marpaESLIF_grammarContext_get_asciib(marpa
 static inline short                  _marpaESLIF_grammarContext_set_asciib(marpaESLIF_t *marpaESLIFp, genericStack_t *outputStackp, genericStack_t *itemTypeStackp, int i, char *value);
 static inline short                  _marpaESLIF_grammarContext_get_intb(marpaESLIF_t *marpaESLIFp, genericStack_t *outputStackp, genericStack_t *itemTypeStackp, int i, int *valuep);
 static inline short                  _marpaESLIF_grammarContext_set_intb(marpaESLIF_t *marpaESLIFp, genericStack_t *outputStackp, genericStack_t *itemTypeStackp, int i, int value);
+static inline short                  _marpaESLIF_grammarContext_get_adverb_item_actionb(marpaESLIF_t *marpaESLIFp, genericStack_t *outputStackp, genericStack_t *itemTypeStackp, int i, char **valuep);
+static inline short                  _marpaESLIF_grammarContext_set_adverb_item_actionb(marpaESLIF_t *marpaESLIFp, genericStack_t *outputStackp, genericStack_t *itemTypeStackp, int i, char *value);
 
 /*****************************************************************************/
 static inline marpaESLIF_string_t *_marpaESLIF_string_newp(marpaESLIF_t *marpaESLIFp, char *encodingasciis, char *bytep, size_t bytel, short asciib)
@@ -2913,6 +2915,7 @@ marpaESLIFGrammar_t *marpaESLIFGrammar_newp(marpaESLIF_t *marpaESLIFp, marpaESLI
   marpaESLIF_grammarContext.outputStackp                    = NULL;
   marpaESLIF_grammarContext.itemTypeStackp                  = NULL;
   marpaESLIF_grammarContext.grammarStackp                   = 0;
+  marpaESLIF_grammarContext.current_grammarp                = NULL;
 
   /* MARPAESLIF_TRACE(marpaESLIFp, funcs, "Building Grammar"); */
 
@@ -5190,6 +5193,7 @@ static short _marpaESLIFValueRuleCallbackGrammar(void *userDatavp, marpaESLIFVal
   marpaESLIF_grammar_t         *out_grammarp               = NULL;
   short                        rcb;
   char                         *asciis;
+  char                         *adverb_item_actions;
   int                           grammarLeveli;
 #ifndef MARPAESLIF_NTRACE
   marpaESLIF_grammar_t         *grammarp                   = marpaESLIFGrammarp->grammarp;
@@ -5258,6 +5262,14 @@ static short _marpaESLIFValueRuleCallbackGrammar(void *userDatavp, marpaESLIFVal
     }
     MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: outputStackp->[%d] => %d", actions, resulti, grammarLeveli);
 
+    /* Set current grammar to the one at level grammarLeveli */
+    if (! GENERICSTACK_IS_PTR(grammarStackp, grammarLeveli)) {
+      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "No grammar at grammarStackp indice %d", grammarLeveli);
+      goto err;
+    }
+    marpaESLIF_grammarContextp->current_grammarp = GENERICSTACK_GET_PTR(grammarStackp, grammarLeveli);
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: Setted current grammar to the one at level %d", actions, grammarLeveli);
+
   } else if (strcmp(actions, G1_RULE_ACTION_NAME) == 0) {
     /*
      * ---------------------------------------------------------------------------------------------
@@ -5308,21 +5320,21 @@ static short _marpaESLIFValueRuleCallbackGrammar(void *userDatavp, marpaESLIFVal
      * <adverb item> ::= action
      * ---------------------------------------------------------------------------------------------
      */
-    if (! _marpaESLIF_grammarContext_get_asciib(marpaESLIFp, outputStackp, itemTypeStackp, arg0i, &asciis)) {
+    if (! _marpaESLIF_grammarContext_get_asciib(marpaESLIFp, outputStackp, itemTypeStackp, arg0i, &adverb_item_actions)) {
       goto err;
     }
-    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: outputStackp->[%d] <= \"%s\"", actions, arg0i, asciis);
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: outputStackp->[%d] <= \"%s\"", actions, arg0i, adverb_item_actions);
 
-    asciis = strdup(asciis);
-    if (asciis == NULL) {
+    adverb_item_actions = strdup(adverb_item_actions);
+    if (adverb_item_actions == NULL) {
       MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "strdup failure, %s", strerror(errno));
       goto err;
     }
 
-    if (! _marpaESLIF_grammarContext_set_asciib(marpaESLIFp, outputStackp, itemTypeStackp, resulti, asciis)) {
+    if (! _marpaESLIF_grammarContext_set_adverb_item_actionb(marpaESLIFp, outputStackp, itemTypeStackp, resulti, adverb_item_actions)) {
       goto err;
     }
-    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: outputStackp->[%d] => \"%s\"", actions, resulti, asciis);
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: outputStackp->[%d] => \"%s\"", actions, resulti, adverb_item_actions);
 
   } else {
     MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "Unknown rule action %s", actions);
@@ -6834,6 +6846,7 @@ static inline short _marpaESLIF_grammarContext_i_resetb(marpaESLIF_t *marpaESLIF
 
       switch (itemType) {
       case MARPAESLIF_GRAMMARITEMTYPE_ASCII_STRING:
+      case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_ACTION:
         if (GENERICSTACK_IS_PTR(outputStackp, i)) {
           asciis = (char *) GENERICSTACK_GET_PTR(outputStackp, i);
           if (asciis != NULL) {
@@ -6958,4 +6971,18 @@ static inline short _marpaESLIF_grammarContext_set_intb(marpaESLIF_t *marpaESLIF
 /*****************************************************************************/
 {
   GENERATE_MARPAESLIF_GRAMMARCONTEXT_SETTER_BODY(INT, INT, int, int);
+}
+
+/*****************************************************************************/
+static inline short _marpaESLIF_grammarContext_get_adverb_item_actionb(marpaESLIF_t *marpaESLIFp, genericStack_t *outputStackp, genericStack_t *itemTypeStackp, int i, char **valuep)
+/*****************************************************************************/
+{
+  GENERATE_MARPAESLIF_GRAMMARCONTEXT_GETTER_BODY(PTR, ADVERB_ITEM_ACTION, adverb_item_action, char *);
+}
+
+/*****************************************************************************/
+static inline short _marpaESLIF_grammarContext_set_adverb_item_actionb(marpaESLIF_t *marpaESLIFp, genericStack_t *outputStackp, genericStack_t *itemTypeStackp, int i, char *value)
+/*****************************************************************************/
+{
+  GENERATE_MARPAESLIF_GRAMMARCONTEXT_SETTER_BODY(PTR, ADVERB_ITEM_ACTION, adverb_item_action, char *);
 }
