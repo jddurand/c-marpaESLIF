@@ -953,7 +953,7 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_grammarp(marpaESLIF_t 
 				  bootstrap_grammar_rulep[i].minimumi,
 				  bootstrap_grammar_rulep[i].separatori,
 				  bootstrap_grammar_rulep[i].properb,
-                                  bootstrap_grammar_rulep[i].actions
+                                  bootstrap_grammar_rulep[i].descs /* In bootstrap, the action name is the name of the rule */
 				  );
     if (rulep == NULL) {
       goto err;
@@ -5160,7 +5160,7 @@ static short _marpaESLIFValueRuleCallbackGrammar(void *userDatavp, marpaESLIFVal
     goto err;
   }
 
-  if (strcmp(actions, INTERNAL_RULE_OP_DECLARE_ANY_GRAMMAR) == 0) {
+  if (strcmp(actions, G1_RULE_OP_DECLARE_3) == 0) {
     /*
      * ---------------------------------------------------------------------------------------------
      * <op declare> ::= <op declare any grammar>
@@ -5192,7 +5192,7 @@ static short _marpaESLIFValueRuleCallbackGrammar(void *userDatavp, marpaESLIFVal
     }
     marpaESLIF_grammarContextp->lastGrammarLeveli = lastGrammarLeveli;
     MARPAESLIF_DEBUGF(marpaESLIFValuep->marpaESLIFp, "[%s] Setted lastGrammarLeveli to %d", funcs, lastGrammarLeveli);
-  } else if (strcmp(actions, INTERNAL_RULE_ASCII_GRAPH_NAME) == 0) {
+  } else if (strcmp(actions, G1_RULE_ACTION_NAME) == 0) {
     /*
      * ---------------------------------------------------------------------------------------------
      * <action name>   ::= <ascii graph name>
@@ -5213,7 +5213,7 @@ static short _marpaESLIFValueRuleCallbackGrammar(void *userDatavp, marpaESLIFVal
     }
     MARPAESLIF_DEBUGF(marpaESLIFValuep->marpaESLIFp, "[%s] Setted lastAsciiGraphNames to %s", funcs, marpaESLIF_grammarContextp->lastAsciiGraphNames);
   } else {
-    MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "Unknown action %s", actions);
+    MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "Unknown rule action %s", actions);
     goto err;
   }
 
