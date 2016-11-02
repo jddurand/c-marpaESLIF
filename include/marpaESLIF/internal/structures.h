@@ -43,22 +43,23 @@ enum marpaESLIF_terminal_type {
 
 /* Regex modifiers - we take JPCRE2 matching semantics, c.f. https://neurobin.org/projects/softwares/libs/jpcre2/ */
 typedef enum marpaESLIF_regex_option {
-  MARPAESLIF_REGEX_OPTION_NA                       = 0x0000,
-  MARPAESLIF_REGEX_OPTION_MATCH_UNSET_BACKREF      = 0x0001, /* e */
-  MARPAESLIF_REGEX_OPTION_CASELESS                 = 0x0002, /* i */
-  MARPAESLIF_REGEX_OPTION_JAVASCRIPT               = 0x0004, /* j */
-  MARPAESLIF_REGEX_OPTION_MULTILINE                = 0x0008, /* m */
-  MARPAESLIF_REGEX_OPTION_UCP                      = 0x0010, /* n */
-  MARPAESLIF_REGEX_OPTION_DOTALL                   = 0x0020, /* s */
-  MARPAESLIF_REGEX_OPTION_EXTENDED                 = 0x0040, /* x */
-  MARPAESLIF_REGEX_OPTION_DOLLAR_ENDONLY           = 0x0080, /* D */
-  MARPAESLIF_REGEX_OPTION_DUPNAMES                 = 0x0100, /* J */
-  MARPAESLIF_REGEX_OPTION_UNGREEDY                 = 0x0200, /* U */
-  MARPAESLIF_REGEX_OPTION_NO_UTF                   = 0x0400, /* a */
-  MARPAESLIF_REGEX_OPTION_NO_UCP                   = 0x0800, /* N */
-  MARPAESLIF_REGEX_OPTION_UTF                      = 0x1000, /* u */
-  MARPAESLIF_REGEX_OPTION_BINARY                   = 0x2000, /* b */
-  MARPAESLIF_REGEX_OPTION_CHARACTER                = 0x4000  /* c */
+  MARPAESLIF_REGEX_OPTION_NA                       = 0x00000,
+  MARPAESLIF_REGEX_OPTION_MATCH_UNSET_BACKREF      = 0x00001, /* e */
+  MARPAESLIF_REGEX_OPTION_CASELESS                 = 0x00002, /* i */
+  MARPAESLIF_REGEX_OPTION_JAVASCRIPT               = 0x00004, /* j */
+  MARPAESLIF_REGEX_OPTION_MULTILINE                = 0x00008, /* m */
+  MARPAESLIF_REGEX_OPTION_UCP                      = 0x00010, /* n */
+  MARPAESLIF_REGEX_OPTION_DOTALL                   = 0x00020, /* s */
+  MARPAESLIF_REGEX_OPTION_EXTENDED                 = 0x00040, /* x */
+  MARPAESLIF_REGEX_OPTION_DOLLAR_ENDONLY           = 0x00080, /* D */
+  MARPAESLIF_REGEX_OPTION_DUPNAMES                 = 0x00100, /* J */
+  MARPAESLIF_REGEX_OPTION_UNGREEDY                 = 0x00200, /* U */
+  MARPAESLIF_REGEX_OPTION_NO_UTF                   = 0x00400, /* a */
+  MARPAESLIF_REGEX_OPTION_NO_UCP                   = 0x00800, /* N */
+  MARPAESLIF_REGEX_OPTION_UTF                      = 0x01000, /* u */
+  MARPAESLIF_REGEX_OPTION_BINARY                   = 0x02000, /* b */
+  MARPAESLIF_REGEX_OPTION_CHARACTER                = 0x04000, /* c */
+  MARPAESLIF_REGEX_OPTION_NO_ANCHOR                = 0x10000  /* A */
 } marpaESLIF_regex_option_t;
 
 typedef enum marpaESLIF_regex_option_id {
@@ -77,6 +78,7 @@ typedef enum marpaESLIF_regex_option_id {
   MARPAESLIF_REGEX_OPTION_UTF_ID,
   MARPAESLIF_REGEX_OPTION_BINARY_ID,
   MARPAESLIF_REGEX_OPTION_CHARACTER_ID,
+  MARPAESLIF_REGEX_OPTION_NO_ANCHOR_ID,
   _MARPAESLIF_REGEX_OPTION_ID_MAX
 } marpaESLIF_regex_option_id_t;
 
@@ -102,7 +104,8 @@ struct marpaESLIF_regex_option_map {
   { MARPAESLIF_REGEX_OPTION_NO_UCP,                   "N", NULL,                                       0,                                        "PCRE2_UCP",       PCRE2_UCP },
   { MARPAESLIF_REGEX_OPTION_UTF,                      "u", "PCRE2_UTF",                                PCRE2_UTF,                                NULL,              0 },
   { MARPAESLIF_REGEX_OPTION_BINARY,                   "b", "PCRE2_NEVER_UTF",                          PCRE2_NEVER_UTF,                          "PCRE2_UTF",       PCRE2_UTF },
-  { MARPAESLIF_REGEX_OPTION_CHARACTER,                "c", "PCRE2_UTF",                                PCRE2_UTF,                                "PCRE2_NEVER_UTF", PCRE2_NEVER_UTF }
+  { MARPAESLIF_REGEX_OPTION_CHARACTER,                "c", "PCRE2_UTF",                                PCRE2_UTF,                                "PCRE2_NEVER_UTF", PCRE2_NEVER_UTF },
+  { MARPAESLIF_REGEX_OPTION_NO_ANCHOR,                "A", NULL,                                       0,                                        "PCRE2_ANCHORED",  PCRE2_ANCHORED }
 };
 
 struct marpaESLIF_regex {
@@ -112,6 +115,7 @@ struct marpaESLIF_regex {
   short       jitCompleteb;   /* Eventual optimized JIT */
   short       jitPartialb;
 #endif
+  short       isAnchoredb; /* Remember if pattern was allocated with PCRE2_ANCHORED (set automatically or not) */
   short       utfb; /* Is UTF mode enabled in that pattern ? */
 };
 
@@ -271,6 +275,8 @@ struct marpaESLIFRecognizer {
   size_t                       columnl;        /* Column number */
   size_t                       bufsizl;        /* Effective bufsizl */
   size_t                       buftriggerl;    /* Minimum number of bytes to trigger crunch of data */
+  short                        _nextReadIsFirstReadb; /* Flag to say if this is the first read ever done */
+  short                        _noAnchorIsOkb;  /* Flag to say if the "A" flag in regexp modifiers is allowed: removing PCRE2_ANCHOR is allowed ONLY is the whole stream was read once */
 
   char                        *_encodings;     /* Current encoding. Always != NULL when _charconvb is true. Always NULL when charconvb is false. */
   marpaESLIF_terminal_t       *_encodingp;     /* Terminal case-insensitive version of current encoding. Always != NULL when _charconvb is true. Always NULL when charconvb is false. */
@@ -278,6 +284,9 @@ struct marpaESLIFRecognizer {
   char                       **encodingsp;     /* Pointer to current encoding - shared between recognizers */
   marpaESLIF_terminal_t      **encodingpp;     /* Pointer to terminal case-insensitive version of current encoding */
   tconv_t                     *tconvpp;        /* Pointer to current converted - shared between recognizers */
+  short                       *nextReadIsFirstReadbp;
+  short                       *noAnchorIsOkbp;  /* Flag to say if the "A" flag in regexp modifiers is allowed: removing PCRE2_ANCHOR is allowed ONLY is the whole stream was read once */
+
 };
 
 /* ------------------------------- */
