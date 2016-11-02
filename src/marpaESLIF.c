@@ -3974,14 +3974,13 @@ static short _marpaESLIFReader_grammarReader(void *userDatavp, char **inputsp, s
   marpaESLIF_readerContext_t *marpaESLIF_readerContextp = (marpaESLIF_readerContext_t *) userDatavp;
   marpaESLIF_t               *marpaESLIFp               = marpaESLIF_readerContextp->marpaESLIFp;
 
-  *inputsp             = marpaESLIF_readerContextp->marpaESLIFGrammarOptionp->grammars;
-  *inputlp             = marpaESLIF_readerContextp->marpaESLIFGrammarOptionp->grammarl;
-  *encodingsp          = marpaESLIF_readerContextp->marpaESLIFGrammarOptionp->encodings;
-  *eofbp               = 1;
-  *characterStreambp   = 1; /* We say this is a stream of characters */
-  encodingOfEncodingsp = NULL; /* We let ESLIF determine the encoding */
-  *encodingsp          = NULL;   /* We let ESLIF determine the encoding */
-  *encodinglp          = 0;
+  *inputsp              = marpaESLIF_readerContextp->marpaESLIFGrammarOptionp->grammars;
+  *inputlp              = marpaESLIF_readerContextp->marpaESLIFGrammarOptionp->grammarl;
+  *eofbp                = 1;
+  *characterStreambp    = 1; /* We say this is a stream of characters */
+  *encodingOfEncodingsp = marpaESLIF_readerContextp->marpaESLIFGrammarOptionp->encodingOfEncodings;
+  *encodingsp           = marpaESLIF_readerContextp->marpaESLIFGrammarOptionp->encodings;
+  *encodinglp           = marpaESLIF_readerContextp->marpaESLIFGrammarOptionp->encodingl;
 
   MARPAESLIF_TRACEF(marpaESLIFp, funcs, "return 1 (*inputsp=%p, *inputlp=%ld, *eofbp=%d, *characterStreambp=%d)", *inputsp, (unsigned long) *inputlp, (int) *eofbp, (int) *characterStreambp);
   return 1;
