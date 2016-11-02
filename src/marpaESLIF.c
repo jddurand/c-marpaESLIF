@@ -5807,6 +5807,8 @@ static inline short _marpaESLIFRecognizer_readb(marpaESLIFRecognizer_t *marpaESL
         }
       }
     }
+    /* We do not know UTF-8 correctness. */
+    *(marpaESLIFRecognizerp->utfbp) = 0;
   }
 
   rcb = 1;
