@@ -358,6 +358,7 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
   terminalp->regex.jitCompleteb  = 0;
   terminalp->regex.jitPartialb   = 0;
 #endif
+  terminalp->regex.isAnchoredb   = 0;
   terminalp->regex.utfb          = 0;
 
   /* ----------- Terminal Identifier ------------ */
@@ -549,11 +550,12 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
     /* break; */
 
   case MARPAESLIF_TERMINAL_TYPE_REGEX:
-    
-    pcre2Optioni = PCRE2_ANCHORED;      /* By default patterns are always anchored and only that */
+
+    /* By default patterns are always anchored and only that EXCEPT in one case... see regex_match */
+    pcre2Optioni = PCRE2_ANCHORED;
     for (i = 0; i < _MARPAESLIF_REGEX_OPTION_ID_MAX; i++) {
       if ((opti & marpaESLIF_regex_option_map[i].opti) == marpaESLIF_regex_option_map[i].opti) {
-	/* It is important to process pcre2OptionNoti first */
+        /* It is important to process pcre2OptionNoti first */
 	if (marpaESLIF_regex_option_map[i].pcre2OptionNoti != 0) {
           MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s: regex modifier %s: removing %s", terminalp->descp->asciis, marpaESLIF_regex_option_map[i].modifiers, marpaESLIF_regex_option_map[i].pcre2OptionNots);
 	  pcre2Optioni &= ~marpaESLIF_regex_option_map[i].pcre2OptionNoti;
@@ -564,6 +566,7 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
 	}
       }
     }
+
     terminalp->regex.patternp = pcre2_compile(
                                               (PCRE2_SPTR) utf8s,      /* An UTF-8 pattern */
                                               (PCRE2_SIZE) utf8l,      /* In code units (!= code points) - in UTF-8 a code unit is a byte */
@@ -600,15 +603,20 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
       terminalp->regex.jitPartialb = 0;
     }
 #endif /*  PCRE2_CONFIG_JIT */
-    /* And in the UTF mode is on */
+    /* And some modes after the pattern was allocated */
     pcre2Errornumberi = pcre2_pattern_info(terminalp->regex.patternp, PCRE2_INFO_ALLOPTIONS, &pcre2Optioni);
     if (pcre2Errornumberi != 0) {
       pcre2_get_error_message(pcre2Errornumberi, pcre2ErrorBuffer, sizeof(pcre2ErrorBuffer));
       MARPAESLIF_ERRORF(marpaESLIFp, "%s: pcre2_pattern_info failure: %s", terminalp->descp->asciis, pcre2ErrorBuffer);
       goto err;
     }
-    terminalp->regex.utfb = ((pcre2Optioni & PCRE2_UTF) == PCRE2_UTF);
-    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s: UTF mode is %s", terminalp->descp->asciis, terminalp->regex.utfb ? "on" : "off");
+    terminalp->regex.utfb        = ((pcre2Optioni & PCRE2_UTF) == PCRE2_UTF);
+    terminalp->regex.isAnchoredb = ((pcre2Optioni & PCRE2_ANCHORED) == PCRE2_ANCHORED);
+    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s: UTF mode is %s, Anchored mode is %s",
+                      terminalp->descp->asciis,
+                      terminalp->regex.utfb ? "on" : "off",
+                      terminalp->regex.isAnchoredb ? "on" : "off"
+                      );
 
     /* If opti is set, revisit the automatic description */
     if ((pcre2Optioni != PCRE2_ANCHORED) & (generatedasciis != NULL)) {
@@ -2268,9 +2276,14 @@ static inline short _marpaESLIFRecognizer_regex_matcherb(marpaESLIFRecognizer_t 
   PCRE2_UCHAR                 pcre2ErrorBuffer[256];
   PCRE2_SIZE                 *pcre2_ovectorp;
   size_t                      matchedLengthl;
-  marpaESLIF_uint32_t         pcre2_option;
+  marpaESLIF_uint32_t         pcre2_optioni;
   short                       binmodeb;
   short                       rcb;
+#ifdef PCRE2_CONFIG_JIT
+  /* A priori we can call JIT - this is switched off in the exceptional case of */
+  /* needing anchoring but the JIT pattern was compiled without anchoring */
+  short                       canJitb = 1;
+#endif
 
   marpaESLIFRecognizerp->callstackCounteri++;
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
@@ -2292,17 +2305,33 @@ static inline short _marpaESLIFRecognizer_regex_matcherb(marpaESLIFRecognizer_t 
     /* by default, unless PCRE2_NO_UTF_CHECK is set.                                  */
     if (marpaESLIF_regex.utfb) {                     /* UTF-8 correctness is required */
       if (! *(marpaESLIFRecognizerp->utfbp)) {
-        pcre2_option = pcre2_option_binary_default;  /* We have done no conversion : PCRE2 will check */
+        pcre2_optioni = pcre2_option_binary_default;  /* We have done no conversion : PCRE2 will check */
         binmodeb = 1;
       } else {
-        pcre2_option = pcre2_option_char_default;    /* We made sure this is ok */
+        pcre2_optioni = pcre2_option_char_default;    /* We made sure this is ok */
         binmodeb = 0;
       }
     } else {
-      pcre2_option = pcre2_option_binary_default;    /* Not needed */
+      pcre2_optioni = pcre2_option_binary_default;    /* Not needed */
       binmodeb = 1;
     }
 
+    /* --------------------------------------------------------- */
+    /* Anchored regex...                                         */
+    /* --------------------------------------------------------- */
+    /*
+     Patterns are always compiled with PCRE2_ANCHORED by default,
+     except when there is the "A" modifier. In this case, it allowed
+     to execute the regex ONLY if the whole stream was read in one
+     call to the user's read callback.
+    */
+    if (! terminalp->regex.isAnchoredb) {
+      if (! *(marpaESLIFRecognizerp->noAnchorIsOkbp)) {
+        MARPAESLIF_ERRORF(marpaESLIFp, "%s: You used the \"A\" modifier to set the pattern non-anchored, but then you must read the whole input in one go", terminalp->descp->asciis);
+        goto err;
+      }
+    }
+    
     /* --------------------------------------------------------- */
     /* EOF mode:                                                 */
     /* return full match status: OK or FAILURE.                  */
@@ -2324,7 +2353,7 @@ static inline short _marpaESLIFRecognizer_regex_matcherb(marpaESLIFRecognizer_t 
                                           (PCRE2_SPTR) inputs,          /* subject */
                                           (PCRE2_SIZE) inputl,          /* length */
                                           (PCRE2_SIZE) 0,               /* startoffset */
-                                          pcre2_option,                 /* options */
+                                          pcre2_optioni,                /* options */
                                           marpaESLIF_regex.match_datap, /* match data */
                                           NULL                          /* match context - used default */
                                           );
@@ -2340,7 +2369,7 @@ static inline short _marpaESLIFRecognizer_regex_matcherb(marpaESLIFRecognizer_t 
                                       (PCRE2_SPTR) inputs,          /* subject */
                                       (PCRE2_SIZE) inputl,          /* length */
                                       (PCRE2_SIZE) 0,               /* startoffset */
-                                      pcre2_option,                 /* options */
+                                      pcre2_optioni,                /* options */
                                       marpaESLIF_regex.match_datap, /* match data */
                                       NULL                          /* match context - used default */
                                       );
@@ -4358,6 +4387,8 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGramm
   marpaESLIFRecognizerp->_encodings                 = 0;
   marpaESLIFRecognizerp->_encodingp                 = NULL;
   marpaESLIFRecognizerp->_tconvp                    = NULL;
+  marpaESLIFRecognizerp->_nextReadIsFirstReadb      = 1;
+  marpaESLIFRecognizerp->_noAnchorIsOkb             = 0;
   /* If this is a parent recognizer get its stream information */
   if (marpaESLIFRecognizerParentp != NULL) {
     marpaESLIFRecognizerp->leveli                     = marpaESLIFRecognizerParentp->leveli + 1;
@@ -4371,6 +4402,8 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGramm
     marpaESLIFRecognizerp->encodingpp                 = marpaESLIFRecognizerParentp->encodingpp;
     marpaESLIFRecognizerp->tconvpp                    = marpaESLIFRecognizerParentp->tconvpp;
     marpaESLIFRecognizerp->parentDeltal               = marpaESLIFRecognizerParentp->inputs - *(marpaESLIFRecognizerParentp->buffersp);
+    marpaESLIFRecognizerp->nextReadIsFirstReadbp      = marpaESLIFRecognizerParentp->nextReadIsFirstReadbp;
+    marpaESLIFRecognizerp->noAnchorIsOkbp             = marpaESLIFRecognizerParentp->noAnchorIsOkbp;
     /* New recognizer is starting at the parent's inputs pointer */
     marpaESLIFRecognizerp->inputs                     = marpaESLIFRecognizerParentp->inputs;
     marpaESLIFRecognizerp->inputl                     = marpaESLIFRecognizerParentp->inputl;
@@ -4388,6 +4421,8 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGramm
     marpaESLIFRecognizerp->encodingpp                 = &(marpaESLIFRecognizerp->_encodingp);
     marpaESLIFRecognizerp->tconvpp                    = &(marpaESLIFRecognizerp->_tconvp);
     marpaESLIFRecognizerp->parentDeltal               = 0;
+    marpaESLIFRecognizerp->nextReadIsFirstReadbp      = &(marpaESLIFRecognizerp->_nextReadIsFirstReadb);
+    marpaESLIFRecognizerp->noAnchorIsOkbp             = &(marpaESLIFRecognizerp->_noAnchorIsOkb);
     /* New recognizer is starting nowhere for the moment - it will ask for more data, c.f. recognizer's read() */
     marpaESLIFRecognizerp->inputs                     = NULL;
     marpaESLIFRecognizerp->inputl                     = 0;
@@ -5612,6 +5647,13 @@ static inline short _marpaESLIFRecognizer_readb(marpaESLIFRecognizer_t *marpaESL
   if (! marpaESLIFRecognizerOption.marpaESLIFReaderCallbackp(marpaESLIFRecognizerOption.userDatavp, &inputs, &inputl, &eofb, &characterStreamb, &encodingOfEncodings, &encodings, &encodingl)) {
     MARPAESLIF_ERROR(marpaESLIFp, "reader failure");
     goto err;
+  }
+
+  /* We maintain here a very special thing: if there is EOF at the very first read, this mean that the user gave the whole stream */
+  /* in ONE step: then removing PCRE2_ANCHOR is allowed. */
+  if (*(marpaESLIFRecognizerp->nextReadIsFirstReadbp)) {
+    *(marpaESLIFRecognizerp->noAnchorIsOkbp) = eofb;
+    *(marpaESLIFRecognizerp->nextReadIsFirstReadbp) = 0; /* Next read will not be the first read */
   }
 
   if ((inputs != NULL) && (inputl > 0)) {
