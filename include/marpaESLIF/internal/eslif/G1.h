@@ -728,8 +728,12 @@ bootstrap_grammar_rule_t bootstrap_grammar_G1_rules[] = {
   { G1_META_DEFAULT_RULE,                     G1_RULE_DEFAULT_RULE,                          MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_TERMINAL__DEFAULT,
                                                                                                                                      G1_META_OP_DECLARE,
                                                                                                                                      G1_META_ADVERB_LIST                          }, { 0, 0, 0},       -1,                        -1, -1 },
-  { G1_META_LEXEME_DEFAULT_STATEMENT,         G1_RULE_LEXEME_DEFAULT_STATEMENT,              MARPAESLIF_RULE_TYPE_ALTERNATIVE, 4, { G1_TERMINAL_LEXEME,
+  { G1_META_LEXEME_DEFAULT_STATEMENT,         G1_RULE_LEXEME_DEFAULT_STATEMENT_1,            MARPAESLIF_RULE_TYPE_ALTERNATIVE, 4, { G1_TERMINAL_LEXEME,
                                                                                                                                      G1_TERMINAL_DEFAULT,
+                                                                                                                                     G1_TERMINAL_EQUAL,
+                                                                                                                                     G1_META_ADVERB_LIST                          }, { 1, 1, 1, 0},    -1,                        -1, -1 },
+  { G1_META_LEXEME_DEFAULT_STATEMENT,         G1_RULE_LEXEME_DEFAULT_STATEMENT_2,            MARPAESLIF_RULE_TYPE_ALTERNATIVE, 4, { G1_TERMINAL_LEXEME,
+                                                                                                                                     G1_META_OP_DECLARE,
                                                                                                                                      G1_TERMINAL_EQUAL,
                                                                                                                                      G1_META_ADVERB_LIST                          }, { 1, 1, 1, 0},    -1,                        -1, -1 },
   /*
