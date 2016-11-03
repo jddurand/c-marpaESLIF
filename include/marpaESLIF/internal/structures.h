@@ -23,10 +23,8 @@ typedef enum    marpaESLIF_event_type      marpaESLIF_event_type_t;
 typedef enum    marpaESLIF_array_type      marpaESLIF_array_type_t;
 typedef struct  marpaESLIF_readerContext   marpaESLIF_readerContext_t;
 typedef struct  marpaESLIF_lexemeContext   marpaESLIF_lexemeContext_t;
-typedef struct  marpaESLIF_grammarContext  marpaESLIF_grammarContext_t;
 typedef struct  marpaESLIF_cloneContext    marpaESLIF_cloneContext_t;
 typedef enum    marpaESLIF_valueMode       marpaESLIF_valueMode_t;
-typedef enum    marpaESLIF_grammarItemType marpaESLIF_grammarItemType_t;
 
 /* Symbol types */
 enum marpaESLIF_symbol_type {
@@ -311,29 +309,6 @@ struct marpaESLIF_readerContext {
 struct marpaESLIF_lexemeContext {
   genericStack_t        outputStack;
   genericStack_t       *outputStackp;
-};
-
-enum marpaESLIF_grammarItemType {
-  MARPAESLIF_GRAMMARITEMTYPE_NA = 0,
-  MARPAESLIF_GRAMMARITEMTYPE_ASCII_STRING,
-  MARPAESLIF_GRAMMARITEMTYPE_INT,
-  MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_ACTION
-};
-
-/* Internal structure to have value context information */
-/* This is used in the grammar generation context */
-/* We maintain in parallel thress stacks:
-   - the outputStack as per Marpa,
-   - a description of what is at every indice of this outputStack
-   - grammars
-/* Grammar themselves are in grammarStackp */
-struct marpaESLIF_grammarContext {
-  genericStack_t              outputStack; /* This stack is temporary: GENERICSTACK_INIT() */
-  genericStack_t             *outputStackp;
-  genericStack_t              itemTypeStack; /* This stack is temporary: GENERICSTACK_INIT() */
-  genericStack_t             *itemTypeStackp;
-  genericStack_t             *grammarStackp; /* This stack will have to survive if success: GENERICSTACK_NEW() */
-  marpaESLIF_grammar_t       *current_grammarp;
 };
 
 /* Internal structure to have clone context information */
