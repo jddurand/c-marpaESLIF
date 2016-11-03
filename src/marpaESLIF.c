@@ -5386,6 +5386,30 @@ static short _marpaESLIFValueRuleCallbackGrammar(void *userDatavp, marpaESLIFVal
     }
     MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: outputStackp->[%d] => \"%s\"", actions, resulti, adverb_item_action);
 
+  } else if (strcmp(actions, G1_RULE_ADVERB_ITEM_12) == 0) {
+    /*
+     * ---------------------------------------------------------------------------------------------
+     * <adverb item> ::= <latm specification>
+     *
+     * Stack types:
+     * PTR ::= SHORT
+     * ---------------------------------------------------------------------------------------------
+     */
+    marpESLIF_grammarContext_latm_t             latm;
+    marpESLIF_grammarContext_adverb_item_latm_t adverb_item_latm;
+
+    if (! _marpaESLIF_grammarContext_get_latmb(marpaESLIFp, outputStackp, itemTypeStackp, arg0i, &latm)) {
+      goto err;
+    }
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: outputStackp->[%d] <= %d", actions, arg0i, (int) latm);
+
+    adverb_item_latm = latm;
+
+    if (! _marpaESLIF_grammarContext_set_adverb_item_latmb(marpaESLIFp, outputStackp, itemTypeStackp, resulti, adverb_item_latm)) {
+      goto err;
+    }
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: outputStackp->[%d] => %d", actions, resulti, (int) adverb_item_latm);
+
   } else if (strcmp(actions, G1_RULE_ADVERB_LIST_ITEMS) == 0) {
     /*
      * ---------------------------------------------------------------------------------------------
@@ -5562,6 +5586,22 @@ static short _marpaESLIFValueRuleCallbackGrammar(void *userDatavp, marpaESLIFVal
       goto err;
     }
     MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: outputStackp->[%d] => NA", actions, resulti);
+
+  } else if (strcmp(actions, G1_RULE_LATM_SPECIFICATION_1) == 0) {
+    /*
+     * ---------------------------------------------------------------------------------------------
+     * <latm specification> ::= 'forgiving' '=>' true
+     *
+     * Stack types:
+     * SHORT ::= LEXEME LEXEME LEXEME
+     * ---------------------------------------------------------------------------------------------
+     */
+    marpESLIF_grammarContext_latm_t latm = 1;
+
+    if (! _marpaESLIF_grammarContext_set_latmb(marpaESLIFp, outputStackp, itemTypeStackp, resulti, latm)) {
+      goto err;
+    }
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: outputStackp->[%d] => %d", actions, resulti, (int) latm);
 
   } else {
     MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "Unknown rule action %s", actions);
