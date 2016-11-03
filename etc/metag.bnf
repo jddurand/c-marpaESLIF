@@ -91,6 +91,7 @@ statement                        ::= <start rule>
 <discard rule>                 ::= ':discard' <op declare> <single symbol> <adverb list>
 <default rule>                 ::= ':default' <op declare> <adverb list>
 <lexeme default statement>     ::= 'lexeme' 'default' '=' <adverb list>
+                                 | 'lexeme' 'default' <op declare> <adverb list>
 <discard default statement>    ::= 'discard' 'default' '=' <adverb list>
 <lexeme rule>                  ::= ':lexeme' <op declare> symbol <adverb list>
 <completion event declaration> ::= 'event' <event initialization> '=' 'completed' <symbol name>
@@ -102,6 +103,7 @@ statement                        ::= <start rule>
 
 <op declare>                   ::= <op declare top grammar>
                                  | <op declare lex grammar>
+                                 | <op declare any grammar>
 
 priorities                     ::= alternatives+ separator => <op loosen>         proper => 1
 alternatives                   ::= alternative+  separator => <op equal priority> proper => 1
