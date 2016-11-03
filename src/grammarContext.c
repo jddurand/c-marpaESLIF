@@ -56,6 +56,14 @@ static inline short _marpaESLIF_grammarContext_i_resetb(marpaESLIF_t *marpaESLIF
       itemType = (marpaESLIF_grammarItemType_t) GENERICSTACK_GET_INT(itemTypeStackp, i);
 
       switch (itemType) {
+      case MARPAESLIF_GRAMMARITEMTYPE_LEXEME:        /* ARRAY */
+        if (GENERICSTACK_IS_ARRAY(outputStackp, i)) {
+          GENERICSTACKITEMTYPE2TYPE_ARRAY array =  GENERICSTACK_GET_ARRAY(outputStackp, i);
+          if (GENERICSTACK_ARRAY_PTR(array) != NULL) {
+            free(GENERICSTACK_ARRAY_PTR(array));
+          }
+        }
+        break;
       case MARPAESLIF_GRAMMARITEMTYPE_OP_DECLARE:         /* INT */
         break;
       case MARPAESLIF_GRAMMARITEMTYPE_ACTION_NAME:        /* ASCII string */

@@ -25,6 +25,7 @@ struct marpaESLIF_grammarContext {
 
 enum marpaESLIF_grammarItemType {
   MARPAESLIF_GRAMMARITEMTYPE_NA = 0,
+  MARPAESLIF_GRAMMARITEMTYPE_LEXEME,
   MARPAESLIF_GRAMMARITEMTYPE_OP_DECLARE,
   MARPAESLIF_GRAMMARITEMTYPE_ACTION_NAME,
   MARPAESLIF_GRAMMARITEMTYPE_ACTION,
@@ -138,6 +139,7 @@ done:                                                                   \
   static inline short _marpaESLIF_grammarContext_get_##name##b(marpaESLIF_t *marpaESLIFp, genericStack_t *outputStackp, genericStack_t *itemTypeStackp, int i, CType *valuep); \
   static inline short _marpaESLIF_grammarContext_set_##name##b(marpaESLIF_t *marpaESLIFp, genericStack_t *outputStackp, genericStack_t *itemTypeStackp, int i, CType value);
 
+MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(ARRAY, LEXEME,                   lexeme,                   GENERICSTACKITEMTYPE2TYPE_ARRAY)
 MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(INT,   OP_DECLARE,               op_declare,               int)
 MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(PTR,   ACTION_NAME,              action_name,              char *)
 MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(PTR,   ACTION,                   action,                   char *)
