@@ -130,12 +130,12 @@ static        short                  _marpaESLIFValueRuleCallbackMainWrapper(voi
 static        short                  _marpaESLIFValueSymbolCallbackMainWrapper(void *userDatavp, int symboli, int argi, int resulti);
 static        short                  _marpaESLIFValueNullingCallbackMainWrapper(void *userDatavp, int symboli, int resulti);
 
-/* These are the function that implement lexeme mode functionnality */
+/* These are the functions that implement lexeme mode functionnality */
 static        short                  _marpaESLIFValueRuleCallbackLexeme(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions, int rulei, int arg0i, int argni, int resulti);
 static        short                  _marpaESLIFValueSymbolCallbackLexeme(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions, char *bytep, size_t bytel, int symboli, int resulti);
 static        short                  _marpaESLIFValueNullingCallbackLexeme(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions, int symboli, int resulti);
 
-/* These are the function that implement grammar mode functionnality */
+/* These are the functions that implement grammar mode functionnality */
 static        short                  _marpaESLIFValueRuleCallbackGrammar(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions, int rulei, int arg0i, int argni, int resulti);
 static        short                  _marpaESLIFValueSymbolCallbackGrammar(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions, char *bytep, size_t bytel, int symboli, int resulti);
 static        short                  _marpaESLIFValueNullingCallbackGrammar(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions, int symboli, int resulti);
@@ -5174,33 +5174,27 @@ static short _marpaESLIFValueNullingCallbackLexeme(void *userDatavp, marpaESLIFV
 /*****************************************************************************/
 static short _marpaESLIFValueRuleCallbackGrammar(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions, int rulei, int arg0i, int argni, int resulti)
 /*****************************************************************************/
-/* In this routine the outputStackp is never changed, despite Marpa says to push at stack No resulti.                         */
-/* We are not obliged to use resulti as a stack indice. Instead we remember last meaninful information in dedicated variables */
-/* This mean that outputStack is guaranteed to contain only lexeme-like entries, copies done in symbol callback.              */
-/*****************************************************************************/
 {
-  static const char            *funcs                      = "_marpaESLIFValueRuleCallbackGrammar";
-  marpaESLIF_grammarContext_t  *marpaESLIF_grammarContextp = (marpaESLIF_grammarContext_t *) userDatavp;
-  marpaESLIF_t                 *marpaESLIFp                = marpaESLIFValuep->marpaESLIFp;
-  marpaESLIFRecognizer_t       *marpaESLIFRecognizerp      = marpaESLIFValuep->marpaESLIFRecognizerp;
-  marpaESLIFGrammar_t          *marpaESLIFGrammarp         = marpaESLIFRecognizerp->marpaESLIFGrammarp;
-  genericStack_t               *outputStackp               = marpaESLIF_grammarContextp->outputStackp;
-  genericStack_t               *itemTypeStackp             = marpaESLIF_grammarContextp->itemTypeStackp;
-  genericStack_t               *grammarStackp              = marpaESLIF_grammarContextp->grammarStackp;
-  marpaESLIF_grammar_t         *out_grammarp               = NULL;
+  static const char           *funcs                      = "_marpaESLIFValueRuleCallbackGrammar";
+  marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp = (marpaESLIF_grammarContext_t *) userDatavp;
+  marpaESLIF_t                *marpaESLIFp                = marpaESLIFValuep->marpaESLIFp;
+  marpaESLIFRecognizer_t      *marpaESLIFRecognizerp      = marpaESLIFValuep->marpaESLIFRecognizerp;
+  marpaESLIFGrammar_t         *marpaESLIFGrammarp         = marpaESLIFRecognizerp->marpaESLIFGrammarp;
+  genericStack_t              *outputStackp               = marpaESLIF_grammarContextp->outputStackp;
+  genericStack_t              *itemTypeStackp             = marpaESLIF_grammarContextp->itemTypeStackp;
+  genericStack_t              *grammarStackp              = marpaESLIF_grammarContextp->grammarStackp;
   int                          i;
   short                        rcb;
-  char                         *asciis;
-  char                         *adverb_item_actions;
-  genericStack_t               *adverb_list_items = NULL;
   marpaESLIF_grammarItemType_t type;
-  genericStack_t               *adverb_list;
-  int                           grammarLeveli;
 #ifndef MARPAESLIF_NTRACE
   marpaESLIF_grammar_t         *grammarp                   = marpaESLIFGrammarp->grammarp;
   genericStack_t               *ruleStackp                 = grammarp->ruleStackp;
   marpaESLIF_rule_t            *rulep;
 #endif
+  /* Variables that many need a cleanup */
+  marpaESLIF_grammar_t        *out_grammarp                 = NULL;
+  marpaESLIF_adverbItem_t     *out_adverbItemp              = NULL;
+  genericStack_t              *out_adverb_list_items_stackp = NULL;
 
   marpaESLIFRecognizerp->callstackCounteri++;
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
@@ -5220,6 +5214,8 @@ static short _marpaESLIFValueRuleCallbackGrammar(void *userDatavp, marpaESLIFVal
   /* Every action that is not a discard nor a grammar used for lexeme discovery, i.e. any action */
   /* that an API can declare, is guaranteed to never be called with actions == NULL. Checked */
   /* nevertheless who knows -; It is also guaranteed that a lexeme is never <= 0 */
+  /* Remember that EVERY lexeme pushed by the grammar recognizer has systematically a NUL byte */
+  /* appended. This make ASCII string usable directly with methods like atoi(), strxxx()... */
   if (actions == NULL) {
     MARPAESLIF_ERRORF(marpaESLIFp, "No action for rule %s", rulep->descp->asciis);
     goto err;
@@ -5233,51 +5229,55 @@ static short _marpaESLIFValueRuleCallbackGrammar(void *userDatavp, marpaESLIFVal
      * <op declare> ::= <op declare any grammar>
      *
      * Stack types:
-     * INT ::= ASCII_STRING
+     * INT ::= LEXEME (ASCII compatible as per the grammar)
      * ---------------------------------------------------------------------------------------------
      */
-    GENERICSTACKITEMTYPE2TYPE_ARRAY array;
-    char *asciis;
-    if (! _marpaESLIF_grammarContext_get_lexemeb(marpaESLIFp, outputStackp, itemTypeStackp, arg0i, &array)) {
+    marpESLIF_grammarContext_lexeme_t     op_declare_any_grammar;
+    marpESLIF_grammarContext_op_declare_t op_declare;
+    char                                 *p;
+
+    if (! _marpaESLIF_grammarContext_get_lexemeb(marpaESLIFp, outputStackp, itemTypeStackp, arg0i, &op_declare_any_grammar)) {
       goto err;
     }
-    asciis = (char *) GENERICSTACK_ARRAY_PTR(array);
-    if (asciis == NULL) {
+    if (GENERICSTACK_ARRAY_PTR(op_declare_any_grammar) == NULL) {
       MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "NULL lexeme");
       goto err;
     }
-    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: outputStackp->[%d] <= \"%s\" (ASCII_STRING)", actions, arg0i, asciis);
 
-    asciis += 2;    /* Skip ":[" */
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: outputStackp->[%d] <= {\"%s\", %ld}", actions, arg0i, GENERICSTACK_ARRAY_PTR(op_declare_any_grammar), (unsigned long) GENERICSTACK_ARRAY_LENGTH(op_declare_any_grammar));
+
+    /* Get the grammar level */
+    p = GENERICSTACK_ARRAY_PTR(op_declare_any_grammar);
+    p += 2;    /* Skip ":[" */
     /* By construction this cannot be < 0 - we made sure the string is ASCII (via the grammar) and NUL terminated (via the symbol callback) */
-    grammarLeveli = atoi(asciis);
+    op_declare = atoi(p);
     /* Make sure grammar at this level exist */
-    if (! GENERICSTACK_IS_PTR(grammarStackp, grammarLeveli)) {
-      out_grammarp = _marpaESLIF_grammar_newp(marpaESLIFp, NULL /* marpaWrapperGrammarOptionp */, grammarLeveli, NULL /* descs */, 0 /* descl */, NULL /* defaultSymbolActionp */, NULL /* defaultRuleActionp */);
+    if (! GENERICSTACK_IS_PTR(grammarStackp, op_declare)) {
+      out_grammarp = _marpaESLIF_grammar_newp(marpaESLIFp, NULL /* marpaWrapperGrammarOptionp */, op_declare, NULL /* descs */, 0 /* descl */, NULL /* defaultSymbolActionp */, NULL /* defaultRuleActionp */);
       if (out_grammarp == NULL) {
         goto err;
       }
-      GENERICSTACK_SET_PTR(grammarStackp, out_grammarp, grammarLeveli);
+      GENERICSTACK_SET_PTR(grammarStackp, out_grammarp, op_declare);
       if (GENERICSTACK_ERROR(grammarStackp)) {
         MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "grammarStackp set failure, %s", strerror(errno));
         goto err;
       }
       out_grammarp = NULL; /* out_grammarp is now in out_grammarStackp */
-      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: Created grammar at level %d", actions, grammarLeveli);
+      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: Created grammar at level %d", actions, op_declare);
     }
 
-    if (! _marpaESLIF_grammarContext_set_intb(marpaESLIFp, outputStackp, itemTypeStackp, resulti, grammarLeveli)) {
+    if (! _marpaESLIF_grammarContext_set_op_declareb(marpaESLIFp, outputStackp, itemTypeStackp, resulti, op_declare)) {
       goto err;
     }
-    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: outputStackp->[%d] => %d (INT)", actions, resulti, grammarLeveli);
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: outputStackp->[%d] => %d", actions, resulti, op_declare);
 
-    /* Set current grammar to the one at level grammarLeveli */
-    if (! GENERICSTACK_IS_PTR(grammarStackp, grammarLeveli)) {
-      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "No grammar at grammarStackp indice %d", grammarLeveli);
+    /* Set current grammar to the one at level op_declare */
+    if (! GENERICSTACK_IS_PTR(grammarStackp, op_declare)) {
+      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "No grammar at grammarStackp indice %d", op_declare);
       goto err;
     }
-    marpaESLIF_grammarContextp->current_grammarp = GENERICSTACK_GET_PTR(grammarStackp, grammarLeveli);
-    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: Setted current grammar to the one at level %d", actions, grammarLeveli);
+    marpaESLIF_grammarContextp->current_grammarp = GENERICSTACK_GET_PTR(grammarStackp, op_declare);
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: Setted current grammar to the one at level %d", actions, op_declare);
 
   } else if (strcmp(actions, G1_RULE_ACTION_NAME) == 0) {
     /*
@@ -5285,15 +5285,33 @@ static short _marpaESLIFValueRuleCallbackGrammar(void *userDatavp, marpaESLIFVal
      * <action name>  ::= <ascii name>
      *
      * Stack types:
-     * ASCII_STRING ::= ASCII_STRING
+     * PTR ::= LEXEME
      * ---------------------------------------------------------------------------------------------
      */
-    if (! _marpaESLIF_grammarContext_get_asciib(marpaESLIFp, outputStackp, itemTypeStackp, arg0i, &asciis)) {
+    marpESLIF_grammarContext_lexeme_t      ascii_name;
+    marpESLIF_grammarContext_action_name_t action_name;
+
+    if (! _marpaESLIF_grammarContext_get_lexemeb(marpaESLIFp, outputStackp, itemTypeStackp, arg0i, &ascii_name)) {
       goto err;
     }
-    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: outputStackp->[%d] <= \"%s\" (ASCII_STRING)", actions, arg0i, asciis);
-    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: No-op", actions);
-    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: outputStackp->[%d] => \"%s\" (ASCII_STRING)", actions, resulti, asciis);
+    if (GENERICSTACK_ARRAY_PTR(ascii_name) == NULL) {
+      MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "NULL lexeme");
+      goto err;
+    }
+
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: outputStackp->[%d] <= {\"%s\", %ld}", actions, arg0i, GENERICSTACK_ARRAY_PTR(ascii_name), (unsigned long) GENERICSTACK_ARRAY_LENGTH(ascii_name));
+
+    action_name = strdup(GENERICSTACK_ARRAY_PTR(ascii_name));
+    if (action_name == NULL) {
+      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "strdup failure, %s", strerror(errno));
+      goto err;
+    }
+
+    if (! _marpaESLIF_grammarContext_set_action_nameb(marpaESLIFp, outputStackp, itemTypeStackp, resulti, action_name)) {
+      free(action_name);
+      goto err;
+    }
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: outputStackp->[%d] => \"%s\"", actions, resulti, action_name);
 
   } else if (strcmp(actions, G1_RULE_ACTION) == 0) {
     /*
@@ -5301,24 +5319,35 @@ static short _marpaESLIFValueRuleCallbackGrammar(void *userDatavp, marpaESLIFVal
      * action ::= 'action' '=>' <action name>
      *
      * Stack types:
-     * ASCII_STRING ::= ASCII_STRING ASCII_STRING ASCII_STRING
+     * PTR ::= LEXEME LEXEME PTR
+     *
+     * Note: <action name> is an ASCII NUL terminated string
      * ---------------------------------------------------------------------------------------------
      */
-    if (! _marpaESLIF_grammarContext_get_asciib(marpaESLIFp, outputStackp, itemTypeStackp, argni, &asciis)) {
+    marpESLIF_grammarContext_action_name_t action_name;
+    marpESLIF_grammarContext_action_t      action;
+
+    if (! _marpaESLIF_grammarContext_get_action_nameb(marpaESLIFp, outputStackp, itemTypeStackp, argni, &action_name)) {
       goto err;
     }
-    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: outputStackp->[%d] <= \"%s\" (ASCII_STRING)", actions, argni, asciis);
+    if (action_name == NULL) {
+      MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "NULL PTR");
+      goto err;
+    }
 
-    asciis = strdup(asciis);
-    if (asciis == NULL) {
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: outputStackp->[%d] <= \"%s\"", actions, argni, action_name);
+
+    action = strdup(action_name);
+    if (action == NULL) {
       MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "strdup failure, %s", strerror(errno));
       goto err;
     }
 
-    if (! _marpaESLIF_grammarContext_set_asciib(marpaESLIFp, outputStackp, itemTypeStackp, resulti, asciis)) {
+    if (! _marpaESLIF_grammarContext_set_actionb(marpaESLIFp, outputStackp, itemTypeStackp, resulti, action)) {
+      free(action);
       goto err;
     }
-    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: outputStackp->[%d] => \"%s\" (ASCII_STRING)", actions, resulti, asciis);
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: outputStackp->[%d] => \"%s\"", actions, resulti, action);
 
   } else if (strcmp(actions, G1_RULE_ADVERB_ITEM_01) == 0) {
     /*
@@ -5326,18 +5355,33 @@ static short _marpaESLIFValueRuleCallbackGrammar(void *userDatavp, marpaESLIFVal
      * <adverb item> ::= action
      *
      * Stack types:
-     * ADVERB_ITEM_ACTION ::= ASCII_STRING - only the type is changing, both are implemented to point to a string
+     * PTR ::= PTR
      * ---------------------------------------------------------------------------------------------
      */
-    if (! _marpaESLIF_grammarContext_get_asciib(marpaESLIFp, outputStackp, itemTypeStackp, argni, &asciis)) {
-      goto err;
-    }
-    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: outputStackp->[%d] <= \"%s\" (ASCII_STRING)", actions, arg0i, asciis);
+    marpESLIF_grammarContext_action_t             action;
+    marpESLIF_grammarContext_adverb_item_action_t adverb_item_action;
 
-    if (! _marpaESLIF_grammarContext_set_typeb(marpaESLIFp, itemTypeStackp, resulti, MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_ACTION)) {
+    if (! _marpaESLIF_grammarContext_get_actionb(marpaESLIFp, outputStackp, itemTypeStackp, arg0i, &action)) {
       goto err;
     }
-    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: outputStackp->[%d] => \"%s\" (ADVERB_ITEM_ACTION)", actions, resulti, asciis);
+    if (action == NULL) {
+      MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "NULL PTR");
+      goto err;
+    }
+
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: outputStackp->[%d] <= \"%s\"", actions, arg0i, action);
+
+    adverb_item_action = strdup(action);
+    if (adverb_item_action == NULL) {
+      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "strdup failure, %s", strerror(errno));
+      goto err;
+    }
+
+    if (! _marpaESLIF_grammarContext_set_adverb_item_actionb(marpaESLIFp, outputStackp, itemTypeStackp, resulti, adverb_item_action)) {
+      free(adverb_item_action);
+      goto err;
+    }
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: outputStackp->[%d] => \"%s\"", actions, resulti, adverb_item_action);
 
   } else if (strcmp(actions, G1_RULE_ADVERB_LIST_ITEMS) == 0) {
     /*
@@ -5345,33 +5389,65 @@ static short _marpaESLIFValueRuleCallbackGrammar(void *userDatavp, marpaESLIFVal
      * <adverb list items> ::= <adverb item>*
      *
      * Stack types:
-     * 
+     * PTR ::= ~variable types see below~
      * ---------------------------------------------------------------------------------------------
      */
-    GENERICSTACK_NEW(adverb_list_items);
-    if (GENERICSTACK_ERROR(adverb_list_items)) {
-      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "adverb_list_items initialization failure, %s", strerror(errno));
+    marpESLIF_grammarContext_adverb_item_action_t adverb_item_action;
+    marpESLIF_grammarContext_adverb_list_items_t  adverb_list_items;
+    
+    GENERICSTACK_NEW(out_adverb_list_items_stackp);
+    if (GENERICSTACK_ERROR(out_adverb_list_items_stackp)) {
+      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "out_adverb_list_items_stackp initialization failure, %s", strerror(errno));
       goto err;
     }
-    for (i = arg0i; i < argni; i++) {
+    for (i = arg0i; i <= argni; i++) {
       if (! _marpaESLIF_grammarContext_get_typeb(marpaESLIFp, itemTypeStackp, i, &type)) {
         goto err;
       }
+
+      out_adverbItemp = malloc(sizeof(marpaESLIF_adverbItem_t));
+      if (out_adverbItemp == NULL) {
+        MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "malloc failure, %s", strerror(errno));
+        goto err;
+      }
+      out_adverbItemp->type = MARPAESLIF_GRAMMARITEMTYPE_NA;
+
       switch (type) {
       case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_ACTION:
+        if (! _marpaESLIF_grammarContext_get_adverb_item_actionb(marpaESLIFp, outputStackp, itemTypeStackp, resulti, &adverb_item_action)) {
+          goto err;
+        }
+        if (adverb_item_action == NULL) {
+          MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "NULL adverb_item_action");
+          goto err;
+        }
+
+        MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: outputStackp->[%d] <= \"%s\"", actions, i, adverb_item_action);
+
+        out_adverbItemp->u.asciis = strdup(adverb_item_action);
+        if (out_adverbItemp->u.asciis == NULL) {
+          MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "strdup failure, %s", strerror(errno));
+          goto err;
+        }
+        out_adverbItemp->type = type;
         break;
       default:
         break;
       }
-      GENERICSTACK_PUSH_INT(adverb_list_items, i);
-      if (GENERICSTACK_ERROR(adverb_list_items)) {
-        MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "adverb_list_items push failure, %s", strerror(errno));
+
+      GENERICSTACK_PUSH_PTR(out_adverb_list_items_stackp, out_adverbItemp);
+      if (GENERICSTACK_ERROR(out_adverb_list_items_stackp)) {
+        MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "out_adverb_list_items_stackp push failure, %s", strerror(errno));
         goto err;
       }
+      out_adverbItemp = NULL;
     }
+
+    adverb_list_items = out_adverb_list_items_stackp;
     if (! _marpaESLIF_grammarContext_set_adverb_list_itemsb(marpaESLIFp, outputStackp, itemTypeStackp, resulti, adverb_list_items)) {
       goto err;
     }
+    out_adverb_list_items_stackp = NULL;
 
     MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: outputStackp->[%d] => %p", actions, resulti, adverb_list_items);
 
@@ -5379,23 +5455,110 @@ static short _marpaESLIFValueRuleCallbackGrammar(void *userDatavp, marpaESLIFVal
     /*
      * ---------------------------------------------------------------------------------------------
      * <adverb list> ::= <adverb list items>
+     *
+     * Stack types:
+     * PTR ::= PTR
      * ---------------------------------------------------------------------------------------------
      */
+    marpESLIF_grammarContext_adverb_list_items_t  adverb_list_items;
+    marpESLIF_grammarContext_adverb_list_t        adverb_list;
+
     if (! _marpaESLIF_grammarContext_get_adverb_list_itemsb(marpaESLIFp, outputStackp, itemTypeStackp, arg0i, &adverb_list_items)) {
       goto err;
     }
+    if (adverb_list_items == NULL) {
+      MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "NULL adverb_list_items");
+      goto err;
+    }
+
     MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: outputStackp->[%d] <= %p", actions, arg0i, adverb_list_items);
 
-    adverb_list = adverb_list_items;
-    if (adverb_list == NULL) {
-      MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "adverb_list is NULL");
+    if (! _marpaESLIF_grammarContext_set_typeb(marpaESLIFp, itemTypeStackp, arg0i, MARPAESLIF_GRAMMARITEMTYPE_NA)) {
       goto err;
+    }
+    adverb_list = adverb_list_items;
+    if (! _marpaESLIF_grammarContext_set_adverb_listb(marpaESLIFp, outputStackp, itemTypeStackp, resulti, adverb_list)) {
+      /* We have a memory leak if it failed here */
+      goto err;
+    }
+    
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: outputStackp->[%d] => %p", actions, resulti, adverb_list);
+
+  } else if (strcmp(actions, G1_RULE_DEFAULT_RULE) == 0) {
+    /*
+     * ---------------------------------------------------------------------------------------------
+     * <default rule> ::= ':default' <op declare> <adverb list>
+     *
+     * Stack types:
+     * PTR ::= LEXEME INT PTR
+     * ---------------------------------------------------------------------------------------------
+     */
+    marpESLIF_grammarContext_op_declare_t   op_declare;
+    marpESLIF_grammarContext_adverb_list_t  adverb_list;
+    marpaESLIF_grammar_t                   *this_grammarp;
+    genericStack_t                         *adverb_list_stackp;
+    marpaESLIF_adverbItem_t                *adverbItemp;
+
+    if (! _marpaESLIF_grammarContext_get_op_declareb(marpaESLIFp, outputStackp, itemTypeStackp, arg0i+1, &op_declare)) {
+      goto err;
+    }
+    /* This grammar should exist, created eventually by <op declare> */
+    if (! GENERICSTACK_IS_PTR(grammarStackp, op_declare)) {
+      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "No such grammar at indice %d", op_declare);
+      goto err;
+    }
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: outputStackp->[%d] <= %d", actions, arg0i+1, op_declare);
+    this_grammarp = (marpaESLIF_grammar_t *) GENERICSTACK_GET_PTR(grammarStackp, op_declare);
+
+    if (! _marpaESLIF_grammarContext_get_adverb_listb(marpaESLIFp, outputStackp, itemTypeStackp, arg0i+2, &adverb_list)) {
+      goto err;
+    }
+    if (adverb_list == NULL) {
+      MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "NULL adverb_list");
+      goto err;
+    }
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: outputStackp->[%d] <= %p", actions, arg0i+2, adverb_list);
+
+    /* Look to all items in averb_list stack. We know we defining the default of grammar at level op_declare */
+    /* Even if grammatically accepted, some of them are now allowed. */
+    adverb_list_stackp = (genericStack_t *) adverb_list;
+    for (i = 0; i < GENERICSTACK_USED(adverb_list_stackp); i++) {
+      adverbItemp = GENERICSTACK_GET_PTR(adverb_list_stackp, i);
+      if (adverbItemp != NULL) {
+        switch (adverbItemp->type) {
+        case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_ACTION:
+          if (adverbItemp->u.asciis != NULL) {
+            this_grammarp->defaultRuleActionp = _marpaESLIF_string_newp(marpaESLIFp, "ASCII", adverbItemp->u.asciis, strlen(adverbItemp->u.asciis), 1 /* asciib */);
+            if (this_grammarp->defaultRuleActionp == NULL) {
+              goto err;
+            }
+          }
+          break;
+        default:
+          break;
+        }
+      }      
     }
 
-    if (! _marpaESLIF_grammarContext_set_adverb_listb(marpaESLIFp, outputStackp, itemTypeStackp, resulti, adverb_list)) {
+    /* The parent rules will be: <statement> and <statements> - that are NO OP */
+    if (! _marpaESLIF_grammarContext_set_NAb(marpaESLIFp, outputStackp, itemTypeStackp, resulti)) {
       goto err;
     }
-    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: outputStackp->[%d] => %p", actions, resulti, adverb_list);
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: outputStackp->[%d] => NA", actions, resulti);
+
+  } else if (strcmp(actions, G1_RULE_STATEMENT_09) == 0) {
+    /*
+     * ---------------------------------------------------------------------------------------------
+     * statement ::= <default rule>
+     *
+     * Stack types:
+     * NA ::= NA
+     * ---------------------------------------------------------------------------------------------
+     */
+    if (! _marpaESLIF_grammarContext_set_NAb(marpaESLIFp, outputStackp, itemTypeStackp, resulti)) {
+      goto err;
+    }
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: outputStackp->[%d] => NA", actions, resulti);
 
   } else {
     MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "Unknown rule action %s", actions);
@@ -5412,8 +5575,37 @@ static short _marpaESLIFValueRuleCallbackGrammar(void *userDatavp, marpaESLIFVal
   if (out_grammarp != NULL) {
     _marpaESLIF_grammar_freev(out_grammarp);
   }
-  if (adverb_list_items != NULL) {
-    GENERICSTACK_FREE(adverb_list_items);
+  if (out_adverbItemp != NULL) {
+    switch (out_adverbItemp->type) {
+    case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_ACTION:
+      if (out_adverbItemp->u.asciis != NULL) {
+        free(out_adverbItemp->u.asciis);
+      }
+      break;
+    default:
+      break;
+    }
+    free(out_adverbItemp);
+  }
+  if (out_adverb_list_items_stackp != NULL) {
+    marpaESLIF_adverbItem_t *adverbItemp;
+    int                      i;
+
+    for (i = 0; i < GENERICSTACK_USED(out_adverb_list_items_stackp); i++) {
+      adverbItemp = GENERICSTACK_GET_PTR(out_adverb_list_items_stackp, i);
+      if (adverbItemp != NULL) {
+        switch (adverbItemp->type) {
+        case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_ACTION:
+          if (adverbItemp->u.asciis != NULL) {
+            free(adverbItemp->u.asciis);
+          }
+          break;
+        default:
+          break;
+        }
+      }
+    }
+    GENERICSTACK_FREE(out_adverb_list_items_stackp);
   }
 
   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
@@ -5425,22 +5617,25 @@ static short _marpaESLIFValueRuleCallbackGrammar(void *userDatavp, marpaESLIFVal
 static short _marpaESLIFValueSymbolCallbackGrammar(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions, char *bytep, size_t bytel, int symboli, int resulti)
 /*****************************************************************************/
 {
-  static const char           *funcs                      = "_marpaESLIFValueSymbolCallbackGrammar";
-  marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp = (marpaESLIF_grammarContext_t *) userDatavp;
-  marpaESLIF_t                *marpaESLIFp                = marpaESLIFValuep->marpaESLIFp;
-  marpaESLIFRecognizer_t      *marpaESLIFRecognizerp      = marpaESLIFValuep->marpaESLIFRecognizerp;
-  marpaESLIFGrammar_t         *marpaESLIFGrammarp         = marpaESLIFRecognizerp->marpaESLIFGrammarp;
-  genericStack_t              *outputStackp               = marpaESLIF_grammarContextp->outputStackp;
-  genericStack_t              *itemTypeStackp             = marpaESLIF_grammarContextp->itemTypeStackp;
-  char                        *asciis                     = NULL;
-  short                        rcb;
-  marpaESLIF_grammar_t        *grammarp                   = marpaESLIFGrammarp->grammarp;
-  genericStack_t              *symbolStackp               = grammarp->symbolStackp;
-  marpaESLIF_symbol_t         *symbolp;
+  static const char                *funcs                      = "_marpaESLIFValueSymbolCallbackGrammar";
+  marpaESLIF_grammarContext_t      *marpaESLIF_grammarContextp = (marpaESLIF_grammarContext_t *) userDatavp;
+  marpaESLIF_t                     *marpaESLIFp                = marpaESLIFValuep->marpaESLIFp;
+  marpaESLIFRecognizer_t           *marpaESLIFRecognizerp      = marpaESLIFValuep->marpaESLIFRecognizerp;
+  marpaESLIFGrammar_t              *marpaESLIFGrammarp         = marpaESLIFRecognizerp->marpaESLIFGrammarp;
+  genericStack_t                   *outputStackp               = marpaESLIF_grammarContextp->outputStackp;
+  genericStack_t                   *itemTypeStackp             = marpaESLIF_grammarContextp->itemTypeStackp;
+  marpESLIF_grammarContext_lexeme_t grammarContext_lexeme;
+  short                             rcb;
+  marpaESLIF_grammar_t             *grammarp                   = marpaESLIFGrammarp->grammarp;
+  genericStack_t                   *symbolStackp               = grammarp->symbolStackp;
+  marpaESLIF_symbol_t              *symbolp;
 
   marpaESLIFRecognizerp->callstackCounteri++;
   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "start (actions=%s)", actions);
 
+  GENERICSTACK_ARRAY_PTR(grammarContext_lexeme) = NULL;
+  GENERICSTACK_ARRAY_LENGTH(grammarContext_lexeme) = 0;
+  
   if (! GENERICSTACK_IS_PTR(symbolStackp, symboli)) {
     MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "No such symbol No %d", symboli);
     goto err;
@@ -5472,21 +5667,22 @@ static short _marpaESLIFValueSymbolCallbackGrammar(void *userDatavp, marpaESLIFV
   /* because some operations on pure ASCII strings need a NUL byte terminated string (for example: atoi()). */
 
   if (strcmp(actions, INTERNAL_DEFAULT_SYMBOL_LEXEME_ACTION) == 0) {
-    /* It is exactly the same thing as _marpaESLIFValueSymbolCallbackInternalLExeme */
-    asciis = (char *) malloc(bytel + 1);
-    if (asciis == NULL) {
+    /* It is qlmost the same thing as _marpaESLIFValueSymbolCallbackInternalLExeme */
+    GENERICSTACK_ARRAY_PTR(grammarContext_lexeme) = malloc(bytel + 1);
+    if (GENERICSTACK_ARRAY_PTR(grammarContext_lexeme) == NULL) {
       MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
       goto err;
     }
-    asciis[bytel] = '\0';
-    memcpy(asciis, bytep, bytel);
+    ((char *) GENERICSTACK_ARRAY_PTR(grammarContext_lexeme))[bytel] = '\0';
+    memcpy(GENERICSTACK_ARRAY_PTR(grammarContext_lexeme), bytep, bytel);
+    GENERICSTACK_ARRAY_LENGTH(grammarContext_lexeme) = bytel;
 
-    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: outputStackp->[%d] => \"%s\"", actions, resulti, asciis);
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: outputStackp->[%d] => {\"%s\", %ld}", actions, resulti, GENERICSTACK_ARRAY_PTR(grammarContext_lexeme), (unsigned long) GENERICSTACK_ARRAY_LENGTH(grammarContext_lexeme));
 
-    if (! _marpaESLIF_grammarContext_set_asciib(marpaESLIFp, outputStackp, itemTypeStackp, resulti, asciis)) {
+    if (! _marpaESLIF_grammarContext_set_lexemeb(marpaESLIFp, outputStackp, itemTypeStackp, resulti, grammarContext_lexeme)) {
       goto err;
     }
-    asciis = NULL;
+    GENERICSTACK_ARRAY_PTR(grammarContext_lexeme) = NULL;
 
   } else {
     MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "Unsupported action: %s", actions);
@@ -5500,8 +5696,8 @@ static short _marpaESLIFValueSymbolCallbackGrammar(void *userDatavp, marpaESLIFV
   rcb = 0;
 
  done:
-  if (asciis != NULL) {
-    free(asciis);
+  if (GENERICSTACK_ARRAY_PTR(grammarContext_lexeme) != NULL) {
+    free(GENERICSTACK_ARRAY_PTR(grammarContext_lexeme));
   }
   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
   marpaESLIFRecognizerp->callstackCounteri--;

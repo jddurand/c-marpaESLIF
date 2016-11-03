@@ -246,7 +246,7 @@ static inline short _marpaESLIF_grammarContext_set_typeb(marpaESLIF_t *marpaESLI
   static const char            *funcs = "_marpaESLIF_grammarContext_set_typeb";
   short                         rcb;
 
-  GENERICSTACK_SET_INT(itemTypeStackp, i, type);
+  GENERICSTACK_SET_INT(itemTypeStackp, type, i);
   if (GENERICSTACK_ERROR(itemTypeStackp)) {
     MARPAESLIF_ERRORF(marpaESLIFp, "itemTypeStackp set failure at indice %d, %s", i, strerror(errno));
     goto err;
