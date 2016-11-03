@@ -3855,6 +3855,27 @@ short marpaESLIFRecognizer_completeb(marpaESLIFRecognizer_t *marpaESLIFRecognize
 }
 
 /*****************************************************************************/
+short marpaESLIFRecognizer_eofb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp)
+/*****************************************************************************/
+{
+  static const char *funcs = "marpaESLIFRecognizer_eofb";
+  short              rcb;
+
+  marpaESLIFRecognizerp->callstackCounteri++;
+  MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
+
+  MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "Ending stream");
+  *(marpaESLIFRecognizerp->eofbp) = 1;
+  marpaESLIFRecognizerp->inputl = 0;
+
+  rcb = 1;
+
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
+  marpaESLIFRecognizerp->callstackCounteri--;
+  return rcb;
+}
+
+/*****************************************************************************/
 static inline short _marpaESLIFRecognizer_completeb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp)
 /*****************************************************************************/
 {
