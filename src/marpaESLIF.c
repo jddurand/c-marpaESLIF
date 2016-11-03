@@ -152,16 +152,6 @@ static inline void                   _marpaESLIF_grammarContext_resetv(marpaESLI
 static inline short                  _marpaESLIF_grammarContext_i_resetb(marpaESLIF_t *marpaESLIFp, genericStack_t *outputStackp, genericStack_t *itemTypeStackp, int i);
 static inline short                  _marpaESLIF_grammarContext_get_typeb(marpaESLIF_t *marpaESLIFp, genericStack_t *itemTypeStackp, int i, marpaESLIF_grammarItemType_t *typep);
 static inline short                  _marpaESLIF_grammarContext_set_typeb(marpaESLIF_t *marpaESLIFp, genericStack_t *itemTypeStackp, int i, marpaESLIF_grammarItemType_t type);
-static inline short                  _marpaESLIF_grammarContext_get_asciib(marpaESLIF_t *marpaESLIFp, genericStack_t *outputStackp, genericStack_t *itemTypeStackp, int i, char **valuep);
-static inline short                  _marpaESLIF_grammarContext_set_asciib(marpaESLIF_t *marpaESLIFp, genericStack_t *outputStackp, genericStack_t *itemTypeStackp, int i, char *value);
-static inline short                  _marpaESLIF_grammarContext_get_intb(marpaESLIF_t *marpaESLIFp, genericStack_t *outputStackp, genericStack_t *itemTypeStackp, int i, int *valuep);
-static inline short                  _marpaESLIF_grammarContext_set_intb(marpaESLIF_t *marpaESLIFp, genericStack_t *outputStackp, genericStack_t *itemTypeStackp, int i, int value);
-static inline short                  _marpaESLIF_grammarContext_get_adverb_item_actionb(marpaESLIF_t *marpaESLIFp, genericStack_t *outputStackp, genericStack_t *itemTypeStackp, int i, char **valuep);
-static inline short                  _marpaESLIF_grammarContext_set_adverb_item_actionb(marpaESLIF_t *marpaESLIFp, genericStack_t *outputStackp, genericStack_t *itemTypeStackp, int i, char *value);
-static inline short                  _marpaESLIF_grammarContext_get_adverb_list_itemsb(marpaESLIF_t *marpaESLIFp, genericStack_t *outputStackp, genericStack_t *itemTypeStackp, int i, genericStack_t **valuep);
-static inline short                  _marpaESLIF_grammarContext_set_adverb_list_itemsb(marpaESLIF_t *marpaESLIFp, genericStack_t *outputStackp, genericStack_t *itemTypeStackp, int i, genericStack_t *value);
-static inline short                  _marpaESLIF_grammarContext_get_adverb_listb(marpaESLIF_t *marpaESLIFp, genericStack_t *outputStackp, genericStack_t *itemTypeStackp, int i, genericStack_t **valuep);
-static inline short                  _marpaESLIF_grammarContext_set_adverb_listb(marpaESLIF_t *marpaESLIFp, genericStack_t *outputStackp, genericStack_t *itemTypeStackp, int i, genericStack_t *value);
 
 /*****************************************************************************/
 static inline marpaESLIF_string_t *_marpaESLIF_string_newp(marpaESLIF_t *marpaESLIFp, char *encodingasciis, char *bytep, size_t bytel, short asciib)
@@ -5246,7 +5236,14 @@ static short _marpaESLIFValueRuleCallbackGrammar(void *userDatavp, marpaESLIFVal
      * INT ::= ASCII_STRING
      * ---------------------------------------------------------------------------------------------
      */
-    if (! _marpaESLIF_grammarContext_get_asciib(marpaESLIFp, outputStackp, itemTypeStackp, arg0i, &asciis)) {
+    GENERICSTACKITEMTYPE2TYPE_ARRAY array;
+    char *asciis;
+    if (! _marpaESLIF_grammarContext_get_lexemeb(marpaESLIFp, outputStackp, itemTypeStackp, arg0i, &array)) {
+      goto err;
+    }
+    asciis = (char *) GENERICSTACK_ARRAY_PTR(array);
+    if (asciis == NULL) {
+      MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "NULL lexeme");
       goto err;
     }
     MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: outputStackp->[%d] <= \"%s\" (ASCII_STRING)", actions, arg0i, asciis);
