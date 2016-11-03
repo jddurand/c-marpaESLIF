@@ -40,7 +40,6 @@ typedef struct marpaESLIFRecognizerOption {
   marpaESLIFReader_t   marpaESLIFReaderCallbackp;   /* Reader */
   short                disableThresholdb;           /* Default: 0 */
   short                exhaustedb;                  /* Exhaustion event. Default: 0 */
-  short                latmb;                       /* Longest acceptable token match mode. Default: 0 */
   short                rejectionb;                  /* Rejection event. Default: 0 */
   short                newlineb;                    /* Count line/column numbers. Default: 0 */
   size_t               bufsizl;                     /* Minimum stream buffer size: Default: MARPAESLIF_BUFSIZ */

@@ -195,6 +195,7 @@ struct marpaESLIF_grammar {
   marpaESLIF_t          *marpaESLIFp;                 /* Shallow pointer to top marpaESLIFp */
   int                    leveli;                      /* Grammar level */
   marpaESLIF_string_t   *descp;                       /* Grammar description */
+  short                  latmb;                       /* Longest acceptable token match mode */
   marpaWrapperGrammar_t *marpaWrapperGrammarStartp;   /* Grammar implementation at :start */
   marpaWrapperGrammar_t *marpaWrapperGrammarDiscardp; /* Grammar implementation at :discard */
   marpaESLIF_symbol_t   *discardSymbolp;              /* Discard symbol, used at grammar validation */
@@ -329,7 +330,6 @@ marpaESLIFRecognizerOption_t marpaESLIFRecognizerOption_default_template = {
   NULL,              /* marpaESLIFReaderCallbackp */
   0,                 /* disableThresholdb */
   0,                 /* exhaustedb */
-  0,                 /* latmb */
   0,                 /* rejectionb */
   0,                 /* newlineb */
   MARPAESLIF_BUFSIZ, /* bufsizl */
