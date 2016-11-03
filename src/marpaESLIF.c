@@ -5266,6 +5266,27 @@ static short _marpaESLIFValueRuleCallbackGrammar(void *userDatavp, marpaESLIFVal
     }
     MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: outputStackp->[%d] => %d", actions, resulti, op_declare);
 
+  } else if (strcmp(actions, G1_RULE_OP_DECLARE_1) == 0) {
+    /*
+     * ---------------------------------------------------------------------------------------------
+     * <op declare> ::= <op declare top grammar>
+     *
+     * Stack types:
+     * INT ::= LEXEME
+     * ---------------------------------------------------------------------------------------------
+     */
+    marpESLIF_grammarContext_op_declare_t op_declare = 0;
+
+    /* Make sure grammar at this level exist */
+    if (! _marpaESLIFValueRuleCallbackGrammar_op_declareb(marpaESLIFValuep, marpaESLIF_grammarContextp, op_declare, 1 /* createb */, NULL)) {
+      goto err;
+    }
+
+    if (! _marpaESLIF_grammarContext_set_op_declareb(marpaESLIFp, outputStackp, itemTypeStackp, resulti, op_declare)) {
+      goto err;
+    }
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: outputStackp->[%d] => %d", actions, resulti, op_declare);
+
   } else if (strcmp(actions, G1_RULE_ACTION_NAME) == 0) {
     /*
      * ---------------------------------------------------------------------------------------------
