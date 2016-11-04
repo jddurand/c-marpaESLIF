@@ -253,7 +253,7 @@ static inline const char *_marpaESLIF_grammarContext_i_types(marpaESLIF_t *marpa
 {
   static const char            *funcs = "_marpaESLIF_grammarContext_i_types";
   marpaESLIF_grammarItemType_t  itemType;
-  const char                   *rcs = marpESLIF_grammarContext_UNKNOWN_types;
+  const char                   *rcs = marpaESLIF_grammarContext_UNKNOWN_types;
 
   if ((outputStackp != NULL) && (itemTypeStackp != NULL)) {
     if (GENERICSTACK_IS_INT(itemTypeStackp, i)) {
@@ -261,85 +261,85 @@ static inline const char *_marpaESLIF_grammarContext_i_types(marpaESLIF_t *marpa
 
       switch (itemType) {
       case MARPAESLIF_GRAMMARITEMTYPE_NA:        /* N/A */
-        rcs = marpESLIF_grammarContext_NA_types;
+        rcs = marpaESLIF_grammarContext_NA_types;
         break;
       case MARPAESLIF_GRAMMARITEMTYPE_LEXEME:        /* ARRAY */
-        rcs = marpESLIF_grammarContext_LEXEME_types;
+        rcs = marpaESLIF_grammarContext_LEXEME_types;
         break;
       case MARPAESLIF_GRAMMARITEMTYPE_OP_DECLARE:         /* INT */
-        rcs = marpESLIF_grammarContext_OP_DECLARE_types;
+        rcs = marpaESLIF_grammarContext_OP_DECLARE_types;
         break;
       case MARPAESLIF_GRAMMARITEMTYPE_ACTION_NAME:        /* ASCII string */
-        rcs = marpESLIF_grammarContext_ACTION_NAME_types;
+        rcs = marpaESLIF_grammarContext_ACTION_NAME_types;
         break;
       case MARPAESLIF_GRAMMARITEMTYPE_ACTION:             /* ASCII string */
-        rcs = marpESLIF_grammarContext_ACTION_types;
+        rcs = marpaESLIF_grammarContext_ACTION_types;
         break;
       case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_ACTION: /* ASCII string */
-        rcs = marpESLIF_grammarContext_ADVERB_ITEM_ACTION_types;
+        rcs = marpaESLIF_grammarContext_ADVERB_ITEM_ACTION_types;
         break;
       case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_AUTORANK: /* SHORT */
-        rcs = marpESLIF_grammarContext_ADVERB_ITEM_AUTORANK_types;
+        rcs = marpaESLIF_grammarContext_ADVERB_ITEM_AUTORANK_types;
         break;
       case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_LEFT: /* SHORT */
-        rcs = marpESLIF_grammarContext_ADVERB_ITEM_LEFT_types;
+        rcs = marpaESLIF_grammarContext_ADVERB_ITEM_LEFT_types;
         break;
       case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_RIGHT: /* SHORT */
-        rcs = marpESLIF_grammarContext_ADVERB_ITEM_RIGHT_types;
+        rcs = marpaESLIF_grammarContext_ADVERB_ITEM_RIGHT_types;
         break;
       case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_GROUP: /* SHORT */
-        rcs = marpESLIF_grammarContext_ADVERB_ITEM_GROUP_types;
+        rcs = marpaESLIF_grammarContext_ADVERB_ITEM_GROUP_types;
         break;
       case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_SEPARATOR: /* String */
-        rcs = marpESLIF_grammarContext_ADVERB_ITEM_SEPARATOR_types;
+        rcs = marpaESLIF_grammarContext_ADVERB_ITEM_SEPARATOR_types;
         break;
       case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_PROPER: /* SHORT */
-        rcs = marpESLIF_grammarContext_ADVERB_ITEM_PROPER_types;
+        rcs = marpaESLIF_grammarContext_ADVERB_ITEM_PROPER_types;
         break;
       case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_RANK: /* INT */
-        rcs = marpESLIF_grammarContext_ADVERB_ITEM_RANK_types;
+        rcs = marpaESLIF_grammarContext_ADVERB_ITEM_RANK_types;
         break;
       case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_NULL_RANKING: /* SHORT */
-        rcs = marpESLIF_grammarContext_ADVERB_ITEM_NULL_RANKING_types;
+        rcs = marpaESLIF_grammarContext_ADVERB_ITEM_NULL_RANKING_types;
         break;
       case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_PRIORITY: /* INT */
-        rcs = marpESLIF_grammarContext_ADVERB_ITEM_PRIORITY_types;
+        rcs = marpaESLIF_grammarContext_ADVERB_ITEM_PRIORITY_types;
         break;
       case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_PAUSE: /* ASCII string */
-        rcs = marpESLIF_grammarContext_ADVERB_ITEM_PAUSE_types;
+        rcs = marpaESLIF_grammarContext_ADVERB_ITEM_PAUSE_types;
         break;
       case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_LATM: /* SHORT */
-        rcs = marpESLIF_grammarContext_ADVERB_ITEM_LATM_types;
+        rcs = marpaESLIF_grammarContext_ADVERB_ITEM_LATM_types;
         break;
       case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_NAMING: /* String */
-        rcs = marpESLIF_grammarContext_ADVERB_ITEM_NAMING_types;
+        rcs = marpaESLIF_grammarContext_ADVERB_ITEM_NAMING_types;
         break;
       case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_NULL: /* SHORT */
-        rcs = marpESLIF_grammarContext_ADVERB_ITEM_NULL_types;
+        rcs = marpaESLIF_grammarContext_ADVERB_ITEM_NULL_types;
         break;
       case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_LIST_ITEMS:  /* Stack of marpaESLIF_adverbItem_t */
-        rcs = marpESLIF_grammarContext_ADVERB_LIST_ITEMS_types;
+        rcs = marpaESLIF_grammarContext_ADVERB_LIST_ITEMS_types;
         break;
       case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_LIST:        /* Alias to MARPAESLIF_GRAMMARITEMTYPE_ADVERB_LIST_ITEMS - the two are exclusives (they share the same indice in outputStackp) */
-        rcs = marpESLIF_grammarContext_ADVERB_LIST_types;
+        rcs = marpaESLIF_grammarContext_ADVERB_LIST_types;
         break;
       case MARPAESLIF_GRAMMARITEMTYPE_LATM:               /* SHORT */
-        rcs = marpESLIF_grammarContext_LATM_types;
+        rcs = marpaESLIF_grammarContext_LATM_types;
         break;
       case MARPAESLIF_GRAMMARITEMTYPE_SYMBOL_NAME:        /* ASCII string */
-        rcs = marpESLIF_grammarContext_SYMBOL_NAME_types;
+        rcs = marpaESLIF_grammarContext_SYMBOL_NAME_types;
         break;
       case MARPAESLIF_GRAMMARITEMTYPE_SYMBOL:             /* ASCII string */
-        rcs = marpESLIF_grammarContext_SYMBOL_types;
+        rcs = marpaESLIF_grammarContext_SYMBOL_types;
         break;
       case MARPAESLIF_GRAMMARITEMTYPE_LHS:                /* ASCII string */
-        rcs = marpESLIF_grammarContext_LHS_types;
+        rcs = marpaESLIF_grammarContext_LHS_types;
         break;
       case MARPAESLIF_GRAMMARITEMTYPE_SINGLE_SYMBOL:       /* ASCII string */
-        rcs = marpESLIF_grammarContext_SINGLE_SYMBOL_types;
+        rcs = marpaESLIF_grammarContext_SINGLE_SYMBOL_types;
         break;
       case MARPAESLIF_GRAMMARITEMTYPE_QUANTIFIER:          /* INT */
-        rcs = marpESLIF_grammarContext_QUANTIFIER_types;
+        rcs = marpaESLIF_grammarContext_QUANTIFIER_types;
         break;
       default:
         break;
@@ -400,3 +400,147 @@ static inline short _marpaESLIF_grammarContext_set_typeb(marpaESLIF_t *marpaESLI
  done:
   return rcb;
 }
+
+/*****************************************************************************/
+static inline short _marpaESLIFValueRuleCallbackGrammar_op_declareb(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, marpaESLIF_grammarContext_op_declare_t op_declare, short createb, marpaESLIF_grammar_t **out_grammarpp)
+/*****************************************************************************/
+{
+  static const char           *funcs = "_marpaESLIFValueRuleCallbackGrammar_op_declareb";
+  marpaESLIF_t                *marpaESLIFp                = marpaESLIFValuep->marpaESLIFp;
+  marpaESLIFRecognizer_t      *marpaESLIFRecognizerp      = marpaESLIFValuep->marpaESLIFRecognizerp;
+  genericStack_t              *grammarStackp              = marpaESLIF_grammarContextp->grammarStackp;
+  marpaESLIF_grammar_t        *out_grammarp               = NULL;
+  short                        rcb;
+
+  marpaESLIFRecognizerp->callstackCounteri++;
+  MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
+
+  /* Make sure grammar at this level exist */
+  if (! GENERICSTACK_IS_PTR(grammarStackp, op_declare)) {
+    if (! createb) {
+      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "No such grammar at indice %d", op_declare);
+      goto err;
+    }
+    out_grammarp = _marpaESLIF_grammar_newp(marpaESLIFp, NULL /* marpaWrapperGrammarOptionp */, op_declare, NULL /* descEncodings */, NULL /* descs */, 0 /* descl */, 0 /* latmb */, NULL /* defaultSymbolActionp */, NULL /* defaultRuleActionp */);
+    if (out_grammarp == NULL) {
+      goto err;
+    }
+    GENERICSTACK_SET_PTR(grammarStackp, out_grammarp, op_declare);
+    if (GENERICSTACK_ERROR(grammarStackp)) {
+      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "grammarStackp set failure, %s", strerror(errno));
+      goto err;
+    }
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Created grammar at level %d", op_declare);
+  } else {
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Grammar at level %d already exist", op_declare);
+    out_grammarp = (marpaESLIF_grammar_t *) GENERICSTACK_GET_PTR(grammarStackp, op_declare);
+  }
+
+  if (out_grammarpp != NULL) {
+    *out_grammarpp = out_grammarp;
+  }
+
+  rcb = 1;
+  goto done;
+
+ err:
+  _marpaESLIF_grammar_freev(out_grammarp);
+  rcb = 0;
+
+ done:
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
+  marpaESLIFRecognizerp->callstackCounteri--;
+  return rcb;
+}
+
+/*****************************************************************************/
+static inline short _marpaESLIFValueRuleCallbackGrammar_symbolb(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, marpaESLIF_grammarContext_op_declare_t op_declare, char *ansis, marpaESLIF_symbol_t **out_symbolpp)
+/*****************************************************************************/
+{
+  static const char           *funcs = "_marpaESLIFValueRuleCallbackGrammar_symbolb";
+  marpaESLIF_t                *marpaESLIFp                = marpaESLIFValuep->marpaESLIFp;
+  marpaESLIFRecognizer_t      *marpaESLIFRecognizerp      = marpaESLIFValuep->marpaESLIFRecognizerp;
+  genericStack_t              *symbolStackp;
+  marpaESLIF_meta_t           *out_metap                  = NULL;
+  marpaESLIF_symbol_t         *out_symbolp                = NULL;
+  marpaESLIF_grammar_t        *out_grammarp;
+  short                        rcb;
+
+  marpaESLIFRecognizerp->callstackCounteri++;
+  MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
+
+  /* Make sure grammar at this level exist */
+  if (! _marpaESLIFValueRuleCallbackGrammar_op_declareb(marpaESLIFValuep, marpaESLIF_grammarContextp, op_declare, 1 /* createb */, &out_grammarp)) {
+    goto err;
+  }
+
+  symbolStackp = out_grammarp->symbolStackp;
+  /* Make sure this symbol at this level exist */
+  out_symbolp = _marpaESLIF_symbol_findp(marpaESLIFp, out_grammarp, ansis, strlen(ansis), -1 /* symboli */);
+  if (out_symbolp == NULL) {
+    /* This is a symbol out of a meta symbol */
+    out_metap = _marpaESLIF_meta_newp(marpaESLIFp, out_grammarp, MARPAWRAPPERGRAMMAR_EVENTTYPE_NONE, "ASCII", ansis, strlen(ansis));
+    if (out_metap == NULL) {
+      goto err;
+    }
+    out_symbolp = _marpaESLIF_symbol_newp(marpaESLIFp);
+    if (out_symbolp == NULL) {
+      goto err;
+    }
+    out_symbolp->type       = MARPAESLIF_SYMBOL_TYPE_META;
+    out_symbolp->startb     = 0;
+    out_symbolp->discardb   = 0;
+    out_symbolp->u.metap    = out_metap;
+    out_symbolp->idi        = out_metap->idi;
+    out_symbolp->descp      = out_metap->descp;
+    /* Meta is now in symbol */
+    out_metap = NULL;
+    /* Push symbol */
+    GENERICSTACK_SET_PTR(symbolStackp, out_symbolp, out_symbolp->u.metap->idi);
+    if (GENERICSTACK_ERROR(symbolStackp)) {
+      MARPAESLIF_ERRORF(marpaESLIFp, "symbolStackp set failure, %s", strerror(errno));
+      goto err;
+    }
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Created symbol No %d (%s) at level %d", out_symbolp->idi, out_symbolp->descp->asciis, op_declare);
+  } else {
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Found symbol No %d (%s) at level %d", out_symbolp->idi, out_symbolp->descp->asciis, op_declare);
+  }
+
+  if (out_symbolpp != NULL) {
+    *out_symbolpp = out_symbolp;
+  }
+
+  rcb = 1;
+  goto done;
+
+ err:
+  _marpaESLIF_meta_freev(out_metap);
+  _marpaESLIF_symbol_freev(out_symbolp);
+  rcb = 0;
+
+ done:
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
+  marpaESLIFRecognizerp->callstackCounteri--;
+  return rcb;
+}
+
+/*****************************************************************************/
+static inline short _marpaESLIFValueRuleCallbackGrammar_ruleb(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, marpaESLIF_grammarContext_op_declare_t op_declare, char *descEncodings, char *descs, size_t descl, marpaESLIF_grammarContext_lhs_t lhs, size_t nsingle_symbol, marpaESLIF_grammarContext_single_symbol_t *single_symbolp, size_t nexception_symbol, marpaESLIF_grammarContext_single_symbol_t *exception_symbolp, marpaESLIF_grammarContext_adverb_list_t adverb_list, marpaESLIF_rule_t **out_rulepp)
+/*****************************************************************************/
+{
+  static const char           *funcs = "_marpaESLIFValueRuleCallbackGrammar_ruleb";
+  marpaESLIF_t                *marpaESLIFp                = marpaESLIFValuep->marpaESLIFp;
+  marpaESLIFRecognizer_t      *marpaESLIFRecognizerp      = marpaESLIFValuep->marpaESLIFRecognizerp;
+  short                        rcb;
+
+  marpaESLIFRecognizerp->callstackCounteri++;
+  MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
+
+  /* TO DO */
+  rcb = 0;
+  
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
+  marpaESLIFRecognizerp->callstackCounteri--;
+  return rcb;
+}
+

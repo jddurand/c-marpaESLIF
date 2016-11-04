@@ -64,17 +64,11 @@ struct marpaESLIF_adverbItem {
   } u;
 };
 
-static inline void        _marpaESLIF_grammarContext_resetv(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp);
-static inline short       _marpaESLIF_grammarContext_i_resetb(marpaESLIF_t *marpaESLIFp, genericStack_t *outputStackp, genericStack_t *itemTypeStackp, int i);
-static inline const char *_marpaESLIF_grammarContext_i_types(marpaESLIF_t *marpaESLIFp, genericStack_t *outputStackp, genericStack_t *itemTypeStackp, int i);
-static inline short       _marpaESLIF_grammarContext_get_typeb(marpaESLIF_t *marpaESLIFp, genericStack_t *itemTypeStackp, int i, marpaESLIF_grammarItemType_t *typep);
-static inline short       _marpaESLIF_grammarContext_set_typeb(marpaESLIF_t *marpaESLIFp, genericStack_t *itemTypeStackp, int i, marpaESLIF_grammarItemType_t type);
-
 #define GENERATE_MARPAESLIF_GRAMMARCONTEXT_GETTER_BODY(genericStackType, itemType, name) \
   static const char                  *funcs = "_marpaESLIF_grammarContext_get_" #name "b"; \
   marpaESLIF_grammarItemType_t        type;                             \
   short                               rcb;                              \
-  marpESLIF_grammarContext_##name##_t value;                            \
+  marpaESLIF_grammarContext_##name##_t value;                            \
                                                                         \
   if (! _marpaESLIF_grammarContext_get_typeb(marpaESLIFp, itemTypeStackp, i, &type)) { \
     goto err;                                                           \
@@ -132,19 +126,26 @@ err:                                                                    \
 done:                                                                   \
  return rcb
 
-static const char *marpESLIF_grammarContext_NA_types = "NA";
-static const char *marpESLIF_grammarContext_UNKNOWN_types = "UNKNOWN";
+static const char *marpaESLIF_grammarContext_NA_types = "NA";
+static const char *marpaESLIF_grammarContext_UNKNOWN_types = "UNKNOWN";
 #define MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(genericStackType, itemType, name) \
-  typedef GENERICSTACKITEMTYPE2TYPE_##genericStackType marpESLIF_grammarContext_##name##_t; \
-  static const char *marpESLIF_grammarContext_##itemType##_types = #itemType; \
-  static inline short _marpaESLIF_grammarContext_get_##name##b(marpaESLIF_t *marpaESLIFp, genericStack_t *outputStackp, genericStack_t *itemTypeStackp, int i, marpESLIF_grammarContext_##name##_t *valuep) \
+  typedef GENERICSTACKITEMTYPE2TYPE_##genericStackType marpaESLIF_grammarContext_##name##_t; \
+  static const char *marpaESLIF_grammarContext_##itemType##_types = #itemType; \
+  static inline short _marpaESLIF_grammarContext_get_##name##b(marpaESLIF_t *marpaESLIFp, genericStack_t *outputStackp, genericStack_t *itemTypeStackp, int i, marpaESLIF_grammarContext_##name##_t *valuep) \
   {                                                                     \
     GENERATE_MARPAESLIF_GRAMMARCONTEXT_GETTER_BODY(genericStackType, itemType, name); \
   }                                                                     \
-  static inline short _marpaESLIF_grammarContext_set_##name##b(marpaESLIF_t *marpaESLIFp, genericStack_t *outputStackp, genericStack_t *itemTypeStackp, int i, marpESLIF_grammarContext_##name##_t value) \
+  static inline short _marpaESLIF_grammarContext_set_##name##b(marpaESLIF_t *marpaESLIFp, genericStack_t *outputStackp, genericStack_t *itemTypeStackp, int i, marpaESLIF_grammarContext_##name##_t value) \
   {                                                                     \
     GENERATE_MARPAESLIF_GRAMMARCONTEXT_SETTER_BODY(genericStackType, itemType, name); \
   }
+
+/* The macros generating getters and setters must know about these methods: */
+static inline void        _marpaESLIF_grammarContext_resetv(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp);
+static inline short       _marpaESLIF_grammarContext_i_resetb(marpaESLIF_t *marpaESLIFp, genericStack_t *outputStackp, genericStack_t *itemTypeStackp, int i);
+static inline const char *_marpaESLIF_grammarContext_i_types(marpaESLIF_t *marpaESLIFp, genericStack_t *outputStackp, genericStack_t *itemTypeStackp, int i);
+static inline short       _marpaESLIF_grammarContext_get_typeb(marpaESLIF_t *marpaESLIFp, genericStack_t *itemTypeStackp, int i, marpaESLIF_grammarItemType_t *typep);
+static inline short       _marpaESLIF_grammarContext_set_typeb(marpaESLIF_t *marpaESLIFp, genericStack_t *itemTypeStackp, int i, marpaESLIF_grammarItemType_t type);
 
 /* Special version that is putting N/A : it has nothing in input - and there is no getter counterpart */
 static inline short _marpaESLIF_grammarContext_set_NAb(marpaESLIF_t *marpaESLIFp, genericStack_t *outputStackp, genericStack_t *itemTypeStackp, int i)
@@ -203,5 +204,9 @@ MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(PTR,   SYMBOL,              
 MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(PTR,   LHS,                      lhs)                      /* ASCII NUL terminated string */
 MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(PTR,   SINGLE_SYMBOL,            single_symbol)            /* ASCII NUL terminated string */
 MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(INT,   QUANTIFIER,               quantifier)               /* 0 == '*', 1 == '+' */
+
+/* Special methods that must know about the types generated by the macros: */
+static inline short       _marpaESLIFValueRuleCallbackGrammar_op_declareb(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, marpaESLIF_grammarContext_op_declare_t op_declare, short createb, marpaESLIF_grammar_t **out_grammarpp);
+static inline short       _marpaESLIFValueRuleCallbackGrammar_symbolb(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, marpaESLIF_grammarContext_op_declare_t op_declare, char *ansis, marpaESLIF_symbol_t **out_symbolpp);
 
 #endif /* MARPAESLIF_INTERNAL_GRAMMARCONTEXT_H */
