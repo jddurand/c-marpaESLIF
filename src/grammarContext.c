@@ -564,9 +564,19 @@ done:                                                                   \
  marpaESLIFRecognizerp->callstackCounteri--;                            \
  return rcb
 
-#define CALLBACKGRAMMAR_DECL_LEXEME(identifier)     marpaESLIF_grammarContext_lexeme_t     identifier
-#define CALLBACKGRAMMAR_DECL_OP_DECLARE(identifier) marpaESLIF_grammarContext_op_declare_t identifier
+#ifndef MARPAESLIF_NTRACE
+#define CALLBACKGRAMMAR_HEXDUMPV(marpaESLIFRecognizerp, headers, asciidescs, p, lengthl, traceb) \
+  _marpaESLIFRecognizer_hexdumpv(marpaESLIFRecognizerp, headers, asciidescs, p, lengthl, traceb)
+#else
+#define CALLBACKGRAMMAR_HEXDUMPV(marpaESLIFRecognizerp, headers, asciidescs, p, lengthl, traceb)
+#endif
 
+/* -------------------------------------------------------------------- */
+/*                              LEXEME                                  */
+/* genericStack type: ARRAY                                             */
+/*            C type: genericStackItemTypeArray_t                       */
+/* -------------------------------------------------------------------- */
+#define CALLBACKGRAMMAR_DECL_LEXEME(identifier) marpaESLIF_grammarContext_lexeme_t identifier
 #define CALLBACKGRAMMAR_GET_LEXEME(indice, identifier) do {              \
     if (! _marpaESLIF_grammarContext_get_lexemeb(marpaESLIFp, outputStackp, itemTypeStackp, indice, &identifier)) { \
       goto err;                                                         \
@@ -575,7 +585,24 @@ done:                                                                   \
       MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, #identifier " is a null lexeme" MARPAESLIF_LOC_FMT, MARPAESLIF_LOC_VAR); \
       goto err;                                                         \
     }                                                                   \
-    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "outputStackp->[%d] val  is {\"%s\", %ld}", indice, GENERICSTACK_ARRAY_PTR(identifier), (unsigned long) GENERICSTACK_ARRAY_LENGTH(identifier)); \
+    CALLBACKGRAMMAR_HEXDUMPV(marpaESLIFValuep->marpaESLIFRecognizerp, "Dump of ", #identifier, GENERICSTACK_ARRAY_PTR(identifier), GENERICSTACK_ARRAY_LENGTH(identifier), 1 /* traceb */); \
+  } while (0)
+
+/* -------------------------------------------------------------------- */
+/*                           OP_DECLARE                                 */
+/* genericStack type: INT                                               */
+/*            C type: int                                               */
+/* -------------------------------------------------------------------- */
+#define CALLBACKGRAMMAR_DECL_OP_DECLARE(identifier) marpaESLIF_grammarContext_op_declare_t identifier
+#define CALLBACKGRAMMAR_GET_OP_DECLARE(indice, identifier) do {         \
+    if (! _marpaESLIF_grammarContext_get_op_declareb(marpaESLIFp, outputStackp, itemTypeStackp, indice, &identifier)) { \
+      goto err;                                                         \
+    }                                                                   \
+    if (identifier < 0) {                                               \
+      MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, #identifier "value is %d", Identifier); \
+      goto err;                                                         \
+    }                                                                   \
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "outputStackp->[%d] val  is %d", indice, identifier); \
   } while (0)
 
 #define CALLBACKGRAMMAR_SET_OP_DECLARE(indice, identifier, grammarp) do {      \
@@ -588,16 +615,131 @@ done:                                                                   \
     MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "outputStackp->[%d] set  to %d", indice, identifier); \
   } while (0)
 
+/* -------------------------------------------------------------------- */
+/*                           ACTION_NAME                                */
+/* genericStack type: PTR                                               */
+/*            C type: void *                                            */
+/* -------------------------------------------------------------------- */
+#define CALLBACKGRAMMAR_DECL_ACTION_NAME(identifier) marpaESLIF_grammarContext_action_name_t identifier
+#define CALLBACKGRAMMAR_GET_ACTION_NAME(indice, identifier) do {        \
+    if (! _marpaESLIF_grammarContext_get_action_nameb(marpaESLIFp, outputStackp, itemTypeStackp, indice, &identifier)) { \
+      goto err;                                                         \
+    }                                                                   \
+    if (identifier == NULL) {                                           \
+      MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, #identifier "value is NULL"); \
+      goto err;                                                         \
+    }                                                                   \
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "outputStackp->[%d] val  is \"%s\"", indice, identifier); \
+  } while (0)
+
+#define CALLBACKGRAMMAR_SET_ACTION_NAME(indice, identifier) do {        \
+    if (! _marpaESLIF_grammarContext_set_action_nameb(marpaESLIFp, outputStackp, itemTypeStackp, indice, identifier)) { \
+      goto err;                                                         \
+    }                                                                   \
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "outputStackp->[%d] set  to \"%s\"", indice, identifier); \
+  } while (0)
+
+/* -------------------------------------------------------------------- */
+/*                              ACTION                                  */
+/* genericStack type: PTR                                               */
+/*            C type: void *                                            */
+/* -------------------------------------------------------------------- */
+#define CALLBACKGRAMMAR_DECL_ACTION(identifier) marpaESLIF_grammarContext_action_t identifier
+#define CALLBACKGRAMMAR_GET_ACTION(indice, identifier) do {        \
+    if (! _marpaESLIF_grammarContext_get_actionb(marpaESLIFp, outputStackp, itemTypeStackp, indice, &identifier)) { \
+      goto err;                                                         \
+    }                                                                   \
+    if (identifier == NULL) {                                           \
+      MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, #identifier "value is NULL"); \
+      goto err;                                                         \
+    }                                                                   \
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "outputStackp->[%d] val  is \"%s\"", indice, identifier); \
+  } while (0)
+
+#define CALLBACKGRAMMAR_SET_ACTION(indice, identifier) do {        \
+    if (! _marpaESLIF_grammarContext_set_actionb(marpaESLIFp, outputStackp, itemTypeStackp, indice, identifier)) { \
+      goto err;                                                         \
+    }                                                                   \
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "outputStackp->[%d] set  to \"%s\"", indice, identifier); \
+  } while (0)
+
+/* -------------------------------------------------------------------- */
+/*                          ADVERB_ITEM_ACTION                          */
+/* genericStack type: PTR                                               */
+/*            C type: void *                                            */
+/* -------------------------------------------------------------------- */
+#define CALLBACKGRAMMAR_DECL_ADVERB_ITEM_ACTION(identifier) marpaESLIF_grammarContext_adverb_item_action_t identifier
+#define CALLBACKGRAMMAR_GET_ADVERB_ITEM_ACTION(indice, identifier) do {        \
+    if (! _marpaESLIF_grammarContext_get_adverb_item_actionb(marpaESLIFp, outputStackp, itemTypeStackp, indice, &identifier)) { \
+      goto err;                                                         \
+    }                                                                   \
+    if (identifier == NULL) {                                           \
+      MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, #identifier "value is NULL"); \
+      goto err;                                                         \
+    }                                                                   \
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "outputStackp->[%d] val  is \"%s\"", indice, identifier); \
+  } while (0)
+
+#define CALLBACKGRAMMAR_SET_ADVERB_ITEM_ACTION(indice, identifier) do {        \
+    if (! _marpaESLIF_grammarContext_set_adverb_item_actionb(marpaESLIFp, outputStackp, itemTypeStackp, indice, identifier)) { \
+      goto err;                                                         \
+    }                                                                   \
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "outputStackp->[%d] set  to \"%s\"", indice, identifier); \
+  } while (0)
+
+/* -------------------------------------------------------------------- */
+/*                               LATM                                   */
+/* genericStack type: SHORT                                             */
+/*            C type: short                                             */
+/* -------------------------------------------------------------------- */
+#define CALLBACKGRAMMAR_DECL_LATM(identifier) marpaESLIF_grammarContext_latm_t identifier
+#define CALLBACKGRAMMAR_GET_LATM(indice, identifier) do {               \
+    if (! _marpaESLIF_grammarContext_get_latmb(marpaESLIFp, outputStackp, itemTypeStackp, indice, &identifier)) { \
+      goto err;                                                         \
+    }                                                                   \
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "outputStackp->[%d] val  is %d", indice, identifier); \
+  } while (0)
+
+#define CALLBACKGRAMMAR_SET_LATM(indice, identifier) do {               \
+    if (! _marpaESLIF_grammarContext_set_latmb(marpaESLIFp, outputStackp, itemTypeStackp, indice, identifier)) { \
+      goto err;                                                         \
+    }                                                                   \
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "outputStackp->[%d] set  to %d", indice, identifier); \
+  } while (0)
+
+/* -------------------------------------------------------------------- */
+/*                           ADVERB_ITEM_LATM                           */
+/* genericStack type: SHORT                                             */
+/*            C type: short                                             */
+/* -------------------------------------------------------------------- */
+#define CALLBACKGRAMMAR_DECL_ADVERB_ITEM_LATM(identifier) marpaESLIF_grammarContext_adverb_item_latm_t identifier
+#define CALLBACKGRAMMAR_GET_ADVERB_ITEM_LATM(indice, identifier) do {   \
+    if (! _marpaESLIF_grammarContext_get_adverb_item_latmb(marpaESLIFp, outputStackp, itemTypeStackp, indice, &identifier)) { \
+      goto err;                                                         \
+    }                                                                   \
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "outputStackp->[%d] val  is %d", indice, identifier); \
+  } while (0)
+
+#define CALLBACKGRAMMAR_SET_ADVERB_ITEM_LATM(indice, identifier) do {   \
+    if (! _marpaESLIF_grammarContext_set_adverb_item_latmb(marpaESLIFp, outputStackp, itemTypeStackp, indice, identifier)) { \
+      goto err;                                                         \
+    }                                                                   \
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "outputStackp->[%d] set  to %d", indice, identifier); \
+  } while (0)
+
 /*****************************************************************************/
 static inline short _G1_RULE_OP_DECLARE_1(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti)
 /*****************************************************************************/
-/* ---------------------------------------------------------------------------
- * <op declare> ::= <op declare top grammar>
- *
- * Stack types:
- * INT ::= LEXEME
- * ------------------------------------------------------------------------- */
 {
+  /* ---------------------------------------------------------------------------
+   * <op declare> ::= <op declare top grammar>
+   *
+   * Stack types:
+   * INT ::= LEXEME
+   *
+   * C types:
+   * int ::= genericStackItemTypeArray_t
+   * ------------------------------------------------------------------------- */
   CALLBACKGRAMMAR_COMMON_HEADER(_G1_RULE_OP_DECLARE_1);
   {
     CALLBACKGRAMMAR_DECL_OP_DECLARE(op_declare);
@@ -610,13 +752,16 @@ static inline short _G1_RULE_OP_DECLARE_1(marpaESLIFValue_t *marpaESLIFValuep, m
 /*****************************************************************************/
 static inline short _G1_RULE_OP_DECLARE_3(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti)
 /*****************************************************************************/
-/* ---------------------------------------------------------------------------
- * <op declare> ::= <op declare any grammar>
- *
- * Stack types:
- * INT ::= LEXEME
- * ------------------------------------------------------------------------- */
 {
+  /* ---------------------------------------------------------------------------
+   * <op declare> ::= <op declare any grammar>
+   *
+   * Stack types:
+   * INT ::= LEXEME
+   *
+   * C types:
+   * int ::= genericStackItemTypeArray_t
+   * ------------------------------------------------------------------------- */
   CALLBACKGRAMMAR_COMMON_HEADER(_G1_RULE_OP_DECLARE_3);
   {
     CALLBACKGRAMMAR_DECL_OP_DECLARE(op_declare);
@@ -635,3 +780,138 @@ static inline short _G1_RULE_OP_DECLARE_3(marpaESLIFValue_t *marpaESLIFValuep, m
   }
   CALLBACKGRAMMAR_COMMON_TRAILER;
 }
+
+/*****************************************************************************/
+static inline short _G1_RULE_ACTION_NAME(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti)
+/*****************************************************************************/
+{
+  /*
+   * ---------------------------------------------------------------------------------------------
+   * <action name>  ::= <ascii name>
+   *
+   * Stack types:
+   * PTR ::= LEXEME
+   *
+   * C types:
+   * void* ::= genericStackItemTypeArray_t
+   *
+   * Note: <ascii name>  inner pointer is an ASCII NUL terminated string: ASCII as per the grammar, NUL terminated as per charconv
+   *       <action name> is an ASCII NUL terminated string
+   * ---------------------------------------------------------------------------------------------
+   */
+  CALLBACKGRAMMAR_COMMON_HEADER(_G1_RULE_ACTION_NAME);
+  {
+    CALLBACKGRAMMAR_DECL_ACTION_NAME(action_name);
+    CALLBACKGRAMMAR_DECL_LEXEME     (ascii_name);
+
+    CALLBACKGRAMMAR_GET_LEXEME(arg0i, ascii_name);
+
+    action_name = strdup(GENERICSTACK_ARRAY_PTR(ascii_name));
+    if (action_name == NULL) {
+      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "strdup failure, %s", strerror(errno));
+      goto err;
+    }
+
+    CALLBACKGRAMMAR_SET_ACTION_NAME(resulti, action_name);
+  }
+  CALLBACKGRAMMAR_COMMON_TRAILER;
+}
+
+/*****************************************************************************/
+static inline short _G1_RULE_ACTION(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti)
+/*****************************************************************************/
+{
+  /*
+   * ---------------------------------------------------------------------------------------------
+   * action ::= 'action' '=>' <action name>
+   *
+   * Stack types:
+   * PTR ::= LEXEME LEXEME PTR
+   *
+   * C types:
+   * void* ::= genericStackItemTypeArray_t genericStackItemTypeArray_t void*
+   *
+   * Note: <action name> is an ASCII NUL terminated string
+   *       <action> is an ASCII NUL terminated string
+   * ---------------------------------------------------------------------------------------------
+   */
+  CALLBACKGRAMMAR_COMMON_HEADER(_G1_RULE_ACTION);
+  {
+    CALLBACKGRAMMAR_DECL_ACTION     (action);
+    CALLBACKGRAMMAR_DECL_ACTION_NAME(action_name);
+
+    CALLBACKGRAMMAR_GET_ACTION_NAME(arg0i+2, action_name);
+
+    action = strdup(action_name);
+    if (action == NULL) {
+      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "strdup failure, %s", strerror(errno));
+      goto err;
+    }
+
+    CALLBACKGRAMMAR_SET_ACTION(resulti, action);
+  }
+  CALLBACKGRAMMAR_COMMON_TRAILER;
+}
+
+/*****************************************************************************/
+static inline short _G1_RULE_ADVERB_ITEM_01(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti)
+/*****************************************************************************/
+{
+  /*
+   * ---------------------------------------------------------------------------------------------
+   * <adverb item> ::= action
+   *
+   * Stack types:
+   * PTR ::= PTR
+   *
+   * C types:
+   * void* ::= void*
+   *
+   * Note: <action>      is an ASCII NUL terminated string
+   *       <adverb item> is an ASCII NUL terminated string
+   * ---------------------------------------------------------------------------------------------
+   */
+  CALLBACKGRAMMAR_COMMON_HEADER(_G1_RULE_ADVERB_ITEM_01);
+  {
+    CALLBACKGRAMMAR_DECL_ADVERB_ITEM_ACTION(adverb_item_action);
+    CALLBACKGRAMMAR_DECL_ACTION            (action);
+
+    CALLBACKGRAMMAR_GET_ACTION(arg0i, action);
+
+    adverb_item_action = strdup(action);
+    if (adverb_item_action == NULL) {
+      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "strdup failure, %s", strerror(errno));
+      goto err;
+    }
+
+    CALLBACKGRAMMAR_SET_ADVERB_ITEM_ACTION(resulti, adverb_item_action);
+  }
+  CALLBACKGRAMMAR_COMMON_TRAILER;
+}
+
+/*****************************************************************************/
+static inline short _G1_RULE_ADVERB_ITEM_12(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti)
+/*****************************************************************************/
+{
+  /*
+   * ---------------------------------------------------------------------------------------------
+   * <adverb item> ::= <latm specification>
+   *
+   * Stack types:
+   * SHORT ::= SHORT
+   * ---------------------------------------------------------------------------------------------
+   */
+  CALLBACKGRAMMAR_COMMON_HEADER(_G1_RULE_ADVERB_ITEM_12);
+  {
+    CALLBACKGRAMMAR_DECL_ADVERB_ITEM_LATM(adverb_item_latm);
+    CALLBACKGRAMMAR_DECL_LATM            (latm);
+
+    CALLBACKGRAMMAR_GET_LATM(arg0i, latm);
+
+    adverb_item_latm = latm;
+
+    CALLBACKGRAMMAR_SET_ADVERB_ITEM_LATM(resulti, adverb_item_latm);
+  }
+  CALLBACKGRAMMAR_COMMON_TRAILER;
+}
+

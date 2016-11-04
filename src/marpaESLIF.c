@@ -5239,133 +5239,21 @@ static short _marpaESLIFValueRuleCallbackGrammar(void *userDatavp, marpaESLIFVal
       goto err;
     }
   } else if (strcmp(actions, G1_RULE_ACTION_NAME) == 0) {
-    /*
-     * ---------------------------------------------------------------------------------------------
-     * <action name>  ::= <ascii name>
-     *
-     * Stack types:
-     * PTR ::= LEXEME
-     * ---------------------------------------------------------------------------------------------
-     */
-    marpaESLIF_grammarContext_lexeme_t      ascii_name;
-    marpaESLIF_grammarContext_action_name_t action_name;
-
-    if (! _marpaESLIF_grammarContext_get_lexemeb(marpaESLIFp, outputStackp, itemTypeStackp, arg0i, &ascii_name)) {
+    if (! _G1_RULE_ACTION_NAME(marpaESLIFValuep, marpaESLIF_grammarContextp, rulei, arg0i, argni, resulti)) {
       goto err;
     }
-    if (GENERICSTACK_ARRAY_PTR(ascii_name) == NULL) {
-      MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "NULL lexeme");
-      goto err;
-    }
-
-    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: [...] outputStackp->[%d] val  is {\"%s\", %ld}", actions, arg0i, GENERICSTACK_ARRAY_PTR(ascii_name), (unsigned long) GENERICSTACK_ARRAY_LENGTH(ascii_name));
-
-    action_name = strdup(GENERICSTACK_ARRAY_PTR(ascii_name));
-    if (action_name == NULL) {
-      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "strdup failure, %s", strerror(errno));
-      goto err;
-    }
-
-    if (! _marpaESLIF_grammarContext_set_action_nameb(marpaESLIFp, outputStackp, itemTypeStackp, resulti, action_name)) {
-      free(action_name);
-      goto err;
-    }
-    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: [...] outputStackp->[%d] set  to \"%s\"", actions, resulti, action_name);
-
   } else if (strcmp(actions, G1_RULE_ACTION) == 0) {
-    /*
-     * ---------------------------------------------------------------------------------------------
-     * action ::= 'action' '=>' <action name>
-     *
-     * Stack types:
-     * PTR ::= LEXEME LEXEME PTR
-     *
-     * Note: <action name> is an ASCII NUL terminated string
-     * ---------------------------------------------------------------------------------------------
-     */
-    marpaESLIF_grammarContext_action_name_t action_name;
-    marpaESLIF_grammarContext_action_t      action;
-
-    if (! _marpaESLIF_grammarContext_get_action_nameb(marpaESLIFp, outputStackp, itemTypeStackp, argni, &action_name)) {
+    if (! _G1_RULE_ACTION(marpaESLIFValuep, marpaESLIF_grammarContextp, rulei, arg0i, argni, resulti)) {
       goto err;
     }
-    if (action_name == NULL) {
-      MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "NULL PTR");
-      goto err;
-    }
-
-    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: [...] outputStackp->[%d] val  is \"%s\"", actions, argni, action_name);
-
-    action = strdup(action_name);
-    if (action == NULL) {
-      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "strdup failure, %s", strerror(errno));
-      goto err;
-    }
-
-    if (! _marpaESLIF_grammarContext_set_actionb(marpaESLIFp, outputStackp, itemTypeStackp, resulti, action)) {
-      free(action);
-      goto err;
-    }
-    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: [...] outputStackp->[%d] set  to \"%s\"", actions, resulti, action);
-
   } else if (strcmp(actions, G1_RULE_ADVERB_ITEM_01) == 0) {
-    /*
-     * ---------------------------------------------------------------------------------------------
-     * <adverb item> ::= action
-     *
-     * Stack types:
-     * PTR ::= PTR
-     * ---------------------------------------------------------------------------------------------
-     */
-    marpaESLIF_grammarContext_action_t             action;
-    marpaESLIF_grammarContext_adverb_item_action_t adverb_item_action;
-
-    if (! _marpaESLIF_grammarContext_get_actionb(marpaESLIFp, outputStackp, itemTypeStackp, arg0i, &action)) {
+    if (! _G1_RULE_ADVERB_ITEM_01(marpaESLIFValuep, marpaESLIF_grammarContextp, rulei, arg0i, argni, resulti)) {
       goto err;
     }
-    if (action == NULL) {
-      MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "NULL PTR");
-      goto err;
-    }
-
-    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: [...] outputStackp->[%d] val  is \"%s\"", actions, arg0i, action);
-
-    adverb_item_action = strdup(action);
-    if (adverb_item_action == NULL) {
-      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "strdup failure, %s", strerror(errno));
-      goto err;
-    }
-
-    if (! _marpaESLIF_grammarContext_set_adverb_item_actionb(marpaESLIFp, outputStackp, itemTypeStackp, resulti, adverb_item_action)) {
-      free(adverb_item_action);
-      goto err;
-    }
-    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: [...] outputStackp->[%d] set  to \"%s\"", actions, resulti, adverb_item_action);
-
   } else if (strcmp(actions, G1_RULE_ADVERB_ITEM_12) == 0) {
-    /*
-     * ---------------------------------------------------------------------------------------------
-     * <adverb item> ::= <latm specification>
-     *
-     * Stack types:
-     * PTR ::= SHORT
-     * ---------------------------------------------------------------------------------------------
-     */
-    marpaESLIF_grammarContext_latm_t             latm;
-    marpaESLIF_grammarContext_adverb_item_latm_t adverb_item_latm;
-
-    if (! _marpaESLIF_grammarContext_get_latmb(marpaESLIFp, outputStackp, itemTypeStackp, arg0i, &latm)) {
+    if (! _G1_RULE_ADVERB_ITEM_12(marpaESLIFValuep, marpaESLIF_grammarContextp, rulei, arg0i, argni, resulti)) {
       goto err;
     }
-    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: [...] outputStackp->[%d] val  is %d", actions, arg0i, (int) latm);
-
-    adverb_item_latm = latm;
-
-    if (! _marpaESLIF_grammarContext_set_adverb_item_latmb(marpaESLIFp, outputStackp, itemTypeStackp, resulti, adverb_item_latm)) {
-      goto err;
-    }
-    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: [...] outputStackp->[%d] set  to %d", actions, resulti, (int) adverb_item_latm);
-
   } else if (strcmp(actions, G1_RULE_ADVERB_LIST_ITEMS) == 0) {
     /*
      * ---------------------------------------------------------------------------------------------

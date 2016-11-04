@@ -879,13 +879,13 @@ bootstrap_grammar_rule_t bootstrap_grammar_G1_rules[] = {
   { G1_META_EVENT_INITIALIZER,                G1_RULE_EVENT_INITIALIZER_2,                    MARPAESLIF_RULE_TYPE_ALTERNATIVE, 0, { -1                                           }, -1,                        -1, -1 },
   { G1_META_LATM_SPECIFICATION,               G1_RULE_LATM_SPECIFICATION_1,                   MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_TERMINAL_FORGIVING,
                                                                                                                                      G1_TERMINAL_THEN,
-                                                                                                                                     G1_META_TRUE                                 }, -1,                        -1, -1 },
+                                                                                                                                     G1_META_BOOLEAN                              }, -1,                        -1, -1 },
   /*
     lhsi                                      descs                                           type                          nrhsl  { rhsi }                                       }  minimumi           separatori  properb
   */
   { G1_META_LATM_SPECIFICATION,               G1_RULE_LATM_SPECIFICATION_2,                   MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_TERMINAL_LATM,
                                                                                                                                      G1_TERMINAL_THEN,
-                                                                                                                                     G1_META_TRUE                                 }, -1,                        -1, -1 },
+                                                                                                                                     G1_META_BOOLEAN                              }, -1,                        -1, -1 },
   { G1_META_NAMING,                           G1_RULE_NAMING,                                 MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_TERMINAL_NAME,
                                                                                                                                      G1_TERMINAL_THEN,
                                                                                                                                      G1_META_ALTERNATIVE_NAME                     }, -1,                        -1, -1 },
