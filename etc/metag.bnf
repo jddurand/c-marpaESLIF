@@ -33,6 +33,8 @@
 # - grammar reference        added
 # - parenthesized rhs list   removed
 # - exception list           added (using '(' and ')' ...)
+# - pseudo rules are not exlically scoped: they are all merged
+# - there is no notion of mask
 #
 # ----------------------------------------------------------------------------------------------
 # Please note that there is a very big difference between using apparently equivalent regexp and
