@@ -1831,6 +1831,7 @@ static inline marpaESLIF_rule_t *_marpaESLIF_rule_newp(marpaESLIF_t *marpaESLIFp
   rulep->sequenceb       = sequenceb;
   rulep->properb         = properb;
   rulep->minimumi        = minimumi;
+  rulep->passthroughb    = 0;
 
   /* -------- Rule Description -------- */
   rulep->descp = _marpaESLIF_string_newp(marpaESLIFp, descEncodings, descs, descl, 1);
@@ -2096,11 +2097,12 @@ marpaESLIF_t *marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptionp)
     }
   }
 
-  marpaESLIFp->marpaESLIFOption           = *marpaESLIFOptionp;
-  marpaESLIFp->marpaESLIFGrammarp         = NULL;
-  marpaESLIFp->anycharp                   = NULL;
-  marpaESLIFp->utf8bomp                   = NULL;
-  marpaESLIFp->newlinep                   = NULL;
+  marpaESLIFp->marpaESLIFOption            = *marpaESLIFOptionp;
+  marpaESLIFp->marpaESLIFGrammarp          = NULL;
+  marpaESLIFp->anycharp                    = NULL;
+  marpaESLIFp->utf8bomp                    = NULL;
+  marpaESLIFp->newlinep                    = NULL;
+  marpaESLIFp->symbolnameTrailingReservedp = NULL;
 
   /* Create internal anychar regex */
   marpaESLIFp->anycharp = _marpaESLIF_terminal_newp(marpaESLIFp,
@@ -2154,6 +2156,24 @@ marpaESLIF_t *marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptionp)
                                                     NULL  /* testPartialMatchs */
                                                     );
   if (marpaESLIFp->newlinep == NULL) {
+    goto err;
+  }
+
+  /* Create internal reserved pattern in symbol names */
+  marpaESLIFp->symbolnameTrailingReservedp = _marpaESLIF_terminal_newp(marpaESLIFp,
+                                                                       NULL, /* grammarp */
+                                                                       MARPAESLIF_EVENTTYPE_NONE, /* eventSeti */
+                                                                       "ASCII", /* We KNOW this is an ASCII thingy */
+                                                                       INTERNAL_SYMBOL_NAME_TRAILING_RESERVED_PATTERN, /* descs */
+                                                                       strlen(INTERNAL_SYMBOL_NAME_TRAILING_RESERVED_PATTERN), /* descl */
+                                                                       MARPAESLIF_TERMINAL_TYPE_REGEX, /* type */
+                                                                       MARPAESLIF_REGEX_OPTION_DOTALL|MARPAESLIF_REGEX_OPTION_UTF, /* opti */
+                                                                       INTERNAL_SYMBOL_NAME_TRAILING_RESERVED_PATTERN, /* utf8s */
+                                                                       strlen(INTERNAL_SYMBOL_NAME_TRAILING_RESERVED_PATTERN), /* utf8l */
+                                                                       NULL, /* testFullMatchs */
+                                                                       NULL  /* testPartialMatchs */
+                                                                       );
+  if (marpaESLIFp->anycharp == NULL) {
     goto err;
   }
 

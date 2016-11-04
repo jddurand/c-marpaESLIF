@@ -575,6 +575,8 @@ done:                                                                   \
 /*                              LEXEME                                  */
 /* genericStack type: ARRAY                                             */
 /*            C type: genericStackItemTypeArray_t                       */
+/*                                                                      */
+/* There is only a getter: the G1 level does never produce a lexeme.    */
 /* -------------------------------------------------------------------- */
 #define CALLBACKGRAMMAR_DECL_LEXEME(identifier) marpaESLIF_grammarContext_lexeme_t identifier
 #define CALLBACKGRAMMAR_GET_LEXEME(indice, identifier) do {              \
@@ -685,6 +687,86 @@ done:                                                                   \
       goto err;                                                         \
     }                                                                   \
     MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "outputStackp->[%d] set  to \"%s\"", indice, identifier); \
+  } while (0)
+
+/* -------------------------------------------------------------------- */
+/*                         ADVERB_ITEM_AUTORANK                         */
+/* genericStack type: SHORT                                             */
+/*            C type: short                                             */
+/* -------------------------------------------------------------------- */
+#define CALLBACKGRAMMAR_DECL_ADVERB_ITEM_AUTORANK(identifier) marpaESLIF_grammarContext_adverb_item_autorank_t identifier
+#define CALLBACKGRAMMAR_GET_ADVERB_ITEM_AUTORANK(indice, identifier) do { \
+    if (! _marpaESLIF_grammarContext_get_adverb_item_autorankb(marpaESLIFp, outputStackp, itemTypeStackp, indice, &identifier)) { \
+      goto err;                                                         \
+    }                                                                   \
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "outputStackp->[%d] val  is %d", indice, (int) identifier); \
+  } while (0)
+
+#define CALLBACKGRAMMAR_SET_ADVERB_ITEM_AUTORANK(indice, identifier) do {        \
+    if (! _marpaESLIF_grammarContext_set_adverb_item_autorankb(marpaESLIFp, outputStackp, itemTypeStackp, indice, identifier)) { \
+      goto err;                                                         \
+    }                                                                   \
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "outputStackp->[%d] set  to %d", indice, (int) identifier); \
+  } while (0)
+
+/* -------------------------------------------------------------------- */
+/*                           ADVERB_ITEM_LEFT                           */
+/* genericStack type: SHORT                                             */
+/*            C type: short                                             */
+/* -------------------------------------------------------------------- */
+#define CALLBACKGRAMMAR_DECL_ADVERB_ITEM_LEFT(identifier) marpaESLIF_grammarContext_adverb_item_left_t identifier
+#define CALLBACKGRAMMAR_GET_ADVERB_ITEM_LEFT(indice, identifier) do {   \
+    if (! _marpaESLIF_grammarContext_get_adverb_item_leftb(marpaESLIFp, outputStackp, itemTypeStackp, indice, &identifier)) { \
+      goto err;                                                         \
+    }                                                                   \
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "outputStackp->[%d] val  is %d", indice, (int) identifier); \
+  } while (0)
+
+#define CALLBACKGRAMMAR_SET_ADVERB_ITEM_LEFT(indice, identifier) do {        \
+    if (! _marpaESLIF_grammarContext_set_adverb_item_leftb(marpaESLIFp, outputStackp, itemTypeStackp, indice, identifier)) { \
+      goto err;                                                         \
+    }                                                                   \
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "outputStackp->[%d] set  to %d", indice, (int) identifier); \
+  } while (0)
+
+/* -------------------------------------------------------------------- */
+/*                           ADVERB_ITEM_RIGHT                          */
+/* genericStack type: SHORT                                             */
+/*            C type: short                                             */
+/* -------------------------------------------------------------------- */
+#define CALLBACKGRAMMAR_DECL_ADVERB_ITEM_RIGHT(identifier) marpaESLIF_grammarContext_adverb_item_right_t identifier
+#define CALLBACKGRAMMAR_GET_ADVERB_ITEM_RIGHT(indice, identifier) do {  \
+    if (! _marpaESLIF_grammarContext_get_adverb_item_rightb(marpaESLIFp, outputStackp, itemTypeStackp, indice, &identifier)) { \
+      goto err;                                                         \
+    }                                                                   \
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "outputStackp->[%d] val  is %d", indice, (int) identifier); \
+  } while (0)
+
+#define CALLBACKGRAMMAR_SET_ADVERB_ITEM_RIGHT(indice, identifier) do {  \
+    if (! _marpaESLIF_grammarContext_set_adverb_item_rightb(marpaESLIFp, outputStackp, itemTypeStackp, indice, identifier)) { \
+      goto err;                                                         \
+    }                                                                   \
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "outputStackp->[%d] set  to %d", indice, (int) identifier); \
+  } while (0)
+
+/* -------------------------------------------------------------------- */
+/*                           ADVERB_ITEM_GROUP                          */
+/* genericStack type: SHORT                                             */
+/*            C type: short                                             */
+/* -------------------------------------------------------------------- */
+#define CALLBACKGRAMMAR_DECL_ADVERB_ITEM_GROUP(identifier) marpaESLIF_grammarContext_adverb_item_group_t identifier
+#define CALLBACKGRAMMAR_GET_ADVERB_ITEM_GROUP(indice, identifier) do {  \
+    if (! _marpaESLIF_grammarContext_get_adverb_item_groupb(marpaESLIFp, outputStackp, itemTypeStackp, indice, &identifier)) { \
+      goto err;                                                         \
+    }                                                                   \
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "outputStackp->[%d] val  is %d", indice, (int) identifier); \
+  } while (0)
+
+#define CALLBACKGRAMMAR_SET_ADVERB_ITEM_GROUP(indice, identifier) do {  \
+    if (! _marpaESLIF_grammarContext_set_adverb_item_groupb(marpaESLIFp, outputStackp, itemTypeStackp, indice, identifier)) { \
+      goto err;                                                         \
+    }                                                                   \
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "outputStackp->[%d] set  to %d", indice, (int) identifier); \
   } while (0)
 
 /* -------------------------------------------------------------------- */
@@ -899,6 +981,9 @@ static inline short _G1_RULE_ADVERB_ITEM_12(marpaESLIFValue_t *marpaESLIFValuep,
    *
    * Stack types:
    * SHORT ::= SHORT
+   *
+   * C types:
+   * short ::= short
    * ---------------------------------------------------------------------------------------------
    */
   CALLBACKGRAMMAR_COMMON_HEADER(_G1_RULE_ADVERB_ITEM_12);
@@ -913,5 +998,25 @@ static inline short _G1_RULE_ADVERB_ITEM_12(marpaESLIFValue_t *marpaESLIFValuep,
     CALLBACKGRAMMAR_SET_ADVERB_ITEM_LATM(resulti, adverb_item_latm);
   }
   CALLBACKGRAMMAR_COMMON_TRAILER;
+}
+
+/*****************************************************************************/
+static inline short _G1_RULE_ADVERB_LIST_ITEMS(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti)
+/*****************************************************************************/
+{
+  /*
+   * ---------------------------------------------------------------------------------------------
+   * <adverb list items> ::= <adverb item>*
+   *
+   * Stack types:
+   * PTR ::= ~variable types see below~
+   *
+   * C types:
+   * PTR ::= short
+   *
+   * Note: <adverb list items> is a genericStack pointer
+   *       <adverb item> can be any of the supported adverb items
+   * ---------------------------------------------------------------------------------------------
+   */
 }
 
