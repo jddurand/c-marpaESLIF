@@ -4841,6 +4841,14 @@ static short _marpaESLIFValueRuleCallbackMainWrapper(void *userDatavp, int rulei
   marpaESLIFRecognizerp->callstackCounteri++;
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
 
+  rulep = _marpaESLIF_rule_findp(marpaESLIFValuep->marpaESLIFp, grammarp, NULL, 0, rulei);
+  if (rulep == NULL) {
+    MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "No such rule No %d", rulei);
+    goto err;
+  }
+
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Rule %d (%s)", rulei, rulep->descp->asciis);
+
   if (ruleCallbackp == _marpaESLIFValueRuleCallbackLexeme) {
     if (! ruleCallbackp(marpaESLIFValueOption.userDatavp, marpaESLIFValuep, NULL, rulei, arg0i, argni, resulti)) {
       goto err;
@@ -4850,11 +4858,6 @@ static short _marpaESLIFValueRuleCallbackMainWrapper(void *userDatavp, int rulei
     /* Look if there is a rule callback */
     if (ruleCallbackp == NULL) {
       MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "No rule value callback");
-      goto err;
-    }
-
-    rulep = _marpaESLIF_rule_findp(marpaESLIFValuep->marpaESLIFp, grammarp, NULL, 0, rulei);
-    if (rulep == NULL) {
       goto err;
     }
 
@@ -4912,6 +4915,14 @@ static short _marpaESLIFValueSymbolCallbackMainWrapper(void *userDatavp, int sym
   marpaESLIFRecognizerp->callstackCounteri++;
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
 
+  symbolp = _marpaESLIF_symbol_findp(marpaESLIFValuep->marpaESLIFp, grammarp, NULL, 0, symboli);
+  if (symbolp == NULL) {
+    MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "No such symbol No %d", symboli);
+    goto err;
+  }
+
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Symbol %d (%s)", symboli, symbolp->descp->asciis);
+
   if (! _marpaESLIFRecognizer_lexemeStack_i_p_and_sizeb(marpaESLIFRecognizerp, marpaESLIFRecognizerp->lexemeInputStackp, argi, &bytep, &bytel)) {
     goto err;
   }
@@ -4933,9 +4944,9 @@ static short _marpaESLIFValueSymbolCallbackMainWrapper(void *userDatavp, int sym
     if (grammarp->defaultSymbolActionp == NULL) {
       symbolp = _marpaESLIF_symbol_findp(marpaESLIFValuep->marpaESLIFp, grammarp, NULL, 0, symboli);
       MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "%s No %d (%s) from grammar level %d (%s) requires that your grammar have: lexeme default = action => action_name",
-                        (symbolp == NULL) ? "Symbol" : ((symbolp->type == MARPAESLIF_SYMBOL_TYPE_TERMINAL) ? "Terminal symbol" : "Meta symbol"),
+                        (symbolp->type == MARPAESLIF_SYMBOL_TYPE_TERMINAL) ? "Terminal symbol" : "Meta symbol",
                         symboli,
-                        (symbolp != NULL) ? symbolp->descp->asciis : "?",
+                        symbolp->descp->asciis,
                         grammarp->leveli,
                         grammarp->descp->asciis);
       goto err;
@@ -4978,6 +4989,14 @@ static short _marpaESLIFValueNullingCallbackMainWrapper(void *userDatavp, int sy
   marpaESLIFRecognizerp->callstackCounteri++;
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
 
+  symbolp = _marpaESLIF_symbol_findp(marpaESLIFValuep->marpaESLIFp, grammarp, NULL, 0, symboli);
+  if (symbolp == NULL) {
+    MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "No such symbol No %d", symboli);
+    goto err;
+  }
+
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Symbol %d (%s)", symboli, symbolp->descp->asciis);
+
   /* When the nulling callback is our internal lexeme, any notion of action is SKIPPED. */
   /* In fact, these callbacks are even called with actions being NULL. */
   if (nullingCallbackp == _marpaESLIFValueNullingCallbackLexeme) {
@@ -4994,11 +5013,10 @@ static short _marpaESLIFValueNullingCallbackMainWrapper(void *userDatavp, int sy
 
     /* Look if there a lexeme action in the grammar - a custom lexeme action is required at the very top level */
     if (grammarp->defaultSymbolActionp == NULL) {
-      symbolp = _marpaESLIF_symbol_findp(marpaESLIFValuep->marpaESLIFp, grammarp, NULL, 0, symboli);
       MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "%s No %d (%s) from grammar level %d (%s) requires that your grammar have: lexeme default = action => action_name",
-                        (symbolp == NULL) ? "Symbol" : ((symbolp->type == MARPAESLIF_SYMBOL_TYPE_TERMINAL) ? "Terminal symbol" : "Meta symbol"),
+                        (symbolp->type == MARPAESLIF_SYMBOL_TYPE_TERMINAL) ? "Terminal symbol" : "Meta symbol",
                         symboli,
-                        (symbolp != NULL) ? symbolp->descp->asciis : "?",
+                        symbolp->descp->asciis,
                         grammarp->leveli,
                         grammarp->descp->asciis);
       goto err;
@@ -6077,6 +6095,8 @@ static short _marpaESLIFValueNullingCallbackGrammar(void *userDatavp, marpaESLIF
   marpaESLIF_grammar_t             *grammarp                   = marpaESLIFGrammarp->grammarp;
   genericStack_t                   *symbolStackp               = grammarp->symbolStackp;
   marpaESLIF_symbol_t              *symbolp;
+  /* Variables that many need a cleanup */
+  genericStack_t                   *out_adverb_list_stackp = NULL;
 
   marpaESLIFRecognizerp->callstackCounteri++;
   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "start (actions=%s)", actions);
@@ -6100,8 +6120,31 @@ static short _marpaESLIFValueNullingCallbackGrammar(void *userDatavp, marpaESLIF
 
   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s", actions);
 
-  if (! _marpaESLIF_grammarContext_set_NAb(marpaESLIFp, outputStackp, itemTypeStackp, resulti)) {
-    goto err;
+  /* Depending on symboli, when parsing the grammar, we want to put NA or something else */
+  /* Basically, sequences with '*' want something else but NA */
+  switch (symboli) {
+  case G1_META_ADVERB_LIST:
+    {
+      marpESLIF_grammarContext_adverb_list_t adverb_list;
+
+      GENERICSTACK_NEW(out_adverb_list_stackp);
+      if (GENERICSTACK_ERROR(out_adverb_list_stackp)) {
+        MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "out_adverb_list_stackp initialization failure, %s", strerror(errno));
+        goto err;
+      }
+
+      adverb_list = out_adverb_list_stackp;
+      if (! _marpaESLIF_grammarContext_set_adverb_listb(marpaESLIFp, outputStackp, itemTypeStackp, resulti, adverb_list)) {
+        goto err;
+      }
+      out_adverb_list_stackp = NULL;
+    }
+    break;
+  default:
+    if (! _marpaESLIF_grammarContext_set_NAb(marpaESLIFp, outputStackp, itemTypeStackp, resulti)) {
+      goto err;
+    }
+    break;
   }
 
   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: [OUT] outputStackp->[%d] type is %s", actions, resulti, _marpaESLIF_grammarContext_i_types(marpaESLIFp, outputStackp, itemTypeStackp, resulti));
@@ -6113,6 +6156,9 @@ static short _marpaESLIFValueNullingCallbackGrammar(void *userDatavp, marpaESLIF
   rcb = 0;
 
  done:
+  if (out_adverb_list_stackp != NULL) {
+    GENERICSTACK_FREE(out_adverb_list_stackp);
+  }
   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
   marpaESLIFRecognizerp->callstackCounteri--;
   return rcb;
