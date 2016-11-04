@@ -88,7 +88,7 @@ static inline short       _marpaESLIF_grammarContext_set_typeb(marpaESLIF_t *mar
       goto err;                                                         \
     }                                                                   \
   } else {                                                              \
-    MARPAESLIF_ERRORF(marpaESLIFp, "Not a MARPAESLIF_GRAMMARITEMTYPE_%s in itemTypeStackp at indice %d, got %d instead of %d", #itemType, i, type, MARPAESLIF_GRAMMARITEMTYPE_##itemType); \
+    MARPAESLIF_ERRORF(marpaESLIFp, "Type is not %s (enum value %d) in itemTypeStackp->[%d], but %s (enum value %d)", #itemType, MARPAESLIF_GRAMMARITEMTYPE_##itemType, i, _marpaESLIF_grammarContext_i_types(marpaESLIFp, outputStackp, itemTypeStackp, i), type); \
     goto err;                                                           \
   }                                                                     \
                                                                         \
