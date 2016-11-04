@@ -184,6 +184,22 @@ static inline short _marpaESLIF_grammarContext_i_resetb(marpaESLIF_t *marpaESLIF
           }
         }
         break;
+      case MARPAESLIF_GRAMMARITEMTYPE_SYMBOL_NAME:        /* ASCII string */
+        if (GENERICSTACK_IS_PTR(outputStackp, i)) {
+          char *asciis = (char *) GENERICSTACK_GET_PTR(outputStackp, i);
+          if (asciis != NULL) {
+            free(asciis);
+          }
+        }
+        break;
+      case MARPAESLIF_GRAMMARITEMTYPE_SYMBOL:             /* ASCII string */
+        if (GENERICSTACK_IS_PTR(outputStackp, i)) {
+          char *asciis = (char *) GENERICSTACK_GET_PTR(outputStackp, i);
+          if (asciis != NULL) {
+            free(asciis);
+          }
+        }
+        break;
       default:
         break;
       }
