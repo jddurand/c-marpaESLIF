@@ -232,7 +232,7 @@ boolean                  ~ [01]
 
 <character class regexp>      ~ /\[(?:[^\\]]*(?:\.[^\\]]*)*)\]/
 <character class>             ~ <character class regexp> <character class modifiers>
-<character class modifier>    ~ /:[eijmnsxDJUuaN]/
+<character class modifier>    ~ /:[eijmnsxDJUuaNubcA]/
 <character class modifier>    ~ ':ic'   # :ic is added for Marpa::R2 compatibility and is meaningless
 <character class modifiers>   ~ <character class modifier>*
 
