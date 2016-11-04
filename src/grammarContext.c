@@ -454,10 +454,10 @@ static inline short _marpaESLIFValueRuleCallbackGrammar_op_declareb(marpaESLIFVa
 }
 
 /*****************************************************************************/
-static inline short _marpaESLIFValueRuleCallbackGrammar_symbolb(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, marpaESLIF_grammarContext_op_declare_t op_declare, char *ansis, marpaESLIF_symbol_t **out_symbolpp)
+static inline short _marpaESLIFValueRuleCallbackGrammar_metab(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, marpaESLIF_grammarContext_op_declare_t op_declare, char *ansis, marpaESLIF_symbol_t **out_symbolpp)
 /*****************************************************************************/
 {
-  static const char           *funcs = "_marpaESLIFValueRuleCallbackGrammar_symbolb";
+  static const char           *funcs = "_marpaESLIFValueRuleCallbackGrammar_metab";
   marpaESLIF_t                *marpaESLIFp                = marpaESLIFValuep->marpaESLIFp;
   marpaESLIFRecognizer_t      *marpaESLIFRecognizerp      = marpaESLIFValuep->marpaESLIFRecognizerp;
   genericStack_t              *symbolStackp;
@@ -544,3 +544,94 @@ static inline short _marpaESLIFValueRuleCallbackGrammar_ruleb(marpaESLIFValue_t 
   return rcb;
 }
 
+#define CALLBACKGRAMMAR_COMMON_HEADER(name)                             \
+  static const char           *funcs                 = #name ;          \
+  marpaESLIF_t                *marpaESLIFp           = marpaESLIFValuep->marpaESLIFp; \
+  marpaESLIFRecognizer_t      *marpaESLIFRecognizerp = marpaESLIFValuep->marpaESLIFRecognizerp; \
+  genericStack_t              *outputStackp          = marpaESLIF_grammarContextp->outputStackp; \
+  genericStack_t              *itemTypeStackp        = marpaESLIF_grammarContextp->itemTypeStackp; \
+  short                        rcb;                                     \
+  marpaESLIFRecognizerp->callstackCounteri++;                           \
+  MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start")
+
+#define CALLBACKGRAMMAR_COMMON_TRAILER                                  \
+  rcb = 1;                                                              \
+  goto done;                                                            \
+err:                                                                    \
+ rcb = 0;                                                               \
+done:                                                                   \
+ MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb); \
+ marpaESLIFRecognizerp->callstackCounteri--;                            \
+ return rcb
+
+#define CALLBACKGRAMMAR_DECL_LEXEME(identifier)     marpaESLIF_grammarContext_lexeme_t     identifier
+#define CALLBACKGRAMMAR_DECL_OP_DECLARE(identifier) marpaESLIF_grammarContext_op_declare_t identifier
+
+#define CALLBACKGRAMMAR_GET_LEXEME(indice, identifier) do {              \
+    if (! _marpaESLIF_grammarContext_get_lexemeb(marpaESLIFp, outputStackp, itemTypeStackp, indice, &identifier)) { \
+      goto err;                                                         \
+    }                                                                   \
+    if (GENERICSTACK_ARRAY_PTR(identifier) == NULL) {                   \
+      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, #identifier " is a null lexeme" MARPAESLIF_LOC_FMT, MARPAESLIF_LOC_VAR); \
+      goto err;                                                         \
+    }                                                                   \
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "outputStackp->[%d] val  is {\"%s\", %ld}", indice, GENERICSTACK_ARRAY_PTR(identifier), (unsigned long) GENERICSTACK_ARRAY_LENGTH(identifier)); \
+  } while (0)
+
+#define CALLBACKGRAMMAR_SET_OP_DECLARE(indice, identifier, grammarp) do {      \
+    if (! _marpaESLIFValueRuleCallbackGrammar_op_declareb(marpaESLIFValuep, marpaESLIF_grammarContextp, identifier, 1 /* createb */, grammarp)) { \
+      goto err;                                                         \
+    }                                                                   \
+    if (! _marpaESLIF_grammarContext_set_op_declareb(marpaESLIFp, outputStackp, itemTypeStackp, indice, identifier)) { \
+      goto err;                                                         \
+    }                                                                   \
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "outputStackp->[%d] set  to %d", indice, identifier); \
+  } while (0)
+
+/*****************************************************************************/
+static inline short _G1_RULE_OP_DECLARE_1(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti)
+/*****************************************************************************/
+/* ---------------------------------------------------------------------------
+ * <op declare> ::= <op declare top grammar>
+ *
+ * Stack types:
+ * INT ::= LEXEME
+ * ------------------------------------------------------------------------- */
+{
+  CALLBACKGRAMMAR_COMMON_HEADER(_G1_RULE_OP_DECLARE_1);
+  {
+    CALLBACKGRAMMAR_DECL_OP_DECLARE(op_declare);
+    op_declare = 0; /* No need to fetch the lexeme, we know it is for level 0 */
+    CALLBACKGRAMMAR_SET_OP_DECLARE(resulti, op_declare, NULL);
+  }
+  CALLBACKGRAMMAR_COMMON_TRAILER;
+}
+
+/*****************************************************************************/
+static inline short _G1_RULE_OP_DECLARE_3(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti)
+/*****************************************************************************/
+/* ---------------------------------------------------------------------------
+ * <op declare> ::= <op declare any grammar>
+ *
+ * Stack types:
+ * INT ::= LEXEME
+ * ------------------------------------------------------------------------- */
+{
+  CALLBACKGRAMMAR_COMMON_HEADER(_G1_RULE_OP_DECLARE_3);
+  {
+    CALLBACKGRAMMAR_DECL_OP_DECLARE(op_declare);
+    CALLBACKGRAMMAR_DECL_LEXEME    (op_declare_any_grammar);
+    char *p;
+
+    CALLBACKGRAMMAR_GET_LEXEME(arg0i, op_declare_any_grammar);
+
+    /* Get the grammar level */
+    /* By construction this cannot be < 0 - we made sure the string is ASCII (via the grammar) and NUL terminated (via the symbol callback) */
+    p = GENERICSTACK_ARRAY_PTR(op_declare_any_grammar);
+    p += 2;    /* Skip ":[" */
+    op_declare = atoi(p);
+
+    CALLBACKGRAMMAR_SET_OP_DECLARE(resulti, op_declare, NULL);
+  }
+  CALLBACKGRAMMAR_COMMON_TRAILER;
+}

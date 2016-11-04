@@ -2,8 +2,8 @@
 #define MARPAESLIF_INTERNAL_LOGGING_H
 #include <stdio.h>
 
-#define MARPAESLIF_LOC_FMT "[v%s/%s:%d]"
-#define MARPAESLIF_LOC_VAR MARPAESLIF_VERSION, funcs, __LINE__
+#define MARPAESLIF_LOC_FMT "[v%s/%s at %s:%04d]"
+#define MARPAESLIF_LOC_VAR MARPAESLIF_VERSION, funcs, FILENAMES, __LINE__
 
 #define MARPAESLIF2LOG(marpaESLIFp, rest) do {				\
     genericLogger_t *genericLoggerp = ((marpaESLIFp) != NULL) ? (marpaESLIFp)->marpaESLIFOption.genericLoggerp : NULL; \
