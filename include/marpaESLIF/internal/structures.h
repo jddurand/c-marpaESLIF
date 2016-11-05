@@ -126,6 +126,7 @@ struct marpaESLIF_terminal {
 
 struct marpaESLIF_meta {
   int                          idi;                       /* Non-terminal Id */
+  char                        *asciinames;
   marpaESLIF_string_t         *descp;                     /* Non-terminal description */
   marpaWrapperGrammar_t       *marpaWrapperGrammarClonep; /* Eventual cloned grammar */
 };
@@ -175,7 +176,8 @@ struct marpaESLIF_symbol {
 /* A rule */
 struct marpaESLIF_rule {
   int                  idi;             /* Rule Id */
-  marpaESLIF_string_t *descp;           /* Rule description */
+  char                *asciinames;      /* Rule name (ASCII as per the grammar) */
+  marpaESLIF_string_t *descp;           /* Rule alternative name */
   char                *asciishows;      /* Rule show (ASCII) */
   marpaESLIF_symbol_t *lhsp;            /* LHS symbol */
   marpaESLIF_symbol_t *separatorp;      /* Eventual separator symbol */
