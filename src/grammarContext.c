@@ -1454,7 +1454,7 @@ static inline short _G1_RULE_START_RULE(marpaESLIFValue_t *marpaESLIFValuep, mar
 }
 
 /*****************************************************************************/
-static inline short _G1_RULE_DESC_RULE_1(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti)
+static inline short _G1_RULE_DESC_RULE(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti)
 /*****************************************************************************/
 {
   /* ---------------------------------------------------------------------------
@@ -1469,7 +1469,7 @@ static inline short _G1_RULE_DESC_RULE_1(marpaESLIFValue_t *marpaESLIFValuep, ma
    * Note: We push NA because parents rule are No-opts
    *       symbol is an ASCII NUL terminated string
    * ------------------------------------------------------------------------- */
-  CALLBACKGRAMMAR_COMMON_HEADER(_G1_RULE_DESC_RULE_1);
+  CALLBACKGRAMMAR_COMMON_HEADER(_G1_RULE_DESC_RULE);
   {
     CALLBACKGRAMMAR_DECL_OP_DECLARE(op_declare);
     CALLBACKGRAMMAR_DECL_LEXEME(quoted_string);
