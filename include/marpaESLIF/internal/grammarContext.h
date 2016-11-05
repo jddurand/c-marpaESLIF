@@ -233,6 +233,7 @@ static inline short _G1_RULE_STATEMENT_17     (marpaESLIFValue_t *marpaESLIFValu
 static inline short _G1_RULE_START_RULE       (marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti);
 static inline short _G1_RULE_DESC_RULE        (marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti);
 static inline short _G1_RULE_EMPTY_RULE       (marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti);
+static inline short _G1_RULE_NULL_STATEMENT   (marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti);
 
 static inline short _G1_RULE_OP_DECLARE_3     (marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti);
 static inline short _G1_RULE_OP_DECLARE_1     (marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti);
