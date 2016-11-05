@@ -83,8 +83,8 @@ statement                        ::= <start rule>
                                  | <exception statement>
 
 <start rule>                   ::= ':start' <op declare> symbol
-<descs rule>                   ::= ':desc' <op declare> <quoted string>
-<descs rule>                   ::= ':desc' <op declare> <integer>
+<desc rule>                    ::= ':desc' <op declare> <quoted string>
+<desc rule>                    ::= ':desc' <op declare> <integer>
 <empty rule>                   ::= lhs <op declare> <adverb list>
 <null statement>               ::= ';'
 <statement group>              ::= '{' statements '}'
