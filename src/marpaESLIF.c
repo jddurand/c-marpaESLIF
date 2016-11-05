@@ -4663,7 +4663,19 @@ static short _marpaESLIFValueRuleCallbackMainWrapper(void *userDatavp, int rulei
 
   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Rule %d (%s)", rulei, rulep->descp->asciis);
 
-  if (ruleCallbackp == _marpaESLIFValueRuleCallbackLexeme) {
+  if (rulep->passthroughb) {
+    /* Special case of INTERNAL rules created in case of prioritized rules */
+    /* We must have arg0i == argni == resulti otherwise there is a serious problem -; */
+    if (arg0i != argni) {
+      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "Prioritized rule passthrough have arg0i %d != argni %d", arg0i, argni);
+      goto err;
+    }
+    if (arg0i != resulti) {
+      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "Prioritized rule passthrough have arg0i %d != resulti %d", arg0i, resulti);
+      goto err;
+    }
+    /* Ok, this is a no-op */
+  } else if (ruleCallbackp == _marpaESLIFValueRuleCallbackLexeme) {
     if (! ruleCallbackp(marpaESLIFValueOption.userDatavp, marpaESLIFValuep, NULL, rulei, arg0i, argni, resulti)) {
       goto err;
     }
