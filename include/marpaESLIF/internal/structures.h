@@ -5,10 +5,9 @@
 #include <pcre2.h>
 #include <tconv.h>
 
-#define INTERNAL_ANYCHAR_PATTERN "."                               /* This ASCII string is UTF-8 compatible */
-#define INTERNAL_UTF8BOM_PATTERN "\\x{FEFF}"                       /* FEFF Unicode code point i.e. EFBBBF in UTF-8 encoding */
-#define INTERNAL_NEWLINE_PATTERN "(*BSR_UNICODE).*?\\R"            /* newline as per unicode - we do .*? because our regexps are always anchored */
-#define INTERNAL_SYMBOL_NAME_TRAILING_RESERVED_PATTERN "[[0-9+]]$" /* This ASCII string is UTF-8 compatible */
+#define INTERNAL_ANYCHAR_PATTERN "."                    /* This ASCII string is UTF-8 compatible */
+#define INTERNAL_UTF8BOM_PATTERN "\\x{FEFF}"            /* FEFF Unicode code point i.e. EFBBBF in UTF-8 encoding */
+#define INTERNAL_NEWLINE_PATTERN "(*BSR_UNICODE).*?\\R" /* newline as per unicode - we do .*? because our regexps are always anchored */
 
 typedef struct  marpaESLIF_regex           marpaESLIF_regex_t;
 typedef         marpaESLIFString_t         marpaESLIF_string_t;
@@ -218,7 +217,6 @@ struct marpaESLIF {
   marpaESLIF_terminal_t *anycharp;                    /* internal regex for match any character */
   marpaESLIF_terminal_t *utf8bomp;                    /* Internal regex for match UTF-8 BOM */
   marpaESLIF_terminal_t *newlinep;                    /* Internal regex for match newline */
-  marpaESLIF_terminal_t *symbolnameTrailingReservedp; /* internal regex for match the reserved part of a symbol name */
   marpaESLIF_string_t   *defaultLexemeActionp;        /* Default action for symbols and rules when collectin lexemes */
   marpaESLIF_string_t   *defaultRuleLexemeActionp;    /* Default action for rules when collectin lexemes */
 };
