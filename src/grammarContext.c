@@ -2124,6 +2124,7 @@ static inline short _G1_RULE_PRIORITY_RULE(marpaESLIFValue_t *marpaESLIFValuep, 
     CALLBACKGRAMMAR_DECL_PRIORITIES(priorities);
     marpaESLIF_grammar_t         *out_grammarp;
     marpaESLIF_symbol_t          *out_symbolp;
+    marpaESLIF_rule_t            *out_rulep;
     genericStack_t               *alternativesStackp;
     genericStack_t               *alternativeStackp;
     marpaESLIF_alternativeItem_t *alternativeItemp;
