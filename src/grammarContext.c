@@ -248,14 +248,14 @@ static inline short _marpaESLIF_grammarContext_i_resetb(marpaESLIF_t *marpaESLIF
 }
 
 /*****************************************************************************/
-static inline const char *_marpaESLIF_grammarContext_i_types(marpaESLIF_t *marpaESLIFp, genericStack_t *outputStackp, genericStack_t *itemTypeStackp, int i)
+static inline const char *_marpaESLIF_grammarContext_i_types(marpaESLIF_t *marpaESLIFp, genericStack_t *itemTypeStackp, int i)
 /*****************************************************************************/
 {
   static const char            *funcs = "_marpaESLIF_grammarContext_i_types";
   marpaESLIF_grammarItemType_t  itemType;
   const char                   *rcs = marpaESLIF_grammarContext_UNKNOWN_types;
 
-  if ((outputStackp != NULL) && (itemTypeStackp != NULL)) {
+  if (itemTypeStackp != NULL) {
     if (GENERICSTACK_IS_INT(itemTypeStackp, i)) {
       itemType = (marpaESLIF_grammarItemType_t) GENERICSTACK_GET_INT(itemTypeStackp, i);
 
@@ -476,10 +476,10 @@ static inline short _marpaESLIFValueRuleCallbackGrammar_metab(marpaESLIFValue_t 
 
   symbolStackp = out_grammarp->symbolStackp;
   /* Make sure this symbol at this level exist */
-  out_symbolp = _marpaESLIF_symbol_findp(marpaESLIFp, out_grammarp, ansis, strlen(ansis), -1 /* symboli */);
+  out_symbolp = _marpaESLIF_symbol_findp(marpaESLIFp, out_grammarp, ansis, -1 /* symboli */);
   if (out_symbolp == NULL) {
     /* This is a symbol out of a meta symbol */
-    out_metap = _marpaESLIF_meta_newp(marpaESLIFp, out_grammarp, MARPAWRAPPERGRAMMAR_EVENTTYPE_NONE, "ASCII", ansis, strlen(ansis));
+    out_metap = _marpaESLIF_meta_newp(marpaESLIFp, out_grammarp, MARPAWRAPPERGRAMMAR_EVENTTYPE_NONE, ansis, NULL /* descEncodings */, NULL /* descs */, 0 /* descl */);
     if (out_metap == NULL) {
       goto err;
     }
@@ -525,20 +525,226 @@ static inline short _marpaESLIFValueRuleCallbackGrammar_metab(marpaESLIFValue_t 
 }
 
 /*****************************************************************************/
-static inline short _marpaESLIFValueRuleCallbackGrammar_ruleb(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, marpaESLIF_grammarContext_op_declare_t op_declare, char *descEncodings, char *descs, size_t descl, marpaESLIF_grammarContext_lhs_t lhs, size_t nsingle_symbol, marpaESLIF_grammarContext_single_symbol_t *single_symbolp, size_t nexception_symbol, marpaESLIF_grammarContext_single_symbol_t *exception_symbolp, marpaESLIF_grammarContext_adverb_list_t adverb_list, marpaESLIF_rule_t **out_rulepp)
+static inline short _marpaESLIF_grammarContext_adverbList_unstackb(marpaESLIF_t *marpaESLIFp, genericStack_t *adverbListStackp, char *contexts, char **actionsp, short *autorankbp, short *leftbp, short *rightbp, short *groupbp, char **separatorsp, short *properbp, int *rankip, short *nullRanksHighbp, int *priorityip, char **pausesp, short *latmbp, marpaESLIF_string_t **namingpp)
+/*****************************************************************************/
+/* Semantics are special here: if a NULL pointer is given to an adverb, then we do NOT want this adverb to exist */
+{
+  marpaESLIF_adverbItem_t *adverbItemp;
+  int                      i;
+  short                    rcb;
+
+  if (contexts == NULL) {
+    contexts = "Adverb list";
+  }
+  
+  if (adverbListStackp == NULL) {
+    MARPAESLIF_ERROR(marpaESLIFp, "adverbListStackp is NULL");
+    goto err;
+  }
+
+  /* Put the default values */
+  if (actionsp != NULL) {
+    *actionsp = NULL;
+  }
+  if (autorankbp != NULL) {
+    *autorankbp = 0;
+  }
+  if (leftbp != NULL) {
+    *leftbp = 1; /* Default is always left associativity */
+  }
+  if (rightbp != NULL) {
+    *rightbp = 0;
+  }
+  if (groupbp != NULL) {
+    *groupbp = 0;
+  }
+  if (separatorsp != NULL) {
+    *separatorsp = NULL;
+  }
+  if (properbp != NULL) {
+    *properbp = 0;
+  }
+  if (rankip != NULL) {
+    *rankip = 0;
+  }
+  if (nullRanksHighbp != NULL) {
+    *nullRanksHighbp = 0;
+  }
+  if (priorityip != NULL) {
+    *priorityip = 0;
+  }
+  if (pausesp != NULL) {
+    *pausesp = NULL;
+  }
+  if (latmbp != NULL) {
+    *latmbp = 0;
+  }
+  if (namingpp != NULL) {
+    *namingpp = NULL;
+  }
+
+  for (i = 0; i < GENERICSTACK_USED(adverbListStackp); i++) {
+    if (! GENERICSTACK_IS_PTR(adverbListStackp, i)) {
+      MARPAESLIF_ERRORF(marpaESLIFp, "Item No %d of adverbListStackp is NULL", i);
+      goto err;
+    }
+
+    adverbItemp = (marpaESLIF_adverbItem_t *) GENERICSTACK_GET_PTR(adverbListStackp, i);
+    switch (adverbItemp->type) {
+    case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_ACTION:
+      if (actionsp == NULL) {
+        MARPAESLIF_ERRORF(marpaESLIFp, "%s: action adverb is not allowed", contexts);
+        goto err;
+      }
+      *actionsp = adverbItemp->u.asciis;
+      break;
+    case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_AUTORANK:
+      if (autorankbp == NULL) {
+        MARPAESLIF_ERRORF(marpaESLIFp, "%s: autorank adverb is not allowed", contexts);
+        goto err;
+      }
+      *autorankbp = adverbItemp->u.b;
+      break;
+    case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_LEFT:
+      if (leftbp == NULL) {
+        MARPAESLIF_ERRORF(marpaESLIFp, "%s: left adverb is not allowed", contexts);
+        goto err;
+      }
+      *leftbp = adverbItemp->u.b;
+      break;
+    case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_RIGHT:
+      if (rightbp == NULL) {
+        MARPAESLIF_ERRORF(marpaESLIFp, "%s: right adverb is not allowed", contexts);
+        goto err;
+      }
+      *rightbp = adverbItemp->u.b;
+      break;
+    case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_GROUP:
+      if (groupbp == NULL) {
+        MARPAESLIF_ERRORF(marpaESLIFp, "%s: group adverb is not allowed", contexts);
+        goto err;
+      }
+      *groupbp = adverbItemp->u.b;
+      break;
+    case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_SEPARATOR:
+      if (separatorsp == NULL) {
+        MARPAESLIF_ERRORF(marpaESLIFp, "%s: separator adverb is not allowed", contexts);
+        goto err;
+      }
+      *separatorsp = adverbItemp->u.asciis;
+      break;
+    case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_PROPER:
+      if (properbp == NULL) {
+        MARPAESLIF_ERRORF(marpaESLIFp, "%s: proper adverb is not allowed", contexts);
+        goto err;
+      }
+      *properbp = adverbItemp->u.b;
+      break;
+    case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_RANK:
+      if (rankip == NULL) {
+        MARPAESLIF_ERRORF(marpaESLIFp, "%s: rank adverb is not allowed", contexts);
+        goto err;
+      }
+      *rankip = adverbItemp->u.i;
+      break;
+    case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_NULL_RANKING:
+      if (nullRanksHighbp == NULL) {
+        MARPAESLIF_ERRORF(marpaESLIFp, "%s: null-ranking adverb is not allowed", contexts);
+        goto err;
+      }
+      *nullRanksHighbp = adverbItemp->u.b;
+      break;
+    case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_PRIORITY:
+      if (priorityip == NULL) {
+        MARPAESLIF_ERRORF(marpaESLIFp, "%s: priority adverb is not allowed", contexts);
+        goto err;
+      }
+      *priorityip = adverbItemp->u.i;
+      break;
+    case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_PAUSE:
+      if (pausesp == NULL) {
+        MARPAESLIF_ERRORF(marpaESLIFp, "%s: pause adverb is not allowed", contexts);
+        goto err;
+      }
+      *pausesp = adverbItemp->u.asciis;
+      break;
+    case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_LATM:
+      if (latmbp == NULL) {
+        MARPAESLIF_ERRORF(marpaESLIFp, "%s: latm or forgiving adverb is not allowed", contexts);
+        goto err;
+      }
+      *latmbp = adverbItemp->u.b;
+      break;
+    case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_NAMING:
+      if (namingpp == NULL) {
+        MARPAESLIF_ERRORF(marpaESLIFp, "%s: name adverb is not allowed", contexts);
+        goto err;
+      }
+      *namingpp = adverbItemp->u.stringp;
+      break;
+    case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_NULL:
+      /* Ignored */
+      break;
+    default:
+      MARPAESLIF_ERRORF(marpaESLIFp, "Unsupported type %s (enum value %d) in adverbListStackp", _marpaESLIF_grammarContext_i_types(marpaESLIFp, adverbListStackp, i), adverbItemp->type);
+      goto err;
+    }
+  }
+
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  return rcb;
+}
+
+/*****************************************************************************/
+static inline short _marpaESLIFValueRuleCallbackGrammar_create_ruleb(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, marpaESLIF_grammar_t *out_grammarp, char *asciinames, marpaESLIF_string_t *descp, int lhsi, size_t nrhsl, int *rhsip, size_t nexceptionl, int *exceptionip, int ranki, short nullRanksHighb, short sequenceb, int minimumi, int separatori, short properb, char *actions, marpaESLIF_rule_t **out_rulepp)
 /*****************************************************************************/
 {
-  static const char           *funcs = "_marpaESLIFValueRuleCallbackGrammar_ruleb";
+  static const char           *funcs = "_marpaESLIFValueRuleCallbackGrammar_create_ruleb";
   marpaESLIF_t                *marpaESLIFp                = marpaESLIFValuep->marpaESLIFp;
   marpaESLIFRecognizer_t      *marpaESLIFRecognizerp      = marpaESLIFValuep->marpaESLIFRecognizerp;
+  marpaESLIF_rule_t           *out_rulep;
   short                        rcb;
 
   marpaESLIFRecognizerp->callstackCounteri++;
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
 
-  /* TO DO */
+  out_rulep = _marpaESLIF_rule_newp(marpaESLIFp,
+                                    out_grammarp,
+                                    asciinames,
+                                    (descp != NULL) ? descp->encodingasciis : NULL,
+                                    (descp != NULL) ? descp->bytep : NULL,
+                                    (descp != NULL) ? descp->bytel : 0,
+                                    lhsi,
+                                    nrhsl,
+                                    rhsip,
+                                    nexceptionl,
+                                    exceptionip,
+                                    ranki,
+                                    nullRanksHighb,
+                                    sequenceb,
+                                    minimumi,
+                                    separatori,
+                                    properb,
+                                    actions);
+  if (out_rulep == NULL) {
+    goto err;
+  }
+
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Created rule No %d (%s) at level %d", out_rulep->idi, out_rulep->asciinames, out_grammarp->leveli);
+
+  rcb = 1;
+  goto done;
+
+ err:
   rcb = 0;
-  
+
+ done:  
   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
   marpaESLIFRecognizerp->callstackCounteri--;
   return rcb;
@@ -1482,6 +1688,96 @@ static inline short _G1_RULE_DESC_RULE(marpaESLIFValue_t *marpaESLIFValuep, marp
     _marpaESLIF_string_freev(out_grammarp->descp);
     out_grammarp->descp = _marpaESLIF_string_newp(marpaESLIFp, "UTF-8"/* Our lexeme imposed character stream */, GENERICSTACK_ARRAY_PTR(quoted_string), GENERICSTACK_ARRAY_LENGTH(quoted_string), 1 /* asciib */);
     if (out_grammarp->descp == NULL) {
+      goto err;
+    }
+
+    /* Parents are no-op */
+    CALLBACKGRAMMAR_SET_NA(resulti);
+  }
+  CALLBACKGRAMMAR_COMMON_TRAILER;
+}
+
+/*****************************************************************************/
+static inline short _G1_RULE_EMPTY_RULE(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti)
+/*****************************************************************************/
+{
+  /* ---------------------------------------------------------------------------
+   * <empty rule> ::= lhs <op declare> <adverb list>
+   *
+   * Stack types:
+   * NA ::= LHS OP_DECLARE ADVERB_LIST
+   *
+   * C types:
+   * -- ::= void* int void*
+   *
+   * Note: We push NA because parents rule are No-opts
+   *       lhs is an ASCII NUL terminated string
+   *       <adverb list> is a genericStack_t*
+   * ------------------------------------------------------------------------- */
+  CALLBACKGRAMMAR_COMMON_HEADER(_G1_RULE_EMPTY_RULE);
+  {
+    CALLBACKGRAMMAR_DECL_LHS(lhs);
+    CALLBACKGRAMMAR_DECL_OP_DECLARE(op_declare);
+    CALLBACKGRAMMAR_DECL_ADVERB_LIST(adverb_list);
+    marpaESLIF_grammar_t   *out_grammarp;
+    marpaESLIF_symbol_t    *out_symbolp;
+    marpaESLIF_rule_t      *out_rulep;
+    /* Arguments for rule creation */
+    char                   *asciinames;
+    char                   *actions;
+    int                     ranki;
+    marpaESLIF_string_t    *namingp;
+    
+    CALLBACKGRAMMAR_GET_LHS(arg0i, lhs);
+    CALLBACKGRAMMAR_GET_OP_DECLARE(arg0i+1, op_declare, &out_grammarp);
+    CALLBACKGRAMMAR_GET_ADVERB_LIST(arg0i+2, adverb_list);
+
+    asciinames = (char *) lhs;
+
+    /* Make sure this symbol exists at that grammar level */
+    if (! _marpaESLIFValueRuleCallbackGrammar_metab(marpaESLIFValuep, marpaESLIF_grammarContextp, op_declare, asciinames, &out_symbolp)) {
+      goto err;
+    }
+
+    /* Get the adverb items that are allowed in our context */
+    if (! _marpaESLIF_grammarContext_adverbList_unstackb(marpaESLIFp,
+                                                         (genericStack_t *) adverb_list,
+                                                         asciinames,
+                                                         &actions,
+                                                         NULL, /* autorankbp */
+                                                         NULL, /* leftbp */
+                                                         NULL, /* rightbp */
+                                                         NULL, /* groupb */
+                                                         NULL, /* separatorsp */
+                                                         NULL, /* properbp */
+                                                         &ranki,
+                                                         NULL, /* nullRanksHighbp */
+                                                         NULL, /* priorityip */
+                                                         NULL, /* pausesp */
+                                                         NULL, /* latmbp */
+                                                         &namingp)) {
+      goto err;
+    }
+
+    /* Create the rule */
+    if (! _marpaESLIFValueRuleCallbackGrammar_create_ruleb(marpaESLIFValuep,
+                                                           marpaESLIF_grammarContextp,
+                                                           out_grammarp,
+                                                           asciinames,
+                                                           namingp,
+                                                           out_symbolp->idi,
+                                                           0, /* nrhsl */
+                                                           NULL, /* rhsip */
+                                                           0, /* nexceptionl */
+                                                           NULL, /* exceptionip */
+                                                           ranki,
+                                                           0, /* nullRanksHighb */
+                                                           0, /* sequenceb */
+                                                           -1, /* minimumi */
+                                                           -1, /* separatori */
+                                                           -1, /* properb */
+                                                           actions,
+                                                           &out_rulep)) {
       goto err;
     }
 
