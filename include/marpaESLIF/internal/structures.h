@@ -190,6 +190,7 @@ struct marpaESLIF_rule {
   short                sequenceb;
   short                properb;
   int                  minimumi;
+  short                passthroughb;    /* This rule is a passthrough */
 };
 
 /* A grammar */
@@ -235,7 +236,9 @@ struct marpaESLIFValue {
   marpaESLIFRecognizer_t   *marpaESLIFRecognizerp;
   marpaESLIFValueOption_t   marpaESLIFValueOption;
   marpaWrapperValue_t      *marpaWrapperValuep;
-  short                     afsmode;         /* Say if we are using the traditional Marpa mode or the ASF valuation mode */
+  short                     previousPassWasPassthroughb;
+  int                       previousArg0i;
+  int                       previousArgni;
 };
 
 struct marpaESLIFRecognizer {
