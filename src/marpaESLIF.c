@@ -1894,6 +1894,7 @@ static inline marpaESLIF_rule_t *_marpaESLIF_rule_newp(marpaESLIF_t *marpaESLIFp
   rulep->sequenceb       = sequenceb;
   rulep->properb         = properb;
   rulep->minimumi        = minimumi;
+  rulep->passthroughb    = 0;
 
   /* -------- Rule name -------- */
   rulep->asciinames = strdup(asciinames);
@@ -4576,10 +4577,13 @@ marpaESLIFValue_t *marpaESLIFValue_newp(marpaESLIFRecognizer_t *marpaESLIFRecogn
     goto err;
   }
 
-  marpaESLIFValuep->marpaESLIFp            = marpaESLIFp;
-  marpaESLIFValuep->marpaESLIFRecognizerp  = marpaESLIFRecognizerp;
-  marpaESLIFValuep->marpaESLIFValueOption  = *marpaESLIFValueOptionp;
-  marpaESLIFValuep->marpaWrapperValuep     = NULL;
+  marpaESLIFValuep->marpaESLIFp                 = marpaESLIFp;
+  marpaESLIFValuep->marpaESLIFRecognizerp       = marpaESLIFRecognizerp;
+  marpaESLIFValuep->marpaESLIFValueOption       = *marpaESLIFValueOptionp;
+  marpaESLIFValuep->marpaWrapperValuep          = NULL;
+  marpaESLIFValuep->previousPassWasPassthroughb = 0;
+  marpaESLIFValuep->previousArg0i               = 0;
+  marpaESLIFValuep->previousArgni               = 0;
 
   marpaWrapperValueOption.genericLoggerp = marpaESLIFp->marpaESLIFOption.genericLoggerp;
   marpaWrapperValueOption.highRankOnlyb  = marpaESLIFValueOptionp->highRankOnlyb;
@@ -4691,36 +4695,110 @@ static short _marpaESLIFValueRuleCallbackMainWrapper(void *userDatavp, int rulei
 
   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Rule %d (%s)", rulei, rulep->descp->asciis);
 
-  if (ruleCallbackp == _marpaESLIFValueRuleCallbackLexeme) {
-    if (! ruleCallbackp(marpaESLIFValueOption.userDatavp, marpaESLIFValuep, NULL, rulei, arg0i, argni, resulti)) {
+  /* Passthrough mode:
+
+     This is a vicious case: we have created a rule that is passthough. This can happen only in
+     prioritized rules and our internal rules made sure that this situation is unique in the whole grammar.
+     That is, for example:
+
+       <Expression> ::=
+         Number
+          | '(' Expression ')' assoc => group
+         || Expression '**' Expression assoc => right
+         || Expression '*' Expression 
+          | Expression '/' Expression
+         || Expression '+' Expression
+          | Expression '-' Expression
+
+     is internally converted to:
+
+          Expression    ::= Expression[0]
+          Expression[3] ::= '(' Expression[0] ')'
+          Expression[2] ::= Expression[3] '**' Expression[2]
+          Expression[1] ::= Expression[1] '*'  Expression[2]
+                          | Expression[1] '/'  Expression[2]
+          Expression[0] ::= Expression[0] '+'  Expression[1]
+                          | Expression[0] '+'  Expression[1]
+
+     i.e. the rule
+
+          Expression    ::= Expression[0]
+
+     is a passtrough. Now, again, we made sure that this rule that we call a "passthrough" can happen only
+     once in the grammar. This mean that when we evaluate Expression[0] we are sure that the next rule to
+     evaluate will be Expression.
+
+     In Marpa native valuation methods, from stack point of view, we know that if the stack numbers for
+     Expression[0] and Expression will be the same. In the ASF valuation mode, this will not be true.
+
+     In Marpa, for instance, Expression[0] evaluates in stack number resulti, then Expression will also
+     evaluate to the same numberi.
+
+     In ASF mode, Expression[0] is likely to be one plus the stack number for Expression.
+
+     A general implementation can just say the following:
+
+     Expression[0] will evaluate stack [arg0i[0]..argni[0]] to resulti[0]
+     Expression    will evaluate stack resulti[0] to resulti
+
+     i.e. both are equivalent to: stack [arg0i[0]..argni[0]] evaluating to resulti.
+
+     This mean that we can skip the passthrough valuation if we remember its stack input: [arg0i[0]..argn[0]].
+
+     Implementation is:
+     * If current rule is a passthrough, remember arg0i and argni, and remember we have done a passthrough
+     * Next pass will check if previous call was a passthrough, and if true, will reuse these remembered arg0i and argni.
+  */
+  if (rulep->passthroughb) {
+    if (marpaESLIFValuep->previousPassWasPassthroughb) {
+      /* Extra protection - this should never happen */
+      MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "Passthrough rule but previous rule was already a passthrough");
       goto err;
     }
+    marpaESLIFValuep->previousPassWasPassthroughb = 1;
+    marpaESLIFValuep->previousArg0i = arg0i;
+    marpaESLIFValuep->previousArgni = argni;
+
   } else {
-
-    /* Look if there is a rule callback */
-    if (ruleCallbackp == NULL) {
-      MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "No rule value callback");
-      goto err;
-    }
-
-    /* Look if there a rule action in the grammar - if not found try the default rule action */
-    if (rulep->actionp != NULL) {
-      actions = rulep->actionp->asciis;
-    } else if (grammarp->defaultRuleActionp != NULL) {
-      actions = grammarp->defaultRuleActionp->asciis;
-    }
     
-    if (actions == NULL) {
-      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "Rule No %d (%s) from grammar level %d (%s) requires: action => action_name, or that your grammar have: :default ::= action => action_name",
-                        rulei,
-                        rulep->descp->asciis,
-                        grammarp->leveli,
-                        grammarp->descp->asciis);
-      goto err;
+    if (marpaESLIFValuep->previousPassWasPassthroughb) {
+      /* Previous rule was a passthrough */
+      arg0i = marpaESLIFValuep->previousArg0i;
+      argni = marpaESLIFValuep->previousArgni;
+      marpaESLIFValuep->previousPassWasPassthroughb = 0;
     }
-  
-    if (! ruleCallbackp(marpaESLIFValueOption.userDatavp, marpaESLIFValuep, actions, rulei, arg0i, argni, resulti)) {
-      goto err;
+
+    if (ruleCallbackp == _marpaESLIFValueRuleCallbackLexeme) {
+      if (! ruleCallbackp(marpaESLIFValueOption.userDatavp, marpaESLIFValuep, NULL, rulei, arg0i, argni, resulti)) {
+        goto err;
+      }
+    } else {
+
+      /* Look if there is a rule callback */
+      if (ruleCallbackp == NULL) {
+        MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "No rule value callback");
+        goto err;
+      }
+
+      /* Look if there a rule action in the grammar - if not found try the default rule action */
+      if (rulep->actionp != NULL) {
+        actions = rulep->actionp->asciis;
+      } else if (grammarp->defaultRuleActionp != NULL) {
+        actions = grammarp->defaultRuleActionp->asciis;
+      }
+    
+      if (actions == NULL) {
+        MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "Rule No %d (%s) from grammar level %d (%s) requires: action => action_name, or that your grammar have: :default ::= action => action_name",
+                          rulei,
+                          rulep->descp->asciis,
+                          grammarp->leveli,
+                          grammarp->descp->asciis);
+        goto err;
+      }
+
+      if (! ruleCallbackp(marpaESLIFValueOption.userDatavp, marpaESLIFValuep, actions, rulei, arg0i, argni, resulti)) {
+        goto err;
+      }
     }
   }
 
