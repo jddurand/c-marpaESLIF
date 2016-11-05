@@ -736,7 +736,7 @@ static inline short _marpaESLIFValueRuleCallbackGrammar_create_ruleb(marpaESLIFV
     goto err;
   }
 
-  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Created rule No %d (%s) at level %d", out_rulep->idi, out_rulep->asciinames, out_grammarp->leveli);
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Created rule No %d (%s) at level %d", out_rulep->idi, out_rulep->descp->asciis, out_grammarp->leveli);
 
   rcb = 1;
   goto done;
