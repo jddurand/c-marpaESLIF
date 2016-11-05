@@ -753,6 +753,7 @@ static inline marpaESLIF_meta_t *_marpaESLIF_meta_newp(marpaESLIF_t *marpaESLIFp
   metap->asciinames                = NULL;
   metap->descp                     = NULL;
   metap->marpaWrapperGrammarClonep = NULL; /* Eventually changed when validating the grammar */
+  metap->prioritizedb              = 0;    /* Internal flag to prevent a prioritized symbol to appear more than once as an LHS */
 
   marpaWrapperGrammarSymbolOption.terminalb = 0;
   marpaWrapperGrammarSymbolOption.startb    = 0;
@@ -5844,6 +5845,7 @@ static short _marpaESLIFValueNullingCallbackGrammar(void *userDatavp, marpaESLIF
   /* Basically, sequences with '*' want something else but NA */
   switch (symboli) {
   case G1_META_ADVERB_LIST:
+    /* The following guarantees that, in the stack, a ADVERB_LIST is always defined, even to an empty generic stack */
     {
       marpaESLIF_grammarContext_adverb_list_t adverb_list;
 
