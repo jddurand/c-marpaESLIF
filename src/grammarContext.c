@@ -135,8 +135,11 @@ static inline short _marpaESLIF_grammarContext_i_resetb(marpaESLIF_t *marpaESLIF
       case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_NULL: /* SHORT */
         break;
       case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_LIST_ITEMS:  /* Stack of marpaESLIF_adverbItem_t */
-      case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_LIST:        /* Alias to MARPAESLIF_GRAMMARITEMTYPE_ADVERB_LIST_ITEMS - the two are exclusives (they share the same indice in outputStackp) */
-        /* TAKE CARE THIS IS OK ONLY because we know this is Marpa native valuation: we changed the mode directly in itemTypeStackp */
+        if (GENERICSTACK_IS_PTR(outputStackp, i)) {
+          _marpaESLIF_adverbItemStack_freev((genericStack_t *) GENERICSTACK_GET_PTR(outputStackp, i));
+        }
+        break;
+      case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_LIST:        /* Stack of marpaESLIF_adverbItem_t as well */
         if (GENERICSTACK_IS_PTR(outputStackp, i)) {
           _marpaESLIF_adverbItemStack_freev((genericStack_t *) GENERICSTACK_GET_PTR(outputStackp, i));
         }
