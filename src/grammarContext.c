@@ -464,6 +464,21 @@ static inline const char *_marpaESLIF_grammarContext_i_types(marpaESLIF_t *marpa
       case MARPAESLIF_GRAMMARITEMTYPE_QUANTIFIER:          /* INT */
         rcs = marpaESLIF_grammarContext_QUANTIFIER_types;
         break;
+      case MARPAESLIF_GRAMMARITEMTYPE_PRIORITIES:          /* Stack of alternatives */
+        rcs = marpaESLIF_grammarContext_PRIORITIES_types;
+        break;
+      case MARPAESLIF_GRAMMARITEMTYPE_ALTERNATIVES:        /* Stack of alternative */
+        rcs = marpaESLIF_grammarContext_ALTERNATIVES_types;
+        break;
+      case MARPAESLIF_GRAMMARITEMTYPE_ALTERNATIVE:        /* Stack of marpaESLIF_alternativeItem_t */
+        rcs = marpaESLIF_grammarContext_ALTERNATIVE_types;
+        break;
+      case MARPAESLIF_GRAMMARITEMTYPE_RHS:        /* Stack of marpaESLIF_rhsItem_t */
+        rcs = marpaESLIF_grammarContext_RHS_types;
+        break;
+      case MARPAESLIF_GRAMMARITEMTYPE_GRAMMAR_REFERENCE:        /* Pointer to marpaESLIF_grammarReferenceItem_t */
+        rcs = marpaESLIF_grammarContext_GRAMMAR_REFERENCE_types;
+        break;
       default:
         break;
       }
