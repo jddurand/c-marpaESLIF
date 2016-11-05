@@ -697,12 +697,9 @@ bootstrap_grammar_rule_t bootstrap_grammar_G1_rules[] = {
   /*
     lhsi                                      descs                                           type                          nrhsl  { rhsi }                                       }  minimumi           separatori  properb
   */
-  { G1_META_DESC_RULE,                        G1_RULE_DESC_RULE_1,                            MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_TERMINAL__DESC,
+  { G1_META_DESC_RULE,                        G1_RULE_DESC_RULE,                              MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_TERMINAL__DESC,
                                                                                                                                      G1_META_OP_DECLARE,
                                                                                                                                      G1_META_QUOTED_NAME                          }, -1,                        -1, -1 },
-  { G1_META_DESC_RULE,                        G1_RULE_DESC_RULE_2,                            MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_TERMINAL__DESC,
-                                                                                                                                     G1_META_OP_DECLARE,
-                                                                                                                                     G1_META_INTEGER                              }, -1,                        -1, -1 },
   { G1_META_EMPTY_RULE,                       G1_RULE_EMPTY_RULE,                             MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_META_LHS,
                                                                                                                                      G1_META_OP_DECLARE,
                                                                                                                                      G1_META_ADVERB_LIST                          }, -1,                        -1, -1 },

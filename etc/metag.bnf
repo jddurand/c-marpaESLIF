@@ -84,7 +84,6 @@ statement                        ::= <start rule>
 
 <start rule>                   ::= ':start' <op declare> symbol
 <desc rule>                    ::= ':desc' <op declare> <quoted string>
-<desc rule>                    ::= ':desc' <op declare> <integer>
 <empty rule>                   ::= lhs <op declare> <adverb list>
 <null statement>               ::= ';'
 <statement group>              ::= '{' statements '}'
