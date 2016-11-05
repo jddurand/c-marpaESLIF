@@ -822,7 +822,7 @@ static inline short _marpaESLIF_grammarContext_adverbList_unstackb(marpaESLIF_t 
 }
 
 /*****************************************************************************/
-static inline short _marpaESLIFValueRuleCallbackGrammar_create_ruleb(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, marpaESLIF_grammar_t *out_grammarp, char *asciis, marpaESLIF_string_t *descp, int lhsi, size_t nrhsl, int *rhsip, size_t nexceptionl, int *exceptionip, int ranki, short nullRanksHighb, short sequenceb, int minimumi, int separatori, short properb, char *actions, short passthroughb, marpaESLIF_rule_t **out_rulepp)
+static inline short _marpaESLIFValueRuleCallbackGrammar_create_ruleb(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, marpaESLIF_grammar_t *out_grammarp, char *asciis, marpaESLIF_string_t *descp, int lhsi, size_t nrhsl, int *rhsip, size_t nexceptionl, int *exceptionip, int ranki, short nullRanksHighb, short sequenceb, int minimumi, int separatori, short properb, char *actions, marpaESLIF_rule_t **out_rulepp)
 /*****************************************************************************/
 {
   static const char           *funcs = "_marpaESLIFValueRuleCallbackGrammar_create_ruleb";
@@ -851,8 +851,7 @@ static inline short _marpaESLIFValueRuleCallbackGrammar_create_ruleb(marpaESLIFV
                                     minimumi,
                                     separatori,
                                     properb,
-                                    actions,
-                                    passthroughb);
+                                    actions);
   if (out_rulep == NULL) {
     goto err;
   }
@@ -2026,7 +2025,6 @@ static inline short _G1_RULE_EMPTY_RULE(marpaESLIFValue_t *marpaESLIFValuep, mar
                                                            -1, /* separatori */
                                                            -1, /* properb */
                                                            actions,
-                                                           0, /* passthroughb */
                                                            &out_rulep)) {
       goto err;
     }

@@ -190,7 +190,6 @@ struct marpaESLIF_rule {
   short                sequenceb;
   short                properb;
   int                  minimumi;
-  short                passthroughb; /* Internal rule with a single RHS that is doing nothing but is used for grouping and associativity */
 };
 
 /* A grammar */
@@ -209,7 +208,6 @@ struct marpaESLIF_grammar {
   int                    starti;                      /* Default start symbol ID - filled during grammar validation */
   int                   *ruleip;                      /* Array of rule IDs - filled by grammar validation */
   size_t                 rulel;                       /* Size of the rule IDs array - filled by grammar validation */
-  short                  internalb;                   /* When true, this is the internal ESLIF grammar */
   short                  haveRejectionb;              /* When true, valuation go to the ASF mode - filled by grammar validation */
 };
 
