@@ -70,7 +70,7 @@ static inline short                  _marpaESLIFRecognizer_lexemeStack_i_dupb(ma
 static inline short                  _marpaESLIFRecognizer_lexemeStack_i_p(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, genericStack_t *lexemeStackp, int i, char **pp);
 static inline const char            *_marpaESLIF_genericStack_i_types(genericStack_t *stackp, int i);
 
-static inline marpaESLIF_rule_t     *_marpaESLIF_rule_newp(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, char *asciinames, char *descEncodings, char *descs, size_t descl, int lhsi, size_t nrhsl, int *rhsip, size_t nexceptionl, int *exceptionip, int ranki, short nullRanksHighb, short sequenceb, int minimumi, int separatori, short properb, char *actions, short passthroughb);
+static inline marpaESLIF_rule_t     *_marpaESLIF_rule_newp(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, char *asciinames, char *descEncodings, char *descs, size_t descl, int lhsi, size_t nrhsl, int *rhsip, size_t nexceptionl, int *exceptionip, int ranki, short nullRanksHighb, short sequenceb, int minimumi, int separatori, short properb, char *actions);
 static inline void                   _marpaESLIF_rule_freev(marpaESLIF_rule_t *rulep);
 
 static inline marpaESLIF_symbol_t   *_marpaESLIF_symbol_newp(marpaESLIF_t *marpaESLIFp);
@@ -1000,8 +1000,7 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_grammarp(marpaESLIF_t 
 				  bootstrap_grammar_rulep[i].minimumi,
 				  bootstrap_grammar_rulep[i].separatori,
 				  bootstrap_grammar_rulep[i].properb,
-                                  bootstrap_grammar_rulep[i].descs, /* In bootstrap, the action name is the name of the rule */
-                                  0 /* passthroughb */
+                                  bootstrap_grammar_rulep[i].descs /* In bootstrap, the action name is the name of the rule */
 				  );
     if (rulep == NULL) {
       goto err;
@@ -1477,7 +1476,6 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_grammar_newp(marpaESLIF_t *marpa
   grammarp->ruleip                      = NULL; /* Filled by grammar validation */
   grammarp->rulel                       = 0;    /* Filled by grammar validation */
   grammarp->haveRejectionb              = 0;    /* Filled by grammar validation */
-  grammarp->internalb                   = 0;    /* Setted only by bootstrap - this is even not a parameter of this method */
 
   grammarp->marpaWrapperGrammarStartp = marpaWrapperGrammar_newp(marpaWrapperGrammarOptionp);
   if (grammarp->marpaWrapperGrammarStartp == NULL) {
@@ -1852,7 +1850,7 @@ static inline short _marpaESLIFRecognizer_lexemeStack_i_dupb(marpaESLIFRecognize
 }
 
 /*****************************************************************************/
-static inline marpaESLIF_rule_t *_marpaESLIF_rule_newp(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, char *asciinames, char *descEncodings, char *descs, size_t descl, int lhsi, size_t nrhsl, int *rhsip, size_t nexceptionl, int *exceptionip, int ranki, short nullRanksHighb, short sequenceb, int minimumi, int separatori, short properb, char *actions, short passthroughb)
+static inline marpaESLIF_rule_t *_marpaESLIF_rule_newp(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, char *asciinames, char *descEncodings, char *descs, size_t descl, int lhsi, size_t nrhsl, int *rhsip, size_t nexceptionl, int *exceptionip, int ranki, short nullRanksHighb, short sequenceb, int minimumi, int separatori, short properb, char *actions)
 /*****************************************************************************/
 {
   static const char               *funcs        = "_marpaESLIF_rule_newp";
@@ -1896,7 +1894,6 @@ static inline marpaESLIF_rule_t *_marpaESLIF_rule_newp(marpaESLIF_t *marpaESLIFp
   rulep->sequenceb       = sequenceb;
   rulep->properb         = properb;
   rulep->minimumi        = minimumi;
-  rulep->passthroughb    = passthroughb;
 
   /* -------- Rule name -------- */
   rulep->asciinames = strdup(asciinames);
@@ -2260,8 +2257,6 @@ marpaESLIF_t *marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptionp)
   if (grammarp == NULL) {
     goto err;
   }
-  /* Set the internal flag */
-  grammarp->internalb = 1;
   GENERICSTACK_SET_PTR(marpaESLIFp->marpaESLIFGrammarp->grammarStackp, grammarp, grammarp->leveli);
   if (GENERICSTACK_ERROR(marpaESLIFp->marpaESLIFGrammarp->grammarStackp)) {
     GENERICLOGGER_ERRORF(marpaESLIFOptionp->genericLoggerp, "marpaESLIFp->marpaESLIFGrammarp->grammarStackp set failure, %s", strerror(errno));
@@ -2274,8 +2269,6 @@ marpaESLIF_t *marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptionp)
   if (grammarp == NULL) {
     goto err;
   }
-  /* Set the internal flag */
-  grammarp->internalb = 1;
   GENERICSTACK_SET_PTR(marpaESLIFp->marpaESLIFGrammarp->grammarStackp, grammarp, grammarp->leveli);
   if (GENERICSTACK_ERROR(marpaESLIFp->marpaESLIFGrammarp->grammarStackp)) {
     GENERICLOGGER_ERRORF(marpaESLIFOptionp->genericLoggerp, "marpaESLIFp->marpaESLIFGrammarp->grammarStackp set failure, %s", strerror(errno));
@@ -4698,29 +4691,7 @@ static short _marpaESLIFValueRuleCallbackMainWrapper(void *userDatavp, int rulei
 
   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Rule %d (%s)", rulei, rulep->descp->asciis);
 
-  if (rulep->passthroughb) {
-    /* Special case of INTERNAL rules created in case of prioritized rules */
-    /* We must have arg0i == argni == resulti otherwise there is a serious problem -; */
-    /* TAKE CARE: this can happen ONLY when we parse a grammar and ONLY because we are using the native value() method of Marpa */
-    /* In AFS valuation mode, usually, resulti is not equal to arg0i (but the later is equal to argni) */
-    if (! grammarp->internalb) {
-      MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "Passthrough mode detected for another grammar but ESLIF - this is not possible");
-      goto err;
-    }
-    if (grammarp->haveRejectionb) {
-      MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "Passthrough mode detected for a grammar having rejection - this is not possible");
-      goto err;
-    }
-    if (arg0i != argni) {
-      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "Prioritized rule passthrough have arg0i %d != argni %d", arg0i, argni);
-      goto err;
-    }
-    if (arg0i != resulti) {
-      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "Prioritized rule passthrough have arg0i %d != resulti %d", arg0i, resulti);
-      goto err;
-    }
-    /* Ok, this is a no-op */
-  } else if (ruleCallbackp == _marpaESLIFValueRuleCallbackLexeme) {
+  if (ruleCallbackp == _marpaESLIFValueRuleCallbackLexeme) {
     if (! ruleCallbackp(marpaESLIFValueOption.userDatavp, marpaESLIFValuep, NULL, rulei, arg0i, argni, resulti)) {
       goto err;
     }
