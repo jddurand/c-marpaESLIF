@@ -208,6 +208,8 @@ struct marpaESLIF_grammar {
   int                    starti;                      /* Default start symbol ID - filled during grammar validation */
   int                   *ruleip;                      /* Array of rule IDs - filled by grammar validation */
   size_t                 rulel;                       /* Size of the rule IDs array - filled by grammar validation */
+  short                  internalb;                   /* When true, this is the internal ESLIF grammar */
+  short                  haveRejectionb;              /* When true, valuation go to the ASF mode - filled by grammar validation */
 };
 
 /* ----------------------------------- */
@@ -234,6 +236,7 @@ struct marpaESLIFValue {
   marpaESLIFRecognizer_t   *marpaESLIFRecognizerp;
   marpaESLIFValueOption_t   marpaESLIFValueOption;
   marpaWrapperValue_t      *marpaWrapperValuep;
+  short                     afsmode;         /* Say if we are using the traditional Marpa mode or the ASF valuation mode */
 };
 
 struct marpaESLIFRecognizer {
