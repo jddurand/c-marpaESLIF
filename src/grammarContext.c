@@ -1788,6 +1788,29 @@ static inline short _G1_RULE_EMPTY_RULE(marpaESLIFValue_t *marpaESLIFValuep, mar
 }
 
 /*****************************************************************************/
+static inline short _G1_RULE_NULL_STATEMENT(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti)
+/*****************************************************************************/
+{
+  /* ---------------------------------------------------------------------------
+   * <null statement> ::= ';'
+   *
+   * Stack types:
+   * NA ::= LEXEME
+   *
+   * C types:
+   * -- ::= genericStackItemTypeArray_t
+   *
+   * Note: We push NA because parents rule are No-opts
+   * ------------------------------------------------------------------------- */
+  CALLBACKGRAMMAR_COMMON_HEADER(_G1_RULE_NULL_STATEMENT);
+  {
+    /* Parents are no-op */
+    CALLBACKGRAMMAR_SET_NA(resulti);
+  }
+  CALLBACKGRAMMAR_COMMON_TRAILER;
+}
+
+/*****************************************************************************/
 static inline short _G1_RULE_OP_DECLARE_1(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti)
 /*****************************************************************************/
 {
