@@ -129,6 +129,7 @@ struct marpaESLIF_meta {
   char                        *asciinames;
   marpaESLIF_string_t         *descp;                     /* Non-terminal description */
   marpaWrapperGrammar_t       *marpaWrapperGrammarClonep; /* Eventual cloned grammar */
+  short                       *prioritizedb;              /* Internal flag to prevent a prioritized symbol to appear more than once as an LHS */
 };
 
 /* Matcher return values */
