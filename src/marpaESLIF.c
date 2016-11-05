@@ -70,7 +70,7 @@ static inline short                  _marpaESLIFRecognizer_lexemeStack_i_dupb(ma
 static inline short                  _marpaESLIFRecognizer_lexemeStack_i_p(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, genericStack_t *lexemeStackp, int i, char **pp);
 static inline const char            *_marpaESLIF_genericStack_i_types(genericStack_t *stackp, int i);
 
-static inline marpaESLIF_rule_t     *_marpaESLIF_rule_newp(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, char *asciinames, char *descEncodings, char *descs, size_t descl, int lhsi, size_t nrhsl, int *rhsip, size_t nexceptionl, int *exceptionip, int ranki, short nullRanksHighb, short sequenceb, int minimumi, int separatori, short properb, char *actions);
+static inline marpaESLIF_rule_t     *_marpaESLIF_rule_newp(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, char *asciinames, char *descEncodings, char *descs, size_t descl, int lhsi, size_t nrhsl, int *rhsip, size_t nexceptionl, int *exceptionip, int ranki, short nullRanksHighb, short sequenceb, int minimumi, int separatori, short properb, char *actions, short passthroughb);
 static inline void                   _marpaESLIF_rule_freev(marpaESLIF_rule_t *rulep);
 
 static inline marpaESLIF_symbol_t   *_marpaESLIF_symbol_newp(marpaESLIF_t *marpaESLIFp);
@@ -999,7 +999,8 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_grammarp(marpaESLIF_t 
 				  bootstrap_grammar_rulep[i].minimumi,
 				  bootstrap_grammar_rulep[i].separatori,
 				  bootstrap_grammar_rulep[i].properb,
-                                  bootstrap_grammar_rulep[i].descs /* In bootstrap, the action name is the name of the rule */
+                                  bootstrap_grammar_rulep[i].descs, /* In bootstrap, the action name is the name of the rule */
+                                  0 /* passthroughb */
 				  );
     if (rulep == NULL) {
       goto err;
@@ -1821,7 +1822,7 @@ static inline short _marpaESLIFRecognizer_lexemeStack_i_dupb(marpaESLIFRecognize
 }
 
 /*****************************************************************************/
-static inline marpaESLIF_rule_t *_marpaESLIF_rule_newp(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, char *asciinames, char *descEncodings, char *descs, size_t descl, int lhsi, size_t nrhsl, int *rhsip, size_t nexceptionl, int *exceptionip, int ranki, short nullRanksHighb, short sequenceb, int minimumi, int separatori, short properb, char *actions)
+static inline marpaESLIF_rule_t *_marpaESLIF_rule_newp(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, char *asciinames, char *descEncodings, char *descs, size_t descl, int lhsi, size_t nrhsl, int *rhsip, size_t nexceptionl, int *exceptionip, int ranki, short nullRanksHighb, short sequenceb, int minimumi, int separatori, short properb, char *actions, short passthroughb)
 /*****************************************************************************/
 {
   static const char               *funcs        = "_marpaESLIF_rule_newp";
@@ -1865,7 +1866,7 @@ static inline marpaESLIF_rule_t *_marpaESLIF_rule_newp(marpaESLIF_t *marpaESLIFp
   rulep->sequenceb       = sequenceb;
   rulep->properb         = properb;
   rulep->minimumi        = minimumi;
-  rulep->passthroughb    = 0;
+  rulep->passthroughb    = passthroughb;
 
   /* -------- Rule name -------- */
   rulep->asciinames = strdup(asciinames);
