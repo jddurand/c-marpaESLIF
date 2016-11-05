@@ -1049,7 +1049,9 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
   int                    symboli;
   int                    subSymboli;
   marpaESLIF_rule_t     *rulep;
+  marpaESLIF_rule_t     *ruletmpp;
   int                    rulei;
+  int                    rulej;
   marpaESLIF_grammar_t  *grammarp;
   marpaESLIF_grammar_t  *subGrammarp;
   marpaESLIF_grammar_t  *tmpGrammarp;
@@ -1082,6 +1084,7 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
    3. At any grammar level n, if a symbol never appear as an LHS of a rule, then
       it must be an LHS of grammar at level leveli, which must de-factor must also exist.
    4. If at least one rule have rejection, rejection mode is on at the grammar level.
+   5. For every rule that is a passthrough, then it is illegal to have its lhs appearing as an lhs is any other rule
 
       It is not illegal to have sparse items in grammarStackp.
 
@@ -1382,6 +1385,44 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
         MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Marking rejection flag for grammar at level %d (%s)", grammari, grammarp->descp->asciis);
         grammarp->haveRejectionb = 1;
         break;
+      }
+    }
+  }
+
+  /*
+   5. For every rule that is a passthrough, then it is illegal to have its lhs appearing as an lhs is any other rule
+  */
+  for (grammari = 0; grammari < GENERICSTACK_USED(grammarStackp); grammari++) {
+    if (! GENERICSTACK_IS_PTR(grammarStackp, grammari)) {
+      /* Sparse item in grammarStackp -; */
+      continue;
+    }
+    grammarp = (marpaESLIF_grammar_t *) GENERICSTACK_GET_PTR(grammarStackp, grammari);
+    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Looking at rejection in grammar level %d (%s)", grammari, grammarp->descp->asciis);
+
+    /* Loop on rules */
+    ruleStackp = grammarp->ruleStackp;
+    for (rulei = 0; rulei < GENERICSTACK_USED(ruleStackp); rulei++) {
+      if (! GENERICSTACK_IS_PTR(ruleStackp, rulei)) {
+        /* Should never happen, but who knows */
+        continue;
+      }
+      rulep = (marpaESLIF_rule_t *) GENERICSTACK_GET_PTR(ruleStackp, rulei);
+      if (rulep->passthroughb) {
+        for (rulej = 0; rulej < GENERICSTACK_USED(ruleStackp); rulej++) {
+          if (rulei == rulej) {
+            continue;
+          }
+          if (! GENERICSTACK_IS_PTR(ruleStackp, rulej)) {
+            /* Should never happen, but who knows */
+            continue;
+          }
+          ruletmpp = (marpaESLIF_rule_t *) GENERICSTACK_GET_PTR(ruleStackp, rulej);
+          if (rulep->lhsp == ruletmpp->lhsp) {
+            MARPAESLIF_ERRORF(marpaESLIFp, "Looking at rules in grammar level %d (%s): symbol %d (%s) is an LHS of a prioritized rule and cannot be appear as an LHS is any other rule", grammari, grammarp->descp->asciis, rulep->lhsp->idi, rulep->lhsp->descp->asciis);
+            goto err;
+          }
+        }
       }
     }
   }
