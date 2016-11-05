@@ -48,7 +48,11 @@ static inline short _marpaESLIF_grammarContext_i_resetb(marpaESLIF_t *marpaESLIF
 {
   static const char            *funcs = "_marpaESLIF_grammarContext_i_resetb";
   marpaESLIF_grammarItemType_t  itemType;
+  char                         *asciis;
+  genericStack_t               *alternativesStackp;
+  genericStack_t               *alternativeStackp;
   int                           j;
+  int                           k;
   short                         rcb;
 
   if ((outputStackp != NULL) && (itemTypeStackp != NULL)) {
@@ -68,7 +72,7 @@ static inline short _marpaESLIF_grammarContext_i_resetb(marpaESLIF_t *marpaESLIF
         break;
       case MARPAESLIF_GRAMMARITEMTYPE_ACTION_NAME:        /* ASCII string */
         if (GENERICSTACK_IS_PTR(outputStackp, i)) {
-          char *asciis = (char *) GENERICSTACK_GET_PTR(outputStackp, i);
+          asciis = (char *) GENERICSTACK_GET_PTR(outputStackp, i);
           if (asciis != NULL) {
             free(asciis);
           }
@@ -76,7 +80,7 @@ static inline short _marpaESLIF_grammarContext_i_resetb(marpaESLIF_t *marpaESLIF
         break;
       case MARPAESLIF_GRAMMARITEMTYPE_ACTION:             /* ASCII string */
         if (GENERICSTACK_IS_PTR(outputStackp, i)) {
-          char *asciis = (char *) GENERICSTACK_GET_PTR(outputStackp, i);
+          asciis = (char *) GENERICSTACK_GET_PTR(outputStackp, i);
           if (asciis != NULL) {
             free(asciis);
           }
@@ -84,7 +88,7 @@ static inline short _marpaESLIF_grammarContext_i_resetb(marpaESLIF_t *marpaESLIF
         break;
       case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_ACTION: /* ASCII string */
         if (GENERICSTACK_IS_PTR(outputStackp, i)) {
-          char *asciis = (char *) GENERICSTACK_GET_PTR(outputStackp, i);
+          asciis = (char *) GENERICSTACK_GET_PTR(outputStackp, i);
           if (asciis != NULL) {
             free(asciis);
           }
@@ -114,7 +118,7 @@ static inline short _marpaESLIF_grammarContext_i_resetb(marpaESLIF_t *marpaESLIF
         break;
       case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_PAUSE: /* ASCII string */
         if (GENERICSTACK_IS_PTR(outputStackp, i)) {
-          char *asciis = (char *) GENERICSTACK_GET_PTR(outputStackp, i);
+          asciis = (char *) GENERICSTACK_GET_PTR(outputStackp, i);
           if (asciis != NULL) {
             free(asciis);
           }
@@ -132,63 +136,16 @@ static inline short _marpaESLIF_grammarContext_i_resetb(marpaESLIF_t *marpaESLIF
         break;
       case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_LIST_ITEMS:  /* Stack of marpaESLIF_adverbItem_t */
       case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_LIST:        /* Alias to MARPAESLIF_GRAMMARITEMTYPE_ADVERB_LIST_ITEMS - the two are exclusives (they share the same indice in outputStackp) */
+        /* TAKE CARE THIS IS OK ONLY because we know this is Marpa native valuation: we changed the mode directly in itemTypeStackp */
         if (GENERICSTACK_IS_PTR(outputStackp, i)) {
-          genericStack_t *stackp = (genericStack_t *) GENERICSTACK_GET_PTR(outputStackp, i);
-          if (stackp != NULL) {
-            for (j = 0; j < GENERICSTACK_USED(stackp); j++) {
-              if (GENERICSTACK_IS_PTR(stackp, j)) {
-                marpaESLIF_adverbItem_t *adverbItemp = (marpaESLIF_adverbItem_t *) GENERICSTACK_GET_PTR(stackp, j);
-                if (adverbItemp != NULL) {
-                  switch (adverbItemp->type) {
-                  case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_ACTION: /* ASCII string */
-                    if (adverbItemp->u.asciis != NULL) {
-                      free(adverbItemp->u.asciis);
-                    }
-                    break;
-                  case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_AUTORANK: /* SHORT */
-                    break;
-                  case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_LEFT: /* SHORT */
-                    break;
-                  case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_RIGHT: /* SHORT */
-                    break;
-                  case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_GROUP: /* SHORT */
-                    break;
-                  case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_SEPARATOR: /* String */
-                    _marpaESLIF_string_freev(adverbItemp->u.stringp);
-                    break;
-                  case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_PROPER: /* SHORT */
-                    break;
-                  case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_RANK: /* INT */
-                    break;
-                  case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_NULL_RANKING: /* SHORT */
-                    break;
-                  case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_PRIORITY: /* INT */
-                    break;
-                  case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_PAUSE: /* SHORT */
-                    break;
-                  case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_LATM: /* SHORT */
-                    break;
-                  case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_NAMING: /* String */
-                    _marpaESLIF_string_freev(adverbItemp->u.stringp);
-                    break;
-                  case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_NULL: /* NA */
-                    break;
-                  default:
-                    break;
-                  }
-                  free(adverbItemp);
-                }
-              }
-            }
-            GENERICSTACK_FREE(stackp);
-          }
+          _marpaESLIF_adverbItemStack_freev((genericStack_t *) GENERICSTACK_GET_PTR(outputStackp, i));
         }
         break;
       case MARPAESLIF_GRAMMARITEMTYPE_LATM:               /* SHORT */
         break;
       case MARPAESLIF_GRAMMARITEMTYPE_SYMBOL_NAME:        /* ASCII string */
         if (GENERICSTACK_IS_PTR(outputStackp, i)) {
-          char *asciis = (char *) GENERICSTACK_GET_PTR(outputStackp, i);
+          asciis = (char *) GENERICSTACK_GET_PTR(outputStackp, i);
           if (asciis != NULL) {
             free(asciis);
           }
@@ -196,7 +153,7 @@ static inline short _marpaESLIF_grammarContext_i_resetb(marpaESLIF_t *marpaESLIF
         break;
       case MARPAESLIF_GRAMMARITEMTYPE_SYMBOL:             /* ASCII string */
         if (GENERICSTACK_IS_PTR(outputStackp, i)) {
-          char *asciis = (char *) GENERICSTACK_GET_PTR(outputStackp, i);
+          asciis = (char *) GENERICSTACK_GET_PTR(outputStackp, i);
           if (asciis != NULL) {
             free(asciis);
           }
@@ -204,7 +161,7 @@ static inline short _marpaESLIF_grammarContext_i_resetb(marpaESLIF_t *marpaESLIF
         break;
       case MARPAESLIF_GRAMMARITEMTYPE_LHS:                /* ASCII string */
         if (GENERICSTACK_IS_PTR(outputStackp, i)) {
-          char *asciis = (char *) GENERICSTACK_GET_PTR(outputStackp, i);
+          asciis = (char *) GENERICSTACK_GET_PTR(outputStackp, i);
           if (asciis != NULL) {
             free(asciis);
           }
@@ -212,13 +169,53 @@ static inline short _marpaESLIF_grammarContext_i_resetb(marpaESLIF_t *marpaESLIF
         break;
       case MARPAESLIF_GRAMMARITEMTYPE_SINGLE_SYMBOL:       /* ASCII string */
         if (GENERICSTACK_IS_PTR(outputStackp, i)) {
-          char *asciis = (char *) GENERICSTACK_GET_PTR(outputStackp, i);
+          asciis = (char *) GENERICSTACK_GET_PTR(outputStackp, i);
           if (asciis != NULL) {
             free(asciis);
           }
         }
         break;
       case MARPAESLIF_GRAMMARITEMTYPE_QUANTIFIER:          /* INT */
+        break;
+      case MARPAESLIF_GRAMMARITEMTYPE_PRIORITIES:        /* Stack of alternatives */
+        if (GENERICSTACK_IS_PTR(outputStackp, i)) {
+          alternativesStackp = (genericStack_t *) GENERICSTACK_GET_PTR(outputStackp, i);
+          for (j = 0; j < GENERICSTACK_USED(alternativesStackp); j++) { /* Stack of alternatives -> Stack of alternative */
+            if (GENERICSTACK_IS_PTR(alternativesStackp, j)) {
+              alternativeStackp = (genericStack_t *) GENERICSTACK_GET_PTR(alternativesStackp, j);
+              for (k = 0; k < GENERICSTACK_USED(alternativeStackp); k++) { /* Stack of alternatives -> Stack of alternative -> Stack of marpaESLIF_alternativeItem_t */
+                if (GENERICSTACK_IS_PTR(alternativeStackp, k)) {
+                  _marpaESLIF_alternativeItemStack_freev((genericStack_t *) GENERICSTACK_GET_PTR(alternativeStackp, k));
+                }
+              }
+            }
+          }
+        }
+        break;
+      case MARPAESLIF_GRAMMARITEMTYPE_ALTERNATIVES:        /* Stack of alternative */
+        if (GENERICSTACK_IS_PTR(outputStackp, i)) {
+          alternativeStackp = (genericStack_t *) GENERICSTACK_GET_PTR(outputStackp, i);
+          for (j = 0; j < GENERICSTACK_USED(alternativeStackp); j++) { /* Stack of alternative -> Stack of marpaESLIF_alternativeItem_t */
+            if (GENERICSTACK_IS_PTR(alternativeStackp, j)) {
+              _marpaESLIF_alternativeItemStack_freev((genericStack_t *) GENERICSTACK_GET_PTR(alternativeStackp, j));
+            }
+          }
+        }
+        break;
+      case MARPAESLIF_GRAMMARITEMTYPE_ALTERNATIVE:        /* marpaESLIF_alternativeItem_t* */
+        if (GENERICSTACK_IS_PTR(outputStackp, i)) {
+          _marpaESLIF_alternativeItem_freev((marpaESLIF_alternativeItem_t *) GENERICSTACK_GET_PTR(outputStackp, i));
+        }
+        break;
+      case MARPAESLIF_GRAMMARITEMTYPE_RHS:        /* marpaESLIF_rhsItem_t* */
+        if (GENERICSTACK_IS_PTR(outputStackp, i)) {
+          _marpaESLIF_rhsItem_freev((marpaESLIF_rhsItem_t *) GENERICSTACK_GET_PTR(outputStackp, i));
+        }
+        break;
+      case MARPAESLIF_GRAMMARITEMTYPE_GRAMMAR_REFERENCE: /* marpaESLIF_grammarReference_t* */
+        if (GENERICSTACK_IS_PTR(outputStackp, i)) {
+          _marpaESLIF_grammarReference_freev((marpaESLIF_grammarReference_t *) GENERICSTACK_GET_PTR(outputStackp, i));
+        }
         break;
       default:
         break;
@@ -245,6 +242,129 @@ static inline short _marpaESLIF_grammarContext_i_resetb(marpaESLIF_t *marpaESLIF
 
  done:
   return rcb;
+}
+
+/*****************************************************************************/
+static inline void _marpaESLIF_adverbItemStack_freev(genericStack_t *stackp)
+/*****************************************************************************/
+{
+  marpaESLIF_adverbItem_t *adverbItemp;
+  int                      i;
+
+  if (stackp != NULL) {
+    for (i = 0; i < GENERICSTACK_USED(stackp); i++) {
+      if (GENERICSTACK_IS_PTR(stackp, i)) {
+        adverbItemp = (marpaESLIF_adverbItem_t *) GENERICSTACK_GET_PTR(stackp, i);
+        if (adverbItemp != NULL) {
+          switch (adverbItemp->type) {
+          case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_ACTION: /* ASCII string */
+            if (adverbItemp->u.asciis != NULL) {
+              free(adverbItemp->u.asciis);
+            }
+            break;
+          case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_AUTORANK: /* SHORT */
+            break;
+          case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_LEFT: /* SHORT */
+            break;
+          case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_RIGHT: /* SHORT */
+            break;
+          case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_GROUP: /* SHORT */
+            break;
+          case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_SEPARATOR: /* String */
+            _marpaESLIF_string_freev(adverbItemp->u.stringp);
+            break;
+          case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_PROPER: /* SHORT */
+            break;
+          case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_RANK: /* INT */
+            break;
+          case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_NULL_RANKING: /* SHORT */
+            break;
+          case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_PRIORITY: /* INT */
+            break;
+          case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_PAUSE: /* SHORT */
+            break;
+          case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_LATM: /* SHORT */
+            break;
+          case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_NAMING: /* String */
+            _marpaESLIF_string_freev(adverbItemp->u.stringp);
+            break;
+          case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_NULL: /* NA */
+            break;
+          default:
+            break;
+          }
+          free(adverbItemp);
+        }
+      }
+    }
+    GENERICSTACK_FREE(stackp);
+  }
+}
+
+/*****************************************************************************/
+static inline void _marpaESLIF_alternativeItem_freev(marpaESLIF_alternativeItem_t *alternativeItemp)
+/*****************************************************************************/
+{
+  if (alternativeItemp != NULL) {
+    _marpaESLIF_rhsItemStack_freev(alternativeItemp->rhsItemStackp);
+    _marpaESLIF_adverbItemStack_freev(alternativeItemp->adverbItemStackp);
+    free(alternativeItemp);
+  }
+}
+
+/*****************************************************************************/
+static inline void _marpaESLIF_alternativeItemStack_freev(genericStack_t *stackp)
+/*****************************************************************************/
+{
+  int i;
+
+  if (stackp != NULL) {
+    for (i = 0; i < GENERICSTACK_USED(stackp); i++) {
+      if (GENERICSTACK_IS_PTR(stackp, i)) {
+        _marpaESLIF_alternativeItem_freev((marpaESLIF_alternativeItem_t *) GENERICSTACK_GET_PTR(stackp, i));
+      }
+    }
+    GENERICSTACK_FREE(stackp);
+  }
+}
+
+/*****************************************************************************/
+static inline void _marpaESLIF_rhsItem_freev(marpaESLIF_rhsItem_t *rhsItemp)
+/*****************************************************************************/
+{
+  if (rhsItemp != NULL) {
+    if (rhsItemp->singleSymbols != NULL) {
+      free(rhsItemp->singleSymbols);
+    }
+    _marpaESLIF_grammarReference_freev(rhsItemp->grammarReferencep);
+    free(rhsItemp);
+  }
+}
+
+/*****************************************************************************/
+static inline void _marpaESLIF_rhsItemStack_freev(genericStack_t *stackp)
+/*****************************************************************************/
+{
+  int i;
+
+  if (stackp != NULL) {
+    for (i = 0; i < GENERICSTACK_USED(stackp); i++) {
+      if (GENERICSTACK_IS_PTR(stackp, i)) {
+        _marpaESLIF_rhsItem_freev((marpaESLIF_rhsItem_t *) GENERICSTACK_GET_PTR(stackp, i));
+      }
+    }
+    GENERICSTACK_FREE(stackp);
+  }
+}
+
+/*****************************************************************************/
+static inline void _marpaESLIF_grammarReference_freev(marpaESLIF_grammarReference_t *grammarReferencep)
+/*****************************************************************************/
+{
+  if (grammarReferencep != NULL) {
+    _marpaESLIF_string_freev(grammarReferencep->stringp);
+    free(grammarReferencep);
+  }
 }
 
 /*****************************************************************************/
@@ -737,12 +857,19 @@ static inline short _marpaESLIFValueRuleCallbackGrammar_create_ruleb(marpaESLIFV
     goto err;
   }
 
+  GENERICSTACK_SET_PTR(out_grammarp->ruleStackp, out_rulep, out_rulep->idi);
+  if (GENERICSTACK_ERROR(out_grammarp->ruleStackp)) {
+    MARPAESLIF_ERRORF(marpaESLIFp, "ruleStackp set failure, %s", strerror(errno));
+    goto err;
+  }
+
   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Created rule No %d (%s) at level %d", out_rulep->idi, out_rulep->descp->asciis, out_grammarp->leveli);
 
   rcb = 1;
   goto done;
 
  err:
+  _marpaESLIF_rule_freev(out_rulep);
   rcb = 0;
 
  done:  
@@ -1813,7 +1940,7 @@ static inline short _G1_RULE_NULL_STATEMENT(marpaESLIFValue_t *marpaESLIFValuep,
 }
 
 /*****************************************************************************/
-static inline short _G1_RULE_STATEMENT_GROUP  (marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti)
+static inline short _G1_RULE_STATEMENT_GROUP(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti)
 /*****************************************************************************/
 {
   /* ---------------------------------------------------------------------------
@@ -1824,6 +1951,29 @@ static inline short _G1_RULE_STATEMENT_GROUP  (marpaESLIFValue_t *marpaESLIFValu
    *
    * C types:
    * -- ::= --
+   *
+   * Note: We push NA because parents rule are No-opts
+   * ------------------------------------------------------------------------- */
+  CALLBACKGRAMMAR_COMMON_HEADER(_G1_RULE_NULL_STATEMENT);
+  {
+    /* Parents are no-op */
+    CALLBACKGRAMMAR_SET_NA(resulti);
+  }
+  CALLBACKGRAMMAR_COMMON_TRAILER;
+}
+
+/*****************************************************************************/
+static inline short _G1_RULE_PRIORITY_RULE(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti)
+/*****************************************************************************/
+{
+  /* ---------------------------------------------------------------------------
+   * <priority rule> ::= lhs <op declare> priorities
+   *
+   * Stack types:
+   * NA ::= LHS OP_DECLARE PRIORITIES
+   *
+   * C types:
+   * -- ::= void* int void*
    *
    * Note: We push NA because parents rule are No-opts
    * ------------------------------------------------------------------------- */

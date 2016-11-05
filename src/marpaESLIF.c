@@ -1081,7 +1081,7 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
      b. Only one symbol can have the discard flag
    3. At any grammar level n, if a symbol never appear as an LHS of a rule, then
       it must be an LHS of grammar at level leveli, which must de-factor must also exist.
-   4. At any grammar level n, if there is a :discard it must be precompute at this symbol
+   4. If at least one rule have rejection, rejection mode is on at the grammar level.
 
       It is not illegal to have sparse items in grammarStackp.
 
@@ -1359,6 +1359,33 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
     }
   }
 
+  /*
+    4. If at least one rule have rejection, rejection mode is on at the grammar level.
+  */
+  for (grammari = 0; grammari < GENERICSTACK_USED(grammarStackp); grammari++) {
+    if (! GENERICSTACK_IS_PTR(grammarStackp, grammari)) {
+      /* Sparse item in grammarStackp -; */
+      continue;
+    }
+    grammarp = (marpaESLIF_grammar_t *) GENERICSTACK_GET_PTR(grammarStackp, grammari);
+    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Looking at rejection in grammar level %d (%s)", grammari, grammarp->descp->asciis);
+
+    /* Loop on rules */
+    ruleStackp = grammarp->ruleStackp;
+    for (rulei = 0; rulei < GENERICSTACK_USED(ruleStackp); rulei++) {
+      if (! GENERICSTACK_IS_PTR(ruleStackp, rulei)) {
+        /* Should never happen, but who knows */
+        continue;
+      }
+      rulep = (marpaESLIF_rule_t *) GENERICSTACK_GET_PTR(ruleStackp, rulei);
+      if (rulep->exceptionStackp != NULL) {
+        MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Marking rejection flag for grammar at level %d (%s)", grammari, grammarp->descp->asciis);
+        grammarp->haveRejectionb = 1;
+        break;
+      }
+    }
+  }
+  
   /* Fill grammars information */
   /* - rule IDs, rule show (ASCII) */
   for (grammari = 0; grammari < GENERICSTACK_USED(grammarStackp); grammari++) {
@@ -1448,6 +1475,8 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_grammar_newp(marpaESLIF_t *marpa
   grammarp->starti                      = 0;    /* Filled during grammar validation */
   grammarp->ruleip                      = NULL; /* Filled by grammar validation */
   grammarp->rulel                       = 0;    /* Filled by grammar validation */
+  grammarp->haveRejectionb              = 0;    /* Filled by grammar validation */
+  grammarp->internalb                   = 0;    /* Setted only by bootstrap - this is even not a parameter of this method */
 
   grammarp->marpaWrapperGrammarStartp = marpaWrapperGrammar_newp(marpaWrapperGrammarOptionp);
   if (grammarp->marpaWrapperGrammarStartp == NULL) {
@@ -2230,6 +2259,8 @@ marpaESLIF_t *marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptionp)
   if (grammarp == NULL) {
     goto err;
   }
+  /* Set the internal flag */
+  grammarp->internalb = 1;
   GENERICSTACK_SET_PTR(marpaESLIFp->marpaESLIFGrammarp->grammarStackp, grammarp, grammarp->leveli);
   if (GENERICSTACK_ERROR(marpaESLIFp->marpaESLIFGrammarp->grammarStackp)) {
     GENERICLOGGER_ERRORF(marpaESLIFOptionp->genericLoggerp, "marpaESLIFp->marpaESLIFGrammarp->grammarStackp set failure, %s", strerror(errno));
@@ -2242,6 +2273,8 @@ marpaESLIF_t *marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptionp)
   if (grammarp == NULL) {
     goto err;
   }
+  /* Set the internal flag */
+  grammarp->internalb = 1;
   GENERICSTACK_SET_PTR(marpaESLIFp->marpaESLIFGrammarp->grammarStackp, grammarp, grammarp->leveli);
   if (GENERICSTACK_ERROR(marpaESLIFp->marpaESLIFGrammarp->grammarStackp)) {
     GENERICLOGGER_ERRORF(marpaESLIFOptionp->genericLoggerp, "marpaESLIFp->marpaESLIFGrammarp->grammarStackp set failure, %s", strerror(errno));
@@ -4667,6 +4700,16 @@ static short _marpaESLIFValueRuleCallbackMainWrapper(void *userDatavp, int rulei
   if (rulep->passthroughb) {
     /* Special case of INTERNAL rules created in case of prioritized rules */
     /* We must have arg0i == argni == resulti otherwise there is a serious problem -; */
+    /* TAKE CARE: this can happen ONLY when we parse a grammar and ONLY because we are using the native value() method of Marpa */
+    /* In AFS valuation mode, usually, resulti is not equal to arg0i (but the later is equal to argni) */
+    if (! grammarp->internalb) {
+      MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "Passthrough mode detected for another grammar but ESLIF - this is not possible");
+      goto err;
+    }
+    if (grammarp->haveRejectionb) {
+      MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "Passthrough mode detected for a grammar having rejection - this is not possible");
+      goto err;
+    }
     if (arg0i != argni) {
       MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "Prioritized rule passthrough have arg0i %d != argni %d", arg0i, argni);
       goto err;
