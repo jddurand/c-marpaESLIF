@@ -2294,7 +2294,7 @@ static inline short _G1_RULE_PRIORITY_RULE(marpaESLIFValue_t *marpaESLIFValuep, 
             newlhsasciis = (char *) malloc(strlen((char *) lhs) + 3 /* "[] and NUL byte */ + nbdigiti);
             if (newlhsasciis == NULL) {
               MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "malloc failure, %s", strerror(errno));
-              goto err;
+              goto workStackLoop_block_err;
             }
             strcpy(newlhsasciis, (char *) lhs);
             sprintf(newlhsasciis + strlen(newlhsasciis), "[%d]", priorityi);
@@ -2315,7 +2315,7 @@ static inline short _G1_RULE_PRIORITY_RULE(marpaESLIFValue_t *marpaESLIFValuep, 
                                                                  NULL, /* pausesp */
                                                                  NULL, /* latmbp */
                                                                  &namingp)) {
-              goto err;
+              goto workStackLoop_block_err;
             }
 
             /* Default assocativity is left */
@@ -2330,6 +2330,24 @@ static inline short _G1_RULE_PRIORITY_RULE(marpaESLIFValue_t *marpaESLIFValuep, 
             /* compatibility issues on a quite rare case. */
             if (nextPriorityi >= priorityCounti) {
               nextPriorityi = priorityi;
+            }
+
+            if (arityi == 1) {
+              if (rhsLengthi == 1) {
+                /* Something like Expression ::= Expression in a prioritized rule -; */
+                MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "Unnecessary unit rule %s in priority rule", (char *) lhs);
+                goto workStackLoop_block_err;
+              }
+            }
+
+            /* Do the association */
+            if (lefb) {
+            } else if (rightb) {
+            } else if (groupb) {
+            } else {
+              /* Should never happen */
+              MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "No association !?");
+              goto workStackLoop_block_err;
             }
           }
 
