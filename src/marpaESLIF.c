@@ -153,6 +153,7 @@ static inline short                  _marpaESLIF_grammarContext_i_resetb(marpaES
 static inline short                  _marpaESLIF_grammarContext_get_typeb(marpaESLIF_t *marpaESLIFp, genericStack_t *itemTypeStackp, int i, marpaESLIF_grammarItemType_t *typep);
 static inline short                  _marpaESLIF_grammarContext_set_typeb(marpaESLIF_t *marpaESLIFp, genericStack_t *itemTypeStackp, int i, marpaESLIF_grammarItemType_t type);
 static inline void                   _marpaESLIFValueErrorProgressReportv(marpaESLIFValue_t *marpaESLIFValuep);
+static inline short                  _marpaESLIF_resolveGrammarb(marpaESLIF_t *marpaESLIFp, genericStack_t *grammarStackp, marpaESLIF_grammar_t *current_grammarp, char *asciis, int lookupLevelDeltai, marpaESLIF_string_t *lookupGrammarStringp, marpaESLIF_grammar_t **grammarpp, marpaESLIF_symbol_t **symbolpp);
 
 /*****************************************************************************/
 static inline marpaESLIF_string_t *_marpaESLIF_string_newp(marpaESLIF_t *marpaESLIFp, char *encodingasciis, char *bytep, size_t bytel, short asciib)
@@ -1057,8 +1058,6 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
   marpaESLIF_grammar_t  *tmpGrammarp;
   short                  lhsb;
   marpaESLIF_symbol_t   *lhsp;
-  int                    lookupLevelDeltai;
-  marpaESLIF_string_t   *lookupGrammarStringp;
   marpaESLIF_symbol_t   *startp;
   marpaESLIF_symbol_t   *discardp;
   short                  rcb;
@@ -1290,36 +1289,19 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
       }
 
       /* Level of RHS is either via a grammar description, either via a number */
-      /* They are exclusive (c.f. the grammar).                                */
-
-      lookupLevelDeltai    = symbolp->lookupLevelDeltai;
-      lookupGrammarStringp = symbolp->lookupGrammarStringp;
-      subGrammarp = NULL;
-      /* We always look to the eventual string first */
-      if (lookupGrammarStringp != NULL) {
-        /* Look for such a grammar description */
-        for (subGrammari = 0; subGrammari < GENERICSTACK_USED(grammarStackp); subGrammari++) {
-          if (! GENERICSTACK_IS_PTR(grammarStackp, subGrammari)) {
-            continue;
-          }
-          tmpGrammarp = (marpaESLIF_grammar_t *) GENERICSTACK_GET_PTR(grammarStackp, grammari);
-          if (_marpaESLIF_string_eqb(tmpGrammarp->descp, lookupGrammarStringp)) {
-            break;
-          }
-        }
-      } else {
-        /* RHS level is relative - if RHS level is 0 the we fall back to current grammar */
-        subGrammari = grammari + lookupLevelDeltai;
-        if ((subGrammari >= 0) && GENERICSTACK_IS_PTR(grammarStackp, subGrammari)) {
-          subGrammarp = (marpaESLIF_grammar_t *) GENERICSTACK_GET_PTR(grammarStackp, subGrammari);
-        }
-      }
-      /* Impossible */
-      if (subGrammarp == NULL) {
+      /* They are exclusive (c.f. the grammar). Please note that we made sure */
+      /* that symbolp is a meta symbol -; */
+      if (! _marpaESLIF_resolveGrammarb(marpaESLIFp, grammarStackp, grammarp, symbolp->u.metap->asciinames, symbolp->lookupLevelDeltai, symbolp->lookupGrammarStringp, &subGrammarp, NULL /* symbolpp */)) {
         MARPAESLIF_ERRORF(marpaESLIFp, "Looking at rules in grammar level %d (%s): symbol %d (%s) is referencing a non-existing grammar ", grammari, grammarp->descp->asciis, symbolp->idi, symbolp->descp->asciis);
         goto err;
       }
-      /* Make sure this RHS is an LHS in sub grammar, ignoring the case where sub grammar would be current grammar */
+      /* Commit resolved level in symbol */
+      symbolp->resolvedLeveli = subGrammarp->leveli;
+      /* Make sure this RHS is an LHS in the sub grammar, ignoring the case where sub grammar would be current grammar */
+      if (subGrammarp == grammarp) {
+        continue;
+      }
+      
       subSymbolStackp = subGrammarp->symbolStackp;
       subSymbolp = NULL;
       for (subSymboli = 0; subSymboli < GENERICSTACK_USED(subSymbolStackp); subSymboli++) {
@@ -1342,10 +1324,7 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
         MARPAESLIF_ERRORF(marpaESLIFp, "Looking at rules in grammar level %d (%s): symbol %d (%s) is referencing existing symbol No %d (%s) at grammar level %d (%s) but it is not an LHS", grammari, grammarp->descp->asciis, symbolp->idi, symbolp->descp->asciis, subSymbolp->idi, subSymbolp->descp->asciis, subGrammarp->leveli, subGrammarp->descp->asciis);
         goto err;
       }
-      /* Very good - attach a precomputed grammar to this symbol, unless this is current grammar! */
-      if (subGrammarp->leveli == grammarp->leveli) {
-        continue;
-      }
+
       marpaESLIF_cloneContext.grammarp = grammarp;
       marpaWrapperGrammarClonep = marpaWrapperGrammar_clonep(subGrammarp->marpaWrapperGrammarStartp, &marpaWrapperGrammarCloneOption);
       if (marpaWrapperGrammarClonep == NULL) {
@@ -1354,8 +1333,6 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
       if (! marpaWrapperGrammar_precompute_startb(marpaWrapperGrammarClonep, subSymbolp->idi)) {
         goto err;
       }
-      /* Commit resolved level in symbol */
-      symbolp->resolvedLeveli = subGrammarp->leveli;
       metap->marpaWrapperGrammarClonep = marpaWrapperGrammarClonep;
       marpaWrapperGrammarClonep = NULL;
       MARPAESLIF_TRACEF(marpaESLIFp,  funcs, "... Grammar level %d (%s): symbol %d (%s) have grammar resolved level set to   %d", grammari, grammarp->descp->asciis, symbolp->idi, symbolp->descp->asciis, symbolp->resolvedLeveli);
@@ -7356,6 +7333,79 @@ static inline void _marpaESLIFValueErrorProgressReportv(marpaESLIFValue_t *marpa
                                         _marpaESLIFGrammar_symbolDescriptionCallback);
     }
   }
+}
+
+/*****************************************************************************/
+static inline short _marpaESLIF_resolveGrammarb(marpaESLIF_t *marpaESLIFp, genericStack_t *grammarStackp, marpaESLIF_grammar_t *current_grammarp, char *asciis, int lookupLevelDeltai, marpaESLIF_string_t *lookupGrammarStringp, marpaESLIF_grammar_t **grammarpp, marpaESLIF_symbol_t **symbolpp)
+/*****************************************************************************/
+{
+  static const char     *funcs = "_marpaESLIF_resolveGrammarb";
+  marpaESLIF_grammar_t  *thisGrammarp;
+  marpaESLIF_grammar_t  *grammarp;
+  marpaESLIF_symbol_t   *symbolp;
+  int                    grammari;
+  short                  rcb;
+
+  if (grammarStackp == NULL) {
+    MARPAESLIF_ERROR(marpaESLIFp, "grammarStackp is NULL");
+    goto err;
+  }
+  if (current_grammarp == NULL) {
+    MARPAESLIF_ERROR(marpaESLIFp, "current_grammarp is NULL");
+    goto err;
+  }
+  if (asciis == NULL) {
+    MARPAESLIF_ERROR(marpaESLIFp, "asciis is NULL");
+    goto err;
+  }
+  
+  grammarp = NULL;
+  /* First look for the grammar */
+  if (lookupGrammarStringp != NULL) {
+    /* Look for such a grammar description */
+    for (grammari = 0; grammari < GENERICSTACK_USED(grammarStackp); grammari++) {
+      if (! GENERICSTACK_IS_PTR(grammarStackp, grammari)) {
+        continue;
+      }
+      thisGrammarp = (marpaESLIF_grammar_t *) GENERICSTACK_GET_PTR(grammarStackp, grammari);
+      if (_marpaESLIF_string_eqb(thisGrammarp->descp, lookupGrammarStringp)) {
+        grammarp = thisGrammarp;
+        break;
+      }
+    }
+  } else {
+    /* RHS level is relative - if RHS level is 0 the we fall back to current grammar */
+    grammari = current_grammarp->leveli + lookupLevelDeltai;
+    if ((grammari >= 0) && GENERICSTACK_IS_PTR(grammarStackp, grammari)) {
+      grammarp = (marpaESLIF_grammar_t *) GENERICSTACK_GET_PTR(grammarStackp, grammari);
+    }
+  }
+
+  if (grammarp == NULL) {
+    goto err;
+  }
+
+  /* Then look into this grammar */
+  symbolp = _marpaESLIF_symbol_findp(marpaESLIFp, grammarp, asciis, -1 /* symboli */);
+  if (symbolp == NULL) {
+    goto err;
+  }
+
+  if (grammarpp != NULL) {
+    *grammarpp = grammarp;
+  }
+  if (symbolpp != NULL) {
+    *symbolpp = symbolp;
+  }
+  
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  return rcb;
 }
 
 #include "grammarContext.c"
