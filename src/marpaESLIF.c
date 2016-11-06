@@ -4632,6 +4632,7 @@ marpaESLIFValue_t *marpaESLIFValue_newp(marpaESLIFRecognizer_t *marpaESLIFRecogn
   marpaESLIFValuep->previousPassWasPassthroughb = 0;
   marpaESLIFValuep->previousArg0i               = 0;
   marpaESLIFValuep->previousArgni               = 0;
+  marpaESLIFValuep->previousActionp             = NULL;
 
   marpaWrapperValueOption.genericLoggerp = marpaESLIFp->marpaESLIFOption.genericLoggerp;
   marpaWrapperValueOption.highRankOnlyb  = marpaESLIFValueOptionp->highRankOnlyb;
@@ -4729,6 +4730,7 @@ static short _marpaESLIFValueRuleCallbackMainWrapper(void *userDatavp, int rulei
   marpaESLIFGrammar_t            *marpaESLIFGrammarp    = marpaESLIFRecognizerp->marpaESLIFGrammarp;
   marpaESLIF_grammar_t           *grammarp              = marpaESLIFGrammarp->grammarp;
   marpaESLIF_rule_t              *rulep;
+  marpaESLIF_string_t            *actionp;
   char                           *actions               = NULL;
   short                           rcb;
   
@@ -4740,6 +4742,7 @@ static short _marpaESLIFValueRuleCallbackMainWrapper(void *userDatavp, int rulei
     MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "No such rule No %d", rulei);
     goto err;
   }
+  actionp = rulep->actionp;
 
   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Rule %d (%s)", rulei, rulep->descp->asciis);
 
@@ -4794,7 +4797,7 @@ static short _marpaESLIFValueRuleCallbackMainWrapper(void *userDatavp, int rulei
      This mean that we can skip the passthrough valuation if we remember its stack input: [arg0i[0]..argn[0]].
 
      Implementation is:
-     * If current rule is a passthrough, remember arg0i and argni, and remember we have done a passthrough
+     * If current rule is a passthrough, remember arg0i and argni, action and remember we have done a passthrough
      * Next pass will check if previous call was a passthrough, and if true, will reuse these remembered arg0i and argni.
   */
   if (rulep->passthroughb) {
@@ -4804,15 +4807,17 @@ static short _marpaESLIFValueRuleCallbackMainWrapper(void *userDatavp, int rulei
       goto err;
     }
     marpaESLIFValuep->previousPassWasPassthroughb = 1;
-    marpaESLIFValuep->previousArg0i = arg0i;
-    marpaESLIFValuep->previousArgni = argni;
+    marpaESLIFValuep->previousArg0i               = arg0i;
+    marpaESLIFValuep->previousArgni               = argni;
+    marpaESLIFValuep->previousActionp             = actionp;
 
   } else {
     
     if (marpaESLIFValuep->previousPassWasPassthroughb) {
       /* Previous rule was a passthrough */
-      arg0i = marpaESLIFValuep->previousArg0i;
-      argni = marpaESLIFValuep->previousArgni;
+      arg0i   = marpaESLIFValuep->previousArg0i;
+      argni   = marpaESLIFValuep->previousArgni;
+      actionp = marpaESLIFValuep->previousActionp;
       marpaESLIFValuep->previousPassWasPassthroughb = 0;
     }
 
@@ -4829,8 +4834,8 @@ static short _marpaESLIFValueRuleCallbackMainWrapper(void *userDatavp, int rulei
       }
 
       /* Look if there a rule action in the grammar - if not found try the default rule action */
-      if (rulep->actionp != NULL) {
-        actions = rulep->actionp->asciis;
+      if (actionp != NULL) {
+        actions = actionp->asciis;
       } else if (grammarp->defaultRuleActionp != NULL) {
         actions = grammarp->defaultRuleActionp->asciis;
       }
@@ -6448,9 +6453,9 @@ static inline void _marpaESLIF_rule_createshowv(marpaESLIF_t *marpaESLIFp, marpa
   char                 tmps[1024];
 
   /* Calculate the size needed to show the rule in ASCII form */
-  asciishowl = strlen(rulep->descp->asciis); /* "LHS" */
+  asciishowl = strlen(rulep->lhsp->descp->asciis); /* "LHS" */
   if (asciishows != NULL) {
-    strcpy(asciishows, rulep->descp->asciis);
+    strcpy(asciishows, rulep->lhsp->descp->asciis);
   }
   asciishowl += 4;                              /* " ::=" */
   if (asciishows != NULL) {
@@ -6592,7 +6597,7 @@ static inline void _marpaESLIF_rule_createshowv(marpaESLIF_t *marpaESLIFp, marpa
     if (asciishows != NULL) {
       strcat(asciishows, " ");
     }
-    asciishowl += strlen("action => "); /* "null-ranking => high */
+    asciishowl += strlen("action => "); /* "action => actionname */
     if (asciishows != NULL) {
       strcat(asciishows, "action => ");
     }
@@ -6600,6 +6605,14 @@ static inline void _marpaESLIF_rule_createshowv(marpaESLIF_t *marpaESLIFp, marpa
     if (asciishows != NULL) {
       strcat(asciishows, rulep->actionp->asciis);
     }
+  }
+  asciishowl += strlen("name => "); /* "name => naming */
+  if (asciishows != NULL) {
+    strcat(asciishows, "name => ");
+  }
+  asciishowl += strlen(rulep->descp->asciis); /* "name" */
+  if (asciishows != NULL) {
+    strcat(asciishows, rulep->descp->asciis);
   }
   asciishowl++; /* NUL byte */
 
