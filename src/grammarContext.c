@@ -1634,7 +1634,15 @@ static inline short _G1_RULE_PRIORITY_RULE(marpaESLIFValue_t *marpaESLIFValuep, 
     genericStack_t               *alternativeStackp;
     marpaESLIF_alternativeItem_t *alternativeItemp;
     int                           priorityCounti;
-    int                           i;
+    int                           priority_ixi;
+    int                           priorityi;
+    int                           alternativei;
+    /* A genericStack containing shallow pointers to all alternatives, with priority set */
+    genericStack_t               *workStackp;
+    genericStack_t               *rhsItemStackp;
+    marpaESLIF_rhsItem_t          rhsItem;
+    /* Temporary lhs name with indice */
+    char                         *lhsasciis;
     /* Adverb items */
     char                         *actions;
     char                         *separators;
@@ -1642,6 +1650,7 @@ static inline short _G1_RULE_PRIORITY_RULE(marpaESLIFValue_t *marpaESLIFValuep, 
     marpaESLIF_string_t          *namingp;
     short                         nullRanksHighb;
     int                           ranki;
+    int                           nbdigits = 1;   /* we start with "0", i.e. one digit */
     
     CALLBACKGRAMMAR_GET_LHS(arg0i, lhs);
     CALLBACKGRAMMAR_GET_OP_DECLARE(arg0i+1, op_declare);
@@ -1658,12 +1667,12 @@ static inline short _G1_RULE_PRIORITY_RULE(marpaESLIFValue_t *marpaESLIFValuep, 
       }
       alternativeStackp = (genericStack_t *) GENERICSTACK_IS_PTR(alternativesStackp, 0);
       /* These are normal alternatives, separated by '|' */
-      for (i = 0; i < GENERICSTACK_USED(alternativeStackp); i++) {
-        if (! GENERICSTACK_IS_PTR(alternativeStackp, i)) {
-          MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "alternativesStackp->[%d] is not a PTR", i);
+      for (alternativei = 0; alternativei < GENERICSTACK_USED(alternativeStackp); alternativei++) {
+        if (! GENERICSTACK_IS_PTR(alternativeStackp, alternativei)) {
+          MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "alternativesStackp->[%d] is not a PTR", alternativei);
           goto err;
         }
-        alternativeItemp = (marpaESLIF_alternativeItem_t *) GENERICSTACK_GET_PTR(alternativeStackp, i);
+        alternativeItemp = (marpaESLIF_alternativeItem_t *) GENERICSTACK_GET_PTR(alternativeStackp, alternativei);
 
         /* Get the adverb items that are allowed in our context */
         if (! _marpaESLIF_grammarContext_adverbList_unstackb(marpaESLIFp,
@@ -1703,8 +1712,96 @@ static inline short _G1_RULE_PRIORITY_RULE(marpaESLIFValue_t *marpaESLIFValuep, 
                                                         NULL /* out_rulepp */)) {
           goto err;
         }
-
       }
+    } else {
+
+      GENERICSTACK_NEW(workStackp);
+      if (GENERICSTACK_ERROR(workStackp)) {
+        MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "workStackp initialization failure, %s", strerror(errno));
+        goto err;
+      }
+
+      /* There is more than one set of alternatives, each of them separated by the loosen '||' operator */
+      /* First we reassociate all rules with its priority */
+      for (priority_ixi = 0; priority_ixi < priorityCounti; priority_ixi++) {
+        priorityi = priorityCounti - (priority_ixi + 1);
+
+        /* Get set of alternatives at indice priority_ixi */
+        if (! GENERICSTACK_IS_PTR(alternativesStackp, priority_ixi)) {
+          MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "alternativesStackp->[%d] is not a PTR", priority_ixi);
+          GENERICSTACK_FREE(workStackp);
+          goto err;
+        }
+        alternativeStackp = (genericStack_t *) GENERICSTACK_IS_PTR(alternativesStackp, priority_ixi);
+        for (alternativei = 0; alternativei < GENERICSTACK_USED(alternativeStackp); alternativei++) {
+          if (! GENERICSTACK_IS_PTR(alternativeStackp, alternativei)) {
+            MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "alternativeStackp->[%d] is not a PTR", alternativei);
+            GENERICSTACK_FREE(workStackp);
+            goto err;
+          }
+          alternativeItemp = (marpaESLIF_alternativeItem_t *) GENERICSTACK_GET_PTR(alternativeStackp, alternativei);
+
+          /* Set the priority of this alternative and push to the work stack */
+          alternativeItemp->priorityi = priorityi;
+          GENERICSTACK_PUSH_PTR(workStackp, alternativeItemp);
+          if (GENERICSTACK_ERROR(workStackp)) {
+            MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "workStackp push failure, %s", strerror(errno));
+            GENERICSTACK_FREE(workStackp);
+            goto err;
+          }
+        }
+      }
+
+      /* Create a passthrough rule - we use symbols with indices that the user CANNOT enter, i.e. "lhs[number]" */
+      /* The passthrough rule is always in the form: lhs ::= lhs[0] */
+      lhsasciis = (char *) malloc(strlen((char *) lhs) + 3 /* "[0]" */ + 1 /* NUL byte */);
+      if (lhsasciis == NULL) {
+        MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "malloc failure, %s", strerror(errno));
+        GENERICSTACK_FREE(workStackp);
+        goto err;
+      }
+      strcpy(lhsasciis, (char *) lhs);
+      strcat(lhsasciis, "[0]");
+
+      GENERICSTACK_NEW(rhsItemStackp);
+      if (GENERICSTACK_ERROR(rhsItemStackp)) {
+        MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "rhsItemStackp initialization failure, %s", strerror(errno));
+        GENERICSTACK_FREE(workStackp);
+        free(lhsasciis);
+        goto err;
+      }
+
+      rhsItem.singleSymbols     = lhsasciis;
+      rhsItem.grammarReferencep = NULL; /* i.e. current grammar */
+
+      GENERICSTACK_PUSH_PTR(rhsItemStackp, &rhsItem);
+      if (GENERICSTACK_ERROR(rhsItemStackp)) {
+        MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "rhsItemStackp push failure, %s", strerror(errno));
+        GENERICSTACK_FREE(workStackp);
+        free(lhsasciis);
+        goto err;
+      }
+      
+      if (! _marpaESLIFValueRuleCallbackGrammar_ruleb(marpaESLIFValuep,
+                                                      marpaESLIF_grammarContextp,
+                                                      op_declare,
+                                                      NULL, /* descp */
+                                                      (char *) lhs,
+                                                      rhsItemStackp,
+                                                      NULL, /* rhsItemExceptionStackp */
+                                                      0, /* ranki */
+                                                      0, /* nullRanksHighb - a prioritized rule is never a nullable anyway */
+                                                      0, /* sequenceb */
+                                                      -1, /* minimumi */
+                                                      NULL, /* separators */
+                                                      -1, /* properb */
+                                                      NULL, /* actions - c.f. comment about passtrough in marpaESLIF.c */
+                                                        0, /* passthroughb */
+                                                        NULL /* out_rulepp */)) {
+          goto err;
+        }
+
+      /* Now we can process the work stack */
     }
 
     /* Parents are no-op */

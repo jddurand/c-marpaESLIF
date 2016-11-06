@@ -75,6 +75,7 @@ struct marpaESLIF_adverbItem {
 struct marpaESLIF_alternativeItem {
   genericStack_t *rhsItemStackp;
   genericStack_t *adverbItemStackp;
+  int             priorityi;   /* Used only when dealing with prioritized rules */
 };
 
 struct marpaESLIF_rhsItem {

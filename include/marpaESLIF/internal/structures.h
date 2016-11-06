@@ -238,6 +238,7 @@ struct marpaESLIFValue {
   short                     previousPassWasPassthroughb;
   int                       previousArg0i;
   int                       previousArgni;
+  marpaESLIF_string_t      *previousActionp;
 };
 
 struct marpaESLIFRecognizer {
