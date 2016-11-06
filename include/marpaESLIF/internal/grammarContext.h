@@ -80,6 +80,7 @@ struct marpaESLIF_alternativeItem {
 
 struct marpaESLIF_rhsItem {
   char *singleSymbols;
+  char *prioritizedSymbols; /* This can be set only when singleSymbols is equal to LHS, i.e. in current grammar */
   marpaESLIF_grammarReference_t *grammarReferencep;
 };
 
@@ -987,7 +988,9 @@ static inline short _marpaESLIF_grammarContext_adverbList_unstackb(marpaESLIF_t 
 static inline short _marpaESLIFValueRuleCallbackGrammar_rhsItemb(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, marpaESLIF_grammarContext_op_declare_t op_declare, marpaESLIF_rhsItem_t *rhsItemp, marpaESLIF_symbol_t **out_symbolpp);
 static inline short _marpaESLIFValueRuleCallbackGrammar_rhsItemStackb(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, marpaESLIF_grammarContext_op_declare_t op_declare, genericStack_t *rhsItemStackp, size_t *nrhslp, int **rhsipp);
 static inline short _marpaESLIFValueRuleCallbackGrammar_ruleb(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, marpaESLIF_grammarContext_op_declare_t op_declare, marpaESLIF_string_t *descp, char *lhsasciis, genericStack_t *rhsItemStackp, genericStack_t *rhsItemExceptionStackp, int ranki, short nullRanksHighb, short sequenceb, int minimumi, char *separators, short properb, char *actions, short passthroughb, marpaESLIF_rule_t **out_rulepp);
-
+/* http://stackoverflow.com/questions/1068849/how-do-i-determine-the-number-of-digits-of-an-integer-in-c */
+static inline int _marpaESLIF_count_revifi(int n);
+  
 /* For every rule we write a specific action. Every action is isually very short, and just pop/push the stack */
 /* For convenience action names mimic the rule names */
 static inline short _G1_RULE_STATEMENTS       (marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti);

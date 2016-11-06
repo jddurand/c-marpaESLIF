@@ -508,6 +508,9 @@ static inline void _marpaESLIF_rhsItem_freev(marpaESLIF_rhsItem_t *rhsItemp)
     if (rhsItemp->singleSymbols != NULL) {
       free(rhsItemp->singleSymbols);
     }
+    if (rhsItemp->prioritizedSymbols != NULL) {
+      free(rhsItemp->prioritizedSymbols);
+    }
     _marpaESLIF_grammarReference_freev(rhsItemp->grammarReferencep);
     free(rhsItemp);
   }
@@ -731,6 +734,9 @@ static inline short _marpaESLIF_grammarContext_adverbList_unstackb(marpaESLIF_t 
   marpaESLIF_adverbItem_t *adverbItemp;
   int                      i;
   short                    rcb;
+  short                    leftb;
+  short                    rightb;
+  short                    groupb;
 
   if (adverbItemStackp == NULL) {
     MARPAESLIF_ERROR(marpaESLIFp, "adverbItemStackp is NULL");
@@ -805,21 +811,21 @@ static inline short _marpaESLIF_grammarContext_adverbList_unstackb(marpaESLIF_t 
         MARPAESLIF_ERROR(marpaESLIFp, "left adverb is not allowed");
         goto err;
       }
-      *leftbp = adverbItemp->u.b;
+      leftb = *leftbp = adverbItemp->u.b;
       break;
     case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_RIGHT:
       if (rightbp == NULL) {
         MARPAESLIF_ERROR(marpaESLIFp, "right adverb is not allowed");
         goto err;
       }
-      *rightbp = adverbItemp->u.b;
+      rightb = *rightbp = adverbItemp->u.b;
       break;
     case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_GROUP:
       if (groupbp == NULL) {
         MARPAESLIF_ERROR(marpaESLIFp, "group adverb is not allowed");
         goto err;
       }
-      *groupbp = adverbItemp->u.b;
+      groupb = *groupbp = adverbItemp->u.b;
       break;
     case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_SEPARATOR:
       if (separatorsp == NULL) {
@@ -886,6 +892,12 @@ static inline short _marpaESLIF_grammarContext_adverbList_unstackb(marpaESLIF_t 
     }
   }
 
+  /* Pos-processing: leftb, rightb and groupb are mutually exclusive */
+  if (leftb + rightb + groupb > 1) {
+    MARPAESLIF_ERROR(marpaESLIFp, "assoc => 'left', assoc => 'right' and assoc => 'group' are mutually exclusive");
+    goto err;
+  }
+  
   rcb = 1;
   goto done;
 
@@ -942,9 +954,15 @@ static inline short _marpaESLIFValueRuleCallbackGrammar_rhsItemb(marpaESLIFValue
     }
   }
 
-  /* Check this symbol in current grammar */
-  if (! _marpaESLIFValueRuleCallbackGrammar_metab(marpaESLIFValuep, marpaESLIF_grammarContextp, out_grammarp->leveli, rhsItemp->singleSymbols, NULL /* descp */, -1 /* startb */, -1 /* discardb */, &out_symbolp)) {
-    goto err;
+  /* Check this symbol in current grammar - we have to take care of eventual prioritization */
+  if (rhsItemp->prioritizedSymbols != NULL) {
+    if (! _marpaESLIFValueRuleCallbackGrammar_metab(marpaESLIFValuep, marpaESLIF_grammarContextp, out_grammarp->leveli, rhsItemp->prioritizedSymbols, NULL /* descp */, -1 /* startb */, -1 /* discardb */, &out_symbolp)) {
+      goto err;
+    }
+  } else {
+    if (! _marpaESLIFValueRuleCallbackGrammar_metab(marpaESLIFValuep, marpaESLIF_grammarContextp, out_grammarp->leveli, rhsItemp->singleSymbols, NULL /* descp */, -1 /* startb */, -1 /* discardb */, &out_symbolp)) {
+      goto err;
+    }
   }
 
   if (out_symbolpp != NULL) {
@@ -1142,6 +1160,29 @@ static inline short _marpaESLIFValueRuleCallbackGrammar_ruleb(marpaESLIFValue_t 
   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
   marpaESLIFRecognizerp->callstackCounteri--;
   return rcb;
+}
+
+/* http://stackoverflow.com/questions/1068849/how-do-i-determine-the-number-of-digits-of-an-integer-in-c */
+/*****************************************************************************/
+static inline int _marpaESLIF_count_revifi(int n)
+/*****************************************************************************/
+{
+  /* I do not imagine a nano-second one would repeat the LHS more than 9999999999 times in the RHS right ? */
+  if (n < 0) {
+    n = (n == INT_MIN) ? INT_MAX : -n;
+  }
+
+  if (n > 999999999) return 10;
+  if (n > 99999999) return 9;
+  if (n > 9999999) return 8;
+  if (n > 999999) return 7;
+  if (n > 99999) return 6;
+  if (n > 9999) return 5;
+  if (n > 999) return 4;
+  if (n > 99) return 3;
+  if (n > 9) return 2;
+
+  return 1;
 }
 
 /*****************************************************************************/
@@ -1654,9 +1695,8 @@ static inline short _G1_RULE_PRIORITY_RULE(marpaESLIFValue_t *marpaESLIFValuep, 
       for (alternativei = 0; alternativei < GENERICSTACK_USED(alternativeStackp); alternativei++) {
         /* Adverb items */
         char                *actions;
-        char                *separators;
-        short                properb;
         int                  ranki;
+        short                nullRanksHighb;
         marpaESLIF_string_t *namingp;
 
         if (! GENERICSTACK_IS_PTR(alternativeStackp, alternativei)) {
@@ -1673,10 +1713,10 @@ static inline short _G1_RULE_PRIORITY_RULE(marpaESLIFValue_t *marpaESLIFValuep, 
                                                              NULL, /* leftbp */
                                                              NULL, /* rightbp */
                                                              NULL, /* groupb */
-                                                             &separators,
-                                                             &properb,
+                                                             NULL, /* separatorsp */
+                                                             NULL, /* properbp */
                                                              &ranki,
-                                                             NULL, /* nullRanksHighbp */
+                                                             &nullRanksHighb,
                                                              NULL, /* priorityip */
                                                              NULL, /* pausesp */
                                                              NULL, /* latmbp */
@@ -1696,8 +1736,8 @@ static inline short _G1_RULE_PRIORITY_RULE(marpaESLIFValue_t *marpaESLIFValuep, 
                                                         0, /* nullRanksHighb - Note this cannot be a nullable as per our grammar */
                                                         0, /* sequenceb */
                                                         -1, /* minimumi */
-                                                        separators,
-                                                        properb,
+                                                        NULL, /* separators */
+                                                        -1, /* properb */
                                                         actions,
                                                         0, /* passthroughb */
                                                         NULL /* out_rulepp */)) {
@@ -1708,6 +1748,7 @@ static inline short _G1_RULE_PRIORITY_RULE(marpaESLIFValue_t *marpaESLIFValuep, 
       { /* WORKSTACK BLOCK */
         genericStack_t *workStackp = NULL;
         int             priority_ixi;
+        short           workStackb;
 
         GENERICSTACK_NEW(workStackp);
         if (GENERICSTACK_ERROR(workStackp)) {
@@ -1726,14 +1767,12 @@ static inline short _G1_RULE_PRIORITY_RULE(marpaESLIFValue_t *marpaESLIFValuep, 
           /* Get set of alternatives at indice priority_ixi */
           if (! GENERICSTACK_IS_PTR(alternativesStackp, priority_ixi)) {
             MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "alternativesStackp->[%d] is not a PTR", priority_ixi);
-            GENERICSTACK_FREE(workStackp);
             goto workstack_block_err;
           }
           alternativeStackp = (genericStack_t *) GENERICSTACK_IS_PTR(alternativesStackp, priority_ixi);
           for (alternativei = 0; alternativei < GENERICSTACK_USED(alternativeStackp); alternativei++) {
             if (! GENERICSTACK_IS_PTR(alternativeStackp, alternativei)) {
               MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "alternativeStackp->[%d] is not a PTR", alternativei);
-              GENERICSTACK_FREE(workStackp);
               goto workstack_block_err;
             }
             alternativeItemp = (marpaESLIF_alternativeItem_t *) GENERICSTACK_GET_PTR(alternativeStackp, alternativei);
@@ -1743,7 +1782,6 @@ static inline short _G1_RULE_PRIORITY_RULE(marpaESLIFValue_t *marpaESLIFValuep, 
             GENERICSTACK_PUSH_PTR(workStackp, alternativeItemp);
             if (GENERICSTACK_ERROR(workStackp)) {
               MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "workStackp push failure, %s", strerror(errno));
-              GENERICSTACK_FREE(workStackp);
               goto workstack_block_err;
             }
           }
@@ -1751,41 +1789,50 @@ static inline short _G1_RULE_PRIORITY_RULE(marpaESLIFValue_t *marpaESLIFValuep, 
 
         { /* LHSASCII BLOCK */
           char *lhsasciis = NULL;
+          short lhsasciib;
 
           /* Create a passthrough rule - we use symbols with indices that the user CANNOT enter, i.e. "lhs[number]" */
           /* The passthrough rule is always in the form: lhs ::= lhs[0] */
           lhsasciis = (char *) malloc(strlen((char *) lhs) + 3 /* "[0]" */ + 1 /* NUL byte */);
           if (lhsasciis == NULL) {
             MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "malloc failure, %s", strerror(errno));
-            GENERICSTACK_FREE(workStackp);
-            goto err;
+            goto lhsascii_block_err;
           }
           strcpy(lhsasciis, (char *) lhs);
           strcat(lhsasciis, "[0]");
 
           { /* RHSITEMSTACKP BLOCK */
             genericStack_t       *rhsItemStackp = NULL;
-            marpaESLIF_rhsItem_t  rhsItem;
+            marpaESLIF_rhsItem_t *rhsItemp;
+            short                 rhsItemStackb;
 
             GENERICSTACK_NEW(rhsItemStackp);
             if (GENERICSTACK_ERROR(rhsItemStackp)) {
               MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "rhsItemStackp initialization failure, %s", strerror(errno));
-              GENERICSTACK_FREE(workStackp);
-              free(lhsasciis);
-              goto err;
+              goto rhsItemStack_block_err;
             }
 
-            rhsItem.singleSymbols     = lhsasciis;
-            rhsItem.grammarReferencep = NULL; /* i.e. current grammar */
+            rhsItemp = (marpaESLIF_rhsItem_t *) malloc(sizeof(marpaESLIF_rhsItem_t));
+            if (rhsItemp == NULL) {
+              MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "malloc failure, %s", strerror(errno));
+              goto rhsItemStack_block_err;
+            }
+            rhsItemp->singleSymbols      = NULL;
+            rhsItemp->prioritizedSymbols = NULL;
+            rhsItemp->grammarReferencep  = NULL; /* i.e. current grammar */
 
-            GENERICSTACK_PUSH_PTR(rhsItemStackp, &rhsItem);
+            rhsItemp->singleSymbols = strdup(lhsasciis);
+            if (rhsItemp->singleSymbols == NULL) {
+              MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "strdup failure, %s", strerror(errno));
+              goto rhsItemStack_block_err;
+            }
+
+            GENERICSTACK_PUSH_PTR(rhsItemStackp, rhsItemp);
             if (GENERICSTACK_ERROR(rhsItemStackp)) {
               MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "rhsItemStackp push failure, %s", strerror(errno));
-              GENERICSTACK_FREE(rhsItemStackp);
-              GENERICSTACK_FREE(workStackp);
-              free(lhsasciis);
-              goto err;
+              goto rhsItemStack_block_err;
             }
+            rhsItemp = NULL; /* rhsItemp is now in rhsItemStackp */
       
             if (! _marpaESLIFValueRuleCallbackGrammar_ruleb(marpaESLIFValuep,
                                                             marpaESLIF_grammarContextp,
@@ -1803,52 +1850,170 @@ static inline short _G1_RULE_PRIORITY_RULE(marpaESLIFValue_t *marpaESLIFValuep, 
                                                             NULL, /* actions - c.f. comment about passthrough in marpaESLIF.c */
                                                             1, /* passthroughb */
                                                             NULL /* out_rulepp */)) {
-              goto err;
-              GENERICSTACK_FREE(rhsItemStackp);
-              GENERICSTACK_FREE(workStackp);
-              free(lhsasciis);
-              goto err;
+              goto rhsItemStack_block_err;
             }
 
             /* Create the prioritized alternatives */
 
             { /* WORKSTACK LOOP BLOCK */
-              int  nbdigits = 1;   /* we start with "0", i.e. one digit */
+              int   workingRulei;
+              short workStackLoopb;
+              char *newlhsasciis = NULL;
+              int   nbdigiti;
 
+              for (workingRulei = 0; workingRulei < GENERICSTACK_USED(workStackp); workingRulei++) {
+                int                  arityi;
+                int                  priorityi;
+                int                  rhsItemStacki;
+                int                  rhsLengthi;
+                int                  nextPriorityi;
+                /* Adverb items */
+                char                *actions;
+                short                leftb;
+                short                rightb;
+                short                groupb;
+                int                  ranki;
+                short                nullRanksHighb;
+                marpaESLIF_string_t *namingp;
+                
+                if (! GENERICSTACK_IS_PTR(workStackp, workingRulei)) {
+                  MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "workStackp->[%d] is not a PTR", workingRulei);
+                  goto workStackLoop_block_err;
+                }
+                alternativeItemp = (marpaESLIF_alternativeItem_t *) GENERICSTACK_GET_PTR(workStackp, workingRulei);
+                /* Arity is the number of times the LHS appear in the list of RHS */
+                if (alternativeItemp->rhsItemStackp == NULL) {
+                  MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "alternativeItemp->rhsItemStackp is NULL");
+                  goto workStackLoop_block_err;
+                }
+                priorityi = alternativeItemp->priorityi;
+                rhsLengthi = GENERICSTACK_USED(alternativeItemp->rhsItemStackp);
+                arityi = 0;
+                for (rhsItemStacki = 0; rhsItemStacki < rhsLengthi; rhsItemStacki++) {
+                  if (! GENERICSTACK_IS_PTR(alternativeItemp->rhsItemStackp, rhsItemStacki)) {
+                    MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "alternativeItemp->rhsItemStackp->[%d] is not a PTR", rhsItemStacki);
+                    goto workStackLoop_block_err;
+                  }
+                  rhsItemp = (marpaESLIF_rhsItem_t *) GENERICSTACK_GET_PTR(alternativeItemp->rhsItemStackp, rhsItemStacki);
+                  if (rhsItemp->singleSymbols == NULL) {
+                    MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "rhsItemp->singleSymbols is NULL");
+                    goto workStackLoop_block_err;
+                  }
+                  if (strcmp(rhsItemp->singleSymbols, (char *) lhs) == 0) {
+                    arityi++;
+                  }
+                }
+                /* Rework LHS to be lhs[$priority] */
+                nbdigiti = _marpaESLIF_count_revifi(priorityi);
+                newlhsasciis = (char *) malloc(strlen((char *) lhs) + 3 /* "[] and NUL byte */ + nbdigiti);
+                if (newlhsasciis == NULL) {
+                  MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "malloc failure, %s", strerror(errno));
+                  goto err;
+                }
+                strcpy(newlhsasciis, (char *) lhs);
+                sprintf(newlhsasciis + strlen(newlhsasciis), "[%d]", priorityi);
+
+                /* Get the adverb items that are allowed in our context */
+                if (! _marpaESLIF_grammarContext_adverbList_unstackb(marpaESLIFp,
+                                                                     alternativeItemp->adverbItemStackp,
+                                                                     &actions,
+                                                                     NULL, /* autorankbp */
+                                                                     &leftb,
+                                                                     &rightb,
+                                                                     &groupb,
+                                                                     NULL, /* separatorsp */
+                                                                     NULL, /* properb */
+                                                                     &ranki,
+                                                                     &nullRanksHighb,
+                                                                     NULL, /* priorityip */
+                                                                     NULL, /* pausesp */
+                                                                     NULL, /* latmbp */
+                                                                     &namingp)) {
+                  goto err;
+                }
+
+                /* Default assocativity is left */
+                if ((! leftb) && (! rightb) && (! groupb)) {
+                  leftb = 1;
+                }
+
+                /* Get arity's priority */
+                nextPriorityi = priorityi + 1;
+                /* Original Marpa::R2 calculus is $next_priority = 0 if $next_priority >= $priority_count */
+                /* And a comment says this is probably a misfeature that the author did not fix for backward */
+                /* compatibility issues on a quite rare case. */
+                if (nextPriorityi >= priorityCounti) {
+                  nextPriorityi = priorityi;
+                }
+              }
+
+              /* ----------------------------------------------- WORKSTACK LOOP BLOCK END */
+              workStackLoopb = 1;
+              goto workStackLoop_block_done;
+
+            workStackLoop_block_err:
+              workStackLoopb = 0;
+
+            workStackLoop_block_done:
+              if (newlhsasciis != NULL) {
+                free(newlhsasciis);
+              }
+              if (! workStackLoopb) {
+                goto rhsItemStack_block_err;
+              }
+              /* ----------------------------------------------- WORKSTACK LOOP BLOCK END */
             }
 
+            /* ----------------------------------------------- RHSITEMSTACK BLOCK END */
+            rhsItemStackb = 1;
             goto rhsItemStack_block_done;
 
           rhsItemStack_block_err:
-            GENERICSTACK_FREE(rhsItemStackp);
-            goto lhsascii_block_err;
+            rhsItemStackb = 0;
 
           rhsItemStack_block_done:
-            GENERICSTACK_FREE(rhsItemStackp);
-          }  /* RHSITEMSTACKP BLOCK */
+            _marpaESLIF_rhsItem_freev(rhsItemp);
+            _marpaESLIF_rhsItemStack_freev(rhsItemStackp);
+            if (! rhsItemStackb) {
+              goto lhsascii_block_err;
+            }
+            /* ----------------------------------------------- RHSITEMSTACK BLOCK END */
+          }
 
+          /* ----------------------------------------------- LHSASCII BLOCK END */
+          lhsasciib = 1;
           goto lhsascii_block_done;
 
         lhsascii_block_err:
-          if (lhsasciis != NULL) {
-            free(lhsasciis);
-          }
-          goto workstack_block_err;
+          lhsasciib = 0;
 
         lhsascii_block_done:
           if (lhsasciis != NULL) {
             free(lhsasciis);
           }
-        } /* LHSASCII BLOCK */
+          if (! lhsasciib) {
+            goto workstack_block_err;
+          }
+          /* ----------------------------------------------- LHSASCII BLOCK END */
+        }
 
+        /* ----------------------------------------------- WORKSTACK BLOCK END */
+        workStackb = 1;
         goto workstack_block_done;
       
       workstack_block_err:
-        GENERICSTACK_FREE(workStackp);
-        goto err;
+        workStackb = 0;
 
       workstack_block_done:
-        GENERICSTACK_FREE(workStackp);
+        if (workStackp != NULL) {
+          /* workStackp is a stack of shallow pointers of marpaESLIF_alternativeItem_t * */
+          /* in which we just overwrote priority. */
+          GENERICSTACK_FREE(workStackp);
+        }
+        if (! workStackb) {
+          goto err;
+        }
+        /* ----------------------------------------------- WORKSTACK BLOCK END */
       }
     }
 
