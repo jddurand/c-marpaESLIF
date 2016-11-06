@@ -177,7 +177,6 @@ struct marpaESLIF_symbol {
 /* A rule */
 struct marpaESLIF_rule {
   int                  idi;             /* Rule Id */
-  char                *asciinames;      /* Rule name (ASCII as per the grammar) */
   marpaESLIF_string_t *descp;           /* Rule alternative name */
   char                *asciishows;      /* Rule show (ASCII) */
   marpaESLIF_symbol_t *lhsp;            /* LHS symbol */
