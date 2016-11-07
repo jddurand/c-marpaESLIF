@@ -204,6 +204,7 @@ struct marpaESLIF_grammar {
   genericStack_t        *ruleStackp;                  /* Stack of rules */
   char                  *defaultSymbolActions;        /* Default action for symbols */
   char                  *defaultRuleActions;          /* Default action for rules */
+  char                  *defaultDiscardEvents;        /* Default discard event */
   int                    starti;                      /* Default start symbol ID - filled during grammar validation */
   int                   *ruleip;                      /* Array of rule IDs - filled by grammar validation */
   size_t                 rulel;                       /* Size of the rule IDs array - filled by grammar validation */
