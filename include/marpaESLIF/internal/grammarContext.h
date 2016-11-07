@@ -226,13 +226,13 @@ MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(SHORT, LATM,                
 MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(PTR,   SYMBOL_NAME,              symbol_name)              /* C: void* (ASCII NUL terminated string) */
 MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(PTR,   SYMBOL,                   symbol)                   /* C: void* (ASCII NUL terminated string) */
 MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(PTR,   LHS,                      lhs)                      /* C: void* (ASCII NUL terminated string) */
-MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(PTR,   SINGLE_SYMBOL,            single_symbol)            /* C: void* (ASCII NUL terminated string) */
+MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(PTR,   SINGLE_SYMBOL,            single_symbol)            /* C: marpaESLIF_rhsItem_t* */
 MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(SHORT, QUANTIFIER,               quantifier)               /* 0 == '*', 1 == '+' */
-MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(PTR,   PRIORITIES,               priorities)               /* C: genericStack_t* of alternatives */
-MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(PTR,   ALTERNATIVES,             alternatives)             /* C: genericStack_t* of alternative */
-MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(PTR,   ALTERNATIVE,              alternative)              /* C: genericStack_t* of marpaESLIF_alternativeItem_t */
-MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(PTR,   RHS,                      rhs)                      /* C: genericStack_t* of marpaESLIF_rhsItem_t */
-MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(PTR,   GRAMMAR_REFERENCE,        grammar_reference)        /* C: genericStack_t* of marpaESLIF_grammarReference_t */
+MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(PTR,   PRIORITIES,               priorities)               /* C: genericStack_t* of alternatives stacks */
+MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(PTR,   ALTERNATIVES,             alternatives)             /* C: genericStack_t* of alternative stacks */
+MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(PTR,   ALTERNATIVE,              alternative)              /* C: genericStack_t* of marpaESLIF_alternativeItem_t* */
+MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(PTR,   RHS,                      rhs)                      /* C: genericStack_t* of marpaESLIF_rhsItem_t* */
+MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(PTR,   GRAMMAR_REFERENCE,        grammar_reference)        /* C: genericStack_t* of marpaESLIF_grammarReference_t* */
 
 /* Getters and setters on the stack are hand-writen */
 #define CALLBACKGRAMMAR_COMMON_HEADER(name)                             \
@@ -812,7 +812,7 @@ done:                                                                   \
 /* -------------------------------------------------------------------- */
 /*                            SINGLE_SYMBOL                             */
 /* genericStack type: PTR                                               */
-/*            C type: void * (ASCII NUL terminated string)              */
+/*            C type: marpaESLIF_rhsItem_t*                             */
 /* -------------------------------------------------------------------- */
 #define CALLBACKGRAMMAR_DECL_SINGLE_SYMBOL(identifier) marpaESLIF_grammarContext_single_symbol_t identifier
 #define CALLBACKGRAMMAR_GET_SINGLE_SYMBOL(indice, identifier) do {        \
@@ -823,14 +823,14 @@ done:                                                                   \
       MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, #identifier "value is NULL"); \
       goto err;                                                         \
     }                                                                   \
-    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "outputStackp->[%d] val  is \"%s\"", indice, identifier); \
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "outputStackp->[%d] val  is %p", indice, identifier); \
   } while (0)
 
 #define CALLBACKGRAMMAR_SET_SINGLE_SYMBOL(indice, identifier) do {        \
     if (! _marpaESLIF_grammarContext_set_single_symbolb(marpaESLIFp, outputStackp, itemTypeStackp, indice, identifier)) { \
       goto err;                                                         \
     }                                                                   \
-    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "outputStackp->[%d] set  to \"%s\"", indice, identifier); \
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "outputStackp->[%d] set  to %p", indice, identifier); \
   } while (0)
 
 /* -------------------------------------------------------------------- */
@@ -1030,6 +1030,7 @@ static inline short _G1_RULE_EMPTY_RULE       (marpaESLIFValue_t *marpaESLIFValu
 static inline short _G1_RULE_NULL_STATEMENT   (marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti);
 static inline short _G1_RULE_STATEMENT_GROUP  (marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti);
 static inline short _G1_RULE_PRIORITY_RULE    (marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti);
+static inline short _G1_RULE_QUANTIFIED_RULE  (marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti);
 
 static inline short _G1_RULE_OP_DECLARE_3     (marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti);
 static inline short _G1_RULE_OP_DECLARE_1     (marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti);

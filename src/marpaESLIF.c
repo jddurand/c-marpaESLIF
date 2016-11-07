@@ -5219,6 +5219,8 @@ static short _marpaESLIFValueRuleCallbackGrammar(void *userDatavp, marpaESLIFVal
   } else if (strcmp(actions, G1_RULE_EMPTY_RULE)      == 0) { if (! _G1_RULE_EMPTY_RULE     (marpaESLIFValuep, marpaESLIF_grammarContextp, rulei, arg0i, argni, resulti)) { goto err; }
   } else if (strcmp(actions, G1_RULE_NULL_STATEMENT)  == 0) { if (! _G1_RULE_NULL_STATEMENT (marpaESLIFValuep, marpaESLIF_grammarContextp, rulei, arg0i, argni, resulti)) { goto err; }
   } else if (strcmp(actions, G1_RULE_STATEMENT_GROUP) == 0) { if (! _G1_RULE_STATEMENT_GROUP(marpaESLIFValuep, marpaESLIF_grammarContextp, rulei, arg0i, argni, resulti)) { goto err; }
+  } else if (strcmp(actions, G1_RULE_PRIORITY_RULE)   == 0) { if (! _G1_RULE_PRIORITY_RULE  (marpaESLIFValuep, marpaESLIF_grammarContextp, rulei, arg0i, argni, resulti)) { goto err; }
+  } else if (strcmp(actions, G1_RULE_QUANTIFIED_RULE) == 0) { if (! _G1_RULE_QUANTIFIED_RULE(marpaESLIFValuep, marpaESLIF_grammarContextp, rulei, arg0i, argni, resulti)) { goto err; }
 
          } else if (strcmp(actions, G1_RULE_OP_DECLARE_3) == 0) {
     if (! _G1_RULE_OP_DECLARE_3(marpaESLIFValuep, marpaESLIF_grammarContextp, rulei, arg0i, argni, resulti)) {
