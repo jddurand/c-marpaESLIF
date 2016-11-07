@@ -60,7 +60,7 @@ typedef enum marpaESLIFEventType {
 
 typedef struct marpaESLIFEvent {
   marpaESLIFEventType_t type;
-  marpaESLIFString_t   *stringp; /* Pointer to event name as per the user - NULL if exhaustion */
+  char                 *events; /* Event name - NULL if exhaustion */
 } marpaESLIFEvent_t;
 
 typedef short (*marpaESLIFValueRuleCallback_t)(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions, int rulei, int arg0i, int argni, int resulti);

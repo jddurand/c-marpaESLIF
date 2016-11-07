@@ -92,7 +92,6 @@
 #define G1_RULE_ALTERNATIVE_NAME_2               "G1_rule_alternative_name_2"
 #define G1_RULE_EVENT_NAME_1                     "G1_rule_event_name_1"
 #define G1_RULE_EVENT_NAME_2                     "G1_rule_event_name_2"
-#define G1_RULE_EVENT_NAME_3                     "G1_rule_event_name_3"
 #define G1_RULE_LHS                              "G1_rule_lhs"
 #define G1_RULE_RHS                              "G1_rule_rhs"
 #define G1_RULE_RHS_PRIMARY_1                    "G1_rule_rhs_primary_1"

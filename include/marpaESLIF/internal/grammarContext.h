@@ -43,6 +43,7 @@ enum marpaESLIF_grammarItemType {
   MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_NULL_RANKING,
   MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_PRIORITY,
   MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_PAUSE,
+  MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_EVENT,
   MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_LATM,
   MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_NAMING,
   MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_NULL,
@@ -218,6 +219,7 @@ MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(INT,   ADVERB_ITEM_RANK,    
 MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(SHORT, ADVERB_ITEM_NULL_RANKING, adverb_item_null_ranking) /* C: short */
 MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(INT,   ADVERB_ITEM_PRIORITY,     adverb_item_priority)     /* C: int */
 MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(PTR,   ADVERB_ITEM_PAUSE,        adverb_item_pause)        /* C: void* (ASCII NUL terminated string) */
+MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(PTR,   ADVERB_ITEM_EVENT,        adverb_item_event)        /* C: void* (ASCII NUL terminated string) */
 MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(SHORT, ADVERB_ITEM_LATM,         adverb_item_latm)         /* C: short */
 MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(PTR,   ADVERB_ITEM_NAMING,       adverb_item_naming)       /* C: void* (NUL terminated for convenience) */
 MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(SHORT, ADVERB_ITEM_NULL,         adverb_item_null)         /* C: short */
@@ -602,6 +604,30 @@ done:                                                                   \
 
 #define CALLBACKGRAMMAR_SET_ADVERB_ITEM_PAUSE(indice, identifier) do {        \
     if (! _marpaESLIF_grammarContext_set_adverb_item_pauseb(marpaESLIFp, outputStackp, itemTypeStackp, indice, identifier)) { \
+      goto err;                                                         \
+    }                                                                   \
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "outputStackp->[%d] set  to \"%s\"", indice, identifier); \
+  } while (0)
+
+/* -------------------------------------------------------------------- */
+/*                          ADVERB_ITEM_EVENT                           */
+/* genericStack type: PTR                                               */
+/*            C type: void * (ASCII NUL terminated string)              */
+/* -------------------------------------------------------------------- */
+#define CALLBACKGRAMMAR_DECL_ADVERB_ITEM_EVENT(identifier) marpaESLIF_grammarContext_adverb_item_event_t identifier
+#define CALLBACKGRAMMAR_GET_ADVERB_ITEM_EVENT(indice, identifier) do {        \
+    if (! _marpaESLIF_grammarContext_get_adverb_item_eventb(marpaESLIFp, outputStackp, itemTypeStackp, indice, &identifier)) { \
+      goto err;                                                         \
+    }                                                                   \
+    if (identifier == NULL) {                                           \
+      MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, #identifier "value is NULL"); \
+      goto err;                                                         \
+    }                                                                   \
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "outputStackp->[%d] val  is \"%s\"", indice, identifier); \
+  } while (0)
+
+#define CALLBACKGRAMMAR_SET_ADVERB_ITEM_EVENT(indice, identifier) do {        \
+    if (! _marpaESLIF_grammarContext_set_adverb_item_eventb(marpaESLIFp, outputStackp, itemTypeStackp, indice, identifier)) { \
       goto err;                                                         \
     }                                                                   \
     MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "outputStackp->[%d] set  to \"%s\"", indice, identifier); \
@@ -1022,8 +1048,8 @@ static inline void                           _marpaESLIF_grammarReference_freev(
 static inline marpaESLIF_grammarReference_t *_marpaESLIF_grammarReference_clonep(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammarReference_t *grammarReferenceOrigp);
 
 static inline short _marpaESLIFValueRuleCallbackGrammar_grammarb(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, marpaESLIF_grammarContext_op_declare_t op_declare, marpaESLIF_string_t *descp, marpaESLIF_string_t *new_descp, short createb, marpaESLIF_grammar_t **out_grammarpp);
-static inline short _marpaESLIFValueRuleCallbackGrammar_metab(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, marpaESLIF_grammarContext_op_declare_t op_declare, char *ansis, marpaESLIF_string_t *descp, short startb, short discardb, marpaESLIF_symbol_t **out_symbolpp, marpaESLIF_grammar_t **out_grammarpp);
-static inline short _marpaESLIF_grammarContext_adverbList_unstackb(marpaESLIF_t *marpaESLIFp, genericStack_t *adverbListStackp, char **actionsp, short *autorankbp, short *leftbp, short *rightbp, short *groupbp, char **separatorsp, short *properbp, int *rankip, short *nullRanksHighbp, int *priorityip, char **pausesp, short *latmbp, marpaESLIF_string_t **namingpp);
+static inline short _marpaESLIFValueRuleCallbackGrammar_metab(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, marpaESLIF_grammarContext_op_declare_t op_declare, char *ansis, marpaESLIF_symbol_t **out_symbolpp, marpaESLIF_grammar_t **out_grammarpp);
+static inline short _marpaESLIF_grammarContext_adverbList_unstackb(marpaESLIF_t *marpaESLIFp, genericStack_t *adverbListStackp, char **actionsp, short *autorankbp, short *leftbp, short *rightbp, short *groupbp, char **separatorsp, short *properbp, int *rankip, short *nullRanksHighbp, int *priorityip, char **pausesp, char **eventsp, short *latmbp, marpaESLIF_string_t **namingpp);
 static inline short _marpaESLIFValueRuleCallbackGrammar_rhsItemb(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, marpaESLIF_grammar_t *current_grammarp, marpaESLIF_rhsItem_t *rhsItemp, marpaESLIF_symbol_t **out_symbolpp, marpaESLIF_symbol_t **out_symbol_referencepp, marpaESLIF_grammar_t **out_grammar_referencepp);
 static inline short _marpaESLIFValueRuleCallbackGrammar_rhsItemStackb(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, marpaESLIF_grammar_t *current_grammarp, genericStack_t *rhsItemStackp, size_t *nrhslp, int **rhsipp);
 static inline short _marpaESLIFValueRuleCallbackGrammar_ruleb(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, marpaESLIF_grammarContext_op_declare_t op_declare, marpaESLIF_string_t *descp, char *lhsasciis, genericStack_t *rhsItemStackp, genericStack_t *rhsItemExceptionStackp, int ranki, short nullRanksHighb, short sequenceb, int minimumi, char *separators, short properb, char *actions, short passthroughb, marpaESLIF_rule_t **out_rulepp);
@@ -1058,6 +1084,7 @@ static inline short _G1_RULE_STATEMENT_GROUP  (marpaESLIFValue_t *marpaESLIFValu
 static inline short _G1_RULE_PRIORITY_RULE    (marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti);
 static inline short _G1_RULE_QUANTIFIED_RULE  (marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti);
 static inline short _G1_RULE_DISCARD_RULE     (marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti);
+static inline short _G1_RULE_LEXEME_RULE      (marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti);
 
 static inline short _G1_RULE_OP_DECLARE_3     (marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti);
 static inline short _G1_RULE_OP_DECLARE_1     (marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti);

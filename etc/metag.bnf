@@ -35,7 +35,9 @@
 # - exception list           added (using '(' and ')' ...)
 # - pseudo rules are not exlically scoped: they are all merged
 # - there is no notion of mask
-#
+# - pause is allowed in discard events
+# - :lexeme rule is not restricted to a single occurence per symbol. Any new occurence erase the previous one.
+# - latm adverb in :lexeme rules is not allowed, latm mode is forced.
 # ----------------------------------------------------------------------------------------------
 # Please note that there is a very big difference between using apparently equivalent regexp and
 # character class with a quantifier:
@@ -152,8 +154,7 @@ naming                         ::= 'name' '=>' <alternative name>
 
 <alternative name>             ::= <standard name> | <quoted name>
 
-<event name>        ::= <standard name>
-                      | <quoted name>
+<event name>        ::= <ascii graph name>
                       | <reserved event name>
 <reserved event name> ~ ':symbol'
 
@@ -182,7 +183,7 @@ symbol          ::= <symbol name>
 <symbol name>   ::= <bare name>
 <symbol name>   ::= <bracketed name>
 
-<action name>   ::= <ascii name>
+<action name>   ::= <ascii graph name>
 
 :discard ~ whitespace
 whitespace ~ [\s]+

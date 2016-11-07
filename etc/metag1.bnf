@@ -85,8 +85,7 @@ naming                         ::= 'name' '=>' <alternative name>
 
 <alternative name>             ::= <standard name> | <quoted name>
 
-<event name>        ::= <standard name>
-                      | <quoted name>
+<event name>        ::= <ascii graph name>
                       | <reserved event name>
 
 lhs                              ::= <symbol name>

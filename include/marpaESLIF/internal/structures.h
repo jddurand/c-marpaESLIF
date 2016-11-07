@@ -163,15 +163,14 @@ struct marpaESLIF_symbol {
   marpaESLIF_string_t         *descp;               /* Symbol description */
   short                        pauseb;              /* -1: before, 0: NA, 1: after */
   short                        pauseIsOnb;          /* 0: off, 1: on */
-  marpaESLIF_string_t         *pausep;              /* Pause event name in native encoding */
-  char                        *asciipauses;         /* Pause event name in ASCII encoding */
-  marpaESLIF_string_t         *eventp;              /* Grammar event name in native encoding */
-  char                        *asciievents;         /* Grammar event name in ASCII encoding */
+  char                        *pauses;              /* Pause type */
+  char                        *events;              /* Event type */
   int                          lookupLevelDeltai;   /* Referenced grammar delta level */
   marpaESLIF_string_t         *lookupGrammarStringp; /* Referenced grammar (string in user's encoding) */
   int                          resolvedLeveli;      /* Referenced grammar level */
   int                          priorityi;           /* Symbol priority */
   marpaESLIF_string_t         *actionp;             /* Action */
+  unsigned int                 nbupdatei;           /* Number of updates - used in grammar ESLIF actions */
 };
 
 /* A rule */
@@ -254,6 +253,7 @@ struct marpaESLIFRecognizer {
   marpaESLIFRecognizer_t      *parentRecognizerp;
   int                          resumeCounteri;    /* Internal counter for tracing - no functional impact */
   int                          callstackCounteri; /* Internal counter for tracing - no functional impact */
+  char                        *discardEvents;  /* Set to NULL before any :discard call, set by the child if success */
 
   char                        *_buffers;       /* Pointer to allocated buffer containing input */
   size_t                       _bufferl;       /* Number of valid bytes in this buffer (!= allocated size) */
