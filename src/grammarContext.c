@@ -961,8 +961,9 @@ static inline short _marpaESLIFValueRuleCallbackGrammar_grammarb(marpaESLIFValue
                                             op_declare,
                                             "UTF-8", (descp != NULL) ? descp->bytep : NULL, (descp != NULL) ? descp->bytel : 0,
                                             0 /* latmb */,
-                                            NULL /* defaultSymbolActionp */,
-                                            NULL /* defaultRuleActionp */);
+                                            NULL /* defaultSymbolActions */,
+                                            NULL /* defaultRuleActions */,
+                                            NULL /* defaultDiscardEvents */);
     if (out_grammarp == NULL) {
       goto err;
     }
@@ -2927,7 +2928,7 @@ static inline short _G1_RULE_LEXEME_DEFAULT_STATEMENT_2(marpaESLIFValue_t *marpa
    *
    * Note: We push NA because parents rule are No-opts
    * ------------------------------------------------------------------------- */
-  CALLBACKGRAMMAR_COMMON_HEADER(_G1_RULE_LEXEME_DEFAULT_STATEMENT_1);
+  CALLBACKGRAMMAR_COMMON_HEADER(_G1_RULE_LEXEME_DEFAULT_STATEMENT_2);
   {
     CALLBACKGRAMMAR_DECL_OP_DECLARE(op_declare);
     CALLBACKGRAMMAR_DECL_ADVERB_LIST(adverb_list);

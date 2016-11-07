@@ -53,7 +53,7 @@ static inline void                   _marpaESLIF_terminal_freev(marpaESLIF_termi
 static inline marpaESLIF_meta_t     *_marpaESLIF_meta_newp(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, int eventSeti, char *asciinames, char *descEncodings, char *descs, size_t descl);
 static inline void                   _marpaESLIF_meta_freev(marpaESLIF_meta_t *metap);
 
-static inline marpaESLIF_grammar_t  *_marpaESLIF_grammar_newp(marpaESLIF_t *marpaESLIFp, marpaWrapperGrammarOption_t *marpaWrapperGrammarOptionp, int leveli, char *descEncodings, char *descs, size_t descl, short latmb, char *defaultSymbolActions, char *defaultRuleActions);
+static inline marpaESLIF_grammar_t  *_marpaESLIF_grammar_newp(marpaESLIF_t *marpaESLIFp, marpaWrapperGrammarOption_t *marpaWrapperGrammarOptionp, int leveli, char *descEncodings, char *descs, size_t descl, short latmb, char *defaultSymbolActions, char *defaultRuleActions, char *defaultDiscardEvents);
 static inline void                   _marpaESLIF_grammar_freev(marpaESLIF_grammar_t *grammarp);
 
 static inline void                   _marpaESLIF_ruleStack_freev(genericStack_t *ruleStackp);
@@ -93,7 +93,8 @@ static inline marpaESLIF_grammar_t  *_marpaESLIF_bootstrap_grammarp(marpaESLIF_t
                                                                     int bootstrap_grammar_metai, bootstrap_grammar_meta_t *bootstrap_grammar_metap,
                                                                     int bootstrap_grammar_rulei, bootstrap_grammar_rule_t *bootstrap_grammar_rulep,
                                                                     char *defaultSymbolActions,
-                                                                    char *defaultRuleActions);
+                                                                    char *defaultRuleActions,
+                                                                    char *defaultDiscardEvents);
 static inline short                  _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIFGrammar);
 
 static inline short                  _marpaESLIFRecognizer_regex_matcherb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIF_terminal_t *terminalp, char *inputs, size_t inputl, short eofb, marpaESLIF_matcher_value_t *rcip, genericStack_t *outputStackp);
@@ -830,8 +831,9 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_grammar_L0p(marpaESLIF
 					bootstrap_grammar_L0_metas,
 					sizeof(bootstrap_grammar_L0_rules) / sizeof(bootstrap_grammar_L0_rules[0]),
 					bootstrap_grammar_L0_rules,
-                                        NULL,
-                                        NULL);
+                                        NULL, /* defaultSymbolActions */
+                                        NULL, /* defaultRuleActions */
+                                        NULL /* defaultDiscardEvents */);
 }
 
 /*****************************************************************************/
@@ -854,7 +856,8 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_grammar_G1p(marpaESLIF
 					sizeof(bootstrap_grammar_G1_rules) / sizeof(bootstrap_grammar_G1_rules[0]),
 					bootstrap_grammar_G1_rules,
                                         INTERNAL_DEFAULT_SYMBOL_LEXEME_ACTION,
-                                        NULL);
+                                        NULL, /* defaultRuleActions */
+                                        NULL /* defaultDiscardEvents */);
 }
 
 /*****************************************************************************/
@@ -871,7 +874,8 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_grammarp(marpaESLIF_t 
 								   int bootstrap_grammar_metai, bootstrap_grammar_meta_t *bootstrap_grammar_metap,
 								   int bootstrap_grammar_rulei, bootstrap_grammar_rule_t *bootstrap_grammar_rulep,
                                                                    char *defaultSymbolActions,
-                                                                   char *defaultRuleActions)
+                                                                   char *defaultRuleActions,
+                                                                   char *defaultDiscardEvents)
 /*****************************************************************************/
 {
   static const char          *funcs        = "_marpaESLIF_bootstrap_grammarp";
@@ -891,7 +895,7 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_grammarp(marpaESLIF_t 
   marpaWrapperGrammarOption.autorankb         = autorankb;
   marpaWrapperGrammarOption.exhaustionEventb  = 1;
   
-  grammarp = _marpaESLIF_grammar_newp(marpaESLIFp, &marpaWrapperGrammarOption, leveli, descEncodings, descs, descl, latmb, defaultSymbolActions, defaultRuleActions);
+  grammarp = _marpaESLIF_grammar_newp(marpaESLIFp, &marpaWrapperGrammarOption, leveli, descEncodings, descs, descl, latmb, defaultSymbolActions, defaultRuleActions, defaultDiscardEvents);
   if (grammarp == NULL) {
     goto err;
   }
@@ -1461,7 +1465,7 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
 }
 
 /*****************************************************************************/
-static inline marpaESLIF_grammar_t *_marpaESLIF_grammar_newp(marpaESLIF_t *marpaESLIFp, marpaWrapperGrammarOption_t *marpaWrapperGrammarOptionp, int leveli, char *descEncodings, char *descs, size_t descl, short latmb, char *defaultSymbolActions, char *defaultRuleActions)
+static inline marpaESLIF_grammar_t *_marpaESLIF_grammar_newp(marpaESLIF_t *marpaESLIFp, marpaWrapperGrammarOption_t *marpaWrapperGrammarOptionp, int leveli, char *descEncodings, char *descs, size_t descl, short latmb, char *defaultSymbolActions, char *defaultRuleActions, char *defaultDiscardEvents)
 /*****************************************************************************/
 {
   static const char             *funcs          = "_marpaESLIF_grammar_newp";
@@ -1488,6 +1492,7 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_grammar_newp(marpaESLIF_t *marpa
   grammarp->ruleStackp                  = NULL;
   grammarp->defaultSymbolActions        = NULL;
   grammarp->defaultRuleActions          = NULL;
+  grammarp->defaultDiscardEvents        = NULL;
   grammarp->starti                      = 0;    /* Filled during grammar validation */
   grammarp->ruleip                      = NULL; /* Filled by grammar validation */
   grammarp->rulel                       = 0;    /* Filled by grammar validation */
@@ -1551,6 +1556,14 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_grammar_newp(marpaESLIF_t *marpa
     }
   }
 
+  if (defaultDiscardEvents != NULL) {
+    grammarp->defaultDiscardEvents = strdup(defaultDiscardEvents);
+    if (grammarp->defaultDiscardEvents == NULL) {
+      MARPAESLIF_ERRORF(marpaESLIFp, "strdup failure, %s", strerror(errno));
+      goto err;
+    }
+  }
+
   goto done;
 
  err:
@@ -1585,6 +1598,9 @@ static inline void _marpaESLIF_grammar_freev(marpaESLIF_grammar_t *grammarp)
     }
     if (grammarp->defaultRuleActions != NULL) {
       free(grammarp->defaultRuleActions);
+    }
+    if (grammarp->defaultDiscardEvents != NULL) {
+      free(grammarp->defaultDiscardEvents);
     }
     free(grammarp);
   }
@@ -4852,7 +4868,7 @@ static short _marpaESLIFValueRuleCallbackMainWrapper(void *userDatavp, int rulei
     /* Is it the start symbol !? It must be a META symbol btw */
     if (rulep->lhsp->startb && (rulep->lhsp->type == MARPAESLIF_SYMBOL_TYPE_META)) {
       marpaESLIFRecognizer_t *parentRecognizerp = marpaESLIFRecognizerp->parentRecognizerp;
-      marpaESLIF_grammar_t   *parent_gramarp;
+      marpaESLIF_grammar_t   *parent_grammarp;
       genericStack_t         *parent_ruleStackp;
       int                     parent_rulei;
       marpaESLIF_rule_t      *parent_rulep;
@@ -4867,8 +4883,8 @@ static short _marpaESLIFValueRuleCallbackMainWrapper(void *userDatavp, int rulei
         MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, ":discard recognizer without a parent recognizer !?");
         goto err;
       }
-      parent_gramarp    = parentRecognizerp->marpaESLIFGrammarp->grammarp;
-      parent_ruleStackp = parent_gramarp->ruleStackp;
+      parent_grammarp   = parentRecognizerp->marpaESLIFGrammarp->grammarp;
+      parent_ruleStackp = parent_grammarp->ruleStackp;
       parent_rulep      = NULL;
 
       for (parent_rulei = 0; parent_rulei < GENERICSTACK_USED(parent_ruleStackp); parent_rulei++) {
@@ -4922,6 +4938,8 @@ static short _marpaESLIFValueRuleCallbackMainWrapper(void *userDatavp, int rulei
       /* Update our parent's discard event in any case */
       if (parent_rulep->actions != NULL) {
         parentRecognizerp->discardEvents = parent_rulep->actions;
+      } else if (parent_grammarp->defaultDiscardEvents != NULL) {
+        parentRecognizerp->discardEvents = parent_grammarp->defaultDiscardEvents;
       } else {
         parentRecognizerp->discardEvents = NULL;
       }
