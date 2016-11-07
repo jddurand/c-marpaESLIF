@@ -169,7 +169,7 @@ struct marpaESLIF_symbol {
   marpaESLIF_string_t         *lookupGrammarStringp; /* Referenced grammar (string in user's encoding) */
   int                          resolvedLeveli;      /* Referenced grammar level */
   int                          priorityi;           /* Symbol priority */
-  marpaESLIF_string_t         *actionp;             /* Action */
+  char                        *actions;             /* Action */
   unsigned int                 nbupdatei;           /* Number of updates - used in grammar ESLIF actions */
 };
 
@@ -182,7 +182,7 @@ struct marpaESLIF_rule {
   marpaESLIF_symbol_t *separatorp;      /* Eventual separator symbol */
   genericStack_t      *rhsStackp;       /* Stack of RHS symbols */
   genericStack_t      *exceptionStackp; /* Stack of Exceptions symbols */
-  marpaESLIF_string_t *actionp;         /* Action */
+  char                *actions;         /* Action */
   int                  ranki;
   short                nullRanksHighb;
   short                sequenceb;
@@ -202,8 +202,8 @@ struct marpaESLIF_grammar {
   marpaESLIF_symbol_t   *discardSymbolp;              /* Discard symbol, used at grammar validation */
   genericStack_t        *symbolStackp;                /* Stack of symbols */
   genericStack_t        *ruleStackp;                  /* Stack of rules */
-  marpaESLIF_string_t   *defaultSymbolActionp;        /* Default action for symbols */
-  marpaESLIF_string_t   *defaultRuleActionp;          /* Default action for rules */
+  char                  *defaultSymbolActions;        /* Default action for symbols */
+  char                  *defaultRuleActions;          /* Default action for rules */
   int                    starti;                      /* Default start symbol ID - filled during grammar validation */
   int                   *ruleip;                      /* Array of rule IDs - filled by grammar validation */
   size_t                 rulel;                       /* Size of the rule IDs array - filled by grammar validation */
@@ -219,8 +219,8 @@ struct marpaESLIF {
   marpaESLIF_terminal_t *anycharp;                    /* internal regex for match any character */
   marpaESLIF_terminal_t *utf8bomp;                    /* Internal regex for match UTF-8 BOM */
   marpaESLIF_terminal_t *newlinep;                    /* Internal regex for match newline */
-  marpaESLIF_string_t   *defaultLexemeActionp;        /* Default action for symbols and rules when collectin lexemes */
-  marpaESLIF_string_t   *defaultRuleLexemeActionp;    /* Default action for rules when collectin lexemes */
+  char                  *defaultLexemeActions;        /* Default action for symbols and rules when collecting lexemes */
+  char                  *defaultRuleLexemeActions;    /* Default action for rules when collectin lexemes */
 };
 
 struct marpaESLIFGrammar {
