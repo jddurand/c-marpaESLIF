@@ -211,6 +211,7 @@ struct marpaESLIF_grammar {
   short                  haveRejectionb;              /* When true, valuation go to the ASF mode - filled by grammar validation */
   unsigned int           nbupdateviaStarti;           /* Number of updates - used in grammar ESLIF actions */
   unsigned int           nbupdateviaLexemei;          /* Number of updates - used in grammar ESLIF actions */
+  unsigned int           nbupdateviaDiscardi;         /* Number of updates - used in grammar ESLIF actions */
 };
 
 /* ----------------------------------- */

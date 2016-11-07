@@ -27,6 +27,7 @@ statement                        ::= <start rule>
 <lexeme default statement>     ::= 'lexeme' 'default' '=' <adverb list>
                                  | 'lexeme' 'default' <op declare> <adverb list>
 <discard default statement>    ::= 'discard' 'default' '=' <adverb list>
+                                 | 'discard' 'default' <op declare> <adverb list>
 <lexeme rule>                  ::= ':lexeme' <op declare> symbol <adverb list>
 <completion event declaration> ::= 'event' <event initialization> '=' 'completed' <symbol name>
 <nulled event declaration>     ::= 'event' <event initialization> '=' 'nulled' <symbol name>
