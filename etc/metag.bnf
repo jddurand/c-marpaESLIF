@@ -33,11 +33,10 @@
 # - grammar reference        added
 # - parenthesized rhs list   removed
 # - exception list           added (using '(' and ')' ...)
-# - pseudo rules are not exlically scoped: they are all merged
 # - there is no notion of mask
 # - pause is allowed in discard events
-# - :lexeme rule is not restricted to a single occurence per symbol. Any new occurence erase the previous one.
 # - latm adverb in :lexeme rules is not allowed, latm mode is forced.
+# - ":default" and "lexeme default" are unique per grammar instead of being lexically scoped
 # ----------------------------------------------------------------------------------------------
 # Please note that there is a very big difference between using apparently equivalent regexp and
 # character class with a quantifier:

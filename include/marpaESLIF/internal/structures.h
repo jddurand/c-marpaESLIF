@@ -208,6 +208,8 @@ struct marpaESLIF_grammar {
   int                   *ruleip;                      /* Array of rule IDs - filled by grammar validation */
   size_t                 rulel;                       /* Size of the rule IDs array - filled by grammar validation */
   short                  haveRejectionb;              /* When true, valuation go to the ASF mode - filled by grammar validation */
+  unsigned int           nbupdateviaStarti;           /* Number of updates - used in grammar ESLIF actions */
+  unsigned int           nbupdateviaLexemei;          /* Number of updates - used in grammar ESLIF actions */
 };
 
 /* ----------------------------------- */

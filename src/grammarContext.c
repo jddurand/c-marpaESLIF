@@ -1565,6 +1565,74 @@ static inline int _marpaESLIF_count_revifi(int n)
 }
 
 /*****************************************************************************/
+static inline short _marpaESLIFValueRuleCallbackGrammar_lexemeDefaultb(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, marpaESLIF_grammarContext_op_declare_t op_declare, genericStack_t *adverbListStackp)
+/*****************************************************************************/
+{
+  static const char             *funcs                 = "_marpaESLIFValueRuleCallbackGrammar_lexemeDefaultb";
+  marpaESLIF_t                  *marpaESLIFp           = marpaESLIFValuep->marpaESLIFp;
+  marpaESLIFRecognizer_t        *marpaESLIFRecognizerp = marpaESLIFValuep->marpaESLIFRecognizerp;
+  short                          rcb;
+  marpaESLIF_grammar_t          *out_grammarp;
+  /* Adverb items */
+  char                          *actions;
+
+  marpaESLIFRecognizerp->callstackCounteri++;
+  MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
+
+  /* Get the adverb items that are allowed in our context */
+  if (! _marpaESLIF_grammarContext_adverbList_unstackb(marpaESLIFp,
+                                                       adverbListStackp,
+                                                       &actions,
+                                                       NULL, /* autorankbp */
+                                                       NULL, /* leftbp */
+                                                       NULL, /* rightbp */
+                                                       NULL, /* groupbp */
+                                                       NULL, /* separatorsp */
+                                                       NULL, /* properbp */
+                                                       NULL, /* rankip */
+                                                       NULL, /* nullRanksHighbp */
+                                                       NULL, /* priorityip */
+                                                       NULL, /* pausesp */
+                                                       NULL, /* eventsp */
+                                                       NULL, /* latmbp */
+                                                       NULL /* namingpp */)) {
+    goto err;
+  }
+
+  /* Check and update grammar */
+  if (! _marpaESLIFValueRuleCallbackGrammar_grammarb(marpaESLIFValuep, marpaESLIF_grammarContextp, op_declare, NULL /* descp */, NULL /* new_descp */, 1 /* createb */, &out_grammarp)) {
+    goto err;
+  }
+  /* :default rule must be unique on this grammar */
+  if (out_grammarp->nbupdateviaLexemei++ > 0) {
+    MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "leeme default for grammar level %d (%s) must be unique", out_grammarp->leveli, out_grammarp->descp->asciis);
+    goto err;
+  }
+  if (out_grammarp->defaultSymbolActions != NULL) {
+    free(out_grammarp->defaultSymbolActions);
+    out_grammarp->defaultSymbolActions = NULL;
+  }
+  if (actions != NULL) {
+    out_grammarp->defaultSymbolActions = strdup(actions);
+    if (out_grammarp->defaultSymbolActions == NULL) {
+      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "strdup failure, %s", strerror(errno));
+      goto err;
+    }
+  }
+
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
+  marpaESLIFRecognizerp->callstackCounteri--;
+  return rcb;
+}
+
+/*****************************************************************************/
 static inline short _G1_RULE_STATEMENTS(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti)
 /*****************************************************************************/
 {
@@ -2734,6 +2802,142 @@ static inline short _G1_RULE_DISCARD_RULE(marpaESLIFValue_t *marpaESLIFValuep, m
       out_symbolp->events = NULL;
     }
     out_symbolp->nbupdatei++;
+
+    /* Parents are no-op */
+    CALLBACKGRAMMAR_SET_NA(resulti);
+  }
+  CALLBACKGRAMMAR_COMMON_TRAILER;
+}
+
+/*****************************************************************************/
+static inline short _G1_RULE_DEFAULT_RULE(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti)
+/*****************************************************************************/
+{
+  /* ---------------------------------------------------------------------------
+   * <default rule> ::= ':default' <op declare> <adverb list>
+   *
+   * Stack types:
+   * NA ::= LEXEME OP_DECLARE ADVERB_LIST
+   *
+   * C types:
+   * -- ::= genericStackItemTypeArray_t int genericStack_t *
+   *
+   * Note: We push NA because parents rule are No-opts
+   * ------------------------------------------------------------------------- */
+  CALLBACKGRAMMAR_COMMON_HEADER(_G1_RULE_DEFAULT_RULE);
+  {
+    CALLBACKGRAMMAR_DECL_OP_DECLARE(op_declare);
+    CALLBACKGRAMMAR_DECL_ADVERB_LIST(adverb_list);
+    marpaESLIF_grammar_t *out_grammarp;
+    /* Adverb items */
+    char *actions;
+
+    CALLBACKGRAMMAR_GET_OP_DECLARE(arg0i+1, op_declare);
+    CALLBACKGRAMMAR_GET_ADVERB_LIST(arg0i+2, adverb_list);
+
+    /* Get the adverb items that are allowed in our context */
+    if (! _marpaESLIF_grammarContext_adverbList_unstackb(marpaESLIFp,
+                                                         (genericStack_t *) adverb_list,
+                                                         &actions,
+                                                         NULL, /* autorankbp */
+                                                         NULL, /* leftbp */
+                                                         NULL, /* rightbp */
+                                                         NULL, /* groupbp */
+                                                         NULL, /* separatorsp */
+                                                         NULL, /* properbp */
+                                                         NULL, /* rankip */
+                                                         NULL, /* nullRanksHighbp */
+                                                         NULL, /* priorityip */
+                                                         NULL, /* pausesp */
+                                                         NULL, /* eventsp */
+                                                         NULL, /* latmbp */
+                                                         NULL /* namingpp */)) {
+      goto err;
+    }
+
+    /* Check and update grammar */
+    if (! _marpaESLIFValueRuleCallbackGrammar_grammarb(marpaESLIFValuep, marpaESLIF_grammarContextp, op_declare, NULL /* descp */, NULL /* new_descp */, 1 /* createb */, &out_grammarp)) {
+      goto err;
+    }
+    /* :default rule must be unique on this grammar */
+    if (out_grammarp->nbupdateviaStarti++ > 0) {
+      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, ":default for grammar level %d (%s) must be unique", out_grammarp->leveli, out_grammarp->descp->asciis);
+      goto err;
+    }
+    if (out_grammarp->defaultRuleActions != NULL) {
+      free(out_grammarp->defaultRuleActions);
+      out_grammarp->defaultRuleActions = NULL;
+    }
+    if (actions != NULL) {
+      out_grammarp->defaultRuleActions = strdup(actions);
+      if (out_grammarp->defaultRuleActions == NULL) {
+        MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "strdup failure, %s", strerror(errno));
+        goto err;
+      }
+    }
+
+    /* Parents are no-op */
+    CALLBACKGRAMMAR_SET_NA(resulti);
+  }
+  CALLBACKGRAMMAR_COMMON_TRAILER;
+}
+
+/*****************************************************************************/
+static inline short _G1_RULE_LEXEME_DEFAULT_STATEMENT_1(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti)
+/*****************************************************************************/
+{
+  /* ---------------------------------------------------------------------------
+   * <lexeme default statement> ::= 'lexeme' 'default' '=' <adverb list>
+   *
+   * Stack types:
+   * NA ::= LEXEME LEXEME LEXEME ADVERB_LIST
+   *
+   * C types:
+   * -- ::= genericStackItemTypeArray_t genericStackItemTypeArray_t genericStackItemTypeArray_t genericStack_t *
+   *
+   * Note: We push NA because parents rule are No-opts
+   * ------------------------------------------------------------------------- */
+  CALLBACKGRAMMAR_COMMON_HEADER(_G1_RULE_LEXEME_DEFAULT_STATEMENT_1);
+  {
+    CALLBACKGRAMMAR_DECL_ADVERB_LIST(adverb_list);
+    CALLBACKGRAMMAR_GET_ADVERB_LIST(arg0i+3, adverb_list);
+
+    if (! _marpaESLIFValueRuleCallbackGrammar_lexemeDefaultb(marpaESLIFValuep, marpaESLIF_grammarContextp, 0 /* op_declare */, (genericStack_t *) adverb_list)) {
+      goto err;
+    }
+
+    /* Parents are no-op */
+    CALLBACKGRAMMAR_SET_NA(resulti);
+  }
+  CALLBACKGRAMMAR_COMMON_TRAILER;
+}
+
+/*****************************************************************************/
+static inline short _G1_RULE_LEXEME_DEFAULT_STATEMENT_2(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti)
+/*****************************************************************************/
+{
+  /* ---------------------------------------------------------------------------
+   * <lexeme default statement> ::= 'lexeme' 'default' <op declare> <adverb list>
+   *
+   * Stack types:
+   * NA ::= LEXEME LEXEME INT ADVERB_LIST
+   *
+   * C types:
+   * -- ::= genericStackItemTypeArray_t genericStackItemTypeArray_t int genericStack_t *
+   *
+   * Note: We push NA because parents rule are No-opts
+   * ------------------------------------------------------------------------- */
+  CALLBACKGRAMMAR_COMMON_HEADER(_G1_RULE_LEXEME_DEFAULT_STATEMENT_1);
+  {
+    CALLBACKGRAMMAR_DECL_OP_DECLARE(op_declare);
+    CALLBACKGRAMMAR_DECL_ADVERB_LIST(adverb_list);
+
+    CALLBACKGRAMMAR_GET_OP_DECLARE(arg0i+2, op_declare);
+    CALLBACKGRAMMAR_GET_ADVERB_LIST(arg0i+3, adverb_list);
+
+    if (! _marpaESLIFValueRuleCallbackGrammar_lexemeDefaultb(marpaESLIFValuep, marpaESLIF_grammarContextp, op_declare, (genericStack_t *) adverb_list)) {
+      goto err;
+    }
 
     /* Parents are no-op */
     CALLBACKGRAMMAR_SET_NA(resulti);
