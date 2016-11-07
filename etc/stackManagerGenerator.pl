@@ -31,6 +31,8 @@ while (chomp($_ = <$fh>)) {
   #
   # We expect data to contain lines in the forms:
   # TYPE = METHOD(TYPE*)
+  # or
+  # :MAP TYPE C_TYPE GENERICSTACK_TYPE
   #
   # where a type is writen like this:
   # genericType, or
