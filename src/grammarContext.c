@@ -2226,6 +2226,7 @@ static inline short _G1_RULE_PRIORITY_RULE(marpaESLIFValue_t *marpaESLIFValuep, 
           int                   workingRulei;
           short                 workStackLoopb;
           char                 *newlhsasciis = NULL;
+          char                 *nextlhsasciis = NULL;
           marpaESLIF_grammar_t *current_grammarp;
           int                   nbdigiti;
 
@@ -2332,6 +2333,20 @@ static inline short _G1_RULE_PRIORITY_RULE(marpaESLIFValue_t *marpaESLIFValuep, 
               nextPriorityi = priorityi;
             }
 
+            /* Generate next LHS, but used in the RHS side */
+            nbdigiti = _marpaESLIF_count_revifi(priorityi);
+            nextlhsasciis = (char *) malloc(strlen((char *) lhs) + 3 /* "[] and NUL byte */ + nbdigiti);
+            if (nextlhsasciis != NULL) {
+              /* Because we reuse this variable */
+              free(nextlhsasciis);
+            }
+            if (nextlhsasciis == NULL) {
+              MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "malloc failure, %s", strerror(errno));
+              goto workStackLoop_block_err;
+            }
+            strcpy(nextlhsasciis, (char *) lhs);
+            sprintf(nextlhsasciis + strlen(nextlhsasciis), "[%d]", priorityi);
+
             if (arityi == 1) {
               if (rhsLengthi == 1) {
                 /* Something like Expression ::= Expression in a prioritized rule -; */
@@ -2341,7 +2356,7 @@ static inline short _G1_RULE_PRIORITY_RULE(marpaESLIFValue_t *marpaESLIFValuep, 
             }
 
             /* Do the association */
-            if (lefb) {
+            if (leftb) {
             } else if (rightb) {
             } else if (groupb) {
             } else {
@@ -2358,6 +2373,9 @@ static inline short _G1_RULE_PRIORITY_RULE(marpaESLIFValue_t *marpaESLIFValuep, 
         workStackLoop_block_done:
           if (newlhsasciis != NULL) {
             free(newlhsasciis);
+          }
+          if (nextlhsasciis != NULL) {
+            free(nextlhsasciis);
           }
           if (! workStackLoopb) {
             goto workstack_block_err;

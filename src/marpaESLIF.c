@@ -4609,7 +4609,6 @@ marpaESLIFValue_t *marpaESLIFValue_newp(marpaESLIFRecognizer_t *marpaESLIFRecogn
   marpaESLIFValuep->previousPassWasPassthroughb = 0;
   marpaESLIFValuep->previousArg0i               = 0;
   marpaESLIFValuep->previousArgni               = 0;
-  marpaESLIFValuep->previousActionp             = NULL;
 
   marpaWrapperValueOption.genericLoggerp = marpaESLIFp->marpaESLIFOption.genericLoggerp;
   marpaWrapperValueOption.highRankOnlyb  = marpaESLIFValueOptionp->highRankOnlyb;
@@ -4786,7 +4785,6 @@ static short _marpaESLIFValueRuleCallbackMainWrapper(void *userDatavp, int rulei
     marpaESLIFValuep->previousPassWasPassthroughb = 1;
     marpaESLIFValuep->previousArg0i               = arg0i;
     marpaESLIFValuep->previousArgni               = argni;
-    marpaESLIFValuep->previousActionp             = actionp;
 
   } else {
     
@@ -4794,7 +4792,6 @@ static short _marpaESLIFValueRuleCallbackMainWrapper(void *userDatavp, int rulei
       /* Previous rule was a passthrough */
       arg0i   = marpaESLIFValuep->previousArg0i;
       argni   = marpaESLIFValuep->previousArgni;
-      actionp = marpaESLIFValuep->previousActionp;
       marpaESLIFValuep->previousPassWasPassthroughb = 0;
     }
 
