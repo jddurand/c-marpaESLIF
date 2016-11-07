@@ -1080,12 +1080,12 @@ static inline short _marpaESLIF_grammarContext_adverbList_unstackb(marpaESLIF_t 
 /*****************************************************************************/
 /* Semantics are special here: if a NULL pointer is given to an adverb, then we do NOT want this adverb to exist */
 {
+  short                    leftb  = 0;
+  short                    rightb = 0;
+  short                    groupb = 0;
   marpaESLIF_adverbItem_t *adverbItemp;
   int                      i;
   short                    rcb;
-  short                    leftb;
-  short                    rightb;
-  short                    groupb;
 
   if (adverbItemStackp == NULL) {
     MARPAESLIF_ERROR(marpaESLIFp, "adverbItemStackp is NULL");
@@ -2086,6 +2086,7 @@ static inline short _G1_RULE_PRIORITY_RULE(marpaESLIFValue_t *marpaESLIFValuep, 
     } else {
       { /* WORKSTACK BLOCK */
         genericStack_t *workStackp = NULL;
+        char           *topasciis  = NULL;
         int             priority_ixi;
         short           workStackb;
 
@@ -2094,6 +2095,15 @@ static inline short _G1_RULE_PRIORITY_RULE(marpaESLIFValue_t *marpaESLIFValuep, 
           MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "workStackp initialization failure, %s", strerror(errno));
           goto workstack_block_err;
         }
+
+        /* Create a fixed version of top prioritized LHS: lhs[0] */
+        topasciis = (char *) malloc(strlen((char *) lhs) + 3 /* "[0]" */ + 1 /* NUL byte */);
+        if (topasciis == NULL) {
+          MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "malloc failure, %s", strerror(errno));
+          goto workstack_block_err;
+        }
+        strcpy(topasciis, (char *) lhs);
+        strcat(topasciis, "[0]");
 
         /* There is more than one set of alternatives, each of them separated by the loosen '||' operator */
         /* First we reassociate all rules with its priority */
@@ -2130,18 +2140,7 @@ static inline short _G1_RULE_PRIORITY_RULE(marpaESLIFValue_t *marpaESLIFValuep, 
         /* Create the first rule: lhs ::= lhs[0]                              */
         /* ------------------------------------------------------------------ */
         { /* PRIORITIZED_RHS BLOCK */
-          char *prioritizedRhss = NULL;
           short prioritizedRhsb;
-
-          /* Create a passthrough rule - we use symbols with indices that the user CANNOT enter, i.e. "lhs[number]" */
-          /* The passthrough rule is always in the form: lhs ::= lhs[0] */
-          prioritizedRhss = (char *) malloc(strlen((char *) lhs) + 3 /* "[0]" */ + 1 /* NUL byte */);
-          if (prioritizedRhss == NULL) {
-            MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "malloc failure, %s", strerror(errno));
-            goto prioritizedRhs_block_err;
-          }
-          strcpy(prioritizedRhss, (char *) lhs);
-          strcat(prioritizedRhss, "[0]");
 
           { /* RHSITEMSTACKP BLOCK */
             genericStack_t       *rhsItemStackp = NULL;
@@ -2162,7 +2161,7 @@ static inline short _G1_RULE_PRIORITY_RULE(marpaESLIFValue_t *marpaESLIFValuep, 
             rhsItemp->singleSymbols      = NULL;
             rhsItemp->grammarReferencep  = NULL; /* i.e. current grammar */
 
-            rhsItemp->singleSymbols = strdup(prioritizedRhss);
+            rhsItemp->singleSymbols = strdup(topasciis);
             if (rhsItemp->singleSymbols == NULL) {
               MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "strdup failure, %s", strerror(errno));
               goto rhsItemStack_block_err;
@@ -2211,9 +2210,6 @@ static inline short _G1_RULE_PRIORITY_RULE(marpaESLIFValue_t *marpaESLIFValuep, 
         prioritizedRhs_block_err:
           prioritizedRhsb = 0;
         prioritizedRhs_block_done:
-          if (prioritizedRhss != NULL) {
-            free(prioritizedRhss);
-          }
           if (! prioritizedRhsb) {
             goto workstack_block_err;
           }
@@ -2223,7 +2219,6 @@ static inline short _G1_RULE_PRIORITY_RULE(marpaESLIFValue_t *marpaESLIFValuep, 
         /* Create the prioritized alternatives                                */
         /* ------------------------------------------------------------------ */
         { /* WORKSTACK LOOP BLOCK */
-          char                 *topasciis          = NULL;
           char                 *currentasciis      = NULL;
           char                 *nextasciis         = NULL;
           genericStack_t       *rhsItemStackClonep = NULL;
@@ -2232,15 +2227,6 @@ static inline short _G1_RULE_PRIORITY_RULE(marpaESLIFValue_t *marpaESLIFValuep, 
           short                 workStackLoopb;
           marpaESLIF_grammar_t *current_grammarp;
           int                   nbdigiti;
-
-          /* Create a fixed version of top prioritized LHS: lhs[0] */
-          topasciis = (char *) malloc(strlen((char *) lhs) + 3 /* "[0]" */ + 1 /* NUL byte */);
-          if (topasciis == NULL) {
-            MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "malloc failure, %s", strerror(errno));
-            goto prioritizedRhs_block_err;
-          }
-          strcpy(topasciis, (char *) lhs);
-          strcat(topasciis, "[0]");
 
           /* We will need the current grammar */
           if (! GENERICSTACK_IS_PTR(marpaESLIF_grammarContextp->grammarStackp, op_declare)) {
@@ -2456,9 +2442,6 @@ static inline short _G1_RULE_PRIORITY_RULE(marpaESLIFValue_t *marpaESLIFValuep, 
         workStackLoop_block_err:
           workStackLoopb = 0;
         workStackLoop_block_done:
-          if (topasciis != NULL) {
-            free(topasciis);
-          }
           if (currentasciis != NULL) {
             free(currentasciis);
           }
@@ -2479,6 +2462,9 @@ static inline short _G1_RULE_PRIORITY_RULE(marpaESLIFValue_t *marpaESLIFValuep, 
       workstack_block_err:
         workStackb = 0;
       workstack_block_done:
+        if (topasciis != NULL) {
+          free(topasciis);
+        }
         if (workStackp != NULL) {
           /* workStackp is a stack of shallow pointers of marpaESLIF_alternativeItem_t * */
           /* in which we just overwrote priority. we must NOT free the content of this stack. */
