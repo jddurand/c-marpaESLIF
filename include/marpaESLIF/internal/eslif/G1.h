@@ -720,7 +720,7 @@ bootstrap_grammar_rule_t bootstrap_grammar_G1_rules[] = {
                                                                                                                                      G1_META_ADVERB_LIST                          }, -1,                        -1, -1 },
   { G1_META_DISCARD_RULE,                     G1_RULE_DISCARD_RULE,                           MARPAESLIF_RULE_TYPE_ALTERNATIVE, 4, { G1_TERMINAL__DISCARD,
                                                                                                                                      G1_META_OP_DECLARE,
-                                                                                                                                     G1_META_SINGLE_SYMBOL,
+                                                                                                                                     G1_META_RHS_PRIMARY,
                                                                                                                                      G1_META_ADVERB_LIST                          }, -1,                        -1, -1 },
   { G1_META_DEFAULT_RULE,                     G1_RULE_DEFAULT_RULE,                          MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_TERMINAL__DEFAULT,
                                                                                                                                      G1_META_OP_DECLARE,

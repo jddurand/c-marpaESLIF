@@ -217,6 +217,11 @@ static inline short _marpaESLIF_grammarContext_i_resetb(marpaESLIF_t *marpaESLIF
           _marpaESLIF_grammarReference_freev((marpaESLIF_grammarReference_t *) GENERICSTACK_GET_PTR(outputStackp, i));
         }
         break;
+      case MARPAESLIF_GRAMMARITEMTYPE_RHS_PRIMARY: /* marpaESLIF_rhsItem_t* */
+        if (GENERICSTACK_IS_PTR(outputStackp, i)) {
+          _marpaESLIF_rhsItem_freev((marpaESLIF_rhsItem_t *) GENERICSTACK_GET_PTR(outputStackp, i));
+        }
+        break;
       default:
         break;
       }
@@ -352,6 +357,9 @@ static inline const char *_marpaESLIF_grammarContext_i_types(marpaESLIF_t *marpa
         break;
       case MARPAESLIF_GRAMMARITEMTYPE_GRAMMAR_REFERENCE:        /* Pointer to marpaESLIF_grammarReferenceItem_t */
         rcs = marpaESLIF_grammarContext_GRAMMAR_REFERENCE_types;
+        break;
+      case MARPAESLIF_GRAMMARITEMTYPE_RHS_PRIMARY:        /* Pointer to marpaESLIF_grammarReferenceItem_t */
+        rcs = marpaESLIF_grammarContext_RHS_PRIMARY_types;
         break;
       default:
         break;
@@ -971,10 +979,12 @@ static inline short _marpaESLIFValueRuleCallbackGrammar_metab(marpaESLIFValue_t 
   static const char           *funcs                 = "_marpaESLIFValueRuleCallbackGrammar_metab";
   marpaESLIF_t                *marpaESLIFp           = marpaESLIFValuep->marpaESLIFp;
   marpaESLIFRecognizer_t      *marpaESLIFRecognizerp = marpaESLIFValuep->marpaESLIFRecognizerp;
+  char                        *currentasciis         = NULL;
   marpaESLIF_meta_t           *out_metap             = NULL;
   marpaESLIF_symbol_t         *out_symbolp           = NULL;
   marpaESLIF_grammar_t        *out_grammarp;
   short                        rcb;
+  int                          nbdigiti;
 
   marpaESLIFRecognizerp->callstackCounteri++;
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
@@ -989,11 +999,21 @@ static inline short _marpaESLIFValueRuleCallbackGrammar_metab(marpaESLIFValue_t 
     goto err;
   }
 
+  /* The symbol is NEVER created with the ascii description given, but ALWAYS in the form asciis{leveli}. The "{}" are not allowed in primary grammar */
+  nbdigiti = _marpaESLIF_count_revifi(out_grammarp->leveli);
+  currentasciis = (char *) malloc(strlen(asciis) + 3 /* "{} and NUL byte */ + nbdigiti);
+  if (currentasciis == NULL) {
+    MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "malloc failure, %s", strerror(errno));
+    goto err;
+  }
+  strcpy(currentasciis, asciis);
+  sprintf(currentasciis + strlen(currentasciis), "{%d}", out_grammarp->leveli);
+
   /* Make sure this symbol at this level exist */
-  out_symbolp = _marpaESLIF_symbol_findp(marpaESLIFp, out_grammarp, asciis, -1 /* symboli */);
+  out_symbolp = _marpaESLIF_symbol_findp(marpaESLIFp, out_grammarp, currentasciis, -1 /* symboli */);
   if (out_symbolp == NULL) {
     /* This is a symbol out of a meta symbol */
-    out_metap = _marpaESLIF_meta_newp(marpaESLIFp, out_grammarp, MARPAWRAPPERGRAMMAR_EVENTTYPE_NONE, asciis, NULL /* descEncodings */, NULL /* descs */, 0 /* descl */);
+    out_metap = _marpaESLIF_meta_newp(marpaESLIFp, out_grammarp, MARPAWRAPPERGRAMMAR_EVENTTYPE_NONE, currentasciis, NULL /* descEncodings */, NULL /* descs */, 0 /* descl */);
     if (out_metap == NULL) {
       goto err;
     }
@@ -1070,6 +1090,9 @@ static inline short _marpaESLIFValueRuleCallbackGrammar_metab(marpaESLIFValue_t 
   rcb = 0;
 
  done:
+  if (currentasciis != NULL) {
+    free(currentasciis);
+  }
   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
   marpaESLIFRecognizerp->callstackCounteri--;
   return rcb;
@@ -1280,6 +1303,8 @@ static inline short _marpaESLIFValueRuleCallbackGrammar_rhsItemb(marpaESLIFValue
     MARPAESLIF_ERROR(marpaESLIFp, "rhsItemp is NULL");
     goto err;
   }
+
+  /* Symbol is ALWAYS reworked if necessary in a form that is not allowed in input, i.e.: symbol<leveli0> */
 
   /* Always check this symbol in current grammar) */
   if (! _marpaESLIFValueRuleCallbackGrammar_metab(marpaESLIFValuep, marpaESLIF_grammarContextp, current_grammarp->leveli, rhsItemp->singleSymbols, NULL /* descp */, -1 /* startb */, -1 /* discardb */, &out_symbolp, NULL /* out_grammarpp */)) {
@@ -2485,23 +2510,23 @@ static inline short _G1_RULE_QUANTIFIED_RULE(marpaESLIFValue_t *marpaESLIFValuep
 /*****************************************************************************/
 {
   /* ---------------------------------------------------------------------------
-   * <quantified rule> ::= lhs <op declare> <single symbol> quantifier <adverb list>
+   * <quantified rule> ::= lhs <op declare> <rhs primary> quantifier <adverb list>
    *
    * Stack types:
-   * NA ::= LHS OP_DECLARE SINGLE_SYMBOL QUANTIFIER ADVERB_LIST
+   * NA ::= LHS OP_DECLARE RHS_PRIMARY QUANTIFIER ADVERB_LIST
    *
    * C types:
    * -- ::= void* int void* int genericStack_t*
    *
    * Note: We push NA because parents rule are No-opts
    *       lhs is an ASCII NUL terminated string
-   *       single symbol is a pointer to a marpaESLIF_rhsItem_t
+   *       rhs primary is a pointer to a marpaESLIF_rhsItem_t
    * ------------------------------------------------------------------------- */
   CALLBACKGRAMMAR_COMMON_HEADER(_G1_RULE_QUANTIFIED_RULE);
   {
     CALLBACKGRAMMAR_DECL_LHS(lhs);
     CALLBACKGRAMMAR_DECL_OP_DECLARE(op_declare);
-    CALLBACKGRAMMAR_DECL_SINGLE_SYMBOL(single_symbol);
+    CALLBACKGRAMMAR_DECL_RHS_PRIMARY(rhs_primary);
     CALLBACKGRAMMAR_DECL_QUANTIFIER(quantifier);
     CALLBACKGRAMMAR_DECL_ADVERB_LIST(adverb_list);
     genericStack_t       rhsItemStack;
@@ -2516,7 +2541,7 @@ static inline short _G1_RULE_QUANTIFIED_RULE(marpaESLIFValue_t *marpaESLIFValuep
 
     CALLBACKGRAMMAR_GET_LHS(arg0i, lhs);
     CALLBACKGRAMMAR_GET_OP_DECLARE(arg0i+1, op_declare);
-    CALLBACKGRAMMAR_GET_SINGLE_SYMBOL(arg0i+2, single_symbol);
+    CALLBACKGRAMMAR_GET_RHS_PRIMARY(arg0i+2, rhs_primary);
     CALLBACKGRAMMAR_GET_QUANTIFIER(arg0i+3, quantifier);
     CALLBACKGRAMMAR_GET_ADVERB_LIST(arg0i+4, adverb_list);
 
@@ -2525,7 +2550,7 @@ static inline short _G1_RULE_QUANTIFIED_RULE(marpaESLIFValue_t *marpaESLIFValuep
       MARPAESLIF_ERRORF(marpaESLIFp, "rhsItemStackp initialization failure, %s", strerror(errno));
       goto err;
     }
-    GENERICSTACK_PUSH_PTR(rhsItemStackp, single_symbol);
+    GENERICSTACK_PUSH_PTR(rhsItemStackp, rhs_primary);
     if (GENERICSTACK_ERROR(rhsItemStackp)) {
       MARPAESLIF_ERRORF(marpaESLIFp, "rhsItemStackp push failure, %s", strerror(errno));
       GENERICSTACK_RESET(rhsItemStackp);
@@ -2574,6 +2599,47 @@ static inline short _G1_RULE_QUANTIFIED_RULE(marpaESLIFValue_t *marpaESLIFValuep
     }
     
     GENERICSTACK_RESET(rhsItemStackp);
+
+    /* Parents are no-op */
+    CALLBACKGRAMMAR_SET_NA(resulti);
+  }
+  CALLBACKGRAMMAR_COMMON_TRAILER;
+}
+
+/*****************************************************************************/
+static inline short _G1_RULE_DISCARD_RULE(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti)
+/*****************************************************************************/
+{
+  /* ---------------------------------------------------------------------------
+   * <discard rule> ::= ':discard' <op declare> <rhs primary> <adverb list>
+   *
+   * Stack types:
+   * NA ::= LEXEME OP_DECLARE RHS_PRIMARY ADVERB_LIST
+   *
+   * C types:
+   * -- ::= genericStackItemTypeArray_t int marpaESLIF_rhsItem_t* genericStack_t *
+   *
+   * Note: We push NA because parents rule are No-opts
+   *       rhs primary is a pointer to a marpaESLIF_rhsItem_t
+   * ------------------------------------------------------------------------- */
+  CALLBACKGRAMMAR_COMMON_HEADER(_G1_RULE_START_RULE);
+  {
+    CALLBACKGRAMMAR_DECL_OP_DECLARE(op_declare);
+    CALLBACKGRAMMAR_DECL_SYMBOL(symbol);
+    marpaESLIF_symbol_t  *out_symbolp;
+    char                 *asciis;
+
+    CALLBACKGRAMMAR_GET_OP_DECLARE(arg0i+1, op_declare);
+    CALLBACKGRAMMAR_GET_SYMBOL(arg0i+2, symbol);
+
+    /* Make sure this symbol exists at that grammar level */
+    asciis = (char *) symbol;
+    if (! _marpaESLIFValueRuleCallbackGrammar_metab(marpaESLIFValuep, marpaESLIF_grammarContextp, op_declare, asciis, NULL /* descp */, 1 /* startb */, -1 /* discardb */, &out_symbolp, NULL /* out_grammarpp */)) {
+      goto err;
+    }
+
+    /* Say this is the start symbol */
+    out_symbolp->startb = 1;
 
     /* Parents are no-op */
     CALLBACKGRAMMAR_SET_NA(resulti);

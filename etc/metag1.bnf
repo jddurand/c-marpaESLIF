@@ -21,8 +21,8 @@ statement                        ::= <start rule>
 <null statement>               ::= ';'
 <statement group>              ::= '{' statements '}'
 <priority rule>                ::= lhs <op declare> priorities
-<quantified rule>              ::= lhs <op declare> <single symbol> quantifier <adverb list>
-<discard rule>                 ::= ':discard' <op declare> <single symbol> <adverb list>
+<quantified rule>              ::= lhs <op declare> <rhs primary> quantifier <adverb list>
+<discard rule>                 ::= ':discard' <op declare> <rhs primary> <adverb list>
 <default rule>                 ::= ':default' <op declare> <adverb list>
 <lexeme default statement>     ::= 'lexeme' 'default' '=' <adverb list>
                                  | 'lexeme' 'default' <op declare> <adverb list>
