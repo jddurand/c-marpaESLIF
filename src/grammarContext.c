@@ -963,7 +963,7 @@ static inline short _marpaESLIFValueRuleCallbackGrammar_grammarb(marpaESLIFValue
 }
 
 /*****************************************************************************/
-static inline short _marpaESLIFValueRuleCallbackGrammar_metab(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, marpaESLIF_grammarContext_op_declare_t op_declare, char *asciis, marpaESLIF_string_t *descp, short startb, short discardb, marpaESLIF_symbol_t **out_symbolpp)
+static inline short _marpaESLIFValueRuleCallbackGrammar_metab(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, marpaESLIF_grammarContext_op_declare_t op_declare, char *asciis, marpaESLIF_string_t *descp, short startb, short discardb, marpaESLIF_symbol_t **out_symbolpp, marpaESLIF_grammar_t **out_grammarpp)
 /*****************************************************************************/
 /* startb   is considered set by the caller if it is >= 0 */
 /* discardb is considered set by the caller if it is >= 0 */
@@ -1043,6 +1043,9 @@ static inline short _marpaESLIFValueRuleCallbackGrammar_metab(marpaESLIFValue_t 
     }
   }
   
+  if (out_grammarpp != NULL) {
+    *out_grammarpp = out_grammarp;
+  }
   if (out_symbolpp != NULL) {
     *out_symbolpp = out_symbolp;
   }
@@ -1255,16 +1258,15 @@ static inline short _marpaESLIF_grammarContext_adverbList_unstackb(marpaESLIF_t 
 }
 
 /*****************************************************************************/
-static inline short _marpaESLIFValueRuleCallbackGrammar_rhsItemb(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, marpaESLIF_grammar_t *current_grammarp, marpaESLIF_rhsItem_t *rhsItemp, marpaESLIF_symbol_t **out_symbolpp)
+static inline short _marpaESLIFValueRuleCallbackGrammar_rhsItemb(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, marpaESLIF_grammar_t *current_grammarp, marpaESLIF_rhsItem_t *rhsItemp, marpaESLIF_symbol_t **out_symbolpp, marpaESLIF_symbol_t **out_symbol_referencepp, marpaESLIF_grammar_t **out_grammar_referencepp)
 /*****************************************************************************/
 {
   static const char             *funcs                 = "_marpaESLIFValueRuleCallbackGrammar_rhsItemb";
   marpaESLIF_t                  *marpaESLIFp           = marpaESLIFValuep->marpaESLIFp;
   marpaESLIFRecognizer_t        *marpaESLIFRecognizerp = marpaESLIFValuep->marpaESLIFRecognizerp;
-  marpaESLIF_grammar_t          *out_grammarp;
+  marpaESLIF_grammar_t          *out_grammar_referencep;
   marpaESLIF_symbol_t           *out_symbolp;
-  marpaESLIF_grammarReference_t *out_grammarReferencep;
-  marpaESLIF_grammar_t          *out_referencegrammarp;
+  marpaESLIF_symbol_t           *out_symbol_referencep;
   short                          rcb;
 
   marpaESLIFRecognizerp->callstackCounteri++;
@@ -1279,32 +1281,36 @@ static inline short _marpaESLIFValueRuleCallbackGrammar_rhsItemb(marpaESLIFValue
     goto err;
   }
 
-  out_grammarReferencep = rhsItemp->grammarReferencep;
-  if  (out_grammarReferencep != NULL) {
-    if (! _marpaESLIFValueRuleCallbackGrammar_grammarb(marpaESLIFValuep, marpaESLIF_grammarContextp, out_grammarReferencep->leveli, out_grammarReferencep->stringp, NULL /* new_descp */, 1 /* createb */, &out_referencegrammarp)) {
+  /* Always check this symbol in current grammar) */
+  if (! _marpaESLIFValueRuleCallbackGrammar_metab(marpaESLIFValuep, marpaESLIF_grammarContextp, current_grammarp->leveli, rhsItemp->singleSymbols, NULL /* descp */, -1 /* startb */, -1 /* discardb */, &out_symbolp, NULL /* out_grammarpp */)) {
+    goto err;
+  }
+
+  if  (rhsItemp->grammarReferencep != NULL) {
+    /* Check referenced grammar */
+    if (! _marpaESLIFValueRuleCallbackGrammar_grammarb(marpaESLIFValuep, marpaESLIF_grammarContextp, rhsItemp->grammarReferencep->leveli, rhsItemp->grammarReferencep->stringp, NULL /* new_descp */, 1 /* createb */, &out_grammar_referencep)) {
+      goto err;
+    }
+    /* And the symbol in this referenced grammar */
+    if (! _marpaESLIFValueRuleCallbackGrammar_metab(marpaESLIFValuep, marpaESLIF_grammarContextp, out_grammar_referencep->leveli, rhsItemp->singleSymbols, NULL /* descp */, -1 /* startb */, -1 /* discardb */, &out_symbol_referencep, NULL /* out_grammarpp */)) {
       goto err;
     }
   } else {
     /* No referenced grammar */
-    out_referencegrammarp = current_grammarp;
-  }
-
-  if (out_referencegrammarp != current_grammarp) {
-    /* Check this symbol when referenced grammar is not current grammar */
-    if (! _marpaESLIFValueRuleCallbackGrammar_metab(marpaESLIFValuep, marpaESLIF_grammarContextp, out_referencegrammarp->leveli, rhsItemp->singleSymbols, NULL /* descp */, -1 /* startb */, -1 /* discardb */, NULL /* out_symbolpp */)) {
-      goto err;
-    }
-  }
-
-  /* Always check this symbol in current grammar) */
-  if (! _marpaESLIFValueRuleCallbackGrammar_metab(marpaESLIFValuep, marpaESLIF_grammarContextp, out_referencegrammarp->leveli, rhsItemp->singleSymbols, NULL /* descp */, -1 /* startb */, -1 /* discardb */, &out_symbolp)) {
-    goto err;
+    out_grammar_referencep = current_grammarp;
+    out_symbol_referencep = out_symbolp;
   }
 
   if (out_symbolpp != NULL) {
     *out_symbolpp = out_symbolp;
   }
-
+  if (out_symbol_referencepp != NULL) {
+    *out_symbol_referencepp = out_symbol_referencep;
+  }
+  if (out_grammar_referencepp != NULL) {
+    *out_grammar_referencepp = out_grammar_referencep;
+  }
+  
   rcb = 1;
   goto done;
 
@@ -1346,7 +1352,7 @@ static inline short _marpaESLIFValueRuleCallbackGrammar_rhsItemStackb(marpaESLIF
         }
         rhsItemp = (marpaESLIF_rhsItem_t *) GENERICSTACK_GET_PTR(rhsItemStackp, i);
 
-        if (! _marpaESLIFValueRuleCallbackGrammar_rhsItemb(marpaESLIFValuep, marpaESLIF_grammarContextp, current_grammarp, rhsItemp, &out_symbolp)) {
+        if (! _marpaESLIFValueRuleCallbackGrammar_rhsItemb(marpaESLIFValuep, marpaESLIF_grammarContextp, current_grammarp, rhsItemp, &out_symbolp, NULL /* out_symbol_referencepp */, NULL /* out_grammar_referencepp */)) {
           goto err;
         }
 
@@ -1418,13 +1424,8 @@ static inline short _marpaESLIFValueRuleCallbackGrammar_ruleb(marpaESLIFValue_t 
   marpaESLIFRecognizerp->callstackCounteri++;
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
 
-  /* Check grammar */
-  if (! _marpaESLIFValueRuleCallbackGrammar_grammarb(marpaESLIFValuep, marpaESLIF_grammarContextp, op_declare, NULL /* descp */, NULL /* new_descp */, 1 /* createb */, &out_grammarp)) {
-    goto err;
-  }
-  
-  /* Check LHS stack */
-  if (! _marpaESLIFValueRuleCallbackGrammar_metab(marpaESLIFValuep, marpaESLIF_grammarContextp, op_declare, lhsasciis, NULL /* descp */, -1 /* startb */, -1 /* discardb */, &out_symbolp)) {
+  /* Check LHS symbol */
+  if (! _marpaESLIFValueRuleCallbackGrammar_metab(marpaESLIFValuep, marpaESLIF_grammarContextp, op_declare, lhsasciis, NULL /* descp */, -1 /* startb */, -1 /* discardb */, &out_symbolp, &out_grammarp)) {
     goto err;
   }
 
@@ -1440,7 +1441,7 @@ static inline short _marpaESLIFValueRuleCallbackGrammar_ruleb(marpaESLIFValue_t 
 
   /* Check separator */
   if (separators != NULL) {
-    if (! _marpaESLIFValueRuleCallbackGrammar_metab(marpaESLIFValuep, marpaESLIF_grammarContextp, op_declare, separators, NULL /* descp */, -1 /* startb */, -1 /* discardb */, &out_symbolseparatorp)) {
+    if (! _marpaESLIFValueRuleCallbackGrammar_metab(marpaESLIFValuep, marpaESLIF_grammarContextp, op_declare, separators, NULL /* descp */, -1 /* startb */, -1 /* discardb */, &out_symbolseparatorp, NULL /* out_grammarpp */)) {
       goto err;
     }
     separatori = out_symbolseparatorp->idi;
@@ -1801,7 +1802,7 @@ static inline short _G1_RULE_START_RULE(marpaESLIFValue_t *marpaESLIFValuep, mar
 
     /* Make sure this symbol exists at that grammar level */
     asciis = (char *) symbol;
-    if (! _marpaESLIFValueRuleCallbackGrammar_metab(marpaESLIFValuep, marpaESLIF_grammarContextp, op_declare, asciis, NULL /* descp */, 1 /* startb */, -1 /* discardb */, &out_symbolp)) {
+    if (! _marpaESLIFValueRuleCallbackGrammar_metab(marpaESLIFValuep, marpaESLIF_grammarContextp, op_declare, asciis, NULL /* descp */, 1 /* startb */, -1 /* discardb */, &out_symbolp, NULL /* out_grammarpp */)) {
       goto err;
     }
 
@@ -2505,8 +2506,6 @@ static inline short _G1_RULE_QUANTIFIED_RULE(marpaESLIFValue_t *marpaESLIFValuep
     CALLBACKGRAMMAR_DECL_ADVERB_LIST(adverb_list);
     genericStack_t       rhsItemStack;
     genericStack_t      *rhsItemStackp = &rhsItemStack;
-    marpaESLIF_symbol_t *out_symbol_lhsp;
-    marpaESLIF_symbol_t *out_symbol_single_symbolp;
     /* Adverb items */
     char                 *actions;
     char                 *separators;
@@ -2533,10 +2532,6 @@ static inline short _G1_RULE_QUANTIFIED_RULE(marpaESLIFValue_t *marpaESLIFValuep
       goto err;
     }
     
-    if (! _marpaESLIFValueRuleCallbackGrammar_metab(marpaESLIFValuep, marpaESLIF_grammarContextp, op_declare, (char *) lhs, NULL /* descp */, -1 /* startb */, -1 /* discardb */, &out_symbol_lhsp)) {
-      goto err;
-    }
-
     /* Get the adverb items that are allowed in our context */
     if (! _marpaESLIF_grammarContext_adverbList_unstackb(marpaESLIFp,
                                                          (genericStack_t *) adverb_list,
