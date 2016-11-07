@@ -715,7 +715,7 @@ bootstrap_grammar_rule_t bootstrap_grammar_G1_rules[] = {
                                                                                                                                      G1_META_PRIORITIES                           }, -1,                        -1, -1 },
   { G1_META_QUANTIFIED_RULE,                  G1_RULE_QUANTIFIED_RULE,                        MARPAESLIF_RULE_TYPE_ALTERNATIVE, 5, { G1_META_LHS,
                                                                                                                                      G1_META_OP_DECLARE,
-                                                                                                                                     G1_META_SINGLE_SYMBOL,
+                                                                                                                                     G1_META_RHS_PRIMARY,
                                                                                                                                      G1_META_QUANTIFIER,
                                                                                                                                      G1_META_ADVERB_LIST                          }, -1,                        -1, -1 },
   { G1_META_DISCARD_RULE,                     G1_RULE_DISCARD_RULE,                           MARPAESLIF_RULE_TYPE_ALTERNATIVE, 4, { G1_TERMINAL__DISCARD,

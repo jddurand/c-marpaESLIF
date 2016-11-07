@@ -170,12 +170,9 @@ static inline short _marpaESLIF_grammarContext_i_resetb(marpaESLIF_t *marpaESLIF
           }
         }
         break;
-      case MARPAESLIF_GRAMMARITEMTYPE_SINGLE_SYMBOL:       /* ASCII string */
+      case MARPAESLIF_GRAMMARITEMTYPE_SINGLE_SYMBOL:       /* marpaESLIF_rhsItem_t * */
         if (GENERICSTACK_IS_PTR(outputStackp, i)) {
-          asciis = (char *) GENERICSTACK_GET_PTR(outputStackp, i);
-          if (asciis != NULL) {
-            free(asciis);
-          }
+          _marpaESLIF_rhsItem_freev((marpaESLIF_rhsItem_t *) GENERICSTACK_IS_PTR(outputStackp, i));
         }
         break;
       case MARPAESLIF_GRAMMARITEMTYPE_QUANTIFIER:          /* INT */
@@ -335,7 +332,7 @@ static inline const char *_marpaESLIF_grammarContext_i_types(marpaESLIF_t *marpa
       case MARPAESLIF_GRAMMARITEMTYPE_LHS:                /* ASCII string */
         rcs = marpaESLIF_grammarContext_LHS_types;
         break;
-      case MARPAESLIF_GRAMMARITEMTYPE_SINGLE_SYMBOL:       /* ASCII string */
+      case MARPAESLIF_GRAMMARITEMTYPE_SINGLE_SYMBOL:       /* mrpaESLIF_rhsItem_t * */
         rcs = marpaESLIF_grammarContext_SINGLE_SYMBOL_types;
         break;
       case MARPAESLIF_GRAMMARITEMTYPE_QUANTIFIER:          /* INT */
@@ -2475,6 +2472,113 @@ static inline short _G1_RULE_PRIORITY_RULE(marpaESLIFValue_t *marpaESLIFValuep, 
         }
       } /* WORKSTACK BLOCK */
     }
+
+    /* Parents are no-op */
+    CALLBACKGRAMMAR_SET_NA(resulti);
+  }
+  CALLBACKGRAMMAR_COMMON_TRAILER;
+}
+
+/*****************************************************************************/
+static inline short _G1_RULE_QUANTIFIED_RULE(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti)
+/*****************************************************************************/
+{
+  /* ---------------------------------------------------------------------------
+   * <quantified rule> ::= lhs <op declare> <single symbol> quantifier <adverb list>
+   *
+   * Stack types:
+   * NA ::= LHS OP_DECLARE SINGLE_SYMBOL QUANTIFIER ADVERB_LIST
+   *
+   * C types:
+   * -- ::= void* int void* int genericStack_t*
+   *
+   * Note: We push NA because parents rule are No-opts
+   *       lhs is an ASCII NUL terminated string
+   *       single symbol is a pointer to a marpaESLIF_rhsItem_t
+   * ------------------------------------------------------------------------- */
+  CALLBACKGRAMMAR_COMMON_HEADER(_G1_RULE_QUANTIFIED_RULE);
+  {
+    CALLBACKGRAMMAR_DECL_LHS(lhs);
+    CALLBACKGRAMMAR_DECL_OP_DECLARE(op_declare);
+    CALLBACKGRAMMAR_DECL_SINGLE_SYMBOL(single_symbol);
+    CALLBACKGRAMMAR_DECL_QUANTIFIER(quantifier);
+    CALLBACKGRAMMAR_DECL_ADVERB_LIST(adverb_list);
+    genericStack_t       rhsItemStack;
+    genericStack_t      *rhsItemStackp = &rhsItemStack;
+    marpaESLIF_symbol_t *out_symbol_lhsp;
+    marpaESLIF_symbol_t *out_symbol_single_symbolp;
+    /* Adverb items */
+    char                 *actions;
+    char                 *separators;
+    short                 properb;
+    int                   ranki;
+    short                 nullRanksHighb;
+    marpaESLIF_string_t  *namingp;
+
+    CALLBACKGRAMMAR_GET_LHS(arg0i, lhs);
+    CALLBACKGRAMMAR_GET_OP_DECLARE(arg0i+1, op_declare);
+    CALLBACKGRAMMAR_GET_SINGLE_SYMBOL(arg0i+2, single_symbol);
+    CALLBACKGRAMMAR_GET_QUANTIFIER(arg0i+3, quantifier);
+    CALLBACKGRAMMAR_GET_ADVERB_LIST(arg0i+4, adverb_list);
+
+    GENERICSTACK_INIT(rhsItemStackp);
+    if (GENERICSTACK_ERROR(rhsItemStackp)) {
+      MARPAESLIF_ERRORF(marpaESLIFp, "rhsItemStackp initialization failure, %s", strerror(errno));
+      goto err;
+    }
+    GENERICSTACK_PUSH_PTR(rhsItemStackp, single_symbol);
+    if (GENERICSTACK_ERROR(rhsItemStackp)) {
+      MARPAESLIF_ERRORF(marpaESLIFp, "rhsItemStackp push failure, %s", strerror(errno));
+      GENERICSTACK_RESET(rhsItemStackp);
+      goto err;
+    }
+    
+    if (! _marpaESLIFValueRuleCallbackGrammar_metab(marpaESLIFValuep, marpaESLIF_grammarContextp, op_declare, (char *) lhs, NULL /* descp */, -1 /* startb */, -1 /* discardb */, &out_symbol_lhsp)) {
+      goto err;
+    }
+
+    /* Get the adverb items that are allowed in our context */
+    if (! _marpaESLIF_grammarContext_adverbList_unstackb(marpaESLIFp,
+                                                         (genericStack_t *) adverb_list,
+                                                         &actions,
+                                                         NULL, /* autorankbp */
+                                                         NULL, /* leftbp */
+                                                         NULL, /* rightbp */
+                                                         NULL, /* groupbp */
+                                                         &separators,
+                                                         &properb, /* properb */
+                                                         &ranki,
+                                                         &nullRanksHighb,
+                                                         NULL, /* priorityip */
+                                                         NULL, /* pausesp */
+                                                         NULL, /* latmbp */
+                                                         &namingp)) {
+      GENERICSTACK_RESET(rhsItemStackp);
+      goto err;
+    }
+
+    /* Create the rule */
+    if (! _marpaESLIFValueRuleCallbackGrammar_ruleb(marpaESLIFValuep,
+                                                    marpaESLIF_grammarContextp,
+                                                    op_declare,
+                                                    namingp,
+                                                    (char *) lhs,
+                                                    rhsItemStackp,
+                                                    NULL, /* rhsItemExceptionStackp */
+                                                    ranki,
+                                                    nullRanksHighb,
+                                                    1, /* sequenceb */
+                                                    quantifier,
+                                                    separators,
+                                                    properb,
+                                                    actions,
+                                                    0, /* passthroughb */
+                                                    NULL /* out_rulepp */)) {
+      GENERICSTACK_RESET(rhsItemStackp);
+      goto err;
+    }
+    
+    GENERICSTACK_RESET(rhsItemStackp);
 
     /* Parents are no-op */
     CALLBACKGRAMMAR_SET_NA(resulti);
