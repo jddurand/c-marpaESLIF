@@ -1,0 +1,14 @@
+#
+# TYPE = STACKTYPE;
+# or
+# TYPE = STACKTYPE{Ctype};
+#
+statements = NA;
+adverb_list = PTR;
+lhs = PTR{char *};
+op_declare = INT;
+quantified_rule = PTR;
+quantifier = PTR{char *};
+rhs_primary = PTR;
+start_rule = NA;
+statement = PTR;
