@@ -128,7 +128,8 @@ struct marpaESLIF_meta {
   int                          idi;                       /* Non-terminal Id */
   char                        *asciinames;
   marpaESLIF_string_t         *descp;                     /* Non-terminal description */
-  marpaWrapperGrammar_t       *marpaWrapperGrammarClonep; /* Eventual cloned grammar */
+  marpaWrapperGrammar_t       *marpaWrapperGrammarClonep;        /* Eventual cloned grammar in lexeme search mode (no event) */
+  marpaWrapperGrammar_t       *marpaWrapperGrammarDiscardClonep; /* Eventual cloned grammar in discard search mode (only top-level event) */
   short                       *prioritizedb;              /* Internal flag to prevent a prioritized symbol to appear more than once as an LHS */
 };
 
@@ -156,21 +157,33 @@ struct marpaESLIF_symbol {
     marpaESLIF_terminal_t     *terminalp; /* Symbol is a terminal */
     marpaESLIF_meta_t         *metap;     /* Symbol is a meta identifier, i.e. a rule */
   } u;
-  short                        startb;              /* Start symbol ? */
-  short                        discardb;            /* Discard symbol ? */
-  short                        lhsb;                /* Is an LHS somewhere in its grammar ? */
-  int                          idi;                 /* Marpa ID */
-  marpaESLIF_string_t         *descp;               /* Symbol description */
-  short                        pauseb;              /* -1: before, 0: NA, 1: after */
-  short                        pauseIsOnb;          /* 0: off, 1: on */
-  char                        *pauses;              /* Pause type */
-  char                        *events;              /* Event type */
-  int                          lookupLevelDeltai;   /* Referenced grammar delta level */
-  marpaESLIF_string_t         *lookupGrammarStringp; /* Referenced grammar (string in user's encoding) */
-  int                          resolvedLeveli;      /* Referenced grammar level */
-  int                          priorityi;           /* Symbol priority */
-  char                        *actions;             /* Action */
-  unsigned int                 nbupdatei;           /* Number of updates - used in grammar ESLIF actions */
+  short                        startb;                 /* Start symbol ? */
+  short                        discardb;               /* Discard symbol ? */
+  short                        lhsb;                   /* Is an LHS somewhere in its grammar ? */
+  short                        topb;                   /* Is a top-level symbol in its grammar - implies lhsb ? */
+  int                          idi;                    /* Marpa ID */
+  marpaESLIF_string_t         *descp;                  /* Symbol description */
+  short                        pauseb;                 /* -1: before, 0: NA, 1: after */
+  short                        pauseIsOnb;             /* 0: off, 1: on */
+  char                        *pauses;                 /* Pause type */
+  char                        *eventPredicteds;        /* Event name for prediction */
+  short                        eventPredictedb;        /* Prediction initial state: 0: off, 1: on */
+  char                        *eventNulleds;           /* Event name for nulled */
+  short                        eventNulledb;           /* Nulled initial state: 0: off, 1: on */
+  char                        *eventCompleteds;        /* Event name for completion */
+  short                        eventCompletedb;        /* Completion initial state: 0: off, 1: on */
+  char                        *discardEventPredicteds; /* Discard event name for prediction */
+  short                        discardEventPredictedb; /* Discard prediction initial state: 0: off, 1: on */
+  char                        *discardEventNulleds;    /* Discard event name for nulled */
+  short                        discardEventNulledb;    /* Discard nulled initial state: 0: off, 1: on */
+  char                        *discardEventCompleteds; /* Discard event name for completion */
+  short                        discardEventCompletedb; /* Discard completion initial state: 0: off, 1: on */
+  int                          lookupLevelDeltai;      /* Referenced grammar delta level */
+  marpaESLIF_string_t         *lookupGrammarStringp;   /* Referenced grammar (string in user's encoding) */
+  int                          resolvedLeveli;         /* Referenced grammar level */
+  int                          priorityi;              /* Symbol priority */
+  char                        *actions;                /* Action */
+  unsigned int                 nbupdatei;              /* Number of updates - used in grammar ESLIF actions */
 };
 
 /* A rule */
@@ -183,6 +196,8 @@ struct marpaESLIF_rule {
   genericStack_t      *rhsStackp;       /* Stack of RHS symbols */
   genericStack_t      *exceptionStackp; /* Stack of Exceptions symbols */
   char                *actions;         /* Action */
+  char                *discardEvents;   /* Discard event */
+  short                discardEventb;   /* Discard event initial state: 0 = off, 1 = on */
   int                  ranki;
   short                nullRanksHighb;
   short                sequenceb;
@@ -205,6 +220,7 @@ struct marpaESLIF_grammar {
   char                  *defaultSymbolActions;        /* Default action for symbols */
   char                  *defaultRuleActions;          /* Default action for rules */
   char                  *defaultDiscardEvents;        /* Default discard event */
+  short                  defaultDiscardEventb;        /* Default discard event initial state: 0: off, 1: on */
   int                    starti;                      /* Default start symbol ID - filled during grammar validation */
   int                   *ruleip;                      /* Array of rule IDs - filled by grammar validation */
   size_t                 rulel;                       /* Size of the rule IDs array - filled by grammar validation */

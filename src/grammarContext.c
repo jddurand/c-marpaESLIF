@@ -116,13 +116,7 @@ static inline short _marpaESLIF_grammarContext_i_resetb(marpaESLIF_t *marpaESLIF
         break;
       case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_PRIORITY: /* INT */
         break;
-      case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_PAUSE: /* ASCII string */
-        if (GENERICSTACK_IS_PTR(outputStackp, i)) {
-          asciis = (char *) GENERICSTACK_GET_PTR(outputStackp, i);
-          if (asciis != NULL) {
-            free(asciis);
-          }
-        }
+      case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_PAUSE: /* INT */
         break;
       case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_EVENT: /* ASCII string */
         if (GENERICSTACK_IS_PTR(outputStackp, i)) {
@@ -131,6 +125,10 @@ static inline short _marpaESLIF_grammarContext_i_resetb(marpaESLIF_t *marpaESLIF
             free(asciis);
           }
         }
+        break;
+      case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_EVENTTYPE: /* INT */
+        break;
+      case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_EVENTINIT: /* SHORT */
         break;
       case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_LATM: /* SHORT */
         break;
@@ -315,11 +313,17 @@ static inline const char *_marpaESLIF_grammarContext_i_types(marpaESLIF_t *marpa
       case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_PRIORITY: /* INT */
         rcs = marpaESLIF_grammarContext_ADVERB_ITEM_PRIORITY_types;
         break;
-      case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_PAUSE: /* ASCII string */
+      case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_PAUSE: /* INT */
         rcs = marpaESLIF_grammarContext_ADVERB_ITEM_PAUSE_types;
         break;
       case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_EVENT: /* ASCII string */
         rcs = marpaESLIF_grammarContext_ADVERB_ITEM_EVENT_types;
+        break;
+      case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_EVENTTYPE: /* INT */
+        rcs = marpaESLIF_grammarContext_ADVERB_ITEM_EVENTTYPE_types;
+        break;
+      case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_EVENTINIT: /* SHORT */
+        rcs = marpaESLIF_grammarContext_ADVERB_ITEM_EVENTINIT_types;
         break;
       case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_LATM: /* SHORT */
         rcs = marpaESLIF_grammarContext_ADVERB_ITEM_LATM_types;
@@ -478,15 +482,16 @@ static inline void _marpaESLIF_adverbItem_freev(marpaESLIF_adverbItem_t *adverbI
       break;
     case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_PRIORITY: /* INT */
       break;
-    case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_PAUSE: /* ASCII string */
-      if (adverbItemp->u.asciis != NULL) {
-        free(adverbItemp->u.asciis);
-      }
+    case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_PAUSE: /* INT */
       break;
     case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_EVENT: /* ASCII string */
       if (adverbItemp->u.asciis != NULL) {
         free(adverbItemp->u.asciis);
       }
+      break;
+    case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_EVENTTYPE: /* INT */
+      break;
+    case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_EVENTINIT: /* SHORT */
       break;
     case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_LATM: /* SHORT */
       break;
@@ -561,14 +566,8 @@ static inline marpaESLIF_adverbItem_t *_marpaESLIF_adverbItem_clonep(marpaESLIF_
     case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_PRIORITY: /* INT */
       adverbItemp->u.i = adverbItemOrigp->u.i;
       break;
-    case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_PAUSE: /* ASCII string */
-      if (adverbItemOrigp->u.asciis != NULL) {
-        adverbItemp->u.asciis = strdup(adverbItemOrigp->u.asciis);
-        if (adverbItemp->u.asciis == NULL) {
-          MARPAESLIF_ERRORF(marpaESLIFp, "strdup failure, %s", strerror(errno));
-          goto err;
-        }
-      }
+    case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_PAUSE: /* INT */
+      adverbItemp->u.i = adverbItemOrigp->u.i;
       break;
     case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_EVENT: /* ASCII string */
       if (adverbItemOrigp->u.asciis != NULL) {
@@ -578,6 +577,12 @@ static inline marpaESLIF_adverbItem_t *_marpaESLIF_adverbItem_clonep(marpaESLIF_
           goto err;
         }
       }
+      break;
+    case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_EVENTTYPE: /* INT */
+      adverbItemp->u.i = adverbItemOrigp->u.i;
+      break;
+    case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_EVENTINIT: /* SHORT */
+      adverbItemp->u.b = adverbItemOrigp->u.b;
       break;
     case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_LATM: /* SHORT */
       adverbItemp->u.b = adverbItemOrigp->u.b;
@@ -963,7 +968,8 @@ static inline short _marpaESLIFValueRuleCallbackGrammar_grammarb(marpaESLIFValue
                                             0 /* latmb */,
                                             NULL /* defaultSymbolActions */,
                                             NULL /* defaultRuleActions */,
-                                            NULL /* defaultDiscardEvents */);
+                                            NULL, /* defaultDiscardEvents */
+                                            0 /* defaultDiscardEventb */);
     if (out_grammarp == NULL) {
       goto err;
     }
@@ -1107,14 +1113,32 @@ static inline short _marpaESLIFValueRuleCallbackGrammar_metab(marpaESLIFValue_t 
 }
 
 /*****************************************************************************/
-static inline short _marpaESLIF_grammarContext_adverbList_unstackb(marpaESLIF_t *marpaESLIFp, genericStack_t *adverbItemStackp, char **actionsp, short *autorankbp, short *leftbp, short *rightbp, short *groupbp, char **separatorsp, short *properbp, int *rankip, short *nullRanksHighbp, int *priorityip, char **pausesp, char **eventsp, short *latmbp, marpaESLIF_string_t **namingpp)
+static inline short _marpaESLIF_grammarContext_adverbList_unstackb(marpaESLIF_t *marpaESLIFp, genericStack_t *adverbItemStackp, char **actionsp, short *autorankbp, short *leftbp, short *rightbp, short *groupbp, char **separatorsp, short *properbp, int *rankip, short *nullRanksHighbp, int *priorityip, int *pauseip, char **eventsp, int *eventtypeip, short *eventinitbp, short *latmbp, marpaESLIF_string_t **namingpp)
 /*****************************************************************************/
 /* Semantics are special here: if a NULL pointer is given to an adverb, then we do NOT want this adverb to exist */
 {
-  short                    leftb  = 0;
-  short                    rightb = 0;
-  short                    groupb = 0;
   marpaESLIF_adverbItem_t *adverbItemp;
+  /* These items are exclusive */
+  short                    leftb           = 0;
+  short                    rightb          = 0;
+  short                    groupb          = 0;
+  /* Every item must appear once */
+  int                      actionsi        = 0;
+  int                      autorankbi      = 0;
+  int                      leftbi          = 0;
+  int                      rightbi         = 0;
+  int                      groupbi         = 0;
+  int                      separatorsi     = 0;
+  int                      properbi        = 0;
+  int                      rankii          = 0;
+  int                      nullRanksHighbi = 0;
+  int                      priorityii      = 0;
+  int                      pauseii         = 0;
+  int                      eventsi         = 0;
+  int                      eventtypeii     = 0;
+  int                      eventinitbi     = 0;
+  int                      latmbi          = 0;
+  int                      namingpi        = 0;
   int                      i;
   short                    rcb;
 
@@ -1154,11 +1178,17 @@ static inline short _marpaESLIF_grammarContext_adverbList_unstackb(marpaESLIF_t 
   if (priorityip != NULL) {
     *priorityip = 0;
   }
-  if (pausesp != NULL) {
-    *pausesp = NULL;
+  if (pauseip != NULL) {
+    *pauseip = MARPAESLIF_EVENTTYPE_NONE;
   }
   if (eventsp != NULL) {
     *eventsp = NULL;
+  }
+  if (eventtypeip != NULL) {
+    *eventtypeip = MARPAESLIF_EVENTTYPE_NONE; /* This must appear in the adverb list */
+  }
+  if (eventinitbp != NULL) {
+    *eventinitbp = 1; /* Default is on for an event */
   }
   if (latmbp != NULL) {
     *latmbp = 0;
@@ -1180,11 +1210,19 @@ static inline short _marpaESLIF_grammarContext_adverbList_unstackb(marpaESLIF_t 
         MARPAESLIF_ERROR(marpaESLIFp, "action adverb is not allowed");
         goto err;
       }
+      if (++actionsi > 1) {
+        MARPAESLIF_ERROR(marpaESLIFp, "action adverb is not unique");
+        goto err;
+      }
       *actionsp = adverbItemp->u.asciis;
       break;
     case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_AUTORANK:
       if (autorankbp == NULL) {
         MARPAESLIF_ERROR(marpaESLIFp, "autorank adverb is not allowed");
+        goto err;
+      }
+      if (++autorankbi > 1) {
+        MARPAESLIF_ERROR(marpaESLIFp, "autorank adverb is not unique");
         goto err;
       }
       *autorankbp = adverbItemp->u.b;
@@ -1194,11 +1232,19 @@ static inline short _marpaESLIF_grammarContext_adverbList_unstackb(marpaESLIF_t 
         MARPAESLIF_ERROR(marpaESLIFp, "left adverb is not allowed");
         goto err;
       }
+      if (++leftbi > 1) {
+        MARPAESLIF_ERROR(marpaESLIFp, "left adverb is not unique");
+        goto err;
+      }
       leftb = *leftbp = adverbItemp->u.b;
       break;
     case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_RIGHT:
       if (rightbp == NULL) {
         MARPAESLIF_ERROR(marpaESLIFp, "right adverb is not allowed");
+        goto err;
+      }
+      if (++rightbi > 1) {
+        MARPAESLIF_ERROR(marpaESLIFp, "right adverb is not unique");
         goto err;
       }
       rightb = *rightbp = adverbItemp->u.b;
@@ -1208,11 +1254,19 @@ static inline short _marpaESLIF_grammarContext_adverbList_unstackb(marpaESLIF_t 
         MARPAESLIF_ERROR(marpaESLIFp, "group adverb is not allowed");
         goto err;
       }
+      if (++groupbi > 1) {
+        MARPAESLIF_ERROR(marpaESLIFp, "group adverb is not unique");
+        goto err;
+      }
       groupb = *groupbp = adverbItemp->u.b;
       break;
     case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_SEPARATOR:
       if (separatorsp == NULL) {
         MARPAESLIF_ERROR(marpaESLIFp, "separator adverb is not allowed");
+        goto err;
+      }
+      if (++separatorsi > 1) {
+        MARPAESLIF_ERROR(marpaESLIFp, "separator adverb is not unique");
         goto err;
       }
       *separatorsp = adverbItemp->u.asciis;
@@ -1222,11 +1276,19 @@ static inline short _marpaESLIF_grammarContext_adverbList_unstackb(marpaESLIF_t 
         MARPAESLIF_ERROR(marpaESLIFp, "proper adverb is not allowed");
         goto err;
       }
+      if (++properbi > 1) {
+        MARPAESLIF_ERROR(marpaESLIFp, "proper adverb is not unique");
+        goto err;
+      }
       *properbp = adverbItemp->u.b;
       break;
     case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_RANK:
       if (rankip == NULL) {
         MARPAESLIF_ERROR(marpaESLIFp, "rank adverb is not allowed");
+        goto err;
+      }
+      if (++rankii > 1) {
+        MARPAESLIF_ERROR(marpaESLIFp, "rank adverb is not unique");
         goto err;
       }
       *rankip = adverbItemp->u.i;
@@ -1236,6 +1298,10 @@ static inline short _marpaESLIF_grammarContext_adverbList_unstackb(marpaESLIF_t 
         MARPAESLIF_ERROR(marpaESLIFp, "null-ranking adverb is not allowed");
         goto err;
       }
+      if (++nullRanksHighbi > 1) {
+        MARPAESLIF_ERROR(marpaESLIFp, "null-ranking adverb is not unique");
+        goto err;
+      }
       *nullRanksHighbp = adverbItemp->u.b;
       break;
     case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_PRIORITY:
@@ -1243,25 +1309,76 @@ static inline short _marpaESLIF_grammarContext_adverbList_unstackb(marpaESLIF_t 
         MARPAESLIF_ERROR(marpaESLIFp, "priority adverb is not allowed");
         goto err;
       }
+      if (++priorityii > 1) {
+        MARPAESLIF_ERROR(marpaESLIFp, "priority adverb is not unique");
+        goto err;
+      }
       *priorityip = adverbItemp->u.i;
       break;
     case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_PAUSE:
-      if (pausesp == NULL) {
+      if (pauseip == NULL) {
         MARPAESLIF_ERROR(marpaESLIFp, "pause adverb is not allowed");
         goto err;
       }
-      *pausesp = adverbItemp->u.asciis;
+      if (++pauseii > 1) {
+        MARPAESLIF_ERROR(marpaESLIFp, "pause adverb is not unique");
+        goto err;
+      }
+      /* It is a non-sense to have a pause different than the ones known */
+      if ((adverbItemp->u.i != MARPAESLIF_EVENTTYPE_BEFORE) &&
+          (adverbItemp->u.i != MARPAESLIF_EVENTTYPE_AFTER)) {
+        MARPAESLIF_ERROR(marpaESLIFp, "pause adverb must be 'before'  or 'after'");
+        goto err;
+      }
+      *pauseip = adverbItemp->u.i;
       break;
     case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_EVENT:
       if (eventsp == NULL) {
         MARPAESLIF_ERROR(marpaESLIFp, "event adverb is not allowed");
         goto err;
       }
+      if (++eventsi > 1) {
+        MARPAESLIF_ERROR(marpaESLIFp, "event adverb is not unique");
+        goto err;
+      }
       *eventsp = adverbItemp->u.asciis;
+      break;
+    case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_EVENTTYPE:
+      if (eventtypeip == NULL) {
+        MARPAESLIF_ERROR(marpaESLIFp, "event type adverb is not allowed");
+        goto err;
+      }
+      if (++eventtypeii > 1) {
+        MARPAESLIF_ERROR(marpaESLIFp, "event type adverb is not unique");
+        goto err;
+      }
+      /* It is a non-sense to have an event type different than those known */
+      if ((adverbItemp->u.i != MARPAESLIF_EVENTTYPE_COMPLETED) &&
+          (adverbItemp->u.i != MARPAESLIF_EVENTTYPE_NULLED) &&
+          (adverbItemp->u.i != MARPAESLIF_EVENTTYPE_PREDICTED)) {
+        MARPAESLIF_ERROR(marpaESLIFp, "event type must be one of 'completed', 'nulled' or 'predicted'");
+        goto err;
+      }
+      *eventtypeip = adverbItemp->u.i;
+      break;
+    case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_EVENTINIT:
+      if (eventinitbp == NULL) {
+        MARPAESLIF_ERROR(marpaESLIFp, "event initial state adverb is not allowed");
+        goto err;
+      }
+      if (++eventinitbi > 1) {
+        MARPAESLIF_ERROR(marpaESLIFp, "event initial state adverb is not unique");
+        goto err;
+      }
+      *eventinitbp = adverbItemp->u.b;
       break;
     case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_LATM:
       if (latmbp == NULL) {
         MARPAESLIF_ERROR(marpaESLIFp, "latm or forgiving adverb is not allowed");
+        goto err;
+      }
+      if (++latmbi > 1) {
+        MARPAESLIF_ERROR(marpaESLIFp, "latm adverb is not unique");
         goto err;
       }
       *latmbp = adverbItemp->u.b;
@@ -1269,6 +1386,10 @@ static inline short _marpaESLIF_grammarContext_adverbList_unstackb(marpaESLIF_t 
     case MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_NAMING:
       if (namingpp == NULL) {
         MARPAESLIF_ERROR(marpaESLIFp, "name adverb is not allowed");
+        goto err;
+      }
+      if (++namingpi > 1) {
+        MARPAESLIF_ERROR(marpaESLIFp, "name adverb is not unique");
         goto err;
       }
       *namingpp = adverbItemp->u.stringp;
@@ -1593,8 +1714,10 @@ static inline short _marpaESLIFValueRuleCallbackGrammar_lexemeDefaultb(marpaESLI
                                                        NULL, /* rankip */
                                                        NULL, /* nullRanksHighbp */
                                                        NULL, /* priorityip */
-                                                       NULL, /* pausesp */
+                                                       NULL, /* pauseip */
                                                        NULL, /* eventsp */
+                                                       NULL, /* eventtypeip */
+                                                       NULL, /* eventinitbp */
                                                        NULL, /* latmbp */
                                                        NULL /* namingpp */)) {
     goto err;
@@ -1605,7 +1728,7 @@ static inline short _marpaESLIFValueRuleCallbackGrammar_lexemeDefaultb(marpaESLI
     goto err;
   }
   /* :default rule must be unique on this grammar */
-  if (out_grammarp->nbupdateviaLexemei++ > 0) {
+  if (++out_grammarp->nbupdateviaLexemei > 1) {
     MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "leeme default for grammar level %d (%s) must be unique", out_grammarp->leveli, out_grammarp->descp->asciis);
     goto err;
   }
@@ -1644,11 +1767,13 @@ static inline short _marpaESLIFValueRuleCallbackGrammar_discardDefaultb(marpaESL
   marpaESLIF_grammar_t          *out_grammarp;
   /* Adverb items */
   char                          *events;
+  short                          eventinitb;
 
   marpaESLIFRecognizerp->callstackCounteri++;
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
 
   /* Get the adverb items that are allowed in our context */
+  /* There is no notion of event type for a discard event: this is faked as an event completion in the Lexeme callback wrappers */
   if (! _marpaESLIF_grammarContext_adverbList_unstackb(marpaESLIFp,
                                                        adverbListStackp,
                                                        NULL, /* actionsp */
@@ -1661,8 +1786,10 @@ static inline short _marpaESLIFValueRuleCallbackGrammar_discardDefaultb(marpaESL
                                                        NULL, /* rankip */
                                                        NULL, /* nullRanksHighbp */
                                                        NULL, /* priorityip */
-                                                       NULL, /* pausesp */
+                                                       NULL, /* pauseip */
                                                        &events, /* eventsp */
+                                                       NULL, /* eventtypeip */
+                                                       &eventinitb,
                                                        NULL, /* latmbp */
                                                        NULL /* namingpp */)) {
     goto err;
@@ -1673,7 +1800,7 @@ static inline short _marpaESLIFValueRuleCallbackGrammar_discardDefaultb(marpaESL
     goto err;
   }
   /* :default rule must be unique on this grammar */
-  if (out_grammarp->nbupdateviaDiscardi++ > 0) {
+  if (++out_grammarp->nbupdateviaDiscardi > 1) {
     MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "leeme default for grammar level %d (%s) must be unique", out_grammarp->leveli, out_grammarp->descp->asciis);
     goto err;
   }
@@ -1687,6 +1814,7 @@ static inline short _marpaESLIFValueRuleCallbackGrammar_discardDefaultb(marpaESL
       MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "strdup failure, %s", strerror(errno));
       goto err;
     }
+    out_grammarp->defaultDiscardEventb = eventinitb;
   }
 
   rcb = 1;
@@ -1984,7 +2112,7 @@ static inline short _G1_RULE_START_RULE(marpaESLIFValue_t *marpaESLIFValuep, mar
       goto err;
     }
     /* :start rule must be unique */
-    if (out_symbolp->nbupdatei++ > 0) {
+    if (++out_symbolp->nbupdatei > 1) {
       MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, ":start for grammar level %d (%s) must be unique", out_grammarp->leveli, out_grammarp->descp->asciis);
       goto err;
     }
@@ -2085,8 +2213,10 @@ static inline short _G1_RULE_EMPTY_RULE(marpaESLIFValue_t *marpaESLIFValuep, mar
                                                          &ranki,
                                                          &nullRanksHighb,
                                                          NULL, /* priorityip */
-                                                         NULL, /* pausesp */
+                                                         NULL, /* pauseip */
                                                          NULL, /* eventsp */
+                                                         NULL, /* eventtypeip */
+                                                         NULL, /* eventinitbp */
                                                          NULL, /* latmbp */
                                                          &namingp)) {
       goto err;
@@ -2238,8 +2368,10 @@ static inline short _G1_RULE_PRIORITY_RULE(marpaESLIFValue_t *marpaESLIFValuep, 
                                                              &ranki,
                                                              &nullRanksHighb,
                                                              NULL, /* priorityip */
-                                                             NULL, /* pausesp */
+                                                             NULL, /* pauseip */
                                                              NULL, /* eventsp */
+                                                             NULL, /* eventtypeip */
+                                                             NULL, /* eventinitbp */
                                                              NULL, /* latmbp */
                                                              &namingp)) {
           goto err;
@@ -2512,8 +2644,10 @@ static inline short _G1_RULE_PRIORITY_RULE(marpaESLIFValue_t *marpaESLIFValuep, 
                                                                  &ranki,
                                                                  &nullRanksHighb,
                                                                  NULL, /* priorityip */
-                                                                 NULL, /* pausesp */
+                                                                 NULL, /* pauseip */
                                                                  NULL, /* eventsp */
+                                                                 NULL, /* eventtypeip */
+                                                                 NULL, /* eventinitbp */
                                                                  NULL, /* latmbp */
                                                                  &namingp)) {
               goto workStackLoop_block_err;
@@ -2718,8 +2852,10 @@ static inline short _G1_RULE_QUANTIFIED_RULE(marpaESLIFValue_t *marpaESLIFValuep
                                                          &ranki,
                                                          &nullRanksHighb,
                                                          NULL, /* priorityip */
-                                                         NULL, /* pausesp */
+                                                         NULL, /* pauseip */
                                                          NULL, /* eventsp */
+                                                         NULL, /* eventtypeip */
+                                                         NULL, /* eventinitbp */
                                                          NULL, /* latmbp */
                                                          &namingp)) {
       goto err;
@@ -2788,10 +2924,13 @@ static inline short _G1_RULE_DISCARD_RULE(marpaESLIFValue_t *marpaESLIFValuep, m
     CALLBACKGRAMMAR_DECL_RHS_PRIMARY(rhs_primary);
     CALLBACKGRAMMAR_DECL_ADVERB_LIST(adverb_list);
     marpaESLIF_symbol_t *out_symbolp;
+    marpaESLIF_rule_t   *out_rulep;
     genericStack_t       rhsItemStack;
     genericStack_t      *rhsItemStackp = &rhsItemStack;
     /* Adverb items */
     char *events;
+    int   eventtypei;
+    short eventinitb;
 
     CALLBACKGRAMMAR_GET_OP_DECLARE(arg0i+1, op_declare);
     CALLBACKGRAMMAR_GET_RHS_PRIMARY(arg0i+2, rhs_primary);
@@ -2810,8 +2949,10 @@ static inline short _G1_RULE_DISCARD_RULE(marpaESLIFValue_t *marpaESLIFValuep, m
                                                          NULL, /* rankip */
                                                          NULL, /* nullRanksHighbp */
                                                          NULL, /* priorityip */
-                                                         NULL, /* pausesp */
+                                                         NULL, /* pauseip */
                                                          &events,
+                                                         &eventtypei,
+                                                         &eventinitb,
                                                          NULL, /* latmbp */
                                                          NULL /* namingpp */)) {
       goto err;
@@ -2832,8 +2973,10 @@ static inline short _G1_RULE_DISCARD_RULE(marpaESLIFValue_t *marpaESLIFValuep, m
 
     /* There is a trick in the recognizer when a discard sub-grammar finishes ok. It looks to the */
     /* grammar of the parent recognizer and check if there is an action for the matched top symbol */
-    /* that got a discard... therefore the discard "event" is in reality an "action" on the discard rule */
-    /* It is not a hazard that action advern is not allowed here -; */
+    /* that got a discard... therefore the discard "event" is in reality a completion "action" on the discard rule */
+    /* It is not a hazard that action adverb is not allowed here -; */
+    /* Please note that when we execute a sub-grammar, ALL events are disabled - this is why it is guaranteed */
+    /* to happen only if the value of the sub-grammar is successful, and at return, within parent's scope. */
     if (! _marpaESLIFValueRuleCallbackGrammar_ruleb(marpaESLIFValuep,
                                                     marpaESLIF_grammarContextp,
                                                     op_declare,
@@ -2849,7 +2992,7 @@ static inline short _G1_RULE_DISCARD_RULE(marpaESLIFValue_t *marpaESLIFValuep, m
                                                     -1, /* properb */
                                                     events, /* actions */
                                                     0, /* passthroughb */
-                                                    NULL /* out_rulepp */)) {
+                                                    &out_rulep)) {
       GENERICSTACK_RESET(rhsItemStackp);
       goto err;
     }
@@ -2866,11 +3009,19 @@ static inline short _G1_RULE_DISCARD_RULE(marpaESLIFValue_t *marpaESLIFValuep, m
       goto err;
     }
     out_symbolp->discardb = 1;
-    if (out_symbolp->events != NULL) {
-      free(out_symbolp->events);
-      out_symbolp->events = NULL;
+
+    /* Update rule discard event */
+    if (out_rulep->discardEvents != NULL) {
+      free(out_rulep->discardEvents);
+      out_rulep->discardEvents = NULL;
     }
-    out_symbolp->nbupdatei++;
+    if (events != NULL) {
+      out_rulep->discardEvents = strdup(events);
+      if (out_rulep->discardEvents == NULL) {
+        MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "strdup failure, %s", strerror(errno));
+        goto err;
+      }
+    }
 
     /* Parents are no-op */
     CALLBACKGRAMMAR_SET_NA(resulti);
@@ -2917,8 +3068,10 @@ static inline short _G1_RULE_DEFAULT_RULE(marpaESLIFValue_t *marpaESLIFValuep, m
                                                          NULL, /* rankip */
                                                          NULL, /* nullRanksHighbp */
                                                          NULL, /* priorityip */
-                                                         NULL, /* pausesp */
+                                                         NULL, /* pauseip */
                                                          NULL, /* eventsp */
+                                                         NULL, /* eventtypeip */
+                                                         NULL, /* eventinitbp */
                                                          NULL, /* latmbp */
                                                          NULL /* namingpp */)) {
       goto err;
@@ -2929,7 +3082,7 @@ static inline short _G1_RULE_DEFAULT_RULE(marpaESLIFValue_t *marpaESLIFValuep, m
       goto err;
     }
     /* :default rule must be unique on this grammar */
-    if (out_grammarp->nbupdateviaStarti++ > 0) {
+    if (++out_grammarp->nbupdateviaStarti > 1) {
       MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, ":default for grammar level %d (%s) must be unique", out_grammarp->leveli, out_grammarp->descp->asciis);
       goto err;
     }
@@ -3102,14 +3255,16 @@ static inline short _G1_RULE_LEXEME_RULE(marpaESLIFValue_t *marpaESLIFValuep, ma
     marpaESLIF_symbol_t *out_symbolp;
     /* Adverb items */
     int   priorityi;
-    char *pauses;
+    int  *pausei;
     char *events;
+    short eventinitb;
 
     CALLBACKGRAMMAR_GET_OP_DECLARE(arg0i+1, op_declare);
     CALLBACKGRAMMAR_GET_SYMBOL(arg0i+2, symbol);
     CALLBACKGRAMMAR_GET_ADVERB_LIST(arg0i+3, adverb_list);
 
     /* Get the adverb items that are allowed in our context */
+    /* There is no notion of event type for lexeme, this is transfered to the notion of pause "before" or "after" */
     if (! _marpaESLIF_grammarContext_adverbList_unstackb(marpaESLIFp,
                                                          (genericStack_t *) adverb_list,
                                                          NULL, /* actionsp */
@@ -3122,8 +3277,10 @@ static inline short _G1_RULE_LEXEME_RULE(marpaESLIFValue_t *marpaESLIFValuep, ma
                                                          NULL, /* rankip */
                                                          NULL, /* nullRanksHighbp */
                                                          &priorityi,
-                                                         NULL, /* pausesp */
+                                                         &pausei,
                                                          &events,
+                                                         NULL, /* eventtypeip */
+                                                         &eventinitb,
                                                          NULL, /* latmbp */
                                                          NULL /* namingpp */)) {
       goto err;
@@ -3139,7 +3296,7 @@ static inline short _G1_RULE_LEXEME_RULE(marpaESLIFValue_t *marpaESLIFValuep, ma
       goto err;
     }
     /* :lexeme rule must be unique on that symbol */
-    if (out_symbolp->nbupdatei++ > 0) {
+    if (++out_symbolp->nbupdatei > 1) {
       MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, ":lexeme on symbol %s for grammar level %d (%s) must be unique", (char *) symbol, out_grammarp->leveli, out_grammarp->descp->asciis);
       goto err;
     }
