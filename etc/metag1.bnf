@@ -30,8 +30,11 @@ statement                        ::= <start rule>
                                  | 'discard' 'default' <op declare> <adverb list>
 <lexeme rule>                  ::= ':lexeme' <op declare> symbol <adverb list>
 <completion event declaration> ::= 'event' <event initialization> '=' 'completed' <symbol name>
+                                 | 'event' <event initialization> <op declare> 'completed' <symbol name>
 <nulled event declaration>     ::= 'event' <event initialization> '=' 'nulled' <symbol name>
+                                 | 'event' <event initialization> <op declare> 'nulled' <symbol name>
 <prediction event declaration> ::= 'event' <event initialization> '=' 'predicted' <symbol name>
+                                 | 'event' <event initialization> <op declare> 'predicted' <symbol name>
 <inaccessible statement>       ::= 'inaccessible' 'is' <inaccessible treatment> 'by' 'default'
 <inaccessible treatment>       ::= 'warn' | 'ok' | 'fatal'
 <exception statement>          ::= lhs <op declare> <rhs primary> '-' <parenthesized rhs exception list>
