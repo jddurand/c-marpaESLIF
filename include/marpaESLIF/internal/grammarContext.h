@@ -43,9 +43,18 @@ enum marpaESLIF_grammarItemType {
   MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_NULL_RANKING,
   MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_PRIORITY,
   MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_PAUSE,
-  MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_EVENT,
-  MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_EVENTTYPE,
-  MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_EVENTINIT,
+  MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_COMPLETION_EVENT,
+  MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_COMPLETION_EVENT_INIT,
+  MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_NULLED_EVENT,
+  MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_NULLED_EVENT_INIT,
+  MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_PREDICTED_EVENT,
+  MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_PREDICTED_EVENT_INIT,
+  MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_BEFORE_EVENT,
+  MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_BEFORE_EVENT_INIT,
+  MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_AFTER_EVENT,
+  MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_AFTER_EVENT_INIT,
+  MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_DISCARD_EVENT,
+  MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_DISCARD_EVENT_INIT,
   MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_LATM,
   MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_NAMING,
   MARPAESLIF_GRAMMARITEMTYPE_ADVERB_ITEM_NULL,
@@ -206,41 +215,50 @@ static inline short       _marpaESLIF_grammarContext_set_NAb(marpaESLIF_t *marpa
   return rcb;
 }
 
-MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(ARRAY, LEXEME,                   lexeme)                   /* C: { void*, size_t } */
-MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(INT,   OP_DECLARE,               op_declare)               /* C: int */
-MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(PTR,   ACTION_NAME,              action_name)              /* C: void* (ASCII NUL terminated string) */
-MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(PTR,   ACTION,                   action)                   /* C: void* (ASCII NUL terminated string) */
-MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(PTR,   ADVERB_ITEM_ACTION,       adverb_item_action)       /* C: void* (ASCII NUL terminated string) */
-MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(SHORT, ADVERB_ITEM_AUTORANK,     adverb_item_autorank)     /* C: short */
-MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(SHORT, ADVERB_ITEM_LEFT,         adverb_item_left)         /* C: short */
-MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(SHORT, ADVERB_ITEM_RIGHT,        adverb_item_right)        /* C: short */
-MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(SHORT, ADVERB_ITEM_GROUP,        adverb_item_group)        /* C: short */
-MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(PTR,   ADVERB_ITEM_SEPARATOR,    adverb_item_separator)    /* C: void* (ASCII NUL terminated string) */
-MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(SHORT, ADVERB_ITEM_PROPER,       adverb_item_proper)       /* C: short */
-MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(INT,   ADVERB_ITEM_RANK,         adverb_item_rank)         /* C: int */
-MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(SHORT, ADVERB_ITEM_NULL_RANKING, adverb_item_null_ranking) /* C: short */
-MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(INT,   ADVERB_ITEM_PRIORITY,     adverb_item_priority)     /* C: int */
-MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(INT,   ADVERB_ITEM_PAUSE,        adverb_item_pause)        /* C: int */
-MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(PTR,   ADVERB_ITEM_EVENT,        adverb_item_event)        /* C: void* (ASCII NUL terminated string) */
-MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(INT,   ADVERB_ITEM_EVENTTYPE,    adverb_item_eventtype)    /* C: int */
-MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(SHORT, ADVERB_ITEM_EVENTINIT,    adverb_item_eventinit)    /* C: short */
-MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(SHORT, ADVERB_ITEM_LATM,         adverb_item_latm)         /* C: short */
-MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(PTR,   ADVERB_ITEM_NAMING,       adverb_item_naming)       /* C: void* (NUL terminated for convenience) */
-MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(SHORT, ADVERB_ITEM_NULL,         adverb_item_null)         /* C: short */
-MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(PTR,   ADVERB_LIST_ITEMS,        adverb_list_items)        /* C: genericStack_t* */
-MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(PTR,   ADVERB_LIST,              adverb_list)              /* C: genericStack_t* */
-MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(SHORT, LATM,                     latm)                     /* C: short */
-MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(PTR,   SYMBOL_NAME,              symbol_name)              /* C: void* (ASCII NUL terminated string) */
-MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(PTR,   SYMBOL,                   symbol)                   /* C: void* (ASCII NUL terminated string) */
-MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(PTR,   LHS,                      lhs)                      /* C: void* (ASCII NUL terminated string) */
-MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(PTR,   SINGLE_SYMBOL,            single_symbol)            /* C: marpaESLIF_rhsItem_t* */
-MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(SHORT, QUANTIFIER,               quantifier)               /* 0 == '*', 1 == '+' */
-MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(PTR,   PRIORITIES,               priorities)               /* C: genericStack_t* of alternatives stacks */
-MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(PTR,   ALTERNATIVES,             alternatives)             /* C: genericStack_t* of alternative stacks */
-MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(PTR,   ALTERNATIVE,              alternative)              /* C: genericStack_t* of marpaESLIF_alternativeItem_t* */
-MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(PTR,   RHS,                      rhs)                      /* C: genericStack_t* of marpaESLIF_rhsItem_t* */
-MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(PTR,   GRAMMAR_REFERENCE,        grammar_reference)        /* C: genericStack_t* of marpaESLIF_grammarReference_t* */
-MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(PTR,   RHS_PRIMARY,              rhs_primary)              /* C: marpaESLIF_rhsItem_t* */
+MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(ARRAY, LEXEME,                            lexeme)                            /* C: { void*, size_t } */
+MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(INT,   OP_DECLARE,                        op_declare)                        /* C: int */
+MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(PTR,   ACTION_NAME,                       action_name)                       /* C: void* (ASCII NUL terminated string) */
+MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(PTR,   ACTION,                            action)                            /* C: void* (ASCII NUL terminated string) */
+MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(PTR,   ADVERB_ITEM_ACTION,                adverb_item_action)                /* C: void* (ASCII NUL terminated string) */
+MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(SHORT, ADVERB_ITEM_AUTORANK,              adverb_item_autorank)              /* C: short */
+MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(SHORT, ADVERB_ITEM_LEFT,                  adverb_item_left)                  /* C: short */
+MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(SHORT, ADVERB_ITEM_RIGHT,                 adverb_item_right)                 /* C: short */
+MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(SHORT, ADVERB_ITEM_GROUP,                 adverb_item_group)                 /* C: short */
+MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(PTR,   ADVERB_ITEM_SEPARATOR,             adverb_item_separator)             /* C: void* (ASCII NUL terminated string) */
+MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(SHORT, ADVERB_ITEM_PROPER,                adverb_item_proper)                /* C: short */
+MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(INT,   ADVERB_ITEM_RANK,                  adverb_item_rank)                  /* C: int */
+MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(SHORT, ADVERB_ITEM_NULL_RANKING,          adverb_item_null_ranking)          /* C: short */
+MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(INT,   ADVERB_ITEM_PRIORITY,              adverb_item_priority)              /* C: int */
+MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(INT,   ADVERB_ITEM_PAUSE,                 adverb_item_pause)                 /* C: int */
+MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(PTR,   ADVERB_ITEM_COMPLETION_EVENT,      adverb_item_completion_event)      /* C: void* (ASCII NUL terminated string) */
+MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(SHORT, ADVERB_ITEM_COMPLETION_EVENT_INIT, adverb_item_completion_event_init) /* short */
+MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(PTR,   ADVERB_ITEM_NULLED_EVENT,          adverb_item_nulled_event)          /* C: void* (ASCII NUL terminated string) */
+MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(SHORT, ADVERB_ITEM_NULLED_EVENT_INIT,     adverb_item_nulled_event_init)     /* short */
+MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(PTR,   ADVERB_ITEM_PREDICTED_EVENT,       adverb_item_predicted_event)       /* C: void* (ASCII NUL terminated string) */
+MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(SHORT, ADVERB_ITEM_PREDICTED_EVENT_INIT,  adverb_item_predicted_event_init)  /* short */
+MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(PTR,   ADVERB_ITEM_BEFORE_EVENT,          adverb_item_before_event)          /* C: void* (ASCII NUL terminated string) */
+MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(SHORT, ADVERB_ITEM_BEFORE_EVENT_INIT,     adverb_item_before_event_init)     /* short */
+MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(PTR,   ADVERB_ITEM_AFTER_EVENT,           adverb_item_after_event)           /* C: void* (ASCII NUL terminated string) */
+MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(SHORT, ADVERB_ITEM_AFTER_EVENT_INIT,      adverb_item_after_event_init)      /* short */
+MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(PTR,   ADVERB_ITEM_DISCARD_EVENT,         adverb_item_discard_event)         /* C: void* (ASCII NUL terminated string) */
+MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(SHORT, ADVERB_ITEM_DISCARD_EVENT_INIT,    adverb_item_discard_event_init)    /* short */
+MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(SHORT, ADVERB_ITEM_LATM,                  adverb_item_latm)                  /* C: short */
+MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(PTR,   ADVERB_ITEM_NAMING,                adverb_item_naming)                /* C: void* (NUL terminated for convenience) */
+MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(SHORT, ADVERB_ITEM_NULL,                  adverb_item_null)                  /* C: short */
+MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(PTR,   ADVERB_LIST_ITEMS,                 adverb_list_items)                 /* C: genericStack_t* */
+MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(PTR,   ADVERB_LIST,                       adverb_list)                       /* C: genericStack_t* */
+MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(SHORT, LATM,                              latm)                              /* C: short */
+MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(PTR,   SYMBOL_NAME,                       symbol_name)                       /* C: void* (ASCII NUL terminated string) */
+MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(PTR,   SYMBOL,                            symbol)                            /* C: void* (ASCII NUL terminated string) */
+MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(PTR,   LHS,                               lhs)                               /* C: void* (ASCII NUL terminated string) */
+MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(PTR,   SINGLE_SYMBOL,                     single_symbol)                     /* C: marpaESLIF_rhsItem_t* */
+MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(SHORT, QUANTIFIER,                        quantifier)                        /* 0 == '*', 1 == '+' */
+MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(PTR,   PRIORITIES,                        priorities)                        /* C: genericStack_t* of alternatives stacks */
+MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(PTR,   ALTERNATIVES,                      alternatives)                      /* C: genericStack_t* of alternative stacks */
+MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(PTR,   ALTERNATIVE,                       alternative)                       /* C: genericStack_t* of marpaESLIF_alternativeItem_t* */
+MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(PTR,   RHS,                               rhs)                               /* C: genericStack_t* of marpaESLIF_rhsItem_t* */
+MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(PTR,   GRAMMAR_REFERENCE,                 grammar_reference)                 /* C: genericStack_t* of marpaESLIF_grammarReference_t* */
+MARPAESLIF_INTERNAL_GRAMMARCONTEXT_DEFINE_ACCESSORS(PTR,   RHS_PRIMARY,                       rhs_primary)                       /* C: marpaESLIF_rhsItem_t* */
 
 /* Getters and setters on the stack are hand-writen */
 #define CALLBACKGRAMMAR_COMMON_HEADER(name)                             \
@@ -614,13 +632,13 @@ done:                                                                   \
   } while (0)
 
 /* -------------------------------------------------------------------- */
-/*                          ADVERB_ITEM_EVENT                           */
+/*                    ADVERB_ITEM_COMPLETION_EVENT                      */
 /* genericStack type: PTR                                               */
 /*            C type: void * (ASCII NUL terminated string)              */
 /* -------------------------------------------------------------------- */
-#define CALLBACKGRAMMAR_DECL_ADVERB_ITEM_EVENT(identifier) marpaESLIF_grammarContext_adverb_item_event_t identifier
-#define CALLBACKGRAMMAR_GET_ADVERB_ITEM_EVENT(indice, identifier) do {        \
-    if (! _marpaESLIF_grammarContext_get_adverb_item_eventb(marpaESLIFp, outputStackp, itemTypeStackp, indice, &identifier)) { \
+#define CALLBACKGRAMMAR_DECL_ADVERB_ITEM_COMPLETION_EVENT(identifier) marpaESLIF_grammarContext_adverb_item_completion_event_t identifier
+#define CALLBACKGRAMMAR_GET_ADVERB_ITEM_COMPLETION_EVENT(indice, identifier) do {        \
+    if (! _marpaESLIF_grammarContext_get_adverb_item_completion_eventb(marpaESLIFp, outputStackp, itemTypeStackp, indice, &identifier)) { \
       goto err;                                                         \
     }                                                                   \
     if (identifier == NULL) {                                           \
@@ -630,56 +648,248 @@ done:                                                                   \
     MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "outputStackp->[%d] val  is \"%s\"", indice, identifier); \
   } while (0)
 
-#define CALLBACKGRAMMAR_SET_ADVERB_ITEM_EVENT(indice, identifier) do {        \
-    if (! _marpaESLIF_grammarContext_set_adverb_item_eventb(marpaESLIFp, outputStackp, itemTypeStackp, indice, identifier)) { \
+#define CALLBACKGRAMMAR_SET_ADVERB_ITEM_COMPLETION_EVENT(indice, identifier) do {        \
+    if (! _marpaESLIF_grammarContext_set_adverb_item_completion_eventb(marpaESLIFp, outputStackp, itemTypeStackp, indice, identifier)) { \
       goto err;                                                         \
     }                                                                   \
     MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "outputStackp->[%d] set  to \"%s\"", indice, identifier); \
   } while (0)
 
 /* -------------------------------------------------------------------- */
-/*                        ADVERB_ITEM_EVENTTYPE                         */
-/* genericStack type: INT                                               */
-/*            C type: int                                               */
+/*                ADVERB_ITEM_COMPLETION_EVENT_INIT                     */
+/* genericStack type: SHORT                                             */
+/*            C type: short                                             */
 /* -------------------------------------------------------------------- */
-#define CALLBACKGRAMMAR_DECL_ADVERB_ITEM_EVENTTYPE(identifier) marpaESLIF_grammarContext_adverb_item_eventtype_t identifier
-#define CALLBACKGRAMMAR_GET_ADVERB_ITEM_EVENTTYPE(indice, identifier) do {        \
-    if (! _marpaESLIF_grammarContext_get_adverb_item_eventtypeb(marpaESLIFp, outputStackp, itemTypeStackp, indice, &identifier)) { \
-      goto err;                                                         \
-    }                                                                   \
-    if (identifier == NULL) {                                           \
-      MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, #identifier "value is NULL"); \
-      goto err;                                                         \
-    }                                                                   \
-    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "outputStackp->[%d] val  is 0x%x", indice, identifier); \
-  } while (0)
-
-#define CALLBACKGRAMMAR_SET_ADVERB_ITEM_EVENTTYPE(indice, identifier) do {        \
-    if (! _marpaESLIF_grammarContext_set_adverb_item_eventtypeb(marpaESLIFp, outputStackp, itemTypeStackp, indice, identifier)) { \
-      goto err;                                                         \
-    }                                                                   \
-    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "outputStackp->[%d] set  to 0x%x", indice, identifier); \
-  } while (0)
-
-/* -------------------------------------------------------------------- */
-/*                        ADVERB_ITEM_EVENTINIT                         */
-/* genericStack type: INT                                               */
-/*            C type: int                                               */
-/* -------------------------------------------------------------------- */
-#define CALLBACKGRAMMAR_DECL_ADVERB_ITEM_EVENTINIT(identifier) marpaESLIF_grammarContext_adverb_item_eventinit_t identifier
-#define CALLBACKGRAMMAR_GET_ADVERB_ITEM_EVENTINIT(indice, identifier) do {        \
-    if (! _marpaESLIF_grammarContext_get_adverb_item_eventinitb(marpaESLIFp, outputStackp, itemTypeStackp, indice, &identifier)) { \
-      goto err;                                                         \
-    }                                                                   \
-    if (identifier == NULL) {                                           \
-      MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, #identifier "value is NULL"); \
+#define CALLBACKGRAMMAR_DECL_ADVERB_ITEM_COMPLETION_EVENT_INIT(identifier) marpaESLIF_grammarContext_adverb_item_completion_event_init_t identifier
+#define CALLBACKGRAMMAR_GET_ADVERB_ITEM_COMPLETION_EVENT_INIT(indice, identifier) do {        \
+    if (! _marpaESLIF_grammarContext_get_adverb_item_completion_event_initb(marpaESLIFp, outputStackp, itemTypeStackp, indice, &identifier)) { \
       goto err;                                                         \
     }                                                                   \
     MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "outputStackp->[%d] val  is %d", indice, (int) identifier); \
   } while (0)
 
-#define CALLBACKGRAMMAR_SET_ADVERB_ITEM_EVENTINIT(indice, identifier) do {        \
-    if (! _marpaESLIF_grammarContext_set_adverb_item_eventinitb(marpaESLIFp, outputStackp, itemTypeStackp, indice, identifier)) { \
+#define CALLBACKGRAMMAR_SET_ADVERB_ITEM_COMPLETION_EVENT_INIT(indice, identifier) do {        \
+    if (! _marpaESLIF_grammarContext_set_adverb_item_completion_event_initb(marpaESLIFp, outputStackp, itemTypeStackp, indice, identifier)) { \
+      goto err;                                                         \
+    }                                                                   \
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "outputStackp->[%d] set  to %d", indice, (int) identifier); \
+  } while (0)
+
+/* -------------------------------------------------------------------- */
+/*                    ADVERB_ITEM_NULLED_EVENT                      */
+/* genericStack type: PTR                                               */
+/*            C type: void * (ASCII NUL terminated string)              */
+/* -------------------------------------------------------------------- */
+#define CALLBACKGRAMMAR_DECL_ADVERB_ITEM_NULLED_EVENT(identifier) marpaESLIF_grammarContext_adverb_item_nulled_event_t identifier
+#define CALLBACKGRAMMAR_GET_ADVERB_ITEM_NULLED_EVENT(indice, identifier) do {        \
+    if (! _marpaESLIF_grammarContext_get_adverb_item_nulled_eventb(marpaESLIFp, outputStackp, itemTypeStackp, indice, &identifier)) { \
+      goto err;                                                         \
+    }                                                                   \
+    if (identifier == NULL) {                                           \
+      MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, #identifier "value is NULL"); \
+      goto err;                                                         \
+    }                                                                   \
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "outputStackp->[%d] val  is \"%s\"", indice, identifier); \
+  } while (0)
+
+#define CALLBACKGRAMMAR_SET_ADVERB_ITEM_NULLED_EVENT(indice, identifier) do {        \
+    if (! _marpaESLIF_grammarContext_set_adverb_item_nulled_eventb(marpaESLIFp, outputStackp, itemTypeStackp, indice, identifier)) { \
+      goto err;                                                         \
+    }                                                                   \
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "outputStackp->[%d] set  to \"%s\"", indice, identifier); \
+  } while (0)
+
+/* -------------------------------------------------------------------- */
+/*                ADVERB_ITEM_NULLED_EVENT_INIT                     */
+/* genericStack type: SHORT                                             */
+/*            C type: short                                             */
+/* -------------------------------------------------------------------- */
+#define CALLBACKGRAMMAR_DECL_ADVERB_ITEM_NULLED_EVENT_INIT(identifier) marpaESLIF_grammarContext_adverb_item_nulled_event_init_t identifier
+#define CALLBACKGRAMMAR_GET_ADVERB_ITEM_NULLED_EVENT_INIT(indice, identifier) do {        \
+    if (! _marpaESLIF_grammarContext_get_adverb_item_nulled_event_initb(marpaESLIFp, outputStackp, itemTypeStackp, indice, &identifier)) { \
+      goto err;                                                         \
+    }                                                                   \
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "outputStackp->[%d] val  is %d", indice, (int) identifier); \
+  } while (0)
+
+#define CALLBACKGRAMMAR_SET_ADVERB_ITEM_NULLED_EVENT_INIT(indice, identifier) do {        \
+    if (! _marpaESLIF_grammarContext_set_adverb_item_nulled_event_initb(marpaESLIFp, outputStackp, itemTypeStackp, indice, identifier)) { \
+      goto err;                                                         \
+    }                                                                   \
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "outputStackp->[%d] set  to %d", indice, (int) identifier); \
+  } while (0)
+
+/* -------------------------------------------------------------------- */
+/*                    ADVERB_ITEM_PREDICTED_EVENT                      */
+/* genericStack type: PTR                                               */
+/*            C type: void * (ASCII NUL terminated string)              */
+/* -------------------------------------------------------------------- */
+#define CALLBACKGRAMMAR_DECL_ADVERB_ITEM_PREDICTED_EVENT(identifier) marpaESLIF_grammarContext_adverb_item_predicted_event_t identifier
+#define CALLBACKGRAMMAR_GET_ADVERB_ITEM_PREDICTED_EVENT(indice, identifier) do {        \
+    if (! _marpaESLIF_grammarContext_get_adverb_item_predicted_eventb(marpaESLIFp, outputStackp, itemTypeStackp, indice, &identifier)) { \
+      goto err;                                                         \
+    }                                                                   \
+    if (identifier == NULL) {                                           \
+      MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, #identifier "value is NULL"); \
+      goto err;                                                         \
+    }                                                                   \
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "outputStackp->[%d] val  is \"%s\"", indice, identifier); \
+  } while (0)
+
+#define CALLBACKGRAMMAR_SET_ADVERB_ITEM_PREDICTED_EVENT(indice, identifier) do {        \
+    if (! _marpaESLIF_grammarContext_set_adverb_item_predicted_eventb(marpaESLIFp, outputStackp, itemTypeStackp, indice, identifier)) { \
+      goto err;                                                         \
+    }                                                                   \
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "outputStackp->[%d] set  to \"%s\"", indice, identifier); \
+  } while (0)
+
+/* -------------------------------------------------------------------- */
+/*                ADVERB_ITEM_PREDICTED_EVENT_INIT                     */
+/* genericStack type: SHORT                                             */
+/*            C type: short                                             */
+/* -------------------------------------------------------------------- */
+#define CALLBACKGRAMMAR_DECL_ADVERB_ITEM_PREDICTED_EVENT_INIT(identifier) marpaESLIF_grammarContext_adverb_item_predicted_event_init_t identifier
+#define CALLBACKGRAMMAR_GET_ADVERB_ITEM_PREDICTED_EVENT_INIT(indice, identifier) do {        \
+    if (! _marpaESLIF_grammarContext_get_adverb_item_predicted_event_initb(marpaESLIFp, outputStackp, itemTypeStackp, indice, &identifier)) { \
+      goto err;                                                         \
+    }                                                                   \
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "outputStackp->[%d] val  is %d", indice, (int) identifier); \
+  } while (0)
+
+#define CALLBACKGRAMMAR_SET_ADVERB_ITEM_PREDICTED_EVENT_INIT(indice, identifier) do {        \
+    if (! _marpaESLIF_grammarContext_set_adverb_item_predicted_event_initb(marpaESLIFp, outputStackp, itemTypeStackp, indice, identifier)) { \
+      goto err;                                                         \
+    }                                                                   \
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "outputStackp->[%d] set  to %d", indice, (int) identifier); \
+  } while (0)
+
+/* -------------------------------------------------------------------- */
+/*                      ADVERB_ITEM_BEFORE_EVENT                        */
+/* genericStack type: PTR                                               */
+/*            C type: void * (ASCII NUL terminated string)              */
+/* -------------------------------------------------------------------- */
+#define CALLBACKGRAMMAR_DECL_ADVERB_ITEM_BEFORE_EVENT(identifier) marpaESLIF_grammarContext_adverb_item_before_event_t identifier
+#define CALLBACKGRAMMAR_GET_ADVERB_ITEM_BEFORE_EVENT(indice, identifier) do {        \
+    if (! _marpaESLIF_grammarContext_get_adverb_item_before_eventb(marpaESLIFp, outputStackp, itemTypeStackp, indice, &identifier)) { \
+      goto err;                                                         \
+    }                                                                   \
+    if (identifier == NULL) {                                           \
+      MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, #identifier "value is NULL"); \
+      goto err;                                                         \
+    }                                                                   \
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "outputStackp->[%d] val  is \"%s\"", indice, identifier); \
+  } while (0)
+
+#define CALLBACKGRAMMAR_SET_ADVERB_ITEM_BEFORE_EVENT(indice, identifier) do {        \
+    if (! _marpaESLIF_grammarContext_set_adverb_item_before_eventb(marpaESLIFp, outputStackp, itemTypeStackp, indice, identifier)) { \
+      goto err;                                                         \
+    }                                                                   \
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "outputStackp->[%d] set  to \"%s\"", indice, identifier); \
+  } while (0)
+
+/* -------------------------------------------------------------------- */
+/*                  ADVERB_ITEM_BEFORE_EVENT_INIT                       */
+/* genericStack type: SHORT                                             */
+/*            C type: short                                             */
+/* -------------------------------------------------------------------- */
+#define CALLBACKGRAMMAR_DECL_ADVERB_ITEM_BEFORE_EVENT_INIT(identifier) marpaESLIF_grammarContext_adverb_item_before_event_init_t identifier
+#define CALLBACKGRAMMAR_GET_ADVERB_ITEM_BEFORE_EVENT_INIT(indice, identifier) do {        \
+    if (! _marpaESLIF_grammarContext_get_adverb_item_before_event_initb(marpaESLIFp, outputStackp, itemTypeStackp, indice, &identifier)) { \
+      goto err;                                                         \
+    }                                                                   \
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "outputStackp->[%d] val  is %d", indice, (int) identifier); \
+  } while (0)
+
+#define CALLBACKGRAMMAR_SET_ADVERB_ITEM_BEFORE_EVENT_INIT(indice, identifier) do {        \
+    if (! _marpaESLIF_grammarContext_set_adverb_item_before_event_initb(marpaESLIFp, outputStackp, itemTypeStackp, indice, identifier)) { \
+      goto err;                                                         \
+    }                                                                   \
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "outputStackp->[%d] set  to %d", indice, (int) identifier); \
+  } while (0)
+
+/* -------------------------------------------------------------------- */
+/*                       ADVERB_ITEM_AFTER_EVENT                        */
+/* genericStack type: PTR                                               */
+/*            C type: void * (ASCII NUL terminated string)              */
+/* -------------------------------------------------------------------- */
+#define CALLBACKGRAMMAR_DECL_ADVERB_ITEM_AFTER_EVENT(identifier) marpaESLIF_grammarContext_adverb_item_after_event_t identifier
+#define CALLBACKGRAMMAR_GET_ADVERB_ITEM_AFTER_EVENT(indice, identifier) do {        \
+    if (! _marpaESLIF_grammarContext_get_adverb_item_after_eventb(marpaESLIFp, outputStackp, itemTypeStackp, indice, &identifier)) { \
+      goto err;                                                         \
+    }                                                                   \
+    if (identifier == NULL) {                                           \
+      MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, #identifier "value is NULL"); \
+      goto err;                                                         \
+    }                                                                   \
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "outputStackp->[%d] val  is \"%s\"", indice, identifier); \
+  } while (0)
+
+#define CALLBACKGRAMMAR_SET_ADVERB_ITEM_AFTER_EVENT(indice, identifier) do {        \
+    if (! _marpaESLIF_grammarContext_set_adverb_item_after_eventb(marpaESLIFp, outputStackp, itemTypeStackp, indice, identifier)) { \
+      goto err;                                                         \
+    }                                                                   \
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "outputStackp->[%d] set  to \"%s\"", indice, identifier); \
+  } while (0)
+
+/* -------------------------------------------------------------------- */
+/*                   ADVERB_ITEM_AFTER_EVENT_INIT                       */
+/* genericStack type: SHORT                                             */
+/*            C type: short                                             */
+/* -------------------------------------------------------------------- */
+#define CALLBACKGRAMMAR_DECL_ADVERB_ITEM_AFTER_EVENT_INIT(identifier) marpaESLIF_grammarContext_adverb_item_after_event_init_t identifier
+#define CALLBACKGRAMMAR_GET_ADVERB_ITEM_AFTER_EVENT_INIT(indice, identifier) do {        \
+    if (! _marpaESLIF_grammarContext_get_adverb_item_after_event_initb(marpaESLIFp, outputStackp, itemTypeStackp, indice, &identifier)) { \
+      goto err;                                                         \
+    }                                                                   \
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "outputStackp->[%d] val  is %d", indice, (int) identifier); \
+  } while (0)
+
+#define CALLBACKGRAMMAR_SET_ADVERB_ITEM_AFTER_EVENT_INIT(indice, identifier) do {        \
+    if (! _marpaESLIF_grammarContext_set_adverb_item_after_event_initb(marpaESLIFp, outputStackp, itemTypeStackp, indice, identifier)) { \
+      goto err;                                                         \
+    }                                                                   \
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "outputStackp->[%d] set  to %d", indice, (int) identifier); \
+  } while (0)
+
+/* -------------------------------------------------------------------- */
+/*                     ADVERB_ITEM_DISCARD_EVENT                        */
+/* genericStack type: PTR                                               */
+/*            C type: void * (ASCII NUL terminated string)              */
+/* -------------------------------------------------------------------- */
+#define CALLBACKGRAMMAR_DECL_ADVERB_ITEM_DISCARD_EVENT(identifier) marpaESLIF_grammarContext_adverb_item_discard_event_t identifier
+#define CALLBACKGRAMMAR_GET_ADVERB_ITEM_DISCARD_EVENT(indice, identifier) do {        \
+    if (! _marpaESLIF_grammarContext_get_adverb_item_discard_eventb(marpaESLIFp, outputStackp, itemTypeStackp, indice, &identifier)) { \
+      goto err;                                                         \
+    }                                                                   \
+    if (identifier == NULL) {                                           \
+      MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, #identifier "value is NULL"); \
+      goto err;                                                         \
+    }                                                                   \
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "outputStackp->[%d] val  is \"%s\"", indice, identifier); \
+  } while (0)
+
+#define CALLBACKGRAMMAR_SET_ADVERB_ITEM_DISCARD_EVENT(indice, identifier) do {        \
+    if (! _marpaESLIF_grammarContext_set_adverb_item_discard_eventb(marpaESLIFp, outputStackp, itemTypeStackp, indice, identifier)) { \
+      goto err;                                                         \
+    }                                                                   \
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "outputStackp->[%d] set  to \"%s\"", indice, identifier); \
+  } while (0)
+
+/* -------------------------------------------------------------------- */
+/*                 ADVERB_ITEM_DISCARD_EVENT_INIT                       */
+/* genericStack type: SHORT                                             */
+/*            C type: short                                             */
+/* -------------------------------------------------------------------- */
+#define CALLBACKGRAMMAR_DECL_ADVERB_ITEM_DISCARD_EVENT_INIT(identifier) marpaESLIF_grammarContext_adverb_item_discard_event_init_t identifier
+#define CALLBACKGRAMMAR_GET_ADVERB_ITEM_DISCARD_EVENT_INIT(indice, identifier) do {        \
+    if (! _marpaESLIF_grammarContext_get_adverb_item_discard_event_initb(marpaESLIFp, outputStackp, itemTypeStackp, indice, &identifier)) { \
+      goto err;                                                         \
+    }                                                                   \
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "outputStackp->[%d] val  is %d", indice, (int) identifier); \
+  } while (0)
+
+#define CALLBACKGRAMMAR_SET_ADVERB_ITEM_DISCARD_EVENT_INIT(indice, identifier) do {        \
+    if (! _marpaESLIF_grammarContext_set_adverb_item_discard_event_initb(marpaESLIFp, outputStackp, itemTypeStackp, indice, identifier)) { \
       goto err;                                                         \
     }                                                                   \
     MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "outputStackp->[%d] set  to %d", indice, (int) identifier); \
@@ -1101,7 +1311,7 @@ static inline marpaESLIF_grammarReference_t *_marpaESLIF_grammarReference_clonep
 
 static inline short _marpaESLIFValueRuleCallbackGrammar_grammarb(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, marpaESLIF_grammarContext_op_declare_t op_declare, marpaESLIF_string_t *descp, marpaESLIF_string_t *new_descp, short createb, marpaESLIF_grammar_t **out_grammarpp);
 static inline short _marpaESLIFValueRuleCallbackGrammar_metab(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, marpaESLIF_grammarContext_op_declare_t op_declare, char *ansis, marpaESLIF_symbol_t **out_symbolpp, marpaESLIF_grammar_t **out_grammarpp);
-static inline short _marpaESLIF_grammarContext_adverbList_unstackb(marpaESLIF_t *marpaESLIFp, genericStack_t *adverbListStackp, char **actionsp, short *autorankbp, short *leftbp, short *rightbp, short *groupbp, char **separatorsp, short *properbp, int *rankip, short *nullRanksHighbp, int *priorityip, int *pauseip, char **eventsp, int *eventtypeip, short *eventinitbp, short *latmbp, marpaESLIF_string_t **namingpp);
+static inline short _marpaESLIF_grammarContext_adverbList_unstackb(marpaESLIF_t *marpaESLIFp, genericStack_t *adverbItemStackp, char **actionsp, short *autorankbp, short *leftbp, short *rightbp, short *groupbp, char **separatorsp, short *properbp, int *rankip, short *nullRanksHighbp, int *priorityip, int *pauseip, char **completion_eventsp, short *completion_eventbp, char **nulled_eventsp, short *nulled_eventbp, char **predicted_eventsp, short *predicted_eventbp, char **before_eventsp, short *before_eventbp, char **after_eventsp, short *after_eventbp, char **discard_eventsp, short *discard_eventbp, short *latmbp, marpaESLIF_string_t **namingpp);
 static inline short _marpaESLIFValueRuleCallbackGrammar_rhsItemb(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, marpaESLIF_grammar_t *current_grammarp, marpaESLIF_rhsItem_t *rhsItemp, marpaESLIF_symbol_t **out_symbolpp, marpaESLIF_symbol_t **out_symbol_referencepp, marpaESLIF_grammar_t **out_grammar_referencepp);
 static inline short _marpaESLIFValueRuleCallbackGrammar_rhsItemStackb(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, marpaESLIF_grammar_t *current_grammarp, genericStack_t *rhsItemStackp, size_t *nrhslp, int **rhsipp);
 static inline short _marpaESLIFValueRuleCallbackGrammar_ruleb(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, marpaESLIF_grammarContext_op_declare_t op_declare, marpaESLIF_string_t *descp, char *lhsasciis, genericStack_t *rhsItemStackp, genericStack_t *rhsItemExceptionStackp, int ranki, short nullRanksHighb, short sequenceb, int minimumi, char *separators, short properb, char *actions, short passthroughb, marpaESLIF_rule_t **out_rulepp);
@@ -1112,39 +1322,39 @@ static inline short _marpaESLIFValueRuleCallbackGrammar_discardDefaultb(marpaESL
   
 /* For every rule we write a specific action. Every action is isually very short, and just pop/push the stack */
 /* For convenience action names mimic the rule names */
-static inline short _G1_RULE_STATEMENTS                 (marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti);
-static inline short _G1_RULE_STATEMENT_01               (marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti);
-static inline short _G1_RULE_STATEMENT_02               (marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti);
-static inline short _G1_RULE_STATEMENT_03               (marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti);
-static inline short _G1_RULE_STATEMENT_04               (marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti);
-static inline short _G1_RULE_STATEMENT_05               (marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti);
-static inline short _G1_RULE_STATEMENT_06               (marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti);
-static inline short _G1_RULE_STATEMENT_07               (marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti);
-static inline short _G1_RULE_STATEMENT_08               (marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti);
-static inline short _G1_RULE_STATEMENT_09               (marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti);
-static inline short _G1_RULE_STATEMENT_10               (marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti);
-static inline short _G1_RULE_STATEMENT_11               (marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti);
-static inline short _G1_RULE_STATEMENT_12               (marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti);
-static inline short _G1_RULE_STATEMENT_13               (marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti);
-static inline short _G1_RULE_STATEMENT_14               (marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti);
-static inline short _G1_RULE_STATEMENT_15               (marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti);
-static inline short _G1_RULE_STATEMENT_16               (marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti);
-static inline short _G1_RULE_STATEMENT_17               (marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti);
-static inline short _G1_RULE_START_RULE                 (marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti);
-static inline short _G1_RULE_DESC_RULE                  (marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti);
-static inline short _G1_RULE_EMPTY_RULE                 (marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti);
-static inline short _G1_RULE_NULL_STATEMENT             (marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti);
-static inline short _G1_RULE_STATEMENT_GROUP            (marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti);
-static inline short _G1_RULE_PRIORITY_RULE              (marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti);
-static inline short _G1_RULE_QUANTIFIED_RULE            (marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti);
-static inline short _G1_RULE_DISCARD_RULE               (marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti);
-static inline short _G1_RULE_DEFAULT_RULE               (marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti);
-static inline short _G1_RULE_LEXEME_DEFAULT_STATEMENT_1 (marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti);
-static inline short _G1_RULE_LEXEME_DEFAULT_STATEMENT_2 (marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti);
-static inline short _G1_RULE_DISCARD_DEFAULT_STATEMENT_1(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti);
-static inline short _G1_RULE_DISCARD_DEFAULT_STATEMENT_2(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti);
-
-static inline short _G1_RULE_LEXEME_RULE               (marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti);
+static inline short _G1_RULE_STATEMENTS                  (marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti);
+static inline short _G1_RULE_STATEMENT_01                (marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti);
+static inline short _G1_RULE_STATEMENT_02                (marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti);
+static inline short _G1_RULE_STATEMENT_03                (marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti);
+static inline short _G1_RULE_STATEMENT_04                (marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti);
+static inline short _G1_RULE_STATEMENT_05                (marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti);
+static inline short _G1_RULE_STATEMENT_06                (marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti);
+static inline short _G1_RULE_STATEMENT_07                (marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti);
+static inline short _G1_RULE_STATEMENT_08                (marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti);
+static inline short _G1_RULE_STATEMENT_09                (marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti);
+static inline short _G1_RULE_STATEMENT_10                (marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti);
+static inline short _G1_RULE_STATEMENT_11                (marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti);
+static inline short _G1_RULE_STATEMENT_12                (marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti);
+static inline short _G1_RULE_STATEMENT_13                (marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti);
+static inline short _G1_RULE_STATEMENT_14                (marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti);
+static inline short _G1_RULE_STATEMENT_15                (marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti);
+static inline short _G1_RULE_STATEMENT_16                (marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti);
+static inline short _G1_RULE_STATEMENT_17                (marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti);
+static inline short _G1_RULE_START_RULE                  (marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti);
+static inline short _G1_RULE_DESC_RULE                   (marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti);
+static inline short _G1_RULE_EMPTY_RULE                  (marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti);
+static inline short _G1_RULE_NULL_STATEMENT              (marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti);
+static inline short _G1_RULE_STATEMENT_GROUP             (marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti);
+static inline short _G1_RULE_PRIORITY_RULE               (marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti);
+static inline short _G1_RULE_QUANTIFIED_RULE             (marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti);
+static inline short _G1_RULE_DISCARD_RULE                (marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti);
+static inline short _G1_RULE_DEFAULT_RULE                (marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti);
+static inline short _G1_RULE_LEXEME_DEFAULT_STATEMENT_1  (marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti);
+static inline short _G1_RULE_LEXEME_DEFAULT_STATEMENT_2  (marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti);
+static inline short _G1_RULE_DISCARD_DEFAULT_STATEMENT_1 (marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti);
+static inline short _G1_RULE_DISCARD_DEFAULT_STATEMENT_2 (marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti);
+static inline short _G1_RULE_LEXEME_RULE                 (marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti);
+static inline short _G1_RULE_COMPLETION_EVENT_DECLARATION(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti);
 
 static inline short _G1_RULE_OP_DECLARE_3              (marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti);
 static inline short _G1_RULE_OP_DECLARE_1              (marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammarContext_t *marpaESLIF_grammarContextp, int rulei, int arg0i, int argni, int resulti);

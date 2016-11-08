@@ -128,8 +128,7 @@ struct marpaESLIF_meta {
   int                          idi;                       /* Non-terminal Id */
   char                        *asciinames;
   marpaESLIF_string_t         *descp;                     /* Non-terminal description */
-  marpaWrapperGrammar_t       *marpaWrapperGrammarClonep;        /* Eventual cloned grammar in lexeme search mode (no event) */
-  marpaWrapperGrammar_t       *marpaWrapperGrammarDiscardClonep; /* Eventual cloned grammar in discard search mode (only top-level event) */
+  marpaWrapperGrammar_t       *marpaWrapperGrammarLexemeClonep; /* Cloned grammar in lexeme search mode (no event) */
   short                       *prioritizedb;              /* Internal flag to prevent a prioritized symbol to appear more than once as an LHS */
 };
 
@@ -161,6 +160,7 @@ struct marpaESLIF_symbol {
   short                        discardb;               /* Discard symbol ? */
   short                        lhsb;                   /* Is an LHS somewhere in its grammar ? */
   short                        topb;                   /* Is a top-level symbol in its grammar - implies lhsb ? */
+  short                        isDiscardTopb;          /* Is a top-level symbol in the :discard context ? */
   int                          idi;                    /* Marpa ID */
   marpaESLIF_string_t         *descp;                  /* Symbol description */
   char                        *eventBefores;           /* Pause before */
@@ -173,12 +173,8 @@ struct marpaESLIF_symbol {
   short                        eventNulledb;           /* Nulled initial state: 0: off, 1: on */
   char                        *eventCompleteds;        /* Event name for completion */
   short                        eventCompletedb;        /* Completion initial state: 0: off, 1: on */
-  char                        *discardEventPredicteds; /* Discard event name for prediction */
-  short                        discardEventPredictedb; /* Discard prediction initial state: 0: off, 1: on */
-  char                        *discardEventNulleds;    /* Discard event name for nulled */
-  short                        discardEventNulledb;    /* Discard nulled initial state: 0: off, 1: on */
-  char                        *discardEventCompleteds; /* Discard event name for completion */
-  short                        discardEventCompletedb; /* Discard completion initial state: 0: off, 1: on */
+  char                        *discardEvents;          /* Discard event name */
+  short                        discardEventb;          /* Discard event initial state: 0: off, 1: on */
   int                          lookupLevelDeltai;      /* Referenced grammar delta level */
   marpaESLIF_string_t         *lookupGrammarStringp;   /* Referenced grammar (string in user's encoding) */
   int                          resolvedLeveli;         /* Referenced grammar level */
@@ -197,8 +193,6 @@ struct marpaESLIF_rule {
   genericStack_t      *rhsStackp;       /* Stack of RHS symbols */
   genericStack_t      *exceptionStackp; /* Stack of Exceptions symbols */
   char                *actions;         /* Action */
-  char                *discardEvents;   /* Discard event */
-  short                discardEventb;   /* Discard event initial state: 0 = off, 1 = on */
   int                  ranki;
   short                nullRanksHighb;
   short                sequenceb;
@@ -272,6 +266,8 @@ struct marpaESLIFRecognizer {
   marpaESLIFEvent_t           *eventArrayp;      /* For the events */
   size_t                       eventArrayl;
   marpaESLIFRecognizer_t      *parentRecognizerp;
+  char                        *lastCompletionEvents; /* A trick to avoid having to fetch the array event when a discard subgrammar succeed */
+  char                        *discardEvents;     /* Set by a child discard recognizer that reaches a completion event */
   int                          resumeCounteri;    /* Internal counter for tracing - no functional impact */
   int                          callstackCounteri; /* Internal counter for tracing - no functional impact */
 
