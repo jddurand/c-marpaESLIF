@@ -163,9 +163,10 @@ struct marpaESLIF_symbol {
   short                        topb;                   /* Is a top-level symbol in its grammar - implies lhsb ? */
   int                          idi;                    /* Marpa ID */
   marpaESLIF_string_t         *descp;                  /* Symbol description */
-  short                        pauseb;                 /* -1: before, 0: NA, 1: after */
-  short                        pauseIsOnb;             /* 0: off, 1: on */
-  char                        *pauses;                 /* Pause type */
+  char                        *eventBefores;           /* Pause before */
+  short                        eventBeforeb;           /* Pause before initial state: 0: off, 1: on */
+  char                        *eventAfters;            /* Pause after */
+  short                        eventAfterb;            /* Pause after initial state: 0: off, 1: on */
   char                        *eventPredicteds;        /* Event name for prediction */
   short                        eventPredictedb;        /* Prediction initial state: 0: off, 1: on */
   char                        *eventNulleds;           /* Event name for nulled */
@@ -273,7 +274,6 @@ struct marpaESLIFRecognizer {
   marpaESLIFRecognizer_t      *parentRecognizerp;
   int                          resumeCounteri;    /* Internal counter for tracing - no functional impact */
   int                          callstackCounteri; /* Internal counter for tracing - no functional impact */
-  char                        *discardEvents;  /* Set to NULL before any :discard call, set by the child if success */
 
   char                        *_buffers;       /* Pointer to allocated buffer containing input */
   size_t                       _bufferl;       /* Number of valid bytes in this buffer (!= allocated size) */

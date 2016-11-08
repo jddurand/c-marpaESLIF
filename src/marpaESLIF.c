@@ -1511,7 +1511,7 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
         MARPAESLIF_ERRORF(marpaESLIFp, "Looking at rules in grammar level %d (%s): rule %d (%s)'s rhs stack does not have a pointer at indice 0 !?", grammari, grammarp->descp->asciis, rulep->idi, rulep->descp->asciis);
         goto err;
       }
-      symbolp = (marpaESLIF_symbol_t *) GENERICSTACK_IS_PTR(rulep->rhsStackp, 0);
+      symbolp = (marpaESLIF_symbol_t *) GENERICSTACK_GET_PTR(rulep->rhsStackp, 0);
       /* Look to the resolve grammar */
       if (! GENERICSTACK_IS_PTR(grammarStackp, symbolp->resolvedLeveli)) {
         MARPAESLIF_ERRORF(marpaESLIFp, "Looking at rules in grammar level %d (%s): rule %d (%s)'s RHS symbol %d (%s) resolve to an unknown grammar !?", grammari, grammarp->descp->asciis, rulep->idi, rulep->descp->asciis, symbolp->idi, symbolp->descp->asciis);
@@ -2259,9 +2259,10 @@ static inline marpaESLIF_symbol_t *_marpaESLIF_symbol_newp(marpaESLIF_t *marpaES
   symbolp->lhsb                   = 0;
   symbolp->idi                    = -1;
   symbolp->descp                  = NULL;
-  symbolp->pauseb                 = 0;
-  symbolp->pauseIsOnb             = 0;
-  symbolp->pauses                 = NULL;
+  symbolp->eventBefores           = NULL;
+  symbolp->eventBeforeb           = 0;
+  symbolp->eventAfters            = NULL;
+  symbolp->eventAfterb            = 0;
   symbolp->eventPredicteds        = NULL;
   symbolp->eventPredictedb        = 0;
   symbolp->eventNulleds           = NULL;
@@ -2302,8 +2303,11 @@ static inline void _marpaESLIF_symbol_freev(marpaESLIF_symbol_t *symbolp)
     default:
       break;
     }
-    if (symbolp->pauses != NULL) {
-      free(symbolp->pauses);
+    if (symbolp->eventBefores != NULL) {
+      free(symbolp->eventBefores);
+    }
+    if (symbolp->eventAfters != NULL) {
+      free(symbolp->eventAfters);
     }
     if (symbolp->eventPredicteds) {
       free(symbolp->eventPredicteds);
@@ -3739,8 +3743,6 @@ static inline short _marpaESLIFRecognizer_resumeb(marpaESLIFRecognizer_t *marpaE
       } else {
         _marpaESLIFrecognizer_lexemeStack_resetv(marpaESLIFRecognizerp, marpaESLIF_lexemeContext.outputStackp);
       }
-      /* Reset our internal discardEvents member in any case - an eventual successful discard will change it */
-      marpaESLIFRecognizerp->discardEvents = NULL;
       if (_marpaESLIFGrammar_parseb(&marpaESLIFGrammarDiscard, &marpaESLIFRecognizerOptionDiscard, &marpaESLIFValueOptionDiscard, 1 /* discardb */, marpaESLIFRecognizerp /* marpaESLIFRecognizerParentp */, NULL /* exhaustedbp */)) {
         /* Discard symbol got matched. Get the length. */
         if (! _marpaESLIFRecognizer_lexemeStack_i_sizeb(marpaESLIFRecognizerp, marpaESLIF_lexemeContext.outputStackp, 0, &matchedl)) {
@@ -4572,7 +4574,6 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGramm
   marpaESLIFRecognizerp->parentRecognizerp          = marpaESLIFRecognizerParentp;
   marpaESLIFRecognizerp->resumeCounteri             = 0;
   marpaESLIFRecognizerp->callstackCounteri          = 0;
-  marpaESLIFRecognizerp->discardEvents              = NULL;
   marpaESLIFRecognizerp->_buffers                   = NULL;
   marpaESLIFRecognizerp->_bufferl                   = 0;
   marpaESLIFRecognizerp->_bufferallocl              = 0;
@@ -5028,101 +5029,6 @@ static short _marpaESLIFValueRuleCallbackMainWrapper(void *userDatavp, int rulei
     }
   }
 
-
-  /* There is a hack to get the parent recognizer generate an event when we are a :discard sub-grammar that succeed */
-  /* First check if we are a sub-grammar executed in the :discard context */
-  if (marpaESLIFRecognizerp->discardb) {
-    /* Check we the LHS of current rule is our start symbol */
-    if (rulep->lhsp == NULL) {
-      /* This is simply not possible, but who knows -; */
-      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "Rule No %d (%s) has no associated LHS symbol !?", rulei, rulep->descp->asciis);
-      goto err;
-    }
-    /* Is it the start symbol !? It must be a META symbol btw */
-    if (rulep->lhsp->startb && (rulep->lhsp->type == MARPAESLIF_SYMBOL_TYPE_META)) {
-      marpaESLIFRecognizer_t *parentRecognizerp = marpaESLIFRecognizerp->parentRecognizerp;
-      marpaESLIF_grammar_t   *parent_grammarp;
-      genericStack_t         *parent_ruleStackp;
-      int                     parent_rulei;
-      marpaESLIF_rule_t      *parent_rulep;
-      marpaESLIF_rule_t      *this_rulep;
-      marpaESLIF_symbol_t    *this_rhsp;
-
-      /* Then this the end of the :discard ! Look into parent's grammar if there is an associated action - this */
-      /* will become the :discard event */
-      /* By definition the rule in the parent can have a single form: ":discard ~ our_top_symbol at our grammar level" */
-      if (parentRecognizerp == NULL) {
-        /* This is also not possible, but who knows -; */
-        MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, ":discard recognizer without a parent recognizer !?");
-        goto err;
-      }
-      parent_grammarp   = parentRecognizerp->marpaESLIFGrammarp->grammarp;
-      parent_ruleStackp = parent_grammarp->ruleStackp;
-      parent_rulep      = NULL;
-
-      for (parent_rulei = 0; parent_rulei < GENERICSTACK_USED(parent_ruleStackp); parent_rulei++) {
-        if (! GENERICSTACK_IS_PTR(parent_ruleStackp, parent_rulei)) {
-          /* Should never happen, but who knows */
-          continue;
-        }
-        this_rulep = (marpaESLIF_rule_t *) GENERICSTACK_GET_PTR(parent_ruleStackp, parent_rulei);
-
-        /* The LHS of this rule must have the discard flag, its SINGLE RSH must be ourself */
-        if (this_rulep->lhsp == NULL) {
-          MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "this_rulep->lhsp is NULL");
-          goto err;
-        }
-        if (! this_rulep->lhsp->discardb) {
-          continue;
-        }
-        
-        if (GENERICSTACK_USED(this_rulep->rhsStackp) != 1) {
-          continue;
-        }
-        if (! GENERICSTACK_IS_PTR(this_rulep->rhsStackp, 0)) {
-          MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "this_rulep->rhsStackp->[0] is not a PTR");
-          goto err;
-        }
-        this_rhsp = (marpaESLIF_symbol_t *) GENERICSTACK_IS_PTR(this_rulep->rhsStackp, 0);
-        if (this_rhsp == NULL) {
-          MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "this_rhsp is NULL");
-          goto err;
-        }
-        /* This parent's discard rule's single's RHS refers to our grammar !? */
-        if (this_rhsp->resolvedLeveli != grammarp->leveli) {
-          continue;
-        }
-        /* Oh... It is us !? - it must be a META thingy */
-        if (this_rhsp->type != MARPAESLIF_SYMBOL_TYPE_META) {
-          continue;
-        }
-        if (strcmp(this_rhsp->u.metap->asciinames, rulep->lhsp->u.metap->asciinames)) {
-          /* Indeed ! */
-          parent_rulep = this_rulep;
-          break;
-        }
-      }
-
-      if (parent_rulep == NULL) {
-        MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, ":discard rule completed but has no association in parent recognizer !?");
-        goto err;
-      }
-
-      /* Update our parent's discard event in any case */
-      if (parent_rulep->discardEvents != NULL) {
-        if (parent_rulep->discardEventb) {
-          parentRecognizerp->discardEvents = parent_rulep->discardEvents;
-        }
-      } else if (parent_grammarp->defaultDiscardEvents != NULL) {
-        if (parent_grammarp->defaultDiscardEventb) {
-          parentRecognizerp->discardEvents = parent_grammarp->defaultDiscardEvents;
-        }
-      } else {
-        parentRecognizerp->discardEvents = NULL;
-      }
-    }
-  }
-  
   rcb = 1;
   goto done;
 
