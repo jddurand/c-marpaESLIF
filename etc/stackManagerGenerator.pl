@@ -177,7 +177,7 @@ sub loadMap {
     next if ($input =~ /^\s*#/);
     next if ($input =~ /^\s*$/);
     if ($input =~ m/^\s*(\w+)\s*=\s*(\w+)(?:\s*\{(.*)\s*\})?\s*;$/smg) {
-      my ($outtype, $stacktype, $ctype) = ($1, $2, $3 || "GENERICSTACKITEMTYPE2TYPE_$2");
+      my ($outtype, $stacktype, $ctype) = ($1, $2, $3 || (("$2" eq 'NA') ? 'void' : "GENERICSTACKITEMTYPE2TYPE_$2"));
       die "Outtype $outtype already defined upper" if (exists($mapp->{$outtype}));
       $mapp->{$outtype} = {stacktype => $stacktype, ctype => $ctype };
     } else {
@@ -259,12 +259,28 @@ sub generate {
   printf $out "static void %s(void *userDatavp, %s *stackManagerp);\n", stackManager_freev(), stackManager_t();
 
   print  $out "\n";
-  printf $out "static %s *%s(void *userDatavp);\n", stackManager_t(), stackManager_newp();
-  print  $out "}\n";
-  printf $out "static void %s(void *userDatavp, %s *stackManagerp);\n", stackManager_freev(), stackManager_t();
+  printf $out "static %s *%s(void *userDatavp) {\n", stackManager_t(), stackManager_newp();
+  printf $out "  %s *stackManagerp;\n", stackManager_t();
+  print  $out "\n";
+  printf $out "  stackManagerp = (%s *) malloc(sizeof(%s));\n", stackManager_t(), stackManager_t();
+  print  $out "  if (stackManagerp == NULL) {\n";
+  stackManager_error('"malloc failure, %s"', "strerror(errno)");
+  print  $out "    goto err;\n";
+  print  $out "  }\n";
+  print  $out "  goto done;\n";
+  print  $out " err:\n";
+  printf $out "  %s(userDatavp, stackManagerp);\n", stackManager_freev();
+  print  $out "  stackManagerp = NULL;\n";
+  print  $out " done:\n";
+  print  $out "  return stackManagerp;\n";
   print  $out "}\n";
   print  $out "\n";
-  stackManager_trace('"%s"', "test");
+  printf $out "static void %s(void *userDatavp, %s *stackManagerp) {\n", stackManager_freev(), stackManager_t();
+  print  $out "  if (stackManagerp != NULL) {\n";
+  print  $out "    free(stackManagerp);\n";
+  print  $out "  }\n";
+  print  $out "}\n";
+  print  $out "\n";
 }
 
 sub x2type { return sprintf("${prefix}_%s_t", shift) }
@@ -277,14 +293,19 @@ sub stackManager {
   }
 }
 sub stackManager_t { return "${prefix}_stackManager_t" }
-sub stackManager_newp { return sprintf("%s_newp", stackManager()) }
-sub stackManager_freev { return sprintf("%s_freev", stackManager()) }
+sub stackManager_newp { return "${prefix}_stackManager_newp" }
+sub stackManager_freev { return "${prefix}_stackManager_freev" }
+sub stackManager_error {
+  if ($errlogger) {
+    printf $out "$errlogger(%s, %s);\n", "userDatavp", join(', ', @_);
+  }
+}
 sub stackManager_trace {
   if ($tracelogger) {
     if ($tracecond) {
       print $out "$tracecond\n";
     }
-    printf $out "  $tracelogger(%s, %s);\n", "userDatavp", join(', ', @_);
+    printf $out "$tracelogger(%s, %s);\n", "userDatavp", join(', ', @_);
     if ($tracecond) {
       print $out "#endif\n";
     }
