@@ -1697,6 +1697,7 @@ static inline short _marpaESLIFValueRuleCallbackGrammar_lexemeDefaultb(marpaESLI
   marpaESLIF_grammar_t          *out_grammarp;
   /* Adverb items */
   char                          *actions;
+  short                          latmb;
 
   marpaESLIFRecognizerp->callstackCounteri++;
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
@@ -1718,8 +1719,14 @@ static inline short _marpaESLIFValueRuleCallbackGrammar_lexemeDefaultb(marpaESLI
                                                        NULL, /* eventsp */
                                                        NULL, /* eventtypeip */
                                                        NULL, /* eventinitbp */
-                                                       NULL, /* latmbp */
+                                                       &latmb,
                                                        NULL /* namingpp */)) {
+    goto err;
+  }
+
+  /* Well, this is supported grammaticallw, but only the true value is allowed */
+  if (! latmb) {
+    MARPAESLIF_ERROR(marpaESLIFp, "Only 'latm => 1' or 'forgiving => 1' is allowed");
     goto err;
   }
 
@@ -3255,7 +3262,7 @@ static inline short _G1_RULE_LEXEME_RULE(marpaESLIFValue_t *marpaESLIFValuep, ma
     marpaESLIF_symbol_t *out_symbolp;
     /* Adverb items */
     int   priorityi;
-    int  *pausei;
+    int   pausei;
     char *events;
     short eventinitb;
 
@@ -3300,22 +3307,33 @@ static inline short _G1_RULE_LEXEME_RULE(marpaESLIFValue_t *marpaESLIFValuep, ma
       MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, ":lexeme on symbol %s for grammar level %d (%s) must be unique", (char *) symbol, out_grammarp->leveli, out_grammarp->descp->asciis);
       goto err;
     }
-    out_symbolp->priorityi = 1;
-    if (out_symbolp->pauses != NULL) {
-      free(out_symbolp->pauses);
-      out_symbolp->pauses = NULL;
+    out_symbolp->priorityi = priorityi;
+    if (out_symbolp->eventBefores != NULL) {
+      free(out_symbolp->eventBefores);
+      out_symbolp->eventBefores = NULL;
     }
-    if (pauses != NULL) {
-      out_symbolp->pauses = strdup(pauses);
-      if (out_symbolp->pauses == NULL) {
-        MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "strdup failure, %s", strerror(errno));
-        goto err;
-      }
+    if (out_symbolp->eventAfters != NULL) {
+      free(out_symbolp->eventAfters);
+      out_symbolp->eventAfters = NULL;
     }
     if (events != NULL) {
-      out_symbolp->events = strdup(events);
-      if (out_symbolp->events == NULL) {
-        MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "strdup failure, %s", strerror(errno));
+      switch (pausei) {
+      case MARPAESLIF_EVENTTYPE_BEFORE:
+        out_symbolp->eventBefores = strdup(events);
+        if (out_symbolp->eventBefores == NULL) {
+          MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "strdup failure, %s", strerror(errno));
+          goto err;
+        }
+        break;
+      case MARPAESLIF_EVENTTYPE_AFTER:
+        out_symbolp->eventAfters = strdup(events);
+        if (out_symbolp->eventAfters == NULL) {
+          MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "strdup failure, %s", strerror(errno));
+          goto err;
+        }
+        break;
+      default:
+        MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "Unsupported pause type 0x%x", pausei);
         goto err;
       }
     }
