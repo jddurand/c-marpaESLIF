@@ -77,6 +77,8 @@ if ($logfile) {
 }
 
 my @rule = ();
+my @symbol = ();
+my @nullable = ();
 my %type = ();
 my %map = ();
 
@@ -84,7 +86,7 @@ _print([$log], "-------------------------------------------------\n");
 _print([$log], "Methods to be writen by hand will be listed here:\n");
 _print([$log], "-------------------------------------------------\n");
 
-loadRule($rulefile, \@rule, \%type);
+loadRule($rulefile, \@rule, \@symbol, \@nullable, \%type);
 die "No type detected" unless %type;
 die "No rule detected" unless @rule;
 
@@ -93,7 +95,7 @@ die "No map detected" unless %map;
 
 checkType(\%type, \%map);
 checkRule(\@rule, \%map);
-generate(\@rule, \%type, \%map);
+generate(\@rule, \@symbol, \@nullable, \%type, \%map);
 
 exit(EXIT_SUCCESS);
 
@@ -106,15 +108,23 @@ if ($logfile) {
 }
 
 sub loadRule {
-  my ($file, $rulep, $typep) = @_;
+  my ($file, $rulep, $symbolp, $nullablep, $typep) = @_;
 
   open(my $fh, '<', $file) || die "$file: $!";
   my $line = 0;
   while (chomp($_ = <$fh>)) {
     ++$line;
     #
-    # We expect data to contain lines in the forms:
+    # We expect date to contain lines in the forms:
     # TYPE = METHOD(TYPE*)
+    # or
+    # TYPE ~ METHOD()
+    # or
+    # TYPE ~ METHOD
+    #
+    # First one is for rules.
+    # Second is for symbols.
+    # Third is for nullables.
     #
     # Perl'like comment lines are ignored
     # Space-only lines are ignored
@@ -139,7 +149,7 @@ sub loadRule {
     my $input = $_;
     next if ($input =~ /^\s*#/);
     next if ($input =~ /^\s*$/);
-    if ($input =~ m/^\s*(\w+)\s*=\s*(\w+)\s*\((.*)\)\s*;$/smg) {
+    if ($input =~ m/^\s*(\w+)\s*=\s*(\w+)\s*\((.*)\)\s*;?\s*$/smg) {
       my ($outtype, $method, $intypes) = ($1, $2, $3 || '');
       $typep->{$outtype}++;
       $intypes =~ s/\s+//g;
@@ -169,6 +179,14 @@ sub loadRule {
         push(@intypes, { type => $intype, minmax => $minmax });
       }
       push(@{$rulep}, { outtype => $outtype, method => $method, intypes => \@intypes });
+    } elsif ($input =~ m/^\s*(\w+)\s*~\s*(\w+)\s*\(\s*\)\s*;?\s*$/smg) {
+      my ($outtype, $method) = ($1, $2);
+      $typep->{$outtype}++;
+      push(@{$symbolp}, { outtype => $outtype, method => $method });
+    } elsif ($input =~ m/^\s*(\w+)\s*~\s*(\w+)\s*;?\s*$/smg) {
+      my ($outtype, $method) = ($1, $2);
+      $typep->{$outtype}++;
+      push(@{$nullablep}, { outtype => $outtype, method => $method });
     } else {
       die "$file.$line: not parsable";
     }
@@ -189,7 +207,7 @@ sub loadMap {
     #
     # or
     #
-    # TYPE = STACKTYPE{Ctype};
+    # TYPE = STACKTYPE{Ctype}
     #
     # Perl'like comment lines are ignored
     # Space-only lines are ignored
@@ -209,7 +227,7 @@ sub loadMap {
     my $input = $_;
     next if ($input =~ /^\s*#/);
     next if ($input =~ /^\s*$/);
-    if ($input =~ m/^\s*(\w+)\s*=\s*(\w+)(?:\s*\{(.*)\s*\})?\s*;$/smg) {
+    if ($input =~ m/^\s*(\w+)\s*=\s*(\w+)(?:\s*\{(.*)\s*\})?\s*;?\s*$/smg) {
       die "Type $1 already defined upper" if (exists($mapp->{$1}));
       $mapp->{$1} = {basictype => $2, stacktype => basictype2stacktype($2), ctype => $3 || basictype2ctype($2) };
     } else {
@@ -228,7 +246,7 @@ sub checkType {
 }
 
 sub generate {
-  my ($rulep, $typep, $mapp) = @_;
+  my ($rulep, $symbolp, $nullablep, $typep, $mapp) = @_;
 
   #
   # First generate an enum for all the types
@@ -248,7 +266,7 @@ sub generate {
 typedef enum ${prefix}_itemType {
 ");
   my $i = 0;
-  _print([$out], "  " . join(",\n  ", map { uc(sprintf("%s_itemType_%s%s", ${prefix}, $_, ($i++ == 0) ? " = 1" : "")) } sort keys %{$typep}));
+  _print([$out], "  " . join(",\n  ", map { sprintf("%s_itemType_%s%s", ${prefix}, $_, ($i++ == 0) ? " = 1" : "") } sort keys %{$typep}));
   _print([$out], "
 
 } ${prefix}_itemType_t;
@@ -267,41 +285,14 @@ typedef enum ${prefix}_itemType {
     _print([$out,$log], "static %s%s(void *userDatavp, %s%s);\n", $mapp->{$_}->{ctype}, x2meth($_, 'clonep'), $mapp->{$_}->{ctype}, $_);
   }
   #
-  # Internal types and methods that the stack manager is using
-  #
-  _print([$out], "
-
-/* ----------------------------------------------- */
-/* Stack internal type, constructor and destructor */
-/* ----------------------------------------------- */
-");
-  _print([$out], "typedef %s %s;\n", stackManager(), stackManager_t());
-  _print([$out], "static %s *%s(void *userDatavp);\n", stackManager_t(), stackManager_newp());
-  _print([$out], "static void %s(void *userDatavp, %s *stackManagerp);\n", stackManager_freev(), stackManager_t());
-  _print([$out], "
-
-/* ----------------------------------------------------------- */
-/* Every item being tagged in the stack, methods to inspect it */
-/* ----------------------------------------------------------- */
-");
-  _print([$out], "static short %s(void *userDatavp, %s *stackManagerp, int i, ${prefix}_itemType_t *itemTypep);\n", stackManager_i_gettypei(), stackManager_t());
-  if ($tracelogger) {
-    if ($tracecond) {
-      _print([$out], "$tracecond\n");
-    }
-    _print([$out], "static void %s(void *userDatavp, %s *stackManagerp, int i);\n", stackManager_i_tracev(), stackManager_t());
-    if ($tracecond) {
-      _print([$out], "#endif /* $tracecond */\n");
-    }
-  }
-  #
-  # Finally, generate the method bodies
+  # Generate the method bodies
   #
   generateStackManagerConstrustor();
   generateStackManagerDestructor();
   generateStackManagerGettype($typep, $mapp);
   generateStackManagerTrace($typep, $mapp);
-  generateRuleWrapper($rulep, $typep, $mapp);
+  generateMacros($rulep, $symbolp, $nullablep, $typep, $mapp);
+  generateRuleWrapper($rulep, $symbolp, $nullablep, $typep, $mapp);
   generateRuleImpl($rulep, $typep, $mapp);
 }
 
@@ -471,9 +462,8 @@ sub generateStackManagerGettype {
 ");
   foreach (sort keys %{$typep}) {
     my $isPtr = $mapp->{$_}->{basictype} eq 'PTR';
-    my $basecase = uc($_);
-    my $case = uc(sprintf("%s_itemType_%s", ${prefix}, $_));
-    _print([$out], "    case $case:\n");
+    my $case = sprintf("%s_itemType_%s", ${prefix}, $_);
+    _print([$out], "    case  $case:\n");
     if ($isPtr) {
       _print([$out], "    case -$case: /* shallow copy */\n");
     }
@@ -502,16 +492,15 @@ sub generateStackManagerGettype {
 
 sub generateStackManagerTrace {
   my ($typep, $mapp) = @_;
+  _print([$out], "
+/* ------------------- */
+/* Stack Manager trace */
+/* ------------------- */");
   if ($tracelogger) {
     _print([$out], "\n");
     if ($tracecond) {
       _print([$out], "$tracecond\n");
     }
-  _print([$out], "
-/* ------------------- */
-/* Stack Manager trace */
-/* ------------------- */
-");
     _print([$out], "static void %s(void *userDatavp, %s *stackManagerp, int i) {\n", stackManager_i_tracev(), stackManager_t());
     _print([$out], "  ${prefix}_itemType_t itemType;\n");
     _print([$out], "  genericStack_t *typeStackp;\n");
@@ -526,9 +515,9 @@ sub generateStackManagerTrace {
 ");
     foreach (sort keys %{$typep}) {
       my $isPtr = $mapp->{$_}->{basictype} eq 'PTR';
-      my $basecase = uc($_);
-      my $case = uc(sprintf("%s_itemType_%s", ${prefix}, $_));
-      _print([$out], "        case $case:\n");
+      my $basecase = $_;
+      my $case = sprintf("%s_itemType_%s", ${prefix}, $_);
+      _print([$out], "        case  $case:\n");
       stackManager_trace(-10, '"stack[%d] type is ' . $basecase . '"', "i");
       _print([$out], "          break;\n");
       if ($isPtr) {
@@ -605,22 +594,50 @@ sub checkRule {
   }
 }
 
-sub generateRuleWrapper {
-  my ($rulep, $typep, $mapp) = @_;
+sub generateMacros {
+  my ($rulep, $symbolp, $nullablep, $typep, $mapp) = @_;
 
-  #
-  # First round is printing out the description and prototypes
-  #
+  foreach my $type (sort keys %{$typep}) {
   _print([$out], "\n");
-  _print([$out], "/* Rule methods prototypes */\n");
-  foreach my $rule (@{$rulep}) {
-    _print([$out], "%s;\n", $rule->{prototype});
+  _print([$out], "/* ------------------------------------------\n");
+  _print([$out], "   %s\n", $type);
+  _print([$out], "\n");
+  _print([$out], "   genericStack type: %s\n", $mapp->{$type}->{stacktype});
+  _print([$out], "              C type: %s\n", $mapp->{$type}->{ctype});
+  _print([$out], "   ------------------------------------------ */\n");
+  _print([$out], "#define ${prefix}_DECL_%s(identifier) %s identifier\n", $type, $mapp->{$type}->{ctype});
+  _print([$out], "#define ${prefix}_GET_%s(identifier, indice) do { \\\n", $type);
+  _print([$out], "  ${prefix}_itemType_t _get_itemType; \\\n");
+  _print([$out], "  %s *_get_stackManagerp \\\n", stackManager_t);
+  _print([$out], "  if (! %s(userDatavp, _get_stackManagerp, (indice), &_get_itemType)) { \\\n", stackManager_i_gettypei);
+  _print([$out], "    goto err; \\\n");
+  _print([$out], "  } \\\n");
+  my $isPtr = $mapp->{$type}->{basictype} eq 'PTR';
+  my $case = sprintf("%s_itemType_%s", ${prefix}, $type);
+  if ($isPtr) {
+    _print([$out], "  if ((_get_itemType != $case) && (itemType != -$case)) { \\\n");
+    stackManager_error(4, '"stack[%d] item type is %d instead of %d or %d"', "indice", "itemType", "$case", "-$case");
+  } else {
+    _print([$out], "  if (_get_itemType != $case) { \\\n");
+    stackManager_error(4, '"stack[%d] item type is %d instead of %d"', "indice", "itemType", "$case");
   }
-  #
-  # Second round is generating the stack machinery in these wrappers
-  #
+
+  if ($tracelogger) {
+  }
+  _print([$out], "    goto err; \\\n");
+  _print([$out], "  } \\\n");
+  _print([$out], "} while (0)\n");
+  }
+}
+
+sub generateRuleWrapper {
+  my ($rulep, $symbolp, $nullablep, $typep, $mapp) = @_;
+
   _print([$out], "\n");
-  _print([$out], "/* Rule methods internal implementation (stack machinery) */\n");
+  _print([$out], "/* Rule methods wrapper implementation (stack machinery) */\n");
+  #
+  # The rules
+  #
   foreach (0..$#{$rulep}) {
     my $rule = $rulep->[$_];
 
@@ -635,6 +652,11 @@ sub generateRuleWrapper {
     _print([$out], "%s {\n", $rule->{prototype});
     _print([$out], "}\n");
   }
+  #
+  # The symbols
+  #
+  # The nullables
+  #
 }
 
 sub generateRuleImpl {
