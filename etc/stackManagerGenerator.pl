@@ -7,25 +7,34 @@ use Getopt::Long;
 my $rulefile;
 my $mapfile;
 my $outfile;
+my $logfile;
+my $before = '';
+my $after = '';
 my $prefix = '';
 my $postfix = '_t';
+my $impl = '_impl';
 my $errlogger = '';
 my $tracelogger = '';
 my $tracecond = '';
+my $NA = 1;
 my $help = 0;
 if (! GetOptions("rule=s"          => \$rulefile,
                  "map=s"           => \$mapfile,
+                 "before=s"        => \$before,
+                 "after=s"         => \$after,
                  "prefix=s"        => \$prefix,
                  "postfix=s"       => \$postfix,
                  "errlogger=s"     => \$errlogger,
                  "tracelogger=s"   => \$tracelogger,
                  "tracecond=s"     => \$tracecond,
-                 "out=s"           => \$outfile,
+                 "outfile=s"       => \$outfile,
+                 "logfile=s"       => \$logfile,
+                 "NA!"             => \$NA,
                  "help!"           => \$help)) {
   exit(EXIT_FAILURE);
 }
 
-if ($help || ! $rulefile || ! $mapfile) {
+if ($help || ! $rulefile || ! $mapfile || ! $impl) {
   print <<USAGE;
   Usage: $0 [options]
 
@@ -33,12 +42,17 @@ if ($help || ! $rulefile || ! $mapfile) {
 
   --rule          rulefile       Load methods configuration from rulefile. Default: undef.
   --map           mapfile        Load type mappings from mapfile. Default: undef.
+  --before        method         Name of a method guaranteed to be called before processing, with this signature: short method(void *userDatavp, char *methodname). Must return true for processing to happen. Default is none.
+  --after         method         Name of a method guaranteed to be called after processing, with this signature: short method(void *userDatavp, char *methodname). Must return true to indicate success. Default is none.
   --prefix        typeprefix     String preprended to every generated type. Default: "$prefix".
   --postfix       typepostfix    String appended to every generated type. Default: "$postfix".
-  --out           outfile        Output. If not specified, it goes to STDOUT.
+  --impl          implprefix     String preprended to every method that use have to implement. Cannot be empty. Default: "$impl".
+  --outfile       filepath       Output. If not specified, it goes to STDOUT.
+  --logfile       filepath       Log. If not specified, it goes to STDERR.
   --errlogger     method         If user context is logger aware, the name of method which accept the following arguments: method(void *userDatavp, char *fmts, ...). Eventual returns value does not matter. Default is none.
   --tracelogger   method         If user context is logger aware, the name of method which accept the following arguments: method(void *userDatavp, char *fmts, ...). Eventual returns value does not matter. Default is none.
   --tracecond     condition      A preprocessor condition to generate TRACE logs via the genericLogger. Default is none.
+  --NA                           Method outputing NA and having all parameters as NA are asumed to be meaningless and generated automatially to return success. Say --no-NA to implement them anyway. Default is true.
   --help                         This help
 
   Example:
@@ -50,24 +64,45 @@ USAGE
 
 my $out;
 if ($outfile) {
-  open($out, '>', $out) || die "$out, $!";
+  open($out, '>', $outfile) || die "$outfile, $!";
 } else {
   $out = \*STDOUT;
+}
+
+my $log;
+if ($logfile) {
+  open($log, '>', $logfile) || die "$logfile, $!";
+} else {
+  $log = \*STDERR;
 }
 
 my @rule = ();
 my %type = ();
 my %map = ();
 
-loadRule($rulefile, \@rule, \%type);
-loadMap($mapfile, \%map);
-checkType(\%type, \%map);
-generate(\%type, \%map);
+_print([$log], "-------------------------------------------------\n");
+_print([$log], "Methods to be writen by hand will be listed here:\n");
+_print([$log], "-------------------------------------------------\n");
 
+loadRule($rulefile, \@rule, \%type);
 die "No type detected" unless %type;
+die "No rule detected" unless @rule;
+
+loadMap($mapfile, \%map);
+die "No map detected" unless %map;
+
+checkType(\%type, \%map);
+checkRule(\@rule, \%map);
+generate(\@rule, \%type, \%map);
+
+exit(EXIT_SUCCESS);
+
 
 if ($outfile) {
-  close($out, '>', $out) || warn "$out, $!";
+  close($out) || warn "$out, $!";
+}
+if ($logfile) {
+  close($log) || warn "$log, $!";
 }
 
 sub loadRule {
@@ -193,13 +228,13 @@ sub checkType {
 }
 
 sub generate {
-  my ($typep, $mapp) = @_;
+  my ($rulep, $typep, $mapp) = @_;
 
   #
   # First generate an enum for all the types
   #
   my $now = localtime;
-  print  $out <<OUT;
+  _print([$out], "
 /* This is a generated file as of $now */
 
 #include <stdlib.h>        /* malloc, etc. */
@@ -211,50 +246,52 @@ sub generate {
 /* Every item in the stack is explicitly tagged */
 /* -------------------------------------------- */
 typedef enum ${prefix}_itemType {
-OUT
-    foreach (sort keys %{$typep}) {
-      printf $out uc(sprintf("\t%s_itemType_%s\n", ${prefix}, $_));
-    }
-    print $out <<OUT;
+");
+  my $i = 0;
+  _print([$out], "  " . join(",\n  ", map { uc(sprintf("%s_itemType_%s%s", ${prefix}, $_, ($i++ == 0) ? " = 1" : "")) } sort keys %{$typep}));
+  _print([$out], "
+
 } ${prefix}_itemType_t;
 
 /* ------------------------------------------------------------------------------- */
 /* Every type mapped to a genericStack's PTR generates free and clone dependencies */
 /* ------------------------------------------------------------------------------- */
-OUT
+");
+  _print([$log], "/* Free methods */\n");
   foreach (grep { $mapp->{$_}->{basictype} eq 'PTR' } sort keys %{$mapp}) {
-    printf "static void %s(void *userDatavp, %s%s);\n", x2meth($_, 'freev'), $mapp->{$_}->{ctype}, $_;
+    _print([$out,$log], "static void %s(void *userDatavp, %s%s);\n", x2meth($_, 'freev'), $mapp->{$_}->{ctype}, $_);
   }
-  print $out "\n";
+  _print([$out], "\n");
+  _print([$log], "/* Clone methods */\n");
   foreach (grep { $mapp->{$_}->{basictype} eq 'PTR' } sort keys %{$mapp}) {
-    printf "static %s%s(void *userDatavp, %s%s);\n", $mapp->{$_}->{ctype}, x2meth($_, 'clonep'), $mapp->{$_}->{ctype}, $_;
+    _print([$out,$log], "static %s%s(void *userDatavp, %s%s);\n", $mapp->{$_}->{ctype}, x2meth($_, 'clonep'), $mapp->{$_}->{ctype}, $_);
   }
   #
   # Internal types and methods that the stack manager is using
   #
-  print  $out <<OUT;
+  _print([$out], "
 
 /* ----------------------------------------------- */
 /* Stack internal type, constructor and destructor */
 /* ----------------------------------------------- */
-OUT
-  printf $out "typedef %s %s;\n", stackManager(), stackManager_t();
-  printf $out "static %s *%s(void *userDatavp);\n", stackManager_t(), stackManager_newp();
-  printf $out "static void %s(void *userDatavp, %s *stackManagerp);\n", stackManager_freev(), stackManager_t();
-  print  $out <<OUT;
+");
+  _print([$out], "typedef %s %s;\n", stackManager(), stackManager_t());
+  _print([$out], "static %s *%s(void *userDatavp);\n", stackManager_t(), stackManager_newp());
+  _print([$out], "static void %s(void *userDatavp, %s *stackManagerp);\n", stackManager_freev(), stackManager_t());
+  _print([$out], "
 
 /* ----------------------------------------------------------- */
 /* Every item being tagged in the stack, methods to inspect it */
 /* ----------------------------------------------------------- */
-OUT
-  printf $out "static ${prefix}_itemType_t %s(void *userDatavp, %s *stackManagerp, int i);\n", stackManager_i_gettypei(), stackManager_t();
+");
+  _print([$out], "static short %s(void *userDatavp, %s *stackManagerp, int i, ${prefix}_itemType_t *itemTypep);\n", stackManager_i_gettypei(), stackManager_t());
   if ($tracelogger) {
     if ($tracecond) {
-      print $out "$tracecond\n";
+      _print([$out], "$tracecond\n");
     }
-    printf $out "static void %s(void *userDatavp, %s *stackManagerp, int i);\n", stackManager_i_tracev(), stackManager_t();
+    _print([$out], "static void %s(void *userDatavp, %s *stackManagerp, int i);\n", stackManager_i_tracev(), stackManager_t());
     if ($tracecond) {
-      print $out "#endif /* $tracecond */\n";
+      _print([$out], "#endif /* $tracecond */\n");
     }
   }
   #
@@ -262,7 +299,10 @@ OUT
   #
   generateStackManagerConstrustor();
   generateStackManagerDestructor();
-  generateStackManagerTrace($typep);
+  generateStackManagerGettype($typep, $mapp);
+  generateStackManagerTrace($typep, $mapp);
+  generateRuleWrapper($rulep, $typep, $mapp);
+  generateRuleImpl($rulep, $typep, $mapp);
 }
 
 sub basictype2ctype {
@@ -319,78 +359,78 @@ sub stackManager_i_gettypei { return "${prefix}_stackManager_i_gettypei" }
 sub stackManager_error {
   my $indent = shift;
   if ($errlogger) {
-    printf $out "%*s$errlogger(%s, %s);\n", $indent, " ", "userDatavp", join(', ', @_);
+    _print([$out], "%*s$errlogger(%s, %s);\n", $indent, " ", "userDatavp", join(', ', @_));
   }
 }
 sub stackManager_trace {
   my $indent = shift;
   if ($tracelogger) {
-    if ($tracecond) {
-      print $out "$tracecond\n";
+    if ($tracecond && $indent > 0) {
+      _print([$out], "$tracecond\n");
     }
-    printf $out "%*s$tracelogger(%s, %s);\n", $indent, " ", "userDatavp", join(', ', @_);
-    if ($tracecond) {
-      print $out "#endif /* $tracecond */\n";
+    _print([$out], "%*s$tracelogger(%s, %s);\n", $indent, " ", "userDatavp", join(', ', @_));
+    if ($tracecond && $indent > 0) {
+      _print([$out], "#endif /* $tracecond */\n");
     }
   }
 }
 
 sub generateStackManagerConstrustor {
-  print  $out <<OUT;
+  _print([$out], "
 
 /* ------------------------- */
 /* Stack Manager constructor */
 /* ------------------------- */
-OUT
-  printf $out "static %s *%s(void *userDatavp) {\n", stackManager_t(), stackManager_newp();
-  printf $out "  %s *stackManagerp;\n", stackManager_t();
-  print  $out "\n";
-  printf $out "  stackManagerp = (%s *) malloc(sizeof(%s));\n", stackManager_t(), stackManager_t();
-  print  $out "  if (stackManagerp == NULL) {\n";
+");
+  _print([$out], "static %s *%s(void *userDatavp) {\n", stackManager_t(), stackManager_newp());
+  _print([$out], "  %s *stackManagerp;\n", stackManager_t());
+  _print([$out], "\n");
+  _print([$out], "  stackManagerp = (%s *) malloc(sizeof(%s));\n", stackManager_t(), stackManager_t());
+  _print([$out], "  if (stackManagerp == NULL) {\n");
   stackManager_error(4, '"malloc failure, %s"', "strerror(errno)");
-  print  $out "    goto err;\n";
-  print  $out "  }\n";
-  print  $out "\n";
-  print  $out "  stackManagerp->dataStackp == NULL;\n";
-  print  $out "  stackManagerp->typeStackp == NULL;\n";
-  print  $out "\n";
-  print  $out "  GENERICSTACK_INIT(stackManagerp->dataStackp)\n";
-  print  $out "  if (GENERICSTACK_ERROR(stackManagerp->dataStackp)) {\n";
-  stackManager_error(6, '"stackManagerp->dataStackp initializationfailure, %s"', "strerror(errno)");
-  print  $out "    goto err;\n";
-  print  $out "  }\n";
-  print  $out "\n";
-  print  $out "  GENERICSTACK_INIT(stackManagerp->typeStackp)\n";
-  print  $out "  if (GENERICSTACK_ERROR(stackManagerp->typeStackp)) {\n";
-  stackManager_error(6, '"stackManagerp->typeStackp initializationfailure, %s"', "strerror(errno)");
-  print  $out "    goto err;\n";
-  print  $out "  }\n";
-  print  $out "  goto done;\n";
-  print  $out "\n";
-  print  $out " err:\n";
-  printf $out "  %s(userDatavp, stackManagerp);\n", stackManager_freev();
-  print  $out "  stackManagerp = NULL;\n";
-  print  $out "\n";
-  print  $out " done:\n";
-  print  $out "  return stackManagerp;\n";
-  print  $out "}\n";
+  _print([$out], "    goto err;\n");
+  _print([$out], "  }\n");
+  _print([$out], "\n");
+  _print([$out], "  stackManagerp->dataStackp = NULL;\n");
+  _print([$out], "  stackManagerp->typeStackp = NULL;\n");
+  _print([$out], "\n");
+  _print([$out], "  GENERICSTACK_INIT(stackManagerp->dataStackp);\n");
+  _print([$out], "  if (GENERICSTACK_ERROR(stackManagerp->dataStackp)) {\n");
+  stackManager_error(4, '"stackManagerp->dataStackp initializationfailure, %s"', "strerror(errno)");
+  _print([$out], "    goto err;\n");
+  _print([$out], "  }\n");
+  _print([$out], "\n");
+  _print([$out], "  GENERICSTACK_INIT(stackManagerp->typeStackp);\n");
+  _print([$out], "  if (GENERICSTACK_ERROR(stackManagerp->typeStackp)) {\n");
+  stackManager_error(4, '"stackManagerp->typeStackp initializationfailure, %s"', "strerror(errno)");
+  _print([$out], "    goto err;\n");
+  _print([$out], "  }\n");
+  _print([$out], "  goto done;\n");
+  _print([$out], "\n");
+  _print([$out], " err:\n");
+  _print([$out], "  %s(userDatavp, stackManagerp);\n", stackManager_freev());
+  _print([$out], "  stackManagerp = NULL;\n");
+  _print([$out], "\n");
+  _print([$out], " done:\n");
+  _print([$out], "  return stackManagerp;\n");
+  _print([$out], "}\n");
 }
 
 sub generateStackManagerDestructor {
-  print  $out <<OUT;
+  _print([$out], "
 
 /* ------------------------- */
 /* Stack Manager destructor */
 /* ------------------------- */
-OUT
-  printf $out "static void %s(void *userDatavp, %s *stackManagerp) {\n", stackManager_freev(), stackManager_t();
-  print  $out <<OUT;
+");
+  _print([$out], "static void %s(void *userDatavp, %s *stackManagerp) {\n", stackManager_freev(), stackManager_t());
+  _print([$out], "
   int i;
   int usedi;
 
   if (stackManagerp != NULL) {
     if (stackManagerp->dataStackp != NULL) {
-      usedi = GENERICSTACK_USED(stackManagerp->dataStackp)
+      usedi = GENERICSTACK_USED(stackManagerp->dataStackp);
       for (i = 0; i < usedi; i++) {
       }
     }
@@ -400,25 +440,82 @@ OUT
     free(stackManagerp);
   }
 }
-OUT
+");
+}
+
+sub generateStackManagerGettype {
+  my ($typep, $mapp) = @_;
+  _print([$out], "\n");
+  _print([$out], "
+/* ------------------------- */
+/* Stack Manager type getter */
+/* ------------------------- */
+");
+  _print([$out], "static short %s(void *userDatavp, %s *stackManagerp, int i, ${prefix}_itemType_t *itemTypep) {\n", stackManager_i_gettypei(), stackManager_t());
+  _print([$out], "  ${prefix}_itemType_t itemType;\n");
+  _print([$out], "  genericStack_t *typeStackp;\n");
+  _print([$out], "  short rcb;
+
+  if (stackManagerp == NULL) {\n");
+  stackManager_error(4, '"stackManagerp is %s"', "\"NULL\"");
+  _print([$out], "    goto err;
+  }
+  typeStackp = stackManagerp->typeStackp;
+  if (typeStackp == NULL) {\n");
+  stackManager_error(4, '"typeStackp is %s"', "\"NULL\"");
+  _print([$out], "    goto err;
+  }
+  if (GENERICSTACK_IS_INT(typeStackp, i)) {
+    itemType = (${prefix}_itemType_t) GENERICSTACK_GET_INT(typeStackp, i);
+    switch (itemType) {
+");
+  foreach (sort keys %{$typep}) {
+    my $isPtr = $mapp->{$_}->{basictype} eq 'PTR';
+    my $basecase = uc($_);
+    my $case = uc(sprintf("%s_itemType_%s", ${prefix}, $_));
+    _print([$out], "    case $case:\n");
+    if ($isPtr) {
+      _print([$out], "    case -$case: /* shallow copy */\n");
+    }
+  }
+  _print([$out], "      break;\n");
+  _print([$out], "    default:\n");
+  stackManager_error(6, '"itemType is unknown (%d))"', "itemType");
+  _print([$out], "      goto err;\n");
+  _print([$out], "    }
+  } else {\n");
+  stackManager_error(4, '"GENERICSTACK_IS_INT(typeStackp, %d) returned false (type is %d instead of %d)"', "i", "GENERICSTACKITEMTYPE(stackName, i)", "GENERICSTACKITEMTYPE_INT");
+  _print([$out], "      goto err;\n");
+  _print([$out], "  }
+
+  *itemTypep = itemType;
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  return rcb;
+}\n");
 }
 
 sub generateStackManagerTrace {
-  my ($typep) = @_;
+  my ($typep, $mapp) = @_;
   if ($tracelogger) {
-    print $out "\n";
+    _print([$out], "\n");
     if ($tracecond) {
-      print $out "$tracecond\n";
+      _print([$out], "$tracecond\n");
     }
-  print  $out <<OUT;
+  _print([$out], "
 /* ------------------- */
 /* Stack Manager trace */
 /* ------------------- */
-OUT
-    printf $out "static void %s(void *userDatavp, %s *stackManagerp, int i) {\n", stackManager_i_tracev(), stackManager_t();
-    print  $out "  ${prefix}_itemType_t itemType;\n";
-    print  $out "  genericStack_t *typeStackp;\n";
-    print  $out <<OUT;
+");
+    _print([$out], "static void %s(void *userDatavp, %s *stackManagerp, int i) {\n", stackManager_i_tracev(), stackManager_t());
+    _print([$out], "  ${prefix}_itemType_t itemType;\n");
+    _print([$out], "  genericStack_t *typeStackp;\n");
+    _print([$out], "
 
   if (stackManagerp != NULL) {
     typeStackp = stackManagerp->typeStackp;
@@ -426,28 +523,149 @@ OUT
       if (GENERICSTACK_IS_INT(typeStackp, i)) {
         itemType = (${prefix}_itemType_t) GENERICSTACK_GET_INT(typeStackp, i);
         switch (itemType) {
-OUT
+");
     foreach (sort keys %{$typep}) {
+      my $isPtr = $mapp->{$_}->{basictype} eq 'PTR';
       my $basecase = uc($_);
       my $case = uc(sprintf("%s_itemType_%s", ${prefix}, $_));
-      printf $out "        case $case:\n";
-      print  $out "          $tracelogger(userDavavp, \"stack[%d] type is %s\", i, \"$basecase\");\n";
-      printf $out "          break;\n";
+      _print([$out], "        case $case:\n");
+      stackManager_trace(-10, '"stack[%d] type is ' . $basecase . '"', "i");
+      _print([$out], "          break;\n");
+      if ($isPtr) {
+        _print([$out], "        case -$case:\n");
+        stackManager_trace(-10, '"stack[%d] type is ' . $basecase . ' (shallow copy)"', "i");
+        _print([$out], "          break;\n");
+      }
     }
-    printf $out "        default:\n";
-      print  $out "          $tracelogger(userDavavp, \"stack[%d] type is unknown\", i);\n";
-    printf $out "          break;\n";
-    print  $out <<OUT;
+    _print([$out], "        default:\n");
+    stackManager_trace(-10, '"stack[%d] type is unknown"', "i");
+    _print([$out], "          break;\n");
+    _print([$out], "
         }
       }
     }
   }
-OUT
-    printf $out "}\n";
+");
+    _print([$out], "}\n");
     if ($tracecond) {
-      print $out "#endif /* $tracecond */\n";
+      _print([$out], "#endif /* $tracecond */\n");
     }
   }
 }
 
-exit(EXIT_SUCCESS);
+sub _print {
+  my ($handlesp, $fmt, @args) = @_;
+  foreach my $handle (@{$handlesp}) {
+    printf $handle $fmt, @args;
+  }
+}
+
+sub checkRule {
+  my ($rulep, $mapp) = @_;
+  #
+  # For every rule, we generate description, prototype, atLeastOneTypeisNotNA flag
+  foreach my $rule (@{$rulep}) {
+    my ($outtype, $method, $intypes) = ($rule->{outtype}, $rule->{method}, $rule->{intypes});
+    my $description = sprintf(
+                              "/* %s = %s(%s) */\n",
+                              $outtype,
+                              $method,
+                              join(', ',
+                                   map {
+                                     $_->{type} . ($_->{minmax} ? "[" . ($_->{minmax}->[0] // 'undef') . "," . ($_->{minmax}->[1] // 'undef') . "]" : "")
+                                   } @{$intypes}));
+    $rule->{description} = $description;
+
+    my $atLeastOneTypeisNotNA = ($mapp->{$outtype}->{basictype} eq 'NA') ? 0 : 1;
+    $rule->{atLeastOneTypeisNotNA} = $atLeastOneTypeisNotNA;
+
+    my @cintypes = ();
+    my $intypes_i = 0;
+    foreach (@{$intypes}) {
+      my ($intype, $minmax) = ($_->{type}, $_->{minmax});
+      if ($mapp->{$intype}->{basictype} eq 'NA') {
+        push(@cintypes, "void *NA${intypes_i}p");
+      } else {
+        $atLeastOneTypeisNotNA++;
+        if (! $_->{minmax}) {
+          push(@cintypes, $mapp->{$intype}->{ctype} . " $intype");
+        } else {
+          push(@cintypes, "genericStack_t *$intype");
+        }
+      }
+      $intypes_i++;
+    }
+    my $prototype = sprintf(
+                            "static short %s(void *userDatavp, %s *%s, %s)",
+                            $method, $mapp->{$outtype}->{ctype},
+                            ($mapp->{$outtype}->{basictype} eq 'NA') ? 'out_NAp' : "out_${outtype}p",
+                            join(', ', @cintypes)
+                           );
+    $rule->{prototype} = $prototype;
+  }
+}
+
+sub generateRuleWrapper {
+  my ($rulep, $typep, $mapp) = @_;
+
+  #
+  # First round is printing out the description and prototypes
+  #
+  _print([$out], "\n");
+  _print([$out], "/* Rule methods prototypes */\n");
+  foreach my $rule (@{$rulep}) {
+    _print([$out], "%s;\n", $rule->{prototype});
+  }
+  #
+  # Second round is generating the stack machinery in these wrappers
+  #
+  _print([$out], "\n");
+  _print([$out], "/* Rule methods internal implementation (stack machinery) */\n");
+  foreach (0..$#{$rulep}) {
+    my $rule = $rulep->[$_];
+
+    # my @handles = ($NA && ! $atLeastOneTypeisNotNA) ? ($out) : ($out,$log);
+    # _print(\@handles, "%s;\n", $prototype);
+    # if ($NA && ! $atLeastOneTypeisNotNA) {
+      #
+      # This method is outputing NA, with input all NAs - if it is called it is assumed to be meaningless
+      #
+    #   _print([$out], "%s { return 1; } /* Everything is NA: assumed to be meaningless */\n", $prototype);
+    # }
+    _print([$out], "%s {\n", $rule->{prototype});
+    _print([$out], "}\n");
+  }
+}
+
+sub generateRuleImpl {
+  my ($rulep, $typep, $mapp) = @_;
+
+  #
+  # First round is printing out the description and prototypes
+  #
+  _print([$out], "\n");
+  _print([$out], "/* Rule methods prototypes */\n");
+  foreach my $rule (@{$rulep}) {
+    _print([$out], "%s%s;\n", $rule->{prototype});
+  }
+  #
+  # Second round is generating the stack machinery in these wrappers
+  #
+  _print([$out], "\n");
+  _print([$out], "/* Rule methods internal implementation (stack machinery) */\n");
+  foreach (0..$#{$rulep}) {
+    my $rule = $rulep->[$_];
+
+    # my @handles = ($NA && ! $atLeastOneTypeisNotNA) ? ($out) : ($out,$log);
+    # _print(\@handles, "%s;\n", $prototype);
+    # if ($NA && ! $atLeastOneTypeisNotNA) {
+      #
+      # This method is outputing NA, with input all NAs - if it is called it is assumed to be meaningless
+      #
+    #   _print([$out], "%s { return 1; } /* Everything is NA: assumed to be meaningless */\n", $prototype);
+    # }
+    _print([$out], "%s {\n", $rule->{prototype});
+    _print([$out], "}\n");
+  }
+}
+
