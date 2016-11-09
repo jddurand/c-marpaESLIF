@@ -243,10 +243,11 @@ OUT
   printf $out "static void %s(void *userDatavp, %s *stackManagerp);\n", stackManager_freev(), stackManager_t();
   print  $out <<OUT;
 
-/* ----------------------------------------------------------------------------------------------- */
-/* Every item being tagged in the stack, it is possible to inform about it during stack operations */
-/* ----------------------------------------------------------------------------------------------- */
+/* ----------------------------------------------------------- */
+/* Every item being tagged in the stack, methods to inspect it */
+/* ----------------------------------------------------------- */
 OUT
+  printf $out "static ${prefix}_itemType_t %s(void *userDatavp, %s *stackManagerp, int i);\n", stackManager_i_gettypei(), stackManager_t();
   if ($tracelogger) {
     if ($tracecond) {
       print $out "$tracecond\n";
@@ -314,6 +315,7 @@ sub stackManager_t { return "${prefix}_stackManager_t" }
 sub stackManager_newp { return "${prefix}_stackManager_newp" }
 sub stackManager_freev { return "${prefix}_stackManager_freev" }
 sub stackManager_i_tracev { return "${prefix}_stackManager_i_tracev" }
+sub stackManager_i_gettypei { return "${prefix}_stackManager_i_gettypei" }
 sub stackManager_error {
   my $indent = shift;
   if ($errlogger) {
