@@ -11,4 +11,4 @@ quantified_rule = PTR;
 quantifier = PTR{char *};
 rhs_primary = PTR;
 start_rule = NA;
-statement = PTR;
+statement = NA;
