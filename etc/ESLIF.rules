@@ -4,3 +4,6 @@
 statements = G1_RULE_STATEMENTS(statement+);
 statement  = G1_RULE_STATEMENT_1(start_rule);
 quantified_rule =  G1_RULE_QUANTIFIED_RULE(lhs, op_declare, rhs_primary, quantifier, adverb_list);
+
+symbol1 ~ G1_SYMBOL1();
+nullable1 ~ G1_NULLABLE;

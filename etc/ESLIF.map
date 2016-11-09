@@ -12,3 +12,5 @@ quantifier = PTR{char *};
 rhs_primary = PTR;
 start_rule = NA;
 statement = NA;
+nullable1 = INT;
+symbol1 = LONG
