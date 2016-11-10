@@ -63,9 +63,11 @@ typedef struct marpaESLIFEvent {
   char                 *events; /* Event name - NULL if exhaustion */
 } marpaESLIFEvent_t;
 
-typedef short (*marpaESLIFValueRuleCallback_t)(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions, int rulei, int arg0i, int argni, int resulti);
+/* We choose int and NOT short - the only constraint is that a false value is considered as a failure */
+/* In particular, this is used by generated wrapper to distinguish between PTR and shallow PTRs */
+typedef int (*marpaESLIFValueRuleCallback_t)(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions, int rulei, int arg0i, int argni, int resulti);
 /* For a nullable callback, bytep is NULL and bytel is 0 */
-typedef short (*marpaESLIFValueSymbolCallback_t)(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions, char *bytep, size_t bytel, int symboli, int resulti);
+typedef int (*marpaESLIFValueSymbolCallback_t)(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions, char *bytep, size_t bytel, int symboli, int resulti);
 typedef struct marpaESLIFValueOption {
   void                             *userDatavp;            /* User specific context */
   marpaESLIFValueRuleCallback_t     ruleCallbackp;
