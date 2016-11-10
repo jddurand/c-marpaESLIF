@@ -94,27 +94,27 @@ bootstrap_grammar_meta_t bootstrap_grammar_L0_metas[] = {
   { L0_META_OP_EQUAL_PRIORITY,                  L0_JOIN_G1_META_OP_EQUAL_PRIORITY, 0, 0 },
   { L0_META_BEFORE_OR_AFTER,                    L0_JOIN_G1_META_BEFORE_OR_AFTER, 0, 0 },
   { L0_META_SIGNED_INTEGER,                     L0_JOIN_G1_META_SIGNED_INTEGER, 0, 0 },
-  { L0_META_SIGN,                               "<L0 meta sign>", 0, 0 },
+  { L0_META_SIGN,                               "meta sign", 0, 0 },
   { L0_META_INTEGER,                            L0_JOIN_G1_META_INTEGER, 0, 0 },
   { L0_META_TRUE,                               L0_JOIN_G1_META_TRUE, 0, 0 },
   { L0_META_BOOLEAN,                            L0_JOIN_G1_META_BOOLEAN, 0, 0 },
-  { L0_META_WORD_CHARACTER,                     "<L0 meta word character>", 0, 0 },
-  { L0_META_ONE_OR_MORE_WORD_CHARACTERS,        "<L0 meta one or more word characters>", 0, 0 },
-  { L0_META_ZERO_OR_MORE_WORD_CHARACTERS,       "<L0 meta zero or more word characters>", 0, 0 },
-  { L0_META_PERL_IDENTIFIER,                    "<L0 meta perl identifier>", 0, 0 },
+  { L0_META_WORD_CHARACTER,                     "meta word character", 0, 0 },
+  { L0_META_ONE_OR_MORE_WORD_CHARACTERS,        "meta one or more word characters", 0, 0 },
+  { L0_META_ZERO_OR_MORE_WORD_CHARACTERS,       "meta zero or more word characters", 0, 0 },
+  { L0_META_PERL_IDENTIFIER,                    "meta perl identifier", 0, 0 },
   { L0_META_ASCII_GRAPH_NAME,                   L0_JOIN_G1_META_ASCII_GRAPH_NAME, 0, 0 },
   { L0_META_BARE_NAME,                          L0_JOIN_G1_META_BARE_NAME, 0, 0 },
   { L0_META_STANDARD_NAME,                      L0_JOIN_G1_META_STANDARD_NAME, 0, 0 },
   { L0_META_BRACKETED_NAME,                     L0_JOIN_G1_META_BRACKETED_NAME, 0, 0 },
-  { L0_META_BRACKETED_NAME_STRING,              "<L0 meta bracketed name string>", 0, 0 },
+  { L0_META_BRACKETED_NAME_STRING,              "meta bracketed name string", 0, 0 },
   { L0_META_QUOTED_STRING,                      L0_JOIN_G1_META_QUOTED_STRING, 0, 0 },
   { L0_META_QUOTED_NAME,                        L0_JOIN_G1_META_QUOTED_NAME, 0, 0 },
-  { L0_META_CHARACTER_CLASS_REGEXP,             "<L0 meta character class regexp>", 0, 0 },
+  { L0_META_CHARACTER_CLASS_REGEXP,             "meta character class regexp", 0, 0 },
   { L0_META_CHARACTER_CLASS,                    L0_JOIN_G1_META_CHARACTER_CLASS, 0, 0 },
-  { L0_META_CHARACTER_CLASS_MODIFIER,           "<L0 meta character class modifier>", 0, 0 },
-  { L0_META_CHARACTER_CLASS_MODIFIERS,          "<L0 meta character class modifiers>", 0, 0 },
+  { L0_META_CHARACTER_CLASS_MODIFIER,           "meta character class modifier", 0, 0 },
+  { L0_META_CHARACTER_CLASS_MODIFIERS,          "meta character class modifiers", 0, 0 },
   { L0_META_REGULAR_EXPRESSION,                 L0_JOIN_G1_META_REGULAR_EXPRESSION, 0, 0 },
-  { L0_META_REGULAR_EXPRESSION_MODIFIERS,       "<L0 meta regular expression modifiers>", 0, 0 }
+  { L0_META_REGULAR_EXPRESSION_MODIFIERS,       "meta regular expression modifiers", 0, 0 }
 };
 
 /* Here it is very important that all the string constants are UTF-8 compatible - this is the case */
@@ -413,68 +413,68 @@ bootstrap_grammar_rule_t bootstrap_grammar_L0_rules[] = {
   /*
     lhsi                                      descs                                           type                          nrhsl  { rhsi }                                       }  minimumi                          separatori  properb
   */
-  { L0_META_RESERVED_EVENT_NAME,              "<L0 rule reserved event name>",                MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_RESERVED_EVENT_NAME              }, -1,                                       -1, -1 },
-  { L0_META_WHITESPACE,                       "<L0 rule whitespace>",                         MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_WHITESPACE                       }, -1,                                       -1, -1 },
-  { L0_META_PERL_COMMENT,                     "<L0 rule perl comment>",                       MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_PERL_COMMENT                     }, -1,                                       -1, -1 },
-  { L0_META_CPLUSPLUS_COMMENT,                "<L0 rule cplusplus comment>",                  MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_CPLUSPLUS_COMMENT                }, -1,                                       -1, -1 },
+  { L0_META_RESERVED_EVENT_NAME,              "reserved event name",                MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_RESERVED_EVENT_NAME              }, -1,                                       -1, -1 },
+  { L0_META_WHITESPACE,                       "whitespace",                         MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_WHITESPACE                       }, -1,                                       -1, -1 },
+  { L0_META_PERL_COMMENT,                     "perl comment",                       MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_PERL_COMMENT                     }, -1,                                       -1, -1 },
+  { L0_META_CPLUSPLUS_COMMENT,                "cplusplus comment",                  MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_CPLUSPLUS_COMMENT                }, -1,                                       -1, -1 },
   /*
     lhsi                                      descs                                           type                          nrhsl  { rhsi }                                       }  minimumi                          separatori  properb
   */
-  { L0_META_OP_DECLARE_ANY_GRAMMAR,           "<L0 rule op declare any grammar>",             MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_OP_DECLARE_ANY_GRAMMAR           }, -1,                                       -1, -1 },
-  { L0_META_OP_DECLARE_TOP_GRAMMAR,           "<L0 rule op declare top grammar>",             MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_OP_DECLARE_TOP_GRAMMAR           }, -1,                                       -1, -1 },
-  { L0_META_OP_DECLARE_LEX_GRAMMAR,           "<L0 rule op declare lex grammar>",             MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_OP_DECLARE_LEX_GRAMMAR           }, -1,                                       -1, -1 },
-  { L0_META_OP_LOOSEN,                        "<L0 rule op loosen>",                          MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_OP_LOOSEN                        }, -1,                                       -1, -1 },
-  { L0_META_OP_EQUAL_PRIORITY,                "<L0 rule op equal priority>",                  MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_OP_EQUAL_PRIORITY                }, -1,                                       -1, -1 },
+  { L0_META_OP_DECLARE_ANY_GRAMMAR,           "op declare any grammar",             MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_OP_DECLARE_ANY_GRAMMAR           }, -1,                                       -1, -1 },
+  { L0_META_OP_DECLARE_TOP_GRAMMAR,           "op declare top grammar",             MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_OP_DECLARE_TOP_GRAMMAR           }, -1,                                       -1, -1 },
+  { L0_META_OP_DECLARE_LEX_GRAMMAR,           "op declare lex grammar",             MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_OP_DECLARE_LEX_GRAMMAR           }, -1,                                       -1, -1 },
+  { L0_META_OP_LOOSEN,                        "op loosen",                          MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_OP_LOOSEN                        }, -1,                                       -1, -1 },
+  { L0_META_OP_EQUAL_PRIORITY,                "op equal priority",                  MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_OP_EQUAL_PRIORITY                }, -1,                                       -1, -1 },
   /*
     lhsi                                      descs                                           type                          nrhsl  { rhsi }                                       }  minimumi                          separatori  properb
   */
-  { L0_META_BEFORE_OR_AFTER,                  "<L0 rule before or after 1>",                  MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_BEFORE                           }, -1,                                       -1, -1 },
-  { L0_META_BEFORE_OR_AFTER,                  "<L0 rule before or after 2>",                  MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_AFTER                            }, -1,                                       -1, -1 },
-  { L0_META_SIGNED_INTEGER,                   "<L0 rule signed integer 1>",                   MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_META_INTEGER                              }, -1,                                       -1, -1 },
-  { L0_META_SIGNED_INTEGER,                   "<L0 rule signed integer 2>",                   MARPAESLIF_RULE_TYPE_ALTERNATIVE, 2, { L0_META_SIGN,
+  { L0_META_BEFORE_OR_AFTER,                  "before or after 1",                  MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_BEFORE                           }, -1,                                       -1, -1 },
+  { L0_META_BEFORE_OR_AFTER,                  "before or after 2",                  MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_AFTER                            }, -1,                                       -1, -1 },
+  { L0_META_SIGNED_INTEGER,                   "signed integer 1",                   MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_META_INTEGER                              }, -1,                                       -1, -1 },
+  { L0_META_SIGNED_INTEGER,                   "signed integer 2",                   MARPAESLIF_RULE_TYPE_ALTERNATIVE, 2, { L0_META_SIGN,
                                                                                                                                      L0_META_INTEGER                              }, -1,                                       -1, -1 },
-  { L0_META_SIGN,                             "<L0 rule sign>",                               MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_SIGN                             }, -1,                                       -1, -1 },
+  { L0_META_SIGN,                             "sign",                               MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_SIGN                             }, -1,                                       -1, -1 },
   /*
     lhsi                                      descs                                           type                          nrhsl  { rhsi }                                       }  minimumi                          separatori  properb
   */
-  { L0_META_INTEGER,                          "<L0 rule integer>",                            MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_INTEGER                          }, -1,                                       -1, -1 },
-  { L0_META_TRUE,                             "<L0 rule true>",                               MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_TRUE                             }, -1,                                       -1, -1 },
-  { L0_META_BOOLEAN,                          "<L0 rule boolean>",                            MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_BOOLEAN                          }, -1,                                       -1, -1 },
-  { L0_META_WORD_CHARACTER     ,              "<L0 rule word character>",                     MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_WORD_CHARACTER                   }, -1,                                       -1, -1 },
+  { L0_META_INTEGER,                          "integer",                            MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_INTEGER                          }, -1,                                       -1, -1 },
+  { L0_META_TRUE,                             "true",                               MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_TRUE                             }, -1,                                       -1, -1 },
+  { L0_META_BOOLEAN,                          "boolean",                            MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_BOOLEAN                          }, -1,                                       -1, -1 },
+  { L0_META_WORD_CHARACTER     ,              "word character",                     MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_WORD_CHARACTER                   }, -1,                                       -1, -1 },
   /*
     lhsi                                      descs                                           type                          nrhsl  { rhsi }                                       }  minimumi                          separatori  properb
   */
-  { L0_META_ONE_OR_MORE_WORD_CHARACTERS,      "<L0 rule one more word characters>",           MARPAESLIF_RULE_TYPE_SEQUENCE,    1, { L0_META_WORD_CHARACTER                       },  1,                                       -1, -1 },
-  { L0_META_ZERO_OR_MORE_WORD_CHARACTERS,     "<L0 rule zero more word characters>",          MARPAESLIF_RULE_TYPE_SEQUENCE,    1, { L0_META_WORD_CHARACTER                       },  0,                                       -1, -1 },
-  { L0_META_PERL_IDENTIFIER,                  "<L0 rule perl identifier>",                    MARPAESLIF_RULE_TYPE_SEQUENCE,    1, { L0_META_WORD_CHARACTER                       },  1,                                       -1, -1 },
+  { L0_META_ONE_OR_MORE_WORD_CHARACTERS,      "one more word characters",           MARPAESLIF_RULE_TYPE_SEQUENCE,    1, { L0_META_WORD_CHARACTER                       },  1,                                       -1, -1 },
+  { L0_META_ZERO_OR_MORE_WORD_CHARACTERS,     "zero more word characters",          MARPAESLIF_RULE_TYPE_SEQUENCE,    1, { L0_META_WORD_CHARACTER                       },  0,                                       -1, -1 },
+  { L0_META_PERL_IDENTIFIER,                  "perl identifier",                    MARPAESLIF_RULE_TYPE_SEQUENCE,    1, { L0_META_WORD_CHARACTER                       },  1,                                       -1, -1 },
   /*
     lhsi                                      descs                                           type                          nrhsl  { rhsi }                                       }  minimumi                          separatori  properb
   */
-  { L0_META_ASCII_GRAPH_NAME,                 "<L0 rule ascii graph name>",                   MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_ASCII_GRAPH_CHARACTERS           }, -1,                                       -1, -1 },
-  { L0_META_BARE_NAME,                        "<L0 rule bare name>",                          MARPAESLIF_RULE_TYPE_SEQUENCE,    1, { L0_META_WORD_CHARACTER                       },  1,                                       -1, -1 },
-  { L0_META_STANDARD_NAME,                    "<L0 rule standard name>",                      MARPAESLIF_RULE_TYPE_ALTERNATIVE, 2, { L0_TERMINAL_LATIN_ALPHABET_LETTER,
+  { L0_META_ASCII_GRAPH_NAME,                 "ascii graph name",                   MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_ASCII_GRAPH_CHARACTERS           }, -1,                                       -1, -1 },
+  { L0_META_BARE_NAME,                        "bare name",                          MARPAESLIF_RULE_TYPE_SEQUENCE,    1, { L0_META_WORD_CHARACTER                       },  1,                                       -1, -1 },
+  { L0_META_STANDARD_NAME,                    "standard name",                      MARPAESLIF_RULE_TYPE_ALTERNATIVE, 2, { L0_TERMINAL_LATIN_ALPHABET_LETTER,
                                                                                                                                      L0_META_ZERO_OR_MORE_WORD_CHARACTERS         }, -1,                                       -1, -1 },
-  { L0_META_BRACKETED_NAME,                   "<L0 rule bracketed name>",                     MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { L0_TERMINAL_LEFT_CURLY,
+  { L0_META_BRACKETED_NAME,                   "bracketed name",                     MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { L0_TERMINAL_LEFT_CURLY,
                                                                                                                                      L0_META_BRACKETED_NAME_STRING,
                                                                                                                                      L0_TERMINAL_RIGHT_CURLY                      }, -1,                                       -1, -1 },
-  { L0_META_BRACKETED_NAME_STRING,            "<L0 rule bracketed name string>",              MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_BRACKETED_NAME_STRING            }, -1,                                       -1, -1 },
+  { L0_META_BRACKETED_NAME_STRING,            "bracketed name string",              MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_BRACKETED_NAME_STRING            }, -1,                                       -1, -1 },
   /*
     lhsi                                      descs                                           type                          nrhsl  { rhsi }                                       }  minimumi                          separatori  properb
   */
-  { L0_META_QUOTED_STRING,                    "<L0 rule quoted string>",                      MARPAESLIF_RULE_TYPE_ALTERNATIVE, 2, { L0_TERMINAL_QUOTED_STRING,
+  { L0_META_QUOTED_STRING,                    "quoted string",                      MARPAESLIF_RULE_TYPE_ALTERNATIVE, 2, { L0_TERMINAL_QUOTED_STRING,
                                                                                                                                      L0_META_CHARACTER_CLASS_MODIFIERS            }, -1,                                       -1, -1 },
-  { L0_META_QUOTED_NAME,                      "<L0 rule quoted name>",                        MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_QUOTED_STRING                    }, -1,                                       -1, -1 },
-  { L0_META_CHARACTER_CLASS_REGEXP,           "<L0 rule character class regexp>",             MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_CHARACTER_CLASS_REGEXP           }, -1,                                       -1, -1 },
-  { L0_META_CHARACTER_CLASS,                  "<L0 rule character class>",                    MARPAESLIF_RULE_TYPE_ALTERNATIVE, 2, { L0_META_CHARACTER_CLASS_REGEXP,
+  { L0_META_QUOTED_NAME,                      "quoted name",                        MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_QUOTED_STRING                    }, -1,                                       -1, -1 },
+  { L0_META_CHARACTER_CLASS_REGEXP,           "character class regexp",             MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_CHARACTER_CLASS_REGEXP           }, -1,                                       -1, -1 },
+  { L0_META_CHARACTER_CLASS,                  "character class",                    MARPAESLIF_RULE_TYPE_ALTERNATIVE, 2, { L0_META_CHARACTER_CLASS_REGEXP,
                                                                                                                                      L0_META_CHARACTER_CLASS_MODIFIERS            }, -1,                                       -1, -1 },
-  { L0_META_CHARACTER_CLASS_MODIFIER,         "<L0 rule character class modifier standard>",  MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_CHARACTER_CLASS_MODIFIER_STANDARD}, -1,                                       -1, -1 },
-  { L0_META_CHARACTER_CLASS_MODIFIER,         "<L0 rule character class modifier compat>",    MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_CHARACTER_CLASS_MODIFIER_COMPAT  }, -1,                                       -1, -1 },
+  { L0_META_CHARACTER_CLASS_MODIFIER,         "character class modifier standard",  MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_CHARACTER_CLASS_MODIFIER_STANDARD}, -1,                                       -1, -1 },
+  { L0_META_CHARACTER_CLASS_MODIFIER,         "character class modifier compat",    MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_CHARACTER_CLASS_MODIFIER_COMPAT  }, -1,                                       -1, -1 },
   /*
     lhsi                                      descs                                           type                          nrhsl  { rhsi }                                       }  minimumi                          separatori  properb
   */
-  { L0_META_CHARACTER_CLASS_MODIFIERS,        "<L0 rule character class modifiers>",          MARPAESLIF_RULE_TYPE_SEQUENCE,    1, { L0_META_CHARACTER_CLASS_MODIFIER             },  0,                                       -1,  0 },
-  { L0_META_REGULAR_EXPRESSION,               "<L0 rule regular expression>",                 MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_REGULAR_EXPRESSION               }, -1,                                       -1, -1 },
-  { L0_META_REGULAR_EXPRESSION_MODIFIERS,     "<L0 rule regular expression modifiers>",       MARPAESLIF_RULE_TYPE_SEQUENCE,    1, { L0_TERMINAL_REGULAR_EXPRESSION_MODIFIER      },  0,                                       -1,  0 }
+  { L0_META_CHARACTER_CLASS_MODIFIERS,        "character class modifiers",          MARPAESLIF_RULE_TYPE_SEQUENCE,    1, { L0_META_CHARACTER_CLASS_MODIFIER             },  0,                                       -1,  0 },
+  { L0_META_REGULAR_EXPRESSION,               "regular expression",                 MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_REGULAR_EXPRESSION               }, -1,                                       -1, -1 },
+  { L0_META_REGULAR_EXPRESSION_MODIFIERS,     "regular expression modifiers",       MARPAESLIF_RULE_TYPE_SEQUENCE,    1, { L0_TERMINAL_REGULAR_EXPRESSION_MODIFIER      },  0,                                       -1,  0 }
 };
 
 #endif /* MARPAESLIF_INTERNAL_ESLIF_L0_H */

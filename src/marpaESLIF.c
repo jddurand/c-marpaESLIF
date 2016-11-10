@@ -130,17 +130,17 @@ static inline short                  _marpaESLIFRecognizer_start_charconvp(marpa
 /* All wrappers, even the Lexeme and Grammar wrappers go through these routines */
 static        short                  _marpaESLIFValueRuleCallbackMainWrapper(void *userDatavp, int rulei, int arg0i, int argni, int resulti);
 static        short                  _marpaESLIFValueSymbolCallbackMainWrapper(void *userDatavp, int symboli, int argi, int resulti);
-static        short                  _marpaESLIFValueNullingCallbackMainWrapper(void *userDatavp, int symboli, int resulti);
+static        short                  _marpaESLIFValueNullableCallbackMainWrapper(void *userDatavp, int symboli, int resulti);
 
 /* These are the functions that implement lexeme mode functionnality */
 static        short                  _marpaESLIFValueRuleCallbackLexeme(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions, int rulei, int arg0i, int argni, int resulti);
 static        short                  _marpaESLIFValueSymbolCallbackLexeme(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions, char *bytep, size_t bytel, int symboli, int resulti);
-static        short                  _marpaESLIFValueNullingCallbackLexeme(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions, int symboli, int resulti);
+static        short                  _marpaESLIFValueNullableCallbackLexeme(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions, int symboli, int resulti);
 
 /* These are the functions that implement grammar mode functionnality */
 static        short                  _marpaESLIFValueRuleCallbackGrammar(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions, int rulei, int arg0i, int argni, int resulti);
 static        short                  _marpaESLIFValueSymbolCallbackGrammar(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions, char *bytep, size_t bytel, int symboli, int resulti);
-static        short                  _marpaESLIFValueNullingCallbackGrammar(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions, int symboli, int resulti);
+static        short                  _marpaESLIFValueNullableCallbackGrammar(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions, int symboli, int resulti);
 
 static inline void                   _marpaESLIFGrammar_freev(marpaESLIFGrammar_t *marpaESLIFGrammarp, short onStackb);
 static        char                  *_marpaESLIFGrammar_symbolDescriptionCallback(void *userDatavp, int symboli);
@@ -157,6 +157,12 @@ static inline short                  _marpaESLIF_grammarContext_get_typeb(marpaE
 static inline short                  _marpaESLIF_grammarContext_set_typeb(marpaESLIF_t *marpaESLIFp, genericStack_t *itemTypeStackp, int i, marpaESLIF_grammarItemType_t type);
 static inline void                   _marpaESLIFValueErrorProgressReportv(marpaESLIFValue_t *marpaESLIFValuep);
 static inline short                  _marpaESLIF_resolveGrammarb(marpaESLIF_t *marpaESLIFp, genericStack_t *grammarStackp, marpaESLIF_grammar_t *current_grammarp, char *asciis, int lookupLevelDeltai, marpaESLIF_string_t *lookupGrammarStringp, marpaESLIF_grammar_t **grammarpp, marpaESLIF_symbol_t **symbolpp);
+static inline short                  _marpaESLIF_generateHelper_by_grammarb(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammar_t *marpaESLIFGrammarp, genericLogger_t *genericLoggerp, marpaESLIF_stringGenerator_t *stringGeneratorp, int grammari);
+static inline short                  _marpaESLIF_generateHelper_by_grammar_enumb(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammar_t *marpaESLIFGrammarp, genericLogger_t *genericLoggerp, marpaESLIF_stringGenerator_t *stringGeneratorp, int grammari);
+static inline short                  _marpaESLIF_generateHelper_by_grammar_symbolCallbackb(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammar_t *marpaESLIFGrammarp, genericLogger_t *genericLoggerp, marpaESLIF_stringGenerator_t *stringGeneratorp, int grammari);
+static inline short                  _marpaESLIF_generateHelper_by_grammar_nullableCallbackb(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammar_t *marpaESLIFGrammarp, genericLogger_t *genericLoggerp, marpaESLIF_stringGenerator_t *stringGeneratorp, int grammari);
+static inline short                  _marpaESLIF_generateHelper_by_grammar_ruleCallbackb(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammar_t *marpaESLIFGrammarp, genericLogger_t *genericLoggerp, marpaESLIF_stringGenerator_t *stringGeneratorp, int grammari);
+static inline char                  *_marpaESLIF_ascii2ids(marpaESLIF_t *marpaESLIFp, char *asciis);
 
 /*****************************************************************************/
 static inline marpaESLIF_string_t *_marpaESLIF_string_newp(marpaESLIF_t *marpaESLIFp, char *encodingasciis, char *bytep, size_t bytel, short asciib)
@@ -2841,10 +2847,10 @@ static inline short _marpaESLIFRecognizer_meta_matcherb(marpaESLIFRecognizer_t *
     goto err;
   }
 
-  marpaESLIFValueOption.userDatavp       = (void *) &marpaESLIF_lexemeContext;
-  marpaESLIFValueOption.ruleCallbackp    = _marpaESLIFValueRuleCallbackLexeme;
-  marpaESLIFValueOption.symbolCallbackp  = _marpaESLIFValueSymbolCallbackLexeme;
-  marpaESLIFValueOption.nullingCallbackp = _marpaESLIFValueNullingCallbackLexeme;
+  marpaESLIFValueOption.userDatavp        = (void *) &marpaESLIF_lexemeContext;
+  marpaESLIFValueOption.ruleCallbackp     = _marpaESLIFValueRuleCallbackLexeme;
+  marpaESLIFValueOption.symbolCallbackp   = _marpaESLIFValueSymbolCallbackLexeme;
+  marpaESLIFValueOption.nullableCallbackp = _marpaESLIFValueNullableCallbackLexeme;
 
   if (! _marpaESLIFGrammar_parseb(&marpaESLIFGrammar, &marpaESLIFRecognizerOption, &marpaESLIFValueOption, 0 /* discardb */, marpaESLIFRecognizerp, exhaustedbp)) {
     goto err;
@@ -3244,10 +3250,10 @@ marpaESLIFGrammar_t *marpaESLIFGrammar_newp(marpaESLIF_t *marpaESLIFp, marpaESLI
   marpaESLIFRecognizerOption.disableThresholdb           = 1; /* No threshold warning when parsing a grammar */
   marpaESLIFRecognizerOption.newlineb                    = 1; /* Grammars are short - we can count line/columns numbers */
 
-  marpaESLIFValueOption.userDatavp       = (void *) &marpaESLIF_grammarContext;
-  marpaESLIFValueOption.ruleCallbackp    = _marpaESLIFValueRuleCallbackGrammar;
-  marpaESLIFValueOption.symbolCallbackp  = _marpaESLIFValueSymbolCallbackGrammar;
-  marpaESLIFValueOption.nullingCallbackp = _marpaESLIFValueNullingCallbackGrammar;
+  marpaESLIFValueOption.userDatavp        = (void *) &marpaESLIF_grammarContext;
+  marpaESLIFValueOption.ruleCallbackp     = _marpaESLIFValueRuleCallbackGrammar;
+  marpaESLIFValueOption.symbolCallbackp   = _marpaESLIFValueSymbolCallbackGrammar;
+  marpaESLIFValueOption.nullableCallbackp = _marpaESLIFValueNullableCallbackGrammar;
 
   /* Parser will automatically create marpaESLIFValuep */
   if (! _marpaESLIFGrammar_parseb(marpaESLIFp->marpaESLIFGrammarp, &marpaESLIFRecognizerOption, &marpaESLIFValueOption, 0 /* discardb */, NULL /* marpaESLIFRecognizerParentp */, NULL /* exhaustedbp */)) {
@@ -3572,9 +3578,9 @@ static inline short _marpaESLIFRecognizer_resumeb(marpaESLIFRecognizer_t *marpaE
   marpaESLIFRecognizerOptionDiscard.exhaustedb        = 1; /* ... and have the exhausted event */
   marpaESLIFRecognizerOptionDiscard.newlineb          = 0; /* ... and not count line/column numbers */
 
-  marpaESLIFValueOptionDiscard.ruleCallbackp    = _marpaESLIFValueRuleCallbackLexeme;
-  marpaESLIFValueOptionDiscard.symbolCallbackp  = _marpaESLIFValueSymbolCallbackLexeme;
-  marpaESLIFValueOptionDiscard.nullingCallbackp = _marpaESLIFValueNullingCallbackLexeme;
+  marpaESLIFValueOptionDiscard.ruleCallbackp     = _marpaESLIFValueRuleCallbackLexeme;
+  marpaESLIFValueOptionDiscard.symbolCallbackp   = _marpaESLIFValueSymbolCallbackLexeme;
+  marpaESLIFValueOptionDiscard.nullableCallbackp = _marpaESLIFValueNullableCallbackLexeme;
 
 #undef MARPAESLIFRECOGNIZER_COLLECT_EVENTS
 #define MARPAESLIFRECOGNIZER_COLLECT_EVENTS(forceb, exhaustedbp)  do {  \
@@ -3725,9 +3731,9 @@ static inline short _marpaESLIFRecognizer_resumeb(marpaESLIFRecognizer_t *marpaE
         if (! _marpaESLIFRecognizer_lexemeStack_i_sizeb(marpaESLIFRecognizerp, marpaESLIF_lexemeContext.outputStackp, 0, &matchedl)) {
           goto err;
         }
-        /* In the exceptional case where discard would be a nulling, matchedl can be 0. */
+        /* In the exceptional case where discard would be a nullable, matchedl can be 0. */
         if (matchedl <= 0) {
-          MARPAESLIF_ERROR(marpaESLIFp, "Discard rule that was matched is a nulling and this is not allowed");
+          MARPAESLIF_ERROR(marpaESLIFp, "Discard rule that was matched is a nullable and this is not allowed");
           goto err;
         }
         /* New line processing, etc... */
@@ -4413,7 +4419,7 @@ static inline short _marpaESLIFRecognizer_grammar_eventsb(marpaESLIFRecognizer_t
           events = symbolp->eventNulleds;
         }
         nulledb     = 1;
-        MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: nulling event", symbolp->descp->asciis);
+        MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: nullable event", symbolp->descp->asciis);
       case MARPAWRAPPERGRAMMAR_EVENT_EXPECTED:
         type        = MARPAESLIF_EVENTTYPE_PREDICTED;
         if (symbolp != NULL) {
@@ -4852,7 +4858,7 @@ short marpaESLIFValue_valueb(marpaESLIFValue_t *marpaESLIFValuep)
                                  marpaESLIFValuep,
                                  _marpaESLIFValueRuleCallbackMainWrapper,
                                  _marpaESLIFValueSymbolCallbackMainWrapper,
-                                 _marpaESLIFValueNullingCallbackMainWrapper);
+                                 _marpaESLIFValueNullableCallbackMainWrapper);
 
   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
   marpaESLIFRecognizerp->callstackCounteri--;
@@ -5109,20 +5115,20 @@ static short _marpaESLIFValueSymbolCallbackMainWrapper(void *userDatavp, int sym
 }
 
 /*****************************************************************************/
-static short _marpaESLIFValueNullingCallbackMainWrapper(void *userDatavp, int symboli, int resulti)
+static short _marpaESLIFValueNullableCallbackMainWrapper(void *userDatavp, int symboli, int resulti)
 /*****************************************************************************/
 {
-  static const char               *funcs                 = "_marpaESLIFValueNullingCallbackMainWrapper";
-  marpaESLIFValue_t               *marpaESLIFValuep      = (marpaESLIFValue_t *) userDatavp;
-  marpaESLIFRecognizer_t          *marpaESLIFRecognizerp = marpaESLIFValuep->marpaESLIFRecognizerp;
-  marpaESLIFValueOption_t          marpaESLIFValueOption = marpaESLIFValuep->marpaESLIFValueOption;
-  marpaESLIFValueNullingCallback_t  nullingCallbackp       = marpaESLIFValueOption.nullingCallbackp;
-  marpaESLIFGrammar_t             *marpaESLIFGrammarp    = marpaESLIFRecognizerp->marpaESLIFGrammarp;
-  marpaESLIF_grammar_t            *grammarp              = marpaESLIFGrammarp->grammarp;
-  char                            *actions               = NULL;
-  marpaESLIF_symbol_t             *symbolp;
-  short                            rcb;
-  
+  static const char                *funcs                 = "_marpaESLIFValueNullableCallbackMainWrapper";
+  marpaESLIFValue_t                *marpaESLIFValuep      = (marpaESLIFValue_t *) userDatavp;
+  marpaESLIFRecognizer_t           *marpaESLIFRecognizerp = marpaESLIFValuep->marpaESLIFRecognizerp;
+  marpaESLIFValueOption_t           marpaESLIFValueOption = marpaESLIFValuep->marpaESLIFValueOption;
+  marpaESLIFValueNullableCallback_t nullableCallbackp       = marpaESLIFValueOption.nullableCallbackp;
+  marpaESLIFGrammar_t              *marpaESLIFGrammarp    = marpaESLIFRecognizerp->marpaESLIFGrammarp;
+  marpaESLIF_grammar_t             *grammarp              = marpaESLIFGrammarp->grammarp;
+  char                             *actions               = NULL;
+  marpaESLIF_symbol_t              *symbolp;
+  short                             rcb;
+
   marpaESLIFRecognizerp->callstackCounteri++;
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
 
@@ -5134,17 +5140,17 @@ static short _marpaESLIFValueNullingCallbackMainWrapper(void *userDatavp, int sy
 
   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Symbol %d (%s)", symboli, symbolp->descp->asciis);
 
-  /* When the nulling callback is our internal lexeme, any notion of action is SKIPPED. */
+  /* When the nullable callback is our internal lexeme, any notion of action is SKIPPED. */
   /* In fact, these callbacks are even called with actions being NULL. */
-  if (nullingCallbackp == _marpaESLIFValueNullingCallbackLexeme) {
-    if (! nullingCallbackp(marpaESLIFValueOption.userDatavp, marpaESLIFValuep, NULL, symboli, resulti)) {
+  if (nullableCallbackp == _marpaESLIFValueNullableCallbackLexeme) {
+    if (! nullableCallbackp(marpaESLIFValueOption.userDatavp, marpaESLIFValuep, NULL, symboli, resulti)) {
       goto err;
     }
   } else {
   
-    /* Look if there is a nulling callback */
-    if (nullingCallbackp == NULL) {
-      MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "No nulling value callback");
+    /* Look if there is a nullable callback */
+    if (nullableCallbackp == NULL) {
+      MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "No nullable value callback");
       goto err;
     }
 
@@ -5160,7 +5166,7 @@ static short _marpaESLIFValueNullingCallbackMainWrapper(void *userDatavp, int sy
       goto err;
     }
   
-    if (! nullingCallbackp(marpaESLIFValueOption.userDatavp, marpaESLIFValuep, actions, symboli, resulti)) {
+    if (! nullableCallbackp(marpaESLIFValueOption.userDatavp, marpaESLIFValuep, actions, symboli, resulti)) {
       goto err;
     }
   }
@@ -5301,10 +5307,10 @@ static short _marpaESLIFValueSymbolCallbackLexeme(void *userDatavp, marpaESLIFVa
 }
 
 /*****************************************************************************/
-static short _marpaESLIFValueNullingCallbackLexeme(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions, int symboli, int resulti)
+static short _marpaESLIFValueNullableCallbackLexeme(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions, int symboli, int resulti)
 /*****************************************************************************/
 {
-  static const char          *funcs                     = "_marpaESLIFValueNullingCallbackLexeme";
+  static const char          *funcs                     = "_marpaESLIFValueNullableCallbackLexeme";
   marpaESLIF_lexemeContext_t *marpaESLIF_lexemeContextp = (marpaESLIF_lexemeContext_t *) userDatavp;
   marpaESLIF_t               *marpaESLIFp               = marpaESLIFValuep->marpaESLIFp;
   marpaESLIFRecognizer_t     *marpaESLIFRecognizerp     = marpaESLIFValuep->marpaESLIFRecognizerp;
@@ -5418,13 +5424,14 @@ static short _marpaESLIFValueRuleCallbackGrammar(void *userDatavp, marpaESLIFVal
   } else if (strcmp(actions, G1_RULE_DISCARD_DEFAULT_STATEMENT_1)    == 0) { if (! _G1_RULE_DISCARD_DEFAULT_STATEMENT_1   (marpaESLIFValuep, marpaESLIF_grammarContextp, rulei, arg0i, argni, resulti)) { goto err; }
   } else if (strcmp(actions, G1_RULE_DISCARD_DEFAULT_STATEMENT_2)    == 0) { if (! _G1_RULE_DISCARD_DEFAULT_STATEMENT_2   (marpaESLIFValuep, marpaESLIF_grammarContextp, rulei, arg0i, argni, resulti)) { goto err; }
   } else if (strcmp(actions, G1_RULE_LEXEME_RULE)                    == 0) { if (! _G1_RULE_LEXEME_RULE                   (marpaESLIFValuep, marpaESLIF_grammarContextp, rulei, arg0i, argni, resulti)) { goto err; }
+           /*
   } else if (strcmp(actions, G1_RULE_COMPLETION_EVENT_DECLARATION_1) == 0) { if (! _G1_RULE_COMPLETION_EVENT_DECLARATION_1(marpaESLIFValuep, marpaESLIF_grammarContextp, rulei, arg0i, argni, resulti)) { goto err; }
   } else if (strcmp(actions, G1_RULE_COMPLETION_EVENT_DECLARATION_2) == 0) { if (! _G1_RULE_COMPLETION_EVENT_DECLARATION_2(marpaESLIFValuep, marpaESLIF_grammarContextp, rulei, arg0i, argni, resulti)) { goto err; }
   } else if (strcmp(actions, G1_RULE_NULLED_EVENT_DECLARATION_1)     == 0) { if (! _G1_RULE_NULLED_EVENT_DECLARATION_1    (marpaESLIFValuep, marpaESLIF_grammarContextp, rulei, arg0i, argni, resulti)) { goto err; }
   } else if (strcmp(actions, G1_RULE_NULLED_EVENT_DECLARATION_2)     == 0) { if (! _G1_RULE_NULLED_EVENT_DECLARATION_2    (marpaESLIFValuep, marpaESLIF_grammarContextp, rulei, arg0i, argni, resulti)) { goto err; }
   } else if (strcmp(actions, G1_RULE_PREDICTION_EVENT_DECLARATION_1) == 0) { if (! _G1_RULE_PREDICTION_EVENT_DECLARATION_1(marpaESLIFValuep, marpaESLIF_grammarContextp, rulei, arg0i, argni, resulti)) { goto err; }
   } else if (strcmp(actions, G1_RULE_PREDICTION_EVENT_DECLARATION_2) == 0) { if (! _G1_RULE_PREDICTION_EVENT_DECLARATION_2(marpaESLIFValuep, marpaESLIF_grammarContextp, rulei, arg0i, argni, resulti)) { goto err; }
-
+           */
 
   } else if (strcmp(actions, G1_RULE_OP_DECLARE_3) == 0) {
     if (! _G1_RULE_OP_DECLARE_3(marpaESLIFValuep, marpaESLIF_grammarContextp, rulei, arg0i, argni, resulti)) {
@@ -6018,19 +6025,19 @@ static short _marpaESLIFValueSymbolCallbackGrammar(void *userDatavp, marpaESLIFV
 }
 
 /*****************************************************************************/
-static short _marpaESLIFValueNullingCallbackGrammar(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions, int symboli, int resulti)
+static short _marpaESLIFValueNullableCallbackGrammar(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions, int symboli, int resulti)
 /*****************************************************************************/
 {
-  static const char                *funcs = "_marpaESLIFValueNullingCallbackGrammar";
+  static const char                *funcs                      = "_marpaESLIFValueNullableCallbackGrammar";
   marpaESLIF_grammarContext_t      *marpaESLIF_grammarContextp = (marpaESLIF_grammarContext_t *) userDatavp;
   marpaESLIF_t                     *marpaESLIFp                = marpaESLIFValuep->marpaESLIFp;
   marpaESLIFRecognizer_t           *marpaESLIFRecognizerp      = marpaESLIFValuep->marpaESLIFRecognizerp;
   marpaESLIFGrammar_t              *marpaESLIFGrammarp         = marpaESLIFRecognizerp->marpaESLIFGrammarp;
   genericStack_t                   *outputStackp               = marpaESLIF_grammarContextp->outputStackp;
   genericStack_t                   *itemTypeStackp             = marpaESLIF_grammarContextp->itemTypeStackp;
-  short                             rcb;
   marpaESLIF_grammar_t             *grammarp                   = marpaESLIFGrammarp->grammarp;
   genericStack_t                   *symbolStackp               = grammarp->symbolStackp;
+  short                             rcb;
   marpaESLIF_symbol_t              *symbolp;
   /* Variables that many need a cleanup */
   genericStack_t                   *out_adverb_list_stackp = NULL;
@@ -7506,7 +7513,7 @@ static inline void _marpaESLIFValueErrorProgressReportv(marpaESLIFValue_t *marpa
         marpaESLIFValue_value_lengthb(marpaESLIFValuep, &lengthi)) {
       marpaESLIFRecognizer_progressLogb(marpaESLIFValuep->marpaESLIFRecognizerp,
                                         starti,
-                                        /* lengthi is zero when this is a MARPA_STEP_NULLING_SYMBOL */
+                                        /* lengthi is zero when this is a MARPA_STEP_NULLABLE_SYMBOL */
                                         (lengthi > 0) ? starti+lengthi-1 : starti,
                                         GENERICLOGGER_LOGLEVEL_ERROR,
                                         marpaESLIFRecognizerp->marpaESLIFGrammarp,
@@ -7586,6 +7593,407 @@ static inline short _marpaESLIF_resolveGrammarb(marpaESLIF_t *marpaESLIFp, gener
 
  done:
   return rcb;
+}
+
+/*****************************************************************************/
+char *marpaESLIF_generateHelper(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammar_t *marpaESLIFGrammarp)
+/*****************************************************************************/
+{
+  /* Given a grammar, generate helper source code that handle stack management */
+  static const char            *funcs = "marpaESLIF_generateHelper";
+  marpaESLIF_stringGenerator_t  stringGenerator;
+  genericLogger_t              *genericLoggerp = NULL;
+  genericStack_t               *grammarStackp;
+  int                           grammari;
+  char                         *rcp = NULL;
+
+  if ((marpaESLIFp == NULL) || (marpaESLIFGrammarp == NULL)) {
+    errno = EINVAL;
+    goto err;
+  }
+
+  stringGenerator.marpaESLIFp = marpaESLIFp;
+  stringGenerator.s           = NULL;
+  stringGenerator.l           = 0;
+  stringGenerator.okb         = 0;
+
+  genericLoggerp = GENERICLOGGER_CUSTOM(_marpaESLIF_generateStringWithLoggerCallback, (void *) &stringGenerator, GENERICLOGGER_LOGLEVEL_TRACE);
+  if (genericLoggerp == NULL) {
+    goto err;
+  }
+
+  /* We loop on all the grammars */
+  grammarStackp = marpaESLIFGrammarp->grammarStackp;
+  for (grammari = 0; grammari < GENERICSTACK_USED(grammarStackp); grammari++) {
+    if (! GENERICSTACK_IS_PTR(grammarStackp, grammari)) {
+      /* Sparse item in grammarStackp -; */
+      continue;
+    }
+    if (! _marpaESLIF_generateHelper_by_grammarb(marpaESLIFp, marpaESLIFGrammarp, genericLoggerp, &stringGenerator, grammari)) {
+      goto err;
+    }
+  }
+  
+  if (! stringGenerator.okb) {
+    goto err;
+  }
+
+  rcp = stringGenerator.s;
+  goto done;
+  
+ err:
+  if (stringGenerator.s != NULL) {
+    free(stringGenerator.s);
+  }
+  if (rcp != NULL) {
+    free(rcp);
+    rcp = NULL;
+  }
+
+ done:
+  GENERICLOGGER_FREE(genericLoggerp);
+  return rcp;
+}
+
+#undef  MARPAESLIF_GEN_OK
+#define MARPAESLIF_GEN_OK do { if (! stringGeneratorp->okb) { goto err;  } } while (0)
+/*****************************************************************************/
+static inline short _marpaESLIF_generateHelper_by_grammarb(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammar_t *marpaESLIFGrammarp, genericLogger_t *genericLoggerp, marpaESLIF_stringGenerator_t *stringGeneratorp, int grammari)
+/*****************************************************************************/
+{
+  static const char    *funcs    = "_marpaESLIF_generateHelper_by_grammarb";
+  marpaESLIF_grammar_t *grammarp = GENERICSTACK_GET_PTR(marpaESLIFGrammarp->grammarStackp, grammari);
+  short                 rcb;
+
+  GENERICLOGGER_TRACE (genericLoggerp, "\n"); MARPAESLIF_GEN_OK;
+  GENERICLOGGER_TRACEF(genericLoggerp, "/* ---------------------------------------- */\n", grammarp->leveli); MARPAESLIF_GEN_OK;
+  GENERICLOGGER_TRACEF(genericLoggerp, "/* Grammar level %d stack management helpers */\n", grammarp->leveli); MARPAESLIF_GEN_OK;
+  GENERICLOGGER_TRACEF(genericLoggerp, "/* ---------------------------------------- */\n", grammarp->leveli); MARPAESLIF_GEN_OK;
+
+  if (! _marpaESLIF_generateHelper_by_grammar_enumb(marpaESLIFp, marpaESLIFGrammarp, genericLoggerp, stringGeneratorp, grammari)) {
+    goto err;
+  }
+  if (! _marpaESLIF_generateHelper_by_grammar_symbolCallbackb(marpaESLIFp, marpaESLIFGrammarp, genericLoggerp, stringGeneratorp, grammari)) {
+    goto err;
+  }
+  if (! _marpaESLIF_generateHelper_by_grammar_nullableCallbackb(marpaESLIFp, marpaESLIFGrammarp, genericLoggerp, stringGeneratorp, grammari)) {
+    goto err;
+  }
+  if (! _marpaESLIF_generateHelper_by_grammar_ruleCallbackb(marpaESLIFp, marpaESLIFGrammarp, genericLoggerp, stringGeneratorp, grammari)) {
+    goto err;
+  }
+  
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  return rcb;
+}
+
+/*****************************************************************************/
+static inline short _marpaESLIF_generateHelper_by_grammar_enumb(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammar_t *marpaESLIFGrammarp, genericLogger_t *genericLoggerp, marpaESLIF_stringGenerator_t *stringGeneratorp, int grammari)
+/*****************************************************************************/
+{
+  static const char    *funcs        = "_marpaESLIF_generateHelper_by_grammar_enumb";
+  marpaESLIF_grammar_t *grammarp     = GENERICSTACK_GET_PTR(marpaESLIFGrammarp->grammarStackp, grammari);
+  genericStack_t       *symbolStackp = grammarp->symbolStackp;
+  char                 *ascii2ids    = NULL;
+  int                   symboloki = 0;
+  int                   symboli;
+  marpaESLIF_symbol_t  *symbolp;
+  short                 rcb;
+
+  /* Generate an enum for all symbols at this level */
+  
+  GENERICLOGGER_TRACE (genericLoggerp, "\n"); MARPAESLIF_GEN_OK;
+  GENERICLOGGER_TRACEF(genericLoggerp, "/* Tag of all symbols */\n", grammarp->leveli); MARPAESLIF_GEN_OK;
+  GENERICLOGGER_TRACEF(genericLoggerp, "typedef enum genericStackHelper_level%d {\n", grammarp->leveli); MARPAESLIF_GEN_OK;
+  for (symboli = 0; symboli < GENERICSTACK_USED(symbolStackp); symboli++) {
+    if (! GENERICSTACK_IS_PTR(symbolStackp, symboli)) {
+      /* Should never happen, but who knows */
+      continue;
+    }
+    symbolp = (marpaESLIF_symbol_t *) GENERICSTACK_GET_PTR(symbolStackp, symboli);
+    /* Only for meta symbols */
+    if (symbolp->type != MARPAESLIF_SYMBOL_TYPE_META) {
+      continue;
+    }
+    if (symboloki > 0) {
+      GENERICLOGGER_TRACE(genericLoggerp, ",\n"); MARPAESLIF_GEN_OK;
+    }
+    ascii2ids = _marpaESLIF_ascii2ids(marpaESLIFp, symbolp->u.metap->asciinames);
+    if (ascii2ids == NULL) {
+      goto err;
+    }
+    GENERICLOGGER_TRACEF(genericLoggerp, "  level%d_%s = %d", grammarp->leveli, ascii2ids, ++symboloki); MARPAESLIF_GEN_OK;
+    free(ascii2ids);
+    ascii2ids = NULL;
+  }
+  GENERICLOGGER_TRACEF(genericLoggerp, "\n} genericStackHelper_level%d_t;\n", grammarp->leveli); MARPAESLIF_GEN_OK;
+
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  if (ascii2ids != NULL) {
+    free(ascii2ids);
+  }
+  return rcb;
+}
+
+/*****************************************************************************/
+static inline short _marpaESLIF_generateHelper_by_grammar_symbolCallbackb(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammar_t *marpaESLIFGrammarp, genericLogger_t *genericLoggerp, marpaESLIF_stringGenerator_t *stringGeneratorp, int grammari)
+/*****************************************************************************/
+{
+  static const char    *funcs        = "_marpaESLIF_generateHelper_by_grammar_symbolCallbackb";
+  marpaESLIF_grammar_t *grammarp     = GENERICSTACK_GET_PTR(marpaESLIFGrammarp->grammarStackp, grammari);
+  genericStack_t       *symbolStackp = grammarp->symbolStackp;
+  char                 *ascii2ids    = NULL;
+  char                 *actions;
+  int                   symboli;
+  marpaESLIF_symbol_t  *symbolp;
+  short                 rcb;
+
+  /* Generate all symbol callbacks - a symbol callback is a "terminal" - where a terminal is everything that is not used as an LHS */
+  
+  GENERICLOGGER_TRACE (genericLoggerp, "\n"); MARPAESLIF_GEN_OK;
+  GENERICLOGGER_TRACEF(genericLoggerp, "/* Symbol callbacks */\n", grammarp->leveli); MARPAESLIF_GEN_OK;
+  for (symboli = 0; symboli < GENERICSTACK_USED(symbolStackp); symboli++) {
+    if (! GENERICSTACK_IS_PTR(symbolStackp, symboli)) {
+      /* Should never happen, but who knows */
+      continue;
+    }
+    symbolp = (marpaESLIF_symbol_t *) GENERICSTACK_GET_PTR(symbolStackp, symboli);
+    /* Only for meta symbols */
+    if (symbolp->type != MARPAESLIF_SYMBOL_TYPE_META) {
+      continue;
+    }
+    /* Only for non-LHS meta symbols */
+    if (symbolp->lhsb) {
+      continue;
+    }
+    ascii2ids = _marpaESLIF_ascii2ids(marpaESLIFp, symbolp->u.metap->asciinames);
+    if (ascii2ids == NULL) {
+      goto err;
+    }
+    /* typedef short (*marpaESLIFValueSymbolCallback_t)(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions, char *bytep, size_t bytel, int symboli, int resulti); */
+    GENERICLOGGER_TRACEF(genericLoggerp, "static short level%d_%s_symbolCallback(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions, char *bytep, size_t bytel, int symboli, int resulti) {\n", grammarp->leveli, ascii2ids); MARPAESLIF_GEN_OK;
+    free(ascii2ids);
+    ascii2ids = NULL;
+    actions = grammarp->defaultSymbolActions;
+    if (actions != NULL) {
+      ascii2ids = _marpaESLIF_ascii2ids(marpaESLIFp, actions);
+      if (ascii2ids == NULL) {
+        goto err;
+      }
+      GENERICLOGGER_TRACEF(genericLoggerp, "  return %s(userDatavp, symboli, bytep, bytel, resulti) {\n", ascii2ids); MARPAESLIF_GEN_OK;
+    } else {
+      MARPAESLIF_WARNF(marpaESLIFp, "Symbol No %d (%s) has no action", symbolp->idi, symbolp->descp->asciis);
+      GENERICLOGGER_TRACE(genericLoggerp, "  /* WARNING : this symbol has no action */\n"); MARPAESLIF_GEN_OK;
+      GENERICLOGGER_TRACE(genericLoggerp, "  return 0;\n"); MARPAESLIF_GEN_OK;
+    }
+    GENERICLOGGER_TRACE(genericLoggerp, "}\n"); MARPAESLIF_GEN_OK;
+  }
+
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  if (ascii2ids != NULL) {
+    free(ascii2ids);
+  }
+  return rcb;
+}
+
+/*****************************************************************************/
+static inline short _marpaESLIF_generateHelper_by_grammar_nullableCallbackb(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammar_t *marpaESLIFGrammarp, genericLogger_t *genericLoggerp, marpaESLIF_stringGenerator_t *stringGeneratorp, int grammari)
+/*****************************************************************************/
+{
+  static const char    *funcs        = "_marpaESLIF_generateHelper_by_grammar_nullableCallbackb";
+  marpaESLIF_grammar_t *grammarp     = GENERICSTACK_GET_PTR(marpaESLIFGrammarp->grammarStackp, grammari);
+  genericStack_t       *symbolStackp = grammarp->symbolStackp;
+  char                 *ascii2ids    = NULL;
+  char                 *actions;
+  int                   marpaWrapperSymbolPropertyBitSet;
+  int                   symboli;
+  marpaESLIF_symbol_t  *symbolp;
+  short                 rcb;
+
+  /* Generate all nullable callbacks - a nullable callback is for every symbol that Marpa says it is nullable (!= nulled) */
+  
+  GENERICLOGGER_TRACE (genericLoggerp, "\n"); MARPAESLIF_GEN_OK;
+  GENERICLOGGER_TRACEF(genericLoggerp, "/* Nullable callbacks */\n", grammarp->leveli); MARPAESLIF_GEN_OK;
+  for (symboli = 0; symboli < GENERICSTACK_USED(symbolStackp); symboli++) {
+    if (! GENERICSTACK_IS_PTR(symbolStackp, symboli)) {
+      /* Should never happen, but who knows */
+      continue;
+    }
+    symbolp = (marpaESLIF_symbol_t *) GENERICSTACK_GET_PTR(symbolStackp, symboli);
+    /* Only for meta symbols */
+    if (symbolp->type != MARPAESLIF_SYMBOL_TYPE_META) {
+      continue;
+    }
+    /* Only for nullable meta symbols */
+    if (! marpaWrapperGrammar_symbolPropertyb(grammarp->marpaWrapperGrammarStartp, symboli, &marpaWrapperSymbolPropertyBitSet)) {
+      goto err;
+    }
+    if ((marpaWrapperSymbolPropertyBitSet & MARPAWRAPPER_SYMBOL_IS_NULLABLE) != MARPAWRAPPER_SYMBOL_IS_NULLABLE) {
+      continue;
+    }
+    ascii2ids = _marpaESLIF_ascii2ids(marpaESLIFp, symbolp->u.metap->asciinames);
+    if (ascii2ids == NULL) {
+      goto err;
+    }
+    /* typedef short (*marpaESLIFValueNullableCallback_t)(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions, int symboli, int resulti); */
+    GENERICLOGGER_TRACEF(genericLoggerp, "static short level%d_%s_nullableCallback(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions, int symboli, int resulti) {\n", grammarp->leveli, ascii2ids); MARPAESLIF_GEN_OK;
+    free(ascii2ids);
+    ascii2ids = NULL;
+    actions = grammarp->defaultSymbolActions;
+    if (actions != NULL) {
+      ascii2ids = _marpaESLIF_ascii2ids(marpaESLIFp, actions);
+      if (ascii2ids == NULL) {
+        goto err;
+      }
+      GENERICLOGGER_TRACEF(genericLoggerp, "  return %s(userDatavp, symboli, NULL, 0, resulti) {\n", ascii2ids); MARPAESLIF_GEN_OK;
+    } else {
+      MARPAESLIF_WARNF(marpaESLIFp, "Symbol No %d (%s) has no action", symbolp->idi, symbolp->descp->asciis);
+      GENERICLOGGER_TRACE(genericLoggerp, "  /* WARNING : this symbol has no action */\n"); MARPAESLIF_GEN_OK;
+      GENERICLOGGER_TRACE(genericLoggerp, "  return 0;\n"); MARPAESLIF_GEN_OK;
+    }
+    GENERICLOGGER_TRACE(genericLoggerp, "}\n"); MARPAESLIF_GEN_OK;
+  }
+
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  if (ascii2ids != NULL) {
+    free(ascii2ids);
+  }
+  return rcb;
+}
+
+/*****************************************************************************/
+static inline short _marpaESLIF_generateHelper_by_grammar_ruleCallbackb(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammar_t *marpaESLIFGrammarp, genericLogger_t *genericLoggerp, marpaESLIF_stringGenerator_t *stringGeneratorp, int grammari)
+/*****************************************************************************/
+{
+  static const char    *funcs      = "_marpaESLIF_generateHelper_by_grammar_ruleCallbackb";
+  marpaESLIF_grammar_t *grammarp   = GENERICSTACK_GET_PTR(marpaESLIFGrammarp->grammarStackp, grammari);
+  genericStack_t       *ruleStackp = grammarp->ruleStackp;
+  char                 *ascii2ids  = NULL;
+  char                 *ruleshows;
+  char                 *actions;
+  int                   rulei;
+  marpaESLIF_rule_t    *rulep;
+  short                 rcb;
+
+  /* Generate all rule callbacks - please note that if a rule produces an empty string, then valuator goes to the nulling callback */
+  
+  GENERICLOGGER_TRACE (genericLoggerp, "\n"); MARPAESLIF_GEN_OK;
+  GENERICLOGGER_TRACEF(genericLoggerp, "/* Rule callbacks */\n", grammarp->leveli); MARPAESLIF_GEN_OK;
+  for (rulei = 0; rulei < GENERICSTACK_USED(ruleStackp); rulei++) {
+    if (! GENERICSTACK_IS_PTR(ruleStackp, rulei)) {
+      /* Should never happen, but who knows */
+      continue;
+    }
+    rulep = (marpaESLIF_rule_t *) GENERICSTACK_GET_PTR(ruleStackp, rulei);
+    /* typedef short (*marpaESLIFValueRuleCallback_t)(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions, int rulei, int arg0i, int argni, int resulti); */
+
+    GENERICLOGGER_TRACEF(genericLoggerp, "static short level%d_rule%d_callback(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions, int rulei, int arg0i, int argni, int resulti) {\n", grammarp->leveli, rulep->idi); MARPAESLIF_GEN_OK;
+    /* If there is a rule specific action */
+    actions = rulep->actions;
+    if (actions == NULL) {
+      actions = grammarp->defaultRuleActions;
+    }
+    if (actions != NULL) {
+      ascii2ids = _marpaESLIF_ascii2ids(marpaESLIFp, actions);
+      if (ascii2ids == NULL) {
+        goto err;
+      }
+      GENERICLOGGER_TRACEF(genericLoggerp, "  return %s(userDatavp, rulei, arg0i, argni, resulti)\n", ascii2ids);
+      free(ascii2ids);
+      ascii2ids = NULL;
+    } else {
+      if (marpaESLIFGrammar_ruleshowform_by_grammarb(marpaESLIFGrammarp, rulei, &ruleshows, grammarp->leveli, NULL /* descp */)) {
+        MARPAESLIF_WARNF(marpaESLIFp, "Rule %s has no action", ruleshows);
+      } else {
+        MARPAESLIF_WARNF(marpaESLIFp, "Rule No %d (%s) has no action", rulep->idi, rulep->descp->asciis);
+      }
+      GENERICLOGGER_TRACE(genericLoggerp, "  /* WARNING : this rule has no action */\n"); MARPAESLIF_GEN_OK;
+      GENERICLOGGER_TRACE(genericLoggerp, "  return 0;\n"); MARPAESLIF_GEN_OK;
+    }
+      
+    GENERICLOGGER_TRACE(genericLoggerp, "}\n"); MARPAESLIF_GEN_OK;
+  }
+
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  if (ascii2ids != NULL) {
+    free(ascii2ids);
+  }
+  return rcb;
+}
+
+/*****************************************************************************/
+static inline char *_marpaESLIF_ascii2ids(marpaESLIF_t *marpaESLIFp, char *asciis)
+/*****************************************************************************/
+{
+  /* Produces a C identifier-compatible version of ascii string */
+  static const char   *funcs = "_marpaESLIF_ascii2ids";
+  char                *rcs   = NULL;
+  char                *p;
+
+  if (asciis == NULL) {
+    MARPAESLIF_ERROR(marpaESLIFp, "asciis is NULL");
+    goto err;
+  }
+
+  rcs = strdup(asciis);
+  if (rcs == NULL) {
+    MARPAESLIF_ERRORF(marpaESLIFp, "strdup failure, %s", strerror(errno));
+    goto err;
+  }
+
+  p = rcs;
+  while (*p != '\0') {
+    if ((*p == '_')                  ||
+        ((*p >= 'a') && (*p <= 'z')) ||
+        ((*p >= 'A') && (*p <= 'Z')) ||
+        ((*p >= '0') && (*p <= '9'))) {
+      goto next;
+    }
+    *p  = '_';
+  next:
+    ++p;
+  }
+
+  goto done;
+
+ err:
+  if (rcs != NULL) {
+    free(rcs);
+    rcs = NULL;
+  }
+
+ done:
+  return rcs;
 }
 
 #include "grammarContext.c"

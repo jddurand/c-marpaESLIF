@@ -248,6 +248,19 @@ sub checkType {
 sub generate {
   my ($rulep, $symbolp, $nullablep, $typep, $mapp) = @_;
 
+  generateHeader();
+  generateEnum($typep);
+  generateDependencies($mapp);
+  generateStackManagerConstrustor();
+  generateStackManagerDestructor();
+  generateStackManagerGettype($typep, $mapp);
+  generateStackManagerTrace($typep, $mapp);
+  generateMacros($rulep, $symbolp, $nullablep, $typep, $mapp);
+  generateRuleWrapper($rulep, $symbolp, $nullablep, $typep, $mapp);
+  generateRuleImpl($rulep, $typep, $mapp);
+}
+
+sub generateHeader {
   #
   # First generate an enum for all the types
   #
@@ -259,7 +272,13 @@ sub generate {
 #include <errno.h>         /* errno */
 #include <string.h>        /* strerror(errno) */
 #include <genericStack.h>  /* generic stack */
+");
+}
 
+sub generateEnum {
+  my ($typep) = @_;
+
+  _print([$out], "
 /* -------------------------------------------- */
 /* Every item in the stack is explicitly tagged */
 /* -------------------------------------------- */
@@ -270,30 +289,25 @@ typedef enum ${prefix}_itemType {
   _print([$out], "
 
 } ${prefix}_itemType_t;
-
-/* ------------------------------------------------------------------------------- */
-/* Every type mapped to a genericStack's PTR generates free and clone dependencies */
-/* ------------------------------------------------------------------------------- */
 ");
-  _print([$log], "/* Free methods */\n");
+}
+
+sub generateDependencies {
+  my ($mapp) = @_;
+
+  _print([$log], "
+/* ----------------------------------- */
+/* Methods that have to be implemented */
+/* ----------------------------------- */
+/* Free methods */\n");
   foreach (grep { $mapp->{$_}->{basictype} eq 'PTR' } sort keys %{$mapp}) {
     _print([$out,$log], "static void %s(void *userDatavp, %s%s);\n", x2meth($_, 'freev'), $mapp->{$_}->{ctype}, $_);
   }
-  _print([$out], "\n");
-  _print([$log], "/* Clone methods */\n");
+  _print([$log], "
+/* Clone methods */\n");
   foreach (grep { $mapp->{$_}->{basictype} eq 'PTR' } sort keys %{$mapp}) {
     _print([$out,$log], "static %s%s(void *userDatavp, %s%s);\n", $mapp->{$_}->{ctype}, x2meth($_, 'clonep'), $mapp->{$_}->{ctype}, $_);
   }
-  #
-  # Generate the method bodies
-  #
-  generateStackManagerConstrustor();
-  generateStackManagerDestructor();
-  generateStackManagerGettype($typep, $mapp);
-  generateStackManagerTrace($typep, $mapp);
-  generateMacros($rulep, $symbolp, $nullablep, $typep, $mapp);
-  generateRuleWrapper($rulep, $symbolp, $nullablep, $typep, $mapp);
-  generateRuleImpl($rulep, $typep, $mapp);
 }
 
 sub basictype2ctype {
