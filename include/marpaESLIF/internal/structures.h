@@ -363,7 +363,6 @@ marpaESLIFValueOption_t marpaESLIFValueOption_default_template = {
   NULL, /* userDatavp - filled at run-time */
   NULL, /* ruleCallbackp */
   NULL, /* symbolCallbackp */
-  NULL, /* nullingCallbackp */
   1,    /* highRankOnlyb */
   1,    /* orderByRankb */
   0,    /* ambiguousb */

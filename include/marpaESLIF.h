@@ -64,13 +64,12 @@ typedef struct marpaESLIFEvent {
 } marpaESLIFEvent_t;
 
 typedef short (*marpaESLIFValueRuleCallback_t)(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions, int rulei, int arg0i, int argni, int resulti);
+/* For a nullable callback, bytep is NULL and bytel is 0 */
 typedef short (*marpaESLIFValueSymbolCallback_t)(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions, char *bytep, size_t bytel, int symboli, int resulti);
-typedef short (*marpaESLIFValueNullableCallback_t)(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions, int symboli, int resulti);
 typedef struct marpaESLIFValueOption {
   void                             *userDatavp;            /* User specific context */
   marpaESLIFValueRuleCallback_t     ruleCallbackp;
   marpaESLIFValueSymbolCallback_t   symbolCallbackp;
-  marpaESLIFValueNullableCallback_t nullableCallbackp;
   short                             highRankOnlyb;         /* Default: 1 */
   short                             orderByRankb;          /* Default: 1 */
   short                             ambiguousb;            /* Default: 0 */
