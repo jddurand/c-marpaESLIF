@@ -155,6 +155,8 @@ static inline short                  _marpaESLIF_grammarContext_get_typeb(marpaE
 static inline short                  _marpaESLIF_grammarContext_set_typeb(marpaESLIF_t *marpaESLIFp, genericStack_t *itemTypeStackp, int i, marpaESLIF_grammarItemType_t type);
 static inline void                   _marpaESLIFValueErrorProgressReportv(marpaESLIFValue_t *marpaESLIFValuep);
 static inline short                  _marpaESLIF_resolveGrammarb(marpaESLIF_t *marpaESLIFp, genericStack_t *grammarStackp, marpaESLIF_grammar_t *current_grammarp, char *asciis, int lookupLevelDeltai, marpaESLIF_string_t *lookupGrammarStringp, marpaESLIF_grammar_t **grammarpp, marpaESLIF_symbol_t **symbolpp);
+static inline short                  _marpaESLIF_generateHelper_includeb(marpaESLIF_t *marpaESLIFp, genericLogger_t *genericLoggerp, marpaESLIF_stringGenerator_t *stringGeneratorp);
+static inline short                  _marpaESLIF_generateHelper_stackStructureb(marpaESLIF_t *marpaESLIFp, genericLogger_t *genericLoggerp, marpaESLIF_stringGenerator_t *stringGeneratorp);
 static inline short                  _marpaESLIF_generateHelper_by_grammarb(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammar_t *marpaESLIFGrammarp, genericLogger_t *genericLoggerp, marpaESLIF_stringGenerator_t *stringGeneratorp, int grammari);
 static inline short                  _marpaESLIF_generateHelper_by_grammar_enumb(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammar_t *marpaESLIFGrammarp, genericLogger_t *genericLoggerp, marpaESLIF_stringGenerator_t *stringGeneratorp, int grammari);
 static inline short                  _marpaESLIF_generateHelper_by_grammar_symbolCallbackb(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammar_t *marpaESLIFGrammarp, genericLogger_t *genericLoggerp, marpaESLIF_stringGenerator_t *stringGeneratorp, int grammari);
@@ -7532,6 +7534,13 @@ char *marpaESLIF_generateHelper(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammar_t *
     goto err;
   }
 
+  if (! _marpaESLIF_generateHelper_includeb(marpaESLIFp, genericLoggerp, &stringGenerator)) {
+    goto err;
+  }
+  if (! _marpaESLIF_generateHelper_stackStructureb(marpaESLIFp, genericLoggerp, &stringGenerator)) {
+    goto err;
+  }
+
   /* We loop on all the grammars */
   grammarStackp = marpaESLIFGrammarp->grammarStackp;
   for (grammari = 0; grammari < GENERICSTACK_USED(grammarStackp); grammari++) {
@@ -7846,6 +7855,58 @@ static inline short _marpaESLIF_generateHelper_by_grammar_ruleCallbackb(marpaESL
   if (ascii2ids != NULL) {
     free(ascii2ids);
   }
+  return rcb;
+}
+
+/*****************************************************************************/
+static inline short _marpaESLIF_generateHelper_includeb(marpaESLIF_t *marpaESLIFp, genericLogger_t *genericLoggerp, marpaESLIF_stringGenerator_t *stringGeneratorp)
+/*****************************************************************************/
+{
+  static const char    *funcs      = "_marpaESLIF_generateHelper_includeb";
+  short                 rcb;
+
+  /* Generate the API of our stack manager */
+  
+  GENERICLOGGER_TRACE(genericLoggerp, "\n"); MARPAESLIF_GEN_OK;
+  GENERICLOGGER_TRACE(genericLoggerp, "#include <stdlib.h>\n"); MARPAESLIF_GEN_OK;
+  GENERICLOGGER_TRACE(genericLoggerp, "#include <errno.h>\n"); MARPAESLIF_GEN_OK;
+  GENERICLOGGER_TRACE(genericLoggerp, "#include <string.h>\n"); MARPAESLIF_GEN_OK;
+  GENERICLOGGER_TRACE(genericLoggerp, "#include <genericStack.h>\n"); MARPAESLIF_GEN_OK;
+
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  return rcb;
+}
+
+/*****************************************************************************/
+static inline short _marpaESLIF_generateHelper_stackStructureb(marpaESLIF_t *marpaESLIFp, genericLogger_t *genericLoggerp, marpaESLIF_stringGenerator_t *stringGeneratorp)
+/*****************************************************************************/
+{
+  static const char    *funcs      = "_marpaESLIF_generateHelper_stackStructureb";
+  short                 rcb;
+
+  /* Generate the API of our stack manager */
+  
+  GENERICLOGGER_TRACE(genericLoggerp, "\n"); MARPAESLIF_GEN_OK;
+  GENERICLOGGER_TRACE(genericLoggerp, "/* Internal structure offering stack management */\n"); MARPAESLIF_GEN_OK;
+  GENERICLOGGER_TRACE(genericLoggerp, "typedef struct marpaESLIF_stackManager {\n"); MARPAESLIF_GEN_OK;
+  GENERICLOGGER_TRACE(genericLoggerp, "  void *userDatavp; /* Caller's opaque context */\n"); MARPAESLIF_GEN_OK;
+  GENERICLOGGER_TRACE(genericLoggerp, "  genericStack_t *stackp; /* The stack */\n"); MARPAESLIF_GEN_OK;
+  GENERICLOGGER_TRACE(genericLoggerp, "  genericStack_t *typep; /* Type of each item in the stack */\n"); MARPAESLIF_GEN_OK;
+  GENERICLOGGER_TRACE(genericLoggerp, "} marpaESLIF_stackManager_t;\n"); MARPAESLIF_GEN_OK;
+
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
   return rcb;
 }
 
