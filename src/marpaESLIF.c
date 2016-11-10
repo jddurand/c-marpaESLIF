@@ -7699,7 +7699,7 @@ static inline short _marpaESLIF_generateHelper_by_grammar_symbolCallbackb(marpaE
       GENERICLOGGER_TRACEF(genericLoggerp, "  return %s(userDatavp, symboli, bytep, bytel, resulti) {\n", ascii2ids); MARPAESLIF_GEN_OK;
     } else {
       MARPAESLIF_WARNF(marpaESLIFp, "Symbol No %d (%s) has no action", symbolp->idi, symbolp->descp->asciis);
-      GENERICLOGGER_TRACE(genericLoggerp, "  /* WARNING : this symbol has no action */\n"); MARPAESLIF_GEN_OK;
+      GENERICLOGGER_TRACE(genericLoggerp, "  /* WARNING : this symbol has no action when input is non-null */\n"); MARPAESLIF_GEN_OK;
       GENERICLOGGER_TRACE(genericLoggerp, "  return 0;\n"); MARPAESLIF_GEN_OK;
     }
     GENERICLOGGER_TRACE(genericLoggerp, "}\n"); MARPAESLIF_GEN_OK;
@@ -7764,7 +7764,7 @@ static inline short _marpaESLIF_generateHelper_by_grammar_nullableCallbackb(marp
       GENERICLOGGER_TRACEF(genericLoggerp, "  return %s(userDatavp, symboli, NULL, 0, resulti) {\n", ascii2ids); MARPAESLIF_GEN_OK;
     } else {
       MARPAESLIF_WARNF(marpaESLIFp, "Symbol No %d (%s) has no action", symbolp->idi, symbolp->descp->asciis);
-      GENERICLOGGER_TRACE(genericLoggerp, "  /* WARNING : this symbol has no action */\n"); MARPAESLIF_GEN_OK;
+      GENERICLOGGER_TRACE(genericLoggerp, "  /* WARNING : this symbol has no action when input is null */\n"); MARPAESLIF_GEN_OK;
       GENERICLOGGER_TRACE(genericLoggerp, "  return 0;\n"); MARPAESLIF_GEN_OK;
     }
     GENERICLOGGER_TRACE(genericLoggerp, "}\n"); MARPAESLIF_GEN_OK;
