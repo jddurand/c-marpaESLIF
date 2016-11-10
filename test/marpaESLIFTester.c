@@ -213,11 +213,11 @@ int main() {
     goto err;
   }
 
-  helpers = marpaESLIF_generateHelper(marpaESLIFp, marpaESLIF_grammarp(marpaESLIFp));
-  if (helpers == NULL) {
+  if (! marpaESLIF_generateHelper(marpaESLIFp, marpaESLIF_grammarp(marpaESLIFp), "myGrammarFreeMethodv", "myGrammarCopyMethodp", &helpers)) {
     goto err;
   }
   fprintf(stdout, "%s", helpers);
+  exiti = 0;
   goto done;
 
   marpaESLIFGrammarOption.grammars            = (char *) metags;
