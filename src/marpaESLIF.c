@@ -7996,10 +7996,10 @@ static inline short _marpaESLIF_generateHelper_forwardb(marpaESLIF_t *marpaESLIF
   short                 rcb;
 
   /* Forward declaration so that the new method is happy */
-  GENERICLOGGER_TRACE (genericLoggerp, "\n"); MARPAESLIF_GEN_OK;
-  GENERICLOGGER_TRACEF(genericLoggerp, "/* Forward declarations to make the new method happy */\n"); MARPAESLIF_GEN_OK;
-  GENERICLOGGER_TRACEF(genericLoggerp, "static int marpaESLIF_managedStack_ruleCallbacki(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions, int rulei, int arg0i, int argni, int resulti);\n"); MARPAESLIF_GEN_OK;
-  GENERICLOGGER_TRACEF(genericLoggerp, "static int marpaESLIF_managedStack_symbolCallbacki(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions, char *bytep, size_t bytel, int symboli, int resulti);\n"); MARPAESLIF_GEN_OK;
+  GENERICLOGGER_TRACE(genericLoggerp, "\n"); MARPAESLIF_GEN_OK;
+  GENERICLOGGER_TRACE(genericLoggerp, "/* Forward declarations to make the new method happy */\n"); MARPAESLIF_GEN_OK;
+  GENERICLOGGER_TRACE(genericLoggerp, "static int marpaESLIF_managedStack_ruleCallbacki(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions, int rulei, int arg0i, int argni, int resulti);\n"); MARPAESLIF_GEN_OK;
+  GENERICLOGGER_TRACE(genericLoggerp, "static int marpaESLIF_managedStack_symbolCallbacki(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions, char *bytep, size_t bytel, int symboli, int resulti);\n"); MARPAESLIF_GEN_OK;
   for (grammari = 0; grammari < GENERICSTACK_USED(grammarStackp); grammari++) {
     if (! GENERICSTACK_IS_PTR(grammarStackp, grammari)) {
       /* Sparse item in grammarStackp -; */
@@ -8028,16 +8028,16 @@ static inline short _marpaESLIF_generateHelper_externb(marpaESLIF_t *marpaESLIFp
   short              rcb;
 
   if (freeMethodNames == NULL) {
-    MARPAESLIF_ERRORF(marpaESLIFp, "freeMethodNames is NULL");
+    MARPAESLIF_ERROR(marpaESLIFp, "freeMethodNames is NULL");
     goto err;
   }
   if (copyMethodNames == NULL) {
-    MARPAESLIF_ERRORF(marpaESLIFp, "copyMethodNames is NULL");
+    MARPAESLIF_ERROR(marpaESLIFp, "copyMethodNames is NULL");
     goto err;
   }
   /* Generate dependencies as per the end-user */
   GENERICLOGGER_TRACE (genericLoggerp, "\n"); MARPAESLIF_GEN_OK;
-  GENERICLOGGER_TRACEF(genericLoggerp, "/* External dependencies */\n"); MARPAESLIF_GEN_OK;
+  GENERICLOGGER_TRACE (genericLoggerp, "/* External dependencies */\n"); MARPAESLIF_GEN_OK;
   GENERICLOGGER_TRACEF(genericLoggerp, "extern void %s(int leveli, char *contexts, void *p);\n", freeMethodNames); MARPAESLIF_GEN_OK;
   GENERICLOGGER_TRACEF(genericLoggerp, "extern void %s(int leveli, char *contexts, void *p);\n", copyMethodNames); MARPAESLIF_GEN_OK;
 
