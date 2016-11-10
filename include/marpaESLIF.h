@@ -65,12 +65,12 @@ typedef struct marpaESLIFEvent {
 
 typedef short (*marpaESLIFValueRuleCallback_t)(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions, int rulei, int arg0i, int argni, int resulti);
 typedef short (*marpaESLIFValueSymbolCallback_t)(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions, char *bytep, size_t bytel, int symboli, int resulti);
-typedef short (*marpaESLIFValueNullingCallback_t)(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions, int symboli, int resulti);
+typedef short (*marpaESLIFValueNullableCallback_t)(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions, int symboli, int resulti);
 typedef struct marpaESLIFValueOption {
   void                             *userDatavp;            /* User specific context */
   marpaESLIFValueRuleCallback_t     ruleCallbackp;
   marpaESLIFValueSymbolCallback_t   symbolCallbackp;
-  marpaESLIFValueNullingCallback_t  nullingCallbackp;
+  marpaESLIFValueNullableCallback_t nullableCallbackp;
   short                             highRankOnlyb;         /* Default: 1 */
   short                             orderByRankb;          /* Default: 1 */
   short                             ambiguousb;            /* Default: 0 */
@@ -130,6 +130,8 @@ extern "C" {
   marpaESLIF_EXPORT void                    marpaESLIFValue_freev(marpaESLIFValue_t *marpaESLIFValuep);
 
   marpaESLIF_EXPORT void                    marpaESLIF_freev(marpaESLIF_t *marpaESLIFp);
+
+  marpaESLIF_EXPORT char                   *marpaESLIF_generateHelper(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammar_t *marpaESLIFGrammarp);
 #ifdef __cplusplus
 }
 #endif

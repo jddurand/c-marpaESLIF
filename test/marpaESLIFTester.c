@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 #include <genericLogger.h>
 #include <marpaESLIF.h>
@@ -201,6 +202,7 @@ const static char *metags = "# Copyright 2015 Jeffrey Kegler\n"
 int main() {
   marpaESLIF_t             *marpaESLIFp        = NULL;
   marpaESLIFGrammar_t      *marpaESLIFGrammarp = NULL;
+  char                     *helpers            = NULL;
   marpaESLIFOption_t        marpaESLIFOption;
   marpaESLIFGrammarOption_t marpaESLIFGrammarOption;
   int                       exiti;
@@ -210,6 +212,13 @@ int main() {
   if (marpaESLIFp == NULL) {
     goto err;
   }
+
+  helpers = marpaESLIF_generateHelper(marpaESLIFp, marpaESLIF_grammarp(marpaESLIFp));
+  if (helpers == NULL) {
+    goto err;
+  }
+  fprintf(stdout, "%s", helpers);
+  goto done;
 
   marpaESLIFGrammarOption.grammars            = (char *) metags;
   marpaESLIFGrammarOption.grammarl            = strlen(metags);
@@ -228,6 +237,9 @@ int main() {
   exiti = 1;
 
  done:
+  if (helpers != NULL) {
+    free(helpers);
+  }
   marpaESLIFGrammar_freev(marpaESLIFGrammarp);
   marpaESLIF_freev(marpaESLIFp);
 
