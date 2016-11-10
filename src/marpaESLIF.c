@@ -160,7 +160,7 @@ static inline short                  _marpaESLIF_generateHelper_externb(marpaESL
 static inline short                  _marpaESLIF_generateHelper_forwardb(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammar_t *marpaESLIFGrammarp, genericLogger_t *genericLoggerp, marpaESLIF_stringGenerator_t *stringGeneratorp);
 static inline short                  _marpaESLIF_generateHelper_managedStack_structureb(marpaESLIF_t *marpaESLIFp, genericLogger_t *genericLoggerp, marpaESLIF_stringGenerator_t *stringGeneratorp);
 static inline short                  _marpaESLIF_generateHelper_managedStack_newb(marpaESLIF_t *marpaESLIFp, genericLogger_t *genericLoggerp, marpaESLIF_stringGenerator_t *stringGeneratorp);
-static inline short                  _marpaESLIF_generateHelper_managedStack_ruleCallbackb(marpaESLIF_t *marpaESLIFp, genericLogger_t *genericLoggerp, marpaESLIF_stringGenerator_t *stringGeneratorp);
+static inline short                  _marpaESLIF_generateHelper_managedStack_ruleCallbackb(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammar_t *marpaESLIFGrammarp, genericLogger_t *genericLoggerp, marpaESLIF_stringGenerator_t *stringGeneratorp);
 static inline short                  _marpaESLIF_generateHelper_managedStack_freeb(marpaESLIF_t *marpaESLIFp, genericLogger_t *genericLoggerp, marpaESLIF_stringGenerator_t *stringGeneratorp);
 static inline short                  _marpaESLIF_generateHelper_managedStack_enumb(marpaESLIF_t *marpaESLIFp, genericLogger_t *genericLoggerp, marpaESLIF_stringGenerator_t *stringGeneratorp);
 static inline short                  _marpaESLIF_generateHelper_by_grammarb(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammar_t *marpaESLIFGrammarp, genericLogger_t *genericLoggerp, marpaESLIF_stringGenerator_t *stringGeneratorp, int grammari, char *freeMethodNames, char *copyMethodNames);
@@ -6117,7 +6117,7 @@ short marpaESLIFValue_grammarib(marpaESLIFValue_t *marpaESLIFValuep, int *gramma
     }
     if (grammarp == (marpaESLIF_grammar_t *) GENERICSTACK_GET_PTR(grammarStackp, grammari)) {
       foundb = 1;
-      if (*grammarip != NULL) {
+      if (grammarip != NULL) {
         *grammarip = grammari;
       }
     }
@@ -7635,7 +7635,7 @@ short marpaESLIF_generateHelper(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammar_t *
   if (! _marpaESLIF_generateHelper_managedStack_newb(marpaESLIFp, genericLoggerp, &stringGenerator)) {
     goto err;
   }
-  if (! _marpaESLIF_generateHelper_managedStack_ruleCallbackb(marpaESLIFp, genericLoggerp, &stringGenerator)) {
+  if (! _marpaESLIF_generateHelper_managedStack_ruleCallbackb(marpaESLIFp, marpaESLIFGrammarp, genericLoggerp, &stringGenerator)) {
     goto err;
   }
   if (! _marpaESLIF_generateHelper_managedStack_enumb(marpaESLIFp, genericLoggerp, &stringGenerator)) {
@@ -8169,10 +8169,13 @@ static inline short _marpaESLIF_generateHelper_managedStack_newb(marpaESLIF_t *m
 }
 
 /*****************************************************************************/
-static inline short _marpaESLIF_generateHelper_managedStack_ruleCallbackb(marpaESLIF_t *marpaESLIFp, genericLogger_t *genericLoggerp, marpaESLIF_stringGenerator_t *stringGeneratorp)
+static inline short _marpaESLIF_generateHelper_managedStack_ruleCallbackb(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammar_t *marpaESLIFGrammarp, genericLogger_t *genericLoggerp, marpaESLIF_stringGenerator_t *stringGeneratorp)
 /*****************************************************************************/
 {
   static const char    *funcs      = "_marpaESLIF_generateHelper_managedStack_ruleCallbackb";
+  genericStack_t       *grammarStackp = marpaESLIFGrammarp->grammarStackp;
+  marpaESLIF_grammar_t *grammarp;
+  int                   grammari;
   short                 rcb;
 
   /* Generate the API of our stack manager */
@@ -8197,6 +8200,22 @@ static inline short _marpaESLIF_generateHelper_managedStack_ruleCallbackb(marpaE
   GENERICLOGGER_TRACE(genericLoggerp, "    goto err;\n"); MARPAESLIF_GEN_OK;
   GENERICLOGGER_TRACE(genericLoggerp, "  }\n"); MARPAESLIF_GEN_OK;
   GENERICLOGGER_TRACE(genericLoggerp, "  if (! marpaESLIFGrammar_leveli_by_grammarb(marpaESLIFGrammarp, &leveli, grammari, NULL)) {\n"); MARPAESLIF_GEN_OK;
+  GENERICLOGGER_TRACE(genericLoggerp, "    goto err;\n"); MARPAESLIF_GEN_OK;
+  GENERICLOGGER_TRACE(genericLoggerp, "  }\n"); MARPAESLIF_GEN_OK;
+  GENERICLOGGER_TRACE(genericLoggerp, "  switch (leveli) {\n"); MARPAESLIF_GEN_OK;
+  for (grammari = 0; grammari < GENERICSTACK_USED(grammarStackp); grammari++) {
+    if (! GENERICSTACK_IS_PTR(grammarStackp, grammari)) {
+      /* Sparse item in grammarStackp -; */
+      continue;
+    }
+    grammarp = GENERICSTACK_GET_PTR(grammarStackp, grammari);
+    GENERICLOGGER_TRACEF(genericLoggerp, "  case %d:\n", grammarp->leveli); MARPAESLIF_GEN_OK;
+    GENERICLOGGER_TRACEF(genericLoggerp, "    if (! marpaESLIF_managedStack_ruleCallback_level%d(managedStackp->userDatavp, marpaESLIFValuep, actions, rulei, arg0i, argni, resulti)) {\n", grammarp->leveli); MARPAESLIF_GEN_OK;
+    GENERICLOGGER_TRACE(genericLoggerp,  "       goto err;\n"); MARPAESLIF_GEN_OK;
+    GENERICLOGGER_TRACE(genericLoggerp,  "    }\n"); MARPAESLIF_GEN_OK;
+    GENERICLOGGER_TRACE(genericLoggerp,  "    break;\n"); MARPAESLIF_GEN_OK;
+  }
+  GENERICLOGGER_TRACE(genericLoggerp, "  default:\n"); MARPAESLIF_GEN_OK;
   GENERICLOGGER_TRACE(genericLoggerp, "    goto err;\n"); MARPAESLIF_GEN_OK;
   GENERICLOGGER_TRACE(genericLoggerp, "  }\n"); MARPAESLIF_GEN_OK;
   GENERICLOGGER_TRACE(genericLoggerp, "\n"); MARPAESLIF_GEN_OK;
