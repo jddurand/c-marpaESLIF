@@ -7706,6 +7706,8 @@ static inline short _marpaESLIF_generateHelper_by_grammar_symbolCallbackb(marpaE
         goto err;
       }
       GENERICLOGGER_TRACEF(genericLoggerp, "  return %s(userDatavp, symboli, bytep, bytel, resulti) {\n", ascii2ids); MARPAESLIF_GEN_OK;
+      free(ascii2ids);
+      ascii2ids = NULL;
     } else {
       MARPAESLIF_WARNF(marpaESLIFp, "Symbol No %d (%s) of grammar No %d (%s) has no action", symbolp->idi, symbolp->descp->asciis, grammarp->leveli, grammarp->descp->asciis);
       GENERICLOGGER_TRACE(genericLoggerp, "  /* WARNING : this symbol has no action when input is non-null */\n"); MARPAESLIF_GEN_OK;
@@ -7771,6 +7773,8 @@ static inline short _marpaESLIF_generateHelper_by_grammar_nullableCallbackb(marp
         goto err;
       }
       GENERICLOGGER_TRACEF(genericLoggerp, "  return %s(userDatavp, symboli, NULL, 0, resulti) {\n", ascii2ids); MARPAESLIF_GEN_OK;
+      free(ascii2ids);
+      ascii2ids = NULL;
     } else {
       MARPAESLIF_WARNF(marpaESLIFp, "Symbol No %d (%s) of grammar No %d (%s) has no action", symbolp->idi, symbolp->descp->asciis, grammarp->leveli, grammarp->descp->asciis);
       GENERICLOGGER_TRACE(genericLoggerp, "  /* WARNING : this symbol has no action when input is null */\n"); MARPAESLIF_GEN_OK;
