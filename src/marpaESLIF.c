@@ -4797,17 +4797,17 @@ marpaESLIFValue_t *marpaESLIFValue_newp(marpaESLIFRecognizer_t *marpaESLIFRecogn
   marpaESLIFValuep->typeStackp                  = NULL;
   marpaESLIFValuep->contextStackp               = NULL;
 
-  GENERICSTACK_INIT(marpaESLIFValuep->valueStackp);
+  GENERICSTACK_NEW(marpaESLIFValuep->valueStackp);
   if (GENERICSTACK_ERROR(marpaESLIFValuep->valueStackp)) {
     MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "marpaESLIFValuep->valueStackp initialization failure, %s", strerror(errno));
     goto err;
   }    
-  GENERICSTACK_INIT(marpaESLIFValuep->typeStackp);
+  GENERICSTACK_NEW(marpaESLIFValuep->typeStackp);
   if (GENERICSTACK_ERROR(marpaESLIFValuep->typeStackp)) {
     MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "marpaESLIFValuep->typeStackp initialization failure, %s", strerror(errno));
     goto err;
   }    
-  GENERICSTACK_INIT(marpaESLIFValuep->contextStackp);
+  GENERICSTACK_NEW(marpaESLIFValuep->contextStackp);
   if (GENERICSTACK_ERROR(marpaESLIFValuep->contextStackp)) {
     MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "marpaESLIFValuep->contextStackp initialization failure, %s", strerror(errno));
     goto err;
