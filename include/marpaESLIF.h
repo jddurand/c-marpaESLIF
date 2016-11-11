@@ -63,20 +63,23 @@ typedef struct marpaESLIFEvent {
   char                 *events; /* Event name - NULL if exhaustion */
 } marpaESLIFEvent_t;
 
-/* We choose int and NOT short - the only constraint is that a false value is considered as a failure */
-/* In particular, this is used by generated wrapper to distinguish between PTR and shallow PTRs */
-typedef int (*marpaESLIFValueRuleCallback_t)(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions, int rulei, int arg0i, int argni, int resulti);
-/* For a nullable callback, bytep is NULL and bytel is 0 */
-typedef int (*marpaESLIFValueSymbolCallback_t)(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions, char *bytep, size_t bytel, int symboli, int resulti);
+typedef int   (*marpaESLIFValueRuleCallback_t)(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti);
+typedef int   (*marpaESLIFValueSymbolCallback_t)(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *bytep, size_t bytel, int resulti);
+typedef void  (*marpaESLIFValueFreeCallback_t)(void *userDatavp, marpaESLIFGrammar_t *marpaESLIFGrammarp, int contexti, void *p);
+
+typedef marpaESLIFValueRuleCallback_t (*marpaESLIFValueRuleActionResolver_t)(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions);
+typedef marpaESLIFValueSymbolCallback_t (*marpaESLIFValueSymbolActionResolver_t)(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions);
+
 typedef struct marpaESLIFValueOption {
-  void                             *userDatavp;            /* User specific context */
-  marpaESLIFValueRuleCallback_t     ruleCallbackp;
-  marpaESLIFValueSymbolCallback_t   symbolCallbackp;
-  short                             highRankOnlyb;         /* Default: 1 */
-  short                             orderByRankb;          /* Default: 1 */
-  short                             ambiguousb;            /* Default: 0 */
-  short                             nullb;                 /* Default: 0 */
-  int                               maxParsesi;            /* Default: 0 */
+  void                                 *userDatavp;            /* User specific context */
+  marpaESLIFValueRuleActionResolver_t   ruleActionResolverp;   /* Will return the function doing the wanted rule action */
+  marpaESLIFValueSymbolActionResolver_t symbolActionResolverp; /* Will return the function doing the wanted symbol action */
+  marpaESLIFValueFreeCallback_t         freeCallbackp;         /* Will be called when memory is to be released */
+  short                                 highRankOnlyb;         /* Default: 1 */
+  short                                 orderByRankb;          /* Default: 1 */
+  short                                 ambiguousb;            /* Default: 0 */
+  short                                 nullb;                 /* Default: 0 */
+  int                                   maxParsesi;            /* Default: 0 */
 } marpaESLIFValueOption_t;
 
 typedef char *(*marpaESLISymbolDescriptionCallback_t)(void *userDatavp, int symboli);
@@ -95,7 +98,6 @@ extern "C" {
 
   marpaESLIF_EXPORT marpaESLIFGrammar_t    *marpaESLIFGrammar_newp(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammarOption_t *marpaESLIFGrammarOptionp);
   marpaESLIF_EXPORT short                   marpaESLIFGrammar_ngrammari(marpaESLIFGrammar_t *marpaESLIFGrammarp, int *ngrammarip);
-  marpaESLIF_EXPORT short                   marpaESLIFGrammar_grammarib(marpaESLIFGrammar_t *marpaESLIFGrammarp, int *grammarip);
   marpaESLIF_EXPORT short                   marpaESLIFGrammar_startib(marpaESLIFGrammar_t *marpaESLIFGrammarp, int *startip);
   marpaESLIF_EXPORT short                   marpaESLIFGrammar_starti_by_grammarb(marpaESLIFGrammar_t *marpaESLIFGrammarp, int *startip, int grammari, marpaESLIFString_t *descp);
   marpaESLIF_EXPORT short                   marpaESLIFGrammar_levelib(marpaESLIFGrammar_t *marpaESLIFGrammarp, int *levelip);
@@ -133,6 +135,26 @@ extern "C" {
   marpaESLIF_EXPORT marpaESLIFGrammar_t    *marpaESLIFValue_grammarp(marpaESLIFValue_t *marpaESLIFValuep);
   marpaESLIF_EXPORT short                   marpaESLIFValue_grammarib(marpaESLIFValue_t *marpaESLIFValuep, int *grammarip);
   marpaESLIF_EXPORT void                    marpaESLIFValue_freev(marpaESLIFValue_t *marpaESLIFValuep);
+
+  /* Stack management when doing valuation */
+  marpaESLIF_EXPORT short                   marpaESLIFValue_stack_set_char(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int contexti, char c);
+  marpaESLIF_EXPORT short                   marpaESLIFValue_stack_set_short(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int contexti, short s);
+  marpaESLIF_EXPORT short                   marpaESLIFValue_stack_set_int(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int contexti, int i);
+  marpaESLIF_EXPORT short                   marpaESLIFValue_stack_set_long(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int contexti, long l);
+  marpaESLIF_EXPORT short                   marpaESLIFValue_stack_set_float(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int contexti, float f);
+  marpaESLIF_EXPORT short                   marpaESLIFValue_stack_set_double(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int contexti, double d);
+  marpaESLIF_EXPORT short                   marpaESLIFValue_stack_set_ptr(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int contexti, void *p, short shallowb);
+  marpaESLIF_EXPORT short                   marpaESLIFValue_stack_set_array(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int contexti, void *p, size_t l, short shallowb);
+
+  marpaESLIF_EXPORT short                   marpaESLIFValue_stack_get_char(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int *contextip, char *cp);
+  marpaESLIF_EXPORT short                   marpaESLIFValue_stack_get_short(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int *contextip, short *sp);
+  marpaESLIF_EXPORT short                   marpaESLIFValue_stack_get_int(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int *contextip, int *ip);
+  marpaESLIF_EXPORT short                   marpaESLIFValue_stack_get_long(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int *contextip, long *lp);
+  marpaESLIF_EXPORT short                   marpaESLIFValue_stack_get_float(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int *contextip, float *fp);
+  marpaESLIF_EXPORT short                   marpaESLIFValue_stack_get_double(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int *contextip, double *dp);
+  marpaESLIF_EXPORT short                   marpaESLIFValue_stack_get_ptr(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int *contextip, void **pp, short *shallowbp);
+  marpaESLIF_EXPORT short                   marpaESLIFValue_stack_get_array(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int *contextip, void **pp, size_t *lp, short *shallowbp);
+
 
   marpaESLIF_EXPORT void                    marpaESLIF_freev(marpaESLIF_t *marpaESLIFp);
 

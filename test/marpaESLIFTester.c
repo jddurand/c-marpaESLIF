@@ -4,6 +4,15 @@
 #include <genericLogger.h>
 #include <marpaESLIF.h>
 
+static marpaESLIFValueRuleCallback_t ruleActionResolver(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions);
+static marpaESLIFValueSymbolCallback_t symbolActionResolver(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions);
+static int default_meta_action(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti);
+static int default_lexeme_action(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *bytep, size_t bytel, int resulti);
+
+typedef struct marpaESLIFTester_context {
+  genericLogger_t *genericLoggerp;
+} marpaESLIFTester_context_t;
+
 const static char *metags = "# Copyright 2015 Jeffrey Kegler\n"
 "# This file is part of Marpa::R2.  Marpa::R2 is free software: you can\n"
 "# redistribute it and/or modify it under the terms of the GNU Lesser\n"
@@ -217,8 +226,10 @@ int main() {
     goto err;
   }
   fprintf(stdout, "%s", helpers);
+  /*
   exiti = 0;
   goto done;
+  */
 
   marpaESLIFGrammarOption.grammars            = (char *) metags;
   marpaESLIFGrammarOption.grammarl            = strlen(metags);
@@ -245,4 +256,110 @@ int main() {
 
   GENERICLOGGER_FREE(marpaESLIFOption.genericLoggerp);
   return exiti;
+}
+
+/****************************************************************************/
+static marpaESLIFValueRuleCallback_t ruleActionResolver(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions)
+/****************************************************************************/
+{
+  marpaESLIFTester_context_t    *marpaESLIFTester_contextp = (marpaESLIFTester_context_t *) userDatavp;
+  marpaESLIFGrammar_t           *marpaESLIFGrammarp;
+  marpaESLIFValueRuleCallback_t  marpaESLIFValueRuleCallbackp;
+  int                            grammari;
+  int                            leveli;
+
+  if (marpaESLIFTester_contextp == NULL) {
+    goto err;
+  }
+  if (! marpaESLIFValue_grammarib(marpaESLIFValuep, &grammari)) {
+    GENERICLOGGER_ERROR(marpaESLIFTester_contextp->genericLoggerp, "marpaESLIFValue_grammarib failure");
+    goto err;
+  }
+  marpaESLIFGrammarp = marpaESLIFValue_grammarp(marpaESLIFValuep);
+  if (marpaESLIFGrammarp == NULL) {
+    GENERICLOGGER_ERROR(marpaESLIFTester_contextp->genericLoggerp, "marpaESLIFValue_grammarp failure");
+    goto err;
+  }
+  if (marpaESLIFGrammar_leveli_by_grammarb(marpaESLIFGrammarp, &leveli, grammari, NULL /* descp */)) {
+    GENERICLOGGER_ERROR(marpaESLIFTester_contextp->genericLoggerp, "marpaESLIFGrammar_leveli_by_grammarb failure");
+    goto err;
+  }
+  /* We have only one level here */
+  if (leveli != 0) {
+    GENERICLOGGER_ERRORF(marpaESLIFTester_contextp->genericLoggerp, "leveli = %d", leveli);
+    goto err;
+  }
+  if (strcmp(actions, "default_meta_action") == 0) {
+    marpaESLIFValueRuleCallbackp = default_meta_action;
+  } else {
+    GENERICLOGGER_ERRORF(marpaESLIFTester_contextp->genericLoggerp, "Unsupported action \"%s\"", actions);
+    goto err;
+  }
+
+  goto done;
+
+ err:
+  marpaESLIFValueRuleCallbackp = NULL;
+ done:
+  return marpaESLIFValueRuleCallbackp;
+}
+
+/****************************************************************************/
+static marpaESLIFValueSymbolCallback_t symbolActionResolver(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions)
+/****************************************************************************/
+{
+  marpaESLIFTester_context_t     *marpaESLIFTester_contextp = (marpaESLIFTester_context_t *) userDatavp;
+  marpaESLIFGrammar_t            *marpaESLIFGrammarp;
+  marpaESLIFValueSymbolCallback_t marpaESLIFValueSymbolCallbackp;
+  int                             grammari;
+  int                             leveli;
+
+  if (marpaESLIFTester_contextp == NULL) {
+    goto err;
+  }
+  if (! marpaESLIFValue_grammarib(marpaESLIFValuep, &grammari)) {
+    GENERICLOGGER_ERROR(marpaESLIFTester_contextp->genericLoggerp, "marpaESLIFValue_grammarib failure");
+    goto err;
+  }
+  marpaESLIFGrammarp = marpaESLIFValue_grammarp(marpaESLIFValuep);
+  if (marpaESLIFGrammarp == NULL) {
+    GENERICLOGGER_ERROR(marpaESLIFTester_contextp->genericLoggerp, "marpaESLIFValue_grammarp failure");
+    goto err;
+  }
+  if (marpaESLIFGrammar_leveli_by_grammarb(marpaESLIFGrammarp, &leveli, grammari, NULL /* descp */)) {
+    GENERICLOGGER_ERROR(marpaESLIFTester_contextp->genericLoggerp, "marpaESLIFGrammar_leveli_by_grammarb failure");
+    goto err;
+  }
+  /* We have only one level here */
+  if (leveli != 0) {
+    GENERICLOGGER_ERRORF(marpaESLIFTester_contextp->genericLoggerp, "leveli = %d", leveli);
+    goto err;
+  }
+  if (strcmp(actions, "default_lexeme_action") == 0) {
+    marpaESLIFValueSymbolCallbackp = default_lexeme_action;
+  } else {
+    GENERICLOGGER_ERRORF(marpaESLIFTester_contextp->genericLoggerp, "Unsupported action \"%s\"", actions);
+    goto err;
+  }
+
+  goto done;
+
+ err:
+  marpaESLIFValueSymbolCallbackp = NULL;
+ done:
+  return marpaESLIFValueSymbolCallbackp;
+}
+
+/****************************************************************************/
+static int default_meta_action(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti)
+/****************************************************************************/
+{
+  return 0;
+}
+
+/****************************************************************************/
+static int default_lexeme_action(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *bytep, size_t bytel, int resulti)
+/****************************************************************************/
+{
+  return 0;
 }
