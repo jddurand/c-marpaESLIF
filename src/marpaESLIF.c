@@ -7766,12 +7766,71 @@ MARPAESLIF_STACK_GETTER_GENERATOR(double, DOUBLE, MARPAESLIF_STACK_TYPE_DOUBLE, 
 short marpaESLIFValue_stack_get_ptr(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int *contextip, void **pp, short *shallowbp)
 /*****************************************************************************/
 {
+  short rcb;
+
+  if (marpaESLIFValuep == NULL) {
+    errno = EINVAL;
+    return 0;
+  }
+
+  if (! GENERICSTACK_IS_PTR(marpaESLIFValuep->valueStackp, indicei)) {
+    MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "marpaESLIFValuep->valueStackp at indice %d is not PTR (internal type: %d)", indicei, GENERICSTACKITEMTYPE(marpaESLIFValuep->valueStackp, indicei));
+    goto err;
+  }
+  if (pp != NULL) {
+    *pp = GENERICSTACK_GET_PTR(marpaESLIFValuep->valueStackp, indicei);
+  }
+  if (contextip != NULL) {
+    *contextip = GENERICSTACK_GET_INT(marpaESLIFValuep->contextStackp, indicei);
+  }
+  if (shallowbp != NULL) {
+    *shallowbp = (GENERICSTACK_GET_INT(marpaESLIFValuep->typeStackp, indicei) == MARPAESLIF_STACK_TYPE_PTR_SHALLOW);
+  }
+  rcb = 1;
+  goto done;
+
+ err:
+    rcb = 0;
+ done:
+    return rcb;
 }
 
 /*****************************************************************************/
 short marpaESLIFValue_stack_get_array(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int *contextip, void **pp, size_t *lp, short *shallowbp)
 /*****************************************************************************/
 {
+  GENERICSTACKITEMTYPE2TYPE_ARRAY array;
+  short                           rcb;
+
+  if (marpaESLIFValuep == NULL) {
+    errno = EINVAL;
+    return 0;
+  }
+
+  if (! GENERICSTACK_IS_ARRAY(marpaESLIFValuep->valueStackp, indicei)) {
+    MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "marpaESLIFValuep->valueStackp at indice %d is not ARRAY (internal type: %d)", indicei, GENERICSTACKITEMTYPE(marpaESLIFValuep->valueStackp, indicei));
+    goto err;
+  }
+  array = GENERICSTACK_GET_ARRAY(marpaESLIFValuep->valueStackp, indicei);
+  if (pp != NULL) {
+    *pp = GENERICSTACK_ARRAY_PTR(array);
+  }
+  if (lp != NULL) {
+    *lp = GENERICSTACK_ARRAY_LENGTH(array);
+  }
+  if (contextip != NULL) {
+    *contextip = GENERICSTACK_GET_INT(marpaESLIFValuep->contextStackp, indicei);
+  }
+  if (shallowbp != NULL) {
+    *shallowbp = (GENERICSTACK_GET_INT(marpaESLIFValuep->typeStackp, indicei) == MARPAESLIF_STACK_TYPE_ARRAY_SHALLOW);
+  }
+  rcb = 1;
+  goto done;
+
+ err:
+    rcb = 0;
+ done:
+    return rcb;
 }
 
 /*****************************************************************************/
