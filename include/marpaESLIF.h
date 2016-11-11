@@ -136,7 +136,7 @@ extern "C" {
 
   marpaESLIF_EXPORT void                    marpaESLIF_freev(marpaESLIF_t *marpaESLIFp);
 
-  marpaESLIF_EXPORT short                   marpaESLIF_generateHelper(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammar_t *marpaESLIFGrammarp, char *freeMethodNames, char *copyMethodNames, char **helpersp);
+  marpaESLIF_EXPORT short                   marpaESLIF_generateHelperb(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammar_t *marpaESLIFGrammarp, char *userspaceincludes, char *freeMethodNames, char *copyMethodNames, char **helpersp);
 #ifdef __cplusplus
 }
 #endif

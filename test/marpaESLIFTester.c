@@ -213,7 +213,7 @@ int main() {
     goto err;
   }
 
-  if (! marpaESLIF_generateHelper(marpaESLIFp, marpaESLIF_grammarp(marpaESLIFp), "myGrammarFreeMethodv", "myGrammarCopyMethodp", &helpers)) {
+  if (! marpaESLIF_generateHelperb(marpaESLIFp, marpaESLIF_grammarp(marpaESLIFp), "#include \"marpaESLIFTester.h\"", "myGrammarFreeMethodv", "myGrammarCopyMethodp", &helpers)) {
     goto err;
   }
   fprintf(stdout, "%s", helpers);
