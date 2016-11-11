@@ -152,7 +152,8 @@ enum marpaESLIF_event_type {
 
 /* Stack types */
 enum marpaESLIF_stack_type {
-  MARPAESLIF_STACK_TYPE_CHAR = 0,
+  MARPAESLIF_STACK_TYPE_NA = 0,
+  MARPAESLIF_STACK_TYPE_CHAR,
   MARPAESLIF_STACK_TYPE_SHORT,
   MARPAESLIF_STACK_TYPE_INT,
   MARPAESLIF_STACK_TYPE_LONG,
@@ -219,6 +220,7 @@ struct marpaESLIF_rule {
 /* A grammar */
 struct marpaESLIF_grammar {
   marpaESLIF_t          *marpaESLIFp;                 /* Shallow pointer to top marpaESLIFp */
+  marpaESLIF_grammar_t  *selfp;                       /* This is vicious: internally the grammar is duplicated on the stack. This pointer give the original allocated memory. */
   int                    leveli;                      /* Grammar level */
   marpaESLIF_string_t   *descp;                       /* Grammar description */
   short                  latmb;                       /* Longest acceptable token match mode */
@@ -270,6 +272,9 @@ struct marpaESLIFValue {
   genericStack_t           *valueStackp;
   genericStack_t           *typeStackp;
   genericStack_t           *contextStackp;
+  short                     inValuationb;
+  int                       symboli;
+  int                       rulei;
 };
 
 struct marpaESLIFRecognizer {
