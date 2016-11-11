@@ -25,6 +25,7 @@ typedef struct  marpaESLIF_readerContext   marpaESLIF_readerContext_t;
 typedef struct  marpaESLIF_lexemeContext   marpaESLIF_lexemeContext_t;
 typedef struct  marpaESLIF_cloneContext    marpaESLIF_cloneContext_t;
 typedef enum    marpaESLIF_valueMode       marpaESLIF_valueMode_t;
+typedef enum    marpaESLIF_stack_type      marpaESLIF_stack_type_t;
 
 /* Symbol types */
 enum marpaESLIF_symbol_type {
@@ -149,6 +150,20 @@ enum marpaESLIF_event_type {
   MARPAESLIF_EVENT_TYPE_AFTER     = 0x10  /* ESLIF lexeme event */
 };
 
+/* Stack types */
+enum marpaESLIF_stack_type {
+  MARPAESLIF_STACK_TYPE_CHAR = 0,
+  MARPAESLIF_STACK_TYPE_SHORT,
+  MARPAESLIF_STACK_TYPE_INT,
+  MARPAESLIF_STACK_TYPE_LONG,
+  MARPAESLIF_STACK_TYPE_FLOAT,
+  MARPAESLIF_STACK_TYPE_DOUBLE,
+  MARPAESLIF_STACK_TYPE_PTR,
+  MARPAESLIF_STACK_TYPE_PTR_SHALLOW,
+  MARPAESLIF_STACK_TYPE_ARRAY,
+  MARPAESLIF_STACK_TYPE_ARRAY_SHALLOW,
+};
+
 /* A symbol */
 struct marpaESLIF_symbol {
   marpaESLIF_symbol_type_t     type;  /* Symbol type */
@@ -252,6 +267,9 @@ struct marpaESLIFValue {
   short                     previousPassWasPassthroughb;
   int                       previousArg0i;
   int                       previousArgni;
+  genericStack_t           *valueStackp;
+  genericStack_t           *typeStackp;
+  genericStack_t           *contextStackp;
 };
 
 struct marpaESLIFRecognizer {
@@ -361,8 +379,9 @@ marpaESLIFRecognizerOption_t marpaESLIFRecognizerOption_default_template = {
 
 marpaESLIFValueOption_t marpaESLIFValueOption_default_template = {
   NULL, /* userDatavp - filled at run-time */
-  NULL, /* ruleCallbackp */
-  NULL, /* symbolCallbackp */
+  NULL, /* ruleActionResolverp */
+  NULL, /* symbolActionResolverp */
+  NULL, /* freeCallbackp */
   1,    /* highRankOnlyb */
   1,    /* orderByRankb */
   0,    /* ambiguousb */
