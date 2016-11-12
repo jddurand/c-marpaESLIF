@@ -2579,7 +2579,6 @@ static inline short _marpaESLIFRecognizer_regex_matcherb(marpaESLIFRecognizer_t 
 {
   static const char              *funcs = "_marpaESLIFRecognizer_regex_matcherb";
   marpaESLIF_t                   *marpaESLIFp = marpaESLIFRecognizerp->marpaESLIFp;
-  marpaESLIFValueResult_t         marpaESLIFValueResult;
   marpaESLIF_matcher_value_t      rci;
   marpaESLIF_regex_t              marpaESLIF_regex;
   int                             pcre2Errornumberi;
@@ -2801,19 +2800,15 @@ static inline short _marpaESLIFRecognizer_regex_matcherb(marpaESLIFRecognizer_t 
     *rcip = rci;
   }
 
-  if (rci == MARPAESLIF_MATCH_OK) {
-    marpaESLIFValueResult.type = MARPAESLIF_STACK_TYPE_ARRAY;
-    marpaESLIFValueResult.u.p = malloc(matchedLengthl);
-    if (marpaESLIFValueResult.u.p == NULL) {
+  if ((rci == MARPAESLIF_MATCH_OK) && (marpaESLIFValueResultp != NULL)) {
+    marpaESLIFValueResultp->type = MARPAESLIF_STACK_TYPE_ARRAY;
+    marpaESLIFValueResultp->u.p = malloc(matchedLengthl);
+    if (marpaESLIFValueResultp->u.p == NULL) {
       MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
       goto err;
     }
-    memcpy(marpaESLIFValueResult.u.p, (void *) inputs, matchedLengthl);
-    marpaESLIFValueResult.sizel = matchedLengthl;
-  }
-
-  if (marpaESLIFValueResultp != NULL) {
-    *marpaESLIFValueResultp = marpaESLIFValueResult;
+    memcpy(marpaESLIFValueResultp->u.p, (void *) inputs, matchedLengthl);
+    marpaESLIFValueResultp->sizel = matchedLengthl;
   }
 
   rcb = 1;
