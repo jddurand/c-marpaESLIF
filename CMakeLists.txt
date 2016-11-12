@@ -169,7 +169,7 @@ ADD_CUSTOM_TARGET(marpaESLIFConfig SOURCES "${CONFIG_H}")
 # ------------------
 # marpaESLIF library
 # -----------------
-FILE (GLOB lib_src src/*.c)
+FILE (GLOB lib_src src/marpaESLIF.c)
 ADD_LIBRARY (marpaESLIF SHARED ${lib_src})
 INCLUDE_DIRECTORIES (
   "${INCLUDE_OUTPUT_PATH}"                             # Include path for generated files
