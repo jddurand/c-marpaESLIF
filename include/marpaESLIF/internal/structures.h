@@ -22,10 +22,9 @@ typedef enum    marpaESLIF_matcher_value   marpaESLIF_matcher_value_t;
 typedef enum    marpaESLIF_event_type      marpaESLIF_event_type_t;
 typedef enum    marpaESLIF_array_type      marpaESLIF_array_type_t;
 typedef struct  marpaESLIF_readerContext   marpaESLIF_readerContext_t;
-typedef struct  marpaESLIF_lexemeContext   marpaESLIF_lexemeContext_t;
 typedef struct  marpaESLIF_cloneContext    marpaESLIF_cloneContext_t;
 typedef enum    marpaESLIF_valueMode       marpaESLIF_valueMode_t;
-typedef enum    marpaESLIF_stack_type      marpaESLIF_stack_type_t;
+typedef         marpaESLIFStackType_t      marpaESLIF_stack_type_t;
 
 /* Symbol types */
 enum marpaESLIF_symbol_type {
@@ -150,21 +149,6 @@ enum marpaESLIF_event_type {
   MARPAESLIF_EVENT_TYPE_AFTER     = 0x10  /* ESLIF lexeme event */
 };
 
-/* Stack types */
-enum marpaESLIF_stack_type {
-  MARPAESLIF_STACK_TYPE_NA = 0,
-  MARPAESLIF_STACK_TYPE_CHAR,
-  MARPAESLIF_STACK_TYPE_SHORT,
-  MARPAESLIF_STACK_TYPE_INT,
-  MARPAESLIF_STACK_TYPE_LONG,
-  MARPAESLIF_STACK_TYPE_FLOAT,
-  MARPAESLIF_STACK_TYPE_DOUBLE,
-  MARPAESLIF_STACK_TYPE_PTR,
-  MARPAESLIF_STACK_TYPE_PTR_SHALLOW,
-  MARPAESLIF_STACK_TYPE_ARRAY,
-  MARPAESLIF_STACK_TYPE_ARRAY_SHALLOW,
-};
-
 /* A symbol */
 struct marpaESLIF_symbol {
   marpaESLIF_symbol_type_t     type;  /* Symbol type */
@@ -275,6 +259,17 @@ struct marpaESLIFValue {
   short                     inValuationb;
   int                       symboli;
   int                       rulei;
+  /* Keep last value */
+  char                      lastValuec;
+  short                     lastValueb;
+  int                       lastValuei;
+  long                      lastValuel;
+  float                     lastValuef;
+  double                    lastValued;
+  void                     *lastValuep;
+  size_t                    lastSizel;
+  marpaESLIFStackType_t     lastTypei;
+  int                       lastContexti;
 };
 
 struct marpaESLIFRecognizer {
@@ -342,19 +337,6 @@ struct marpaESLIFRecognizer {
 struct marpaESLIF_readerContext {
   marpaESLIF_t              *marpaESLIFp;
   marpaESLIFGrammarOption_t *marpaESLIFGrammarOptionp;
-};
-
-/* Internal structure to have value context information */
-/* This is used in three contexts:
-   - discard grammar
-   - meta symbol that appears to be a terminal
-
-   Both are using the "lexeme" mode, in which any action set in the grammar is ignored
-   in favour of concatenating everything that matched.
-*/
-struct marpaESLIF_lexemeContext {
-  genericStack_t        outputStack;
-  genericStack_t       *outputStackp;
 };
 
 /* Internal structure to have clone context information */

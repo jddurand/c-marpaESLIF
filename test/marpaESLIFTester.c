@@ -216,7 +216,7 @@ int main() {
   marpaESLIFGrammarOption_t marpaESLIFGrammarOption;
   int                       exiti;
 
-  marpaESLIFOption.genericLoggerp = GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_DEBUG);
+  marpaESLIFOption.genericLoggerp = GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_TRACE);
   marpaESLIFp = marpaESLIF_newp(&marpaESLIFOption);
   if (marpaESLIFp == NULL) {
     goto err;
