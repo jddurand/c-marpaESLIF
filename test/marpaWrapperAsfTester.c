@@ -451,7 +451,7 @@ static short pruning_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, 
     int     indicei;
     char   *tokenValues;
     
-    if (! marpaWrapperAsf_traverse_rh_valueb(traverserp, 0, &spanIdi)) {
+    if (! marpaWrapperAsf_traverse_rh_valueb(traverserp, 0, &spanIdi, NULL /* lengthip */)) {
       goto err;
     }
     GENERICLOGGER_DEBUGF(genericLoggerp, "[%s][%d:%d] ... spanIdi=%d", funcs, ruleIdi, symbolIdi, spanIdi);
@@ -501,7 +501,7 @@ static short pruning_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, 
       int   valuei;
       char *values;
 
-      if (! marpaWrapperAsf_traverse_rh_valueb(traverserp, rhIxi, &valuei)) {
+      if (! marpaWrapperAsf_traverse_rh_valueb(traverserp, rhIxi, &valuei, NULL /* lengthip */)) {
         goto err;
       }
 
@@ -658,7 +658,7 @@ static short full_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, voi
     size_t  stringl;
     char   *strings;
     
-    marpaWrapperAsf_traverse_rh_valueb(traverserp, 0, &spanIdi);
+    marpaWrapperAsf_traverse_rh_valueb(traverserp, 0, &spanIdi, NULL /* lengthip */);
     indicei     = spanIdi + 1; /* The spanId correspond to the inputstack indice spanId+1 */
     tokenValues = GENERICSTACK_GET_PTR(traverseContextp->inputStackp, indicei);
 
@@ -709,7 +709,7 @@ static short full_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, voi
           genericStack_t *childValueStackp;
           int             j;
 
-	  marpaWrapperAsf_traverse_rh_valueb(traverserp, rhIxi, &childValuei);
+	  marpaWrapperAsf_traverse_rh_valueb(traverserp, rhIxi, &childValuei, NULL /* lengthip */);
           childValueStackp = GENERICSTACK_GET_PTR(traverseContextp->outputStackp, childValuei);
 
           for (j = 0; j < GENERICSTACK_USED(childValueStackp); j++) {
