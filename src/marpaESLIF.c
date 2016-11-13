@@ -5205,15 +5205,13 @@ static inline short _marpaESLIFValue_anySymbolCallbackWrapperb(void *userDatavp,
   } else {
     actions = grammarp->defaultSymbolActions;
     if (actions == NULL) {
-      /* Not specified - apply the default i.e. transfer the lexeme as-is */
-      symbolCallbackp = _marpaESLIF_lexeme_transferi;
+      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "Grammar No %d (%s) has no lexeme default action", grammarp->leveli, grammarp->descp->asciis);
+      goto err;
     } else {
-
       if (symbolActionResolverp == NULL) {
         MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "No symbol action resolver");
         goto err;
       }
- 
       symbolCallbackp = symbolActionResolverp(marpaESLIFValueOption.userDatavp, marpaESLIFValuep, actions);
       if (symbolCallbackp == NULL) {
         MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "Symbol %d (%s) action \"%s\" resolved to NULL", symboli, symbolp->descp->asciis, actions);
