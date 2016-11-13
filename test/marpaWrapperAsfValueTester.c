@@ -18,6 +18,7 @@ static char *penn_tag_symbols(traverseContext_t *traverseContextp, int symbolIdi
 static char *penn_tag_rules(traverseContext_t *traverseContextp, int ruleIdi);
 static short full_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, void *userDatavp, int *valueip);
 static short okSymbolCallback(void *userDatavp, genericStack_t *parentRuleiStackp, int symboli, int argi);
+static short okNullingCallback(void *userDatavp, genericStack_t *parentRuleiStackp, int symboli);
 static short okRuleCallback(void *userDatavp, genericStack_t *parentRuleiStackp, int rulei);
 static short valueRuleCallback(void *userDatavp, int rulei, int arg0i, int argni, int resulti);
 static short valueSymbolCallback(void *userDatavp, int symboli, int argi, int resulti);
@@ -244,8 +245,9 @@ int main(int argc, char **argv) {
   }
   if (marpaWrapperAsf_prunedValueb(marpaWrapperAsfp,
 				   &traverseContext,
-				   okSymbolCallback,
 				   okRuleCallback,
+				   okSymbolCallback,
+				   okNullingCallback,
 				   valueRuleCallback,
 				   valueSymbolCallback,
 				   valueNullingCallback)) {
@@ -385,6 +387,36 @@ static short okSymbolCallback(void *userDatavp, genericStack_t *parentRuleiStack
   
   /* We accept any symbol */
   rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  GENERICLOGGER_DEBUGF(genericLoggerp, "[okSymbolCallback] Symbol %d %s: returns %d", symboli, descs != NULL ? descs : "???", (int) rcb);
+  if (descs != NULL) {
+    free(descs);
+  }
+  return rcb;
+}
+
+/********************************************************************************/
+static short okNullingCallback(void *userDatavp, genericStack_t *parentRuleiStackp, int symboli)
+/********************************************************************************/
+{
+  traverseContext_t *traverseContextp = (traverseContext_t *) userDatavp;
+  genericLogger_t   *genericLoggerp = traverseContextp->genericLoggerp;
+  short              rcb;
+  char              *descs;
+
+  descs = penn_tag_symbols(traverseContextp, symboli);
+  if (descs == NULL) {
+    GENERICLOGGER_ERRORF(genericLoggerp, "okNullingCallback description failure for symbol %d", symboli);
+    goto err;
+  }
+  
+  /* We reject any nullable in our grammar */
+  rcb = -1;
   goto done;
 
  err:

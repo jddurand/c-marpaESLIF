@@ -13,8 +13,9 @@ typedef struct marpaWrapperAsfTraverser marpaWrapperAsfTraverser_t;
 /* ------------------------------------------------------------- */
 /* Ok callbacks: they return 0 if failure, 1 if ok, -1 if reject */
 /* ------------------------------------------------------------- */
-typedef short (*marpaWrapperAsfOkSymbolCallback_t)(void *userDatavp, genericStack_t *parentRuleiStackp, int symboli, int argi);
 typedef short (*marpaWrapperAsfOkRuleCallback_t)(void *userDatavp, genericStack_t *parentRuleiStackp, int rulei);
+typedef short (*marpaWrapperAsfOkSymbolCallback_t)(void *userDatavp, genericStack_t *parentRuleiStackp, int symboli, int argi);
+typedef short (*marpaWrapperAsfOkNullingCallback_t)(void *userDatavp, genericStack_t *parentRuleiStackp, int symboli);
 
 /* --------------- */
 /* General options */
@@ -48,10 +49,11 @@ extern "C" {
   /* Generic helper to compute the using only the ASF API */
   marpaWrapper_EXPORT short                     marpaWrapperAsf_prunedValueb(marpaWrapperAsf_t                    *marpaWrapperAsfp,
                                                                              void                                 *userDatavp,
-                                                                             marpaWrapperAsfOkSymbolCallback_t     okSymbolCallbackp,
                                                                              marpaWrapperAsfOkRuleCallback_t       okRuleCallbackp,
+                                                                             marpaWrapperAsfOkSymbolCallback_t     okSymbolCallbackp,
+                                                                             marpaWrapperAsfOkNullingCallback_t    okNullingCallbackp,
                                                                              marpaWrapperValueRuleCallback_t       valueRuleCallbackp,
-                                                                             marpaWrapperValueSymbolCallback_t     valueRymbolCallbackp,
+                                                                             marpaWrapperValueSymbolCallback_t     valueSymbolCallbackp,
                                                                              marpaWrapperValueNullingCallback_t    valueNullingCallbackp);
 #ifdef __cplusplus
 }
