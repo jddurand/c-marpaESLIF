@@ -2390,8 +2390,9 @@ static inline short _marpaWrapperAsf_factoring_finishb(marpaWrapperAsf_t *marpaW
     short                    childIsCauseb = 0;
     short                    childIsPredecessorb = 0;
     marpaWrapperAsfNook_t   *newNookp;
-    short                    orNodeInUsedb;
-    short                    findResultb;
+    /* See GCC comment below */
+    short                    orNodeInUsedb = 0;
+    short                    findResultb = 0;
 
     worklistLasti = worklistUsedi - 1;
 
@@ -2442,7 +2443,7 @@ static inline short _marpaWrapperAsf_factoring_finishb(marpaWrapperAsf_t *marpaW
       goto err;
     }
     /* GCC seem to badly optimize this statement: if (findResultb && orNodeInUsedb), always doing the && */
-    /* even if findResultb is 0 */
+    /* even if findResultb is 0 - this is why both are explicitely initialized. */
     if (findResultb && orNodeInUsedb) {
       *factoringFinishbp = 0;
       goto done;
