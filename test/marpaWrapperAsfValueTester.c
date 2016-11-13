@@ -636,7 +636,7 @@ static short full_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, voi
     size_t  stringl;
     char   *strings;
     
-    marpaWrapperAsf_traverse_rh_valueb(traverserp, 0, &spanIdi);
+    marpaWrapperAsf_traverse_rh_valueb(traverserp, 0, &spanIdi, NULL /* lengthip */);
     indicei     = spanIdi + 1; /* The spanId correspond to the inputstack indice spanId+1 */
     tokenValues = GENERICSTACK_GET_PTR(traverseContextp->inputStackp, indicei);
 
@@ -687,7 +687,7 @@ static short full_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, voi
           genericStack_t *childValueStackp;
           int             j;
 
-	  marpaWrapperAsf_traverse_rh_valueb(traverserp, rhIxi, &childValuei);
+	  marpaWrapperAsf_traverse_rh_valueb(traverserp, rhIxi, &childValuei, NULL /* lengthip */);
           childValueStackp = GENERICSTACK_GET_PTR(traverseContextp->outputStackp, (size_t) childValuei);
 
           for (j = 0; j < GENERICSTACK_USED(childValueStackp); j++) {

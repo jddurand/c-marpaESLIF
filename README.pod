@@ -755,23 +755,25 @@ C<NULL> is returned in case of failure.
 
 Call for a forest tree, using the C<traverserCallbackp> callback function pointer, the later C<userDatavp> as an opaque pointer, typically used to propagate user context. In case of failure, this method returns a false value, else it propagates the traverser callback value in the C<*valueip> integer pointer. This value is typically an indice in an output stack, managed in the user-space. Traverser itself returns a false value in case of failure, and fills its C<*valueip> argument otherwise.
 
+In the forest tree mode, it is important to talk about B<ASF token>s and B<ASF rule>s, instead of I<symbols> and I<rules>: a rule with no RHS is considered a I<trivial> node, and is identified as a B<token>. This mean that, in a forest tree, when we talk about a B<rule>, it is guaranteed that there is at least one RHS.
+
 =head2 marpaWrapperAsf_traverse_rh_lengthl
 
   int marpaWrapperAsf_traverse_rh_lengthi(marpaWrapperAsfTraverser_t *traverserp)
 
-Returns the number of RHS symbols at the current node, -1 in case of failure. In particular, this will fail if it is called for a token. A Nulling rule returns a zero length.
+Returns the number of RHS symbols at the current node, -1 in case of failure. In particular, this will fail if it is called for a I<ASF token>.
 
 =head2 marpaWrapperAsf_traverse_symbolIdb
 
   short marpaWrapperAsf_traverse_symbolIdb(marpaWrapperAsfTraverser_t *traverserp, int *symbolIdip)
 
-If it returns a true value, then current symbol Id in filled in C<*symbolIdip>.
+If it returns a true value, then current I<ASF token> Id is filled in C<*symbolIdip>.
 
 =head2 marpaWrapperAsf_traverse_ruleIdb
 
   short marpaWrapperAsf_traverse_ruleIdb(marpaWrapperAsfTraverser_t *traverserp, int *ruleIdip)
 
-If it returns a true value, then current symbol Id in filled in C<*ruleIdip>. Please note that if current node is a token, it is not an application failure to get the value -1 in C<*ruleIdip>. Therefore, traversers will typically distinguish cases where C<*ruleIdip> is >= 0 or not.
+If it returns a true value, then current original rule Id is filled in C<*ruleIdip>. Please note that if current node is an I<ASF token>, it is not an application failure to get the value -1 in C<*ruleIdip>. Therefore, traversers will typically distinguish cases where C<*ruleIdip> is >= 0 or not: if C<*ruleIdip> is < 0, it is a nulling symbol (can be an LHS with no RHS), if C<*ruleIdip> is >= 0 it is a, LHS with at least one RHS.
 
 =head2 marpaWrapperAsf_traverse_nextb
 
@@ -781,9 +783,9 @@ If it returns a true value, then C<*nextbp> contains a true value if there is an
 
 =head2 marpaWrapperAsf_traverse_rh_valueb
 
-  short marpaWrapperAsf_traverse_rh_valueb(marpaWrapperAsfTraverser_t *traverserp, int rhIxi, int *valueip)
+  short marpaWrapperAsf_traverse_rh_valueb(marpaWrapperAsfTraverser_t *traverserp, int rhIxi, int *valueip, int *lengthip)
 
-If it is returns a true value, then the user-space value of RH symbol C<rhIxi> in filled in C<*valueip>.
+If it returns a true value, then the indice in the user-space output stack of the RHS number C<rhIxi> is set in C<*valueip> for the current node. When current node is an I<ASF token>, C<rhIxi> is ignored. C<*lengthip> is the number of RHS if current node is an I<ASF rule> (guaranteed to be greater than zero), the length (in unit of Earley Set) in the input stream if current node is an I<ASF token>. If C<*lengthip> is zero, it indicates a nullable I<ASF token> (i;e. a rule with no RHS, or a nullable symbol).
 
 =head2 marpaWrapperAsf_recognizerp
 
