@@ -19,6 +19,7 @@ static char *penn_tag_rules(traverseContext_t *traverseContextp, int ruleIdi);
 static short pruning_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, void *userDatavp, int *valueip);
 static short full_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, void *userDatavp, int *valueip);
 static short okSymbolCallback(void *userDatavp, genericStack_t *parentRuleiStackp, int symboli, int argi);
+static short okNullableCallback(void *userDatavp, genericStack_t *parentRuleiStackp, int symboli);
 static short okRuleCallback(void *userDatavp, genericStack_t *parentRuleiStackp, int rulei);
 static short valueRuleCallback(void *userDatavp, int rulei, int arg0i, int argni, int resulti);
 static short valueSymbolCallback(void *userDatavp, int symboli, int argi, int resulti);
@@ -375,8 +376,9 @@ int main(int argc, char **argv) {
   }
   if (marpaWrapperAsf_prunedValueb(marpaWrapperAsfp,
 				   &traverseContext,
-				   okSymbolCallback,
 				   okRuleCallback,
+				   okSymbolCallback,
+				   okNullableCallback,
 				   valueRuleCallback,
 				   valueSymbolCallback,
 				   valueNullingCallback)) {
@@ -1008,6 +1010,37 @@ static short okSymbolCallback(void *userDatavp, genericStack_t *parentRuleiStack
   goto done;
 
  reject:
+  rcb = -1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  GENERICLOGGER_DEBUGF(genericLoggerp, "[okSymbolCallback] Symbol %d %s: returns %d", symboli, descs != NULL ? descs : "???", (int) rcb);
+  if (descs != NULL) {
+    free(descs);
+  }
+  return rcb;
+}
+
+/********************************************************************************/
+static short okNullableCallback(void *userDatavp, genericStack_t *parentRuleiStackp, int symboli)
+/********************************************************************************/
+{
+  traverseContext_t *traverseContextp = (traverseContext_t *) userDatavp;
+  genericLogger_t   *genericLoggerp   = traverseContextp->genericLoggerp;
+  char              *s                = NULL;
+  short              rcb;
+  char              *descs;
+
+  descs = penn_tag_symbols(traverseContextp, symboli);
+  if (descs == NULL) {
+    GENERICLOGGER_ERRORF(genericLoggerp, "okSymbolCallback description failure for symbol %d", symboli);
+    goto err;
+  }
+  
+  /* We do not have any nullable in our grammar (!?) */
   rcb = -1;
   goto done;
 

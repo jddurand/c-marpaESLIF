@@ -147,7 +147,7 @@ static inline int                        _marpaWrapperAsf_sourceDataCmpi(const v
 static inline int                        _marpaWrapperAsf_nid_token_idi(marpaWrapperAsf_t *marpaWrapperAsfp, int nidi);
 static inline int                        _marpaWrapperAsf_nid_symbol_idi(marpaWrapperAsf_t *marpaWrapperAsfp, int nidi);
 static inline int                        _marpaWrapperAsf_nid_rule_idi(marpaWrapperAsf_t *marpaWrapperAsfp, int nidi);
-static inline int                        _marpaWrapperAsf_nid_spani(marpaWrapperAsf_t *marpaWrapperAsfp, int nidi);
+static inline int                        _marpaWrapperAsf_nid_spani(marpaWrapperAsf_t *marpaWrapperAsfp, int nidi, int *lengthip);
 
 /* Specific to powerset */
 static inline marpaWrapperAsfNidset_t   *_marpaWrapperAsf_powerset_nidsetp(marpaWrapperAsf_t *marpaWrapperAsfp, marpaWrapperAsfPowerset_t *powersetp, int ixi);
@@ -165,7 +165,7 @@ static inline short                      _marpaWrapperAsf_glade_is_visitedb(marp
 static inline void                       _marpaWrapperAsf_glade_visited_clearb(marpaWrapperAsf_t *marpaWrapperAsfp, int *gladeIdip);
 static inline short                      _marpaWrapperAsf_glade_symch_countb(marpaWrapperAsf_t *marpaWrapperAsfp, int gladeIdi, int *countip);
 static inline int                        _marpaWrapperAsf_glade_symbol_idi(marpaWrapperAsf_t *marpaWrapperAsfp, int gladeIdi);
-static inline int                        _marpaWrapperAsf_glade_spani(marpaWrapperAsf_t *marpaWrapperAsfp, int gladeIdi);
+static inline int                        _marpaWrapperAsf_glade_spani(marpaWrapperAsf_t *marpaWrapperAsfp, int gladeIdi, int *lengthip);
 
 /* Specific to orNodeInUseSparseArray */
 int                                      _marpaWrapperAsf_orNodeInUse_sparseArrayIndi(void *userDatavp, genericStackItemType_t itemType, void **pp);
@@ -196,6 +196,7 @@ static inline void                       _marpaWrapperAsf_dump_stack(marpaWrappe
 #endif
 static inline short                      _marpaWrapperAsf_traverse_nextFactoringb(marpaWrapperAsfTraverser_t *traverserp, int *factoringIxip);
 static inline short                      _marpaWrapperAsf_traverse_nextSymchb(marpaWrapperAsfTraverser_t *traverserp, int *symchIxip);
+static inline short                      _marpaWrapperAsf_traverse_rh_valueb(marpaWrapperAsfTraverser_t *traverserp, int rhIxi, int *valueip, int *lengthip);
 
 /* Specific to choicepoint */
 static inline marpaWrapperAsfChoicePoint_t *_marpaWrapperAsf_choicepoint_newp(marpaWrapperAsf_t *marpaWrapperAsfp);
@@ -1774,23 +1775,27 @@ static inline int _marpaWrapperAsf_nid_rule_idi(marpaWrapperAsf_t *marpaWrapperA
 }
 
 /****************************************************************************/
-static inline int _marpaWrapperAsf_nid_spani(marpaWrapperAsf_t *marpaWrapperAsfp, int nidi)
+static inline int _marpaWrapperAsf_nid_spani(marpaWrapperAsf_t *marpaWrapperAsfp, int nidi, int *lengthip)
 /****************************************************************************/
 {
   MARPAWRAPPER_FUNCS(_marpaWrapperAsf_nid_spani);
   genericLogger_t   *genericLoggerp = marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp;
   int                spanIdi        = -1;
+  int                lengthi;
 
   if (nidi <= MARPAWRAPPERASF_NID_LEAF_BASE) {
     int andNodeIdi = _marpaWrapperAsf_nid_to_and_nodei(nidi);
 
-    spanIdi = _marpaWrapperAsf_token_es_spani(marpaWrapperAsfp, andNodeIdi, NULL);
+    spanIdi = _marpaWrapperAsf_token_es_spani(marpaWrapperAsfp, andNodeIdi, &lengthi);
   }
   if (nidi >= 0) {
-    spanIdi = _marpaWrapperAsf_or_node_es_spani(marpaWrapperAsfp, nidi, NULL);
+    spanIdi = _marpaWrapperAsf_or_node_es_spani(marpaWrapperAsfp, nidi, &lengthi);
   }
 
-  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "return %d", spanIdi);
+  if (lengthip != NULL) {
+    *lengthip = lengthi;
+  }
+  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "return %d (length %d)", spanIdi, lengthi);
   return spanIdi;
 }
 
@@ -2961,7 +2966,7 @@ static inline int _marpaWrapperAsf_glade_symbol_idi(marpaWrapperAsf_t *marpaWrap
 }
 
 /****************************************************************************/
-static inline int _marpaWrapperAsf_glade_spani(marpaWrapperAsf_t *marpaWrapperAsfp, int gladeIdi)
+static inline int _marpaWrapperAsf_glade_spani(marpaWrapperAsf_t *marpaWrapperAsfp, int gladeIdi, int *lengthip)
 /****************************************************************************/
 {
   MARPAWRAPPER_FUNCS(_marpaWrapperAsf_glade_spani);
@@ -2971,6 +2976,7 @@ static inline int _marpaWrapperAsf_glade_spani(marpaWrapperAsf_t *marpaWrapperAs
   int                      nid0;
   marpaWrapperAsfNidset_t *nidsetp;
   short                    findResult;
+  int                      lengthi;
 
   GENERICSPARSEARRAY_FIND(nidsetSparseArrayp, marpaWrapperAsfp, gladeIdi, PTR, &nidsetp, findResult);
   if (GENERICSPARSEARRAY_ERROR(nidsetSparseArrayp)) {
@@ -2986,9 +2992,12 @@ static inline int _marpaWrapperAsf_glade_spani(marpaWrapperAsf_t *marpaWrapperAs
     goto err;
   }
   
-  spanIdi = _marpaWrapperAsf_nid_spani(marpaWrapperAsfp, nid0);
-  
-  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "return %d", spanIdi);
+  spanIdi = _marpaWrapperAsf_nid_spani(marpaWrapperAsfp, nid0, &lengthi);
+
+  if (lengthip != NULL) {
+    *lengthip = lengthi;
+  }
+  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "return %d (length %d)", spanIdi, lengthi);
   return spanIdi;
 
  err:
@@ -3072,16 +3081,18 @@ int marpaWrapperAsf_traverse_rh_lengthi(marpaWrapperAsfTraverser_t *traverserp)
   return -1;
 }
 
+
 /****************************************************************************/
-short marpaWrapperAsf_traverse_rh_valueb(marpaWrapperAsfTraverser_t *traverserp, int rhIxi, int *valueip)
+static inline short _marpaWrapperAsf_traverse_rh_valueb(marpaWrapperAsfTraverser_t *traverserp, int rhIxi, int *valueip, int *lengthip)
 /****************************************************************************/
 {
-  MARPAWRAPPER_FUNCS(marpaWrapperAsf_traverse_rh_valueb);
+  MARPAWRAPPER_FUNCS(_marpaWrapperAsf_traverse_rh_valueb);
   genericSparseArray_t       *valueSparseArrayp;
   marpaWrapperAsfTraverser_t  childTraverser;
   genericSparseArray_t        childValueSparseArray;
   genericSparseArray_t       *childValueSparseArrayp = &childValueSparseArray;
   int                         valuei;
+  int                         lengthi;
   marpaWrapperAsf_t          *marpaWrapperAsfp;
   marpaWrapperAsfGlade_t     *gladep;
   genericLogger_t            *genericLoggerp;
@@ -3097,11 +3108,6 @@ short marpaWrapperAsf_traverse_rh_valueb(marpaWrapperAsfTraverser_t *traverserp,
   short                       findResultb;
 
   GENERICSPARSEARRAY_INIT(childValueSparseArrayp, _marpaWrapperAsf_valueSparseArray_indi);
-
-  if (traverserp == NULL) {
-    errno = EINVAL;
-    goto err;
-  }
 
   marpaWrapperAsfp  = traverserp->marpaWrapperAsfp;
   valueSparseArrayp = traverserp->valueSparseArrayp;
@@ -3145,7 +3151,7 @@ short marpaWrapperAsf_traverse_rh_valueb(marpaWrapperAsfTraverser_t *traverserp,
       MARPAWRAPPER_ERROR(genericLoggerp, "This call is not allowed if there is at least one variablen length token");
       goto err;
     }
-    spanIdi = _marpaWrapperAsf_glade_spani(marpaWrapperAsfp, gladep->idi);
+    spanIdi = _marpaWrapperAsf_glade_spani(marpaWrapperAsfp, gladep->idi, &lengthi);
     if (spanIdi < 0) {
       goto err;
     }
@@ -3173,6 +3179,7 @@ short marpaWrapperAsf_traverse_rh_valueb(marpaWrapperAsfTraverser_t *traverserp,
   _marpaWrapperAsf_dump_stack(marpaWrapperAsfp, "downFactoringsStackp", downFactoringsStackp);
 #endif
   maxRhixi = GENERICSTACK_USED(downFactoringsStackp);
+  lengthi = maxRhixi;
   /*
    * Nullables have no RHS
    */
@@ -3230,12 +3237,47 @@ ok:
   if (valueip != NULL) {
     *valueip = valuei;
   }
+  if (lengthip != NULL) {
+    *lengthip = lengthi;
+  }
 
-  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "return 1, *valueip=%d", valuei);
+  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "return 1 (*valueip=%d, *lengthip=%d)", valuei, lengthi);
   return 1;
 
  err:
   GENERICSPARSEARRAY_RESET(childValueSparseArrayp, marpaWrapperAsfp);
+  MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return 0");
+  return 0;
+}
+
+/****************************************************************************/
+short marpaWrapperAsf_traverse_rh_valueb(marpaWrapperAsfTraverser_t *traverserp, int rhIxi, int *valueip)
+/****************************************************************************/
+{
+  MARPAWRAPPER_FUNCS(marpaWrapperAsf_traverse_rh_valueb);
+  marpaWrapperAsf_t *marpaWrapperAsfp;
+  genericLogger_t   *genericLoggerp;
+  int                valuei;
+  short              rcb;
+
+  if (traverserp == NULL) {
+    errno = EINVAL;
+    goto err;
+  }
+
+  marpaWrapperAsfp  = traverserp->marpaWrapperAsfp;
+  genericLoggerp    = marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp;
+
+  rcb = _marpaWrapperAsf_traverse_rh_valueb(traverserp, rhIxi, &valuei, NULL);
+
+  if (valueip != NULL) {
+    *valueip = valuei;
+  }
+
+  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "return %d (*valueip=%d)", (int) rcb, valuei);
+  return rcb;
+
+ err:
   MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return 0");
   return 0;
 }
@@ -3850,8 +3892,9 @@ static inline void _marpaWrapperAsf_choicepoint_freev(marpaWrapperAsf_t *marpaWr
 /****************************************************************************/
 short marpaWrapperAsf_prunedValueb(marpaWrapperAsf_t                    *marpaWrapperAsfp,
                                    void                                 *userDatavp,
-                                   marpaWrapperAsfOkSymbolCallback_t     okSymbolCallbackp,
                                    marpaWrapperAsfOkRuleCallback_t       okRuleCallbackp,
+                                   marpaWrapperAsfOkSymbolCallback_t     okSymbolCallbackp,
+                                   marpaWrapperAsfOkNullingCallback_t    okNullingCallbackp,
                                    marpaWrapperValueRuleCallback_t       valueRuleCallbackp,
                                    marpaWrapperValueSymbolCallback_t     valueSymbolCallbackp,
                                    marpaWrapperValueNullingCallback_t    valueNullingCallbackp)
@@ -3870,8 +3913,9 @@ short marpaWrapperAsf_prunedValueb(marpaWrapperAsf_t                    *marpaWr
 
   genericLoggerp = marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp;
   
-  if ((okSymbolCallbackp == NULL)    ||
-      (okRuleCallbackp == NULL)      ||
+  if ((okRuleCallbackp == NULL)      ||
+      (okSymbolCallbackp == NULL)    ||
+      (okNullingCallbackp == NULL)   ||
       (valueRuleCallbackp == NULL)   ||
       (valueSymbolCallbackp == NULL) ||
       (valueNullingCallbackp == NULL)) {
@@ -3881,8 +3925,9 @@ short marpaWrapperAsf_prunedValueb(marpaWrapperAsf_t                    *marpaWr
   }
   
   marpaWrapperAsfValueContext.userDatavp            = userDatavp;
-  marpaWrapperAsfValueContext.okSymbolCallbackp     = okSymbolCallbackp;
   marpaWrapperAsfValueContext.okRuleCallbackp       = okRuleCallbackp;
+  marpaWrapperAsfValueContext.okSymbolCallbackp     = okSymbolCallbackp;
+  marpaWrapperAsfValueContext.okNullingCallbackp    = okNullingCallbackp;
   marpaWrapperAsfValueContext.valueRuleCallbackp    = valueRuleCallbackp;
   marpaWrapperAsfValueContext.valueSymbolCallbackp  = valueSymbolCallbackp;
   marpaWrapperAsfValueContext.valueNullingCallbackp = valueNullingCallbackp;
@@ -3933,8 +3978,9 @@ static inline short _marpaWrapperAsf_valueTraverserb(marpaWrapperAsfTraverser_t 
   genericLogger_t                   *genericLoggerp               = marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp;
   marpaWrapperAsfValueContext_t     *marpaWrapperAsfValueContextp = (marpaWrapperAsfValueContext_t *) userDatavp;
   genericStack_t                    *parentRuleiStackp            = marpaWrapperAsfValueContextp->parentRuleiStackp;
-  marpaWrapperAsfOkSymbolCallback_t  okSymbolCallbackp            = marpaWrapperAsfValueContextp->okSymbolCallbackp;
   marpaWrapperAsfOkRuleCallback_t    okRuleCallbackp              = marpaWrapperAsfValueContextp->okRuleCallbackp;
+  marpaWrapperAsfOkSymbolCallback_t  okSymbolCallbackp            = marpaWrapperAsfValueContextp->okSymbolCallbackp;
+  marpaWrapperAsfOkNullingCallback_t okNullingCallbackp           = marpaWrapperAsfValueContextp->okNullingCallbackp;
   marpaWrapperValueRuleCallback_t    valueRuleCallbackp           = marpaWrapperAsfValueContextp->valueRuleCallbackp;
   marpaWrapperValueSymbolCallback_t  valueSymbolCallbackp         = marpaWrapperAsfValueContextp->valueSymbolCallbackp;
   marpaWrapperValueNullingCallback_t valueNullingCallbackp        = marpaWrapperAsfValueContextp->valueNullingCallbackp;
@@ -3943,6 +3989,7 @@ static inline short _marpaWrapperAsf_valueTraverserb(marpaWrapperAsfTraverser_t 
   int                                marpaRuleIdi;
   int                                marpaSymbolIdi;
   int                                spani;
+  int                                rhlengthi;
   int                                tokenValuei;
   int                                lengthi;
   int                                rhIxi;
@@ -3966,13 +4013,17 @@ static inline short _marpaWrapperAsf_valueTraverserb(marpaWrapperAsfTraverser_t 
     /* This is a token */
 
     /* Get its value */
-    if (! marpaWrapperAsf_traverse_rh_valueb(traverserp, 0, &spani)) {
+    if (! _marpaWrapperAsf_traverse_rh_valueb(traverserp, 0, &spani, &rhlengthi)) {
       goto err;
     }
     tokenValuei = spani + 1;
 
     /* Check if it is ok */
-    rcb = okSymbolCallbackp(marpaWrapperAsfValueContextp->userDatavp, marpaWrapperAsfValueContextp->parentRuleiStackp, marpaSymbolIdi, tokenValuei);
+    if (rhlengthi <= 0) {
+      rcb = okNullingCallbackp(marpaWrapperAsfValueContextp->userDatavp, marpaWrapperAsfValueContextp->parentRuleiStackp, marpaSymbolIdi);
+    } else {
+      rcb = okSymbolCallbackp(marpaWrapperAsfValueContextp->userDatavp, marpaWrapperAsfValueContextp->parentRuleiStackp, marpaSymbolIdi, tokenValuei);
+    }
     if (rcb < 0) {
       MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "Symbol No %d value callback says reject", marpaSymbolIdi);
       goto reject;
@@ -3981,9 +4032,16 @@ static inline short _marpaWrapperAsf_valueTraverserb(marpaWrapperAsfTraverser_t 
       goto err;
     }
 
-    if (! valueSymbolCallbackp(marpaWrapperAsfValueContextp->userDatavp, marpaSymbolIdi, tokenValuei, wantedOutputStacki)) {
-      MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "Symbol No %d value callback says failure", marpaSymbolIdi);
-      goto err;
+    if (rhlengthi <= 0) {
+      if (! valueNullingCallbackp(marpaWrapperAsfValueContextp->userDatavp, marpaSymbolIdi, wantedOutputStacki)) {
+        MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "Symbol No %d value nulling callback says failure", marpaSymbolIdi);
+        goto err;
+      }
+    } else {
+      if (! valueSymbolCallbackp(marpaWrapperAsfValueContextp->userDatavp, marpaSymbolIdi, tokenValuei, wantedOutputStacki)) {
+        MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "Symbol No %d value non-nulling callback says failure", marpaSymbolIdi);
+        goto err;
+      }
     }
 
     /* A token act as a single alternative */
@@ -4171,4 +4229,3 @@ int _marpaWrapperAsf_valueSparseArray_indi(void *userDatavp, genericStackItemTyp
   return _marpaWrapperAsf_djb2_s((unsigned char *) pp, sizeof(int)) % MARPAWRAPPERASF_VALUESPARSEARRAY_SIZE;
   /* return abs(* ((int *) pp)) % MARPAWRAPPERASF_CAUSESHASH_SIZE; */
 }
-
