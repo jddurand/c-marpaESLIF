@@ -109,8 +109,9 @@ struct marpaWrapperAsfTraverser {
 typedef struct marpaWrapperAsfValueContext {
   /* Copy of the marpaWrapperAsf_valueb() parameters */
   void                                 *userDatavp;
-  marpaWrapperAsfOkSymbolCallback_t     okSymbolCallbackp;
   marpaWrapperAsfOkRuleCallback_t       okRuleCallbackp;
+  marpaWrapperAsfOkSymbolCallback_t     okSymbolCallbackp;
+  marpaWrapperAsfOkNullingCallback_t    okNullingCallbackp;
   marpaWrapperValueRuleCallback_t       valueRuleCallbackp;
   marpaWrapperValueSymbolCallback_t     valueSymbolCallbackp;
   marpaWrapperValueNullingCallback_t    valueNullingCallbackp;
