@@ -38,6 +38,7 @@
 # - latm adverb in :lexeme rules is not allowed, latm mode is forced.
 # - ":default" and "lexeme default" are unique per grammar instead of being lexically scoped
 # - the RHS of a :discard rule can be anywhere, including current grammar
+# - Unless specified, the default symbol action is to transfer lexeme as-is
 # ----------------------------------------------------------------------------------------------
 # Please note that there is a very big difference between using apparently equivalent regexp and
 # character class with a quantifier:

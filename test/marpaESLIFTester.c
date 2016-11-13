@@ -216,20 +216,11 @@ int main() {
   marpaESLIFGrammarOption_t marpaESLIFGrammarOption;
   int                       exiti;
 
-  marpaESLIFOption.genericLoggerp = GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_TRACE);
+  marpaESLIFOption.genericLoggerp = GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_DEBUG);
   marpaESLIFp = marpaESLIF_newp(&marpaESLIFOption);
   if (marpaESLIFp == NULL) {
     goto err;
   }
-
-  if (! marpaESLIF_generateHelperb(marpaESLIFp, marpaESLIF_grammarp(marpaESLIFp), "#include \"marpaESLIFTester.h\"", "myGrammarFreeMethodv", "myGrammarCopyMethodp", &helpers)) {
-    goto err;
-  }
-  fprintf(stdout, "%s", helpers);
-  /*
-  exiti = 0;
-  goto done;
-  */
 
   marpaESLIFGrammarOption.grammars            = (char *) metags;
   marpaESLIFGrammarOption.grammarl            = strlen(metags);
