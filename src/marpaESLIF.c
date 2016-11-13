@@ -66,8 +66,6 @@ static inline short                  _marpaESLIFRecognizer_lexemeStack_i_p_and_s
 static inline short                  _marpaESLIFRecognizer_lexemeStack_i_setarraypb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, genericStack_t *lexemeStackp, int i, GENERICSTACKITEMTYPE2TYPE_ARRAYP arrayp);
 static inline short                  _marpaESLIFRecognizer_lexemeStack_i_setb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, genericStack_t *lexemeStackp, int i, void *p, size_t sizel);
 static inline short                  _marpaESLIFRecognizer_lexemeStack_i_moveb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, genericStack_t *lexemeStackDstp, int dsti, genericStack_t *lexemeStackSrcp, int srci);
-static inline short                  _marpaESLIFRecognizer_lexemeStack_i_dupb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, genericStack_t *lexemeStackDstp, int dsti, genericStack_t *lexemeStackSrcp, int srci);
-static inline short                  _marpaESLIFRecognizer_lexemeStack_i_p(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, genericStack_t *lexemeStackp, int i, char **pp);
 static inline const char            *_marpaESLIF_genericStack_i_types(genericStack_t *stackp, int i);
 
 static inline marpaESLIF_rule_t     *_marpaESLIF_rule_newp(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, char *descEncodings, char *descs, size_t descl, int lhsi, size_t nrhsl, int *rhsip, size_t nexceptionl, int *exceptionip, int ranki, short nullRanksHighb, short sequenceb, int minimumi, int separatori, short properb, char *actions, short passthroughb);
@@ -1985,67 +1983,6 @@ static inline short _marpaESLIFRecognizer_lexemeStack_i_moveb(marpaESLIFRecogniz
  err:
   if (GENERICSTACK_ARRAY_PTR(array) != NULL) {
     free(GENERICSTACK_ARRAY_PTR(array));
-  }
-  rcb = 0;
-
- done:
-  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
-  marpaESLIFRecognizerp->callstackCounteri--;
-  return rcb;
-}
-
-/*****************************************************************************/
-static inline short _marpaESLIFRecognizer_lexemeStack_i_dupb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, genericStack_t *lexemeStackDstp, int dsti, genericStack_t *lexemeStackSrcp, int srci)
-/*****************************************************************************/
-{
-  static const char              *funcs = "_marpaESLIFRecognizer_lexemeStack_i_dupb";
-  GENERICSTACKITEMTYPE2TYPE_ARRAY srcArray;
-  GENERICSTACKITEMTYPE2TYPE_ARRAY dstArray;
-  short                           rcb;
-
-  marpaESLIFRecognizerp->callstackCounteri++;
-  MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
-
-  GENERICSTACK_ARRAY_PTR(srcArray)    = NULL;
-  GENERICSTACK_ARRAY_LENGTH(srcArray) = 0;
-
-  GENERICSTACK_ARRAY_PTR(dstArray)    = NULL;
-  GENERICSTACK_ARRAY_LENGTH(dstArray) = 0;
-  
-  if (! GENERICSTACK_IS_ARRAY(lexemeStackSrcp, srci)) {
-    MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "Bad type %s in lexemeStackSrcp %p at indice %d", _marpaESLIF_genericStack_i_types(lexemeStackSrcp, srci), lexemeStackSrcp, srci);
-    goto err;
-  }
-
-  /* Prepare the clone, prevent free of origin if any failure */
-  srcArray = GENERICSTACK_GET_ARRAY(lexemeStackSrcp, srci);
-  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Got %p->[%d] = {%p, %d}", lexemeStackSrcp, srci, GENERICSTACK_ARRAY_PTR(srcArray), GENERICSTACK_ARRAY_LENGTH(srcArray));
-  if (GENERICSTACK_ARRAY_PTR(srcArray) != NULL) {
-    if (GENERICSTACK_ARRAY_LENGTH(srcArray) <= 0) {
-      MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "Got %p->[%d] = {%p, %d}", lexemeStackSrcp, srci, GENERICSTACK_ARRAY_PTR(srcArray), GENERICSTACK_ARRAY_LENGTH(srcArray));
-      goto err;
-    }
-    GENERICSTACK_ARRAY_PTR(dstArray) = malloc(GENERICSTACK_ARRAY_LENGTH(srcArray));
-    if (GENERICSTACK_ARRAY_PTR(dstArray) == NULL) {
-      MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "malloc failure, %s", strerror(errno));
-      goto err;
-    }
-    memcpy(GENERICSTACK_ARRAY_PTR(dstArray), GENERICSTACK_ARRAY_PTR(srcArray), GENERICSTACK_ARRAY_LENGTH(srcArray));
-    GENERICSTACK_ARRAY_LENGTH(dstArray) = GENERICSTACK_ARRAY_LENGTH(srcArray);
-    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Dupped %p->[%d] = {%p, %d} to {%p, %d}", lexemeStackSrcp, srci, GENERICSTACK_ARRAY_PTR(srcArray), GENERICSTACK_ARRAY_LENGTH(srcArray), GENERICSTACK_ARRAY_PTR(dstArray), GENERICSTACK_ARRAY_LENGTH(dstArray));
-  }
-  if (! _marpaESLIFRecognizer_lexemeStack_i_setarraypb(marpaESLIFRecognizerp, lexemeStackDstp, dsti, &dstArray)) {
-    goto err;
-  }
-  /* Never free dst: copy is successful */
-  /* GENERICSTACK_ARRAY_PTR(dstArray) = NULL; /* /* Commented because the goto will make sure we never do the free... */
-
-  rcb = 1;
-  goto done;
-  
- err:
-  if (GENERICSTACK_ARRAY_PTR(dstArray) != NULL) {
-    free(GENERICSTACK_ARRAY_PTR(dstArray));
   }
   rcb = 0;
 
@@ -5424,39 +5361,6 @@ static inline short _marpaESLIFRecognizer_lexemeStack_i_sizeb(marpaESLIFRecogniz
 
   rcb = 1;
   *sizelp = sizel;
-  goto done;
-
- err:
-  rcb = 0;
-
- done:
-  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
-  marpaESLIFRecognizerp->callstackCounteri--;
-  return rcb;
-}
-
-/*****************************************************************************/
-static inline short _marpaESLIFRecognizer_lexemeStack_i_p(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, genericStack_t *lexemeStackp, int i, char **pp)
-/*****************************************************************************/
-{
-  static const char                *funcs = "_marpaESLIFRecognizer_lexemeStack_i_p";
-  GENERICSTACKITEMTYPE2TYPE_ARRAYP  arrayp;
-  short                             rcb;
-  char                             *p;
-
-  marpaESLIFRecognizerp->callstackCounteri++;
-  MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
-
-  if (GENERICSTACK_IS_ARRAY(lexemeStackp, i)) {
-    arrayp = GENERICSTACK_GET_ARRAYP(lexemeStackp, i);
-    p = GENERICSTACK_ARRAYP_PTR(arrayp);
-  } else {
-    MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "Bad type %s in lexeme stack at indice %d", _marpaESLIF_genericStack_i_types(lexemeStackp, i), i);
-    goto err;
-  }
-
-  rcb = 1;
-  *pp = p;
   goto done;
 
  err:
