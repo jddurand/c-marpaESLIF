@@ -1,8 +1,6 @@
 #ifndef MARPAESLIF_INTERNAL_ESLIF_H
 #define MARPAESLIF_INTERNAL_ESLIF_H
 
-#define INTERNAL_DEFAULT_SYMBOL_LEXEME_ACTION "transfert_to_outputStack"
-
 #define G1_RULE_STATEMENTS                       "G1_rule_statements"
 #define G1_RULE_STATEMENT_01                     "G1_rule_statement_01"
 #define G1_RULE_STATEMENT_02                     "G1_rule_statement_02"

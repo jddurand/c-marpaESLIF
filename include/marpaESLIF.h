@@ -65,7 +65,7 @@ typedef struct marpaESLIFEvent {
 
 typedef int   (*marpaESLIFValueRuleCallback_t)(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti);
 typedef int   (*marpaESLIFValueSymbolCallback_t)(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *bytep, size_t bytel, int resulti);
-typedef void  (*marpaESLIFValueFreeCallback_t)(void *userDatavp, marpaESLIFGrammar_t *marpaESLIFGrammarp, int contexti, void *p);
+typedef void  (*marpaESLIFValueFreeCallback_t)(void *userDatavp, int contexti, void *p);
 
 typedef marpaESLIFValueRuleCallback_t (*marpaESLIFValueRuleActionResolver_t)(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions);
 typedef marpaESLIFValueSymbolCallback_t (*marpaESLIFValueSymbolActionResolver_t)(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions);
