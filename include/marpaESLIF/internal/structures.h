@@ -215,6 +215,7 @@ struct marpaESLIF_grammar {
   genericStack_t        *ruleStackp;                  /* Stack of rules */
   char                  *defaultSymbolActions;        /* Default action for symbols */
   char                  *defaultRuleActions;          /* Default action for rules */
+  char                  *defaultFreeActions;          /* Default action for free */
   char                  *defaultDiscardEvents;        /* Default discard event */
   short                  defaultDiscardEventb;        /* Default discard event initial state: 0: off, 1: on */
   int                    starti;                      /* Default start symbol ID - filled during grammar validation */
@@ -369,7 +370,7 @@ marpaESLIFValueOption_t marpaESLIFValueOption_default_template = {
   NULL, /* userDatavp - filled at run-time */
   NULL, /* ruleActionResolverp */
   NULL, /* symbolActionResolverp */
-  NULL, /* freeCallbackp */
+  NULL, /* freeActionResolverp */
   1,    /* highRankOnlyb */
   1,    /* orderByRankb */
   0,    /* ambiguousb */
