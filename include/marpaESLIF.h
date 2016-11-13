@@ -63,12 +63,13 @@ typedef struct marpaESLIFEvent {
   char                 *events; /* Event name - NULL if exhaustion */
 } marpaESLIFEvent_t;
 
-typedef int   (*marpaESLIFValueRuleCallback_t)(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti);
-typedef int   (*marpaESLIFValueSymbolCallback_t)(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *bytep, size_t bytel, int resulti);
+typedef short (*marpaESLIFValueRuleCallback_t)(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti);
+typedef short (*marpaESLIFValueSymbolCallback_t)(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *bytep, size_t bytel, int resulti);
 typedef void  (*marpaESLIFValueFreeCallback_t)(void *userDatavp, int contexti, void *p);
 
-typedef marpaESLIFValueRuleCallback_t (*marpaESLIFValueRuleActionResolver_t)(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions);
+typedef marpaESLIFValueRuleCallback_t   (*marpaESLIFValueRuleActionResolver_t)(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions);
 typedef marpaESLIFValueSymbolCallback_t (*marpaESLIFValueSymbolActionResolver_t)(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions);
+typedef marpaESLIFValueFreeCallback_t   (*marpaESLIFValueFreeActionResolver_t)(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions);
 
 /* Stack types */
 typedef enum marpaESLIFStackType {
@@ -105,7 +106,7 @@ typedef struct marpaESLIFValueOption {
   void                                 *userDatavp;            /* User specific context */
   marpaESLIFValueRuleActionResolver_t   ruleActionResolverp;   /* Will return the function doing the wanted rule action */
   marpaESLIFValueSymbolActionResolver_t symbolActionResolverp; /* Will return the function doing the wanted symbol action */
-  marpaESLIFValueFreeCallback_t         freeCallbackp;         /* Will be called when memory is to be released */
+  marpaESLIFValueFreeActionResolver_t   freeActionResolverp;   /* Will return the function doing the free */
   short                                 highRankOnlyb;         /* Default: 1 */
   short                                 orderByRankb;          /* Default: 1 */
   short                                 ambiguousb;            /* Default: 0 */
