@@ -250,6 +250,7 @@ struct marpaESLIFValue {
   marpaESLIFRecognizer_t   *marpaESLIFRecognizerp;
   marpaESLIFValueOption_t   marpaESLIFValueOption;
   marpaWrapperValue_t      *marpaWrapperValuep;
+  marpaWrapperAsf_t        *marpaWrapperAsfp;
   short                     previousPassWasPassthroughb;
   int                       previousArg0i;
   int                       previousArgni;
