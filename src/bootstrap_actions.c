@@ -226,19 +226,12 @@ static short _marpaESLIF_bootstrap_G1_rule_symbol_name_2(void *userDatavp, marpa
   /* <symbol name>   ::= <bracketed name> */
   void                *bytep;
   size_t               bytel;
-  short                rcb;
 
   if (! marpaESLIFValue_stack_get_arrayb(marpaESLIFValuep, arg0i, NULL, &bytep, &bytel, NULL)) {
-    goto err;
+    return 0;
   }
 
-  rcb = _marpaESLIF_bootstrap_transferLexemeb(userDatavp, marpaESLIFValuep, bytep, bytel, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_SYMBOL_NAME);
-  goto done;
-
- err:
-  rcb = 0;
- done:
-  return rcb;
+  return _marpaESLIF_bootstrap_transferLexemeb(userDatavp, marpaESLIFValuep, bytep, bytel, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_SYMBOL_NAME);
 }
 
 /*****************************************************************************/
@@ -248,19 +241,12 @@ static short _marpaESLIF_bootstrap_G1_rule_lhs(void *userDatavp, marpaESLIFValue
   /* <symbol name>   ::= <bracketed name> */
   void                *bytep;
   size_t               bytel;
-  short                rcb;
 
   if (! marpaESLIFValue_stack_get_arrayb(marpaESLIFValuep, arg0i, NULL, &bytep, &bytel, NULL)) {
-    goto err;
+    return 0;
   }
 
-  rcb = _marpaESLIF_bootstrap_transferLexemeb(userDatavp, marpaESLIFValuep, bytep, bytel, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_LHS);
-  goto done;
-
- err:
-  rcb = 0;
- done:
-  return rcb;
+  return _marpaESLIF_bootstrap_transferLexemeb(userDatavp, marpaESLIFValuep, bytep, bytel, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_LHS);
 }
 
 /*****************************************************************************/
@@ -278,17 +264,10 @@ static short _marpaESLIF_bootstrap_G1_rule_rhs_primary_2(void *userDatavp, marpa
   /* <rhs primary> ::= <quoted string> */
   void                *bytep;
   size_t               bytel;
-  short                rcb;
 
   if (! marpaESLIFValue_stack_get_arrayb(marpaESLIFValuep, arg0i, NULL, &bytep, &bytel, NULL)) {
-    goto err;
+    return 0;
   }
 
-  rcb = _marpaESLIF_bootstrap_transferLexemeb(userDatavp, marpaESLIFValuep, bytep, bytel, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_RHS_PRIMARY);
-  goto done;
-
- err:
-  rcb = 0;
- done:
-  return rcb;
+  return _marpaESLIF_bootstrap_transferLexemeb(userDatavp, marpaESLIFValuep, bytep, bytel, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_RHS_PRIMARY);
 }
