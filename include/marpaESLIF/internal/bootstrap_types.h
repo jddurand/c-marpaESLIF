@@ -57,7 +57,7 @@ typedef struct marpaESLIF_bootstrap_adverb_list_item {
     int                                 priorityi;
     marpaESLIF_bootstrap_null_pause_t   pausei;
     short                               latmb;
-    marpaESLIF_bootstrap_utf_string_t   utfstring;
+    marpaESLIF_bootstrap_utf_string_t   naming;
   } u;
 } marpaESLIF_bootstrap_adverb_list_item_t;
 

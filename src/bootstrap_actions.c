@@ -101,6 +101,9 @@ static inline void _marpaESLIF_bootstrap_adverb_list_item_freev(marpaESLIF_boots
   if (adverbListItemp != NULL) {
     switch (adverbListItemp->type) {
     case MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_ACTION:
+      if (adverbListItemp->u.actions != NULL) {
+        free(adverbListItemp->u.actions);
+      }
       break;
     case MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_AUTORANK:
       break;
@@ -111,6 +114,9 @@ static inline void _marpaESLIF_bootstrap_adverb_list_item_freev(marpaESLIF_boots
     case MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_GROUP:
       break;
     case MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_SEPARATOR:
+      if (adverbListItemp->u.separators != NULL) {
+        free(adverbListItemp->u.separators);
+      }
       break;
     case MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_PROPER:
       break;
@@ -125,10 +131,14 @@ static inline void _marpaESLIF_bootstrap_adverb_list_item_freev(marpaESLIF_boots
     case MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_LATM:
       break;
     case MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_NAMING:
+      if (adverbListItemp->u.naming.bytep != NULL) {
+        free(adverbListItemp->u.naming.bytep);
+      }
       break;
     default:
       break;
     }
+    free(adverbListItemp);
   }
 }
 
@@ -457,9 +467,9 @@ static short _marpaESLIF_bootstrap_G1_rule_adverb_list(void *userDatavp, marpaES
 /*****************************************************************************/
 {
   /* <adverb list>  ::= <adverb list items> */
-  marpaESLIF_t                            *marpaESLIFp = marpaESLIFValue_eslifp(marpaESLIFValuep);
-  genericStack_t                          *adverbListStackp   = NULL;
-  marpaESLIF_bootstrap_adverb_list_item_t *adverbListItemp;
+  marpaESLIF_t                            *marpaESLIFp      = marpaESLIFValue_eslifp(marpaESLIFValuep);
+  genericStack_t                          *adverbListStackp = NULL;
+  marpaESLIF_bootstrap_adverb_list_item_t *adverbListItemp  = NULL;
   int                                      i;
   void                                    *p;
   short                                    rcb;
@@ -472,17 +482,20 @@ static short _marpaESLIF_bootstrap_G1_rule_adverb_list(void *userDatavp, marpaES
 
   if (! nullableb) {
     for (i = arg0i; i <= argni; i++) {
-      if (! marpaESLIFValue_stack_get_ptrb(marpaESLIFValuep, i, NULL, &p, NULL)) {
-        return 0;
+      if (! marpaESLIFValue_stack_get_ptrb(marpaESLIFValuep, i, NULL, (void **) &adverbListItemp, NULL)) {
+        goto err;
       }
       if (! marpaESLIFValue_stack_forgetb(marpaESLIFValuep, i)) {
-        /* In case of failure here, there is a memory leak */
         goto err;
       }
-      GENERICSTACK_PUSH_PTR(adverbListStackp, p);
-      if (GENERICSTACK_ERROR(adverbListStackp)) {
-        MARPAESLIF_ERRORF(marpaESLIFp, "adverbListStackp push failure, %s", strerror(errno));
-        goto err;
+      if (adverbListItemp != NULL) {
+        /* NULL is the eventual null adverb - not needed for further processing */
+        GENERICSTACK_PUSH_PTR(adverbListStackp, (void *) adverbListItemp);
+        if (GENERICSTACK_ERROR(adverbListStackp)) {
+          MARPAESLIF_ERRORF(marpaESLIFp, "adverbListStackp push failure, %s", strerror(errno));
+          goto err;
+        }
+        adverbListItemp = NULL; /* adverbListItemp is now in adverbListStackp */
       }
     }
   }
@@ -495,6 +508,7 @@ static short _marpaESLIF_bootstrap_G1_rule_adverb_list(void *userDatavp, marpaES
   goto done;
 
  err:
+  _marpaESLIF_bootstrap_adverb_list_item_freev(adverbListItemp);
   _marpaESLIF_bootstrap_adverb_list_freev(adverbListStackp);
   rcb = 0;
 
