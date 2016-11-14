@@ -5142,6 +5142,7 @@ static short _marpaESLIFValue_ruleCallbackWrapperb(void *userDatavp, int rulei, 
       ruleCallbackp = ruleActionResolverp(marpaESLIFValueOption.userDatavp, marpaESLIFValuep, actions);
       if (ruleCallbackp == NULL) {
         MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "Rule %d (%s) action \"%s\" resolved to NULL", rulei, rulep->descp->asciis, actions);
+        MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "Rule description is: %s", rulep->asciishows);
         goto err;
       } else {
         MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Rule %d (%s) action \"%s\" resolved to %p", rulei, rulep->descp->asciis, actions, ruleCallbackp);

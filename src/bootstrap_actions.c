@@ -6,15 +6,20 @@
 /* This file contain the definition of all bootstrap actions, i.e. the ESLIF grammar itself */
 /* This is an example of how to use the API */
 
-static void _marpaESLIF_bootstrap_freeDefaultActionv(void *userDatavp, int contexti, void *p);
+static short _marpaESLIF_bootstrap_transferLexemeb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *bytep, size_t bytel, int resulti, int contexti);
+static void  _marpaESLIF_bootstrap_freeDefaultActionv(void *userDatavp, int contexti, void *p);
 static short _marpaESLIF_bootstrap_lexemeDefaultActionb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *bytep, size_t bytel, int resulti);
+static short _marpaESLIF_bootstrap_G1_rule_symbol_name_2(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti);
+static short _marpaESLIF_bootstrap_G1_rule_lhs(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti);
 
 typedef enum marpaESLIF_bootstrap_stack_type {
-  MARPAESLIF_BOOTSTRAP_STACK_TYPE_LEXEME
+  MARPAESLIF_BOOTSTRAP_STACK_TYPE_LEXEME,
+  MARPAESLIF_BOOTSTRAP_STACK_TYPE_SYMBOL_NAME,
+  MARPAESLIF_BOOTSTRAP_STACK_TYPE_LHS
 } marpaESLIF_bootstrap_stack_type_t;
 
 /*****************************************************************************/
-static short _marpaESLIF_bootstrap_lexemeDefaultActionb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *bytep, size_t bytel, int resulti)
+static short _marpaESLIF_bootstrap_transferLexemeb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *bytep, size_t bytel, int resulti, int contexti)
 /*****************************************************************************/
 {
   marpaESLIFGrammar_t *marpaESLIFGrammarp    = marpaESLIFValue_grammarp(marpaESLIFValuep);
@@ -34,7 +39,7 @@ static short _marpaESLIF_bootstrap_lexemeDefaultActionb(void *userDatavp, marpaE
     goto err;
   }
   memcpy(p, bytep, bytel);
-  if (! marpaESLIFValue_stack_set_arrayb(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_LEXEME, p, bytel, 0)) {
+  if (! marpaESLIFValue_stack_set_arrayb(marpaESLIFValuep, resulti, contexti, p, bytel, 0)) {
     goto err;
   }
 
@@ -51,6 +56,13 @@ static short _marpaESLIF_bootstrap_lexemeDefaultActionb(void *userDatavp, marpaE
 }
 
 /*****************************************************************************/
+static short _marpaESLIF_bootstrap_lexemeDefaultActionb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *bytep, size_t bytel, int resulti)
+/*****************************************************************************/
+{
+  return _marpaESLIF_bootstrap_transferLexemeb(userDatavp, marpaESLIFValuep, bytep, bytel, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_LEXEME);
+}
+
+/*****************************************************************************/
 static void _marpaESLIF_bootstrap_freeDefaultActionv(void *userDatavp, int contexti, void *p)
 /*****************************************************************************/
 {
@@ -58,7 +70,8 @@ static void _marpaESLIF_bootstrap_freeDefaultActionv(void *userDatavp, int conte
 
   switch (contexti) {
   case MARPAESLIF_BOOTSTRAP_STACK_TYPE_LEXEME:
-    /* This is the result of _marpaESLIF_bootstrap_lexemeDefaultActionb */
+  case MARPAESLIF_BOOTSTRAP_STACK_TYPE_SYMBOL_NAME:
+  case MARPAESLIF_BOOTSTRAP_STACK_TYPE_LHS:
     free(p);
     break;
   default:
@@ -95,10 +108,9 @@ static marpaESLIFValueRuleCallback_t _marpaESLIF_bootstrap_ruleActionResolver(vo
     goto err;
   }
   /* TO DO */
-  /*
-  if (strcmp(actions, "G1_rule_adverb_item_12") == 0) { marpaESLIFValueRuleCallbackp = G1_rule_adverb_item_12; }
+       if (strcmp(actions, "G1_rule_symbol_name_2") == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_rule_symbol_name_2; }
+  else if (strcmp(actions, "G1_rule_lhs")           == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_rule_lhs;           }
   else
-  */
   {
     MARPAESLIF_ERRORF(marpaESLIFp, "Unsupported action \"%s\"", actions);
     goto err;
@@ -132,7 +144,7 @@ static marpaESLIFValueSymbolCallback_t _marpaESLIF_bootstrap_symbolActionResolve
     goto err;
   }
   if (! marpaESLIFGrammar_leveli_by_grammarb(marpaESLIFGrammarp, &leveli, grammari, NULL /* descp */)) {
-    MARPAESLIF_ERROR(marpaESLIFp, "marpaESLIFGrammar_leveli_by_grammarb");
+    MARPAESLIF_ERROR(marpaESLIFp, "marpaESLIFGrammar_leveli_by_grammarb failure");
     goto err;
   }
   /* We have only one level here */
@@ -176,7 +188,7 @@ static marpaESLIFValueFreeCallback_t _marpaESLIF_bootstrap_freeActionResolver(vo
     goto err;
   }
   if (! marpaESLIFGrammar_leveli_by_grammarb(marpaESLIFGrammarp, &leveli, grammari, NULL /* descp */)) {
-    MARPAESLIF_ERROR(marpaESLIFp, "marpaESLIFGrammar_leveli_by_grammarb");
+    MARPAESLIF_ERROR(marpaESLIFp, "marpaESLIFGrammar_leveli_by_grammarb failure");
     goto err;
   }
   /* We have only one level here */
@@ -198,5 +210,49 @@ static marpaESLIFValueFreeCallback_t _marpaESLIF_bootstrap_freeActionResolver(vo
   marpaESLIFValueFreeCallbackp = NULL;
  done:
   return marpaESLIFValueFreeCallbackp;
+}
+
+/*****************************************************************************/
+static short _marpaESLIF_bootstrap_G1_rule_symbol_name_2(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti)
+/*****************************************************************************/
+{
+  /* <symbol name>   ::= <bracketed name> */
+  void                *bytep;
+  size_t               bytel;
+  short                rcb;
+
+  if (! marpaESLIFValue_stack_get_arrayb(marpaESLIFValuep, arg0i, NULL, &bytep, &bytel, NULL)) {
+    goto err;
+  }
+
+  rcb = _marpaESLIF_bootstrap_transferLexemeb(userDatavp, marpaESLIFValuep, bytep, bytel, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_SYMBOL_NAME);
+  goto done;
+
+ err:
+  rcb = 0;
+ done:
+  return rcb;
+}
+
+/*****************************************************************************/
+static short _marpaESLIF_bootstrap_G1_rule_lhs(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti)
+/*****************************************************************************/
+{
+  /* <symbol name>   ::= <bracketed name> */
+  void                *bytep;
+  size_t               bytel;
+  short                rcb;
+
+  if (! marpaESLIFValue_stack_get_arrayb(marpaESLIFValuep, arg0i, NULL, &bytep, &bytel, NULL)) {
+    goto err;
+  }
+
+  rcb = _marpaESLIF_bootstrap_transferLexemeb(userDatavp, marpaESLIFValuep, bytep, bytel, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_LHS);
+  goto done;
+
+ err:
+  rcb = 0;
+ done:
+  return rcb;
 }
 
