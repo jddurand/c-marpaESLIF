@@ -24,6 +24,7 @@ static        short _marpaESLIF_bootstrap_G1_rule_rhs_primary_2b(void *userDatav
 static        short _marpaESLIF_bootstrap_G1_rule_rhs(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short _marpaESLIF_bootstrap_G1_rule_adverb_list(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short _marpaESLIF_bootstrap_G1_rule_action_name(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
+static        short _marpaESLIF_bootstrap_G1_rule_action(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 
 /*****************************************************************************/
 static inline short _marpaESLIF_bootstrap_dup_and_set_arrayb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *bytep, size_t bytel, int resulti, int contexti)
@@ -171,6 +172,10 @@ static void _marpaESLIF_bootstrap_freeDefaultActionv(void *userDatavp, int conte
   case MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_LIST_ITEM:
     _marpaESLIF_bootstrap_adverb_list_item_freev((marpaESLIF_bootstrap_adverb_list_item_t *) p);
     break;
+  case MARPAESLIF_BOOTSTRAP_STACK_TYPE_ACTION:
+    /* We should never be called because this is a shallow copy */
+    _marpaESLIF_bootstrap_adverb_list_item_freev((marpaESLIF_bootstrap_adverb_list_item_t *) p);
+    break;
   default:
     break;
   }
@@ -212,6 +217,7 @@ static marpaESLIFValueRuleCallback_t _marpaESLIF_bootstrap_ruleActionResolver(vo
   else if (strcmp(actions, "G1_rule_rhs")           == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_rule_rhs;            }
   else if (strcmp(actions, "G1_rule_adverb_list")   == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_rule_adverb_list;    }
   else if (strcmp(actions, "G1_rule_action_name")   == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_rule_action_name;    }
+  else if (strcmp(actions, "G1_rule_action")        == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_rule_action;         }
   else
   {
     MARPAESLIF_ERRORF(marpaESLIFp, "Unsupported action \"%s\"", actions);
@@ -569,6 +575,39 @@ static short _marpaESLIF_bootstrap_G1_rule_action_name(void *userDatavp, marpaES
 
  err:
   _marpaESLIF_bootstrap_adverb_list_item_freev(adverbListItemp);
+  rcb = 0;
+
+ done:
+  return rcb;
+}
+
+/*****************************************************************************/
+static short _marpaESLIF_bootstrap_G1_rule_action(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
+/*****************************************************************************/
+{
+  /* action ::= 'action' '=>' <action name> */
+  marpaESLIF_t *marpaESLIFp = marpaESLIFValue_eslifp(marpaESLIFValuep);
+  void         *p;
+  short         rcb;
+
+  /* Cannot be nullable */
+  if (nullableb) {
+    MARPAESLIF_ERROR(marpaESLIFp, "Nullable mode is not supported");
+    goto err;
+  }
+
+  /* action is just a shallow copy of action name */
+  if (! marpaESLIFValue_stack_get_ptrb(marpaESLIFValuep, argni, NULL, &p, NULL)) {
+    goto err;
+  }
+  if (! marpaESLIFValue_stack_set_ptrb(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_ACTION, p, 1 /* shallowb */)) {
+    goto err;
+  }
+  
+  rcb = 1;
+  goto done;
+
+ err:
   rcb = 0;
 
  done:
