@@ -11,11 +11,11 @@
 static inline short _marpaESLIF_bootstrap_dup_and_set_arrayb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *bytep, size_t bytel, int resulti, int contexti);
 static        void  _marpaESLIF_bootstrap_freeDefaultActionv(void *userDatavp, int contexti, void *p, size_t sizel);
 static        short _marpaESLIF_bootstrap_lexemeDefaultActionb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *bytep, size_t bytel, int resulti);
-static        short _marpaESLIF_bootstrap_G1_rule_symbol_name_2b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti);
-static        short _marpaESLIF_bootstrap_G1_rule_lhsb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti);
-static        short _marpaESLIF_bootstrap_G1_rule_op_declare_1b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti);
-static        short _marpaESLIF_bootstrap_G1_rule_rhs_primary_2b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti);
-static        short _marpaESLIF_bootstrap_G1_rule_rhs(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti);
+static        short _marpaESLIF_bootstrap_G1_rule_symbol_name_2b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
+static        short _marpaESLIF_bootstrap_G1_rule_lhsb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
+static        short _marpaESLIF_bootstrap_G1_rule_op_declare_1b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
+static        short _marpaESLIF_bootstrap_G1_rule_rhs_primary_2b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
+static        short _marpaESLIF_bootstrap_G1_rule_rhs(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static inline void  _marpaESLIF_bootstrap_rhs_freev(genericStack_t *rhsStackp);
 
 typedef enum marpaESLIF_bootstrap_stack_type {
@@ -223,13 +223,19 @@ static marpaESLIFValueFreeCallback_t _marpaESLIF_bootstrap_freeActionResolver(vo
 }
 
 /*****************************************************************************/
-static short _marpaESLIF_bootstrap_G1_rule_symbol_name_2b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti)
+static short _marpaESLIF_bootstrap_G1_rule_symbol_name_2b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
 /*****************************************************************************/
 {
   /* <symbol name> ::= <bracketed name> */
   marpaESLIF_t *marpaESLIFp = marpaESLIFValue_eslifp(marpaESLIFValuep);
   char   *bracketedNames;
   size_t  bracketedNamel;
+
+  /* Cannot be nullable */
+  if (nullableb) {
+    MARPAESLIF_ERROR(marpaESLIFp, "Nullable mode is not supported");
+    return 0;
+  }
 
   /* By definition a bracketed name start with '<' (one UTF-8 byte) and end with '>' (one UTF-8 byte). */
 
@@ -247,12 +253,19 @@ static short _marpaESLIF_bootstrap_G1_rule_symbol_name_2b(void *userDatavp, marp
 }
 
 /*****************************************************************************/
-static short _marpaESLIF_bootstrap_G1_rule_lhsb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti)
+static short _marpaESLIF_bootstrap_G1_rule_lhsb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
 /*****************************************************************************/
 {
   /* lhs ::= <symbol name> */
-  void                *bytep;
-  size_t               bytel;
+  marpaESLIF_t *marpaESLIFp = marpaESLIFValue_eslifp(marpaESLIFValuep);
+  void         *bytep;
+  size_t        bytel;
+
+  /* Cannot be nullable */
+  if (nullableb) {
+    MARPAESLIF_ERROR(marpaESLIFp, "Nullable mode is not supported");
+    return 0;
+  }
 
   if (! marpaESLIFValue_stack_get_arrayb(marpaESLIFValuep, arg0i, NULL, &bytep, &bytel, NULL)) {
     return 0;
@@ -262,21 +275,35 @@ static short _marpaESLIF_bootstrap_G1_rule_lhsb(void *userDatavp, marpaESLIFValu
 }
 
 /*****************************************************************************/
-static short _marpaESLIF_bootstrap_G1_rule_op_declare_1b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti)
+static short _marpaESLIF_bootstrap_G1_rule_op_declare_1b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
 /*****************************************************************************/
 {
+  marpaESLIF_t *marpaESLIFp = marpaESLIFValue_eslifp(marpaESLIFValuep);
   /* <op declare> ::= <op declare top grammar> */
+
+  /* Cannot be nullable */
+  if (nullableb) {
+    MARPAESLIF_ERROR(marpaESLIFp, "Nullable mode is not supported");
+    return 0;
+  }
+
   return marpaESLIFValue_stack_set_intb(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_OP_DECLARE, 0);
 }
 
 /*****************************************************************************/
-static short _marpaESLIF_bootstrap_G1_rule_rhs_primary_2b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti)
+static short _marpaESLIF_bootstrap_G1_rule_rhs_primary_2b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
 /*****************************************************************************/
 {
   /* <rhs primary> ::= <quoted string> */
   marpaESLIF_t *marpaESLIFp = marpaESLIFValue_eslifp(marpaESLIFValuep);
-  char   *quotedStrings;
-  size_t  quotedStringl;
+  char         *quotedStrings;
+  size_t        quotedStringl;
+
+  /* Cannot be nullable */
+  if (nullableb) {
+    MARPAESLIF_ERROR(marpaESLIFp, "Nullable mode is not supported");
+    return 0;
+  }
 
   if (! marpaESLIFValue_stack_get_arrayb(marpaESLIFValuep, arg0i, NULL, (void *) &quotedStrings, &quotedStringl, NULL)) {
     return 0;
@@ -291,7 +318,7 @@ static short _marpaESLIF_bootstrap_G1_rule_rhs_primary_2b(void *userDatavp, marp
 }
 
 /*****************************************************************************/
-static short _marpaESLIF_bootstrap_G1_rule_rhs(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti)
+static short _marpaESLIF_bootstrap_G1_rule_rhs(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
 /*****************************************************************************/
 {
   /* <rhs> ::= <rhs primary>+ */
@@ -303,6 +330,12 @@ static short _marpaESLIF_bootstrap_G1_rule_rhs(void *userDatavp, marpaESLIFValue
   void                *bytep;
   size_t               bytel;
   short                rcb;
+
+  /* Cannot be nullable */
+  if (nullableb) {
+    MARPAESLIF_ERROR(marpaESLIFp, "Nullable mode is not supported");
+    return 0;
+  }
 
   GENERICSTACK_NEW(rhsStackp);
   if (GENERICSTACK_ERROR(rhsStackp)) {
