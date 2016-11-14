@@ -181,6 +181,8 @@ struct marpaESLIF_symbol {
   int                          priorityi;              /* Symbol priority */
   char                        *actions;                /* Action */
   unsigned int                 nbupdatei;              /* Number of updates - used in grammar ESLIF actions */
+  genericStack_t              *nullableRuleStackp;     /* Work are used during validation, to determine nullable semantics */
+  char                        *nullableActions;        /* Nullable semantic */
 };
 
 /* A rule */
