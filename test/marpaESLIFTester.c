@@ -13,7 +13,7 @@ typedef struct marpaESLIFTester_context {
   genericLogger_t *genericLoggerp;
 } marpaESLIFTester_context_t;
 
-const static char *metags = "<null statement>::=';'"
+const static char *metags = "<null statement>::=';' action => 'myaction'"
 ;
 
 int main() {
