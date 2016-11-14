@@ -9,10 +9,10 @@
 static short _marpaESLIF_bootstrap_transferLexemeb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *bytep, size_t bytel, int resulti, int contexti);
 static void  _marpaESLIF_bootstrap_freeDefaultActionv(void *userDatavp, int contexti, void *p);
 static short _marpaESLIF_bootstrap_lexemeDefaultActionb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *bytep, size_t bytel, int resulti);
-static short _marpaESLIF_bootstrap_G1_rule_symbol_name_2(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti);
-static short _marpaESLIF_bootstrap_G1_rule_lhs(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti);
-static short _marpaESLIF_bootstrap_G1_rule_op_declare_1(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti);
-static short _marpaESLIF_bootstrap_G1_rule_rhs_primary_2(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti);
+static short _marpaESLIF_bootstrap_G1_rule_symbol_name_2b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti);
+static short _marpaESLIF_bootstrap_G1_rule_lhsb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti);
+static short _marpaESLIF_bootstrap_G1_rule_op_declare_1b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti);
+static short _marpaESLIF_bootstrap_G1_rule_rhs_primary_2b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti);
 
 typedef enum marpaESLIF_bootstrap_stack_type {
   MARPAESLIF_BOOTSTRAP_STACK_TYPE_LEXEME = 0,
@@ -113,10 +113,10 @@ static marpaESLIFValueRuleCallback_t _marpaESLIF_bootstrap_ruleActionResolver(vo
     goto err;
   }
   /* TO DO */
-       if (strcmp(actions, "G1_rule_symbol_name_2") == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_rule_symbol_name_2; }
-  else if (strcmp(actions, "G1_rule_lhs")           == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_rule_lhs;           }
-  else if (strcmp(actions, "G1_rule_op_declare_1")  == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_rule_op_declare_1;  }
-  else if (strcmp(actions, "G1_rule_rhs_primary_2") == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_rule_rhs_primary_2; }
+       if (strcmp(actions, "G1_rule_symbol_name_2") == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_rule_symbol_name_2b; }
+  else if (strcmp(actions, "G1_rule_lhs")           == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_rule_lhsb;           }
+  else if (strcmp(actions, "G1_rule_op_declare_1")  == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_rule_op_declare_1b;  }
+  else if (strcmp(actions, "G1_rule_rhs_primary_2") == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_rule_rhs_primary_2b; }
   else
   {
     MARPAESLIF_ERRORF(marpaESLIFp, "Unsupported action \"%s\"", actions);
@@ -220,7 +220,7 @@ static marpaESLIFValueFreeCallback_t _marpaESLIF_bootstrap_freeActionResolver(vo
 }
 
 /*****************************************************************************/
-static short _marpaESLIF_bootstrap_G1_rule_symbol_name_2(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti)
+static short _marpaESLIF_bootstrap_G1_rule_symbol_name_2b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti)
 /*****************************************************************************/
 {
   /* <symbol name>   ::= <bracketed name> */
@@ -235,7 +235,7 @@ static short _marpaESLIF_bootstrap_G1_rule_symbol_name_2(void *userDatavp, marpa
 }
 
 /*****************************************************************************/
-static short _marpaESLIF_bootstrap_G1_rule_lhs(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti)
+static short _marpaESLIF_bootstrap_G1_rule_lhsb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti)
 /*****************************************************************************/
 {
   /* <symbol name>   ::= <bracketed name> */
@@ -250,7 +250,7 @@ static short _marpaESLIF_bootstrap_G1_rule_lhs(void *userDatavp, marpaESLIFValue
 }
 
 /*****************************************************************************/
-static short _marpaESLIF_bootstrap_G1_rule_op_declare_1(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti)
+static short _marpaESLIF_bootstrap_G1_rule_op_declare_1b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti)
 /*****************************************************************************/
 {
   /* <op declare> ::= <op declare top grammar> */
@@ -258,7 +258,7 @@ static short _marpaESLIF_bootstrap_G1_rule_op_declare_1(void *userDatavp, marpaE
 }
 
 /*****************************************************************************/
-static short _marpaESLIF_bootstrap_G1_rule_rhs_primary_2(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti)
+static short _marpaESLIF_bootstrap_G1_rule_rhs_primary_2b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti)
 /*****************************************************************************/
 {
   /* <rhs primary> ::= <quoted string> */
