@@ -1449,9 +1449,11 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
       }
       rulep = (marpaESLIF_rule_t *) GENERICSTACK_GET_PTR(ruleStackp, rulei);
       if (rulep->exceptionStackp != NULL) {
-        MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Marking rejection flag for grammar at level %d (%s)", grammari, grammarp->descp->asciis);
-        grammarp->haveRejectionb = 1;
-        break;
+        if ((! grammarp->haveRejectionb) && (GENERICSTACK_USED(rulep->exceptionStackp) > 0)) {
+          MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Marking rejection flag for grammar at level %d (%s)", grammari, grammarp->descp->asciis);
+          grammarp->haveRejectionb = 1;
+          break;
+        }
       }
     }
   }
