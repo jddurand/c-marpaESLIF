@@ -14,6 +14,7 @@ static inline short _marpaESLIF_bootstrap_dup_and_set_arrayb(void *userDatavp, m
 static inline void  _marpaESLIF_bootstrap_rhs_freev(genericStack_t *rhsStackp);
 static inline void  _marpaESLIF_bootstrap_adverb_list_freev(genericStack_t *adverbListStackp);
 static inline void  _marpaESLIF_bootstrap_adverb_list_item_freev(marpaESLIF_bootstrap_adverb_list_item_t *adverbListItemp);
+static inline short _marpaESLIF_bootstrap_G1_adverb_item(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 
 static        void  _marpaESLIF_bootstrap_freeDefaultActionv(void *userDatavp, int contexti, void *p, size_t sizel);
 static        short _marpaESLIF_bootstrap_lexemeDefaultActionb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *bytep, size_t bytel, int resulti);
@@ -25,6 +26,20 @@ static        short _marpaESLIF_bootstrap_G1_rule_rhs(void *userDatavp, marpaESL
 static        short _marpaESLIF_bootstrap_G1_rule_adverb_list(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short _marpaESLIF_bootstrap_G1_rule_action_name(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short _marpaESLIF_bootstrap_G1_rule_action(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
+static        short _marpaESLIF_bootstrap_G1_rule_adverb_item_01(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
+static        short _marpaESLIF_bootstrap_G1_rule_adverb_item_02(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
+static        short _marpaESLIF_bootstrap_G1_rule_adverb_item_03(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
+static        short _marpaESLIF_bootstrap_G1_rule_adverb_item_04(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
+static        short _marpaESLIF_bootstrap_G1_rule_adverb_item_05(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
+static        short _marpaESLIF_bootstrap_G1_rule_adverb_item_06(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
+static        short _marpaESLIF_bootstrap_G1_rule_adverb_item_07(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
+static        short _marpaESLIF_bootstrap_G1_rule_adverb_item_08(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
+static        short _marpaESLIF_bootstrap_G1_rule_adverb_item_09(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
+static        short _marpaESLIF_bootstrap_G1_rule_adverb_item_10(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
+static        short _marpaESLIF_bootstrap_G1_rule_adverb_item_11(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
+static        short _marpaESLIF_bootstrap_G1_rule_adverb_item_12(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
+static        short _marpaESLIF_bootstrap_G1_rule_adverb_item_13(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
+static        short _marpaESLIF_bootstrap_G1_rule_adverb_item_14(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 
 /*****************************************************************************/
 static inline short _marpaESLIF_bootstrap_dup_and_set_arrayb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *bytep, size_t bytel, int resulti, int contexti)
@@ -210,14 +225,28 @@ static marpaESLIFValueRuleCallback_t _marpaESLIF_bootstrap_ruleActionResolver(vo
     goto err;
   }
   /* TO DO */
-       if (strcmp(actions, "G1_rule_symbol_name_2") == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_rule_symbol_name_2b; }
-  else if (strcmp(actions, "G1_rule_lhs")           == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_rule_lhsb;           }
-  else if (strcmp(actions, "G1_rule_op_declare_1")  == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_rule_op_declare_1b;  }
-  else if (strcmp(actions, "G1_rule_rhs_primary_2") == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_rule_rhs_primary_2b; }
-  else if (strcmp(actions, "G1_rule_rhs")           == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_rule_rhs;            }
-  else if (strcmp(actions, "G1_rule_adverb_list")   == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_rule_adverb_list;    }
-  else if (strcmp(actions, "G1_rule_action_name")   == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_rule_action_name;    }
-  else if (strcmp(actions, "G1_rule_action")        == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_rule_action;         }
+       if (strcmp(actions, "G1_rule_symbol_name_2")  == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_rule_symbol_name_2b; }
+  else if (strcmp(actions, "G1_rule_lhs")            == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_rule_lhsb;           }
+  else if (strcmp(actions, "G1_rule_op_declare_1")   == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_rule_op_declare_1b;  }
+  else if (strcmp(actions, "G1_rule_rhs_primary_2")  == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_rule_rhs_primary_2b; }
+  else if (strcmp(actions, "G1_rule_rhs")            == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_rule_rhs;            }
+  else if (strcmp(actions, "G1_rule_adverb_list")    == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_rule_adverb_list;    }
+  else if (strcmp(actions, "G1_rule_action_name")    == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_rule_action_name;    }
+  else if (strcmp(actions, "G1_rule_action")         == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_rule_action;         }
+  else if (strcmp(actions, "G1_rule_adverb_item_01") == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_rule_adverb_item_01; }
+  else if (strcmp(actions, "G1_rule_adverb_item_02") == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_rule_adverb_item_02; }
+  else if (strcmp(actions, "G1_rule_adverb_item_03") == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_rule_adverb_item_03; }
+  else if (strcmp(actions, "G1_rule_adverb_item_04") == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_rule_adverb_item_04; }
+  else if (strcmp(actions, "G1_rule_adverb_item_05") == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_rule_adverb_item_05; }
+  else if (strcmp(actions, "G1_rule_adverb_item_06") == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_rule_adverb_item_06; }
+  else if (strcmp(actions, "G1_rule_adverb_item_07") == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_rule_adverb_item_07; }
+  else if (strcmp(actions, "G1_rule_adverb_item_08") == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_rule_adverb_item_08; }
+  else if (strcmp(actions, "G1_rule_adverb_item_09") == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_rule_adverb_item_09; }
+  else if (strcmp(actions, "G1_rule_adverb_item_10") == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_rule_adverb_item_10; }
+  else if (strcmp(actions, "G1_rule_adverb_item_11") == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_rule_adverb_item_11; }
+  else if (strcmp(actions, "G1_rule_adverb_item_12") == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_rule_adverb_item_12; }
+  else if (strcmp(actions, "G1_rule_adverb_item_13") == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_rule_adverb_item_13; }
+  else if (strcmp(actions, "G1_rule_adverb_item_14") == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_rule_adverb_item_14; }
   else
   {
     MARPAESLIF_ERRORF(marpaESLIFp, "Unsupported action \"%s\"", actions);
@@ -479,7 +508,7 @@ static short _marpaESLIF_bootstrap_G1_rule_rhs(void *userDatavp, marpaESLIFValue
 static short _marpaESLIF_bootstrap_G1_rule_adverb_list(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
 /*****************************************************************************/
 {
-  /* <adverb list>  ::= <adverb list items> */
+  /* <adverb list> ::= <adverb list items> */
   marpaESLIF_t                            *marpaESLIFp      = marpaESLIFValue_eslifp(marpaESLIFValuep);
   genericStack_t                          *adverbListStackp = NULL;
   marpaESLIF_bootstrap_adverb_list_item_t *adverbListItemp  = NULL;
@@ -613,3 +642,152 @@ static short _marpaESLIF_bootstrap_G1_rule_action(void *userDatavp, marpaESLIFVa
  done:
   return rcb;
 }
+
+/*****************************************************************************/
+static inline short _marpaESLIF_bootstrap_G1_adverb_item(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
+/*****************************************************************************/
+{
+  /*
+    Normally this is a no-op
+    <adverb item>                  ::= action
+                                     | autorank
+                                     | <left association>
+                                     | <right association>
+                                     | <group association>
+                                     | <separator specification>
+                                     | <proper specification>
+                                     | <rank specification>
+                                     | <null ranking specification>
+                                     | <priority specification>
+                                     | <pause specification>
+                                     | <latm specification>
+                                     | naming
+                                     | <null adverb>
+  */
+  marpaESLIF_t *marpaESLIFp = marpaESLIFValue_eslifp(marpaESLIFValuep);
+  void         *p;
+  short         rcb;
+  int           contexti;
+
+  /* Cannot be nullable */
+  if (nullableb) {
+    MARPAESLIF_ERROR(marpaESLIFp, "Nullable mode is not supported");
+    goto err;
+  }
+
+  /* adverb item is just a shallow copy of its single RHS */
+  if (! marpaESLIFValue_stack_get_ptrb(marpaESLIFValuep, arg0i, &contexti, &p, NULL)) {
+    goto err;
+  }
+  if (! marpaESLIFValue_stack_set_ptrb(marpaESLIFValuep, resulti, contexti, p, 1 /* shallowb */)) {
+    goto err;
+  }
+  
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  return rcb;
+}
+
+/*****************************************************************************/
+static short _marpaESLIF_bootstrap_G1_rule_adverb_item_01(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
+/*****************************************************************************/
+{
+  return _marpaESLIF_bootstrap_G1_adverb_item(userDatavp, marpaESLIFValuep, arg0i, argni, resulti, nullableb);
+}
+
+/*****************************************************************************/
+static short _marpaESLIF_bootstrap_G1_rule_adverb_item_02(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
+/*****************************************************************************/
+{
+  return _marpaESLIF_bootstrap_G1_adverb_item(userDatavp, marpaESLIFValuep, arg0i, argni, resulti, nullableb);
+}
+
+/*****************************************************************************/
+static short _marpaESLIF_bootstrap_G1_rule_adverb_item_03(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
+/*****************************************************************************/
+{
+  return _marpaESLIF_bootstrap_G1_adverb_item(userDatavp, marpaESLIFValuep, arg0i, argni, resulti, nullableb);
+}
+
+/*****************************************************************************/
+static short _marpaESLIF_bootstrap_G1_rule_adverb_item_04(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
+/*****************************************************************************/
+{
+  return _marpaESLIF_bootstrap_G1_adverb_item(userDatavp, marpaESLIFValuep, arg0i, argni, resulti, nullableb);
+}
+
+/*****************************************************************************/
+static short _marpaESLIF_bootstrap_G1_rule_adverb_item_05(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
+/*****************************************************************************/
+{
+  return _marpaESLIF_bootstrap_G1_adverb_item(userDatavp, marpaESLIFValuep, arg0i, argni, resulti, nullableb);
+}
+
+/*****************************************************************************/
+static short _marpaESLIF_bootstrap_G1_rule_adverb_item_06(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
+/*****************************************************************************/
+{
+  return _marpaESLIF_bootstrap_G1_adverb_item(userDatavp, marpaESLIFValuep, arg0i, argni, resulti, nullableb);
+}
+
+/*****************************************************************************/
+static short _marpaESLIF_bootstrap_G1_rule_adverb_item_07(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
+/*****************************************************************************/
+{
+  return _marpaESLIF_bootstrap_G1_adverb_item(userDatavp, marpaESLIFValuep, arg0i, argni, resulti, nullableb);
+}
+
+/*****************************************************************************/
+static short _marpaESLIF_bootstrap_G1_rule_adverb_item_08(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
+/*****************************************************************************/
+{
+  return _marpaESLIF_bootstrap_G1_adverb_item(userDatavp, marpaESLIFValuep, arg0i, argni, resulti, nullableb);
+}
+
+/*****************************************************************************/
+static short _marpaESLIF_bootstrap_G1_rule_adverb_item_09(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
+/*****************************************************************************/
+{
+  return _marpaESLIF_bootstrap_G1_adverb_item(userDatavp, marpaESLIFValuep, arg0i, argni, resulti, nullableb);
+}
+
+/*****************************************************************************/
+static short _marpaESLIF_bootstrap_G1_rule_adverb_item_10(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
+/*****************************************************************************/
+{
+  return _marpaESLIF_bootstrap_G1_adverb_item(userDatavp, marpaESLIFValuep, arg0i, argni, resulti, nullableb);
+}
+
+/*****************************************************************************/
+static short _marpaESLIF_bootstrap_G1_rule_adverb_item_11(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
+/*****************************************************************************/
+{
+  return _marpaESLIF_bootstrap_G1_adverb_item(userDatavp, marpaESLIFValuep, arg0i, argni, resulti, nullableb);
+}
+
+/*****************************************************************************/
+static short _marpaESLIF_bootstrap_G1_rule_adverb_item_12(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
+/*****************************************************************************/
+{
+  return _marpaESLIF_bootstrap_G1_adverb_item(userDatavp, marpaESLIFValuep, arg0i, argni, resulti, nullableb);
+}
+
+/*****************************************************************************/
+static short _marpaESLIF_bootstrap_G1_rule_adverb_item_13(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
+/*****************************************************************************/
+{
+  return _marpaESLIF_bootstrap_G1_adverb_item(userDatavp, marpaESLIFValuep, arg0i, argni, resulti, nullableb);
+}
+
+/*****************************************************************************/
+static short _marpaESLIF_bootstrap_G1_rule_adverb_item_14(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
+/*****************************************************************************/
+{
+  return _marpaESLIF_bootstrap_G1_adverb_item(userDatavp, marpaESLIFValuep, arg0i, argni, resulti, nullableb);
+}
+
