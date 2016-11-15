@@ -7811,11 +7811,44 @@ static inline char *_marpaESLIF_ascii2ids(marpaESLIF_t *marpaESLIFp, char *ascii
   return rcs;
 }
 
+#ifndef MARPAESLIF_NTRACE
+#define MARPAESLIF_STACK_SETTER_GENERATOR_TRACE(ESLIFTYPE) do {         \
+    switch (ESLIFTYPE) {                                                \
+    case MARPAESLIF_STACK_TYPE_CHAR:                                    \
+      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Setted %p->[%d] = %c (0x%02x) (type=CHAR,context=%d)", marpaESLIFValuep->marpaESLIFp, indicei, (char) value, (unsigned char) value, contexti); \
+      break;                                                            \
+    case MARPAESLIF_STACK_TYPE_SHORT:                                   \
+      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Setted %p->[%d] = %d (type=SHORT,context=%d)", marpaESLIFValuep->marpaESLIFp, indicei, (int) value, contexti); \
+      break;                                                            \
+    case MARPAESLIF_STACK_TYPE_INT:                                     \
+      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Setted %p->[%d] = %d (type=INT,context=%d)", marpaESLIFValuep->marpaESLIFp, indicei, (int) value, contexti); \
+      break;                                                            \
+    case MARPAESLIF_STACK_TYPE_LONG:                                    \
+      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Setted %p->[%d] = %ld (type=INT,context=%d)", marpaESLIFValuep->marpaESLIFp, indicei, (long) value, contexti); \
+      break;                                                            \
+    case MARPAESLIF_STACK_TYPE_FLOAT:                                   \
+      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Setted %p->[%d] = %ld (type=INT,context=%d)", marpaESLIFValuep->marpaESLIFp, indicei, (double) value, contexti); \
+      break;                                                            \
+    case MARPAESLIF_STACK_TYPE_DOUBLE:                                  \
+      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Setted %p->[%d] = %ld (type=INT,context=%d)", marpaESLIFValuep->marpaESLIFp, indicei, (double) value, contexti); \
+    default:                                                            \
+      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Setted %p->[%d] = ??? (type=???,context=%d)", marpaESLIFValuep->marpaESLIFp, indicei, contexti); \
+      break;                                                            \
+    }                                                                   \
+  } while (0)
+#else
+#define MARPAESLIF_STACK_SETTER_GENERATOR_TRACE
+#endif
 /* All the stack setters have exactly the same body except for PTR and ARRAY */
 #define MARPAESLIF_STACK_SETTER_GENERATOR(type, STACKTYPE, ESLIFTYPE, ...) \
   static inline short _marpaESLIFValue_stack_set_##type##b(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int contexti, __VA_ARGS__) \
   {                                                                     \
+    static const char      *funcs = "_marpaESLIFValue_stack_set_" #type "b"; \
+    marpaESLIFRecognizer_t *marpaESLIFRecognizerp = marpaESLIFValuep->marpaESLIFRecognizerp; \
     short rcb;                                                          \
+                                                                        \
+    marpaESLIFRecognizerp->callstackCounteri++;                         \
+    MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");  \
                                                                         \
     if (marpaESLIFValuep == NULL) {                                     \
       errno = EINVAL;                                                   \
@@ -7840,12 +7873,15 @@ static inline char *_marpaESLIF_ascii2ids(marpaESLIF_t *marpaESLIFp, char *ascii
       MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "marpaESLIFValuep->contextStackp set at indice %d failure, %s", indicei, strerror(errno)); \
       goto err;                                                         \
     }                                                                   \
+    MARPAESLIF_STACK_SETTER_GENERATOR_TRACE(ESLIFTYPE);                 \
     rcb = 1;                                                            \
     goto done;                                                          \
                                                                         \
   err:                                                                  \
     rcb = 0;                                                            \
   done:                                                                 \
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb); \
+    marpaESLIFRecognizerp->callstackCounteri--;                         \
     return rcb;                                                         \
   }
   
