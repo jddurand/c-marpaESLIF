@@ -20,6 +20,7 @@
 # - quoted name              added
 # - blessing                 removed
 # - reserved action name     only ::shift and ::undef are kept
+#                            ::ascii is added and is allowed only for symbol action
 # - action name              revisited to contain only ascii graph characters (so that UTF-8 == ASCII -;)
 # - array descriptor         removed
 # - lexer name               removed
@@ -191,6 +192,7 @@ symbol          ::= <symbol name>
 <action name>   ::= <ascii graph name>
                   | '::shift'          # reserved action name
                   | '::undef'          # reserved action name
+                  | '::ascii'          # reserved action name
 
 :discard ~ whitespace
 whitespace ~ [\s]+
