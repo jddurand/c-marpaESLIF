@@ -7859,6 +7859,33 @@ MARPAESLIF_STACK_SETTER_GENERATOR(double, DOUBLE, MARPAESLIF_STACK_TYPE_DOUBLE, 
 /*****************************************************************************/
 
 /*****************************************************************************/
+static inline short _marpaESLIFValue_stack_set_undefb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int contexti)
+/*****************************************************************************/
+{
+  static const char      *funcs = "_marpaESLIFValue_stack_set_undefb";
+  marpaESLIFRecognizer_t *marpaESLIFRecognizerp = marpaESLIFValuep->marpaESLIFRecognizerp;
+  short                   rcb;
+
+  marpaESLIFRecognizerp->callstackCounteri++;
+  MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
+
+  if (! _marpaESLIFValue_stack_i_resetb(marpaESLIFValuep, indicei, NULL, NULL, 0)) {
+    goto err;
+  }
+
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Setted %p->[%d] = NA (context=%d)", marpaESLIFValuep->marpaESLIFp, indicei, contexti);
+  rcb = 1;
+  goto done;
+
+ err:
+    rcb = 0;
+ done:
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
+    marpaESLIFRecognizerp->callstackCounteri--;
+    return rcb;
+}
+
+/*****************************************************************************/
 static inline short _marpaESLIFValue_stack_set_ptrb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int contexti, void *p, short shallowb)
 /*****************************************************************************/
 {
@@ -8722,6 +8749,25 @@ short marpaESLIFValue_stack_set_floatb(marpaESLIFValue_t *marpaESLIFValuep, int 
   }
 
   return _marpaESLIFValue_stack_set_floatb(marpaESLIFValuep, indicei, contexti, f);
+}
+
+/*****************************************************************************/
+short marpaESLIFValue_stack_set_undefb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int contexti)
+/*****************************************************************************/
+{
+  static const char *funcs  = "marpaESLIFValue_stack_set_undefb";
+
+  if (marpaESLIFValuep == NULL) {
+    errno = EINVAL;
+    return 0;
+  }
+
+  if (! marpaESLIFValuep->inValuationb) {
+    MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "%s must be called only in an action callback", funcs);
+    return 0;
+  }
+
+  return _marpaESLIFValue_stack_set_undefb(marpaESLIFValuep, indicei, contexti);
 }
 
 /*****************************************************************************/
