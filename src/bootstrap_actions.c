@@ -16,6 +16,7 @@ static inline void  _marpaESLIF_bootstrap_adverb_list_item_freev(marpaESLIF_boot
 
 static        void  _marpaESLIF_bootstrap_freeDefaultActionv(void *userDatavp, int contexti, void *p, size_t sizel);
 
+static        short _marpaESLIF_bootstrap_G1_action_symbol_2b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short _marpaESLIF_bootstrap_G1_action_op_declare_1b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short _marpaESLIF_bootstrap_G1_action_rhs(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short _marpaESLIF_bootstrap_G1_action_adverb_list(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
@@ -123,6 +124,9 @@ static void _marpaESLIF_bootstrap_freeDefaultActionv(void *userDatavp, int conte
   case MARPAESLIF_BOOTSTRAP_STACK_TYPE_ACTION:
     _marpaESLIF_bootstrap_adverb_list_item_freev((marpaESLIF_bootstrap_adverb_list_item_t *) p);
     break;
+  case MARPAESLIF_BOOTSTRAP_STACK_TYPE_SYMBOL_NAME:
+    free(p);
+    break;
   default:
     break;
   }
@@ -161,6 +165,7 @@ static marpaESLIFValueRuleCallback_t _marpaESLIF_bootstrap_ruleActionResolver(vo
   else if (strcmp(actions, "G1_rule_rhs")            == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_rhs;            }
   else if (strcmp(actions, "G1_rule_adverb_list")    == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_adverb_list;    }
   else if (strcmp(actions, "G1_rule_action")         == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_action;         }
+  else if (strcmp(actions, "G1_action_symbol_2")     == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_symbol_2b;      }
   else
   {
     MARPAESLIF_ERRORF(marpaESLIFp, "Unsupported action \"%s\"", actions);
@@ -217,6 +222,70 @@ static marpaESLIFValueFreeCallback_t _marpaESLIF_bootstrap_freeActionResolver(vo
   marpaESLIFValueFreeCallbackp = NULL;
  done:
   return marpaESLIFValueFreeCallbackp;
+}
+
+/*****************************************************************************/
+static short _marpaESLIF_bootstrap_G1_action_symbol_2b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
+/*****************************************************************************/
+{
+  /* <symbol name>  ::= <bracketed name> */
+  marpaESLIF_t *marpaESLIFp = marpaESLIFValue_eslifp(marpaESLIFValuep);
+  char         *barenames   = NULL;
+  short         arrayb;
+  char         *asciis; /* bare name is only ASCII letters as per the grammar */
+  size_t        asciil;
+  short         rcb;
+
+  /* Cannot be nullable */
+  if (nullableb) {
+    MARPAESLIF_ERROR(marpaESLIFp, "Nullable mode is not supported");
+    goto err;
+  }
+
+  /* Per def, because of the ::shift default action, <bracketed name> is of type array since this is a lexeme */
+  if (! _marpaESLIFValue_stack_is_arrayb(marpaESLIFValuep, arg0i, &arrayb)) {
+    goto err;
+  }
+  if (! arrayb) {
+    MARPAESLIF_ERRORF(marpaESLIFp, "RHS No %d is of type ARRAY", arg0i);
+    goto err;
+  }
+  if (! _marpaESLIFValue_stack_get_arrayb(marpaESLIFValuep, arg0i, NULL /* contextip */, (void **) &asciis, &asciil, NULL /* shallowbp */)) {
+    goto err;
+  }
+  if ((asciis == NULL) || (asciil <= 0)) {
+    /* Should never happen as per the grammar */
+    MARPAESLIF_ERROR(marpaESLIFp, "Null bare name");
+    goto err;
+  }
+  if (asciil < 2) {
+    /* Should never happen neither as per the grammar */
+    MARPAESLIF_ERRORF(marpaESLIFp, "Length of bare name is %ld", (unsigned long) asciil);
+    goto err;
+  }
+  /* We just remove the '<' and '>' around... */
+  barenames = (char *) malloc(asciil - 2 + 1);
+  if (barenames == NULL) {
+    MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
+    goto err;
+  }
+  strncpy(barenames, asciis + 1, asciil - 2);
+  barenames[asciil - 2] = '\0';
+
+  if (! marpaESLIFValue_stack_set_ptrb(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_SYMBOL_NAME, barenames, 0 /* shallowb */)) {
+    goto err;
+  }
+
+  /* You will note that we are coherent will ALL the other <symbol name> rules: the outcome is an ASCII NUL terminated string pointer */
+  rcb = 1;
+  goto done;
+ err:
+  if (barenames != NULL) {
+    free(barenames);
+  }
+  rcb = 0;
+ done:
+  return rcb;
 }
 
 /*****************************************************************************/

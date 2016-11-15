@@ -14,7 +14,7 @@ typedef struct marpaESLIFTester_context {
 } marpaESLIFTester_context_t;
 
 const static char *metags = "\n"
-"null_statement ::= ';' action => 'myaction'\n"
+"<null statement> ::= ';' action => 'myaction'\n"
 ;
 
 int main() {
