@@ -167,10 +167,10 @@ naming                         ::= 'name' '=>' <alternative name>
 lhs                              ::= <symbol name>
 rhs                              ::= <rhs primary>+
 <rhs primary>                    ::= <single symbol>
+<rhs primary>                    ::= <quoted string>
 <rhs primary>                    ::= <single symbol> '<' <grammar reference> '>'
 <grammar reference>              ::= <quoted string>
 <grammar reference>              ::= <signed integer>
-<rhs primary>                    ::= <quoted string>
 <rhs primary list>               ::= <rhs primary>+
 
 <parenthesized rhs exception list> ::= '(' <rhs exception list> ')'
