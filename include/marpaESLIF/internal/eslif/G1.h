@@ -62,6 +62,8 @@ typedef enum bootstrap_grammar_G1_enum {
   G1_TERMINAL___UNDEF,
   G1_TERMINAL___ASCII,
   G1_TERMINAL___TRANSLIT,
+  G1_TERMINAL_LEFT_ANGLE,
+  G1_TERMINAL_RIGHT_ANGLE,
   /* ----- Non terminals ------ */
   G1_META_STATEMENTS,
   G1_META_STATEMENT,
@@ -128,6 +130,8 @@ typedef enum bootstrap_grammar_G1_enum {
   G1_META_SYMBOL_NAME,
   G1_META_ACTION_NAME,
   G1_META_QUANTIFIER,
+  G1_META_GRAMMAR_REFERENCE,
+  /* This symbol is special, c.f. bootstrap_grammar_G1_metas[] array below: it has the discard flag on */
   G1_META_DISCARD,
   /* These meta identifiers are handled by L0 */
   G1_META_BOOLEAN,
@@ -216,6 +220,7 @@ bootstrap_grammar_meta_t bootstrap_grammar_G1_metas[] = {
   { G1_META_SYMBOL_NAME,                      "symbol name", 0, 0 },
   { G1_META_ACTION_NAME,                      "action name", 0, 0 },
   { G1_META_QUANTIFIER,                       "quantifier", 0, 0 },
+  { G1_META_GRAMMAR_REFERENCE,                "grammar reference", 0, 0 },
   { G1_META_DISCARD,                          "discard", 0, 1 },
   /* L0 join */
   { G1_META_BOOLEAN,                          L0_JOIN_G1_META_BOOLEAN, 0, 0 },
@@ -674,6 +679,22 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
 #else
     NULL, NULL
 #endif
+  },
+  { G1_TERMINAL_LEFT_ANGLE, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+    "<",
+#ifndef MARPAESLIF_NTRACE
+    "<", NULL
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_RIGHT_ANGLE, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+    ">",
+#ifndef MARPAESLIF_NTRACE
+    ">", NULL
+#else
+    NULL, NULL
+#endif
   }
 };
 
@@ -941,6 +962,10 @@ bootstrap_grammar_rule_t bootstrap_grammar_G1_rules[] = {
   */
   { G1_META_RHS_PRIMARY,                      G1_RULE_RHS_PRIMARY_1,                          MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_SINGLE_SYMBOL                        }, -1,                        -1, -1 , G1_ACTION_RHS_PRIMARY_1 },
   { G1_META_RHS_PRIMARY,                      G1_RULE_RHS_PRIMARY_2,                          MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_QUOTED_STRING                        }, -1,                        -1, -1 , G1_ACTION_RHS_PRIMARY_2 },
+  { G1_META_RHS_PRIMARY,                      G1_RULE_RHS_PRIMARY_3,                          MARPAESLIF_RULE_TYPE_ALTERNATIVE, 4, { G1_META_SINGLE_SYMBOL,
+                                                                                                                                     G1_TERMINAL_LEFT_ANGLE,
+                                                                                                                                     G1_META_GRAMMAR_REFERENCE,
+                                                                                                                                     G1_TERMINAL_RIGHT_ANGLE                      }, -1,                        -1, -1 , G1_ACTION_RHS_PRIMARY_3 },
   { G1_META_RHS_PRIMARY_LIST,                 G1_RULE_RHS_PRIMARY_LIST,                       MARPAESLIF_RULE_TYPE_SEQUENCE,    1, { G1_META_RHS_PRIMARY                          },  1,                        -1,  0 , G1_ACTION_RHS_PRIMARY_LIST },
   /*
     lhsi                                      descs                                           type                          nrhsl  { rhsi }                                       }  minimumi           separatori  properb
@@ -974,6 +999,8 @@ bootstrap_grammar_rule_t bootstrap_grammar_G1_rules[] = {
   */
   { G1_META_QUANTIFIER,                       G1_RULE_QUANTIFIER_1,                           MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL_STAR                             }, -1,                        -1, -1 , G1_ACTION_QUANTIFIER_1 },
   { G1_META_QUANTIFIER,                       G1_RULE_QUANTIFIER_2,                           MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL_PLUS                             }, -1,                        -1, -1 , G1_ACTION_QUANTIFIER_2 },
+  { G1_META_GRAMMAR_REFERENCE,                G1_RULE_GRAMMAR_REFERENCE_1,                    MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_QUOTED_STRING                        }, -1,                        -1, -1 , G1_ACTION_GRAMMAR_REFERENCE_1 },
+  { G1_META_GRAMMAR_REFERENCE,                G1_RULE_GRAMMAR_REFERENCE_2,                    MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_SIGNED_INTEGER                       }, -1,                        -1, -1 , G1_ACTION_GRAMMAR_REFERENCE_2 },
   { G1_META_DISCARD,                          G1_RULE_DISCARD_1,                              MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_WHITESPACE                           }, -1,                        -1, -1 , G1_ACTION_DISCARD_1 },
   { G1_META_DISCARD,                          G1_RULE_DISCARD_2,                              MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_PERL_COMMENT                         }, -1,                        -1, -1 , G1_ACTION_DISCARD_2 },
   { G1_META_DISCARD,                          G1_RULE_DISCARD_3,                              MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_CPLUSPLUS_COMMENT                    }, -1,                        -1, -1 , G1_ACTION_DISCARD_3 }
