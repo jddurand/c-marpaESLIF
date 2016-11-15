@@ -14,7 +14,7 @@ typedef struct marpaESLIFTester_context {
 } marpaESLIFTester_context_t;
 
 const static char *metags = "\n"
-"<null statement> ::= ';' action => 'myaction'\n"
+"null_statement ::= ';' action => 'myaction'\n"
 ;
 
 int main() {
@@ -25,7 +25,7 @@ int main() {
   marpaESLIFGrammarOption_t marpaESLIFGrammarOption;
   int                       exiti;
 
-  marpaESLIFOption.genericLoggerp = GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_TRACE);
+  marpaESLIFOption.genericLoggerp = GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_DEBUG);
   marpaESLIFp = marpaESLIF_newp(&marpaESLIFOption);
   if (marpaESLIFp == NULL) {
     goto err;
