@@ -8101,7 +8101,7 @@ short marpaESLIFValue_stack_forgetb(marpaESLIFValue_t *marpaESLIFValuep, int ind
     goto err;
   }
 
-  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Setted %p->[%d] = UNDEF (context=%d)", marpaESLIFValuep->marpaESLIFp, indicei, contexti);
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Setted %p->[%d] = NA (context=UNDEF)", marpaESLIFValuep->marpaESLIFp, indicei);
   rcb = 1;
   goto done;
 
