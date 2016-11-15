@@ -61,6 +61,7 @@ typedef enum bootstrap_grammar_G1_enum {
   G1_TERMINAL___SHIFT,
   G1_TERMINAL___UNDEF,
   G1_TERMINAL___ASCII,
+  G1_TERMINAL___TRANSLIT,
   /* ----- Non terminals ------ */
   G1_META_STATEMENTS,
   G1_META_STATEMENT,
@@ -665,6 +666,14 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
 #else
     NULL, NULL
 #endif
+  },
+  { G1_TERMINAL___TRANSLIT, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
+    "::translit",
+#ifndef MARPAESLIF_NTRACE
+    "::translit", "::t"
+#else
+    NULL, NULL
+#endif
   }
 };
 
@@ -958,7 +967,8 @@ bootstrap_grammar_rule_t bootstrap_grammar_G1_rules[] = {
   { G1_META_ACTION_NAME,                      G1_RULE_ACTION_NAME_1,                          MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_ASCII_GRAPH_NAME                     }, -1,                        -1, -1 , G1_ACTION_ACTION_NAME_1 },
   { G1_META_ACTION_NAME,                      G1_RULE_ACTION_NAME_2,                          MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL___SHIFT                          }, -1,                        -1, -1 , G1_ACTION_ACTION_NAME_2 },
   { G1_META_ACTION_NAME,                      G1_RULE_ACTION_NAME_3,                          MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL___UNDEF                          }, -1,                        -1, -1 , G1_ACTION_ACTION_NAME_3 },
-  { G1_META_ACTION_NAME,                      G1_RULE_ACTION_NAME_4,                          MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL___ASCII                          }, -1,                        -1, -1 , G1_ACTION_ACTION_NAME_3 },
+  { G1_META_ACTION_NAME,                      G1_RULE_ACTION_NAME_4,                          MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL___ASCII                          }, -1,                        -1, -1 , G1_ACTION_ACTION_NAME_4 },
+  { G1_META_ACTION_NAME,                      G1_RULE_ACTION_NAME_5,                          MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL___TRANSLIT                       }, -1,                        -1, -1 , G1_ACTION_ACTION_NAME_5 },
   /*
     lhsi                                      descs                                           type                          nrhsl  { rhsi }                                       }  minimumi           separatori  properb
   */

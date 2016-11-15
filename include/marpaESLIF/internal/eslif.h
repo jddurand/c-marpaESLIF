@@ -114,6 +114,7 @@
 #define G1_RULE_ACTION_NAME_2                    "G1_rule_action_name_2"
 #define G1_RULE_ACTION_NAME_3                    "G1_rule_action_name_3"
 #define G1_RULE_ACTION_NAME_4                    "G1_rule_action_name_4"
+#define G1_RULE_ACTION_NAME_5                    "G1_rule_action_name_5"
 #define G1_RULE_QUANTIFIER_1                     "G1_rule_quantifier_1"
 #define G1_RULE_QUANTIFIER_2                     "G1_rule_quantifier_2"
 #define G1_RULE_DISCARD_1                        "G1_rule_discard_1"
@@ -227,12 +228,13 @@
 #define G1_ACTION_SINGLE_SYMBOL_2                  "G1_action_single_symbol_2"
 #define G1_ACTION_SINGLE_SYMBOL_3                  "G1_action_single_symbol_3"
 #define G1_ACTION_SYMBOL                           "G1_action_symbol"
-#define G1_ACTION_SYMBOL_NAME_1                    "::shift" /* <symbol name> ::= <bare name> */
+#define G1_ACTION_SYMBOL_NAME_1                    "::translit" /* <symbol name> ::= <bare name> */
 #define G1_ACTION_SYMBOL_NAME_2                    "G1_action_symbol_2" /* <symbol name> ::= <bracketed name> */
-#define G1_ACTION_ACTION_NAME_1                    "::shift" /* <action name> ::= <ascii graph name> */
-#define G1_ACTION_ACTION_NAME_2                    "::shift" /* <action name> ::= '::shift' */
-#define G1_ACTION_ACTION_NAME_3                    "::shift" /* <action name> ::= '::undef' */
-#define G1_ACTION_ACTION_NAME_4                    "::shift" /* <action name> ::= '::ascii' */
+#define G1_ACTION_ACTION_NAME_1                    "::ascii" /* <action name> ::= <ascii graph name> */
+#define G1_ACTION_ACTION_NAME_2                    "::ascii" /* <action name> ::= '::shift' */
+#define G1_ACTION_ACTION_NAME_3                    "::ascii" /* <action name> ::= '::undef' */
+#define G1_ACTION_ACTION_NAME_4                    "::ascii" /* <action name> ::= '::ascii' */
+#define G1_ACTION_ACTION_NAME_5                    "::ascii" /* <action name> ::= '::translit' */
 #define G1_ACTION_QUANTIFIER_1                     "G1_action_quantifier_1"
 #define G1_ACTION_QUANTIFIER_2                     "G1_action_quantifier_2"
 #define G1_ACTION_DISCARD_1                        "G1_action_discard_1"
