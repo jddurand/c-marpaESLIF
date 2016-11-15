@@ -3040,8 +3040,8 @@ static inline short _marpaESLIFRecognizer_symbol_matcherb(marpaESLIFRecognizer_t
 #ifndef MARPAESLIF_NTRACE
   if ((rcip != NULL) && (*rcip == MARPAESLIF_MATCH_OK) && (marpaESLIFValueResultp != NULL)) {
     switch (marpaESLIFValueResultp->type) {
-    case MARPAESLIF_STACK_TYPE_NA:
-      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Match result for %s is NA", symbolp->descp->asciis);
+    case MARPAESLIF_STACK_TYPE_UNDEF:
+      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Match result for %s is UNDEF", symbolp->descp->asciis);
       break;
     case MARPAESLIF_STACK_TYPE_CHAR:
       MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Match result for %s is CHAR: %c (0x%02x)", symbolp->descp->asciis, marpaESLIFValueResultp->u.c, (unsigned int) marpaESLIFValueResultp->u.c);
@@ -5124,9 +5124,9 @@ short marpaESLIFValue_valueb(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFValu
       *marpaESLIFValueResultp = marpaESLIFValueResult;
       /* User is aking for the value: he will responsible to manage its eventual free */
       /* We have to set the corresponding entries to NA */
-      GENERICSTACK_SET_INT(marpaESLIFValuep->typeStackp, MARPAESLIF_STACK_TYPE_NA, indicei);
+      GENERICSTACK_SET_INT(marpaESLIFValuep->typeStackp, MARPAESLIF_STACK_TYPE_UNDEF, indicei);
       if (GENERICSTACK_ERROR(marpaESLIFValuep->typeStackp)) {
-        MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "marpaESLIFValuep->typeStackp set to MARPAESLIF_STACK_TYPE_NA failure at indice %d, %s", strerror(errno), indicei);
+        MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "marpaESLIFValuep->typeStackp set to MARPAESLIF_STACK_TYPE_UNDEF failure at indice %d, %s", strerror(errno), indicei);
         goto err;
       }
       GENERICSTACK_SET_NA(marpaESLIFValuep->contextStackp, indicei);
@@ -7753,7 +7753,7 @@ static inline short _marpaESLIF_generateHelper_managedStack_enumb(marpaESLIF_t *
   GENERICLOGGER_TRACE(genericLoggerp, "  marpaESLIF_managedStack_type_DOUBLE__COMPLEX = GENERICSTACKITEMTYPE_DOUBLE__COMPLEX,\n"); MARPAESLIF_GEN_OK;
   GENERICLOGGER_TRACE(genericLoggerp, "  marpaESLIF_managedStack_type_LONG_DOUBLE__COMPLEX = GENERICSTACKITEMTYPE_LONG_DOUBLE__COMPLEX,\n"); MARPAESLIF_GEN_OK;
   GENERICLOGGER_TRACE(genericLoggerp, "#endif\n"); MARPAESLIF_GEN_OK;
-  GENERICLOGGER_TRACE(genericLoggerp, "  marpaESLIF_managedStack_type_NA = GENERICSTACKITEMTYPE_NA\n"); MARPAESLIF_GEN_OK;
+  GENERICLOGGER_TRACE(genericLoggerp, "  marpaESLIF_managedStack_type_UNDEF = GENERICSTACKITEMTYPE_NA\n"); MARPAESLIF_GEN_OK;
   GENERICLOGGER_TRACE(genericLoggerp, "} marpaESLIF_managedStack_type_t;\n"); MARPAESLIF_GEN_OK;
 
   rcb = 1;
@@ -7873,7 +7873,7 @@ static inline short _marpaESLIFValue_stack_set_undefb(marpaESLIFValue_t *marpaES
     goto err;
   }
 
-  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Setted %p->[%d] = NA (context=%d)", marpaESLIFValuep->marpaESLIFp, indicei, contexti);
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Setted %p->[%d] = UNDEF (context=%d)", marpaESLIFValuep->marpaESLIFp, indicei, contexti);
   rcb = 1;
   goto done;
 
@@ -8129,8 +8129,8 @@ static inline short _marpaESLIFValue_stack_i_resetb(marpaESLIFValue_t *marpaESLI
     goto done;
   }
 
-  if (GENERICSTACK_GET_INT(marpaESLIFValuep->typeStackp, indicei) == MARPAESLIF_STACK_TYPE_NA) {
-    /* It i set, but it is our own NA */
+  if (GENERICSTACK_GET_INT(marpaESLIFValuep->typeStackp, indicei) == MARPAESLIF_STACK_TYPE_UNDEF) {
+    /* It i set, but it is undef  */
     rcb = 1;
     goto done;
   }
@@ -8153,7 +8153,7 @@ static inline short _marpaESLIFValue_stack_i_resetb(marpaESLIFValue_t *marpaESLI
       GENERICSTACK_SET_NA(marpaESLIFValuep->valueStackp, indicei);
       contexti = GENERICSTACK_GET_INT(marpaESLIFValuep->contextStackp, indicei);
       GENERICSTACK_SET_NA(marpaESLIFValuep->contextStackp, indicei);
-      GENERICSTACK_SET_INT(marpaESLIFValuep->typeStackp, MARPAESLIF_STACK_TYPE_NA, indicei);
+      GENERICSTACK_SET_INT(marpaESLIFValuep->typeStackp, MARPAESLIF_STACK_TYPE_UNDEF, indicei);
     }
     break;
   case MARPAESLIF_STACK_TYPE_SHORT:
@@ -8165,7 +8165,7 @@ static inline short _marpaESLIFValue_stack_i_resetb(marpaESLIFValue_t *marpaESLI
       GENERICSTACK_SET_NA(marpaESLIFValuep->valueStackp, indicei);
       contexti = GENERICSTACK_GET_INT(marpaESLIFValuep->contextStackp, indicei);
       GENERICSTACK_SET_NA(marpaESLIFValuep->contextStackp, indicei);
-      GENERICSTACK_SET_INT(marpaESLIFValuep->typeStackp, MARPAESLIF_STACK_TYPE_NA, indicei);
+      GENERICSTACK_SET_INT(marpaESLIFValuep->typeStackp, MARPAESLIF_STACK_TYPE_UNDEF, indicei);
     }
     break;
   case MARPAESLIF_STACK_TYPE_INT:
@@ -8177,7 +8177,7 @@ static inline short _marpaESLIFValue_stack_i_resetb(marpaESLIFValue_t *marpaESLI
       GENERICSTACK_SET_NA(marpaESLIFValuep->valueStackp, indicei);
       contexti = GENERICSTACK_GET_INT(marpaESLIFValuep->contextStackp, indicei);
       GENERICSTACK_SET_NA(marpaESLIFValuep->contextStackp, indicei);
-      GENERICSTACK_SET_INT(marpaESLIFValuep->typeStackp, MARPAESLIF_STACK_TYPE_NA, indicei);
+      GENERICSTACK_SET_INT(marpaESLIFValuep->typeStackp, MARPAESLIF_STACK_TYPE_UNDEF, indicei);
     }
     break;
   case MARPAESLIF_STACK_TYPE_LONG:
@@ -8189,7 +8189,7 @@ static inline short _marpaESLIFValue_stack_i_resetb(marpaESLIFValue_t *marpaESLI
       GENERICSTACK_SET_NA(marpaESLIFValuep->valueStackp, indicei);
       contexti = GENERICSTACK_GET_INT(marpaESLIFValuep->contextStackp, indicei);
       GENERICSTACK_SET_NA(marpaESLIFValuep->contextStackp, indicei);
-      GENERICSTACK_SET_INT(marpaESLIFValuep->typeStackp, MARPAESLIF_STACK_TYPE_NA, indicei);
+      GENERICSTACK_SET_INT(marpaESLIFValuep->typeStackp, MARPAESLIF_STACK_TYPE_UNDEF, indicei);
     }
     break;
   case MARPAESLIF_STACK_TYPE_FLOAT:
@@ -8201,7 +8201,7 @@ static inline short _marpaESLIFValue_stack_i_resetb(marpaESLIFValue_t *marpaESLI
       GENERICSTACK_SET_NA(marpaESLIFValuep->valueStackp, indicei);
       contexti = GENERICSTACK_GET_INT(marpaESLIFValuep->contextStackp, indicei);
       GENERICSTACK_SET_NA(marpaESLIFValuep->contextStackp, indicei);
-      GENERICSTACK_SET_INT(marpaESLIFValuep->typeStackp, MARPAESLIF_STACK_TYPE_NA, indicei);
+      GENERICSTACK_SET_INT(marpaESLIFValuep->typeStackp, MARPAESLIF_STACK_TYPE_UNDEF, indicei);
     }
     break;
   case MARPAESLIF_STACK_TYPE_DOUBLE:
@@ -8213,7 +8213,7 @@ static inline short _marpaESLIFValue_stack_i_resetb(marpaESLIFValue_t *marpaESLI
       GENERICSTACK_SET_NA(marpaESLIFValuep->valueStackp, indicei);
       contexti = GENERICSTACK_GET_INT(marpaESLIFValuep->contextStackp, indicei);
       GENERICSTACK_SET_NA(marpaESLIFValuep->contextStackp, indicei);
-      GENERICSTACK_SET_INT(marpaESLIFValuep->typeStackp, MARPAESLIF_STACK_TYPE_NA, indicei);
+      GENERICSTACK_SET_INT(marpaESLIFValuep->typeStackp, MARPAESLIF_STACK_TYPE_UNDEF, indicei);
     }
     break;
   case MARPAESLIF_STACK_TYPE_PTR:
@@ -8229,7 +8229,7 @@ static inline short _marpaESLIFValue_stack_i_resetb(marpaESLIFValue_t *marpaESLI
       GENERICSTACK_SET_NA(marpaESLIFValuep->valueStackp, indicei);
       contexti = GENERICSTACK_GET_INT(marpaESLIFValuep->contextStackp, indicei);
       GENERICSTACK_SET_NA(marpaESLIFValuep->contextStackp, indicei);
-      GENERICSTACK_SET_INT(marpaESLIFValuep->typeStackp, MARPAESLIF_STACK_TYPE_NA, indicei);
+      GENERICSTACK_SET_INT(marpaESLIFValuep->typeStackp, MARPAESLIF_STACK_TYPE_UNDEF, indicei);
     }
     break;
   case MARPAESLIF_STACK_TYPE_ARRAY:
@@ -8245,7 +8245,7 @@ static inline short _marpaESLIFValue_stack_i_resetb(marpaESLIFValue_t *marpaESLI
       GENERICSTACK_SET_NA(marpaESLIFValuep->valueStackp, indicei);
       contexti = GENERICSTACK_GET_INT(marpaESLIFValuep->contextStackp, indicei);
       GENERICSTACK_SET_NA(marpaESLIFValuep->contextStackp, indicei);
-      GENERICSTACK_SET_INT(marpaESLIFValuep->typeStackp, MARPAESLIF_STACK_TYPE_NA, indicei);
+      GENERICSTACK_SET_INT(marpaESLIFValuep->typeStackp, MARPAESLIF_STACK_TYPE_UNDEF, indicei);
     }
     break;
   default:
@@ -8550,7 +8550,7 @@ static inline marpaESLIFValue_t *_marpaESLIFValue_newp(marpaESLIFRecognizer_t *m
   marpaESLIFValuep->lastValued                  = 0.;
   marpaESLIFValuep->lastValuep                  = NULL;
   marpaESLIFValuep->lastSizel                   = 0;
-  marpaESLIFValuep->lastTypei                   = MARPAESLIF_STACK_TYPE_NA;
+  marpaESLIFValuep->lastTypei                   = MARPAESLIF_STACK_TYPE_UNDEF;
   marpaESLIFValuep->lastContexti                = 0;
 
   if (! fakeb) {
