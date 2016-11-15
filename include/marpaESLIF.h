@@ -73,7 +73,7 @@ typedef marpaESLIFValueFreeCallback_t   (*marpaESLIFValueFreeActionResolver_t)(v
 
 /* Stack types */
 typedef enum marpaESLIFStackType {
-  MARPAESLIF_STACK_TYPE_NA = 0,
+  MARPAESLIF_STACK_TYPE_UNDEF = 0,
   MARPAESLIF_STACK_TYPE_CHAR,
   MARPAESLIF_STACK_TYPE_SHORT,
   MARPAESLIF_STACK_TYPE_INT,
