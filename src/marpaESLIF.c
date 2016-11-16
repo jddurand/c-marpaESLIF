@@ -9984,10 +9984,10 @@ static inline short _marpaESLIF_symbol_action___charconvb(void *userDatavp, marp
 }
 
 /*****************************************************************************/
-short marpaESLIFValue_stack_pop_charb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int *contextip, char *cp)
+short marpaESLIFValue_stack_getAndForget_charb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int *contextip, char *cp)
 /*****************************************************************************/
 {
-  static const char      *funcs                 = "marpaESLIFValue_stack_pop_charb";
+  static const char      *funcs                 = "marpaESLIFValue_stack_getAndForget_charb";
   marpaESLIFRecognizer_t *marpaESLIFRecognizerp = marpaESLIFValue_recognizerp(marpaESLIFValuep);
   short                   rcb;
   
@@ -10013,10 +10013,10 @@ short marpaESLIFValue_stack_pop_charb(marpaESLIFValue_t *marpaESLIFValuep, int i
 }
 
 /*****************************************************************************/
-short marpaESLIFValue_stack_pop_shortb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int *contextip, short *bp)
+short marpaESLIFValue_stack_getAndForget_shortb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int *contextip, short *bp)
 /*****************************************************************************/
 {
-  static const char      *funcs                 = "marpaESLIFValue_stack_pop_shortb";
+  static const char      *funcs                 = "marpaESLIFValue_stack_getAndForget_shortb";
   marpaESLIFRecognizer_t *marpaESLIFRecognizerp = marpaESLIFValue_recognizerp(marpaESLIFValuep);
   short                   rcb;
   
@@ -10042,10 +10042,10 @@ short marpaESLIFValue_stack_pop_shortb(marpaESLIFValue_t *marpaESLIFValuep, int 
 }
 
 /*****************************************************************************/
-short marpaESLIFValue_stack_pop_intb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int *contextip, int *ip)
+short marpaESLIFValue_stack_getAndForget_intb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int *contextip, int *ip)
 /*****************************************************************************/
 {
-  static const char      *funcs                 = "marpaESLIFValue_stack_pop_intb";
+  static const char      *funcs                 = "marpaESLIFValue_stack_getAndForget_intb";
   marpaESLIFRecognizer_t *marpaESLIFRecognizerp = marpaESLIFValue_recognizerp(marpaESLIFValuep);
   short                   rcb;
   
@@ -10071,10 +10071,10 @@ short marpaESLIFValue_stack_pop_intb(marpaESLIFValue_t *marpaESLIFValuep, int in
 }
 
 /*****************************************************************************/
-short marpaESLIFValue_stack_pop_longb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int *contextip, long *lp)
+short marpaESLIFValue_stack_getAndForget_longb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int *contextip, long *lp)
 /*****************************************************************************/
 {
-  static const char      *funcs                 = "marpaESLIFValue_stack_pop_longb";
+  static const char      *funcs                 = "marpaESLIFValue_stack_getAndForget_longb";
   marpaESLIFRecognizer_t *marpaESLIFRecognizerp = marpaESLIFValue_recognizerp(marpaESLIFValuep);
   short                   rcb;
   
@@ -10100,10 +10100,10 @@ short marpaESLIFValue_stack_pop_longb(marpaESLIFValue_t *marpaESLIFValuep, int i
 }
 
 /*****************************************************************************/
-short marpaESLIFValue_stack_pop_floatb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int *contextip, float *fp)
+short marpaESLIFValue_stack_getAndForget_floatb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int *contextip, float *fp)
 /*****************************************************************************/
 {
-  static const char      *funcs                 = "marpaESLIFValue_stack_pop_floatb";
+  static const char      *funcs                 = "marpaESLIFValue_stack_getAndForget_floatb";
   marpaESLIFRecognizer_t *marpaESLIFRecognizerp = marpaESLIFValue_recognizerp(marpaESLIFValuep);
   short                   rcb;
   
@@ -10129,10 +10129,10 @@ short marpaESLIFValue_stack_pop_floatb(marpaESLIFValue_t *marpaESLIFValuep, int 
 }
 
 /*****************************************************************************/
-short marpaESLIFValue_stack_pop_doubleb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int *contextip, double *dp)
+short marpaESLIFValue_stack_getAndForget_doubleb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int *contextip, double *dp)
 /*****************************************************************************/
 {
-  static const char      *funcs                 = "marpaESLIFValue_stack_pop_doubleb";
+  static const char      *funcs                 = "marpaESLIFValue_stack_getAndForget_doubleb";
   marpaESLIFRecognizer_t *marpaESLIFRecognizerp = marpaESLIFValue_recognizerp(marpaESLIFValuep);
   short                   rcb;
   
@@ -10158,10 +10158,10 @@ short marpaESLIFValue_stack_pop_doubleb(marpaESLIFValue_t *marpaESLIFValuep, int
 }
 
 /*****************************************************************************/
-short marpaESLIFValue_stack_pop_ptrb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int *contextip, void **pp, short *shallowbp)
+short marpaESLIFValue_stack_getAndForget_ptrb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int *contextip, void **pp, short *shallowbp)
 /*****************************************************************************/
 {
-  static const char      *funcs                 = "marpaESLIFValue_stack_pop_ptrb";
+  static const char      *funcs                 = "marpaESLIFValue_stack_getAndForget_ptrb";
   marpaESLIFRecognizer_t *marpaESLIFRecognizerp = marpaESLIFValue_recognizerp(marpaESLIFValuep);
   short                   rcb;
   
@@ -10187,10 +10187,10 @@ short marpaESLIFValue_stack_pop_ptrb(marpaESLIFValue_t *marpaESLIFValuep, int in
 }
 
 /*****************************************************************************/
-short marpaESLIFValue_stack_pop_arrayb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int *contextip, void **pp, size_t *lp, short *shallowbp)
+short marpaESLIFValue_stack_getAndForget_arrayb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int *contextip, void **pp, size_t *lp, short *shallowbp)
 /*****************************************************************************/
 {
-  static const char      *funcs                 = "marpaESLIFValue_stack_pop_arrayb";
+  static const char      *funcs                 = "marpaESLIFValue_stack_getAndForget_arrayb";
   marpaESLIFRecognizer_t *marpaESLIFRecognizerp = marpaESLIFValue_recognizerp(marpaESLIFValuep);
   short                   rcb;
   
