@@ -157,8 +157,9 @@ static inline void _marpaESLIF_bootstrap_priorities_freev(genericStack_t *altern
 static inline short _marpaESLIF_bootstrap_check_grammar_by_levelb(marpaESLIFGrammar_t *marpaESLIFGrammarp, int leveli)
 /*****************************************************************************/
 {
-  marpaESLIF_t *marpaESLIFp = marpaESLIFGrammar_eslifp(marpaESLIFGrammarp);
-  short         rcb;
+  marpaESLIF_t          *marpaESLIFp = marpaESLIFGrammar_eslifp(marpaESLIFGrammarp);
+  marpaESLIF_grammar_t *grammarp     = NULL;
+  short                 rcb;
 
   if (marpaESLIFGrammarp->grammarStackp == NULL) {
     /* Make sure that grammar stack exists */
@@ -168,9 +169,33 @@ static inline short _marpaESLIF_bootstrap_check_grammar_by_levelb(marpaESLIFGram
       goto err;
     }
   }
+  if (! GENERICSTACK_IS_PTR(marpaESLIFGrammarp->grammarStackp, leveli)) {
+    /* Create it */
+    grammarp = _marpaESLIF_grammar_newp(marpaESLIFp,
+                                        NULL /* marpaWrapperGrammarOptionp */,
+                                        leveli,
+                                        NULL /* descEncodings */,
+                                        NULL /* descs */,
+                                        0 /* descl */,
+                                        0 /* latmb */,
+                                        NULL /* defaultSymbolActions */,
+                                        NULL /* defaultRuleActions */,
+                                        NULL /* defaultFreeActions */,
+                                        NULL /* defaultDiscardEvents */,
+                                        0 /* defaultDiscardEventb */);
+    if (grammarp == NULL) {
+      goto err;
+    }
+    GENERICSTACK_SET_PTR(marpaESLIFGrammarp->grammarStackp, grammarp, leveli);
+    if (GENERICSTACK_ERROR(marpaESLIFGrammarp->grammarStackp)) {
+      goto err;
+    }
+    grammarp = NULL; /* grammarp is in marpaESLIFGrammarp->grammarStackp */
+  }
   rcb = 1;
   goto done;
  err:
+  _marpaESLIF_grammar_freev(grammarp);
   rcb = 0;
  done:
   return rcb;
