@@ -173,7 +173,7 @@
 #define G1_ACTION_PRIORITIES                       "G1_action_priorities"
 #define G1_ACTION_ALTERNATIVES                     "G1_action_alternatives"
 #define G1_ACTION_ALTERNATIVE                      "G1_action_alternative"
-#define G1_ACTION_ADVERB_LIST                      "G1_action_adverb_list"
+#define G1_ACTION_ADVERB_LIST                      "::shift" /* This is a nullable - it will return undef if there is no adverb */
 #define G1_ACTION_ADVERB_LIST_ITEMS                "G1_action_adverb_list_items"
 #define G1_ACTION_ADVERB_ITEM_01                   "::shift" /* <adverb item> ::= action */
 #define G1_ACTION_ADVERB_ITEM_02                   "::shift" /* <adverb item> ::= autorank */
