@@ -8,7 +8,8 @@ typedef enum marpaESLIF_bootstrap_stack_context {
   MARPAESLIF_BOOTSTRAP_STACK_TYPE_RHS_PRIMARY,
   MARPAESLIF_BOOTSTRAP_STACK_TYPE_RHS,
   MARPAESLIF_BOOTSTRAP_STACK_TYPE_ACTION,
-  MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_LIST_ITEMS
+  MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_LIST_ITEMS,
+  MARPAESLIF_BOOTSTRAP_STACK_TYPE_ALTERNATIVE
 } marpaESLIF_bootstrap_stack_context_t;
 
 typedef enum marpaESLIF_bootstrap_adverb_list_item_type {
@@ -83,6 +84,9 @@ typedef struct marpaESLIF_bootstrap_rhs_primary {
     marpaESLIF_bootstrap_utf_string_t         *quotedStringp;
   } u;
 } marpaESLIF_bootstrap_rhs_primary_t;
+
+typedef struct marpaESLIF_bootstrap_alternative {
+} marpaESLIF_bootstrap_alternative_t;
 
 #endif /* MARPAESLIF_INTERNAL_BOOTSTRAP_TYPES_H */
 

@@ -205,6 +205,15 @@ extern "C" {
   marpaESLIF_EXPORT short                   marpaESLIFValue_stack_get_ptrb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int *contextip, void **pp, short *shallowbp);
   marpaESLIF_EXPORT short                   marpaESLIFValue_stack_get_arrayb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int *contextip, void **pp, size_t *lp, short *shallowbp);
 
+  marpaESLIF_EXPORT short                   marpaESLIFValue_stack_pop_charb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int *contextip, char *cp);
+  marpaESLIF_EXPORT short                   marpaESLIFValue_stack_pop_shortb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int *contextip, short *bp);
+  marpaESLIF_EXPORT short                   marpaESLIFValue_stack_pop_intb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int *contextip, int *ip);
+  marpaESLIF_EXPORT short                   marpaESLIFValue_stack_pop_longb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int *contextip, long *lp);
+  marpaESLIF_EXPORT short                   marpaESLIFValue_stack_pop_floatb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int *contextip, float *fp);
+  marpaESLIF_EXPORT short                   marpaESLIFValue_stack_pop_doubleb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int *contextip, double *dp);
+  marpaESLIF_EXPORT short                   marpaESLIFValue_stack_pop_ptrb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int *contextip, void **pp, short *shallowbp);
+  marpaESLIF_EXPORT short                   marpaESLIFValue_stack_pop_arrayb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int *contextip, void **pp, size_t *lp, short *shallowbp);
+
   /* Stack context when doing valuation */
   marpaESLIF_EXPORT short                   marpaESLIFValue_context_symbolib(marpaESLIFValue_t *marpaESLIFValuep, int *symbolip);
   marpaESLIF_EXPORT short                   marpaESLIFValue_context_ruleib(marpaESLIFValue_t *marpaESLIFValuep, int *ruleip);

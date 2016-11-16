@@ -7867,7 +7867,7 @@ static inline char *_marpaESLIF_ascii2ids(marpaESLIF_t *marpaESLIFp, char *ascii
 }
 
 #ifndef MARPAESLIF_NTRACE
-#define MARPAESLIF_STACK_SETTER_GENERATOR_TRACE(ESLIFTYPE) do {         \
+#define _MARPAESLIF_STACK_SETTER_GENERATOR_TRACE(ESLIFTYPE) do {         \
     switch (ESLIFTYPE) {                                                \
     case MARPAESLIF_STACK_TYPE_CHAR:                                    \
       MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Setted %p->[%d] = %c (0x%02x) (type=CHAR,contexti=%d)", marpaESLIFValuep->marpaESLIFp, indicei, (char) value, (unsigned char) value, contexti); \
@@ -7892,10 +7892,10 @@ static inline char *_marpaESLIF_ascii2ids(marpaESLIF_t *marpaESLIFp, char *ascii
     }                                                                   \
   } while (0)
 #else
-#define MARPAESLIF_STACK_SETTER_GENERATOR_TRACE
+#define _MARPAESLIF_STACK_SETTER_GENERATOR_TRACE
 #endif
 /* All the stack setters have exactly the same body except for PTR and ARRAY */
-#define MARPAESLIF_STACK_SETTER_GENERATOR(type, STACKTYPE, ESLIFTYPE, ...) \
+#define _MARPAESLIF_STACK_SETTER_GENERATOR(type, STACKTYPE, ESLIFTYPE, ...) \
   static inline short _marpaESLIFValue_stack_set_##type##b(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int contexti, __VA_ARGS__) \
   {                                                                     \
     static const char      *funcs = "_marpaESLIFValue_stack_set_" #type "b"; \
@@ -7907,7 +7907,7 @@ static inline char *_marpaESLIF_ascii2ids(marpaESLIF_t *marpaESLIFp, char *ascii
                                                                         \
     if (marpaESLIFValuep == NULL) {                                     \
       errno = EINVAL;                                                   \
-      return 0;                                                         \
+      goto err;                                                         \
     }                                                                   \
                                                                         \
     if (! _marpaESLIFValue_stack_i_resetb(marpaESLIFValuep, indicei, NULL, NULL, 0)) { \
@@ -7928,7 +7928,7 @@ static inline char *_marpaESLIF_ascii2ids(marpaESLIF_t *marpaESLIFp, char *ascii
       MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "marpaESLIFValuep->contextStackp set at indice %d failure, %s", indicei, strerror(errno)); \
       goto err;                                                         \
     }                                                                   \
-    MARPAESLIF_STACK_SETTER_GENERATOR_TRACE(ESLIFTYPE);                 \
+    _MARPAESLIF_STACK_SETTER_GENERATOR_TRACE(ESLIFTYPE);                 \
     rcb = 1;                                                            \
     goto done;                                                          \
                                                                         \
@@ -7941,12 +7941,12 @@ static inline char *_marpaESLIF_ascii2ids(marpaESLIF_t *marpaESLIFp, char *ascii
   }
   
 /*****************************************************************************/
-MARPAESLIF_STACK_SETTER_GENERATOR(char,   CHAR,   MARPAESLIF_STACK_TYPE_CHAR, char value)
-MARPAESLIF_STACK_SETTER_GENERATOR(short,  SHORT,  MARPAESLIF_STACK_TYPE_SHORT, short value)
-MARPAESLIF_STACK_SETTER_GENERATOR(int,    INT,    MARPAESLIF_STACK_TYPE_INT, int value)
-MARPAESLIF_STACK_SETTER_GENERATOR(long,   LONG,   MARPAESLIF_STACK_TYPE_LONG, long value)
-MARPAESLIF_STACK_SETTER_GENERATOR(float,  FLOAT,  MARPAESLIF_STACK_TYPE_FLOAT, float value)
-MARPAESLIF_STACK_SETTER_GENERATOR(double, DOUBLE, MARPAESLIF_STACK_TYPE_DOUBLE, double value)
+_MARPAESLIF_STACK_SETTER_GENERATOR(char,   CHAR,   MARPAESLIF_STACK_TYPE_CHAR, char value)
+_MARPAESLIF_STACK_SETTER_GENERATOR(short,  SHORT,  MARPAESLIF_STACK_TYPE_SHORT, short value)
+_MARPAESLIF_STACK_SETTER_GENERATOR(int,    INT,    MARPAESLIF_STACK_TYPE_INT, int value)
+_MARPAESLIF_STACK_SETTER_GENERATOR(long,   LONG,   MARPAESLIF_STACK_TYPE_LONG, long value)
+_MARPAESLIF_STACK_SETTER_GENERATOR(float,  FLOAT,  MARPAESLIF_STACK_TYPE_FLOAT, float value)
+_MARPAESLIF_STACK_SETTER_GENERATOR(double, DOUBLE, MARPAESLIF_STACK_TYPE_DOUBLE, double value)
 /*****************************************************************************/
 
 /*****************************************************************************/
@@ -9975,6 +9975,238 @@ static inline short _marpaESLIF_symbol_action___charconvb(void *userDatavp, marp
   if (asciis != NULL) {
     free(asciis);
   }
+  rcb = 0;
+
+ done:
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
+  marpaESLIFRecognizerp->callstackCounteri--;
+  return rcb;
+}
+
+/*****************************************************************************/
+short marpaESLIFValue_stack_pop_charb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int *contextip, char *cp)
+/*****************************************************************************/
+{
+  static const char      *funcs                 = "marpaESLIFValue_stack_pop_charb";
+  marpaESLIFRecognizer_t *marpaESLIFRecognizerp = marpaESLIFValue_recognizerp(marpaESLIFValuep);
+  short                   rcb;
+  
+  marpaESLIFRecognizerp->callstackCounteri++;
+  MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
+
+  if (! marpaESLIFValue_stack_get_charb(marpaESLIFValuep, indicei, contextip, cp)) {
+    goto err;
+  }
+  if (! _marpaESLIFValue_stack_forgetb(marpaESLIFValuep, indicei)) {
+    goto err;
+  }
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
+  marpaESLIFRecognizerp->callstackCounteri--;
+  return rcb;
+}
+
+/*****************************************************************************/
+short marpaESLIFValue_stack_pop_shortb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int *contextip, short *bp)
+/*****************************************************************************/
+{
+  static const char      *funcs                 = "marpaESLIFValue_stack_pop_shortb";
+  marpaESLIFRecognizer_t *marpaESLIFRecognizerp = marpaESLIFValue_recognizerp(marpaESLIFValuep);
+  short                   rcb;
+  
+  marpaESLIFRecognizerp->callstackCounteri++;
+  MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
+
+  if (! marpaESLIFValue_stack_get_shortb(marpaESLIFValuep, indicei, contextip, bp)) {
+    goto err;
+  }
+  if (! _marpaESLIFValue_stack_forgetb(marpaESLIFValuep, indicei)) {
+    goto err;
+  }
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
+  marpaESLIFRecognizerp->callstackCounteri--;
+  return rcb;
+}
+
+/*****************************************************************************/
+short marpaESLIFValue_stack_pop_intb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int *contextip, int *ip)
+/*****************************************************************************/
+{
+  static const char      *funcs                 = "marpaESLIFValue_stack_pop_intb";
+  marpaESLIFRecognizer_t *marpaESLIFRecognizerp = marpaESLIFValue_recognizerp(marpaESLIFValuep);
+  short                   rcb;
+  
+  marpaESLIFRecognizerp->callstackCounteri++;
+  MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
+
+  if (! marpaESLIFValue_stack_get_intb(marpaESLIFValuep, indicei, contextip, ip)) {
+    goto err;
+  }
+  if (! _marpaESLIFValue_stack_forgetb(marpaESLIFValuep, indicei)) {
+    goto err;
+  }
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
+  marpaESLIFRecognizerp->callstackCounteri--;
+  return rcb;
+}
+
+/*****************************************************************************/
+short marpaESLIFValue_stack_pop_longb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int *contextip, long *lp)
+/*****************************************************************************/
+{
+  static const char      *funcs                 = "marpaESLIFValue_stack_pop_longb";
+  marpaESLIFRecognizer_t *marpaESLIFRecognizerp = marpaESLIFValue_recognizerp(marpaESLIFValuep);
+  short                   rcb;
+  
+  marpaESLIFRecognizerp->callstackCounteri++;
+  MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
+
+  if (! marpaESLIFValue_stack_get_longb(marpaESLIFValuep, indicei, contextip, lp)) {
+    goto err;
+  }
+  if (! _marpaESLIFValue_stack_forgetb(marpaESLIFValuep, indicei)) {
+    goto err;
+  }
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
+  marpaESLIFRecognizerp->callstackCounteri--;
+  return rcb;
+}
+
+/*****************************************************************************/
+short marpaESLIFValue_stack_pop_floatb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int *contextip, float *fp)
+/*****************************************************************************/
+{
+  static const char      *funcs                 = "marpaESLIFValue_stack_pop_floatb";
+  marpaESLIFRecognizer_t *marpaESLIFRecognizerp = marpaESLIFValue_recognizerp(marpaESLIFValuep);
+  short                   rcb;
+  
+  marpaESLIFRecognizerp->callstackCounteri++;
+  MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
+
+  if (! marpaESLIFValue_stack_get_floatb(marpaESLIFValuep, indicei, contextip, fp)) {
+    goto err;
+  }
+  if (! _marpaESLIFValue_stack_forgetb(marpaESLIFValuep, indicei)) {
+    goto err;
+  }
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
+  marpaESLIFRecognizerp->callstackCounteri--;
+  return rcb;
+}
+
+/*****************************************************************************/
+short marpaESLIFValue_stack_pop_doubleb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int *contextip, double *dp)
+/*****************************************************************************/
+{
+  static const char      *funcs                 = "marpaESLIFValue_stack_pop_doubleb";
+  marpaESLIFRecognizer_t *marpaESLIFRecognizerp = marpaESLIFValue_recognizerp(marpaESLIFValuep);
+  short                   rcb;
+  
+  marpaESLIFRecognizerp->callstackCounteri++;
+  MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
+
+  if (! marpaESLIFValue_stack_get_doubleb(marpaESLIFValuep, indicei, contextip, dp)) {
+    goto err;
+  }
+  if (! _marpaESLIFValue_stack_forgetb(marpaESLIFValuep, indicei)) {
+    goto err;
+  }
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
+  marpaESLIFRecognizerp->callstackCounteri--;
+  return rcb;
+}
+
+/*****************************************************************************/
+short marpaESLIFValue_stack_pop_ptrb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int *contextip, void **pp, short *shallowbp)
+/*****************************************************************************/
+{
+  static const char      *funcs                 = "marpaESLIFValue_stack_pop_ptrb";
+  marpaESLIFRecognizer_t *marpaESLIFRecognizerp = marpaESLIFValue_recognizerp(marpaESLIFValuep);
+  short                   rcb;
+  
+  marpaESLIFRecognizerp->callstackCounteri++;
+  MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
+
+  if (! marpaESLIFValue_stack_get_ptrb(marpaESLIFValuep, indicei, contextip, pp, shallowbp)) {
+    goto err;
+  }
+  if (! _marpaESLIFValue_stack_forgetb(marpaESLIFValuep, indicei)) {
+    goto err;
+  }
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
+  marpaESLIFRecognizerp->callstackCounteri--;
+  return rcb;
+}
+
+/*****************************************************************************/
+short marpaESLIFValue_stack_pop_arrayb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int *contextip, void **pp, size_t *lp, short *shallowbp)
+/*****************************************************************************/
+{
+  static const char      *funcs                 = "marpaESLIFValue_stack_pop_arrayb";
+  marpaESLIFRecognizer_t *marpaESLIFRecognizerp = marpaESLIFValue_recognizerp(marpaESLIFValuep);
+  short                   rcb;
+  
+  marpaESLIFRecognizerp->callstackCounteri++;
+  MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
+
+  if (! marpaESLIFValue_stack_get_arrayb(marpaESLIFValuep, indicei, contextip, pp, lp, shallowbp)) {
+    goto err;
+  }
+  if (! _marpaESLIFValue_stack_forgetb(marpaESLIFValuep, indicei)) {
+    goto err;
+  }
+  rcb = 1;
+  goto done;
+
+ err:
   rcb = 0;
 
  done:
