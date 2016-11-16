@@ -25,6 +25,7 @@ static        short _marpaESLIF_bootstrap_G1_action_rhsb(void *userDatavp, marpa
 static        short _marpaESLIF_bootstrap_G1_action_adverb_list_itemsb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short _marpaESLIF_bootstrap_G1_action_actionb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short _marpaESLIF_bootstrap_G1_action_rhs_primary_2b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
+static        short _marpaESLIF_bootstrap_G1_action_alternative(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 
 /*****************************************************************************/
 static inline void  _marpaESLIF_bootstrap_rhs_primary_freev(marpaESLIF_bootstrap_rhs_primary_t *rhsPrimaryp)
@@ -592,3 +593,49 @@ static short _marpaESLIF_bootstrap_G1_action_rhs_primary_2b(void *userDatavp, ma
  done:
   return rcb;
 }
+
+/*****************************************************************************/
+static short _marpaESLIF_bootstrap_G1_action_alternative(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
+/*****************************************************************************/
+{
+  /* alternative ::= rhs <adverb list> */
+  marpaESLIF_t    *marpaESLIFp          = marpaESLIFValue_eslifp(marpaESLIFValuep);
+  genericStack_t  *adverbListItemStackp = NULL;
+  genericStack_t  *rhsPrimaryStackp     = NULL;
+  short            undefb;
+  short            rcb;
+
+  /* rhs must be a non-NULL generic stack of the primary */
+  if (! marpaESLIFValue_stack_get_ptrb(marpaESLIFValuep, arg0i, NULL /* contextip */, (void **) &rhsPrimaryStackp, NULL /* shallowbp */)) {
+    goto err;
+  }
+  if (rhsPrimaryStackp == NULL) {
+    MARPAESLIF_ERROR(marpaESLIFp, "rhsPrimaryStackp is NULL");
+    goto err;
+  }
+  
+  /* adverb list may be undef */
+  if (! marpaESLIFValue_stack_is_undefb(marpaESLIFValuep, argni, &undefb)) {
+    goto err;
+  }
+  if (! undefb) {
+    if (! marpaESLIFValue_stack_get_ptrb(marpaESLIFValuep, argni, NULL /* contextip */, (void **) &adverbListItemStackp, NULL /* shallowbp */)) {
+      goto err;
+    }
+    /* Non-sense to have a NULL stack in this case */
+    if (adverbListItemStackp == NULL) {
+      MARPAESLIF_ERROR(marpaESLIFp, "adverbListItemStackp is NULL");
+      goto err;
+    }
+  }
+
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  return rcb;
+}
+
