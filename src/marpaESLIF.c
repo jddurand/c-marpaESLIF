@@ -181,6 +181,8 @@ static inline short                  _marpaESLIFValue_stack_get_intb(marpaESLIFV
 static inline short                  _marpaESLIFValue_stack_get_longb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int *contextip, long *lp);
 static inline short                  _marpaESLIFValue_stack_get_floatb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int *contextip, float *fp);
 static inline short                  _marpaESLIFValue_stack_get_doubleb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int *contextip, double *dp);
+static inline short                  _marpaESLIFValue_stack_get_ptrb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int *contextip, void **pp, short *shallowbp);
+static inline short                  _marpaESLIFValue_stack_get_arrayb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int *contextip, void **pp, size_t *lp, short *shallowbp);
 static inline short                  _marpaESLIFValue_stack_forgetb(marpaESLIFValue_t *marpaESLIFValuep, int indicei);
 static inline short                  _marpaESLIFValue_stack_is_undefb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, short *undefbp);
 static inline short                  _marpaESLIFValue_stack_is_charb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, short *charbp);
@@ -191,8 +193,6 @@ static inline short                  _marpaESLIFValue_stack_is_floatb(marpaESLIF
 static inline short                  _marpaESLIFValue_stack_is_doubleb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, short *doublebp);
 static inline short                  _marpaESLIFValue_stack_is_ptrb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, short *ptrbp);
 static inline short                  _marpaESLIFValue_stack_is_arrayb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, short *arraybp);
-static inline short                  _marpaESLIFValue_stack_get_ptrb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int *contextip, void **pp, short *shallowbp);
-static inline short                  _marpaESLIFValue_stack_get_arrayb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int *contextip, void **pp, size_t *lp, short *shallowbp);
 static inline short                  _marpaESLIFValue_context_symbolib(marpaESLIFValue_t *marpaESLIFValuep, int *symbolip);
 static inline short                  _marpaESLIFValue_context_ruleib(marpaESLIFValue_t *marpaESLIFValuep, int *ruleip);
 static        short                  _marpaESLIFValue_traverserb(marpaWrapperAsfTraverser_t *traverserp, void *userDatavp, int *valueip);
@@ -9994,7 +9994,12 @@ short marpaESLIFValue_stack_getAndForget_charb(marpaESLIFValue_t *marpaESLIFValu
   marpaESLIFRecognizerp->callstackCounteri++;
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
 
-  if (! marpaESLIFValue_stack_get_charb(marpaESLIFValuep, indicei, contextip, cp)) {
+  if (marpaESLIFValuep == NULL) {
+    errno = EINVAL;
+    goto err;
+  }
+
+  if (! _marpaESLIFValue_stack_get_charb(marpaESLIFValuep, indicei, contextip, cp)) {
     goto err;
   }
   if (! _marpaESLIFValue_stack_forgetb(marpaESLIFValuep, indicei)) {
@@ -10023,7 +10028,12 @@ short marpaESLIFValue_stack_getAndForget_shortb(marpaESLIFValue_t *marpaESLIFVal
   marpaESLIFRecognizerp->callstackCounteri++;
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
 
-  if (! marpaESLIFValue_stack_get_shortb(marpaESLIFValuep, indicei, contextip, bp)) {
+  if (marpaESLIFValuep == NULL) {
+    errno = EINVAL;
+    goto err;
+  }
+
+  if (! _marpaESLIFValue_stack_get_shortb(marpaESLIFValuep, indicei, contextip, bp)) {
     goto err;
   }
   if (! _marpaESLIFValue_stack_forgetb(marpaESLIFValuep, indicei)) {
@@ -10052,7 +10062,12 @@ short marpaESLIFValue_stack_getAndForget_intb(marpaESLIFValue_t *marpaESLIFValue
   marpaESLIFRecognizerp->callstackCounteri++;
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
 
-  if (! marpaESLIFValue_stack_get_intb(marpaESLIFValuep, indicei, contextip, ip)) {
+  if (marpaESLIFValuep == NULL) {
+    errno = EINVAL;
+    goto err;
+  }
+
+  if (! _marpaESLIFValue_stack_get_intb(marpaESLIFValuep, indicei, contextip, ip)) {
     goto err;
   }
   if (! _marpaESLIFValue_stack_forgetb(marpaESLIFValuep, indicei)) {
@@ -10081,7 +10096,12 @@ short marpaESLIFValue_stack_getAndForget_longb(marpaESLIFValue_t *marpaESLIFValu
   marpaESLIFRecognizerp->callstackCounteri++;
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
 
-  if (! marpaESLIFValue_stack_get_longb(marpaESLIFValuep, indicei, contextip, lp)) {
+  if (marpaESLIFValuep == NULL) {
+    errno = EINVAL;
+    goto err;
+  }
+
+  if (! _marpaESLIFValue_stack_get_longb(marpaESLIFValuep, indicei, contextip, lp)) {
     goto err;
   }
   if (! _marpaESLIFValue_stack_forgetb(marpaESLIFValuep, indicei)) {
@@ -10110,7 +10130,12 @@ short marpaESLIFValue_stack_getAndForget_floatb(marpaESLIFValue_t *marpaESLIFVal
   marpaESLIFRecognizerp->callstackCounteri++;
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
 
-  if (! marpaESLIFValue_stack_get_floatb(marpaESLIFValuep, indicei, contextip, fp)) {
+  if (marpaESLIFValuep == NULL) {
+    errno = EINVAL;
+    goto err;
+  }
+
+  if (! _marpaESLIFValue_stack_get_floatb(marpaESLIFValuep, indicei, contextip, fp)) {
     goto err;
   }
   if (! _marpaESLIFValue_stack_forgetb(marpaESLIFValuep, indicei)) {
@@ -10139,7 +10164,12 @@ short marpaESLIFValue_stack_getAndForget_doubleb(marpaESLIFValue_t *marpaESLIFVa
   marpaESLIFRecognizerp->callstackCounteri++;
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
 
-  if (! marpaESLIFValue_stack_get_doubleb(marpaESLIFValuep, indicei, contextip, dp)) {
+  if (marpaESLIFValuep == NULL) {
+    errno = EINVAL;
+    goto err;
+  }
+
+  if (! _marpaESLIFValue_stack_get_doubleb(marpaESLIFValuep, indicei, contextip, dp)) {
     goto err;
   }
   if (! _marpaESLIFValue_stack_forgetb(marpaESLIFValuep, indicei)) {
@@ -10168,7 +10198,12 @@ short marpaESLIFValue_stack_getAndForget_ptrb(marpaESLIFValue_t *marpaESLIFValue
   marpaESLIFRecognizerp->callstackCounteri++;
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
 
-  if (! marpaESLIFValue_stack_get_ptrb(marpaESLIFValuep, indicei, contextip, pp, shallowbp)) {
+  if (marpaESLIFValuep == NULL) {
+    errno = EINVAL;
+    goto err;
+  }
+
+  if (! _marpaESLIFValue_stack_get_ptrb(marpaESLIFValuep, indicei, contextip, pp, shallowbp)) {
     goto err;
   }
   if (! _marpaESLIFValue_stack_forgetb(marpaESLIFValuep, indicei)) {
@@ -10197,7 +10232,12 @@ short marpaESLIFValue_stack_getAndForget_arrayb(marpaESLIFValue_t *marpaESLIFVal
   marpaESLIFRecognizerp->callstackCounteri++;
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
 
-  if (! marpaESLIFValue_stack_get_arrayb(marpaESLIFValuep, indicei, contextip, pp, lp, shallowbp)) {
+  if (marpaESLIFValuep == NULL) {
+    errno = EINVAL;
+    goto err;
+  }
+
+  if (! _marpaESLIFValue_stack_get_arrayb(marpaESLIFValuep, indicei, contextip, pp, lp, shallowbp)) {
     goto err;
   }
   if (! _marpaESLIFValue_stack_forgetb(marpaESLIFValuep, indicei)) {
