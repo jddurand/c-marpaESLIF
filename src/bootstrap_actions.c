@@ -550,7 +550,7 @@ static short _marpaESLIF_bootstrap_G1_action_rhs_primary_2b(void *userDatavp, ma
   }
 
   /* action is the result of ::shift, i.e. a lexeme in any case  */
-  if (! marpaESLIFValue_stack_get_arrayb(marpaESLIFValuep, arg0i, NULL /* contextip */, &bytep, &bytel, NULL /* shallowbp */)) {
+  if (! marpaESLIFValue_stack_getAndForget_arrayb(marpaESLIFValuep, arg0i, NULL /* contextip */, &bytep, &bytel, NULL /* shallowbp */)) {
     goto err;
   }
   /* It is a non-sense to not have valid information */
@@ -574,15 +574,7 @@ static short _marpaESLIF_bootstrap_G1_action_rhs_primary_2b(void *userDatavp, ma
   }
 
   rhsPrimaryp->type                   = MARPAESLIF_BOOTSTRAP_RHS_PRIMARY_TYPE_QUOTED_STRING;
-  rhsPrimaryp->u.quotedStringp->bytep = NULL;
-  rhsPrimaryp->u.quotedStringp->bytel = 0;
-
-  rhsPrimaryp->u.quotedStringp->bytep = (char *) malloc(bytel);
-  if (rhsPrimaryp->u.quotedStringp->bytep == NULL) {
-    MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
-    goto err;
-  }
-  memcpy(rhsPrimaryp->u.quotedStringp->bytep, bytep, bytel);
+  rhsPrimaryp->u.quotedStringp->bytep = bytep;
   rhsPrimaryp->u.quotedStringp->bytel = bytel;
 
   if (! marpaESLIFValue_stack_set_ptrb(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_RHS_PRIMARY, rhsPrimaryp, 0 /* shallowb */)) {
