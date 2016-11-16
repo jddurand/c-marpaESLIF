@@ -4,10 +4,11 @@
 typedef enum marpaESLIF_bootstrap_stack_context {
   MARPAESLIF_BOOTSTRAP_STACK_TYPE_NA = 0,
   MARPAESLIF_BOOTSTRAP_STACK_TYPE_OP_DECLARE,
-  MARPAESLIF_BOOTSTRAP_STACK_TYPE_RHS,
   MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_LIST,
   MARPAESLIF_BOOTSTRAP_STACK_TYPE_ACTION,
-  MARPAESLIF_BOOTSTRAP_STACK_TYPE_SYMBOL_NAME
+  MARPAESLIF_BOOTSTRAP_STACK_TYPE_SYMBOL_NAME,
+  MARPAESLIF_BOOTSTRAP_STACK_TYPE_RHS_PRIMARY,
+  MARPAESLIF_BOOTSTRAP_STACK_TYPE_RHS
 } marpaESLIF_bootstrap_stack_context_t;
 
 typedef enum marpaESLIF_bootstrap_adverb_list_item_type {
@@ -40,7 +41,7 @@ typedef enum marpaESLIF_bootstrap_pause {
 } marpaESLIF_bootstrap_null_pause_t;
 
 typedef struct marpaESLIF_bootstrap_utf_string {
-  char *bytep;
+  char  *bytep;
   size_t bytel;
 } marpaESLIF_bootstrap_utf_string_t;
 
