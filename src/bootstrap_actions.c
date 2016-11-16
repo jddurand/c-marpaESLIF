@@ -867,11 +867,7 @@ static short _marpaESLIF_bootstrap_G1_action_priority_ruleb(void *userDatavp, ma
     goto err;
   }
 
-  /* We return undef - from now on the stack is meaningless */
-  if (! marpaESLIFValue_stack_set_undefb(marpaESLIFValuep, resulti)) {
-    goto err;
-  }
-
+  /* We set nothing in the stack, our parent will return ::undef up to the top-level */
   rcb = 1;
   goto done;
 
