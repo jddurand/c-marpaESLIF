@@ -14,15 +14,15 @@ static inline void  _marpaESLIF_bootstrap_rhs_primary_freev(marpaESLIF_bootstrap
 static inline void  _marpaESLIF_bootstrap_rhs_primary_symbol_freev(marpaESLIF_bootstrap_rhs_primary_symbol_t *symbolp);
 static inline void  _marpaESLIF_bootstrap_utf_string_freev(marpaESLIF_bootstrap_utf_string_t *stringp);
 static inline void  _marpaESLIF_bootstrap_rhs_freev(genericStack_t *rhsPrimaryStackp);
-static inline void  _marpaESLIF_bootstrap_adverb_list_freev(genericStack_t *adverbListStackp);
 static inline void  _marpaESLIF_bootstrap_adverb_list_item_freev(marpaESLIF_bootstrap_adverb_list_item_t *adverbListItemp);
+static inline void  _marpaESLIF_bootstrap_adverb_list_items_freev(genericStack_t *adverbListItemStackp);
 
 static        void  _marpaESLIF_bootstrap_freeDefaultActionv(void *userDatavp, int contexti, void *p, size_t sizel);
 
 static        short _marpaESLIF_bootstrap_G1_action_symbol_2b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short _marpaESLIF_bootstrap_G1_action_op_declare_1b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short _marpaESLIF_bootstrap_G1_action_rhsb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
-static        short _marpaESLIF_bootstrap_G1_action_adverb_listb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
+static        short _marpaESLIF_bootstrap_G1_action_adverb_list_itemsb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short _marpaESLIF_bootstrap_G1_action_actionb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short _marpaESLIF_bootstrap_G1_action_rhs_primary_2b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 
@@ -87,20 +87,18 @@ static inline void _marpaESLIF_bootstrap_rhs_freev(genericStack_t *rhsPrimarySta
 }
 
 /*****************************************************************************/
-static inline void  _marpaESLIF_bootstrap_adverb_list_freev(genericStack_t *adverbListStackp)
+static inline void  _marpaESLIF_bootstrap_adverb_list_items_freev(genericStack_t *adverbListItemStackp)
 /*****************************************************************************/
 {
-  int                                      i;
-  marpaESLIF_bootstrap_adverb_list_item_t *adverbListItemp;
+  int i;
 
-  if (adverbListStackp != NULL) {
-    for (i = 0; i < GENERICSTACK_USED(adverbListStackp); i++) {
-      if (GENERICSTACK_IS_PTR(adverbListStackp, i)) {
-        adverbListItemp = (marpaESLIF_bootstrap_adverb_list_item_t *) GENERICSTACK_GET_PTR(adverbListStackp, i);
-        _marpaESLIF_bootstrap_adverb_list_item_freev(adverbListItemp);
+  if (adverbListItemStackp != NULL) {
+    for (i = 0; i < GENERICSTACK_USED(adverbListItemStackp); i++) {
+      if (GENERICSTACK_IS_PTR(adverbListItemStackp, i)) {
+        _marpaESLIF_bootstrap_adverb_list_item_freev((marpaESLIF_bootstrap_adverb_list_item_t *) GENERICSTACK_GET_PTR(adverbListItemStackp, i));
       }
     }
-    GENERICSTACK_FREE(adverbListStackp);
+    GENERICSTACK_FREE(adverbListItemStackp);
   }
 }
 
@@ -159,9 +157,6 @@ static void _marpaESLIF_bootstrap_freeDefaultActionv(void *userDatavp, int conte
   switch (contexti) {
   case MARPAESLIF_BOOTSTRAP_STACK_TYPE_OP_DECLARE:
     break;
-  case MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_LIST:
-    _marpaESLIF_bootstrap_adverb_list_freev((genericStack_t *) p);
-    break;
   case MARPAESLIF_BOOTSTRAP_STACK_TYPE_SYMBOL_NAME:
     free(p);
     break;
@@ -173,6 +168,9 @@ static void _marpaESLIF_bootstrap_freeDefaultActionv(void *userDatavp, int conte
     break;
   case MARPAESLIF_BOOTSTRAP_STACK_TYPE_ACTION:
     free(p);
+    break;
+  case MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_LIST_ITEMS:
+    _marpaESLIF_bootstrap_adverb_list_items_freev((genericStack_t *) p);
     break;
   default:
     break;
@@ -208,12 +206,12 @@ static marpaESLIFValueRuleCallback_t _marpaESLIF_bootstrap_ruleActionResolver(vo
     goto err;
   }
   /* TO DO */
-       if (strcmp(actions, "G1_action_op_declare_1")  == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_op_declare_1b;  }
-  else if (strcmp(actions, "G1_action_rhs")           == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_rhsb;           }
-  else if (strcmp(actions, "G1_rule_adverb_list")     == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_adverb_listb;   }
-  else if (strcmp(actions, "G1_action_action")        == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_actionb;        }
-  else if (strcmp(actions, "G1_action_symbol_2")      == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_symbol_2b;      }
-  else if (strcmp(actions, "G1_action_rhs_primary_2") == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_rhs_primary_2b; }
+       if (strcmp(actions, "G1_action_op_declare_1")      == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_op_declare_1b;      }
+  else if (strcmp(actions, "G1_action_rhs")               == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_rhsb;               }
+  else if (strcmp(actions, "G1_action_adverb_list_items") == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_adverb_list_itemsb; }
+  else if (strcmp(actions, "G1_action_action")            == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_actionb;            }
+  else if (strcmp(actions, "G1_action_symbol_2")          == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_symbol_2b;          }
+  else if (strcmp(actions, "G1_action_rhs_primary_2")     == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_rhs_primary_2b;     }
   else
   {
     MARPAESLIF_ERRORF(marpaESLIFp, "Unsupported action \"%s\"", actions);
@@ -411,43 +409,62 @@ static short _marpaESLIF_bootstrap_G1_action_rhsb(void *userDatavp, marpaESLIFVa
 }
 
 /*****************************************************************************/
-static short _marpaESLIF_bootstrap_G1_action_adverb_listb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
+static short _marpaESLIF_bootstrap_G1_action_adverb_list_itemsb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
 /*****************************************************************************/
 {
-  /* <adverb list> ::= <adverb list items> */
-  marpaESLIF_t                            *marpaESLIFp      = marpaESLIFValue_eslifp(marpaESLIFValuep);
-  genericStack_t                          *adverbListStackp = NULL;
-  marpaESLIF_bootstrap_adverb_list_item_t *adverbListItemp  = NULL;
+  /* <adverb list items> ::= <adverb item>* */
+  marpaESLIF_t                            *marpaESLIFp          = marpaESLIFValue_eslifp(marpaESLIFValuep);
+  genericStack_t                          *adverbListItemStackp = NULL;
+  marpaESLIF_bootstrap_adverb_list_item_t *adverbListItemp      = NULL;
+  void                                    *p;
+  int                                      contexti;
   int                                      i;
   short                                    rcb;
 
-  GENERICSTACK_NEW(adverbListStackp);
-  if (GENERICSTACK_ERROR(adverbListStackp)) {
-    MARPAESLIF_ERRORF(marpaESLIFp, "adverbListStackp initialization failure, %s", strerror(errno));
+  GENERICSTACK_NEW(adverbListItemStackp);
+  if (GENERICSTACK_ERROR(adverbListItemStackp)) {
+    MARPAESLIF_ERRORF(marpaESLIFp, "adverbListItemStackp initialization failure, %s", strerror(errno));
     goto err;
   }
 
+  /* In theory, if we are called, this is because there is something on the stack */
+  /* In any case, this is okay to have an empty stack -; */
   if (! nullableb) {
     for (i = arg0i; i <= argni; i++) {
-      if (! marpaESLIFValue_stack_get_ptrb(marpaESLIFValuep, i, NULL, (void **) &adverbListItemp, NULL)) {
+      if (! marpaESLIFValue_stack_get_ptrb(marpaESLIFValuep, i, &contexti, &p, NULL /* shallowbp */)) {
         goto err;
       }
-      if (! marpaESLIFValue_stack_forgetb(marpaESLIFValuep, i)) {
-        goto err;
-      }
-      if (adverbListItemp != NULL) {
-        /* NULL is the eventual null adverb - not needed for further processing */
-        GENERICSTACK_PUSH_PTR(adverbListStackp, (void *) adverbListItemp);
-        if (GENERICSTACK_ERROR(adverbListStackp)) {
-          MARPAESLIF_ERRORF(marpaESLIFp, "adverbListStackp push failure, %s", strerror(errno));
+      if (p != NULL) { /* NULL is the case of null adverb - ignored */
+        adverbListItemp = (marpaESLIF_bootstrap_adverb_list_item_t *) malloc(sizeof(marpaESLIF_bootstrap_adverb_list_item_t));
+        if (adverbListItemp == NULL) {
+          MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
           goto err;
         }
-        adverbListItemp = NULL; /* adverbListItemp is now in adverbListStackp */
+        if (! marpaESLIFValue_stack_forgetb(marpaESLIFValuep, i)) {
+          goto err;
+        }
+        adverbListItemp->type = MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_NA;
+        switch (contexti) {
+        case MARPAESLIF_BOOTSTRAP_STACK_TYPE_ACTION:
+          adverbListItemp->type      = MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_ACTION;
+          adverbListItemp->u.actions = (char *) p;
+          break;
+        default:
+          MARPAESLIF_ERRORF(marpaESLIFp, "Unsupported adverb list item type %d", contexti);
+          goto err;
+          break;
+        }
+        GENERICSTACK_PUSH_PTR(adverbListItemStackp, (void *) adverbListItemp);
+        if (GENERICSTACK_ERROR(adverbListItemStackp)) {
+          MARPAESLIF_ERRORF(marpaESLIFp, "adverbListItemStackp push failure, %s", strerror(errno));
+          goto err;
+        }
+        adverbListItemp = NULL; /* adverbListItemp is now in adverbListItemStackp */
       }
     }
   }
 
-  if (! marpaESLIFValue_stack_set_ptrb(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_LIST, adverbListStackp, 0 /* shallowb */)) {
+  if (! marpaESLIFValue_stack_set_ptrb(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_LIST_ITEMS, adverbListItemStackp, 0 /* shallowb */)) {
     goto err;
   }
 
@@ -456,7 +473,7 @@ static short _marpaESLIF_bootstrap_G1_action_adverb_listb(void *userDatavp, marp
 
  err:
   _marpaESLIF_bootstrap_adverb_list_item_freev(adverbListItemp);
-  _marpaESLIF_bootstrap_adverb_list_freev(adverbListStackp);
+  _marpaESLIF_bootstrap_adverb_list_items_freev(adverbListItemStackp);
   rcb = 0;
 
  done:
