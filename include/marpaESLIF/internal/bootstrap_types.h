@@ -12,7 +12,7 @@ typedef enum marpaESLIF_bootstrap_stack_context {
   MARPAESLIF_BOOTSTRAP_STACK_TYPE_ALTERNATIVE,
   MARPAESLIF_BOOTSTRAP_STACK_TYPE_ALTERNATIVES,
   MARPAESLIF_BOOTSTRAP_STACK_TYPE_PRIORITIES,
-  MARPAESLIF_BOOTSTRAP_STACK_TYPE_PRIORITY_RULE
+  MARPAESLIF_BOOTSTRAP_STACK_TYPE_GRAMMARSTACK
 } marpaESLIF_bootstrap_stack_context_t;
 
 typedef enum marpaESLIF_bootstrap_adverb_list_item_type {
@@ -92,12 +92,6 @@ typedef struct marpaESLIF_bootstrap_alternative {
   genericStack_t *rhsPrimaryStackp;
   genericStack_t *adverbListItemStackp;
 } marpaESLIF_bootstrap_alternative_t;
-
-typedef struct marpaESLIF_bootstrap_priority_rule {
-  char           *symbolNames;
-  int             leveli;
-  genericStack_t *alternativesStackp;
-} marpaESLIF_bootstrap_priority_rule_t;
 
 #endif /* MARPAESLIF_INTERNAL_BOOTSTRAP_TYPES_H */
 
