@@ -162,9 +162,6 @@ static void _marpaESLIF_bootstrap_freeDefaultActionv(void *userDatavp, int conte
   case MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_LIST:
     _marpaESLIF_bootstrap_adverb_list_freev((genericStack_t *) p);
     break;
-  case MARPAESLIF_BOOTSTRAP_STACK_TYPE_ACTION:
-    _marpaESLIF_bootstrap_adverb_list_item_freev((marpaESLIF_bootstrap_adverb_list_item_t *) p);
-    break;
   case MARPAESLIF_BOOTSTRAP_STACK_TYPE_SYMBOL_NAME:
     free(p);
     break;
@@ -173,6 +170,9 @@ static void _marpaESLIF_bootstrap_freeDefaultActionv(void *userDatavp, int conte
     break;
   case MARPAESLIF_BOOTSTRAP_STACK_TYPE_RHS:
     _marpaESLIF_bootstrap_rhs_freev((genericStack_t *) p);
+    break;
+  case MARPAESLIF_BOOTSTRAP_STACK_TYPE_ACTION:
+    free(p);
     break;
   default:
     break;
@@ -211,7 +211,7 @@ static marpaESLIFValueRuleCallback_t _marpaESLIF_bootstrap_ruleActionResolver(vo
        if (strcmp(actions, "G1_action_op_declare_1")  == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_op_declare_1b;  }
   else if (strcmp(actions, "G1_action_rhs")           == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_rhsb;           }
   else if (strcmp(actions, "G1_rule_adverb_list")     == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_adverb_listb;   }
-  else if (strcmp(actions, "G1_rule_action")          == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_actionb;        }
+  else if (strcmp(actions, "G1_action_action")        == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_actionb;        }
   else if (strcmp(actions, "G1_action_symbol_2")      == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_symbol_2b;      }
   else if (strcmp(actions, "G1_action_rhs_primary_2") == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_rhs_primary_2b; }
   else
@@ -470,8 +470,6 @@ static short _marpaESLIF_bootstrap_G1_action_actionb(void *userDatavp, marpaESLI
   /* action ::= 'action' '=>' <action name> */
   marpaESLIF_t *marpaESLIFp = marpaESLIFValue_eslifp(marpaESLIFValuep);
   char         *actions = NULL;
-  void         *bytep;
-  size_t        bytel;
   short         rcb;
 
   /* Cannot be nullable */
@@ -480,23 +478,19 @@ static short _marpaESLIF_bootstrap_G1_action_actionb(void *userDatavp, marpaESLI
     goto err;
   }
 
-  /* action is the result of ::shift, i.e. a lexeme in any case  */
-  if (! marpaESLIFValue_stack_get_arrayb(marpaESLIFValuep, argni, NULL /* contextip */, &bytep, &bytel, NULL /* shallowbp */)) {
+  /* <action name> is the result of ::ascii, i.e. a ptr in any case  */
+  if (! marpaESLIFValue_stack_get_ptrb(marpaESLIFValuep, argni, NULL /* contextip */, (void **) &actions, NULL /* shallowbp */)) {
     goto err;
   }
-  /* It is a non-sense to not have valid information */
-  if ((bytep == NULL) || (bytel <= 0)) {
-    MARPAESLIF_ERRORF(marpaESLIFp, "marpaESLIFValue_stack_get_arrayb at indice %d returned {%p,%ld}", argni, bytep, (unsigned long) bytel);
-    goto err;
-  }
-  /* This is an ASCII thingy per-def */
-  actions = (char *) malloc(bytel+1);
+  /* It is a non-sense to not have no action in this case */
   if (actions == NULL) {
-    MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
+    MARPAESLIF_ERRORF(marpaESLIFp, "marpaESLIFValue_stack_get_ptrb at indice %d returned %p", argni, actions);
     goto err;
   }
-  memcpy(actions, bytep, bytel);
-  actions[bytel] = '\0';
+  /* "Tranfert" to the action stack type */
+  if (! marpaESLIFValue_stack_forgetb(marpaESLIFValuep, argni)) {
+    goto err;
+  }
   if (! marpaESLIFValue_stack_set_ptrb(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_ACTION, actions, 0 /* shallowb */)) {
     goto err;
   }
