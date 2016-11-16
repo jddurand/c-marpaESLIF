@@ -238,8 +238,6 @@ struct marpaESLIF {
   marpaESLIF_terminal_t *anycharp;                    /* internal regex for match any character */
   marpaESLIF_terminal_t *utf8bomp;                    /* Internal regex for match UTF-8 BOM */
   marpaESLIF_terminal_t *newlinep;                    /* Internal regex for match newline */
-  char                  *defaultLexemeActions;        /* Default action for symbols and rules when collecting lexemes */
-  char                  *defaultRuleLexemeActions;    /* Default action for rules when collectin lexemes */
 };
 
 struct marpaESLIFGrammar {

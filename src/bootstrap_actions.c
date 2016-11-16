@@ -19,7 +19,7 @@ static inline void  _marpaESLIF_bootstrap_adverb_list_items_freev(genericStack_t
 static inline void  _marpaESLIF_bootstrap_alternative_freev(marpaESLIF_bootstrap_alternative_t *alternativep);
 static inline void  _marpaESLIF_bootstrap_alternatives_freev(genericStack_t *alternativeStackp);
 static inline void  _marpaESLIF_bootstrap_priorities_freev(genericStack_t *alternativesStackp);
-static inline void  _marpaESLIF_bootstrap_priority_rule_freev(marpaESLIF_bootstrap_priority_rule_t *priorityRulep);
+static inline short _marpaESLIF_bootstrap_check_grammar_by_levelb(marpaESLIFGrammar_t *marpaESLIFGrammarp, int leveli);
 
 static        void  _marpaESLIF_bootstrap_freeDefaultActionv(void *userDatavp, int contexti, void *p, size_t sizel);
 
@@ -154,16 +154,26 @@ static inline void _marpaESLIF_bootstrap_priorities_freev(genericStack_t *altern
 }
 
 /*****************************************************************************/
-static inline void  _marpaESLIF_bootstrap_priority_rule_freev(marpaESLIF_bootstrap_priority_rule_t *priorityRulep)
+static inline short _marpaESLIF_bootstrap_check_grammar_by_levelb(marpaESLIFGrammar_t *marpaESLIFGrammarp, int leveli)
 /*****************************************************************************/
 {
-  if (priorityRulep != NULL) {
-    if (priorityRulep->symbolNames != NULL) {
-      free(priorityRulep->symbolNames);
+  marpaESLIF_t *marpaESLIFp = marpaESLIFGrammar_eslifp(marpaESLIFGrammarp);
+  short         rcb;
+
+  if (marpaESLIFGrammarp->grammarStackp == NULL) {
+    /* Make sure that grammar stack exists */
+    GENERICSTACK_NEW(marpaESLIFGrammarp->grammarStackp);
+    if (GENERICSTACK_ERROR(marpaESLIFGrammarp->grammarStackp)) {
+      MARPAESLIF_ERRORF(marpaESLIFp, "marpaESLIFGrammarp->grammarStackp initialization failure, %s", strerror(errno));
+      goto err;
     }
-    _marpaESLIF_bootstrap_priorities_freev(priorityRulep->alternativesStackp);
-    free(priorityRulep);
   }
+  rcb = 1;
+  goto done;
+ err:
+  rcb = 0;
+ done:
+  return rcb;
 }
 
 /*****************************************************************************/
@@ -244,9 +254,6 @@ static void _marpaESLIF_bootstrap_freeDefaultActionv(void *userDatavp, int conte
     break;
   case MARPAESLIF_BOOTSTRAP_STACK_TYPE_PRIORITIES:
     _marpaESLIF_bootstrap_priorities_freev((genericStack_t *) p);
-    break;
-  case MARPAESLIF_BOOTSTRAP_STACK_TYPE_PRIORITY_RULE:
-    _marpaESLIF_bootstrap_priority_rule_freev((marpaESLIF_bootstrap_priority_rule_t *) p);
     break;
   default:
     break;
@@ -809,10 +816,14 @@ static short _marpaESLIF_bootstrap_G1_action_priority_ruleb(void *userDatavp, ma
 /*****************************************************************************/
 {
   /* <priority rule> ::= lhs <op declare> priorities */
+  /* **** The result will be undef **** */
+  /* **** We work on userDatavp, that is a marpaESLIFGrammarp **** */
+  /* **** In case of failure, the caller that is marpaESLIFGrammar_newp() will call a free on this marpaESLIFGrammarp **** */
+  
+  marpaESLIFGrammar_t                  *marpaESLIFGrammarp = (marpaESLIFGrammar_t *) userDatavp;
   marpaESLIF_t                         *marpaESLIFp        = marpaESLIFValue_eslifp(marpaESLIFValuep);
   char                                 *symbolNames        = NULL;
   genericStack_t                       *alternativesStackp = NULL;
-  marpaESLIF_bootstrap_priority_rule_t *priorityRulep      = NULL;
   int                                   leveli;
   short                               rcb;
 
@@ -826,19 +837,13 @@ static short _marpaESLIF_bootstrap_G1_action_priority_ruleb(void *userDatavp, ma
     goto err;
   }
 
-  priorityRulep = (marpaESLIF_bootstrap_priority_rule_t *) malloc(sizeof(marpaESLIF_bootstrap_priority_rule_t));
-  if (priorityRulep == NULL) {
-    MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
+  /* Check grammar at that level exist */
+  if (! _marpaESLIF_bootstrap_check_grammar_by_levelb(marpaESLIFGrammarp, leveli)) {
     goto err;
   }
-  priorityRulep->symbolNames        = symbolNames;
-  priorityRulep->leveli             = leveli;
-  priorityRulep->alternativesStackp = alternativesStackp;
 
-  symbolNames        = NULL; /* symbolNames is now in priorityRulep */
-  alternativesStackp = NULL; /* alternativesStackp is now in priorityRulep */
-
-  if (! marpaESLIFValue_stack_set_ptrb(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_PRIORITY_RULE, priorityRulep, 0 /* shallowb */)) {
+  /* We return undef - from now on the stack is meaningless */
+  if (! marpaESLIFValue_stack_set_undefb(marpaESLIFValuep, resulti)) {
     goto err;
   }
 
@@ -850,7 +855,6 @@ static short _marpaESLIF_bootstrap_G1_action_priority_ruleb(void *userDatavp, ma
     free(symbolNames);
   }
   _marpaESLIF_bootstrap_priorities_freev(alternativesStackp);
-  _marpaESLIF_bootstrap_priority_rule_freev(priorityRulep);
   rcb = 0;
 
  done:
