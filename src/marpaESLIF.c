@@ -9921,9 +9921,44 @@ static short _marpaESLIF_rule_action___translitb(void *userDatavp, marpaESLIFVal
 static short _marpaESLIF_symbol_action___shiftb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *bytep, size_t bytel, int resulti)
 /*****************************************************************************/
 {
-  /* We say shallow because this is an array that leave in the lexeme stack - and the lexeme stack is absolutely not */
-  /* available from outside! Therefore it is very light operation: no malloc, no free when released */
-  return _marpaESLIFValue_stack_set_arrayb(marpaESLIFValuep, resulti, 0 /* contexti here the value not allowed from outside ! */, bytep, bytel, 1 /* shallowb */);
+  static const char      *funcs                 = "_marpaESLIF_symbol_action___shiftb";
+  marpaESLIF_t           *marpaESLIFp           = marpaESLIFValue_eslifp(marpaESLIFValuep);
+  marpaESLIFRecognizer_t *marpaESLIFRecognizerp = marpaESLIFValue_recognizerp(marpaESLIFValuep);
+  char                   *p                     = NULL;
+  size_t                  l                     = 0;
+  short                   rcb;
+
+  marpaESLIFRecognizerp->callstackCounteri++;
+  MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
+
+  /* The bytep and bytel are coming from the lexeme stack, and we cannot affort to make a shallow copy from it */
+  if ((bytep != NULL) && (bytel > 0)) {
+    p = (char *) malloc(bytel);
+    if (p == NULL) {
+      MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
+      goto err;
+    }
+    memcpy(p, bytep, bytel);
+    l = bytel;
+  }
+
+  if (! _marpaESLIFValue_stack_set_arrayb(marpaESLIFValuep, resulti, 0 /* contexti here the value not allowed from outside ! */, p, l, 0 /* shallowb */)) {
+    goto err;
+  }
+
+  rcb = 1;
+  goto done;
+
+ err:
+  if (p != NULL) {
+    free(p);
+  }
+  rcb = 0;
+
+ done:
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
+  marpaESLIFRecognizerp->callstackCounteri--;
+  return rcb;
 }
 
 /*****************************************************************************/
