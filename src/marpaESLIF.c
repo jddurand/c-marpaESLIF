@@ -8332,6 +8332,7 @@ static inline short _marpaESLIFValue_stack_i_resetb(marpaESLIFValue_t *marpaESLI
   int                                 origcontexti;
   int                                 origtypei;
   size_t                              origsizel;
+  void                               *userDatavp;
 
   marpaESLIFRecognizerp->callstackCounteri++;
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
@@ -8515,12 +8516,15 @@ static inline short _marpaESLIFValue_stack_i_resetb(marpaESLIFValue_t *marpaESLI
       /* And we must not free this memory if the caller say it is doing a shallow */
       if (marpaESLIFRecognizerp->parentRecognizerp != NULL) {
         freeCallbackp = _marpaESLIF_lexeme_freeCallbackv;
+        userDatavp    = marpaESLIFRecognizerp; /* Our internal free callback on lexemes requires that userDatavp is the recognizer */
       } else {
         /* Remember the context that cannot be == 0 from outside ? If this is the case */
         /* then per def, it is the result of a ::shift operation. Then no need of a resolver */
         if (! origcontexti) {
           freeCallbackp = _marpaESLIF_rule_freeCallbackv;
+          userDatavp    = marpaESLIFRecognizerp; /* Our internal free callback on rules requires that userDatavp is the recognizer */
         } else {
+          userDatavp = marpaESLIFValueOption.userDatavp; /* Caller's callback's userDatavp in any other case */
           actions = grammarp->defaultFreeActions;
           if (actions == NULL) {
             MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "Grammar No %d (%s) has no free default action", grammarp->leveli, grammarp->descp->asciis);
@@ -8530,7 +8534,7 @@ static inline short _marpaESLIFValue_stack_i_resetb(marpaESLIFValue_t *marpaESLI
               MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "No free action resolver");
               goto err;
             }
-            freeCallbackp = freeActionResolverp(marpaESLIFValueOption.userDatavp, marpaESLIFValuep, actions);
+            freeCallbackp = freeActionResolverp(userDatavp, marpaESLIFValuep, actions);
             if (freeCallbackp == NULL) {
               MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "Grammar No %d (%s) action \"%s\" resolved to NULL", grammarp->leveli, grammarp->descp->asciis, actions);
               goto err;
@@ -8563,7 +8567,7 @@ static inline short _marpaESLIFValue_stack_i_resetb(marpaESLIFValue_t *marpaESLI
         break;
       }
 #endif
-      freeCallbackp(marpaESLIFValueOption.userDatavp, origcontexti, origp, origsizel);
+      freeCallbackp(userDatavp, origcontexti, origp, origsizel);
     }
   }
 
