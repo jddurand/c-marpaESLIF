@@ -19,7 +19,8 @@ static inline void  _marpaESLIF_bootstrap_adverb_list_items_freev(genericStack_t
 static inline void  _marpaESLIF_bootstrap_alternative_freev(marpaESLIF_bootstrap_alternative_t *alternativep);
 static inline void  _marpaESLIF_bootstrap_alternatives_freev(genericStack_t *alternativeStackp);
 static inline void  _marpaESLIF_bootstrap_priorities_freev(genericStack_t *alternativesStackp);
-static inline short _marpaESLIF_bootstrap_check_grammar_by_levelb(marpaESLIFGrammar_t *marpaESLIFGrammarp, int leveli);
+
+static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_check_grammar_by_levelb(marpaESLIFGrammar_t *marpaESLIFGrammarp, int leveli);
 
 static        void  _marpaESLIF_bootstrap_freeDefaultActionv(void *userDatavp, int contexti, void *p, size_t sizel);
 
@@ -154,12 +155,11 @@ static inline void _marpaESLIF_bootstrap_priorities_freev(genericStack_t *altern
 }
 
 /*****************************************************************************/
-static inline short _marpaESLIF_bootstrap_check_grammar_by_levelb(marpaESLIFGrammar_t *marpaESLIFGrammarp, int leveli)
+static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_check_grammar_by_levelb(marpaESLIFGrammar_t *marpaESLIFGrammarp, int leveli)
 /*****************************************************************************/
 {
-  marpaESLIF_t          *marpaESLIFp = marpaESLIFGrammar_eslifp(marpaESLIFGrammarp);
+  marpaESLIF_t         *marpaESLIFp = marpaESLIFGrammar_eslifp(marpaESLIFGrammarp);
   marpaESLIF_grammar_t *grammarp     = NULL;
-  short                 rcb;
 
   if (marpaESLIFGrammarp->grammarStackp == NULL) {
     /* Make sure that grammar stack exists */
@@ -188,17 +188,17 @@ static inline short _marpaESLIF_bootstrap_check_grammar_by_levelb(marpaESLIFGram
     }
     GENERICSTACK_SET_PTR(marpaESLIFGrammarp->grammarStackp, grammarp, leveli);
     if (GENERICSTACK_ERROR(marpaESLIFGrammarp->grammarStackp)) {
-      goto err;
+      _marpaESLIF_grammar_freev(grammarp);
+      grammarp = NULL;
     }
-    grammarp = NULL; /* grammarp is in marpaESLIFGrammarp->grammarStackp */
   }
-  rcb = 1;
+
+  /* Note: grammarp may be NULL here */
   goto done;
  err:
-  _marpaESLIF_grammar_freev(grammarp);
-  rcb = 0;
+  grammarp = NULL;
  done:
-  return rcb;
+  return grammarp;
 }
 
 /*****************************************************************************/
@@ -849,8 +849,9 @@ static short _marpaESLIF_bootstrap_G1_action_priority_ruleb(void *userDatavp, ma
   marpaESLIF_t                         *marpaESLIFp        = marpaESLIFValue_eslifp(marpaESLIFValuep);
   char                                 *symbolNames        = NULL;
   genericStack_t                       *alternativesStackp = NULL;
+  marpaESLIF_grammar_t                 *grammarp;
   int                                   leveli;
-  short                               rcb;
+  short                                 rcb;
 
   if (! marpaESLIFValue_stack_getAndForget_ptrb(marpaESLIFValuep, arg0i, NULL /* contextip */, (void **) &symbolNames, NULL /* shallowbp */)) {
     goto err;
@@ -863,7 +864,8 @@ static short _marpaESLIF_bootstrap_G1_action_priority_ruleb(void *userDatavp, ma
   }
 
   /* Check grammar at that level exist */
-  if (! _marpaESLIF_bootstrap_check_grammar_by_levelb(marpaESLIFGrammarp, leveli)) {
+  grammarp = _marpaESLIF_bootstrap_check_grammar_by_levelb(marpaESLIFGrammarp, leveli);
+  if (grammarp == NULL) {
     goto err;
   }
 
