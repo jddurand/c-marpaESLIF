@@ -375,14 +375,11 @@ static short _marpaESLIF_bootstrap_G1_action_rhsb(void *userDatavp, marpaESLIFVa
   }
 
   for (i = arg0i; i <= argni; i++) {
-    if (! marpaESLIFValue_stack_get_ptrb(marpaESLIFValuep, i, NULL /* contextip */, (void **) &rhsPrimaryp, NULL /* shallowbp */)) {
+    if (! marpaESLIFValue_stack_pop_ptrb(marpaESLIFValuep, i, NULL /* contextip */, (void **) &rhsPrimaryp, NULL /* shallowbp */)) {
       return 0;
     }
     if (rhsPrimaryp == NULL) {
       MARPAESLIF_ERROR(marpaESLIFp, "An RHS primary is not set");
-      goto err;
-    }
-    if (! marpaESLIFValue_stack_forgetb(marpaESLIFValuep, i)) {
       goto err;
     }
 
@@ -432,16 +429,13 @@ static short _marpaESLIF_bootstrap_G1_action_adverb_list_itemsb(void *userDatavp
   /* In any case, this is okay to have an empty stack -; */
   if (! nullableb) {
     for (i = arg0i; i <= argni; i++) {
-      if (! marpaESLIFValue_stack_get_ptrb(marpaESLIFValuep, i, &contexti, &p, NULL /* shallowbp */)) {
+      if (! marpaESLIFValue_stack_pop_ptrb(marpaESLIFValuep, i, &contexti, &p, NULL /* shallowbp */)) {
         goto err;
       }
       if (p != NULL) { /* NULL is the case of null adverb - ignored */
         adverbListItemp = (marpaESLIF_bootstrap_adverb_list_item_t *) malloc(sizeof(marpaESLIF_bootstrap_adverb_list_item_t));
         if (adverbListItemp == NULL) {
           MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
-          goto err;
-        }
-        if (! marpaESLIFValue_stack_forgetb(marpaESLIFValuep, i)) {
           goto err;
         }
         adverbListItemp->type = MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_NA;
@@ -497,16 +491,12 @@ static short _marpaESLIF_bootstrap_G1_action_actionb(void *userDatavp, marpaESLI
   }
 
   /* <action name> is the result of ::ascii, i.e. a ptr in any case  */
-  if (! marpaESLIFValue_stack_get_ptrb(marpaESLIFValuep, argni, NULL /* contextip */, (void **) &actions, NULL /* shallowbp */)) {
+  if (! marpaESLIFValue_stack_pop_ptrb(marpaESLIFValuep, argni, NULL /* contextip */, (void **) &actions, NULL /* shallowbp */)) {
     goto err;
   }
   /* It is a non-sense to not have no action in this case */
   if (actions == NULL) {
     MARPAESLIF_ERRORF(marpaESLIFp, "marpaESLIFValue_stack_get_ptrb at indice %d returned %p", argni, actions);
-    goto err;
-  }
-  /* "Tranfert" to the action stack type */
-  if (! marpaESLIFValue_stack_forgetb(marpaESLIFValuep, argni)) {
     goto err;
   }
   if (! marpaESLIFValue_stack_set_ptrb(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_ACTION, actions, 0 /* shallowb */)) {
