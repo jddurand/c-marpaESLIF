@@ -197,6 +197,7 @@ static inline short                  _marpaESLIFValue_stack_get_floatb(marpaESLI
 static inline short                  _marpaESLIFValue_stack_get_doubleb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int *contextip, double *dp);
 static inline short                  _marpaESLIFValue_stack_get_ptrb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int *contextip, void **pp, short *shallowbp);
 static inline short                  _marpaESLIFValue_stack_get_arrayb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int *contextip, void **pp, size_t *lp, short *shallowbp);
+static inline short                  _marpaESLIFValue_stack_get_contextb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int *contextip);
 static inline short                  _marpaESLIFValue_stack_forgetb(marpaESLIFValue_t *marpaESLIFValuep, int indicei);
 static inline short                  _marpaESLIFValue_stack_is_undefb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, short *undefbp);
 static inline short                  _marpaESLIFValue_stack_is_charb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, short *charbp);
@@ -395,6 +396,10 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
   size_t                            inputl;
   marpaESLIF_matcher_value_t        rci;
   marpaESLIF_uint32_t               codepointi;
+  marpaESLIF_uint32_t               firstcodepointi;
+  marpaESLIF_uint32_t               lastcodepointi;
+  marpaESLIF_uint32_t               previouscodepointi;
+  short                             backslashb;
   short                             utfflagb;
   size_t                            stringl;
   char                             *tmps;
@@ -459,37 +464,11 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
       goto err;
     }
     if (type == MARPAESLIF_TERMINAL_TYPE_STRING) {
-      /* Try to be clever, using ' or ", otherwise fall back to the q{} version (without escaping {}) */
-      if (strchr(content2descp->asciis, '\'') == NULL) {
-        /* 'XXX' */
-        generatedasciis = (char *) malloc(1 + strlen(content2descp->asciis) + 1 + 1);
-        if (generatedasciis == NULL) {
-          MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
-          goto err;
-        }
-        strcpy(generatedasciis, "'");
-        strcat(generatedasciis, content2descp->asciis);
-        strcat(generatedasciis, "'");
-      } else if (strchr(content2descp->asciis, '"') == NULL) {
-        /* "XXX" */
-        generatedasciis = (char *) malloc(1 + strlen(content2descp->asciis) + 1 + 1);
-        if (generatedasciis == NULL) {
-          MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
-          goto err;
-        }
-        strcpy(generatedasciis, "\"");
-        strcat(generatedasciis, content2descp->asciis);
-        strcat(generatedasciis, "\"");
-      } else {
-        /* {XXX} */
-        generatedasciis = (char *) malloc(1 + strlen(content2descp->asciis) + 1 + 1);
-        if (generatedasciis == NULL) {
-          MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
-          goto err;
-        }
-        strcpy(generatedasciis, "{");
-        strcat(generatedasciis, content2descp->asciis);
-        strcat(generatedasciis, "}");
+      /* Use already escaped it as he want -; */
+      generatedasciis = strdup(content2descp->asciis);
+      if (generatedasciis == NULL) {
+        MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
+        goto err;
       }
     } else {
       /* /XXX/ (without escaping) */
@@ -565,7 +544,7 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
     utfflagb = 0;
     stringl = 0;
     /* Remember that lexeme input stack is putting a fake value at indice 0, because marpa does not like it */
-    for (i = 1; i < GENERICSTACK_USED(marpaESLIFRecognizerp->lexemeInputStackp); i++) {
+    for (i = 1; i < GENERICSTACK_USED(marpaESLIFRecognizerp->lexemeInputStackp); previouscodepointi = codepointi, i++) {
       if (! _marpaESLIFRecognizer_lexemeStack_i_p_and_sizeb(marpaESLIFRecognizerp, marpaESLIFRecognizerp->lexemeInputStackp, i, &matchedp, &matchedl)) {
         goto err;
       }
@@ -577,6 +556,77 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
       } else if (utf82ordi != (int) matchedl) {
         MARPAESLIF_ERRORF(marpaESLIFp, "Not all bytes consumed: %d instead of %ld", utf82ordi, (unsigned long) matchedl);
         goto err;
+      }
+      if (i == 1) {
+        /* We want to skip first and last characters, and we will use that to detect the backslash... Note that it cannot be backslash per def as per the regexps */
+        firstcodepointi = codepointi;
+        /* First codepoints are known in advance */
+        switch (firstcodepointi) {
+        case '\'':
+        case '"':
+        case '{':
+          break;
+        default:
+          {
+            char *clever0s = (codepointi == '{') ? "'" : "{";
+            char *clever1s = (codepointi == '{') ? "'" : "}";
+            if (isprint((unsigned char) codepointi)) {
+              MARPAESLIF_ERRORF(marpaESLIFp, "Impossible first codepoint %s%c%s (0x%02lx), should be \"'\", '\"' or '{'", clever0s, (unsigned char) codepointi, clever1s, (unsigned long) codepointi);
+            } else {
+              MARPAESLIF_ERRORF(marpaESLIFp, "Impossible first codepoint 0x%02lx, should be ''', '\"' or '{'", (unsigned long) codepointi);
+            }
+            goto err;
+          }
+        }
+        lastcodepointi = (firstcodepointi == '{') ? '}' : firstcodepointi;
+        continue;
+      } else if (i == (GENERICSTACK_USED(marpaESLIFRecognizerp->lexemeInputStackp) - 1)) {
+        /* Non-sense to not have the same value */
+        if (lastcodepointi != codepointi) {
+          char *clever0s = (lastcodepointi == '}') ? "'" : "{";
+          char *clever1s = (lastcodepointi == '}') ? "'" : "}";
+          /* Note that we know that our regexp start and end with printable characters */
+          if (isprint((unsigned char) codepointi)) {
+            MARPAESLIF_ERRORF(marpaESLIFp, "First and last characters to not correspond: %s%c%s (0%02lx) v.s. %s%c%s (0x%02lx) (wanted %s%c%s (0x%lx))",
+                              clever0s, (unsigned char) firstcodepointi, clever1s, (unsigned long) firstcodepointi,
+                              clever0s, (unsigned char) codepointi, clever1s, (unsigned long) codepointi,
+                              clever0s, (unsigned char) lastcodepointi, clever1s, (unsigned long) lastcodepointi);
+          } else {
+            MARPAESLIF_ERRORF(marpaESLIFp, "First and last characters to not correspond: %s%c%s (0%02lx) v.s. 0x%02lx (wanted %s%c%s (0x%lx))",
+                              clever0s, (unsigned char) firstcodepointi, clever1s, (unsigned long) firstcodepointi,
+                              (unsigned long) codepointi,
+                              clever0s, (unsigned char) lastcodepointi, clever1s, (unsigned long) lastcodepointi);
+          }
+          goto err;
+        }
+        break;
+      } else {
+        /* Backslash stuff */
+        if (codepointi == '\\') {
+          if (! backslashb) {
+            /* Next character is escaped. Only backslash itself or the first character is considered as per the regexp. */
+            backslashb = 1;
+            continue;
+          } else {
+            /* This is escaped backslash */
+            backslashb = 0;
+          }
+        } else if (codepointi == firstcodepointi) {
+          if (! backslashb) {
+            /* This is a priori impossible to have the first character it is not preceeded by backslash */
+            MARPAESLIF_ERRORF(marpaESLIFp, "First character 0%02lx found but no preceeding backslash", (unsigned long) codepointi);
+            goto err;
+          }
+        } else {
+          /* All is well */
+#ifndef MARPAESLIF_NTRACE
+          if (isprint((unsigned char) codepointi)) {
+            MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Got character %c (0%02lx)", (unsigned char) codepointi, (unsigned long) codepointi);
+          } else {
+            MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Got character 0%02lx (non printable)", (unsigned char) codepointi, (unsigned long) codepointi);
+          }
+#endif
+        }
       }
       /* Determine the number of hex digits to fully represent the code point, remembering if we need PCRE2_UTF flag */
       hexdigitl = 4; /* \x{} */
@@ -6301,15 +6351,13 @@ static inline void _marpaESLIF_rule_createshowv(marpaESLIF_t *marpaESLIFp, marpa
     if (asciishows != NULL) {
       strcat(asciishows, " ");
     }
-    asciishowl += strlen("action => "); /* "action => 'actionname' */
+    asciishowl += strlen("action => "); /* "action => quotedstring */
     if (asciishows != NULL) {
       strcat(asciishows, "action => ");
     }
-    asciishowl += 1 + strlen(rulep->actions) + 1; /* 'actionname' */
+    asciishowl += strlen(rulep->actions);
     if (asciishows != NULL) {
-      strcat(asciishows, "'");
       strcat(asciishows, rulep->actions);
-      strcat(asciishows, "'");
     }
   }
   if (strcmp(rulep->lhsp->descp->asciis, rulep->descp->asciis) != 0) {
@@ -8325,6 +8373,35 @@ static inline short _marpaESLIFValue_stack_get_arrayb(marpaESLIFValue_t *marpaES
 }
 
 /*****************************************************************************/
+static inline short _marpaESLIFValue_stack_get_contextb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int *contextip)
+/*****************************************************************************/
+{
+  static const char      *funcs = "_marpaESLIFValue_stack_get_contextb";
+  marpaESLIFRecognizer_t *marpaESLIFRecognizerp = marpaESLIFValuep->marpaESLIFRecognizerp;
+  short                   rcb;
+
+  marpaESLIFRecognizerp->callstackCounteri++;
+  MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
+
+  if (! GENERICSTACK_IS_INT(marpaESLIFValuep->contextStackp, indicei)) {
+    MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "marpaESLIFValuep->contextStackp at indice %d is not INT (got %s, value %d)", indicei, _marpaESLIF_genericStack_i_types(marpaESLIFValuep->contextStackp, indicei), GENERICSTACKITEMTYPE(marpaESLIFValuep->contextStackp, indicei));
+    goto err;
+  }
+  if (contextip != NULL) {
+    *contextip = GENERICSTACK_GET_INT(marpaESLIFValuep->contextStackp, indicei);
+  }
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+ done:
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
+  marpaESLIFRecognizerp->callstackCounteri--;
+  return rcb;
+}
+
+/*****************************************************************************/
 short marpaESLIFValue_stack_forgetb(marpaESLIFValue_t *marpaESLIFValuep, int indicei)
 /*****************************************************************************/
 {
@@ -8341,6 +8418,25 @@ short marpaESLIFValue_stack_forgetb(marpaESLIFValue_t *marpaESLIFValuep, int ind
   }
 
   return _marpaESLIFValue_stack_forgetb(marpaESLIFValuep, indicei);
+}
+
+/*****************************************************************************/
+short marpaESLIFValue_stack_get_contextb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int *contextip)
+/*****************************************************************************/
+{
+  static const char *funcs  = "marpaESLIFValue_stack_get_contextb";
+
+  if (marpaESLIFValuep == NULL) {
+    errno = EINVAL;
+    return 0;
+  }
+
+  if (! marpaESLIFValuep->inValuationb) {
+    MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "%s must be called only in an action callback", funcs);
+    return 0;
+  }
+
+  return _marpaESLIFValue_stack_get_contextb(marpaESLIFValuep, indicei, contextip);
 }
 
 /*****************************************************************************/

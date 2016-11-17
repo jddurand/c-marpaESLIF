@@ -154,7 +154,7 @@ __DATA__
   /* --------------------------------------------------------------------------------------------------------------------------------- */
   /* --------------------------------------------------------------------------------------------------------------------------------- */
   { L0_TERMINAL_RESERVED_EVENT_NAME, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
-    ":symbol",
+    "{:symbol}",
 #ifndef MARPAESLIF_NTRACE
     ":symbol", ":symb"
 #else
@@ -205,7 +205,7 @@ __DATA__
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
   { L0_TERMINAL_OP_DECLARE_TOP_GRAMMAR, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
-    "::=",
+    "{::=}",
 #ifndef MARPAESLIF_NTRACE
     "::=", "::"
 #else
@@ -214,7 +214,7 @@ __DATA__
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
   { L0_TERMINAL_OP_DECLARE_LEX_GRAMMAR, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
-    "~",
+    "{~}",
 #ifndef MARPAESLIF_NTRACE
     "~", NULL
 #else
@@ -223,7 +223,7 @@ __DATA__
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
   { L0_TERMINAL_OP_LOOSEN, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
-    "||",
+    "{||}",
 #ifndef MARPAESLIF_NTRACE
     NULL, NULL
 #else
@@ -232,7 +232,7 @@ __DATA__
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
   { L0_TERMINAL_OP_EQUAL_PRIORITY, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
-    "|",
+    "{|}",
 #ifndef MARPAESLIF_NTRACE
     NULL, NULL
 #else
@@ -241,12 +241,12 @@ __DATA__
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
   { L0_TERMINAL_BEFORE, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
-    "before",
+    "{before}",
     NULL, NULL
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
   { L0_TERMINAL_AFTER, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
-    "after",
+    "{after}",
     NULL, NULL
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
@@ -261,7 +261,7 @@ __DATA__
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
   { L0_TERMINAL_TRUE, MARPAESLIF_TERMINAL_TYPE_STRING,   MARPAESLIF_REGEX_OPTION_NA,
-    "1",
+    "{1}",
 #ifndef MARPAESLIF_NTRACE
     "1", ""
 #else
@@ -285,12 +285,12 @@ __DATA__
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
   { L0_TERMINAL_LEFT_CURLY, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
-    "<",
+    "{<}",
     NULL, NULL
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
   { L0_TERMINAL_RIGHT_CURLY, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
-    ">",
+    "{>}",
     NULL, NULL
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
@@ -300,57 +300,57 @@ __DATA__
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
   { L0_TERMINAL_COMMA, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
-    ",",
+    "{,}",
     NULL, NULL
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
   { L0_TERMINAL_START, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
-    "start",
+    "{start}",
     NULL, NULL
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
   { L0_TERMINAL_LENGTH, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
-    "length",
+    "{length}",
     NULL, NULL
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
   { L0_TERMINAL_G1START, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
-    "g1start",
+    "{g1start}",
     NULL, NULL
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
   { L0_TERMINAL_G1LENGTH, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
-    "g1length",
+    "{g1length}",
     NULL, NULL
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
   { L0_TERMINAL_NAME, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
-    "name",
+    "{name}",
     NULL, NULL
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
   { L0_TERMINAL_LHS, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
-    "lhs",
+    "{lhs}",
     NULL, NULL
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
   { L0_TERMINAL_SYMBOL, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
-    "symbol",
+    "{symbol}",
     NULL, NULL
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
   { L0_TERMINAL_RULE, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
-    "rule",
+    "{rule}",
     NULL, NULL
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
   { L0_TERMINAL_VALUE, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
-    "value",
+    "{value}",
     NULL, NULL
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
   { L0_TERMINAL_VALUES, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
-    "values",
+    "{values}",
     NULL, NULL
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
@@ -399,7 +399,7 @@ __DATA__
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
   { L0_TERMINAL_CHARACTER_CLASS_MODIFIER_COMPAT, MARPAESLIF_TERMINAL_TYPE_STRING,   MARPAESLIF_REGEX_OPTION_NA,
-    ":ic",
+    "{:ic}",
     NULL, NULL
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */

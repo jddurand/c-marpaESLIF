@@ -185,6 +185,7 @@ extern "C" {
   /* forget is like undef except that memory management is switched off - a possible use for it is when a PTR in the stack is stored into another structure, the later pushed in the result stack */
   /* For example X ::= Y, where Y is a PTR with value yp, and X is a PTR to a struct with value xp and content { void *yp } : xp and yp are not the same, though xp contain yp. */
   marpaESLIF_EXPORT short                   marpaESLIFValue_stack_forgetb(marpaESLIFValue_t *marpaESLIFValuep, int indicei);
+  marpaESLIF_EXPORT short                   marpaESLIFValue_stack_get_contextb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int *contextip);
 
   marpaESLIF_EXPORT short                   marpaESLIFValue_stack_is_undefb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, short *undefbp);
   marpaESLIF_EXPORT short                   marpaESLIFValue_stack_is_charb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, short *charbp);
