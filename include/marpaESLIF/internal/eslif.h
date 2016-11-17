@@ -250,7 +250,7 @@
 typedef struct bootstrap_grammar_terminal {
   int                        idi;                 /* Identifier */
   marpaESLIF_terminal_type_t terminalType;        /* Terminal type */
-  marpaESLIF_uint32_t        optioni;             /* Terminal option */
+  char                      *modifiers;           /* Modifiers */
   char                      *utf8s;               /* ASCII UTF-8 compatible encoding */
   char                      *testFullMatchs;
   char                      *testPartialMatchs;

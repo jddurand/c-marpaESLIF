@@ -43,6 +43,7 @@ static        short _marpaESLIF_bootstrap_G1_action_alternativesb(void *userData
 static        short _marpaESLIF_bootstrap_G1_action_prioritiesb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short _marpaESLIF_bootstrap_G1_action_priority_ruleb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short _marpaESLIF_bootstrap_G1_action_single_symbol_1b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
+static        short _marpaESLIF_bootstrap_G1_action_single_symbol_2b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 
 /*****************************************************************************/
 static inline void  _marpaESLIF_bootstrap_rhs_primary_freev(marpaESLIF_bootstrap_rhs_primary_t *rhsPrimaryp)
@@ -86,6 +87,9 @@ static inline void  _marpaESLIF_bootstrap_utf_string_freev(marpaESLIF_bootstrap_
   if (stringp != NULL) {
     if (stringp->bytep != NULL) {
       free(stringp->bytep);
+    }
+    if (stringp->modifiers != NULL) {
+      free(stringp->modifiers);
     }
     free(stringp);
   }
@@ -178,17 +182,16 @@ static inline void _marpaESLIF_bootstrap_single_symbol_freev(marpaESLIF_bootstra
       }
       break;
     case MARPAESLIF_SINGLE_SYMBOL_TYPE_CHARACTER_CLASS:
-      if (singleSymbolp->u.characterClasss != NULL) {
-        free(singleSymbolp->u.characterClasss);
-      }
+      _marpaESLIF_bootstrap_utf_string_freev(singleSymbolp->u.characterClassp);
       break;
     case MARPAESLIF_SINGLE_SYMBOL_TYPE_REGULAR_EXPRESSION:
-      if (singleSymbolp->u.regularExpressions != NULL) {
-        free(singleSymbolp->u.regularExpressions);
-      }
+      _marpaESLIF_bootstrap_utf_string_freev(singleSymbolp->u.regularExpressionp);
       break;
     default:
       break;
+    }
+    if (singleSymbolp->modifiers != NULL) {
+      free(singleSymbolp->modifiers);
     }
     free(singleSymbolp);
   }
@@ -319,10 +322,25 @@ static inline marpaESLIF_symbol_t *_marpaESLIF_bootstrap_check_terminalsymbolp(m
     desc.bytel          = quotedStringp->bytel;
     desc.encodingasciis = NULL;
     desc.asciis         = NULL;
-    if (_marpaESLIF_string_eqb(symbol_i_p->u.terminalp->descp, &desc)) {
-      symbolp = symbol_i_p;
-      break;
+    if (! _marpaESLIF_string_eqb(symbol_i_p->u.terminalp->descp, &desc)) {
+      continue;
     }
+    /* Modifiers ? */
+    if ((quotedStringp->modifiers != NULL) && (symbolp->u.terminalp->modifiers == NULL)) {
+      continue;
+    }
+    if ((quotedStringp->modifiers == NULL) && (symbolp->u.terminalp->modifiers != NULL)) {
+      continue;
+    }
+    /* Either both are NULL, or both are not NULL */
+    if (quotedStringp->modifiers != NULL) {
+      if (strcmp(quotedStringp->modifiers, symbolp->u.terminalp->modifiers) != 0) {
+        continue;
+      }
+    }
+    /* Got it */
+    symbolp = symbol_i_p;
+    break;
   }
 
   if (symbolp == NULL) {
@@ -333,7 +351,7 @@ static inline marpaESLIF_symbol_t *_marpaESLIF_bootstrap_check_terminalsymbolp(m
                                           NULL /* descs */,
                                           0 /* descl */,
                                           MARPAESLIF_TERMINAL_TYPE_STRING,
-                                          MARPAESLIF_REGEX_OPTION_NA,
+                                          quotedStringp->modifiers,
                                           quotedStringp->bytep,
                                           quotedStringp->bytel,
                                           NULL /* testFullMatchs */,
@@ -510,6 +528,7 @@ static marpaESLIFValueRuleCallback_t _marpaESLIF_bootstrap_ruleActionResolver(vo
   else if (strcmp(actions, "G1_action_priorities")        == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_prioritiesb;        }
   else if (strcmp(actions, "G1_action_priority_rule")     == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_priority_ruleb;     }
   else if (strcmp(actions, "G1_action_single_symbol_1")   == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_single_symbol_1b;   }
+  else if (strcmp(actions, "G1_action_single_symbol_2")   == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_single_symbol_2b;   }
   else
   {
     MARPAESLIF_ERRORF(marpaESLIFp, "Unsupported action \"%s\"", actions);
@@ -992,6 +1011,11 @@ static short _marpaESLIF_bootstrap_G1_action_rhs_primary_2b(void *userDatavp, ma
   /* <rhs primary> ::= <quoted string> */
   marpaESLIF_bootstrap_rhs_primary_t *rhsPrimaryp = NULL;
   marpaESLIF_t                       *marpaESLIFp = marpaESLIFValue_eslifp(marpaESLIFValuep);
+  marpaESLIFRecognizer_t             *marpaESLIFRecognizerp = NULL; /* Fake recognizer to use the internal regex */
+  char                               *modifiers             = NULL;
+  marpaESLIFGrammar_t                 marpaESLIFGrammar; /* Fake grammar for the same reason */
+  marpaESLIFValueResult_t             marpaESLIFValueResult;
+  marpaESLIF_matcher_value_t          rci;
   void                               *bytep;
   size_t                              bytel;
   short                               rcb;
@@ -1012,6 +1036,35 @@ static short _marpaESLIF_bootstrap_G1_action_rhs_primary_2b(void *userDatavp, ma
     goto err;
   }
 
+  /* Fake a recognizer. EOF flag will be set automatically in fake mode */
+  marpaESLIFGrammar.marpaESLIFp = marpaESLIFp;
+  marpaESLIFRecognizerp = _marpaESLIFRecognizer_newp(&marpaESLIFGrammar, NULL /* marpaESLIFRecognizerOptionp */, 0 /* discardb */, NULL /* marpaESLIFRecognizerParentp */, 1 /* fakeb */);
+  if (marpaESLIFRecognizerp == NULL) {
+    goto err;
+  }
+  if (! _marpaESLIFRecognizer_regex_matcherb(marpaESLIFRecognizerp, marpaESLIFp->stringModifiersp, bytep, bytel, 1 /* eofb */, &rci, &marpaESLIFValueResult)) {
+    goto err;
+  }
+  if (rci == MARPAESLIF_MATCH_OK) {
+    /* Got modifiers. Per def this is an sequence of ASCII characters. */
+    /* For a character class it is something like ":xxxxx" */
+    if (marpaESLIFValueResult.sizel <= 0) {
+      MARPAESLIF_ERROR(marpaESLIFp, "Match of character class modifiers returned empty size");
+      goto err;
+    }
+    modifiers = (char *) malloc(marpaESLIFValueResult.sizel + 1);
+    if (modifiers == NULL) {
+      MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
+      goto err;
+    }
+    memcpy(modifiers, marpaESLIFValueResult.u.p, marpaESLIFValueResult.sizel);
+    modifiers[marpaESLIFValueResult.sizel] = '\0';
+    free(marpaESLIFValueResult.u.p);
+  } else {
+    /* Because we use this value just below */
+    marpaESLIFValueResult.sizel = 0;
+  }
+
   /* Make that an rhs primary structure */
   rhsPrimaryp = (marpaESLIF_bootstrap_rhs_primary_t *) malloc(sizeof(marpaESLIF_bootstrap_rhs_primary_t));
   if (rhsPrimaryp == NULL) {
@@ -1026,9 +1079,15 @@ static short _marpaESLIF_bootstrap_G1_action_rhs_primary_2b(void *userDatavp, ma
     goto err;
   }
 
-  rhsPrimaryp->type                   = MARPAESLIF_BOOTSTRAP_RHS_PRIMARY_TYPE_QUOTED_STRING;
-  rhsPrimaryp->u.quotedStringp->bytep = bytep;
-  rhsPrimaryp->u.quotedStringp->bytel = bytel;
+  rhsPrimaryp->type                       = MARPAESLIF_BOOTSTRAP_RHS_PRIMARY_TYPE_QUOTED_STRING;
+  rhsPrimaryp->u.quotedStringp->bytep     = bytep;
+  bytep = NULL; /* bytep is in rhsPrimaryp */
+  rhsPrimaryp->u.quotedStringp->bytel     = bytel;
+  rhsPrimaryp->u.quotedStringp->modifiers = modifiers;
+  modifiers = NULL; /* modifiers is in rhsPrimaryp */
+  if (marpaESLIFValueResult.sizel > 0) {
+    rhsPrimaryp->u.quotedStringp->bytel -= (marpaESLIFValueResult.sizel + 1);  /* ":xxxx" */
+  }
 
   if (! marpaESLIFValue_stack_set_ptrb(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_RHS_PRIMARY, rhsPrimaryp, 0 /* shallowb */)) {
     goto err;
@@ -1042,6 +1101,9 @@ static short _marpaESLIF_bootstrap_G1_action_rhs_primary_2b(void *userDatavp, ma
   rcb = 0;
 
  done:
+  if (modifiers != NULL) {
+    free(modifiers);
+  }
   return rcb;
 }
 
@@ -1420,8 +1482,9 @@ static short _marpaESLIF_bootstrap_G1_action_single_symbol_1b(void *userDatavp, 
     MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
     goto err;
   }
-  singleSymbolp->type = MARPAESLIF_SINGLE_SYMBOL_TYPE_SYMBOL;
+  singleSymbolp->type      = MARPAESLIF_SINGLE_SYMBOL_TYPE_SYMBOL;
   singleSymbolp->u.symbols = asciis;
+  singleSymbolp->modifiers = NULL;
   asciis = NULL; /* asciis is in singleSymbolp */
 
   if (! marpaESLIFValue_stack_set_ptrb(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_SINGLE_SYMBOL, singleSymbolp, 0 /* shallowb */)) {
@@ -1440,4 +1503,116 @@ static short _marpaESLIF_bootstrap_G1_action_single_symbol_1b(void *userDatavp, 
 
  done:
   return rcb;
+}
+
+/*****************************************************************************/
+static short _marpaESLIF_bootstrap_G1_action_single_symbol_2b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
+/*****************************************************************************/
+{
+  /* <single symbol> ::= <character class> */
+  /* <character class> is a lexeme. */
+  marpaESLIF_bootstrap_single_symbol_t *singleSymbolp         = NULL;
+  marpaESLIF_t                         *marpaESLIFp           = marpaESLIFValue_eslifp(marpaESLIFValuep);
+  marpaESLIFRecognizer_t               *marpaESLIFRecognizerp = NULL; /* Fake recognizer to use the internal regex */
+  char                                 *modifiers             = NULL;
+  marpaESLIFGrammar_t                   marpaESLIFGrammar; /* Fake grammar for the same reason */
+  marpaESLIFValueResult_t               marpaESLIFValueResult;
+  marpaESLIF_matcher_value_t            rci;
+  void                                 *bytep;
+  size_t                                bytel;
+  short                                 rcb;
+
+  /* Cannot be nullable */
+  if (nullableb) {
+    MARPAESLIF_ERROR(marpaESLIFp, "Nullable mode is not supported");
+    goto err;
+  }
+
+  if (! marpaESLIFValue_stack_getAndForget_arrayb(marpaESLIFValuep, arg0i, NULL /* contextip */, &bytep, &bytel, NULL /* shallowbp */)) {
+    goto err;
+  }
+  /* It is a non-sense to have a null lexeme */
+  if ((bytep == NULL) || (bytel <= 0)) {
+    MARPAESLIF_ERRORF(marpaESLIFp, "marpaESLIFValue_stack_get_arrayb at indice %d returned {%p,%ld}", argni, bytep, (unsigned long) bytel);
+    goto err;
+  }
+
+  /* Extract opti from it */
+  /* Thre are several methods...: */
+  /* - Re-execute the sub-grammar as if it was a top grammar */
+  /* - apply a regexp to extract the modifiers. */
+  /* - revisit our own top grammar to have two separate lexemes (which I do not like because modifers can then be separated from regex by a discard symbol) */
+  /* ... Since we are internal anyway I choose (what I think is) the costless method: the regexp */
+
+  /* Fake a recognizer. EOF flag will be set automatically in fake mode */
+  marpaESLIFGrammar.marpaESLIFp = marpaESLIFp;
+  marpaESLIFRecognizerp = _marpaESLIFRecognizer_newp(&marpaESLIFGrammar, NULL /* marpaESLIFRecognizerOptionp */, 0 /* discardb */, NULL /* marpaESLIFRecognizerParentp */, 1 /* fakeb */);
+  if (marpaESLIFRecognizerp == NULL) {
+    goto err;
+  }
+  if (! _marpaESLIFRecognizer_regex_matcherb(marpaESLIFRecognizerp, marpaESLIFp->characterClassModifiersp, bytep, bytel, 1 /* eofb */, &rci, &marpaESLIFValueResult)) {
+    goto err;
+  }
+  if (rci == MARPAESLIF_MATCH_OK) {
+    /* Got modifiers. Per def this is an sequence of ASCII characters. */
+    /* For a character class it is something like ":xxxxx" */
+    if (marpaESLIFValueResult.sizel <= 0) {
+      MARPAESLIF_ERROR(marpaESLIFp, "Match of character class modifiers returned empty size");
+      goto err;
+    }
+    modifiers = (char *) malloc(marpaESLIFValueResult.sizel + 1);
+    if (modifiers == NULL) {
+      MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
+      goto err;
+    }
+    memcpy(modifiers, marpaESLIFValueResult.u.p, marpaESLIFValueResult.sizel);
+    modifiers[marpaESLIFValueResult.sizel] = '\0';
+    free(marpaESLIFValueResult.u.p);
+  } else {
+    /* Because we use this value just below */
+    marpaESLIFValueResult.sizel = 0;
+  }
+
+  singleSymbolp = (marpaESLIF_bootstrap_single_symbol_t *) malloc(sizeof(marpaESLIF_bootstrap_single_symbol_t));
+  if (singleSymbolp == NULL) {
+    MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
+    goto err;
+  }
+  singleSymbolp->type              = MARPAESLIF_SINGLE_SYMBOL_TYPE_NA;
+
+  singleSymbolp->u.characterClassp = (marpaESLIF_bootstrap_utf_string_t *) malloc(sizeof(marpaESLIF_bootstrap_utf_string_t));
+  if (singleSymbolp->u.characterClassp == NULL) {
+    MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
+    goto err;
+  }
+  singleSymbolp->type                     = MARPAESLIF_SINGLE_SYMBOL_TYPE_CHARACTER_CLASS;
+  singleSymbolp->u.characterClassp->bytep = bytep;
+  bytep = NULL; /* bytep is in singleSymbolp */
+  singleSymbolp->u.characterClassp->bytel = bytel;
+  singleSymbolp->modifiers                = modifiers;
+  modifiers = NULL; /* modifiers is in singleSymbolp */
+  if (marpaESLIFValueResult.sizel > 0) {
+    singleSymbolp->u.characterClassp->bytel -= (marpaESLIFValueResult.sizel + 1);  /* ":xxxx" */
+  }
+
+  if (! marpaESLIFValue_stack_set_ptrb(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_SINGLE_SYMBOL, singleSymbolp, 0 /* shallowb */)) {
+    goto err;
+  }
+
+  rcb = 1;
+  goto done;
+
+ err:
+  if (bytep != NULL) {
+    free(bytep);
+  }
+  _marpaESLIF_bootstrap_single_symbol_freev(singleSymbolp);
+  rcb = 0;
+
+ done:
+  if (modifiers != NULL) {
+    free(modifiers);
+  }
+  marpaESLIFRecognizer_freev(marpaESLIFRecognizerp);
+ return rcb;
 }

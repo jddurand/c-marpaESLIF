@@ -52,6 +52,7 @@ typedef enum marpaESLIF_bootstrap_pause {
 typedef struct marpaESLIF_bootstrap_utf_string {
   char  *bytep;
   size_t bytel;
+  char  *modifiers;
 } marpaESLIF_bootstrap_utf_string_t;
 
 typedef struct marpaESLIF_bootstrap_adverb_list_item {
@@ -84,9 +85,10 @@ typedef struct marpaESLIF_bootstrap_single_symbol {
   marpaESLIF_bootstrap_single_symbol_type_t type;
   union {
     char *symbols;
-    char *characterClasss;
-    char *regularExpressions;
+    marpaESLIF_bootstrap_utf_string_t *characterClassp;
+    marpaESLIF_bootstrap_utf_string_t *regularExpressionp;
   } u;
+  char *modifiers; /* Used only for character class and regular expression */
 } marpaESLIF_bootstrap_single_symbol_t;
 
 typedef enum marpaESLIF_bootstrap_rhs_primary_type {
