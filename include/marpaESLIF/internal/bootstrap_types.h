@@ -91,7 +91,8 @@ typedef struct marpaESLIF_bootstrap_single_symbol {
 typedef enum marpaESLIF_bootstrap_rhs_primary_type {
   MARPAESLIF_BOOTSTRAP_RHS_PRIMARY_TYPE_NA = 0,
   MARPAESLIF_BOOTSTRAP_RHS_PRIMARY_TYPE_SINGLE_SYMBOL,
-  MARPAESLIF_BOOTSTRAP_RHS_PRIMARY_TYPE_QUOTED_STRING
+  MARPAESLIF_BOOTSTRAP_RHS_PRIMARY_TYPE_QUOTED_STRING,
+  MARPAESLIF_BOOTSTRAP_RHS_PRIMARY_TYPE_SYMBOL_NAME_AND_REFERENCE
 } marpaESLIF_bootstrap_rhs_primary_type_t;
 
 typedef struct marpaESLIF_bootstrap_rhs_primary_single_symbol {
