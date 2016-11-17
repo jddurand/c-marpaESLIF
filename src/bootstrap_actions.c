@@ -35,6 +35,7 @@ static        short _marpaESLIF_bootstrap_G1_action_autorankb(void *userDatavp, 
 static        short _marpaESLIF_bootstrap_G1_action_left_associationb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short _marpaESLIF_bootstrap_G1_action_right_associationb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short _marpaESLIF_bootstrap_G1_action_group_associationb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
+static        short _marpaESLIF_bootstrap_G1_action_separatorb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short _marpaESLIF_bootstrap_G1_action_rhs_primary_2b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short _marpaESLIF_bootstrap_G1_action_alternativeb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short _marpaESLIF_bootstrap_G1_action_alternativesb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
@@ -420,6 +421,9 @@ static void _marpaESLIF_bootstrap_freeDefaultActionv(void *userDatavp, int conte
     break;
   case MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_GROUP_ASSOCIATION:
     break;
+  case MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_SEPARATOR:
+    free(p);
+    break;
   default:
     break;
   }
@@ -462,6 +466,7 @@ static marpaESLIFValueRuleCallback_t _marpaESLIF_bootstrap_ruleActionResolver(vo
   else if (strcmp(actions, "G1_action_left_association")  == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_left_associationb;  }
   else if (strcmp(actions, "G1_action_right_association") == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_right_associationb; }
   else if (strcmp(actions, "G1_action_group_association") == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_group_associationb; }
+  else if (strcmp(actions, "G1_action_separator")         == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_separatorb;         }
   else if (strcmp(actions, "G1_action_symbol_2")          == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_symbol_2b;          }
   else if (strcmp(actions, "G1_action_rhs_primary_2")     == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_rhs_primary_2b;     }
   else if (strcmp(actions, "G1_action_alternative")       == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_alternativeb;       }
@@ -673,6 +678,7 @@ static short _marpaESLIF_bootstrap_G1_action_adverb_list_itemsb(void *userDatavp
   short                                    left_associationb    = 0;
   short                                    right_associationb   = 0;
   short                                    group_associationb   = 0;
+  char                                    *separators           = NULL;
   short                                    autorankb;
   int                                      contexti;
   int                                      i;
@@ -740,6 +746,18 @@ static short _marpaESLIF_bootstrap_G1_action_adverb_list_itemsb(void *userDatavp
         adverbListItemp->type                = MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_GROUP_ASSOCIATION;
         adverbListItemp->u.group_associationb = group_associationb;
         break;
+      case MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_SEPARATOR:
+        if (! marpaESLIFValue_stack_getAndForget_ptrb(marpaESLIFValuep, i, NULL /* contextip */, (void **) &separators, NULL /* shallowbp */)) {
+          goto err;
+        }
+        if (separators == NULL) { /* Not possible */
+          MARPAESLIF_ERROR(marpaESLIFp, "Adverb list item separator is NULL");
+          goto err;
+        }
+        adverbListItemp->type         = MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_SEPARATOR;
+        adverbListItemp->u.separators = separators;
+        separators = NULL; /* separators is now in adverbListItemp */
+        break;
       default:
         MARPAESLIF_ERRORF(marpaESLIFp, "Unsupported adverb list item type %d", contexti);
         goto err;
@@ -771,6 +789,9 @@ static short _marpaESLIF_bootstrap_G1_action_adverb_list_itemsb(void *userDatavp
   if (actions != NULL) {
     free(actions);
   }
+  if (separators != NULL) {
+    free(separators);
+  }
   _marpaESLIF_bootstrap_adverb_list_item_freev(adverbListItemp);
   _marpaESLIF_bootstrap_adverb_list_items_freev(adverbListItemStackp);
   rcb = 0;
@@ -785,7 +806,7 @@ static short _marpaESLIF_bootstrap_G1_action_actionb(void *userDatavp, marpaESLI
 {
   /* action ::= 'action' '=>' <action name> */
   marpaESLIF_t *marpaESLIFp = marpaESLIFValue_eslifp(marpaESLIFValuep);
-  char         *actions = NULL;
+  char         *actions     = NULL;
   short         rcb;
 
   /* Cannot be nullable */
@@ -800,7 +821,7 @@ static short _marpaESLIF_bootstrap_G1_action_actionb(void *userDatavp, marpaESLI
   }
   /* It is a non-sense to not have no action in this case */
   if (actions == NULL) {
-    MARPAESLIF_ERRORF(marpaESLIFp, "actions at indice %d returned NULL", argni);
+    MARPAESLIF_ERRORF(marpaESLIFp, "action at indice %d returned NULL", argni);
     goto err;
   }
   if (! marpaESLIFValue_stack_set_ptrb(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_ACTION, actions, 0 /* shallowb */)) {
@@ -813,6 +834,47 @@ static short _marpaESLIF_bootstrap_G1_action_actionb(void *userDatavp, marpaESLI
  err:
   if (actions != NULL) {
     free(actions);
+  }
+  rcb = 0;
+
+ done:
+  return rcb;
+}
+
+/*****************************************************************************/
+static short _marpaESLIF_bootstrap_G1_action_separatorb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
+/*****************************************************************************/
+{
+  /* 'separator' '=>' <single symbol>> */
+  marpaESLIF_t *marpaESLIFp = marpaESLIFValue_eslifp(marpaESLIFValuep);
+  char         *separators  = NULL;
+  short         rcb;
+
+  /* Cannot be nullable */
+  if (nullableb) {
+    MARPAESLIF_ERROR(marpaESLIFp, "Nullable mode is not supported");
+    goto err;
+  }
+
+  /* <single symbol> is the result of ::ascii, i.e. a ptr in any case  */
+  if (! marpaESLIFValue_stack_getAndForget_ptrb(marpaESLIFValuep, argni, NULL /* contextip */, (void **) &separators, NULL /* shallowbp */)) {
+    goto err;
+  }
+  /* It is a non-sense to not have no action in this case */
+  if (separators == NULL) {
+    MARPAESLIF_ERRORF(marpaESLIFp, "separator at indice %d returned NULL", argni);
+    goto err;
+  }
+  if (! marpaESLIFValue_stack_set_ptrb(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_SEPARATOR, separators, 0 /* shallowb */)) {
+    goto err;
+  }
+  
+  rcb = 1;
+  goto done;
+
+ err:
+  if (separators != NULL) {
+    free(separators);
   }
   rcb = 0;
 
@@ -1231,6 +1293,9 @@ static short _marpaESLIF_bootstrap_G1_action_priority_ruleb(void *userDatavp, ma
             break;
           case MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_GROUP_ASSOCIATION:
             group_associationb = adverbListItemp->u.group_associationb;
+            break;
+          case MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_SEPARATOR:
+            MARPAESLIF_ERROR(marpaESLIFp, "separator adverb is not allowed in a priotitized rule context");
             break;
           default:
             MARPAESLIF_ERRORF(marpaESLIFp, "adverbListItemStackp type at indice %d is not supported (value %d)", adverbListItemi, adverbListItemp->type);
