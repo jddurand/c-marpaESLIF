@@ -1283,7 +1283,7 @@ static short _marpaESLIF_bootstrap_G1_action_priority_ruleb(void *userDatavp, ma
       nrhsl = GENERICSTACK_USED(rhsPrimaryStackp);
 
       /* Analyse RHS list */
-      for (rhsPrimaryi = 0; rhsPrimaryi < nrhsl; rhsPrimaryi++) {
+      for (rhsPrimaryi = 0; rhsPrimaryi < (int) nrhsl; rhsPrimaryi++) {
         if (! GENERICSTACK_IS_PTR(rhsPrimaryStackp, rhsPrimaryi)) {
           MARPAESLIF_ERRORF(marpaESLIFp, "alternativeStackp at indice %d is not PTR (got %s, value %d)", rhsPrimaryi, _marpaESLIF_genericStack_i_types(rhsPrimaryStackp, rhsPrimaryi), GENERICSTACKITEMTYPE(rhsPrimaryStackp, rhsPrimaryi));
           goto err;
