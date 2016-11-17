@@ -352,6 +352,7 @@ static inline void _marpaESLIF_string_freev(marpaESLIF_string_t *stringp)
 static inline short _marpaESLIF_string_eqb(marpaESLIF_string_t *string1p, marpaESLIF_string_t *string2p)
 /*****************************************************************************/
 {
+  /* It is assumed the caller compare strings with the same encoding - UTF-8 in our case */
   char  *byte1p;
   char  *byte2p;
   size_t bytel;
@@ -1014,7 +1015,7 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_grammarp(marpaESLIF_t 
     /* Terminal is now in symbol */
     terminalp = NULL;
 
-    GENERICSTACK_SET_PTR(grammarp->symbolStackp, symbolp, symbolp->u.terminalp->idi);
+    GENERICSTACK_SET_PTR(grammarp->symbolStackp, symbolp, symbolp->idi);
     if (GENERICSTACK_ERROR(grammarp->symbolStackp)) {
       MARPAESLIF_ERRORF(marpaESLIFp, "symbolStackp push failure, %s", strerror(errno));
       goto err;
@@ -1046,16 +1047,16 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_grammarp(marpaESLIF_t 
       goto err;
     }
 
-    symbolp->type       = MARPAESLIF_SYMBOL_TYPE_META;
-    symbolp->startb     = bootstrap_grammar_metap[i].startb;
-    symbolp->discardb   = bootstrap_grammar_metap[i].discardb;
-    symbolp->u.metap    = metap;
-    symbolp->idi        = metap->idi;
-    symbolp->descp      = metap->descp;
+    symbolp->type     = MARPAESLIF_SYMBOL_TYPE_META;
+    symbolp->startb   = bootstrap_grammar_metap[i].startb;
+    symbolp->discardb = bootstrap_grammar_metap[i].discardb;
+    symbolp->u.metap  = metap;
+    symbolp->idi      = metap->idi;
+    symbolp->descp    = metap->descp;
     /* Meta is now in symbol */
     metap = NULL;
 
-    GENERICSTACK_SET_PTR(grammarp->symbolStackp, symbolp, symbolp->u.metap->idi);
+    GENERICSTACK_SET_PTR(grammarp->symbolStackp, symbolp, symbolp->idi);
     if (GENERICSTACK_ERROR(grammarp->symbolStackp)) {
       MARPAESLIF_ERRORF(marpaESLIFp, "symbolStackp set failure, %s", strerror(errno));
       goto err;
