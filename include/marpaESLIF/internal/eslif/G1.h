@@ -962,7 +962,7 @@ bootstrap_grammar_rule_t bootstrap_grammar_G1_rules[] = {
   */
   { G1_META_RHS_PRIMARY,                      G1_RULE_RHS_PRIMARY_1,                          MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_SINGLE_SYMBOL                        }, -1,                        -1, -1 , G1_ACTION_RHS_PRIMARY_1 },
   { G1_META_RHS_PRIMARY,                      G1_RULE_RHS_PRIMARY_2,                          MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_QUOTED_STRING                        }, -1,                        -1, -1 , G1_ACTION_RHS_PRIMARY_2 },
-  { G1_META_RHS_PRIMARY,                      G1_RULE_RHS_PRIMARY_3,                          MARPAESLIF_RULE_TYPE_ALTERNATIVE, 4, { G1_META_SINGLE_SYMBOL,
+  { G1_META_RHS_PRIMARY,                      G1_RULE_RHS_PRIMARY_3,                          MARPAESLIF_RULE_TYPE_ALTERNATIVE, 4, { G1_META_SYMBOL_NAME,
                                                                                                                                      G1_TERMINAL_LEFT_ANGLE,
                                                                                                                                      G1_META_GRAMMAR_REFERENCE,
                                                                                                                                      G1_TERMINAL_RIGHT_ANGLE                      }, -1,                        -1, -1 , G1_ACTION_RHS_PRIMARY_3 },
