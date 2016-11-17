@@ -10,15 +10,16 @@
 /* This file contain the definition of all bootstrap actions, i.e. the ESLIF grammar itself */
 /* This is an example of how to use the API */
 
-static inline void  _marpaESLIF_bootstrap_rhs_primary_freev(marpaESLIF_bootstrap_rhs_primary_t *rhsPrimaryp);
-static inline void  _marpaESLIF_bootstrap_rhs_primary_single_symbol_freev(marpaESLIF_bootstrap_rhs_primary_single_symbol_t *singleSymbolp);
-static inline void  _marpaESLIF_bootstrap_utf_string_freev(marpaESLIF_bootstrap_utf_string_t *stringp);
-static inline void  _marpaESLIF_bootstrap_rhs_freev(genericStack_t *rhsPrimaryStackp);
-static inline void  _marpaESLIF_bootstrap_adverb_list_item_freev(marpaESLIF_bootstrap_adverb_list_item_t *adverbListItemp);
-static inline void  _marpaESLIF_bootstrap_adverb_list_items_freev(genericStack_t *adverbListItemStackp);
-static inline void  _marpaESLIF_bootstrap_alternative_freev(marpaESLIF_bootstrap_alternative_t *alternativep);
-static inline void  _marpaESLIF_bootstrap_alternatives_freev(genericStack_t *alternativeStackp);
-static inline void  _marpaESLIF_bootstrap_priorities_freev(genericStack_t *alternativesStackp);
+static inline void _marpaESLIF_bootstrap_rhs_primary_freev(marpaESLIF_bootstrap_rhs_primary_t *rhsPrimaryp);
+static inline void _marpaESLIF_bootstrap_rhs_primary_single_symbol_freev(marpaESLIF_bootstrap_rhs_primary_single_symbol_t *singleSymbolp);
+static inline void _marpaESLIF_bootstrap_utf_string_freev(marpaESLIF_bootstrap_utf_string_t *stringp);
+static inline void _marpaESLIF_bootstrap_rhs_freev(genericStack_t *rhsPrimaryStackp);
+static inline void _marpaESLIF_bootstrap_adverb_list_item_freev(marpaESLIF_bootstrap_adverb_list_item_t *adverbListItemp);
+static inline void _marpaESLIF_bootstrap_adverb_list_items_freev(genericStack_t *adverbListItemStackp);
+static inline void _marpaESLIF_bootstrap_alternative_freev(marpaESLIF_bootstrap_alternative_t *alternativep);
+static inline void _marpaESLIF_bootstrap_alternatives_freev(genericStack_t *alternativeStackp);
+static inline void _marpaESLIF_bootstrap_priorities_freev(genericStack_t *alternativesStackp);
+static inline void _marpaESLIF_bootstrap_single_symbol_freev(marpaESLIF_bootstrap_single_symbol_t *singleSymbolp);
 
 static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_check_grammar_by_levelp(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammar_t *marpaESLIFGrammarp, int leveli);
 static inline marpaESLIF_symbol_t  *_marpaESLIF_bootstrap_check_metasymbol_by_namep(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, char *asciinames);
@@ -158,6 +159,34 @@ static inline void _marpaESLIF_bootstrap_priorities_freev(genericStack_t *altern
       }
     }
     GENERICSTACK_FREE(alternativesStackp);
+  }
+}
+
+/*****************************************************************************/
+static inline void _marpaESLIF_bootstrap_single_symbol_freev(marpaESLIF_bootstrap_single_symbol_t *singleSymbolp)
+/*****************************************************************************/
+{
+  if (singleSymbolp != NULL) {
+    switch (singleSymbolp->type) {
+    case MARPAESLIF_SINGLE_SYMBOL_TYPE_SYMBOL:
+      if (singleSymbolp->u.symbols != NULL) {
+        free(singleSymbolp->u.symbols);
+      }
+      break;
+    case MARPAESLIF_SINGLE_SYMBOL_TYPE_CHARACTER_CLASS:
+      if (singleSymbolp->u.characterClasss != NULL) {
+        free(singleSymbolp->u.characterClasss);
+      }
+      break;
+    case MARPAESLIF_SINGLE_SYMBOL_TYPE_REGULAR_EXPRESSION:
+      if (singleSymbolp->u.regularExpressions != NULL) {
+        free(singleSymbolp->u.regularExpressions);
+      }
+      break;
+    default:
+      break;
+    }
+    free(singleSymbolp);
   }
 }
 
