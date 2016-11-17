@@ -71,8 +71,8 @@
 #define G1_RULE_LEFT_ASSOCIATION                 "G1_rule_left_association"
 #define G1_RULE_RIGHT_ASSOCIATION                "G1_rule_right_association"
 #define G1_RULE_GROUP_ASSOCIATION                "G1_rule_group_association"
-#define G1_RULE_SEPARATOR_ASSOCIATION            "G1_rule_separator_association"
-#define G1_RULE_PROPER_ASSOCIATION               "G1_rule_proper_association"
+#define G1_RULE_SEPARATOR_SPECIFICATION          "G1_rule_separator_specification"
+#define G1_RULE_PROPER_SPECIFICATION             "G1_rule_proper_specification"
 #define G1_RULE_RANK_SPECIFICATION               "G1_rule_rank_specification"
 #define G1_RULE_NULL_RANKING_SPECIFICATION_1     "G1_rule_null_ranking_specification_1"
 #define G1_RULE_NULL_RANKING_SPECIFICATION_2     "G1_rule_null_ranking_specification_2"
@@ -194,8 +194,8 @@
 #define G1_ACTION_LEFT_ASSOCIATION                 "G1_action_left_association"
 #define G1_ACTION_RIGHT_ASSOCIATION                "G1_action_right_association"
 #define G1_ACTION_GROUP_ASSOCIATION                "G1_action_group_association"
-#define G1_ACTION_SEPARATOR_ASSOCIATION            "G1_action_separator_association"
-#define G1_ACTION_PROPER_ASSOCIATION               "G1_action_proper_association"
+#define G1_ACTION_SEPARATOR_SPECIFICATION          "G1_action_separator_specification"
+#define G1_ACTION_PROPER_SPECIFICATION             "G1_action_proper_specification"
 #define G1_ACTION_RANK_SPECIFICATION               "G1_action_rank_specification"
 #define G1_ACTION_NULL_RANKING_SPECIFICATION_1     "G1_action_null_ranking_specification_1"
 #define G1_ACTION_NULL_RANKING_SPECIFICATION_2     "G1_action_null_ranking_specification_2"
@@ -233,7 +233,7 @@
 #define G1_ACTION_SINGLE_SYMBOL_3                  "G1_action_single_symbol_3"
 #define G1_ACTION_SYMBOL                           "::shift"
 #define G1_ACTION_SYMBOL_NAME_1                    "::ascii" /* <symbol name> ::= <bare name> */
-#define G1_ACTION_SYMBOL_NAME_2                    "G1_action_symbol_2" /* <symbol name> ::= <bracketed name> */
+#define G1_ACTION_SYMBOL_NAME_2                    "G1_action_symbol_name_2" /* <symbol name> ::= <bracketed name> */
 #define G1_ACTION_ACTION_NAME_1                    "::ascii" /* <action name> ::= <ascii graph name> */
 #define G1_ACTION_ACTION_NAME_2                    "::ascii" /* <action name> ::= '::shift' */
 #define G1_ACTION_ACTION_NAME_3                    "::ascii" /* <action name> ::= '::undef' */
