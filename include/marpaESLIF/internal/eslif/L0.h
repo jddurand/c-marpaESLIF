@@ -43,9 +43,10 @@ typedef enum bootstrap_grammar_L0_enum {
   L0_TERMINAL_REGULAR_EXPRESSION,
   L0_TERMINAL_REGULAR_EXPRESSION_MODIFIER,
   L0_TERMINAL_CHARACTER_CLASS_REGEXP,
-  L0_TERMINAL_CHARACTER_CLASS_MODIFIER_STANDARD,
-  L0_TERMINAL_CHARACTER_CLASS_MODIFIER_COMPAT,
+  L0_TERMINAL_PCRE2_MODIFIERS,
+  L0_TERMINAL_STRING_MODIFIERS,
   L0_TERMINAL_ASCII_GRAPH_CHARACTERS,
+  L0_TERMINAL_SEMICOLON,
   /* ----- Non terminals ------ */
   L0_META_RESERVED_EVENT_NAME,
   L0_META_WHITESPACE,
@@ -73,12 +74,8 @@ typedef enum bootstrap_grammar_L0_enum {
   L0_META_BRACKETED_NAME_STRING,
   L0_META_QUOTED_STRING,
   L0_META_QUOTED_NAME,
-  L0_META_CHARACTER_CLASS_REGEXP,
   L0_META_CHARACTER_CLASS,
-  L0_META_CHARACTER_CLASS_MODIFIER,
-  L0_META_CHARACTER_CLASS_MODIFIERS,
-  L0_META_REGULAR_EXPRESSION,
-  L0_META_REGULAR_EXPRESSION_MODIFIERS
+  L0_META_REGULAR_EXPRESSION
 } bootstrap_grammar_L0_enum_t;
 
 /* All non-terminals are listed here */
@@ -109,12 +106,8 @@ bootstrap_grammar_meta_t bootstrap_grammar_L0_metas[] = {
   { L0_META_BRACKETED_NAME_STRING,              "bracketed name string", 0, 0 },
   { L0_META_QUOTED_STRING,                      L0_JOIN_G1_META_QUOTED_STRING, 0, 0 },
   { L0_META_QUOTED_NAME,                        L0_JOIN_G1_META_QUOTED_NAME, 0, 0 },
-  { L0_META_CHARACTER_CLASS_REGEXP,             "character class regexp", 0, 0 },
   { L0_META_CHARACTER_CLASS,                    L0_JOIN_G1_META_CHARACTER_CLASS, 0, 0 },
-  { L0_META_CHARACTER_CLASS_MODIFIER,           "character class modifier", 0, 0 },
-  { L0_META_CHARACTER_CLASS_MODIFIERS,          "character class modifiers", 0, 0 },
-  { L0_META_REGULAR_EXPRESSION,                 L0_JOIN_G1_META_REGULAR_EXPRESSION, 0, 0 },
-  { L0_META_REGULAR_EXPRESSION_MODIFIERS,       "regular expression modifiers", 0, 0 }
+  { L0_META_REGULAR_EXPRESSION,                 L0_JOIN_G1_META_REGULAR_EXPRESSION, 0, 0 }
 };
 
 /* Here it is very important that all the string constants are UTF-8 compatible - this is the case */
@@ -153,8 +146,8 @@ __DATA__
   /*                                                             TERMINALS                                                             */
   /* --------------------------------------------------------------------------------------------------------------------------------- */
   /* --------------------------------------------------------------------------------------------------------------------------------- */
-  { L0_TERMINAL_RESERVED_EVENT_NAME, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
-    "{:symbol}",
+  { L0_TERMINAL_RESERVED_EVENT_NAME, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
+    "':symbol'",
 #ifndef MARPAESLIF_NTRACE
     ":symbol", ":symb"
 #else
@@ -162,7 +155,7 @@ __DATA__
 #endif
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
-  { L0_TERMINAL_WHITESPACE, MARPAESLIF_TERMINAL_TYPE_REGEX,   MARPAESLIF_REGEX_OPTION_NA,
+  { L0_TERMINAL_WHITESPACE, MARPAESLIF_TERMINAL_TYPE_REGEX, NULL,
     "[\\s]+",
 #ifndef MARPAESLIF_NTRACE
     "\x09\x20xxx", "\x09\x20"
@@ -174,7 +167,7 @@ __DATA__
   /* Taken from Regexp::Common::comment, $RE{comment}{Perl} */
   /* Perl stringified version is: (?:(?:#)(?:[^\n]*)(?:\n)) */
   /* \z added to match the end of the buffer (ESLIF will ask more data if this is not EOF as well) */
-  { L0_TERMINAL_PERL_COMMENT, MARPAESLIF_TERMINAL_TYPE_REGEX, MARPAESLIF_REGEX_OPTION_UTF,
+  { L0_TERMINAL_PERL_COMMENT, MARPAESLIF_TERMINAL_TYPE_REGEX, "u",
     "(?:(?:#)(?:[^\\n]*)(?:\\n|\\z))",
 #ifndef MARPAESLIF_NTRACE
     "# Comment up to the end of the buffer", "# Again a comment"
@@ -186,7 +179,7 @@ __DATA__
   /* Taken from Regexp::Common::comment, $RE{comment}{'C++'}, which includes the C language comment */
   /* Perl stringified version is: (?:(?:(?://)(?:[^\n]*)(?:\n))|(?:(?:\/\*)(?:(?:[^\*]+|\*(?!\/))*)(?:\*\/))) */
   /* \z added to match the end of the buffer in the // mode (ESLIF will ask more data if this is not EOF as well) */
-  { L0_TERMINAL_CPLUSPLUS_COMMENT, MARPAESLIF_TERMINAL_TYPE_REGEX, MARPAESLIF_REGEX_OPTION_UTF,
+  { L0_TERMINAL_CPLUSPLUS_COMMENT, MARPAESLIF_TERMINAL_TYPE_REGEX, "u",
     "(?:(?:(?://)(?:[^\\n]*)(?:\\n|\\z))|(?:(?:\\/\\*)(?:(?:[^\\*]+|\\*(?!\\/))*)(?:\\*\\/)))",
 #ifndef MARPAESLIF_NTRACE
     "// Comment up to the end of the buffer", "// Again a comment"
@@ -195,7 +188,7 @@ __DATA__
 #endif
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
-  { L0_TERMINAL_OP_DECLARE_ANY_GRAMMAR, MARPAESLIF_TERMINAL_TYPE_REGEX,   MARPAESLIF_REGEX_OPTION_NA,
+  { L0_TERMINAL_OP_DECLARE_ANY_GRAMMAR, MARPAESLIF_TERMINAL_TYPE_REGEX, NULL,
     ":\\[(\\d+)\\]:=",
 #ifndef MARPAESLIF_NTRACE
     ":[0123]:=", ":[0"
@@ -204,8 +197,8 @@ __DATA__
 #endif
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
-  { L0_TERMINAL_OP_DECLARE_TOP_GRAMMAR, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
-    "{::=}",
+  { L0_TERMINAL_OP_DECLARE_TOP_GRAMMAR, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
+    "'::='",
 #ifndef MARPAESLIF_NTRACE
     "::=", "::"
 #else
@@ -213,8 +206,8 @@ __DATA__
 #endif
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
-  { L0_TERMINAL_OP_DECLARE_LEX_GRAMMAR, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
-    "{~}",
+  { L0_TERMINAL_OP_DECLARE_LEX_GRAMMAR, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
+    "'~'",
 #ifndef MARPAESLIF_NTRACE
     "~", NULL
 #else
@@ -222,8 +215,8 @@ __DATA__
 #endif
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
-  { L0_TERMINAL_OP_LOOSEN, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
-    "{||}",
+  { L0_TERMINAL_OP_LOOSEN, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
+    "'||'",
 #ifndef MARPAESLIF_NTRACE
     NULL, NULL
 #else
@@ -231,8 +224,8 @@ __DATA__
 #endif
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
-  { L0_TERMINAL_OP_EQUAL_PRIORITY, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
-    "{|}",
+  { L0_TERMINAL_OP_EQUAL_PRIORITY, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
+    "'|'",
 #ifndef MARPAESLIF_NTRACE
     NULL, NULL
 #else
@@ -240,28 +233,28 @@ __DATA__
 #endif
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
-  { L0_TERMINAL_BEFORE, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
-    "{before}",
+  { L0_TERMINAL_BEFORE, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
+    "'before'",
     NULL, NULL
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
-  { L0_TERMINAL_AFTER, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
-    "{after}",
+  { L0_TERMINAL_AFTER, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
+    "'after'",
     NULL, NULL
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
-  { L0_TERMINAL_SIGN, MARPAESLIF_TERMINAL_TYPE_REGEX,   MARPAESLIF_REGEX_OPTION_NA,
+  { L0_TERMINAL_SIGN, MARPAESLIF_TERMINAL_TYPE_REGEX, NULL,
     "[+-]",
     NULL, NULL
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
-  { L0_TERMINAL_INTEGER, MARPAESLIF_TERMINAL_TYPE_REGEX,   MARPAESLIF_REGEX_OPTION_NA,
+  { L0_TERMINAL_INTEGER, MARPAESLIF_TERMINAL_TYPE_REGEX, NULL,
     "[\\d]+",
     NULL, NULL
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
-  { L0_TERMINAL_TRUE, MARPAESLIF_TERMINAL_TYPE_STRING,   MARPAESLIF_REGEX_OPTION_NA,
-    "{1}",
+  { L0_TERMINAL_TRUE, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
+    "'1'",
 #ifndef MARPAESLIF_NTRACE
     "1", ""
 #else
@@ -269,94 +262,94 @@ __DATA__
 #endif
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
-  { L0_TERMINAL_BOOLEAN, MARPAESLIF_TERMINAL_TYPE_REGEX,   MARPAESLIF_REGEX_OPTION_NA,
+  { L0_TERMINAL_BOOLEAN, MARPAESLIF_TERMINAL_TYPE_REGEX, NULL,
     "[01]",
     NULL, NULL
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
-  { L0_TERMINAL_WORD_CHARACTER, MARPAESLIF_TERMINAL_TYPE_REGEX,   MARPAESLIF_REGEX_OPTION_NA,
+  { L0_TERMINAL_WORD_CHARACTER, MARPAESLIF_TERMINAL_TYPE_REGEX, NULL,
     "[\\w]",
     NULL, NULL
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
-  { L0_TERMINAL_LATIN_ALPHABET_LETTER, MARPAESLIF_TERMINAL_TYPE_REGEX,   MARPAESLIF_REGEX_OPTION_NA,
+  { L0_TERMINAL_LATIN_ALPHABET_LETTER, MARPAESLIF_TERMINAL_TYPE_REGEX, NULL,
     "[a-zA-Z]",
     NULL, NULL
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
-  { L0_TERMINAL_LEFT_CURLY, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
-    "{<}",
+  { L0_TERMINAL_LEFT_CURLY, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
+    "'<'",
     NULL, NULL
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
-  { L0_TERMINAL_RIGHT_CURLY, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
-    "{>}",
+  { L0_TERMINAL_RIGHT_CURLY, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
+    "'>'",
     NULL, NULL
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
-  { L0_TERMINAL_BRACKETED_NAME_STRING, MARPAESLIF_TERMINAL_TYPE_REGEX,   MARPAESLIF_REGEX_OPTION_NA,
+  { L0_TERMINAL_BRACKETED_NAME_STRING, MARPAESLIF_TERMINAL_TYPE_REGEX, NULL,
     "[\\s\\w]+",
     NULL, NULL
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
-  { L0_TERMINAL_COMMA, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
-    "{,}",
+  { L0_TERMINAL_COMMA, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
+    "','",
     NULL, NULL
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
-  { L0_TERMINAL_START, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
-    "{start}",
+  { L0_TERMINAL_START, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
+    "'start'",
     NULL, NULL
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
-  { L0_TERMINAL_LENGTH, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
-    "{length}",
+  { L0_TERMINAL_LENGTH, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
+    "'length'",
     NULL, NULL
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
-  { L0_TERMINAL_G1START, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
-    "{g1start}",
+  { L0_TERMINAL_G1START, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
+    "'g1start'",
     NULL, NULL
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
-  { L0_TERMINAL_G1LENGTH, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
-    "{g1length}",
+  { L0_TERMINAL_G1LENGTH, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
+    "'g1length'",
     NULL, NULL
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
-  { L0_TERMINAL_NAME, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
-    "{name}",
+  { L0_TERMINAL_NAME, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
+    "'name'",
     NULL, NULL
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
-  { L0_TERMINAL_LHS, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
-    "{lhs}",
+  { L0_TERMINAL_LHS, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
+    "'lhs'",
     NULL, NULL
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
-  { L0_TERMINAL_SYMBOL, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
-    "{symbol}",
+  { L0_TERMINAL_SYMBOL, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
+    "'symbol'",
     NULL, NULL
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
-  { L0_TERMINAL_RULE, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
-    "{rule}",
+  { L0_TERMINAL_RULE, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
+    "'rule'",
     NULL, NULL
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
-  { L0_TERMINAL_VALUE, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
-    "{value}",
+  { L0_TERMINAL_VALUE, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
+    "'value'",
     NULL, NULL
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
-  { L0_TERMINAL_VALUES, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
-    "{values}",
+  { L0_TERMINAL_VALUES, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
+    "'values'",
     NULL, NULL
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
   /* Taken from Regexp::Common::delimited, $RE{delimited}{-delim=>q{'"\{}}{-cdelim=>q{'"\}}} */
   /* Perl stringified version is: (?:(?|(?:\')(?:[^\\\']*(?:\\.[^\\\']*)*)(?:\')|(?:\")(?:[^\\\"]*(?:\\.[^\\\"]*)*)(?:\")|(?:\{)(?:[^\\\}]*(?:\\.[^\\\}]*)*)(?:\}))) */
-  { L0_TERMINAL_QUOTED_STRING, MARPAESLIF_TERMINAL_TYPE_REGEX, MARPAESLIF_REGEX_OPTION_DOTALL|MARPAESLIF_REGEX_OPTION_UTF,
+  { L0_TERMINAL_QUOTED_STRING, MARPAESLIF_TERMINAL_TYPE_REGEX, "su",
     "(?:(?|(?:\\')(?:[^\\\\\\']*(?:\\\\.[^\\\\\\']*)*)(?:\\')|(?:\\\")(?:[^\\\\\\\"]*(?:\\\\.[^\\\\\\\"]*)*)(?:\\\")|(?:\\{)(?:[^\\\\\\}]*(?:\\\\.[^\\\\\\}]*)*)(?:\\})))",
 #ifndef MARPAESLIF_NTRACE
     "'A string'", "'"
@@ -367,7 +360,7 @@ __DATA__
   /* --------------------------------------------------------------------------------------------------------------------------------- */
   /* Taken from Regexp::Common::delimited, $RE{delimited}{-delim=>"/"}{-cdelim=>"/"} */
   /* Perl stringified version is: (?:(?|(?:\/)(?:[^\\\/]*(?:\\.[^\\\/]*)*)(?:\/))) */
-  { L0_TERMINAL_REGULAR_EXPRESSION, MARPAESLIF_TERMINAL_TYPE_REGEX, MARPAESLIF_REGEX_OPTION_DOTALL|MARPAESLIF_REGEX_OPTION_UTF,
+  { L0_TERMINAL_REGULAR_EXPRESSION, MARPAESLIF_TERMINAL_TYPE_REGEX, "su",
     "(?:(?|(?:\\/)(?:[^\\\\\\/]*(?:\\\\.[^\\\\\\/]*)*)(?:\\/)))",
 #ifndef MARPAESLIF_NTRACE
     "/a(b)c/", "/a("
@@ -376,7 +369,7 @@ __DATA__
 #endif
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
-  { L0_TERMINAL_REGULAR_EXPRESSION_MODIFIER, MARPAESLIF_TERMINAL_TYPE_REGEX, MARPAESLIF_REGEX_OPTION_NA,
+  { L0_TERMINAL_REGULAR_EXPRESSION_MODIFIER, MARPAESLIF_TERMINAL_TYPE_REGEX, NULL,
     "[eijmnsxDJUuaN]",
     NULL, NULL
   },
@@ -384,7 +377,7 @@ __DATA__
   /* Taken from Regexp::Common::balanced, $RE{balanced}{-parens=>'[]'} */
   /* Perl stringified version is: (?^:((?:\[(?:(?>[^\[\]]+)|(?-1))*\]))) */
   /* Perl stringified version is revisited without the (?^:XXX): ((?:\[(?:(?>[^\[\]]+)|(?-1))*\])) */
-  { L0_TERMINAL_CHARACTER_CLASS_REGEXP, MARPAESLIF_TERMINAL_TYPE_REGEX, MARPAESLIF_REGEX_OPTION_NA,
+  { L0_TERMINAL_CHARACTER_CLASS_REGEXP, MARPAESLIF_TERMINAL_TYPE_REGEX, NULL,
     "((?:\\[(?:(?>[^\\[\\]]+)|(?-1))*\\]))",
 #ifndef MARPAESLIF_NTRACE
     "[[:alnum]]","[a-z"
@@ -393,18 +386,23 @@ __DATA__
 #endif
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
-  { L0_TERMINAL_CHARACTER_CLASS_MODIFIER_STANDARD, MARPAESLIF_TERMINAL_TYPE_REGEX, MARPAESLIF_REGEX_OPTION_NA,
-    ":[eijmnsxDJUuaN]",
+  { L0_TERMINAL_PCRE2_MODIFIERS, MARPAESLIF_TERMINAL_TYPE_REGEX, NULL,
+    "[eijmnsxDJUuaNubcA]+",
     NULL, NULL
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
-  { L0_TERMINAL_CHARACTER_CLASS_MODIFIER_COMPAT, MARPAESLIF_TERMINAL_TYPE_STRING,   MARPAESLIF_REGEX_OPTION_NA,
-    "{:ic}",
+  { L0_TERMINAL_STRING_MODIFIERS, MARPAESLIF_TERMINAL_TYPE_REGEX, NULL,
+    "ic?",
     NULL, NULL
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
-  { L0_TERMINAL_ASCII_GRAPH_CHARACTERS, MARPAESLIF_TERMINAL_TYPE_REGEX,   MARPAESLIF_REGEX_OPTION_NA,
+  { L0_TERMINAL_ASCII_GRAPH_CHARACTERS, MARPAESLIF_TERMINAL_TYPE_REGEX, NULL,
     "[[:graph:]]+",
+    NULL, NULL
+  },
+  /* --------------------------------------------------------------------------------------------------------------------------------- */
+  { L0_TERMINAL_SEMICOLON, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
+    "':'",
     NULL, NULL
   }
 };
@@ -461,20 +459,21 @@ bootstrap_grammar_rule_t bootstrap_grammar_L0_rules[] = {
   /*
     lhsi                                      descs                                           type                          nrhsl  { rhsi }                                       }  minimumi                          separatori  properb
   */
-  { L0_META_QUOTED_STRING,                    "quoted string",                      MARPAESLIF_RULE_TYPE_ALTERNATIVE, 2, { L0_TERMINAL_QUOTED_STRING,
-                                                                                                                           L0_META_CHARACTER_CLASS_MODIFIERS            }, -1,                                       -1, -1 , NULL },
+  { L0_META_QUOTED_STRING,                    "quoted string 1",                    MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_QUOTED_STRING                    }, -1,                                       -1, -1 , NULL },
+  { L0_META_QUOTED_STRING,                    "quoted string 2",                    MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { L0_TERMINAL_QUOTED_STRING,
+                                                                                                                           L0_TERMINAL_SEMICOLON,
+                                                                                                                           L0_TERMINAL_STRING_MODIFIERS                 }, -1,                                       -1, -1 , NULL },
   { L0_META_QUOTED_NAME,                      "quoted name",                        MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_QUOTED_STRING                    }, -1,                                       -1, -1 , NULL },
-  { L0_META_CHARACTER_CLASS_REGEXP,           "character class regexp",             MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_CHARACTER_CLASS_REGEXP           }, -1,                                       -1, -1 , NULL },
-  { L0_META_CHARACTER_CLASS,                  "character class",                    MARPAESLIF_RULE_TYPE_ALTERNATIVE, 2, { L0_META_CHARACTER_CLASS_REGEXP,
-                                                                                                                           L0_META_CHARACTER_CLASS_MODIFIERS            }, -1,                                       -1, -1 , NULL },
-  { L0_META_CHARACTER_CLASS_MODIFIER,         "character class modifier standard",  MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_CHARACTER_CLASS_MODIFIER_STANDARD}, -1,                                       -1, -1 , NULL },
-  { L0_META_CHARACTER_CLASS_MODIFIER,         "character class modifier compat",    MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_CHARACTER_CLASS_MODIFIER_COMPAT  }, -1,                                       -1, -1 , NULL },
+  { L0_META_CHARACTER_CLASS,                  "character class 1",                  MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_CHARACTER_CLASS_REGEXP           }, -1,                                       -1, -1 , NULL },
+  { L0_META_CHARACTER_CLASS,                  "character class 2",                  MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { L0_TERMINAL_CHARACTER_CLASS_REGEXP,
+                                                                                                                           L0_TERMINAL_SEMICOLON,
+                                                                                                                           L0_TERMINAL_PCRE2_MODIFIERS                  }, -1,                                       -1, -1 , NULL },
   /*
     lhsi                                      descs                                           type                          nrhsl  { rhsi }                                       }  minimumi                          separatori  properb
   */
-  { L0_META_CHARACTER_CLASS_MODIFIERS,        "character class modifiers",          MARPAESLIF_RULE_TYPE_SEQUENCE,    1, { L0_META_CHARACTER_CLASS_MODIFIER             },  0,                                       -1,  0 , NULL },
-  { L0_META_REGULAR_EXPRESSION,               "regular expression",                 MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_REGULAR_EXPRESSION               }, -1,                                       -1, -1 , NULL },
-  { L0_META_REGULAR_EXPRESSION_MODIFIERS,     "regular expression modifiers",       MARPAESLIF_RULE_TYPE_SEQUENCE,    1, { L0_TERMINAL_REGULAR_EXPRESSION_MODIFIER      },  0,                                       -1,  0 , NULL }
+  { L0_META_REGULAR_EXPRESSION,               "regular expression 1",               MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_REGULAR_EXPRESSION               }, -1,                                       -1, -1 , NULL },
+  { L0_META_REGULAR_EXPRESSION,               "regular expression 2",               MARPAESLIF_RULE_TYPE_ALTERNATIVE, 2, { L0_TERMINAL_REGULAR_EXPRESSION,
+                                                                                                                           L0_TERMINAL_PCRE2_MODIFIERS                  }, -1,                                       -1, -1 , NULL }
 };
 
 #endif /* MARPAESLIF_INTERNAL_ESLIF_L0_H */

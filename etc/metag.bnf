@@ -239,14 +239,16 @@ boolean                  ~ [01]
 <bracketed name>        ~ '<' <bracketed name string> '>'
 <bracketed name string> ~ [\s\w]+
 
-<quoted string>         ~ /(?:(?|(?:\')(?:[^\\\']*(?:\\.[^\\\']*)*)(?:\')|(?:\")(?:[^\\\"]*(?:\\.[^\\\"]*)*)(?:\")|(?:\{)(?:[^\\\}]*(?:\\.[^\\\}]*)*)(?:\})))/s /* s modifier to match newline - we never match "" */ <character class modifiers>
+<quoted string>         ~ /(?:(?|(?:\')(?:[^\\\']*(?:\\.[^\\\']*)*)(?:\')|(?:\")(?:[^\\\"]*(?:\\.[^\\\"]*)*)(?:\")|(?:\{)(?:[^\\\}]*(?:\\.[^\\\}]*)*)(?:\})))/s /* s modifier to match newline - we never match "" */
+<quoted string>         ~ /(?:(?|(?:\')(?:[^\\\']*(?:\\.[^\\\']*)*)(?:\')|(?:\")(?:[^\\\"]*(?:\\.[^\\\"]*)*)(?:\")|(?:\{)(?:[^\\\}]*(?:\\.[^\\\}]*)*)(?:\})))/s /* s modifier to match newline - we never match "" */ ":" <string modifiers>
 <quoted name>         ~ /(?:(?|(?:\')(?:[^\\\']*(?:\\.[^\\\']*)*)(?:\')|(?:\")(?:[^\\\"]*(?:\\.[^\\\"]*)*)(?:\")|(?:\{)(?:[^\\\}]*(?:\\.[^\\\}]*)*)(?:\})))/s /* s modifier to match newline - we never match "" */
 
+<string modifiers>            ~ 'i'
 <character class regexp>      ~ /\[(?:[^\\]]*(?:\.[^\\]]*)*)\]/
-<character class>             ~ <character class regexp> <character class modifiers>
-<character class modifier>    ~ /:[eijmnsxDJUuaNubcA]/
-<character class modifier>    ~ ':ic'   # :ic is added for Marpa::R2 compatibility and is meaningless
-<character class modifiers>   ~ <character class modifier>*
+<character class>             ~ <character class regexp>
+<character class>             ~ <character class regexp> ":" <character class modifiers>
+<character class modifiers>    ~ /[eijmnsxDJUuaNubcA]+/
 
+<regular expression>           ~ /\/[^\\/]*(?:\.[^\\/]*)*\//
 <regular expression>           ~ /\/[^\\/]*(?:\.[^\\/]*)*\// <regular expression modifiers>
-<regular expression modifiers> ~ [eijmnsxDJUuaN]*
+<regular expression modifiers> ~ [eijmnsxDJUuaNubcA]*

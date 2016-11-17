@@ -60,7 +60,7 @@ static inline marpaESLIF_string_t   *_marpaESLIF_string_newp(marpaESLIF_t *marpa
 static inline marpaESLIF_string_t   *_marpaESLIF_string_clonep(marpaESLIF_t *marpaESLIFp, marpaESLIF_string_t *stringp);
 static inline void                   _marpaESLIF_string_freev(marpaESLIF_string_t *stringp);
 static inline short                  _marpaESLIF_string_eqb(marpaESLIF_string_t *string1p, marpaESLIF_string_t *string2p);
-static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, int eventSeti, char *descEncodings, char *descs, size_t descl, marpaESLIF_terminal_type_t type, marpaESLIF_uint32_t opti, char *utf8s, size_t utf8l, char *testFullMatchs, char *testPartialMatchs);
+static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, int eventSeti, char *descEncodings, char *descs, size_t descl, marpaESLIF_terminal_type_t type, char *modifiers, char *utf8s, size_t utf8l, char *testFullMatchs, char *testPartialMatchs);
 static inline void                   _marpaESLIF_terminal_freev(marpaESLIF_terminal_t *terminalp);
 
 static inline marpaESLIF_meta_t     *_marpaESLIF_meta_newp(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, int eventSeti, char *asciinames, char *descEncodings, char *descs, size_t descl);
@@ -371,7 +371,7 @@ static inline short _marpaESLIF_string_eqb(marpaESLIF_string_t *string1p, marpaE
 }
 
 /*****************************************************************************/
-static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, int eventSeti, char *descEncodings, char *descs, size_t descl, marpaESLIF_terminal_type_t type, marpaESLIF_uint32_t opti, char *utf8s, size_t utf8l, char *testFullMatchs, char *testPartialMatchs)
+static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, int eventSeti, char *descEncodings, char *descs, size_t descl, marpaESLIF_terminal_type_t type, char *modifiers, char *utf8s, size_t utf8l, char *testFullMatchs, char *testPartialMatchs)
 /*****************************************************************************/
 /* This method is bootstraped at marpaESLIFp creation itself to have the internal regexps, with grammarp being NULL... */
 /*****************************************************************************/
@@ -408,7 +408,8 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
   marpaESLIFValueResult_t           marpaESLIFValueResult;
   char                             *matchedp;
   size_t                            matchedl;
-  int                               regexdescriptori;
+  char                             *modifiersp;
+  char                              modifierc;
 
   /* Check some required parameters */
   if ((utf8s == NULL) || (utf8l <= 0)) {
@@ -416,18 +417,7 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
     goto err;
   }
 
-  switch (type) {
-  case MARPAESLIF_TERMINAL_TYPE_STRING:
-  case MARPAESLIF_TERMINAL_TYPE_REGEX:
-    break;
-  default:
-    MARPAESLIF_ERRORF(marpaESLIFp, "Unsupported terminal type %d", type);
-    goto err;
-    break;
-  }
-  
   /* Please note the "fakeb" parameter below */
-
   terminalp = (marpaESLIF_terminal_t *) malloc(sizeof(marpaESLIF_terminal_t));
   if (terminalp == NULL) {
     MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
@@ -436,6 +426,7 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
 
   terminalp->idi                 = -1;
   terminalp->descp               = NULL;
+  terminalp->modifiers           = NULL;
   terminalp->regex.patternp      = NULL;
   terminalp->regex.match_datap   = NULL;
 #ifdef PCRE2_CONFIG_JIT
@@ -444,6 +435,15 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
 #endif
   terminalp->regex.isAnchoredb   = 0;
   terminalp->regex.utfb          = 0;
+
+  /* ----------- Modifiers ------------ */
+  if (modifiers != NULL) {
+    terminalp->modifiers = strdup(modifiers);
+    if (terminalp->modifiers == NULL) {
+      MARPAESLIF_ERRORF(marpaESLIFp, "strdup failure, %s", strerror(errno));
+      goto err;
+    }
+  }
 
   /* ----------- Terminal Identifier ------------ */
   if (grammarp != NULL) { /* Here is the bootstrap dependency with grammarp == NULL */
@@ -492,6 +492,36 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
     goto err;
   }
 
+  /* Validate type and set pcre2Optioni */
+  pcre2Optioni = PCRE2_ANCHORED;
+  switch (type) {
+  case MARPAESLIF_TERMINAL_TYPE_STRING:
+  case MARPAESLIF_TERMINAL_TYPE_REGEX:
+    if (modifiers != NULL) {
+      modifiersp = modifiers;
+      while ((modifierc = *modifiersp++) != '\0') {
+        for (i = 0; i < (sizeof(marpaESLIF_regex_option_map) / sizeof(marpaESLIF_regex_option_map[0])); i++) {
+          if (modifierc == marpaESLIF_regex_option_map[i].modifierc) {
+            /* It is important to process pcre2OptionNoti first */
+            if (marpaESLIF_regex_option_map[i].pcre2OptionNoti != 0) {
+              MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s: regex modifier %c: removing %s", terminalp->descp->asciis, marpaESLIF_regex_option_map[i].modifierc, marpaESLIF_regex_option_map[i].pcre2OptionNots);
+              pcre2Optioni &= ~marpaESLIF_regex_option_map[i].pcre2OptionNoti;
+            }
+            if (marpaESLIF_regex_option_map[i].pcre2Optioni != 0) {
+              MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s: regex modifier %c: adding %s", terminalp->descp->asciis, marpaESLIF_regex_option_map[i].modifierc, marpaESLIF_regex_option_map[i].pcre2Options);
+              pcre2Optioni |= marpaESLIF_regex_option_map[i].pcre2Optioni;
+            }
+          }
+        }
+      }
+    }
+    break;
+  default:
+    MARPAESLIF_ERRORF(marpaESLIFp, "Unsupported terminal type %d", type);
+    goto err;
+    break;
+  }
+  
   /* ----------- Terminal Implementation ------------ */
   switch (type) {
 
@@ -543,6 +573,7 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
     /* All matches are in the recognizer's lexeme input stack, in order. Take all unicode code points to generate a regex out of this string. */
     utfflagb = 0;
     stringl = 0;
+    backslashb = 0;
     /* Remember that lexeme input stack is putting a fake value at indice 0, because marpa does not like it */
     for (i = 1; i < GENERICSTACK_USED(marpaESLIFRecognizerp->lexemeInputStackp); previouscodepointi = codepointi, i++) {
       if (! _marpaESLIFRecognizer_lexemeStack_i_p_and_sizeb(marpaESLIFRecognizerp, marpaESLIFRecognizerp->lexemeInputStackp, i, &matchedp, &matchedl)) {
@@ -669,7 +700,7 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
     utf8l = stringl;
     /* opti for string is compatible with opti for regex - just that the lexer accept less options - in particular the UTF flag */
     if (utfflagb) {
-      opti |= MARPAESLIF_REGEX_OPTION_UTF;
+      pcre2Optioni |= PCRE2_UTF;
     }
 
     /* ********************************************************************************************************** */
@@ -678,22 +709,6 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
     /* break; */
 
   case MARPAESLIF_TERMINAL_TYPE_REGEX:
-
-    /* By default patterns are always anchored and only that EXCEPT in one case... see regex_match */
-    pcre2Optioni = PCRE2_ANCHORED;
-    for (i = 0; i < _MARPAESLIF_REGEX_OPTION_ID_MAX; i++) {
-      if ((opti & marpaESLIF_regex_option_map[i].opti) == marpaESLIF_regex_option_map[i].opti) {
-        /* It is important to process pcre2OptionNoti first */
-	if (marpaESLIF_regex_option_map[i].pcre2OptionNoti != 0) {
-          MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s: regex modifier %s: removing %s", terminalp->descp->asciis, marpaESLIF_regex_option_map[i].modifiers, marpaESLIF_regex_option_map[i].pcre2OptionNots);
-	  pcre2Optioni &= ~marpaESLIF_regex_option_map[i].pcre2OptionNoti;
-	}
-	if (marpaESLIF_regex_option_map[i].pcre2Optioni != 0) {
-          MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s: regex modifier %s: adding %s", terminalp->descp->asciis, marpaESLIF_regex_option_map[i].modifiers, marpaESLIF_regex_option_map[i].pcre2Options);
-	  pcre2Optioni |= marpaESLIF_regex_option_map[i].pcre2Optioni;
-	}
-      }
-    }
 
     terminalp->regex.patternp = pcre2_compile(
                                               (PCRE2_SPTR) utf8s,      /* An UTF-8 pattern */
@@ -746,33 +761,6 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
                       terminalp->regex.isAnchoredb ? "on" : "off"
                       );
 
-    /* If opti is set, revisit the automatic description */
-    if ((pcre2Optioni != PCRE2_ANCHORED) & (generatedasciis != NULL)) {
-      regexdescriptori =  0;
-      for (i = 0; i < _MARPAESLIF_REGEX_OPTION_ID_MAX; i++) {
-        if ((opti & marpaESLIF_regex_option_map[i].opti) == marpaESLIF_regex_option_map[i].opti) {
-          regexdescriptori++;
-        }
-      }
-      if (regexdescriptori > 0) {
-        free(generatedasciis);
-        generatedasciis = (char *) malloc(strlen(terminalp->descp->asciis) + regexdescriptori + 1);
-        if (generatedasciis == NULL) {
-          MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
-          goto err;
-        }
-        strcpy(generatedasciis, terminalp->descp->asciis);
-        for (i = 0; i < _MARPAESLIF_REGEX_OPTION_ID_MAX; i++) {
-          if ((opti & marpaESLIF_regex_option_map[i].opti) == marpaESLIF_regex_option_map[i].opti) {
-            strcat(generatedasciis, marpaESLIF_regex_option_map[i].modifiers);
-          }
-        }
-        /* No need for a new call to string */
-        free(terminalp->descp->asciis);
-        terminalp->descp->asciis = generatedasciis;
-        generatedasciis = NULL;
-      }
-    }
     break;
 
   default:
@@ -1043,7 +1031,7 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_grammarp(marpaESLIF_t 
 					  NULL, /* descs */
                                           0, /* descl */
 					  bootstrap_grammar_terminalp[i].terminalType,
-					  bootstrap_grammar_terminalp[i].optioni,
+					  bootstrap_grammar_terminalp[i].modifiers,
 					  bootstrap_grammar_terminalp[i].utf8s,
 					  (bootstrap_grammar_terminalp[i].utf8s != NULL) ? strlen(bootstrap_grammar_terminalp[i].utf8s) : 0,
 					  bootstrap_grammar_terminalp[i].testFullMatchs,
@@ -2559,6 +2547,9 @@ static inline void _marpaESLIF_terminal_freev(marpaESLIF_terminal_t *terminalp)
     if (terminalp->regex.match_datap != NULL) {
       pcre2_match_data_free(terminalp->regex.match_datap);
     }
+    if (terminalp->modifiers != NULL) {
+      free(terminalp->modifiers);
+    }
     if (terminalp->regex.patternp != NULL) {
       pcre2_code_free(terminalp->regex.patternp);
     }
@@ -2596,11 +2587,14 @@ marpaESLIF_t *marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptionp)
     }
   }
 
-  marpaESLIFp->marpaESLIFOption   = *marpaESLIFOptionp;
-  marpaESLIFp->marpaESLIFGrammarp = NULL;
-  marpaESLIFp->anycharp           = NULL;
-  marpaESLIFp->utf8bomp           = NULL;
-  marpaESLIFp->newlinep           = NULL;
+  marpaESLIFp->marpaESLIFOption         = *marpaESLIFOptionp;
+  marpaESLIFp->marpaESLIFGrammarp       = NULL;
+  marpaESLIFp->anycharp                 = NULL;
+  marpaESLIFp->utf8bomp                 = NULL;
+  marpaESLIFp->newlinep                 = NULL;
+  marpaESLIFp->stringModifiersp         = NULL;
+  marpaESLIFp->characterClassModifiersp = NULL;
+  marpaESLIFp->regexModifiersp          = NULL;
 
   /* Create internal anychar regex */
   marpaESLIFp->anycharp = _marpaESLIF_terminal_newp(marpaESLIFp,
@@ -2610,7 +2604,7 @@ marpaESLIF_t *marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptionp)
                                                     INTERNAL_ANYCHAR_PATTERN, /* descs */
                                                     strlen(INTERNAL_ANYCHAR_PATTERN), /* descl */
                                                     MARPAESLIF_TERMINAL_TYPE_REGEX, /* type */
-                                                    MARPAESLIF_REGEX_OPTION_DOTALL|MARPAESLIF_REGEX_OPTION_UTF, /* opti */
+                                                    "su", /* modifiers */
                                                     INTERNAL_ANYCHAR_PATTERN, /* utf8s */
                                                     strlen(INTERNAL_ANYCHAR_PATTERN), /* utf8l */
                                                     NULL, /* testFullMatchs */
@@ -2628,7 +2622,7 @@ marpaESLIF_t *marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptionp)
                                                     INTERNAL_UTF8BOM_PATTERN, /* descs */
                                                     strlen(INTERNAL_UTF8BOM_PATTERN), /* descl */
                                                     MARPAESLIF_TERMINAL_TYPE_REGEX, /* type */
-                                                    MARPAESLIF_REGEX_OPTION_UTF, /* opti */
+                                                    "u", /* modifiers */
                                                     INTERNAL_UTF8BOM_PATTERN, /* utf8s */
                                                     strlen(INTERNAL_UTF8BOM_PATTERN), /* utf8l */
                                                     NULL, /* testFullMatchs */
@@ -2647,13 +2641,67 @@ marpaESLIF_t *marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptionp)
                                                     INTERNAL_NEWLINE_PATTERN /* descs */,
                                                     strlen(INTERNAL_NEWLINE_PATTERN) /* descl */,
                                                     MARPAESLIF_TERMINAL_TYPE_REGEX, /* type */
-                                                    MARPAESLIF_REGEX_OPTION_NA, /* opti */
+                                                    NULL, /* modifiers */
                                                     INTERNAL_NEWLINE_PATTERN, /* utf8s */
                                                     strlen(INTERNAL_NEWLINE_PATTERN), /* utf8l */
                                                     NULL, /* testFullMatchs */
                                                     NULL  /* testPartialMatchs */
                                                     );
   if (marpaESLIFp->newlinep == NULL) {
+    goto err;
+  }
+
+  /* Create internal anychar regex */
+  marpaESLIFp->stringModifiersp = _marpaESLIF_terminal_newp(marpaESLIFp,
+                                                            NULL, /* grammarp */
+                                                            MARPAESLIF_EVENTTYPE_NONE, /* eventSeti */
+                                                            "ASCII", /* We KNOW this is an ASCII thingy */
+                                                            INTERNAL_STRINGMODIFIERS_PATTERN, /* descs */
+                                                            strlen(INTERNAL_STRINGMODIFIERS_PATTERN), /* descl */
+                                                            MARPAESLIF_TERMINAL_TYPE_REGEX, /* type */
+                                                            "Au", /* modifiers */
+                                                            INTERNAL_STRINGMODIFIERS_PATTERN, /* utf8s */
+                                                            strlen(INTERNAL_STRINGMODIFIERS_PATTERN), /* utf8l */
+                                                            NULL, /* testFullMatchs */
+                                                            NULL  /* testPartialMatchs */
+                                                            );
+  if (marpaESLIFp->stringModifiersp == NULL) {
+    goto err;
+  }
+
+  /* Create internal anychar regex */
+  marpaESLIFp->characterClassModifiersp = _marpaESLIF_terminal_newp(marpaESLIFp,
+                                                                    NULL, /* grammarp */
+                                                                    MARPAESLIF_EVENTTYPE_NONE, /* eventSeti */
+                                                                    "ASCII", /* We KNOW this is an ASCII thingy */
+                                                                    INTERNAL_CHARACTERCLASSMODIFIERS_PATTERN, /* descs */
+                                                                    strlen(INTERNAL_CHARACTERCLASSMODIFIERS_PATTERN), /* descl */
+                                                                    MARPAESLIF_TERMINAL_TYPE_REGEX, /* type */
+                                                                    "Au", /* modifiers */
+                                                                    INTERNAL_CHARACTERCLASSMODIFIERS_PATTERN, /* utf8s */
+                                                                    strlen(INTERNAL_CHARACTERCLASSMODIFIERS_PATTERN), /* utf8l */
+                                                                    NULL, /* testFullMatchs */
+                                                                    NULL  /* testPartialMatchs */
+                                                                    );
+  if (marpaESLIFp->characterClassModifiersp == NULL) {
+    goto err;
+  }
+
+  /* Create internal anychar regex */
+  marpaESLIFp->regexModifiersp = _marpaESLIF_terminal_newp(marpaESLIFp,
+                                                           NULL, /* grammarp */
+                                                           MARPAESLIF_EVENTTYPE_NONE, /* eventSeti */
+                                                           "ASCII", /* We KNOW this is an ASCII thingy */
+                                                           INTERNAL_REGEXMODIFIERS_PATTERN, /* descs */
+                                                           strlen(INTERNAL_REGEXMODIFIERS_PATTERN), /* descl */
+                                                           MARPAESLIF_TERMINAL_TYPE_REGEX, /* type */
+                                                           "Au", /* modifiers */
+                                                           INTERNAL_REGEXMODIFIERS_PATTERN, /* utf8s */
+                                                           strlen(INTERNAL_REGEXMODIFIERS_PATTERN), /* utf8l */
+                                                           NULL, /* testFullMatchs */
+                                                           NULL  /* testPartialMatchs */
+                                                           );
+  if (marpaESLIFp->regexModifiersp == NULL) {
     goto err;
   }
 
@@ -2769,6 +2817,9 @@ void marpaESLIF_freev(marpaESLIF_t *marpaESLIFp)
     _marpaESLIF_terminal_freev(marpaESLIFp->anycharp);
     _marpaESLIF_terminal_freev(marpaESLIFp->utf8bomp);
     _marpaESLIF_terminal_freev(marpaESLIFp->newlinep);
+    _marpaESLIF_terminal_freev(marpaESLIFp->stringModifiersp);
+    _marpaESLIF_terminal_freev(marpaESLIFp->characterClassModifiersp);
+    _marpaESLIF_terminal_freev(marpaESLIFp->regexModifiersp);
     free(marpaESLIFp);
   }
 }
@@ -2786,6 +2837,7 @@ static inline short _marpaESLIFRecognizer_regex_matcherb(marpaESLIFRecognizer_t 
   PCRE2_UCHAR                     pcre2ErrorBuffer[256];
   PCRE2_SIZE                     *pcre2_ovectorp;
   size_t                          matchedLengthl;
+  char                           *matchedp;
   marpaESLIF_uint32_t             pcre2_optioni;
   short                           binmodeb;
   short                           rcb;
@@ -2837,8 +2889,11 @@ static inline short _marpaESLIFRecognizer_regex_matcherb(marpaESLIFRecognizer_t 
     */
     if (! terminalp->regex.isAnchoredb) {
       if (! *(marpaESLIFRecognizerp->noAnchorIsOkbp)) {
-        MARPAESLIF_ERRORF(marpaESLIFp, "%s: You used the \"A\" modifier to set the pattern non-anchored, but then you must read the whole input in one go", terminalp->descp->asciis);
-        goto err;
+        /* This is an error unless we are at EOF */
+        if (! eofb) {
+          MARPAESLIF_ERRORF(marpaESLIFp, "%s: You used the \"A\" modifier to set the pattern non-anchored, but then you must read the whole input in one go, and you have not reached EOF yet", terminalp->descp->asciis);
+          goto err;
+        }
       }
     }
     
@@ -2922,6 +2977,7 @@ static inline short _marpaESLIFRecognizer_regex_matcherb(marpaESLIFRecognizer_t 
           goto err;
         }
         /* Very good -; */
+        matchedp = inputs + pcre2_ovectorp[0];
         rci = MARPAESLIF_MATCH_OK;
       }
     } else {
@@ -2948,6 +3004,7 @@ static inline short _marpaESLIFRecognizer_regex_matcherb(marpaESLIFRecognizer_t 
           rci = MARPAESLIF_MATCH_AGAIN;
         } else {
           /* And end of the buffer is not reached */
+          matchedp = inputs + pcre2_ovectorp[0];
           rci = MARPAESLIF_MATCH_OK;
         }
       } else {
@@ -3008,7 +3065,7 @@ static inline short _marpaESLIFRecognizer_regex_matcherb(marpaESLIFRecognizer_t 
       MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
       goto err;
     }
-    memcpy(marpaESLIFValueResultp->u.p, (void *) inputs, matchedLengthl);
+    memcpy(marpaESLIFValueResultp->u.p, (void *) matchedp, matchedLengthl);
     marpaESLIFValueResultp->sizel = matchedLengthl;
   }
 
@@ -7005,7 +7062,7 @@ static inline short _marpaESLIFRecognizer_start_charconvp(marpaESLIFRecognizer_t
                                                                    *(marpaESLIFRecognizerp->encodingsp) /* descs */,
                                                                    strlen(*(marpaESLIFRecognizerp->encodingsp)) /* descl */,
                                                                    MARPAESLIF_TERMINAL_TYPE_REGEX, /* type */
-                                                                   MARPAESLIF_REGEX_OPTION_CASELESS, /* opti */
+                                                                   "i", /* modifiers */
                                                                    encodingutf8s, /* utf8s */
                                                                    encodingutf8l, /* utf8l */
                                                                    NULL, /* testFullMatchs */
