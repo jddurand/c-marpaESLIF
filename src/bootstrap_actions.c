@@ -11,7 +11,7 @@
 /* This is an example of how to use the API */
 
 static inline void _marpaESLIF_bootstrap_rhs_primary_freev(marpaESLIF_bootstrap_rhs_primary_t *rhsPrimaryp);
-static inline void _marpaESLIF_bootstrap_rhs_primary_single_symbol_freev(marpaESLIF_bootstrap_rhs_primary_single_symbol_t *singleSymbolp);
+static inline void _marpaESLIF_bootstrap_symbol_name_and_reference_freev(marpaESLIF_bootstrap_symbol_name_and_reference_t *symbolNameAndReferencep);
 static inline void _marpaESLIF_bootstrap_utf_string_freev(marpaESLIF_bootstrap_utf_string_t *stringp);
 static inline void _marpaESLIF_bootstrap_rhs_freev(genericStack_t *rhsPrimaryStackp);
 static inline void _marpaESLIF_bootstrap_adverb_list_item_freev(marpaESLIF_bootstrap_adverb_list_item_t *adverbListItemp);
@@ -50,10 +50,13 @@ static inline void  _marpaESLIF_bootstrap_rhs_primary_freev(marpaESLIF_bootstrap
   if (rhsPrimaryp != NULL) {
     switch (rhsPrimaryp->type) {
     case MARPAESLIF_BOOTSTRAP_RHS_PRIMARY_TYPE_SINGLE_SYMBOL:
-      _marpaESLIF_bootstrap_rhs_primary_single_symbol_freev(rhsPrimaryp->u.singleSymbolp);
+      _marpaESLIF_bootstrap_single_symbol_freev(rhsPrimaryp->u.singleSymbolp);
       break;
     case MARPAESLIF_BOOTSTRAP_RHS_PRIMARY_TYPE_QUOTED_STRING:
       _marpaESLIF_bootstrap_utf_string_freev(rhsPrimaryp->u.quotedStringp);
+      break;
+    case MARPAESLIF_BOOTSTRAP_RHS_PRIMARY_TYPE_SYMBOL_NAME_AND_REFERENCE:
+      _marpaESLIF_bootstrap_symbol_name_and_reference_freev(rhsPrimaryp->u.symbolNameAndReferencep);
       break;
     default:
       break;
@@ -63,15 +66,15 @@ static inline void  _marpaESLIF_bootstrap_rhs_primary_freev(marpaESLIF_bootstrap
 }
 
 /*****************************************************************************/
-static inline void  _marpaESLIF_bootstrap_rhs_primary_single_symbol_freev(marpaESLIF_bootstrap_rhs_primary_single_symbol_t *singleSymbolp)
+static inline void _marpaESLIF_bootstrap_symbol_name_and_reference_freev(marpaESLIF_bootstrap_symbol_name_and_reference_t *symbolNameAndReferencep)
 /*****************************************************************************/
 {
-  if (singleSymbolp != NULL) {
-    if (singleSymbolp->symbols != NULL) {
-      free(singleSymbolp->symbols);
+  if (symbolNameAndReferencep != NULL) {
+    if (symbolNameAndReferencep->symbols != NULL) {
+      free(symbolNameAndReferencep->symbols);
     }
-    _marpaESLIF_bootstrap_utf_string_freev(singleSymbolp->lookupGrammarStringp);
-    free(singleSymbolp);
+    _marpaESLIF_bootstrap_utf_string_freev(symbolNameAndReferencep->lookupGrammarStringp);
+    free(symbolNameAndReferencep);
   }
 }
 
@@ -1213,7 +1216,9 @@ static short _marpaESLIF_bootstrap_G1_action_priority_ruleb(void *userDatavp, ma
   marpaESLIF_bootstrap_rhs_primary_t               *rhsPrimaryp;
   marpaESLIF_symbol_t                              *lhsp;
   marpaESLIF_symbol_t                              *rhsp;
-  marpaESLIF_bootstrap_rhs_primary_single_symbol_t *singleSymbolp;
+  marpaESLIF_bootstrap_single_symbol_t             *singleSymbolp;
+  marpaESLIF_bootstrap_utf_string_t                *quotedStringp;
+  marpaESLIF_bootstrap_symbol_name_and_reference_t *symbolNameAndReferencep;
   marpaESLIF_bootstrap_adverb_list_item_t          *adverbListItemp;
   marpaESLIF_grammar_t                             *grammarp;
   int                                               leveli;
