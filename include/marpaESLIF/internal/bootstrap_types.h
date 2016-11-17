@@ -95,17 +95,18 @@ typedef enum marpaESLIF_bootstrap_rhs_primary_type {
   MARPAESLIF_BOOTSTRAP_RHS_PRIMARY_TYPE_SYMBOL_NAME_AND_REFERENCE
 } marpaESLIF_bootstrap_rhs_primary_type_t;
 
-typedef struct marpaESLIF_bootstrap_rhs_primary_single_symbol {
+typedef struct marpaESLIF_bootstrap_symbol_name_and_reference {
   char                              *symbols;
   marpaESLIF_bootstrap_utf_string_t *lookupGrammarStringp;
   int                                lookupLevelDeltai;
-} marpaESLIF_bootstrap_rhs_primary_single_symbol_t;
+} marpaESLIF_bootstrap_symbol_name_and_reference_t;
 
 typedef struct marpaESLIF_bootstrap_rhs_primary {
   marpaESLIF_bootstrap_rhs_primary_type_t type;
   union {
-    marpaESLIF_bootstrap_rhs_primary_single_symbol_t *singleSymbolp;
+    marpaESLIF_bootstrap_single_symbol_t             *singleSymbolp;
     marpaESLIF_bootstrap_utf_string_t                *quotedStringp;
+    marpaESLIF_bootstrap_symbol_name_and_reference_t *symbolNameAndReferencep;
   } u;
 } marpaESLIF_bootstrap_rhs_primary_t;
 
