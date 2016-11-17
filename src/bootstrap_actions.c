@@ -1104,6 +1104,7 @@ static short _marpaESLIF_bootstrap_G1_action_rhs_primary_2b(void *userDatavp, ma
   if (modifiers != NULL) {
     free(modifiers);
   }
+  marpaESLIFRecognizer_freev(marpaESLIFRecognizerp);
   return rcb;
 }
 
