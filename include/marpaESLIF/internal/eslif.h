@@ -231,7 +231,7 @@
 #define G1_ACTION_SINGLE_SYMBOL_1                  "G1_action_single_symbol_1"
 #define G1_ACTION_SINGLE_SYMBOL_2                  "G1_action_single_symbol_2"
 #define G1_ACTION_SINGLE_SYMBOL_3                  "G1_action_single_symbol_3"
-#define G1_ACTION_SYMBOL                           "G1_action_symbol"
+#define G1_ACTION_SYMBOL                           "::shift"
 #define G1_ACTION_SYMBOL_NAME_1                    "::ascii" /* <symbol name> ::= <bare name> */
 #define G1_ACTION_SYMBOL_NAME_2                    "G1_action_symbol_2" /* <symbol name> ::= <bracketed name> */
 #define G1_ACTION_ACTION_NAME_1                    "::ascii" /* <action name> ::= <ascii graph name> */
