@@ -72,6 +72,22 @@ typedef struct marpaESLIF_bootstrap_adverb_list_item {
   } u;
 } marpaESLIF_bootstrap_adverb_list_item_t;
 
+typedef enum marpaESLIF_bootstrap_single_symbol_type {
+  MARPAESLIF_SINGLE_SYMBOL_TYPE_NA = 0,
+  MARPAESLIF_SINGLE_SYMBOL_TYPE_SYMBOL,
+  MARPAESLIF_SINGLE_SYMBOL_TYPE_CHARACTER_CLASS,
+  MARPAESLIF_SINGLE_SYMBOL_TYPE_REGULAR_EXPRESSION
+} marpaESLIF_bootstrap_single_symbol_type_t;
+
+typedef struct marpaESLIF_bootstrap_single_symbol {
+  marpaESLIF_bootstrap_single_symbol_type_t type;
+  union {
+    char *symbols;
+    char *characterClasss;
+    char *regularExpressions;
+  } u;
+} marpaESLIF_bootstrap_single_symbol_t;
+
 typedef enum marpaESLIF_bootstrap_rhs_primary_type {
   MARPAESLIF_BOOTSTRAP_RHS_PRIMARY_TYPE_NA = 0,
   MARPAESLIF_BOOTSTRAP_RHS_PRIMARY_TYPE_SINGLE_SYMBOL,
@@ -96,22 +112,6 @@ typedef struct marpaESLIF_bootstrap_alternative {
   genericStack_t *rhsPrimaryStackp;
   genericStack_t *adverbListItemStackp;
 } marpaESLIF_bootstrap_alternative_t;
-
-typedef enum marpaESLIF_bootstrap_single_symbol_type {
-  MARPAESLIF_SINGLE_SYMBOL_TYPE_NA = 0,
-  MARPAESLIF_SINGLE_SYMBOL_TYPE_SYMBOL,
-  MARPAESLIF_SINGLE_SYMBOL_TYPE_CHARACTER_CLASS,
-  MARPAESLIF_SINGLE_SYMBOL_TYPE_REGULAR_EXPRESSION
-} marpaESLIF_bootstrap_single_symbol_type_t;
-
-typedef struct marpaESLIF_bootstrap_single_symbol {
-  marpaESLIF_bootstrap_single_symbol_type_t type;
-  union {
-    char *symbols;
-    char *characterClasss;
-    char *regularExpressions;
-  } u;
-} marpaESLIF_bootstrap_single_symbol_t;
 
 #endif /* MARPAESLIF_INTERNAL_BOOTSTRAP_TYPES_H */
 
