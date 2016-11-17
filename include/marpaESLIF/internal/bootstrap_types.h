@@ -69,7 +69,7 @@ typedef struct marpaESLIF_bootstrap_adverb_list_item {
 
 typedef enum marpaESLIF_bootstrap_rhs_primary_type {
   MARPAESLIF_BOOTSTRAP_RHS_PRIMARY_TYPE_NA = 0,
-  MARPAESLIF_BOOTSTRAP_RHS_PRIMARY_TYPE_SYMBOL,
+  MARPAESLIF_BOOTSTRAP_RHS_PRIMARY_TYPE_PRIMARY_SYMBOL,
   MARPAESLIF_BOOTSTRAP_RHS_PRIMARY_TYPE_QUOTED_STRING
 } marpaESLIF_bootstrap_rhs_primary_type_t;
 
@@ -82,7 +82,7 @@ typedef struct marpaESLIF_bootstrap_rhs_primary_symbol {
 typedef struct marpaESLIF_bootstrap_rhs_primary {
   marpaESLIF_bootstrap_rhs_primary_type_t type;
   union {
-    marpaESLIF_bootstrap_rhs_primary_symbol_t *symbolp;
+    marpaESLIF_bootstrap_rhs_primary_symbol_t *primarySymbolp;
     marpaESLIF_bootstrap_utf_string_t         *quotedStringp;
   } u;
 } marpaESLIF_bootstrap_rhs_primary_t;
