@@ -4887,7 +4887,7 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGramm
   marpaESLIFRecognizerp->_encodingp                 = NULL;
   marpaESLIFRecognizerp->_tconvp                    = NULL;
   marpaESLIFRecognizerp->_nextReadIsFirstReadb      = 1;
-  marpaESLIFRecognizerp->_noAnchorIsOkb             = 0;
+  marpaESLIFRecognizerp->_noAnchorIsOkb             = marpaESLIFRecognizerp->_eofb;
   /* If this is a parent recognizer get its stream information */
   if (marpaESLIFRecognizerParentp != NULL) {
     marpaESLIFRecognizerp->leveli                     = marpaESLIFRecognizerParentp->leveli + 1;
