@@ -14,7 +14,7 @@ typedef struct marpaESLIFTester_context {
 } marpaESLIFTester_context_t;
 
 const static char *metags = "\n"
-"<null statement> ::= ';' action => 'myaction'\n"
+"<null statement> ::= ';' action => 'myaction' assoc => left\n"
 ;
 
 int main() {
@@ -24,6 +24,11 @@ int main() {
   marpaESLIFOption_t        marpaESLIFOption;
   marpaESLIFGrammarOption_t marpaESLIFGrammarOption;
   int                       exiti;
+  int                       ngrammari;
+  int                      *ruleip;
+  size_t                    rulel;
+  int                       i;
+  size_t                    l;
 
   marpaESLIFOption.genericLoggerp = GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_DEBUG);
   marpaESLIFp = marpaESLIF_newp(&marpaESLIFOption);
@@ -39,6 +44,22 @@ int main() {
   marpaESLIFGrammarp = marpaESLIFGrammar_newp(marpaESLIFp, &marpaESLIFGrammarOption);
   if (marpaESLIFGrammarp == NULL) {
     goto err;
+  }
+
+  if (marpaESLIFGrammar_ngrammari(marpaESLIFGrammarp, &ngrammari)) {
+    for (i = 0; i < ngrammari; i++) {
+      if (marpaESLIFGrammar_rules_by_grammarb(marpaESLIFGrammarp, &ruleip, &rulel, i /* grammari */, NULL /* descp */)) {
+        GENERICLOGGER_INFO (marpaESLIFOption.genericLoggerp, "-------------------------");
+        GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "ESLIF grammar at level %d:", i);
+        GENERICLOGGER_INFO (marpaESLIFOption.genericLoggerp, "-------------------------");
+        for (l = 0; l < rulel; l++) {
+          char *ruleshows;
+          if (marpaESLIFGrammar_ruleshowform_by_grammarb(marpaESLIFGrammarp, l, &ruleshows, i, NULL /* descp */)) {
+            GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "%s", ruleshows);
+          }
+        }
+      }
+    }
   }
 
   exiti = 0;

@@ -249,7 +249,7 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
   /*                                                             TERMINALS                                                             */
   /* --------------------------------------------------------------------------------------------------------------------------------- */
   { G1_TERMINAL__START, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
-    ":start",
+    "{:start}",
 #ifndef MARPAESLIF_NTRACE
     ":start", ":sta",
 #else
@@ -257,7 +257,7 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
 #endif
   },
   { G1_TERMINAL__DESC, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
-    ":desc",
+    "{:desc}",
 #ifndef MARPAESLIF_NTRACE
     ":desc", ":de"
 #else
@@ -265,7 +265,7 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
 #endif
   },
   { G1_TERMINAL_SEMICOLON, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
-    ";",
+    "{;}",
 #ifndef MARPAESLIF_NTRACE
     ";", ""
 #else
@@ -273,7 +273,7 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
 #endif
   },
   { G1_TERMINAL_LEFT_BRACKET, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
-    "{",
+    "'{'",
 #ifndef MARPAESLIF_NTRACE
     "{", ""
 #else
@@ -281,7 +281,7 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
 #endif
   },
   { G1_TERMINAL_RIGHT_BRACKET, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
-    "}",
+    "'}'",
 #ifndef MARPAESLIF_NTRACE
     "}", ""
 #else
@@ -289,7 +289,7 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
 #endif
   },
   { G1_TERMINAL__DISCARD, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
-    ":discard",
+    "{:discard}",
 #ifndef MARPAESLIF_NTRACE
     ":discard", ":dis"
 #else
@@ -297,7 +297,7 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
 #endif
   },
   { G1_TERMINAL__DEFAULT, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
-    ":default",
+    "{:default}",
 #ifndef MARPAESLIF_NTRACE
     ":default", ":def"
 #else
@@ -305,7 +305,7 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
 #endif
   },
   { G1_TERMINAL_LEXEME, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
-    "lexeme",
+    "{lexeme}",
 #ifndef MARPAESLIF_NTRACE
     "lexeme", "lexe"
 #else
@@ -313,7 +313,7 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
 #endif
   },
   { G1_TERMINAL_DEFAULT, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
-    "default",
+    "{default}",
 #ifndef MARPAESLIF_NTRACE
     "default", "def"
 #else
@@ -321,7 +321,7 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
 #endif
   },
   { G1_TERMINAL_EQUAL, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
-    "=",
+    "{=}",
 #ifndef MARPAESLIF_NTRACE
     "=", ""
 #else
@@ -329,7 +329,7 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
 #endif
   },
   { G1_TERMINAL_DISCARD, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
-    "discard",
+    "{discard}",
 #ifndef MARPAESLIF_NTRACE
     "discard", "dis"
 #else
@@ -337,7 +337,7 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
 #endif
   },
   { G1_TERMINAL__LEXEME, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
-    ":lexeme",
+    "{:lexeme}",
 #ifndef MARPAESLIF_NTRACE
     ":lexeme", ":lexe"
 #else
@@ -345,7 +345,7 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
 #endif
   },
   { G1_TERMINAL_EVENT, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
-    "event",
+    "{event}",
 #ifndef MARPAESLIF_NTRACE
     "event", "eve"
 #else
@@ -353,7 +353,7 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
 #endif
   },
   { G1_TERMINAL_COMPLETED, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
-    "completed",
+    "{completed}",
 #ifndef MARPAESLIF_NTRACE
     "completed", "comp"
 #else
@@ -361,7 +361,7 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
 #endif
   },
   { G1_TERMINAL_NULLED, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
-    "nulled",
+    "{nulled}",
 #ifndef MARPAESLIF_NTRACE
     "nulled", "nul"
 #else
@@ -369,7 +369,7 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
 #endif
   },
   { G1_TERMINAL_PREDICTED, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
-    "predicted",
+    "{predicted}",
 #ifndef MARPAESLIF_NTRACE
     "predicted", "pre"
 #else
@@ -377,7 +377,7 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
 #endif
   },
   { G1_TERMINAL_IS, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
-    "is",
+    "{is}",
 #ifndef MARPAESLIF_NTRACE
     "is", "i"
 #else
@@ -385,7 +385,7 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
 #endif
   },
   { G1_TERMINAL_INACCESSIBLE, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
-    "inaccessible",
+    "{inaccessible}",
 #ifndef MARPAESLIF_NTRACE
     "inaccessible", "inac"
 #else
@@ -393,7 +393,7 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
 #endif
   },
   { G1_TERMINAL_BY, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
-    "by",
+    "{by}",
 #ifndef MARPAESLIF_NTRACE
     "by", "b"
 #else
@@ -401,7 +401,7 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
 #endif
   },
   { G1_TERMINAL_WARN, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
-    "warn",
+    "{warn}",
 #ifndef MARPAESLIF_NTRACE
     "warn", "wa"
 #else
@@ -409,7 +409,7 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
 #endif
   },
   { G1_TERMINAL_OK,  MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
-    "ok",
+    "{ok}",
 #ifndef MARPAESLIF_NTRACE
     "ok", "o"
 #else
@@ -417,7 +417,7 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
 #endif
   },
   { G1_TERMINAL_FATAL, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
-    "fatal",
+    "{fatal}",
 #ifndef MARPAESLIF_NTRACE
     "fatal", "fata"
 #else
@@ -425,7 +425,7 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
 #endif
   },
   { G1_TERMINAL_MINUS, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
-    "-",
+    "{-}",
 #ifndef MARPAESLIF_NTRACE
     "-", ""
 #else
@@ -433,7 +433,7 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
 #endif
   },
   { G1_TERMINAL_ACTION, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
-    "action",
+    "{action}",
 #ifndef MARPAESLIF_NTRACE
     "action", "act"
 #else
@@ -441,7 +441,7 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
 #endif
   },
   { G1_TERMINAL_THEN, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
-    "=>",
+    "{=>}",
 #ifndef MARPAESLIF_NTRACE
     "=>", "="
 #else
@@ -449,7 +449,7 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
 #endif
   },
   { G1_TERMINAL_AUTORANK, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
-    "autorank",
+    "{autorank}",
 #ifndef MARPAESLIF_NTRACE
     "autorank", "auto"
 #else
@@ -457,7 +457,7 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
 #endif
   },
   { G1_TERMINAL_ASSOC, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
-    "assoc",
+    "{assoc}",
 #ifndef MARPAESLIF_NTRACE
     "assoc", "asso"
 #else
@@ -465,7 +465,7 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
 #endif
   },
   { G1_TERMINAL_LEFT, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
-    "left",
+    "{left}",
 #ifndef MARPAESLIF_NTRACE
     "left", "lef"
 #else
@@ -473,7 +473,7 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
 #endif
   },
   { G1_TERMINAL_RIGHT, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
-    "right",
+    "{right}",
 #ifndef MARPAESLIF_NTRACE
     "right", "r"
 #else
@@ -481,7 +481,7 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
 #endif
   },
   { G1_TERMINAL_GROUP, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
-    "group",
+    "{group}",
 #ifndef MARPAESLIF_NTRACE
     "group", "gr"
 #else
@@ -489,7 +489,7 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
 #endif
   },
   { G1_TERMINAL_SEPARATOR, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
-    "separator",
+    "{separator}",
 #ifndef MARPAESLIF_NTRACE
     "separator", "sep"
 #else
@@ -497,7 +497,7 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
 #endif
   },
   { G1_TERMINAL_PROPER, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
-    "proper",
+    "{proper}",
 #ifndef MARPAESLIF_NTRACE
     "proper", "pro"
 #else
@@ -505,7 +505,7 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
 #endif
   },
   { G1_TERMINAL_RANK, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
-    "rank",
+    "{rank}",
 #ifndef MARPAESLIF_NTRACE
     "rank", "ra"
 #else
@@ -513,7 +513,7 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
 #endif
   },
   { G1_TERMINAL_NULL_RANKING, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
-    "null-ranking",
+    "{null-ranking}",
 #ifndef MARPAESLIF_NTRACE
     "null-ranking", "null-"
 #else
@@ -521,7 +521,7 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
 #endif
   },
   { G1_TERMINAL_NULL, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
-    "null",
+    "{null}",
 #ifndef MARPAESLIF_NTRACE
     "null", "nul"
 #else
@@ -529,7 +529,7 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
 #endif
   },
   { G1_TERMINAL_LOW, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
-    "low",
+    "{low}",
 #ifndef MARPAESLIF_NTRACE
     "low", "lo"
 #else
@@ -537,7 +537,7 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
 #endif
   },
   { G1_TERMINAL_HIGH, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
-    "high",
+    "{high}",
 #ifndef MARPAESLIF_NTRACE
     "high", "hi"
 #else
@@ -545,7 +545,7 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
 #endif
   },
   { G1_TERMINAL_PRIORITY, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
-    "priority",
+    "{priority}",
 #ifndef MARPAESLIF_NTRACE
     "priority", "prio"
 #else
@@ -553,7 +553,7 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
 #endif
   },
   { G1_TERMINAL_PAUSE, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
-    "pause",
+    "{pause}",
 #ifndef MARPAESLIF_NTRACE
     "pause", "pa"
 #else
@@ -561,7 +561,7 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
 #endif
   },
   { G1_TERMINAL_ON, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
-    "on",
+    "{on}",
 #ifndef MARPAESLIF_NTRACE
     "on", "o"
 #else
@@ -569,7 +569,7 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
 #endif
   },
   { G1_TERMINAL_OFF, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
-    "off",
+    "{off}",
 #ifndef MARPAESLIF_NTRACE
     "off", "of"
 #else
@@ -577,7 +577,7 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
 #endif
   },
   { G1_TERMINAL_FORGIVING, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
-    "forgiving",
+    "{forgiving}",
 #ifndef MARPAESLIF_NTRACE
     "forgiving", "for"
 #else
@@ -585,7 +585,7 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
 #endif
   },
   { G1_TERMINAL_LATM, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
-    "latm",
+    "{latm}",
 #ifndef MARPAESLIF_NTRACE
     "latm", "lat"
 #else
@@ -593,7 +593,7 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
 #endif
   },
   { G1_TERMINAL_BLESS, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
-    "bless",
+    "{bless}",
 #ifndef MARPAESLIF_NTRACE
     "bless", "bl"
 #else
@@ -601,7 +601,7 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
 #endif
   },
   { G1_TERMINAL_NAME, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
-    "name",
+    "{name}",
 #ifndef MARPAESLIF_NTRACE
     "name", "nam"
 #else
@@ -609,7 +609,7 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
 #endif
   },
   { G1_TERMINAL_COMMA, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
-    ",",
+    "{,}",
 #ifndef MARPAESLIF_NTRACE
     ",", ""
 #else
@@ -617,7 +617,7 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
 #endif
   },
   { G1_TERMINAL_LPAREN, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
-    "(",
+    "{(}",
 #ifndef MARPAESLIF_NTRACE
     "(", ""
 #else
@@ -625,7 +625,7 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
 #endif
   },
   { G1_TERMINAL_RPAREN, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
-    ")",
+    "{)}",
 #ifndef MARPAESLIF_NTRACE
     ")", ""
 #else
@@ -633,7 +633,7 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
 #endif
   },
   { G1_TERMINAL_STAR, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
-    "*",
+    "{*}",
 #ifndef MARPAESLIF_NTRACE
     "*", ""
 #else
@@ -641,7 +641,7 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
 #endif
   },
   { G1_TERMINAL_PLUS, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
-    "+",
+    "{+}",
 #ifndef MARPAESLIF_NTRACE
     "+", ""
 #else
@@ -649,7 +649,7 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
 #endif
   },
   { G1_TERMINAL___SHIFT, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
-    "::shift",
+    "{::shift}",
 #ifndef MARPAESLIF_NTRACE
     "::shift", "::s"
 #else
@@ -657,7 +657,7 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
 #endif
   },
   { G1_TERMINAL___UNDEF, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
-    "::undef",
+    "{::undef}",
 #ifndef MARPAESLIF_NTRACE
     "::undef", ":"
 #else
@@ -665,7 +665,7 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
 #endif
   },
   { G1_TERMINAL___ASCII, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
-    "::ascii",
+    "{::ascii}",
 #ifndef MARPAESLIF_NTRACE
     "::ascii", "::asci"
 #else
@@ -673,7 +673,7 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
 #endif
   },
   { G1_TERMINAL___TRANSLIT, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
-    "::translit",
+    "{::translit}",
 #ifndef MARPAESLIF_NTRACE
     "::translit", "::t"
 #else
@@ -681,7 +681,7 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
 #endif
   },
   { G1_TERMINAL_LEFT_ANGLE, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
-    "<",
+    "{<}",
 #ifndef MARPAESLIF_NTRACE
     "<", NULL
 #else
@@ -689,7 +689,7 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
 #endif
   },
   { G1_TERMINAL_RIGHT_ANGLE, MARPAESLIF_TERMINAL_TYPE_STRING,  MARPAESLIF_REGEX_OPTION_NA,
-    ">",
+    "{>}",
 #ifndef MARPAESLIF_NTRACE
     ">", NULL
 #else
