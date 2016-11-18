@@ -1430,7 +1430,7 @@ static short _marpaESLIF_bootstrap_G1_action_alternativesb(void *userDatavp, mar
     goto err;
   }
 
-  for (i = arg0i; i <= argni; i++) {
+  for (i = arg0i; i <= argni; i += 2) { /* The separator is NOT skipped from the list of arguments */
     if (! marpaESLIFValue_stack_getAndForget_ptrb(marpaESLIFValuep, i, NULL /* contextip */, (void **) &alternativep, NULL /* shallowbp */)) {
       goto err;
     }
@@ -1475,7 +1475,7 @@ static short _marpaESLIF_bootstrap_G1_action_prioritiesb(void *userDatavp, marpa
     goto err;
   }
 
-  for (i = arg0i; i <= argni; i++) {
+  for (i = arg0i; i <= argni; i += 2) { /* The separator is NOT skipped from the list of arguments */
     if (! marpaESLIFValue_stack_getAndForget_ptrb(marpaESLIFValuep, i, NULL /* contextip */, (void **) &alternativeStackp, NULL /* shallowbp */)) {
       goto err;
     }
@@ -1484,7 +1484,7 @@ static short _marpaESLIF_bootstrap_G1_action_prioritiesb(void *userDatavp, marpa
       MARPAESLIF_ERRORF(marpaESLIFp, "alternativesStackp push failure, %s", strerror(errno));
       goto err;
     }
-    alternativeStackp = NULL; /* alternativeStackp is now in alternativeStackp */
+    alternativeStackp = NULL; /* alternativeStackp is now in alternativesStackp */
   }
 
   if (! marpaESLIFValue_stack_set_ptrb(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_PRIORITIES, alternativesStackp, 0 /* shallowb */)) {
