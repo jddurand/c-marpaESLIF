@@ -1392,6 +1392,7 @@ static short _marpaESLIF_bootstrap_G1_action_alternativeb(void *userDatavp, marp
   }
   alternativep->rhsPrimaryStackp     = rhsPrimaryStackp;
   alternativep->adverbListItemStackp = adverbListItemStackp;
+  alternativep->priorityi            = 0;  /* Used when there is the loosen "||" operator */
 
   rhsPrimaryStackp     = NULL;
   adverbListItemStackp = NULL;
@@ -1544,6 +1545,7 @@ static short _marpaESLIF_bootstrap_G1_action_priority_ruleb(void *userDatavp, ma
   short                                             left_associationb;
   short                                             right_associationb;
   short                                             group_associationb;
+  int                                               priorityCounti;
 
   if (! marpaESLIFValue_stack_get_ptrb(marpaESLIFValuep, arg0i, NULL /* contextip */, (void **) &symbolNames, NULL /* shallowbp */)) {
     goto err;
@@ -1567,6 +1569,54 @@ static short _marpaESLIF_bootstrap_G1_action_priority_ruleb(void *userDatavp, ma
     goto err;
   }
 
+  priorityCounti = GENERICSTACK_USED(alternativesStackp);
+  if (priorityCounti > 1) {
+    /* There is at least one '||' involved in the parsing      */
+    /* We revisit everything up the RHS of every individual alternative */
+    genericStack_t *alternativesStackWorkp = NULL;
+    genericStack_t *alternativeStackWorkp  = NULL;
+    genericStack_t *rhsPrimaryStackWorkp   = NULL;
+    char           *topasciis              = NULL;
+    int             priority_ixi;
+
+    /* Create a fixed version of top prioritized LHS: lhs[0] */
+    topasciis = (char *) malloc(strlen(symbolNames) + 3 /* "[0]" */ + 1 /* NUL byte */);
+    if (topasciis == NULL) {
+      MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
+      goto localerr;
+    }
+    strcpy(topasciis, symbolNames);
+    strcat(topasciis, "[0]");
+
+    GENERICSTACK_NEW(alternativesStackWorkp);
+    if (GENERICSTACK_ERROR(alternativesStackWorkp)) {
+      MARPAESLIF_ERRORF(marpaESLIFp, "alternativesStackWorkp initialization failure, %s", strerror(errno));
+      goto localerr;
+    }
+
+    for (priority_ixi = 0; priority_ixi < priorityCounti; priority_ixi++) {
+      int priorityi;
+      int alternativei;
+
+      priorityi = priorityCounti - (priority_ixi + 1);
+      /* Get the alternatives at indice priority_ixi */
+      if (! GENERICSTACK_IS_PTR(alternativesStackp, priority_ixi)) {
+        MARPAESLIF_ERRORF(marpaESLIFp, "alternativesStackp->[%d] is not a PTR", priority_ixi);
+        goto localerr;
+      }
+    }
+    goto localok;
+  localerr:
+    GENERICSTACK_FREE(alternativesStackWorkp);
+    GENERICSTACK_FREE(alternativeStackWorkp);
+    GENERICSTACK_FREE(rhsPrimaryStackWorkp);
+    if (topasciis != NULL) {
+      free(topasciis);
+    }
+    goto err;
+  }
+
+ localok:
   /* Priorities (things separated by the || operator) is a stack of alternatives */
   for (alternativesi = 0; alternativesi < GENERICSTACK_USED(alternativesStackp); alternativesi++) {
     if (! GENERICSTACK_IS_PTR(alternativesStackp, alternativesi)) {

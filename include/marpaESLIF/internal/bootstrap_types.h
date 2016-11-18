@@ -129,6 +129,7 @@ typedef struct marpaESLIF_bootstrap_rhs_primary {
 typedef struct marpaESLIF_bootstrap_alternative {
   genericStack_t *rhsPrimaryStackp;
   genericStack_t *adverbListItemStackp;
+  int             priorityi;         /* Used when there is the loosen "||" operator */
 } marpaESLIF_bootstrap_alternative_t;
 
 #endif /* MARPAESLIF_INTERNAL_BOOTSTRAP_TYPES_H */
