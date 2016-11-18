@@ -1573,11 +1573,10 @@ static short _marpaESLIF_bootstrap_G1_action_priority_ruleb(void *userDatavp, ma
   if (priorityCounti > 1) {
     /* There is at least one '||' involved in the parsing      */
     /* We revisit everything up the RHS of every individual alternative */
-    genericStack_t *alternativesStackWorkp = NULL;
-    genericStack_t *alternativeStackWorkp  = NULL;
-    genericStack_t *rhsPrimaryStackWorkp   = NULL;
+    genericStack_t *workStackp             = NULL;
     char           *topasciis              = NULL;
     int             priority_ixi;
+    short           localrcb;
 
     /* Create a fixed version of top prioritized LHS: lhs[0] */
     topasciis = (char *) malloc(strlen(symbolNames) + 3 /* "[0]" */ + 1 /* NUL byte */);
@@ -1588,12 +1587,13 @@ static short _marpaESLIF_bootstrap_G1_action_priority_ruleb(void *userDatavp, ma
     strcpy(topasciis, symbolNames);
     strcat(topasciis, "[0]");
 
-    GENERICSTACK_NEW(alternativesStackWorkp);
-    if (GENERICSTACK_ERROR(alternativesStackWorkp)) {
-      MARPAESLIF_ERRORF(marpaESLIFp, "alternativesStackWorkp initialization failure, %s", strerror(errno));
+    GENERICSTACK_NEW(workStackp);
+    if (GENERICSTACK_ERROR(workStackp)) {
+      MARPAESLIF_ERRORF(marpaESLIFp, "workStackp initialization failure, %s", strerror(errno));
       goto localerr;
     }
 
+    /* Fill priorityi of every alternative */
     for (priority_ixi = 0; priority_ixi < priorityCounti; priority_ixi++) {
       int priorityi;
       int alternativei;
@@ -1601,22 +1601,45 @@ static short _marpaESLIF_bootstrap_G1_action_priority_ruleb(void *userDatavp, ma
       priorityi = priorityCounti - (priority_ixi + 1);
       /* Get the alternatives at indice priority_ixi */
       if (! GENERICSTACK_IS_PTR(alternativesStackp, priority_ixi)) {
-        MARPAESLIF_ERRORF(marpaESLIFp, "alternativesStackp->[%d] is not a PTR", priority_ixi);
+        MARPAESLIF_ERRORF(marpaESLIFp, "alternativesStackp at indice %d is not PTR (got %s, value %d)", alternativesi, _marpaESLIF_genericStack_i_types(alternativesStackp, alternativesi), GENERICSTACKITEMTYPE(alternativesStackp, alternativesi));
         goto localerr;
       }
+      alternativeStackp = (genericStack_t *) GENERICSTACK_IS_PTR(alternativesStackp, priority_ixi);
+      for (alternativei = 0; alternativei < GENERICSTACK_USED(alternativeStackp); alternativei++) {
+        if (! GENERICSTACK_IS_PTR(alternativeStackp, alternativei)) {
+          MARPAESLIF_ERRORF(marpaESLIFp, "alternativeStackp at indice %d is not PTR (got %s, value %d)", alternativei, _marpaESLIF_genericStack_i_types(alternativeStackp, alternativei), GENERICSTACKITEMTYPE(alternativeStackp, alternativei));
+          goto localerr;
+        }
+        alternativep = (marpaESLIF_bootstrap_alternative_t *) GENERICSTACK_GET_PTR(alternativeStackp, alternativei);
+        /* Set the priority of this alternative and push to the work stack */
+        alternativep->priorityi = priorityi;
+        GENERICSTACK_PUSH_PTR(workStackp, alternativep);
+        if (GENERICSTACK_ERROR(workStackp)) {
+          MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "workStackp push failure, %s", strerror(errno));
+          goto localerr;
+        }
+      }
     }
-    goto localok;
+
+    localrcb = 1;
+    goto localdone;
+ 
   localerr:
-    GENERICSTACK_FREE(alternativesStackWorkp);
-    GENERICSTACK_FREE(alternativeStackWorkp);
-    GENERICSTACK_FREE(rhsPrimaryStackWorkp);
+    localrcb = 0;
+
+  localdone:
+    GENERICSTACK_FREE(workStackp);
     if (topasciis != NULL) {
       free(topasciis);
     }
-    goto err;
+    if (! localrcb) {
+      goto err;
+    } else {
+      rcb = 1;
+      goto done;
+    }
   }
 
- localok:
   /* Priorities (things separated by the || operator) is a stack of alternatives */
   for (alternativesi = 0; alternativesi < GENERICSTACK_USED(alternativesStackp); alternativesi++) {
     if (! GENERICSTACK_IS_PTR(alternativesStackp, alternativesi)) {
