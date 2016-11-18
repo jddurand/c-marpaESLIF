@@ -64,6 +64,7 @@ typedef enum bootstrap_grammar_G1_enum {
   G1_TERMINAL___TRANSLIT,
   G1_TERMINAL_LEFT_ANGLE,
   G1_TERMINAL_RIGHT_ANGLE,
+  G1_TERMINAL_AT_SIGN,
   /* ----- Non terminals ------ */
   G1_META_STATEMENTS,
   G1_META_STATEMENT,
@@ -695,6 +696,14 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
 #else
     NULL, NULL
 #endif
+  },
+  { G1_TERMINAL_AT_SIGN, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
+    "'@'",
+#ifndef MARPAESLIF_NTRACE
+    "@", NULL
+#else
+    NULL, NULL
+#endif
   }
 };
 
@@ -962,10 +971,9 @@ bootstrap_grammar_rule_t bootstrap_grammar_G1_rules[] = {
   */
   { G1_META_RHS_PRIMARY,                      G1_RULE_RHS_PRIMARY_1,                          MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_SINGLE_SYMBOL                        }, -1,                        -1, -1 , G1_ACTION_RHS_PRIMARY_1 },
   { G1_META_RHS_PRIMARY,                      G1_RULE_RHS_PRIMARY_2,                          MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_QUOTED_STRING                        }, -1,                        -1, -1 , G1_ACTION_RHS_PRIMARY_2 },
-  { G1_META_RHS_PRIMARY,                      G1_RULE_RHS_PRIMARY_3,                          MARPAESLIF_RULE_TYPE_ALTERNATIVE, 4, { G1_META_SYMBOL_NAME,
-                                                                                                                                     G1_TERMINAL_LEFT_ANGLE,
-                                                                                                                                     G1_META_GRAMMAR_REFERENCE,
-                                                                                                                                     G1_TERMINAL_RIGHT_ANGLE                      }, -1,                        -1, -1 , G1_ACTION_RHS_PRIMARY_3 },
+  { G1_META_RHS_PRIMARY,                      G1_RULE_RHS_PRIMARY_3,                          MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_META_SYMBOL_NAME,
+                                                                                                                                     G1_TERMINAL_AT_SIGN,
+                                                                                                                                     G1_META_GRAMMAR_REFERENCE                    }, -1,                        -1, -1 , G1_ACTION_RHS_PRIMARY_3 },
   { G1_META_RHS_PRIMARY_LIST,                 G1_RULE_RHS_PRIMARY_LIST,                       MARPAESLIF_RULE_TYPE_SEQUENCE,    1, { G1_META_RHS_PRIMARY                          },  1,                        -1,  0 , G1_ACTION_RHS_PRIMARY_LIST },
   /*
     lhsi                                      descs                                           type                          nrhsl  { rhsi }                                       }  minimumi           separatori  properb

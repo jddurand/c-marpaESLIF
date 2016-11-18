@@ -17,7 +17,8 @@ typedef enum marpaESLIF_bootstrap_stack_context {
   MARPAESLIF_BOOTSTRAP_STACK_TYPE_ALTERNATIVE,
   MARPAESLIF_BOOTSTRAP_STACK_TYPE_ALTERNATIVES,
   MARPAESLIF_BOOTSTRAP_STACK_TYPE_PRIORITIES,
-  MARPAESLIF_BOOTSTRAP_STACK_TYPE_SINGLE_SYMBOL
+  MARPAESLIF_BOOTSTRAP_STACK_TYPE_SINGLE_SYMBOL,
+  MARPAESLIF_BOOTSTRAP_STACK_TYPE_GRAMMAR_REFERENCE
 } marpaESLIF_bootstrap_stack_context_t;
 
 typedef enum marpaESLIF_bootstrap_adverb_list_item_type {
@@ -97,10 +98,23 @@ typedef enum marpaESLIF_bootstrap_rhs_primary_type {
   MARPAESLIF_BOOTSTRAP_RHS_PRIMARY_TYPE_SYMBOL_NAME_AND_REFERENCE
 } marpaESLIF_bootstrap_rhs_primary_type_t;
 
+typedef enum marpaESLIF_bootstrap_grammar_reference_type {
+  MARPAESLIF_BOOTSTRAP_GRAMMAR_REFERENCE_TYPE_NA = 0,
+  MARPAESLIF_BOOTSTRAP_GRAMMAR_REFERENCE_TYPE_STRING,
+  MARPAESLIF_BOOTSTRAP_GRAMMAR_REFERENCE_TYPE_SIGNED_INTEGER
+} marpaESLIF_bootstrap_grammar_reference_type_t;
+
+typedef struct marpaESLIF_bootstrap_grammar_reference {
+  marpaESLIF_bootstrap_grammar_reference_type_t type;
+  union {
+    marpaESLIF_bootstrap_utf_string_t *quotedStringp;
+    int                                signedIntegeri;
+  } u;
+} marpaESLIF_bootstrap_grammar_reference_t;
+
 typedef struct marpaESLIF_bootstrap_symbol_name_and_reference {
-  char                              *symbols;
-  marpaESLIF_bootstrap_utf_string_t *lookupGrammarStringp;
-  int                                lookupLevelDeltai;
+  char                                     *symbols;
+  marpaESLIF_bootstrap_grammar_reference_t *grammarReferencep;
 } marpaESLIF_bootstrap_symbol_name_and_reference_t;
 
 typedef struct marpaESLIF_bootstrap_rhs_primary {

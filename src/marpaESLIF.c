@@ -1859,6 +1859,11 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_grammar_newp(marpaESLIF_t *marpa
 
   /* MARPAESLIF_TRACE(marpaESLIFp, funcs, "Building ESLIF grammar"); */
 
+  if (leveli < 0) {
+    MARPAESLIF_ERRORF(marpaESLIFp, "Grammar level must be >= 0, current value is %d", leveli);
+    goto err;
+  }
+  
   grammarp = (marpaESLIF_grammar_t *) malloc(sizeof(marpaESLIF_grammar_t));
   if (grammarp == NULL) {
     MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
@@ -8258,7 +8263,7 @@ static inline short _marpaESLIFValue_stack_set_arrayb(marpaESLIFValue_t *marpaES
     MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "start indice=%d", indicei); \
                                                                         \
     if (! GENERICSTACK_IS_##STACKTYPE(marpaESLIFValuep->valueStackp, indicei)) { \
-      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "marpaESLIFValuep->valueStackp at indice %d is not " #STACKTYPE " (internal type: %d)", indicei, GENERICSTACKITEMTYPE(marpaESLIFValuep->valueStackp, indicei)); \
+      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "marpaESLIFValuep->valueStackp at indice %d is not " #STACKTYPE " (got %s, value %d)", indicei, _marpaESLIF_genericStack_i_types(marpaESLIFValuep->valueStackp, indicei), GENERICSTACKITEMTYPE(marpaESLIFValuep->valueStackp, indicei)); \
       goto err;                                                         \
     }                                                                   \
     if (valuep != NULL) {                                               \
@@ -8300,7 +8305,7 @@ MARPAESLIF_STACK_GETTER_GENERATOR(double, DOUBLE, MARPAESLIF_STACK_TYPE_DOUBLE, 
     MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "start indicei=%d", indicei); \
                                                                         \
     if (! GENERICSTACK_IS_INT(marpaESLIFValuep->typeStackp, indicei)) { \
-      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "marpaESLIFValuep->typeStackp at indice %d is not INT (internal type: %d)", indicei, GENERICSTACKITEMTYPE(marpaESLIFValuep->valueStackp, indicei)); \
+      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "marpaESLIFValuep->typeStackp at indice %d is not INT (got %s, value %d)", indicei, _marpaESLIF_genericStack_i_types(marpaESLIFValuep->typeStackp, indicei), GENERICSTACKITEMTYPE(marpaESLIFValuep->typeStackp, indicei)); \
       goto err;                                                         \
     }                                                                   \
     if (flagbp != NULL) {                                               \
@@ -8627,7 +8632,12 @@ static inline short _marpaESLIFValue_stack_i_resetb(marpaESLIFValue_t *marpaESLI
     goto err;
   }
 
+#ifdef MARPAESLIFVALE_POPMODE_SUPPORT
+  /* Experimental and is current failing, all this popmode stuff will be removed OOTD */
   popmodeb = ((indicei + 1) == GENERICSTACK_USED(marpaESLIFValuep->typeStackp));
+#else
+  popmodeb = 0;
+#endif
 
   origtypei = GENERICSTACK_GET_INT(marpaESLIFValuep->typeStackp, indicei);
   switch (origtypei) {
