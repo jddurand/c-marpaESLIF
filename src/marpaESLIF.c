@@ -1475,7 +1475,11 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
       /* They are exclusive (c.f. the grammar). Please note that we made sure */
       /* that symbolp is a meta symbol -; */
       if (! _marpaESLIF_resolveGrammarb(marpaESLIFp, grammarStackp, grammarp, symbolp->u.metap->asciinames, symbolp->lookupLevelDeltai, symbolp->lookupGrammarStringp, &sub_grammarp, NULL /* symbolpp */)) {
-        MARPAESLIF_ERRORF(marpaESLIFp, "Looking at rules in grammar level %d (%s): symbol %d (%s) is referencing a non-existing grammar ", grammari, grammarp->descp->asciis, symbolp->idi, symbolp->descp->asciis);
+        if (symbolp->lookupGrammarStringp != NULL) {
+          MARPAESLIF_ERRORF(marpaESLIFp, "Looking at rules in grammar level %d (%s): symbol %d (%s) is referencing a non-existing grammar (lookupLevelDeltai=%d, lookupGrammarStringp=%s)", grammari, grammarp->descp->asciis, symbolp->idi, symbolp->descp->asciis, symbolp->lookupLevelDeltai, symbolp->lookupGrammarStringp->asciis);
+        } else {
+          MARPAESLIF_ERRORF(marpaESLIFp, "Looking at rules in grammar level %d (%s): symbol %d (%s) is referencing a non-existing grammar (lookupLevelDeltai=%d)", grammari, grammarp->descp->asciis, symbolp->idi, symbolp->descp->asciis, symbolp->lookupLevelDeltai);
+        }
         goto err;
       }
       /* Commit resolved level in symbol */
@@ -1534,7 +1538,7 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
       continue;
     }
     grammarp = (marpaESLIF_grammar_t *) GENERICSTACK_GET_PTR(grammarStackp, grammari);
-    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Looking at rejection in grammar level %d (%s)", grammari, grammarp->descp->asciis);
+    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Looking at rejections in grammar level %d (%s)", grammari, grammarp->descp->asciis);
 
     /* Loop on rules */
     ruleStackp = grammarp->ruleStackp;
@@ -1563,7 +1567,7 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
       continue;
     }
     grammarp = (marpaESLIF_grammar_t *) GENERICSTACK_GET_PTR(grammarStackp, grammari);
-    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Looking at rejection in grammar level %d (%s)", grammari, grammarp->descp->asciis);
+    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Looking at passthroughs in grammar level %d (%s)", grammari, grammarp->descp->asciis);
 
     /* Loop on rules */
     ruleStackp = grammarp->ruleStackp;
@@ -1602,7 +1606,7 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
       continue;
     }
     grammarp = (marpaESLIF_grammar_t *) GENERICSTACK_GET_PTR(grammarStackp, grammari);
-    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Looking at rejection in grammar level %d (%s)", grammari, grammarp->descp->asciis);
+    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Looking at :discard in grammar level %d (%s)", grammari, grammarp->descp->asciis);
 
     /* Loop on rules */
     ruleStackp = grammarp->ruleStackp;

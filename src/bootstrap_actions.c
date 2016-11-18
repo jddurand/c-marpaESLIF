@@ -23,7 +23,8 @@ static inline void _marpaESLIF_bootstrap_single_symbol_freev(marpaESLIF_bootstra
 
 static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_check_grammar_by_levelp(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammar_t *marpaESLIFGrammarp, int leveli);
 static inline marpaESLIF_symbol_t  *_marpaESLIF_bootstrap_check_metasymbol_by_namep(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, char *asciinames);
-static inline marpaESLIF_symbol_t  *_marpaESLIF_bootstrap_check_terminalsymbolp(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, marpaESLIF_bootstrap_utf_string_t *quotedStringp);
+static inline marpaESLIF_symbol_t  *_marpaESLIF_bootstrap_check_quotedStringp(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, marpaESLIF_bootstrap_utf_string_t *quotedStringp);
+static inline marpaESLIF_symbol_t  *_marpaESLIF_bootstrap_check_singleSymbolp(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, marpaESLIF_bootstrap_single_symbol_t *singleSymbolp);
 
 static        void  _marpaESLIF_bootstrap_freeDefaultActionv(void *userDatavp, int contexti, void *p, size_t sizel);
 
@@ -277,12 +278,13 @@ static inline marpaESLIF_symbol_t *_marpaESLIF_bootstrap_check_metasymbol_by_nam
     if (symbolp == NULL) {
       goto err;
     }
-    symbolp->type     = MARPAESLIF_SYMBOL_TYPE_META;
-    symbolp->startb   = 0; /* TO DO */
-    symbolp->discardb = 0; /* TO DO */
-    symbolp->u.metap  = metap;
-    symbolp->idi      = metap->idi;
-    symbolp->descp    = metap->descp;
+    symbolp->type              = MARPAESLIF_SYMBOL_TYPE_META;
+    symbolp->startb            = 0; /* TO DO */
+    symbolp->discardb          = 0; /* TO DO */
+    symbolp->u.metap           = metap;
+    symbolp->idi               = metap->idi;
+    symbolp->descp             = metap->descp;
+    symbolp->lookupLevelDeltai = 0; /* This method is inserting symbols in the same grammar */
     metap = NULL; /* metap is now in symbolp */
 
     GENERICSTACK_SET_PTR(grammarp->symbolStackp, symbolp, symbolp->idi);
@@ -303,7 +305,7 @@ static inline marpaESLIF_symbol_t *_marpaESLIF_bootstrap_check_metasymbol_by_nam
 }
 
 /*****************************************************************************/
-static inline marpaESLIF_symbol_t *_marpaESLIF_bootstrap_check_terminalsymbolp(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, marpaESLIF_bootstrap_utf_string_t *quotedStringp)
+static inline marpaESLIF_symbol_t *_marpaESLIF_bootstrap_check_quotedStringp(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, marpaESLIF_bootstrap_utf_string_t *quotedStringp)
 /*****************************************************************************/
 {
   marpaESLIF_symbol_t   *symbolp = NULL;
@@ -385,6 +387,38 @@ static inline marpaESLIF_symbol_t *_marpaESLIF_bootstrap_check_terminalsymbolp(m
   _marpaESLIF_terminal_freev(terminalp);
   _marpaESLIF_symbol_freev(symbolp);
   symbolp = NULL;
+ done:
+  return symbolp;
+}
+
+/*****************************************************************************/
+static inline marpaESLIF_symbol_t *_marpaESLIF_bootstrap_check_singleSymbolp(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, marpaESLIF_bootstrap_single_symbol_t *singleSymbolp)
+/*****************************************************************************/
+{
+  marpaESLIF_symbol_t   *symbolp = NULL;
+
+  switch (singleSymbolp->type) {
+  case MARPAESLIF_SINGLE_SYMBOL_TYPE_SYMBOL:
+    symbolp = _marpaESLIF_bootstrap_check_metasymbol_by_namep(marpaESLIFp, grammarp, singleSymbolp->u.symbols);
+    if (symbolp == NULL) {
+      goto err;
+    }
+    break;
+  case MARPAESLIF_SINGLE_SYMBOL_TYPE_CHARACTER_CLASS:
+    break;
+  case MARPAESLIF_SINGLE_SYMBOL_TYPE_REGULAR_EXPRESSION:
+    break;
+  default:
+    MARPAESLIF_ERRORF(marpaESLIFp, "Unsupported singleSymbolp->Type = %d", singleSymbolp->type);
+    goto err;
+  }
+
+  goto done;
+  
+ err:
+  _marpaESLIF_symbol_freev(symbolp);
+  symbolp = NULL;
+
  done:
   return symbolp;
 }
@@ -1416,12 +1450,13 @@ static short _marpaESLIF_bootstrap_G1_action_priority_ruleb(void *userDatavp, ma
         rhsPrimaryp = (marpaESLIF_bootstrap_rhs_primary_t *) GENERICSTACK_GET_PTR(rhsPrimaryStackp, rhsPrimaryi);
         switch (rhsPrimaryp->type) {
         case MARPAESLIF_BOOTSTRAP_RHS_PRIMARY_TYPE_SINGLE_SYMBOL:
-          /* TO DO */
-          MARPAESLIF_ERROR(marpaESLIFp, "TO DO");
-          goto err;
+          rhsp = _marpaESLIF_bootstrap_check_singleSymbolp(marpaESLIFp, grammarp, rhsPrimaryp->u.singleSymbolp);
+          if (rhsp == NULL) {
+            goto err;
+          }
           break;
         case MARPAESLIF_BOOTSTRAP_RHS_PRIMARY_TYPE_QUOTED_STRING:
-          rhsp = _marpaESLIF_bootstrap_check_terminalsymbolp(marpaESLIFp, grammarp, rhsPrimaryp->u.quotedStringp);
+          rhsp = _marpaESLIF_bootstrap_check_quotedStringp(marpaESLIFp, grammarp, rhsPrimaryp->u.quotedStringp);
           if (rhsp == NULL) {
             goto err;
           }
