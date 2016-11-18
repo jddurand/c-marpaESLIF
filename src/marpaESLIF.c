@@ -464,15 +464,32 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
       goto err;
     }
     if (type == MARPAESLIF_TERMINAL_TYPE_STRING) {
-      /* Use already escaped it as he want -; */
-      generatedasciis = strdup(content2descp->asciis);
-      if (generatedasciis == NULL) {
-        MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
-        goto err;
+      /* Use already escaped version -; */
+      if (modifiers != NULL) {
+        /* ":xxxx */
+        generatedasciis = (char *) malloc(strlen(content2descp->asciis) + 1 + strlen(modifiers) + 1);
+        if (generatedasciis == NULL) {
+          MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
+          goto err;
+        }
+        strcpy(generatedasciis, content2descp->asciis);
+        strcat(generatedasciis, ":");
+        strcat(generatedasciis, modifiers);
+      } else {
+        generatedasciis = strdup(content2descp->asciis);
+        if (generatedasciis == NULL) {
+          MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
+          goto err;
+        }
       }
     } else {
-      /* /XXX/ (without escaping) */
-      generatedasciis = (char *) malloc(1 + strlen(content2descp->asciis) + 1 + 1);
+      /* "/" + XXX + "/" (without escaping) */
+      if (modifiers != NULL) {
+        /* xxxx */
+        generatedasciis = (char *) malloc(1 + strlen(content2descp->asciis) + 1 + strlen(modifiers) + 1);
+      } else {
+        generatedasciis = (char *) malloc(1 + strlen(content2descp->asciis) + 1 + 1);
+      }
       if (generatedasciis == NULL) {
         MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
         goto err;
@@ -480,10 +497,10 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
       strcpy(generatedasciis, "/");
       strcat(generatedasciis, content2descp->asciis);
       strcat(generatedasciis, "/");
+      if (modifiers != NULL) {
+        strcat(generatedasciis, modifiers);
+      }
     }
-    /*
-     * Look to modifiers
-     */
     terminalp->descp = _marpaESLIF_string_newp(marpaESLIFp, "ASCII", generatedasciis, strlen(generatedasciis), 1);
   } else {
     terminalp->descp = _marpaESLIF_string_newp(marpaESLIFp, descEncodings, descs, descl, 1);
