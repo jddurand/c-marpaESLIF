@@ -8594,9 +8594,13 @@ static inline short _marpaESLIFValue_stack_i_resetb(marpaESLIFValue_t *marpaESLI
   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "start indice=%d", indicei);
 
   if (indicei >= GENERICSTACK_USED(marpaESLIFValuep->typeStackp)) {
-    /* reset on something that does not exist */
-    rcb = 1;
-    goto done;
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Reset on something that does not yet exist: indice %d >= %d", indicei, GENERICSTACK_USED(marpaESLIFValuep->typeStackp));
+    /* reset on something that does not yet exist */
+    GENERICSTACK_SET_NA(marpaESLIFValuep->valueStackp, indicei);
+    GENERICSTACK_SET_INT(marpaESLIFValuep->contextStackp, 0, indicei);
+    GENERICSTACK_SET_INT(marpaESLIFValuep->typeStackp, MARPAESLIF_STACK_TYPE_UNDEF, indicei);
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Setted %p->[%d] = NA (type=NA,context=NA)", marpaESLIFValuep->valueStackp, indicei);
+    goto check_reset_status;
   }
 
   if (! GENERICSTACK_IS_INT(marpaESLIFValuep->typeStackp, indicei)) {
@@ -8608,6 +8612,7 @@ static inline short _marpaESLIFValue_stack_i_resetb(marpaESLIFValue_t *marpaESLI
 
   if (GENERICSTACK_GET_INT(marpaESLIFValuep->typeStackp, indicei) == MARPAESLIF_STACK_TYPE_UNDEF) {
     /* It i set, but it is undef  */
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Already resetted at indice %d", indicei);
     rcb = 1;
     goto done;
   }
@@ -8738,6 +8743,7 @@ static inline short _marpaESLIFValue_stack_i_resetb(marpaESLIFValue_t *marpaESLI
     MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "marpaESLIFValuep->valueStackp at indice %d is not supported (internal type: %d)", indicei, GENERICSTACKITEMTYPE(marpaESLIFValuep->valueStackp, indicei));
     goto err;
   }
+ check_reset_status:
   if (GENERICSTACK_ERROR(marpaESLIFValuep->valueStackp)) {
     MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "marpaESLIFValuep->valueStackp %s failure at indice %d, %s", popmodeb ? "pop" : "set", indicei, strerror(errno));
     goto err;
