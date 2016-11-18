@@ -37,6 +37,7 @@ static        short _marpaESLIF_bootstrap_G1_action_left_associationb(void *user
 static        short _marpaESLIF_bootstrap_G1_action_right_associationb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short _marpaESLIF_bootstrap_G1_action_group_associationb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short _marpaESLIF_bootstrap_G1_action_separatorb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
+static        short _marpaESLIF_bootstrap_G1_action_rhs_primary_1b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short _marpaESLIF_bootstrap_G1_action_rhs_primary_2b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short _marpaESLIF_bootstrap_G1_action_alternativeb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short _marpaESLIF_bootstrap_G1_action_alternativesb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
@@ -334,6 +335,8 @@ static inline marpaESLIF_symbol_t *_marpaESLIF_bootstrap_check_terminalsymbolp(m
       continue;
     }
     /* Either both are NULL, or both are not NULL */
+    /* We do try to re-evaluate the modifiers. Even if at the end this would give the same */
+    /* PCRE2 option, at mos this will generate a new terminal technically equivalent */
     if (quotedStringp->modifiers != NULL) {
       if (strcmp(quotedStringp->modifiers, symbolp->u.terminalp->modifiers) != 0) {
         continue;
@@ -523,6 +526,7 @@ static marpaESLIFValueRuleCallback_t _marpaESLIF_bootstrap_ruleActionResolver(vo
   else if (strcmp(actions, "G1_action_group_association") == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_group_associationb; }
   else if (strcmp(actions, "G1_action_separator")         == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_separatorb;         }
   else if (strcmp(actions, "G1_action_symbol_name_2")     == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_symbol_name_2b;     }
+  else if (strcmp(actions, "G1_action_rhs_primary_1")     == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_rhs_primary_1b;     }
   else if (strcmp(actions, "G1_action_rhs_primary_2")     == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_rhs_primary_2b;     }
   else if (strcmp(actions, "G1_action_alternative")       == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_alternativeb;       }
   else if (strcmp(actions, "G1_action_alternatives")      == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_alternativesb;      }
@@ -1004,6 +1008,62 @@ static short _marpaESLIF_bootstrap_G1_action_group_associationb(void *userDatavp
 {
   /* <group association> ::= 'assoc' '=>' 'group' */
   return marpaESLIFValue_stack_set_shortb(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_GROUP_ASSOCIATION, 1);
+}
+
+/*****************************************************************************/
+static short _marpaESLIF_bootstrap_G1_action_rhs_primary_1b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
+/*****************************************************************************/
+{
+  /* <rhs primary> ::= <single symbol> */
+  /* <single symbol> is on the stack, typed MARPAESLIF_BOOTSTRAP_STACK_TYPE_SINGLE_SYMBOL */
+  marpaESLIF_bootstrap_rhs_primary_t   *rhsPrimaryp   = NULL;
+  marpaESLIF_t                         *marpaESLIFp   = marpaESLIFValue_eslifp(marpaESLIFValuep);
+  marpaESLIF_bootstrap_single_symbol_t *singleSymbolp = NULL;
+  void                                 *bytep;
+  size_t                                bytel;
+  short                                 rcb;
+
+  /* Cannot be nullable */
+  if (nullableb) {
+    MARPAESLIF_ERROR(marpaESLIFp, "Nullable mode is not supported");
+    goto err;
+  }
+
+  if (! marpaESLIFValue_stack_getAndForget_ptrb(marpaESLIFValuep, arg0i, NULL /* contextip */, (void **) &singleSymbolp, NULL /* shallowbp */)) {
+    goto err;
+  }
+  /* It is a non-sense to not have valid information */
+  if (singleSymbolp == NULL) {
+    MARPAESLIF_ERRORF(marpaESLIFp, "marpaESLIFValue_stack_get_ptrb at indice %d returned NULL", argni);
+    goto err;
+  }
+
+  /* Make that an rhs primary structure */
+  rhsPrimaryp = (marpaESLIF_bootstrap_rhs_primary_t *) malloc(sizeof(marpaESLIF_bootstrap_rhs_primary_t));
+  if (rhsPrimaryp == NULL) {
+    MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
+    goto err;
+  }
+  rhsPrimaryp->type            = MARPAESLIF_BOOTSTRAP_RHS_PRIMARY_TYPE_SINGLE_SYMBOL;
+  rhsPrimaryp->u.singleSymbolp = singleSymbolp;
+  singleSymbolp = NULL; /* singleSymbolp is now in rhsPrimaryp */
+
+  if (! marpaESLIFValue_stack_set_ptrb(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_RHS_PRIMARY, rhsPrimaryp, 0 /* shallowb */)) {
+    goto err;
+  }
+
+  rcb = 1;
+  goto done;
+
+ err:
+  _marpaESLIF_bootstrap_rhs_primary_freev(rhsPrimaryp);
+  rcb = 0;
+
+ done:
+  if (singleSymbolp != NULL) {
+    _marpaESLIF_bootstrap_single_symbol_freev(singleSymbolp);
+  }
+  return rcb;
 }
 
 /*****************************************************************************/
