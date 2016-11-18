@@ -88,7 +88,6 @@ typedef struct marpaESLIF_bootstrap_single_symbol {
     marpaESLIF_bootstrap_utf_string_t *characterClassp;
     marpaESLIF_bootstrap_utf_string_t *regularExpressionp;
   } u;
-  char *modifiers; /* Used only for character class and regular expression */
 } marpaESLIF_bootstrap_single_symbol_t;
 
 typedef enum marpaESLIF_bootstrap_rhs_primary_type {
