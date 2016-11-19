@@ -1915,7 +1915,7 @@ static inline short _marpaESLIFValueRuleCallbackGrammar_ruleb(marpaESLIFValue_t 
                                     nrhsExceptionl,
                                     rhsExceptionip,
                                     ranki,
-                                    nullRanksHighb,
+                                    nullRanksHighb,
                                     sequenceb,
                                     minimumi,
                                     separatori,

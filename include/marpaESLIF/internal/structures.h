@@ -210,7 +210,10 @@ struct marpaESLIF {
 struct marpaESLIFGrammar {
   marpaESLIF_t             *marpaESLIFp;
   genericStack_t           *grammarStackp;
-  marpaESLIF_grammar_t     *grammarp;         /* This is a SHALLOW copy of current grammar in grammarStackp, defaulting to the top grammar */
+  marpaESLIF_grammar_t     *grammarp;          /* This is a SHALLOW copy of current grammar in grammarStackp, defaulting to the top grammar */
+  short                     warningIsErrorb;   /* Current warningIsErrorb setting (used when parsing grammars ) */
+  short                     warningIsIgnoredb; /* Current warningIsErrorb setting (used when parsing grammars ) */
+  short                     autorankb;         /* Current autorank setting */
 };
 
 struct marpaESLIFValue {

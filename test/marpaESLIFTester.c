@@ -14,10 +14,16 @@ typedef struct marpaESLIFTester_context {
 } marpaESLIFTester_context_t;
 
 const static char *metags = "\n"
-"<null statement> ::= 'a'\n"
-"                   | 'b'\n"
-"                   | 'c'\n"
-"                   | 'd'\n"
+  "inaccessible is warn by default\n"
+  "autorank is on by default\n"
+  "Expression ::= \n"
+  "            Number\n"
+  "            | '(' Expression ')' action => do_parens assoc => group\n"
+  "           || Expression '**' Expression action => do_pow assoc => right\n"
+  "           || Expression '*' Expression action => do_multiply\n"
+  "            | Expression '/' Expression action => do_divide\n"
+  "           || Expression '+' Expression action => do_add\n"
+  "            | Expression '-' Expression action => do_subtract\n"
 ;
 
 int main() {

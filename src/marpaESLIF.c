@@ -1030,7 +1030,6 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_grammarp(marpaESLIF_t 
   marpaWrapperGrammarOption.warningIsErrorb   = warningIsErrorb;
   marpaWrapperGrammarOption.warningIsIgnoredb = warningIsIgnoredb;
   marpaWrapperGrammarOption.autorankb         = autorankb;
-  marpaWrapperGrammarOption.exhaustionEventb  = 1;
   
   grammarp = _marpaESLIF_grammar_newp(marpaESLIFp, &marpaWrapperGrammarOption, leveli, descEncodings, descs, descl, latmb, defaultSymbolActions, defaultRuleActions, defaultFreeActions, defaultDiscardEvents, defaultDiscardEventb);
   if (grammarp == NULL) {
@@ -3526,9 +3525,12 @@ marpaESLIFGrammar_t *marpaESLIFGrammar_newp(marpaESLIF_t *marpaESLIFp, marpaESLI
     goto err;
   }
 
-  marpaESLIFGrammarp->marpaESLIFp   = marpaESLIFp;
-  marpaESLIFGrammarp->grammarStackp = NULL;
-  marpaESLIFGrammarp->grammarp      = NULL;
+  marpaESLIFGrammarp->marpaESLIFp       = marpaESLIFp;
+  marpaESLIFGrammarp->grammarStackp     = NULL;
+  marpaESLIFGrammarp->grammarp          = NULL;
+  marpaESLIFGrammarp->warningIsErrorb   = 0;
+  marpaESLIFGrammarp->warningIsIgnoredb = 0;
+  marpaESLIFGrammarp->autorankb         = 0;
 
   /* Our internal grammar reader callback */
   marpaESLIF_readerContext.marpaESLIFp = marpaESLIFp;
@@ -4713,7 +4715,11 @@ static inline short _marpaESLIFRecognizer_grammar_eventsb(marpaESLIFRecognizer_t
   marpaESLIFRecognizerp->lastCompletionEvents = NULL;
 
   /* Collect grammar native events and push them in the events stack */
-  if (! marpaWrapperGrammar_eventb(marpaESLIFRecognizerp->discardb ? grammarp->marpaWrapperGrammarDiscardp : grammarp->marpaWrapperGrammarStartp, &grammarEventl, &grammarEventp, 0)) {
+  if (! marpaWrapperGrammar_eventb(marpaESLIFRecognizerp->discardb ? grammarp->marpaWrapperGrammarDiscardp : grammarp->marpaWrapperGrammarStartp,
+                                   &grammarEventl,
+                                   &grammarEventp,
+                                   1, /* exhaustedb */
+                                   0 /* forceReloadb */)) {
     goto err;
   }
   if (grammarEventl > 0) {
@@ -6410,6 +6416,7 @@ static inline void _marpaESLIF_rule_createshowv(marpaESLIF_t *marpaESLIFp, marpa
         if (asciishows != NULL) {
           strcat(asciishows, " ");
         }
+        exceptionl++;
       }
       switch (symbolp->type) {
       case MARPAESLIF_SYMBOL_TYPE_TERMINAL:
@@ -6927,7 +6934,7 @@ static inline short _marpaESLIFRecognizer_encoding_eqb(marpaESLIFRecognizer_t *m
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerParentp, funcs, "start");
 
   /* First we want to make sure that the inputs is in UTF-8 */
-  utf8s = _marpaESLIF_charconvp(marpaESLIFRecognizerp->marpaESLIFp, "UTF-8", encodings, inputs, inputl, &utf8l, NULL /* fromEncodingsp */, NULL /* tconvpp */);
+  utf8s = _marpaESLIF_charconvp(marpaESLIFRecognizerParentp->marpaESLIFp, "UTF-8", encodings, inputs, inputl, &utf8l, NULL /* fromEncodingsp */, NULL /* tconvpp */);
   if (utf8s == NULL) {
     goto err;
   }
@@ -6935,7 +6942,7 @@ static inline short _marpaESLIFRecognizer_encoding_eqb(marpaESLIFRecognizer_t *m
   /* terminalp points to a case-insensitive string match terminal */
   marpaESLIFGrammar.marpaESLIFp = marpaESLIFp;
   /* Fake a recognizer. EOF flag will be set automatically in fake mode */
-  marpaESLIFRecognizerp = _marpaESLIFRecognizer_newp(&marpaESLIFGrammar, NULL /* marpaESLIFRecognizerOptionp */, 0 /* discardb */, NULL /* marpaESLIFRecognizerParentp */, 1 /* fakeb */);
+  marpaESLIFRecognizerp = _marpaESLIFRecognizer_newp(&marpaESLIFGrammar, NULL /* marpaESLIFRecognizerOptionp */, 0 /* discardb */, marpaESLIFRecognizerParentp, 1 /* fakeb */);
   if (marpaESLIFRecognizerp == NULL) {
     goto err;
   }

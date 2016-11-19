@@ -16,7 +16,7 @@
 # ESLIF 2016 Jean-Damien Durand
 #
 # ESLIF can read Marpa::R2's SLIF with the following additions or restrictions:
-# - autorank                 added
+# - autorank statement       added
 # - quoted name              added
 # - blessing                 removed
 # - reserved action name     only ::shift and ::undef are kept
@@ -85,6 +85,7 @@ statement                        ::= <start rule>
                                  | <prediction event declaration>
                                  | <inaccessible statement>
                                  | <exception statement>
+                                 | <autorank statement>
 
 <start rule>                   ::= ':start' <op declare> symbol
 <desc rule>                    ::= ':desc' <op declare> <quoted string>
@@ -109,6 +110,7 @@ statement                        ::= <start rule>
 <inaccessible statement>       ::= 'inaccessible' 'is' <inaccessible treatment> 'by' 'default'
 <inaccessible treatment>       ::= 'warn' | 'ok' | 'fatal'
 <exception statement>          ::= lhs <op declare> <rhs primary> '-' <parenthesized rhs exception list>
+<autorank statement>           ::= 'autorank' 'is' <on or of> 'by' 'default'
 
 <op declare>                   ::= <op declare top grammar>
                                  | <op declare lex grammar>
@@ -121,7 +123,6 @@ alternative                    ::= rhs <adverb list>
 <adverb list>                  ::= <adverb list items>
 <adverb list items>            ::= <adverb item>*
 <adverb item>                  ::= action
-                                 | autorank
                                  | <left association>
                                  | <right association>
                                  | <group association>
@@ -136,7 +137,6 @@ alternative                    ::= rhs <adverb list>
                                  | <null adverb>
 
 action                         ::= 'action' '=>' <action name>
-autorank                       ::= 'autorank' '=>' boolean
 <left association>             ::= 'assoc' '=>' 'left'
 <right association>            ::= 'assoc' '=>' 'right'
 <group association>            ::= 'assoc' '=>' 'group'
