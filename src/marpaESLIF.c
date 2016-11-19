@@ -6461,7 +6461,7 @@ static inline void _marpaESLIF_rule_createshowv(marpaESLIF_t *marpaESLIFp, marpa
       strcat(asciishows, rulep->actions);
     }
   }
-  if ((! rulep->descautob) && (strcmp(rulep->lhsp->descp->asciis, rulep->descp->asciis) != 0)) {
+  if (! rulep->descautob) {
     asciishowl++;                                 /* space */
     if (asciishows != NULL) {
       strcat(asciishows, " ");
