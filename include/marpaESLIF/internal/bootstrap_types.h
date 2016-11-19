@@ -20,6 +20,7 @@ typedef enum marpaESLIF_bootstrap_stack_context {
   MARPAESLIF_BOOTSTRAP_STACK_TYPE_GRAMMAR_REFERENCE,
   MARPAESLIF_BOOTSTRAP_STACK_TYPE_INACESSIBLE_TREATMENT,
   MARPAESLIF_BOOTSTRAP_STACK_TYPE_ON_OR_OFF,
+  MARPAESLIF_BOOTSTRAP_STACK_TYPE_QUANTIFIER
 } marpaESLIF_bootstrap_stack_context_t;
 
 typedef enum marpaESLIF_bootstrap_adverb_list_item_type {
@@ -38,12 +39,6 @@ typedef enum marpaESLIF_bootstrap_adverb_list_item_type {
   MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_NAMING
 } marpaESLIF_bootstrap_adverb_list_item_type_t;
 
-typedef enum marpaESLIF_bootstrap_null_ranking {
-  MARPAESLIF_BOOTSTRAP_NULL_RANKING_NA = 0,
-  MARPAESLIF_BOOTSTRAP_NULL_RANKING_LOW,
-  MARPAESLIF_BOOTSTRAP_NULL_RANKING_HIGHT
-} marpaESLIF_bootstrap_null_ranking_t;
-
 typedef enum marpaESLIF_bootstrap_pause {
   MARPAESLIF_BOOTSTRAP_PAUSE_NA = 0,
   MARPAESLIF_BOOTSTRAP_PAUSE_BEFORE,
@@ -55,24 +50,6 @@ typedef struct marpaESLIF_bootstrap_utf_string {
   size_t bytel;
   char  *modifiers;
 } marpaESLIF_bootstrap_utf_string_t;
-
-typedef struct marpaESLIF_bootstrap_adverb_list_item {
-  marpaESLIF_bootstrap_adverb_list_item_type_t type;
-  union {
-    char                               *actions;
-    short                               left_associationb;
-    short                               right_associationb;
-    short                               group_associationb;
-    char                               *separators;
-    short                               properb;
-    int                                 ranki;
-    marpaESLIF_bootstrap_null_ranking_t nullrankingi;
-    int                                 priorityi;
-    marpaESLIF_bootstrap_null_pause_t   pausei;
-    short                               latmb;
-    marpaESLIF_bootstrap_utf_string_t   naming;
-  } u;
-} marpaESLIF_bootstrap_adverb_list_item_t;
 
 typedef enum marpaESLIF_bootstrap_single_symbol_type {
   MARPAESLIF_SINGLE_SYMBOL_TYPE_NA = 0,
@@ -89,6 +66,24 @@ typedef struct marpaESLIF_bootstrap_single_symbol {
     marpaESLIF_bootstrap_utf_string_t *regularExpressionp;
   } u;
 } marpaESLIF_bootstrap_single_symbol_t;
+
+typedef struct marpaESLIF_bootstrap_adverb_list_item {
+  marpaESLIF_bootstrap_adverb_list_item_type_t type;
+  union {
+    char                                 *actions;
+    short                                 left_associationb;
+    short                                 right_associationb;
+    short                                 group_associationb;
+    marpaESLIF_bootstrap_single_symbol_t *separatorSingleSymbolp;
+    short                                 properb;
+    int                                   ranki;
+    short                                 nullRanksHighb;
+    int                                   priorityi;
+    marpaESLIF_bootstrap_null_pause_t     pausei;
+    short                                 latmb;
+    marpaESLIF_bootstrap_utf_string_t    *namingp;
+  } u;
+} marpaESLIF_bootstrap_adverb_list_item_t;
 
 typedef enum marpaESLIF_bootstrap_rhs_primary_type {
   MARPAESLIF_BOOTSTRAP_RHS_PRIMARY_TYPE_NA = 0,
