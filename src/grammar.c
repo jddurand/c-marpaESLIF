@@ -13,8 +13,7 @@ static marpaWrapperGrammarOption_t marpaWrapperGrammarOptionDefault = {
   NULL,    /* genericLoggerp             */
   0,       /* warningIsErrorb            */
   0,       /* warningIsIgnoredb          */
-  0,       /* autorankb                  */
-  0        /* exhaustionEventb           */
+  0        /* autorankb                  */
 };
 
 static marpaWrapperGrammarSymbolOption_t marpaWrapperGrammarSymbolOptionDefault = {
@@ -699,7 +698,7 @@ static inline short _marpaWrapperGrammar_precomputeb(marpaWrapperGrammar_t *marp
   }
 
   /* Prefetch events */
-  if (marpaWrapperGrammar_eventb(marpaWrapperGrammarp, NULL, NULL, 1) == 0) {
+  if (marpaWrapperGrammar_eventb(marpaWrapperGrammarp, NULL, NULL, 0 /* exhaustionEventb */, 1) == 0) {
     goto err;
   }
   
@@ -712,7 +711,7 @@ static inline short _marpaWrapperGrammar_precomputeb(marpaWrapperGrammar_t *marp
 }
 
 /****************************************************************************/
-short marpaWrapperGrammar_eventb(marpaWrapperGrammar_t *marpaWrapperGrammarp, size_t *eventlp, marpaWrapperGrammarEvent_t **eventpp, short forceReloadb)
+short marpaWrapperGrammar_eventb(marpaWrapperGrammar_t *marpaWrapperGrammarp, size_t *eventlp, marpaWrapperGrammarEvent_t **eventpp, short exhaustionEventb, short forceReloadb)
 /****************************************************************************/
 {
   MARPAWRAPPER_FUNCS(marpaWrapperGrammar_eventb);
@@ -784,7 +783,7 @@ short marpaWrapperGrammar_eventb(marpaWrapperGrammar_t *marpaWrapperGrammarp, si
           warningMsgs = msgs;
           break;
         case MARPA_EVENT_EXHAUSTED:
-          if (marpaWrapperGrammarp->marpaWrapperGrammarOption.exhaustionEventb) {
+          if (exhaustionEventb) {
             /* Generate an event */
             if (manageBuf_createp(genericLoggerp, (void **) &(marpaWrapperGrammarp->eventArrayp), &(marpaWrapperGrammarp->sizeEventl), subscribedEventi + 1, sizeof(marpaWrapperGrammarEvent_t)) == NULL) {
               goto err;
@@ -795,8 +794,6 @@ short marpaWrapperGrammar_eventb(marpaWrapperGrammar_t *marpaWrapperGrammarp, si
             eventp->symboli   = -1; /* No symbol associated to such event */
 
             marpaWrapperGrammarp->nEventl = ++subscribedEventi;
-          } else {
-            infoMsgs = msgs;
           }
           break;
         case MARPA_EVENT_LOOP_RULES:

@@ -12,7 +12,8 @@
 
 static marpaWrapperRecognizerOption_t marpaWrapperRecognizerOptionDefault = {
   NULL,    /* genericLoggerp   */
-  0        /* disableThresholdb */
+  0,       /* disableThresholdb */
+  0        /* exhaustionEventb */
 };
 
 /****************************************************************************/
@@ -93,7 +94,7 @@ marpaWrapperRecognizer_t *marpaWrapperRecognizer_newp(marpaWrapperGrammar_t *mar
   }
 
   /* Events can happen */
-  if (marpaWrapperGrammar_eventb(marpaWrapperGrammarp, NULL, NULL, 1) == 0) {
+  if (marpaWrapperGrammar_eventb(marpaWrapperGrammarp, NULL, NULL, marpaWrapperRecognizerOptionp->exhaustionEventb, 1) == 0) {
     goto err;
   }
 
@@ -192,7 +193,7 @@ short marpaWrapperRecognizer_completeb(marpaWrapperRecognizer_t *marpaWrapperRec
   }
 
   /* Events can happen */
-  if (marpaWrapperGrammar_eventb(marpaWrapperRecognizerp->marpaWrapperGrammarp, NULL, NULL, 1) == 0) {
+  if (marpaWrapperGrammar_eventb(marpaWrapperRecognizerp->marpaWrapperGrammarp, NULL, NULL, marpaWrapperRecognizerp->marpaWrapperRecognizerOption.exhaustionEventb, 1) == 0) {
     goto err;
   }
 
