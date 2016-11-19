@@ -21,7 +21,6 @@ marpaWrapper is a thin interface on top of L<libmarpa|https://jeffreykegler.gith
     short            warningIsErrorb;            /* Default: 0. Have precedence over warningIsIgnoredb  */
     short            warningIsIgnoredb;          /* Default: 0.                                         */
     short            autorankb;                  /* Default: 0.                                         */
-    short            exhaustionEventb;           /* Default: 0.                                         */
   } marpaWrapperGrammarOption_t;
 
   marpaWrapperGrammar_t *marpaWrapperGrammar_newp(marpaWrapperGrammarOption_t *marpaWrapperGrammarOptionp)
@@ -49,10 +48,6 @@ A flag saying that rules are automatically ranked. Then when a rule is created, 
 =item autorankb
 
 Automatic assign rule ranks. In such a cause the eventual rank number on a rule is always ignored. Rules are autoranked by their order of in the grammar. The latest the rule, the lower its rank.
-
-=item exhaustionEventb
-
-Generate an MARPAWRAPPERGRAMMAR_EVENT_EXHAUSTED event when parse tree is exhausted. Unless this option is set, an info message is always generated.
 
 =back
 
@@ -363,6 +358,7 @@ There is one notion to know about in the recognizer: it has an internal I<positi
   typedef struct marpaWrapperRecognizerOption {
     genericLogger_t *genericLoggerp;             /* Default: NULL. */
     short            disableThresholdb;          /* Default: 0.    */
+    short            exhaustionEventb;           /* Default: 0.                                         */
   } marpaWrapperRecognizerOption_t;
 
    marpaWrapperRecognizer_t *marpaWrapperRecognizer_newp(marpaWrapperGrammar_t *marpaWrapperGrammarp,
@@ -379,6 +375,10 @@ An eventual generic logger. If NULL, the recognizer will never log.
 =item disableThresholdb
 
 If this is a true value, disable Earley item warning threshold.
+
+=item exhaustionEventb
+
+Generate an MARPAWRAPPERGRAMMAR_EVENT_EXHAUSTED event when parse tree is exhausted. When not set, no exhaustion event is ever generated.
 
 =back
 
