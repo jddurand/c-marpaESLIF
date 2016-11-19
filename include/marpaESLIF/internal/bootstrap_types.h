@@ -8,7 +8,6 @@ typedef enum marpaESLIF_bootstrap_stack_context {
   MARPAESLIF_BOOTSTRAP_STACK_TYPE_RHS_PRIMARY,
   MARPAESLIF_BOOTSTRAP_STACK_TYPE_RHS,
   MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_ACTION,
-  MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_AUTORANK,
   MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_LEFT_ASSOCIATION,
   MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_RIGHT_ASSOCIATION,
   MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_GROUP_ASSOCIATION,
@@ -18,13 +17,14 @@ typedef enum marpaESLIF_bootstrap_stack_context {
   MARPAESLIF_BOOTSTRAP_STACK_TYPE_ALTERNATIVES,
   MARPAESLIF_BOOTSTRAP_STACK_TYPE_PRIORITIES,
   MARPAESLIF_BOOTSTRAP_STACK_TYPE_SINGLE_SYMBOL,
-  MARPAESLIF_BOOTSTRAP_STACK_TYPE_GRAMMAR_REFERENCE
+  MARPAESLIF_BOOTSTRAP_STACK_TYPE_GRAMMAR_REFERENCE,
+  MARPAESLIF_BOOTSTRAP_STACK_TYPE_INACESSIBLE_TREATMENT,
+  MARPAESLIF_BOOTSTRAP_STACK_TYPE_ON_OR_OFF,
 } marpaESLIF_bootstrap_stack_context_t;
 
 typedef enum marpaESLIF_bootstrap_adverb_list_item_type {
   MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_NA = 0,
   MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_ACTION,
-  MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_AUTORANK,
   MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_LEFT_ASSOCIATION,
   MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_RIGHT_ASSOCIATION,
   MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_GROUP_ASSOCIATION,
@@ -60,7 +60,6 @@ typedef struct marpaESLIF_bootstrap_adverb_list_item {
   marpaESLIF_bootstrap_adverb_list_item_type_t type;
   union {
     char                               *actions;
-    short                               autorankb;
     short                               left_associationb;
     short                               right_associationb;
     short                               group_associationb;
@@ -127,10 +126,22 @@ typedef struct marpaESLIF_bootstrap_rhs_primary {
 } marpaESLIF_bootstrap_rhs_primary_t;
 
 typedef struct marpaESLIF_bootstrap_alternative {
-  genericStack_t *rhsPrimaryStackp;
-  genericStack_t *adverbListItemStackp;
-  int             priorityi;         /* Used when there is the loosen "||" operator */
+  genericStack_t      *rhsPrimaryStackp;
+  genericStack_t      *adverbListItemStackp;
+  int                  priorityi;         /* Used when there is the loosen "||" operator */
+  marpaESLIF_symbol_t *forcedLhsp;        /* ditto */
 } marpaESLIF_bootstrap_alternative_t;
+
+typedef enum marpaESLIF_bootstrap_inaccessible_treatment_type {
+  MARPAESLIF_BOOTSTRAP_INACCESSIBLE_TREATMENT_TYPE_WARN = 0,
+  MARPAESLIF_BOOTSTRAP_INACCESSIBLE_TREATMENT_TYPE_OK,
+  MARPAESLIF_BOOTSTRAP_INACCESSIBLE_TREATMENT_TYPE_FATAL
+} marpaESLIF_bootstrap_inaccessible_treatment_type_t;
+
+typedef enum marpaESLIF_bootstrap_on_or_off_type {
+  MARPAESLIF_BOOTSTRAP_ON_OR_OFF_TYPE_ON = 0,
+  MARPAESLIF_BOOTSTRAP_ON_OR_OFF_TYPE_OFF
+} marpaESLIF_bootstrap_on_or_off_type_t;
 
 #endif /* MARPAESLIF_INTERNAL_BOOTSTRAP_TYPES_H */
 

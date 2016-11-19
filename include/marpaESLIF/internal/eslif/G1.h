@@ -86,6 +86,7 @@ typedef enum bootstrap_grammar_G1_enum {
   G1_META_INACCESSIBLE_STATEMENT,
   G1_META_INACCESSIBLE_TREATMENT,
   G1_META_EXCEPTION_STATEMENT,
+  G1_META_AUTORANK_STATEMENT,
   G1_META_OP_DECLARE,
   G1_META_OP_DECLARE_ANY_GRAMMAR,
   G1_META_OP_DECLARE_TOP_GRAMMAR,
@@ -99,7 +100,6 @@ typedef enum bootstrap_grammar_G1_enum {
   G1_META_ADVERB_LIST_ITEMS,
   G1_META_ADVERB_ITEM,
   G1_META_ACTION,
-  G1_META_AUTORANK,
   G1_META_LEFT_ASSOCIATION,
   G1_META_RIGHT_ASSOCIATION,
   G1_META_GROUP_ASSOCIATION,
@@ -176,6 +176,7 @@ bootstrap_grammar_meta_t bootstrap_grammar_G1_metas[] = {
   { G1_META_INACCESSIBLE_STATEMENT,           "inaccessible statement", 0, 0 },
   { G1_META_INACCESSIBLE_TREATMENT,           "inaccessible treatment", 0, 0 },
   { G1_META_EXCEPTION_STATEMENT,              "exception statement", 0, 0 },
+  { G1_META_AUTORANK_STATEMENT,               "autorank statement", 0, 0 },
   { G1_META_OP_DECLARE,                       "op declare", 0, 0 },
   { G1_META_OP_DECLARE_ANY_GRAMMAR,           L0_JOIN_G1_META_OP_DECLARE_ANY_GRAMMAR, 0, 0 },
   { G1_META_OP_DECLARE_TOP_GRAMMAR,           L0_JOIN_G1_META_OP_DECLARE_TOP_GRAMMAR, 0, 0 },
@@ -189,7 +190,6 @@ bootstrap_grammar_meta_t bootstrap_grammar_G1_metas[] = {
   { G1_META_ADVERB_LIST_ITEMS,                "adverb list items", 0, 0 },
   { G1_META_ADVERB_ITEM,                      "adverb item", 0, 0 },
   { G1_META_ACTION,                           "action", 0, 0 },
-  { G1_META_AUTORANK,                         "autorank", 0, 0 },
   { G1_META_LEFT_ASSOCIATION,                 "left association", 0, 0 },
   { G1_META_RIGHT_ASSOCIATION,                "right association", 0, 0 },
   { G1_META_GROUP_ASSOCIATION,                "group association", 0, 0 },
@@ -739,6 +739,7 @@ bootstrap_grammar_rule_t bootstrap_grammar_G1_rules[] = {
   { G1_META_STATEMENT,                        G1_RULE_STATEMENT_15,                           MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_PREDICTION_EVENT_DECLARATION         }, -1,                        -1, -1 , G1_ACTION_STATEMENT_15 },
   { G1_META_STATEMENT,                        G1_RULE_STATEMENT_16,                           MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_INACCESSIBLE_STATEMENT               }, -1,                        -1, -1 , G1_ACTION_STATEMENT_16 },
   { G1_META_STATEMENT,                        G1_RULE_STATEMENT_17,                           MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_EXCEPTION_STATEMENT                  }, -1,                        -1, -1 , G1_ACTION_STATEMENT_17 },
+  { G1_META_STATEMENT,                        G1_RULE_STATEMENT_18,                           MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_AUTORANK_STATEMENT                   }, -1,                        -1, -1 , G1_ACTION_STATEMENT_18 },
   { G1_META_START_RULE,                       G1_RULE_START_RULE,                             MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_TERMINAL__START,
                                                                                                                                      G1_META_OP_DECLARE,
                                                                                                                                      G1_META_SYMBOL                               }, -1,                        -1, -1 , G1_ACTION_START_RULE },
@@ -845,6 +846,11 @@ bootstrap_grammar_rule_t bootstrap_grammar_G1_rules[] = {
                                                                                                                                      G1_META_RHS_PRIMARY,
                                                                                                                                      G1_TERMINAL_MINUS,
                                                                                                                                      G1_META_PARENTHESIZED_RHS_EXCEPTION_LIST     }, -1,                        -1, -1 , G1_ACTION_EXCEPTION_STATEMENT },
+  { G1_META_AUTORANK_STATEMENT,               G1_RULE_AUTORANK_STATEMENT,                     MARPAESLIF_RULE_TYPE_ALTERNATIVE, 5, { G1_TERMINAL_AUTORANK,
+                                                                                                                                     G1_TERMINAL_IS,
+                                                                                                                                     G1_META_ON_OR_OFF,
+                                                                                                                                     G1_TERMINAL_BY,
+                                                                                                                                     G1_TERMINAL_DEFAULT                          }, -1,                        -1, -1 , G1_ACTION_AUTORANK_STATEMENT },
   { G1_META_OP_DECLARE,                       G1_RULE_OP_DECLARE_1,                           MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_OP_DECLARE_TOP_GRAMMAR               }, -1,                        -1, -1 , G1_ACTION_OP_DECLARE_1 },
   { G1_META_OP_DECLARE,                       G1_RULE_OP_DECLARE_2,                           MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_OP_DECLARE_LEX_GRAMMAR               }, -1,                        -1, -1 , G1_ACTION_OP_DECLARE_2 },
   { G1_META_OP_DECLARE,                       G1_RULE_OP_DECLARE_3,                           MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_OP_DECLARE_ANY_GRAMMAR               }, -1,                        -1, -1 , G1_ACTION_OP_DECLARE_3 },
@@ -861,34 +867,30 @@ bootstrap_grammar_rule_t bootstrap_grammar_G1_rules[] = {
   /*
     lhsi                                      descs                                           type                          nrhsl  { rhsi }                                       }  minimumi           separatori  properb
   */
-  { G1_META_ADVERB_ITEM,                      G1_RULE_ADVERB_ITEM_02,                         MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_AUTORANK                             }, -1,                        -1, -1 , G1_ACTION_ADVERB_ITEM_02 },
-  { G1_META_ADVERB_ITEM,                      G1_RULE_ADVERB_ITEM_03,                         MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_LEFT_ASSOCIATION                     }, -1,                        -1, -1 , G1_ACTION_ADVERB_ITEM_03 },
-  { G1_META_ADVERB_ITEM,                      G1_RULE_ADVERB_ITEM_04,                         MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_RIGHT_ASSOCIATION                    }, -1,                        -1, -1 , G1_ACTION_ADVERB_ITEM_04 },
-  { G1_META_ADVERB_ITEM,                      G1_RULE_ADVERB_ITEM_05,                         MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_GROUP_ASSOCIATION                    }, -1,                        -1, -1 , G1_ACTION_ADVERB_ITEM_05 },
-  { G1_META_ADVERB_ITEM,                      G1_RULE_ADVERB_ITEM_06,                         MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_SEPARATOR_SPECIFICATION              }, -1,                        -1, -1 , G1_ACTION_ADVERB_ITEM_06 },
+  { G1_META_ADVERB_ITEM,                      G1_RULE_ADVERB_ITEM_02,                         MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_LEFT_ASSOCIATION                     }, -1,                        -1, -1 , G1_ACTION_ADVERB_ITEM_03 },
+  { G1_META_ADVERB_ITEM,                      G1_RULE_ADVERB_ITEM_03,                         MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_RIGHT_ASSOCIATION                    }, -1,                        -1, -1 , G1_ACTION_ADVERB_ITEM_04 },
+  { G1_META_ADVERB_ITEM,                      G1_RULE_ADVERB_ITEM_04,                         MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_GROUP_ASSOCIATION                    }, -1,                        -1, -1 , G1_ACTION_ADVERB_ITEM_05 },
+  { G1_META_ADVERB_ITEM,                      G1_RULE_ADVERB_ITEM_05,                         MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_SEPARATOR_SPECIFICATION              }, -1,                        -1, -1 , G1_ACTION_ADVERB_ITEM_06 },
   /*
     lhsi                                      descs                                           type                          nrhsl  { rhsi }                                       }  minimumi           separatori  properb
   */
-  { G1_META_ADVERB_ITEM,                      G1_RULE_ADVERB_ITEM_07,                         MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_PROPER_SPECIFICATION                 }, -1,                        -1, -1 , G1_ACTION_ADVERB_ITEM_07 },
-  { G1_META_ADVERB_ITEM,                      G1_RULE_ADVERB_ITEM_08,                         MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_RANK_SPECIFICATION                   }, -1,                        -1, -1 , G1_ACTION_ADVERB_ITEM_08 },
-  { G1_META_ADVERB_ITEM,                      G1_RULE_ADVERB_ITEM_09,                         MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_NULL_RANKING_CONSTANT                }, -1,                        -1, -1 , G1_ACTION_ADVERB_ITEM_09 },
-  { G1_META_ADVERB_ITEM,                      G1_RULE_ADVERB_ITEM_10,                         MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_PRIORITY_SPECIFICATION               }, -1,                        -1, -1 , G1_ACTION_ADVERB_ITEM_10 },
-  { G1_META_ADVERB_ITEM,                      G1_RULE_ADVERB_ITEM_11,                         MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_PAUSE_SPECIFICATION                  }, -1,                        -1, -1 , G1_ACTION_ADVERB_ITEM_11 },
+  { G1_META_ADVERB_ITEM,                      G1_RULE_ADVERB_ITEM_06,                         MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_PROPER_SPECIFICATION                 }, -1,                        -1, -1 , G1_ACTION_ADVERB_ITEM_07 },
+  { G1_META_ADVERB_ITEM,                      G1_RULE_ADVERB_ITEM_07,                         MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_RANK_SPECIFICATION                   }, -1,                        -1, -1 , G1_ACTION_ADVERB_ITEM_08 },
+  { G1_META_ADVERB_ITEM,                      G1_RULE_ADVERB_ITEM_08,                         MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_NULL_RANKING_CONSTANT                }, -1,                        -1, -1 , G1_ACTION_ADVERB_ITEM_09 },
+  { G1_META_ADVERB_ITEM,                      G1_RULE_ADVERB_ITEM_09,                         MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_PRIORITY_SPECIFICATION               }, -1,                        -1, -1 , G1_ACTION_ADVERB_ITEM_10 },
+  { G1_META_ADVERB_ITEM,                      G1_RULE_ADVERB_ITEM_10,                         MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_PAUSE_SPECIFICATION                  }, -1,                        -1, -1 , G1_ACTION_ADVERB_ITEM_11 },
   /*
     lhsi                                      descs                                           type                          nrhsl  { rhsi }                                       }  minimumi           separatori  properb
   */
-  { G1_META_ADVERB_ITEM,                      G1_RULE_ADVERB_ITEM_12,                         MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_LATM_SPECIFICATION                   }, -1,                        -1, -1 , G1_ACTION_ADVERB_ITEM_12 },
-  { G1_META_ADVERB_ITEM,                      G1_RULE_ADVERB_ITEM_13,                         MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_NAMING                               }, -1,                        -1, -1 , G1_ACTION_ADVERB_ITEM_13 },
-  { G1_META_ADVERB_ITEM,                      G1_RULE_ADVERB_ITEM_14,                         MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_NULL_ADVERB                          }, -1,                        -1, -1 , G1_ACTION_ADVERB_ITEM_14 },
+  { G1_META_ADVERB_ITEM,                      G1_RULE_ADVERB_ITEM_11,                         MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_LATM_SPECIFICATION                   }, -1,                        -1, -1 , G1_ACTION_ADVERB_ITEM_12 },
+  { G1_META_ADVERB_ITEM,                      G1_RULE_ADVERB_ITEM_12,                         MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_NAMING                               }, -1,                        -1, -1 , G1_ACTION_ADVERB_ITEM_13 },
+  { G1_META_ADVERB_ITEM,                      G1_RULE_ADVERB_ITEM_13,                         MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_NULL_ADVERB                          }, -1,                        -1, -1 , G1_ACTION_ADVERB_ITEM_13},
   { G1_META_ACTION,                           G1_RULE_ACTION,                                 MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_TERMINAL_ACTION,
                                                                                                                                      G1_TERMINAL_THEN,
                                                                                                                                      G1_META_ACTION_NAME                          }, -1,                        -1, -1 , G1_ACTION_ACTION },
   /*
     lhsi                                      descs                                           type                          nrhsl  { rhsi }                                       }  minimumi           separatori  properb
   */
-  { G1_META_AUTORANK,                         G1_RULE_AUTORANK,                               MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_TERMINAL_AUTORANK,
-                                                                                                                                     G1_TERMINAL_THEN,
-                                                                                                                                     G1_META_BOOLEAN                              }, -1,                        -1, -1 , G1_ACTION_AUTORANK },
   { G1_META_LEFT_ASSOCIATION,                 G1_RULE_LEFT_ASSOCIATION,                       MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_TERMINAL_ASSOC,
                                                                                                                                      G1_TERMINAL_THEN,
                                                                                                                                      G1_TERMINAL_LEFT                             }, -1,                        -1, -1 , G1_ACTION_LEFT_ASSOCIATION },

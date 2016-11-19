@@ -19,6 +19,7 @@
 #define G1_RULE_STATEMENT_15                     "G1_rule_statement_15"
 #define G1_RULE_STATEMENT_16                     "G1_rule_statement_16"
 #define G1_RULE_STATEMENT_17                     "G1_rule_statement_17"
+#define G1_RULE_STATEMENT_18                     "G1_rule_statement_18"
 #define G1_RULE_START_RULE                       "G1_rule_start_rule"
 #define G1_RULE_DESC_RULE                        "G1_rule_desc_rule"
 #define G1_RULE_EMPTY_RULE                       "G1_rule_empty_rule"
@@ -44,6 +45,7 @@
 #define G1_RULE_INACCESSIBLE_TREATMENT_2         "G1_rule_inaccessible_treatment_2"
 #define G1_RULE_INACCESSIBLE_TREATMENT_3         "G1_rule_inaccessible_treatment_3"
 #define G1_RULE_EXCEPTION_STATEMENT              "G1_rule_exception_statement"
+#define G1_RULE_AUTORANK_STATEMENT               "G1_rule_autorank_statement"
 #define G1_RULE_OP_DECLARE_1                     "G1_rule_op_declare_1"
 #define G1_RULE_OP_DECLARE_2                     "G1_rule_op_declare_2"
 #define G1_RULE_OP_DECLARE_3                     "G1_rule_op_declare_3"
@@ -67,7 +69,6 @@
 #define G1_RULE_ADVERB_ITEM_13                   "G1_rule_adverb_item_13"
 #define G1_RULE_ADVERB_ITEM_14                   "G1_rule_adverb_item_14"
 #define G1_RULE_ACTION                           "G1_rule_action"
-#define G1_RULE_AUTORANK                         "G1_rule_autorank"
 #define G1_RULE_LEFT_ASSOCIATION                 "G1_rule_left_association"
 #define G1_RULE_RIGHT_ASSOCIATION                "G1_rule_right_association"
 #define G1_RULE_GROUP_ASSOCIATION                "G1_rule_group_association"
@@ -142,6 +143,7 @@
 #define G1_ACTION_STATEMENT_15                     "::undef"
 #define G1_ACTION_STATEMENT_16                     "::undef"
 #define G1_ACTION_STATEMENT_17                     "::undef"
+#define G1_ACTION_STATEMENT_18                     "::undef"
 #define G1_ACTION_START_RULE                       "G1_action_start_rule"
 #define G1_ACTION_DESC_RULE                        "G1_action_desc_rule"
 #define G1_ACTION_EMPTY_RULE                       "G1_action_empty_rule"
@@ -167,6 +169,7 @@
 #define G1_ACTION_INACCESSIBLE_TREATMENT_2         "G1_action_inaccessible_treatment_2"
 #define G1_ACTION_INACCESSIBLE_TREATMENT_3         "G1_action_inaccessible_treatment_3"
 #define G1_ACTION_EXCEPTION_STATEMENT              "G1_action_exception_statement"
+#define G1_ACTION_AUTORANK_STATEMENT               "G1_action_autorank_statement"
 #define G1_ACTION_OP_DECLARE_1                     "G1_action_op_declare_1"
 #define G1_ACTION_OP_DECLARE_2                     "G1_action_op_declare_2"
 #define G1_ACTION_OP_DECLARE_3                     "G1_action_op_declare_3"
@@ -176,21 +179,19 @@
 #define G1_ACTION_ADVERB_LIST                      "::shift" /* This is a nullable - it will return undef if there is no adverb */
 #define G1_ACTION_ADVERB_LIST_ITEMS                "G1_action_adverb_list_items"
 #define G1_ACTION_ADVERB_ITEM_01                   "::shift" /* <adverb item> ::= action */
-#define G1_ACTION_ADVERB_ITEM_02                   "::shift" /* <adverb item> ::= autorank */
-#define G1_ACTION_ADVERB_ITEM_03                   "::shift" /* <adverb item> ::= <left association> */
-#define G1_ACTION_ADVERB_ITEM_04                   "::shift" /* <adverb item> ::= <right association> */
-#define G1_ACTION_ADVERB_ITEM_05                   "::shift" /* <adverb item> ::= <group association> */
-#define G1_ACTION_ADVERB_ITEM_06                   "::shift" /* <adverb item> ::= <separator association> */
-#define G1_ACTION_ADVERB_ITEM_07                   "::shift" /* <adverb item> ::= <proper association> */
-#define G1_ACTION_ADVERB_ITEM_08                   "::shift" /* <adverb item> ::= <rank specification> */
-#define G1_ACTION_ADVERB_ITEM_09                   "::shift" /* <adverb item> ::= <null ranking specification> */
-#define G1_ACTION_ADVERB_ITEM_10                   "::shift" /* <adverb item> ::= <priority specification> */
-#define G1_ACTION_ADVERB_ITEM_11                   "::shift" /* <adverb item> ::= <pause specification> */
-#define G1_ACTION_ADVERB_ITEM_12                   "::shift" /* <adverb item> ::= <latm specification> */
-#define G1_ACTION_ADVERB_ITEM_13                   "::shift" /* <adverb item> ::= naming */
-#define G1_ACTION_ADVERB_ITEM_14                   "::shift" /* <adverb item> ::= <null adverb> */
+#define G1_ACTION_ADVERB_ITEM_02                   "::shift" /* <adverb item> ::= <left association> */
+#define G1_ACTION_ADVERB_ITEM_03                   "::shift" /* <adverb item> ::= <right association> */
+#define G1_ACTION_ADVERB_ITEM_04                   "::shift" /* <adverb item> ::= <group association> */
+#define G1_ACTION_ADVERB_ITEM_05                   "::shift" /* <adverb item> ::= <separator association> */
+#define G1_ACTION_ADVERB_ITEM_06                   "::shift" /* <adverb item> ::= <proper association> */
+#define G1_ACTION_ADVERB_ITEM_07                   "::shift" /* <adverb item> ::= <rank specification> */
+#define G1_ACTION_ADVERB_ITEM_08                   "::shift" /* <adverb item> ::= <null ranking specification> */
+#define G1_ACTION_ADVERB_ITEM_09                   "::shift" /* <adverb item> ::= <priority specification> */
+#define G1_ACTION_ADVERB_ITEM_10                   "::shift" /* <adverb item> ::= <pause specification> */
+#define G1_ACTION_ADVERB_ITEM_11                   "::shift" /* <adverb item> ::= <latm specification> */
+#define G1_ACTION_ADVERB_ITEM_12                   "::shift" /* <adverb item> ::= naming */
+#define G1_ACTION_ADVERB_ITEM_13                   "::shift" /* <adverb item> ::= <null adverb> */
 #define G1_ACTION_ACTION                           "G1_action_action"
-#define G1_ACTION_AUTORANK                         "G1_action_autorank"
 #define G1_ACTION_LEFT_ASSOCIATION                 "G1_action_left_association"
 #define G1_ACTION_RIGHT_ASSOCIATION                "G1_action_right_association"
 #define G1_ACTION_GROUP_ASSOCIATION                "G1_action_group_association"
