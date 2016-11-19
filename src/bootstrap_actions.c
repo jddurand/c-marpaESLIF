@@ -49,6 +49,8 @@ static        short _marpaESLIF_bootstrap_G1_action_alternativeb(void *userDatav
 static        short _marpaESLIF_bootstrap_G1_action_alternativesb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short _marpaESLIF_bootstrap_G1_action_prioritiesb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short _marpaESLIF_bootstrap_G1_action_priority_ruleb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
+static inline short _marpaESLIF_bootstrap_G1_action_priority_loosenb_ruleb(marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaESLIFValue_t *marpaESLIFValuep, int resulti, marpaESLIF_grammar_t *grammarp, marpaESLIF_symbol_t *lhsp, genericStack_t *alternativesStackp);
+static inline short _marpaESLIF_bootstrap_G1_action_priority_flat_ruleb(marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaESLIFValue_t *marpaESLIFValuep, int resulti, marpaESLIF_grammar_t *grammarp, marpaESLIF_symbol_t *lhsp, genericStack_t *alternativesStackp);
 static        short _marpaESLIF_bootstrap_G1_action_single_symbol_1b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short _marpaESLIF_bootstrap_G1_action_single_symbol_2b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short _marpaESLIF_bootstrap_G1_action_single_symbol_3b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
@@ -1505,21 +1507,23 @@ static short _marpaESLIF_bootstrap_G1_action_prioritiesb(void *userDatavp, marpa
 }
 
 /*****************************************************************************/
-static short _marpaESLIF_bootstrap_G1_action_priority_ruleb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
+static inline short _marpaESLIF_bootstrap_G1_action_priority_loosenb_ruleb(marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaESLIFValue_t *marpaESLIFValuep, int resulti, marpaESLIF_grammar_t *grammarp, marpaESLIF_symbol_t *lhsp, genericStack_t *alternativesStackp)
 /*****************************************************************************/
 {
   /* <priority rule> ::= lhs <op declare> priorities */
-  /* **** The result will be undef **** */
-  /* **** We work on userDatavp, that is a marpaESLIFGrammarp **** */
-  /* **** In case of failure, the caller that is marpaESLIFGrammar_newp() will call a free on this marpaESLIFGrammarp **** */
-  
-  marpaESLIFGrammar_t                              *marpaESLIFGrammarp = (marpaESLIFGrammar_t *) userDatavp;
+  /* This method is called when there is more than one priority. It reconstruct a flat list with one priority only */
+}
+
+/*****************************************************************************/
+static inline short _marpaESLIF_bootstrap_G1_action_priority_flat_ruleb(marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaESLIFValue_t *marpaESLIFValuep, int resulti, marpaESLIF_grammar_t *grammarp, marpaESLIF_symbol_t *lhsp, genericStack_t *alternativesStackp)
+/*****************************************************************************/
+{
+  /* <priority rule> ::= lhs <op declare> priorities */
+  /* This method is called when there is no more than one priority. It is ignoring the notion of priority. */
   marpaESLIF_t                                     *marpaESLIFp        = marpaESLIFValue_eslifp(marpaESLIFValuep);
   marpaESLIF_rule_t                                *rulep              = NULL;
   int                                              *rhsip              = NULL;
   size_t                                            nrhsl;
-  char                                             *symbolNames;
-  genericStack_t                                   *alternativesStackp;
   genericStack_t                                   *alternativeStackp;
   genericStack_t                                   *rhsPrimaryStackp;
   genericStack_t                                   *adverbListItemStackp;
@@ -1529,118 +1533,21 @@ static short _marpaESLIF_bootstrap_G1_action_priority_ruleb(void *userDatavp, ma
   int                                               rhsPrimaryi;
   marpaESLIF_bootstrap_alternative_t               *alternativep;
   marpaESLIF_bootstrap_rhs_primary_t               *rhsPrimaryp;
-  marpaESLIF_symbol_t                              *lhsp;
   marpaESLIF_symbol_t                              *rhsp;
   marpaESLIF_bootstrap_single_symbol_t             *singleSymbolp;
   marpaESLIF_bootstrap_single_symbol_t              singleSymbol; /* Fake single symbol in case of a "referenced-in-any-grammar" symbol */
   marpaESLIF_bootstrap_utf_string_t                *quotedStringp;
   marpaESLIF_bootstrap_symbol_name_and_reference_t *symbolNameAndReferencep;
   marpaESLIF_bootstrap_adverb_list_item_t          *adverbListItemp;
-  marpaESLIF_grammar_t                             *grammarp;
   marpaESLIF_grammar_t                             *referencedGrammarp;
-  int                                               leveli;
   short                                             rcb;
   short                                             undefb;
   char                                             *actions;
   short                                             left_associationb;
   short                                             right_associationb;
   short                                             group_associationb;
-  int                                               priorityCounti;
 
-  if (! marpaESLIFValue_stack_get_ptrb(marpaESLIFValuep, arg0i, NULL /* contextip */, (void **) &symbolNames, NULL /* shallowbp */)) {
-    goto err;
-  }
-  if (! marpaESLIFValue_stack_get_intb(marpaESLIFValuep, arg0i+1, NULL /* contextip */, &leveli)) {
-    goto err;
-  }
-  if (! marpaESLIFValue_stack_get_ptrb(marpaESLIFValuep, arg0i+2, NULL /* contextip */, (void **) &alternativesStackp, NULL /* shallowbp */)) {
-    goto err;
-  }
-
-  /* Check grammar at that level exist */
-  grammarp = _marpaESLIF_bootstrap_check_grammarp(marpaESLIFp, marpaESLIFGrammarp, leveli, NULL);
-  if (grammarp == NULL) {
-    goto err;
-  }
-
-  /* Check the lhs exist */
-  lhsp = _marpaESLIF_bootstrap_check_meta_by_namep(marpaESLIFp, grammarp, symbolNames);
-  if (lhsp == NULL) {
-    goto err;
-  }
-
-  priorityCounti = GENERICSTACK_USED(alternativesStackp);
-  if (priorityCounti > 1) {
-    /* There is at least one '||' involved in the parsing      */
-    /* We revisit everything up the RHS of every individual alternative */
-    genericStack_t *workStackp             = NULL;
-    char           *topasciis              = NULL;
-    int             priority_ixi;
-    short           localrcb;
-
-    /* Create a fixed version of top prioritized LHS: lhs[0] */
-    topasciis = (char *) malloc(strlen(symbolNames) + 3 /* "[0]" */ + 1 /* NUL byte */);
-    if (topasciis == NULL) {
-      MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
-      goto localerr;
-    }
-    strcpy(topasciis, symbolNames);
-    strcat(topasciis, "[0]");
-
-    GENERICSTACK_NEW(workStackp);
-    if (GENERICSTACK_ERROR(workStackp)) {
-      MARPAESLIF_ERRORF(marpaESLIFp, "workStackp initialization failure, %s", strerror(errno));
-      goto localerr;
-    }
-
-    /* Fill priorityi of every alternative */
-    for (priority_ixi = 0; priority_ixi < priorityCounti; priority_ixi++) {
-      int priorityi;
-      int alternativei;
-
-      priorityi = priorityCounti - (priority_ixi + 1);
-      /* Get the alternatives at indice priority_ixi */
-      if (! GENERICSTACK_IS_PTR(alternativesStackp, priority_ixi)) {
-        MARPAESLIF_ERRORF(marpaESLIFp, "alternativesStackp at indice %d is not PTR (got %s, value %d)", alternativesi, _marpaESLIF_genericStack_i_types(alternativesStackp, alternativesi), GENERICSTACKITEMTYPE(alternativesStackp, alternativesi));
-        goto localerr;
-      }
-      alternativeStackp = (genericStack_t *) GENERICSTACK_GET_PTR(alternativesStackp, priority_ixi);
-      for (alternativei = 0; alternativei < GENERICSTACK_USED(alternativeStackp); alternativei++) {
-        if (! GENERICSTACK_IS_PTR(alternativeStackp, alternativei)) {
-          MARPAESLIF_ERRORF(marpaESLIFp, "alternativeStackp at indice %d is not PTR (got %s, value %d)", alternativei, _marpaESLIF_genericStack_i_types(alternativeStackp, alternativei), GENERICSTACKITEMTYPE(alternativeStackp, alternativei));
-          goto localerr;
-        }
-        alternativep = (marpaESLIF_bootstrap_alternative_t *) GENERICSTACK_GET_PTR(alternativeStackp, alternativei);
-        /* Set the priority of this alternative and push to the work stack */
-        alternativep->priorityi = priorityi;
-        GENERICSTACK_PUSH_PTR(workStackp, alternativep);
-        if (GENERICSTACK_ERROR(workStackp)) {
-          MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "workStackp push failure, %s", strerror(errno));
-          goto localerr;
-        }
-      }
-    }
-
-    localrcb = 1;
-    goto localdone;
- 
-  localerr:
-    localrcb = 0;
-
-  localdone:
-    GENERICSTACK_FREE(workStackp);
-    if (topasciis != NULL) {
-      free(topasciis);
-    }
-    if (! localrcb) {
-      goto err;
-    } else {
-      rcb = 1;
-      goto done;
-    }
-  }
-
-  /* Priorities (things separated by the || operator) is a stack of alternatives */
+  /* Priorities (things separated by the || operator) are IGNORED in this method */
   for (alternativesi = 0; alternativesi < GENERICSTACK_USED(alternativesStackp); alternativesi++) {
     if (! GENERICSTACK_IS_PTR(alternativesStackp, alternativesi)) {
       MARPAESLIF_ERRORF(marpaESLIFp, "alternativesStackp at indice %d is not PTR (got %s, value %d)", alternativesi, _marpaESLIF_genericStack_i_types(alternativesStackp, alternativesi), GENERICSTACKITEMTYPE(alternativesStackp, alternativesi));
@@ -1802,6 +1709,59 @@ static short _marpaESLIF_bootstrap_G1_action_priority_ruleb(void *userDatavp, ma
     free(rhsip);
   }
   _marpaESLIF_rule_freev(rulep);
+  return rcb;
+}
+
+/*****************************************************************************/
+static short _marpaESLIF_bootstrap_G1_action_priority_ruleb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
+/*****************************************************************************/
+{
+  /* <priority rule> ::= lhs <op declare> priorities */
+  /* **** The result will be undef **** */
+  /* **** We work on userDatavp, that is a marpaESLIFGrammarp **** */
+  /* **** In case of failure, the caller that is marpaESLIFGrammar_newp() will call a free on this marpaESLIFGrammarp **** */
+  marpaESLIFGrammar_t  *marpaESLIFGrammarp = (marpaESLIFGrammar_t *) userDatavp;
+  marpaESLIF_t         *marpaESLIFp        = marpaESLIFValue_eslifp(marpaESLIFValuep);
+  char                 *symbolNames;
+  int                   leveli;
+  genericStack_t       *alternativesStackp;
+  marpaESLIF_grammar_t *grammarp;
+  marpaESLIF_symbol_t  *lhsp;
+  short                 rcb;
+
+  if (! marpaESLIFValue_stack_get_ptrb(marpaESLIFValuep, arg0i, NULL /* contextip */, (void **) &symbolNames, NULL /* shallowbp */)) {
+    goto err;
+  }
+  if (! marpaESLIFValue_stack_get_intb(marpaESLIFValuep, arg0i+1, NULL /* contextip */, &leveli)) {
+    goto err;
+  }
+  if (! marpaESLIFValue_stack_get_ptrb(marpaESLIFValuep, arg0i+2, NULL /* contextip */, (void **) &alternativesStackp, NULL /* shallowbp */)) {
+    goto err;
+  }
+
+  /* Check grammar at that level exist */
+  grammarp = _marpaESLIF_bootstrap_check_grammarp(marpaESLIFp, marpaESLIFGrammarp, leveli, NULL);
+  if (grammarp == NULL) {
+    goto err;
+  }
+
+  /* Check the lhs exist */
+  lhsp = _marpaESLIF_bootstrap_check_meta_by_namep(marpaESLIFp, grammarp, symbolNames);
+  if (lhsp == NULL) {
+    goto err;
+  }
+
+  if (! _marpaESLIF_bootstrap_G1_action_priority_flat_ruleb(marpaESLIFGrammarp, marpaESLIFValuep, resulti, grammarp, lhsp, alternativesStackp)) {
+    goto err;
+  }
+
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
   return rcb;
 }
 
