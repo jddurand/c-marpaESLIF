@@ -64,10 +64,10 @@ int main(int argc, char **argv) {
 								  0 /* warningIsErrorb */,
 								  0 /* warningIsIgnoredb */,
 								  0 /* autorankb */,
-								  0 /* exhaustion */
   };
   marpaWrapperRecognizerOption_t marpaWrapperRecognizerOption = { GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_DEBUG),
-								  0 /* disableThresholdb */
+								  0, /* disableThresholdb */
+								  0 /* exhaustion */
   };
   marpaWrapperAsfOption_t        marpaWrapperAsfOption        = { GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_DEBUG),
 								  0 /* highRankOnlyb */,

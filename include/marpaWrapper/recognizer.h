@@ -14,6 +14,7 @@ typedef struct marpaWrapperRecognizer marpaWrapperRecognizer_t;
 typedef struct marpaWrapperRecognizerOption {
   genericLogger_t *genericLoggerp;             /* Default: NULL. */
   short            disableThresholdb;          /* Default: 0.    */
+  short            exhaustionEventb;           /* Default: 0     */
 } marpaWrapperRecognizerOption_t;
 
 typedef struct marpaWrapperRecognizerProgress {

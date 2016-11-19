@@ -57,10 +57,10 @@ int main(int argc, char **argv) {
 								  0 /* warningIsErrorb */,
 								  0 /* warningIsIgnoredb */,
 								  0 /* autorankb */,
-								  0 /* exhaustion */
   };
   marpaWrapperRecognizerOption_t marpaWrapperRecognizerOption = { GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_TRACE),
-								  0 /* disableThresholdb */
+								  0, /* disableThresholdb */
+								  0 /* exhaustion */
   };
   marpaWrapperValueOption_t      marpaWrapperValueOption      = { GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_TRACE),
 								  1 /* highRankOnlyb */,
@@ -113,7 +113,7 @@ int main(int argc, char **argv) {
     }
   }
   if (rci == 0) {
-    if (marpaWrapperGrammar_eventb(marpaWrapperGrammarp, &neventl, NULL, 0) == 0) {
+    if (marpaWrapperGrammar_eventb(marpaWrapperGrammarp, &neventl, NULL, 0 /* exhaustionEventb */, 0) == 0) {
       rci = 1;
     }
   }
