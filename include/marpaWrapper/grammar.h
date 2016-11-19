@@ -62,7 +62,6 @@ typedef struct marpaWrapperGrammarOption {
   short            warningIsErrorb;            /* Default: 0. Have precedence over warningIsIgnoredb  */
   short            warningIsIgnoredb;          /* Default: 0.                                         */
   short            autorankb;                  /* Default: 0.                                         */
-  short            exhaustionEventb;           /* Default: 0.                                         */
 } marpaWrapperGrammarOption_t;
 
 typedef enum marpaWrapperSymbolProperty {
@@ -113,7 +112,7 @@ extern "C" {
   
   marpaWrapper_EXPORT short                  marpaWrapperGrammar_precomputeb(marpaWrapperGrammar_t *marpaWrapperGrammarp);
   marpaWrapper_EXPORT short                  marpaWrapperGrammar_precompute_startb(marpaWrapperGrammar_t *marpaWrapperGrammarp, int starti);
-  marpaWrapper_EXPORT short                  marpaWrapperGrammar_eventb(marpaWrapperGrammar_t *marpaWrapperGrammarp, size_t *eventlp, marpaWrapperGrammarEvent_t **eventpp, short forceReloadb);
+  marpaWrapper_EXPORT short                  marpaWrapperGrammar_eventb(marpaWrapperGrammar_t *marpaWrapperGrammarp, size_t *eventlp, marpaWrapperGrammarEvent_t **eventpp, short exhaustionEventb, short forceReloadb);
 #ifdef __cplusplus
 }
 #endif
