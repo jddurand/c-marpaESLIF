@@ -1460,6 +1460,8 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
       }
       /* Only non LHS meta symbols should be looked at */
       if ((symbolp->type != MARPAESLIF_SYMBOL_TYPE_META) || symbolp->lhsb) {
+        /* This is always resolved in the same grammar */
+        symbolp->resolvedLeveli = grammarp->leveli;
         continue;
       }
       metap = symbolp->u.metap;
@@ -6304,21 +6306,33 @@ static inline void _marpaESLIF_rule_createshowv(marpaESLIF_t *marpaESLIFp, marpa
     strcat(asciishows, rulep->lhsp->descp->asciis);
     strcat(asciishows, ">");
   }
-  asciishowl += 2;                              /* " :" */
-  if (asciishows != NULL) {
-    strcat(asciishows, " :");
-  }
-  /* Will an "int" ever have more than 1023 digits ? */
-  sprintf(tmps, "%d", grammarp->leveli);
-  asciishowl += 1 + strlen(tmps) + 1;          /* [%d] */
-  if (asciishows != NULL) {
-    strcat(asciishows, "[");
-    strcat(asciishows, tmps);
-    strcat(asciishows, "]");
-  }
-  asciishowl += 2;                              /* ":=" */
-  if (asciishows != NULL) {
-    strcat(asciishows, ":=");
+  if (grammarp->leveli == 0) {
+    asciishowl += 4;                              /* " ::=" */
+    if (asciishows != NULL) {
+      strcat(asciishows, " ::=");
+    }
+  } else if (grammarp->leveli == 1) {
+    asciishowl += 2;                              /* " ~" */
+    if (asciishows != NULL) {
+      strcat(asciishows, " ~");
+    }
+  } else {
+    asciishowl += 2;                              /* " :" */
+    if (asciishows != NULL) {
+      strcat(asciishows, " :");
+    }
+    /* Will an "int" ever have more than 1023 digits ? */
+    sprintf(tmps, "%d", grammarp->leveli);
+    asciishowl += 1 + strlen(tmps) + 1;          /* [%d] */
+    if (asciishows != NULL) {
+      strcat(asciishows, "[");
+      strcat(asciishows, tmps);
+      strcat(asciishows, "]");
+    }
+    asciishowl += 2;                              /* ":=" */
+    if (asciishows != NULL) {
+      strcat(asciishows, ":=");
+    }
   }
   for (rhsi = 0; rhsi < GENERICSTACK_USED(rhsStackp); rhsi++) {
     if (! GENERICSTACK_IS_PTR(rhsStackp, rhsi)) {

@@ -20,13 +20,14 @@ const static char *metags = "\n"
   "Expression ::= \n"
   "            Number\n"
   "            | '(' Expression ')' action => do_parens assoc => group\n"
-  "           || Expression '**' Expression action => do_pow assoc => right\n"
+  "           || Expression '**' Expression@1 action => do_pow assoc => right\n"
   "           || Expression '*' Expression action => do_multiply\n"
   "            | Expression '/' Expression action => do_divide\n"
   "           || Expression '+' Expression action => do_add\n"
   "            | Expression '-' Expression action => do_subtract\n"
   "comma ::= [,]\n"
   "Number ::= [\\d]+"
+  "Expression ~ 'TEST'\n"
 ;
 
 int main() {
