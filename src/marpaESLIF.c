@@ -2479,7 +2479,7 @@ static inline marpaESLIF_symbol_t *_marpaESLIF_symbol_newp(marpaESLIF_t *marpaES
   symbolp->discardEventb          = 1; /* An event is on by default */
   symbolp->lookupLevelDeltai      = 1;   /* Default lookup is the next grammar level */
   symbolp->lookupGrammarStringp   = NULL;
-  symbolp->resolvedLeveli         = -1; /* This will be overwriten by _marpaESLIFGrammar_validateb() and used only when symbol is a lexeme from another grammar */
+  symbolp->resolvedLeveli         = 0;   /* This will be overwriten by _marpaESLIFGrammar_validateb() and used only when symbol is a lexeme from another grammar */
   symbolp->priorityi              = 0; /* Default priority is 0 */
   symbolp->actions                = NULL;
   symbolp->nbupdatei              = 0;
@@ -6340,6 +6340,17 @@ static inline void _marpaESLIF_rule_createshowv(marpaESLIF_t *marpaESLIFp, marpa
       }
     default:
       break;
+    }
+    if (symbolp->resolvedLeveli != grammarp->leveli) {
+      asciishowl++;                              /* @ */
+      if (asciishows != NULL) {
+        strcat(asciishows, "@");
+      }
+      sprintf(tmps, "%d", symbolp->resolvedLeveli);
+      asciishowl += strlen(tmps);               /* %d */
+      if (asciishows != NULL) {
+        strcat(asciishows, tmps);
+      }
     }
   }
   exceptionl = 0;
