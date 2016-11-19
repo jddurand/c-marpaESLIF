@@ -1604,7 +1604,7 @@ static short _marpaESLIF_bootstrap_G1_action_priority_ruleb(void *userDatavp, ma
         MARPAESLIF_ERRORF(marpaESLIFp, "alternativesStackp at indice %d is not PTR (got %s, value %d)", alternativesi, _marpaESLIF_genericStack_i_types(alternativesStackp, alternativesi), GENERICSTACKITEMTYPE(alternativesStackp, alternativesi));
         goto localerr;
       }
-      alternativeStackp = (genericStack_t *) GENERICSTACK_IS_PTR(alternativesStackp, priority_ixi);
+      alternativeStackp = (genericStack_t *) GENERICSTACK_GET_PTR(alternativesStackp, priority_ixi);
       for (alternativei = 0; alternativei < GENERICSTACK_USED(alternativeStackp); alternativei++) {
         if (! GENERICSTACK_IS_PTR(alternativeStackp, alternativei)) {
           MARPAESLIF_ERRORF(marpaESLIFp, "alternativeStackp at indice %d is not PTR (got %s, value %d)", alternativei, _marpaESLIF_genericStack_i_types(alternativeStackp, alternativei), GENERICSTACKITEMTYPE(alternativeStackp, alternativei));

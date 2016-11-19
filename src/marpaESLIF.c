@@ -151,7 +151,7 @@ static inline void                   _marpaESLIFGrammar_grammarStack_freev(marpa
 static        char                  *_marpaESLIFGrammar_symbolDescriptionCallback(void *userDatavp, int symboli);
 static        short                  _marpaESLIFGrammar_symbolOptionSetterDiscardTop(void *userDatavp, int symboli, marpaWrapperGrammarSymbolOption_t *marpaWrapperGrammarSymbolOptionp);
 static        short                  _marpaESLIFGrammar_symbolOptionSetterNoEvent(void *userDatavp, int symboli, marpaWrapperGrammarSymbolOption_t *marpaWrapperGrammarSymbolOptionp);
-static inline void                   _marpaESLIF_rule_createshowv(marpaESLIF_t *marpaESLIFp, marpaESLIF_rule_t *rulep, char *asciishows, size_t *asciishowlp);
+static inline void                   _marpaESLIF_rule_createshowv(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, marpaESLIF_rule_t *rulep, char *asciishows, size_t *asciishowlp);
 static inline int                    _marpaESLIF_utf82ordi(PCRE2_SPTR8 utf8bytes, marpaESLIF_uint32_t *uint32p);
 static inline short                  _marpaESLIFRecognizer_matchPostProcessingb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, size_t matchl);
 static inline short                  _marpaESLIFRecognizer_appendDatab(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *datas, size_t datal);
@@ -1820,7 +1820,7 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
         }
         rulep = (marpaESLIF_rule_t *) GENERICSTACK_GET_PTR(ruleStackp, rulei);
         grammarp->ruleip[grammarp->rulel++] = rulep->idi;
-        _marpaESLIF_rule_createshowv(marpaESLIFp, rulep, NULL, &asciishowl);
+        _marpaESLIF_rule_createshowv(marpaESLIFp, grammarp, rulep, NULL, &asciishowl);
         rulep->asciishows = (char *) malloc(asciishowl);
         if (rulep->asciishows == NULL) {
           MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
@@ -1828,7 +1828,7 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
         }
         /* It is guaranteed that asciishowl is >= 1 - c.f. _marpaESLIF_rule_createshowv() */
         rulep->asciishows[0] = '\0';
-        _marpaESLIF_rule_createshowv(marpaESLIFp, rulep, rulep->asciishows, NULL);
+        _marpaESLIF_rule_createshowv(marpaESLIFp, grammarp, rulep, rulep->asciishows, NULL);
       }
     }
   }
@@ -2259,6 +2259,7 @@ static inline marpaESLIF_rule_t *_marpaESLIF_rule_newp(marpaESLIF_t *marpaESLIFp
 
   rulep->idi             = -1;
   rulep->descp           = NULL;
+  rulep->descautob       = 0;
   rulep->asciishows      = NULL; /* Filled by grammar validation */
   rulep->lhsp            = NULL;
   rulep->separatorp      = NULL;
@@ -2393,9 +2394,11 @@ static inline marpaESLIF_rule_t *_marpaESLIF_rule_newp(marpaESLIF_t *marpaESLIFp
       goto err;
     }
     rulep->descp = _marpaESLIF_string_newp(marpaESLIFp, "ASCII" /* We KNOW we generated an ASCII stringy */, marpaESLIF_stringGenerator.s, strlen(marpaESLIF_stringGenerator.s), 1 /* asciib */);
+    rulep->descautob = 1;
     free(marpaESLIF_stringGenerator.s);
   } else {
     rulep->descp = _marpaESLIF_string_newp(marpaESLIFp, descEncodings, descs, descl, 1 /* asciib */);
+    rulep->descautob = 0;
   }
   if (rulep->descp == NULL) {
     goto err;
@@ -6275,7 +6278,7 @@ static inline short _marpaESLIFRecognizer_readb(marpaESLIFRecognizer_t *marpaESL
 }
 
 /*****************************************************************************/
-static inline void _marpaESLIF_rule_createshowv(marpaESLIF_t *marpaESLIFp, marpaESLIF_rule_t *rulep, char *asciishows, size_t *asciishowlp)
+static inline void _marpaESLIF_rule_createshowv(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, marpaESLIF_rule_t *rulep, char *asciishows, size_t *asciishowlp)
 /*****************************************************************************/
 {
   genericStack_t      *rhsStackp       = rulep->rhsStackp;
@@ -6295,9 +6298,21 @@ static inline void _marpaESLIF_rule_createshowv(marpaESLIF_t *marpaESLIFp, marpa
     strcat(asciishows, rulep->lhsp->descp->asciis);
     strcat(asciishows, ">");
   }
-  asciishowl += 4;                              /* " ::=" */
+  asciishowl += 2;                              /* " :" */
   if (asciishows != NULL) {
-    strcat(asciishows, " ::=");
+    strcat(asciishows, " :");
+  }
+  /* Will an "int" ever have more than 1023 digits ? */
+  sprintf(tmps, "%d", grammarp->leveli);
+  asciishowl += 1 + strlen(tmps) + 1;          /* [%d] */
+  if (asciishows != NULL) {
+    strcat(asciishows, "[");
+    strcat(asciishows, tmps);
+    strcat(asciishows, "]");
+  }
+  asciishowl += 2;                              /* ":=" */
+  if (asciishows != NULL) {
+    strcat(asciishows, ":=");
   }
   for (rhsi = 0; rhsi < GENERICSTACK_USED(rhsStackp); rhsi++) {
     if (! GENERICSTACK_IS_PTR(rhsStackp, rhsi)) {
@@ -6446,7 +6461,7 @@ static inline void _marpaESLIF_rule_createshowv(marpaESLIF_t *marpaESLIFp, marpa
       strcat(asciishows, rulep->actions);
     }
   }
-  if (strcmp(rulep->lhsp->descp->asciis, rulep->descp->asciis) != 0) {
+  if ((! rulep->descautob) && (strcmp(rulep->lhsp->descp->asciis, rulep->descp->asciis) != 0)) {
     asciishowl++;                                 /* space */
     if (asciishows != NULL) {
       strcat(asciishows, " ");
