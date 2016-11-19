@@ -14,11 +14,9 @@ typedef struct marpaESLIFTester_context {
 } marpaESLIFTester_context_t;
 
 const static char *metags = "\n"
-  "      Number ::= [\\d]+"
   "inaccessible is warn by default\n"
   "autorank is on by default\n"
   "Script ::= Expression+ separator => comma action => do_script\n"
-  " comma ::= ','\n"
   "Expression ::= \n"
   "            Number\n"
   "            | '(' Expression ')' action => do_parens assoc => group\n"
@@ -27,6 +25,8 @@ const static char *metags = "\n"
   "            | Expression '/' Expression action => do_divide\n"
   "           || Expression '+' Expression action => do_add\n"
   "            | Expression '-' Expression action => do_subtract\n"
+  "comma ::= [,]\n"
+  "Number ::= [\\d]+"
 ;
 
 int main() {
