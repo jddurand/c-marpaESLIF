@@ -1832,7 +1832,7 @@ static inline short _marpaESLIF_bootstrap_G1_action_priority_loosen_ruleb(marpaE
   }
 
   /* Create the rule lhs := lhs[0] */
-  MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "Creating rule %s ::= %s at grammar level %d", lhsp->descp->asciis, prioritizedLhsp->descp->asciis, grammarp->leveli);
+  MARPAESLIF_DEBUGF(marpaESLIFValuep->marpaESLIFp, "Creating rule %s ::= %s at grammar level %d", lhsp->descp->asciis, prioritizedLhsp->descp->asciis, grammarp->leveli);
   rulep = _marpaESLIF_rule_newp(marpaESLIFp,
                                 grammarp,
                                 NULL, /* descEncodings */
@@ -1875,6 +1875,74 @@ static inline short _marpaESLIF_bootstrap_G1_action_priority_loosen_ruleb(marpaE
   if (GENERICSTACK_ERROR(flatAlternativesStackp)) {
     MARPAESLIF_ERRORF(marpaESLIFp, "flatAlternativesStackp push failure, %s", strerror(errno));
     goto err;
+  }
+
+  /* Create transition rules (remember, it is guaranteed that priorityCounti > 1 here */
+  for (priorityi = 1; priorityi <= priorityCounti-1; priorityi++) {
+    sprintf(tmps, "%d", priorityi - 1);
+    if (currentasciis != NULL) {
+      free(currentasciis);
+    }
+    currentasciis = (char *) malloc(strlen(lhsp->u.metap->asciinames) + 1 /* [ */ + strlen(tmps) + 1 /* ] */ + 1 /* NUL */);
+    if (currentasciis == NULL) {
+      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "malloc failure, %s", strerror(errno));
+      goto err;
+    }
+    strcpy(currentasciis, lhsp->u.metap->asciinames);
+    strcat(currentasciis, "[");
+    strcat(currentasciis, tmps);
+    strcat(currentasciis, "]");
+    prioritizedLhsp = _marpaESLIF_bootstrap_check_meta_by_namep(marpaESLIFp, grammarp, currentasciis, 1 /* createb */);
+    if (prioritizedLhsp == NULL) {
+      goto err;
+    }
+
+    sprintf(tmps, "%d", priorityi);
+    if (nextasciis != NULL) {
+      free(nextasciis);
+    }
+    nextasciis = (char *) malloc(strlen(lhsp->u.metap->asciinames) + 1 /* [ */ + strlen(tmps) + 1 /* ] */ + 1 /* NUL */);
+    if (nextasciis == NULL) {
+      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "malloc failure, %s", strerror(errno));
+      goto err;
+    }
+    strcpy(nextasciis, lhsp->u.metap->asciinames);
+    strcat(nextasciis, "[");
+    strcat(nextasciis, tmps);
+    strcat(nextasciis, "]");
+    nextPrioritizedLhsp = _marpaESLIF_bootstrap_check_meta_by_namep(marpaESLIFp, grammarp, nextasciis, 1 /* createb */);
+    if (nextPrioritizedLhsp == NULL) {
+      goto err;
+    }
+
+    /* Create the transition rule lhs[priorityi-1] := lhs[priorityi] */
+    MARPAESLIF_DEBUGF(marpaESLIFValuep->marpaESLIFp, "Creating transition rule %s ::= %s at grammar level %d", prioritizedLhsp->descp->asciis, nextPrioritizedLhsp->descp->asciis, grammarp->leveli);
+    rulep = _marpaESLIF_rule_newp(marpaESLIFp,
+                                  grammarp,
+                                  NULL, /* descEncodings */
+                                  NULL, /* descs */
+                                  0, /* descl */
+                                  prioritizedLhsp->idi,
+                                  1, /* nrhsl */
+                                  &(nextPrioritizedLhsp->idi), /* rhsip */
+                                  0, /* nexceptionl */
+                                  NULL, /* exceptionip */
+                                  0, /* ranki */
+                                  0, /* nullRanksHighb */
+                                  0, /* sequenceb */
+                                  -1, /* minimumi */
+                                  -1, /* separatori */
+                                  0, /* properb */
+                                  NULL, /* actions */
+                                  0 /* passthroughb */);
+    if (rulep == NULL) {
+      goto err;
+    }
+    GENERICSTACK_SET_PTR(grammarp->ruleStackp, rulep, rulep->idi);
+    if (GENERICSTACK_ERROR(grammarp->ruleStackp)) {
+      MARPAESLIF_ERRORF(marpaESLIFp, "ruleStackp set failure, %s", strerror(errno));
+      goto err;
+    }
   }
 
   /* Evaluate current priority of every alternative, change symbols, and push it in the flat version */
@@ -2237,7 +2305,22 @@ static inline short _marpaESLIF_bootstrap_G1_action_priority_flat_ruleb(marpaESL
           }
         }
       }
-      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "Creating rule %s at grammar level %d", (alternativep->forcedLhsp != NULL) ? alternativep->forcedLhsp->descp->asciis : lhsp->descp->asciis, grammarp->leveli);
+#ifndef MARPAESLIF_NTRACE
+      MARPAESLIF_DEBUGF(marpaESLIFValuep->marpaESLIFp, "Creating rule %s at grammar level %d", (alternativep->forcedLhsp != NULL) ? alternativep->forcedLhsp->descp->asciis : lhsp->descp->asciis, grammarp->leveli);
+      for (rhsPrimaryi = 0; rhsPrimaryi < nrhsi; rhsPrimaryi++) {
+        if (! GENERICSTACK_IS_PTR(rhsPrimaryStackp, rhsPrimaryi)) {
+          MARPAESLIF_ERRORF(marpaESLIFp, "alternativeStackp at indice %d is not PTR (got %s, value %d)", rhsPrimaryi, _marpaESLIF_genericStack_i_types(rhsPrimaryStackp, rhsPrimaryi), GENERICSTACKITEMTYPE(rhsPrimaryStackp, rhsPrimaryi));
+          goto err;
+        }
+        rhsPrimaryp = (marpaESLIF_bootstrap_rhs_primary_t *) GENERICSTACK_GET_PTR(rhsPrimaryStackp, rhsPrimaryi);
+        rhsp = _marpaESLIF_bootstrap_check_rhsPrimaryp(marpaESLIFp, marpaESLIFGrammarp, grammarp, rhsPrimaryp, 1 /* createb */);
+        if (rhsp == NULL) {
+          goto err;
+        }
+        MARPAESLIF_DEBUGF(marpaESLIFValuep->marpaESLIFp, "... Rhs No %d: %s", rhsPrimaryi, rhsp->descp->asciis);
+        rhsip[rhsPrimaryi] = rhsp->idi;
+      }
+#endif
       rulep = _marpaESLIF_rule_newp(marpaESLIFp,
                                     grammarp,
                                     NULL, /* descEncodings */
@@ -3036,9 +3119,9 @@ static short _marpaESLIF_bootstrap_G1_action_quantified_ruleb(void *userDatavp, 
 
 #ifndef MARPAESLIF_NTRACE
   if (separatorp != NULL) {
-    MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "Creating rule %s ::= %s%s ranki=>%d separator=>%s proper=>%d null-ranking=>%s at grammar level %d", lhsp->descp->asciis, rhsp->descp->asciis, minimumi ? "+" : "*", ranki, separatorp->descp->asciis, (int) properb, nullRanksHighb ? "high" : "low", grammarp->leveli);
+    MARPAESLIF_DEBUGF(marpaESLIFValuep->marpaESLIFp, "Creating rule %s ::= %s%s ranki=>%d separator=>%s proper=>%d null-ranking=>%s at grammar level %d", lhsp->descp->asciis, rhsp->descp->asciis, minimumi ? "+" : "*", ranki, separatorp->descp->asciis, (int) properb, nullRanksHighb ? "high" : "low", grammarp->leveli);
   } else {
-    MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "Creating rule %s ::= %s%s ranki=>%d null-ranking=>%s at grammar level %d", lhsp->descp->asciis, rhsp->descp->asciis, minimumi ? "+" : "*", ranki, nullRanksHighb ? "high" : "low", grammarp->leveli);
+    MARPAESLIF_DEBUGF(marpaESLIFValuep->marpaESLIFp, "Creating rule %s ::= %s%s ranki=>%d null-ranking=>%s at grammar level %d", lhsp->descp->asciis, rhsp->descp->asciis, minimumi ? "+" : "*", ranki, nullRanksHighb ? "high" : "low", grammarp->leveli);
   }
 #endif
   rulep = _marpaESLIF_rule_newp(marpaESLIFp,
