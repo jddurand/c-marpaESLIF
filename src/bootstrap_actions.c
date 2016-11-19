@@ -1507,11 +1507,33 @@ static short _marpaESLIF_bootstrap_G1_action_prioritiesb(void *userDatavp, marpa
 }
 
 /*****************************************************************************/
-static inline short _marpaESLIF_bootstrap_G1_action_priority_loosenb_ruleb(marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaESLIFValue_t *marpaESLIFValuep, int resulti, marpaESLIF_grammar_t *grammarp, marpaESLIF_symbol_t *lhsp, genericStack_t *alternativesStackp)
+static inline short _marpaESLIF_bootstrap_G1_action_priority_loosen_ruleb(marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaESLIFValue_t *marpaESLIFValuep, int resulti, marpaESLIF_grammar_t *grammarp, marpaESLIF_symbol_t *lhsp, genericStack_t *alternativesStackp)
 /*****************************************************************************/
 {
   /* <priority rule> ::= lhs <op declare> priorities */
   /* This method is called when there is more than one priority. It reconstruct a flat list with one priority only */
+  short           rcb;
+  genericStack_t *flatAlternativesStackp = NULL;
+
+  if (GENERICSTACK_USED(alternativesStackp) <= 1) {
+    /* No loosen operator: go to flat method */
+    return _marpaESLIF_bootstrap_G1_action_priority_flat_ruleb(marpaESLIFGrammarp, marpaESLIFValuep, resulti, grammarp, lhsp, alternativesStackp);
+  }
+
+  /* We construct a new alternativesStackp as if the loosen operator was absent, as if the user would have writen the BNF the old way. */
+  if (! _marpaESLIF_bootstrap_G1_action_priority_flat_ruleb(marpaESLIFGrammarp, marpaESLIFValuep, resulti, grammarp, lhsp, alternativesStackp)) {
+    goto err;
+  }
+
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  GENERICSTACK_FREE(flatAlternativesStackp);
+  return rcb;
 }
 
 /*****************************************************************************/
@@ -1751,7 +1773,7 @@ static short _marpaESLIF_bootstrap_G1_action_priority_ruleb(void *userDatavp, ma
     goto err;
   }
 
-  if (! _marpaESLIF_bootstrap_G1_action_priority_flat_ruleb(marpaESLIFGrammarp, marpaESLIFValuep, resulti, grammarp, lhsp, alternativesStackp)) {
+  if (! _marpaESLIF_bootstrap_G1_action_priority_loosen_ruleb(marpaESLIFGrammarp, marpaESLIFValuep, resulti, grammarp, lhsp, alternativesStackp)) {
     goto err;
   }
 
