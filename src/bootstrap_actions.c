@@ -1506,6 +1506,8 @@ static short _marpaESLIF_bootstrap_G1_action_rhs_primary_2b(void *userDatavp, ma
   /* In contrary to regexps, because [] in a character class are not to be removed, while // in an explicit regexp */
   /* are to be removed. Therefore, terminal_newp() to be called with regexp *content* in regexp mode, while it can */
   /* handle totally the string case. */
+  /* Remember that a quoted string is a regexp with enforced unicode mode. Therefore the match is guaranteed to */
+  /* have been done on a buffer converted to UTF-8, regardless of the original encoding of the input. */
   rhsPrimaryp->u.quotedStringp->bytep     = bytep;
   rhsPrimaryp->u.quotedStringp->bytel     = bytel;
   modifiers = NULL; /* modifiers is in rhsPrimaryp */
@@ -3267,7 +3269,10 @@ static short _marpaESLIF_bootstrap_G1_action_desc_ruleb(void *userDatavp, marpaE
   }
 
   _marpaESLIF_string_freev(grammarp->descp);
-  grammarp->descp = _marpaESLIF_string_newp(marpaESLIFp, NULL /* encodingasciis */, newbytep, newbytel, 1 /* asciib */);
+  /* Why hardcoded to UTF-8 ? Because a quote string is implemented as a regexp in unicode mode. */
+  /* Therefore it is guaranteed that the match was done on UTF-8 bytes; regardless of the encoding */
+  /* of the original input. */
+  grammarp->descp = _marpaESLIF_string_newp(marpaESLIFp, "UTF-8", newbytep, newbytel, 1 /* asciib */);
   if (grammarp->descp == NULL) {
     goto err;
   }
