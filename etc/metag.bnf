@@ -167,7 +167,7 @@ naming                         ::= 'name' '=>' <alternative name>
 
 <event name>        ::= <ascii graph name>
                       | <reserved event name>
-<reserved event name> ~ ':symbol'
+<reserved event name> ::= ':symbol'
 
 lhs                              ::= <symbol name>
 rhs                              ::= <rhs primary>+
