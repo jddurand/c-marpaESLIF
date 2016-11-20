@@ -139,6 +139,8 @@ extern "C" {
   marpaESLIF_EXPORT short                   marpaESLIFGrammar_rules_by_grammarb(marpaESLIFGrammar_t *marpaESLIFGrammarp, int **ruleipp, size_t *rulelp, int grammari, marpaESLIFString_t *descp);
   marpaESLIF_EXPORT short                   marpaESLIFGrammar_ruledisplayformb(marpaESLIFGrammar_t *marpaESLIFGrammarp, int rulei, char **ruledisplaysp);
   marpaESLIF_EXPORT short                   marpaESLIFGrammar_ruledisplayform_by_grammarb(marpaESLIFGrammar_t *marpaESLIFGrammarp, int rulei, char **ruledisplaysp, int grammari, marpaESLIFString_t *descp);
+  marpaESLIF_EXPORT short                   marpaESLIFGrammar_grammarshowformb(marpaESLIFGrammar_t *marpaESLIFGrammarp, char **grammarshowsp);
+  marpaESLIF_EXPORT short                   marpaESLIFGrammar_grammarshowform_by_grammarb(marpaESLIFGrammar_t *marpaESLIFGrammarp, char **grammarshowsp, int grammari, marpaESLIFString_t *descp);
   marpaESLIF_EXPORT short                   marpaESLIFGrammar_ruleshowformb(marpaESLIFGrammar_t *marpaESLIFGrammarp, int rulei, char **ruleshowsp);
   marpaESLIF_EXPORT short                   marpaESLIFGrammar_ruleshowform_by_grammarb(marpaESLIFGrammar_t *marpaESLIFGrammarp, int rulei, char **ruleshowsp, int grammari, marpaESLIFString_t *descp);
   marpaESLIF_EXPORT short                   marpaESLIFGrammar_symboldisplayformb(marpaESLIFGrammar_t *marpaESLIFGrammarp, int symboli, char **symboldisplaysp);

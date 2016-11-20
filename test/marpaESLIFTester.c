@@ -16,18 +16,18 @@ typedef struct marpaESLIFTester_context {
 const static char *metags = "\n"
   "inaccessible is warn by default\n"
   "autorank is on by default\n"
+  ":start ::= Script\n"
   "Script ::= Expression+ separator => comma action => do_script\n"
   "Expression ::= \n"
   "            Number\n"
   "            | '(' Expression ')' action => do_parens assoc => group\n"
-  "           || Expression '**' X@+1 action => do_pow assoc => right\n"
+  "           || Expression '**' Expression action => do_pow assoc => right\n"
   "           || Expression '*' Expression action => do_multiply\n"
   "            | Expression '/' Expression action => do_divide\n"
   "           || Expression '+' Expression action => do_add\n"
   "            | Expression '-' Expression action => do_subtract\n"
   "comma ::= [,]\n"
   "Number ::= [\\d]+"
-  "X ~ 'Y'"
 ;
 
 int main() {
@@ -38,9 +38,10 @@ int main() {
   marpaESLIFGrammarOption_t marpaESLIFGrammarOption;
   int                       exiti;
   int                       ngrammari;
+  char                     *grammarshows;
   int                      *ruleip;
   size_t                    rulel;
-  int                       i;
+  int                       grammari;
   size_t                    l;
 
   marpaESLIFOption.genericLoggerp = GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_DEBUG);
@@ -60,17 +61,11 @@ int main() {
   }
 
   if (marpaESLIFGrammar_ngrammari(marpaESLIFGrammarp, &ngrammari)) {
-    for (i = 0; i < ngrammari; i++) {
-      if (marpaESLIFGrammar_rules_by_grammarb(marpaESLIFGrammarp, &ruleip, &rulel, i /* grammari */, NULL /* descp */)) {
+    for (grammari = 0; grammari < ngrammari; grammari++) {
+      if (marpaESLIFGrammar_grammarshowform_by_grammarb(marpaESLIFGrammarp, &grammarshows, grammari, NULL)) {
         GENERICLOGGER_INFO (marpaESLIFOption.genericLoggerp, "-------------------------");
-        GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "ESLIF grammar at level %d:", i);
-        GENERICLOGGER_INFO (marpaESLIFOption.genericLoggerp, "-------------------------");
-        for (l = 0; l < rulel; l++) {
-          char *ruleshows;
-          if (marpaESLIFGrammar_ruleshowform_by_grammarb(marpaESLIFGrammarp, l, &ruleshows, i, NULL /* descp */)) {
-            GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "%s", ruleshows);
-          }
-        }
+        GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "ESLIF grammar at level %d:", grammari);
+        GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "-------------------------\n\n%s", grammarshows);
       }
     }
   }

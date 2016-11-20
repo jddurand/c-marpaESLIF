@@ -185,12 +185,14 @@ struct marpaESLIF_grammar {
   char                  *defaultDiscardEvents;        /* Default discard event */
   short                  defaultDiscardEventb;        /* Default discard event initial state: 0: off, 1: on */
   int                    starti;                      /* Default start symbol ID - filled during grammar validation */
+  char                  *starts;                      /* Default start symbol name - filled during grammar validation - shallow pointer */
   int                   *ruleip;                      /* Array of rule IDs - filled by grammar validation */
   size_t                 rulel;                       /* Size of the rule IDs array - filled by grammar validation */
   short                  haveRejectionb;              /* When true, valuation go to the ASF mode - filled by grammar validation */
   unsigned int           nbupdateviaStarti;           /* Number of updates - used in grammar ESLIF actions */
   unsigned int           nbupdateviaLexemei;          /* Number of updates - used in grammar ESLIF actions */
   unsigned int           nbupdateviaDiscardi;         /* Number of updates - used in grammar ESLIF actions */
+  char                  *asciishows;                  /* Grammar show (ASCII) */
 };
 
 /* ----------------------------------- */
