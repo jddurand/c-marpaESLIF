@@ -157,7 +157,7 @@ static inline short                  _marpaESLIFRecognizer_matchPostProcessingb(
 static inline short                  _marpaESLIFRecognizer_appendDatab(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *datas, size_t datal);
 static inline short                  _marpaESLIFRecognizer_encoding_eqb(marpaESLIFRecognizer_t *marpaESLIFRecognizerParentp, marpaESLIF_terminal_t *terminalp, char *encodings, char *inputs, size_t inputl);
 static inline void                   _marpaESLIFValueErrorProgressReportv(marpaESLIFValue_t *marpaESLIFValuep);
-static inline short                  _marpaESLIF_resolveGrammarb(marpaESLIF_t *marpaESLIFp, genericStack_t *grammarStackp, marpaESLIF_grammar_t *current_grammarp, char *asciis, int lookupLevelDeltai, marpaESLIF_string_t *lookupGrammarStringp, marpaESLIF_grammar_t **grammarpp, marpaESLIF_symbol_t **symbolpp);
+static inline marpaESLIF_symbol_t   *_marpaESLIF_resolveSymbolp(marpaESLIF_t *marpaESLIFp, genericStack_t *grammarStackp, marpaESLIF_grammar_t *current_grammarp, char *asciis, int lookupLevelDeltai, marpaESLIF_string_t *lookupGrammarStringp, marpaESLIF_grammar_t **grammarpp);
 
 static inline short                  _marpaESLIF_generateHelper_includeb(marpaESLIF_t *marpaESLIFp, genericLogger_t *genericLoggerp, marpaESLIF_stringGenerator_t *stringGeneratorp, char *userspaceincludes);
 static inline short                  _marpaESLIF_generateHelper_externb(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammar_t *marpaESLIFGrammarp, genericLogger_t *genericLoggerp, marpaESLIF_stringGenerator_t *stringGeneratorp, char *freeMethodNames, char *copyMethodNames);
@@ -1306,7 +1306,7 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
         if (startp == NULL) {
           startp = symbolp;
         } else {
-          MARPAESLIF_ERRORF(marpaESLIFp, "More than one :start symbol at grammar level %d (%s): symbols No %d (%s) and %d (%s)", grammari, grammarp->descp->asciis, startp->idi, startp->descp->asciis, symbolp->idi, symbolp->descp->asciis);
+          MARPAESLIF_ERRORF(marpaESLIFp, "More than one :start symbol at grammar level %d (%s): symbols %d <%s> and %d <%s>", grammari, grammarp->descp->asciis, startp->idi, startp->descp->asciis, symbolp->idi, symbolp->descp->asciis);
           goto err;
         }
       }
@@ -1326,13 +1326,13 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
         MARPAESLIF_ERRORF(marpaESLIFp, "Precomputing grammar level %d (%s) is impossible: no rule", grammari, grammarp->descp->asciis);
         goto err;
       }
-      MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Precomputing grammar level %d (%s) at its default start symbol No %d (%s)", grammari, grammarp->descp->asciis, rulep->lhsp->idi, rulep->lhsp->descp->asciis);
+      MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Precomputing grammar level %d (%s) at its default start symbol %d <%s>", grammari, grammarp->descp->asciis, rulep->lhsp->idi, rulep->lhsp->descp->asciis);
       if (! marpaWrapperGrammar_precompute_startb(grammarp->marpaWrapperGrammarStartp, rulep->lhsp->idi)) {
         goto err;
       }
       grammarp->starti = rulep->lhsp->idi;
     } else {
-      MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Precomputing grammar level %d (%s) at start symbol No %d (%s)", grammari, grammarp->descp->asciis, startp->idi, startp->descp->asciis);
+      MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Precomputing grammar level %d (%s) at start symbol %d <%s>", grammari, grammarp->descp->asciis, startp->idi, startp->descp->asciis);
       if (! marpaWrapperGrammar_precompute_startb(grammarp->marpaWrapperGrammarStartp, startp->idi)) {
         goto err;
       }
@@ -1351,23 +1351,23 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
         if (discardp == NULL) {
           discardp = symbolp;
         } else {
-          MARPAESLIF_ERRORF(marpaESLIFp, "More than one :discard symbol at grammar level %d (%s): symbols No %d (%s) and %d (%s)", grammari, grammarp->descp->asciis, discardp->idi, discardp->descp->asciis, symbolp->idi, symbolp->descp->asciis);
+          MARPAESLIF_ERRORF(marpaESLIFp, "More than one :discard symbol at grammar level %d (%s): symbols %d <%s> and %d <%s>", grammari, grammarp->descp->asciis, discardp->idi, discardp->descp->asciis, symbolp->idi, symbolp->descp->asciis);
           goto err;
         }
       }
     }
     if (discardp != NULL) {
-      MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Precomputing grammar level %d (%s) at discard symbol No %d (%s)", grammari, grammarp->descp->asciis, discardp->idi, discardp->descp->asciis);
+      MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Precomputing grammar level %d (%s) at discard symbol %d <%s>", grammari, grammarp->descp->asciis, discardp->idi, discardp->descp->asciis);
       marpaESLIF_cloneContext.grammarp = grammarp;
       /* Clone for the discard mode at grammar level */
       marpaWrapperGrammarCloneOption.symbolOptionSetterp = _marpaESLIFGrammar_symbolOptionSetterDiscardTop;
       marpaWrapperGrammarClonep = marpaWrapperGrammar_clonep(grammarp->marpaWrapperGrammarStartp, &marpaWrapperGrammarCloneOption);
       if (marpaWrapperGrammarClonep == NULL) {
-        MARPAESLIF_ERRORF(marpaESLIFp, "Precomputing grammar level %d (%s) at discard symbol No %d (%s): cloning failure", grammari, grammarp->descp->asciis, discardp->idi, discardp->descp->asciis);
+        MARPAESLIF_ERRORF(marpaESLIFp, "Precomputing grammar level %d (%s) at discard symbol %d <%s>: cloning failure", grammari, grammarp->descp->asciis, discardp->idi, discardp->descp->asciis);
         goto err;
       }
       if (! marpaWrapperGrammar_precompute_startb(marpaWrapperGrammarClonep, discardp->idi)) {
-        MARPAESLIF_ERRORF(marpaESLIFp, "Precomputing grammar level %d (%s) at discard symbol No %d (%s): precompute failure", grammari, grammarp->descp->asciis, discardp->idi, discardp->descp->asciis);
+        MARPAESLIF_ERRORF(marpaESLIFp, "Precomputing grammar level %d (%s) at discard symbol %d <%s>: precompute failure", grammari, grammarp->descp->asciis, discardp->idi, discardp->descp->asciis);
         goto err;
       }
       grammarp->marpaWrapperGrammarDiscardp = marpaWrapperGrammarClonep;
@@ -1420,7 +1420,7 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
         }
         if (_marpaESLIF_string_eqb(lhsp->descp, symbolp->descp)) {
           /* Found */
-          MARPAESLIF_TRACEF(marpaESLIFp, funcs, "... Grammar level %d (%s): symbol %d (%s) marked as LHS", grammari, grammarp->descp->asciis, lhsp->idi, lhsp->descp->asciis);
+          MARPAESLIF_DEBUGF(marpaESLIFp, "... Grammar level %d (%s): symbol %d (%s) marked as LHS", grammari, grammarp->descp->asciis, lhsp->idi, lhsp->descp->asciis);
           lhsb = 1;
           break;
         }
@@ -1461,58 +1461,39 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
       /* Only non LHS meta symbols should be looked at */
       if ((symbolp->type != MARPAESLIF_SYMBOL_TYPE_META) || symbolp->lhsb) {
         /* This is always resolved in the same grammar */
-        symbolp->resolvedLeveli = grammarp->leveli;
+        symbolp->lookupResolvedLeveli = grammarp->leveli;
         continue;
       }
       metap = symbolp->u.metap;
       /* Since we loop on symbols of every rule, it can very well happen that we hit */
       /* the same meta symbol more than once.                                        */
       if (metap->marpaWrapperGrammarLexemeClonep != NULL) {
-        MARPAESLIF_TRACEF(marpaESLIFp,  funcs, "... Grammar level %d (%s): symbol %d (%s) already processed", grammari, grammarp->descp->asciis, symbolp->idi, symbolp->descp->asciis);
+        MARPAESLIF_TRACEF(marpaESLIFp, funcs, "... Grammar level %d (%s): symbol %d (%s) already processed", grammari, grammarp->descp->asciis, symbolp->idi, symbolp->descp->asciis);
         continue;
       }
 
-      /* Level of RHS is either via a grammar description, either via a number */
-      /* They are exclusive (c.f. the grammar). Please note that we made sure */
-      /* that symbolp is a meta symbol -; */
-      if (! _marpaESLIF_resolveGrammarb(marpaESLIFp, grammarStackp, grammarp, symbolp->u.metap->asciinames, symbolp->lookupLevelDeltai, symbolp->lookupGrammarStringp, &sub_grammarp, NULL /* symbolpp */)) {
-        if (symbolp->lookupGrammarStringp != NULL) {
-          MARPAESLIF_ERRORF(marpaESLIFp, "Looking at rules in grammar level %d (%s): symbol %d (%s) is referencing a non-existing grammar (lookupLevelDeltai=%d, lookupGrammarStringp=%s)", grammari, grammarp->descp->asciis, symbolp->idi, symbolp->descp->asciis, symbolp->lookupLevelDeltai, symbolp->lookupGrammarStringp->asciis);
-        } else {
-          MARPAESLIF_ERRORF(marpaESLIFp, "Looking at rules in grammar level %d (%s): symbol %d (%s) is referencing a non-existing grammar (lookupLevelDeltai=%d)", grammari, grammarp->descp->asciis, symbolp->idi, symbolp->descp->asciis, symbolp->lookupLevelDeltai);
-        }
+      /* Resolve the symbol */
+      if (symbolp->lookupMetas == NULL) {
+        /* If lookup name is not forced, then it must have the same name in the lookedup grammar */
+        symbolp->lookupMetas = symbolp->u.metap->asciinames;
+      }
+      MARPAESLIF_DEBUGF(marpaESLIFp, "... Grammar level %d (%s): symbol %d (%s) must be symbol <%s> and an LHS in grammar level %d", grammari, grammarp->descp->asciis, symbolp->idi, symbolp->descp->asciis, symbolp->lookupMetas, grammarp->leveli + symbolp->lookupLevelDeltai);
+      subSymbolp = _marpaESLIF_resolveSymbolp(marpaESLIFp, grammarStackp, grammarp, symbolp->lookupMetas, symbolp->lookupLevelDeltai, NULL, &sub_grammarp);
+      if (subSymbolp == NULL) {
+        MARPAESLIF_ERRORF(marpaESLIFp, "Looking at rules in grammar level %d (%s): symbol %d (%s) must be resolved as <%s> in grammar at level %d", grammari, grammarp->descp->asciis, symbolp->idi, symbolp->descp->asciis, symbolp->lookupMetas, grammarp->leveli + symbolp->lookupLevelDeltai);
         goto err;
       }
-      /* Commit resolved level in symbol */
-      symbolp->resolvedLeveli = sub_grammarp->leveli;
-      /* Make sure this RHS is an LHS in the sub grammar, ignoring the case where sub grammar would be current grammar */
-      if (sub_grammarp == grammarp) {
-        continue;
-      }
-      
-      subSymbolStackp = sub_grammarp->symbolStackp;
-      subSymbolp = NULL;
-      for (subSymboli = 0; subSymboli < GENERICSTACK_USED(subSymbolStackp); subSymboli++) {
-        if (! GENERICSTACK_IS_PTR(subSymbolStackp, subSymboli)) {
-          /* Should never happen, but who knows */
-          continue;
-        }
-        tmpSymbolp = (marpaESLIF_symbol_t *) GENERICSTACK_GET_PTR(subSymbolStackp, subSymboli);
-        if (_marpaESLIF_string_eqb(tmpSymbolp->descp, symbolp->descp)) {
-          subSymbolp = tmpSymbolp;
-          break;
-        }
-      }
+
       if (subSymbolp == NULL) {
         MARPAESLIF_ERRORF(marpaESLIFp, "Looking at rules in grammar level %d (%s): symbol %d (%s) is referencing a non-existing symbol at grammar level %d (%s)", grammari, grammarp->descp->asciis, symbolp->idi, symbolp->descp->asciis, sub_grammarp->leveli, sub_grammarp->descp->asciis);
         goto err;
       }
       if (! subSymbolp->lhsb) {
         /* When sub grammar is current grammar, this mean that we require that this RHS is also an LHS - which is correct because we restricted symbol loop on meta symbols */
-        MARPAESLIF_ERRORF(marpaESLIFp, "Looking at rules in grammar level %d (%s): symbol %d (%s) is referencing existing symbol No %d (%s) at grammar level %d (%s) but it is not an LHS", grammari, grammarp->descp->asciis, symbolp->idi, symbolp->descp->asciis, subSymbolp->idi, subSymbolp->descp->asciis, sub_grammarp->leveli, sub_grammarp->descp->asciis);
+        MARPAESLIF_ERRORF(marpaESLIFp, "Looking at rules in grammar level %d (%s): symbol %d <%s> is referencing existing symbol %d <%s> at grammar level %d (%s) but it is not an LHS", grammari, grammarp->descp->asciis, symbolp->idi, symbolp->descp->asciis, subSymbolp->idi, subSymbolp->descp->asciis, sub_grammarp->leveli, sub_grammarp->descp->asciis);
         goto err;
       }
-
+      
       /* Clone for the symbol in lexeme mode */
       marpaESLIF_cloneContext.grammarp = grammarp;
       marpaWrapperGrammarCloneOption.symbolOptionSetterp = _marpaESLIFGrammar_symbolOptionSetterNoEvent;
@@ -1526,7 +1507,14 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
       metap->marpaWrapperGrammarLexemeClonep = marpaWrapperGrammarClonep;
       marpaWrapperGrammarClonep = NULL;
 
-      MARPAESLIF_TRACEF(marpaESLIFp,  funcs, "... Grammar level %d (%s): symbol %d (%s) have grammar resolved level set to   %d", grammari, grammarp->descp->asciis, symbolp->idi, symbolp->descp->asciis, symbolp->resolvedLeveli);
+      /* Commit resolved level in symbol */
+      symbolp->lookupResolvedLeveli = sub_grammarp->leveli;
+      /* Make sure this RHS is an LHS in the sub grammar, ignoring the case where sub grammar would be current grammar */
+      if (sub_grammarp == grammarp) {
+        continue;
+      }
+
+      MARPAESLIF_TRACEF(marpaESLIFp,  funcs, "... Grammar level %d (%s): symbol %d (%s) have grammar resolved level set to   %d", grammari, grammarp->descp->asciis, symbolp->idi, symbolp->descp->asciis, symbolp->lookupResolvedLeveli);
     }
   }
 
@@ -1644,11 +1632,11 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
 
       /* If current symbol is a meta, we already made sure 
       /* Look to the resolved grammar (this can be current grammar) */
-      if (! GENERICSTACK_IS_PTR(grammarStackp, symbolp->resolvedLeveli)) {
+      if (! GENERICSTACK_IS_PTR(grammarStackp, symbolp->lookupResolvedLeveli)) {
         MARPAESLIF_ERRORF(marpaESLIFp, "Looking at rules in grammar level %d (%s): rule %d (%s)'s RHS symbol %d (%s) resolve to an unknown grammar !?", grammari, grammarp->descp->asciis, rulep->idi, rulep->descp->asciis, symbolp->idi, symbolp->descp->asciis);
         goto err;
       }
-      sub_grammarp = (marpaESLIF_grammar_t *) GENERICSTACK_GET_PTR(grammarStackp, symbolp->resolvedLeveli);
+      sub_grammarp = (marpaESLIF_grammar_t *) GENERICSTACK_GET_PTR(grammarStackp, symbolp->lookupResolvedLeveli);
       /* Look for this symbol in the sub grammar */
       subSymbolStackp = sub_grammarp->symbolStackp;
       subSymbolp = NULL;
@@ -1668,7 +1656,7 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
         goto err;
       }
       if (! subSymbolp->topb) {
-        MARPAESLIF_ERRORF(marpaESLIFp, "Looking at rules in grammar level %d (%s): symbol %d (%s) is referencing existing symbol No %d (%s) at grammar level %d (%s) but it is not a top level symbol", grammari, grammarp->descp->asciis, symbolp->idi, symbolp->descp->asciis, subSymbolp->idi, subSymbolp->descp->asciis, sub_grammarp->leveli, sub_grammarp->descp->asciis);
+        MARPAESLIF_ERRORF(marpaESLIFp, "Looking at rules in grammar level %d (%s): symbol %d (%s) is referencing existing symbol %d <%s> at grammar level %d (%s) but it is not a top level symbol", grammari, grammarp->descp->asciis, symbolp->idi, symbolp->descp->asciis, subSymbolp->idi, subSymbolp->descp->asciis, sub_grammarp->leveli, sub_grammarp->descp->asciis);
         goto err;
       }
       symbolp->isDiscardTopb = 1;
@@ -2479,8 +2467,8 @@ static inline marpaESLIF_symbol_t *_marpaESLIF_symbol_newp(marpaESLIF_t *marpaES
   symbolp->discardEvents          = NULL;
   symbolp->discardEventb          = 1; /* An event is on by default */
   symbolp->lookupLevelDeltai      = 1;   /* Default lookup is the next grammar level */
-  symbolp->lookupGrammarStringp   = NULL;
-  symbolp->resolvedLeveli         = 0;   /* This will be overwriten by _marpaESLIFGrammar_validateb() and used only when symbol is a lexeme from another grammar */
+  symbolp->lookupMetas            = NULL;
+  symbolp->lookupResolvedLeveli         = 0;   /* This will be overwriten by _marpaESLIFGrammar_validateb() and used only when symbol is a lexeme from another grammar */
   symbolp->priorityi              = 0; /* Default priority is 0 */
   symbolp->actions                = NULL;
   symbolp->nbupdatei              = 0;
@@ -3135,7 +3123,7 @@ static inline short _marpaESLIFRecognizer_meta_matcherb(marpaESLIFRecognizer_t *
   /* A meta matcher is always using ANOTHER grammar at level grammarLeveli (validator guaranteed that is exists) that is sent on the stack. */
   /* Though the precomputed grammar is known to the symbol that called us, also sent on the stack. */
   if (! GENERICSTACK_IS_PTR(marpaESLIFGrammarp->grammarStackp, grammarLeveli)) {
-    MARPAESLIF_ERRORF(marpaESLIFp, "At grammar No %d (%s), meta symbol No %d (%s) resolve to a grammar level %d that do not exist", marpaESLIFGrammarp->grammarp->leveli, marpaESLIFGrammarp->grammarp->descp->asciis, metap->idi, metap->descp->asciis, grammarLeveli);
+    MARPAESLIF_ERRORF(marpaESLIFp, "At grammar No %d (%s), meta symbol %d <%s> resolve to a grammar level %d that do not exist", marpaESLIFGrammarp->grammarp->leveli, marpaESLIFGrammarp->grammarp->descp->asciis, metap->idi, metap->descp->asciis, grammarLeveli);
     goto err;
   }
   
@@ -3198,7 +3186,7 @@ static inline short _marpaESLIFRecognizer_symbol_matcherb(marpaESLIFRecognizer_t
     /* A terminal matcher MAY recursively call other recognizers, reading new data, etc... : this will update current recognizer inputs, inputl and eof. */
     /* The result will be a parse tree value, at indice 0 of outputStackp */
     if (! _marpaESLIFRecognizer_meta_matcherb(marpaESLIFRecognizerp,
-                                              symbolp->resolvedLeveli, /* Computed by grammar validator */
+                                              symbolp->lookupResolvedLeveli, /* Computed by grammar validator */
                                               symbolp->u.metap->marpaWrapperGrammarLexemeClonep,
                                               NULL /* terminalp */,
                                               symbolp->u.metap,
@@ -5599,7 +5587,7 @@ static inline short _marpaESLIFValue_anySymbolCallbackWrapperb(void *userDatavp,
         actions = grammarp->defaultRuleActions;
       }
       if (actions == NULL) {
-        MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "Nullable symbol No %d (%s) from grammar level %d (%s) requires: action => action_name, or that your grammar have: :default ::= action => action_name",
+        MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "Nullable symbol %d <%s> from grammar level %d (%s) requires: action => action_name, or that your grammar have: :default ::= action => action_name",
                           symboli,
                           symbolp->descp->asciis,
                           grammarp->leveli,
@@ -6028,7 +6016,7 @@ static char *_marpaESLIFGrammar_symbolDescriptionCallback(void *userDatavp, int 
   }
 
   if (marpaWrapperGrammarSymbolOptionp->eventSeti != MARPAWRAPPERGRAMMAR_EVENTTYPE_NONE) {
-    MARPAESLIF_TRACEF(marpaESLIF_cloneContextp->marpaESLIFp, funcs, "Resetting event set for symbol No %d (%s) at grammar level %d (%s)", symbolp->idi, symbolp->descp->asciis, grammarp->leveli, grammarp->descp->asciis);
+    MARPAESLIF_TRACEF(marpaESLIF_cloneContextp->marpaESLIFp, funcs, "Resetting event set for symbol %d <%s> at grammar level %d (%s)", symbolp->idi, symbolp->descp->asciis, grammarp->leveli, grammarp->descp->asciis);
     marpaWrapperGrammarSymbolOptionp->eventSeti = MARPAWRAPPERGRAMMAR_EVENTTYPE_NONE;
   }
 
@@ -6070,10 +6058,10 @@ static char *_marpaESLIFGrammar_symbolDescriptionCallback(void *userDatavp, int 
   /* This will look like an internal event that the recognizer will catchup to create pause events on discard */
   if (symbolp->isDiscardTopb && symbolp->discardEvents) {
     marpaWrapperGrammarSymbolOptionp->eventSeti &= MARPAWRAPPERGRAMMAR_EVENTTYPE_COMPLETION;
-    MARPAESLIF_TRACEF(marpaESLIF_cloneContextp->marpaESLIFp, funcs, "Setting discard event set for symbol No %d (%s) at grammar level %d (%s) on completion", symbolp->idi, symbolp->descp->asciis, grammarp->leveli, grammarp->descp->asciis);
+    MARPAESLIF_TRACEF(marpaESLIF_cloneContextp->marpaESLIFp, funcs, "Setting discard event set for symbol %d <%s> at grammar level %d (%s) on completion", symbolp->idi, symbolp->descp->asciis, grammarp->leveli, grammarp->descp->asciis);
   } else {
     if (marpaWrapperGrammarSymbolOptionp->eventSeti != MARPAWRAPPERGRAMMAR_EVENTTYPE_NONE) {
-      MARPAESLIF_TRACEF(marpaESLIF_cloneContextp->marpaESLIFp, funcs, "Resetting event set for symbol No %d (%s) at grammar level %d (%s)", symbolp->idi, symbolp->descp->asciis, grammarp->leveli, grammarp->descp->asciis);
+      MARPAESLIF_TRACEF(marpaESLIF_cloneContextp->marpaESLIFp, funcs, "Resetting event set for symbol %d <%s> at grammar level %d (%s)", symbolp->idi, symbolp->descp->asciis, grammarp->leveli, grammarp->descp->asciis);
       marpaWrapperGrammarSymbolOptionp->eventSeti = MARPAWRAPPERGRAMMAR_EVENTTYPE_NONE;
     }
   }
@@ -6352,21 +6340,21 @@ static inline void _marpaESLIF_rule_createshowv(marpaESLIF_t *marpaESLIFp, marpa
       }
       break;
     case MARPAESLIF_SYMBOL_TYPE_META:
-      asciishowl += 1 + strlen(symbolp->u.metap->asciinames) + 1; /* RHS description (ASCII) */
+      asciishowl += 1 + strlen((symbolp->lookupMetas != NULL) ? symbolp->lookupMetas : symbolp->u.metap->asciinames) + 1; /* RHS description (ASCII) */
       if (asciishows != NULL) {
         strcat(asciishows, "<");
-        strcat(asciishows, symbolp->u.metap->asciinames);
+        strcat(asciishows, (symbolp->lookupMetas != NULL) ? symbolp->lookupMetas : symbolp->u.metap->asciinames);
         strcat(asciishows, ">");
       }
     default:
       break;
     }
-    if (symbolp->resolvedLeveli != grammarp->leveli) {
+    if (symbolp->lookupResolvedLeveli != grammarp->leveli) {
       asciishowl++;                              /* @ */
       if (asciishows != NULL) {
         strcat(asciishows, "@");
       }
-      sprintf(tmps, "%d", symbolp->resolvedLeveli);
+      sprintf(tmps, "%+d", symbolp->lookupLevelDeltai);
       asciishowl += strlen(tmps);               /* %d */
       if (asciishows != NULL) {
         strcat(asciishows, tmps);
@@ -7273,26 +7261,20 @@ static inline void _marpaESLIFValueErrorProgressReportv(marpaESLIFValue_t *marpa
 }
 
 /*****************************************************************************/
-static inline short _marpaESLIF_resolveGrammarb(marpaESLIF_t *marpaESLIFp, genericStack_t *grammarStackp, marpaESLIF_grammar_t *current_grammarp, char *asciis, int lookupLevelDeltai, marpaESLIF_string_t *lookupGrammarStringp, marpaESLIF_grammar_t **grammarpp, marpaESLIF_symbol_t **symbolpp)
+static inline marpaESLIF_symbol_t *_marpaESLIF_resolveSymbolp(marpaESLIF_t *marpaESLIFp, genericStack_t *grammarStackp, marpaESLIF_grammar_t *current_grammarp, char *asciis, int lookupLevelDeltai, marpaESLIF_string_t *lookupGrammarStringp, marpaESLIF_grammar_t **grammarpp)
 /*****************************************************************************/
 {
-  static const char     *funcs = "_marpaESLIF_resolveGrammarb";
+  static const char     *funcs   = "_marpaESLIF_resolveSymbolp";
+  marpaESLIF_symbol_t   *symbolp;
   marpaESLIF_grammar_t  *thisGrammarp;
   marpaESLIF_grammar_t  *grammarp;
-  marpaESLIF_symbol_t   *symbolp;
   int                    grammari;
-  short                  rcb;
 
-  if (grammarStackp == NULL) {
-    MARPAESLIF_ERROR(marpaESLIFp, "grammarStackp is NULL");
-    goto err;
-  }
-  if (current_grammarp == NULL) {
-    MARPAESLIF_ERROR(marpaESLIFp, "current_grammarp is NULL");
-    goto err;
-  }
-  if (asciis == NULL) {
-    MARPAESLIF_ERROR(marpaESLIFp, "asciis is NULL");
+  if ((grammarStackp == NULL)
+      ||
+      (current_grammarp == NULL)
+      ||
+      (asciis == NULL)) {
     goto err;
   }
   
@@ -7331,18 +7313,13 @@ static inline short _marpaESLIF_resolveGrammarb(marpaESLIF_t *marpaESLIFp, gener
   if (grammarpp != NULL) {
     *grammarpp = grammarp;
   }
-  if (symbolpp != NULL) {
-    *symbolpp = symbolp;
-  }
-  
-  rcb = 1;
   goto done;
 
  err:
-  rcb = 0;
+  symbolp = NULL;
 
  done:
-  return rcb;
+  return symbolp;
 }
 
 /*****************************************************************************/
@@ -9886,7 +9863,7 @@ static inline short _marpaESLIFValue_okAnySymbolCallbackWrapperb(void *userDatav
             MARPAESLIF_ERRORF(marpaESLIFp, "No such symbol No %d", symboli);
             goto err;
           }
-          MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Symbol No %d (%s) exception caught for rule No %d (%s)", symboli, symbolp->descp->asciis, rulei, rulep->descp->asciis);
+          MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Symbol %d <%s> exception caught for rule No %d (%s)", symboli, symbolp->descp->asciis, rulei, rulep->descp->asciis);
           goto err;
         }
       }

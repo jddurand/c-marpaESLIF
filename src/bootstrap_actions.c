@@ -569,7 +569,7 @@ static inline marpaESLIF_symbol_t  *_marpaESLIF_bootstrap_check_rhsPrimaryp(marp
       symbolp = referencedSymbolp;
     } else {
       /* symbol must exist in the current grammar in the form symbol@delta  */
-      sprintf(tmps, "%d", referencedGrammarp->leveli - grammarp->leveli);
+      sprintf(tmps, "%+d", referencedGrammarp->leveli - grammarp->leveli);
       referencedSymbols = (char *) malloc(strlen(rhsPrimaryp->u.symbolNameAndReferencep->symbols) + 1 /* @ */ + strlen(tmps) + 1 /* NUL */);
       if (referencedSymbols == NULL) {
         MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
@@ -584,6 +584,10 @@ static inline marpaESLIF_symbol_t  *_marpaESLIF_bootstrap_check_rhsPrimaryp(marp
       if (symbolp == NULL) {
         goto err;
       }
+      /* We overwrite reference grammar information */
+      symbolp->lookupLevelDeltai = referencedGrammarp->leveli - grammarp->leveli;
+      /* By definition looked up reference symbol is a meta symbol */
+      symbolp->lookupMetas       = referencedSymbolp->u.metap->asciinames;
     }
     break;
   default:
