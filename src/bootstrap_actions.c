@@ -3416,10 +3416,9 @@ static short _marpaESLIF_bootstrap_G1_action_start_ruleb(void *userDatavp, marpa
     goto err;
   }
 
-  /* Overwrite grammar start */
-  MARPAESLIF_DEBUGF(marpaESLIFp, "Making meta symbol %s in grammar level %d the start symbol", startp->descp->asciis, grammarp->leveli);
-  grammarp->starti = startp->idi;
-
+  /* Make it the start symbol */
+  MARPAESLIF_DEBUGF(marpaESLIFp, "Marking meta symbol %s in grammar level %d as start symbol", startp->descp->asciis, grammarp->leveli);
+  startp->startb = 1;
 
   rcb = 1;
   goto done;
