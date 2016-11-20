@@ -6664,6 +6664,37 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIF_t *marpaESLIFp, ma
       strcat(asciishows, "\n");
     }
   }
+  if ((grammarp->defaultRuleActions != NULL)
+      ||
+      (grammarp->defaultSymbolActions != NULL)
+      ||
+      (grammarp->defaultFreeActions != NULL)
+      ||
+      (grammarp->defaultDiscardEvents != NULL)) {
+    asciishowl += strlen(":default"); /* ":default" */
+    if (asciishows != NULL) {
+      strcat(asciishows, ":default");
+    }
+    MARPAESLIF_LEVEL_CREATESHOW(grammarp, asciishowl, asciishows);
+    if (grammarp->defaultRuleActions != NULL) {
+      asciishowl += 1; /* space */
+      if (asciishows != NULL) {
+        strcat(asciishows, " ");
+      }
+      asciishowl += strlen("action => "); /* "action => " */
+      if (asciishows != NULL) {
+        strcat(asciishows, "action => ");
+      }
+      asciishowl += strlen(grammarp->defaultRuleActions); /* action */
+      if (asciishows != NULL) {
+        strcat(asciishows, grammarp->defaultRuleActions);
+      }
+    }
+    asciishowl += 1; /* \n */
+    if (asciishows != NULL) {
+      strcat(asciishows, "\n");
+    }
+  }
   if (marpaESLIFGrammar_rules_by_grammarb(marpaESLIFGrammarp, &ruleip, &rulel, grammarp->leveli, NULL /* descp */)) {
     for (l = 0; l < rulel; l++) {
       if (marpaESLIFGrammar_ruleshowform_by_grammarb(marpaESLIFGrammarp, l, &ruleshows, grammarp->leveli, NULL /* descp */)) {

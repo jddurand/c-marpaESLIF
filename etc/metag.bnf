@@ -22,6 +22,9 @@
 # - reserved action name     only ::shift and ::undef are kept
 #                            ::ascii and ::translit are added
 # - action name              revisited to contain only ascii graph characters (so that UTF-8 == ASCII -;)
+# - symbol action name       added
+# - nullable action name     added
+# - free action name         added
 # - array descriptor         removed
 # - lexer name               removed
 # - latm                     only latm => 1 is supported if calling scan()
@@ -39,7 +42,6 @@
 # - latm adverb in :lexeme rules is not allowed, latm mode is forced.
 # - ":default" and "lexeme default" are unique per grammar instead of being lexically scoped
 # - the RHS of a :discard rule can be anywhere, including current grammar
-# - Unless specified, the default symbol action is to transfer lexeme as-is
 # ----------------------------------------------------------------------------------------------
 # Please note that there is a very big difference between using apparently equivalent regexp and
 # character class with a quantifier:
@@ -135,8 +137,14 @@ alternative                    ::= rhs <adverb list>
                                  | <latm specification>
                                  | naming
                                  | <null adverb>
+                                 | symbolaction
+                                 | nullableaction
+                                 | freeaction
 
 action                         ::= 'action' '=>' <action name>
+symbolaction                   ::= 'symbol-action' '=>' <action name>
+nullableaction                 ::= 'nullable-action' =>' <action name>
+freeaction                     ::= 'free-action' =>' <ascii graph name>
 <left association>             ::= 'assoc' '=>' 'left'
 <right association>            ::= 'assoc' '=>' 'right'
 <group association>            ::= 'assoc' '=>' 'group'
