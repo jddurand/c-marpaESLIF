@@ -66,6 +66,7 @@ typedef enum bootstrap_grammar_G1_enum {
   G1_TERMINAL_LEFT_ANGLE,
   G1_TERMINAL_RIGHT_ANGLE,
   G1_TERMINAL_AT_SIGN,
+  G1_TERMINAL__SYMBOL,
   /* ----- Non terminals ------ */
   G1_META_STATEMENTS,
   G1_META_STATEMENT,
@@ -146,7 +147,6 @@ typedef enum bootstrap_grammar_G1_enum {
   G1_META_TRUE,
   G1_META_STANDARD_NAME,
   G1_META_QUOTED_NAME,
-  G1_META_RESERVED_EVENT_NAME,
   G1_META_QUOTED_STRING,
   G1_META_CHARACTER_CLASS,
   G1_META_REGULAR_EXPRESSION,
@@ -238,7 +238,6 @@ bootstrap_grammar_meta_t bootstrap_grammar_G1_metas[] = {
   { G1_META_TRUE,                             L0_JOIN_G1_META_TRUE, 0, 0 },
   { G1_META_STANDARD_NAME,                    L0_JOIN_G1_META_STANDARD_NAME, 0, 0 },
   { G1_META_QUOTED_NAME,                      L0_JOIN_G1_META_QUOTED_NAME, 0, 0 },
-  { G1_META_RESERVED_EVENT_NAME,              L0_JOIN_G1_META_RESERVED_EVENT_NAME, 0, 0 },
   { G1_META_QUOTED_STRING,                    L0_JOIN_G1_META_QUOTED_STRING, 0, 0 },
   { G1_META_CHARACTER_CLASS,                  L0_JOIN_G1_META_CHARACTER_CLASS, 0, 0 },
   { G1_META_REGULAR_EXPRESSION,               L0_JOIN_G1_META_REGULAR_EXPRESSION, 0, 0 },
@@ -719,6 +718,14 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
 #else
     NULL, NULL
 #endif
+  },
+  { G1_TERMINAL__SYMBOL, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
+    "':symbol'",
+#ifndef MARPAESLIF_NTRACE
+    ":symbol", ":symb"
+#else
+    NULL, NULL
+#endif
   }
 };
 
@@ -986,7 +993,7 @@ bootstrap_grammar_rule_t bootstrap_grammar_G1_rules[] = {
   /*
     lhsi                                      descs                                           type                          nrhsl  { rhsi }                                       }  minimumi           separatori  properb
   */
-  { G1_META_EVENT_NAME,                       G1_RULE_EVENT_NAME_2,                           MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_RESERVED_EVENT_NAME                  }, -1,                        -1, -1 , G1_ACTION_EVENT_NAME_2 },
+  { G1_META_EVENT_NAME,                       G1_RULE_EVENT_NAME_2,                           MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL__SYMBOL                          }, -1,                        -1, -1 , G1_ACTION_EVENT_NAME_2 },
   { G1_META_LHS,                              G1_RULE_LHS,                                    MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_SYMBOL_NAME                          }, -1,                        -1, -1 , G1_ACTION_LHS },
   { G1_META_RHS,                              G1_RULE_RHS,                                    MARPAESLIF_RULE_TYPE_SEQUENCE,    1, { G1_META_RHS_PRIMARY                          },  1,                        -1,  0 , G1_ACTION_RHS },
   /*

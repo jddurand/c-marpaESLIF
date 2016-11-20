@@ -9,7 +9,6 @@
 #define L0_JOIN_G1_META_TRUE                             "true"
 #define L0_JOIN_G1_META_STANDARD_NAME                    "standard name"
 #define L0_JOIN_G1_META_QUOTED_NAME                      "quoted name"
-#define L0_JOIN_G1_META_RESERVED_EVENT_NAME              "reserved event name"
 #define L0_JOIN_G1_META_QUOTED_STRING                    "quoted string"
 #define L0_JOIN_G1_META_CHARACTER_CLASS                  "character class"
 #define L0_JOIN_G1_META_REGULAR_EXPRESSION               "regular expression"

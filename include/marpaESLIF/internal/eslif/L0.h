@@ -8,8 +8,7 @@
 /* It is very important here to list all the terminals first, and in order compatible */
 /* with bootstrap_grammar_L0_terminals[] and bootstrap_grammar_L0_rules[] */
 typedef enum bootstrap_grammar_L0_enum {
-  L0_TERMINAL_RESERVED_EVENT_NAME = 0,
-  L0_TERMINAL_WHITESPACE,
+  L0_TERMINAL_WHITESPACE = 0,
   L0_TERMINAL_PERL_COMMENT,
   L0_TERMINAL_CPLUSPLUS_COMMENT,
   L0_TERMINAL_OP_DECLARE_ANY_GRAMMAR,
@@ -48,7 +47,6 @@ typedef enum bootstrap_grammar_L0_enum {
   L0_TERMINAL_ASCII_GRAPH_CHARACTERS,
   L0_TERMINAL_SEMICOLON,
   /* ----- Non terminals ------ */
-  L0_META_RESERVED_EVENT_NAME,
   L0_META_WHITESPACE,
   L0_META_PERL_COMMENT,
   L0_META_CPLUSPLUS_COMMENT,
@@ -80,7 +78,6 @@ typedef enum bootstrap_grammar_L0_enum {
 
 /* All non-terminals are listed here */
 bootstrap_grammar_meta_t bootstrap_grammar_L0_metas[] = {
-  { L0_META_RESERVED_EVENT_NAME,                L0_JOIN_G1_META_RESERVED_EVENT_NAME, 0, 0 },
   { L0_META_WHITESPACE,                         L0_JOIN_G1_META_WHITESPACE, 0, 0 },
   { L0_META_PERL_COMMENT,                       L0_JOIN_G1_META_PERL_COMMENT, 0, 0 },
   { L0_META_CPLUSPLUS_COMMENT,                  L0_JOIN_G1_META_CPLUSPLUS_COMMENT, 0, 0 },
@@ -145,15 +142,6 @@ __DATA__
   /* --------------------------------------------------------------------------------------------------------------------------------- */
   /*                                                             TERMINALS                                                             */
   /* --------------------------------------------------------------------------------------------------------------------------------- */
-  /* --------------------------------------------------------------------------------------------------------------------------------- */
-  { L0_TERMINAL_RESERVED_EVENT_NAME, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
-    "':symbol'",
-#ifndef MARPAESLIF_NTRACE
-    ":symbol", ":symb"
-#else
-    NULL, NULL
-#endif
-  },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
   { L0_TERMINAL_WHITESPACE, MARPAESLIF_TERMINAL_TYPE_REGEX, NULL,
     "[\\s]+",
@@ -411,7 +399,6 @@ bootstrap_grammar_rule_t bootstrap_grammar_L0_rules[] = {
   /*
     lhsi                                      descs                                           type                          nrhsl  { rhsi }                                       }  minimumi                          separatori  properb
   */
-  { L0_META_RESERVED_EVENT_NAME,              "reserved event name",                MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_RESERVED_EVENT_NAME              }, -1,                                       -1, -1 , NULL },
   { L0_META_WHITESPACE,                       "whitespace",                         MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_WHITESPACE                       }, -1,                                       -1, -1 , NULL },
   { L0_META_PERL_COMMENT,                     "perl comment",                       MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_PERL_COMMENT                     }, -1,                                       -1, -1 , NULL },
   { L0_META_CPLUSPLUS_COMMENT,                "cplusplus comment",                  MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_CPLUSPLUS_COMMENT                }, -1,                                       -1, -1 , NULL },
