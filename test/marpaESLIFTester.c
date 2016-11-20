@@ -17,7 +17,7 @@ const static char *metags = "\n"
   "inaccessible is warn by default\n"
   "autorank is on by default\n"
   ":start ::= Script\n"
-  ":desc ::= 'This is Grammar Top Level with unicode characters: \xc3\x86'\n"
+  ":desc ::= 'This is Grammar Top Level with UTF-8 characters: r\xc3\xa9sum\xc3\xa9'\n"
   "Script ::= Expression+ separator => comma action => do_script\n"
   "Expression ::= \n"
   "            Number\n"
@@ -53,9 +53,9 @@ int main() {
 
   marpaESLIFGrammarOption.grammars            = (char *) metags;
   marpaESLIFGrammarOption.grammarl            = strlen(metags);
-  marpaESLIFGrammarOption.encodings           = NULL;
-  marpaESLIFGrammarOption.encodingl           = 0;
-  marpaESLIFGrammarOption.encodingOfEncodings = NULL;
+  marpaESLIFGrammarOption.encodings           = "UTF-8";
+  marpaESLIFGrammarOption.encodingl           = (marpaESLIFGrammarOption.encodings != NULL) ? strlen(marpaESLIFGrammarOption.encodings) : 0;
+  marpaESLIFGrammarOption.encodingOfEncodings = "ASCII";
   marpaESLIFGrammarp = marpaESLIFGrammar_newp(marpaESLIFp, &marpaESLIFGrammarOption);
   if (marpaESLIFGrammarp == NULL) {
     goto err;
