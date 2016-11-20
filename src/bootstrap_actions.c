@@ -93,6 +93,7 @@ static        short _marpaESLIF_bootstrap_G1_action_start_ruleb(void *userDatavp
 static        short _marpaESLIF_bootstrap_G1_action_desc_ruleb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short _marpaESLIF_bootstrap_G1_action_empty_ruleb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short _marpaESLIF_bootstrap_G1_action_default_ruleb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
+static        short _marpaESLIF_bootstrap_G1_action_latm_specificationb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 
 /*****************************************************************************/
 static inline void  _marpaESLIF_bootstrap_rhs_primary_freev(marpaESLIF_bootstrap_rhs_primary_t *rhsPrimaryp)
@@ -985,6 +986,7 @@ static marpaESLIFValueRuleCallback_t _marpaESLIF_bootstrap_ruleActionResolver(vo
   else if (strcmp(actions, "G1_action_desc_rule")                == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_desc_ruleb;                }
   else if (strcmp(actions, "G1_action_empty_rule")               == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_empty_ruleb;               }
   else if (strcmp(actions, "G1_action_default_rule")             == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_default_ruleb;             }
+  else if (strcmp(actions, "G1_action_latm_specification")       == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_latm_specificationb;       }
   else
   {
     MARPAESLIF_ERRORF(marpaESLIFp, "Unsupported action \"%s\"", actions);
@@ -3643,6 +3645,7 @@ static short _marpaESLIF_bootstrap_G1_action_default_ruleb(void *userDatavp, mar
   marpaESLIF_grammar_t              *grammarp;
   short                              undefb;
   char                              *actions;
+  short                              latmb;
   char                              *symbolactions;
   char                              *freeactions;
   short                              rcb;
@@ -3671,9 +3674,19 @@ static short _marpaESLIF_bootstrap_G1_action_default_ruleb(void *userDatavp, mar
     goto err;
   }
 
+  /* We restrict :default for a grammar to appear once */
+  if (grammarp->nbupdatei > 0) {
+    if (grammarp->descautob) {
+      MARPAESLIF_ERRORF(marpaESLIFp, "The :default rule should appear once for grammar level %d", grammarp->leveli);
+    } else {
+      MARPAESLIF_ERRORF(marpaESLIFp, "The :default rule should appear once for grammar level %d (%s)", grammarp->leveli, grammarp->descp->asciis);
+    }
+    goto err;
+  }
+  
   /* Unpack the adverb list */
   if (! _marpaESLIF_bootstrap_unpack_adverbListItemStackb(marpaESLIFp,
-                                                          "empty rule",
+                                                          ":default rule",
                                                           adverbListItemStackp,
                                                           &actions,
                                                           NULL, /* left_associationbp */
@@ -3685,7 +3698,7 @@ static short _marpaESLIF_bootstrap_G1_action_default_ruleb(void *userDatavp, mar
                                                           NULL, /* nullRanksHighbp */
                                                           NULL, /* priorityip */
                                                           NULL, /* pauseip */
-                                                          NULL, /* latmbp */
+                                                          &latmb,
                                                           NULL, /* namingpp */
                                                           &symbolactions,
                                                           &freeactions
@@ -3693,31 +3706,40 @@ static short _marpaESLIF_bootstrap_G1_action_default_ruleb(void *userDatavp, mar
     goto err;
   }
 
-  /* Overwrite grammar default actions */
+  grammarp->nbupdatei++;
+
+  /* Overwrite grammar default settings */
+  if (grammarp->defaultRuleActions != NULL) {
+    free(grammarp->defaultRuleActions);
+    grammarp->defaultRuleActions = NULL;
+  }
   if (actions != NULL) {
-    if (grammarp->defaultRuleActions != NULL) {
-      free(grammarp->defaultRuleActions);
-    }
     grammarp->defaultRuleActions = strdup(actions);
     if (grammarp->defaultRuleActions == NULL) {
       MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "strdup failure, %s", strerror(errno));
       goto err;
     }
   }
+
+  grammarp->latmb = latmb;
+
+  if (grammarp->defaultSymbolActions != NULL) {
+    free(grammarp->defaultSymbolActions);
+    grammarp->defaultSymbolActions = NULL;
+  }
   if (symbolactions != NULL) {
-    if (grammarp->defaultSymbolActions != NULL) {
-      free(grammarp->defaultSymbolActions);
-    }
     grammarp->defaultSymbolActions = strdup(symbolactions);
     if (grammarp->defaultSymbolActions == NULL) {
       MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "strdup failure, %s", strerror(errno));
       goto err;
     }
   }
+
+  if (grammarp->defaultFreeActions != NULL) {
+    free(grammarp->defaultFreeActions);
+    grammarp->defaultFreeActions = NULL;
+  }
   if (freeactions != NULL) {
-    if (grammarp->defaultFreeActions != NULL) {
-      free(grammarp->defaultFreeActions);
-    }
     grammarp->defaultFreeActions = strdup(freeactions);
     if (grammarp->defaultFreeActions == NULL) {
       MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "strdup failure, %s", strerror(errno));
@@ -3738,3 +3760,13 @@ static short _marpaESLIF_bootstrap_G1_action_default_ruleb(void *userDatavp, mar
  done:
   return rcb;
 }
+
+/*****************************************************************************/
+static short _marpaESLIF_bootstrap_G1_action_latm_specificationb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
+/*****************************************************************************/
+{
+  /* <latm specification> ::= 'latm' '=>' true */
+
+  return marpaESLIFValue_stack_set_shortb(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_LATM, 1);
+}
+
