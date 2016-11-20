@@ -29,8 +29,10 @@ const static char *metags = "\n"
   "            | Expression '/' Expression action => do_divide\n"
   "           || Expression '+' Expression action => do_add\n"
   "            | Expression '-' Expression action => do_subtract\n"
+  "{ // start statement group\n"
   "comma ::= [,]\n"
   "Number ::= [\\d]+"
+  "} /* end statement group */\n"
 ;
 
 int main() {
