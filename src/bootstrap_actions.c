@@ -84,6 +84,7 @@ static        short _marpaESLIF_bootstrap_G1_action_quantifier_1b(void *userData
 static        short _marpaESLIF_bootstrap_G1_action_quantifier_2b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short _marpaESLIF_bootstrap_G1_action_quantified_ruleb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short _marpaESLIF_bootstrap_G1_action_start_ruleb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
+static        short _marpaESLIF_bootstrap_G1_action_desc_ruleb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 
 /*****************************************************************************/
 static inline void  _marpaESLIF_bootstrap_rhs_primary_freev(marpaESLIF_bootstrap_rhs_primary_t *rhsPrimaryp)
@@ -933,6 +934,7 @@ static marpaESLIFValueRuleCallback_t _marpaESLIF_bootstrap_ruleActionResolver(vo
   else if (strcmp(actions, "G1_action_quantifier_2")             == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_quantifier_2b;             }
   else if (strcmp(actions, "G1_action_quantified_rule")          == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_quantified_ruleb;          }
   else if (strcmp(actions, "G1_action_start_rule")               == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_start_ruleb;               }
+  else if (strcmp(actions, "G1_action_desc_rule")                == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_desc_ruleb;                }
   else
   {
     MARPAESLIF_ERRORF(marpaESLIFp, "Unsupported action \"%s\"", actions);
@@ -2772,7 +2774,7 @@ static short _marpaESLIF_bootstrap_G1_action_grammar_reference_1b(void *userData
     goto err;
   }
   /* Per def, the surrounding characters are always ASCII taking one byte ("", '', {}) */
-  memcpy(newbytep, (void *)(((char *) bytep) - 2), newbytel);
+  memcpy(newbytep, (void *)(((char *) bytep) + 1), newbytel);
   free(bytep);
   bytep = NULL; /* No need of bytep anymore */
 
@@ -3211,5 +3213,81 @@ static short _marpaESLIF_bootstrap_G1_action_start_ruleb(void *userDatavp, marpa
   rcb = 0;
 
  done:
+  return rcb;
+}
+
+/*****************************************************************************/
+static short _marpaESLIF_bootstrap_G1_action_desc_ruleb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
+/*****************************************************************************/
+{
+  /* <desc rule> ::= ':desc' <op declare> <quoted string> */
+  marpaESLIFGrammar_t  *marpaESLIFGrammarp = (marpaESLIFGrammar_t *) userDatavp;
+  marpaESLIF_t         *marpaESLIFp        = marpaESLIFValue_eslifp(marpaESLIFValuep);
+  int                  leveli;
+  void                 *bytep = NULL;
+  size_t                bytel;
+  void                 *newbytep = NULL;
+  size_t                newbytel;
+  short                 rcb;
+  marpaESLIF_grammar_t *grammarp;
+
+  if (! marpaESLIFValue_stack_get_intb(marpaESLIFValuep, arg0i+1, NULL /* contextip */, &leveli)) {
+    goto err;
+  }
+  if (! marpaESLIFValue_stack_getAndForget_arrayb(marpaESLIFValuep, arg0i+2, NULL /* contextip */, &bytep, &bytel, NULL /* shallowbp */)) {
+    goto err;
+  }
+  /* It is a non-sense to not have valid information */
+  if ((bytep == NULL) || (bytel <= 0)) {
+    MARPAESLIF_ERRORF(marpaESLIFp, "marpaESLIFValue_stack_get_arrayb at indice %d returned {%p,%ld}", arg0i, bytep, (unsigned long) bytel);
+    goto err;
+  }
+
+  /* We are not going to use this quoted string as a terminal, therefore we have to remove the surrounding characters ourself */
+  if (bytel <= 2) {
+    /* Empty string ? */
+    MARPAESLIF_ERROR(marpaESLIFp, "An empty string as grammar description is not allowed");
+    goto err;
+  }
+  newbytel = bytel - 2;
+  newbytep = malloc(newbytel);
+  if (newbytep == NULL) {
+    MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
+    goto err;
+  }
+  /* Per def, the surrounding characters are always ASCII taking one byte ("", '', {}) */
+  memcpy(newbytep, (void *)(((char *) bytep) + 1), newbytel);
+  free(bytep);
+  bytep = NULL; /* No need of bytep anymore */
+
+  /* Check grammar at that level exist */
+  grammarp = _marpaESLIF_bootstrap_check_grammarp(marpaESLIFp, marpaESLIFGrammarp, leveli, NULL);
+  if (grammarp == NULL) {
+    goto err;
+  }
+
+  _marpaESLIF_string_freev(grammarp->descp);
+  grammarp->descp = _marpaESLIF_string_newp(marpaESLIFp, NULL /* encodingasciis */, newbytep, newbytel, 1 /* asciib */);
+  if (grammarp->descp == NULL) {
+    goto err;
+  }
+  grammarp->descautob = 0;
+
+  /* Overwrite grammar start */
+  MARPAESLIF_DEBUGF(marpaESLIFp, "Grammar level %d description set to %s", grammarp->leveli, grammarp->descp->asciis);
+
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  if (bytep != NULL) {
+    free(bytep);
+  }
+  if (newbytep != NULL) {
+    free(newbytep);
+  }
   return rcb;
 }
