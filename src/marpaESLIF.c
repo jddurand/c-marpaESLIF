@@ -5679,7 +5679,7 @@ static inline short _marpaESLIFValue_anySymbolCallbackWrapperb(void *userDatavp,
     } else {
       actions = grammarp->defaultSymbolActions;
       if (actions == NULL) {
-        MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "Grammar No %d (%s) has no lexeme default action", grammarp->leveli, grammarp->descp->asciis);
+        MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "Grammar No %d (%s) has no symbol-action specification", grammarp->leveli, grammarp->descp->asciis);
         goto err;
       } else {
         /* If this is a built-in action, we do not need the resolver */
