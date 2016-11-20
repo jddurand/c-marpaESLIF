@@ -90,9 +90,9 @@ struct marpaESLIF_terminal {
 struct marpaESLIF_meta {
   int                          idi;                       /* Non-terminal Id */
   char                        *asciinames;
-  marpaESLIF_string_t         *descp;                     /* Non-terminal description */
+  marpaESLIF_string_t         *descp;                           /* Non-terminal description */
   marpaWrapperGrammar_t       *marpaWrapperGrammarLexemeClonep; /* Cloned grammar in lexeme search mode (no event) */
-  short                       *prioritizedb;              /* Internal flag to prevent a prioritized symbol to appear more than once as an LHS */
+  short                       *prioritizedb;                    /* Internal flag to prevent a prioritized symbol to appear more than once as an LHS */
 };
 
 /* Matcher return values */
@@ -139,8 +139,8 @@ struct marpaESLIF_symbol {
   char                        *discardEvents;          /* Discard event name */
   short                        discardEventb;          /* Discard event initial state: 0: off, 1: on */
   int                          lookupLevelDeltai;      /* Referenced grammar delta level */
-  marpaESLIF_string_t         *lookupGrammarStringp;   /* Referenced grammar (string in user's encoding) */
-  int                          resolvedLeveli;         /* Referenced grammar level */
+  char                        *lookupMetas;            /* Referenced lookup meta name - shallow pointer */
+  int                          lookupResolvedLeveli;   /* Referenced grammar level */
   int                          priorityi;              /* Symbol priority */
   char                        *actions;                /* Action */
   unsigned int                 nbupdatei;              /* Number of updates - used in grammar ESLIF actions */
