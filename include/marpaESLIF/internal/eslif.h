@@ -147,8 +147,8 @@
 #define G1_ACTION_START_RULE                       "G1_action_start_rule"                       /* done */
 #define G1_ACTION_DESC_RULE                        "G1_action_desc_rule"                        /* done */
 #define G1_ACTION_EMPTY_RULE                       "G1_action_empty_rule"                       /* done */
-#define G1_ACTION_NULL_STATEMENT                   "G1_action_null_statement"                   /* done */
-#define G1_ACTION_STATEMENT_GROUP                  "G1_action_statement_group"
+#define G1_ACTION_NULL_STATEMENT                   "::undef"
+#define G1_ACTION_STATEMENT_GROUP                  "::undef"
 #define G1_ACTION_PRIORITY_RULE                    "G1_action_priority_rule"
 #define G1_ACTION_QUANTIFIED_RULE                  "G1_action_quantified_rule"
 #define G1_ACTION_DISCARD_RULE                     "G1_action_discard_rule"
