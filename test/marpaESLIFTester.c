@@ -16,7 +16,7 @@ typedef struct marpaESLIFTester_context {
 const static char *metags = "\n"
   "inaccessible is warn by default\n"
   "autorank is on by default\n"
-  ":default ::= action => do_first_arg\n"
+  ":default ::= action => do_first_arg symbol-action => do_symbol free-action => do_free\n"
   ":start ::= Script\n"
   ":desc ::= 'This is Grammar Top Level with UTF-8 characters: r\xc3\xa9sum\xc3\xa9'\n"
   "Script ::= Expression+ separator => comma action => do_script\n"

@@ -23,7 +23,6 @@
 #                            ::ascii and ::translit are added
 # - action name              revisited to contain only ascii graph characters (so that UTF-8 == ASCII -;)
 # - symbol action name       added
-# - nullable action name     added
 # - free action name         added
 # - array descriptor         removed
 # - lexer name               removed
@@ -138,13 +137,11 @@ alternative                    ::= rhs <adverb list>
                                  | naming
                                  | <null adverb>
                                  | symbolaction
-                                 | nullableaction
                                  | freeaction
 
 action                         ::= 'action' '=>' <action name>
 symbolaction                   ::= 'symbol-action' '=>' <action name>
-nullableaction                 ::= 'nullable-action' =>' <action name>
-freeaction                     ::= 'free-action' =>' <ascii graph name>
+freeaction                     ::= 'free-action' =>' <free name>
 <left association>             ::= 'assoc' '=>' 'left'
 <right association>            ::= 'assoc' '=>' 'right'
 <group association>            ::= 'assoc' '=>' 'group'
@@ -202,6 +199,8 @@ symbol          ::= <symbol name>
                   | '::undef'          # reserved action name
                   | '::ascii'          # reserved action name
                   | '::translit'       # reserved action name
+
+<free name>     ::= <ascii graph name>
 
 :discard ~ whitespace
 whitespace ~ [\s]+

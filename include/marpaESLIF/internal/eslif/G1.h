@@ -33,7 +33,6 @@ typedef enum bootstrap_grammar_G1_enum {
   G1_TERMINAL_MINUS,
   G1_TERMINAL_ACTION,
   G1_TERMINAL_SYMBOL_ACTION,
-  G1_TERMINAL_NULLABLE_ACTION,
   G1_TERMINAL_FREE_ACTION,
   G1_TERMINAL_THEN,
   G1_TERMINAL_AUTORANK,
@@ -104,7 +103,6 @@ typedef enum bootstrap_grammar_G1_enum {
   G1_META_ADVERB_ITEM,
   G1_META_ACTION,
   G1_META_SYMBOL_ACTION,
-  G1_META_NULLABLE_ACTION,
   G1_META_FREE_ACTION,
   G1_META_LEFT_ASSOCIATION,
   G1_META_RIGHT_ASSOCIATION,
@@ -136,6 +134,7 @@ typedef enum bootstrap_grammar_G1_enum {
   G1_META_SYMBOL,
   G1_META_SYMBOL_NAME,
   G1_META_ACTION_NAME,
+  G1_META_FREE_NAME,
   G1_META_QUANTIFIER,
   G1_META_GRAMMAR_REFERENCE,
   /* This symbol is special, c.f. bootstrap_grammar_G1_metas[] array below: it has the discard flag on */
@@ -197,7 +196,6 @@ bootstrap_grammar_meta_t bootstrap_grammar_G1_metas[] = {
   { G1_META_ADVERB_ITEM,                      "adverb item", 0, 0 },
   { G1_META_ACTION,                           "action", 0, 0 },
   { G1_META_SYMBOL_ACTION,                    "symbol-action,", 0, 0 },
-  { G1_META_NULLABLE_ACTION,                  "nullable-action,", 0, 0 },
   { G1_META_FREE_ACTION,                      "free-action", 0, 0 },
   { G1_META_LEFT_ASSOCIATION,                 "left association", 0, 0 },
   { G1_META_RIGHT_ASSOCIATION,                "right association", 0, 0 },
@@ -229,6 +227,7 @@ bootstrap_grammar_meta_t bootstrap_grammar_G1_metas[] = {
   { G1_META_SYMBOL,                           "symbol", 0, 0 },
   { G1_META_SYMBOL_NAME,                      "symbol name", 0, 0 },
   { G1_META_ACTION_NAME,                      "action name", 0, 0 },
+  { G1_META_FREE_NAME,                        "free name", 0, 0 },
   { G1_META_QUANTIFIER,                       "quantifier", 0, 0 },
   { G1_META_GRAMMAR_REFERENCE,                "grammar reference", 0, 0 },
   { G1_META_DISCARD,                          "discard", 0, 1 },
@@ -454,14 +453,6 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
     "'symbol-action'",
 #ifndef MARPAESLIF_NTRACE
     "symbol-action", "sym"
-#else
-    NULL, NULL
-#endif
-  },
-  { G1_TERMINAL_NULLABLE_ACTION, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
-    "'nullable-action'",
-#ifndef MARPAESLIF_NTRACE
-    "nullable-action", "nullable-ac"
 #else
     NULL, NULL
 #endif
@@ -919,8 +910,7 @@ bootstrap_grammar_rule_t bootstrap_grammar_G1_rules[] = {
   { G1_META_ADVERB_ITEM,                      G1_RULE_ADVERB_ITEM_12,                         MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_NAMING                               }, -1,                        -1, -1 , G1_ACTION_ADVERB_ITEM_13 },
   { G1_META_ADVERB_ITEM,                      G1_RULE_ADVERB_ITEM_13,                         MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_NULL_ADVERB                          }, -1,                        -1, -1 , G1_ACTION_ADVERB_ITEM_13},
   { G1_META_ADVERB_ITEM,                      G1_RULE_ADVERB_ITEM_14,                         MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_SYMBOL_ACTION                        }, -1,                        -1, -1 , G1_ACTION_ADVERB_ITEM_14 },
-  { G1_META_ADVERB_ITEM,                      G1_RULE_ADVERB_ITEM_15,                         MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_NULLABLE_ACTION                      }, -1,                        -1, -1 , G1_ACTION_ADVERB_ITEM_15 },
-  { G1_META_ADVERB_ITEM,                      G1_RULE_ADVERB_ITEM_16,                         MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_FREE_ACTION                          }, -1,                        -1, -1 , G1_ACTION_ADVERB_ITEM_16 },
+  { G1_META_ADVERB_ITEM,                      G1_RULE_ADVERB_ITEM_15,                         MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_FREE_ACTION                          }, -1,                        -1, -1 , G1_ACTION_ADVERB_ITEM_15 },
   { G1_META_ACTION,                           G1_RULE_ACTION,                                 MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_TERMINAL_ACTION,
                                                                                                                                      G1_TERMINAL_THEN,
                                                                                                                                      G1_META_ACTION_NAME                          }, -1,                        -1, -1 , G1_ACTION_ACTION },
@@ -994,13 +984,10 @@ bootstrap_grammar_rule_t bootstrap_grammar_G1_rules[] = {
   { G1_META_NULL_ADVERB,                      G1_RULE_NULL_ADVERB,                            MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL_COMMA                            }, -1,                        -1, -1 , G1_ACTION_NULL_ADVERB },
   { G1_META_SYMBOL_ACTION,                    G1_RULE_SYMBOL_ACTION,                          MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_TERMINAL_SYMBOL_ACTION,
                                                                                                                                      G1_TERMINAL_THEN,
-                                                                                                                                     G1_META_ACTION_NAME                          }, -1,                        -1, -1 , G1_ACTION_SYMBOL_ACTION },
-  { G1_META_NULLABLE_ACTION,                  G1_RULE_NULLABLE_ACTION,                        MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_TERMINAL_NULLABLE_ACTION,
-                                                                                                                                     G1_TERMINAL_THEN,
-                                                                                                                                     G1_META_ACTION_NAME                          }, -1,                        -1, -1 , G1_ACTION_NULLABLE_ACTION },
+                                                                                                                                     G1_META_ACTION_NAME                          }, -1,                        -1, -1 , G1_ACTION_SYMBOLACTION },
   { G1_META_FREE_ACTION,                      G1_RULE_FREE_ACTION,                            MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_TERMINAL_FREE_ACTION,
                                                                                                                                      G1_TERMINAL_THEN,
-                                                                                                                                     G1_META_ASCII_GRAPH_NAME                     }, -1,                        -1, -1 , G1_ACTION_FREE_ACTION },
+                                                                                                                                     G1_META_FREE_NAME                            }, -1,                        -1, -1 , G1_ACTION_FREEACTION },
   { G1_META_ALTERNATIVE_NAME,                 G1_RULE_ALTERNATIVE_NAME_1,                     MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_STANDARD_NAME                        }, -1,                        -1, -1 , G1_ACTION_ALTERNATIVE_NAME_1 },
   /*
     lhsi                                      descs                                           type                          nrhsl  { rhsi }                                       }  minimumi           separatori  properb
@@ -1049,6 +1036,7 @@ bootstrap_grammar_rule_t bootstrap_grammar_G1_rules[] = {
   { G1_META_ACTION_NAME,                      G1_RULE_ACTION_NAME_3,                          MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL___UNDEF                          }, -1,                        -1, -1 , G1_ACTION_ACTION_NAME_3 },
   { G1_META_ACTION_NAME,                      G1_RULE_ACTION_NAME_4,                          MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL___ASCII                          }, -1,                        -1, -1 , G1_ACTION_ACTION_NAME_4 },
   { G1_META_ACTION_NAME,                      G1_RULE_ACTION_NAME_5,                          MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL___TRANSLIT                       }, -1,                        -1, -1 , G1_ACTION_ACTION_NAME_5 },
+  { G1_META_FREE_NAME,                        G1_RULE_ACTION_FREE_NAME,                       MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_ASCII_GRAPH_NAME                     }, -1,                        -1, -1 , G1_ACTION_FREE_NAME },
   /*
     lhsi                                      descs                                           type                          nrhsl  { rhsi }                                       }  minimumi           separatori  properb
   */
