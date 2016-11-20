@@ -68,7 +68,12 @@
 #define G1_RULE_ADVERB_ITEM_12                   "G1_rule_adverb_item_12"
 #define G1_RULE_ADVERB_ITEM_13                   "G1_rule_adverb_item_13"
 #define G1_RULE_ADVERB_ITEM_14                   "G1_rule_adverb_item_14"
+#define G1_RULE_ADVERB_ITEM_15                   "G1_rule_adverb_item_15"
+#define G1_RULE_ADVERB_ITEM_16                   "G1_rule_adverb_item_16"
 #define G1_RULE_ACTION                           "G1_rule_action"
+#define G1_RULE_SYMBOL_ACTION                    "G1_rule_symbol_action"
+#define G1_RULE_NULLABLE_ACTION                  "G1_rule_nullable_action"
+#define G1_RULE_FREE_ACTION                      "G1_rule_free_action"
 #define G1_RULE_LEFT_ASSOCIATION                 "G1_rule_left_association"
 #define G1_RULE_RIGHT_ASSOCIATION                "G1_rule_right_association"
 #define G1_RULE_GROUP_ASSOCIATION                "G1_rule_group_association"
@@ -149,8 +154,8 @@
 #define G1_ACTION_EMPTY_RULE                       "G1_action_empty_rule"                       /* done */
 #define G1_ACTION_NULL_STATEMENT                   "::undef"
 #define G1_ACTION_STATEMENT_GROUP                  "::undef"
-#define G1_ACTION_PRIORITY_RULE                    "G1_action_priority_rule"
-#define G1_ACTION_QUANTIFIED_RULE                  "G1_action_quantified_rule"
+#define G1_ACTION_PRIORITY_RULE                    "G1_action_priority_rule"                    /* done */
+#define G1_ACTION_QUANTIFIED_RULE                  "G1_action_quantified_rule"                  /* done */
 #define G1_ACTION_DISCARD_RULE                     "G1_action_discard_rule"
 #define G1_ACTION_DEFAULT_RULE                     "G1_action_default_rule"
 #define G1_ACTION_LEXEME_DEFAULT_STATEMENT_1       "G1_action_lexeme_default_statement_1"
@@ -191,7 +196,13 @@
 #define G1_ACTION_ADVERB_ITEM_11                   "::shift" /* <adverb item> ::= <latm specification> */
 #define G1_ACTION_ADVERB_ITEM_12                   "::shift" /* <adverb item> ::= naming */
 #define G1_ACTION_ADVERB_ITEM_13                   "::shift" /* <adverb item> ::= <null adverb> */
+#define G1_ACTION_ADVERB_ITEM_14                   "::shift" /* <adverb item> ::= symbolaction */
+#define G1_ACTION_ADVERB_ITEM_15                   "::shift" /* <adverb item> ::= nullableaction */
+#define G1_ACTION_ADVERB_ITEM_16                   "::shift" /* <adverb item> ::= freeaction */
 #define G1_ACTION_ACTION                           "G1_action_action"
+#define G1_ACTION_SYMBOL_ACTION                    "G1_action_symbol_action"
+#define G1_ACTION_NULLABLE_ACTION                  "G1_action_nullable_action"
+#define G1_ACTION_FREE_ACTION                      "G1_action_free_action"
 #define G1_ACTION_LEFT_ASSOCIATION                 "G1_action_left_association"
 #define G1_ACTION_RIGHT_ASSOCIATION                "G1_action_right_association"
 #define G1_ACTION_GROUP_ASSOCIATION                "G1_action_group_association"
