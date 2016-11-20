@@ -69,10 +69,8 @@
 #define G1_RULE_ADVERB_ITEM_13                   "G1_rule_adverb_item_13"
 #define G1_RULE_ADVERB_ITEM_14                   "G1_rule_adverb_item_14"
 #define G1_RULE_ADVERB_ITEM_15                   "G1_rule_adverb_item_15"
-#define G1_RULE_ADVERB_ITEM_16                   "G1_rule_adverb_item_16"
 #define G1_RULE_ACTION                           "G1_rule_action"
 #define G1_RULE_SYMBOL_ACTION                    "G1_rule_symbol_action"
-#define G1_RULE_NULLABLE_ACTION                  "G1_rule_nullable_action"
 #define G1_RULE_FREE_ACTION                      "G1_rule_free_action"
 #define G1_RULE_LEFT_ASSOCIATION                 "G1_rule_left_association"
 #define G1_RULE_RIGHT_ASSOCIATION                "G1_rule_right_association"
@@ -122,6 +120,7 @@
 #define G1_RULE_ACTION_NAME_3                    "G1_rule_action_name_3"
 #define G1_RULE_ACTION_NAME_4                    "G1_rule_action_name_4"
 #define G1_RULE_ACTION_NAME_5                    "G1_rule_action_name_5"
+#define G1_RULE_ACTION_FREE_NAME                 "G1_rule_action_free_name"
 #define G1_RULE_QUANTIFIER_1                     "G1_rule_quantifier_1"
 #define G1_RULE_QUANTIFIER_2                     "G1_rule_quantifier_2"
 #define G1_RULE_GRAMMAR_REFERENCE_1              "G1_rule_grammar_reference_1"
@@ -197,12 +196,10 @@
 #define G1_ACTION_ADVERB_ITEM_12                   "::shift" /* <adverb item> ::= naming */
 #define G1_ACTION_ADVERB_ITEM_13                   "::shift" /* <adverb item> ::= <null adverb> */
 #define G1_ACTION_ADVERB_ITEM_14                   "::shift" /* <adverb item> ::= symbolaction */
-#define G1_ACTION_ADVERB_ITEM_15                   "::shift" /* <adverb item> ::= nullableaction */
-#define G1_ACTION_ADVERB_ITEM_16                   "::shift" /* <adverb item> ::= freeaction */
+#define G1_ACTION_ADVERB_ITEM_15                   "::shift" /* <adverb item> ::= freeaction */
 #define G1_ACTION_ACTION                           "G1_action_action"
-#define G1_ACTION_SYMBOL_ACTION                    "G1_action_symbol_action"
-#define G1_ACTION_NULLABLE_ACTION                  "G1_action_nullable_action"
-#define G1_ACTION_FREE_ACTION                      "G1_action_free_action"
+#define G1_ACTION_SYMBOLACTION                     "G1_action_symbolaction"
+#define G1_ACTION_FREEACTION                       "G1_action_freeaction"
 #define G1_ACTION_LEFT_ASSOCIATION                 "G1_action_left_association"
 #define G1_ACTION_RIGHT_ASSOCIATION                "G1_action_right_association"
 #define G1_ACTION_GROUP_ASSOCIATION                "G1_action_group_association"
@@ -251,6 +248,7 @@
 #define G1_ACTION_ACTION_NAME_3                    "::ascii" /* <action name> ::= '::undef' */
 #define G1_ACTION_ACTION_NAME_4                    "::ascii" /* <action name> ::= '::ascii' */
 #define G1_ACTION_ACTION_NAME_5                    "::ascii" /* <action name> ::= '::translit' */
+#define G1_ACTION_FREE_NAME                        "::ascii" /* <free name> ::= <ascii graph name> */
 #define G1_ACTION_QUANTIFIER_1                     "G1_action_quantifier_1"
 #define G1_ACTION_QUANTIFIER_2                     "G1_action_quantifier_2"
 #define G1_ACTION_GRAMMAR_REFERENCE_1              "G1_action_grammar_reference_1"

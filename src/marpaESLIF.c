@@ -6690,6 +6690,34 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIF_t *marpaESLIFp, ma
         strcat(asciishows, grammarp->defaultRuleActions);
       }
     }
+    if (grammarp->defaultSymbolActions != NULL) {
+      asciishowl += 1; /* space */
+      if (asciishows != NULL) {
+        strcat(asciishows, " ");
+      }
+      asciishowl += strlen("symbol-action => "); /* "symbol-action => " */
+      if (asciishows != NULL) {
+        strcat(asciishows, "symbol-action => ");
+      }
+      asciishowl += strlen(grammarp->defaultSymbolActions); /* action */
+      if (asciishows != NULL) {
+        strcat(asciishows, grammarp->defaultSymbolActions);
+      }
+    }
+    if (grammarp->defaultFreeActions != NULL) {
+      asciishowl += 1; /* space */
+      if (asciishows != NULL) {
+        strcat(asciishows, " ");
+      }
+      asciishowl += strlen("free-action => "); /* "free-action => " */
+      if (asciishows != NULL) {
+        strcat(asciishows, "free-action => ");
+      }
+      asciishowl += strlen(grammarp->defaultFreeActions); /* action */
+      if (asciishows != NULL) {
+        strcat(asciishows, grammarp->defaultFreeActions);
+      }
+    }
     asciishowl += 1; /* \n */
     if (asciishows != NULL) {
       strcat(asciishows, "\n");
