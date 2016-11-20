@@ -69,6 +69,7 @@
 #define G1_RULE_ADVERB_ITEM_13                   "G1_rule_adverb_item_13"
 #define G1_RULE_ADVERB_ITEM_14                   "G1_rule_adverb_item_14"
 #define G1_RULE_ADVERB_ITEM_15                   "G1_rule_adverb_item_15"
+#define G1_RULE_ADVERB_ITEM_16                   "G1_rule_adverb_item_16"
 #define G1_RULE_ACTION                           "G1_rule_action"
 #define G1_RULE_SYMBOL_ACTION                    "G1_rule_symbol_action"
 #define G1_RULE_FREE_ACTION                      "G1_rule_free_action"
@@ -196,6 +197,7 @@
 #define G1_ACTION_ADVERB_ITEM_13                   "::shift" /* <adverb item> ::= <null adverb> */
 #define G1_ACTION_ADVERB_ITEM_14                   "::shift" /* <adverb item> ::= symbolaction */
 #define G1_ACTION_ADVERB_ITEM_15                   "::shift" /* <adverb item> ::= freeaction */
+#define G1_ACTION_ADVERB_ITEM_16                   "::shift" /* <adverb item> ::= <event specification> */
 #define G1_ACTION_ACTION                           "G1_action_action"
 #define G1_ACTION_SYMBOLACTION                     "G1_action_symbolaction"
 #define G1_ACTION_FREEACTION                       "G1_action_freeaction"

@@ -138,6 +138,7 @@ alternative                    ::= rhs <adverb list>
                                  | <null adverb>
                                  | symbolaction
                                  | freeaction
+                                 | <event specification>
 
 action                         ::= 'action' '=>' <action name>
 symbolaction                   ::= 'symbol-action' '=>' <action name>
