@@ -144,8 +144,8 @@
 #define G1_ACTION_STATEMENT_16                     "::undef"
 #define G1_ACTION_STATEMENT_17                     "::undef"
 #define G1_ACTION_STATEMENT_18                     "::undef"
-#define G1_ACTION_START_RULE                       "G1_action_start_rule"
-#define G1_ACTION_DESC_RULE                        "G1_action_desc_rule"
+#define G1_ACTION_START_RULE                       "G1_action_start_rule"                       /* done */
+#define G1_ACTION_DESC_RULE                        "G1_action_desc_rule"                        /* done */
 #define G1_ACTION_EMPTY_RULE                       "G1_action_empty_rule"
 #define G1_ACTION_NULL_STATEMENT                   "G1_action_null_statement"
 #define G1_ACTION_STATEMENT_GROUP                  "G1_action_statement_group"
