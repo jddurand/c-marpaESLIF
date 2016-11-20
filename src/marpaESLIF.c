@@ -1877,6 +1877,7 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_grammar_newp(marpaESLIF_t *marpa
   grammarp->selfp                       = NULL;
   grammarp->leveli                      = leveli;
   grammarp->descp                       = NULL;
+  grammarp->descautob                   = 0;
   grammarp->latmb                       = latmb;
   grammarp->marpaWrapperGrammarStartp   = NULL;
   grammarp->marpaWrapperGrammarDiscardp = NULL;
@@ -1921,8 +1922,10 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_grammar_newp(marpaESLIF_t *marpa
     }
     grammarp->descp = _marpaESLIF_string_newp(marpaESLIFp, "ASCII" /* We KNOW we generated an ASCII stringy */, marpaESLIF_stringGenerator.s, strlen(marpaESLIF_stringGenerator.s), 1 /* asciib */);
     free(marpaESLIF_stringGenerator.s);
+    grammarp->descautob = 1;
   } else {
     grammarp->descp = _marpaESLIF_string_newp(marpaESLIFp, descEncodings, descs, descl, 1 /* asciib */);
+    grammarp->descautob = 0;
   }
   if (grammarp->descp == NULL) {
     goto err;
@@ -3388,6 +3391,8 @@ static inline char *_marpaESLIF_charconvp(marpaESLIF_t *marpaESLIFp, char *toEnc
     MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
     goto err;
   }
+  /* This setting is NOT necessary because *outbufp is always set to '\0' as well. But */
+  /* I do this just to ease inspection in a debugger. */
   outbuforigp[srcl] = '\0';
   outbuforigl = srcl;
 
@@ -3452,6 +3457,9 @@ static inline char *_marpaESLIF_charconvp(marpaESLIF_t *marpaESLIFp, char *toEnc
       inbufp = NULL;
     }
   }
+
+  /* Remember that we ALWAYS allocate one byte more. This mean that outbufp points exactly at this extra byte */
+  *outbufp = '\0';
 
   if (dstlp != NULL) {
     *dstlp = outbufp - outbuforigp;
@@ -6537,7 +6545,7 @@ static inline void _marpaESLIF_rule_createshowv(marpaESLIF_t *marpaESLIFp, marpa
       strcat(asciishows, rulep->actions);
     }
   }
-  if (! rulep->descautob) {
+  if ((! rulep->descautob) && (rulep->descp != NULL) && (rulep->descp->asciis != NULL)) {
     asciishowl++;                                 /* space */
     if (asciishows != NULL) {
       strcat(asciishows, " ");
@@ -6594,6 +6602,7 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIF_t *marpaESLIFp, ma
   size_t               rulel;
   char                *ruleshows;
   size_t               l;
+  char                 quote[2][2];
 
   /* Calculate the size needed to show the grammar in ASCII form */
   asciishowl = strlen(":start"); /* ":start" */
@@ -6609,6 +6618,51 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIF_t *marpaESLIFp, ma
   asciishowl += 1; /* \n */
   if (asciishows != NULL) {
     strcat(asciishows, "\n");
+  }
+  if ((! grammarp->descautob) && (grammarp->descp != NULL) && (grammarp->descp->asciis != NULL)) {
+    asciishowl += strlen(":desc"); /* ":desc" */
+    if (asciishows != NULL) {
+      strcat(asciishows, ":desc");
+    }
+    MARPAESLIF_LEVEL_CREATESHOW(grammarp, asciishowl, asciishows);
+    asciishowl += 1; /* space */
+    if (asciishows != NULL) {
+      strcat(asciishows, " ");
+    }
+    /* Try to be clever by determining the quote possibility */
+    if (strchr(grammarp->descp->asciis, '\'') == NULL) {
+      strcpy(quote[0], "'");
+      strcpy(quote[1], "'");
+    } else if (strchr(grammarp->descp->asciis, '"') == NULL) {
+      strcpy(quote[0], "\"");
+      strcpy(quote[1], "\"");
+    } else if (strchr(grammarp->descp->asciis, '}') == NULL) {
+      strcpy(quote[0], "{");
+      strcpy(quote[1], "}");
+    } else {
+      strcpy(quote[0], "");
+      strcpy(quote[1], "");
+    }
+    if (strlen(quote[0]) > 0) {
+      asciishowl += 1;
+      if (asciishows != NULL) {
+        strcat(asciishows, quote[0]);
+      }
+    }
+    asciishowl += strlen(grammarp->descp->asciis);
+    if (asciishows != NULL) {
+      strcat(asciishows, grammarp->descp->asciis);
+    }
+    if (strlen(quote[1]) > 0) {
+      asciishowl += 1;
+      if (asciishows != NULL) {
+        strcat(asciishows, quote[1]);
+      }
+    }
+    asciishowl += 1; /* \n */
+    if (asciishows != NULL) {
+      strcat(asciishows, "\n");
+    }
   }
   if (marpaESLIFGrammar_rules_by_grammarb(marpaESLIFGrammarp, &ruleip, &rulel, grammarp->leveli, NULL /* descp */)) {
     for (l = 0; l < rulel; l++) {
@@ -10338,7 +10392,7 @@ static short _marpaESLIF_symbol_action___shiftb(void *userDatavp, marpaESLIFValu
   marpaESLIFRecognizerp->callstackCounteri++;
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
 
-  /* The bytep and bytel are coming from the lexeme stack, and we cannot affort to make a shallow copy from it */
+  /* The bytep and bytel are coming from the lexeme stack, and we cannot afford to make a shallow copy from it */
   if ((bytep != NULL) && (bytel > 0)) {
     p = (char *) malloc(bytel);
     if (p == NULL) {
