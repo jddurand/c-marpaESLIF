@@ -90,8 +90,7 @@
 #define G1_RULE_ON_OR_OFF_1                      "G1_rule_on_or_off_1"
 #define G1_RULE_ON_OR_OFF_2                      "G1_rule_on_or_off_2"
 #define G1_RULE_EVENT_INITIALIZER_2              "G1_rule_event_initializer_2"
-#define G1_RULE_LATM_SPECIFICATION_1             "G1_rule_latm_specification_1"
-#define G1_RULE_LATM_SPECIFICATION_2             "G1_rule_latm_specification_2"
+#define G1_RULE_LATM_SPECIFICATION               "G1_rule_latm_specification"
 #define G1_RULE_NAMING                           "G1_rule_naming"
 #define G1_RULE_NULL_ADVERB                      "G1_rule_null_adverb"
 #define G1_RULE_ALTERNATIVE_NAME_1               "G1_rule_alternative_name_1"
@@ -156,7 +155,7 @@
 #define G1_ACTION_PRIORITY_RULE                    "G1_action_priority_rule"                    /* done */
 #define G1_ACTION_QUANTIFIED_RULE                  "G1_action_quantified_rule"                  /* done */
 #define G1_ACTION_DISCARD_RULE                     "G1_action_discard_rule"
-#define G1_ACTION_DEFAULT_RULE                     "G1_action_default_rule"
+#define G1_ACTION_DEFAULT_RULE                     "G1_action_default_rule"                     /* done */
 #define G1_ACTION_LEXEME_DEFAULT_STATEMENT_1       "G1_action_lexeme_default_statement_1"
 #define G1_ACTION_LEXEME_DEFAULT_STATEMENT_2       "G1_action_lexeme_default_statement_2"
 #define G1_ACTION_DISCARD_DEFAULT_STATEMENT_1      "G1_action_discard_default_statement_1"
@@ -218,8 +217,7 @@
 #define G1_ACTION_ON_OR_OFF_1                      "G1_action_on_or_off_1"
 #define G1_ACTION_ON_OR_OFF_2                      "G1_action_on_or_off_2"
 #define G1_ACTION_EVENT_INITIALIZER_2              "G1_action_event_initializer_2"
-#define G1_ACTION_LATM_SPECIFICATION_1             "G1_action_latm_specification_1"
-#define G1_ACTION_LATM_SPECIFICATION_2             "G1_action_latm_specification_2"
+#define G1_ACTION_LATM_SPECIFICATION               "G1_action_latm_specification"
 #define G1_ACTION_NAMING                           "G1_action_naming"
 #define G1_ACTION_NULL_ADVERB                      "G1_action_null_adverb"
 #define G1_ACTION_ALTERNATIVE_NAME_1               "G1_action_alternative_name_1"

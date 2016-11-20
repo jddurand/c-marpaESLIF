@@ -1894,9 +1894,7 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_grammar_newp(marpaESLIF_t *marpa
   grammarp->ruleip                      = NULL; /* Filled by grammar validation */
   grammarp->rulel                       = 0;    /* Filled by grammar validation */
   grammarp->haveRejectionb              = 0;    /* Filled by grammar validation */
-  grammarp->nbupdateviaStarti           = 0;    /* Used by ESLIF grammar actions */
-  grammarp->nbupdateviaLexemei          = 0;    /* Used by ESLIF grammar actions */
-  grammarp->nbupdateviaDiscardi         = 0;    /* Used by ESLIF grammar actions */
+  grammarp->nbupdatei                   = 0;    /* Used by ESLIF grammar actions */
   grammarp->asciishows                  = NULL;
 
   grammarp->marpaWrapperGrammarStartp = marpaWrapperGrammar_newp(marpaWrapperGrammarOptionp);
@@ -2490,7 +2488,7 @@ static inline marpaESLIF_symbol_t *_marpaESLIF_symbol_newp(marpaESLIF_t *marpaES
   symbolp->discardEventb          = 1; /* An event is on by default */
   symbolp->lookupLevelDeltai      = 1;   /* Default lookup is the next grammar level */
   symbolp->lookupMetas            = NULL;
-  symbolp->lookupResolvedLeveli         = 0;   /* This will be overwriten by _marpaESLIFGrammar_validateb() and used only when symbol is a lexeme from another grammar */
+  symbolp->lookupResolvedLeveli   = 0; /* This will be overwriten by _marpaESLIFGrammar_validateb() and used only when symbol is a lexeme from another grammar */
   symbolp->priorityi              = 0; /* Default priority is 0 */
   symbolp->actions                = NULL;
   symbolp->nbupdatei              = 0;
@@ -6670,7 +6668,10 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIF_t *marpaESLIFp, ma
       ||
       (grammarp->defaultFreeActions != NULL)
       ||
-      (grammarp->defaultDiscardEvents != NULL)) {
+      (grammarp->defaultDiscardEvents != NULL)
+      ||
+      (grammarp->latmb)
+      ) {
     asciishowl += strlen(":default"); /* ":default" */
     if (asciishows != NULL) {
       strcat(asciishows, ":default");
@@ -6716,6 +6717,16 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIF_t *marpaESLIFp, ma
       asciishowl += strlen(grammarp->defaultFreeActions); /* action */
       if (asciishows != NULL) {
         strcat(asciishows, grammarp->defaultFreeActions);
+      }
+    }
+    if (grammarp->latmb) {
+      asciishowl += 1; /* space */
+      if (asciishows != NULL) {
+        strcat(asciishows, " ");
+      }
+      asciishowl += strlen("latm => 1"); /* "latm => 1" */
+      if (asciishows != NULL) {
+        strcat(asciishows, "latm => 1");
       }
     }
     asciishowl += 1; /* \n */

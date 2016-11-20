@@ -27,7 +27,7 @@
 # - array descriptor         removed
 # - lexer name               removed
 # - latm                     only latm => 1 is supported if calling scan()
-# - forgiving                only forgiving => 1 is supported if calling scan()
+# - forgiving                removed
 # - regexp                   added
 # - C++ style comments       added
 # - quoted strings           added
@@ -158,7 +158,6 @@ freeaction                     ::= 'free-action' =>' <free name>
 <event initializer>            ::= '=' <on or off>
 <on or off>                    ::= 'on' | 'off'
 <event initializer>            ::= # empty
-<latm specification>           ::= 'forgiving' '=>' true
 <latm specification>           ::= 'latm' '=>' true
 naming                         ::= 'name' '=>' <alternative name>
 <null adverb>                  ::= ','

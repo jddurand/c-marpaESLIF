@@ -51,7 +51,6 @@ typedef enum bootstrap_grammar_G1_enum {
   G1_TERMINAL_PAUSE,
   G1_TERMINAL_ON,
   G1_TERMINAL_OFF,
-  G1_TERMINAL_FORGIVING,
   G1_TERMINAL_LATM,
   G1_TERMINAL_BLESS,
   G1_TERMINAL_NAME,
@@ -601,14 +600,6 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
     NULL, NULL
 #endif
   },
-  { G1_TERMINAL_FORGIVING, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
-    "'forgiving'",
-#ifndef MARPAESLIF_NTRACE
-    "forgiving", "for"
-#else
-    NULL, NULL
-#endif
-  },
   { G1_TERMINAL_LATM, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
     "'latm'",
 #ifndef MARPAESLIF_NTRACE
@@ -969,15 +960,12 @@ bootstrap_grammar_rule_t bootstrap_grammar_G1_rules[] = {
   { G1_META_ON_OR_OFF,                        G1_RULE_ON_OR_OFF_1,                            MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL_ON                               }, -1,                        -1, -1 , G1_ACTION_ON_OR_OFF_1 },
   { G1_META_ON_OR_OFF,                        G1_RULE_ON_OR_OFF_2,                            MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL_OFF                              }, -1,                        -1, -1 , G1_ACTION_ON_OR_OFF_2 },
   { G1_META_EVENT_INITIALIZER,                G1_RULE_EVENT_INITIALIZER_2,                    MARPAESLIF_RULE_TYPE_ALTERNATIVE, 0, { -1                                           }, -1,                        -1, -1 , G1_ACTION_EVENT_INITIALIZER_2 },
-  { G1_META_LATM_SPECIFICATION,               G1_RULE_LATM_SPECIFICATION_1,                   MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_TERMINAL_FORGIVING,
-                                                                                                                                     G1_TERMINAL_THEN,
-                                                                                                                                     G1_META_BOOLEAN                              }, -1,                        -1, -1 , G1_ACTION_LATM_SPECIFICATION_1 },
   /*
     lhsi                                      descs                                           type                          nrhsl  { rhsi }                                       }  minimumi           separatori  properb
   */
-  { G1_META_LATM_SPECIFICATION,               G1_RULE_LATM_SPECIFICATION_2,                   MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_TERMINAL_LATM,
+  { G1_META_LATM_SPECIFICATION,               G1_RULE_LATM_SPECIFICATION,                     MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_TERMINAL_LATM,
                                                                                                                                      G1_TERMINAL_THEN,
-                                                                                                                                     G1_META_BOOLEAN                              }, -1,                        -1, -1 , G1_ACTION_LATM_SPECIFICATION_2 },
+                                                                                                                                     G1_META_BOOLEAN                              }, -1,                        -1, -1 , G1_ACTION_LATM_SPECIFICATION },
   { G1_META_NAMING,                           G1_RULE_NAMING,                                 MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_TERMINAL_NAME,
                                                                                                                                      G1_TERMINAL_THEN,
                                                                                                                                      G1_META_ALTERNATIVE_NAME                     }, -1,                        -1, -1 , G1_ACTION_NAMING },
