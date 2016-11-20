@@ -3945,7 +3945,8 @@ static inline short _marpaESLIFRecognizer_resumeb(marpaESLIFRecognizer_t *marpaE
   short                            continueb;
   size_t                           maxMatchedl;
   int                              maxPriorityi;
-  short                            maxPriorityInitializedb = 0;
+  short                            maxPriorityInitializedb;
+  short                            haveTerminalMatchedb;
   genericStack_t                   alternativeStack;
   genericStack_t                  *alternativeStackp = &alternativeStack;
   int                              alternativeOki;
@@ -4142,11 +4143,10 @@ static inline short _marpaESLIFRecognizer_resumeb(marpaESLIFRecognizer_t *marpaE
     }
   }
 
-  /* Generate the eventual pre-lexeme events */
-  /* Switch to user space now */
-
-  /* Prepare filterings */
-  maxPriorityInitializedb = 0;
+  /* There are two king of symbol: meta or terminal. If there is at least one terminal */
+  /* this mean the grammar specified an explicit input, and it always have precedence */
+  /* over every other meta (that is a jump into another rule). */
+  haveTerminalMatchedb = 0;
   for (symboll = 0; symboll < nSymboll; symboll++) {
     symboli = symbolArrayp[symboll];
     if (! GENERICSTACK_IS_PTR(symbolStackp, symboli)) {
@@ -4154,7 +4154,6 @@ static inline short _marpaESLIFRecognizer_resumeb(marpaESLIFRecognizer_t *marpaE
       goto err;
     }
     symbolp = GENERICSTACK_GET_PTR(symbolStackp, symboli);
-
     /* Get lexeme length */
     if (! _marpaESLIFRecognizer_lexemeStack_i_sizeb(marpaESLIFRecognizerp, alternativeStackp, (int) symboll, &sizel)) {
       goto err;
@@ -4163,22 +4162,52 @@ static inline short _marpaESLIFRecognizer_resumeb(marpaESLIFRecognizer_t *marpaE
       /* This symbol did not match */
       continue;
     }
+    if (symbolp->type == MARPAESLIF_SYMBOL_TYPE_TERMINAL) {
+      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Alternatives contain at least one terminal (<%s>) - absolute priority given to all terminals", symbolp->descp->asciis);
+      haveTerminalMatchedb = 1;
+      break;
+    }
+  }
 
- /* if (latmb) { */
-      /* In latm mode, keep only the longests alternatives */
-      if (sizel < maxMatchedl) {
-        MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp,
-                                    funcs,
-                                    "Alternative %s is skipped (length %ld < max length %ld)",
-                                    symbolp->descp->asciis,
-                                    (unsigned long) sizel,
-                                    (unsigned long) maxMatchedl);
+  /* Generate the eventual pre-lexeme events */
+  /* Switch to user space now */
+
+  /* Prepare filterings - this has no sense if there is at least one terminal */
+  if (! haveTerminalMatchedb) {
+    maxPriorityInitializedb = 0;
+    for (symboll = 0; symboll < nSymboll; symboll++) {
+      symboli = symbolArrayp[symboll];
+      if (! GENERICSTACK_IS_PTR(symbolStackp, symboli)) {
+        MARPAESLIF_ERRORF(marpaESLIFp, "No such symbol ID %d", symboli);
+        goto err;
+      }
+      symbolp = GENERICSTACK_GET_PTR(symbolStackp, symboli);
+
+      /* Get lexeme length */
+      if (! _marpaESLIFRecognizer_lexemeStack_i_sizeb(marpaESLIFRecognizerp, alternativeStackp, (int) symboll, &sizel)) {
+        goto err;
+      }
+      if (sizel <= 0) {
+        /* This symbol did not match */
         continue;
-      }      
- /* } */
+      }
 
-    if ((! maxPriorityInitializedb) || (symbolp->priorityi > maxPriorityi)) {
-      maxPriorityi = symbolp->priorityi;
+   /* if (latmb) { */
+        /* In latm mode, keep only the longests alternatives */
+        if (sizel < maxMatchedl) {
+          MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp,
+                                      funcs,
+                                      "Alternative %s is skipped (length %ld < max length %ld)",
+                                      symbolp->descp->asciis,
+                                      (unsigned long) sizel,
+                                      (unsigned long) maxMatchedl);
+          continue;
+        }
+  /* } */
+
+        if ((! maxPriorityInitializedb) || (symbolp->priorityi > maxPriorityi)) {
+          maxPriorityi = symbolp->priorityi;
+        }
     }
   }
   
@@ -4209,15 +4238,25 @@ static inline short _marpaESLIFRecognizer_resumeb(marpaESLIFRecognizer_t *marpaE
       }      
  /* } */
 
-    if (symbolp->priorityi < maxPriorityi) {
-        MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp,
-                                    funcs,
-                                    "Alternative %s is out-prioritized (priority %d < max priority %d)",
-                                    symbolp->descp->asciis,
-                                    symbolp->priorityi,
-                                    maxPriorityi);
-        continue;
-    }
+      if (haveTerminalMatchedb) {
+        if (symbolp->type != MARPAESLIF_SYMBOL_TYPE_TERMINAL) {
+          MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp,
+                                      funcs,
+                                      "Alternative %s is out-prioritized (not a terminal)",
+                                      symbolp->descp->asciis);
+          continue;
+        }
+      } else {
+        if (symbolp->priorityi < maxPriorityi) {
+          MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp,
+                                      funcs,
+                                      "Alternative %s is out-prioritized (priority %d < max priority %d)",
+                                      symbolp->descp->asciis,
+                                      symbolp->priorityi,
+                                      maxPriorityi);
+          continue;
+        }
+      }
 
     /* Commit in the lexeme input stack */
     if (! _marpaESLIFRecognizer_lexemeStack_i_moveb(marpaESLIFRecognizerp, lexemeInputStackp, GENERICSTACK_USED(lexemeInputStackp), alternativeStackp, (int) symboll)) {
