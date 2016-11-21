@@ -1704,12 +1704,12 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
         continue;
       }
       symbolp = (marpaESLIF_symbol_t *) GENERICSTACK_GET_PTR(symbolStackp, symboli);
-      if (GENERICSTACK_USED(symbolp->nullableRuleStackp) <= 0) {
-        continue;
-      }
       /* Always fetch properties - this is used in the grammar show */
       if (! marpaWrapperGrammar_symbolPropertyb(grammarp->marpaWrapperGrammarStartp, symbolp->idi, &(symbolp->propertyBitSet))) {
         goto err;
+      }
+      if (GENERICSTACK_USED(symbolp->nullableRuleStackp) <= 0) {
+        continue;
       }
       if (GENERICSTACK_USED(symbolp->nullableRuleStackp) == 1) {
         /* Just one nullable rule: nullable semantic is this rule's semantic */
@@ -6794,6 +6794,7 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIF_t *marpaESLIFp, ma
     npropertyi = 0;
     if ((symbolp->propertyBitSet & MARPAWRAPPER_SYMBOL_IS_ACCESSIBLE) == MARPAWRAPPER_SYMBOL_IS_ACCESSIBLE) {
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "ACCESSIBLE");
+      npropertyi++;
     }
     if ((symbolp->propertyBitSet & MARPAWRAPPER_SYMBOL_IS_NULLABLE) == MARPAWRAPPER_SYMBOL_IS_NULLABLE) {
       if (npropertyi++ > 0) {
