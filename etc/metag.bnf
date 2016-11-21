@@ -164,7 +164,7 @@ naming                         ::= 'name' '=>' <alternative name>
 
 <alternative name>             ::= <standard name> | <quoted name>
 
-<event name>        ::= <ascii graph name>
+<event name>        ::= <restricted ascii graph name>
                       | ':symbol'
 
 lhs                              ::= <symbol name>
