@@ -35,11 +35,12 @@
 # - grammar description      added
 # - grammar reference        added
 # - parenthesized rhs list   removed
+# - lexeme default           removed
 # - exception list           added (using '(' and ')' ...)
 # - there is no notion of mask
 # - pause is allowed in discard events
 # - latm adverb in :lexeme rules is not allowed, latm mode is forced.
-# - ":default" and "lexeme default" are unique per grammar instead of being lexically scoped
+# - ":default" is unique per grammar instead of being lexically scoped
 # - the RHS of a :discard rule can be anywhere, including current grammar
 # ----------------------------------------------------------------------------------------------
 # Please note that there is a very big difference between using apparently equivalent regexp and
@@ -64,7 +65,6 @@
 # -------------------------------------------------------------------------------------------------
 
 :default   ::= action => [start,length,values]
-lexeme default =  action => [start,length,value]
 
 :start                           ::= statements
 
@@ -78,7 +78,6 @@ statement                        ::= <start rule>
                                  | <quantified rule>
                                  | <discard rule>
                                  | <default rule>
-                                 | <lexeme default statement>
                                  | <discard default statement>
                                  | <lexeme rule>
                                  | <completion event declaration>
@@ -97,8 +96,6 @@ statement                        ::= <start rule>
 <quantified rule>              ::= lhs <op declare> <rhs primary> quantifier <adverb list>
 <discard rule>                 ::= ':discard' <op declare> <rhs primary> <adverb list>
 <default rule>                 ::= ':default' <op declare> <adverb list>
-<lexeme default statement>     ::= 'lexeme' 'default' '=' <adverb list>
-                                 | 'lexeme' 'default' <op declare> <adverb list>
 <discard default statement>    ::= 'discard' 'default' '=' <adverb list>
                                  | 'discard' 'default' <op declare> <adverb list>
 <lexeme rule>                  ::= ':lexeme' <op declare> symbol <adverb list>
