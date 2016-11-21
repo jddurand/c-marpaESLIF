@@ -16,7 +16,7 @@ typedef struct marpaESLIFTester_context {
 const static char *metags = "\n"
   "inaccessible is warn by default\n"
   "autorank is on by default\n"
-  ":lexeme ::= <comma> pause => before priority => 1 event => :symbol\n"
+  ":lexeme ~ <comma> pause => before priority => 1 event => :symbol\n"
   ":default ::= action => do_first_arg symbol-action => do_symbol free-action => do_free latm => 1\n"
   ":start ::= Script\n"
   ":desc ::= 'This is Grammar Top Level with UTF-8 characters: r\xc3\xa9sum\xc3\xa9'\n"
@@ -32,8 +32,14 @@ const static char *metags = "\n"
   "           || Expression '+' Expression action => do_add\n"
   "            | Expression '-' Expression action => do_subtract\n"
   "{ // start statement group\n"
-  "comma ::= [,]\n"
-  "Number ::= [\\d]+"
+  "comma ~ [,]\n"
+  "Number ~ [\\d]+"
+  "<hash comment> ~ <terminated hash comment> | <unterminated final hash comment>\n"
+  "<terminated hash comment> ~ '#' <hash comment body> <vertical space char>\n"
+  "<unterminated final hash comment> ~ '#' <hash comment body>\n"
+  "<hash comment body> ~ <hash comment char>*\n"
+  "<vertical space char> ~ [\\x{A}\\x{B}\\x{C}\\x{D}\\x{2028}\\x{2029}]:u\n"
+  "<hash comment char> ~ [^\\x{A}\\x{B}\\x{C}\\x{D}\\x{2028}\\x{2029}]:u\n"
   "} /* end statement group */\n"
 ;
 
@@ -46,10 +52,7 @@ int main() {
   int                       exiti;
   int                       ngrammari;
   char                     *grammarshows;
-  int                      *ruleip;
-  size_t                    rulel;
   int                       grammari;
-  size_t                    l;
 
   marpaESLIFOption.genericLoggerp = GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_DEBUG);
   marpaESLIFp = marpaESLIF_newp(&marpaESLIFOption);
