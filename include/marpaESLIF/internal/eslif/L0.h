@@ -16,8 +16,6 @@ typedef enum bootstrap_grammar_L0_enum {
   L0_TERMINAL_OP_DECLARE_LEX_GRAMMAR,
   L0_TERMINAL_OP_LOOSEN,
   L0_TERMINAL_OP_EQUAL_PRIORITY,
-  L0_TERMINAL_BEFORE,
-  L0_TERMINAL_AFTER,
   L0_TERMINAL_SIGN,
   L0_TERMINAL_INTEGER,
   L0_TERMINAL_TRUE,
@@ -55,7 +53,6 @@ typedef enum bootstrap_grammar_L0_enum {
   L0_META_OP_DECLARE_LEX_GRAMMAR,
   L0_META_OP_LOOSEN,
   L0_META_OP_EQUAL_PRIORITY,
-  L0_META_BEFORE_OR_AFTER,
   L0_META_SIGNED_INTEGER,
   L0_META_SIGN,
   L0_META_INTEGER,
@@ -86,8 +83,7 @@ bootstrap_grammar_meta_t bootstrap_grammar_L0_metas[] = {
   { L0_META_OP_DECLARE_LEX_GRAMMAR,             L0_JOIN_G1_META_OP_DECLARE_LEX_GRAMMAR, 0, 0 },
   { L0_META_OP_LOOSEN,                          L0_JOIN_G1_META_OP_LOOSEN, 0, 0 },
   { L0_META_OP_EQUAL_PRIORITY,                  L0_JOIN_G1_META_OP_EQUAL_PRIORITY, 0, 0 },
-  { L0_META_BEFORE_OR_AFTER,                    L0_JOIN_G1_META_BEFORE_OR_AFTER, 0, 0 },
-  { L0_META_SIGNED_INTEGER,                     L0_JOIN_G1_META_SIGNED_INTEGER, 0, 0 },
+  { L0_META_SIGNED_INTEGER,                     "signed integer", 0, 0 },
   { L0_META_SIGN,                               "sign", 0, 0 },
   { L0_META_INTEGER,                            L0_JOIN_G1_META_INTEGER, 0, 0 },
   { L0_META_TRUE,                               L0_JOIN_G1_META_TRUE, 0, 0 },
@@ -219,16 +215,6 @@ __DATA__
 #else
     "|", NULL
 #endif
-  },
-  /* --------------------------------------------------------------------------------------------------------------------------------- */
-  { L0_TERMINAL_BEFORE, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
-    "'before'",
-    NULL, NULL
-  },
-  /* --------------------------------------------------------------------------------------------------------------------------------- */
-  { L0_TERMINAL_AFTER, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
-    "'after'",
-    NULL, NULL
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
   { L0_TERMINAL_SIGN, MARPAESLIF_TERMINAL_TYPE_REGEX, NULL,
@@ -413,8 +399,6 @@ bootstrap_grammar_rule_t bootstrap_grammar_L0_rules[] = {
   /*
     lhsi                                      descs                                           type                          nrhsl  { rhsi }                                       }  minimumi                          separatori  properb
   */
-  { L0_META_BEFORE_OR_AFTER,                  "before or after 1",                  MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_BEFORE                           }, -1,                                       -1, -1 , NULL },
-  { L0_META_BEFORE_OR_AFTER,                  "before or after 2",                  MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_AFTER                            }, -1,                                       -1, -1 , NULL },
   { L0_META_SIGNED_INTEGER,                   "signed integer 1",                   MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_META_INTEGER                              }, -1,                                       -1, -1 , NULL },
   { L0_META_SIGNED_INTEGER,                   "signed integer 2",                   MARPAESLIF_RULE_TYPE_ALTERNATIVE, 2, { L0_META_SIGN,
                                                                                                                            L0_META_INTEGER                              }, -1,                                       -1, -1 , NULL },

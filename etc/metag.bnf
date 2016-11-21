@@ -153,7 +153,8 @@ freeaction                     ::= 'free-action' =>' <free name>
 <null ranking specification>   ::= 'null' 'rank' '=>' <null ranking constant>
 <null ranking constant>        ::= 'low' | 'high'
 <priority specification>       ::= 'priority' '=>' <signed integer>
-<pause specification>          ::= 'pause' '=>' <before or after>
+<pause specification>          ::= 'pause' '=>' 'before'
+<pause specification>          ::= 'pause' '=>' 'after'
 <event specification>          ::= 'event' '=>' <event initialization>
 <event initialization>         ::= <event name> <event initializer>
 <event initializer>            ::= '=' <on or off>
@@ -222,7 +223,6 @@ whitespace ~ [\s]+
 <op loosen>              ~ '||'
 <op equal priority>      ~ '|'
 quantifier             ::= '*' | '+'
-<before or after>        ~ 'before' | 'after'
 
 <signed integer>         ~ <integer> | <sign> <integer>
 <sign>                   ~ [+-]
