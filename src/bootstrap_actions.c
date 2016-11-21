@@ -56,6 +56,7 @@ static        void  _marpaESLIF_bootstrap_freeDefaultActionv(void *userDatavp, i
 static        short _marpaESLIF_bootstrap_G1_action_symbol_name_2b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short _marpaESLIF_bootstrap_G1_action_op_declare_1b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short _marpaESLIF_bootstrap_G1_action_op_declare_2b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
+static        short _marpaESLIF_bootstrap_G1_action_op_declare_3b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short _marpaESLIF_bootstrap_G1_action_rhsb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short _marpaESLIF_bootstrap_G1_action_adverb_list_itemsb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short _marpaESLIF_bootstrap_G1_action_actionb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
@@ -1009,6 +1010,7 @@ static marpaESLIFValueRuleCallback_t _marpaESLIF_bootstrap_ruleActionResolver(vo
   /* TO DO */
        if (strcmp(actions, "G1_action_op_declare_1")             == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_op_declare_1b;             }
   else if (strcmp(actions, "G1_action_op_declare_2")             == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_op_declare_2b;             }
+  else if (strcmp(actions, "G1_action_op_declare_3")             == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_op_declare_3b;             }
   else if (strcmp(actions, "G1_action_rhs")                      == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_rhsb;                      }
   else if (strcmp(actions, "G1_action_adverb_list_items")        == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_adverb_list_itemsb;        }
   else if (strcmp(actions, "G1_action_action")                   == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_actionb;                   }
@@ -1119,7 +1121,6 @@ static short _marpaESLIF_bootstrap_G1_action_symbol_name_2b(void *userDatavp, ma
   /* <symbol name>  ::= <bracketed name> */
   marpaESLIF_t *marpaESLIFp = marpaESLIFValue_eslifp(marpaESLIFValuep);
   char         *barenames   = NULL;
-  short         arrayb;
   char         *asciis; /* bare name is only ASCII letters as per the grammar */
   size_t        asciil;
   short         rcb;
@@ -1130,15 +1131,12 @@ static short _marpaESLIF_bootstrap_G1_action_symbol_name_2b(void *userDatavp, ma
     goto err;
   }
 
-  /* Per def, because of the ::shift default action, <bracketed name> is of type array since this is a lexeme */
-  if (! _marpaESLIFValue_stack_is_arrayb(marpaESLIFValuep, arg0i, &arrayb)) {
-    goto err;
-  }
-  if (! arrayb) {
-    MARPAESLIF_ERRORF(marpaESLIFp, "RHS No %d is of type ARRAY", arg0i);
-    goto err;
-  }
   if (! _marpaESLIFValue_stack_get_arrayb(marpaESLIFValuep, arg0i, NULL /* contextip */, (void **) &asciis, &asciil, NULL /* shallowbp */)) {
+    goto err;
+  }
+  if ((asciis == NULL) || (asciil <= 0)) {
+    /* Should never happen as per the grammar */
+    MARPAESLIF_ERROR(marpaESLIFp, "Null bare name");
     goto err;
   }
   if ((asciis == NULL) || (asciil <= 0)) {
@@ -1206,6 +1204,49 @@ static short _marpaESLIF_bootstrap_G1_action_op_declare_2b(void *userDatavp, mar
   }
 
   return marpaESLIFValue_stack_set_intb(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_OP_DECLARE, 1 /* ~ is level No 0 */);
+}
+
+/*****************************************************************************/
+static short _marpaESLIF_bootstrap_G1_action_op_declare_3b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
+/*****************************************************************************/
+{
+  /* <op declare> ::= <op declare any grammar> */
+  marpaESLIF_t *marpaESLIFp = marpaESLIFValue_eslifp(marpaESLIFValuep);
+  char         *asciis; /* <op declare any grammar> is only ASCII letters as per the grammar */
+  size_t        asciil;
+  short         rcb;
+
+  /* Cannot be nullable */
+  if (nullableb) {
+    MARPAESLIF_ERROR(marpaESLIFp, "Nullable mode is not supported");
+    goto err;
+  }
+  if (! _marpaESLIFValue_stack_get_arrayb(marpaESLIFValuep, arg0i, NULL /* contextip */, (void **) &asciis, &asciil, NULL /* shallowbp */)) {
+    goto err;
+  }
+  if ((asciis == NULL) || (asciil <= 0)) {
+    /* Should never happen as per the grammar */
+    MARPAESLIF_ERROR(marpaESLIFp, "Null bare name");
+    goto err;
+  }
+
+  /* <op declare any grammar> lexeme definition is /:\[\d+\]:=/ i.e. start with 2 ASCII characters and end with 3 ASCII characters */
+  if (asciil < 5) {
+    /* Should never happen as per the grammar */
+    MARPAESLIF_ERROR(marpaESLIFp, "<op declare any grammar> is not long enough");
+    goto err;
+  }
+
+  if (! marpaESLIFValue_stack_set_intb(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_OP_DECLARE, atoi(asciis + 2))) {
+    goto err;
+  }
+
+  rcb = 1;
+  goto done;
+ err:
+  rcb = 0;
+ done:
+  return rcb;
 }
 
 /*****************************************************************************/

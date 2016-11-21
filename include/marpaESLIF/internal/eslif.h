@@ -163,7 +163,7 @@
 #define G1_ACTION_LEXEME_DEFAULT_STATEMENT_2       "G1_action_lexeme_default_statement_2"
 #define G1_ACTION_DISCARD_DEFAULT_STATEMENT_1      "G1_action_discard_default_statement_1"
 #define G1_ACTION_DISCARD_DEFAULT_STATEMENT_2      "G1_action_discard_default_statement_2"
-#define G1_ACTION_LEXEME_RULE                      "G1_action_lexeme_rule"
+#define G1_ACTION_LEXEME_RULE                      "G1_action_lexeme_rule"                      /* done */
 #define G1_ACTION_COMPLETION_EVENT_DECLARATION_1   "G1_action_completion_event_declaration_1"
 #define G1_ACTION_COMPLETION_EVENT_DECLARATION_2   "G1_action_completion_event_declaration_2"
 #define G1_ACTION_NULLED_EVENT_DECLARATION_1       "G1_action_nulled_event_declaration_1"
@@ -171,13 +171,13 @@
 #define G1_ACTION_NULLED_PREDICTED_DECLARATION_1   "G1_action_nulled_predicted_declaration_1"
 #define G1_ACTION_NULLED_PREDICTED_DECLARATION_2   "G1_action_nulled_predicted_declaration_2"
 #define G1_ACTION_INACCESSIBLE_STATEMENT           "G1_action_inaccessible_statement"
-#define G1_ACTION_INACCESSIBLE_TREATMENT_1         "G1_action_inaccessible_treatment_1"
-#define G1_ACTION_INACCESSIBLE_TREATMENT_2         "G1_action_inaccessible_treatment_2"
-#define G1_ACTION_INACCESSIBLE_TREATMENT_3         "G1_action_inaccessible_treatment_3"
+#define G1_ACTION_INACCESSIBLE_TREATMENT_1         "G1_action_inaccessible_treatment_1"         /* done */
+#define G1_ACTION_INACCESSIBLE_TREATMENT_2         "G1_action_inaccessible_treatment_2"         /* done */
+#define G1_ACTION_INACCESSIBLE_TREATMENT_3         "G1_action_inaccessible_treatment_3"         /* done */
 #define G1_ACTION_EXCEPTION_STATEMENT              "G1_action_exception_statement"
-#define G1_ACTION_AUTORANK_STATEMENT               "G1_action_autorank_statement"
-#define G1_ACTION_OP_DECLARE_1                     "G1_action_op_declare_1"
-#define G1_ACTION_OP_DECLARE_2                     "G1_action_op_declare_2"
+#define G1_ACTION_AUTORANK_STATEMENT               "G1_action_autorank_statement"               /* done */
+#define G1_ACTION_OP_DECLARE_1                     "G1_action_op_declare_1"                     /* done */
+#define G1_ACTION_OP_DECLARE_2                     "G1_action_op_declare_2"                     /* done */
 #define G1_ACTION_OP_DECLARE_3                     "G1_action_op_declare_3"
 #define G1_ACTION_PRIORITIES                       "G1_action_priorities"
 #define G1_ACTION_ALTERNATIVES                     "G1_action_alternatives"
