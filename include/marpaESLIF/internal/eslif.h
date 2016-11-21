@@ -124,6 +124,7 @@
 #define G1_RULE_ACTION_FREE_NAME                 "G1_rule_action_free_name"
 #define G1_RULE_QUANTIFIER_1                     "G1_rule_quantifier_1"
 #define G1_RULE_QUANTIFIER_2                     "G1_rule_quantifier_2"
+#define G1_RULE_SIGNED_INTEGER                   "G1_rule_signed_integer"
 #define G1_RULE_GRAMMAR_REFERENCE_1              "G1_rule_grammar_reference_1"
 #define G1_RULE_GRAMMAR_REFERENCE_2              "G1_rule_grammar_reference_2"
 #define G1_RULE_DISCARD_1                        "G1_rule_discard_1"
@@ -226,8 +227,8 @@
 #define G1_ACTION_NULL_ADVERB                      "G1_action_null_adverb"
 #define G1_ACTION_ALTERNATIVE_NAME_1               "G1_action_alternative_name_1"
 #define G1_ACTION_ALTERNATIVE_NAME_2               "G1_action_alternative_name_2"
-#define G1_ACTION_EVENT_NAME_1                     "G1_action_event_name_1"
-#define G1_ACTION_EVENT_NAME_2                     "G1_action_event_name_2"
+#define G1_ACTION_EVENT_NAME_1                     "::ascii" /* <event name> ::= <ascii graph name> */
+#define G1_ACTION_EVENT_NAME_2                     "::ascii" /* <event name> ::= ':symbol' */
 #define G1_ACTION_LHS                              "::shift" /* lhs ::= <symbol name> */
 #define G1_ACTION_RHS                              "G1_action_rhs"
 #define G1_ACTION_RHS_PRIMARY_1                    "G1_action_rhs_primary_1"
@@ -253,6 +254,7 @@
 #define G1_ACTION_FREE_NAME                        "::ascii" /* <free name> ::= <ascii graph name> */
 #define G1_ACTION_QUANTIFIER_1                     "G1_action_quantifier_1"
 #define G1_ACTION_QUANTIFIER_2                     "G1_action_quantifier_2"
+#define G1_ACTION_SIGNED_INTEGER                   "::ascii" /* <signed integer> ::= /[+-]?\d+/ */
 #define G1_ACTION_GRAMMAR_REFERENCE_1              "G1_action_grammar_reference_1"
 #define G1_ACTION_GRAMMAR_REFERENCE_2              "G1_action_grammar_reference_2"
 #define G1_ACTION_DISCARD_1                        "G1_action_discard_1"

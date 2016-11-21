@@ -167,8 +167,7 @@ naming                         ::= 'name' '=>' <alternative name>
 <alternative name>             ::= <standard name> | <quoted name>
 
 <event name>        ::= <ascii graph name>
-                      | <reserved event name>
-<reserved event name> ::= ':symbol'
+                      | ':symbol'
 
 lhs                              ::= <symbol name>
 rhs                              ::= <rhs primary>+
@@ -224,9 +223,7 @@ whitespace ~ [\s]+
 <op equal priority>      ~ '|'
 quantifier             ::= '*' | '+'
 
-<signed integer>         ~ <integer> | <sign> <integer>
-<sign>                   ~ [+-]
-<integer>                ~ [\d]+     # By default, a character class by default never matched characters whose code points are greater than 127. So [\d] is [0-9]
+<signed integer>       ::= /[+-]?\d+/
 
 true                     ~ '1'
 boolean                  ~ [01]

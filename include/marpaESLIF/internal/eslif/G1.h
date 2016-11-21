@@ -69,6 +69,7 @@ typedef enum bootstrap_grammar_G1_enum {
   G1_TERMINAL__SYMBOL,
   G1_TERMINAL_BEFORE,
   G1_TERMINAL_AFTER,
+  G1_TERMINAL_SIGNED_INTEGER,
   /* ----- Non terminals ------ */
   G1_META_STATEMENTS,
   G1_META_STATEMENT,
@@ -139,12 +140,11 @@ typedef enum bootstrap_grammar_G1_enum {
   G1_META_FREE_NAME,
   G1_META_QUANTIFIER,
   G1_META_GRAMMAR_REFERENCE,
+  G1_META_SIGNED_INTEGER,
   /* This symbol is special, c.f. bootstrap_grammar_G1_metas[] array below: it has the discard flag on */
   G1_META_DISCARD,
   /* These meta identifiers are handled by L0 */
   G1_META_BOOLEAN,
-  G1_META_SIGNED_INTEGER,
-  G1_META_INTEGER,
   G1_META_TRUE,
   G1_META_STANDARD_NAME,
   G1_META_QUOTED_NAME,
@@ -230,11 +230,10 @@ bootstrap_grammar_meta_t bootstrap_grammar_G1_metas[] = {
   { G1_META_FREE_NAME,                        "free name", 0, 0 },
   { G1_META_QUANTIFIER,                       "quantifier", 0, 0 },
   { G1_META_GRAMMAR_REFERENCE,                "grammar reference", 0, 0 },
+  { G1_META_SIGNED_INTEGER,                   "signed integer", 0, 0 },
   { G1_META_DISCARD,                          "discard", 0, 1 },
   /* L0 join */
   { G1_META_BOOLEAN,                          L0_JOIN_G1_META_BOOLEAN, 0, 0 },
-  { G1_META_SIGNED_INTEGER,                   L0_JOIN_G1_META_SIGNED_INTEGER, 0, 0 },
-  { G1_META_INTEGER,                          L0_JOIN_G1_META_INTEGER, 0, 0 },
   { G1_META_TRUE,                             L0_JOIN_G1_META_TRUE, 0, 0 },
   { G1_META_STANDARD_NAME,                    L0_JOIN_G1_META_STANDARD_NAME, 0, 0 },
   { G1_META_QUOTED_NAME,                      L0_JOIN_G1_META_QUOTED_NAME, 0, 0 },
@@ -742,6 +741,14 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
 #else
     NULL, NULL
 #endif
+  },
+  { G1_TERMINAL_SIGNED_INTEGER, MARPAESLIF_TERMINAL_TYPE_REGEX, NULL,
+    "[+-]?\\d+",
+#ifndef MARPAESLIF_NTRACE
+    "-10", "+"
+#else
+    NULL, NULL
+#endif
   }
 };
 
@@ -1057,6 +1064,7 @@ bootstrap_grammar_rule_t bootstrap_grammar_G1_rules[] = {
   */
   { G1_META_QUANTIFIER,                       G1_RULE_QUANTIFIER_1,                           MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL_STAR                             }, -1,                        -1, -1 , G1_ACTION_QUANTIFIER_1 },
   { G1_META_QUANTIFIER,                       G1_RULE_QUANTIFIER_2,                           MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL_PLUS                             }, -1,                        -1, -1 , G1_ACTION_QUANTIFIER_2 },
+  { G1_META_SIGNED_INTEGER,                   G1_RULE_SIGNED_INTEGER,                         MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL_SIGNED_INTEGER                   }, -1,                        -1, -1 , G1_ACTION_SIGNED_INTEGER },
   { G1_META_GRAMMAR_REFERENCE,                G1_RULE_GRAMMAR_REFERENCE_1,                    MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_QUOTED_STRING                        }, -1,                        -1, -1 , G1_ACTION_GRAMMAR_REFERENCE_1 },
   { G1_META_GRAMMAR_REFERENCE,                G1_RULE_GRAMMAR_REFERENCE_2,                    MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_SIGNED_INTEGER                       }, -1,                        -1, -1 , G1_ACTION_GRAMMAR_REFERENCE_2 },
   { G1_META_DISCARD,                          G1_RULE_DISCARD_1,                              MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_WHITESPACE                           }, -1,                        -1, -1 , G1_ACTION_DISCARD_1 },
