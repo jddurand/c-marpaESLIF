@@ -16,7 +16,7 @@ typedef struct marpaESLIFTester_context {
 const static char *metags = "\n"
   "inaccessible is warn by default\n"
   "autorank is on by default\n"
-  ":discard ::= whitespace\n"
+  ":discard ::= whitespace event => discard_whitespace=off\n"
   ":lexeme ~ <comma> pause => before priority => 1 event => :symbol\n"
   ":default ::= action => do_first_arg symbol-action => do_symbol free-action => do_free latm => 1\n"
   ":start ::= Script\n"
