@@ -1708,7 +1708,7 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
         continue;
       }
       /* Always fetch properties - this is used in the grammar show */
-      if (! marpaWrapperGrammar_symbolPropertyb(grammarp->marpaWrapperGrammarStartp, symboli, &(symbolp->propertyBitSet))) {
+      if (! marpaWrapperGrammar_symbolPropertyb(grammarp->marpaWrapperGrammarStartp, symbolp->idi, &(symbolp->propertyBitSet))) {
         goto err;
       }
       if (GENERICSTACK_USED(symbolp->nullableRuleStackp) == 1) {
