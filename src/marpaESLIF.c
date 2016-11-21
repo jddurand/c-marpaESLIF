@@ -1499,7 +1499,7 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
       }
       
       /* Clone for the symbol in lexeme mode */
-      marpaESLIF_cloneContext.grammarp = grammarp;
+      marpaESLIF_cloneContext.grammarp = sub_grammarp;
       marpaWrapperGrammarCloneOption.symbolOptionSetterp = _marpaESLIFGrammar_symbolOptionSetterNoEvent;
       marpaWrapperGrammarClonep = marpaWrapperGrammar_clonep(sub_grammarp->marpaWrapperGrammarStartp, &marpaWrapperGrammarCloneOption);
       if (marpaWrapperGrammarClonep == NULL) {
