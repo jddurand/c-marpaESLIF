@@ -3155,7 +3155,7 @@ static short _marpaESLIF_bootstrap_G1_action_grammar_reference_2b(void *userData
     goto err;
   }
 
-  if (! marpaESLIFValue_stack_get_ptrb(marpaESLIFValuep, arg0i, NULL /* contextip */, &signedIntegers, NULL /* shallowbp */)) {
+  if (! marpaESLIFValue_stack_get_ptrb(marpaESLIFValuep, arg0i, NULL /* contextip */, (void **) &signedIntegers, NULL /* shallowbp */)) {
     goto err;
   }
   /* It is a non-sense to have a null information */
@@ -3894,7 +3894,7 @@ static short _marpaESLIF_bootstrap_G1_action_priority_specificationb(void *userD
     goto err;
   }
 
-  if (! marpaESLIFValue_stack_get_ptrb(marpaESLIFValuep, arg0i+2, NULL /* contextip */, &signedIntegers, NULL /* shallowbp */)) {
+  if (! marpaESLIFValue_stack_get_ptrb(marpaESLIFValuep, arg0i+2, NULL /* contextip */, (void **) &signedIntegers, NULL /* shallowbp */)) {
     goto err;
   }
   /* It is a non-sense to have a null information */
