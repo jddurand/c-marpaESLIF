@@ -385,7 +385,6 @@ static inline marpaESLIF_symbol_t *_marpaESLIF_bootstrap_check_meta_by_namep(mar
     symbolp->u.metap           = metap;
     symbolp->idi               = metap->idi;
     symbolp->descp             = metap->descp;
-    symbolp->lookupLevelDeltai = 0; /* This method is inserting symbols in the same grammar */
     metap = NULL; /* metap is now in symbolp */
 
     GENERICSTACK_SET_PTR(grammarp->symbolStackp, symbolp, symbolp->idi);

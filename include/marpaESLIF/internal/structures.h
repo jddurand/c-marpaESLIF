@@ -146,6 +146,7 @@ struct marpaESLIF_symbol {
   unsigned int                 nbupdatei;              /* Number of updates - used in grammar ESLIF actions */
   genericStack_t              *nullableRuleStackp;     /* Used during validation, to determine nullable semantics */
   char                        *nullableActions;        /* Nullable semantic */
+  int                          propertyBitSet;
 };
 
 /* A rule */
@@ -165,6 +166,7 @@ struct marpaESLIF_rule {
   short                properb;
   int                  minimumi;
   short                passthroughb;    /* This rule is a passthrough */
+  int                  propertyBitSet;
 };
 
 /* A grammar */
