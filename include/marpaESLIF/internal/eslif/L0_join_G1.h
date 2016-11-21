@@ -3,8 +3,6 @@
 
 /* The join between two grammars is the description of symbol */
 #define L0_JOIN_G1_META_BOOLEAN                          "boolean"
-#define L0_JOIN_G1_META_SIGNED_INTEGER                   "signed integer"
-#define L0_JOIN_G1_META_INTEGER                          "integer"
 #define L0_JOIN_G1_META_TRUE                             "true"
 #define L0_JOIN_G1_META_STANDARD_NAME                    "standard name"
 #define L0_JOIN_G1_META_QUOTED_NAME                      "quoted name"

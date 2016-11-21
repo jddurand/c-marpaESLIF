@@ -16,8 +16,6 @@ typedef enum bootstrap_grammar_L0_enum {
   L0_TERMINAL_OP_DECLARE_LEX_GRAMMAR,
   L0_TERMINAL_OP_LOOSEN,
   L0_TERMINAL_OP_EQUAL_PRIORITY,
-  L0_TERMINAL_SIGN,
-  L0_TERMINAL_INTEGER,
   L0_TERMINAL_TRUE,
   L0_TERMINAL_BOOLEAN,
   L0_TERMINAL_WORD_CHARACTER,
@@ -53,9 +51,6 @@ typedef enum bootstrap_grammar_L0_enum {
   L0_META_OP_DECLARE_LEX_GRAMMAR,
   L0_META_OP_LOOSEN,
   L0_META_OP_EQUAL_PRIORITY,
-  L0_META_SIGNED_INTEGER,
-  L0_META_SIGN,
-  L0_META_INTEGER,
   L0_META_TRUE,
   L0_META_BOOLEAN,
   L0_META_WORD_CHARACTER,
@@ -83,9 +78,6 @@ bootstrap_grammar_meta_t bootstrap_grammar_L0_metas[] = {
   { L0_META_OP_DECLARE_LEX_GRAMMAR,             L0_JOIN_G1_META_OP_DECLARE_LEX_GRAMMAR, 0, 0 },
   { L0_META_OP_LOOSEN,                          L0_JOIN_G1_META_OP_LOOSEN, 0, 0 },
   { L0_META_OP_EQUAL_PRIORITY,                  L0_JOIN_G1_META_OP_EQUAL_PRIORITY, 0, 0 },
-  { L0_META_SIGNED_INTEGER,                     "signed integer", 0, 0 },
-  { L0_META_SIGN,                               "sign", 0, 0 },
-  { L0_META_INTEGER,                            L0_JOIN_G1_META_INTEGER, 0, 0 },
   { L0_META_TRUE,                               L0_JOIN_G1_META_TRUE, 0, 0 },
   { L0_META_BOOLEAN,                            L0_JOIN_G1_META_BOOLEAN, 0, 0 },
   { L0_META_WORD_CHARACTER,                     "word character", 0, 0 },
@@ -215,16 +207,6 @@ __DATA__
 #else
     "|", NULL
 #endif
-  },
-  /* --------------------------------------------------------------------------------------------------------------------------------- */
-  { L0_TERMINAL_SIGN, MARPAESLIF_TERMINAL_TYPE_REGEX, NULL,
-    "[+-]",
-    NULL, NULL
-  },
-  /* --------------------------------------------------------------------------------------------------------------------------------- */
-  { L0_TERMINAL_INTEGER, MARPAESLIF_TERMINAL_TYPE_REGEX, NULL,
-    "[\\d]+",
-    NULL, NULL
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
   { L0_TERMINAL_TRUE, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
@@ -399,14 +381,6 @@ bootstrap_grammar_rule_t bootstrap_grammar_L0_rules[] = {
   /*
     lhsi                                      descs                                           type                          nrhsl  { rhsi }                                       }  minimumi                          separatori  properb
   */
-  { L0_META_SIGNED_INTEGER,                   "signed integer 1",                   MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_META_INTEGER                              }, -1,                                       -1, -1 , NULL },
-  { L0_META_SIGNED_INTEGER,                   "signed integer 2",                   MARPAESLIF_RULE_TYPE_ALTERNATIVE, 2, { L0_META_SIGN,
-                                                                                                                           L0_META_INTEGER                              }, -1,                                       -1, -1 , NULL },
-  { L0_META_SIGN,                             "sign",                               MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_SIGN                             }, -1,                                       -1, -1 , NULL },
-  /*
-    lhsi                                      descs                                           type                          nrhsl  { rhsi }                                       }  minimumi                          separatori  properb
-  */
-  { L0_META_INTEGER,                          "integer",                            MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_INTEGER                          }, -1,                                       -1, -1 , NULL },
   { L0_META_TRUE,                             "true",                               MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_TRUE                             }, -1,                                       -1, -1 , NULL },
   { L0_META_BOOLEAN,                          "boolean",                            MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_BOOLEAN                          }, -1,                                       -1, -1 , NULL },
   { L0_META_WORD_CHARACTER     ,              "word character",                     MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_WORD_CHARACTER                   }, -1,                                       -1, -1 , NULL },
