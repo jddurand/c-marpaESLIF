@@ -6545,6 +6545,11 @@ static inline void _marpaESLIF_rule_createshowv(marpaESLIF_t *marpaESLIFp, marpa
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, quote[1]);
     }
   }
+  if (rulep->lhsp->discardb && rulep->lhsp->discardEvents != NULL) {
+    MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " event => ");
+    MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, rulep->lhsp->discardEvents);
+    MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, rulep->lhsp->discardEventb ? "=on" : "=off");
+  }
   asciishowl++; /* NUL byte */
 
   if (asciishowlp != NULL) {
@@ -6612,30 +6617,24 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIF_t *marpaESLIFp, ma
       ||
       (grammarp->defaultFreeActions != NULL)
       ||
-      (grammarp->defaultDiscardEvents != NULL)
-      ||
       (grammarp->latmb)
       ) {
     MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, ":default");
     MARPAESLIF_LEVEL_CREATESHOW(grammarp, asciishowl, asciishows);
     if (grammarp->defaultRuleActions != NULL) {
-      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " ");
-      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "action => ");
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " action => ");
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, grammarp->defaultRuleActions);
     }
     if (grammarp->defaultSymbolActions != NULL) {
-      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " ");
-      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "symbol-action => ");
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " symbol-action => ");
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, grammarp->defaultSymbolActions);
     }
     if (grammarp->defaultFreeActions != NULL) {
-      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " ");
-      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "free-action => ");
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " free-action => ");
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, grammarp->defaultFreeActions);
     }
     if (grammarp->latmb) {
-      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " ");
-      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "latm => 1");
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " latm => 1");
     }
     MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "\n");
   }
@@ -6661,18 +6660,17 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIF_t *marpaESLIFp, ma
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->descp->asciis);
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, ">");
       if (symbolp->eventBefores != NULL) {
-        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " ");
-        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "pause => before event => ");
+        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " pause => before event => ");
         MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->eventBefores);
+        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->eventBeforeb ? "=on" : "=off");
       }
       if (symbolp->eventAfters != NULL) {
-        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " ");
-        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "pause => after event => ");
+        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " pause => after event => ");
         MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->eventAfters);
+        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->eventAfterb ? "=on" : "=off");
       }
       if (symbolp->priorityi != 0) {
-        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " ");
-        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "priority => ");
+        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " priority => ");
         sprintf(tmps, "%d", symbolp->priorityi);
         MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, tmps);
       }
@@ -9762,7 +9760,7 @@ static inline short _marpaESLIF_rule_action___charconvb(void *userDatavp, marpaE
         goto err;
       }
       if (! arrayb) {
-        MARPAESLIF_ERRORF(marpaESLIFp, "The ::ascii rule action requires that all RHS are of ARRAY type, this is not the case of RHS No %d", i);
+        MARPAESLIF_ERRORF(marpaESLIFp, "The ::ascii rule action requires that all RHS are of ARRAY type, this is not the case of RHS at stack indice No %d", i);
         goto err;
       }
       if (! _marpaESLIFValue_stack_get_arrayb(marpaESLIFValuep, i, NULL /* contextip */, &p, &l, NULL /* shallowbp */)) {
