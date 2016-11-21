@@ -4345,6 +4345,37 @@ static short _marpaESLIF_bootstrap_G1_action_discard_ruleb(void *userDatavp, mar
     goto err;
   }
 
+  if (eventInitializationp != NULL) {
+    if (eventInitializationp->eventNames == NULL) {
+      MARPAESLIF_ERROR(marpaESLIFp, "In :discard rule, event name is NULL");
+      goto err;
+    }
+    if (discardp->discardEvents != NULL) {
+      free(discardp->discardEvents);
+    }
+    discardp->discardEvents = strdup(eventInitializationp->eventNames);
+    if (discardp->discardEvents == NULL) {
+      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "strdup failure, %s", strerror(errno));
+      goto err;
+    }
+    switch (eventInitializationp->initializerb) {
+    case MARPAESLIF_BOOTSTRAP_EVENT_INITIALIZER_TYPE_ON:
+      discardp->discardEventb = 1;
+      break;
+    case MARPAESLIF_BOOTSTRAP_EVENT_INITIALIZER_TYPE_OFF:
+      discardp->discardEventb = 0;
+      break;
+    default:
+      MARPAESLIF_ERRORF(marpaESLIFp, "In :discard rule, unsupported event initializer type %d", (int) eventInitializationp->initializerb);
+      goto err;
+      break;
+    }
+  }
+
+  if (! marpaESLIFValue_stack_set_undefb(marpaESLIFValuep, resulti)) {
+    goto err;
+  }
+
   rcb = 1;
   goto done;
 
