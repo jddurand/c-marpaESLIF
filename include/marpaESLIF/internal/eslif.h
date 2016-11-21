@@ -178,12 +178,12 @@
 #define G1_ACTION_AUTORANK_STATEMENT               "G1_action_autorank_statement"               /* done */
 #define G1_ACTION_OP_DECLARE_1                     "G1_action_op_declare_1"                     /* done */
 #define G1_ACTION_OP_DECLARE_2                     "G1_action_op_declare_2"                     /* done */
-#define G1_ACTION_OP_DECLARE_3                     "G1_action_op_declare_3"
-#define G1_ACTION_PRIORITIES                       "G1_action_priorities"
-#define G1_ACTION_ALTERNATIVES                     "G1_action_alternatives"
-#define G1_ACTION_ALTERNATIVE                      "G1_action_alternative"
+#define G1_ACTION_OP_DECLARE_3                     "G1_action_op_declare_3"                     /* done */
+#define G1_ACTION_PRIORITIES                       "G1_action_priorities"                       /* done */
+#define G1_ACTION_ALTERNATIVES                     "G1_action_alternatives"                     /* done */
+#define G1_ACTION_ALTERNATIVE                      "G1_action_alternative"                      /* done */
 #define G1_ACTION_ADVERB_LIST                      "::shift" /* This is a nullable - it will return undef if there is no adverb */
-#define G1_ACTION_ADVERB_LIST_ITEMS                "G1_action_adverb_list_items"
+#define G1_ACTION_ADVERB_LIST_ITEMS                "G1_action_adverb_list_items"                /* done */
 #define G1_ACTION_ADVERB_ITEM_01                   "::shift" /* <adverb item> ::= action */
 #define G1_ACTION_ADVERB_ITEM_02                   "::shift" /* <adverb item> ::= <left association> */
 #define G1_ACTION_ADVERB_ITEM_03                   "::shift" /* <adverb item> ::= <right association> */
@@ -200,28 +200,28 @@
 #define G1_ACTION_ADVERB_ITEM_14                   "::shift" /* <adverb item> ::= symbolaction */
 #define G1_ACTION_ADVERB_ITEM_15                   "::shift" /* <adverb item> ::= freeaction */
 #define G1_ACTION_ADVERB_ITEM_16                   "::shift" /* <adverb item> ::= <event specification> */
-#define G1_ACTION_ACTION                           "G1_action_action"
-#define G1_ACTION_SYMBOLACTION                     "G1_action_symbolaction"
-#define G1_ACTION_FREEACTION                       "G1_action_freeaction"
-#define G1_ACTION_LEFT_ASSOCIATION                 "G1_action_left_association"
-#define G1_ACTION_RIGHT_ASSOCIATION                "G1_action_right_association"
-#define G1_ACTION_GROUP_ASSOCIATION                "G1_action_group_association"
-#define G1_ACTION_SEPARATOR_SPECIFICATION          "G1_action_separator_specification"
+#define G1_ACTION_ACTION                           "G1_action_action"                           /* done */
+#define G1_ACTION_SYMBOLACTION                     "G1_action_symbolaction"                     /* done */
+#define G1_ACTION_FREEACTION                       "G1_action_freeaction"                       /* done */
+#define G1_ACTION_LEFT_ASSOCIATION                 "G1_action_left_association"                 /* done */
+#define G1_ACTION_RIGHT_ASSOCIATION                "G1_action_right_association"                /* done */
+#define G1_ACTION_GROUP_ASSOCIATION                "G1_action_group_association"                /* done */
+#define G1_ACTION_SEPARATOR_SPECIFICATION          "G1_action_separator_specification"          /* done */
 #define G1_ACTION_PROPER_SPECIFICATION             "G1_action_proper_specification"
 #define G1_ACTION_RANK_SPECIFICATION               "G1_action_rank_specification"
 #define G1_ACTION_NULL_RANKING_SPECIFICATION_1     "G1_action_null_ranking_specification_1"
 #define G1_ACTION_NULL_RANKING_SPECIFICATION_2     "G1_action_null_ranking_specification_2"
 #define G1_ACTION_NULL_RANKING_CONSTANT_1          "G1_action_null_ranking_constant_1"
 #define G1_ACTION_NULL_RANKING_CONSTANT_2          "G1_action_null_ranking_constant_2"
-#define G1_ACTION_PRIORITY_SPECIFICATION           "G1_action_priority_specification"
-#define G1_ACTION_PAUSE_SPECIFICATION_1            "G1_action_pause_specification_1"
-#define G1_ACTION_PAUSE_SPECIFICATION_2            "G1_action_pause_specification_2"
-#define G1_ACTION_EVENT_SPECIFICATION              "G1_action_event_specification"
-#define G1_ACTION_EVENT_INITIALIZATION             "G1_action_event_initialization"
-#define G1_ACTION_EVENT_INITIALIZER_1              "G1_action_event_initializer_1"
-#define G1_ACTION_ON_OR_OFF_1                      "G1_action_on_or_off_1"
-#define G1_ACTION_ON_OR_OFF_2                      "G1_action_on_or_off_2"
-#define G1_ACTION_EVENT_INITIALIZER_2              "G1_action_event_initializer_2"
+#define G1_ACTION_PRIORITY_SPECIFICATION           "G1_action_priority_specification"           /* done */
+#define G1_ACTION_PAUSE_SPECIFICATION_1            "G1_action_pause_specification_1"            /* done */
+#define G1_ACTION_PAUSE_SPECIFICATION_2            "G1_action_pause_specification_2"            /* done */
+#define G1_ACTION_EVENT_SPECIFICATION              "G1_action_event_specification"              /* done */
+#define G1_ACTION_EVENT_INITIALIZATION             "G1_action_event_initialization"             /* done */
+#define G1_ACTION_EVENT_INITIALIZER_1              "G1_action_event_initializer_1"              /* done */
+#define G1_ACTION_ON_OR_OFF_1                      "G1_action_on_or_off_1"                      /* done */
+#define G1_ACTION_ON_OR_OFF_2                      "G1_action_on_or_off_2"                      /* done */
+#define G1_ACTION_EVENT_INITIALIZER_2              "G1_action_event_initializer_2"              /* done */
 #define G1_ACTION_LATM_SPECIFICATION               "G1_action_latm_specification"
 #define G1_ACTION_NAMING                           "G1_action_naming"
 #define G1_ACTION_NULL_ADVERB                      "G1_action_null_adverb"
@@ -230,19 +230,19 @@
 #define G1_ACTION_EVENT_NAME_1                     "::ascii" /* <event name> ::= <ascii graph name> */
 #define G1_ACTION_EVENT_NAME_2                     "::ascii" /* <event name> ::= ':symbol' */
 #define G1_ACTION_LHS                              "::shift" /* lhs ::= <symbol name> */
-#define G1_ACTION_RHS                              "G1_action_rhs"
-#define G1_ACTION_RHS_PRIMARY_1                    "G1_action_rhs_primary_1"
-#define G1_ACTION_RHS_PRIMARY_2                    "G1_action_rhs_primary_2"
-#define G1_ACTION_RHS_PRIMARY_3                    "G1_action_rhs_primary_3"
+#define G1_ACTION_RHS                              "G1_action_rhs"                              /* done */
+#define G1_ACTION_RHS_PRIMARY_1                    "G1_action_rhs_primary_1"                    /* done */
+#define G1_ACTION_RHS_PRIMARY_2                    "G1_action_rhs_primary_2"                    /* done */
+#define G1_ACTION_RHS_PRIMARY_3                    "G1_action_rhs_primary_3"                    /* done */
 #define G1_ACTION_RHS_PRIMARY_LIST                 "G1_action_rhs_primary_list"
 #define G1_ACTION_PARENTHESIZED_RHS_EXCEPTION_LIST "G1_action_parenthesized_rhs_exception_list"
 #define G1_ACTION_RHS_EXCEPTION_LIST               "G1_action_rhs_exception_list"
 #define G1_ACTION_RHS_EXCEPTION_1                  "G1_action_rhs_exception_1"
 #define G1_ACTION_RHS_EXCEPTION_2                  "G1_action_rhs_exception_2"
 #define G1_ACTION_RHS_EXCEPTION_3                  "G1_action_rhs_exception_3"
-#define G1_ACTION_SINGLE_SYMBOL_1                  "G1_action_single_symbol_1"
-#define G1_ACTION_SINGLE_SYMBOL_2                  "G1_action_single_symbol_2"
-#define G1_ACTION_SINGLE_SYMBOL_3                  "G1_action_single_symbol_3"
+#define G1_ACTION_SINGLE_SYMBOL_1                  "G1_action_single_symbol_1"                  /* done */
+#define G1_ACTION_SINGLE_SYMBOL_2                  "G1_action_single_symbol_2"                  /* done */
+#define G1_ACTION_SINGLE_SYMBOL_3                  "G1_action_single_symbol_3"                  /* done */
 #define G1_ACTION_SYMBOL                           "::shift"
 #define G1_ACTION_SYMBOL_NAME_1                    "::ascii" /* <symbol name> ::= <bare name> */
 #define G1_ACTION_SYMBOL_NAME_2                    "G1_action_symbol_name_2" /* <symbol name> ::= <bracketed name> */
@@ -252,11 +252,11 @@
 #define G1_ACTION_ACTION_NAME_4                    "::ascii" /* <action name> ::= '::ascii' */
 #define G1_ACTION_ACTION_NAME_5                    "::ascii" /* <action name> ::= '::translit' */
 #define G1_ACTION_FREE_NAME                        "::ascii" /* <free name> ::= <ascii graph name> */
-#define G1_ACTION_QUANTIFIER_1                     "G1_action_quantifier_1"
-#define G1_ACTION_QUANTIFIER_2                     "G1_action_quantifier_2"
+#define G1_ACTION_QUANTIFIER_1                     "G1_action_quantifier_1"                     /* done */
+#define G1_ACTION_QUANTIFIER_2                     "G1_action_quantifier_2"                     /* done */
 #define G1_ACTION_SIGNED_INTEGER                   "::ascii" /* <signed integer> ::= /[+-]?\d+/ */
-#define G1_ACTION_GRAMMAR_REFERENCE_1              "G1_action_grammar_reference_1"
-#define G1_ACTION_GRAMMAR_REFERENCE_2              "G1_action_grammar_reference_2"
+#define G1_ACTION_GRAMMAR_REFERENCE_1              "G1_action_grammar_reference_1"              /* done */
+#define G1_ACTION_GRAMMAR_REFERENCE_2              "G1_action_grammar_reference_2"              /* done */
 #define G1_ACTION_DISCARD_1                        "G1_action_discard_1"
 #define G1_ACTION_DISCARD_2                        "G1_action_discard_2"
 #define G1_ACTION_DISCARD_3                        "G1_action_discard_3"
