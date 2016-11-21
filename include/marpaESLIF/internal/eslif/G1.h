@@ -67,6 +67,8 @@ typedef enum bootstrap_grammar_G1_enum {
   G1_TERMINAL_RIGHT_ANGLE,
   G1_TERMINAL_AT_SIGN,
   G1_TERMINAL__SYMBOL,
+  G1_TERMINAL_BEFORE,
+  G1_TERMINAL_AFTER,
   /* ----- Non terminals ------ */
   G1_META_STATEMENTS,
   G1_META_STATEMENT,
@@ -143,7 +145,6 @@ typedef enum bootstrap_grammar_G1_enum {
   G1_META_BOOLEAN,
   G1_META_SIGNED_INTEGER,
   G1_META_INTEGER,
-  G1_META_BEFORE_OR_AFTER,
   G1_META_TRUE,
   G1_META_STANDARD_NAME,
   G1_META_QUOTED_NAME,
@@ -234,7 +235,6 @@ bootstrap_grammar_meta_t bootstrap_grammar_G1_metas[] = {
   { G1_META_BOOLEAN,                          L0_JOIN_G1_META_BOOLEAN, 0, 0 },
   { G1_META_SIGNED_INTEGER,                   L0_JOIN_G1_META_SIGNED_INTEGER, 0, 0 },
   { G1_META_INTEGER,                          L0_JOIN_G1_META_INTEGER, 0, 0 },
-  { G1_META_BEFORE_OR_AFTER,                  L0_JOIN_G1_META_BEFORE_OR_AFTER, 0, 0 },
   { G1_META_TRUE,                             L0_JOIN_G1_META_TRUE, 0, 0 },
   { G1_META_STANDARD_NAME,                    L0_JOIN_G1_META_STANDARD_NAME, 0, 0 },
   { G1_META_QUOTED_NAME,                      L0_JOIN_G1_META_QUOTED_NAME, 0, 0 },
@@ -726,6 +726,22 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
 #else
     NULL, NULL
 #endif
+  },
+  { G1_TERMINAL_BEFORE, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
+    "'before'",
+#ifndef MARPAESLIF_NTRACE
+    "before", "bef"
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_AFTER, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
+    "'after'",
+#ifndef MARPAESLIF_NTRACE
+    "after", "afte"
+#else
+    NULL, NULL
+#endif
   }
 };
 
@@ -952,9 +968,12 @@ bootstrap_grammar_rule_t bootstrap_grammar_G1_rules[] = {
   { G1_META_PRIORITY_SPECIFICATION,           G1_RULE_PRIORITY_SPECIFICATION,                 MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_TERMINAL_PRIORITY,
                                                                                                                                      G1_TERMINAL_THEN,
                                                                                                                                      G1_META_SIGNED_INTEGER                       }, -1,                        -1, -1 , G1_ACTION_PRIORITY_SPECIFICATION },
-  { G1_META_PAUSE_SPECIFICATION,              G1_RULE_PAUSE_SPECIFICATION,                    MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_TERMINAL_PAUSE,
+  { G1_META_PAUSE_SPECIFICATION,              G1_RULE_PAUSE_SPECIFICATION_1,                  MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_TERMINAL_PAUSE,
                                                                                                                                      G1_TERMINAL_THEN,
-                                                                                                                                     G1_META_BEFORE_OR_AFTER                      }, -1,                        -1, -1 , G1_ACTION_PAUSE_SPECIFICATION },
+                                                                                                                                     G1_TERMINAL_BEFORE                           }, -1,                        -1, -1 , G1_ACTION_PAUSE_SPECIFICATION_1 },
+  { G1_META_PAUSE_SPECIFICATION,              G1_RULE_PAUSE_SPECIFICATION_2,                  MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_TERMINAL_PAUSE,
+                                                                                                                                     G1_TERMINAL_THEN,
+                                                                                                                                     G1_TERMINAL_AFTER                            }, -1,                        -1, -1 , G1_ACTION_PAUSE_SPECIFICATION_2 },
   { G1_META_EVENT_SPECIFICATION,              G1_RULE_EVENT_SPECIFICATION,                    MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_TERMINAL_EVENT,
                                                                                                                                      G1_TERMINAL_THEN,
                                                                                                                                      G1_META_EVENT_INITIALIZATION                 }, -1,                        -1, -1 , G1_ACTION_EVENT_SPECIFICATION },

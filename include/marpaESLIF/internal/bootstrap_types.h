@@ -50,11 +50,11 @@ typedef enum marpaESLIF_bootstrap_adverb_list_item_type {
   MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_FREEACTION
 } marpaESLIF_bootstrap_adverb_list_item_type_t;
 
-typedef enum marpaESLIF_bootstrap_pause {
-  MARPAESLIF_BOOTSTRAP_PAUSE_NA = 0,
-  MARPAESLIF_BOOTSTRAP_PAUSE_BEFORE,
-  MARPAESLIF_BOOTSTRAP_PAUSE_AFTER
-} marpaESLIF_bootstrap_null_pause_t;
+typedef enum marpaESLIF_bootstrap_pause_type {
+  MARPAESLIF_BOOTSTRAP_PAUSE_TYPE_NA = 0,
+  MARPAESLIF_BOOTSTRAP_PAUSE_TYPE_BEFORE,
+  MARPAESLIF_BOOTSTRAP_PAUSE_TYPE_AFTER
+} marpaESLIF_bootstrap_pause_type_t;
 
 typedef struct marpaESLIF_bootstrap_utf_string {
   char  *bytep;
@@ -90,7 +90,7 @@ typedef struct marpaESLIF_bootstrap_adverb_list_item {
     int                                   ranki;
     short                                 nullRanksHighb;
     int                                   priorityi;
-    marpaESLIF_bootstrap_null_pause_t     pausei;
+    marpaESLIF_bootstrap_pause_type_t     pausei;
     short                                 latmb;
     marpaESLIF_bootstrap_utf_string_t    *namingp;
     char                                 *symbolactions;
