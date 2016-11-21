@@ -104,6 +104,7 @@ static        short _marpaESLIF_bootstrap_G1_action_event_initializer_2b(void *u
 static        short _marpaESLIF_bootstrap_G1_action_event_initializationb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short _marpaESLIF_bootstrap_G1_action_event_specificationb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short _marpaESLIF_bootstrap_G1_action_lexeme_ruleb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
+static        short _marpaESLIF_bootstrap_G1_action_discard_ruleb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 
 /*****************************************************************************/
 static inline void  _marpaESLIF_bootstrap_rhs_primary_freev(marpaESLIF_bootstrap_rhs_primary_t *rhsPrimaryp)
@@ -1056,6 +1057,7 @@ static marpaESLIFValueRuleCallback_t _marpaESLIF_bootstrap_ruleActionResolver(vo
   else if (strcmp(actions, "G1_action_event_initialization")     == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_event_initializationb;     }
   else if (strcmp(actions, "G1_action_event_specification")      == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_event_specificationb;      }
   else if (strcmp(actions, "G1_action_lexeme_rule")              == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_lexeme_ruleb;              }
+  else if (strcmp(actions, "G1_action_discard_rule")             == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_discard_ruleb;             }
   else
   {
     MARPAESLIF_ERRORF(marpaESLIFp, "Unsupported action \"%s\"", actions);
@@ -4231,3 +4233,124 @@ static short _marpaESLIF_bootstrap_G1_action_lexeme_ruleb(void *userDatavp, marp
   return rcb;
 }
 
+/*****************************************************************************/
+static short _marpaESLIF_bootstrap_G1_action_discard_ruleb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
+/*****************************************************************************/
+{
+  /* <discard rule> ::= ':discard' <op declare> <rhs primary> <adverb list> */
+  marpaESLIFGrammar_t                         *marpaESLIFGrammarp = (marpaESLIFGrammar_t *) userDatavp;
+  marpaESLIF_t                                *marpaESLIFp        = marpaESLIFValue_eslifp(marpaESLIFValuep);
+  marpaESLIF_rule_t                           *rulep = NULL;
+  genericStack_t                              *adverbListItemStackp = NULL;
+  int                                          leveli;
+  marpaESLIF_bootstrap_rhs_primary_t          *rhsPrimaryp;
+  short                                        undefb;
+  marpaESLIF_symbol_t                         *discardp;
+  marpaESLIF_bootstrap_event_initialization_t *eventInitializationp;
+  marpaESLIF_symbol_t                         *rhsp;
+  marpaESLIF_grammar_t                        *grammarp;
+  short                                        rcb;
+  
+  if (! marpaESLIFValue_stack_get_intb(marpaESLIFValuep, arg0i+1, NULL /* contextip */, &leveli)) {
+    goto err;
+  }
+  if (! marpaESLIFValue_stack_get_ptrb(marpaESLIFValuep, arg0i+2, NULL /* contextip */, (void **) &rhsPrimaryp, NULL /* shallowbp */)) {
+    goto err;
+  }
+  /* adverb list may be undef */
+  if (! marpaESLIFValue_stack_is_undefb(marpaESLIFValuep, argni, &undefb)) {
+    goto err;
+  }
+  if (! undefb) {
+    if (! marpaESLIFValue_stack_get_ptrb(marpaESLIFValuep, argni, NULL /* contextip */, (void **) &adverbListItemStackp, NULL /* shallowbp */)) {
+      goto err;
+    }
+    /* Non-sense to have a NULL stack in this case */
+    if (adverbListItemStackp == NULL) {
+      MARPAESLIF_ERROR(marpaESLIFp, "adverbListItemStackp is NULL");
+      goto err;
+    }
+  }
+ 
+  /* Check grammar at that level exist */
+  grammarp = _marpaESLIF_bootstrap_check_grammarp(marpaESLIFp, marpaESLIFGrammarp, leveli, NULL);
+  if (grammarp == NULL) {
+    goto err;
+  }
+
+  /* Check the :discard */
+  discardp = _marpaESLIF_bootstrap_check_meta_by_namep(marpaESLIFp, grammarp, ":discard", 1 /* createb */);
+  if (discardp == NULL) {
+    goto err;
+  }
+  /* Make sure it has the internal discard flag */
+  MARPAESLIF_DEBUGF(marpaESLIFp, "Marking meta symbol %s in grammar level %d as :discard symbol", discardp->descp->asciis, grammarp->leveli);
+  discardp->discardb = 1;
+
+  /* Check the rhs primary */
+  rhsp = _marpaESLIF_bootstrap_check_rhsPrimaryp(marpaESLIFp, marpaESLIFGrammarp, grammarp, rhsPrimaryp, 1 /* createb */);
+  if (rhsp == NULL) {
+    goto err;
+  }
+
+  /* Check the adverb list */
+  if (! _marpaESLIF_bootstrap_unpack_adverbListItemStackb(marpaESLIFp,
+                                                          "discard rule",
+                                                          adverbListItemStackp,
+                                                          NULL, /* actionsp */
+                                                          NULL, /* left_associationbp */
+                                                          NULL, /* right_associationbp */
+                                                          NULL, /* group_associationbp */
+                                                          NULL, /* separatorSingleSymbolpp */
+                                                          NULL, /* properbp */
+                                                          NULL, /* ranki */
+                                                          NULL, /* nullRanksHighb */
+                                                          NULL, /* priorityip */
+                                                          NULL, /* pauseip */
+                                                          NULL, /* latmbp */
+                                                          NULL, /* namingpp */
+                                                          NULL, /* symbolactionsp */
+                                                          NULL, /* freeactionsp */
+                                                          &eventInitializationp
+                                                          )) {
+    goto err;
+  }
+
+  MARPAESLIF_DEBUGF(marpaESLIFValuep->marpaESLIFp, "Creating rule %s ::= %s at grammar level %d", discardp->descp->asciis, rhsp->descp->asciis, grammarp->leveli);
+  /* If naming is not NULL, it is guaranteed to be an UTF-8 thingy */
+  rulep = _marpaESLIF_rule_newp(marpaESLIFp,
+                                grammarp,
+                                NULL, /* descEncodings */
+                                NULL, /* descs */
+                                0, /* descl */
+                                discardp->idi,
+                                1, /* nrhsl */
+                                &(rhsp->idi), /* rhsip */
+                                0, /* nexceptionl */
+                                NULL, /* exceptionip */
+                                0,
+                                0,
+                                0, /* sequenceb */
+                                -1,
+                                -1, /* separatori */
+                                0,
+                                NULL, /* actions */
+                                0 /* passthroughb */);
+  if (rulep == NULL) {
+    goto err;
+  }
+  GENERICSTACK_SET_PTR(grammarp->ruleStackp, rulep, rulep->idi);
+  if (GENERICSTACK_ERROR(grammarp->ruleStackp)) {
+    MARPAESLIF_ERRORF(marpaESLIFp, "ruleStackp set failure, %s", strerror(errno));
+    goto err;
+  }
+
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  return rcb;
+}

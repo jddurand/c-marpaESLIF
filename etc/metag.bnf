@@ -40,8 +40,9 @@
 # - there is no notion of mask
 # - pause is allowed in discard events
 # - latm adverb in :lexeme rules is not allowed, latm mode is forced.
-# - ":default" is unique per grammar instead of being lexically scoped
+# - :default is unique per grammar instead of being lexically scoped
 # - the RHS of a :discard rule can be anywhere, including current grammar
+# - :discard                modified: the :discard of a grammar have to have to <op declare> of it
 # ----------------------------------------------------------------------------------------------
 # Please note that there is a very big difference between using apparently equivalent regexp and
 # character class with a quantifier:

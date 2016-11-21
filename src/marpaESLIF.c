@@ -6429,9 +6429,15 @@ static inline void _marpaESLIF_rule_createshowv(marpaESLIF_t *marpaESLIFp, marpa
   char                 quote[2][2];
 
   /* Calculate the size needed to show the rule in ASCII form */
-  MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "<");
-  MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, rulep->lhsp->descp->asciis);
-  MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, ">");
+
+  /* There is a special case with :discard, that we want to be shown as-is */
+  if (rulep->lhsp->discardb) {
+    MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, rulep->lhsp->descp->asciis);
+  } else {
+    MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "<");
+    MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, rulep->lhsp->descp->asciis);
+    MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, ">");
+  }
   MARPAESLIF_LEVEL_CREATESHOW(grammarp, asciishowl, asciishows);
   for (rhsi = 0; rhsi < GENERICSTACK_USED(rhsStackp); rhsi++) {
     if (! GENERICSTACK_IS_PTR(rhsStackp, rhsi)) {
