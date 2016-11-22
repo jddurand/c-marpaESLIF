@@ -901,7 +901,7 @@ bootstrap_grammar_rule_t bootstrap_grammar_G1_rules[] = {
   */
   { G1_META_ADVERB_ITEM,                      G1_RULE_ADVERB_ITEM_06,                         MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_PROPER_SPECIFICATION                 }, -1,                        -1, -1 , G1_ACTION_ADVERB_ITEM_07 },
   { G1_META_ADVERB_ITEM,                      G1_RULE_ADVERB_ITEM_07,                         MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_RANK_SPECIFICATION                   }, -1,                        -1, -1 , G1_ACTION_ADVERB_ITEM_08 },
-  { G1_META_ADVERB_ITEM,                      G1_RULE_ADVERB_ITEM_08,                         MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_NULL_RANKING_CONSTANT                }, -1,                        -1, -1 , G1_ACTION_ADVERB_ITEM_09 },
+  { G1_META_ADVERB_ITEM,                      G1_RULE_ADVERB_ITEM_08,                         MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_NULL_RANKING_SPECIFICATION           }, -1,                        -1, -1 , G1_ACTION_ADVERB_ITEM_09 },
   { G1_META_ADVERB_ITEM,                      G1_RULE_ADVERB_ITEM_09,                         MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_PRIORITY_SPECIFICATION               }, -1,                        -1, -1 , G1_ACTION_ADVERB_ITEM_10 },
   { G1_META_ADVERB_ITEM,                      G1_RULE_ADVERB_ITEM_10,                         MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_PAUSE_SPECIFICATION                  }, -1,                        -1, -1 , G1_ACTION_ADVERB_ITEM_11 },
   /*
