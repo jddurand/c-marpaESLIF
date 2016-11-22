@@ -16,6 +16,8 @@
 #define MARPAESLIF_INITIAL_REPLACEMENT_LENGTH 8096  /* Subjective number */
 #endif
 
+#define MARPAESLIF_EVENTTYPE_EXHAUSTED_NAME "'exhauted'"
+
 /* This is very internal: I use the genericLogger to generate strings */
 typedef struct marpaESLIF_stringGenerator {
   marpaESLIF_t *marpaESLIFp;
@@ -4873,6 +4875,7 @@ static inline short _marpaESLIFRecognizer_grammar_eventsb(marpaESLIFRecognizer_t
           goto err;
         }
         type        = MARPAESLIF_EVENTTYPE_EXHAUSTED;
+        events      = MARPAESLIF_EVENTTYPE_EXHAUSTED_NAME;
         exhaustedb  = 1;
         MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "Exhausted event");
         /* symboli will be -1 as per marpaWrapper spec */
@@ -4882,11 +4885,9 @@ static inline short _marpaESLIFRecognizer_grammar_eventsb(marpaESLIFRecognizer_t
         break;
       }
 
-      if (type != MARPAESLIF_EVENTTYPE_EXHAUSTED) {
-        marpaESLIFRecognizerp->eventArrayp[okeventl].type   = type;
-        marpaESLIFRecognizerp->eventArrayp[okeventl].events = events;
-        marpaESLIFRecognizerp->eventArrayl = ++okeventl;
-      }
+      marpaESLIFRecognizerp->eventArrayp[okeventl].type   = type;
+      marpaESLIFRecognizerp->eventArrayp[okeventl].events = events;
+      marpaESLIFRecognizerp->eventArrayl = ++okeventl;
     }
   }
 
@@ -4923,7 +4924,7 @@ static inline short _marpaESLIFRecognizer_grammar_eventsb(marpaESLIFRecognizer_t
         marpaESLIFRecognizerp->eventArrayp[okeventl].events  = NULL;
         marpaESLIFRecognizerp->eventArrayl++;
       }
-        MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "Exhausted event");
+      MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "Exhausted event");
     }
   }
 

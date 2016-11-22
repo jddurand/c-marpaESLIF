@@ -253,9 +253,6 @@
 #define G1_ACTION_SIGNED_INTEGER                   "::ascii" /* <signed integer> ::= /[+-]?\d+/ */
 #define G1_ACTION_GRAMMAR_REFERENCE_1              "G1_action_grammar_reference_1"              /* done */
 #define G1_ACTION_GRAMMAR_REFERENCE_2              "G1_action_grammar_reference_2"              /* done */
-#define G1_ACTION_DISCARD_1                        "G1_action_discard_1"
-#define G1_ACTION_DISCARD_2                        "G1_action_discard_2"
-#define G1_ACTION_DISCARD_3                        "G1_action_discard_3"
 
 typedef struct bootstrap_grammar_terminal {
   int                        idi;                 /* Identifier */

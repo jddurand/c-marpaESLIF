@@ -1047,9 +1047,9 @@ bootstrap_grammar_rule_t bootstrap_grammar_G1_rules[] = {
   { G1_META_SIGNED_INTEGER,                   G1_RULE_SIGNED_INTEGER,                         MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL_SIGNED_INTEGER                   }, -1,                        -1, -1 , G1_ACTION_SIGNED_INTEGER },
   { G1_META_GRAMMAR_REFERENCE,                G1_RULE_GRAMMAR_REFERENCE_1,                    MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_QUOTED_STRING                        }, -1,                        -1, -1 , G1_ACTION_GRAMMAR_REFERENCE_1 },
   { G1_META_GRAMMAR_REFERENCE,                G1_RULE_GRAMMAR_REFERENCE_2,                    MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_SIGNED_INTEGER                       }, -1,                        -1, -1 , G1_ACTION_GRAMMAR_REFERENCE_2 },
-  { G1_META_DISCARD,                          G1_RULE_DISCARD_1,                              MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_WHITESPACE                           }, -1,                        -1, -1 , G1_ACTION_DISCARD_1 },
-  { G1_META_DISCARD,                          G1_RULE_DISCARD_2,                              MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_PERL_COMMENT                         }, -1,                        -1, -1 , G1_ACTION_DISCARD_2 },
-  { G1_META_DISCARD,                          G1_RULE_DISCARD_3,                              MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_CPLUSPLUS_COMMENT                    }, -1,                        -1, -1 , G1_ACTION_DISCARD_3 }
+  { G1_META_DISCARD,                          G1_RULE_DISCARD_1,                              MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_WHITESPACE                           }, -1,                        -1, -1 , NULL },
+  { G1_META_DISCARD,                          G1_RULE_DISCARD_2,                              MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_PERL_COMMENT                         }, -1,                        -1, -1 , NULL },
+  { G1_META_DISCARD,                          G1_RULE_DISCARD_3,                              MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_CPLUSPLUS_COMMENT                    }, -1,                        -1, -1 , NULL }
 };
 
 #endif /* MARPAESLIF_INTERNAL_ESLIF_G1_H */
