@@ -5479,7 +5479,7 @@ static short _marpaESLIFValue_ruleCallbackWrapperb(void *userDatavp, int rulei, 
   char                               *actions               = NULL;
   marpaESLIF_rule_t                  *rulep;
   short                               rcb;
-
+  
   marpaESLIFValuep->inValuationb = 1;
   marpaESLIFValuep->symboli      = -1;
   marpaESLIFValuep->rulei        = rulei;
@@ -8238,14 +8238,10 @@ static inline short _marpaESLIFValue_stack_i_resetb(marpaESLIFValue_t *marpaESLI
   }
 
   if (! GENERICSTACK_IS_INT(marpaESLIFValuep->typeStackp, indicei)) {
-    /* Stack is sparse - this is happening in the AST mode */
+    /* Type must be set */
     MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "marpaESLIFValuep->typeStackp at indice %d is not set", indicei);
-    /* reset on something that does not yet exist */
-    GENERICSTACK_SET_NA(marpaESLIFValuep->valueStackp, indicei);
-    GENERICSTACK_SET_INT(marpaESLIFValuep->contextStackp, 0, indicei);
-    GENERICSTACK_SET_INT(marpaESLIFValuep->typeStackp, MARPAESLIF_STACK_TYPE_UNDEF, indicei);
-    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Setted %p->[%d] = NA (type=NA,context=NA)", marpaESLIFValuep->valueStackp, indicei);
-    goto check_reset_status;
+    rcb = 1;
+    goto done;
   }
 
   if (GENERICSTACK_GET_INT(marpaESLIFValuep->typeStackp, indicei) == MARPAESLIF_STACK_TYPE_UNDEF) {
