@@ -3905,7 +3905,6 @@ short marpaWrapperAsf_prunedValueb(marpaWrapperAsf_t                    *marpaWr
   marpaWrapperAsfValueContext.valueSymbolCallbackp  = valueSymbolCallbackp;
   marpaWrapperAsfValueContext.valueNullingCallbackp = valueNullingCallbackp;
   marpaWrapperAsfValueContext.parentRuleiStackp     = NULL;
-  marpaWrapperAsfValueContext.freeOutputStacki      = 0;
   marpaWrapperAsfValueContext.wantedOutputStacki    = 0;
   marpaWrapperAsfValueContext.leveli                = 0;
 
@@ -3970,6 +3969,7 @@ static inline short _marpaWrapperAsf_valueTraverserb(marpaWrapperAsfTraverser_t 
   int                                nbAlternativeOki;
   int                                arg0i;
   int                                argni;
+  int                                localWantedOutputStacki;
 
   marpaWrapperAsfValueContextp->leveli++;
   
@@ -4059,26 +4059,23 @@ static inline short _marpaWrapperAsf_valueTraverserb(marpaWrapperAsfTraverser_t 
 
       /* Rule value */
       {
-        int localWantedOutputStacki = marpaWrapperAsfValueContextp->freeOutputStacki + 1;
-        
-        /* We "reserve" the space in the stack for subsequent recursive rules */
-        marpaWrapperAsfValueContextp->freeOutputStacki += lengthi;
-        for (rhIxi = 0; rhIxi < lengthi; rhIxi++) {
+        for (rhIxi = 0, localWantedOutputStacki = wantedOutputStacki;
+             rhIxi < lengthi;
+             rhIxi++, localWantedOutputStacki++) {
           
           marpaWrapperAsfValueContextp->wantedOutputStacki = localWantedOutputStacki;
           if (! marpaWrapperAsf_traverse_rh_valueb(traverserp, rhIxi, &localWantedOutputStacki, NULL)) {
+            marpaWrapperAsfValueContextp->wantedOutputStacki = wantedOutputStacki;
             goto err;
           }
-
-          marpaWrapperAsfValueContextp->wantedOutputStacki = wantedOutputStacki;
           
           if (localWantedOutputStacki < 0) {
             /* There is rejection below: go to next alternative */
             MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "Rule No %d traversal is hitting a reject", marpaRuleIdi);
             /* We do not change next free indice in the output stack so that user can free what is now a garbage */
+            marpaWrapperAsfValueContextp->wantedOutputStacki = wantedOutputStacki;
             goto nextRule;
           }
-          localWantedOutputStacki++;
         }
         argni = --localWantedOutputStacki;
         arg0i = argni - (lengthi - 1);
