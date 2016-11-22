@@ -864,11 +864,12 @@ bootstrap_grammar_rule_t bootstrap_grammar_G1_rules[] = {
   /*
     lhsi                                      descs                                           type                          nrhsl  { rhsi }                                       }  minimumi           separatori  properb
   */
-  { G1_META_EXCEPTION_STATEMENT,              G1_RULE_EXCEPTION_STATEMENT,                    MARPAESLIF_RULE_TYPE_ALTERNATIVE, 5, { G1_META_LHS,
+  { G1_META_EXCEPTION_STATEMENT,              G1_RULE_EXCEPTION_STATEMENT,                    MARPAESLIF_RULE_TYPE_ALTERNATIVE, 6, { G1_META_LHS,
                                                                                                                                      G1_META_OP_DECLARE,
                                                                                                                                      G1_META_RHS_PRIMARY,
                                                                                                                                      G1_TERMINAL_MINUS,
-                                                                                                                                     G1_META_PARENTHESIZED_RHS_EXCEPTION_LIST     }, -1,                        -1, -1 , G1_ACTION_EXCEPTION_STATEMENT },
+                                                                                                                                     G1_META_PARENTHESIZED_RHS_EXCEPTION_LIST,
+                                                                                                                                     G1_META_ADVERB_LIST                          }, -1,                        -1, -1 , G1_ACTION_EXCEPTION_STATEMENT },
   { G1_META_AUTORANK_STATEMENT,               G1_RULE_AUTORANK_STATEMENT,                     MARPAESLIF_RULE_TYPE_ALTERNATIVE, 5, { G1_TERMINAL_AUTORANK,
                                                                                                                                      G1_TERMINAL_IS,
                                                                                                                                      G1_META_ON_OR_OFF,

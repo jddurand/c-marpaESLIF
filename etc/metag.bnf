@@ -108,7 +108,7 @@ statement                        ::= <start rule>
                                  | 'event' <event initialization> <op declare> 'predicted' <symbol name>
 <inaccessible statement>       ::= 'inaccessible' 'is' <inaccessible treatment> 'by' 'default'
 <inaccessible treatment>       ::= 'warn' | 'ok' | 'fatal'
-<exception statement>          ::= lhs <op declare> <rhs primary> '-' <parenthesized rhs exception list>
+<exception statement>          ::= lhs <op declare> <rhs primary> '-' <parenthesized rhs exception list> <adverb list>
 <autorank statement>           ::= 'autorank' 'is' <on or of> 'by' 'default'
 
 <op declare>                   ::= <op declare top grammar>
