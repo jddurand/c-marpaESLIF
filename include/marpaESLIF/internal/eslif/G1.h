@@ -842,16 +842,16 @@ bootstrap_grammar_rule_t bootstrap_grammar_G1_rules[] = {
                                                                                                                                      G1_META_OP_DECLARE,
                                                                                                                                      G1_TERMINAL_NULLED,
                                                                                                                                      G1_META_SYMBOL_NAME                          }, -1,                        -1, -1 , G1_ACTION_NULLED_EVENT_DECLARATION_1 },
-  { G1_META_PREDICTION_EVENT_DECLARATION,     G1_RULE_NULLED_PREDICTED_DECLARATION_1,         MARPAESLIF_RULE_TYPE_ALTERNATIVE, 5, { G1_TERMINAL_EVENT,
+  { G1_META_PREDICTION_EVENT_DECLARATION,     G1_RULE_PREDICTED_EVENT_DECLARATION_1,          MARPAESLIF_RULE_TYPE_ALTERNATIVE, 5, { G1_TERMINAL_EVENT,
                                                                                                                                      G1_META_EVENT_INITIALIZATION,
                                                                                                                                      G1_TERMINAL_EQUAL,
                                                                                                                                      G1_TERMINAL_PREDICTED,
-                                                                                                                                     G1_META_SYMBOL_NAME                          }, -1,                        -1, -1 , G1_ACTION_NULLED_PREDICTED_DECLARATION_1 },
-  { G1_META_PREDICTION_EVENT_DECLARATION,     G1_RULE_NULLED_PREDICTED_DECLARATION_2,         MARPAESLIF_RULE_TYPE_ALTERNATIVE, 5, { G1_TERMINAL_EVENT,
+                                                                                                                                     G1_META_SYMBOL_NAME                          }, -1,                        -1, -1 , G1_ACTION_PREDICTED_EVENT_DECLARATION_1 },
+  { G1_META_PREDICTION_EVENT_DECLARATION,     G1_RULE_PREDICTED_EVENT_DECLARATION_2,          MARPAESLIF_RULE_TYPE_ALTERNATIVE, 5, { G1_TERMINAL_EVENT,
                                                                                                                                      G1_META_EVENT_INITIALIZATION,
                                                                                                                                      G1_META_OP_DECLARE,
                                                                                                                                      G1_TERMINAL_PREDICTED,
-                                                                                                                                     G1_META_SYMBOL_NAME                          }, -1,                        -1, -1 , G1_ACTION_NULLED_PREDICTED_DECLARATION_2 },
+                                                                                                                                     G1_META_SYMBOL_NAME                          }, -1,                        -1, -1 , G1_ACTION_PREDICTED_EVENT_DECLARATION_2 },
   /*
     lhsi                                      descs                                           type                          nrhsl  { rhsi }                                       }  minimumi           separatori  properb
   */

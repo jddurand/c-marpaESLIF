@@ -36,8 +36,8 @@
 #define G1_RULE_COMPLETION_EVENT_DECLARATION_2   "G1_rule_completion_event_declaration_2"
 #define G1_RULE_NULLED_EVENT_DECLARATION_1       "G1_rule_nulled_event_declaration_1"
 #define G1_RULE_NULLED_EVENT_DECLARATION_2       "G1_rule_nulled_event_declaration_2"
-#define G1_RULE_NULLED_PREDICTED_DECLARATION_1   "G1_rule_nulled_predicted_declaration_1"
-#define G1_RULE_NULLED_PREDICTED_DECLARATION_2   "G1_rule_nulled_predicted_declaration_2"
+#define G1_RULE_PREDICTED_EVENT_DECLARATION_1    "G1_rule_predicted_event_declaration_1"
+#define G1_RULE_PREDICTED_EVENT_DECLARATION_2    "G1_rule_predicted_event_declaration_2"
 #define G1_RULE_INACCESSIBLE_STATEMENT           "G1_rule_inaccessible_statement"
 #define G1_RULE_INACCESSIBLE_TREATMENT_1         "G1_rule_inaccessible_treatment_1"
 #define G1_RULE_INACCESSIBLE_TREATMENT_2         "G1_rule_inaccessible_treatment_2"
@@ -160,13 +160,13 @@
 #define G1_ACTION_DISCARD_DEFAULT_STATEMENT_1      "::undef"
 #define G1_ACTION_DISCARD_DEFAULT_STATEMENT_2      "::undef"
 #define G1_ACTION_LEXEME_RULE                      "G1_action_lexeme_rule"                      /* done */
-#define G1_ACTION_COMPLETION_EVENT_DECLARATION_1   "G1_action_completion_event_declaration_1"
-#define G1_ACTION_COMPLETION_EVENT_DECLARATION_2   "G1_action_completion_event_declaration_2"
-#define G1_ACTION_NULLED_EVENT_DECLARATION_1       "G1_action_nulled_event_declaration_1"
-#define G1_ACTION_NULLED_EVENT_DECLARATION_2       "G1_action_nulled_event_declaration_2"
-#define G1_ACTION_NULLED_PREDICTED_DECLARATION_1   "G1_action_nulled_predicted_declaration_1"
-#define G1_ACTION_NULLED_PREDICTED_DECLARATION_2   "G1_action_nulled_predicted_declaration_2"
-#define G1_ACTION_INACCESSIBLE_STATEMENT           "G1_action_inaccessible_statement"
+#define G1_ACTION_COMPLETION_EVENT_DECLARATION_1   "G1_action_completion_event_declaration_1"   /* done */
+#define G1_ACTION_COMPLETION_EVENT_DECLARATION_2   "G1_action_completion_event_declaration_2"   /* done */
+#define G1_ACTION_NULLED_EVENT_DECLARATION_1       "G1_action_nulled_event_declaration_1"       /* done */
+#define G1_ACTION_NULLED_EVENT_DECLARATION_2       "G1_action_nulled_event_declaration_2"       /* done */
+#define G1_ACTION_PREDICTED_EVENT_DECLARATION_1    "G1_action_predicted_event_declaration_1"    /* done */
+#define G1_ACTION_PREDICTED_EVENT_DECLARATION_2    "G1_action_predicted_event_declaration_2"    /* done */
+#define G1_ACTION_INACCESSIBLE_STATEMENT           "G1_action_inaccessible_statement"           /* done */
 #define G1_ACTION_INACCESSIBLE_TREATMENT_1         "G1_action_inaccessible_treatment_1"         /* done */
 #define G1_ACTION_INACCESSIBLE_TREATMENT_2         "G1_action_inaccessible_treatment_2"         /* done */
 #define G1_ACTION_INACCESSIBLE_TREATMENT_3         "G1_action_inaccessible_treatment_3"         /* done */

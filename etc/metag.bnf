@@ -192,13 +192,15 @@ symbol          ::= <symbol name>
 <symbol name>   ::= <bare name>
 <symbol name>   ::= <bracketed name>
 
-<action name>   ::= <ascii graph name>
+<action name>   ::= <restricted ascii graph name>
                   | '::shift'          # reserved action name
                   | '::undef'          # reserved action name
                   | '::ascii'          # reserved action name
                   | '::translit'       # reserved action name
 
-<free name>     ::= <ascii graph name>
+<free name>     ::= <restricted ascii graph name>
+
+<restricted ascii graph name> ~ [-!#$%&()*+,./:;<>?@\[\\\]^_`|~A-Za-z0-9]+
 
 :discard ~ whitespace
 whitespace ~ [\s]+

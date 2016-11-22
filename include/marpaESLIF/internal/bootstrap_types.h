@@ -11,6 +11,7 @@ typedef enum   marpaESLIF_bootstrap_grammar_reference_type      marpaESLIF_boots
 typedef enum   marpaESLIF_bootstrap_inaccessible_treatment_type marpaESLIF_bootstrap_inaccessible_treatment_type_t;
 typedef enum   marpaESLIF_bootstrap_on_or_off_type              marpaESLIF_bootstrap_on_or_off_type_t;
 typedef enum   marpaESLIF_bootstrap_event_initializer_type      marpaESLIF_bootstrap_event_initializer_type_t;
+typedef enum   marpaESLIF_bootstrap_event_declaration_type      marpaESLIF_bootstrap_event_declaration_type_t;
 
 typedef struct marpaESLIF_bootstrap_utf_string                marpaESLIF_bootstrap_utf_string_t;
 typedef struct marpaESLIF_bootstrap_single_symbol             marpaESLIF_bootstrap_single_symbol_t;
@@ -144,6 +145,11 @@ struct marpaESLIF_bootstrap_grammar_reference {
   } u;
 };
 
+enum marpaESLIF_bootstrap_event_declaration_type {
+  MARPAESLIF_BOOTSTRAP_EVENT_DECLARATION_TYPE_PREDICTED = 0,
+  MARPAESLIF_BOOTSTRAP_EVENT_DECLARATION_TYPE_NULLED,
+  MARPAESLIF_BOOTSTRAP_EVENT_DECLARATION_TYPE_COMPLETED
+};
 struct marpaESLIF_bootstrap_symbol_name_and_reference {
   char                                     *symbols;
   marpaESLIF_bootstrap_grammar_reference_t *grammarReferencep;

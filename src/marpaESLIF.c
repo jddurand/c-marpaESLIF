@@ -6678,14 +6678,7 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIF_t *marpaESLIFp, ma
 
     if (symbolp->eventPredicteds != NULL) {
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "event ");
-      MARPAESLIF_STRING_CREATEQUOTE(quote, symbolp->eventPredicteds);
-      if (strlen(quote[0]) > 0) {
-        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, quote[0]);
-      }
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->eventPredicteds);
-      if (strlen(quote[1]) > 0) {
-        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, quote[1]);
-      }
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " = predicted ");
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "<");
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->descp->asciis);
@@ -6695,14 +6688,7 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIF_t *marpaESLIFp, ma
 
     if (symbolp->eventNulleds != NULL) {
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "event ");
-      MARPAESLIF_STRING_CREATEQUOTE(quote, symbolp->eventNulleds);
-      if (strlen(quote[0]) > 0) {
-        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, quote[0]);
-      }
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->eventNulleds);
-      if (strlen(quote[1]) > 0) {
-        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, quote[1]);
-      }
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " = nulled ");
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "<");
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->descp->asciis);
@@ -6712,14 +6698,7 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIF_t *marpaESLIFp, ma
 
     if (symbolp->eventCompleteds != NULL) {
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "event ");
-      MARPAESLIF_STRING_CREATEQUOTE(quote, symbolp->eventCompleteds);
-      if (strlen(quote[0]) > 0) {
-        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, quote[0]);
-      }
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->eventCompleteds);
-      if (strlen(quote[1]) > 0) {
-        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, quote[1]);
-      }
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " = completed ");
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "<");
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->descp->asciis);
