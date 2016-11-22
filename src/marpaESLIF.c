@@ -6501,16 +6501,14 @@ static inline void _marpaESLIF_rule_createshowv(marpaESLIF_t *marpaESLIFp, marpa
     }
   }
   if (exceptionl > 0) {
-    MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " (");
-    exceptionl = 0;
+    MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " - ( ");
     for (exceptioni = 0; exceptioni < GENERICSTACK_USED(exceptionStackp); exceptioni++) {
       if (! GENERICSTACK_IS_PTR(exceptionStackp, exceptioni)) {
         continue;
       }
       symbolp = GENERICSTACK_GET_PTR(exceptionStackp, exceptioni);
-      if (exceptionl > 0) {
+      if (exceptioni > 0) {
         MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " ");
-        exceptionl++;
       }
       switch (symbolp->type) {
       case MARPAESLIF_SYMBOL_TYPE_TERMINAL:

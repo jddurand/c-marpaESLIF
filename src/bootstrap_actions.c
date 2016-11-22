@@ -5120,11 +5120,11 @@ static short _marpaESLIF_bootstrap_G1_action_parenthesized_rhs_exception_listb(v
     goto err;
   }
 
-  if (! marpaESLIFValue_stack_get_ptrb(marpaESLIFValuep, arg0i+1, NULL /* contextip */, (void **) &rhsExceptionStackp, NULL /* shallowbp */)) {
+  if (! marpaESLIFValue_stack_getAndForget_ptrb(marpaESLIFValuep, arg0i+1, NULL /* contextip */, (void **) &rhsExceptionStackp, NULL /* shallowbp */)) {
     goto err;
   }
 
-  if (! marpaESLIFValue_stack_set_ptrb(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_RHS_EXCEPTION_LIST, rhsExceptionStackp, 1 /* shallowbp */)) {
+  if (! marpaESLIFValue_stack_set_ptrb(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_RHS_EXCEPTION_LIST, rhsExceptionStackp, 0 /* shallowbp */)) {
     goto err;
   }
 
@@ -5132,6 +5132,7 @@ static short _marpaESLIF_bootstrap_G1_action_parenthesized_rhs_exception_listb(v
   goto done;
 
  err:
+  _marpaESLIF_bootstrap_rhs_exception_list_freev(rhsExceptionStackp);
   rcb = 0;
 
  done:
@@ -5172,10 +5173,10 @@ static short _marpaESLIF_bootstrap_G1_action_exception_statementb(void *userData
   if (! marpaESLIFValue_stack_get_intb(marpaESLIFValuep, arg0i+1, NULL /* contextip */, &leveli)) {
     goto err;
   }
-  if (! marpaESLIFValue_stack_get_ptrb(marpaESLIFValuep, arg0i+2, NULL /* contextip */, (void **) &rhsPrimaryp, NULL /* shallowbp */)) {
+  if (! marpaESLIFValue_stack_getAndForget_ptrb(marpaESLIFValuep, arg0i+2, NULL /* contextip */, (void **) &rhsPrimaryp, NULL /* shallowbp */)) {
     goto err;
   }
-  if (! marpaESLIFValue_stack_get_ptrb(marpaESLIFValuep, arg0i+4, NULL /* contextip */, (void **) &rhsExceptionStackp, NULL /* shallowbp */)) {
+  if (! marpaESLIFValue_stack_getAndForget_ptrb(marpaESLIFValuep, arg0i+4, NULL /* contextip */, (void **) &rhsExceptionStackp, NULL /* shallowbp */)) {
     goto err;
   }
   /* adverb list may be undef */
@@ -5183,7 +5184,7 @@ static short _marpaESLIF_bootstrap_G1_action_exception_statementb(void *userData
     goto err;
   }
   if (! undefb) {
-    if (! marpaESLIFValue_stack_get_ptrb(marpaESLIFValuep, argni, NULL /* contextip */, (void **) &adverbListItemStackp, NULL /* shallowbp */)) {
+    if (! marpaESLIFValue_stack_getAndForget_ptrb(marpaESLIFValuep, argni, NULL /* contextip */, (void **) &adverbListItemStackp, NULL /* shallowbp */)) {
       goto err;
     }
     /* Non-sense to have a NULL stack in this case */
@@ -5214,8 +5215,8 @@ static short _marpaESLIF_bootstrap_G1_action_exception_statementb(void *userData
   /* Check the exceptions */
   nexceptionl = GENERICSTACK_USED(rhsExceptionStackp);
   if (nexceptionl <= 0) {
-      MARPAESLIF_ERROR(marpaESLIFp, "rhsExceptionStackp at empty");
-      goto err;
+    MARPAESLIF_ERROR(marpaESLIFp, "rhsExceptionStackp is empty");
+    goto err;
   }
   exceptionip  = (int *) malloc(sizeof(int) * nexceptionl);
   if (exceptionip == NULL) {
@@ -5317,9 +5318,11 @@ static short _marpaESLIF_bootstrap_G1_action_exception_statementb(void *userData
   rcb = 0;
 
  done:
+  _marpaESLIF_bootstrap_rhs_primary_freev(rhsPrimaryp);
+  _marpaESLIF_bootstrap_rhs_exception_list_freev(rhsExceptionStackp);
+  _marpaESLIF_bootstrap_adverb_list_items_freev(adverbListItemStackp);
   if (exceptionip != NULL) {
     free(exceptionip);
   }
   return rcb;
 }
-
