@@ -207,7 +207,7 @@
 #define G1_ACTION_SEPARATOR_SPECIFICATION          "G1_action_separator_specification"          /* done */
 #define G1_ACTION_PROPER_SPECIFICATION_1           "G1_action_proper_specification_1"           /* done */
 #define G1_ACTION_PROPER_SPECIFICATION_2           "G1_action_proper_specification_2"           /* done */
-#define G1_ACTION_RANK_SPECIFICATION               "G1_action_rank_specification"
+#define G1_ACTION_RANK_SPECIFICATION               "G1_action_rank_specification"               /* done */
 #define G1_ACTION_NULL_RANKING_SPECIFICATION_1     "G1_action_null_ranking_specification_1"
 #define G1_ACTION_NULL_RANKING_SPECIFICATION_2     "G1_action_null_ranking_specification_2"
 #define G1_ACTION_NULL_RANKING_CONSTANT_1          "G1_action_null_ranking_constant_1"
