@@ -6414,6 +6414,22 @@ static inline short _marpaESLIFRecognizer_readb(marpaESLIFRecognizer_t *marpaESL
     }                                                                   \
   } while (0)
 
+#define MARPAESLIF_STRING_CREATEQUOTE(quote, strings) do {      \
+    if (strchr(strings, '\'') == NULL) {                        \
+      strcpy(quote[0], "'");                                    \
+      strcpy(quote[1], "'");                                    \
+    } else if (strchr(strings, '"') == NULL) {                  \
+      strcpy(quote[0], "\"");                                   \
+      strcpy(quote[1], "\"");                                   \
+    } else if (strchr(strings, '}') == NULL) {                  \
+      strcpy(quote[0], "{");                                    \
+      strcpy(quote[1], "}");                                    \
+    } else {                                                    \
+      strcpy(quote[0], "");                                     \
+      strcpy(quote[1], "");                                     \
+    }                                                           \
+  } while (0)
+
 /*****************************************************************************/
 static inline void _marpaESLIF_rule_createshowv(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, marpaESLIF_rule_t *rulep, char *asciishows, size_t *asciishowlp)
 /*****************************************************************************/
@@ -6523,20 +6539,7 @@ static inline void _marpaESLIF_rule_createshowv(marpaESLIF_t *marpaESLIFp, marpa
   }
   if ((! rulep->descautob) && (rulep->descp != NULL) && (rulep->descp->asciis != NULL)) {
     MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " name => ");
-    /* Try to be clever by determining the quote possibility */
-    if (strchr(rulep->descp->asciis, '\'') == NULL) {
-      strcpy(quote[0], "'");
-      strcpy(quote[1], "'");
-    } else if (strchr(rulep->descp->asciis, '"') == NULL) {
-      strcpy(quote[0], "\"");
-      strcpy(quote[1], "\"");
-    } else if (strchr(rulep->descp->asciis, '}') == NULL) {
-      strcpy(quote[0], "{");
-      strcpy(quote[1], "}");
-    } else {
-      strcpy(quote[0], "");
-      strcpy(quote[1], "");
-    }
+    MARPAESLIF_STRING_CREATEQUOTE(quote, rulep->descp->asciis);
     if (strlen(quote[0]) > 0) {
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, quote[0]);
     }
@@ -6588,20 +6591,7 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIF_t *marpaESLIFp, ma
     MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, ":desc");
     MARPAESLIF_LEVEL_CREATESHOW(grammarp, asciishowl, asciishows);
     MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " ");
-    /* Try to be clever by determining the quote possibility */
-    if (strchr(grammarp->descp->asciis, '\'') == NULL) {
-      strcpy(quote[0], "'");
-      strcpy(quote[1], "'");
-    } else if (strchr(grammarp->descp->asciis, '"') == NULL) {
-      strcpy(quote[0], "\"");
-      strcpy(quote[1], "\"");
-    } else if (strchr(grammarp->descp->asciis, '}') == NULL) {
-      strcpy(quote[0], "{");
-      strcpy(quote[1], "}");
-    } else {
-      strcpy(quote[0], "");
-      strcpy(quote[1], "");
-    }
+    MARPAESLIF_STRING_CREATEQUOTE(quote, grammarp->descp->asciis);
     if (strlen(quote[0]) > 0) {
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, quote[0]);
     }
@@ -6674,6 +6664,66 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIF_t *marpaESLIFp, ma
         sprintf(tmps, "%d", symbolp->priorityi);
         MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, tmps);
       }
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "\n");
+    }
+  }
+
+  /* Event information */
+  for (symboli = 0; symboli < GENERICSTACK_USED(symbolStackp); symboli++) {
+    if (! GENERICSTACK_IS_PTR(symbolStackp, symboli)) {
+      /* Should never happen, but who knows */
+      continue;
+    }
+    symbolp = (marpaESLIF_symbol_t *) GENERICSTACK_GET_PTR(symbolStackp, symboli);
+
+    if (symbolp->eventPredicteds != NULL) {
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "event ");
+      MARPAESLIF_STRING_CREATEQUOTE(quote, symbolp->eventPredicteds);
+      if (strlen(quote[0]) > 0) {
+        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, quote[0]);
+      }
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->eventPredicteds);
+      if (strlen(quote[1]) > 0) {
+        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, quote[1]);
+      }
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " = predicted ");
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "<");
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->descp->asciis);
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, ">");
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "\n");
+    }
+
+    if (symbolp->eventNulleds != NULL) {
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "event ");
+      MARPAESLIF_STRING_CREATEQUOTE(quote, symbolp->eventNulleds);
+      if (strlen(quote[0]) > 0) {
+        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, quote[0]);
+      }
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->eventNulleds);
+      if (strlen(quote[1]) > 0) {
+        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, quote[1]);
+      }
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " = nulled ");
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "<");
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->descp->asciis);
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, ">");
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "\n");
+    }
+
+    if (symbolp->eventCompleteds != NULL) {
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "event ");
+      MARPAESLIF_STRING_CREATEQUOTE(quote, symbolp->eventCompleteds);
+      if (strlen(quote[0]) > 0) {
+        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, quote[0]);
+      }
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->eventCompleteds);
+      if (strlen(quote[1]) > 0) {
+        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, quote[1]);
+      }
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " = completed ");
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "<");
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->descp->asciis);
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, ">");
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "\n");
     }
   }
