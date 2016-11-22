@@ -5163,7 +5163,7 @@ static short _marpaESLIF_bootstrap_G1_action_exception_statementb(void *userData
   if (! marpaESLIFValue_stack_get_ptrb(marpaESLIFValuep, arg0i+2, NULL /* contextip */, (void **) &rhsPrimaryp, NULL /* shallowbp */)) {
     goto err;
   }
-  if (! marpaESLIFValue_stack_get_intb(marpaESLIFValuep, arg0i+4, NULL /* contextip */, &rhsExceptionStackp)) {
+  if (! marpaESLIFValue_stack_get_ptrb(marpaESLIFValuep, arg0i+4, NULL /* contextip */, (void **) &rhsExceptionStackp, NULL /* shallowbp */)) {
     goto err;
   }
 
@@ -5190,8 +5190,8 @@ static short _marpaESLIF_bootstrap_G1_action_exception_statementb(void *userData
   {
   int i;
   for (i = 0; i < GENERICSTACK_USED(rhsExceptionStackp); i++) {
-    marpaESLIF_bootstrap_rhs_exception_t *rhsExceptionp = (marpaESLIF_bootstrap_rhs_exception_t *) GENERICSTACK_GET_PTR(rhsExceptionp, i);
-    switch (rhsExcpetionp->type) {
+    marpaESLIF_bootstrap_rhs_exception_t *rhsExceptionp = (marpaESLIF_bootstrap_rhs_exception_t *) GENERICSTACK_GET_PTR(rhsExceptionStackp, i);
+    switch (rhsExceptionp->type) {
     case MARPAESLIF_BOOTSTRAP_RHS_EXCEPTION_TYPE_QUOTED_STRING:
       MARPAESLIF_DEBUGF(marpaESLIFValuep->marpaESLIFp, "... Exception No %d type is STRING", i);
       break;
