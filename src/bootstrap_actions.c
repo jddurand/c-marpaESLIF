@@ -1849,7 +1849,7 @@ static short _marpaESLIF_bootstrap_G1_action_rhs_primary_1b(void *userDatavp, ma
   }
   /* It is a non-sense to not have valid information */
   if (singleSymbolp == NULL) {
-    MARPAESLIF_ERRORF(marpaESLIFp, "marpaESLIFValue_stack_get_ptrb at indice %d returned NULL", argni);
+    MARPAESLIF_ERRORF(marpaESLIFp, "marpaESLIFValue_stack_getAndForget_ptrb at indice %d returned NULL", argni);
     goto err;
   }
 
@@ -1912,7 +1912,7 @@ static short _marpaESLIF_bootstrap_G1_action_rhs_primary_3b(void *userDatavp, ma
   }
   /* It is a non-sense to not have valid information */
   if (symbolNames == NULL) {
-    MARPAESLIF_ERRORF(marpaESLIFp, "marpaESLIFValue_stack_get_ptrb at indice %d returned NULL", arg0i);
+    MARPAESLIF_ERRORF(marpaESLIFp, "marpaESLIFValue_stack_getAndForget_ptrb at indice %d returned NULL", arg0i);
     goto err;
   }
 
@@ -1922,7 +1922,7 @@ static short _marpaESLIF_bootstrap_G1_action_rhs_primary_3b(void *userDatavp, ma
   }
   /* It is a non-sense to not have valid information */
   if (grammarReferencep == NULL) {
-    MARPAESLIF_ERRORF(marpaESLIFp, "marpaESLIFValue_stack_get_ptrb at indice %d returned NULL", arg0i+2);
+    MARPAESLIF_ERRORF(marpaESLIFp, "marpaESLIFValue_stack_get_getAndForget at indice %d returned NULL", arg0i+2);
     goto err;
   }
 
@@ -2778,7 +2778,7 @@ static short _marpaESLIF_bootstrap_G1_action_single_symbol_1b(void *userDatavp, 
   }
   /* It is a non-sense to have a null asciis */
   if (asciis == NULL) {
-    MARPAESLIF_ERRORF(marpaESLIFp, "marpaESLIFValue_stack_get_ptrb at indice %d returned NULL", argni);
+    MARPAESLIF_ERRORF(marpaESLIFp, "marpaESLIFValue_stack_getAndForget_ptrb at indice %d returned NULL", argni);
     goto err;
   }
 
