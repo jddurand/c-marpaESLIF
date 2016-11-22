@@ -224,7 +224,7 @@
 #define G1_ACTION_LATM_SPECIFICATION_1             "G1_action_latm_specification_1"             /* done */
 #define G1_ACTION_LATM_SPECIFICATION_2             "G1_action_latm_specification_2"             /* done */
 #define G1_ACTION_NAMING                           "G1_action_naming"                           /* done */
-#define G1_ACTION_NULL_ADVERB                      "G1_action_null_adverb"
+#define G1_ACTION_NULL_ADVERB                      "::undef"
 #define G1_ACTION_ALTERNATIVE_NAME_1               "::shift" /* <alternative name> ::= <standard name> */
 #define G1_ACTION_ALTERNATIVE_NAME_2               "G1_action_alternative_name_2"               /* done */
 #define G1_ACTION_EVENT_NAME_1                     "::ascii" /* <event name> ::= <ascii graph name> */

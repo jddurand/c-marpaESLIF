@@ -1367,6 +1367,7 @@ static short _marpaESLIF_bootstrap_G1_action_adverb_list_itemsb(void *userDatavp
   int                                          contexti;
   int                                          i;
   short                                        rcb;
+  short                                        undefb;
 
   GENERICSTACK_NEW(adverbListItemStackp);
   if (GENERICSTACK_ERROR(adverbListItemStackp)) {
@@ -1378,6 +1379,14 @@ static short _marpaESLIF_bootstrap_G1_action_adverb_list_itemsb(void *userDatavp
   /* In any case, this is okay to have an empty stack -; */
   if (! nullableb) {
     for (i = arg0i; i <= argni; i++) {
+      /* The null adverb is pushing undef */
+      if (! marpaESLIFValue_stack_is_undefb(marpaESLIFValuep, i, &undefb)) {
+        goto err;
+      }
+      if (undefb) {
+        continue;
+      }
+
       if (! marpaESLIFValue_stack_get_contextb(marpaESLIFValuep, i, &contexti)) {
         goto err;
       }
