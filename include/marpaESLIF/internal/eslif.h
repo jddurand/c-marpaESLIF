@@ -104,7 +104,6 @@
 #define G1_RULE_RHS_PRIMARY_1                    "G1_rule_rhs_primary_1"
 #define G1_RULE_RHS_PRIMARY_2                    "G1_rule_rhs_primary_2"
 #define G1_RULE_RHS_PRIMARY_3                    "G1_rule_rhs_primary_3"
-#define G1_RULE_RHS_PRIMARY_LIST                 "G1_rule_rhs_primary_list"
 #define G1_RULE_PARENTHESIZED_RHS_EXCEPTION_LIST "G1_rule_parenthesized_rhs_exception_list"
 #define G1_RULE_RHS_EXCEPTION_LIST               "G1_rule_rhs_exception_list"
 #define G1_RULE_RHS_EXCEPTION_1                  "G1_rule_rhs_exception_1"
@@ -172,7 +171,7 @@
 #define G1_ACTION_INACCESSIBLE_TREATMENT_1         "G1_action_inaccessible_treatment_1"         /* done */
 #define G1_ACTION_INACCESSIBLE_TREATMENT_2         "G1_action_inaccessible_treatment_2"         /* done */
 #define G1_ACTION_INACCESSIBLE_TREATMENT_3         "G1_action_inaccessible_treatment_3"         /* done */
-#define G1_ACTION_EXCEPTION_STATEMENT              "::undef"
+#define G1_ACTION_EXCEPTION_STATEMENT              "G1_action_exception_statement"
 #define G1_ACTION_AUTORANK_STATEMENT               "G1_action_autorank_statement"               /* done */
 #define G1_ACTION_OP_DECLARE_1                     "G1_action_op_declare_1"                     /* done */
 #define G1_ACTION_OP_DECLARE_2                     "G1_action_op_declare_2"                     /* done */
@@ -234,18 +233,17 @@
 #define G1_ACTION_RHS_PRIMARY_1                    "G1_action_rhs_primary_1"                    /* done */
 #define G1_ACTION_RHS_PRIMARY_2                    "G1_action_rhs_primary_2"                    /* done */
 #define G1_ACTION_RHS_PRIMARY_3                    "G1_action_rhs_primary_3"                    /* done */
-#define G1_ACTION_RHS_PRIMARY_LIST                 "G1_action_rhs_primary_list"
-#define G1_ACTION_PARENTHESIZED_RHS_EXCEPTION_LIST "G1_action_parenthesized_rhs_exception_list"
-#define G1_ACTION_RHS_EXCEPTION_LIST               "G1_action_rhs_exception_list"
-#define G1_ACTION_RHS_EXCEPTION_1                  "G1_action_rhs_exception_1"
-#define G1_ACTION_RHS_EXCEPTION_2                  "G1_action_rhs_exception_2"
-#define G1_ACTION_RHS_EXCEPTION_3                  "G1_action_rhs_exception_3"
+#define G1_ACTION_PARENTHESIZED_RHS_EXCEPTION_LIST "G1_action_parenthesized_rhs_exception_list" /* done */
+#define G1_ACTION_RHS_EXCEPTION_LIST               "G1_action_rhs_exception_list"               /* done */
+#define G1_ACTION_RHS_EXCEPTION_1                  "G1_action_rhs_exception_1"                  /* done */
+#define G1_ACTION_RHS_EXCEPTION_2                  "G1_action_rhs_exception_2"                  /* done */
+#define G1_ACTION_RHS_EXCEPTION_3                  "G1_action_rhs_exception_3"                  /* done */
 #define G1_ACTION_SINGLE_SYMBOL_1                  "G1_action_single_symbol_1"                  /* done */
 #define G1_ACTION_SINGLE_SYMBOL_2                  "G1_action_single_symbol_2"                  /* done */
 #define G1_ACTION_SINGLE_SYMBOL_3                  "G1_action_single_symbol_3"                  /* done */
 #define G1_ACTION_SYMBOL                           "::shift"
 #define G1_ACTION_SYMBOL_NAME_1                    "::ascii" /* <symbol name> ::= <bare name> */
-#define G1_ACTION_SYMBOL_NAME_2                    "G1_action_symbol_name_2" /* <symbol name> ::= <bracketed name> */
+#define G1_ACTION_SYMBOL_NAME_2                    "G1_action_symbol_name_2" /* <symbol name> ::= <bracketed name> */ /* done */
 #define G1_ACTION_ACTION_NAME_1                    "::ascii" /* <action name> ::= <ascii graph name> */
 #define G1_ACTION_ACTION_NAME_2                    "::ascii" /* <action name> ::= '::shift' */
 #define G1_ACTION_ACTION_NAME_3                    "::ascii" /* <action name> ::= '::undef' */

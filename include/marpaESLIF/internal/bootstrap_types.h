@@ -12,6 +12,7 @@ typedef enum   marpaESLIF_bootstrap_inaccessible_treatment_type marpaESLIF_boots
 typedef enum   marpaESLIF_bootstrap_on_or_off_type              marpaESLIF_bootstrap_on_or_off_type_t;
 typedef enum   marpaESLIF_bootstrap_event_initializer_type      marpaESLIF_bootstrap_event_initializer_type_t;
 typedef enum   marpaESLIF_bootstrap_event_declaration_type      marpaESLIF_bootstrap_event_declaration_type_t;
+typedef enum   marpaESLIF_bootstrap_rhs_exception_type          marpaESLIF_bootstrap_rhs_exception_type_t;
 
 typedef struct marpaESLIF_bootstrap_utf_string                marpaESLIF_bootstrap_utf_string_t;
 typedef struct marpaESLIF_bootstrap_single_symbol             marpaESLIF_bootstrap_single_symbol_t;
@@ -21,6 +22,7 @@ typedef struct marpaESLIF_bootstrap_symbol_name_and_reference marpaESLIF_bootstr
 typedef struct marpaESLIF_bootstrap_rhs_primary               marpaESLIF_bootstrap_rhs_primary_t;
 typedef struct marpaESLIF_bootstrap_alternative               marpaESLIF_bootstrap_alternative_t;
 typedef struct marpaESLIF_bootstrap_event_initialization      marpaESLIF_bootstrap_event_initialization_t;
+typedef struct marpaESLIF_bootstrap_rhs_exception             marpaESLIF_bootstrap_rhs_exception_t;
 
 enum marpaESLIF_bootstrap_stack_context {
   MARPAESLIF_BOOTSTRAP_STACK_TYPE_NA = 0,
@@ -54,7 +56,9 @@ enum marpaESLIF_bootstrap_stack_context {
   MARPAESLIF_BOOTSTRAP_STACK_TYPE_QUANTIFIER,
   MARPAESLIF_BOOTSTRAP_STACK_TYPE_EVENT_INITIALIZER,
   MARPAESLIF_BOOTSTRAP_STACK_TYPE_EVENT_INITIALIZATION,
-  MARPAESLIF_BOOTSTRAP_STACK_TYPE_ALTERNATIVE_NAME
+  MARPAESLIF_BOOTSTRAP_STACK_TYPE_ALTERNATIVE_NAME,
+  MARPAESLIF_BOOTSTRAP_STACK_TYPE_RHS_EXCEPTION,
+  MARPAESLIF_BOOTSTRAP_STACK_TYPE_RHS_EXCEPTION_LIST
 };
 
 enum marpaESLIF_bootstrap_adverb_list_item_type {
@@ -151,6 +155,14 @@ enum marpaESLIF_bootstrap_event_declaration_type {
   MARPAESLIF_BOOTSTRAP_EVENT_DECLARATION_TYPE_NULLED,
   MARPAESLIF_BOOTSTRAP_EVENT_DECLARATION_TYPE_COMPLETED
 };
+
+enum marpaESLIF_bootstrap_rhs_exception_type {
+  MARPAESLIF_BOOTSTRAP_RHS_EXCEPTION_TYPE_NA = 0,
+  MARPAESLIF_BOOTSTRAP_RHS_EXCEPTION_TYPE_QUOTED_STRING,
+  MARPAESLIF_BOOTSTRAP_RHS_EXCEPTION_TYPE_CHARACTER_CLASS,
+  MARPAESLIF_BOOTSTRAP_RHS_EXCEPTION_TYPE_REGULAR_EXPRESSION
+};
+
 struct marpaESLIF_bootstrap_symbol_name_and_reference {
   char                                     *symbols;
   marpaESLIF_bootstrap_grammar_reference_t *grammarReferencep;
@@ -191,6 +203,15 @@ enum marpaESLIF_bootstrap_event_initializer_type {
 struct marpaESLIF_bootstrap_event_initialization {
   char                                         *eventNames;
   marpaESLIF_bootstrap_event_initializer_type_t initializerb;
+};
+
+struct marpaESLIF_bootstrap_rhs_exception {
+  marpaESLIF_bootstrap_rhs_exception_type_t type;
+  union {
+    marpaESLIF_bootstrap_utf_string_t *quotedStringp;
+    marpaESLIF_bootstrap_utf_string_t *characterClassp;
+    marpaESLIF_bootstrap_utf_string_t *regularExpressionp;
+  } u;
 };
 
 #endif /* MARPAESLIF_INTERNAL_BOOTSTRAP_TYPES_H */

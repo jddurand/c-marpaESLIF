@@ -174,7 +174,6 @@ rhs                              ::= <rhs primary>+
 <rhs primary>                    ::= <symbol name> '@' <grammar reference>
 <grammar reference>              ::= <quoted string>
 <grammar reference>              ::= <signed integer>
-<rhs primary list>               ::= <rhs primary>+
 
 <parenthesized rhs exception list> ::= '(' <rhs exception list> ')'
 <rhs exception list>             ::= <rhs exception>+

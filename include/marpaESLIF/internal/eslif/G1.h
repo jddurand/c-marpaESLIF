@@ -127,7 +127,6 @@ typedef enum bootstrap_grammar_G1_enum {
   G1_META_LHS,
   G1_META_RHS,
   G1_META_RHS_PRIMARY,
-  G1_META_RHS_PRIMARY_LIST,
   G1_META_PARENTHESIZED_RHS_EXCEPTION_LIST,
   G1_META_RHS_EXCEPTION_LIST,
   G1_META_RHS_EXCEPTION,
@@ -216,7 +215,6 @@ bootstrap_grammar_meta_t bootstrap_grammar_G1_metas[] = {
   { G1_META_LHS,                              "lhs", 0, 0 },
   { G1_META_RHS,                              "rhs", 0, 0 },
   { G1_META_RHS_PRIMARY,                      "rhs primary", 0, 0 },
-  { G1_META_RHS_PRIMARY_LIST,                 "rhs primary list", 0, 0 },
   { G1_META_PARENTHESIZED_RHS_EXCEPTION_LIST, "parenthesized rhs exception list", 0, 0 },
   { G1_META_RHS_EXCEPTION_LIST,               "rhs exception list", 0, 0 },
   { G1_META_RHS_EXCEPTION,                    "rhs exception", 0, 0 },
@@ -1016,7 +1014,6 @@ bootstrap_grammar_rule_t bootstrap_grammar_G1_rules[] = {
   { G1_META_RHS_PRIMARY,                      G1_RULE_RHS_PRIMARY_3,                          MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_META_SYMBOL_NAME,
                                                                                                                                      G1_TERMINAL_AT_SIGN,
                                                                                                                                      G1_META_GRAMMAR_REFERENCE                    }, -1,                        -1, -1 , G1_ACTION_RHS_PRIMARY_3 },
-  { G1_META_RHS_PRIMARY_LIST,                 G1_RULE_RHS_PRIMARY_LIST,                       MARPAESLIF_RULE_TYPE_SEQUENCE,    1, { G1_META_RHS_PRIMARY                          },  1,                        -1,  0 , G1_ACTION_RHS_PRIMARY_LIST },
   /*
     lhsi                                      descs                                           type                          nrhsl  { rhsi }                                       }  minimumi           separatori  properb
   */
