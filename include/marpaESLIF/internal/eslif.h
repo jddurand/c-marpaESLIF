@@ -223,10 +223,10 @@
 #define G1_ACTION_EVENT_INITIALIZER_2              "G1_action_event_initializer_2"              /* done */
 #define G1_ACTION_LATM_SPECIFICATION_1             "G1_action_latm_specification_1"             /* done */
 #define G1_ACTION_LATM_SPECIFICATION_2             "G1_action_latm_specification_2"             /* done */
-#define G1_ACTION_NAMING                           "G1_action_naming"
+#define G1_ACTION_NAMING                           "G1_action_naming"                           /* done */
 #define G1_ACTION_NULL_ADVERB                      "G1_action_null_adverb"
-#define G1_ACTION_ALTERNATIVE_NAME_1               "G1_action_alternative_name_1"
-#define G1_ACTION_ALTERNATIVE_NAME_2               "G1_action_alternative_name_2"
+#define G1_ACTION_ALTERNATIVE_NAME_1               "::shift" /* <alternative name> ::= <standard name> */
+#define G1_ACTION_ALTERNATIVE_NAME_2               "G1_action_alternative_name_2"               /* done */
 #define G1_ACTION_EVENT_NAME_1                     "::ascii" /* <event name> ::= <ascii graph name> */
 #define G1_ACTION_EVENT_NAME_2                     "::ascii" /* <event name> ::= ':symbol' */
 #define G1_ACTION_LHS                              "::shift" /* lhs ::= <symbol name> */

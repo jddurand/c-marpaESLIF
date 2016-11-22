@@ -120,6 +120,8 @@ static        short _marpaESLIF_bootstrap_G1_action_nulled_event_declaration_1b(
 static        short _marpaESLIF_bootstrap_G1_action_nulled_event_declaration_2b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short _marpaESLIF_bootstrap_G1_action_predicted_event_declaration_1b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short _marpaESLIF_bootstrap_G1_action_predicted_event_declaration_2b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
+static        short _marpaESLIF_bootstrap_G1_action_alternative_name_2b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
+static        short _marpaESLIF_bootstrap_G1_action_namingb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 
 /*****************************************************************************/
 static inline void  _marpaESLIF_bootstrap_rhs_primary_freev(marpaESLIF_bootstrap_rhs_primary_t *rhsPrimaryp)
@@ -990,6 +992,8 @@ static void _marpaESLIF_bootstrap_freeDefaultActionv(void *userDatavp, int conte
   case MARPAESLIF_BOOTSTRAP_STACK_TYPE_EVENT_INITIALIZATION:
     _marpaESLIF_bootstrap_event_initialization_freev((marpaESLIF_bootstrap_event_initialization_t *) p);
     break;
+  case MARPAESLIF_BOOTSTRAP_STACK_TYPE_ALTERNATIVE_NAME:
+    free(p);
   default:
     break;
   }
@@ -1087,6 +1091,8 @@ static marpaESLIFValueRuleCallback_t _marpaESLIF_bootstrap_ruleActionResolver(vo
   else if (strcmp(actions, "G1_action_nulled_event_declaration_2")     == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_nulled_event_declaration_2b;     }
   else if (strcmp(actions, "G1_action_predicted_event_declaration_1")  == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_predicted_event_declaration_1b;  }
   else if (strcmp(actions, "G1_action_predicted_event_declaration_2")  == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_predicted_event_declaration_2b;  }
+  else if (strcmp(actions, "G1_action_alternative_name_2")             == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_alternative_name_2b;             }
+  else if (strcmp(actions, "G1_action_naming")                         == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_namingb;                         }
   else
   {
     MARPAESLIF_ERRORF(marpaESLIFp, "Unsupported action \"%s\"", actions);
@@ -4727,3 +4733,122 @@ static short _marpaESLIF_bootstrap_G1_action_predicted_event_declaration_2b(void
 {
   return _marpaESLIF_bootstrap_G1_action_event_declarationb(userDatavp, marpaESLIFValuep, arg0i, argni, resulti, nullableb, MARPAESLIF_BOOTSTRAP_EVENT_DECLARATION_TYPE_PREDICTED);
 }
+
+/*****************************************************************************/
+static short _marpaESLIF_bootstrap_G1_action_alternative_name_2b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
+/*****************************************************************************/
+{
+  /* <alternative name> ::= <quoted name> */
+  marpaESLIF_t *marpaESLIFp = marpaESLIFValue_eslifp(marpaESLIFValuep);
+  void         *bytep       = NULL;
+  size_t        bytel;
+  void         *newbytep    = NULL;
+  size_t        newbytel;
+  short         rcb;
+
+  /* Cannot be nullable */
+  if (nullableb) {
+    MARPAESLIF_ERROR(marpaESLIFp, "Nullable mode is not supported");
+    goto err;
+  }
+
+  if (! marpaESLIFValue_stack_getAndForget_arrayb(marpaESLIFValuep, arg0i, NULL /* contextip */, &bytep, &bytel, NULL /* shallowbp */)) {
+    goto err;
+  }
+  /* It is a non-sense to have a null information */
+  if ((bytep == NULL) || (bytel <= 0)) {
+    MARPAESLIF_ERRORF(marpaESLIFp, "marpaESLIFValue_stack_get_arrayb at indice %d returned {p,%ld}", arg0i, bytep, (unsigned long) bytel);
+    goto err;
+  }
+
+  /* We are not going to use this quoted string as a terminal, therefore we have to remove the surrounding characters ourself */
+  if (bytel <= 2) {
+    /* Empty string ? */
+    MARPAESLIF_ERROR(marpaESLIFp, "An empty string as grammar reference is not allowed");
+    goto err;
+  }
+  newbytel = bytel - 2;
+  newbytep = malloc(newbytel);
+  if (newbytep == NULL) {
+    MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
+    goto err;
+  }
+  /* Per def, the surrounding characters are always ASCII taking one byte ("", '', {}) */
+  memcpy(newbytep, (void *)(((char *) bytep) + 1), newbytel);
+  free(bytep);
+  bytep = NULL; /* No need of bytep anymore */
+
+  if (! marpaESLIFValue_stack_set_arrayb(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_ALTERNATIVE_NAME, newbytep, newbytel, 0 /* shallowb */)) {
+    goto err;
+  }
+
+  rcb = 1;
+  goto done;
+
+ err:
+  if (newbytep != NULL) {
+    free(newbytep);
+  }
+  rcb = 0;
+
+ done:
+  if (bytep != NULL) {
+    free(bytep);
+  }
+  return rcb;
+}
+
+/*****************************************************************************/
+static short _marpaESLIF_bootstrap_G1_action_namingb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
+/*****************************************************************************/
+{
+  /* naming ::= 'name' '=>' <alternative name> */
+  /* <alternative name> is always an array */
+  marpaESLIF_t                      *marpaESLIFp = marpaESLIFValue_eslifp(marpaESLIFValuep);
+  marpaESLIF_bootstrap_utf_string_t *namingp     = NULL;
+  void                              *bytep       = NULL;
+  size_t                             bytel;
+  short                              rcb;
+
+  /* Cannot be nullable */
+  if (nullableb) {
+    MARPAESLIF_ERROR(marpaESLIFp, "Nullable mode is not supported");
+    goto err;
+  }
+
+  if (! marpaESLIFValue_stack_getAndForget_arrayb(marpaESLIFValuep, argni, NULL /* contextip */, &bytep, &bytel, NULL /* shallowbp */)) {
+    goto err;
+  }
+  /* It is a non-sense to have a null information */
+  if ((bytep == NULL) || (bytel <= 0)) {
+    MARPAESLIF_ERRORF(marpaESLIFp, "marpaESLIFValue_stack_get_arrayb at indice %d returned {p,%ld}", arg0i, bytep, (unsigned long) bytel);
+    goto err;
+  }
+
+  namingp = (marpaESLIF_bootstrap_utf_string_t *) malloc(sizeof(marpaESLIF_bootstrap_utf_string_t));
+  if (namingp == NULL) {
+    MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
+    goto err;
+  }
+
+  namingp->bytep     = bytep;
+  namingp->bytel     = bytel;
+  namingp->modifiers = NULL;
+
+  bytep = NULL; /* bytep is in namingp */
+
+  if (! marpaESLIFValue_stack_set_ptrb(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_NAMING, namingp, 0 /* shallowb */)) {
+    goto err;
+  }
+
+  rcb = 1;
+  goto done;
+
+ err:
+  _marpaESLIF_bootstrap_utf_string_freev(namingp);
+  rcb = 0;
+
+ done:
+  return rcb;
+}
+
