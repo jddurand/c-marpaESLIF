@@ -50,7 +50,7 @@ static inline short _marpaESLIF_bootstrap_unpack_adverbListItemStackb(marpaESLIF
                                                                       char                                        **freeactionsp,
                                                                       marpaESLIF_bootstrap_event_initialization_t **eventInitializationpp
                                                                       );
-static inline short _marpaESLIF_bootstrap_G1_action_completion_event_declarationb(marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_bootstrap_event_initialization_t *eventInitializationp, int leveli, char *symbolNames, int resulti);
+static inline short _marpaESLIF_bootstrap_G1_action_event_declarationb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb, marpaESLIF_bootstrap_event_declaration_type_t type);
 
 static        void  _marpaESLIF_bootstrap_freeDefaultActionv(void *userDatavp, int contexti, void *p, size_t sizel);
 
@@ -108,6 +108,10 @@ static        short _marpaESLIF_bootstrap_G1_action_lexeme_ruleb(void *userDatav
 static        short _marpaESLIF_bootstrap_G1_action_discard_ruleb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short _marpaESLIF_bootstrap_G1_action_completion_event_declaration_1b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short _marpaESLIF_bootstrap_G1_action_completion_event_declaration_2b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
+static        short _marpaESLIF_bootstrap_G1_action_nulled_event_declaration_1b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
+static        short _marpaESLIF_bootstrap_G1_action_nulled_event_declaration_2b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
+static        short _marpaESLIF_bootstrap_G1_action_predicted_event_declaration_1b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
+static        short _marpaESLIF_bootstrap_G1_action_predicted_event_declaration_2b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 
 /*****************************************************************************/
 static inline void  _marpaESLIF_bootstrap_rhs_primary_freev(marpaESLIF_bootstrap_rhs_primary_t *rhsPrimaryp)
@@ -1012,57 +1016,61 @@ static marpaESLIFValueRuleCallback_t _marpaESLIF_bootstrap_ruleActionResolver(vo
     goto err;
   }
   /* TO DO */
-       if (strcmp(actions, "G1_action_op_declare_1")                   == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_op_declare_1b;             }
-  else if (strcmp(actions, "G1_action_op_declare_2")                   == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_op_declare_2b;             }
-  else if (strcmp(actions, "G1_action_op_declare_3")                   == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_op_declare_3b;             }
-  else if (strcmp(actions, "G1_action_rhs")                            == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_rhsb;                      }
-  else if (strcmp(actions, "G1_action_adverb_list_items")              == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_adverb_list_itemsb;        }
-  else if (strcmp(actions, "G1_action_action")                         == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_actionb;                   }
-  else if (strcmp(actions, "G1_action_symbolaction")                   == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_symbolactionb;             }
-  else if (strcmp(actions, "G1_action_freeaction")                     == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_freeactionb;               }
-  else if (strcmp(actions, "G1_action_left_association")               == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_left_associationb;         }
-  else if (strcmp(actions, "G1_action_right_association")              == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_right_associationb;        }
-  else if (strcmp(actions, "G1_action_group_association")              == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_group_associationb;        }
-  else if (strcmp(actions, "G1_action_separator_specification")        == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_separator_specificationb;  }
-  else if (strcmp(actions, "G1_action_symbol_name_2")                  == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_symbol_name_2b;            }
-  else if (strcmp(actions, "G1_action_rhs_primary_1")                  == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_rhs_primary_1b;            }
-  else if (strcmp(actions, "G1_action_rhs_primary_2")                  == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_rhs_primary_2b;            }
-  else if (strcmp(actions, "G1_action_rhs_primary_3")                  == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_rhs_primary_3b;            }
-  else if (strcmp(actions, "G1_action_alternative")                    == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_alternativeb;              }
-  else if (strcmp(actions, "G1_action_alternatives")                   == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_alternativesb;             }
-  else if (strcmp(actions, "G1_action_priorities")                     == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_prioritiesb;               }
-  else if (strcmp(actions, "G1_action_priority_rule")                  == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_priority_ruleb;            }
-  else if (strcmp(actions, "G1_action_single_symbol_1")                == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_single_symbol_1b;          }
-  else if (strcmp(actions, "G1_action_single_symbol_2")                == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_single_symbol_2b;          }
-  else if (strcmp(actions, "G1_action_single_symbol_3")                == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_single_symbol_3b;          }
-  else if (strcmp(actions, "G1_action_grammar_reference_1")            == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_grammar_reference_1b;      }
-  else if (strcmp(actions, "G1_action_grammar_reference_2")            == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_grammar_reference_2b;      }
-  else if (strcmp(actions, "G1_action_inaccessible_treatment_1")       == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_inaccessible_treatment_1b; }
-  else if (strcmp(actions, "G1_action_inaccessible_treatment_2")       == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_inaccessible_treatment_2b; }
-  else if (strcmp(actions, "G1_action_inaccessible_treatment_3")       == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_inaccessible_treatment_3b; }
-  else if (strcmp(actions, "G1_action_inaccessible_statement")         == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_inaccessible_statementb;   }
-  else if (strcmp(actions, "G1_action_on_or_off_1")                    == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_on_or_off_1b;              }
-  else if (strcmp(actions, "G1_action_on_or_off_2")                    == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_on_or_off_2b;              }
-  else if (strcmp(actions, "G1_action_autorank_statement")             == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_autorank_statementb;       }
-  else if (strcmp(actions, "G1_action_quantifier_1")                   == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_quantifier_1b;             }
-  else if (strcmp(actions, "G1_action_quantifier_2")                   == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_quantifier_2b;             }
-  else if (strcmp(actions, "G1_action_quantified_rule")                == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_quantified_ruleb;          }
-  else if (strcmp(actions, "G1_action_start_rule")                     == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_start_ruleb;               }
-  else if (strcmp(actions, "G1_action_desc_rule")                      == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_desc_ruleb;                }
-  else if (strcmp(actions, "G1_action_empty_rule")                     == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_empty_ruleb;               }
-  else if (strcmp(actions, "G1_action_default_rule")                   == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_default_ruleb;             }
-  else if (strcmp(actions, "G1_action_latm_specification")             == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_latm_specificationb;       }
-  else if (strcmp(actions, "G1_action_pause_specification_1")          == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_pause_specification_1b;    }
-  else if (strcmp(actions, "G1_action_pause_specification_2")          == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_pause_specification_2b;    }
-  else if (strcmp(actions, "G1_action_priority_specification")         == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_priority_specificationb;   }
-  else if (strcmp(actions, "G1_action_event_initializer_1")            == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_event_initializer_1b;      }
-  else if (strcmp(actions, "G1_action_event_initializer_2")            == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_event_initializer_2b;      }
-  else if (strcmp(actions, "G1_action_event_initialization")           == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_event_initializationb;     }
-  else if (strcmp(actions, "G1_action_event_specification")            == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_event_specificationb;      }
-  else if (strcmp(actions, "G1_action_lexeme_rule")                    == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_lexeme_ruleb;              }
-  else if (strcmp(actions, "G1_action_discard_rule")                   == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_discard_ruleb;             }
+       if (strcmp(actions, "G1_action_op_declare_1")                   == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_op_declare_1b;                   }
+  else if (strcmp(actions, "G1_action_op_declare_2")                   == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_op_declare_2b;                   }
+  else if (strcmp(actions, "G1_action_op_declare_3")                   == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_op_declare_3b;                   }
+  else if (strcmp(actions, "G1_action_rhs")                            == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_rhsb;                            }
+  else if (strcmp(actions, "G1_action_adverb_list_items")              == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_adverb_list_itemsb;              }
+  else if (strcmp(actions, "G1_action_action")                         == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_actionb;                         }
+  else if (strcmp(actions, "G1_action_symbolaction")                   == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_symbolactionb;                   }
+  else if (strcmp(actions, "G1_action_freeaction")                     == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_freeactionb;                     }
+  else if (strcmp(actions, "G1_action_left_association")               == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_left_associationb;               }
+  else if (strcmp(actions, "G1_action_right_association")              == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_right_associationb;              }
+  else if (strcmp(actions, "G1_action_group_association")              == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_group_associationb;              }
+  else if (strcmp(actions, "G1_action_separator_specification")        == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_separator_specificationb;        }
+  else if (strcmp(actions, "G1_action_symbol_name_2")                  == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_symbol_name_2b;                  }
+  else if (strcmp(actions, "G1_action_rhs_primary_1")                  == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_rhs_primary_1b;                  }
+  else if (strcmp(actions, "G1_action_rhs_primary_2")                  == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_rhs_primary_2b;                  }
+  else if (strcmp(actions, "G1_action_rhs_primary_3")                  == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_rhs_primary_3b;                  }
+  else if (strcmp(actions, "G1_action_alternative")                    == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_alternativeb;                    }
+  else if (strcmp(actions, "G1_action_alternatives")                   == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_alternativesb;                   }
+  else if (strcmp(actions, "G1_action_priorities")                     == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_prioritiesb;                     }
+  else if (strcmp(actions, "G1_action_priority_rule")                  == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_priority_ruleb;                  }
+  else if (strcmp(actions, "G1_action_single_symbol_1")                == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_single_symbol_1b;                }
+  else if (strcmp(actions, "G1_action_single_symbol_2")                == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_single_symbol_2b;                }
+  else if (strcmp(actions, "G1_action_single_symbol_3")                == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_single_symbol_3b;                }
+  else if (strcmp(actions, "G1_action_grammar_reference_1")            == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_grammar_reference_1b;            }
+  else if (strcmp(actions, "G1_action_grammar_reference_2")            == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_grammar_reference_2b;            }
+  else if (strcmp(actions, "G1_action_inaccessible_treatment_1")       == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_inaccessible_treatment_1b;       }
+  else if (strcmp(actions, "G1_action_inaccessible_treatment_2")       == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_inaccessible_treatment_2b;       }
+  else if (strcmp(actions, "G1_action_inaccessible_treatment_3")       == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_inaccessible_treatment_3b;       }
+  else if (strcmp(actions, "G1_action_inaccessible_statement")         == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_inaccessible_statementb;         }
+  else if (strcmp(actions, "G1_action_on_or_off_1")                    == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_on_or_off_1b;                    }
+  else if (strcmp(actions, "G1_action_on_or_off_2")                    == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_on_or_off_2b;                    }
+  else if (strcmp(actions, "G1_action_autorank_statement")             == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_autorank_statementb;             }
+  else if (strcmp(actions, "G1_action_quantifier_1")                   == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_quantifier_1b;                   }
+  else if (strcmp(actions, "G1_action_quantifier_2")                   == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_quantifier_2b;                   }
+  else if (strcmp(actions, "G1_action_quantified_rule")                == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_quantified_ruleb;                }
+  else if (strcmp(actions, "G1_action_start_rule")                     == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_start_ruleb;                     }
+  else if (strcmp(actions, "G1_action_desc_rule")                      == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_desc_ruleb;                      }
+  else if (strcmp(actions, "G1_action_empty_rule")                     == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_empty_ruleb;                     }
+  else if (strcmp(actions, "G1_action_default_rule")                   == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_default_ruleb;                   }
+  else if (strcmp(actions, "G1_action_latm_specification")             == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_latm_specificationb;             }
+  else if (strcmp(actions, "G1_action_pause_specification_1")          == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_pause_specification_1b;          }
+  else if (strcmp(actions, "G1_action_pause_specification_2")          == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_pause_specification_2b;          }
+  else if (strcmp(actions, "G1_action_priority_specification")         == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_priority_specificationb;         }
+  else if (strcmp(actions, "G1_action_event_initializer_1")            == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_event_initializer_1b;            }
+  else if (strcmp(actions, "G1_action_event_initializer_2")            == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_event_initializer_2b;            }
+  else if (strcmp(actions, "G1_action_event_initialization")           == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_event_initializationb;           }
+  else if (strcmp(actions, "G1_action_event_specification")            == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_event_specificationb;            }
+  else if (strcmp(actions, "G1_action_lexeme_rule")                    == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_lexeme_ruleb;                    }
+  else if (strcmp(actions, "G1_action_discard_rule")                   == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_discard_ruleb;                   }
   else if (strcmp(actions, "G1_action_completion_event_declaration_1") == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_completion_event_declaration_1b; }
   else if (strcmp(actions, "G1_action_completion_event_declaration_2") == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_completion_event_declaration_2b; }
+  else if (strcmp(actions, "G1_action_nulled_event_declaration_1")     == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_nulled_event_declaration_1b;     }
+  else if (strcmp(actions, "G1_action_nulled_event_declaration_2")     == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_nulled_event_declaration_2b;     }
+  else if (strcmp(actions, "G1_action_predicted_event_declaration_1")  == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_predicted_event_declaration_1b;  }
+  else if (strcmp(actions, "G1_action_predicted_event_declaration_2")  == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_predicted_event_declaration_2b;  }
   else
   {
     MARPAESLIF_ERRORF(marpaESLIFp, "Unsupported action \"%s\"", actions);
@@ -4392,13 +4400,48 @@ static short _marpaESLIF_bootstrap_G1_action_discard_ruleb(void *userDatavp, mar
 }
 
 /*****************************************************************************/
-static inline short _marpaESLIF_bootstrap_G1_action_completion_event_declarationb(marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_bootstrap_event_initialization_t *eventInitializationp, int leveli, char *symbolNames, int resulti)
+static inline short _marpaESLIF_bootstrap_G1_action_event_declarationb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb, marpaESLIF_bootstrap_event_declaration_type_t type)
 /*****************************************************************************/
 {
-  marpaESLIF_t         *marpaESLIFp = marpaESLIFValue_eslifp(marpaESLIFValuep);
-  marpaESLIF_grammar_t *grammarp;
-  marpaESLIF_symbol_t  *symbolp;
-  short                 rcb;
+  /* <TYPE event declaration> ::= 'event' <event initialization> {'=' OR <op_declare>} 'TYPE' <symbol name> */
+  marpaESLIFGrammar_t                         *marpaESLIFGrammarp = (marpaESLIFGrammar_t *) userDatavp;
+  marpaESLIF_t                                *marpaESLIFp          = marpaESLIFValue_eslifp(marpaESLIFValuep);
+  marpaESLIF_bootstrap_event_initialization_t *eventInitializationp;
+  char                                        *symbolNames;
+  marpaESLIF_grammar_t                        *grammarp;
+  marpaESLIF_symbol_t                         *symbolp;
+  char                                       **eventsp = NULL;
+  short                                       *eventbp = NULL;
+  char                                        *types = NULL;
+  short                                        intb = 0;
+  int                                          leveli = 0;
+  short                                        rcb;
+
+  /* Cannot be nullable */
+  if (nullableb) {
+    MARPAESLIF_ERROR(marpaESLIFp, "Nullable mode is not supported");
+    goto err;
+  }
+
+  if (! marpaESLIFValue_stack_get_ptrb(marpaESLIFValuep, arg0i+1, NULL /* contextip */, (void **) &eventInitializationp, NULL /* shallowbp */)) {
+    goto err;
+  }
+  /* It is a non-sense to have a null information */
+  if (eventInitializationp == NULL) {
+    MARPAESLIF_ERRORF(marpaESLIFp, "marpaESLIFValue_stack_get_arrayb at indice %d returned NULL", arg0i+2);
+    goto err;
+  }
+  if (! marpaESLIFValue_stack_is_intb(marpaESLIFValuep, arg0i+2, &intb)) {
+    goto err;
+  }
+  if (intb) {
+    if (! marpaESLIFValue_stack_get_intb(marpaESLIFValuep, arg0i+2, NULL /* contextip */, &leveli)) {
+      goto err;
+    }
+  }
+  if (! marpaESLIFValue_stack_get_ptrb(marpaESLIFValuep, arg0i+4, NULL /* contextip */, (void **) &symbolNames, NULL /* shallowbp */)) {
+    goto err;
+  }
 
   /* Check grammar at that level exist */
   grammarp = _marpaESLIF_bootstrap_check_grammarp(marpaESLIFp, marpaESLIFGrammarp, leveli, NULL);
@@ -4412,25 +4455,49 @@ static inline short _marpaESLIF_bootstrap_G1_action_completion_event_declaration
     goto err;
   }
 
-  /* It is a non-sense to have an event initialization without pause information */
+  /* It is a non-sense to have an event initialization without a name */
   if (eventInitializationp->eventNames == NULL) {
-    MARPAESLIF_ERRORF(marpaESLIFp, "In completion event declaration for symbol <%s>, event name is NULL", symbolNames);
+    MARPAESLIF_ERRORF(marpaESLIFp, "In event declaration for symbol <%s>, event name is NULL", symbolNames);
     goto err;
   }
-  if (symbolp->eventCompleteds != NULL) {
-    free(symbolp->eventCompleteds);
+
+  /* Update symbol */
+  switch (type) {
+  case MARPAESLIF_BOOTSTRAP_EVENT_DECLARATION_TYPE_PREDICTED:
+    eventsp = &(symbolp->eventPredicteds);
+    eventbp = &(symbolp->eventPredictedb);
+    types   = "predicted";
+    break;
+  case MARPAESLIF_BOOTSTRAP_EVENT_DECLARATION_TYPE_NULLED:
+    eventsp = &(symbolp->eventNulleds);
+    eventbp = &(symbolp->eventNulledb);
+    types   = "nulled";
+    break;
+  case MARPAESLIF_BOOTSTRAP_EVENT_DECLARATION_TYPE_COMPLETED:
+    eventsp = &(symbolp->eventCompleteds);
+    eventbp = &(symbolp->eventCompletedb);
+    types   = "completion";
+    break;
+  default:
+    MARPAESLIF_ERRORF(marpaESLIFp, "In event declaration for symbol <%s>, unsupported event type %d", symbolNames, type);
+    goto err;
+    break;
   }
-  symbolp->eventCompleteds = strdup(eventInitializationp->eventNames);
-  if (symbolp->eventCompleteds == NULL) {
+  
+  if (*eventsp != NULL) {
+    free(*eventsp);
+  }
+  *eventsp = strdup(eventInitializationp->eventNames);
+  if (*eventsp == NULL) {
     MARPAESLIF_ERRORF(marpaESLIFp, "strdup failure, %s", strerror(errno));
     goto err;
   }
   switch (eventInitializationp->initializerb) {
   case MARPAESLIF_BOOTSTRAP_EVENT_INITIALIZER_TYPE_ON:
-    symbolp->eventCompletedb = 1;
+    *eventbp = 1;
     break;
   case MARPAESLIF_BOOTSTRAP_EVENT_INITIALIZER_TYPE_OFF:
-    symbolp->eventCompletedb = 0;
+    *eventbp = 0;
     break;
   default:
     MARPAESLIF_ERRORF(marpaESLIFp, "In completion event declaration for symbol <%s>, unsupported event initializer type %d", symbolNames, (int) eventInitializationp->initializerb);
@@ -4438,7 +4505,11 @@ static inline short _marpaESLIF_bootstrap_G1_action_completion_event_declaration
     break;
   }
 
-  MARPAESLIF_DEBUGF(marpaESLIFValuep->marpaESLIFp, "Setted completion event %s=%s for symbol <%s> at grammar level %d", symbolp->eventCompleteds, symbolp->eventCompletedb ? "on" : "off", symbolNames, leveli);
+  if (! marpaESLIFValue_stack_set_undefb(marpaESLIFValuep, resulti)) {
+    goto err;
+  }
+
+  MARPAESLIF_DEBUGF(marpaESLIFValuep->marpaESLIFp, "Setted %s event %s=%s for symbol <%s> at grammar level %d", types, *eventsp, *eventbp ? "on" : "off", symbolNames, leveli);
 
   rcb = 1;
   goto done;
@@ -4454,88 +4525,40 @@ static inline short _marpaESLIF_bootstrap_G1_action_completion_event_declaration
 static short _marpaESLIF_bootstrap_G1_action_completion_event_declaration_1b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
 /*****************************************************************************/
 {
-  /* <completion event declaration> ::= 'event' <event initialization> '=' 'completed' <symbol name> */
-  marpaESLIFGrammar_t                         *marpaESLIFGrammarp = (marpaESLIFGrammar_t *) userDatavp;
-  marpaESLIF_t                                *marpaESLIFp          = marpaESLIFValue_eslifp(marpaESLIFValuep);
-  marpaESLIF_bootstrap_event_initialization_t *eventInitializationp;
-  char                                        *symbolNames;
-  short                                        rcb;
-
-  /* Cannot be nullable */
-  if (nullableb) {
-    MARPAESLIF_ERROR(marpaESLIFp, "Nullable mode is not supported");
-    goto err;
-  }
-
-  if (! marpaESLIFValue_stack_get_ptrb(marpaESLIFValuep, arg0i+1, NULL /* contextip */, (void **) &eventInitializationp, NULL /* shallowbp */)) {
-    goto err;
-  }
-  /* It is a non-sense to have a null information */
-  if (eventInitializationp == NULL) {
-    MARPAESLIF_ERRORF(marpaESLIFp, "marpaESLIFValue_stack_get_arrayb at indice %d returned NULL", arg0i+2);
-    goto err;
-  }
-  if (! marpaESLIFValue_stack_get_ptrb(marpaESLIFValuep, arg0i+4, NULL /* contextip */, (void **) &symbolNames, NULL /* shallowbp */)) {
-    goto err;
-  }
-
-  if (! _marpaESLIF_bootstrap_G1_action_completion_event_declarationb(marpaESLIFGrammarp, marpaESLIFValuep, eventInitializationp, 0 /* leveli */, symbolNames, resulti)) {
-    goto err;
-  }
-
-  rcb = 1;
-  goto done;
-
- err:
-  rcb = 0;
-
- done:
-  return rcb;
+  return _marpaESLIF_bootstrap_G1_action_event_declarationb(userDatavp, marpaESLIFValuep, arg0i, argni, resulti, nullableb, MARPAESLIF_BOOTSTRAP_EVENT_DECLARATION_TYPE_COMPLETED);
 }
 
 /*****************************************************************************/
 static short _marpaESLIF_bootstrap_G1_action_completion_event_declaration_2b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
 /*****************************************************************************/
 {
-  /* <completion event declaration> ::= 'event' <event initialization> <op declare> 'completed' <symbol name> */
-  marpaESLIFGrammar_t                         *marpaESLIFGrammarp = (marpaESLIFGrammar_t *) userDatavp;
-  marpaESLIF_t                                *marpaESLIFp          = marpaESLIFValue_eslifp(marpaESLIFValuep);
-  marpaESLIF_bootstrap_event_initialization_t *eventInitializationp;
-  char                                        *symbolNames;
-  int                                          leveli;
-  short                                        rcb;
+  return _marpaESLIF_bootstrap_G1_action_event_declarationb(userDatavp, marpaESLIFValuep, arg0i, argni, resulti, nullableb, MARPAESLIF_BOOTSTRAP_EVENT_DECLARATION_TYPE_COMPLETED);
+}
 
-  /* Cannot be nullable */
-  if (nullableb) {
-    MARPAESLIF_ERROR(marpaESLIFp, "Nullable mode is not supported");
-    goto err;
-  }
+/*****************************************************************************/
+static short _marpaESLIF_bootstrap_G1_action_nulled_event_declaration_1b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
+/*****************************************************************************/
+{
+  return _marpaESLIF_bootstrap_G1_action_event_declarationb(userDatavp, marpaESLIFValuep, arg0i, argni, resulti, nullableb, MARPAESLIF_BOOTSTRAP_EVENT_DECLARATION_TYPE_NULLED);
+}
 
-  if (! marpaESLIFValue_stack_get_ptrb(marpaESLIFValuep, arg0i+1, NULL /* contextip */, (void **) &eventInitializationp, NULL /* shallowbp */)) {
-    goto err;
-  }
-  if (! marpaESLIFValue_stack_get_intb(marpaESLIFValuep, arg0i+2, NULL /* contextip */, &leveli)) {
-    goto err;
-  }
-  /* It is a non-sense to have a null information */
-  if (eventInitializationp == NULL) {
-    MARPAESLIF_ERRORF(marpaESLIFp, "marpaESLIFValue_stack_get_arrayb at indice %d returned NULL", arg0i+2);
-    goto err;
-  }
-  if (! marpaESLIFValue_stack_get_ptrb(marpaESLIFValuep, arg0i+4, NULL /* contextip */, (void **) &symbolNames, NULL /* shallowbp */)) {
-    goto err;
-  }
+/*****************************************************************************/
+static short _marpaESLIF_bootstrap_G1_action_nulled_event_declaration_2b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
+/*****************************************************************************/
+{
+  return _marpaESLIF_bootstrap_G1_action_event_declarationb(userDatavp, marpaESLIFValuep, arg0i, argni, resulti, nullableb, MARPAESLIF_BOOTSTRAP_EVENT_DECLARATION_TYPE_NULLED);
+}
 
-  if (! _marpaESLIF_bootstrap_G1_action_completion_event_declarationb(marpaESLIFGrammarp, marpaESLIFValuep, eventInitializationp, 0 /* leveli */, symbolNames, resulti)) {
-    goto err;
-  }
+/*****************************************************************************/
+static short _marpaESLIF_bootstrap_G1_action_predicted_event_declaration_1b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
+/*****************************************************************************/
+{
+  return _marpaESLIF_bootstrap_G1_action_event_declarationb(userDatavp, marpaESLIFValuep, arg0i, argni, resulti, nullableb, MARPAESLIF_BOOTSTRAP_EVENT_DECLARATION_TYPE_PREDICTED);
+}
 
-  rcb = 1;
-  goto done;
-
- err:
-  rcb = 0;
-
- done:
-  return rcb;
+/*****************************************************************************/
+static short _marpaESLIF_bootstrap_G1_action_predicted_event_declaration_2b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
+/*****************************************************************************/
+{
+  return _marpaESLIF_bootstrap_G1_action_event_declarationb(userDatavp, marpaESLIFValuep, arg0i, argni, resulti, nullableb, MARPAESLIF_BOOTSTRAP_EVENT_DECLARATION_TYPE_PREDICTED);
 }
