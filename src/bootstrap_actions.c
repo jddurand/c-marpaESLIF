@@ -131,6 +131,7 @@ static        short _marpaESLIF_bootstrap_G1_action_rhs_exception_2b(void *userD
 static        short _marpaESLIF_bootstrap_G1_action_rhs_exception_3b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short _marpaESLIF_bootstrap_G1_action_rhs_exception_listb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short _marpaESLIF_bootstrap_G1_action_parenthesized_rhs_exception_listb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
+static        short _marpaESLIF_bootstrap_G1_action_exception_statementb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 
 /*****************************************************************************/
 static inline void  _marpaESLIF_bootstrap_rhs_primary_freev(marpaESLIF_bootstrap_rhs_primary_t *rhsPrimaryp)
@@ -5135,3 +5136,112 @@ static short _marpaESLIF_bootstrap_G1_action_parenthesized_rhs_exception_listb(v
  done:
   return rcb;
 }
+
+/*****************************************************************************/
+static short _marpaESLIF_bootstrap_G1_action_exception_statementb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
+/*****************************************************************************/
+{
+  /* <exception statement> ::= lhs <op declare> <rhs primary> '-' <parenthesized rhs exception list> */
+  marpaESLIFGrammar_t                  *marpaESLIFGrammarp = (marpaESLIFGrammar_t *) userDatavp;
+  marpaESLIF_t                         *marpaESLIFp        = marpaESLIFValue_eslifp(marpaESLIFValuep);
+  marpaESLIF_rule_t                    *rulep = NULL;
+  genericStack_t                       *rhsExceptionStackp = NULL;
+  char                                  *symbolNames;
+  int                                   leveli;
+  marpaESLIF_bootstrap_rhs_primary_t   *rhsPrimaryp;
+  marpaESLIF_symbol_t                  *lhsp;
+  marpaESLIF_symbol_t                  *rhsp;
+  marpaESLIF_grammar_t                 *grammarp;
+  short                                 rcb;
+  
+  if (! marpaESLIFValue_stack_get_ptrb(marpaESLIFValuep, arg0i, NULL /* contextip */, (void **) &symbolNames, NULL /* shallowbp */)) {
+    goto err;
+  }
+  if (! marpaESLIFValue_stack_get_intb(marpaESLIFValuep, arg0i+1, NULL /* contextip */, &leveli)) {
+    goto err;
+  }
+  if (! marpaESLIFValue_stack_get_ptrb(marpaESLIFValuep, arg0i+2, NULL /* contextip */, (void **) &rhsPrimaryp, NULL /* shallowbp */)) {
+    goto err;
+  }
+  if (! marpaESLIFValue_stack_get_intb(marpaESLIFValuep, arg0i+4, NULL /* contextip */, &rhsExceptionStackp)) {
+    goto err;
+  }
+
+  /* Check grammar at that level exist */
+  grammarp = _marpaESLIF_bootstrap_check_grammarp(marpaESLIFp, marpaESLIFGrammarp, leveli, NULL);
+  if (grammarp == NULL) {
+    goto err;
+  }
+
+  /* Check the lhs */
+  lhsp = _marpaESLIF_bootstrap_check_meta_by_namep(marpaESLIFp, grammarp, symbolNames, 1 /* createb */);
+  if (lhsp == NULL) {
+    goto err;
+  }
+
+  /* Check the rhs primary */
+  rhsp = _marpaESLIF_bootstrap_check_rhsPrimaryp(marpaESLIFp, marpaESLIFGrammarp, grammarp, rhsPrimaryp, 1 /* createb */);
+  if (rhsp == NULL) {
+    goto err;
+  }
+
+  MARPAESLIF_DEBUGF(marpaESLIFValuep->marpaESLIFp, "Creating exception rule %s ::= %s", lhsp->descp->asciis, rhsp->descp->asciis);
+#ifndef MARPAESLIF_NTRACE
+  {
+  int i;
+  for (i = 0; i < GENERICSTACK_USED(rhsExceptionStackp); i++) {
+    marpaESLIF_bootstrap_rhs_exception_t *rhsExceptionp = (marpaESLIF_bootstrap_rhs_exception_t *) GENERICSTACK_GET_PTR(rhsExceptionp, i);
+    switch (rhsExcpetionp->type) {
+    case MARPAESLIF_BOOTSTRAP_RHS_EXCEPTION_TYPE_QUOTED_STRING:
+      MARPAESLIF_DEBUGF(marpaESLIFValuep->marpaESLIFp, "... Exception No %d type is STRING", i);
+      break;
+    case MARPAESLIF_BOOTSTRAP_RHS_EXCEPTION_TYPE_CHARACTER_CLASS:
+      MARPAESLIF_DEBUGF(marpaESLIFValuep->marpaESLIFp, "... Exception No %d type is CHARACTER CLASS", i);
+      break;
+    case MARPAESLIF_BOOTSTRAP_RHS_EXCEPTION_TYPE_REGULAR_EXPRESSION:
+      MARPAESLIF_DEBUGF(marpaESLIFValuep->marpaESLIFp, "... Exception No %d type is REGULAR EXPRESSION", i);
+      break;
+    default:
+      MARPAESLIF_DEBUGF(marpaESLIFValuep->marpaESLIFp, "... Exception No %d type is ?", i);
+      break;
+    }
+  }
+#endif
+  /* If naming is not NULL, it is guaranteed to be an UTF-8 thingy */
+  rulep = _marpaESLIF_rule_newp(marpaESLIFp,
+                                grammarp,
+                                NULL, /* descEncodings */
+                                NULL, /* descs */
+                                0, /* descl */
+                                lhsp->idi,
+                                1, /* nrhsl */
+                                &(rhsp->idi), /* rhsip */
+                                0, /* nexceptionl */
+                                NULL, /* exceptionip */
+                                ranki,
+                                0, /*nullRanksHighb */
+                                0, /* sequenceb */
+                                0, /* minimumi */
+                                -1, /* separatori */
+                                0, /* properb */
+                                actions,
+                                0 /* passthroughb */);
+  if (rulep == NULL) {
+    goto err;
+  }
+  GENERICSTACK_SET_PTR(grammarp->ruleStackp, rulep, rulep->idi);
+  if (GENERICSTACK_ERROR(grammarp->ruleStackp)) {
+    MARPAESLIF_ERRORF(marpaESLIFp, "ruleStackp set failure, %s", strerror(errno));
+    goto err;
+  }
+
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  return rcb;
+}
+
