@@ -142,7 +142,7 @@ typedef enum bootstrap_grammar_G1_enum {
   /* This symbol is special, c.f. bootstrap_grammar_G1_metas[] array below: it has the discard flag on */
   G1_META_DISCARD,
   /* These meta identifiers are handled by L0 */
-  G1_META_BOOLEAN,
+  G1_META_FALSE,
   G1_META_TRUE,
   G1_META_STANDARD_NAME,
   G1_META_QUOTED_NAME,
@@ -230,7 +230,7 @@ bootstrap_grammar_meta_t bootstrap_grammar_G1_metas[] = {
   { G1_META_SIGNED_INTEGER,                   "signed integer", 0, 0 },
   { G1_META_DISCARD,                          "discard", 0, 1 },
   /* L0 join */
-  { G1_META_BOOLEAN,                          L0_JOIN_G1_META_BOOLEAN, 0, 0 },
+  { G1_META_FALSE,                            L0_JOIN_G1_META_FALSE, 0, 0 },
   { G1_META_TRUE,                             L0_JOIN_G1_META_TRUE, 0, 0 },
   { G1_META_STANDARD_NAME,                    L0_JOIN_G1_META_STANDARD_NAME, 0, 0 },
   { G1_META_QUOTED_NAME,                      L0_JOIN_G1_META_QUOTED_NAME, 0, 0 },
@@ -934,9 +934,12 @@ bootstrap_grammar_rule_t bootstrap_grammar_G1_rules[] = {
   /*
     lhsi                                      descs                                           type                          nrhsl  { rhsi }                                       }  minimumi           separatori  properb
   */
-  { G1_META_PROPER_SPECIFICATION,             G1_RULE_PROPER_SPECIFICATION,                   MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_TERMINAL_PROPER,
+  { G1_META_PROPER_SPECIFICATION,             G1_RULE_PROPER_SPECIFICATION_1,                 MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_TERMINAL_PROPER,
                                                                                                                                      G1_TERMINAL_THEN,
-                                                                                                                                     G1_META_BOOLEAN                              }, -1,                        -1, -1 , G1_ACTION_PROPER_SPECIFICATION },
+                                                                                                                                     G1_META_FALSE                                }, -1,                        -1, -1 , G1_ACTION_PROPER_SPECIFICATION_1 },
+  { G1_META_PROPER_SPECIFICATION,             G1_RULE_PROPER_SPECIFICATION_2,                 MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_TERMINAL_PROPER,
+                                                                                                                                     G1_TERMINAL_THEN,
+                                                                                                                                     G1_META_TRUE                                 }, -1,                        -1, -1 , G1_ACTION_PROPER_SPECIFICATION_2 },
   { G1_META_RANK_SPECIFICATION,               G1_RULE_RANK_SPECIFICATION,                     MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_TERMINAL_RANK,
                                                                                                                                      G1_TERMINAL_THEN,
                                                                                                                                      G1_META_SIGNED_INTEGER                       }, -1,                        -1, -1 , G1_ACTION_RANK_SPECIFICATION },
@@ -977,9 +980,12 @@ bootstrap_grammar_rule_t bootstrap_grammar_G1_rules[] = {
   /*
     lhsi                                      descs                                           type                          nrhsl  { rhsi }                                       }  minimumi           separatori  properb
   */
-  { G1_META_LATM_SPECIFICATION,               G1_RULE_LATM_SPECIFICATION,                     MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_TERMINAL_LATM,
+  { G1_META_LATM_SPECIFICATION,               G1_RULE_LATM_SPECIFICATION_1,                   MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_TERMINAL_LATM,
                                                                                                                                      G1_TERMINAL_THEN,
-                                                                                                                                     G1_META_BOOLEAN                              }, -1,                        -1, -1 , G1_ACTION_LATM_SPECIFICATION },
+                                                                                                                                     G1_META_FALSE                                }, -1,                        -1, -1 , G1_ACTION_LATM_SPECIFICATION_1 },
+  { G1_META_LATM_SPECIFICATION,               G1_RULE_LATM_SPECIFICATION_2,                   MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_TERMINAL_LATM,
+                                                                                                                                     G1_TERMINAL_THEN,
+                                                                                                                                     G1_META_TRUE                                 }, -1,                        -1, -1 , G1_ACTION_LATM_SPECIFICATION_2 },
   { G1_META_NAMING,                           G1_RULE_NAMING,                                 MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_TERMINAL_NAME,
                                                                                                                                      G1_TERMINAL_THEN,
                                                                                                                                      G1_META_ALTERNATIVE_NAME                     }, -1,                        -1, -1 , G1_ACTION_NAMING },
