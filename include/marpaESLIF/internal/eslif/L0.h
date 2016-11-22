@@ -17,7 +17,7 @@ typedef enum bootstrap_grammar_L0_enum {
   L0_TERMINAL_OP_LOOSEN,
   L0_TERMINAL_OP_EQUAL_PRIORITY,
   L0_TERMINAL_TRUE,
-  L0_TERMINAL_BOOLEAN,
+  L0_TERMINAL_FALSE,
   L0_TERMINAL_WORD_CHARACTER,
   L0_TERMINAL_LATIN_ALPHABET_LETTER,
   L0_TERMINAL_LEFT_CURLY,
@@ -52,7 +52,7 @@ typedef enum bootstrap_grammar_L0_enum {
   L0_META_OP_LOOSEN,
   L0_META_OP_EQUAL_PRIORITY,
   L0_META_TRUE,
-  L0_META_BOOLEAN,
+  L0_META_FALSE,
   L0_META_WORD_CHARACTER,
   L0_META_ONE_OR_MORE_WORD_CHARACTERS,
   L0_META_ZERO_OR_MORE_WORD_CHARACTERS,
@@ -79,7 +79,7 @@ bootstrap_grammar_meta_t bootstrap_grammar_L0_metas[] = {
   { L0_META_OP_LOOSEN,                          L0_JOIN_G1_META_OP_LOOSEN, 0, 0 },
   { L0_META_OP_EQUAL_PRIORITY,                  L0_JOIN_G1_META_OP_EQUAL_PRIORITY, 0, 0 },
   { L0_META_TRUE,                               L0_JOIN_G1_META_TRUE, 0, 0 },
-  { L0_META_BOOLEAN,                            L0_JOIN_G1_META_BOOLEAN, 0, 0 },
+  { L0_META_FALSE,                              L0_JOIN_G1_META_FALSE, 0, 0 },
   { L0_META_WORD_CHARACTER,                     "word character", 0, 0 },
   { L0_META_ONE_OR_MORE_WORD_CHARACTERS,        "one or more word characters", 0, 0 },
   { L0_META_ZERO_OR_MORE_WORD_CHARACTERS,       "zero or more word characters", 0, 0 },
@@ -218,9 +218,13 @@ __DATA__
 #endif
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
-  { L0_TERMINAL_BOOLEAN, MARPAESLIF_TERMINAL_TYPE_REGEX, NULL,
-    "[01]",
+  { L0_TERMINAL_FALSE, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
+    "'0'",
+#ifndef MARPAESLIF_NTRACE
+    "0", ""
+#else
     NULL, NULL
+#endif
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
   { L0_TERMINAL_WORD_CHARACTER, MARPAESLIF_TERMINAL_TYPE_REGEX, NULL,
@@ -382,7 +386,7 @@ bootstrap_grammar_rule_t bootstrap_grammar_L0_rules[] = {
     lhsi                                      descs                                           type                          nrhsl  { rhsi }                                       }  minimumi                          separatori  properb
   */
   { L0_META_TRUE,                             "true",                               MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_TRUE                             }, -1,                                       -1, -1 , NULL },
-  { L0_META_BOOLEAN,                          "boolean",                            MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_BOOLEAN                          }, -1,                                       -1, -1 , NULL },
+  { L0_META_FALSE,                            "false",                              MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_FALSE                            }, -1,                                       -1, -1 , NULL },
   { L0_META_WORD_CHARACTER     ,              "word character",                     MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_WORD_CHARACTER                   }, -1,                                       -1, -1 , NULL },
   /*
     lhsi                                      descs                                           type                          nrhsl  { rhsi }                                       }  minimumi                          separatori  properb
