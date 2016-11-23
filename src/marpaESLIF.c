@@ -1216,7 +1216,6 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
    4. If at least one rule have rejection, rejection mode is on at the grammar level.
    5. For every rule that is a passthrough, then it is illegal to have its lhs appearing as an lhs is any other rule
    6. The semantic of a nullable LHS must be unique
-   7. An exception must have its first primary being a terminal or a lexeme
 
       It is not illegal to have sparse items in grammarStackp.
 
@@ -1704,55 +1703,6 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
             MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Nullable semantic of symbol %d (%s) is grammar's default", symbolp->idi, symbolp->descp->asciis, symbolp->nullableActions);
           }
 #endif
-        }
-      }
-    }
-  }
-
-  /*
-   7. An exception must have its first primary being a terminal or a lexeme
-  */
-  for (grammari = 0; grammari < GENERICSTACK_USED(grammarStackp); grammari++) {
-    if (! GENERICSTACK_IS_PTR(grammarStackp, grammari)) {
-      /* Sparse item in grammarStackp -; */
-      continue;
-    }
-    grammarp = (marpaESLIF_grammar_t *) GENERICSTACK_GET_PTR(grammarStackp, grammari);
-    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Looking at passthroughs in grammar level %d (%s)", grammari, grammarp->descp->asciis);
-
-    /* Loop on rules */
-    ruleStackp   = grammarp->ruleStackp;
-    symbolStackp = grammarp->symbolStackp;
-    for (rulei = 0; rulei < GENERICSTACK_USED(ruleStackp); rulei++) {
-      if (! GENERICSTACK_IS_PTR(ruleStackp, rulei)) {
-        /* Should never happen, but who knows */
-        continue;
-      }
-      rulep = (marpaESLIF_rule_t *) GENERICSTACK_GET_PTR(ruleStackp, rulei);
-      if (rulep->exceptionp == NULL) {
-        continue;
-      }
-      if (GENERICSTACK_USED(rulep->rhsStackp) != 1) {
-        MARPAESLIF_ERRORF(marpaESLIFp, "Looking at rules in grammar level %d (%s): An exception must have only one RHS", grammari, grammarp->descp->asciis);
-        goto err;
-      }
-      if (! GENERICSTACK_IS_PTR(rulep->rhsStackp, 0)) {
-        MARPAESLIF_ERRORF(marpaESLIFp, "rulep->rhsStackp at indice 0 is not PTR (got %s, value  %d)", _marpaESLIF_genericStack_i_types(rulep->rhsStackp, 0), GENERICSTACKITEMTYPE(rulep->rhsStackp, 0));
-        goto err;
-      }
-      rhsExceptionp = (marpaESLIF_symbol_t *) GENERICSTACK_GET_PTR(rulep->rhsStackp, 0);
-      for (symboli = 0; symboli < GENERICSTACK_USED(symbolStackp); symboli++) {
-        if (! GENERICSTACK_IS_PTR(symbolStackp, symboli)) {
-          /* Should never happen, but who knows */
-          continue;
-        }
-        symbolp = (marpaESLIF_symbol_t *) GENERICSTACK_GET_PTR(symbolStackp, symboli);
-        if (symbolp != rhsExceptionp) {
-          continue;
-        }
-        if (symbolp->lhsb) {
-          MARPAESLIF_ERRORF(marpaESLIFp, "Looking at rules in grammar level %d (%s): symbol %d (%s) is the first RHS of an exception rule and must be a terminal or a lexeme", grammari, grammarp->descp->asciis, rhsExceptionp->idi, rhsExceptionp->descp->asciis);
-          goto err;
         }
       }
     }
@@ -9316,6 +9266,7 @@ static inline short _marpaESLIFValue_okAnySymbolCallbackWrapperb(void *userDatav
   marpaESLIF_symbol_t    *symbolp;
   marpaESLIF_symbol_t    *exceptionp;
   int                     rhsi;
+  short                   arrayb;
   short                   rcb;
 
   marpaESLIFRecognizerp->callstackCounteri++;
@@ -9348,7 +9299,11 @@ static inline short _marpaESLIFValue_okAnySymbolCallbackWrapperb(void *userDatav
     MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Rule %d %s", rulep->idi, rulep->asciishows);
     exceptionp = rulep->exceptionp;
     if (exceptionp != NULL) {
-      /* TO DO - verify exception */
+      /* TO DO - verify exception - this is exactly like the :discard stuff except that we */
+      /* restrict the stack at indicei to be of type ARRAY. */
+      if (! _marpaESLIFValue_stack_is_arrayb(marpaESLIFValuep, argi, &arrayb)) {
+        goto err;
+      }
     }
   }
 
