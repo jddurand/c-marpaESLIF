@@ -1215,9 +1215,7 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
       it must be an LHS of grammar at level leveli, which must de-factor must also exist.
    4. If at least one rule have rejection, rejection mode is on at the grammar level.
    5. For every rule that is a passthrough, then it is illegal to have its lhs appearing as an lhs is any other rule
-   6. The RHS of every :discard rule must be a top-level symbol (.i.e a symbol never appearing as an RHS) in the resolved grammar
-       (the ESLIF grammar made sure that there can be only one symbol on the right-hande side of a :discard rule)
-   7. The semantic of a nullable LHS must be unique
+   6. The semantic of a nullable LHS must be unique
 
       It is not illegal to have sparse items in grammarStackp.
 
@@ -1592,85 +1590,7 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
   }
 
   /*
-   6. The RHS of every :discard rule must be a top-level symbol (.i.e a symbol never appearing as an RHS) in the resolved grammar
-       (the ESLIF grammar made sure that there can be only one symbol on the right-hande side of a :discard rule)
-  */
-  for (grammari = 0; grammari < GENERICSTACK_USED(grammarStackp); grammari++) {
-    if (! GENERICSTACK_IS_PTR(grammarStackp, grammari)) {
-      /* Sparse item in grammarStackp -; */
-      continue;
-    }
-    grammarp = (marpaESLIF_grammar_t *) GENERICSTACK_GET_PTR(grammarStackp, grammari);
-    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Looking at :discard in grammar level %d (%s)", grammari, grammarp->descp->asciis);
-
-    /* Loop on rules */
-    ruleStackp = grammarp->ruleStackp;
-    for (rulei = 0; rulei < GENERICSTACK_USED(ruleStackp); rulei++) {
-      if (! GENERICSTACK_IS_PTR(ruleStackp, rulei)) {
-        /* Should never happen, but who knows */
-        continue;
-      }
-      rulep = (marpaESLIF_rule_t *) GENERICSTACK_GET_PTR(ruleStackp, rulei);
-      /* Does this rule have the :discard symbol as LHS ? */
-      if (rulep->lhsp == NULL) {
-        MARPAESLIF_ERRORF(marpaESLIFp, "Looking at rules in grammar level %d (%s): rule %d (%s) has no LHS pointer !?", grammari, grammarp->descp->asciis, rulep->idi, rulep->descp->asciis);
-        goto err;
-      }
-      if (! rulep->lhsp->discardb) {
-        continue;
-      }
-      /* There should be a single RHS in this rule */
-      if (GENERICSTACK_USED(rulep->rhsStackp) != 1) {
-        MARPAESLIF_ERRORF(marpaESLIFp, "Looking at rules in grammar level %d (%s): rule %d (%s) must have a single RHS", grammari, grammarp->descp->asciis, rulep->idi, rulep->descp->asciis);
-        goto err;
-      }
-      if (! GENERICSTACK_IS_PTR(rulep->rhsStackp, 0)) {
-        MARPAESLIF_ERRORF(marpaESLIFp, "Looking at rules in grammar level %d (%s): rule %d (%s)'s rhs stack does not have a pointer at indice 0 !?", grammari, grammarp->descp->asciis, rulep->idi, rulep->descp->asciis);
-        goto err;
-      }
-      symbolp = (marpaESLIF_symbol_t *) GENERICSTACK_GET_PTR(rulep->rhsStackp, 0);
-
-      /* If current symbol is a lexeme, per def it is "top-level" in any discard context */
-      if (symbolp->type != MARPAESLIF_SYMBOL_TYPE_META) {
-        symbolp->isDiscardTopb = 1;
-        continue;
-      }
-
-      /* If current symbol is a meta, we already made sure 
-      /* Look to the resolved grammar (this can be current grammar) */
-      if (! GENERICSTACK_IS_PTR(grammarStackp, symbolp->lookupResolvedLeveli)) {
-        MARPAESLIF_ERRORF(marpaESLIFp, "Looking at rules in grammar level %d (%s): rule %d (%s)'s RHS symbol %d (%s) resolve to an unknown grammar !?", grammari, grammarp->descp->asciis, rulep->idi, rulep->descp->asciis, symbolp->idi, symbolp->descp->asciis);
-        goto err;
-      }
-      sub_grammarp = (marpaESLIF_grammar_t *) GENERICSTACK_GET_PTR(grammarStackp, symbolp->lookupResolvedLeveli);
-      /* Look for this symbol in the sub grammar */
-      subSymbolStackp = sub_grammarp->symbolStackp;
-      subSymbolp = NULL;
-      for (subSymboli = 0; subSymboli < GENERICSTACK_USED(subSymbolStackp); subSymboli++) {
-        if (! GENERICSTACK_IS_PTR(subSymbolStackp, subSymboli)) {
-          /* Should never happen, but who knows */
-          continue;
-        }
-        tmpSymbolp = (marpaESLIF_symbol_t *) GENERICSTACK_GET_PTR(subSymbolStackp, subSymboli);
-        if (_marpaESLIF_string_eqb(tmpSymbolp->descp, symbolp->descp)) {
-          subSymbolp = tmpSymbolp;
-          break;
-        }
-      }
-      if (subSymbolp == NULL) {
-        MARPAESLIF_ERRORF(marpaESLIFp, "Looking at rules in grammar level %d (%s): symbol %d (%s) is referencing a non-existing symbol at grammar level %d (%s)", grammari, grammarp->descp->asciis, symbolp->idi, symbolp->descp->asciis, sub_grammarp->leveli, sub_grammarp->descp->asciis);
-        goto err;
-      }
-      if (! subSymbolp->topb) {
-        MARPAESLIF_ERRORF(marpaESLIFp, "Looking at rules in grammar level %d (%s): symbol %d (%s) is referencing existing symbol %d <%s> at grammar level %d (%s) but it is not a top level symbol", grammari, grammarp->descp->asciis, symbolp->idi, symbolp->descp->asciis, subSymbolp->idi, subSymbolp->descp->asciis, sub_grammarp->leveli, sub_grammarp->descp->asciis);
-        goto err;
-      }
-      symbolp->isDiscardTopb = 1;
-    }
-  }
-
-  /*
-   7. The semantic of a nullable LHS must be unique
+   6. The semantic of a nullable LHS must be unique
   */
   for (grammari = 0; grammari < GENERICSTACK_USED(grammarStackp); grammari++) {
     if (! GENERICSTACK_IS_PTR(grammarStackp, grammari)) {
