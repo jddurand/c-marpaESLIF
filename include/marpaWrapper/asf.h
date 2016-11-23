@@ -13,7 +13,7 @@ typedef struct marpaWrapperAsfTraverser marpaWrapperAsfTraverser_t;
 /* ------------------------------------------------------------- */
 /* Ok callbacks: they return 0 if failure, 1 if ok, -1 if reject */
 /* ------------------------------------------------------------- */
-typedef short (*marpaWrapperAsfOkRuleCallback_t)(void *userDatavp, genericStack_t *parentRuleiStackp, int rulei);
+typedef short (*marpaWrapperAsfOkRuleCallback_t)(void *userDatavp, genericStack_t *parentRuleiStackp, int rulei, int arg0i, int argni);
 typedef short (*marpaWrapperAsfOkSymbolCallback_t)(void *userDatavp, genericStack_t *parentRuleiStackp, int symboli, int argi);
 typedef short (*marpaWrapperAsfOkNullingCallback_t)(void *userDatavp, genericStack_t *parentRuleiStackp, int symboli);
 

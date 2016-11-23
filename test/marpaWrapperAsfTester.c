@@ -20,7 +20,7 @@ static short pruning_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, 
 static short full_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, void *userDatavp, int *valueip);
 static short okSymbolCallback(void *userDatavp, genericStack_t *parentRuleiStackp, int symboli, int argi);
 static short okNullableCallback(void *userDatavp, genericStack_t *parentRuleiStackp, int symboli);
-static short okRuleCallback(void *userDatavp, genericStack_t *parentRuleiStackp, int rulei);
+static short okRuleCallback(void *userDatavp, genericStack_t *parentRuleiStackp, int rulei, int arg0i, int argni);
 static short valueRuleCallback(void *userDatavp, int rulei, int arg0i, int argni, int resulti);
 static short valueSymbolCallback(void *userDatavp, int symboli, int argi, int resulti);
 static short valueNullingCallback(void *userDatavp, int symboli, int resulti);
@@ -1056,7 +1056,7 @@ static short okNullableCallback(void *userDatavp, genericStack_t *parentRuleiSta
 }
 
 /********************************************************************************/
-static short okRuleCallback(void *userDatavp, genericStack_t *parentRuleiStackp, int rulei)
+static short okRuleCallback(void *userDatavp, genericStack_t *parentRuleiStackp, int rulei, int arg0i, int argni)
 /********************************************************************************/
 {
   traverseContext_t *traverseContextp = (traverseContext_t *) userDatavp;
