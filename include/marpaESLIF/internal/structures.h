@@ -286,7 +286,7 @@ struct marpaESLIFRecognizer {
   size_t                       inputl;         /* Current remaining bytes - specific to every recognizer */
   short                        scanb;          /* Prevent resume before a call to scan */
   short                        discardb;       /* Discard mode */
-  short                        exceptionb;     /* Exception mode */
+  short                        silentb;        /* Silent mode */
   short                        haveLexemeb;    /* Remember if this recognizer have at least one lexeme */
   size_t                       linel;          /* Line number */
   size_t                       columnl;        /* Column number */
