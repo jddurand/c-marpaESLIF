@@ -17,8 +17,6 @@ typedef struct marpaESLIFTester_context {
 } marpaESLIFTester_context_t;
 
 const static char *exceptions = "\n"
-  "inaccessible is warn by default\n"
-  "autorank is on by default\n"
   ":default ::= latm => 1\n"
   "start ::= chars - startException\n"
   "chars ::= char*\n"
@@ -95,7 +93,7 @@ int main() {
     marpaESLIFRecognizerOption.buftriggerperci           = 50;
     marpaESLIFRecognizerOption.bufaddperci               = 50;
 
-    genericLogger_logLevel_seti(genericLoggerp, GENERICLOGGER_LOGLEVEL_TRACE);
+    genericLogger_logLevel_seti(genericLoggerp, GENERICLOGGER_LOGLEVEL_DEBUG);
     if (marpaESLIFGrammar_parseb(marpaESLIFGrammarp, &marpaESLIFRecognizerOption, NULL /* marpaESLIFValueOptionp */, NULL /* exhaustedbp */, NULL /* marpaESLIFValueResultp */)) {
       GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "\"%s\" match", inputs);
     } else {
