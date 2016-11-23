@@ -8,46 +8,22 @@ static marpaESLIFValueRuleCallback_t ruleActionResolver(void *userDatavp, marpaE
 static marpaESLIFValueSymbolCallback_t symbolActionResolver(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions);
 static short default_meta_action(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static short default_lexeme_action(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *bytep, size_t bytel, int resulti);
+static short _marpaESLIFReader_inputReader(void *userDatavp, char **inputsp, size_t *inputlp, short *eofbp, short *characterStreambp, char **encodingOfEncodingsp, char **encodingsp, size_t *encodinglp);
 
 typedef struct marpaESLIFTester_context {
   genericLogger_t *genericLoggerp;
+  char            *inputs;
+  size_t           inputl;
 } marpaESLIFTester_context_t;
 
-const static char *metags = "\n"
+const static char *exceptions = "\n"
   "inaccessible is warn by default\n"
   "autorank is on by default\n"
-  ":discard ::= Expression event => discard_whitespace=off\n"
-  ":lexeme ~ <comma> pause => before priority => 1 event => :symbol\n"
-  ":default ::= action => do_first_arg symbol-action => do_symbol free-action => do_free latm => 1\n"
-  ":start ::= Script\n"
-  ":desc ::= 'This is Grammar Top Level with UTF-8 characters: r\xc3\xa9sum\xc3\xa9'\n"
-  "event Script$ = completed Script\n"
-  "event Script[] = nulled Script\n"
-  "event ^Script = predicted Script\n"
-  "Script ::= Expression+ separator => comma action => do_script,,,,,,,,, proper => 1 rank => 7 null-ranking => high name => 'ABC r\xc3\xa9sum\xc3\xa9\xc3\x9fxxx'\n"
-  "<empty rule> ::= \n"
-  "<exception rule> ::= Number - NumberException\n"
-  "NumberException ::= '10'\n"
-  "; # null statement\n"
-  "Expression ::= \n"
-  "            Number\n"
-  "            | '(' Expression ')' action => do_parens assoc => group\n"
-  "           || Expression '**' Expression action => do_pow assoc => right\n"
-  "           || Expression '*' Expression action => do_multiply\n"
-  "            | Expression '/' Expression action => do_divide\n"
-  "           || Expression '+' Expression action => do_add\n"
-  "            | Expression '-' Expression action => do_subtract\n"
-  "whitespace ~ [\\s]+\n"
-  "{ // start statement group\n"
-  "comma ~ [,]\n"
-  "Number ~ [\\d]+"
-  "<hash comment> ~ <terminated hash comment> | <unterminated final hash comment>\n"
-  "<terminated hash comment> ~ '#' <hash comment body> <vertical space char>\n"
-  "<unterminated final hash comment> ~ '#' <hash comment body>\n"
-  "<hash comment body> ~ <hash comment char>*\n"
-  "<vertical space char> ~ [\\x{A}\\x{B}\\x{C}\\x{D}\\x{2028}\\x{2029}]:u\n"
-  "<hash comment char> ~ [^\\x{A}\\x{B}\\x{C}\\x{D}\\x{2028}\\x{2029}]:u\n"
-  "} /* end statement group */\n"
+  ":default ::= latm => 1\n"
+  "start ::= chars - startException\n"
+  "chars ::= char*\n"
+  "char ::= [a-zA-Z0-9_:]\n"
+  "startException ::= '-' chars ':' chars\n"
 ;
 
 int main() {
@@ -60,15 +36,18 @@ int main() {
   int                       ngrammari;
   char                     *grammarshows;
   int                       grammari;
+  genericLogger_t          *genericLoggerp;
 
-  marpaESLIFOption.genericLoggerp = GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_DEBUG);
+  genericLoggerp = GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_DEBUG);
+
+  marpaESLIFOption.genericLoggerp = genericLoggerp;
   marpaESLIFp = marpaESLIF_newp(&marpaESLIFOption);
   if (marpaESLIFp == NULL) {
     goto err;
   }
 
-  marpaESLIFGrammarOption.grammars            = (char *) metags;
-  marpaESLIFGrammarOption.grammarl            = strlen(metags);
+  marpaESLIFGrammarOption.bytep               = (void *) exceptions;
+  marpaESLIFGrammarOption.bytel               = strlen(exceptions);
   marpaESLIFGrammarOption.encodings           = "UTF-8";
   marpaESLIFGrammarOption.encodingl           = (marpaESLIFGrammarOption.encodings != NULL) ? strlen(marpaESLIFGrammarOption.encodings) : 0;
   marpaESLIFGrammarOption.encodingOfEncodings = "ASCII";
@@ -87,9 +66,32 @@ int main() {
     }
   }
 
+  /* Try the exception -; */
+  {
+    marpaESLIFTester_context_t   marpaESLIFTester_context;
+    marpaESLIFRecognizerOption_t marpaESLIFRecognizerOption;
+    const static char           *inputs = "abd123def";
+
+    marpaESLIFTester_context.genericLoggerp = genericLoggerp;
+    marpaESLIFTester_context.inputs         = (char *) inputs;
+    marpaESLIFTester_context.inputl         = strlen(inputs);
+
+    marpaESLIFRecognizerOption.userDatavp                = &marpaESLIFTester_context;
+    marpaESLIFRecognizerOption.marpaESLIFReaderCallbackp = _marpaESLIFReader_inputReader;
+    marpaESLIFRecognizerOption.disableThresholdb         = 0;
+    marpaESLIFRecognizerOption.exhaustedb                = 1;
+    marpaESLIFRecognizerOption.newlineb                  = 0;
+    marpaESLIFRecognizerOption.bufsizl                   = 0;
+    marpaESLIFRecognizerOption.buftriggerperci           = 50;
+    marpaESLIFRecognizerOption.bufaddperci               = 50;
+
+    genericLogger_logLevel_seti(genericLoggerp, GENERICLOGGER_LOGLEVEL_TRACE);
+    marpaESLIFGrammar_parseb(marpaESLIFGrammarp, &marpaESLIFRecognizerOption, NULL /* marpaESLIFValueOptionp */, NULL /* exhaustedbp */, NULL /* marpaESLIFValueResultp */);
+  }
+
   exiti = 0;
   goto done;
-  
+
  err:
   exiti = 1;
 
@@ -100,7 +102,7 @@ int main() {
   marpaESLIFGrammar_freev(marpaESLIFGrammarp);
   marpaESLIF_freev(marpaESLIFp);
 
-  GENERICLOGGER_FREE(marpaESLIFOption.genericLoggerp);
+  GENERICLOGGER_FREE(genericLoggerp);
   return exiti;
 }
 
@@ -208,4 +210,21 @@ static short default_lexeme_action(void *userDatavp, marpaESLIFValue_t *marpaESL
 /****************************************************************************/
 {
   return 0;
+}
+
+/*****************************************************************************/
+static short _marpaESLIFReader_inputReader(void *userDatavp, char **inputsp, size_t *inputlp, short *eofbp, short *characterStreambp, char **encodingOfEncodingsp, char **encodingsp, size_t *encodinglp)
+/*****************************************************************************/
+{
+  marpaESLIFTester_context_t *marpaESLIFTester_contextp = (marpaESLIFTester_context_t *) userDatavp;
+
+  *inputsp              = marpaESLIFTester_contextp->inputs;
+  *inputlp              = marpaESLIFTester_contextp->inputl;
+  *eofbp                = 1;
+  *characterStreambp    = 0; /* We say this is not a stream of characters - regexp will adapt and to UTF correctness if needed */
+  *encodingOfEncodingsp = NULL;
+  *encodingsp           = NULL;
+  *encodinglp           = 0;
+
+  return 1;
 }

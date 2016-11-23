@@ -62,6 +62,7 @@ typedef enum bootstrap_grammar_G1_enum {
   G1_TERMINAL___UNDEF,
   G1_TERMINAL___ASCII,
   G1_TERMINAL___TRANSLIT,
+  G1_TERMINAL___CONCAT,
   G1_TERMINAL_LEFT_ANGLE,
   G1_TERMINAL_RIGHT_ANGLE,
   G1_TERMINAL_AT_SIGN,
@@ -675,6 +676,14 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
     NULL, NULL
 #endif
   },
+  { G1_TERMINAL___CONCAT, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
+    "'::concat'",
+#ifndef MARPAESLIF_NTRACE
+    "::concat", "::c"
+#else
+    NULL, NULL
+#endif
+  },
   { G1_TERMINAL_LEFT_ANGLE, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
     "'<'",
 #ifndef MARPAESLIF_NTRACE
@@ -1026,6 +1035,7 @@ bootstrap_grammar_rule_t bootstrap_grammar_G1_rules[] = {
   { G1_META_ACTION_NAME,                      G1_RULE_ACTION_NAME_3,                          MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL___UNDEF                          }, -1,                        -1, -1 , G1_ACTION_ACTION_NAME_3 },
   { G1_META_ACTION_NAME,                      G1_RULE_ACTION_NAME_4,                          MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL___ASCII                          }, -1,                        -1, -1 , G1_ACTION_ACTION_NAME_4 },
   { G1_META_ACTION_NAME,                      G1_RULE_ACTION_NAME_5,                          MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL___TRANSLIT                       }, -1,                        -1, -1 , G1_ACTION_ACTION_NAME_5 },
+  { G1_META_ACTION_NAME,                      G1_RULE_ACTION_NAME_6,                          MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL___CONCAT                         }, -1,                        -1, -1 , G1_ACTION_ACTION_NAME_6 },
   { G1_META_FREE_NAME,                        G1_RULE_ACTION_FREE_NAME,                       MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_RESTRICTED_ASCII_GRAPH_NAME          }, -1,                        -1, -1 , G1_ACTION_FREE_NAME },
   /*
     lhsi                                      descs                                           type                          nrhsl  { rhsi }                                       }  minimumi           separatori  properb
