@@ -373,6 +373,7 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_check_grammarp(marpaES
 static inline marpaESLIF_symbol_t *_marpaESLIF_bootstrap_check_meta_by_namep(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, char *asciinames, short createb)
 /*****************************************************************************/
 {
+  static const char   *funcs   = "_marpaESLIF_bootstrap_check_meta_by_namep";
   marpaESLIF_symbol_t *symbolp = NULL;
   marpaESLIF_meta_t   *metap   = NULL;
   marpaESLIF_symbol_t *symbol_i_p;
@@ -397,7 +398,7 @@ static inline marpaESLIF_symbol_t *_marpaESLIF_bootstrap_check_meta_by_namep(mar
     if (metap == NULL) {
       goto err;
     }
-    MARPAESLIF_DEBUGF(marpaESLIFp, "Creating meta symbol %s in grammar level %d", metap->descp->asciis, grammarp->leveli);
+    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Creating meta symbol %s in grammar level %d", metap->descp->asciis, grammarp->leveli);
     symbolp = _marpaESLIF_symbol_newp(marpaESLIFp);
     if (symbolp == NULL) {
       goto err;
@@ -483,6 +484,7 @@ static inline marpaESLIF_symbol_t *_marpaESLIF_bootstrap_search_terminal_by_desc
 static inline marpaESLIF_symbol_t  *_marpaESLIF_bootstrap_check_terminal_by_typep(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, marpaESLIF_terminal_type_t terminalType, marpaESLIF_bootstrap_utf_string_t *stringp, short createb)
 /*****************************************************************************/
 {
+  static const char     *funcs     = "_marpaESLIF_bootstrap_check_terminal_by_typep";
   marpaESLIF_symbol_t   *symbolp   = NULL;
   marpaESLIF_terminal_t *terminalp = NULL;
 
@@ -504,7 +506,7 @@ static inline marpaESLIF_symbol_t  *_marpaESLIF_bootstrap_check_terminal_by_type
     if (terminalp == NULL) {
       goto err;
     }
-    MARPAESLIF_DEBUGF(marpaESLIFp, "Creating terminal symbol %s in grammar level %d", terminalp->descp->asciis, grammarp->leveli);
+    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Creating terminal symbol %s in grammar level %d", terminalp->descp->asciis, grammarp->leveli);
     symbolp = _marpaESLIF_symbol_newp(marpaESLIFp);
     if (symbolp == NULL) {
       goto err;
@@ -2071,6 +2073,7 @@ static inline short _marpaESLIF_bootstrap_G1_action_priority_loosen_ruleb(marpaE
 {
   /* <priority rule> ::= lhs <op declare> priorities */
   /* This method is called when there is more than one priority. It reconstruct a flat list with one priority only */
+  static const char                       *funcs                  = "_marpaESLIF_bootstrap_G1_action_priority_loosen_ruleb";
   marpaESLIF_t                            *marpaESLIFp            = marpaESLIFValue_eslifp(marpaESLIFValuep);
   genericStack_t                          *flatAlternativesStackp = NULL;
   genericStack_t                          *flatAlternativeStackp  = NULL;
@@ -2134,7 +2137,7 @@ static inline short _marpaESLIF_bootstrap_G1_action_priority_loosen_ruleb(marpaE
   }
 
   /* Create the rule lhs := lhs[0] */
-  MARPAESLIF_DEBUGF(marpaESLIFValuep->marpaESLIFp, "Creating rule %s ::= %s at grammar level %d", lhsp->descp->asciis, prioritizedLhsp->descp->asciis, grammarp->leveli);
+  MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Creating rule %s ::= %s at grammar level %d", lhsp->descp->asciis, prioritizedLhsp->descp->asciis, grammarp->leveli);
   rulep = _marpaESLIF_rule_newp(marpaESLIFp,
                                 grammarp,
                                 NULL, /* descEncodings */
@@ -2217,7 +2220,7 @@ static inline short _marpaESLIF_bootstrap_G1_action_priority_loosen_ruleb(marpaE
     }
 
     /* Create the transition rule lhs[priorityi-1] := lhs[priorityi] */
-    MARPAESLIF_DEBUGF(marpaESLIFValuep->marpaESLIFp, "Creating transition rule %s ::= %s at grammar level %d", prioritizedLhsp->descp->asciis, nextPrioritizedLhsp->descp->asciis, grammarp->leveli);
+    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Creating transition rule %s ::= %s at grammar level %d", prioritizedLhsp->descp->asciis, nextPrioritizedLhsp->descp->asciis, grammarp->leveli);
     rulep = _marpaESLIF_rule_newp(marpaESLIFp,
                                   grammarp,
                                   NULL, /* descEncodings */
@@ -2376,7 +2379,7 @@ static inline short _marpaESLIF_bootstrap_G1_action_priority_loosen_ruleb(marpaE
       }
 
       /* Rework the RHS list by replacing the symbols matching the LHS */
-      MARPAESLIF_DEBUGF(marpaESLIFp, "alternativesStackp[%d] alternativeStackp[%d] currentLeft=<%s> nextLeft=<%s> priorityi=%d nrhsi=%d arityi=%d assoc=%s", alternativesi, alternativei, currentasciis, nextasciis, priorityi, nrhsi, arityi, left_associationb ? "left" : (right_associationb ? "right" : (group_associationb ? "group" : "unknown")));
+      MARPAESLIF_TRACEF(marpaESLIFp, funcs, "alternativesStackp[%d] alternativeStackp[%d] currentLeft=<%s> nextLeft=<%s> priorityi=%d nrhsi=%d arityi=%d assoc=%s", alternativesi, alternativei, currentasciis, nextasciis, priorityi, nrhsi, arityi, left_associationb ? "left" : (right_associationb ? "right" : (group_associationb ? "group" : "unknown")));
 
       if (arityi > 0) {
         if ((arityi == 1) && (nrhsi == 1)) {
@@ -2431,7 +2434,7 @@ static inline short _marpaESLIF_bootstrap_G1_action_priority_loosen_ruleb(marpaE
             MARPAESLIF_ERRORF(marpaESLIFp, "rhsPrimaryStackp set failure, %s", strerror(errno));
             goto err;
           }
-          MARPAESLIF_DEBUGF(marpaESLIFp, "alternativesStackp[%d] alternativeStackp[%d] ... LHS is %s, RHS[%d] is now %s", alternativesi, alternativei, currentasciis, rhsi, prioritizedRhsPrimaryp->u.singleSymbolp->u.symbols);
+          MARPAESLIF_TRACEF(marpaESLIFp, funcs, "alternativesStackp[%d] alternativeStackp[%d] ... LHS is %s, RHS[%d] is now %s", alternativesi, alternativei, currentasciis, rhsi, prioritizedRhsPrimaryp->u.singleSymbolp->u.symbols);
           prioritizedRhsPrimaryp = NULL; /* prioritizedRhsPrimaryp is in rhsPrimaryStackp */
           /* We can forget the old one */
           _marpaESLIF_bootstrap_rhs_primary_freev(rhsPrimaryp);
@@ -2486,6 +2489,7 @@ static inline short _marpaESLIF_bootstrap_G1_action_priority_flat_ruleb(marpaESL
 {
   /* <priority rule> ::= lhs <op declare> priorities */
   /* This method is called when there is no more than one priority. It is ignoring the notion of priority. */
+  static const char                  *funcs             = "_marpaESLIF_bootstrap_G1_action_priority_flat_ruleb";
   marpaESLIF_t                       *marpaESLIFp       = marpaESLIFValue_eslifp(marpaESLIFValuep);
   marpaESLIF_rule_t                  *rulep             = NULL;
   char                               *referencedSymbols = NULL;
@@ -2580,7 +2584,7 @@ static inline short _marpaESLIF_bootstrap_G1_action_priority_flat_ruleb(marpaESL
         goto err;
       }
 #ifndef MARPAESLIF_NTRACE
-      MARPAESLIF_DEBUGF(marpaESLIFValuep->marpaESLIFp, "Creating rule %s at grammar level %d", (alternativep->forcedLhsp != NULL) ? alternativep->forcedLhsp->descp->asciis : lhsp->descp->asciis, grammarp->leveli);
+      MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Creating rule %s at grammar level %d", (alternativep->forcedLhsp != NULL) ? alternativep->forcedLhsp->descp->asciis : lhsp->descp->asciis, grammarp->leveli);
       for (rhsPrimaryi = 0; rhsPrimaryi < nrhsi; rhsPrimaryi++) {
         if (! GENERICSTACK_IS_PTR(rhsPrimaryStackp, rhsPrimaryi)) {
           MARPAESLIF_ERRORF(marpaESLIFp, "alternativeStackp at indice %d is not PTR (got %s, value %d)", rhsPrimaryi, _marpaESLIF_genericStack_i_types(rhsPrimaryStackp, rhsPrimaryi), GENERICSTACKITEMTYPE(rhsPrimaryStackp, rhsPrimaryi));
@@ -2591,7 +2595,7 @@ static inline short _marpaESLIF_bootstrap_G1_action_priority_flat_ruleb(marpaESL
         if (rhsp == NULL) {
           goto err;
         }
-        MARPAESLIF_DEBUGF(marpaESLIFValuep->marpaESLIFp, "... Rhs No %d: %s", rhsPrimaryi, rhsp->descp->asciis);
+        MARPAESLIF_TRACEF(marpaESLIFp, funcs, "... Rhs No %d: %s", rhsPrimaryi, rhsp->descp->asciis);
         rhsip[rhsPrimaryi] = rhsp->idi;
       }
 #endif
@@ -3135,6 +3139,7 @@ static short _marpaESLIF_bootstrap_G1_action_quantified_ruleb(void *userDatavp, 
 /*****************************************************************************/
 {
   /* <quantified rule> ::= lhs <op declare> <rhs primary> quantifier <adverb list> */
+  static const char                    *funcs              = "_marpaESLIF_bootstrap_G1_action_quantified_ruleb";
   marpaESLIFGrammar_t                  *marpaESLIFGrammarp = (marpaESLIFGrammar_t *) userDatavp;
   marpaESLIF_t                         *marpaESLIFp        = marpaESLIFValue_eslifp(marpaESLIFValuep);
   marpaESLIF_rule_t                    *rulep = NULL;
@@ -3236,9 +3241,9 @@ static short _marpaESLIF_bootstrap_G1_action_quantified_ruleb(void *userDatavp, 
 
 #ifndef MARPAESLIF_NTRACE
   if (separatorp != NULL) {
-    MARPAESLIF_DEBUGF(marpaESLIFValuep->marpaESLIFp, "Creating rule %s ::= %s%s ranki=>%d separator=>%s proper=>%d null-ranking=>%s at grammar level %d", lhsp->descp->asciis, rhsp->descp->asciis, minimumi ? "+" : "*", ranki, separatorp->descp->asciis, (int) properb, nullRanksHighb ? "high" : "low", grammarp->leveli);
+    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Creating rule %s ::= %s%s ranki=>%d separator=>%s proper=>%d null-ranking=>%s at grammar level %d", lhsp->descp->asciis, rhsp->descp->asciis, minimumi ? "+" : "*", ranki, separatorp->descp->asciis, (int) properb, nullRanksHighb ? "high" : "low", grammarp->leveli);
   } else {
-    MARPAESLIF_DEBUGF(marpaESLIFValuep->marpaESLIFp, "Creating rule %s ::= %s%s ranki=>%d null-ranking=>%s at grammar level %d", lhsp->descp->asciis, rhsp->descp->asciis, minimumi ? "+" : "*", ranki, nullRanksHighb ? "high" : "low", grammarp->leveli);
+    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Creating rule %s ::= %s%s ranki=>%d null-ranking=>%s at grammar level %d", lhsp->descp->asciis, rhsp->descp->asciis, minimumi ? "+" : "*", ranki, nullRanksHighb ? "high" : "low", grammarp->leveli);
   }
 #endif
   /* If naming is not NULL, it is guaranteed to be an UTF-8 thingy */
@@ -3283,6 +3288,7 @@ static short _marpaESLIF_bootstrap_G1_action_start_ruleb(void *userDatavp, marpa
 /*****************************************************************************/
 {
   /* <start rule>  ::= ':start' <op declare> symbol */
+  static const char    *funcs              = "_marpaESLIF_bootstrap_G1_action_start_ruleb";
   marpaESLIFGrammar_t  *marpaESLIFGrammarp = (marpaESLIFGrammar_t *) userDatavp;
   marpaESLIF_t         *marpaESLIFp        = marpaESLIFValue_eslifp(marpaESLIFValuep);
   int                  leveli;
@@ -3311,7 +3317,7 @@ static short _marpaESLIF_bootstrap_G1_action_start_ruleb(void *userDatavp, marpa
   }
 
   /* Make it the start symbol */
-  MARPAESLIF_DEBUGF(marpaESLIFp, "Marking meta symbol %s in grammar level %d as start symbol", startp->descp->asciis, grammarp->leveli);
+  MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Marking meta symbol %s in grammar level %d as start symbol", startp->descp->asciis, grammarp->leveli);
   startp->startb = 1;
 
   rcb = 1;
@@ -3329,6 +3335,7 @@ static short _marpaESLIF_bootstrap_G1_action_desc_ruleb(void *userDatavp, marpaE
 /*****************************************************************************/
 {
   /* <desc rule> ::= ':desc' <op declare> <quoted string> */
+  static const char    *funcs              = "_marpaESLIF_bootstrap_G1_action_desc_ruleb";
   marpaESLIFGrammar_t  *marpaESLIFGrammarp = (marpaESLIFGrammar_t *) userDatavp;
   marpaESLIF_t         *marpaESLIFp        = marpaESLIFValue_eslifp(marpaESLIFValuep);
   int                  leveli;
@@ -3385,7 +3392,7 @@ static short _marpaESLIF_bootstrap_G1_action_desc_ruleb(void *userDatavp, marpaE
   grammarp->descautob = 0;
 
   /* Overwrite grammar start */
-  MARPAESLIF_DEBUGF(marpaESLIFp, "Grammar level %d description set to %s", grammarp->leveli, grammarp->descp->asciis);
+  MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Grammar level %d description set to %s", grammarp->leveli, grammarp->descp->asciis);
 
   rcb = 1;
   goto done;
@@ -3408,6 +3415,7 @@ static short _marpaESLIF_bootstrap_G1_action_empty_ruleb(void *userDatavp, marpa
 /*****************************************************************************/
 {
   /* <empty rule> ::= lhs <op declare> <adverb list> */
+  static const char                 *funcs              = "_marpaESLIF_bootstrap_G1_action_empty_ruleb";
   marpaESLIFGrammar_t               *marpaESLIFGrammarp = (marpaESLIFGrammar_t *) userDatavp;
   marpaESLIF_t                      *marpaESLIFp        = marpaESLIFValue_eslifp(marpaESLIFValuep);
   marpaESLIF_rule_t                 *rulep              = NULL;
@@ -3481,7 +3489,7 @@ static short _marpaESLIF_bootstrap_G1_action_empty_ruleb(void *userDatavp, marpa
 
   /* Create the rule */
   /* If there is a name description, then it is UTF-8 compatible (<standard name> or <quoted name>) */
-  MARPAESLIF_DEBUGF(marpaESLIFValuep->marpaESLIFp, "Creating empty rule %s at grammar level %d", lhsp->descp->asciis, grammarp->leveli);
+  MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Creating empty rule %s at grammar level %d", lhsp->descp->asciis, grammarp->leveli);
   rulep = _marpaESLIF_rule_newp(marpaESLIFp,
                                 grammarp,
                                 (namingp != NULL) ? "UTF-8" : NULL, /* descEncodings */
@@ -4185,6 +4193,7 @@ static short _marpaESLIF_bootstrap_G1_action_discard_ruleb(void *userDatavp, mar
 /*****************************************************************************/
 {
   /* <discard rule> ::= ':discard' <op declare> <rhs primary> <adverb list> */
+  static const char                           *funcs              = "_marpaESLIF_bootstrap_G1_action_discard_ruleb";
   marpaESLIFGrammar_t                         *marpaESLIFGrammarp = (marpaESLIFGrammar_t *) userDatavp;
   marpaESLIF_t                                *marpaESLIFp        = marpaESLIFValue_eslifp(marpaESLIFValuep);
   marpaESLIF_rule_t                           *rulep = NULL;
@@ -4231,7 +4240,7 @@ static short _marpaESLIF_bootstrap_G1_action_discard_ruleb(void *userDatavp, mar
     goto err;
   }
   /* Make sure it has the internal discard flag */
-  MARPAESLIF_DEBUGF(marpaESLIFp, "Marking meta symbol %s in grammar level %d as :discard symbol", discardp->descp->asciis, grammarp->leveli);
+  MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Marking meta symbol %s in grammar level %d as :discard symbol", discardp->descp->asciis, grammarp->leveli);
   discardp->discardb = 1;
 
   /* Check the rhs primary */
@@ -4263,7 +4272,7 @@ static short _marpaESLIF_bootstrap_G1_action_discard_ruleb(void *userDatavp, mar
     goto err;
   }
 
-  MARPAESLIF_DEBUGF(marpaESLIFValuep->marpaESLIFp, "Creating rule %s ::= %s at grammar level %d", discardp->descp->asciis, rhsp->descp->asciis, grammarp->leveli);
+  MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Creating rule %s ::= %s at grammar level %d", discardp->descp->asciis, rhsp->descp->asciis, grammarp->leveli);
   /* If naming is not NULL, it is guaranteed to be an UTF-8 thingy */
   rulep = _marpaESLIF_rule_newp(marpaESLIFp,
                                 grammarp,
@@ -4337,8 +4346,9 @@ static inline short _marpaESLIF_bootstrap_G1_action_event_declarationb(void *use
 /*****************************************************************************/
 {
   /* <TYPE event declaration> ::= 'event' <event initialization> {'=' OR <op_declare>} 'TYPE' <symbol name> */
+  static const char                           *funcs              = "_marpaESLIF_bootstrap_G1_action_event_declarationb";
   marpaESLIFGrammar_t                         *marpaESLIFGrammarp = (marpaESLIFGrammar_t *) userDatavp;
-  marpaESLIF_t                                *marpaESLIFp          = marpaESLIFValue_eslifp(marpaESLIFValuep);
+  marpaESLIF_t                                *marpaESLIFp        = marpaESLIFValue_eslifp(marpaESLIFValuep);
   marpaESLIF_bootstrap_event_initialization_t *eventInitializationp;
   char                                        *symbolNames;
   marpaESLIF_grammar_t                        *grammarp;
@@ -4442,7 +4452,7 @@ static inline short _marpaESLIF_bootstrap_G1_action_event_declarationb(void *use
     goto err;
   }
 
-  MARPAESLIF_DEBUGF(marpaESLIFValuep->marpaESLIFp, "Setted %s event %s=%s for symbol <%s> at grammar level %d", types, *eventsp, *eventbp ? "on" : "off", symbolNames, leveli);
+  MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Setted %s event %s=%s for symbol <%s> at grammar level %d", types, *eventsp, *eventbp ? "on" : "off", symbolNames, leveli);
 
   rcb = 1;
   goto done;
@@ -4732,6 +4742,7 @@ static short _marpaESLIF_bootstrap_G1_action_exception_statementb(void *userData
 /*****************************************************************************/
 {
   /* <exception statement> ::= lhs <op declare> <rhs primary> '-' <rhs primary> <adverb list> */
+  static const char                    *funcs              = "_marpaESLIF_bootstrap_G1_action_exception_statementb";
   marpaESLIFGrammar_t                  *marpaESLIFGrammarp = (marpaESLIFGrammar_t *) userDatavp;
   marpaESLIF_t                         *marpaESLIFp        = marpaESLIFValue_eslifp(marpaESLIFValuep);
   marpaESLIF_rule_t                    *rulep = NULL;
@@ -4825,7 +4836,7 @@ static short _marpaESLIF_bootstrap_G1_action_exception_statementb(void *userData
     goto err;
   }
 
-  MARPAESLIF_DEBUGF(marpaESLIFValuep->marpaESLIFp, "Creating exception rule %s ::= %s - %s", lhsp->descp->asciis, rhsp->descp->asciis, rhsExceptionp->descp->asciis);
+  MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Creating exception rule %s ::= %s - %s", lhsp->descp->asciis, rhsp->descp->asciis, rhsExceptionp->descp->asciis);
   /* If naming is not NULL, it is guaranteed to be an UTF-8 thingy */
   rulep = _marpaESLIF_rule_newp(marpaESLIFp,
                                 grammarp,

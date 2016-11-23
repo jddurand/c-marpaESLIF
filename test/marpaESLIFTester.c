@@ -23,7 +23,7 @@ const static char *exceptions = "\n"
   "start ::= chars - startException\n"
   "chars ::= char*\n"
   "char ::= [a-zA-Z0-9_:]\n"
-  "startException ::= '-' chars ':' chars\n"
+  "startException ::= chars ':' chars\n"
 ;
 
 int main() {
@@ -46,6 +46,16 @@ int main() {
     goto err;
   }
 
+  if (marpaESLIFGrammar_ngrammari(marpaESLIF_grammarp(marpaESLIFp), &ngrammari)) {
+    for (grammari = 0; grammari < ngrammari; grammari++) {
+      if (marpaESLIFGrammar_grammarshowform_by_grammarb(marpaESLIF_grammarp(marpaESLIFp), &grammarshows, grammari, NULL)) {
+        GENERICLOGGER_INFO (marpaESLIFOption.genericLoggerp, "-------------------------");
+        GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "ESLIF grammar at level %d:", grammari);
+        GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "-------------------------\n\n%s", grammarshows);
+      }
+    }
+  }
+
   marpaESLIFGrammarOption.bytep               = (void *) exceptions;
   marpaESLIFGrammarOption.bytel               = strlen(exceptions);
   marpaESLIFGrammarOption.encodings           = "UTF-8";
@@ -60,7 +70,7 @@ int main() {
     for (grammari = 0; grammari < ngrammari; grammari++) {
       if (marpaESLIFGrammar_grammarshowform_by_grammarb(marpaESLIFGrammarp, &grammarshows, grammari, NULL)) {
         GENERICLOGGER_INFO (marpaESLIFOption.genericLoggerp, "-------------------------");
-        GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "ESLIF grammar at level %d:", grammari);
+        GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "TEST grammar at level %d:", grammari);
         GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "-------------------------\n\n%s", grammarshows);
       }
     }
