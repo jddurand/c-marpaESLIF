@@ -5126,7 +5126,7 @@ static inline short _marpaESLIFGrammar_parseb(marpaESLIFGrammar_t *marpaESLIFGra
     if (marpaESLIFValueResultp != NULL) {
       *marpaESLIFValueResultp = marpaESLIFValueResult;
     } else {
-      /* Free it - IMHO this case never happen, but who knows */
+      /* Free it - This case happen when caller is not interested in the value. Happen with exception grammars. */
       free(marpaESLIFValueResult.u.p);
     }
   } else {
