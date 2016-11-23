@@ -26,8 +26,8 @@ typedef struct marpaESLIFString {
 } marpaESLIFString_t;
 
 typedef struct marpaESLIFGrammarOption {
-  char   *grammars;            /* Grammar */
-  size_t  grammarl;            /* Grammar length in bytes */
+  void   *bytep;               /* Input */
+  size_t  bytel;               /* Input length in byte unit */
   char   *encodings;           /* Input encoding. Default: NULL */
   size_t  encodingl;           /* Length of encoding itself. Default: 0 */
   char   *encodingOfEncodings; /* Encoding of encoding, in ASCII encoding. Default: NULL. */
@@ -40,11 +40,10 @@ typedef struct marpaESLIFRecognizerOption {
   marpaESLIFReader_t   marpaESLIFReaderCallbackp;   /* Reader */
   short                disableThresholdb;           /* Default: 0 */
   short                exhaustedb;                  /* Exhaustion event. Default: 0 */
-  short                rejectionb;                  /* Rejection event. Default: 0 */
   short                newlineb;                    /* Count line/column numbers. Default: 0 */
-  size_t               bufsizl;                     /* Minimum stream buffer size: Default: MARPAESLIF_BUFSIZ */
-  unsigned int         buftriggerperci;             /* Excess number of bytes, in percentage of bufsizl, where stream buffer size is reduced. Default: 50 */
-  unsigned int         bufaddperci;                 /* Policy of minimum of bytes for increase, in percentage of current allocated size, when stream buffer size need to augment. Default: 50 */
+  size_t               bufsizl;                     /* Minimum stream buffer size: Recommended: 0 (internally, a system default will apply) */
+  unsigned int         buftriggerperci;             /* Excess number of bytes, in percentage of bufsizl, where stream buffer size is reduced. Recommended: 50 */
+  unsigned int         bufaddperci;                 /* Policy of minimum of bytes for increase, in percentage of current allocated size, when stream buffer size need to augment. Recommended: 50 */
 } marpaESLIFRecognizerOption_t;
 
 typedef enum marpaESLIFEventType {

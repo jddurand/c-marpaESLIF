@@ -285,7 +285,8 @@ struct marpaESLIFRecognizer {
   char                        *inputs;         /* Current pointer in input - specific to every recognizer */
   size_t                       inputl;         /* Current remaining bytes - specific to every recognizer */
   short                        scanb;          /* Prevent resume before a call to scan */
-  short                        discardb;       /* discard mode */
+  short                        discardb;       /* Discard mode */
+  short                        exceptionb;     /* Exception mode */
   short                        haveLexemeb;    /* Remember if this recognizer have at least one lexeme */
   size_t                       linel;          /* Line number */
   size_t                       columnl;        /* Column number */
@@ -333,7 +334,6 @@ marpaESLIFRecognizerOption_t marpaESLIFRecognizerOption_default_template = {
   NULL,              /* marpaESLIFReaderCallbackp */
   0,                 /* disableThresholdb */
   0,                 /* exhaustedb */
-  0,                 /* rejectionb */
   0,                 /* newlineb */
   MARPAESLIF_BUFSIZ, /* bufsizl */
   50,                /* buftriggerperci */
