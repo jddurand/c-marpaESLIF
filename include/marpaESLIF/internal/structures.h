@@ -122,8 +122,7 @@ struct marpaESLIF_symbol {
   short                        startb;                 /* Start symbol ? */
   short                        discardb;               /* Discard symbol ? */
   short                        lhsb;                   /* Is an LHS somewhere in its grammar ? */
-  short                        topb;                   /* Is a top-level symbol in its grammar - implies lhsb ? */
-  short                        isDiscardTopb;          /* Is a top-level symbol in the :discard context ? */
+  short                        topb;                   /* Is a top-level symbol in its grammar - implies lhsb */
   int                          idi;                    /* Marpa ID */
   marpaESLIF_string_t         *descp;                  /* Symbol description */
   char                        *eventBefores;           /* Pause before */
