@@ -158,7 +158,7 @@ struct marpaESLIF_rule {
   marpaESLIF_symbol_t *lhsp;            /* LHS symbol */
   marpaESLIF_symbol_t *separatorp;      /* Eventual separator symbol */
   genericStack_t      *rhsStackp;       /* Stack of RHS symbols */
-  genericStack_t      *exceptionStackp; /* Stack of Exceptions symbols */
+  marpaESLIF_symbol_t *exceptionp;      /* Exception symbol */
   char                *actions;         /* Action */
   int                  ranki;
   short                nullRanksHighb;

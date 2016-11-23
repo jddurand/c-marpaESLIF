@@ -22,8 +22,6 @@ static inline void _marpaESLIF_bootstrap_priorities_freev(genericStack_t *altern
 static inline void _marpaESLIF_bootstrap_single_symbol_freev(marpaESLIF_bootstrap_single_symbol_t *singleSymbolp);
 static inline void _marpaESLIF_bootstrap_grammar_reference_freev(marpaESLIF_bootstrap_grammar_reference_t *grammarReferencep);
 static inline void _marpaESLIF_bootstrap_event_initialization_freev(marpaESLIF_bootstrap_event_initialization_t *eventInitializationp);
-static inline void _marpaESLIF_bootstrap_rhs_exception_freev(marpaESLIF_bootstrap_rhs_exception_t *rhsExceptionp);
-static inline void _marpaESLIF_bootstrap_rhs_exception_list_freev(genericStack_t *rhsExceptionStackp);
 
 static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_check_grammarp(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammar_t *marpaESLIFGrammarp, int leveli, marpaESLIF_bootstrap_utf_string_t *stringp);
 static inline marpaESLIF_symbol_t  *_marpaESLIF_bootstrap_check_meta_by_namep(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, char *asciinames, short createb);
@@ -54,7 +52,6 @@ static inline short _marpaESLIF_bootstrap_unpack_adverbListItemStackb(marpaESLIF
                                                                       );
 static inline short _marpaESLIF_bootstrap_G1_action_event_declarationb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb, marpaESLIF_bootstrap_event_declaration_type_t type);
 static inline short _marpaESLIF_bootstrap_G1_action_rhs_xxx_from_quoted_stringb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb, short primaryb);
-static inline short _marpaESLIF_bootstrap_G1_action_rhs_exception_23b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb, short characterClassb);
 static inline marpaESLIF_bootstrap_utf_string_t *_marpaESLIF_bootstrap_regex_to_stringb(marpaESLIF_t *marpaESLIFp, void *bytep, size_t bytel);
 static inline marpaESLIF_bootstrap_utf_string_t *_marpaESLIF_bootstrap_characterClass_to_stringb(marpaESLIF_t *marpaESLIFp, void *bytep, size_t bytel);
 
@@ -128,11 +125,6 @@ static        short _marpaESLIF_bootstrap_G1_action_predicted_event_declaration_
 static        short _marpaESLIF_bootstrap_G1_action_predicted_event_declaration_2b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short _marpaESLIF_bootstrap_G1_action_alternative_name_2b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short _marpaESLIF_bootstrap_G1_action_namingb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
-static        short _marpaESLIF_bootstrap_G1_action_rhs_exception_1b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
-static        short _marpaESLIF_bootstrap_G1_action_rhs_exception_2b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
-static        short _marpaESLIF_bootstrap_G1_action_rhs_exception_3b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
-static        short _marpaESLIF_bootstrap_G1_action_rhs_exception_listb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
-static        short _marpaESLIF_bootstrap_G1_action_parenthesized_rhs_exception_listb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short _marpaESLIF_bootstrap_G1_action_exception_statementb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 
 /*****************************************************************************/
@@ -309,44 +301,6 @@ static inline void _marpaESLIF_bootstrap_event_initialization_freev(marpaESLIF_b
       free(eventInitializationp->eventNames);
     }
     free(eventInitializationp);
-  }
-}
-
-/*****************************************************************************/
-static inline void _marpaESLIF_bootstrap_rhs_exception_freev(marpaESLIF_bootstrap_rhs_exception_t *rhsExceptionp)
-/*****************************************************************************/
-{
-  if (rhsExceptionp != NULL) {
-    switch (rhsExceptionp->type) {
-    case MARPAESLIF_BOOTSTRAP_RHS_EXCEPTION_TYPE_QUOTED_STRING:
-      _marpaESLIF_bootstrap_utf_string_freev(rhsExceptionp->u.quotedStringp);
-      break;
-    case MARPAESLIF_BOOTSTRAP_RHS_EXCEPTION_TYPE_CHARACTER_CLASS:
-      _marpaESLIF_bootstrap_utf_string_freev(rhsExceptionp->u.characterClassp);
-      break;
-    case MARPAESLIF_BOOTSTRAP_RHS_EXCEPTION_TYPE_REGULAR_EXPRESSION:
-      _marpaESLIF_bootstrap_utf_string_freev(rhsExceptionp->u.regularExpressionp);
-      break;
-    default:
-      break;
-    }
-    free(rhsExceptionp);
-  }
-}
-
-/*****************************************************************************/
-static inline void _marpaESLIF_bootstrap_rhs_exception_list_freev(genericStack_t *rhsExceptionStackp)
-/*****************************************************************************/
-{
-  int i;
-
-  if (rhsExceptionStackp != NULL) {
-    for (i = 0; i < GENERICSTACK_USED(rhsExceptionStackp); i++) {
-      if (GENERICSTACK_IS_PTR(rhsExceptionStackp, i)) {
-        _marpaESLIF_bootstrap_rhs_exception_freev((marpaESLIF_bootstrap_rhs_exception_t *) GENERICSTACK_GET_PTR(rhsExceptionStackp, i));
-      }
-    }
-    GENERICSTACK_FREE(rhsExceptionStackp);
   }
 }
 
@@ -1044,10 +998,6 @@ static void _marpaESLIF_bootstrap_freeDefaultActionv(void *userDatavp, int conte
     break;
   case MARPAESLIF_BOOTSTRAP_STACK_TYPE_ALTERNATIVE_NAME:
     free(p);
-  case MARPAESLIF_BOOTSTRAP_STACK_TYPE_RHS_EXCEPTION:
-    _marpaESLIF_bootstrap_rhs_exception_freev((marpaESLIF_bootstrap_rhs_exception_t *) p);
-  case MARPAESLIF_BOOTSTRAP_STACK_TYPE_RHS_EXCEPTION_LIST:
-    _marpaESLIF_bootstrap_rhs_exception_list_freev((genericStack_t *) p);
   default:
     break;
   }
@@ -1147,11 +1097,6 @@ static marpaESLIFValueRuleCallback_t _marpaESLIF_bootstrap_ruleActionResolver(vo
   else if (strcmp(actions, "G1_action_predicted_event_declaration_2")    == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_predicted_event_declaration_2b;    }
   else if (strcmp(actions, "G1_action_alternative_name_2")               == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_alternative_name_2b;               }
   else if (strcmp(actions, "G1_action_naming")                           == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_namingb;                           }
-  else if (strcmp(actions, "G1_action_rhs_exception_1")                  == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_rhs_exception_1b;                  }
-  else if (strcmp(actions, "G1_action_rhs_exception_2")                  == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_rhs_exception_2b;                  }
-  else if (strcmp(actions, "G1_action_rhs_exception_3")                  == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_rhs_exception_3b;                  }
-  else if (strcmp(actions, "G1_action_rhs_exception_list")               == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_rhs_exception_listb;               }
-  else if (strcmp(actions, "G1_action_parenthesized_rhs_exception_list") == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_parenthesized_rhs_exception_listb; }
   else if (strcmp(actions, "G1_action_exception_statement")              == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_exception_statementb;              }
   else
   {
@@ -2198,8 +2143,7 @@ static inline short _marpaESLIF_bootstrap_G1_action_priority_loosen_ruleb(marpaE
                                 lhsp->idi,
                                 1, /* nrhsl */
                                 &(prioritizedLhsp->idi), /* rhsip */
-                                0, /* nexceptionl */
-                                NULL, /* exceptionip */
+                                -1, /* exceptioni */
                                 0, /* ranki */
                                 0, /* nullRanksHighb */
                                 0, /* sequenceb */
@@ -2282,8 +2226,7 @@ static inline short _marpaESLIF_bootstrap_G1_action_priority_loosen_ruleb(marpaE
                                   prioritizedLhsp->idi,
                                   1, /* nrhsl */
                                   &(nextPrioritizedLhsp->idi), /* rhsip */
-                                  0, /* nexceptionl */
-                                  NULL, /* exceptionip */
+                                  -1, /* exceptioni */
                                   0, /* ranki */
                                   0, /* nullRanksHighb */
                                   0, /* sequenceb */
@@ -2661,8 +2604,7 @@ static inline short _marpaESLIF_bootstrap_G1_action_priority_flat_ruleb(marpaESL
                                     (alternativep->forcedLhsp != NULL) ? alternativep->forcedLhsp->idi : lhsp->idi,
                                     (size_t) nrhsi,
                                     rhsip,
-                                    0, /* nexceptionl */
-                                    NULL, /* exceptionip */
+                                    -1, /* exceptioni */
                                     ranki,
                                     nullRanksHighb,
                                     0, /* sequenceb */
@@ -3308,8 +3250,7 @@ static short _marpaESLIF_bootstrap_G1_action_quantified_ruleb(void *userDatavp, 
                                 lhsp->idi,
                                 1, /* nrhsl */
                                 &(rhsp->idi), /* rhsip */
-                                0, /* nexceptionl */
-                                NULL, /* exceptionip */
+                                -1, /* exceptioni */
                                 ranki,
                                 nullRanksHighb,
                                 1, /* sequenceb */
@@ -3549,8 +3490,7 @@ static short _marpaESLIF_bootstrap_G1_action_empty_ruleb(void *userDatavp, marpa
                                 lhsp->idi,
                                 0, /* nrhsl */
                                 NULL, /* rhsip */
-                                0, /* nexceptionl */
-                                NULL, /* exceptionip */
+                                -1, /* exceptioni */
                                 ranki,
                                 nullRanksHighb,
                                 0, /* sequenceb */
@@ -4333,8 +4273,7 @@ static short _marpaESLIF_bootstrap_G1_action_discard_ruleb(void *userDatavp, mar
                                 discardp->idi,
                                 1, /* nrhsl */
                                 &(rhsp->idi), /* rhsip */
-                                0, /* nexceptionl */
-                                NULL, /* exceptionip */
+                                -1, /* exceptioni */
                                 0,
                                 0,
                                 0, /* sequenceb */
@@ -4676,38 +4615,11 @@ static short _marpaESLIF_bootstrap_G1_action_namingb(void *userDatavp, marpaESLI
 }
 
 /*****************************************************************************/
-static short _marpaESLIF_bootstrap_G1_action_rhs_exception_1b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
-/*****************************************************************************/
-{
-  /* <rhs exception> ::= <quoted string> */
-  return _marpaESLIF_bootstrap_G1_action_rhs_xxx_from_quoted_stringb(userDatavp, marpaESLIFValuep, arg0i, argni, resulti, nullableb, 0 /* primaryb */);
-}
-
-/*****************************************************************************/
-static short _marpaESLIF_bootstrap_G1_action_rhs_exception_2b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
-/*****************************************************************************/
-{
-  /* <rhs exception> ::= <character class> */
-  return _marpaESLIF_bootstrap_G1_action_rhs_exception_23b(userDatavp, marpaESLIFValuep, arg0i, argni, resulti, nullableb, 1 /* characterClassb */);
-}
-
-/*****************************************************************************/
-static short _marpaESLIF_bootstrap_G1_action_rhs_exception_3b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
-/*****************************************************************************/
-{
-  /* <rhs exception> ::= <regular expression> */
-  return _marpaESLIF_bootstrap_G1_action_rhs_exception_23b(userDatavp, marpaESLIFValuep, arg0i, argni, resulti, nullableb, 0 /* characterClassb */);
-}
-
-/*****************************************************************************/
 static inline short _marpaESLIF_bootstrap_G1_action_rhs_xxx_from_quoted_stringb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb, short primaryb)
 /*****************************************************************************/
 {
   /* <rhs primary> ::= <quoted string> */
-  /* OR */
-  /* <rhs exception> ::= <quoted string> */
   marpaESLIF_bootstrap_rhs_primary_t   *rhsPrimaryp = NULL;
-  marpaESLIF_bootstrap_rhs_exception_t *rhsExceptionp = NULL;
   marpaESLIF_t                         *marpaESLIFp = marpaESLIFValue_eslifp(marpaESLIFValuep);
   marpaESLIFRecognizer_t               *marpaESLIFRecognizerp = NULL; /* Fake recognizer to use the internal regex */
   char                                 *modifiers             = NULL;
@@ -4791,31 +4703,9 @@ static inline short _marpaESLIF_bootstrap_G1_action_rhs_xxx_from_quoted_stringb(
     if (marpaESLIFValueResult.sizel > 0) {
       rhsPrimaryp->u.quotedStringp->bytel -= (marpaESLIFValueResult.sizel + 1);  /* ":xxxx" */
     }
-  } else {
-    /* Make that an rhs exception structure */
-    rhsExceptionp = (marpaESLIF_bootstrap_rhs_exception_t *) malloc(sizeof(marpaESLIF_bootstrap_rhs_exception_t));
-    if (rhsExceptionp == NULL) {
-      MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
-      goto err;
-    }
-    rhsExceptionp->type          = MARPAESLIF_BOOTSTRAP_RHS_EXCEPTION_TYPE_NA;
-    rhsExceptionp->u.quotedStringp = (marpaESLIF_bootstrap_utf_string_t *) malloc(sizeof(marpaESLIF_bootstrap_utf_string_t));
-    if (rhsExceptionp->u.quotedStringp == NULL) {
-      MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
-      goto err;
-    }
-    rhsExceptionp->type                     = MARPAESLIF_BOOTSTRAP_RHS_EXCEPTION_TYPE_QUOTED_STRING;
-    rhsExceptionp->u.quotedStringp->modifiers = modifiers;
-    rhsExceptionp->u.quotedStringp->bytep     = bytep;
-    rhsExceptionp->u.quotedStringp->bytel     = bytel;
-    modifiers = NULL; /* modifiers is in rhsPrimaryp */
-    bytep = NULL; /* bytep is in rhsPrimaryp */
-    if (marpaESLIFValueResult.sizel > 0) {
-      rhsExceptionp->u.quotedStringp->bytel -= (marpaESLIFValueResult.sizel + 1);  /* ":xxxx" */
-    }
   }
 
-  if (! marpaESLIFValue_stack_set_ptrb(marpaESLIFValuep, resulti, primaryb ? MARPAESLIF_BOOTSTRAP_STACK_TYPE_RHS_PRIMARY : MARPAESLIF_BOOTSTRAP_STACK_TYPE_RHS_EXCEPTION, primaryb ? (void *)rhsPrimaryp : (void *)rhsExceptionp, 0 /* shallowb */)) {
+  if (! marpaESLIFValue_stack_set_ptrb(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_RHS_PRIMARY, rhsPrimaryp, 0 /* shallowb */)) {
     goto err;
   }
 
@@ -4824,7 +4714,6 @@ static inline short _marpaESLIF_bootstrap_G1_action_rhs_xxx_from_quoted_stringb(
 
  err:
   _marpaESLIF_bootstrap_rhs_primary_freev(rhsPrimaryp);
-  _marpaESLIF_bootstrap_rhs_exception_freev(rhsExceptionp);
   rcb = 0;
 
  done:
@@ -4839,178 +4728,22 @@ static inline short _marpaESLIF_bootstrap_G1_action_rhs_xxx_from_quoted_stringb(
 }
 
 /*****************************************************************************/
-static inline short _marpaESLIF_bootstrap_G1_action_rhs_exception_23b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb, short characterClassb)
-/*****************************************************************************/
-{
-  marpaESLIF_bootstrap_rhs_exception_t *rhsExceptionp = NULL;
-  marpaESLIF_t                         *marpaESLIFp = marpaESLIFValue_eslifp(marpaESLIFValuep);
-  void                                 *bytep = NULL;
-  size_t                                bytel;
-  short                                 rcb;
-
-  /* Cannot be nullable */
-  if (nullableb) {
-    MARPAESLIF_ERROR(marpaESLIFp, "Nullable mode is not supported");
-    goto err;
-  }
-
-  /* action is the result of ::shift, i.e. a lexeme in any case  */
-  if (! marpaESLIFValue_stack_getAndForget_arrayb(marpaESLIFValuep, arg0i, NULL /* contextip */, &bytep, &bytel, NULL /* shallowbp */)) {
-    goto err;
-  }
-  /* It is a non-sense to not have valid information */
-  if ((bytep == NULL) || (bytel <= 0)) {
-    MARPAESLIF_ERRORF(marpaESLIFp, "marpaESLIFValue_stack_get_arrayb at indice %d returned {%p,%ld}", arg0i, bytep, (unsigned long) bytel);
-    goto err;
-  }
-
-  rhsExceptionp = (marpaESLIF_bootstrap_rhs_exception_t *) malloc(sizeof(marpaESLIF_bootstrap_rhs_exception_t));
-  if (rhsExceptionp == NULL) {
-    MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
-    goto err;
-  }
-  rhsExceptionp->type          = MARPAESLIF_BOOTSTRAP_RHS_EXCEPTION_TYPE_NA;
-  if (characterClassb) {
-    rhsExceptionp->u.characterClassp = _marpaESLIF_bootstrap_characterClass_to_stringb(marpaESLIFp, bytep, bytel);
-    if (rhsExceptionp->u.characterClassp == NULL) {
-      goto err;
-    }
-    rhsExceptionp->type                     = MARPAESLIF_BOOTSTRAP_RHS_EXCEPTION_TYPE_CHARACTER_CLASS;
-    bytep = NULL; /* Take care _marpaESLIF_bootstrap_characterClass_to_stringb() is not duplicating bytep but just shallow it -; */
-  } else {
-    rhsExceptionp->u.regularExpressionp = _marpaESLIF_bootstrap_regex_to_stringb(marpaESLIFp, bytep, bytel);
-    if (rhsExceptionp->u.regularExpressionp == NULL) {
-      goto err;
-    }
-    rhsExceptionp->type                     = MARPAESLIF_BOOTSTRAP_RHS_EXCEPTION_TYPE_REGULAR_EXPRESSION;
-    /* bytep = NULL; */ /* Take care _marpaESLIF_bootstrap_characterClass_to_stringb() is duplicating bytep -; */
-  }
-
-  if (! marpaESLIFValue_stack_set_ptrb(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_RHS_EXCEPTION, rhsExceptionp, 0 /* shallowb */)) {
-    goto err;
-  }
-
-  rcb = 1;
-  goto done;
-
- err:
-  _marpaESLIF_bootstrap_rhs_exception_freev(rhsExceptionp);
-  rcb = 0;
-
- done:
-  if (bytep != NULL) {
-    free(bytep);
-  }
-  return rcb;
-}
-
-/*****************************************************************************/
-static short _marpaESLIF_bootstrap_G1_action_rhs_exception_listb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
-/*****************************************************************************/
-{
-  /* <rhs exception list> ::= <rhs exception>+ */
-  marpaESLIF_t                         *marpaESLIFp        = marpaESLIFValue_eslifp(marpaESLIFValuep);
-  genericStack_t                       *rhsExceptionStackp = NULL;
-  marpaESLIF_bootstrap_rhs_exception_t *rhsExceptionp      = NULL;
-  int                                   i;
-  short                                 rcb;
-
-  /* Cannot be nullable */
-  if (nullableb) {
-    MARPAESLIF_ERROR(marpaESLIFp, "Nullable mode is not supported");
-    goto err;
-  }
-
-  GENERICSTACK_NEW(rhsExceptionStackp);
-  if (GENERICSTACK_ERROR(rhsExceptionStackp)) {
-    MARPAESLIF_ERRORF(marpaESLIFp, "rhsExceptionStackp initialization failure, %s", strerror(errno));
-    goto err;
-  }
-
-  for (i = arg0i; i <= argni; i++) {
-    if (! marpaESLIFValue_stack_getAndForget_ptrb(marpaESLIFValuep, i, NULL /* contextip */, (void **) &rhsExceptionp, NULL /* shallowbp */)) {
-      return 0;
-    }
-    if (rhsExceptionp == NULL) {
-      MARPAESLIF_ERROR(marpaESLIFp, "An RHS exception is not set");
-      goto err;
-    }
-
-    GENERICSTACK_PUSH_PTR(rhsExceptionStackp, rhsExceptionp);
-    if (GENERICSTACK_ERROR(rhsExceptionStackp)) {
-      MARPAESLIF_ERRORF(marpaESLIFp, "rhsExceptionStackp push failure, %s", strerror(errno));
-      goto err;
-    }
-    rhsExceptionp = NULL; /* rhsExceptionp is now in rhsExceptionStackp */
-  }
-  if (! marpaESLIFValue_stack_set_ptrb(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_RHS_EXCEPTION_LIST, rhsExceptionStackp, 0 /* shallowb */)) {
-    goto err;
-  }
-
-  rcb = 1;
-  goto done;
-
- err:
-  _marpaESLIF_bootstrap_rhs_exception_freev(rhsExceptionp);
-  _marpaESLIF_bootstrap_rhs_exception_list_freev(rhsExceptionStackp);
-  rcb = 0;
-
- done:
-  return rcb;
-}
-
-/*****************************************************************************/
-static short _marpaESLIF_bootstrap_G1_action_parenthesized_rhs_exception_listb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
-/*****************************************************************************/
-{
-  /* <parenthesized rhs exception list> ::= '(' <rhs exception list> ')' */
-  /* Cannot be nullable */
-  marpaESLIF_t   *marpaESLIFp        = marpaESLIFValue_eslifp(marpaESLIFValuep);
-  genericStack_t *rhsExceptionStackp = NULL;
-  short           rcb;
-
-  if (nullableb) {
-    MARPAESLIF_ERROR(marpaESLIFp, "Nullable mode is not supported");
-    goto err;
-  }
-
-  if (! marpaESLIFValue_stack_getAndForget_ptrb(marpaESLIFValuep, arg0i+1, NULL /* contextip */, (void **) &rhsExceptionStackp, NULL /* shallowbp */)) {
-    goto err;
-  }
-
-  if (! marpaESLIFValue_stack_set_ptrb(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_RHS_EXCEPTION_LIST, rhsExceptionStackp, 0 /* shallowbp */)) {
-    goto err;
-  }
-
-  rcb = 1;
-  goto done;
-
- err:
-  _marpaESLIF_bootstrap_rhs_exception_list_freev(rhsExceptionStackp);
-  rcb = 0;
-
- done:
-  return rcb;
-}
-
-/*****************************************************************************/
 static short _marpaESLIF_bootstrap_G1_action_exception_statementb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
 /*****************************************************************************/
 {
-  /* <exception statement> ::= lhs <op declare> <rhs primary> '-' <parenthesized rhs exception list> <adverb list> */
+  /* <exception statement> ::= lhs <op declare> <rhs primary> '-' <rhs primary> <adverb list> */
   marpaESLIFGrammar_t                  *marpaESLIFGrammarp = (marpaESLIFGrammar_t *) userDatavp;
   marpaESLIF_t                         *marpaESLIFp        = marpaESLIFValue_eslifp(marpaESLIFValuep);
   marpaESLIF_rule_t                    *rulep = NULL;
-  genericStack_t                       *rhsExceptionStackp = NULL;
   genericStack_t                       *adverbListItemStackp = NULL;
-  marpaESLIF_bootstrap_rhs_exception_t *rhsExceptionp;
   short                                 undefb;
   char                                  *symbolNames;
   int                                   leveli;
   marpaESLIF_bootstrap_rhs_primary_t   *rhsPrimaryp;
+  marpaESLIF_bootstrap_rhs_primary_t   *rhsPrimaryExceptionp;
   marpaESLIF_symbol_t                  *lhsp;
   marpaESLIF_symbol_t                  *rhsp;
-  marpaESLIF_symbol_t                  *exceptionp;
+  marpaESLIF_symbol_t                  *rhsExceptionp;
   marpaESLIF_grammar_t                 *grammarp;
   char                                 *actions = NULL;
   int                                   ranki = 0;
@@ -5018,8 +4751,6 @@ static short _marpaESLIF_bootstrap_G1_action_exception_statementb(void *userData
   marpaESLIF_bootstrap_utf_string_t    *namingp;
   int                                   i;
   short                                 rcb;
-  size_t                                nexceptionl;
-  int                                  *exceptionip = NULL;
   
   if (! marpaESLIFValue_stack_get_ptrb(marpaESLIFValuep, arg0i, NULL /* contextip */, (void **) &symbolNames, NULL /* shallowbp */)) {
     goto err;
@@ -5030,7 +4761,7 @@ static short _marpaESLIF_bootstrap_G1_action_exception_statementb(void *userData
   if (! marpaESLIFValue_stack_getAndForget_ptrb(marpaESLIFValuep, arg0i+2, NULL /* contextip */, (void **) &rhsPrimaryp, NULL /* shallowbp */)) {
     goto err;
   }
-  if (! marpaESLIFValue_stack_getAndForget_ptrb(marpaESLIFValuep, arg0i+4, NULL /* contextip */, (void **) &rhsExceptionStackp, NULL /* shallowbp */)) {
+  if (! marpaESLIFValue_stack_getAndForget_ptrb(marpaESLIFValuep, arg0i+4, NULL /* contextip */, (void **) &rhsPrimaryExceptionp, NULL /* shallowbp */)) {
     goto err;
   }
   /* adverb list may be undef */
@@ -5066,51 +4797,10 @@ static short _marpaESLIF_bootstrap_G1_action_exception_statementb(void *userData
     goto err;
   }
 
-  /* Check the exceptions */
-  nexceptionl = GENERICSTACK_USED(rhsExceptionStackp);
-  if (nexceptionl <= 0) {
-    MARPAESLIF_ERROR(marpaESLIFp, "rhsExceptionStackp is empty");
+  /* Check the rhs primary exception */
+  rhsExceptionp = _marpaESLIF_bootstrap_check_rhsPrimaryp(marpaESLIFp, marpaESLIFGrammarp, grammarp, rhsPrimaryExceptionp, 1 /* createb */);
+  if (rhsExceptionp == NULL) {
     goto err;
-  }
-  exceptionip  = (int *) malloc(sizeof(int) * nexceptionl);
-  if (exceptionip == NULL) {
-    MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
-    goto err;
-  }
-  for (i = 0; i < GENERICSTACK_USED(rhsExceptionStackp); i++) {
-    if (! GENERICSTACK_IS_PTR(rhsExceptionStackp, i)) {
-      MARPAESLIF_ERRORF(marpaESLIFp, "rhsExceptionStackp at indice %d is not PTR", i);
-      goto err;
-    }
-
-    rhsExceptionp = (marpaESLIF_bootstrap_rhs_exception_t *) GENERICSTACK_GET_PTR(rhsExceptionStackp, i);
-    switch (rhsExceptionp->type) {
-    case MARPAESLIF_BOOTSTRAP_RHS_EXCEPTION_TYPE_QUOTED_STRING:
-      exceptionp = _marpaESLIF_bootstrap_check_quotedStringp(marpaESLIFp, grammarp, rhsExceptionp->u.quotedStringp, 1 /* createb */);
-      if (exceptionp == NULL) {
-        goto err;
-      }
-      MARPAESLIF_DEBUGF(marpaESLIFValuep->marpaESLIFp, "... Exception No %d type is STRING: %s", i, exceptionp->descp->asciis);
-      break;
-    case MARPAESLIF_BOOTSTRAP_RHS_EXCEPTION_TYPE_CHARACTER_CLASS:
-      exceptionp = _marpaESLIF_bootstrap_check_regexp(marpaESLIFp, grammarp, rhsExceptionp->u.characterClassp, 1 /* createb */);
-      if (exceptionp == NULL) {
-        goto err;
-      }
-      MARPAESLIF_DEBUGF(marpaESLIFValuep->marpaESLIFp, "... Exception No %d type is CHARACTER CLASS: %s", i, exceptionp->descp->asciis);
-      break;
-    case MARPAESLIF_BOOTSTRAP_RHS_EXCEPTION_TYPE_REGULAR_EXPRESSION:
-      exceptionp = _marpaESLIF_bootstrap_check_regexp(marpaESLIFp, grammarp, rhsExceptionp->u.regularExpressionp, 1 /* createb */);
-      if (exceptionp == NULL) {
-        goto err;
-      }
-      MARPAESLIF_DEBUGF(marpaESLIFValuep->marpaESLIFp, "... Exception No %d type is REGEX: %s", i, exceptionp->descp->asciis);
-      break;
-    default:
-      MARPAESLIF_DEBUGF(marpaESLIFValuep->marpaESLIFp, "Unsupported rhs exception type %d", rhsExceptionp->type);
-      goto err;
-    }
-    exceptionip[i] = exceptionp->idi;
   }
 
   /* Check the adverb list */
@@ -5136,7 +4826,7 @@ static short _marpaESLIF_bootstrap_G1_action_exception_statementb(void *userData
     goto err;
   }
 
-  MARPAESLIF_DEBUGF(marpaESLIFValuep->marpaESLIFp, "Creating exception rule %s ::= %s", lhsp->descp->asciis, rhsp->descp->asciis);
+  MARPAESLIF_DEBUGF(marpaESLIFValuep->marpaESLIFp, "Creating exception rule %s ::= %s - %s", lhsp->descp->asciis, rhsp->descp->asciis, rhsExceptionp->descp->asciis);
   /* If naming is not NULL, it is guaranteed to be an UTF-8 thingy */
   rulep = _marpaESLIF_rule_newp(marpaESLIFp,
                                 grammarp,
@@ -5146,8 +4836,7 @@ static short _marpaESLIF_bootstrap_G1_action_exception_statementb(void *userData
                                 lhsp->idi,
                                 1, /* nrhsl */
                                 &(rhsp->idi), /* rhsip */
-                                nexceptionl,
-                                exceptionip,
+                                rhsExceptionp->idi,
                                 ranki,
                                 0, /*nullRanksHighb */
                                 0, /* sequenceb */
@@ -5173,11 +4862,7 @@ static short _marpaESLIF_bootstrap_G1_action_exception_statementb(void *userData
 
  done:
   _marpaESLIF_bootstrap_rhs_primary_freev(rhsPrimaryp);
-  _marpaESLIF_bootstrap_rhs_exception_list_freev(rhsExceptionStackp);
   _marpaESLIF_bootstrap_adverb_list_items_freev(adverbListItemStackp);
-  if (exceptionip != NULL) {
-    free(exceptionip);
-  }
   return rcb;
 }
 
