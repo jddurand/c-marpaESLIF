@@ -1,3 +1,12 @@
+#!env perl
+use strict;
+use diagnostics;
+use Marpa::R2;
+
+Marpa::R2::Scanless::G->new({ source => \do { local $/; <DATA>; } });
+
+__DATA__
+
 # Copyright 2015 Jeffrey Kegler
 # This file is part of Marpa::R2.  Marpa::R2 is free software: you can
 # redistribute it and/or modify it under the terms of the GNU Lesser
@@ -88,6 +97,15 @@ statement                        ::= <start rule>
                                  | <exception statement>
                                  | <autorank statement>
 
+bodystatements                 ::= bodystatement+
+bodystatement                  ::= <empty rule>
+                                 | <null statement>
+                                 | <body statement group>
+                                 | <priority rule>
+                                 | <quantified rule>
+                                 | <exception statement>
+<body statement group>         ::= '{' bodystatements '}'
+
 <start rule>                   ::= ':start' <op declare> symbol
 <desc rule>                    ::= ':desc' <op declare> <quoted string>
 <empty rule>                   ::= lhs <op declare> <adverb list>
@@ -108,7 +126,7 @@ statement                        ::= <start rule>
                                  | 'event' <event initialization> <op declare> 'predicted' <symbol name>
 <inaccessible statement>       ::= 'inaccessible' 'is' <inaccessible treatment> 'by' 'default'
 <inaccessible treatment>       ::= 'warn' | 'ok' | 'fatal'
-<exception statement>          ::= lhs <op declare> <rhs primary> '-' <parenthesized rhs exception list> <adverb list>
+<exception statement>          ::= bodystatement '-' '(' bodystatements ')'
 <autorank statement>           ::= 'autorank' 'is' <on or of> 'by' 'default'
 
 <op declare>                   ::= <op declare top grammar>
@@ -140,7 +158,7 @@ alternative                    ::= rhs <adverb list>
 
 action                         ::= 'action' '=>' <action name>
 symbolaction                   ::= 'symbol-action' '=>' <action name>
-freeaction                     ::= 'free-action' =>' <free name>
+freeaction                     ::= 'free-action' '=>' <free name>
 <left association>             ::= 'assoc' '=>' 'left'
 <right association>            ::= 'assoc' '=>' 'right'
 <group association>            ::= 'assoc' '=>' 'group'
