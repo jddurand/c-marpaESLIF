@@ -1188,7 +1188,7 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
   marpaESLIF_symbol_t   *lhsp;
   marpaESLIF_symbol_t   *startp;
   marpaESLIF_symbol_t   *discardp;
-  marpaESLIF_symbol_t   *rhsExceptionp;
+  marpaESLIF_symbol_t   *exceptionp;
   short                  rcb;
   int                    rhsi;
   size_t                 asciishowl;
@@ -1430,6 +1430,47 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
         }
       }
       symbolp->lhsb = lhsb;
+    }
+  }
+
+  for (grammari = 0; grammari < GENERICSTACK_USED(grammarStackp); grammari++) {
+    if (! GENERICSTACK_IS_PTR(grammarStackp, grammari)) {
+      /* Sparse item in grammarStackp -; */
+      continue;
+    }
+    grammarp = (marpaESLIF_grammar_t *) GENERICSTACK_GET_PTR(grammarStackp, grammari);
+    ruleStackp = grammarp->ruleStackp;
+    /* exception check */
+    for (rulei = 0; rulei < GENERICSTACK_USED(ruleStackp); rulei++) {
+      if (! GENERICSTACK_IS_PTR(ruleStackp, rulei)) {
+        /* Should never happen, but who knows */
+        continue;
+      }
+      rulep = (marpaESLIF_rule_t *) GENERICSTACK_GET_PTR(ruleStackp, rulei);
+      exceptionp = rulep->exceptionp;
+      if (exceptionp == NULL) {
+        continue;
+      }
+      /* We can predict if precomputing will fail by checking that exceptionp is an LHS */
+      if (! exceptionp->lhsb) {
+        MARPAESLIF_ERRORF(marpaESLIFp, "At grammar level %d (%s), for exception symbol %d <%s> and rule %d: exception symbol must be an LHS", grammari, grammarp->descp->asciis, exceptionp->idi, exceptionp->descp->asciis, rulep->idi);
+        goto err;
+      }
+      MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Precomputing grammar level %d (%s) at exception symbol %d <%s> for rule %d", grammari, grammarp->descp->asciis, exceptionp->idi, exceptionp->descp->asciis, rulep->idi);
+      marpaESLIF_cloneContext.grammarp = grammarp;
+      /* Clone for the discard mode at grammar level */
+      marpaWrapperGrammarCloneOption.symbolOptionSetterp = _marpaESLIFGrammar_symbolOptionSetterNoEvent;
+      marpaWrapperGrammarClonep = marpaWrapperGrammar_clonep(grammarp->marpaWrapperGrammarStartp, &marpaWrapperGrammarCloneOption);
+      if (marpaWrapperGrammarClonep == NULL) {
+        MARPAESLIF_ERRORF(marpaESLIFp, "Precomputing grammar level %d (%s) at exception symbol %d <%s> for rule %d: cloning failure", grammari, grammarp->descp->asciis, exceptionp->idi, exceptionp->descp->asciis, rulep->idi);
+        goto err;
+      }
+      if (! marpaWrapperGrammar_precompute_startb(marpaWrapperGrammarClonep, exceptionp->idi)) {
+        MARPAESLIF_ERRORF(marpaESLIFp, "Precomputing grammar level %d (%s) at exception symbol %d <%s> for rule %d: precompute failure", grammari, grammarp->descp->asciis, exceptionp->idi, exceptionp->descp->asciis, rulep->idi);
+        goto err;
+      }
+      rulep->marpaWrapperGrammarExceptionp = marpaWrapperGrammarClonep;
+      marpaWrapperGrammarClonep = NULL;
     }
   }
 
@@ -2192,22 +2233,23 @@ static inline marpaESLIF_rule_t *_marpaESLIF_rule_newp(marpaESLIF_t *marpaESLIFp
     goto err;
   }
 
-  rulep->idi             = -1;
-  rulep->descp           = NULL;
-  rulep->descautob       = 0;
-  rulep->asciishows      = NULL; /* Filled by grammar validation */
-  rulep->lhsp            = NULL;
-  rulep->separatorp      = NULL;
-  rulep->rhsStackp       = NULL;
-  rulep->exceptionp      = NULL;
-  rulep->actions         = NULL;
-  rulep->ranki           = ranki;
-  rulep->nullRanksHighb  = nullRanksHighb;
-  rulep->sequenceb       = sequenceb;
-  rulep->properb         = properb;
-  rulep->minimumi        = minimumi;
-  rulep->passthroughb    = passthroughb;
-  rulep->propertyBitSet  = 0; /* Filled by grammar validation */
+  rulep->idi                           = -1;
+  rulep->descp                         = NULL;
+  rulep->descautob                     = 0;
+  rulep->asciishows                    = NULL; /* Filled by grammar validation */
+  rulep->lhsp                          = NULL;
+  rulep->separatorp                    = NULL;
+  rulep->rhsStackp                     = NULL;
+  rulep->exceptionp                    = NULL;
+  rulep->marpaWrapperGrammarExceptionp = NULL;
+  rulep->actions                       = NULL;
+  rulep->ranki                         = ranki;
+  rulep->nullRanksHighb                = nullRanksHighb;
+  rulep->sequenceb                     = sequenceb;
+  rulep->properb                       = properb;
+  rulep->minimumi                      = minimumi;
+  rulep->passthroughb                  = passthroughb;
+  rulep->propertyBitSet                = 0; /* Filled by grammar validation */
 
   /* Look to the symbol itself, and remember it is an LHS - this is used when validating the grammar */
   for (symboli = 0; symboli < GENERICSTACK_USED(symbolStackp); symboli++) {
@@ -2359,6 +2401,9 @@ static inline void _marpaESLIF_rule_freev(marpaESLIF_rule_t *rulep)
     _marpaESLIF_symbolStack_freev(rulep->rhsStackp);
     _marpaESLIF_symbol_freev(marpaESLIFp, exceptionp);
     */
+    if (rulep->marpaWrapperGrammarExceptionp != NULL) {
+      marpaWrapperGrammar_freev(rulep->marpaWrapperGrammarExceptionp);
+    }			       
     GENERICSTACK_FREE(rulep->rhsStackp);
     free(rulep);
   }

@@ -4862,6 +4862,7 @@ static short _marpaESLIF_bootstrap_G1_action_exception_statementb(void *userData
 
  done:
   _marpaESLIF_bootstrap_rhs_primary_freev(rhsPrimaryp);
+  _marpaESLIF_bootstrap_rhs_primary_freev(rhsPrimaryExceptionp);
   _marpaESLIF_bootstrap_adverb_list_items_freev(adverbListItemStackp);
   return rcb;
 }
