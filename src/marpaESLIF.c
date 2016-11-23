@@ -2448,7 +2448,6 @@ static inline marpaESLIF_symbol_t *_marpaESLIF_symbol_newp(marpaESLIF_t *marpaES
   symbolp->discardb               = 0;
   symbolp->lhsb                   = 0;
   symbolp->topb                   = 0; /* Revisited by grammar validation */
-  symbolp->isDiscardTopb          = 0; /* Ditto */
   symbolp->idi                    = -1;
   symbolp->descp                  = NULL;
   symbolp->eventBefores           = NULL;
@@ -6264,7 +6263,7 @@ static char *_marpaESLIFGrammar_symbolDescriptionCallback(void *userDatavp, int 
   /* A "discard" event is possible only for symbols that at "top-level" symbols in the current grammar */
   /* AND for which there is a ":discard ~ SYMBOL event => EVENTNAME setting */
   /* This will look like an internal event that the recognizer will catchup to create pause events on discard */
-  if (symbolp->isDiscardTopb && symbolp->discardEvents) {
+  if (symbolp->discardEvents) {
     marpaWrapperGrammarSymbolOptionp->eventSeti &= MARPAWRAPPERGRAMMAR_EVENTTYPE_COMPLETION;
     MARPAESLIF_TRACEF(marpaESLIF_cloneContextp->marpaESLIFp, funcs, "Setting discard event set for symbol %d <%s> at grammar level %d (%s) on completion", symbolp->idi, symbolp->descp->asciis, grammarp->leveli, grammarp->descp->asciis);
   } else {
