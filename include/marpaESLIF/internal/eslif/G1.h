@@ -747,7 +747,7 @@ bootstrap_grammar_rule_t bootstrap_grammar_G1_rules[] = {
   /*
     lhsi                                      descs                                           type                          nrhsl  { rhsi }                                       }  minimumi           separatori  properb
   */
-  { G1_META_STATEMENTS,                       G1_RULE_STATEMENTS,                             MARPAESLIF_RULE_TYPE_SEQUENCE,    1, { G1_META_STATEMENT                            },  0,                        -1, -1 , G1_ACTION_STATEMENTS },
+  { G1_META_STATEMENTS,                       G1_RULE_STATEMENTS,                             MARPAESLIF_RULE_TYPE_SEQUENCE,    1, { G1_META_STATEMENT                            },  0,                        -1,  0 , G1_ACTION_STATEMENTS   },
   { G1_META_STATEMENT,                        G1_RULE_STATEMENT_01,                           MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_START_RULE                           }, -1,                        -1, -1 , G1_ACTION_STATEMENT_01 },
   { G1_META_STATEMENT,                        G1_RULE_STATEMENT_02,                           MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_DESC_RULE                            }, -1,                        -1, -1 , G1_ACTION_STATEMENT_02 },
   { G1_META_STATEMENT,                        G1_RULE_STATEMENT_03,                           MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_EMPTY_RULE                           }, -1,                        -1, -1 , G1_ACTION_STATEMENT_03 },
@@ -889,7 +889,7 @@ bootstrap_grammar_rule_t bootstrap_grammar_G1_rules[] = {
   { G1_META_ALTERNATIVE,                      G1_RULE_ALTERNATIVE,                            MARPAESLIF_RULE_TYPE_ALTERNATIVE, 2, { G1_META_RHS,
                                                                                                                                      G1_META_ADVERB_LIST                          }, -1,                        -1, -1 , G1_ACTION_ALTERNATIVE },
   { G1_META_ADVERB_LIST,                      G1_RULE_ADVERB_LIST,                            MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_ADVERB_LIST_ITEMS                    }, -1,                        -1, -1 , G1_ACTION_ADVERB_LIST },
-  { G1_META_ADVERB_LIST_ITEMS,                G1_RULE_ADVERB_LIST_ITEMS,                      MARPAESLIF_RULE_TYPE_SEQUENCE,    1, { G1_META_ADVERB_ITEM                          },  0,                        -1,  1 , G1_ACTION_ADVERB_LIST_ITEMS },
+  { G1_META_ADVERB_LIST_ITEMS,                G1_RULE_ADVERB_LIST_ITEMS,                      MARPAESLIF_RULE_TYPE_SEQUENCE,    1, { G1_META_ADVERB_ITEM                          },  0,                        -1,  0 , G1_ACTION_ADVERB_LIST_ITEMS },
   { G1_META_ADVERB_ITEM,                      G1_RULE_ADVERB_ITEM_01,                         MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_ACTION                               }, -1,                        -1, -1 , G1_ACTION_ADVERB_ITEM_01 },
   /*
     lhsi                                      descs                                           type                          nrhsl  { rhsi }                                       }  minimumi           separatori  properb
