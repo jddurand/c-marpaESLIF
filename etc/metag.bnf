@@ -36,7 +36,7 @@
 # - grammar reference        added
 # - parenthesized rhs list   removed
 # - lexeme default           removed
-# - exception list           added (using '(' and ')' ...)
+# - exception                added (using '(' and ')' ...) and is limited to the first RHS being a lexeme or a terminal
 # - there is no notion of mask
 # - pause is allowed in discard events
 # - latm adverb in :lexeme rules is not allowed, latm mode is forced.
@@ -108,7 +108,7 @@ statement                        ::= <start rule>
                                  | 'event' <event initialization> <op declare> 'predicted' <symbol name>
 <inaccessible statement>       ::= 'inaccessible' 'is' <inaccessible treatment> 'by' 'default'
 <inaccessible treatment>       ::= 'warn' | 'ok' | 'fatal'
-<exception statement>          ::= lhs <op declare> <rhs primary> '-' <parenthesized rhs exception list> <adverb list>
+<exception statement>          ::= lhs <op declare> <rhs primary> '-' <rhs primary>
 <autorank statement>           ::= 'autorank' 'is' <on or of> 'by' 'default'
 
 <op declare>                   ::= <op declare top grammar>
@@ -174,15 +174,6 @@ rhs                              ::= <rhs primary>+
 <rhs primary>                    ::= <symbol name> '@' <grammar reference>
 <grammar reference>              ::= <quoted string>
 <grammar reference>              ::= <signed integer>
-
-<parenthesized rhs exception list> ::= '(' <rhs exception list> ')'
-<rhs exception list>             ::= <rhs exception>+
-#
-# An exception cannot be a meta identifier.
-#
-<rhs exception>                  ::= <quoted string>
-<rhs exception>                  ::= <character class>
-<rhs exception>                  ::= <regular expression>
 
 <single symbol> ::=  symbol
                   | <character class>

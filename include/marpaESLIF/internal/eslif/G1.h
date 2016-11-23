@@ -127,9 +127,6 @@ typedef enum bootstrap_grammar_G1_enum {
   G1_META_LHS,
   G1_META_RHS,
   G1_META_RHS_PRIMARY,
-  G1_META_PARENTHESIZED_RHS_EXCEPTION_LIST,
-  G1_META_RHS_EXCEPTION_LIST,
-  G1_META_RHS_EXCEPTION,
   G1_META_SINGLE_SYMBOL,
   G1_META_SYMBOL,
   G1_META_SYMBOL_NAME,
@@ -215,9 +212,6 @@ bootstrap_grammar_meta_t bootstrap_grammar_G1_metas[] = {
   { G1_META_LHS,                              "lhs", 0, 0 },
   { G1_META_RHS,                              "rhs", 0, 0 },
   { G1_META_RHS_PRIMARY,                      "rhs primary", 0, 0 },
-  { G1_META_PARENTHESIZED_RHS_EXCEPTION_LIST, "parenthesized rhs exception list", 0, 0 },
-  { G1_META_RHS_EXCEPTION_LIST,               "rhs exception list", 0, 0 },
-  { G1_META_RHS_EXCEPTION,                    "rhs exception", 0, 0 },
   { G1_META_SINGLE_SYMBOL,                    "single symbol", 0, 0 },
   { G1_META_SYMBOL,                           "symbol", 0, 0 },
   { G1_META_SYMBOL_NAME,                      "symbol name", 0, 0 },
@@ -868,7 +862,7 @@ bootstrap_grammar_rule_t bootstrap_grammar_G1_rules[] = {
                                                                                                                                      G1_META_OP_DECLARE,
                                                                                                                                      G1_META_RHS_PRIMARY,
                                                                                                                                      G1_TERMINAL_MINUS,
-                                                                                                                                     G1_META_PARENTHESIZED_RHS_EXCEPTION_LIST,
+                                                                                                                                     G1_META_RHS_PRIMARY,
                                                                                                                                      G1_META_ADVERB_LIST                          }, -1,                        -1, -1 , G1_ACTION_EXCEPTION_STATEMENT },
   { G1_META_AUTORANK_STATEMENT,               G1_RULE_AUTORANK_STATEMENT,                     MARPAESLIF_RULE_TYPE_ALTERNATIVE, 5, { G1_TERMINAL_AUTORANK,
                                                                                                                                      G1_TERMINAL_IS,
@@ -1015,16 +1009,6 @@ bootstrap_grammar_rule_t bootstrap_grammar_G1_rules[] = {
   { G1_META_RHS_PRIMARY,                      G1_RULE_RHS_PRIMARY_3,                          MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_META_SYMBOL_NAME,
                                                                                                                                      G1_TERMINAL_AT_SIGN,
                                                                                                                                      G1_META_GRAMMAR_REFERENCE                    }, -1,                        -1, -1 , G1_ACTION_RHS_PRIMARY_3 },
-  /*
-    lhsi                                      descs                                           type                          nrhsl  { rhsi }                                       }  minimumi           separatori  properb
-  */
-  { G1_META_PARENTHESIZED_RHS_EXCEPTION_LIST, G1_RULE_PARENTHESIZED_RHS_EXCEPTION_LIST,       MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_TERMINAL_LPAREN,
-                                                                                                                                     G1_META_RHS_EXCEPTION_LIST,
-                                                                                                                                     G1_TERMINAL_RPAREN                           }, -1,                        -1, -1 , G1_ACTION_PARENTHESIZED_RHS_EXCEPTION_LIST },
-  { G1_META_RHS_EXCEPTION_LIST,               G1_RULE_RHS_EXCEPTION_LIST,                     MARPAESLIF_RULE_TYPE_SEQUENCE,    1, { G1_META_RHS_EXCEPTION                        },  1,                        -1,  0 , G1_ACTION_RHS_EXCEPTION_LIST },
-  { G1_META_RHS_EXCEPTION,                    G1_RULE_RHS_EXCEPTION_1,                        MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_QUOTED_STRING                        }, -1,                        -1, -1 , G1_ACTION_RHS_EXCEPTION_1 },
-  { G1_META_RHS_EXCEPTION,                    G1_RULE_RHS_EXCEPTION_2,                        MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_CHARACTER_CLASS                      }, -1,                        -1, -1 , G1_ACTION_RHS_EXCEPTION_2 },
-  { G1_META_RHS_EXCEPTION,                    G1_RULE_RHS_EXCEPTION_3,                        MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_REGULAR_EXPRESSION                   }, -1,                        -1, -1 , G1_ACTION_RHS_EXCEPTION_3 },
   /*
     lhsi                                      descs                                           type                          nrhsl  { rhsi }                                       }  minimumi           separatori  properb
   */

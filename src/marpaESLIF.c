@@ -84,7 +84,7 @@ static inline short                  _marpaESLIFRecognizer_lexemeStack_i_moveb(m
 static inline const char            *_marpaESLIF_genericStack_i_types(genericStack_t *stackp, int i);
 static inline const char            *_marpaESLIF_stack_types(int typei);
 
-static inline marpaESLIF_rule_t     *_marpaESLIF_rule_newp(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, char *descEncodings, char *descs, size_t descl, int lhsi, size_t nrhsl, int *rhsip, size_t nexceptionl, int *exceptionip, int ranki, short nullRanksHighb, short sequenceb, int minimumi, int separatori, short properb, char *actions, short passthroughb);
+static inline marpaESLIF_rule_t     *_marpaESLIF_rule_newp(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, char *descEncodings, char *descs, size_t descl, int lhsi, size_t nrhsl, int *rhsip, int exceptioni, int ranki, short nullRanksHighb, short sequenceb, int minimumi, int separatori, short properb, char *actions, short passthroughb);
 static inline void                   _marpaESLIF_rule_freev(marpaESLIF_rule_t *rulep);
 
 static inline marpaESLIF_symbol_t   *_marpaESLIF_symbol_newp(marpaESLIF_t *marpaESLIFp);
@@ -1123,8 +1123,7 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_grammarp(marpaESLIF_t 
 				  bootstrap_grammar_rulep[i].lhsi,
 				  bootstrap_grammar_rulep[i].nrhsl,
 				  bootstrap_grammar_rulep[i].rhsip,
-				  0, /* nexceptionl */
-				  NULL, /* exceptionip */
+				  -1, /* exceptioni */
 				  0, /* ranki */
 				  0, /* nullRanksHighb */
 				  (bootstrap_grammar_rulep[i].type == MARPAESLIF_RULE_TYPE_ALTERNATIVE) ? 0 : 1, /* sequenceb */
@@ -1189,6 +1188,7 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
   marpaESLIF_symbol_t   *lhsp;
   marpaESLIF_symbol_t   *startp;
   marpaESLIF_symbol_t   *discardp;
+  marpaESLIF_symbol_t   *rhsExceptionp;
   short                  rcb;
   int                    rhsi;
   size_t                 asciishowl;
@@ -1216,6 +1216,7 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
    4. If at least one rule have rejection, rejection mode is on at the grammar level.
    5. For every rule that is a passthrough, then it is illegal to have its lhs appearing as an lhs is any other rule
    6. The semantic of a nullable LHS must be unique
+   7. An exception must have its first primary being a terminal or a lexeme
 
       It is not illegal to have sparse items in grammarStackp.
 
@@ -1541,8 +1542,8 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
         continue;
       }
       rulep = (marpaESLIF_rule_t *) GENERICSTACK_GET_PTR(ruleStackp, rulei);
-      if (rulep->exceptionStackp != NULL) {
-        if ((! grammarp->haveRejectionb) && (GENERICSTACK_USED(rulep->exceptionStackp) > 0)) {
+      if (rulep->exceptionp != NULL) {
+        if (! grammarp->haveRejectionb) {
           MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Marking rejection flag for grammar at level %d (%s)", grammari, grammarp->descp->asciis);
           grammarp->haveRejectionb = 1;
           break;
@@ -1703,6 +1704,55 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
             MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Nullable semantic of symbol %d (%s) is grammar's default", symbolp->idi, symbolp->descp->asciis, symbolp->nullableActions);
           }
 #endif
+        }
+      }
+    }
+  }
+
+  /*
+   7. An exception must have its first primary being a terminal or a lexeme
+  */
+  for (grammari = 0; grammari < GENERICSTACK_USED(grammarStackp); grammari++) {
+    if (! GENERICSTACK_IS_PTR(grammarStackp, grammari)) {
+      /* Sparse item in grammarStackp -; */
+      continue;
+    }
+    grammarp = (marpaESLIF_grammar_t *) GENERICSTACK_GET_PTR(grammarStackp, grammari);
+    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Looking at passthroughs in grammar level %d (%s)", grammari, grammarp->descp->asciis);
+
+    /* Loop on rules */
+    ruleStackp   = grammarp->ruleStackp;
+    symbolStackp = grammarp->symbolStackp;
+    for (rulei = 0; rulei < GENERICSTACK_USED(ruleStackp); rulei++) {
+      if (! GENERICSTACK_IS_PTR(ruleStackp, rulei)) {
+        /* Should never happen, but who knows */
+        continue;
+      }
+      rulep = (marpaESLIF_rule_t *) GENERICSTACK_GET_PTR(ruleStackp, rulei);
+      if (rulep->exceptionp == NULL) {
+        continue;
+      }
+      if (GENERICSTACK_USED(rulep->rhsStackp) != 1) {
+        MARPAESLIF_ERRORF(marpaESLIFp, "Looking at rules in grammar level %d (%s): An exception must have only one RHS", grammari, grammarp->descp->asciis);
+        goto err;
+      }
+      if (! GENERICSTACK_IS_PTR(rulep->rhsStackp, 0)) {
+        MARPAESLIF_ERRORF(marpaESLIFp, "rulep->rhsStackp at indice 0 is not PTR (got %s, value  %d)", _marpaESLIF_genericStack_i_types(rulep->rhsStackp, 0), GENERICSTACKITEMTYPE(rulep->rhsStackp, 0));
+        goto err;
+      }
+      rhsExceptionp = (marpaESLIF_symbol_t *) GENERICSTACK_GET_PTR(rulep->rhsStackp, 0);
+      for (symboli = 0; symboli < GENERICSTACK_USED(symbolStackp); symboli++) {
+        if (! GENERICSTACK_IS_PTR(symbolStackp, symboli)) {
+          /* Should never happen, but who knows */
+          continue;
+        }
+        symbolp = (marpaESLIF_symbol_t *) GENERICSTACK_GET_PTR(symbolStackp, symboli);
+        if (symbolp != rhsExceptionp) {
+          continue;
+        }
+        if (symbolp->lhsb) {
+          MARPAESLIF_ERRORF(marpaESLIFp, "Looking at rules in grammar level %d (%s): symbol %d (%s) is the first RHS of an exception rule and must be a terminal or a lexeme", grammari, grammarp->descp->asciis, rhsExceptionp->idi, rhsExceptionp->descp->asciis);
+          goto err;
         }
       }
     }
@@ -2169,7 +2219,7 @@ static inline short _marpaESLIFRecognizer_lexemeStack_i_moveb(marpaESLIFRecogniz
 }
 
 /*****************************************************************************/
-static inline marpaESLIF_rule_t *_marpaESLIF_rule_newp(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, char *descEncodings, char *descs, size_t descl, int lhsi, size_t nrhsl, int *rhsip, size_t nexceptionl, int *exceptionip, int ranki, short nullRanksHighb, short sequenceb, int minimumi, int separatori, short properb, char *actions, short passthroughb)
+static inline marpaESLIF_rule_t *_marpaESLIF_rule_newp(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, char *descEncodings, char *descs, size_t descl, int lhsi, size_t nrhsl, int *rhsip, int exceptioni, int ranki, short nullRanksHighb, short sequenceb, int minimumi, int separatori, short properb, char *actions, short passthroughb)
 /*****************************************************************************/
 {
   static const char               *funcs          = "_marpaESLIF_rule_newp";
@@ -2199,7 +2249,7 @@ static inline marpaESLIF_rule_t *_marpaESLIF_rule_newp(marpaESLIF_t *marpaESLIFp
   rulep->lhsp            = NULL;
   rulep->separatorp      = NULL;
   rulep->rhsStackp       = NULL;
-  rulep->exceptionStackp = NULL;
+  rulep->exceptionp      = NULL;
   rulep->actions         = NULL;
   rulep->ranki           = ranki;
   rulep->nullRanksHighb  = nullRanksHighb;
@@ -2255,12 +2305,6 @@ static inline marpaESLIF_rule_t *_marpaESLIF_rule_newp(marpaESLIF_t *marpaESLIFp
     goto err;
   }
 
-  GENERICSTACK_NEW(rulep->exceptionStackp);
-  if (GENERICSTACK_ERROR(rulep->exceptionStackp)) {
-    MARPAESLIF_ERRORF(marpaESLIFp, "exceptionStackp initialization failure, %s", strerror(errno));
-    goto err;
-  }
-
   /* Fill rhs symbol stack */
   if (rhsip != NULL) {
     for (i = 0; i < nrhsl; i++) {
@@ -2276,20 +2320,14 @@ static inline marpaESLIF_rule_t *_marpaESLIF_rule_newp(marpaESLIF_t *marpaESLIFp
     }
   }
   
-  /* Fill exception symbol stack */
-  if (exceptionip != NULL) {
-    for (i = 0; i < nexceptionl; i++) {
-      if (! GENERICSTACK_IS_PTR(grammarp->symbolStackp, exceptionip[i])) {
-        MARPAESLIF_ERRORF(marpaESLIFp, "At grammar level %d, rule %s: No such RHS exception symbol No %d", grammarp->leveli, rulep->descp->asciis, exceptionip[i]);
-        goto err;
-      }
-      GENERICSTACK_PUSH_PTR(rulep->exceptionStackp, GENERICSTACK_GET_PTR(grammarp->symbolStackp, exceptionip[i]));
-      if (GENERICSTACK_ERROR(rulep->exceptionStackp)) {
-        MARPAESLIF_ERRORF(marpaESLIFp, "exceptionStackp push failure, %s", strerror(errno));
-        goto err;
-      }
+  /* Fill exception symbol */
+  if (exceptioni >= 0) {
+    if (! GENERICSTACK_IS_PTR(grammarp->symbolStackp, exceptioni)) {
+      MARPAESLIF_ERRORF(marpaESLIFp, "At grammar level %d, rule %s: No such RHS exception symbol No %d", grammarp->leveli, rulep->descp->asciis, exceptioni);
+      goto err;
     }
-  }
+    rulep->exceptionp = GENERICSTACK_GET_PTR(grammarp->symbolStackp, exceptioni);
+}
   
   marpaWrapperGrammarRuleOption.ranki            = ranki;
   marpaWrapperGrammarRuleOption.nullRanksHighb   = nullRanksHighb;
@@ -2364,15 +2402,14 @@ static inline void _marpaESLIF_rule_freev(marpaESLIF_rule_t *rulep)
     if (rulep->actions != NULL) {
       free(rulep->actions);
     }
-    /* In the rule structure, lhsp, rhsStackp and exceptionStackp contain shallow pointers */
+    /* In the rule structure, lhsp, rhsStackp and exceptionp contain shallow pointers */
     /* Only the stack themselves should be freed. */
     /*
-    _marpaESLIF_symbol_freev(rulep->lhsp);
+    _marpaESLIF_symbol_freev(marpaESLIFp, rulep->lhsp);
     _marpaESLIF_symbolStack_freev(rulep->rhsStackp);
-    _marpaESLIF_symbolStack_freev(marpaESLIFp, exceptionStackp);
+    _marpaESLIF_symbol_freev(marpaESLIFp, exceptionp);
     */
     GENERICSTACK_FREE(rulep->rhsStackp);
-    GENERICSTACK_FREE(rulep->exceptionStackp);
     free(rulep);
   }
 }
@@ -6356,11 +6393,8 @@ static inline void _marpaESLIF_rule_createshowv(marpaESLIF_t *marpaESLIFp, marpa
 /*****************************************************************************/
 {
   genericStack_t      *rhsStackp       = rulep->rhsStackp;
-  genericStack_t      *exceptionStackp = rulep->exceptionStackp;
   marpaESLIF_symbol_t *symbolp;
   size_t               asciishowl = 0;
-  int                  exceptioni;
-  size_t               exceptionl;
   int                  rhsi;
   char                 tmps[1024];
   char                 quote[2][2];
@@ -6403,13 +6437,6 @@ static inline void _marpaESLIF_rule_createshowv(marpaESLIF_t *marpaESLIFp, marpa
       }
     }
   }
-  exceptionl = 0;
-  for (exceptioni = 0; exceptioni < GENERICSTACK_USED(exceptionStackp); exceptioni++) {
-    if (! GENERICSTACK_IS_PTR(exceptionStackp, exceptioni)) {
-      continue;
-    }
-    exceptionl++;
-  }
   if (rulep->sequenceb) {
     MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, (rulep->minimumi == 0) ? "*" : "+");
     if (rulep->separatorp != NULL) {
@@ -6420,29 +6447,9 @@ static inline void _marpaESLIF_rule_createshowv(marpaESLIF_t *marpaESLIFp, marpa
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " proper => 1");
     }
   }
-  if (exceptionl > 0) {
-    MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " - ( ");
-    for (exceptioni = 0; exceptioni < GENERICSTACK_USED(exceptionStackp); exceptioni++) {
-      if (! GENERICSTACK_IS_PTR(exceptionStackp, exceptioni)) {
-        continue;
-      }
-      symbolp = GENERICSTACK_GET_PTR(exceptionStackp, exceptioni);
-      if (exceptioni > 0) {
-        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " ");
-      }
-      switch (symbolp->type) {
-      case MARPAESLIF_SYMBOL_TYPE_TERMINAL:
-        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->descp->asciis);
-        break;
-      case MARPAESLIF_SYMBOL_TYPE_META:
-        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "<");
-        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, (symbolp->lookupMetas != NULL) ? symbolp->lookupMetas : symbolp->u.metap->asciinames);
-        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, ">");
-      default:
-        break;
-      }
-    }
-    MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, ")");
+  if (rulep->exceptionp != NULL) {
+    MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " - ");
+    MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, rulep->exceptionp->descp->asciis);
   }
   if (rulep->ranki != 0) {
     MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " rank => ");
@@ -8165,7 +8172,6 @@ static inline short _marpaESLIFValue_stack_i_resetb(marpaESLIFValue_t *marpaESLI
   char                               *actions;
   marpaESLIFValueFreeCallback_t       freeCallbackp;
   short                               rcb;
-  short                               popmodeb;
   short                               freeb;
   int                                 origcontexti;
   int                                 origtypei;
@@ -8205,126 +8211,71 @@ static inline short _marpaESLIFValue_stack_i_resetb(marpaESLIFValue_t *marpaESLI
     goto err;
   }
 
-#ifdef MARPAESLIFVALE_POPMODE_SUPPORT
-  /* Experimental and is current failing, all this popmode stuff will be removed OOTD */
-  popmodeb = ((indicei + 1) == GENERICSTACK_USED(marpaESLIFValuep->typeStackp));
-#else
-  popmodeb = 0;
-#endif
-
   origtypei = GENERICSTACK_GET_INT(marpaESLIFValuep->typeStackp, indicei);
   switch (origtypei) {
   case MARPAESLIF_STACK_TYPE_CHAR:
-    if (popmodeb) {
-      GENERICSTACK_POP_CHAR(marpaESLIFValuep->valueStackp);
-      origcontexti = GENERICSTACK_POP_INT(marpaESLIFValuep->contextStackp);
-      GENERICSTACK_POP_CHAR(marpaESLIFValuep->typeStackp);
-    } else {
-      GENERICSTACK_SET_NA(marpaESLIFValuep->valueStackp, indicei);
-      origcontexti = GENERICSTACK_GET_INT(marpaESLIFValuep->contextStackp, indicei);
-      GENERICSTACK_SET_INT(marpaESLIFValuep->contextStackp, 0, indicei);
-      GENERICSTACK_SET_INT(marpaESLIFValuep->typeStackp, MARPAESLIF_STACK_TYPE_UNDEF, indicei);
-      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Setted %p->[%d] = NA (type=NA,context=NA)", marpaESLIFValuep->valueStackp, indicei);
-    }
+    GENERICSTACK_SET_NA(marpaESLIFValuep->valueStackp, indicei);
+    origcontexti = GENERICSTACK_GET_INT(marpaESLIFValuep->contextStackp, indicei);
+    GENERICSTACK_SET_INT(marpaESLIFValuep->contextStackp, 0, indicei);
+    GENERICSTACK_SET_INT(marpaESLIFValuep->typeStackp, MARPAESLIF_STACK_TYPE_UNDEF, indicei);
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Setted %p->[%d] = NA (type=NA,context=NA)", marpaESLIFValuep->valueStackp, indicei);
     break;
   case MARPAESLIF_STACK_TYPE_SHORT:
-    if (popmodeb) {
-      GENERICSTACK_POP_SHORT(marpaESLIFValuep->valueStackp);
-      origcontexti = GENERICSTACK_POP_INT(marpaESLIFValuep->contextStackp);
-      GENERICSTACK_POP_SHORT(marpaESLIFValuep->typeStackp);
-    } else {
-      GENERICSTACK_SET_NA(marpaESLIFValuep->valueStackp, indicei);
-      origcontexti = GENERICSTACK_GET_INT(marpaESLIFValuep->contextStackp, indicei);
-      GENERICSTACK_SET_INT(marpaESLIFValuep->contextStackp, 0, indicei);
-      GENERICSTACK_SET_INT(marpaESLIFValuep->typeStackp, MARPAESLIF_STACK_TYPE_UNDEF, indicei);
-      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Setted %p->[%d] = NA (type=NA,context=NA)", marpaESLIFValuep->valueStackp, indicei);
-    }
+    GENERICSTACK_SET_NA(marpaESLIFValuep->valueStackp, indicei);
+    origcontexti = GENERICSTACK_GET_INT(marpaESLIFValuep->contextStackp, indicei);
+    GENERICSTACK_SET_INT(marpaESLIFValuep->contextStackp, 0, indicei);
+    GENERICSTACK_SET_INT(marpaESLIFValuep->typeStackp, MARPAESLIF_STACK_TYPE_UNDEF, indicei);
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Setted %p->[%d] = NA (type=NA,context=NA)", marpaESLIFValuep->valueStackp, indicei);
     break;
   case MARPAESLIF_STACK_TYPE_INT:
-    if (popmodeb) {
-      GENERICSTACK_POP_INT(marpaESLIFValuep->valueStackp);
-      origcontexti = GENERICSTACK_POP_INT(marpaESLIFValuep->contextStackp);
-      GENERICSTACK_POP_INT(marpaESLIFValuep->typeStackp);
-    } else {
-      GENERICSTACK_SET_NA(marpaESLIFValuep->valueStackp, indicei);
-      origcontexti = GENERICSTACK_GET_INT(marpaESLIFValuep->contextStackp, indicei);
-      GENERICSTACK_SET_INT(marpaESLIFValuep->contextStackp, 0, indicei);
-      GENERICSTACK_SET_INT(marpaESLIFValuep->typeStackp, MARPAESLIF_STACK_TYPE_UNDEF, indicei);
-      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Setted %p->[%d] = NA (type=NA,context=NA)", marpaESLIFValuep->valueStackp, indicei);
-    }
+    GENERICSTACK_SET_NA(marpaESLIFValuep->valueStackp, indicei);
+    origcontexti = GENERICSTACK_GET_INT(marpaESLIFValuep->contextStackp, indicei);
+    GENERICSTACK_SET_INT(marpaESLIFValuep->contextStackp, 0, indicei);
+    GENERICSTACK_SET_INT(marpaESLIFValuep->typeStackp, MARPAESLIF_STACK_TYPE_UNDEF, indicei);
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Setted %p->[%d] = NA (type=NA,context=NA)", marpaESLIFValuep->valueStackp, indicei);
     break;
   case MARPAESLIF_STACK_TYPE_LONG:
-    if (popmodeb) {
-      GENERICSTACK_POP_LONG(marpaESLIFValuep->valueStackp);
-      origcontexti = GENERICSTACK_POP_INT(marpaESLIFValuep->contextStackp);
-      GENERICSTACK_POP_LONG(marpaESLIFValuep->typeStackp);
-    } else {
-      GENERICSTACK_SET_NA(marpaESLIFValuep->valueStackp, indicei);
-      origcontexti = GENERICSTACK_GET_INT(marpaESLIFValuep->contextStackp, indicei);
-      GENERICSTACK_SET_INT(marpaESLIFValuep->contextStackp, 0, indicei);
-      GENERICSTACK_SET_INT(marpaESLIFValuep->typeStackp, MARPAESLIF_STACK_TYPE_UNDEF, indicei);
-      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Setted %p->[%d] = NA (type=NA,context=NA)", marpaESLIFValuep->valueStackp, indicei);
-    }
+    GENERICSTACK_SET_NA(marpaESLIFValuep->valueStackp, indicei);
+    origcontexti = GENERICSTACK_GET_INT(marpaESLIFValuep->contextStackp, indicei);
+    GENERICSTACK_SET_INT(marpaESLIFValuep->contextStackp, 0, indicei);
+    GENERICSTACK_SET_INT(marpaESLIFValuep->typeStackp, MARPAESLIF_STACK_TYPE_UNDEF, indicei);
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Setted %p->[%d] = NA (type=NA,context=NA)", marpaESLIFValuep->valueStackp, indicei);
     break;
   case MARPAESLIF_STACK_TYPE_FLOAT:
-    if (popmodeb) {
-      GENERICSTACK_POP_FLOAT(marpaESLIFValuep->valueStackp);
-      origcontexti = GENERICSTACK_POP_INT(marpaESLIFValuep->contextStackp);
-      GENERICSTACK_POP_FLOAT(marpaESLIFValuep->typeStackp);
-    } else {
-      GENERICSTACK_SET_NA(marpaESLIFValuep->valueStackp, indicei);
-      origcontexti = GENERICSTACK_GET_INT(marpaESLIFValuep->contextStackp, indicei);
-      GENERICSTACK_SET_INT(marpaESLIFValuep->contextStackp, 0, indicei);
-      GENERICSTACK_SET_INT(marpaESLIFValuep->typeStackp, MARPAESLIF_STACK_TYPE_UNDEF, indicei);
-      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Setted %p->[%d] = NA (type=NA,context=NA)", marpaESLIFValuep->valueStackp, indicei);
-    }
+    GENERICSTACK_SET_NA(marpaESLIFValuep->valueStackp, indicei);
+    origcontexti = GENERICSTACK_GET_INT(marpaESLIFValuep->contextStackp, indicei);
+    GENERICSTACK_SET_INT(marpaESLIFValuep->contextStackp, 0, indicei);
+    GENERICSTACK_SET_INT(marpaESLIFValuep->typeStackp, MARPAESLIF_STACK_TYPE_UNDEF, indicei);
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Setted %p->[%d] = NA (type=NA,context=NA)", marpaESLIFValuep->valueStackp, indicei);
     break;
   case MARPAESLIF_STACK_TYPE_DOUBLE:
-    if (popmodeb) {
-      GENERICSTACK_POP_DOUBLE(marpaESLIFValuep->valueStackp);
-      origcontexti = GENERICSTACK_POP_INT(marpaESLIFValuep->contextStackp);
-      GENERICSTACK_POP_DOUBLE(marpaESLIFValuep->typeStackp);
-    } else {
-      GENERICSTACK_SET_NA(marpaESLIFValuep->valueStackp, indicei);
-      origcontexti = GENERICSTACK_GET_INT(marpaESLIFValuep->contextStackp, indicei);
-      GENERICSTACK_SET_INT(marpaESLIFValuep->contextStackp, 0, indicei);
-      GENERICSTACK_SET_INT(marpaESLIFValuep->typeStackp, MARPAESLIF_STACK_TYPE_UNDEF, indicei);
-      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Setted %p->[%d] = NA (type=NA,context=NA)", marpaESLIFValuep->valueStackp, indicei);
-    }
+    GENERICSTACK_SET_NA(marpaESLIFValuep->valueStackp, indicei);
+    origcontexti = GENERICSTACK_GET_INT(marpaESLIFValuep->contextStackp, indicei);
+    GENERICSTACK_SET_INT(marpaESLIFValuep->contextStackp, 0, indicei);
+    GENERICSTACK_SET_INT(marpaESLIFValuep->typeStackp, MARPAESLIF_STACK_TYPE_UNDEF, indicei);
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Setted %p->[%d] = NA (type=NA,context=NA)", marpaESLIFValuep->valueStackp, indicei);
     break;
   case MARPAESLIF_STACK_TYPE_PTR:
     origp        = GENERICSTACK_GET_PTR(marpaESLIFValuep->valueStackp, indicei);
     origsizel    = 0;
     origshallowb = 0;
   case MARPAESLIF_STACK_TYPE_PTR_SHALLOW:
-    if (popmodeb) {
-      GENERICSTACK_POP_PTR(marpaESLIFValuep->valueStackp);
-      origcontexti = GENERICSTACK_POP_INT(marpaESLIFValuep->contextStackp);
-      GENERICSTACK_POP_PTR(marpaESLIFValuep->typeStackp);
-    } else {
-      GENERICSTACK_SET_NA(marpaESLIFValuep->valueStackp, indicei);
-      origcontexti = GENERICSTACK_GET_INT(marpaESLIFValuep->contextStackp, indicei);
-      GENERICSTACK_SET_INT(marpaESLIFValuep->contextStackp, 0, indicei);
-      GENERICSTACK_SET_INT(marpaESLIFValuep->typeStackp, MARPAESLIF_STACK_TYPE_UNDEF, indicei);
-      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Setted %p->[%d] = NA (type=NA,context=NA)", marpaESLIFValuep->valueStackp, indicei);
-    }
+    GENERICSTACK_SET_NA(marpaESLIFValuep->valueStackp, indicei);
+    origcontexti = GENERICSTACK_GET_INT(marpaESLIFValuep->contextStackp, indicei);
+    GENERICSTACK_SET_INT(marpaESLIFValuep->contextStackp, 0, indicei);
+    GENERICSTACK_SET_INT(marpaESLIFValuep->typeStackp, MARPAESLIF_STACK_TYPE_UNDEF, indicei);
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Setted %p->[%d] = NA (type=NA,context=NA)", marpaESLIFValuep->valueStackp, indicei);
     break;
   case MARPAESLIF_STACK_TYPE_ARRAY:
     origp        = GENERICSTACK_ARRAYP_PTR(GENERICSTACK_GET_ARRAYP(marpaESLIFValuep->valueStackp, indicei));
     origsizel    = GENERICSTACK_ARRAYP_LENGTH(GENERICSTACK_GET_ARRAYP(marpaESLIFValuep->valueStackp, indicei));
     origshallowb = 0;
   case MARPAESLIF_STACK_TYPE_ARRAY_SHALLOW:
-    if (popmodeb) {
-      GENERICSTACK_POP_ARRAY(marpaESLIFValuep->valueStackp);
-      origcontexti = GENERICSTACK_POP_INT(marpaESLIFValuep->contextStackp);
-      GENERICSTACK_POP_ARRAY(marpaESLIFValuep->typeStackp);
-    } else {
-      GENERICSTACK_SET_NA(marpaESLIFValuep->valueStackp, indicei);
-      origcontexti = GENERICSTACK_GET_INT(marpaESLIFValuep->contextStackp, indicei);
-      GENERICSTACK_SET_INT(marpaESLIFValuep->contextStackp, 0, indicei);
-      GENERICSTACK_SET_INT(marpaESLIFValuep->typeStackp, MARPAESLIF_STACK_TYPE_UNDEF, indicei);
-      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Setted %p->[%d] = NA (type=NA,context=NA)", marpaESLIFValuep->valueStackp, indicei);
-    }
+    GENERICSTACK_SET_NA(marpaESLIFValuep->valueStackp, indicei);
+    origcontexti = GENERICSTACK_GET_INT(marpaESLIFValuep->contextStackp, indicei);
+    GENERICSTACK_SET_INT(marpaESLIFValuep->contextStackp, 0, indicei);
+    GENERICSTACK_SET_INT(marpaESLIFValuep->typeStackp, MARPAESLIF_STACK_TYPE_UNDEF, indicei);
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Setted %p->[%d] = NA (type=NA,context=NA)", marpaESLIFValuep->valueStackp, indicei);
     break;
   default:
     MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "marpaESLIFValuep->valueStackp at indice %d is not supported (internal type: %d)", indicei, GENERICSTACKITEMTYPE(marpaESLIFValuep->valueStackp, indicei));
@@ -8332,15 +8283,15 @@ static inline short _marpaESLIFValue_stack_i_resetb(marpaESLIFValue_t *marpaESLI
   }
  check_reset_status:
   if (GENERICSTACK_ERROR(marpaESLIFValuep->valueStackp)) {
-    MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "marpaESLIFValuep->valueStackp %s failure at indice %d, %s", popmodeb ? "pop" : "set", indicei, strerror(errno));
+    MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "marpaESLIFValuep->valueStackp set failure at indice %d, %s", indicei, strerror(errno));
     goto err;
   }
   if (GENERICSTACK_ERROR(marpaESLIFValuep->contextStackp)) {
-    MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "marpaESLIFValuep->contextStackp %s failure at indice %d, %s", popmodeb ? "pop" : "set", indicei, strerror(errno));
+    MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "marpaESLIFValuep->contextStackp set failure at indice %d, %s", indicei, strerror(errno));
     goto err;
   }
   if (GENERICSTACK_ERROR(marpaESLIFValuep->typeStackp)) {
-    MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "marpaESLIFValuep->typeStackp %s failure at indice %d, %s", popmodeb ? "pop" : "set", indicei, strerror(errno));
+    MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "marpaESLIFValuep->typeStackp set failure at indice %d, %s", indicei, strerror(errno));
     goto err;
   }
 
@@ -9363,8 +9314,7 @@ static inline short _marpaESLIFValue_okAnySymbolCallbackWrapperb(void *userDatav
   int                     rulei;
   marpaESLIF_rule_t      *rulep;
   marpaESLIF_symbol_t    *symbolp;
-  genericStack_t         *exceptionStackp;
-  int                     exceptioni;
+  marpaESLIF_symbol_t    *exceptionp;
   int                     rhsi;
   short                   rcb;
 
@@ -9372,8 +9322,7 @@ static inline short _marpaESLIFValue_okAnySymbolCallbackWrapperb(void *userDatav
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
 
   /* In ESLIF, rejections are always at the symbol level: an exception is identified in the grammar by: */
-  /* <exception statement> ::= lhs <op declare> <rhs primary> '-' <parenthesized rhs exception list> */
-  /* where RHS are symbols (themselves can be the LHS of other rules of course) */
+  /* <exception statement> ::= lhs <op declare> <rhs primary> '-' <rhs primary> */
 
   /* This should never happen but who knows -; */
   if (parentRuleiStackp == NULL) {
@@ -9381,7 +9330,7 @@ static inline short _marpaESLIFValue_okAnySymbolCallbackWrapperb(void *userDatav
     goto err;
   }
 
-  /* Get the latest parent rule and look if we in its exception list */
+  /* Get the latest parent rule and look if we have an exception */
   usedi = GENERICSTACK_USED(parentRuleiStackp);
   if (usedi > 0) {
     lasti = usedi - 1;
@@ -9397,25 +9346,9 @@ static inline short _marpaESLIFValue_okAnySymbolCallbackWrapperb(void *userDatav
     }
 
     MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Rule %d %s", rulep->idi, rulep->asciishows);
-    exceptionStackp = rulep->exceptionStackp;
-    if (exceptionStackp != NULL) {
-      for (exceptioni = 0; exceptioni < GENERICSTACK_USED(exceptionStackp); exceptioni++) {
-        if (! GENERICSTACK_IS_INT(exceptionStackp, exceptioni)) {
-          MARPAESLIF_ERRORF(marpaESLIFp, "exceptionStackp type at indice %d is not INT (internal type: %d)", lasti, GENERICSTACKITEMTYPE(exceptionStackp, exceptioni));
-          goto err;
-        }
-        rhsi = GENERICSTACK_IS_INT(exceptionStackp, exceptioni);
-        if (rhsi == symboli) {
-          /* Got an exception */
-          symbolp = _marpaESLIF_symbol_findp(marpaESLIFp, grammarp, NULL /* asciis */, symboli);
-          if (symbolp == NULL) {
-            MARPAESLIF_ERRORF(marpaESLIFp, "No such symbol No %d", symboli);
-            goto err;
-          }
-          MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Symbol %d <%s> exception caught for rule No %d (%s)", symboli, symbolp->descp->asciis, rulei, rulep->descp->asciis);
-          goto err;
-        }
-      }
+    exceptionp = rulep->exceptionp;
+    if (exceptionp != NULL) {
+      /* TO DO - verify exception */
     }
   }
 
@@ -9474,8 +9407,7 @@ static short _marpaESLIFValue_okRuleCallbackWrapperb(void *userDatavp, genericSt
 /*****************************************************************************/
 {
   /* In ESLIF, rejections are always at the symbol level: an exception is identified in the grammar by: */
-  /* <exception statement> ::= lhs <op declare> <rhs primary> '-' <parenthesized rhs exception list> */
-  /* where RHS are symbols (themselves can be the LHS of other rules of course) */
+  /* <exception statement> ::= lhs <op declare> <rhs primary> '-' <rhs primary> */
   return 1;
 }
 
