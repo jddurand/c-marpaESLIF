@@ -114,7 +114,7 @@ static inline marpaESLIF_grammar_t  *_marpaESLIF_bootstrap_grammarp(marpaESLIF_t
 static inline short                  _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIFGrammar);
 
 static inline short                  _marpaESLIFRecognizer_regex_matcherb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIF_terminal_t *terminalp, char *inputs, size_t inputl, short eofb, marpaESLIF_matcher_value_t *rcip, marpaESLIFValueResult_t *marpaESLIFValueResultp);
-static inline short                  _marpaESLIFRecognizer_meta_matcherb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, int grammarLeveli, marpaWrapperGrammar_t *marpaWrapperGrammarp, marpaESLIF_meta_t *metap, marpaESLIF_matcher_value_t *rcip, short *exhaustedbp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
+static inline short                  _marpaESLIFRecognizer_meta_matcherb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIF_symbol_t *symbolp, marpaESLIF_matcher_value_t *rcip, short *exhaustedbp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
 static inline short                  _marpaESLIFRecognizer_symbol_matcherb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIF_symbol_t *symbolp, marpaESLIF_matcher_value_t *rcip, short *exhaustedbp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
 
 static const  char                  *_marpaESLIF_utf82printableascii_defaultp = "<!NOT TRANSLATED!>";
@@ -1170,14 +1170,11 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
   marpaWrapperGrammar_t *marpaWrapperGrammarClonep        = NULL;
   marpaESLIF_meta_t     *metap;
   genericStack_t        *symbolStackp;
-  genericStack_t        *subSymbolStackp;
   genericStack_t        *ruleStackp;
   int                    grammari;
   marpaESLIF_symbol_t   *symbolp;
-  marpaESLIF_symbol_t   *tmpSymbolp;
   marpaESLIF_symbol_t   *subSymbolp;
   int                    symboli;
-  int                    subSymboli;
   marpaESLIF_rule_t     *rulep;
   marpaESLIF_rule_t     *ruletmpp;
   int                    rulei;
@@ -3083,7 +3080,7 @@ static inline short _marpaESLIFRecognizer_regex_matcherb(marpaESLIFRecognizer_t 
 }
 
 /*****************************************************************************/
-static inline short _marpaESLIFRecognizer_meta_matcherb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, int grammarLeveli, marpaWrapperGrammar_t *marpaWrapperGrammarp, marpaESLIF_meta_t *metap, marpaESLIF_matcher_value_t *rcip, short *exhaustedbp, marpaESLIFValueResult_t *marpaESLIFValueResultp)
+static inline short _marpaESLIFRecognizer_meta_matcherb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIF_symbol_t *symbolp, marpaESLIF_matcher_value_t *rcip, short *exhaustedbp, marpaESLIFValueResult_t *marpaESLIFValueResultp)
 /*****************************************************************************/
 {
   /* All in all, this routine is the core of this module, and the cause of recursion -; */
@@ -3100,16 +3097,22 @@ static inline short _marpaESLIFRecognizer_meta_matcherb(marpaESLIFRecognizer_t *
   marpaESLIFRecognizerp->callstackCounteri++;
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
 
-  /* A meta matcher is always using ANOTHER grammar at level grammarLeveli (validator guaranteed that is exists) that is sent on the stack. */
+  /* Safe check - whould never happen though */
+  if (symbolp->type != MARPAESLIF_SYMBOL_TYPE_META) {
+    MARPAESLIF_ERRORF(marpaESLIFp, "%s called for a symbol that is not a meta symbol (type %d)", funcs, symbolp->type);
+    goto err;
+  }
+
+  /* A meta matcher is always using ANOTHER grammar at level symbolp->grammarLeveli (validator guaranteed that is exists) that is sent on the stack. */
   /* Though the precomputed grammar is known to the symbol that called us, also sent on the stack. */
-  if (! GENERICSTACK_IS_PTR(marpaESLIFGrammarp->grammarStackp, grammarLeveli)) {
-    MARPAESLIF_ERRORF(marpaESLIFp, "At grammar No %d (%s), meta symbol %d <%s> resolve to a grammar level %d that do not exist", marpaESLIFGrammarp->grammarp->leveli, marpaESLIFGrammarp->grammarp->descp->asciis, metap->idi, metap->descp->asciis, grammarLeveli);
+  if (! GENERICSTACK_IS_PTR(marpaESLIFGrammarp->grammarStackp, symbolp->lookupResolvedLeveli)) {
+    MARPAESLIF_ERRORF(marpaESLIFp, "At grammar No %d (%s), meta symbol %d <%s> resolve to a grammar level %d that do not exist", marpaESLIFGrammarp->grammarp->leveli, marpaESLIFGrammarp->grammarp->descp->asciis, symbolp->u.metap->idi, symbolp->u.metap->descp->asciis, symbolp->lookupResolvedLeveli);
     goto err;
   }
   
-  grammarp                           = (marpaESLIF_grammar_t *) GENERICSTACK_GET_PTR(marpaESLIFGrammarp->grammarStackp, grammarLeveli);
+  grammarp                           = (marpaESLIF_grammar_t *) GENERICSTACK_GET_PTR(marpaESLIFGrammarp->grammarStackp, symbolp->lookupResolvedLeveli);
   grammar                            = *grammarp;
-  grammar.marpaWrapperGrammarStartp  = marpaWrapperGrammarp;
+  grammar.marpaWrapperGrammarStartp  = symbolp->u.metap->marpaWrapperGrammarLexemeClonep;
   marpaESLIFGrammar                  = *marpaESLIFGrammarp;
   marpaESLIFGrammar.grammarp         = &grammar;
 
@@ -3166,9 +3169,7 @@ static inline short _marpaESLIFRecognizer_symbol_matcherb(marpaESLIFRecognizer_t
     /* A meta matcher MAY recursively call other recognizers, reading new data, etc... : this will update current recognizer inputs, inputl and eof. */
     /* The result will be a parse tree value, at indice 0 of outputStackp */
     if (! _marpaESLIFRecognizer_meta_matcherb(marpaESLIFRecognizerp,
-                                              symbolp->lookupResolvedLeveli, /* Computed by grammar validator */
-                                              symbolp->u.metap->marpaWrapperGrammarLexemeClonep,
-                                              symbolp->u.metap,
+                                              symbolp,
                                               rcip,
                                               exhaustedbp,
                                               marpaESLIFValueResultp)) {
@@ -9310,9 +9311,7 @@ static inline short _marpaESLIFValue_okAnySymbolCallbackWrapperb(void *userDatav
   int                          lasti;
   int                          rulei;
   marpaESLIF_rule_t           *rulep;
-  marpaESLIF_symbol_t         *symbolp;
   marpaESLIF_symbol_t         *exceptionp;
-  int                          rhsi;
   short                        arrayb;
   short                        rcb;
 
