@@ -70,7 +70,7 @@ int main() {
   {
     marpaESLIFTester_context_t   marpaESLIFTester_context;
     marpaESLIFRecognizerOption_t marpaESLIFRecognizerOption;
-    const static char           *inputs = "abd123def";
+    const static char           *inputs = "abd123:def";
 
     marpaESLIFTester_context.genericLoggerp = genericLoggerp;
     marpaESLIFTester_context.inputs         = (char *) inputs;
@@ -86,7 +86,11 @@ int main() {
     marpaESLIFRecognizerOption.bufaddperci               = 50;
 
     genericLogger_logLevel_seti(genericLoggerp, GENERICLOGGER_LOGLEVEL_TRACE);
-    marpaESLIFGrammar_parseb(marpaESLIFGrammarp, &marpaESLIFRecognizerOption, NULL /* marpaESLIFValueOptionp */, NULL /* exhaustedbp */, NULL /* marpaESLIFValueResultp */);
+    if (marpaESLIFGrammar_parseb(marpaESLIFGrammarp, &marpaESLIFRecognizerOption, NULL /* marpaESLIFValueOptionp */, NULL /* exhaustedbp */, NULL /* marpaESLIFValueResultp */)) {
+      GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "\"%s\" match", inputs);
+    } else {
+      GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "\"%s\" does not match", inputs);
+    }
   }
 
   exiti = 0;
