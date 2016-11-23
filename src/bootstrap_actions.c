@@ -4749,7 +4749,6 @@ static short _marpaESLIF_bootstrap_G1_action_exception_statementb(void *userData
   int                                   ranki = 0;
   short                                 nullRanksHighb = 0;
   marpaESLIF_bootstrap_utf_string_t    *namingp;
-  int                                   i;
   short                                 rcb;
   
   if (! marpaESLIFValue_stack_get_ptrb(marpaESLIFValuep, arg0i, NULL /* contextip */, (void **) &symbolNames, NULL /* shallowbp */)) {
@@ -4980,8 +4979,6 @@ static inline marpaESLIF_bootstrap_utf_string_t *_marpaESLIF_bootstrap_character
 {
   marpaESLIF_bootstrap_utf_string_t *stringp   = NULL;
   char                              *modifiers = NULL;
-  void                              *newbytep  = NULL;
-  size_t                             newbytel;
   marpaESLIFRecognizer_t            *marpaESLIFRecognizerp = NULL; /* Fake recognizer to use the internal regex */
   marpaESLIFGrammar_t                marpaESLIFGrammar; /* Fake grammar for the same reason */
   marpaESLIFValueResult_t            marpaESLIFValueResult;
@@ -5049,9 +5046,6 @@ static inline marpaESLIF_bootstrap_utf_string_t *_marpaESLIF_bootstrap_character
   stringp = NULL;
 
  done:
-  if (newbytep != NULL) {
-    free(newbytep);
-  }
   if (modifiers != NULL) {
     free(modifiers);
   }
