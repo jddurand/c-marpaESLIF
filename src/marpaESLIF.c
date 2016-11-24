@@ -4073,7 +4073,6 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
   */
   short                            exhaustedb                        = 0;
   short                            completedb                        = 0;
-  short                            collectb                          = 0;
   marpaESLIFValueOption_t          marpaESLIFValueOptionDiscard      = marpaESLIFValueOption_default_template;
   marpaESLIFRecognizerOption_t     marpaESLIFRecognizerOptionDiscard = marpaESLIFRecognizerp->marpaESLIFRecognizerOption; /* Things overwriten, see below */
   short                            continueb;
@@ -4110,13 +4109,12 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
   marpaESLIFValueOptionDiscard.userDatavp             = (void *) marpaESLIFRecognizerp; /* Used by _marpaESLIF_lexeme_freeCallbackv */
 
 #undef MARPAESLIFRECOGNIZER_COLLECT_EVENTS
-#define MARPAESLIFRECOGNIZER_COLLECT_EVENTS(forceb, exhaustedbp)  do {  \
-    if (forceb || ! collectb) {                                         \
-      _marpaESLIFRecognizer_reset_eventsb(marpaESLIFRecognizerp);       \
-      if (! _marpaESLIFRecognizer_grammar_eventsb(marpaESLIFRecognizerp, NULL, NULL, NULL, exhaustedbp)) { \
+#define MARPAESLIFRECOGNIZER_COLLECT_EVENTS(exhaustedbp, ignoreerrorb)  do { \
+    _marpaESLIFRecognizer_reset_eventsb(marpaESLIFRecognizerp);         \
+    if (! _marpaESLIFRecognizer_grammar_eventsb(marpaESLIFRecognizerp, NULL, NULL, NULL, exhaustedbp)) { \
+      if (! ignoreerrorb) {                                             \
         goto err;                                                       \
       }                                                                 \
-      collectb = 1;                                                     \
     }                                                                   \
   } while (0)
 
@@ -4136,7 +4134,7 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
   marpaESLIFRecognizerp->resumeCounteri++; /* Increment internal counter for tracing */
 
   if (initialEventsb) {
-    MARPAESLIFRECOGNIZER_COLLECT_EVENTS(0, &exhaustedb);
+    MARPAESLIFRECOGNIZER_COLLECT_EVENTS(&exhaustedb, 0 /* ignoreerrorb */);
     if (marpaESLIFRecognizerp->eventArrayl > 0) {
       continueb = ! exhaustedb;
       rcb = 1;
@@ -4155,7 +4153,7 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
        - exhaustion
        (Note that exception mode setted support of exhaustion mode)
     */
-    MARPAESLIFRECOGNIZER_COLLECT_EVENTS(0, &exhaustedb);
+    MARPAESLIFRECOGNIZER_COLLECT_EVENTS(&exhaustedb, 0 /* ignorerrrorb */);
     if ((marpaESLIFRecognizerp->discardb && completedb) || exhaustedb) {
       continueb = 0;
       rcb = 1;
@@ -4416,6 +4414,8 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
                                       GENERICLOGGER_LOGLEVEL_TRACE,
                                       marpaESLIFGrammarp,
                                       _marpaESLIFGrammar_symbolDescriptionCallback);
+    /* Fetch the events anyway as per the doc */
+    MARPAESLIFRECOGNIZER_COLLECT_EVENTS(&exhaustedb, 1 /* ignoreerrorb */);
 #endif
     goto err;
   }
@@ -4432,7 +4432,7 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
   marpaESLIFRecognizerp->inputl -= maxMatchedl;
 
   /* Collect events */
-  MARPAESLIFRECOGNIZER_COLLECT_EVENTS(1, &exhaustedb);
+  MARPAESLIFRECOGNIZER_COLLECT_EVENTS(&exhaustedb, 0 /* ignoreerrorb */);
 
   rcb = marpaESLIFRecognizerp->haveLexemeb; /* Global status is ok if at least one lexeme matched */
   /* We do not continue if there is discard failure or if there is exhaustion */
