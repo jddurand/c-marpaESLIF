@@ -130,7 +130,8 @@ static inline void                   _marpaESLIF_utf82printableascii_freev(char 
 static        short                  _marpaESLIFReader_grammarReader(void *userDatavp, char **inputsp, size_t *inputlp, short *eofbp, short *characterStreambp, char **encodingOfEncodingsp, char **encodingsp, size_t *encodinglp);
 static        short                  _marpaESLIFReader_exceptionReader(void *userDatavp, char **inputsp, size_t *inputlp, short *eofbp, short *characterStreambp, char **encodingOfEncodingsp, char **encodingsp, size_t *encodinglp);
 static inline short                  _marpaESLIFRecognizer_completeb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp);
-static inline short                  _marpaESLIFRecognizer_resumeb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, short ignorePreviousEventsb, short *continuebp, short *exhaustedbp);
+static inline short                  _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, short initialEventsb, short *continuebp, short *exhaustedbp);
+static inline short                  _marpaESLIFRecognizer_resumeb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, short initialEventsb, short *continuebp, short *exhaustedbp);
 static inline marpaESLIF_grammar_t  *_marpaESLIFGrammar_grammar_findp(marpaESLIFGrammar_t *marpaESLIFGrammarp, int grammari, marpaESLIF_string_t *descp);
 static inline marpaESLIF_rule_t     *_marpaESLIF_rule_findp(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, int rulei);
 static inline marpaESLIF_symbol_t   *_marpaESLIF_symbol_findp(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, char *asciis, int symboli);
@@ -1327,6 +1328,9 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
     if (marpaWrapperGrammarClonep == NULL) {
         MARPAESLIF_ERRORF(marpaESLIFp, "Precomputing grammar level %d (%s): cloning failure", grammari, grammarp->descp->asciis);
         goto err;
+    }
+    if (grammarp->marpaWrapperGrammarStartp != NULL) {
+      marpaWrapperGrammar_freev(grammarp->marpaWrapperGrammarStartp);
     }
     grammarp->marpaWrapperGrammarStartp = marpaWrapperGrammarClonep;
     marpaWrapperGrammarClonep = NULL;
@@ -4019,7 +4023,42 @@ short marpaESLIFRecognizer_resumeb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp
 static inline short _marpaESLIFRecognizer_resumeb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, short initialEventsb, short *continuebp, short *exhaustedbp)
 /*****************************************************************************/
 {
-  static const char               *funcs                             = "_marpaESLIFRecognizer_resumeb";
+  /* Top level resume is looping on _marpaESLIFRecognizer_resume_oneb() until:
+     - failure
+     - event
+  */
+  short continueb = 0;
+  short rcb;
+
+  do {
+    rcb = _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizerp, initialEventsb, &continueb, exhaustedbp);
+    if (! rcb) {
+      goto err;
+    }
+    /* Make sure initialEvents is true once only */
+    if (initialEventsb) {
+      initialEventsb = 0;
+    }
+  } while (continueb);
+
+  if (continuebp != NULL) {
+    *continuebp = continueb;
+  }
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  return rcb;
+}
+
+/*****************************************************************************/
+static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, short initialEventsb, short *continuebp, short *exhaustedbp)
+/*****************************************************************************/
+{
+  static const char               *funcs                             = "_marpaESLIFRecognizer_resume_oneb";
   marpaESLIF_t                    *marpaESLIFp                       = marpaESLIFRecognizerp->marpaESLIFp;
   genericStack_t                  *lexemeInputStackp                 = marpaESLIFRecognizerp->lexemeInputStackp;
   marpaESLIFGrammar_t             *marpaESLIFGrammarp                = marpaESLIFRecognizerp->marpaESLIFGrammarp;
