@@ -189,6 +189,8 @@ short marpaWrapperRecognizer_completeb(marpaWrapperRecognizer_t *marpaWrapperRec
   MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_r_earleme_complete(%p)", marpaWrapperRecognizerp->marpaRecognizerp);
   if (marpa_r_earleme_complete(marpaWrapperRecognizerp->marpaRecognizerp) < 0) {
     MARPAWRAPPER_MARPA_G_ERROR(genericLoggerp, marpaWrapperRecognizerp->marpaWrapperGrammarp->marpaGrammarp);
+    /* As per the doc, events should be fetched even in case of failure */
+    marpaWrapperGrammar_eventb(marpaWrapperRecognizerp->marpaWrapperGrammarp, NULL, NULL, marpaWrapperRecognizerp->marpaWrapperRecognizerOption.exhaustionEventb, 1);
     goto err;
   }
 
