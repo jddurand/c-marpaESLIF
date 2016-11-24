@@ -185,8 +185,6 @@ struct marpaESLIF_grammar {
   char                  *defaultSymbolActions;        /* Default action for symbols */
   char                  *defaultRuleActions;          /* Default action for rules */
   char                  *defaultFreeActions;          /* Default action for free */
-  char                  *defaultDiscardEvents;        /* Default discard event */
-  short                  defaultDiscardEventb;        /* Default discard event initial state: 0: off, 1: on */
   int                    starti;                      /* Default start symbol ID - filled during grammar validation */
   char                  *starts;                      /* Default start symbol name - filled during grammar validation - shallow pointer */
   int                   *ruleip;                      /* Array of rule IDs - filled by grammar validation */
