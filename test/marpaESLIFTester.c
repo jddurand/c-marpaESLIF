@@ -300,9 +300,6 @@ static void eventManagerv(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, generic
     case MARPAESLIF_EVENTTYPE_EXHAUSTED:
       GENERICLOGGER_INFO (genericLoggerp, "Exhausted event");
       break;
-    case MARPAESLIF_EVENTTYPE_REJECTED:
-      GENERICLOGGER_INFOF(genericLoggerp, "Rejected event %s", eventArrayp[eventArrayIteratorl].events);
-      break;
     case MARPAESLIF_EVENTTYPE_DISCARD:
       GENERICLOGGER_INFOF(genericLoggerp, "Discard event %s", eventArrayp[eventArrayIteratorl].events);
       break;
