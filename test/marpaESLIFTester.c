@@ -18,10 +18,13 @@ typedef struct marpaESLIFTester_context {
 
 const static char *exceptions = "\n"
   ":default ::= latm => 1\n"
+  ":start ::= start\n"
+  ":discard ::= whitespace event => DISCARD\n"
   "start ::= chars - startException\n"
   "chars ::= char*\n"
   "char ::= [a-zA-Z0-9_:]\n"
   "startException ::= chars ':' chars\n"
+  "whitespace ::= [\\s]\n"
 ;
 
 int main() {
@@ -78,7 +81,7 @@ int main() {
   {
     marpaESLIFTester_context_t   marpaESLIFTester_context;
     marpaESLIFRecognizerOption_t marpaESLIFRecognizerOption;
-    const static char           *inputs = "abd123:def";
+    const static char           *inputs = "abc 123:def";
 
     marpaESLIFTester_context.genericLoggerp = genericLoggerp;
     marpaESLIFTester_context.inputs         = (char *) inputs;
@@ -93,7 +96,7 @@ int main() {
     marpaESLIFRecognizerOption.buftriggerperci           = 50;
     marpaESLIFRecognizerOption.bufaddperci               = 50;
 
-    genericLogger_logLevel_seti(genericLoggerp, GENERICLOGGER_LOGLEVEL_DEBUG);
+    genericLogger_logLevel_seti(genericLoggerp, GENERICLOGGER_LOGLEVEL_TRACE);
     if (marpaESLIFGrammar_parseb(marpaESLIFGrammarp, &marpaESLIFRecognizerOption, NULL /* marpaESLIFValueOptionp */, NULL /* exhaustedbp */, NULL /* marpaESLIFValueResultp */)) {
       GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "\"%s\" match", inputs);
     } else {
