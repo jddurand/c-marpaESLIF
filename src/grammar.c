@@ -839,11 +839,9 @@ short marpaWrapperGrammar_eventb(marpaWrapperGrammar_t *marpaWrapperGrammarp, si
         }
       }
 
-      if (subscribedEventi > 0) {
-        if (subscribedEventi > 1) {
-          /* Sort the events */
-          qsort(marpaWrapperGrammarp->eventArrayp, subscribedEventi, sizeof(marpaWrapperGrammarEvent_t), &_marpaWrapperGrammar_cmpi);
-        }
+      if (subscribedEventi > 1) {
+        /* Sort the events */
+        qsort(marpaWrapperGrammarp->eventArrayp, subscribedEventi, sizeof(marpaWrapperGrammarEvent_t), &_marpaWrapperGrammar_cmpi);
       }
 
     }
