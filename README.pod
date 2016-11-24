@@ -795,7 +795,7 @@ Convenient method that returns the recognizer wrapper, C<NULL> if failure.
 
 =head2 marpaWrapperAsf_prunedValueb
 
-  typedef short (*marpaWrapperAsfOkRuleCallback_t)(void *userDatavp, genericStack_t *parentRuleiStackp, int rulei);
+  typedef short (*marpaWrapperAsfOkRuleCallback_t)(void *userDatavp, genericStack_t *parentRuleiStackp, int rulei, int arg0i, int argni);
   typedef short (*marpaWrapperAsfOkSymbolCallback_t)(void *userDatavp, genericStack_t *parentRuleiStackp, int symboli, int argi);
   typedef short (*marpaWrapperAsfOkNullingCallback_t)(void *userDatavp, genericStack_t *parentRuleiStackp, int symboli);
 
@@ -814,15 +814,15 @@ An example of how to use the ASF API. This method simulate the value namespace, 
 
 =item C<okRuleCallackp>
 
-Return 0 in case of failure, a positive value if success, a negative value if reject. It is called for the rule number C<rule>. Context in terms of parent rule IDs is in <parentRuleiStackp>.
+Return 0 in case of failure, a positive value if success, a negative value if reject. It is called for the rule number C<rule>. Context in terms of parent rule IDs is in <parentRuleiStackp>. C<rulei> is the rule number, C<arg0i> and C<argni> are the stack indices.
 
 =item C<okSymbolCallackp>
 
-Return 0 in case of failure, a positive value if success, a negative value if reject. It is called for the symbol number C<symboli> and the input at indice C<argi> in the input stack. Context in terms of parent rule IDs is in <parentRuleiStackp>.
+Return 0 in case of failure, a positive value if success, a negative value if reject. It is called for the symbol number C<symboli> and the input at indice C<argi> in the input stack. Context in terms of parent rule IDs is in <parentRuleiStackp>. C<symboli> is the symbol number, and C<argi> is the stack number.
 
 =item C<okNullingCallackp>
 
-Return 0 in case of failure, a positive value if success, a negative value if reject. It is called for the nulling symbol number C<symboli>, per def there is no associated input. Context in terms of parent rule IDs is in <parentRuleiStackp>.
+Return 0 in case of failure, a positive value if success, a negative value if reject. It is called for the nulling symbol number C<symboli>, per def there is no associated input. Context in terms of parent rule IDs is in <parentRuleiStackp>. C<symboli> is the symbol number.
 
 =item C<valueRuleCallbackp>
 
