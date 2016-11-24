@@ -4039,6 +4039,9 @@ static inline short _marpaESLIFRecognizer_resumeb(marpaESLIFRecognizer_t *marpaE
     if (initialEventsb) {
       initialEventsb = 0;
     }
+    if (marpaESLIFRecognizerp->eventArrayl > 0) {
+      break;
+    }
   } while (continueb);
 
   if (continuebp != NULL) {
@@ -5010,6 +5013,7 @@ static inline short _marpaESLIFRecognizer_grammar_eventsb(marpaESLIFRecognizer_t
         }
         nulledb     = 1;
         MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: nullable event", symbolp->descp->asciis);
+        break;
       case MARPAWRAPPERGRAMMAR_EVENT_EXPECTED:
         type        = MARPAESLIF_EVENTTYPE_PREDICTED;
         if (symbolp != NULL) {
