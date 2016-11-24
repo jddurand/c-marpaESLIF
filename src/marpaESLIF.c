@@ -4391,9 +4391,6 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
 
   /* Commit */
   if (! _marpaESLIFRecognizer_completeb(marpaESLIFRecognizerp)) {
-    /* Re-fetch event anyway as per the doc */
-    _marpaESLIFRecognizer_reset_eventsb(marpaESLIFRecognizerp);
-    _marpaESLIFRecognizer_push_grammar_eventsb(marpaESLIFRecognizerp);
 #ifndef MARPAESLIF_NTRACE
     marpaESLIFRecognizer_progressLogb(marpaESLIFRecognizerp,
                                       -1,
@@ -4403,12 +4400,6 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
                                       _marpaESLIFGrammar_symbolDescriptionCallback);
 #endif
     goto err;
-  } else {
-    /* Collect the new events */
-    _marpaESLIFRecognizer_reset_eventsb(marpaESLIFRecognizerp);
-    if (! _marpaESLIFRecognizer_push_grammar_eventsb(marpaESLIFRecognizerp)) {
-      goto err;
-    }
   }
 
   /* Remember this recognizer have at least one lexeme */
@@ -4621,6 +4612,13 @@ static inline short _marpaESLIFRecognizer_completeb(marpaESLIFRecognizer_t *marp
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
 
   rcb = marpaWrapperRecognizer_completeb(marpaESLIFRecognizerp->marpaWrapperRecognizerp);
+
+  /* Regardless of failure or success, events should always be fetched as per the doc */
+  _marpaESLIFRecognizer_reset_eventsb(marpaESLIFRecognizerp);
+  /* Okay, we consider that if complete succeeded and fetch of events fail, this is globally a failure */
+  if (! _marpaESLIFRecognizer_push_grammar_eventsb(marpaESLIFRecognizerp)) {
+    rcb = 0;
+  }
 
   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
   marpaESLIFRecognizerp->callstackCounteri--;
