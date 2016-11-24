@@ -54,8 +54,7 @@ typedef enum marpaESLIFEventType {
   MARPAESLIF_EVENTTYPE_BEFORE     = 0x08, /* Just before lexeme is commited */
   MARPAESLIF_EVENTTYPE_AFTER      = 0x10, /* Just after lexeme is commited */
   MARPAESLIF_EVENTTYPE_EXHAUSTED  = 0x20, /* Exhaustion */
-  MARPAESLIF_EVENTTYPE_REJECTED   = 0x40, /* Rejection */
-  MARPAESLIF_EVENTTYPE_DISCARD    = 0x80  /* Discard */
+  MARPAESLIF_EVENTTYPE_DISCARD    = 0x40  /* Discard */
 } marpaESLIFEventType_t;
 
 typedef struct marpaESLIFEvent {
