@@ -301,6 +301,12 @@ struct marpaESLIFRecognizer {
   short                       *nextReadIsFirstReadbp;
   short                       *noAnchorIsOkbp;  /* Flag to say if the "A" flag in regexp modifiers is allowed: removing PCRE2_ANCHOR is allowed ONLY is the whole stream was read once */
 
+  /* Current recognizer states */
+  short                        exhaustedb;
+  short                        completedb;
+  short                        continueb;
+  short                        nulledb;
+  short                        predictedb;
 };
 
 /* ------------------------------- */
