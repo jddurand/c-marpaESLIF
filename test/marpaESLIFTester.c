@@ -18,6 +18,7 @@ typedef struct marpaESLIFTester_context {
 } marpaESLIFTester_context_t;
 
 const static char *exceptions = "\n"
+  ":default ~ latm => 1\n"
   ":default ::= latm => 1\n"
   ":start ::= start\n"
   ":discard ::= whitespace event => DISCARD\n"
@@ -44,7 +45,8 @@ const static char *exceptions = "\n"
   "event ^char = predicted start\n"
   "event char[] = nulled start\n"
   "event char$ = completed start\n"
-  "char ::= [a-zA-Z0-9_:]\n"
+  ":lexeme ::= <char> pause => after event => after_char\n"
+  "char ~ [a-zA-Z0-9_:]\n"
   "\n"
   "event ^start_exception = predicted startException\n"
   "event start_exception[] = nulled startException\n"
