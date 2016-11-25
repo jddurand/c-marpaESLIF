@@ -4134,17 +4134,19 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
   marpaESLIFRecognizerp->havePauseBeforeEventb = 0;
   marpaESLIFRecognizerp->havePauseAfterEventb  = 0;
 
-  /* We always start by collecting the resetting and collect current events */
+  /* We always start by resetting and collecting current events */
   _marpaESLIFRecognizer_reset_eventsb(marpaESLIFRecognizerp);
-  if (! _marpaESLIFRecognizer_push_grammar_eventsb(marpaESLIFRecognizerp)) {
-    goto err;
-  }
   /* We break immediately if there are events and the initialEventsb is set. This can happen once */
   /* only in the whole lifetime of a recognizer. */
-  if (initialEventsb && (marpaESLIFRecognizerp->eventArrayl > 0)) {
-    marpaESLIFRecognizerp->continueb = ! marpaESLIFRecognizerp->exhaustedb;
-    rcb = 1;
-    goto done;
+  if (initialEventsb) {
+    if (! _marpaESLIFRecognizer_push_grammar_eventsb(marpaESLIFRecognizerp)) {
+      goto err;
+    }
+    if (marpaESLIFRecognizerp->eventArrayl > 0) {
+      marpaESLIFRecognizerp->continueb = ! marpaESLIFRecognizerp->exhaustedb;
+      rcb = 1;
+      goto done;
+    }
   }
   
   /* Ask for expected lexemes */
@@ -4622,6 +4624,7 @@ short marpaESLIFRecognizer_completeb(marpaESLIFRecognizer_t *marpaESLIFRecognize
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
 
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "Completing alternatives");
+  _marpaESLIFRecognizer_reset_eventsb(marpaESLIFRecognizerp);
   rcb = _marpaESLIFRecognizer_completeb(marpaESLIFRecognizerp);
 
   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
@@ -4663,7 +4666,6 @@ static inline short _marpaESLIFRecognizer_completeb(marpaESLIFRecognizer_t *marp
   rcb = marpaWrapperRecognizer_completeb(marpaESLIFRecognizerp->marpaWrapperRecognizerp);
 
   /* Regardless of failure or success, events should always be fetched as per the doc */
-  _marpaESLIFRecognizer_reset_eventsb(marpaESLIFRecognizerp);
   /* Okay, we consider that if complete succeeded and fetch of events fail, this is globally a failure */
   if (! _marpaESLIFRecognizer_push_grammar_eventsb(marpaESLIFRecognizerp)) {
     rcb = 0;
