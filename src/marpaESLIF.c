@@ -1212,6 +1212,7 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
    4. If at least one rule have rejection, rejection mode is on at the grammar level.
    5. For every rule that is a passthrough, then it is illegal to have its lhs appearing as an lhs is any other rule
    6. The semantic of a nullable LHS must be unique
+   7. lexeme events is meaningul only on lexemes -;
 
       It is not illegal to have sparse items in grammarStackp.
 
@@ -1773,6 +1774,33 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
             MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Nullable semantic of symbol %d (%s) is grammar's default", symbolp->idi, symbolp->descp->asciis, symbolp->nullableActions);
           }
 #endif
+        }
+      }
+    }
+  }
+
+  /*
+    7. lexeme events is meaningul only on lexemes -;
+  */
+  for (grammari = 0; grammari < GENERICSTACK_USED(grammarStackp); grammari++) {
+    if (! GENERICSTACK_IS_PTR(grammarStackp, grammari)) {
+      continue;
+    }
+    grammarp = (marpaESLIF_grammar_t *) GENERICSTACK_GET_PTR(grammarStackp, grammari);
+    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Checking lexeme events in grammar level %d (%s)", grammarp->leveli, grammarp->descp->asciis);
+
+    symbolStackp = grammarp->symbolStackp;
+    for (symboli = 0; symboli < GENERICSTACK_USED(symbolStackp); symboli++) {
+      if (! GENERICSTACK_IS_PTR(symbolStackp, symboli)) {
+        /* Should never happen, but who knows */
+        continue;
+      }
+      symbolp = (marpaESLIF_symbol_t *) GENERICSTACK_GET_PTR(symbolStackp, symboli);
+      if ((symbolp->lhsb) || (symbolp->type != MARPAESLIF_SYMBOL_TYPE_META)) {
+        /* This symbol is not a lexeme */
+        if ((symbolp->eventBefores != NULL) || (symbolp->eventAfters != NULL)) {
+          MARPAESLIF_ERRORF(marpaESLIFp, "Lexeme events on symbol <%s> at grammar level %d (%s) but it is not a lexeme", symbolp->descp->asciis, grammari, grammarp->descp->asciis);
+          goto err;
         }
       }
     }
