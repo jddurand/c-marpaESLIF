@@ -4102,6 +4102,14 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
   }
   marpaESLIFRecognizerp->resumeCounteri++; /* Increment internal counter for tracing */
 
+  marpaESLIFRecognizerp->exhaustedb            = 0;
+  marpaESLIFRecognizerp->completedb            = 0;
+  marpaESLIFRecognizerp->continueb             = 0;
+  marpaESLIFRecognizerp->nulledb               = 0;
+  marpaESLIFRecognizerp->predictedb            = 0;
+  marpaESLIFRecognizerp->havePauseBeforeEventb = 0;
+  marpaESLIFRecognizerp->havePauseAfterEventb  = 0;
+
   /* We always start by collecting the resetting and collect current events */
   _marpaESLIFRecognizer_reset_eventsb(marpaESLIFRecognizerp);
   if (! _marpaESLIFRecognizer_push_grammar_eventsb(marpaESLIFRecognizerp)) {
@@ -4387,6 +4395,7 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
                                              GENERICSTACK_USED(lexemeInputStackp) - 1)) {
       goto err;
     }
+
   }
 
   /* Commit */
@@ -4555,8 +4564,24 @@ static inline short _marpaESLIFRecognizer_alternativeb(marpaESLIFRecognizer_t *m
   }
 #endif
 
-  rcb = marpaWrapperRecognizer_alternativeb(marpaESLIFRecognizerp->marpaWrapperRecognizerp, symbolp->idi, valuei, 1);
+  if (! marpaWrapperRecognizer_alternativeb(marpaESLIFRecognizerp->marpaWrapperRecognizerp, symbolp->idi, valuei, 1)) {
+    goto err;
+  }
 
+  /* Lexeme pause is managed outside of marpa and only for top recognizer */
+  if ((symbolp->eventAfterb) && (symbolp->eventAfters != NULL) && (marpaESLIFRecognizerp->parentRecognizerp == NULL)) {
+    if (! _marpaESLIFRecognizer_push_eventb(marpaESLIFRecognizerp, MARPAESLIF_EVENTTYPE_AFTER, symbolp->eventAfters)) {
+      goto err;
+    }
+    marpaESLIFRecognizerp->havePauseAfterEventb = 1;
+  }
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
   marpaESLIFRecognizerp->callstackCounteri--;
   return rcb;
@@ -5220,6 +5245,14 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGramm
   marpaESLIFRecognizerp->haveLexemeb                = 0;
   marpaESLIFRecognizerp->linel                      = 1;
   marpaESLIFRecognizerp->columnl                    = 0;
+  /* These variables are resetted at every _resume_oneb() */
+  marpaESLIFRecognizerp->exhaustedb                 = 0;
+  marpaESLIFRecognizerp->completedb                 = 0;
+  marpaESLIFRecognizerp->continueb                  = 0;
+  marpaESLIFRecognizerp->nulledb                    = 0;
+  marpaESLIFRecognizerp->predictedb                 = 0;
+  marpaESLIFRecognizerp->havePauseBeforeEventb      = 0;
+  marpaESLIFRecognizerp->havePauseAfterEventb       = 0;
 
   marpaWrapperRecognizerOption.genericLoggerp       = marpaESLIFp->marpaESLIFOption.genericLoggerp;
   marpaWrapperRecognizerOption.disableThresholdb    = marpaESLIFRecognizerOptionp->disableThresholdb;

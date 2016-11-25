@@ -281,12 +281,6 @@ struct marpaESLIFRecognizer {
   size_t                       parentDeltal;   /* Parent original delta - used to recovert parent current pointer at our free */
   char                        *inputs;         /* Current pointer in input - specific to every recognizer */
   size_t                       inputl;         /* Current remaining bytes - specific to every recognizer */
-  short                        scanb;          /* Prevent resume before a call to scan */
-  short                        discardb;       /* Discard mode */
-  short                        silentb;        /* Silent mode */
-  short                        haveLexemeb;    /* Remember if this recognizer have at least one lexeme */
-  size_t                       linel;          /* Line number */
-  size_t                       columnl;        /* Column number */
   size_t                       bufsizl;        /* Effective bufsizl */
   size_t                       buftriggerl;    /* Minimum number of bytes to trigger crunch of data */
   short                        _nextReadIsFirstReadb; /* Flag to say if this is the first read ever done */
@@ -302,11 +296,19 @@ struct marpaESLIFRecognizer {
   short                       *noAnchorIsOkbp;  /* Flag to say if the "A" flag in regexp modifiers is allowed: removing PCRE2_ANCHOR is allowed ONLY is the whole stream was read once */
 
   /* Current recognizer states */
+  short                        scanb;          /* Prevent resume before a call to scan */
+  short                        discardb;       /* Discard mode */
+  short                        silentb;        /* Silent mode */
+  short                        haveLexemeb;    /* Remember if this recognizer have at least one lexeme */
+  size_t                       linel;          /* Line number */
+  size_t                       columnl;        /* Column number */
   short                        exhaustedb;
   short                        completedb;
   short                        continueb;
   short                        nulledb;
   short                        predictedb;
+  short                        havePauseBeforeEventb;
+  short                        havePauseAfterEventb;
 };
 
 /* ------------------------------- */
