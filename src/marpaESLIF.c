@@ -4440,31 +4440,37 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
   }
 
   /* Commit if there are lexemes unless pause before */
-  if (marpaESLIFRecognizerp->haveLexemeb && (! marpaESLIFRecognizerp->havePauseBeforeEventb)) {
-    if (! _marpaESLIFRecognizer_completeb(marpaESLIFRecognizerp)) {
+  if (marpaESLIFRecognizerp->haveLexemeb) {
+    if (! marpaESLIFRecognizerp->havePauseBeforeEventb) {
+      if (! _marpaESLIFRecognizer_completeb(marpaESLIFRecognizerp)) {
 #ifndef MARPAESLIF_NTRACE
-      marpaESLIFRecognizer_progressLogb(marpaESLIFRecognizerp,
-                                        -1,
-                                        -1,
-                                        GENERICLOGGER_LOGLEVEL_TRACE,
-                                        marpaESLIFGrammarp,
-                                        _marpaESLIFGrammar_symbolDescriptionCallback);
+        marpaESLIFRecognizer_progressLogb(marpaESLIFRecognizerp,
+                                          -1,
+                                          -1,
+                                          GENERICLOGGER_LOGLEVEL_TRACE,
+                                          marpaESLIFGrammarp,
+                                          _marpaESLIFGrammar_symbolDescriptionCallback);
 #endif
-      goto err;
-    }
+        goto err;
+      }
 
-    /* New line processing, etc... */
-    if (! _marpaESLIFRecognizer_matchPostProcessingb(marpaESLIFRecognizerp, maxMatchedl)) {
-      goto err;
+      /* New line processing, etc... */
+      if (! _marpaESLIFRecognizer_matchPostProcessingb(marpaESLIFRecognizerp, maxMatchedl)) {
+        goto err;
+      }
+      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Advancing stream internal position by %ld bytes", (unsigned long) maxMatchedl);
+      marpaESLIFRecognizerp->inputs += maxMatchedl;
+      marpaESLIFRecognizerp->inputl -= maxMatchedl;
+      marpaESLIFRecognizerp->continueb = ! marpaESLIFRecognizerp->exhaustedb; /* Continue unless exaustion */
+    } else {
+      marpaESLIFRecognizerp->continueb = 1; /* Continue is possible by defintion */
     }
-    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Advancing stream internal position by %ld bytes", (unsigned long) maxMatchedl);
-    marpaESLIFRecognizerp->inputs += maxMatchedl;
-    marpaESLIFRecognizerp->inputl -= maxMatchedl;
+  } else {
+    /* No lexeme: we do not continue if there is discard failure or if there is exhaustion */
+    marpaESLIFRecognizerp->continueb = (! discardFailureb) && (! marpaESLIFRecognizerp->exhaustedb);
   }
 
-  rcb = marpaESLIFRecognizerp->haveLexemeb; /* Global status is ok if at least one lexeme was recognizer */
-  /* We do not continue if there is discard failure or if there is exhaustion */
-  marpaESLIFRecognizerp->continueb = (! discardFailureb) && (! marpaESLIFRecognizerp->exhaustedb);
+  rcb = marpaESLIFRecognizerp->haveLexemeb; /* Global status is ok if at least one lexeme was recognized */
   goto done;
 
  err:
