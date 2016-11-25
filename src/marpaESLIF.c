@@ -4385,30 +4385,33 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
  /* if (latmb) { */
       /* If latm mode is true, keep only the longests alternatives */
       /* Already traced few lines higher */
-      if (sizel < maxMatchedl) {
-        continue;
-      }      
+    if (sizel < maxMatchedl) {
+      continue;
+    }
  /* } */
 
-      if (haveTerminalMatchedb) {
-        if (symbolp->type != MARPAESLIF_SYMBOL_TYPE_TERMINAL) {
-          MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp,
-                                      funcs,
-                                      "Alternative %s is out-prioritized (not a terminal)",
-                                      symbolp->descp->asciis);
-          continue;
-        }
-      } else {
-        if (symbolp->priorityi < maxPriorityi) {
-          MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp,
-                                      funcs,
-                                      "Alternative %s is out-prioritized (priority %d < max priority %d)",
-                                      symbolp->descp->asciis,
-                                      symbolp->priorityi,
-                                      maxPriorityi);
-          continue;
-        }
+    if (haveTerminalMatchedb) {
+      if (symbolp->type != MARPAESLIF_SYMBOL_TYPE_TERMINAL) {
+        MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp,
+                                    funcs,
+                                    "Alternative %s is out-prioritized (not a terminal)",
+                                    symbolp->descp->asciis);
+        continue;
       }
+    } else {
+      if (symbolp->priorityi < maxPriorityi) {
+        MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp,
+                                    funcs,
+                                    "Alternative %s is out-prioritized (priority %d < max priority %d)",
+                                    symbolp->descp->asciis,
+                                    symbolp->priorityi,
+                                    maxPriorityi);
+        continue;
+      }
+    }
+
+    /* Remember this recognizer have seen at least one lexeme */
+    marpaESLIFRecognizerp->haveLexemeb = 1;
 
     /* Pause before is manageable only inside the internal recognizer */
     if ((symbolp->eventBeforeb) && (symbolp->eventBefores != NULL) && (marpaESLIFRecognizerp->parentRecognizerp == NULL)) {
@@ -4436,8 +4439,8 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
 
   }
 
-  /* Commit unless pause before */
-  if (! marpaESLIFRecognizerp->havePauseBeforeEventb) {
+  /* Commit if there are lexemes unless pause before */
+  if (marpaESLIFRecognizerp->haveLexemeb && (! marpaESLIFRecognizerp->havePauseBeforeEventb)) {
     if (! _marpaESLIFRecognizer_completeb(marpaESLIFRecognizerp)) {
 #ifndef MARPAESLIF_NTRACE
       marpaESLIFRecognizer_progressLogb(marpaESLIFRecognizerp,
@@ -4450,9 +4453,6 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
       goto err;
     }
 
-    /* Remember this recognizer have at least one lexeme */
-    marpaESLIFRecognizerp->haveLexemeb = 1;
-  
     /* New line processing, etc... */
     if (! _marpaESLIFRecognizer_matchPostProcessingb(marpaESLIFRecognizerp, maxMatchedl)) {
       goto err;
@@ -4460,11 +4460,9 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
     MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Advancing stream internal position by %ld bytes", (unsigned long) maxMatchedl);
     marpaESLIFRecognizerp->inputs += maxMatchedl;
     marpaESLIFRecognizerp->inputl -= maxMatchedl;
-
-    rcb = marpaESLIFRecognizerp->haveLexemeb; /* Global status is ok if at least one lexeme matched */
-  } else {
-    rcb = 1; /* Per def something was seen */
   }
+
+  rcb = marpaESLIFRecognizerp->haveLexemeb; /* Global status is ok if at least one lexeme was recognizer */
   /* We do not continue if there is discard failure or if there is exhaustion */
   marpaESLIFRecognizerp->continueb = (! discardFailureb) && (! marpaESLIFRecognizerp->exhaustedb);
   goto done;
