@@ -333,7 +333,6 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_check_grammarp(marpaES
   if (grammarp == NULL) {
     /* Create it */
 
-    /* TO DO grammar option */
     marpaWrapperGrammarOption.genericLoggerp    = marpaESLIFp->marpaESLIFOption.genericLoggerp;
     marpaWrapperGrammarOption.warningIsErrorb   = marpaESLIFGrammarp->warningIsErrorb;
     marpaWrapperGrammarOption.warningIsIgnoredb = marpaESLIFGrammarp->warningIsIgnoredb;
@@ -401,8 +400,6 @@ static inline marpaESLIF_symbol_t *_marpaESLIF_bootstrap_check_meta_by_namep(mar
       goto err;
     }
     symbolp->type              = MARPAESLIF_SYMBOL_TYPE_META;
-    symbolp->startb            = 0; /* TO DO */
-    symbolp->discardb          = 0; /* TO DO */
     symbolp->u.metap           = metap;
     symbolp->idi               = metap->idi;
     symbolp->descp             = metap->descp;
@@ -1030,7 +1027,6 @@ static marpaESLIFValueRuleCallback_t _marpaESLIF_bootstrap_ruleActionResolver(vo
     MARPAESLIF_ERRORF(marpaESLIFp, "leveli is %d", leveli);
     goto err;
   }
-  /* TO DO */
        if (strcmp(actions, "G1_action_op_declare_1")                     == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_op_declare_1b;                     }
   else if (strcmp(actions, "G1_action_op_declare_2")                     == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_op_declare_2b;                     }
   else if (strcmp(actions, "G1_action_op_declare_3")                     == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_op_declare_3b;                     }
