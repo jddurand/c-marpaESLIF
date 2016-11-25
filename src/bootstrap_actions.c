@@ -345,7 +345,6 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_check_grammarp(marpaES
                                         NULL /* descEncodings */,
                                         NULL /* descs */,
                                         0 /* descl */,
-                                        0 /* latmb */,
                                         NULL /* defaultSymbolActions */,
                                         NULL /* defaultRuleActions */,
                                         NULL /* defaultFreeActions */);

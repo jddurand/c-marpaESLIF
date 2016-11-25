@@ -146,7 +146,8 @@ freeaction                     ::= 'free-action' =>' <free name>
 <right association>            ::= 'assoc' '=>' 'right'
 <group association>            ::= 'assoc' '=>' 'group'
 <separator specification>      ::= 'separator' '=>' <single symbol>
-<proper specification>         ::= 'proper' '=>' boolean
+<proper specification>         ::= 'proper' '=>' false
+<proper specification>         ::= 'proper' '=>' true
 <rank specification>           ::= 'rank' '=>' <signed integer>
 <null ranking specification>   ::= 'null-ranking' '=>' <null ranking constant>
 <null ranking specification>   ::= 'null' 'rank' '=>' <null ranking constant>
@@ -159,6 +160,7 @@ freeaction                     ::= 'free-action' =>' <free name>
 <event initializer>            ::= '=' <on or off>
 <on or off>                    ::= 'on' | 'off'
 <event initializer>            ::= # empty
+<latm specification>           ::= 'latm' '=>' false
 <latm specification>           ::= 'latm' '=>' true
 naming                         ::= 'name' '=>' <alternative name>
 <null adverb>                  ::= ','
@@ -217,8 +219,8 @@ quantifier             ::= '*' | '+'
 
 <signed integer>       ::= /[+-]?\d+/
 
+false                    ~ '0'
 true                     ~ '1'
-boolean                  ~ [01]
 
 <word character>               ~ [\w]   # \w is  [a-zA-Z0-9_]
 <one or more word characters>  ~ <word character>+

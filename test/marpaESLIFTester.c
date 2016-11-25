@@ -18,8 +18,6 @@ typedef struct marpaESLIFTester_context {
 } marpaESLIFTester_context_t;
 
 const static char *exceptions = "\n"
-  ":default ~ latm => 1\n"
-  ":default ::= latm => 1\n"
   ":start ::= start\n"
   ":discard ::= whitespace event => DISCARD\n"
   "event ^start = predicted start\n"
