@@ -18,7 +18,7 @@ typedef enum    marpaESLIF_symbol_type     marpaESLIF_symbol_type_t;
 typedef enum    marpaESLIF_terminal_type   marpaESLIF_terminal_type_t;
 typedef struct  marpaESLIF_terminal        marpaESLIF_terminal_t;
 typedef struct  marpaESLIF_meta            marpaESLIF_meta_t;
-typedef struct  marpaESLIF_symbol          marpaESLIF_symbol_t;
+typedef         marpaESLIFSymbol_t         marpaESLIF_symbol_t;
 typedef struct  marpaESLIF_rule            marpaESLIF_rule_t;
 typedef struct  marpaESLIF_grammar         marpaESLIF_grammar_t;
 typedef enum    marpaESLIF_matcher_value   marpaESLIF_matcher_value_t;
@@ -113,7 +113,7 @@ enum marpaESLIF_event_type {
 };
 
 /* A symbol */
-struct marpaESLIF_symbol {
+struct marpaESLIFSymbol {
   marpaESLIF_symbol_type_t     type;  /* Symbol type */
   union {
     marpaESLIF_terminal_t     *terminalp; /* Symbol is a terminal */
@@ -179,7 +179,7 @@ struct marpaESLIF_grammar {
   short                  latmb;                       /* Longest acceptable token match mode */
   marpaWrapperGrammar_t *marpaWrapperGrammarStartp;   /* Grammar implementation at :start */
   marpaWrapperGrammar_t *marpaWrapperGrammarDiscardp; /* Grammar implementation at :discard */
-  marpaESLIF_symbol_t   *discardSymbolp;              /* Discard symbol, used at grammar validation */
+  marpaESLIF_symbol_t   *discardp;                    /* Discard symbol, used at grammar validation */
   genericStack_t        *symbolStackp;                /* Stack of symbols */
   genericStack_t        *ruleStackp;                  /* Stack of rules */
   char                  *defaultSymbolActions;        /* Default action for symbols */
@@ -307,8 +307,9 @@ struct marpaESLIFRecognizer {
   short                        continueb;
   short                        nulledb;
   short                        predictedb;
-  short                        havePauseBeforeEventb;
-  short                        havePauseAfterEventb;
+  size_t                       alternativeLengthl;
+  genericStack_t              *alternativeStackp;         /* Current alternative stack */
+  genericStack_t              *commitedAlternativeStackp; /* Commited alternative stack (internal + external) */
 };
 
 /* ------------------------------- */
