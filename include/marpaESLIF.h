@@ -12,6 +12,7 @@ typedef struct marpaESLIF           marpaESLIF_t;
 typedef struct marpaESLIFGrammar    marpaESLIFGrammar_t;
 typedef struct marpaESLIFRecognizer marpaESLIFRecognizer_t;
 typedef struct marpaESLIFValue      marpaESLIFValue_t;
+typedef struct marpaESLIFSymbol     marpaESLIFSymbol_t;
 
 /* A string */
 typedef struct marpaESLIFString {
@@ -59,6 +60,7 @@ typedef enum marpaESLIFEventType {
 
 typedef struct marpaESLIFEvent {
   marpaESLIFEventType_t type;
+  marpaESLIFSymbol_t   *symbolp; /* Opaque pointer to be re-used if an alternative is to be pushed */
   char                 *events; /* Event name - NULL if exhaustion */
 } marpaESLIFEvent_t;
 
@@ -153,7 +155,8 @@ extern "C" {
   marpaESLIF_EXPORT marpaESLIFGrammar_t    *marpaESLIFRecognizer_grammarp(marpaESLIFRecognizer_t *marpaESLIFRecognizerp);
   marpaESLIF_EXPORT short                   marpaESLIFRecognizer_scanb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, short initialEventsb, short *continuebp, short *exhaustedbp);
   marpaESLIF_EXPORT short                   marpaESLIFRecognizer_resumeb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, short *continuebp, short *exhaustedbp);
-  marpaESLIF_EXPORT short                   marpaESLIFRecognizer_alternativeb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *asciis, int valuei);
+  marpaESLIF_EXPORT short                   marpaESLIFRecognizer_alternative_lengthb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, size_t alternativeLengthl);
+  marpaESLIF_EXPORT short                   marpaESLIFRecognizer_alternativeb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFSymbol_t *symbolp);
   marpaESLIF_EXPORT short                   marpaESLIFRecognizer_completeb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp);
   marpaESLIF_EXPORT short                   marpaESLIFRecognizer_eofb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp);
   marpaESLIF_EXPORT short                   marpaESLIFRecognizer_event_onoffb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, int symboli, marpaESLIFEventType_t eventSeti, int onoffb);
