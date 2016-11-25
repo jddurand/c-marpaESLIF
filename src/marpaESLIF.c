@@ -4410,6 +4410,18 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
         }
       }
 
+    /* Pause before is manageable only inside the internal recognizer */
+    if ((symbolp->eventBeforeb) && (symbolp->eventBefores != NULL) && (marpaESLIFRecognizerp->parentRecognizerp == NULL)) {
+      if (! _marpaESLIFRecognizer_push_eventb(marpaESLIFRecognizerp, MARPAESLIF_EVENTTYPE_BEFORE, symbolp->eventBefores)) {
+        goto err;
+      }
+      marpaESLIFRecognizerp->havePauseBeforeEventb = 1;
+    }
+
+    if (marpaESLIFRecognizerp->havePauseBeforeEventb) {
+      continue;
+    }
+
     /* Commit in the lexeme input stack */
     if (! _marpaESLIFRecognizer_lexemeStack_i_moveb(marpaESLIFRecognizerp, lexemeInputStackp, GENERICSTACK_USED(lexemeInputStackp), alternativeStackp, (int) symboll)) {
       goto err;
@@ -4424,31 +4436,35 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
 
   }
 
-  /* Commit */
-  if (! _marpaESLIFRecognizer_completeb(marpaESLIFRecognizerp)) {
+  /* Commit unless pause before */
+  if (! marpaESLIFRecognizerp->havePauseBeforeEventb) {
+    if (! _marpaESLIFRecognizer_completeb(marpaESLIFRecognizerp)) {
 #ifndef MARPAESLIF_NTRACE
-    marpaESLIFRecognizer_progressLogb(marpaESLIFRecognizerp,
-                                      -1,
-                                      -1,
-                                      GENERICLOGGER_LOGLEVEL_TRACE,
-                                      marpaESLIFGrammarp,
-                                      _marpaESLIFGrammar_symbolDescriptionCallback);
+      marpaESLIFRecognizer_progressLogb(marpaESLIFRecognizerp,
+                                        -1,
+                                        -1,
+                                        GENERICLOGGER_LOGLEVEL_TRACE,
+                                        marpaESLIFGrammarp,
+                                        _marpaESLIFGrammar_symbolDescriptionCallback);
 #endif
-    goto err;
-  }
+      goto err;
+    }
 
-  /* Remember this recognizer have at least one lexeme */
-  marpaESLIFRecognizerp->haveLexemeb = 1;
+    /* Remember this recognizer have at least one lexeme */
+    marpaESLIFRecognizerp->haveLexemeb = 1;
   
-  /* New line processing, etc... */
-  if (! _marpaESLIFRecognizer_matchPostProcessingb(marpaESLIFRecognizerp, maxMatchedl)) {
-    goto err;
-  }
-  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Advancing stream internal position by %ld bytes", (unsigned long) maxMatchedl);
-  marpaESLIFRecognizerp->inputs += maxMatchedl;
-  marpaESLIFRecognizerp->inputl -= maxMatchedl;
+    /* New line processing, etc... */
+    if (! _marpaESLIFRecognizer_matchPostProcessingb(marpaESLIFRecognizerp, maxMatchedl)) {
+      goto err;
+    }
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Advancing stream internal position by %ld bytes", (unsigned long) maxMatchedl);
+    marpaESLIFRecognizerp->inputs += maxMatchedl;
+    marpaESLIFRecognizerp->inputl -= maxMatchedl;
 
-  rcb = marpaESLIFRecognizerp->haveLexemeb; /* Global status is ok if at least one lexeme matched */
+    rcb = marpaESLIFRecognizerp->haveLexemeb; /* Global status is ok if at least one lexeme matched */
+  } else {
+    rcb = 1; /* Per def something was seen */
+  }
   /* We do not continue if there is discard failure or if there is exhaustion */
   marpaESLIFRecognizerp->continueb = (! discardFailureb) && (! marpaESLIFRecognizerp->exhaustedb);
   goto done;
