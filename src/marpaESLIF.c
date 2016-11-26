@@ -2812,7 +2812,7 @@ marpaESLIF_t *marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptionp)
 
     if (marpaESLIFGrammar_ngrammari(marpaESLIFp->marpaESLIFGrammarp, &ngrammari)) {
       for (i = 0; i < ngrammari; i++) {
-        if (marpaESLIFGrammar_rules_by_grammarb(marpaESLIFp->marpaESLIFGrammarp, &ruleip, &rulel, i /* grammari */, NULL /* descp */)) {
+        if (marpaESLIFGrammar_rulearray_by_grammarb(marpaESLIFp->marpaESLIFGrammarp, &ruleip, &rulel, i /* grammari */, NULL /* descp */)) {
           GENERICLOGGER_TRACEF(genericLoggerp, "[%s] -------------------------", funcs);
           GENERICLOGGER_TRACEF(genericLoggerp, "[%s] ESLIF grammar at level %d:", funcs, i);
           GENERICLOGGER_TRACEF(genericLoggerp, "[%s] -------------------------", funcs);
@@ -3755,14 +3755,14 @@ short marpaESLIFGrammar_starti_by_grammarb(marpaESLIFGrammar_t *marpaESLIFGramma
 }
 
 /*****************************************************************************/
-short marpaESLIFGrammar_rulesb(marpaESLIFGrammar_t *marpaESLIFGrammarp, int **ruleipp, size_t *rulelp)
+short marpaESLIFGrammar_rulearrayb(marpaESLIFGrammar_t *marpaESLIFGrammarp, int **ruleipp, size_t *rulelp)
 /*****************************************************************************/
 {
-  return marpaESLIFGrammar_rules_by_grammarb(marpaESLIFGrammarp, ruleipp, rulelp, 0 /* grammari */, NULL /* descp */);
+  return marpaESLIFGrammar_rulearray_by_grammarb(marpaESLIFGrammarp, ruleipp, rulelp, 0 /* grammari */, NULL /* descp */);
 }
 
 /*****************************************************************************/
-short marpaESLIFGrammar_rules_by_grammarb(marpaESLIFGrammar_t *marpaESLIFGrammarp, int **ruleipp, size_t *rulelp, int grammari, marpaESLIFString_t *descp)
+short marpaESLIFGrammar_rulearray_by_grammarb(marpaESLIFGrammar_t *marpaESLIFGrammarp, int **ruleipp, size_t *rulelp, int grammari, marpaESLIFString_t *descp)
 /*****************************************************************************/
 {
   marpaESLIF_grammar_t *grammarp;
@@ -4417,12 +4417,7 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
   /* Commit */
   if (! marpaESLIFRecognizer_completeb(marpaESLIFRecognizerp)) {
 #ifndef MARPAESLIF_NTRACE
-    marpaESLIFRecognizer_progressLogb(marpaESLIFRecognizerp,
-                                      -1,
-                                      -1,
-                                      GENERICLOGGER_LOGLEVEL_TRACE,
-                                      marpaESLIFGrammarp,
-                                      _marpaESLIFGrammar_symbolDescriptionCallback);
+    marpaESLIFRecognizer_progressLogb(marpaESLIFRecognizerp, -1, -1, GENERICLOGGER_LOGLEVEL_TRACE);
 #endif
     goto err;
   }
@@ -4458,12 +4453,7 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
     if (! marpaESLIFRecognizerp->silentb) {
       MARPAESLIF_ERROR(marpaESLIFRecognizerp->marpaESLIFp, "--------------------------------------------");
       MARPAESLIF_ERROR(marpaESLIFRecognizerp->marpaESLIFp, "Recognizer failure. Current state:");
-      marpaESLIFRecognizer_progressLogb(marpaESLIFRecognizerp,
-                                        -1,
-                                        -1,
-                                        GENERICLOGGER_LOGLEVEL_ERROR,
-                                        marpaESLIFRecognizerp->marpaESLIFGrammarp,
-                                        _marpaESLIFGrammar_symbolDescriptionCallback);
+      marpaESLIFRecognizer_progressLogb(marpaESLIFRecognizerp, -1, -1, GENERICLOGGER_LOGLEVEL_ERROR);
       MARPAESLIF_ERROR(marpaESLIFRecognizerp->marpaESLIFp, "--------------------------------------------");
       if (nSymboll <= 0) {
         MARPAESLIF_ERROR(marpaESLIFRecognizerp->marpaESLIFp, "There was no expected terminal");
@@ -4499,13 +4489,13 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
       if (marpaESLIFRecognizerp->marpaESLIFRecognizerOption.newlineb) {
         if (marpaESLIFRecognizerp->columnl > 0) {
           /* Column is known (in terms of character count) */
-          MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "RECOGNIZER FAILURE AFTER LINE No %ld COLUMN No %ld, HERE:", (unsigned long) marpaESLIFRecognizerp->linel, (unsigned long) marpaESLIFRecognizerp->columnl);
+          MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "<<<<<< RECOGNIZER FAILURE AFTER LINE No %ld COLUMN No %ld, HERE: >>>>>>", (unsigned long) marpaESLIFRecognizerp->linel, (unsigned long) marpaESLIFRecognizerp->columnl);
         } else {
           /* Column is not known */
-          MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "RECOGNIZER FAILURE AFTER LINE No %ld, HERE:", (unsigned long) marpaESLIFRecognizerp->linel);
+          MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "<<<<<< RECOGNIZER FAILURE AFTER LINE No %ld, HERE: >>>>>>", (unsigned long) marpaESLIFRecognizerp->linel);
         }
       } else {
-        MARPAESLIF_ERROR(marpaESLIFRecognizerp->marpaESLIFp, "RECOGNIZER FAILURE HERE:");
+        MARPAESLIF_ERROR(marpaESLIFRecognizerp->marpaESLIFp, "<<<<<< RECOGNIZER FAILURE HERE: >>>>>>");
       }
       /* If there is some information after, show it */
       if ((marpaESLIFRecognizerp->inputs != NULL) && (marpaESLIFRecognizerp->inputl > 0)) {
@@ -7045,7 +7035,7 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIF_t *marpaESLIFp, ma
     }
   }
 
-  if (marpaESLIFGrammar_rules_by_grammarb(marpaESLIFGrammarp, &ruleip, &rulel, grammarp->leveli, NULL /* descp */)) {
+  if (marpaESLIFGrammar_rulearray_by_grammarb(marpaESLIFGrammarp, &ruleip, &rulel, grammarp->leveli, NULL /* descp */)) {
     for (l = 0; l < rulel; l++) {
       if (marpaESLIFGrammar_ruleshowform_by_grammarb(marpaESLIFGrammarp, l, &ruleshows, grammarp->leveli, NULL /* descp */)) {
         if (ruleshows == NULL) {
@@ -7453,7 +7443,7 @@ static inline short _marpaESLIFRecognizer_matchPostProcessingb(marpaESLIFRecogni
 }
 
 /*****************************************************************************/
-short marpaESLIFRecognizer_progressLogb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, int starti, int endi, genericLoggerLevel_t logleveli, void *userDatavp, marpaESLISymbolDescriptionCallback_t symbolDescriptionCallbackp)
+short marpaESLIFRecognizer_progressLogb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, int starti, int endi, genericLoggerLevel_t logleveli)
 /*****************************************************************************/
 {
   static const char *funcs = "marpaESLIFRecognizer_progressLogb";
@@ -7466,8 +7456,8 @@ short marpaESLIFRecognizer_progressLogb(marpaESLIFRecognizer_t *marpaESLIFRecogn
                                             starti,
                                             endi,
                                             logleveli,
-                                            userDatavp,
-                                            symbolDescriptionCallbackp);
+                                            marpaESLIFRecognizerp->marpaESLIFGrammarp,
+                                            _marpaESLIFGrammar_symbolDescriptionCallback);
 
   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
   marpaESLIFRecognizerp->callstackCounteri--;
@@ -7962,9 +7952,7 @@ static inline void _marpaESLIFValueErrorProgressReportv(marpaESLIFValue_t *marpa
                                         starti,
                                         /* lengthi is zero when this is a MARPA_STEP_NULLABLE_SYMBOL */
                                         (lengthi > 0) ? starti+lengthi-1 : starti,
-                                        GENERICLOGGER_LOGLEVEL_ERROR,
-                                        marpaESLIFRecognizerp->marpaESLIFGrammarp,
-                                        _marpaESLIFGrammar_symbolDescriptionCallback);
+                                        GENERICLOGGER_LOGLEVEL_ERROR);
     }
   }
 }
