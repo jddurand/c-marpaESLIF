@@ -82,7 +82,6 @@ typedef enum bootstrap_grammar_G1_enum {
   G1_META_QUANTIFIED_RULE,
   G1_META_DISCARD_RULE,
   G1_META_DEFAULT_RULE,
-  G1_META_DISCARD_DEFAULT_STATEMENT,
   G1_META_LEXEME_RULE,
   G1_META_COMPLETION_EVENT_DECLARATION,
   G1_META_NULLED_EVENT_DECLARATION,
@@ -167,7 +166,6 @@ bootstrap_grammar_meta_t bootstrap_grammar_G1_metas[] = {
   { G1_META_QUANTIFIED_RULE,                  "quantified rule", 0, 0 },
   { G1_META_DISCARD_RULE,                     "discard rule", 0, 0 },
   { G1_META_DEFAULT_RULE,                     "default rule", 0, 0 },
-  { G1_META_DISCARD_DEFAULT_STATEMENT,        "discard default statement", 0, 0 },
   { G1_META_LEXEME_RULE,                      "lexeme rule", 0, 0 },
   { G1_META_COMPLETION_EVENT_DECLARATION,     "completion event declaration", 0, 0 },
   { G1_META_NULLED_EVENT_DECLARATION,         "nulled event declaration", 0, 0 },
@@ -189,8 +187,8 @@ bootstrap_grammar_meta_t bootstrap_grammar_G1_metas[] = {
   { G1_META_ADVERB_LIST_ITEMS,                "adverb list items", 0, 0 },
   { G1_META_ADVERB_ITEM,                      "adverb item", 0, 0 },
   { G1_META_ACTION,                           "action", 0, 0 },
-  { G1_META_SYMBOL_ACTION,                    "symbol-action,", 0, 0 },
-  { G1_META_FREE_ACTION,                      "free-action", 0, 0 },
+  { G1_META_SYMBOL_ACTION,                    "symbol action", 0, 0 },
+  { G1_META_FREE_ACTION,                      "free action", 0, 0 },
   { G1_META_LEFT_ASSOCIATION,                 "left association", 0, 0 },
   { G1_META_RIGHT_ASSOCIATION,                "right association", 0, 0 },
   { G1_META_GROUP_ASSOCIATION,                "group association", 0, 0 },
@@ -763,7 +761,6 @@ bootstrap_grammar_rule_t bootstrap_grammar_G1_rules[] = {
   /*
     lhsi                                      descs                                           type                          nrhsl  { rhsi }                                       }  minimumi           separatori  properb
   */
-  { G1_META_STATEMENT,                        G1_RULE_STATEMENT_11,                           MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_DISCARD_DEFAULT_STATEMENT            }, -1,                        -1, -1 , G1_ACTION_STATEMENT_11 },
   { G1_META_STATEMENT,                        G1_RULE_STATEMENT_12,                           MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_LEXEME_RULE                          }, -1,                        -1, -1 , G1_ACTION_STATEMENT_12 },
   { G1_META_STATEMENT,                        G1_RULE_STATEMENT_13,                           MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_COMPLETION_EVENT_DECLARATION         }, -1,                        -1, -1 , G1_ACTION_STATEMENT_13 },
   { G1_META_STATEMENT,                        G1_RULE_STATEMENT_14,                           MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_NULLED_EVENT_DECLARATION             }, -1,                        -1, -1 , G1_ACTION_STATEMENT_14 },
@@ -811,14 +808,6 @@ bootstrap_grammar_rule_t bootstrap_grammar_G1_rules[] = {
   /*
     lhsi                                      descs                                           type                          nrhsl  { rhsi }                                       }  minimumi           separatori  properb
   */
-  { G1_META_DISCARD_DEFAULT_STATEMENT,        G1_RULE_DISCARD_DEFAULT_STATEMENT_1,            MARPAESLIF_RULE_TYPE_ALTERNATIVE, 4, { G1_TERMINAL_DISCARD,
-                                                                                                                                     G1_TERMINAL_DEFAULT,
-                                                                                                                                     G1_TERMINAL_EQUAL,
-                                                                                                                                     G1_META_ADVERB_LIST                          }, -1,                        -1, -1 , G1_ACTION_DISCARD_DEFAULT_STATEMENT_1 },
-  { G1_META_DISCARD_DEFAULT_STATEMENT,        G1_RULE_DISCARD_DEFAULT_STATEMENT_2,            MARPAESLIF_RULE_TYPE_ALTERNATIVE, 4, { G1_TERMINAL_DISCARD,
-                                                                                                                                     G1_META_OP_DECLARE,
-                                                                                                                                     G1_TERMINAL_EQUAL,
-                                                                                                                                     G1_META_ADVERB_LIST                          }, -1,                        -1, -1 , G1_ACTION_DISCARD_DEFAULT_STATEMENT_2 },
   { G1_META_LEXEME_RULE,                      G1_RULE_LEXEME_RULE,                            MARPAESLIF_RULE_TYPE_ALTERNATIVE, 4, { G1_TERMINAL__LEXEME,
                                                                                                                                      G1_META_OP_DECLARE,
                                                                                                                                      G1_META_SYMBOL,

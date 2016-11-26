@@ -6937,7 +6937,9 @@ static inline void _marpaESLIF_rule_createshowv(marpaESLIF_t *marpaESLIFp, marpa
     MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, (rulep->minimumi == 0) ? "*" : "+");
     if (rulep->separatorp != NULL) {
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " separator => ");
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "<");
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, rulep->separatorp->descp->asciis);
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, ">");
     }
     if (rulep->properb) {
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " proper => 1");
