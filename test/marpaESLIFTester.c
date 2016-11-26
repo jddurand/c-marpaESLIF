@@ -73,7 +73,7 @@ int main() {
   marpaESLIFRecognizer_t      *marpaESLIFRecognizerp = NULL;
   short                        continueb;
   short                        exhaustedb;
-  const static char           *inputs = "abc 123:def";
+  const static char           *inputs = "abc\\ 123:def";
 
   genericLoggerp = GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_DEBUG);
 
@@ -113,7 +113,7 @@ int main() {
   marpaESLIFRecognizerOption.userDatavp                = &marpaESLIFTester_context;
   marpaESLIFRecognizerOption.marpaESLIFReaderCallbackp = inputReaderb;
   marpaESLIFRecognizerOption.disableThresholdb         = 0;
-  marpaESLIFRecognizerOption.exhaustedb                = 1;
+  marpaESLIFRecognizerOption.exhaustedb                = 0;
   marpaESLIFRecognizerOption.newlineb                  = 1;
   marpaESLIFRecognizerOption.bufsizl                   = 0;
   marpaESLIFRecognizerOption.buftriggerperci           = 50;
