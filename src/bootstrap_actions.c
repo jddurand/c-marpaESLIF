@@ -25,7 +25,7 @@ static inline void _marpaESLIF_bootstrap_event_initialization_freev(marpaESLIF_b
 
 static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_check_grammarp(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammar_t *marpaESLIFGrammarp, int leveli, marpaESLIF_bootstrap_utf_string_t *stringp);
 static inline marpaESLIF_symbol_t  *_marpaESLIF_bootstrap_check_meta_by_namep(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, char *asciinames, short createb);
-static inline short                 _marpaESLIF_bootstrap_search_terminal_by_descriptionp(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, marpaESLIF_terminal_type_t terminalType, marpaESLIF_bootstrap_utf_string_t *stringp, marpaESLIF_symbol_t **symbolpp);
+static inline short                 _marpaESLIF_bootstrap_search_terminal_by_descriptionb(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, marpaESLIF_terminal_type_t terminalType, marpaESLIF_bootstrap_utf_string_t *stringp, marpaESLIF_symbol_t **symbolpp);
 static inline marpaESLIF_symbol_t  *_marpaESLIF_bootstrap_check_terminal_by_typep(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, marpaESLIF_terminal_type_t terminalType, marpaESLIF_bootstrap_utf_string_t *stringp, short createb);
 static inline marpaESLIF_symbol_t  *_marpaESLIF_bootstrap_check_quotedStringp(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, marpaESLIF_bootstrap_utf_string_t *quotedStringp, short createb);
 static inline marpaESLIF_symbol_t  *_marpaESLIF_bootstrap_check_regexp(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, marpaESLIF_bootstrap_utf_string_t *regexp, short createb);
@@ -424,7 +424,7 @@ static inline marpaESLIF_symbol_t *_marpaESLIF_bootstrap_check_meta_by_namep(mar
 }
 
 /*****************************************************************************/
-static inline short _marpaESLIF_bootstrap_search_terminal_by_descriptionp(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, marpaESLIF_terminal_type_t terminalType, marpaESLIF_bootstrap_utf_string_t *stringp, marpaESLIF_symbol_t **symbolpp)
+static inline short _marpaESLIF_bootstrap_search_terminal_by_descriptionb(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, marpaESLIF_terminal_type_t terminalType, marpaESLIF_bootstrap_utf_string_t *stringp, marpaESLIF_symbol_t **symbolpp)
 /*****************************************************************************/
 {
   marpaESLIF_symbol_t   *symbolp = NULL;
@@ -461,6 +461,21 @@ static inline short _marpaESLIF_bootstrap_search_terminal_by_descriptionp(marpaE
     if (! _marpaESLIF_string_eqb(symbol_i_p->u.terminalp->descp, terminalp->descp)) {
       continue;
     }
+   /* Modifiers ? */
+    if ((stringp->modifiers != NULL) && (symbol_i_p->u.terminalp->modifiers == NULL)) {
+      continue;
+    }
+    if ((stringp->modifiers == NULL) && (symbol_i_p->u.terminalp->modifiers != NULL)) {
+      continue;
+    }
+    /* Either both are NULL, or both are not NULL */
+    /* We do not try to re-evaluate the modifiers. Even if at the end this would give the same */
+    /* PCRE2 option, at most this will generate a new terminal technically equivalent */
+    if (stringp->modifiers != NULL) {
+      if (strcmp(stringp->modifiers, symbol_i_p->u.terminalp->modifiers) != 0) {
+        continue;
+      }
+    }
     /* Got it */
     symbolp = symbol_i_p;
     break;
@@ -489,7 +504,7 @@ static inline marpaESLIF_symbol_t  *_marpaESLIF_bootstrap_check_terminal_by_type
   marpaESLIF_symbol_t   *symbolp   = NULL;
   marpaESLIF_terminal_t *terminalp = NULL;
 
-  if (! _marpaESLIF_bootstrap_search_terminal_by_descriptionp(marpaESLIFp, grammarp, terminalType, stringp, &symbolp)) {
+  if (! _marpaESLIF_bootstrap_search_terminal_by_descriptionb(marpaESLIFp, grammarp, terminalType, stringp, &symbolp)) {
     goto err;
   }
 
