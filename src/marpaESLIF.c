@@ -220,6 +220,7 @@ static        short                  _marpaESLIF_symbol_action___asciib(void *us
 static        short                  _marpaESLIF_symbol_action___translitb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *bytep, size_t bytel, int resulti);
 static        short                  _marpaESLIF_symbol_action___concatb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *bytep, size_t bytel, int resulti);
 static inline short                  _marpaESLIF_symbol_action___charconvb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *bytep, size_t bytel, int resulti, char *toEncodings);
+static        int                    _marpaESLIF_event_sorti(const void *p1, const void *p2);
 
 /*****************************************************************************/
 static inline marpaESLIF_string_t *_marpaESLIF_string_newp(marpaESLIF_t *marpaESLIFp, char *encodingasciis, char *bytep, size_t bytel, short asciib)
@@ -5087,6 +5088,11 @@ static inline void _marpaESLIFRecognizer_reset_eventsb(marpaESLIFRecognizer_t *m
     }
     eventArrayp[marpaESLIFRecognizerp->eventArrayl++] = eventArray;
     marpaESLIFRecognizerp->eventArrayp = eventArrayp;
+  }
+
+  if (marpaESLIFRecognizerp->eventArrayl > 1) {
+    /* Sort the events */
+    qsort(marpaESLIFRecognizerp->eventArrayp, marpaESLIFRecognizerp->eventArrayl, sizeof(marpaESLIFEvent_t), _marpaESLIF_event_sorti);
   }
 
  no_push:
@@ -10720,5 +10726,115 @@ short marpaESLIFRecognizer_alternative_lengthb(marpaESLIFRecognizer_t *marpaESLI
   marpaESLIFRecognizerp->callstackCounteri--;
   return rcb;
 }
+
+/*****************************************************************************/
+static int _marpaESLIF_event_sorti(const void *p1, const void *p2)
+/*****************************************************************************/
+{
+  marpaESLIFEvent_t *event1p = (marpaESLIFEvent_t *) p1;
+  marpaESLIFEvent_t *event2p = (marpaESLIFEvent_t *) p2;
+  int                rci;
+  
+  /* The order is:
+
+     MARPAESLIF_EVENTTYPE_PREDICTED
+     MARPAESLIF_EVENTTYPE_BEFORE
+     MARPAESLIF_EVENTTYPE_NULLED
+     MARPAESLIF_EVENTTYPE_AFTER
+     MARPAESLIF_EVENTTYPE_COMPLETED
+     MARPAESLIF_EVENTTYPE_DISCARD
+     MARPAESLIF_EVENTTYPE_EXHAUSTED
+     else
+       no order
+  */
+
+  
+  switch (event1p->type) {
+  case MARPAESLIF_EVENTTYPE_NONE: /* Should never happen */
+    rci = 0;
+    break;
+  case MARPAESLIF_EVENTTYPE_PREDICTED:
+    switch (event2p->type) {
+    case MARPAESLIF_EVENTTYPE_PREDICTED:  rci =  0; break;
+    case MARPAESLIF_EVENTTYPE_BEFORE:     rci = -1; break;
+    case MARPAESLIF_EVENTTYPE_NULLED:     rci = -1; break;
+    case MARPAESLIF_EVENTTYPE_AFTER:      rci = -1; break;
+    case MARPAESLIF_EVENTTYPE_COMPLETED:  rci = -1; break;
+    case MARPAESLIF_EVENTTYPE_DISCARD:    rci = -1; break;
+    case MARPAESLIF_EVENTTYPE_EXHAUSTED:  rci = -1; break;
+    default:                              rci =  0; break; /* Should never happen */
+    }
+    break;
+  case MARPAESLIF_EVENTTYPE_BEFORE:
+    switch (event2p->type) {
+    case MARPAESLIF_EVENTTYPE_PREDICTED:  rci =  1; break;
+    case MARPAESLIF_EVENTTYPE_BEFORE:     rci =  0; break;
+    case MARPAESLIF_EVENTTYPE_NULLED:     rci = -1; break;
+    case MARPAESLIF_EVENTTYPE_AFTER:      rci = -1; break;
+    case MARPAESLIF_EVENTTYPE_COMPLETED:  rci = -1; break;
+    case MARPAESLIF_EVENTTYPE_DISCARD:    rci = -1; break;
+    case MARPAESLIF_EVENTTYPE_EXHAUSTED:  rci = -1; break;
+    default:                              rci =  0; break; /* Should never happen */
+    }
+    break;
+  case MARPAESLIF_EVENTTYPE_NULLED:
+    switch (event2p->type) {
+    case MARPAESLIF_EVENTTYPE_PREDICTED:  rci =  1; break;
+    case MARPAESLIF_EVENTTYPE_BEFORE:     rci =  1; break;
+    case MARPAESLIF_EVENTTYPE_NULLED:     rci =  0; break;
+    case MARPAESLIF_EVENTTYPE_AFTER:      rci = -1; break;
+    case MARPAESLIF_EVENTTYPE_COMPLETED:  rci = -1; break;
+    case MARPAESLIF_EVENTTYPE_DISCARD:    rci = -1; break;
+    case MARPAESLIF_EVENTTYPE_EXHAUSTED:  rci = -1; break;
+    default:                              rci =  0; break; /* Should never happen */
+    }
+    break;
+  case MARPAESLIF_EVENTTYPE_AFTER:
+    switch (event2p->type) {
+    case MARPAESLIF_EVENTTYPE_PREDICTED:  rci =  1; break;
+    case MARPAESLIF_EVENTTYPE_BEFORE:     rci =  1; break;
+    case MARPAESLIF_EVENTTYPE_NULLED:     rci =  1; break;
+    case MARPAESLIF_EVENTTYPE_AFTER:      rci =  0; break;
+    case MARPAESLIF_EVENTTYPE_COMPLETED:  rci = -1; break;
+    case MARPAESLIF_EVENTTYPE_DISCARD:    rci = -1; break;
+    case MARPAESLIF_EVENTTYPE_EXHAUSTED:  rci = -1; break;
+    default:                              rci =  0; break; /* Should never happen */
+    }
+    break;
+  case MARPAESLIF_EVENTTYPE_COMPLETED:
+    switch (event2p->type) {
+    case MARPAESLIF_EVENTTYPE_PREDICTED:  rci =  1; break;
+    case MARPAESLIF_EVENTTYPE_BEFORE:     rci =  1; break;
+    case MARPAESLIF_EVENTTYPE_NULLED:     rci =  1; break;
+    case MARPAESLIF_EVENTTYPE_AFTER:      rci =  1; break;
+    case MARPAESLIF_EVENTTYPE_COMPLETED:  rci =  0; break;
+    case MARPAESLIF_EVENTTYPE_DISCARD:    rci = -1; break;
+    case MARPAESLIF_EVENTTYPE_EXHAUSTED:  rci = -1; break;
+    default:                              rci =  0; break; /* Should never happen */
+    }
+    break;
+  case MARPAESLIF_EVENTTYPE_DISCARD:
+    switch (event2p->type) {
+    case MARPAESLIF_EVENTTYPE_PREDICTED:  rci =  1; break;
+    case MARPAESLIF_EVENTTYPE_BEFORE:     rci =  1; break;
+    case MARPAESLIF_EVENTTYPE_NULLED:     rci =  1; break;
+    case MARPAESLIF_EVENTTYPE_AFTER:      rci =  1; break;
+    case MARPAESLIF_EVENTTYPE_COMPLETED:  rci =  1; break;
+    case MARPAESLIF_EVENTTYPE_DISCARD:    rci =  0; break;
+    case MARPAESLIF_EVENTTYPE_EXHAUSTED:  rci = -1; break;
+    default:                              rci =  0; break; /* Should never happen */
+    }
+    break;
+  case MARPAESLIF_EVENTTYPE_EXHAUSTED: /* Always at the very end */
+    rci = 1;
+    break;
+  default: /* Should never happen */
+    rci = 0;
+    break;
+  }
+
+  return rci;
+}
+
 
 #include "bootstrap_actions.c"
