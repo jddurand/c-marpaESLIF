@@ -230,19 +230,8 @@ struct marpaESLIFValue {
   genericStack_t           *typeStackp;
   genericStack_t           *contextStackp;
   short                     inValuationb;
-  int                       symboli;
-  int                       rulei;
-  /* Keep last value */
-  char                      lastValuec;
-  short                     lastValueb;
-  int                       lastValuei;
-  long                      lastValuel;
-  float                     lastValuef;
-  double                    lastValued;
-  void                     *lastValuep;
-  size_t                    lastSizel;
-  marpaESLIFStackType_t     lastTypei;
-  int                       lastContexti;
+  marpaESLIF_symbol_t      *currentSymbolp;
+  marpaESLIF_rule_t        *currentRulep;
 };
 
 struct marpaESLIFRecognizer {
@@ -298,15 +287,14 @@ struct marpaESLIFRecognizer {
   /* Current recognizer states */
   short                        scanb;          /* Prevent resume before a call to scan */
   short                        discardb;       /* Discard mode */
+  short                        exceptionb;     /* Exception mode */
   short                        silentb;        /* Silent mode */
   short                        haveLexemeb;    /* Remember if this recognizer have at least one lexeme */
   size_t                       linel;          /* Line number */
   size_t                       columnl;        /* Column number */
-  short                        exhaustedb;
-  short                        completedb;
+  short                        exhaustedb;     /* Internally, every recognizer need to know if parsing is exhausted */
+  short                        completedb;     /* Ditto for completion (used in case od discard events) */
   short                        continueb;
-  short                        nulledb;
-  short                        predictedb;
   size_t                       alternativeLengthl;
   genericStack_t              *alternativeStackp;         /* Current alternative stack */
   genericStack_t              *commitedAlternativeStackp; /* Commited alternative stack (internal + external) */
