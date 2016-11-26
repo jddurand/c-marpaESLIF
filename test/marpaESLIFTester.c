@@ -316,6 +316,7 @@ static short eventManagerb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, generi
   short              rcb;
   char              *inputs;
   size_t             inputl;
+  short              eofb;
 
   marpaESLIFRecognizer_eventb(marpaESLIFRecognizerp, &eventArrayl, &eventArrayp);
 
@@ -331,8 +332,8 @@ static short eventManagerb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, generi
       GENERICLOGGER_INFOF(genericLoggerp, "Predicted event %s for symbol <%s>", eventArrayp[eventArrayIteratorl].events, eventArrayp[eventArrayIteratorl].symbols);
       break;
     case MARPAESLIF_EVENTTYPE_BEFORE:
-      marpaESLIFRecognizer_inputv(marpaESLIFRecognizerp, &inputs, &inputl);
-      GENERICLOGGER_INFOF(genericLoggerp, "Before event %s for symbol <%s> (character is %c (0x%lx))", eventArrayp[eventArrayIteratorl].events, eventArrayp[eventArrayIteratorl].symbols, *inputs, (unsigned long) *inputs);
+      marpaESLIFRecognizer_inputv(marpaESLIFRecognizerp, &inputs, &inputl, &eofb);
+      GENERICLOGGER_INFOF(genericLoggerp, "Before event %s for symbol <%s> (character is %c (0x%lx), eofb is %d)", eventArrayp[eventArrayIteratorl].events, eventArrayp[eventArrayIteratorl].symbols, *inputs, (unsigned long) *inputs, (int) eofb);
       if (strcmp(eventArrayp[eventArrayIteratorl].events, "before_char") == 0) {
         if (! marpaESLIFRecognizer_alternative_lengthb(marpaESLIFRecognizerp, 1)) {
           goto err;
@@ -353,8 +354,8 @@ static short eventManagerb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, generi
       }
       break;
     case MARPAESLIF_EVENTTYPE_AFTER:
-      marpaESLIFRecognizer_inputv(marpaESLIFRecognizerp, &inputs, &inputl);
-      GENERICLOGGER_INFOF(genericLoggerp, "After event %s for symbol <%s> (inputl=%ld)", eventArrayp[eventArrayIteratorl].events, eventArrayp[eventArrayIteratorl].symbols, (unsigned long) inputl);
+      marpaESLIFRecognizer_inputv(marpaESLIFRecognizerp, &inputs, &inputl, &eofb);
+      GENERICLOGGER_INFOF(genericLoggerp, "After event %s for symbol <%s> (inputl=%ld, eofbp is %d)", eventArrayp[eventArrayIteratorl].events, eventArrayp[eventArrayIteratorl].symbols, (unsigned long) inputl, (int) eofb);
       break;
     case MARPAESLIF_EVENTTYPE_EXHAUSTED:
       GENERICLOGGER_INFO (genericLoggerp, "Exhausted event");
