@@ -29,8 +29,6 @@
 #define G1_RULE_QUANTIFIED_RULE                  "G1_rule_quantified_rule"
 #define G1_RULE_DISCARD_RULE                     "G1_rule_discard_rule"
 #define G1_RULE_DEFAULT_RULE                     "G1_rule_default_rule"
-#define G1_RULE_DISCARD_DEFAULT_STATEMENT_1      "G1_rule_discard_default_statement_1"
-#define G1_RULE_DISCARD_DEFAULT_STATEMENT_2      "G1_rule_discard_default_statement_2"
 #define G1_RULE_LEXEME_RULE                      "G1_rule_lexeme_rule"
 #define G1_RULE_COMPLETION_EVENT_DECLARATION_1   "G1_rule_completion_event_declaration_1"
 #define G1_RULE_COMPLETION_EVENT_DECLARATION_2   "G1_rule_completion_event_declaration_2"
@@ -154,8 +152,6 @@
 #define G1_ACTION_QUANTIFIED_RULE                  "G1_action_quantified_rule"                  /* done */
 #define G1_ACTION_DISCARD_RULE                     "G1_action_discard_rule"                     /* done */
 #define G1_ACTION_DEFAULT_RULE                     "G1_action_default_rule"                     /* done */
-#define G1_ACTION_DISCARD_DEFAULT_STATEMENT_1      "::undef"
-#define G1_ACTION_DISCARD_DEFAULT_STATEMENT_2      "::undef"
 #define G1_ACTION_LEXEME_RULE                      "G1_action_lexeme_rule"                      /* done */
 #define G1_ACTION_COMPLETION_EVENT_DECLARATION_1   "G1_action_completion_event_declaration_1"   /* done */
 #define G1_ACTION_COMPLETION_EVENT_DECLARATION_2   "G1_action_completion_event_declaration_2"   /* done */
