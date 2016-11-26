@@ -4851,9 +4851,7 @@ void marpaESLIFRecognizer_freev(marpaESLIFRecognizer_t *marpaESLIFRecognizerp)
       if (marpaESLIFRecognizerp->_encodings != NULL) {
         free(marpaESLIFRecognizerp->_encodings);
       }
-      if (marpaESLIFRecognizerp->_encodingp != NULL) {
-        _marpaESLIF_terminal_freev(marpaESLIFRecognizerp->_encodingp);
-      }
+      _marpaESLIF_terminal_freev(marpaESLIFRecognizerp->_encodingp);
       /* The situation where _tconvp is different than NULL should never happen except in case */
       /* of error processing */
       if (marpaESLIFRecognizerp->_tconvp != NULL) {
