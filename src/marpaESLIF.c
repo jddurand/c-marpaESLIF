@@ -6991,20 +6991,22 @@ static inline void _marpaESLIF_rule_createshowv(marpaESLIF_t *marpaESLIFp, marpa
 static inline void _marpaESLIF_grammar_createshowv(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaESLIF_grammar_t *grammarp, char *asciishows, size_t *asciishowlp)
 /*****************************************************************************/
 {
-  size_t               asciishowl = 0;
-  char                 tmps[1024];
-  int                 *ruleip;
-  size_t               rulel;
-  char                *ruleshows;
-  size_t               l;
-  char                 quote[2][2];
-  genericStack_t      *symbolStackp = grammarp->symbolStackp;
-  marpaESLIF_symbol_t *symbolp;
-  int                  symboli;
-  genericStack_t      *ruleStackp = grammarp->ruleStackp;
-  marpaESLIF_rule_t   *rulep;
-  int                  rulei;
-  int                  npropertyi;
+  size_t                        asciishowl = 0;
+  char                          tmps[1024];
+  int                          *ruleip;
+  size_t                        rulel;
+  char                         *ruleshows;
+  size_t                        l;
+  char                          quote[2][2];
+  genericStack_t               *symbolStackp = grammarp->symbolStackp;
+  marpaESLIF_symbol_t          *symbolp;
+  int                           symboli;
+  genericStack_t               *ruleStackp = grammarp->ruleStackp;
+  marpaESLIF_rule_t            *rulep;
+  int                           rulei;
+  int                           npropertyi;
+  genericLogger_t              *genericLoggerp = NULL;
+  marpaESLIF_stringGenerator_t  marpaESLIF_stringGenerator;
 
   /* Calculate the size needed to show the grammar in ASCII form */
 
@@ -7258,6 +7260,36 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIF_t *marpaESLIFp, ma
     MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "\n");
     MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "#   Definition: ");
     MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, rulep->asciishows);
+
+    marpaESLIF_stringGenerator.marpaESLIFp = marpaESLIFp;
+    marpaESLIF_stringGenerator.s           = NULL;
+    marpaESLIF_stringGenerator.l           = 0;
+    marpaESLIF_stringGenerator.okb         = 0;
+    genericLoggerp = GENERICLOGGER_CUSTOM(_marpaESLIF_generateStringWithLoggerCallback, (void *) &marpaESLIF_stringGenerator, GENERICLOGGER_LOGLEVEL_TRACE);
+    if (genericLoggerp != NULL) {
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "\n");
+      GENERICLOGGER_TRACE (genericLoggerp, "#   Components:  LHS = RHS[]\n");
+      GENERICLOGGER_TRACEF(genericLoggerp, "#               %4d", rulep->lhsp->idi);
+      if (GENERICSTACK_USED(rulep->rhsStackp) > 0) {
+        for (symboli = 0; symboli < GENERICSTACK_USED(rulep->rhsStackp); symboli++) {
+          symbolp = (marpaESLIF_symbol_t *) GENERICSTACK_GET_PTR(rulep->rhsStackp, symboli);
+          if (symboli == 0) {
+            GENERICLOGGER_TRACEF(genericLoggerp, " = %d", symbolp->idi);
+          } else {
+            GENERICLOGGER_TRACEF(genericLoggerp, " %d", symbolp->idi);
+          }
+        }
+      }
+      if (marpaESLIF_stringGenerator.okb) {
+        if (marpaESLIF_stringGenerator.s != NULL) {
+          MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, marpaESLIF_stringGenerator.s);
+        }
+      }
+      if (marpaESLIF_stringGenerator.s != NULL) {
+        free(marpaESLIF_stringGenerator.s);
+      }
+      GENERICLOGGER_FREE(genericLoggerp);
+    }
     MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "\n");
   }
 
