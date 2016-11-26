@@ -2103,7 +2103,7 @@ static inline void _marpaESLIFrecognizer_lexemeStack_resetv(marpaESLIFRecognizer
       /* if it failed, we will have a memory leak - error will be logged */
       /* In practice it never fails, because _marpaESLIFRecognizer_lexemeStack_i_resetb() */
       /* frees() only something that it recognizes, and afterwards set it to NA - and the */
-      /* to NA cannot fail, because this place place in stack memory is already there. */
+      /* set to NA cannot fail, because where it is already exist in memory (I exclude the case of memory corruption -;). */
       /* Anyway, suppose that it would fail, I repeat, at most there is a memory leak */
       _marpaESLIFRecognizer_lexemeStack_i_resetb(marpaESLIFRecognizerp, lexemeStackp, i);
       GENERICSTACK_USED(lexemeStackp)--;
@@ -2151,7 +2151,7 @@ static inline short _marpaESLIFRecognizer_lexemeStack_i_resetb(marpaESLIFRecogni
       if (GENERICSTACK_ERROR(lexemeStackp)) {
         if (marpaESLIFRecognizerp != NULL) {
           MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "lexemeStackp %p->[%d] set failure, %s", lexemeStackp, indicei, strerror(errno));
-          }
+        }
         goto err;
       }
     }
