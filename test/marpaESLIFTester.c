@@ -43,8 +43,8 @@ const static char *exceptions = "\n"
   "event ^char = predicted start\n"
   "event char[] = nulled start\n"
   "event char$ = completed start\n"
-  ":lexeme ::= <char> pause => before event => before_char\n"
-  ":lexeme ::= <char> pause => after event => after_char\n"
+  ":lexeme ::= <char> pause => before event => ^[a-zA-Z0-9_:]\n"
+  ":lexeme ::= <char> pause => after event => [a-zA-Z0-9_:]$\n"
   "char ~ [a-zA-Z0-9_:]\n"
   "\n"
   "event ^start_exception = predicted startException\n"
@@ -323,22 +323,22 @@ static short eventManagerb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, generi
   for (eventArrayIteratorl = 0; eventArrayIteratorl < eventArrayl; eventArrayIteratorl++) {
     switch (eventArrayp[eventArrayIteratorl].type) {
     case MARPAESLIF_EVENTTYPE_COMPLETED:
-      GENERICLOGGER_INFOF(genericLoggerp, "Completed event %s for symbol <%s>", eventArrayp[eventArrayIteratorl].events, eventArrayp[eventArrayIteratorl].symbols);
+      GENERICLOGGER_INFOF(genericLoggerp, "Event %s for symbol <%s>", eventArrayp[eventArrayIteratorl].events, eventArrayp[eventArrayIteratorl].symbols);
       break;
     case MARPAESLIF_EVENTTYPE_NULLED:
-      GENERICLOGGER_INFOF(genericLoggerp, "Nulled event %s for symbol <%s>", eventArrayp[eventArrayIteratorl].events, eventArrayp[eventArrayIteratorl].symbols);
+      GENERICLOGGER_INFOF(genericLoggerp, "Event %s for symbol <%s>", eventArrayp[eventArrayIteratorl].events, eventArrayp[eventArrayIteratorl].symbols);
       break;
     case MARPAESLIF_EVENTTYPE_PREDICTED:
-      GENERICLOGGER_INFOF(genericLoggerp, "Predicted event %s for symbol <%s>", eventArrayp[eventArrayIteratorl].events, eventArrayp[eventArrayIteratorl].symbols);
+      GENERICLOGGER_INFOF(genericLoggerp, "Event %s for symbol <%s>", eventArrayp[eventArrayIteratorl].events, eventArrayp[eventArrayIteratorl].symbols);
       break;
     case MARPAESLIF_EVENTTYPE_BEFORE:
       marpaESLIFRecognizer_inputv(marpaESLIFRecognizerp, &inputs, &inputl, &eofb);
-      GENERICLOGGER_INFOF(genericLoggerp, "Before event %s for symbol <%s> (character is %c (0x%lx), eofb is %d)", eventArrayp[eventArrayIteratorl].events, eventArrayp[eventArrayIteratorl].symbols, *inputs, (unsigned long) *inputs, (int) eofb);
-      if (strcmp(eventArrayp[eventArrayIteratorl].events, "before_char") == 0) {
+      GENERICLOGGER_INFOF(genericLoggerp, "Event %s for symbol <%s> (character is %c (0x%lx), eofb is %d)", eventArrayp[eventArrayIteratorl].events, eventArrayp[eventArrayIteratorl].symbols, *inputs, (unsigned long) *inputs, (int) eofb);
+      if (strcmp(eventArrayp[eventArrayIteratorl].events, "^[a-zA-Z0-9_:]") == 0) {
         if (! marpaESLIFRecognizer_alternative_lengthb(marpaESLIFRecognizerp, 1)) {
           goto err;
         }
-        GENERICLOGGER_INFOF(genericLoggerp, "... Pushing alternative %p", eventArrayp[eventArrayIteratorl].symbols);
+        GENERICLOGGER_INFOF(genericLoggerp, "... Pushing alternative <%s>", eventArrayp[eventArrayIteratorl].symbols);
         if (! marpaESLIFRecognizer_alternativeb(marpaESLIFRecognizerp, eventArrayp[eventArrayIteratorl].symbols)) {
           goto err;
         }
@@ -355,13 +355,13 @@ static short eventManagerb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, generi
       break;
     case MARPAESLIF_EVENTTYPE_AFTER:
       marpaESLIFRecognizer_inputv(marpaESLIFRecognizerp, &inputs, &inputl, &eofb);
-      GENERICLOGGER_INFOF(genericLoggerp, "After event %s for symbol <%s> (inputl=%ld, eofbp is %d)", eventArrayp[eventArrayIteratorl].events, eventArrayp[eventArrayIteratorl].symbols, (unsigned long) inputl, (int) eofb);
+      GENERICLOGGER_INFOF(genericLoggerp, "Event %s for symbol <%s> (inputl=%ld, eofbp is %d)", eventArrayp[eventArrayIteratorl].events, eventArrayp[eventArrayIteratorl].symbols, (unsigned long) inputl, (int) eofb);
       break;
     case MARPAESLIF_EVENTTYPE_EXHAUSTED:
-      GENERICLOGGER_INFO (genericLoggerp, "Exhausted event");
+      GENERICLOGGER_INFO (genericLoggerp, ">>> Exhausted event");
       break;
     case MARPAESLIF_EVENTTYPE_DISCARD:
-      GENERICLOGGER_INFOF(genericLoggerp, "Discard event %s for symbol <%s>", eventArrayp[eventArrayIteratorl].events, eventArrayp[eventArrayIteratorl].symbols);
+      GENERICLOGGER_INFOF(genericLoggerp, "Event %s for symbol <%s>", eventArrayp[eventArrayIteratorl].events, eventArrayp[eventArrayIteratorl].symbols);
       break;
     default:
       if (eventArrayp[eventArrayIteratorl].type != MARPAESLIF_EVENTTYPE_NONE) {
