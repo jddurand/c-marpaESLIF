@@ -92,6 +92,17 @@ int main() {
     goto err;
   }
 
+  /* Dump ESLIF grammar */
+  if (marpaESLIFGrammar_ngrammari(marpaESLIF_grammarp(marpaESLIFp), &ngrammari)) {
+    for (grammari = 0; grammari < ngrammari; grammari++) {
+      if (marpaESLIFGrammar_grammarshowform_by_grammarb(marpaESLIF_grammarp(marpaESLIFp), &grammarshows, grammari, NULL)) {
+        GENERICLOGGER_INFO (marpaESLIFOption.genericLoggerp, "-------------------------");
+        GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "ESLIF grammar at level %d:", grammari);
+        GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "-------------------------\n\n%s", grammarshows);
+      }
+    }
+  }
+
   marpaESLIFGrammarOption.bytep               = (void *) exceptions;
   marpaESLIFGrammarOption.bytel               = strlen(exceptions);
   marpaESLIFGrammarOption.encodings           = "UTF-8";
