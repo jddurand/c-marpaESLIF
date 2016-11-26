@@ -4298,20 +4298,21 @@ static short _marpaESLIF_bootstrap_G1_action_discard_ruleb(void *userDatavp, mar
       MARPAESLIF_ERROR(marpaESLIFp, "In :discard rule, event name is NULL");
       goto err;
     }
-    if (discardp->discardEvents != NULL) {
-      free(discardp->discardEvents);
+    /* Take care, we set the discard event on the RULE - not on the symbol */
+    if (rulep->discardEvents != NULL) {
+      free(rulep->discardEvents);
     }
-    discardp->discardEvents = strdup(eventInitializationp->eventNames);
-    if (discardp->discardEvents == NULL) {
+    rulep->discardEvents = strdup(eventInitializationp->eventNames);
+    if (rulep->discardEvents == NULL) {
       MARPAESLIF_ERRORF(marpaESLIFp, "strdup failure, %s", strerror(errno));
       goto err;
     }
     switch (eventInitializationp->initializerb) {
     case MARPAESLIF_BOOTSTRAP_EVENT_INITIALIZER_TYPE_ON:
-      discardp->discardEventb = 1;
+      rulep->discardEventb = 1;
       break;
     case MARPAESLIF_BOOTSTRAP_EVENT_INITIALIZER_TYPE_OFF:
-      discardp->discardEventb = 0;
+      rulep->discardEventb = 0;
       break;
     default:
       MARPAESLIF_ERRORF(marpaESLIFp, "In :discard rule, unsupported event initializer type %d", (int) eventInitializationp->initializerb);

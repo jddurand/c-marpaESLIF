@@ -120,7 +120,8 @@ struct marpaESLIFSymbol {
     marpaESLIF_meta_t         *metap;     /* Symbol is a meta identifier, i.e. a rule */
   } u;
   short                        startb;                 /* Start symbol ? */
-  short                        discardb;               /* Discard symbol ? */
+  short                        discardb;               /* Discard LHS symbol (i.e. :discard) ? */
+  short                        discardRhsb;            /* Discard RHS symbol ? */
   short                        lhsb;                   /* Is an LHS somewhere in its grammar ? */
   short                        topb;                   /* Is a top-level symbol in its grammar - implies lhsb */
   int                          idi;                    /* Marpa ID */
@@ -135,8 +136,8 @@ struct marpaESLIFSymbol {
   short                        eventNulledb;           /* Nulled initial state: 0: off, 1: on */
   char                        *eventCompleteds;        /* Event name for completion */
   short                        eventCompletedb;        /* Completion initial state: 0: off, 1: on */
-  char                        *discardEvents;          /* Discard event name */
-  short                        discardEventb;          /* Discard event initial state: 0: off, 1: on */
+  char                        *discardEvents;          /* Discard event name - shallow pointer to a :discard rule */
+  short                        discardEventb;          /* Discard event initial state: 0: off, 1: on - copy of :discard's rule value */
   int                          lookupLevelDeltai;      /* Referenced grammar delta level */
   char                        *lookupMetas;            /* Referenced lookup meta name - shallow pointer */
   int                          lookupResolvedLeveli;   /* Referenced grammar level */
@@ -160,6 +161,8 @@ struct marpaESLIF_rule {
   marpaESLIF_symbol_t   *exceptionp;                      /* Exception symbol */
   marpaWrapperGrammar_t *marpaWrapperGrammarExceptionp; /* Grammar implementation at exception */
   char                  *actions;                         /* Action */
+  char                  *discardEvents;                   /* Discard event name - shallowed with its RHS */
+  short                  discardEventb;                   /* Discard event initial state: 0: off, 1: on - copied to its RHS */
   int                    ranki;
   short                  nullRanksHighb;
   short                  sequenceb;

@@ -1374,6 +1374,36 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
     }
 
     if (discardp != NULL) {
+      /* The :discard symbol itself never have any event */
+      if ((discardp->eventBefores != NULL)    ||
+          (discardp->eventAfters != NULL)     ||
+          (discardp->eventPredicteds != NULL) ||
+          (discardp->eventNulleds != NULL)    ||
+          (discardp->eventCompleteds != NULL) ||
+          (discardp->discardEvents != NULL)) {
+        MARPAESLIF_ERRORF(marpaESLIFp, ":discard symbol at grammar level %d (%s) must have no event", grammari, grammarp->descp->asciis);
+        goto err;
+      }
+      /* Per def a :discard rule has only one RHS, we mark its discardRhsb flag and copy the rule's discard settings */
+      /* (Note that saying :discard :[x]:= RHS event => EVENT twice will overwrite first setting) */
+      for (rulei = 0; rulei < GENERICSTACK_USED(ruleStackp); rulei++) {
+        if (! GENERICSTACK_IS_PTR(ruleStackp, rulei)) {
+          /* Should never happen, but who knows */
+          continue;
+        }
+        rulep = (marpaESLIF_rule_t *) GENERICSTACK_GET_PTR(ruleStackp, rulei);
+        if (rulep->lhsp != discardp) {
+          continue;
+        }
+        if (GENERICSTACK_USED(rulep->rhsStackp) != 1) {
+          MARPAESLIF_ERRORF(marpaESLIFp, "Looking at grammar level %d (%s) and discard symbol %d <%s>: a :discard rule must have exactly one RHS", grammari, grammarp->descp->asciis, discardp->idi, discardp->descp->asciis);
+          goto err;
+        }
+        symbolp = (marpaESLIF_symbol_t *) GENERICSTACK_GET_PTR(rulep->rhsStackp, 0);
+        symbolp->discardRhsb = 1;
+        symbolp->discardEvents = rulep->discardEvents;
+        symbolp->discardEventb = rulep->discardEventb;
+      }
       MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Precomputing grammar level %d (%s) at discard symbol %d <%s>", grammari, grammarp->descp->asciis, discardp->idi, discardp->descp->asciis);
       marpaESLIF_cloneContext.grammarp = grammarp;
       /* Clone for the discard mode at grammar level */
@@ -2271,6 +2301,8 @@ static inline marpaESLIF_rule_t *_marpaESLIF_rule_newp(marpaESLIF_t *marpaESLIFp
   rulep->exceptionp                    = NULL;
   rulep->marpaWrapperGrammarExceptionp = NULL;
   rulep->actions                       = NULL;
+  rulep->discardEvents                 = NULL;
+  rulep->discardEventb                 = 0;
   rulep->ranki                         = ranki;
   rulep->nullRanksHighb                = nullRanksHighb;
   rulep->sequenceb                     = sequenceb;
@@ -2456,6 +2488,7 @@ static inline marpaESLIF_symbol_t *_marpaESLIF_symbol_newp(marpaESLIF_t *marpaES
   /* Union itself is undetermined at this stage */
   symbolp->startb                 = 0;
   symbolp->discardb               = 0;
+  symbolp->discardRhsb            = 0;
   symbolp->lhsb                   = 0;
   symbolp->topb                   = 0; /* Revisited by grammar validation */
   symbolp->idi                    = -1;
@@ -5393,39 +5426,37 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGramm
         continue;
       }
       symbolp = (marpaESLIF_symbol_t *) GENERICSTACK_GET_PTR(symbolStackp, symboli);
-      if (! symbolp->discardb) {
-        /* No need to have an event on any symbol but :discard if we are doing discard... */
-        if (symbolp->eventPredicteds != NULL) {
+      if (symbolp->eventPredicteds != NULL) {
+        MARPAESLIF_TRACEF(marpaESLIFp, funcs,
+                          "Setting prediction event state for symbol %d <%s> at grammar level %d (%s) to %s (recognizer discard mode: %d)",
+                          symbolp->idi, symbolp->descp->asciis, grammarp->leveli, grammarp->descp->asciis, discardb ? "off" : (symbolp->eventPredictedb ? "on" : "off"), (int) discardb);
+        if (! marpaWrapperRecognizer_event_onoffb(marpaESLIFRecognizerp->marpaWrapperRecognizerp, symbolp->idi, MARPAWRAPPERGRAMMAR_EVENTTYPE_PREDICTION, discardb ? 0 : symbolp->eventPredictedb)) {
+          goto err;
+        }
+      }
+      if (symbolp->eventNulleds != NULL) {
+        MARPAESLIF_TRACEF(marpaESLIFp, funcs,
+                          "Setting nulled event state for symbol %d <%s> at grammar level %d (%s) to %s (recognizer discard mode: %d)",
+                          symbolp->idi, symbolp->descp->asciis, grammarp->leveli, grammarp->descp->asciis, discardb ? "off" : (symbolp->eventNulledb ? "on" : "off"), (int) discardb);
+        if (! marpaWrapperRecognizer_event_onoffb(marpaESLIFRecognizerp->marpaWrapperRecognizerp, symbolp->idi, MARPAWRAPPERGRAMMAR_EVENTTYPE_NULLED, discardb ? 0 : symbolp->eventNulledb)) {
+          goto err;
+        }
+      }
+      if (discardb) {
+        if (symbolp->discardEvents != NULL) {
           MARPAESLIF_TRACEF(marpaESLIFp, funcs,
-                            "Setting prediction event state for symbol %d <%s> at grammar level %d (%s) to %s (recognizer discard mode: %d)",
-                            symbolp->idi, symbolp->descp->asciis, grammarp->leveli, grammarp->descp->asciis, discardb ? "off" : (symbolp->eventPredictedb ? "on" : "off"), (int) discardb);
-          if (! marpaWrapperRecognizer_event_onoffb(marpaESLIFRecognizerp->marpaWrapperRecognizerp, symbolp->idi, MARPAWRAPPERGRAMMAR_EVENTTYPE_PREDICTION, discardb ? 0 : symbolp->eventPredictedb)) {
+                            "Setting :discard completion event state for symbol %d <%s> at grammar level %d (%s) to %s (recognizer discard mode: %d)",
+                            symbolp->idi, symbolp->descp->asciis, grammarp->leveli, grammarp->descp->asciis, symbolp->discardEventb ? "on" : "off", (int) discardb);
+          if (! marpaWrapperRecognizer_event_onoffb(marpaESLIFRecognizerp->marpaWrapperRecognizerp, symbolp->idi, MARPAWRAPPERGRAMMAR_EVENTTYPE_COMPLETION, symbolp->discardEventb)) {
             goto err;
           }
         }
-        if (symbolp->eventNulleds != NULL) {
-          MARPAESLIF_TRACEF(marpaESLIFp, funcs,
-                            "Setting nulled event state for symbol %d <%s> at grammar level %d (%s) to %s (recognizer discard mode: %d)",
-                            symbolp->idi, symbolp->descp->asciis, grammarp->leveli, grammarp->descp->asciis, discardb ? "off" : (symbolp->eventNulledb ? "on" : "off"), (int) discardb);
-          if (! marpaWrapperRecognizer_event_onoffb(marpaESLIFRecognizerp->marpaWrapperRecognizerp, symbolp->idi, MARPAWRAPPERGRAMMAR_EVENTTYPE_NULLED, discardb ? 0 : symbolp->eventNulledb)) {
-            goto err;
-          }
-        }
+      } else {
         if (symbolp->eventCompleteds != NULL) {
           MARPAESLIF_TRACEF(marpaESLIFp, funcs,
                             "Setting completion event state for symbol %d <%s> at grammar level %d (%s) to %s (recognizer discard mode: %d)",
                             symbolp->idi, symbolp->descp->asciis, grammarp->leveli, grammarp->descp->asciis, discardb ? "off" : (symbolp->eventCompletedb ? "on" : "off"), (int) discardb);
           if (! marpaWrapperRecognizer_event_onoffb(marpaESLIFRecognizerp->marpaWrapperRecognizerp, symbolp->idi, MARPAWRAPPERGRAMMAR_EVENTTYPE_COMPLETION, discardb ? 0 : symbolp->eventCompletedb)) {
-            goto err;
-          }
-        }
-      } else {
-        /* No need to have a completion event on the :discard symbol if we are not doing discard... */
-        if (symbolp->discardEvents != NULL) {
-          MARPAESLIF_TRACEF(marpaESLIFp, funcs,
-                            "Setting completion event state for symbol %d <%s> at grammar level %d (%s) to %s (recognizer discard mode: %d)",
-                            symbolp->idi, symbolp->descp->asciis, grammarp->leveli, grammarp->descp->asciis, discardb ? (symbolp->discardEventb ? "on" : "off") : "off", (int) discardb);
-          if (! marpaWrapperRecognizer_event_onoffb(marpaESLIFRecognizerp->marpaWrapperRecognizerp, symbolp->idi, MARPAWRAPPERGRAMMAR_EVENTTYPE_COMPLETION, discardb ? symbolp->discardEventb : 0)) {
             goto err;
           }
         }
@@ -6491,7 +6522,7 @@ static char *_marpaESLIFGrammar_symbolDescriptionCallback(void *userDatavp, int 
   marpaWrapperGrammarSymbolOptionp->eventSeti = MARPAWRAPPERGRAMMAR_EVENTTYPE_NONE;
 
   /* Get event set */
-  if (! symbolp->discardb) {
+  if (! symbolp->discardRhsb) {
     if (symbolp->eventPredicteds != NULL) {
       MARPAESLIF_TRACEF(marpaESLIF_cloneContextp->marpaESLIFp, funcs, "Setting prediction event for symbol %d <%s> at grammar level %d (%s)", symbolp->idi, symbolp->descp->asciis, grammarp->leveli, grammarp->descp->asciis);
       marpaWrapperGrammarSymbolOptionp->eventSeti |= MARPAWRAPPERGRAMMAR_EVENTTYPE_PREDICTION;
@@ -6582,10 +6613,8 @@ static char *_marpaESLIFGrammar_symbolDescriptionCallback(void *userDatavp, int 
     goto err;
   }
 
-  /* A "discard" event is possible only for symbols that at "top-level" symbols in the current grammar */
-  /* AND for which there is a ":discard ~ SYMBOL event => EVENTNAME setting */
-  /* This will look like an internal event that the recognizer will catchup to create pause events on discard */
-  if (symbolp->discardEvents) {
+  /* A "discard" event is possible only for symbols that are the RHS of a :discard in the current grammar */
+  if (symbolp->discardRhsb && (symbolp->discardEvents != NULL)) {
     if (marpaWrapperGrammarSymbolOptionp->eventSeti != MARPAWRAPPERGRAMMAR_EVENTTYPE_COMPLETION) {
       MARPAESLIF_TRACEF(marpaESLIF_cloneContextp->marpaESLIFp, funcs, "Setting discard event set for symbol %d <%s> at grammar level %d (%s) on completion", symbolp->idi, symbolp->descp->asciis, grammarp->leveli, grammarp->descp->asciis);
       marpaWrapperGrammarSymbolOptionp->eventSeti = MARPAWRAPPERGRAMMAR_EVENTTYPE_COMPLETION;
@@ -6945,10 +6974,11 @@ static inline void _marpaESLIF_rule_createshowv(marpaESLIF_t *marpaESLIFp, marpa
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, quote[1]);
     }
   }
-  if (rulep->lhsp->discardb && rulep->lhsp->discardEvents != NULL) {
+  if (rulep->lhsp->discardb && rulep->discardEvents != NULL) {
+    /* Please note that this is a shared with symbol's discardEvents, even if the show does not "show" it */
     MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " event => ");
-    MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, rulep->lhsp->discardEvents);
-    MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, rulep->lhsp->discardEventb ? "=on" : "=off");
+    MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, rulep->discardEvents);
+    MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, rulep->discardEventb ? "=on" : "=off");
   }
   asciishowl++; /* NUL byte */
 
@@ -6977,6 +7007,12 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIF_t *marpaESLIFp, ma
   int                  npropertyi;
 
   /* Calculate the size needed to show the grammar in ASCII form */
+
+  MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "/*\n");
+  MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " * **********************\n");
+  MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " * Meta-grammar settings:\n");
+  MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " * **********************\n");
+  MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " */\n");
 
   MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, ":start");
   MARPAESLIF_LEVEL_CREATESHOW(grammarp, asciishowl, asciishows);
@@ -7026,7 +7062,14 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIF_t *marpaESLIFp, ma
     MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "\n");
   }
 
-  /* Lexeme information */
+  MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "\n");
+  MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "/*\n");
+  MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " * ***************\n");
+  MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " * Event settings:\n");
+  MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " * ***************\n");
+  MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " */\n");
+
+  /* Lexeme information - this is all about events */
   for (symboli = 0; symboli < GENERICSTACK_USED(symbolStackp); symboli++) {
     if (! GENERICSTACK_IS_PTR(symbolStackp, symboli)) {
       /* Should never happen, but who knows */
@@ -7104,6 +7147,14 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIF_t *marpaESLIFp, ma
     }
   }
 
+  MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "\n");
+  MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "/*\n");
+  MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " * ******\n");
+  MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " * Rules:\n");
+  MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " * ******\n");
+  MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " */\n");
+
+  /* Rules */
   if (marpaESLIFGrammar_rulearray_by_grammarb(marpaESLIFGrammarp, &ruleip, &rulel, grammarp->leveli, NULL /* descp */)) {
     for (l = 0; l < rulel; l++) {
       if (marpaESLIFGrammar_ruleshowform_by_grammarb(marpaESLIFGrammarp, l, &ruleshows, grammarp->leveli, NULL /* descp */)) {
@@ -7122,10 +7173,13 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIF_t *marpaESLIFp, ma
      - nullable symbols
   */
   MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "\n");
+  MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "#\n");
+  MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "# The following is giving information on grammar components: lexemes, rules and symbol properties\n");
+  MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "#\n");
   MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "# --------\n");
   MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "# Lexemes:\n");
   MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "# --------\n");
-  MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "\n");
+  MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "#\n");
   for (symboli = 0; symboli < GENERICSTACK_USED(symbolStackp); symboli++) {
     if (! GENERICSTACK_IS_PTR(symbolStackp, symboli)) {
       /* Should never happen, but who knows */
@@ -7155,11 +7209,11 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIF_t *marpaESLIFp, ma
     }
   }
 
-  MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "\n");
-  MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "# ---------------------\n");
-  MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "# All rules properties:\n");
-  MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "# ---------------------\n");
-  MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "\n");
+  MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "#\n");
+  MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "# -----------------\n");
+  MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "# Rules properties:\n");
+  MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "# -----------------\n");
+  MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "#\n");
 
   for (rulei = 0; rulei < GENERICSTACK_USED(ruleStackp); rulei++) {
     if (! GENERICSTACK_IS_PTR(ruleStackp, rulei)) {
@@ -7207,11 +7261,11 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIF_t *marpaESLIFp, ma
     MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "\n");
   }
 
-  MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "\n");
-  MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "# ----------------------\n");
-  MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "# All symbol properties:\n");
-  MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "# ----------------------\n");
-  MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "\n");
+  MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "#\n");
+  MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "# ------------------\n");
+  MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "# Symbol properties:\n");
+  MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "# ------------------\n");
+  MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "#\n");
 
   for (symboli = 0; symboli < GENERICSTACK_USED(symbolStackp); symboli++) {
     if (! GENERICSTACK_IS_PTR(symbolStackp, symboli)) {
