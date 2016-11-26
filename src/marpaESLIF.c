@@ -7174,7 +7174,7 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIF_t *marpaESLIFp, ma
   */
   MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "\n");
   MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "#\n");
-  MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "# The following is giving information on grammar components: lexemes, rules and symbol properties\n");
+  MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "# The following is giving information on grammar components: lexemes, rules and symbols properties\n");
   MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "#\n");
   MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "# --------\n");
   MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "# Lexemes:\n");
@@ -7292,9 +7292,9 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIF_t *marpaESLIFp, ma
   }
 
   MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "#\n");
-  MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "# ------------------\n");
-  MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "# Symbol properties:\n");
-  MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "# ------------------\n");
+  MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "# -------------------\n");
+  MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "# Symbols properties:\n");
+  MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "# -------------------\n");
   MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "#\n");
 
   for (symboli = 0; symboli < GENERICSTACK_USED(symbolStackp); symboli++) {
