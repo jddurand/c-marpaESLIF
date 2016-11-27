@@ -810,9 +810,8 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
           break;
         }
       }
-      /* Done - now we can generate a regexp out of that UTF-8 compatible string */
-      MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s: regex content analysed (UTF=%d)", terminalp->descp->asciis, strings, utfflagb);
-      /* opti for string is compatible with opti for regex - just that the lexer accept less options - in particular the UTF flag */
+      MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s: regex content scanned and give UTF=%d", terminalp->descp->asciis, strings, utfflagb);
+      /* Detected the need of UTF flag in the regex ? */
       if (utfflagb) {
         pcre2Optioni |= PCRE2_UTF;
       }
