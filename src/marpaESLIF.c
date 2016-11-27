@@ -158,7 +158,7 @@ static        short                  _marpaESLIFGrammar_symbolOptionSetterInit(v
 static        short                  _marpaESLIFGrammar_symbolOptionSetterDiscard(void *userDatavp, int symboli, marpaWrapperGrammarSymbolOption_t *marpaWrapperGrammarSymbolOptionp);
 static        short                  _marpaESLIFGrammar_symbolOptionSetterNoEvent(void *userDatavp, int symboli, marpaWrapperGrammarSymbolOption_t *marpaWrapperGrammarSymbolOptionp);
 static inline void                   _marpaESLIF_rule_createshowv(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, marpaESLIF_rule_t *rulep, char *asciishows, size_t *asciishowlp);
-static inline void                   _marpaESLIF_grammar_createshowv(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaESLIF_grammar_t *grammarp, char *asciishows, size_t *asciishowlp);
+static inline void                   _marpaESLIF_grammar_createshowv(marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaESLIF_grammar_t *grammarp, char *asciishows, size_t *asciishowlp);
 static inline int                    _marpaESLIF_utf82ordi(PCRE2_SPTR8 utf8bytes, marpaESLIF_uint32_t *uint32p);
 static inline short                  _marpaESLIFRecognizer_matchPostProcessingb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, size_t matchl);
 static inline short                  _marpaESLIFRecognizer_appendDatab(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *datas, size_t datal);
@@ -1915,16 +1915,6 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
         _marpaESLIF_rule_createshowv(marpaESLIFp, grammarp, rulep, rulep->asciishows, NULL);
       }
     }
-
-    _marpaESLIF_grammar_createshowv(marpaESLIFp, marpaESLIFGrammarp, grammarp, NULL /* asciishows */, &asciishowl);
-    grammarp->asciishows = (char *) malloc(asciishowl);
-    if (grammarp->asciishows == NULL) {
-      MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
-      goto err;
-    }
-    /* It is guaranteed that asciishowl is >= 1 - c.f. _marpaESLIF_grammar_createshowv() */
-    grammarp->asciishows[0] = '\0';
-    _marpaESLIF_grammar_createshowv(marpaESLIFp, marpaESLIFGrammarp, grammarp, grammarp->asciishows, NULL);
   }
 
   rcb = 1;
@@ -3933,6 +3923,7 @@ short marpaESLIFGrammar_grammarshowform_by_grammarb(marpaESLIFGrammar_t *marpaES
 {
   marpaESLIF_grammar_t *grammarp;
   short                 rcb;
+  size_t                asciishowl;
 
   grammarp = _marpaESLIFGrammar_grammar_findp(marpaESLIFGrammarp, grammari, descp);
   if (grammarp == NULL) {
@@ -3940,6 +3931,18 @@ short marpaESLIFGrammar_grammarshowform_by_grammarb(marpaESLIFGrammar_t *marpaES
   }
  
   if (grammarshowsp != NULL) {
+    /* Grammar show is delayed until requeted because it have a cost -; */
+    if (grammarp->asciishows == NULL) {
+      _marpaESLIF_grammar_createshowv(marpaESLIFGrammarp, grammarp, NULL /* asciishows */, &asciishowl);
+      grammarp->asciishows = (char *) malloc(asciishowl);
+      if (grammarp->asciishows == NULL) {
+        MARPAESLIF_ERRORF(marpaESLIFGrammarp->marpaESLIFp, "malloc failure, %s", strerror(errno));
+        goto err;
+      }
+      /* It is guaranteed that asciishowl is >= 1 - c.f. _marpaESLIF_grammar_createshowv() */
+      grammarp->asciishows[0] = '\0';
+      _marpaESLIF_grammar_createshowv(marpaESLIFGrammarp, grammarp, grammarp->asciishows, NULL);
+    }
     *grammarshowsp = grammarp->asciishows;
   }
 
@@ -7047,9 +7050,10 @@ static inline void _marpaESLIF_rule_createshowv(marpaESLIF_t *marpaESLIFp, marpa
 }
 
 /*****************************************************************************/
-static inline void _marpaESLIF_grammar_createshowv(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaESLIF_grammar_t *grammarp, char *asciishows, size_t *asciishowlp)
+static inline void _marpaESLIF_grammar_createshowv(marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaESLIF_grammar_t *grammarp, char *asciishows, size_t *asciishowlp)
 /*****************************************************************************/
 {
+  marpaESLIF_t                 *marpaESLIFp = marpaESLIFGrammarp->marpaESLIFp;
   size_t                        asciishowl = 0;
   char                          tmps[1024];
   int                          *ruleip;
@@ -7472,6 +7476,7 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIF_t *marpaESLIFp, ma
               marpaESLIF_stringGenerator.okb = 0;
             }
           }
+          GENERICLOGGER_FREE(genericLoggerp);
         }
       }
     } else {
