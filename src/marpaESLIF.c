@@ -532,7 +532,6 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
   default:
     MARPAESLIF_ERRORF(marpaESLIFp, "Unsupported terminal type %d", type);
     goto err;
-    break;
   }
   
   /* ----------- Terminal Implementation ------------ */
