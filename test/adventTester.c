@@ -32,7 +32,7 @@ const static char *base_dsl = "\n"
 #define BLACK_SPADE_SUIT_UTF8s   "\xE2\x99\xA0"
 const static char *suit_line[] = {
   "suit ~ [\\x{2665}\\x{2666}\\x{2663}\\x{2660}]:u", /* Code points */
-  "suit ~ [" BLACK_HEART_SUIT_UTF8s BLACK_DIAMOND_SUIT_UTF8s BLACK_CLUB_SUIT_UTF8s BLACK_SPADE_SUIT_UTF8s "]:u", /* Character class */
+  "suit ~ [" BLACK_HEART_SUIT_UTF8s BLACK_DIAMOND_SUIT_UTF8s BLACK_CLUB_SUIT_UTF8s BLACK_SPADE_SUIT_UTF8s "]", /* Character class */
   "suit ~ '" BLACK_HEART_SUIT_UTF8s "' | '" BLACK_DIAMOND_SUIT_UTF8s "' | '" BLACK_CLUB_SUIT_UTF8s "'| '" BLACK_SPADE_SUIT_UTF8s "'" /* Characters */
 };
 
@@ -104,6 +104,7 @@ int main() {
   int                          test_datai;
   size_t                       dsll;
   char                        *dsls = NULL;
+  test_parse_result_type_t     test_parse_result_type;
 
   genericLoggerp = GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_DEBUG);
 
@@ -156,18 +157,30 @@ int main() {
       marpaESLIFRecognizerOption.buftriggerperci           = 50;
       marpaESLIFRecognizerOption.bufaddperci               = 50;
 
+      if (marpaESLIFRecognizerp != NULL) {
+        marpaESLIFRecognizer_freev(marpaESLIFRecognizerp);
+      }
       marpaESLIFRecognizerp = marpaESLIFRecognizer_newp(marpaESLIFGrammarp, &marpaESLIFRecognizerOption);
       if (marpaESLIFRecognizerp == NULL) {
-        goto err;
+        goto check;
       }
       /* genericLogger_logLevel_seti(genericLoggerp, GENERICLOGGER_LOGLEVEL_TRACE); */
       if (! marpaESLIFRecognizer_scanb(marpaESLIFRecognizerp, 1 /* initialEventsb */, &continueb, &exhaustedb)) {
-        goto err;
+        test_parse_result_type = PARSE_FAILED_BEFORE_END;
+        goto check;
       }
       while (continueb) {
         if (! marpaESLIFRecognizer_resumeb(marpaESLIFRecognizerp, &continueb, &exhaustedb)) {
-          goto err;
+          test_parse_result_type = PARSE_FAILED_BEFORE_END;
+          goto check;
         }
+      }
+
+      test_parse_result_type = PARSE_OK;
+    check:
+      if (test_parse_result_type != tests_parse_result[test_datai]) {
+        GENERICLOGGER_ERRORF(genericLoggerp, "Got test parse result %d, excepted %d", test_parse_result_type, tests_parse_result[test_datai]);
+        goto err;
       }
     }
   }
