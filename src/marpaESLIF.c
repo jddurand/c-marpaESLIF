@@ -406,6 +406,7 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
   size_t                            matchedl;
   char                             *modifiersp;
   char                              modifierc;
+  short                             asciisafeb;
 
   /* Check some required parameters */
   if ((utf8s == NULL) || (utf8l <= 0)) {
@@ -609,8 +610,13 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
         /* First codepoints are known in advance */
         switch (firstcodepointi) {
         case '\'':
+          lastcodepointi = '\'';
+          break;
         case '"':
+          lastcodepointi = '"';
+          break;
         case '{':
+          lastcodepointi = '}';
           break;
         default:
           {
@@ -624,7 +630,6 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
             goto err;
           }
         }
-        lastcodepointi = (firstcodepointi == '{') ? '}' : firstcodepointi;
         continue;
       } else if (i == (GENERICSTACK_USED(marpaESLIFRecognizerp->lexemeInputStackp) - 1)) {
         /* Non-sense to not have the same value */
@@ -657,7 +662,7 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
             /* This is escaped backslash */
             backslashb = 0;
           }
-        } else if (codepointi == firstcodepointi) {
+        } else if (codepointi == lastcodepointi) {
           if (! backslashb) {
             /* This is a priori impossible to have the first character it is not preceeded by backslash */
             MARPAESLIF_ERRORF(marpaESLIFp, "First character 0%02lx found but no preceeding backslash", (unsigned long) codepointi);
@@ -675,21 +680,47 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
         }
       }
       /* Determine the number of hex digits to fully represent the code point, remembering if we need PCRE2_UTF flag */
-      hexdigitl = 4; /* \x{} */
-      if ((codepointi & 0xFF000000) != 0x00000000) {
-        hexdigitl += 8;
-        utfflagb = 1;
-      } else if ((codepointi & 0x00FF0000) != 0x00000000) {
-        hexdigitl += 6;
-        utfflagb = 1;
-      } else if ((codepointi & 0x0000FF00) != 0x00000000) {
-        hexdigitl += 4;
-        utfflagb = 1;
+      if ((codepointi >= 0x20) && (codepointi <= 0x7E)) {
+        /* Characters [0x20-0x7E] are considered safe */
+        /* Since we are not doing a character-class thingy, we escape all PCRE2 metacharacters */
+        /* that are recognized outside of a character class */
+        switch ((unsigned char) codepointi) {
+        case '\\':
+        case '^':
+        case '$':
+        case '.':
+        case '[':
+        case '|':
+        case '(':
+        case ')':
+        case '?':
+        case '*':
+        case '+':
+        case '{':
+          asciisafeb = 2;
+          break;
+        default:
+          asciisafeb = 1;
+          break;
+        }
       } else {
-        hexdigitl += 2;
+        asciisafeb = 0;
+        hexdigitl = 4; /* \x{} */
+        if ((codepointi & 0xFF000000) != 0x00000000) {
+          hexdigitl += 8;
+          utfflagb = 1;
+        } else if ((codepointi & 0x00FF0000) != 0x00000000) {
+          hexdigitl += 6;
+          utfflagb = 1;
+        } else if ((codepointi & 0x0000FF00) != 0x00000000) {
+          hexdigitl += 4;
+          utfflagb = 1;
+        } else {
+          hexdigitl += 2;
+        }
       }
       /* Append the ASCII representation */
-      stringl += hexdigitl;
+      stringl += (asciisafeb > 0) ? asciisafeb : hexdigitl;
       if (strings == NULL) {
         strings = (char *) malloc(stringl + 1);
         if (strings == NULL) {
@@ -706,8 +737,16 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
         strings = tmps;
       }
       strings[stringl] = '\0'; /* Make sure the string always end with NUL */
-      hexdigitl -= 4; /* \x{} */
-      sprintf(strings + strlen(strings), "\\x{%0*x}", (int) hexdigitl, codepointi);
+      if (asciisafeb > 0) {
+        if (asciisafeb > 1) {
+          sprintf(strings + strlen(strings), "\\%c", (unsigned char) codepointi);
+        } else {
+          sprintf(strings + strlen(strings), "%c", (unsigned char) codepointi);
+        }
+      } else {
+        hexdigitl -= 4; /* \x{} */
+        sprintf(strings + strlen(strings), "\\x{%0*x}", (int) hexdigitl, codepointi);
+      }
     }
     /* Done - now we can generate a regexp out of that UTF-8 compatible string */
     MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s: content string converted to regex %s (UTF=%d)", terminalp->descp->asciis, strings, utfflagb);
@@ -7381,29 +7420,64 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIF_t *marpaESLIFp, ma
     }
     MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "\n");
     if (symbolp->type == MARPAESLIF_SYMBOL_TYPE_TERMINAL) {
-      if (symbolp->u.terminalp->type == MARPAESLIF_TERMINAL_TYPE_STRING) {
-        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "#      Pattern: ");
-      } else {
-        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "#   Definition: ");
-      }
-    } else if (symbolp->type == MARPAESLIF_SYMBOL_TYPE_META) {
-      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "#         Name: ");
-      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "<");
-    } else {
-      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "#   Definition: ");
-    }
-    if (symbolp->type == MARPAESLIF_SYMBOL_TYPE_TERMINAL) {
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "#      Pattern:");
       if (symbolp->u.terminalp->type == MARPAESLIF_TERMINAL_TYPE_STRING) {
         /* We know we made a 100% ASCII compatible pattern when the original type is STRING */
         MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->u.terminalp->patterns);
       } else {
         /* We have to dump - this is an opaque UTF-8 pattern */
-        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->descp->asciis);
+        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "\n");
+        marpaESLIF_stringGenerator.marpaESLIFp = marpaESLIFp;
+        marpaESLIF_stringGenerator.s           = NULL;
+        marpaESLIF_stringGenerator.l           = 0;
+        marpaESLIF_stringGenerator.okb         = 0;
+        genericLoggerp = GENERICLOGGER_CUSTOM(_marpaESLIF_generateStringWithLoggerCallback, (void *) &marpaESLIF_stringGenerator, GENERICLOGGER_LOGLEVEL_TRACE);
+        if (genericLoggerp != NULL) {
+          int    i;
+          int    j;
+          size_t lengthl = symbolp->u.terminalp->patternl;
+          char  *p = symbolp->u.terminalp->patterns;
+          
+          for (i = 0; i < lengthl + ((lengthl % MARPAESLIF_HEXDUMP_COLS) ? (MARPAESLIF_HEXDUMP_COLS - lengthl % MARPAESLIF_HEXDUMP_COLS) : 0); i++) {
+            /* print offset */
+            if (i % MARPAESLIF_HEXDUMP_COLS == 0) {
+              GENERICLOGGER_TRACEF(genericLoggerp, "#     0x%06x: ", i);
+            }
+            /* print hex data */
+            if (i < lengthl) {
+              GENERICLOGGER_TRACEF(genericLoggerp, "%02x ", 0xFF & p[i]);
+            } else { /* end of block, just aligning for ASCII dump */
+              GENERICLOGGER_TRACE(genericLoggerp, "   ");
+            }
+            /* print ASCII dump */
+            if (i % MARPAESLIF_HEXDUMP_COLS == (MARPAESLIF_HEXDUMP_COLS - 1)) {
+              for (j = i - (MARPAESLIF_HEXDUMP_COLS - 1); j <= i; j++) {
+                if (j >= lengthl) { /* end of block, not really printing */
+                  GENERICLOGGER_TRACE(genericLoggerp, " ");
+                }
+                else if (isprint(0xFF & p[j])) { /* printable char */
+                  GENERICLOGGER_TRACEF(genericLoggerp, "%c", 0xFF & p[j]);
+                }
+                else { /* other char */
+                  GENERICLOGGER_TRACE(genericLoggerp, ".");
+                }
+              }
+              if (marpaESLIF_stringGenerator.okb) {
+                MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, marpaESLIF_stringGenerator.s);
+              }
+              if (marpaESLIF_stringGenerator.s != NULL) {
+                free(marpaESLIF_stringGenerator.s);
+              }
+              marpaESLIF_stringGenerator.s = NULL;
+              marpaESLIF_stringGenerator.okb = 0;
+            }
+          }
+        }
       }
     } else {
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "#         Name: ");
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "<");
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->descp->asciis);
-    }
-    if (symbolp->type == MARPAESLIF_SYMBOL_TYPE_META) {
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, ">");
     }
     MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "\n");
