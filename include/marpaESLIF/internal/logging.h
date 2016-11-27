@@ -19,11 +19,19 @@
   MARPAESLIF2LOG(marpaESLIFRecognizerp->marpaESLIFp, GENERICLOGGER_TRACEF(genericLoggerp, "[Level %2d Iter %4d][%s%-47s at %s:%04d]%*s" fmts, marpaESLIFRecognizerp->leveli, marpaESLIFRecognizerp->resumeCounteri, marpaESLIFRecognizerp->discardb ? "!" : " ", funcs, FILENAMES, __LINE__, marpaESLIFRecognizerp->leveli + marpaESLIFRecognizerp->callstackCounteri, " ", __VA_ARGS__))
 #define MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, msgs) \
   MARPAESLIF2LOG(marpaESLIFRecognizerp->marpaESLIFp, GENERICLOGGER_TRACEF(genericLoggerp, "[Level %2d Iter %4d][%s%-47s at %s:%04d]%*s%s", marpaESLIFRecognizerp->leveli, marpaESLIFRecognizerp->resumeCounteri, marpaESLIFRecognizerp->discardb ? "!" : " ", funcs, FILENAMES, __LINE__, marpaESLIFRecognizerp->leveli + marpaESLIFRecognizerp->callstackCounteri, " ", msgs))
+#define MARPAESLIFRECOGNIZER_RESUMECOUNTER_INC do { marpaESLIFRecognizerp->resumeCounteri++; } while (0)
+#define MARPAESLIFRECOGNIZER_RESUMECOUNTER_DEC do { marpaESLIFRecognizerp->resumeCounteri--; } while (0)
+#define MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC do { marpaESLIFRecognizerp->callstackCounteri++; } while (0)
+#define MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC do { marpaESLIFRecognizerp->callstackCounteri--; } while (0)
 #else
 #define MARPAESLIF_TRACEF(marpaESLIFp, funcs, fmts, ...)
 #define MARPAESLIF_TRACE(marpaESLIFp, funcs, msgs)
 #define MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFp, funcs, fmts, ...)
 #define MARPAESLIFRECOGNIZER_TRACE(marpaESLIFp, funcs, msgs)
+#define MARPAESLIFRECOGNIZER_RESUMECOUNTER_INC
+#define MARPAESLIFRECOGNIZER_RESUMECOUNTER_DEC
+#define MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC
+#define MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC
 #endif
 
 #define MARPAESLIF_DEBUGF(marpaESLIFp, fmts, ...)     MARPAESLIF2LOG(marpaESLIFp, GENERICLOGGER_DEBUGF    ((genericLoggerp), (fmts), __VA_ARGS__))
