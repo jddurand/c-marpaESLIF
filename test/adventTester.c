@@ -31,7 +31,7 @@ const static char *base_dsl = "\n"
 #define BLACK_CLUB_SUIT_UTF8s    "\xE2\x99\xA3"
 #define BLACK_SPADE_SUIT_UTF8s   "\xE2\x99\xA0"
 const static char *suit_line[] = {
-  "suit ~ [\\x{2665}\\x{2666}\\x{2663}\\x{2660}]:u", /* Code points */
+  "suit ~ [\\x{2665}\\x{2666}\\x{2663}\\x{2660}]:u", /* Code points - the u flag is NEEDED */
   "suit ~ [" BLACK_HEART_SUIT_UTF8s BLACK_DIAMOND_SUIT_UTF8s BLACK_CLUB_SUIT_UTF8s BLACK_SPADE_SUIT_UTF8s "]", /* Character class */
   "suit ~ '" BLACK_HEART_SUIT_UTF8s "' | '" BLACK_DIAMOND_SUIT_UTF8s "' | '" BLACK_CLUB_SUIT_UTF8s "'| '" BLACK_SPADE_SUIT_UTF8s "'" /* Characters */
 };
