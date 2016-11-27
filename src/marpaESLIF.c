@@ -382,7 +382,7 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
   char                             *generatedasciis       = NULL;
   marpaESLIF_terminal_t            *terminalp;
   marpaWrapperGrammarSymbolOption_t marpaWrapperGrammarSymbolOption;
-  marpaESLIF_uint32_t               pcre2Optioni;
+  marpaESLIF_uint32_t               pcre2Optioni = PCRE2_ANCHORED;
   int                               pcre2Errornumberi;
   PCRE2_SIZE                        pcre2ErrorOffsetl;
   PCRE2_UCHAR                       pcre2ErrorBuffer[256];
@@ -509,35 +509,6 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
     goto err;
   }
 
-  /* Validate type and set pcre2Optioni */
-  pcre2Optioni = PCRE2_ANCHORED;
-  switch (type) {
-  case MARPAESLIF_TERMINAL_TYPE_STRING:
-  case MARPAESLIF_TERMINAL_TYPE_REGEX:
-    if (modifiers != NULL) {
-      modifiersp = modifiers;
-      while ((modifierc = *modifiersp++) != '\0') {
-        for (i = 0; i < (sizeof(marpaESLIF_regex_option_map) / sizeof(marpaESLIF_regex_option_map[0])); i++) {
-          if (modifierc == marpaESLIF_regex_option_map[i].modifierc) {
-            /* It is important to process pcre2OptionNoti first */
-            if (marpaESLIF_regex_option_map[i].pcre2OptionNoti != 0) {
-              MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s: regex modifier %c: removing %s", terminalp->descp->asciis, marpaESLIF_regex_option_map[i].modifierc, marpaESLIF_regex_option_map[i].pcre2OptionNots);
-              pcre2Optioni &= ~marpaESLIF_regex_option_map[i].pcre2OptionNoti;
-            }
-            if (marpaESLIF_regex_option_map[i].pcre2Optioni != 0) {
-              MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s: regex modifier %c: adding %s", terminalp->descp->asciis, marpaESLIF_regex_option_map[i].modifierc, marpaESLIF_regex_option_map[i].pcre2Options);
-              pcre2Optioni |= marpaESLIF_regex_option_map[i].pcre2Optioni;
-            }
-          }
-        }
-      }
-    }
-    break;
-  default:
-    MARPAESLIF_ERRORF(marpaESLIFp, "Unsupported terminal type %d", type);
-    goto err;
-  }
-  
   /* ----------- Terminal Implementation ------------ */
   switch (type) {
 
@@ -845,6 +816,34 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
       if (utfflagb) {
         pcre2Optioni |= PCRE2_UTF;
       }
+    }
+
+    /* Apply user options */
+    switch (type) {
+    case MARPAESLIF_TERMINAL_TYPE_STRING:
+    case MARPAESLIF_TERMINAL_TYPE_REGEX:
+      if (modifiers != NULL) {
+        modifiersp = modifiers;
+        while ((modifierc = *modifiersp++) != '\0') {
+          for (i = 0; i < (sizeof(marpaESLIF_regex_option_map) / sizeof(marpaESLIF_regex_option_map[0])); i++) {
+            if (modifierc == marpaESLIF_regex_option_map[i].modifierc) {
+              /* It is important to process pcre2OptionNoti first */
+              if (marpaESLIF_regex_option_map[i].pcre2OptionNoti != 0) {
+                MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s: regex modifier %c: removing %s", terminalp->descp->asciis, marpaESLIF_regex_option_map[i].modifierc, marpaESLIF_regex_option_map[i].pcre2OptionNots);
+                pcre2Optioni &= ~marpaESLIF_regex_option_map[i].pcre2OptionNoti;
+              }
+              if (marpaESLIF_regex_option_map[i].pcre2Optioni != 0) {
+                MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s: regex modifier %c: adding %s", terminalp->descp->asciis, marpaESLIF_regex_option_map[i].modifierc, marpaESLIF_regex_option_map[i].pcre2Options);
+                pcre2Optioni |= marpaESLIF_regex_option_map[i].pcre2Optioni;
+              }
+            }
+          }
+        }
+      }
+      break;
+    default:
+      MARPAESLIF_ERRORF(marpaESLIFp, "Unsupported terminal type %d", type);
+      goto err;
     }
 
     terminalp->regex.patternp = pcre2_compile(
