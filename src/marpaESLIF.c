@@ -557,6 +557,8 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
       goto err;
     }
 
+    /* Please note that at the very very early startup, when we create marpaESLIFp, there is NO marpaESLIFp->anycharp yet! */
+    /* But we will never crash because marpaESLIFp never create its internal terminals using the STRING type -; */
     while (inputl > 0) {
       if (! _marpaESLIFRecognizer_regex_matcherb(marpaESLIFRecognizerp, marpaESLIFp->anycharp, inputs, inputl, 1 /* eofb */, &rci, &marpaESLIFValueResult)) {
         goto err;
@@ -766,6 +768,84 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
     /* a regular expression, if "/" is escaped, this is has no impact. */
 
   case MARPAESLIF_TERMINAL_TYPE_REGEX:
+
+    if ((type != MARPAESLIF_TERMINAL_TYPE_STRING) && (marpaESLIFp->anycharp != NULL)) {
+      /* Coming directly there, try to determine the need of PCRE2_UTF. This will not work with */
+      /* character classes containing codepoints in the form \x{}, but then PCRE2 will yell on its own. */
+      /* This does not work when we build internal marpaESLIF regex itself -; */
+      if (marpaESLIFRecognizerp != NULL) {
+        marpaESLIFRecognizer_freev(marpaESLIFRecognizerp);
+        marpaESLIFRecognizerp = NULL;
+      }
+
+      marpaESLIFGrammar.marpaESLIFp = marpaESLIFp;
+      inputs = utf8s;
+      inputl = utf8l;
+
+      /* Fake a recognizer. EOF flag will be set automatically in fake mode */
+      marpaESLIFRecognizerp = _marpaESLIFRecognizer_newp(&marpaESLIFGrammar, NULL /* marpaESLIFRecognizerOptionp */, 0 /* discardb */, 0 /* exceptionb */, 0 /* silentb */, NULL /* marpaESLIFRecognizerParentp */, 1 /* fakeb */);
+      if (marpaESLIFRecognizerp == NULL) {
+        goto err;
+      }
+
+      while (inputl > 0) {
+        if (! _marpaESLIFRecognizer_regex_matcherb(marpaESLIFRecognizerp, marpaESLIFp->anycharp, inputs, inputl, 1 /* eofb */, &rci, &marpaESLIFValueResult)) {
+          goto err;
+        }
+        if (rci != MARPAESLIF_MATCH_OK) {
+          MARPAESLIF_ERROR(marpaESLIFp, "Failed to detect all characters of terminal string");
+          goto err;
+        }
+        /* It is a non-sense to have a regex match returning something else but MARPAESLIF_STACK_TYPE_ARRAY */
+        if (marpaESLIFValueResult.type != MARPAESLIF_STACK_TYPE_ARRAY) {
+          MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "newline regex returned type %d}", marpaESLIFValueResult.type);
+          goto err;
+        }
+        /* It is a non-sense to have a match returning nothing */
+        if (marpaESLIFValueResult.u.p == NULL) {
+          MARPAESLIF_ERROR(marpaESLIFRecognizerp->marpaESLIFp, "anychar regex return NULL pointer");
+          goto err;
+        }
+        if (marpaESLIFValueResult.sizel <= 0) {
+          MARPAESLIF_ERROR(marpaESLIFRecognizerp->marpaESLIFp, "anychar regex matched zero byte");
+          goto err;
+        }
+        if (! _marpaESLIFRecognizer_lexemeStack_i_setb(marpaESLIFRecognizerp, marpaESLIFRecognizerp->lexemeInputStackp, GENERICSTACK_USED(marpaESLIFRecognizerp->lexemeInputStackp), marpaESLIFValueResult.u.p, marpaESLIFValueResult.sizel)) {
+          free(marpaESLIFValueResult.u.p);
+          goto err;
+        }
+        inputs += marpaESLIFValueResult.sizel;
+        inputl -= marpaESLIFValueResult.sizel;
+      }
+      /* All matches are in the recognizer's lexeme input stack, in order. Take all unicode code points. */
+      utfflagb = 0;
+      /* Remember that lexeme input stack is putting a fake value at indice 0, because marpa does not like it */
+      for (i = 1; i < GENERICSTACK_USED(marpaESLIFRecognizerp->lexemeInputStackp); previouscodepointi = codepointi, i++) {
+        if (! _marpaESLIFRecognizer_lexemeStack_i_p_and_sizeb(marpaESLIFRecognizerp, marpaESLIFRecognizerp->lexemeInputStackp, i, &matchedp, &matchedl)) {
+          goto err;
+        }
+        /* Get the code point from the UTF-8 representation */
+        utf82ordi = _marpaESLIF_utf82ordi((PCRE2_SPTR8) matchedp, &codepointi);
+        if (utf82ordi <= 0) {
+          MARPAESLIF_ERRORF(marpaESLIFp, "Malformed UTF-8 character at offset %d", -utf82ordi);
+          goto err;
+        } else if (utf82ordi != (int) matchedl) {
+          MARPAESLIF_ERRORF(marpaESLIFp, "Not all bytes consumed: %d instead of %ld", utf82ordi, (unsigned long) matchedl);
+          goto err;
+        }
+        /* Determine the number of hex digits to fully represent the code point, remembering if we need PCRE2_UTF flag */
+        if (codepointi > 0xFF) {
+          utfflagb = 1;
+          break;
+        }
+      }
+      /* Done - now we can generate a regexp out of that UTF-8 compatible string */
+      MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s: regex content analysed (UTF=%d)", terminalp->descp->asciis, strings, utfflagb);
+      /* opti for string is compatible with opti for regex - just that the lexer accept less options - in particular the UTF flag */
+      if (utfflagb) {
+        pcre2Optioni |= PCRE2_UTF;
+      }
+    }
 
     terminalp->regex.patternp = pcre2_compile(
                                               (PCRE2_SPTR) utf8s,      /* An UTF-8 pattern */
@@ -2711,6 +2791,10 @@ marpaESLIF_t *marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptionp)
   marpaESLIFp->characterClassModifiersp = NULL;
   marpaESLIFp->regexModifiersp          = NULL;
 
+  /* **************************************************************** */
+  /* It is very important to NOT create terminals of type STRING here */
+  /* **************************************************************** */
+  
   /* Create internal anychar regex */
   marpaESLIFp->anycharp = _marpaESLIF_terminal_newp(marpaESLIFp,
                                                     NULL, /* grammarp */
