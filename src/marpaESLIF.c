@@ -7468,6 +7468,7 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIFGrammar_t *marpaESL
               }
               if (marpaESLIF_stringGenerator.okb) {
                 MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, marpaESLIF_stringGenerator.s);
+                MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "\n");
               }
               if (marpaESLIF_stringGenerator.s != NULL) {
                 free(marpaESLIF_stringGenerator.s);
