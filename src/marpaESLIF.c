@@ -202,8 +202,7 @@ static inline short                  _marpaESLIFValue_stack_is_floatb(marpaESLIF
 static inline short                  _marpaESLIFValue_stack_is_doubleb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, short *doublebp);
 static inline short                  _marpaESLIFValue_stack_is_ptrb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, short *ptrbp);
 static inline short                  _marpaESLIFValue_stack_is_arrayb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, short *arraybp);
-static inline void                   _marpaESLIFValue_context_symbolsb(marpaESLIFValue_t *marpaESLIFValuep, char **symbolsp);
-static inline void                   _marpaESLIFValue_context_rulesb(marpaESLIFValue_t *marpaESLIFValuep, char **rulesp);
+static inline short                  _marpaESLIFValue_contextb(marpaESLIFValue_t *marpaESLIFValuep, int *grammarip, int *symbolip, int *ruleip);
 static        short                  _marpaESLIFValue_traverserb(marpaWrapperAsfTraverser_t *traverserp, void *userDatavp, int *valueip);
 static        short                  _marpaESLIFValue_okRuleCallbackWrapperb(void *userDatavp, genericStack_t *parentRuleiStackp, int rulei, int arg0i, int argni);
 static        short                  _marpaESLIFValue_okSymbolCallbackWrapperb(void *userDatavp, genericStack_t *parentRuleiStackp, int symboli, int argi);
@@ -5879,11 +5878,12 @@ static short _marpaESLIFValue_ruleCallbackWrapperb(void *userDatavp, int rulei, 
     goto err;
   }
 
-  marpaESLIFValuep->inValuationb   = 1;
-  marpaESLIFValuep->currentSymbolp = NULL;
-  marpaESLIFValuep->currentRulep   = rulep;
+  marpaESLIFValuep->inValuationb   =  1;
+  marpaESLIFValuep->symboli        = -1;
+  marpaESLIFValuep->rulei          = rulei;
+  marpaESLIFValuep->grammari       = grammarp->leveli;
 
-  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Rule %d %s", rulep->idi, rulep->asciishows);
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Grammar %d Rule %d %s", marpaESLIFValuep->grammari, marpaESLIFValuep->rulei, rulep->asciishows);
 
   /* Passthrough mode:
 
@@ -6018,9 +6018,10 @@ static short _marpaESLIFValue_ruleCallbackWrapperb(void *userDatavp, int rulei, 
  done:
   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
   marpaESLIFRecognizerp->callstackCounteri--;
-  marpaESLIFValuep->inValuationb   = 0;
-  marpaESLIFValuep->currentSymbolp = NULL;
-  marpaESLIFValuep->currentRulep   = NULL;
+  marpaESLIFValuep->inValuationb   =  0;
+  marpaESLIFValuep->symboli        = -1;
+  marpaESLIFValuep->rulei          = -1;
+  marpaESLIFValuep->grammari       = -1;
   return rcb;
 }
 
@@ -6044,8 +6045,6 @@ static inline short _marpaESLIFValue_anySymbolCallbackWrapperb(void *userDatavp,
   marpaESLIF_symbol_t                  *symbolp;
   short                                 rcb;
   
-  marpaESLIFValuep->inValuationb = 1;
-
   marpaESLIFRecognizerp->callstackCounteri++;
 #ifndef MARPAESLIF_NTRACE
   if (nullableb) {
@@ -6061,10 +6060,12 @@ static inline short _marpaESLIFValue_anySymbolCallbackWrapperb(void *userDatavp,
     goto err;
   }
 
-  marpaESLIFValuep->currentSymbolp = symbolp;
-  marpaESLIFValuep->currentRulep   = NULL;
+  marpaESLIFValuep->inValuationb   =  1;
+  marpaESLIFValuep->symboli        = symboli;
+  marpaESLIFValuep->rulei          = -1;
+  marpaESLIFValuep->grammari       = grammarp->leveli;
 
-  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Symbol %d %s", symbolp->idi, symbolp->descp->asciis);
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Grammar %d Symbol %d %s", marpaESLIFValuep->grammari, marpaESLIFValuep->symboli, symbolp->descp->asciis);
 
   if (! nullableb) {
     if (! _marpaESLIFRecognizer_lexemeStack_i_p_and_sizeb(marpaESLIFRecognizerp, marpaESLIFRecognizerp->lexemeInputStackp, argi, &bytep, &bytel)) {
@@ -6171,9 +6172,10 @@ static inline short _marpaESLIFValue_anySymbolCallbackWrapperb(void *userDatavp,
  done:
   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
   marpaESLIFRecognizerp->callstackCounteri--;
-  marpaESLIFValuep->inValuationb   = 0;
-  marpaESLIFValuep->currentSymbolp = NULL;
-  marpaESLIFValuep->currentRulep   = NULL;
+  marpaESLIFValuep->inValuationb   =  0;
+  marpaESLIFValuep->symboli        = -1;
+  marpaESLIFValuep->rulei          = -1;
+  marpaESLIFValuep->grammari       = -1;
   return rcb;
 }
 
@@ -8964,10 +8966,10 @@ static inline short _marpaESLIFValue_stack_i_resetb(marpaESLIFValue_t *marpaESLI
 }
 
 /*****************************************************************************/
-short marpaESLIFValue_context_symbolsb(marpaESLIFValue_t *marpaESLIFValuep, char **symbolsp)
+short marpaESLIFValue_contextb(marpaESLIFValue_t *marpaESLIFValuep, int *grammarip, int *symbolip, int *ruleip)
 /*****************************************************************************/
 {
-  static const char *funcs  = "marpaESLIFValue_context_symbolsb";
+  static const char *funcs  = "marpaESLIFValue_contextb";
   short              rcb;
 
   if (marpaESLIFValuep == NULL) {
@@ -8980,7 +8982,9 @@ short marpaESLIFValue_context_symbolsb(marpaESLIFValue_t *marpaESLIFValuep, char
     goto err;
   }
 
-  _marpaESLIFValue_context_symbolsb(marpaESLIFValuep, symbolsp);
+  if (! _marpaESLIFValue_contextb(marpaESLIFValuep, grammarip, symbolip, ruleip)) {
+    goto err;
+  }
 
   rcb = 1;
   goto done;
@@ -8993,31 +8997,20 @@ short marpaESLIFValue_context_symbolsb(marpaESLIFValue_t *marpaESLIFValuep, char
 }
 
 /*****************************************************************************/
-short marpaESLIFValue_context_rulesb(marpaESLIFValue_t *marpaESLIFValuep, char **rulesp)
+static inline short _marpaESLIFValue_contextb(marpaESLIFValue_t *marpaESLIFValuep, int *grammarip, int *symbolip, int *ruleip)
 /*****************************************************************************/
 {
-  static const char *funcs  = "marpaESLIFValue_context_rulesb";
-  short              rcb;
-
-  if (marpaESLIFValuep == NULL) {
-    errno = EINVAL;
-    goto err;
+  if (grammarip != NULL) {
+    *grammarip = marpaESLIFValuep->grammari;
+  }
+  if (symbolip != NULL) {
+    *symbolip = marpaESLIFValuep->symboli;
+  }
+  if (ruleip != NULL) {
+    *ruleip = marpaESLIFValuep->rulei;
   }
 
-  if (! marpaESLIFValuep->inValuationb) {
-    MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "%s must be called only in an action callback", funcs);
-    goto err;
-  }
-
-  _marpaESLIFValue_context_rulesb(marpaESLIFValuep, rulesp);
-  rcb = 1;
-  goto done;
-
- err:
-  rcb = 0;
-
- done:
-  return rcb;
+  return 1;
 }
 
 /*****************************************************************************/
@@ -9216,8 +9209,9 @@ static inline marpaESLIFValue_t *_marpaESLIFValue_newp(marpaESLIFRecognizer_t *m
   marpaESLIFValuep->typeStackp                  = NULL;
   marpaESLIFValuep->contextStackp               = NULL;
   marpaESLIFValuep->inValuationb                = 0;
-  marpaESLIFValuep->currentSymbolp              = 0;
-  marpaESLIFValuep->currentRulep                = 0;
+  marpaESLIFValuep->symboli                     = -1;
+  marpaESLIFValuep->rulei                       = -1;
+  marpaESLIFValuep->grammari                    = -1;
 
   if (! fakeb) {
     if (grammarp->haveRejectionb) {
@@ -9854,28 +9848,6 @@ short marpaESLIFValue_stack_get_arrayb(marpaESLIFValue_t *marpaESLIFValuep, int 
   }
 
   return _marpaESLIFValue_stack_get_arrayb(marpaESLIFValuep, indicei, contextip, pp, lp, shallowbp);
-}
-
-/*****************************************************************************/
-static inline void _marpaESLIFValue_context_symbolsb(marpaESLIFValue_t *marpaESLIFValuep, char **symbolsp)
-/*****************************************************************************/
-{
-  char *symbols = (marpaESLIFValuep->currentSymbolp != NULL) ? marpaESLIFValuep->currentSymbolp->descp->asciis : NULL;
-
-  if (symbolsp != NULL) {
-    *symbolsp = symbols;
-  }
-}
-
-/*****************************************************************************/
-static inline void _marpaESLIFValue_context_rulesb(marpaESLIFValue_t *marpaESLIFValuep, char **rulesp)
-/*****************************************************************************/
-{
-  char *rules = (marpaESLIFValuep->currentRulep != NULL) ? marpaESLIFValuep->currentRulep->descp->asciis : NULL;
-
-  if (rulesp != NULL) {
-    *rulesp = rules;
-  }
 }
 
 /*****************************************************************************/

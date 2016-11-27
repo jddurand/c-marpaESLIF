@@ -26,7 +26,6 @@ typedef enum    marpaESLIF_event_type      marpaESLIF_event_type_t;
 typedef enum    marpaESLIF_array_type      marpaESLIF_array_type_t;
 typedef struct  marpaESLIF_readerContext   marpaESLIF_readerContext_t;
 typedef struct  marpaESLIF_cloneContext    marpaESLIF_cloneContext_t;
-typedef enum    marpaESLIF_valueMode       marpaESLIF_valueMode_t;
 typedef         marpaESLIFStackType_t      marpaESLIF_stack_type_t;
 
 /* Symbol types */
@@ -233,8 +232,9 @@ struct marpaESLIFValue {
   genericStack_t           *typeStackp;
   genericStack_t           *contextStackp;
   short                     inValuationb;
-  marpaESLIF_symbol_t      *currentSymbolp;
-  marpaESLIF_rule_t        *currentRulep;
+  int                       symboli;
+  int                       rulei;
+  int                       grammari;
 };
 
 struct marpaESLIFRecognizer {
