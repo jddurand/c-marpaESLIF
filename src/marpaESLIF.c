@@ -834,14 +834,16 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
 #endif
 
   /* Creation of PCRE2 pattern is ok - keep it for bootstrap comparison when creating grammars */
-  terminalp->patterns = (char *) malloc(utf8l);
+  terminalp->patterns = (char *) malloc(utf8l + 1);
   if (terminalp->patterns == NULL) {
     MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
     goto err;
   }
   memcpy(terminalp->patterns, utf8s, utf8l);
+  terminalp->patterns[utf8l] = '\0';
   terminalp->patternl = utf8l;
   terminalp->patterni = pcre2Optioni;
+  terminalp->type     = type;
 
   goto done;
   
@@ -7379,14 +7381,28 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIF_t *marpaESLIFp, ma
     }
     MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "\n");
     if (symbolp->type == MARPAESLIF_SYMBOL_TYPE_TERMINAL) {
-      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "#   Definition: ");
+      if (symbolp->u.terminalp->type == MARPAESLIF_TERMINAL_TYPE_STRING) {
+        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "#      Pattern: ");
+      } else {
+        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "#   Definition: ");
+      }
     } else if (symbolp->type == MARPAESLIF_SYMBOL_TYPE_META) {
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "#         Name: ");
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "<");
     } else {
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "#   Definition: ");
     }
-    MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->descp->asciis);
+    if (symbolp->type == MARPAESLIF_SYMBOL_TYPE_TERMINAL) {
+      if (symbolp->u.terminalp->type == MARPAESLIF_TERMINAL_TYPE_STRING) {
+        /* We know we made a 100% ASCII compatible pattern when the original type is STRING */
+        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->u.terminalp->patterns);
+      } else {
+        /* We have to dump - this is an opaque UTF-8 pattern */
+        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->descp->asciis);
+      }
+    } else {
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->descp->asciis);
+    }
     if (symbolp->type == MARPAESLIF_SYMBOL_TYPE_META) {
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, ">");
     }

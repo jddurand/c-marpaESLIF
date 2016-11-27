@@ -86,6 +86,7 @@ struct marpaESLIF_terminal {
   char                       *patterns;            /* This is what is sent to PCRE2 and what defines exactly the terminal */
   size_t                      patternl;
   marpaESLIF_uint32_t         patterni;            /* ... this includes pattern options */
+  marpaESLIF_terminal_type_t  type;                /* Original type. Used for description. When origin is STRING we know that patterns if ASCII safe */
   marpaESLIF_regex_t          regex;
 };
 
