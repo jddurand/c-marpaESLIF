@@ -83,6 +83,9 @@ struct marpaESLIF_terminal {
   int                         idi;                 /* Terminal Id */
   marpaESLIF_string_t        *descp;               /* Terminal description */
   char                       *modifiers;           /* Modifiers */
+  char                       *patterns;            /* This is what is sent to PCRE2 and what defines exactly the terminal */
+  size_t                      patternl;
+  marpaESLIF_uint32_t         patterni;            /* ... this includes pattern options */
   marpaESLIF_regex_t          regex;
 };
 

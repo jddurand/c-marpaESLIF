@@ -7,6 +7,9 @@
 #include "marpaESLIF/internal/bootstrap_actions.h"
 #include "marpaESLIF/internal/bootstrap_types.h"
 
+#undef  FILENAMES
+#define FILENAMES "bootstrap_actions.c" /* For logging */
+
 /* This file contain the definition of all bootstrap actions, i.e. the ESLIF grammar itself */
 /* This is an example of how to use the API */
 
@@ -433,7 +436,7 @@ static inline short _marpaESLIF_bootstrap_search_terminal_by_descriptionb(marpaE
   marpaESLIF_terminal_t *terminalp;
   short                  rcb;
 
-  /* Create a fake terminal (it has existence only in memory) */
+  /* Create a fake terminal (it has existence only in memory) - the description is the content itself */
   terminalp = _marpaESLIF_terminal_newp(marpaESLIFp,
                                         NULL, /* grammarp: this is what make the terminal only in memory */
                                         MARPAWRAPPERGRAMMAR_EVENTTYPE_NONE,
@@ -458,23 +461,16 @@ static inline short _marpaESLIF_bootstrap_search_terminal_by_descriptionb(marpaE
     if (symbol_i_p->type != MARPAESLIF_SYMBOL_TYPE_TERMINAL) {
       continue;
     }
-    if (! _marpaESLIF_string_eqb(symbol_i_p->u.terminalp->descp, terminalp->descp)) {
+    /* Pattern options */
+    if (symbol_i_p->u.terminalp->patterni != terminalp->patterni) {
       continue;
     }
-   /* Modifiers ? */
-    if ((stringp->modifiers != NULL) && (symbol_i_p->u.terminalp->modifiers == NULL)) {
+    /* Pattern content */
+    if (symbol_i_p->u.terminalp->patternl != terminalp->patternl) {
       continue;
     }
-    if ((stringp->modifiers == NULL) && (symbol_i_p->u.terminalp->modifiers != NULL)) {
+    if (memcmp(symbol_i_p->u.terminalp->patterns, terminalp->patterns, terminalp->patternl) != 0) {
       continue;
-    }
-    /* Either both are NULL, or both are not NULL */
-    /* We do not try to re-evaluate the modifiers. Even if at the end this would give the same */
-    /* PCRE2 option, at most this will generate a new terminal technically equivalent */
-    if (stringp->modifiers != NULL) {
-      if (strcmp(stringp->modifiers, symbol_i_p->u.terminalp->modifiers) != 0) {
-        continue;
-      }
     }
     /* Got it */
     symbolp = symbol_i_p;
@@ -509,10 +505,6 @@ static inline marpaESLIF_symbol_t  *_marpaESLIF_bootstrap_check_terminal_by_type
   }
 
   if (createb && (symbolp == NULL)) {
-    if (grammarp->leveli == 1) {
-      int jddi = 0;
-      jddi++;
-    }
     terminalp = _marpaESLIF_terminal_newp(marpaESLIFp,
                                           grammarp,
                                           MARPAWRAPPERGRAMMAR_EVENTTYPE_NONE,
@@ -2606,6 +2598,7 @@ static inline short _marpaESLIF_bootstrap_G1_action_priority_flat_ruleb(marpaESL
       }
 #ifndef MARPAESLIF_NTRACE
       MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Creating rule %s at grammar level %d", (alternativep->forcedLhsp != NULL) ? alternativep->forcedLhsp->descp->asciis : lhsp->descp->asciis, grammarp->leveli);
+      MARPAESLIF_TRACEF(marpaESLIFp, funcs, "... LHS     : %d %s", (alternativep->forcedLhsp != NULL) ? alternativep->forcedLhsp->idi : lhsp->idi, (alternativep->forcedLhsp != NULL) ? alternativep->forcedLhsp->descp->asciis : lhsp->descp->asciis);
       for (rhsPrimaryi = 0; rhsPrimaryi < nrhsi; rhsPrimaryi++) {
         if (! GENERICSTACK_IS_PTR(rhsPrimaryStackp, rhsPrimaryi)) {
           MARPAESLIF_ERRORF(marpaESLIFp, "alternativeStackp at indice %d is not PTR (got %s, value %d)", rhsPrimaryi, _marpaESLIF_genericStack_i_types(rhsPrimaryStackp, rhsPrimaryi), GENERICSTACKITEMTYPE(rhsPrimaryStackp, rhsPrimaryi));
@@ -2616,7 +2609,7 @@ static inline short _marpaESLIF_bootstrap_G1_action_priority_flat_ruleb(marpaESL
         if (rhsp == NULL) {
           goto err;
         }
-        MARPAESLIF_TRACEF(marpaESLIFp, funcs, "... Rhs No %d: %s", rhsPrimaryi, rhsp->descp->asciis);
+        MARPAESLIF_TRACEF(marpaESLIFp, funcs, "... RHS[%3d]: %d %s", rhsPrimaryi, rhsp->idi, rhsp->descp->asciis);
         rhsip[rhsPrimaryi] = rhsp->idi;
       }
 #endif

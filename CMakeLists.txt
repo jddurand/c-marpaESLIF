@@ -216,6 +216,7 @@ SET_TARGET_PROPERTIES(marpaESLIF PROPERTIES COMPILE_FLAGS "-DmarpaESLIF_EXPORTS"
 ENABLE_TESTING()
 
 ADD_EXECUTABLE        (marpaESLIFTester EXCLUDE_FROM_ALL test/marpaESLIFTester.c)
+ADD_EXECUTABLE        (adventTester EXCLUDE_FROM_ALL test/adventTester.c)
 #
 # Painful but putting the binaries produced with dynamic linking in the same directory as the
 # dynamic libraries is the only way to make sure the OS will always see the dynamic library
@@ -224,11 +225,17 @@ ADD_EXECUTABLE        (marpaESLIFTester EXCLUDE_FROM_ALL test/marpaESLIFTester.c
 #
 SET_TARGET_PROPERTIES (marpaESLIFTester       PROPERTIES LINKER_LANGUAGE C RUNTIME_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH})
 TARGET_LINK_LIBRARIES (marpaESLIFTester       marpaESLIF)
+SET_TARGET_PROPERTIES (adventTester           PROPERTIES LINKER_LANGUAGE C RUNTIME_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH})
+TARGET_LINK_LIBRARIES (adventTester           marpaESLIF)
+
 
 ADD_TEST              (NAME marpaESLIFTest
   COMMAND marpaESLIFTester
   WORKING_DIRECTORY ${LIBRARY_OUTPUT_PATH})
-ADD_CUSTOM_TARGET     (check COMMAND ${CMAKE_CTEST_COMMAND} DEPENDS marpaESLIFTester)
+ADD_TEST              (NAME adventTest
+  COMMAND adventTester
+  WORKING_DIRECTORY ${LIBRARY_OUTPUT_PATH})
+ADD_CUSTOM_TARGET     (check COMMAND ${CMAKE_CTEST_COMMAND} DEPENDS marpaESLIFTester adventTester)
 
 # -------
 # Install
