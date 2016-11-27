@@ -26,7 +26,8 @@ typedef struct marpaESLIF_stringGenerator {
   short         okb;
 } marpaESLIF_stringGenerator_t;
 
-static const char *FILENAMES                           = "marpaESLIF.c"; /* For logging */
+#undef  FILENAMES
+#define FILENAMES "marpaESLIF.c" /* For logging */
 
 static const char *GENERICSTACKITEMTYPE_NA_STRING      = "NA";
 static const char *GENERICSTACKITEMTYPE_CHAR_STRING    = "CHAR";
@@ -422,6 +423,9 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
   terminalp->idi                 = -1;
   terminalp->descp               = NULL;
   terminalp->modifiers           = NULL;
+  terminalp->patterns            = NULL;
+  terminalp->patternl            = 0;
+  terminalp->patterni            = 0;
   terminalp->regex.patternp      = NULL;
   terminalp->regex.match_datap   = NULL;
 #ifdef PCRE2_CONFIG_JIT
@@ -828,6 +832,16 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
   }
 
 #endif
+
+  /* Creation of PCRE2 pattern is ok - keep it for bootstrap comparison when creating grammars */
+  terminalp->patterns = (char *) malloc(utf8l);
+  if (terminalp->patterns == NULL) {
+    MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
+    goto err;
+  }
+  memcpy(terminalp->patterns, utf8s, utf8l);
+  terminalp->patternl = utf8l;
+  terminalp->patterni = pcre2Optioni;
 
   goto done;
   
@@ -2603,6 +2617,9 @@ static inline void _marpaESLIF_terminal_freev(marpaESLIF_terminal_t *terminalp)
 {
   if (terminalp != NULL) {
     _marpaESLIF_string_freev(terminalp->descp);
+    if (terminalp->patterns != NULL) {
+      free(terminalp->patterns);
+    }
     if (terminalp->regex.match_datap != NULL) {
       pcre2_match_data_free(terminalp->regex.match_datap);
     }
