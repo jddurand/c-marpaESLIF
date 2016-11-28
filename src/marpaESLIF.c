@@ -1300,6 +1300,7 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
   marpaESLIF_meta_t     *metap;
   genericStack_t        *symbolStackp;
   genericStack_t        *ruleStackp;
+  genericStack_t        *lhsRuleStackp;
   int                    grammari;
   marpaESLIF_symbol_t   *symbolp;
   marpaESLIF_symbol_t   *subSymbolp;
@@ -1589,6 +1590,7 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
       }
 
       lhsb = 0;
+      lhsRuleStackp = symbolp->lhsRuleStackp;
       for (rulei = 0; rulei < GENERICSTACK_USED(ruleStackp); rulei++) {
         if (! GENERICSTACK_IS_PTR(ruleStackp, rulei)) {
           /* Should never happen, but who knows */
@@ -1596,14 +1598,15 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
         }
         rulep = (marpaESLIF_rule_t *) GENERICSTACK_GET_PTR(ruleStackp, rulei);
         lhsp = rulep->lhsp;
-        if (lhsp->lhsb) {
-          /* Symbol already marked */
-        }
         if (_marpaESLIF_string_eqb(lhsp->descp, symbolp->descp)) {
           /* Found */
           MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Grammar level %d (%s): symbol %d (%s) marked as LHS", grammari, grammarp->descp->asciis, lhsp->idi, lhsp->descp->asciis);
           lhsb = 1;
-          break;
+          GENERICSTACK_PUSH_PTR(symbolp->lhsRuleStackp, rulep);
+          if (GENERICSTACK_ERROR(symbolp->lhsRuleStackp)) {
+            MARPAESLIF_ERRORF(marpaESLIFp, "symbolp->lhsRuleStackp push failure, %s", strerror(errno));
+            goto err;
+          }
         }
       }
       symbolp->lhsb = lhsb;
@@ -2645,10 +2648,17 @@ static inline marpaESLIF_symbol_t *_marpaESLIF_symbol_newp(marpaESLIF_t *marpaES
   symbolp->nullableRuleStackp     = NULL;
   symbolp->nullableActions        = NULL;
   symbolp->propertyBitSet         = 0; /* Filled by grammar validation */
+  symbolp->lhsRuleStackp          = NULL;
 
   GENERICSTACK_NEW(symbolp->nullableRuleStackp);
   if (GENERICSTACK_ERROR(symbolp->nullableRuleStackp)) {
     MARPAESLIF_ERRORF(marpaESLIFp, "symbolp->nullableRuleStackp initialization failure, %s", strerror(errno));
+    goto err;
+  }
+  
+  GENERICSTACK_NEW(symbolp->lhsRuleStackp);
+  if (GENERICSTACK_ERROR(symbolp->lhsRuleStackp)) {
+    MARPAESLIF_ERRORF(marpaESLIFp, "symbolp->lhsRuleStackp initialization failure, %s", strerror(errno));
     goto err;
   }
   
@@ -2700,9 +2710,8 @@ static inline void _marpaESLIF_symbol_freev(marpaESLIF_symbol_t *symbolp)
     if (symbolp->actions != NULL) {
       free(symbolp->actions);
     }
-    if (symbolp->nullableRuleStackp != NULL) {
-      GENERICSTACK_FREE(symbolp->nullableRuleStackp);
-    }
+    GENERICSTACK_FREE(symbolp->nullableRuleStackp);
+    GENERICSTACK_FREE(symbolp->lhsRuleStackp);
     /* Take care, when not NULL, this will be anyway a shallow pointer */
     /*
     if (symbolp->nullableActions != NULL) {
@@ -11198,5 +11207,104 @@ static int _marpaESLIF_event_sorti(const void *p1, const void *p2)
   return rci;
 }
 
+/*****************************************************************************/
+short marpaESLIFRecognizer_last_completedb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *names, int *startip, int *endip)
+/*****************************************************************************/
+{
+  /* This method work only for the CURRENT grammar of CURRENT recognizer */
+  marpaESLIF_t                     *marpaESLIFp             = marpaESLIFRecognizerp->marpaESLIFp;
+  marpaWrapperRecognizer_t         *marpaWrapperRecognizerp = marpaESLIFRecognizerp->marpaWrapperRecognizerp;
+  marpaESLIFGrammar_t              *marpaESLIFGrammarp      = marpaESLIFRecognizerp->marpaESLIFGrammarp;
+  marpaESLIF_grammar_t             *grammarp                = marpaESLIFGrammarp->grammarp;
+  marpaESLIF_symbol_t              *symbolp;
+  short                             rcb;
+  int                               latestEarleySetIdi;
+  int                               earleySetIdi;
+  marpaWrapperRecognizerProgress_t *progressp;
+  size_t                            nProgressl;
+  size_t                            progressl;
+  int                               rulei;
+  int                               positioni;
+  int                               origini;
+  int                               firstOrigini;
+  int                               lhsRuleStacki;
+  genericStack_t                   *lhsRuleStackp;
+  short                             lhsRuleStackb;
+  marpaESLIF_rule_t                *rulep;
+
+  if (names == NULL) {
+    MARPAESLIF_ERROR(marpaESLIFp, "Symbol name is NULL");
+    goto err;
+  }
+
+  /* First look for this symbol */
+  symbolp = _marpaESLIF_symbol_findp(marpaESLIFp, grammarp, names, -1);
+  if (symbolp == NULL) {
+    MARPAESLIF_ERRORF(marpaESLIFp, "No such symbol <%s>", names);
+    goto err;
+  }
+  lhsRuleStackp = symbolp->lhsRuleStackp;
+
+  if (!  marpaWrapperRecognizer_latestb(marpaWrapperRecognizerp, &latestEarleySetIdi)) {
+    goto err;
+  }
+  earleySetIdi = latestEarleySetIdi;
+
+  /* Initialize to one past the end, so we can tell if there were no hits */
+  firstOrigini = latestEarleySetIdi + 1;
+  while (earleySetIdi >= 0) {
+    if (! marpaWrapperRecognizer_progressb(marpaWrapperRecognizerp, earleySetIdi, -1, &nProgressl, &progressp)) {
+      goto err;
+    }
+    for (progressl = 0; progressl < nProgressl; progressl++) {
+      rulei     = progressp[progressl].rulei;
+      positioni = progressp[progressl].positioni;
+      origini   = progressp[progressl].earleySetOrigIdi;
+
+      if (positioni != -1) {
+        continue;
+      }
+      lhsRuleStackb = 0;
+      for (lhsRuleStacki = 0; lhsRuleStacki < GENERICSTACK_USED(lhsRuleStackp); lhsRuleStacki++) {
+        rulep = (marpaESLIF_rule_t *) GENERICSTACK_GET_PTR(lhsRuleStackp, lhsRuleStacki);
+        if (rulep->idi == rulei) {
+          lhsRuleStackb = 1;
+          break;
+        }
+      }
+      if (! lhsRuleStackb) {
+        continue;
+      }
+      if (origini >= firstOrigini) {
+        continue;
+      }
+      firstOrigini = origini;
+    }
+    if (firstOrigini <= latestEarleySetIdi) {
+      break;
+    }
+    earleySetIdi--;
+  }
+
+  if (earleySetIdi < 0) {
+    /* Not found */
+    goto err;
+  }
+
+  if (startip != NULL) {
+    *startip = firstOrigini;
+  }
+  if (endip != NULL) {
+    *endip = earleySetIdi - firstOrigini;
+  }
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 1;
+
+ done:
+  return rcb;
+}
 
 #include "bootstrap_actions.c"
