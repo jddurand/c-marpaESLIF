@@ -11378,7 +11378,7 @@ short marpaESLIFRecognizer_last_completedb(marpaESLIFRecognizer_t *marpaESLIFRec
   goto done;
 
  err:
-  rcb = 1;
+  rcb = 0;
 
  done:
   return rcb;
