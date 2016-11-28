@@ -11249,7 +11249,7 @@ static int _marpaESLIF_event_sorti(const void *p1, const void *p2)
 }
 
 /*****************************************************************************/
-short marpaESLIFRecognizer_last_completed_rangeb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *names, int *startip, int *lengthip)
+short marpaESLIFRecognizer_last_completedb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *names, char **offsetpp, size_t *lengthlp)
 /*****************************************************************************/
 {
   /* This method work only for the CURRENT grammar of CURRENT recognizer */
@@ -11257,6 +11257,7 @@ short marpaESLIFRecognizer_last_completed_rangeb(marpaESLIFRecognizer_t *marpaES
   marpaWrapperRecognizer_t         *marpaWrapperRecognizerp = marpaESLIFRecognizerp->marpaWrapperRecognizerp;
   marpaESLIFGrammar_t              *marpaESLIFGrammarp      = marpaESLIFRecognizerp->marpaESLIFGrammarp;
   marpaESLIF_grammar_t             *grammarp                = marpaESLIFGrammarp->grammarp;
+  genericStack_t                   *set2InputStackp         = marpaESLIFRecognizerp->set2InputStackp;
   marpaESLIF_symbol_t              *symbolp;
   short                             rcb;
   int                               latestEarleySetIdi;
@@ -11272,6 +11273,15 @@ short marpaESLIFRecognizer_last_completed_rangeb(marpaESLIFRecognizer_t *marpaES
   genericStack_t                   *lhsRuleStackp;
   short                             lhsRuleStackb;
   marpaESLIF_rule_t                *rulep;
+  int                               starti;
+  int                               lengthi;
+  int                               endi;
+  char                             *offsetp;
+  size_t                            lengthl;
+  GENERICSTACKITEMTYPE2TYPE_ARRAY   array[2];
+  char                             *firstStartPositionp;
+  char                             *lastStartPositionp;
+  size_t                            lastLengthl;
 
   if (names == NULL) {
     MARPAESLIF_ERROR(marpaESLIFp, "Symbol name is NULL");
@@ -11332,39 +11342,35 @@ short marpaESLIFRecognizer_last_completed_rangeb(marpaESLIFRecognizer_t *marpaES
     goto err;
   }
 
-  if (startip != NULL) {
-    *startip = firstOrigini;
-  }
-  if (lengthip != NULL) {
-    *lengthip = earleySetIdi - firstOrigini;
-  }
-  rcb = 1;
-  goto done;
+  starti  = firstOrigini;
+  lengthi = earleySetIdi - firstOrigini;
+  endi    = firstOrigini + lengthi - 1;
 
- err:
-  rcb = 1;
-
- done:
-  return rcb;
-}
-
-/*****************************************************************************/
-short marpaESLIFRecognizer_last_completedb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *names, int *startip, int *endip)
-/*****************************************************************************/
-{
-  int   starti;
-  int   lengthi;
-  short rcb;
-
-  if (! marpaESLIFRecognizer_last_completed_rangeb(marpaESLIFRecognizerp, names, &starti, &lengthi)) {
+  if (! GENERICSTACK_IS_ARRAY(set2InputStackp, starti)) {
+    MARPAESLIF_ERRORF(marpaESLIFp, "No entry in set2InputStackp at indice %d", starti);
     goto err;
   }
 
-  if (startip != NULL) {
-    *startip = starti;
+  if (! GENERICSTACK_IS_ARRAY(set2InputStackp, endi)) {
+    MARPAESLIF_ERRORF(marpaESLIFp, "No entry in set2InputStackp at indice %d", endi);
+    goto err;
   }
-  if (endip != NULL) {
-    *endip = starti + lengthi;
+
+  array[0] = GENERICSTACK_GET_ARRAY(set2InputStackp, starti);
+  array[1] = GENERICSTACK_GET_ARRAY(set2InputStackp, endi);
+
+  firstStartPositionp = (char *) GENERICSTACK_ARRAY_PTR(array[0]);
+  lastStartPositionp  = (char *) GENERICSTACK_ARRAY_PTR(array[1]);
+  lastLengthl         =          GENERICSTACK_ARRAY_LENGTH(array[1]);
+
+  offsetp = (char *) firstStartPositionp;
+  lengthl = (size_t) (lastStartPositionp + lastLengthl - firstStartPositionp);
+
+  if (offsetpp != NULL) {
+    *offsetpp = offsetp;
+  }
+  if (lengthlp != NULL) {
+    *lengthlp = lengthl;
   }
 
   rcb = 1;
