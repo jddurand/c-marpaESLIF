@@ -4268,6 +4268,7 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
   marpaESLIFValueResult_t          marpaESLIFValueResult;
   short                            discardFailureb = 0;
   GENERICSTACKITEMTYPE2TYPE_ARRAY  array;
+  short                            pauseb;
 
   marpaESLIFGrammarDiscard.grammarp = &grammarDiscard;
 
@@ -4572,6 +4573,7 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
   marpaESLIFRecognizerp->haveLexemeb = 1;
 
   /* Determine if we have pause before events - only for the top-level recognizer */
+  pauseb = 0;
   for (alternativei = 0; alternativei < GENERICSTACK_USED(marpaESLIFRecognizerp->alternativeStackp); alternativei++) {
     array   = GENERICSTACK_GET_ARRAY(marpaESLIFRecognizerp->alternativeStackp, alternativei);
     symbolp = GENERICSTACK_ARRAY_PTR(array);
@@ -4579,7 +4581,19 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
       if (! _marpaESLIFRecognizer_push_eventb(marpaESLIFRecognizerp, MARPAESLIF_EVENTTYPE_BEFORE, symbolp, symbolp->eventBefores)) {
         goto err;
       }
+      pauseb = 1;
     }
+  }
+  if (pauseb) {
+    if (marpaESLIFRecognizerp->pauses != NULL) {
+      free(marpaESLIFRecognizerp->pauses);
+    }
+    marpaESLIFRecognizerp->pauses = (char *) malloc(maxMatchedl);
+    if (marpaESLIFRecognizerp->pauses == NULL) {
+      MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
+      goto err;
+    }
+    memcpy(marpaESLIFRecognizerp->pauses, marpaESLIFRecognizerp->inputs, maxMatchedl);
   }
   if (marpaESLIFRecognizerp->eventArrayl > 0) {
     marpaESLIFRecognizerp->continueb = ! marpaESLIFRecognizerp->exhaustedb;
@@ -4599,7 +4613,7 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
     }
   }
 
-  /* Commit */
+  /* Commit - this will increment inputs and decrement inputl */
   if (! marpaESLIFRecognizer_completeb(marpaESLIFRecognizerp)) {
 #ifndef MARPAESLIF_NTRACE
     marpaESLIFRecognizer_progressLogb(marpaESLIFRecognizerp, -1, -1, GENERICLOGGER_LOGLEVEL_TRACE);
@@ -4870,6 +4884,7 @@ short marpaESLIFRecognizer_completeb(marpaESLIFRecognizer_t *marpaESLIFRecognize
   int                  commitedAlternativei;
   marpaESLIF_symbol_t *symbolp;
   short                rcb;
+  short                pauseb;
 
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
@@ -4895,15 +4910,12 @@ short marpaESLIFRecognizer_completeb(marpaESLIFRecognizer_t *marpaESLIFRecognize
     goto err;
   }
 
-  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Advancing stream internal position by %ld bytes", (unsigned long) marpaESLIFRecognizerp->alternativeLengthl);
-  marpaESLIFRecognizerp->inputs += marpaESLIFRecognizerp->alternativeLengthl;
-  marpaESLIFRecognizerp->inputl -= marpaESLIFRecognizerp->alternativeLengthl;
-
   /* Push grammar and eventual pause after events */
   _marpaESLIFRecognizer_reset_eventsb(marpaESLIFRecognizerp);
   if (! _marpaESLIFRecognizer_push_grammar_eventsb(marpaESLIFRecognizerp)) {
     goto err;
   }
+  pauseb = 0;
   for (commitedAlternativei = 0; commitedAlternativei < GENERICSTACK_USED(commitedAlternativeStackp); commitedAlternativei++) {
     symbolp = (marpaESLIF_symbol_t *) GENERICSTACK_GET_PTR(commitedAlternativeStackp, commitedAlternativei);
     if ((symbolp->eventAfterb) && (symbolp->eventAfters != NULL)) {
@@ -4912,6 +4924,21 @@ short marpaESLIFRecognizer_completeb(marpaESLIFRecognizer_t *marpaESLIFRecognize
       }
     }
   }
+  if (pauseb) {
+    if (marpaESLIFRecognizerp->pauses != NULL) {
+      free(marpaESLIFRecognizerp->pauses);
+    }
+    marpaESLIFRecognizerp->pauses = (char *) malloc(marpaESLIFRecognizerp->alternativeLengthl);
+    if (marpaESLIFRecognizerp->pauses == NULL) {
+      MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
+      goto err;
+    }
+    memcpy(marpaESLIFRecognizerp->pauses, marpaESLIFRecognizerp->inputs, marpaESLIFRecognizerp->alternativeLengthl);
+  }
+
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Advancing stream internal position by %ld bytes", (unsigned long) marpaESLIFRecognizerp->alternativeLengthl);
+  marpaESLIFRecognizerp->inputs += marpaESLIFRecognizerp->alternativeLengthl;
+  marpaESLIFRecognizerp->inputl -= marpaESLIFRecognizerp->alternativeLengthl;
 
   /* We can reset commited alternatives and length */
   marpaESLIFRecognizerp->alternativeLengthl = 0;
@@ -4991,6 +5018,9 @@ void marpaESLIFRecognizer_freev(marpaESLIFRecognizer_t *marpaESLIFRecognizerp)
     }
     if (marpaESLIFRecognizerp->eventArrayp != NULL) {
       free(marpaESLIFRecognizerp->eventArrayp);
+    }
+    if (marpaESLIFRecognizerp->pauses != NULL) {
+      free(marpaESLIFRecognizerp->pauses);
     }
     if (marpaESLIFRecognizerParentp == NULL) {
       /* These area are managed by the parent recognizer */
@@ -5553,6 +5583,8 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGramm
   marpaESLIFRecognizerp->alternativeLengthl         = 0;
   marpaESLIFRecognizerp->alternativeStackp          = NULL;
   marpaESLIFRecognizerp->commitedAlternativeStackp  = NULL;
+  marpaESLIFRecognizerp->pauses                     = NULL;
+  marpaESLIFRecognizerp->pausel                     = 0;
 
   marpaWrapperRecognizerOption.genericLoggerp       = marpaESLIFp->marpaESLIFOption.genericLoggerp;
   marpaWrapperRecognizerOption.disableThresholdb    = marpaESLIFRecognizerOptionp->disableThresholdb;
@@ -10943,6 +10975,21 @@ void marpaESLIFRecognizer_inputv(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, 
   }
   if (inputlp != NULL) {
     *inputlp = marpaESLIFRecognizerp->inputl;
+  }
+  if (eofbp != NULL) {
+    *eofbp = *(marpaESLIFRecognizerp->eofbp);
+  }
+}
+
+/*****************************************************************************/
+void marpaESLIFRecognizer_pausev(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char **pausesp, size_t *pauselp, short *eofbp)
+/*****************************************************************************/
+{
+  if (pausesp != NULL) {
+    *pausesp = marpaESLIFRecognizerp->pauses;
+  }
+  if (pauselp != NULL) {
+    *pauselp = marpaESLIFRecognizerp->pausel;
   }
   if (eofbp != NULL) {
     *eofbp = *(marpaESLIFRecognizerp->eofbp);

@@ -305,6 +305,8 @@ struct marpaESLIFRecognizer {
   size_t                       alternativeLengthl;
   genericStack_t              *alternativeStackp;         /* Current alternative stack */
   genericStack_t              *commitedAlternativeStackp; /* Commited alternative stack (internal + external) */
+  char                        *pauses;        /* Last pause data */
+  size_t                       pausel;        /* Last pause length */
 };
 
 /* ------------------------------- */
