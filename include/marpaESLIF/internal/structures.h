@@ -250,8 +250,9 @@ struct marpaESLIFRecognizer {
   marpaESLIFRecognizerOption_t marpaESLIFRecognizerOption;
   marpaWrapperRecognizer_t    *marpaWrapperRecognizerp;
   genericStack_t              *lexemeInputStackp;  /* Internal input stack of lexemes */
-  marpaESLIFEvent_t           *eventArrayp;      /* For the events */
-  size_t                       eventArrayl;
+  marpaESLIFEvent_t           *eventArrayp;        /* For the events */
+  size_t                       eventArrayl;        /* Current number of events */
+  size_t                       eventArraySizel;    /* Real allocated size (to avoid constant free/deletes) */
   marpaESLIFRecognizer_t      *parentRecognizerp;
   char                        *lastCompletionEvents; /* A trick to avoid having to fetch the array event when a discard subgrammar succeed */
   char                        *discardEvents;     /* Set by a child discard recognizer that reaches a completion event */
@@ -307,6 +308,7 @@ struct marpaESLIFRecognizer {
   genericStack_t              *commitedAlternativeStackp; /* Commited alternative stack (internal + external) */
   char                        *pauses;        /* Last pause data */
   size_t                       pausel;        /* Last pause length */
+  size_t                       pauseSizel;    /* Last pause allocate size */
 };
 
 /* ------------------------------- */
