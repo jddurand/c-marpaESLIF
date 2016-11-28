@@ -71,18 +71,6 @@ const static test_parse_result_type_t tests_parse_result[] = {
   PARSE_FAILED_AFTER_FINDING_HANDS
 };
 
-const static char *tests_parse_value[] = {
-  "Hand was 2/BLACK_HEART_SUIT 5/BLACK_HEART_SUIT 7/BLACK_DIAMOND_SUIT 8/BLACK_CLUB_SUIT 9/BLACK_SPADE_SUIT",
-  "Hand was 2/BLACK_HEART_SUIT a/BLACK_HEART_SUIT 7/BLACK_DIAMOND_SUIT 8/BLACK_CLUB_SUIT j/BLACK_HEART_SUIT",
-  "Duplicate card a/BLACK_HEART_SUIT",
-  "Duplicate card j/BLACK_HEART_SUIT",
-  "Hand was 2/BLACK_HEART_SUIT 7/BLACK_HEART_SUIT 2/BLACK_DIAMOND_SUIT 3/BLACK_CLUB_SUIT 3/BLACK_DIAMOND_SUIT",
-  "No hands were found",
-  NULL,
-  "No hands were found",
-  "Last hand successfully parsed was a/BLACK_HEART_SUIT 7/BLACK_HEART_SUIT 7/BLACK_DIAMOND_SUIT 8/BLACK_CLUB_SUIT j/BLACK_HEART_SUIT"
-};
-
 int main() {
   marpaESLIF_t                *marpaESLIFp        = NULL;
   marpaESLIFGrammar_t         *marpaESLIFGrammarp = NULL;
@@ -138,6 +126,14 @@ int main() {
   for (test_datai = 0; test_datai < sizeof(tests_input)/sizeof(tests_input[0]); test_datai++) {
     for (suit_linei = 0; suit_linei < sizeof(suit_line)/sizeof(suit_line[0]); suit_linei++) {
 
+      /* Free in order - marpaESLIF interface will do nothing if input is NULL */
+      marpaESLIFValue_freev(marpaESLIFValuep);
+      marpaESLIFValuep = NULL;
+      marpaESLIFRecognizer_freev(marpaESLIFRecognizerp);
+      marpaESLIFRecognizerp = NULL;
+      marpaESLIFGrammar_freev(marpaESLIFGrammarp);
+      marpaESLIFGrammarp = NULL;
+
       GENERICLOGGER_INFOF(genericLoggerp, "Test data No %d, suite line No %d", test_datai, suit_linei);
 
       if (dsls != NULL) {
@@ -158,9 +154,7 @@ int main() {
       marpaESLIFGrammarOption.encodingl           = 0;
       marpaESLIFGrammarOption.encodingOfEncodings = NULL;
 
-      marpaESLIFGrammar_freev(marpaESLIFGrammarp);
       marpaESLIFGrammarp = marpaESLIFGrammar_newp(marpaESLIFp, &marpaESLIFGrammarOption);
-
       if (marpaESLIFGrammarp == NULL) {
         goto err;
       }
@@ -178,13 +172,12 @@ int main() {
       marpaESLIFRecognizerOption.buftriggerperci           = 50;
       marpaESLIFRecognizerOption.bufaddperci               = 50;
 
-      if (marpaESLIFRecognizerp != NULL) {
-        marpaESLIFRecognizer_freev(marpaESLIFRecognizerp);
-      }
       marpaESLIFRecognizerp = marpaESLIFRecognizer_newp(marpaESLIFGrammarp, &marpaESLIFRecognizerOption);
       if (marpaESLIFRecognizerp == NULL) {
         goto check;
       }
+
+      /* Scan the input */
       if (! marpaESLIFRecognizer_scanb(marpaESLIFRecognizerp, 1 /* initialEventsb */, &continueb, &exhaustedb)) {
         test_parse_result_type = PARSE_FAILED_BEFORE_END;
         goto check;
@@ -223,20 +216,50 @@ int main() {
         }
       }
 
-      if (! marpaESLIFRecognizer_last_completedb(marpaESLIFRecognizerp, "hand", &offsetp, &lengthl)) {
-        goto err;
+      /* Get eventual value */
+      marpaESLIFValueOption.userDatavp             = NULL;
+      marpaESLIFValueOption.ruleActionResolverp    = NULL;
+      marpaESLIFValueOption.symbolActionResolverp  = NULL;
+      marpaESLIFValueOption.freeActionResolverp    = NULL;
+      marpaESLIFValueOption.highRankOnlyb          = 1;
+      marpaESLIFValueOption.orderByRankb           = 1;
+      marpaESLIFValueOption.ambiguousb             = 0;
+      marpaESLIFValueOption.nullb                  = 0;
+      marpaESLIFValueOption.maxParsesi             = 0;
+
+      marpaESLIFValuep = marpaESLIFValue_newp(marpaESLIFRecognizerp, &marpaESLIFValueOption);
+      if (marpaESLIFValuep == NULL) {
+        rcValueb = 0;
+      } else {
+        rcValueb = marpaESLIFValue_valueb(marpaESLIFValuep, NULL);
       }
+
+      /* Get eventual last hand */
       if (handsp != NULL) {
         free(handsp);
+        handsp = NULL;
       }
-      handsp = (char *) malloc(lengthl + 1); /* +1 for the debugger - hiden */
-      if (handsp == NULL) {
-        GENERICLOGGER_ERRORF(genericLoggerp, "malloc failure, %s", strerror(errno));
-        return NULL;
+      if (marpaESLIFRecognizer_last_completedb(marpaESLIFRecognizerp, "hand", &offsetp, &lengthl)) {
+        GENERICLOGGER_NOTICE(genericLoggerp, "Got hands");
+        handsp = (char *) malloc(lengthl + 1); /* +1 for the debugger - hiden */
+        if (handsp == NULL) {
+          GENERICLOGGER_ERRORF(genericLoggerp, "malloc failure, %s", strerror(errno));
+          goto err;
+        }
+        memcpy(handsp, marpaESLIFTester_context.inputs, lengthl);
       }
-      memcpy(handsp, marpaESLIFTester_context.inputs, lengthl);
 
-      test_parse_result_type = PARSE_OK;
+      if (rcValueb > 0) {
+        test_parse_result_type = PARSE_OK;
+        goto check;
+      }
+      if (handsp != NULL) {
+        test_parse_result_type = PARSE_FAILED_AFTER_FINDING_HANDS;
+        goto check;
+      }
+
+      test_parse_result_type = PARSE_REACHED_END_OF_INPUT_BUT_FAILED;
+
     check:
       if (test_parse_result_type != tests_parse_result[test_datai]) {
         GENERICLOGGER_ERRORF(genericLoggerp, "Got test parse result %d, excepted %d", test_parse_result_type, tests_parse_result[test_datai]);
