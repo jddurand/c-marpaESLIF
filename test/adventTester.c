@@ -3,9 +3,12 @@
 #include <stdio.h>
 #include <string.h>
 #include <genericLogger.h>
+#include <genericStack.h>
 #include <marpaESLIF.h>
 
 static short inputReaderb(void *userDatavp, char **inputsp, size_t *inputlp, short *eofbp, short *characterStreambp, char **encodingOfEncodingsp, char **encodingsp, size_t *encodinglp);
+static int   card2inti(char *inputs, size_t inputl);
+static char *int2cards(genericLogger_t *genericLoggerp, int cardi);
 
 typedef struct marpaESLIFTester_context {
   genericLogger_t *genericLoggerp;
@@ -69,15 +72,15 @@ const static test_parse_result_type_t tests_parse_result[] = {
 };
 
 const static char *tests_parse_value[] = {
-  "Hand was 2" BLACK_HEART_SUIT_UTF8s " 5" BLACK_HEART_SUIT_UTF8s " 7" BLACK_DIAMOND_SUIT_UTF8s " 8" BLACK_CLUB_SUIT_UTF8s " 9" BLACK_SPADE_SUIT_UTF8s "",
-  "Hand was 2" BLACK_HEART_SUIT_UTF8s " a" BLACK_HEART_SUIT_UTF8s " 7" BLACK_DIAMOND_SUIT_UTF8s " 8" BLACK_CLUB_SUIT_UTF8s " j" BLACK_HEART_SUIT_UTF8s "",
-  "Duplicate card a" BLACK_HEART_SUIT_UTF8s "",
-  "Duplicate card j" BLACK_HEART_SUIT_UTF8s "",
-  "Hand was 2" BLACK_HEART_SUIT_UTF8s " 7" BLACK_HEART_SUIT_UTF8s " 2" BLACK_DIAMOND_SUIT_UTF8s " 3" BLACK_CLUB_SUIT_UTF8s " 3" BLACK_DIAMOND_SUIT_UTF8s "",
+  "Hand was 2/BLACK_HEART_SUIT 5/BLACK_HEART_SUIT 7/BLACK_DIAMOND_SUIT 8/BLACK_CLUB_SUIT 9/BLACK_SPADE_SUIT",
+  "Hand was 2/BLACK_HEART_SUIT a/BLACK_HEART_SUIT 7/BLACK_DIAMOND_SUIT 8/BLACK_CLUB_SUIT j/BLACK_HEART_SUIT",
+  "Duplicate card a/BLACK_HEART_SUIT",
+  "Duplicate card j/BLACK_HEART_SUIT",
+  "Hand was 2/BLACK_HEART_SUIT 7/BLACK_HEART_SUIT 2/BLACK_DIAMOND_SUIT 3/BLACK_CLUB_SUIT 3/BLACK_DIAMOND_SUIT",
   "No hands were found",
   NULL,
   "No hands were found",
-  "Last hand successfully parsed was a" BLACK_HEART_SUIT_UTF8s " 7" BLACK_HEART_SUIT_UTF8s " 7" BLACK_DIAMOND_SUIT_UTF8s " 8" BLACK_CLUB_SUIT_UTF8s " j" BLACK_HEART_SUIT_UTF8s ""
+  "Last hand successfully parsed was a/BLACK_HEART_SUIT 7/BLACK_HEART_SUIT 7/BLACK_DIAMOND_SUIT 8/BLACK_CLUB_SUIT j/BLACK_HEART_SUIT"
 };
 
 int main() {
@@ -105,8 +108,23 @@ int main() {
   size_t                       dsll;
   char                        *dsls = NULL;
   test_parse_result_type_t     test_parse_result_type;
+  char                        *pauses;
+  size_t                       pausel;
+  int                          cardi;
+  char                        *cards = NULL;
+  genericStack_t              *cardStackp = NULL;
 
   genericLoggerp = GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_DEBUG);
+  if (genericLoggerp == NULL) {
+    perror("GENERICLOGGER_NEW");
+    goto err;
+  }
+
+  GENERICSTACK_NEW(cardStackp);
+  if (GENERICSTACK_ERROR(cardStackp)) {
+    GENERICLOGGER_ERRORF(genericLoggerp, "cardStackp initialization failure, %s", strerror(errno));
+    goto err;
+  }
 
   marpaESLIFOption.genericLoggerp = genericLoggerp;
   marpaESLIFp = marpaESLIF_newp(&marpaESLIFOption);
@@ -117,7 +135,7 @@ int main() {
   for (test_datai = 0; test_datai < sizeof(tests_input)/sizeof(tests_input[0]); test_datai++) {
     for (suit_linei = 0; suit_linei < sizeof(suit_line)/sizeof(suit_line[0]); suit_linei++) {
 
-      GENERICLOGGER_INFOF(genericLoggerp, "test data No %d, suite line No %d", test_datai, suit_linei);
+      GENERICLOGGER_INFOF(genericLoggerp, "Test data No %d, suite line No %d", test_datai, suit_linei);
 
       if (dsls != NULL) {
         free(dsls);
@@ -164,12 +182,38 @@ int main() {
       if (marpaESLIFRecognizerp == NULL) {
         goto check;
       }
-      /* genericLogger_logLevel_seti(genericLoggerp, GENERICLOGGER_LOGLEVEL_TRACE); */
       if (! marpaESLIFRecognizer_scanb(marpaESLIFRecognizerp, 1 /* initialEventsb */, &continueb, &exhaustedb)) {
         test_parse_result_type = PARSE_FAILED_BEFORE_END;
         goto check;
       }
+
+      GENERICSTACK_FREE(cardStackp);
+      GENERICSTACK_NEW(cardStackp);
+      if (GENERICSTACK_ERROR(cardStackp)) {
+        GENERICLOGGER_ERRORF(genericLoggerp, "cardStackp initialization failure, %s", strerror(errno));
+        goto err;
+      }
       while (continueb) {
+        /* We have a single event, no need to ask what it is */
+        marpaESLIFRecognizer_pausev(marpaESLIFRecognizerp, &pauses, &pausel, NULL /* eofbp */);
+
+        /* We arbitrarily transform card data into a number to uniquely identify it */
+        cardi = card2inti(pauses, pausel);
+        if (cards != NULL) {
+          free(cards);
+        }
+        cards = int2cards(genericLoggerp, cardi);
+        GENERICLOGGER_DEBUGF(genericLoggerp, "Card %s, cardi=%d", cards, cardi);
+
+        /* Check for duplicate card */
+        if (GENERICSTACK_IS_SHORT(cardStackp, cardi)) {
+          GENERICLOGGER_DEBUGF(genericLoggerp, "Duplicate card %s", cards);
+          test_parse_result_type = PARSE_STOPPED_BY_APPLICATION;
+          goto check;
+        }
+        GENERICSTACK_SET_SHORT(cardStackp, 1, cardi);
+
+        /* Resume */
         if (! marpaESLIFRecognizer_resumeb(marpaESLIFRecognizerp, &continueb, &exhaustedb)) {
           test_parse_result_type = PARSE_FAILED_BEFORE_END;
           goto check;
@@ -207,6 +251,10 @@ int main() {
   if (dsls != NULL) {
     free(dsls);
   }
+  if (cards != NULL) {
+    free(cards);
+  }
+  GENERICSTACK_FREE(cardStackp);
   marpaESLIFValue_freev(marpaESLIFValuep);
   marpaESLIFRecognizer_freev(marpaESLIFRecognizerp);
   marpaESLIFGrammar_freev(marpaESLIFGrammarp);
@@ -232,3 +280,98 @@ static short inputReaderb(void *userDatavp, char **inputsp, size_t *inputlp, sho
 
   return 1;
 }
+
+/*****************************************************************************/
+static int card2inti(char *inputs, size_t inputl)
+/*****************************************************************************/
+{
+  /* card data is:
+
+  "card ~ face suit\n"
+  "face ~ [2-9jqka] | '10'\n"
+
+  where suit is is always a 3-bytes UTF8 thingy
+  */
+  int   i100;
+  int   i;
+  char *suits;
+  
+  switch ((unsigned char) *inputs) {
+  case '2': i100 = 100; suits = inputs + 1; break;
+  case '3': i100 = 110; suits = inputs + 1; break;
+  case '4': i100 = 120; suits = inputs + 1; break;
+  case '5': i100 = 130; suits = inputs + 1; break;
+  case '6': i100 = 140; suits = inputs + 1; break;
+  case '7': i100 = 150; suits = inputs + 1; break;
+  case '8': i100 = 160; suits = inputs + 1; break;
+  case '9': i100 = 170; suits = inputs + 1; break;
+  case 'j': i100 = 180; suits = inputs + 1; break;
+  case 'q': i100 = 190; suits = inputs + 1; break;
+  case 'k': i100 = 200; suits = inputs + 1; break;
+  case 'a': i100 = 210; suits = inputs + 1; break;
+  default:  i100 = 220; suits = inputs + 2; break;
+  }
+
+  switch (((unsigned char) suits[2]) % 10) {
+  case 5:  i = 1; break;
+  case 6:  i = 2; break;
+  case 3:  i = 3; break;
+  default: i = 4; break;
+  }
+
+  return i100 + i;
+}
+
+/*****************************************************************************/
+static char *int2cards(genericLogger_t *genericLoggerp, int cardi)
+/*****************************************************************************/
+{
+  /* card data is:
+
+  "card ~ face suit\n"
+  "face ~ [2-9jqka] | '10'\n"
+
+  where suit is is always a 3-bytes UTF8 thingy
+  */
+  int   i100 = (cardi / 10) * 10;
+  int   i = cardi % 10;
+  char *faces;
+  char *suits;
+  char *cards;
+
+  switch (i100) {
+  case 100: faces = "2"; break;
+  case 110: faces = "3"; break;
+  case 120: faces = "4"; break;
+  case 130: faces = "5"; break;
+  case 140: faces = "6"; break;
+  case 150: faces = "7"; break;
+  case 160: faces = "8"; break;
+  case 170: faces = "9"; break;
+  case 180: faces = "j"; break;
+  case 190: faces = "q"; break;
+  case 200: faces = "k"; break;
+  case 210: faces = "a"; break;
+  default:  faces = "10"; break;
+  }
+
+  switch (i) {
+  case 1:  suits = "BLACK_HEART_SUIT"; break;
+  case 2:  suits = "BLACK_DIAMOND_SUIT"; break;
+  case 3:  suits = "BLACK_CLUB_SUIT"; break;
+  default: suits = "BLACK_SPADE_SUIT"; break;
+  }
+
+  cards = (char *) malloc(strlen(faces) + 1 + strlen(suits) + 1);
+  if (cards == NULL) {
+    GENERICLOGGER_ERRORF(genericLoggerp, "malloc failure, %s", strerror(errno));
+    return NULL;
+  }
+
+  strcpy(cards, faces);
+  strcat(cards, "/");
+  strcat(cards, suits);
+
+  return cards;
+}
+ 
