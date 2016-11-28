@@ -113,6 +113,9 @@ int main() {
   int                          cardi;
   char                        *cards = NULL;
   genericStack_t              *cardStackp = NULL;
+  char                        *offsetp;
+  size_t                       lengthl;
+  char                        *handsp = NULL;
 
   genericLoggerp = GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_DEBUG);
   if (genericLoggerp == NULL) {
@@ -220,6 +223,19 @@ int main() {
         }
       }
 
+      if (! marpaESLIFRecognizer_last_completedb(marpaESLIFRecognizerp, "hand", &offsetp, &lengthl)) {
+        goto err;
+      }
+      if (handsp != NULL) {
+        free(handsp);
+      }
+      handsp = (char *) malloc(lengthl + 1); /* +1 for the debugger - hiden */
+      if (handsp == NULL) {
+        GENERICLOGGER_ERRORF(genericLoggerp, "malloc failure, %s", strerror(errno));
+        return NULL;
+      }
+      memcpy(handsp, marpaESLIFTester_context.inputs, lengthl);
+
       test_parse_result_type = PARSE_OK;
     check:
       if (test_parse_result_type != tests_parse_result[test_datai]) {
@@ -253,6 +269,9 @@ int main() {
   }
   if (cards != NULL) {
     free(cards);
+  }
+  if (handsp != NULL) {
+    free(handsp);
   }
   GENERICSTACK_FREE(cardStackp);
   marpaESLIFValue_freev(marpaESLIFValuep);
