@@ -150,6 +150,7 @@ struct marpaESLIFSymbol {
   genericStack_t              *nullableRuleStackp;     /* Used during validation, to determine nullable semantics */
   char                        *nullableActions;        /* Nullable semantic */
   int                          propertyBitSet;
+  genericStack_t              *lhsRuleStackp;          /* Stack of rules having this symbol as LHS */
 };
 
 /* A rule */
