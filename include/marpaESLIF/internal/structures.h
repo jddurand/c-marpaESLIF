@@ -305,11 +305,13 @@ struct marpaESLIFRecognizer {
   short                        completedb;     /* Ditto for completion (used in case od discard events) */
   short                        continueb;
   size_t                       alternativeLengthl;
-  genericStack_t              *alternativeStackp;         /* Current alternative stack */
+  genericStack_t              *alternativeStackp;       /* Current alternative stack */
+  genericStack_t              *alternativeStackWorkp;   /* Work alternative stack */
   genericStack_t              *commitedAlternativeStackp; /* Commited alternative stack (internal + external) */
   char                        *pauses;        /* Last pause data */
   size_t                       pausel;        /* Last pause length */
   size_t                       pauseSizel;    /* Last pause allocate size */
+  genericStack_t              *set2InputStackp;
 };
 
 /* ------------------------------- */
