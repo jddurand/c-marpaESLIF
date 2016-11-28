@@ -11208,7 +11208,7 @@ static int _marpaESLIF_event_sorti(const void *p1, const void *p2)
 }
 
 /*****************************************************************************/
-short marpaESLIFRecognizer_last_completedb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *names, int *startip, int *endip)
+short marpaESLIFRecognizer_last_completed_rangeb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *names, int *startip, int *lengthip)
 /*****************************************************************************/
 {
   /* This method work only for the CURRENT grammar of CURRENT recognizer */
@@ -11294,9 +11294,38 @@ short marpaESLIFRecognizer_last_completedb(marpaESLIFRecognizer_t *marpaESLIFRec
   if (startip != NULL) {
     *startip = firstOrigini;
   }
-  if (endip != NULL) {
-    *endip = earleySetIdi - firstOrigini;
+  if (lengthip != NULL) {
+    *lengthip = earleySetIdi - firstOrigini;
   }
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 1;
+
+ done:
+  return rcb;
+}
+
+/*****************************************************************************/
+short marpaESLIFRecognizer_last_completedb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *names, int *startip, int *endip)
+/*****************************************************************************/
+{
+  int   starti;
+  int   lengthi;
+  short rcb;
+
+  if (! marpaESLIFRecognizer_last_completed_rangeb(marpaESLIFRecognizerp, names, &starti, &lengthi)) {
+    goto err;
+  }
+
+  if (startip != NULL) {
+    *startip = starti;
+  }
+  if (endip != NULL) {
+    *endip = starti + lengthi;
+  }
+
   rcb = 1;
   goto done;
 
