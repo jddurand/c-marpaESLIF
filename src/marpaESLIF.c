@@ -7587,23 +7587,23 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIFGrammar_t *marpaESL
     }
     symbolp = (marpaESLIF_symbol_t *) GENERICSTACK_GET_PTR(symbolStackp, symboli);
 
+    if (symboli > 0) {
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "#\n");
+    }
     MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "# Symbol No ");
-    sprintf(tmps, "%d", symbolp->idi);
+    sprintf(tmps, "%d\n", symbolp->idi);
     MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, tmps);
-    MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " (");
     switch (symbolp->type) {
     case MARPAESLIF_SYMBOL_TYPE_TERMINAL:
-      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "ESLIF TERMINAL");
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "#         Type: TERMINAL\n");
       break;
     case MARPAESLIF_SYMBOL_TYPE_META:
-      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "ESLIF META");
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "#         Type: META\n");
       break;
     default:
-      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "ESLIF ???");
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "#         Type: ?\n");
       break;
     }
-    MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, ")");
-    MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "\n");
     MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "#   Properties: ");
     npropertyi = 0;
     if ((symbolp->propertyBitSet & MARPAWRAPPER_SYMBOL_IS_ACCESSIBLE) == MARPAWRAPPER_SYMBOL_IS_ACCESSIBLE) {
@@ -7645,6 +7645,7 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIFGrammar_t *marpaESL
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "#      Pattern:");
       if (symbolp->u.terminalp->type == MARPAESLIF_TERMINAL_TYPE_STRING) {
         /* We know we made a 100% ASCII compatible pattern when the original type is STRING */
+        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " ");
         MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->u.terminalp->patterns);
       } else {
         /* We have to dump - this is an opaque UTF-8 pattern */
@@ -7703,8 +7704,8 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIFGrammar_t *marpaESL
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "<");
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->descp->asciis);
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, ">");
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "\n");
     }
-    MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "\n");
   }
 
   asciishowl++; /* NUL byte */
