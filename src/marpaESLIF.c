@@ -18,6 +18,8 @@
 
 #define MARPAESLIF_EVENTTYPE_EXHAUSTED_NAME "'exhauted'"
 
+#define MARPAESLIFRECOGNIZER_RESET_EVENTSB(marpaESLIFRecognizerp) (marpaESLIFRecognizerp)->eventArrayl = 0
+
 /* This is very internal: I use the genericLogger to generate strings */
 typedef struct marpaESLIF_stringGenerator {
   marpaESLIF_t *marpaESLIFp;
@@ -135,8 +137,8 @@ static inline marpaESLIF_symbol_t   *_marpaESLIF_symbol_findp(marpaESLIF_t *marp
 static inline short                  _marpaESLIFRecognizer_alternativeb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIF_symbol_t *symbolp);
 
 static inline short                  _marpaESLIFRecognizer_alternative_and_valueb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIF_symbol_t *symbolp, int valuei);
-static inline void                   _marpaESLIFRecognizer_reset_eventsb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp);
 static inline short                  _marpaESLIFRecognizer_push_eventb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFEventType_t type, marpaESLIFSymbol_t *symbolp, char *events);
+static inline short                  _marpaESLIFRecognizer_set_pauseb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *bytep, size_t bytel);
 static inline short                  _marpaESLIFRecognizer_push_grammar_eventsb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp);
 static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaESLIFRecognizerOption_t *marpaESLIFRecognizerOptionp, short discardb, short exceptionb, short silentb, marpaESLIFRecognizer_t *marpaESLIFRecognizerParentp, short fakeb);
 static inline short                  _marpaESLIFGrammar_parseb(marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaESLIFRecognizerOption_t *marpaESLIFRecognizerOptionp, marpaESLIFValueOption_t *marpaESLIFValueOptionp, short discardb, short exceptionb, short silentb, marpaESLIFRecognizer_t *marpaESLIFRecognizerParentp, short *exhaustedbp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
@@ -4301,7 +4303,7 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
 
   GENERICSTACK_USED(marpaESLIFRecognizerp->alternativeStackp) = 0;
   /* We always start by resetting and collecting current events */
-  _marpaESLIFRecognizer_reset_eventsb(marpaESLIFRecognizerp);
+  MARPAESLIFRECOGNIZER_RESET_EVENTSB(marpaESLIFRecognizerp);
   /* We break immediately if there are events and the initialEventsb is set. This can happen once */
   /* only in the whole lifetime of a recognizer. */
   if (initialEventsb) {
@@ -4585,15 +4587,9 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
     }
   }
   if (pauseb) {
-    if (marpaESLIFRecognizerp->pauses != NULL) {
-      free(marpaESLIFRecognizerp->pauses);
-    }
-    marpaESLIFRecognizerp->pauses = (char *) malloc(maxMatchedl);
-    if (marpaESLIFRecognizerp->pauses == NULL) {
-      MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
+    if (! _marpaESLIFRecognizer_set_pauseb(marpaESLIFRecognizerp, marpaESLIFRecognizerp->inputs, maxMatchedl)) {
       goto err;
     }
-    memcpy(marpaESLIFRecognizerp->pauses, marpaESLIFRecognizerp->inputs, maxMatchedl);
   }
   if (marpaESLIFRecognizerp->eventArrayl > 0) {
     marpaESLIFRecognizerp->continueb = ! marpaESLIFRecognizerp->exhaustedb;
@@ -4911,7 +4907,7 @@ short marpaESLIFRecognizer_completeb(marpaESLIFRecognizer_t *marpaESLIFRecognize
   }
 
   /* Push grammar and eventual pause after events */
-  _marpaESLIFRecognizer_reset_eventsb(marpaESLIFRecognizerp);
+  MARPAESLIFRECOGNIZER_RESET_EVENTSB(marpaESLIFRecognizerp);
   if (! _marpaESLIFRecognizer_push_grammar_eventsb(marpaESLIFRecognizerp)) {
     goto err;
   }
@@ -4926,15 +4922,9 @@ short marpaESLIFRecognizer_completeb(marpaESLIFRecognizer_t *marpaESLIFRecognize
     }
   }
   if (pauseb) {
-    if (marpaESLIFRecognizerp->pauses != NULL) {
-      free(marpaESLIFRecognizerp->pauses);
-    }
-    marpaESLIFRecognizerp->pauses = (char *) malloc(marpaESLIFRecognizerp->alternativeLengthl);
-    if (marpaESLIFRecognizerp->pauses == NULL) {
-      MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
+    if (! _marpaESLIFRecognizer_set_pauseb(marpaESLIFRecognizerp, marpaESLIFRecognizerp->inputs, marpaESLIFRecognizerp->alternativeLengthl)) {
       goto err;
     }
-    memcpy(marpaESLIFRecognizerp->pauses, marpaESLIFRecognizerp->inputs, marpaESLIFRecognizerp->alternativeLengthl);
   }
 
   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Advancing stream internal position by %ld bytes", (unsigned long) marpaESLIFRecognizerp->alternativeLengthl);
@@ -5231,31 +5221,13 @@ void marpaESLIFRecognizer_eventb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, 
 }
 
 /*****************************************************************************/
-static inline void _marpaESLIFRecognizer_reset_eventsb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp)
-/*****************************************************************************/
-{
-  static const char *funcs = "_marpaESLIFRecognizer_reset_eventsb";
-
-  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
-  MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
-
-  if (marpaESLIFRecognizerp->eventArrayp != NULL) {
-    free(marpaESLIFRecognizerp->eventArrayp);
-    marpaESLIFRecognizerp->eventArrayp = NULL;
-  }
-  marpaESLIFRecognizerp->eventArrayl = 0;
-
-  MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "return");
-  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC;
-}
-
-/*****************************************************************************/
  static inline short _marpaESLIFRecognizer_push_eventb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFEventType_t type, marpaESLIF_symbol_t *symbolp, char *events)
 /*****************************************************************************/
 {
   static const char *funcs        = "_marpaESLIFRecognizer_push_eventb";
-  marpaESLIF_t      *marpaESLIFp  = marpaESLIFRecognizerp->marpaESLIFp;
   marpaESLIFEvent_t *eventArrayp;
+  size_t             eventArrayl;
+  size_t             eventArraySizel;
   marpaESLIFEvent_t  eventArray;
   short              rcb;
 
@@ -5269,44 +5241,120 @@ static inline void _marpaESLIFRecognizer_reset_eventsb(marpaESLIFRecognizer_t *m
    sub-reconizer or exception (which has no parent recognizer, 
    but remains an internal thingy)
 
-   It is exactly for this reason that internal recognizers propagate the excpetion internal flag
+   It is exactly for this reason that internal recognizers propagate the exception internal flag
    because they NEED this information anyway, regardless if they have a parent recognizer, if
    they are in the exception mode, or not.
+
+   Memory management of the event array is done so that free/malloc/realloc are avoided as much as
+   possible.
   */
   if (marpaESLIFRecognizerp->exceptionb || (marpaESLIFRecognizerp->parentRecognizerp != NULL)) {
     goto no_push;
   }
+  /* These statements have a cost - execute them only if we really push the event */
+  eventArrayp     = marpaESLIFRecognizerp->eventArrayp;
+  eventArraySizel = marpaESLIFRecognizerp->eventArraySizel;
+  eventArrayl     = marpaESLIFRecognizerp->eventArrayl;
 
   eventArray.type    = type;
   eventArray.symbols = (symbolp != NULL) ? symbolp->descp->asciis : NULL;
   eventArray.events  = events;
 
   /* Extend of create the array */
-  if (marpaESLIFRecognizerp->eventArrayl <= 0) {
-    eventArrayp = malloc(sizeof(marpaESLIFEvent_t));
+  /* marpaESLIFRecognizerp->eventArrayl is always in the range [0..marpaESLIFRecognizerp->eventArraySizel] */
+  /* and is set to 0 at every reset */
+  if (eventArraySizel <= eventArrayl) {
     if (eventArrayp == NULL) {
-      MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
-      goto err;
+      /* In theory, here, eventArrayl can only have the value 1 */
+      eventArraySizel = eventArrayl + 1;
+      eventArrayp = malloc(eventArraySizel * sizeof(marpaESLIFEvent_t));
+      if (eventArrayp == NULL) {
+        MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "malloc failure, %s", strerror(errno));
+        goto err;
+      }
+    } else {
+      eventArraySizel *= 2;
+      eventArrayp = realloc(eventArrayp, eventArraySizel * sizeof(marpaESLIFEvent_t));
+      if (eventArrayp == NULL) {
+        MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "realloc failure, %s", strerror(errno));
+        goto err;
+      }
     }
-    eventArrayp[0] = eventArray;
-    marpaESLIFRecognizerp->eventArrayl = 1;
-    marpaESLIFRecognizerp->eventArrayp = eventArrayp;
-  } else {
-    eventArrayp = realloc(marpaESLIFRecognizerp->eventArrayp, (marpaESLIFRecognizerp->eventArrayl + 1) * sizeof(marpaESLIFEvent_t));
-    if (eventArrayp == NULL) {
-      MARPAESLIF_ERRORF(marpaESLIFp, "realloc failure, %s", strerror(errno));
-      goto err;
-    }
-    eventArrayp[marpaESLIFRecognizerp->eventArrayl++] = eventArray;
-    marpaESLIFRecognizerp->eventArrayp = eventArrayp;
+    marpaESLIFRecognizerp->eventArrayp     = eventArrayp;
+    marpaESLIFRecognizerp->eventArraySizel = eventArraySizel;
   }
 
-  if (marpaESLIFRecognizerp->eventArrayl > 1) {
+  eventArrayp[eventArrayl] = eventArray;
+  if (++eventArrayl > 1) {
     /* Sort the events */
-    qsort(marpaESLIFRecognizerp->eventArrayp, marpaESLIFRecognizerp->eventArrayl, sizeof(marpaESLIFEvent_t), _marpaESLIF_event_sorti);
+    qsort(eventArrayp, eventArrayl, sizeof(marpaESLIFEvent_t), _marpaESLIF_event_sorti);
   }
+  marpaESLIFRecognizerp->eventArrayl = eventArrayl;
 
  no_push:
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
+  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC;
+  return rcb;
+}
+
+/*****************************************************************************/
+static inline short _marpaESLIFRecognizer_set_pauseb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *bytep, size_t bytel)
+/*****************************************************************************/
+{
+  static const char *funcs        = "_marpaESLIFRecognizer_push_eventb";
+  char              *pauses;
+  size_t             pauseSizel;
+  short              rcb;
+
+  /* In theory it is not possible to have a pause event if:
+     - there is a parent recognizer
+     - it is an exception context
+
+   Memory management of the pause chunk is done so that free/malloc/realloc are avoided as much as
+   possible.
+  */
+  if (marpaESLIFRecognizerp->exceptionb || (marpaESLIFRecognizerp->parentRecognizerp != NULL)) {
+    goto no_set;
+  }
+  /* These statements have a cost - execute them only if we really set the pause */
+  pauseSizel = marpaESLIFRecognizerp->pauseSizel;
+
+  /* Extend of create the chunk */
+  if (pauseSizel < bytel) {
+    pauses     = marpaESLIFRecognizerp->pauses;
+    pauseSizel = bytel;
+
+    if (pauses == NULL) {
+      pauses = (char *) malloc(pauseSizel + 1);  /* + 1 for a hiden NUL */
+      if (pauses == NULL) {
+        MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "malloc failure, %s", strerror(errno));
+        goto err;
+      }
+    } else {
+      pauses = realloc(pauses, pauseSizel + 1); /* + 1 for a hiden NUL */
+      if (pauses == NULL) {
+        MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "realloc failure, %s", strerror(errno));
+        goto err;
+      }
+    }
+    marpaESLIFRecognizerp->pauses     = pauses;
+    marpaESLIFRecognizerp->pauseSizel = pauseSizel;
+  } else {
+    pauses = marpaESLIFRecognizerp->pauses;
+  }
+
+  memcpy(pauses, bytep, bytel);
+  pauses[bytel] = '\0'; /* Just to make the debuggers happy - this is hiden */
+  marpaESLIFRecognizerp->pausel = bytel;
+
+ no_set:
   rcb = 1;
   goto done;
 
@@ -5506,6 +5554,7 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGramm
   marpaESLIFRecognizerp->lexemeInputStackp          = NULL;
   marpaESLIFRecognizerp->eventArrayp                = NULL;
   marpaESLIFRecognizerp->eventArrayl                = 0;
+  marpaESLIFRecognizerp->eventArraySizel            = 0;
   marpaESLIFRecognizerp->parentRecognizerp          = marpaESLIFRecognizerParentp;
   marpaESLIFRecognizerp->lastCompletionEvents       = NULL;
   marpaESLIFRecognizerp->discardEvents              = NULL;
@@ -5586,6 +5635,7 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGramm
   marpaESLIFRecognizerp->commitedAlternativeStackp  = NULL;
   marpaESLIFRecognizerp->pauses                     = NULL;
   marpaESLIFRecognizerp->pausel                     = 0;
+  marpaESLIFRecognizerp->pauseSizel                 = 0;
 
   marpaWrapperRecognizerOption.genericLoggerp       = marpaESLIFp->marpaESLIFOption.genericLoggerp;
   marpaWrapperRecognizerOption.disableThresholdb    = marpaESLIFRecognizerOptionp->disableThresholdb;
@@ -7560,8 +7610,8 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIFGrammar_t *marpaESL
         marpaESLIF_stringGenerator.okb         = 0;
         genericLoggerp = GENERICLOGGER_CUSTOM(_marpaESLIF_generateStringWithLoggerCallback, (void *) &marpaESLIF_stringGenerator, GENERICLOGGER_LOGLEVEL_TRACE);
         if (genericLoggerp != NULL) {
-          int    i;
-          int    j;
+          size_t i;
+          size_t j;
           size_t lengthl = symbolp->u.terminalp->patternl;
           char  *p = symbolp->u.terminalp->patterns;
           
