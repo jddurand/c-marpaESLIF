@@ -263,6 +263,7 @@ struct marpaESLIFRecognizer {
   char                        *_buffers;       /* Pointer to allocated buffer containing input */
   size_t                       _bufferl;       /* Number of valid bytes in this buffer (!= allocated size) */
   size_t                       _bufferallocl;  /* Number of allocated bytes in this buffer (!= valid bytes) */
+  char                        *_globalOffsetp; /* The offset between the original start of input, and current buffer */
   short                        _eofb;          /* EOF flag */
   short                        _utfb;          /* A flag to say if input is UTF-8 correct. Automatically true if _charconv is true. Can set be regex engine as well. */
   short                        _charconvb;     /* A flag to say if latest stream chunk was converted to UTF-8 */
@@ -272,6 +273,7 @@ struct marpaESLIFRecognizer {
   char                       **buffersp;       /* Pointer to allocated buffer - for sharing with eventual parent recognizers */
   size_t                      *bufferlp;       /* Ditto for the size */
   size_t                      *bufferalloclp;  /* Ditto for the allocated size */
+  char                       **globalOffsetpp; /* Pointer to offset between the original start of input, and current buffer */
   short                       *eofbp;          /* Ditto for the EOF flag */
   short                       *utfbp;          /* Ditto for the UTF-8 correctness flag */
   short                       *charconvbp;     /* Ditto for the character conversion flag */
