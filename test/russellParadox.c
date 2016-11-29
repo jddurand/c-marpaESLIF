@@ -13,7 +13,9 @@ typedef struct marpaESLIFTester_context {
 } marpaESLIFTester_context_t;
 
 const static char *exceptions = "\n"
-  "xx ::= 'A' - xx\n"
+  "xx ::= [ABC] - yy\n"
+  "yy ::= [BCD] - zz\n"
+  "zz ::= [CDE] - xx\n"
 ;
 
 int main() {
@@ -33,10 +35,10 @@ int main() {
   marpaESLIFValue_t           *marpaESLIFValuep = NULL;
   short                        continueb;
   short                        exhaustedb;
-  const static char           *inputs = "A";
+  const static char           *inputs = "C";
   short                        rcValueb;
 
-  genericLoggerp = GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_DEBUG);
+  genericLoggerp = GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_TRACE);
 
   marpaESLIFOption.genericLoggerp = genericLoggerp;
   marpaESLIFp = marpaESLIF_newp(&marpaESLIFOption);
