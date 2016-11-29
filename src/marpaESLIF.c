@@ -6013,11 +6013,17 @@ short marpaESLIFValue_valueb(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFValu
         rcb = 0;
       }
     } else {
-      /* Non-ambiguous mode is nothing else but a pruning that remembers the fetched trees */
+      /* In non-ambiguous mode we have to maintain the traverser in our context */
+      marpaESLIFValuep->wantedOutputStacki = 0;
       rcb = marpaWrapperAsf_traverseb(marpaESLIFValuep->marpaWrapperAsfp,
                                       _marpaESLIFValue_traverserb,
                                       (void *) marpaESLIFValuep,
                                       &indicei);
+      /* indicei will be marpaESLIFValuep->wantedOutputStacki in fact - we can cross check*/
+      if (indicei != 0) {
+        MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "indicei is %d, expected 0", indicei);
+        goto err;
+      }
     }
   }
 
@@ -9604,6 +9610,8 @@ static inline marpaESLIFValue_t *_marpaESLIFValue_newp(marpaESLIFRecognizer_t *m
   marpaESLIFValuep->rulei                       = -1;
   marpaESLIFValuep->grammari                    = -1;
   marpaESLIFValuep->prunedValueDoneb            = 0;
+  marpaESLIFValuep->nonPrunedValueFirstb        = 1; /* We have to remember it this is the first iteration in the non-ambiguous ASF valuation mode */
+  marpaESLIFValuep->wantedOutputStacki          = 0; /* Used on non-ambiguous ASF valuation */
 
   if (! fakeb) {
     if (grammarp->haveRejectionb) {
@@ -9666,6 +9674,7 @@ static inline short _marpaESLIFValue_stack_newb(marpaESLIFValue_t *marpaESLIFVal
     MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "marpaESLIFValuep->contextStackp initialization failure, %s", strerror(errno));
     goto err;
   }
+
   rcb = 1;
   goto done;
  err:
@@ -10338,19 +10347,101 @@ static short _marpaESLIFValue_traverserb(marpaWrapperAsfTraverser_t *traverserp,
   static const char      *funcs                 = "_marpaESLIFValue_traverserb";
   marpaESLIFValue_t      *marpaESLIFValuep      = (marpaESLIFValue_t *) userDatavp;
   marpaESLIFRecognizer_t *marpaESLIFRecognizerp = marpaESLIFValue_recognizerp(marpaESLIFValuep);
+  int                     wantedOutputStacki    = marpaESLIFValuep->wantedOutputStacki;
   short                   rcb;
+  int                     marpaRuleIdi;
+  int                     marpaSymbolIdi;
+  int                     rhvaluei;
+  int                     rhlengthi;
+  int                     tokenValuei;
+  int                     lengthi;
+  int                     rhIxi;
+  short                   nextb;
+  int                     arg0i;
+  int                     argni;
+  int                     localWantedOutputStacki;
 
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
 
-  /* TO DO */
-  rcb = 0;
+  if (! marpaESLIFValuep->nonPrunedValueFirstb) {
+    /* We want first to ask the traverser for the next glade */
+    if (! marpaWrapperAsf_traverse_nextb(traverserp, &nextb)) {
+      goto err;
+    }
+    if (! nextb) {
+      /* No more parse tree value */
+      rcb = 0;
+      goto done;
+    }
+  }
+
+  /* Get rule and symbol context */
+  if (! marpaWrapperAsf_traverse_ruleIdb(traverserp, &marpaRuleIdi)) {
+    goto err;
+  }
+  if (! marpaWrapperAsf_traverse_symbolIdb(traverserp, &marpaSymbolIdi)) {
+    goto err;
+  }
+
+  if (marpaRuleIdi < 0) {
+    /* This is a token - we do not really mind if this is a rule with no rhs, or a nullable symbol */
+
+    /* Get its value */
+    if (! marpaWrapperAsf_traverse_rh_valueb(traverserp, 0, &rhvaluei, &rhlengthi)) {
+      goto err;
+    }
+
+    if (rhlengthi <= 0) {
+      /* Nulling symbol */
+      if (! _marpaESLIFValue_nullingCallbackWrapperb(userDatavp, marpaSymbolIdi, wantedOutputStacki)) {
+        goto err;
+      }
+    } else {
+      /* Non-Nulling token. By definition this is a "lexeme", refering to input stack at indice tokenValuei. */
+      tokenValuei = rhvaluei + 1;
+      if (! _marpaESLIFValue_symbolCallbackWrapperb(userDatavp, marpaSymbolIdi, tokenValuei, wantedOutputStacki)) {
+        goto err;
+      }
+    }
+
+  } else {
+    /* This is a rule */
+    
+    /* Rule length */
+    lengthi = marpaWrapperAsf_traverse_rh_lengthi(traverserp);
+    if (lengthi < 0) {
+      goto err;
+    }
+
+    /* Rule value */
+    for (rhIxi = 0, localWantedOutputStacki = wantedOutputStacki;
+         rhIxi < lengthi;
+         rhIxi++, localWantedOutputStacki++) {
+
+      marpaESLIFValuep->wantedOutputStacki = localWantedOutputStacki;
+      if (! marpaWrapperAsf_traverse_rh_valueb(traverserp, rhIxi, &localWantedOutputStacki, NULL)) {
+        marpaESLIFValuep->wantedOutputStacki = wantedOutputStacki;
+        goto err;
+      }
+
+    }
+    argni = --localWantedOutputStacki;
+    arg0i = argni - (lengthi - 1);
+
+    if (! _marpaESLIFValue_ruleCallbackWrapperb(userDatavp, marpaRuleIdi, arg0i, argni, wantedOutputStacki)) {
+      goto err;
+    }
+  }
+
+  rcb = 1;
   goto done;
 
  err:
   rcb = 0;
 
  done:
+  marpaESLIFValuep->nonPrunedValueFirstb = 0;
   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC;
   return rcb;

@@ -241,6 +241,8 @@ struct marpaESLIFValue {
   int                       rulei;
   int                       grammari;
   short                     prunedValueDoneb;
+  short                     nonPrunedValueFirstb;
+  int                       wantedOutputStacki;
 };
 
 struct marpaESLIFRecognizer {
