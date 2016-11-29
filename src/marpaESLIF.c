@@ -7605,7 +7605,11 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIFGrammar_t *marpaESL
     genericLoggerp = GENERICLOGGER_CUSTOM(_marpaESLIF_generateStringWithLoggerCallback, (void *) &marpaESLIF_stringGenerator, GENERICLOGGER_LOGLEVEL_TRACE);
     if (genericLoggerp != NULL) {
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "\n");
-      GENERICLOGGER_TRACE (genericLoggerp, "#   Components:  LHS = RHS[]\n");
+      GENERICLOGGER_TRACE (genericLoggerp, "#   Components:  LHS = RHS[]");
+      if (rulep->exceptionp != NULL) {
+        GENERICLOGGER_TRACE (genericLoggerp, " - EXCEPTION");
+      }
+      GENERICLOGGER_TRACE (genericLoggerp, "\n");
       GENERICLOGGER_TRACEF(genericLoggerp, "#               %4d", rulep->lhsp->idi);
       if (GENERICSTACK_USED(rulep->rhsStackp) > 0) {
         for (symboli = 0; symboli < GENERICSTACK_USED(rulep->rhsStackp); symboli++) {
@@ -7616,6 +7620,9 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIFGrammar_t *marpaESL
             GENERICLOGGER_TRACEF(genericLoggerp, " %d", symbolp->idi);
           }
         }
+      }
+      if (rulep->exceptionp != NULL) {
+        GENERICLOGGER_TRACEF(genericLoggerp, " - %d", rulep->exceptionp->idi);
       }
       if (marpaESLIF_stringGenerator.okb) {
         if (marpaESLIF_stringGenerator.s != NULL) {
