@@ -299,6 +299,7 @@ struct marpaESLIFRecognizer {
   short                        scanb;          /* Prevent resume before a call to scan */
   short                        discardb;       /* Discard mode */
   short                        exceptionb;     /* Exception mode */
+  genericStack_t              *exceptionStackp; /* This variable is never owned by the recognizer - it is created during valuation */
   short                        silentb;        /* Silent mode */
   short                        haveLexemeb;    /* Remember if this recognizer have at least one lexeme */
   size_t                       linel;          /* Line number */
