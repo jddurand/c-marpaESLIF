@@ -13,9 +13,11 @@ typedef struct marpaESLIFTester_context {
 } marpaESLIFTester_context_t;
 
 const static char *exceptions = "\n"
-  "xx ::= [ABC] - yy\n"
-  "yy ::= [BCD] - zz\n"
-  "zz ::= [CDE] - xx\n"
+  ":start ::= cdef\n"
+  "abc  ::= [ABC] - bcd\n"
+  "bcd  ::= [BCD] - cdef\n"
+  "cdef ::= [CDE] - abc\n"
+  "cdef ::= [F]\n"
 ;
 
 int main() {
@@ -35,10 +37,11 @@ int main() {
   marpaESLIFValue_t           *marpaESLIFValuep = NULL;
   short                        continueb;
   short                        exhaustedb;
-  const static char           *inputs = "C";
+  const static char           *inputCs = "C";
+  const static char           *inputFs = "F";
   short                        rcValueb;
 
-  genericLoggerp = GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_TRACE);
+  genericLoggerp = GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_DEBUG);
 
   marpaESLIFOption.genericLoggerp = genericLoggerp;
   marpaESLIFp = marpaESLIF_newp(&marpaESLIFOption);
@@ -69,8 +72,6 @@ int main() {
   }
 
   marpaESLIFTester_context.genericLoggerp = genericLoggerp;
-  marpaESLIFTester_context.inputs         = (char *) inputs;
-  marpaESLIFTester_context.inputl         = strlen(inputs);
 
   marpaESLIFRecognizerOption.userDatavp                = &marpaESLIFTester_context;
   marpaESLIFRecognizerOption.marpaESLIFReaderCallbackp = inputReaderb;
@@ -91,8 +92,22 @@ int main() {
   marpaESLIFValueOption.nullb                  = 0;
   marpaESLIFValueOption.maxParsesi             = 0;
 
-  if (! marpaESLIFGrammar_parseb(marpaESLIFGrammarp, &marpaESLIFRecognizerOption, &marpaESLIFValueOption, NULL /* exhaustedbp */, NULL /* marpaESLIFValueResultp */)) {
+  marpaESLIFTester_context.inputs         = (char *) inputCs;
+  marpaESLIFTester_context.inputl         = strlen(inputCs);
+  if (marpaESLIFGrammar_parseb(marpaESLIFGrammarp, &marpaESLIFRecognizerOption, &marpaESLIFValueOption, NULL /* exhaustedbp */, NULL /* marpaESLIFValueResultp */)) {
+    GENERICLOGGER_ERRORF(marpaESLIFOption.genericLoggerp, "Input \"%s\" match when it should not", inputCs);
     goto err;
+  } else {
+    GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "Input \"%s\" does not match and this is ok", inputCs);
+  }
+
+  marpaESLIFTester_context.inputs         = (char *) inputFs;
+  marpaESLIFTester_context.inputl         = strlen(inputFs);
+  if (! marpaESLIFGrammar_parseb(marpaESLIFGrammarp, &marpaESLIFRecognizerOption, &marpaESLIFValueOption, NULL /* exhaustedbp */, NULL /* marpaESLIFValueResultp */)) {
+    GENERICLOGGER_ERRORF(marpaESLIFOption.genericLoggerp, "Input \"%s\" does not match when it should", inputFs);
+    goto err;
+  } else {
+    GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "Input \"%s\" match and this is ok", inputFs);
   }
 
   exiti = 0;

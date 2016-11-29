@@ -240,6 +240,7 @@ struct marpaESLIFValue {
   int                       symboli;
   int                       rulei;
   int                       grammari;
+  short                     prunedValueDoneb;
 };
 
 struct marpaESLIFRecognizer {

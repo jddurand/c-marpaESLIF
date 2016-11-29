@@ -5998,14 +5998,20 @@ short marpaESLIFValue_valueb(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFValu
   } else {
     if (! marpaESLIFValuep->marpaESLIFValueOption.ambiguousb) {
       /* ASF have a built-in facility for pruning */
-      rcb = marpaWrapperAsf_prunedValueb(marpaESLIFValuep->marpaWrapperAsfp,
-                                         (void *) marpaESLIFValuep,
-                                         _marpaESLIFValue_okRuleCallbackWrapperb,
-                                         _marpaESLIFValue_okSymbolCallbackWrapperb,
-                                         _marpaESLIFValue_okNullingCallbackWrapperb,
-                                         _marpaESLIFValue_ruleCallbackWrapperb,
-                                         _marpaESLIFValue_symbolCallbackWrapperb,
-                                         _marpaESLIFValue_nullingCallbackWrapperb);
+      if (! marpaESLIFValuep->prunedValueDoneb) {
+        rcb = marpaWrapperAsf_prunedValueb(marpaESLIFValuep->marpaWrapperAsfp,
+                                           (void *) marpaESLIFValuep,
+                                           _marpaESLIFValue_okRuleCallbackWrapperb,
+                                           _marpaESLIFValue_okSymbolCallbackWrapperb,
+                                           _marpaESLIFValue_okNullingCallbackWrapperb,
+                                           _marpaESLIFValue_ruleCallbackWrapperb,
+                                           _marpaESLIFValue_symbolCallbackWrapperb,
+                                           _marpaESLIFValue_nullingCallbackWrapperb);
+        marpaESLIFValuep->prunedValueDoneb = 1;
+      } else {
+        /* No more parse value */
+        rcb = 0;
+      }
     } else {
       /* Non-ambiguous mode is nothing else but a pruning that remembers the fetched trees */
       rcb = marpaWrapperAsf_traverseb(marpaESLIFValuep->marpaWrapperAsfp,
@@ -9597,6 +9603,7 @@ static inline marpaESLIFValue_t *_marpaESLIFValue_newp(marpaESLIFRecognizer_t *m
   marpaESLIFValuep->symboli                     = -1;
   marpaESLIFValuep->rulei                       = -1;
   marpaESLIFValuep->grammari                    = -1;
+  marpaESLIFValuep->prunedValueDoneb            = 0;
 
   if (! fakeb) {
     if (grammarp->haveRejectionb) {
