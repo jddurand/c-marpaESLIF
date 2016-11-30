@@ -13,17 +13,51 @@ typedef struct marpaESLIFTester_context {
   size_t           inputl;
 } marpaESLIFTester_context_t;
 
-const static char *base_dsl = "\n"
-  ":start ::= deal\n"
-  "deal ::= hands\n"
-  "hands ::= hand | hands ';' hand\n"
-  "hand ::= card card card card card\n"
-  "card ~ face suit\n"
-  "face ~ [2-9jqka] | '10'\n"
-  "WS ~ [\\s]\n"
-  ":discard ::= WS\n"
-  "\n"
-  ":lexeme ::= <card> pause => after event => card\n"
+const static char *dsl = "\n"
+":default ::= action => ::shift\n"
+":start       ::= json\n"
+"json         ::= object\n"
+"               | array\n"
+"object       ::= '{' members '}'       action => do_object\n"
+"# comma is provided as a char class here, to ensure that char classes\n"
+"# as separators are in the test suite.\n"
+"members      ::= pair*                 action => do_array separator => [,]\n"
+"pair         ::= string ':' value action => do_array\n"
+"value        ::= string\n"
+"               | object\n"
+"               | number\n"
+"               | array\n"
+"               | 'true'                action => do_true\n"
+"               | 'false'               action => do_true\n"
+"               | 'null'                action => ::undef\n"
+"array        ::= '[' ']'               action => do_empty_array\n"
+"               | '[' elements ']' \n"
+"# comma is provided as a char class here, to ensure that char classes\n"
+"# as separators are in the test suite.\n"
+"elements     ::= value+                action => do_array separator => [,]\n"
+"number         ~ int\n"
+"               | int frac\n"
+"               | int exp\n"
+"               | int frac exp\n"
+"int            ~ digits\n"
+"               | '-' digits\n"
+"digits         ~ [\\d]+\n"
+"frac           ~ '.' digits\n"
+"exp            ~ e digits\n"
+"e              ~ 'e'\n"
+"               | 'e+'\n"
+"               | 'e-'\n"
+"               | 'E'\n"
+"               | 'E+'\n"
+"               | 'E-'\n"
+"string       ::= lstring\n"
+":lexeme ::= lstring pause => before event => ^lstring\n"
+"lstring        ~ quote in_string quote\n"
+"quote          ~ [\"]\n"
+"in_string      ~ in_string_char*\n"
+"in_string_char  ~ [^\"] | '\\\"'\n"
+":discard       ::= whitespace\n"
+"whitespace     ~ [\\s]+\n"
   ;
 
 int main() {
@@ -60,8 +94,8 @@ int main() {
     goto err;
   }
 
-  marpaESLIFGrammarOption.bytep               = (void *) inputs;
-  marpaESLIFGrammarOption.bytel               = strlen(inputs);
+  marpaESLIFGrammarOption.bytep               = (void *) dsl;
+  marpaESLIFGrammarOption.bytel               = strlen(dsl);
   marpaESLIFGrammarOption.encodings           = NULL;
   marpaESLIFGrammarOption.encodingl           = 0;
   marpaESLIFGrammarOption.encodingOfEncodings = NULL;
