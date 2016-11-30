@@ -90,7 +90,6 @@ int main() {
   short                        exhaustedb;
   const static char           *inputs = "abc 123:de@ @f";
   short                        rcValueb;
-  int                          eventCounti = 0;
   int                          suit_linei;
   int                          test_datai;
   size_t                       dsll;
