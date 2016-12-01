@@ -8,6 +8,11 @@
 #include "marpaWrapper/asf.h"
 #include "marpa.h"
 
+/* Is the "registered" attribute of marpaWrapperAsfGlade_t really needed ? I don't believe */
+#ifndef MARPAWRAPPERASF_USE_REGISTERED_FLAG
+#define MARPAWRAPPERASF_USE_REGISTERED_FLAG 0
+#endif
+
 typedef struct marpaWrapperAsfIdset {
   int    idi;
   int    counti;
@@ -27,7 +32,9 @@ typedef struct marpaWrapperAsfGlade {
   int             idi;
   genericStack_t *symchesStackp;
   short           visitedb;
+#if MARPAWRAPPERASF_USE_REGISTERED_FLAG > 0
   short           registeredb;
+#endif
 } marpaWrapperAsfGlade_t;
 
 typedef int *andNodeStack_t;
