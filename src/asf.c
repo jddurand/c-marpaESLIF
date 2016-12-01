@@ -887,7 +887,9 @@ static inline short _marpaWrapperAsf_peakb(marpaWrapperAsf_t *marpaWrapperAsfp, 
     gladep->idi           = gladeIdi;
     gladep->symchesStackp = NULL;
     gladep->visitedb      = 0;
+#if MARPAWRAPPERASF_USE_REGISTERED_FLAG > 0
     gladep->registeredb   = 1;
+#endif
     GENERICSTACK_SET_PTR(marpaWrapperAsfp->gladeStackp, gladep, gladeIdi);
     if (GENERICSTACK_ERROR(marpaWrapperAsfp->gladeStackp)) {
       MARPAWRAPPER_ERRORF(genericLoggerp, "glade stack failure: %s", strerror(errno));
@@ -897,7 +899,9 @@ static inline short _marpaWrapperAsf_peakb(marpaWrapperAsf_t *marpaWrapperAsfp, 
   } else {
 
     gladep = GENERICSTACK_GET_PTR(marpaWrapperAsfp->gladeStackp,  gladeIdi);
+#if MARPAWRAPPERASF_USE_REGISTERED_FLAG > 0
     gladep->registeredb   = 1;
+#endif
   }
 
   if (_marpaWrapperAsf_glade_obtainp(marpaWrapperAsfp, gladeIdi) == NULL) {
@@ -1910,7 +1914,13 @@ static inline marpaWrapperAsfGlade_t *_marpaWrapperAsf_glade_obtainp(marpaWrappe
   int                          symchRuleIdi;
   short                        findResult;
 
-  if ((! GENERICSTACK_IS_PTR(gladeStackp, gladei)) || ((gladep = GENERICSTACK_GET_PTR(gladeStackp, gladei))->registeredb == 0)) {
+  if ((! GENERICSTACK_IS_PTR(gladeStackp, gladei))
+#if MARPAWRAPPERASF_USE_REGISTERED_FLAG > 0
+      || ((gladep = GENERICSTACK_GET_PTR(gladeStackp, gladei))->registeredb == 0)
+#else
+      || ((gladep = GENERICSTACK_GET_PTR(gladeStackp, gladei)) == NULL)
+#endif
+      ) {
     MARPAWRAPPER_ERRORF(genericLoggerp, "Attempt to use an invalid glade, one whose ID is %d", gladei);
     goto err;
   }
@@ -2087,7 +2097,9 @@ static inline marpaWrapperAsfGlade_t *_marpaWrapperAsf_glade_obtainp(marpaWrappe
         localGladep->idi           = gladeIdi;
         localGladep->symchesStackp = NULL;
         localGladep->visitedb      = 0;
+#if MARPAWRAPPERASF_USE_REGISTERED_FLAG > 0
         localGladep->registeredb   = 1;
+#endif
         GENERICSTACK_SET_PTR(gladeStackp, localGladep, gladeIdi);
         if (GENERICSTACK_ERROR(gladeStackp)) {
           MARPAWRAPPER_ERRORF(genericLoggerp, "glade stack failure: %s", strerror(errno));
@@ -2098,7 +2110,9 @@ static inline marpaWrapperAsfGlade_t *_marpaWrapperAsf_glade_obtainp(marpaWrappe
         marpaWrapperAsfGlade_t *localGladep;
 
         localGladep = GENERICSTACK_GET_PTR(gladeStackp, gladeIdi);
+#if MARPAWRAPPERASF_USE_REGISTERED_FLAG > 0
         localGladep->registeredb = 1;
+#endif
       }
 
       GENERICSTACK_NEW(localStackp);
@@ -2691,7 +2705,9 @@ static inline short _marpaWrapperAsf_glade_id_factorsb(marpaWrapperAsf_t *marpaW
       gladep->idi           = gladeIdi;
       gladep->symchesStackp = NULL;
       gladep->visitedb      = 0;
+#if MARPAWRAPPERASF_USE_REGISTERED_FLAG > 0
       gladep->registeredb   = 1;
+#endif
       GENERICSTACK_SET_PTR(gladeStackp, gladep,  gladeIdi);
       if (GENERICSTACK_ERROR(gladeStackp)) {
         MARPAWRAPPER_ERROR(genericLoggerp, "Failure to set in gladeStackp");
@@ -2702,7 +2718,9 @@ static inline short _marpaWrapperAsf_glade_id_factorsb(marpaWrapperAsf_t *marpaW
       marpaWrapperAsfGlade_t *gladep;
 
       gladep = GENERICSTACK_GET_PTR(gladeStackp,  gladeIdi);
+#if MARPAWRAPPERASF_USE_REGISTERED_FLAG > 0
       gladep->registeredb = 1;
+#endif
     }
     GENERICSTACK_PUSH_INT(stackp, gladeIdi);
     if (GENERICSTACK_ERROR(stackp)) {
