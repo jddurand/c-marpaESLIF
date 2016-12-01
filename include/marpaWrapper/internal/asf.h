@@ -112,7 +112,7 @@ struct marpaWrapperAsfTraverser {
   int                     factoringIxi;
 };
 
-/* Internal structure used for valuation using the ASF */
+/* Internal structure used for pruned valuation using the ASF */
 typedef struct marpaWrapperAsfPrunedValueContext {
   /* Copy of the marpaWrapperAsf_valueb() parameters */
   void                                 *userDatavp;
@@ -129,5 +129,20 @@ typedef struct marpaWrapperAsfPrunedValueContext {
   /* For logging, keep track of recursivity level */
   int                                   leveli;
 } marpaWrapperAsfPrunedValueContext_t;
+
+/* Internal structure used for valuation using the ASF */
+typedef struct marpaWrapperAsfValueContext {
+  marpaWrapperAsf_t                    *marpaWrapperAsfp;
+  /* Copy of the marpaWrapperAsf_valueb() parameters */
+  void                                 *userDatavp;
+  marpaWrapperAsfOkRuleCallback_t       okRuleCallbackp;
+  marpaWrapperAsfOkSymbolCallback_t     okSymbolCallbackp;
+  marpaWrapperAsfOkNullingCallback_t    okNullingCallbackp;
+  marpaWrapperValueRuleCallback_t       valueRuleCallbackp;
+  marpaWrapperValueSymbolCallback_t     valueSymbolCallbackp;
+  marpaWrapperValueNullingCallback_t    valueNullingCallbackp;
+  /* Remember visited parse trees */
+  genericStack_t                       *parseTreeStackp;
+} marpaWrapperAsfValueContext_t;
 
 #endif /* MARPAWRAPPER_INTERNAL_ASF_H */
