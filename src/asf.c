@@ -203,6 +203,10 @@ static inline void                          _marpaWrapperAsf_choicepoint_freev(m
 
 /* Specific to value using the ASF */
 static inline short                       _marpaWrapperAsf_valueTraverserb(marpaWrapperAsfTraverser_t *traverserp, void *userDatavp, int *valueip);
+static inline short                       _marpaWrapperAsf_valueOkCallback(marpaWrapperAsfValueContext_t *marpaWrapperAsfValueContextp, genericStack_t *parentRuleiStackp, int rulei);
+static short                              _marpaWrapperAsf_valueOkRuleCallback(void *userDatavp, genericStack_t *parentRuleiStackp, int rulei, int arg0i, int argni);
+static short                              _marpaWrapperAsf_valueOkSymbolCallback(void *userDatavp, genericStack_t *parentRuleiStackp, int symboli, int argi);
+static short                              _marpaWrapperAsf_valueOkNullingCallback(void *userDatavp, genericStack_t *parentRuleiStackp, int symboli);
 
 /* Specific to value sparse array */
 int                                      _marpaWrapperAsf_valueSparseArray_indi(void *userDatavp, genericStackItemType_t itemType, void **pp);
@@ -4214,3 +4218,90 @@ int _marpaWrapperAsf_valueSparseArray_indi(void *userDatavp, genericStackItemTyp
   return _marpaWrapperAsf_djb2_s((unsigned char *) pp, sizeof(int)) % MARPAWRAPPERASF_VALUESPARSEARRAY_SIZE;
   /* return abs(* ((int *) pp)) % MARPAWRAPPERASF_CAUSESHASH_SIZE; */
 }
+
+/* Internal ok callbacks for value mode: we know that ASF is calling the parse tree from the deepest node to the highest */
+/* We just verify if this parse tree has already been visited -; */
+
+/****************************************************************************/
+static inline short _marpaWrapperAsf_valueOkCallback(marpaWrapperAsfValueContext_t *marpaWrapperAsfValueContextp, genericStack_t *parentRuleiStackp, int rulei)
+/****************************************************************************/
+{
+  /* We maintain in parseTreeStackp all visited parse trees */
+  marpaWrapperAsf_t *marpaWrapperAsfp      = marpaWrapperAsfValueContextp->marpaWrapperAsfp;
+  genericLogger_t   *genericLoggerp        = marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp;
+  genericStack_t    *parseTreeStackp       = marpaWrapperAsfValueContextp->parseTreeStackp;
+  int                parseTreeStackUsedi   = GENERICSTACK_USED(marpaWrapperAsfValueContextp->parseTreeStackp);
+  int                parentRuleiStackUsedi = GENERICSTACK_USED(parentRuleiStackp);
+  genericStack_t    *ruleStackp            = NULL;
+  int                ruleStackUsedi;
+  int                i;
+  int                j;
+  short              rcb;
+
+  /* parentRuleiStackUsedi is the current indice in parseTreeStackp if rulei has already been visited */
+  parentRuleiStackUsedi = GENERICSTACK_USED(parentRuleiStackp);
+  if (parentRuleiStackUsedi > parseTreeStackUsedi) {
+    /* Definitely not yet visited. We create the visited rules stack at indice parentRuleiStackUsedi */
+    GENERICSTACK_NEW(ruleStackp);
+    if (GENERICSTACK_ERROR(ruleStackp)) {
+      MARPAWRAPPER_ERRORF(genericLoggerp, "ruleStackp initialization failure, %s", strerror(errno));
+      goto err;
+    }
+    GENERICSTACK_PUSH_INT(ruleStackp, rulei);
+    if (GENERICSTACK_ERROR(ruleStackp)) {
+      MARPAWRAPPER_ERRORF(genericLoggerp, "ruleStackp push failure, %s", strerror(errno));
+      goto err;
+    }
+    GENERICSTACK_SET_PTR(parseTreeStackp, ruleStackp, parentRuleiStackUsedi);
+    if (GENERICSTACK_ERROR(parseTreeStackp)) {
+      MARPAWRAPPER_ERRORF(genericLoggerp, "parseTreeStackp set failure, %s", strerror(errno));
+      goto err;
+    }
+  } else {
+    /* We look all visited rules and check if parentRuleiStackp matches */
+    for (i = 0; i < parentRuleiStackUsedi; i++) {
+      ruleStackp = (genericStack_t *) GENERICSTACK_GET_PTR(parseTreeStackp, i);
+      ruleStackUsedi = GENERICSTACK_USED(ruleStackp);
+      for (j = 0; j < ruleStackUsedi; j++) {
+        if (GENERICSTACK_GET_INT(parentRuleiStackp, j) == GENERICSTACK_GET_INT(ruleStackp, j)) {
+          /* Reject */
+          rcb = -1;
+          goto done;
+        }
+      }
+    }
+  }
+
+  /* Ok */
+  rcb = 1;
+  goto done;
+
+ err:
+  GENERICSTACK_FREE(ruleStackp);
+  rcb = 0;
+
+ done:
+  return rcb;
+}
+
+/****************************************************************************/
+static short _marpaWrapperAsf_valueOkRuleCallback(void *userDatavp, genericStack_t *parentRuleiStackp, int rulei, int arg0i, int argni)
+/****************************************************************************/
+{
+  return _marpaWrapperAsf_valueOkCallback((marpaWrapperAsfValueContext_t *) userDatavp, parentRuleiStackp, rulei);
+}
+
+/****************************************************************************/
+static short _marpaWrapperAsf_valueOkSymbolCallback(void *userDatavp, genericStack_t *parentRuleiStackp, int symboli, int argi)
+/****************************************************************************/
+{
+  return 1; /* We always accept any lexeme */
+}
+
+/****************************************************************************/
+static short _marpaWrapperAsf_valueOkNullingCallback(void *userDatavp, genericStack_t *parentRuleiStackp, int symboli)
+/****************************************************************************/
+{
+  return _marpaWrapperAsf_valueOkCallback((marpaWrapperAsfValueContext_t *) userDatavp, parentRuleiStackp, symboli /* This is a nulling rule */);
+}
+
