@@ -4243,15 +4243,16 @@ static inline short _marpaWrapperAsf_valueOkCallback(marpaWrapperAsfValueContext
   int                parseTreei;
   int                wantedRulei;
 
-  if (parentRuleiStackUsedi > parseTreeStackUsedi) {
-    /* Definitely not visited */
-    goto remember;
-  }
-
   /* We look all visited parse trees and check if parentRuleiStackp matches */
   for (i = 0; i < parentRuleiStackUsedi; i++) {
     wantedRulei = GENERICSTACK_GET_INT(parentRuleiStackp, i);
 
+    if (! GENERICSTACK_IS_PTR(parseTreeStackp, i)) {
+      /* Cannot be: we start remembering at this indice in parseTreeStackp */
+      /* And this will be the next parse tree value indice (< 0 means a push) */
+      parseTreei = -1;
+      goto remember;
+    }
     /* Per def indice i exist in parseTreeStackp */
     ruleStackp = (genericStack_t *) GENERICSTACK_GET_PTR(parseTreeStackp, i);
     ruleStackUsedi = GENERICSTACK_USED(ruleStackp);
@@ -4267,14 +4268,14 @@ static inline short _marpaWrapperAsf_valueOkCallback(marpaWrapperAsfValueContext
       /* This rule was never visited */
       goto remember;
     }
-    /* The parse tree No parseTreei matches wantedRulei */
-    /* We want to know if have a match of remaining rules in parentRuleiStackUsedi at this same parse tree indice */
+    /* The parse tree value indice parseTreei matches wantedRulei */
+    /* We want to know if have a match of remaining rules in parentRuleiStackUsedi at this same parse tree value indice */
     if (i >= parentRuleiStackMaxi) {
-      /* Cannot be - remains rulei itself */
+      /* Cannot be */
       goto remember;
     } else {
       for (j = i+1; j < parentRuleiStackUsedi; j++) {
-        if (i > parseTreeStackMaxi) {
+        if (j > parseTreeStackMaxi) {
           /* There are more entries in parentRuleiStackp than in parseTreeStackp */
           goto remember;
         }
@@ -4282,22 +4283,25 @@ static inline short _marpaWrapperAsf_valueOkCallback(marpaWrapperAsfValueContext
 
         /* Per def indice j exist in parseTreeStackp */
         ruleStackp = (genericStack_t *) GENERICSTACK_GET_PTR(parseTreeStackp, j);
-        if (! GENERICSTACK_EXISTS(ruleStackp, parseTreei) && (wantedRulei == GENERICSTACK_GET_INT(ruleStackp, parseTreei))) {
-          /* This rule was never visited */
+        if ((! GENERICSTACK_EXISTS(ruleStackp, parseTreei)) || (wantedRulei != GENERICSTACK_GET_INT(ruleStackp, parseTreei))) {
+          /* This rule was never visited at parse tree value indice parseTreei */
           goto remember;
         }
       }
-      /* If we are here this mean that the whole parentRuleiStackp was already visited at parse tree indice parseTreei */
+      /* If we are here this mean that the whole parentRuleiStackp was already visited at parse tree value indice parseTreei */
       /* Remains rulei itself -; */
-      if (j <= parseTreeStackMaxi) {
-        /* Per def j is (parentRuleiStackUsedi + 1) */
-        ruleStackp = (genericStack_t *) GENERICSTACK_GET_PTR(parseTreeStackp, j);
-        if (GENERICSTACK_EXISTS(ruleStackp, parseTreei) && (rulei == GENERICSTACK_GET_INT(ruleStackp, parseTreei))) {
-          /* This whole thing was already visited - rejected */
-          rcb = -1;
-          goto done;
-        }
+      if (j > parseTreeStackMaxi) {
+        goto remember;
       }
+      /* Per def j is (parentRuleiStackUsedi + 1) */
+      ruleStackp = (genericStack_t *) GENERICSTACK_GET_PTR(parseTreeStackp, j);
+      if ((! GENERICSTACK_EXISTS(ruleStackp, parseTreei)) || (rulei != GENERICSTACK_GET_INT(ruleStackp, parseTreei))) {
+        /* The current rule was never visited at parse tree value indice parseTreei */
+        goto remember;
+      }
+      /* Found - so we reject */
+      rcb = -1;
+      goto done;
     }
   }
 
@@ -4306,7 +4310,8 @@ static inline short _marpaWrapperAsf_valueOkCallback(marpaWrapperAsfValueContext
   goto done;
 
  remember:
-  /* We remember all visited rule starting at indice rememberStarti */
+  /* We remember all visited rule starting at indice i in parseTreeStackp */
+  /* If parseTreei is < 0, we do a push, else we do a set */
 
  err:
   GENERICSTACK_FREE(ruleStackp);
