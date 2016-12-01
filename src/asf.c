@@ -1914,11 +1914,10 @@ static inline marpaWrapperAsfGlade_t *_marpaWrapperAsf_glade_obtainp(marpaWrappe
   int                          symchRuleIdi;
   short                        findResult;
 
-  if ((! GENERICSTACK_IS_PTR(gladeStackp, gladei))
-#if MARPAWRAPPERASF_USE_REGISTERED_FLAG > 0
-      || ((gladep = GENERICSTACK_GET_PTR(gladeStackp, gladei))->registeredb == 0)
-#else
+  if (   (! GENERICSTACK_IS_PTR(gladeStackp, gladei))
       || ((gladep = GENERICSTACK_GET_PTR(gladeStackp, gladei)) == NULL)
+#if MARPAWRAPPERASF_USE_REGISTERED_FLAG > 0
+      || (gladep->registeredb == 0)
 #endif
       ) {
     MARPAWRAPPER_ERRORF(genericLoggerp, "Attempt to use an invalid glade, one whose ID is %d", gladei);
