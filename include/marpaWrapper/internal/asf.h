@@ -113,7 +113,7 @@ struct marpaWrapperAsfTraverser {
 };
 
 /* Internal structure used for valuation using the ASF */
-typedef struct marpaWrapperAsfValueContext {
+typedef struct marpaWrapperAsfPrunedValueContext {
   /* Copy of the marpaWrapperAsf_valueb() parameters */
   void                                 *userDatavp;
   marpaWrapperAsfOkRuleCallback_t       okRuleCallbackp;
@@ -128,6 +128,6 @@ typedef struct marpaWrapperAsfValueContext {
   int                                   wantedOutputStacki;
   /* For logging, keep track of recursivity level */
   int                                   leveli;
-} marpaWrapperAsfValueContext_t;
+} marpaWrapperAsfPrunedValueContext_t;
 
 #endif /* MARPAWRAPPER_INTERNAL_ASF_H */
