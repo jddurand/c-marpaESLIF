@@ -4233,38 +4233,67 @@ static inline short _marpaWrapperAsf_valueOkCallback(marpaWrapperAsfValueContext
   int                parseTreeStackUsedi   = GENERICSTACK_USED(marpaWrapperAsfValueContextp->parseTreeStackp);
   int                parentRuleiStackUsedi = GENERICSTACK_USED(parentRuleiStackp);
   genericStack_t    *ruleStackp            = NULL;
+  int                parseTreeStackMaxi    = parseTreeStackUsedi - 1;
+  int                parentRuleiStackMaxi  = parentRuleiStackUsedi - 1;
   int                ruleStackUsedi;
   int                i;
   int                j;
+  int                k;
   short              rcb;
+  int                parseTreei;
+  int                wantedRulei;
 
-  /* parentRuleiStackUsedi is the current indice in parseTreeStackp if rulei has already been visited */
-  parentRuleiStackUsedi = GENERICSTACK_USED(parentRuleiStackp);
   if (parentRuleiStackUsedi > parseTreeStackUsedi) {
-    /* Definitely not yet visited. We create the visited rules stack at indice parentRuleiStackUsedi */
-    GENERICSTACK_NEW(ruleStackp);
-    if (GENERICSTACK_ERROR(ruleStackp)) {
-      MARPAWRAPPER_ERRORF(genericLoggerp, "ruleStackp initialization failure, %s", strerror(errno));
-      goto err;
+    /* Definitely not visited */
+    goto remember;
+  }
+
+  /* We look all visited parse trees and check if parentRuleiStackp matches */
+  for (i = 0; i < parentRuleiStackUsedi; i++) {
+    wantedRulei = GENERICSTACK_GET_INT(parentRuleiStackp, i);
+
+    /* Per def indice i exist in parseTreeStackp */
+    ruleStackp = (genericStack_t *) GENERICSTACK_GET_PTR(parseTreeStackp, i);
+    ruleStackUsedi = GENERICSTACK_USED(ruleStackp);
+    parseTreei = -1;
+    for (j = 0; j < ruleStackUsedi; j++) {
+      if (wantedRulei == GENERICSTACK_GET_INT(ruleStackp, j)) {
+        /* This rule at this parse tree indice was visited */
+        parseTreei = j;
+        break;
+      }
     }
-    GENERICSTACK_PUSH_INT(ruleStackp, rulei);
-    if (GENERICSTACK_ERROR(ruleStackp)) {
-      MARPAWRAPPER_ERRORF(genericLoggerp, "ruleStackp push failure, %s", strerror(errno));
-      goto err;
+    if (parseTreei < 0) {
+      /* This rule was never visited */
+      goto remember;
     }
-    GENERICSTACK_SET_PTR(parseTreeStackp, ruleStackp, parentRuleiStackUsedi);
-    if (GENERICSTACK_ERROR(parseTreeStackp)) {
-      MARPAWRAPPER_ERRORF(genericLoggerp, "parseTreeStackp set failure, %s", strerror(errno));
-      goto err;
-    }
-  } else {
-    /* We look all visited rules and check if parentRuleiStackp matches */
-    for (i = 0; i < parentRuleiStackUsedi; i++) {
-      ruleStackp = (genericStack_t *) GENERICSTACK_GET_PTR(parseTreeStackp, i);
-      ruleStackUsedi = GENERICSTACK_USED(ruleStackp);
-      for (j = 0; j < ruleStackUsedi; j++) {
-        if (GENERICSTACK_GET_INT(parentRuleiStackp, j) == GENERICSTACK_GET_INT(ruleStackp, j)) {
-          /* Reject */
+    /* The parse tree No parseTreei matches wantedRulei */
+    /* We want to know if have a match of remaining rules in parentRuleiStackUsedi at this same parse tree indice */
+    if (i >= parentRuleiStackMaxi) {
+      /* Cannot be - remains rulei itself */
+      goto remember;
+    } else {
+      for (j = i+1; j < parentRuleiStackUsedi; j++) {
+        if (i > parseTreeStackMaxi) {
+          /* There are more entries in parentRuleiStackp than in parseTreeStackp */
+          goto remember;
+        }
+        wantedRulei = GENERICSTACK_GET_INT(parentRuleiStackp, j);
+
+        /* Per def indice j exist in parseTreeStackp */
+        ruleStackp = (genericStack_t *) GENERICSTACK_GET_PTR(parseTreeStackp, j);
+        if (! GENERICSTACK_EXISTS(ruleStackp, parseTreei) && (wantedRulei == GENERICSTACK_GET_INT(ruleStackp, parseTreei))) {
+          /* This rule was never visited */
+          goto remember;
+        }
+      }
+      /* If we are here this mean that the whole parentRuleiStackp was already visited at parse tree indice parseTreei */
+      /* Remains rulei itself -; */
+      if (j <= parseTreeStackMaxi) {
+        /* Per def j is (parentRuleiStackUsedi + 1) */
+        ruleStackp = (genericStack_t *) GENERICSTACK_GET_PTR(parseTreeStackp, j);
+        if (GENERICSTACK_EXISTS(ruleStackp, parseTreei) && (rulei == GENERICSTACK_GET_INT(ruleStackp, parseTreei))) {
+          /* This whole thing was already visited - rejected */
           rcb = -1;
           goto done;
         }
@@ -4272,9 +4301,12 @@ static inline short _marpaWrapperAsf_valueOkCallback(marpaWrapperAsfValueContext
     }
   }
 
-  /* Ok */
+  /* Not yet visited - accepted */
   rcb = 1;
   goto done;
+
+ remember:
+  /* We remember all visited rule starting at indice rememberStarti */
 
  err:
   GENERICSTACK_FREE(ruleStackp);
