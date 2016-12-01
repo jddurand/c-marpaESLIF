@@ -161,8 +161,12 @@ static inline short                      _marpaWrapperAsf_next_factoringb(marpaW
 static inline short                      _marpaWrapperAsf_glade_id_factorsb(marpaWrapperAsf_t *marpaWrapperAsfp, marpaWrapperAsfChoicePoint_t *choicepointp, genericStack_t **stackpp);
 int                                      _marpaWrapperAsf_causesHash_indi(void *userDatavp, genericStackItemType_t itemType, void **pp);
 static inline short                      _marpaWrapperAsf_and_nodes_to_cause_nidsp(marpaWrapperAsf_t *marpaWrapperAsfp, genericStack_t *andNodeIdStackp, genericStack_t *causeNidsStackp);
+#if MARPAWRAPPERASF_USE_VISITED_FLAG > 0
 static inline short                      _marpaWrapperAsf_glade_is_visitedb(marpaWrapperAsf_t *marpaWrapperAsfp, int gladeIdi);
+#endif
+#if MARPAWRAPPERASF_USE_VISITED_FLAG > 0
 static inline void                       _marpaWrapperAsf_glade_visited_clearb(marpaWrapperAsf_t *marpaWrapperAsfp, int *gladeIdip);
+#endif
 static inline short                      _marpaWrapperAsf_glade_symch_countb(marpaWrapperAsf_t *marpaWrapperAsfp, int gladeIdi, int *countip);
 static inline int                        _marpaWrapperAsf_glade_symbol_idi(marpaWrapperAsf_t *marpaWrapperAsfp, int gladeIdi);
 static inline int                        _marpaWrapperAsf_glade_spani(marpaWrapperAsf_t *marpaWrapperAsfp, int gladeIdi, int *lengthip);
@@ -890,7 +894,9 @@ static inline short _marpaWrapperAsf_peakb(marpaWrapperAsf_t *marpaWrapperAsfp, 
     }
     gladep->idi           = gladeIdi;
     gladep->symchesStackp = NULL;
+#if MARPAWRAPPERASF_USE_VISITED_FLAG > 0
     gladep->visitedb      = 0;
+#endif
 #if MARPAWRAPPERASF_USE_REGISTERED_FLAG > 0
     gladep->registeredb   = 1;
 #endif
@@ -2099,7 +2105,9 @@ static inline marpaWrapperAsfGlade_t *_marpaWrapperAsf_glade_obtainp(marpaWrappe
         }
         localGladep->idi           = gladeIdi;
         localGladep->symchesStackp = NULL;
+#if MARPAWRAPPERASF_USE_VISITED_FLAG > 0
         localGladep->visitedb      = 0;
+#endif
 #if MARPAWRAPPERASF_USE_REGISTERED_FLAG > 0
         localGladep->registeredb   = 1;
 #endif
@@ -2707,7 +2715,9 @@ static inline short _marpaWrapperAsf_glade_id_factorsb(marpaWrapperAsf_t *marpaW
       }
       gladep->idi           = gladeIdi;
       gladep->symchesStackp = NULL;
+#if MARPAWRAPPERASF_USE_VISITED_FLAG > 0
       gladep->visitedb      = 0;
+#endif
 #if MARPAWRAPPERASF_USE_REGISTERED_FLAG > 0
       gladep->registeredb   = 1;
 #endif
@@ -2876,6 +2886,7 @@ static inline short _marpaWrapperAsf_next_factoringb(marpaWrapperAsf_t *marpaWra
 
 }
 
+#if MARPAWRAPPERASF_USE_VISITED_FLAG > 0
 /****************************************************************************/
 static inline short _marpaWrapperAsf_glade_is_visitedb(marpaWrapperAsf_t *marpaWrapperAsfp, int gladeIdi)
 /****************************************************************************/
@@ -2895,7 +2906,9 @@ static inline short _marpaWrapperAsf_glade_is_visitedb(marpaWrapperAsf_t *marpaW
   MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "return %d", rcb);
   return rcb;
 }
+#endif
 
+#if MARPAWRAPPERASF_USE_VISITED_FLAG > 0
 /****************************************************************************/
 static inline void _marpaWrapperAsf_glade_visited_clearb(marpaWrapperAsf_t *marpaWrapperAsfp, int *gladeIdip)
 /****************************************************************************/
@@ -2922,6 +2935,7 @@ static inline void _marpaWrapperAsf_glade_visited_clearb(marpaWrapperAsf_t *marp
     }
   }
 }
+#endif
 
 /****************************************************************************/
 static inline short _marpaWrapperAsf_glade_symch_countb(marpaWrapperAsf_t *marpaWrapperAsfp, int gladeIdi, int *countip)

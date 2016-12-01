@@ -13,6 +13,11 @@
 #define MARPAWRAPPERASF_USE_REGISTERED_FLAG 0
 #endif
 
+/* Same remark for the visited attributed */
+#ifndef MARPAWRAPPERASF_USE_VISITED_FLAG
+#define MARPAWRAPPERASF_USE_VISITED_FLAG 0
+#endif
+
 typedef struct marpaWrapperAsfIdset {
   int    idi;
   int    counti;
@@ -31,7 +36,9 @@ typedef enum marpaWrapperAsfIdsete {
 typedef struct marpaWrapperAsfGlade {
   int             idi;
   genericStack_t *symchesStackp;
+#if MARPAWRAPPERASF_USE_VISITED_FLAG > 0
   short           visitedb;
+#endif
 #if MARPAWRAPPERASF_USE_REGISTERED_FLAG > 0
   short           registeredb;
 #endif
