@@ -4101,6 +4101,12 @@ static inline short _marpaWrapperAsf_valueTraverserb(marpaWrapperAsfTraverser_t 
       argni = --localWantedOutputStacki;
       arg0i = argni - (lengthi - 1);
 
+      GENERICSTACK_POP_INT(parentRuleiStackp);
+      if (GENERICSTACK_ERROR(parentRuleiStackp)) {
+        MARPAWRAPPER_ERRORF(genericLoggerp, "parentRuleiStackp pop failure, %s", strerror(errno));
+        goto err;
+      }
+
       /* Check if it is ok */
       rcb = okRuleCallbackp(marpaWrapperAsfPrunedValueContextp->userDatavp, marpaWrapperAsfPrunedValueContextp->parentRuleiStackp, marpaRuleIdi, arg0i, argni);
       if (rcb < 0) {
@@ -4137,12 +4143,6 @@ static inline short _marpaWrapperAsf_valueTraverserb(marpaWrapperAsfTraverser_t 
       if (! marpaWrapperAsf_traverse_ruleIdb(traverserp, &marpaRuleIdi)) {
         goto err;
       }
-    }
-
-    GENERICSTACK_POP_INT(parentRuleiStackp);
-    if (GENERICSTACK_ERROR(parentRuleiStackp)) {
-      MARPAWRAPPER_ERRORF(genericLoggerp, "parentRuleiStackp pop failure, %s", strerror(errno));
-      goto err;
     }
 
   }
