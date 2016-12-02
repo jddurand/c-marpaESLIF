@@ -217,7 +217,14 @@ IF (GENERICSTACK_FOUND)
     COMMAND marpaWrapperAsfValueTester
     WORKING_DIRECTORY ${LIBRARY_OUTPUT_PATH})
 
-  ADD_CUSTOM_TARGET     (check COMMAND ${CMAKE_CTEST_COMMAND} DEPENDS marpaWrapperTester marpaWrapperAsfTester marpaWrapperAsfValueTester)
+  ADD_EXECUTABLE        (marpaWrapperAsfAmbiguousTester EXCLUDE_FROM_ALL test/marpaWrapperAsfAmbiguousTester.c)
+  SET_TARGET_PROPERTIES (marpaWrapperAsfAmbiguousTester PROPERTIES LINKER_LANGUAGE C RUNTIME_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH})
+  TARGET_LINK_LIBRARIES (marpaWrapperAsfAmbiguousTester marpaWrapper)
+  ADD_TEST              (NAME marpaWrapperAsfAmbiguousTest
+    COMMAND marpaWrapperAsfAmbiguousTester
+    WORKING_DIRECTORY ${LIBRARY_OUTPUT_PATH})
+
+  ADD_CUSTOM_TARGET     (check COMMAND ${CMAKE_CTEST_COMMAND} DEPENDS marpaWrapperTester marpaWrapperAsfTester marpaWrapperAsfValueTester marpaWrapperAsfAmbiguousTester)
 ENDIF (GENERICSTACK_FOUND)
 
 # -------

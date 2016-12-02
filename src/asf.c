@@ -206,11 +206,8 @@ static inline marpaWrapperAsfChoicePoint_t *_marpaWrapperAsf_choicepoint_newp(ma
 static inline void                          _marpaWrapperAsf_choicepoint_freev(marpaWrapperAsf_t *marpaWrapperAsfp, marpaWrapperAsfChoicePoint_t *choicepointp);
 
 /* Specific to value using the ASF */
+static inline short                       _marpaWrapperAsf_prunedValueTraverserb(marpaWrapperAsfTraverser_t *traverserp, void *userDatavp, int *valueip);
 static inline short                       _marpaWrapperAsf_valueTraverserb(marpaWrapperAsfTraverser_t *traverserp, void *userDatavp, int *valueip);
-static inline short                       _marpaWrapperAsf_valueOkCallback(marpaWrapperAsfValueContext_t *marpaWrapperAsfValueContextp, genericStack_t *parentRuleiStackp, int rulei);
-static short                              _marpaWrapperAsf_valueOkRuleCallback(void *userDatavp, genericStack_t *parentRuleiStackp, int rulei, int arg0i, int argni);
-static short                              _marpaWrapperAsf_valueOkSymbolCallback(void *userDatavp, genericStack_t *parentRuleiStackp, int symboli, int argi);
-static short                              _marpaWrapperAsf_valueOkNullingCallback(void *userDatavp, genericStack_t *parentRuleiStackp, int symboli);
 
 /* Specific to value sparse array */
 int                                      _marpaWrapperAsf_valueSparseArray_indi(void *userDatavp, genericStackItemType_t itemType, void **pp);
@@ -3945,11 +3942,11 @@ short marpaWrapperAsf_prunedValueb(marpaWrapperAsf_t                    *marpaWr
 
   GENERICSTACK_NEW(marpaWrapperAsfPrunedValueContext.parentRuleiStackp);
   if (GENERICSTACK_ERROR(marpaWrapperAsfPrunedValueContext.parentRuleiStackp)) {
-    MARPAWRAPPER_ERRORF(genericLoggerp, "marpaWrapperAsfPrunedValueContext->parentRuleiStackp initialization failure, %s", strerror(errno));
+    MARPAWRAPPER_ERRORF(genericLoggerp, "marpaWrapperAsfPrunedValueContext.parentRuleiStackp initialization failure, %s", strerror(errno));
     goto err;
   }
 
-  rcb = marpaWrapperAsf_traverseb(marpaWrapperAsfp, _marpaWrapperAsf_valueTraverserb, &marpaWrapperAsfPrunedValueContext, &valuei);
+  rcb = marpaWrapperAsf_traverseb(marpaWrapperAsfp, _marpaWrapperAsf_prunedValueTraverserb, &marpaWrapperAsfPrunedValueContext, &valuei);
   if (rcb) {
     if (valuei < 0) {
       /* All alternatives were rejected */
@@ -3968,7 +3965,7 @@ short marpaWrapperAsf_prunedValueb(marpaWrapperAsf_t                    *marpaWr
 }
 
 /****************************************************************************/
-static inline short _marpaWrapperAsf_valueTraverserb(marpaWrapperAsfTraverser_t *traverserp, void *userDatavp, int *valueip)
+static inline short _marpaWrapperAsf_prunedValueTraverserb(marpaWrapperAsfTraverser_t *traverserp, void *userDatavp, int *valueip)
 /****************************************************************************/
 /* Our traverser has the following semantics:                               */
 /* *valueip is the wanted indice in output stack.                           */
@@ -3980,7 +3977,7 @@ static inline short _marpaWrapperAsf_valueTraverserb(marpaWrapperAsfTraverser_t 
 /* It is possible to reject both a symbol and a rule.                       */
 /****************************************************************************/
 {
-  MARPAWRAPPER_FUNCS(_marpaWrapperAsf_valueTraverserb);
+  MARPAWRAPPER_FUNCS(_marpaWrapperAsf_prunedValueTraverserb);
   marpaWrapperAsf_t                   *marpaWrapperAsfp                   = marpaWrapperAsf_traverse_asfp(traverserp);
   genericLogger_t                     *genericLoggerp                     = marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp;
   marpaWrapperAsfPrunedValueContext_t *marpaWrapperAsfPrunedValueContextp = (marpaWrapperAsfPrunedValueContext_t *) userDatavp;
@@ -4233,126 +4230,337 @@ int _marpaWrapperAsf_valueSparseArray_indi(void *userDatavp, genericStackItemTyp
   /* return abs(* ((int *) pp)) % MARPAWRAPPERASF_CAUSESHASH_SIZE; */
 }
 
-/* Internal ok callbacks for value mode: we know that ASF is calling the parse tree from the deepest node to the highest */
-/* We just verify if this parse tree has already been visited -; */
-
 /****************************************************************************/
-static inline short _marpaWrapperAsf_valueOkCallback(marpaWrapperAsfValueContext_t *marpaWrapperAsfValueContextp, genericStack_t *parentRuleiStackp, int rulei)
+marpaWrapperAsfValueContext_t *marpaWrapperAsfValueContext_newp(marpaWrapperAsf_t                 *marpaWrapperAsfp,
+                                                                void                              *userDatavp,
+                                                                marpaWrapperValueRuleCallback_t    valueRuleCallbackp,
+                                                                marpaWrapperValueSymbolCallback_t  valueSymbolCallbackp,
+                                                                marpaWrapperValueNullingCallback_t valueNullingCallbackp)
 /****************************************************************************/
 {
-  /* We maintain in parseTreeStackp all visited parse trees */
-  marpaWrapperAsf_t *marpaWrapperAsfp      = marpaWrapperAsfValueContextp->marpaWrapperAsfp;
-  genericLogger_t   *genericLoggerp        = marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp;
-  genericStack_t    *parseTreeStackp       = marpaWrapperAsfValueContextp->parseTreeStackp;
-  int                parseTreeStackUsedi   = GENERICSTACK_USED(marpaWrapperAsfValueContextp->parseTreeStackp);
-  int                parentRuleiStackUsedi = GENERICSTACK_USED(parentRuleiStackp);
-  genericStack_t    *ruleStackp            = NULL;
-  int                parseTreeStackMaxi    = parseTreeStackUsedi - 1;
-  int                parentRuleiStackMaxi  = parentRuleiStackUsedi - 1;
-  int                ruleStackUsedi;
-  int                i;
-  int                j;
-  int                k;
-  short              rcb;
-  int                parseTreei;
-  int                wantedRulei;
+  MARPAWRAPPER_FUNCS(marpaWrapperAsfValueContext_newp);
+  genericLogger_t               *genericLoggerp;
+  marpaWrapperAsfValueContext_t *marpaWrapperAsfValueContextp;
 
-  /* We look all visited parse trees and check if parentRuleiStackp matches */
-  for (i = 0; i < parentRuleiStackUsedi; i++) {
-    wantedRulei = GENERICSTACK_GET_INT(parentRuleiStackp, i);
-
-    if (! GENERICSTACK_IS_PTR(parseTreeStackp, i)) {
-      /* Cannot be: we start remembering at this indice in parseTreeStackp */
-      /* And this will be the next parse tree value indice (< 0 means a push) */
-      parseTreei = -1;
-      goto remember;
-    }
-    /* Per def indice i exist in parseTreeStackp */
-    ruleStackp = (genericStack_t *) GENERICSTACK_GET_PTR(parseTreeStackp, i);
-    ruleStackUsedi = GENERICSTACK_USED(ruleStackp);
-    parseTreei = -1;
-    for (j = 0; j < ruleStackUsedi; j++) {
-      if (wantedRulei == GENERICSTACK_GET_INT(ruleStackp, j)) {
-        /* This rule at this parse tree indice was visited */
-        parseTreei = j;
-        break;
-      }
-    }
-    if (parseTreei < 0) {
-      /* This rule was never visited */
-      goto remember;
-    }
-    /* The parse tree value indice parseTreei matches wantedRulei */
-    /* We want to know if have a match of remaining rules in parentRuleiStackUsedi at this same parse tree value indice */
-    if (i >= parentRuleiStackMaxi) {
-      /* Cannot be */
-      goto remember;
-    } else {
-      for (j = i+1; j < parentRuleiStackUsedi; j++) {
-        if (j > parseTreeStackMaxi) {
-          /* There are more entries in parentRuleiStackp than in parseTreeStackp */
-          goto remember;
-        }
-        wantedRulei = GENERICSTACK_GET_INT(parentRuleiStackp, j);
-
-        /* Per def indice j exist in parseTreeStackp */
-        ruleStackp = (genericStack_t *) GENERICSTACK_GET_PTR(parseTreeStackp, j);
-        if ((! GENERICSTACK_EXISTS(ruleStackp, parseTreei)) || (wantedRulei != GENERICSTACK_GET_INT(ruleStackp, parseTreei))) {
-          /* This rule was never visited at parse tree value indice parseTreei */
-          goto remember;
-        }
-      }
-      /* If we are here this mean that the whole parentRuleiStackp was already visited at parse tree value indice parseTreei */
-      /* Remains rulei itself -; */
-      if (j > parseTreeStackMaxi) {
-        goto remember;
-      }
-      /* Per def j is (parentRuleiStackUsedi + 1) */
-      ruleStackp = (genericStack_t *) GENERICSTACK_GET_PTR(parseTreeStackp, j);
-      if ((! GENERICSTACK_EXISTS(ruleStackp, parseTreei)) || (rulei != GENERICSTACK_GET_INT(ruleStackp, parseTreei))) {
-        /* The current rule was never visited at parse tree value indice parseTreei */
-        goto remember;
-      }
-      /* Found - so we reject */
-      rcb = -1;
-      goto done;
-    }
+  if (marpaWrapperAsfp == NULL) {
+    errno = EINVAL;
+    return 0;
   }
 
-  /* Not yet visited - accepted */
+  genericLoggerp = marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp;
+
+  if ((valueRuleCallbackp == NULL)   ||
+      (valueSymbolCallbackp == NULL) ||
+      (valueNullingCallbackp == NULL)) {
+    MARPAWRAPPER_ERROR(genericLoggerp, "All callback function pointers must be non-NULL");
+    errno = EINVAL;
+    goto err;
+  }
+  
+  marpaWrapperAsfValueContextp = (marpaWrapperAsfValueContext_t *) malloc(sizeof(marpaWrapperAsfValueContext_t));
+  if (marpaWrapperAsfValueContextp == NULL) {
+    MARPAWRAPPER_ERRORF(genericLoggerp, "malloc failure: %s", strerror(errno));
+    goto err;
+  }
+
+  marpaWrapperAsfValueContextp->marpaWrapperAsfp               = marpaWrapperAsfp;
+  marpaWrapperAsfValueContextp->userDatavp                     = userDatavp;
+  marpaWrapperAsfValueContextp->valueRuleCallbackp             = valueRuleCallbackp;
+  marpaWrapperAsfValueContextp->valueSymbolCallbackp           = valueSymbolCallbackp;
+  marpaWrapperAsfValueContextp->valueNullingCallbackp          = valueNullingCallbackp;
+  marpaWrapperAsfValueContextp->wantedOutputStacki             = 0;
+  marpaWrapperAsfValueContextp->leveli                         = 0;
+  marpaWrapperAsfValueContextp->firstb                         = 1;
+  marpaWrapperAsfValueContextp->stack0RuleIterationi           = 0;
+  marpaWrapperAsfValueContextp->stack0PreviousRuleIterationi   = 0;
+  marpaWrapperAsfValueContextp->previousNextStatePerlLevelp    = NULL;
+
+  GENERICSTACK_NEW(marpaWrapperAsfValueContextp->previousNextStatePerlLevelp);
+  if (GENERICSTACK_ERROR(marpaWrapperAsfValueContextp->previousNextStatePerlLevelp)) {
+    MARPAWRAPPER_ERRORF(genericLoggerp, "marpaWrapperAsfValueContextp->previousNextStatePerlLevelp initialization failure: %s", strerror(errno));
+    goto err;
+  }
+
+  goto done;
+
+ err:
+  marpaWrapperAsfValueContext_freev(marpaWrapperAsfValueContextp);
+  marpaWrapperAsfValueContextp = NULL;
+
+ done:
+  return marpaWrapperAsfValueContextp;
+}
+
+/****************************************************************************/
+short marpaWrapperAsfValueContext_valueb(marpaWrapperAsfValueContext_t *marpaWrapperAsfValueContextp)
+/****************************************************************************/
+{
+  MARPAWRAPPER_FUNCS(marpaWrapperAsf_valueb);
+  marpaWrapperAsf_t             *marpaWrapperAsfp;
+  genericLogger_t               *genericLoggerp;
+  short                          rcb;
+  marpaWrapperAsfValueContext_t  marpaWrapperAsfValueContext;
+  int                            valuei;
+
+  if (marpaWrapperAsfValueContextp == NULL) {
+    errno = EINVAL;
+    return -1;
+  }
+
+  marpaWrapperAsfp = marpaWrapperAsfValueContextp->marpaWrapperAsfp;
+  genericLoggerp = marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp;
+
+  rcb = marpaWrapperAsf_traverseb(marpaWrapperAsfp, _marpaWrapperAsf_valueTraverserb, marpaWrapperAsfValueContextp, &valuei);
+  if (rcb) {
+    if (valuei < 0) {
+      /* All alternatives were rejected */
+      goto err;
+    }
+  }
+  /* Prepare the next round */
+  marpaWrapperAsfValueContextp->wantedOutputStacki           = 0;
+  marpaWrapperAsfValueContextp->leveli                       = 0;
+  marpaWrapperAsfValueContextp->firstb                       = 0;
+  marpaWrapperAsfValueContextp->stack0PreviousRuleIterationi = marpaWrapperAsfValueContextp->stack0RuleIterationi;
+  marpaWrapperAsfValueContextp->stack0RuleIterationi         = 0;
   rcb = 1;
   goto done;
 
- remember:
-  /* We remember all visited rule starting at indice i in parseTreeStackp */
-  /* If parseTreei is < 0, we do a push, else we do a set */
-
  err:
-  GENERICSTACK_FREE(ruleStackp);
-  rcb = 0;
+  rcb = marpaWrapperAsfValueContextp->firstb ? 0 : -1;
 
  done:
+  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "return %d", (int) rcb);
   return rcb;
 }
 
 /****************************************************************************/
-static short _marpaWrapperAsf_valueOkRuleCallback(void *userDatavp, genericStack_t *parentRuleiStackp, int rulei, int arg0i, int argni)
+static inline short _marpaWrapperAsf_valueTraverserb(marpaWrapperAsfTraverser_t *traverserp, void *userDatavp, int *valueip)
+/****************************************************************************/
+/* Our traverser has the following semantics:                               */
+/* *valueip is the wanted indice in output stack.                           */
+/*                                                                          */
+/* It returns -1 if failure                                                 */
+/*             0 if the end                                                 */
+/*             1 if ok                                                      */
+/*                                                                          */
+/* We use same the logic as the pruned traverser to return a single value.  */
+/* The different is the starting point: each iteration is doing a replay to */
+/* get positionned exactly where we left previous one.                      */
 /****************************************************************************/
 {
-  return _marpaWrapperAsf_valueOkCallback((marpaWrapperAsfValueContext_t *) userDatavp, parentRuleiStackp, rulei);
+  MARPAWRAPPER_FUNCS(_marpaWrapperAsf_valueTraverserb);
+  marpaWrapperAsf_t                   *marpaWrapperAsfp                   = marpaWrapperAsf_traverse_asfp(traverserp);
+  genericLogger_t                     *genericLoggerp                     = marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp;
+  marpaWrapperAsfValueContext_t       *marpaWrapperAsfValueContextp       = (marpaWrapperAsfValueContext_t *) userDatavp;
+  marpaWrapperValueRuleCallback_t      valueRuleCallbackp                 = marpaWrapperAsfValueContextp->valueRuleCallbackp;
+  marpaWrapperValueSymbolCallback_t    valueSymbolCallbackp               = marpaWrapperAsfValueContextp->valueSymbolCallbackp;
+  marpaWrapperValueNullingCallback_t   valueNullingCallbackp              = marpaWrapperAsfValueContextp->valueNullingCallbackp;
+  int                                  wantedOutputStacki                 = marpaWrapperAsfValueContextp->wantedOutputStacki;
+  short                                rcb;
+  int                                  marpaRuleIdi;
+  int                                  marpaSymbolIdi;
+  int                                  rhvaluei;
+  int                                  rhlengthi;
+  int                                  tokenValuei;
+  int                                  lengthi;
+  int                                  rhIxi;
+  short                                nextb;
+  int                                  nbAlternativeOki;
+  int                                  arg0i;
+  int                                  argni;
+  int                                  localWantedOutputStacki;
+  int                                  i;
+  int                                  nexti;
+  short                                manageStack0RuleIterationb;
+
+  marpaWrapperAsfValueContextp->leveli++;
+
+  if (! marpaWrapperAsf_traverse_ruleIdb(traverserp, &marpaRuleIdi)) {
+    goto err;
+  }
+  if (! marpaWrapperAsf_traverse_symbolIdb(traverserp, &marpaSymbolIdi)) {
+    goto err;
+  }
+
+  MARPAWRAPPER_DEBUGF(genericLoggerp, "[%3d] Rule %d, symbol %d, wanted indice in the output stack: %d, stack0RuleIterationi/stack0PreviousRuleIterationi=%d/%d", marpaWrapperAsfValueContextp->leveli, marpaRuleIdi, marpaSymbolIdi, wantedOutputStacki, marpaWrapperAsfValueContextp->stack0RuleIterationi, marpaWrapperAsfValueContextp->stack0PreviousRuleIterationi);
+
+  if (marpaRuleIdi < 0) {
+    /* This is a token - we do not really mind if this is a rule with no rhs, or a nullable symbol */
+    manageStack0RuleIterationb = 0;
+
+    /* Get its value */
+    if (! marpaWrapperAsf_traverse_rh_valueb(traverserp, 0, &rhvaluei, &rhlengthi)) {
+      goto err;
+    }
+
+    /* marpaSymbolIdi is the symbol ID of either a the LHS rule with no RHS, or of a nulling symbol */
+    if (rhlengthi <= 0) {
+      /* Nulling token */
+      if (! valueNullingCallbackp(marpaWrapperAsfValueContextp->userDatavp, marpaSymbolIdi, wantedOutputStacki)) {
+        MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "Symbol No %d value nulling callback says failure", marpaSymbolIdi);
+        goto err;
+      }
+    } else {
+      /* Non-Nulling token. By definition this is a "lexeme", refering to input stack at indice tokenValuei. */
+      /* Marpa does not like when input stack start with 0, it is required (and documented) to always */
+      /* start with something non-meaninful at indice 0. Real values start at indice 1. */
+      tokenValuei = rhvaluei + 1;
+      if (! valueSymbolCallbackp(marpaWrapperAsfValueContextp->userDatavp, marpaSymbolIdi, tokenValuei, wantedOutputStacki)) {
+        MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "Symbol No %d value callback says failure", marpaSymbolIdi);
+        goto err;
+      }
+    }
+
+    /* A token act as a single alternative */
+    nbAlternativeOki = 1;
+  } else {
+    /* This is a rule */
+    if (wantedOutputStacki == 0) {
+      manageStack0RuleIterationb = 1;
+    }
+
+    nbAlternativeOki = 0;
+    while (1) {
+
+      if (wantedOutputStacki == 0) {
+        ++marpaWrapperAsfValueContextp->stack0RuleIterationi;
+      }
+
+      /* Rule length */
+      lengthi = marpaWrapperAsf_traverse_rh_lengthi(traverserp);
+      if (lengthi < 0) {
+        goto err;
+      }
+
+      /* Rule value */
+      for (rhIxi = 0, localWantedOutputStacki = wantedOutputStacki;
+           rhIxi < lengthi;
+           rhIxi++, localWantedOutputStacki++) {
+
+        marpaWrapperAsfValueContextp->wantedOutputStacki = localWantedOutputStacki;
+        if (! marpaWrapperAsf_traverse_rh_valueb(traverserp, rhIxi, &localWantedOutputStacki, NULL)) {
+          marpaWrapperAsfValueContextp->wantedOutputStacki = wantedOutputStacki;
+          goto err;
+        }
+
+        if (localWantedOutputStacki < 0) {
+          /* There is rejection below: go to next alternative */
+          MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "Rule No %d traversal is hitting a reject", marpaRuleIdi);
+          /* We do not change next free indice in the output stack so that user can free what is now a garbage */
+          marpaWrapperAsfValueContextp->wantedOutputStacki = wantedOutputStacki;
+          goto nextRule;
+        }
+      }
+      argni = --localWantedOutputStacki;
+      arg0i = argni - (lengthi - 1);
+
+      if (! marpaWrapperAsfValueContextp->firstb) {
+        /* Check if next state said to switch immediately to next iteration. We have to do this once and only at the deepest */
+        /* from previous iteration, and when this is possible */
+        if (marpaWrapperAsfValueContextp->stack0RuleIterationi >= marpaWrapperAsfValueContextp->stack0PreviousRuleIterationi) {
+          nextb = GENERICSTACK_GET_SHORT(marpaWrapperAsfValueContextp->previousNextStatePerlLevelp, marpaWrapperAsfValueContextp->leveli);
+          MARPAWRAPPER_DEBUGF(genericLoggerp, "At iteration %d, level %d, previous next state flag is %d", marpaWrapperAsfValueContextp->stack0RuleIterationi, marpaWrapperAsfValueContextp->leveli, (int) nextb);
+          if (nextb) {
+            /* Reset all next state flags */
+            /*
+            for (i = 0; i < GENERICSTACK_USED(marpaWrapperAsfValueContextp->previousNextStatePerlLevelp); i++) {
+              MARPAWRAPPER_DEBUGF(genericLoggerp, "At iteration %d, level %d, resetting previousNextStatePerlLevelp[%d]", marpaWrapperAsfValueContextp->stack0RuleIterationi, marpaWrapperAsfValueContextp->leveli, i);
+              GENERICSTACK_SET_SHORT(marpaWrapperAsfValueContextp->previousNextStatePerlLevelp, 0, i);
+              if (GENERICSTACK_ERROR(marpaWrapperAsfValueContextp->previousNextStatePerlLevelp)) {
+                MARPAWRAPPER_ERRORF(genericLoggerp, "marpaWrapperAsfValueContextp->previousNextStatePerlLevelp set failure, %s", strerror(errno));
+                goto err;
+              }
+            }
+            */
+            MARPAWRAPPER_DEBUGF(genericLoggerp, "At iteration %d, level %d, switching immediately to next iteration", marpaWrapperAsfValueContextp->stack0RuleIterationi, marpaWrapperAsfValueContextp->leveli);
+            goto nextRule;
+          }
+        }
+      }
+
+      if (! valueRuleCallbackp(marpaWrapperAsfValueContextp->userDatavp, marpaRuleIdi, arg0i, argni, wantedOutputStacki)) {
+        MARPAWRAPPER_ERRORF(genericLoggerp, "Rule No %d value callback failure", marpaSymbolIdi);
+        goto err;
+      }
+
+      /* Prune the number of accepted alternatives */
+      if (++nbAlternativeOki == 1) {
+	MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "Rule No %d value callback success: ignoring other alternatives", marpaSymbolIdi);
+        break;
+      }
+
+
+    nextRule:
+      /* Check for another alternative */
+      if (! marpaWrapperAsf_traverse_nextb(traverserp, &nextb)) {
+        goto err;
+      }
+      if (! nextb) {
+        break;
+      }
+      /* There is another alternative: get the ruleId */
+      if (! marpaWrapperAsf_traverse_ruleIdb(traverserp, &marpaRuleIdi)) {
+        goto err;
+      }
+    }
+
+  }
+
+  if (nbAlternativeOki < 0) {
+    /* All alternatives were rejected */
+    wantedOutputStacki = -1;
+  }
+  rcb = 1;
+  goto done;
+
+ reject:
+  /* Formally not an error, we indicate our caller this is a rejection */
+  rcb = 1;
+  wantedOutputStacki = -1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  if (rcb) {
+    if (valueip != NULL) {
+      *valueip = wantedOutputStacki;
+    }
+  }
+  if (manageStack0RuleIterationb) {
+    if (! marpaWrapperAsf_traverse_nextb(traverserp, &nextb)) {
+      goto err;
+    }
+    MARPAWRAPPER_DEBUGF(genericLoggerp, "At iteration %d, level %d, setting next state flag to %d before returning", marpaWrapperAsfValueContextp->stack0RuleIterationi, marpaWrapperAsfValueContextp->leveli, (int) nextb);
+    GENERICSTACK_SET_SHORT(marpaWrapperAsfValueContextp->previousNextStatePerlLevelp, nextb, marpaWrapperAsfValueContextp->leveli);
+    if (GENERICSTACK_ERROR(marpaWrapperAsfValueContextp->previousNextStatePerlLevelp)) {
+      MARPAWRAPPER_ERRORF(genericLoggerp, "marpaWrapperAsfValueContextp->previousNextStatePerlLevelp set failure, %s", strerror(errno));
+      goto err;
+    }
+  }
+
+#ifndef MARPAWRAPPER_NTRACE
+  if (rcb) {
+    MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "[%3d] return %d, *valueip=%d", marpaWrapperAsfValueContextp->leveli, (int) rcb, wantedOutputStacki);
+  } else {
+    MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "[%3d] return %d", marpaWrapperAsfValueContextp->leveli, (int) rcb);
+  }
+#endif
+  
+  marpaWrapperAsfValueContextp->leveli--;
+
+  return rcb;
 }
 
 /****************************************************************************/
-static short _marpaWrapperAsf_valueOkSymbolCallback(void *userDatavp, genericStack_t *parentRuleiStackp, int symboli, int argi)
+void marpaWrapperAsfValueContext_freev(marpaWrapperAsfValueContext_t *marpaWrapperAsfValueContextp)
 /****************************************************************************/
 {
-  return 1; /* We always accept any lexeme */
-}
-
-/****************************************************************************/
-static short _marpaWrapperAsf_valueOkNullingCallback(void *userDatavp, genericStack_t *parentRuleiStackp, int symboli)
-/****************************************************************************/
-{
-  return _marpaWrapperAsf_valueOkCallback((marpaWrapperAsfValueContext_t *) userDatavp, parentRuleiStackp, symboli /* This is a nulling rule */);
+  if (marpaWrapperAsfValueContextp != NULL) {
+    GENERICSTACK_FREE(marpaWrapperAsfValueContextp->previousNextStatePerlLevelp);
+    free(marpaWrapperAsfValueContextp);
+  }
 }
 
