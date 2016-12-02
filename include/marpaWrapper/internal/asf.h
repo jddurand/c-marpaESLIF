@@ -121,7 +121,7 @@ struct marpaWrapperAsfTraverser {
 
 /* Internal structure used for pruned valuation using the ASF */
 typedef struct marpaWrapperAsfPrunedValueContext {
-  /* Copy of the marpaWrapperAsf_valueb() parameters */
+  /* Copy of the marpaWrapperAsf_prunedValueb() parameters */
   void                                 *userDatavp;
   marpaWrapperAsfOkRuleCallback_t       okRuleCallbackp;
   marpaWrapperAsfOkSymbolCallback_t     okSymbolCallbackp;
@@ -138,18 +138,22 @@ typedef struct marpaWrapperAsfPrunedValueContext {
 } marpaWrapperAsfPrunedValueContext_t;
 
 /* Internal structure used for valuation using the ASF */
-typedef struct marpaWrapperAsfValueContext {
+struct marpaWrapperAsfValueContext {
   marpaWrapperAsf_t                    *marpaWrapperAsfp;
   /* Copy of the marpaWrapperAsf_valueb() parameters */
   void                                 *userDatavp;
-  marpaWrapperAsfOkRuleCallback_t       okRuleCallbackp;
-  marpaWrapperAsfOkSymbolCallback_t     okSymbolCallbackp;
-  marpaWrapperAsfOkNullingCallback_t    okNullingCallbackp;
   marpaWrapperValueRuleCallback_t       valueRuleCallbackp;
   marpaWrapperValueSymbolCallback_t     valueSymbolCallbackp;
   marpaWrapperValueNullingCallback_t    valueNullingCallbackp;
-  /* Remember visited parse trees */
-  genericStack_t                       *parseTreeStackp;
-} marpaWrapperAsfValueContext_t;
+  /* Current wanted indice in the output stack */
+  int                                   wantedOutputStacki;
+  /* For logging, keep track of recursivity level */
+  int                                   leveli;
+  /* We keep track of the the number of rule iterations when the output stack is the No 0 */
+  int                                   stack0RuleIterationi;
+  int                                   stack0PreviousRuleIterationi;
+  genericStack_t                       *previousNextStatePerlLevelp;
+  short                                 firstb;
+};
 
 #endif /* MARPAWRAPPER_INTERNAL_ASF_H */
