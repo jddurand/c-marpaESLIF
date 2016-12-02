@@ -7,8 +7,9 @@
 /***********************/
 /* Opaque object types */
 /***********************/
-typedef struct marpaWrapperAsf          marpaWrapperAsf_t;
-typedef struct marpaWrapperAsfTraverser marpaWrapperAsfTraverser_t;
+typedef struct marpaWrapperAsf             marpaWrapperAsf_t;
+typedef struct marpaWrapperAsfTraverser    marpaWrapperAsfTraverser_t;
+typedef struct marpaWrapperAsfValueContext marpaWrapperAsfValueContext_t;
 
 /* ------------------------------------------------------------- */
 /* Ok callbacks: they return 0 if failure, 1 if ok, -1 if reject */
@@ -55,11 +56,14 @@ extern "C" {
                                                                              marpaWrapperValueRuleCallback_t       valueRuleCallbackp,
                                                                              marpaWrapperValueSymbolCallback_t     valueSymbolCallbackp,
                                                                              marpaWrapperValueNullingCallback_t    valueNullingCallbackp);
-  marpaWrapper_EXPORT short                     marpaWrapperAsf_valueb(marpaWrapperAsf_t                 *marpaWrapperAsfp,
-                                                                       void                              *userDatavp,
-                                                                       marpaWrapperValueRuleCallback_t    ruleCallbackp,
-                                                                       marpaWrapperValueSymbolCallback_t  symbolCallbackp,
-                                                                       marpaWrapperValueNullingCallback_t nullingCallbackp);
+
+  marpaWrapper_EXPORT marpaWrapperAsfValueContext_t *marpaWrapperAsfValueContext_newp(marpaWrapperAsf_t                 *marpaWrapperAsfp,
+                                                                                      void                              *userDatavp,
+                                                                                      marpaWrapperValueRuleCallback_t    valueRuleCallbackp,
+                                                                                      marpaWrapperValueSymbolCallback_t  valueSymbolCallbackp,
+                                                                                      marpaWrapperValueNullingCallback_t valueNullingCallbackp);
+  marpaWrapper_EXPORT short                          marpaWrapperAsfValueContext_valueb(marpaWrapperAsfValueContext_t *marpaWrapperAsfValueContextp);
+  marpaWrapper_EXPORT void                           marpaWrapperAsfValueContext_freev(marpaWrapperAsfValueContext_t *marpaWrapperAsfValueContextp);
 #ifdef __cplusplus
 }
 #endif
