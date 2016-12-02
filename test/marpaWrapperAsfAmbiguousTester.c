@@ -405,6 +405,12 @@ static short valueRuleCallback(void *userDatavp, int rulei, int arg0i, int argni
   }
   p = tmp;
   strcat(p, ")");
+  if (GENERICSTACK_IS_PTR(traverseContextp->outputStackp, resulti)) {
+    char *olds = GENERICSTACK_GET_PTR(traverseContextp->outputStackp, resulti);
+    if (olds != NULL) {
+      free(olds);
+    }
+  }
   GENERICSTACK_SET_PTR(traverseContextp->outputStackp, p, resulti);
   if (GENERICSTACK_ERROR(traverseContextp->outputStackp)) {
     GENERICLOGGER_ERRORF(genericLoggerp, "[valueRuleCallback] outputStackp set failure, %s", strerror(errno));
@@ -461,6 +467,12 @@ static short valueSymbolCallback(void *userDatavp, int symboli, int argi, int re
   strcat(p, " ");
   strcat(p, s);
   strcat(p, ")");
+  if (GENERICSTACK_IS_PTR(traverseContextp->outputStackp, resulti)) {
+    char *olds = GENERICSTACK_GET_PTR(traverseContextp->outputStackp, resulti);
+    if (olds != NULL) {
+      free(olds);
+    }
+  }
   GENERICSTACK_SET_PTR(traverseContextp->outputStackp, p, resulti);
   if (GENERICSTACK_ERROR(traverseContextp->outputStackp)) {
     GENERICLOGGER_ERRORF(genericLoggerp, "[valueSymbolCallback] outputStackp set failure, %s", strerror(errno));
