@@ -150,10 +150,12 @@ struct marpaWrapperAsfValueContext {
   /* For logging, keep track of recursivity level */
   int                                   leveli;
   /* We keep track of the the number of rule iterations when the output stack is the No 0 */
-  int                                   stack0RuleIterationi;
-  int                                   stack0PreviousRuleIterationi;
-  genericStack_t                       *previousNextStatePerlLevelp;
+  int                                   indicei;
   short                                 firstb;
+  short                                 wantNextChoiceb;
+  short                                 gotNextChoiceb;
+  genericStack_t                       *consumedNextChoicesPerLevelStackp;
+  genericStack_t                       *haveNextChoicePerLevelStackp;
 };
 
 #endif /* MARPAWRAPPER_INTERNAL_ASF_H */

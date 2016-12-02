@@ -192,6 +192,26 @@ int main(int argc, char **argv) {
   /* Do the parse tree traverse */
   /* -------------------------- */
 
+  /* Full traverser (to be able to get a comparison) */
+  GENERICSTACK_NEW(traverseContext.outputStackp);
+  if (traverseContext.outputStackp == NULL) {
+    perror("GENERICSTACK_NEW");
+    exit(1);
+  }
+  if (marpaWrapperAsf_traverseb(marpaWrapperAsfp, full_traverserCallbacki, &traverseContext, &valuei)) {
+    genericStack_t *stringStackp;
+    int             i;
+    GENERICLOGGER_INFO(traverseContext.genericLoggerp, "full traverser returns:");
+
+    stringStackp = GENERICSTACK_GET_PTR(traverseContext.outputStackp, valuei);
+    for (i = 0; i < GENERICSTACK_USED(stringStackp); i++) {
+      GENERICLOGGER_INFOF(traverseContext.genericLoggerp, "Indice %d:\n%s", i, GENERICSTACK_GET_PTR(stringStackp, i));
+    }    
+  } else {
+    GENERICLOGGER_ERROR(traverseContext.genericLoggerp, "marpaWrapperAsf_traverseb failure");
+  }
+  freeStringArrayStackv(traverseContext.outputStackp);
+
   /* value traverser */
   traverseContext.marpaWrapperAsfp = marpaWrapperAsfp;
   marpaWrapperAsfValueContextp = marpaWrapperAsfValueContext_newp(marpaWrapperAsfp,
