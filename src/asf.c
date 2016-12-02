@@ -4025,7 +4025,7 @@ static inline short _marpaWrapperAsf_prunedValueTraverserb(marpaWrapperAsfTraver
     /* Check if it is ok: marpaSymbolIdi is the symbol ID of either a the LHS rule with no RHS, or of a nulling symbol */
     if (rhlengthi <= 0) {
       /* Nulling token */
-      rcb = okNullingCallbackp(marpaWrapperAsfPrunedValueContextp->userDatavp, marpaWrapperAsfPrunedValueContextp->parentRuleiStackp, marpaSymbolIdi);
+      rcb = okNullingCallbackp(marpaWrapperAsfPrunedValueContextp->userDatavp, parentRuleiStackp, marpaSymbolIdi);
       if (rcb < 0) {
         MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "Symbol No %d ok nulling callback says reject", marpaSymbolIdi);
         goto reject;
@@ -4042,7 +4042,7 @@ static inline short _marpaWrapperAsf_prunedValueTraverserb(marpaWrapperAsfTraver
       /* Marpa does not like when input stack start with 0, it is required (and documented) to always */
       /* start with something non-meaninful at indice 0. Real values start at indice 1. */
       tokenValuei = rhvaluei + 1;
-      rcb = okSymbolCallbackp(marpaWrapperAsfPrunedValueContextp->userDatavp, marpaWrapperAsfPrunedValueContextp->parentRuleiStackp, marpaSymbolIdi, tokenValuei);
+      rcb = okSymbolCallbackp(marpaWrapperAsfPrunedValueContextp->userDatavp, parentRuleiStackp, marpaSymbolIdi, tokenValuei);
       if (rcb < 0) {
         MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "Symbol No %d ok callback says reject", marpaSymbolIdi);
         goto reject;
@@ -4231,16 +4231,19 @@ int _marpaWrapperAsf_valueSparseArray_indi(void *userDatavp, genericStackItemTyp
 }
 
 /****************************************************************************/
-marpaWrapperAsfValueContext_t *marpaWrapperAsfValueContext_newp(marpaWrapperAsf_t                 *marpaWrapperAsfp,
-                                                                void                              *userDatavp,
-                                                                marpaWrapperValueRuleCallback_t    valueRuleCallbackp,
-                                                                marpaWrapperValueSymbolCallback_t  valueSymbolCallbackp,
-                                                                marpaWrapperValueNullingCallback_t valueNullingCallbackp)
+marpaWrapperAsfValue_t *marpaWrapperAsfValue_newp(marpaWrapperAsf_t                 *marpaWrapperAsfp,
+                                                  void                              *userDatavp,
+                                                  marpaWrapperAsfOkRuleCallback_t    okRuleCallbackp,
+                                                  marpaWrapperAsfOkSymbolCallback_t  okSymbolCallbackp,
+                                                  marpaWrapperAsfOkNullingCallback_t okNullingCallbackp,
+                                                  marpaWrapperValueRuleCallback_t    valueRuleCallbackp,
+                                                  marpaWrapperValueSymbolCallback_t  valueSymbolCallbackp,
+                                                  marpaWrapperValueNullingCallback_t valueNullingCallbackp)
 /****************************************************************************/
 {
-  MARPAWRAPPER_FUNCS(marpaWrapperAsfValueContext_newp);
-  genericLogger_t               *genericLoggerp;
-  marpaWrapperAsfValueContext_t *marpaWrapperAsfValueContextp;
+  MARPAWRAPPER_FUNCS(marpaWrapperAsfValue_newp);
+  genericLogger_t        *genericLoggerp;
+  marpaWrapperAsfValue_t *marpaWrapperAsfValuep;
 
   if (marpaWrapperAsfp == NULL) {
     errno = EINVAL;
@@ -4249,7 +4252,10 @@ marpaWrapperAsfValueContext_t *marpaWrapperAsfValueContext_newp(marpaWrapperAsf_
 
   genericLoggerp = marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp;
 
-  if ((valueRuleCallbackp == NULL)   ||
+  if ((okRuleCallbackp == NULL)      ||
+      (okSymbolCallbackp == NULL)    ||
+      (okNullingCallbackp == NULL)   ||
+      (valueRuleCallbackp == NULL)   ||
       (valueSymbolCallbackp == NULL) ||
       (valueNullingCallbackp == NULL)) {
     MARPAWRAPPER_ERROR(genericLoggerp, "All callback function pointers must be non-NULL");
@@ -4257,50 +4263,60 @@ marpaWrapperAsfValueContext_t *marpaWrapperAsfValueContext_newp(marpaWrapperAsf_
     goto err;
   }
   
-  marpaWrapperAsfValueContextp = (marpaWrapperAsfValueContext_t *) malloc(sizeof(marpaWrapperAsfValueContext_t));
-  if (marpaWrapperAsfValueContextp == NULL) {
+  marpaWrapperAsfValuep = (marpaWrapperAsfValue_t *) malloc(sizeof(marpaWrapperAsfValue_t));
+  if (marpaWrapperAsfValuep == NULL) {
     MARPAWRAPPER_ERRORF(genericLoggerp, "malloc failure: %s", strerror(errno));
     goto err;
   }
 
-  marpaWrapperAsfValueContextp->marpaWrapperAsfp                  = marpaWrapperAsfp;
-  marpaWrapperAsfValueContextp->userDatavp                        = userDatavp;
-  marpaWrapperAsfValueContextp->valueRuleCallbackp                = valueRuleCallbackp;
-  marpaWrapperAsfValueContextp->valueSymbolCallbackp              = valueSymbolCallbackp;
-  marpaWrapperAsfValueContextp->valueNullingCallbackp             = valueNullingCallbackp;
-  marpaWrapperAsfValueContextp->wantedOutputStacki                = 0;
-  marpaWrapperAsfValueContextp->leveli                            = 0;
-  marpaWrapperAsfValueContextp->firstb                            = 1;
-  marpaWrapperAsfValueContextp->indicei                           = -1;
-  marpaWrapperAsfValueContextp->wantNextChoiceb                   = 0;
-  marpaWrapperAsfValueContextp->gotNextChoiceb                    = 0;
-  marpaWrapperAsfValueContextp->consumedNextChoicesPerLevelStackp = NULL;
-  marpaWrapperAsfValueContextp->haveNextChoicePerLevelStackp      = NULL;
+  marpaWrapperAsfValuep->marpaWrapperAsfp                  = marpaWrapperAsfp;
+  marpaWrapperAsfValuep->userDatavp                        = userDatavp;
+  marpaWrapperAsfValuep->okRuleCallbackp                   = okRuleCallbackp;
+  marpaWrapperAsfValuep->okSymbolCallbackp                 = okSymbolCallbackp;
+  marpaWrapperAsfValuep->okNullingCallbackp                = okNullingCallbackp;
+  marpaWrapperAsfValuep->valueRuleCallbackp                = valueRuleCallbackp;
+  marpaWrapperAsfValuep->valueSymbolCallbackp              = valueSymbolCallbackp;
+  marpaWrapperAsfValuep->valueNullingCallbackp             = valueNullingCallbackp;
+  marpaWrapperAsfValuep->parentRuleiStackp                 = NULL;
+  marpaWrapperAsfValuep->wantedOutputStacki                = 0;
+  marpaWrapperAsfValuep->leveli                            = 0;
+  marpaWrapperAsfValuep->firstb                            = 1;
+  marpaWrapperAsfValuep->indicei                           = -1;
+  marpaWrapperAsfValuep->wantNextChoiceb                   = 0;
+  marpaWrapperAsfValuep->gotNextChoiceb                    = 0;
+  marpaWrapperAsfValuep->consumedNextChoicesPerLevelStackp = NULL;
+  marpaWrapperAsfValuep->haveNextChoicePerLevelStackp      = NULL;
 
-  GENERICSTACK_NEW(marpaWrapperAsfValueContextp->consumedNextChoicesPerLevelStackp);
-  if (GENERICSTACK_ERROR(marpaWrapperAsfValueContextp->consumedNextChoicesPerLevelStackp)) {
-    MARPAWRAPPER_ERRORF(genericLoggerp, "marpaWrapperAsfValueContextp->consumedNextChoicesPerLevelStackp initialization failure: %s", strerror(errno));
+  GENERICSTACK_NEW(marpaWrapperAsfValuep->parentRuleiStackp);
+  if (GENERICSTACK_ERROR(marpaWrapperAsfValuep->parentRuleiStackp)) {
+    MARPAWRAPPER_ERRORF(genericLoggerp, "marpaWrapperAsfValuep->parentRuleiStackp initialization failure, %s", strerror(errno));
     goto err;
   }
 
-  GENERICSTACK_NEW(marpaWrapperAsfValueContextp->haveNextChoicePerLevelStackp);
-  if (GENERICSTACK_ERROR(marpaWrapperAsfValueContextp->haveNextChoicePerLevelStackp)) {
-    MARPAWRAPPER_ERRORF(genericLoggerp, "marpaWrapperAsfValueContextp->haveNextChoicePerLevelStackp initialization failure: %s", strerror(errno));
+  GENERICSTACK_NEW(marpaWrapperAsfValuep->consumedNextChoicesPerLevelStackp);
+  if (GENERICSTACK_ERROR(marpaWrapperAsfValuep->consumedNextChoicesPerLevelStackp)) {
+    MARPAWRAPPER_ERRORF(genericLoggerp, "marpaWrapperAsfValuep->consumedNextChoicesPerLevelStackp initialization failure: %s", strerror(errno));
+    goto err;
+  }
+
+  GENERICSTACK_NEW(marpaWrapperAsfValuep->haveNextChoicePerLevelStackp);
+  if (GENERICSTACK_ERROR(marpaWrapperAsfValuep->haveNextChoicePerLevelStackp)) {
+    MARPAWRAPPER_ERRORF(genericLoggerp, "marpaWrapperAsfValuep->haveNextChoicePerLevelStackp initialization failure: %s", strerror(errno));
     goto err;
   }
 
   goto done;
 
  err:
-  marpaWrapperAsfValueContext_freev(marpaWrapperAsfValueContextp);
-  marpaWrapperAsfValueContextp = NULL;
+  marpaWrapperAsfValue_freev(marpaWrapperAsfValuep);
+  marpaWrapperAsfValuep = NULL;
 
  done:
-  return marpaWrapperAsfValueContextp;
+  return marpaWrapperAsfValuep;
 }
 
 /****************************************************************************/
-short marpaWrapperAsfValueContext_valueb(marpaWrapperAsfValueContext_t *marpaWrapperAsfValueContextp)
+short marpaWrapperAsfValue_valueb(marpaWrapperAsfValue_t *marpaWrapperAsfValuep)
 /****************************************************************************/
 {
   MARPAWRAPPER_FUNCS(marpaWrapperAsf_valueb);
@@ -4309,12 +4325,12 @@ short marpaWrapperAsfValueContext_valueb(marpaWrapperAsfValueContext_t *marpaWra
   short                          rcb;
   int                            valuei;
 
-  if (marpaWrapperAsfValueContextp == NULL) {
+  if (marpaWrapperAsfValuep == NULL) {
     errno = EINVAL;
     return -1;
   }
 
-  marpaWrapperAsfp = marpaWrapperAsfValueContextp->marpaWrapperAsfp;
+  marpaWrapperAsfp = marpaWrapperAsfValuep->marpaWrapperAsfp;
   genericLoggerp = marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp;
 
 #ifndef MARPAWRAPPER_NTRACE
@@ -4323,16 +4339,16 @@ short marpaWrapperAsfValueContext_valueb(marpaWrapperAsfValueContext_t *marpaWra
     MARPAWRAPPER_TRACE(genericLoggerp, funcs,"-------------------------");
     MARPAWRAPPER_TRACE(genericLoggerp, funcs,"Current state of choices:");
     MARPAWRAPPER_TRACE(genericLoggerp, funcs,"-------------------------");
-    for (i = 0; i < GENERICSTACK_USED(marpaWrapperAsfValueContextp->haveNextChoicePerLevelStackp); i++) {
-      if (GENERICSTACK_IS_SHORT(marpaWrapperAsfValueContextp->haveNextChoicePerLevelStackp, i)) {
-        MARPAWRAPPER_TRACEF(genericLoggerp, funcs,"haveNextChoicePerLevelStackp[%d]=%d", i, (int) GENERICSTACK_GET_SHORT(marpaWrapperAsfValueContextp->haveNextChoicePerLevelStackp, i));
+    for (i = 0; i < GENERICSTACK_USED(marpaWrapperAsfValuep->haveNextChoicePerLevelStackp); i++) {
+      if (GENERICSTACK_IS_SHORT(marpaWrapperAsfValuep->haveNextChoicePerLevelStackp, i)) {
+        MARPAWRAPPER_TRACEF(genericLoggerp, funcs,"haveNextChoicePerLevelStackp[%d]=%d", i, (int) GENERICSTACK_GET_SHORT(marpaWrapperAsfValuep->haveNextChoicePerLevelStackp, i));
       } else {
         MARPAWRAPPER_TRACEF(genericLoggerp, funcs,"haveNextChoicePerLevelStackp[%d]=NA", i);
       }
     }
-    for (i = 0; i < GENERICSTACK_USED(marpaWrapperAsfValueContextp->consumedNextChoicesPerLevelStackp); i++) {
-      if (GENERICSTACK_IS_INT(marpaWrapperAsfValueContextp->consumedNextChoicesPerLevelStackp, i)) {
-        MARPAWRAPPER_TRACEF(genericLoggerp, funcs,"consumedNextChoicesPerLevelStackp[%d]=%d", i, GENERICSTACK_GET_SHORT(marpaWrapperAsfValueContextp->consumedNextChoicesPerLevelStackp, i));
+    for (i = 0; i < GENERICSTACK_USED(marpaWrapperAsfValuep->consumedNextChoicesPerLevelStackp); i++) {
+      if (GENERICSTACK_IS_INT(marpaWrapperAsfValuep->consumedNextChoicesPerLevelStackp, i)) {
+        MARPAWRAPPER_TRACEF(genericLoggerp, funcs,"consumedNextChoicesPerLevelStackp[%d]=%d", i, GENERICSTACK_GET_SHORT(marpaWrapperAsfValuep->consumedNextChoicesPerLevelStackp, i));
       } else {
         MARPAWRAPPER_TRACEF(genericLoggerp, funcs,"consumedNextChoicesPerLevelStackp[%d]=NA", i);
       }
@@ -4340,7 +4356,7 @@ short marpaWrapperAsfValueContext_valueb(marpaWrapperAsfValueContext_t *marpaWra
   }
 #endif
   
-  rcb = marpaWrapperAsf_traverseb(marpaWrapperAsfp, _marpaWrapperAsf_valueTraverserb, marpaWrapperAsfValueContextp, &valuei);
+  rcb = marpaWrapperAsf_traverseb(marpaWrapperAsfp, _marpaWrapperAsf_valueTraverserb, marpaWrapperAsfValuep, &valuei);
   if (! rcb) {
     goto err;
   }
@@ -4349,17 +4365,17 @@ short marpaWrapperAsfValueContext_valueb(marpaWrapperAsfValueContext_t *marpaWra
     goto err;
   }
   /* Prepare the next round */
-  marpaWrapperAsfValueContextp->wantedOutputStacki              =  0;
-  marpaWrapperAsfValueContextp->leveli                          =  0;
-  marpaWrapperAsfValueContextp->firstb                          =  0;
-  marpaWrapperAsfValueContextp->indicei                         = -1;
-  marpaWrapperAsfValueContextp->wantNextChoiceb                 =  1;
-  marpaWrapperAsfValueContextp->gotNextChoiceb                  =  0;
+  marpaWrapperAsfValuep->wantedOutputStacki              =  0;
+  marpaWrapperAsfValuep->leveli                          =  0;
+  marpaWrapperAsfValuep->firstb                          =  0;
+  marpaWrapperAsfValuep->indicei                         = -1;
+  marpaWrapperAsfValuep->wantNextChoiceb                 =  1;
+  marpaWrapperAsfValuep->gotNextChoiceb                  =  0;
   rcb = 1;
   goto done;
 
  err:
-  rcb = marpaWrapperAsfValueContextp->firstb ? -1 /* Error */: 0 /* End */;
+  rcb = marpaWrapperAsfValuep->firstb ? -1 /* Error */: 0 /* End */;
 
  done:
   MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "return %d", (int) rcb);
@@ -4382,37 +4398,41 @@ static inline short _marpaWrapperAsf_valueTraverserb(marpaWrapperAsfTraverser_t 
 /****************************************************************************/
 {
   MARPAWRAPPER_FUNCS(_marpaWrapperAsf_valueTraverserb);
-  marpaWrapperAsf_t                   *marpaWrapperAsfp                   = marpaWrapperAsf_traverse_asfp(traverserp);
-  genericLogger_t                     *genericLoggerp                     = marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp;
-  marpaWrapperAsfValueContext_t       *marpaWrapperAsfValueContextp       = (marpaWrapperAsfValueContext_t *) userDatavp;
-  marpaWrapperValueRuleCallback_t      valueRuleCallbackp                 = marpaWrapperAsfValueContextp->valueRuleCallbackp;
-  marpaWrapperValueSymbolCallback_t    valueSymbolCallbackp               = marpaWrapperAsfValueContextp->valueSymbolCallbackp;
-  marpaWrapperValueNullingCallback_t   valueNullingCallbackp              = marpaWrapperAsfValueContextp->valueNullingCallbackp;
-  int                                  wantedOutputStacki                 = marpaWrapperAsfValueContextp->wantedOutputStacki;
-  short                                rcb;
-  int                                  marpaRuleIdi;
-  int                                  marpaSymbolIdi;
-  int                                  rhvaluei;
-  int                                  rhlengthi;
-  int                                  tokenValuei;
-  int                                  lengthi;
-  int                                  rhIxi;
-  short                                nextb;
-  int                                  nbAlternativeOki;
-  int                                  arg0i;
-  int                                  argni;
-  int                                  localWantedOutputStacki;
-  short                                manageNextChoiceb;
-  int                                  consumedNextChoicesi;
-  int                                  nextChoicei;
-  int                                  numberOfLevelsInStacki;
-  int                                  i;
-  short                                isDeepestLevelWithAChoiceb;
-  short                                haveLevelWithAChoiceb;
-  int                                  indicei;
+  marpaWrapperAsf_t                  *marpaWrapperAsfp      = marpaWrapperAsf_traverse_asfp(traverserp);
+  genericLogger_t                    *genericLoggerp        = marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp;
+  marpaWrapperAsfValue_t             *marpaWrapperAsfValuep = (marpaWrapperAsfValue_t *) userDatavp;
+  genericStack_t                     *parentRuleiStackp     = marpaWrapperAsfValuep->parentRuleiStackp;
+  marpaWrapperAsfOkRuleCallback_t     okRuleCallbackp       = marpaWrapperAsfValuep->okRuleCallbackp;
+  marpaWrapperAsfOkSymbolCallback_t   okSymbolCallbackp     = marpaWrapperAsfValuep->okSymbolCallbackp;
+  marpaWrapperAsfOkNullingCallback_t  okNullingCallbackp    = marpaWrapperAsfValuep->okNullingCallbackp;
+  marpaWrapperValueRuleCallback_t     valueRuleCallbackp    = marpaWrapperAsfValuep->valueRuleCallbackp;
+  marpaWrapperValueSymbolCallback_t   valueSymbolCallbackp  = marpaWrapperAsfValuep->valueSymbolCallbackp;
+  marpaWrapperValueNullingCallback_t  valueNullingCallbackp = marpaWrapperAsfValuep->valueNullingCallbackp;
+  int                                 wantedOutputStacki    = marpaWrapperAsfValuep->wantedOutputStacki;
+  short                               rcb;
+  int                                 marpaRuleIdi;
+  int                                 marpaSymbolIdi;
+  int                                 rhvaluei;
+  int                                 rhlengthi;
+  int                                 tokenValuei;
+  int                                 lengthi;
+  int                                 rhIxi;
+  short                               nextb;
+  int                                 nbAlternativeOki;
+  int                                 arg0i;
+  int                                 argni;
+  int                                 localWantedOutputStacki;
+  short                               manageNextChoiceb;
+  int                                 consumedNextChoicesi;
+  int                                 nextChoicei;
+  int                                 numberOfLevelsInStacki;
+  int                                 i;
+  short                               isDeepestLevelWithAChoiceb;
+  short                               haveLevelWithAChoiceb;
+  int                                 indicei;
 
-  marpaWrapperAsfValueContextp->leveli++;
-  indicei = ++marpaWrapperAsfValueContextp->indicei;
+  marpaWrapperAsfValuep->leveli++;
+  indicei = ++marpaWrapperAsfValuep->indicei;
 
   if (! marpaWrapperAsf_traverse_ruleIdb(traverserp, &marpaRuleIdi)) {
     goto err;
@@ -4421,7 +4441,7 @@ static inline short _marpaWrapperAsf_valueTraverserb(marpaWrapperAsfTraverser_t 
     goto err;
   }
 
-  MARPAWRAPPER_TRACEF(genericLoggerp, funcs,"[%3d][%3d] Rule %d, symbol %d, wanted indice in the output stack: %d", marpaWrapperAsfValueContextp->leveli, indicei, marpaRuleIdi, marpaSymbolIdi, wantedOutputStacki);
+  MARPAWRAPPER_TRACEF(genericLoggerp, funcs,"[%3d][%3d] Rule %d, symbol %d, wanted indice in the output stack: %d", marpaWrapperAsfValuep->leveli, indicei, marpaRuleIdi, marpaSymbolIdi, wantedOutputStacki);
 
   if (marpaRuleIdi < 0) {
     /* This is a token - we do not really mind if this is a rule with no rhs, or a nullable symbol */
@@ -4435,7 +4455,15 @@ static inline short _marpaWrapperAsf_valueTraverserb(marpaWrapperAsfTraverser_t 
     /* marpaSymbolIdi is the symbol ID of either a the LHS rule with no RHS, or of a nulling symbol */
     if (rhlengthi <= 0) {
       /* Nulling token */
-      if (! valueNullingCallbackp(marpaWrapperAsfValueContextp->userDatavp, marpaSymbolIdi, wantedOutputStacki)) {
+      rcb = okNullingCallbackp(marpaWrapperAsfValuep->userDatavp, marpaWrapperAsfValuep->parentRuleiStackp, marpaSymbolIdi);
+      if (rcb < 0) {
+        MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "Symbol No %d ok nulling callback says reject", marpaSymbolIdi);
+        goto reject;
+      } else if (rcb == 0) {
+        MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "Symbol No %d ok nulling callback says failure", marpaSymbolIdi);
+        goto err;
+      }
+      if (! valueNullingCallbackp(marpaWrapperAsfValuep->userDatavp, marpaSymbolIdi, wantedOutputStacki)) {
         MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "Symbol No %d value nulling callback says failure", marpaSymbolIdi);
         goto err;
       }
@@ -4444,7 +4472,15 @@ static inline short _marpaWrapperAsf_valueTraverserb(marpaWrapperAsfTraverser_t 
       /* Marpa does not like when input stack start with 0, it is required (and documented) to always */
       /* start with something non-meaninful at indice 0. Real values start at indice 1. */
       tokenValuei = rhvaluei + 1;
-      if (! valueSymbolCallbackp(marpaWrapperAsfValueContextp->userDatavp, marpaSymbolIdi, tokenValuei, wantedOutputStacki)) {
+      rcb = okSymbolCallbackp(marpaWrapperAsfValuep->userDatavp, marpaWrapperAsfValuep->parentRuleiStackp, marpaSymbolIdi, tokenValuei);
+      if (rcb < 0) {
+        MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "Symbol No %d ok callback says reject", marpaSymbolIdi);
+        goto reject;
+      } else if (rcb == 0) {
+        MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "Symbol No %d ok callback says failure", marpaSymbolIdi);
+        goto err;
+      }
+      if (! valueSymbolCallbackp(marpaWrapperAsfValuep->userDatavp, marpaSymbolIdi, tokenValuei, wantedOutputStacki)) {
         MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "Symbol No %d value callback says failure", marpaSymbolIdi);
         goto err;
       }
@@ -4454,14 +4490,21 @@ static inline short _marpaWrapperAsf_valueTraverserb(marpaWrapperAsfTraverser_t 
     nbAlternativeOki = 1;
   } else {
     /* This is a rule */
+
+    GENERICSTACK_PUSH_INT(parentRuleiStackp, marpaRuleIdi);
+    if (GENERICSTACK_ERROR(parentRuleiStackp)) {
+      MARPAWRAPPER_ERRORF(genericLoggerp, "parentRuleiStackp push failure, %s", strerror(errno));
+      goto err;
+    }
+    
     manageNextChoiceb    = 1;
     consumedNextChoicesi = 0;
 
     /* Look how far is this level */
-    if (GENERICSTACK_IS_INT(marpaWrapperAsfValueContextp->consumedNextChoicesPerLevelStackp, indicei)) {
-      consumedNextChoicesi = GENERICSTACK_GET_INT(marpaWrapperAsfValueContextp->consumedNextChoicesPerLevelStackp, indicei);
+    if (GENERICSTACK_IS_INT(marpaWrapperAsfValuep->consumedNextChoicesPerLevelStackp, indicei)) {
+      consumedNextChoicesi = GENERICSTACK_GET_INT(marpaWrapperAsfValuep->consumedNextChoicesPerLevelStackp, indicei);
       if (consumedNextChoicesi > 0) {
-        MARPAWRAPPER_TRACEF(genericLoggerp, funcs,"[%3d][%3d] ==> Consuming immediately %d choices", marpaWrapperAsfValueContextp->leveli, indicei, consumedNextChoicesi);
+        MARPAWRAPPER_TRACEF(genericLoggerp, funcs,"[%3d][%3d] ==> Consuming immediately %d choices", marpaWrapperAsfValuep->leveli, indicei, consumedNextChoicesi);
         for (nextChoicei = 1; nextChoicei <= consumedNextChoicesi; nextChoicei++) {
           /* Check for another alternative */
           if (! marpaWrapperAsf_traverse_nextb(traverserp, &nextb)) {
@@ -4469,38 +4512,38 @@ static inline short _marpaWrapperAsf_valueTraverserb(marpaWrapperAsfTraverser_t 
           }
           if (! nextb) {
             /* Impossible */
-            MARPAWRAPPER_ERRORF(genericLoggerp, "[%3d][%5d] ==> Tried to consume a choice that do not exist", marpaWrapperAsfValueContextp->leveli, indicei, marpaWrapperAsfValueContextp->leveli);
+            MARPAWRAPPER_ERRORF(genericLoggerp, "[%3d][%5d] ==> Tried to consume a choice that do not exist", marpaWrapperAsfValuep->leveli, indicei, marpaWrapperAsfValuep->leveli);
             goto err;
           }
         }
       }
     }
 
-    if (marpaWrapperAsfValueContextp->wantNextChoiceb) {
-      if (! marpaWrapperAsfValueContextp->gotNextChoiceb) {
-        if (GENERICSTACK_IS_SHORT(marpaWrapperAsfValueContextp->haveNextChoicePerLevelStackp, indicei) &&
-            GENERICSTACK_GET_SHORT(marpaWrapperAsfValueContextp->haveNextChoicePerLevelStackp, indicei)) {
+    if (marpaWrapperAsfValuep->wantNextChoiceb) {
+      if (! marpaWrapperAsfValuep->gotNextChoiceb) {
+        if (GENERICSTACK_IS_SHORT(marpaWrapperAsfValuep->haveNextChoicePerLevelStackp, indicei) &&
+            GENERICSTACK_GET_SHORT(marpaWrapperAsfValuep->haveNextChoicePerLevelStackp, indicei)) {
           /* We accept to get next choice at this iteration only if this is the deepest that give this possibility */
-          numberOfLevelsInStacki = GENERICSTACK_USED(marpaWrapperAsfValueContextp->haveNextChoicePerLevelStackp);
+          numberOfLevelsInStacki = GENERICSTACK_USED(marpaWrapperAsfValuep->haveNextChoicePerLevelStackp);
           isDeepestLevelWithAChoiceb = 1;
           for (i = indicei + 1; i < numberOfLevelsInStacki; i++) {
-            if (GENERICSTACK_IS_SHORT(marpaWrapperAsfValueContextp->haveNextChoicePerLevelStackp, i) &&
-                GENERICSTACK_GET_SHORT(marpaWrapperAsfValueContextp->haveNextChoicePerLevelStackp, i)) {
-              MARPAWRAPPER_TRACEF(genericLoggerp, funcs,"[%3d][%3d] ==> Not switching to next choice - another iteration can do so indice at %d", marpaWrapperAsfValueContextp->leveli, indicei, i);
+            if (GENERICSTACK_IS_SHORT(marpaWrapperAsfValuep->haveNextChoicePerLevelStackp, i) &&
+                GENERICSTACK_GET_SHORT(marpaWrapperAsfValuep->haveNextChoicePerLevelStackp, i)) {
+              MARPAWRAPPER_TRACEF(genericLoggerp, funcs,"[%3d][%3d] ==> Not switching to next choice - another iteration can do so indice at %d", marpaWrapperAsfValuep->leveli, indicei, i);
               isDeepestLevelWithAChoiceb = 0;
               break;
             }
           }
           if (isDeepestLevelWithAChoiceb) {
-            marpaWrapperAsfValueContextp->gotNextChoiceb = 1;
-            MARPAWRAPPER_TRACEF(genericLoggerp, funcs,"[%3d][%3d] ==> Getting next choice", marpaWrapperAsfValueContextp->leveli, indicei);
+            marpaWrapperAsfValuep->gotNextChoiceb = 1;
+            MARPAWRAPPER_TRACEF(genericLoggerp, funcs,"[%3d][%3d] ==> Getting next choice", marpaWrapperAsfValuep->leveli, indicei);
             /* We do not do the goto nextRule, because we want to verify that the prediction was correct */
             if (! marpaWrapperAsf_traverse_nextb(traverserp, &nextb)) {
               goto err;
             }
             if (! nextb) {
               /* Impossible */
-              MARPAWRAPPER_ERRORF(genericLoggerp, "[%3d][%3d] ==> Predicted next choice does not exist", marpaWrapperAsfValueContextp->leveli, indicei);
+              MARPAWRAPPER_ERRORF(genericLoggerp, "[%3d][%3d] ==> Predicted next choice does not exist", marpaWrapperAsfValuep->leveli, indicei);
               goto err;
             }
             if (! marpaWrapperAsf_traverse_ruleIdb(traverserp, &marpaRuleIdi)) {
@@ -4509,24 +4552,24 @@ static inline short _marpaWrapperAsf_valueTraverserb(marpaWrapperAsfTraverser_t 
             ++consumedNextChoicesi;
 
             /* This is invalidating all the further iteration numbers */
-            MARPAWRAPPER_TRACEF(genericLoggerp, funcs,"[%3d][%3d] ==> Invalidating any other setup after current indice", marpaWrapperAsfValueContextp->leveli, indicei);
-            GENERICSTACK_USED(marpaWrapperAsfValueContextp->haveNextChoicePerLevelStackp)      = indicei + 1;
-            GENERICSTACK_USED(marpaWrapperAsfValueContextp->consumedNextChoicesPerLevelStackp) = indicei + 1;
+            MARPAWRAPPER_TRACEF(genericLoggerp, funcs,"[%3d][%3d] ==> Invalidating any other setup after current indice", marpaWrapperAsfValuep->leveli, indicei);
+            GENERICSTACK_USED(marpaWrapperAsfValuep->haveNextChoicePerLevelStackp)      = indicei + 1;
+            GENERICSTACK_USED(marpaWrapperAsfValuep->consumedNextChoicesPerLevelStackp) = indicei + 1;
           }
         }
       }
-      if (! marpaWrapperAsfValueContextp->gotNextChoiceb) {
+      if (! marpaWrapperAsfValuep->gotNextChoiceb) {
         /* If we are here, this is an error ir no choice change is possible at any iteration */
         haveLevelWithAChoiceb = 0;
-        for (i = 0; i < GENERICSTACK_USED(marpaWrapperAsfValueContextp->haveNextChoicePerLevelStackp); i++) {
-          if (GENERICSTACK_IS_SHORT(marpaWrapperAsfValueContextp->haveNextChoicePerLevelStackp, i) &&
-              GENERICSTACK_GET_SHORT(marpaWrapperAsfValueContextp->haveNextChoicePerLevelStackp, i)) {
+        for (i = 0; i < GENERICSTACK_USED(marpaWrapperAsfValuep->haveNextChoicePerLevelStackp); i++) {
+          if (GENERICSTACK_IS_SHORT(marpaWrapperAsfValuep->haveNextChoicePerLevelStackp, i) &&
+              GENERICSTACK_GET_SHORT(marpaWrapperAsfValuep->haveNextChoicePerLevelStackp, i)) {
             haveLevelWithAChoiceb = 1;
             break;
           }
         }
         if (! haveLevelWithAChoiceb) {
-          MARPAWRAPPER_TRACEF(genericLoggerp, funcs,"[%3d][%3d] ==> No choice is available at any iteration - end of parse tree valuation", marpaWrapperAsfValueContextp->leveli, indicei);
+          MARPAWRAPPER_TRACEF(genericLoggerp, funcs,"[%3d][%3d] ==> No choice is available at any iteration - end of parse tree valuation", marpaWrapperAsfValuep->leveli, indicei);
           goto err;
         }
       }
@@ -4546,9 +4589,9 @@ static inline short _marpaWrapperAsf_valueTraverserb(marpaWrapperAsfTraverser_t 
            rhIxi < lengthi;
            rhIxi++, localWantedOutputStacki++) {
 
-        marpaWrapperAsfValueContextp->wantedOutputStacki = localWantedOutputStacki;
+        marpaWrapperAsfValuep->wantedOutputStacki = localWantedOutputStacki;
         if (! marpaWrapperAsf_traverse_rh_valueb(traverserp, rhIxi, &localWantedOutputStacki, NULL)) {
-          marpaWrapperAsfValueContextp->wantedOutputStacki = wantedOutputStacki;
+          marpaWrapperAsfValuep->wantedOutputStacki = wantedOutputStacki;
           goto err;
         }
 
@@ -4556,14 +4599,33 @@ static inline short _marpaWrapperAsf_valueTraverserb(marpaWrapperAsfTraverser_t 
           /* There is rejection below: go to next alternative */
           MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "Rule No %d traversal is hitting a reject", marpaRuleIdi);
           /* We do not change next free indice in the output stack so that user can free what is now a garbage */
-          marpaWrapperAsfValueContextp->wantedOutputStacki = wantedOutputStacki;
+          marpaWrapperAsfValuep->wantedOutputStacki = wantedOutputStacki;
           goto nextRule;
         }
       }
       argni = --localWantedOutputStacki;
       arg0i = argni - (lengthi - 1);
 
-      if (! valueRuleCallbackp(marpaWrapperAsfValueContextp->userDatavp, marpaRuleIdi, arg0i, argni, wantedOutputStacki)) {
+      GENERICSTACK_POP_INT(parentRuleiStackp);
+      if (GENERICSTACK_ERROR(parentRuleiStackp)) {
+        MARPAWRAPPER_ERRORF(genericLoggerp, "parentRuleiStackp pop failure, %s", strerror(errno));
+        goto err;
+      }
+
+      /* Check if it is ok */
+      rcb = okRuleCallbackp(marpaWrapperAsfValuep->userDatavp, marpaWrapperAsfValuep->parentRuleiStackp, marpaRuleIdi, arg0i, argni);
+      if (rcb < 0) {
+        MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "Rule No %d value callback says reject", marpaRuleIdi);
+	if (nbAlternativeOki == 0) {
+	  nbAlternativeOki = -1;
+	}
+        goto reject;
+      } else if (rcb == 0) {
+        MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "Rule No %d value callback says failure", marpaRuleIdi);
+        goto err;
+      }
+
+      if (! valueRuleCallbackp(marpaWrapperAsfValuep->userDatavp, marpaRuleIdi, arg0i, argni, wantedOutputStacki)) {
         MARPAWRAPPER_ERRORF(genericLoggerp, "Rule No %d value callback failure", marpaSymbolIdi);
         goto err;
       }
@@ -4598,6 +4660,12 @@ static inline short _marpaWrapperAsf_valueTraverserb(marpaWrapperAsfTraverser_t 
   rcb = 1;
   goto done;
 
+ reject:
+  /* Formally not an error, we indicate our caller this is a rejection */
+  rcb = 1;
+  wantedOutputStacki = -1;
+  goto done;
+
  err:
   rcb = 0;
 
@@ -4611,42 +4679,43 @@ static inline short _marpaWrapperAsf_valueTraverserb(marpaWrapperAsfTraverser_t 
     goto err;
   }
   if (manageNextChoiceb) {
-    GENERICSTACK_SET_SHORT(marpaWrapperAsfValueContextp->haveNextChoicePerLevelStackp, nextb, indicei);
-    if (GENERICSTACK_ERROR(marpaWrapperAsfValueContextp->haveNextChoicePerLevelStackp)) {
-      MARPAWRAPPER_ERRORF(genericLoggerp, "[%3d][%3d] ==> marpaWrapperAsfValueContextp->haveNextChoicePerLevelStackp set failure, %s", marpaWrapperAsfValueContextp->leveli, indicei, strerror(errno));
+    GENERICSTACK_SET_SHORT(marpaWrapperAsfValuep->haveNextChoicePerLevelStackp, nextb, indicei);
+    if (GENERICSTACK_ERROR(marpaWrapperAsfValuep->haveNextChoicePerLevelStackp)) {
+      MARPAWRAPPER_ERRORF(genericLoggerp, "[%3d][%3d] ==> marpaWrapperAsfValuep->haveNextChoicePerLevelStackp set failure, %s", marpaWrapperAsfValuep->leveli, indicei, strerror(errno));
       goto err;
     }
-    MARPAWRAPPER_TRACEF(genericLoggerp, funcs,"[%3d][%3d] ==> Setted have next choice flag to %d", marpaWrapperAsfValueContextp->leveli, indicei, (int) nextb);
+    MARPAWRAPPER_TRACEF(genericLoggerp, funcs,"[%3d][%3d] ==> Setted have next choice flag to %d", marpaWrapperAsfValuep->leveli, indicei, (int) nextb);
 
-    GENERICSTACK_SET_INT(marpaWrapperAsfValueContextp->consumedNextChoicesPerLevelStackp, consumedNextChoicesi, indicei);
-    if (GENERICSTACK_ERROR(marpaWrapperAsfValueContextp->consumedNextChoicesPerLevelStackp)) {
-      MARPAWRAPPER_ERRORF(genericLoggerp, "[%3d][%3d] ==> marpaWrapperAsfValueContextp->consumedNextChoicesPerLevelStackp set failure, %s", marpaWrapperAsfValueContextp->leveli, indicei, strerror(errno));
+    GENERICSTACK_SET_INT(marpaWrapperAsfValuep->consumedNextChoicesPerLevelStackp, consumedNextChoicesi, indicei);
+    if (GENERICSTACK_ERROR(marpaWrapperAsfValuep->consumedNextChoicesPerLevelStackp)) {
+      MARPAWRAPPER_ERRORF(genericLoggerp, "[%3d][%3d] ==> marpaWrapperAsfValuep->consumedNextChoicesPerLevelStackp set failure, %s", marpaWrapperAsfValuep->leveli, indicei, strerror(errno));
       goto err;
     }
-    MARPAWRAPPER_TRACEF(genericLoggerp, funcs,"[%3d][%3d] ==> Setted consumed next choices to %d", marpaWrapperAsfValueContextp->leveli, indicei, consumedNextChoicesi);
+    MARPAWRAPPER_TRACEF(genericLoggerp, funcs,"[%3d][%3d] ==> Setted consumed next choices to %d", marpaWrapperAsfValuep->leveli, indicei, consumedNextChoicesi);
   }
 
 #ifndef MARPAWRAPPER_NTRACE
   if (rcb) {
-    MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "[%3d][%3d] return %d, *valueip=%d", marpaWrapperAsfValueContextp->leveli, indicei, (int) rcb, wantedOutputStacki);
+    MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "[%3d][%3d] return %d, *valueip=%d", marpaWrapperAsfValuep->leveli, indicei, (int) rcb, wantedOutputStacki);
   } else {
-    MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "[%3d][%3d] return %d", marpaWrapperAsfValueContextp->leveli, indicei, (int) rcb);
+    MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "[%3d][%3d] return %d", marpaWrapperAsfValuep->leveli, indicei, (int) rcb);
   }
 #endif
   
-  marpaWrapperAsfValueContextp->leveli--;
+  marpaWrapperAsfValuep->leveli--;
 
   return rcb;
 }
 
 /****************************************************************************/
-void marpaWrapperAsfValueContext_freev(marpaWrapperAsfValueContext_t *marpaWrapperAsfValueContextp)
+void marpaWrapperAsfValue_freev(marpaWrapperAsfValue_t *marpaWrapperAsfValuep)
 /****************************************************************************/
 {
-  if (marpaWrapperAsfValueContextp != NULL) {
-    GENERICSTACK_FREE(marpaWrapperAsfValueContextp->consumedNextChoicesPerLevelStackp);
-    GENERICSTACK_FREE(marpaWrapperAsfValueContextp->haveNextChoicePerLevelStackp);
-    free(marpaWrapperAsfValueContextp);
+  if (marpaWrapperAsfValuep != NULL) {
+    GENERICSTACK_FREE(marpaWrapperAsfValuep->parentRuleiStackp);
+    GENERICSTACK_FREE(marpaWrapperAsfValuep->consumedNextChoicesPerLevelStackp);
+    GENERICSTACK_FREE(marpaWrapperAsfValuep->haveNextChoicePerLevelStackp);
+    free(marpaWrapperAsfValuep);
   }
 }
 

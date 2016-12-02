@@ -138,13 +138,19 @@ typedef struct marpaWrapperAsfPrunedValueContext {
 } marpaWrapperAsfPrunedValueContext_t;
 
 /* Internal structure used for valuation using the ASF */
-struct marpaWrapperAsfValueContext {
+/* The context is the marpaWrapperAsfValue itself */
+struct marpaWrapperAsfValue {
   marpaWrapperAsf_t                    *marpaWrapperAsfp;
   /* Copy of the marpaWrapperAsf_valueb() parameters */
   void                                 *userDatavp;
+  marpaWrapperAsfOkRuleCallback_t       okRuleCallbackp;
+  marpaWrapperAsfOkSymbolCallback_t     okSymbolCallbackp;
+  marpaWrapperAsfOkNullingCallback_t    okNullingCallbackp;
   marpaWrapperValueRuleCallback_t       valueRuleCallbackp;
   marpaWrapperValueSymbolCallback_t     valueSymbolCallbackp;
   marpaWrapperValueNullingCallback_t    valueNullingCallbackp;
+  /* Parent rule ID stack */
+  genericStack_t                       *parentRuleiStackp;
   /* Current wanted indice in the output stack */
   int                                   wantedOutputStacki;
   /* For logging, keep track of recursivity level */
