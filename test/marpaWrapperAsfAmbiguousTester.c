@@ -56,11 +56,11 @@ int main(int argc, char **argv) {
   int                           *symbolArrayp = NULL;
   int                            valuei;
   traverseContext_t              traverseContext = { NULL, symbolip, ruleip, NULL, NULL, GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_DEBUG) };
-  marpaWrapperAsfValueContext_t *marpaWrapperAsfValueContextp = NULL;
+  marpaWrapperAsfValue_t        *marpaWrapperAsfValuep = NULL;
   marpaWrapperGrammarOption_t    marpaWrapperGrammarOption    = { GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_DEBUG),
-								  0 /* warningIsErrorb */,
-								  0 /* warningIsIgnoredb */,
-								  0 /* autorankb */,
+                                                                  0 /* warningIsErrorb */,
+                                                                  0 /* warningIsIgnoredb */,
+                                                                  0 /* autorankb */,
   };
   marpaWrapperRecognizerOption_t marpaWrapperRecognizerOption = { GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_DEBUG),
 								  0, /* disableThresholdb */
@@ -214,12 +214,15 @@ int main(int argc, char **argv) {
 
   /* value traverser */
   traverseContext.marpaWrapperAsfp = marpaWrapperAsfp;
-  marpaWrapperAsfValueContextp = marpaWrapperAsfValueContext_newp(marpaWrapperAsfp,
-                                                                  &traverseContext,
-                                                                  valueRuleCallback,
-                                                                  valueSymbolCallback,
-                                                                  valueNullingCallback);
-  if (marpaWrapperAsfValueContextp == NULL) {
+  marpaWrapperAsfValuep = marpaWrapperAsfValue_newp(marpaWrapperAsfp,
+                                                    &traverseContext,
+                                                    okRuleCallback,
+                                                    okSymbolCallback,
+                                                    okNullingCallback,
+                                                    valueRuleCallback,
+                                                    valueSymbolCallback,
+                                                    valueNullingCallback);
+  if (marpaWrapperAsfValuep == NULL) {
     exit(1);
   }
   while (1) {
@@ -230,7 +233,7 @@ int main(int argc, char **argv) {
       perror("GENERICSTACK_NEW");
       exit(1);
     }
-    valueb = marpaWrapperAsfValueContext_valueb(marpaWrapperAsfValueContextp);
+    valueb = marpaWrapperAsfValue_valueb(marpaWrapperAsfValuep);
     if (valueb > 0) {
       GENERICLOGGER_INFOF(traverseContext.genericLoggerp, "value traverser returns:\n%s", GENERICSTACK_GET_PTR(traverseContext.outputStackp, 0));
     }
@@ -240,7 +243,7 @@ int main(int argc, char **argv) {
       break;
     }
   }
-  marpaWrapperAsfValueContext_freev(marpaWrapperAsfValueContextp);
+  marpaWrapperAsfValue_freev(marpaWrapperAsfValuep);
  
   if (marpaWrapperAsfp != NULL) {
     marpaWrapperAsf_freev(marpaWrapperAsfp);
