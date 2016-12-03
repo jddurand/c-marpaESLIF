@@ -77,7 +77,7 @@ int main() {
   marpaESLIFValue_t           *marpaESLIFValuep = NULL;
   short                        continueb;
   short                        exhaustedb;
-  const static char           *inputs = "abc 123:de@ @f";
+  const static char           *inputs = "{\"test\":\"1\"}";
   short                        rcValueb;
   char                        *pauses;
   size_t                       pausel;
