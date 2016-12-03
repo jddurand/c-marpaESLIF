@@ -211,7 +211,6 @@ static inline short                  _marpaESLIFValue_stack_is_doubleb(marpaESLI
 static inline short                  _marpaESLIFValue_stack_is_ptrb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, short *ptrbp);
 static inline short                  _marpaESLIFValue_stack_is_arrayb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, short *arraybp);
 static inline short                  _marpaESLIFValue_contextb(marpaESLIFValue_t *marpaESLIFValuep, int *grammarip, int *symbolip, int *ruleip);
-static        short                  _marpaESLIFValue_traverserb(marpaWrapperAsfTraverser_t *traverserp, void *userDatavp, int *valueip);
 static        short                  _marpaESLIFValue_okRuleCallbackWrapperb(void *userDatavp, genericStack_t *parentRuleiStackp, int rulei, int arg0i, int argni);
 static        short                  _marpaESLIFValue_okSymbolCallbackWrapperb(void *userDatavp, genericStack_t *parentRuleiStackp, int symboli, int argi);
 static        short                  _marpaESLIFValue_okNullingCallbackWrapperb(void *userDatavp, genericStack_t *parentRuleiStackp, int symboli);
@@ -5971,7 +5970,7 @@ short marpaESLIFValue_valueb(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFValu
 {
   static const char                *funcs                 = "marpaESLIFValue_valueb";
   marpaESLIFRecognizer_t           *marpaESLIFRecognizerp = marpaESLIFValuep->marpaESLIFRecognizerp;
-  int                               indicei               = 0;
+  static const int                  indicei               = 0;
   GENERICSTACKITEMTYPE2TYPE_ARRAY   array;
   short                             rcb;
   marpaESLIFValueResult_t           marpaESLIFValueResult;
@@ -5989,6 +5988,7 @@ short marpaESLIFValue_valueb(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFValu
     goto err;
   }
 
+  /* Logging is using recognizer's internal counters */
   if (marpaESLIFValuep->marpaWrapperValuep != NULL) {
     rcb = marpaWrapperValue_valueb(marpaESLIFValuep->marpaWrapperValuep,
                                    (void *) marpaESLIFValuep,
@@ -5996,35 +5996,15 @@ short marpaESLIFValue_valueb(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFValu
                                    _marpaESLIFValue_symbolCallbackWrapperb,
                                    _marpaESLIFValue_nullingCallbackWrapperb);
   } else {
-    if (! marpaESLIFValuep->marpaESLIFValueOption.ambiguousb) {
-      /* ASF have a built-in facility for pruning */
-      if (! marpaESLIFValuep->prunedValueDoneb) {
-        rcb = marpaWrapperAsf_prunedValueb(marpaESLIFValuep->marpaWrapperAsfp,
-                                           (void *) marpaESLIFValuep,
-                                           _marpaESLIFValue_okRuleCallbackWrapperb,
-                                           _marpaESLIFValue_okSymbolCallbackWrapperb,
-                                           _marpaESLIFValue_okNullingCallbackWrapperb,
-                                           _marpaESLIFValue_ruleCallbackWrapperb,
-                                           _marpaESLIFValue_symbolCallbackWrapperb,
-                                           _marpaESLIFValue_nullingCallbackWrapperb);
-        marpaESLIFValuep->prunedValueDoneb = 1;
-      } else {
-        /* No more parse value */
-        rcb = 0;
-      }
-    } else {
-      /* In non-ambiguous mode we have to maintain the traverser in our context */
-      marpaESLIFValuep->wantedOutputStacki = 0;
-      rcb = marpaWrapperAsf_traverseb(marpaESLIFValuep->marpaWrapperAsfp,
-                                      _marpaESLIFValue_traverserb,
+    marpaESLIFValuep->wantedOutputStacki = 0;
+    rcb = marpaWrapperAsfValue_valueb(marpaESLIFValuep->marpaWrapperAsfValuep,
                                       (void *) marpaESLIFValuep,
-                                      &indicei);
-      /* indicei will be marpaESLIFValuep->wantedOutputStacki in fact - we can cross check*/
-      if (indicei != 0) {
-        MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "indicei is %d, expected 0", indicei);
-        goto err;
-      }
-    }
+                                      _marpaESLIFValue_okRuleCallbackWrapperb,
+                                      _marpaESLIFValue_okSymbolCallbackWrapperb,
+                                      _marpaESLIFValue_okNullingCallbackWrapperb,
+                                      _marpaESLIFValue_ruleCallbackWrapperb,
+                                      _marpaESLIFValue_symbolCallbackWrapperb,
+                                      _marpaESLIFValue_nullingCallbackWrapperb);
   }
 
   if (rcb > 0) {
@@ -6160,7 +6140,7 @@ void marpaESLIFValue_freev(marpaESLIFValue_t *marpaESLIFValuep)
     /* Take care: last value is under the USER's responsibility */
     marpaESLIFRecognizer_t *marpaESLIFRecognizerp = marpaESLIFValuep->marpaESLIFRecognizerp;
     marpaWrapperValue_t    *marpaWrapperValuep    = marpaESLIFValuep->marpaWrapperValuep;
-    marpaWrapperAsf_t      *marpaWrapperAsfp      = marpaESLIFValuep->marpaWrapperAsfp;
+    marpaWrapperAsfValue_t *marpaWrapperAsfValuep = marpaESLIFValuep->marpaWrapperAsfValuep;
 
     MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
     MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
@@ -6168,8 +6148,8 @@ void marpaESLIFValue_freev(marpaESLIFValue_t *marpaESLIFValuep)
     if (marpaWrapperValuep != NULL) {
       marpaWrapperValue_freev(marpaWrapperValuep);
     }
-    if (marpaWrapperAsfp != NULL) {
-      marpaWrapperAsf_freev(marpaWrapperAsfp);
+    if (marpaWrapperAsfValuep != NULL) {
+      marpaWrapperAsfValue_freev(marpaWrapperAsfValuep);
     }
     /* The stacks should never be something different than NULL */
     /* The methods to use them are protected so that it is impossible */
@@ -9575,13 +9555,13 @@ static void _marpaESLIF_rule_freeCallbackv(void *userDatavp, int contexti, void 
 static inline marpaESLIFValue_t *_marpaESLIFValue_newp(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueOption_t *marpaESLIFValueOptionp, short fakeb)
 /*****************************************************************************/
 {
-  static const char        *funcs              = "marpaESLIFValue_newp";
-  marpaESLIF_t             *marpaESLIFp        = marpaESLIFRecognizerp->marpaESLIFp;
-  marpaESLIFGrammar_t      *marpaESLIFGrammarp = marpaESLIFRecognizerp->marpaESLIFGrammarp;
-  marpaESLIF_grammar_t     *grammarp           = marpaESLIFGrammarp->grammarp;
-  marpaESLIFValue_t        *marpaESLIFValuep   = NULL;
-  marpaWrapperValue_t      *marpaWrapperValuep = NULL;
-  marpaWrapperAsf_t        *marpaWrapperAsfp   = NULL;
+  static const char        *funcs                 = "marpaESLIFValue_newp";
+  marpaESLIF_t             *marpaESLIFp           = marpaESLIFRecognizerp->marpaESLIFp;
+  marpaESLIFGrammar_t      *marpaESLIFGrammarp    = marpaESLIFRecognizerp->marpaESLIFGrammarp;
+  marpaESLIF_grammar_t     *grammarp              = marpaESLIFGrammarp->grammarp;
+  marpaESLIFValue_t        *marpaESLIFValuep      = NULL;
+  marpaWrapperValue_t      *marpaWrapperValuep    = NULL;
+  marpaWrapperAsfValue_t   *marpaWrapperAsfValuep = NULL;
   marpaWrapperValueOption_t marpaWrapperValueOption;
   marpaWrapperAsfOption_t   marpaWrapperAsfOption;
 
@@ -9605,7 +9585,7 @@ static inline marpaESLIFValue_t *_marpaESLIFValue_newp(marpaESLIFRecognizer_t *m
   marpaESLIFValuep->marpaESLIFRecognizerp       = marpaESLIFRecognizerp;
   marpaESLIFValuep->marpaESLIFValueOption       = *marpaESLIFValueOptionp;
   marpaESLIFValuep->marpaWrapperValuep          = NULL;
-  marpaESLIFValuep->marpaWrapperAsfp            = NULL;
+  marpaESLIFValuep->marpaWrapperAsfValuep       = NULL;
   marpaESLIFValuep->previousPassWasPassthroughb = 0;
   marpaESLIFValuep->previousArg0i               = 0;
   marpaESLIFValuep->previousArgni               = 0;
@@ -9616,8 +9596,6 @@ static inline marpaESLIFValue_t *_marpaESLIFValue_newp(marpaESLIFRecognizer_t *m
   marpaESLIFValuep->symboli                     = -1;
   marpaESLIFValuep->rulei                       = -1;
   marpaESLIFValuep->grammari                    = -1;
-  marpaESLIFValuep->prunedValueDoneb            = 0;
-  marpaESLIFValuep->nonPrunedValueFirstb        = 1; /* We have to remember it this is the first iteration in the non-ambiguous ASF valuation mode */
   marpaESLIFValuep->wantedOutputStacki          = 0; /* Used on non-ambiguous ASF valuation */
 
   if (! fakeb) {
@@ -9627,11 +9605,11 @@ static inline marpaESLIFValue_t *_marpaESLIFValue_newp(marpaESLIFRecognizer_t *m
       marpaWrapperAsfOption.orderByRankb   = marpaESLIFValueOptionp->orderByRankb;
       marpaWrapperAsfOption.ambiguousb     = marpaESLIFValueOptionp->ambiguousb;
       marpaWrapperAsfOption.maxParsesi     = marpaESLIFValueOptionp->maxParsesi;
-      marpaWrapperAsfp = marpaWrapperAsf_newp(marpaESLIFRecognizerp->marpaWrapperRecognizerp, &marpaWrapperAsfOption);
-      if (marpaWrapperAsfp == NULL) {
+      marpaWrapperAsfValuep = marpaWrapperAsfValue_newp(marpaESLIFRecognizerp->marpaWrapperRecognizerp, &marpaWrapperAsfOption);
+      if (marpaWrapperAsfValuep == NULL) {
         goto err;
       }
-      marpaESLIFValuep->marpaWrapperAsfp = marpaWrapperAsfp;
+      marpaESLIFValuep->marpaWrapperAsfValuep = marpaWrapperAsfValuep;
     } else {
       marpaWrapperValueOption.genericLoggerp = marpaESLIFp->marpaESLIFOption.genericLoggerp;
       marpaWrapperValueOption.highRankOnlyb  = marpaESLIFValueOptionp->highRankOnlyb;
@@ -10342,113 +10320,6 @@ static short _marpaESLIFValue_okRuleCallbackWrapperb(void *userDatavp, genericSt
   rcb = 0;
 
  done:
-  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
-  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC;
-  return rcb;
-}
-
-/*****************************************************************************/
-static short _marpaESLIFValue_traverserb(marpaWrapperAsfTraverser_t *traverserp, void *userDatavp, int *valueip)
-/*****************************************************************************/
-{
-  static const char      *funcs                 = "_marpaESLIFValue_traverserb";
-  marpaESLIFValue_t      *marpaESLIFValuep      = (marpaESLIFValue_t *) userDatavp;
-  marpaESLIFRecognizer_t *marpaESLIFRecognizerp = marpaESLIFValue_recognizerp(marpaESLIFValuep);
-  int                     wantedOutputStacki    = marpaESLIFValuep->wantedOutputStacki;
-  short                   rcb;
-  int                     marpaRuleIdi;
-  int                     marpaSymbolIdi;
-  int                     rhvaluei;
-  int                     rhlengthi;
-  int                     tokenValuei;
-  int                     lengthi;
-  int                     rhIxi;
-  short                   nextb;
-  int                     arg0i;
-  int                     argni;
-  int                     localWantedOutputStacki;
-
-  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
-  MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
-
-  if (! marpaESLIFValuep->nonPrunedValueFirstb) {
-    /* We want first to ask the traverser for the next glade */
-    if (! marpaWrapperAsf_traverse_nextb(traverserp, &nextb)) {
-      goto err;
-    }
-    if (! nextb) {
-      /* No more parse tree value */
-      rcb = 0;
-      goto done;
-    }
-  }
-
-  /* Get rule and symbol context */
-  if (! marpaWrapperAsf_traverse_ruleIdb(traverserp, &marpaRuleIdi)) {
-    goto err;
-  }
-  if (! marpaWrapperAsf_traverse_symbolIdb(traverserp, &marpaSymbolIdi)) {
-    goto err;
-  }
-
-  if (marpaRuleIdi < 0) {
-    /* This is a token - we do not really mind if this is a rule with no rhs, or a nullable symbol */
-
-    /* Get its value */
-    if (! marpaWrapperAsf_traverse_rh_valueb(traverserp, 0, &rhvaluei, &rhlengthi)) {
-      goto err;
-    }
-
-    if (rhlengthi <= 0) {
-      /* Nulling symbol */
-      if (! _marpaESLIFValue_nullingCallbackWrapperb(userDatavp, marpaSymbolIdi, wantedOutputStacki)) {
-        goto err;
-      }
-    } else {
-      /* Non-Nulling token. By definition this is a "lexeme", refering to input stack at indice tokenValuei. */
-      tokenValuei = rhvaluei + 1;
-      if (! _marpaESLIFValue_symbolCallbackWrapperb(userDatavp, marpaSymbolIdi, tokenValuei, wantedOutputStacki)) {
-        goto err;
-      }
-    }
-
-  } else {
-    /* This is a rule */
-    
-    /* Rule length */
-    lengthi = marpaWrapperAsf_traverse_rh_lengthi(traverserp);
-    if (lengthi < 0) {
-      goto err;
-    }
-
-    /* Rule value */
-    for (rhIxi = 0, localWantedOutputStacki = wantedOutputStacki;
-         rhIxi < lengthi;
-         rhIxi++, localWantedOutputStacki++) {
-
-      marpaESLIFValuep->wantedOutputStacki = localWantedOutputStacki;
-      if (! marpaWrapperAsf_traverse_rh_valueb(traverserp, rhIxi, &localWantedOutputStacki, NULL)) {
-        marpaESLIFValuep->wantedOutputStacki = wantedOutputStacki;
-        goto err;
-      }
-
-    }
-    argni = --localWantedOutputStacki;
-    arg0i = argni - (lengthi - 1);
-
-    if (! _marpaESLIFValue_ruleCallbackWrapperb(userDatavp, marpaRuleIdi, arg0i, argni, wantedOutputStacki)) {
-      goto err;
-    }
-  }
-
-  rcb = 1;
-  goto done;
-
- err:
-  rcb = 0;
-
- done:
-  marpaESLIFValuep->nonPrunedValueFirstb = 0;
   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC;
   return rcb;

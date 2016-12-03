@@ -80,7 +80,7 @@ int main() {
   marpaESLIFValue_t           *marpaESLIFValuep = NULL;
   short                        continueb;
   short                        exhaustedb;
-  const static char           *inputs = "abc 123:de@ @f";
+  const static char           *inputs = "abc 123de@ @f";
   short                        rcValueb;
   int                          eventCounti = 0;
 
@@ -108,7 +108,6 @@ int main() {
   marpaESLIFGrammarOption.encodings           = "UTF-8";
   marpaESLIFGrammarOption.encodingl           = (marpaESLIFGrammarOption.encodings != NULL) ? strlen(marpaESLIFGrammarOption.encodings) : 0;
   marpaESLIFGrammarOption.encodingOfEncodings = "ASCII";
-  /* genericLogger_logLevel_seti(genericLoggerp, GENERICLOGGER_LOGLEVEL_TRACE); */
   marpaESLIFGrammarp = marpaESLIFGrammar_newp(marpaESLIFp, &marpaESLIFGrammarOption);
   /* genericLogger_logLevel_seti(genericLoggerp, GENERICLOGGER_LOGLEVEL_DEBUG); */
 
@@ -172,6 +171,7 @@ int main() {
   marpaESLIFValueOption.nullb                  = 0;
   marpaESLIFValueOption.maxParsesi             = 0;
 
+  genericLogger_logLevel_seti(genericLoggerp, GENERICLOGGER_LOGLEVEL_TRACE);
   marpaESLIFValuep = marpaESLIFValue_newp(marpaESLIFRecognizerp, &marpaESLIFValueOption);
   if (marpaESLIFValuep == NULL) {
     goto err;
