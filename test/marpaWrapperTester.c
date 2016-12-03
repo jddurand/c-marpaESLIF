@@ -23,13 +23,15 @@ static char *symbolDescription(void *userDatavp, int symboli);
 static short valueRuleCallback(void *userDatavp, int rulei, int arg0i, int argni, int resulti);
 static short valueSymbolCallback(void *userDatavp, int symboli, int argi, int resulti);
 static void  dumpStacks(char *modes, valueContext_t *valueContextp);
+static short grammarOptionSetter(void *userDatavp, marpaWrapperGrammarOption_t *marpaWrapperGrammarOptionp);
 static short symbolOptionSetter(void *userDatavp, int symboli, marpaWrapperGrammarSymbolOption_t *marpaWrapperGrammarSymbolOptionp);
 static short ruleOptionSetter(void *userDatavp, int symboli, marpaWrapperGrammarRuleOption_t *marpaWrapperGrammarRuleOptionp);
 static short okRuleCallback(void *userDatavp, genericStack_t *parentRuleiStackp, int rulei, int arg0i, int argni);
 static short okSymbolCallback(void *userDatavp, genericStack_t *parentRuleiStackp, int symboli, int argi);
 
 static marpaWrapperGrammarCloneOption_t marpaWrapperGrammarCloneOption = {
-  NULL,
+  NULL, /* userDatavp */
+  grammarOptionSetter,
   symbolOptionSetter,
   ruleOptionSetter,
 };
@@ -759,6 +761,15 @@ static void dumpStacks(char *modes, valueContext_t *valueContextp)
       }
     }
   }
+}
+
+/****************************************************************************/
+static short grammarOptionSetter(void *userDatavp, marpaWrapperGrammarOption_t *marpaWrapperGrammarOptionp)
+/****************************************************************************/
+{
+  genericLogger_t *genericLoggerp = (genericLogger_t *) userDatavp;
+  GENERICLOGGER_TRACE(genericLoggerp, "grammarOptionSetter clone callback");
+  return 1;
 }
 
 /****************************************************************************/

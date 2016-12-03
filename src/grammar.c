@@ -33,6 +33,7 @@ static marpaWrapperGrammarRuleOption_t marpaWrapperGrammarRuleOptionDefault = {
 
 static marpaWrapperGrammarCloneOption_t marpaWrapperGrammarCloneOptionDefault = {
   NULL, /* userDatavp */
+  NULL, /* genericLoggerSetterp */
   NULL, /* symbolOptionSetterp */
   NULL  /* ruleOptionSetterp */
 };
@@ -156,6 +157,7 @@ marpaWrapperGrammar_t *marpaWrapperGrammar_clonep(marpaWrapperGrammar_t *marpaWr
   int                               lhsSymboli;
   int                               ruleLengthi;
   int                               j;
+  marpaWrapperGrammarOption_t       marpaWrapperGrammarOption;
   marpaWrapperGrammarSymbolOption_t marpaWrapperGrammarSymbolOption;
   marpaWrapperGrammarRuleOption_t   marpaWrapperGrammarRuleOption;
 
@@ -171,7 +173,13 @@ marpaWrapperGrammar_t *marpaWrapperGrammar_clonep(marpaWrapperGrammar_t *marpaWr
   genericLoggerp = marpaWrapperGrammarOriginp->marpaWrapperGrammarOption.genericLoggerp;
 
   /* Create the grammar */
-  marpaWrapperGrammarp = marpaWrapperGrammar_newp(&(marpaWrapperGrammarOriginp->marpaWrapperGrammarOption));
+  marpaWrapperGrammarOption = marpaWrapperGrammarOriginp->marpaWrapperGrammarOption;
+  if (marpaWrapperGrammarCloneOptionp->grammarOptionSetterp != NULL) {
+    if (! marpaWrapperGrammarCloneOptionp->grammarOptionSetterp(marpaWrapperGrammarCloneOptionp->userDatavp, &marpaWrapperGrammarOption)) {
+      goto err;
+    }
+  }
+  marpaWrapperGrammarp = marpaWrapperGrammar_newp(&marpaWrapperGrammarOption);
   if (marpaWrapperGrammarp == NULL) {
     goto err;
   }
