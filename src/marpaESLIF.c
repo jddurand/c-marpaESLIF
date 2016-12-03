@@ -535,6 +535,8 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
       goto err;
     }
 
+    MARPAESLIF_HEXDUMPV(marpaESLIFRecognizerp, "String conversion to regexp for ", terminalp->descp->asciis, utf8s, utf8l, 1 /* traceb */);
+
     /* Please note that at the very very early startup, when we create marpaESLIFp, there is NO marpaESLIFp->anycharp yet! */
     /* But we will never crash because marpaESLIFp never create its internal terminals using the STRING type -; */
     while (inputl > 0) {
@@ -610,6 +612,8 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
             goto err;
           }
         }
+        MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "First character     is %c", (unsigned char) codepointi);
+        MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Last character must be %c", (unsigned char) lastcodepointi);
         continue;
       } else if (i == (GENERICSTACK_USED(marpaESLIFRecognizerp->lexemeInputStackp) - 1)) {
         /* Non-sense to not have the same value */
@@ -618,12 +622,12 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
           char *clever1s = (lastcodepointi == '}') ? "'" : "}";
           /* Note that we know that our regexp start and end with printable characters */
           if (isprint((unsigned char) codepointi)) {
-            MARPAESLIF_ERRORF(marpaESLIFp, "First and last characters to not correspond: %s%c%s (0%02lx) v.s. %s%c%s (0x%02lx) (wanted %s%c%s (0x%lx))",
+            MARPAESLIF_ERRORF(marpaESLIFp, "First and last characters to not correspond: %s%c%s (0x%02lx) v.s. %s%c%s (0x%02lx) (wanted %s%c%s (0x%lx))",
                               clever0s, (unsigned char) firstcodepointi, clever1s, (unsigned long) firstcodepointi,
                               clever0s, (unsigned char) codepointi, clever1s, (unsigned long) codepointi,
                               clever0s, (unsigned char) lastcodepointi, clever1s, (unsigned long) lastcodepointi);
           } else {
-            MARPAESLIF_ERRORF(marpaESLIFp, "First and last characters to not correspond: %s%c%s (0%02lx) v.s. 0x%02lx (wanted %s%c%s (0x%lx))",
+            MARPAESLIF_ERRORF(marpaESLIFp, "First and last characters to not correspond: %s%c%s (0x%02lx) v.s. 0x%02lx (wanted %s%c%s (0x%lx))",
                               clever0s, (unsigned char) firstcodepointi, clever1s, (unsigned long) firstcodepointi,
                               (unsigned long) codepointi,
                               clever0s, (unsigned char) lastcodepointi, clever1s, (unsigned long) lastcodepointi);
@@ -635,26 +639,41 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
         /* Backslash stuff */
         if (codepointi == '\\') {
           if (! backslashb) {
-            /* Next character is escaped. Only backslash itself or the first character is considered as per the regexp. */
+            /* Next character MAY BE escaped. Only backslash itself or the first character is considered as per the regexp. */
+            MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "Backslash character remembered");
             backslashb = 1;
             continue;
           } else {
             /* This is escaped backslash */
+            MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "Escaped backslash character accepted");
             backslashb = 0;
           }
-        } else if (codepointi == lastcodepointi) {
+        } else if ((codepointi == lastcodepointi) || (codepointi == '\\')) {
           if (! backslashb) {
-            /* This is a priori impossible to have the first character it is not preceeded by backslash */
-            MARPAESLIF_ERRORF(marpaESLIFp, "First character 0%02lx found but no preceeding backslash", (unsigned long) codepointi);
+            /* This is a priori impossible to not have the first or backslash character if it is not preceeded by backslash */
+            if (codepointi == lastcodepointi) {
+              MARPAESLIF_ERRORF(marpaESLIFp, "First character %c found but no preceeding backslash", (unsigned char) codepointi);
+            } else {
+              MARPAESLIF_ERROR(marpaESLIFp, "Backslash character found but no preceeding backslash");
+            }
             goto err;
           }
         } else {
+          if (backslashb) {
+            /* Here the backslash flag must not be true */
+            if (isprint((unsigned char) codepointi)) {
+              MARPAESLIF_ERRORF(marpaESLIFp, "Got character %c (0x%02lx) preceeded by backslash: in your string only backslash character (\\) or the string delimitor (%c) can be escaped", (unsigned char) codepointi, (unsigned long) codepointi, (unsigned char) firstcodepointi);
+            } else {
+              MARPAESLIF_ERRORF(marpaESLIFp, "Got character 0x%02lx (non printable) preceeded by backslash: in your string only backslash character (\\) or the string delimitor (%c) can be escaped", (unsigned long) codepointi, (unsigned char) firstcodepointi);
+            }
+            goto err;
+          }
           /* All is well */
 #ifndef MARPAESLIF_NTRACE
           if (isprint((unsigned char) codepointi)) {
-            MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Got character %c (0%02lx)", (unsigned char) codepointi, (unsigned long) codepointi);
+            MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Got character %c (0x%02lx)", (unsigned char) codepointi, (unsigned long) codepointi);
           } else {
-            MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Got character 0%02lx (non printable)", (unsigned char) codepointi, (unsigned long) codepointi);
+            MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Got character 0x%02lx (non printable)", (unsigned long) codepointi);
           }
 #endif
         }
@@ -729,7 +748,7 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
       }
     }
     /* Done - now we can generate a regexp out of that UTF-8 compatible string */
-    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s: content string converted to regex %s (UTF=%d)", terminalp->descp->asciis, strings, utfflagb);
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: content string converted to regex %s (UTF=%d)", terminalp->descp->asciis, strings, utfflagb);
     utf8s = strings;
     utf8l = stringl;
     /* opti for string is compatible with opti for regex - just that the lexer accept less options - in particular the UTF flag */
@@ -817,7 +836,7 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
           break;
         }
       }
-      MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s: regex content scanned and give UTF=%d", terminalp->descp->asciis, strings, utfflagb);
+      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: regex content scanned and give UTF=%d", terminalp->descp->asciis, strings, utfflagb);
       /* Detected the need of UTF flag in the regex ? */
       if (utfflagb) {
         pcre2Optioni |= PCRE2_UTF;
@@ -7717,6 +7736,7 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIFGrammar_t *marpaESL
         /* We know we made a 100% ASCII compatible pattern when the original type is STRING */
         MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " ");
         MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->u.terminalp->patterns);
+        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "\n");
       } else {
         /* We have to dump - this is an opaque UTF-8 pattern */
         MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "\n");
