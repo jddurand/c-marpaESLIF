@@ -10,6 +10,8 @@ static short                           default_meta_actionb(void *userDatavp, ma
 static short                           default_lexeme_actionb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *bytep, size_t bytel, int resulti);
 static short                           inputReaderb(void *userDatavp, char **inputsp, size_t *inputlp, short *eofbp, short *characterStreambp, char **encodingOfEncodingsp, char **encodingsp, size_t *encodinglp);
 static short                           eventManagerb(int *eventCountip, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, genericLogger_t *genericLoggerp);
+static void                            genericLoggerCallback(void *userDatavp, genericLoggerLevel_t logLeveli, const char *msgs);
+
 
 typedef struct marpaESLIFTester_context {
   genericLogger_t *genericLoggerp;
@@ -84,7 +86,7 @@ int main() {
   short                        rcValueb;
   int                          eventCounti = 0;
 
-  genericLoggerp = GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_DEBUG);
+  genericLoggerp = genericLogger_newp(genericLoggerCallback, NULL /* userDatavp */, GENERICLOGGER_LOGLEVEL_DEBUG);
 
   marpaESLIFOption.genericLoggerp = genericLoggerp;
   marpaESLIFp = marpaESLIF_newp(&marpaESLIFOption);
@@ -171,7 +173,7 @@ int main() {
   marpaESLIFValueOption.nullb                  = 0;
   marpaESLIFValueOption.maxParsesi             = 0;
 
-  genericLogger_logLevel_seti(genericLoggerp, GENERICLOGGER_LOGLEVEL_TRACE);
+  /* genericLogger_logLevel_seti(genericLoggerp, GENERICLOGGER_LOGLEVEL_TRACE); */
   marpaESLIFValuep = marpaESLIFValue_newp(marpaESLIFRecognizerp, &marpaESLIFValueOption);
   if (marpaESLIFValuep == NULL) {
     goto err;
@@ -401,4 +403,42 @@ static short eventManagerb(int *eventCountip, marpaESLIFRecognizer_t *marpaESLIF
 
  done:
   return rcb;
+}
+
+/*****************************************************************************/
+static void genericLoggerCallback(void *userDatavp, genericLoggerLevel_t logLeveli, const char *msgs)
+/*****************************************************************************/
+{
+  switch (logLeveli) {
+  case GENERICLOGGER_LOGLEVEL_TRACE:
+    fprintf(stdout, "<TRACE> %s\n", msgs); fflush(stdout);
+    break;
+  case GENERICLOGGER_LOGLEVEL_DEBUG:
+    fprintf(stdout, "<DEBUG> %s\n", msgs); fflush(stdout);
+    break;
+  case GENERICLOGGER_LOGLEVEL_INFO:
+    fprintf(stdout, "<INFO> %s\n", msgs); fflush(stdout);
+    break;
+  case GENERICLOGGER_LOGLEVEL_NOTICE:
+    fprintf(stdout, "<NOTICE> %s\n", msgs); fflush(stdout);
+    break;
+  case GENERICLOGGER_LOGLEVEL_WARNING:
+    fprintf(stdout, "<WARNING> %s\n", msgs); fflush(stdout);
+    break;
+  case GENERICLOGGER_LOGLEVEL_ERROR:
+    fprintf(stderr, "<ERROR> %s\n", msgs); fflush(stderr);
+    break;
+  case GENERICLOGGER_LOGLEVEL_CRITICAL:
+    fprintf(stdout, "<CRITICAL> %s\n", msgs); fflush(stdout);
+    break;
+  case GENERICLOGGER_LOGLEVEL_ALERT:
+    fprintf(stdout, "<ALERT %s\n", msgs); fflush(stdout);
+    break;
+  case GENERICLOGGER_LOGLEVEL_EMERGENCY:
+    fprintf(stdout, "<EMERGENCY> %s\n", msgs); fflush(stdout);
+    break;
+  default:
+    fprintf(stdout, "<UNKNOWN LEVEL> %s\n", msgs); fflush(stdout);
+    break;
+  }
 }
