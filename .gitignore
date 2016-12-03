@@ -31,6 +31,9 @@
 # Debug files
 *.dSYM/
 
+# Code::Blocks
+*.cbp
+
 # Cmake garbage
 CMakeCache.txt
 CMakeFiles/
