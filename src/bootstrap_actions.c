@@ -734,7 +734,7 @@ static inline short _marpaESLIF_bootstrap_unpack_adverbListItemStackb(marpaESLIF
     *pauseip = MARPAESLIF_BOOTSTRAP_PAUSE_TYPE_NA;
   }
   if (latmbp != NULL) {
-    *latmbp = 0;
+    *latmbp = 1; /* Default is TRUE! */
   }
   if (namingpp != NULL) {
     *namingpp = NULL;
