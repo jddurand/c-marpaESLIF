@@ -229,7 +229,7 @@ struct marpaESLIFValue {
   marpaESLIFRecognizer_t   *marpaESLIFRecognizerp;
   marpaESLIFValueOption_t   marpaESLIFValueOption;
   marpaWrapperValue_t      *marpaWrapperValuep;
-  marpaWrapperAsf_t        *marpaWrapperAsfp;
+  marpaWrapperAsfValue_t   *marpaWrapperAsfValuep;
   short                     previousPassWasPassthroughb;
   int                       previousArg0i;
   int                       previousArgni;
@@ -240,8 +240,6 @@ struct marpaESLIFValue {
   int                       symboli;
   int                       rulei;
   int                       grammari;
-  short                     prunedValueDoneb;
-  short                     nonPrunedValueFirstb;
   int                       wantedOutputStacki;
 };
 
