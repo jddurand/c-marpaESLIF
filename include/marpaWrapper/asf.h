@@ -51,7 +51,7 @@ extern "C" {
 
   /* Valuation method simulation */
   marpaWrapper_EXPORT marpaWrapperAsfValue_t *marpaWrapperAsfValue_newp(marpaWrapperRecognizer_t *marpaWrapperRecognizerp, marpaWrapperAsfOption_t *marpaWrapperAsfOptionp);
-  marpaWrapper_EXPORT short                   marpaWrapperAsfValue_valueb(marpaWrapperAsfValue_t *marpaWrapperAsfValuep,
+  marpaWrapper_EXPORT short                   marpaWrapperAsfValue_valueb(marpaWrapperAsfValue_t            *marpaWrapperAsfValuep,
                                                                           void                              *userDatavp,
                                                                           marpaWrapperAsfOkRuleCallback_t    okRuleCallbackp,
                                                                           marpaWrapperAsfOkSymbolCallback_t  okSymbolCallbackp,
