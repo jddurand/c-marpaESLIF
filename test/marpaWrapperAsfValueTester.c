@@ -236,14 +236,6 @@ int main(int argc, char **argv) {
   }
   freeStringArrayStackv(traverseContext.outputStackp);
 
-  /* Pruning value traverser */
-  traverseContext.marpaWrapperAsfp = marpaWrapperAsfp;
-  GENERICSTACK_NEW(traverseContext.outputStackp);
-  if (traverseContext.outputStackp == NULL) {
-    perror("GENERICSTACK_NEW");
-    exit(1);
-  }
-
   marpaWrapperAsf_freev(marpaWrapperAsfp);
   marpaWrapperRecognizer_freev(marpaWrapperRecognizerp);
   marpaWrapperGrammar_freev(marpaWrapperGrammarp);

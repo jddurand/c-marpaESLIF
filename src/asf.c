@@ -3859,15 +3859,7 @@ int _marpaWrapperAsf_valueSparseArray_indi(void *userDatavp, genericStackItemTyp
 }
 
 /****************************************************************************/
-marpaWrapperAsfValue_t *marpaWrapperAsfValue_newp(marpaWrapperRecognizer_t          *marpaWrapperRecognizerp,
-                                                  marpaWrapperAsfOption_t           *marpaWrapperAsfOptionp,
-                                                  void                              *userDatavp,
-                                                  marpaWrapperAsfOkRuleCallback_t    okRuleCallbackp,
-                                                  marpaWrapperAsfOkSymbolCallback_t  okSymbolCallbackp,
-                                                  marpaWrapperAsfOkNullingCallback_t okNullingCallbackp,
-                                                  marpaWrapperValueRuleCallback_t    valueRuleCallbackp,
-                                                  marpaWrapperValueSymbolCallback_t  valueSymbolCallbackp,
-                                                  marpaWrapperValueNullingCallback_t valueNullingCallbackp)
+marpaWrapperAsfValue_t *marpaWrapperAsfValue_newp(marpaWrapperRecognizer_t *marpaWrapperRecognizerp, marpaWrapperAsfOption_t *marpaWrapperAsfOptionp)
 /****************************************************************************/
 {
   MARPAWRAPPER_FUNCS(marpaWrapperAsfValue_newp);
@@ -3892,13 +3884,13 @@ marpaWrapperAsfValue_t *marpaWrapperAsfValue_newp(marpaWrapperRecognizer_t      
   marpaWrapperAsfValuep->marpaWrapperAsfp                  = marpaWrapperAsfp;
   marpaWrapperAsfValuep->traverserp                        = NULL;
   marpaWrapperAsfValuep->nParsesi                          = 0;
-  marpaWrapperAsfValuep->userDatavp                        = userDatavp;
-  marpaWrapperAsfValuep->okRuleCallbackp                   = okRuleCallbackp;
-  marpaWrapperAsfValuep->okSymbolCallbackp                 = okSymbolCallbackp;
-  marpaWrapperAsfValuep->okNullingCallbackp                = okNullingCallbackp;
-  marpaWrapperAsfValuep->valueRuleCallbackp                = valueRuleCallbackp;
-  marpaWrapperAsfValuep->valueSymbolCallbackp              = valueSymbolCallbackp;
-  marpaWrapperAsfValuep->valueNullingCallbackp             = valueNullingCallbackp;
+  marpaWrapperAsfValuep->userDatavp                        = NULL;
+  marpaWrapperAsfValuep->okRuleCallbackp                   = NULL;
+  marpaWrapperAsfValuep->okSymbolCallbackp                 = NULL;
+  marpaWrapperAsfValuep->okNullingCallbackp                = NULL;
+  marpaWrapperAsfValuep->valueRuleCallbackp                = NULL;
+  marpaWrapperAsfValuep->valueSymbolCallbackp              = NULL;
+  marpaWrapperAsfValuep->valueNullingCallbackp             = NULL;
   marpaWrapperAsfValuep->parentRuleiStackp                 = NULL;
   marpaWrapperAsfValuep->wantedOutputStacki                = 0;
   marpaWrapperAsfValuep->leveli                            = 0;
@@ -3938,7 +3930,14 @@ marpaWrapperAsfValue_t *marpaWrapperAsfValue_newp(marpaWrapperRecognizer_t      
 }
 
 /****************************************************************************/
-short marpaWrapperAsfValue_valueb(marpaWrapperAsfValue_t *marpaWrapperAsfValuep)
+short marpaWrapperAsfValue_valueb(marpaWrapperAsfValue_t *marpaWrapperAsfValuep,
+                                  void                              *userDatavp,
+                                  marpaWrapperAsfOkRuleCallback_t    okRuleCallbackp,
+                                  marpaWrapperAsfOkSymbolCallback_t  okSymbolCallbackp,
+                                  marpaWrapperAsfOkNullingCallback_t okNullingCallbackp,
+                                  marpaWrapperValueRuleCallback_t    valueRuleCallbackp,
+                                  marpaWrapperValueSymbolCallback_t  valueSymbolCallbackp,
+                                  marpaWrapperValueNullingCallback_t valueNullingCallbackp)
 /****************************************************************************/
 {
   MARPAWRAPPER_FUNCS(marpaWrapperAsf_valueb);
@@ -3954,6 +3953,14 @@ short marpaWrapperAsfValue_valueb(marpaWrapperAsfValue_t *marpaWrapperAsfValuep)
 
   marpaWrapperAsfp = marpaWrapperAsfValuep->marpaWrapperAsfp;
   genericLoggerp = marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp;
+
+  marpaWrapperAsfValuep->userDatavp                        = userDatavp;
+  marpaWrapperAsfValuep->okRuleCallbackp                   = okRuleCallbackp;
+  marpaWrapperAsfValuep->okSymbolCallbackp                 = okSymbolCallbackp;
+  marpaWrapperAsfValuep->okNullingCallbackp                = okNullingCallbackp;
+  marpaWrapperAsfValuep->valueRuleCallbackp                = valueRuleCallbackp;
+  marpaWrapperAsfValuep->valueSymbolCallbackp              = valueSymbolCallbackp;
+  marpaWrapperAsfValuep->valueNullingCallbackp             = valueNullingCallbackp;
 
 #ifndef MARPAWRAPPER_NTRACE
   {
@@ -3995,6 +4002,13 @@ short marpaWrapperAsfValue_valueb(marpaWrapperAsfValue_t *marpaWrapperAsfValuep)
 
   /* Prepare the next round */
   marpaWrapperAsfValuep->nParsesi++;
+  marpaWrapperAsfValuep->userDatavp                      = NULL;
+  marpaWrapperAsfValuep->okRuleCallbackp                 = NULL;
+  marpaWrapperAsfValuep->okSymbolCallbackp               = NULL;
+  marpaWrapperAsfValuep->okNullingCallbackp              = NULL;
+  marpaWrapperAsfValuep->valueRuleCallbackp              = NULL;
+  marpaWrapperAsfValuep->valueSymbolCallbackp            = NULL;
+  marpaWrapperAsfValuep->valueNullingCallbackp           = NULL;
   marpaWrapperAsfValuep->wantedOutputStacki              =  0;
   marpaWrapperAsfValuep->traverserp                      = NULL;
   marpaWrapperAsfValuep->leveli                          =  0;

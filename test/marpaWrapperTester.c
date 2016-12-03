@@ -395,16 +395,7 @@ int main(int argc, char **argv)
 
   /* Using ASF valuation */
   if (rci == 0) {
-    marpaWrapperAsfValuep = marpaWrapperAsfValue_newp(marpaWrapperRecognizerp,
-                                                      &marpaWrapperAsfOption,
-                                                      (void *) &valueContext,
-                                                      okRuleCallback,
-                                                      okSymbolCallback,
-                                                      NULL, /* okNullingCallbackp */
-                                                      valueRuleCallback,
-                                                      valueSymbolCallback,
-                                                      NULL /* nullingCallbackp */
-                                                      );
+    marpaWrapperAsfValuep = marpaWrapperAsfValue_newp(marpaWrapperRecognizerp, &marpaWrapperAsfOption);
     if (marpaWrapperAsfValuep == NULL) {
       rci = 1;
     }
@@ -413,7 +404,15 @@ int main(int argc, char **argv)
   if (rci == 0) {
     valueContext.marpaWrapperValuep    = NULL;
     valueContext.marpaWrapperAsfValuep = marpaWrapperAsfValuep;
-    while (marpaWrapperAsfValue_valueb(marpaWrapperAsfValuep) > 0) {
+    while (marpaWrapperAsfValue_valueb(marpaWrapperAsfValuep,
+                                       (void *) &valueContext,
+                                       okRuleCallback,
+                                       okSymbolCallback,
+                                       NULL, /* okNullingCallbackp */
+                                       valueRuleCallback,
+                                       valueSymbolCallback,
+                                       NULL /* nullingCallbackp */
+                                       ) > 0) {
       stackValueAndDescription_t *resultp = GENERICSTACK_GET_PTR(valueContext.outputStackp, 0);
       GENERICLOGGER_INFOF(valueContext.genericLoggerp, "[Asf value mode] %s => %d", resultp->s, resultp->i);
     }

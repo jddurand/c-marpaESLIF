@@ -17,4 +17,6 @@ script:
   - make check
   - ./output/lib/marpaWrapperTester
   - ./output/lib/marpaWrapperAsfTester
+  - ./output/lib/marpaWrapperAsfValueTester
+  - ./output/lib/marpaWrapperAsfAmbiguousTester
   - sudo make install
