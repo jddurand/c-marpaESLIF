@@ -6335,7 +6335,7 @@ static short _marpaESLIFValue_ruleCallbackWrapperb(void *userDatavp, int rulei, 
         ruleCallbackp = _marpaESLIF_rule_action___concatb;
       } else {
         if (ruleActionResolverp == NULL) {
-          MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "No rule action resolver");
+          MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "Cannot execute action \"%s\": no rule action resolver", actions);
           goto err;
         }
         ruleCallbackp = ruleActionResolverp(marpaESLIFValueOption.userDatavp, marpaESLIFValuep, actions);
