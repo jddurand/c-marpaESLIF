@@ -33,6 +33,7 @@
 
 # Code::Blocks
 *.cbp
+*.layout
 
 # Cmake garbage
 CMakeCache.txt

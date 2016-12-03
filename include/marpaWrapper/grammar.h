@@ -81,12 +81,15 @@ typedef enum marpaWrapperRuleProperty {
   MARPAWRAPPER_RULE_IS_PRODUCTIVE = 0x10
 } marpaWrapperRuleProperty_t;
 
+typedef short (*marpaWrapperGrammar_grammarOptionSetter_t)(void *userDatavp, marpaWrapperGrammarOption_t *marpaWrapperGrammarOptionp);
 typedef short (*marpaWrapperGrammar_symbolOptionSetter_t)(void *userDatavp, int symboli, marpaWrapperGrammarSymbolOption_t *marpaWrapperGrammarSymbolOptionp);
 typedef short (*marpaWrapperGrammar_ruleOptionSetter_t)(void *userDatavp, int rulei, marpaWrapperGrammarRuleOption_t *marpaWrapperGrammarRuleOptionp);
+
 typedef struct marpaWrapperGrammarCloneOption {
-  void                                    *userDatavp;          /* Default: NULL. User context */
-  marpaWrapperGrammar_symbolOptionSetter_t symbolOptionSetterp; /* Default: NULL. Overwrite event symbol option */
-  marpaWrapperGrammar_ruleOptionSetter_t   ruleOptionSetterp;   /* Default: NULL. Overwrite event rule option */
+  void                                      *userDatavp;           /* Default: NULL. User context */
+  marpaWrapperGrammar_grammarOptionSetter_t  grammarOptionSetterp; /* Default: NULL. Overwrite grammar option */
+  marpaWrapperGrammar_symbolOptionSetter_t   symbolOptionSetterp;  /* Default: NULL. Overwrite event symbol option */
+  marpaWrapperGrammar_ruleOptionSetter_t     ruleOptionSetterp;    /* Default: NULL. Overwrite event rule option */
 } marpaWrapperGrammarCloneOption_t;
 
 #ifdef __cplusplus

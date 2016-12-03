@@ -55,12 +55,15 @@ C<NULL> is returned in case of failure.
 
 =head2 marpaWrapperGrammar_clonep
 
+  typedef short (*marpaWrapperGrammar_grammarOptionSetter_t)(void *userDatavp, marpaWrapperGrammarOption_t *marpaWrapperGrammarOptionp);
   typedef short (*marpaWrapperGrammar_symbolOptionSetter_t)(void *userDatavp, int symboli, marpaWrapperGrammarSymbolOption_t *marpaWrapperGrammarSymbolOptionp);
   typedef short (*marpaWrapperGrammar_ruleOptionSetter_t)(void *userDatavp, int rulei, marpaWrapperGrammarRuleOption_t *marpaWrapperGrammarRuleOptionp);
+
   typedef struct marpaWrapperGrammarCloneOption {
-    void                                    *userDatavp;          /* Default: NULL. User context */
-    marpaWrapperGrammar_symbolOptionSetter_t symbolOptionSetterp; /* Default: NULL. Overwrite event symbol option */
-    marpaWrapperGrammar_ruleOptionSetter_t   ruleOptionSetterp;   /* Default: NULL. Overwrite event rule option */
+    void                                      *userDatavp;           /* Default: NULL. User context */
+    marpaWrapperGrammar_grammarOptionSetter_t  grammarOptionSetterp; /* Default: NULL. Overwrite grammar option */
+    marpaWrapperGrammar_symbolOptionSetter_t   symbolOptionSetterp;  /* Default: NULL. Overwrite event symbol option */
+    marpaWrapperGrammar_ruleOptionSetter_t     ruleOptionSetterp;    /* Default: NULL. Overwrite event rule option */
   } marpaWrapperGrammarCloneOption_t;
 
   marpaWrapperGrammar_t *marpaWrapperGrammar_clonep(marpaWrapperGrammar_t *marpaWrapperGrammarOriginp, marpaWrapperGrammarCloneOption_t *marpaWrapperGrammarCloneOptionp);
@@ -74,6 +77,10 @@ C<marpaWrapperGrammarCloneOptionp> content is:
 =item C<userDatavp>
 
 User context that will be used as-us within the callbacks.
+
+=item C<grammarOptionSetterp>
+
+Grammar option callback setter. If it is C<NULL>, grammar is clone with the same options as the original, otherwise C<marpaWrapperGrammarOptionp> is an input/output variable pointer containing the options of the grammar.
 
 =item C<symbolOptionSetterp>
 
