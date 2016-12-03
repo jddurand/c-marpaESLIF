@@ -793,36 +793,42 @@ If it returns a true value, then the indice in the user-space output stack of th
 
 Convenient method that returns the recognizer wrapper, C<NULL> if failure.
 
-=head2 marpaWrapperAsf_prunedValueb and marpaWrapperAsf_prunedValueb
+=head2 marpaWrapperAsf_genericLoggerp
+
+  short marpaWrapperAsf_genericLoggerp(marpaWrapperAsf_t *marpaWrapperAsfp, genericLogger_t **genericLoggerpp);
+
+Convenient method that returns the generic logger wrapper in the value pointed by C<genericLoggerpp>. Return a true value on success, a false value on failure .
+
+=head2 marpaWrapperAsfValue_newp
 
   typedef short (*marpaWrapperAsfOkRuleCallback_t)(void *userDatavp, genericStack_t *parentRuleiStackp, int rulei, int arg0i, int argni);
   typedef short (*marpaWrapperAsfOkSymbolCallback_t)(void *userDatavp, genericStack_t *parentRuleiStackp, int symboli, int argi);
   typedef short (*marpaWrapperAsfOkNullingCallback_t)(void *userDatavp, genericStack_t *parentRuleiStackp, int symboli);
 
-  short marpaWrapperAsf_prunedValueb(marpaWrapperAsf_t                    *marpaWrapperAsfp,
-                                     void                                 *userDatavp,
-                                     marpaWrapperAsfOkRuleCallback_t       okRuleCallbackp,
-                                     marpaWrapperAsfOkSymbolCallback_t     okSymbolCallbackp,
-                                     marpaWrapperAsfOkNullingCallback_t    okNullingCallbackp,
-                                     marpaWrapperValueRuleCallback_t       valueRuleCallbackp,
-                                     marpaWrapperValueSymbolCallback_t     valueSymbolCallbackp,
-                                     marpaWrapperValueNullingCallback_t    valueNullingCallbackp);
+  marpaWrapperAsfValue_t *marpaWrapperAsf_valueb(marpaWrapperAsf_t                    *marpaWrapperAsfp,
+                                                 void                                 *userDatavp,
+                                                 marpaWrapperAsfOkRuleCallback_t       okRuleCallbackp,
+                                                 marpaWrapperAsfOkSymbolCallback_t     okSymbolCallbackp,
+                                                 marpaWrapperAsfOkNullingCallback_t    okNullingCallbackp,
+                                                 marpaWrapperValueRuleCallback_t       valueRuleCallbackp,
+                                                 marpaWrapperValueSymbolCallback_t     valueSymbolCallbackp,
+                                                 marpaWrapperValueNullingCallback_t    valueNullingCallbackp);
 
-An example of how to use the ASF API. This method simulate the value namespace, by pruning the ASF to return a single value:
+This method instanciates a valuation opaque pointer that will allow the user to use the ASF and perform valuation, as if he was using a C<marpaWrapperValue_t> instance. The difference is that the user have the control on which rule or symbol is valid:
 
 =over
 
 =item C<okRuleCallackp>
 
-Return 0 in case of failure, a positive value if success, a negative value if reject. It is called for the rule number C<rule>. Context in terms of parent rule IDs is in <parentRuleiStackp>. C<rulei> is the rule number, C<arg0i> and C<argni> are the stack indices.
+Return 0 in case of failure, a positive value if success, a negative value if reject. Stack of parent rule IDs is in <parentRuleiStackp>. C<rulei> is the rule number, C<arg0i> and C<argni> are the stack indices.
 
 =item C<okSymbolCallackp>
 
-Return 0 in case of failure, a positive value if success, a negative value if reject. It is called for the symbol number C<symboli> and the input at indice C<argi> in the input stack. Context in terms of parent rule IDs is in <parentRuleiStackp>. C<symboli> is the symbol number, and C<argi> is the stack number.
+Return 0 in case of failure, a positive value if success, a negative value if reject. Stack of parent rule IDs is in <parentRuleiStackp>. C<symboli> is the symbol number, and C<argi> is the stack number.
 
 =item C<okNullingCallackp>
 
-Return 0 in case of failure, a positive value if success, a negative value if reject. It is called for the nulling symbol number C<symboli>, per def there is no associated input. Context in terms of parent rule IDs is in <parentRuleiStackp>. C<symboli> is the symbol number.
+Return 0 in case of failure, a positive value if success, a negative value if reject. Stack of parent rule IDs is in <parentRuleiStackp>. C<symboli> is the symbol number.
 
 =item C<valueRuleCallbackp>
 
@@ -837,23 +843,6 @@ Same semantic as for C<marpaWrapperValue_valueb>.
 Same semantic as for C<marpaWrapperValue_valueb>.
 
 =back
-
-Even if the ASF is instanciated with a false <ambiguousb> value, and the parse tree is ambiguous, it is then possible to get a single value from it. A typical usage of C<marpaWrapperAsf_prunedValueb> is a grammar that has a notion of I<exclusion>, e.g. EBNF.
-
-Returns a true value on success, a false value on failure. In case of success, the final result is always at the indice 0 of output stack.
-
-=head2 marpaWrapperAsfValue_newp
-
-  marpaWrapperAsfValue_t *marpaWrapperAsf_valueb(marpaWrapperAsf_t                    *marpaWrapperAsfp,
-                                                 void                                 *userDatavp,
-                                                 marpaWrapperAsfOkRuleCallback_t       okRuleCallbackp,
-                                                 marpaWrapperAsfOkSymbolCallback_t     okSymbolCallbackp,
-                                                 marpaWrapperAsfOkNullingCallback_t    okNullingCallbackp,
-                                                 marpaWrapperValueRuleCallback_t       valueRuleCallbackp,
-                                                 marpaWrapperValueSymbolCallback_t     valueSymbolCallbackp,
-                                                 marpaWrapperValueNullingCallback_t    valueNullingCallbackp);
-
-This method instanciates a valuation opaque pointer that will allow the user to use ASF as if it was a marpaWrapperValue instance. All parameters have exactly the same semantic as for marpaWrapperAsf_prunedValueb().
 
 C<NULL> is returned in case of failure.
 
