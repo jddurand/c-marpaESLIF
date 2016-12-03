@@ -51,7 +51,7 @@ const static char *dsl = "\n"
 "               | 'E+'\n"
 "               | 'E-'\n"
 "string       ::= lstring\n"
-":lexeme ::= lstring pause => before event => ^lstring\n"
+":lexeme ::= lstring pause => after event => lstring$\n"
 "lstring        ~ quote in_string quote\n"
 "quote          ~ [\"]\n"
 "in_string      ~ in_string_char*\n"
@@ -135,7 +135,7 @@ int main() {
   }
 
   /* Scan the input */
-  genericLogger_logLevel_seti(genericLoggerp, GENERICLOGGER_LOGLEVEL_TRACE);
+  /* genericLogger_logLevel_seti(genericLoggerp, GENERICLOGGER_LOGLEVEL_TRACE); */
   if (! marpaESLIFRecognizer_scanb(marpaESLIFRecognizerp, 1 /* initialEventsb */, &continueb, &exhaustedb)) {
     goto err;
   }
@@ -143,6 +143,7 @@ int main() {
   while (continueb) {
     /* We have a single event, no need to ask what it is */
     marpaESLIFRecognizer_pausev(marpaESLIFRecognizerp, &pauses, &pausel, NULL /* eofbp */);
+    GENERICLOGGER_TRACEF(genericLoggerp, "Got lstring: %s; length=%ld", pauses, pausel);
 
     /* Resume */
     if (! marpaESLIFRecognizer_resumeb(marpaESLIFRecognizerp, &continueb, &exhaustedb)) {
