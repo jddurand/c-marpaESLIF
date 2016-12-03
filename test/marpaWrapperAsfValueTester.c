@@ -243,34 +243,13 @@ int main(int argc, char **argv) {
     perror("GENERICSTACK_NEW");
     exit(1);
   }
-  if (marpaWrapperAsf_prunedValueb(marpaWrapperAsfp,
-				   &traverseContext,
-				   okRuleCallback,
-				   okSymbolCallback,
-				   okNullingCallback,
-				   valueRuleCallback,
-				   valueSymbolCallback,
-				   valueNullingCallback)) {
-    GENERICLOGGER_INFOF(traverseContext.genericLoggerp, "Pruned value traverser returns:\n%s", GENERICSTACK_GET_PTR(traverseContext.outputStackp, 0));
-  } else {
-    GENERICLOGGER_ERROR(traverseContext.genericLoggerp, "marpaWrapperAsf_prunedValueb failure");
-  }
-  freeStringStackv(traverseContext.outputStackp);
- 
-  if (marpaWrapperAsfp != NULL) {
-    marpaWrapperAsf_freev(marpaWrapperAsfp);
-  }
-  if (marpaWrapperRecognizerp != NULL) {
-    marpaWrapperRecognizer_freev(marpaWrapperRecognizerp);
-  }
+
+  marpaWrapperAsf_freev(marpaWrapperAsfp);
+  marpaWrapperRecognizer_freev(marpaWrapperRecognizerp);
+  marpaWrapperGrammar_freev(marpaWrapperGrammarp);
   GENERICLOGGER_FREE(marpaWrapperAsfOption.genericLoggerp);
   GENERICLOGGER_FREE(marpaWrapperRecognizerOption.genericLoggerp);
-
-  if (marpaWrapperGrammarp != NULL) {
-    marpaWrapperGrammar_freev(marpaWrapperGrammarp);
-  }
   GENERICLOGGER_FREE(marpaWrapperGrammarOption.genericLoggerp);
-
   GENERICLOGGER_FREE(traverseContext.genericLoggerp);
 
   /* Input stack has no inner PTR */

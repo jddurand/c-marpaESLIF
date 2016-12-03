@@ -47,16 +47,16 @@ enum { PAIR_RULE_01,
        MAX_RULE };
 
 int main(int argc, char **argv) {
-  marpaWrapperGrammar_t         *marpaWrapperGrammarp = NULL;
+  marpaWrapperGrammar_t         *marpaWrapperGrammarp    = NULL;
   marpaWrapperRecognizer_t      *marpaWrapperRecognizerp = NULL;
-  marpaWrapperAsf_t             *marpaWrapperAsfp = NULL;
+  marpaWrapperAsf_t             *marpaWrapperAsfp        = NULL;
+  marpaWrapperAsfValue_t        *marpaWrapperAsfValuep   = NULL;
   int                            symbolip[MAX_SYMBOL];
   int                            ruleip[MAX_RULE];
   int                            rci = 0;
   int                           *symbolArrayp = NULL;
   int                            valuei;
   traverseContext_t              traverseContext = { NULL, symbolip, ruleip, NULL, NULL, GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_DEBUG) };
-  marpaWrapperAsfValue_t        *marpaWrapperAsfValuep = NULL;
   marpaWrapperGrammarOption_t    marpaWrapperGrammarOption    = { GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_DEBUG),
                                                                   0 /* warningIsErrorb */,
                                                                   0 /* warningIsIgnoredb */,
@@ -181,13 +181,6 @@ int main(int argc, char **argv) {
     }
   }
 
-  if (rci == 0) {
-    marpaWrapperAsfp = marpaWrapperAsf_newp(marpaWrapperRecognizerp, &marpaWrapperAsfOption);
-    if (marpaWrapperAsfp == NULL) {
-      rci = 1;
-    }
-  }
-
   /* -------------------------- */
   /* Do the parse tree traverse */
   /* -------------------------- */
@@ -198,23 +191,32 @@ int main(int argc, char **argv) {
     perror("GENERICSTACK_NEW");
     exit(1);
   }
-  if (marpaWrapperAsf_traverseb(marpaWrapperAsfp, full_traverserCallbacki, &traverseContext, &valuei)) {
-    genericStack_t *stringStackp;
-    int             i;
-    GENERICLOGGER_INFO(traverseContext.genericLoggerp, "full traverser returns:");
-
-    stringStackp = GENERICSTACK_GET_PTR(traverseContext.outputStackp, valuei);
-    for (i = 0; i < GENERICSTACK_USED(stringStackp); i++) {
-      GENERICLOGGER_INFOF(traverseContext.genericLoggerp, "Indice %d:\n%s", i, GENERICSTACK_GET_PTR(stringStackp, i));
-    }    
-  } else {
-    GENERICLOGGER_ERROR(traverseContext.genericLoggerp, "marpaWrapperAsf_traverseb failure");
+  marpaWrapperAsfp = marpaWrapperAsf_newp(marpaWrapperRecognizerp, &marpaWrapperAsfOption);
+  if (marpaWrapperAsfp == NULL) {
+    rci = 1;
   }
-  freeStringArrayStackv(traverseContext.outputStackp);
+  if (rci == 0) {
+    if (marpaWrapperAsf_traverseb(marpaWrapperAsfp, full_traverserCallbacki, &traverseContext, &valuei)) {
+      genericStack_t *stringStackp;
+      int             i;
+      GENERICLOGGER_INFO(traverseContext.genericLoggerp, "full traverser returns:");
+
+      stringStackp = GENERICSTACK_GET_PTR(traverseContext.outputStackp, valuei);
+      for (i = 0; i < GENERICSTACK_USED(stringStackp); i++) {
+        GENERICLOGGER_INFOF(traverseContext.genericLoggerp, "Indice %d:\n%s", i, GENERICSTACK_GET_PTR(stringStackp, i));
+      }
+    } else {
+      GENERICLOGGER_ERROR(traverseContext.genericLoggerp, "marpaWrapperAsf_traverseb failure");
+    }
+    freeStringArrayStackv(traverseContext.outputStackp);
+    marpaWrapperAsf_freev(marpaWrapperAsfp);
+    marpaWrapperAsfp = NULL;
+  }
 
   /* value traverser */
   traverseContext.marpaWrapperAsfp = marpaWrapperAsfp;
-  marpaWrapperAsfValuep = marpaWrapperAsfValue_newp(marpaWrapperAsfp,
+  marpaWrapperAsfValuep = marpaWrapperAsfValue_newp(marpaWrapperRecognizerp,
+                                                    &marpaWrapperAsfOption,
                                                     &traverseContext,
                                                     okRuleCallback,
                                                     okSymbolCallback,
@@ -243,14 +245,10 @@ int main(int argc, char **argv) {
       break;
     }
   }
+
   marpaWrapperAsfValue_freev(marpaWrapperAsfValuep);
- 
-  if (marpaWrapperAsfp != NULL) {
-    marpaWrapperAsf_freev(marpaWrapperAsfp);
-  }
-  if (marpaWrapperRecognizerp != NULL) {
-    marpaWrapperRecognizer_freev(marpaWrapperRecognizerp);
-  }
+  marpaWrapperAsf_freev(marpaWrapperAsfp);
+  marpaWrapperRecognizer_freev(marpaWrapperRecognizerp);
   GENERICLOGGER_FREE(marpaWrapperAsfOption.genericLoggerp);
   GENERICLOGGER_FREE(marpaWrapperRecognizerOption.genericLoggerp);
 
