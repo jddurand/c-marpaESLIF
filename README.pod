@@ -687,7 +687,7 @@ Returns a true value value, a false value on failure.
 
   short marpaWrapperValue_value_lengthb(marpaWrapperValue_t *marpaWrapperValuep, int *lengthip);
 
-Get the Length Earleme Set Id in the value pointed by C<lengthip>, if it is not C<NULL>.
+Get the number of Earleme Set Ids in the value pointed by C<lengthip>, if it is not C<NULL>.
 
 This method will always fail if it is called outside of a value callback. This mean that you have to arrange to get C<marpaWrapperValuep> via the opaque context of the callbacks.
 
@@ -801,18 +801,24 @@ Convenient method that returns the generic logger wrapper in the value pointed b
 
 =head2 marpaWrapperAsfValue_newp
 
+  marpaWrapperAsfValue_t *marpaWrapperAsfValue_newp(marpaWrapperRecognizer_t *marpaWrapperRecognizerp, marpaWrapperAsfOption_t *marpaWrapperAsfOptionp);
+
+Instanciate a new valuator using the ASF. Returns C<NULL> on failure.
+
+=head2 marpaWrapperAsfValue_valueb
+
   typedef short (*marpaWrapperAsfOkRuleCallback_t)(void *userDatavp, genericStack_t *parentRuleiStackp, int rulei, int arg0i, int argni);
   typedef short (*marpaWrapperAsfOkSymbolCallback_t)(void *userDatavp, genericStack_t *parentRuleiStackp, int symboli, int argi);
   typedef short (*marpaWrapperAsfOkNullingCallback_t)(void *userDatavp, genericStack_t *parentRuleiStackp, int symboli);
 
-  marpaWrapperAsfValue_t *marpaWrapperAsf_valueb(marpaWrapperAsf_t                    *marpaWrapperAsfp,
-                                                 void                                 *userDatavp,
-                                                 marpaWrapperAsfOkRuleCallback_t       okRuleCallbackp,
-                                                 marpaWrapperAsfOkSymbolCallback_t     okSymbolCallbackp,
-                                                 marpaWrapperAsfOkNullingCallback_t    okNullingCallbackp,
-                                                 marpaWrapperValueRuleCallback_t       valueRuleCallbackp,
-                                                 marpaWrapperValueSymbolCallback_t     valueSymbolCallbackp,
-                                                 marpaWrapperValueNullingCallback_t    valueNullingCallbackp);
+  marpaWrapperAsfValue_t *marpaWrapperAsfValue_valueb(marpaWrapperAsfValue_t               *marpaWrapperAsfValuep,
+                                                      void                                 *userDatavp,
+                                                      marpaWrapperAsfOkRuleCallback_t       okRuleCallbackp,
+                                                      marpaWrapperAsfOkSymbolCallback_t     okSymbolCallbackp,
+                                                      marpaWrapperAsfOkNullingCallback_t    okNullingCallbackp,
+                                                      marpaWrapperValueRuleCallback_t       valueRuleCallbackp,
+                                                      marpaWrapperValueSymbolCallback_t     valueSymbolCallbackp,
+                                                      marpaWrapperValueNullingCallback_t    valueNullingCallbackp);
 
 This method instanciates a valuation opaque pointer that will allow the user to use the ASF and perform valuation, as if he was using a C<marpaWrapperValue_t> instance. The difference is that the user have the control on which rule or symbol is valid:
 
@@ -850,7 +856,27 @@ C<NULL> is returned in case of failure.
 
   short marpaWrapperAsfValue_valueb(marpaWrapperAsfValue_t *marpaWrapperAsfValuep);
 
-Another example of how to use the ASF API. This method simulate the marpaWrapperValue_valueb() behaviour, but using the ASF, i.e. it returns -1 on failure, 0 when there is no more parse value, and 1 on success.
+An example of how to use the ASF API. This method simulate the marpaWrapperValue_valueb() behaviour, but using the ASF, i.e. it returns -1 on failure, 0 when there is no more parse value, and 1 on success.
+
+=head2 marpaWrapperAsfValue_value_startb
+
+  short marpaWrapperAsfValue_value_startb(marpaWrapperAsfValue_t *marpaWrapperAsfValuep, int *startip);
+
+Get the Start Earleme Set Id in the value pointed by C<startip>, if it is not C<NULL>.
+
+This method will always fail if it is called outside of an ASF callback. This mean that you have to arrange to get C<marpaWrapperAsfValuep> via the opaque context of the callbacks.
+
+Returns a true value value, a false value on failure.
+
+=head2 marpaWrapperAsfValue_value_lengthb
+
+  short marpaWrapperAsfValue_value_lengthb(marpaWrapperAsfValue_t *marpaWrapperAsfValuep, int *lengthip);
+
+Get the number of Earleme Set Ids in the value pointed by C<lengthip>, if it is not C<NULL>.
+
+This method will always fail if it is called outside of an ASF callback. This mean that you have to arrange to get C<marpaWrapperAsfValuep> via the opaque context of the callbacks.
+
+Returns a true value value, a false value on failure.
 
 =head2 marpaWrapperAsfValue_freev
 
