@@ -3822,6 +3822,10 @@ static void _marpaWrapperAsf_dumpintsetHashpv(marpaWrapperAsf_t *marpaWrapperAsf
   int               *idip;
   int                nInRowi;
 
+  if (intsetHashp == NULL) {
+    return;
+  }
+
   for (i = 0; i < GENERICSTACK_USED(intsetHashp->keyStackp); i++) {
     genericStack_t *subStackp;
 
