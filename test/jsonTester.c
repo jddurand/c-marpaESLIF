@@ -73,14 +73,92 @@ int main() {
   marpaESLIFTester_context_t   marpaESLIFTester_context;
   marpaESLIFRecognizerOption_t marpaESLIFRecognizerOption;
   marpaESLIFRecognizer_t      *marpaESLIFRecognizerp = NULL;
-  marpaESLIFValueOption_t      marpaESLIFValueOption;
-  marpaESLIFValue_t           *marpaESLIFValuep = NULL;
   short                        continueb;
   short                        exhaustedb;
-  const static char           *inputs = "{\"test\":\"1\"}";
-  short                        rcValueb;
+  int                          i;
   char                        *pauses;
   size_t                       pausel;
+  const static char           *inputs[] = {
+    "{\"test\":\"1\"}",
+    "{\"test\":[1,2,3]}",
+    "{\"test\":true}",
+    "{\"test\":false}",
+    "{\"test\":null}",
+    "{\"test\":null, \"test2\":\"hello world\"}",
+    "{\"test\":\"1.25\"}",
+    "{\"test\":\"1.25e4\"}",
+    "[]",
+    "[\n"
+    "  {\n"
+    "     \"precision\": \"zip\",\n"
+    "     \"Latitude\":  37.7668,\n"
+    "     \"Longitude\": -122.3959,\n"
+    "     \"Address\":   \"\",\n"
+    "     \"City\":      \"SAN FRANCISCO\",\n"
+    "     \"State\":     \"CA\",\n"
+    "     \"Zip\":       \"94107\",\n"
+    "     \"Country\":   \"US\"\n"
+    "  },\n"
+    "  {\n"
+    "     \"precision\": \"zip\",\n"
+    "     \"Latitude\":  37.371991,\n"
+    "     \"Longitude\": -122.026020,\n"
+    "     \"Address\":   \"\",\n"
+    "     \"City\":      \"SUNNYVALE\",\n"
+    "     \"State\":     \"CA\",\n"
+    "     \"Zip\":       \"94085\",\n"
+    "     \"Country\":   \"US\"\n"
+    "  }\n"
+    "]",
+    "{\n"
+    "  \"Image\": {\n"
+    "    \"Width\":  800,\n"
+    "    \"Height\": 600,\n"
+    "    \"Title\":  \"View from 15th Floor\",\n"
+    "    \"Thumbnail\": {\n"
+    "        \"Url\":    \"http://www.example.com/image/481989943\",\n"
+    "        \"Height\": 125,\n"
+    "        \"Width\":  \"100\"\n"
+    "    },\n"
+    "    \"IDs\": [116, 943, 234, 38793]\n"
+    "  }\n"
+    "}",
+    "{\n"
+    "  \"source\" : \"<a href=\\\"http://janetter.net/\\\" rel=\\\"nofollow\\\">Janetter</a>\",\n"
+    "  \"entities\" : {\n"
+    "      \"user_mentions\" : [ {\n"
+    "              \"name\" : \"James Governor\",\n"
+    "              \"screen_name\" : \"moankchips\",\n"
+    "              \"indices\" : [ 0, 10 ],\n"
+    "              \"id_str\" : \"61233\",\n"
+    "              \"id\" : 61233\n"
+    "          } ],\n"
+    "      \"media\" : [ ],\n"
+    "      \"hashtags\" : [ ],\n"
+    "     \"urls\" : [ ]\n"
+    "  },\n"
+    "  \"in_reply_to_status_id_str\" : \"281400879465238529\",\n"
+    "  \"geo\" : {\n"
+    "  },\n"
+    "  \"id_str\" : \"281405942321532929\",\n"
+    "  \"in_reply_to_user_id\" : 61233,\n"
+    "  \"text\" : \"@monkchips Ouch. Some regrets are harsher than others.\",\n"
+    "  \"id\" : 281405942321532929,\n"
+    "  \"in_reply_to_status_id\" : 281400879465238529,\n"
+    "  \"created_at\" : \"Wed Dec 19 14:29:39 +0000 2012\",\n"
+    "  \"in_reply_to_screen_name\" : \"monkchips\",\n"
+    "  \"in_reply_to_user_id_str\" : \"61233\",\n"
+    "  \"user\" : {\n"
+    "      \"name\" : \"Sarah Bourne\",\n"
+    "      \"screen_name\" : \"sarahebourne\",\n"
+    "      \"protected\" : false,\n"
+    "      \"id_str\" : \"16010789\",\n"
+    "      \"profile_image_url_https\" : \"https://si0.twimg.com/profile_images/638441870/Snapshot-of-sb_normal.jpg\",\n"
+    "      \"id\" : 16010789,\n"
+    "     \"verified\" : false\n"
+    "  }\n"
+    "}"
+  };
 
   genericLoggerp = GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_DEBUG);
   if (genericLoggerp == NULL) {
@@ -116,60 +194,45 @@ int main() {
     }
   }
 
-  marpaESLIFTester_context.genericLoggerp = genericLoggerp;
-  marpaESLIFTester_context.inputs         = (char *) inputs;
-  marpaESLIFTester_context.inputl         = strlen(inputs);
+  for (i = 0; i < (sizeof(inputs)/sizeof(inputs[0])); i++) {
+    marpaESLIFTester_context.genericLoggerp = genericLoggerp;
+    marpaESLIFTester_context.inputs         = (char *) inputs[i];
+    marpaESLIFTester_context.inputl         = strlen(inputs[i]);
 
-  marpaESLIFRecognizerOption.userDatavp                = &marpaESLIFTester_context;
-  marpaESLIFRecognizerOption.marpaESLIFReaderCallbackp = inputReaderb;
-  marpaESLIFRecognizerOption.disableThresholdb         = 0;
-  marpaESLIFRecognizerOption.exhaustedb                = 0;
-  marpaESLIFRecognizerOption.newlineb                  = 1;
-  marpaESLIFRecognizerOption.bufsizl                   = 0;
-  marpaESLIFRecognizerOption.buftriggerperci           = 50;
-  marpaESLIFRecognizerOption.bufaddperci               = 50;
+    marpaESLIFRecognizerOption.userDatavp                = &marpaESLIFTester_context;
+    marpaESLIFRecognizerOption.marpaESLIFReaderCallbackp = inputReaderb;
+    marpaESLIFRecognizerOption.disableThresholdb         = 0;
+    marpaESLIFRecognizerOption.exhaustedb                = 0;
+    marpaESLIFRecognizerOption.newlineb                  = 1;
+    marpaESLIFRecognizerOption.bufsizl                   = 0;
+    marpaESLIFRecognizerOption.buftriggerperci           = 50;
+    marpaESLIFRecognizerOption.bufaddperci               = 50;
 
-  marpaESLIFRecognizerp = marpaESLIFRecognizer_newp(marpaESLIFGrammarp, &marpaESLIFRecognizerOption);
-  if (marpaESLIFRecognizerp == NULL) {
-    goto err;
-  }
-
-  /* Scan the input */
-  /* genericLogger_logLevel_seti(genericLoggerp, GENERICLOGGER_LOGLEVEL_TRACE); */
-  if (! marpaESLIFRecognizer_scanb(marpaESLIFRecognizerp, 1 /* initialEventsb */, &continueb, &exhaustedb)) {
-    goto err;
-  }
-
-  while (continueb) {
-    /* We have a single event, no need to ask what it is */
-    marpaESLIFRecognizer_pausev(marpaESLIFRecognizerp, &pauses, &pausel, NULL /* eofbp */);
-    GENERICLOGGER_TRACEF(genericLoggerp, "Got lstring: %s; length=%ld", pauses, pausel);
-
-    /* Resume */
-    if (! marpaESLIFRecognizer_resumeb(marpaESLIFRecognizerp, &continueb, &exhaustedb)) {
+    marpaESLIFRecognizerp = marpaESLIFRecognizer_newp(marpaESLIFGrammarp, &marpaESLIFRecognizerOption);
+    if (marpaESLIFRecognizerp == NULL) {
       goto err;
     }
-  }
 
-  /* Get value */
-  marpaESLIFValueOption.userDatavp             = NULL;
-  marpaESLIFValueOption.ruleActionResolverp    = NULL;
-  marpaESLIFValueOption.symbolActionResolverp  = NULL;
-  marpaESLIFValueOption.freeActionResolverp    = NULL;
-  marpaESLIFValueOption.highRankOnlyb          = 1;
-  marpaESLIFValueOption.orderByRankb           = 1;
-  marpaESLIFValueOption.ambiguousb             = 0;
-  marpaESLIFValueOption.nullb                  = 0;
-  marpaESLIFValueOption.maxParsesi             = 0;
+    GENERICLOGGER_INFO(genericLoggerp, "Scanning JSON");
+    GENERICLOGGER_INFO(genericLoggerp, "-------------");
+    GENERICLOGGER_INFOF(genericLoggerp, "%s", inputs[i]);
+    GENERICLOGGER_INFO(genericLoggerp, "-------------");
+    /* Scan the input */
+    /* genericLogger_logLevel_seti(genericLoggerp, GENERICLOGGER_LOGLEVEL_TRACE); */
+    if (! marpaESLIFRecognizer_scanb(marpaESLIFRecognizerp, 1 /* initialEventsb */, &continueb, &exhaustedb)) {
+      goto err;
+    }
 
-  marpaESLIFValuep = marpaESLIFValue_newp(marpaESLIFRecognizerp, &marpaESLIFValueOption);
-  if (marpaESLIFValuep == NULL) {
-    goto err;
-  }
+    while (continueb) {
+      /* We have a single event, no need to ask what it is */
+      marpaESLIFRecognizer_pausev(marpaESLIFRecognizerp, &pauses, &pausel, NULL /* eofbp */);
+      GENERICLOGGER_INFOF(genericLoggerp, "Got lstring: %s; length=%ld", pauses, pausel);
 
-  rcValueb = marpaESLIFValue_valueb(marpaESLIFValuep, NULL);
-  if (rcValueb < 0) {
-    goto err;
+      /* Resume */
+      if (! marpaESLIFRecognizer_resumeb(marpaESLIFRecognizerp, &continueb, &exhaustedb)) {
+        goto err;
+      }
+    }
   }
 
   exiti = 0;
@@ -179,7 +242,6 @@ int main() {
   exiti = 1;
 
  done:
-  marpaESLIFValue_freev(marpaESLIFValuep);
   marpaESLIFRecognizer_freev(marpaESLIFRecognizerp);
   marpaESLIFGrammar_freev(marpaESLIFGrammarp);
   marpaESLIF_freev(marpaESLIFp);
