@@ -5298,6 +5298,9 @@ void marpaESLIFRecognizer_eventb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, 
   marpaESLIFEvent_t  eventArray;
   short              rcb;
 
+  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
+  MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
+
   /* As a general protection, we never push events when:
      - there is a parent recognizer
      - it is an exception context
@@ -5379,6 +5382,9 @@ static inline short _marpaESLIFRecognizer_set_pauseb(marpaESLIFRecognizer_t *mar
   char              *pauses;
   size_t             pauseSizel;
   short              rcb;
+
+  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
+  MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
 
   /* In theory it is not possible to have a pause event if:
      - there is a parent recognizer
