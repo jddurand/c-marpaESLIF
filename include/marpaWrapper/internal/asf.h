@@ -72,8 +72,6 @@ struct marpaWrapperAsf {
   marpaWrapperAsfOption_t      marpaWrapperAsfOption;
   Marpa_Bocage                 marpaBocagep;
   Marpa_Order                  marpaOrderp;
-  int                          recursionLeveli;
-  int                          nParsesi;
 
   /* Memoization */
   genericStack_t              *orNodeStackp;
@@ -119,28 +117,14 @@ struct marpaWrapperAsfTraverser {
   int                     factoringIxi;
 };
 
-/* Internal structure used for pruned valuation using the ASF */
-typedef struct marpaWrapperAsfPrunedValueContext {
-  /* Copy of the marpaWrapperAsf_prunedValueb() parameters */
-  void                                 *userDatavp;
-  marpaWrapperAsfOkRuleCallback_t       okRuleCallbackp;
-  marpaWrapperAsfOkSymbolCallback_t     okSymbolCallbackp;
-  marpaWrapperAsfOkNullingCallback_t    okNullingCallbackp;
-  marpaWrapperValueRuleCallback_t       valueRuleCallbackp;
-  marpaWrapperValueSymbolCallback_t     valueSymbolCallbackp;
-  marpaWrapperValueNullingCallback_t    valueNullingCallbackp;
-  /* Parent rule ID stack */
-  genericStack_t                       *parentRuleiStackp;
-  /* Current wanted indice in the output stack */
-  int                                   wantedOutputStacki;
-  /* For logging, keep track of recursivity level */
-  int                                   leveli;
-} marpaWrapperAsfPrunedValueContext_t;
-
 /* Internal structure used for valuation using the ASF */
-/* The context is the marpaWrapperAsfValue itself */
 struct marpaWrapperAsfValue {
+  /* Internal ASF instance */
   marpaWrapperAsf_t                    *marpaWrapperAsfp;
+  /* Current traverser instance */
+  marpaWrapperAsfTraverser_t           *traverserp;
+  /* Number of parse tree values so far */
+  int                                   nParsesi;
   /* Copy of the marpaWrapperAsf_valueb() parameters */
   void                                 *userDatavp;
   marpaWrapperAsfOkRuleCallback_t       okRuleCallbackp;

@@ -46,18 +46,12 @@ extern "C" {
   marpaWrapper_EXPORT short                     marpaWrapperAsf_traverse_rh_valueb(marpaWrapperAsfTraverser_t *traverserp, int rhIxi, int *valueip, int *lengthip);
   marpaWrapper_EXPORT marpaWrapperAsf_t        *marpaWrapperAsf_traverse_asfp(marpaWrapperAsfTraverser_t *traverserp);
   marpaWrapper_EXPORT marpaWrapperRecognizer_t *marpaWrapperAsf_recognizerp(marpaWrapperAsf_t *marpaWrapperAsfp);
+  marpaWrapper_EXPORT short                     marpaWrapperAsf_genericLoggerp(marpaWrapperAsf_t *marpaWrapperAsfp, genericLogger_t **genericLoggerpp);
   marpaWrapper_EXPORT void                      marpaWrapperAsf_freev(marpaWrapperAsf_t *marpaWrapperAsfp);
-  /* Generic helper to compute the using only the ASF API */
-  marpaWrapper_EXPORT short                     marpaWrapperAsf_prunedValueb(marpaWrapperAsf_t                    *marpaWrapperAsfp,
-                                                                             void                                 *userDatavp,
-                                                                             marpaWrapperAsfOkRuleCallback_t       okRuleCallbackp,
-                                                                             marpaWrapperAsfOkSymbolCallback_t     okSymbolCallbackp,
-                                                                             marpaWrapperAsfOkNullingCallback_t    okNullingCallbackp,
-                                                                             marpaWrapperValueRuleCallback_t       valueRuleCallbackp,
-                                                                             marpaWrapperValueSymbolCallback_t     valueSymbolCallbackp,
-                                                                             marpaWrapperValueNullingCallback_t    valueNullingCallbackp);
 
-  marpaWrapper_EXPORT marpaWrapperAsfValue_t *marpaWrapperAsfValue_newp(marpaWrapperAsf_t                 *marpaWrapperAsfp,
+  /* Valuation method simulation */
+  marpaWrapper_EXPORT marpaWrapperAsfValue_t *marpaWrapperAsfValue_newp(marpaWrapperRecognizer_t          *marpaWrapperRecognizerp,
+                                                                        marpaWrapperAsfOption_t           *marpaWrapperAsfOptionp,
                                                                         void                              *userDatavp,
                                                                         marpaWrapperAsfOkRuleCallback_t    okRuleCallbackp,
                                                                         marpaWrapperAsfOkSymbolCallback_t  okSymbolCallbackp,
@@ -66,6 +60,8 @@ extern "C" {
                                                                         marpaWrapperValueSymbolCallback_t  valueSymbolCallbackp,
                                                                         marpaWrapperValueNullingCallback_t valueNullingCallbackp);
   marpaWrapper_EXPORT short                   marpaWrapperAsfValue_valueb(marpaWrapperAsfValue_t *marpaWrapperAsfValuep);
+  marpaWrapper_EXPORT short                   marpaWrapperAsfValue_value_startb(marpaWrapperAsfValue_t *marpaWrapperAsfValuep, int *startip);
+  marpaWrapper_EXPORT short                   marpaWrapperAsfValue_value_lengthb(marpaWrapperAsfValue_t *marpaWrapperAsfValuep, int *lengthip);
   marpaWrapper_EXPORT void                    marpaWrapperAsfValue_freev(marpaWrapperAsfValue_t *marpaWrapperAsfValuep);
 #ifdef __cplusplus
 }
