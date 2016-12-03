@@ -55,7 +55,7 @@ const static char *dsl = "\n"
 "lstring        ~ quote in_string quote\n"
 "quote          ~ [\"]\n"
 "in_string      ~ in_string_char*\n"
-"in_string_char  ~ [^\"] | '\\\"'\n"
+"in_string_char  ~ [^\"] | '\\\\\"'\n"
 ":discard       ::= whitespace\n"
 "whitespace     ~ [\\s]+\n"
   ;
@@ -135,6 +135,7 @@ int main() {
   }
 
   /* Scan the input */
+  genericLogger_logLevel_seti(genericLoggerp, GENERICLOGGER_LOGLEVEL_TRACE);
   if (! marpaESLIFRecognizer_scanb(marpaESLIFRecognizerp, 1 /* initialEventsb */, &continueb, &exhaustedb)) {
     goto err;
   }
