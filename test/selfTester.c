@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <errno.h>
 #include <genericLogger.h>
 #include <marpaESLIF.h>
 
@@ -215,6 +216,8 @@ int main() {
   char                        *grammarshows;
   int                          grammari;
   genericLogger_t             *genericLoggerp;
+  marpaESLIFTester_context_t   marpaESLIFTester_context;
+  marpaESLIFRecognizerOption_t marpaESLIFRecognizerOption;
 
   genericLoggerp = GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_DEBUG);
 
@@ -246,7 +249,25 @@ int main() {
     }
   }
 
+  /* So in theory we must be able to reparse ESLIF using this generated grammar -; */
+  marpaESLIFTester_context.genericLoggerp = genericLoggerp;
+  marpaESLIFTester_context.inputs         = (char *) selfs;
+  marpaESLIFTester_context.inputl         = strlen(selfs);
+
+  marpaESLIFRecognizerOption.userDatavp                   = &marpaESLIFTester_context; /* User specific context */
+  marpaESLIFRecognizerOption.marpaESLIFReaderCallbackp    = inputReaderb; /* Reader */
+  marpaESLIFRecognizerOption.disableThresholdb            = 0; /* Default: 0 */
+  marpaESLIFRecognizerOption.exhaustedb                   = 0; /* Exhaustion event. Default: 0 */
+  marpaESLIFRecognizerOption.newlineb                     = 1; /* Count line/column numbers. Default: 0 */
+  marpaESLIFRecognizerOption.bufsizl                      = 0; /* Minimum stream buffer size: Recommended: 0 (internally, a system default will apply) */
+  marpaESLIFRecognizerOption.buftriggerperci              = 50; /* Excess number of bytes, in percentage of bufsizl, where stream buffer size is reduced. Recommended: 50 */
+  marpaESLIFRecognizerOption.bufaddperci                  = 50; /* Policy of minimum of bytes for increase, in percentage of current allocated size, when stream buffer size need to augment. Recommended: 50 */
+  if (! marpaESLIFGrammar_parseb(marpaESLIFGrammarp, &marpaESLIFRecognizerOption, NULL /* marpaESLIFValueOptionp */, NULL /* exhaustedbp */, NULL /* marpaESLIFValueResultp */)) {
+    goto err;
+  }
+
   fprintf(stderr, " OK FOR:\n%s", selfs);
+
   marpaESLIFGrammar_freev(marpaESLIFGrammarp);
   marpaESLIF_freev(marpaESLIFp);
 
