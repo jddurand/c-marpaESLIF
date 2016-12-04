@@ -26,11 +26,21 @@ The BNF is inspired from L<Marpa::R2's DSL|https://metacpan.org/pod/distribution
 
 marpaESLIF BNF can be expressed in itself:
 
+  /*
+   * **********************
+   * Meta-grammar settings:
+   * **********************
+   */
   :start                         ::= statements
   :discard                       ::= whitespace
   :discard                       ::= <perl comment> 
   :discard                       ::= <cplusplus comment> 
 
+  /*
+   * ******
+   * Rules:
+   * ******
+   */
   <statements>                   ::= statement*
 
   <statement>                    ::= <start rule>
@@ -150,6 +160,32 @@ marpaESLIF BNF can be expressed in itself:
   <signed integer>               ::= /[+-]?\d+/
   <grammar reference>            ::= <quoted string>
                                    | <signed integer>
+
+  #
+  # The following is giving information on grammar components: lexemes, rules and symbols properties
+  #
+  # --------
+  # Lexemes:
+  # --------
+  #
+  # <op declare any grammar> ::= <op declare any grammar>@+1
+  # <op declare top grammar> ::= <op declare top grammar>@+1
+  # <op declare lex grammar> ::= <op declare lex grammar>@+1
+  # <op loosen> ::= <op loosen>@+1
+  # <op equal priority> ::= <op equal priority>@+1
+  # <false> ::= <false>@+1
+  # <true> ::= <true>@+1
+  # <standard name> ::= <standard name>@+1
+  # <quoted name> ::= <quoted name>@+1
+  # <quoted string> ::= <quoted string>@+1
+  # <character class> ::= <character class>@+1
+  # <regular expression> ::= <regular expression>@+1
+  # <bare name> ::= <bare name>@+1
+  # <bracketed name> ::= <bracketed name>@+1
+  # <restricted ascii graph name> ::= <restricted ascii graph name>@+1
+  # <whitespace> ::= <whitespace>@+1
+  # <perl comment> ::= <perl comment>@+1
+  # <cplusplus comment> ::= <cplusplus comment>@+1
 
   whitespace                       ~ /[\s]+/
   <perl comment>                   ~ /(?:(?:#)(?:[^\n]*)(?:\n|\z))/u
