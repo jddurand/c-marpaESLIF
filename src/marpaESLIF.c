@@ -1497,6 +1497,15 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
           continue;
         }
         rulep = (marpaESLIF_rule_t *) GENERICSTACK_GET_PTR(ruleStackp, rulei);
+        if (rulep == NULL) {
+          /* Ditto */
+          continue;
+        }
+        /* Take care! discard is an internal rule that should never be the start symbol... */
+        if (rulep->lhsp->discardb) {
+          rulep = NULL;
+          continue;
+        }
         break;
       }
       if (rulep == NULL) {

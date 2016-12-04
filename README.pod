@@ -31,7 +31,6 @@ marpaESLIF BNF can be expressed in itself:
    * Meta-grammar settings:
    * **********************
    */
-  :start                         ::= statements
   :discard                       ::= whitespace
   :discard                       ::= <perl comment> 
   :discard                       ::= <cplusplus comment> 
