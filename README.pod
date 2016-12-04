@@ -51,10 +51,13 @@ This is why it is required that grammar at level 0 exist: it is considered by th
 
 The lifetime of parsing, for a given I<location> in the top-level grammar, consist by assigning a set of symbols (these are called I<alternatives>), commiting them (we say that we I<complete> the set of alternatives), and move on. A Scanless Interface mean that you do not have to write your own analysis of input: grammars give definition of what is expected, and the interface have the possbility to determine all the alternatives for you, commiting them, and move on in the input stream. We say input stream: this is another dimension (we suppose from now on that the top-level grammar is at level 0):
 
+  #
   # Note
-  # ::= is an alias for grammar level 0
-  #   ~ is an alias for grammar level 1
-
+  #
+  #    ::= is an alias for grammar level 0
+  #      ~ is an alias for grammar level 1
+  # :[n]:= is the generic form for grammar level n
+  #
            ---------------------------------------------------  STREAM MANAGEMENT
           | Rule is X ::= x y                                 |
           |---------------------------------------------------| STEP 0
