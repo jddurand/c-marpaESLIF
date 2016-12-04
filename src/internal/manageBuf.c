@@ -11,7 +11,6 @@
 /*********************/
 void *manageBuf_createp(genericLogger_t *genericLoggerp, void **pp, size_t *sizelp, const size_t wantedNumberi, const size_t elementSizel) {
   size_t sizel     = *sizelp;
-  size_t origSizel = sizel;
   void  *p         = *pp;
   size_t prevSizel;
 
