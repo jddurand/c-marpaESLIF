@@ -2,7 +2,7 @@
 
 =head1 NAME
 
-marpaESLIF::BNF - Domain Specific Language (DSL)
+marpaESLIF_BNF - Domain Specific Language (DSL)
 
 =head1 DESCRIPTION
 

@@ -24,7 +24,14 @@ The L<marpaESLIF BNF|https://github.com/jddurand/c-marpaESLIF/tree/master/doc/BN
 
 =head1 Architecture
 
-The ESLIF is nothing else but a I<sparse array> of grammars:
+The ESLIF is nothing else but a I<sparse array> of grammars, identified by an indice called I<level> and starting with value 0, or a description:
+
+           ---------------------------------------------------------
+  Indice: | Level 0 | N/A | Level 2 | Level 3 | N/A | Level 5 | ... |
+  Name  : | nameof0 | N/A | nameof2 | nameof3 | N/A | nameof5 | ... |
+           ---------------------------------------------------------
+
+The constraint is that there B<must> be a grammar at level indice 0.
 
 =head1 SEE ALSO
 
