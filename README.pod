@@ -26,6 +26,7 @@ The BNF is inspired from L<Marpa::R2's DSL|https://metacpan.org/pod/distribution
 
 marpaESLIF BNF can be expressed in itself:
 
+  :start                         ::= statements
   :discard                       ::= whitespace
   :discard                       ::= <perl comment> 
   :discard                       ::= <cplusplus comment> 
