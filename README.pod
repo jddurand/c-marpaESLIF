@@ -77,7 +77,7 @@ This stream management is transversal to any grammar: As soon as "terminal" is i
                     TOP RECOGNIZER ON GRAMMAR LEVEL 0
 
            ---------------------------------------------------            STREAM MANAGEMENT
- Rule:    | X ::= x y                                         |
+          | Rule is X ::= x y                                 |
           |---------------------------------------------------| STEP 0.0
           | Location is start of rule X[0]:                   |
           | X ::= . x y                                       |
@@ -95,7 +95,7 @@ This stream management is transversal to any grammar: As soon as "terminal" is i
                     SUB-RECOGNIZER ON GRAMMAR LEVEL n
 
              -------------------------------------------------
-            | T2 :[n]:= a b                                   |
+            | Rule is T2 :[n]:= a b                           |
             |-------------------------------------------------| STEP 1.0
             | Location is start of rule T2[n]:                |
             | T2 :[n]:= . a b                                 |
@@ -121,7 +121,7 @@ This stream management is transversal to any grammar: As soon as "terminal" is i
           | Match ? Commit T1 and/or T2 and continue          |
            ---------------------------------------------------
 
-And this is recursive: there will as many sub-recognizers instanciated as there are sub-grammars involved.
+And this is recursive: there will as many sub-recognizers instanciated as there are sub-grammars involved. For instance if terminal C<U2> above is a referenced symbol at grammar level C<l>, a second sub-recognizer will be instanced by the first sub-recognizer. Every child recognizer is sharing all needed transveral information, that is everything about stream management.
 
 =head1 SEE ALSO
 
