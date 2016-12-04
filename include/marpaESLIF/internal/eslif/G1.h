@@ -218,7 +218,7 @@ bootstrap_grammar_meta_t bootstrap_grammar_G1_metas[] = {
   { G1_META_QUANTIFIER,                       "quantifier", 0, 0 },
   { G1_META_GRAMMAR_REFERENCE,                "grammar reference", 0, 0 },
   { G1_META_SIGNED_INTEGER,                   "signed integer", 0, 0 },
-  { G1_META_DISCARD,                          "discard", 0, 1 },
+  { G1_META_DISCARD,                          ":discard", 0, 1 },
   /* L0 join */
   { G1_META_FALSE,                            L0_JOIN_G1_META_FALSE, 0, 0 },
   { G1_META_TRUE,                             L0_JOIN_G1_META_TRUE, 0, 0 },
