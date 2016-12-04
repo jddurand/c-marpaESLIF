@@ -162,11 +162,9 @@ marpaESLIF BNF can be expressed in itself:
                                    | <signed integer>
 
   #
-  # The following is giving information on grammar components: lexemes, rules and symbols properties
-  #
-  # --------
-  # Lexemes:
-  # --------
+  # ---------------------------------------
+  # Lexemes of the grammar given above are:
+  # ---------------------------------------
   #
   # <op declare any grammar> ::= <op declare any grammar>@+1
   # <op declare top grammar> ::= <op declare top grammar>@+1
@@ -186,7 +184,13 @@ marpaESLIF BNF can be expressed in itself:
   # <whitespace> ::= <whitespace>@+1
   # <perl comment> ::= <perl comment>@+1
   # <cplusplus comment> ::= <cplusplus comment>@+1
+  #
 
+  /*
+   * *************
+   * Lexeme rules:
+   * *************
+   */
   whitespace                       ~ /[\s]+/
   <perl comment>                   ~ /(?:(?:#)(?:[^\n]*)(?:\n|\z))/u
   <cplusplus comment>              ~ /(?:(?:(?://)(?:[^\n]*)(?:\n|\z))|(?:(?:\/\*)(?:(?:[^\*]+|\*(?!\/))*)(?:\*\/)))/u
