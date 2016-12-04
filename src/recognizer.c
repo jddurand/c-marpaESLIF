@@ -212,15 +212,19 @@ short marpaWrapperRecognizer_latestb(marpaWrapperRecognizer_t *marpaWrapperRecog
 /****************************************************************************/
 {
   MARPAWRAPPER_FUNCS(marpaWrapperRecognizer_latestb);
-  genericLogger_t *genericLoggerp = NULL;
-  Marpa_Earley_Set_ID earleySetIdi;
+#ifndef MARPAWRAPPER_NTRACE
+  genericLogger_t     *genericLoggerp = NULL;
+#endif
+  Marpa_Earley_Set_ID  earleySetIdi;
 
   if (marpaWrapperRecognizerp == NULL) {
     errno = EINVAL;
     goto err;
   }
 
+#ifndef MARPAWRAPPER_NTRACE
   genericLoggerp = marpaWrapperRecognizerp->marpaWrapperRecognizerOption.genericLoggerp;
+#endif
 
   MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_r_latest_earley_set(%p)", marpaWrapperRecognizerp->marpaRecognizerp);
   /* This method always succeed as per the doc */
@@ -341,15 +345,19 @@ short marpaWrapperRecognizer_exhaustedb(marpaWrapperRecognizer_t *marpaWrapperRe
 /****************************************************************************/
 {
   MARPAWRAPPER_FUNCS(marpaWrapperRecognizer_exhaustedb);
-  genericLogger_t    *genericLoggerp = NULL;
-  short               exhaustedb;
+#ifndef MARPAWRAPPER_NTRACE
+  genericLogger_t *genericLoggerp = NULL;
+#endif
+  short            exhaustedb;
 
   if (marpaWrapperRecognizerp == NULL) {
     errno = EINVAL;
     goto err;
   }
 
+#ifndef MARPAWRAPPER_NTRACE
   genericLoggerp = marpaWrapperRecognizerp->marpaWrapperRecognizerOption.genericLoggerp;
+#endif
 
   /* This function always succeed as per doc */
   MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_r_is_exhausted(%p)", marpaWrapperRecognizerp->marpaRecognizerp);
@@ -663,7 +671,9 @@ marpaWrapperGrammar_t *marpaWrapperRecognizer_grammarp(marpaWrapperRecognizer_t 
 /****************************************************************************/
 {
   MARPAWRAPPER_FUNCS(marpaWrapperRecognizer_grammarp);
+#ifndef MARPAWRAPPER_NTRACE
   genericLogger_t       *genericLoggerp;
+#endif
   marpaWrapperGrammar_t *marpaWrapperGrammarp;
 
   if (marpaWrapperRecognizerp == NULL) {
@@ -671,7 +681,9 @@ marpaWrapperGrammar_t *marpaWrapperRecognizer_grammarp(marpaWrapperRecognizer_t 
     return NULL;
   }
 
+#ifndef MARPAWRAPPER_NTRACE
   genericLoggerp       = marpaWrapperRecognizerp->marpaWrapperRecognizerOption.genericLoggerp;
+#endif
   marpaWrapperGrammarp = marpaWrapperRecognizerp->marpaWrapperGrammarp;
 
   MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "return %p", marpaWrapperGrammarp);
