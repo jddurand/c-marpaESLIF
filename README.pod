@@ -144,7 +144,7 @@ discard is yet another symbol in any grammar, but with special semantic, and its
 
 mean that grammar at level 0 always try to match the C<whitespace> symbol when it failed to match any of the expected terminals.
 
-As soon as there is no match, and if C<:discard> rule exist, any sub-recognizer is always trying to get a match on it using a sub-recognizer, exactly like when it is executing a sub-recognizer for a terminal referencing a symbol in another grammar. Furthermore nothing distinguishes the special symbol C<:discard> from the others: it can also reference any symbol in any other sub-grammar. Though there is a major difference between discard sub-recognizers and terminal sub-recognizers: a discard sub-recognizer will never instanciate another discard sub-sub-recognizer. This mean that in the following:
+As soon as there is no match, and if C<:discard> rule exist, any recognizer is always trying to get a match on it using a sub-recognizer, exactly like when it is executing a sub-recognizer for a terminal referencing a symbol in another grammar. Furthermore nothing distinguishes the special symbol C<:discard> from the others: it can also reference any symbol in any other sub-grammar. Though there is a major difference between discard sub-recognizers and terminal sub-recognizers: a discard sub-recognizer will never instanciate another discard sub-sub-recognizer. This mean that in the following:
 
   :discard    ::= whitespace
   :discard      ~ somethingelse
