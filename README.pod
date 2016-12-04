@@ -8,9 +8,19 @@ marpaESLIF - Extended Marpa's Scanless Interface
 
 marpaESLIF is a Scanless Interface expressed in a BNF format, that is using L<marpaWrapper|https://github.com/jddurand/c-marpaWrapper>, itself being a thin interface on top of L<libmarpa|https://jeffreykegler.github.io/Marpa-web-site/libmarpa.html> parser.
 
-The BNF is inspired from L<Marpa::R2's DSL|https://metacpan.org/pod/distribution/Marpa-R2/pod/Scanless/DSL.pod>, though with some incompatible changes and many add-ons, in particular native regular expression support, syntactic exception and unlimited number of sub-grammars.
+The BNF is inspired from L<Marpa::R2's DSL|https://metacpan.org/pod/distribution/Marpa-R2/pod/Scanless/DSL.pod>, though with some incompatible changes and many add-ons, in particular:
 
-There are three runtime components: the grammar, recognizer and valuation.
+=over
+
+=item native regular expression support
+
+=item syntactic exception
+
+=item unlimited number of sub-grammars
+
+=item streaming compatible architecture
+
+=back
 
 =head1 BNF
 
