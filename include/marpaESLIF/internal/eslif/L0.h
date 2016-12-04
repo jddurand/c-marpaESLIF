@@ -154,7 +154,7 @@ __DATA__
   /* Perl stringified version is: (?:(?:(?://)(?:[^\n]*)(?:\n))|(?:(?:\/\*)(?:(?:[^\*]+|\*(?!\/))*)(?:\*\/))) */
   /* \z added to match the end of the buffer in the // mode (ESLIF will ask more data if this is not EOF as well) */
   { L0_TERMINAL_CPLUSPLUS_COMMENT, MARPAESLIF_TERMINAL_TYPE_REGEX, "u",
-    "(?:(?:(?://)(?:[^\\n]*)(?:\\n|\\z))|(?:(?:\\/\\*)(?:(?:[^\\*]+|\\*(?!\\/))*)(?:\\*\\/)))",
+    "(?:(?:(?://)(?:[^\\n]*)(?:\\n|\\z))|(?:(?:/\\*)(?:(?:[^\\*]+|\\*(?!/))*)(?:\\*/)))",
 #ifndef MARPAESLIF_NTRACE
     "// Comment up to the end of the buffer", "// Again a comment"
 #else
@@ -319,7 +319,7 @@ __DATA__
   /* Taken from Regexp::Common::delimited, $RE{delimited}{-delim=>"/"}{-cdelim=>"/"} */
   /* Perl stringified version is: (?:(?|(?:\/)(?:[^\\\/]*(?:\\.[^\\\/]*)*)(?:\/))) */
   { L0_TERMINAL_REGULAR_EXPRESSION, MARPAESLIF_TERMINAL_TYPE_REGEX, "su",
-    "(?:(?|(?:\\/)(?:[^\\\\\\/]*(?:\\\\.[^\\\\\\/]*)*)(?:\\/)))",
+    "(?:(?|(?:/)(?:[^\\\\/]*(?:\\\\.[^\\\\/]*)*)(?:/)))",
 #ifndef MARPAESLIF_NTRACE
     "/a(b)c/", "/a("
 #else
