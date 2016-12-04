@@ -90,7 +90,7 @@ marpaESLIF BNF can be expressed in itself:
   <alternative>                  ::= rhs <adverb list>
   <adverb list>                  ::= <adverb list items>
   <adverb list items>            ::= <adverb item>*
-  <adverb item>                  ::= action
+  <adverb item>                  ::= <action>
                                    | <left association>
                                    | <right association>
                                    | <group association>
@@ -186,6 +186,7 @@ marpaESLIF BNF can be expressed in itself:
   # <cplusplus comment> ::= <cplusplus comment>@+1
   #
 
+  ; // This semicolon is VERY important, otherwise grammar will believe that /* ... Lexeme rules ... */ is a continuation of <grammar reference> ::= <signed integer>... Definitely NOT wanted, plus in addition /* ... Lexeme rules ... */ would trigger a PCRE2 compile exception!
   /*
    * *************
    * Lexeme rules:
@@ -193,7 +194,7 @@ marpaESLIF BNF can be expressed in itself:
    */
   whitespace                       ~ /[\s]+/
   <perl comment>                   ~ /(?:(?:#)(?:[^\n]*)(?:\n|\z))/u
-  <cplusplus comment>              ~ /(?:(?:(?://)(?:[^\n]*)(?:\n|\z))|(?:(?:\/\*)(?:(?:[^\*]+|\*(?!\/))*)(?:\*\/)))/u
+  <cplusplus comment>              ~ /(?:(?:(?:\/\/)(?:[^\n]*)(?:\n|\z))|(?:(?:\/\*)(?:(?:[^\*]+|\*(?!\/))*)(?:\*\/)))/u
   <op declare any grammar>         ~ /:\[(\d+)\]:=/
   <op declare top grammar>         ~ '::='
   <op declare lex grammar>         ~ '~'
@@ -201,12 +202,12 @@ marpaESLIF BNF can be expressed in itself:
   <op equal priority>              ~ '|'
   <true>                           ~ '1'
   <false>                          ~ '0'
-  <word character>                 ~ /[\w]/
+  <word character>                 ~ [\w]
   <one or more word characters>    ~ <word character>+ proper => 1
   <zero or more word characters>   ~ <word character>* proper => 1
-  <restricted ascii graph name>    ~ /[-!#$%&()*+./;<>?@\[\\\]^_`|~A-Za-z0-9][-!#$%&()*+./:;<>?@\[\\\]^_`|~A-Za-z0-9]*/
+  <restricted ascii graph name>    ~ /[-!#$%&()*+.\/;<>?@\[\\\]^_`|~A-Za-z0-9][-!#$%&()*+.\/:;<>?@\[\\\]^_`|~A-Za-z0-9]*/
   <bare name>                      ~ <word character>+ proper => 1
-  <standard name>                  ~ /[a-zA-Z]/ <zero or more word characters>
+  <standard name>                  ~ [a-zA-Z] <zero or more word characters>
   <bracketed name>                 ~ '<' <bracketed name string> '>'
   <bracketed name string>          ~ /[\s\w]+/
   <quoted string>                  ~ /(?:(?|(?:\')(?:[^\\\']*(?:\\.[^\\\']*)*)(?:\')|(?:\")(?:[^\\\"]*(?:\\.[^\\\"]*)*)(?:\")|(?:\{)(?:[^\\\}]*(?:\\.[^\\\}]*)*)(?:\})))/su
