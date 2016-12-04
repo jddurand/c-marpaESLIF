@@ -21,4 +21,5 @@ script:
   - ./output/lib/adventTester
   - ./output/lib/russellParadoxTester
   - ./output/lib/jsonTester
+  - ./output/lib/selfTester
   - sudo make install
