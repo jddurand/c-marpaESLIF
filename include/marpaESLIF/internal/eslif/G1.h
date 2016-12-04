@@ -17,7 +17,6 @@ typedef enum bootstrap_grammar_G1_enum {
   G1_TERMINAL__DEFAULT,
   G1_TERMINAL_DEFAULT,
   G1_TERMINAL_EQUAL,
-  G1_TERMINAL_DISCARD,
   G1_TERMINAL__LEXEME,
   G1_TERMINAL_EVENT,
   G1_TERMINAL_COMPLETED,
@@ -310,14 +309,6 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
     "'='",
 #ifndef MARPAESLIF_NTRACE
     "=", ""
-#else
-    NULL, NULL
-#endif
-  },
-  { G1_TERMINAL_DISCARD, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
-    "'discard'",
-#ifndef MARPAESLIF_NTRACE
-    "discard", "dis"
 #else
     NULL, NULL
 #endif
