@@ -13,6 +13,7 @@ before_script:
   - sh ./install-c-genericHash.sh
   - sh ./install-c-genericSparseArray.sh
   - sh ./install-c-marpaWrapper.sh
+  - sh ./install-c-tconv.sh
   - cmake .
 script:
   - make check
