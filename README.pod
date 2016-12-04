@@ -73,4 +73,4 @@ The lifetime of parsing, for a given I<location> in the top-level grammar, consi
 
 =head1 SEE ALSO
 
-L<marpaESLIF::BNF|https://github.com/jddurand/c-marpaESLIF/tree/master/doc/BNF>
+L<marpaESLIF_BNF|https://github.com/jddurand/c-marpaESLIF/tree/master/doc/BNF>
