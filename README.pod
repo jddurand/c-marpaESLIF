@@ -155,4 +155,4 @@ if a discard tentative is instancuated on grammar at level 0 using the symbol C<
 
 =head1 SEE ALSO
 
-L<marpaESLIF_BNF|https://github.com/jddurand/c-marpaESLIF/tree/master/doc/BNF>
+L<marpaESLIF_BNF|https://github.com/jddurand/c-marpaESLIF/tree/master/doc/BNF>, L<genericLogger|https://github.com/jddurand/c-genericLogger>
