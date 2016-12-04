@@ -49,7 +49,7 @@ If we note a symbol in the form S[i], meaning I<symbol S of grammar level i>, th
 
 This is why it is required that grammar at level 0 exist: it is considered by the author a common practice that the I<top level> grammar should be at level 0. Though technically this is not absolutely required -; In fact, it is possible to start parsing by specifying I<another> grammar but the one at level 0 as a starting grammar.
 
-The lifetime of parsing, for a given I<location> in the top-level grammar, consist by assigning a set of symbols (these are called I<alternatives>), commiting them (we say that we I<complete> the set of alternatives), and move on. A Scanless Interface mean that you do not have to write your own analysis of input: grammars give definition of what is expected, and the interface have the possbility to determine all the alternatives for you, commiting them, and move on in the input stream. We say input stream: this is another dimension:
+The lifetime of parsing, for a given I<location> in the top-level grammar, consist by assigning a set of symbols (these are called I<alternatives>), commiting them (we say that we I<complete> the set of alternatives), and move on. A Scanless Interface mean that you do not have to write your own analysis of input: grammars give definition of what is expected, and the interface have the possbility to determine all the alternatives for you, commiting them, and move on in the input stream. We say input stream: this is another dimension (we suppose from now on that the top-level grammar is at level 0):
 
            ---------------------------------------------------  STREAM MANAGEMENT
  Rule:    | X ::= x y                                         |
@@ -68,8 +68,60 @@ The lifetime of parsing, for a given I<location> in the top-level grammar, consi
           |   Repeat until T2 matches for sure or not         |
           |---------------------------------------------------|
           | No match ? End of scanning                        | STEP 3
-          | Match ? Commit alternatives T1 and T2 and continue|
+          | Match ? Commit T1 and T2 and continue             |
            ---------------------------------------------------
+
+This stream management is transversal to any grammar: As soon as "terminal" is in reality a referenced symbol, a sub-recognizer is instanciated and it is sharing the stream with is parent:
+
+
+                    TOP RECOGNIZER ON GRAMMAR LEVEL 0
+
+           ---------------------------------------------------            STREAM MANAGEMENT
+ Rule:    | X ::= x y                                         |
+          |---------------------------------------------------| STEP 0.0
+          | Location is start of rule X[0]:                   |
+          | X ::= . x y                                       |
+          | Suppose that expected "terminals" are T1 and T2:  |
+          |---------------------------------------------------| STEP 0.1
+          | Try to match T1                                   |
+          |   Nothing yet in the stream ?                     |<-----> Stream reader callback
+          |   T1 may match but we are not sure                |<-----> Stream reader callback
+          |   Repeat until T1 matches for sure or not         |
+          |---------------------------------------------------| STEP 0.2
+          | Try to match T2                                   |
+          |   T2 is a referenced symbol in grammar n          |
+           ---------------------------------------------------
+
+                    SUB-RECOGNIZER ON GRAMMAR LEVEL n
+
+             -------------------------------------------------
+            | T2 :[n]:= a b                                   |
+            |-------------------------------------------------| STEP 1.0
+            | Location is start of rule T2[n]:                |
+            | T2 :[n]:= . a b                                 |
+            | Suppose that expected "terminals" are U1 and U2:|
+            |-------------------------------------------------| STEP 1.1
+            | Try to match U1                                 |
+            |   Nothing yet in the stream ?                   |<-----> Stream reader callback
+            |   U1 may match but we are not sure              |<-----> Stream reader callback
+            |   Repeat until U1 matches for sure or not       |
+            |-------------------------------------------------| STEP 1.2
+            | Try to match U2                                 |
+            |   U2 may match but we are not sure              |<-----> Stream reader callback
+            |   Repeat until U2 matches for sure or not       |
+            |-------------------------------------------------|
+            | No match ? End of scanning for T2[n]            | STEP 1.3
+            | Match ? Commit U1 and/or U2 and continue        |
+             -------------------------------------------------
+
+                 BACK TO TOP RECOGNIZER ON GRAMMAR LEVEL 0
+
+           ---------------------------------------------------
+          | No match ? End of scanning                        | STEP 0.3
+          | Match ? Commit T1 and/or T2 and continue          |
+           ---------------------------------------------------
+
+And this is recursive: there will as many sub-recognizers instanciated as there are sub-grammars involved.
 
 =head1 SEE ALSO
 
