@@ -8,7 +8,7 @@ marpaESLIF - Extended Marpa's Scanless Interface
 
 marpaESLIF is a Scanless Interface expressed in a BNF format, that is using L<marpaWrapper|https://github.com/jddurand/c-marpaWrapper>, itself being a thin interface on top of L<libmarpa|https://jeffreykegler.github.io/Marpa-web-site/libmarpa.html> parser.
 
-The L<marpaESLIF BNF|https://github.com/jddurand/c-marpaESLIF/doc/BNF> is inspired from L<Marpa::R2's DSL|https://metacpan.org/pod/distribution/Marpa-R2/pod/Scanless/DSL.pod>, though with some incompatible changes and many add-ons, in particular:
+The L<marpaESLIF BNF|https://github.com/jddurand/c-marpaESLIF/tree/master/doc/BNF> is inspired from L<Marpa::R2's DSL|https://metacpan.org/pod/distribution/Marpa-R2/pod/Scanless/DSL.pod>, though with some incompatible changes and many add-ons, in particular:
 
 =over
 
@@ -28,4 +28,4 @@ The ESLIF is nothing else but a I<sparse array> of grammars:
 
 =head1 SEE ALSO
 
-L<marpaESLIF BNF|https://github.com/jddurand/c-marpaESLIF/doc/BNF>
+L<marpaESLIF BNF|https://github.com/jddurand/c-marpaESLIF/tree/master/doc/BNF>
