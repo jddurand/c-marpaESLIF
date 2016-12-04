@@ -135,21 +135,23 @@ And this is recursive: there will as many sub-recognizers instanciated as there 
 
 The internal valuation is a forced mode that is concatenating all matched bytes in the input stream.
 
-You might say, why explicitely doing an internal valuation: the match is where sub-recognizer started and where it ended. No, because any grammar is independant can have it own I<discard> mechanism. This mean that what a sub-recognizer matched may be shorter than the number of bytes effectively consumed from the input stream. So we have introduced the notion of I<discard>:
+You might say, why explicitely doing an internal valuation: the match is where sub-recognizer started and where it ended. No, because any grammar can have it own I<discard> mechanism. This mean that what a sub-recognizer matched may be shorter than the number of bytes effectively consumed from the input stream. So, we have just introduced the notion of I<discard>:
 
-discard is yet another symbol in any grammar, but with special semantic. For example:
+discard is yet another symbol in any grammar, but with special semantic, and its name in the BNF is always C<:discard>. For example:
 
   :discard   ::= whitespace
   whitespace   ~ /[\s]+/
 
-As soon as there is no match, if discard exist, any sub-recognizer will try to get a match on it. Nothing distinguishes the special symbol I<:discard> from the others: it can reference as well any symbol in any other sub-grammar. Though a discard match tentative cannot instanciate another discard match from a sub-grammar. This mean that in the following:
+mean that grammar at level 0 always try to match the C<whitespace> symbol when it failed to match any of the expected terminals.
+
+As soon as there is no match, and if C<:discard> rule exist, any sub-recognizer is always trying to get a match on it using a sub-recognizer, exactly like when it is executing a sub-recognizer for a terminal referencing a symbol in another grammar. Furthermore nothing distinguishes the special symbol C<:discard> from the others: it can also reference any symbol in any other sub-grammar. Though there is a major difference between discard sub-recognizers and terminal sub-recognizers: a discard sub-recognizer will never instanciate another discard sub-sub-recognizer. This mean that in the following:
 
   :discard    ::= whitespace
   :discard      ~ somethingelse
   whitespace    ~ /[\s]+/
   somethingelse ~ 'a string'
 
-if a discard tentative is instance on grammar at level 0 using the C<whitespace> of level 1, and if C<whitespace> of level 1 does not match, there will be no tentative for discard in level 1 using its symbol I<somethingelse>.
+if a discard tentative is instancuated on grammar at level 0 using the symbol C<whitespace> of level 1, and if C<whitespace> of level 1 does not match, there will be no tentative for try to discard in level 1, even it is has a C<:discard> rule that is defined to be C<somethingelse>.
 
 =head1 SEE ALSO
 
