@@ -113,15 +113,22 @@ This stream management is transversal to any grammar: As soon as "terminal" is i
             | No match ? End of scanning for T2[n]            | STEP 1.3
             | Match ? Commit U1 and/or U2 and continue        |
              -------------------------------------------------
+            | Do internal valuation                           | STEP 1.4
+             -------------------------------------------------
 
                  BACK TO TOP RECOGNIZER ON GRAMMAR LEVEL 0
 
            ---------------------------------------------------
           | No match ? End of scanning                        | STEP 0.3
           | Match ? Commit T1 and/or T2 and continue          |
+          | If T2 matches it is a parse tree value            |
            ---------------------------------------------------
 
-And this is recursive: there will as many sub-recognizers instanciated as there are sub-grammars involved. For instance if terminal C<U2> above is a referenced symbol at grammar level C<l>, a second sub-recognizer will be instanced by the first sub-recognizer. Every child recognizer is sharing all needed transveral information, that is everything about stream management.
+And this is recursive: there will as many sub-recognizers instanciated as there are sub-grammars involved. For instance if terminal C<U2> above is a referenced symbol at grammar level C<l>, a second sub-recognizer will be instanced by the first sub-recognizer. Every child recognizer is sharing all needed transveral information, that is everything about stream management. The main difference between the top recognizer and any child recognizer is that a child recognizer is always doing an internal valuation to retreive the span in the input stream for, and give that back to its parent.
+
+The internal valuation is a forced mode that is concatenating all matched bytes in the input stream.
+
+You might say, why explicitely doing an internal valuation: the match is where sub-recognizer started and where it ended. No, because any grammar is independant can have it own I<discard> mechanism. This mean that what a sub-recognizer matched may be shorter than the number of bytes effectively consumed from the input stream. So we have introduced the notion of I<discard>:
 
 =head1 SEE ALSO
 
