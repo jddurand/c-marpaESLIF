@@ -56,7 +56,6 @@ typedef enum bootstrap_grammar_L0_enum {
   L0_META_WORD_CHARACTER,
   L0_META_ONE_OR_MORE_WORD_CHARACTERS,
   L0_META_ZERO_OR_MORE_WORD_CHARACTERS,
-  L0_META_PERL_IDENTIFIER,
   L0_META_RESTRICTED_ASCII_GRAPH_NAME,
   L0_META_BARE_NAME,
   L0_META_STANDARD_NAME,
@@ -83,7 +82,6 @@ bootstrap_grammar_meta_t bootstrap_grammar_L0_metas[] = {
   { L0_META_WORD_CHARACTER,                     "word character", 0, 0 },
   { L0_META_ONE_OR_MORE_WORD_CHARACTERS,        "one or more word characters", 0, 0 },
   { L0_META_ZERO_OR_MORE_WORD_CHARACTERS,       "zero or more word characters", 0, 0 },
-  { L0_META_PERL_IDENTIFIER,                    "perl identifier", 0, 0 },
   { L0_META_RESTRICTED_ASCII_GRAPH_NAME,        L0_JOIN_G1_META_RESTRICTED_ASCII_GRAPH_NAME, 0, 0 },
   { L0_META_BARE_NAME,                          L0_JOIN_G1_META_BARE_NAME, 0, 0 },
   { L0_META_STANDARD_NAME,                      L0_JOIN_G1_META_STANDARD_NAME, 0, 0 },
@@ -393,7 +391,6 @@ bootstrap_grammar_rule_t bootstrap_grammar_L0_rules[] = {
   */
   { L0_META_ONE_OR_MORE_WORD_CHARACTERS,      "one more word characters",           MARPAESLIF_RULE_TYPE_SEQUENCE,    1, { L0_META_WORD_CHARACTER                       },  1,                                       -1, -1 , NULL },
   { L0_META_ZERO_OR_MORE_WORD_CHARACTERS,     "zero more word characters",          MARPAESLIF_RULE_TYPE_SEQUENCE,    1, { L0_META_WORD_CHARACTER                       },  0,                                       -1, -1 , NULL },
-  { L0_META_PERL_IDENTIFIER,                  "perl identifier",                    MARPAESLIF_RULE_TYPE_SEQUENCE,    1, { L0_META_WORD_CHARACTER                       },  1,                                       -1, -1 , NULL },
   /*
     lhsi                                      descs                                           type                          nrhsl  { rhsi }                                       }  minimumi                          separatori  properb
   */
