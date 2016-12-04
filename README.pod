@@ -28,4 +28,4 @@ The ESLIF is nothing else but a I<sparse array> of grammars:
 
 =head1 SEE ALSO
 
-L<marpaESLIF BNF|https://github.com/jddurand/c-marpaESLIF/tree/master/doc/BNF>
+L<marpaESLIF::BNF|https://github.com/jddurand/c-marpaESLIF/tree/master/doc/BNF>
