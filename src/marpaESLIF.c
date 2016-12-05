@@ -597,17 +597,12 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
         case '"':
           lastcodepointi = '"';
           break;
-        case '{':
-          lastcodepointi = '}';
-          break;
         default:
           {
-            char *clever0s = (codepointi == '{') ? "'" : "{";
-            char *clever1s = (codepointi == '{') ? "'" : "}";
             if (isprint((unsigned char) codepointi)) {
-              MARPAESLIF_ERRORF(marpaESLIFp, "Impossible first codepoint %s%c%s (0x%02lx), should be \"'\", '\"' or '{'", clever0s, (unsigned char) codepointi, clever1s, (unsigned long) codepointi);
+              MARPAESLIF_ERRORF(marpaESLIFp, "Impossible first codepoint %c (0x%02lx), should be \"'\" or '\"'", (unsigned char) codepointi, (unsigned long) codepointi);
             } else {
-              MARPAESLIF_ERRORF(marpaESLIFp, "Impossible first codepoint 0x%02lx, should be ''', '\"' or '{'", (unsigned long) codepointi);
+              MARPAESLIF_ERRORF(marpaESLIFp, "Impossible first codepoint 0x%02lx, should be \"'\" or '\"'", (unsigned long) codepointi);
             }
             goto err;
           }
@@ -618,19 +613,17 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
       } else if (i == (GENERICSTACK_USED(marpaESLIFRecognizerp->lexemeInputStackp) - 1)) {
         /* Non-sense to not have the same value */
         if (lastcodepointi != codepointi) {
-          char *clever0s = (lastcodepointi == '}') ? "'" : "{";
-          char *clever1s = (lastcodepointi == '}') ? "'" : "}";
           /* Note that we know that our regexp start and end with printable characters */
           if (isprint((unsigned char) codepointi)) {
-            MARPAESLIF_ERRORF(marpaESLIFp, "First and last characters to not correspond: %s%c%s (0x%02lx) v.s. %s%c%s (0x%02lx) (wanted %s%c%s (0x%lx))",
-                              clever0s, (unsigned char) firstcodepointi, clever1s, (unsigned long) firstcodepointi,
-                              clever0s, (unsigned char) codepointi, clever1s, (unsigned long) codepointi,
-                              clever0s, (unsigned char) lastcodepointi, clever1s, (unsigned long) lastcodepointi);
+            MARPAESLIF_ERRORF(marpaESLIFp, "First and last characters to not correspond: %c (0x%02lx) v.s. %c (0x%02lx) (wanted %c (0x%lx))",
+                              (unsigned char) firstcodepointi, (unsigned long) firstcodepointi,
+                              (unsigned char) codepointi, (unsigned long) codepointi,
+                              (unsigned char) lastcodepointi, (unsigned long) lastcodepointi);
           } else {
-            MARPAESLIF_ERRORF(marpaESLIFp, "First and last characters to not correspond: %s%c%s (0x%02lx) v.s. 0x%02lx (wanted %s%c%s (0x%lx))",
-                              clever0s, (unsigned char) firstcodepointi, clever1s, (unsigned long) firstcodepointi,
+            MARPAESLIF_ERRORF(marpaESLIFp, "First and last characters to not correspond: %c (0x%02lx) v.s. 0x%02lx (wanted %c (0x%lx))",
+                              (unsigned char) firstcodepointi, (unsigned long) firstcodepointi,
                               (unsigned long) codepointi,
-                              clever0s, (unsigned char) lastcodepointi, clever1s, (unsigned long) lastcodepointi);
+                              (unsigned char) lastcodepointi, (unsigned long) lastcodepointi);
           }
           goto err;
         }
@@ -7276,9 +7269,6 @@ static inline short _marpaESLIFRecognizer_readb(marpaESLIFRecognizer_t *marpaESL
     } else if (strchr(strings, '"') == NULL) {                  \
       strcpy(quote[0], "\"");                                   \
       strcpy(quote[1], "\"");                                   \
-    } else if (strchr(strings, '}') == NULL) {                  \
-      strcpy(quote[0], "{");                                    \
-      strcpy(quote[1], "}");                                    \
     } else {                                                    \
       strcpy(quote[0], "");                                     \
       strcpy(quote[1], "");                                     \
