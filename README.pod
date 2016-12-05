@@ -385,15 +385,15 @@ Case-insensitive.
 
 Set the C<PCRE2_ALT_BSUX|PCRE2_MATCH_UNSET_BACKREF> flags.
 
-\u \U \x and unset back-references will act as JavaScript standard:
+C<\u>, C<\U> and C<\x> and unset back-references will act as JavaScript standard:
 
 =over
 
-=item \U matches an upper case "U" character (by default it causes a compile error if this option is not set).
+=item C<\U> matches an upper case "U" character (by default it causes a compile error if this option is not set).
 
-=item \u matches a lower case "u" character unless it is followed by four hexadecimal digits, in which case the hexadecimal number defines the code point to match (by default it causes a compile error if this option is not set).
+=item C<\u> matches a lower case "u" character unless it is followed by four hexadecimal digits, in which case the hexadecimal number defines the code point to match (by default it causes a compile error if this option is not set).
 
-=item \x matches a lower case "x" character unless it is followed by two hexadecimal digits, in which case the hexadecimal number defines the code point to match (By default, as in Perl, a hexadecimal number is always expected after \x, but it may have zero, one, or two digits (so, for example, \xz matches a binary zero character followed by z) ).
+=item C<\x> matches a lower case "x" character unless it is followed by two hexadecimal digits, in which case the hexadecimal number defines the code point to match (By default, as in Perl, a hexadecimal number is always expected after C<\x>, but it may have zero, one, or two digits (so, for example, C<\xz> matches a binary zero character followed by z) ).
 
 =item Unset back-references in the pattern will match to empty strings.
 
