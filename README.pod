@@ -231,6 +231,25 @@ A string is always scanned character per character by marpaESLIF, and an ASCII c
 
 =item 'Black Heart Suite Character: ♥':i
 
+A dump of it in terms of PCRE2 (c.f. the API specification for dump facility) would show the C<PCRE2_CASELESS> flag:
+
+  #      Pattern: Black Heart Suite Character: \x{2665}
+  #        Flags: PCRE2_ANCHORED|PCRE2_CASELESS|PCRE2_UTF
+
+You notice the presence of:
+
+=over
+
+=item C<PCRE2_ANCHORED>
+
+Strings are always anchored at the point where match is attempted.
+
+=item C<PCRE2_UTF>
+
+This flag is automatically set when the scanning of string by marpaESLIF detect the need for it.
+
+=back
+
 =item Character class
 
 A character class is very closed to a regular expression (see later), except that it looks like a string, with start/end delimiters being C<[]>, and that the pattern is NOT scanned. marpaESLIF will lets PCRE2 eventually yell if there is a use of codepoints and if the internal PCRE2_UTF flag is not set.
