@@ -7,6 +7,9 @@
 
 static short inputReaderb(void *userDatavp, char **inputsp, size_t *inputlp, short *eofbp, short *characterStreambp, char **encodingOfEncodingsp, char **encodingsp, size_t *encodinglp);
 
+#define UTF_8_STRING "UTF-8"
+#define ASCII_STRING "ASCII"
+
 typedef struct marpaESLIFTester_context {
   genericLogger_t *genericLoggerp;
   char            *inputs;
@@ -197,13 +200,21 @@ const static char *selfs = "\n"
   "  <standard name>                  ~ [a-zA-Z] <zero or more word characters>\n"
   "  <bracketed name>                 ~ '<' <bracketed name string> '>'\n"
   "  <bracketed name string>          ~ /[\\s\\w]+/\n"
-  "  <quoted string>                  ~ /(?:(?|(?:')(?:[^\\\\']*(?:\\\\.[^\\\\']*)*)(?:')|(?:\")(?:[^\\\\\"]*(?:\\\\.[^\\\\\"]*)*)(?:\")|(?:\\{)(?:[^\\\\}]*(?:\\\\.[^\\\\}]*)*)(?:})))/su\n"
-  "                                   | /(?:(?|(?:')(?:[^\\\\']*(?:\\\\.[^\\\\']*)*)(?:')|(?:\")(?:[^\\\\\"]*(?:\\\\.[^\\\\\"]*)*)(?:\")|(?:\\{)(?:[^\\\\}]*(?:\\\\.[^\\\\}]*)*)(?:})))/su ':' /ic?/\n"
-  "  <quoted name>                    ~ /(?:(?|(?:')(?:[^\\\\']*(?:\\\\.[^\\\\']*)*)(?:')|(?:\")(?:[^\\\\\"]*(?:\\\\.[^\\\\\"]*)*)(?:\")|(?:\\{)(?:[^\\\\}]*(?:\\\\.[^\\\\}]*)*)(?:})))/su\n"
+  "  <quoted string>                  ~ /(?:(?|(?:')(?:[^\\\\']*(?:\\\\.[^\\\\']*)*)(?:')|(?:\")(?:[^\\\\\"]*(?:\\\\.[^\\\\\"]*)*)(?:\")))/su\n"
+  "                                   | /(?:(?|(?:')(?:[^\\\\']*(?:\\\\.[^\\\\']*)*)(?:')|(?:\")(?:[^\\\\\"]*(?:\\\\.[^\\\\\"]*)*)(?:\")))/su ':' /ic?/\n"
+  "  <quoted name>                    ~ /(?:(?|(?:')(?:[^\\\\']*(?:\\\\.[^\\\\']*)*)(?:')|(?:\")(?:[^\\\\\"]*(?:\\\\.[^\\\\\"]*)*)(?:\")))/su\n"
   "  <character class>                ~ /((?:\\[(?:(?>[^\\[\\]]+)|(?-1))*\\]))/\n"
   "                                   | /((?:\\[(?:(?>[^\\[\\]]+)|(?-1))*\\]))/ ':' /[eijmnsxDJUuaNbcA]+/\n"
   "  <regular expression>             ~ /(?:(?|(?:\\/)(?:[^\\\\\\/]*(?:\\\\.[^\\\\\\/]*)*)(?:\\/)))/su\n"
   "                                   | /(?:(?|(?:\\/)(?:[^\\\\\\/]*(?:\\\\.[^\\\\\\/]*)*)(?:\\/)))/su /[eijmnsxDJUuaNbcA]+/\n"
+  "#\n"
+  "# The following are unused but just added as examples...\n"
+  "#\n"
+  " <JDD1>                            ~ 'Example'\n"
+  " <JDD2>                            ~ '{Example}'\n"
+  " <JDD3>                            ~ \"{Example}\"\n"
+  " <JDD5>                            ~ '{Example[]\\\\}'\n"
+  " <JDD6>                            ~ 'Black Heart Suite Character: ♥':i\n"
   "\n";
 
 int main() {
@@ -229,9 +240,9 @@ int main() {
 
   marpaESLIFGrammarOption.bytep               = (void *) selfs;
   marpaESLIFGrammarOption.bytel               = strlen(selfs);
-  marpaESLIFGrammarOption.encodings           = NULL;
-  marpaESLIFGrammarOption.encodingl           = 0;
-  marpaESLIFGrammarOption.encodingOfEncodings = NULL;
+  marpaESLIFGrammarOption.encodings           = UTF_8_STRING;
+  marpaESLIFGrammarOption.encodingl           = strlen(UTF_8_STRING);
+  marpaESLIFGrammarOption.encodingOfEncodings = ASCII_STRING;
   marpaESLIFGrammarp = marpaESLIFGrammar_newp(marpaESLIFp, &marpaESLIFGrammarOption);
 
   if (marpaESLIFGrammarp == NULL) {
