@@ -221,11 +221,13 @@ is translated to the UTF-8 pattern C<\{Example\[]\\}>
 
 (supposing that input grammar is writen in UTF-8 encoding) is translated to the UTF-8 pattern C<Black Heart Suite Character: \x{2665}>
 
-=item 'Not black Heart Suite Character: \\x{2665}'
-
 =back
 
+A string is always scanned character per character by marpaESLIF, and an ASCII compatible pattern is generated, using \x{...} codepoint notation whenever this is an ASCII special character or a character outside of original ASCII 7-bis character set. So marpaESLIF know if there is need for unicode support or not in PCRE2 terminology (which is: any code point greater than 255, else byte matching is enough). This is important because PCRE2 yells if a pattern is using a large codepoint and that if an internal PCRE2_UTF flag is not set accordingly.
+
 =item Character class
+
+A character class is very closed to a regular expression (see later), except that it looks like a string, with start/end delimiters being C<[]>, and that the pattern is NOT scanned. marpaESLIF will lets PCRE2 eventually yell if there is a use of codepoints and if the internal PCRE2_UTF flag is not set.
 
 =item Regular expression
 
