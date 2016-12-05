@@ -1,0 +1,60 @@
+=encoding UTF-8
+
+=head1 NAME
+
+marpaESLIF_API - Extended Marpa's Scanless Interface API
+
+=head1 DESCRIPTION
+
+marpaESLIF is a Scanless Interface expressed in a BNF format, that is using L<marpaWrapper|https://github.com/jddurand/c-marpaWrapper>, itself being a thin interface on top of L<libmarpa|https://jeffreykegler.github.io/Marpa-web-site/libmarpa.html> parser.
+
+This document is describing the Application Interface of marpaESLIF. It is splitted in four namespaces:
+
+=over
+
+=item ESLIF
+
+=item ESLIFGrammar 
+
+=item ESLIFRecognizer
+
+=item ESLIFValue
+
+=back
+
+=head2 ESLIF
+
+Any application must start by instanciating a main ESLIF:
+
+  #include <marpaESLIF.h>
+
+  typedef struct marpaESLIFOption {
+    genericLogger_t *genericLoggerp;  /* Logger. Default: NULL */
+  } marpaESLIFOption_t;
+
+  marpaESLIF_t           *marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptionp);
+  void                    marpaESLIF_freev(marpaESLIF_t *marpaESLIFp);
+
+=head3 marpaESLIF_newp
+
+Instanciante the main C<marpaESLIF> object, with C<marpaESLIFOptionp> being an eventual pointer to a C<marpaESLIFOption_t> structure. This structure contain:
+
+=over
+
+=item genericLoggerp
+
+A pointer to a C<genericLogger_t> instance. If it is NULL, then C<marpaESLIF> instance, neither any of the other namespaces, will do logging.
+
+=back
+
+=head3 marpaESLIF_freev
+
+The C<marpaESLIF> destructor, with parameter C<marpaESLIFp> being an instance previously created.
+
+=head1 NOTES
+
+Any of the object of this API is thread-safe but is not I<reentrant>. That is, if user need to access the same object from different threads, he is responsible of doing sychronization.
+
+=head1 SEE ALSO
+
+L<genericLogger|https://github.com/jddurand/c-genericLogger>
