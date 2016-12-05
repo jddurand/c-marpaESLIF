@@ -216,6 +216,9 @@ const static char *selfs = "\n"
   " <JDD5>                            ~ '{Example[]\\\\}'\n"
   " <JDD6>                            ~ 'Black Heart Suite Character: ♥'\n"
   " <JDD7>                            ~ 'Black Heart Suite Character: ♥':i\n"
+  " <CLS1>                            ~ [a-z]\n"
+  " <CLS2>                            ~ [a-z♥]\n"
+  " <CLS3>                            ~ [a-z\\x{2665}]:u\n"
   "\n";
 
 int main() {
