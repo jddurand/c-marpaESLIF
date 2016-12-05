@@ -223,7 +223,7 @@ is translated to the UTF-8 pattern C<\{Example\[]\\}>
 
 =item 'Black Heart Suite Character: ♥'
 
-(supposing that input grammar is writen in UTF-8 encoding) is translated to the UTF-8 pattern C<Black Heart Suite Character: \x{2665}>
+is translated to the UTF-8 pattern C<Black Heart Suite Character: \x{2665}>
 
 =back
 
