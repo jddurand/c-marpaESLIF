@@ -209,6 +209,10 @@ is translated to the UTF-8 pattern C<Example>
 
 is translated to the UTF-8 pattern C<\{Example>
 
+=item "{Example}"
+
+is translated to the UTF-8 pattern C<\{Example>
+
 =item '{Example[]\}'
 
 will trigger an error because only C<'> or C<\> itself can be backslashed.
@@ -223,7 +227,9 @@ is translated to the UTF-8 pattern C<\{Example\[]\\}>
 
 =back
 
-A string is always scanned character per character by marpaESLIF, and an ASCII compatible pattern is generated, using \x{...} codepoint notation whenever this is an ASCII special character or a character outside of original ASCII 7-bis character set. So marpaESLIF know if there is need for unicode support or not in PCRE2 terminology (which is: any code point greater than 255, else byte matching is enough). This is important because PCRE2 yells if a pattern is using a large codepoint and that if an internal PCRE2_UTF flag is not set accordingly.
+A string is always scanned character per character by marpaESLIF, and an ASCII compatible pattern is generated, using \x{...} codepoint notation whenever this is an ASCII special character or a character outside of original ASCII 7-bits character set. So marpaESLIF know if there is need for unicode support or not in PCRE2 terminology (which is: any code point greater than 255, else byte matching is enough). This is important because PCRE2 yells if a pattern is using a large codepoint and if this internal PCRE2_UTF flag is not set accordingly. Modifiers are possible but restricted to C<:i> (or its alias C<:ic>), meaning case non-sensitive:
+
+=item 'Black Heart Suite Character: ♥':i
 
 =item Character class
 
