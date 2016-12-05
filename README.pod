@@ -246,7 +246,7 @@ Strings are always anchored at the point where match is attempted.
 
 =item C<PCRE2_UTF>
 
-This flag is automatically set when the scanning of string by marpaESLIF detect the need for it.
+This flag is automatically set when the scanning of the string that is in the grammar, done internally by marpaESLIF, reveal the need for it.
 
 =back
 
