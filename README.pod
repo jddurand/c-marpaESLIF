@@ -167,7 +167,7 @@ As soon as there is no match, and if C<:discard> rule exist, any recognizer is a
 
 if a discard tentative is instancuated on grammar at level 0 using the symbol C<whitespace> of level 1, and if C<whitespace> of level 1 does not match, there will be no tentative for try to discard in level 1, even it is has a C<:discard> rule that is defined to be C<somethingelse>.
 
-=head2 Streaming, character and binary modes
+=head1 Streaming, character and binary modes
 
 Everytime any recognizer need more data, a callback to userspace is triggered. This callback is set up in the top recognizer's option, and shared with any sub-recognizer. Its definition is:
 
@@ -191,7 +191,7 @@ Internally, all chunks of characters are converted to UTF-8. This guarantees thr
 
 =back
 
-=head2 Terminals and Regular expression engine
+=head1 Terminals and Regular expression engine
 
 As mentionned above, regular expression are totally handled using L<PCRE2|http://www.pcre.org/>. Therefore the syntax of regular expression is the PCRE2 syntax. It is obvious that a regular expression define an internal "terminal", and there are three ways to define such a terminal, all of them being converted to a regular expression:
 
@@ -493,9 +493,13 @@ Modifiers are always executed I<in order>, and I<before> the regular expression 
 
 =back
 
-=head2 Logging
+=head1 Logging
 
 All the logging is done via L<genericLogger|https://github.com/jddurand/c-genericLogger>, and if the later is not set, nothing is logged.
+
+=head1 Grammar
+
+Please refer to L<marpaESLIF BNF|https://github.com/jddurand/c-marpaESLIF/tree/master/doc/BNF> for the ESLIF BNF expressed with itself. Fundamentals of the ESLIF grammar are the followings:
 
 =head1 SEE ALSO
 
