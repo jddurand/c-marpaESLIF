@@ -203,7 +203,7 @@ As mentionned above, regular expression are totally handled using L<PCRE2|http:/
 
 =back
 
-Each of these three terminal types support eventual modifiers.
+Each of these three terminal types support eventual modifiers. The most central modifier is the need or not of having the notion of "valid characters", especially outside of the ASCII range. This is called the PCRE2_UTF flag, and is mentionned thoroughly in the next sections.
 
 =over
 
@@ -283,6 +283,60 @@ would give the following dump:
 =item Character class
 
 A character class is very closed to a regular expression (see later), except that it looks like a string, with start/end delimiters being C<[]>, and that the pattern is NOT scanned. marpaESLIF will lets PCRE2 eventually yell if there is a use of codepoints and if the internal PCRE2_UTF flag is not set.
+
+marpaESLIF will try to guess the need for PCRE2_UTF flag by scanning the UTF-8 bytes composing the character class, but will do I<no modification>. For example:
+
+=over
+
+=item [a-z]
+
+will be dumped as:
+
+  #      Pattern:
+  #     0x000000: 5b 61 2d 7a 5d                                  [a-z]
+  #        Flags: PCRE2_ANCHORED
+
+=item [a-z♥]
+
+is dumped as:
+
+  #      Pattern:
+  #     0x000000: 5b 61 2d 7a e2 99 a5 5d                         [a-z...]
+  #        Flags: PCRE2_ANCHORED|PCRE2_UTF
+
+You notice that the sequence C<e299a5> that is the UTF-8 representation of the Black Heart Suite Character. marpaESLIF detected it C<as an explicit character>, so it was able to put the PCRE2_UTF flag automatically. But this will not work if you are using codepoints:
+
+=item [a-z\\x{2665}]
+
+will yield automatically the following error, and this will come from the PCRE2 engine itself:
+
+  ERROR /[a-z\x{2665}]/: pcre2_compile failure at offset 11: character code point value in \x{} or \o{} is too large.
+
+So there is a need for a modifier. Please see the section on "Character class and Regular expression modifiers". For instance, here, one would say:
+
+=item [a-z\\x{2665}]:u
+
+leaving to the following dump:
+
+  #     0x000000: 5b 61 2d 7a 5c 78 7b 32 36 36 35 7d 5d          [a-z\x{2665}]
+  #        Flags: PCRE2_ANCHORED|PCRE2_UTF
+
+
+=back
+
+In conclusion determining the need of the PCRE2_UTF8 will always be exact: either marpaESLIF will detect it correctly, either PCRE2 will yell, and you will have to explicitely set it using modifiers. Since character class is nothing else but a regular expression limited to a range of character, they both share the same possible set of modifiers. The only difference is that modifiers in a character class must be preceeded by the C<:> character, while for a regular expression they can be set directly after the C</> end delimiter (as in Perl language).
+
+=item Character class and Regular expression modifiers
+
+Setring modifiers is possible in two ways:
+
+=over
+
+=item directly in the expression
+
+=item explicitely as modifiers
+
+=back
 
 =item Regular expression
 
