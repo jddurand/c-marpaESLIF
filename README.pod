@@ -268,6 +268,14 @@ Strings are always anchored at the point where match is attempted.
 
 This flag is automatically set when the scanning of the string that is in the grammar, done internally by marpaESLIF, reveal the need for it.
 
+=item 'Example':ic
+
+would give the following dump:
+
+  #      Pattern: Example
+  #        Flags: PCRE2_ANCHORED|PCRE2_CASELESS
+
+
 =back
 
 =back
