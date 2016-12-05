@@ -4512,7 +4512,7 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
       }
       /* Remember if this is a true terminal */
       if (symbolp->type == MARPAESLIF_SYMBOL_TYPE_TERMINAL) {
-        MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Alternatives contain at least one terminal (<%s>) - absolute priority given to all terminals", symbolp->descp->asciis);
+        MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Alternatives contain at least one terminal (%s) - absolute priority given to all terminals", symbolp->descp->asciis);
         haveTerminalMatchedb = 1;
       }
       break;
