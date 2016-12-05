@@ -401,9 +401,9 @@ Matches a lower case "u" character unless it is followed by four hexadecimal dig
 
 Matches a lower case "x" character unless it is followed by two hexadecimal digits, in which case the hexadecimal number defines the code point to match (By default, as in Perl, a hexadecimal number is always expected after C<\x>, but it may have zero, one, or two digits (so, for example, C<\xz> matches a binary zero character followed by z) ).
 
-=item Unset back-references in the pattern will match to empty strings.
-
 =back
+
+Unset back-references in the pattern will match to empty strings.
 
 =item m
 
