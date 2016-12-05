@@ -69,14 +69,14 @@ struct marpaESLIF_regex_option_map {
 };
 
 struct marpaESLIF_regex {
-  pcre2_code          *patternp;      /* Compiled pattern */
-  pcre2_match_data    *match_datap;   /* Match data */
+  pcre2_code          *patternp;     /* Compiled pattern */
+  pcre2_match_data    *match_datap;  /* Match data */
 #ifdef PCRE2_CONFIG_JIT
-  short       jitCompleteb;   /* Eventual optimized JIT */
-  short       jitPartialb;
+  short                jitCompleteb; /* Eventual optimized JIT */
+  short                jitPartialb;
 #endif
-  short       isAnchoredb; /* Remember if pattern was allocated with PCRE2_ANCHORED (set automatically or not) */
-  short       utfb; /* Is UTF mode enabled in that pattern ? */
+  short                isAnchoredb;  /* Remember if pattern was allocated with PCRE2_ANCHORED (set automatically or not) */
+  short                utfb;         /* Is UTF mode enabled in that pattern ? */
 };
 
 struct marpaESLIF_terminal {
