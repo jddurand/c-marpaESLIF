@@ -499,7 +499,59 @@ All the logging is done via L<genericLogger|https://github.com/jddurand/c-generi
 
 =head1 Grammar
 
-Please refer to L<marpaESLIF BNF|https://github.com/jddurand/c-marpaESLIF/tree/master/doc/BNF> for the ESLIF BNF expressed with itself. Fundamentals of the ESLIF grammar are the followings:
+Please refer to L<marpaESLIF BNF|https://github.com/jddurand/c-marpaESLIF/tree/master/doc/BNF> for the ESLIF BNF expressed with itself. Fundamentals of the ESLIF grammar are the followings (incompatible change v.s. L<Marpa::R2's DSL|https://metacpan.org/pod/distribution/Marpa-R2/pod/Scanless/DSL.pod> are highlighted):
+
+=over
+
+=item Grammar levels
+
+The number of levels is only limited by memory for your program -; Any symbol that have an impact on grammar at level C<n> must be defined with such level explicitely:
+
+=over
+
+=item C<::=> is an alias for level 0
+
+=item C<~> is an alias for level 1
+
+=item C<:[n]:=> is the general form for level n
+
+=back
+
+As a consequence the definition of a C<:discard> symbol is incompatible with L<Marpa::R2's DSL|https://metacpan.org/pod/distribution/Marpa-R2/pod/Scanless/DSL.pod>, in which a discard rule affecting level 0 have the alias C<~>, for ESLIF it is C<::=>.
+
+=item built-in actions and adverb lists
+
+Any L<Marpa::R2|https://metacpan.org/pod/distribution/Marpa-R2/pod/Scanless/DSL.pod>'s action or adverb list that require the Perl langage has been removed, for example C<::array>, C<bless>
+
+=item LATM is true by default
+
+LATM (Longest Acceptable Token Match) is preventing the scanner to push alternatives of lower length than the longest of the alternatives.
+
+=item pausing is allowed with discard events
+
+=item C<:default> statement is unique per level
+
+... instead of being lexically scoped with L<Marpa::R2's DSL|https://metacpan.org/pod/distribution/Marpa-R2/pod/Scanless/DSL.pod>.
+
+=item syntactic exception is supported
+
+... dand it is managed at I<valuation> phase.
+
+=item native regular expression support (via L<PCRE2|http://www.pcre.org/>)
+
+=item comments are extended to C<C++>/C<C> styles
+
+=item there is B<no> notion of I<mask>
+
+In L<Marpa::R2|https://metacpan.org/pod/distribution/Marpa-R2/pod/Scanless/DSL.pod>, it is possible to get actions called with masked RHS (they are enclosed in parenthesis). This is quite highly coupled with how Perl is strong at managing arrays, and this feature has been removed
+
+=item I<proper> symbol separators are B<not> hiden when calling actions
+
+Sequence rules can have a I<separator symbol>, and it is hiden by L<Marpa::R2|https://metacpan.org/pod/distribution/Marpa-R2/pod/Scanless/DSL.pod> when calling the actions. This add-on has been removed, in favour of the native L<libmarpa|https://jeffreykegler.github.io/Marpa-web-site/libmarpa.html> implementation, in which a stack contain everything: symbols and their separator between each of them.
+
+=item etc -;
+
+=back
 
 =head1 SEE ALSO
 
