@@ -245,7 +245,7 @@ The presence of this flag has an important consequence: if at least one string i
 
 =item String modifiers
 
-String modifiers must be appended directly after the end delimiter of the string. They are restricted to C<:i> (or its alias C<:ic>), meaning that the match is caseless sensitive:
+String modifiers must be appended directly after the end delimiter of the string. They are restricted to C<:i>, meaning that the match is caseless sensitive:
 
 =over
 
@@ -270,7 +270,7 @@ This flag is automatically set when the scanning of the string that is in the gr
 
 =back
 
-=item 'Example':ic
+=item 'Example':i
 
 would give the following dump:
 
