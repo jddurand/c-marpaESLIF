@@ -306,15 +306,15 @@ is dumped as:
 
 You notice that the sequence C<e299a5> that is the UTF-8 representation of the Black Heart Suite Character. marpaESLIF detected it C<as an explicit character>, so it was able to put the PCRE2_UTF flag automatically. But this will not work if you are using codepoints:
 
-=item [a-z\\x{2665}]
+=item [a-z\x{2665}]
 
 will yield automatically the following error, and this will come from the PCRE2 engine itself:
 
-  ERROR /[a-z\x{2665}]/: pcre2_compile failure at offset 11: character code point value in \x{} or \o{} is too large.
+  /[a-z\x{2665}]/: pcre2_compile failure at offset 11: character code point value in \x{} or \o{} is too large.
 
 So there is a need for a modifier. Please see the section on "Character class and Regular expression modifiers". For instance, here, one would say:
 
-=item [a-z\\x{2665}]:u
+=item [a-z\x{2665}]:u
 
 leaving to the following dump:
 
