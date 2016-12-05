@@ -219,6 +219,9 @@ const static char *selfs = "\n"
   " <CLS1>                            ~ [a-z]\n"
   " <CLS2>                            ~ [a-z♥]\n"
   " <CLS3>                            ~ [a-z\\x{2665}]:u\n"
+  " <REG1>                            ~ /[a-z]/u\n"
+  " <REG2>                            ~ /[a-z]+/u\n"
+  " <REG3>                            ~ /(*LIMIT_MATCH=15)[a-z]+/\n"
   "\n";
 
 int main() {

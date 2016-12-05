@@ -324,24 +324,167 @@ leaving to the following dump:
 
 =back
 
-In conclusion determining the need of the PCRE2_UTF8 will always be exact: either marpaESLIF will detect it correctly, either PCRE2 will yell, and you will have to explicitely set it using modifiers. Since character class is nothing else but a regular expression limited to a range of character, they both share the same possible set of modifiers. The only difference is that modifiers in a character class must be preceeded by the C<:> character, while for a regular expression they can be set directly after the C</> end delimiter (as in Perl language).
+=item Regular expression
 
-=item Character class and Regular expression modifiers
-
-Setring modifiers is possible in two ways:
+Nothing really distinguished regular expression and character classes in the grammar, except that I<sequence modifiers> can be embedded directly in a regular expression, so that they are managed by PCRE2 instead of marpaESLIF, i.e:
 
 =over
 
-=item directly in the expression
+=item /[a-z]/
 
-=item explicitely as modifiers
+is stricly equivalent to the character C<[a-z]>.
+
+=item /[a-z]+/
+
+really mean that the sequence is embedded in the regular expression. The dump of the later would say:
+
+  #      Pattern:
+  #     0x000000: 5b 61 2d 7a 5d 2b                               [a-z]+
 
 =back
 
-=item Regular expression
+In conclusion determining the need of the PCRE2_UTF8 will always be exact: either marpaESLIF will detect it correctly, either PCRE2 will yell, and you will have to explicitely set it using modifiers. Since character class is nothing else but a regular expression limited to a range of character, they both share the same possible set of modifiers.
+
+=item Character class and Regular expression modifiers
+
+The only difference between the twos is how modifiers are expressed: for a character class they must be preceeded by the C<:> character, while for a regular expression they can be set directly after the C</> end delimiter (as in the Perl language).
+
+The explicit regular expression, being sent directly as-is to PCRE2, support de-facto all of the native PCRE2 pattern language, i.e. one can set regular expression options that have no single option equivalent when using a regular expression, for example:
+
+=over
+
+=item /(*LIMIT_MATCH=15)[a-z]+/
+
+is setting an internal PCRE2 match limit to 15. The dump does not show that as an explicit flag:
+
+  #      Pattern:
+  #     0x000000: 28 2a 4c 49 4d 49 54 5f 4d 41 54 43 48 3d 31 35 (*LIMIT_MATCH=15
+  #     0x000010: 29 5b 61 2d 7a 5d 2b                            )[a-z]+
+  #        Flags: PCRE2_ANCHORED
+
+
+=back
+
+It is highly recommended to read the L<pcre2pattern|http://www.pcre.org/current/doc/html/pcre2pattern.html> documentation to know all the possible settings that can be I<embedded> into the regular expression. Explicit modifiers are insipired by the L<jpcre2|https://github.com/jpcre2/jpcre2> and L<Perl language|www.perl.org> (most of the descriptions below are copy/pasted from jpcre2):
+
+=over
+
+=item e
+
+Set the C<PCRE2_MATCH_UNSET_BACKREF> flag.
+
+Unset back-references in the pattern will match to empty strings.
+
+=item i
+
+Set the C<PCRE2_CASELESS> flag.
+
+Case-insensitive.
+
+=item j
+
+Set the C<PCRE2_ALT_BSUX|PCRE2_MATCH_UNSET_BACKREF> flags.
+
+\u \U \x and unset back-references will act as JavaScript standard:
+
+=over
+
+=item \U matches an upper case "U" character (by default it causes a compile error if this option is not set).
+
+=item \u matches a lower case "u" character unless it is followed by four hexadecimal digits, in which case the hexadecimal number defines the code point to match (by default it causes a compile error if this option is not set).
+
+=item \x matches a lower case "x" character unless it is followed by two hexadecimal digits, in which case the hexadecimal number defines the code point to match (By default, as in Perl, a hexadecimal number is always expected after \x, but it may have zero, one, or two digits (so, for example, \xz matches a binary zero character followed by z) ).
+
+=item Unset back-references in the pattern will match to empty strings.
+
+=back
+
+=item m
+
+Set the C<PCRE2_MULTILINE> flag.
+
+Multi-line regex.
+
+=item n
+
+Set the C<PCRE2_UCP> flag.
+
+Enable Unicode properties for several meta-characters?
+
+=item s
+
+Set the C<PCRE2_DOTALL> flag.
+
+If this modifier is set, a dot meta-character in the pattern matches all characters, including newlines. 
+
+=item x
+
+Set the C<PCRE2_EXTENDED> flag.
+
+Whitespace data characters in the pattern are totally ignored except when escaped or inside a character class, enables commentary in pattern.
+
+For parsing reasons, it can be the parsing of our grammar fail if your are using the / character into embedded regular expression comments, though -;
+
+=item D
+
+Set the C<PCRE2_DOLLAR_ENDONLY> flag.
+
+A dollar meta-character in the pattern matches only at the end of the subject string. Without this modifier, a dollar also matches immediately before the final character if it is a newline (but not before any other newlines). This modifier is ignored if m modifier is set.
+
+=item J
+
+Set the C<PCRE2_DUPNAMES> flag.
+
+Allow duplicate names for sub-patterns.
+
+=item U
+
+Set the C<PCRE2_UNGREEDY> flag.
+
+This modifier inverts the "greediness" of the quantifiers so that they are not greedy by default, but become greedy if followed by ?.
+
+=item a
+
+Unset the C<PCRE2_UTF> flag.
+
+Only byte matching will work.
+
+=item N
+
+Unset the C<PCRE2_UCP> flag.
+
+Meta-characters will be limited to their ASCII equivalent.
+
+=item u
+
+Set the C<PCRE2_UTF> flag.
+
+Forces support of large codepoints.
+
+=item b
+
+Unset the C<PCRE2_UTF> flag, then set the C<PCRE2_NEVER_UTF> flag.
+
+Could mean "forced binary" mode.
+
+=item c
+
+Unset the C<PCRE2_NEVER_UTF> flag, then set the C<PCRE2_UTF> flag.
+
+Could mean "forced unicode character" mode.
+
+=item A
+
+Unset the C<PCRE2_ANCHORED> flag.
+
+Dangerous option, in case you want to do look-behind. Since the user has no control on how marpaESLIF manages its stream buffers, in theory it is safe to use this option only if the whole data is sent to marpaESLIF a single buffer.
+
+=back
+
+Modifiers are always executed I<in order>, and I<before> the regular expression is compiled: if a regular expression compilation fail, corresponding message sent by PCRE2 will be echoed to your logger, with the C<GENERICLOGGER_LOGLEVEL_ERROR> level. You will notice that all modifiers in common to jpcre2 have the same meaning, I<except for the n> modifier: I<n> in jpcre2 is I<nu> for us.
 
 =back
 
 =head1 SEE ALSO
 
-L<marpaESLIF_BNF|https://github.com/jddurand/c-marpaESLIF/tree/master/doc/BNF>, L<genericLogger|https://github.com/jddurand/c-genericLogger>, L<PCRE2|http://www.pcre.org/>
+L<marpaESLIF_BNF|https://github.com/jddurand/c-marpaESLIF/tree/master/doc/BNF>, L<genericLogger|https://github.com/jddurand/c-genericLogger>, L<PCRE2|http://www.pcre.org/>, L<jpcre2|https://github.com/jpcre2/jpcre2>, L<Perl language|www.perl.org>.
