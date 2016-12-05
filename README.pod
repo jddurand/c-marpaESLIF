@@ -197,7 +197,7 @@ As mentionned above, regular expression are totally handled using L<PCRE2|http:/
 
 =item String
 
-A string is delimited expression in the grammar, where allowed start/and delimiters are C<''>, C<""> and C<{}>. When a string is recognized in the grammar, escaping is allowed using the backslash C<\> character, and only the start delimited or backslash itself can be escaped. Absolutely any other character is taken C<as is>, eventually internally escaped by marpaESLIF to remove its signification in PCRE2, when there is one. For example:
+A string is delimited expression in the grammar, where allowed start/and delimiters are C<''> and C<"">. When a string is recognized in the grammar, escaping is allowed using the backslash C<\> character, and only the start delimited or backslash itself can be escaped. Absolutely any other character is taken C<as is>, eventually internally escaped by marpaESLIF to remove its signification in PCRE2, when there is one. For example:
 
 =over
 
