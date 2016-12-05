@@ -245,7 +245,7 @@ The presence of this flag has an important consequence: if at least one string i
 
 =item String modifiers
 
- String modifiers must be appended directly after the end delimiter of the string. They are restricted to C<:i> (or its alias C<:ic>), meaning that the match is caseless sensitive:
+String modifiers must be appended directly after the end delimiter of the string. They are restricted to C<:i> (or its alias C<:ic>), meaning that the match is caseless sensitive:
 
 =over
 
