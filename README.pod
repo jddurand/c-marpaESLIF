@@ -491,6 +491,10 @@ Modifiers are always executed I<in order>, and I<before> the regular expression 
 
 =back
 
+=head2 Logging
+
+All the logging is done via L<genericLogger|https://github.com/jddurand/c-genericLogger>, and if the later is not set, nothing is logged.
+
 =head1 SEE ALSO
 
 L<marpaESLIF_BNF|https://github.com/jddurand/c-marpaESLIF/tree/master/doc/BNF>, L<genericLogger|https://github.com/jddurand/c-genericLogger>, L<PCRE2|http://www.pcre.org/>, L<jpcre2|https://github.com/jpcre2/jpcre2>, L<Perl language|www.perl.org>.
