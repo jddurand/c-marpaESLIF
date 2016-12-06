@@ -154,7 +154,7 @@ Return the indice of the start rule of the top grammar in the value pointed by C
 
 Return a true value on failure, a false value on failure.
 
-=item marpaESLIFGrammar_startib
+=item marpaESLIFGrammar_starti_by_grammarb
 
   short                   marpaESLIFGrammar_starti_by_grammarb(marpaESLIFGrammar_t *marpaESLIFGrammarp,
                                                                int *startip,
