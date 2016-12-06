@@ -34,6 +34,21 @@ Valuation phase.
 
 =back
 
+and on transversal type:
+
+  typedef struct marpaESLIFString {
+    char   *bytep;            /* pointer bytes */
+    size_t  bytel;            /* number of bytes */
+    char   *encodingasciis;   /* Encoding of bytes, itself being writen in ASCII encoding, NUL byte terminated */
+    char   *asciis;           /* ASCII (un-translatable bytes are changed to a replacement character) translation of previous bytes, NUL byte terminated - never NULL if bytep is not NULL */
+    /*
+     * Remark: the encodings and asciis pointers are not NULL only when ESLIF know that the buffer is associated to a "description". I.e.
+     * this is happening ONLY when parsing the grammar. Raw data never have non-NULL asciis or encodings.
+     */
+  } marpaESLIFString_t;
+
+which describe what is a I<string>: this is a sequence of C<bytel> bytes, starting at C<bytep> in memory, in eventual C<encodingasciis> encoding, and transliterated into C<asciis>.
+
 =head2 ESLIF
 
 =head3 marpaESLIF_newp
@@ -121,12 +136,44 @@ Return C<NULL> if failure, a grammar object instance on success.
 
 Return the main ESLIF object instance from a ESLIFGrammar instance, or C<NULL> is failure.
 
-=item marpaESLIFGrammar_ngrammari
+=item marpaESLIFGrammar_ngrammarib
 
   short                   marpaESLIFGrammar_ngrammarib(marpaESLIFGrammar_t *marpaESLIFGrammarp,
                                                        int *ngrammarip);
 
 Get the number of grammars in the value pointed by C<ngrammarip> when the later is not C<NULL>. The number of grammars is the highest indice plus one in an internal sparse array of grammars.
+
+Return a true value on failure, a false value on failure.
+
+=item marpaESLIFGrammar_startib
+
+  short                   marpaESLIFGrammar_startib(marpaESLIFGrammar_t *marpaESLIFGrammarp,
+                                                    int *startip);
+
+Return the indice of the start rule of the top grammar in the value pointed by C<startip>, which can be NULL. The top grammar is the first of the grammars (also called grammar at level 0).
+
+Return a true value on failure, a false value on failure.
+
+=item marpaESLIFGrammar_startib
+
+  short                   marpaESLIFGrammar_starti_by_grammarb(marpaESLIFGrammar_t *marpaESLIFGrammarp,
+                                                               int *startip,
+                                                               int grammari,
+                                                               marpaESLIFString_t *descp);
+
+Return the indice of the start rule of the wanted grammar in the value pointed by C<startip>, which can be NULL. The wanted grammar is identifier by:
+
+=over
+
+=item C<grammari>
+
+Indice in the list of grammars, ignored if < 0.
+
+=item C<descp>
+
+Grammar description, always have precedence if it is not C<NULL>. Only C<<descp->bytep>> and C<<descp->bytel>> are considered when looking up grammars using a grammar description.
+
+=back
 
 Return a true value on failure, a false value on failure.
 
