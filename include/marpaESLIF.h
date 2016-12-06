@@ -18,7 +18,7 @@ typedef struct marpaESLIFSymbol     marpaESLIFSymbol_t;
 typedef struct marpaESLIFString {
   char   *bytep;            /* pointer bytes */
   size_t  bytel;            /* number of bytes */
-  char   *encodingasciis;   /* Encoding of previous bytes, itself being writen in ASCII encoding, NUL byte terminated */
+  char   *encodingasciis;   /* Encoding of bytes, itself being writen in ASCII encoding, NUL byte terminated */
   char   *asciis;           /* ASCII (un-translatable bytes are changed to a replacement character) translation of previous bytes, NUL byte terminated - never NULL if bytep is not NULL */
   /*
    * Remark: the encodings and asciis pointers are not NULL only when ESLIF know that the buffer is associated to a "description". I.e.
