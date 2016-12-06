@@ -44,13 +44,13 @@ Valuation phase.
 
   marpaESLIF_t           *marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptionp);
 
-Any application must start by instanciating a main ESLIF. This method is returning such a main C<marpaESLIF> object, with C<marpaESLIFOptionp> being an eventual pointer to a C<marpaESLIFOption_t> structure. This structure contain:
+Any application must start by instanciating a main ESLIF. This method is returning such a main C<marpaESLIF> object, or C<NULL> is failure, using C<marpaESLIFOptionp> that is an eventual pointer to a C<marpaESLIFOption_t> structure. This structure contain:
 
 =over
 
 =item genericLoggerp
 
-A pointer to a C<genericLogger_t> instance. If it is NULL, then C<marpaESLIF> instance, neither any of the other namespaces, will do logging.
+A pointer to a C<genericLogger_t> instance. If it is NULL, then C<marpaESLIF> instance, neither any of the other namespaces, will do logging. Otherwise, all will inherit this logger object and use it.
 
 =back
 
@@ -112,6 +112,23 @@ ASCII and NUL-terminated string giving the encoding of the encoding information 
 =back
 
 In real life-programming, grammars are assumed to always fit within a single block of memory. So there is no reader of grammar definition, we assume that C<bytep> and C<bytel> are enough for this job.
+
+Return C<NULL> if failure, a grammar object instance on success.
+
+=item marpaESLIFGrammar_eslifp
+
+  marpaESLIF_t           *marpaESLIFGrammar_eslifp(marpaESLIFGrammar_t *marpaESLIFGrammarp);
+
+Return the main ESLIF object instance from a ESLIFGrammar instance, or C<NULL> is failure.
+
+=item marpaESLIFGrammar_ngrammari
+
+  short                   marpaESLIFGrammar_ngrammari(marpaESLIFGrammar_t *marpaESLIFGrammarp,
+                                                      int *ngrammarip);
+
+Get the number of grammars in the value pointed by C<ngrammarip> when the later is not C<NULL>. The number of grammars is the highest indice plus one in an internal sparse array of grammars.
+
+Return a true value on failure, a false value on failure.
 
 =back
 
