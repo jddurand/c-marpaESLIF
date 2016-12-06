@@ -72,7 +72,8 @@ The C<marpaESLIF> destructor, with parameter C<marpaESLIFp> being an instance pr
     char   *encodingOfEncodings; /* Encoding of encoding, in ASCII encoding. Default: NULL. */
   } marpaESLIFGrammarOption_t;
 
-  marpaESLIFGrammar_t    *marpaESLIFGrammar_newp(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammarOption_t *marpaESLIFGrammarOptionp);
+  marpaESLIFGrammar_t    *marpaESLIFGrammar_newp(marpaESLIF_t *marpaESLIFp,
+                                                 marpaESLIFGrammarOption_t *marpaESLIFGrammarOptionp);
 
 This is creating a grammar object instance, with parameters:
 
