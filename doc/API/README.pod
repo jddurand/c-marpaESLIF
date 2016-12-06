@@ -123,8 +123,8 @@ Return the main ESLIF object instance from a ESLIFGrammar instance, or C<NULL> i
 
 =item marpaESLIFGrammar_ngrammari
 
-  short                   marpaESLIFGrammar_ngrammari(marpaESLIFGrammar_t *marpaESLIFGrammarp,
-                                                      int *ngrammarip);
+  short                   marpaESLIFGrammar_ngrammarib(marpaESLIFGrammar_t *marpaESLIFGrammarp,
+                                                       int *ngrammarip);
 
 Get the number of grammars in the value pointed by C<ngrammarip> when the later is not C<NULL>. The number of grammars is the highest indice plus one in an internal sparse array of grammars.
 

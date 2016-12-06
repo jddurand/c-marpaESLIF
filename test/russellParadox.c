@@ -61,7 +61,7 @@ int main() {
   }
 
   /* Dump grammar */
-  if (marpaESLIFGrammar_ngrammari(marpaESLIFGrammarp, &ngrammari)) {
+  if (marpaESLIFGrammar_ngrammarib(marpaESLIFGrammarp, &ngrammari)) {
     for (grammari = 0; grammari < ngrammari; grammari++) {
       if (marpaESLIFGrammar_grammarshowform_by_grammarb(marpaESLIFGrammarp, &grammarshows, grammari, NULL)) {
         GENERICLOGGER_INFO (marpaESLIFOption.genericLoggerp, "-------------------------");

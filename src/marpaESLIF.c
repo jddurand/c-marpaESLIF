@@ -3055,7 +3055,7 @@ marpaESLIF_t *marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptionp)
     int     i;
     size_t  l;
 
-    if (marpaESLIFGrammar_ngrammari(marpaESLIFp->marpaESLIFGrammarp, &ngrammari)) {
+    if (marpaESLIFGrammar_ngrammarib(marpaESLIFp->marpaESLIFGrammarp, &ngrammari)) {
       for (i = 0; i < ngrammari; i++) {
         if (marpaESLIFGrammar_rulearray_by_grammarb(marpaESLIFp->marpaESLIFGrammarp, &ruleip, &rulel, i /* grammari */, NULL /* descp */)) {
           GENERICLOGGER_TRACEF(genericLoggerp, "[%s] -------------------------", funcs);
@@ -8643,7 +8643,7 @@ marpaESLIFGrammar_t *marpaESLIF_grammarp(marpaESLIF_t *marpaESLIFp)
 }
 
 /*****************************************************************************/
-short marpaESLIFGrammar_ngrammari(marpaESLIFGrammar_t *marpaESLIFGrammarp, int *ngrammarip)
+short marpaESLIFGrammar_ngrammarib(marpaESLIFGrammar_t *marpaESLIFGrammarp, int *ngrammarip)
 /*****************************************************************************/
 {
   if (marpaESLIFGrammarp == NULL) {
