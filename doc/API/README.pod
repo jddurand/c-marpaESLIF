@@ -18,11 +18,19 @@ There are four namespaces:
 
 =item ESLIF
 
-=item ESLIFGrammar 
+The main object.
+
+=item ESLIFGrammar
+
+Grammar creation and inspection.
 
 =item ESLIFRecognizer
 
+Parsing phase.
+
 =item ESLIFValue
+
+Valuation phase.
 
 =back
 
@@ -51,6 +59,60 @@ A pointer to a C<genericLogger_t> instance. If it is NULL, then C<marpaESLIF> in
   void                    marpaESLIF_freev(marpaESLIF_t *marpaESLIFp);
 
 The C<marpaESLIF> destructor, with parameter C<marpaESLIFp> being an instance previously created.
+
+=head2 ESLIFGrammar
+
+=head3 marpaESLIFGrammar_newp
+
+  typedef struct marpaESLIFGrammarOption {
+    void   *bytep;               /* Input */
+    size_t  bytel;               /* Input length in byte unit */
+    char   *encodings;           /* Input encoding. Default: NULL */
+    size_t  encodingl;           /* Length of encoding itself. Default: 0 */
+    char   *encodingOfEncodings; /* Encoding of encoding, in ASCII encoding. Default: NULL. */
+  } marpaESLIFGrammarOption_t;
+
+  marpaESLIFGrammar_t    *marpaESLIFGrammar_newp(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammarOption_t *marpaESLIFGrammarOptionp);
+
+This is creating a grammar object instance, with parameters:
+
+=over
+
+=item C<marpaESLIFp>
+
+Object instance of the main ESLIF.
+
+=item C<marpaESLIFGrammarOptionp>
+
+Required pointer to a C<marpaESLIFGrammarOption_t> structure, that contain:
+
+=over
+
+=item C<bytep>
+
+A pointer to the start of the grammar. Must be non-NULL.
+
+=item C<bytel>
+
+Number of bytes. Must be > 0.
+
+=item C<encodings>
+
+Pointer to a buffer containing encoding information of the grammar. Can be NULL.
+
+=item C<encodingl>
+
+Number of bytes of the buffer containing encoding information. Can be 0.
+
+=item C<encodingOfEncodings>
+
+ASCII and NUL-terminated string giving the encoding of the encoding information itself. Can be NULL.
+
+=back
+
+In real life-programming, grammars are assumed to always fit within a single block of memory. So there is no reader of grammar definition, we assume that C<bytep> and C<bytel> are enough for this job.
+
+=back
 
 =head1 NOTES
 
