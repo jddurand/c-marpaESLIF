@@ -39,12 +39,8 @@ and on transversal type:
   typedef struct marpaESLIFString {
     char   *bytep;            /* pointer bytes */
     size_t  bytel;            /* number of bytes */
-    char   *encodingasciis;   /* Encoding of bytes, itself being writen in ASCII encoding, NUL byte terminated */
-    char   *asciis;           /* ASCII (un-translatable bytes are changed to a replacement character) translation of previous bytes, NUL byte terminated - never NULL if bytep is not NULL */
-    /*
-     * Remark: the encodings and asciis pointers are not NULL only when ESLIF know that the buffer is associated to a "description". I.e.
-     * this is happening ONLY when parsing the grammar. Raw data never have non-NULL asciis or encodings.
-     */
+    char   *encodingasciis;   /* Encoding of bytes, itself in ASCII encoding, NUL byte terminated */
+    char   *asciis;           /* ASCII transliteration - never NULL if bytep is not NULL */
   } marpaESLIFString_t;
 
 which describe what is a I<string>: this is a sequence of C<bytel> bytes, starting at C<bytep> in memory, in eventual C<encodingasciis> encoding, and transliterated into C<asciis>.
@@ -403,7 +399,11 @@ for the C<marpaESLIFValueOption_t> and C<marpaESLIFValueResult_t> structures doc
 
 =back
 
-A short form of parsing and valuation, in which no I<lexeme pause before event> is possible, which normally puts the scanning on hold waiting for the user to take action. Please refer to the L<marpaESLIF_BNF|https://github.com/jddurand/c-marpaESLIF/tree/master/doc/BNF> for more information about grammar events. The grammar at level C<0> is used.
+A short form of parsing and valuation, in which I<no event> is possible: the entire scanning is left to the marpaESLIF engine. The grammar at level C<0> is used.
+
+The value pointed by C<exhaustedbp>, when not C<NULL>, is filled with a true value if the parsing exhausted (exhaustion roughly mean that the parsing stopped without consuming all the data), a false value otherwise.
+
+Returns a true value on success, a false value otherwise.
 
 =head3 C<marpaESLIFGrammar_parse_by_levelb>
 
@@ -430,6 +430,165 @@ is the eventual explicit description, ignored if C<NULL>.
 =back
 
 C<descp> have precedence of C<leveli>.
+
+=head3 C<marpaESLIFGrammar_freev>
+
+  void marpaESLIFGrammar_freev(marpaESLIFGrammar_t *marpaESLIFGrammarp);
+
+The destructor of a C<marpaESLIFGrammarp> instance. No-op if C<marpaESLIFGrammarp> is C<NULL>.
+
+=head2 ESLIFRecognizer
+
+=head3 C<marpaESLIFRecognizer_newp>
+
+  typedef short (*marpaESLIFReader_t)(void    *userDatavp,
+                                      char   **inputcpp,
+                                      size_t  *inputlp,
+                                      short   *eofbp,
+                                      short   *characterStreambp,
+                                      char   **encodingOfEncodingsp,
+                                      char   **encodingsp,
+                                      size_t  *encodinglp);
+  typedef struct marpaESLIFRecognizerOption {
+    void                *userDatavp;                  /* User specific context */
+    marpaESLIFReader_t   marpaESLIFReaderCallbackp;   /* Reader callback */
+    short                disableThresholdb;           /* Disable threshold warning.  Recommended: 0 */
+    short                exhaustedb;                  /* Exhaustion event.           Recommended: 0 */
+    short                newlineb;                    /* Count line/column numbers.  Recommended: 0 */
+    size_t               bufsizl;                     /* Minimum stream buffer size. Recommended: 0 (== system default) */
+
+    /* Excess number of bytes, in % of bufsizl, where stream buffer size is reduced */
+    unsigned int         buftriggerperci;             /*                             Recommended: 50 */
+
+    /* Policy of minimum of bytes for increase, in % of current allocated size, when */
+    /*  stream buffer size need to augment */
+    unsigned int         bufaddperci;                 /*                             Recommended: 50 */
+  } marpaESLIFRecognizerOption_t;
+
+  marpaESLIFRecognizer_t *marpaESLIFRecognizer_newp(marpaESLIFGrammar_t          *marpaESLIFGrammarp,
+                                                    marpaESLIFRecognizerOption_t *marpaESLIFRecognizerOptionp);
+
+Creates a recognizer out of a C<marpaESLIFGrammarp> grammar instance.
+
+The C<marpaESLIFReader_t> defines the prototype of a reader, referenced in the required parameter C<marpaESLIFRecognizerOptionp>. Its arguments are:
+
+=over
+
+=item C<userDatavp>
+
+User opaque pointer, set in C<marpaESLIFRecognizerOptionp> and propagated as-is to the reader. There is no default value.
+
+=item C<inputcpp>
+
+The place where the user will set the pointer of the next available buffer. Default is C<NULL>.
+
+=item C<inputlp>
+
+The place where the user will set the number of bytes of the next available buffer. Default is C<0>.
+
+=item C<eofbp>
+
+The place where the user will set a flag saying this the end of data. Default is a false value.
+
+=item C<characterStreambp>
+
+The place where the user will set a flag saying this buffer I<must> be a stream of characters. Default is a false value.
+
+=item C<encodingOfEncodingsp>
+
+The place where the user will give in which encoding is the encoding itself. Default is <NULL>.
+
+=item C<encodingsp>
+
+The place where the user will give a pointer to a buffer containing encoding information, encoded using C<encodingOfEncodingsp> encoding. Default is C<NULL>.
+
+=item C<encodinglp>
+
+The place where the user will give a size of the buffer starting at C<*encodingsp>. Default is C<0>.
+
+=back
+
+Mixing binary and character streams is possible but only at the chunk level, where a chunk is the data buffer returned by the reader callback. It is up the user to be able to determine the boundaries. Here is how the character stream flag and encoding information is used by marpaESLIF at the return of the reader callback:
+
+=over
+
+=item 1 - User say this is a character stream
+
+=over
+
+=item A - Previous read was also a character streams
+
+=over
+
+=item a - User gave encoding (C<*encodingsp> is not C<NULL>)
+
+If previous encoding is different, it is flushed and a new one is starting. Else previous encoding continue, this more will support incomplete character from the previous chunk.
+
+=item b - User gave no encoding (C<*encodingsp> is C<NULL>)
+
+It is assumed that previous encoding continue
+
+=back
+
+=item B - Previous read was not a stream of characters (or there was no previous read)
+
+If user gave encoding information it is used, else encoding is guessed.
+
+=back
+
+=item 2 - User say this is not a character stream
+
+=over
+
+=item A - Previous read was a character stream
+
+It is flushed, and binary data is appended as-is.
+
+=item B - Previous read was not a character stream (or there was no previous read)
+
+Binary data is appended as.is.
+
+=back
+
+=back
+
+The parameter C<marpaESLIFRecognizerOptionp> is a pointer to a C<marpaESLIFRecognizerOption_t> structure, where:
+
+=over
+
+=item C<userDatavp>
+
+User context, propagated as-is to reader callback.
+
+=item C<marpaESLIFReaderCallbackp>
+
+Pointer to the reader callback. Must not be C<NULL>.
+
+=item C<disableThresholdb>
+
+Disable treshold warning generated by L<libmarpa|https://jeffreykegler.github.io/Marpa-web-site/libmarpa.html>. Recommended value is a false value, because when such warning arises, it usually indicate some problem with the grammar.
+
+=item exhaustedb
+
+Support of exhaustion. Recommended value is a false value, because the most common usage of parsing data is to parse the full buffer up to its end of data. Nevertheless is is quite easy to find applications that support the exhaustion, for example parsing of binary structures that contain sub-structures, and so on.
+
+=item newlineb
+
+Support of newline count. This is used when the parser fails to produce ab accurate report with line and number information. Works at the granularity of data chunk, and is meaningless if data chunk is not declared as a character stream.
+
+=item bufsizl
+
+Default number of bytes of the internal buffer in marpaESLIF, in which I<all> data is stored and appended. If C<0>, the value used when compiling marpaESLIF library is used, itself defaulting to 1Mb. Recommended value is C<0>.
+
+=item buftriggerperci
+
+In order to prevent internal buffer to grow indefinitely, C<buftriggerperci> is the percentage of C<bufsizl> that give a trigger on the number of unused bytes at which the internal buffer is reduced to its initial size C<bufsizl>. Recommended value is C<50>.
+
+=item bufaddperci
+
+To prevent too many memory allocations, when marpaESLIF need to increase its internal buffer, it will do so by requesting C<bufaddperci> percent of current allocated size more bytes. Recommended value: C<50>.
+
+=back
 
 =head1 NOTES
 
