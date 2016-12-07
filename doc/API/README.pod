@@ -334,10 +334,10 @@ Return a true value on failure, a false value on failure.
 =head3 marpaESLIFGrammar_grammarshowform_currentb
 
   short marpaESLIFGrammar_grammarshowform_currentb(marpaESLIFGrammar_t  *marpaESLIFGrammarp,
-                                                int                   grammari,
-                                                char                **grammarshowsp);
+                                                   int                   grammari,
+                                                   char                **grammarshowsp);
 
-Put in the value pointed by C<grammarshowsp>, which can be C<NULL>, a NUL-terminated I<ASCII encoded> transliteration of grammar definition at indice C<grammari> of the current grammar from C<marpaESLIFGrammarp>. This is very exhaustive, and give internal information about all symbols and rules.
+Put in the value pointed by C<grammarshowsp>, which can be C<NULL>, a NUL-terminated I<ASCII encoded> transliteration of grammar definition at indice C<grammari> of the current grammar from C<marpaESLIFGrammarp>. This is very exhaustive, and give internal information about all symbols and rules. See the NOTES section.
 
 Return a true value on failure, a false value on failure.
 
@@ -365,13 +365,152 @@ is the eventual explicit description, ignored if C<NULL>.
 
 C<descp> have precedence of C<leveli>.
 
-This is very exhaustive, and give internal information about all symbols and rules.
+This is very exhaustive, and give internal information about all symbols and rules. See the NOTES section.
 
 Return a true value on failure, a false value on failure.
 
 =head1 NOTES
 
+=over
+
+=item Thread-safety
+
 Any of the object of this API is thread-safe but is not I<reentrant>. That is, if user need to access the same object from different threads, he is responsible of doing sychronization.
+
+=item Grammar show form
+
+The grammar show form is a concatenation of rule show forms and internal information, for every valid grammar level. For every grammar, the following is outputed:
+
+=over
+
+=item Meta grammar settings
+
+For example:
+
+  /*
+   * **********************
+   * Meta-grammar settings:
+   * **********************
+   */
+  :start ::= json
+  :default ::= action => ::concat
+               symbol-action => ::shift
+               latm => 1
+
+=item Event settings
+
+For example:
+
+  /*
+   * ***************
+   * Event settings:
+   * ***************
+   */
+  :lexeme ::= <lstring> pause => after event => lstring$=on
+
+=item Rules
+
+For example:
+
+  /*
+   * ******
+   * Rules:
+   * ******
+   */
+  <json> ::= <object>
+  <json> ::= <array>
+  <object> ::= '{' <members> '}' action => do_object
+  etc...
+
+=item Lexemes
+
+A I<lexeme> is a symbol that is referencing another symbol of the same name but in <another> grammar level, for example:
+
+  # --------
+  # Lexemes:
+  # --------
+  #
+  # <number> ::= <number>@+1
+  # <lstring> ::= <lstring>@+1
+  # <whitespace> ::= <whitespace>@+1
+
+=item Rule properties
+
+For every rule, Marpa parser internal properties are given, together with the rule description, and components of the rule in terms in symbol indices, for example:
+
+  # -----------------
+  # Rules properties:
+  # -----------------
+  #
+  # Rule No 0
+  #   Properties: ACCESSIBLE, PRODUCTIVE
+  #   Definition: <json> ::= <object>
+  #   Components:  LHS = RHS[]
+  #                  0 = 1
+  # ...
+  #
+  # Rule No 2
+  #   Properties: ACCESSIBLE, PRODUCTIVE
+  #   Definition: <object> ::= '{' <members> '}' action => do_object
+  #   Components:  LHS = RHS[]
+  #                  1 = 3 4 5
+  # Rule No 3
+  #   Properties: ACCESSIBLE, NULLABLE, PRODUCTIVE
+  #   Definition: <members> ::= <pair>* separator => /[,]/ action => do_array
+  #   Components:  LHS = RHS[]
+  #                  4 = 6
+  #
+  # ...
+
+=item Symbol properties
+
+For every symbol, its ESLIF type, Marpa parser properties and definition are given. When it is a terminal, corresponding regular expression definition is given, as well as eventual JIT usage (c.f. PCRE2 information to understand what it is about). For example:
+
+  # -------------------
+  # Symbols properties:
+  # -------------------
+  #
+  # Symbol No 0
+  #         Type: ESLIF META
+  #   Properties: ACCESSIBLE, PRODUCTIVE, START
+  #         Name: <json>
+  #
+  # ...
+  #
+  # Symbol No 3
+  #         Type: ESLIF TERMINAL
+  #   Properties: ACCESSIBLE, PRODUCTIVE, TERMINAL
+  #      Pattern: \{
+  #        Flags: PCRE2_ANCHORED
+  #          JIT: complete=yes, partial=yes
+  #
+  # ...
+  #
+  # Symbol No 23
+  #         Type: ESLIF TERMINAL
+  #   Properties: PRODUCTIVE, TERMINAL
+  #      Pattern:
+  #     0x000000: 5b 5c 73 5d                                     [\s]
+  #        Flags: PCRE2_ANCHORED
+  #          JIT: complete=yes, partial=yes
+
+There are two types of terminal:
+
+=over
+
+=item Strings
+
+Strings are always converted to a pattern that is fully ASCII compatible, in which ESLIF decide to eventually escape some characters, or to use them in their C<\x{...}> code point version. Therefore the definition of the PCRE2 pattern is outputed as-is.
+
+=item Regular expression
+
+This type include character class. In such a case, the UTF-8 byte sequence corresponding to what the grammar is defining is sent directly to PCRE2, so the definition is the dump of this UTF-8 byte sequence.
+
+=back
+
+=back
+
+=back
 
 =head1 SEE ALSO
 
