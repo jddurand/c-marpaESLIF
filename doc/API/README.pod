@@ -229,7 +229,7 @@ Return a true value on failure, a false value on failure.
                                                    int                   rulei,
                                                    char                **ruledisplaysp);
 
-Put in the value pointed by C<ruledisplaysp>, which can be C<NULL>, an I<ASCII approximation> of rule at indice C<rulei> of the current grammar from C<marpaESLIFGrammarp>.
+Put in the value pointed by C<ruledisplaysp>, which can be C<NULL>, a NUL-terminated I<ASCII encoded> version of rule name at indice C<rulei> of the current grammar from C<marpaESLIFGrammarp>.
 
 Return a true value on failure, a false value on failure.
 
@@ -241,7 +241,7 @@ Return a true value on failure, a false value on failure.
                                                     int                   leveli,
                                                     marpaESLIFString_t   *descp);
 
-Put in the value pointed by C<ruledisplaysp>, which can be C<NULL>, an I<ASCII approximation> of rule at indice C<rulei> of the wanted grammar from C<marpaESLIFGrammarp>:
+Put in the value pointed by C<ruledisplaysp>, which can be C<NULL>, a NUL-terminated I<ASCII encoded> version of rule name at indice C<rulei> of the wanted grammar from C<marpaESLIFGrammarp>:
 
 =over
 
