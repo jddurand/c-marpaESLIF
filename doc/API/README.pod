@@ -87,7 +87,7 @@ The C<marpaESLIF> destructor, with parameter C<marpaESLIFp> being an instance pr
     char   *encodingOfEncodings; /* Encoding of encoding, in ASCII encoding. Default: NULL. */
   } marpaESLIFGrammarOption_t;
 
-  marpaESLIFGrammar_t    *marpaESLIFGrammar_newp(marpaESLIF_t *marpaESLIFp,
+  marpaESLIFGrammar_t    *marpaESLIFGrammar_newp(marpaESLIF_t              *marpaESLIFp,
                                                  marpaESLIFGrammarOption_t *marpaESLIFGrammarOptionp);
 
 This is creating a grammar object instance, with parameters:
@@ -141,7 +141,7 @@ Return the main ESLIF object instance from a ESLIFGrammar instance, or C<NULL> i
 =head3 marpaESLIFGrammar_ngrammarib
 
   short                   marpaESLIFGrammar_ngrammarib(marpaESLIFGrammar_t *marpaESLIFGrammarp,
-                                                       int *ngrammarip);
+                                                       int                 *ngrammarip);
 
 Get the number of grammars in the value pointed by C<ngrammarip> when the later is not C<NULL>. The number of grammars is the highest indice plus one in an internal sparse array of grammars.
 
@@ -149,7 +149,9 @@ Return a true value on failure, a false value on failure.
 
 =head3 marpaESLIFGrammar_grammar_currentb
 
-  short                   marpaESLIFGrammar_grammar_currentb(marpaESLIFGrammar_t *marpaESLIFGrammarp, int *levelip, marpaESLIFString_t **descpp);
+  short                   marpaESLIFGrammar_grammar_currentb(marpaESLIFGrammar_t *marpaESLIFGrammarp,
+                                                             int                 *levelip,
+                                                             marpaESLIFString_t **descpp);
 
 Get in the values pointed by C<levelip> and C<descpp>, which can be both C<NULL>, the level and description of I<current> grammar: the default current grammar is the one at level C<0>, nevertheless it is possible to instanciate a parsing at a different level, and if, as a use case, you are sharing the same actions between different levels, this is the way to know which is the current.
 
@@ -157,7 +159,11 @@ Return a true value on failure, a false value on failure.
 
 =head3 marpaESLIFGrammar_grammar_by_levelb
 
-  short                   marpaESLIFGrammar_grammar_by_levelb(marpaESLIFGrammar_t *marpaESLIFGrammarp, int leveli, marpaESLIFString_t *descp, int *levelip, marpaESLIFString_t **descpp);
+  short                   marpaESLIFGrammar_grammar_by_levelb(marpaESLIFGrammar_t *marpaESLIFGrammarp,
+                                                              int                  leveli,
+                                                              marpaESLIFString_t  *descp,
+                                                              int                 *levelip,
+                                                              marpaESLIFString_t **descpp);
 
 Get in the values pointed by C<levelip> and C<descpp>, which can be both C<NULL>, the level and description of wanted grammar:
 
@@ -179,7 +185,9 @@ Return a true value on failure, a false value on failure.
 
 =head3 marpaESLIFGrammar_grammar_currentb
 
-  short                   marpaESLIFGrammar_rulearray_currentb(marpaESLIFGrammar_t *marpaESLIFGrammarp, int **ruleipp, size_t *rulelp);
+  short                   marpaESLIFGrammar_rulearray_currentb(marpaESLIFGrammar_t  *marpaESLIFGrammarp,
+                                                               int                 **ruleipp,
+                                                               size_t               *rulelp);
 
 Get in the values pointed by C<ruleipp> and C<rulelp> the rule indices and the number of such indices of current grammar.
 
