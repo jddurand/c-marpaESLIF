@@ -78,7 +78,7 @@ The C<marpaESLIF> destructor, with parameter C<marpaESLIFp> being an instance pr
 =head2 ESLIFGrammar
 
 An I<ESLIFGrammar> is an array of grammars, each identified by a I<level>, that is the indice in this array. Most of the APIs in this section have a version to deal with I<current> grammar, and a version for the grammar at a wanted I<indice> or I<description>.
-The default current grammar is always one at level C<0>, nevertheless it is possible to instanciate a parsing at a different level, and if, as a use case, you are sharing the same actions between different levels, this is the way to know in I<which grammar> you are.
+The default current grammar is always at level C<0>, nevertheless it is possible to instanciate a parsing at a different level, and if, as a use case, you are sharing the same actions between different levels, this is the way to know in I<which grammar> you are.
 
 =head3 marpaESLIFGrammar_newp
 
@@ -139,14 +139,14 @@ Return C<NULL> if failure, a grammar object instance on success.
 
   marpaESLIF_t *marpaESLIFGrammar_eslifp(marpaESLIFGrammar_t *marpaESLIFGrammarp);
 
-Return the main ESLIF object instance from a ESLIFGrammar instance, or C<NULL> is failure.
+Return the main ESLIF object instance from a C<marpaESLIFGrammarp> ESLIFGrammar instance, or C<NULL> is failure.
 
 =head3 marpaESLIFGrammar_ngrammarib
 
   short marpaESLIFGrammar_ngrammarib(marpaESLIFGrammar_t *marpaESLIFGrammarp,
                                      int                 *ngrammarip);
 
-Put the number of grammars in the value pointed by C<ngrammarip> when the later is not C<NULL>. The number of grammars is the highest indice plus one in an internal sparse array of grammars.
+Put the number of grammars in the value pointed by C<ngrammarip>, which can be C<NULL>, of the current grammar from C<marpaESLIFGrammarp>. The number of grammars is the highest level plus one, and it is B<allowed> to have undefined grammars at any indice but level 0.
 
 Return a true value on failure, a false value on failure.
 
@@ -192,7 +192,7 @@ Return a true value on failure, a false value on failure.
                                              int                 **ruleipp,
                                              size_t               *rulelp);
 
-Put in the values pointed by C<ruleipp> and C<rulelp> the rule indices and the number of such indices of current grammar fro, C<marpaESLIFGrammarp>.
+Put in the values pointed by C<ruleipp> and C<rulelp> the rule indices and the number of such indices of current grammar from C<marpaESLIFGrammarp>.
 
 Return a true value on failure, a false value on failure.
 
