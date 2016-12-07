@@ -73,7 +73,7 @@ int main() {
   int                          exiti;
   int                          ngrammari;
   char                        *grammarshows;
-  int                          grammari;
+  int                          leveli;
   genericLogger_t             *genericLoggerp;
   marpaESLIFTester_context_t   marpaESLIFTester_context;
   marpaESLIFRecognizerOption_t marpaESLIFRecognizerOption;
@@ -96,10 +96,10 @@ int main() {
 
   /* Dump ESLIF grammar */
   if (marpaESLIFGrammar_ngrammarib(marpaESLIF_grammarp(marpaESLIFp), &ngrammari)) {
-    for (grammari = 0; grammari < ngrammari; grammari++) {
-      if (marpaESLIFGrammar_grammarshowform_by_grammarb(marpaESLIF_grammarp(marpaESLIFp), &grammarshows, grammari, NULL)) {
+    for (leveli = 0; leveli < ngrammari; leveli++) {
+      if (marpaESLIFGrammar_grammarshowform_by_levelb(marpaESLIF_grammarp(marpaESLIFp), &grammarshows, leveli, NULL)) {
         GENERICLOGGER_INFO (marpaESLIFOption.genericLoggerp, "-------------------------");
-        GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "ESLIF grammar at level %d:", grammari);
+        GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "ESLIF grammar at level %d:", leveli);
         GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "-------------------------\n\n%s", grammarshows);
       }
     }
@@ -119,10 +119,10 @@ int main() {
 
   /* Dump grammar */
   if (marpaESLIFGrammar_ngrammarib(marpaESLIFGrammarp, &ngrammari)) {
-    for (grammari = 0; grammari < ngrammari; grammari++) {
-      if (marpaESLIFGrammar_grammarshowform_by_grammarb(marpaESLIFGrammarp, &grammarshows, grammari, NULL)) {
+    for (leveli = 0; leveli < ngrammari; leveli++) {
+      if (marpaESLIFGrammar_grammarshowform_by_levelb(marpaESLIFGrammarp, &grammarshows, leveli, NULL)) {
         GENERICLOGGER_INFO (marpaESLIFOption.genericLoggerp, "-------------------------");
-        GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "TEST grammar at level %d:", grammari);
+        GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "TEST grammar at level %d:", leveli);
         GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "-------------------------\n\n%s", grammarshows);
       }
     }
@@ -209,27 +209,16 @@ static marpaESLIFValueRuleCallback_t ruleActionResolverp(void *userDatavp, marpa
 /****************************************************************************/
 {
   marpaESLIFTester_context_t    *marpaESLIFTester_contextp = (marpaESLIFTester_context_t *) userDatavp;
-  marpaESLIFGrammar_t           *marpaESLIFGrammarp;
+  marpaESLIFGrammar_t           *marpaESLIFGrammarp        = marpaESLIFValue_grammarp(marpaESLIFValuep);
   marpaESLIFValueRuleCallback_t  marpaESLIFValueRuleCallbackp;
   int                            grammari;
   int                            leveli;
 
-  if (marpaESLIFTester_contextp == NULL) {
+  if (! marpaESLIFGrammar_grammar_currentb(marpaESLIFGrammarp, &leveli, NULL /* descp */)) {
+    GENERICLOGGER_ERROR(marpaESLIFTester_contextp->genericLoggerp, "marpaESLIFGrammar_grammar_currentb failure");
     goto err;
   }
-  if (! marpaESLIFValue_grammarib(marpaESLIFValuep, &grammari)) {
-    GENERICLOGGER_ERROR(marpaESLIFTester_contextp->genericLoggerp, "marpaESLIFValue_grammarib failure");
-    goto err;
-  }
-  marpaESLIFGrammarp = marpaESLIFValue_grammarp(marpaESLIFValuep);
-  if (marpaESLIFGrammarp == NULL) {
-    GENERICLOGGER_ERROR(marpaESLIFTester_contextp->genericLoggerp, "marpaESLIFValue_grammarp failure");
-    goto err;
-  }
-  if (marpaESLIFGrammar_leveli_by_grammarb(marpaESLIFGrammarp, &leveli, grammari, NULL /* descp */)) {
-    GENERICLOGGER_ERROR(marpaESLIFTester_contextp->genericLoggerp, "marpaESLIFGrammar_leveli_by_grammarb failure");
-    goto err;
-  }
+
   /* We have only one level here */
   if (leveli != 0) {
     GENERICLOGGER_ERRORF(marpaESLIFTester_contextp->genericLoggerp, "leveli = %d", leveli);
@@ -255,27 +244,17 @@ static marpaESLIFValueSymbolCallback_t symbolActionResolverp(void *userDatavp, m
 /****************************************************************************/
 {
   marpaESLIFTester_context_t     *marpaESLIFTester_contextp = (marpaESLIFTester_context_t *) userDatavp;
-  marpaESLIFGrammar_t            *marpaESLIFGrammarp;
+  marpaESLIFGrammar_t            *marpaESLIFGrammarp        = marpaESLIFValue_grammarp(marpaESLIFValuep);
   marpaESLIFValueSymbolCallback_t marpaESLIFValueSymbolCallbackp;
   int                             grammari;
   int                             leveli;
 
-  if (marpaESLIFTester_contextp == NULL) {
+  if (! marpaESLIFGrammar_grammar_currentb(marpaESLIFGrammarp, &leveli, NULL /* descp */)) {
+    GENERICLOGGER_ERROR(marpaESLIFTester_contextp->genericLoggerp, "marpaESLIFGrammar_grammar_currentb failure");
     goto err;
   }
-  if (! marpaESLIFValue_grammarib(marpaESLIFValuep, &grammari)) {
-    GENERICLOGGER_ERROR(marpaESLIFTester_contextp->genericLoggerp, "marpaESLIFValue_grammarib failure");
-    goto err;
-  }
-  marpaESLIFGrammarp = marpaESLIFValue_grammarp(marpaESLIFValuep);
-  if (marpaESLIFGrammarp == NULL) {
-    GENERICLOGGER_ERROR(marpaESLIFTester_contextp->genericLoggerp, "marpaESLIFValue_grammarp failure");
-    goto err;
-  }
-  if (marpaESLIFGrammar_leveli_by_grammarb(marpaESLIFGrammarp, &leveli, grammari, NULL /* descp */)) {
-    GENERICLOGGER_ERROR(marpaESLIFTester_contextp->genericLoggerp, "marpaESLIFGrammar_leveli_by_grammarb failure");
-    goto err;
-  }
+
+
   /* We have only one level here */
   if (leveli != 0) {
     GENERICLOGGER_ERRORF(marpaESLIFTester_contextp->genericLoggerp, "leveli = %d", leveli);

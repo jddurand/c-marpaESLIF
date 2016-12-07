@@ -126,17 +126,19 @@ ASCII and NUL-terminated string giving the encoding of the encoding information 
 
 =back
 
+=back
+
 In real life-programming, grammars are assumed to always fit within a single block of memory. So there is no reader of grammar definition, we assume that C<bytep> and C<bytel> are enough for this job.
 
 Return C<NULL> if failure, a grammar object instance on success.
 
-=item marpaESLIFGrammar_eslifp
+=head3 marpaESLIFGrammar_eslifp
 
   marpaESLIF_t           *marpaESLIFGrammar_eslifp(marpaESLIFGrammar_t *marpaESLIFGrammarp);
 
 Return the main ESLIF object instance from a ESLIFGrammar instance, or C<NULL> is failure.
 
-=item marpaESLIFGrammar_ngrammarib
+=head3 marpaESLIFGrammar_ngrammarib
 
   short                   marpaESLIFGrammar_ngrammarib(marpaESLIFGrammar_t *marpaESLIFGrammarp,
                                                        int *ngrammarip);
@@ -145,39 +147,43 @@ Get the number of grammars in the value pointed by C<ngrammarip> when the later 
 
 Return a true value on failure, a false value on failure.
 
-=item marpaESLIFGrammar_startib
+=head3 marpaESLIFGrammar_grammar_currentb
 
-  short                   marpaESLIFGrammar_startib(marpaESLIFGrammar_t *marpaESLIFGrammarp,
-                                                    int *startip);
+  short                   marpaESLIFGrammar_grammar_currentb(marpaESLIFGrammar_t *marpaESLIFGrammarp, int *levelip, marpaESLIFString_t **descpp);
 
-Return the indice of the start rule of the top grammar in the value pointed by C<startip>, which can be NULL. The top grammar is the first of the grammars (also called grammar at level 0).
+Get in the values pointed by C<levelip> and C<descpp>, which can be both C<NULL>, the level and description of I<current> grammar: the default current grammar is the one at level C<0>, nevertheless it is possible to instanciate a parsing at a different level, and if, as a use case, you are sharing the same actions between different levels, this is the way to know which is the current.
 
 Return a true value on failure, a false value on failure.
 
-=item marpaESLIFGrammar_starti_by_grammarb
+=head3 marpaESLIFGrammar_grammar_by_levelb
 
-  short                   marpaESLIFGrammar_starti_by_grammarb(marpaESLIFGrammar_t *marpaESLIFGrammarp,
-                                                               int *startip,
-                                                               int grammari,
-                                                               marpaESLIFString_t *descp);
+  short                   marpaESLIFGrammar_grammar_by_levelb(marpaESLIFGrammar_t *marpaESLIFGrammarp, int leveli, marpaESLIFString_t *descp, int *levelip, marpaESLIFString_t **descpp);
 
-Return the indice of the start rule of the wanted grammar in the value pointed by C<startip>, which can be NULL. The wanted grammar is identifier by:
+Get in the values pointed by C<levelip> and C<descpp>, which can be both C<NULL>, the level and description of wanted grammar:
 
 =over
 
-=item C<grammari>
+=item leveli
 
-Indice in the list of grammars, ignored if < 0.
+is the eventual explicit wanted level, ignored if < C<0>.
 
-=item C<descp>
+=item descp
 
-Grammar description, always have precedence if it is not C<NULL>. Only C<<descp->bytep>> and C<<descp->bytel>> are considered when looking up grammars using a grammar description.
+is the eventual explicit description, ignored if C<NULL>.
 
 =back
+
+C<descp> have precedence of C<leveli>.
 
 Return a true value on failure, a false value on failure.
 
-=back
+=head3 marpaESLIFGrammar_grammar_currentb
+
+  short                   marpaESLIFGrammar_rulearray_currentb(marpaESLIFGrammar_t *marpaESLIFGrammarp, int **ruleipp, size_t *rulelp);
+
+Get in the values pointed by C<ruleipp> and C<rulelp> the rule indices and the number of such indices of current grammar.
+
+Return a true value on failure, a false value on failure.
 
 =head1 NOTES
 

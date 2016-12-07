@@ -68,7 +68,7 @@ int main() {
   int                          exiti;
   int                          ngrammari;
   char                        *grammarshows;
-  int                          grammari;
+  int                          leveli;
   genericLogger_t             *genericLoggerp;
   marpaESLIFTester_context_t   marpaESLIFTester_context;
   marpaESLIFRecognizerOption_t marpaESLIFRecognizerOption;
@@ -185,10 +185,10 @@ int main() {
 
   /* Dump grammar */
   if (marpaESLIFGrammar_ngrammarib(marpaESLIFGrammarp, &ngrammari)) {
-    for (grammari = 0; grammari < ngrammari; grammari++) {
-      if (marpaESLIFGrammar_grammarshowform_by_grammarb(marpaESLIFGrammarp, &grammarshows, grammari, NULL)) {
+    for (leveli = 0; leveli < ngrammari; leveli++) {
+      if (marpaESLIFGrammar_grammarshowform_by_levelb(marpaESLIFGrammarp, &grammarshows, leveli, NULL)) {
         GENERICLOGGER_INFO (marpaESLIFOption.genericLoggerp, "-------------------------");
-        GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "TEST grammar at level %d:", grammari);
+        GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "TEST grammar at level %d:", leveli);
         GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "-------------------------\n\n%s", grammarshows);
       }
     }

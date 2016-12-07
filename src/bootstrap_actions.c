@@ -1029,17 +1029,8 @@ static marpaESLIFValueRuleCallback_t _marpaESLIF_bootstrap_ruleActionResolver(vo
   int                            grammari;
   int                            leveli;
 
-  if (! marpaESLIFValue_grammarib(marpaESLIFValuep, &grammari)) {
-    MARPAESLIF_ERROR(marpaESLIFp, "marpaESLIFValue_grammarib failure");
-    goto err;
-  }
-  marpaESLIFGrammarp = marpaESLIFValue_grammarp(marpaESLIFValuep);
-  if (marpaESLIFGrammarp == NULL) {
-    MARPAESLIF_ERROR(marpaESLIFp, "marpaESLIFValue_grammarp failure");
-    goto err;
-  }
-  if (! marpaESLIFGrammar_leveli_by_grammarb(marpaESLIFGrammarp, &leveli, grammari, NULL /* descp */)) {
-    MARPAESLIF_ERROR(marpaESLIFp, "marpaESLIFGrammar_leveli_by_grammarb failure");
+  if (! marpaESLIFGrammar_grammar_currentb(marpaESLIFGrammarp, &leveli, NULL /* descp */)) {
+    MARPAESLIF_ERROR(marpaESLIFp, "marpaESLIFGrammar_grammar_currentb failure");
     goto err;
   }
   /* We have only one level here */
@@ -1137,17 +1128,8 @@ static marpaESLIFValueFreeCallback_t _marpaESLIF_bootstrap_freeActionResolver(vo
   int                             grammari;
   int                             leveli;
 
-  if (! marpaESLIFValue_grammarib(marpaESLIFValuep, &grammari)) {
-    MARPAESLIF_ERROR(marpaESLIFp, "marpaESLIFValue_grammarib failure");
-    goto err;
-  }
-  marpaESLIFGrammarp = marpaESLIFValue_grammarp(marpaESLIFValuep);
-  if (marpaESLIFGrammarp == NULL) {
-    MARPAESLIF_ERROR(marpaESLIFp, "marpaESLIFValue_grammarp failure");
-    goto err;
-  }
-  if (! marpaESLIFGrammar_leveli_by_grammarb(marpaESLIFGrammarp, &leveli, grammari, NULL /* descp */)) {
-    MARPAESLIF_ERROR(marpaESLIFp, "marpaESLIFGrammar_leveli_by_grammarb failure");
+  if (! marpaESLIFGrammar_grammar_currentb(marpaESLIFGrammarp, &leveli, NULL /* descp */)) {
+    MARPAESLIF_ERROR(marpaESLIFp, "marpaESLIFGrammar_grammar_currentb failure");
     goto err;
   }
   /* We have only one level here */
