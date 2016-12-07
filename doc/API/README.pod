@@ -77,6 +77,9 @@ The C<marpaESLIF> destructor, with parameter C<marpaESLIFp> being an instance pr
 
 =head2 ESLIFGrammar
 
+An I<ESLIFGrammar> is an array of grammars, each identified by a I<level>, that is the indice in this array. Most of the APIs in this section have a version to deal with I<current> grammar, and a version for the grammar at a wanted I<indice> or I<description>.
+The default current grammar is always one at level C<0>, nevertheless it is possible to instanciate a parsing at a different level, and if, as a use case, you are sharing the same actions between different levels, this is the way to know in I<which grammar> you are.
+
 =head3 marpaESLIFGrammar_newp
 
   typedef struct marpaESLIFGrammarOption {
@@ -143,7 +146,7 @@ Return the main ESLIF object instance from a ESLIFGrammar instance, or C<NULL> i
   short                   marpaESLIFGrammar_ngrammarib(marpaESLIFGrammar_t *marpaESLIFGrammarp,
                                                        int                 *ngrammarip);
 
-Get the number of grammars in the value pointed by C<ngrammarip> when the later is not C<NULL>. The number of grammars is the highest indice plus one in an internal sparse array of grammars.
+Put the number of grammars in the value pointed by C<ngrammarip> when the later is not C<NULL>. The number of grammars is the highest indice plus one in an internal sparse array of grammars.
 
 Return a true value on failure, a false value on failure.
 
@@ -153,7 +156,7 @@ Return a true value on failure, a false value on failure.
                                                              int                 *levelip,
                                                              marpaESLIFString_t **descpp);
 
-Get in the values pointed by C<levelip> and C<descpp>, which can be both C<NULL>, the level and description of I<current> grammar: the default current grammar is the one at level C<0>, nevertheless it is possible to instanciate a parsing at a different level, and if, as a use case, you are sharing the same actions between different levels, this is the way to know which is the current.
+Put in the values pointed by C<levelip> and C<descpp>, which can be both C<NULL>, the level and description of current grammar from C<marpaESLIFGrammarp>.
 
 Return a true value on failure, a false value on failure.
 
@@ -165,7 +168,7 @@ Return a true value on failure, a false value on failure.
                                                               int                 *levelip,
                                                               marpaESLIFString_t **descpp);
 
-Get in the values pointed by C<levelip> and C<descpp>, which can be both C<NULL>, the level and description of wanted grammar:
+Put in the values pointed by C<levelip> and C<descpp>, which can be both C<NULL>, the level and description of wanted grammar from C<marpaESLIFGrammarp>:
 
 =over
 
@@ -183,13 +186,76 @@ C<descp> have precedence of C<leveli>.
 
 Return a true value on failure, a false value on failure.
 
-=head3 marpaESLIFGrammar_grammar_currentb
+=head3 marpaESLIFGrammar_rulearray_currentb
 
   short                   marpaESLIFGrammar_rulearray_currentb(marpaESLIFGrammar_t  *marpaESLIFGrammarp,
                                                                int                 **ruleipp,
                                                                size_t               *rulelp);
 
-Get in the values pointed by C<ruleipp> and C<rulelp> the rule indices and the number of such indices of current grammar.
+Put in the values pointed by C<ruleipp> and C<rulelp> the rule indices and the number of such indices of current grammar fro, C<marpaESLIFGrammarp>.
+
+Return a true value on failure, a false value on failure.
+
+=head3 marpaESLIFGrammar_rulearray_by_levelb
+
+  short                   marpaESLIFGrammar_rulearray_by_levelb(marpaESLIFGrammar_t  *marpaESLIFGrammarp,
+                                                                int                 **ruleipp,
+                                                                size_t               *rulelp,
+                                                                int                   leveli,
+                                                                marpaESLIFString_t   *descp);
+
+
+Put in the values pointed by C<ruleipp> and C<rulelp> the rule indices and the number of such indices of wanted grammar from C<marpaESLIFGrammarp>:
+
+=over
+
+=item leveli
+
+is the eventual explicit wanted level, ignored if < C<0>.
+
+=item descp
+
+is the eventual explicit description, ignored if C<NULL>.
+
+=back
+
+C<descp> have precedence of C<leveli>.
+
+Return a true value on failure, a false value on failure.
+
+=head3 marpaESLIFGrammar_ruledisplayform_currentb
+
+  short                   marpaESLIFGrammar_ruledisplayform_currentb(marpaESLIFGrammar_t  *marpaESLIFGrammarp,
+                                                                     int                   rulei,
+                                                                     char                **ruledisplaysp);
+
+Put in the value pointed by C<ruledisplaysp>, which can be C<NULL>, an I<ASCII approximation> of rule at indice C<rulei> of the current grammar from C<marpaESLIFGrammarp>.
+
+Return a true value on failure, a false value on failure.
+
+=head3 marpaESLIFGrammar_ruledisplayform_by_levelb
+
+  short                   marpaESLIFGrammar_ruledisplayform_by_levelb(marpaESLIFGrammar_t  *marpaESLIFGrammarp,
+                                                                      int                   rulei,
+                                                                      char                **ruledisplaysp,
+                                                                      int                   leveli,
+                                                                      marpaESLIFString_t   *descp);
+
+Put in the value pointed by C<ruledisplaysp>, which can be C<NULL>, an I<ASCII approximation> of rule at indice C<rulei> of the wanted grammar from C<marpaESLIFGrammarp>:
+
+=over
+
+=item leveli
+
+is the eventual explicit wanted level, ignored if < C<0>.
+
+=item descp
+
+is the eventual explicit description, ignored if C<NULL>.
+
+=back
+
+C<descp> have precedence of C<leveli>.
 
 Return a true value on failure, a false value on failure.
 
