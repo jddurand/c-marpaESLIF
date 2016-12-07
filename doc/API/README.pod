@@ -73,7 +73,7 @@ A pointer to a C<genericLogger_t> instance. If it is NULL, then C<marpaESLIF> in
 
   void marpaESLIF_freev(marpaESLIF_t *marpaESLIFp);
 
-The C<marpaESLIF> destructor, with parameter C<marpaESLIFp> being an instance previously created.
+The C<marpaESLIF> destructor, with parameter C<marpaESLIFp> being an instance previously created. No-op if C<marpaESLIFp> is NULL.
 
 =head2 ESLIFGrammar
 

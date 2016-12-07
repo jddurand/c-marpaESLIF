@@ -35,11 +35,8 @@ int main() {
   marpaESLIFRecognizer_t      *marpaESLIFRecognizerp = NULL;
   marpaESLIFValueOption_t      marpaESLIFValueOption;
   marpaESLIFValue_t           *marpaESLIFValuep = NULL;
-  short                        continueb;
-  short                        exhaustedb;
   const static char           *inputCs = "C";
   const static char           *inputFs = "F";
-  short                        rcValueb;
 
   genericLoggerp = GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_DEBUG);
 

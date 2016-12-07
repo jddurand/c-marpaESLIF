@@ -211,7 +211,6 @@ static marpaESLIFValueRuleCallback_t ruleActionResolverp(void *userDatavp, marpa
   marpaESLIFTester_context_t    *marpaESLIFTester_contextp = (marpaESLIFTester_context_t *) userDatavp;
   marpaESLIFGrammar_t           *marpaESLIFGrammarp        = marpaESLIFValue_grammarp(marpaESLIFValuep);
   marpaESLIFValueRuleCallback_t  marpaESLIFValueRuleCallbackp;
-  int                            grammari;
   int                            leveli;
 
   if (! marpaESLIFGrammar_grammar_currentb(marpaESLIFGrammarp, &leveli, NULL /* descp */)) {
@@ -246,7 +245,6 @@ static marpaESLIFValueSymbolCallback_t symbolActionResolverp(void *userDatavp, m
   marpaESLIFTester_context_t     *marpaESLIFTester_contextp = (marpaESLIFTester_context_t *) userDatavp;
   marpaESLIFGrammar_t            *marpaESLIFGrammarp        = marpaESLIFValue_grammarp(marpaESLIFValuep);
   marpaESLIFValueSymbolCallback_t marpaESLIFValueSymbolCallbackp;
-  int                             grammari;
   int                             leveli;
 
   if (! marpaESLIFGrammar_grammar_currentb(marpaESLIFGrammarp, &leveli, NULL /* descp */)) {
