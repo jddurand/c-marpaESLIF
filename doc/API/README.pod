@@ -233,6 +233,10 @@ Put in the value pointed by C<ruledisplaysp>, which can be C<NULL>, a NUL-termin
 
 Return a true value on failure, a false value on failure.
 
+Example of a rule display form:
+
+  <lstring> ~ <quote> <in_string> <quote>
+
 =head3 marpaESLIFGrammar_ruledisplayform_by_levelb
 
   short marpaESLIFGrammar_ruledisplayform_by_levelb(marpaESLIFGrammar_t  *marpaESLIFGrammarp,
@@ -269,6 +273,10 @@ Put in the value pointed by C<symboldisplaysp>, which can be C<NULL>, a NUL-term
 
 Return a true value on failure, a false value on failure.
 
+Example of a symbol display form:
+
+  <in_string>
+
 =head3 marpaESLIFGrammar_symboldisplayform_by_levelb
 
   short marpaESLIFGrammar_symboldisplayform_by_levelb(marpaESLIFGrammar_t  *marpaESLIFGrammarp,
@@ -304,6 +312,10 @@ Return a true value on failure, a false value on failure.
 Put in the value pointed by C<ruleshowsp>, which can be C<NULL>, a NUL-terminated I<ASCII encoded> transliteration of rule definition at indice C<rulei> of the current grammar from C<marpaESLIFGrammarp>.
 
 Return a true value on failure, a false value on failure.
+
+Example of a rule show form:
+
+  <lstring> ~ <quote> <in_string> <quote>
 
 =head3 marpaESLIFGrammar_ruleshowform_by_levelb
 
