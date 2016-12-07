@@ -381,6 +381,29 @@ This is very exhaustive, and give internal information about all symbols and rul
 
 Return a true value on failure, a false value on failure.
 
+=head3 marpaESLIFGrammar_parseb
+
+  short marpaESLIFGrammar_parseb(marpaESLIFGrammar_t          *marpaESLIFGrammarp,
+                                 marpaESLIFRecognizerOption_t *marpaESLIFRecognizerOptionp,
+                                 marpaESLIFValueOption_t      *marpaESLIFValueOptionp,
+                                 short                        *exhaustedbp,
+                                 marpaESLIFValueResult_t      *marpaESLIFValueResultp);
+
+Please refer to the documentation of:
+
+=over
+
+=item marpaESLIFGrammar_newp
+
+for the C<marpaESLIFRecognizerOption_t> structure documentation.
+
+=item marpaESLIFValue_newp
+
+for the C<marpaESLIFValueOption_t> and C<marpaESLIFValueResult_t> structures documentation.
+
+=back
+
+
 =head1 NOTES
 
 =over
