@@ -6244,18 +6244,6 @@ marpaESLIFValue_t *marpaESLIFValue_newp(marpaESLIFRecognizer_t *marpaESLIFRecogn
 }
 
 /*****************************************************************************/
-marpaESLIF_t *marpaESLIFValue_eslifp(marpaESLIFValue_t *marpaESLIFValuep)
-/*****************************************************************************/
-{
-  if (marpaESLIFValuep == NULL) {
-    errno = EINVAL;
-    return NULL;
-  }
-
-  return marpaESLIFValuep->marpaESLIFp;
-}
-
-/*****************************************************************************/
 short marpaESLIFValue_valueb(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFValueResult_t *marpaESLIFValueResultp)
 /*****************************************************************************/
 {
@@ -6821,31 +6809,6 @@ static short _marpaESLIFValue_nullingCallbackWrapperb(void *userDatavp, int symb
   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC;
   return rcb;
-}
-
-/*****************************************************************************/
-marpaESLIFGrammar_t *marpaESLIFValue_grammarp(marpaESLIFValue_t *marpaESLIFValuep)
-/*****************************************************************************/
-{
-  static const char      *funcs = "marpaESLIFValue_grammarp";
-  marpaESLIFRecognizer_t *marpaESLIFRecognizerp;
-  marpaESLIFGrammar_t    *marpaESLIFGrammarp;;
-
-  if (marpaESLIFValuep == NULL) {
-    errno = EINVAL;
-    return NULL;
-  }
-
-  marpaESLIFRecognizerp = marpaESLIFValuep->marpaESLIFRecognizerp;
-
-  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
-  MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
-
-  marpaESLIFGrammarp = marpaESLIFValuep->marpaESLIFRecognizerp->marpaESLIFGrammarp;
-
-  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %p", marpaESLIFGrammarp);
-  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC;
-  return marpaESLIFGrammarp;
 }
 
 /*****************************************************************************/
@@ -10665,7 +10628,7 @@ static short _marpaESLIF_rule_action___shiftb(void *userDatavp, marpaESLIFValue_
 /*****************************************************************************/
 {
   static const char      *funcs                 = "_marpaESLIF_rule_action___shiftb";
-  marpaESLIFRecognizer_t *marpaESLIFRecognizerp = marpaESLIFValue_recognizerp(marpaESLIFValuep);
+  marpaESLIFRecognizer_t *marpaESLIFRecognizerp = marpaESLIFValuep->marpaESLIFRecognizerp;
   short                   rcb;
   short                   flagb;
   char                    c;
@@ -10816,8 +10779,8 @@ static short _marpaESLIF_rule_action___concatb(void *userDatavp, marpaESLIFValue
 /*****************************************************************************/
 {
   static const char      *funcs                 = "_marpaESLIF_rule_action___concatb";
-  marpaESLIFRecognizer_t *marpaESLIFRecognizerp = marpaESLIFValue_recognizerp(marpaESLIFValuep);
-  marpaESLIF_t           *marpaESLIFp           = marpaESLIFValue_eslifp(marpaESLIFValuep);
+  marpaESLIFRecognizer_t *marpaESLIFRecognizerp = marpaESLIFValuep->marpaESLIFRecognizerp;
+  marpaESLIF_t           *marpaESLIFp           = marpaESLIFValuep->marpaESLIFp;
   short                   rcb;
   short                   flagb;
   int                     i;
@@ -10904,7 +10867,7 @@ static short _marpaESLIF_rule_action___undefb(void *userDatavp, marpaESLIFValue_
 /*****************************************************************************/
 {
   static const char      *funcs                 = "_marpaESLIF_rule_action___undefb";
-  marpaESLIFRecognizer_t *marpaESLIFRecognizerp = marpaESLIFValue_recognizerp(marpaESLIFValuep);
+  marpaESLIFRecognizer_t *marpaESLIFRecognizerp = marpaESLIFValuep->marpaESLIFRecognizerp;
   short                   rcb;
 
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
@@ -10922,8 +10885,8 @@ static inline short _marpaESLIF_rule_action___charconvb(void *userDatavp, marpaE
 /*****************************************************************************/
 {
   static const char      *funcs                 = "_marpaESLIF_rule_action___charconvb";
-  marpaESLIF_t           *marpaESLIFp           = marpaESLIFValue_eslifp(marpaESLIFValuep);
-  marpaESLIFRecognizer_t *marpaESLIFRecognizerp = marpaESLIFValue_recognizerp(marpaESLIFValuep);
+  marpaESLIF_t           *marpaESLIFp           = marpaESLIFValuep->marpaESLIFp;
+  marpaESLIFRecognizer_t *marpaESLIFRecognizerp = marpaESLIFValuep->marpaESLIFRecognizerp;
   char                   *asciis                = NULL;
   size_t                  asciil;
   char                   *tmps;
@@ -11027,8 +10990,8 @@ static short _marpaESLIF_symbol_action___shiftb(void *userDatavp, marpaESLIFValu
 /*****************************************************************************/
 {
   static const char      *funcs                 = "_marpaESLIF_symbol_action___shiftb";
-  marpaESLIF_t           *marpaESLIFp           = marpaESLIFValue_eslifp(marpaESLIFValuep);
-  marpaESLIFRecognizer_t *marpaESLIFRecognizerp = marpaESLIFValue_recognizerp(marpaESLIFValuep);
+  marpaESLIF_t           *marpaESLIFp           = marpaESLIFValuep->marpaESLIFp;
+  marpaESLIFRecognizer_t *marpaESLIFRecognizerp = marpaESLIFValuep->marpaESLIFRecognizerp;
   char                   *p                     = NULL;
   size_t                  l                     = 0;
   short                   rcb;
@@ -11092,8 +11055,8 @@ static inline short _marpaESLIF_symbol_action___charconvb(void *userDatavp, marp
 /*****************************************************************************/
 {
   static const char      *funcs                 = "_marpaESLIF_symbol_action___charconvb";
-  marpaESLIF_t           *marpaESLIFp           = marpaESLIFValue_eslifp(marpaESLIFValuep);
-  marpaESLIFRecognizer_t *marpaESLIFRecognizerp = marpaESLIFValue_recognizerp(marpaESLIFValuep);
+  marpaESLIF_t           *marpaESLIFp           = marpaESLIFValuep->marpaESLIFp;
+  marpaESLIFRecognizer_t *marpaESLIFRecognizerp = marpaESLIFValuep->marpaESLIFRecognizerp;
   char                   *asciis                = NULL;
   short                   rcb;
 
@@ -11128,7 +11091,7 @@ short marpaESLIFValue_stack_getAndForget_charb(marpaESLIFValue_t *marpaESLIFValu
 /*****************************************************************************/
 {
   static const char      *funcs                 = "marpaESLIFValue_stack_getAndForget_charb";
-  marpaESLIFRecognizer_t *marpaESLIFRecognizerp = marpaESLIFValue_recognizerp(marpaESLIFValuep);
+  marpaESLIFRecognizer_t *marpaESLIFRecognizerp = marpaESLIFValuep->marpaESLIFRecognizerp;
   short                   rcb;
   
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
@@ -11162,7 +11125,7 @@ short marpaESLIFValue_stack_getAndForget_shortb(marpaESLIFValue_t *marpaESLIFVal
 /*****************************************************************************/
 {
   static const char      *funcs                 = "marpaESLIFValue_stack_getAndForget_shortb";
-  marpaESLIFRecognizer_t *marpaESLIFRecognizerp = marpaESLIFValue_recognizerp(marpaESLIFValuep);
+  marpaESLIFRecognizer_t *marpaESLIFRecognizerp = marpaESLIFValuep->marpaESLIFRecognizerp;
   short                   rcb;
   
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
@@ -11196,7 +11159,7 @@ short marpaESLIFValue_stack_getAndForget_intb(marpaESLIFValue_t *marpaESLIFValue
 /*****************************************************************************/
 {
   static const char      *funcs                 = "marpaESLIFValue_stack_getAndForget_intb";
-  marpaESLIFRecognizer_t *marpaESLIFRecognizerp = marpaESLIFValue_recognizerp(marpaESLIFValuep);
+  marpaESLIFRecognizer_t *marpaESLIFRecognizerp = marpaESLIFValuep->marpaESLIFRecognizerp;
   short                   rcb;
   
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
@@ -11230,7 +11193,7 @@ short marpaESLIFValue_stack_getAndForget_longb(marpaESLIFValue_t *marpaESLIFValu
 /*****************************************************************************/
 {
   static const char      *funcs                 = "marpaESLIFValue_stack_getAndForget_longb";
-  marpaESLIFRecognizer_t *marpaESLIFRecognizerp = marpaESLIFValue_recognizerp(marpaESLIFValuep);
+  marpaESLIFRecognizer_t *marpaESLIFRecognizerp = marpaESLIFValuep->marpaESLIFRecognizerp;
   short                   rcb;
   
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
@@ -11264,7 +11227,7 @@ short marpaESLIFValue_stack_getAndForget_floatb(marpaESLIFValue_t *marpaESLIFVal
 /*****************************************************************************/
 {
   static const char      *funcs                 = "marpaESLIFValue_stack_getAndForget_floatb";
-  marpaESLIFRecognizer_t *marpaESLIFRecognizerp = marpaESLIFValue_recognizerp(marpaESLIFValuep);
+  marpaESLIFRecognizer_t *marpaESLIFRecognizerp = marpaESLIFValuep->marpaESLIFRecognizerp;
   short                   rcb;
   
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
@@ -11298,7 +11261,7 @@ short marpaESLIFValue_stack_getAndForget_doubleb(marpaESLIFValue_t *marpaESLIFVa
 /*****************************************************************************/
 {
   static const char      *funcs                 = "marpaESLIFValue_stack_getAndForget_doubleb";
-  marpaESLIFRecognizer_t *marpaESLIFRecognizerp = marpaESLIFValue_recognizerp(marpaESLIFValuep);
+  marpaESLIFRecognizer_t *marpaESLIFRecognizerp = marpaESLIFValuep->marpaESLIFRecognizerp;
   short                   rcb;
   
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
@@ -11332,7 +11295,7 @@ short marpaESLIFValue_stack_getAndForget_ptrb(marpaESLIFValue_t *marpaESLIFValue
 /*****************************************************************************/
 {
   static const char      *funcs                 = "marpaESLIFValue_stack_getAndForget_ptrb";
-  marpaESLIFRecognizer_t *marpaESLIFRecognizerp = marpaESLIFValue_recognizerp(marpaESLIFValuep);
+  marpaESLIFRecognizer_t *marpaESLIFRecognizerp = marpaESLIFValuep->marpaESLIFRecognizerp;
   short                   rcb;
   
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
@@ -11367,7 +11330,7 @@ short marpaESLIFValue_stack_getAndForget_arrayb(marpaESLIFValue_t *marpaESLIFVal
 /*****************************************************************************/
 {
   static const char      *funcs                 = "marpaESLIFValue_stack_getAndForget_arrayb";
-  marpaESLIFRecognizer_t *marpaESLIFRecognizerp = marpaESLIFValue_recognizerp(marpaESLIFValuep);
+  marpaESLIFRecognizer_t *marpaESLIFRecognizerp = marpaESLIFValuep->marpaESLIFRecognizerp;
   short                   rcb;
   
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
