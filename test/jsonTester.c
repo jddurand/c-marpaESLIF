@@ -208,6 +208,7 @@ int main() {
     marpaESLIFRecognizerOption.buftriggerperci           = 50;
     marpaESLIFRecognizerOption.bufaddperci               = 50;
 
+    marpaESLIFRecognizer_freev(marpaESLIFRecognizerp);
     marpaESLIFRecognizerp = marpaESLIFRecognizer_newp(marpaESLIFGrammarp, &marpaESLIFRecognizerOption);
     if (marpaESLIFRecognizerp == NULL) {
       goto err;
