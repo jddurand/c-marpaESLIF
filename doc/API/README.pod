@@ -235,7 +235,7 @@ Return a true value on failure, a false value on failure.
 
 Example of a rule display form:
 
-  <lstring> ~ <quote> <in_string> <quote>
+  <lstring>
 
 =head3 marpaESLIFGrammar_ruledisplayform_by_levelb
 
