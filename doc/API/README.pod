@@ -584,7 +584,7 @@ Default number of bytes of the internal buffer in marpaESLIF, in which I<all> da
 
 In order to prevent internal buffer to grow indefinitely, C<buftriggerperci> is the percentage of C<bufsizl> that give a trigger on the number of unused bytes at which the internal buffer is reduced to its initial size C<bufsizl>. Recommended value is C<50>.
 
-=item bufaddperci
+=item C<bufaddperci>
 
 To prevent too many memory allocations, when marpaESLIF need to increase its internal buffer, it will do so by requesting C<bufaddperci> percent of current allocated size more bytes. Recommended value: C<50>.
 
