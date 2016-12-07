@@ -57,7 +57,7 @@ which describe what is a I<string>: this is a sequence of C<bytel> bytes, starti
     genericLogger_t *genericLoggerp;  /* Logger. Default: NULL */
   } marpaESLIFOption_t;
 
-  marpaESLIF_t           *marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptionp);
+  marpaESLIF_t *marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptionp);
 
 Any application must start by instanciating a main ESLIF. This method is returning such a main C<marpaESLIF> object, or C<NULL> is failure, using C<marpaESLIFOptionp> that is an eventual pointer to a C<marpaESLIFOption_t> structure. This structure contain:
 
@@ -71,7 +71,7 @@ A pointer to a C<genericLogger_t> instance. If it is NULL, then C<marpaESLIF> in
 
 =head3 marpaESLIF_freev
 
-  void                    marpaESLIF_freev(marpaESLIF_t *marpaESLIFp);
+  void marpaESLIF_freev(marpaESLIF_t *marpaESLIFp);
 
 The C<marpaESLIF> destructor, with parameter C<marpaESLIFp> being an instance previously created.
 
@@ -90,8 +90,8 @@ The default current grammar is always one at level C<0>, nevertheless it is poss
     char   *encodingOfEncodings; /* Encoding of encoding, in ASCII encoding. Default: NULL. */
   } marpaESLIFGrammarOption_t;
 
-  marpaESLIFGrammar_t    *marpaESLIFGrammar_newp(marpaESLIF_t              *marpaESLIFp,
-                                                 marpaESLIFGrammarOption_t *marpaESLIFGrammarOptionp);
+  marpaESLIFGrammar_t *marpaESLIFGrammar_newp(marpaESLIF_t              *marpaESLIFp,
+                                              marpaESLIFGrammarOption_t *marpaESLIFGrammarOptionp);
 
 This is creating a grammar object instance, with parameters:
 
@@ -137,14 +137,14 @@ Return C<NULL> if failure, a grammar object instance on success.
 
 =head3 marpaESLIFGrammar_eslifp
 
-  marpaESLIF_t           *marpaESLIFGrammar_eslifp(marpaESLIFGrammar_t *marpaESLIFGrammarp);
+  marpaESLIF_t *marpaESLIFGrammar_eslifp(marpaESLIFGrammar_t *marpaESLIFGrammarp);
 
 Return the main ESLIF object instance from a ESLIFGrammar instance, or C<NULL> is failure.
 
 =head3 marpaESLIFGrammar_ngrammarib
 
-  short                   marpaESLIFGrammar_ngrammarib(marpaESLIFGrammar_t *marpaESLIFGrammarp,
-                                                       int                 *ngrammarip);
+  short marpaESLIFGrammar_ngrammarib(marpaESLIFGrammar_t *marpaESLIFGrammarp,
+                                     int                 *ngrammarip);
 
 Put the number of grammars in the value pointed by C<ngrammarip> when the later is not C<NULL>. The number of grammars is the highest indice plus one in an internal sparse array of grammars.
 
@@ -152,9 +152,9 @@ Return a true value on failure, a false value on failure.
 
 =head3 marpaESLIFGrammar_grammar_currentb
 
-  short                   marpaESLIFGrammar_grammar_currentb(marpaESLIFGrammar_t *marpaESLIFGrammarp,
-                                                             int                 *levelip,
-                                                             marpaESLIFString_t **descpp);
+  short marpaESLIFGrammar_grammar_currentb(marpaESLIFGrammar_t *marpaESLIFGrammarp,
+                                           int                 *levelip,
+                                           marpaESLIFString_t **descpp);
 
 Put in the values pointed by C<levelip> and C<descpp>, which can be both C<NULL>, the level and description of current grammar from C<marpaESLIFGrammarp>.
 
@@ -162,11 +162,11 @@ Return a true value on failure, a false value on failure.
 
 =head3 marpaESLIFGrammar_grammar_by_levelb
 
-  short                   marpaESLIFGrammar_grammar_by_levelb(marpaESLIFGrammar_t *marpaESLIFGrammarp,
-                                                              int                  leveli,
-                                                              marpaESLIFString_t  *descp,
-                                                              int                 *levelip,
-                                                              marpaESLIFString_t **descpp);
+  short marpaESLIFGrammar_grammar_by_levelb(marpaESLIFGrammar_t *marpaESLIFGrammarp,
+                                            int                  leveli,
+                                            marpaESLIFString_t  *descp,
+                                            int                 *levelip,
+                                            marpaESLIFString_t **descpp);
 
 Put in the values pointed by C<levelip> and C<descpp>, which can be both C<NULL>, the level and description of wanted grammar from C<marpaESLIFGrammarp>:
 
@@ -188,9 +188,9 @@ Return a true value on failure, a false value on failure.
 
 =head3 marpaESLIFGrammar_rulearray_currentb
 
-  short                   marpaESLIFGrammar_rulearray_currentb(marpaESLIFGrammar_t  *marpaESLIFGrammarp,
-                                                               int                 **ruleipp,
-                                                               size_t               *rulelp);
+  short marpaESLIFGrammar_rulearray_currentb(marpaESLIFGrammar_t  *marpaESLIFGrammarp,
+                                             int                 **ruleipp,
+                                             size_t               *rulelp);
 
 Put in the values pointed by C<ruleipp> and C<rulelp> the rule indices and the number of such indices of current grammar fro, C<marpaESLIFGrammarp>.
 
@@ -198,11 +198,11 @@ Return a true value on failure, a false value on failure.
 
 =head3 marpaESLIFGrammar_rulearray_by_levelb
 
-  short                   marpaESLIFGrammar_rulearray_by_levelb(marpaESLIFGrammar_t  *marpaESLIFGrammarp,
-                                                                int                 **ruleipp,
-                                                                size_t               *rulelp,
-                                                                int                   leveli,
-                                                                marpaESLIFString_t   *descp);
+  short marpaESLIFGrammar_rulearray_by_levelb(marpaESLIFGrammar_t  *marpaESLIFGrammarp,
+                                              int                 **ruleipp,
+                                              size_t               *rulelp,
+                                              int                   leveli,
+                                              marpaESLIFString_t   *descp);
 
 
 Put in the values pointed by C<ruleipp> and C<rulelp> the rule indices and the number of such indices of wanted grammar from C<marpaESLIFGrammarp>:
@@ -225,9 +225,9 @@ Return a true value on failure, a false value on failure.
 
 =head3 marpaESLIFGrammar_ruledisplayform_currentb
 
-  short                   marpaESLIFGrammar_ruledisplayform_currentb(marpaESLIFGrammar_t  *marpaESLIFGrammarp,
-                                                                     int                   rulei,
-                                                                     char                **ruledisplaysp);
+  short marpaESLIFGrammar_ruledisplayform_currentb(marpaESLIFGrammar_t  *marpaESLIFGrammarp,
+                                                   int                   rulei,
+                                                   char                **ruledisplaysp);
 
 Put in the value pointed by C<ruledisplaysp>, which can be C<NULL>, an I<ASCII approximation> of rule at indice C<rulei> of the current grammar from C<marpaESLIFGrammarp>.
 
@@ -235,11 +235,11 @@ Return a true value on failure, a false value on failure.
 
 =head3 marpaESLIFGrammar_ruledisplayform_by_levelb
 
-  short                   marpaESLIFGrammar_ruledisplayform_by_levelb(marpaESLIFGrammar_t  *marpaESLIFGrammarp,
-                                                                      int                   rulei,
-                                                                      char                **ruledisplaysp,
-                                                                      int                   leveli,
-                                                                      marpaESLIFString_t   *descp);
+  short marpaESLIFGrammar_ruledisplayform_by_levelb(marpaESLIFGrammar_t  *marpaESLIFGrammarp,
+                                                    int                   rulei,
+                                                    char                **ruledisplaysp,
+                                                    int                   leveli,
+                                                    marpaESLIFString_t   *descp);
 
 Put in the value pointed by C<ruledisplaysp>, which can be C<NULL>, an I<ASCII approximation> of rule at indice C<rulei> of the wanted grammar from C<marpaESLIFGrammarp>:
 
