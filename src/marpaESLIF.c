@@ -1627,7 +1627,7 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
       }
       grammarp->marpaWrapperGrammarDiscardp = marpaWrapperGrammarClonep;
       marpaWrapperGrammarClonep = NULL;
-      /* Saée but with no event */
+      /* Same but with no event */
       marpaWrapperGrammarCloneOption.grammarOptionSetterp = _marpaESLIFGrammar_grammarOptionSetterNoLoggerb;
       marpaWrapperGrammarCloneOption.symbolOptionSetterp  = _marpaESLIFGrammar_symbolOptionSetterNoEventb;
       marpaWrapperGrammarClonep = marpaWrapperGrammar_clonep(grammarp->marpaWrapperGrammarStartp, &marpaWrapperGrammarCloneOption);
@@ -3460,7 +3460,7 @@ static inline short _marpaESLIFRecognizer_meta_matcherb(marpaESLIFRecognizer_t *
                                   &marpaESLIFRecognizerOption,
                                   &marpaESLIFValueOption,
                                   0 /* discardb */,
-                                  1 /* noEventb */,
+                                  1 /* noEventb - this will make the recognizer use marpaWrapperGrammarStartNoEventp */,
                                   NULL /* exceptionStackp */,
                                   1 /* silentb */,
                                   marpaESLIFRecognizerp /* parentRecognizerp */,
@@ -3537,11 +3537,11 @@ static inline short _marpaESLIFRecognizer_exception_matcherb(marpaESLIFRecognize
   marpaESLIF_readerContext.marpaESLIFp              = marpaESLIFp;
   marpaESLIF_readerContext.marpaESLIFGrammarOptionp = &marpaESLIFGrammarOption;
 
-  grammarp                          = (marpaESLIF_grammar_t *) GENERICSTACK_GET_PTR(marpaESLIFGrammarp->grammarStackp, rulep->exceptionp->lookupResolvedLeveli);
-  grammar                           = *grammarp;
-  grammar.marpaWrapperGrammarStartp = rulep->marpaWrapperGrammarExceptionNoEventp;
-  marpaESLIFGrammar                 = *marpaESLIFGrammarp;
-  marpaESLIFGrammar.grammarp        = &grammar;
+  grammarp                                 = (marpaESLIF_grammar_t *) GENERICSTACK_GET_PTR(marpaESLIFGrammarp->grammarStackp, rulep->exceptionp->lookupResolvedLeveli);
+  grammar                                  = *grammarp;
+  grammar.marpaWrapperGrammarStartNoEventp = rulep->marpaWrapperGrammarExceptionNoEventp;
+  marpaESLIFGrammar                        = *marpaESLIFGrammarp;
+  marpaESLIFGrammar.grammarp               = &grammar;
 
   /* Overwrite things not setted in the template, or with which we want a change */
   marpaESLIFRecognizerOption.userDatavp                  = (void *) &marpaESLIF_readerContext;
@@ -3596,7 +3596,7 @@ static inline short _marpaESLIFRecognizer_exception_matcherb(marpaESLIFRecognize
                                   &marpaESLIFRecognizerOption,
                                   &marpaESLIFValueOption,
                                   0, /* discardb */
-                                  1, /* noEventb */
+                                  1, /* noEventb - this will make the recognizer use marpaWrapperGrammarStartNoEventp */
                                   exceptionStackp,
                                   1, /* silentb */
                                   NULL /* marpaESLIFRecognizerp */,
@@ -4392,7 +4392,13 @@ short marpaESLIFGrammar_symboldisplayform_by_levelb(marpaESLIFGrammar_t *marpaES
 marpaESLIFRecognizer_t *marpaESLIFRecognizer_newp(marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaESLIFRecognizerOption_t *marpaESLIFRecognizerOptionp)
 /*****************************************************************************/
 {
-  return _marpaESLIFRecognizer_newp(marpaESLIFGrammarp, marpaESLIFRecognizerOptionp, 0 /* discardb */, 0 /* noEventb */, NULL /* exceptionStackp */, 0 /* silentb */, NULL /* marpaESLIFRecognizerParentp */, 0 /* fakeb */);
+  return _marpaESLIFRecognizer_newp(marpaESLIFGrammarp,
+                                    marpaESLIFRecognizerOptionp, 0, /* discardb */
+                                    0, /* noEventb */
+                                    NULL, /* exceptionStackp */
+                                    0, /* silentb */
+                                    NULL, /* marpaESLIFRecognizerParentp */
+                                    0 /* fakeb */);
 }
 
 /*****************************************************************************/
@@ -4680,7 +4686,7 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
                                     &marpaESLIFRecognizerOptionDiscard,
                                     &marpaESLIFValueOptionDiscard,
                                     1 /* discardb */,
-                                    marpaESLIFRecognizerp->noEventb,
+                                    marpaESLIFRecognizerp->noEventb /* This will select marpaWrapperGrammarDiscardNoEventp or marpaWrapperGrammarDiscardp */,
                                     NULL /* exceptionStackp */,
                                     1 /* silentb */,
                                     marpaESLIFRecognizerp /* marpaESLIFRecognizerParentp */,
@@ -8505,8 +8511,8 @@ static inline short _marpaESLIFRecognizer_encoding_eqb(marpaESLIFRecognizer_t *m
   /* Fake a recognizer. EOF flag will be set automatically in fake mode */
   marpaESLIFRecognizerp = _marpaESLIFRecognizer_newp(&marpaESLIFGrammar,
                                                      NULL /* marpaESLIFRecognizerOptionp */,
-                                                     0 /* discardb - no effect because we are in fake mode */,
-                                                     1 /* noEventb - no effect because we are in fake mode -; */,
+                                                     0 /* discardb - no effect anyway because we are in fake mode */,
+                                                     1 /* noEventb - no effect anyway because we are in fake mode -; */,
                                                      NULL /* exceptionStackp */,
                                                      0 /* silentb */,
                                                      marpaESLIFRecognizerParentp,
