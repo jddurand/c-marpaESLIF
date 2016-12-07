@@ -403,7 +403,7 @@ for the C<marpaESLIFValueOption_t> and C<marpaESLIFValueResult_t> structures doc
 
 =back
 
-A short form of parsing and valuation, in which any I<grammar event>, which normally puts the scanning on hold, is disabled. Please refer to the L<marpaESLIF_BNF|https://github.com/jddurand/c-marpaESLIF/tree/master/doc/BNF> for more information about grammar events. The grammar at level C<0> is used.
+A short form of parsing and valuation, in which no I<lexeme pause before event> is possible, which normally puts the scanning on hold waiting for the user to take action. Please refer to the L<marpaESLIF_BNF|https://github.com/jddurand/c-marpaESLIF/tree/master/doc/BNF> for more information about grammar events. The grammar at level C<0> is used.
 
 =head3 C<marpaESLIFGrammar_parse_by_levelb>
 
