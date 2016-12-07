@@ -514,4 +514,4 @@ This type include character class. In such a case, the UTF-8 byte sequence corre
 
 =head1 SEE ALSO
 
-L<genericLogger|https://github.com/jddurand/c-genericLogger>
+L<genericLogger|https://github.com/jddurand/c-genericLogger>,  L<PCRE2|http://www.pcre.org/>, L<libmarpa|https://jeffreykegler.github.io/Marpa-web-site/libmarpa.html>
