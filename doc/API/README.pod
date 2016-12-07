@@ -576,7 +576,7 @@ Support of exhaustion. Recommended value is a false value, because the most comm
 
 =item C<newlineb>
 
-Support of newline count. This is used when the parser fails to produce ab accurate report with line and number information. Works at the granularity of data chunk, and is meaningless if data chunk is not declared as a character stream.
+Support of newline count. This is used when the parser fails to produce ab accurate report with line and number information. Works at the granularity of data chunk, and is meaningless if data chunk is not declared as a character stream. Any Unicode line ending sequence is considered.
 
 =item C<bufsizl>
 
