@@ -4937,7 +4937,7 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
                             dumpl,
                             0 /* traceb */);
       }
-      if (marpaESLIFRecognizerp->marpaESLIFRecognizerOption.newlineb) {
+      if ((*(marpaESLIFRecognizerp->utfbp)) && marpaESLIFRecognizerp->marpaESLIFRecognizerOption.newlineb) {
         if (marpaESLIFRecognizerp->columnl > 0) {
           /* Column is known (in terms of character count) */
           MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "<<<<<< RECOGNIZER FAILURE AFTER LINE No %ld COLUMN No %ld, HERE: >>>>>>", (unsigned long) marpaESLIFRecognizerp->linel, (unsigned long) marpaESLIFRecognizerp->columnl);
@@ -8197,7 +8197,7 @@ static inline short _marpaESLIFRecognizer_matchPostProcessingb(marpaESLIFRecogni
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
 
   /* If newline counting is on, so do we - only at first level */
-  if (marpaESLIFRecognizerp->marpaESLIFRecognizerOption.newlineb && (marpaESLIFRecognizerp->leveli == 0)) {
+  if (marpaESLIFRecognizerp->marpaESLIFRecognizerOption.newlineb && (*(marpaESLIFRecognizerp->utfbp)) && (marpaESLIFRecognizerp->leveli == 0)) {
     newlinep = marpaESLIFRecognizerp->marpaESLIFp->newlinep;
     anycharp = marpaESLIFRecognizerp->marpaESLIFp->anycharp;
     linep = marpaESLIFRecognizerp->inputs;
