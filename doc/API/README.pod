@@ -403,6 +403,33 @@ for the C<marpaESLIFValueOption_t> and C<marpaESLIFValueResult_t> structures doc
 
 =back
 
+A short form of parsing and valuation, in which any I<grammar event>, which normally puts the scanning on hold, is disabled. Please refer to the L<marpaESLIF_BNF|https://github.com/jddurand/c-marpaESLIF/tree/master/doc/BNF> for more information about grammar events. The grammar at level C<0> is used.
+
+=head3 C<marpaESLIFGrammar_parse_by_levelb>
+
+  short marpaESLIFGrammar_parse_by_levelb(marpaESLIFGrammar_t          *marpaESLIFGrammarp,
+                                          marpaESLIFRecognizerOption_t *marpaESLIFRecognizerOptionp,
+                                          marpaESLIFValueOption_t      *marpaESLIFValueOptionp,
+                                          short                        *exhaustedbp,
+                                          int                           leveli,
+                                          marpaESLIFString_t           *descp,
+                                          marpaESLIFValueResult_t      *marpaESLIFValueResultp);
+
+Same functionnality as C<marpaESLIFGrammar_parseb> for a wanted grammar from C<marpaESLIFGrammarp>:
+
+=over
+
+=item C<leveli>
+
+is the eventual explicit wanted level, ignored if < C<0>.
+
+=item C<descp>
+
+is the eventual explicit description, ignored if C<NULL>.
+
+=back
+
+C<descp> have precedence of C<leveli>.
 
 =head1 NOTES
 
