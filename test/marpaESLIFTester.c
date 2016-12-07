@@ -111,7 +111,6 @@ int main() {
   marpaESLIFGrammarOption.encodingl           = (marpaESLIFGrammarOption.encodings != NULL) ? strlen(marpaESLIFGrammarOption.encodings) : 0;
   marpaESLIFGrammarOption.encodingOfEncodings = "ASCII";
   marpaESLIFGrammarp = marpaESLIFGrammar_newp(marpaESLIFp, &marpaESLIFGrammarOption);
-  /* genericLogger_logLevel_seti(genericLoggerp, GENERICLOGGER_LOGLEVEL_DEBUG); */
 
   if (marpaESLIFGrammarp == NULL) {
     goto err;
