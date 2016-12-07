@@ -259,6 +259,116 @@ C<descp> have precedence of C<leveli>.
 
 Return a true value on failure, a false value on failure.
 
+=head3 marpaESLIFGrammar_symboldisplayform_currentb
+
+  short marpaESLIFGrammar_symboldisplayform_currentb(marpaESLIFGrammar_t  *marpaESLIFGrammarp,
+                                                     int                   symboli,
+                                                     char                **symboldisplaysp);
+
+Put in the value pointed by C<symboldisplaysp>, which can be C<NULL>, a NUL-terminated I<ASCII encoded> version of symbol name at indice C<symboli> of the current grammar from C<marpaESLIFGrammarp>. C<symboli> is an argument of symbol actions (c.f. the documentation for actions).
+
+Return a true value on failure, a false value on failure.
+
+=head3 marpaESLIFGrammar_symboldisplayform_by_levelb
+
+  short marpaESLIFGrammar_symboldisplayform_by_levelb(marpaESLIFGrammar_t  *marpaESLIFGrammarp,
+                                                      int                   symboli,
+                                                      char                **symboldisplaysp,
+                                                      int                   leveli,
+                                                      marpaESLIFString_t   *descp);
+
+Put in the value pointed by C<symboldisplaysp>, which can be C<NULL>, a NUL-terminated I<ASCII encoded> version of symbol name at indice C<symboli> of the wanted grammar from C<marpaESLIFGrammarp>:
+
+=over
+
+=item leveli
+
+is the eventual explicit wanted level, ignored if < C<0>.
+
+=item descp
+
+is the eventual explicit description, ignored if C<NULL>.
+
+=back
+
+C<descp> have precedence of C<leveli>. C<symboli> is an argument of symbol actions (c.f. the documentation for actions).
+
+Return a true value on failure, a false value on failure.
+
+=head3 marpaESLIFGrammar_ruleshowform_currentb
+
+  short marpaESLIFGrammar_ruleshowform_currentb(marpaESLIFGrammar_t  *marpaESLIFGrammarp,
+                                                int                   rulei,
+                                                char                **ruleshowsp);
+
+Put in the value pointed by C<ruleshowsp>, which can be C<NULL>, a NUL-terminated I<ASCII encoded> transliteration of rule definition at indice C<rulei> of the current grammar from C<marpaESLIFGrammarp>.
+
+Return a true value on failure, a false value on failure.
+
+=head3 marpaESLIFGrammar_ruleshowform_by_levelb
+
+  short marpaESLIFGrammar_ruleshowform_by_levelb(marpaESLIFGrammar_t  *marpaESLIFGrammarp,
+                                                    int                   rulei,
+                                                    char                **ruleshowsp,
+                                                    int                   leveli,
+                                                    marpaESLIFString_t   *descp);
+
+Put in the value pointed by C<ruleshowsp>, which can be C<NULL>, a NUL-terminated I<ASCII encoded> transliteration of rule definition at indice C<rulei> of the wanted grammar from C<marpaESLIFGrammarp>:
+
+=over
+
+=item leveli
+
+is the eventual explicit wanted level, ignored if < C<0>.
+
+=item descp
+
+is the eventual explicit description, ignored if C<NULL>.
+
+=back
+
+C<descp> have precedence of C<leveli>.
+
+Return a true value on failure, a false value on failure.
+
+=head3 marpaESLIFGrammar_grammarshowform_currentb
+
+  short marpaESLIFGrammar_grammarshowform_currentb(marpaESLIFGrammar_t  *marpaESLIFGrammarp,
+                                                int                   grammari,
+                                                char                **grammarshowsp);
+
+Put in the value pointed by C<grammarshowsp>, which can be C<NULL>, a NUL-terminated I<ASCII encoded> transliteration of grammar definition at indice C<grammari> of the current grammar from C<marpaESLIFGrammarp>. This is very exhaustive, and give internal information about all symbols and rules.
+
+Return a true value on failure, a false value on failure.
+
+=head3 marpaESLIFGrammar_grammarshowform_by_levelb
+
+  short marpaESLIFGrammar_grammarshowform_by_levelb(marpaESLIFGrammar_t  *marpaESLIFGrammarp,
+                                                    int                   grammari,
+                                                    char                **grammarshowsp,
+                                                    int                   leveli,
+                                                    marpaESLIFString_t   *descp);
+
+Put in the value pointed by C<grammarshowsp>, which can be C<NULL>, a NUL-terminated I<ASCII encoded> transliteration of grammar definition at indice C<grammari> of the wanted grammar from C<marpaESLIFGrammarp>:
+
+=over
+
+=item leveli
+
+is the eventual explicit wanted level, ignored if < C<0>.
+
+=item descp
+
+is the eventual explicit description, ignored if C<NULL>.
+
+=back
+
+C<descp> have precedence of C<leveli>.
+
+This is very exhaustive, and give internal information about all symbols and rules.
+
+Return a true value on failure, a false value on failure.
+
 =head1 NOTES
 
 Any of the object of this API is thread-safe but is not I<reentrant>. That is, if user need to access the same object from different threads, he is responsible of doing sychronization.
