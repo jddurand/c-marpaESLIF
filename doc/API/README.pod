@@ -546,11 +546,13 @@ It is flushed, and binary data is appended as-is.
 
 =item B - Previous read was not a character stream (or there was no previous read)
 
-Binary data is appended as.is.
+Binary data is appended as-is.
 
 =back
 
 =back
+
+I<If> the grammar requires UTF-8 understanding of the buffer (either by using characters with code points greater than C<0xFF> in terminals, or explicitely setting the C<c> modifier to regular expressions - all of that meaning that PCRE2 expressions have the PCRE2_UTF flag), and C<If> the chunk of data was not declared as a character stream: it is assumed that it is in UTF-8 encoding. PCRE2 will check that and yell if it does not contain only valid UTF-8 characters.
 
 The parameter C<marpaESLIFRecognizerOptionp> is a pointer to a C<marpaESLIFRecognizerOption_t> structure, where:
 
