@@ -724,7 +724,7 @@ Returns a true value on success, a false value on failure.
                                           marpaESLIFEventType_t   eventSeti,
                                           short                   onoffb);
 
-Switches on or off the event types C<eventSeti> (which is a bit mask of event type), depending of C<onoffb> value, at symbol with name C<symbols> (a NUL terminated ASCII string) of current grammar. Setting on or off a non-existing event is a no-op which.
+Switches on or off the event types C<eventSeti> (which is a bit mask of event type), depending of C<onoffb> value, at symbol with name C<symbols> (a NUL terminated ASCII string) of current grammar. Setting on or off a non-existing event is a no-op.
 
 Returns a true value on success, a false value on failure.
 
