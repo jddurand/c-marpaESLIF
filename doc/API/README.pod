@@ -472,7 +472,7 @@ is declaring no lexeme: both C<[\s]+>, C</[a-z]+/> and C<'X'> are I<explicit> ex
   my_separator      ~ [\s]+
   my_string         ~ 'X'
 
-declares the symbols C<my_separator> and C<my_string> as lexemes: they are not in any LHS of the grammar at level 0 (the one with C<::=> declarations), they refer to a I<grammar used as lexer> that is at level 1 (the one with C<~> declarations). The user will be able to push himself alternatives using the symbol names C<my_separator> and C<my_string>. Taking the example of the C<'X'> string, the user have the freedom to push I<something else> but C<'X'>, because we took over the lexing phase. The only important thing from the top grammar point of view, is that the I<terminal> wich name I<my_string> is an alternative. Still, the end-user will not be able to push an alternative that would correspond to the expression C</[a-z]+/> at the C<something> location.
+declares the symbols C<my_separator> and C<my_string> as lexemes: they are not in any LHS of the grammar at level 0 (the one with C<::=> declarations), they refer to a I<grammar used as lexer> that is at level 1 (the one with C<~> declarations). The user will be able to push himself alternatives using the symbol names C<my_separator> and C<my_string>. Taking the example of the C<'X'> string, the user have the freedom to push I<something else> but C<'X'>, because we took over the lexing phase. The only important thing from the top grammar point of view, is that the I<terminal> whose name is C<my_string> is an accepted alternative. Still, the end-user will not be able to push an alternative that would correspond to the expression C</[a-z]+/> at the C<something> location.
 
 =head3 C<marpaESLIFRecognizer_newp>
 
