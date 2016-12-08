@@ -445,25 +445,25 @@ Internally, marpaESLIF have two terminal implementations:
 
 =over
 
-=item regular expressions
+=item explicit expressions
 
-These are terminals defined explicitely in the grammar as strings, character classes or directly regular expressions. These terminals have no name, and will be handled automatically by the recognizer during a scanning phase. It is not possible for the end user to declare an alternative that would be of such type
+These are terminals defined explicitely in the grammar as strings, character classes or regular expressions. These terminals have no name, and will be handled automatically by the recognizer during a scanning phase. It is not possible for the end user to push an alternative that would be of such type.
 
 =item meta symbols
 
-These are symbols that have no LHS counterpart in the current grammar, thus must be known to another grammar. We call them lexemes.
+These are symbols that have no LHS counterpart in the current grammar, thus must be known to another grammar. We call them lexemes, and the other grammar is used as a I<lexing grammar>.
 
 =back
 
 This mean that if the end-user want to have control on the parsing, he <must> make sure that he will declare as a lexeme any part of the grammar on which he migh want to have some influence.
 
-The subtility, so, is in the declaration of terminals. For instance, a rule like this:
+The subtility, so, is in the declaration of terminals. For instance, rules like this:
 
   <sequence rule> ::= <something>* separator => [\s]+
   <something>     ::= /[a-z]+/
   <something>     ::= 'X'
 
-is declaring no lexeme: both C<[\s]+>, C</[a-z]+/> and C<'X'> are I<explicit> terminals in the same grammar level. There is no associated name, and the user will not be able to say "I want an alternative being C<'X'>". On the other hand:
+is declaring no lexeme: both C<[\s]+>, C</[a-z]+/> and C<'X'> are I<explicit> expressions in the same grammar level. There is no associated name, and the user will not be able to say "I want to push an alternative whose content is C<'X'> myself". On the other hand:
 
   <sequence rule> ::= <something>* separator => my_separator
   <something>     ::= /[a-z]+/
@@ -472,7 +472,7 @@ is declaring no lexeme: both C<[\s]+>, C</[a-z]+/> and C<'X'> are I<explicit> te
   my_separator      ~ [\s]+
   my_string         ~ 'X'
 
-declares the symbols C<my_separator> and C<my_string> as lexemes: they are not in any LHS of the grammar at level 0 (the one with C<::=> declarations), they refer to a I<grammar used as lexer> that is at level 1 (the one with C<~> declarations). The user will be able to push himself alternatives using the symbol names C<my_separator> and C<my_string>. Still, he will not be able to push an alternative that would correspond to the expression C</[a-z]+/>.
+declares the symbols C<my_separator> and C<my_string> as lexemes: they are not in any LHS of the grammar at level 0 (the one with C<::=> declarations), they refer to a I<grammar used as lexer> that is at level 1 (the one with C<~> declarations). The user will be able to push himself alternatives using the symbol names C<my_separator> and C<my_string>. Taking the example of the C<'X'> string, the user have the freedom to push I<something else> but C<'X'>, because we took over the lexing phase. The only important thing from the top grammar point of view, is that the I<terminal> wich name I<my_string> is an alternative. Still, the end-user will not be able to push an alternative that would correspond to the expression C</[a-z]+/> at the C<something> location.
 
 =head3 C<marpaESLIFRecognizer_newp>
 
