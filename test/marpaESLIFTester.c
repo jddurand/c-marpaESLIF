@@ -334,14 +334,8 @@ static short eventManagerb(int *eventCountip, marpaESLIFRecognizer_t *marpaESLIF
       marpaESLIFRecognizer_inputv(marpaESLIFRecognizerp, &inputs, &inputl, &eofb);
       GENERICLOGGER_INFOF(genericLoggerp, "[%3d] Event %s for symbol <%s> (character is %c (0x%lx), eofb is %d)", *eventCountip, eventArrayp[eventArrayIteratorl].events, eventArrayp[eventArrayIteratorl].symbols, *inputs, (unsigned long) *inputs, (int) eofb);
       if (strcmp(eventArrayp[eventArrayIteratorl].events, "^[a-zA-Z0-9_:]") == 0) {
-        if (! marpaESLIFRecognizer_alternative_lengthb(marpaESLIFRecognizerp, 1)) {
-          goto err;
-        }
-        GENERICLOGGER_INFOF(genericLoggerp, "[%3d] ... Pushing alternative <%s>", *eventCountip, eventArrayp[eventArrayIteratorl].symbols);
-        if (! marpaESLIFRecognizer_alternativeb(marpaESLIFRecognizerp, eventArrayp[eventArrayIteratorl].symbols)) {
-          goto err;
-        }
-        if (! marpaESLIFRecognizer_completeb(marpaESLIFRecognizerp)) {
+        GENERICLOGGER_INFOF(genericLoggerp, "[%3d] ... Pushing single alternative <%s>", *eventCountip, eventArrayp[eventArrayIteratorl].symbols);
+        if (! marpaESLIFRecognizer_lexeme_readb(marpaESLIFRecognizerp, eventArrayp[eventArrayIteratorl].symbols, 1)) {
           goto err;
         }
         /* Complete can generate again events! */
