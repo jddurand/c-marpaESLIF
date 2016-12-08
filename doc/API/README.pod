@@ -592,9 +592,13 @@ To prevent too many memory allocations, when marpaESLIF need to increase its int
 
 =back
 
+This method returns a recognizer pointer in case of success, C<NULL> in case of failure.
+
 =head3 C<marpaESLIFRecognizer_grammarp>
 
   marpaESLIFGrammar_t *marpaESLIFRecognizer_grammarp(marpaESLIFRecognizer_t *marpaESLIFRecognizerp);
+
+Returns the ESLIFGrammar instance parent of the C<marpaESLIFRecognizerp> instance, C<NULL> in case of failure.
 
 =head3 C<marpaESLIFRecognizer_scanb>
 
@@ -636,9 +640,13 @@ A typical usage of the C<marpaESLIFRecognizer_scanb> method is:
     /* See below for the events, pause and resume methods */
   }
 
+This method returns a true value on success, a false value on failure.
+
 =head3 C<marpaESLIFRecognizer_resumeb>
 
-  short marpaESLIFRecognizer_resumeb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, short *continuebp, short *exhaustedbp);
+  short marpaESLIFRecognizer_resumeb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp,
+                                     short *continuebp,
+                                     short *exhaustedbp);
 
 Resume the scanning. All parameters have the same meaning as for C<marpaESLIFRecognizer_scanb>. A typical usage is:
 
@@ -661,6 +669,34 @@ Resume the scanning. All parameters have the same meaning as for C<marpaESLIFRec
       goto error_processing;
     }
   }
+
+Returns a true value on success, a false value on failure.
+
+=head3 C<marpaESLIFRecognizer_alternative_lengthb>
+
+  short marpaESLIFRecognizer_alternative_lengthb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp,
+                                                 size_t alternativeLengthl);
+
+When a recognizer is paused, user have the possibility to inject himself symbols. The marpaESLIF does I<not> support injection of symbols that would be of different length in the input stream: all symbols will be of of size C<alternativeLengthl>, which is in I<byte> unit. At every pause of the scanning, this method can be called once, and it is illegal to give a length higher than the number of remaining bytes in marpaESLIF internal buffer (see the C<marpaESLIFRecognizer_readb> for injecting more data, and C<marpaESLIFRecognizer_inputv> for get information of the internal buffers).
+
+Returns a true value on success, a false value on failure.
+
+=head3 C<marpaESLIFRecognizer_alternativeb>
+
+  short marpaESLIFRecognizer_alternativeb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp,
+                                          char *symbols);
+
+Say to the recognizer pointed by C<marpaESLIFRecognizerp> that symbol C<symbols> (which is an ASCII NUL terminated string) is an alternative.
+
+Returns a true value on success, a false value on failure.
+
+=head3 C<marpaESLIFRecognizer_completeb>
+
+  short marpaESLIFRecognizer_completeb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp);
+
+Say to the recognizer pointed C<marpaESLIFRecognizerp> by that the current set of alternatives is complete: these are the ones pushed with C<marpaESLIFRecognizer_alternativeb> method, and they all take the number of bytes in the input stream declared with C<marpaESLIFRecognizer_alternative_lengthb>.
+
+Returns a true value on success, a false value on failure.
 
 =head1 NOTES
 
