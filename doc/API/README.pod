@@ -686,7 +686,7 @@ Returns a true value on success, a false value on failure.
   short marpaESLIFRecognizer_alternativeb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp,
                                           char *symbols);
 
-Say to the recognizer pointed by C<marpaESLIFRecognizerp> that symbol C<symbols> (which is an ASCII NUL terminated string) is an alternative. Please note that, as per the grammar, a symbol name is always composed only ASCII characters only.
+Say to the recognizer pointed by C<marpaESLIFRecognizerp> that symbol C<symbols> (which is an ASCII NUL terminated string) is an alternative. Please note that, as per the grammar, a symbol name is always composed of ASCII characters only.
 
 Returns a true value on success, a false value on failure.
 
