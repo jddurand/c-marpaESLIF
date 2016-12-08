@@ -135,7 +135,7 @@ Return C<NULL> if failure, a grammar object instance on success.
 
   marpaESLIF_t *marpaESLIFGrammar_eslifp(marpaESLIFGrammar_t *marpaESLIFGrammarp);
 
-Return the main ESLIF object instance from a C<marpaESLIFGrammarp> ESLIFGrammar instance, or C<NULL> is failure.
+Return the main ESLIF object instance from a C<marpaESLIFGrammarp> ESLIFGrammar instance, or C<NULL> is failure. It never returns C<NULL> if C<marpaESLIFGrammarp> is not C<NULL>.
 
 =head3 C<marpaESLIFGrammar_ngrammarib>
 
@@ -598,7 +598,7 @@ This method returns a recognizer pointer in case of success, C<NULL> in case of 
 
   marpaESLIFGrammar_t *marpaESLIFRecognizer_grammarp(marpaESLIFRecognizer_t *marpaESLIFRecognizerp);
 
-Returns the ESLIFGrammar instance parent of the C<marpaESLIFRecognizerp> instance, C<NULL> in case of failure.
+Returns the ESLIFGrammar instance parent of the C<marpaESLIFRecognizerp> instance, C<NULL> in case of failure. It never returns C<NULL> if C<marpaESLIFRecognizerp> is not C<NULL>.
 
 =head3 C<marpaESLIFRecognizer_scanb>
 
