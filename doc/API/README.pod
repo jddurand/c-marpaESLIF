@@ -698,6 +698,42 @@ Say to the recognizer pointed C<marpaESLIFRecognizerp> by that the current set o
 
 Returns a true value on success, a false value on failure.
 
+=head3 C<marpaESLIFRecognizer_eofb>
+
+  short marpaESLIFRecognizer_eofb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp);
+
+Forces the recognizer pointed by C<marpaESLIFRecognizerp> to believe that the end of data is reached.
+
+Returns a true value on success, a false value on failure.
+
+=head3 C<marpaESLIFRecognizer_event_onoffb>
+
+  typedef enum marpaESLIFEventType {
+    MARPAESLIF_EVENTTYPE_NONE       = 0x00,
+    MARPAESLIF_EVENTTYPE_COMPLETED  = 0x01, /* Grammar event */
+    MARPAESLIF_EVENTTYPE_NULLED     = 0x02, /* Grammar event */
+    MARPAESLIF_EVENTTYPE_PREDICTED  = 0x04, /* Grammar event */
+    MARPAESLIF_EVENTTYPE_BEFORE     = 0x08, /* Just before lexeme is commited */
+    MARPAESLIF_EVENTTYPE_AFTER      = 0x10, /* Just after lexeme is commited */
+    MARPAESLIF_EVENTTYPE_EXHAUSTED  = 0x20, /* Exhaustion */
+    MARPAESLIF_EVENTTYPE_DISCARD    = 0x40  /* Discard */
+  } marpaESLIFEventType_t;
+
+  short marpaESLIFRecognizer_event_onoffb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp,
+                                          int                     symboli,
+                                          marpaESLIFEventType_t   eventSeti,
+                                          short                   onoffb);
+
+Switches on or off the event types C<eventSeti> (which is a bit mask of event type), depending of C<onoffb> value, at symbol number C<symboli> of current grammar.
+
+Returns a true value on success, a false value on failure.
+
+=head3 C<marpaESLIFRecognizer_expectedb>
+
+  short marpaESLIFRecognizer_expectedb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp,
+                                       size_t                 *nSymbollp,
+                                       int                    **symbolArraypp);
+
 =head1 NOTES
 
 =over
