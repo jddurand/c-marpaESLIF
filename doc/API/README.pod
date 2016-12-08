@@ -636,6 +636,32 @@ A typical usage of the C<marpaESLIFRecognizer_scanb> method is:
     /* See below for the events, pause and resume methods */
   }
 
+=head3 C<marpaESLIFRecognizer_resumeb>
+
+  short marpaESLIFRecognizer_resumeb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, short *continuebp, short *exhaustedbp);
+
+Resume the scanning. All parameters have the same meaning as for C<marpaESLIFRecognizer_scanb>. A typical usage is:
+
+  short continueb;
+  short exhaustedb;
+
+  if (! marpaESLIFRecognizer_scanb(marpaESLIFRecognizerp,
+                                   0 /* initialEventsb */,
+                                   &continueb,
+                                   &exhaustedb)) {
+    goto error_processing;
+  }
+  while (continueb) {
+    /* See below for the events and pause */
+    /* ... */
+    /* Resume */
+    if (! marpaESLIFRecognizer_resumeb(marpaESLIFRecognizerp,
+                                       &continueb,
+                                       &exhaustedb)) {
+      goto error_processing;
+    }
+  }
+
 =head1 NOTES
 
 =over
