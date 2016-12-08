@@ -198,7 +198,7 @@ int main() {
           free(cards);
         }
         cards = int2cards(genericLoggerp, cardi);
-        GENERICLOGGER_DEBUGF(genericLoggerp, "Card %s, cardi=%d", cards, cardi);
+        GENERICLOGGER_DEBUGF(genericLoggerp, "Got card %s", cards);
 
         /* Check for duplicate card */
         if (GENERICSTACK_IS_SHORT(cardStackp, cardi)) {
