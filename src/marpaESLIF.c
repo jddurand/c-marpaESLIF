@@ -4524,6 +4524,7 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
   marpaESLIFRecognizerOption_t     marpaESLIFRecognizerOptionDiscard = marpaESLIFRecognizerp->marpaESLIFRecognizerOption; /* Things overwriten, see below */
   genericStack_t                  *alternativeStackp                 = marpaESLIFRecognizerp->alternativeStackp;
   genericStack_t                  *alternativeStackWorkp             = marpaESLIFRecognizerp->alternativeStackWorkp;
+  marpaWrapperRecognizer_t        *marpaWrapperRecognizerp           = marpaESLIFRecognizerp->marpaWrapperRecognizerp;
   short                            haveTerminalMatchedb              = 0;
   short                            maxPriorityInitializedb           = 0;
   size_t                           maxMatchedl                       = 0;
@@ -4590,7 +4591,7 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
   }
   
   /* Ask for expected lexemes */
-  if (! marpaESLIFRecognizer_expectedb(marpaESLIFRecognizerp, &nSymboll, &symbolArrayp)) {
+  if (! marpaWrapperRecognizer_expectedb(marpaWrapperRecognizerp, &nSymboll, &symbolArrayp)) {
     goto err;
   }
 
