@@ -596,7 +596,45 @@ To prevent too many memory allocations, when marpaESLIF need to increase its int
 
   marpaESLIFGrammar_t *marpaESLIFRecognizer_grammarp(marpaESLIFRecognizer_t *marpaESLIFRecognizerp);
 
-Returns the ESLIFGrammar instance on which C<marpaESLIFRecognizerp> was created.
+=head3 C<marpaESLIFRecognizer_scanb>
+
+  short marpaESLIFRecognizer_scanb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp,
+                                   short initialEventsb,
+                                   short *continuebp,
+                                   short *exhaustedbp);
+
+Start a scanless parsing using the C<marpaESLIFRecognizerp> instance. Only one such call can be done in the whole lifetime of a recognizer. Parameters are:
+
+=over
+
+=item initialEventsb
+
+Traditionnally initial events are not of use and are skipped. When true, this flag enable such events.
+
+=item continuebp
+
+The scanning will pause as soon as there is an event or an error. When not C<NULL>, the value pointed by C<continuebp> say that if scanning can continue if it is a true value.
+
+=item exhaustedbp
+
+If not C<NULL>, this value pointed by C<exhaustedbp> will say if the parse is exhausted.
+
+=back
+
+A typical usage of the C<marpaESLIFRecognizer_scanb> method is:
+
+  short continueb;
+  short exhaustedb;
+
+  if (! marpaESLIFRecognizer_scanb(marpaESLIFRecognizerp,
+                                   0 /* initialEventsb */,
+                                   &continueb,
+                                   &exhaustedb)) {
+    goto error_processing;
+  }
+  while (continueb) {
+    /* See below for the events, pause and resume methods */
+  }
 
 =head1 NOTES
 
