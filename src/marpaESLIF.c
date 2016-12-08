@@ -5238,18 +5238,42 @@ short marpaESLIFRecognizer_completeb(marpaESLIFRecognizer_t *marpaESLIFRecognize
 }
 
 /*****************************************************************************/
-short marpaESLIFRecognizer_event_onoffb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, int symboli, marpaESLIFEventType_t eventSeti, short onoffb)
+short marpaESLIFRecognizer_event_onoffb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *symbols, marpaESLIFEventType_t eventSeti, short onoffb)
 /*****************************************************************************/
 {
-  static const char *funcs = "marpaESLIFRecognizer_event_onoffb";
-  short              rcb;
+  static const char    *funcs              = "marpaESLIFRecognizer_event_onoffb";
+  marpaESLIF_t         *marpaESLIFp        = marpaESLIFRecognizerp->marpaESLIFp;
+  marpaESLIFGrammar_t  *marpaESLIFGrammarp = marpaESLIFRecognizerp->marpaESLIFGrammarp;
+  marpaESLIF_grammar_t *grammarp           = marpaESLIFGrammarp->grammarp;
+  marpaESLIFSymbol_t   *symbolp;
+  short                 rcb;
 
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
 
-  /* Of course, our marpaESLIFEventType_t is strictly equivalent to marpaWrapperGrammarEventType_t -; */
-  rcb = marpaWrapperRecognizer_event_onoffb(marpaESLIFRecognizerp->marpaWrapperRecognizerp, symboli, eventSeti, (int) onoffb);
+  if (symbols == NULL) {
+    MARPAESLIF_ERROR(marpaESLIFp, "Symbol name is NULL");
+    goto err;
+  }
 
+  symbolp = _marpaESLIF_symbol_findp(marpaESLIFp, grammarp, symbols, -1);
+  if (symbolp == NULL) {
+    MARPAESLIF_ERRORF(marpaESLIFp, "Failed to find symbol <%s>", symbols);
+    goto err;
+  }
+
+  /* Of course, our marpaESLIFEventType_t is strictly equivalent to marpaWrapperGrammarEventType_t -; */
+  if (! marpaWrapperRecognizer_event_onoffb(marpaESLIFRecognizerp->marpaWrapperRecognizerp, symbolp->idi, eventSeti, (int) onoffb)) {
+    goto err;
+  }
+
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC;
   return rcb;
