@@ -463,7 +463,7 @@ The subtility, so, is in the declaration of terminals. For instance, a rule like
   <something>     ::= /[a-z]+/
   <something>     ::= 'X'
 
-is declaring no lexeme: both C<[\s]+>, C</[a-z]+/> and 'X' are I<explicit> terminals in the same grammar level. There is no associated name, and the user will not be able to say "I want an alternative being 'X'". On the other hand:
+is declaring no lexeme: both C<[\s]+>, C</[a-z]+/> and C<'X'> are I<explicit> terminals in the same grammar level. There is no associated name, and the user will not be able to say "I want an alternative being C<'X'>". On the other hand:
 
   <sequence rule> ::= <something>* separator => my_separator
   <something>     ::= /[a-z]+/
@@ -472,7 +472,7 @@ is declaring no lexeme: both C<[\s]+>, C</[a-z]+/> and 'X' are I<explicit> termi
   my_separator      ~ [\s]+
   my_string         ~ 'X'
 
-declares the symbols C<my_separator> and C<my_string> as lexemes: they are not in any LHS of the grammar at level 0 (the one with C<::=> declarations), they refer to a I<grammar used as lexer> that is at level 1 (the one with C<~> declarations). The user will be able to push himself alternatives using the symbol names C<my_separator> and C<my_string>. Still, he will not be able to push an alternative that would correspond to the result expression C</[a-z]+/>.
+declares the symbols C<my_separator> and C<my_string> as lexemes: they are not in any LHS of the grammar at level 0 (the one with C<::=> declarations), they refer to a I<grammar used as lexer> that is at level 1 (the one with C<~> declarations). The user will be able to push himself alternatives using the symbol names C<my_separator> and C<my_string>. Still, he will not be able to push an alternative that would correspond to the expression C</[a-z]+/>.
 
 =head3 C<marpaESLIFRecognizer_newp>
 
