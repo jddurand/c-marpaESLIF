@@ -720,11 +720,11 @@ Returns a true value on success, a false value on failure.
   } marpaESLIFEventType_t;
 
   short marpaESLIFRecognizer_event_onoffb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp,
-                                          int                     symboli,
+                                          char                   *symbols,
                                           marpaESLIFEventType_t   eventSeti,
                                           short                   onoffb);
 
-Switches on or off the event types C<eventSeti> (which is a bit mask of event type), depending of C<onoffb> value, at symbol number C<symboli> of current grammar.
+Switches on or off the event types C<eventSeti> (which is a bit mask of event type), depending of C<onoffb> value, at symbol with name C<symbols> (a NUL terminated ASCII string) of current grammar.
 
 Returns a true value on success, a false value on failure.
 
