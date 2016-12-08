@@ -723,9 +723,9 @@ Returns a true value on success, a false value on failure.
 =head3 C<marpaESLIFRecognizer_lexeme_alternativeb>
 
   short marpaESLIFRecognizer_lexeme_alternativeb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp,
-                                                 char *symbols);
+                                                 char *lexemes);
 
-Say to the recognizer pointed by C<marpaESLIFRecognizerp> that the lexeme C<symbols> (which is an ASCII NUL terminated string) is an alternative. Please note that, as per the grammar, a symbol name is always composed of ASCII characters only.
+Say to the recognizer pointed by C<marpaESLIFRecognizerp> that the lexeme C<lexemes> (which is an ASCII NUL terminated string) is an alternative. Please note that, as per the grammar, a symbol name is always composed of ASCII characters only.
 
 Returns a true value on success, a false value on failure.
 
@@ -739,9 +739,11 @@ Returns a true value on success, a false value on failure.
 
 =head3 marpaESLIFRecognizer_lexeme_readb
 
-  short marpaESLIFRecognizer_lexeme_readb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *lexemes, , size_t lexemel);
+  short marpaESLIFRecognizer_lexeme_readb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp,
+                                          char *lexemes,
+                                          size_t lexemel);
 
-A short-hand version of lexeme management that is pushing a lexeme C<lexemes> of size C<lexemel> bytes as a single alternative and call for the alternatives completion.
+A short-hand version of lexeme management that is pushing a lexeme C<lexemes> (which is ASCII NUL terminated string), of size C<lexemel> bytes in the input stream, as a single alternative and call for alternative completion.
 
 =head3 C<marpaESLIFRecognizer_eofb>
 
