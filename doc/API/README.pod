@@ -592,6 +592,12 @@ To prevent too many memory allocations, when marpaESLIF need to increase its int
 
 =back
 
+=head3 C<marpaESLIFRecognizer_grammarp>
+
+  marpaESLIFGrammar_t *marpaESLIFRecognizer_grammarp(marpaESLIFRecognizer_t *marpaESLIFRecognizerp);
+
+Returns the ESLIFGrammar instance on which C<marpaESLIFRecognizerp> was created.
+
 =head1 NOTES
 
 =over
