@@ -214,7 +214,6 @@ static inline short                  _marpaESLIFValue_stack_is_floatb(marpaESLIF
 static inline short                  _marpaESLIFValue_stack_is_doubleb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, short *doublebp);
 static inline short                  _marpaESLIFValue_stack_is_ptrb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, short *ptrbp);
 static inline short                  _marpaESLIFValue_stack_is_arrayb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, short *arraybp);
-static inline short                  _marpaESLIFValue_contextb(marpaESLIFValue_t *marpaESLIFValuep, int *grammarip, int *symbolip, int *ruleip);
 static        short                  _marpaESLIFValue_okRuleCallbackWrapperb(void *userDatavp, genericStack_t *parentRuleiStackp, int rulei, int arg0i, int argni);
 static        short                  _marpaESLIFValue_okSymbolCallbackWrapperb(void *userDatavp, genericStack_t *parentRuleiStackp, int symboli, int argi);
 static        short                  _marpaESLIFValue_okNullingCallbackWrapperb(void *userDatavp, genericStack_t *parentRuleiStackp, int symboli);
@@ -9767,7 +9766,7 @@ static inline short _marpaESLIFValue_stack_i_resetb(marpaESLIFValue_t *marpaESLI
 }
 
 /*****************************************************************************/
-short marpaESLIFValue_contextb(marpaESLIFValue_t *marpaESLIFValuep, int *grammarip, int *symbolip, int *ruleip)
+short marpaESLIFValue_contextb(marpaESLIFValue_t *marpaESLIFValuep, int *symbolip, int *ruleip)
 /*****************************************************************************/
 {
   static const char *funcs  = "marpaESLIFValue_contextb";
@@ -9783,8 +9782,11 @@ short marpaESLIFValue_contextb(marpaESLIFValue_t *marpaESLIFValuep, int *grammar
     goto err;
   }
 
-  if (! _marpaESLIFValue_contextb(marpaESLIFValuep, grammarip, symbolip, ruleip)) {
-    goto err;
+  if (symbolip != NULL) {
+    *symbolip = marpaESLIFValuep->symboli;
+  }
+  if (ruleip != NULL) {
+    *ruleip = marpaESLIFValuep->rulei;
   }
 
   rcb = 1;
@@ -9795,23 +9797,6 @@ short marpaESLIFValue_contextb(marpaESLIFValue_t *marpaESLIFValuep, int *grammar
 
  done:
   return rcb;
-}
-
-/*****************************************************************************/
-static inline short _marpaESLIFValue_contextb(marpaESLIFValue_t *marpaESLIFValuep, int *grammarip, int *symbolip, int *ruleip)
-/*****************************************************************************/
-{
-  if (grammarip != NULL) {
-    *grammarip = marpaESLIFValuep->grammari;
-  }
-  if (symbolip != NULL) {
-    *symbolip = marpaESLIFValuep->symboli;
-  }
-  if (ruleip != NULL) {
-    *ruleip = marpaESLIFValuep->rulei;
-  }
-
-  return 1;
 }
 
 /*****************************************************************************/
