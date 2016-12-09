@@ -1033,6 +1033,16 @@ For every rule, Marpa parser internal properties are given, together with the ru
   #
   # ...
 
+Exceptions are shown like this:
+
+  #
+  # Rule No 2
+  #   Properties: ACCESSIBLE, NULLABLE, PRODUCTIVE
+  #   Definition: <start> ::= <thisstart> - <startException>
+  #   Components:  LHS = RHS[] - EXCEPTION
+  #                  0 = 4 - 5
+  #
+
 =item Symbol properties
 
 For every symbol, its ESLIF type, Marpa parser properties and definition are given. When it is a terminal, corresponding regular expression definition is given, as well as eventual JIT usage (c.f. PCRE2 information to understand what it is about). For example:
