@@ -737,7 +737,7 @@ Say to the recognizer pointed C<marpaESLIFRecognizerp> by that the current set o
 
 Returns a true value on success, a false value on failure.
 
-=head3 marpaESLIFRecognizer_lexeme_readb
+=head3 C<marpaESLIFRecognizer_lexeme_readb>
 
   short marpaESLIFRecognizer_lexeme_readb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp,
                                           char *lexemes,
