@@ -319,6 +319,8 @@ struct marpaESLIFRecognizer {
   size_t                       pausel;        /* Last pause length */
   size_t                       pauseSizel;    /* Last pause allocate size */
   genericStack_t              *set2InputStackp;
+  char                       **lexemesArrayp;      /* Persistent buffer of last call to marpaESLIFRecognizer_lexeme_expectedb */
+  size_t                       lexemesArrayAllocl; /* Current allocated size -; */
 };
 
 /* ------------------------------- */

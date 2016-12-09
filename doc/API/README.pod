@@ -745,6 +745,16 @@ Returns a true value on success, a false value on failure.
 
 A short-hand version of lexeme management that is pushing a lexeme C<lexemes> (which is ASCII NUL terminated string), of size C<lexemel> bytes in the input stream, as a single alternative and call for alternative completion.
 
+=head3 C<marpaESLIFRecognizer_lexeme_expectedb>
+
+  short marpaESLIFRecognizer_lexeme_expectedb(marpaESLIFRecognizer_t   *marpaESLIFRecognizerp,
+                                              size_t                   *nLexemelp,
+                                              char                   ***lexemesArraypp);
+
+Get the list of I<lexemes> expected. C<*nLexemelp>, if not C<NULL>, is filled with the number of expected lexemes, and C<*lexemesArraypp>, if not C<NULL>, will contain the array of NUL-terminated ASCII symbol names.
+
+Returns a true value on success, a false value on failure.
+
 =head3 C<marpaESLIFRecognizer_eofb>
 
   short marpaESLIFRecognizer_eofb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp);
@@ -774,12 +784,6 @@ Returns a true value on success, a false value on failure.
 Switches on or off the event types C<eventSeti> (which is a bit mask of event type), depending of C<onoffb> value, at symbol with name C<symbols> (a NUL terminated ASCII string) of current grammar. Setting on or off a non-existing event is a no-op.
 
 Returns a true value on success, a false value on failure.
-
-=head3 C<marpaESLIFRecognizer_expectedb>
-
-  short marpaESLIFRecognizer_expectedb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp,
-                                       size_t                 *nSymbollp,
-                                       int                    **symbolArraypp);
 
 =head1 NOTES
 
