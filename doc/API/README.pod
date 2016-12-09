@@ -61,7 +61,7 @@ Any application must start by instanciating a main ESLIF. This method is returni
 
 =item C<genericLoggerp>
 
-A pointer to a C<genericLogger_t> instance. If it is NULL, then C<marpaESLIF> instance, neither any of the other namespaces, will do logging. Otherwise, all will inherit this logger object and use it.
+A pointer to a C<genericLogger_t> instance. If it is C<NULL>, then C<marpaESLIF> instance, neither any of the other namespaces, will do logging. Otherwise, all will inherit this logger object and use it.
 
 =back
 
@@ -69,7 +69,7 @@ A pointer to a C<genericLogger_t> instance. If it is NULL, then C<marpaESLIF> in
 
   void marpaESLIF_freev(marpaESLIF_t *marpaESLIFp);
 
-The C<marpaESLIF> destructor, with parameter C<marpaESLIFp> being an instance previously created. No-op if C<marpaESLIFp> is NULL.
+The C<marpaESLIF> destructor, with parameter C<marpaESLIFp> being an instance previously created. No-op if C<marpaESLIFp> is C<NULL>.
 
 =head2 ESLIFGrammar
 
@@ -938,7 +938,7 @@ Returns a true value on success, a false value on failure.
 
   void marpaESLIFRecognizer_freev(marpaESLIFRecognizer_t *marpaESLIFRecognizerp);
 
-The C<marpaESLIFRecognizer> destructor, with parameter C<marpaESLIFRecognizerp> being an instance previously created. No-op if C<marpaESLIFRecognizerp> is NULL.
+The C<marpaESLIFRecognizer> destructor, with parameter C<marpaESLIFRecognizerp> being an instance previously created. No-op if C<marpaESLIFRecognizerp> is C<NULL>.
 
 =head1 NOTES
 
