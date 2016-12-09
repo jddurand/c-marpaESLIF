@@ -218,7 +218,7 @@ extern "C" {
   marpaESLIF_EXPORT short                   marpaESLIFValue_stack_getAndForget_arrayb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int *contextip, void **pp, size_t *lp, short *shallowbp);
 
   /* Stack context when doing valuation */
-  marpaESLIF_EXPORT short                   marpaESLIFValue_contextb(marpaESLIFValue_t *marpaESLIFValuep, int *grammarip, int *symbolip, int *ruleip);
+  marpaESLIF_EXPORT short                   marpaESLIFValue_contextb(marpaESLIFValue_t *marpaESLIFValuep, int *symbolip, int *ruleip);
 
 
   marpaESLIF_EXPORT void                    marpaESLIF_freev(marpaESLIF_t *marpaESLIFp);
