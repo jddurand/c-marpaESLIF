@@ -85,6 +85,9 @@ int main() {
   const static char           *inputs = "abc 123de@ @f";
   short                        rcValueb;
   int                          eventCounti = 0;
+  size_t                       nLexemel;
+  size_t                       lexemel;
+  char                       **lexemesArrayp;
 
   genericLoggerp = genericLogger_newp(genericLoggerCallback, NULL /* userDatavp */, GENERICLOGGER_LOGLEVEL_DEBUG);
 
@@ -148,12 +151,26 @@ int main() {
   if (! marpaESLIFRecognizer_scanb(marpaESLIFRecognizerp, 1 /* initialEventsb */, &continueb, &exhaustedb)) {
     goto err;
   }
+  /* Lexemes expected ? */
+  if (! marpaESLIFRecognizer_lexeme_expectedb(marpaESLIFRecognizerp, &nLexemel, &lexemesArrayp)) {
+    goto err;
+  }
+  for (lexemel = 0; lexemel < nLexemel; lexemel++) {
+    GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "Lexeme expected: %s", lexemesArrayp[lexemel]);
+  }
   if (! eventManagerb(&eventCounti, marpaESLIFRecognizerp, genericLoggerp)) {
     goto err;
   }
   while (continueb) {
     if (! marpaESLIFRecognizer_resumeb(marpaESLIFRecognizerp, &continueb, &exhaustedb)) {
       goto err;
+    }
+    /* Lexemes expected ? */
+    if (! marpaESLIFRecognizer_lexeme_expectedb(marpaESLIFRecognizerp, &nLexemel, &lexemesArrayp)) {
+      goto err;
+    }
+    for (lexemel = 0; lexemel < nLexemel; lexemel++) {
+      GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "Lexeme expected: %s", lexemesArrayp[lexemel]);
     }
     if (! eventManagerb(&eventCounti, marpaESLIFRecognizerp, genericLoggerp)) {
       goto err;
