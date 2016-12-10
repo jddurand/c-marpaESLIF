@@ -1101,15 +1101,15 @@ The function call is
 
 What is this C<nullableb> flag!? Well, it means what it means: sometimes a rule is nullable, for example the empty rule:
 
-  nullableRule ::= action => my_nullable_action;
+  nullableRule ::= action => my_action2;
 
 or a sequence rule:
 
-  nullableRule ::= item* action => my_nullable_action
+  nullableRule ::= item* action => my_action2
 
-Then, and only in these cases, the C<nullableb> flag is a true value, C<arg0i> and C<argni> will be both C<-1>, e.g. (with C<my_nullable_actionp> being the rule resolver result for action C<"my_nullable_action">):
+Then, and only in these cases, the C<nullableb> flag is a true value, C<arg0i> and C<argni> will be both C<-1>, e.g. (with C<my_action2p> being the rule resolver result for action C<"my_action2">):
 
-  my_nullable_actionp(userDatavp, marpaESLIFValuep, -1/* arg0i */, -1/* argni */, 0/* resulti */, 1/* nullableb */)
+  my_action2p(userDatavp, marpaESLIFValuep, -1/* arg0i */, -1/* argni */, 0/* resulti */, 1/* nullableb */)
 
 Ok, so finally C<my_actionp> is called, and it decided to return a value of type I<long> and context C<20>.
 
