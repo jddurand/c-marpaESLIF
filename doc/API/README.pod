@@ -1019,7 +1019,25 @@ and nothing impose that the valuation result of C<my_rule> would be same as C<'s
 
 =back
 
-The functions holding valuation results are totally unknown from marpaESLIF, which is always asking to user-space for a function pointer of the correct type, whenever needed. For that it is using I<action resolvers>.
+The functions holding valuation results are totally unknown from marpaESLIF, which is always asking to user-space for a function pointer of the correct type, whenever needed. For that it is using I<action resolvers>. An action resolver is always called for a given I<action name> C<actions>, guaranteed to a NUL-terminated ASCII string. In other terms marpaESLIF will always call the actions resolver like this:
+
+=over
+
+=item For symbols
+
+  ruleActionResolverp(userDatavp, marpaESLIFValuep, actions)
+
+=item For rules
+
+  symbolActionResolverp(userDatavp, marpaESLIFValuep, actions)
+
+=item For free
+
+  freeActionResolverp(userDatavp, marpaESLIFValuep, actions)
+
+=over
+
+and nothing impose the action resolvers to always return the same function pointer.
 
 The value result itself is also not under marpaESLIF control, though the later requires the user to manipulate a I<stack>, and to assign to every entry in the stack a I<value type>, and a I<value context>. So there is a notion of C<user stack>, which start at indice number C<0>, and whose length is determined by the parse tree value location. The context of every I<value> in the stack is nothing else but a free number that should describe what it is, and has a meaning only for the end-user. It is important to set a correct context when assigning values to the stack, because this is how the I<memory free> function pointer, another function leaving in user space, will know how to react. For example a rule like this:
 
