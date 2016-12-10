@@ -67,3 +67,4 @@ ipch/
 output/
 *.gz
 pcre2/
+*.3
