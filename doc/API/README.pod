@@ -1037,17 +1037,19 @@ The functions holding valuation results are totally unknown from marpaESLIF, whi
 
 =back
 
-and nothing impose the action resolvers to always return the same function pointer.
+and nothing impose the action resolvers to always return the same function pointer for a given C<action> NUL-terminated ASCII string.
 
 The value result itself is also not under marpaESLIF control, though the later requires the user to manipulate a I<stack>, and to assign to every entry in the stack a I<value type>, and a I<value context>. So there is a notion of I<user stack>, which start at indice number C<0>, and whose length is determined by the parse tree value location. The context of every I<value> in the stack is nothing else but a free number that should describe what it is, and has a meaning only for the end-user. It is important to set a correct context when assigning values to the stack, because this is how the I<memory free> function pointer, another function leaving in user space, will know how to react. For example a rule like this:
 
   my_rule ::= I J 'string terminal' action => my_action
 
-could be called with output stack indice C<0> and input stack indices C<0> for C<I>, C<1> for C<J>, and C<2> for C<K>. It the end user that knows what it is about. Suppose that types of data types would be, in order, a pointer (C<PTR> below) with context value C<17>, an integer (C<INT> below) with context value C<216>, and a short (C<SHORT> below) with context value C<43>, and that user decide that the result is a long with context C<20>, then a representation of the stack is:
+could be called with output stack indice C<0> and input stack indices C<0> for C<I>, C<1> for C<J>, and C<2> for C<K>. It is the end user that knows what it is all about, through the famous I<context>. Suppose that types of data would be a pointer (C<PTR> below) with context value C<17>, an integer (C<INT> below) with context value C<216>, and a short (C<SHORT> below) with context value C<43>, and that the end user decided that the result is a long with context C<20>, then a representation of the stack is:
 
-  Stack indice:          0           1         2      ==>         0
-          Type:        PTR         INT     SHORT               LONG
-       Context:        17          216        43                 20
+          Rule:    my_rule     =   I      J       'string terminal'
+  -----------------------------------------------------------------
+  Stack indice:          0     =   0      1       2
+          Type:        LONG      PTR     INT   SHORT
+       Context:         20       17      216      43
 
 You will note that:
 
