@@ -1073,7 +1073,9 @@ marpaESLIF provide stack manipulation functions, and it is simply impossible for
 
 =item Stack number indice C<0> is in I<both input and output> indices
 
-This mean that, at any time, a stack indice can be replaced by another. This is a decision of the parse tree engine, based on rule definitions. And since in our example stack at indice C<0> is a pointer, marpaESLIF will I<automatically> call for I<memory free> action on this indice, before replacing it by the C<my_rule> result. The I<free action> is set at the grammar level:
+This mean that, at any time, a stack indice can be replaced by another. This is a decision of the parse tree engine, based on rule definitions.
+
+Suppose that I<before the call> to C<my_actionp>, there is already something at indice C<0> in the stack and it is a pointer!? marpaESLIF will I<automatically> call for I<memory free> action on this indice, before replacing it by the C<my_rule> result. The I<free action> is set at the grammar level:
 
   :default ::= free-action => my_free_action
 
