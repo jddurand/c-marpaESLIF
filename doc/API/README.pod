@@ -1023,39 +1023,69 @@ The functions holding valuation results are totally unknown from marpaESLIF, whi
 
 =over
 
-=item For symbols
-
-  ruleActionResolverp(userDatavp, marpaESLIFValuep, actions)
-
 =item For rules
 
-  symbolActionResolverp(userDatavp, marpaESLIFValuep, actions)
+  ruleActionp = ruleActionResolverp(userDatavp, marpaESLIFValuep, actions)
+
+=item For symbols
+
+  symbolActionp = symbolActionResolverp(userDatavp, marpaESLIFValuep, actions)
 
 =item For free
 
-  freeActionResolverp(userDatavp, marpaESLIFValuep, actions)
+  freeActionp = freeActionResolverp(userDatavp, marpaESLIFValuep, actions)
 
 =back
 
 and nothing impose the action resolvers to always return the same function pointer.
 
-The value result itself is also not under marpaESLIF control, though the later requires the user to manipulate a I<stack>, and to assign to every entry in the stack a I<value type>, and a I<value context>. So there is a notion of C<user stack>, which start at indice number C<0>, and whose length is determined by the parse tree value location. The context of every I<value> in the stack is nothing else but a free number that should describe what it is, and has a meaning only for the end-user. It is important to set a correct context when assigning values to the stack, because this is how the I<memory free> function pointer, another function leaving in user space, will know how to react. For example a rule like this:
+The value result itself is also not under marpaESLIF control, though the later requires the user to manipulate a I<stack>, and to assign to every entry in the stack a I<value type>, and a I<value context>. So there is a notion of I<user stack>, which start at indice number C<0>, and whose length is determined by the parse tree value location. The context of every I<value> in the stack is nothing else but a free number that should describe what it is, and has a meaning only for the end-user. It is important to set a correct context when assigning values to the stack, because this is how the I<memory free> function pointer, another function leaving in user space, will know how to react. For example a rule like this:
 
-  my_rule ::= I J K action => my_action free-action => my_free_action
+  my_rule ::= I J 'string terminal' action => my_action
 
-could be called with output stack indice C<0> and input stack indices C<0> for C<I>, C<1> for C<J>, and C<2> for C<K>. It the end user that knows what it is about. Suppose that types of data types would be, in order, a pointer (C<PTR> below) with context value C<17>, an integer (C<INT> below) with context value C<216>, and a short (C<SHORT> below) with context value C<19>, and that user decide that the result is a long with context C<20>, then a representation of the stack is:
+could be called with output stack indice C<0> and input stack indices C<0> for C<I>, C<1> for C<J>, and C<2> for C<K>. It the end user that knows what it is about. Suppose that types of data types would be, in order, a pointer (C<PTR> below) with context value C<17>, an integer (C<INT> below) with context value C<216>, and a short (C<SHORT> below) with context value C<43>, and that user decide that the result is a long with context C<20>, then a representation of the stack is:
 
   Stack indice:          0           1         2      ==>         0
           Type:        PTR         INT     SHORT               LONG
-       Context:        17          216        19                 20
+       Context:        17          216        43                 20
 
-You will note that stack number indice C<0> is in I<both input and output> indices. This mean that, at any time, a stack indice can be replaced by another. This is a decision of the parse tree engine, based on rule definitions. And since stack at indice C<0> is a pointer, marpaESLIF will I<automatically> call for I<memory free> action on this indice, before replacing it by the C<my_rule> result. The full history is:
+You will note that:
+
+=over
+
+=item The context of the terminal is a short !?
+
+The <'string terminal'> terminal is coming from input stream. There is I<no> associated symbol, and the function that manage symbols is covered by this grammar statement:
+
+  :default ::= symbol-action => my_symbol_action
+
+marpaESLIF called the symbol action resolver C<symbolActionResolverp> for action C<"my_symbol_action">, the later returning function pointer C<my_symbol_actionp>, and marpaESLIF called this function pointer like this:
+
+  my_symbol_actionp(userDatavp, marpaESLIFValuep, p, l, 2)
+
+where C<p> is a pointer to a copy of input stream C<'string terminal'>, of size C<l>, asking for the result to be pushed at stack indice number C<2>. It is the user that decided that it will put a short value at indice 2.
+
+=item You talk about value types in the stack, but I<how> can this be set?
+
+marpaESLIF provide stack manipulation functions, and it is simply impossible for the end-user to get or set something for the stack without using these functions. Stack itself is maintained inside marpaESLIF. Please see all C<marpaESLIFValue_stack_xxx> stack function documented later.
+
+=item Stack number indice C<0> is in I<both input and output> indices
+
+This mean that, at any time, a stack indice can be replaced by another. This is a decision of the parse tree engine, based on rule definitions. And since stack at indice C<0> is a pointer, marpaESLIF will I<automatically> call for I<memory free> action on this indice, before replacing it by the C<my_rule> result. The I<free action> set set at the grammar level:
+
+  :default ::= free-action => my_free_action
+
+=back
+
+Full history of rule action is then:
 
 =over
 
 =item 1 - Call the action resolver for C<"my_action">, the later returns function pointer C<my_actionp>
 
 =item 2 - Call C<my_actionp> with input parameter range C<[0-2]> and output parameter C<0>
+
+User function C<my_actionp> decided to return a value of type I<long>.
 
 =item 3 - Call the free resolver for C<"my_free_action"> the later returns function pointer C<my_free_actionp>
 
