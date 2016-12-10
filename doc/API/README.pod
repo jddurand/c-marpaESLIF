@@ -1018,6 +1018,10 @@ Specify if parse tree valuation can be ambiguous. Application's choice -;
 
 Allow a parse tree valuation to produce nothing. It is recommended to set it to a false value.
 
+=item maxParsesi
+
+In case of ambiguity, there can be a lot of parse tree valuation results. If greater than zero, C<maxParsesi> is a higher limit on such number.
+
 =back
 
 Valuation lifetime is on the top-level grammar and has two main entry points:
