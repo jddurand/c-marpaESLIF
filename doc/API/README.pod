@@ -872,7 +872,7 @@ Returns a true value on success, a false value on failure.
                                           int                     endi,
                                           genericLoggerLevel_t    logleveli);
 
-Send to the logger configured at the marpaESLIF instanciation step, the current progress of parsing of the C<marpaESLIFRecognizerp> recognizer instance. Logging is do at level C<logleveli> (c.f. L<genericLogger|https://github.com/jddurand/c-genericLogger> documentation), and from C<starti> to C<endi> indiced. The C<starti> and C<endi> indices obey the Perl language convention, i.e. a negative indice means it far back from the end. The format of the strings generated is totally under the L<marpaWrapper|https://github.com/jddurand/c-marpaWrapper> library.
+Send to the logger configured at the marpaESLIF instanciation step, the current progress of parsing of the C<marpaESLIFRecognizerp> recognizer instance. Logging is do at level C<logleveli> (c.f. L<genericLogger|https://github.com/jddurand/c-genericLogger> documentation), and from C<starti> to C<endi> indices. The C<starti> and C<endi> indices are Earleme Set Ids, and obey the Perl language convention, i.e. a negative indice means it far back from the end. The format of the strings generated is totally under the L<marpaWrapper|https://github.com/jddurand/c-marpaWrapper> library. This method should be used when the end user want to have a progress report during valuation, c.f. the C<marpaESLIFValue_value_startb> and C<marpaESLIFValue_value_lengthb> methods.
 
 Returns a true value on success, a false value on failure.
 
@@ -1312,11 +1312,11 @@ The return value of C<marpaESLIFValue_valueb> is always:
 
 =over
 
-=item A true value on success
+=item 1 on success
 
-=item The zero value on end
+=item 0 on end
 
-=item A false value on failure
+=item -1 on failure
 
 =back
 
@@ -1330,6 +1330,40 @@ I.e. a typical usage is:
       break;
     }
   }
+
+=head3 C<marpaESLIFValue_value_startb>
+
+  short marpaESLIFValue_value_startb(marpaESLIFValue_t *marpaESLIFValuep, int *startip);
+
+Taken directly from L<marpaWrapper|https://github.com/jddurand/c-marpaWrapper> interface, this is returning the Start Earleme Set Ids of current valuation phase in the value pointed by C<startip>, if the later is not C<NULL>. This should be used to produce progress reports if wanted.
+
+This method cannot be called outside a valuation callback. C.f. C<marpaESLIFValue_value_lengthb> for an example.
+
+Returns a true value on success, else a false value.
+
+=head3 C<marpaESLIFValue_value_lengthb>
+
+  short marpaESLIFValue_value_lengthb(marpaESLIFValue_t *marpaESLIFValuep, int *lengthip);
+
+Returns the number of Earleme Set Ids in the value pointed by C<lengthip>, if the later is not C<NULL>.
+
+The length is greater than zero only when current Start Earleme Set Id is at a non-nullable symbol. This method cannot be called outside a valuation callback.
+
+A typical usage example is:
+
+  int starti;
+  int lengthi;
+
+  if (marpaESLIFValue_value_startb(marpaESLIFValuep, &starti) &&
+      marpaESLIFValue_value_lengthb(marpaESLIFValuep, &lengthi)) {
+      marpaESLIFRecognizer_progressLogb(marpaESLIFValuep_recognizerp(marpaESLIFRValuep),
+                                        starti,
+                                        /* lengthi is zero when this is a nullable symbol */
+                                        (lengthi > 0) ? starti+lengthi-1 : starti,
+                                        GENERICLOGGER_LOGLEVEL_ERROR);
+    }
+
+Returns a true value on success, else a false value.
 
 =head1 NOTES
 
