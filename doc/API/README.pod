@@ -991,6 +991,35 @@ At any point in the parsing lifetime it is possible to call for parse tree value
   marpaESLIFValue_t *marpaESLIFValue_newp(marpaESLIFRecognizer_t  *marpaESLIFRecognizerp,
                                           marpaESLIFValueOption_t *marpaESLIFValueOptionp);
 
+where C<userDatavp> is a user opaque value, holding user specific context. Action resolvers are looked up later in this section. The other parameters are:
+
+=over
+
+=item highRankOnlyb
+
+Actions can have a I<rank>, e.g.:
+
+  my_rule ::= I J 'string terminal' rank => 2
+  my_rule ::= K L 'string terminal' rank => 1
+
+say that C<my_rule> have two alternatives, with different ranks.
+
+I<If> the next parameter C<orderByRankb> then only rule with highest rank will be taken into account. This is a nice nice way to have a grammar ambiguous by nature, though having a non-ambiguous parse tree value from it.
+
+=item orderByRankb
+
+Specify if the rank is to be used.
+
+=item ambiguousb
+
+Specify if parse tree valuation can be ambiguous. Application's choice -;
+
+=item nullb
+
+Allow a parse tree valuation to produce nothing. It is recommended to set it to a false value.
+
+=back
+
 Valuation lifetime is on the top-level grammar and has two main entry points:
 
 =over
@@ -1003,7 +1032,7 @@ Terminals are what comes directly from the input stream. From grammar point of v
 
 Indeed, the valuation lifetime of something like e.g.:
 
-  my_rule ::= 'string terminal'
+  this_rule ::= 'string terminal'
 
 is:
 
@@ -1011,7 +1040,7 @@ is:
 
 =item 1 - Evaluate C<'string terminal'>
 
-=item 2 - Evaluate C<my_rule>
+=item 2 - Evaluate C<this_rule>
 
 =back
 
@@ -1123,7 +1152,7 @@ Suppose that it returned a function pointer to C<my_free_actionp>, a function th
 
 =item 4 - Call C<my_free_actionp>
 
-  my_free_actionp(userDatabp, 17, p, l)
+  my_free_actionp(userDatavp, 17, p, l)
 
 where C<p> is a pointer to the memory holding previous value at stack indice C<0>. C<l> is zero in this case, we explain later when it can be different than zero. C<17> is the context, so that the function pointer C<my_free_actionp> knows what we are talking about.
 
