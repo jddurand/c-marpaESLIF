@@ -9,14 +9,21 @@ typedef struct reader_context {
   size_t           inputl;
 } reader_context_t;
 
+typedef enum stack_context {
+  INTEGER_CONTEXT = 1
+} stack_context_t;
+
 static short inputReaderb(void *userDatavp, char **inputsp, size_t *inputlp, short *eofbp, short *characterStreambp, char **encodingOfEncodingsp, char **encodingsp, size_t *encodinglp);
+static short do_int(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
+static short do_paren(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
+static short do_double(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 
 const static char *grammars =
   ":default ::= action => do_double\n"
   ":discard ::= [\\s]\n"
   "Expression ::=\n"
-  "    /[\\d]+/  action => do_int\n"
-  "    | '(' Expression ')'              assoc => group\n"
+  "    /[\\d]+/                          action => do_int\n"
+  "    | '(' Expression ')'              assoc => group action => do_paren\n"
   "   ||     Expression '**' Expression  assoc => right\n"
   "   ||     Expression  '*' Expression\n"
   "    |     Expression  '/' Expression\n"
@@ -133,4 +140,44 @@ static short inputReaderb(void *userDatavp, char **inputsp, size_t *inputlp, sho
   *encodinglp           = 0;
 
   return 1;
+}
+
+/*****************************************************************************/
+static short do_int(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
+/*****************************************************************************/
+{
+  /* /[\d]+/  action => do_int */
+
+  void   *bytep;
+  size_t  bytel;
+  int     i;
+
+  if (nullableb) {
+    fprintf(stderr, "Nullable is impossible here!\n");
+    return 0;
+  }
+
+  if (! marpaESLIFValue_stack_get_arrayb(marpaESLIFValuep, arg0i, NULL /* contextip */, &bytep, &bytel, NULL /* shallowbp */)) {
+    fprintf(stderr, "marpaESLIFValue_stack_get_arrayb failure!\n");
+    return 0;
+  }
+
+  i = atoi((char *) bytep);
+
+  if (! marpaESLIFValue_stack_set_intb(marpaESLIFValuep, resulti, INTEGER_CONTEXT /* Anything but 0 */, i)) {
+  }
+
+  return 1; /* Ok */
+}
+
+/*****************************************************************************/
+static short do_double(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
+/*****************************************************************************/
+{
+}
+
+/*****************************************************************************/
+static short do_paren(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
+/*****************************************************************************/
+{
 }
