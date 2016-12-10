@@ -1004,7 +1004,7 @@ Actions can have a I<rank>, e.g.:
 
 say that C<my_rule> have two alternatives, with different ranks.
 
-I<If> the next parameter C<orderByRankb> then only rule with highest rank will be taken into account. This is a nice nice way to have a grammar ambiguous by nature, though having a non-ambiguous parse tree value from it.
+I<If> the next parameter C<orderByRankb> is a true value, then only rule with highest rank will be taken into account. This is a nice nice way to have a grammar ambiguous by nature, though having a non-ambiguous parse tree value from it.
 
 =item orderByRankb
 
@@ -1016,7 +1016,7 @@ Specify if parse tree valuation can be ambiguous. Application's choice -;
 
 =item nullb
 
-Allow a parse tree valuation to produce nothing. It is recommended to set it to a false value.
+Allow a parse tree valuation to produce nothing. It is recommended to set this to a false value.
 
 =item maxParsesi
 
@@ -1072,7 +1072,7 @@ The functions holding valuation results are totally unknown from marpaESLIF, whi
 
 and nothing impose the action resolvers to always return the same function pointer for a given C<action> NUL-terminated ASCII string.
 
-The value result itself is also not under marpaESLIF control, though the later requires the user to manipulate a I<stack>, and to assign to every entry in the stack a I<value type>, and a I<value context>. So there is a notion of I<user stack>, which start at indice number C<0>, and whose length is determined by the parse tree value location. The context of every I<value> in the stack is nothing else but a free number that should describe what it is, and has a meaning only for the end-user. It is important to set a correct context when assigning values to the stack, because this is how the I<memory free> function pointer, another function leaving in user space, will know how to react. For example a rule like this:
+The value result itself is also not under marpaESLIF control, though the later requires the user to manipulate a I<stack>, and to assign to every entry in the stack a I<value type>, and a I<value context>. So there is a notion of I<user stack>, which start at indice number C<0>, and whose length is determined by the parse tree value location. The context of every I<value> in the stack is nothing else but a free number different than zero that should describe what it is, and has a meaning only for the end-user. It is important to set a correct context when assigning values to the stack, because this is how the I<memory free> function pointer, another function leaving in user space, will know how to react. For example a rule like this:
 
   my_rule ::= I J 'string terminal' action => my_action
 
@@ -1165,6 +1165,171 @@ where C<p> is a pointer to the memory holding previous value at stack indice C<0
 =back
 
 Nothing differentiate symbol actions v.s. rule action except that there is no range of indices in input, only a single indice.
+
+=head3 C<marpaESLIFValue_recognizerp>
+
+  marpaESLIFRecognizer_t *marpaESLIFValue_recognizerp(marpaESLIFValue_t *marpaESLIFValuep);
+
+Returns the marpaESLIF's recognizer instance used to create the C<marpaESLIFValuep> instance.
+
+=head3 C<marpaESLIFValue_valueb>
+
+  typedef enum marpaESLIFStackType {
+    MARPAESLIF_STACK_TYPE_UNDEF = 0,
+    MARPAESLIF_STACK_TYPE_CHAR,
+    MARPAESLIF_STACK_TYPE_SHORT,
+    MARPAESLIF_STACK_TYPE_INT,
+    MARPAESLIF_STACK_TYPE_LONG,
+    MARPAESLIF_STACK_TYPE_FLOAT,
+    MARPAESLIF_STACK_TYPE_DOUBLE,
+    MARPAESLIF_STACK_TYPE_PTR,
+    MARPAESLIF_STACK_TYPE_PTR_SHALLOW,
+    MARPAESLIF_STACK_TYPE_ARRAY,
+    MARPAESLIF_STACK_TYPE_ARRAY_SHALLOW
+  } marpaESLIFStackType_t;
+
+  typedef struct marpaESLIFValueResult {
+    marpaESLIFStackType_t type;
+    union {
+      char c;          /* Value is a char */
+      short b;         /* Value is a short */
+      int i;           /* Value is an int */
+      long l;          /* Value is a long */
+      float f;         /* Value is a float */
+      double d;        /* Value is a double */
+      void *p;         /* Value is a pointer */
+    } u;
+    int contexti;      /* Free value meaninful to the user */
+    size_t sizel;      /* Length of data in case value is an ARRAY - always 0 otherwise */
+  } marpaESLIFValueResult_t;
+
+  short marpaESLIFValue_valueb(marpaESLIFValue_t       *marpaESLIFValuep,
+                               marpaESLIFValueResult_t *marpaESLIFValueResultp);
+
+Calls for parse tree valuation. Parameter C<marpaESLIFValueResultp> can be C<NULL>, meaning that the end-user is not interested by the value. Otherwise, this a pointer to a structure of type C<marpaESLIFValueResult_t> hosting rhe result, that is <always> at stack indice number C<0>, where:
+
+=over
+
+=item type
+
+The type of the value. This is the enum C<marpaESLIFStackType_t> that can have these values:
+
+=over
+
+=item MARPAESLIF_STACK_TYPE_UNDEF
+
+Value is undefined. This is a valid type by itself and user is allowed to push an undefined value in the stack.
+
+=item MARPAESLIF_STACK_TYPE_CHAR
+
+Value is a C<C>'s C<char>.
+
+=item MARPAESLIF_STACK_TYPE_SHORT
+
+Value is a C<C>'s C<short>.
+
+=item MARPAESLIF_STACK_TYPE_INT
+
+Value is a C<C>'s C<int>.
+
+=item MARPAESLIF_STACK_TYPE_LONG
+
+Value is a C<C>'s C<long>.
+
+=item MARPAESLIF_STACK_TYPE_FLOAT
+
+Value is a C<C>'s C<float>.
+
+=item MARPAESLIF_STACK_TYPE_DOUBLE
+
+Value is a C<C>'s C<double>.
+
+=item MARPAESLIF_STACK_TYPE_PTR
+
+Value is a C<C>'s C<void *> pointer.
+
+=item MARPAESLIF_STACK_TYPE_PTR_SHALLOW
+
+Value is a C<C>'s C<void *> shallow pointer.
+
+=item MARPAESLIF_STACK_TYPE_ARRAY
+
+Value is a tuple of C<C>'s C<void *> and C<C>'s C<size_t> size.
+
+=item MARPAESLIF_STACK_TYPE_ARRAY_SHALLOW
+
+Value is a tuple of a shallow C<C>'s C<void *> and C<C>'s C<size_t> size.
+
+=back
+
+=item u
+
+This is an union whose member to take depend on C<type>:
+
+=over
+
+=item u.c
+
+Contains the C<C>'s C<char> value when type is C<MARPAESLIF_STACK_TYPE_CHAR>.
+
+=item u.b
+
+Contains the C<C>'s C<short> value when type is C<MARPAESLIF_STACK_TYPE_SHORT>.
+
+=item u.i
+
+Contains the C<C>'s C<int> value when type is C<MARPAESLIF_STACK_TYPE_INT>.
+
+=item u.l
+
+Contains the C<C>'s C<long> value when type is C<MARPAESLIF_STACK_TYPE_LONG>.
+
+=item u.f
+
+Contains the C<C>'s C<float> value when type is C<MARPAESLIF_STACK_TYPE_FLOAT>.
+
+=item u.d
+
+Contains the C<C>'s C<double> value when type is C<MARPAESLIF_STACK_TYPE_DOUBLE>.
+
+=item u.p
+
+Contains the C<C>'s C<void *> value when type is C<MARPAESLIF_STACK_TYPE_PTR>, C<MARPAESLIF_STACK_TYPE_PTR_SHALLOW>, C<MARPAESLIF_STACK_TYPE_ARRAY> or C<MARPAESLIF_STACK_TYPE_ARRAY_SHALLOW>.
+
+=back
+
+=item contexti
+
+Contains the user's context, or C<0> if this was not instanciated by the end-user.
+
+=item sizel
+
+Contains the size of the memory pointed by C<u.p> when type is C<MARPAESLIF_STACK_TYPE_PTR>, C<MARPAESLIF_STACK_TYPE_PTR_SHALLOW>, C<MARPAESLIF_STACK_TYPE_ARRAY> or C<MARPAESLIF_STACK_TYPE_ARRAY_SHALLOW>.
+
+=back
+
+The return value of C<marpaESLIFValue_valueb> is always:
+
+=over
+
+=item A true value on success
+
+=item The zero value on end
+
+=item A false value on failure
+
+=back
+
+I.e. a typical usage is:
+
+  while (1) {
+    short rcValueb = marpaESLIFValue_valueb(marpaESLIFValuep, NULL);
+    if (rcValueb < 0) {
+      goto err;
+    } else if (rcValueb == 0) {
+      break;
+    }
+  }
 
 =head1 NOTES
 
