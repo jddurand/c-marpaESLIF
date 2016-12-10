@@ -191,9 +191,11 @@ And we want to have I<actions> to compute the arithmetic result:
 
 =item * Parenthesized expression
 
-We will just return what is in the middle:
+We will just copy what is in the middle:
 
   '(' Expression ')'              assoc => group action => ::copy[1]
+
+Here C<[1] is the relative indice from the first RHS.
 
 =item * Any other rule can give anything, we will choose a C<double> for convenience
 
@@ -207,7 +209,7 @@ So we end up with this grammar:
     :discard ::= [\s]
     Expression ::=
         /[\d]+/                           action => do_int
-        | '(' Expression ')'              assoc => group action => do_paren
+        | '(' Expression ')'              assoc => group action => ::copy[1]
        ||     Expression '**' Expression  assoc => right
        ||     Expression  '*' Expression
         |     Expression  '/' Expression
