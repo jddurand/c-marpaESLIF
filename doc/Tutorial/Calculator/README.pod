@@ -173,7 +173,7 @@ All in all, this give:
     exit(0);
   }
 
-=head2 Grammar v2: discard and actions
+=head2 Grammar v2: discard and parsing test
 
 Obviously, we would like the grammar to discard automatically any non-significant I<whitespace>, as it is done traditionnaly in any language:
 
@@ -401,6 +401,47 @@ and we see clearly that rule No C<6> is not complete...:
   DEBUG [R6@0..4]                   . ')'
 
 =back
+
+=head2 Grammar v3: actions
+
+Let's try valuation without setting action resolvers. We can use the previous recognizer and setup a marpaESLIFValue, or use the direct C<marpaESLIFGrammar_parseb()> method. Let's do the marpaESLIFValue:
+
+  marpaESLIFValueOption_t      marpaESLIFValueOption;
+  marpaESLIFValue_t           *marpaESLIFValuep;
+  int                          rcValueb;
+  ./..
+  marpaESLIFValueOption.userDatavp             = NULL; /* No context... why not */
+  marpaESLIFValueOption.ruleActionResolverp    = NULL; /* No rule action resolver! */
+  marpaESLIFValueOption.symbolActionResolverp  = NULL; /* No symbol action resolver... Okay we use the default */
+  marpaESLIFValueOption.freeActionResolverp    = NULL; /* No free action resolver... Okay if we generate no pointer */
+  marpaESLIFValueOption.highRankOnlyb          = 1;    /* Recommended value */
+  marpaESLIFValueOption.orderByRankb           = 1;    /* Recommended value */
+  marpaESLIFValueOption.ambiguousb             = 0;    /* Recommended value */
+  marpaESLIFValueOption.nullb                  = 0;    /* Recommended value */
+  marpaESLIFValueOption.maxParsesi             = 0;    /* Get all parse tree values - meaningless because ambiguousb is false */
+  marpaESLIFValuep = marpaESLIFValue_newp(marpaESLIFRecognizerp, &marpaESLIFValueOption);
+  if (marpaESLIFValuep == NULL) {
+    exit(1);
+  }
+  while (1) {
+    rcValueb = marpaESLIFValue_valueb(marpaESLIFValuep, NULL);
+    if (rcValueb < 0) {
+      exit(1);
+    } else if (rcValueb == 0) {
+      break;
+    }
+  }
+
+Remember our example that is a priori incomplete, though the scanning did not yell? Valuation will say there is really a problem:
+
+  echo "( 1 + 2" | /tmp/Calculator
+  ERROR MARPA_ERR_NO_PARSE: No parse
+
+And what about something that is complete, but rule resolver is missing:
+
+  echo "1 + 2" | /tmp/Calculator
+  ERROR Cannot execute action "do_int": no rule action resolver
+  (recognizer state would follow)
 
 =head1 NOTES
 
