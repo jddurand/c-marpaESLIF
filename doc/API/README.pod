@@ -1035,7 +1035,7 @@ The functions holding valuation results are totally unknown from marpaESLIF, whi
 
   freeActionResolverp(userDatavp, marpaESLIFValuep, actions)
 
-=over
+=back
 
 and nothing impose the action resolvers to always return the same function pointer.
 
