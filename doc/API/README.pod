@@ -1387,6 +1387,8 @@ The destructor of a marpaESLIFValue instance C<marpaESLIFValuep> instance. No-op
 
 In the valuation callbacks, stack is manipulated using the functions described below. With no exception, they all return a true value on success, a false value on failure, and all have in common current marpaESLIF valuation context C<marpaESLIFValuep>.
 
+The I<getAndForget> versions are dangerous in the sense that there is a risk of memory leak if your application forget to free a memory popped from the stack with such method. Nevertheless, they are also very handy when wou I<know> this is a pointer that should be, for example, embedded in another composite structure. The marpaESLIF internal bootstrap is using that.
+
 =head3 C<marpaESLIFValue_stack_set_undefb>
 
   short marpaESLIFValue_stack_set_undefb(marpaESLIFValue_t *marpaESLIFValuep,
