@@ -386,29 +386,29 @@ We see that:
 
 =over
 
-=item The start rule has been automatically set to the first rule, i.e. C<Expression>
+=item * The start rule has been automatically set to the first rule, i.e. C<Expression>
 
-=item The default settings of a grammar are using pre-defined built-in actions:
+=item * The default settings of a grammar are using pre-defined built-in actions:
 
 =over
 
-=item Concatenation of all symbols at the rule level
+=item * Concatenation of all symbols at the rule level
 
-=item Lexeme itself at the symbol level
+=item * Lexeme itself at the symbol level
 
 (it could have been C<::concat>, which is equivalent to C<::shift> where there is a single RHS)
 
 =back
 
-=item Longest Acceptable Token Match is on by default
+=item * Longest Acceptable Token Match is on by default
 
-=item The I<loosen> operator C<||> has been dissected into suite of normal alternatives
+=item * The I<loosen> operator C<||> has been dissected into suite of normal alternatives
 
-=item There is no reference to a meta symbol of another grammar
+=item * There is no reference to a meta symbol of another grammar
 
-=item There are 10 rules
+=item * There are 10 rules
 
-=item There are 12 symbols
+=item * There are 12 symbols
 
 =back
 
