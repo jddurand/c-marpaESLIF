@@ -216,10 +216,24 @@ At this stage, if we do not instanciate any valuation, it is perfectly okay to h
     size_t           inputl;
   } reader_context_t;
 
-  static short inputReaderb(void *userDatavp, char **inputsp, size_t *inputlp, short *eofbp, short *characterStreambp, char **encodingOfEncodingsp, char **encodingsp, size_t *encodinglp);
+  static short inputReaderb(void    *userDatavp,
+                            char   **inputsp,
+                            size_t  *inputlp,
+                            short   *eofbp,
+                            short   *characterStreambp,
+                            char   **encodingOfEncodingsp,
+                            char   **encodingsp,
+                            size_t  *encodinglp);
   ./..
   /*****************************************************************************/
-  static short inputReaderb(void *userDatavp, char **inputsp, size_t *inputlp, short *eofbp, short *characterStreambp, char **encodingOfEncodingsp, char **encodingsp, size_t *encodinglp)
+  static short inputReaderb(void    *userDatavp,
+                            char   **inputsp,
+                            size_t  *inputlp,
+                            short   *eofbp,
+                            short   *characterStreambp,
+                            char   **encodingOfEncodingsp,
+                            char   **encodingsp,
+                            size_t  *encodinglp)
   /*****************************************************************************/
   {
     reader_context_t *reader_contextp = (reader_context_t *) userDatavp;
