@@ -940,6 +940,115 @@ Returns a true value on success, a false value on failure.
 
 The C<marpaESLIFRecognizer> destructor, with parameter C<marpaESLIFRecognizerp> being an instance previously created. No-op if C<marpaESLIFRecognizerp> is C<NULL>.
 
+=head2 ESLIFValue
+
+At any point in the parsing lifetime it is possible to call for parse tree values. Traditionnaly this is happening when all data has been scanned, or when the parsing has exhausted.
+
+=head3 C<marpaESLIFValue_newp>
+
+  typedef short (*marpaESLIFValueRuleCallback_t)  (void              *userDatavp,
+                                                   marpaESLIFValue_t *marpaESLIFValuep,
+                                                   int                arg0i,
+                                                   int                argni,
+                                                   int                resulti,
+                                                   short              nullableb);
+
+  typedef short (*marpaESLIFValueSymbolCallback_t)(void              *userDatavp,
+                                                   marpaESLIFValue_t *marpaESLIFValuep,
+                                                   char              *bytep,
+                                                   size_t             bytel,
+                                                   int                resulti);
+
+  typedef void  (*marpaESLIFValueFreeCallback_t)  (void              *userDatavp,
+                                                   int                contexti,
+                                                   void              *p,
+                                                   size_t             sizel);
+
+  typedef marpaESLIFValueRuleCallback_t   (*marpaESLIFValueRuleActionResolver_t)  (void              *userDatavp,
+                                                                                   marpaESLIFValue_t *marpaESLIFValuep,
+                                                                                   char              *actions);
+
+  typedef marpaESLIFValueSymbolCallback_t (*marpaESLIFValueSymbolActionResolver_t)(void              *userDatavp,
+                                                                                   marpaESLIFValue_t *marpaESLIFValuep,
+                                                                                   char              *actions);
+
+  typedef marpaESLIFValueFreeCallback_t   (*marpaESLIFValueFreeActionResolver_t)  (void              *userDatavp,
+                                                                                   marpaESLIFValue_t *marpaESLIFValuep,
+                                                                                   char              *actions);
+
+  typedef struct marpaESLIFValueOption {
+    void                                 *userDatavp;            /* User specific context */
+    marpaESLIFValueRuleActionResolver_t   ruleActionResolverp;
+    marpaESLIFValueSymbolActionResolver_t symbolActionResolverp;
+    marpaESLIFValueFreeActionResolver_t   freeActionResolverp;
+    short                                 highRankOnlyb;         /* Recommended: 1 */
+    short                                 orderByRankb;          /* Recommended: 1 */
+    short                                 ambiguousb;            /* Recommended: 0 */
+    short                                 nullb;                 /* Recommended: 0 */
+    int                                   maxParsesi;            /* Recommended: 0 */
+  } marpaESLIFValueOption_t;
+
+  marpaESLIFValue_t *marpaESLIFValue_newp(marpaESLIFRecognizer_t  *marpaESLIFRecognizerp,
+                                          marpaESLIFValueOption_t *marpaESLIFValueOptionp);
+
+Valuation lifetime is on the top-level grammar and has two main entry points:
+
+=over
+
+=item Valuation of terminals
+
+Terminals are what comes directly from the input stream. From grammar point of view, this correspond to string, character class, regular expressions, or lexemes.
+
+=item Valuation of rules
+
+Indeed, the valuation lifetime of something like e.g.:
+
+  my_rule ::= 'string terminal'
+
+is:
+
+=over
+
+=item 1 - Evaluate C<'string terminal'>
+
+=item 2 - Evaluate C<my_rule>
+
+=back
+
+and nothing impose that the valuation result of C<my_rule> would be same as C<'string terminal'> valuation result.
+
+=back
+
+The functions holding valuation results are totally unknown from marpaESLIF, which is always asking to user-space for a function pointer of the correct type, whenever needed. For that it is using I<action resolvers>.
+
+The value result itself is also not under marpaESLIF control, though the later requires the user to manipulate a I<stack>, and to assign to every entry in the stack a I<value type>, and a I<value context>. So there is a notion of C<user stack>, which start at indice number C<0>, and whose length is determined by the parse tree value location. The context of every I<value> in the stack is nothing else but a free number that should describe what it is, and has a meaning only for the end-user. It is important to set a correct context when assigning values to the stack, because this is how the I<memory free> function pointer, another function leaving in user space, will know how to react. For example a rule like this:
+
+  my_rule ::= I J K action => my_action free-action => my_free_action
+
+could be called with output stack indice C<0> and input stack indices C<0> for C<I>, C<1> for C<J>, and C<2> for C<K>. It the end user that knows what it is about. Suppose that types of data types would be, in order, a pointer (C<PTR> below) with context value C<17>, an integer (C<INT> below) with context value C<216>, and a short (C<SHORT> below) with context value C<19>, and that user decide that the result is a long with context C<20>, then a representation of the stack is:
+
+  Stack indice:          0           1         2      ==>         0
+          Type:        PTR         INT     SHORT               LONG
+       Context:        17          216        19                 20
+
+You will note that stack number indice C<0> is in I<both input and output> indices. This mean that, at any time, a stack indice can be replaced by another. This is a decision of the parse tree engine, based on rule definitions. And since stack at indice C<0> is a pointer, marpaESLIF will I<automatically> call for I<memory free> action on this indice, before replacing it by the C<my_rule> result. The full history is:
+
+=over
+
+=item 1 - Call the action resolver for C<"my_action">, the later returns function pointer C<my_actionp>
+
+=item 2 - Call C<my_actionp> with input parameter range C<[0-2]> and output parameter C<0>
+
+=item 3 - Call the free resolver for C<"my_free_action"> the later returns function pointer C<my_free_actionp>
+
+=item 4 - Call C<my_free_actionp> with input C<0> and context C<17>
+
+=item 5 - Put user data at stack indice C<0> and context C<20>
+
+=back
+
+Nothing differentiate symbol actions v.s. rule action except that there is no range of indices in input, only a single indice.
+
 =head1 NOTES
 
 =over
