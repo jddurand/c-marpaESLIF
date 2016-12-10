@@ -1097,7 +1097,7 @@ We suppose that it returned a function pointer to C<my_actionp>, a function that
 
 The function call is
 
-  my_actionp(userDatavp, marpaESLIFValuep, 0 /* arg0i */, 2 /* argni */, 0 /* resulti */, 0 /* nullableb */)
+  my_actionp(userDatavp, marpaESLIFValuep, 0/* arg0i */, 2/* argni */, 0/* resulti */, 0/* nullableb */)
 
 What is this C<nullableb> flag!? Well, it means what it means: sometimes a rule is nullable, for example the empty rule:
 
@@ -1109,7 +1109,7 @@ or a sequence rule:
 
 Then, and only in these cases, the C<nullableb> flag is a true value, C<arg0i> and C<argni> will be both C<-1>, e.g. (with C<my_nullable_actionp> being the rule resolver result for action C<"my_nullable_action">):
 
-  my_nullable_actionp(userDatavp, marpaESLIFValuep, -1 /* arg0i */, -1 /* argni */, 0 /* resulti */, 1 /* nullableb */)
+  my_nullable_actionp(userDatavp, marpaESLIFValuep, -1/* arg0i */, -1/* argni */, 0/* resulti */, 1/* nullableb */)
 
 Ok, so finally C<my_actionp> is called, and it decided to return a value of type I<long> and context C<20>.
 
