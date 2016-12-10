@@ -137,6 +137,7 @@ marpaESLIF BNF can be expressed in itself:
                                    | '::ascii'
                                    | '::translit'
                                    | '::concat'
+                                   | /::copy\[\d+\]/
   <free name>                    ::= <restricted ascii graph name>
   <quantifier>                   ::= '*'
                                    | '+'
