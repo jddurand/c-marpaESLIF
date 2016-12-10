@@ -1379,123 +1379,140 @@ In the valuation callbacks, stack is manipulated using the functions described b
 
 =head3 C<marpaESLIFValue_stack_set_undefb>
 
-  short marpaESLIFValue_stack_set_undefb(marpaESLIFValue_t *marpaESLIFValuep, int indicei);
+  short marpaESLIFValue_stack_set_undefb(marpaESLIFValue_t *marpaESLIFValuep,
+                                         int                indicei);
 
 Puts the undefined value at stack number C<indicei>.
 
 =head3 C<marpaESLIFValue_stack_set_charb>
 
-  short marpaESLIFValue_stack_set_charb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int contexti, char c);
+  short marpaESLIFValue_stack_set_charb(marpaESLIFValue_t *marpaESLIFValuep,
+                                        int                indicei,
+                                        int                contexti,
+                                        char               c);
 
 Puts the C<C>'s C<char> value C<c>, associated to context C<contexti> that must be different than zero, at stack number C<indicei>.
 
 =head3 C<marpaESLIFValue_stack_set_shortb>
 
-  short marpaESLIFValue_stack_set_shortb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int contexti, short b);
+  short marpaESLIFValue_stack_set_shortb(marpaESLIFValue_t *marpaESLIFValuep,
+                                         int                indicei,
+                                         int                contexti,
+                                         short              b);
 
 Puts the C<C>'s C<short> value C<b>, associated to context C<contexti> that must be different than zero, at stack number C<indicei>.
 
 =head3 C<marpaESLIFValue_stack_set_intb>
 
-  short marpaESLIFValue_stack_set_intb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int contexti, int i);
+  short marpaESLIFValue_stack_set_intb(marpaESLIFValue_t *marpaESLIFValuep,
+                                       int                indicei,
+                                       int                contexti,
+                                       int                i);
 
 Puts the C<C>'s C<int> value C<i>, associated to context C<contexti> that must be different than zero, at stack number C<indicei>.
 
 =head3 C<marpaESLIFValue_stack_set_longb>
 
-  short marpaESLIFValue_stack_set_longb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int contexti, long l);
+  short marpaESLIFValue_stack_set_longb(marpaESLIFValue_t *marpaESLIFValuep,
+                                        int                indicei,
+                                        int                contexti,
+                                        long               l);
 
 Puts the C<C>'s C<long> value C<l>, associated to context C<contexti> that must be different than zero, at stack number C<indicei>.
 
 =head3 C<marpaESLIFValue_stack_set_floatb>
 
-  short marpaESLIFValue_stack_set_floatb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int contexti, float f);
+  short marpaESLIFValue_stack_set_floatb(marpaESLIFValue_t *marpaESLIFValuep,
+                                         int                indicei,
+                                         int                contexti,
+                                         float              f);
 
 Puts the C<C>'s C<float> value C<f>, associated to context C<contexti> that must be different than zero, at stack number C<indicei>.
 
 =head3 C<marpaESLIFValue_stack_set_doubleb>
 
-  short marpaESLIFValue_stack_set_doubleb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int contexti, double d);
+  short marpaESLIFValue_stack_set_doubleb(marpaESLIFValue_t *marpaESLIFValuep,
+                                          int                indicei,
+                                          int                contexti,
+                                          double             d);
 
 Puts the C<C>'s C<double> value C<d>, associated to context C<contexti> that must be different than zero, at stack number C<indicei>.
 
 =head3 C<marpaESLIFValue_stack_set_ptrb>
 
-  short marpaESLIFValue_stack_set_ptrb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int contexti, void *p, short shallowb);
+  short marpaESLIFValue_stack_set_ptrb(marpaESLIFValue_t *marpaESLIFValuep,
+                                       int                indicei,
+                                       int                contexti,
+                                       void              *p,
+                                       short              shallowb);
 
 Puts the C<C>'s Cvoid *> value C<p>, associated to context C<contexti> that must be different than zero, at stack number C<indicei>. I<If> C<shallowb> is a true value, then marpaESLIF will I<not> call a free callback on it.
 
 =head3 C<marpaESLIFValue_stack_set_arrayb>
 
-  short marpaESLIFValue_stack_set_arrayb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int contexti, void *p, size_t l, short shallowb);
+  short marpaESLIFValue_stack_set_arrayb(marpaESLIFValue_t *marpaESLIFValuep,
+                                         int                indicei,
+                                         int                contexti,
+                                         void              *p,
+                                         size_t             l,
+                                         short shallowb);
 
 Puts the C<C>'s Cvoid *> value C<p>, associated to context C<contexti> that must be different than zero and size C<l>, at stack number C<indicei>. I<If> C<shallowb> is a true value, then marpaESLIF will I<not> call a free callback on it.
 
 =head3 C<marpaESLIFValue_stack_forgetb>
 
-  short marpaESLIFValue_stack_forgetb(marpaESLIFValue_t *marpaESLIFValuep, int indicei);
+  short marpaESLIFValue_stack_forgetb(marpaESLIFValue_t *marpaESLIFValuep,
+                                      int                indicei);
 
 Says to marpaESLIF that he must forget about what it as indice C<indicei> in the stack. In such a case, internally, marpaESLIF is putting a sort of undefined value at this indice, though something that has nothing to do with what C<marpaESLIFValue_stack_set_undefb> is doing, the later being a user explicit wanted value type.
 
 =head3 C<marpaESLIFValue_stack_get_contextb>
 
-  short marpaESLIFValue_stack_get_contextb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int *contextip);
+  short marpaESLIFValue_stack_get_contextb(marpaESLIFValue_t *marpaESLIFValuep,
+                                           int                indicei,
+                                           int               *contextip);
 
 Returns the context associated to stack at indice C<indicei>. The value is C<0> when this is a context not managed by the end user.
 
 =head3 C<marpaESLIFValue_stack_is_undefb>
 
-  short marpaESLIFValue_stack_is_undefb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, short *undefbp);
+  short marpaESLIFValue_stack_is_undefb(marpaESLIFValue_t *marpaESLIFValuep,
+                                        int                indicei,
+                                        short             *undefbp);
 
 Puts in C<undefbp>, if it is not C<NULL>, a true value if stack at indice C<indice> is an undefined value, as per C<marpaESLIFValue_stack_set_undefb>.
 
 =head3 C<marpaESLIFValue_stack_is_charb>
 
-  short marpaESLIFValue_stack_is_undefb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, short *charbp);
+  short marpaESLIFValue_stack_is_charb(marpaESLIFValue_t *marpaESLIFValuep,
+                                       int                indicei,
+                                       short             *charbp);
 
 Puts in C<charbp>, if it is not C<NULL>, a true value if stack at indice C<indice> is a C<C>'s C<char> value, as per C<marpaESLIFValue_stack_set_charb>.
 
 =head3 C<marpaESLIFValue_stack_is_shortb>
 
-  short marpaESLIFValue_stack_is_undefb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, short *shortbp);
+  short marpaESLIFValue_stack_is_shortb(marpaESLIFValue_t *marpaESLIFValuep,
+                                        int                indicei,
+                                        short             *shortbp);
 
 Puts in C<shortbp>, if it is not C<NULL>, a true value if stack at indice C<indice> is a C<C>'s C<short> value, as per C<marpaESLIFValue_stack_set_shortb>.
 
 =head3 C<marpaESLIFValue_stack_is_intb>
 
-  short marpaESLIFValue_stack_is_undefb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, short *intbp);
+  short marpaESLIFValue_stack_is_intb(marpaESLIFValue_t *marpaESLIFValuep,
+                                      int                indicei,
+                                      short             *intbp);
 
 Puts in C<intbp>, if it is not C<NULL>, a true value if stack at indice C<indice> is a C<C>'s C<int> value, as per C<marpaESLIFValue_stack_set_intb>.
 
 =head3 C<marpaESLIFValue_stack_is_longb>
 
-  short marpaESLIFValue_stack_is_undefb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, short *longbp);
+  short marpaESLIFValue_stack_is_longb(marpaESLIFValue_t *marpaESLIFValuep,
+                                       int                indicei,
+                                       short             *longbp);
 
 Puts in C<longbp>, if it is not C<NULL>, a true value if stack at indice C<indice> is a C<C>'s C<long> value, as per C<marpaESLIFValue_stack_set_longb>.
-
-=head3 C<marpaESLIFValue_stack_is_floatb>
-
-  short marpaESLIFValue_stack_is_undefb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, short *floatbp);
-
-Puts in C<floatbp>, if it is not C<NULL>, a true value if stack at indice C<indice> is a C<C>'s C<float> value, as per C<marpaESLIFValue_stack_set_floatb>.
-
-=head3 C<marpaESLIFValue_stack_is_doubleb>
-
-  short marpaESLIFValue_stack_is_undefb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, short *doublebp);
-
-Puts in C<doublebp>, if it is not C<NULL>, a true value if stack at indice C<indice> is a C<C>'s C<double> value, as per C<marpaESLIFValue_stack_set_doubleb>.
-
-=head3 C<marpaESLIFValue_stack_is_ptrb>
-
-  short marpaESLIFValue_stack_is_undefb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, short *ptrbp);
-
-Puts in C<ptrbp>, if it is not C<NULL>, a true value if stack at indice C<indice> is a C<C>'s C<ptr> value, as per C<marpaESLIFValue_stack_set_ptrb>.
-
-=head3 C<marpaESLIFValue_stack_is_arrayb>
-
-  short marpaESLIFValue_stack_is_undefb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, short *arraybp);
-
-Puts in C<arraybp>, if it is not C<NULL>, a true value if stack at indice C<indice> is a C<C>'s C<array> value, as per C<marpaESLIFValue_stack_set_arrayb>.
 
 =head1 NOTES
 
