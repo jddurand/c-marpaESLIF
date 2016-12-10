@@ -144,6 +144,7 @@ const static char *selfs = "\n"
   "                                   | '::ascii'\n"
   "                                   | '::translit'\n"
   "                                   | '::concat'\n"
+  "                                   | /::copy\\[\\d+\\]/\n"
   "  <free name>                    ::= <restricted ascii graph name>\n"
   "  <quantifier>                   ::= '*'\n"
   "                                   | '+'\n"
@@ -243,6 +244,17 @@ int main() {
   marpaESLIFp = marpaESLIF_newp(&marpaESLIFOption);
   if (marpaESLIFp == NULL) {
     goto err;
+  }
+
+  /* Dump grammar */
+  if (marpaESLIFGrammar_ngrammarib(marpaESLIF_grammarp(marpaESLIFp), &ngrammari)) {
+    for (leveli = 0; leveli < ngrammari; leveli++) {
+      if (marpaESLIFGrammar_grammarshowform_by_levelb(marpaESLIF_grammarp(marpaESLIFp), &grammarshows, leveli, NULL)) {
+        GENERICLOGGER_INFO (marpaESLIFOption.genericLoggerp, "-------------------------");
+        GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "TEST grammar at level %d:", leveli);
+        GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "-------------------------\n\n%s", grammarshows);
+      }
+    }
   }
 
   marpaESLIFGrammarOption.bytep               = (void *) selfs;
