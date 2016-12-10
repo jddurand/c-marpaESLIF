@@ -1,0 +1,39 @@
+=encoding UTF-8
+
+=head1 NAME
+
+marpaESLIF_CALCULATOR - Extended Marpa's Scanless Interface Calculator
+
+=head1 DESCRIPTION
+
+marpaESLIF is a Scanless Interface expressed in a BNF format, that is using L<marpaWrapper|https://github.com/jddurand/c-marpaWrapper>, itself being a thin interface on top of L<libmarpa|https://jeffreykegler.github.io/Marpa-web-site/libmarpa.html> parser.
+
+This documentation is giving a tutorial with a calculator as example.
+
+=head2 GRAMMAR
+
+We will start with this grammar:
+
+    :default ::= action => do_first_arg
+    :discard ::= [\s]
+    :discard ::= /^#.*$/u           # Perl Comments - unicode support
+
+    Script   ::= Expression+ separator => comma action => do_script
+    comma    ::= ','
+    Number   ::= /[\d]+/
+    Expression ::=
+        Number
+        | '(' Expression ')'              action => do_parens    assoc => group
+       ||     Expression '**' Expression  action => do_pow       assoc => right
+       ||     Expression  '*' Expression  action => do_multiply
+        |     Expression  '/' Expression  action => do_divide
+       ||     Expression  '+' Expression  action => do_add
+        |     Expression  '-' Expression  action => do_subtract
+
+=head2 PROGRAM
+
+
+
+=head1 SEE ALSO
+
+L<marpaESLIF|https://github.com/jddurand/c-marpaESLIF>
