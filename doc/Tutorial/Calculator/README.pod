@@ -58,12 +58,6 @@ then compile the grammar:
 
   marpaESLIFGrammar_t *marpaESLIFGrammarp = marpaESLIFGrammar_newp(marpaESLIFp, &marpaESLIFGrammarOption);
 
-and dump it:
-
-  if (marpaESLIFGrammar_grammarshowform_currentb(marpaESLIFGrammarp, &grammarshows)) {
-    GENERICLOGGER_INFOF(genericLoggerp, "Grammar show:\n%s", grammarshows);
-  }
-
 =head3 Creating the generic logger
 
 This is as simple as:
@@ -112,14 +106,6 @@ A C<marpaESLIFGrammarOption_t> structure is setup like this:
 
 which means: the whole grammar start at C<bytep>, is of length C<bytel>, and I do not know anything about the encoding, please manage it yourself.
 
-=head2 Printing the grammar
-
-By default the current grammar of a a C<marpaESLIFGrammarp> object instance is always the first available grammar, in our case there is a single level (we used C<::=> everywhere), so this is ok to do:
-
-  if (marpaESLIFGrammar_grammarshowform_currentb(marpaESLIFGrammarp, &grammarshows)) {
-    GENERICLOGGER_INFOF(genericLoggerp, "Grammar show:\n%s", grammarshows);
-  }
-
 =head3 Cleanup
 
 We have to clean the grammar,the marpaESLIF and the generic logger:
@@ -156,7 +142,6 @@ All in all, this give:
     marpaESLIF_t                *marpaESLIFp;
     marpaESLIFGrammarOption_t    marpaESLIFGrammarOption;
     marpaESLIFGrammar_t         *marpaESLIFGrammarp;
-    char                        *grammarshows;
     int                          exiti;
   
     genericLoggerp = GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_DEBUG);
@@ -181,11 +166,6 @@ All in all, this give:
       exit(1);
     }
   
-    if (marpaESLIFGrammar_grammarshowform_currentb(marpaESLIFGrammarp, &grammarshows)) {
-      GENERICLOGGER_INFOF(genericLoggerp, "Grammar show:\n%s", grammarshows);
-      exit(1);
-    }
-  
     marpaESLIFGrammar_freev(marpaESLIFGrammarp);
     marpaESLIF_freev(marpaESLIFp);
     GENERICLOGGER_FREE(genericLoggerp);
@@ -193,222 +173,31 @@ All in all, this give:
     exit(0);
   }
 
-=head4 Output
+=head2 Grammar v2: discard and actions
 
-The output is interesting, it shows a lot of internals. This was done a machine where PCRE2 is installed with JIT support:
+Obviously, we would like the grammar to discard automatically any non-significant I<whitespace>, as it is done traditionnaly in any language:
 
-  /*
-   * **********************
-   * Meta-grammar settings:
-   * **********************
-   */
-  :start ::= Expression
-  :default ::= action => ::concat symbol-action => ::shift latm => 1
-  
-  /*
-   * ***************
-   * Event settings:
-   * ***************
-   */
-  
-  /*
-   * ******
-   * Rules:
-   * ******
-   */
-  <Expression> ::= <Expression[0]>
-  <Expression[0]> ::= <Expression[1]>
-  <Expression[1]> ::= <Expression[2]>
-  <Expression[2]> ::= <Expression[3]>
-  <Expression[3]> ::= /[\d]+/
-  <Expression[3]> ::= '(' <Expression[0]> ')'
-  <Expression[2]> ::= <Expression[3]> '**' <Expression[2]>
-  <Expression[1]> ::= <Expression[1]> '*' <Expression[2]>
-  <Expression[1]> ::= <Expression[1]> '/' <Expression[2]>
-  <Expression[0]> ::= <Expression[0]> '+' <Expression[1]>
-  <Expression[0]> ::= <Expression[0]> '-' <Expression[1]>
-  
-  #
-  # The following is giving information on grammar components: lexemes, rules and symbols properties
-  #
-  # --------
-  # Lexemes:
-  # --------
-  #
-  #
-  # -----------------
-  # Rules properties:
-  # -----------------
-  #
-  # Rule No 0
-  #   Properties: ACCESSIBLE, PRODUCTIVE
-  #   Definition: <Expression> ::= <Expression[0]>
-  #   Components:  LHS = RHS[]
-  #                  0 = 1
-  # Rule No 1
-  #   Properties: ACCESSIBLE, PRODUCTIVE
-  #   Definition: <Expression[0]> ::= <Expression[1]>
-  #   Components:  LHS = RHS[]
-  #                  1 = 2
-  # Rule No 2
-  #   Properties: ACCESSIBLE, PRODUCTIVE
-  #   Definition: <Expression[1]> ::= <Expression[2]>
-  #   Components:  LHS = RHS[]
-  #                  2 = 3
-  # Rule No 3
-  #   Properties: ACCESSIBLE, PRODUCTIVE
-  #   Definition: <Expression[2]> ::= <Expression[3]>
-  #   Components:  LHS = RHS[]
-  #                  3 = 4
-  # Rule No 4
-  #   Properties: ACCESSIBLE, PRODUCTIVE
-  #   Definition: <Expression[3]> ::= /[\d]+/
-  #   Components:  LHS = RHS[]
-  #                  4 = 5
-  # Rule No 5
-  #   Properties: ACCESSIBLE, PRODUCTIVE
-  #   Definition: <Expression[3]> ::= '(' <Expression[0]> ')'
-  #   Components:  LHS = RHS[]
-  #                  4 = 6 1 7
-  # Rule No 6
-  #   Properties: ACCESSIBLE, PRODUCTIVE
-  #   Definition: <Expression[2]> ::= <Expression[3]> '**' <Expression[2]>
-  #   Components:  LHS = RHS[]
-  #                  3 = 4 8 3
-  # Rule No 7
-  #   Properties: ACCESSIBLE, PRODUCTIVE
-  #   Definition: <Expression[1]> ::= <Expression[1]> '*' <Expression[2]>
-  #   Components:  LHS = RHS[]
-  #                  2 = 2 9 3
-  # Rule No 8
-  #   Properties: ACCESSIBLE, PRODUCTIVE
-  #   Definition: <Expression[1]> ::= <Expression[1]> '/' <Expression[2]>
-  #   Components:  LHS = RHS[]
-  #                  2 = 2 10 3
-  # Rule No 9
-  #   Properties: ACCESSIBLE, PRODUCTIVE
-  #   Definition: <Expression[0]> ::= <Expression[0]> '+' <Expression[1]>
-  #   Components:  LHS = RHS[]
-  #                  1 = 1 11 2
-  # Rule No 10
-  #   Properties: ACCESSIBLE, PRODUCTIVE
-  #   Definition: <Expression[0]> ::= <Expression[0]> '-' <Expression[1]>
-  #   Components:  LHS = RHS[]
-  #                  1 = 1 12 2
-  #
-  # -------------------
-  # Symbols properties:
-  # -------------------
-  #
-  # Symbol No 0
-  #         Type: ESLIF META
-  #   Properties: ACCESSIBLE, PRODUCTIVE, START
-  #         Name: <Expression>
-  #
-  # Symbol No 1
-  #         Type: ESLIF META
-  #   Properties: ACCESSIBLE, PRODUCTIVE
-  #         Name: <Expression[0]>
-  #
-  # Symbol No 2
-  #         Type: ESLIF META
-  #   Properties: ACCESSIBLE, PRODUCTIVE
-  #         Name: <Expression[1]>
-  #
-  # Symbol No 3
-  #         Type: ESLIF META
-  #   Properties: ACCESSIBLE, PRODUCTIVE
-  #         Name: <Expression[2]>
-  #
-  # Symbol No 4
-  #         Type: ESLIF META
-  #   Properties: ACCESSIBLE, PRODUCTIVE
-  #         Name: <Expression[3]>
-  #
-  # Symbol No 5
-  #         Type: ESLIF TERMINAL
-  #   Properties: ACCESSIBLE, PRODUCTIVE, TERMINAL
-  #      Pattern:
-  #     0x000000: 5b 5c 64 5d 2b                                  [\d]+           
-  #        Flags: PCRE2_ANCHORED
-  #          JIT: complete=yes, partial=yes
-  #
-  # Symbol No 6
-  #         Type: ESLIF TERMINAL
-  #   Properties: ACCESSIBLE, PRODUCTIVE, TERMINAL
-  #      Pattern: \(
-  #        Flags: PCRE2_ANCHORED
-  #          JIT: complete=yes, partial=yes
-  #
-  # Symbol No 7
-  #         Type: ESLIF TERMINAL
-  #   Properties: ACCESSIBLE, PRODUCTIVE, TERMINAL
-  #      Pattern: \)
-  #        Flags: PCRE2_ANCHORED
-  #          JIT: complete=yes, partial=yes
-  #
-  # Symbol No 8
-  #         Type: ESLIF TERMINAL
-  #   Properties: ACCESSIBLE, PRODUCTIVE, TERMINAL
-  #      Pattern: \*\*
-  #        Flags: PCRE2_ANCHORED
-  #          JIT: complete=yes, partial=yes
-  #
-  # Symbol No 9
-  #         Type: ESLIF TERMINAL
-  #   Properties: ACCESSIBLE, PRODUCTIVE, TERMINAL
-  #      Pattern: \*
-  #        Flags: PCRE2_ANCHORED
-  #          JIT: complete=yes, partial=yes
-  #
-  # Symbol No 10
-  #         Type: ESLIF TERMINAL
-  #   Properties: ACCESSIBLE, PRODUCTIVE, TERMINAL
-  #      Pattern: /
-  #        Flags: PCRE2_ANCHORED
-  #          JIT: complete=yes, partial=yes
-  #
-  # Symbol No 11
-  #         Type: ESLIF TERMINAL
-  #   Properties: ACCESSIBLE, PRODUCTIVE, TERMINAL
-  #      Pattern: \+
-  #        Flags: PCRE2_ANCHORED
-  #          JIT: complete=yes, partial=yes
-  #
-  # Symbol No 12
-  #         Type: ESLIF TERMINAL
-  #   Properties: ACCESSIBLE, PRODUCTIVE, TERMINAL
-  #      Pattern: -
-  #        Flags: PCRE2_ANCHORED
-  #          JIT: complete=yes, partial=yes
+  :discard ::= [\s]
 
-We see that:
+will do it.
+
+And we want to have I<actions> to compute the arithmetic result:
 
 =over
 
-=item * The start rule has been automatically set to the first rule, i.e. C<Expression>
+=item * C</[\d]+/> obviously give an integer
 
-=item * The default settings of a grammar are using pre-defined built-in actions:
+        /[\d]+/ action => do_int
 
-=over
+=item * Any other rule can give anything, we will choose a C<double> for convenience
 
-=item * Concatenation of all symbols at the rule level
+No need to duplicate an eventual C<action => do_double> everywhere, since these are the only other rules, we can put that in the C<:default> statement:
 
-=item * Lexeme itself at the symbol level
+  :default ::= action => do_double
 
-(it could have been C<::concat>, which is equivalent to C<::shift> where there is a single RHS)
+At this stage, if we do not instanciate any valuation, it is perfectly okay to have no action implementation. Indeed, we can try immediately to parse some input. For example one that is compliant with the grammar:
 
-=back
 
-=item * Longest Acceptable Token Match is on by default
-
-=item * The I<loosen> operator C<||> has been dissected into suite of normal alternatives
-
-=item * There is no reference to a meta symbol of another grammar
-
-=item * There are 10 rules
-
-=item * There are 12 symbols
 
 =back
 

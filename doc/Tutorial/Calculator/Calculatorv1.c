@@ -5,8 +5,10 @@
 #include <genericLogger.h>
 
 const static char *grammars =
+  ":default ::= action => do_double\n"
+  ":discard ::= [\\s]\n"
   "Expression ::=\n"
-  "    /[\\d]+/\n"
+  "    /[\\d]+/  action => do_int\n"
   "    | '(' Expression ')'              assoc => group\n"
   "   ||     Expression '**' Expression  assoc => right\n"
   "   ||     Expression  '*' Expression\n"
@@ -21,7 +23,6 @@ int main() {
   marpaESLIF_t                *marpaESLIFp;
   marpaESLIFGrammarOption_t    marpaESLIFGrammarOption;
   marpaESLIFGrammar_t         *marpaESLIFGrammarp;
-  char                        *grammarshows;
   int                          exiti;
 
   genericLoggerp = GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_DEBUG);
@@ -43,11 +44,6 @@ int main() {
   marpaESLIFGrammarOption.encodingOfEncodings = NULL;
   marpaESLIFGrammarp = marpaESLIFGrammar_newp(marpaESLIFp, &marpaESLIFGrammarOption);
   if (marpaESLIFGrammarp == NULL) {
-    exit(1);
-  }
-
-  if (marpaESLIFGrammar_grammarshowform_currentb(marpaESLIFGrammarp, &grammarshows)) {
-    GENERICLOGGER_INFOF(genericLoggerp, "Grammar show:\n%s", grammarshows);
     exit(1);
   }
 
