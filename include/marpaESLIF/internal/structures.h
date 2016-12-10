@@ -239,9 +239,8 @@ struct marpaESLIFValue {
   genericStack_t           *typeStackp;
   genericStack_t           *contextStackp;
   short                     inValuationb;
-  int                       symboli;
-  int                       rulei;
-  int                       grammari;
+  marpaESLIF_symbol_t      *symbolp;
+  marpaESLIF_rule_t        *rulep;
   int                       wantedOutputStacki;
 };
 

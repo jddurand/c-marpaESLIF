@@ -1367,6 +1367,16 @@ A typical usage example is:
 
 Returns a true value on success, else a false value.
 
+=head3 C<marpaESLIFValue_contextb>
+
+  short marpaESLIFValue_contextb(marpaESLIFValue_t  *marpaESLIFValuep,
+                                 char              **symbolsp,
+                                 char               *rulesp);
+
+Puts in the value pointed by C<symbolsp> if it is not C<NULL>, the current symbol name if valuation occurs on a symbol, or in the value pointed by C<rulesp> if it is not C<NULL>, the current current rule name if valuation occurs on a rule.
+
+Returns a true value on success, a false value on failure.
+
 =head3 C<marpaESLIFValue_freev>
 
   void marpaESLIFValue_freev(marpaESLIFValue_t *marpaESLIFValuep);
@@ -1375,7 +1385,7 @@ The destructor of a marpaESLIFValue instance C<marpaESLIFValuep> instance. No-op
 
 =head2 Stack manipulation
 
-In the valuation callbacks, stack is manipulated using the functions described below. With no exception, they all return a true value on success, a false value on failure.
+In the valuation callbacks, stack is manipulated using the functions described below. With no exception, they all return a true value on success, a false value on failure, and all have in common current marpaESLIF valuation context C<marpaESLIFValuep>.
 
 =head3 C<marpaESLIFValue_stack_set_undefb>
 
@@ -1513,6 +1523,188 @@ Puts in C<intbp>, if it is not C<NULL>, a true value if stack at indice C<indice
                                        short             *longbp);
 
 Puts in C<longbp>, if it is not C<NULL>, a true value if stack at indice C<indice> is a C<C>'s C<long> value, as per C<marpaESLIFValue_stack_set_longb>.
+
+=head3 C<marpaESLIFValue_stack_is_floatb>
+
+  short marpaESLIFValue_stack_is_floatb(marpaESLIFValue_t *marpaESLIFValuep,
+                                        int                indicei,
+                                        short             *floatbp);
+
+Puts in C<floatbp>, if it is not C<NULL>, a true value if stack at indice C<indice> is a C<C>'s C<float> value, as per C<marpaESLIFValue_stack_set_floatb>.
+
+=head3 C<marpaESLIFValue_stack_is_doubleb>
+
+  short marpaESLIFValue_stack_is_doubleb(marpaESLIFValue_t *marpaESLIFValuep,
+                                         int                indicei,
+                                         short             *doublebp);
+
+Puts in C<doublebp>, if it is not C<NULL>, a true value if stack at indice C<indice> is a C<C>'s C<double> value, as per C<marpaESLIFValue_stack_set_doubleb>.
+
+=head3 C<marpaESLIFValue_stack_is_ptrb>
+
+  short marpaESLIFValue_stack_is_ptrb(marpaESLIFValue_t *marpaESLIFValuep,
+                                      int                indicei,
+                                      short             *ptrbp);
+
+Puts in C<ptrbp>, if it is not C<NULL>, a true value if stack at indice C<indice> is a C<C>'s C<ptr> value, as per C<marpaESLIFValue_stack_set_ptrb>.
+
+=head3 C<marpaESLIFValue_stack_is_arrayb>
+
+  short marpaESLIFValue_stack_is_arrayb(marpaESLIFValue_t *marpaESLIFValuep,
+                                        int                indicei,
+                                        short             *arraybp);
+
+Puts in C<arraybp>, if it is not C<NULL>, a true value if stack at indice C<indice> is a C<C>'s C<array> value, as per C<marpaESLIFValue_stack_set_arrayb>.
+
+=head3 C<marpaESLIFValue_stack_get_charb>
+
+  short marpaESLIFValue_stack_get_charb(marpaESLIFValue_t *marpaESLIFValuep,
+                                        int                indicei,
+                                        int               *contextip,
+                                        char              *cp);
+
+Get in the value pointed by C<cp>, if it is not C<NULL>, and in the value pointed by C<contextip> if it not C<NULL>, the current C<C>'s C<char> value and current context at stack indice C<indicei>.
+
+=head3 C<marpaESLIFValue_stack_get_shortb>
+
+  short marpaESLIFValue_stack_get_shortb(marpaESLIFValue_t *marpaESLIFValuep,
+                                         int                indicei,
+                                         int               *contextip,
+                                         short             *bp);
+
+Get in the value pointed by C<bp>, if it is not C<NULL>, and in the value pointed by C<contextip> if it not C<NULL>, the current C<C>'s C<short> value and current context at stack indice C<indicei>.
+
+=head3 C<marpaESLIFValue_stack_get_intb>
+
+  short marpaESLIFValue_stack_get_intb(marpaESLIFValue_t *marpaESLIFValuep,
+                                       int                indicei,
+                                       int               *contextip,
+                                       int               *ip);
+
+Get in the value pointed by C<ip>, if it is not C<NULL>, and in the value pointed by C<contextip> if it not C<NULL>, the current C<C>'s C<int> value and current context at stack indice C<indicei>.
+
+=head3 C<marpaESLIFValue_stack_get_longb>
+
+  short marpaESLIFValue_stack_get_longb(marpaESLIFValue_t *marpaESLIFValuep,
+                                        int                indicei,
+                                        int               *contextip,
+                                        long              *lp);
+
+Get in the value pointed by C<lp>, if it is not C<NULL>, and in the value pointed by C<contextip> if it not C<NULL>, the current C<C>'s C<long> value and current context at stack indice C<indicei>.
+
+=head3 C<marpaESLIFValue_stack_get_floatb>
+
+  short marpaESLIFValue_stack_get_floatb(marpaESLIFValue_t *marpaESLIFValuep,
+                                         int                indicei,
+                                         int               *contextip,
+                                         float             *fp);
+
+Get in the value pointed by C<fp>, if it is not C<NULL>, and in the value pointed by C<contextip> if it not C<NULL>, the current C<C>'s C<float> value and current context at stack indice C<indicei>.
+
+=head3 C<marpaESLIFValue_stack_get_doubleb>
+
+  short marpaESLIFValue_stack_get_doubleb(marpaESLIFValue_t *marpaESLIFValuep,
+                                          int                indicei,
+                                          int               *contextip,
+                                          double            *dp);
+
+Get in the value pointed by C<dp>, if it is not C<NULL>, and in the value pointed by C<contextip> if it not C<NULL>, the current C<C>'s C<double> value and current context at stack indice C<indicei>.
+
+=head3 C<marpaESLIFValue_stack_get_ptrb>
+
+  short marpaESLIFValue_stack_get_ptrb(marpaESLIFValue_t  *marpaESLIFValuep,
+                                       int                 indicei,
+                                       int                *contextip,
+                                       void              **pp,
+                                       short              *shallowbp);
+
+Get in the value pointed by C<pp>, if it is not C<NULL>, in the value pointed by C<contextip> if it not C<NULL>, and in the value pointed by C<shallowbp> if it is not C<NULL>, the current C<C>'s C<void *> value, current context at stack indice C<indicei> and current shallow flag, respectively.
+
+=head3 C<marpaESLIFValue_stack_get_arrayb>
+
+  short marpaESLIFValue_stack_get_arrayb(marpaESLIFValue_t  *marpaESLIFValuep,
+                                       int                   indicei,
+                                       int                  *contextip,
+                                       void                **pp,
+                                       size_t               *lp,
+                                       short                *shallowbp);
+
+Get in the value pointed by C<pp>, if it is not C<NULL>, in the value pointed by C<contextip> if it not C<NULL>, in the value pointed by C<lp> if it is not C<NULL> and in the value pointed by C<shallowbp> if it is not C<NULL>, the current C<C>'s C<void *> value, the current context at stack indice C<indicei>, the associated C<C>'s C<size_t> value > and current shallow flag, respectively.
+
+=head3 C<marpaESLIFValue_stack_getAndForget_charb>
+
+  short marpaESLIFValue_stack_getAndForget_charb(marpaESLIFValue_t *marpaESLIFValuep,
+                                                 int                indicei,
+                                                 int               *contextip,
+                                                 char              *cp);
+
+Get in the value pointed by C<cp>, if it is not C<NULL>, and in the value pointed by C<contextip> if it not C<NULL>, the current C<C>'s C<char> value and current context at stack indice C<indicei>. marpaESLIF will then forget about it. User's responsibility to know what he is doing.
+
+=head3 C<marpaESLIFValue_stack_getAndForget_shortb>
+
+  short marpaESLIFValue_stack_getAndForget_shortb(marpaESLIFValue_t *marpaESLIFValuep,
+                                                  int                indicei,
+                                                  int               *contextip,
+                                                  short             *bp);
+
+Get in the value pointed by C<bp>, if it is not C<NULL>, and in the value pointed by C<contextip> if it not C<NULL>, the current C<C>'s C<short> value and current context at stack indice C<indicei>. marpaESLIF will then forget about it. User's responsibility to know what he is doing.
+
+=head3 C<marpaESLIFValue_stack_getAndForget_intb>
+
+  short marpaESLIFValue_stack_getAndForget_intb(marpaESLIFValue_t *marpaESLIFValuep,
+                                                int                indicei,
+                                                int               *contextip,
+                                                int               *ip);
+
+Get in the value pointed by C<ip>, if it is not C<NULL>, and in the value pointed by C<contextip> if it not C<NULL>, the current C<C>'s C<int> value and current context at stack indice C<indicei>. marpaESLIF will then forget about it. User's responsibility to know what he is doing.
+
+=head3 C<marpaESLIFValue_stack_getAndForget_longb>
+
+  short marpaESLIFValue_stack_getAndForget_longb(marpaESLIFValue_t *marpaESLIFValuep,
+                                                 int                indicei,
+                                                 int               *contextip,
+                                                 long              *lp);
+
+Get in the value pointed by C<lp>, if it is not C<NULL>, and in the value pointed by C<contextip> if it not C<NULL>, the current C<C>'s C<long> value and current context at stack indice C<indicei>. marpaESLIF will then forget about it. User's responsibility to know what he is doing.
+
+=head3 C<marpaESLIFValue_stack_getAndForget_floatb>
+
+  short marpaESLIFValue_stack_getAndForget_floatb(marpaESLIFValue_t *marpaESLIFValuep,
+                                                  int                indicei,
+                                                  int               *contextip,
+                                                  float             *fp);
+
+Get in the value pointed by C<fp>, if it is not C<NULL>, and in the value pointed by C<contextip> if it not C<NULL>, the current C<C>'s C<float> value and current context at stack indice C<indicei>. marpaESLIF will then forget about it. User's responsibility to know what he is doing.
+
+=head3 C<marpaESLIFValue_stack_getAndForget_doubleb>
+
+  short marpaESLIFValue_stack_getAndForget_doubleb(marpaESLIFValue_t *marpaESLIFValuep,
+                                                   int                indicei,
+                                                   int               *contextip,
+                                                   double            *dp);
+
+Get in the value pointed by C<dp>, if it is not C<NULL>, and in the value pointed by C<contextip> if it not C<NULL>, the current C<C>'s C<double> value and current context at stack indice C<indicei>. marpaESLIF will then forget about it. User's responsibility to know what he is doing.
+
+=head3 C<marpaESLIFValue_stack_getAndForget_ptrb>
+
+  short marpaESLIFValue_stack_getAndForget_ptrb(marpaESLIFValue_t  *marpaESLIFValuep,
+                                                int                 indicei,
+                                                int                *contextip,
+                                                void              **pp,
+                                                short              *shallowbp);
+
+Get in the value pointed by C<pp>, if it is not C<NULL>, in the value pointed by C<contextip> if it not C<NULL>, and in the value pointed by C<shallowbp> if it is not C<NULL>, the current C<C>'s C<void *> value, current context at stack indice C<indicei> and current shallow flag, respectively. marpaESLIF will then forget about it. User's responsibility to know what he is doing. User's responsibility to manage pointer value if this has been allocated on the heap.
+
+=head3 C<marpaESLIFValue_stack_getAndForget_arrayb>
+
+  short marpaESLIFValue_stack_getAndForget_arrayb(marpaESLIFValue_t  *marpaESLIFValuep,
+                                                int                   indicei,
+                                                int                  *contextip,
+                                                void                **pp,
+                                                size_t               *lp,
+                                                short                *shallowbp);
+
+Get in the value pointed by C<pp>, if it is not C<NULL>, in the value pointed by C<contextip> if it not C<NULL>, in the value pointed by C<lp> if it is not C<NULL> and in the value pointed by C<shallowbp> if it is not C<NULL>, the current C<C>'s C<void *> value, the current context at stack indice C<indicei>, the associated C<C>'s C<size_t> value > and current shallow flag, respectively. User's responsibility to manage pointer value if this has been allocated on the heap.
 
 =head1 NOTES
 

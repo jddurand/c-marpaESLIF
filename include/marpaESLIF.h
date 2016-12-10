@@ -171,6 +171,7 @@ extern "C" {
   marpaESLIF_EXPORT short                   marpaESLIFValue_valueb(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFValueResult_t *marpaESLIFValueResultp);
   marpaESLIF_EXPORT short                   marpaESLIFValue_value_startb(marpaESLIFValue_t *marpaESLIFValuep, int *startip);
   marpaESLIF_EXPORT short                   marpaESLIFValue_value_lengthb(marpaESLIFValue_t *marpaESLIFValuep, int *lengthip);
+  marpaESLIF_EXPORT short                   marpaESLIFValue_contextb(marpaESLIFValue_t *marpaESLIFValuep, char **symbolsp, char **rulesp);
   marpaESLIF_EXPORT void                    marpaESLIFValue_freev(marpaESLIFValue_t *marpaESLIFValuep);
 
   /* Stack management when doing valuation */
@@ -216,10 +217,6 @@ extern "C" {
   marpaESLIF_EXPORT short                   marpaESLIFValue_stack_getAndForget_doubleb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int *contextip, double *dp);
   marpaESLIF_EXPORT short                   marpaESLIFValue_stack_getAndForget_ptrb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int *contextip, void **pp, short *shallowbp);
   marpaESLIF_EXPORT short                   marpaESLIFValue_stack_getAndForget_arrayb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int *contextip, void **pp, size_t *lp, short *shallowbp);
-
-  /* Stack context when doing valuation */
-  marpaESLIF_EXPORT short                   marpaESLIFValue_contextb(marpaESLIFValue_t *marpaESLIFValuep, int *symbolip, int *ruleip);
-
 
   marpaESLIF_EXPORT void                    marpaESLIF_freev(marpaESLIF_t *marpaESLIFp);
 #ifdef __cplusplus

@@ -6591,11 +6591,10 @@ static short _marpaESLIFValue_ruleCallbackWrapperb(void *userDatavp, int rulei, 
   }
 
   marpaESLIFValuep->inValuationb   =  1;
-  marpaESLIFValuep->symboli        = -1;
-  marpaESLIFValuep->rulei          = rulei;
-  marpaESLIFValuep->grammari       = grammarp->leveli;
+  marpaESLIFValuep->symbolp        = NULL;
+  marpaESLIFValuep->rulep          = rulep;
 
-  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Grammar %d Rule %d %s", marpaESLIFValuep->grammari, marpaESLIFValuep->rulei, rulep->asciishows);
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Grammar %d Rule %d %s", grammarp->leveli, rulep->idi, rulep->asciishows);
 
   /* Passthrough mode:
 
@@ -6731,9 +6730,8 @@ static short _marpaESLIFValue_ruleCallbackWrapperb(void *userDatavp, int rulei, 
   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC;
   marpaESLIFValuep->inValuationb   =  0;
-  marpaESLIFValuep->symboli        = -1;
-  marpaESLIFValuep->rulei          = -1;
-  marpaESLIFValuep->grammari       = -1;
+  marpaESLIFValuep->symbolp        = NULL;
+  marpaESLIFValuep->rulep          = NULL;
   return rcb;
 }
 
@@ -6773,11 +6771,10 @@ static inline short _marpaESLIFValue_anySymbolCallbackWrapperb(void *userDatavp,
   }
 
   marpaESLIFValuep->inValuationb   =  1;
-  marpaESLIFValuep->symboli        = symboli;
-  marpaESLIFValuep->rulei          = -1;
-  marpaESLIFValuep->grammari       = grammarp->leveli;
+  marpaESLIFValuep->symbolp        = symbolp;
+  marpaESLIFValuep->rulep          = NULL;
 
-  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Grammar %d Symbol %d %s", marpaESLIFValuep->grammari, marpaESLIFValuep->symboli, symbolp->descp->asciis);
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Grammar %d Symbol %d %s", grammarp->leveli, symbolp->idi, symbolp->descp->asciis);
 
   if (! nullableb) {
     if (! _marpaESLIFRecognizer_lexemeStack_i_p_and_sizeb(marpaESLIFRecognizerp, marpaESLIFRecognizerp->lexemeInputStackp, argi, &bytep, &bytel)) {
@@ -6885,9 +6882,8 @@ static inline short _marpaESLIFValue_anySymbolCallbackWrapperb(void *userDatavp,
   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC;
   marpaESLIFValuep->inValuationb   =  0;
-  marpaESLIFValuep->symboli        = -1;
-  marpaESLIFValuep->rulei          = -1;
-  marpaESLIFValuep->grammari       = -1;
+  marpaESLIFValuep->symbolp        = NULL;
+  marpaESLIFValuep->rulep          = NULL;
   return rcb;
 }
 
@@ -9766,7 +9762,7 @@ static inline short _marpaESLIFValue_stack_i_resetb(marpaESLIFValue_t *marpaESLI
 }
 
 /*****************************************************************************/
-short marpaESLIFValue_contextb(marpaESLIFValue_t *marpaESLIFValuep, int *symbolip, int *ruleip)
+short marpaESLIFValue_contextb(marpaESLIFValue_t *marpaESLIFValuep, char **symbolsp, char **rulesp)
 /*****************************************************************************/
 {
   static const char *funcs  = "marpaESLIFValue_contextb";
@@ -9782,11 +9778,15 @@ short marpaESLIFValue_contextb(marpaESLIFValue_t *marpaESLIFValuep, int *symboli
     goto err;
   }
 
-  if (symbolip != NULL) {
-    *symbolip = marpaESLIFValuep->symboli;
+  if (symbolsp != NULL) {
+    if (marpaESLIFValuep->symbolp != NULL) {
+      *symbolsp = marpaESLIFValuep->symbolp->descp->asciis;
+    }
   }
-  if (ruleip != NULL) {
-    *ruleip = marpaESLIFValuep->rulei;
+  if (rulesp != NULL) {
+    if (marpaESLIFValuep->rulep != NULL) {
+      *rulesp = marpaESLIFValuep->rulep->descp->asciis;
+    }
   }
 
   rcb = 1;
@@ -9995,9 +9995,8 @@ static inline marpaESLIFValue_t *_marpaESLIFValue_newp(marpaESLIFRecognizer_t *m
   marpaESLIFValuep->typeStackp                  = NULL;
   marpaESLIFValuep->contextStackp               = NULL;
   marpaESLIFValuep->inValuationb                = 0;
-  marpaESLIFValuep->symboli                     = -1;
-  marpaESLIFValuep->rulei                       = -1;
-  marpaESLIFValuep->grammari                    = -1;
+  marpaESLIFValuep->symbolp                     = NULL;
+  marpaESLIFValuep->rulep                       = NULL;
   marpaESLIFValuep->wantedOutputStacki          = 0; /* Used on non-ambiguous ASF valuation */
 
   if (! fakeb) {
