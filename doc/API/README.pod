@@ -69,7 +69,7 @@ A pointer to a C<genericLogger_t> instance. If it is C<NULL>, then C<marpaESLIF>
 
   void marpaESLIF_freev(marpaESLIF_t *marpaESLIFp);
 
-The C<marpaESLIF> destructor, with parameter C<marpaESLIFp> being an instance previously created. No-op if C<marpaESLIFp> is C<NULL>.
+The destructor of a marpaESLIF instance C<marpaESLIFp> instance. No-op if C<marpaESLIFp> is C<NULL>.
 
 =head2 ESLIFGrammar
 
@@ -435,7 +435,7 @@ C<descp> have precedence of C<leveli>.
 
   void marpaESLIFGrammar_freev(marpaESLIFGrammar_t *marpaESLIFGrammarp);
 
-The destructor of a C<marpaESLIFGrammarp> instance. No-op if C<marpaESLIFGrammarp> is C<NULL>.
+The destructor of a marpaESLIFGrammar instance C<marpaESLIFGrammarp> instance. No-op if C<marpaESLIFGrammarp> is C<NULL>.
 
 =head2 ESLIFRecognizer
 
@@ -938,7 +938,7 @@ Returns a true value on success, a false value on failure.
 
   void marpaESLIFRecognizer_freev(marpaESLIFRecognizer_t *marpaESLIFRecognizerp);
 
-The C<marpaESLIFRecognizer> destructor, with parameter C<marpaESLIFRecognizerp> being an instance previously created. No-op if C<marpaESLIFRecognizerp> is C<NULL>.
+The destructor of a marpaESLIFRecognizer instance C<marpaESLIFRecognizerp> instance. No-op if C<marpaESLIFRecognizerp> is C<NULL>.
 
 =head2 ESLIFValue
 
@@ -1364,6 +1364,12 @@ A typical usage example is:
     }
 
 Returns a true value on success, else a false value.
+
+=head3 C<marpaESLIFValue_freev>
+
+  void marpaESLIFValue_freev(marpaESLIFValue_t *marpaESLIFValuep);
+
+The destructor of a marpaESLIFValue instance C<marpaESLIFValuep> instance. No-op if C<marpaESLIFValuep> is C<NULL>.
 
 =head1 NOTES
 
