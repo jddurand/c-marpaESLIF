@@ -2129,7 +2129,7 @@ static inline short _marpaESLIF_bootstrap_G1_action_priority_loosen_ruleb(marpaE
     goto err;
   }
 
-  /* Create the rule lhs := lhs[0] */
+  /* Create the rule lhs := lhs[0] action => ::shift */
   MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Creating rule %s ::= %s at grammar level %d", lhsp->descp->asciis, prioritizedLhsp->descp->asciis, grammarp->leveli);
   rulep = _marpaESLIF_rule_newp(marpaESLIFp,
                                 grammarp,
@@ -2146,7 +2146,7 @@ static inline short _marpaESLIF_bootstrap_G1_action_priority_loosen_ruleb(marpaE
                                 -1, /* minimumi */
                                 -1, /* separatori */
                                 0, /* properb */
-                                NULL, /* actions */
+                                "::shift", /* actions */
                                 0 /* passthroughb */);
   if (rulep == NULL) {
     goto err;
@@ -2212,7 +2212,7 @@ static inline short _marpaESLIF_bootstrap_G1_action_priority_loosen_ruleb(marpaE
       goto err;
     }
 
-    /* Create the transition rule lhs[priorityi-1] := lhs[priorityi] */
+    /* Create the transition rule lhs[priorityi-1] := lhs[priorityi] action => ::shift */
     MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Creating transition rule %s ::= %s at grammar level %d", prioritizedLhsp->descp->asciis, nextPrioritizedLhsp->descp->asciis, grammarp->leveli);
     rulep = _marpaESLIF_rule_newp(marpaESLIFp,
                                   grammarp,
@@ -2229,7 +2229,7 @@ static inline short _marpaESLIF_bootstrap_G1_action_priority_loosen_ruleb(marpaE
                                   -1, /* minimumi */
                                   -1, /* separatori */
                                   0, /* properb */
-                                  NULL, /* actions */
+                                  "::shift", /* actions */
                                   0 /* passthroughb */);
     if (rulep == NULL) {
       goto err;
