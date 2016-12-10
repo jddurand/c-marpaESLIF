@@ -195,6 +195,20 @@ No need to duplicate an eventual C<action => do_double> everywhere, since these 
 
   :default ::= action => do_double
 
+So we end up with this grammar:
+
+    :default ::= action => do_double
+    :discard ::= [\s]
+    Expression ::=
+        /[\d]+/                           action => do_int
+        | '(' Expression ')'              assoc => group
+       ||     Expression '**' Expression  assoc => right
+       ||     Expression  '*' Expression
+        |     Expression  '/' Expression
+       ||     Expression  '+' Expression
+        |     Expression  '-' Expression
+
+
 At this stage, if we do not instanciate any valuation, it is perfectly okay to have no action implementation. Indeed, we can try immediately to parse some input. For example one that is compliant with the grammar:
 
 
