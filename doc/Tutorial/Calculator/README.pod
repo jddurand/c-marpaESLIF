@@ -269,7 +269,7 @@ We cannot use the C<marpaESLIFGrammar_parseb> method yet, because it will try to
   ./..
   marpaESLIFRecognizer_freev(marpaESLIFRecognizerp);
 
-And ask for a scan of what it is C<stdin> (we assume that 4096 bytes is enough -;):
+And ask for a scan of what it is in C<stdin> (we assume that 4096 bytes is enough -;):
 
   char                         inputs[4096];
   ./..
@@ -351,11 +351,11 @@ You see that by default, marpaESLIF will always send to the generic logger, at t
 
 =item * The expected terminals and their definition
 
-  Their definition, here, is always an ASCII representation tentative.
+Their definition, here, is always an ASCII representation tentative.
 
 =item * A dump of the input
 
-  The dump always takes into account if this is stream of characters or not, by saying so: C<UTF-8 converted data>. In case of a binary stream it would say C<Raw data>. The dump is always giving a maximum of C<128> bytes before and after the exact point of failure in input, when possible.
+The dump always takes into account if this is stream of characters or not, by saying so: C<UTF-8 converted data>. In case of a binary stream it would say C<Raw data>. The dump is always giving a maximum of C<128> bytes before and after the exact point of failure in input, when possible.
 
 =back
 
