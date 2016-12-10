@@ -241,6 +241,7 @@ struct marpaESLIFValue {
   short                     inValuationb;
   marpaESLIF_symbol_t      *symbolp;
   marpaESLIF_rule_t        *rulep;
+  char                     *actions;
   int                       wantedOutputStacki;
 };
 
