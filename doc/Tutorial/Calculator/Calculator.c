@@ -34,7 +34,9 @@ int main() {
   marpaESLIFRecognizerOption_t marpaESLIFRecognizerOption;
   marpaESLIFRecognizer_t      *marpaESLIFRecognizerp;
   char                         inputs[4096];
-  int                          exiti;
+  marpaESLIFValueOption_t      marpaESLIFValueOption;
+  marpaESLIFValue_t           *marpaESLIFValuep;
+  int                          rcValueb;
 
   genericLoggerp = GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_DEBUG);
   if (genericLoggerp == NULL) {
@@ -84,7 +86,29 @@ int main() {
     exit(1);
   }
 
-  marpaESLIFRecognizer_progressLogb(marpaESLIFRecognizerp, -1, -1, GENERICLOGGER_LOGLEVEL_DEBUG);
+  /* marpaESLIFRecognizer_progressLogb(marpaESLIFRecognizerp, -1, -1, GENERICLOGGER_LOGLEVEL_DEBUG); */
+
+  marpaESLIFValueOption.userDatavp             = NULL; /* No context... why not */
+  marpaESLIFValueOption.ruleActionResolverp    = NULL; /* No rule action resolver! */
+  marpaESLIFValueOption.symbolActionResolverp  = NULL; /* No symbol action resolver... Okay we use the default */
+  marpaESLIFValueOption.freeActionResolverp    = NULL; /* No free action resolver... Okay if we generate no pointer */
+  marpaESLIFValueOption.highRankOnlyb          = 1;    /* Recommended value */
+  marpaESLIFValueOption.orderByRankb           = 1;    /* Recommended value */
+  marpaESLIFValueOption.ambiguousb             = 0;    /* Recommended value */
+  marpaESLIFValueOption.nullb                  = 0;    /* Recommended value */
+  marpaESLIFValueOption.maxParsesi             = 0;    /* Get all parse tree values - meaningless because ambiguousb is false */
+  marpaESLIFValuep = marpaESLIFValue_newp(marpaESLIFRecognizerp, &marpaESLIFValueOption);
+  if (marpaESLIFValuep == NULL) {
+    exit(1);
+  }
+  while (1) {
+    rcValueb = marpaESLIFValue_valueb(marpaESLIFValuep, NULL);
+    if (rcValueb < 0) {
+      exit(1);
+    } else if (rcValueb == 0) {
+      break;
+    }
+  }
 
   marpaESLIFRecognizer_freev(marpaESLIFRecognizerp);
   marpaESLIFGrammar_freev(marpaESLIFGrammarp);
