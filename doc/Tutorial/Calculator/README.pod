@@ -193,7 +193,7 @@ And we want to have I<actions> to compute the arithmetic result:
 
 We will just return what is in the middle:
 
-  '(' Expression ')'              assoc => group action => do_paren
+  '(' Expression ')'              assoc => group action => ::copy[1]
 
 =item * Any other rule can give anything, we will choose a C<double> for convenience
 
@@ -470,9 +470,170 @@ A rule prototype is always:
                                                  int resulti,
                                                  short nullableb);
 
-A typical implementation is always getting data from the stack, and put the result, i.e.:
+A typical implementation is always getting data from the stack, and put the result, for example with C<do_int>, without error checking:
 
+  typedef enum stack_context {
+    INTEGER_CONTEXT = 1,
+    DOUBLE_CONTEXT = 1
+  } stack_context_t;
+  
+  static short do_int(void              *userDatavp,
+                      marpaESLIFValue_t *marpaESLIFValuep,
+                      int                arg0i,
+                      int                argni,
+                      int                resulti,
+                      short              nullableb)
+  {
+    void   *bytep;
+    size_t  bytel;
+  
+    marpaESLIFValue_stack_get_arrayb(marpaESLIFValuep, arg0i, NULL /* contextip */, &bytep, &bytel, NULL /* shallowbp */);
+    return marpaESLIFValue_stack_set_intb(marpaESLIFValuep, resulti, INTEGER_CONTEXT /* Anything but 0 */, atoi((char *) bytep));
+  }
 
+Here you can say "but atoi() is unsafe here! What guarantees that this is NUL-terminated?". This is something that the end-user have to know: marpaESLIF B<always put a NUL byte> to any buffer that the end-user can access. Therefore, it is safe. This systematic NUL-byte <never> appear in any size information. It is just systematically added to any memory allocation, and set by the engine to the hardcoded C<'\0'> value.
+
+The implementation of C<do_double> is complicated I<only> because we maintained the possibility to have a double or an int on the stack. A version without error checking is:
+
+  static short do_double(void              *userDatavp,
+                         marpaESLIFValue_t *marpaESLIFValuep,
+                         int                arg0i,
+                         int                argni,
+                         int                resulti,
+                         short              nullableb)
+  {
+    /* Expression OPERATOR Expression */
+    int     i[2];
+    double  d[2];
+    short   intb[2];
+    short   doubleb[2];
+    void   *bytep;
+    size_t  bytel;
+    int     valuei;
+    double  valued;
+    short   resultIsIntb;
+  
+    /* Check if expressions are integers or doubles */
+    marpaESLIFValue_stack_is_intb(marpaESLIFValuep, arg0i, &(intb[0]));
+    marpaESLIFValue_stack_is_intb(marpaESLIFValuep, argni, &(intb[1]));
+  
+    /* Get values */
+    intb[0] ?
+      marpaESLIFValue_stack_get_intb(marpaESLIFValuep, arg0i, NULL /* contextip */, &(i[0]))
+      :
+      marpaESLIFValue_stack_get_doubleb(marpaESLIFValuep, arg0i, NULL /* contextip */, &(d[0]))
+      ;
+    intb[1] ?
+      marpaESLIFValue_stack_get_intb(marpaESLIFValuep, argni, NULL /* contextip */, &(i[1]))
+      :
+      marpaESLIFValue_stack_get_doubleb(marpaESLIFValuep, argni, NULL /* contextip */, &(d[1]))
+      ;
+    
+    /* Operator is a lexeme */
+    marpaESLIFValue_stack_get_arrayb(marpaESLIFValuep, arg0i + 1, NULL /* contextip */, &bytep, &bytel, NULL /* shallowbp */);
+  
+    /* For convenience, marpaESLIF is ALWAYS putting a NUL character after every lexeme buffer. */
+    if (strcmp((char *) bytep, "**") == 0) {
+      if (intb[0] && intb[1]) { /* Both are int ? */
+        valued = pow((double) i[0], (double) i[1]);
+      } else {
+        valued = pow((intb[0] ? (double) i[0] : d[0]), (intb[1] ? (double) i[1] : d[1]));
+      }
+      resultIsIntb = 0;
+    } else if (strcmp((char *) bytep, "*") == 0) {
+      if (intb[0] && intb[1]) { /* Both are int ? */
+        valuei = i[0] * i[1];
+        resultIsIntb = 1;
+      } else {
+        valued = (intb[0] ? (double) i[0] : d[0]) * (intb[1] ? (double) i[1] : d[1]);
+        resultIsIntb = 0;
+      }
+    } else if (strcmp((char *) bytep, "/") == 0) {
+      if (intb[0] && intb[1]) { /* Both are int ? */
+        if (intb[1] == 0) {
+          fprintf(stderr, "Division by zero!\n");
+          return 0;
+        }
+        valued = (double) i[0] / (double) i[1];
+      } else {
+        if ((intb[1] ? (double) i[1] : d[1]) < 0.E-8) {
+          fprintf(stderr, "Division by zero (well, value is < 10E-8) !\n");
+          return 0;
+        }
+        valued = (intb[0] ? (double) i[0] : d[0]) / (intb[1] ? (double) i[1] : d[1]);
+      }
+      resultIsIntb = 0;
+    } else if (strcmp((char *) bytep, "+") == 0) {
+      if (intb[0] && intb[1]) { /* Both are int ? */
+        valuei = i[0] + i[1];
+        resultIsIntb = 1;
+      } else {
+        valued = (intb[0] ? (double) i[0] : d[0]) + (intb[1] ? (double) i[1] : d[1]);
+        resultIsIntb = 0;
+      }
+    } else if (strcmp((char *) bytep, "-") == 0) {
+      if (intb[0] && intb[1]) { /* Both are int ? */
+        valuei = i[0] - i[1];
+        resultIsIntb = 1;
+      } else {
+        valued = (intb[0] ? (double) i[0] : d[0]) - (intb[1] ? (double) i[1] : d[1]);
+        resultIsIntb = 0;
+      }
+    } else {
+      fprintf(stderr, "Unknown operator %s!\n", (char *) bytep);
+      return 0;
+    }
+  
+    return
+      resultIsIntb ?
+      marpaESLIFValue_stack_set_intb(marpaESLIFValuep, resulti, INTEGER_CONTEXT, valuei)
+      :
+      marpaESLIFValue_stack_set_doubleb(marpaESLIFValuep, resulti, DOUBLE_CONTEXT, valued);
+  }
+
+And the resolver is nothing else but this simple method, taking into the same remark as before: any buffer that the end-user can access is NUL-terminated. So is C<actions> below:
+
+  static marpaESLIFValueRuleCallback_t ruleActionResolverp(void              *userDatavp,
+                                                           marpaESLIFValue_t *marpaESLIFValuep,
+                                                           char              *actions)
+  {
+    if (strcmp(actions, "do_int") == 0) {
+      return do_int;
+    } else if (strcmp(actions, "do_double") == 0) {
+      return do_double;
+    } else {
+      fprintf(stderr, "Unknown action %s!\n", actions);
+      return NULL;
+    }
+  }
+
+=head2 TESTS
+
+Well, you can check:
+
+  echo "5 / (2 * 3)" | /tmp/Calculator
+  5 / (2 * 3) = 0.833333
+  
+  echo "5 / 2 * 3" | /tmp/Calculator
+  5 / 2 * 3 = 7.500000
+  
+  echo "5 / (2 * 3)" | /tmp/Calculator
+  5 / (2 * 3) = 0.833333
+  
+  echo "5 * (2 * 3)" | /tmp/Calculator
+  5 * (2 * 3) = 30
+  
+  echo "5 ** (2 ** 3)" | /tmp/Calculator
+  5 ** (2 ** 3) = 390625.000000
+  
+  echo "5 ** (2 / 3)" | /tmp/Calculator
+  5 ** (2 / 3) = 2.924018
+  
+  echo "1 + ( 2 + ( 3 + ( 4 + 5) )" | /tmp/Calculator
+  ERROR MARPA_ERR_NO_PARSE: No parse
+  
+  echo "1 + ( 2 + ( 3 + ( 4 + 5) ) )" | /tmp/Calculator
+  1 + ( 2 + ( 3 + ( 4 + 5) ) ) = 15
 
 =head1 NOTES
 
