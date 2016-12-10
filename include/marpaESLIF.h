@@ -1,6 +1,7 @@
 #ifndef MARPAESLIF_H
 #define MARPAESLIF_H
 
+#include <stddef.h>                 /* For size_t */
 #include <genericLogger.h>
 #include <marpaESLIF/export.h>
 
