@@ -189,6 +189,12 @@ And we want to have I<actions> to compute the arithmetic result:
 
         /[\d]+/ action => do_int
 
+=item * Parenthesized expression
+
+We will just return what is in the middle:
+
+  '(' Expression ')'              assoc => group action => do_paren
+
 =item * Any other rule can give anything, we will choose a C<double> for convenience
 
 No need to duplicate an eventual C<action => do_double> everywhere, since these are the only other rules, we can put that in the C<:default> statement:
@@ -201,7 +207,7 @@ So we end up with this grammar:
     :discard ::= [\s]
     Expression ::=
         /[\d]+/                           action => do_int
-        | '(' Expression ')'              assoc => group
+        | '(' Expression ')'              assoc => group action => do_paren
        ||     Expression '**' Expression  assoc => right
        ||     Expression  '*' Expression
         |     Expression  '/' Expression
@@ -412,13 +418,13 @@ Let's try valuation without setting action resolvers. We can use the previous re
   ./..
   marpaESLIFValueOption.userDatavp             = NULL; /* No context... why not */
   marpaESLIFValueOption.ruleActionResolverp    = NULL; /* No rule action resolver! */
-  marpaESLIFValueOption.symbolActionResolverp  = NULL; /* No symbol action resolver... Okay we use the default */
-  marpaESLIFValueOption.freeActionResolverp    = NULL; /* No free action resolver... Okay if we generate no pointer */
+  marpaESLIFValueOption.symbolActionResolverp  = NULL; /* No symbol action resolver... Okay with the default */
+  marpaESLIFValueOption.freeActionResolverp    = NULL; /* No free action resolver... Okay: we generate no ptr */
   marpaESLIFValueOption.highRankOnlyb          = 1;    /* Recommended value */
   marpaESLIFValueOption.orderByRankb           = 1;    /* Recommended value */
   marpaESLIFValueOption.ambiguousb             = 0;    /* Recommended value */
   marpaESLIFValueOption.nullb                  = 0;    /* Recommended value */
-  marpaESLIFValueOption.maxParsesi             = 0;    /* Get all parse tree values - meaningless because ambiguousb is false */
+  marpaESLIFValueOption.maxParsesi             = 0;    /* Meaningless because ambiguousb is false */
   marpaESLIFValuep = marpaESLIFValue_newp(marpaESLIFRecognizerp, &marpaESLIFValueOption);
   if (marpaESLIFValuep == NULL) {
     exit(1);
@@ -432,7 +438,9 @@ Let's try valuation without setting action resolvers. We can use the previous re
     }
   }
 
-Remember our example that is a priori incomplete, though the scanning did not yell? Valuation will say there is really a problem:
+See the comment on symbol action resolver? The default for symbol action is to put on the stack a data of type I<array>, i.e. a tuple {pointer,size}. This default is okay for most applications, and definitely fine with us.
+
+Remember our example that is a priori incomplete, though the scanning did not yell. Valuation will say there is really a problem:
 
   echo "( 1 + 2" | /tmp/Calculator
   ERROR MARPA_ERR_NO_PARSE: No parse
@@ -442,6 +450,29 @@ And what about something that is complete, but rule resolver is missing:
   echo "1 + 2" | /tmp/Calculator
   ERROR Cannot execute action "do_int": no rule action resolver
   (recognizer state would follow)
+
+So we have to implement the rules, and the rule resolver. Rules themselves are simple, and we have two of them:
+
+=over
+
+=item * do_double
+
+=item * do_int
+
+=back
+
+A rule prototype is always:
+
+  typedef short (*marpaESLIFValueRuleCallback_t)(void *userDatavp,
+                                                 marpaESLIFValue_t *marpaESLIFValuep,
+                                                 int arg0i,
+                                                 int argni,
+                                                 int resulti,
+                                                 short nullableb);
+
+A typical implementation is always getting data from the stack, and put the result, i.e.:
+
+
 
 =head1 NOTES
 
