@@ -1356,7 +1356,7 @@ A typical usage example is:
 
   if (marpaESLIFValue_value_startb(marpaESLIFValuep, &starti) &&
       marpaESLIFValue_value_lengthb(marpaESLIFValuep, &lengthi)) {
-      marpaESLIFRecognizer_progressLogb(marpaESLIFValuep_recognizerp(marpaESLIFRValuep),
+      marpaESLIFRecognizer_progressLogb(marpaESLIFValue_recognizerp(marpaESLIFValuep),
                                         starti,
                                         /* lengthi is zero when this is a nullable symbol */
                                         (lengthi > 0) ? starti+lengthi-1 : starti,
