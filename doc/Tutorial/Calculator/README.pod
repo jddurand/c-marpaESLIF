@@ -363,7 +363,42 @@ So take care, this is just a I<test of the parsing phase>. Parsing can be comple
 
   echo "( 1 + 2" | /tmp/Calculator
 
-will output nothing. And this is normal. From the grammar point of view, even if parsing is not complete, parsing did not fail: the input was conform to the grammar up to its end. This is by doing valuation that we will discover there is a problem.
+will output nothing. And this is normal. From the grammar point of view, even if parsing is not complete, parsing did not fail: the input was conform to the grammar up to its end. This is by doing valuation that we will discover there is a problem... This can also be predicted by asking for the state of the recognizer... Suppose there would be this line of code just after scanning:
+
+  marpaESLIFRecognizer_progressLogb(marpaESLIFRecognizerp, -1, -1, GENERICLOGGER_LOGLEVEL_DEBUG);
+
+then the output would be:
+
+  DEBUG [F3@3..4] Expression[1] ::= Expression[2] .
+  DEBUG [F4@3..4] Expression[2] ::= Expression[3] .
+  DEBUG [F5@3..4] Expression[3] ::= /[\d]+/ .
+  DEBUG [F10@1..4] Expression[0] ::= Expression[0]
+  DEBUG [F10@1..4]                   '+'
+  DEBUG [F10@1..4]                   Expression[1] .
+  DEBUG [R7@3..4] Expression[2] ::= Expression[3]
+  DEBUG [R7@3..4]                   . '**'
+  DEBUG [R7@3..4]                   Expression[2]
+  DEBUG [R8@3..4] Expression[1] ::= Expression[1]
+  DEBUG [R8@3..4]                   . '*'
+  DEBUG [R8@3..4]                   Expression[2]
+  DEBUG [R9@3..4] Expression[1] ::= Expression[1]
+  DEBUG [R9@3..4]                   . '/'
+  DEBUG [R9@3..4]                   Expression[2]
+  DEBUG [R10@1..4] Expression[0] ::= Expression[0]
+  DEBUG [R10@1..4]                   . '+'
+  DEBUG [R10@1..4]                   Expression[1]
+  DEBUG [R11@1..4] Expression[0] ::= Expression[0]
+  DEBUG [R11@1..4]                   . '-'
+  DEBUG [R11@1..4]                   Expression[1]
+  DEBUG [R6@0..4] Expression[3] ::= '('
+  DEBUG [R6@0..4]                   Expression[0]
+  DEBUG [R6@0..4]                   . ')'
+
+and we see clearly that rule No C<6> is not complete...:
+
+  DEBUG [R6@0..4] Expression[3] ::= '('
+  DEBUG [R6@0..4]                   Expression[0]
+  DEBUG [R6@0..4]                   . ')'
 
 =back
 

@@ -84,6 +84,8 @@ int main() {
     exit(1);
   }
 
+  marpaESLIFRecognizer_progressLogb(marpaESLIFRecognizerp, -1, -1, GENERICLOGGER_LOGLEVEL_DEBUG);
+
   marpaESLIFRecognizer_freev(marpaESLIFRecognizerp);
   marpaESLIFGrammar_freev(marpaESLIFGrammarp);
   marpaESLIF_freev(marpaESLIFp);
