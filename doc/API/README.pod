@@ -1063,15 +1063,15 @@ marpaESLIF called the symbol action resolver C<symbolActionResolverp> for action
 
   my_symbol_actionp(userDatavp, marpaESLIFValuep, p, l, 2)
 
-where C<p> is a pointer to a copy of input stream C<'string terminal'>, of size C<l>, asking for the result to be pushed at stack indice number C<2>. It is the user that decided that it will put a short value at indice 2.
+where C<p> is a pointer to a copy of input stream C<'string terminal'>, of size C<l>, asking for the result to be pushed at stack indice number C<2>. It is the user that decided that it will put a short value at indice 2, with context C<43>.
 
-=item You talk about value types in the stack, but I<how> can this be set?
+=item You talk about value types and context in the stack, but B<how> can this be set?
 
-marpaESLIF provide stack manipulation functions, and it is simply impossible for the end-user to get or set something for the stack without using these functions. Stack itself is maintained inside marpaESLIF. Please see all C<marpaESLIFValue_stack_xxx> stack function documented later.
+marpaESLIF provide stack manipulation functions, and it is simply impossible for the end-user to manipulate the stack without using these functions. Stack itself is maintained inside marpaESLIF. Please see all C<marpaESLIFValue_stack_xxx> stack functions documented later.
 
 =item Stack number indice C<0> is in I<both input and output> indices
 
-This mean that, at any time, a stack indice can be replaced by another. This is a decision of the parse tree engine, based on rule definitions. And since stack at indice C<0> is a pointer, marpaESLIF will I<automatically> call for I<memory free> action on this indice, before replacing it by the C<my_rule> result. The I<free action> set set at the grammar level:
+This mean that, at any time, a stack indice can be replaced by another. This is a decision of the parse tree engine, based on rule definitions. And since in our example stack at indice C<0> is a pointer, marpaESLIF will I<automatically> call for I<memory free> action on this indice, before replacing it by the C<my_rule> result. The I<free action> is set at the grammar level:
 
   :default ::= free-action => my_free_action
 
@@ -1081,13 +1081,27 @@ Full history of rule action is then:
 
 =over
 
-=item 1 - Call the action resolver for C<"my_action">, the later returns function pointer C<my_actionp>
+=item 1 - Call the action resolver for C<"my_action">
+
+The function call is equivalent to: C<ruleActionResolverp(userDatavp, marpaESLIFValuep, "my_action")>, suppose that it returned a function pointer to C<my_actionp>, a function that exist in user-space.
 
 =item 2 - Call C<my_actionp> with input parameter range C<[0-2]> and output parameter C<0>
 
-User function C<my_actionp> decided to return a value of type I<long>.
+The function call is is C<my_actionp(userDatavp, marpaESLIFValuep, 0 /* arg0i */, 2 /* argni */, 0 /* resulti */, 0 /* nullableb */)>. What is this C<nullableb> flag then !? Well, it means what it means: sometimes a rule is nullable, for example the empty rule:
 
-=item 3 - Call the free resolver for C<"my_free_action"> the later returns function pointer C<my_free_actionp>
+  nullableRule ::= ;
+
+or a sequence rule:
+
+  nullableRule ::= item*
+
+Then, and only in these cases, the C<nullableb> flag is a true value, C<arg0i> and C<argni> will be both C<-1>.
+
+Ok, so finally C<my_actionp> is called, and it decided to return a value of type I<long> and context C<20>.
+
+=item 3 - Call the free resolver for C<"my_free_action">
+
+The function call is equivalent to: C<freeActionResolverp(userDatavp, marpaESLIFValuep, "my_free_action")>, suppose that it returned a function pointer to C<my_free_actionp>, a function that exist in user-space.
 
 =item 4 - Call C<my_free_actionp> with input C<0> and context C<17>
 
