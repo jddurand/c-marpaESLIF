@@ -105,7 +105,7 @@ Internally this correspond to this set of options in PCRE2:
 
 =item Lexemes
 
-Lexemes are meta-symbols that does appear as the LHS symbol anywhere within the current grammar. Therefore they behave like terminals, except that their definition is not in the grammar. By default such meta-symbol is looked up in the grammar at the next level. For example:
+Lexemes are meta-symbols that does appear as the LHS symbol anywhere within the current grammar. Therefore they behave like terminals, except that their definition is not in the current grammar. By default such meta-symbol is looked up at the next level. For example:
 
   rule      ::= something
   something   ~ [\d]
@@ -115,6 +115,47 @@ say that symbol C<something> at grammar level C<0> is a reference to C<something
 =item Discard
 
 Everytime expected terminals cannot be match, marpaESLIF will try to match the special rule C<:discard>.
+
+=item Grammar meta settings
+
+=over
+
+=item Setting the start rule
+
+By default, the first symbol of a grammar of level C<n> is its start symbol. This can be set once with e.g.:
+
+  :start ::= symbolname
+
+=item Setting a description
+
+By default, a grammar of level C<n> has the description C<Grammar level n>. This can be set once with e.g.:
+
+  :desc ::= 'A single-quoted string'
+
+=item Setting default actions
+
+By default, symbol action is C<::shift> and rule action is C<::concat>, i.e. the parse tree value of a grammar is a concatenation of every matched input, without the eventual discard. Stack manipulation may require the trigger of a I<free> function, and this has no default. Only expected terminals or lexemes are looked up, this is the Longest Acceptable Token Match (LATM) setting. These can be set once, for example like this:
+
+  :default ::= action        => defaultRuleAction
+               latm          => 1
+               symbol-action => defaultSymbolAction
+               free-action   => defaultFreeAction
+
+=item Setting discard
+
+The C<:discard> symbol, despite belonging to a given grammar, is not accessible directly, and can only be set as a meta setting. An event can be associated upon discard completion, there can be multiple C<:discard> statements:
+
+  :discard ::= symbolname1 action => discard_symbolname1$
+  :discard ::= symbolname2 action => discard_symbolname2$
+
+=item Setting lexeme events
+
+Meta symbols that are lexemes can have pause events, C<before> mean that the scanning recognized them, C<after> mean they have been consumed, e.g.:
+
+  :lexeme ::= symbolname1 pause => before event => ^symbolname1
+  :lexeme ::= symbolname2 pause => after  event =>  symbolname2$
+
+=back
 
 =item Events
 
