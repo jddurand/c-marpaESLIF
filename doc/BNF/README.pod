@@ -217,16 +217,15 @@ Ambiguities in the grammar itself may be solve by adding the C<;> character at t
 
 There are two types of alternatives: the standard C<|> meaning this is an I<or>, or the I<loosen> character C<||> meaning that this is an alternative starting a I<prioritized> group of alternatives, for example the calculator grammar is:
 
-  Expression ::=
-                  /[\d]+/
-               | '(' Expression ')'              assoc => group
-               ||    Expression '**' Expression  assoc => right
-               ||    Expression  '*' Expression
-               |     Expression  '/' Expression
-               ||    Expression  '+' Expression
-               |     Expression  '-' Expression
+  Expression  ::=  /[\d]+/
+                | '(' Expression ')'              assoc => group
+                ||    Expression '**' Expression  assoc => right
+                ||    Expression  '*' Expression
+                |     Expression  '/' Expression
+                ||    Expression  '+' Expression
+                |     Expression  '-' Expression
 
-which is stricyl equivalent, in traditional BNF syntax to:
+which is strictly equivalent, in traditional BNF syntax to:
 
   Expression  ::= Expression0
   Expression0 ::= Expression1
@@ -241,7 +240,7 @@ which is stricyl equivalent, in traditional BNF syntax to:
   Expression0 ::=  Expression0  '+' Expression1
   Expression0 ::=  Expression0  '-' Expression1
 
-Therefore the I<loosen> operator C<||> is a I<convenience> operator, it is always possible to write an equivalent grammar without it, though this can become quite tedious.
+As you can see statements has been grouped at every occurence of C<||> operator. Therefore the I<loosen> operator C<||> is a I<convenience> operator, it is always possible to write an equivalent grammar without it, though this can become quite tedious.
 
 =item Adverbs
 
