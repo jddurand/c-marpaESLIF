@@ -5684,7 +5684,8 @@ void marpaESLIFRecognizer_eventb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, 
 
   eventArray.type    = type;
   eventArray.symbols = (symbolp != NULL) ? symbolp->descp->asciis : NULL;
-  eventArray.events  = events;
+  /* Support of ":symbol" is coded here */
+  eventArray.events  = ((events != NULL) && (strcmp(events, ":symbol") == 0)) ? eventArray.symbols : events;
 
   /* Extend of create the array */
   /* marpaESLIFRecognizerp->eventArrayl is always in the range [0..marpaESLIFRecognizerp->eventArraySizel] */
