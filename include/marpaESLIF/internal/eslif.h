@@ -101,10 +101,10 @@
 #define G1_RULE_RHS                              "G1_rule_rhs"
 #define G1_RULE_RHS_PRIMARY_1                    "G1_rule_rhs_primary_1"
 #define G1_RULE_RHS_PRIMARY_2                    "G1_rule_rhs_primary_2"
-#define G1_RULE_RHS_PRIMARY_3                    "G1_rule_rhs_primary_3"
 #define G1_RULE_SINGLE_SYMBOL_1                  "G1_rule_single_symbol_1"
 #define G1_RULE_SINGLE_SYMBOL_2                  "G1_rule_single_symbol_2"
 #define G1_RULE_SINGLE_SYMBOL_3                  "G1_rule_single_symbol_3"
+#define G1_RULE_SINGLE_SYMBOL_4                  "G1_rule_single_symbol_4"
 #define G1_RULE_SYMBOL                           "G1_rule_symbol"
 #define G1_RULE_SYMBOL_NAME_1                    "G1_rule_symbol_name_1"
 #define G1_RULE_SYMBOL_NAME_2                    "G1_rule_symbol_name_2"
@@ -225,10 +225,10 @@
 #define G1_ACTION_RHS                              "G1_action_rhs"                              /* done */
 #define G1_ACTION_RHS_PRIMARY_1                    "G1_action_rhs_primary_1"                    /* done */
 #define G1_ACTION_RHS_PRIMARY_2                    "G1_action_rhs_primary_2"                    /* done */
-#define G1_ACTION_RHS_PRIMARY_3                    "G1_action_rhs_primary_3"                    /* done */
 #define G1_ACTION_SINGLE_SYMBOL_1                  "G1_action_single_symbol_1"                  /* done */
 #define G1_ACTION_SINGLE_SYMBOL_2                  "G1_action_single_symbol_2"                  /* done */
 #define G1_ACTION_SINGLE_SYMBOL_3                  "G1_action_single_symbol_3"                  /* done */
+#define G1_ACTION_SINGLE_SYMBOL_4                  "G1_action_single_symbol_4"                  /* done */
 #define G1_ACTION_SYMBOL                           "::shift"
 #define G1_ACTION_SYMBOL_NAME_1                    "::ascii" /* <symbol name> ::= <bare name> */
 #define G1_ACTION_SYMBOL_NAME_2                    "G1_action_symbol_name_2" /* <symbol name> ::= <bracketed name> */ /* done */

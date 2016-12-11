@@ -89,10 +89,11 @@ struct marpaESLIF_bootstrap_utf_string {
 };
 
 enum marpaESLIF_bootstrap_single_symbol_type {
-  MARPAESLIF_SINGLE_SYMBOL_TYPE_NA = 0,
-  MARPAESLIF_SINGLE_SYMBOL_TYPE_SYMBOL,
-  MARPAESLIF_SINGLE_SYMBOL_TYPE_CHARACTER_CLASS,
-  MARPAESLIF_SINGLE_SYMBOL_TYPE_REGULAR_EXPRESSION
+  MARPAESLIF_BOOTSTRAP_SINGLE_SYMBOL_TYPE_NA = 0,
+  MARPAESLIF_BOOTSTRAP_SINGLE_SYMBOL_TYPE_SYMBOL,
+  MARPAESLIF_BOOTSTRAP_SINGLE_SYMBOL_TYPE_CHARACTER_CLASS,
+  MARPAESLIF_BOOTSTRAP_SINGLE_SYMBOL_TYPE_REGULAR_EXPRESSION,
+  MARPAESLIF_BOOTSTRAP_SINGLE_SYMBOL_TYPE_QUOTED_STRING
 };
 
 struct marpaESLIF_bootstrap_single_symbol {
@@ -101,6 +102,7 @@ struct marpaESLIF_bootstrap_single_symbol {
     char *symbols;
     marpaESLIF_bootstrap_utf_string_t *characterClassp;
     marpaESLIF_bootstrap_utf_string_t *regularExpressionp;
+    marpaESLIF_bootstrap_utf_string_t *quotedStringp;
   } u;
 };
 
@@ -128,7 +130,6 @@ struct marpaESLIF_bootstrap_adverb_list_item {
 enum marpaESLIF_bootstrap_rhs_primary_type {
   MARPAESLIF_BOOTSTRAP_RHS_PRIMARY_TYPE_NA = 0,
   MARPAESLIF_BOOTSTRAP_RHS_PRIMARY_TYPE_SINGLE_SYMBOL,
-  MARPAESLIF_BOOTSTRAP_RHS_PRIMARY_TYPE_QUOTED_STRING,
   MARPAESLIF_BOOTSTRAP_RHS_PRIMARY_TYPE_SYMBOL_NAME_AND_REFERENCE
 };
 
@@ -161,7 +162,6 @@ struct marpaESLIF_bootstrap_rhs_primary {
   marpaESLIF_bootstrap_rhs_primary_type_t type;
   union {
     marpaESLIF_bootstrap_single_symbol_t             *singleSymbolp;
-    marpaESLIF_bootstrap_utf_string_t                *quotedStringp;
     marpaESLIF_bootstrap_symbol_name_and_reference_t *symbolNameAndReferencep;
   } u;
 };
