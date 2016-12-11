@@ -261,6 +261,21 @@ The following is copied almost verbatim from the L<Marpa::R2 section on preceden
 
 In prioritized statements, every alternative has a I<unary> number, that is the number of times the LHS appear. Anything else is considered as an I<operand>. When unary is C<0>, precedence and associativy are meaningless and ignored. When unary is C<1>, precedence have affect, but not left nor right associativity. Else, in left associativity only the leftmost operand associates and operands after the first will have the next-tighest priority level, in right associativity only the rightmost operand associates and all operands except the last will have the next-tightest priority level. In group associativity, all operands associates at the lowest priority.
 
+=item Autoranking
+
+Rules can be autoranked, the higest of a set of alternative having the highest rank, default is off:
+
+  autorank is on by default
+  autorank is off by default
+
+=item Inaccessible statements
+
+Inaccessible statements can generate warnings, can be ignored, or be error on demand, default is to ignore them:
+
+  inaccessible is warn by default
+  inaccessible is ok by default
+  inaccessible is fatal by default
+
 =item Adverbs
 
 Any rule can be followed by zero or more of these adverbs, if an adverb appears more than once, the latest is the winner:
@@ -310,9 +325,11 @@ Sequence rules can be I<proper>, i.e. without trailing separator:
 
 =item Rank specification
 
-During valuation, rules can have a rank to get prioritized. Rank is a signed integer:
+During valuation, rules can have a rank to get prioritized. Rank is a signed integer and default to C<0>:
 
   rank => -2
+
+Any other value but C<0> is not allowed if autoranking is set to a true value.
 
 =item Null-ranking specification
 
