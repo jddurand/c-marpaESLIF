@@ -31,7 +31,7 @@ The grammar can contain multiple levels, the level syntax being:
     ~         # Alias for level 1
   :[\d]+:=    # General form
 
-The level 0 must exist.
+The level 0 must exist. We will use only C<::=> and/or C<~> in the rest of this document for conveniene, though we are adressing any possible level.
 
 =item Terminals
 
@@ -188,6 +188,28 @@ For example:
 =back
 
 =back
+
+=head2 Statements
+
+A statement have a symbol name on the left-hand side (LHS) and zero or more symbol names, or terminals, on the right-hand side (RHS):
+
+  LHS ::= RHS1 RHS2 etc...
+
+The I<exception statement> is also an exception from syntax point of view, its semantic is:
+
+  LHS ::= RHS1 - RHS2
+
+And empty rule have no RHS:
+
+  EMPTYRULE ::=
+
+Ambiguities in the grammar itself may be solve by adding the C<;> character at the end of a rule, or by enclosing zero or more statements within C<{> and C<}> characters:
+
+  EMPTYRULE ::= ;
+  {
+    LHS1 ::= RHS1
+    LHS2 ::= RHS2 - RHS3
+  }
 
 =head1 BNF
 
