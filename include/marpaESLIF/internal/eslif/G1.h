@@ -1003,16 +1003,16 @@ bootstrap_grammar_rule_t bootstrap_grammar_G1_rules[] = {
     lhsi                                      descs                                           type                          nrhsl  { rhsi }                                       }  minimumi           separatori  properb
   */
   { G1_META_RHS_PRIMARY,                      G1_RULE_RHS_PRIMARY_1,                          MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_SINGLE_SYMBOL                        }, -1,                        -1, -1 , G1_ACTION_RHS_PRIMARY_1 },
-  { G1_META_RHS_PRIMARY,                      G1_RULE_RHS_PRIMARY_2,                          MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_QUOTED_STRING                        }, -1,                        -1, -1 , G1_ACTION_RHS_PRIMARY_2 },
-  { G1_META_RHS_PRIMARY,                      G1_RULE_RHS_PRIMARY_3,                          MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_META_SYMBOL_NAME,
+  { G1_META_RHS_PRIMARY,                      G1_RULE_RHS_PRIMARY_2,                          MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_META_SYMBOL_NAME,
                                                                                                                                      G1_TERMINAL_AT_SIGN,
-                                                                                                                                     G1_META_GRAMMAR_REFERENCE                    }, -1,                        -1, -1 , G1_ACTION_RHS_PRIMARY_3 },
+                                                                                                                                     G1_META_GRAMMAR_REFERENCE                    }, -1,                        -1, -1 , G1_ACTION_RHS_PRIMARY_2 },
   /*
     lhsi                                      descs                                           type                          nrhsl  { rhsi }                                       }  minimumi           separatori  properb
   */
   { G1_META_SINGLE_SYMBOL,                    G1_RULE_SINGLE_SYMBOL_1,                        MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_SYMBOL                               }, -1,                        -1, -1 , G1_ACTION_SINGLE_SYMBOL_1 },
   { G1_META_SINGLE_SYMBOL,                    G1_RULE_SINGLE_SYMBOL_2,                        MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_CHARACTER_CLASS                      }, -1,                        -1, -1 , G1_ACTION_SINGLE_SYMBOL_2 },
   { G1_META_SINGLE_SYMBOL,                    G1_RULE_SINGLE_SYMBOL_3,                        MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_REGULAR_EXPRESSION                   }, -1,                        -1, -1 , G1_ACTION_SINGLE_SYMBOL_3 },
+  { G1_META_SINGLE_SYMBOL,                    G1_RULE_SINGLE_SYMBOL_4,                        MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_QUOTED_STRING                        }, -1,                        -1, -1 , G1_ACTION_SINGLE_SYMBOL_4 },
   { G1_META_SYMBOL,                           G1_RULE_SYMBOL,                                 MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_SYMBOL_NAME                          }, -1,                        -1, -1 , G1_ACTION_SYMBOL },
   /*
     lhsi                                      descs                                           type                          nrhsl  { rhsi }                                       }  minimumi           separatori  properb
