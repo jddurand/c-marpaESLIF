@@ -49,57 +49,46 @@ They are always enclosed with slashes C<//>, and the content must be valid as pe
 The PCRE2 syntax is supported in its entirety, this include any PCRE2 add-on. Character classes and regular expression share the same set of modifiers, executed in order of appearance, that are:
 
   ----------------------------------------------------------------
+  Modifiers   Explanation
+  ----------------------------------------------------------------
+  e           Unset back-references in the pattern will match to empty strings
+  i           Case-insensitive
+  j           \u, \U and \x and unset back-references will act as JavaScript standard
+  m           Multi-line regex
+  n           Enable Unicode properties and extend meaning of meta-characters
+  s           A dot meta-character in the pattern matches all characters, including newlines
+  x           Enable comments. This has some limitation due marpaESLIF semantics
+  D           A dollar meta-character matches only at the end of the subject string
+  J           Allow duplicate names for sub-patterns
+  U           Inverts the "greediness" of the quantifiers
+  a           Meta-characters will be limited to their ASCII equivalent
+  u           Forces support of large codepoints
+  b           Could mean "forced binary" mode
+  c           Could mean "forced unicode character" mode
+  A           Remove the systematic anchoring
+  ----------------------------------------------------------------
+
+Internally this correspond to this set of option in PCRE2:
+
+  ----------------------------------------------------------------
   Modifiers         PCRE2 flag unset   PCR2 flag set
-  Explanation
   ----------------------------------------------------------------
   e                                    PCRE2_MATCH_UNSET_BACKREF
-  Unset back-references in the pattern will match to empty strings
-  ----------------------------------------------------------------
   i                                    PCRE2_CASELESS
-  Case-insensitive.
-  ----------------------------------------------------------------
   j                                    PCRE2_ALT_BSUX|PCRE2_MATCH_UNSET_BACKREF
-  \u, \U and \x and unset back-references will act as JavaScript standard
-  ----------------------------------------------------------------
   m                                    PCRE2_MULTILINE
-  Multi-line regex.
-  ----------------------------------------------------------------
   n                                    PCRE2_UCP
-  Enable Unicode properties and extend meaning of meta-characters
-  ----------------------------------------------------------------
   s                                    PCRE2_DOTALL
-  A dot meta-character in the pattern matches all characters, including newlines
-  ----------------------------------------------------------------
   x                                    PCRE2_EXTENDED
-  Enable comments. This has some limitation due marpaESLIF semantics
-  ----------------------------------------------------------------
   D                                    PCRE2_DOLLAR_ENDONLY
-  A dollar meta-character matches only at the end of the subject string
-  ----------------------------------------------------------------
   J                                    PCRE2_DUPNAMES
-  Allow duplicate names for sub-patterns
-  ----------------------------------------------------------------
   U                                    PCRE2_UNGREEDY
-  This modifier inverts the "greediness" of the quantifiers so that they are
-  not greedy by default, but become greedy if followed by ?
-  ----------------------------------------------------------------
   a                 PCRE2_UTF
-  Only byte matching will work
-  ----------------------------------------------------------------
   N                 PCRE2_UCP
-  Meta-characters will be limited to their ASCII equivalent
-  ----------------------------------------------------------------
   u                                    PCRE2_UTF
-  Forces support of large codepoints
-  ----------------------------------------------------------------
   b                 PCRE2_UTF          PCRE2_NEVER_UTF
-  Could mean "forced binary" mode
-  ----------------------------------------------------------------
   c                 PCRE2_NEVER_UTF    PCRE2_UTF
-  Could mean "forced unicode character" mode
-  ----------------------------------------------------------------
   A                 PCRE2_ANCHORED
-  Remove the systematic anchoring
   ----------------------------------------------------------------
 
 =back
