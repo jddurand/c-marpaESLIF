@@ -14,16 +14,18 @@ The marpaESLIF BNF is composed of unicode characters, in any encoding supported 
 
 =over
 
-=item * Symbol names consist of <bare names>, or can be enclosed in angle brackets if whitespace if desired.
+=item Symbol names
 
-They are case sensitive, and can be composed only of ASCII characters. There is no attempt to discard any leading, trailing, or repeated whitespace in angle brackets version, i.e. all the followings are different symbol names:
+They consist of <bare names>, or can be enclosed in angle brackets if whitespace if desired. They are case sensitive, and can be composed only of ASCII characters. There is no attempt to discard any leading, trailing, or repeated whitespace in angle brackets version, i.e. all the followings are different symbol names:
 
   this
   <this >
   < this
     >
 
-=item there are three types of explicit terminals
+=item Terminals
+
+There are three types of explicit terminals.
 
 =over
 
