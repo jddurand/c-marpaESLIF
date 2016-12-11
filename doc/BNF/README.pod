@@ -136,7 +136,7 @@ By default, a grammar of level C<n> has the description C<Grammar level n>. This
 
 =item Defaults
 
-By default, symbol action is C<::shift> and rule action is C<::concat>, i.e. the parse tree value of a grammar is a concatenation of every matched input, without the eventual discard. Stack manipulation may require the trigger of a I<free> function, and this has no default. Only expected terminals or lexemes are looked up, this is the Longest Acceptable Token Match (LATM) setting. These can be set once, for example like this:
+By default, symbol action is C<::shift> and rule action is C<::concat>, i.e. the parse tree value of a grammar is a concatenation of every matched input, without the eventual discard. Stack manipulation may require the trigger of a I<free> function, and this has no default. Only expected terminals or lexemes are looked up, this is the Longest Acceptable Token Match (LATM) setting, defaulting to a true value. You should not change that. Defaults can be set once, for example like this:
 
   :default ::= action        => defaultRuleAction
                latm          => 1
@@ -154,11 +154,11 @@ The C<:discard> symbol, despite belonging to a given grammar, is not accessible 
 
 =over
 
-=item Event names
+=item * Event names
 
 They are composed of a restricted set of the ASCII graph characters. The name ':symbol' is restricted and is transformed to the symbol name for which the event is triggered.
 
-=item Event initializers
+=item * Event initializers
 
 By default, events are on, this is equivalent to appending C<=on> after the event name. The C<=off> characters are putting event off at startup.
 
@@ -173,21 +173,19 @@ Lexemes are different than non-lexeme symbols because they are treated in the gr
 Meta symbols that are lexemes can have pause events, C<before> mean that the scanning recognized them, C<after> mean they have been consumed, e.g.:
 
   :lexeme ::= symbolname1 pause => before event => ^symbolname1
-  :lexeme ::= symbolname2 pause => after  event =>  symbolname2$
+  :lexeme ::= symbolname2 pause => after  event =>  symbolname2$2
 
 =item Non-lexeme events
 
-=item Event type and target
-
 Completion, predicted or nulled events are supported, targetting a symbol name.
-
-=back
 
 For example:
 
   event a     = completed symbolname1
   event b=off = completed symbolname2
   event c=on  = completed symbolname3
+
+=back
 
 =back
 
