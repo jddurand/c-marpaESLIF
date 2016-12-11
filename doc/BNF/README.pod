@@ -187,6 +187,21 @@ For example:
 
 =back
 
+=item Autoranking
+
+Rules can be autoranked, the higest of a set of alternative having the highest rank, default is off:
+
+  autorank is on by default
+  autorank is off by default
+
+=item Inaccessible statements
+
+Inaccessible statements can generate warnings, can be ignored, or be error on demand, default is to ignore them:
+
+  inaccessible is warn by default
+  inaccessible is ok by default
+  inaccessible is fatal by default
+
 =back
 
 =head2 Statements
@@ -260,21 +275,6 @@ As you can see statements has been grouped at every occurence of C<||> operator.
 The following is copied almost verbatim from the L<Marpa::R2 section on precedence|https://metacpan.org/pod/distribution/Marpa-R2/pod/Scanless/DSL.pod#Precedence>:
 
 In prioritized statements, every alternative has a I<unary> number, that is the number of times the LHS appear. Anything else is considered as an I<operand>. When unary is C<0>, precedence and associativy are meaningless and ignored. When unary is C<1>, precedence have affect, but not left nor right associativity. Else, in left associativity only the leftmost operand associates and operands after the first will have the next-tighest priority level, in right associativity only the rightmost operand associates and all operands except the last will have the next-tightest priority level. In group associativity, all operands associates at the lowest priority.
-
-=item Autoranking
-
-Rules can be autoranked, the higest of a set of alternative having the highest rank, default is off:
-
-  autorank is on by default
-  autorank is off by default
-
-=item Inaccessible statements
-
-Inaccessible statements can generate warnings, can be ignored, or be error on demand, default is to ignore them:
-
-  inaccessible is warn by default
-  inaccessible is ok by default
-  inaccessible is fatal by default
 
 =item Adverbs
 
