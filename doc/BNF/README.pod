@@ -181,9 +181,9 @@ Completion, predicted or nulled events are supported, targetting a symbol name.
 
 For example:
 
-  event a     = completed symbolname1
-  event b=off = completed symbolname2
-  event c=on  = completed symbolname3
+  event a     = completed  symbolname1$
+  event b=off = nulled     symbolname2[]
+  event c=on  = predicted ^symbolname3
 
 =back
 
