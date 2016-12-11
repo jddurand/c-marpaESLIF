@@ -23,6 +23,16 @@ They consist of <bare names>, or can be enclosed in angle brackets if whitespace
   < this
     >
 
+=item Levels
+
+The grammar can contain multiple levels, the level syntax being:
+
+  ::=         # Alias for level 0
+    ~         # Alias for level 1
+  :[\d]+:=    # General form
+
+The level 0 must exist.
+
 =item Terminals
 
 There are three types of explicit terminals.
@@ -92,6 +102,43 @@ Internally this correspond to this set of options in PCRE2:
   c                 PCRE2_NEVER_UTF    PCRE2_UTF
   A                 PCRE2_ANCHORED
   ----------------------------------------------------------------
+
+=item Lexemes
+
+Lexemes are meta-symbols that does appear as the LHS symbol anywhere within the current grammar. Therefore they behave like terminals, except that their definition is not in the grammar. By default such meta-symbol is looked up in the grammar at the next level. For example:
+
+  rule      ::= something
+  something   ~ [\d]
+
+say that symbol C<something> at grammar level C<0> is a reference to C<something> at grammar level C<1>.
+
+=item Discard
+
+Everytime expected terminals cannot be match, marpaESLIF will try to match the special rule C<:discard>.
+
+=item Events
+
+=over
+
+=item Event names
+
+They are composed of a restricted set of the ASCII graph characters. The name ':symbol' is restricted and is transformed to the symbol name for which the event is triggered.
+
+=item Event initializers
+
+By default, events are on, this is equivalent to appending C<=on> after the event name. The C<=off> characters are putting event off at startup.
+
+=item Event type and target
+
+Completion, predicted or nulled events are supported, targetting a symbol name.
+
+=back
+
+For example:
+
+  event a     = completed symbolname1
+  event b=off = completed symbolname2
+  event c=on  = completed symbolname3
 
 =back
 
