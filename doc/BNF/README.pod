@@ -211,6 +211,50 @@ Ambiguities in the grammar itself may be solve by adding the C<;> character at t
     LHS2 ::= RHS2 - RHS3
   }
 
+=over
+
+=item Alternatives
+
+There are two types of alternatives: the standard C<|> meaning this is an I<or>, or the I<loosen> character C<||> meaning that this is an alternative starting a I<prioritized> group of alternatives, for example the calculator grammar is:
+
+  Expression ::=
+      /[\d]+/
+      | '(' Expression ')'              assoc => group
+     ||     Expression '**' Expression  assoc => right
+     ||     Expression  '*' Expression
+      |     Expression  '/' Expression
+     ||     Expression  '+' Expression
+      |     Expression  '-' Expression
+
+which is stricyl equivalent, in traditional BNF syntax to:
+
+  Expression  ::= Expression0
+  Expression0 ::= Expression1
+  Expression1 ::= Expression2
+  Expression2 ::= Expression3
+
+  Expression3 ::= /[\d]+/
+                | '(' Expression0 ')'
+  Expression2 ::=  Expression3 '**' Expression2
+  Expression1 ::=  Expression1  '*' Expression2
+                |  Expression1  '/' Expression2
+  Expression0 ::=  Expression0  '+' Expression1
+  Expression0 ::=  Expression0  '-' Expression1
+
+Therefore the I<loosen> operator C<||> is a I<convenience> operator, it is always possible to write an equivalent grammar without it, though this can become quite tedious.
+
+=item Adverbs
+
+Any rule can be followed by zero or more of these adverbs, if an adverb appears more than once, the latest is the winner:
+
+=over
+
+=item
+
+=back
+
+=back
+
 =head1 BNF
 
 marpaESLIF BNF can be expressed in itself:
