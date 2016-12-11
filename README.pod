@@ -417,13 +417,13 @@ Multi-line regex.
 
 Set the C<PCRE2_UCP> flag.
 
-Enable Unicode properties for several meta-characters?
+Enable Unicode properties and extend meaning of meta-characters.
 
 =item s
 
 Set the C<PCRE2_DOTALL> flag.
 
-If this modifier is set, a dot meta-character in the pattern matches all characters, including newlines. 
+If this modifier is set, a dot meta-character in the pattern matches all characters, including newlines.
 
 =item x
 
