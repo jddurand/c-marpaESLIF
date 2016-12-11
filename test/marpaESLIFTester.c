@@ -21,7 +21,7 @@ typedef struct marpaESLIFTester_context {
 
 const static char *exceptions = "\n"
   ":start ::= start\n"
-  ":discard ::= whitespace event => discard_whitespace\n"
+  ":discard ::= whitespace event => :symbol\n"
   ":discard ::= arobace event => discard_arobace\n"
   "event ^start = predicted start\n"
   "event start[] = nulled start\n"
