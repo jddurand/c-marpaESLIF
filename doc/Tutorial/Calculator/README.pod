@@ -633,8 +633,8 @@ Well, you can check:
   echo "5 / 2 * 3" | /path/to/your/calculator
   5 / 2 * 3 = 7.500000
   
-  echo "5 / (2 * 3)" | /path/to/your/calculator
-  5 / (2 * 3) = 0.833333
+  echo "(5 ** 2) ** 3" | /path/to/your/calculator
+  (5 ** 2) ** 3 = 15625.000000
   
   echo "5 * (2 * 3)" | /path/to/your/calculator
   5 * (2 * 3) = 30
