@@ -218,13 +218,13 @@ Ambiguities in the grammar itself may be solve by adding the C<;> character at t
 There are two types of alternatives: the standard C<|> meaning this is an I<or>, or the I<loosen> character C<||> meaning that this is an alternative starting a I<prioritized> group of alternatives, for example the calculator grammar is:
 
   Expression ::=
-      /[\d]+/
-      | '(' Expression ')'              assoc => group
-     ||     Expression '**' Expression  assoc => right
-     ||     Expression  '*' Expression
-      |     Expression  '/' Expression
-     ||     Expression  '+' Expression
-      |     Expression  '-' Expression
+                  /[\d]+/
+               | '(' Expression ')'              assoc => group
+               ||    Expression '**' Expression  assoc => right
+               ||    Expression  '*' Expression
+               |     Expression  '/' Expression
+               ||    Expression  '+' Expression
+               |     Expression  '-' Expression
 
 which is stricyl equivalent, in traditional BNF syntax to:
 
