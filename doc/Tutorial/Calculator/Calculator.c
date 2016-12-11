@@ -77,7 +77,6 @@ int main() {
   }
 
   /* Dump grammar */
-  /*
   if (marpaESLIFGrammar_ngrammarib(marpaESLIFGrammarp, &ngrammari)) {
     for (leveli = 0; leveli < ngrammari; leveli++) {
       if (marpaESLIFGrammar_grammarshowform_by_levelb(marpaESLIFGrammarp, &grammarshows, leveli, NULL)) {
@@ -87,7 +86,7 @@ int main() {
       }
     }
   }
-  */
+  exit(0);
 
   marpaESLIFRecognizerOption.userDatavp                = &reader_context;
   marpaESLIFRecognizerOption.marpaESLIFReaderCallbackp = inputReaderb;
