@@ -2,7 +2,7 @@
 
 =head1 NAME
 
-marpaESLIF_CALCULATOR - Extended Marpa's Scanless Interface Calculator
+marpaESLIF_CALCULATOR - Extended Marpa's Scanless Interface Calculator Tutorial
 
 =head1 DESCRIPTION
 
