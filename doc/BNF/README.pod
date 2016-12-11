@@ -195,15 +195,30 @@ A statement have a symbol name on the left-hand side (LHS) and zero or more symb
 
   LHS ::= RHS1 RHS2 etc...
 
-The I<exception statement> is also an exception from syntax point of view, its semantic is:
+There are two exceptions:
+
+=over
+
+=item The I<exception statement>
+
+Its semantic is a single symbol name following by another single symbol name, with C<-> in the middle:
 
   LHS ::= RHS1 - RHS2
 
-And empty rule have no RHS:
+=item The I<sequence statement>
+
+This is a single symbol name following by the C<*> or the C<+> character:
+
+  LHS1 ::= RHS1*
+  LHS2 ::= RHS2+
+
+=back
+
+Empty rule have no RHS:
 
   EMPTYRULE ::=
 
-Ambiguities in the grammar itself may be solve by adding the C<;> character at the end of a rule, or by enclosing zero or more statements within C<{> and C<}> characters:
+Eventual ambiguities in the grammar itself may be solved by adding the C<;> character at the end of a rule, or by enclosing zero or more statements within C<{> and C<}> characters:
 
   EMPTYRULE ::= ;
   {
@@ -240,7 +255,11 @@ which is strictly equivalent, in traditional BNF syntax to:
   Expression0 ::=  Expression0  '+' Expression1
   Expression0 ::=  Expression0  '-' Expression1
 
-As you can see statements has been grouped at every occurence of C<||> operator. Therefore the I<loosen> operator C<||> is a I<convenience> operator, it is always possible to write an equivalent grammar without it, though this can become quite tedious.
+As you can see statements has been grouped at every occurence of C<||> operator. Therefore the I<loosen> operator C<||> is a I<convenience> operator, it is always possible to write an equivalent grammar without it, though this can become quite tedious. The C<assoc> adverb has a meaning only in the presence of prioritized alternatives, else it has no effect.
+
+The following is copied almost verbatim from the L<Marpa::R2 section on precedence|https://metacpan.org/pod/distribution/Marpa-R2/pod/Scanless/DSL.pod#Precedence>:
+
+In prioritized statements, every alternative has a I<unary> number, that is the number of times the LHS appear. Anything else is considered as an I<operand>. When unary is C<0>, precedence and associativy are meaningless and ignored. When unary is C<1>, precedence have affect, but not left nor right associativity. Else, in left associativity only the leftmost operand associates and operands after the first will have the next-tighest priority level, in right associativity only the rightmost operand associates and all operands except the last will have the next-tightest priority level. In group associativity, all operands associates at the lowest priority.
 
 =item Adverbs
 
@@ -248,7 +267,88 @@ Any rule can be followed by zero or more of these adverbs, if an adverb appears 
 
 =over
 
-=item
+=item Action
+
+During valuation, a specific action can be associated to a rule:
+
+  action => my_action
+
+=item Left association
+
+In a prioritized statement, associate with the left-most operand:
+
+  assoc => left
+
+=item Right association
+
+In a prioritized statement, associate with the right-most operand:
+
+  assoc => right
+
+=item Group association
+
+All operands associate at the lowest priority:
+
+  assoc => group
+
+=item Separator
+
+Sequence rules can have a separator, that can be a symbol name, a string, a character class or a regular expression.
+
+  separator => comma
+  separator => ','
+  separator => [,]
+  separator => /,/
+
+Modifiers are allowed after string, character class or regular expressions.
+
+=item Proper specification
+
+Sequence rules can be I<proper>, i.e. without trailing separator:
+
+  proper => 1
+
+=item Rank specification
+
+During valuation, rules can have a rank to get prioritized. Rank is a signed integer:
+
+  rank => -2
+
+=item Null-ranking specification
+
+Nulling symbols can rank high low, the default is low.
+
+  null-ranking => 'low'
+  null-ranking => 'high'
+
+=item Priority specification
+
+Lexemes can be prioritized, using a signed integer:
+
+  priority => 15
+
+=item Pause specification
+
+Scanner can be paused before a lexeme is recognized, or just after it has been completed:
+
+  pause => before
+  pause => after
+
+=item Event specification
+
+Events can be specified, with an eventual initializer, given that default initialization is C<=on>:
+
+  event => eventName
+  event => eventName=on
+  event => eventName=off
+
+=item Naming
+
+A name can be associated to the rule, in the form:
+
+  name => something
+  name => 'quoted name'  # No modifier is allowed after the string
+  name => "quoted name"  # No modifier is allowed after the string
 
 =back
 
@@ -371,11 +471,11 @@ marpaESLIF BNF can be expressed in itself:
   lhs                            ::= <symbol name>
   rhs                            ::= <rhs primary>+
   <rhs primary>                  ::= <single symbol>
-                                   | <quoted string>
                                    | <symbol name> '@' <grammar reference>
   <single symbol>                ::= symbol
                                    | <character class>
                                    | <regular expression>
+                                   | <quoted string>
   symbol                         ::= <symbol name>
   <symbol name>                  ::= <bare name>
                                    | <bracketed name>
