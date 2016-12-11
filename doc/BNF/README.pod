@@ -8,6 +8,104 @@ marpaESLIF_BNF - Domain Specific Language (DSL)
 
 marpaESLIF is a Scanless Interface expressed in a BNF format, that is using L<marpaWrapper|https://github.com/jddurand/c-marpaWrapper>, itself being a thin interface on top of L<libmarpa|https://jeffreykegler.github.io/Marpa-web-site/libmarpa.html> parser.
 
+=head2 CONVENTIONS
+
+The marpaESLIF BNF is composed of unicode characters, in any encoding supported by the underlying convertor (L<ICU|http://site.icu-project.org/> or iconv, in order of preference). Unsignificant whitespaces, Perl-like comments and C++-like comments are discarded.
+
+=over
+
+=item * Symbol names consist of <bare names>, or can be enclosed in angle brackets if whitespace if desired.
+
+They are case sensitive, and can be composed only of ASCII characters. There is no attempt to discard any leading, trailing, or repeated whitespace in angle brackets version, i.e. all the followings are different symbol names:
+
+  this
+  <this >
+  < this
+    >
+
+=item there are three types of explicit terminals
+
+=over
+
+=item * Strings
+
+They can be single or double-quoted, the content is any valid unicode character, and the C<\> character can be used to escape the quote or C<\> itself. The C<:i> modifier can be used to force case-insensitive match:
+
+  'string'
+  'string':i
+  'string\'s'
+  "string\"s\\"
+
+=item * Character classes
+
+They are always enclosed with left and right brackets C<[]>, and the content must be valid as per the <PCRE2 Perl Compatible Regular Expression|http://www.pcre.org/> library. Modifiers can start after a C<:> character. A character class class is nothing else but a lexically restricted regular expression.
+
+=item * Regular expression
+
+They are always enclosed with slashes C<//>, and the content must be valid as per the <PCRE2 Perl Compatible Regular Expression|http://www.pcre.org/> library. Modifiers can start after the slash on the right. Regular expression patterns are by default anchored.
+
+=back
+
+The PCRE2 syntax is supported in its entirety, this include any PCRE2 add-on. Character classes and regular expression share the same set of modifiers, executed in order of appearance, that are:
+
+  ----------------------------------------------------------------
+  Modifiers         PCRE2 flag unset   PCR2 flag set
+  Explanation
+  ----------------------------------------------------------------
+  e                                    PCRE2_MATCH_UNSET_BACKREF
+  Unset back-references in the pattern will match to empty strings
+  ----------------------------------------------------------------
+  i                                    PCRE2_CASELESS
+  Case-insensitive.
+  ----------------------------------------------------------------
+  j                                    PCRE2_ALT_BSUX|PCRE2_MATCH_UNSET_BACKREF
+  \u, \U and \x and unset back-references will act as JavaScript standard
+  ----------------------------------------------------------------
+  m                                    PCRE2_MULTILINE
+  Multi-line regex.
+  ----------------------------------------------------------------
+  n                                    PCRE2_UCP
+  Enable Unicode properties and extend meaning of meta-characters
+  ----------------------------------------------------------------
+  s                                    PCRE2_DOTALL
+  A dot meta-character in the pattern matches all characters, including newlines
+  ----------------------------------------------------------------
+  x                                    PCRE2_EXTENDED
+  Enable comments. This has some limitation due marpaESLIF semantics
+  ----------------------------------------------------------------
+  D                                    PCRE2_DOLLAR_ENDONLY
+  A dollar meta-character matches only at the end of the subject string
+  ----------------------------------------------------------------
+  J                                    PCRE2_DUPNAMES
+  Allow duplicate names for sub-patterns
+  ----------------------------------------------------------------
+  U                                    PCRE2_UNGREEDY
+  This modifier inverts the "greediness" of the quantifiers so that they are
+  not greedy by default, but become greedy if followed by ?
+  ----------------------------------------------------------------
+  a                 PCRE2_UTF
+  Only byte matching will work
+  ----------------------------------------------------------------
+  N                 PCRE2_UCP
+  Meta-characters will be limited to their ASCII equivalent
+  ----------------------------------------------------------------
+  u                                    PCRE2_UTF
+  Forces support of large codepoints
+  ----------------------------------------------------------------
+  b                 PCRE2_UTF          PCRE2_NEVER_UTF
+  Could mean "forced binary" mode
+  ----------------------------------------------------------------
+  c                 PCRE2_NEVER_UTF    PCRE2_UTF
+  Could mean "forced unicode character" mode
+  ----------------------------------------------------------------
+  A                 PCRE2_ANCHORED
+  Remove the systematic anchoring
+  ----------------------------------------------------------------
+
+=back
+
+=head1 BNF
+
 marpaESLIF BNF can be expressed in itself:
 
   /*
@@ -204,4 +302,4 @@ marpaESLIF BNF can be expressed in itself:
 
 =head1 SEE ALSO
 
-L<marpaESLIF|https://github.com/jddurand/c-marpaESLIF>
+L<marpaESLIF|https://github.com/jddurand/c-marpaESLIF>, L<ICU|http://site.icu-project.org/>
