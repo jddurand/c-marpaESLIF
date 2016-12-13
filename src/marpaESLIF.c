@@ -60,7 +60,7 @@ static const char *MARPAESLIF_STACK_TYPE_ARRAY_STRING         = "ARRAY";
 static const char *MARPAESLIF_STACK_TYPE_ARRAY_SHALLOW_STRING = "ARRAY_SHALLOW";
 static const char *MARPAESLIF_STACK_TYPE_UNKNOWN_STRING       = "UNKNOWN";
 
-static const size_t copyl = strlen("::copy");
+static const size_t copyl = 6; /* strlen("::copy"); */
 
 const marpaESLIF_uint32_t pcre2_option_binary_default  = PCRE2_NOTEMPTY;
 const marpaESLIF_uint32_t pcre2_option_char_default    = PCRE2_NOTEMPTY|PCRE2_NO_UTF_CHECK;
@@ -10755,17 +10755,6 @@ static short _marpaESLIF_rule_action___shiftb(void *userDatavp, marpaESLIFValue_
   static const char      *funcs                 = "_marpaESLIF_rule_action___shiftb";
   marpaESLIFRecognizer_t *marpaESLIFRecognizerp = marpaESLIFValuep->marpaESLIFRecognizerp;
   short                   rcb;
-  short                   flagb;
-  char                    c;
-  short                   b;
-  int                     i;
-  long                    l;
-  float                   f;
-  double                  d;
-  void                   *p;
-  short                   shallowb;
-  size_t                  sizel;
-  int                     contexti;
 
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
