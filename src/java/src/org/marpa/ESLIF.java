@@ -10,30 +10,45 @@ import java.nio.ByteBuffer;
  *
  */
 public class ESLIF {
-	private ByteBuffer  _marpaESLIFp;
-	private ESLIFOption _eSLIFOption;
+	private ESLIFOption _ESLIFOption= null;
+	private ByteBuffer  _marpaESLIFp = null;
 
-	private native      ByteBuffer marpaESLIF_newp(ESLIFOption eSLIFOption);
-	private native void marpaESLIF_freev();
+	private native void jni_init();
+	private native void jni_release();
 	
 	static {
 	   System.loadLibrary("marpaESLIF");
 	}
-	
-	public ESLIF() {
-		init();
+
+	ESLIF() {
 	}
-	public ESLIF(ESLIFOption eSLIFOption) {
-		seteSLIFOption(eSLIFOption);
-		init();
+	
+	ESLIF(ESLIFOption ESLIFOption) {
+		set_ESLIFOption(ESLIFOption);
 	}
 
-	private void init() {
-		_eSLIFOption = geteSLIFOption();
-		ByteBuffer marpaESLIFp;
-		
-		marpaESLIFp = marpaESLIF_newp(_eSLIFOption); 
-		setMarpaESLIFp(marpaESLIFp);
+	public void init() {
+		jni_init(); 
+	}
+	
+	public void release() {
+		jni_release();
+	}
+
+	private ESLIFOption get_ESLIFOption() {
+		return _ESLIFOption;
+	}
+
+	private void set_ESLIFOption(ESLIFOption _ESLIFOption) {
+		this._ESLIFOption = _ESLIFOption;
+	}
+
+	private ByteBuffer get_marpaESLIFp() {
+		return _marpaESLIFp;
+	}
+
+	private void set_marpaESLIFp(ByteBuffer _marpaESLIFp) {
+		this._marpaESLIFp = _marpaESLIFp;
 	}
 
 }
