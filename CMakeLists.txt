@@ -16,7 +16,7 @@ SET (CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 SET (MARPAESLIF_VERSION_MAJOR 1)
 SET (MARPAESLIF_VERSION_MINOR 0)
-SET (MARPAESLIF_VERSION_PATCH 1)
+SET (MARPAESLIF_VERSION_PATCH 2)
 SET (MARPAESLIF_VERSION "${MARPAESLIF_VERSION_MAJOR}.${MARPAESLIF_VERSION_MINOR}.${MARPAESLIF_VERSION_PATCH}")
 
 SET (CMAKE_MODULE_PATH              ${PROJECT_SOURCE_DIR}/cmake)           # General module search path
@@ -158,6 +158,26 @@ ELSE ()
    MESSAGE (FATAL_ERROR "Could not detect a valid unsigned 32-bit integer type")
 ENDIF ()
 
+# -----------------------------------
+# JNI: optional
+# -----------------------------------
+FIND_PACKAGE (JNI)
+IF (NOT JNI_FOUND)
+    MESSAGE (STATUS "--------------------")
+    MESSAGE (STATUS "JNI is not detected")
+    MESSAGE (STATUS "--------------------")
+ELSE (NOT JNI_FOUND)
+    MESSAGE (STATUS "---------------")
+    MESSAGE (STATUS "JNI is detected")
+    MESSAGE (STATUS "---------------")
+    MESSAGE (STATUS " JNI_INCLUDE_DIRS: ${JNI_INCLUDE_DIRS}")
+    MESSAGE (STATUS "    JNI_LIBRARIES: ${JNI_LIBRARIES}")
+    MESSAGE (STATUS "JAVA_INCLUDE_PATH: ${JAVA_INCLUDE_PATH}")
+    FILE (GLOB lib_src_jni src/bindings/java/*.c)
+    ADD_LIBRARY (marpaESLIF_jni SHARED ${lib_src_jni})
+    SET_PROPERTY(TARGET marpaESLIF_jni PROPERTY INCLUDE_DIRECTORIES ${JNI_INCLUDE_DIRS})
+ENDIF ()
+
 # ----------------------------------------------------
 # Configuration
 # ----------------------------------------------------
@@ -166,11 +186,6 @@ SET (CONFIG_H_IN ${CMAKE_CURRENT_SOURCE_DIR}/include/config.h.in)
 CONFIGURE_FILE(${CONFIG_H_IN} ${CONFIG_H})
 ADD_CUSTOM_TARGET(marpaESLIFConfig SOURCES "${CONFIG_H}")
 
-# ------------------
-# marpaESLIF library
-# -----------------
-FILE (GLOB lib_src src/marpaESLIF.c)
-ADD_LIBRARY (marpaESLIF SHARED ${lib_src})
 INCLUDE_DIRECTORIES (
   "${INCLUDE_OUTPUT_PATH}"                             # Include path for generated files
   "${PROJECT_SOURCE_DIR}/include"                      # Include path for the other headers
@@ -180,6 +195,22 @@ INCLUDE_DIRECTORIES (
   "${TCONV_INCLUDE_DIRS}"                              # Include path for tconv (external - required)
   "${PCRE2_INCLUDE_DIRS}"                              # Include path for PCRE2 (external - required or built-in)
   )
+
+# ------------
+# Java library
+# ------------
+FIND_PACKAGE (Java)
+IF (Java_FOUND)
+  INCLUDE (UseJava)
+  FILE (GLOB lib_src_jar src/java/src/org/marpa/*.java)
+  ADD_JAR (marpaESLIF_jar ${lib_src_jar})
+ENDIF (Java_FOUND)
+
+# ------------------
+# marpaESLIF library
+# -----------------
+FILE (GLOB lib_src src/marpaESLIF.c)
+ADD_LIBRARY (marpaESLIF SHARED ${lib_src})
 TARGET_LINK_LIBRARIES (marpaESLIF ${GENERICLOGGER_LIBRARIES} ${MARPAWRAPPER_LIBRARIES} ${TCONV_LIBRARIES} ${PCRE2_LIBRARIES})
 SET_TARGET_PROPERTIES (marpaESLIF
   PROPERTIES
