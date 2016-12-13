@@ -158,26 +158,6 @@ ELSE ()
    MESSAGE (FATAL_ERROR "Could not detect a valid unsigned 32-bit integer type")
 ENDIF ()
 
-# -----------------------------------
-# JNI: optional
-# -----------------------------------
-FIND_PACKAGE (JNI)
-IF (NOT JNI_FOUND)
-    MESSAGE (STATUS "--------------------")
-    MESSAGE (STATUS "JNI is not detected")
-    MESSAGE (STATUS "--------------------")
-ELSE (NOT JNI_FOUND)
-    MESSAGE (STATUS "---------------")
-    MESSAGE (STATUS "JNI is detected")
-    MESSAGE (STATUS "---------------")
-    MESSAGE (STATUS " JNI_INCLUDE_DIRS: ${JNI_INCLUDE_DIRS}")
-    MESSAGE (STATUS "    JNI_LIBRARIES: ${JNI_LIBRARIES}")
-    MESSAGE (STATUS "JAVA_INCLUDE_PATH: ${JAVA_INCLUDE_PATH}")
-    FILE (GLOB lib_src_jni src/bindings/java/*.c)
-    ADD_LIBRARY (marpaESLIF_jni SHARED ${lib_src_jni})
-    SET_PROPERTY(TARGET marpaESLIF_jni PROPERTY INCLUDE_DIRECTORIES ${JNI_INCLUDE_DIRS})
-ENDIF ()
-
 # ----------------------------------------------------
 # Configuration
 # ----------------------------------------------------
@@ -217,6 +197,27 @@ SET_TARGET_PROPERTIES (marpaESLIF
   COMPILE_FLAGS "-DmarpaESLIF_EXPORTS"
   VERSION "${MARPAESLIF_VERSION}"
   SOVERSION "${MARPAESLIF_VERSION_MAJOR}")
+
+# -----------------------------------
+# JNI: optional
+# -----------------------------------
+FIND_PACKAGE (JNI)
+IF (NOT JNI_FOUND)
+    MESSAGE (STATUS "--------------------")
+    MESSAGE (STATUS "JNI is not detected")
+    MESSAGE (STATUS "--------------------")
+ELSE (NOT JNI_FOUND)
+    MESSAGE (STATUS "---------------")
+    MESSAGE (STATUS "JNI is detected")
+    MESSAGE (STATUS "---------------")
+    MESSAGE (STATUS " JNI_INCLUDE_DIRS: ${JNI_INCLUDE_DIRS}")
+    MESSAGE (STATUS "    JNI_LIBRARIES: ${JNI_LIBRARIES}")
+    MESSAGE (STATUS "JAVA_INCLUDE_PATH: ${JAVA_INCLUDE_PATH}")
+    FILE (GLOB lib_src_jni src/bindings/java/*.c)
+    ADD_LIBRARY (marpaESLIF_jni SHARED ${lib_src_jni})
+    SET_PROPERTY(TARGET marpaESLIF_jni PROPERTY INCLUDE_DIRECTORIES ${JNI_INCLUDE_DIRS} "${GENERICLOGGER_INCLUDE_DIRS}" "${INCLUDE_OUTPUT_PATH}" "${PROJECT_SOURCE_DIR}/include")
+    TARGET_LINK_LIBRARIES (marpaESLIF_jni ${GENERICLOGGER_LIBRARIES} marpaESLIF)
+ENDIF ()
 
 # ------------
 # Export flags
