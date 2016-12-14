@@ -87,6 +87,7 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *JavaVMp, void* reservedp)
 {
   /* It is safe to store JavaVMp in a global variable */
   g_vmp = JavaVMp;
+  fprintf(stderr, "In JNI_OnLoad, JavaVMp=%p\n", JavaVMp);
 
   return JNI_VERSION_1_1;
 }
