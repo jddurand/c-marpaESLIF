@@ -13,7 +13,7 @@ public class ESLIF {
 	private ESLIFOption _ESLIFOption= null;
 	private ByteBuffer  _marpaESLIFp = null;
 
-	private native void jni_init();
+	private native ByteBuffer jni_init();
 	private native void jni_release();
 	
 	static {
@@ -28,7 +28,7 @@ public class ESLIF {
 	}
 
 	public void init() {
-		jni_init(); 
+		set_marpaESLIFp(jni_init()); 
 	}
 	
 	public void release() {
