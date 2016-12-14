@@ -9,32 +9,26 @@
 /* ------------------------------------- */
 /* Handy defines to not mess with naming */
 /* ------------------------------------- */
-#define MARPAESLIF_JVM()              _JavaVMp
-#define MARPAESLIF_JCLASS(className)   jclass##className
-#define MARPAESLIF_JOBJECT(objectName) jobject##objectName
-#define MARPAESLIF_JMETHOD(methodName) jmethod##methodName
-#define MARPAESLIF_JSTRING(className)  jstring##className
-
-#define MARPAESLIF_FINDCLASS(envp, className, classString) do {         \
-    MARPAESLIF_JCLASS(className) = (*envp)->FindClass(envp, classString); \
-    if (MARPAESLIF_JCLASS(className) == NULL) {                         \
-      raiseException(envp, "Failed to find class " ## className " named " classString); \
+#define MARPAESLIF_FINDCLASS(envp, classp, strings) do {                \
+    classp = (*envp)->FindClass(envp, strings);                         \
+    if (classp == NULL) {                                               \
+      raiseException(envp, "Failed to find class " strings);            \
       goto err;                                                         \
     }                                                                   \
   } while (0)
 
-#define MARPAESLIF_GETMETHOD(envp, className, methodName, signature) do { \
-    MARPAESLIF_JMETHOD(methodName) = (*envp)->GetMethodID(envp, MARPAESLIF_JCLASS(className), methodName, signature); \
-    if (MARPAESLIF_JMETHOD(methodName) == NULL) {                       \
-      raiseException(envp, "Failed to find method " ## methodName " from class " ## className " with signature " signature); \
+#define MARPAESLIF_GETMETHOD(envp, methodp, classp, string, signature) do { \
+    methodp = (*envp)->GetMethodID(envp, classp, string, signature);    \
+    if (methodp == NULL) {                                              \
+      raiseException(envp, "Failed to find method " string " with signature " signature); \
       goto err;                                                         \
     }                                                                   \
   } while (0)
 
-#define MARPAESLIF_OBJ2CLASS(envp, className, object) do {         \
-    MARPAESLIF_JCLASS(className) = (*envp)->GetObjectClass(envp, object); \
-    if (MARPAESLIF_JCLASS(className) == NULL) {                         \
-      raiseException(envp, "Failed to get class " ## className " from object"); \
+#define MARPAESLIF_OBJ2CLASS(envp, classp, objectp) do {                \
+    classp = (*envp)->GetObjectClass(envp, objectp);                    \
+    if (classp == NULL) {                                               \
+      raiseException(envp, "Failed to get class from object");          \
       goto err;                                                         \
     }                                                                   \
   } while (0)
@@ -43,13 +37,13 @@
 /* Global variables */
 /* ---------------- */
 /* It is safe to store this value via JNI_OnLoad */
-static JavaVM *MARPAESLIF_JVM();
+static JavaVM *g_vmp;
 
 /* ---------------- */
 /* Exported methods */
 /* ---------------- */
 JNIEXPORT jint    JNICALL JNI_OnLoad(JavaVM *vmp, void* reservedp);
-JNIEXPORT jobject JNICALL Java_org_marpa_ESLIF_newp(JNIEnv *envp, jobject ESLIFp);
+JNIEXPORT jobject JNICALL Java_org_marpa_ESLIF_newp(JNIEnv *envp, jobject ESLIF_objectp);
 
 /* ------------------------------ */
 /* Internal types and definitions */
@@ -58,7 +52,7 @@ JNIEXPORT jobject JNICALL Java_org_marpa_ESLIF_newp(JNIEnv *envp, jobject ESLIFp
 #define ESLIF_CLASS_STRING "org/marpa/ESLIF"
 #define ESLIF_LOG_SIGNATURE "(Ljava/lang/String;)V"
 
-#define GET_ESLIFOPTION_STRING    "get_ESLIFOption";
+#define GET_ESLIFOPTION_STRING    "get_ESLIFOption"
 #define GET_ESLIFOPTION_SIGNATURE "()Lorg/marpa/ESLIFOption;"
 
 typedef struct marpaESLIF_genericLoggerContext marpaESLIF_genericLoggerContext_t;
@@ -92,30 +86,30 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *JavaVMp, void* reservedp)
 /*****************************************************************************/
 {
   /* It is safe to store JavaVMp in a global variable */
-  MARPAESLIF_JVM() = JavaVMp;
+  g_vmp = JavaVMp;
 
   return JNI_VERSION_1_1;
 }
 
 /*****************************************************************************/
-JNIEXPORT jobject JNICALL Java_org_marpa_ESLIF_jni_init(JNIEnv *envp, jobject MARPAESLIF_JOBJECT(ESLIF))
+JNIEXPORT jobject JNICALL Java_org_marpa_ESLIF_jni_init(JNIEnv *envp, jobject ESLIF_objectp)
 /*****************************************************************************/
 {
-  jclass                  MARPAESLIF_JCLASS(ESLIF)             = NULL;
-  jmethodID               MARPAESLIF_JMETHOD(get_ESLIFOption)  = NULL;
-  jobject                 MARPAESLIF_JOBJECT(ESLIFOption)      = NULL;
-  jobject                 MARPAESLIF_JOBJECT(directByteBuffer) = NULL;
+  jclass                  ESLIF_classp             = NULL;
+  jmethodID               get_ESLIFOption_methodp  = NULL;
+  jobject                 ESLIFOption_objectp      = NULL;
+  jobject                 directByteBuffer_objectp = NULL;
 
   marpaESLIF_t           *marpaESLIFp       = NULL;
   genericLogger_t        *genericLoggerp    = NULL;
   marpaESLIFOption_t      marpaESLIFOption;
 
-  MARPAESLIF_OBJ2CLASS(envp, ESLIF_CLASS_STRING, MARPAESLIF_JOBJECT(ESLIF));
-  MARPAESLIF_GETMETHOD(envp, ESLIF_CLASS_STRING, GET_ESLIFOPTION_STRING, GET_ESLIFOPTION_SIGNATURE);
-  MARPAESLIF_JOBJECT(ESLIFOption) = (*envp)->CallVoidMethod(envp, MARPAESLIF_JOBJECT(ESLIF), MARPAESLIF_JMETHOD(get_ESLIFOption));
+  MARPAESLIF_OBJ2CLASS(envp, ESLIF_classp, ESLIFOption_objectp);
+  MARPAESLIF_GETMETHOD(envp, get_ESLIFOption_methodp, ESLIF_classp, GET_ESLIFOPTION_STRING, GET_ESLIFOPTION_SIGNATURE);
+  ESLIFOption_objectp = (*envp)->CallObjectMethod(envp, ESLIF_objectp, get_ESLIFOption_methodp);
 
-  if (MARPAESLIF_JOBJECT(ESLIFOption) != NULL) {
-    genericLoggerp = genericLogger_newp(genericLoggerCallback, (void *) objectp, GENERICLOGGER_LOGLEVEL_TRACE);
+  if (ESLIFOption_objectp != NULL) {
+    genericLoggerp = genericLogger_newp(genericLoggerCallback, (void *) ESLIFOption_objectp, GENERICLOGGER_LOGLEVEL_TRACE);
     if (genericLoggerp == NULL) {
       raiseException(envp, strerror(errno));
       goto err;
@@ -128,8 +122,8 @@ JNIEXPORT jobject JNICALL Java_org_marpa_ESLIF_jni_init(JNIEnv *envp, jobject MA
     goto err;
   }
 
-  newDirectByteBufferp = (*envp)->NewDirectByteBuffer(envp, marpaESLIFp, sizeof(marpaESLIF_t *));
-  if (newDirectByteBufferp == NULL) {
+  directByteBuffer_objectp = (*envp)->NewDirectByteBuffer(envp, marpaESLIFp, sizeof(marpaESLIF_t *));
+  if (directByteBuffer_objectp == NULL) {
     raiseException(envp, "NewDirectByteBuffer failure");
     goto err;
   }
@@ -141,7 +135,7 @@ JNIEXPORT jobject JNICALL Java_org_marpa_ESLIF_jni_init(JNIEnv *envp, jobject MA
   marpaESLIF_freev(marpaESLIFp);
 
  done:
-  return newDirectByteBufferp;
+  return directByteBuffer_objectp;
 }
 
 /*****************************************************************************/

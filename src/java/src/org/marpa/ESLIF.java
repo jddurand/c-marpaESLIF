@@ -20,10 +20,10 @@ public class ESLIF {
 	   System.loadLibrary("marpaESLIF");
 	}
 
-	ESLIF() {
+	public ESLIF() {
 	}
 	
-	ESLIF(ESLIFOption ESLIFOption) {
+	public ESLIF(ESLIFOption ESLIFOption) {
 		set_ESLIFOption(ESLIFOption);
 	}
 
