@@ -17,7 +17,7 @@ public class ESLIF {
 	private native void jni_release();
 	
 	static {
-	   System.loadLibrary("marpaESLIF");
+	   System.loadLibrary("marpaESLIF_jni");
 	}
 
 	public ESLIF() {
