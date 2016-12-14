@@ -184,6 +184,10 @@ IF (Java_FOUND)
   INCLUDE (UseJava)
   FILE (GLOB lib_src_jar src/java/src/org/marpa/*.java)
   ADD_JAR (marpaESLIF_jar ${lib_src_jar})
+  FILE (GLOB lib_src_test_jar src/java/test/*.java)
+  FILE (GLOB lib_src_resource_jar src/java/test/resources/*.properties)
+  SET (CMAKE_JAVA_INCLUDE_PATH marpaESLIF_jar.jar)
+  ADD_JAR (marpaESLIF_test_jar ${lib_src_test_jar} ${lib_src_resource})
 ENDIF (Java_FOUND)
 
 # ------------------
@@ -215,7 +219,8 @@ ELSE (NOT JNI_FOUND)
     MESSAGE (STATUS "JAVA_INCLUDE_PATH: ${JAVA_INCLUDE_PATH}")
     FILE (GLOB lib_src_jni src/bindings/java/*.c)
     ADD_LIBRARY (marpaESLIF_jni SHARED ${lib_src_jni})
-    SET_PROPERTY(TARGET marpaESLIF_jni PROPERTY INCLUDE_DIRECTORIES ${JNI_INCLUDE_DIRS} "${GENERICLOGGER_INCLUDE_DIRS}" "${INCLUDE_OUTPUT_PATH}" "${PROJECT_SOURCE_DIR}/include")
+    SET_PROPERTY(TARGET marpaESLIF_jni
+                 PROPERTY INCLUDE_DIRECTORIES ${JNI_INCLUDE_DIRS} "${GENERICLOGGER_INCLUDE_DIRS}" "${TCONV_INCLUDE_DIRS}" "${INCLUDE_OUTPUT_PATH}" "${PROJECT_SOURCE_DIR}/include")
     TARGET_LINK_LIBRARIES (marpaESLIF_jni ${GENERICLOGGER_LIBRARIES} marpaESLIF)
 ENDIF ()
 

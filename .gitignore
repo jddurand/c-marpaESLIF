@@ -68,3 +68,9 @@ output/
 *.gz
 pcre2/
 *.3
+workspace/
+*.i
+*.jar
+*.classpath
+*.project
+src/java/.gitignore
