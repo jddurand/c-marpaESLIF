@@ -49,6 +49,7 @@ public class ESLIF {
 
 	private void set_marpaESLIFp(ByteBuffer _marpaESLIFp) {
 		this._marpaESLIFp = _marpaESLIFp;
+		System.out.println("Setted _marpaESLIFp to " + _marpaESLIFp);
 	}
 
 }
