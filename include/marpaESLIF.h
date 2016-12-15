@@ -126,6 +126,7 @@ typedef struct marpaESLIFRecognizerProgress {
 #ifdef __cplusplus
 extern "C" {
 #endif
+  MARPAESLIF_EXPORT const char             *marpaESLIF_versions();
   MARPAESLIF_EXPORT marpaESLIF_t           *marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptionp);
   MARPAESLIF_EXPORT marpaESLIFGrammar_t    *marpaESLIF_grammarp(marpaESLIF_t *marpaESLIFp);
 
