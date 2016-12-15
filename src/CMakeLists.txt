@@ -1,0 +1,172 @@
+# --------------
+# Buffering size
+# --------------
+IF (NOT MARPAESLIF_BUFSIZ)
+  SET (MARPAESLIF_BUFSIZ "1048576" CACHE STRING "Buffering size")
+  MARK_AS_ADVANCED (MARPAESLIF_BUFSIZ)
+ENDIF ()
+ADD_DEFINITIONS(-DMARPAESLIF_BUFSIZ=${MARPAESLIF_BUFSIZ})
+
+MESSAGE(STATUS "-----------------------------------------")
+MESSAGE(STATUS "Setup MARPAESLIF:")
+MESSAGE(STATUS "           VERSION: ${MARPAESLIF_VERSION}")
+MESSAGE(STATUS "            BUFSIZ: ${MARPAESLIF_BUFSIZ}")
+MESSAGE(STATUS "-----------------------------------------")
+
+#############################
+# Dependencies
+#############################
+EXECUTE_PROCESS(COMMAND "${CMAKE_COMMAND}" -E make_directory "${3RDPARTY_OUTPUT_PATH}")
+
+# -----------------------------------
+# genericLogger: required
+# -----------------------------------
+FIND_PACKAGE (genericLogger)
+IF (NOT GENERICLOGGER_FOUND)
+    MESSAGE (FATAL_ERROR "genericLogger must be detected")
+ENDIF ()
+
+# -----------------------------------
+# genericStack: required
+# -----------------------------------
+FIND_PACKAGE (genericStack)
+IF (NOT GENERICSTACK_FOUND)
+    MESSAGE (FATAL_ERROR "genericStack must be detected")
+ENDIF ()
+
+# -----------------------------------
+# marpaWrapper: required
+# -----------------------------------
+FIND_PACKAGE (marpaWrapper)
+IF (NOT MARPAWRAPPER_FOUND)
+    MESSAGE (FATAL_ERROR "marpaWrapper must be detected")
+ENDIF ()
+
+# -----------------------------------
+# tconv: required
+# -----------------------------------
+FIND_PACKAGE (tconv)
+IF (NOT TCONV_FOUND)
+    MESSAGE (FATAL_ERROR "tconv must be detected")
+ENDIF ()
+
+# -----------------------------------
+# PCRE2: found or built-in
+# -----------------------------------
+FIND_PACKAGE (PCRE2)
+IF (NOT PCRE2_FOUND)
+    MESSAGE (STATUS "Using built-in PCRE2")
+    EXECUTE_PROCESS(
+      COMMAND "${CMAKE_COMMAND}" -E tar xzf "${PROJECT_SOURCE_DIR}/3rdparty/tar/pcre2-10.22.tar.gz"
+      WORKING_DIRECTORY "${3RDPARTY_OUTPUT_PATH}"
+      )
+    INCLUDE(cmake/BuildPCRE2.cmake)
+ENDIF (NOT PCRE2_FOUND)
+# In any case, we want to use only the 8 bits version, that is always compiled everywhere AFAIK
+ADD_DEFINITIONS(-DPCRE2_CODE_UNIT_WIDTH=8)
+
+# --------------------------------------
+# config.h (we will share it with marpa)
+# --------------------------------------
+INCLUDE (FindInline)
+IF ("${C_INLINE}" EQUAL "inline")
+  SET (C_INLINE_IS_INLINE TRUE)
+ELSE ("${C_INLINE}" EQUAL "inline")
+  SET (C_INLINE_IS_INLINE FALSE)
+ENDIF ("${C_INLINE}" EQUAL "inline")
+
+# ----------------------------------------------------
+# Host compiler - based on https://github.com/legatoproject/legato-af/blob/master/3rdParty/jansson-2.6/CMakeLists.txt
+# ----------------------------------------------------
+INCLUDE(CheckIncludeFile)
+# Make sure we have HAVE for the headers used by CheckTypeSize as per documentation
+CHECK_INCLUDE_FILE("sys/types.h"  HAVE_SYS_TYPES_H)
+CHECK_INCLUDE_FILE("stdint.h"     HAVE_STDINT_H)
+CHECK_INCLUDE_FILE("stddef.h"     HAVE_STDDEF_H)
+ 
+INCLUDE (CheckTypeSize)
+CHECK_TYPE_SIZE (uint32_t UINT32_T)
+CHECK_TYPE_SIZE (__uint32 __UINT32)
+CHECK_TYPE_SIZE ("unsigned long" UNSIGNED_LONG_INT)
+CHECK_TYPE_SIZE ("unsigned int" UNSIGNED_INT)
+IF (HAVE_UINT32_T)
+   MESSAGE (STATUS "Unsigned 32-bit integer type is uint32_t")
+   SET (MARPSESLIF_UINT32_T uint32_t)
+ELSEIF (HAVE___UINT32)
+   MESSAGE (STATUS "Unsigned 32-bit integer type is __uint32")
+   SET (MARPSESLIF_UINT32 __uint32)
+ELSEIF (HAVE_UNSIGNED_LONG_INT AND (${UNSIGNED_LONG_INT} EQUAL 4))
+   MESSAGE (STATUS "Unsigned 32-bit integer type is unsigned long")
+   SET (MARPSESLIF_UINT32 "unsigned long")
+ELSEIF (HAVE_UNSIGNED_INT AND (${UNSIGNED_INT} EQUAL 4))
+   MESSAGE (STATUS "Unsigned 32-bit integer type is unsigned int")
+   SET (MARPSESLIF_UINT32 "unsigned int")
+ELSE ()
+   MESSAGE (FATAL_ERROR "Could not detect a valid unsigned 32-bit integer type")
+ENDIF ()
+
+# ----------------------------------------------------
+# Configuration
+# ----------------------------------------------------
+SET (CONFIG_H ${INCLUDE_OUTPUT_PATH}/config.h)
+SET (CONFIG_H_IN ${CMAKE_CURRENT_SOURCE_DIR}/include/config.h.in)
+CONFIGURE_FILE(${CONFIG_H_IN} ${CONFIG_H})
+ADD_CUSTOM_TARGET(marpaESLIFConfig SOURCES "${CONFIG_H}")
+
+INCLUDE_DIRECTORIES (
+  "${INCLUDE_OUTPUT_PATH}"                             # Include path for generated files
+  "${PROJECT_SOURCE_DIR}/include"                      # Include path for the other headers
+  "${GENERICLOGGER_INCLUDE_DIRS}"                      # Include path for genericLogger (external - required)
+  "${GENERICSTACK_INCLUDE_DIRS}"                       # Include path for genericStack (external - required)
+  "${MARPAWRAPPER_INCLUDE_DIRS}"                       # Include path for marpaWrapper (external - required)
+  "${TCONV_INCLUDE_DIRS}"                              # Include path for tconv (external - required)
+  "${PCRE2_INCLUDE_DIRS}"                              # Include path for PCRE2 (external - required or built-in)
+  )
+
+# ------------------
+# marpaESLIF library
+# -----------------
+FILE (GLOB lib_src src/marpaESLIF.c)
+ADD_LIBRARY (marpaESLIF SHARED ${lib_src})
+TARGET_LINK_LIBRARIES (marpaESLIF ${GENERICLOGGER_LIBRARIES} ${MARPAWRAPPER_LIBRARIES} ${TCONV_LIBRARIES} ${PCRE2_LIBRARIES})
+SET_TARGET_PROPERTIES (marpaESLIF
+  PROPERTIES
+  COMPILE_FLAGS "-DmarpaESLIF_EXPORTS"
+  VERSION "${MARPAESLIF_VERSION}"
+  SOVERSION "${MARPAESLIF_VERSION_MAJOR}")
+
+# ------------
+# Export flags
+# ------------
+INCLUDE (GenerateExportHeader)
+EXECUTE_PROCESS(COMMAND "${CMAKE_COMMAND}" -E make_directory "${INCLUDE_OUTPUT_PATH}/marpaESLIF")
+GENERATE_EXPORT_HEADER(marpaESLIF
+    BASE_NAME marpaESLIF
+    EXPORT_MACRO_NAME marpaESLIF_EXPORT
+    EXPORT_FILE_NAME "${INCLUDE_OUTPUT_PATH}/marpaESLIF/export.h"
+    STATIC_DEFINE marpaESLIF_STATIC)
+ADD_CUSTOM_TARGET(marpaESLIFExport SOURCES "${INCLUDE_OUTPUT_PATH}/marpaESLIF/export.h")
+
+# ----------------------------------------
+# Explicit dependencies on generated files
+# ----------------------------------------
+ADD_DEPENDENCIES(marpaESLIF marpaESLIFConfig marpaESLIFExport pcre2)
+
+SET_TARGET_PROPERTIES(marpaESLIF PROPERTIES COMPILE_FLAGS "-DmarpaESLIF_EXPORTS"
+                                               VERSION       "${MARPAESLIF_VERSION}"
+                                               SOVERSION     "${MARPAESLIF_VERSION_MAJOR}"
+                                               LINKER_LANGUAGE C)
+
+
+# -------
+# Install
+# -------
+INSTALL (TARGETS marpaESLIF ARCHIVE DESTINATION lib LIBRARY DESTINATION lib RUNTIME DESTINATION bin COMPONENT libraries)
+INSTALL (FILES ${INCLUDE_OUTPUT_PATH}/marpaESLIF/export.h DESTINATION include/marpaESLIF)
+FILE (GLOB include_marpa_src "include/marpaESLIF/*.h")
+INSTALL (FILES ${include_marpa_src} DESTINATION include)
+INSTALL (FILES include/marpaESLIF.h DESTINATION include)
+
+IF (UNIX)
+  POD2MAN(README.pod "MARPAESLIF" "3" "${MARPAESLIF_VERSION}")
+ENDIF (UNIX)

@@ -74,3 +74,4 @@ workspace/
 *.classpath
 *.project
 src/java/.gitignore
+src/java/bin
