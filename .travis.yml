@@ -1,5 +1,7 @@
 language: c
 sudo: required
+jdk:
+  - oraclejdk8
 addons:
   apt:
     sources:
@@ -7,6 +9,7 @@ addons:
     packages:
       - cmake
       - cmake-data
+      - swig
 before_script:
   - sh ./install-c-genericLogger.sh
   - sh ./install-c-genericStack.sh
