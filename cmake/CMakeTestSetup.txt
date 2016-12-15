@@ -11,6 +11,20 @@ ADD_EXECUTABLE        (selfTester EXCLUDE_FROM_ALL test/selfTester.c)
 # at runtime, REGARDLESS of the OS (we are thinking to Windows and Visual Studio for instance).
 # and since we must do that for the dynamic test, we do it as well for any runtime thingy, just for coherency.
 #
+IF ("${CMAKE_HOST_SYSTEM}" MATCHES ".*Windows.*")
+  SET (SEP "\\;")
+ELSE ()
+  SET (SEP ":")
+ENDIF ()
+SET (TEST_PATH "$ENV{PATH}")
+SET (TEST_PATH "${TEST_PATH}${SEP}${GENERICLOGGER_RUNTIME_DIRECTORY}")
+SET (TEST_PATH "${TEST_PATH}${SEP}${MARPAWRAPPER_RUNTIME_DIRECTORY}")
+SET (TEST_PATH "${TEST_PATH}${SEP}${TCONV_RUNTIME_DIRECTORY}")
+IF (PCRE2_DIRECTORY)
+  SET (TEST_PATH "${TEST_PATH}${SEP}${PCRE2_RUNTIME_DIRECTORY}")
+ENDIF ()
+SET (TEST_PATH "${TEST_PATH}${SEP}${LIBRARY_OUTPUT_PATH}")
+
 SET_TARGET_PROPERTIES (marpaESLIFTester       PROPERTIES LINKER_LANGUAGE C RUNTIME_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH})
 TARGET_LINK_LIBRARIES (marpaESLIFTester       marpaESLIF)
 SET_TARGET_PROPERTIES (adventTester           PROPERTIES LINKER_LANGUAGE C RUNTIME_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH})
@@ -22,20 +36,23 @@ TARGET_LINK_LIBRARIES (jsonTester             marpaESLIF)
 SET_TARGET_PROPERTIES (selfTester             PROPERTIES LINKER_LANGUAGE C RUNTIME_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH})
 TARGET_LINK_LIBRARIES (selfTester             marpaESLIF)
 
-ADD_TEST              (NAME marpaESLIFTest
-  COMMAND marpaESLIFTester
+MESSAGE(STATUS "Using PATH=${TEST_PATH}")
+
+ADD_TEST (NAME marpaESLIFTest
+  COMMAND ${CMAKE_COMMAND} -E env "PATH=${TEST_PATH}" marpaESLIFTester
   WORKING_DIRECTORY ${LIBRARY_OUTPUT_PATH})
-ADD_TEST              (NAME adventTest
-  COMMAND adventTester
+ADD_TEST (NAME adventTest
+  COMMAND ${CMAKE_COMMAND} -E env "PATH=${TEST_PATH}" adventTester
   WORKING_DIRECTORY ${LIBRARY_OUTPUT_PATH})
-ADD_TEST              (NAME russellParadoxTest
-  COMMAND russellParadoxTester
+ADD_TEST (NAME russellParadoxTest
+  COMMAND ${CMAKE_COMMAND} -E env "PATH=${TEST_PATH}" russellParadoxTester
   WORKING_DIRECTORY ${LIBRARY_OUTPUT_PATH})
-ADD_TEST              (NAME jsonTest
-  COMMAND jsonTester
+ADD_TEST (NAME jsonTest
+  COMMAND ${CMAKE_COMMAND} -E env "PATH=${TEST_PATH}" jsonTester
   WORKING_DIRECTORY ${LIBRARY_OUTPUT_PATH})
-ADD_TEST              (NAME selfTest
-  COMMAND selfTester
+ADD_TEST (NAME selfTest
+  COMMAND ${CMAKE_COMMAND} -E env "PATH=${TEST_PATH}" selfTester
   WORKING_DIRECTORY ${LIBRARY_OUTPUT_PATH})
-ADD_CUSTOM_TARGET     (check COMMAND ${CMAKE_CTEST_COMMAND}
-                       DEPENDS marpaESLIFTester adventTester russellParadoxTester jsonTester selfTester)
+
+ADD_CUSTOM_TARGET (check COMMAND ${CMAKE_CTEST_COMMAND}
+                   DEPENDS marpaESLIFTester adventTester russellParadoxTester jsonTester selfTester)

@@ -7,7 +7,7 @@
 #include <genericStack.h>
 #include <tconv.h>
 #include <ctype.h>
-#include "config.h"
+#include "marpaESLIF/internal/config.h"
 #include "marpaESLIF/internal/structures.h"
 #include "marpaESLIF/internal/logging.h"
 #include "marpaESLIF/internal/bootstrap_actions.h"
