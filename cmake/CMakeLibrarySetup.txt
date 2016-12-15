@@ -95,7 +95,7 @@ ENDIF ()
 # ----------------------------------------------------
 # Configuration
 # ----------------------------------------------------
-SET (CONFIG_H ${INCLUDE_OUTPUT_PATH}/config.h)
+SET (CONFIG_H ${CMAKE_CURRENT_SOURCE_DIR}/include/marpaESLIF/internal/config.h)
 SET (CONFIG_H_IN ${CMAKE_CURRENT_SOURCE_DIR}/include/config.h.in)
 CONFIGURE_FILE(${CONFIG_H_IN} ${CONFIG_H})
 ADD_CUSTOM_TARGET(marpaESLIFConfig SOURCES "${CONFIG_H}")
@@ -136,10 +136,17 @@ GENERATE_EXPORT_HEADER(marpaESLIF
     STATIC_DEFINE marpaESLIF_STATIC)
 ADD_CUSTOM_TARGET(marpaESLIFExport SOURCES "${INCLUDE_OUTPUT_PATH}/marpaESLIF/export.h")
 
+# -------------
+# Include files
+# -------------
+ADD_CUSTOM_TARGET(marpaESLIFInclude)
+ADD_CUSTOM_COMMAND(TARGET marpaESLIFInclude PRE_BUILD COMMAND ${CMAKE_COMMAND} -E copy include/marpaESLIF.h ${INCLUDE_OUTPUT_PATH})
+ADD_DEPENDENCIES(marpaESLIFInclude marpaESLIFExport)
+
 # ----------------------------------------
 # Explicit dependencies on generated files
 # ----------------------------------------
-ADD_DEPENDENCIES(marpaESLIF marpaESLIFConfig marpaESLIFExport pcre2)
+ADD_DEPENDENCIES(marpaESLIF marpaESLIFConfig marpaESLIFInclude pcre2)
 
 SET_TARGET_PROPERTIES(marpaESLIF PROPERTIES COMPILE_FLAGS "-DmarpaESLIF_EXPORTS"
                                                VERSION       "${MARPAESLIF_VERSION}"
@@ -150,8 +157,7 @@ SET_TARGET_PROPERTIES(marpaESLIF PROPERTIES COMPILE_FLAGS "-DmarpaESLIF_EXPORTS"
 # -------
 # Install
 # -------
+INCLUDE(InstallRequiredSystemLibraries)
 INSTALL (TARGETS marpaESLIF ARCHIVE DESTINATION lib LIBRARY DESTINATION lib RUNTIME DESTINATION bin COMPONENT libraries)
 INSTALL (FILES ${INCLUDE_OUTPUT_PATH}/marpaESLIF/export.h DESTINATION include/marpaESLIF)
-FILE (GLOB include_marpa_src "include/marpaESLIF/*.h")
-INSTALL (FILES ${include_marpa_src} DESTINATION include)
 INSTALL (FILES include/marpaESLIF.h DESTINATION include)

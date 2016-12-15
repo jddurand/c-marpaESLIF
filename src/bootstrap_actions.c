@@ -1,10 +1,3 @@
-#include <stdlib.h>
-#include <stddef.h>
-#include <errno.h>
-#include <string.h>
-#include <genericStack.h>
-#include "config.h" /* For inline */
-#include "marpaESLIF/internal/bootstrap_actions.h"
 #include "marpaESLIF/internal/bootstrap_types.h"
 
 #undef  FILENAMES

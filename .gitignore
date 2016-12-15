@@ -75,3 +75,4 @@ workspace/
 *.project
 src/java/.gitignore
 src/java/bin
+config.h
