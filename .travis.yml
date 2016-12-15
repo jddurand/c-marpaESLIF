@@ -1,7 +1,5 @@
 language: c
 sudo: required
-jdk:
-  - oraclejdk8
 addons:
   apt:
     sources:
@@ -19,6 +17,7 @@ before_script:
   - sh ./install-c-tconv.sh
   - cmake .
 script:
+  - make
   - make check
   - ./output/lib/marpaESLIFTester
   - ./output/lib/adventTester
