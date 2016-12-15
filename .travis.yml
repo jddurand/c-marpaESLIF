@@ -19,9 +19,9 @@ before_script:
 script:
   - make
   - make check
-  - ./output/lib/marpaESLIFTester
-  - ./output/lib/adventTester
-  - ./output/lib/russellParadoxTester
-  - ./output/lib/jsonTester
-  - ./output/lib/selfTester
+#  - ./output/lib/marpaESLIFTester
+#  - ./output/lib/adventTester
+#  - ./output/lib/russellParadoxTester
+#  - ./output/lib/jsonTester
+#  - ./output/lib/selfTester
   - sudo make install
