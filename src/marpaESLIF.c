@@ -2892,6 +2892,15 @@ static inline void _marpaESLIF_terminal_freev(marpaESLIF_terminal_t *terminalp)
 }
 
 /*****************************************************************************/
+const char *marpaESLIF_versions()
+/*****************************************************************************/
+{
+  static const char *versions = MARPAESLIF_VERSION;
+
+  return versions;
+}
+
+/*****************************************************************************/
 marpaESLIF_t *marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptionp)
 /*****************************************************************************/
 {
