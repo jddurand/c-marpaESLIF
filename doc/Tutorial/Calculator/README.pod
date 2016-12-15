@@ -195,7 +195,7 @@ We will just copy what is in the middle:
 
   '(' Expression ')'              assoc => group action => ::copy[1]
 
-Here C<[1] is the relative indice from the first RHS.
+Here C<[1]> is the relative indice from the first RHS.
 
 =item * Any other rule can give anything, we will choose a C<double> for convenience
 
