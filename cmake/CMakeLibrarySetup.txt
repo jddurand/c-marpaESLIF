@@ -166,7 +166,3 @@ INSTALL (FILES ${INCLUDE_OUTPUT_PATH}/marpaESLIF/export.h DESTINATION include/ma
 FILE (GLOB include_marpa_src "include/marpaESLIF/*.h")
 INSTALL (FILES ${include_marpa_src} DESTINATION include)
 INSTALL (FILES include/marpaESLIF.h DESTINATION include)
-
-IF (UNIX)
-  POD2MAN(README.pod "MARPAESLIF" "3" "${MARPAESLIF_VERSION}")
-ENDIF (UNIX)
