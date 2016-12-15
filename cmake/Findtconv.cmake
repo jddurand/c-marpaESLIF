@@ -188,8 +188,9 @@ SET (TCONV_LINK_FLAGS       "${_TCONV_LINK_FLAGS}"       CACHE STRING "Linker fl
 SET (TCONV_LDFLAGS          "${_TCONV_LDFLAGS}"          CACHE STRING "Stringified version of TCONV_LINK_FLAGS")
 
 IF(TCONV_FOUND)
-  MESSAGE(STATUS "-----------------------------------------")
+  MESSAGE(STATUS "")
   MESSAGE(STATUS "tconv Setup:")
+  MESSAGE(STATUS "------------")
   MESSAGE(STATUS "           ROOT_DIR: ${TCONV_ROOT_DIR}")
   MESSAGE(STATUS "     C_FLAGS_SHARED: ${TCONV_C_FLAGS_SHARED}")
   MESSAGE(STATUS "   CXX_FLAGS_SHARED: ${TCONV_CXX_FLAGS_SHARED}")
@@ -197,7 +198,6 @@ IF(TCONV_FOUND)
   MESSAGE(STATUS "          LIBRARIES: ${TCONV_LIBRARIES}")
   MESSAGE(STATUS "         LINK_FLAGS: ${TCONV_LINK_FLAGS}")
   MESSAGE(STATUS "            LDFLAGS: ${TCONV_LDFLAGS}")
-  MESSAGE(STATUS "-----------------------------------------")
 ENDIF()
 
 MARK_AS_ADVANCED (

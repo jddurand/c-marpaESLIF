@@ -72,11 +72,11 @@ FIND_PACKAGE_HANDLE_STANDARD_ARGS (GENERICSTACK
   )
 
 IF(GENERICSTACK_FOUND)
-  MESSAGE(STATUS "-----------------------------------------")
+  MESSAGE(STATUS "")
   MESSAGE(STATUS "genericStack Setup:")
+  MESSAGE(STATUS "-------------------")
   MESSAGE(STATUS "           ROOT_DIR: ${GENERICSTACK_ROOT_DIR}")
   MESSAGE(STATUS "        INCLUDE_DIR: ${GENERICSTACK_INCLUDE_DIR}")
-  MESSAGE(STATUS "-----------------------------------------")
 ENDIF()
 
 MARK_AS_ADVANCED (GENERICSTACK_FOUND)
