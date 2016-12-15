@@ -69,7 +69,6 @@ output/
 pcre2/
 *.3
 workspace/
-*.i
 *.jar
 *.classpath
 *.project

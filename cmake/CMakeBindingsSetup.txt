@@ -1,0 +1,12 @@
+#
+# Inspired by https://github.com/javagg/ctp-swig
+#
+FIND_PACKAGE(SWIG)
+IF (SWIG_FOUND)
+  FIND_PACKAGE(Java)
+  FIND_PACKAGE(JNI)
+  FIND_PACKAGE(PerlLibs)
+  IF (JNI_FOUND AND JAVA_FOUND)
+    ADD_SUBDIRECTORY(bindings/java)
+  ENDIF()
+ENDIF ()
