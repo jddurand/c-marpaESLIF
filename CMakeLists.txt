@@ -7,5 +7,5 @@ PROJECT (marpaESLIF C CXX)
 INCLUDE (CMakeGlobalSetup.txt NO_POLICY_SCOPE)
 
 INCLUDE (CMakeCompilerSetup.txt)
-INCLUDE (src/CMakeLists.txt)
-INCLUDE (test/CMakeLists.txt)
+INCLUDE (CMakeLibrarySetup.txt)
+INCLUDE (CMakeTestSetup.txt)
