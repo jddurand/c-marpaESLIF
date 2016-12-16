@@ -20,6 +20,6 @@
 %include "genericLogger.h"
 */
 
-/* The methods to wrap */
+/* The methods to wrap - All our ctors/dtors have special naming */
 #define MARPAESLIF_EXPORT
 %include "marpaESLIF.h"
