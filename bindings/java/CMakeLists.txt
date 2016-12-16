@@ -22,27 +22,24 @@ SET (BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/build)
 FILE (MAKE_DIRECTORY ${SOURCE_DIR})
 FILE (MAKE_DIRECTORY ${BINARY_DIR})
 
+FILE(COPY marpaESLIF.java DESTINATION ${CMAKE_SWIG_OUTDIR})
 SET (JAVA_SOURCES ${CMAKE_SWIG_OUTDIR}/*.java)
-SET (BIN_FILE "marpaESLIFWrapperJava.jar")
-SET (DOC_FILE "marpaESLIFWrapperJava-doc.jar")
-SET (SRC_FILE "marpaESLIFWrapperJava-src.jar")
-
-# FILE(COPY Runmd.java DESTINATION ${CMAKE_SWIG_OUTDIR})
+SET (BIN_FILE "marpaESLIF.jar")
+SET (DOC_FILE "marpaESLIF-doc.jar")
+SET (SRC_FILE "marpaESLIF-src.jar")
 
 #
 # Our additional stuff on top of the native wrapper
 #
-SET (_marpaESLIFfiles "")
-
 ADD_CUSTOM_COMMAND(OUTPUT _build_jar
     COMMENT "Creating jar file..."
     COMMAND ${Java_JAVAC_EXECUTABLE} -d ${BINARY_DIR} ${JAVA_SOURCES}
     COMMAND ${Java_JAR_EXECUTABLE} cf ${CMAKE_CURRENT_BINARY_DIR}/${BIN_FILE} -C ${BINARY_DIR} ${_package_top_dir}
-    COMMAND ${Java_JAR_EXECUTABLE} uf ${CMAKE_CURRENT_BINARY_DIR}/${BIN_FILE} ${_marpaESLIFfiles} marpaESLIFWrapperJava
-    COMMAND ${Java_JAVADOC_EXECUTABLE} -quiet -d ${BINARY_DIR}/javadoc -sourcepath ${SOURCE_DIR} ${_package_name}
+    # COMMAND ${Java_JAR_EXECUTABLE} uf ${CMAKE_CURRENT_BINARY_DIR}/${BIN_FILE} ${JAVA_SOURCES}
+    COMMAND ${Java_JAVADOC_EXECUTABLE} -quiet -d ${BINARY_DIR}/javadoc -sourcepath ${SOURCE_DIR} ${_package_name} marpaESLIF.java
     COMMAND ${Java_JAR_EXECUTABLE} cf ${CMAKE_CURRENT_BINARY_DIR}/${DOC_FILE} -C ${BINARY_DIR}/javadoc ${_package_top_dir}
-    COMMAND ${Java_JAR_EXECUTABLE} cf ${CMAKE_CURRENT_BINARY_DIR}/${SRC_FILE} ${_package_top_dir}
+    COMMAND ${Java_JAR_EXECUTABLE} cf ${CMAKE_CURRENT_BINARY_DIR}/${SRC_FILE} ${_package_top_dir} marpaESLIF.java
     DEPENDS marpaESLIFWrapperJava
 )
 
-# add_custom_target(run_build_jar ALL DEPENDS _build_jar)
+ADD_CUSTOM_TARGET(run_build_jar ALL DEPENDS _build_jar)
