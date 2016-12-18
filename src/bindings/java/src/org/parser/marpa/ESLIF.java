@@ -12,12 +12,13 @@ import java.nio.ByteBuffer;
 public class ESLIF {
 	final static String MARPAESLIFJAVA_LIBRARY_NAME = "marpaESLIFJava";
 
-	private ESLIFOption option                = null;
-	private ByteBuffer  marpaESLIFp           = null;
-	private ByteBuffer  genericLoggerContextp = null;
-	private ByteBuffer  genericLoggerp        = null;
-	private native void newp();
-	private native void freev();
+	private ESLIFLoggerInterface loggerInterface       = null;
+	private ByteBuffer           marpaESLIFp           = null;
+	private ByteBuffer           genericLoggerContextp = null;
+	private ByteBuffer           genericLoggerp        = null;
+	private native void          newp();
+	private native void          freev();
+	private native static String versions();
 	
 	static {
 		try {
@@ -28,8 +29,13 @@ public class ESLIF {
 		}
 	}
 	
-	public ESLIF(ESLIFOption option) throws Exception {
-		this.option = option;
+	/*
+	 * ********************************************
+	 * Public methods
+	 * ********************************************
+	 */
+	public ESLIF(ESLIFLoggerInterface loggerInterface) throws Exception {
+		this.loggerInterface = loggerInterface;
 		newp();
 	}
 	
@@ -40,14 +46,20 @@ public class ESLIF {
 	public void free() {
 		freev();
 	}
+	
+	final public static String version() {
+		return versions();
+	}
 
-	private ESLIFLoggerInterface getLoggerInterface() {
-		ESLIFLoggerInterface loggerInterface= null;
-		if (option != null) {
-			loggerInterface = option.getLoggerInterface();
-		}
+	public ESLIFLoggerInterface getLoggerInterface() {
 		return loggerInterface;
 	}
+
+	/*
+	 * ********************************************
+	 * Private methods - used by the JNI
+	 * ********************************************
+	 */
 	private ByteBuffer getMarpaESLIFp() {
 		return marpaESLIFp;
 	}
