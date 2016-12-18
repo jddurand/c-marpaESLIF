@@ -8,6 +8,7 @@ public class ESLIFGrammar {
 	private ByteBuffer  marpaGrammarp = null;
 	private native void newp(byte[] utf8);
 	private native void freev();
+	private native int  ngrammari();
 	
 	/*
 	 * ********************************************
@@ -30,7 +31,11 @@ public class ESLIFGrammar {
 	public void free() {
 		freev();
 	}
-
+	
+	public int ngrammar() {
+		return ngrammari();
+	}
+	
 	/*
 	 * ********************************************
 	 * Private methods - used by the JNI

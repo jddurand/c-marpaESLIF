@@ -468,38 +468,38 @@ JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIFGrammar_newp(JNIEnv *envp, job
   /* Get information from caller object (ESLIF) */
   eslifp = (*envp)->CallObjectMethod(envp, objectp, MARPAESLIF_ESLIFGRAMMAR_CLASS_getEslif_METHODP);
   if (eslifp == NULL) {
-    RAISEEXCEPTION(envp, "eslifp is %p", NULL);
+    RAISEEXCEPTION(envp, "eslifp is NULL at %s:%d", MARPAESLIF_FILENAMES, __LINE__);
     goto err;
   }
 
   BYTEBUFFER(marpaESLIFGenericLoggerContext) = (*envp)->CallObjectMethod(envp, eslifp, MARPAESLIF_ESLIF_CLASS_getGenericLoggerContextp_METHODP);
   BYTEBUFFER(marpaESLIF)                     = (*envp)->CallObjectMethod(envp, eslifp, MARPAESLIF_ESLIF_CLASS_getMarpaESLIFp_METHODP);
 
-  if (BYTEBUFFER(marpaESLIFGenericLoggerContext) == NULL) { RAISEEXCEPTION(envp, "marpaESLIFGenericLoggerContext bytebuffer is %p", NULL); goto err; }
-  if (BYTEBUFFER(marpaESLIF)                     == NULL) { RAISEEXCEPTION(envp, "eslif bytebuffer is %p", NULL); goto err; }
+  if (BYTEBUFFER(marpaESLIFGenericLoggerContext) == NULL) { RAISEEXCEPTION(envp, "marpaESLIFGenericLoggerContext bytebuffer is NULL at %s:%d", MARPAESLIF_FILENAMES, __LINE__); goto err; }
+  if (BYTEBUFFER(marpaESLIF)                     == NULL) { RAISEEXCEPTION(envp, "eslif bytebuffer is NULL at %s:%d", MARPAESLIF_FILENAMES, __LINE__); goto err; }
 
   marpaESLIFGenericLoggerContextp = (*envp)->GetDirectBufferAddress(envp, BYTEBUFFER(marpaESLIFGenericLoggerContext));
   marpaESLIFp                     = (*envp)->GetDirectBufferAddress(envp, BYTEBUFFER(marpaESLIF));
 
-  if (marpaESLIFGenericLoggerContextp == NULL) { RAISEEXCEPTION(envp, "marpaESLIFGenericLoggerContextp is %p", NULL); goto err; }
-  if (marpaESLIFp                     == NULL) { RAISEEXCEPTION(envp, "marpaESLIFp is %p", NULL); goto err; }
+  if (marpaESLIFGenericLoggerContextp == NULL) { RAISEEXCEPTION(envp, "marpaESLIFGenericLoggerContextp is NULL at %s:%d", MARPAESLIF_FILENAMES, __LINE__); goto err; }
+  if (marpaESLIFp                     == NULL) { RAISEEXCEPTION(envp, "marpaESLIFp is NULL at %s:%d", MARPAESLIF_FILENAMES, __LINE__); goto err; }
 
   marpaESLIFGenericLoggerContextp->objectp             = objectp;
   marpaESLIFGenericLoggerContextp->getLoggerInterfacep = MARPAESLIF_ESLIFGRAMMAR_CLASS_getLoggerInterfacep_METHODP;
 
   /* Get information from the stack */
   if (utf8byteArrayp == NULL) {
-    RAISEEXCEPTION(envp, "utf8byteArrayp is %p", NULL);
+    RAISEEXCEPTION(envp, "utf8byteArrayp is NULL at %s:%d", MARPAESLIF_FILENAMES, __LINE__);
     goto err;
   }
   utf8bytep = (*envp)->GetByteArrayElements(envp, utf8byteArrayp, &isCopyb);
   if (utf8bytep == NULL) {
-    RAISEEXCEPTION(envp, "utf8bytep is %p", NULL);
+    RAISEEXCEPTION(envp, "utf8bytep is NULL at %s:%d", MARPAESLIF_FILENAMES, __LINE__);
     goto err;
   }
   utf8lengthl = (*envp)->GetArrayLength(envp, utf8byteArrayp);
   if (utf8lengthl <= 0) {
-    RAISEEXCEPTION(envp, "utf8lengthl is <= %d", 0);
+    RAISEEXCEPTION(envp, "utf8lengthl is <= 0 at %s:%d", MARPAESLIF_FILENAMES, __LINE__);
     goto err;
   }
 
@@ -549,4 +549,29 @@ JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIFGrammar_freev(JNIEnv *envp, jo
   marpaESLIFGrammar_freev(marpaESLIFGrammarp); /* This is NULL protected */
 
   (*envp)->CallVoidMethod(envp, objectp, MARPAESLIF_ESLIFGRAMMAR_CLASS_setMarpaGrammarp_METHODP, NULL);  
+}
+
+/*****************************************************************************/
+JNIEXPORT jint JNICALL Java_org_parser_marpa_ESLIFGrammar_ngrammari(JNIEnv *envp, jobject objectp)
+/*****************************************************************************/
+{
+  marpaESLIFGrammar_t *marpaESLIFGrammarp  = NULL;
+  jobject              BYTEBUFFER(marpaESLIFGrammar);
+  int                  ngrammari;
+
+  BYTEBUFFER(marpaESLIFGrammar) = (*envp)->CallObjectMethod(envp, objectp, MARPAESLIF_ESLIFGRAMMAR_CLASS_getMarpaGrammarp_METHODP);
+
+  if (BYTEBUFFER(marpaESLIFGrammar) != NULL) {
+    marpaESLIFGrammarp = (*envp)->GetDirectBufferAddress(envp, BYTEBUFFER(marpaESLIFGrammar));
+  }
+
+  if (marpaESLIFGrammarp == NULL) {
+    RAISEEXCEPTION(envp, "marpaESLIFGrammarp is NULL at %s:%d", MARPAESLIF_FILENAMES, __LINE__);
+  }
+
+  if (! marpaESLIFGrammar_ngrammarib(marpaESLIFGrammarp, &ngrammari)) {
+    RAISEEXCEPTION(envp, "marpaESLIFGrammar_ngrammarib failure at %s:%d", MARPAESLIF_FILENAMES, __LINE__);
+  }
+  
+  return (jint) ngrammari;
 }

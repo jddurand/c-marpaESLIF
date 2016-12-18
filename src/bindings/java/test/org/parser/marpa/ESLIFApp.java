@@ -11,7 +11,7 @@ public class ESLIFApp  {
 
 		final String grammar = 
 				    ":default ::= action => do_double\n"
-				  + ":discard ::= [\\s]\n"
+				  + ":discard ::= whitespace\n"
 				  + "Expression ::=\n"
 				  + "    /[\\d]+/                          action => do_int\n"
 				  + "    | '(' Expression ')'              assoc => group action => ::copy[1]\n"
@@ -20,9 +20,12 @@ public class ESLIFApp  {
 				  + "    |     Expression  '/' Expression\n"
 				  + "   ||     Expression  '+' Expression\n"
 				  + "    |     Expression  '-' Expression\n"
+				  + "whitespace :[1]:= [\\s]\n"
 				  + "\n";
 
+
 		ESLIFGrammar eslifGrammar = new ESLIFGrammar(eslif, grammar);
+		eslifLogger.info("number of grammars: " + eslifGrammar.ngrammar());
 		eslifGrammar.free();
 
 		eslif.free();
