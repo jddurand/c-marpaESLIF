@@ -1,7 +1,6 @@
 package org.parser.marpa;
 
-import java.util.Collection;
-
 public interface ESLIFActionInterface {
-	Object action(Collection<Object> arg);
+	public Object ruleAction(int arg0i, int argni, int resulti, boolean nullable);
+	public Object symbolAction(byte[] data, int resulti);
 }
