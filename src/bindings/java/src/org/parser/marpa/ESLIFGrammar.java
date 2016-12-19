@@ -74,7 +74,7 @@ public class ESLIFGrammar {
 	 * Private methods - used by the JNI
 	 * ********************************************
 	 */
-	protected ESLIFLoggerInterface getLoggerInterface() {
+	private ESLIFLoggerInterface getLoggerInterface() {
 		return eslif != null ? eslif.getLoggerInterface() : null;
 	}
 	private ESLIF getEslif() {
