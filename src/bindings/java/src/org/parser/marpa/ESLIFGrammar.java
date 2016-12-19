@@ -20,7 +20,6 @@ public class ESLIFGrammar {
 	private native String jniRuleShowByLevel(int level, int rule);
 	private native String jniShow();
 	private native String jniShowByLevel(int level);
-	private native Object jniParse(ESLIFRecognizer recognizer, ESLIFValuator valuator);
 	
 	/*
 	 * ********************************************
@@ -75,9 +74,6 @@ public class ESLIFGrammar {
 	}
 	public String showByLevel(int level) {
 		return jniShowByLevel(level);
-	}
-	public Object parse(ESLIFRecognizer recognizer, ESLIFValuator valuator) {
-		return jniParse(recognizer, valuator);
 	}
 	/*
 	 * ********************************************
