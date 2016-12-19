@@ -15,6 +15,11 @@ public class ESLIFRecognizerOption {
 	 * Public methods
 	 * ********************************************
 	 */
+	public ESLIFRecognizerOption(Reader reader) throws Exception {
+		if (reader == null) {
+			throw new Exception("Reader must not be null");
+		}
+	}
 	public Reader getReader() {
 		return reader;
 	}
