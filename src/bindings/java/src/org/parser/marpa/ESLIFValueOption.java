@@ -14,6 +14,11 @@ public class ESLIFValueOption {
 	 * Public methods
 	 * ********************************************
 	 */
+	public ESLIFValueOption(Object object) throws Exception {
+		if (object == null) {
+			throw new Exception("Action object must not be null");
+		}
+	}
 	public Object getObject() {
 		return object;
 	}
