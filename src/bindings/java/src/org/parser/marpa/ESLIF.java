@@ -34,8 +34,8 @@ public class ESLIF {
 	 * Public methods
 	 * ********************************************
 	 */
-	public ESLIF(ESLIFLoggerInterface loggerInterface) throws Exception {
-		this.loggerInterface = loggerInterface;
+	public ESLIF(ESLIFLoggerInterface loggerInterface) {
+		setLoggerInterface(loggerInterface);
 		jniNew(loggerInterface);
 	}
 	
@@ -59,6 +59,9 @@ public class ESLIF {
 	 */
 	protected ESLIFLoggerInterface getLoggerInterface() {
 		return loggerInterface;
+	}
+	private void setLoggerInterface(ESLIFLoggerInterface loggerInterface) {
+		this.loggerInterface = loggerInterface;
 	}
 	private ByteBuffer getMarpaESLIFp() {
 		return marpaESLIFp;
