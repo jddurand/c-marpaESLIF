@@ -20,14 +20,21 @@ public class ESLIFGrammar {
 	private native String jniRuleShowByLevel(int level, int rule);
 	private native String jniShow();
 	private native String jniShowByLevel(int level);
+	private native Object jniParse(ESLIFRecognizer recognizer, ESLIFValuator valuator);
 	
 	/*
 	 * ********************************************
 	 * Public methods
 	 * ********************************************
 	 */
-	public ESLIFGrammar(ESLIF eslif, String grammar) throws UnsupportedEncodingException {
-		this.eslif = eslif;
+	public ESLIFGrammar(ESLIF eslif, String grammar) throws UnsupportedEncodingException  {
+		if (eslif == null) {
+			throw new IllegalArgumentException("eslif must not be null");
+		}
+		if (grammar == null) {
+			throw new IllegalArgumentException("grammar must not be null");
+		}
+		setEslif(eslif);
 		jniNew(grammar.getBytes("UTF-8"));
 	}
 	public void free() {
@@ -69,6 +76,9 @@ public class ESLIFGrammar {
 	public String showByLevel(int level) {
 		return jniShowByLevel(level);
 	}
+	public Object parse(ESLIFRecognizer recognizer, ESLIFValuator valuator) {
+		return jniParse(recognizer, valuator);
+	}
 	/*
 	 * ********************************************
 	 * Private methods - used by the JNI
@@ -79,6 +89,9 @@ public class ESLIFGrammar {
 	}
 	private ESLIF getEslif() {
 		return eslif;
+	}
+	private void setEslif(ESLIF eslif) {
+		this.eslif = eslif;
 	}
 	private ByteBuffer getMarpaGrammarp() {
 		return marpaGrammarp;
