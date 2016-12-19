@@ -16,9 +16,20 @@ JNIEXPORT void    JNICALL Java_org_parser_marpa_ESLIF_jniNew    (JNIEnv *envp, j
 JNIEXPORT jstring JNICALL Java_org_parser_marpa_ESLIF_jniVersion(JNIEnv *envp, jobject eslifp);
 JNIEXPORT void    JNICALL Java_org_parser_marpa_ESLIF_jniFree   (JNIEnv *envp, jobject eslifp);
 
-JNIEXPORT void    JNICALL Java_org_parser_marpa_ESLIFGrammar_jniNew     (JNIEnv *envp, jobject eslifGrammarp, jbyteArray utf8byteArrayp);
-JNIEXPORT jint    JNICALL Java_org_parser_marpa_ESLIFGrammar_jniNgrammar(JNIEnv *envp, jobject eslifGrammarp);
-JNIEXPORT void    JNICALL Java_org_parser_marpa_ESLIFGrammar_jniFree    (JNIEnv *envp, jobject eslifGrammarp);
+JNIEXPORT void      JNICALL Java_org_parser_marpa_ESLIFGrammar_jniNew               (JNIEnv *envp, jobject eslifGrammarp, jbyteArray utf8byteArrayp);
+JNIEXPORT jint      JNICALL Java_org_parser_marpa_ESLIFGrammar_jniNgrammar          (JNIEnv *envp, jobject eslifGrammarp);
+JNIEXPORT jint      JNICALL Java_org_parser_marpa_ESLIFGrammar_jniCurrentLevel      (JNIEnv *envp, jobject eslifGrammarp);
+JNIEXPORT jstring   JNICALL Java_org_parser_marpa_ESLIFGrammar_jniCurrentDescription(JNIEnv *envp, jobject eslifGrammarp);
+JNIEXPORT jstring   JNICALL Java_org_parser_marpa_ESLIFGrammar_jniDescriptionByLevel(JNIEnv *envp, jobject eslifGrammarp, jint level);
+JNIEXPORT jintArray JNICALL Java_org_parser_marpa_ESLIFGrammar_jniCurrentRuleIds    (JNIEnv *envp, jobject eslifGrammarp);
+JNIEXPORT jintArray JNICALL Java_org_parser_marpa_ESLIFGrammar_jniRuleIdsByLevel    (JNIEnv *envp, jobject eslifGrammarp, jint level);
+JNIEXPORT jintArray JNICALL Java_org_parser_marpa_ESLIFGrammar_jniRuleDisplay       (JNIEnv *envp, jobject eslifGrammarp, jint rule);
+JNIEXPORT jintArray JNICALL Java_org_parser_marpa_ESLIFGrammar_jniRuleShow          (JNIEnv *envp, jobject eslifGrammarp, jint rule);
+JNIEXPORT jintArray JNICALL Java_org_parser_marpa_ESLIFGrammar_jniRuleDisplayByLevel(JNIEnv *envp, jobject eslifGrammarp, jint level, jint rule);
+JNIEXPORT jintArray JNICALL Java_org_parser_marpa_ESLIFGrammar_jniRuleShowByLevel   (JNIEnv *envp, jobject eslifGrammarp, jint level, jint rule);
+JNIEXPORT jstring   JNICALL Java_org_parser_marpa_ESLIFGrammar_jniShow              (JNIEnv *envp, jobject eslifGrammarp);
+JNIEXPORT jstring   JNICALL Java_org_parser_marpa_ESLIFGrammar_jniShowByLevel       (JNIEnv *envp, jobject eslifGrammarp, jint level);
+JNIEXPORT void      JNICALL Java_org_parser_marpa_ESLIFGrammar_jniFree              (JNIEnv *envp, jobject eslifGrammarp);
 
 /* ---------- */
 /* Structures */
@@ -225,7 +236,6 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *JavaVMp, void* reservedp)
     if (marpaESLIFClassCachep->classp == NULL) {
       RAISEEXCEPTION(envp, "NewGlobalRef failure at %s:%d", MARPAESLIF_FILENAMES, __LINE__);
     }
-    fprintf(stderr, "Cached class %s => %p\n", marpaESLIFClassCachep->classs, marpaESLIFClassCachep->classp);
     marpaESLIFClassCachep++;
   }
 
@@ -246,7 +256,6 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *JavaVMp, void* reservedp)
                      MARPAESLIF_FILENAMES,
                      __LINE__);
     }
-    fprintf(stderr, "Cached method %s:%s with signature %s => %p:%p\n", marpaESLIFMethodCachep->marpaESLIFClassCachep->classs, marpaESLIFMethodCachep->methods, marpaESLIFMethodCachep->signatures, marpaESLIFMethodCachep->marpaESLIFClassCachep->classp, marpaESLIFMethodCachep->methodp);
     marpaESLIFMethodCachep++;
   }
 
@@ -488,34 +497,37 @@ JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIFGrammar_jniNew(JNIEnv *envp, j
   return;
 }
 
+#define MARPAESLIF_GRAMMAR_COMMON_START(envp, eslifGrammarp, marpaESLIFGrammarp, genericLoggerpp) do { \
+    jobject              BYTEBUFFER(marpaESLIFGrammar);                 \
+    genericLogger_t     *genericLoggerp = NULL;                         \
+                                                                        \
+    if (ESLIFGrammar_updateContextAndGetMarpaeslifp(envp, eslifGrammarp, eslifGrammarp, MARPAESLIF_ESLIFGRAMMAR_CLASS_getLoggerInterfacep_METHODP, genericLoggerpp) == NULL) { \
+      goto err;                                                         \
+    }                                                                   \
+                                                                        \
+    BYTEBUFFER(marpaESLIFGrammar) = (*envp)->CallObjectMethod(envp, eslifGrammarp, MARPAESLIF_ESLIFGRAMMAR_CLASS_getMarpaGrammarp_METHODP); \
+    if (BYTEBUFFER(marpaESLIFGrammar) == NULL) {                        \
+      RAISEEXCEPTION(envp, "marpaESLIFGrammar bytebuffer is NULL at %s:%d", MARPAESLIF_FILENAMES, __LINE__); \
+    }                                                                   \
+    marpaESLIFGrammarp = (*envp)->GetDirectBufferAddress(envp, BYTEBUFFER(marpaESLIFGrammar)); \
+    if (marpaESLIFGrammarp == NULL) {                                   \
+      RAISEEXCEPTION(envp, "marpaESLIFGrammarp is NULL at %s:%d", MARPAESLIF_FILENAMES, __LINE__); \
+    }                                                                   \
+  } while (0)
+
 /*****************************************************************************/
 JNIEXPORT jint JNICALL Java_org_parser_marpa_ESLIFGrammar_jniNgrammar(JNIEnv *envp, jobject eslifGrammarp)
 /*****************************************************************************/
 {
   static const char   *funcs = "Java_org_parser_marpa_ESLIFGrammar_jniNgrammar";
   marpaESLIFGrammar_t *marpaESLIFGrammarp  = NULL;
-  jobject              BYTEBUFFER(marpaESLIFGrammar);
   int                  ngrammari = 0;
   genericLogger_t     *genericLoggerp = NULL;
 
-  /* Always update genericLogger context */
-  if (ESLIFGrammar_updateContextAndGetMarpaeslifp(envp, eslifGrammarp, eslifGrammarp, MARPAESLIF_ESLIFGRAMMAR_CLASS_getLoggerInterfacep_METHODP, &genericLoggerp) == NULL) {
-    /* An exception was raised */
-    goto err;
-  }
+  MARPAESLIF_GRAMMAR_COMMON_START(envp, eslifGrammarp, marpaESLIFGrammarp, &genericLoggerp);
 #ifndef MARPAESLIF_NTRACE
   GENERICLOGGER_TRACEF(genericLoggerp, "In %s", funcs);
 #endif
-
-  BYTEBUFFER(marpaESLIFGrammar) = (*envp)->CallObjectMethod(envp, eslifGrammarp, MARPAESLIF_ESLIFGRAMMAR_CLASS_getMarpaGrammarp_METHODP);
-  if (BYTEBUFFER(marpaESLIFGrammar) == NULL) {
-    RAISEEXCEPTION(envp, "marpaESLIFGrammar bytebuffer is NULL at %s:%d", MARPAESLIF_FILENAMES, __LINE__);
-  }
-
-  marpaESLIFGrammarp = (*envp)->GetDirectBufferAddress(envp, BYTEBUFFER(marpaESLIFGrammar));
-  if (marpaESLIFGrammarp == NULL) {
-    RAISEEXCEPTION(envp, "marpaESLIFGrammarp is NULL at %s:%d", MARPAESLIF_FILENAMES, __LINE__);
-  }
 
   if (! marpaESLIFGrammar_ngrammarib(marpaESLIFGrammarp, &ngrammari)) {
     RAISEEXCEPTION(envp, "marpaESLIFGrammar_ngrammarib failure at %s:%d", MARPAESLIF_FILENAMES, __LINE__);
@@ -531,32 +543,395 @@ JNIEXPORT jint JNICALL Java_org_parser_marpa_ESLIFGrammar_jniNgrammar(JNIEnv *en
 }
 
 /*****************************************************************************/
+JNIEXPORT jint JNICALL Java_org_parser_marpa_ESLIFGrammar_jniCurrentLevel(JNIEnv *envp, jobject eslifGrammarp)
+/*****************************************************************************/
+{
+  static const char   *funcs = "Java_org_parser_marpa_ESLIFGrammar_jniCurrentLevel";
+  marpaESLIFGrammar_t *marpaESLIFGrammarp  = NULL;
+  int                  leveli = 0;
+  genericLogger_t     *genericLoggerp = NULL;
+
+  MARPAESLIF_GRAMMAR_COMMON_START(envp, eslifGrammarp, marpaESLIFGrammarp, &genericLoggerp);
+#ifndef MARPAESLIF_NTRACE
+  GENERICLOGGER_TRACEF(genericLoggerp, "In %s", funcs);
+#endif
+
+  if (! marpaESLIFGrammar_grammar_currentb(marpaESLIFGrammarp, &leveli, NULL)) {
+    RAISEEXCEPTION(envp, "marpaESLIFGrammar_grammar_currentb failure at %s:%d", MARPAESLIF_FILENAMES, __LINE__);
+  }
+
+  goto done;
+
+ err:
+  leveli = -1;
+
+ done:
+  return (jint) leveli;
+}
+
+/*****************************************************************************/
+JNIEXPORT jstring JNICALL Java_org_parser_marpa_ESLIFGrammar_jniCurrentDescription(JNIEnv *envp, jobject eslifGrammarp)
+/*****************************************************************************/
+{
+  static const char   *funcs = "Java_org_parser_marpa_ESLIFGrammar_jniCurrentDescription";
+  marpaESLIFGrammar_t *marpaESLIFGrammarp  = NULL;
+  marpaESLIFString_t  *descp;
+  jstring              stringp;
+  genericLogger_t     *genericLoggerp = NULL;
+
+  MARPAESLIF_GRAMMAR_COMMON_START(envp, eslifGrammarp, marpaESLIFGrammarp, &genericLoggerp);
+#ifndef MARPAESLIF_NTRACE
+  GENERICLOGGER_TRACEF(genericLoggerp, "In %s", funcs);
+#endif
+
+  if (! marpaESLIFGrammar_grammar_currentb(marpaESLIFGrammarp, NULL, &descp)) {
+    RAISEEXCEPTION(envp, "marpaESLIFGrammar_grammar_currentb failure at %s:%d", MARPAESLIF_FILENAMES, __LINE__);
+  }
+
+  /* We enforced UTF-8 when parsing the grammar, so description is also in UTF-8 */
+  stringp = (*envp)->NewStringUTF(envp, descp->bytep);
+  goto done;
+
+ err:
+  stringp = NULL;
+
+ done:
+  return stringp;
+}
+
+/*****************************************************************************/
+JNIEXPORT jstring JNICALL Java_org_parser_marpa_ESLIFGrammar_jniDescriptionByLevel(JNIEnv *envp, jobject eslifGrammarp, jint level)
+/*****************************************************************************/
+{
+  static const char   *funcs = "Java_org_parser_marpa_ESLIFGrammar_jniDescription";
+  marpaESLIFGrammar_t *marpaESLIFGrammarp  = NULL;
+  marpaESLIFString_t  *descp;
+  int                  leveli = (jint) level;
+  jstring              stringp;
+  genericLogger_t     *genericLoggerp = NULL;
+
+  MARPAESLIF_GRAMMAR_COMMON_START(envp, eslifGrammarp, marpaESLIFGrammarp, &genericLoggerp);
+#ifndef MARPAESLIF_NTRACE
+  GENERICLOGGER_TRACEF(genericLoggerp, "In %s", funcs);
+#endif
+
+  if (! marpaESLIFGrammar_grammar_by_levelb(marpaESLIFGrammarp, leveli, NULL, NULL, &descp)) {
+    RAISEEXCEPTION(envp, "marpaESLIFGrammar_grammar_by_levelb failure for level %d at %s:%d", leveli, MARPAESLIF_FILENAMES, __LINE__);
+  }
+
+  /* We enforced UTF-8 when parsing the grammar, so description is also in UTF-8 */
+  stringp = (*envp)->NewStringUTF(envp, descp->bytep);
+  goto done;
+
+ err:
+  stringp = NULL;
+
+ done:
+  return stringp;
+}
+
+/*****************************************************************************/
+JNIEXPORT jintArray JNICALL Java_org_parser_marpa_ESLIFGrammar_jniCurrentRuleIds(JNIEnv *envp, jobject eslifGrammarp)
+/*****************************************************************************/
+{
+  static const char   *funcs = "Java_org_parser_marpa_ESLIFGrammar_jniCurrentRuleIds";
+  marpaESLIFGrammar_t *marpaESLIFGrammarp  = NULL;
+  jintArray            intArray = NULL;
+  jint                *intp = NULL;
+  int                 *ruleip;
+  size_t               rulel;
+  int                  i;
+  genericLogger_t     *genericLoggerp = NULL;
+
+  MARPAESLIF_GRAMMAR_COMMON_START(envp, eslifGrammarp, marpaESLIFGrammarp, &genericLoggerp);
+#ifndef MARPAESLIF_NTRACE
+  GENERICLOGGER_TRACEF(genericLoggerp, "In %s", funcs);
+#endif
+
+  if (! marpaESLIFGrammar_rulearray_currentb(marpaESLIFGrammarp, &ruleip, &rulel)) {
+    RAISEEXCEPTION(envp, "marpaESLIFGrammar_rulearray_currentb failure at %s:%d", MARPAESLIF_FILENAMES, __LINE__);
+  }
+  if (rulel <= 0) {
+    RAISEEXCEPTION(envp, "marpaESLIFGrammar_rulearray_currentb returned rulel <= 0 at %s:%d", MARPAESLIF_FILENAMES, __LINE__);
+  }
+  intp = (jint *) malloc(sizeof(jint) * rulel);
+  if (intp == NULL) {
+    RAISEEXCEPTION(envp, "malloc failure at %s:%d; %s", MARPAESLIF_FILENAMES, __LINE__, strerror(errno));
+  }
+  for (i = 0; i < rulel; i++) {
+    intp[i] = (jint) ruleip[i];
+  }
+
+  intArray = (*envp)->NewIntArray(envp, (jsize) rulel);
+  if (intArray == NULL) {
+    RAISEEXCEPTION(envp, "NewIntArray failure at %s:%d", MARPAESLIF_FILENAMES, __LINE__);
+  }
+  (*envp)->SetIntArrayRegion(envp, intArray, 0, (jsize) rulel, intp);
+  goto done;
+
+ err:
+  if (intArray != NULL) {
+    (*envp)->DeleteLocalRef(envp, intArray);
+    intArray = NULL;
+  }
+
+ done:
+  if (intp != NULL) {
+    free(intp);
+  }
+  return intArray;
+}
+
+/*****************************************************************************/
+JNIEXPORT jintArray JNICALL Java_org_parser_marpa_ESLIFGrammar_jniRuleIdsByLevel(JNIEnv *envp, jobject eslifGrammarp, jint level)
+/*****************************************************************************/
+{
+  static const char   *funcs = "Java_org_parser_marpa_ESLIFGrammar_jniRuleIdsByLevel";
+  marpaESLIFGrammar_t *marpaESLIFGrammarp  = NULL;
+  int                  leveli = (int) level;
+  jintArray            intArray;
+  jint                *intp = NULL;
+  int                 *ruleip;
+  size_t               rulel;
+  int                  i;
+  genericLogger_t     *genericLoggerp = NULL;
+
+  MARPAESLIF_GRAMMAR_COMMON_START(envp, eslifGrammarp, marpaESLIFGrammarp, &genericLoggerp);
+#ifndef MARPAESLIF_NTRACE
+  GENERICLOGGER_TRACEF(genericLoggerp, "In %s", funcs);
+#endif
+
+  if (! marpaESLIFGrammar_rulearray_by_levelb(marpaESLIFGrammarp, &ruleip, &rulel, leveli, NULL)) {
+    RAISEEXCEPTION(envp, "marpaESLIFGrammar_rulearray_by_levelb failure for level %d at %s:%d", leveli, MARPAESLIF_FILENAMES, __LINE__);
+  }
+  if (rulel <= 0) {
+    RAISEEXCEPTION(envp, "marpaESLIFGrammar_rulearray_currentb returned rulel <= 0 at %s:%d", MARPAESLIF_FILENAMES, __LINE__);
+  }
+  intp = (jint *) malloc(sizeof(jint) * rulel);
+  if (intp == NULL) {
+    RAISEEXCEPTION(envp, "malloc failure at %s:%d; %s", MARPAESLIF_FILENAMES, __LINE__, strerror(errno));
+  }
+  for (i = 0; i < rulel; i++) {
+    intp[i] = (jint) ruleip[i];
+  }
+
+  intArray = (*envp)->NewIntArray(envp, (jsize) rulel);
+  if (intArray == NULL) {
+    RAISEEXCEPTION(envp, "NewIntArray failure at %s:%d", MARPAESLIF_FILENAMES, __LINE__);
+  }
+  (*envp)->SetIntArrayRegion(envp, intArray, 0, (jsize) rulel, intp);
+  goto done;
+
+ err:
+  if (intArray != NULL) {
+    (*envp)->DeleteLocalRef(envp, intArray);
+    intArray = NULL;
+  }
+
+ done:
+  if (intp != NULL) {
+    free(intp);
+  }
+  return intArray;
+}
+
+/*****************************************************************************/
+JNIEXPORT jintArray JNICALL Java_org_parser_marpa_ESLIFGrammar_jniRuleDisplay(JNIEnv *envp, jobject eslifGrammarp, jint rule)
+/*****************************************************************************/
+{
+  static const char   *funcs = "Java_org_parser_marpa_ESLIFGrammar_jniRuleDisplay";
+  marpaESLIFGrammar_t *marpaESLIFGrammarp  = NULL;
+  int                  rulei = (int) rule;
+  char                *ruledisplays;
+  genericLogger_t     *genericLoggerp = NULL;
+  jstring              stringp;
+
+  MARPAESLIF_GRAMMAR_COMMON_START(envp, eslifGrammarp, marpaESLIFGrammarp, &genericLoggerp);
+#ifndef MARPAESLIF_NTRACE
+  GENERICLOGGER_TRACEF(genericLoggerp, "In %s", funcs);
+#endif
+
+  if (! marpaESLIFGrammar_ruledisplayform_currentb(marpaESLIFGrammarp, rulei, &ruledisplays)) {
+    RAISEEXCEPTION(envp, "marpaESLIFGrammar_ruledisplayform_currentb failure for rule %d at %s:%d", rulei, MARPAESLIF_FILENAMES, __LINE__);
+  }
+
+  stringp = (*envp)->NewStringUTF(envp, ruledisplays);
+  goto done;
+
+ err:
+  stringp = NULL;
+
+ done:
+  return stringp;
+}
+
+/*****************************************************************************/
+JNIEXPORT jintArray JNICALL Java_org_parser_marpa_ESLIFGrammar_jniRuleShow(JNIEnv *envp, jobject eslifGrammarp, jint rule)
+/*****************************************************************************/
+{
+  static const char   *funcs = "Java_org_parser_marpa_ESLIFGrammar_jniRuleShow";
+  marpaESLIFGrammar_t *marpaESLIFGrammarp  = NULL;
+  int                  rulei = (int) rule;
+  char                *ruleshows;
+  genericLogger_t     *genericLoggerp = NULL;
+  jstring              stringp;
+
+  MARPAESLIF_GRAMMAR_COMMON_START(envp, eslifGrammarp, marpaESLIFGrammarp, &genericLoggerp);
+#ifndef MARPAESLIF_NTRACE
+  GENERICLOGGER_TRACEF(genericLoggerp, "In %s", funcs);
+#endif
+
+  if (! marpaESLIFGrammar_ruleshowform_currentb(marpaESLIFGrammarp, rulei, &ruleshows)) {
+    RAISEEXCEPTION(envp, "marpaESLIFGrammar_ruleshowform_currentb failure for rule %d at %s:%d", rulei, MARPAESLIF_FILENAMES, __LINE__);
+  }
+
+  stringp = (*envp)->NewStringUTF(envp, ruleshows);
+  goto done;
+
+ err:
+  stringp = NULL;
+
+ done:
+  return stringp;
+}
+
+/*****************************************************************************/
+JNIEXPORT jintArray JNICALL Java_org_parser_marpa_ESLIFGrammar_jniRuleDisplayByLevel(JNIEnv *envp, jobject eslifGrammarp, jint level, jint rule)
+/*****************************************************************************/
+{
+  static const char   *funcs = "Java_org_parser_marpa_ESLIFGrammar_jniRuleDisplayByLevel";
+  marpaESLIFGrammar_t *marpaESLIFGrammarp  = NULL;
+  int                  leveli = (int) level;
+  int                  rulei = (int) rule;
+  char                *ruledisplays;
+  genericLogger_t     *genericLoggerp = NULL;
+  jstring              stringp;
+
+  MARPAESLIF_GRAMMAR_COMMON_START(envp, eslifGrammarp, marpaESLIFGrammarp, &genericLoggerp);
+#ifndef MARPAESLIF_NTRACE
+  GENERICLOGGER_TRACEF(genericLoggerp, "In %s", funcs);
+#endif
+
+  if (! marpaESLIFGrammar_ruledisplayform_by_levelb(marpaESLIFGrammarp, rulei, &ruledisplays, leveli, NULL)) {
+    RAISEEXCEPTION(envp, "marpaESLIFGrammar_ruledisplayform_currentb failure for rule %d and level %d at %s:%d", rulei, leveli, MARPAESLIF_FILENAMES, __LINE__);
+  }
+
+  stringp = (*envp)->NewStringUTF(envp, ruledisplays);
+  goto done;
+
+ err:
+  stringp = NULL;
+
+ done:
+  return stringp;
+}
+
+/*****************************************************************************/
+JNIEXPORT jintArray JNICALL Java_org_parser_marpa_ESLIFGrammar_jniRuleShowByLevel(JNIEnv *envp, jobject eslifGrammarp, jint level, jint rule)
+/*****************************************************************************/
+{
+  static const char   *funcs = "Java_org_parser_marpa_ESLIFGrammar_jniRuleShowByLevel";
+  marpaESLIFGrammar_t *marpaESLIFGrammarp  = NULL;
+  int                  leveli = (int) level;
+  int                  rulei = (int) rule;
+  char                *ruleshows;
+  genericLogger_t     *genericLoggerp = NULL;
+  jstring              stringp;
+
+  MARPAESLIF_GRAMMAR_COMMON_START(envp, eslifGrammarp, marpaESLIFGrammarp, &genericLoggerp);
+#ifndef MARPAESLIF_NTRACE
+  GENERICLOGGER_TRACEF(genericLoggerp, "In %s", funcs);
+#endif
+
+  if (! marpaESLIFGrammar_ruleshowform_by_levelb(marpaESLIFGrammarp, rulei, &ruleshows, leveli, NULL)) {
+    RAISEEXCEPTION(envp, "marpaESLIFGrammar_ruleshowform_by_levelb failure for rule %d and level %d at %s:%d", rulei, leveli, MARPAESLIF_FILENAMES, __LINE__);
+  }
+
+  stringp = (*envp)->NewStringUTF(envp, ruleshows);
+  goto done;
+
+ err:
+  stringp = NULL;
+
+ done:
+  return stringp;
+}
+
+/*****************************************************************************/
+JNIEXPORT jstring JNICALL Java_org_parser_marpa_ESLIFGrammar_jniShow(JNIEnv *envp, jobject eslifGrammarp)
+/*****************************************************************************/
+{
+  static const char   *funcs = "Java_org_parser_marpa_ESLIFGrammar_jniShow";
+  marpaESLIFGrammar_t *marpaESLIFGrammarp  = NULL;
+  char                *shows;
+  jstring              stringp;
+  genericLogger_t     *genericLoggerp = NULL;
+
+  MARPAESLIF_GRAMMAR_COMMON_START(envp, eslifGrammarp, marpaESLIFGrammarp, &genericLoggerp);
+#ifndef MARPAESLIF_NTRACE
+  GENERICLOGGER_TRACEF(genericLoggerp, "In %s", funcs);
+#endif
+
+  if (! marpaESLIFGrammar_grammarshowform_currentb(marpaESLIFGrammarp, &shows)) {
+    RAISEEXCEPTION(envp, "marpaESLIFGrammar_grammarshowform_currentb failure at %s:%d", MARPAESLIF_FILENAMES, __LINE__);
+  }
+
+  stringp = (*envp)->NewStringUTF(envp, shows);
+  goto done;
+
+ err:
+  stringp = NULL;
+
+ done:
+  return stringp;
+}
+
+/*****************************************************************************/
+JNIEXPORT jstring JNICALL Java_org_parser_marpa_ESLIFGrammar_jniShowByLevel(JNIEnv *envp, jobject eslifGrammarp, jint level)
+/*****************************************************************************/
+{
+  static const char   *funcs = "Java_org_parser_marpa_ESLIFGrammar_jniShowByLevel";
+  marpaESLIFGrammar_t *marpaESLIFGrammarp  = NULL;
+  int                  leveli = (int) level;
+  char                *shows;
+  jstring              stringp;
+  genericLogger_t     *genericLoggerp = NULL;
+
+  MARPAESLIF_GRAMMAR_COMMON_START(envp, eslifGrammarp, marpaESLIFGrammarp, &genericLoggerp);
+#ifndef MARPAESLIF_NTRACE
+  GENERICLOGGER_TRACEF(genericLoggerp, "In %s", funcs);
+#endif
+
+  if (! marpaESLIFGrammar_grammarshowform_by_levelb(marpaESLIFGrammarp, &shows, leveli, NULL)) {
+    RAISEEXCEPTION(envp, "marpaESLIFGrammar_grammarshowform_by_levelb for level at %s:%d", leveli, MARPAESLIF_FILENAMES, __LINE__);
+  }
+
+  stringp = (*envp)->NewStringUTF(envp, shows);
+  goto done;
+
+ err:
+  stringp = NULL;
+
+ done:
+  return stringp;
+}
+
+/*****************************************************************************/
 JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIFGrammar_jniFree(JNIEnv *envp, jobject eslifGrammarp)
 /*****************************************************************************/
 {
   static const char   *funcs = "Java_org_parser_marpa_ESLIFGrammar_jniFree";
   marpaESLIFGrammar_t *marpaESLIFGrammarp  = NULL;
-  jobject              BYTEBUFFER(marpaESLIFGrammar);
-
   genericLogger_t     *genericLoggerp = NULL;
 
-  /* Always update genericLogger context */
-  if (ESLIFGrammar_updateContextAndGetMarpaeslifp(envp, eslifGrammarp, eslifGrammarp, MARPAESLIF_ESLIFGRAMMAR_CLASS_getLoggerInterfacep_METHODP, &genericLoggerp) == NULL) {
-    /* An exception was raised */
-    goto done;
-  }
+  MARPAESLIF_GRAMMAR_COMMON_START(envp, eslifGrammarp, marpaESLIFGrammarp, &genericLoggerp);
 #ifndef MARPAESLIF_NTRACE
   GENERICLOGGER_TRACEF(genericLoggerp, "In %s", funcs);
 #endif
 
-  BYTEBUFFER(marpaESLIFGrammar) = (*envp)->CallObjectMethod(envp, eslifGrammarp, MARPAESLIF_ESLIFGRAMMAR_CLASS_getMarpaGrammarp_METHODP);
-  if (BYTEBUFFER(marpaESLIFGrammar) != NULL) {
-    marpaESLIFGrammarp = (*envp)->GetDirectBufferAddress(envp, BYTEBUFFER(marpaESLIFGrammar));
-    marpaESLIFGrammar_freev(marpaESLIFGrammarp); /* This is NULL protected */
-  }
-
-  (*envp)->CallVoidMethod(envp, eslifGrammarp, MARPAESLIF_ESLIFGRAMMAR_CLASS_setMarpaGrammarp_METHODP, NULL);
-
+  marpaESLIFGrammar_freev(marpaESLIFGrammarp); /* This is NULL protected */
+  goto done;
+ err:
  done:
   return;
 }
