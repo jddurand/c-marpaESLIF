@@ -16,7 +16,7 @@ public class ESLIFApp  {
 				  + "    /[\\d]+/                          action => do_int\n"
 				  + "    | '(' Expression ')'              assoc => group action => ::copy[1]\n"
 				  + "   ||     Expression '**' Expression  assoc => right\n"
-				  + "   ||     Expression  '*' Expression\n"
+				  + "   |x|     Expression  '*' Expression\n"
 				  + "    |     Expression  '/' Expression\n"
 				  + "   ||     Expression  '+' Expression\n"
 				  + "    |     Expression  '-' Expression\n"
@@ -24,6 +24,7 @@ public class ESLIFApp  {
 				  + "\n";
 
 
+		Thread.sleep(15000);
 		ESLIFGrammar eslifGrammar = new ESLIFGrammar(eslif, grammar);
 		eslifLogger.info("number of grammars: " + eslifGrammar.ngrammar());
 		eslifGrammar.free();

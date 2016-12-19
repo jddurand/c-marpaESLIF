@@ -6,9 +6,9 @@ import java.nio.ByteBuffer;
 public class ESLIFGrammar {
 	private ESLIF       eslif         = null;
 	private ByteBuffer  marpaGrammarp = null;
-	private native void newp(byte[] utf8);
-	private native void freev();
-	private native int  ngrammari();
+	private native void jniNew(byte[] utf8);
+	private native void jniFree();
+	private native int  jniNgrammar();
 	
 	/*
 	 * ********************************************
@@ -17,23 +17,15 @@ public class ESLIFGrammar {
 	 */
 	public ESLIFGrammar(ESLIF eslif, String grammar) throws UnsupportedEncodingException {
 		this.eslif = eslif;
-		newp(grammar.getBytes("UTF-8"));
+		jniNew(grammar.getBytes("UTF-8"));
 	}
 
-	public ESLIFLoggerInterface getLoggerInterface() {
-		ESLIFLoggerInterface loggerInterface = null;
-		if (this.eslif != null) {
-			loggerInterface = eslif.getLoggerInterface();
-		}
-		return loggerInterface;
-	}
-	
 	public void free() {
-		freev();
+		jniFree();
 	}
 	
 	public int ngrammar() {
-		return ngrammari();
+		return jniNgrammar();
 	}
 	
 	/*
@@ -41,6 +33,9 @@ public class ESLIFGrammar {
 	 * Private methods - used by the JNI
 	 * ********************************************
 	 */
+	protected ESLIFLoggerInterface getLoggerInterface() {
+		return eslif != null ? eslif.getLoggerInterface() : null;
+	}
 	private ESLIF getEslif() {
 		return eslif;
 	}

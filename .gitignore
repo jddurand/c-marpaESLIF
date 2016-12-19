@@ -72,7 +72,5 @@ workspace/
 *.jar
 *.classpath
 *.project
-src/java/.gitignore
-src/java/bin
+src/bindings/java/bin
 config.h
-bindings/java/org
