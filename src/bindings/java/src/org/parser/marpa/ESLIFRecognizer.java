@@ -3,12 +3,12 @@ package org.parser.marpa;
 import java.nio.ByteBuffer;
 
 public class ESLIFRecognizer implements ESLIFRecognizerInterface {
-	private ESLIFGrammar         eslifGrammar         = null;
-	private ByteBuffer           marpaRecognizerp     = null;
-	private ESLIFReaderInterface readerInterface      = null;
-	private boolean              withDisableThreshold = false;
-	private boolean              withExhaustion       = false;
-	private boolean              withNewline          = false;
+	private ESLIFGrammar         eslifGrammar          = null;
+	private ByteBuffer           marpaESLIFRecognizerp = null;
+	private ESLIFReaderInterface readerInterface       = null;
+	private boolean              withDisableThreshold  = false;
+	private boolean              withExhaustion        = false;
+	private boolean              withNewline           = false;
 	private native void          jniNew(ESLIFGrammar eslifGrammar);
 	private native void          jniFree();
 
@@ -81,10 +81,10 @@ public class ESLIFRecognizer implements ESLIFRecognizerInterface {
 	private void setEslifGrammar(ESLIFGrammar eslifGrammar) {
 		this.eslifGrammar = eslifGrammar;
 	}
-	private ByteBuffer getMarpaRecognizerp() {
-		return marpaRecognizerp;
+	private ByteBuffer getMarpaESLIFRecognizerp() {
+		return marpaESLIFRecognizerp;
 	}
-	private void setMarpaRecognizerp(ByteBuffer marpaRecognizerp) {
-		this.marpaRecognizerp = marpaRecognizerp;
+	private void setMarpaESLIFRecognizerp(ByteBuffer marpaESLIFRecognizerp) {
+		this.marpaESLIFRecognizerp = marpaESLIFRecognizerp;
 	}
 }
