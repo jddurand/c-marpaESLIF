@@ -514,7 +514,6 @@ JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIFGrammar_jniNew(JNIEnv *envp, j
 
 #define MARPAESLIF_GRAMMAR_COMMON_START(envp, eslifGrammarp, marpaESLIFGrammarp, genericLoggerpp) do { \
     jobject              BYTEBUFFER(marpaESLIFGrammar);                 \
-    genericLogger_t     *genericLoggerp = NULL;                         \
                                                                         \
     if (ESLIFGrammar_updateContextAndGetMarpaeslifp(envp, eslifGrammarp, eslifGrammarp, MARPAESLIF_ESLIFGRAMMAR_CLASS_getLoggerInterfacep_METHODP, genericLoggerpp) == NULL) { \
       goto err;                                                         \
