@@ -4,22 +4,23 @@ import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 
 public class ESLIFGrammar {
-	private ESLIF         eslif         = null;
-	private ByteBuffer    marpaGrammarp = null;
-	private native void   jniNew(byte[] utf8);
-	private native void   jniFree();
-	private native int    jniNgrammar();
-	private native int    jniCurrentLevel();
-	private native String jniCurrentDescription();
-	private native String jniDescriptionByLevel(int level);
-	private native int[]  jniCurrentRuleIds();
-	private native int[]  jniRuleIdsByLevel(int level);
-	private native String jniRuleDisplay(int rule);
-	private native String jniRuleShow(int rule);
-	private native String jniRuleDisplayByLevel(int level, int rule);
-	private native String jniRuleShowByLevel(int level, int rule);
-	private native String jniShow();
-	private native String jniShowByLevel(int level);
+	private ESLIF          eslif         = null;
+	private ByteBuffer     marpaGrammarp = null;
+	private native void    jniNew(byte[] utf8);
+	private native void    jniFree();
+	private native int     jniNgrammar();
+	private native int     jniCurrentLevel();
+	private native String  jniCurrentDescription();
+	private native String  jniDescriptionByLevel(int level);
+	private native int[]   jniCurrentRuleIds();
+	private native int[]   jniRuleIdsByLevel(int level);
+	private native String  jniRuleDisplay(int rule);
+	private native String  jniRuleShow(int rule);
+	private native String  jniRuleDisplayByLevel(int level, int rule);
+	private native String  jniRuleShowByLevel(int level, int rule);
+	private native String  jniShow();
+	private native String  jniShowByLevel(int level);
+	private native boolean jniParse(ESLIFRecognizer recognizer, ESLIFValue value);
 	
 	/*
 	 * ********************************************
@@ -75,13 +76,48 @@ public class ESLIFGrammar {
 	public String showByLevel(int level) {
 		return jniShowByLevel(level);
 	}
+	public boolean parse(ESLIFRecognizerInterface recognizerInterface, ESLIFValueInterface valueInterface) throws Exception {
+		boolean   rc = false;
+		Exception exception = null;
+		/*
+		 * The JNI will work with ESLIFRecognizer and ESLIFValue instances.
+		 * So we create temporary instances from the interfaces.
+		 * It is not a hazard that ESLIFRecognizer implements only ESLIFRecognizerInterface, ditto for ESLIFValue -;
+		 */
+		ESLIFRecognizer recognizer = new ESLIFRecognizer(this, recognizerInterface);
+		ESLIFValue      value      = new ESLIFValue(recognizer, valueInterface);
+
+		recognizer.setWithDisableThreshold(recognizerInterface.isWithDisableThreshold());
+		recognizer.setWithExhaustion(recognizerInterface.isWithExhaustion());
+		recognizer.setWithNewline(recognizerInterface.isWithNewline());
+
+		value.setWithHighRankOnly(valueInterface.isWithHighRankOnly());
+		value.setWithOrderByRank(valueInterface.isWithOrderByRank());
+		value.setWithAmbiguous(valueInterface.isWithAmbiguous());
+		value.setWithNull(valueInterface.isWithNull());
+		value.setMaxParses(valueInterface.maxParses());
+
+		try {
+			rc = jniParse(recognizer, value);
+		} catch (Exception e) {
+			exception = e;
+		} finally {
+			value.free();
+			recognizer.free();
+		}
+		
+		if (exception != null) {
+			throw new Exception(exception);
+		}
+		return rc;
+	}
 	/*
 	 * ********************************************
 	 * Private methods - used by the JNI
 	 * ********************************************
 	 */
-	private ESLIFLoggerInterface getLoggerInterface() {
-		return eslif != null ? eslif.getLoggerInterface() : null;
+	protected ESLIFLoggerInterface getLoggerInterface() {
+		return (eslif != null) ? eslif.getLoggerInterface() : null;
 	}
 	private ESLIF getEslif() {
 		return eslif;
