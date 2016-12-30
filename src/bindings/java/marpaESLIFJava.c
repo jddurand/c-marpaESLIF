@@ -209,8 +209,9 @@ static marpaESLIF_t *ESLIF_updateContextAndGetMarpaeslifp(JNIEnv *envp, jobject 
 JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *JavaVMp, void* reservedp)
 /*****************************************************************************/
 {
+  jint                     rci;
   JNIEnv                  *envp;
-  jclass                   classp;
+  jclass                   classp                 = NULL;
   marpaESLIFClassCache_t  *marpaESLIFClassCachep  = marpaESLIFClassCacheArrayp;
   marpaESLIFMethodCache_t *marpaESLIFMethodCachep = marpaESLIFMethodCacheArrayp;
 
@@ -227,6 +228,9 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *JavaVMp, void* reservedp)
   /* Get cache of classes - this is ok only if the result of FindClass is turned into a global reference */
   /* --------------------------------------------------------------------------------------------------- */
   while (marpaESLIFClassCachep->classs != NULL) {
+    if (classp != NULL) {
+      (*envp)->DeleteLocalRef(envp, classp);
+    }
     classp = (*envp)->FindClass(envp, marpaESLIFClassCachep->classs);
     if (classp == NULL) {
       RAISEEXCEPTION(envp, "Failed to find class \"%s\" at %s:%d", marpaESLIFClassCachep->classs, MARPAESLIF_FILENAMES, __LINE__);
@@ -237,6 +241,10 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *JavaVMp, void* reservedp)
       RAISEEXCEPTION(envp, "NewGlobalRef failure at %s:%d", MARPAESLIF_FILENAMES, __LINE__);
     }
     marpaESLIFClassCachep++;
+  }
+  if (classp != NULL) {
+    (*envp)->DeleteLocalRef(envp, classp);
+    classp = NULL;
   }
 
   /* -------------------- */
@@ -259,10 +267,17 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *JavaVMp, void* reservedp)
     marpaESLIFMethodCachep++;
   }
 
-  return MARPAESLIF_JNI_VERSION;
+  rci = MARPAESLIF_JNI_VERSION;
+  goto done;
 
  err:
-  return JNI_ERR;
+  rci = JNI_ERR;
+
+ done:
+  if (classp != NULL) {
+    (*envp)->DeleteLocalRef(envp, classp);
+  }
+  return rci;
 }
 
 /*****************************************************************************/
@@ -272,9 +287,9 @@ JNIEXPORT void JNICALL JNI_OnUnLoad(JavaVM *vmp, void* reservedp)
   JNIEnv                 *envp;
   marpaESLIFClassCache_t *marpaESLIFClassCachep  = marpaESLIFClassCacheArrayp;
 
-  /* ------------------------------------------------ */
-  /* It is safe to store JavaVMp in a global variable */
-  /* ------------------------------------------------ */
+  /* ------------------------------------------------- */
+  /* It was safe to store JavaVMp in a global variable */
+  /* ------------------------------------------------- */
   if (((*vmp)->GetEnv(vmp, (void **) &envp, MARPAESLIF_JNI_VERSION) != JNI_OK) || (envp == NULL)) {
     RAISEEXCEPTION(envp, "Failed to get environment at %s:%d", MARPAESLIF_FILENAMES, __LINE__);
   }
