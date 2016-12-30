@@ -4,8 +4,8 @@ import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 
 public class ESLIFGrammar {
-	private ESLIF          eslif         = null;
-	private ByteBuffer     marpaGrammarp = null;
+	private ESLIF          eslif              = null;
+	private ByteBuffer     marpaESLIFGrammarp = null;
 	private native void    jniNew(byte[] utf8);
 	private native void    jniFree();
 	private native int     jniNgrammar();
@@ -125,11 +125,11 @@ public class ESLIFGrammar {
 	private void setEslif(ESLIF eslif) {
 		this.eslif = eslif;
 	}
-	private ByteBuffer getMarpaGrammarp() {
-		return marpaGrammarp;
+	private ByteBuffer getMarpaESLIFGrammarp() {
+		return marpaESLIFGrammarp;
 	}
-	private void setMarpaGrammarp(ByteBuffer marpaGrammarp) {
-		this.marpaGrammarp = marpaGrammarp;
+	private void setMarpaESLIFGrammarp(ByteBuffer marpaESLIFGrammarp) {
+		this.marpaESLIFGrammarp = marpaESLIFGrammarp;
 	}
 
 }

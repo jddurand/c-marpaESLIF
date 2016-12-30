@@ -1,7 +1,10 @@
 package org.parser.marpa;
 
-public class ESLIFApp  {
+import java.io.BufferedReader;
+import java.io.StringReader;
 
+public class ESLIFApp  {
+	
 	public static void main(String[] args) throws Exception {
 		ESLIFLogger eslifLogger = new ESLIFLogger();
 
@@ -50,6 +53,10 @@ public class ESLIFApp  {
 				eslifLogger.info("    show    form: " + eslifGrammar.ruleShowByLevel(level, i)); 
 			}
 		}
+		
+		BufferedReader input = new BufferedReader(new StringReader("(3 * 4) + 2 * 7"));
+		ESLIFAppRecognizer eslifAppRecognizer = new ESLIFAppRecognizer(input);
+		eslifGrammar.parse(eslifAppRecognizer, null);
 		eslifGrammar.free();
 
 		eslif.free();
