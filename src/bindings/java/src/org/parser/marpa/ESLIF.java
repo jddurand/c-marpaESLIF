@@ -10,8 +10,7 @@ import java.nio.ByteBuffer;
  *
  */
 public class ESLIF {
-	final static String MARPAESLIFJAVA_LIBRARY_NAME = "marpaESLIFJava";
-
+	private final static String  MARPAESLIFJAVA_LIBRARY_NAME = "marpaESLIFJava";
 	private ESLIFLoggerInterface loggerInterface       = null;
 	private ByteBuffer           marpaESLIFp           = null;
 	private ByteBuffer           genericLoggerContextp = null;
@@ -22,9 +21,9 @@ public class ESLIF {
 	
 	static {
 		try {
-			System.loadLibrary(MARPAESLIFJAVA_LIBRARY_NAME);
+			System.loadLibrary(getMarpaeslifjavaLibraryName());
 		} catch (Exception e) {
-			System.err.println("Failed to load " + MARPAESLIFJAVA_LIBRARY_NAME + ", " + e);
+			System.err.println("Failed to load " + getMarpaeslifjavaLibraryName() + ", " + e);
 			System.exit(1);
 		}
 	}
@@ -34,6 +33,9 @@ public class ESLIF {
 	 * Public methods
 	 * ********************************************
 	 */
+	public static String getMarpaeslifjavaLibraryName() {
+		return MARPAESLIFJAVA_LIBRARY_NAME;
+	}
 	public ESLIF(ESLIFLoggerInterface loggerInterface) {
 		setLoggerInterface(loggerInterface);
 		jniNew(loggerInterface);
@@ -50,8 +52,6 @@ public class ESLIF {
 	public String version() {
 		return jniVersion();
 	}
-
-
 	/*
 	 * *******************************************
 	 * Private/protected methods - used by the JNI
