@@ -56,7 +56,8 @@ public class ESLIFApp  {
 		
 		BufferedReader input = new BufferedReader(new StringReader("(3 * 4) + 2 * 7"));
 		ESLIFAppRecognizer eslifAppRecognizer = new ESLIFAppRecognizer(input);
-		eslifGrammar.parse(eslifAppRecognizer, null);
+		ESLIFAppValue eslifAppValue = new ESLIFAppValue();
+		eslifGrammar.parse(eslifAppRecognizer, eslifAppValue);
 		eslifGrammar.free();
 
 		eslif.free();
