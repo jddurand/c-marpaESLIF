@@ -20,8 +20,7 @@ public class ESLIFGrammar {
 	private native String  jniRuleShowByLevel(int level, int rule);
 	private native String  jniShow();
 	private native String  jniShowByLevel(int level);
-	private native boolean jniParse(ESLIFRecognizer recognizer, ESLIFValue value);
-	
+	private native boolean jniParse(ESLIFRecognizerInterface recognizerInterface, ESLIFValueInterface valueInterface);
 	/*
 	 * ********************************************
 	 * Public methods
@@ -76,40 +75,8 @@ public class ESLIFGrammar {
 	public String showByLevel(int level) {
 		return jniShowByLevel(level);
 	}
-	public boolean parse(ESLIFRecognizerInterface recognizerInterface, ESLIFValueInterface valueInterface) throws Exception {
-		boolean   rc = false;
-		Exception exception = null;
-		/*
-		 * The JNI will work with ESLIFRecognizer and ESLIFValue instances.
-		 * So we create temporary instances from the interfaces.
-		 * It is not a hazard that ESLIFRecognizer implements only ESLIFRecognizerInterface, ditto for ESLIFValue -;
-		 */
-		ESLIFRecognizer recognizer = new ESLIFRecognizer(this, recognizerInterface);
-		ESLIFValue      value      = new ESLIFValue(recognizer, valueInterface);
-
-		recognizer.setWithDisableThreshold(recognizerInterface.isWithDisableThreshold());
-		recognizer.setWithExhaustion(recognizerInterface.isWithExhaustion());
-		recognizer.setWithNewline(recognizerInterface.isWithNewline());
-
-		value.setWithHighRankOnly(valueInterface.isWithHighRankOnly());
-		value.setWithOrderByRank(valueInterface.isWithOrderByRank());
-		value.setWithAmbiguous(valueInterface.isWithAmbiguous());
-		value.setWithNull(valueInterface.isWithNull());
-		value.setMaxParses(valueInterface.maxParses());
-
-		try {
-			rc = jniParse(recognizer, value);
-		} catch (Exception e) {
-			exception = e;
-		} finally {
-			value.free();
-			recognizer.free();
-		}
-		
-		if (exception != null) {
-			throw new Exception(exception);
-		}
-		return rc;
+	public boolean parse(ESLIFRecognizerInterface recognizerInterface, ESLIFValueInterface valueInterface) {
+		return jniParse(recognizerInterface, valueInterface);
 	}
 	/*
 	 * ********************************************
