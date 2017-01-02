@@ -13,7 +13,7 @@ public class ESLIFApp  {
 		eslifLogger.info("marpaESLIF version is " + eslif.version());
 
 		final String grammar = 
-				    ":default ::= action => do_double\n"
+				    ":default ::= action => do_double symbol-action => toString\n"
 				  + ":discard ::= whitespace\n"
 				  + "Expression ::=\n"
 				  + "    /[\\d]+/                          action => do_int\n"

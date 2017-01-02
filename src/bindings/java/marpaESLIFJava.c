@@ -54,6 +54,11 @@ typedef struct recognizerInterfaceContext {
   const char  *previousUTFCharp;
 } recognizerInterfaceContext_t;
 
+typedef struct valueInterfaceContext {
+  jobject      eslifValueInterfacep;  /* Current value interface instance - this can change at every call */
+  char        *actions;
+} valueInterfaceContext_t;
+
 typedef struct marpaESLIFClassCache {
   char     *classs;
   jclass    classp;
@@ -255,10 +260,10 @@ static marpaESLIFMethodCache_t marpaESLIFMethodCacheArrayp[] = {
   {      &MARPAESLIF_ESLIFVALUE_CLASSCACHE, "setMarpaESLIFValueContextp",           "(Ljava/nio/ByteBuffer;)V", NULL },
 
   #define MARPAESLIF_ESLIFVALUEINTERFACE_CLASS_ruleAction_METHODP                   marpaESLIFMethodCacheArrayp[42].methodp
-  {      &MARPAESLIF_ESLIFVALUEINTERFACE_CLASSCACHE, "ruleAction",                  "(Ljava/lang/String;Ljava/util/List;Z)Ljava/lang/Object;", NULL },
+  {      &MARPAESLIF_ESLIFVALUEINTERFACE_CLASSCACHE, "ruleAction",                  "(Ljava/lang/String;IIIZ)Z", NULL },
 
   #define MARPAESLIF_ESLIFVALUEINTERFACE_CLASS_symbolAction_METHODP                 marpaESLIFMethodCacheArrayp[43].methodp
-  {      &MARPAESLIF_ESLIFVALUEINTERFACE_CLASSCACHE, "symbolAction",                "([B)Ljava/lang/Object;", NULL },
+  {      &MARPAESLIF_ESLIFVALUEINTERFACE_CLASSCACHE, "symbolAction",                "([BI)Z", NULL },
 
   #define MARPAESLIF_ESLIFVALUEINTERFACE_CLASS_isWithHighRankOnly_METHODP           marpaESLIFMethodCacheArrayp[44].methodp
   {      &MARPAESLIF_ESLIFVALUEINTERFACE_CLASSCACHE, "isWithHighRankOnly",          "()Z", NULL },
@@ -307,6 +312,10 @@ static short ESLIFValue_contextb(JNIEnv *envp, jobject eslifValuep, jobject obje
                                  marpaESLIFGrammar_t **marpaESLIFGrammarpp,
                                  marpaESLIFRecognizer_t **marpaESLIFRecognizerpp,
                                  marpaESLIFValue_t **marpaESLIFValuepp);
+static marpaESLIFValueRuleCallback_t   marpaESLIFValueRuleActionResolver(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions);
+static marpaESLIFValueSymbolCallback_t marpaESLIFValueSymbolActionResolver(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions);
+static short marpaESLIFValueRuleCallback(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
+static short marpaESLIFValueSymbolCallback(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *bytep, size_t bytel, int resulti);
 
 /* --------------- */
 /* Internal macros */
@@ -455,14 +464,14 @@ JNIEXPORT void JNICALL JNI_OnUnLoad(JavaVM *vmp, void* reservedp)
 JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIF_jniNew(JNIEnv *envp, jobject eslifp)
 /*****************************************************************************/
 {
-  static const char                *funcs = "Java_org_parser_marpa_ESLIF_jniNew";
+  static const char      *funcs = "Java_org_parser_marpa_ESLIF_jniNew";
   genericLoggerContext_t *genericLoggerContextp = NULL;
-  genericLogger_t                  *genericLoggerp                  = NULL;
-  marpaESLIF_t                     *marpaESLIFp                     = NULL;
-  marpaESLIFOption_t                marpaESLIFOption;
-  jobject                           BYTEBUFFER(genericLoggerContext);
-  jobject                           BYTEBUFFER(genericLogger);
-  jobject                           BYTEBUFFER(marpaESLIF);
+  genericLogger_t        *genericLoggerp                  = NULL;
+  marpaESLIF_t           *marpaESLIFp                     = NULL;
+  marpaESLIFOption_t     marpaESLIFOption;
+  jobject                BYTEBUFFER(genericLoggerContext);
+  jobject                BYTEBUFFER(genericLogger);
+  jobject                BYTEBUFFER(marpaESLIF);
 
   /* ------------------------------------- */
   /* Create and save genericLogger context */
@@ -599,6 +608,7 @@ JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIFGrammar_jniNew(JNIEnv *envp, j
   marpaESLIFGrammarOption.encodings           = "UTF-8";
   marpaESLIFGrammarOption.encodingl           = strlen("UTF-8");
   marpaESLIFGrammarOption.encodingOfEncodings = "ASCII";
+  marpaESLIFGrammarOption.externSymbolActionb = 1;
 
   marpaESLIFGrammarp = marpaESLIFGrammar_newp(marpaESLIFp, &marpaESLIFGrammarOption);
   if (marpaESLIFGrammarp == NULL) {
@@ -1013,6 +1023,7 @@ JNIEXPORT jboolean JNICALL Java_org_parser_marpa_ESLIFGrammar_jniParse(JNIEnv *e
   marpaESLIFValueResult_t       marpaESLIFValueResult;
   short                         exhaustedb;
   recognizerInterfaceContext_t  recognizerInterfaceContext;
+  valueInterfaceContext_t       valueInterfaceContext;
 
   if (! ESLIFGrammar_contextb(envp, eslifGrammarp, eslifGrammarp, MARPAESLIF_ESLIFGRAMMAR_CLASS_getLoggerInterfacep_METHODP,
                               NULL /* genericLoggerpp */,
@@ -1034,14 +1045,17 @@ JNIEXPORT jboolean JNICALL Java_org_parser_marpa_ESLIFGrammar_jniParse(JNIEnv *e
   marpaESLIFRecognizerOption.exhaustedb                = ((*envp)->CallBooleanMethod(envp, eslifRecognizerInterfacep, MARPAESLIF_ESLIFRECOGNIZERINTERFACE_CLASS_isWithExhaustion_METHODP) == JNI_TRUE);
   marpaESLIFRecognizerOption.newlineb                  = ((*envp)->CallBooleanMethod(envp, eslifRecognizerInterfacep, MARPAESLIF_ESLIFRECOGNIZERINTERFACE_CLASS_isWithNewline_METHODP) == JNI_TRUE);
 
-  marpaESLIFValueOption.userDatavp                = NULL;
-  marpaESLIFValueOption.ruleActionResolverp       = NULL;
-  marpaESLIFValueOption.symbolActionResolverp     = NULL;
-  marpaESLIFValueOption.freeActionResolverp       = NULL;
-  marpaESLIFValueOption.highRankOnlyb             = ((*envp)->CallBooleanMethod(envp, eslifValueInterfacep, MARPAESLIF_ESLIFVALUEINTERFACE_CLASS_isWithHighRankOnly_METHODP) == JNI_TRUE);
-  marpaESLIFValueOption.ambiguousb                = ((*envp)->CallBooleanMethod(envp, eslifValueInterfacep, MARPAESLIF_ESLIFVALUEINTERFACE_CLASS_isWithAmbiguous_METHODP)    == JNI_TRUE);
-  marpaESLIFValueOption.nullb                     = ((*envp)->CallBooleanMethod(envp, eslifValueInterfacep, MARPAESLIF_ESLIFVALUEINTERFACE_CLASS_isWithNull_METHODP)         == JNI_TRUE);
-  marpaESLIFValueOption.maxParsesi                = (*envp)->CallIntMethod(envp, eslifValueInterfacep, MARPAESLIF_ESLIFVALUEINTERFACE_CLASS_maxParses_METHODP);
+  valueInterfaceContext.eslifValueInterfacep           = eslifValueInterfacep;
+  valueInterfaceContext.actions                        = NULL;
+
+  marpaESLIFValueOption.userDatavp                     = &valueInterfaceContext;
+  marpaESLIFValueOption.ruleActionResolverp            = marpaESLIFValueRuleActionResolver;
+  marpaESLIFValueOption.symbolActionResolverp          = marpaESLIFValueSymbolActionResolver;
+  marpaESLIFValueOption.freeActionResolverp            = NULL;
+  marpaESLIFValueOption.highRankOnlyb                  = ((*envp)->CallBooleanMethod(envp, eslifValueInterfacep, MARPAESLIF_ESLIFVALUEINTERFACE_CLASS_isWithHighRankOnly_METHODP) == JNI_TRUE);
+  marpaESLIFValueOption.ambiguousb                     = ((*envp)->CallBooleanMethod(envp, eslifValueInterfacep, MARPAESLIF_ESLIFVALUEINTERFACE_CLASS_isWithAmbiguous_METHODP)    == JNI_TRUE);
+  marpaESLIFValueOption.nullb                          = ((*envp)->CallBooleanMethod(envp, eslifValueInterfacep, MARPAESLIF_ESLIFVALUEINTERFACE_CLASS_isWithNull_METHODP)         == JNI_TRUE);
+  marpaESLIFValueOption.maxParsesi                     = (*envp)->CallIntMethod(envp, eslifValueInterfacep, MARPAESLIF_ESLIFVALUEINTERFACE_CLASS_maxParses_METHODP);
 
   if (! marpaESLIFGrammar_parseb(marpaESLIFGrammarp, &marpaESLIFRecognizerOption, &marpaESLIFValueOption, &exhaustedb, &marpaESLIFValueResult)) {
     goto err;
@@ -1563,4 +1577,119 @@ static short recognizerReaderCallbackb(void *userDatavp, char **inputcpp, size_t
   recognizerInterfaceContextp->previousUTFCharp   = charp;
 
   return 1;
+}
+
+/*****************************************************************************/
+static marpaESLIFValueRuleCallback_t marpaESLIFValueRuleActionResolver(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions)
+/*****************************************************************************/
+{
+  valueInterfaceContext_t *valueInterfaceContextp = (valueInterfaceContext_t *) userDatavp;
+
+  /* Remember action name - it is okay to not dup it */
+  valueInterfaceContextp->actions = actions;
+  return marpaESLIFValueRuleCallback;
+}
+
+/*****************************************************************************/
+static marpaESLIFValueSymbolCallback_t marpaESLIFValueSymbolActionResolver(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions)
+/*****************************************************************************/
+{
+  valueInterfaceContext_t *valueInterfaceContextp = (valueInterfaceContext_t *) userDatavp;
+
+  /* Remember action name - it is okay to not dup it */
+  valueInterfaceContextp->actions = actions;
+  return marpaESLIFValueSymbolCallback;
+}
+
+/*****************************************************************************/
+static short marpaESLIFValueRuleCallback(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
+/*****************************************************************************/
+{
+  JNIEnv                  *envp;
+  valueInterfaceContext_t *valueInterfaceContextp = (valueInterfaceContext_t *) userDatavp;
+  jstring                  string = NULL;
+  short                    rcb;
+
+  /* Reader callack is never running in another thread - no need to attach */
+  if (((*marpaESLIF_vmp)->GetEnv(marpaESLIF_vmp, (void **) &envp, MARPAESLIF_JNI_VERSION) != JNI_OK) || (envp == NULL)) {
+    goto err;
+  }
+
+  string = (*envp)->NewStringUTF(envp, valueInterfaceContextp->actions);
+  if (string == NULL) {
+    goto err;
+  }
+
+  rcb = ((*envp)->CallBooleanMethod(envp, valueInterfaceContextp->eslifValueInterfacep, MARPAESLIF_ESLIFVALUEINTERFACE_CLASS_ruleAction_METHODP, string, (jint) arg0i, (jint) argni, (jint) resulti, (jboolean) nullableb) == JNI_TRUE);
+  if (! rcb) {
+    RAISEEXCEPTION(envp, "%s rule action callback failure", valueInterfaceContextp->actions);
+  }
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  if (envp != NULL) {
+    if (string != NULL) {
+      (*envp)->ReleaseStringUTFChars(envp, string, valueInterfaceContextp->actions);
+    }
+  }
+
+  return rcb;
+}
+
+/*****************************************************************************/
+static short marpaESLIFValueSymbolCallback(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *bytep, size_t bytel, int resulti)
+/*****************************************************************************/
+{
+  JNIEnv                  *envp;
+  jbyteArray               byteArray = NULL;
+  jbyte                   *byte = NULL;
+  valueInterfaceContext_t *valueInterfaceContextp = (valueInterfaceContext_t *) userDatavp;
+  short                    rcb;
+  size_t                   i;
+
+  fprintf(stderr, "JDD 02\n");
+  
+  /* Reader callack is never running in another thread - no need to attach */
+  if (((*marpaESLIF_vmp)->GetEnv(marpaESLIF_vmp, (void **) &envp, MARPAESLIF_JNI_VERSION) != JNI_OK) || (envp == NULL)) {
+    goto err;
+  }
+
+  byteArray = (*envp)->NewByteArray(envp, bytel);
+  if (byteArray == NULL) {
+    goto err;
+  }
+
+  byte = malloc(sizeof(jbyte) * bytel);
+  if (byte == NULL) {
+    RAISEEXCEPTION(envp, "malloc failure at %s:%d, %s", MARPAESLIF_FILENAMES, __LINE__, strerror(errno));
+    goto err;
+  }
+  for (i = 0; i < bytel; i++) {
+    byte[i] = (jbyte) bytep[i];
+  }
+
+  (*envp)->SetByteArrayRegion(envp, byteArray, 0, bytel - 1, byte);
+  rcb = ((*envp)->CallBooleanMethod(envp, valueInterfaceContextp->eslifValueInterfacep, MARPAESLIF_ESLIFVALUEINTERFACE_CLASS_symbolAction_METHODP, byteArray, (jint) resulti) == JNI_TRUE);
+  if (! rcb) {
+    RAISEEXCEPTION(envp, "%s symbol action callback failure", valueInterfaceContextp->actions);
+  }
+
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  if (envp != NULL) {
+    if (byteArray != NULL) {
+      if (byte != NULL) {
+        (*envp)->ReleaseByteArrayElements(envp, byteArray, byte, JNI_ABORT);
+      }
+      (*envp)->DeleteLocalRef(envp, byteArray);
+    }
+  }
+  return rcb;
 }
