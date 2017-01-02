@@ -1,10 +1,8 @@
 package org.parser.marpa;
 
-import java.util.List;
-
 public interface ESLIFValueInterface {
-	public Object  ruleAction(String actionName, List<Object> objectList, boolean nullable);
-	public Object  symbolAction(byte[] data);
+	public boolean ruleAction(String actionName, int arg0i, int argni, int resulti, boolean nullable);
+	public boolean symbolAction(byte[] data, int resulti);
 	/* No free action because Java is able to free itself via its garbage collector */
 	public boolean isWithHighRankOnly();
 	public boolean isWithOrderByRank();
