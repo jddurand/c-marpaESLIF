@@ -593,14 +593,15 @@ JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIFGrammar_jniNew(JNIEnv *envp, j
   if (utf8byteArrayp == NULL) {
     RAISEEXCEPTION(envp, "utf8byteArrayp is NULL at %s:%d", MARPAESLIF_FILENAMES, __LINE__);
   }
-  utf8bytep = (*envp)->GetByteArrayElements(envp, utf8byteArrayp, &isCopyb);
-  if (utf8bytep == NULL) {
-    RAISEEXCEPTION(envp, "utf8bytep is NULL at %s:%d", MARPAESLIF_FILENAMES, __LINE__);
-  }
   utf8lengthl = (*envp)->GetArrayLength(envp, utf8byteArrayp);
   if (utf8lengthl <= 0) {
     RAISEEXCEPTION(envp, "utf8lengthl is <= 0 at %s:%d", MARPAESLIF_FILENAMES, __LINE__);
   }
+  utf8bytep = (jbyte *) malloc(utf8lengthl * sizeof(jbyte));
+  if (utf8bytep == NULL) {
+    RAISEEXCEPTION(envp, "utf8bytep is NULL at %s:%d", MARPAESLIF_FILENAMES, __LINE__);
+  }
+  (*envp)->GetByteArrayRegion(envp, utf8byteArrayp, 0, utf8lengthl, utf8bytep);
 
   /* Create C object */
   marpaESLIFGrammarOption.bytep               = (void *) utf8bytep;
@@ -623,8 +624,8 @@ JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIFGrammar_jniNew(JNIEnv *envp, j
   /* Java_org_parser_marpa_ESLIFGrammar_jniFree(envp, eslifGrammarp); */
 
  done:
-  if ((utf8byteArrayp != NULL) && (utf8bytep != NULL)) {
-    (*envp)->ReleaseByteArrayElements(envp, utf8byteArrayp, utf8bytep, JNI_ABORT); /* We certainly did not want to modify anything -; */
+  if (utf8bytep != NULL) {
+    free(utf8bytep);
   }
   return;
 }
@@ -866,10 +867,6 @@ JNIEXPORT jintArray JNICALL Java_org_parser_marpa_ESLIFGrammar_jniRuleDisplay(JN
     goto err;
   }
 
-#ifndef MARPAESLIF_NTRACE
-  GENERICLOGGER_TRACEF(genericLoggerp, "In %s", funcs);
-#endif
-
   if (! marpaESLIFGrammar_ruledisplayform_currentb(marpaESLIFGrammarp, rulei, &ruledisplays)) {
     RAISEEXCEPTION(envp, "marpaESLIFGrammar_ruledisplayform_currentb failure for rule %d at %s:%d", rulei, MARPAESLIF_FILENAMES, __LINE__);
   }
@@ -1043,6 +1040,9 @@ JNIEXPORT jboolean JNICALL Java_org_parser_marpa_ESLIFGrammar_jniParse(JNIEnv *e
   marpaESLIFRecognizerOption.disableThresholdb         = ((*envp)->CallBooleanMethod(envp, eslifRecognizerInterfacep, MARPAESLIF_ESLIFRECOGNIZERINTERFACE_CLASS_isWithDisableThreshold_METHODP) == JNI_TRUE);
   marpaESLIFRecognizerOption.exhaustedb                = ((*envp)->CallBooleanMethod(envp, eslifRecognizerInterfacep, MARPAESLIF_ESLIFRECOGNIZERINTERFACE_CLASS_isWithExhaustion_METHODP) == JNI_TRUE);
   marpaESLIFRecognizerOption.newlineb                  = ((*envp)->CallBooleanMethod(envp, eslifRecognizerInterfacep, MARPAESLIF_ESLIFRECOGNIZERINTERFACE_CLASS_isWithNewline_METHODP) == JNI_TRUE);
+  marpaESLIFRecognizerOption.bufsizl                   = 0; /* Recommended value */
+  marpaESLIFRecognizerOption.buftriggerperci           = 50; /* Recommended value */
+  marpaESLIFRecognizerOption.bufaddperci               = 50; /* Recommended value */
 
   valueInterfaceContext.eslifValueInterfacep           = eslifValueInterfacep;
   valueInterfaceContext.actions                        = NULL;
@@ -1640,6 +1640,7 @@ static short marpaESLIFValueRuleCallback(void *userDatavp, marpaESLIFValue_t *ma
 static short marpaESLIFValueSymbolCallback(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *bytep, size_t bytel, int resulti)
 /*****************************************************************************/
 {
+  /* Note: marpaESLIF guarantees that bytel is > 0 - otherwise this would be a nullable call */
   JNIEnv                  *envp;
   jbyteArray               byteArray = NULL;
   jbyte                   *byte = NULL;
@@ -1647,8 +1648,6 @@ static short marpaESLIFValueSymbolCallback(void *userDatavp, marpaESLIFValue_t *
   short                    rcb;
   size_t                   i;
 
-  fprintf(stderr, "JDD 02\n");
-  
   /* Reader callack is never running in another thread - no need to attach */
   if (((*marpaESLIF_vmp)->GetEnv(marpaESLIF_vmp, (void **) &envp, MARPAESLIF_JNI_VERSION) != JNI_OK) || (envp == NULL)) {
     goto err;
@@ -1668,8 +1667,10 @@ static short marpaESLIFValueSymbolCallback(void *userDatavp, marpaESLIFValue_t *
     byte[i] = (jbyte) bytep[i];
   }
 
-  (*envp)->SetByteArrayRegion(envp, byteArray, 0, bytel - 1, byte);
+  (*envp)->SetByteArrayRegion(envp, byteArray, 0, bytel, byte);
+
   rcb = ((*envp)->CallBooleanMethod(envp, valueInterfaceContextp->eslifValueInterfacep, MARPAESLIF_ESLIFVALUEINTERFACE_CLASS_symbolAction_METHODP, byteArray, (jint) resulti) == JNI_TRUE);
+
   if (! rcb) {
     RAISEEXCEPTION(envp, "%s symbol action callback failure", valueInterfaceContextp->actions);
   }
@@ -1681,10 +1682,10 @@ static short marpaESLIFValueSymbolCallback(void *userDatavp, marpaESLIFValue_t *
 
  done:
   if (envp != NULL) {
+    if (byte != NULL) {
+      free(byte);
+    }
     if (byteArray != NULL) {
-      if (byte != NULL) {
-        (*envp)->ReleaseByteArrayElements(envp, byteArray, byte, JNI_ABORT);
-      }
       (*envp)->DeleteLocalRef(envp, byteArray);
     }
   }
