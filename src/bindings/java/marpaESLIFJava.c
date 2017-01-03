@@ -321,29 +321,35 @@ static short marpaESLIFValueSymbolCallback(void *userDatavp, marpaESLIFValue_t *
 /* Internal macros */
 /* --------------- */
 
+/* Check if there is a pending exception - if yes, our raise will NOT raise a new one */
+/* Since we asked for JNI_VERSION_1_4 per def ExceptionCheck() is available */
+#define HAVEEXCEPTION(envp) (*envp)->ExceptionCheck(envp)
+
 /* Raise exception - I use a macro because I did not want to include stdarg in this file - it is used as a static method */
 #define RAISEEXCEPTION(envp, fmts, ...) do {                            \
-    if (MARPAESLIF_EXCEPTION_CLASSP != NULL) {                          \
-      genericLogger_t              *genericLoggerp = NULL;              \
-      marpaESLIF_stringGenerator_t  marpaESLIF_stringGenerator;         \
+    if (! HAVEEXCEPTION(envp)) {                                        \
+      if (MARPAESLIF_EXCEPTION_CLASSP != NULL) {                        \
+        genericLogger_t              *genericLoggerp = NULL;            \
+        marpaESLIF_stringGenerator_t  marpaESLIF_stringGenerator;       \
                                                                         \
-      marpaESLIF_stringGenerator.s   = NULL;                            \
-      marpaESLIF_stringGenerator.l   = 0;                               \
-      marpaESLIF_stringGenerator.okb = 0;                               \
+        marpaESLIF_stringGenerator.s   = NULL;                          \
+        marpaESLIF_stringGenerator.l   = 0;                             \
+        marpaESLIF_stringGenerator.okb = 0;                             \
                                                                         \
-      genericLoggerp = GENERICLOGGER_CUSTOM(generateStringWithLoggerCallbackv, (void *) &marpaESLIF_stringGenerator, GENERICLOGGER_LOGLEVEL_TRACE); \
-      if (genericLoggerp != NULL) {                                     \
-        GENERICLOGGER_TRACEF(genericLoggerp, fmts, __VA_ARGS__);        \
-        if (marpaESLIF_stringGenerator.okb) {                           \
-          (*envp)->ThrowNew(envp, MARPAESLIF_EXCEPTION_CLASSP, marpaESLIF_stringGenerator.s); \
+        genericLoggerp = GENERICLOGGER_CUSTOM(generateStringWithLoggerCallbackv, (void *) &marpaESLIF_stringGenerator, GENERICLOGGER_LOGLEVEL_TRACE); \
+        if (genericLoggerp != NULL) {                                   \
+          GENERICLOGGER_TRACEF(genericLoggerp, fmts, __VA_ARGS__);      \
+          if (marpaESLIF_stringGenerator.okb) {                         \
+            (*envp)->ThrowNew(envp, MARPAESLIF_EXCEPTION_CLASSP, marpaESLIF_stringGenerator.s); \
+          }                                                             \
+          free(marpaESLIF_stringGenerator.s);                           \
+          GENERICLOGGER_FREE(genericLoggerp);                           \
+        } else {                                                        \
+          (*envp)->ThrowNew(envp, MARPAESLIF_EXCEPTION_CLASSP, "Exception (no description)"); \
         }                                                               \
-        free(marpaESLIF_stringGenerator.s);                             \
-        GENERICLOGGER_FREE(genericLoggerp);                             \
-      } else {                                                          \
-        (*envp)->ThrowNew(envp, MARPAESLIF_EXCEPTION_CLASSP, "Exception (no description)"); \
       }                                                                 \
-      goto err;                                                         \
     }                                                                   \
+    goto err;                                                           \
 } while (0)
 
 /* ---------------------------------------------------------------------------- */
@@ -1016,7 +1022,6 @@ JNIEXPORT jboolean JNICALL Java_org_parser_marpa_ESLIFGrammar_jniParse(JNIEnv *e
   marpaESLIFGrammar_t          *marpaESLIFGrammarp;
   marpaESLIFRecognizerOption_t  marpaESLIFRecognizerOption;
   marpaESLIFValueOption_t       marpaESLIFValueOption;
-  marpaESLIFValueResult_t       marpaESLIFValueResult;
   short                         exhaustedb;
   recognizerInterfaceContext_t  recognizerInterfaceContext;
   valueInterfaceContext_t       valueInterfaceContext;
@@ -1050,13 +1055,14 @@ JNIEXPORT jboolean JNICALL Java_org_parser_marpa_ESLIFGrammar_jniParse(JNIEnv *e
   marpaESLIFValueOption.userDatavp                     = &valueInterfaceContext;
   marpaESLIFValueOption.ruleActionResolverp            = marpaESLIFValueRuleActionResolver;
   marpaESLIFValueOption.symbolActionResolverp          = marpaESLIFValueSymbolActionResolver;
-  marpaESLIFValueOption.freeActionResolverp            = NULL;
+  marpaESLIFValueOption.freeActionResolverp            = NULL; /* No need of a free action - stack is managed in Java, Java will free */
   marpaESLIFValueOption.highRankOnlyb                  = ((*envp)->CallBooleanMethod(envp, eslifValueInterfacep, MARPAESLIF_ESLIFVALUEINTERFACE_CLASS_isWithHighRankOnly_METHODP) == JNI_TRUE);
   marpaESLIFValueOption.ambiguousb                     = ((*envp)->CallBooleanMethod(envp, eslifValueInterfacep, MARPAESLIF_ESLIFVALUEINTERFACE_CLASS_isWithAmbiguous_METHODP)    == JNI_TRUE);
   marpaESLIFValueOption.nullb                          = ((*envp)->CallBooleanMethod(envp, eslifValueInterfacep, MARPAESLIF_ESLIFVALUEINTERFACE_CLASS_isWithNull_METHODP)         == JNI_TRUE);
   marpaESLIFValueOption.maxParsesi                     = (*envp)->CallIntMethod(envp, eslifValueInterfacep, MARPAESLIF_ESLIFVALUEINTERFACE_CLASS_maxParses_METHODP);
 
-  if (! marpaESLIFGrammar_parseb(marpaESLIFGrammarp, &marpaESLIFRecognizerOption, &marpaESLIFValueOption, &exhaustedb, &marpaESLIFValueResult)) {
+  /* We never need marpaESLIF to keep the stack of values because it is managed directly in Java */
+  if (! marpaESLIFGrammar_parseb(marpaESLIFGrammarp, &marpaESLIFRecognizerOption, &marpaESLIFValueOption, &exhaustedb, NULL)) {
     goto err;
   }
 
