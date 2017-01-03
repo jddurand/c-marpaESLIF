@@ -15,7 +15,7 @@ public class ESLIF {
 	private ByteBuffer           marpaESLIFp           = null;
 	private ByteBuffer           genericLoggerContextp = null;
 	private ByteBuffer           genericLoggerp        = null;
-	private native void          jniNew(ESLIFLoggerInterface loggerInterface);
+	private native void          jniNew();
 	private native void          jniFree();
 	private native String        jniVersion();
 	
@@ -38,11 +38,11 @@ public class ESLIF {
 	}
 	public ESLIF(ESLIFLoggerInterface loggerInterface) {
 		setLoggerInterface(loggerInterface);
-		jniNew(loggerInterface);
+		jniNew();
 	}
 	
 	public ESLIF() throws Exception {
-		jniNew(null);
+		jniNew();
 	}
 	
 	public void free() {
