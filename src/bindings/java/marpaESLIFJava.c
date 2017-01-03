@@ -608,7 +608,6 @@ JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIFGrammar_jniNew(JNIEnv *envp, j
   marpaESLIFGrammarOption.encodings           = "UTF-8";
   marpaESLIFGrammarOption.encodingl           = strlen("UTF-8");
   marpaESLIFGrammarOption.encodingOfEncodings = "ASCII";
-  marpaESLIFGrammarOption.externSymbolActionb = 1;
 
   marpaESLIFGrammarp = marpaESLIFGrammar_newp(marpaESLIFp, &marpaESLIFGrammarOption);
   if (marpaESLIFGrammarp == NULL) {
@@ -753,7 +752,7 @@ JNIEXPORT jintArray JNICALL Java_org_parser_marpa_ESLIFGrammar_jniCurrentRuleIds
   marpaESLIFGrammar_t *marpaESLIFGrammarp;
   int                 *ruleip;
   size_t               rulel;
-  int                  i;
+  size_t               i;
 
   if (! ESLIFGrammar_contextb(envp, eslifGrammarp, eslifGrammarp, MARPAESLIF_ESLIFGRAMMAR_CLASS_getLoggerInterfacep_METHODP,
                               NULL /* genericLoggerpp */,
@@ -807,7 +806,7 @@ JNIEXPORT jintArray JNICALL Java_org_parser_marpa_ESLIFGrammar_jniRuleIdsByLevel
   jint                *intp = NULL;
   int                 *ruleip;
   size_t               rulel;
-  int                  i;
+  size_t               i;
 
   if (! ESLIFGrammar_contextb(envp, eslifGrammarp, eslifGrammarp, MARPAESLIF_ESLIFGRAMMAR_CLASS_getLoggerInterfacep_METHODP,
                               NULL /* genericLoggerpp */,
@@ -1201,7 +1200,6 @@ static short ESLIF_contextb(JNIEnv *envp, jobject eslifp, jobject objectp, jmeth
   jobject                           BYTEBUFFER(genericLoggerContext);
   jobject                           BYTEBUFFER(marpaESLIF);
   jobject                           BYTEBUFFER(genericLogger);
-  short                             rcb;
 
   if (marpaESLIFpp != NULL) {
     /* If caller is giving marpaESLIFpp we expect bytebuffer and more to not be NULL */
@@ -1439,7 +1437,7 @@ static short ESLIFValue_contextb(JNIEnv *envp, jobject eslifValuep, jobject obje
     *marpaESLIFValuepp = marpaESLIFValuep;
   }
 
-  eslifRecognizerp = (*envp)->CallObjectMethod(envp, eslifRecognizerp, MARPAESLIF_ESLIFVALUE_CLASS_getEslifRecognizer_METHODP);
+  eslifRecognizerp = (*envp)->CallObjectMethod(envp, eslifValuep, MARPAESLIF_ESLIFVALUE_CLASS_getEslifRecognizer_METHODP);
   if (eslifRecognizerp == NULL) {
     RAISEEXCEPTION(envp, "eslifRecognizerp is NULL at %s:%d", MARPAESLIF_FILENAMES, __LINE__);
   }
@@ -1530,7 +1528,6 @@ static short recognizerReaderCallbackb(void *userDatavp, char **inputcpp, size_t
   jstring                        encodingp;
   const char                    *charp;
   jboolean                       isCopy;
-  jint                           length;
 
   recognizerInterfaceContextp = (recognizerInterfaceContext_t *) userDatavp;
   eslifRecognizerInterfacep   = recognizerInterfaceContextp->eslifRecognizerInterfacep;
