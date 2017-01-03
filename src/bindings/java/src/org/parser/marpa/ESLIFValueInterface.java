@@ -2,7 +2,7 @@ package org.parser.marpa;
 
 public interface ESLIFValueInterface {
 	public boolean ruleAction(String actionName, int arg0i, int argni, int resulti, boolean nullable);
-	public boolean symbolAction(byte[] data, int resulti);
+	public boolean symbolAction(byte[] data, int resulti) throws Exception;
 	/* No free action because Java is able to free itself via its garbage collector */
 	public boolean isWithHighRankOnly();
 	public boolean isWithOrderByRank();
