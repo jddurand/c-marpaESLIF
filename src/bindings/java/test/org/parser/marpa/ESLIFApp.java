@@ -68,18 +68,6 @@ public class ESLIFApp  {
 				"1 + ( 2 + ( 3 + ( 4 + 5) ) )"
 				};
 
-		Object[] results= {
-				new Double(Math.pow((((3. * 4.) + 2. * 7.) / 2. - 1.), 3.)),
-				new Double(5. / (2. * 3.)),
-				new Double(5. / 2. * 3.),
-				new Double(Math.pow(Math.pow(5., 2.), 3.)),
-				new Integer(5 * (2 * 3)),
-				new Double(Math.pow(5., Math.pow(2., 3.))),
-				new Double(Math.pow(5., 2. / 3.)),
-				null,
-				new Integer(1 + ( 2 + ( 3 + ( 4 + 5) ) )),
-				};
-		
 		for (int i = 0; i < strings.length; i++) {
 			String string = new String(strings[i]);
 
@@ -89,11 +77,7 @@ public class ESLIFApp  {
 			try {
 				eslifGrammar.parse(eslifAppRecognizer, eslifAppValue);
 				Object result = eslifAppValue.result();
-				if (result.equals(results[i])) {
-					eslifLogger.notice(string + " = " + results[i]);
-				} else {
-					eslifLogger.error(string + " = " + result + " instead of " + results[i]);
-				}
+				eslifLogger.notice(string + " = " + result);
 			} catch (Exception e) {
 				eslifLogger.notice(string + ": " + e);
 			}
