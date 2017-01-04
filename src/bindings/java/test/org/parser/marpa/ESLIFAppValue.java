@@ -6,17 +6,16 @@ import java.util.List;
 public class ESLIFAppValue implements ESLIFValueInterface {
 	private List<Object> stack = new ArrayList<Object>();
 
-	private void setInStack(int resulti, Object object) {
+	private void setInStack(int indice, Object object) {
 		/* Fill eventual holes */
-		if (resulti > stack.lastIndexOf(stack)) {
-			for (int i = 0; i < resulti; i++) {
+		if (indice >= stack.size()) {
+			for (int i = 0; i < indice; i++) {
 				stack.set(i, null);
 			}
 			stack.add(object);
 		} else {
-			stack.set(resulti, object);
+			stack.set(indice, object);
 		}
-
 	}
 
 	public boolean ruleAction(String actionName, int arg0i, int argni, int resulti, boolean nullable) {
@@ -32,8 +31,8 @@ public class ESLIFAppValue implements ESLIFValueInterface {
 			Object right = stack.get(arg0i+2);
 
 			/* For simplification of this example, we do all maths with Double */
-			Double dleft  = (left instanceof Integer) ? new Double((Integer) left) : (Double) left; 
-			Double dright = (left instanceof Integer) ? new Double((Integer) right) : (Double) right;
+			Double dleft  = (left  instanceof Integer) ? new Double(((Integer) left).doubleValue())  : (Double) left; 
+			Double dright = (right instanceof Integer) ? new Double(((Integer) right).doubleValue()) : (Double) right;
 			Double dresult = null;
 			if ("**".equals(op)) {
 				dresult = Math.pow(dleft, dright);
@@ -47,6 +46,9 @@ public class ESLIFAppValue implements ESLIFValueInterface {
 				dresult = dleft - dright;
 			}
 			result = dresult;
+
+			System.err.println("Action " + actionName + ": " + dleft + " " + op + " " + dright + " => " + dresult);
+
 		} else {
 			return false;
 		}
@@ -58,6 +60,8 @@ public class ESLIFAppValue implements ESLIFValueInterface {
 	public boolean symbolAction(byte[] data, int resulti) throws Exception {
 		String string = new String(data, "UTF-8");
 		
+		System.err.println("symbolAction: setting \"" + string + "\" in stack at indice " + resulti);
+
 		setInStack(resulti, string);
 		return true;
 	}
