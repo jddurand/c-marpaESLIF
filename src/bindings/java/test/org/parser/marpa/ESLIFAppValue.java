@@ -6,20 +6,26 @@ import java.util.List;
 public class ESLIFAppValue implements ESLIFValueInterface {
 	private List<Object> stack = new ArrayList<Object>();
 
-	public boolean ruleAction(String actionName, int arg0i, int argni, int resulti, boolean nullable) {
-		
+	private void setInStack(int resulti, Object object) {
 		/* Fill eventual holes */
 		if (resulti > stack.lastIndexOf(stack)) {
 			for (int i = 0; i < resulti; i++) {
 				stack.set(i, null);
 			}
+			stack.add(object);
+		} else {
+			stack.set(resulti, object);
 		}
 
+	}
+
+	public boolean ruleAction(String actionName, int arg0i, int argni, int resulti, boolean nullable) {
+		Object result = null;
+		
 		/* The stack contains either an Integer, either a Double, either a String */
 		if ("do_int".equals(actionName)) {
 			String input = (String) stack.get(arg0i);
-			stack.set(resulti, new Integer(input));
-			return true;
+			result = new Integer(input);
 		} else if ("do_double".equals(actionName)) {
 			Object left  =  stack.get(arg0i);
 			String op    = (String) stack.get(arg0i+1); 
@@ -40,24 +46,19 @@ public class ESLIFAppValue implements ESLIFValueInterface {
 			} else if ("-".equals(op)) {
 				dresult = dleft - dright;
 			}
-			stack.set(resulti, dresult);
-			return true;
+			result = dresult;
 		} else {
 			return false;
 		}
+
+		setInStack(resulti, result);
+		return true;
 	}
 
 	public boolean symbolAction(byte[] data, int resulti) throws Exception {
 		String string = new String(data, "UTF-8");
-
-		/* Fill eventual holes */
-		if (resulti > stack.lastIndexOf(stack)) {
-			for (int i = 0; i < resulti; i++) {
-				stack.set(i, null);
-			}
-		}
-
-		stack.set(resulti, string);
+		
+		setInStack(resulti, string);
 		return true;
 	}
 
