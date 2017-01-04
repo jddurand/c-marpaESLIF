@@ -9606,7 +9606,7 @@ static inline short _marpaESLIFValue_stack_i_resetb(marpaESLIFValue_t *marpaESLI
   }
 
   if (GENERICSTACK_GET_INT(marpaESLIFValuep->typeStackp, indicei) == MARPAESLIF_STACK_TYPE_UNDEF) {
-    /* It i set, but it is undef  */
+    /* When indice exist, but it is undef  */
     MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Already resetted at indice %d", indicei);
     rcb = 1;
     goto done;
@@ -10162,7 +10162,7 @@ short marpaESLIFValue_stack_set_charb(marpaESLIFValue_t *marpaESLIFValuep, int i
 short marpaESLIFValue_stack_set_shortb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int contexti, short b)
 /*****************************************************************************/
 {
-  static const char *funcs  = "marpaESLIFValue_stack_set_charb";
+  static const char *funcs  = "marpaESLIFValue_stack_set_shortb";
 
   if (marpaESLIFValuep == NULL) {
     errno = EINVAL;
@@ -10186,7 +10186,7 @@ short marpaESLIFValue_stack_set_shortb(marpaESLIFValue_t *marpaESLIFValuep, int 
 short marpaESLIFValue_stack_set_intb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int contexti, int i)
 /*****************************************************************************/
 {
-  static const char *funcs  = "marpaESLIFValue_stack_set_charb";
+  static const char *funcs  = "marpaESLIFValue_stack_set_intb";
 
   if (marpaESLIFValuep == NULL) {
     errno = EINVAL;
@@ -10210,7 +10210,7 @@ short marpaESLIFValue_stack_set_intb(marpaESLIFValue_t *marpaESLIFValuep, int in
 short marpaESLIFValue_stack_set_longb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int contexti, long l)
 /*****************************************************************************/
 {
-  static const char *funcs  = "marpaESLIFValue_stack_set_charb";
+  static const char *funcs  = "marpaESLIFValue_stack_set_longb";
 
   if (marpaESLIFValuep == NULL) {
     errno = EINVAL;
@@ -10234,7 +10234,7 @@ short marpaESLIFValue_stack_set_longb(marpaESLIFValue_t *marpaESLIFValuep, int i
 short marpaESLIFValue_stack_set_floatb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int contexti, float f)
 /*****************************************************************************/
 {
-  static const char *funcs  = "marpaESLIFValue_stack_set_charb";
+  static const char *funcs  = "marpaESLIFValue_stack_set_floatb";
 
   if (marpaESLIFValuep == NULL) {
     errno = EINVAL;
@@ -10277,7 +10277,7 @@ short marpaESLIFValue_stack_set_undefb(marpaESLIFValue_t *marpaESLIFValuep, int 
 short marpaESLIFValue_stack_set_doubleb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int contexti, double d)
 /*****************************************************************************/
 {
-  static const char *funcs  = "marpaESLIFValue_stack_set_charb";
+  static const char *funcs  = "marpaESLIFValue_stack_set_doubleb";
 
   if (marpaESLIFValuep == NULL) {
     errno = EINVAL;
@@ -10301,7 +10301,7 @@ short marpaESLIFValue_stack_set_doubleb(marpaESLIFValue_t *marpaESLIFValuep, int
 short marpaESLIFValue_stack_set_ptrb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int contexti, void *p, short shallowb)
 /*****************************************************************************/
 {
-  static const char *funcs  = "marpaESLIFValue_stack_set_charb";
+  static const char *funcs  = "marpaESLIFValue_stack_set_ptrb";
 
   if (marpaESLIFValuep == NULL) {
     errno = EINVAL;
@@ -10325,7 +10325,7 @@ short marpaESLIFValue_stack_set_ptrb(marpaESLIFValue_t *marpaESLIFValuep, int in
 short marpaESLIFValue_stack_set_arrayb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int contexti, void *p, size_t l, short shallowb)
 /*****************************************************************************/
 {
-  static const char *funcs  = "marpaESLIFValue_stack_set_charb";
+  static const char *funcs  = "marpaESLIFValue_stack_set_arrayb";
 
   if (marpaESLIFValuep == NULL) {
     errno = EINVAL;
