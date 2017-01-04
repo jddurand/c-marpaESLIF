@@ -23,7 +23,7 @@ public class ESLIFAppValue implements ESLIFValueInterface {
 	}
 
 	private Double toDouble(Object object) {
-		return (object  instanceof Integer)  ? new Double(((Integer) object).doubleValue())  : (Double) object;
+		return (object instanceof Integer)  ? new Double(((Integer) object).doubleValue())  : (Double) object;
 	}
 
 	private Integer toInteger(Object object) {
@@ -46,13 +46,19 @@ public class ESLIFAppValue implements ESLIFValueInterface {
 
 			boolean leftIsInteger  = (left  instanceof Integer);
 			boolean rightIsInteger = (right instanceof Integer);
+			
+			double dleft;
+			double dright;
+			
+			int ileft;
+			int iright;
 
 			if ("**".equals(op)) {
 				result = new Double(Math.pow(toDouble(left), toDouble(right)));
 			} else if ("*".equals(op)) {
 				if (leftIsInteger && rightIsInteger) {
 					result = toInteger(left) * toInteger(right);
-				} else { 
+				} else {
 					result = toDouble(left) * toDouble(right);
 				}
 			} else if ("/".equals(op)) {
@@ -60,13 +66,13 @@ public class ESLIFAppValue implements ESLIFValueInterface {
 			} else if ("+".equals(op)) {
 				if (leftIsInteger && rightIsInteger) {
 					result = toInteger(left) + toInteger(right);
-				} else { 
+				} else {
 					result = toDouble(left) + toDouble(right);
 				}
 			} else if ("-".equals(op)) {
 				if (leftIsInteger && rightIsInteger) {
 					result = toInteger(left) - toInteger(right);
-				} else { 
+				} else {
 					result = toDouble(left) - toDouble(right);
 				}
 			}
