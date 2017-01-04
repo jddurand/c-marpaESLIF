@@ -47,12 +47,6 @@ public class ESLIFAppValue implements ESLIFValueInterface {
 			boolean leftIsInteger  = (left  instanceof Integer);
 			boolean rightIsInteger = (right instanceof Integer);
 			
-			double dleft;
-			double dright;
-			
-			int ileft;
-			int iright;
-
 			if ("**".equals(op)) {
 				result = new Double(Math.pow(toDouble(left), toDouble(right)));
 			} else if ("*".equals(op)) {
