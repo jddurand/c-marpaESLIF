@@ -35,12 +35,21 @@ JNIEXPORT void      JNICALL Java_org_parser_marpa_ESLIFGrammar_jniFree          
 JNIEXPORT void      JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniNew            (JNIEnv *envp, jobject eslifRecognizerp, jobject eslifGrammarp);
 JNIEXPORT void      JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniFree           (JNIEnv *envp, jobject eslifRecognizerp);
 
+/* Note about the stack: we use Java to stored Object pointers. Within marpaESLIF we will store a pointer    */
+/* to a structure that contain a single element: the indice in the java stack, stored in a jsize variable.   */
+/* Stack itself is stored in a eslifValueInterface instance, in which stackSet() and stackGet() are required */
+/* and their prototypes impose that this is stack of Java Objects.                                           */
+
 JNIEXPORT void      JNICALL Java_org_parser_marpa_ESLIFValue_jniNew                 (JNIEnv *envp, jobject eslifValuep, jobject eslifRecognizerp);
 JNIEXPORT void      JNICALL Java_org_parser_marpa_ESLIFValue_jniFree                (JNIEnv *envp, jobject eslifValuep);
 
 /* ---------- */
 /* Structures */
 /* ---------- */
+typedef struct stackmap {
+  jsize indice;
+} stackmap_t;
+
 typedef struct genericLoggerContext {
   jobject   objectp;              /* Current object - this can change at every call */
   jmethodID getLoggerInterfacep;
