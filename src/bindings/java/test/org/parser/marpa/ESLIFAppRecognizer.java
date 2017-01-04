@@ -2,7 +2,6 @@ package org.parser.marpa;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
 
 public class ESLIFAppRecognizer implements ESLIFRecognizerInterface {
