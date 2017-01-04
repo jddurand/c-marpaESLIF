@@ -75,7 +75,7 @@ public class ESLIFGrammar {
 	public String showByLevel(int level) {
 		return jniShowByLevel(level);
 	}
-	public boolean parse(ESLIFRecognizerInterface recognizerInterface, ESLIFValueInterface valueInterface) {
+	public boolean parse(ESLIFRecognizerInterface recognizerInterface, ESLIFValueInterface valueInterface) throws Exception {
 		return jniParse(recognizerInterface, valueInterface);
 	}
 	/*

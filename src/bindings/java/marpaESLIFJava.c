@@ -503,11 +503,6 @@ JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIF_jniNew(JNIEnv *envp, jobject 
   MARPAESLIF_PTR2BYTEBUFFER(genericLogger, genericLoggerp);
   (*envp)->CallVoidMethod(envp, eslifp, MARPAESLIF_ESLIF_CLASS_setGenericLoggerp_METHODP, BYTEBUFFER(genericLogger));
 
-  /* Now we can also log */
-#ifndef MARPAESLIF_NTRACE
-  GENERICLOGGER_TRACEF(genericLoggerp, "In %s", funcs);
-#endif
-
   /* --------------------------- */
   /* Create and save marpaESLIFp */
   /* --------------------------- */
@@ -1063,7 +1058,9 @@ JNIEXPORT jboolean JNICALL Java_org_parser_marpa_ESLIFGrammar_jniParse(JNIEnv *e
 
   /* We never need marpaESLIF to keep the stack of values because it is managed directly in Java */
   if (! marpaESLIFGrammar_parseb(marpaESLIFGrammarp, &marpaESLIFRecognizerOption, &marpaESLIFValueOption, &exhaustedb, NULL)) {
-    goto err;
+    /* In theory the logger has been called with the ERROR level, already raising an exception. We will not overwrite the exception */
+    /* in this case, c.f. the RAISEEXCEPTION macro. */
+    RAISEEXCEPTION(envp, "Parse failure");
   }
 
   return JNI_TRUE;
@@ -1078,7 +1075,6 @@ JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIFGrammar_jniFree(JNIEnv *envp, 
 {
   marpaESLIFGrammar_t *marpaESLIFGrammarp;
 
-  fprintf(stderr, "============> In Java_org_parser_marpa_ESLIFGrammar_jniFree\n");
   if (ESLIFGrammar_contextb(envp, eslifGrammarp, eslifGrammarp, MARPAESLIF_ESLIFGRAMMAR_CLASS_getLoggerInterfacep_METHODP,
                               NULL /* genericLoggerpp */,
                               NULL /* genericLoggerContextpp */,
@@ -1093,6 +1089,7 @@ static void genericLoggerCallbackv(void *userDatavp, genericLoggerLevel_t logLev
 /*****************************************************************************/
 {
   genericLoggerContext_t *genericLoggerContextp = (genericLoggerContext_t *) userDatavp;
+  short                   exceptionb            = 0;
   JNIEnv                 *envp;
   jobject                 loggerInterfacep;
   jmethodID               methodp;
@@ -1135,33 +1132,40 @@ static void genericLoggerCallbackv(void *userDatavp, genericLoggerLevel_t logLev
     break;
   case GENERICLOGGER_LOGLEVEL_ERROR:
     methodp = MARPAESLIF_ESLIFLOGGERINTERFACE_CLASS_error_METHODP;
+    exceptionb = 1;
     break;
   case GENERICLOGGER_LOGLEVEL_CRITICAL:
     methodp = MARPAESLIF_ESLIFLOGGERINTERFACE_CLASS_critical_METHODP;
+    exceptionb = 1;
     break;
   case GENERICLOGGER_LOGLEVEL_ALERT:
     methodp = MARPAESLIF_ESLIFLOGGERINTERFACE_CLASS_alert_METHODP;
+    exceptionb = 1;
     break;
   case GENERICLOGGER_LOGLEVEL_EMERGENCY:
     methodp = MARPAESLIF_ESLIFLOGGERINTERFACE_CLASS_emergency_METHODP;
+    exceptionb = 1;
     break;
   default:
     methodp = NULL;
     break;
   }
 
-  if (methodp == NULL) {
-    return;
+  if (exceptionb) {
+    RAISEEXCEPTION(envp, "%s", msgs);
+  } else {
+    if (methodp != NULL) {
+      /* marpaESLIF is never logging with characters outside of 7-bits ASCII */
+      stringp = (*envp)->NewStringUTF(envp, msgs);
+      if (stringp != NULL) {
+        (*envp)->CallVoidMethod(envp, loggerInterfacep, methodp, stringp);
+        (*envp)->DeleteLocalRef(envp, stringp);
+      }
+    }
   }
 
-  /* marpaESLIF is never logging with characters outside of 7-bits ASCII */
-  stringp = (*envp)->NewStringUTF(envp, msgs);
-  if (stringp == NULL) {
-    return;
-  }
-
-  (*envp)->CallVoidMethod(envp, loggerInterfacep, methodp, stringp);
-  (*envp)->DeleteLocalRef(envp, stringp);
+ err:
+  return;
 }
 
 /*****************************************************************************/
