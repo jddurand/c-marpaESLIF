@@ -1628,6 +1628,13 @@ static short marpaESLIFValueRuleCallback(void *userDatavp, marpaESLIFValue_t *ma
   if (! rcb) {
     RAISEEXCEPTION(envp, "%s rule action callback failure", valueInterfaceContextp->actions);
   }
+
+  /* We have to inform internal stack */
+  rcb =  marpaESLIFValue_stack_set_intb(marpaESLIFValuep, resulti, 1 /* any value != 0 */, resulti /* value is the indice */);
+  if (! rcb) {
+    RAISEEXCEPTION(envp, "%s symbol action marpaESLIFValue_stack_set_intb failure", valueInterfaceContextp->actions);
+  }
+
   goto done;
 
  err:
@@ -1680,6 +1687,12 @@ static short marpaESLIFValueSymbolCallback(void *userDatavp, marpaESLIFValue_t *
 
   if (! rcb) {
     RAISEEXCEPTION(envp, "%s symbol action callback failure", valueInterfaceContextp->actions);
+  }
+
+  /* We have to inform internal stack */
+  rcb =  marpaESLIFValue_stack_set_intb(marpaESLIFValuep, resulti, 1 /* any value != 0 */, resulti /* value is the indice */);
+  if (! rcb) {
+    RAISEEXCEPTION(envp, "%s symbol action marpaESLIFValue_stack_set_intb failure", valueInterfaceContextp->actions);
   }
 
   goto done;
