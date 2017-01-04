@@ -5,17 +5,29 @@ import java.util.List;
 
 public class ESLIFAppValue implements ESLIFValueInterface {
 	private List<Object> stack = new ArrayList<Object>();
+	
+	public Object result() {
+		return stack.get(0);
+	}
 
 	private void setInStack(int indice, Object object) {
 		/* Fill eventual holes */
 		if (indice >= stack.size()) {
-			for (int i = 0; i < indice; i++) {
+			for (int i = stack.size(); i < indice - 1; i++) {
 				stack.set(i, null);
 			}
 			stack.add(object);
 		} else {
 			stack.set(indice, object);
 		}
+	}
+
+	private Double toDouble(Object object) {
+		return (object  instanceof Integer)  ? new Double(((Integer) object).doubleValue())  : (Double) object;
+	}
+
+	private Integer toInteger(Object object) {
+		return (Integer) object;
 	}
 
 	public boolean ruleAction(String actionName, int arg0i, int argni, int resulti, boolean nullable) {
@@ -25,29 +37,39 @@ public class ESLIFAppValue implements ESLIFValueInterface {
 		if ("do_int".equals(actionName)) {
 			String input = (String) stack.get(arg0i);
 			result = new Integer(input);
-		} else if ("do_double".equals(actionName)) {
-			Object left  =  stack.get(arg0i);
+		} else if ("do_group".equals(actionName)) {
+			result = stack.get(arg0i+1);
+		} else if ("do_op".equals(actionName)) {
+			Object left  =          stack.get(arg0i);
 			String op    = (String) stack.get(arg0i+1); 
-			Object right = stack.get(arg0i+2);
+			Object right =          stack.get(arg0i+2);
 
-			/* For simplification of this example, we do all maths with Double */
-			Double dleft  = (left  instanceof Integer) ? new Double(((Integer) left).doubleValue())  : (Double) left; 
-			Double dright = (right instanceof Integer) ? new Double(((Integer) right).doubleValue()) : (Double) right;
-			Double dresult = null;
+			boolean leftIsInteger  = (left  instanceof Integer);
+			boolean rightIsInteger = (right instanceof Integer);
+
 			if ("**".equals(op)) {
-				dresult = Math.pow(dleft, dright);
+				result = new Double(Math.pow(toDouble(left), toDouble(right)));
 			} else if ("*".equals(op)) {
-				dresult = dleft * dright;
+				if (leftIsInteger && rightIsInteger) {
+					result = toInteger(left) * toInteger(right);
+				} else { 
+					result = toDouble(left) * toDouble(right);
+				}
 			} else if ("/".equals(op)) {
-				dresult = dleft / dright;
+				result = toDouble(left) / toDouble(right);
 			} else if ("+".equals(op)) {
-				dresult = dleft + dright;
+				if (leftIsInteger && rightIsInteger) {
+					result = toInteger(left) + toInteger(right);
+				} else { 
+					result = toDouble(left) + toDouble(right);
+				}
 			} else if ("-".equals(op)) {
-				dresult = dleft - dright;
+				if (leftIsInteger && rightIsInteger) {
+					result = toInteger(left) - toInteger(right);
+				} else { 
+					result = toDouble(left) - toDouble(right);
+				}
 			}
-			result = dresult;
-
-			System.err.println("Action " + actionName + ": " + dleft + " " + op + " " + dright + " => " + dresult);
 
 		} else {
 			return false;
@@ -60,8 +82,6 @@ public class ESLIFAppValue implements ESLIFValueInterface {
 	public boolean symbolAction(byte[] data, int resulti) throws Exception {
 		String string = new String(data, "UTF-8");
 		
-		System.err.println("symbolAction: setting \"" + string + "\" in stack at indice " + resulti);
-
 		setInStack(resulti, string);
 		return true;
 	}

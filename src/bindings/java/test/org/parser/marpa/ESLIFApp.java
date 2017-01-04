@@ -2,6 +2,8 @@ package org.parser.marpa;
 
 import java.io.BufferedReader;
 import java.io.StringReader;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ESLIFApp  {
 	
@@ -13,11 +15,11 @@ public class ESLIFApp  {
 		eslifLogger.info("marpaESLIF version is " + eslif.version());
 
 		final String grammar = 
-				    ":default ::= action => do_double symbol-action => toString\n"
+				    ":default ::= action => do_op symbol-action => toString\n"
 				  + ":discard ::= whitespace\n"
 				  + "Expression ::=\n"
-				  + "    /[\\d]+/                          action => do_int\n"
-				  + "    | '(' Expression ')'              assoc => group action => ::copy[1]\n"
+				  + "    /[\\d]+/                                         action => do_int\n"
+				  + "    | '(' Expression ')'              assoc => group action => do_group\n"
 				  + "   ||     Expression '**' Expression  assoc => right\n"
 				  + "   ||     Expression  '*' Expression\n"
 				  + "    |     Expression  '/' Expression\n"
@@ -54,10 +56,48 @@ public class ESLIFApp  {
 			}
 		}
 		
-		BufferedReader input = new BufferedReader(new StringReader("(3 * 4) + 2 * 7"));
-		ESLIFAppRecognizer eslifAppRecognizer = new ESLIFAppRecognizer(input);
-		ESLIFAppValue eslifAppValue = new ESLIFAppValue();
-		eslifGrammar.parse(eslifAppRecognizer, eslifAppValue);
+		String[] strings = {
+				"(((3 * 4) + 2 * 7) / 2 - 1) ** 3",
+				"5 / (2 * 3)",
+				"5 / 2 * 3",
+				"(5 ** 2) ** 3",
+				"5 * (2 * 3)",
+				"5 ** (2 ** 3)",
+				"5 ** (2 / 3)",
+				"1 + ( 2 + ( 3 + ( 4 + 5) )",
+				"1 + ( 2 + ( 3 + ( 4 + 5) ) )"
+				};
+
+		Object[] results= {
+				new Double(Math.pow((((3. * 4.) + 2. * 7.) / 2. - 1.), 3.)),
+				new Double(5. / (2. * 3.)),
+				new Double(5. / 2. * 3.),
+				new Double(Math.pow(Math.pow(5., 2.), 3.)),
+				new Integer(5 * (2 * 3)),
+				new Double(Math.pow(5., Math.pow(2., 3.))),
+				new Double(Math.pow(5., 2. / 3.)),
+				null,
+				new Integer(1 + ( 2 + ( 3 + ( 4 + 5) ) )),
+				};
+		
+		for (int i = 0; i < strings.length; i++) {
+			String string = new String(strings[i]);
+
+			BufferedReader reader = new BufferedReader(new StringReader(string));
+			ESLIFAppRecognizer eslifAppRecognizer = new ESLIFAppRecognizer(reader);
+			ESLIFAppValue eslifAppValue = new ESLIFAppValue();
+			try {
+				eslifGrammar.parse(eslifAppRecognizer, eslifAppValue);
+				Object result = eslifAppValue.result();
+				if (result.equals(results[i])) {
+					eslifLogger.notice(string + " = " + results[i]);
+				} else {
+					eslifLogger.error(string + " = " + result + " instead of " + results[i]);
+				}
+			} catch (Exception e) {
+				eslifLogger.notice(string + ": " + e);
+			}
+		}
 		eslifGrammar.free();
 
 		eslif.free();
