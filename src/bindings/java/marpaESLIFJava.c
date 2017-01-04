@@ -1078,6 +1078,7 @@ JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIFGrammar_jniFree(JNIEnv *envp, 
 {
   marpaESLIFGrammar_t *marpaESLIFGrammarp;
 
+  fprintf(stderr, "============> In Java_org_parser_marpa_ESLIFGrammar_jniFree\n");
   if (ESLIFGrammar_contextb(envp, eslifGrammarp, eslifGrammarp, MARPAESLIF_ESLIFGRAMMAR_CLASS_getLoggerInterfacep_METHODP,
                               NULL /* genericLoggerpp */,
                               NULL /* genericLoggerContextpp */,
@@ -1635,7 +1636,7 @@ static short marpaESLIFValueRuleCallback(void *userDatavp, marpaESLIFValue_t *ma
  done:
   if (envp != NULL) {
     if (string != NULL) {
-      (*envp)->ReleaseStringUTFChars(envp, string, valueInterfaceContextp->actions);
+      (*envp)->DeleteLocalRef(envp, string);
     }
   }
 
