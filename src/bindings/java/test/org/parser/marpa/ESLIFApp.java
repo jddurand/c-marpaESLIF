@@ -74,7 +74,7 @@ public class ESLIFApp  {
 			ESLIFAppValue eslifAppValue = new ESLIFAppValue();
 			try {
 				eslifGrammar.parse(eslifAppRecognizer, eslifAppValue);
-				Object result = eslifAppValue.result();
+				Object result = eslifAppValue.stackGet(0);
 				eslifLogger.notice(string + " = " + result);
 			} catch (Exception e) {
 				eslifLogger.notice(string + ": " + e);
