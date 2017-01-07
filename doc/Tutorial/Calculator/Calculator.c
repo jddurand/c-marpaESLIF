@@ -18,10 +18,10 @@ typedef enum stack_context {
 static short                         inputReaderb(void *userDatavp, char **inputsp, size_t *inputlp, short *eofbp, short *characterStreambp, char **encodingOfEncodingsp, char **encodingsp, size_t *encodinglp);
 static marpaESLIFValueRuleCallback_t ruleActionResolverp(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions);
 static short                         do_int(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
-static short                         do_double(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
+static short                         do_op(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 
 const static char *grammars =
-  ":default ::= action => do_double\n"
+  ":default ::= action => do_op\n"
   ":discard ::= [\\s]\n"
   "Expression ::=\n"
   "    /[\\d]+/                          action => do_int\n"
@@ -206,7 +206,7 @@ static short do_int(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int a
 }
 
 /*****************************************************************************/
-static short do_double(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
+static short do_op(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
 /*****************************************************************************/
 {
   /* Expression OPERATOR Expression */
@@ -364,8 +364,8 @@ static marpaESLIFValueRuleCallback_t ruleActionResolverp(void *userDatavp, marpa
 {
   if (strcmp(actions, "do_int") == 0) {
     return do_int;
-  } else if (strcmp(actions, "do_double") == 0) {
-    return do_double;
+  } else if (strcmp(actions, "do_op") == 0) {
+    return do_op;
   } else {
     fprintf(stderr, "Unknown action %s!\n", actions);
     return NULL;
