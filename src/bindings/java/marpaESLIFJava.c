@@ -354,7 +354,7 @@ static void marpaESLIFRecognizerInterfaceContextCleanup(JNIEnv *envp, recognizer
 /* Since we asked for JNI_VERSION_1_4 per def ExceptionCheck() is available */
 #define HAVEEXCEPTION(envp) (*envp)->ExceptionCheck(envp)
 
-/* Raise exception - I use a macro because I did not want to include stdarg in this file - it is used as a static method */
+/* Raise exception - I use a macro because I did not want to include stdarg in this file */
 #define RAISEEXCEPTION(envp, message) do {                              \
     if (! HAVEEXCEPTION(envp)) {                                        \
       if (MARPAESLIF_EXCEPTION_CLASSP != NULL) {                        \
@@ -678,10 +678,13 @@ JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIFGrammar_jniNew(JNIEnv *envp, j
   /* Store the object */
   MARPAESLIF_PTR2BYTEBUFFER(marpaESLIFGrammar, marpaESLIFGrammarp);  
   (*envp)->CallVoidMethod(envp, eslifGrammarp, MARPAESLIF_ESLIFGRAMMAR_CLASS_setMarpaESLIFGrammarp_METHODP, BYTEBUFFER(marpaESLIFGrammar));
+  if (HAVEEXCEPTION(envp)) {
+    goto err;
+  }
   goto done;
   
  err:
-  /* Java_org_parser_marpa_ESLIFGrammar_jniFree(envp, eslifGrammarp); */
+  Java_org_parser_marpa_ESLIFGrammar_jniFree(envp, eslifGrammarp);
 
  done:
   if (utf8bytep != NULL) {
@@ -798,6 +801,7 @@ JNIEXPORT jstring JNICALL Java_org_parser_marpa_ESLIFGrammar_jniDescriptionByLev
   }
 
   /* We enforced UTF-8 when parsing the grammar, so description is also in UTF-8 */
+  /* If it fails the exception will be seen by the Java layer */
   return (*envp)->NewStringUTF(envp, descp->bytep);
 
  err:
@@ -841,6 +845,8 @@ JNIEXPORT jintArray JNICALL Java_org_parser_marpa_ESLIFGrammar_jniCurrentRuleIds
   if (intArray == NULL) {
     RAISEEXCEPTIONF(envp, "NewIntArray failure at %s:%d", MARPAESLIF_FILENAMES, __LINE__);
   }
+
+  /* If it fails the exception will be seen by the Java layer */
   (*envp)->SetIntArrayRegion(envp, intArray, 0, (jsize) rulel, intp);
   goto done;
 
@@ -895,6 +901,8 @@ JNIEXPORT jintArray JNICALL Java_org_parser_marpa_ESLIFGrammar_jniRuleIdsByLevel
   if (intArray == NULL) {
     RAISEEXCEPTIONF(envp, "NewIntArray failure at %s:%d", MARPAESLIF_FILENAMES, __LINE__);
   }
+
+  /* If it fails the exception will be seen by the Java layer */
   (*envp)->SetIntArrayRegion(envp, intArray, 0, (jsize) rulel, intp);
   goto done;
 
@@ -931,6 +939,7 @@ JNIEXPORT jintArray JNICALL Java_org_parser_marpa_ESLIFGrammar_jniRuleDisplay(JN
     RAISEEXCEPTIONF(envp, "marpaESLIFGrammar_ruledisplayform_currentb failure for rule %d at %s:%d", rulei, MARPAESLIF_FILENAMES, __LINE__);
   }
 
+  /* If it fails the exception will be seen by the Java layer */
   return (*envp)->NewStringUTF(envp, ruledisplays);
 
  err:
@@ -958,6 +967,7 @@ JNIEXPORT jintArray JNICALL Java_org_parser_marpa_ESLIFGrammar_jniRuleShow(JNIEn
     RAISEEXCEPTIONF(envp, "marpaESLIFGrammar_ruleshowform_currentb failure for rule %d at %s:%d", rulei, MARPAESLIF_FILENAMES, __LINE__);
   }
 
+  /* If it fails the exception will be seen by the Java layer */
   return (*envp)->NewStringUTF(envp, ruleshows);
 
  err:
@@ -985,6 +995,7 @@ JNIEXPORT jintArray JNICALL Java_org_parser_marpa_ESLIFGrammar_jniRuleDisplayByL
     RAISEEXCEPTIONF(envp, "marpaESLIFGrammar_ruledisplayform_currentb failure for rule %d and level %d at %s:%d", rulei, leveli, MARPAESLIF_FILENAMES, __LINE__);
   }
 
+  /* If it fails the exception will be seen by the Java layer */
   return (*envp)->NewStringUTF(envp, ruledisplays);
 
  err:
@@ -1012,6 +1023,7 @@ JNIEXPORT jintArray JNICALL Java_org_parser_marpa_ESLIFGrammar_jniRuleShowByLeve
     RAISEEXCEPTIONF(envp, "marpaESLIFGrammar_ruleshowform_by_levelb failure for rule %d and level %d at %s:%d", rulei, leveli, MARPAESLIF_FILENAMES, __LINE__);
   }
 
+  /* If it fails the exception will be seen by the Java layer */
   return (*envp)->NewStringUTF(envp, ruleshows);
 
  err:
@@ -1037,6 +1049,7 @@ JNIEXPORT jstring JNICALL Java_org_parser_marpa_ESLIFGrammar_jniShow(JNIEnv *env
     RAISEEXCEPTIONF(envp, "marpaESLIFGrammar_grammarshowform_currentb failure at %s:%d", MARPAESLIF_FILENAMES, __LINE__);
   }
 
+  /* If it fails the exception will be seen by the Java layer */
   return (*envp)->NewStringUTF(envp, shows);
 
  err:
@@ -1063,6 +1076,7 @@ JNIEXPORT jstring JNICALL Java_org_parser_marpa_ESLIFGrammar_jniShowByLevel(JNIE
     RAISEEXCEPTIONF(envp, "marpaESLIFGrammar_grammarshowform_by_levelb for level at %s:%d", leveli, MARPAESLIF_FILENAMES, __LINE__);
   }
 
+  /* If it fails the exception will be seen by the Java layer */
   return (*envp)->NewStringUTF(envp, shows);
 
  err:
@@ -1123,19 +1137,19 @@ JNIEXPORT jboolean JNICALL Java_org_parser_marpa_ESLIFGrammar_jniParse(JNIEnv *e
   classp = (*envp)->GetObjectClass(envp, eslifValueInterfacep);
   if (classp == NULL) {
     /* An exception was (must have been) raised */
-    goto err;
+    RAISEEXCEPTIONF(envp, "GetObjectClass failure at %s:%d", MARPAESLIF_FILENAMES, __LINE__);
   }
 
   stringp = (*envp)->CallObjectMethod(envp, classp, MARPAESLIF_CLASS_CLASS_getName_METHODP);
   if (stringp == NULL) {
     /* An exception was (must have been) raised */
-    goto err;
+    RAISEEXCEPTIONF(envp, "CallObjectMethod failure at %s:%d", MARPAESLIF_FILENAMES, __LINE__);
   }
 
   classs = (*envp)->GetStringUTFChars(envp, stringp, &isCopy);
   if (classs == NULL) {
     /* An exception was (must have been) raised */
-    goto err;
+    RAISEEXCEPTIONF(envp, "GetStringUTFChars failure at %s:%d", MARPAESLIF_FILENAMES, __LINE__);
   }
   valueInterfaceContext.classCache.classs = strdup(classs);
   if (valueInterfaceContext.classCache.classs == NULL) {
@@ -1144,6 +1158,7 @@ JNIEXPORT jboolean JNICALL Java_org_parser_marpa_ESLIFGrammar_jniParse(JNIEnv *e
 
   valueInterfaceContext.classCache.classp = (*envp)->NewGlobalRef(envp, classp);
   if (valueInterfaceContext.classCache.classp == NULL) {
+    /* An exception was (must have been) raised */
     RAISEEXCEPTIONF(envp, "NewGlobalRef failure at %s:%d", MARPAESLIF_FILENAMES, __LINE__);
   }
 
