@@ -199,13 +199,13 @@ Here C<[1]> is the relative indice from the first RHS.
 
 =item * Any other rule can give anything, we will choose a C<double> for convenience
 
-No need to duplicate an eventual C<action => do_double> everywhere, since these are the only other rules, we can put that in the C<:default> statement:
+No need to duplicate an eventual C<action => do_op> everywhere, since these are the only other rules, we can put that in the C<:default> statement:
 
-  :default ::= action => do_double
+  :default ::= action => do_op
 
 So we end up with this grammar:
 
-    :default ::= action => do_double
+    :default ::= action => do_op
     :discard ::= [\s]
     Expression ::=
         /[\d]+/                           action => do_int
@@ -457,7 +457,7 @@ So we have to implement the rules, and the rule resolver. Rules themselves are s
 
 =over
 
-=item * do_double
+=item * do_op
 
 =item * do_int
 
@@ -504,14 +504,14 @@ A typical implementation is always getting data from the stack, and put the resu
 
 Here you can say "but atoi() is unsafe here! What guarantees that this is NUL-terminated?". This is something that the end-user have to know: marpaESLIF B<always put a NUL byte> to any buffer that the end-user can access. Therefore, it is safe. This systematic NUL-byte <never> appear in any size information. It is just systematically added to any memory allocation, and set by the engine to the hardcoded C<'\0'> value.
 
-The implementation of C<do_double> is complicated I<only> because we maintained the possibility to have a double or an int on the stack. A version without error checking is:
+The implementation of C<do_op> is complicated I<only> because we maintained the possibility to have a double or an int on the stack. A version without error checking is:
 
-  static short do_double(void              *userDatavp,
-                         marpaESLIFValue_t *marpaESLIFValuep,
-                         int                arg0i,
-                         int                argni,
-                         int                resulti,
-                         short              nullableb)
+  static short do_op(void              *userDatavp,
+                     marpaESLIFValue_t *marpaESLIFValuep,
+                     int                arg0i,
+                     int                argni,
+                     int                resulti,
+                     short              nullableb)
   {
     /* Expression OPERATOR Expression */
     int     i[2];
@@ -615,8 +615,8 @@ And the resolver is nothing else but this simple method, taking into the same re
   {
     if (strcmp(actions, "do_int") == 0) {
       return do_int;
-    } else if (strcmp(actions, "do_double") == 0) {
-      return do_double;
+    } else if (strcmp(actions, "do_op") == 0) {
+      return do_op;
     } else {
       fprintf(stderr, "Unknown action %s!\n", actions);
       return NULL;
