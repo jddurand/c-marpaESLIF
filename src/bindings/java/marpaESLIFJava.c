@@ -1670,10 +1670,13 @@ JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIFValue_jniNew(JNIEnv *envp, job
   /* Store the object */
   MARPAESLIF_PTR2BYTEBUFFER(marpaESLIFValue, marpaESLIFValuep);  
   (*envp)->CallVoidMethod(envp, eslifValuep, MARPAESLIF_ESLIFVALUE_CLASS_setMarpaESLIFValuep_METHODP, BYTEBUFFER(marpaESLIFValue));
+  if (HAVEEXCEPTION(envp)) {
+    goto err;
+  }
   goto done;
   
  err:
-  /* Java_org_parser_marpa_ESLIFValue_jniFree(envp, eslifValuep); */
+  Java_org_parser_marpa_ESLIFValue_jniFree(envp, eslifValuep);
 
  done:
   return;
