@@ -1559,9 +1559,15 @@ JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniNew(JNIEnv *envp
   /* Store the objects */
   MARPAESLIF_PTR2BYTEBUFFER(marpaESLIFRecognizer, marpaESLIFRecognizerp);  
   (*envp)->CallVoidMethod(envp, eslifRecognizerp, MARPAESLIF_ESLIFRECOGNIZER_CLASS_setMarpaESLIFRecognizerp_METHODP, BYTEBUFFER(marpaESLIFRecognizer));
+  if (HAVEEXCEPTION(envp)) {
+    goto err;
+  }
 
   MARPAESLIF_PTR2BYTEBUFFER(recognizerInterfaceContext, recognizerInterfaceContextp);  
   (*envp)->CallVoidMethod(envp, eslifRecognizerp, MARPAESLIF_ESLIFRECOGNIZER_CLASS_setMarpaESLIFRecognizerContextp_METHODP, BYTEBUFFER(recognizerInterfaceContext));
+  if (HAVEEXCEPTION(envp)) {
+    goto err;
+  }
 
   goto done;
   
@@ -1569,7 +1575,7 @@ JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniNew(JNIEnv *envp
   if (recognizerInterfaceContextp != NULL) {
     free(recognizerInterfaceContextp);
   }
-  /* Java_org_parser_marpa_ESLIFRecognizer_jniFree(envp, eslifRecognizerp); */
+  Java_org_parser_marpa_ESLIFRecognizer_jniFree(envp, eslifRecognizerp);
 
  done:
   return;
