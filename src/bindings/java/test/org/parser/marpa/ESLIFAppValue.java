@@ -9,7 +9,7 @@ import java.nio.ByteBuffer;
  * a ByteBuffer.
  */
 public class ESLIFAppValue implements ESLIFValueInterface {
-	private Object result;
+	private Object result = null;
 	
 	/*
 	 * https://java.net/jira/browse/TYRUS-216
