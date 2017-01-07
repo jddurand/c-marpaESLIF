@@ -1,6 +1,7 @@
 /* Java JNI bindings for marpaESLIF                          */
 #include <jni.h>
 #include <marpaESLIF.h>
+#include <genericStack.h>
 #include <stdlib.h>
 #include <errno.h>
 #include <string.h>
@@ -35,21 +36,12 @@ JNIEXPORT void      JNICALL Java_org_parser_marpa_ESLIFGrammar_jniFree          
 JNIEXPORT void      JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniNew            (JNIEnv *envp, jobject eslifRecognizerp, jobject eslifGrammarp);
 JNIEXPORT void      JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniFree           (JNIEnv *envp, jobject eslifRecognizerp);
 
-/* Note about the stack: we use Java to stored Object pointers. Within marpaESLIF we will store a pointer    */
-/* to a structure that contain a single element: the indice in the java stack, stored in a jsize variable.   */
-/* Stack itself is stored in a eslifValueInterface instance, in which stackSet() and stackGet() are required */
-/* and their prototypes impose that this is stack of Java Objects.                                           */
-
 JNIEXPORT void      JNICALL Java_org_parser_marpa_ESLIFValue_jniNew                 (JNIEnv *envp, jobject eslifValuep, jobject eslifRecognizerp);
 JNIEXPORT void      JNICALL Java_org_parser_marpa_ESLIFValue_jniFree                (JNIEnv *envp, jobject eslifValuep);
 
 /* ---------- */
 /* Structures */
 /* ---------- */
-typedef struct stackmap {
-  jsize indice;
-} stackmap_t;
-
 typedef struct genericLoggerContext {
   jobject   objectp;              /* Current object - this can change at every call */
   jmethodID getLoggerInterfacep;
@@ -63,11 +55,6 @@ typedef struct recognizerInterfaceContext {
   const char  *previousUTFCharp;
 } recognizerInterfaceContext_t;
 
-typedef struct valueInterfaceContext {
-  jobject      eslifValueInterfacep;  /* Current value interface instance - this can change at every call */
-  char        *actions;
-} valueInterfaceContext_t;
-
 typedef struct marpaESLIFClassCache {
   char     *classs;
   jclass    classp;
@@ -79,6 +66,16 @@ typedef struct marpaESLIFMethodCache {
   char                   *signatures;
   jmethodID              methodp;
 } marpaESLIFMethodCache_t;
+
+typedef struct valueInterfaceContext {
+  jobject                  objectp;
+  marpaESLIFClassCache_t   classCache;           /* Cache of current class */
+  marpaESLIFMethodCache_t *methodCachep;         /* Cache of method IDs */
+  size_t                   methodCacheSizel;
+  jmethodID                methodp;              /* Current resolved method ID */
+  char                    *actions;              /* shallow copy of last resolved name */
+  genericStack_t          *stackp;               /* Stack of objects */
+} valueInterfaceContext_t;
 
 typedef struct marpaESLIF_stringGenerator { /* We use genericLogger to generate strings */
   char        *s;
@@ -99,6 +96,11 @@ typedef struct marpaESLIF_stringGenerator { /* We use genericLogger to generate 
 #define MARPAESLIF_ESLIFRECOGNIZERINTERFACE_CLASS "org/parser/marpa/ESLIFRecognizerInterface"
 #define MARPAESLIF_ESLIFVALUE_CLASS               "org/parser/marpa/ESLIFValue"
 #define MARPAESLIF_ESLIFVALUEINTERFACE_CLASS      "org/parser/marpa/ESLIFValueInterface"
+#define MARPAESLIF_OBJECT_CLASS                   "java/lang/Object"
+#define MARPAESLIF_CLASS_CLASS                    "java/lang/Class"
+
+#define MARPAESLIF_ESLIFVALUEINTERFACE_SYMBOLACTION_SIGNATURE "(Ljava/nio/ByteBuffer;)Ljava/lang/Object;"
+#define MARPAESLIF_ESLIFVALUEINTERFACE_RULEACTION_SIGNATURE   "([Ljava/lang/Object;)Ljava/lang/Object;"
 
 /* -------------------------------- */
 /* Globals and accessors as macros */
@@ -137,6 +139,14 @@ static marpaESLIFClassCache_t marpaESLIFClassCacheArrayp[] = {
   #define MARPAESLIF_ESLIFVALUEINTERFACE_CLASSCACHE      marpaESLIFClassCacheArrayp[7]
   #define MARPAESLIF_ESLIFVALUEINTERFACE_CLASSP          marpaESLIFClassCacheArrayp[7].classp
   {       MARPAESLIF_ESLIFVALUEINTERFACE_CLASS,          NULL },
+
+  #define MARPAESLIF_OBJECT_CLASSCACHE                   marpaESLIFClassCacheArrayp[8]
+  #define MARPAESLIF_OBJECT_CLASSP                       marpaESLIFClassCacheArrayp[8].classp
+  {       MARPAESLIF_OBJECT_CLASS,                       NULL },
+
+  #define MARPAESLIF_CLASS_CLASSCACHE                    marpaESLIFClassCacheArrayp[9]
+  #define MARPAESLIF_CLASS_CLASSP                        marpaESLIFClassCacheArrayp[9].classp
+  {       MARPAESLIF_CLASS_CLASS,                        NULL },
 
   { NULL }
 };
@@ -268,26 +278,32 @@ static marpaESLIFMethodCache_t marpaESLIFMethodCacheArrayp[] = {
   #define MARPAESLIF_ESLIFVALUE_CLASS_setMarpaESLIFValueContextp_METHODP            marpaESLIFMethodCacheArrayp[41].methodp
   {      &MARPAESLIF_ESLIFVALUE_CLASSCACHE, "setMarpaESLIFValueContextp",           "(Ljava/nio/ByteBuffer;)V", NULL },
 
-  #define MARPAESLIF_ESLIFVALUEINTERFACE_CLASS_ruleAction_METHODP                   marpaESLIFMethodCacheArrayp[42].methodp
-  {      &MARPAESLIF_ESLIFVALUEINTERFACE_CLASSCACHE, "ruleAction",                  "(Ljava/lang/String;IIIZ)Z", NULL },
-
-  #define MARPAESLIF_ESLIFVALUEINTERFACE_CLASS_symbolAction_METHODP                 marpaESLIFMethodCacheArrayp[43].methodp
-  {      &MARPAESLIF_ESLIFVALUEINTERFACE_CLASSCACHE, "symbolAction",                "([BI)Z", NULL },
-
-  #define MARPAESLIF_ESLIFVALUEINTERFACE_CLASS_isWithHighRankOnly_METHODP           marpaESLIFMethodCacheArrayp[44].methodp
+  #define MARPAESLIF_ESLIFVALUEINTERFACE_CLASS_isWithHighRankOnly_METHODP           marpaESLIFMethodCacheArrayp[42].methodp
   {      &MARPAESLIF_ESLIFVALUEINTERFACE_CLASSCACHE, "isWithHighRankOnly",          "()Z", NULL },
 
-  #define MARPAESLIF_ESLIFVALUEINTERFACE_CLASS_isWithOrderByRank_METHODP            marpaESLIFMethodCacheArrayp[45].methodp
+  #define MARPAESLIF_ESLIFVALUEINTERFACE_CLASS_isWithOrderByRank_METHODP            marpaESLIFMethodCacheArrayp[43].methodp
   {      &MARPAESLIF_ESLIFVALUEINTERFACE_CLASSCACHE, "isWithOrderByRank",           "()Z", NULL },
 
-  #define MARPAESLIF_ESLIFVALUEINTERFACE_CLASS_isWithAmbiguous_METHODP              marpaESLIFMethodCacheArrayp[46].methodp
+  #define MARPAESLIF_ESLIFVALUEINTERFACE_CLASS_isWithAmbiguous_METHODP              marpaESLIFMethodCacheArrayp[44].methodp
   {      &MARPAESLIF_ESLIFVALUEINTERFACE_CLASSCACHE, "isWithAmbiguous",             "()Z", NULL },
 
-  #define MARPAESLIF_ESLIFVALUEINTERFACE_CLASS_isWithNull_METHODP                   marpaESLIFMethodCacheArrayp[47].methodp
+  #define MARPAESLIF_ESLIFVALUEINTERFACE_CLASS_isWithNull_METHODP                   marpaESLIFMethodCacheArrayp[45].methodp
   {      &MARPAESLIF_ESLIFVALUEINTERFACE_CLASSCACHE, "isWithNull",                  "()Z", NULL },
 
-  #define MARPAESLIF_ESLIFVALUEINTERFACE_CLASS_maxParses_METHODP                    marpaESLIFMethodCacheArrayp[48].methodp
+  #define MARPAESLIF_ESLIFVALUEINTERFACE_CLASS_maxParses_METHODP                    marpaESLIFMethodCacheArrayp[46].methodp
   {      &MARPAESLIF_ESLIFVALUEINTERFACE_CLASSCACHE, "maxParses",                   "()I", NULL },
+
+  #define MARPAESLIF_ESLIFVALUEINTERFACE_CLASS_setResult_METHODP                    marpaESLIFMethodCacheArrayp[47].methodp
+  {      &MARPAESLIF_ESLIFVALUEINTERFACE_CLASSCACHE, "setResult",                   "(Ljava/lang/Object;)V", NULL },
+
+  #define MARPAESLIF_ESLIFVALUEINTERFACE_CLASS_getResult_METHODP                    marpaESLIFMethodCacheArrayp[48].methodp
+  {      &MARPAESLIF_ESLIFVALUEINTERFACE_CLASSCACHE, "getResult",                   "()Ljava/lang/Object;", NULL },
+
+  #define MARPAESLIF_OBJECT_CLASS_getClass_METHODP                                  marpaESLIFMethodCacheArrayp[49].methodp
+  {      &MARPAESLIF_OBJECT_CLASSCACHE, "getClass",                                 "()Ljava/lang/Class;", NULL },
+
+  #define MARPAESLIF_CLASS_CLASS_getName_METHODP                                    marpaESLIFMethodCacheArrayp[50].methodp
+  {      &MARPAESLIF_CLASS_CLASSCACHE, "getName",                                   "()Ljava/lang/String;", NULL },
 
   { NULL }
 };
@@ -325,6 +341,8 @@ static marpaESLIFValueRuleCallback_t   marpaESLIFValueRuleActionResolver(void *u
 static marpaESLIFValueSymbolCallback_t marpaESLIFValueSymbolActionResolver(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions);
 static short marpaESLIFValueRuleCallback(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static short marpaESLIFValueSymbolCallback(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *bytep, size_t bytel, int resulti);
+static jmethodID marpaESLIFValueActionResolver(JNIEnv *envp, valueInterfaceContext_t *valueInterfaceContextp, char *methods, char *signatures);
+static void marpaESLIFValueContextFree(JNIEnv *envp, valueInterfaceContext_t *valueInterfaceContextp, short onStackb);
 
 /* --------------- */
 /* Internal macros */
@@ -426,6 +444,8 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *JavaVMp, void* reservedp)
     }
     classp = (*envp)->FindClass(envp, marpaESLIFClassCachep->classs);
     if (classp == NULL) {
+      /* We want OUR exception to be raised */
+      (*envp)->ExceptionClear(envp);
       RAISEEXCEPTIONF(envp, "Failed to find class \"%s\" at %s:%d", marpaESLIFClassCachep->classs, MARPAESLIF_FILENAMES, __LINE__);
     }
     /* classp is a local reference and will vanish itself */
@@ -449,6 +469,8 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *JavaVMp, void* reservedp)
                                                            marpaESLIFMethodCachep->methods,
                                                            marpaESLIFMethodCachep->signatures);
     if (marpaESLIFMethodCachep->methodp == NULL) {
+      /* We want OUR exception to be raised */
+      (*envp)->ExceptionClear(envp);
       RAISEEXCEPTIONF(envp,
                      "Failed to find method \"%s\" with signature \"%s\" in class \"%s\" at %s:%d",
                      marpaESLIFMethodCachep->methods,
@@ -1049,12 +1071,19 @@ JNIEXPORT jstring JNICALL Java_org_parser_marpa_ESLIFGrammar_jniShowByLevel(JNIE
 JNIEXPORT jboolean JNICALL Java_org_parser_marpa_ESLIFGrammar_jniParse(JNIEnv *envp, jobject eslifGrammarp, jobject eslifRecognizerInterfacep, jobject eslifValueInterfacep)
 /*****************************************************************************/
 {
+  jclass                        classp  = NULL;
+  jstring                       stringp = NULL;
+  const char                   *classs  = NULL;
+  jobject                       result  = NULL;
   marpaESLIFGrammar_t          *marpaESLIFGrammarp;
   marpaESLIFRecognizerOption_t  marpaESLIFRecognizerOption;
   marpaESLIFValueOption_t       marpaESLIFValueOption;
   short                         exhaustedb;
   recognizerInterfaceContext_t  recognizerInterfaceContext;
   valueInterfaceContext_t       valueInterfaceContext;
+  size_t                        i;
+  jboolean                      rcb;
+  jboolean                      isCopy;
 
   if (! ESLIFGrammar_contextb(envp, eslifGrammarp, eslifGrammarp, MARPAESLIF_ESLIFGRAMMAR_CLASS_getLoggerInterfacep_METHODP,
                               NULL /* genericLoggerpp */,
@@ -1079,13 +1108,52 @@ JNIEXPORT jboolean JNICALL Java_org_parser_marpa_ESLIFGrammar_jniParse(JNIEnv *e
   marpaESLIFRecognizerOption.buftriggerperci           = 50; /* Recommended value */
   marpaESLIFRecognizerOption.bufaddperci               = 50; /* Recommended value */
 
-  valueInterfaceContext.eslifValueInterfacep           = eslifValueInterfacep;
+  valueInterfaceContext.objectp                        = eslifValueInterfacep;
+  valueInterfaceContext.classCache.classs              = NULL;
+  valueInterfaceContext.classCache.classp              = NULL;
+  valueInterfaceContext.methodCachep                   = NULL;
+  valueInterfaceContext.methodCacheSizel               = 0;
+  valueInterfaceContext.methodp                        = 0;
   valueInterfaceContext.actions                        = NULL;
+  valueInterfaceContext.stackp                         = NULL;
 
+  /* For run-time resolving of actions we need current jclass */
+  classp = (*envp)->GetObjectClass(envp, eslifValueInterfacep);
+  if (classp == NULL) {
+    /* An exception was (must have been) raised */
+    goto err;
+  }
+
+  stringp = (*envp)->CallObjectMethod(envp, classp, MARPAESLIF_CLASS_CLASS_getName_METHODP);
+  if (stringp == NULL) {
+    /* An exception was (must have been) raised */
+    goto err;
+  }
+
+  classs = (*envp)->GetStringUTFChars(envp, stringp, &isCopy);
+  if (classs == NULL) {
+    /* An exception was (must have been) raised */
+    goto err;
+  }
+  valueInterfaceContext.classCache.classs = strdup(classs);
+  if (valueInterfaceContext.classCache.classs == NULL) {
+    RAISEEXCEPTIONF(envp, "strdup failure at %s:%d, %s", MARPAESLIF_FILENAMES, __LINE__, strerror(errno));
+  }
+
+  valueInterfaceContext.classCache.classp = (*envp)->NewGlobalRef(envp, classp);
+  if (valueInterfaceContext.classCache.classp == NULL) {
+    RAISEEXCEPTIONF(envp, "NewGlobalRef failure at %s:%d", MARPAESLIF_FILENAMES, __LINE__);
+  }
+
+  GENERICSTACK_NEW(valueInterfaceContext.stackp);
+  if (GENERICSTACK_ERROR(valueInterfaceContext.stackp)) {
+    RAISEEXCEPTIONF(envp, "valueInterfaceContext.stackp initialization failure at %s:%d, %s", MARPAESLIF_FILENAMES, __LINE__, strerror(errno));
+  }
+  
   marpaESLIFValueOption.userDatavp                     = &valueInterfaceContext;
   marpaESLIFValueOption.ruleActionResolverp            = marpaESLIFValueRuleActionResolver;
   marpaESLIFValueOption.symbolActionResolverp          = marpaESLIFValueSymbolActionResolver;
-  marpaESLIFValueOption.freeActionResolverp            = NULL; /* No need of a free action - stack is managed in Java, Java will free */
+  marpaESLIFValueOption.freeActionResolverp            = NULL; /* We always push only integers */
   marpaESLIFValueOption.highRankOnlyb                  = ((*envp)->CallBooleanMethod(envp, eslifValueInterfacep, MARPAESLIF_ESLIFVALUEINTERFACE_CLASS_isWithHighRankOnly_METHODP) == JNI_TRUE);
   marpaESLIFValueOption.ambiguousb                     = ((*envp)->CallBooleanMethod(envp, eslifValueInterfacep, MARPAESLIF_ESLIFVALUEINTERFACE_CLASS_isWithAmbiguous_METHODP)    == JNI_TRUE);
   marpaESLIFValueOption.nullb                          = ((*envp)->CallBooleanMethod(envp, eslifValueInterfacep, MARPAESLIF_ESLIFVALUEINTERFACE_CLASS_isWithNull_METHODP)         == JNI_TRUE);
@@ -1098,10 +1166,51 @@ JNIEXPORT jboolean JNICALL Java_org_parser_marpa_ESLIFGrammar_jniParse(JNIEnv *e
     RAISEEXCEPTION(envp, "Parse failure");
   }
 
-  return JNI_TRUE;
+  /* By definition, result is at indice 0 of our stack */
+  if (GENERICSTACK_IS_PTR(valueInterfaceContext.stackp, 0)) {
+    result = GENERICSTACK_GET_PTR(valueInterfaceContext.stackp, 0);
+    /* We do NOT want this reference to be destroyed */
+    GENERICSTACK_SET_NA(valueInterfaceContext.stackp, 0);
+    if (GENERICSTACK_ERROR(valueInterfaceContext.stackp)) {
+      /* We do not want a double free of result, c.f. the call to marpaESLIFValueContextFree() */
+      result = NULL;
+      RAISEEXCEPTIONF(envp, "genericStack set failure at %s:%d, %s", MARPAESLIF_FILENAMES, __LINE__, strerror(errno));
+    }
+  } else {
+    result = NULL;
+  }
+  (*envp)->CallVoidMethod(envp, eslifValueInterfacep, MARPAESLIF_ESLIFVALUEINTERFACE_CLASS_setResult_METHODP, result);
+  if (HAVEEXCEPTION(envp)) {
+    goto err;
+  }
+  
+  rcb = JNI_TRUE;
+  goto done;
 
  err:
-  return JNI_FALSE;
+  if (envp != NULL) {
+    if (result != NULL) {
+      (*envp)->DeleteGlobalRef(envp, stringp);
+    }
+  }
+  rcb = JNI_FALSE;
+
+ done:
+  if (envp != NULL) {
+    if (stringp != NULL) {
+      if (classs != NULL) {
+        (*envp)->ReleaseStringUTFChars(envp, stringp, classs);
+      } else {
+        (*envp)->DeleteLocalRef(envp, stringp);
+      }
+    }
+    if (classp != NULL) {
+      (*envp)->DeleteLocalRef(envp, classp);
+    }
+  }
+  marpaESLIFValueContextFree(envp, &valueInterfaceContext, 1 /* onStackb */);
+
+  return rcb;
 }
 
 /*****************************************************************************/
@@ -1626,50 +1735,157 @@ static short recognizerReaderCallbackb(void *userDatavp, char **inputcpp, size_t
 static marpaESLIFValueRuleCallback_t marpaESLIFValueRuleActionResolver(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions)
 /*****************************************************************************/
 {
+  JNIEnv                  *envp;
   valueInterfaceContext_t *valueInterfaceContextp = (valueInterfaceContext_t *) userDatavp;
+  jmethodID                methodp;
 
-  /* Remember action name - it is okay to not dup it */
+  /* resolver callack is never running in another thread - no need to attach */
+  if (((*marpaESLIF_vmp)->GetEnv(marpaESLIF_vmp, (void **) &envp, MARPAESLIF_JNI_VERSION) != JNI_OK) || (envp == NULL)) {
+    goto err;
+  }
+
+  /* Make sure rule action method is resolved */
+  methodp = marpaESLIFValueActionResolver(envp, valueInterfaceContextp, actions, MARPAESLIF_ESLIFVALUEINTERFACE_RULEACTION_SIGNATURE);
+  if (methodp == NULL) {
+    goto err;
+  }
+
   valueInterfaceContextp->actions = actions;
+  valueInterfaceContextp->methodp = methodp;
+
   return marpaESLIFValueRuleCallback;
+
+ err:
+  return NULL;
 }
 
 /*****************************************************************************/
 static marpaESLIFValueSymbolCallback_t marpaESLIFValueSymbolActionResolver(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions)
 /*****************************************************************************/
 {
+  JNIEnv                  *envp;
   valueInterfaceContext_t *valueInterfaceContextp = (valueInterfaceContext_t *) userDatavp;
+  jmethodID                methodp;
 
-  /* Remember action name - it is okay to not dup it */
+  /* resolver callack is never running in another thread - no need to attach */
+  if (((*marpaESLIF_vmp)->GetEnv(marpaESLIF_vmp, (void **) &envp, MARPAESLIF_JNI_VERSION) != JNI_OK) || (envp == NULL)) {
+    goto err;
+  }
+
+  /* Make sure symbol action method is resolved */
+  methodp = marpaESLIFValueActionResolver(envp, valueInterfaceContextp, actions, MARPAESLIF_ESLIFVALUEINTERFACE_SYMBOLACTION_SIGNATURE);
+  if (methodp == NULL) {
+    goto err;
+  }
+
   valueInterfaceContextp->actions = actions;
+  valueInterfaceContextp->methodp = methodp;
+
   return marpaESLIFValueSymbolCallback;
+
+ err:
+  return NULL;
 }
 
 /*****************************************************************************/
 static short marpaESLIFValueRuleCallback(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
 /*****************************************************************************/
 {
-  JNIEnv                  *envp;
-  valueInterfaceContext_t *valueInterfaceContextp = (valueInterfaceContext_t *) userDatavp;
-  jstring                  string = NULL;
-  short                    rcb;
+  JNIEnv                         *envp;
+  valueInterfaceContext_t        *valueInterfaceContextp = (valueInterfaceContext_t *) userDatavp;
+  genericStack_t                 *stackp                 = valueInterfaceContextp->stackp;
+  jobjectArray                    list                   = NULL;
+  jobject                         actionResult           = NULL;
+  jobject                         actionResultGlobalRef  = NULL;
+  jobject                         byteBuffer             = NULL;
+  jobject                         actionResultPreviousGlobalRef;
+  jobject                         listElement;
+  short                           rcb;
+  int                             i;
+  short                           intb;
+  int                             indice;
+  short                           arrayb;
+  void                           *bytep;
+  size_t                          bytel;
 
   /* Reader callack is never running in another thread - no need to attach */
   if (((*marpaESLIF_vmp)->GetEnv(marpaESLIF_vmp, (void **) &envp, MARPAESLIF_JNI_VERSION) != JNI_OK) || (envp == NULL)) {
     goto err;
   }
 
-  string = (*envp)->NewStringUTF(envp, valueInterfaceContextp->actions);
-  if (string == NULL) {
+  /* Prototype of a rule action is: public Object action(List<Object> list) */
+  if (! nullableb) {
+    /* Make the list */
+    list = (*envp)->NewObjectArray(envp, argni - arg0i + 1, MARPAESLIF_OBJECT_CLASSP, NULL /* initialElement */);
+    if (list == NULL) {
+      RAISEEXCEPTION(envp, "NewObjectArray failure");
+    }
+
+    for (i = arg0i; i <= argni; i++) {
+      if (! marpaESLIFValue_stack_is_intb(marpaESLIFValuep, i, &intb)) {
+        RAISEEXCEPTION(envp, "marpaESLIFValue_stack_is_intb failure");
+      }
+      if (intb) {
+        if (! marpaESLIFValue_stack_get_intb(marpaESLIFValuep, i, NULL /* contextip */, &indice)) {
+          RAISEEXCEPTION(envp, "marpaESLIFValue_stack_is_intb failure");
+        }
+        /* This is an object created by the user interface */
+        (*envp)->SetObjectArrayElement(envp, list, i - arg0i, (jobject) GENERICSTACK_GET_PTR(stackp, indice));
+        if (HAVEEXCEPTION(envp)) {
+          goto err;
+        }
+      } else {
+        /* This must be a lexeme - always in the form of an array */
+        if (! marpaESLIFValue_stack_is_arrayb(marpaESLIFValuep, i, &arrayb)) {
+          RAISEEXCEPTION(envp, "marpaESLIFValue_stack_is_arrayb failure");
+        }
+        if (! arrayb) {
+          RAISEEXCEPTIONF(envp, "At indice %d pf stack, item is not a PTR neither an ARRAY", i);
+        }
+        if (! marpaESLIFValue_stack_get_arrayb(marpaESLIFValuep, i, NULL /* contextip */, &bytep, &bytel, NULL /* shallowbp */)) {
+          RAISEEXCEPTION(envp, "marpaESLIFValue_stack_get_arrayb failure");
+        }
+        if (byteBuffer != NULL) {
+          (*envp)->DeleteLocalRef(envp, byteBuffer);
+        }
+        byteBuffer = (*envp)->NewDirectByteBuffer(envp, bytep, (jlong) bytel);
+        if (byteBuffer == NULL) {
+          RAISEEXCEPTION(envp, "NewDirectByteBuffer failure");
+        }
+        (*envp)->SetObjectArrayElement(envp, list, i - arg0i, byteBuffer);
+        if (HAVEEXCEPTION(envp)) {
+          goto err;
+        }
+      }
+    }
+  }
+
+  /* Call the action */
+  actionResult = (*envp)->CallObjectMethod(envp, valueInterfaceContextp->objectp, valueInterfaceContextp->methodp, list);
+  if (HAVEEXCEPTION(envp)) {
     goto err;
   }
 
-  rcb = ((*envp)->CallBooleanMethod(envp, valueInterfaceContextp->eslifValueInterfacep, MARPAESLIF_ESLIFVALUEINTERFACE_CLASS_ruleAction_METHODP, string, (jint) arg0i, (jint) argni, (jint) resulti, (jboolean) nullableb) == JNI_TRUE);
-  if (! rcb) {
-    RAISEEXCEPTIONF(envp, "%s rule action callback failure", valueInterfaceContextp->actions);
+  if (actionResult != NULL) {
+    actionResultGlobalRef = (*envp)->NewGlobalRef(envp, actionResult);
+    if (actionResultGlobalRef == NULL) {
+      RAISEEXCEPTIONF(envp, "NewGlobalRef failure at %s:%d", MARPAESLIF_FILENAMES, __LINE__);
+    }
   }
 
-  /* We have to inform internal stack */
-  rcb =  marpaESLIFValue_stack_set_intb(marpaESLIFValuep, resulti, 1 /* any value != 0 */, resulti /* value is the indice */);
+  /* Remember the global ref for the destroy phase */
+  if (GENERICSTACK_IS_PTR(stackp, resulti)) {
+    actionResultPreviousGlobalRef = (jobject) GENERICSTACK_GET_PTR(stackp, resulti);
+    if (actionResultPreviousGlobalRef != NULL) {
+      (*envp)->DeleteGlobalRef(envp, actionResultPreviousGlobalRef);
+    }
+  }
+  GENERICSTACK_SET_PTR(stackp, actionResultGlobalRef, resulti);
+  if (GENERICSTACK_ERROR(stackp)) {
+    RAISEEXCEPTIONF(envp, "genericStack set failure at %s:%d, %s", MARPAESLIF_FILENAMES, __LINE__, strerror(errno));
+  }
+  /* shallowb to a true value is very important because we get independant of an eventual free-action in the grammar */
+  rcb =  marpaESLIFValue_stack_set_intb(marpaESLIFValuep, resulti, 1 /* context: any value != 0 */, resulti);
   if (! rcb) {
     RAISEEXCEPTIONF(envp, "%s symbol action marpaESLIFValue_stack_set_intb failure", valueInterfaceContextp->actions);
   }
@@ -1677,12 +1893,23 @@ static short marpaESLIFValueRuleCallback(void *userDatavp, marpaESLIFValue_t *ma
   goto done;
 
  err:
+  if (envp != NULL) {
+    if (actionResultGlobalRef != NULL) {
+      (*envp)->DeleteGlobalRef(envp, actionResultGlobalRef);
+    }
+  }
   rcb = 0;
 
  done:
   if (envp != NULL) {
-    if (string != NULL) {
-      (*envp)->DeleteLocalRef(envp, string);
+    if (byteBuffer != NULL) {
+      (*envp)->DeleteLocalRef(envp, byteBuffer);
+    }
+    if (list != NULL) {
+      (*envp)->DeleteLocalRef(envp, list);
+    }
+    if (actionResult != NULL) {
+      (*envp)->DeleteLocalRef(envp, actionResult);
     }
   }
 
@@ -1693,43 +1920,54 @@ static short marpaESLIFValueRuleCallback(void *userDatavp, marpaESLIFValue_t *ma
 static short marpaESLIFValueSymbolCallback(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *bytep, size_t bytel, int resulti)
 /*****************************************************************************/
 {
-  /* Note: marpaESLIF guarantees that bytel is > 0 - otherwise this would be a nullable call */
+  /* Almost exactly like marpaESLIFValueRuleCallback except that we construct a list of one element containing a jbyteArray that we do ourself */
   JNIEnv                  *envp;
-  jbyteArray               byteArray = NULL;
-  jbyte                   *byte = NULL;
   valueInterfaceContext_t *valueInterfaceContextp = (valueInterfaceContext_t *) userDatavp;
+  genericStack_t          *stackp                 = valueInterfaceContextp->stackp;
+  jobject                  byteBuffer             = NULL;
+  jobject                  actionResult           = NULL;
+  jobject                  actionResultGlobalRef  = NULL;
+  jobject                  actionResultPreviousGlobalRef;
   short                    rcb;
-  size_t                   i;
+  jint                     i;
 
   /* Reader callack is never running in another thread - no need to attach */
   if (((*marpaESLIF_vmp)->GetEnv(marpaESLIF_vmp, (void **) &envp, MARPAESLIF_JNI_VERSION) != JNI_OK) || (envp == NULL)) {
     goto err;
   }
 
-  byteArray = (*envp)->NewByteArray(envp, bytel);
-  if (byteArray == NULL) {
+  /* Prototype of a symbol action is: public Object symbolAction(ByteBuffer byteBuffer) */
+  byteBuffer = (*envp)->NewDirectByteBuffer(envp, bytep, (jlong) bytel);
+  if (byteBuffer == NULL) {
+    RAISEEXCEPTION(envp, "NewDirectByteBuffer failure");
+  }
+
+  /* Call the symbol action */
+  actionResult = (*envp)->CallObjectMethod(envp, valueInterfaceContextp->objectp, valueInterfaceContextp->methodp, byteBuffer);
+  if (HAVEEXCEPTION(envp)) {
     goto err;
   }
 
-  byte = malloc(sizeof(jbyte) * bytel);
-  if (byte == NULL) {
-    RAISEEXCEPTIONF(envp, "malloc failure at %s:%d, %s", MARPAESLIF_FILENAMES, __LINE__, strerror(errno));
-    goto err;
-  }
-  for (i = 0; i < bytel; i++) {
-    byte[i] = (jbyte) bytep[i];
+  if (actionResult != NULL) {
+    actionResultGlobalRef = (*envp)->NewGlobalRef(envp, actionResult);
+    if (actionResultGlobalRef == NULL) {
+      RAISEEXCEPTIONF(envp, "NewGlobalRef failure at %s:%d", MARPAESLIF_FILENAMES, __LINE__);
+    }
   }
 
-  (*envp)->SetByteArrayRegion(envp, byteArray, 0, bytel, byte);
-
-  rcb = ((*envp)->CallBooleanMethod(envp, valueInterfaceContextp->eslifValueInterfacep, MARPAESLIF_ESLIFVALUEINTERFACE_CLASS_symbolAction_METHODP, byteArray, (jint) resulti) == JNI_TRUE);
-
-  if (! rcb) {
-    RAISEEXCEPTIONF(envp, "%s symbol action callback failure", valueInterfaceContextp->actions);
+  /* Remember the global ref for the destroy phase */
+  if (GENERICSTACK_IS_PTR(stackp, resulti)) {
+    actionResultPreviousGlobalRef = (jobject) GENERICSTACK_GET_PTR(stackp, resulti);
+    if (actionResultPreviousGlobalRef != NULL) {
+      (*envp)->DeleteGlobalRef(envp, actionResultPreviousGlobalRef);
+    }
   }
-
-  /* We have to inform internal stack */
-  rcb =  marpaESLIFValue_stack_set_intb(marpaESLIFValuep, resulti, 1 /* any value != 0 */, resulti /* value is the indice */);
+  GENERICSTACK_SET_PTR(stackp, actionResultGlobalRef, resulti);
+  if (GENERICSTACK_ERROR(stackp)) {
+    RAISEEXCEPTIONF(envp, "genericStack set failure at %s:%d, %s", MARPAESLIF_FILENAMES, __LINE__, strerror(errno));
+  }
+  /* shallowb to a true value is very important because we get independant of an eventual free-action in the grammar */
+  rcb =  marpaESLIFValue_stack_set_intb(marpaESLIFValuep, resulti, 1 /* context: any value != 0 */, resulti);
   if (! rcb) {
     RAISEEXCEPTIONF(envp, "%s symbol action marpaESLIFValue_stack_set_intb failure", valueInterfaceContextp->actions);
   }
@@ -1737,16 +1975,146 @@ static short marpaESLIFValueSymbolCallback(void *userDatavp, marpaESLIFValue_t *
   goto done;
 
  err:
+  if (envp != NULL) {
+    if (actionResultGlobalRef != NULL) {
+      (*envp)->DeleteGlobalRef(envp, actionResultGlobalRef);
+    }
+  }
   rcb = 0;
 
  done:
   if (envp != NULL) {
-    if (byte != NULL) {
-      free(byte);
+    if (byteBuffer != NULL) {
+      (*envp)->DeleteLocalRef(envp, byteBuffer);
     }
-    if (byteArray != NULL) {
-      (*envp)->DeleteLocalRef(envp, byteArray);
+    if (actionResult != NULL) {
+      (*envp)->DeleteLocalRef(envp, actionResult);
     }
   }
+
   return rcb;
 }
+
+/*****************************************************************************/
+static jmethodID marpaESLIFValueActionResolver(JNIEnv *envp, valueInterfaceContext_t *valueInterfaceContextp, char *methods, char *signatures)
+/*****************************************************************************/
+{
+  /* We do not used an internal hash, believing it is not worth the overhead */
+  marpaESLIFMethodCache_t *methodCachep      = valueInterfaceContextp->methodCachep;
+  size_t                   methodCacheSizel  = valueInterfaceContextp->methodCacheSizel;
+  marpaESLIFMethodCache_t *localMethodCachep;
+  jmethodID                methodp;
+  size_t                   i;
+  
+
+  for (i = 0, localMethodCachep = methodCachep /* May be NULL */; i < methodCacheSizel; i++, localMethodCachep++) {
+    if ((strcmp(localMethodCachep->methods, methods) == 0) && (strcmp(localMethodCachep->signatures, signatures) == 0)) {
+      return localMethodCachep->methodp;
+    }
+  }
+
+  /* If we are here, this mean that method with given signature was not resolved */
+  if (methodCacheSizel <= 0) {
+    methodCachep = (marpaESLIFMethodCache_t *) malloc(sizeof(marpaESLIFMethodCache_t));
+    if (methodCachep == NULL) {
+      RAISEEXCEPTIONF(envp, "malloc failure at %s:%d, %s", MARPAESLIF_FILENAMES, __LINE__, strerror(errno));
+    }
+  } else {
+    methodCachep = (marpaESLIFMethodCache_t *) realloc(methodCachep, sizeof(marpaESLIFMethodCache_t) * (methodCacheSizel + 1));
+    if (methodCachep == NULL) {
+      RAISEEXCEPTIONF(envp, "realloc failure at %s:%d, %s", MARPAESLIF_FILENAMES, __LINE__, strerror(errno));
+    }
+  }
+
+  valueInterfaceContextp->methodCachep     = methodCachep;
+  valueInterfaceContextp->methodCacheSizel++;
+
+  localMethodCachep                        = &(methodCachep[methodCacheSizel]);
+  localMethodCachep->marpaESLIFClassCachep = &(valueInterfaceContextp->classCache);
+  localMethodCachep->methods               = NULL;
+  localMethodCachep->signatures            = NULL;
+  localMethodCachep->methodp               = NULL;
+
+  localMethodCachep->methods = strdup(methods);
+  if (localMethodCachep->methods == NULL) {
+    RAISEEXCEPTIONF(envp, "strdup failure at %s:%d, %s", MARPAESLIF_FILENAMES, __LINE__, strerror(errno));
+  }
+
+  localMethodCachep->signatures = strdup(signatures);
+  if (localMethodCachep->signatures == NULL) {
+    RAISEEXCEPTIONF(envp, "strdup failure at %s:%d, %s", MARPAESLIF_FILENAMES, __LINE__, strerror(errno));
+  }
+
+  methodp = (*envp)->GetMethodID(envp,
+                                 valueInterfaceContextp->classCache.classp,
+                                 methods,
+                                 signatures);
+  if (methodp == NULL) {
+    /* We want OUR exception to be shown */
+    (*envp)->ExceptionClear(envp);
+    RAISEEXCEPTIONF(envp,
+                    "Failed to find method \"%s\" with signature \"%s\" in class \"%s\" at %s:%d",
+                    methods,
+                    signatures,
+                    valueInterfaceContextp->classCache.classs,
+                    MARPAESLIF_FILENAMES,
+                    __LINE__);
+  }
+
+  localMethodCachep->methodp = methodp;
+  return methodp;
+
+ err:
+  return NULL;
+}
+
+/*****************************************************************************/
+static void marpaESLIFValueContextFree(JNIEnv *envp, valueInterfaceContext_t *valueInterfaceContextp, short onStackb)
+/*****************************************************************************/
+{
+  marpaESLIFMethodCache_t *methodCachep;
+  size_t                   methodCacheSizel;
+  marpaESLIFMethodCache_t *localMethodCachep;
+  genericStack_t          *stackp;
+  jmethodID                methodp;
+  jobject                  globalRef;
+  size_t                   i; 
+
+  if (valueInterfaceContextp != NULL) {
+    if (valueInterfaceContextp->classCache.classp != NULL) {
+      if (envp != NULL) {
+        (*envp)->DeleteGlobalRef(envp, valueInterfaceContextp->classCache.classp);
+      }
+    }
+    if (valueInterfaceContextp->methodCachep != NULL) {
+      methodCachep      = valueInterfaceContextp->methodCachep;
+      methodCacheSizel  = valueInterfaceContextp->methodCacheSizel;
+
+      for (i = 0, localMethodCachep = methodCachep; i < methodCacheSizel; i++, localMethodCachep++) {
+        if (localMethodCachep->methods != NULL) {
+          free(localMethodCachep->methods);
+        }
+        if (localMethodCachep->signatures != NULL) {
+          free(localMethodCachep->signatures);
+        }
+      }
+      free(valueInterfaceContextp->methodCachep);
+    }
+    stackp = valueInterfaceContextp->stackp;
+    if (stackp != NULL) {
+      for (i = 0; i < GENERICSTACK_USED(stackp); i++) {
+        if (GENERICSTACK_IS_PTR(stackp, i)) {
+          globalRef = GENERICSTACK_GET_PTR(stackp, i);
+          if (globalRef != NULL) {
+            (*envp)->DeleteGlobalRef(envp, globalRef);
+          }
+        }
+      }
+      GENERICSTACK_FREE(stackp);
+    }
+    if (! onStackb) {
+      free(valueInterfaceContextp);
+    }
+  }
+}
+ 
