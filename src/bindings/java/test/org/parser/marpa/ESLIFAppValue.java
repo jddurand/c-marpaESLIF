@@ -1,31 +1,38 @@
 package org.parser.marpa;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.io.UnsupportedEncodingException;
+import java.nio.ByteBuffer;
 
+/*
+ * In our example we have NOT specified a symbol action, therefore
+ * lexemes that come directly from the grammar are in the form of
+ * a ByteBuffer.
+ */
 public class ESLIFAppValue implements ESLIFValueInterface {
-	private List<Object> stack = new ArrayList<Object>();
+	private Object result;
 	
-	public void stackSet(int indice, Object object) {
-		/* Fill eventual holes */
-		if (indice >= stack.size()) {
-			for (int i = stack.size(); i < indice - 1; i++) {
-				stack.set(i, null);
-			}
-			stack.add(object);
-		} else {
-			stack.set(indice, object);
-		}
+	/*
+	 * https://java.net/jira/browse/TYRUS-216
+	 */
+	private final byte[] getActiveArray(ByteBuffer buffer)
+	{
+	  byte[] ret = new byte[buffer.remaining()];
+	  if (buffer.hasArray())
+	  {
+	      byte[] array = buffer.array();
+	      System.arraycopy(array, buffer.arrayOffset() + buffer.position(), ret, 0, ret.length);
+	  }
+	  else
+	  {
+	      buffer.slice().get(ret);
+	  }
+	  return ret;
 	}
-
-	public void stackFree(int indice) {
-		stackSet(indice, null);
+	
+	private String byteBufferToString(ByteBuffer byteBuffer) throws UnsupportedEncodingException {
+		return new String(getActiveArray(byteBuffer), "UTF-8");
 	}
-
-	public Object stackGet(int indice) {
-		return stack.get(indice);
-	}
-
+		
 	private Double toDouble(Object object) {
 		return (object instanceof Integer)  ? new Double(((Integer) object).doubleValue())  : (Double) object;
 	}
@@ -33,49 +40,51 @@ public class ESLIFAppValue implements ESLIFValueInterface {
 	private Integer toInteger(Object object) {
 		return (Integer) object;
 	}
+	
+	public Object do_int(Object[] list) throws UnsupportedEncodingException {
+		Object result;
+		String input = byteBufferToString((ByteBuffer) list[0]); 
 
-	public Object action(String actionName, List<Object> list) {
+		result = new Integer(input);
+		return result;
+	}
+
+	public Object do_group(Object[] list) {
+		return list[1];
+	}
+
+	public Object do_op(Object[] list) throws UnsupportedEncodingException {
+		Object left   = list[0];
+		String op     = byteBufferToString((ByteBuffer) list[1]); 
+		Object right  = list[2];
 		Object result = null;
-		
-		/* The stack contains either an Integer, either a Double, either a String */
-		if ("do_int".equals(actionName)) {
-			String input = (String) list.get(0);
-			result = new Integer(input);
-		} else if ("do_group".equals(actionName)) {
-			result = list.get(1);
-		} else if ("do_op".equals(actionName)) {
-			Object left  =          list.get(0);
-			String op    = (String) list.get(1); 
-			Object right =          list.get(2);
 
-			boolean leftIsInteger  = (left  instanceof Integer);
-			boolean rightIsInteger = (right instanceof Integer);
-			
-			if ("**".equals(op)) {
-				result = new Double(Math.pow(toDouble(left), toDouble(right)));
-			} else if ("*".equals(op)) {
-				if (leftIsInteger && rightIsInteger) {
-					result = toInteger(left) * toInteger(right);
-				} else {
-					result = toDouble(left) * toDouble(right);
-				}
-			} else if ("/".equals(op)) {
-				result = toDouble(left) / toDouble(right);
-			} else if ("+".equals(op)) {
-				if (leftIsInteger && rightIsInteger) {
-					result = toInteger(left) + toInteger(right);
-				} else {
-					result = toDouble(left) + toDouble(right);
-				}
-			} else if ("-".equals(op)) {
-				if (leftIsInteger && rightIsInteger) {
-					result = toInteger(left) - toInteger(right);
-				} else {
-					result = toDouble(left) - toDouble(right);
-				}
+		boolean leftIsInteger  = (left  instanceof Integer);
+		boolean rightIsInteger = (right instanceof Integer);
+		
+		if ("**".equals(op)) {
+			result = new Double(Math.pow(toDouble(left), toDouble(right)));
+		} else if ("*".equals(op)) {
+			if (leftIsInteger && rightIsInteger) {
+				result = toInteger(left) * toInteger(right);
+			} else {
+				result = toDouble(left) * toDouble(right);
+			}
+		} else if ("/".equals(op)) {
+			result = toDouble(left) / toDouble(right);
+		} else if ("+".equals(op)) {
+			if (leftIsInteger && rightIsInteger) {
+				result = toInteger(left) + toInteger(right);
+			} else {
+				result = toDouble(left) + toDouble(right);
+			}
+		} else if ("-".equals(op)) {
+			if (leftIsInteger && rightIsInteger) {
+				result = toInteger(left) - toInteger(right);
+			} else {
+				result = toDouble(left) - toDouble(right);
 			}
 		}
-		
 		return result;
 	}
 
@@ -97,6 +106,14 @@ public class ESLIFAppValue implements ESLIFValueInterface {
 
 	public int maxParses() {
 		return 0;
+	}
+
+	public Object getResult() {
+		return result;
+	}
+
+	public void setResult(Object result) {
+		this.result = result;
 	}
 
 }

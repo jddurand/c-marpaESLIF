@@ -13,11 +13,11 @@ public class ESLIFApp  {
 		eslifLogger.info("marpaESLIF version is " + eslif.version());
 
 		final String grammar = 
-				    ":default ::= action => do_op symbol-action => toString\n"
+				    ":default ::= action => do_op\n"
 				  + ":discard ::= whitespace\n"
 				  + "Expression ::=\n"
 				  + "    /[\\d]+/                                         action => do_int\n"
-				  + "    | '(' Expression ')'              assoc => group action => do_group\n"
+				  + "    | '(' Expression ')'              assoc => group action => ::copy[1]\n"
 				  + "   ||     Expression '**' Expression  assoc => right\n"
 				  + "   ||     Expression  '*' Expression\n"
 				  + "    |     Expression  '/' Expression\n"
@@ -74,7 +74,7 @@ public class ESLIFApp  {
 			ESLIFAppValue eslifAppValue = new ESLIFAppValue();
 			try {
 				eslifGrammar.parse(eslifAppRecognizer, eslifAppValue);
-				Object result = eslifAppValue.stackGet(0);
+				Object result = eslifAppValue.getResult();
 				eslifLogger.notice(string + " = " + result);
 			} catch (Exception e) {
 				eslifLogger.notice(string + ": " + e);
