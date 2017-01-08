@@ -21,7 +21,7 @@ public class AppParse  {
 				  + "    | '(' Expression ')'              assoc => group action => ::copy[1]\n"
 				  + "   ||     Expression '**' Expression  assoc => right\n"
 				  + "   ||     Expression  '*' Expression\n"
-				  + "    |     Expression  /\\/(?!\\*)/ Expression\n"
+				  + "    |     Expression  '/' Expression\n"
 				  + "   ||     Expression  '+' Expression\n"
 				  + "    |     Expression  '-' Expression\n"
 				  + "whitespace :[1]:= [\\s]\n"
