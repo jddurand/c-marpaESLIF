@@ -1,3 +1,4 @@
+PROJECT (marpaESLIFJava)
 INCLUDE (UseJava)
 INCLUDE_DIRECTORIES (${JAVA_INCLUDE_PATH} ${JAVA_INCLUDE_PATH2})
 
@@ -6,7 +7,7 @@ INCLUDE_DIRECTORIES (${JAVA_INCLUDE_PATH} ${JAVA_INCLUDE_PATH2})
 # ------------------------------------------
 FILE (GLOB lib_src_java marpaESLIFJava.c)
 ADD_LIBRARY (marpaESLIFJava SHARED ${lib_src_java})
-TARGET_LINK_LIBRARIES (marpaESLIFJava ${MARPAESLIF_LIBRARY} ${GENERICLOGGER_LIBRARIES})
+TARGET_LINK_LIBRARIES (marpaESLIFJava marpaESLIF ${GENERICLOGGER_LIBRARIES})
 SET_TARGET_PROPERTIES (marpaESLIFJava
   PROPERTIES
   VERSION "${MARPAESLIF_VERSION}"
@@ -24,6 +25,7 @@ ADD_JAR(marpaESLIFJava_jar
         VERSION ${MARPAESLIF_VERSION}
         OUTPUT_NAME marpaESLIF
         )
+ADD_DEPENDENCIES(marpaESLIFJava_jar marpaESLIFJava)
 INSTALL_JAR(marpaESLIFJava_jar share/java)
 INSTALL_JNI_SYMLINK(marpaESLIFJava_jar share/java)
 
@@ -55,9 +57,6 @@ ADD_JAR(marpaESLIFJavaTest_jar
         )
 ADD_DEPENDENCIES(marpaESLIFJavaTest_jar marpaESLIFJava_jar)
       
-ADD_TEST (NAME marpaESLIFJavaTest
-          COMMAND "${Java_JAVA_EXECUTABLE}" -Djava.library.path=${LIBRARY_OUTPUT_PATH} -jar marpaESLIFJavaTest.jar org.parser.marpa.AppParse
-          DEPENDS marpaESLIFJavaTest_jar
-          )
-
-ADD_CUSTOM_TARGET(NAME marpaESLIFJavaTester DEPENDS marpaESLIFJavaTest)
+ADD_TEST (marpaESLIFJavaTest ${CMAKE_COMMAND} -E env "PATH=${TEST_PATH}" "${Java_JAVA_EXECUTABLE}" -Djava.library.path=${LIBRARY_OUTPUT_PATH} -jar marpaESLIFJavaTest.jar org.parser.marpa.AppParse)
+ADD_CUSTOM_TARGET(marpaESLIFJavaTester DEPENDS marpaESLIFJavaTest_jar)
+ADD_DEPENDENCIES(check marpaESLIFJavaTester)
