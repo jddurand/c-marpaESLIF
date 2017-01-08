@@ -21,11 +21,11 @@ public class AppParse  {
 				  + "    | '(' Expression ')'              assoc => group action => ::copy[1]\n"
 				  + "   ||     Expression '**' Expression  assoc => right\n"
 				  + "   ||     Expression  '*' Expression\n"
-				  + "    |     Expression  '/' Expression\n"
+				  + "    |     Expression  /\\/(?!\\*)/ Expression\n"
 				  + "   ||     Expression  '+' Expression\n"
 				  + "    |     Expression  '-' Expression\n"
 				  + "whitespace :[1]:= [\\s]\n"
-				  + "comment ~ /(?:(?:(?://)(?:[^\\n]*)(?:\\n|\\z))|(?:(?:/\\*)(?:(?:[^\\*]+|\\*(?!/))*)(?:\\*/)))/u"
+				  + "comment ~ /(?:(?:(?:\\/\\/)(?:[^\\n]*)(?:\\n|\\z))|(?:(?:\\/\\*)(?:(?:[^\\*]+|\\*(?!\\/))*)(?:\\*\\/)))/u\n"
 				  + "\n";
 
 
@@ -57,7 +57,7 @@ public class AppParse  {
 		}
 		
 		String[] strings = {
-				"(((3 * 4) + 2 * 7) / 2 - 1) \n" + "/* This is a commented line */ ** 3",
+				"(((3 * 4) + 2 * 7) / 2 - 1) \n" + "/* This is a comment */\n ** 3",
 				"5 / (2 * 3)",
 				"5 / 2 * 3",
 				"(5 ** 2) ** 3",
