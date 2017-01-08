@@ -15,6 +15,7 @@ public class AppParse  {
 		final String grammar = 
 				    ":default ::= action => do_op\n"
 				  + ":discard ::= whitespace\n"
+				  + ":discard ::= comment\n"
 				  + "Expression ::=\n"
 				  + "    /[\\d]+/                                         action => do_int\n"
 				  + "    | '(' Expression ')'              assoc => group action => ::copy[1]\n"
@@ -24,6 +25,7 @@ public class AppParse  {
 				  + "   ||     Expression  '+' Expression\n"
 				  + "    |     Expression  '-' Expression\n"
 				  + "whitespace :[1]:= [\\s]\n"
+				  + "comment ~ /(?:(?:(?://)(?:[^\\n]*)(?:\\n|\\z))|(?:(?:/\\*)(?:(?:[^\\*]+|\\*(?!/))*)(?:\\*/)))/u"
 				  + "\n";
 
 
@@ -55,7 +57,7 @@ public class AppParse  {
 		}
 		
 		String[] strings = {
-				"(((3 * 4) + 2 * 7) / 2 - 1) ** 3",
+				"(((3 * 4) + 2 * 7) / 2 - 1) \n" + "/* This is a commented line */ ** 3",
 				"5 / (2 * 3)",
 				"5 / 2 * 3",
 				"(5 ** 2) ** 3",
