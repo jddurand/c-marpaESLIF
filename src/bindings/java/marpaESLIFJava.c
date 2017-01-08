@@ -1258,7 +1258,6 @@ static void genericLoggerCallbackv(void *userDatavp, genericLoggerLevel_t logLev
 /*****************************************************************************/
 {
   genericLoggerContext_t *genericLoggerContextp = (genericLoggerContext_t *) userDatavp;
-  short                   exceptionb            = 0;
   JNIEnv                 *envp;
   jobject                 loggerInterfacep;
   jmethodID               methodp;
@@ -1301,35 +1300,27 @@ static void genericLoggerCallbackv(void *userDatavp, genericLoggerLevel_t logLev
     break;
   case GENERICLOGGER_LOGLEVEL_ERROR:
     methodp = MARPAESLIF_ESLIFLOGGERINTERFACE_CLASS_error_METHODP;
-    exceptionb = 1;
     break;
   case GENERICLOGGER_LOGLEVEL_CRITICAL:
     methodp = MARPAESLIF_ESLIFLOGGERINTERFACE_CLASS_critical_METHODP;
-    exceptionb = 1;
     break;
   case GENERICLOGGER_LOGLEVEL_ALERT:
     methodp = MARPAESLIF_ESLIFLOGGERINTERFACE_CLASS_alert_METHODP;
-    exceptionb = 1;
     break;
   case GENERICLOGGER_LOGLEVEL_EMERGENCY:
     methodp = MARPAESLIF_ESLIFLOGGERINTERFACE_CLASS_emergency_METHODP;
-    exceptionb = 1;
     break;
   default:
     methodp = NULL;
     break;
   }
 
-  if (exceptionb) {
-    RAISEEXCEPTIONF(envp, "%s", msgs);
-  } else {
-    if (methodp != NULL) {
-      /* marpaESLIF is never logging with characters outside of 7-bits ASCII */
-      stringp = (*envp)->NewStringUTF(envp, msgs);
-      if (stringp != NULL) {
-        (*envp)->CallVoidMethod(envp, loggerInterfacep, methodp, stringp);
-        (*envp)->DeleteLocalRef(envp, stringp);
-      }
+  if (methodp != NULL) {
+    /* marpaESLIF is never logging with characters outside of 7-bits ASCII */
+    stringp = (*envp)->NewStringUTF(envp, msgs);
+    if (stringp != NULL) {
+      (*envp)->CallVoidMethod(envp, loggerInterfacep, methodp, stringp);
+      (*envp)->DeleteLocalRef(envp, stringp);
     }
   }
 
