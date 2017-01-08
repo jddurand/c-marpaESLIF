@@ -68,6 +68,11 @@ public class AppParse  {
 				"1 + ( 2 + ( 3 + ( 4 + 5) ) )"
 				};
 
+		/*
+		 * =========================================
+		 * Test the gramma's parse() shortcut method
+		 * =========================================
+		 */
 		for (int i = 0; i < strings.length; i++) {
 			String string = new String(strings[i]);
 
@@ -82,8 +87,13 @@ public class AppParse  {
 				eslifLogger.error(string + ": " + e);
 			}
 		}
-		eslifGrammar.free();
+		/*
+		 * ====================================================================
+		 * Test the recognizer's scan()/resume and the value's result() methods
+		 * ====================================================================
+		 */
 
+		eslifGrammar.free();
 		eslif.free();
 	}
 }
