@@ -539,8 +539,8 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
     /* Fake a recognizer. EOF flag will be set automatically in fake mode */
     marpaESLIFRecognizerp = _marpaESLIFRecognizer_newp(&marpaESLIFGrammar,
                                                        NULL /* marpaESLIFRecognizerOptionp */,
-                                                       0 /* discardb - no used anway because we are in fake mode */,
-                                                       0 /* noEventb - no used anway because we are in fake mode */,
+                                                       0 /* discardb - not used anyway because we are in fake mode */,
+                                                       0 /* noEventb - not used anyway because we are in fake mode */,
                                                        NULL /* exceptionStackp */,
                                                        0 /* silentb */,
                                                        NULL /* marpaESLIFRecognizerParentp */,
@@ -789,8 +789,8 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
       /* Fake a recognizer. EOF flag will be set automatically in fake mode */
       marpaESLIFRecognizerp = _marpaESLIFRecognizer_newp(&marpaESLIFGrammar,
                                                          NULL /* marpaESLIFRecognizerOptionp */,
-                                                         0 /* discardb - no used anway because we are in fake mode */,
-                                                         0 /* noEventb - no used anway because we are in fake mode */,
+                                                         0 /* discardb - not used anyway because we are in fake mode */,
+                                                         0 /* noEventb - not used anyway because we are in fake mode */,
                                                          NULL /* exceptionStackp */,
                                                          0 /* silentb */,
                                                          NULL /* marpaESLIFRecognizerParentp */,
@@ -958,8 +958,8 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
     /* Fake a recognizer. EOF flag will be set automatically in fake mode */
     marpaESLIFRecognizerTestp = _marpaESLIFRecognizer_newp(&marpaESLIFGrammar,
                                                            NULL /* marpaESLIFRecognizerOptionp */,
-                                                           0 /* discardb - no used anway because we are in fake mode */,
-                                                           0 /* noEventb - no used anway because we are in fake mode */,
+                                                           0 /* discardb - not used anyway because we are in fake mode */,
+                                                           0 /* noEventb - not used anyway because we are in fake mode */,
                                                            NULL /* exceptionStackp */,
                                                            0 /* silentb */,
                                                            NULL /* marpaESLIFRecognizerParentp */,
@@ -5490,11 +5490,11 @@ short marpaESLIFGrammar_parse_by_levelb(marpaESLIFGrammar_t *marpaESLIFGrammarp,
   if (! _marpaESLIFGrammar_parseb(&marpaESLIFGrammar,
                                   marpaESLIFRecognizerOptionp,
                                   marpaESLIFValueOptionp,
-                                  0 /* discardb */,
-                                  0 /* noEventb */,
-                                  NULL /* exceptionStackp */,
-                                  0 /* silentb */,
-                                  NULL /* marpaESLIFRecognizerParentp */,
+                                  0, /* discardb */
+                                  1, /* noEventb - this will make the recognizer use marpaWrapperGrammarStartNoEventp */
+                                  NULL, /* exceptionStackp */
+                                  0, /* silentb */
+                                  NULL, /* marpaESLIFRecognizerParentp */
                                   exhaustedbp,
                                   marpaESLIFValueResultp)) {
     goto err;
@@ -8615,11 +8615,11 @@ static inline short _marpaESLIFRecognizer_encoding_eqb(marpaESLIFRecognizer_t *m
   marpaESLIFGrammar.marpaESLIFp = marpaESLIFp;
   /* Fake a recognizer. EOF flag will be set automatically in fake mode */
   marpaESLIFRecognizerp = _marpaESLIFRecognizer_newp(&marpaESLIFGrammar,
-                                                     NULL /* marpaESLIFRecognizerOptionp */,
-                                                     0 /* discardb - no effect anyway because we are in fake mode */,
-                                                     1 /* noEventb - no effect anyway because we are in fake mode -; */,
-                                                     NULL /* exceptionStackp */,
-                                                     0 /* silentb */,
+                                                     NULL, /* marpaESLIFRecognizerOptionp */
+                                                     0, /* discardb - no effect anyway because we are in fake mode */
+                                                     1, /* noEventb - no effect anyway because we are in fake mode */
+                                                     NULL, /* exceptionStackp */
+                                                     0, /* silentb */
                                                      marpaESLIFRecognizerParentp,
                                                      1 /* fakeb */);
   if (marpaESLIFRecognizerp == NULL) {
