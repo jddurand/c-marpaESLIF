@@ -22,7 +22,8 @@ static short                         do_op(void *userDatavp, marpaESLIFValue_t *
 
 const static char *grammars =
   ":default ::= action => do_op\n"
-  ":discard ::= [\\s]\n"
+  ":discard ::= whitespace\n"
+  ":discard ::= comment\n"
   "Expression ::=\n"
   "    /[\\d]+/                          action => do_int\n"
   "    | '(' Expression ')'              assoc => group action => ::copy[1]\n"
@@ -31,6 +32,8 @@ const static char *grammars =
   "    |     Expression  '/' Expression\n"
   "   ||     Expression  '+' Expression\n"
   "    |     Expression  '-' Expression\n"
+  "whitespace :[1]:= [\\s]\n"
+  "comment ~ /(?:(?:(?:\\/\\/)(?:[^\\n]*)(?:\\n|\\z))|(?:(?:\\/\\*)(?:(?:[^\\*]+|\\*(?!\\/))*)(?:\\*\\/)))/u\n"
   "\n";
 
 int main() {
@@ -86,7 +89,6 @@ int main() {
       }
     }
   }
-  exit(0);
 
   marpaESLIFRecognizerOption.userDatavp                = &reader_context;
   marpaESLIFRecognizerOption.marpaESLIFReaderCallbackp = inputReaderb;

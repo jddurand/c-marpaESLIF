@@ -4543,7 +4543,7 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
   marpaWrapperRecognizer_t        *marpaWrapperRecognizerp           = marpaESLIFRecognizerp->marpaWrapperRecognizerp;
   short                            haveTerminalMatchedb              = 0;
   short                            maxPriorityInitializedb           = 0;
-  size_t                           maxMatchedl                       = 0;
+  size_t                           maxMatchedl;
   int                              maxPriorityi;
   size_t                           nSymboll;
   int                             *symbolArrayp;
@@ -4629,6 +4629,7 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
 
   /* Try to match */
   retry:
+  maxMatchedl = 0;
   for (symboll = 0; symboll < nSymboll; symboll++) {
     symboli = symbolArrayp[symboll];
     if (! GENERICSTACK_IS_PTR(symbolStackp, symboli)) {
@@ -4703,12 +4704,12 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
       if (_marpaESLIFGrammar_parseb(&marpaESLIFGrammarDiscard,
                                     &marpaESLIFRecognizerOptionDiscard,
                                     &marpaESLIFValueOptionDiscard,
-                                    1 /* discardb */,
-                                    marpaESLIFRecognizerp->noEventb /* This will select marpaWrapperGrammarDiscardNoEventp or marpaWrapperGrammarDiscardp */,
-                                    NULL /* exceptionStackp */,
-                                    1 /* silentb */,
-                                    marpaESLIFRecognizerp /* marpaESLIFRecognizerParentp */,
-                                    NULL /* exhaustedbp */,
+                                    1, /* discardb */
+                                    marpaESLIFRecognizerp->noEventb, /* This will select marpaWrapperGrammarDiscardNoEventp or marpaWrapperGrammarDiscardp */
+                                    NULL, /* exceptionStackp */
+                                    1, /* silentb */
+                                    marpaESLIFRecognizerp, /* marpaESLIFRecognizerParentp */
+                                    NULL, /* exhaustedbp */
                                     &marpaESLIFValueResult)) {
         /* It is a non-sense if matchedMarpaESLIFStackTypei is not MARPAESLIF_STACK_TYPE_ARRAY */
         if (marpaESLIFValueResult.type != MARPAESLIF_STACK_TYPE_ARRAY) {
@@ -4728,7 +4729,7 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
         marpaESLIFRecognizerp->inputs += marpaESLIFValueResult.sizel;
         marpaESLIFRecognizerp->inputl -= marpaESLIFValueResult.sizel;
         free(marpaESLIFValueResult.u.p);
-        /* If there is an event, get out of this methods */
+        /* If there is an event, get out of this method */
         if (marpaESLIFRecognizerp->discardEvents != NULL) {
           /* Push discard event */
           if (! _marpaESLIFRecognizer_push_eventb(marpaESLIFRecognizerp, MARPAESLIF_EVENTTYPE_DISCARD, grammarp->discardp, marpaESLIFRecognizerp->discardEvents)) {
@@ -4822,7 +4823,7 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
     }
   }
 
-  /* Filter by length (LATM) - this test is "useless" in the sense that latmb is forced to be true, i.e. maxMatched is always meaningful */
+  /* Filter by length (LATM) - this test is "useless" in the sense that latmb is forced to be true, i.e. maxMatchedl is always meaningful */
   if (latmb) {
     GENERICSTACK_USED(alternativeStackWorkp) = 0;
     for (alternativei = 0; alternativei < GENERICSTACK_USED(alternativeStackp); alternativei++) {
@@ -4849,6 +4850,67 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
     if (GENERICSTACK_USED(alternativeStackp) <= 0) {
       MARPAESLIF_ERROR(marpaESLIFp, "LATM filtering filtered everything");
       goto err;
+    }
+  }
+
+  /* It is a non-sense to have lexemes of length maxMatchedl and a discard rule that would be of at least this length. */
+  /* In this case, :discard have precedence. */
+  if ((! marpaESLIFRecognizerp->discardb) /* Done only if we are not already in discard mode */
+      &&
+      (grammarp->marpaWrapperGrammarDiscardp != NULL) /* And if there is a :discard entry point */
+      ) {
+    /* Always reset this shallow pointer */
+    marpaESLIFRecognizerp->discardEvents = NULL;
+    if (_marpaESLIFGrammar_parseb(&marpaESLIFGrammarDiscard,
+                                  &marpaESLIFRecognizerOptionDiscard,
+                                  &marpaESLIFValueOptionDiscard,
+                                  1, /* discardb */
+                                  marpaESLIFRecognizerp->noEventb, /* This will select marpaWrapperGrammarDiscardNoEventp or marpaWrapperGrammarDiscardp */
+                                  NULL, /* exceptionStackp */
+                                  1, /* silentb - and we want that to be absolutely silent */
+                                  marpaESLIFRecognizerp, /* marpaESLIFRecognizerParentp */
+                                  NULL, /* exhaustedbp */
+                                  &marpaESLIFValueResult)) {
+      /* It is a non-sense if matchedMarpaESLIFStackTypei is not MARPAESLIF_STACK_TYPE_ARRAY */
+      if (marpaESLIFValueResult.type != MARPAESLIF_STACK_TYPE_ARRAY) {
+        MARPAESLIF_ERRORF(marpaESLIFp, "marpaESLIFValueResult.type is %d instead of %d (MARPAESLIF_STACK_TYPE_ARRAY)", marpaESLIFValueResult.type, MARPAESLIF_STACK_TYPE_ARRAY);
+        goto err;
+      }
+      /* So ptr must not be NULL nor size <= 0 */
+      if ((marpaESLIFValueResult.u.p == NULL) || (marpaESLIFValueResult.sizel <= 0)) {
+        MARPAESLIF_ERRORF(marpaESLIFp, "Discard matcher returned {%p, %ld}", marpaESLIFValueResult.u.p, marpaESLIFValueResult.sizel);
+        goto err;
+      }
+      if (marpaESLIFValueResult.sizel >= maxMatchedl) {
+        /* New line processing, etc... */
+        if (! _marpaESLIFRecognizer_matchPostProcessingb(marpaESLIFRecognizerp, marpaESLIFValueResult.sizel)) {
+          goto err;
+        }
+        MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Discard match is of %ld bytes >= %ld bytes (longest lexeme): advancing stream internal position by %ld bytes",
+                                    (unsigned long) marpaESLIFValueResult.sizel,
+                                    (unsigned long) maxMatchedl,
+                                    (unsigned long) marpaESLIFValueResult.sizel);
+        marpaESLIFRecognizerp->inputs += marpaESLIFValueResult.sizel;
+        marpaESLIFRecognizerp->inputl -= marpaESLIFValueResult.sizel;
+        free(marpaESLIFValueResult.u.p);
+        /* If there is an event, get out of this method */
+        if (marpaESLIFRecognizerp->discardEvents != NULL) {
+          /* Push discard event */
+          if (! _marpaESLIFRecognizer_push_eventb(marpaESLIFRecognizerp, MARPAESLIF_EVENTTYPE_DISCARD, grammarp->discardp, marpaESLIFRecognizerp->discardEvents)) {
+            goto err;
+          }
+          marpaESLIFRecognizerp->continueb = ! marpaESLIFRecognizerp->exhaustedb;
+          rcb = 1;
+          goto done;
+        } else {
+          goto retry;
+        }
+      } else {
+        MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Discard match is not longer than number of bytes of longest lexeme (%ld bytes): %ld bytes",
+                                    (unsigned long) maxMatchedl,
+                                    (unsigned long) marpaESLIFValueResult.sizel);
+        free(marpaESLIFValueResult.u.p);
+      }
     }
   }
 
