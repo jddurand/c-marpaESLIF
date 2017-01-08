@@ -52,7 +52,7 @@ public class AppRecognizer implements ESLIFRecognizerInterface {
 		}
 
 		public boolean isWithExhaustion() {
-			return true;
+			return false;
 		}
 
 		public boolean isWithNewline() {
