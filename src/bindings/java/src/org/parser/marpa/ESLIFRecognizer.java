@@ -7,8 +7,12 @@ public class ESLIFRecognizer {
 	private ESLIFRecognizerInterface eslifRecognizerInterface     = null;
 	private ByteBuffer               marpaESLIFRecognizerp        = null;
 	private ByteBuffer               marpaESLIFRecognizerContextp = null;
+	private boolean                  canContinue    = false;
+	private boolean                  exhausted      = false;
 	private native void              jniNew(ESLIFGrammar eslifGrammar);
 	private native void              jniFree();
+	private native void              jniScan(boolean initialEvents);
+	private native void              jniResume();
 
 	public ESLIFRecognizer(ESLIFGrammar eslifGrammar, ESLIFRecognizerInterface eslifRecognizerInterface) {
 		if (eslifGrammar == null) {
@@ -26,6 +30,17 @@ public class ESLIFRecognizer {
 		jniFree();
 	}
 
+	public boolean isCanContinue() {
+		return canContinue;
+	}
+
+	public boolean isExhausted() {
+		return exhausted;
+	}
+	
+	public void scan(boolean initialEvents) {
+		jniScan(initialEvents);
+	}
 	/*
 	 * ********************************************
 	 * Private methods - used by the JNI
@@ -57,5 +72,11 @@ public class ESLIFRecognizer {
 	}
 	private void setMarpaESLIFRecognizerContextp(ByteBuffer marpaESLIFRecognizerContextp) {
 		this.marpaESLIFRecognizerContextp = marpaESLIFRecognizerContextp;
+	}
+	private void setCanContinue(boolean canContinue) {
+		this.canContinue = canContinue;
+	}
+	private void setExhausted(boolean exhausted) {
+		this.exhausted = exhausted;
 	}
 }
