@@ -74,3 +74,4 @@ workspace/
 *.project
 src/bindings/java/bin
 config.h
+cmake-build/
