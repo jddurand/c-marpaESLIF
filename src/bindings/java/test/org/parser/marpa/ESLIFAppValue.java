@@ -14,7 +14,7 @@ public class ESLIFAppValue implements ESLIFValueInterface {
 	/*
 	 * https://java.net/jira/browse/TYRUS-216
 	 */
-	private final byte[] getActiveArray(ByteBuffer buffer)
+	private byte[] getActiveArray(ByteBuffer buffer)
 	{
 	  byte[] ret = new byte[buffer.remaining()];
 	  if (buffer.hasArray())
@@ -47,10 +47,6 @@ public class ESLIFAppValue implements ESLIFValueInterface {
 
 		result = new Integer(input);
 		return result;
-	}
-
-	public Object do_group(Object[] list) {
-		return list[1];
 	}
 
 	public Object do_op(Object[] list) throws UnsupportedEncodingException {
