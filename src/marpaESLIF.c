@@ -4853,6 +4853,7 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
     }
   }
 
+#if 0
   /* It is a non-sense to have lexemes of length maxMatchedl and a discard rule that would be of at least this length. */
   /* In this case, :discard have precedence. */
   if ((! marpaESLIFRecognizerp->discardb) /* Done only if we are not already in discard mode */
@@ -4913,6 +4914,7 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
       }
     }
   }
+#endif
 
   /* Here we have all the alternativess the recognizer got - remember that this recognizer have seen at least one lexeme in its whole life */
   marpaESLIFRecognizerp->haveLexemeb = 1;
