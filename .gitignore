@@ -75,3 +75,4 @@ workspace/
 src/bindings/java/bin
 config.h
 cmake-build/
+javadoc/
