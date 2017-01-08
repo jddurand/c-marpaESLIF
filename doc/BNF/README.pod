@@ -114,7 +114,7 @@ say that symbol C<something> at grammar level C<0> is a reference to C<something
 
 =item Discard
 
-Everytime expected terminals cannot be match, marpaESLIF will try to match the special rule C<:discard>.
+Everytime expected terminals cannot be match, marpaESLIF will try to match the special rule C<:discard>. The C<:discard> rule also have precedence if its length is greater or equal to the longest current terminal.
 
 =back
 
@@ -535,7 +535,6 @@ marpaESLIF BNF can be expressed in itself:
   # <cplusplus comment> ::= <cplusplus comment>@+1
   #
 
-  ; // This semicolon is VERY important, otherwise grammar will believe that /* ... Lexeme rules ... */ is a continuation of <grammar reference> ::= <signed integer>... Definitely NOT wanted, plus in addition /* ... Lexeme rules ... */ would trigger a PCRE2 compile exception!
   /*
    * *************
    * Lexeme rules:
