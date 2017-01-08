@@ -1629,6 +1629,37 @@ JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniScan(JNIEnv *env
 JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniResume(JNIEnv *envp, jobject eslifRecognizerp)
 /*****************************************************************************/
 {
+  marpaESLIFRecognizer_t *marpaESLIFRecognizerp;
+  short                   continueb;
+  short                   exhaustedb;
+
+  if (ESLIFRecognizer_contextb(envp, eslifRecognizerp, eslifRecognizerp, MARPAESLIF_ESLIFRECOGNIZER_CLASS_getLoggerInterfacep_METHODP,
+                              NULL /* genericLoggerpp */,
+                              NULL /* genericLoggerContextpp */,
+                              NULL /* marpaESLIFpp */,
+                              NULL /* marpaESLIFGrammarpp */,
+                              &marpaESLIFRecognizerp)) {
+    goto err;
+  }
+
+  if (! marpaESLIFRecognizer_resumeb(marpaESLIFRecognizerp, &continueb, &exhaustedb)) {
+    RAISEEXCEPTION(envp, "marpaESLIFRecognizer_scanb failure");   
+  }
+
+  (*envp)->CallVoidMethod(envp, eslifRecognizerp, MARPAESLIF_ESLIFRECOGNIZER_CLASS_setCanContinue_METHODP, continueb ? JNI_TRUE : JNI_FALSE);
+  if (HAVEEXCEPTION(envp)) {
+    goto err;
+  }
+  
+  (*envp)->CallVoidMethod(envp, eslifRecognizerp, MARPAESLIF_ESLIFRECOGNIZER_CLASS_setExhausted_METHODP, exhaustedb ? JNI_TRUE : JNI_FALSE);
+  if (HAVEEXCEPTION(envp)) {
+    goto err;
+  }
+
+  return;
+
+ err:
+  return;
 }
 
 /*****************************************************************************/
