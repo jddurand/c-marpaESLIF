@@ -333,37 +333,16 @@ static marpaESLIFMethodCache_t marpaESLIFMethodCacheArrayp[] = {
   #define MARPAESLIF_CLASS_CLASS_getName_METHODP                                    marpaESLIFMethodCacheArrayp[52].methodp
   {      &MARPAESLIF_CLASS_CLASSCACHE, "getName",                                   "()Ljava/lang/String;", 0, NULL },
 
-  #define MARPAESLIF_ESLIFEVENT_CLASS_init_METHODP                                  marpaESLIFMethodCacheArrayp[53].methodp
+  #define MARPAESLIF_ESLIFEVENTTYPE_CLASS_get_METHODP                               marpaESLIFMethodCacheArrayp[53].methodp
+  {      &MARPAESLIF_ESLIFEVENTTYPE_CLASSCACHE, "get",                              "(I)Lorg/parser/marpa/ESLIFEventType;", 1 /* static */, NULL },
+
+  #define MARPAESLIF_ESLIFEVENT_CLASS_init_METHODP                                  marpaESLIFMethodCacheArrayp[54].methodp
   {      &MARPAESLIF_ESLIFEVENT_CLASSCACHE, "<init>",                               "(Lorg/parser/marpa/ESLIFEventType;Ljava/lang/String;Ljava/lang/String;)V", 0, NULL },
 
   { NULL }
 };
 
 static marpaESLIFFieldCache_t marpaESLIFFieldCacheArrayp[] = {
-  #define MARPAESLIF_ESLIFEVENTTYPE_CLASS_NONE_FIELDP                               marpaESLIFFieldCacheArrayp[1].fieldp
-  {      &MARPAESLIF_ESLIFEVENTTYPE_CLASSCACHE, "NONE",                             "Lorg/parser/marpa/ESLIFEventType;", 1 /* static */, NULL },
-
-  #define MARPAESLIF_ESLIFEVENTTYPE_CLASS_COMPLETED_FIELDP                          marpaESLIFFieldCacheArrayp[1].fieldp
-  {      &MARPAESLIF_ESLIFEVENTTYPE_CLASSCACHE, "COMPLETED",                        "Lorg/parser/marpa/ESLIFEventType;", 1 /* static */, NULL },
-
-  #define MARPAESLIF_ESLIFEVENTTYPE_CLASS_NULLED_FIELDP                             marpaESLIFFieldCacheArrayp[1].fieldp
-  {      &MARPAESLIF_ESLIFEVENTTYPE_CLASSCACHE, "NULLED",                           "Lorg/parser/marpa/ESLIFEventType;", 1 /* static */, NULL },
-
-  #define MARPAESLIF_ESLIFEVENTTYPE_CLASS_PREDICTED_FIELDP                          marpaESLIFFieldCacheArrayp[1].fieldp
-  {      &MARPAESLIF_ESLIFEVENTTYPE_CLASSCACHE, "PREDICTED",                        "Lorg/parser/marpa/ESLIFEventType;", 1 /* static */, NULL },
-
-  #define MARPAESLIF_ESLIFEVENTTYPE_CLASS_BEFORE_FIELDP                             marpaESLIFFieldCacheArrayp[1].fieldp
-  {      &MARPAESLIF_ESLIFEVENTTYPE_CLASSCACHE, "BEFORE",                           "Lorg/parser/marpa/ESLIFEventType;", 1 /* static */, NULL },
-
-  #define MARPAESLIF_ESLIFEVENTTYPE_CLASS_AFTER_FIELDP                              marpaESLIFFieldCacheArrayp[1].fieldp
-  {      &MARPAESLIF_ESLIFEVENTTYPE_CLASSCACHE, "AFTER",                            "Lorg/parser/marpa/ESLIFEventType;", 1 /* static */, NULL },
-
-  #define MARPAESLIF_ESLIFEVENTTYPE_CLASS_EXHAUSTED_FIELDP                          marpaESLIFFieldCacheArrayp[1].fieldp
-  {      &MARPAESLIF_ESLIFEVENTTYPE_CLASSCACHE, "EXHAUSTED",                        "Lorg/parser/marpa/ESLIFEventType;", 1 /* static */, NULL },
-
-  #define MARPAESLIF_ESLIFEVENTTYPE_CLASS_DISCARD_FIELDP                            marpaESLIFFieldCacheArrayp[1].fieldp
-  {      &MARPAESLIF_ESLIFEVENTTYPE_CLASSCACHE, "DISCARD",                          "Lorg/parser/marpa/ESLIFEventType;", 1 /* static */, NULL },
-
   { NULL }
 };
 
@@ -1773,37 +1752,9 @@ JNIEXPORT jobjectArray JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniEvent(JN
     symbol    = NULL;
     event     = NULL;
 
-    switch (eventArrayp[i].type) {
-    case MARPAESLIF_EVENTTYPE_NONE:
-      eventType = (*envp)->GetStaticObjectField(envp, MARPAESLIF_ESLIFEVENTTYPE_CLASSP, MARPAESLIF_ESLIFEVENTTYPE_CLASS_NONE_FIELDP);
-      break;
-    case MARPAESLIF_EVENTTYPE_COMPLETED:
-      eventType = (*envp)->GetStaticObjectField(envp, MARPAESLIF_ESLIFEVENTTYPE_CLASSP, MARPAESLIF_ESLIFEVENTTYPE_CLASS_COMPLETED_FIELDP);
-      break;
-    case MARPAESLIF_EVENTTYPE_NULLED:
-      eventType = (*envp)->GetStaticObjectField(envp, MARPAESLIF_ESLIFEVENTTYPE_CLASSP, MARPAESLIF_ESLIFEVENTTYPE_CLASS_NULLED_FIELDP);
-      break;
-    case MARPAESLIF_EVENTTYPE_PREDICTED:
-      eventType = (*envp)->GetStaticObjectField(envp, MARPAESLIF_ESLIFEVENTTYPE_CLASSP, MARPAESLIF_ESLIFEVENTTYPE_CLASS_PREDICTED_FIELDP);
-      break;
-    case MARPAESLIF_EVENTTYPE_BEFORE:
-      eventType = (*envp)->GetStaticObjectField(envp, MARPAESLIF_ESLIFEVENTTYPE_CLASSP, MARPAESLIF_ESLIFEVENTTYPE_CLASS_BEFORE_FIELDP);
-      break;
-    case MARPAESLIF_EVENTTYPE_AFTER:
-      eventType = (*envp)->GetStaticObjectField(envp, MARPAESLIF_ESLIFEVENTTYPE_CLASSP, MARPAESLIF_ESLIFEVENTTYPE_CLASS_AFTER_FIELDP);
-      break;
-    case MARPAESLIF_EVENTTYPE_EXHAUSTED:
-      eventType = (*envp)->GetStaticObjectField(envp, MARPAESLIF_ESLIFEVENTTYPE_CLASSP, MARPAESLIF_ESLIFEVENTTYPE_CLASS_EXHAUSTED_FIELDP);
-      break;
-    case MARPAESLIF_EVENTTYPE_DISCARD:
-      eventType = (*envp)->GetStaticObjectField(envp, MARPAESLIF_ESLIFEVENTTYPE_CLASSP, MARPAESLIF_ESLIFEVENTTYPE_CLASS_DISCARD_FIELDP);
-      break;
-    default:
-      RAISEEXCEPTIONF(envp, "Unsupported event type %d", eventArrayp[i].type);
-      break;
-    }
+    eventType = (*envp)->CallStaticObjectMethod(envp, MARPAESLIF_ESLIFEVENTTYPE_CLASSP, MARPAESLIF_ESLIFEVENTTYPE_CLASS_get_METHODP, eventArrayp[i].type);
     if (eventType == NULL) {
-      RAISEEXCEPTION(envp, "GetStaticObjectField failure");
+      RAISEEXCEPTION(envp, "CallStaticObjectMethod failure");
     }
 
     symbol = (*envp)->NewStringUTF(envp, (eventArrayp[i].symbols != NULL) ? eventArrayp[i].symbols : "");
