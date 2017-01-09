@@ -1103,7 +1103,6 @@ JNIEXPORT jboolean JNICALL Java_org_parser_marpa_ESLIFGrammar_jniParse(JNIEnv *e
   short                         exhaustedb;
   recognizerInterfaceContext_t  recognizerInterfaceContext;
   valueInterfaceContext_t       valueInterfaceContext;
-  size_t                        i;
   jboolean                      rcb;
   jboolean                      isCopy;
 
@@ -1323,9 +1322,6 @@ static void genericLoggerCallbackv(void *userDatavp, genericLoggerLevel_t logLev
       (*envp)->DeleteLocalRef(envp, stringp);
     }
   }
-
- err:
-  return;
 }
 
 /*****************************************************************************/
@@ -1888,7 +1884,6 @@ static short marpaESLIFValueRuleCallback(void *userDatavp, marpaESLIFValue_t *ma
   jobject                         actionResultGlobalRef  = NULL;
   jobject                         byteBuffer             = NULL;
   jobject                         actionResultPreviousGlobalRef;
-  jobject                         listElement;
   short                           rcb;
   int                             i;
   short                           intb;
@@ -2018,7 +2013,6 @@ static short marpaESLIFValueSymbolCallback(void *userDatavp, marpaESLIFValue_t *
   jobject                  actionResultGlobalRef  = NULL;
   jobject                  actionResultPreviousGlobalRef;
   short                    rcb;
-  jint                     i;
 
   /* Reader callack is never running in another thread - no need to attach */
   if (((*marpaESLIF_vmp)->GetEnv(marpaESLIF_vmp, (void **) &envp, MARPAESLIF_JNI_VERSION) != JNI_OK) || (envp == NULL)) {
@@ -2163,9 +2157,8 @@ static void marpaESLIFValueInterfaceContextFree(JNIEnv *envp, valueInterfaceCont
   size_t                   methodCacheSizel;
   marpaESLIFMethodCache_t *localMethodCachep;
   genericStack_t          *stackp;
-  jmethodID                methodp;
   jobject                  globalRef;
-  size_t                   i; 
+  int                      i; 
 
   if (valueInterfaceContextp != NULL) {
     if (valueInterfaceContextp->classCache.classp != NULL) {
@@ -2180,7 +2173,7 @@ static void marpaESLIFValueInterfaceContextFree(JNIEnv *envp, valueInterfaceCont
       methodCachep      = valueInterfaceContextp->methodCachep;
       methodCacheSizel  = valueInterfaceContextp->methodCacheSizel;
 
-      for (i = 0, localMethodCachep = methodCachep; i < methodCacheSizel; i++, localMethodCachep++) {
+      for (i = 0, localMethodCachep = methodCachep; i < (int) methodCacheSizel; i++, localMethodCachep++) {
         if (localMethodCachep->methods != NULL) {
           free(localMethodCachep->methods);
         }
