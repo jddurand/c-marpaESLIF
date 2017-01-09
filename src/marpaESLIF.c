@@ -16,6 +16,10 @@
 #define MARPAESLIF_INITIAL_REPLACEMENT_LENGTH 8096  /* Subjective number */
 #endif
 
+#ifndef MARPAESLIF_VALUEERRORPROGRESSREPORT
+#define MARPAESLIF_VALUEERRORPROGRESSREPORT 0 /* Left in the code, although not needed IMHO */
+#endif
+
 #define MARPAESLIF_EVENTTYPE_EXHAUSTED_NAME "'exhauted'"
 
 #define MARPAESLIFRECOGNIZER_RESET_EVENTS(marpaESLIFRecognizerp) (marpaESLIFRecognizerp)->eventArrayl = 0
@@ -176,7 +180,9 @@ static inline int                    _marpaESLIF_utf82ordi(PCRE2_SPTR8 utf8bytes
 static inline short                  _marpaESLIFRecognizer_matchPostProcessingb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, size_t matchl);
 static inline short                  _marpaESLIFRecognizer_appendDatab(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *datas, size_t datal);
 static inline short                  _marpaESLIFRecognizer_encoding_eqb(marpaESLIFRecognizer_t *marpaESLIFRecognizerParentp, marpaESLIF_terminal_t *terminalp, char *encodings, char *inputs, size_t inputl);
+#if MARPAESLIF_VALUEERRORPROGRESSREPORT
 static inline void                   _marpaESLIFValueErrorProgressReportv(marpaESLIFValue_t *marpaESLIFValuep);
+#endif
 static inline marpaESLIF_symbol_t   *_marpaESLIF_resolveSymbolp(marpaESLIF_t *marpaESLIFp, genericStack_t *grammarStackp, marpaESLIF_grammar_t *current_grammarp, char *asciis, int lookupLevelDeltai, marpaESLIF_string_t *lookupGrammarStringp, marpaESLIF_grammar_t **grammarpp);
 
 static inline char                  *_marpaESLIF_ascii2ids(marpaESLIF_t *marpaESLIFp, char *asciis);
@@ -4543,7 +4549,7 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
   marpaWrapperRecognizer_t        *marpaWrapperRecognizerp           = marpaESLIFRecognizerp->marpaWrapperRecognizerp;
   short                            haveTerminalMatchedb              = 0;
   short                            maxPriorityInitializedb           = 0;
-  size_t                           maxMatchedl;
+  size_t                           maxMatchedl                       = 0;
   int                              maxPriorityi;
   size_t                           nSymboll;
   int                             *symbolArrayp;
@@ -4629,7 +4635,6 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
 
   /* Try to match */
   retry:
-  maxMatchedl = 0;
   for (symboll = 0; symboll < nSymboll; symboll++) {
     symboli = symbolArrayp[symboll];
     if (! GENERICSTACK_IS_PTR(symbolStackp, symboli)) {
@@ -4893,6 +4898,9 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
         marpaESLIFRecognizerp->inputs += marpaESLIFValueResult.sizel;
         marpaESLIFRecognizerp->inputl -= marpaESLIFValueResult.sizel;
         free(marpaESLIFValueResult.u.p);
+        /* These two lines are important so that this specific retry is clean */
+        GENERICSTACK_USED(alternativeStackp) = 0;
+        maxMatchedl = 0;
         /* If there is an event, get out of this method */
         if (marpaESLIFRecognizerp->discardEvents != NULL) {
           /* Push discard event */
@@ -4914,7 +4922,7 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
     }
   }
 
-  /* Here we have all the alternativess the recognizer got - remember that this recognizer have seen at least one lexeme in its whole life */
+  /* Here we have all the alternatives the recognizer got - remember that this recognizer have seen at least one lexeme in its whole life */
   marpaESLIFRecognizerp->haveLexemeb = 1;
 
   /* Determine if we have pause before events - only for the top-level recognizer */
@@ -6805,7 +6813,9 @@ static short _marpaESLIFValue_ruleCallbackWrapperb(void *userDatavp, int rulei, 
   goto done;
 
  err:
+#if MARPAESLIF_VALUEERRORPROGRESSREPORT
   _marpaESLIFValueErrorProgressReportv(marpaESLIFValuep);
+#endif
   rcb = 0;
 
  done:
@@ -6961,7 +6971,9 @@ static inline short _marpaESLIFValue_anySymbolCallbackWrapperb(void *userDatavp,
   goto done;
 
  err:
+#if MARPAESLIF_VALUEERRORPROGRESSREPORT
   _marpaESLIFValueErrorProgressReportv(marpaESLIFValuep);
+#endif
   rcb = 0;
 
  done:
@@ -8976,6 +8988,7 @@ short marpaESLIFGrammar_ngrammarib(marpaESLIFGrammar_t *marpaESLIFGrammarp, int 
   return 1;
 }
 
+#if MARPAESLIF_VALUEERRORPROGRESSREPORT
 /*****************************************************************************/
 static inline void _marpaESLIFValueErrorProgressReportv(marpaESLIFValue_t *marpaESLIFValuep)
 /*****************************************************************************/
@@ -8998,6 +9011,7 @@ static inline void _marpaESLIFValueErrorProgressReportv(marpaESLIFValue_t *marpa
     }
   }
 }
+#endif
 
 /*****************************************************************************/
 static inline marpaESLIF_symbol_t *_marpaESLIF_resolveSymbolp(marpaESLIF_t *marpaESLIFp, genericStack_t *grammarStackp, marpaESLIF_grammar_t *current_grammarp, char *asciis, int lookupLevelDeltai, marpaESLIF_string_t *lookupGrammarStringp, marpaESLIF_grammar_t **grammarpp)
