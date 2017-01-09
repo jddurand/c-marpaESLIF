@@ -55,12 +55,6 @@ MESSAGE (STATUS "--------------------")
 # config.h (we will share it with marpa)
 # --------------------------------------
 INCLUDE (FindInline)
-IF ("${C_INLINE}" EQUAL "inline")
-  SET (C_INLINE_IS_INLINE TRUE)
-ELSE ("${C_INLINE}" EQUAL "inline")
-  SET (C_INLINE_IS_INLINE FALSE)
-ENDIF ("${C_INLINE}" EQUAL "inline")
-MESSAGE (STATUS "  C inlining is done with ${C_INLINE}")
 
 # ----------------------------------------------------
 # Host compiler - based on https://github.com/legatoproject/legato-af/blob/master/3rdParty/jansson-2.6/CMakeLists.txt
