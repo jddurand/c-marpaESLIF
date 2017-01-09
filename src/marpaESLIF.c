@@ -4906,9 +4906,9 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
           goto retry;
         }
       } else {
-        MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Discard match is not longer than number of bytes of longest lexeme (%ld bytes): %ld bytes",
-                                    (unsigned long) maxMatchedl,
-                                    (unsigned long) marpaESLIFValueResult.sizel);
+        MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Discard match is of %ld bytes < %ld bytes (longest lexeme): ignored",
+                                    (unsigned long) marpaESLIFValueResult.sizel,
+                                    (unsigned long) maxMatchedl);
         free(marpaESLIFValueResult.u.p);
       }
     }
