@@ -147,8 +147,8 @@ By default, symbol action is C<::shift> and rule action is C<::concat>, i.e. the
 
 The C<:discard> symbol, despite belonging to a given grammar, is not accessible directly, and can only be set as a meta setting. An event can be associated upon discard completion, there can be multiple C<:discard> statements:
 
-  :discard ::= symbolname1 action => discard_symbolname1$
-  :discard ::= symbolname2 action => discard_symbolname2$
+  :discard ::= symbolname1 event => discard_symbolname1$
+  :discard ::= symbolname2 event => discard_symbolname2$
 
 =item Events
 
@@ -181,9 +181,9 @@ Completion, predicted or nulled events are supported, targetting a symbol name.
 
 For example:
 
-  event a     = completed  symbolname1$
-  event b=off = nulled     symbolname2[]
-  event c=on  = predicted ^symbolname3
+  event a     = completed  symbolname
+  event b=off = nulled     symbolname
+  event c=on  = predicted ^symbolname
 
 =back
 

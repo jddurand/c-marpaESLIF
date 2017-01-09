@@ -13,17 +13,26 @@ public class AppParse  {
 		eslifLogger.info("marpaESLIF version is " + eslif.version());
 
 		final String grammar = 
-				    ":default ::= action => do_op\n"
-				  + ":discard ::= whitespace\n"
-				  + ":discard ::= comment\n"
+				    ":start   ::= Expression\n"
+				  + ":default ::=            action => do_op\n"
+				  + ":discard ::= whitespace event  => discard_whitespace$\n"
+				  + ":discard ::= comment    event  => discard_comment$\n"
+				  + "\n"
+				  + "event ^Number = predicted Number\n"
+				  + "event Number$ = completed Number\n"
+				  + "Number   ::= /[\\d]+/   action => ::shift\n"
+				  + "\n"
+				  + "event Expression$ = completed Expression\n"
+				  + "event ^Expression = predicted Expression\n"
 				  + "Expression ::=\n"
-				  + "    /[\\d]+/                                         action => do_int\n"
+				  + "    Number                                           action => do_int\n"
 				  + "    | '(' Expression ')'              assoc => group action => ::copy[1]\n"
 				  + "   ||     Expression '**' Expression  assoc => right\n"
 				  + "   ||     Expression  '*' Expression\n"
 				  + "    |     Expression  '/' Expression\n"
 				  + "   ||     Expression  '+' Expression\n"
 				  + "    |     Expression  '-' Expression\n"
+				  + "\n"
 				  + "whitespace :[1]:= [\\s]\n"
 				  + "comment ~ /(?:(?:(?:\\/\\/)(?:[^\\n]*)(?:\\n|\\z))|(?:(?:\\/\\*)(?:(?:[^\\*]+|\\*(?!\\/))*)(?:\\*\\/)))/u\n"
 				  + "\n";
@@ -79,12 +88,13 @@ public class AppParse  {
 			BufferedReader reader = new BufferedReader(new StringReader(string));
 			AppRecognizer eslifAppRecognizer = new AppRecognizer(reader);
 			AppValue eslifAppValue = new AppValue();
+			eslifLogger.info("Testing parse() on " + string);
 			try {
 				eslifGrammar.parse(eslifAppRecognizer, eslifAppValue);
 				Object result = eslifAppValue.getResult();
-				eslifLogger.trace(string + " = " + result);
+				eslifLogger.info("Result: " + result);
 			} catch (Exception e) {
-				eslifLogger.error(string + ": " + e);
+				eslifLogger.error("Exception: " + e);
 			}
 		}
 		/*
@@ -99,15 +109,28 @@ public class AppParse  {
 			AppRecognizer eslifAppRecognizer = new AppRecognizer(reader);
 			ESLIFRecognizer eslifRecognizer = new ESLIFRecognizer(eslifGrammar, eslifAppRecognizer);
 			boolean eslifRecognizerFree = true;
+			eslifLogger.info("Testing scan()/resume() on " + string);
 			try {
 				eslifRecognizer.scan(true);
-				System.err.println("scan ok, canContinue=" + eslifRecognizer.isCanContinue());
+				ESLIFEvent[] events = eslifRecognizer.events();
+				if (events != null) {
+					for (int j = 0; j < events.length; j++) {
+						ESLIFEvent event = events[j];
+					    eslifLogger.trace("  Event: Type=" + event.getEslifEventType() + ", Symbol=" + event.getSymbol() + ", Event=" + event.getEvent());
+					}
+				}
 				while (eslifRecognizer.isCanContinue()) {
 					eslifRecognizer.resume();
-					System.err.println("resume ok, canContinue=" + eslifRecognizer.isCanContinue());
+					events = eslifRecognizer.events();
+					if (events != null) {
+						for (int j = 0; j < events.length; j++) {
+							ESLIFEvent event = events[j];
+						    eslifLogger.trace("  Event: Type=" + event.getEslifEventType() + ", Symbol=" + event.getSymbol() + ", Event=" + event.getEvent());
+						}
+					}
 				}
 			} catch (Exception e) {
-				eslifLogger.error(string + ": " + e);
+				eslifLogger.error("Exception: " + e);
 			} finally {
 				if (eslifRecognizerFree) {
 					eslifRecognizer.free();
