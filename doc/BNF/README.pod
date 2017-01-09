@@ -54,7 +54,7 @@ They are always enclosed with left and right brackets C<[]>. Modifiers can start
 
 =item * Regular expression
 
-They are always enclosed with slashes C<//>, and the content must be valid as per the L<PCRE2 Perl Compatible Regular Expression|http://www.pcre.org/> library. Modifiers can start after the slash on the right. Regular expression patterns are by default anchored.
+They are always enclosed within slashes C<//>, and the content must be valid as per the L<PCRE2 Perl Compatible Regular Expression|http://www.pcre.org/> library. Modifiers can start after the slash on the right. Regular expression patterns are by default anchored. The slash character itself must be preceeded by a backslash, i.e. C<\/> in the string I<seen> by the parser (so, in practice, it is coded like this: C<"\\/">).
 
 =back
 
