@@ -13,7 +13,7 @@ public class ESLIFRecognizer {
 	private native void              jniFree();
 	private native void              jniScan(boolean initialEvents);
 	private native void              jniResume();
-	private native ESLIFEventType[]  jniEvent();
+	private native ESLIFEvent[]      jniEvent();
 
 	public ESLIFRecognizer(ESLIFGrammar eslifGrammar, ESLIFRecognizerInterface eslifRecognizerInterface) {
 		if (eslifGrammar == null) {
