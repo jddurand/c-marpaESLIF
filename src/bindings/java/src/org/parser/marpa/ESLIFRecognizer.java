@@ -46,6 +46,10 @@ public class ESLIFRecognizer {
 	public void resume() {
 		jniResume();
 	}
+	
+	public ESLIFEvent[] events() {
+		return jniEvent();
+	}
 	/*
 	 * ********************************************
 	 * Private methods - used by the JNI

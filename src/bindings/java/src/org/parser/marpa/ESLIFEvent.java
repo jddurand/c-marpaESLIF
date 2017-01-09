@@ -22,5 +22,5 @@ public class ESLIFEvent {
 	public String getEvent() {
 		return event;
 	}
-
+	
 }
