@@ -13,6 +13,7 @@ public class ESLIFRecognizer {
 	private native void              jniFree();
 	private native void              jniScan(boolean initialEvents);
 	private native void              jniResume();
+	private native ESLIFEventType[]  jniEvent();
 
 	public ESLIFRecognizer(ESLIFGrammar eslifGrammar, ESLIFRecognizerInterface eslifRecognizerInterface) {
 		if (eslifGrammar == null) {
@@ -40,6 +41,10 @@ public class ESLIFRecognizer {
 	
 	public void scan(boolean initialEvents) {
 		jniScan(initialEvents);
+	}
+
+	public void resume() {
+		jniResume();
 	}
 	/*
 	 * ********************************************

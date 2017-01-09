@@ -92,6 +92,28 @@ public class AppParse  {
 		 * Test the recognizer's scan()/resume and the value's result() methods
 		 * ====================================================================
 		 */
+		for (int i = 0; i < strings.length; i++) {
+			String string = new String(strings[i]);
+
+			BufferedReader reader = new BufferedReader(new StringReader(string));
+			AppRecognizer eslifAppRecognizer = new AppRecognizer(reader);
+			ESLIFRecognizer eslifRecognizer = new ESLIFRecognizer(eslifGrammar, eslifAppRecognizer);
+			boolean eslifRecognizerFree = true;
+			try {
+				eslifRecognizer.scan(true);
+				System.err.println("scan ok, canContinue=" + eslifRecognizer.isCanContinue());
+				while (eslifRecognizer.isCanContinue()) {
+					eslifRecognizer.resume();
+					System.err.println("resume ok, canContinue=" + eslifRecognizer.isCanContinue());
+				}
+			} catch (Exception e) {
+				eslifLogger.error(string + ": " + e);
+			} finally {
+				if (eslifRecognizerFree) {
+					eslifRecognizer.free();
+				}
+			}
+		}
 
 		eslifGrammar.free();
 		eslif.free();
