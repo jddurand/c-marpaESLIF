@@ -546,7 +546,7 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
     marpaESLIFRecognizerp = _marpaESLIFRecognizer_newp(&marpaESLIFGrammar,
                                                        NULL /* marpaESLIFRecognizerOptionp */,
                                                        0 /* discardb - not used anyway because we are in fake mode */,
-                                                       0 /* noEventb - not used anyway because we are in fake mode */,
+                                                       1 /* noEventb - not used anyway because we are in fake mode */,
                                                        NULL /* exceptionStackp */,
                                                        0 /* silentb */,
                                                        NULL /* marpaESLIFRecognizerParentp */,
@@ -796,7 +796,7 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
       marpaESLIFRecognizerp = _marpaESLIFRecognizer_newp(&marpaESLIFGrammar,
                                                          NULL /* marpaESLIFRecognizerOptionp */,
                                                          0 /* discardb - not used anyway because we are in fake mode */,
-                                                         0 /* noEventb - not used anyway because we are in fake mode */,
+                                                         1 /* noEventb - not used anyway because we are in fake mode */,
                                                          NULL /* exceptionStackp */,
                                                          0 /* silentb */,
                                                          NULL /* marpaESLIFRecognizerParentp */,
@@ -965,7 +965,7 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
     marpaESLIFRecognizerTestp = _marpaESLIFRecognizer_newp(&marpaESLIFGrammar,
                                                            NULL /* marpaESLIFRecognizerOptionp */,
                                                            0 /* discardb - not used anyway because we are in fake mode */,
-                                                           0 /* noEventb - not used anyway because we are in fake mode */,
+                                                           1 /* noEventb - not used anyway because we are in fake mode */,
                                                            NULL /* exceptionStackp */,
                                                            0 /* silentb */,
                                                            NULL /* marpaESLIFRecognizerParentp */,
@@ -5902,7 +5902,7 @@ static inline short _marpaESLIFRecognizer_push_grammar_eventsb(marpaESLIFRecogni
   marpaESLIFRecognizerp->exhaustedb           = 0;
 
   /* Collect grammar native events and push them in the events stack */
-  if (! marpaWrapperGrammar_eventb(marpaESLIFRecognizerp->discardb ? grammarp->marpaWrapperGrammarDiscardp : grammarp->marpaWrapperGrammarStartp,
+  if (! marpaWrapperGrammar_eventb(marpaESLIFRecognizerp->marpaWrapperGrammarp,
                                    &grammarEventl,
                                    &grammarEventp,
                                    1, /* exhaustedb */
@@ -5926,7 +5926,7 @@ static inline short _marpaESLIFRecognizer_push_grammar_eventsb(marpaESLIFRecogni
       } else {
         symbolp = NULL;
       }
-      
+
       /* Our grammar made sure there can by only one named event per symbol */
       /* In addition, marpaWrapper guarantee there is a symbol associated to */
       /* completion, nulled or prediction events */
@@ -6019,7 +6019,6 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGramm
   marpaWrapperRecognizerOption_t marpaWrapperRecognizerOption;
   short                          marpaESLIFRecognizerOptionb;
   marpaESLIF_grammar_t          *grammarp;
-  marpaWrapperGrammar_t         *marpaWrapperGrammarWorkp;
   genericStack_t                *symbolStackp;
   int                            symboli;
   marpaESLIF_symbol_t           *symbolp;
@@ -6060,6 +6059,7 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGramm
   marpaESLIFRecognizerp->marpaESLIFGrammarp         = marpaESLIFGrammarp;
   marpaESLIFRecognizerp->marpaESLIFRecognizerOption = *marpaESLIFRecognizerOptionp;
   marpaESLIFRecognizerp->marpaWrapperRecognizerp    = NULL;
+  marpaESLIFRecognizerp->marpaWrapperGrammarp       = NULL;
   marpaESLIFRecognizerp->lexemeInputStackp          = NULL;
   marpaESLIFRecognizerp->eventArrayp                = NULL;
   marpaESLIFRecognizerp->eventArrayl                = 0;
@@ -6160,14 +6160,21 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGramm
   marpaWrapperRecognizerOption.exhaustionEventb     = marpaESLIFRecognizerOptionp->exhaustedb;
 
   if (! fakeb) {
-    grammarp                                          = marpaESLIFGrammarp->grammarp;
-    marpaWrapperGrammarWorkp                          =
-      discardb ?
-      (noEventb ? grammarp->marpaWrapperGrammarDiscardNoEventp : grammarp->marpaWrapperGrammarDiscardp)
-      :
-      (noEventb ? grammarp->marpaWrapperGrammarStartNoEventp : grammarp->marpaWrapperGrammarStartp)
-      ;
-    marpaESLIFRecognizerp->marpaWrapperRecognizerp    = marpaWrapperRecognizer_newp(marpaWrapperGrammarWorkp, &marpaWrapperRecognizerOption);
+    grammarp                                        = marpaESLIFGrammarp->grammarp;
+    if (discardb) {
+      if (noEventb) {
+        marpaESLIFRecognizerp->marpaWrapperGrammarp = grammarp->marpaWrapperGrammarDiscardNoEventp;
+      } else {
+        marpaESLIFRecognizerp->marpaWrapperGrammarp = grammarp->marpaWrapperGrammarDiscardp;
+      }
+    } else {
+      if (noEventb) {
+        marpaESLIFRecognizerp->marpaWrapperGrammarp = grammarp->marpaWrapperGrammarStartNoEventp;
+      } else {
+        marpaESLIFRecognizerp->marpaWrapperGrammarp = grammarp->marpaWrapperGrammarStartp;
+      }
+    }
+    marpaESLIFRecognizerp->marpaWrapperRecognizerp    = marpaWrapperRecognizer_newp(marpaESLIFRecognizerp->marpaWrapperGrammarp, &marpaWrapperRecognizerOption);
     if (marpaESLIFRecognizerp->marpaWrapperRecognizerp == NULL) {
       goto err;
     }
