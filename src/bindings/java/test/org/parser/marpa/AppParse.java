@@ -20,7 +20,7 @@ public class AppParse  {
 				  + "\n"
 				  + "event ^Number = predicted Number\n"
 				  + "event Number$ = completed Number\n"
-				  + "Number   ::= /[\\d]+/   action => ::shift\n"
+				  + "Number   ::= NUMBER   action => ::shift\n"
 				  + "\n"
 				  + "event Expression$ = completed Expression\n"
 				  + "event ^Expression = predicted Expression\n"
@@ -33,6 +33,7 @@ public class AppParse  {
 				  + "   ||     Expression  '+' Expression\n"
 				  + "    |     Expression  '-' Expression\n"
 				  + "\n"
+				  + "NUMBER     ~ /[\\d]+/\n"
 				  + "whitespace ::= WHITESPACE\n"
 				  + "WHITESPACE ~ [\\s]\n"
 				  + "comment ::= /(?:(?:(?:\\/\\/)(?:[^\\n]*)(?:\\n|\\z))|(?:(?:\\/\\*)(?:(?:[^\\*]+|\\*(?!\\/))*)(?:\\*\\/)))/u\n"
@@ -118,6 +119,12 @@ public class AppParse  {
 					for (int j = 0; j < events.length; j++) {
 						ESLIFEvent event = events[j];
 					    eslifLogger.debug("  Event: Type=" + event.getEslifEventType() + ", Symbol=" + event.getSymbol() + ", Event=" + event.getEvent());
+					}
+				}
+				String[] lexemeExpected = eslifRecognizer.lexemeExpected();
+				if (lexemeExpected != null) {
+					for (int j = 0; j < lexemeExpected.length; j++) {
+						eslifLogger.debug("  Expected: " + lexemeExpected[j]);
 					}
 				}
 				if (! eslifRecognizer.isEof()) {

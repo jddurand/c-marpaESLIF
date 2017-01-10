@@ -40,6 +40,7 @@ JNIEXPORT void         JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniLexemeAl
 JNIEXPORT void         JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniLexemeAlternative      (JNIEnv *envp, jobject eslifRecognizerp, jstring namep);
 JNIEXPORT void         JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniLexemeComplete         (JNIEnv *envp, jobject eslifRecognizerp);
 JNIEXPORT void         JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniLexemeRead             (JNIEnv *envp, jobject eslifRecognizerp, jstring namep, jint lengthi);
+JNIEXPORT jobjectArray JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniLexemeExpected         (JNIEnv *envp, jobject eslifRecognizerp);
 JNIEXPORT void         JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniEof                    (JNIEnv *envp, jobject eslifRecognizerp);
 JNIEXPORT jboolean     JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniIsEof                  (JNIEnv *envp, jobject eslifRecognizerp);
 JNIEXPORT void         JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniRead                   (JNIEnv *envp, jobject eslifRecognizerp);
@@ -119,6 +120,7 @@ typedef struct marpaESLIF_stringGenerator { /* We use genericLogger to generate 
 #define MARPAESLIF_CLASS_CLASS                    "java/lang/Class"
 #define MARPAESLIF_ESLIFEVENTTYPE_CLASS           "org/parser/marpa/ESLIFEventType"
 #define MARPAESLIF_ESLIFEVENT_CLASS               "org/parser/marpa/ESLIFEvent"
+#define MARPAESLIF_STRING_CLASS                   "java/lang/String"
 
 #define MARPAESLIF_ESLIFVALUEINTERFACE_SYMBOLACTION_SIGNATURE "(Ljava/nio/ByteBuffer;)Ljava/lang/Object;"
 #define MARPAESLIF_ESLIFVALUEINTERFACE_RULEACTION_SIGNATURE   "([Ljava/lang/Object;)Ljava/lang/Object;"
@@ -176,6 +178,10 @@ static marpaESLIFClassCache_t marpaESLIFClassCacheArrayp[] = {
   #define MARPAESLIF_ESLIFEVENT_CLASSCACHE               marpaESLIFClassCacheArrayp[11]
   #define MARPAESLIF_ESLIFEVENT_CLASSP                   marpaESLIFClassCacheArrayp[11].classp
   {       MARPAESLIF_ESLIFEVENT_CLASS,                   NULL },
+
+  #define MARPAESLIF_STRING_CLASSCACHE                   marpaESLIFClassCacheArrayp[12]
+  #define MARPAESLIF_STRING_CLASSP                       marpaESLIFClassCacheArrayp[12].classp
+  {       MARPAESLIF_STRING_CLASS,                       NULL },
 
   { NULL }
 };
@@ -1669,7 +1675,7 @@ JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniScan(JNIEnv *env
   }
 
   if (! marpaESLIFRecognizer_scanb(marpaESLIFRecognizerp, initialEventsb, &continueb, &exhaustedb)) {
-    RAISEEXCEPTION(envp, "marpaESLIFRecognizer_scanb failure");   
+    RAISEEXCEPTION(envp, "marpaESLIFRecognizer_scanb failure");
   }
 
   (*envp)->CallVoidMethod(envp, eslifRecognizerp, MARPAESLIF_ESLIFRECOGNIZER_CLASS_setCanContinue_METHODP, continueb ? JNI_TRUE : JNI_FALSE);
@@ -1706,7 +1712,7 @@ JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniResume(JNIEnv *e
   }
 
   if (! marpaESLIFRecognizer_resumeb(marpaESLIFRecognizerp, &continueb, &exhaustedb)) {
-    RAISEEXCEPTION(envp, "marpaESLIFRecognizer_scanb failure");   
+    RAISEEXCEPTION(envp, "marpaESLIFRecognizer_scanb failure");
   }
 
   (*envp)->CallVoidMethod(envp, eslifRecognizerp, MARPAESLIF_ESLIFRECOGNIZER_CLASS_setCanContinue_METHODP, continueb ? JNI_TRUE : JNI_FALSE);
@@ -1741,7 +1747,7 @@ JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniLexemeAlternativ
   }
 
   if (!  marpaESLIFRecognizer_lexeme_alternative_lengthb(marpaESLIFRecognizerp, (size_t) lengthi)) {
-    RAISEEXCEPTION(envp, "marpaESLIFRecognizer_lexeme_alternative_lengthb failure");   
+    RAISEEXCEPTION(envp, "marpaESLIFRecognizer_lexeme_alternative_lengthb failure");
   }
 
   return;
@@ -1770,12 +1776,12 @@ JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniLexemeAlternativ
   if (namep != NULL) {
     names = (*envp)->GetStringUTFChars(envp, namep, &isCopy);
     if (names == NULL) {
-      RAISEEXCEPTION(envp, "GetStringUTFChars failure");   
+      RAISEEXCEPTION(envp, "GetStringUTFChars failure");
     }
   }
 
   if (!  marpaESLIFRecognizer_lexeme_alternativeb(marpaESLIFRecognizerp, (char *) names)) {
-    RAISEEXCEPTION(envp, "marpaESLIFRecognizer_lexeme_alternativeb failure");   
+    RAISEEXCEPTION(envp, "marpaESLIFRecognizer_lexeme_alternativeb failure");
   }
 
  err: /* err and done share the same code */
@@ -1803,7 +1809,7 @@ JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniLexemeComplete(J
   }
 
   if (!  marpaESLIFRecognizer_lexeme_completeb(marpaESLIFRecognizerp)) {
-    RAISEEXCEPTION(envp, "marpaESLIFRecognizer_lexeme_completeb failure");   
+    RAISEEXCEPTION(envp, "marpaESLIFRecognizer_lexeme_completeb failure");
   }
 
  err: /* err and done share the same code */
@@ -1830,12 +1836,12 @@ JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniLexemeRead(JNIEn
   if (namep != NULL) {
     names = (*envp)->GetStringUTFChars(envp, namep, &isCopy);
     if (names == NULL) {
-      RAISEEXCEPTION(envp, "GetStringUTFChars failure");   
+      RAISEEXCEPTION(envp, "GetStringUTFChars failure");
     }
   }
 
   if (!  marpaESLIFRecognizer_lexeme_readb(marpaESLIFRecognizerp, (char *) names, (size_t) lengthi)) {
-    RAISEEXCEPTION(envp, "marpaESLIFRecognizer_lexeme_readb failure");   
+    RAISEEXCEPTION(envp, "marpaESLIFRecognizer_lexeme_readb failure");
   }
 
  err: /* err and done share the same code */
@@ -1845,6 +1851,64 @@ JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniLexemeRead(JNIEn
     }
   }
   return;
+}
+
+/*****************************************************************************/
+JNIEXPORT jobjectArray JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniLexemeExpected(JNIEnv *envp, jobject eslifRecognizerp)
+/*****************************************************************************/
+{
+  marpaESLIFRecognizer_t *marpaESLIFRecognizerp;
+  size_t                  nLexeme;
+  size_t                  i;
+  char                  **lexemesArrayp;
+  jobjectArray            objectArray = NULL;
+  jstring                 string      = NULL;
+
+  if (! ESLIFRecognizer_contextb(envp, eslifRecognizerp, eslifRecognizerp, MARPAESLIF_ESLIFRECOGNIZER_CLASS_getLoggerInterfacep_METHODP,
+                                 NULL /* genericLoggerpp */,
+                                 NULL /* genericLoggerContextpp */,
+                                 NULL /* marpaESLIFpp */,
+                                 NULL /* marpaESLIFGrammarpp */,
+                                 &marpaESLIFRecognizerp)) {
+    goto err;
+  }
+
+  if (! marpaESLIFRecognizer_lexeme_expectedb(marpaESLIFRecognizerp, &nLexeme, &lexemesArrayp)) {
+    RAISEEXCEPTION(envp, "marpaESLIFRecognizer_lexeme_expectedb failure");
+  }
+
+  if (nLexeme > 0) {
+    objectArray = (*envp)->NewObjectArray(envp, nLexeme, MARPAESLIF_STRING_CLASSP, NULL /* initialElement */);
+    if (objectArray == NULL) {
+      RAISEEXCEPTION(envp, "NewObjectArray failure");
+    }
+    for (i = 0; i < nLexeme; i++) {
+      string = (*envp)->NewStringUTF(envp, (lexemesArrayp[i] != NULL) ? lexemesArrayp[i] : "");
+      if (string == NULL) {
+        RAISEEXCEPTION(envp, "NewStringUTF failure");
+      }
+      (*envp)->SetObjectArrayElement(envp, objectArray, i, string);
+      if (HAVEEXCEPTION(envp)) {
+        goto err;
+      }
+    }
+  }
+
+  goto done;
+
+ err:
+  if (envp != NULL) {
+    if (objectArray != NULL) {
+      (*envp)->DeleteLocalRef(envp, objectArray);
+    }
+    if (string != NULL) {
+      (*envp)->DeleteLocalRef(envp, string);
+    }
+  }
+  objectArray = NULL;
+
+ done:
+  return objectArray;
 }
 
 /*****************************************************************************/
@@ -1863,7 +1927,7 @@ JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniEof(JNIEnv *envp
   }
 
   if (! marpaESLIFRecognizer_eofb(marpaESLIFRecognizerp)) {
-    RAISEEXCEPTION(envp, "marpaESLIFRecognizer_eofb failure");   
+    RAISEEXCEPTION(envp, "marpaESLIFRecognizer_eofb failure");
   }
 
  err: /* err and done share the same code */
@@ -1887,7 +1951,7 @@ JNIEXPORT jboolean JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniIsEof(JNIEnv
   }
 
   if (! marpaESLIFRecognizer_isEofb(marpaESLIFRecognizerp, &eofb)) {
-    RAISEEXCEPTION(envp, "marpaESLIFRecognizer_isEofb failure");   
+    RAISEEXCEPTION(envp, "marpaESLIFRecognizer_isEofb failure");
   }
 
   return eofb ? JNI_TRUE : JNI_FALSE;
@@ -1912,7 +1976,7 @@ JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniRead(JNIEnv *env
   }
 
   if (!  marpaESLIFRecognizer_readb(marpaESLIFRecognizerp, NULL /* inputsp */, NULL /* inputlp */, NULL /* eofbp */)) {
-    RAISEEXCEPTION(envp, "marpaESLIFRecognizer_readb failure");   
+    RAISEEXCEPTION(envp, "marpaESLIFRecognizer_readb failure");
   }
 
  err: /* err and done share the same code */
@@ -1944,41 +2008,41 @@ JNIEXPORT jobjectArray JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniEvent(JN
 
   marpaESLIFRecognizer_eventb(marpaESLIFRecognizerp, &eventArrayl, &eventArrayp);
 
-
-  /* An array of size 0 is legal in Java */
-  objectArray = (*envp)->NewObjectArray(envp, eventArrayl, MARPAESLIF_ESLIFEVENT_CLASSP, NULL /* initialElement */);
-  if (objectArray == NULL) {
-    RAISEEXCEPTION(envp, "NewObjectArray failure");   
-  }
-
-  for (i = 0; i < eventArrayl; i++) {
-    eventType = NULL;
-    symbol    = NULL;
-    event     = NULL;
-
-    eventType = (*envp)->CallStaticObjectMethod(envp, MARPAESLIF_ESLIFEVENTTYPE_CLASSP, MARPAESLIF_ESLIFEVENTTYPE_CLASS_get_METHODP, eventArrayp[i].type);
-    if (eventType == NULL) {
-      RAISEEXCEPTION(envp, "CallStaticObjectMethod failure");
+  if (eventArrayl > 0) {
+    objectArray = (*envp)->NewObjectArray(envp, eventArrayl, MARPAESLIF_ESLIFEVENT_CLASSP, NULL /* initialElement */);
+    if (objectArray == NULL) {
+      RAISEEXCEPTION(envp, "NewObjectArray failure");
     }
 
-    symbol = (*envp)->NewStringUTF(envp, (eventArrayp[i].symbols != NULL) ? eventArrayp[i].symbols : "");
-    if (symbol == NULL) {
-      RAISEEXCEPTION(envp, "NewStringUTF failure");
-    }
+    for (i = 0; i < eventArrayl; i++) {
+      eventType = NULL;
+      symbol    = NULL;
+      event     = NULL;
 
-    event = (*envp)->NewStringUTF(envp, (eventArrayp[i].events != NULL) ? eventArrayp[i].events : "");
-    if (event == NULL) {
-      RAISEEXCEPTION(envp, "NewStringUTF failure");
-    }
+      eventType = (*envp)->CallStaticObjectMethod(envp, MARPAESLIF_ESLIFEVENTTYPE_CLASSP, MARPAESLIF_ESLIFEVENTTYPE_CLASS_get_METHODP, eventArrayp[i].type);
+      if (eventType == NULL) {
+        RAISEEXCEPTION(envp, "CallStaticObjectMethod failure");
+      }
 
-    object = (*envp)->NewObject(envp, MARPAESLIF_ESLIFEVENT_CLASSP, MARPAESLIF_ESLIFEVENT_CLASS_init_METHODP, eventType, symbol, event);
-    if (object == NULL) {
-      RAISEEXCEPTION(envp, "NewObject failure");
-    }
+      symbol = (*envp)->NewStringUTF(envp, (eventArrayp[i].symbols != NULL) ? eventArrayp[i].symbols : "");
+      if (symbol == NULL) {
+        RAISEEXCEPTION(envp, "NewStringUTF failure");
+      }
 
-    (*envp)->SetObjectArrayElement(envp, objectArray, i, object);
-    if (HAVEEXCEPTION(envp)) {
-      goto err;
+      event = (*envp)->NewStringUTF(envp, (eventArrayp[i].events != NULL) ? eventArrayp[i].events : "");
+      if (event == NULL) {
+        RAISEEXCEPTION(envp, "NewStringUTF failure");
+      }
+
+      object = (*envp)->NewObject(envp, MARPAESLIF_ESLIFEVENT_CLASSP, MARPAESLIF_ESLIFEVENT_CLASS_init_METHODP, eventType, symbol, event);
+      if (object == NULL) {
+        RAISEEXCEPTION(envp, "NewObject failure");
+      }
+
+      (*envp)->SetObjectArrayElement(envp, objectArray, i, object);
+      if (HAVEEXCEPTION(envp)) {
+        goto err;
+      }
     }
   }
 
