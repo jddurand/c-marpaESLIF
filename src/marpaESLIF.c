@@ -5227,6 +5227,10 @@ short marpaESLIFRecognizer_eofb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp)
   static const char *funcs = "marpaESLIFRecognizer_eofb";
   short              rcb;
 
+  if (marpaESLIFRecognizerp == NULL) {
+    goto err;
+  }
+
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
 
@@ -5235,7 +5239,42 @@ short marpaESLIFRecognizer_eofb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp)
   marpaESLIFRecognizerp->inputl = 0;
 
   rcb = 1;
+  goto done;
 
+ err:
+  rcb = 0;
+
+ done:
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
+  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC;
+  return rcb;
+}
+
+/*****************************************************************************/
+short marpaESLIFRecognizer_isEofb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, short *eofbp)
+/*****************************************************************************/
+{
+  static const char *funcs = "marpaESLIFRecognizer_isEofb";
+  short              rcb;
+
+  if (marpaESLIFRecognizerp == NULL) {
+    goto err;
+  }
+
+  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
+  MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
+
+  if (eofbp != NULL) {
+    *eofbp = *(marpaESLIFRecognizerp->eofbp);
+  }
+
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC;
   return rcb;
@@ -11741,7 +11780,7 @@ static inline short _marpaESLIFRecognizer_alternative_lengthb(marpaESLIFRecogniz
     goto err;
   }
   if (alternativeLengthl > marpaESLIFRecognizerp->inputl) {
-    MARPAESLIF_ERRORF(marpaESLIFp, "Alternative length must be <= %ld (current remaining bytes in recognizer buffer)", (unsigned long) marpaESLIFRecognizerp->inputl);
+    MARPAESLIF_ERRORF(marpaESLIFp, "Alternative length must be <= current remaining bytes in recognizer buffer, currently %ld", (unsigned long) marpaESLIFRecognizerp->inputl);
     goto err;
   }
   /* Alternative length must be set once until a call to complete */
