@@ -44,7 +44,16 @@ public class AppRecognizer implements ESLIFRecognizerInterface {
 		}
 
 		public byte[] data() {
-			return (line != null) ? line.getBytes() : null;
+			byte[] rc = (line != null) ? line.getBytes() : null;
+			
+			/*
+			if (rc != null) {
+				System.err.println("Returning " + rc.length + " bytes");
+			} else {
+				System.err.println("Returning null");
+			}
+			*/
+			return rc;
 		}
 
 		public boolean isWithDisableThreshold() {
