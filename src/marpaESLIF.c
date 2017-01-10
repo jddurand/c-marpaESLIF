@@ -1401,6 +1401,7 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
    6. The semantic of a nullable LHS must be unique
    7. lexeme events is meaningul only on lexemes
    8. Grammar names must all be different
+   9. :discard events are possible only if the RHS of the :discard rule is not a lexeme
 
       It is not illegal to have sparse items in grammarStackp.
 
@@ -1594,12 +1595,12 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
 
     if (discardp != NULL) {
       /* The :discard symbol itself never have any event */
-      if ((discardp->eventBefores != NULL)    ||
-          (discardp->eventAfters != NULL)     ||
+      if ((discardp->eventBefores    != NULL) ||
+          (discardp->eventAfters     != NULL) ||
           (discardp->eventPredicteds != NULL) ||
-          (discardp->eventNulleds != NULL)    ||
+          (discardp->eventNulleds    != NULL) ||
           (discardp->eventCompleteds != NULL) ||
-          (discardp->discardEvents != NULL)) {
+          (discardp->discardEvents   != NULL)) {
         MARPAESLIF_ERRORF(marpaESLIFp, ":discard symbol at grammar level %d (%s) must have no event", grammari, grammarp->descp->asciis);
         goto err;
       }
@@ -1664,7 +1665,7 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
     same level, then it must be an LHS of grammar at a resolved level, which must de-factor must also exist.
     
     Therefore every grammar is first scanned to detect all symbols that are truely LHS's at this level.
-    Then every RHS of every rule is verified: it is must an LHS at its specified grammar level. When found,
+    Then every RHS of every rule is verified: it is must be an LHS at its specified grammar level. When found,
     This resolved grammar is precomputed at this found LHS and the result is attached to the symbol of the
     parent grammar.
   */
@@ -2079,6 +2080,38 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
       subgrammarp = (marpaESLIF_grammar_t *) GENERICSTACK_GET_PTR(grammarStackp, grammarj);
       if (_marpaESLIF_string_eqb(grammarp->descp, subgrammarp->descp)) {
         MARPAESLIF_ERRORF(marpaESLIFp, "Grammars at level %d and %d have the same name (%s)", grammarp->leveli, subgrammarp->leveli, grammarp->descp->asciis);
+        goto err;
+      }
+    }
+  }
+
+  /*
+   9. :discard events are possible only if the RHS of the :discard rule is not a lexeme
+  */
+  for (grammari = 0; grammari < GENERICSTACK_USED(grammarStackp); grammari++) {
+    if (! GENERICSTACK_IS_PTR(grammarStackp, grammari)) {
+      continue;
+    }
+    grammarp = (marpaESLIF_grammar_t *) GENERICSTACK_GET_PTR(grammarStackp, grammari);
+    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Checking :discard events in grammar level %d (%s)", grammarp->leveli, grammarp->descp->asciis);
+
+    symbolStackp = grammarp->symbolStackp;
+    for (symboli = 0; symboli < GENERICSTACK_USED(symbolStackp); symboli++) {
+      if (! GENERICSTACK_IS_PTR(symbolStackp, symboli)) {
+        /* Should never happen, but who knows */
+        continue;
+      }
+      symbolp = (marpaESLIF_symbol_t *) GENERICSTACK_GET_PTR(symbolStackp, symboli);
+      if (! symbolp->discardRhsb) {
+        continue;
+      }
+      if (symbolp->discardEvents == NULL) {
+        continue;
+      }
+
+      if (! symbolp->lhsb) {
+        /* This symbol is not an lhs in this grammar */
+        MARPAESLIF_ERRORF(marpaESLIFp, "Discard event \"%s\" is not possible unless the RHS is also an LHS at grammar level %d (%s)", symbolp->discardEvents, grammari, grammarp->descp->asciis);
         goto err;
       }
     }
