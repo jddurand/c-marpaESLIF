@@ -14,6 +14,13 @@ public class ESLIFRecognizer {
 	private native void              jniScan(boolean initialEvents);
 	private native void              jniResume();
 	private native ESLIFEvent[]      jniEvent();
+	private native void              jniLexemeAlternativeLength(int length);
+	private native void              jniLexemeAlternative(String name);
+	private native void              jniLexemeComplete();
+	private native void              jniLexemeRead(String name, int length);
+	private native void              jniEof();
+	private native boolean           jniIsEof();
+	private native void              jniRead();
 
 	public ESLIFRecognizer(ESLIFGrammar eslifGrammar, ESLIFRecognizerInterface eslifRecognizerInterface) {
 		if (eslifGrammar == null) {
@@ -50,6 +57,35 @@ public class ESLIFRecognizer {
 	public ESLIFEvent[] events() {
 		return jniEvent();
 	}
+
+	public void lexemeAlternativeLength(int length) {
+		jniLexemeAlternativeLength(length);
+	}
+	
+	public void lexemeAlternative(String name) {
+		jniLexemeAlternative(name);
+	}
+	
+	public void lexemeComplete() {
+		jniLexemeComplete();
+	}
+	
+	public void lexemeRead(String name, int length) {
+		jniLexemeRead(name, length);
+	}
+	
+	public void eof() {
+		jniEof();
+	}
+
+	public boolean isEof() {
+		return jniIsEof();
+	}
+
+	public void read() {
+		jniRead();
+	}
+
 	/*
 	 * ********************************************
 	 * Private methods - used by the JNI

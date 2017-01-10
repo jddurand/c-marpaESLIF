@@ -67,7 +67,7 @@ public class AppParse  {
 		}
 		
 		String[] strings = {
-				"(((3 * 4) + 2 * 7) / 2 - 1)/* This is a comment \n */** 3",
+				"(((3 * 4) + 2 * 7) / 2 - 1)/* This is a\n comment \n */** 3",
 				"5 / (2 * 3)",
 				"5 / 2 * 3",
 				"(5 ** 2) ** 3",
@@ -119,6 +119,9 @@ public class AppParse  {
 						ESLIFEvent event = events[j];
 					    eslifLogger.debug("  Event: Type=" + event.getEslifEventType() + ", Symbol=" + event.getSymbol() + ", Event=" + event.getEvent());
 					}
+				}
+				if (! eslifRecognizer.isEof()) {
+					eslifRecognizer.read();
 				}
 				while (eslifRecognizer.isCanContinue()) {
 					eslifRecognizer.resume();
