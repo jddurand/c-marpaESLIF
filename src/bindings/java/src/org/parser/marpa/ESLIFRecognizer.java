@@ -18,6 +18,7 @@ public class ESLIFRecognizer {
 	private native void              jniLexemeAlternative(String name);
 	private native void              jniLexemeComplete();
 	private native void              jniLexemeRead(String name, int length);
+	private native String[]          jniLexemeExpected();
 	private native void              jniEof();
 	private native boolean           jniIsEof();
 	private native void              jniRead();
@@ -72,6 +73,10 @@ public class ESLIFRecognizer {
 	
 	public void lexemeRead(String name, int length) {
 		jniLexemeRead(name, length);
+	}
+	
+	public String[] lexemeExpected() {
+		return jniLexemeExpected();
 	}
 	
 	public void eof() {
