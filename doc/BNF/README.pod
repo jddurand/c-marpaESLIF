@@ -150,6 +150,8 @@ The C<:discard> symbol, despite belonging to a given grammar, is not accessible 
   :discard ::= symbolname1 event => discard_symbolname1$
   :discard ::= symbolname2 event => discard_symbolname2$
 
+Note than when an event is set, this will be triggered only on the C<:discard>'s RHS completion, therefore the RHS of the C<:discard> must be an LHS in the same grammar when there is an event setting.
+
 =item Events
 
 =over
