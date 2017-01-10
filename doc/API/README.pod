@@ -765,6 +765,14 @@ Forces the recognizer pointed by C<marpaESLIFRecognizerp> to believe that the en
 
 Returns a true value on success, a false value on failure.
 
+=head3 C<marpaESLIFRecognizer_isEofb>
+
+  short marpaESLIFRecognizer_eofb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, short *eofbp);
+
+Returns in the value pointed by C<eofbp> the current EOF state, when it is not C<NULL>.
+
+Returns a true value on success, a false value on failure.
+
 =head3 C<marpaESLIFRecognizer_event_onoffb>
 
   typedef enum marpaESLIFEventType {
