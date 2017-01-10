@@ -33,8 +33,9 @@ public class AppParse  {
 				  + "   ||     Expression  '+' Expression\n"
 				  + "    |     Expression  '-' Expression\n"
 				  + "\n"
-				  + "whitespace :[1]:= [\\s]\n"
-				  + "comment ~ /(?:(?:(?:\\/\\/)(?:[^\\n]*)(?:\\n|\\z))|(?:(?:\\/\\*)(?:(?:[^\\*]+|\\*(?!\\/))*)(?:\\*\\/)))/u\n"
+				  + "whitespace ::= WHITESPACE\n"
+				  + "WHITESPACE ~ [\\s]\n"
+				  + "comment ::= /(?:(?:(?:\\/\\/)(?:[^\\n]*)(?:\\n|\\z))|(?:(?:\\/\\*)(?:(?:[^\\*]+|\\*(?!\\/))*)(?:\\*\\/)))/u\n"
 				  + "\n";
 
 
@@ -66,7 +67,7 @@ public class AppParse  {
 		}
 		
 		String[] strings = {
-				"(((3 * 4) + 2 * 7) / 2 - 1) \n" + "/* This is a comment */\n ** 3",
+				"(((3 * 4) + 2 * 7) / 2 - 1)/* This is a comment \n */** 3",
 				"5 / (2 * 3)",
 				"5 / 2 * 3",
 				"(5 ** 2) ** 3",
@@ -116,7 +117,7 @@ public class AppParse  {
 				if (events != null) {
 					for (int j = 0; j < events.length; j++) {
 						ESLIFEvent event = events[j];
-					    eslifLogger.trace("  Event: Type=" + event.getEslifEventType() + ", Symbol=" + event.getSymbol() + ", Event=" + event.getEvent());
+					    eslifLogger.debug("  Event: Type=" + event.getEslifEventType() + ", Symbol=" + event.getSymbol() + ", Event=" + event.getEvent());
 					}
 				}
 				while (eslifRecognizer.isCanContinue()) {
@@ -125,7 +126,7 @@ public class AppParse  {
 					if (events != null) {
 						for (int j = 0; j < events.length; j++) {
 							ESLIFEvent event = events[j];
-						    eslifLogger.trace("  Event: Type=" + event.getEslifEventType() + ", Symbol=" + event.getSymbol() + ", Event=" + event.getEvent());
+						    eslifLogger.debug("  Event: Type=" + event.getEslifEventType() + ", Symbol=" + event.getSymbol() + ", Event=" + event.getEvent());
 						}
 					}
 				}
