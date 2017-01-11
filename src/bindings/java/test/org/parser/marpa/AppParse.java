@@ -153,6 +153,20 @@ public class AppParse  {
 									ESLIFEventType.get(ESLIFEventType.COMPLETED.getCode())
 							},
 							false);
+					eslifRecognizer.eventOnOff(
+							":discard",
+							new ESLIFEventType[] {
+									ESLIFEventType.get(ESLIFEventType.PREDICTED.getCode()),
+									ESLIFEventType.get(ESLIFEventType.COMPLETED.getCode())
+							},
+							false);
+					eslifRecognizer.eventOnOff(
+							"whitespace",
+							new ESLIFEventType[] {
+									ESLIFEventType.get(ESLIFEventType.PREDICTED.getCode()),
+									ESLIFEventType.get(ESLIFEventType.COMPLETED.getCode())
+							},
+							false);
 				}
 			} catch (Exception e) {
 				eslifLogger.error("Exception: " + e);
