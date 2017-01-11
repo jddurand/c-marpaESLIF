@@ -6156,8 +6156,6 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGramm
   genericStack_t                *symbolStackp;
   int                            symboli;
   marpaESLIF_symbol_t           *symbolp;
-  int                            starti;
-  marpaWrapperGrammar_t         *marpaWrapperGrammarp;
 
   if (marpaESLIFRecognizerOptionp == NULL) {
     marpaESLIFRecognizerOptionp = &marpaESLIFRecognizerOption_default_template;
