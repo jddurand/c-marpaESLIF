@@ -23,7 +23,7 @@ public class ESLIFRecognizer {
 	private native boolean           jniIsEof();
 	private native void              jniRead();
 
-	public ESLIFRecognizer(ESLIFGrammar eslifGrammar, ESLIFRecognizerInterface eslifRecognizerInterface) {
+	public ESLIFRecognizer(ESLIFGrammar eslifGrammar, ESLIFRecognizerInterface eslifRecognizerInterface) throws ESLIFException {
 		if (eslifGrammar == null) {
 			throw new IllegalArgumentException("eslifGrammar must not be null");
 		}
@@ -35,59 +35,59 @@ public class ESLIFRecognizer {
 		jniNew(eslifGrammar);
 	}
 	
-	public void free() {
+	public synchronized void free() throws ESLIFException {
 		jniFree();
 	}
 
-	public boolean isCanContinue() {
+	public synchronized boolean isCanContinue() throws ESLIFException {
 		return canContinue;
 	}
 
-	public boolean isExhausted() {
+	public synchronized boolean isExhausted() throws ESLIFException {
 		return exhausted;
 	}
 	
-	public void scan(boolean initialEvents) {
+	public synchronized void scan(boolean initialEvents) throws ESLIFException {
 		jniScan(initialEvents);
 	}
 
-	public void resume() {
+	public synchronized void resume() throws ESLIFException {
 		jniResume();
 	}
 	
-	public ESLIFEvent[] events() {
+	public synchronized ESLIFEvent[] events() throws ESLIFException {
 		return jniEvent();
 	}
 
-	public void lexemeAlternativeLength(int length) {
+	public synchronized void lexemeAlternativeLength(int length) throws ESLIFException {
 		jniLexemeAlternativeLength(length);
 	}
 	
-	public void lexemeAlternative(String name) {
+	public synchronized void lexemeAlternative(String name) throws ESLIFException {
 		jniLexemeAlternative(name);
 	}
 	
-	public void lexemeComplete() {
+	public synchronized void lexemeComplete() throws ESLIFException {
 		jniLexemeComplete();
 	}
 	
-	public void lexemeRead(String name, int length) {
+	public synchronized void lexemeRead(String name, int length) throws ESLIFException {
 		jniLexemeRead(name, length);
 	}
 	
-	public String[] lexemeExpected() {
+	public synchronized String[] lexemeExpected() throws ESLIFException {
 		return jniLexemeExpected();
 	}
 	
-	public void eof() {
+	public synchronized void eof() throws ESLIFException {
 		jniEof();
 	}
 
-	public boolean isEof() {
+	public synchronized boolean isEof() throws ESLIFException {
 		return jniIsEof();
 	}
 
-	public void read() {
+	public synchronized void read() throws ESLIFException {
 		jniRead();
 	}
 

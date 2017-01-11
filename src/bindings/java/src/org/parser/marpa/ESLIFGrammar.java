@@ -26,7 +26,7 @@ public class ESLIFGrammar {
 	 * Public methods
 	 * ********************************************
 	 */
-	public ESLIFGrammar(ESLIF eslif, String grammar) throws UnsupportedEncodingException  {
+	public ESLIFGrammar(ESLIF eslif, String grammar) throws UnsupportedEncodingException, ESLIFException {
 		if (eslif == null) {
 			throw new IllegalArgumentException("eslif must not be null");
 		}
@@ -36,46 +36,46 @@ public class ESLIFGrammar {
 		setEslif(eslif);
 		jniNew(grammar.getBytes("UTF-8"));
 	}
-	public void free() {
+	public synchronized void free() throws ESLIFException {
 		jniFree();
 	}
-	public int ngrammar() {
+	public synchronized int ngrammar() throws ESLIFException {
 		return jniNgrammar();
 	}
-	public int currentLevel() {
+	public synchronized int currentLevel() throws ESLIFException {
 		return jniCurrentLevel();
 	}
-	public String currentDescription() {
+	public synchronized String currentDescription() throws ESLIFException {
 		return jniCurrentDescription();
 	}
-	public String descriptionByLevel(int level) {
+	public synchronized String descriptionByLevel(int level) throws ESLIFException {
 		return jniDescriptionByLevel(level);
 	}
-	public int[] currentRuleIds() {
+	public synchronized int[] currentRuleIds() throws ESLIFException {
 		return jniCurrentRuleIds();
 	}
-	public int[] ruleIdsByLevel(int level) {
+	public synchronized int[] ruleIdsByLevel(int level) throws ESLIFException {
 		return jniRuleIdsByLevel(level);
 	}
-	public String ruleDisplay(int rule) {
+	public synchronized String ruleDisplay(int rule) throws ESLIFException {
 		return jniRuleDisplay(rule);
 	}
-	public String ruleShow(int rule) {
+	public synchronized String ruleShow(int rule) throws ESLIFException {
 		return jniRuleShow(rule);
 	}
-	public String ruleDisplayByLevel(int level, int rule) {
+	public synchronized String ruleDisplayByLevel(int level, int rule) throws ESLIFException {
 		return jniRuleDisplayByLevel(level, rule);
 	}
-	public String ruleShowByLevel(int level, int rule) {
+	public synchronized String ruleShowByLevel(int level, int rule) throws ESLIFException {
 		return jniRuleShowByLevel(level, rule);
 	}
-	public String show() {
+	public synchronized String show() throws ESLIFException {
 		return jniShow();
 	}
-	public String showByLevel(int level) {
+	public synchronized String showByLevel(int level) throws ESLIFException {
 		return jniShowByLevel(level);
 	}
-	public boolean parse(ESLIFRecognizerInterface recognizerInterface, ESLIFValueInterface valueInterface) throws Exception {
+	public synchronized boolean parse(ESLIFRecognizerInterface recognizerInterface, ESLIFValueInterface valueInterface) throws ESLIFException {
 		return jniParse(recognizerInterface, valueInterface);
 	}
 	/*

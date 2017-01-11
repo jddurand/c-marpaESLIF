@@ -10,7 +10,7 @@ public class ESLIFValue  {
 	private native void          jniNew(ESLIFRecognizer recognizer);
 	private native void          jniFree();
 	
-	public ESLIFValue(ESLIFRecognizer recognizer, ESLIFValueInterface eslifValueInterface) {
+	public ESLIFValue(ESLIFRecognizer recognizer, ESLIFValueInterface eslifValueInterface) throws ESLIFException {
 		if (recognizer == null) {
 			throw new IllegalAccessError("recognizer must not be null");
 		}
@@ -22,7 +22,7 @@ public class ESLIFValue  {
 		jniNew(recognizer);
 	}
 
-	public void free() {
+	public synchronized void free() throws ESLIFException {
 		jniFree();
 	}
 	/*
