@@ -95,6 +95,7 @@ struct marpaESLIF_meta {
   char                        *asciinames;
   marpaESLIF_string_t         *descp;                                  /* Non-terminal description */
   marpaWrapperGrammar_t       *marpaWrapperGrammarLexemeCloneNoEventp; /* Cloned grammar in lexeme search mode (no event) */
+  int                          lexemeIdi;                              /* Lexeme Id in this cloned grammar */
   short                       *prioritizedb;                           /* Internal flag to prevent a prioritized symbol to appear more than once as an LHS */
 };
 
@@ -163,6 +164,7 @@ struct marpaESLIF_rule {
   marpaESLIF_symbol_t   *separatorp;                           /* Eventual separator symbol */
   genericStack_t        *rhsStackp;                            /* Stack of RHS symbols */
   marpaESLIF_symbol_t   *exceptionp;                           /* Exception symbol */
+  int                    exceptionIdi;                         /* Exception symbol Id */
   marpaWrapperGrammar_t *marpaWrapperGrammarExceptionNoEventp; /* Grammar implementation at exception - note that this NEVER have any event */
   char                  *actions;                              /* Action */
   char                  *discardEvents;                        /* Discard event name - shallowed with its RHS */
@@ -201,6 +203,7 @@ struct marpaESLIF_grammar {
   short                  haveRejectionb;                     /* When true, valuation go to the ASF mode - filled by grammar validation */
   unsigned int           nbupdatei;                          /* Number of updates - used in grammar ESLIF actions */
   char                  *asciishows;                         /* Grammar show (ASCII) */
+  int                    discardi;                           /* Discard symbol ID - filled during grammar validation */
 };
 
 /* ----------------------------------- */
@@ -253,7 +256,7 @@ struct marpaESLIFRecognizer {
   marpaESLIFGrammar_t         *marpaESLIFGrammarp;
   marpaESLIFRecognizerOption_t marpaESLIFRecognizerOption;
   marpaWrapperRecognizer_t    *marpaWrapperRecognizerp; /* Current recognizer */
-  marpaWrapperGrammar_t       *marpaWrapperGrammarp; /* Shallow copy of used grammar */
+  marpaWrapperGrammar_t       *marpaWrapperGrammarp; /* Shallow copy of cached grammar in use */
   genericStack_t              *lexemeInputStackp;  /* Internal input stack of lexemes */
   marpaESLIFEvent_t           *eventArrayp;        /* For the events */
   size_t                       eventArrayl;        /* Current number of events */
@@ -271,6 +274,7 @@ struct marpaESLIFRecognizer {
   short                        _eofb;          /* EOF flag */
   short                        _utfb;          /* A flag to say if input is UTF-8 correct. Automatically true if _charconv is true. Can set be regex engine as well. */
   short                        _charconvb;     /* A flag to say if latest stream chunk was converted to UTF-8 */
+  marpaWrapperGrammar_t     ***_marpaWrapperGrammarCacheppp; /* Cache of all needed cloned()/precomputed grammars */
 
   int                          leveli;         /* Recognizer level (!= grammar level) */
 
@@ -281,6 +285,7 @@ struct marpaESLIFRecognizer {
   short                       *eofbp;          /* Ditto for the EOF flag */
   short                       *utfbp;          /* Ditto for the UTF-8 correctness flag */
   short                       *charconvbp;     /* Ditto for the character conversion flag */
+  marpaWrapperGrammar_t    ****marpaWrapperGrammarCachepppp; /* Ditto for grammars cache */
 
   size_t                       parentDeltal;   /* Parent original delta - used to recovert parent current pointer at our free */
   char                        *inputs;         /* Current pointer in input - specific to every recognizer */

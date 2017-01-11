@@ -108,7 +108,7 @@ typedef struct marpaESLIF_stringGenerator { /* We use genericLogger to generate 
 /* ------ */
 #define MARPAESLIF_JNI_VERSION                    JNI_VERSION_1_4 /* Because of NIO Support */
 #define MARPAESLIF_FILENAMES                      "marpaESLIFJava.c"
-#define MARPAESLIF_EXCEPTION_CLASS                "java/lang/Exception"
+#define MARPAESLIF_EXCEPTION_CLASS                "org/parser/marpa/ESLIFException"
 #define MARPAESLIF_ESLIF_CLASS                    "org/parser/marpa/ESLIF"
 #define MARPAESLIF_ESLIFLOGGERINTERFACE_CLASS     "org/parser/marpa/ESLIFLoggerInterface"
 #define MARPAESLIF_ESLIFGRAMMAR_CLASS             "org/parser/marpa/ESLIFGrammar"
