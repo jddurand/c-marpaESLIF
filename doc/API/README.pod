@@ -851,11 +851,11 @@ Returns a true value on success, a false value on failure.
     char                 *events;  /* Event name, always NULL if exhaustion eent */
   } marpaESLIFEvent_t;
 
-  void marpaESLIFRecognizer_eventb(marpaESLIFRecognizer_t  *marpaESLIFRecognizerp,
-                                   size_t                  *eventArraylp,
-                                   marpaESLIFEvent_t      **eventArraypp);
+  short marpaESLIFRecognizer_eventb(marpaESLIFRecognizer_t  *marpaESLIFRecognizerp,
+                                    size_t                  *eventArraylp,
+                                    marpaESLIFEvent_t      **eventArraypp);
 
-  Retreive the current list of events within the recognizer pointed by C<marpaESLIFRecognizerp>, putting in the value pointed by C<eventArraylp>, if it is not NULL, the number of event, and in the value pointed by C<eventArraypp>, if it not NULL, the list of these events. An event is always a structure of type C<marpaESLIFEvent_t> containing:
+Retreive the current list of events within the recognizer pointed by C<marpaESLIFRecognizerp>, putting in the value pointed by C<eventArraylp>, if it is not NULL, the number of event, and in the value pointed by C<eventArraypp>, if it not NULL, the list of these events. An event is always a structure of type C<marpaESLIFEvent_t> containing:
 
 =over
 
