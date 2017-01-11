@@ -36,19 +36,20 @@ public class ESLIF {
 	public static String getMarpaeslifjavaLibraryName() {
 		return MARPAESLIFJAVA_LIBRARY_NAME;
 	}
-	public ESLIF(ESLIFLoggerInterface loggerInterface) {
+	public ESLIF(ESLIFLoggerInterface loggerInterface) throws ESLIFException {
 		setLoggerInterface(loggerInterface);
 		jniNew();
 	}
 	
-	public ESLIF() throws Exception {
+	public ESLIF() throws ESLIFException {
 		jniNew();
 	}
 	
-	public void free() {
+	public synchronized void free() throws ESLIFException {
 		jniFree();
 	}
 	
+	/* This is accessing static inside the library */ 
 	public String version() {
 		return jniVersion();
 	}
