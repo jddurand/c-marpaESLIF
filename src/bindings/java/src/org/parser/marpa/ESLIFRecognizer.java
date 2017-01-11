@@ -14,6 +14,7 @@ public class ESLIFRecognizer {
 	private native void              jniScan(boolean initialEvents);
 	private native void              jniResume();
 	private native ESLIFEvent[]      jniEvent();
+	private native void              jniEventOnOff(String symbol, ESLIFEventType[] eventTypes, boolean onOff);
 	private native void              jniLexemeAlternativeLength(int length);
 	private native void              jniLexemeAlternative(String name);
 	private native void              jniLexemeComplete();
@@ -57,6 +58,10 @@ public class ESLIFRecognizer {
 	
 	public synchronized ESLIFEvent[] events() throws ESLIFException {
 		return jniEvent();
+	}
+
+	public synchronized void eventOnOff(String symbol, ESLIFEventType[] eventTypes, boolean onOff) {
+		jniEventOnOff(symbol, eventTypes, onOff);
 	}
 
 	public synchronized void lexemeAlternativeLength(int length) throws ESLIFException {

@@ -45,6 +45,7 @@ JNIEXPORT void         JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniEof     
 JNIEXPORT jboolean     JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniIsEof                  (JNIEnv *envp, jobject eslifRecognizerp);
 JNIEXPORT void         JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniRead                   (JNIEnv *envp, jobject eslifRecognizerp);
 JNIEXPORT jobjectArray JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniEvent                  (JNIEnv *envp, jobject eslifRecognizerp);
+JNIEXPORT void         JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniEventOnOff             (JNIEnv *envp, jobject eslifRecognizerp, jstring symbolp, jobjectArray eventTypesp, jboolean onOff);
 JNIEXPORT void         JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniFree                   (JNIEnv *envp, jobject eslifRecognizerp);
 
 JNIEXPORT void      JNICALL Java_org_parser_marpa_ESLIFValue_jniNew                 (JNIEnv *envp, jobject eslifValuep, jobject eslifRecognizerp);
@@ -349,7 +350,10 @@ static marpaESLIFMethodCache_t marpaESLIFMethodCacheArrayp[] = {
   #define MARPAESLIF_ESLIFEVENTTYPE_CLASS_get_METHODP                               marpaESLIFMethodCacheArrayp[53].methodp
   {      &MARPAESLIF_ESLIFEVENTTYPE_CLASSCACHE, "get",                              "(I)Lorg/parser/marpa/ESLIFEventType;", 1 /* static */, NULL },
 
-  #define MARPAESLIF_ESLIFEVENT_CLASS_init_METHODP                                  marpaESLIFMethodCacheArrayp[54].methodp
+  #define MARPAESLIF_ESLIFEVENTTYPE_CLASS_getCode_METHODP                           marpaESLIFMethodCacheArrayp[54].methodp
+  {      &MARPAESLIF_ESLIFEVENTTYPE_CLASSCACHE, "getCode",                          "()I", 0, NULL },
+
+  #define MARPAESLIF_ESLIFEVENT_CLASS_init_METHODP                                  marpaESLIFMethodCacheArrayp[55].methodp
   {      &MARPAESLIF_ESLIFEVENT_CLASSCACHE, "<init>",                               "(Lorg/parser/marpa/ESLIFEventType;Ljava/lang/String;Ljava/lang/String;)V", 0, NULL },
 
   { NULL }
@@ -2006,7 +2010,9 @@ JNIEXPORT jobjectArray JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniEvent(JN
     goto err;
   }
 
-  marpaESLIFRecognizer_eventb(marpaESLIFRecognizerp, &eventArrayl, &eventArrayp);
+  if (! marpaESLIFRecognizer_eventb(marpaESLIFRecognizerp, &eventArrayl, &eventArrayp)) {
+    RAISEEXCEPTION(envp, "marpaESLIFRecognizer_eventb failure");
+  }
 
   if (eventArrayl > 0) {
     objectArray = (*envp)->NewObjectArray(envp, eventArrayl, MARPAESLIF_ESLIFEVENT_CLASSP, NULL /* initialElement */);
@@ -2070,6 +2076,84 @@ JNIEXPORT jobjectArray JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniEvent(JN
 
  done:
   return objectArray;
+}
+
+/*****************************************************************************/
+JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniEventOnOff(JNIEnv *envp, jobject eslifRecognizerp, jstring symbolp, jobjectArray eventTypesp, jboolean onOff)
+/*****************************************************************************/
+{
+  marpaESLIFRecognizer_t *marpaESLIFRecognizerp;
+  jboolean                isCopy;
+  const char             *symbols    = (symbolp != NULL) ? (*envp)->GetStringUTFChars(envp, symbolp, &isCopy) : NULL;
+  marpaESLIFEventType_t   eventSeti  = MARPAESLIF_EVENTTYPE_NONE;
+  short                   onoffb     = (onOff == JNI_TRUE);
+  jobject                 eventTypep = NULL;
+  jsize                   eventTypesLengthl;
+  jint                    codei;
+  jsize                   i;
+
+  if (! ESLIFRecognizer_contextb(envp, eslifRecognizerp, eslifRecognizerp, MARPAESLIF_ESLIFRECOGNIZER_CLASS_getLoggerInterfacep_METHODP,
+                                 NULL /* genericLoggerpp */,
+                                 NULL /* genericLoggerContextpp */,
+                                 NULL /* marpaESLIFpp */,
+                                 NULL /* marpaESLIFGrammarpp */,
+                                 &marpaESLIFRecognizerp)) {
+    goto err;
+  }
+
+  if (eventTypesp != NULL) {
+    eventTypesLengthl = (*envp)->GetArrayLength(envp, eventTypesp);
+    if (HAVEEXCEPTION(envp)) {
+      RAISEEXCEPTION(envp, "GetArrayLength failure");
+    }
+    for (i = 0; i < eventTypesLengthl; i++) {
+      if (eventTypep != NULL) {
+        (*envp)->DeleteLocalRef(envp, eventTypep);
+      }
+      eventTypep = (*envp)->GetObjectArrayElement(envp, eventTypesp, i);
+      if (HAVEEXCEPTION(envp)) {
+        RAISEEXCEPTION(envp, "GetObjectArrayElement failure");
+      }
+      if (eventTypep != NULL) {
+        codei = (*envp)->CallIntMethod(envp, eventTypep, MARPAESLIF_ESLIFEVENTTYPE_CLASS_getCode_METHODP);
+        if (HAVEEXCEPTION(envp)) {
+          RAISEEXCEPTION(envp, "getCode failure");
+        }
+        switch (codei) {
+        case MARPAESLIF_EVENTTYPE_NONE:
+          break;
+        case MARPAESLIF_EVENTTYPE_COMPLETED:
+        case MARPAESLIF_EVENTTYPE_NULLED:
+        case MARPAESLIF_EVENTTYPE_PREDICTED:
+        case MARPAESLIF_EVENTTYPE_BEFORE:
+        case MARPAESLIF_EVENTTYPE_AFTER:
+        case MARPAESLIF_EVENTTYPE_EXHAUSTED:
+        case MARPAESLIF_EVENTTYPE_DISCARD:
+          eventSeti |= codei;
+          break;
+        default:
+          RAISEEXCEPTIONF(envp, "Unknown code %d", (int) codei);
+          break;
+        }
+      }
+    }
+  }
+
+  if (! marpaESLIFRecognizer_event_onoffb(marpaESLIFRecognizerp, (char *) symbols, eventSeti, onoffb)) {
+    RAISEEXCEPTION(envp, "marpaESLIFRecognizer_event_onoffb failure");
+  }
+
+ err: /* err and done share the same code */
+  if (envp != NULL) {
+    if ((symbolp != NULL) && (symbols != NULL)) {
+      (*envp)->ReleaseStringUTFChars(envp, symbolp, symbols);
+    }
+    if (eventTypep != NULL) {
+      (*envp)->DeleteLocalRef(envp, eventTypep);
+    }
+  }
+
+  return;
 }
 
 /*****************************************************************************/

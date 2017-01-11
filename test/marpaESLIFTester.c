@@ -63,7 +63,7 @@ const static char *exceptions = "\n"
   "event arobace[] = nulled arobace\n"
   "event arobace$ = completed arobace\n"
   "arobace ::= '@'\n"
-;
+  ;
 
 int main() {
   marpaESLIF_t                *marpaESLIFp        = NULL;
@@ -334,7 +334,9 @@ static short eventManagerb(int *eventCountip, marpaESLIFRecognizer_t *marpaESLIF
 
   (*eventCountip)++;
 
-  marpaESLIFRecognizer_eventb(marpaESLIFRecognizerp, &eventArrayl, &eventArrayp);
+  if (! marpaESLIFRecognizer_eventb(marpaESLIFRecognizerp, &eventArrayl, &eventArrayp)) {
+    goto err;
+  }
 
   for (eventArrayIteratorl = 0; eventArrayIteratorl < eventArrayl; eventArrayIteratorl++) {
     switch (eventArrayp[eventArrayIteratorl].type) {

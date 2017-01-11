@@ -139,6 +139,20 @@ public class AppParse  {
 						    eslifLogger.debug("  Event: Type=" + event.getEslifEventType() + ", Symbol=" + event.getSymbol() + ", Event=" + event.getEvent());
 						}
 					}
+					eslifRecognizer.eventOnOff(
+							"Expression",
+							new ESLIFEventType[] {
+									ESLIFEventType.get(ESLIFEventType.PREDICTED.getCode()),
+									ESLIFEventType.get(ESLIFEventType.COMPLETED.getCode())
+							},
+							false);
+					eslifRecognizer.eventOnOff(
+							"Number",
+							new ESLIFEventType[] {
+									ESLIFEventType.get(ESLIFEventType.PREDICTED.getCode()),
+									ESLIFEventType.get(ESLIFEventType.COMPLETED.getCode())
+							},
+							false);
 				}
 			} catch (Exception e) {
 				eslifLogger.error("Exception: " + e);
