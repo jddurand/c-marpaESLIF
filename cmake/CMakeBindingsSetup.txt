@@ -1,6 +1,3 @@
-#
-# Inspired by https://github.com/javagg/ctp-swig
-#
 FIND_PACKAGE(Java)
 FIND_PACKAGE(JNI)
 IF (JNI_FOUND AND JAVA_FOUND)
