@@ -33,6 +33,7 @@ public class AppParse  {
 				  + "   ||     Expression  '+' Expression\n"
 				  + "    |     Expression  '-' Expression\n"
 				  + "\n"
+				  + ":lexeme ::= NUMBER pause => after  event => NUMBER$\n"
 				  + "NUMBER     ~ /[\\d]+/\n"
 				  + "whitespace ::= WHITESPACE\n"
 				  + "WHITESPACE ~ [\\s]\n"
@@ -142,14 +143,12 @@ public class AppParse  {
 					eslifRecognizer.eventOnOff(
 							"Expression",
 							new ESLIFEventType[] {
-									ESLIFEventType.get(ESLIFEventType.PREDICTED.getCode()),
-									ESLIFEventType.get(ESLIFEventType.COMPLETED.getCode())
+									ESLIFEventType.get(ESLIFEventType.PREDICTED.getCode())
 							},
 							false);
 					eslifRecognizer.eventOnOff(
 							"Number",
 							new ESLIFEventType[] {
-									ESLIFEventType.get(ESLIFEventType.PREDICTED.getCode()),
 									ESLIFEventType.get(ESLIFEventType.COMPLETED.getCode())
 							},
 							false);
@@ -157,6 +156,12 @@ public class AppParse  {
 							"whitespace",
 							new ESLIFEventType[] {
 									ESLIFEventType.get(ESLIFEventType.DISCARD.getCode())
+							},
+							false);
+					eslifRecognizer.eventOnOff(
+							"NUMBER",
+							new ESLIFEventType[] {
+									ESLIFEventType.get(ESLIFEventType.AFTER.getCode())
 							},
 							false);
 				}
