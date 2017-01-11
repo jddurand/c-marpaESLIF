@@ -154,17 +154,9 @@ public class AppParse  {
 							},
 							false);
 					eslifRecognizer.eventOnOff(
-							":discard",
-							new ESLIFEventType[] {
-									ESLIFEventType.get(ESLIFEventType.PREDICTED.getCode()),
-									ESLIFEventType.get(ESLIFEventType.COMPLETED.getCode())
-							},
-							false);
-					eslifRecognizer.eventOnOff(
 							"whitespace",
 							new ESLIFEventType[] {
-									ESLIFEventType.get(ESLIFEventType.PREDICTED.getCode()),
-									ESLIFEventType.get(ESLIFEventType.COMPLETED.getCode())
+									ESLIFEventType.get(ESLIFEventType.DISCARD.getCode())
 							},
 							false);
 				}

@@ -263,7 +263,9 @@ struct marpaESLIFRecognizer {
   size_t                       eventArraySizel;    /* Real allocated size (to avoid constant free/deletes) */
   marpaESLIFRecognizer_t      *parentRecognizerp;
   char                        *lastCompletionEvents; /* A trick to avoid having to fetch the array event when a discard subgrammar succeed */
+  marpaESLIF_symbol_t         *lastCompletionSymbolp; /* Ditto */
   char                        *discardEvents;     /* Set by a child discard recognizer that reaches a completion event */
+  marpaESLIF_symbol_t         *discardSymbolp;    /* Ditto */
   int                          resumeCounteri;    /* Internal counter for tracing - no functional impact */
   int                          callstackCounteri; /* Internal counter for tracing - no functional impact */
 
@@ -275,6 +277,7 @@ struct marpaESLIFRecognizer {
   short                        _utfb;          /* A flag to say if input is UTF-8 correct. Automatically true if _charconv is true. Can set be regex engine as well. */
   short                        _charconvb;     /* A flag to say if latest stream chunk was converted to UTF-8 */
   marpaWrapperGrammar_t     ***_marpaWrapperGrammarCacheppp; /* Cache of all needed cloned()/precomputed grammars */
+  short                      **_discardEventStatebpp; /* Cache of all discard current event states */
 
   int                          leveli;         /* Recognizer level (!= grammar level) */
 
@@ -286,6 +289,7 @@ struct marpaESLIFRecognizer {
   short                       *utfbp;          /* Ditto for the UTF-8 correctness flag */
   short                       *charconvbp;     /* Ditto for the character conversion flag */
   marpaWrapperGrammar_t    ****marpaWrapperGrammarCachepppp; /* Ditto for grammars cache */
+  short                     ***discardEventStatebppp; /* Ditto for discard event states */
 
   size_t                       parentDeltal;   /* Parent original delta - used to recovert parent current pointer at our free */
   char                        *inputs;         /* Current pointer in input - specific to every recognizer */
