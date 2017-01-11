@@ -278,6 +278,8 @@ struct marpaESLIFRecognizer {
   short                        _charconvb;     /* A flag to say if latest stream chunk was converted to UTF-8 */
   marpaWrapperGrammar_t     ***_marpaWrapperGrammarCacheppp; /* Cache of all needed cloned()/precomputed grammars */
   short                      **_discardEventStatebpp; /* Cache of all discard current event states */
+  short                      **_beforeEventStatebpp;  /* Cache of all before current event states */
+  short                      **_afterEventStatebpp;   /* Cache of all after current event states */
 
   int                          leveli;         /* Recognizer level (!= grammar level) */
 
@@ -290,6 +292,8 @@ struct marpaESLIFRecognizer {
   short                       *charconvbp;     /* Ditto for the character conversion flag */
   marpaWrapperGrammar_t    ****marpaWrapperGrammarCachepppp; /* Ditto for grammars cache */
   short                     ***discardEventStatebppp; /* Ditto for discard event states */
+  short                     ***beforeEventStatebppp;  /* Ditto for discard event states */
+  short                     ***afterEventStatebppp;   /* Ditto for discard event states */
 
   size_t                       parentDeltal;   /* Parent original delta - used to recovert parent current pointer at our free */
   char                        *inputs;         /* Current pointer in input - specific to every recognizer */
