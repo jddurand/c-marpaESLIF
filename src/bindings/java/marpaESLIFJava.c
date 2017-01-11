@@ -108,7 +108,7 @@ typedef struct marpaESLIF_stringGenerator { /* We use genericLogger to generate 
 /* ------ */
 #define MARPAESLIF_JNI_VERSION                    JNI_VERSION_1_4 /* Because of NIO Support */
 #define MARPAESLIF_FILENAMES                      "marpaESLIFJava.c"
-#define MARPAESLIF_EXCEPTION_CLASS                "org/parser/marpa/ESLIFException"
+#define MARPAESLIF_ESLIFEXCEPTION_CLASS           "org/parser/marpa/ESLIFException"
 #define MARPAESLIF_ESLIF_CLASS                    "org/parser/marpa/ESLIF"
 #define MARPAESLIF_ESLIFLOGGERINTERFACE_CLASS     "org/parser/marpa/ESLIFLoggerInterface"
 #define MARPAESLIF_ESLIFGRAMMAR_CLASS             "org/parser/marpa/ESLIFGrammar"
@@ -131,9 +131,9 @@ typedef struct marpaESLIF_stringGenerator { /* We use genericLogger to generate 
 static JavaVM *marpaESLIF_vmp;
 
 static marpaESLIFClassCache_t marpaESLIFClassCacheArrayp[] = {
-  #define MARPAESLIF_EXCEPTION_CLASSCACHE                marpaESLIFClassCacheArrayp[0]
-  #define MARPAESLIF_EXCEPTION_CLASSP                    marpaESLIFClassCacheArrayp[0].classp
-  {       MARPAESLIF_EXCEPTION_CLASS,                    NULL },
+  #define MARPAESLIF_ESLIFEXCEPTION_CLASSCACHE           marpaESLIFClassCacheArrayp[0]
+  #define MARPAESLIF_ESLIFEXCEPTION_CLASSP               marpaESLIFClassCacheArrayp[0].classp
+  {       MARPAESLIF_ESLIFEXCEPTION_CLASS,               NULL },
 
   #define MARPAESLIF_ESLIF_CLASSCACHE                    marpaESLIFClassCacheArrayp[1]
   #define MARPAESLIF_ESLIF_CLASSP                        marpaESLIFClassCacheArrayp[1].classp
@@ -407,7 +407,7 @@ static void marpaESLIFRecognizerInterfaceContextCleanup(JNIEnv *envp, recognizer
 /* Raise exception - I use a macro because I did not want to include stdarg in this file */
 #define RAISEEXCEPTION(envp, message) do {                              \
     if (! HAVEEXCEPTION(envp)) {                                        \
-      if (MARPAESLIF_EXCEPTION_CLASSP != NULL) {                        \
+      if (MARPAESLIF_ESLIFEXCEPTION_CLASSP != NULL) {                   \
         genericLogger_t              *genericLoggerp = NULL;            \
         marpaESLIF_stringGenerator_t  marpaESLIF_stringGenerator;       \
                                                                         \
@@ -419,12 +419,12 @@ static void marpaESLIFRecognizerInterfaceContextCleanup(JNIEnv *envp, recognizer
         if (genericLoggerp != NULL) {                                   \
           GENERICLOGGER_TRACEF(genericLoggerp, "%s", message);          \
           if (marpaESLIF_stringGenerator.okb) {                         \
-            (*envp)->ThrowNew(envp, MARPAESLIF_EXCEPTION_CLASSP, marpaESLIF_stringGenerator.s); \
+            (*envp)->ThrowNew(envp, MARPAESLIF_ESLIFEXCEPTION_CLASSP, marpaESLIF_stringGenerator.s); \
           }                                                             \
           free(marpaESLIF_stringGenerator.s);                           \
           GENERICLOGGER_FREE(genericLoggerp);                           \
         } else {                                                        \
-          (*envp)->ThrowNew(envp, MARPAESLIF_EXCEPTION_CLASSP, "Exception (no description)"); \
+          (*envp)->ThrowNew(envp, MARPAESLIF_ESLIFEXCEPTION_CLASSP, "Exception (no description)"); \
         }                                                               \
       }                                                                 \
     }                                                                   \
@@ -433,7 +433,7 @@ static void marpaESLIFRecognizerInterfaceContextCleanup(JNIEnv *envp, recognizer
 
 #define RAISEEXCEPTIONF(envp, fmts, ...) do {                           \
     if (! HAVEEXCEPTION(envp)) {                                        \
-      if (MARPAESLIF_EXCEPTION_CLASSP != NULL) {                        \
+      if (MARPAESLIF_ESLIFEXCEPTION_CLASSP != NULL) {                   \
         genericLogger_t              *genericLoggerp = NULL;            \
         marpaESLIF_stringGenerator_t  marpaESLIF_stringGenerator;       \
                                                                         \
@@ -445,12 +445,12 @@ static void marpaESLIFRecognizerInterfaceContextCleanup(JNIEnv *envp, recognizer
         if (genericLoggerp != NULL) {                                   \
           GENERICLOGGER_TRACEF(genericLoggerp, fmts, __VA_ARGS__);      \
           if (marpaESLIF_stringGenerator.okb) {                         \
-            (*envp)->ThrowNew(envp, MARPAESLIF_EXCEPTION_CLASSP, marpaESLIF_stringGenerator.s); \
+            (*envp)->ThrowNew(envp, MARPAESLIF_ESLIFEXCEPTION_CLASSP, marpaESLIF_stringGenerator.s); \
           }                                                             \
           free(marpaESLIF_stringGenerator.s);                           \
           GENERICLOGGER_FREE(genericLoggerp);                           \
         } else {                                                        \
-          (*envp)->ThrowNew(envp, MARPAESLIF_EXCEPTION_CLASSP, "Exception (no description)"); \
+          (*envp)->ThrowNew(envp, MARPAESLIF_ESLIFEXCEPTION_CLASSP, "Exception (no description)"); \
         }                                                               \
       }                                                                 \
     }                                                                   \
