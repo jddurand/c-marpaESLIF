@@ -46,6 +46,7 @@ JNIEXPORT jboolean     JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniIsEof   
 JNIEXPORT void         JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniRead                   (JNIEnv *envp, jobject eslifRecognizerp);
 JNIEXPORT jobjectArray JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniEvent                  (JNIEnv *envp, jobject eslifRecognizerp);
 JNIEXPORT void         JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniEventOnOff             (JNIEnv *envp, jobject eslifRecognizerp, jstring symbolp, jobjectArray eventTypesp, jboolean onOff);
+JNIEXPORT void         JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniProgressLog            (JNIEnv *envp, jobject eslifRecognizerp, int starti, int endi, jobject levelp);
 JNIEXPORT void         JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniFree                   (JNIEnv *envp, jobject eslifRecognizerp);
 
 JNIEXPORT void      JNICALL Java_org_parser_marpa_ESLIFValue_jniNew                 (JNIEnv *envp, jobject eslifValuep, jobject eslifRecognizerp);
@@ -122,6 +123,7 @@ typedef struct marpaESLIF_stringGenerator { /* We use genericLogger to generate 
 #define MARPAESLIF_ESLIFEVENTTYPE_CLASS           "org/parser/marpa/ESLIFEventType"
 #define MARPAESLIF_ESLIFEVENT_CLASS               "org/parser/marpa/ESLIFEvent"
 #define MARPAESLIF_STRING_CLASS                   "java/lang/String"
+#define MARPAESLIF_ESLIFLOGGERLEVEL_CLASS         "org/parser/marpa/ESLIFLoggerLevel"
 
 #define MARPAESLIF_ESLIFVALUEINTERFACE_SYMBOLACTION_SIGNATURE "(Ljava/nio/ByteBuffer;)Ljava/lang/Object;"
 #define MARPAESLIF_ESLIFVALUEINTERFACE_RULEACTION_SIGNATURE   "([Ljava/lang/Object;)Ljava/lang/Object;"
@@ -183,6 +185,10 @@ static marpaESLIFClassCache_t marpaESLIFClassCacheArrayp[] = {
   #define MARPAESLIF_STRING_CLASSCACHE                   marpaESLIFClassCacheArrayp[12]
   #define MARPAESLIF_STRING_CLASSP                       marpaESLIFClassCacheArrayp[12].classp
   {       MARPAESLIF_STRING_CLASS,                       NULL },
+
+  #define MARPAESLIF_ESLIFLOGGERLEVEL_CLASSCACHE         marpaESLIFClassCacheArrayp[13]
+  #define MARPAESLIF_ESLIFLOGGERLEVEL_CLASSP             marpaESLIFClassCacheArrayp[13].classp
+  {       MARPAESLIF_ESLIFLOGGERLEVEL_CLASS,             NULL },
 
   { NULL }
 };
@@ -355,6 +361,9 @@ static marpaESLIFMethodCache_t marpaESLIFMethodCacheArrayp[] = {
 
   #define MARPAESLIF_ESLIFEVENT_CLASS_init_METHODP                                  marpaESLIFMethodCacheArrayp[55].methodp
   {      &MARPAESLIF_ESLIFEVENT_CLASSCACHE, "<init>",                               "(Lorg/parser/marpa/ESLIFEventType;Ljava/lang/String;Ljava/lang/String;)V", 0, NULL },
+
+  #define MARPAESLIF_ESLIFLOGGERLEVEL_CLASS_getCode_METHODP                         marpaESLIFMethodCacheArrayp[56].methodp
+  {      &MARPAESLIF_ESLIFLOGGERLEVEL_CLASSCACHE, "getCode",                        "()I", 0, NULL },
 
   { NULL }
 };
@@ -2153,6 +2162,51 @@ JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniEventOnOff(JNIEn
     }
   }
 
+  return;
+}
+
+/*****************************************************************************/
+JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniProgressLog(JNIEnv *envp, jobject eslifRecognizerp, int starti, int endi, jobject levelp)
+/*****************************************************************************/
+{
+  marpaESLIFRecognizer_t *marpaESLIFRecognizerp;
+  genericLoggerLevel_t    logleveli;
+
+  if (! ESLIFRecognizer_contextb(envp, eslifRecognizerp, eslifRecognizerp, MARPAESLIF_ESLIFRECOGNIZER_CLASS_getLoggerInterfacep_METHODP,
+                                 NULL /* genericLoggerpp */,
+                                 NULL /* genericLoggerContextpp */,
+                                 NULL /* marpaESLIFpp */,
+                                 NULL /* marpaESLIFGrammarpp */,
+                                 &marpaESLIFRecognizerp)) {
+    goto err;
+  }
+
+  if (levelp != NULL) {
+    logleveli = (*envp)->CallIntMethod(envp, levelp, MARPAESLIF_ESLIFLOGGERLEVEL_CLASS_getCode_METHODP);
+    if (HAVEEXCEPTION(envp)) {
+      RAISEEXCEPTION(envp, "getCode failure");
+    }
+    switch (logleveli) {
+    case GENERICLOGGER_LOGLEVEL_TRACE:
+    case GENERICLOGGER_LOGLEVEL_DEBUG:
+    case GENERICLOGGER_LOGLEVEL_INFO:
+    case GENERICLOGGER_LOGLEVEL_NOTICE:
+    case GENERICLOGGER_LOGLEVEL_WARNING:
+    case GENERICLOGGER_LOGLEVEL_ERROR:
+    case GENERICLOGGER_LOGLEVEL_CRITICAL:
+    case GENERICLOGGER_LOGLEVEL_ALERT:
+    case GENERICLOGGER_LOGLEVEL_EMERGENCY:
+      break;
+    default:
+      RAISEEXCEPTIONF(envp, "Unknown code %d", (int) logleveli);
+      break;
+    }
+    if (! marpaESLIFRecognizer_progressLogb(marpaESLIFRecognizerp, (int) starti, (int) endi, logleveli)) {
+      RAISEEXCEPTION(envp, "marpaESLIFRecognizer_progressLogb failure");
+    }
+  }
+
+ err: /* err and done share the same code */
   return;
 }
 
