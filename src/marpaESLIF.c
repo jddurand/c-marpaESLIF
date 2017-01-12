@@ -156,6 +156,7 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGramm
 static inline short                  _marpaESLIFGrammar_parseb(marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaESLIFRecognizerOption_t *marpaESLIFRecognizerOptionp, marpaESLIFValueOption_t *marpaESLIFValueOptionp, short discardb, short noEventb, genericStack_t *exceptionStackp, short silentb, marpaESLIFRecognizer_t *marpaESLIFRecognizerParentp, short *exhaustedbp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
 static        void                   _marpaESLIF_generateStringWithLoggerCallback(void *userDatavp, genericLoggerLevel_t logLeveli, const char *msgs);
 static        void                   _marpaESLIF_generateSeparatedStringWithLoggerCallback(void *userDatavp, genericLoggerLevel_t logLeveli, const char *msgs);
+static        void                   _marpaESLIF_traceLoggerCallback(void *userDatavp, genericLoggerLevel_t logLeveli, const char *msgs);
 static inline short                  _marpaESLIFRecognizer_alternative_lengthb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, size_t alternativeLengthl);
 static inline short                  _marpaESLIFRecognizer_readb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp);
 static inline short                  _marpaESLIFRecognizer_flush_charconv(marpaESLIFRecognizer_t *marpaESLIFRecognizerp);
@@ -948,7 +949,6 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
                       terminalp->regex.utfb ? "on" : "off",
                       terminalp->regex.isAnchoredb ? "on" : "off"
                       );
-
     break;
 
   default:
@@ -2992,6 +2992,7 @@ marpaESLIF_t *marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptionp)
   marpaESLIFp->stringModifiersp         = NULL;
   marpaESLIFp->characterClassModifiersp = NULL;
   marpaESLIFp->regexModifiersp          = NULL;
+  marpaESLIFp->traceLoggerp             = NULL;
 
   /* **************************************************************** */
   /* It is very important to NOT create terminals of type STRING here */
@@ -3104,6 +3105,12 @@ marpaESLIF_t *marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptionp)
                                                            );
   if (marpaESLIFp->regexModifiersp == NULL) {
     goto err;
+  }
+
+  marpaESLIFp->traceLoggerp = GENERICLOGGER_CUSTOM(_marpaESLIF_traceLoggerCallback, (void *) marpaESLIFp, GENERICLOGGER_LOGLEVEL_TRACE);
+  /* Although this should never happen, it is okay if the trace logger is NULL */
+  if (marpaESLIFp->traceLoggerp == NULL) {
+    GENERICLOGGER_TRACEF(marpaESLIFOptionp->genericLoggerp, "genericLogger initialization failure, %s", strerror(errno));
   }
 
   /* Create internal ESLIF grammar - it is important to set the option first */
@@ -3221,6 +3228,9 @@ void marpaESLIF_freev(marpaESLIF_t *marpaESLIFp)
     _marpaESLIF_terminal_freev(marpaESLIFp->stringModifiersp);
     _marpaESLIF_terminal_freev(marpaESLIFp->characterClassModifiersp);
     _marpaESLIF_terminal_freev(marpaESLIFp->regexModifiersp);
+    if (marpaESLIFp->traceLoggerp != NULL) {
+      genericLogger_freev(&(marpaESLIFp->traceLoggerp));
+    }
     free(marpaESLIFp);
   }
 }
@@ -4751,11 +4761,8 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
   }
   
   if (GENERICSTACK_USED(alternativeStackp) <= 0) {
-    /* If we are already in the discard mode and discard itself fail, this is end of the story */
-    if (marpaESLIFRecognizerp->discardb) {
-      goto err;
-    }
-    if (grammarp->discardi >= 0) {
+    /* If we are not already in the discard mode, try to discard */
+    if ((! marpaESLIFRecognizerp->discardb) && (grammarp->discardi >= 0)) {
       /* Always reset this shallow pointer */
       marpaESLIFRecognizerp->discardEvents  = NULL;
       marpaESLIFRecognizerp->discardSymbolp = NULL;
@@ -4804,8 +4811,21 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
 
     /* Discard failure - this is an error unless lexemes were read and:
        - exhaustion is on, or
-       - eof flags is true and all the data is consumed */
-    if (marpaESLIFRecognizerp->haveLexemeb && (marpaESLIFRecognizerp->marpaESLIFRecognizerOption.exhaustedb || (*(marpaESLIFRecognizerp->eofbp) && (marpaESLIFRecognizerp->inputl <= 0)))) {
+       - eof flags is true and all the data is consumed
+    */
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp,
+                                funcs,
+                                "No alternative, current state is: haveLexemeb=%d, marpaESLIFRecognizerOption.exhaustedb=%d, discardb=%d, eofb=%d, inputl=%ld",
+                                (int) marpaESLIFRecognizerp->haveLexemeb,
+                                (int) marpaESLIFRecognizerp->marpaESLIFRecognizerOption.exhaustedb,
+                                (int) *(marpaESLIFRecognizerp->eofbp),
+                                (unsigned long) marpaESLIFRecognizerp->inputl);
+    if (marpaESLIFRecognizerp->haveLexemeb && (
+                                               marpaESLIFRecognizerp->marpaESLIFRecognizerOption.exhaustedb
+                                               ||
+                                               (*(marpaESLIFRecognizerp->eofbp) && (marpaESLIFRecognizerp->inputl <= 0))
+                                               )
+        ) {
       marpaESLIFRecognizerp->continueb = 0;
       rcb = 1;
       goto done;
@@ -6679,6 +6699,20 @@ static void _marpaESLIF_generateSeparatedStringWithLoggerCallback(void *userData
       MARPAESLIF_ERRORF(contextp->marpaESLIFp, "realloc failure, %s", strerror(errno));
     }
   }
+}
+
+/*****************************************************************************/
+static void _marpaESLIF_traceLoggerCallback(void *userDatavp, genericLoggerLevel_t logLeveli, const char *msgs)
+/*****************************************************************************/
+{
+#ifndef MARPAESLIF_NTRACE
+  static const char *funcs       = "_marpaESLIF_traceLoggerCallback";
+  marpaESLIF_t      *marpaESLIFp = (marpaESLIF_t *) userDatavp;
+
+  if (marpaESLIFp != NULL) {
+    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s", msgs);
+  }
+#endif
 }
 
 /*****************************************************************************/
@@ -10687,7 +10721,7 @@ static inline marpaESLIFValue_t *_marpaESLIFValue_newp(marpaESLIFRecognizer_t *m
 
   if (! fakeb) {
     if (grammarp->haveRejectionb) {
-      marpaWrapperAsfOption.genericLoggerp = silentb ? NULL : marpaESLIFp->marpaESLIFOption.genericLoggerp;
+      marpaWrapperAsfOption.genericLoggerp = silentb ? marpaESLIFp->traceLoggerp : marpaESLIFp->marpaESLIFOption.genericLoggerp;
       marpaWrapperAsfOption.highRankOnlyb  = marpaESLIFValueOptionp->highRankOnlyb;
       marpaWrapperAsfOption.orderByRankb   = marpaESLIFValueOptionp->orderByRankb;
       marpaWrapperAsfOption.ambiguousb     = marpaESLIFValueOptionp->ambiguousb;
@@ -10698,7 +10732,7 @@ static inline marpaESLIFValue_t *_marpaESLIFValue_newp(marpaESLIFRecognizer_t *m
       }
       marpaESLIFValuep->marpaWrapperAsfValuep = marpaWrapperAsfValuep;
     } else {
-      marpaWrapperValueOption.genericLoggerp = silentb ? NULL : marpaESLIFp->marpaESLIFOption.genericLoggerp;
+      marpaWrapperValueOption.genericLoggerp = silentb ? marpaESLIFp->traceLoggerp : marpaESLIFp->marpaESLIFOption.genericLoggerp;
       marpaWrapperValueOption.highRankOnlyb  = marpaESLIFValueOptionp->highRankOnlyb;
       marpaWrapperValueOption.orderByRankb   = marpaESLIFValueOptionp->orderByRankb;
       marpaWrapperValueOption.ambiguousb     = marpaESLIFValueOptionp->ambiguousb;
