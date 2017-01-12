@@ -34,6 +34,7 @@ public class AppParse  {
 				  + "   ||     Expression  '+' Expression\n"
 				  + "    |     Expression  '-' Expression\n"
 				  + "\n"
+				  + ":lexeme ::= NUMBER pause => before event => ^NUMBER\n"
 				  + ":lexeme ::= NUMBER pause => after  event => NUMBER$\n"
 				  + "NUMBER     ~ /[\\d]+/\n"
 				  + "whitespaces ::= WHITESPACES\n"
@@ -172,6 +173,16 @@ public class AppParse  {
 						for (int j = 0; j < events.length; j++) {
 							ESLIFEvent event = events[j];
 						    eslifLogger.debug("  Event: Type=" + event.getEslifEventType() + ", Symbol=" + event.getSymbol() + ", Event=" + event.getEvent());
+						    if ("^NUMBER".equals(event.getEvent())) {
+						    	//
+						    	// Recognizer will wait forever if we do not feed the number
+						    	//
+								byte[] bytes = eslifRecognizer.pause();
+								if (bytes == null) {
+									throw new Exception("Pause before on NUMBER but no pause information!");
+								}
+								eslifRecognizer.lexemeRead("NUMBER", 0 /* bytes.length */);
+						    }
 						}
 					}
 					eslifRecognizer.eventOnOff(

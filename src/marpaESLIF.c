@@ -5015,7 +5015,7 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
   for (alternativei = 0; alternativei < GENERICSTACK_USED(alternativeStackp); alternativei++) {
     array   = GENERICSTACK_GET_ARRAY(alternativeStackp, alternativei);
     symbolp = GENERICSTACK_ARRAY_PTR(array);
-    if ((*(marpaESLIFRecognizerp->beforeEventStatebppp))[grammarp->leveli][symbolp->idi] && (symbolp->eventBefores != NULL)) {
+    if ((symbolp->eventBefores != NULL) && (*(marpaESLIFRecognizerp->beforeEventStatebppp))[grammarp->leveli][symbolp->idi]) {
       if (! _marpaESLIFRecognizer_push_eventb(marpaESLIFRecognizerp, MARPAESLIF_EVENTTYPE_BEFORE, symbolp, symbolp->eventBefores)) {
         goto err;
       }
@@ -5393,7 +5393,7 @@ static inline short _marpaESLIFRecognizer_completeb(marpaESLIFRecognizer_t *marp
   pauseb = 0;
   for (commitedAlternativei = 0; commitedAlternativei < GENERICSTACK_USED(commitedAlternativeStackp); commitedAlternativei++) {
     symbolp = (marpaESLIF_symbol_t *) GENERICSTACK_GET_PTR(commitedAlternativeStackp, commitedAlternativei);
-    if ((*(marpaESLIFRecognizerp->afterEventStatebppp))[grammarp->leveli][symbolp->idi] && (symbolp->eventAfters != NULL)) {
+    if ((symbolp->eventAfters != NULL) && (*(marpaESLIFRecognizerp->afterEventStatebppp))[grammarp->leveli][symbolp->idi]) {
       if (! _marpaESLIFRecognizer_push_eventb(marpaESLIFRecognizerp, MARPAESLIF_EVENTTYPE_AFTER, symbolp, symbolp->eventAfters)) {
         goto err;
       }
@@ -6439,9 +6439,9 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGramm
     }
     /* Set-up initial event states - Inside Marpa this will be a no-op if the symbol was not set with support of the wanted event */
     /* We know this is a global no-op if we are in the no-event mode */
+    grammarp     = marpaESLIFGrammarp->grammarp;
+    symbolStackp = grammarp->symbolStackp;
     if (! noEventb) {
-      grammarp     = marpaESLIFGrammarp->grammarp;
-      symbolStackp = grammarp->symbolStackp;
 
       for (symboli = 0; symboli < GENERICSTACK_USED(symbolStackp); symboli++) {
         if (! GENERICSTACK_IS_PTR(symbolStackp, symboli)) {
@@ -6484,6 +6484,27 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGramm
               goto err;
             }
           }
+        }
+      }
+    } else {
+      /* Events outside of marpa that need to be swtiched off: lexeme before, lexeme after and exhaustion */
+      for (symboli = 0; symboli < GENERICSTACK_USED(symbolStackp); symboli++) {
+        if (! GENERICSTACK_IS_PTR(symbolStackp, symboli)) {
+          /* Should never happen, but who knows */
+          continue;
+        }
+        symbolp = (marpaESLIF_symbol_t *) GENERICSTACK_GET_PTR(symbolStackp, symboli);
+        if (symbolp->eventBefores != NULL) {
+          MARPAESLIF_TRACEF(marpaESLIFp, funcs,
+                            "Setting :lexeme before event state for symbol %d <%s> at grammar level %d (%s) to off (recognizer discard mode: %d)",
+                            symbolp->idi, symbolp->descp->asciis, grammarp->leveli, grammarp->descp->asciis, (int) discardb);
+          (*(marpaESLIFRecognizerp->beforeEventStatebppp))[grammarp->leveli][symbolp->idi] = 0;
+        }
+        if (symbolp->eventAfters != NULL) {
+          MARPAESLIF_TRACEF(marpaESLIFp, funcs,
+                            "Setting :lexeme after event state for symbol %d <%s> at grammar level %d (%s) to off (recognizer discard mode: %d)",
+                            symbolp->idi, symbolp->descp->asciis, grammarp->leveli, grammarp->descp->asciis, (int) discardb);
+          (*(marpaESLIFRecognizerp->afterEventStatebppp))[grammarp->leveli][symbolp->idi] = 0;
         }
       }
     }
