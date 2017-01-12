@@ -23,6 +23,7 @@ public class ESLIFRecognizer {
 	private native void              jniEof();
 	private native boolean           jniIsEof();
 	private native void              jniRead();
+	private native void              jniProgressLog(int start, int end, ESLIFLoggerLevel level);
 
 	public ESLIFRecognizer(ESLIFGrammar eslifGrammar, ESLIFRecognizerInterface eslifRecognizerInterface) throws ESLIFException {
 		if (eslifGrammar == null) {
@@ -96,6 +97,9 @@ public class ESLIFRecognizer {
 		jniRead();
 	}
 
+	public synchronized void progressLog(int start, int end, ESLIFLoggerLevel level) {
+		jniProgressLog(start, end, level);
+	}
 	/*
 	 * ********************************************
 	 * Private methods - used by the JNI
