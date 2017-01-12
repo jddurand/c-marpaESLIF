@@ -114,7 +114,7 @@ say that symbol C<something> at grammar level C<0> is a reference to C<something
 
 =item Discard
 
-Everytime expected terminals cannot be match, marpaESLIF will try to match the special rule C<:discard>. The C<:discard> rule also have precedence if it matches longer than the longest acceptable lexeme.
+Everytime expected terminals cannot be match, marpaESLIF will try to match the special rule C<:discard>. The C<:discard> rule also have precedence if it matches longer than the longest acceptable lexeme. and can not be ambiguous (else discard silently fail).
 
 =back
 
