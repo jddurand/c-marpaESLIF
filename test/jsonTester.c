@@ -226,7 +226,7 @@ int main() {
 
     while (continueb) {
       /* We have a single event, no need to ask what it is */
-      if (! marpaESLIFRecognizer_pauseb(marpaESLIFRecognizerp, &pauses, &pausel, NULL /* eofbp */)) {
+      if (! marpaESLIFRecognizer_pauseb(marpaESLIFRecognizerp, &pauses, &pausel)) {
         goto err;
       }
       GENERICLOGGER_INFOF(genericLoggerp, "Got lstring: %s; length=%ld", pauses, pausel);

@@ -115,7 +115,25 @@ public class AppParse  {
 			boolean eslifRecognizerFree = true;
 			eslifLogger.info("Testing scan()/resume() on " + string);
 			try {
+				{
+					byte[] bytes = eslifRecognizer.input();
+					if (bytes != null) {
+						String str = new String(bytes, "UTF-8"); // for UTF-8 encoding
+						eslifLogger.debug("Recognizer buffer before scan: " + str);
+					} else {
+						eslifLogger.debug("Recognizer buffer before scan is null");
+					}
+				}
 				eslifRecognizer.scan(true);
+				{
+					byte[] bytes = eslifRecognizer.input();
+					if (bytes != null) {
+						String str = new String(bytes, "UTF-8"); // for UTF-8 encoding
+						eslifLogger.debug("Recognizer buffer after first scan: " + str);
+					} else {
+						eslifLogger.debug("Recognizer buffer after first scan is null");
+					}
+				}
 				ESLIFEvent[] events = eslifRecognizer.events();
 				if (events != null) {
 					for (int j = 0; j < events.length; j++) {
@@ -130,13 +148,24 @@ public class AppParse  {
 					}
 				}
 				if (! eslifRecognizer.isEof()) {
-					eslifRecognizer.read();
+					byte[] bytes = eslifRecognizer.read();
+					String str = new String(bytes, "UTF-8"); // for UTF-8 encoding
+					eslifLogger.debug("Current recognizer buffer after scan then read: " + str);
 				}
 				if (i == 0) {
 					eslifRecognizer.progressLog(-1, -1, ESLIFLoggerLevel.get(ESLIFLoggerLevel.NOTICE.getCode()));
 				}
 				while (eslifRecognizer.isCanContinue()) {
 					eslifRecognizer.resume();
+					{
+						byte[] bytes = eslifRecognizer.input();
+						if (bytes != null) {
+							String str = new String(bytes, "UTF-8"); // for UTF-8 encoding
+							eslifLogger.debug("Recognizer buffer after resume: " + str);
+						} else {
+							eslifLogger.debug("Recognizer buffer after resume is null");
+						}
+					}
 					events = eslifRecognizer.events();
 					if (events != null) {
 						for (int j = 0; j < events.length; j++) {
@@ -161,7 +190,7 @@ public class AppParse  {
 							new ESLIFEventType[] {
 									ESLIFEventType.get(ESLIFEventType.DISCARD.getCode())
 							},
-							true);
+							false);
 					eslifRecognizer.eventOnOff(
 							"NUMBER",
 							new ESLIFEventType[] {

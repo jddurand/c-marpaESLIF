@@ -42,7 +42,9 @@ JNIEXPORT void         JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniLexemeCo
 JNIEXPORT void         JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniLexemeRead             (JNIEnv *envp, jobject eslifRecognizerp, jstring namep, jint lengthi);
 JNIEXPORT jobjectArray JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniLexemeExpected         (JNIEnv *envp, jobject eslifRecognizerp);
 JNIEXPORT jboolean     JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniIsEof                  (JNIEnv *envp, jobject eslifRecognizerp);
-JNIEXPORT void         JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniRead                   (JNIEnv *envp, jobject eslifRecognizerp);
+JNIEXPORT jbyteArray   JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniRead                   (JNIEnv *envp, jobject eslifRecognizerp);
+JNIEXPORT jbyteArray   JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniInput                  (JNIEnv *envp, jobject eslifRecognizerp);
+JNIEXPORT jbyteArray   JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniPause                  (JNIEnv *envp, jobject eslifRecognizerp);
 JNIEXPORT jobjectArray JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniEvent                  (JNIEnv *envp, jobject eslifRecognizerp);
 JNIEXPORT void         JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniEventOnOff             (JNIEnv *envp, jobject eslifRecognizerp, jstring symbolp, jobjectArray eventTypesp, jboolean onOff);
 JNIEXPORT void         JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniProgressLog            (JNIEnv *envp, jobject eslifRecognizerp, int starti, int endi, jobject levelp);
@@ -1950,10 +1952,13 @@ JNIEXPORT jboolean JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniIsEof(JNIEnv
 }
 
 /*****************************************************************************/
-JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniRead(JNIEnv *envp, jobject eslifRecognizerp)
+JNIEXPORT jbyteArray JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniRead(JNIEnv *envp, jobject eslifRecognizerp)
 /*****************************************************************************/
 {
   marpaESLIFRecognizer_t *marpaESLIFRecognizerp;
+  jbyteArray              byteArrayp = NULL;
+  char                   *inputs;
+  size_t                  inputl;
 
   if (! ESLIFRecognizer_contextb(envp, eslifRecognizerp, eslifRecognizerp, MARPAESLIF_ESLIFRECOGNIZER_CLASS_getLoggerInterfacep_METHODP,
                                  NULL /* genericLoggerpp */,
@@ -1964,12 +1969,131 @@ JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniRead(JNIEnv *env
     goto err;
   }
 
-  if (!  marpaESLIFRecognizer_readb(marpaESLIFRecognizerp, NULL /* inputsp */, NULL /* inputlp */, NULL /* eofbp */)) {
+  if (!  marpaESLIFRecognizer_readb(marpaESLIFRecognizerp, &inputs, &inputl)) {
     RAISEEXCEPTION(envp, "marpaESLIFRecognizer_readb failure");
   }
+  if (inputs == NULL) {
+    RAISEEXCEPTION(envp, "inputs is NULL");
+  }
+  if (inputl <= 0) {
+    RAISEEXCEPTION(envp, "inputl is <= 0");
+  }
 
- err: /* err and done share the same code */
-  return;
+  byteArrayp = (*envp)->NewByteArray(envp, (jsize) inputl);
+  if (byteArrayp == NULL) {
+    goto err;
+  }
+  (*envp)->SetByteArrayRegion(envp, byteArrayp, (jsize) 0, (jsize) inputl, (jbyte *) inputs);
+  if (HAVEEXCEPTION(envp)) {
+    goto err;
+  }
+
+  goto done;
+
+ err:
+  if (envp != NULL) {
+    if (byteArrayp != NULL) {
+      (*envp)->DeleteLocalRef(envp, byteArrayp);
+    }
+  }
+  byteArrayp = NULL;
+
+ done:
+  return byteArrayp;
+}
+
+/*****************************************************************************/
+JNIEXPORT jbyteArray JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniInput(JNIEnv *envp, jobject eslifRecognizerp)
+/*****************************************************************************/
+{
+  marpaESLIFRecognizer_t *marpaESLIFRecognizerp;
+  jbyteArray              byteArrayp = NULL;
+  char                   *inputs;
+  size_t                  inputl;
+
+  if (! ESLIFRecognizer_contextb(envp, eslifRecognizerp, eslifRecognizerp, MARPAESLIF_ESLIFRECOGNIZER_CLASS_getLoggerInterfacep_METHODP,
+                                 NULL /* genericLoggerpp */,
+                                 NULL /* genericLoggerContextpp */,
+                                 NULL /* marpaESLIFpp */,
+                                 NULL /* marpaESLIFGrammarpp */,
+                                 &marpaESLIFRecognizerp)) {
+    goto err;
+  }
+
+  if (!  marpaESLIFRecognizer_inputb(marpaESLIFRecognizerp, &inputs, &inputl)) {
+    RAISEEXCEPTION(envp, "marpaESLIFRecognizer_inputb failure");
+  }
+
+  if ((inputs != NULL) && (inputl > 0)) {
+    byteArrayp = (*envp)->NewByteArray(envp, (jsize) inputl);
+    if (byteArrayp == NULL) {
+      goto err;
+    }
+    (*envp)->SetByteArrayRegion(envp, byteArrayp, (jsize) 0, (jsize) inputl, (jbyte *) inputs);
+    if (HAVEEXCEPTION(envp)) {
+      goto err;
+    }
+  }
+
+  goto done;
+
+ err:
+  if (envp != NULL) {
+    if (byteArrayp != NULL) {
+      (*envp)->DeleteLocalRef(envp, byteArrayp);
+    }
+  }
+  byteArrayp = NULL;
+
+ done:
+  return byteArrayp;
+}
+
+/*****************************************************************************/
+JNIEXPORT jbyteArray JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniPause(JNIEnv *envp, jobject eslifRecognizerp)
+/*****************************************************************************/
+{
+  marpaESLIFRecognizer_t *marpaESLIFRecognizerp;
+  jbyteArray              byteArrayp = NULL;
+  char                   *pauses;
+  size_t                  pausel;
+
+  if (! ESLIFRecognizer_contextb(envp, eslifRecognizerp, eslifRecognizerp, MARPAESLIF_ESLIFRECOGNIZER_CLASS_getLoggerInterfacep_METHODP,
+                                 NULL /* genericLoggerpp */,
+                                 NULL /* genericLoggerContextpp */,
+                                 NULL /* marpaESLIFpp */,
+                                 NULL /* marpaESLIFGrammarpp */,
+                                 &marpaESLIFRecognizerp)) {
+    goto err;
+  }
+
+  if (!  marpaESLIFRecognizer_pauseb(marpaESLIFRecognizerp, &pauses, &pausel)) {
+    RAISEEXCEPTION(envp, "marpaESLIFRecognizer_pauseb failure");
+  }
+
+  if ((pauses != NULL) && (pausel > 0)) {
+    byteArrayp = (*envp)->NewByteArray(envp, (jsize) pausel);
+    if (byteArrayp == NULL) {
+      goto err;
+    }
+    (*envp)->SetByteArrayRegion(envp, byteArrayp, (jsize) 0, (jsize) pausel, (jbyte *) pauses);
+    if (HAVEEXCEPTION(envp)) {
+      goto err;
+    }
+  }
+
+  goto done;
+
+ err:
+  if (envp != NULL) {
+    if (byteArrayp != NULL) {
+      (*envp)->DeleteLocalRef(envp, byteArrayp);
+    }
+  }
+  byteArrayp = NULL;
+
+ done:
+  return byteArrayp;
 }
 
 /*****************************************************************************/

@@ -12275,7 +12275,7 @@ short marpaESLIFValue_stack_getAndForget_arrayb(marpaESLIFValue_t *marpaESLIFVal
 }
 
 /*****************************************************************************/
-short marpaESLIFRecognizer_readb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char **inputsp, size_t *inputlp, short *eofbp)
+short marpaESLIFRecognizer_readb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char **inputsp, size_t *inputlp)
 /*****************************************************************************/
 {
   static const char *funcs = "marpaESLIFRecognizer_readb";
@@ -12293,7 +12293,7 @@ short marpaESLIFRecognizer_readb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, 
     goto err;
   }
 
-  rcb = marpaESLIFRecognizer_inputb(marpaESLIFRecognizerp, inputsp, inputlp, eofbp);
+  rcb = marpaESLIFRecognizer_inputb(marpaESLIFRecognizerp, inputsp, inputlp);
   goto done;
 
  err:
@@ -12306,7 +12306,7 @@ short marpaESLIFRecognizer_readb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, 
 }
 
 /*****************************************************************************/
-short marpaESLIFRecognizer_inputb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char **inputsp, size_t *inputlp, short *eofbp)
+short marpaESLIFRecognizer_inputb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char **inputsp, size_t *inputlp)
 /*****************************************************************************/
 {
   if (marpaESLIFRecognizerp == NULL) {
@@ -12320,15 +12320,12 @@ short marpaESLIFRecognizer_inputb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp,
   if (inputlp != NULL) {
     *inputlp = marpaESLIFRecognizerp->inputl;
   }
-  if (eofbp != NULL) {
-    *eofbp = *(marpaESLIFRecognizerp->eofbp);
-  }
 
   return 1;
 }
 
 /*****************************************************************************/
-short marpaESLIFRecognizer_pauseb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char **pausesp, size_t *pauselp, short *eofbp)
+short marpaESLIFRecognizer_pauseb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char **pausesp, size_t *pauselp)
 /*****************************************************************************/
 {
   if (marpaESLIFRecognizerp == NULL) {
@@ -12341,9 +12338,6 @@ short marpaESLIFRecognizer_pauseb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp,
   }
   if (pauselp != NULL) {
     *pauselp = marpaESLIFRecognizerp->pausel;
-  }
-  if (eofbp != NULL) {
-    *eofbp = *(marpaESLIFRecognizerp->eofbp);
   }
 
   return 1;
