@@ -41,7 +41,6 @@ JNIEXPORT void         JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniLexemeAl
 JNIEXPORT void         JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniLexemeComplete         (JNIEnv *envp, jobject eslifRecognizerp);
 JNIEXPORT void         JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniLexemeRead             (JNIEnv *envp, jobject eslifRecognizerp, jstring namep, jint lengthi);
 JNIEXPORT jobjectArray JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniLexemeExpected         (JNIEnv *envp, jobject eslifRecognizerp);
-JNIEXPORT void         JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniEof                    (JNIEnv *envp, jobject eslifRecognizerp);
 JNIEXPORT jboolean     JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniIsEof                  (JNIEnv *envp, jobject eslifRecognizerp);
 JNIEXPORT void         JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniRead                   (JNIEnv *envp, jobject eslifRecognizerp);
 JNIEXPORT jobjectArray JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniEvent                  (JNIEnv *envp, jobject eslifRecognizerp);
@@ -1922,29 +1921,6 @@ JNIEXPORT jobjectArray JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniLexemeEx
 
  done:
   return objectArray;
-}
-
-/*****************************************************************************/
-JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniEof(JNIEnv *envp, jobject eslifRecognizerp)
-/*****************************************************************************/
-{
-  marpaESLIFRecognizer_t *marpaESLIFRecognizerp;
-
-  if (! ESLIFRecognizer_contextb(envp, eslifRecognizerp, eslifRecognizerp, MARPAESLIF_ESLIFRECOGNIZER_CLASS_getLoggerInterfacep_METHODP,
-                                 NULL /* genericLoggerpp */,
-                                 NULL /* genericLoggerContextpp */,
-                                 NULL /* marpaESLIFpp */,
-                                 NULL /* marpaESLIFGrammarpp */,
-                                 &marpaESLIFRecognizerp)) {
-    goto err;
-  }
-
-  if (! marpaESLIFRecognizer_eofb(marpaESLIFRecognizerp)) {
-    RAISEEXCEPTION(envp, "marpaESLIFRecognizer_eofb failure");
-  }
-
- err: /* err and done share the same code */
-  return;
 }
 
 /*****************************************************************************/

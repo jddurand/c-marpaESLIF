@@ -5277,37 +5277,6 @@ static inline short _marpaESLIFRecognizer_alternative_and_valueb(marpaESLIFRecog
 }
 
 /*****************************************************************************/
-short marpaESLIFRecognizer_eofb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp)
-/*****************************************************************************/
-{
-  static const char *funcs = "marpaESLIFRecognizer_eofb";
-  short              rcb;
-
-  if (marpaESLIFRecognizerp == NULL) {
-    errno = EINVAL;
-    goto err;
-  }
-
-  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
-  MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
-
-  MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "Ending stream");
-  *(marpaESLIFRecognizerp->eofbp) = 1;
-  marpaESLIFRecognizerp->inputl = 0;
-
-  rcb = 1;
-  goto done;
-
- err:
-  rcb = 0;
-
- done:
-  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
-  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC;
-  return rcb;
-}
-
-/*****************************************************************************/
 short marpaESLIFRecognizer_isEofb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, short *eofbp)
 /*****************************************************************************/
 {
