@@ -44,7 +44,7 @@ JNIEXPORT jobjectArray JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniLexemeEx
 JNIEXPORT jboolean     JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniIsEof                  (JNIEnv *envp, jobject eslifRecognizerp);
 JNIEXPORT jbyteArray   JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniRead                   (JNIEnv *envp, jobject eslifRecognizerp);
 JNIEXPORT jbyteArray   JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniInput                  (JNIEnv *envp, jobject eslifRecognizerp);
-JNIEXPORT jbyteArray   JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniPause                  (JNIEnv *envp, jobject eslifRecognizerp);
+JNIEXPORT jbyteArray   JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniLexemeLastPause        (JNIEnv *envp, jobject eslifRecognizerp, jstring lexemep);
 JNIEXPORT jobjectArray JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniEvent                  (JNIEnv *envp, jobject eslifRecognizerp);
 JNIEXPORT jint         JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniLastCompletedOffset    (JNIEnv *envp, jobject eslifRecognizerp, jstring namep);
 JNIEXPORT jint         JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniLastCompletedLength    (JNIEnv *envp, jobject eslifRecognizerp, jstring namep);
@@ -2052,11 +2052,13 @@ JNIEXPORT jbyteArray JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniInput(JNIE
 }
 
 /*****************************************************************************/
-JNIEXPORT jbyteArray JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniPause(JNIEnv *envp, jobject eslifRecognizerp)
+JNIEXPORT jbyteArray JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniLexemeLastPause(JNIEnv *envp, jobject eslifRecognizerp, jstring lexemep)
 /*****************************************************************************/
 {
   marpaESLIFRecognizer_t *marpaESLIFRecognizerp;
   jbyteArray              byteArrayp = NULL;
+  const char             *lexemes = NULL;
+  jboolean                isCopy;
   char                   *pauses;
   size_t                  pausel;
 
@@ -2069,7 +2071,14 @@ JNIEXPORT jbyteArray JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniPause(JNIE
     goto err;
   }
 
-  if (!  marpaESLIFRecognizer_pauseb(marpaESLIFRecognizerp, &pauses, &pausel)) {
+  if (lexemep != NULL) {
+    lexemes = (*envp)->GetStringUTFChars(envp, lexemep, &isCopy);
+    if (lexemes == NULL) {
+      RAISEEXCEPTION(envp, "GetStringUTFChars failure");
+    }
+  }
+
+  if (!  marpaESLIFRecognizer_lexeme_last_pauseb(marpaESLIFRecognizerp, (char *) lexemes, &pauses, &pausel)) {
     RAISEEXCEPTION(envp, "marpaESLIFRecognizer_pauseb failure");
   }
 
@@ -2095,6 +2104,11 @@ JNIEXPORT jbyteArray JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniPause(JNIE
   byteArrayp = NULL;
 
  done:
+  if (envp != NULL) {
+    if ((lexemep != NULL) && (lexemes != NULL)) {
+      (*envp)->ReleaseStringUTFChars(envp, lexemep, lexemes);
+    }
+  }
   return byteArrayp;
 }
 
@@ -2148,6 +2162,7 @@ JNIEXPORT jint JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniLastCompletedLen
   const char             *names = NULL;
   jboolean                isCopy;
   size_t                  lengthl;
+  jint                    rci;
 
   if (! ESLIFRecognizer_contextb(envp, eslifRecognizerp, eslifRecognizerp, MARPAESLIF_ESLIFRECOGNIZER_CLASS_getLoggerInterfacep_METHODP,
                                  NULL /* genericLoggerpp */,
@@ -2169,16 +2184,19 @@ JNIEXPORT jint JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniLastCompletedLen
     RAISEEXCEPTION(envp, "marpaESLIFRecognizer_last_completedb failure");
   }
 
+  rci = (jint) lengthl;
   goto done;
 
  err:
+  rci = -1;
+
+ done:
   if (envp != NULL) {
     if ((namep != NULL) && (names != NULL)) {
       (*envp)->ReleaseStringUTFChars(envp, namep, names);
     }
   }
 
- done:
   return (jint) lengthl;
 }
 
