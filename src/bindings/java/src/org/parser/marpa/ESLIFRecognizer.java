@@ -25,6 +25,8 @@ public class ESLIFRecognizer {
 	private native byte[]            jniInput();
 	private native byte[]            jniPause();
 	private native void              jniProgressLog(int start, int end, ESLIFLoggerLevel level);
+	private native int               jniLastCompletedOffset(String name);
+	private native int               jniLastCompletedLength(String name);
 
 	public ESLIFRecognizer(ESLIFGrammar eslifGrammar, ESLIFRecognizerInterface eslifRecognizerInterface) throws ESLIFException {
 		if (eslifGrammar == null) {
@@ -102,8 +104,16 @@ public class ESLIFRecognizer {
 		return jniPause();
 	}
 
-	public synchronized void progressLog(int start, int end, ESLIFLoggerLevel level) {
+	public synchronized void progressLog(int start, int end, ESLIFLoggerLevel level) throws ESLIFException {
 		jniProgressLog(start, end, level);
+	}
+	
+	public synchronized int lastCompletedOffset(String name) throws ESLIFException {
+		return jniLastCompletedOffset(name);
+	}
+
+	public synchronized int lastCompletedLength(String name) throws ESLIFException {
+		return jniLastCompletedLength(name);
 	}
 	/*
 	 * ********************************************

@@ -2,6 +2,7 @@ package org.parser.marpa;
 
 import java.io.BufferedReader;
 import java.io.StringReader;
+import java.util.Arrays;
 
 public class AppParse  {
 	
@@ -180,12 +181,6 @@ public class AppParse  {
 							},
 							false);
 					eslifRecognizer.eventOnOff(
-							"Number",
-							new ESLIFEventType[] {
-									ESLIFEventType.get(ESLIFEventType.COMPLETED.getCode())
-							},
-							false);
-					eslifRecognizer.eventOnOff(
 							"whitespaces",
 							new ESLIFEventType[] {
 									ESLIFEventType.get(ESLIFEventType.DISCARD.getCode())
@@ -197,6 +192,34 @@ public class AppParse  {
 									ESLIFEventType.get(ESLIFEventType.AFTER.getCode())
 							},
 							false);
+					{
+						//
+						// Take great care: returned information is in terms of offsets and length meaningful to the
+						// RECOGNIZER - not to us. It is documented that in the case of stream characters, marpaESLIF
+						// is always thinking in terms of UTF-8. So this is an UTF-8 byte-oriented information in our
+						// case
+						//
+						try {
+							int lastExpressionOffset = eslifRecognizer.lastCompletedOffset("Expression");
+							int lastExpressionLength = eslifRecognizer.lastCompletedLength("Expression");
+							byte[] string2byte = string.getBytes();
+							byte[] matchedbytes = Arrays.copyOfRange(string2byte, lastExpressionOffset, lastExpressionOffset + lastExpressionLength);
+							String matchedString = new String(matchedbytes, "UTF-8");
+							eslifLogger.debug("  Last Expression completed is: " + matchedString);
+						} catch (ESLIFException e) {
+							eslifLogger.error("Expression: " + e.getMessage());
+						}
+						try {
+							int lastNumberOffset =  eslifRecognizer.lastCompletedOffset("Number");
+							int lastNumberLength = eslifRecognizer.lastCompletedLength("Number");
+							byte[] string2byte = string.getBytes();
+							byte[] matchedbytes = Arrays.copyOfRange(string2byte, lastNumberOffset, lastNumberOffset + lastNumberLength);
+							String matchedString = new String(matchedbytes, "UTF-8");
+							eslifLogger.debug("  Last Number completed is: " + matchedString);
+						} catch (ESLIFException e) {
+							eslifLogger.error("Number: " + e.getMessage());
+						}
+					}
 				}
 			} catch (Exception e) {
 				eslifLogger.error("Exception: " + e);
