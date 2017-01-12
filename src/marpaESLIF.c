@@ -12606,6 +12606,7 @@ short marpaESLIFRecognizer_last_completedb(marpaESLIFRecognizer_t *marpaESLIFRec
 
   if (earleySetIdi < 0) {
     /* Not found */
+    MARPAESLIF_ERRORF(marpaESLIFp, "No match for <%s> in input stack", names);
     goto err;
   }
 
