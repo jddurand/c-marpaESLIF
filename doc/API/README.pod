@@ -718,7 +718,7 @@ Returns a true value on success, a false value on failure.
   short marpaESLIFRecognizer_lexeme_alternative_lengthb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp,
                                                         size_t alternativeLengthl);
 
-When a recognizer is paused, user have the possibility to inject lexemes. Though the marpaESLIF does I<not> support injection of lexemes that would be of different size in the input stream: all lexemes must be of the same size C<alternativeLengthl>, which is in I<byte> unit. At every pause of the scanning, this method can be called once, and it is illegal to give a length higher than the number of remaining bytes in marpaESLIF internal buffer (see the C<marpaESLIFRecognizer_readb> for injecting more data, and C<marpaESLIFRecognizer_inputv> for get information of the internal buffers).
+When a recognizer is paused, user have the possibility to inject lexemes. Though the marpaESLIF does I<not> support injection of lexemes that would be of different size in the input stream: all lexemes must be of the same size C<alternativeLengthl>, which is in I<byte> unit. At every pause of the scanning, this method can be called once, and it is illegal to give a length higher than the number of remaining bytes in marpaESLIF internal buffer (see the C<marpaESLIFRecognizer_readb> for injecting more data, and C<marpaESLIFRecognizer_inputb> for get information of the internal buffers).
 
 Returns a true value on success, a false value on failure.
 
@@ -754,14 +754,6 @@ A short-hand version of lexeme management that is pushing a lexeme C<lexemes> (w
                                               char                   ***lexemesArraypp);
 
 For the current recognizer C<marpaESLIFRecognizerp>, get the list of I<lexemes> expected. C<*nLexemelp>, if not C<NULL>, is filled with the number of expected lexemes, and C<*lexemesArraypp>, if not C<NULL>, will contain the array of NUL-terminated ASCII symbol names.
-
-Returns a true value on success, a false value on failure.
-
-=head3 C<marpaESLIFRecognizer_eofb>
-
-  short marpaESLIFRecognizer_eofb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp);
-
-Forces the recognizer pointed by C<marpaESLIFRecognizerp> to believe that the end of data is reached.
 
 Returns a true value on success, a false value on failure.
 
@@ -886,12 +878,11 @@ Send to the logger configured at the marpaESLIF instanciation step, the current 
 
 Returns a true value on success, a false value on failure.
 
-=head3 C<marpaESLIFRecognizer_inputv>
+=head3 C<marpaESLIFRecognizer_inputb>
 
-  void marpaESLIFRecognizer_inputv(marpaESLIFRecognizer_t  *marpaESLIFRecognizerp,
-                                   char                   **inputsp,
-                                   size_t                  *inputlp,
-                                   short                   *eofbp);
+  short marpaESLIFRecognizer_inputb(marpaESLIFRecognizer_t  *marpaESLIFRecognizerp,
+                                    char                   **inputsp,
+                                    size_t                  *inputlp);
 
 For the recognizer instance pointed by C<marpaESLIFRecognizerp>, returns the current internal buffer state, i.e.:
 
@@ -905,31 +896,29 @@ If not C<NULL>, will contain the current input internal buffer pointer.
 
 If not C<NULL>, will contain the current input internal buffer length.
 
-=item eofbp
-
-If not C<NULL>, will contain the current I<end of file> flag.
-
 =back
 
-These pointers are intentionnaly not having a I<const> keyword, though it is obvious that any attempt to modify C<*inputsp> or C<*inputlp> is likely to make the process crash. Modifying C<*eofbp> is less dangerous, in the sense that forcing it for a false value will simply force the recognizer to call the reader callback.
+These pointers are intentionnaly not having a I<const> keyword, though it is obvious that any attempt to modify C<*inputsp> or C<*inputlp> is likely to make the process crash. The internal buffer may I<not> correspond to what the callback returned in case there is character conversion: in this case the internal buffer contains UTF-8 character sequences.
 
-=head3 C<marpaESLIFRecognizer_pausev>
+Returns a true value on success, a false value on failure.
 
-  void marpaESLIFRecognizer_pausev(marpaESLIFRecognizer_t  *marpaESLIFRecognizerp,
-                                   char                   **pausesp,
-                                   size_t                  *pauselp,
-                                   short                   *eofbp);
+=head3 C<marpaESLIFRecognizer_pauseb>
 
-For the recognizer instance pointed by C<marpaESLIFRecognizerp>, returns a pointer to the last portion of input stream that generated a I<lexeme pause> event in the value pointed by C<pausesp> if it is not NULL, and the length in the value pointed by C<pauselp> if it is not NULL. For convenience if the last pause is not NULL, the buffer holding the pause information is always NUL-terminated, even if the C<\0> NUL character is I<not> in the returned length. For convenence as well, the current I<end of file> flag is returned in the value pointed by C<eofbp> if it is not C<NULL>.
+  short marpaESLIFRecognizer_pauseb(marpaESLIFRecognizer_t  *marpaESLIFRecognizerp,
+                                    char                   **pausesp,
+                                    size_t                  *pauselp);
+
+For the recognizer instance pointed by C<marpaESLIFRecognizerp>, returns a pointer to the last portion of input stream that generated a I<lexeme pause> event in the value pointed by C<pausesp> if it is not NULL, and the length in the value pointed by C<pauselp> if it is not NULL. For convenience if the last pause is not NULL, the buffer holding the pause information is always NUL-terminated, even if the C<\0> NUL character is I<not> in the returned length.
+
+Returns a true value on success, a false value on failure.
 
 =head3 C<marpaESLIFRecognizer_readb>
 
   short marpaESLIFRecognizer_readb(marpaESLIFRecognizer_t  *marpaESLIFRecognizerp,
                                    char                   **inputsp,
-                                   size_t                  *inputlp,
-                                   short                   *eofbp);
+                                   size_t                  *inputlp);
 
-Forces a call to the reader callback. All parameters have the semantic as in the method C<marpaESLIFRecognizer_inputv>.
+Forces a call to the reader callback. All parameters have the semantic as in the method C<marpaESLIFRecognizer_inputb>.
 
 Returns a true value on success, a false value on failure.
 

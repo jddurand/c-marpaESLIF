@@ -21,7 +21,9 @@ public class ESLIFRecognizer {
 	private native void              jniLexemeRead(String name, int length);
 	private native String[]          jniLexemeExpected();
 	private native boolean           jniIsEof();
-	private native void              jniRead();
+	private native byte[]            jniRead();
+	private native byte[]            jniInput();
+	private native byte[]            jniPause();
 	private native void              jniProgressLog(int start, int end, ESLIFLoggerLevel level);
 
 	public ESLIFRecognizer(ESLIFGrammar eslifGrammar, ESLIFRecognizerInterface eslifRecognizerInterface) throws ESLIFException {
@@ -88,8 +90,16 @@ public class ESLIFRecognizer {
 		return jniIsEof();
 	}
 
-	public synchronized void read() throws ESLIFException {
-		jniRead();
+	public synchronized byte[] read() throws ESLIFException {
+		return jniRead();
+	}
+
+	public synchronized byte[] input() throws ESLIFException {
+		return jniInput();
+	}
+
+	public synchronized byte[] pause() throws ESLIFException {
+		return jniPause();
 	}
 
 	public synchronized void progressLog(int start, int end, ESLIFLoggerLevel level) {
