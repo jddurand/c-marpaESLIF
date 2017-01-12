@@ -20,7 +20,6 @@ public class ESLIFRecognizer {
 	private native void              jniLexemeComplete();
 	private native void              jniLexemeRead(String name, int length);
 	private native String[]          jniLexemeExpected();
-	private native void              jniEof();
 	private native boolean           jniIsEof();
 	private native void              jniRead();
 	private native void              jniProgressLog(int start, int end, ESLIFLoggerLevel level);
@@ -85,10 +84,6 @@ public class ESLIFRecognizer {
 		return jniLexemeExpected();
 	}
 	
-	public synchronized void eof() throws ESLIFException {
-		jniEof();
-	}
-
 	public synchronized boolean isEof() throws ESLIFException {
 		return jniIsEof();
 	}

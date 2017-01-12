@@ -132,10 +132,10 @@ public class AppParse  {
 				if (! eslifRecognizer.isEof()) {
 					eslifRecognizer.read();
 				}
+				if (i == 0) {
+					eslifRecognizer.progressLog(-1, -1, ESLIFLoggerLevel.get(ESLIFLoggerLevel.NOTICE.getCode()));
+				}
 				while (eslifRecognizer.isCanContinue()) {
-					if (i == 0) {
-						eslifRecognizer.progressLog(-1, -1, ESLIFLoggerLevel.get(ESLIFLoggerLevel.NOTICE.getCode()));
-					}
 					eslifRecognizer.resume();
 					events = eslifRecognizer.events();
 					if (events != null) {
