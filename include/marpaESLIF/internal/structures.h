@@ -218,6 +218,7 @@ struct marpaESLIF {
   marpaESLIF_terminal_t *stringModifiersp;            /* Internal regex for match string modifiers */
   marpaESLIF_terminal_t *characterClassModifiersp;    /* Internal regex for match character class modifiers */
   marpaESLIF_terminal_t *regexModifiersp;             /* Internal regex for match regex modifiers */
+  genericLogger_t       *traceLoggerp;                /* For cases where this is silent mode but compiled with TRACE */
 };
 
 struct marpaESLIFGrammar {
