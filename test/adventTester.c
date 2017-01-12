@@ -190,7 +190,9 @@ int main() {
       }
       while (continueb) {
         /* We have a single event, no need to ask what it is */
-        marpaESLIFRecognizer_pausev(marpaESLIFRecognizerp, &pauses, &pausel, NULL /* eofbp */);
+        if (! marpaESLIFRecognizer_pauseb(marpaESLIFRecognizerp, &pauses, &pausel, NULL /* eofbp */)) {
+          goto err;
+        }
 
         /* We arbitrarily transform card data into a number to uniquely identify it */
         cardi = card2inti(pauses, pausel);

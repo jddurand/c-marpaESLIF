@@ -163,8 +163,8 @@ extern "C" {
   MARPAESLIF_EXPORT short                   marpaESLIFRecognizer_event_onoffb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *symbols, marpaESLIFEventType_t eventSeti, short onoffb);
   MARPAESLIF_EXPORT short                   marpaESLIFRecognizer_eventb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, size_t *eventArraylp, marpaESLIFEvent_t **eventArraypp);
   MARPAESLIF_EXPORT short                   marpaESLIFRecognizer_progressLogb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, int starti, int endi, genericLoggerLevel_t logleveli);
-  MARPAESLIF_EXPORT void                    marpaESLIFRecognizer_inputv(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char **inputsp, size_t *inputlp, short *eofbp);
-  MARPAESLIF_EXPORT void                    marpaESLIFRecognizer_pausev(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char **pausesp, size_t *pauselp, short *eofbp);
+  MARPAESLIF_EXPORT short                   marpaESLIFRecognizer_inputb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char **inputsp, size_t *inputlp, short *eofbp);
+  MARPAESLIF_EXPORT short                   marpaESLIFRecognizer_pauseb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char **pausesp, size_t *pauselp, short *eofbp);
   MARPAESLIF_EXPORT short                   marpaESLIFRecognizer_readb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char **inputsp, size_t *inputlp, short *eofbp);
   MARPAESLIF_EXPORT short                   marpaESLIFRecognizer_last_completedb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *names, char **offsetpp, size_t *lengthlp);
   MARPAESLIF_EXPORT void                    marpaESLIFRecognizer_freev(marpaESLIFRecognizer_t *marpaESLIFRecognizerp);
