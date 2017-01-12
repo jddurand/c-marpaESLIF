@@ -181,7 +181,7 @@ public class AppParse  {
 								if (bytes == null) {
 									throw new Exception("Pause before on NUMBER but no pause information!");
 								}
-								eslifRecognizer.lexemeRead("NUMBER", 0 /* bytes.length */);
+								eslifRecognizer.lexemeRead("NUMBER", bytes.length);
 						    }
 						}
 					}

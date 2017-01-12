@@ -278,9 +278,6 @@ struct marpaESLIFRecognizer {
   short                        _utfb;          /* A flag to say if input is UTF-8 correct. Automatically true if _charconv is true. Can set be regex engine as well. */
   short                        _charconvb;     /* A flag to say if latest stream chunk was converted to UTF-8 */
   marpaWrapperGrammar_t     ***_marpaWrapperGrammarCacheppp; /* Cache of all needed cloned()/precomputed grammars */
-  short                      **_discardEventStatebpp; /* Cache of all discard current event states */
-  short                      **_beforeEventStatebpp;  /* Cache of all before current event states */
-  short                      **_afterEventStatebpp;   /* Cache of all after current event states */
 
   int                          leveli;         /* Recognizer level (!= grammar level) */
 
@@ -292,9 +289,6 @@ struct marpaESLIFRecognizer {
   short                       *utfbp;          /* Ditto for the UTF-8 correctness flag */
   short                       *charconvbp;     /* Ditto for the character conversion flag */
   marpaWrapperGrammar_t    ****marpaWrapperGrammarCachepppp; /* Ditto for grammars cache */
-  short                     ***discardEventStatebppp; /* Ditto for discard event states */
-  short                     ***beforeEventStatebppp;  /* Ditto for discard event states */
-  short                     ***afterEventStatebppp;   /* Ditto for discard event states */
 
   size_t                       parentDeltal;   /* Parent original delta - used to recovert parent current pointer at our free */
   char                        *inputs;         /* Current pointer in input - specific to every recognizer */
@@ -336,6 +330,9 @@ struct marpaESLIFRecognizer {
   genericStack_t              *set2InputStackp;
   char                       **lexemesArrayp;      /* Persistent buffer of last call to marpaESLIFRecognizer_lexeme_expectedb */
   size_t                       lexemesArrayAllocl; /* Current allocated size -; */
+  short                      **discardEventStatebpp; /* Discard current event states */
+  short                      **beforeEventStatebpp;  /* Lexeme before current event states */
+  short                      **afterEventStatebpp;   /* Lexeme after current event states */
 };
 
 /* ------------------------------- */
