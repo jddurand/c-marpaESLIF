@@ -27,6 +27,7 @@ typedef enum    marpaESLIF_array_type      marpaESLIF_array_type_t;
 typedef struct  marpaESLIF_readerContext   marpaESLIF_readerContext_t;
 typedef struct  marpaESLIF_cloneContext    marpaESLIF_cloneContext_t;
 typedef         marpaESLIFStackType_t      marpaESLIF_stack_type_t;
+typedef struct  marpaESLIF_last_pause      marpaESLIF_last_pause_t;
 
 /* Symbol types */
 enum marpaESLIF_symbol_type {
@@ -324,15 +325,19 @@ struct marpaESLIFRecognizer {
   genericStack_t              *alternativeStackp;       /* Current alternative stack */
   genericStack_t              *alternativeStackWorkp;   /* Work alternative stack */
   genericStack_t              *commitedAlternativeStackp; /* Commited alternative stack (internal + external) */
-  char                        *pauses;        /* Last pause data */
-  size_t                       pausel;        /* Last pause length */
-  size_t                       pauseSizel;    /* Last pause allocate size */
   genericStack_t              *set2InputStackp;
   char                       **lexemesArrayp;      /* Persistent buffer of last call to marpaESLIFRecognizer_lexeme_expectedb */
   size_t                       lexemesArrayAllocl; /* Current allocated size -; */
   short                      **discardEventStatebpp; /* Discard current event states */
   short                      **beforeEventStatebpp;  /* Lexeme before current event states */
   short                      **afterEventStatebpp;   /* Lexeme after current event states */
+  marpaESLIF_last_pause_t   ***lastPauseppp;         /* Lexeme last pause */
+};
+
+struct marpaESLIF_last_pause {
+  char   *pauses;        /* Last pause data */
+  size_t  pausel;        /* Last pause length */
+  size_t  pauseSizel;    /* Last pause allocate size */
 };
 
 /* ------------------------------- */

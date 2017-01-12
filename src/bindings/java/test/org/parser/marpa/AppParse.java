@@ -177,7 +177,7 @@ public class AppParse  {
 						    	//
 						    	// Recognizer will wait forever if we do not feed the number
 						    	//
-								byte[] bytes = eslifRecognizer.pause();
+								byte[] bytes = eslifRecognizer.lexemeLastPause("NUMBER");
 								if (bytes == null) {
 									throw new Exception("Pause before on NUMBER but no pause information!");
 								}
