@@ -14,9 +14,9 @@ public class AppParse  {
 
 		final String grammar = 
 				    ":start   ::= Expression\n"
-				  + ":default ::=            action => do_op\n"
-				  + ":discard ::= whitespace event  => discard_whitespace$\n"
-				  + ":discard ::= comment    event  => discard_comment$\n"
+				  + ":default ::=             action => do_op\n"
+				  + ":discard ::= whitespaces event  => discard_whitespaces$\n"
+				  + ":discard ::= comment     event  => discard_comment$\n"
 				  + "\n"
 				  + "event ^Number = predicted Number\n"
 				  + "event Number$ = completed Number\n"
@@ -35,8 +35,8 @@ public class AppParse  {
 				  + "\n"
 				  + ":lexeme ::= NUMBER pause => after  event => NUMBER$\n"
 				  + "NUMBER     ~ /[\\d]+/\n"
-				  + "whitespace ::= WHITESPACE\n"
-				  + "WHITESPACE ~ [\\s]\n"
+				  + "whitespaces ::= WHITESPACES\n"
+				  + "WHITESPACES ~ [\\s]+\n"
 				  + "comment ::= /(?:(?:(?:\\/\\/)(?:[^\\n]*)(?:\\n|\\z))|(?:(?:\\/\\*)(?:(?:[^\\*]+|\\*(?!\\/))*)(?:\\*\\/)))/u\n"
 				  + "\n";
 
@@ -77,7 +77,8 @@ public class AppParse  {
 				"5 ** (2 ** 3)",
 				"5 ** (2 / 3)",
 				"1 + ( 2 + ( 3 + ( 4 + 5) )",
-				"1 + ( 2 + ( 3 + ( 4 + 5) ) )"
+				"1 + ( 2 + ( 3 + ( 4 + 5) ) )   /* comment after */",
+				" 1"
 				};
 
 		/*
@@ -153,11 +154,11 @@ public class AppParse  {
 							},
 							false);
 					eslifRecognizer.eventOnOff(
-							"whitespace",
+							"whitespaces",
 							new ESLIFEventType[] {
 									ESLIFEventType.get(ESLIFEventType.DISCARD.getCode())
 							},
-							false);
+							true);
 					eslifRecognizer.eventOnOff(
 							"NUMBER",
 							new ESLIFEventType[] {
