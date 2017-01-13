@@ -232,7 +232,7 @@ int main() {
       GENERICLOGGER_INFOF(genericLoggerp, "Got lstring: %s; length=%ld", pauses, pausel);
 
       /* Resume */
-      if (! marpaESLIFRecognizer_resumeb(marpaESLIFRecognizerp, &continueb, &exhaustedb)) {
+      if (! marpaESLIFRecognizer_resumeb(marpaESLIFRecognizerp, 0, &continueb, &exhaustedb)) {
         goto err;
       }
     }

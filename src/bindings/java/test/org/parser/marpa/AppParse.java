@@ -158,7 +158,7 @@ public class AppParse  {
 					eslifRecognizer.progressLog(-1, -1, ESLIFLoggerLevel.get(ESLIFLoggerLevel.NOTICE.getCode()));
 				}
 				while (eslifRecognizer.isCanContinue()) {
-					eslifRecognizer.resume();
+					eslifRecognizer.resume(0);
 					{
 						byte[] bytes = eslifRecognizer.input();
 						if (bytes != null) {

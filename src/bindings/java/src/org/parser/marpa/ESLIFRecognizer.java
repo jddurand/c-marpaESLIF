@@ -12,7 +12,7 @@ public class ESLIFRecognizer {
 	private native void              jniNew(ESLIFGrammar eslifGrammar);
 	private native void              jniFree();
 	private native void              jniScan(boolean initialEvents);
-	private native void              jniResume();
+	private native void              jniResume(int deltaLength);
 	private native ESLIFEvent[]      jniEvent();
 	private native void              jniEventOnOff(String symbol, ESLIFEventType[] eventTypes, boolean onOff);
 	private native void              jniLexemeAlternativeLength(int length);
@@ -56,8 +56,8 @@ public class ESLIFRecognizer {
 		jniScan(initialEvents);
 	}
 
-	public synchronized void resume() throws ESLIFException {
-		jniResume();
+	public synchronized void resume(int deltaLength) throws ESLIFException {
+		jniResume(deltaLength);
 	}
 	
 	public synchronized ESLIFEvent[] events() throws ESLIFException {
