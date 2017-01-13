@@ -328,10 +328,10 @@ struct marpaESLIFRecognizer {
   genericStack_t              *set2InputStackp;
   char                       **lexemesArrayp;      /* Persistent buffer of last call to marpaESLIFRecognizer_lexeme_expectedb */
   size_t                       lexemesArrayAllocl; /* Current allocated size -; */
-  short                      **discardEventStatebpp; /* Discard current event states */
-  short                      **beforeEventStatebpp;  /* Lexeme before current event states */
-  short                      **afterEventStatebpp;   /* Lexeme after current event states */
-  marpaESLIF_last_pause_t   ***lastPauseppp;         /* Lexeme last pause */
+  short                       *discardEventStatebp; /* Discard current event states for the CURRENT grammar (marpaESLIFRecognizerp->marpaESLIFGrammarp->grammarp) */
+  short                      **beforeEventStatebpp;  /* Lexeme before current event states for the CURRENT grammar */
+  short                      **afterEventStatebpp;   /* Lexeme after current event states for the CURRENT grammar */
+  marpaESLIF_last_pause_t   ***lastPauseppp;         /* Lexeme last pause for the CURRENT grammar */
 };
 
 struct marpaESLIF_last_pause {
