@@ -6459,8 +6459,17 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGramm
           }
         }
         if (discardb) {
+          /* Discard event is a special beast: it is a sub-recognizer, but the event setting is done at the top recognizer level. */
+          /* In addition the current grammar (grammarp pointer) of a discard grammar always have the exact same symbols than the */
+          /* current grammar of its parent, because this is the same grammar, though precomputed with a different start symbol -; */
+
+          /* It is a non-sense to have discardb to true without a parent recognizer */
+          if (marpaESLIFRecognizerParentp == NULL) {
+            MARPAESLIF_ERROR(marpaESLIFp, "Discard mode called without a parent recognizer");
+            goto err;
+          }
           if (symbolp->discardEvents != NULL) {
-            discardEventb = marpaESLIFRecognizerp->discardEventStatebp[symbolp->idi];
+            discardEventb = marpaESLIFRecognizerParentp->discardEventStatebp[symbolp->idi];
             MARPAESLIF_TRACEF(marpaESLIFp, funcs,
                               "Setting :discard completion event state for symbol %d <%s> at grammar level %d (%s) to %s (recognizer discard mode: %d)",
                               symbolp->idi, symbolp->descp->asciis, grammarp->leveli, grammarp->descp->asciis, discardEventb ? "on" : "off", (int) discardb);
