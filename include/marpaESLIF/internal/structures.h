@@ -331,7 +331,7 @@ struct marpaESLIFRecognizer {
   short                       *discardEventStatebp; /* Discard current event states for the CURRENT grammar (marpaESLIFRecognizerp->marpaESLIFGrammarp->grammarp) */
   short                       *beforeEventStatebp;  /* Lexeme before current event states for the CURRENT grammar */
   short                       *afterEventStatebp;   /* Lexeme after current event states for the CURRENT grammar */
-  marpaESLIF_last_pause_t   ***lastPauseppp;         /* Lexeme last pause for the CURRENT grammar */
+  marpaESLIF_last_pause_t    **lastPausepp;         /* Lexeme last pause for the CURRENT grammar */
 };
 
 struct marpaESLIF_last_pause {

@@ -5623,7 +5623,6 @@ void marpaESLIFRecognizer_freev(marpaESLIFRecognizer_t *marpaESLIFRecognizerp)
   short                     *discardEventStatebp;
   short                     *beforeEventStatebp;
   short                     *afterEventStatebp;
-  marpaESLIF_last_pause_t ***lastPauseppp;
   marpaESLIF_last_pause_t  **lastPausepp;
   marpaESLIF_last_pause_t   *lastPausep;
   genericStack_t            *grammarStackp;
@@ -5653,33 +5652,22 @@ void marpaESLIFRecognizer_freev(marpaESLIFRecognizer_t *marpaESLIFRecognizerp)
       free(marpaESLIFRecognizerp->eventArrayp);
     }
 
-    lastPauseppp = marpaESLIFRecognizerp->lastPauseppp;
-    if (lastPauseppp != NULL) {
+    lastPausepp = marpaESLIFRecognizerp->lastPausepp;
+    if (lastPausepp != NULL) {
       marpaESLIFGrammarp = marpaESLIFRecognizerp->marpaESLIFGrammarp;
-      if (marpaESLIFGrammarp != NULL) {
-        grammarStackp = marpaESLIFGrammarp->grammarStackp;
-        for (grammari = 0; grammari < GENERICSTACK_USED(grammarStackp); grammari++) {
-          lastPausepp = lastPauseppp[grammari];
-          if (lastPausepp != NULL) {
-            grammarp = (marpaESLIF_grammar_t *) GENERICSTACK_GET_PTR(grammarStackp, grammari);
-            symbolStackp = grammarp->symbolStackp;
-            if (GENERICSTACK_USED(symbolStackp) <= 0) {
-              continue;
-            }
-            for (symboli = 0; symboli < GENERICSTACK_USED(symbolStackp); symboli++) {
-              lastPausep = lastPausepp[symboli];
-              if (lastPausep != NULL) {
-                if (lastPausep->pauses != NULL) {
-                  free(lastPausep->pauses);
-                }
-                free(lastPausep);
-              }
-            }
-            free(lastPausepp);
+      grammarp = marpaESLIFGrammarp->grammarp;
+      symbolStackp = grammarp->symbolStackp;
+
+      for (symboli = 0; symboli < GENERICSTACK_USED(symbolStackp); symboli++) {
+        lastPausep = lastPausepp[symboli];
+        if (lastPausep != NULL) {
+          if (lastPausep->pauses != NULL) {
+            free(lastPausep->pauses);
           }
+          free(lastPausep);
         }
       }
-      free(lastPauseppp);
+      free(lastPausepp);
     }
 
     discardEventStatebp = marpaESLIFRecognizerp->discardEventStatebp;
@@ -6049,7 +6037,7 @@ static inline short _marpaESLIFRecognizer_set_pauseb(marpaESLIFRecognizer_t *mar
 /*****************************************************************************/
 {
   static const char       *funcs      = "_marpaESLIFRecognizer_set_pauseb";
-  marpaESLIF_last_pause_t *lastPausep = marpaESLIFRecognizerp->lastPauseppp[grammarp->leveli][symbolp->idi];
+  marpaESLIF_last_pause_t *lastPausep = marpaESLIFRecognizerp->lastPausepp[symbolp->idi];
   char                    *pauses;
   size_t                   pauseSizel;
   short                    rcb;
@@ -6391,7 +6379,7 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGramm
   marpaESLIFRecognizerp->alternativeStackp          = NULL;
   marpaESLIFRecognizerp->alternativeStackWorkp      = NULL;
   marpaESLIFRecognizerp->commitedAlternativeStackp  = NULL;
-  marpaESLIFRecognizerp->lastPauseppp               = NULL;
+  marpaESLIFRecognizerp->lastPausepp                = NULL;
   marpaESLIFRecognizerp->set2InputStackp            = NULL;
   marpaESLIFRecognizerp->lexemesArrayp              = NULL;
   marpaESLIFRecognizerp->lexemesArrayAllocl         = 0;
@@ -9254,71 +9242,52 @@ static inline short _marpaESLIFRecognizer_createAfterStateb(marpaESLIFRecognizer
 static inline short _marpaESLIFRecognizer_createLastPauseb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp)
 /*****************************************************************************/
 {
-  static const char         *funcs              = "_marpaESLIFRecognizer_createLastPauseb";
-  marpaESLIF_last_pause_t ***lastPauseppp       = marpaESLIFRecognizerp->lastPauseppp;
-  marpaESLIFGrammar_t       *marpaESLIFGrammarp = marpaESLIFRecognizerp->marpaESLIFGrammarp;
-  genericStack_t            *grammarStackp      = marpaESLIFGrammarp->grammarStackp;
-  genericStack_t            *symbolStackp;
-  marpaESLIF_grammar_t      *grammarp;
-  short                      rcb;
-  int                        grammari;
-  int                        symboli;
-  marpaESLIF_symbol_t       *symbolp;
+  static const char        *funcs              = "_marpaESLIFRecognizer_createLastPauseb";
+  marpaESLIF_last_pause_t **lastPausepp        = marpaESLIFRecognizerp->lastPausepp;
+  marpaESLIFGrammar_t      *marpaESLIFGrammarp;
+  marpaESLIF_grammar_t     *grammarp;
+  genericStack_t           *symbolStackp;
+  short                     rcb;
+  int                       grammari;
+  int                       symboli;
+  marpaESLIF_symbol_t      *symbolp;
 
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
 
-  if (lastPauseppp == NULL) {
+  if (lastPausepp == NULL) {
     /* First time */
 
-    /* First indice on grammars */
-    lastPauseppp = (marpaESLIF_last_pause_t ***) malloc(sizeof(marpaESLIF_last_pause_t **) * GENERICSTACK_USED(grammarStackp));
-    if (lastPauseppp == NULL) {
+    marpaESLIFGrammarp  = marpaESLIFRecognizerp->marpaESLIFGrammarp;
+    grammarp            = marpaESLIFGrammarp->grammarp;
+    symbolStackp        = grammarp->symbolStackp;;
+
+    lastPausepp = (marpaESLIF_last_pause_t **) malloc(sizeof(marpaESLIF_last_pause_t *) * GENERICSTACK_USED(symbolStackp));
+    if (lastPausepp == NULL) {
       MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "malloc failure, %s", strerror(errno));
       goto err;
     }
-    for (grammari = 0; grammari < GENERICSTACK_USED(grammarStackp); grammari++) {
-      lastPauseppp[grammari] = NULL;
+    for (symboli = 0; symboli < GENERICSTACK_USED(symbolStackp); symboli++) {
+      lastPausepp[symboli] = NULL;
     }
-
-    /* Second indice on symbols */
-    for (grammari = 0; grammari < GENERICSTACK_USED(grammarStackp); grammari++) {
-      if (! GENERICSTACK_IS_PTR(grammarStackp, grammari)) {
-        /* Sparse item in grammarStackp -; */
-        continue;
-      }
-      grammarp = (marpaESLIF_grammar_t *) GENERICSTACK_GET_PTR(grammarStackp, grammari);
-      symbolStackp = grammarp->symbolStackp;
-      if (GENERICSTACK_USED(symbolStackp) <= 0) {
-        continue;
-      }
-      lastPauseppp[grammari] = (marpaESLIF_last_pause_t **) malloc(sizeof(marpaESLIF_last_pause_t *) * GENERICSTACK_USED(symbolStackp));
-      if (lastPauseppp[grammari] == NULL) {
-        MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "malloc failure, %s", strerror(errno));
-        goto err;
-      }
-      for (symboli = 0; symboli < GENERICSTACK_USED(symbolStackp); symboli++) {
-        lastPauseppp[grammari][symboli] = NULL;
-      }
-      for (symboli = 0; symboli < GENERICSTACK_USED(symbolStackp); symboli++) {
-        if (GENERICSTACK_IS_PTR(symbolStackp, symboli)) {
-          symbolp = (marpaESLIF_symbol_t *) GENERICSTACK_GET_PTR(symbolStackp, symboli);
-          if ((symbolp->eventBefores != NULL) || (symbolp->eventAfters != NULL)) {
-            lastPauseppp[grammari][symboli] = (marpaESLIF_last_pause_t *) malloc(sizeof(marpaESLIF_last_pause_t) * GENERICSTACK_USED(symbolStackp));
-            if (lastPauseppp[grammari][symboli] == NULL) {
-              MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "malloc failure, %s", strerror(errno));
-              goto err;
-            }
-            lastPauseppp[grammari][symboli]->pauses     = NULL;
-            lastPauseppp[grammari][symboli]->pausel     = 0;
-            lastPauseppp[grammari][symboli]->pauseSizel = 0;
+    for (symboli = 0; symboli < GENERICSTACK_USED(symbolStackp); symboli++) {
+      if (GENERICSTACK_IS_PTR(symbolStackp, symboli)) {
+        symbolp = (marpaESLIF_symbol_t *) GENERICSTACK_GET_PTR(symbolStackp, symboli);
+        if ((symbolp->eventBefores != NULL) || (symbolp->eventAfters != NULL)) {
+          lastPausepp[symboli] = (marpaESLIF_last_pause_t *) malloc(sizeof(marpaESLIF_last_pause_t));
+          if (lastPausepp[symboli] == NULL) {
+            MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "malloc failure, %s", strerror(errno));
+            goto err;
           }
+          lastPausepp[symboli]->pauses     = NULL;
+          lastPausepp[symboli]->pausel     = 0;
+          lastPausepp[symboli]->pauseSizel = 0;
         }
       }
     }
 
     /* Initialization ok */
-    marpaESLIFRecognizerp->lastPauseppp = lastPauseppp;
+    marpaESLIFRecognizerp->lastPausepp = lastPausepp;
   }
 
   rcb = 1;
@@ -12376,7 +12345,6 @@ short marpaESLIFRecognizer_lexeme_last_pauseb(marpaESLIFRecognizer_t *marpaESLIF
   marpaESLIFGrammar_t       *marpaESLIFGrammarp;
   marpaESLIF_grammar_t      *grammarp;
   marpaESLIFSymbol_t        *symbolp;
-  marpaESLIF_last_pause_t ***lastPauseppp;
   marpaESLIF_last_pause_t   *lastPausep;
   short                      rcb;
 
@@ -12388,7 +12356,6 @@ short marpaESLIFRecognizer_lexeme_last_pauseb(marpaESLIFRecognizer_t *marpaESLIF
   marpaESLIFp        = marpaESLIFRecognizerp->marpaESLIFp;
   marpaESLIFGrammarp = marpaESLIFRecognizerp->marpaESLIFGrammarp;
   grammarp           = marpaESLIFGrammarp->grammarp;
-  lastPauseppp       = marpaESLIFRecognizerp->lastPauseppp;
 
   if (lexemes == NULL) {
     MARPAESLIF_ERROR(marpaESLIFp, "Lexeme name is NULL");
@@ -12400,7 +12367,7 @@ short marpaESLIFRecognizer_lexeme_last_pauseb(marpaESLIFRecognizer_t *marpaESLIF
     MARPAESLIF_ERRORF(marpaESLIFp, "Failed to find <%s>", lexemes);
     goto err;
   }
-  lastPausep = lastPauseppp[grammarp->leveli][symbolp->idi];
+  lastPausep = marpaESLIFRecognizerp->lastPausepp[symbolp->idi];
   if (lastPausep == NULL) {
     MARPAESLIF_ERRORF(marpaESLIFp, "Symbol <%s> has no pause setting", lexemes);
     goto err;
