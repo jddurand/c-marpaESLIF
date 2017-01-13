@@ -141,7 +141,7 @@ static inline void                   _marpaESLIF_utf82printableascii_freev(char 
 static        short                  _marpaESLIFReader_grammarReader(void *userDatavp, char **inputsp, size_t *inputlp, short *eofbp, short *characterStreambp, char **encodingOfEncodingsp, char **encodingsp, size_t *encodinglp);
 static        short                  _marpaESLIFReader_exceptionReader(void *userDatavp, char **inputsp, size_t *inputlp, short *eofbp, short *characterStreambp, char **encodingOfEncodingsp, char **encodingsp, size_t *encodinglp);
 static inline short                  _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, short initialEventsb);
-static inline short                  _marpaESLIFRecognizer_resumeb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, short initialEventsb, short *continuebp, short *exhaustedbp);
+static inline short                  _marpaESLIFRecognizer_resumeb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, size_t deltaLengthl, short initialEventsb, short *continuebp, short *exhaustedbp);
 static inline marpaESLIF_grammar_t  *_marpaESLIFGrammar_grammar_findp(marpaESLIFGrammar_t *marpaESLIFGrammarp, int leveli, marpaESLIF_string_t *descp);
 static inline marpaESLIF_rule_t     *_marpaESLIF_rule_findp(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, int rulei);
 static inline marpaESLIF_symbol_t   *_marpaESLIF_symbol_findp(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, char *asciis, int symboli, int *symbolip);
@@ -4530,7 +4530,7 @@ short marpaESLIFRecognizer_scanb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, 
   }
 
   marpaESLIFRecognizerp->scanb = 1;
-  rcb = _marpaESLIFRecognizer_resumeb(marpaESLIFRecognizerp, initialEventsb, continuebp, exhaustedbp);
+  rcb = _marpaESLIFRecognizer_resumeb(marpaESLIFRecognizerp, 0, initialEventsb, continuebp, exhaustedbp);
   goto done;
 
  err:
@@ -4543,7 +4543,7 @@ short marpaESLIFRecognizer_scanb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, 
 }
 
 /*****************************************************************************/
-short marpaESLIFRecognizer_resumeb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, short *continuebp, short *exhaustedbp)
+short marpaESLIFRecognizer_resumeb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, size_t deltaLengthl, short *continuebp, short *exhaustedbp)
 /*****************************************************************************/
 {
   static const char *funcs = "marpaESLIFRecognizer_resumeb";
@@ -4557,7 +4557,7 @@ short marpaESLIFRecognizer_resumeb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
 
-  rcb = _marpaESLIFRecognizer_resumeb(marpaESLIFRecognizerp, 0 /* initialEventsb */, continuebp, exhaustedbp);
+  rcb = _marpaESLIFRecognizer_resumeb(marpaESLIFRecognizerp, deltaLengthl, 0 /* initialEventsb */, continuebp, exhaustedbp);
 
   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC;
@@ -4565,7 +4565,7 @@ short marpaESLIFRecognizer_resumeb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp
 }
 
 /*****************************************************************************/
-static inline short _marpaESLIFRecognizer_resumeb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, short initialEventsb, short *continuebp, short *exhaustedbp)
+static inline short _marpaESLIFRecognizer_resumeb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, size_t deltaLengthl, short initialEventsb, short *continuebp, short *exhaustedbp)
 /*****************************************************************************/
 {
   /* Top level resume is looping on _marpaESLIFRecognizer_resume_oneb() until:
@@ -4573,6 +4573,27 @@ static inline short _marpaESLIFRecognizer_resumeb(marpaESLIFRecognizer_t *marpaE
      - event
   */
   short rcb;
+
+  /* Eventually read until the delta offset is available */
+  if (deltaLengthl > 0) {
+    while (deltaLengthl > marpaESLIFRecognizerp->inputl) {
+      if (! *(marpaESLIFRecognizerp->eofbp)) {
+        if (! _marpaESLIFRecognizer_readb(marpaESLIFRecognizerp)) {
+          goto err;
+        }
+      } else {
+        MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "Resume delta offset %ld must be <= current remaining bytes in recognizer buffer, currently %ld", (unsigned long) deltaLengthl, (unsigned long) marpaESLIFRecognizerp->inputl);
+        goto err;
+      }
+    }
+    /* If there is newline is the skipped data, we suppose we should account for it for debug/trace purposes... */
+    if (! _marpaESLIFRecognizer_matchPostProcessingb(marpaESLIFRecognizerp, deltaLengthl)) {
+      goto err;
+    }
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Resume: advancing stream internal position by %ld bytes", (unsigned long) deltaLengthl);
+    marpaESLIFRecognizerp->inputs += deltaLengthl;
+    marpaESLIFRecognizerp->inputl -= deltaLengthl;
+  }
 
   do {
     rcb = _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizerp, initialEventsb);
@@ -5129,6 +5150,7 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
         char  *dumps;
         size_t dumpl;
 
+        MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "marpaESLIFRecognizerp->inputl is %ld", (unsigned long) marpaESLIFRecognizerp->inputl);
         dumps = marpaESLIFRecognizerp->inputs;
         dumpl = marpaESLIFRecognizerp->inputl > 128 ? 128 : marpaESLIFRecognizerp->inputl;
         MARPAESLIF_HEXDUMPV(marpaESLIFRecognizerp,
@@ -6571,7 +6593,7 @@ static inline short _marpaESLIFGrammar_parseb(marpaESLIFGrammar_t *marpaESLIFGra
     goto err;
   }
   while (continueb) {
-    if (! marpaESLIFRecognizer_resumeb(marpaESLIFRecognizerp, &continueb, &exhaustedb)) {
+    if (! marpaESLIFRecognizer_resumeb(marpaESLIFRecognizerp, 0, &continueb, &exhaustedb)) {
       goto err;
     }
   }

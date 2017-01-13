@@ -211,7 +211,7 @@ int main() {
         GENERICSTACK_SET_SHORT(cardStackp, 1, cardi);
 
         /* Resume */
-        if (! marpaESLIFRecognizer_resumeb(marpaESLIFRecognizerp, &continueb, &exhaustedb)) {
+        if (! marpaESLIFRecognizer_resumeb(marpaESLIFRecognizerp, 0, &continueb, &exhaustedb)) {
           test_parse_result_type = PARSE_FAILED_BEFORE_END;
           goto check;
         }

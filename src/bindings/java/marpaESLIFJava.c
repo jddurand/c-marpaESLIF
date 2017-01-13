@@ -35,7 +35,7 @@ JNIEXPORT void      JNICALL Java_org_parser_marpa_ESLIFGrammar_jniFree          
 
 JNIEXPORT void         JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniNew                    (JNIEnv *envp, jobject eslifRecognizerp, jobject eslifGrammarp);
 JNIEXPORT void         JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniScan                   (JNIEnv *envp, jobject eslifRecognizerp, jboolean initialEvents);
-JNIEXPORT void         JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniResume                 (JNIEnv *envp, jobject eslifRecognizerp);
+JNIEXPORT void         JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniResume                 (JNIEnv *envp, jobject eslifRecognizerp, jint deltaLength);
 JNIEXPORT void         JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniLexemeAlternativeLength(JNIEnv *envp, jobject eslifRecognizerp, jint lengthi);
 JNIEXPORT void         JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniLexemeAlternative      (JNIEnv *envp, jobject eslifRecognizerp, jstring namep);
 JNIEXPORT void         JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniLexemeComplete         (JNIEnv *envp, jobject eslifRecognizerp);
@@ -1711,7 +1711,7 @@ JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniScan(JNIEnv *env
 }
 
 /*****************************************************************************/
-JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniResume(JNIEnv *envp, jobject eslifRecognizerp)
+JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniResume(JNIEnv *envp, jobject eslifRecognizerp, jint deltaLength)
 /*****************************************************************************/
 {
   marpaESLIFRecognizer_t *marpaESLIFRecognizerp;
@@ -1727,7 +1727,12 @@ JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniResume(JNIEnv *e
     goto err;
   }
 
-  if (! marpaESLIFRecognizer_resumeb(marpaESLIFRecognizerp, &continueb, &exhaustedb)) {
+  /* Let's be conservative */
+  if (deltaLength < 0) {
+    RAISEEXCEPTION(envp, "Resume delta length cannot be negative");
+  }
+  
+  if (! marpaESLIFRecognizer_resumeb(marpaESLIFRecognizerp, (size_t) deltaLength, &continueb, &exhaustedb)) {
     RAISEEXCEPTION(envp, "marpaESLIFRecognizer_scanb failure");
   }
 

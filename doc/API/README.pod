@@ -686,10 +686,11 @@ This method returns a true value on success, a false value on failure.
 =head3 C<marpaESLIFRecognizer_resumeb>
 
   short marpaESLIFRecognizer_resumeb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp,
+                                     size_t deltaLengthl,
                                      short *continuebp,
                                      short *exhaustedbp);
 
-Resume the scanning. All parameters have the same meaning as for C<marpaESLIFRecognizer_scanb>. A typical usage is:
+Resume the scanning. All parameters have the same meaning as for C<marpaESLIFRecognizer_scanb>, with an additional C<deltaLengthl> that say to the recognizer to skip this given number of byte before going on. A typical usage is:
 
   short continueb;
   short exhaustedb;
@@ -705,6 +706,7 @@ Resume the scanning. All parameters have the same meaning as for C<marpaESLIFRec
     /* ... */
     /* Resume */
     if (! marpaESLIFRecognizer_resumeb(marpaESLIFRecognizerp,
+                                       0,
                                        &continueb,
                                        &exhaustedb)) {
       goto error_processing;

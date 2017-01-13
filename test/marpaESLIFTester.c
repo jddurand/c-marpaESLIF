@@ -162,7 +162,7 @@ int main() {
     goto err;
   }
   while (continueb) {
-    if (! marpaESLIFRecognizer_resumeb(marpaESLIFRecognizerp, &continueb, &exhaustedb)) {
+    if (! marpaESLIFRecognizer_resumeb(marpaESLIFRecognizerp, 0, &continueb, &exhaustedb)) {
       goto err;
     }
     /* Lexemes expected ? */
