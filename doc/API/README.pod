@@ -902,13 +902,14 @@ These pointers are intentionnaly not having a I<const> keyword, though it is obv
 
 Returns a true value on success, a false value on failure.
 
-=head3 C<marpaESLIFRecognizer_pauseb>
+=head3 C<marpaESLIFRecognizer_lexeme_last_pauseb>
 
-  short marpaESLIFRecognizer_pauseb(marpaESLIFRecognizer_t  *marpaESLIFRecognizerp,
-                                    char                   **pausesp,
-                                    size_t                  *pauselp);
+  short marpaESLIFRecognizer_lexeme_last_pauseb(marpaESLIFRecognizer_t  *marpaESLIFRecognizerp,
+                                                char                    *lexemes,
+                                                char                   **pausesp,
+                                                size_t                  *pauselp);
 
-For the recognizer instance pointed by C<marpaESLIFRecognizerp>, returns a pointer to the last portion of input stream that generated a I<lexeme pause> event in the value pointed by C<pausesp> if it is not NULL, and the length in the value pointed by C<pauselp> if it is not NULL. For convenience if the last pause is not NULL, the buffer holding the pause information is always NUL-terminated, even if the C<\0> NUL character is I<not> in the returned length.
+For the recognizer instance pointed by C<marpaESLIFRecognizerp>, returns a pointer to the last portion of input stream that generated a I<lexeme pause> event for lexeme C<lexemes> in the value pointed by C<pausesp> if it is not NULL, and the length in the value pointed by C<pauselp> if it is not NULL. For convenience if the last pause is not NULL, the buffer holding the pause information is always NUL-terminated, even if the C<\0> NUL character is I<not> in the returned length.
 
 Returns a true value on success, a false value on failure.
 
