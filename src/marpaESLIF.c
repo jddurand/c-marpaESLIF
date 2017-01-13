@@ -12528,9 +12528,16 @@ static inline short _marpaESLIFRecognizer_alternative_lengthb(marpaESLIFRecogniz
     MARPAESLIF_ERROR(marpaESLIFp, "Alternative length must be > 0");
     goto err;
   }
-  if (alternativeLengthl > marpaESLIFRecognizerp->inputl) {
-    MARPAESLIF_ERRORF(marpaESLIFp, "Alternative length must be <= current remaining bytes in recognizer buffer, currently %ld", (unsigned long) marpaESLIFRecognizerp->inputl);
-    goto err;
+  /* The user may give a length bigger than what we have */
+  while (alternativeLengthl > marpaESLIFRecognizerp->inputl) {
+    if (! *(marpaESLIFRecognizerp->eofbp)) {
+      if (! _marpaESLIFRecognizer_readb(marpaESLIFRecognizerp)) {
+        goto err;
+      }
+    } else {
+      MARPAESLIF_ERRORF(marpaESLIFp, "Alternative length must be <= current remaining bytes in recognizer buffer, currently %ld", (unsigned long) marpaESLIFRecognizerp->inputl);
+      goto err;
+    }
   }
   /* Alternative length must be set once until a call to complete */
   if (marpaESLIFRecognizerp->alternativeLengthl > 0) {
