@@ -9160,7 +9160,6 @@ static inline short _marpaESLIFRecognizer_createBeforeStateb(marpaESLIFRecognize
   marpaESLIF_grammar_t *grammarp;
   genericStack_t       *symbolStackp;
   short                 rcb;
-  int                   grammari;
   int                   symboli;
   marpaESLIF_symbol_t  *symbolp;
 
@@ -9215,7 +9214,6 @@ static inline short _marpaESLIFRecognizer_createAfterStateb(marpaESLIFRecognizer
   marpaESLIF_grammar_t *grammarp;
   genericStack_t       *symbolStackp;
   short                 rcb;
-  int                   grammari;
   int                   symboli;
   marpaESLIF_symbol_t  *symbolp;
 
@@ -9270,7 +9268,6 @@ static inline short _marpaESLIFRecognizer_createLastPauseb(marpaESLIFRecognizer_
   marpaESLIF_grammar_t     *grammarp;
   genericStack_t           *symbolStackp;
   short                     rcb;
-  int                       grammari;
   int                       symboli;
   marpaESLIF_symbol_t      *symbolp;
 
