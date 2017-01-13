@@ -6081,7 +6081,7 @@ short marpaESLIFRecognizer_eventb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp,
 static inline short _marpaESLIFRecognizer_set_pauseb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIF_grammar_t *grammarp, marpaESLIF_symbol_t *symbolp, char *bytep, size_t bytel)
 /*****************************************************************************/
 {
-  static const char      *funcs       = "_marpaESLIFRecognizer_push_eventb";
+  static const char       *funcs      = "_marpaESLIFRecognizer_set_pauseb";
   marpaESLIF_last_pause_t *lastPausep = marpaESLIFRecognizerp->lastPauseppp[grammarp->leveli][symbolp->idi];
   char                    *pauses;
   size_t                   pauseSizel;
@@ -12469,6 +12469,7 @@ short marpaESLIFRecognizer_lexeme_last_pauseb(marpaESLIFRecognizer_t *marpaESLIF
   marpaESLIFSymbol_t        *symbolp;
   marpaESLIF_last_pause_t ***lastPauseppp;
   marpaESLIF_last_pause_t   *lastPausep;
+  short                      rcb;
 
   if (marpaESLIFRecognizerp == NULL) {
     errno = EINVAL;
@@ -12482,26 +12483,34 @@ short marpaESLIFRecognizer_lexeme_last_pauseb(marpaESLIFRecognizer_t *marpaESLIF
 
   if (lexemes == NULL) {
     MARPAESLIF_ERROR(marpaESLIFp, "Lexeme name is NULL");
-    return 0;
+    goto err;
   }
 
   symbolp = _marpaESLIF_symbol_findp(marpaESLIFp, grammarp, lexemes, -1, NULL /* symbolip */);
   if (symbolp == NULL) {
-    MARPAESLIF_ERRORF(marpaESLIFp, "Failed to find lexeme <%s>", lexemes);
-    return 0;
+    MARPAESLIF_ERRORF(marpaESLIFp, "Failed to find <%s>", lexemes);
+    goto err;
   }
   lastPausep = lastPauseppp[grammarp->leveli][symbolp->idi];
-
-  if (lastPausep != NULL) {
-    if (pausesp != NULL) {
-      *pausesp = lastPausep->pauses;
-    }
-    if (pauselp != NULL) {
-      *pauselp = lastPausep->pausel;
-    }
+  if (lastPausep == NULL) {
+    MARPAESLIF_ERRORF(marpaESLIFp, "Symbol <%s> has no pause setting", lexemes);
+    goto err;
   }
 
-  return 1;
+  if (pausesp != NULL) {
+    *pausesp = lastPausep->pauses;
+  }
+  if (pauselp != NULL) {
+    *pauselp = lastPausep->pausel;
+  }
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  return rcb;
 }
 
 /*****************************************************************************/

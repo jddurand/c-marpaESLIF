@@ -2079,7 +2079,7 @@ JNIEXPORT jbyteArray JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniLexemeLast
   }
 
   if (!  marpaESLIFRecognizer_lexeme_last_pauseb(marpaESLIFRecognizerp, (char *) lexemes, &pauses, &pausel)) {
-    RAISEEXCEPTION(envp, "marpaESLIFRecognizer_pauseb failure");
+    RAISEEXCEPTION(envp, "marpaESLIFRecognizer_lexeme_last_pauseb failure");
   }
 
   if ((pauses != NULL) && (pausel > 0)) {
