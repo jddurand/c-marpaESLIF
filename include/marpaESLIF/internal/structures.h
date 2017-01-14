@@ -322,9 +322,9 @@ struct marpaESLIFRecognizer {
   short                        completedb;     /* Ditto for completion (used in case od discard events) */
   short                        continueb;
   size_t                       alternativeLengthl;
-  genericStack_t              *alternativeStackp;       /* Current alternative stack */
-  genericStack_t              *alternativeStackWorkp;   /* Work alternative stack */
-  genericStack_t              *commitedAlternativeStackp; /* Commited alternative stack (internal + external) */
+  genericStack_t              *alternativeStackSymbolp;          /* Current alternative stack containing symbol information and the matched size */
+  genericStack_t              *alternativeStackSymbolWorkp;      /* Work alternative stack */
+  genericStack_t              *commitedAlternativeStackSymbolp;  /* Commited alternative stack */
   genericStack_t              *set2InputStackp;
   char                       **lexemesArrayp;      /* Persistent buffer of last call to marpaESLIFRecognizer_lexeme_expectedb */
   size_t                       lexemesArrayAllocl; /* Current allocated size -; */
