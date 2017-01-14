@@ -4639,8 +4639,8 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
   short                            latmb                             = grammarp->latmb;
   marpaESLIFValueOption_t          marpaESLIFValueOptionDiscard      = marpaESLIFValueOption_default_template;
   marpaESLIFRecognizerOption_t     marpaESLIFRecognizerOptionDiscard = marpaESLIFRecognizerp->marpaESLIFRecognizerOption; /* Things overwriten, see below */
-  genericStack_t                  *alternativeStackp                 = marpaESLIFRecognizerp->alternativeStackp;
-  genericStack_t                  *alternativeStackWorkp             = marpaESLIFRecognizerp->alternativeStackWorkp;
+  genericStack_t                  *alternativeStackSymbolp           = marpaESLIFRecognizerp->alternativeStackSymbolp;
+  genericStack_t                  *alternativeStackSymbolWorkp       = marpaESLIFRecognizerp->alternativeStackSymbolWorkp;
   marpaWrapperRecognizer_t        *marpaWrapperRecognizerp           = marpaESLIFRecognizerp->marpaWrapperRecognizerp;
   short                            haveTerminalMatchedb              = 0;
   short                            maxPriorityInitializedb           = 0;
@@ -4690,7 +4690,7 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
   marpaESLIFRecognizerp->completedb            = 0;
   marpaESLIFRecognizerp->continueb             = 0;
 
-  GENERICSTACK_USED(alternativeStackp) = 0;
+  GENERICSTACK_USED(alternativeStackSymbolp) = 0;
   /* We always start by resetting and collecting current events */
   MARPAESLIFRECOGNIZER_RESET_EVENTS(marpaESLIFRecognizerp);
   /* We break immediately if there are events and the initialEventsb is set. This can happen once */
@@ -4770,9 +4770,9 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
       free(marpaESLIFValueResult.u.p);
       GENERICSTACK_ARRAY_PTR(array)    = symbolp; /* Not needed */
       GENERICSTACK_ARRAY_LENGTH(array) = marpaESLIFValueResult.sizel; /* Indicate success for this symbol */
-      GENERICSTACK_PUSH_ARRAY(alternativeStackp, array);
-      if (GENERICSTACK_ERROR(alternativeStackp)) {
-        MARPAESLIF_ERRORF(marpaESLIFp, "alternativeStackp push failure, %s", strerror(errno));
+      GENERICSTACK_PUSH_ARRAY(alternativeStackSymbolp, array);
+      if (GENERICSTACK_ERROR(alternativeStackSymbolp)) {
+        MARPAESLIF_ERRORF(marpaESLIFp, "alternativeStackSymbolp push failure, %s", strerror(errno));
         goto err;
       }
       /* Remember max matched length */
@@ -4792,7 +4792,7 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
     }
   }
   
-  if (GENERICSTACK_USED(alternativeStackp) <= 0) {
+  if (GENERICSTACK_USED(alternativeStackSymbolp) <= 0) {
     /* If we are not already in the discard mode, try to discard */
     if ((! marpaESLIFRecognizerp->discardb) && (grammarp->discardi >= 0)) {
       /* Always reset this shallow pointer */
@@ -4869,9 +4869,9 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
 
   /* Filter by type. If at least one terminal matched, skip everything that is not a terminal */
   if (haveTerminalMatchedb) {
-    GENERICSTACK_USED(alternativeStackWorkp) = 0;
-    for (alternativei = 0; alternativei < GENERICSTACK_USED(alternativeStackp); alternativei++) {
-      array   = GENERICSTACK_GET_ARRAY(alternativeStackp, alternativei);
+    GENERICSTACK_USED(alternativeStackSymbolWorkp) = 0;
+    for (alternativei = 0; alternativei < GENERICSTACK_USED(alternativeStackSymbolp); alternativei++) {
+      array   = GENERICSTACK_GET_ARRAY(alternativeStackSymbolp, alternativei);
       symbolp = GENERICSTACK_ARRAY_PTR(array);
       sizel   = GENERICSTACK_ARRAY_LENGTH(array);
       if (symbolp->type != MARPAESLIF_SYMBOL_TYPE_TERMINAL) {
@@ -4881,15 +4881,15 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
                                     symbolp->descp->asciis);
         continue;
       }
-      GENERICSTACK_PUSH_ARRAY(alternativeStackWorkp, array);
-      if (GENERICSTACK_ERROR(alternativeStackWorkp)) {
-        MARPAESLIF_ERRORF(marpaESLIFp, "alternativeStackWorkp push failure, %s", strerror(errno));
+      GENERICSTACK_PUSH_ARRAY(alternativeStackSymbolWorkp, array);
+      if (GENERICSTACK_ERROR(alternativeStackSymbolWorkp)) {
+        MARPAESLIF_ERRORF(marpaESLIFp, "alternativeStackSymbolWorkp push failure, %s", strerror(errno));
         goto err;
       }
     }
-    MARPAESLIFRECOGNIZER_EXCHANGE_ALTERNATIVESTACK(alternativeStackp, alternativeStackWorkp);
+    MARPAESLIFRECOGNIZER_EXCHANGE_ALTERNATIVESTACK(alternativeStackSymbolp, alternativeStackSymbolWorkp);
     /* Should never happen */
-    if (GENERICSTACK_USED(alternativeStackp) <= 0) {
+    if (GENERICSTACK_USED(alternativeStackSymbolp) <= 0) {
       MARPAESLIF_ERROR(marpaESLIFp, "Terminal filtering filtered everything");
       goto err;
     }
@@ -4897,17 +4897,17 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
 
   /* Filter by priority */
   {
-    for (alternativei = 0; alternativei < GENERICSTACK_USED(alternativeStackp); alternativei++) {
-      array   = GENERICSTACK_GET_ARRAY(alternativeStackp, alternativei);
+    for (alternativei = 0; alternativei < GENERICSTACK_USED(alternativeStackSymbolp); alternativei++) {
+      array   = GENERICSTACK_GET_ARRAY(alternativeStackSymbolp, alternativei);
       symbolp = GENERICSTACK_ARRAY_PTR(array);
       sizel   = GENERICSTACK_ARRAY_LENGTH(array);
       if ((! maxPriorityInitializedb) || (symbolp->priorityi > maxPriorityi)) {
         maxPriorityi = symbolp->priorityi;
       }
     }
-    GENERICSTACK_USED(alternativeStackWorkp) = 0;
-    for (alternativei = 0; alternativei < GENERICSTACK_USED(alternativeStackp); alternativei++) {
-      array   = GENERICSTACK_GET_ARRAY(alternativeStackp, alternativei);
+    GENERICSTACK_USED(alternativeStackSymbolWorkp) = 0;
+    for (alternativei = 0; alternativei < GENERICSTACK_USED(alternativeStackSymbolp); alternativei++) {
+      array   = GENERICSTACK_GET_ARRAY(alternativeStackSymbolp, alternativei);
       symbolp = GENERICSTACK_ARRAY_PTR(array);
       sizel   = GENERICSTACK_ARRAY_LENGTH(array);
       if (symbolp->priorityi < maxPriorityi) {
@@ -4919,15 +4919,15 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
                                     maxPriorityi);
         continue;
       }
-      GENERICSTACK_PUSH_ARRAY(alternativeStackWorkp, array);
-      if (GENERICSTACK_ERROR(alternativeStackWorkp)) {
-        MARPAESLIF_ERRORF(marpaESLIFp, "alternativeStackWorkp push failure, %s", strerror(errno));
+      GENERICSTACK_PUSH_ARRAY(alternativeStackSymbolWorkp, array);
+      if (GENERICSTACK_ERROR(alternativeStackSymbolWorkp)) {
+        MARPAESLIF_ERRORF(marpaESLIFp, "alternativeStackSymbolWorkp push failure, %s", strerror(errno));
         goto err;
       }
     }
-    MARPAESLIFRECOGNIZER_EXCHANGE_ALTERNATIVESTACK(alternativeStackp, alternativeStackWorkp);
+    MARPAESLIFRECOGNIZER_EXCHANGE_ALTERNATIVESTACK(alternativeStackSymbolp, alternativeStackSymbolWorkp);
     /* Should never happen */
-    if (GENERICSTACK_USED(alternativeStackp) <= 0) {
+    if (GENERICSTACK_USED(alternativeStackSymbolp) <= 0) {
       MARPAESLIF_ERROR(marpaESLIFp, "LATM filtering filtered everything");
       goto err;
     }
@@ -4935,9 +4935,9 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
 
   /* Filter by length (LATM) - this test is "useless" in the sense that latmb is forced to be true, i.e. maxMatchedl is always meaningful */
   if (latmb) {
-    GENERICSTACK_USED(alternativeStackWorkp) = 0;
-    for (alternativei = 0; alternativei < GENERICSTACK_USED(alternativeStackp); alternativei++) {
-      array   = GENERICSTACK_GET_ARRAY(alternativeStackp, alternativei);
+    GENERICSTACK_USED(alternativeStackSymbolWorkp) = 0;
+    for (alternativei = 0; alternativei < GENERICSTACK_USED(alternativeStackSymbolp); alternativei++) {
+      array   = GENERICSTACK_GET_ARRAY(alternativeStackSymbolp, alternativei);
       symbolp = GENERICSTACK_ARRAY_PTR(array);
       sizel   = GENERICSTACK_ARRAY_LENGTH(array);
       if (sizel < maxMatchedl) {
@@ -4949,15 +4949,15 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
                                     (unsigned long) maxMatchedl);
         continue;
       }
-      GENERICSTACK_PUSH_ARRAY(alternativeStackWorkp, array);
-      if (GENERICSTACK_ERROR(alternativeStackWorkp)) {
-        MARPAESLIF_ERRORF(marpaESLIFp, "alternativeStackWorkp push failure, %s", strerror(errno));
+      GENERICSTACK_PUSH_ARRAY(alternativeStackSymbolWorkp, array);
+      if (GENERICSTACK_ERROR(alternativeStackSymbolWorkp)) {
+        MARPAESLIF_ERRORF(marpaESLIFp, "alternativeStackSymbolWorkp push failure, %s", strerror(errno));
         goto err;
       }
     }
-    MARPAESLIFRECOGNIZER_EXCHANGE_ALTERNATIVESTACK(alternativeStackp, alternativeStackWorkp);
+    MARPAESLIFRECOGNIZER_EXCHANGE_ALTERNATIVESTACK(alternativeStackSymbolp, alternativeStackSymbolWorkp);
     /* Should never happen */
-    if (GENERICSTACK_USED(alternativeStackp) <= 0) {
+    if (GENERICSTACK_USED(alternativeStackSymbolp) <= 0) {
       MARPAESLIF_ERROR(marpaESLIFp, "LATM filtering filtered everything");
       goto err;
     }
@@ -5005,7 +5005,7 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
         marpaESLIFRecognizerp->inputl -= marpaESLIFValueResult.sizel;
         free(marpaESLIFValueResult.u.p);
         /* These two lines are important so that this specific retry is clean */
-        GENERICSTACK_USED(alternativeStackp) = 0;
+        GENERICSTACK_USED(alternativeStackSymbolp) = 0;
         maxMatchedl = 0;
         /* If there is an event, get out of this method */
         if ((marpaESLIFRecognizerp->discardEvents != NULL) && (marpaESLIFRecognizerp->discardSymbolp != NULL)) {
@@ -5032,8 +5032,8 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
   marpaESLIFRecognizerp->haveLexemeb = 1;
 
   /* Determine if we have pause before events - only for the top-level recognizer */
-  for (alternativei = 0; alternativei < GENERICSTACK_USED(alternativeStackp); alternativei++) {
-    array   = GENERICSTACK_GET_ARRAY(alternativeStackp, alternativei);
+  for (alternativei = 0; alternativei < GENERICSTACK_USED(alternativeStackSymbolp); alternativei++) {
+    array   = GENERICSTACK_GET_ARRAY(alternativeStackSymbolp, alternativei);
     symbolp = GENERICSTACK_ARRAY_PTR(array);
     if ((symbolp->eventBefores != NULL) && marpaESLIFRecognizerp->beforeEventStatebp[symbolp->idi]) {
       if (! _marpaESLIFRecognizer_set_pauseb(marpaESLIFRecognizerp, grammarp, symbolp, marpaESLIFRecognizerp->inputs, maxMatchedl)) {
@@ -5054,8 +5054,8 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
   if (! _marpaESLIFRecognizer_alternative_lengthb(marpaESLIFRecognizerp, maxMatchedl)) {
     goto err;
   }
-  for (alternativei = 0; alternativei < GENERICSTACK_USED(alternativeStackp); alternativei++) {
-    array   = GENERICSTACK_GET_ARRAY(alternativeStackp, alternativei);
+  for (alternativei = 0; alternativei < GENERICSTACK_USED(alternativeStackSymbolp); alternativei++) {
+    array   = GENERICSTACK_GET_ARRAY(alternativeStackSymbolp, alternativei);
     symbolp = GENERICSTACK_ARRAY_PTR(array);
     if (! _marpaESLIFRecognizer_alternativeb(marpaESLIFRecognizerp, symbolp)) {
       goto err;
@@ -5257,9 +5257,9 @@ short marpaESLIFRecognizer_lexeme_alternativeb(marpaESLIFRecognizer_t *marpaESLI
 static inline short _marpaESLIFRecognizer_alternative_and_valueb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIF_symbol_t *symbolp, int valuei)
 /*****************************************************************************/
 {
-  static const char *funcs                     = "_marpaESLIFRecognizer_alternative_and_valueb";
-  marpaESLIF_t      *marpaESLIFp               = marpaESLIFRecognizerp->marpaESLIFp;
-  genericStack_t    *commitedAlternativeStackp = marpaESLIFRecognizerp->commitedAlternativeStackp;
+  static const char *funcs                           = "_marpaESLIFRecognizer_alternative_and_valueb";
+  marpaESLIF_t      *marpaESLIFp                     = marpaESLIFRecognizerp->marpaESLIFp;
+  genericStack_t    *commitedAlternativeStackSymbolp = marpaESLIFRecognizerp->commitedAlternativeStackSymbolp;
   short              rcb;
 
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
@@ -5276,9 +5276,9 @@ static inline short _marpaESLIFRecognizer_alternative_and_valueb(marpaESLIFRecog
   if (! marpaWrapperRecognizer_alternativeb(marpaESLIFRecognizerp->marpaWrapperRecognizerp, symbolp->idi, valuei, 1)) {
     goto err;
   }
-  GENERICSTACK_PUSH_PTR(commitedAlternativeStackp, symbolp);
-  if (GENERICSTACK_ERROR(commitedAlternativeStackp)) {
-    MARPAESLIF_ERRORF(marpaESLIFp, "commitedAlternativeStackp push failure, %s", strerror(errno));
+  GENERICSTACK_PUSH_PTR(commitedAlternativeStackSymbolp, symbolp);
+  if (GENERICSTACK_ERROR(commitedAlternativeStackSymbolp)) {
+    MARPAESLIF_ERRORF(marpaESLIFp, "commitedAlternativeStackSymbolp push failure, %s", strerror(errno));
     goto err;
   }
 
@@ -5341,13 +5341,13 @@ short marpaESLIFRecognizer_lexeme_completeb(marpaESLIFRecognizer_t *marpaESLIFRe
 static inline short _marpaESLIFRecognizer_completeb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp)
 /*****************************************************************************/
 {
-  static const char                *funcs                     = "_marpaESLIFRecognizer_completeb";
-  marpaESLIF_t                     *marpaESLIFp               = marpaESLIFRecognizerp->marpaESLIFp;
-  marpaESLIFGrammar_t              *marpaESLIFGrammarp        = marpaESLIFRecognizerp->marpaESLIFGrammarp;
-  marpaESLIF_grammar_t             *grammarp                  = marpaESLIFGrammarp->grammarp;
-  genericStack_t                   *commitedAlternativeStackp = marpaESLIFRecognizerp->commitedAlternativeStackp;
-  char                             *inputs                    = marpaESLIFRecognizerp->inputs;
-  size_t                            alternativeLengthl        = marpaESLIFRecognizerp->alternativeLengthl;
+  static const char                *funcs                           = "_marpaESLIFRecognizer_completeb";
+  marpaESLIF_t                     *marpaESLIFp                     = marpaESLIFRecognizerp->marpaESLIFp;
+  marpaESLIFGrammar_t              *marpaESLIFGrammarp              = marpaESLIFRecognizerp->marpaESLIFGrammarp;
+  marpaESLIF_grammar_t             *grammarp                        = marpaESLIFGrammarp->grammarp;
+  genericStack_t                   *commitedAlternativeStackSymbolp = marpaESLIFRecognizerp->commitedAlternativeStackSymbolp;
+  char                             *inputs                          = marpaESLIFRecognizerp->inputs;
+  size_t                            alternativeLengthl              = marpaESLIFRecognizerp->alternativeLengthl;
   genericStack_t                   *set2InputStackp;
   int                               commitedAlternativei;
   marpaESLIF_symbol_t              *symbolp;
@@ -5359,8 +5359,8 @@ static inline short _marpaESLIFRecognizer_completeb(marpaESLIFRecognizer_t *marp
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
 
-  if (GENERICSTACK_USED(commitedAlternativeStackp) <= 0) {
-    MARPAESLIF_ERROR(marpaESLIFp, "commitedAlternativeStackp is empty");
+  if (GENERICSTACK_USED(commitedAlternativeStackSymbolp) <= 0) {
+    MARPAESLIF_ERROR(marpaESLIFp, "commitedAlternativeStackSymbolp is empty");
     goto err;
   }
 
@@ -5407,8 +5407,8 @@ static inline short _marpaESLIFRecognizer_completeb(marpaESLIFRecognizer_t *marp
   if (! _marpaESLIFRecognizer_push_grammar_eventsb(marpaESLIFRecognizerp)) {
     goto err;
   }
-  for (commitedAlternativei = 0; commitedAlternativei < GENERICSTACK_USED(commitedAlternativeStackp); commitedAlternativei++) {
-    symbolp = (marpaESLIF_symbol_t *) GENERICSTACK_GET_PTR(commitedAlternativeStackp, commitedAlternativei);
+  for (commitedAlternativei = 0; commitedAlternativei < GENERICSTACK_USED(commitedAlternativeStackSymbolp); commitedAlternativei++) {
+    symbolp = (marpaESLIF_symbol_t *) GENERICSTACK_GET_PTR(commitedAlternativeStackSymbolp, commitedAlternativei);
     if ((symbolp->eventAfters != NULL) && marpaESLIFRecognizerp->afterEventStatebp[symbolp->idi]) {
       if (! _marpaESLIFRecognizer_set_pauseb(marpaESLIFRecognizerp, grammarp, symbolp, inputs, alternativeLengthl)) {
         goto err;
@@ -5425,7 +5425,7 @@ static inline short _marpaESLIFRecognizer_completeb(marpaESLIFRecognizer_t *marp
 
   /* We can reset commited alternatives and length */
   marpaESLIFRecognizerp->alternativeLengthl = 0;
-  GENERICSTACK_USED(commitedAlternativeStackp) = 0;
+  GENERICSTACK_USED(commitedAlternativeStackSymbolp) = 0;
 
   rcb = 1;
   goto done;
@@ -5660,9 +5660,9 @@ void marpaESLIFRecognizer_freev(marpaESLIFRecognizer_t *marpaESLIFRecognizerp)
     MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
 
     _marpaESLIFrecognizer_lexemeStack_freev(marpaESLIFRecognizerp, marpaESLIFRecognizerp->lexemeInputStackp);
-    GENERICSTACK_FREE(marpaESLIFRecognizerp->alternativeStackp);
-    GENERICSTACK_FREE(marpaESLIFRecognizerp->alternativeStackWorkp);
-    GENERICSTACK_FREE(marpaESLIFRecognizerp->commitedAlternativeStackp);
+    GENERICSTACK_FREE(marpaESLIFRecognizerp->alternativeStackSymbolp);
+    GENERICSTACK_FREE(marpaESLIFRecognizerp->alternativeStackSymbolWorkp);
+    GENERICSTACK_FREE(marpaESLIFRecognizerp->commitedAlternativeStackSymbolp);
     GENERICSTACK_FREE(marpaESLIFRecognizerp->set2InputStackp);
     if (marpaESLIFRecognizerp->lexemesArrayp != NULL) {
       free(marpaESLIFRecognizerp->lexemesArrayp);
@@ -6384,30 +6384,30 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGramm
     }
     marpaESLIFRecognizerp->buftriggerl                = (marpaESLIFRecognizerp->bufsizl * (100 + marpaESLIFRecognizerp->marpaESLIFRecognizerOption.buftriggerperci)) / 100;
   }
-  marpaESLIFRecognizerp->scanb                      = 0;
-  marpaESLIFRecognizerp->noEventb                   = noEventb;
-  marpaESLIFRecognizerp->discardb                   = discardb;
-  marpaESLIFRecognizerp->exceptionb                 = ((exceptionStackp != NULL) && (GENERICSTACK_USED(exceptionStackp) > 0));
-  marpaESLIFRecognizerp->exceptionStackp            = exceptionStackp;
-  marpaESLIFRecognizerp->silentb                    = silentb;
-  marpaESLIFRecognizerp->haveLexemeb                = 0;
-  marpaESLIFRecognizerp->linel                      = 1;
-  marpaESLIFRecognizerp->columnl                    = 0;
+  marpaESLIFRecognizerp->scanb                           = 0;
+  marpaESLIFRecognizerp->noEventb                        = noEventb;
+  marpaESLIFRecognizerp->discardb                        = discardb;
+  marpaESLIFRecognizerp->exceptionb                      = ((exceptionStackp != NULL) && (GENERICSTACK_USED(exceptionStackp) > 0));
+  marpaESLIFRecognizerp->exceptionStackp                 = exceptionStackp;
+  marpaESLIFRecognizerp->silentb                         = silentb;
+  marpaESLIFRecognizerp->haveLexemeb                     = 0;
+  marpaESLIFRecognizerp->linel                           = 1;
+  marpaESLIFRecognizerp->columnl                         = 0;
   /* These variables are resetted at every _resume_oneb() */
-  marpaESLIFRecognizerp->exhaustedb                 = 0;
-  marpaESLIFRecognizerp->completedb                 = 0;
-  marpaESLIFRecognizerp->continueb                  = 0;
-  marpaESLIFRecognizerp->alternativeLengthl         = 0;
-  marpaESLIFRecognizerp->alternativeStackp          = NULL;
-  marpaESLIFRecognizerp->alternativeStackWorkp      = NULL;
-  marpaESLIFRecognizerp->commitedAlternativeStackp  = NULL;
-  marpaESLIFRecognizerp->lastPausepp                = NULL;
-  marpaESLIFRecognizerp->set2InputStackp            = NULL;
-  marpaESLIFRecognizerp->lexemesArrayp              = NULL;
-  marpaESLIFRecognizerp->lexemesArrayAllocl         = 0;
-  marpaESLIFRecognizerp->discardEventStatebp        = NULL;
-  marpaESLIFRecognizerp->beforeEventStatebp         = NULL;
-  marpaESLIFRecognizerp->afterEventStatebp          = NULL;
+  marpaESLIFRecognizerp->exhaustedb                      = 0;
+  marpaESLIFRecognizerp->completedb                      = 0;
+  marpaESLIFRecognizerp->continueb                       = 0;
+  marpaESLIFRecognizerp->alternativeLengthl              = 0;
+  marpaESLIFRecognizerp->alternativeStackSymbolp         = NULL;
+  marpaESLIFRecognizerp->alternativeStackSymbolWorkp     = NULL;
+  marpaESLIFRecognizerp->commitedAlternativeStackSymbolp = NULL;
+  marpaESLIFRecognizerp->lastPausepp                     = NULL;
+  marpaESLIFRecognizerp->set2InputStackp                 = NULL;
+  marpaESLIFRecognizerp->lexemesArrayp                   = NULL;
+  marpaESLIFRecognizerp->lexemesArrayAllocl              = 0;
+  marpaESLIFRecognizerp->discardEventStatebp             = NULL;
+  marpaESLIFRecognizerp->beforeEventStatebp              = NULL;
+  marpaESLIFRecognizerp->afterEventStatebp               = NULL;
 
   marpaWrapperRecognizerOption.genericLoggerp       = silentb ? NULL : marpaESLIFp->marpaESLIFOption.genericLoggerp;
   marpaWrapperRecognizerOption.disableThresholdb    = marpaESLIFRecognizerOptionp->disableThresholdb;
@@ -6514,21 +6514,21 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGramm
     marpaESLIFRecognizerp->marpaWrapperRecognizerp = NULL;
   }
 
-  GENERICSTACK_NEW(marpaESLIFRecognizerp->alternativeStackp);
-  if (GENERICSTACK_ERROR(marpaESLIFRecognizerp->alternativeStackp)) {
-    MARPAESLIF_ERRORF(marpaESLIFp, "alternativeStackp initialization failure, %s", strerror(errno));
+  GENERICSTACK_NEW(marpaESLIFRecognizerp->alternativeStackSymbolp);
+  if (GENERICSTACK_ERROR(marpaESLIFRecognizerp->alternativeStackSymbolp)) {
+    MARPAESLIF_ERRORF(marpaESLIFp, "alternativeStackSymbolp initialization failure, %s", strerror(errno));
     goto err;
   }
 
-  GENERICSTACK_NEW(marpaESLIFRecognizerp->alternativeStackWorkp);
-  if (GENERICSTACK_ERROR(marpaESLIFRecognizerp->alternativeStackWorkp)) {
-    MARPAESLIF_ERRORF(marpaESLIFp, "alternativeStackWorkp initialization failure, %s", strerror(errno));
+  GENERICSTACK_NEW(marpaESLIFRecognizerp->alternativeStackSymbolWorkp);
+  if (GENERICSTACK_ERROR(marpaESLIFRecognizerp->alternativeStackSymbolWorkp)) {
+    MARPAESLIF_ERRORF(marpaESLIFp, "alternativeStackSymbolWorkp initialization failure, %s", strerror(errno));
     goto err;
   }
 
-  GENERICSTACK_NEW(marpaESLIFRecognizerp->commitedAlternativeStackp);
-  if (GENERICSTACK_ERROR(marpaESLIFRecognizerp->commitedAlternativeStackp)) {
-    MARPAESLIF_ERRORF(marpaESLIFp, "commitedAlternativeStackp initialization failure, %s", strerror(errno));
+  GENERICSTACK_NEW(marpaESLIFRecognizerp->commitedAlternativeStackSymbolp);
+  if (GENERICSTACK_ERROR(marpaESLIFRecognizerp->commitedAlternativeStackSymbolp)) {
+    MARPAESLIF_ERRORF(marpaESLIFp, "commitedAlternativeStackSymbolp initialization failure, %s", strerror(errno));
     goto err;
   }
 
