@@ -28,6 +28,7 @@ typedef struct  marpaESLIF_readerContext   marpaESLIF_readerContext_t;
 typedef struct  marpaESLIF_cloneContext    marpaESLIF_cloneContext_t;
 typedef         marpaESLIFStackType_t      marpaESLIF_stack_type_t;
 typedef struct  marpaESLIF_last_pause      marpaESLIF_last_pause_t;
+typedef struct  marpaESLIF_alternative     marpaESLIF_alternative_t;
 
 /* Symbol types */
 enum marpaESLIF_symbol_type {
@@ -323,7 +324,6 @@ struct marpaESLIFRecognizer {
   short                        continueb;
   size_t                       alternativeLengthl;
   genericStack_t              *alternativeStackSymbolp;          /* Current alternative stack containing symbol information and the matched size */
-  genericStack_t              *alternativeStackSymbolWorkp;      /* Work alternative stack */
   genericStack_t              *commitedAlternativeStackSymbolp;  /* Commited alternative stack */
   genericStack_t              *set2InputStackp;
   char                       **lexemesArrayp;      /* Persistent buffer of last call to marpaESLIFRecognizer_lexeme_expectedb */
@@ -338,6 +338,24 @@ struct marpaESLIF_last_pause {
   char   *pauses;        /* Last pause data */
   size_t  pausel;        /* Last pause length */
   size_t  pauseSizel;    /* Last pause allocate size */
+};
+
+struct marpaESLIF_alternative {
+  marpaESLIF_symbol_t *symbolp;  /* Associated symbol */
+  void                *valuep;   /* Associated value and length */
+  size_t               valuel;
+  short                shallowb; /* Flag saying if value is a shallow pointer */
+  int                  lengthi;  /* Length within the grammar (1 in the token-stream model) */
+  short                usedb;    /* Is this structure in use ? */
+};
+
+marpaESLIF_alternative_t marpaESLIF_alternative_default = {
+  NULL, /* symbolp */
+  NULL, /* valuep */
+  0,    /* valuel */
+  0,    /* shallowb */
+  0,    /* tokenl */
+  0     /* usedb */
 };
 
 /* ------------------------------- */
