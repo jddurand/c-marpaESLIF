@@ -15,10 +15,9 @@ public class ESLIFRecognizer {
 	private native void              jniResume(int deltaLength);
 	private native ESLIFEvent[]      jniEvent();
 	private native void              jniEventOnOff(String symbol, ESLIFEventType[] eventTypes, boolean onOff);
-	private native void              jniLexemeAlternativeLength(int length);
-	private native void              jniLexemeAlternative(String name);
-	private native void              jniLexemeComplete();
-	private native void              jniLexemeRead(String name, int length);
+	private native void              jniLexemeAlternative(String name, Object object, int grammarLength);
+	private native void              jniLexemeComplete(int length);
+	private native void              jniLexemeRead(String name, Object object, int grammarLength, int length);
 	private native String[]          jniLexemeExpected();
 	private native byte[]            jniLexemeLastPause(String lexeme);
 	private native boolean           jniIsEof();
@@ -68,20 +67,16 @@ public class ESLIFRecognizer {
 		jniEventOnOff(symbol, eventTypes, onOff);
 	}
 
-	public synchronized void lexemeAlternativeLength(int length) throws ESLIFException {
-		jniLexemeAlternativeLength(length);
+	public synchronized void lexemeAlternative(String name, Object object, int grammarLength) throws ESLIFException {
+		jniLexemeAlternative(name, object, grammarLength);
 	}
 	
-	public synchronized void lexemeAlternative(String name) throws ESLIFException {
-		jniLexemeAlternative(name);
+	public synchronized void lexemeComplete(int length) throws ESLIFException {
+		jniLexemeComplete(length);
 	}
 	
-	public synchronized void lexemeComplete() throws ESLIFException {
-		jniLexemeComplete();
-	}
-	
-	public synchronized void lexemeRead(String name, int length) throws ESLIFException {
-		jniLexemeRead(name, length);
+	public synchronized void lexemeRead(String name, Object object, int grammarLength, int length) throws ESLIFException {
+		jniLexemeRead(name, object, grammarLength, length);
 	}
 	
 	public synchronized String[] lexemeExpected() throws ESLIFException {

@@ -80,8 +80,8 @@ public class AppParse  {
 				"5 ** (2 ** 3)",
 				"5 ** (2 / 3)",
 				"1 + ( 2 + ( 3 + ( 4 + 5) )",
-				"1 + ( 2 + ( 3 + ( 4 + 5) ) )   /* comment after */",
-				" 1"
+				"1 + ( 2 + ( 3 + ( 4 + 50) ) )   /* comment after */",
+				" 100"
 				};
 
 		/*
@@ -115,7 +115,6 @@ public class AppParse  {
 			BufferedReader reader = new BufferedReader(new StringReader(string));
 			AppRecognizer eslifAppRecognizer = new AppRecognizer(reader);
 			ESLIFRecognizer eslifRecognizer = new ESLIFRecognizer(eslifGrammar, eslifAppRecognizer);
-			boolean eslifRecognizerFree = true;
 			eslifLogger.info("");
 			eslifLogger.info("***********************************************************");
 			eslifLogger.info("Testing scan()/resume() on " + string);
@@ -147,7 +146,7 @@ public class AppParse  {
 								if (bytes == null) {
 									throw new Exception("Pause before on NUMBER but no pause information!");
 								}
-								doLexemeRead(eslifLogger, eslifRecognizer, "NUMBER", bytes);
+								doLexemeRead(eslifLogger, eslifRecognizer, "NUMBER", j, bytes);
 						    }
 						}
 					}
@@ -160,13 +159,19 @@ public class AppParse  {
 					showLastCompletion("Loop No " + j, eslifLogger, eslifRecognizer, "Number", string);
 					j++;
 				}
+				// Thread.sleep(10000);
+				AppValue eslifAppValue = new AppValue();
+				eslifLogger.info("Testing value() on " + string);
+				ESLIFValue value = new ESLIFValue(eslifRecognizer, eslifAppValue);
+				while (value.value()) {
+					Object result = eslifAppValue.getResult();
+					eslifLogger.info("Result: " + result);
+				}
+				value.free();
 			} catch (Exception e) {
 				eslifLogger.error("Exception: " + e);
-			} finally {
-				if (eslifRecognizerFree) {
-					eslifRecognizer.free();
-				}
 			}
+			eslifRecognizer.free();
 		}
 
 		eslifGrammar.free();
@@ -197,11 +202,15 @@ public class AppParse  {
 		showLexemeExpected(context, eslifLogger, eslifRecognizer);
 	}
 
-	private static void doLexemeRead(ESLIFLoggerInterface eslifLogger, ESLIFRecognizer eslifRecognizer, String symbol, byte[] bytes) throws Exception {
+	//
+	// We replace current NUMBER by the Integer object representing value
+	//
+	private static void doLexemeRead(ESLIFLoggerInterface eslifLogger, ESLIFRecognizer eslifRecognizer, String symbol, int value, byte[] bytes) throws Exception {
 		String context;
+		String old = new String(bytes, "UTF-8");
 		
-		eslifLogger.debug(" =============> lexemeRead(symbol=" + symbol+ ", bytes=)" + bytes);
-		eslifRecognizer.lexemeRead(symbol, bytes.length);
+		eslifLogger.debug("... Forcing Integer object for \"" + value + "\" spanned on " + bytes.length + " bytes" + " instead of \"" + old + "\"");
+		eslifRecognizer.lexemeRead(symbol, new Integer(value), 1 /* grammarLength */, bytes.length);
 
 		context = "after lexemeRead";
 		showRecognizerInput(context, eslifLogger, eslifRecognizer);

@@ -715,39 +715,132 @@ Resume the scanning. All parameters have the same meaning as for C<marpaESLIFRec
 
 Returns a true value on success, a false value on failure.
 
-=head3 C<marpaESLIFRecognizer_lexeme_alternative_lengthb>
-
-  short marpaESLIFRecognizer_lexeme_alternative_lengthb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp,
-                                                        size_t alternativeLengthl);
-
-When a recognizer is paused, user have the possibility to inject lexemes. Though the marpaESLIF does I<not> support injection of lexemes that would be of different size in the input stream: all lexemes must be of the same size C<alternativeLengthl>, which is in I<byte> unit. At every pause of the scanning, this method can be called once, and it is illegal to give a length higher than the number of remaining bytes in marpaESLIF internal buffer (see the C<marpaESLIFRecognizer_readb> for injecting more data, and C<marpaESLIFRecognizer_inputb> for get information of the internal buffers).
-
-Returns a true value on success, a false value on failure.
-
 =head3 C<marpaESLIFRecognizer_lexeme_alternativeb>
 
-  short marpaESLIFRecognizer_lexeme_alternativeb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp,
-                                                 char *lexemes);
+  typedef struct marpaESLIFAlternative {
+    char                   *lexemes;        /* Lexeme name */
+    marpaESLIFValueResult_t value;          /* Value */
+    size_t                  grammarLengthl; /* Length in the grammar (1 == token-stream model) */
+  } marpaESLIFAlternative_t;
 
-Say to the recognizer pointed by C<marpaESLIFRecognizerp> that the lexeme C<lexemes> (which is an ASCII NUL terminated string) is an alternative. Please note that, as per the grammar, a symbol name is always composed of ASCII characters only.
+  short marpaESLIFRecognizer_lexeme_alternativeb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp,
+                                                 marpaESLIFAlternative_t *marpaESLIFAlternativep);
+
+It is possible to inject arbitrarty lexemes outside of the internal scanner. Such external lexemes are described using a C<marpaESLIFAlternative_t> structure, containing:
+
+=over
+
+=item lexemes
+
+The lexeme name as per the grammar. Must be different than C<NULL>.
+
+=item value
+
+A structure describing the value. Please refer to the "value" namespace below for explanation. Please note that, in contrary to the "value" namespace, where a context for a value must be different than zero, eveyrthing is permitted in case of an alternative.
+
+=item grammarLengthl
+
+The number of grammar tokens taken by this alternative. A highly recommended value is C<1>, which correspond to the tradional "token-stream" model. This number must be greater than zero, and putting a value greater than C<1>, will make the parser believe that your alternative has consumed as many terminals.
+
+=back
+
+Because this is representing a lexeme, which is always of type ARRAY in the value stack (i.e. a pointer to bytes together with an associated length), here is how the rule and symbol callbacks can distinguish from user-defined alternatives from the alternatives coming from the internal recognition: the pointer is non-C<NULL>, but the length is C<0> i.e
+
+=over
+
+=item Rule callbacks
+
+The stack type of the item at an indice C<indicei> is ARRAY, the context is C<0> (i.e. a reserved value), and the array is dereferenced to a non-C<NULL> pointer with a zero length:
+
+  short myRuleCallback(void              *userDatavp,
+                       marpaESLIFValue_t *marpaESLIFValuep,
+                       int                arg0i,
+                       int                argni,
+                       int                resulti,
+                       short              nullableb) {
+
+    short              arrayb;
+    void              *bytep;
+    size_t             bytel;
+    int                contexti;
+    marpaESLIFValue_t *marpaESLIFValuep;
+
+    if (! nullableb) {
+      /* There is something in the stack - let's try arg0i */
+
+      if (! marpaESLIFValue_stack_is_arrayb(marpaESLIFValuep,
+                                            arg0i,
+                                            &arrayb)) {
+        goto err;
+      }
+      if (arrayb) {
+        if (! marpaESLIFValue_stack_get_arrayb(marpaESLIFValuep,
+                                               arg0i
+                                               &contexti,
+                                               &bytep,
+                                               &bytel,
+                                               NULL /* shallowbp */)) {
+          goto err;
+        }
+        if ((! contexti) && (bytep != NULL) && (bytel <= 0)) {
+          /* This is a user-defined lexeme */
+          marpaESLIFValuep = (marpaESLIFValue_t *) bytep;
+          /* Here, only the user knows what it is about */
+        }
+      }
+    }
+    /* ... */
+    return 1;
+
+  err:
+    return 0;
+  }
+
+=item Symbol callbacks
+
+Same logic, except that you receive directly the "array" description on the stack:
+
+  short mySymbolCallback(void              *userDatavp,
+                         marpaESLIFValue_t *marpaESLIFValuep,
+                         char              *bytep,
+                         size_t             bytel,
+                         int                resulti) {
+
+    marpaESLIFValue_t *marpaESLIFValuep;
+
+    if ((bytep != NULL) && (bytel <= 0)) {
+      /* This is a user-defined lexeme */
+      marpaESLIFValuep = (marpaESLIFValue_t *) bytep;
+      /* Here, only the user knows what it is about */
+    }
+  }
+
+=back
+
+Please note that user-defined lexemes can trigger a I<lexeme after> event, though the information retreived with C<marpaESLIFRecognizer_lexeme_last_pauseb> will never show anything else than correspond to real input stream.
 
 Returns a true value on success, a false value on failure.
 
 =head3 C<marpaESLIFRecognizer_lexeme_completeb>
 
-  short marpaESLIFRecognizer_lexeme_completeb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp);
+  short marpaESLIFRecognizer_lexeme_completeb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp,
+                                              size_t lengthl);
 
-Say to the recognizer pointed C<marpaESLIFRecognizerp> by that the current set of lexeme alternatives is complete: these are the ones pushed with C<marpaESLIFRecognizer_alternativeb> method, and they all take the same number of bytes in the input stream declared with C<marpaESLIFRecognizer_alternative_lengthb>.
+Say to the recognizer pointed C<marpaESLIFRecognizerp> by that the current set of lexeme alternatives is complete, and that the stream should advance by C<length> bytes, where bytes is really the number of bytes in the internal recognizer buffer, i.e. an UTF-8 sequence of code points in case of a character-oriented stream. The reader callback may be called if necessary, in case the caller say to advance by more bytes than what is currently available. It is an error to specify more bytes than the recognizer can get (and eventually transform, in case of character-stream oriented buffer) from the reader. A a value of C<0> for the length is legal.
+
+If a I<lexeme after> event is triggered, C<marpaESLIFRecognizer_lexeme_last_pauseb> will show as many bytes as C<lengthl>. And because it is guaranteed that C<marpaESLIFRecognizer_lexeme_last_pauseb> returns a pointer to NUL-terminated buffer, the extreme case is that last pause can be an empty string "".
 
 Returns a true value on success, a false value on failure.
 
 =head3 C<marpaESLIFRecognizer_lexeme_readb>
 
   short marpaESLIFRecognizer_lexeme_readb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp,
-                                          char *lexemes,
-                                          size_t lexemel);
+                                          marpaESLIFAlternative_t *marpaESLIFAlternativep);
+                                          size_t lengthl);
 
-A short-hand version of lexeme management that is pushing a lexeme C<lexemes> (which is ASCII NUL terminated string), of size C<lexemel> bytes in the input stream, as a single alternative and call for alternative completion.
+A short-hand version of lexeme management that is pushing an alternative and do completion in one call.
+
+Returns a true value on success, a false value on failure.
 
 =head3 C<marpaESLIFRecognizer_lexeme_expectedb>
 
@@ -911,7 +1004,7 @@ Returns a true value on success, a false value on failure.
                                                 char                   **pausesp,
                                                 size_t                  *pauselp);
 
-For the recognizer instance pointed by C<marpaESLIFRecognizerp>, returns a pointer to the last portion of input stream that generated a I<lexeme pause> event for lexeme C<lexemes> in the value pointed by C<pausesp> if it is not NULL, and the length in the value pointed by C<pauselp> if it is not NULL. For convenience if the last pause is not NULL, the buffer holding the pause information is always NUL-terminated, even if the C<\0> NUL character is I<not> in the returned length.
+For the recognizer instance pointed by C<marpaESLIFRecognizerp>, returns a pointer to the last portion of input stream that generated a I<lexeme pause> event for lexeme C<lexemes> in the value pointed by C<pausesp> if it is not NULL, and the length in the value pointed by C<pauselp> if it is not NULL. For convenience if the last pause is not NULL, the buffer holding the pause information is always NUL-terminated, even if the C<\0> NUL character is I<not> in the returned length. In case of user-defined alternatives, the empty string "" is returned in C<pausesp>.
 
 Returns a true value on success, a false value on failure.
 
@@ -1176,22 +1269,22 @@ Returns the marpaESLIF's recognizer instance used to create the C<marpaESLIFValu
 
 =head3 C<marpaESLIFValue_valueb>
 
-  typedef enum marpaESLIFStackType {
-    MARPAESLIF_STACK_TYPE_UNDEF = 0,
-    MARPAESLIF_STACK_TYPE_CHAR,
-    MARPAESLIF_STACK_TYPE_SHORT,
-    MARPAESLIF_STACK_TYPE_INT,
-    MARPAESLIF_STACK_TYPE_LONG,
-    MARPAESLIF_STACK_TYPE_FLOAT,
-    MARPAESLIF_STACK_TYPE_DOUBLE,
-    MARPAESLIF_STACK_TYPE_PTR,
-    MARPAESLIF_STACK_TYPE_PTR_SHALLOW,
-    MARPAESLIF_STACK_TYPE_ARRAY,
-    MARPAESLIF_STACK_TYPE_ARRAY_SHALLOW
-  } marpaESLIFStackType_t;
+  typedef enum marpaESLIFValueType {
+    MARPAESLIF_VALUE_TYPE_UNDEF = 0,
+    MARPAESLIF_VALUE_TYPE_CHAR,
+    MARPAESLIF_VALUE_TYPE_SHORT,
+    MARPAESLIF_VALUE_TYPE_INT,
+    MARPAESLIF_VALUE_TYPE_LONG,
+    MARPAESLIF_VALUE_TYPE_FLOAT,
+    MARPAESLIF_VALUE_TYPE_DOUBLE,
+    MARPAESLIF_VALUE_TYPE_PTR,
+    MARPAESLIF_VALUE_TYPE_PTR_SHALLOW,
+    MARPAESLIF_VALUE_TYPE_ARRAY,
+    MARPAESLIF_VALUE_TYPE_ARRAY_SHALLOW
+  } marpaESLIFValueType_t;
 
   typedef struct marpaESLIFValueResult {
-    marpaESLIFStackType_t type;
+    marpaESLIFValueType_t type;
     union {
       char c;          /* Value is a char */
       short b;         /* Value is a short */
@@ -1214,51 +1307,51 @@ Calls for parse tree valuation. Parameter C<marpaESLIFValueResultp> can be C<NUL
 
 =item type
 
-The type of the value. This is the enum C<marpaESLIFStackType_t> that can have these values:
+The type of the value. This is the enum C<marpaESLIFValueType_t> that can have these values:
 
 =over
 
-=item MARPAESLIF_STACK_TYPE_UNDEF
+=item MARPAESLIF_VALUE_TYPE_UNDEF
 
 Value is undefined. This is a valid type by itself and user is allowed to push an undefined value in the stack.
 
-=item MARPAESLIF_STACK_TYPE_CHAR
+=item MARPAESLIF_VALUE_TYPE_CHAR
 
 Value is a C<C>'s C<char>.
 
-=item MARPAESLIF_STACK_TYPE_SHORT
+=item MARPAESLIF_VALUE_TYPE_SHORT
 
 Value is a C<C>'s C<short>.
 
-=item MARPAESLIF_STACK_TYPE_INT
+=item MARPAESLIF_VALUE_TYPE_INT
 
 Value is a C<C>'s C<int>.
 
-=item MARPAESLIF_STACK_TYPE_LONG
+=item MARPAESLIF_VALUE_TYPE_LONG
 
 Value is a C<C>'s C<long>.
 
-=item MARPAESLIF_STACK_TYPE_FLOAT
+=item MARPAESLIF_VALUE_TYPE_FLOAT
 
 Value is a C<C>'s C<float>.
 
-=item MARPAESLIF_STACK_TYPE_DOUBLE
+=item MARPAESLIF_VALUE_TYPE_DOUBLE
 
 Value is a C<C>'s C<double>.
 
-=item MARPAESLIF_STACK_TYPE_PTR
+=item MARPAESLIF_VALUE_TYPE_PTR
 
 Value is a C<C>'s C<void *> pointer.
 
-=item MARPAESLIF_STACK_TYPE_PTR_SHALLOW
+=item MARPAESLIF_VALUE_TYPE_PTR_SHALLOW
 
 Value is a C<C>'s C<void *> shallow pointer.
 
-=item MARPAESLIF_STACK_TYPE_ARRAY
+=item MARPAESLIF_VALUE_TYPE_ARRAY
 
 Value is a tuple of C<C>'s C<void *> and C<C>'s C<size_t> size.
 
-=item MARPAESLIF_STACK_TYPE_ARRAY_SHALLOW
+=item MARPAESLIF_VALUE_TYPE_ARRAY_SHALLOW
 
 Value is a tuple of a shallow C<C>'s C<void *> and C<C>'s C<size_t> size.
 
@@ -1272,31 +1365,31 @@ This is an union whose member to take depend on C<type>:
 
 =item u.c
 
-Contains the C<C>'s C<char> value when type is C<MARPAESLIF_STACK_TYPE_CHAR>.
+Contains the C<C>'s C<char> value when type is C<MARPAESLIF_VALUE_TYPE_CHAR>.
 
 =item u.b
 
-Contains the C<C>'s C<short> value when type is C<MARPAESLIF_STACK_TYPE_SHORT>.
+Contains the C<C>'s C<short> value when type is C<MARPAESLIF_VALUE_TYPE_SHORT>.
 
 =item u.i
 
-Contains the C<C>'s C<int> value when type is C<MARPAESLIF_STACK_TYPE_INT>.
+Contains the C<C>'s C<int> value when type is C<MARPAESLIF_VALUE_TYPE_INT>.
 
 =item u.l
 
-Contains the C<C>'s C<long> value when type is C<MARPAESLIF_STACK_TYPE_LONG>.
+Contains the C<C>'s C<long> value when type is C<MARPAESLIF_VALUE_TYPE_LONG>.
 
 =item u.f
 
-Contains the C<C>'s C<float> value when type is C<MARPAESLIF_STACK_TYPE_FLOAT>.
+Contains the C<C>'s C<float> value when type is C<MARPAESLIF_VALUE_TYPE_FLOAT>.
 
 =item u.d
 
-Contains the C<C>'s C<double> value when type is C<MARPAESLIF_STACK_TYPE_DOUBLE>.
+Contains the C<C>'s C<double> value when type is C<MARPAESLIF_VALUE_TYPE_DOUBLE>.
 
 =item u.p
 
-Contains the C<C>'s C<void *> value when type is C<MARPAESLIF_STACK_TYPE_PTR>, C<MARPAESLIF_STACK_TYPE_PTR_SHALLOW>, C<MARPAESLIF_STACK_TYPE_ARRAY> or C<MARPAESLIF_STACK_TYPE_ARRAY_SHALLOW>.
+Contains the C<C>'s C<void *> value when type is C<MARPAESLIF_VALUE_TYPE_PTR>, C<MARPAESLIF_VALUE_TYPE_PTR_SHALLOW>, C<MARPAESLIF_VALUE_TYPE_ARRAY> or C<MARPAESLIF_VALUE_TYPE_ARRAY_SHALLOW>.
 
 =back
 
@@ -1306,7 +1399,7 @@ Contains the user's context, or C<0> if this was not instanciated by the end-use
 
 =item sizel
 
-Contains the size of the memory pointed by C<u.p> when type is C<MARPAESLIF_STACK_TYPE_PTR>, C<MARPAESLIF_STACK_TYPE_PTR_SHALLOW>, C<MARPAESLIF_STACK_TYPE_ARRAY> or C<MARPAESLIF_STACK_TYPE_ARRAY_SHALLOW>.
+Contains the size of the memory pointed by C<u.p> when type is C<MARPAESLIF_VALUE_TYPE_PTR>, C<MARPAESLIF_VALUE_TYPE_PTR_SHALLOW>, C<MARPAESLIF_VALUE_TYPE_ARRAY> or C<MARPAESLIF_VALUE_TYPE_ARRAY_SHALLOW>.
 
 =back
 
