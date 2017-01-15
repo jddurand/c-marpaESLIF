@@ -26,7 +26,7 @@ typedef enum    marpaESLIF_event_type      marpaESLIF_event_type_t;
 typedef enum    marpaESLIF_array_type      marpaESLIF_array_type_t;
 typedef struct  marpaESLIF_readerContext   marpaESLIF_readerContext_t;
 typedef struct  marpaESLIF_cloneContext    marpaESLIF_cloneContext_t;
-typedef         marpaESLIFStackType_t      marpaESLIF_stack_type_t;
+typedef         marpaESLIFValueType_t      marpaESLIF_stack_type_t;
 typedef struct  marpaESLIF_last_pause      marpaESLIF_last_pause_t;
 typedef struct  marpaESLIF_alternative     marpaESLIF_alternative_t;
 
@@ -322,7 +322,6 @@ struct marpaESLIFRecognizer {
   short                        exhaustedb;     /* Internally, every recognizer need to know if parsing is exhausted */
   short                        completedb;     /* Ditto for completion (used in case od discard events) */
   short                        continueb;
-  size_t                       alternativeLengthl;
   genericStack_t              *alternativeStackSymbolp;          /* Current alternative stack containing symbol information and the matched size */
   genericStack_t              *commitedAlternativeStackSymbolp;  /* Commited alternative stack */
   genericStack_t              *set2InputStackp;
@@ -341,20 +340,18 @@ struct marpaESLIF_last_pause {
 };
 
 struct marpaESLIF_alternative {
-  marpaESLIF_symbol_t *symbolp;  /* Associated symbol */
-  void                *valuep;   /* Associated value and length */
-  size_t               valuel;
-  short                shallowb; /* Flag saying if value is a shallow pointer */
-  int                  lengthi;  /* Length within the grammar (1 in the token-stream model) */
-  short                usedb;    /* Is this structure in use ? */
+  marpaESLIF_symbol_t *symbolp;         /* Associated symbol */
+  void                *valuep;          /* Associated value and length */
+  size_t               valuel;          /* 0 when it is external */
+  int                  grammarLengthi;  /* Length within the grammar (1 in the token-stream model) */
+  short                usedb;           /* Is this structure in use ? */
 };
 
 marpaESLIF_alternative_t marpaESLIF_alternative_default = {
   NULL, /* symbolp */
   NULL, /* valuep */
   0,    /* valuel */
-  0,    /* shallowb */
-  0,    /* tokenl */
+  0,    /* grammarLengthi */
   0     /* usedb */
 };
 

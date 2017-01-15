@@ -143,6 +143,36 @@ By default, symbol action is C<::shift> and rule action is C<::concat>, i.e. the
                symbol-action => defaultSymbolAction
                free-action   => defaultFreeAction
 
+Predefined actions are available for rules and symbols. Please refer the API documentation to know more about value types.
+
+=over
+
+=item C<::undef>
+
+Put a value of type UNDEF.
+
+=item C<::ascii>
+
+Convert to ASCII charset the concatenation of all RHS's value. Only values of type ARRAY are accepted. ARRAY values with a null pointer or a length <= 0 are ignored. The value type is PTR, guaranteed to never be NULL, and always NUL terminated. If there was nothing to concatenate this will be the empty string "".
+
+=item C<::translit>
+
+Same as C<::ascii> though translate whenever possible, ignoring untranslatable sequences of bytes (think to I<iconv>'s I<//ASCII//TRANSLIT//IGNORE> option).
+
+=item C<::concat>
+
+Concatenate all RHS's value. Only values of type ARRAY or UNDEF accepted. ARRAY values with a length > 0 are concatenated, UNDEF values are ignored. Please note that for symbols, C<::concat> is allowed but in reality is not doing any concatenation, it is doing a C<::shift>. The result is always of ARRAY type. If something was found during concatenation, the area pointed by the ARRAY is guaranteed to be NUL terminated, even if the exposed size does not contain the extra byte for this NUL character.
+
+=item C<::copy[x]>
+
+Copies the RHS number C<x> (first RHS is at indice C<0>), putting UNDEF if it does not exist.
+
+=item C<::shift>
+
+Alias for C<::copy[0]>.
+
+=back
+
 =item Discard
 
 The C<:discard> symbol, despite belonging to a given grammar, is not accessible directly, and can only be set as a meta setting. An event can be associated upon discard completion, there can be multiple C<:discard> statements:

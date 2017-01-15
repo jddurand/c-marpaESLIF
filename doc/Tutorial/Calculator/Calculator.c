@@ -142,10 +142,10 @@ int main() {
   expressions[lengthl] = '\0';
 
   switch (marpaESLIFValueResult.type) {
-  case MARPAESLIF_STACK_TYPE_INT:
+  case MARPAESLIF_VALUE_TYPE_INT:
     fprintf(stdout, "%s = %d\n", expressions, marpaESLIFValueResult.u.i);
     break;
-  case MARPAESLIF_STACK_TYPE_DOUBLE:
+  case MARPAESLIF_VALUE_TYPE_DOUBLE:
     fprintf(stdout, "%s = %f\n", expressions, marpaESLIFValueResult.u.d);
     break;
   default:

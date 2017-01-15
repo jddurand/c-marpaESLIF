@@ -9,6 +9,7 @@ public class ESLIFValue  {
 	private ESLIFValueInterface  eslifValueInterface     = null;
 	private native void          jniNew(ESLIFRecognizer recognizer);
 	private native void          jniFree();
+	private native boolean       jniValue();
 	
 	public ESLIFValue(ESLIFRecognizer recognizer, ESLIFValueInterface eslifValueInterface) throws ESLIFException {
 		if (recognizer == null) {
@@ -22,6 +23,9 @@ public class ESLIFValue  {
 		jniNew(recognizer);
 	}
 
+	public boolean value() {
+		return jniValue();
+	}
 	public synchronized void free() throws ESLIFException {
 		jniFree();
 	}

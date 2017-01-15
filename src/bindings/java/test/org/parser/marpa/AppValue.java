@@ -34,7 +34,7 @@ public class AppValue implements ESLIFValueInterface {
 	}
 		
 	private Double toDouble(Object object) {
-		return (object instanceof Integer)  ? new Double(((Integer) object).doubleValue())  : (Double) object;
+		return (object instanceof Integer) ? new Double(((Integer) object).doubleValue()) : (Double) object;
 	}
 
 	private Integer toInteger(Object object) {
@@ -43,9 +43,15 @@ public class AppValue implements ESLIFValueInterface {
 	
 	public Object do_int(Object[] list) throws UnsupportedEncodingException {
 		Object result;
-		String input = byteBufferToString((ByteBuffer) list[0]); 
+		
+		if (list[0] instanceof ByteBuffer) {
+			String input = byteBufferToString((ByteBuffer) list[0]); 
+			result = new Integer(input);
+		} else {
+			result = list[0];
+			return list[0];
+		}
 
-		result = new Integer(input);
 		return result;
 	}
 
@@ -54,7 +60,7 @@ public class AppValue implements ESLIFValueInterface {
 		String op     = byteBufferToString((ByteBuffer) list[1]); 
 		Object right  = list[2];
 		Object result = null;
-
+		
 		boolean leftIsInteger  = (left  instanceof Integer);
 		boolean rightIsInteger = (right instanceof Integer);
 		
@@ -81,6 +87,9 @@ public class AppValue implements ESLIFValueInterface {
 				result = toDouble(left) - toDouble(right);
 			}
 		}
+
+		System.err.println("... " + left + " " + op + " " + right + " => " + result);
+
 		return result;
 	}
 

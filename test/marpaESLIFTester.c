@@ -12,7 +12,6 @@ static short                           inputReaderb(void *userDatavp, char **inp
 static short                           eventManagerb(int *eventCountip, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, genericLogger_t *genericLoggerp);
 static void                            genericLoggerCallback(void *userDatavp, genericLoggerLevel_t logLeveli, const char *msgs);
 
-
 typedef struct marpaESLIFTester_context {
   genericLogger_t *genericLoggerp;
   char            *inputs;
@@ -324,13 +323,14 @@ static short inputReaderb(void *userDatavp, char **inputsp, size_t *inputlp, sho
 static short eventManagerb(int *eventCountip, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, genericLogger_t *genericLoggerp)
 /*****************************************************************************/
 {
-  marpaESLIFEvent_t *eventArrayp;
-  size_t             eventArrayl;
-  size_t             eventArrayIteratorl;
-  short              rcb;
-  char              *inputs;
-  size_t             inputl;
-  short              eofb;
+  marpaESLIFEvent_t      *eventArrayp;
+  size_t                  eventArrayl;
+  size_t                  eventArrayIteratorl;
+  short                   rcb;
+  char                   *inputs;
+  size_t                  inputl;
+  short                   eofb;
+  marpaESLIFAlternative_t marpaESLIFAlternative;
 
   (*eventCountip)++;
 
@@ -359,7 +359,13 @@ static short eventManagerb(int *eventCountip, marpaESLIFRecognizer_t *marpaESLIF
       GENERICLOGGER_INFOF(genericLoggerp, "[%3d] Event %s for symbol <%s> (character is %c (0x%lx), eofb is %d)", *eventCountip, eventArrayp[eventArrayIteratorl].events, eventArrayp[eventArrayIteratorl].symbols, *inputs, (unsigned long) *inputs, (int) eofb);
       if (strcmp(eventArrayp[eventArrayIteratorl].events, "^[a-zA-Z0-9_:]") == 0) {
         GENERICLOGGER_INFOF(genericLoggerp, "[%3d] ... Pushing single alternative <%s>", *eventCountip, eventArrayp[eventArrayIteratorl].symbols);
-        if (! marpaESLIFRecognizer_lexeme_readb(marpaESLIFRecognizerp, eventArrayp[eventArrayIteratorl].symbols, 1)) {
+        marpaESLIFAlternative.lexemes        = eventArrayp[eventArrayIteratorl].symbols;
+        marpaESLIFAlternative.value.type     = MARPAESLIF_VALUE_TYPE_CHAR;
+        marpaESLIFAlternative.value.u.c      = *inputs;
+        marpaESLIFAlternative.value.contexti =  0; /* Not used */
+        marpaESLIFAlternative.value.sizel    =  0; /* Not used */
+        marpaESLIFAlternative.grammarLengthl = 1;
+        if (! marpaESLIFRecognizer_lexeme_readb(marpaESLIFRecognizerp, &marpaESLIFAlternative, 1 /* Length in the real input */)) {
           goto err;
         }
         /* Complete can generate again events! */
