@@ -2837,6 +2837,7 @@ static short marpaESLIFValueRuleCallback(void *userDatavp, marpaESLIFValue_t *ma
   jobject                        objectp;
   jobject                        globalObjectp;
   jint                           capacityi;
+  int                            contexti;
 
   /* Reader callack is never running in another thread - no need to attach */
   if (((*marpaESLIF_vmp)->GetEnv(marpaESLIF_vmp, (void **) &envp, MARPAESLIF_JNI_VERSION) != JNI_OK) || (envp == NULL)) {
@@ -2862,7 +2863,7 @@ static short marpaESLIFValueRuleCallback(void *userDatavp, marpaESLIFValue_t *ma
         RAISEEXCEPTION(envp, "marpaESLIFValue_stack_is_intb failure");
       }
       if (intb) {
-        if (! marpaESLIFValue_stack_get_intb(marpaESLIFValuep, i, NULL /* contextip */, &indicei)) {
+        if (! marpaESLIFValue_stack_get_intb(marpaESLIFValuep, i, &contexti, &indicei)) {
           RAISEEXCEPTION(envp, "marpaESLIFValue_stack_is_intb failure");
         }
         objectp = (jobject) GENERICSTACK_GET_PTR(stackp, indicei);
@@ -2879,8 +2880,12 @@ static short marpaESLIFValueRuleCallback(void *userDatavp, marpaESLIFValue_t *ma
         if (! arrayb) {
           RAISEEXCEPTIONF(envp, "At indice %d of stack, item not an ARRAY", i);
         }
-        if (! marpaESLIFValue_stack_get_arrayb(marpaESLIFValuep, i, NULL /* contextip */, &bytep, &bytel, NULL /* shallowbp */)) {
+        if (! marpaESLIFValue_stack_get_arrayb(marpaESLIFValuep, i, &contexti, &bytep, &bytel, NULL /* shallowbp */)) {
           RAISEEXCEPTION(envp, "marpaESLIFValue_stack_get_arrayb failure");
+        }
+        /* We never push array, i.e. contexti must be 0 in any case here */
+        if (contexti != 0) {
+          RAISEEXCEPTIONF(envp, "marpaESLIFValue_stack_get_array success but contexti is %d instead of 0", contexti);
         }
         /* Either bytel is > 0, then this is the input, else this is a user-defined object */
         if (bytel > 0) {
