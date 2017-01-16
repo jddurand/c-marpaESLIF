@@ -3,20 +3,10 @@ package org.parser.marpa;
 /**
  * ESLIFLoggerInterface is listing all required logging methods.
  * <p>
- * A logger interface may be associated to an {@link ESLIF} instance. When provided @{link ESLIF} can generate messages at different levels, that are:
- * <ul>
- * <li> <code>TRACE</code>
- * <li> <code>DEBUG</code>
- * <li> <code>INFO</code>
- * <li> <code>NOTIVE</code>
- * <li> <code>WARNING</code>
- * <li> <code>ERROR</code>
- * <li> <code>CRITICAL</code>
- * <li> <code>ALERT</code>
- * <li> <code>EMERGENCY</code>
- * </ul>
- *
+ * A logger interface may be associated to an {@link ESLIF} instance.
  * This interface is explicitly reproducing the formalism of the <a href="http://github.com/jddurand/c-genericLogger" target="_top">genericLogger C library</a>.
+ * 
+ * @see ESLIFLoggerLevel
  */
 public interface ESLIFLoggerInterface {
 	/**
