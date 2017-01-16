@@ -54,3 +54,5 @@ ipch/
 # Our garbage
 *~
 output/
+CPack*.cmake
+LICENSE.txt
