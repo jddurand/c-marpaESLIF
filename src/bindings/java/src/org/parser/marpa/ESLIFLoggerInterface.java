@@ -4,7 +4,7 @@ package org.parser.marpa;
  * ESLIFLoggerInterface is listing all required logging methods.
  * <p>
  * A logger interface may be associated to an {@link ESLIF} instance.
- * This interface is explicitly reproducing the formalism of the <a href="http://github.com/jddurand/c-genericLogger" target="_top">genericLogger C library</a>.
+ * This interface is explicitly reproducing the formalism of the <a href="http://github.com/jddurand/c-genericLogger" target="_top">genericLogger</a> C library.
  * 
  * @see ESLIFLoggerLevel
  */

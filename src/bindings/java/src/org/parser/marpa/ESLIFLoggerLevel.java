@@ -7,7 +7,7 @@ import java.util.Map;
 /**
  * ESLIFLoggerLevel is a enumeration of all ESLIF logging levels.
  * <p>
- * This class is explicitly reproducing the formalism of the <a href="http://github.com/jddurand/c-genericLogger" target="_top">genericLogger C library</a>.
+ * This class is explicitly reproducing the formalism of the <a href="http://github.com/jddurand/c-genericLogger" target="_top">genericLogger</a> C library.
  * 
  * @see ESLIFLoggerInterface
  */
