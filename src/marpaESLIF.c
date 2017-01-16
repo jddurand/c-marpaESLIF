@@ -142,7 +142,7 @@ static inline marpaESLIF_rule_t     *_marpaESLIF_rule_findp(marpaESLIF_t *marpaE
 static inline marpaESLIF_symbol_t   *_marpaESLIF_symbol_findp(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, char *asciis, int symboli, int *symbolip);
 static inline short                  _marpaESLIFRecognizer_lexeme_alternativeb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIF_alternative_t *alternativep);
 static inline short                  _marpaESLIFRecognizer_lexeme_completeb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, size_t lengthl);
-static inline void                   _marpaESLIFRecognizer_lexeme_tryb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIF_symbol_t *symbolp, short *matchbp);
+static inline short                  _marpaESLIFRecognizer_lexeme_tryb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIF_symbol_t *symbolp, short *matchbp);
 
 #ifndef MARPAESLIF_NTRACE
 static inline void                   _marpaESLIFRecognizer_alternativeStackSymbol_showv(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *contexts, genericStack_t *alternativeStackSymbolp);
@@ -5559,12 +5559,24 @@ static inline short _marpaESLIFRecognizer_lexeme_completeb(marpaESLIFRecognizer_
 }
 
 /*****************************************************************************/
-static inline void _marpaESLIFRecognizer_lexeme_tryb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIF_symbol_t *symbolp, short *matchbp)
+static inline short _marpaESLIFRecognizer_lexeme_tryb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIF_symbol_t *symbolp, short *matchbp)
 /*****************************************************************************/
 {
   static const char *funcs = "_marpaESLIFRecognizer_lexeme_tryb";
+  short              rcb;
   short              matchb = 0;
   int                rci;
+
+  /* Do these check, because _marpaESLIFRecognizer_meta_matcherb() is very internal and is assuming everything */
+  /* is correct for performance reasons. */
+  if (symbolp->type != MARPAESLIF_SYMBOL_TYPE_META) {
+    MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "Symbol <%s> is not a meta symbol", symbolp->descp->asciis, symbolp->type);
+    goto err;
+  }
+  if (symbolp->u.metap->marpaWrapperGrammarLexemeCloneNoEventp == NULL) {
+    MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "Symbol <%s> is not a lexeme", symbolp->descp->asciis, symbolp->type);
+    goto err;
+  }
 
   /* This function never fails */
   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Trying to match %s", symbolp->descp->asciis);
@@ -5580,6 +5592,15 @@ static inline void _marpaESLIFRecognizer_lexeme_tryb(marpaESLIFRecognizer_t *mar
   if (matchbp != NULL) {
     *matchbp = matchb;
   }
+
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  return rcb;
 }
 
 /*****************************************************************************/
@@ -5625,7 +5646,9 @@ short marpaESLIFRecognizer_lexeme_tryb(marpaESLIFRecognizer_t *marpaESLIFRecogni
     goto err;
   }
 
-  _marpaESLIFRecognizer_lexeme_tryb(marpaESLIFRecognizerp, symbolp, matchbp);
+  if (! _marpaESLIFRecognizer_lexeme_tryb(marpaESLIFRecognizerp, symbolp, matchbp)) {
+    goto err;
+  }
   rcb = 1;
   goto done;
 

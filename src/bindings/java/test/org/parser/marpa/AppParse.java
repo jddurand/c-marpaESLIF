@@ -146,9 +146,9 @@ public class AppParse  {
 								if (bytes == null) {
 									throw new Exception("Pause before on NUMBER but no pause information!");
 								}
-								doLexemeTry(eslifLogger, eslifRecognizer, "WHITESPACES");
 								doLexemeRead(eslifLogger, eslifRecognizer, "NUMBER", j, bytes);
 								doLexemeTry(eslifLogger, eslifRecognizer, "WHITESPACES");
+								doLexemeTry(eslifLogger, eslifRecognizer, "whitespaces");
 						    }
 						}
 					}
@@ -204,9 +204,15 @@ public class AppParse  {
 		showLexemeExpected(context, eslifLogger, eslifRecognizer);
 	}
 
-	private static void doLexemeTry(ESLIFLoggerInterface eslifLogger, ESLIFRecognizer eslifRecognizer, String symbol) throws Exception {
-		boolean test = eslifRecognizer.lexemeTry(symbol);
-		eslifLogger.debug("... Testing " + symbol + " lexeme at current position returns " + test);
+	private static void doLexemeTry(ESLIFLoggerInterface eslifLogger, ESLIFRecognizer eslifRecognizer, String symbol) {
+		boolean test;
+		try {
+			test = eslifRecognizer.lexemeTry(symbol);
+			eslifLogger.debug("... Testing " + symbol + " lexeme at current position returns " + test);
+		} catch (ESLIFException e) {
+			// Because we test with a symbol that is not a lexeme, and that raises an exception
+			eslifLogger.debug(e.getMessage());
+		}
 	}
 	//
 	// We replace current NUMBER by the Integer object representing value
