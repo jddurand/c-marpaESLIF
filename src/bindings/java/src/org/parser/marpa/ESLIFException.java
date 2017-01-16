@@ -8,6 +8,10 @@ package org.parser.marpa;
 @SuppressWarnings("serial")
 public class ESLIFException extends Exception {
 
+	/**
+	 * 
+	 * @param message the message describing the exception
+	 */
 	public ESLIFException(String message) {
 		super(message);
 	}
