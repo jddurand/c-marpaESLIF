@@ -16,7 +16,7 @@ The marpaESLIF BNF is composed of unicode characters, in any encoding supported 
 
 =item Symbol names
 
-They consist of <bare names>, or can be enclosed in angle brackets if whitespace if desired. They are case sensitive, and can be composed only of ASCII characters. There is no attempt to discard any leading, trailing, or repeated whitespace in angle brackets version, i.e. all the followings are different symbol names:
+They consist of C<bare names>, or can be enclosed in angle brackets if whitespace if desired. They are case sensitive, and can be composed only of ASCII characters. There is no attempt to discard any leading, trailing, or repeated whitespace in angle brackets version, i.e. all the followings are different symbol names:
 
   this
   <this >
@@ -161,7 +161,7 @@ Same as C<::ascii> though translate whenever possible, ignoring untranslatable s
 
 =item C<::concat>
 
-Concatenate all RHS's value. Only values of type ARRAY or UNDEF accepted. ARRAY values with a length > 0 are concatenated, UNDEF values are ignored. Please note that for symbols, C<::concat> is allowed but in reality is not doing any concatenation, it is doing a C<::shift>. The result is always of ARRAY type. If something was found during concatenation, the area pointed by the ARRAY is guaranteed to be NUL terminated, even if the exposed size does not contain the extra byte for this NUL character.
+Concatenate all RHS's value. Only values of type ARRAY or UNDEF accepted. ARRAY values with a length greater than 0 are concatenated, UNDEF values are ignored. Please note that for symbols, C<::concat> is allowed but in reality is not doing any concatenation, it is doing a C<::shift>. The result is always of ARRAY type. If something was found during concatenation, the area pointed by the ARRAY is guaranteed to be NUL terminated, even if the exposed size does not contain the extra byte for this NUL character.
 
 =item C<::copy[x]>
 
