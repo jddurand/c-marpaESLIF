@@ -16,6 +16,10 @@ This documentation is giving tutorials, in increasing order of complexity:
 
 C.f. L<marpaESLIF Calculator|https://github.com/jddurand/c-marpaESLIF/tree/master/doc/Tutorial/Calculator>
 
+=item Propositional Logic
+
+C.f. L<marpaESLIF Propositional Logic|https://github.com/jddurand/c-marpaESLIF/tree/master/doc/Tutorial/propositionalLogic>
+
 =back
 
 =head1 SEE ALSO

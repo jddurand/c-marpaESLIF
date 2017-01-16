@@ -163,6 +163,7 @@ extern "C" {
   MARPAESLIF_EXPORT short                   marpaESLIFRecognizer_lexeme_alternativeb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFAlternative_t *marpaESLIFAlternativep);
   MARPAESLIF_EXPORT short                   marpaESLIFRecognizer_lexeme_completeb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, size_t lengthl);
   MARPAESLIF_EXPORT short                   marpaESLIFRecognizer_lexeme_readb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFAlternative_t *marpaESLIFAlternativep, size_t lengthl);
+  MARPAESLIF_EXPORT short                   marpaESLIFRecognizer_lexeme_testb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *lexemes, marpaESLIFRecognizerOption_t *marpaESLIFRecognizerOptionp);
   MARPAESLIF_EXPORT short                   marpaESLIFRecognizer_lexeme_expectedb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, size_t *nLexemelp, char ***lexemesArraypp);
   MARPAESLIF_EXPORT short                   marpaESLIFRecognizer_lexeme_last_pauseb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *lexemes, char **pausesp, size_t *pauselp);
   MARPAESLIF_EXPORT short                   marpaESLIFRecognizer_isEofb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, short *eofbp);
