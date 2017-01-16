@@ -1,0 +1,33 @@
+=encoding UTF-8
+
+=head1 NAME
+
+marpaESLIF_PROPOSITIONALLOGIC - Extended Marpa's Scanless Interface Propositional Logic Tutorial
+
+=head1 DESCRIPTION
+
+marpaESLIF is a Scanless Interface expressed in a BNF format, that is using L<marpaWrapper|https://github.com/jddurand/c-marpaWrapper>, itself being a thin interface on top of L<libmarpa|https://jeffreykegler.github.io/Marpa-web-site/libmarpa.html> parser.
+
+This documentation is giving a tutorial using propositional logic and an external lexer. We will make a binary that is evaluating the sentence as the input goes on.
+
+=head2 GRAMMAR
+
+The BNF for propositional logic is:
+
+    Sentence        ::= Atomicsentence | ComplexSentence
+    Atomicsentence  ::= TRUE | FALSE | Symbol
+    Symbol          ::= /[^\s]+/; /* Anything that is not a space or special characters */
+    ComplexSentence ::=                        NOT Sentence
+                     || LPAREN Sentence        AND Sentence RPAREN
+                     || LPAREN Sentence         OR Sentence RPAREN
+                     || LPAREN Sentence    IMPLIES Sentence RPAREN
+                     || LPAREN Sentence EQUIVALENT Sentence RPAREN
+    TRUE        ~ 'TRUE':i | '1'
+    FALSE       ~ 'FALSE':i | '0'
+    LPAREN      ~ '('
+    RPAREN      ~ ')'
+    NOT         ~ 'NOT':i | '!'
+    AND         ~ 'AND':i | '&'
+    OR          ~ 'OR':i  | '|'
+    IMPLIES     ~ 'IMPLIES':i  | '=>'
+    EQUIVALENT  ~ 'EQUIVALENT':i  | '<=>'
