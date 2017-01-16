@@ -2,14 +2,14 @@ package org.parser.marpa;
 
 import java.nio.ByteBuffer;
 
-public class ESLIFValue  {
+public class ESLIFValue {
 	private ESLIFRecognizer      eslifRecognizer         = null;
 	private ByteBuffer           marpaESLIFValuep        = null;
 	private ByteBuffer           marpaESLIFValueContextp = null;
 	private ESLIFValueInterface  eslifValueInterface     = null;
-	private native void          jniNew(ESLIFRecognizer recognizer);
-	private native void          jniFree();
-	private native boolean       jniValue();
+	private native void          jniNew(ESLIFRecognizer recognizer) throws ESLIFException;
+	private native void          jniFree() throws ESLIFException;
+	private native boolean       jniValue() throws ESLIFException;
 	
 	public ESLIFValue(ESLIFRecognizer recognizer, ESLIFValueInterface eslifValueInterface) throws ESLIFException {
 		if (recognizer == null) {
@@ -23,7 +23,7 @@ public class ESLIFValue  {
 		jniNew(recognizer);
 	}
 
-	public boolean value() {
+	public boolean value() throws ESLIFException {
 		return jniValue();
 	}
 	public synchronized void free() throws ESLIFException {
