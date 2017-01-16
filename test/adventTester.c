@@ -103,6 +103,7 @@ int main() {
   char                        *offsetp;
   size_t                       lengthl;
   char                        *handsp = NULL;
+  short                        isWSb;
 
   genericLoggerp = GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_DEBUG);
   if (genericLoggerp == NULL) {
@@ -201,6 +202,16 @@ int main() {
         }
         cards = int2cards(genericLoggerp, cardi);
         GENERICLOGGER_DEBUGF(genericLoggerp, "Got card %s", cards);
+
+        /* Try to see if there is whitespace after */
+        if (! marpaESLIFRecognizer_lexeme_tryb(marpaESLIFRecognizerp, "WS", &isWSb)) {
+          goto err;
+        }
+        if (isWSb) {
+          GENERICLOGGER_DEBUGF(genericLoggerp, "Card %s is followed by whitespace", cards);
+        } else {
+          GENERICLOGGER_DEBUGF(genericLoggerp, "Card %s is not followed by whitespace", cards);
+        }
 
         /* Check for duplicate card */
         if (GENERICSTACK_IS_SHORT(cardStackp, cardi)) {

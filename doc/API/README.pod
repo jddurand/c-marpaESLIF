@@ -844,6 +844,16 @@ A short-hand version of lexeme management that is pushing an alternative and do 
 
 Returns a true value on success, a false value on failure.
 
+=head3 C<marpaESLIFRecognizer_lexeme_tryb>
+
+  short marpaESLIFRecognizer_lexeme_tryb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp,
+                                         char *lexemes,
+                                         short *matchbp);
+
+Try to match the lexeme with name C<lexemes> that must be non-C<NULL>. Returns in C<matchbp>, when not C<NULL>, a true value if there is a match, a false value otherwise.
+
+Returns a true value on success, a false value on failure.
+
 =head3 C<marpaESLIFRecognizer_lexeme_expectedb>
 
   short marpaESLIFRecognizer_lexeme_expectedb(marpaESLIFRecognizer_t   *marpaESLIFRecognizerp,
