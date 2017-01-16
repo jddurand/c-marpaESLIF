@@ -2048,7 +2048,9 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
   }
 
   /*
-    7. lexeme events is meaningul only on lexemes -;
+    7. lexeme events are meaningul only on lexemes -; Non-lexeme events are meaningful only on non-lexemes.
+       The second case is a bit vicious because marpa allows terminals to be predicted, but not to be completed.
+       We restrict the "event" keyword to non-terminals, and the "lexeme event" to terminals.
   */
   for (grammari = 0; grammari < GENERICSTACK_USED(grammarStackp); grammari++) {
     if (! GENERICSTACK_IS_PTR(grammarStackp, grammari)) {
@@ -2067,7 +2069,13 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
       if ((symbolp->lhsb) || (symbolp->type != MARPAESLIF_SYMBOL_TYPE_META)) {
         /* This symbol is not a lexeme */
         if ((symbolp->eventBefores != NULL) || (symbolp->eventAfters != NULL)) {
-          MARPAESLIF_ERRORF(marpaESLIFp, "Lexeme events on symbol <%s> at grammar level %d (%s) but it is not a lexeme", symbolp->descp->asciis, grammari, grammarp->descp->asciis);
+          MARPAESLIF_ERRORF(marpaESLIFp, "Lexeme events on symbol <%s> at grammar level %d (%s) but it is not a lexeme, you must use the \"event eventName = eventType <%s>\" form", symbolp->descp->asciis, grammari, grammarp->descp->asciis, symbolp->descp->asciis);
+          goto err;
+        }
+      } else {
+        /* This symbol is a lexeme */
+        if ((symbolp->eventPredicteds != NULL) || (symbolp->eventNulleds != NULL) || (symbolp->eventCompleteds != NULL)) {
+          MARPAESLIF_ERRORF(marpaESLIFp, "Events on symbol <%s> at grammar level %d (%s) but it is a lexeme, you must use the \":lexeme <%s> pause => eventType event => eventName\" form", symbolp->descp->asciis, grammari, grammarp->descp->asciis, symbolp->descp->asciis);
           goto err;
         }
       }

@@ -207,6 +207,8 @@ Meta symbols that are lexemes can have pause events, C<before> mean that the sca
   :lexeme ::= symbolname1 pause => before event => ^symbolname1
   :lexeme ::= symbolname2 pause => after  event =>  symbolname2$2
 
+It is not allowed to set a lexeme event on a symbol that is not a lexeme.
+
 =item Non-lexeme events
 
 Completion, predicted or nulled events are supported, targetting a symbol name.
@@ -216,6 +218,8 @@ For example:
   event a     = completed  symbolname
   event b=off = nulled     symbolname
   event c=on  = predicted ^symbolname
+
+It is not allowed to a a non-lexeme event on a symbol that is a lexeme.
 
 =back
 
