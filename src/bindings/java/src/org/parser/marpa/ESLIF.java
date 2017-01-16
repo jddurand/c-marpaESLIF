@@ -55,14 +55,9 @@ public class ESLIF {
 	 * ********************************************
 	 */
 	/**
-	 * Constructor of the ESLIF
 	 * 
 	 * @param loggerInterface instance of a {@link ESLIFLoggerInterface}, may be null
-	 * 
-	 * @throws ESLIFException when the C library returns {@code NULL}
-	 * 
-	 * <p>
-	 * See {@link <a href="https://github.com/jddurand/c-marpaESLIF/tree/master/doc/API#marpaESLIF_newp" "target="_top">marpaESLIF_newp</a>}.
+	 * @throws ESLIFException exception in case of JNI error or object creation failure
 	 */
 	public ESLIF(ESLIFLoggerInterface loggerInterface) throws ESLIFException {
 		setLoggerInterface(loggerInterface);
@@ -70,37 +65,29 @@ public class ESLIF {
 	}
 	
 	/**
-	 * Constructor of the ESLIF
-	 * <p>
 	 * Equivalent to {@link #ESLIF(ESLIFLoggerInterface)}, giving a null parameter for the logger interface.
 	 * 
-	 * @throws ESLIFException when the C library returns {@code NULL}
-	 * 
-	 * <p>
-	 * See {@link <a href="https://github.com/jddurand/c-marpaESLIF/tree/master/doc/API#marpaESLIF_newp" "target="_top">marpaESLIF_newp</a>}.
+	 * @throws ESLIFException exception in case of JNI error or object creation failure
 	 */
 	public ESLIF() throws ESLIFException {
 		jniNew();
 	}
 	
 	/**
-	 * Dispose of ESLIF resources
+	 * Dispose of ESLIF resources.
 	 * <p>
 	 * This call is <b>required</b> when you do not need anymore the ESLIF instance.
-	 * <p>
-	 * See {@link <a href="https://github.com/jddurand/c-marpaESLIF/tree/master/doc/API#marpaESLIF_freev" "target="_top">marpaESLIF_freev</a>}.
+	 * 
+	 * @throws ESLIFException exception in case of JNI error
 	 */
 	public synchronized void free() throws ESLIFException {
 		jniFree();
 	}
 	
 	/**
-	 * Version of the ESLIF
+	 * Version of the ESLIF.
 	 * 
 	 * @return a string describing the ESLIF version, never null
-	 * 
-	 * <p>
-	 * See {@link <a href="https://github.com/jddurand/c-marpaESLIF/tree/master/doc/API#marpaESLIF_versions" "target="_top">marpaESLIF_versions</a>}.
 	 */
 	public String version() {
 		return jniVersion();

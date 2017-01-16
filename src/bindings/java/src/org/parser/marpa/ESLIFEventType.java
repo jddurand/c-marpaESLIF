@@ -69,8 +69,9 @@ public enum ESLIFEventType {
 	}
 
 	/**
-	 * Get an instance of ESLIFEventType from an event value
+	 * Get an instance of ESLIFEventType from an event code value
 	 * 
+	 * @param code event code value
 	 * @return the ESLIFEventType instance
 	 */
 	public static ESLIFEventType get(int code) { 

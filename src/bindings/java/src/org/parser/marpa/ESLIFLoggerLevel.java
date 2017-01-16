@@ -39,7 +39,7 @@ public enum ESLIFLoggerLevel {
 	}
 
 	/**
-	 * Get the log level value associated to an instance of ESLIFLoggerLevel.
+	 * Get the log level value associated to an instance of ESLIFLoggerLevel
 	 * 
 	 * @return the log level value
 	 */
@@ -50,6 +50,7 @@ public enum ESLIFLoggerLevel {
 	/**
 	 * Get an instance of ESLIFLoggerLevel from a log level value
 	 * 
+	 * @param code the log level value
 	 * @return the ESLIFLoggerLevel instance
 	 */
 	public static ESLIFLoggerLevel get(int code) { 
