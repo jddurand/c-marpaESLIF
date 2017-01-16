@@ -60,3 +60,5 @@ ipch/
 output/
 *.gz
 *.3
+LICENSE.txt
+CPack*.cmake
