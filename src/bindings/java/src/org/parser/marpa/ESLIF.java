@@ -10,6 +10,8 @@ import java.nio.ByteBuffer;
  * <p>
  * ESLIF is an extension of perl's <a href="https://metacpan.org/pod/Marpa::R2" target="_top">Marpa::R2</a> BNF,
  * written as a stand-alone <a href="http://github.com/jddurand/c-marpaESLIF" target="_top">C library</a>.
+ * <p>
+ * Please note that the call to the {@link free()} method is required to dispose the resources allocated withing constructors.
  *
  * This class and its derivatives is thread-safe.
  */
@@ -70,11 +72,25 @@ public class ESLIF {
 		jniNew();
 	}
 	
+	/**
+	 * Dispose of ESLIF resources
+	 * <p>
+	 * This call is <b>required</b> when you do not need anymore the ESLIF instance.
+	 * <p>
+	 * See {@link <a href="https://github.com/jddurand/c-marpaESLIF/tree/master/doc/API#marpaESLIF_freev" "target="_top">marpaESLIF_freev</a>}.
+	 */
 	public synchronized void free() throws ESLIFException {
 		jniFree();
 	}
 	
-	/* This is accessing static inside the library */ 
+	/**
+	 * Version of the ESLIF
+	 * 
+	 * @return a string describing the ESLIF version, never null
+	 * 
+	 * <p>
+	 * See {@link <a href="https://github.com/jddurand/c-marpaESLIF/tree/master/doc/API#marpaESLIF_versions" "target="_top">marpaESLIF_versions</a>}.
+	 */
 	public String version() {
 		return jniVersion();
 	}
