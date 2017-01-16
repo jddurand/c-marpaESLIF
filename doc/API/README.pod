@@ -49,6 +49,12 @@ A dedicated section on I<stack manipulation> is also described.
 
 =head2 ESLIF
 
+=head3 C<marpaESLIF_versions>
+
+  const char *marpaESLIF_versions();
+
+Returns a non-C<NULL> string describing the ESLIF version, in the form "MAJOR.MINOR.PATCH".
+
 =head3 C<marpaESLIF_newp>
 
   typedef struct marpaESLIFOption {
