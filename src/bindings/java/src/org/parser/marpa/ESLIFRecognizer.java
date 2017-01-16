@@ -18,6 +18,7 @@ public class ESLIFRecognizer {
 	private native void              jniLexemeAlternative(String name, Object object, int grammarLength);
 	private native void              jniLexemeComplete(int length);
 	private native void              jniLexemeRead(String name, Object object, int grammarLength, int length);
+	private native boolean           jniLexemeTry(String name);
 	private native String[]          jniLexemeExpected();
 	private native byte[]            jniLexemeLastPause(String lexeme);
 	private native boolean           jniIsEof();
@@ -77,6 +78,10 @@ public class ESLIFRecognizer {
 	
 	public synchronized void lexemeRead(String name, Object object, int grammarLength, int length) throws ESLIFException {
 		jniLexemeRead(name, object, grammarLength, length);
+	}
+	
+	public synchronized boolean lexemeTry(String name) throws ESLIFException {
+		return jniLexemeTry(name);
 	}
 	
 	public synchronized String[] lexemeExpected() throws ESLIFException {
