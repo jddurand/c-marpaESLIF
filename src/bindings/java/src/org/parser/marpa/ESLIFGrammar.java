@@ -6,21 +6,21 @@ import java.nio.ByteBuffer;
 public class ESLIFGrammar {
 	private ESLIF          eslif              = null;
 	private ByteBuffer     marpaESLIFGrammarp = null;
-	private native void    jniNew(byte[] utf8);
-	private native void    jniFree();
-	private native int     jniNgrammar();
-	private native int     jniCurrentLevel();
-	private native String  jniCurrentDescription();
-	private native String  jniDescriptionByLevel(int level);
-	private native int[]   jniCurrentRuleIds();
-	private native int[]   jniRuleIdsByLevel(int level);
-	private native String  jniRuleDisplay(int rule);
-	private native String  jniRuleShow(int rule);
-	private native String  jniRuleDisplayByLevel(int level, int rule);
-	private native String  jniRuleShowByLevel(int level, int rule);
-	private native String  jniShow();
-	private native String  jniShowByLevel(int level);
-	private native boolean jniParse(ESLIFRecognizerInterface recognizerInterface, ESLIFValueInterface valueInterface);
+	private native void    jniNew(byte[] utf8) throws ESLIFException;
+	private native void    jniFree() throws ESLIFException;
+	private native int     jniNgrammar() throws ESLIFException;
+	private native int     jniCurrentLevel() throws ESLIFException;
+	private native String  jniCurrentDescription() throws ESLIFException;
+	private native String  jniDescriptionByLevel(int level) throws ESLIFException;
+	private native int[]   jniCurrentRuleIds() throws ESLIFException;
+	private native int[]   jniRuleIdsByLevel(int level) throws ESLIFException;
+	private native String  jniRuleDisplay(int rule) throws ESLIFException;
+	private native String  jniRuleShow(int rule) throws ESLIFException;
+	private native String  jniRuleDisplayByLevel(int level, int rule) throws ESLIFException;
+	private native String  jniRuleShowByLevel(int level, int rule) throws ESLIFException;
+	private native String  jniShow() throws ESLIFException;
+	private native String  jniShowByLevel(int level) throws ESLIFException;
+	private native boolean jniParse(ESLIFRecognizerInterface recognizerInterface, ESLIFValueInterface valueInterface) throws ESLIFException;
 	/*
 	 * ********************************************
 	 * Public methods

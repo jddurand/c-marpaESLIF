@@ -9,24 +9,24 @@ public class ESLIFRecognizer {
 	private ByteBuffer               marpaESLIFRecognizerContextp = null;
 	private boolean                  canContinue    = false;
 	private boolean                  exhausted      = false;
-	private native void              jniNew(ESLIFGrammar eslifGrammar);
-	private native void              jniFree();
-	private native void              jniScan(boolean initialEvents);
-	private native void              jniResume(int deltaLength);
-	private native ESLIFEvent[]      jniEvent();
-	private native void              jniEventOnOff(String symbol, ESLIFEventType[] eventTypes, boolean onOff);
-	private native void              jniLexemeAlternative(String name, Object object, int grammarLength);
-	private native void              jniLexemeComplete(int length);
-	private native void              jniLexemeRead(String name, Object object, int grammarLength, int length);
-	private native boolean           jniLexemeTry(String name);
-	private native String[]          jniLexemeExpected();
-	private native byte[]            jniLexemeLastPause(String lexeme);
-	private native boolean           jniIsEof();
-	private native byte[]            jniRead();
-	private native byte[]            jniInput();
-	private native void              jniProgressLog(int start, int end, ESLIFLoggerLevel level);
-	private native int               jniLastCompletedOffset(String name);
-	private native int               jniLastCompletedLength(String name);
+	private native void              jniNew(ESLIFGrammar eslifGrammar) throws ESLIFException;
+	private native void              jniFree() throws ESLIFException;
+	private native void              jniScan(boolean initialEvents) throws ESLIFException;
+	private native void              jniResume(int deltaLength) throws ESLIFException;
+	private native ESLIFEvent[]      jniEvent() throws ESLIFException;
+	private native void              jniEventOnOff(String symbol, ESLIFEventType[] eventTypes, boolean onOff) throws ESLIFException;
+	private native void              jniLexemeAlternative(String name, Object object, int grammarLength) throws ESLIFException;
+	private native void              jniLexemeComplete(int length) throws ESLIFException;
+	private native void              jniLexemeRead(String name, Object object, int grammarLength, int length) throws ESLIFException;
+	private native boolean           jniLexemeTry(String name) throws ESLIFException;
+	private native String[]          jniLexemeExpected() throws ESLIFException;
+	private native byte[]            jniLexemeLastPause(String lexeme) throws ESLIFException;
+	private native boolean           jniIsEof() throws ESLIFException;
+	private native byte[]            jniRead() throws ESLIFException;
+	private native byte[]            jniInput() throws ESLIFException;
+	private native void              jniProgressLog(int start, int end, ESLIFLoggerLevel level) throws ESLIFException;
+	private native int               jniLastCompletedOffset(String name) throws ESLIFException;
+	private native int               jniLastCompletedLength(String name) throws ESLIFException;
 
 	public ESLIFRecognizer(ESLIFGrammar eslifGrammar, ESLIFRecognizerInterface eslifRecognizerInterface) throws ESLIFException {
 		if (eslifGrammar == null) {
@@ -64,7 +64,7 @@ public class ESLIFRecognizer {
 		return jniEvent();
 	}
 
-	public synchronized void eventOnOff(String symbol, ESLIFEventType[] eventTypes, boolean onOff) {
+	public synchronized void eventOnOff(String symbol, ESLIFEventType[] eventTypes, boolean onOff) throws ESLIFException {
 		jniEventOnOff(symbol, eventTypes, onOff);
 	}
 
