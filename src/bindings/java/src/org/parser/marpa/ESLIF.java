@@ -6,8 +6,12 @@ package org.parser.marpa;
 import java.nio.ByteBuffer;
 
 /**
- * @author Jean-Damien DUrand
+ * ESLIF is Extended ScanLess InterFace
+ * <p>
+ * ESLIF is an extension of perl's <a href="https://metacpan.org/pod/Marpa::R2" target="_top">Marpa::R2</a> BNF,
+ * written as a stand-alone <a href="http://github.com/jddurand/c-marpaESLIF" target="_top">C library</a>.
  *
+ * This class and its derivatives is thread-safe.
  */
 public class ESLIF {
 	private final static String  MARPAESLIFJAVA_LIBRARY_NAME = "marpaESLIFJava";
@@ -33,14 +37,35 @@ public class ESLIF {
 	 * Public methods
 	 * ********************************************
 	 */
-	public static String getMarpaeslifjavaLibraryName() {
-		return MARPAESLIFJAVA_LIBRARY_NAME;
-	}
+	/**
+	 * Constructor of the ESLIF
+	 * 
+	 * @param loggerInterface instance of a {@link ESLIFLoggerInterface}, may be null
+	 * 
+	 * @return an ESLIF instance
+	 * 
+	 * @throws ESLIFException when the C library returns {@code NULL}
+	 * 
+	 * <p>
+	 * See {@link <a href="https://github.com/jddurand/c-marpaESLIF/tree/master/doc/API#marpaESLIF_newp" "target="_top">marpaESLIF_newp</a>}.
+	 */
 	public ESLIF(ESLIFLoggerInterface loggerInterface) throws ESLIFException {
 		setLoggerInterface(loggerInterface);
 		jniNew();
 	}
 	
+	/**
+	 * Constructor of the ESLIF
+	 * <p>
+	 * Equivalent to {@link #ESLIF(ESLIFLoggerInterface)}, giving a null parameter for the logger interface.
+	 * 
+	 * @return an ESLIF instance
+	 * 
+	 * @throws ESLIFException when the C library returns {@code NULL}
+	 * 
+	 * <p>
+	 * See {@link <a href="https://github.com/jddurand/c-marpaESLIF/tree/master/doc/API#marpaESLIF_newp" "target="_top">marpaESLIF_newp</a>}.
+	 */
 	public ESLIF() throws ESLIFException {
 		jniNew();
 	}
@@ -58,6 +83,9 @@ public class ESLIF {
 	 * Private/protected methods - used by the JNI
 	 * *******************************************
 	 */
+	private static String getMarpaeslifjavaLibraryName() {
+		return MARPAESLIFJAVA_LIBRARY_NAME;
+	}
 	protected ESLIFLoggerInterface getLoggerInterface() {
 		return loggerInterface;
 	}

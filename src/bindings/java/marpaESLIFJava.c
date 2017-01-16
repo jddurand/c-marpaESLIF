@@ -3207,8 +3207,6 @@ static void marpaESLIFValueContextFree(JNIEnv *envp, marpaESLIFValueContext_t *m
   marpaESLIFMethodCache_t *methodCachep;
   size_t                   methodCacheSizel;
   marpaESLIFMethodCache_t *localMethodCachep;
-  genericStack_t          *stackp;
-  jobject                  objectp;
   int                      i; 
 
   if (marpaESLIFValueContextp != NULL) {

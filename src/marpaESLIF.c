@@ -4757,7 +4757,6 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
   marpaESLIF_grammar_t             grammarDiscard = *grammarp;
   marpaESLIFValueResult_t          marpaESLIFValueResult;
   short                            discardFailureb = 0;
-  GENERICSTACKITEMTYPE2TYPE_ARRAY  array;
   marpaESLIF_alternative_t         alternative;
   marpaESLIF_alternative_t        *alternativep;
 
@@ -5562,10 +5561,10 @@ static inline short _marpaESLIFRecognizer_lexeme_completeb(marpaESLIFRecognizer_
 static inline short _marpaESLIFRecognizer_lexeme_tryb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIF_symbol_t *symbolp, short *matchbp)
 /*****************************************************************************/
 {
-  static const char *funcs = "_marpaESLIFRecognizer_lexeme_tryb";
-  short              rcb;
-  short              matchb = 0;
-  int                rci;
+  static const char          *funcs = "_marpaESLIFRecognizer_lexeme_tryb";
+  short                       rcb;
+  short                       matchb = 0;
+  marpaESLIF_matcher_value_t  rci;
 
   /* Do these check, because _marpaESLIFRecognizer_meta_matcherb() is very internal and is assuming everything */
   /* is correct for performance reasons. */
