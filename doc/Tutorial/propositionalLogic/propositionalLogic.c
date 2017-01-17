@@ -1,13 +1,19 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 #include <marpaESLIF.h>
 #include <genericLogger.h>
 
 const static char *grammars =
+  "    Start           ::= <Init many> <Sentence any>\n"
+  "    <Sentence any>  ::= Sentence*\n"
+  "    <Init many>     ::= Init+\n"
+  "    Init            ::= Symbol '=' Boolean\n"
+  "    Boolean         ::= TRUE | FALSE\n"
   "    Sentence        ::= Atomicsentence | ComplexSentence\n"
-  "    Atomicsentence  ::= TRUE | FALSE | Symbol\n"
-  "    Symbol          ::= /[^\\s]+/; /* Anything that is not a space or special characters */\n"
+  "    Atomicsentence  ::= Boolean | Symbol\n"
+  "    Symbol          ::= SYMBOL /* Anything that is not a space or special characters */\n"
   "    ComplexSentence ::=                        NOT Sentence\n"
   "                     || LPAREN Sentence        AND Sentence RPAREN\n"
   "                     || LPAREN Sentence         OR Sentence RPAREN\n"
@@ -22,28 +28,51 @@ const static char *grammars =
   "    OR          ~ 'OR':i  | '|'\n"
   "    IMPLIES     ~ 'IMPLIES':i  | '=>'\n"
   "    EQUIVALENT  ~ 'EQUIVALENT':i  | '<=>'\n"
+  "    SYMBOL      ~ /[^\\s]+/ /* Anything that is not a space or special characters */\n"
+  "\n"
+  "event ^Symbol = predicted Symbol\n"
+  "event Symbol$ = completed Symbol\n"
+  "event Init$ = completed Init\n"
+  ":lexeme ::= SYMBOL pause => after event => SYMBOL$\n"
   ;
 
+static short stdinReaderb(void *userDatavp, char **inputsp, size_t *inputlp, short *eofbp, short *characterStreambp, char **encodingOfEncodingsp, char **encodingsp, size_t *encodinglp);
+
+typedef struct readerContext {
+  genericLogger_t *genericLoggerp;
+} readerContext_t;
+
 int main() {
-  genericLogger_t             *genericLoggerp;
+  genericLogger_t             *genericLoggerp        = NULL;
+  marpaESLIF_t                *marpaESLIFp           = NULL;
+  marpaESLIFGrammar_t         *marpaESLIFGrammarp    = NULL;
+  marpaESLIFRecognizer_t      *marpaESLIFRecognizerp = NULL;
+  int                          rci;
   marpaESLIFOption_t           marpaESLIFOption;
-  marpaESLIF_t                *marpaESLIFp;
   marpaESLIFGrammarOption_t    marpaESLIFGrammarOption;
-  marpaESLIFGrammar_t         *marpaESLIFGrammarp;
   int                          leveli;
   int                          ngrammari;
   char                        *grammarshows;
-  
+  readerContext_t              readerContext;
+  marpaESLIFRecognizerOption_t marpaESLIFRecognizerOption;
+  size_t                       nEventl;
+  size_t                       eventl;
+  marpaESLIFEvent_t           *eventArrayp;
+  short                        eofb;
+  marpaESLIFAlternative_t      marpaESLIFAlternative;
+  char                        *pauses;
+  size_t                       pausel;
+
   genericLoggerp = GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_DEBUG);
   if (genericLoggerp == NULL) {
     perror("GENERICLOGGER_NEW");
-    exit(1);
+    goto err;
   }
 
   marpaESLIFOption.genericLoggerp = genericLoggerp;
   marpaESLIFp = marpaESLIF_newp(&marpaESLIFOption);
   if (marpaESLIFp == NULL) {
-    exit(1);
+    goto err;
   }
 
   marpaESLIFGrammarOption.bytep               = (void *) grammars;
@@ -53,7 +82,7 @@ int main() {
   marpaESLIFGrammarOption.encodingOfEncodings = NULL;
   marpaESLIFGrammarp = marpaESLIFGrammar_newp(marpaESLIFp, &marpaESLIFGrammarOption);
   if (marpaESLIFGrammarp == NULL) {
-    exit(1);
+    goto err;
   }
 
   /* Dump grammar */
@@ -67,5 +96,104 @@ int main() {
     }
   }
 
-  exit(0);
+  /* Start a recognizer */
+  readerContext.genericLoggerp = genericLoggerp;
+
+  marpaESLIFRecognizerOption.userDatavp                = &readerContext;
+  marpaESLIFRecognizerOption.marpaESLIFReaderCallbackp = stdinReaderb;
+  marpaESLIFRecognizerOption.disableThresholdb         = 0;  /* No disable of threshold warning */
+  marpaESLIFRecognizerOption.exhaustedb                = 0;  /* No exhaustion event */
+  marpaESLIFRecognizerOption.newlineb                  = 1;  /* Do newline counting */
+  marpaESLIFRecognizerOption.bufsizl                   = 0;  /* Recommended value */
+  marpaESLIFRecognizerOption.buftriggerperci           = 50; /* Recommended value */
+  marpaESLIFRecognizerOption.bufaddperci               = 50; /* Recommended value */
+  marpaESLIFRecognizerp = marpaESLIFRecognizer_newp(marpaESLIFGrammarp, &marpaESLIFRecognizerOption);
+  if (marpaESLIFRecognizerp == NULL) {
+    exit(1);
+  }
+
+  /* Look on events */
+  while (marpaESLIFRecognizer_eventb(marpaESLIFRecognizerp, &nEventl, &eventArrayp)) {
+    if (nEventl <= 0) {
+      /* Read some data */
+      if (! marpaESLIFRecognizer_readb(marpaESLIFRecognizerp, NULL, NULL)) {
+        goto err;
+      }
+    }
+    /* Get events */
+    if (! marpaESLIFRecognizer_eventb(marpaESLIFRecognizerp, &nEventl, &eventArrayp)) {
+      goto err;
+    }
+    for (eventl = 0; eventl < nEventl; eventl++) {
+      GENERICLOGGER_INFOF(genericLoggerp, "Event %s on symbol %s", eventArrayp[eventl].events, eventArrayp[eventl].symbols);
+      if (strcmp(eventArrayp[eventl].events, "Init$") == 0) {
+        /* Get last symbol and boolean */
+        if (! marpaESLIFRecognizer_lexeme_last_pauseb(marpaESLIFRecognizerp, "SYMBOL", &pauses, &pausel)) {
+          goto err;
+        }
+        GENERICLOGGER_INFOF(genericLoggerp, "... Last SYMBOL is %s", pauses);
+      }
+    }
+    /* Stop if eof */
+    if (! marpaESLIFRecognizer_isEofb(marpaESLIFRecognizerp, &eofb)) {
+      goto err;
+    }
+    if (eofb) {
+      GENERICLOGGER_INFO(genericLoggerp, "EOF");
+      break;
+    }
+  }
+
+  rci = 0;
+  goto done;
+
+ err:
+  rci = 1;
+
+ done:
+  /* All these calls are NULL protected */
+  marpaESLIFRecognizer_freev(marpaESLIFRecognizerp);
+  marpaESLIFGrammar_freev(marpaESLIFGrammarp);
+  marpaESLIF_freev(marpaESLIFp);
+  GENERICLOGGER_FREE(genericLoggerp);
+
+  exit(rci);
 }
+
+/*****************************************************************************/
+static short stdinReaderb(void *userDatavp, char **inputsp, size_t *inputlp, short *eofbp, short *characterStreambp, char **encodingOfEncodingsp, char **encodingsp, size_t *encodinglp)
+/*****************************************************************************/
+{
+  readerContext_t *readerContextp = (readerContext_t *) userDatavp;
+  genericLogger_t *genericLoggerp = readerContextp->genericLoggerp;
+  int              i;
+  unsigned char    c;
+
+  i = fgetc(stdin);
+  if (i != EOF) {
+    c = (unsigned char) i;
+
+    *inputsp              = (char *) &c;
+    *inputlp              = sizeof(char);
+    *eofbp                = 0;
+    if (iscntrl(i)) {
+      GENERICLOGGER_DEBUGF(genericLoggerp, "... fgetc(stdin) returned 0x%x", c);
+    } else {
+      GENERICLOGGER_DEBUGF(genericLoggerp, "... fgetc(stdin) returned '%c' (0x%x)", c, c);
+    }
+  } else {
+    *inputsp              = NULL;
+    *inputlp              = 0;
+    *eofbp                = 1;    /* One chunk */
+    GENERICLOGGER_DEBUG(genericLoggerp, "... fgetc(stdin) returned EOF");
+  }
+
+
+  *characterStreambp    = 1;    /* We say this is a stream of characters */
+  *encodingOfEncodingsp = NULL; /* let marpaESLIF deal with encoding */
+  *encodingsp           = NULL;
+  *encodinglp           = 0;
+
+  return 1;
+}
+
