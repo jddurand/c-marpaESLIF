@@ -27,7 +27,7 @@ typedef enum    marpaESLIF_array_type      marpaESLIF_array_type_t;
 typedef struct  marpaESLIF_readerContext   marpaESLIF_readerContext_t;
 typedef struct  marpaESLIF_cloneContext    marpaESLIF_cloneContext_t;
 typedef         marpaESLIFValueType_t      marpaESLIF_stack_type_t;
-typedef struct  marpaESLIF_last_pause      marpaESLIF_last_pause_t;
+typedef struct  marpaESLIF_lexeme_data     marpaESLIF_lexeme_data_t;
 typedef struct  marpaESLIF_alternative     marpaESLIF_alternative_t;
 
 /* Symbol types */
@@ -330,13 +330,14 @@ struct marpaESLIFRecognizer {
   short                       *discardEventStatebp; /* Discard current event states for the CURRENT grammar (marpaESLIFRecognizerp->marpaESLIFGrammarp->grammarp) */
   short                       *beforeEventStatebp;  /* Lexeme before current event states for the CURRENT grammar */
   short                       *afterEventStatebp;   /* Lexeme after current event states for the CURRENT grammar */
-  marpaESLIF_last_pause_t    **lastPausepp;         /* Lexeme last pause for the CURRENT grammar */
+  marpaESLIF_lexeme_data_t   **lastPausepp;         /* Lexeme last pause for the CURRENT grammar */
+  marpaESLIF_lexeme_data_t   **lastTrypp;           /* Lexeme last try for the CURRENT grammar */
 };
 
-struct marpaESLIF_last_pause {
-  char   *pauses;        /* Last pause data */
-  size_t  pausel;        /* Last pause length */
-  size_t  pauseSizel;    /* Last pause allocate size */
+struct marpaESLIF_lexeme_data {
+  char   *bytes;        /* Data */
+  size_t  bytel;        /* Length */
+  size_t  byteSizel;    /* Allocated size */
 };
 
 struct marpaESLIF_alternative {

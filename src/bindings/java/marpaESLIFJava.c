@@ -43,6 +43,7 @@ JNIEXPORT jboolean     JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniIsEof   
 JNIEXPORT jbyteArray   JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniRead                   (JNIEnv *envp, jobject eslifRecognizerp);
 JNIEXPORT jbyteArray   JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniInput                  (JNIEnv *envp, jobject eslifRecognizerp);
 JNIEXPORT jbyteArray   JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniLexemeLastPause        (JNIEnv *envp, jobject eslifRecognizerp, jstring lexemep);
+JNIEXPORT jbyteArray   JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniLexemeLastTry          (JNIEnv *envp, jobject eslifRecognizerp, jstring lexemep);
 JNIEXPORT jobjectArray JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniEvent                  (JNIEnv *envp, jobject eslifRecognizerp);
 JNIEXPORT jint         JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniLastCompletedOffset    (JNIEnv *envp, jobject eslifRecognizerp, jstring namep);
 JNIEXPORT jint         JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniLastCompletedLength    (JNIEnv *envp, jobject eslifRecognizerp, jstring namep);
@@ -2174,6 +2175,68 @@ JNIEXPORT jbyteArray JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniLexemeLast
       goto err;
     }
     (*envp)->SetByteArrayRegion(envp, byteArrayp, (jsize) 0, (jsize) pausel, (jbyte *) pauses);
+    if (HAVEEXCEPTION(envp)) {
+      goto err;
+    }
+  }
+
+  goto done;
+
+ err:
+  if (envp != NULL) {
+    if (byteArrayp != NULL) {
+      (*envp)->DeleteLocalRef(envp, byteArrayp);
+    }
+  }
+  byteArrayp = NULL;
+
+ done:
+  if (envp != NULL) {
+    if ((lexemep != NULL) && (lexemes != NULL)) {
+      (*envp)->ReleaseStringUTFChars(envp, lexemep, lexemes);
+    }
+  }
+  return byteArrayp;
+}
+
+/*****************************************************************************/
+JNIEXPORT jbyteArray JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniLexemeLastTry(JNIEnv *envp, jobject eslifRecognizerp, jstring lexemep)
+/*****************************************************************************/
+{
+  marpaESLIFRecognizer_t *marpaESLIFRecognizerp;
+  jbyteArray              byteArrayp = NULL;
+  const char             *lexemes = NULL;
+  jboolean                isCopy;
+  char                   *trys;
+  size_t                  tryl;
+
+  if (! ESLIFRecognizer_contextb(envp, eslifRecognizerp, eslifRecognizerp, MARPAESLIF_ESLIFRECOGNIZER_CLASS_getLoggerInterfacep_METHODP,
+                                 NULL /* genericLoggerpp */,
+                                 NULL /* genericLoggerContextpp */,
+                                 NULL /* marpaESLIFpp */,
+                                 NULL /* marpaESLIFGrammarpp */,
+                                 &marpaESLIFRecognizerp,
+                                 NULL /* marpaESLIFRecognizerContextpp */)) {
+    goto err;
+  }
+
+  if (lexemep != NULL) {
+    lexemes = (*envp)->GetStringUTFChars(envp, lexemep, &isCopy);
+    if (lexemes == NULL) {
+      RAISEEXCEPTION(envp, "GetStringUTFChars failure");
+    }
+  }
+
+  if (!  marpaESLIFRecognizer_lexeme_last_tryb(marpaESLIFRecognizerp, (char *) lexemes, &trys, &tryl)) {
+    RAISEEXCEPTION(envp, "marpaESLIFRecognizer_lexeme_last_tryb failure");
+  }
+
+  if ((trys != NULL) && (tryl > 0)) {
+    byteArrayp = (*envp)->NewByteArray(envp, (jsize) tryl);
+    if (byteArrayp == NULL) {
+      goto err;
+    }
+    (*envp)->SetByteArrayRegion(envp, byteArrayp, (jsize) 0, (jsize) tryl, (jbyte *) trys);
     if (HAVEEXCEPTION(envp)) {
       goto err;
     }
