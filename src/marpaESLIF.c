@@ -5246,7 +5246,6 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
         char  *dumps;
         size_t dumpl;
 
-        MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "marpaESLIFRecognizerp->inputl is %ld", (unsigned long) marpaESLIFRecognizerp->inputl);
         dumps = marpaESLIFRecognizerp->inputs;
         dumpl = marpaESLIFRecognizerp->inputl > 128 ? 128 : marpaESLIFRecognizerp->inputl;
         MARPAESLIF_HEXDUMPV(marpaESLIFRecognizerp,
@@ -8399,6 +8398,7 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIFGrammar_t *marpaESL
     if (symbolp->eventPredicteds != NULL) {
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "event ");
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->eventPredicteds);
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->eventPredictedb ? "=on" : "=off");
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " = predicted ");
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "<");
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->descp->asciis);
@@ -8409,6 +8409,7 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIFGrammar_t *marpaESL
     if (symbolp->eventNulleds != NULL) {
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "event ");
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->eventNulleds);
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->eventNulledb ? "=on" : "=off");
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " = nulled ");
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "<");
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->descp->asciis);
@@ -8419,6 +8420,7 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIFGrammar_t *marpaESL
     if (symbolp->eventCompleteds != NULL) {
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "event ");
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->eventCompleteds);
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->eventCompletedb ? "=on" : "=off");
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " = completed ");
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "<");
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->descp->asciis);
