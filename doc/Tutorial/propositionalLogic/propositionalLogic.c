@@ -28,7 +28,7 @@ const static char *grammars =
   "    OR          ~ 'OR':i  | '|'\n"
   "    IMPLIES     ~ 'IMPLIES':i  | '=>'\n"
   "    EQUIVALENT  ~ 'EQUIVALENT':i  | '<=>'\n"
-  "    SYMBOL      ~ /[^\\s]+/ /* Anything that is not a space or special characters */\n"
+  "    SYMBOL      ~ /[a-zA-Z0-9_]+/\n"
   "\n"
   "event ^Symbol = predicted Symbol\n"
   "event ^Boolean = predicted Boolean\n"
