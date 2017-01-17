@@ -687,7 +687,7 @@ A typical usage of the C<marpaESLIFRecognizer_scanb> method is:
     /* See below for the events, pause and resume methods */
   }
 
-This method returns a true value on success, a false value on failure.
+This method returns a true value on success, a false value on failure, and can generate grammar and pause events.
 
 =head3 C<marpaESLIFRecognizer_resumeb>
 
@@ -718,6 +718,8 @@ Resume the scanning. All parameters have the same meaning as for C<marpaESLIFRec
       goto error_processing;
     }
   }
+
+This method can generate grammar and pause events.
 
 Returns a true value on success, a false value on failure.
 
@@ -838,6 +840,8 @@ Say to the recognizer pointed C<marpaESLIFRecognizerp> by that the current set o
 
 If a I<lexeme after> event is triggered, C<marpaESLIFRecognizer_lexeme_last_pauseb> will show as many bytes as C<lengthl>. And because it is guaranteed that C<marpaESLIFRecognizer_lexeme_last_pauseb> returns a pointer to NUL-terminated buffer, the extreme case is that last pause can be an empty string "" when the alternative has been pushed using a user-defined value.
 
+This method can generate grammar and pause events.
+
 Returns a true value on success, a false value on failure.
 
 =head3 C<marpaESLIFRecognizer_lexeme_readb>
@@ -848,6 +852,8 @@ Returns a true value on success, a false value on failure.
 
 A short-hand version of lexeme management that is pushing an alternative and do completion in one call.
 
+This method can generate grammar and pause events.
+
 Returns a true value on success, a false value on failure.
 
 =head3 C<marpaESLIFRecognizer_lexeme_tryb>
@@ -856,7 +862,7 @@ Returns a true value on success, a false value on failure.
                                          char *lexemes,
                                          short *matchbp);
 
-Try to match the lexeme with name C<lexemes> that must be non-C<NULL>. Returns in C<matchbp>, when not C<NULL>, a true value if there is a match, a false value otherwise.
+Try to match the lexeme with name C<lexemes> that must be non-C<NULL>. Returns in C<matchbp>, when not C<NULL>, a true value if there is a match, a false value otherwise. This method generates no event.
 
 Returns a true value on success, a false value on failure.
 
