@@ -153,6 +153,8 @@ static inline short                  _marpaESLIFRecognizer_alternative_and_value
 static inline short                  _marpaESLIFRecognizer_push_eventb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFEventType_t type, marpaESLIFSymbol_t *symbolp, char *events);
 static inline short                  _marpaESLIFRecognizer_set_pauseb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIF_grammar_t *grammarp, marpaESLIF_symbol_t *symbolp, char *bytes, size_t bytel);
 static inline short                  _marpaESLIFRecognizer_push_grammar_eventsb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp);
+static inline void                   _marpaESLIFRecognizer_clear_grammar_eventsb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp);
+static inline void                   _marpaESLIFRecognizer_sort_eventsb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp);
 static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaESLIFRecognizerOption_t *marpaESLIFRecognizerOptionp, short discardb, short noEventb, genericStack_t *exceptionStackp, short silentb, marpaESLIFRecognizer_t *marpaESLIFRecognizerParentp, short fakeb);
 static inline short                  _marpaESLIFGrammar_parseb(marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaESLIFRecognizerOption_t *marpaESLIFRecognizerOptionp, marpaESLIFValueOption_t *marpaESLIFValueOptionp, short discardb, short noEventb, genericStack_t *exceptionStackp, short silentb, marpaESLIFRecognizer_t *marpaESLIFRecognizerParentp, short *exhaustedbp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
 static        void                   _marpaESLIF_generateStringWithLoggerCallback(void *userDatavp, genericLoggerLevel_t logLeveli, const char *msgs);
@@ -6154,6 +6156,7 @@ short marpaESLIFRecognizer_eventb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp,
 /*****************************************************************************/
 {
   static const char *funcs = "marpaESLIFRecognizer_eventb";
+  short              rcb;
 
   if (marpaESLIFRecognizerp == NULL) {
     errno = EINVAL;
@@ -6163,6 +6166,13 @@ short marpaESLIFRecognizer_eventb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp,
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
 
+  /* We want to always make sure that grammar events are fetched */
+  /* although without duplicates */
+  _marpaESLIFRecognizer_clear_grammar_eventsb(marpaESLIFRecognizerp);
+  if (! _marpaESLIFRecognizer_push_grammar_eventsb(marpaESLIFRecognizerp)) {
+    goto err;
+  }
+
   if (eventArraylp != NULL) {
     *eventArraylp = marpaESLIFRecognizerp->eventArrayl;
   }
@@ -6170,10 +6180,17 @@ short marpaESLIFRecognizer_eventb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp,
     *eventArraypp = marpaESLIFRecognizerp->eventArrayp;
   }
 
-  MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "return");
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC;
 
-  return 1;
+  return rcb;
 }
 
 /*****************************************************************************/
@@ -6246,8 +6263,8 @@ short marpaESLIFRecognizer_eventb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp,
 
   eventArrayp[eventArrayl] = eventArray;
   if (++eventArrayl > 1) {
-    /* Sort the events */
-    qsort(eventArrayp, eventArrayl, sizeof(marpaESLIFEvent_t), _marpaESLIF_event_sorti);
+    /* Sort the events if there is more than one */
+    _marpaESLIFRecognizer_sort_eventsb(marpaESLIFRecognizerp);
   }
   marpaESLIFRecognizerp->eventArrayl = eventArrayl;
 
@@ -6466,6 +6483,45 @@ static inline short _marpaESLIFRecognizer_push_grammar_eventsb(marpaESLIFRecogni
   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC;
   return rcb;
+}
+
+/*****************************************************************************/
+static inline void _marpaESLIFRecognizer_clear_grammar_eventsb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp)
+/*****************************************************************************/
+{
+  static const char *funcs           = "_marpaESLIFRecognizer_clear_grammar_eventsb";
+  marpaESLIFEvent_t *eventArrayp     = marpaESLIFRecognizerp->eventArrayp;
+  size_t             eventArrayl     = marpaESLIFRecognizerp->eventArrayl;
+  size_t             eventArraySizel = marpaESLIFRecognizerp->eventArraySizel;
+  size_t             i;
+  size_t             okl             = 0;
+
+  /* We put to NONE the grammar events, sort (NONE will be at the end), and change the length */
+  for (i = 0; i < eventArrayl; i++) {
+    switch (eventArrayp[i].type) {
+    case MARPAESLIF_EVENTTYPE_PREDICTED:
+    case MARPAESLIF_EVENTTYPE_NULLED:
+    case MARPAESLIF_EVENTTYPE_COMPLETED:
+      eventArrayp[i].type = MARPAESLIF_EVENTTYPE_NONE;
+      break;
+    default:
+      okl++;
+      break;
+    }
+  }
+
+  if (okl > 0) {
+    /* The sort will put eventual NONE events at the very end */
+    _marpaESLIFRecognizer_sort_eventsb(marpaESLIFRecognizerp);
+  }
+  marpaESLIFRecognizerp->eventArrayl = okl;
+}
+
+/*****************************************************************************/
+static inline void  _marpaESLIFRecognizer_sort_eventsb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp)
+/*****************************************************************************/
+{
+  qsort(marpaESLIFRecognizerp->eventArrayp, marpaESLIFRecognizerp->eventArrayl, sizeof(marpaESLIFEvent_t), _marpaESLIF_event_sorti);
 }
 
 /*****************************************************************************/
@@ -12660,7 +12716,6 @@ static int _marpaESLIF_event_sorti(const void *p1, const void *p2)
   marpaESLIFEvent_t *event1p = (marpaESLIFEvent_t *) p1;
   marpaESLIFEvent_t *event2p = (marpaESLIFEvent_t *) p2;
   int                rci;
-  
   /* The order is:
 
      MARPAESLIF_EVENTTYPE_PREDICTED
@@ -12674,10 +12729,24 @@ static int _marpaESLIF_event_sorti(const void *p1, const void *p2)
        no order
   */
 
-  
   switch (event1p->type) {
-  case MARPAESLIF_EVENTTYPE_NONE: /* Should never happen */
-    rci = 0;
+  case MARPAESLIF_EVENTTYPE_NONE: /* Happen when we clear grammar events and repush them */
+    /* Not absolutely, this should be rci == 0 when event2p->type is NONE, but this has */
+    /* no consequence: NONE is at the very end - by doing this we avoid a sub-switch -; */
+    rci = 1;
+    /*
+    switch (event2p->type) {
+    case MARPAESLIF_EVENTTYPE_PREDICTED:  rci =  1; break;
+    case MARPAESLIF_EVENTTYPE_BEFORE:     rci =  1; break;
+    case MARPAESLIF_EVENTTYPE_NULLED:     rci =  1; break;
+    case MARPAESLIF_EVENTTYPE_AFTER:      rci =  1; break;
+    case MARPAESLIF_EVENTTYPE_COMPLETED:  rci =  1; break;
+    case MARPAESLIF_EVENTTYPE_DISCARD:    rci =  1; break;
+    case MARPAESLIF_EVENTTYPE_EXHAUSTED:  rci =  1; break;
+    case MARPAESLIF_EVENTTYPE_NONE:       rci =  0; break;
+    default:                              rci =  0; break;
+    }
+    */
     break;
   case MARPAESLIF_EVENTTYPE_PREDICTED:
     switch (event2p->type) {
@@ -12688,6 +12757,7 @@ static int _marpaESLIF_event_sorti(const void *p1, const void *p2)
     case MARPAESLIF_EVENTTYPE_COMPLETED:  rci = -1; break;
     case MARPAESLIF_EVENTTYPE_DISCARD:    rci = -1; break;
     case MARPAESLIF_EVENTTYPE_EXHAUSTED:  rci = -1; break;
+    case MARPAESLIF_EVENTTYPE_NONE:       rci = -1; break;
     default:                              rci =  0; break; /* Should never happen */
     }
     break;
@@ -12700,6 +12770,7 @@ static int _marpaESLIF_event_sorti(const void *p1, const void *p2)
     case MARPAESLIF_EVENTTYPE_COMPLETED:  rci = -1; break;
     case MARPAESLIF_EVENTTYPE_DISCARD:    rci = -1; break;
     case MARPAESLIF_EVENTTYPE_EXHAUSTED:  rci = -1; break;
+    case MARPAESLIF_EVENTTYPE_NONE:       rci = -1; break;
     default:                              rci =  0; break; /* Should never happen */
     }
     break;
@@ -12712,6 +12783,7 @@ static int _marpaESLIF_event_sorti(const void *p1, const void *p2)
     case MARPAESLIF_EVENTTYPE_COMPLETED:  rci = -1; break;
     case MARPAESLIF_EVENTTYPE_DISCARD:    rci = -1; break;
     case MARPAESLIF_EVENTTYPE_EXHAUSTED:  rci = -1; break;
+    case MARPAESLIF_EVENTTYPE_NONE:       rci = -1; break;
     default:                              rci =  0; break; /* Should never happen */
     }
     break;
@@ -12724,6 +12796,7 @@ static int _marpaESLIF_event_sorti(const void *p1, const void *p2)
     case MARPAESLIF_EVENTTYPE_COMPLETED:  rci = -1; break;
     case MARPAESLIF_EVENTTYPE_DISCARD:    rci = -1; break;
     case MARPAESLIF_EVENTTYPE_EXHAUSTED:  rci = -1; break;
+    case MARPAESLIF_EVENTTYPE_NONE:       rci = -1; break;
     default:                              rci =  0; break; /* Should never happen */
     }
     break;
@@ -12736,6 +12809,7 @@ static int _marpaESLIF_event_sorti(const void *p1, const void *p2)
     case MARPAESLIF_EVENTTYPE_COMPLETED:  rci =  0; break;
     case MARPAESLIF_EVENTTYPE_DISCARD:    rci = -1; break;
     case MARPAESLIF_EVENTTYPE_EXHAUSTED:  rci = -1; break;
+    case MARPAESLIF_EVENTTYPE_NONE:       rci = -1; break;
     default:                              rci =  0; break; /* Should never happen */
     }
     break;
@@ -12748,11 +12822,22 @@ static int _marpaESLIF_event_sorti(const void *p1, const void *p2)
     case MARPAESLIF_EVENTTYPE_COMPLETED:  rci =  1; break;
     case MARPAESLIF_EVENTTYPE_DISCARD:    rci =  0; break;
     case MARPAESLIF_EVENTTYPE_EXHAUSTED:  rci = -1; break;
+    case MARPAESLIF_EVENTTYPE_NONE:       rci = -1; break;
     default:                              rci =  0; break; /* Should never happen */
     }
     break;
-  case MARPAESLIF_EVENTTYPE_EXHAUSTED: /* Always at the very end */
-    rci = 1;
+  case MARPAESLIF_EVENTTYPE_EXHAUSTED: /* Always at the very end, except if event2p->type is NONE */
+    switch (event2p->type) {
+    case MARPAESLIF_EVENTTYPE_PREDICTED:  rci =  1; break;
+    case MARPAESLIF_EVENTTYPE_BEFORE:     rci =  1; break;
+    case MARPAESLIF_EVENTTYPE_NULLED:     rci =  1; break;
+    case MARPAESLIF_EVENTTYPE_AFTER:      rci =  1; break;
+    case MARPAESLIF_EVENTTYPE_COMPLETED:  rci =  1; break;
+    case MARPAESLIF_EVENTTYPE_DISCARD:    rci =  1; break;
+    case MARPAESLIF_EVENTTYPE_EXHAUSTED:  rci =  0; break;
+    case MARPAESLIF_EVENTTYPE_NONE:       rci = -1; break;
+    default:                              rci =  0; break; /* Should never happen */
+    }
     break;
   default: /* Should never happen */
     rci = 0;
