@@ -39,6 +39,11 @@ const static char *grammars =
 
 static short stdinReaderb(void *userDatavp, char **inputsp, size_t *inputlp, short *eofbp, short *characterStreambp, char **encodingOfEncodingsp, char **encodingsp, size_t *encodinglp);
 
+typedef enum alternativeContext {
+  ALTERNATIVE_SYMBOL,
+  ALTERNATIVE_BOOLEAN
+} alternativeContext_t;
+
 typedef struct readerContext {
   genericLogger_t *genericLoggerp;
 } readerContext_t;
@@ -61,6 +66,8 @@ int main() {
   marpaESLIFEvent_t           *eventArrayp;
   short                        eofb;
   short                        symbolb;
+  char                        *symbols;
+  size_t                       symboll;
   short                        trueb;
   short                        falseb;
   marpaESLIFAlternative_t      marpaESLIFAlternative;
@@ -132,12 +139,32 @@ int main() {
       /* Note that events are always sorted in order: predictions, nullables, completions, discard, exhaustion */
       GENERICLOGGER_INFOF(genericLoggerp, "Event %s on symbol %s", eventArrayp[eventl].events, eventArrayp[eventl].symbols);
       if (strcmp(eventArrayp[eventl].events, "^Symbol") == 0) {
-        /* No proof that recognizer saw SYMBOL - we have to try */
+        /* Check if the recognizer see SYMBOL */
         if (! marpaESLIFRecognizer_lexeme_tryb(marpaESLIFRecognizerp, "SYMBOL", &symbolb)) {
           goto err;
         }
         if (symbolb) {
-          GENERICLOGGER_INFO(genericLoggerp, "... SYMBOL will match");
+          /* Get the symbol as the recognizer saw it */
+          if (! marpaESLIFRecognizer_lexeme_last_tryb(marpaESLIFRecognizerp, "SYMBOL", &symbols, &symboll)) {
+            goto err;
+          }
+          GENERICLOGGER_INFO(genericLoggerp, "... SYMBOL match");
+          /* Feed symbol */
+          marpaESLIFAlternative.lexemes = "SYMBOL";
+          marpaESLIFAlternative.value.type = MARPAESLIF_VALUE_TYPE_ARRAY;
+          marpaESLIFAlternative.value.u.p = malloc(symboll);
+          if (marpaESLIFAlternative.value.u.p == NULL) {
+            GENERICLOGGER_ERRORF(genericLoggerp, "malloc failure, %s", strerror(errno));
+            goto err;
+          }
+          memcpy(marpaESLIFAlternative.value.u.p, symbols, symboll);
+          marpaESLIFAlternative.value.contexti = ALTERNATIVE_SYMBOL;
+          marpaESLIFAlternative.value.sizel = symboll;
+          marpaESLIFAlternative.grammarLengthl = 1;
+          /* Push it */
+          if (! marpaESLIFRecognizer_lexeme_readb(marpaESLIFRecognizerp, &marpaESLIFAlternative, symboll)) {
+            goto err;
+          }
           goto done;
         }
       }

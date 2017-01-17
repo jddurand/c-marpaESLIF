@@ -21,6 +21,7 @@ public class ESLIFRecognizer {
 	private native boolean           jniLexemeTry(String name) throws ESLIFException;
 	private native String[]          jniLexemeExpected() throws ESLIFException;
 	private native byte[]            jniLexemeLastPause(String lexeme) throws ESLIFException;
+	private native byte[]            jniLexemeLastTry(String lexeme) throws ESLIFException;
 	private native boolean           jniIsEof() throws ESLIFException;
 	private native byte[]            jniRead() throws ESLIFException;
 	private native byte[]            jniInput() throws ESLIFException;
@@ -90,6 +91,10 @@ public class ESLIFRecognizer {
 	
 	public synchronized byte[] lexemeLastPause(String lexeme) throws ESLIFException {
 		return jniLexemeLastPause(lexeme);
+	}
+
+	public synchronized byte[] lexemeLastTry(String lexeme) throws ESLIFException {
+		return jniLexemeLastTry(lexeme);
 	}
 
 	public synchronized boolean isEof() throws ESLIFException {
