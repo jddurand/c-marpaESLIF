@@ -31,6 +31,7 @@ const static char *grammars =
   "    SYMBOL      ~ /[^\\s]+/ /* Anything that is not a space or special characters */\n"
   "\n"
   "event ^Symbol = predicted Symbol\n"
+  "event ^Boolean = predicted Boolean\n"
   "event Symbol$ = completed Symbol\n"
   "event Init$ = completed Init\n"
   ":lexeme ::= SYMBOL pause => after event => SYMBOL$\n"
@@ -59,6 +60,9 @@ int main() {
   size_t                       eventl;
   marpaESLIFEvent_t           *eventArrayp;
   short                        eofb;
+  short                        symbolb;
+  short                        trueb;
+  short                        falseb;
   marpaESLIFAlternative_t      marpaESLIFAlternative;
   char                        *pauses;
   size_t                       pausel;
@@ -125,7 +129,33 @@ int main() {
       goto err;
     }
     for (eventl = 0; eventl < nEventl; eventl++) {
+      /* Note that events are always sorted in order: predictions, nullables, completions, discard, exhaustion */
       GENERICLOGGER_INFOF(genericLoggerp, "Event %s on symbol %s", eventArrayp[eventl].events, eventArrayp[eventl].symbols);
+      if (strcmp(eventArrayp[eventl].events, "^Symbol") == 0) {
+        /* No proof that recognizer saw SYMBOL - we have to try */
+        if (! marpaESLIFRecognizer_lexeme_tryb(marpaESLIFRecognizerp, "SYMBOL", &symbolb)) {
+          goto err;
+        }
+        if (symbolb) {
+          GENERICLOGGER_INFO(genericLoggerp, "... SYMBOL will match");
+          goto done;
+        }
+      }
+      else if (strcmp(eventArrayp[eventl].events, "^Boolean") == 0) {
+        /* No proof that recognizer saw TRUE or FALSE - we have to try */
+        if ((! marpaESLIFRecognizer_lexeme_tryb(marpaESLIFRecognizerp, "TRUE", &trueb)) ||
+            (! marpaESLIFRecognizer_lexeme_tryb(marpaESLIFRecognizerp, "FALSE", &falseb))) {
+          goto err;
+        }
+        if (trueb) {
+          GENERICLOGGER_INFO(genericLoggerp, "... TRUE will match");
+          goto done;
+        }
+        if (falseb) {
+          GENERICLOGGER_INFO(genericLoggerp, "... FALSE will match");
+          goto done;
+        }
+      }
       if (strcmp(eventArrayp[eventl].events, "Init$") == 0) {
         /* Get last symbol and boolean */
         if (! marpaESLIFRecognizer_lexeme_last_pauseb(marpaESLIFRecognizerp, "SYMBOL", &pauses, &pausel)) {
