@@ -28,7 +28,7 @@ const static char *grammars =
   "    OR          ~ 'OR':i  | '|'\n"
   "    IMPLIES     ~ 'IMPLIES':i  | '=>'\n"
   "    EQUIVALENT  ~ 'EQUIVALENT':i  | '<=>'\n"
-  "    SYMBOL      ~ /[a-zA-Z0-9_]+/\n"
+  "    SYMBOL      ~ /[^\\s]+/n\n"
   "\n"
   "event ^Symbol = predicted Symbol\n"
   "event ^Boolean = predicted Boolean\n"
@@ -46,6 +46,7 @@ typedef enum alternativeContext {
 
 typedef struct readerContext {
   genericLogger_t *genericLoggerp;
+  char             c;
 } readerContext_t;
 
 int main() {
@@ -96,6 +97,7 @@ int main() {
     goto err;
   }
 
+#if 0
   /* Dump grammar */
   if (marpaESLIFGrammar_ngrammarib(marpaESLIFGrammarp, &ngrammari)) {
     for (leveli = 0; leveli < ngrammari; leveli++) {
@@ -106,6 +108,7 @@ int main() {
       }
     }
   }
+#endif
 
   /* Start a recognizer */
   readerContext.genericLoggerp = genericLoggerp;
@@ -123,7 +126,7 @@ int main() {
     exit(1);
   }
 
-  /* Look on events */
+  /* Loop on events */
   while (marpaESLIFRecognizer_eventb(marpaESLIFRecognizerp, &nEventl, &eventArrayp)) {
     if (nEventl <= 0) {
       /* Read some data */
@@ -143,6 +146,7 @@ int main() {
         if (! marpaESLIFRecognizer_lexeme_tryb(marpaESLIFRecognizerp, "SYMBOL", &symbolb)) {
           goto err;
         }
+        GENERICLOGGER_INFOF(genericLoggerp, "... SYMBOL try is %s", symbolb ? "ok" : "ko");
         if (symbolb) {
           /* Get the symbol as the recognizer saw it */
           if (! marpaESLIFRecognizer_lexeme_last_tryb(marpaESLIFRecognizerp, "SYMBOL", &symbols, &symboll)) {
@@ -224,19 +228,18 @@ static short stdinReaderb(void *userDatavp, char **inputsp, size_t *inputlp, sho
   readerContext_t *readerContextp = (readerContext_t *) userDatavp;
   genericLogger_t *genericLoggerp = readerContextp->genericLoggerp;
   int              i;
-  unsigned char    c;
 
   i = fgetc(stdin);
   if (i != EOF) {
-    c = (unsigned char) i;
+    readerContextp->c = (unsigned char) i;
 
-    *inputsp              = (char *) &c;
+    *inputsp              = (char *) &(readerContextp->c);
     *inputlp              = sizeof(char);
     *eofbp                = 0;
     if (iscntrl(i)) {
-      GENERICLOGGER_DEBUGF(genericLoggerp, "... fgetc(stdin) returned 0x%x", c);
+      GENERICLOGGER_DEBUGF(genericLoggerp, "... fgetc(stdin) returned 0x%x", readerContextp->c);
     } else {
-      GENERICLOGGER_DEBUGF(genericLoggerp, "... fgetc(stdin) returned '%c' (0x%x)", c, c);
+      GENERICLOGGER_DEBUGF(genericLoggerp, "... fgetc(stdin) returned '%c' (0x%x)", readerContextp->c, readerContextp->c);
     }
   } else {
     *inputsp              = NULL;
