@@ -21,7 +21,7 @@
 #endif
 
 #define MARPAESLIF_EVENTTYPE_EXHAUSTED_NAME "'exhauted'"
-#define MARPAESLIF_IS_LEXEME(symbolp) ((symbolp)->type == MARPAESLIF_SYMBOL_TYPE_META) && ((symbolp)->u.metap->marpaWrapperGrammarLexemeCloneNoEventp != NULL)
+#define MARPAESLIF_IS_LEXEME(symbolp) (((symbolp)->type == MARPAESLIF_SYMBOL_TYPE_META) && ((symbolp)->u.metap->marpaWrapperGrammarLexemeCloneNoEventp != NULL))
 
 #define MARPAESLIFRECOGNIZER_RESET_EVENTS(marpaESLIFRecognizerp) (marpaESLIFRecognizerp)->eventArrayl = 0
 
@@ -9358,7 +9358,6 @@ static inline short _marpaESLIFRecognizer_checkGrammarCacheb(marpaESLIFRecognize
 
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "start (discardb=%d, noEventb=%d)", (int) discardb, (int) noEventb);
-
   if (marpaWrapperGrammarCacheppp == NULL) {
     /* First time (i.e. the top recognizer) */
 
