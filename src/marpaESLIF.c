@@ -4779,6 +4779,7 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
   marpaESLIF_alternative_t         alternative;
   marpaESLIF_alternative_t        *alternativep;
 
+  grammarDiscard.starti             = grammarDiscard.discardi;
   marpaESLIFGrammarDiscard.grammarp = &grammarDiscard;
 
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
@@ -9398,8 +9399,8 @@ static inline short _marpaESLIFRecognizer_checkGrammarCacheb(marpaESLIFRecognize
 
   /* Clone and precompute if needed */
   grammarp = marpaESLIFGrammarp->grammarp;
-  grammari = grammarp->leveli;
-  symboli  = discardb ? grammarp->discardi : grammarp->starti;
+  grammari = grammarp->leveli; /* The caller will make sure grammarp is the current grammar */
+  symboli  = grammarp->starti; /* The caller will make sure starti is set correctly */
   marpaWrapperGrammarp = marpaWrapperGrammarCacheppp[grammari][symboli];
 
   if (marpaWrapperGrammarp == NULL) {
@@ -9417,6 +9418,8 @@ static inline short _marpaESLIFRecognizer_checkGrammarCacheb(marpaESLIFRecognize
     }
 
     /* Remember it */
+    /* - When discardb is true, symboli can ben nothing else but the ID of :discard symbol */
+    /* - Else it can be any symbol, with or without events */
     marpaWrapperGrammarCacheppp[grammari][symboli] = marpaWrapperGrammarp;
 
     /* Precompute it */
