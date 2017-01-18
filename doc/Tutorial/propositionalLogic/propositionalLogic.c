@@ -5,11 +5,30 @@
 #include <marpaESLIF.h>
 #include <genericLogger.h>
 
+#define EXTEND_ALTERNATIVE() {                                          \
+    if (marpaESLIFAlternativel == 0) {                                  \
+      marpaESLIFAlternativep = (marpaESLIFAlternative_t *) malloc(sizeof(marpaESLIFAlternative_t)); \
+      if (marpaESLIFAlternativep == NULL) {                             \
+        GENERICLOGGER_ERRORF(genericLoggerp, "malloc failure, %s", strerror(errno)); \
+        goto err;                                                       \
+      }                                                                 \
+    } else {                                                            \
+      marpaESLIFAlternative_t *tmp = (marpaESLIFAlternative_t *) realloc(marpaESLIFAlternativep, marpaESLIFAlternativel + 1); \
+      if (tmp == NULL) {                                                \
+        GENERICLOGGER_ERRORF(genericLoggerp, "realloc failure, %s", strerror(errno)); \
+        goto err;                                                       \
+      }                                                                 \
+      marpaESLIFAlternativep = tmp;                                     \
+    }                                                                   \
+    ++marpaESLIFAlternativel;                                           \
+  }
+
 const static char *grammars =
   "    Start           ::= <Init many> <Sentence any>\n"
   "    <Sentence any>  ::= Sentence*\n"
   "    <Init many>     ::= Init+\n"
-  "    Init            ::= Symbol '=' Boolean\n"
+  "    Init            ::= Symbol Set Boolean\n"
+  "    Set             ::= SET\n"
   "    Boolean         ::= TRUE | FALSE\n"
   "    Sentence        ::= Atomicsentence | ComplexSentence\n"
   "    Atomicsentence  ::= Boolean | Symbol\n"
@@ -19,6 +38,7 @@ const static char *grammars =
   "                     || LPAREN Sentence         OR Sentence RPAREN\n"
   "                     || LPAREN Sentence    IMPLIES Sentence RPAREN\n"
   "                     || LPAREN Sentence EQUIVALENT Sentence RPAREN\n"
+  "    SET         ~ '='\n"
   "    TRUE        ~ 'TRUE':i | '1'\n"
   "    FALSE       ~ 'FALSE':i | '0'\n"
   "    LPAREN      ~ '('\n"
@@ -30,11 +50,13 @@ const static char *grammars =
   "    EQUIVALENT  ~ 'EQUIVALENT':i  | '<=>'\n"
   "    SYMBOL      ~ /[^\\s]+/n\n"
   "\n"
-  "event ^Symbol = predicted Symbol\n"
+  "    :discard    ::= whitespace event => discard_whitespace$\n"
+  "    whitespace  ::= [\\s]\n"
+  "\n"
+  "event ^Symbol  = predicted Symbol\n"
+  "event ^Set     = predicted Set\n"
   "event ^Boolean = predicted Boolean\n"
-  "event Symbol$ = completed Symbol\n"
   "event Init$ = completed Init\n"
-  ":lexeme ::= SYMBOL pause => after event => SYMBOL$\n"
   ;
 
 static short stdinReaderb(void *userDatavp, char **inputsp, size_t *inputlp, short *eofbp, short *characterStreambp, char **encodingOfEncodingsp, char **encodingsp, size_t *encodinglp);
@@ -67,11 +89,17 @@ int main() {
   marpaESLIFEvent_t           *eventArrayp;
   short                        eofb;
   short                        symbolb;
+  char                        *inputs;
+  size_t                       inputl;
   char                        *symbols;
   size_t                       symboll;
+  short                        setb;
   short                        trueb;
   short                        falseb;
-  marpaESLIFAlternative_t      marpaESLIFAlternative;
+  marpaESLIFAlternative_t     *marpaESLIFAlternativep;
+  marpaESLIFAlternative_t     *thismarpaESLIFAlternativep;
+  size_t                       marpaESLIFAlternativel = 0;
+  size_t                       l;
   char                        *pauses;
   size_t                       pausel;
 
@@ -128,21 +156,16 @@ int main() {
 
   /* Loop on events */
   while (marpaESLIFRecognizer_eventb(marpaESLIFRecognizerp, &nEventl, &eventArrayp)) {
-    if (nEventl <= 0) {
-      /* Read some data */
-      if (! marpaESLIFRecognizer_readb(marpaESLIFRecognizerp, NULL, NULL)) {
-        goto err;
-      }
-    }
-    /* Get events */
-    if (! marpaESLIFRecognizer_eventb(marpaESLIFRecognizerp, &nEventl, &eventArrayp)) {
+    if (! marpaESLIFRecognizer_inputb(marpaESLIFRecognizerp, &inputs, &inputl)) {
       goto err;
     }
+    GENERICLOGGER_DEBUGF(genericLoggerp, "Current input length is %ld", (unsigned long) inputl);
     for (eventl = 0; eventl < nEventl; eventl++) {
       /* Note that events are always sorted in order: predictions, nullables, completions, discard, exhaustion */
       GENERICLOGGER_INFOF(genericLoggerp, "Event %s on symbol %s", eventArrayp[eventl].events, eventArrayp[eventl].symbols);
       if (strcmp(eventArrayp[eventl].events, "^Symbol") == 0) {
-        /* Check if the recognizer see SYMBOL */
+        /* By putting the rule Symbol ::= SYMBOL, we know that ^Symbol */
+        /* is equivalent to "I need the SYMBOL lexeme" */
         if (! marpaESLIFRecognizer_lexeme_tryb(marpaESLIFRecognizerp, "SYMBOL", &symbolb)) {
           goto err;
         }
@@ -152,24 +175,33 @@ int main() {
           if (! marpaESLIFRecognizer_lexeme_last_tryb(marpaESLIFRecognizerp, "SYMBOL", &symbols, &symboll)) {
             goto err;
           }
-          GENERICLOGGER_INFO(genericLoggerp, "... SYMBOL match");
+          GENERICLOGGER_INFOF(genericLoggerp, "... SYMBOL match on \"%s\"", symbols);
           /* Feed symbol */
-          marpaESLIFAlternative.lexemes = "SYMBOL";
-          marpaESLIFAlternative.value.type = MARPAESLIF_VALUE_TYPE_ARRAY;
-          marpaESLIFAlternative.value.u.p = malloc(symboll);
-          if (marpaESLIFAlternative.value.u.p == NULL) {
+          EXTEND_ALTERNATIVE();
+          thismarpaESLIFAlternativep = &(marpaESLIFAlternativep[marpaESLIFAlternativel - 1]);
+          thismarpaESLIFAlternativep->lexemes = "SYMBOL";
+          thismarpaESLIFAlternativep->value.type = MARPAESLIF_VALUE_TYPE_ARRAY;
+          thismarpaESLIFAlternativep->value.u.p = malloc(symboll);
+          if (thismarpaESLIFAlternativep->value.u.p == NULL) {
             GENERICLOGGER_ERRORF(genericLoggerp, "malloc failure, %s", strerror(errno));
             goto err;
           }
-          memcpy(marpaESLIFAlternative.value.u.p, symbols, symboll);
-          marpaESLIFAlternative.value.contexti = ALTERNATIVE_SYMBOL;
-          marpaESLIFAlternative.value.sizel = symboll;
-          marpaESLIFAlternative.grammarLengthl = 1;
+          memcpy(thismarpaESLIFAlternativep->value.u.p, symbols, symboll);
+          thismarpaESLIFAlternativep->value.contexti = ALTERNATIVE_SYMBOL;
+          thismarpaESLIFAlternativep->value.sizel = symboll;
+          thismarpaESLIFAlternativep->grammarLengthl = 1;
           /* Push it */
-          if (! marpaESLIFRecognizer_lexeme_readb(marpaESLIFRecognizerp, &marpaESLIFAlternative, symboll)) {
+          if (! marpaESLIFRecognizer_lexeme_readb(marpaESLIFRecognizerp, thismarpaESLIFAlternativep, symboll)) {
             goto err;
           }
-          goto done;
+        }
+      }
+      else if (strcmp(eventArrayp[eventl].events, "^Set") == 0) {
+        if (! marpaESLIFRecognizer_lexeme_tryb(marpaESLIFRecognizerp, "SET", &setb)) {
+          goto err;
+        }
+        GENERICLOGGER_INFOF(genericLoggerp, "... SET try is %s", setb ? "ok" : "ko");
+        if (setb) {
         }
       }
       else if (strcmp(eventArrayp[eventl].events, "^Boolean") == 0) {
@@ -217,6 +249,12 @@ int main() {
   marpaESLIFGrammar_freev(marpaESLIFGrammarp);
   marpaESLIF_freev(marpaESLIFp);
   GENERICLOGGER_FREE(genericLoggerp);
+  for (l = 0; l < marpaESLIFAlternativel; l++) {
+    thismarpaESLIFAlternativep = &(marpaESLIFAlternativep[l]);
+    if (thismarpaESLIFAlternativep->value.u.p != NULL) {
+      free(thismarpaESLIFAlternativep->value.u.p);
+    }
+  }
 
   exit(rci);
 }
