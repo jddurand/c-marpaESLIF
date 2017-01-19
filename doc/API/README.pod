@@ -871,7 +871,7 @@ Returns a true value on success, a false value on failure.
   short marpaESLIFRecognizer_discard_tryb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp,
                                           short *matchbp);
 
-Try to match the :discard rule against the input seen by the recognizer. Returns in C<matchbp>, when not C<NULL>, a true value if there is a match, a false value otherwise. This method generates no event.
+Try to match the :discard rule against the input seen by the recognizer. Returns in C<matchbp>, when not C<NULL>, a true value if there is a match, a false value otherwise. This method may generate a discard event.
 
 Returns a true value on success, a false value on failure.
 
