@@ -5660,7 +5660,6 @@ static inline short _marpaESLIFRecognizer_discard_tryb(marpaESLIFRecognizer_t *m
   size_t                       valuel;
   short                        rcb;
   short                        matchb = 0;
-  marpaESLIF_matcher_value_t   rci;
   marpaESLIFValueResult_t      marpaESLIFValueResult;
 
   grammarDiscard.starti             = grammarDiscard.discardi;
@@ -5675,9 +5674,14 @@ static inline short _marpaESLIFRecognizer_discard_tryb(marpaESLIFRecognizer_t *m
 
   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Trying to match %s", symbolp->descp->asciis);
 
-  /* Always reset this shallow pointer */
+  /* It is important to select marpaESLIFRecognizerp->noEventb because only this grammar can be cached */
+  /* nevertheles event if the sub-grammar MAY generate an event, end-user will not see it because we */
+  /* will never propagate it. This is why the two following lines have to remain commented: they have */
+  /* a meaning only for the true recognizer (c.f. method resume_oneb) */
+  /*
   marpaESLIFRecognizerp->discardEvents  = NULL;
   marpaESLIFRecognizerp->discardSymbolp = NULL;
+  */
   matchb = _marpaESLIFGrammar_parseb(&marpaESLIFGrammarDiscard,
                                      &marpaESLIFRecognizerOptionDiscard,
                                      &marpaESLIFValueOptionDiscard,
@@ -5783,7 +5787,6 @@ short marpaESLIFRecognizer_discard_tryb(marpaESLIFRecognizer_t *marpaESLIFRecogn
   marpaESLIF_t            *marpaESLIFp;
   marpaESLIFGrammar_t     *marpaESLIFGrammarp;
   marpaESLIF_grammar_t    *grammarp;
-  marpaESLIFSymbol_t      *symbolp;
   short                    rcb;
 
   if (marpaESLIFRecognizerp == NULL) {
