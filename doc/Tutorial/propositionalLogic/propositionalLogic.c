@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <errno.h>
 #include <string.h>
 #include <ctype.h>
 #include <marpaESLIF.h>
@@ -50,8 +51,8 @@ const static char *grammars =
   "    EQUIVALENT  ~ 'EQUIVALENT':i  | '<=>'\n"
   "    SYMBOL      ~ /[^\\s]+/n\n"
   "\n"
-  "    :discard    ::= whitespace event => discard_whitespace$\n"
-  "    whitespace  ::= [\\s]\n"
+  "    :discard    ::= whitespaces event => discard_whitespaces$\n"
+  "    whitespaces  ::= [\\s]+\n"
   "\n"
   "event ^Symbol  = predicted Symbol\n"
   "event ^Set     = predicted Set\n"
@@ -88,11 +89,14 @@ int main() {
   size_t                       eventl;
   marpaESLIFEvent_t           *eventArrayp;
   short                        eofb;
+  short                        discardb;
+  char                        *discards;
+  size_t                       discardl;
   short                        symbolb;
-  char                        *inputs;
-  size_t                       inputl;
   char                        *symbols;
   size_t                       symboll;
+  char                        *inputs;
+  size_t                       inputl;
   short                        setb;
   short                        trueb;
   short                        falseb;
@@ -160,6 +164,19 @@ int main() {
       goto err;
     }
     GENERICLOGGER_DEBUGF(genericLoggerp, "Current input length is %ld", (unsigned long) inputl);
+    /* Try discard */
+    if (! marpaESLIFRecognizer_discard_tryb(marpaESLIFRecognizerp, &discardb)) {
+      goto err;
+    }
+    if (discardb) {
+      /* Get the discarded data as the recognizer saw it */
+      if (! marpaESLIFRecognizer_discard_last_tryb(marpaESLIFRecognizerp, &discards, &discardl)) {
+        goto err;
+      }
+      GENERICLOGGER_INFOF(genericLoggerp, "... :discard match on \"%s\"", discards);
+      goto done;
+    }
+   GENERICLOGGER_INFOF(genericLoggerp, "... :discard try is %s", discardb ? "ok" : "ko");
     for (eventl = 0; eventl < nEventl; eventl++) {
       /* Note that events are always sorted in order: predictions, nullables, completions, discard, exhaustion */
       GENERICLOGGER_INFOF(genericLoggerp, "Event %s on symbol %s", eventArrayp[eventl].events, eventArrayp[eventl].symbols);

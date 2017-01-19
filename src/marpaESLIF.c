@@ -20,8 +20,13 @@
 #define MARPAESLIF_VALUEERRORPROGRESSREPORT 0 /* Left in the code, although not needed IMHO */
 #endif
 
+#ifndef MARPAESLIF_VALUECHECK_IF_LEXEME_MODE
+#define MARPAESLIF_VALUECHECK_IF_LEXEME_MODE 0 /* Check marpaESLIFValueResult */
+#endif
+
 #define MARPAESLIF_EVENTTYPE_EXHAUSTED_NAME "'exhauted'"
-#define MARPAESLIF_IS_LEXEME(symbolp) (((symbolp)->type == MARPAESLIF_SYMBOL_TYPE_META) && ((symbolp)->u.metap->marpaWrapperGrammarLexemeCloneNoEventp != NULL))
+#define MARPAESLIF_IS_LEXEME(symbolp)  (((symbolp)->type == MARPAESLIF_SYMBOL_TYPE_META) && ((symbolp)->u.metap->marpaWrapperGrammarLexemeCloneNoEventp != NULL))
+#define MARPAESLIF_IS_DISCARD(symbolp) (symbolp)->discardb
 
 #define MARPAESLIFRECOGNIZER_RESET_EVENTS(marpaESLIFRecognizerp) (marpaESLIFRecognizerp)->eventArrayl = 0
 
@@ -144,6 +149,7 @@ static inline marpaESLIF_symbol_t   *_marpaESLIF_symbol_findp(marpaESLIF_t *marp
 static inline short                  _marpaESLIFRecognizer_lexeme_alternativeb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIF_alternative_t *alternativep);
 static inline short                  _marpaESLIFRecognizer_lexeme_completeb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, size_t lengthl);
 static inline short                  _marpaESLIFRecognizer_lexeme_tryb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIF_grammar_t *grammarp, marpaESLIF_symbol_t *symbolp, short *matchbp);
+static inline short                  _marpaESLIFRecognizer_discard_tryb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIF_grammar_t *grammarp, marpaESLIF_symbol_t *symbolp, short *matchbp);
 
 #ifndef MARPAESLIF_NTRACE
 static inline void                   _marpaESLIFRecognizer_alternativeStackSymbol_showv(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *contexts, genericStack_t *alternativeStackSymbolp);
@@ -584,6 +590,7 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
         MARPAESLIF_ERROR(marpaESLIFp, "Failed to detect all characters of terminal string");
         goto err;
       }
+#if MARPAESLIF_VALUECHECK_IF_LEXEME_MODE != 0
       /* It is a non-sense to have a regex match returning something else but MARPAESLIF_VALUE_TYPE_ARRAY */
       if (marpaESLIFValueResult.type != MARPAESLIF_VALUE_TYPE_ARRAY) {
         MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "newline regex returned type %d}", marpaESLIFValueResult.type);
@@ -598,6 +605,7 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
         MARPAESLIF_ERROR(marpaESLIFRecognizerp->marpaESLIFp, "anychar regex matched zero byte");
         goto err;
       }
+#endif
       if (! _marpaESLIFRecognizer_lexemeStack_i_setb(marpaESLIFRecognizerp, marpaESLIFRecognizerp->lexemeInputStackp, GENERICSTACK_USED(marpaESLIFRecognizerp->lexemeInputStackp), marpaESLIFValueResult.u.p, marpaESLIFValueResult.sizel)) {
         free(marpaESLIFValueResult.u.p);
         goto err;
@@ -830,6 +838,7 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
           MARPAESLIF_ERROR(marpaESLIFp, "Failed to detect all characters of terminal string");
           goto err;
         }
+#if MARPAESLIF_VALUECHECK_IF_LEXEME_MODE != 0
         /* It is a non-sense to have a regex match returning something else but MARPAESLIF_VALUE_TYPE_ARRAY */
         if (marpaESLIFValueResult.type != MARPAESLIF_VALUE_TYPE_ARRAY) {
           MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "newline regex returned type %d}", marpaESLIFValueResult.type);
@@ -844,6 +853,7 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
           MARPAESLIF_ERROR(marpaESLIFRecognizerp->marpaESLIFp, "anychar regex matched zero byte");
           goto err;
         }
+#endif
         if (! _marpaESLIFRecognizer_lexemeStack_i_setb(marpaESLIFRecognizerp, marpaESLIFRecognizerp->lexemeInputStackp, GENERICSTACK_USED(marpaESLIFRecognizerp->lexemeInputStackp), marpaESLIFValueResult.u.p, marpaESLIFValueResult.sizel)) {
           free(marpaESLIFValueResult.u.p);
           goto err;
@@ -4874,6 +4884,7 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
     case MARPAESLIF_MATCH_FAILURE:
       break;
     case MARPAESLIF_MATCH_OK:
+#if MARPAESLIF_VALUECHECK_IF_LEXEME_MODE != 0
       /* It is a non-sense if matchedMarpaESLIFStackTypei is not MARPAESLIF_VALUE_TYPE_ARRAY */
       if (marpaESLIFValueResult.type != MARPAESLIF_VALUE_TYPE_ARRAY) {
         MARPAESLIF_ERRORF(marpaESLIFp, "marpaESLIFValueResult.type is %d instead of %d (MARPAESLIF_VALUE_TYPE_ARRAY)", marpaESLIFValueResult.type, MARPAESLIF_VALUE_TYPE_ARRAY);
@@ -4884,7 +4895,7 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
         MARPAESLIF_ERRORF(marpaESLIFp, "symbol matcher returned {%p, %ld}", marpaESLIFValueResult.u.p, marpaESLIFValueResult.sizel);
         goto err;
       }
-
+#endif
       /* Note that by definition marpaESLIFValueResult.u.p is the result of ::concat, i.e. it always have a hiden NUL byte */
       alternative.symbolp        = symbolp;
       alternative.valuep         = marpaESLIFValueResult.u.p;
@@ -4932,6 +4943,7 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
                                     marpaESLIFRecognizerp, /* marpaESLIFRecognizerParentp */
                                     NULL, /* exhaustedbp */
                                     &marpaESLIFValueResult)) {
+#if MARPAESLIF_VALUECHECK_IF_LEXEME_MODE != 0
         /* It is a non-sense if matchedMarpaESLIFStackTypei is not MARPAESLIF_VALUE_TYPE_ARRAY */
         if (marpaESLIFValueResult.type != MARPAESLIF_VALUE_TYPE_ARRAY) {
           MARPAESLIF_ERRORF(marpaESLIFp, "marpaESLIFValueResult.type is %d instead of %d (MARPAESLIF_VALUE_TYPE_ARRAY)", marpaESLIFValueResult.type, MARPAESLIF_VALUE_TYPE_ARRAY);
@@ -4942,6 +4954,7 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
           MARPAESLIF_ERRORF(marpaESLIFp, "Discard matcher returned {%p, %ld}", marpaESLIFValueResult.u.p, marpaESLIFValueResult.sizel);
           goto err;
         }
+#endif
         /* New line processing, etc... */
         if (! _marpaESLIFRecognizer_matchPostProcessingb(marpaESLIFRecognizerp, marpaESLIFValueResult.sizel)) {
           goto err;
@@ -5087,6 +5100,7 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
                                   marpaESLIFRecognizerp, /* marpaESLIFRecognizerParentp */
                                   NULL, /* exhaustedbp */
                                   &marpaESLIFValueResult)) {
+#if MARPAESLIF_VALUECHECK_IF_LEXEME_MODE != 0
       /* It is a non-sense if matchedMarpaESLIFStackTypei is not MARPAESLIF_VALUE_TYPE_ARRAY */
       if (marpaESLIFValueResult.type != MARPAESLIF_VALUE_TYPE_ARRAY) {
         MARPAESLIF_ERRORF(marpaESLIFp, "marpaESLIFValueResult.type is %d instead of %d (MARPAESLIF_VALUE_TYPE_ARRAY)", marpaESLIFValueResult.type, MARPAESLIF_VALUE_TYPE_ARRAY);
@@ -5097,6 +5111,7 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
         MARPAESLIF_ERRORF(marpaESLIFp, "Discard matcher returned {%p, %ld}", marpaESLIFValueResult.u.p, marpaESLIFValueResult.sizel);
         goto err;
       }
+#endif
       if (marpaESLIFValueResult.sizel > maxMatchedl) {
         /* New line processing, etc... */
         if (! _marpaESLIFRecognizer_matchPostProcessingb(marpaESLIFRecognizerp, marpaESLIFValueResult.sizel)) {
@@ -5585,11 +5600,11 @@ static inline short _marpaESLIFRecognizer_lexeme_completeb(marpaESLIFRecognizer_
 static inline short _marpaESLIFRecognizer_lexeme_tryb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIF_grammar_t *grammarp, marpaESLIF_symbol_t *symbolp, short *matchbp)
 /*****************************************************************************/
 {
-  static const char          *funcs = "_marpaESLIFRecognizer_lexeme_tryb";
+  static const char          *funcs  = "_marpaESLIFRecognizer_lexeme_tryb";
+  short                       matchb = 0;
   char                       *valuep = NULL;
   size_t                      valuel;
   short                       rcb;
-  short                       matchb = 0;
   marpaESLIF_matcher_value_t  rci;
   marpaESLIFValueResult_t     marpaESLIFValueResult;
 
@@ -5604,6 +5619,75 @@ static inline short _marpaESLIFRecognizer_lexeme_tryb(marpaESLIFRecognizer_t *ma
     matchb = 0;
   }
 
+  if (matchb) {
+    /* Remember the data, NULL or not - per def a lexeme coming our from the recognizer is always an array -; */
+    valuep = marpaESLIFValueResult.u.p;
+    valuel = marpaESLIFValueResult.sizel;
+    if (! _marpaESLIFRecognizer_set_tryb(marpaESLIFRecognizerp, grammarp, symbolp, valuep, valuel)) {
+      goto err;
+    }
+  }
+  
+  if (matchbp != NULL) {
+    *matchbp = matchb;
+  }
+
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  if (valuep != NULL) {
+    /* Data, if any, has been copied in the try section for this symbol */
+    free(valuep);
+  }
+  return rcb;
+}
+
+/*****************************************************************************/
+static inline short _marpaESLIFRecognizer_discard_tryb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIF_grammar_t *grammarp, marpaESLIF_symbol_t *symbolp, short *matchbp)
+/*****************************************************************************/
+{
+  static const char           *funcs                             = "_marpaESLIFRecognizer_discard_tryb";
+  marpaESLIFGrammar_t         *marpaESLIFGrammarp                = marpaESLIFRecognizerp->marpaESLIFGrammarp;
+  marpaESLIFGrammar_t          marpaESLIFGrammarDiscard          = *marpaESLIFGrammarp; /* Fake marpaESLIFGrammar with the grammar sent in the stack */
+  marpaESLIFValueOption_t      marpaESLIFValueOptionDiscard      = marpaESLIFValueOption_default_template;
+  marpaESLIF_grammar_t         grammarDiscard                    = *grammarp;
+  marpaESLIFRecognizerOption_t marpaESLIFRecognizerOptionDiscard = marpaESLIFRecognizerp->marpaESLIFRecognizerOption; /* Things overwriten, see below */
+  char                        *valuep = NULL;
+  size_t                       valuel;
+  short                        rcb;
+  short                        matchb = 0;
+  marpaESLIF_matcher_value_t   rci;
+  marpaESLIFValueResult_t      marpaESLIFValueResult;
+
+  grammarDiscard.starti             = grammarDiscard.discardi;
+  marpaESLIFGrammarDiscard.grammarp = &grammarDiscard;
+
+  marpaESLIFRecognizerOptionDiscard.disableThresholdb = 1; /* If discard, prepare the option to disable threshold */
+  marpaESLIFRecognizerOptionDiscard.exhaustedb        = 1; /* ... and have the exhausted event */
+  marpaESLIFRecognizerOptionDiscard.newlineb          = 0; /* ... and not count line/column numbers */
+
+  /* The context of a discard is current recognizer */
+  marpaESLIFValueOptionDiscard.userDatavp             = (void *) marpaESLIFRecognizerp; /* Used by _marpaESLIF_lexeme_freeCallbackv */
+
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Trying to match %s", symbolp->descp->asciis);
+
+  /* Always reset this shallow pointer */
+  marpaESLIFRecognizerp->discardEvents  = NULL;
+  marpaESLIFRecognizerp->discardSymbolp = NULL;
+  matchb = _marpaESLIFGrammar_parseb(&marpaESLIFGrammarDiscard,
+                                     &marpaESLIFRecognizerOptionDiscard,
+                                     &marpaESLIFValueOptionDiscard,
+                                     1, /* discardb */
+                                     marpaESLIFRecognizerp->noEventb, /* This will select marpaWrapperGrammarDiscardNoEventp or marpaWrapperGrammarDiscardp */
+                                     NULL, /* exceptionStackp */
+                                     1, /* silentb */
+                                     marpaESLIFRecognizerp, /* marpaESLIFRecognizerParentp */
+                                     NULL, /* exhaustedbp */
+                                     &marpaESLIFValueResult);
   if (matchb) {
     /* Remember the data, NULL or not - per def a lexeme coming our from the recognizer is always an array -; */
     valuep = marpaESLIFValueResult.u.p;
@@ -5680,6 +5764,42 @@ short marpaESLIFRecognizer_lexeme_tryb(marpaESLIFRecognizer_t *marpaESLIFRecogni
   }
 
   if (! _marpaESLIFRecognizer_lexeme_tryb(marpaESLIFRecognizerp, grammarp, symbolp, matchbp)) {
+    goto err;
+  }
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  return rcb;
+}
+
+/*****************************************************************************/
+short marpaESLIFRecognizer_discard_tryb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, short *matchbp)
+/*****************************************************************************/
+{
+  marpaESLIF_t            *marpaESLIFp;
+  marpaESLIFGrammar_t     *marpaESLIFGrammarp;
+  marpaESLIF_grammar_t    *grammarp;
+  marpaESLIFSymbol_t      *symbolp;
+  short                    rcb;
+
+  if (marpaESLIFRecognizerp == NULL) {
+    errno = EINVAL;
+    return 0;
+  }
+  marpaESLIFp        = marpaESLIFRecognizerp->marpaESLIFp;
+  marpaESLIFGrammarp = marpaESLIFRecognizerp->marpaESLIFGrammarp;
+  grammarp           = marpaESLIFGrammarp->grammarp;
+
+  if (grammarp->discardp == NULL) {
+    MARPAESLIF_ERROR(marpaESLIFp, "Grammar has no <:discard>");
+    goto err;
+  }
+
+  if (! _marpaESLIFRecognizer_discard_tryb(marpaESLIFRecognizerp, grammarp, grammarp->discardp, matchbp)) {
     goto err;
   }
   rcb = 1;
@@ -6948,6 +7068,7 @@ static inline short _marpaESLIFGrammar_parseb(marpaESLIFGrammar_t *marpaESLIFGra
     if (marpaESLIFValue_valueb(marpaESLIFValuep, &marpaESLIFValueResult) <= 0) {
       goto err;
     }
+#if MARPAESLIF_VALUECHECK_IF_LEXEME_MODE != 0
     if (marpaESLIFValueResult.type != MARPAESLIF_VALUE_TYPE_ARRAY) {
       MARPAESLIF_ERRORF(marpaESLIFp, "marpaESLIFValueResult.type is not ARRAY (internal type: %d)", marpaESLIFValueResult.type);
       goto err;
@@ -6956,6 +7077,7 @@ static inline short _marpaESLIFGrammar_parseb(marpaESLIFGrammar_t *marpaESLIFGra
       MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Lexeme valuation returned {%d,%ld}", marpaESLIFValueResult.u.p, (unsigned long) marpaESLIFValueResult.sizel);
       goto err;
     }
+#endif
     if (marpaESLIFValueResultp != NULL) {
       *marpaESLIFValueResultp = marpaESLIFValueResult;
     } else {
@@ -8139,7 +8261,7 @@ static inline short _marpaESLIFRecognizer_readb(marpaESLIFRecognizer_t *marpaESL
             /*     - If encodings and *(marpaESLIFRecognizerp->encodingsp) are the same, current conversion engine continue.                                     */
             /* ************************************************************************************************************************************************* */
             /* Continue with current conversion engine */
-            utf8s = _marpaESLIF_charconvp(marpaESLIFp, "UTF-8", *(marpaESLIFRecognizerp->encodingsp), inputs, inputl, &utf8l, marpaESLIFRecognizerp->encodingsp, marpaESLIFRecognizerp->tconvpp);
+            utf8s = _marpaESLIF_charconvp(marpaESLIFp, "UTF-8", *(marpaESLIFRecognizerp->encodingsp), inputs, inputl, &utf8l, NULL /* encodingsp */, marpaESLIFRecognizerp->tconvpp);
             if (utf8s == NULL) {
               goto err;
             }
@@ -8152,7 +8274,7 @@ static inline short _marpaESLIFRecognizer_readb(marpaESLIFRecognizer_t *marpaESL
           /*   - user gave NO encoding (encodings == NULL)                                                                                                     */
           /* ************************************************************************************************************************************************* */
           /* Continue with current conversion engine */
-          utf8s = _marpaESLIF_charconvp(marpaESLIFp, "UTF-8", *(marpaESLIFRecognizerp->encodingsp), inputs, inputl, &utf8l, marpaESLIFRecognizerp->encodingsp, marpaESLIFRecognizerp->tconvpp);
+          utf8s = _marpaESLIF_charconvp(marpaESLIFp, "UTF-8", *(marpaESLIFRecognizerp->encodingsp), inputs, inputl, &utf8l, NULL /* encodingsp */, marpaESLIFRecognizerp->tconvpp);
           if (utf8s == NULL) {
             goto err;
           }
@@ -9046,6 +9168,7 @@ static inline short _marpaESLIFRecognizer_matchPostProcessingb(marpaESLIFRecogni
       if (rci != MARPAESLIF_MATCH_OK) {
         break;
       }
+#if MARPAESLIF_VALUECHECK_IF_LEXEME_MODE != 0
       /* It is a non-sense to have a regex match returning something else but MARPAESLIF_VALUE_TYPE_ARRAY */
       if (marpaESLIFValueResult.type != MARPAESLIF_VALUE_TYPE_ARRAY) {
         MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "newline regex returned type %d}", marpaESLIFValueResult.type);
@@ -9061,6 +9184,7 @@ static inline short _marpaESLIFRecognizer_matchPostProcessingb(marpaESLIFRecogni
         MARPAESLIF_ERROR(marpaESLIFRecognizerp->marpaESLIFp, "newline regex matched zero byte");
         goto err;
       }
+#endif
       linep += marpaESLIFValueResult.sizel;
       linel -= marpaESLIFValueResult.sizel;
       free(marpaESLIFValueResult.u.p);
@@ -9086,6 +9210,7 @@ static inline short _marpaESLIFRecognizer_matchPostProcessingb(marpaESLIFRecogni
         if (rci != MARPAESLIF_MATCH_OK) {
           break;
         }
+#if MARPAESLIF_VALUECHECK_IF_LEXEME_MODE != 0
         /* It is a non-sense to have a regex match returning something else but MARPAESLIF_VALUE_TYPE_ARRAY */
         if (marpaESLIFValueResult.type != MARPAESLIF_VALUE_TYPE_ARRAY) {
           MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "newline regex returned type %d}", marpaESLIFValueResult.type);
@@ -9101,6 +9226,7 @@ static inline short _marpaESLIFRecognizer_matchPostProcessingb(marpaESLIFRecogni
           MARPAESLIF_ERROR(marpaESLIFRecognizerp->marpaESLIFp, "newline regex matched zero byte");
           goto err;
         }
+#endif
         linep += marpaESLIFValueResult.sizel;
         linel -= marpaESLIFValueResult.sizel;
         free(marpaESLIFValueResult.u.p);
@@ -9646,8 +9772,8 @@ static inline short _marpaESLIFRecognizer_createLexemeDatab(marpaESLIFRecognizer
           /* Any lexeme that as an event (grammar validation made sure that only lexemes can have such events) */
           conditionb = (symbolp->eventBefores != NULL) || (symbolp->eventAfters != NULL);
         } else {
-          /* Anything symbol that is a lexeme */
-          conditionb = MARPAESLIF_IS_LEXEME(symbolp);
+          /* Any symbol that is a lexeme or the :discard entry */
+          conditionb = MARPAESLIF_IS_LEXEME(symbolp) || MARPAESLIF_IS_DISCARD(symbolp);
         }
         if (! conditionb) {
           continue;
@@ -9927,6 +10053,7 @@ static inline short _marpaESLIFRecognizer_start_charconvp(marpaESLIFRecognizer_t
     goto err;
   }
   if (rci == MARPAESLIF_MATCH_OK) {
+#if MARPAESLIF_VALUECHECK_IF_LEXEME_MODE != 0
     /* It is a non-sense to have a regex match returning something else but MARPAESLIF_VALUE_TYPE_ARRAY */
     if (marpaESLIFValueResult.type != MARPAESLIF_VALUE_TYPE_ARRAY) {
       MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "newline regex returned type %d}", marpaESLIFValueResult.type);
@@ -9942,6 +10069,7 @@ static inline short _marpaESLIFRecognizer_start_charconvp(marpaESLIFRecognizer_t
       MARPAESLIF_ERROR(marpaESLIFRecognizerp->marpaESLIFp, "newline regex matched zero byte");
       goto err;
     }
+#endif
     utf8withoutboms = utf8s + marpaESLIFValueResult.sizel;
     utf8withoutboml = utf8l - marpaESLIFValueResult.sizel;
     free(marpaESLIFValueResult.u.p);
@@ -12825,6 +12953,18 @@ short marpaESLIFRecognizer_lexeme_last_tryb(marpaESLIFRecognizer_t *marpaESLIFRe
   }
 
   return _marpaESLIFRecognizer_last_lexemeDatab(marpaESLIFRecognizerp, lexemes, trysp, trylp, marpaESLIFRecognizerp->lastTrypp);
+}
+
+/*****************************************************************************/
+short marpaESLIFRecognizer_discard_last_tryb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char **trysp, size_t *trylp)
+/*****************************************************************************/
+{
+  if (marpaESLIFRecognizerp == NULL) {
+    errno = EINVAL;
+    return 0;
+  }
+
+  return _marpaESLIFRecognizer_last_lexemeDatab(marpaESLIFRecognizerp, ":discard", trysp, trylp, marpaESLIFRecognizerp->lastTrypp);
 }
 
 /*****************************************************************************/

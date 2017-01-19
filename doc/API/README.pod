@@ -866,6 +866,15 @@ Try to match the lexeme with name C<lexemes> that must be non-C<NULL> against th
 
 Returns a true value on success, a false value on failure.
 
+=head3 C<marpaESLIFRecognizer_discard_tryb>
+
+  short marpaESLIFRecognizer_discard_tryb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp,
+                                          short *matchbp);
+
+Try to match the :discard rule against the input seen by the recognizer. Returns in C<matchbp>, when not C<NULL>, a true value if there is a match, a false value otherwise. This method generates no event.
+
+Returns a true value on success, a false value on failure.
+
 =head3 C<marpaESLIFRecognizer_lexeme_expectedb>
 
   short marpaESLIFRecognizer_lexeme_expectedb(marpaESLIFRecognizer_t   *marpaESLIFRecognizerp,
@@ -1040,6 +1049,16 @@ Returns a true value on success, a false value on failure.
                                               size_t                  *trylp);
 
 For the recognizer instance pointed by C<marpaESLIFRecognizerp>, returns a pointer to the last portion of input stream into the value pointed by C<trysp>, when it is non-C<NULL>, and corresponding length in the value pointed by C<trylp> when it is is non-C<NULL>, of the last successful try for lexeme C<lexemes>, via a call to C<marpaESLIFRecognizer_lexeme_tryb>. If C<*trysp> is non-NULL, it is guaranteed that C<*trylp> is greater than zero, and the block of memory is NUL-terminated, even if the additional NUL byte will not be included into C<trylp>.
+
+Returns a true value on success, a false value on failure.
+
+=head3 C<marpaESLIFRecognizer_discard_last_tryb>
+
+  short marpaESLIFRecognizer_discard_last_tryb(marpaESLIFRecognizer_t  *marpaESLIFRecognizerp,
+                                               char                   **trysp,
+                                               size_t                  *trylp);
+
+For the recognizer instance pointed by C<marpaESLIFRecognizerp>, returns a pointer to the last portion of input stream into the value pointed by C<trysp>, when it is non-C<NULL>, and corresponding length in the value pointed by C<trylp> when it is is non-C<NULL>, of the last successful discard try, via a call to C<marpaESLIFRecognizer_discard_tryb>. If C<*trysp> is non-NULL, it is guaranteed that C<*trylp> is greater than zero, and the block of memory is NUL-terminated, even if the additional NUL byte will not be included into C<trylp>.
 
 Returns a true value on success, a false value on failure.
 

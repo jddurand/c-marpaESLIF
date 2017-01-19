@@ -165,6 +165,7 @@ public class AppParse  {
 									throw new Exception("Pause before on NUMBER but no pause information!");
 								}
 								doLexemeRead(eslifLogger, eslifRecognizer, "NUMBER", j, bytes);
+								doDiscardTry(eslifLogger, eslifRecognizer);
 								doLexemeTry(eslifLogger, eslifRecognizer, "WHITESPACES");
 								doLexemeTry(eslifLogger, eslifRecognizer, "whitespaces");
 						    }
@@ -222,11 +223,32 @@ public class AppParse  {
 		showLexemeExpected(context, eslifLogger, eslifRecognizer);
 	}
 
-	private static void doLexemeTry(ESLIFLoggerInterface eslifLogger, ESLIFRecognizer eslifRecognizer, String symbol) {
+	private static void doDiscardTry(ESLIFLoggerInterface eslifLogger, ESLIFRecognizer eslifRecognizer) throws UnsupportedEncodingException {
+		boolean test;
+		try {
+			test = eslifRecognizer.discardTry();
+			eslifLogger.debug("... Testing discard at current position returns " + test);
+			if (test) {
+				byte[] bytes = eslifRecognizer.discardLastTry();
+				String string = new String(bytes, "UTF-8");
+				eslifLogger.debug("... Testing discard at current position gave \"" + string + "\"");
+			}
+		} catch (ESLIFException e) {
+			// Because we test with a symbol that is not a lexeme, and that raises an exception
+			eslifLogger.debug(e.getMessage());
+		}
+	}
+
+	private static void doLexemeTry(ESLIFLoggerInterface eslifLogger, ESLIFRecognizer eslifRecognizer, String symbol) throws UnsupportedEncodingException {
 		boolean test;
 		try {
 			test = eslifRecognizer.lexemeTry(symbol);
 			eslifLogger.debug("... Testing " + symbol + " lexeme at current position returns " + test);
+			if (test) {
+				byte[] bytes = eslifRecognizer.lexemeLastTry(symbol);
+				String string = new String(bytes, "UTF-8");
+				eslifLogger.debug("... Testing " + symbol + " lexeme at current position gave \"" + string + "\"");
+			}
 		} catch (ESLIFException e) {
 			// Because we test with a symbol that is not a lexeme, and that raises an exception
 			eslifLogger.debug(e.getMessage());
