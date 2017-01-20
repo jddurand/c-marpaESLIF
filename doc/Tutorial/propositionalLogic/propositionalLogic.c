@@ -58,17 +58,15 @@ const static char *grammars =
   "\n"
   "    :default ::= action => ::shift\n"
   "\n"
-  "    Sentence        ::= Atomicsentence | ComplexSentence\n"
-  "    Boolean         ::= TRUE           | FALSE\n"
-  "    Atomicsentence  ::= Boolean        | Symbol\n"
-  "\n"
-  "    Symbol          ::= SYMBOL /* Anything that is not a space or special characters */\n"
-  "    ComplexSentence ::= NOT Sentence                                  action => action_not\n"
-  "                      | LPAREN Sentence RPAREN                        action => ::copy[1]\n"
-  "                     ||        Sentence        AND Sentence           action => action_and\n"
-  "                     ||        Sentence         OR Sentence           action => action_or\n"
-  "                     ||        Sentence    IMPLIES Sentence           action => action_implies\n"
-  "                      |        Sentence EQUIVALENT Sentence           action => action_equivalent\n"
+  "    Sentence        ::= TRUE\n"
+  "                      | FALSE\n"
+  "                      | SYMBOL\n"
+  "                      | LPAREN Sentence RPAREN              assoc => group action => ::copy[1]\n"
+  "                     || NOT Sentence                                       action => action_not\n"
+  "                     ||        Sentence        AND Sentence                action => action_and\n"
+  "                     ||        Sentence         OR Sentence                action => action_or\n"
+  "                     ||        Sentence    IMPLIES Sentence                action => action_implies\n"
+  "                      |        Sentence EQUIVALENT Sentence                action => action_equivalent\n"
   "\n"
   "    _DUMMY      ~ [^\\s\\S]\n"
   "    TRUE        ~ _DUMMY\n"
@@ -94,7 +92,6 @@ static short                         get_valueb(void *userDatavp, marpaESLIFValu
 
 typedef struct valueContext {
   genericLogger_t *genericLoggerp;
-  int              roundi;
   short            p;
   short            q;
   short            r;
@@ -181,28 +178,30 @@ int main() {
         marpaESLIFValueOption.freeActionResolverp    = NULL; /* No free action resolver... Okay if we generate no pointer */
         marpaESLIFValueOption.highRankOnlyb          = 1;    /* Recommended value */
         marpaESLIFValueOption.orderByRankb           = 1;    /* Recommended value */
-        marpaESLIFValueOption.ambiguousb             = 1;    /* our BNF is ambiguous by nature but this has no importance ./.. */
-        marpaESLIFValueOption.maxParsesi             = 0;    /* ./.. because of associativity: all values should be the same */
+        marpaESLIFValueOption.ambiguousb             = 0;    /* our BNF is not ambiguous thanks to loosen operator and group association */
+        marpaESLIFValueOption.maxParsesi             = 0;    /* Meaningless here since we say it is not ambiguous */
         marpaESLIFValueOption.nullb                  = 0;    /* Recommended value */
 
+        GENERICLOGGER_INFOF(genericLoggerp, "Valuation with {P, Q, R} = {%d, %d, %d} of %s ", (int) valueContext.p, (int) valueContext.q, (int) valueContext.r, examples);
         marpaESLIFValue_freev(marpaESLIFValuep); /* This is NULL protected */
         marpaESLIFValuep = marpaESLIFValue_newp(marpaESLIFRecognizerp, &marpaESLIFValueOption);
         if (marpaESLIFValuep == NULL) {
           goto err;
         }
-        valueContext.roundi = 1;
-        while (marpaESLIFValue_valueb(marpaESLIFValuep, &marpaESLIFValueResult) > 0) {
-          if (marpaESLIFValueResult.type != MARPAESLIF_VALUE_TYPE_SHORT) {
-            GENERICLOGGER_ERROR(genericLoggerp, "Valuation result is not a boolean !?");
-            goto err;
-          }
-          GENERICLOGGER_INFOF(genericLoggerp, "Valuation with {P, Q, R} = {%d, %d, %d}... %s : %d ", (int) valueContext.p, (int) valueContext.q, (int) valueContext.r, examples, (int) marpaESLIFValueResult.u.b);
-          if (marpaESLIFValueResult.u.b != 0) {
-            GENERICLOGGER_ERROR(genericLoggerp, "Valuation result is not zero !?");
-            goto err;
-          }
-          valueContext.roundi++;
+
+        if (marpaESLIFValue_valueb(marpaESLIFValuep, &marpaESLIFValueResult) <= 0) {
+          goto err;
         }
+
+        if (marpaESLIFValueResult.type != MARPAESLIF_VALUE_TYPE_SHORT) {
+          GENERICLOGGER_ERROR(genericLoggerp, "Valuation result is not a boolean !?");
+          goto err;
+        }
+        GENERICLOGGER_INFOF(genericLoggerp, ".............. {P, Q, R} = {%d, %d, %d}... %d ", (int) valueContext.p, (int) valueContext.q, (int) valueContext.r, (int) marpaESLIFValueResult.u.b);
+        if (marpaESLIFValueResult.u.b != 0) {
+          GENERICLOGGER_ERROR(genericLoggerp, "Valuation result is not zero !?");
+          goto err;
+          }
       }
     }
   }
@@ -327,7 +326,7 @@ static short action_not(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, i
   }
 
   resultb = (valb ? 0 : 1);
-  GENERICLOGGER_DEBUGF(valueContextp->genericLoggerp, "[Round %d] with {P, Q, R} = {%d, %d, %d}... NOT %d : %d", valueContextp->roundi, (int) valueContextp->p, (int) valueContextp->q, (int) valueContextp->r, (int) valb, (int) resultb);
+  GENERICLOGGER_DEBUGF(valueContextp->genericLoggerp, ".............. {P, Q, R} = {%d, %d, %d}... NOT %d : %d", (int) valueContextp->p, (int) valueContextp->q, (int) valueContextp->r, (int) valb, (int) resultb);
   return marpaESLIFValue_stack_set_shortb(marpaESLIFValuep, resulti, 1 /* must be != 0, not used */, resultb);
 }
 
@@ -348,7 +347,7 @@ static short action_and(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, i
   }
 
   resultb = (leftb && rightb) ? 1 : 0;
-  GENERICLOGGER_DEBUGF(valueContextp->genericLoggerp, "[Round %d] with {P, Q, R} = {%d, %d, %d}... ... %d AND %d : %d", valueContextp->roundi, (int) valueContextp->p, (int) valueContextp->q, (int) valueContextp->r, (int) leftb, (int) rightb, (int) resultb);
+  GENERICLOGGER_DEBUGF(valueContextp->genericLoggerp, ".............. {P, Q, R} = {%d, %d, %d}... %d AND %d : %d", (int) valueContextp->p, (int) valueContextp->q, (int) valueContextp->r, (int) leftb, (int) rightb, (int) resultb);
   return marpaESLIFValue_stack_set_shortb(marpaESLIFValuep, resulti, 1 /* must be != 0, not used */, resultb);
 }
 
@@ -369,7 +368,7 @@ static short action_or(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, in
   }
 
   resultb = (leftb || rightb) ? 1 : 0;
-  GENERICLOGGER_DEBUGF(valueContextp->genericLoggerp, "[Round %d] with {P, Q, R} = {%d, %d, %d}... ... %d OR %d : %d", valueContextp->roundi, (int) valueContextp->p, (int) valueContextp->q, (int) valueContextp->r, (int) leftb, (int) rightb, (int) resultb);
+  GENERICLOGGER_DEBUGF(valueContextp->genericLoggerp, ".............. {P, Q, R} = {%d, %d, %d}... %d OR %d : %d", (int) valueContextp->p, (int) valueContextp->q, (int) valueContextp->r, (int) leftb, (int) rightb, (int) resultb);
   return marpaESLIFValue_stack_set_shortb(marpaESLIFValuep, resulti, 1 /* must be != 0, not used */, resultb);
 }
 
@@ -390,7 +389,7 @@ static short action_implies(void *userDatavp, marpaESLIFValue_t *marpaESLIFValue
   }
 
   resultb = leftb ? rightb : 1;
-  GENERICLOGGER_DEBUGF(valueContextp->genericLoggerp, "[Round %d] with {P, Q, R} = {%d, %d, %d}... ... %d IMPLIES %d : %d", valueContextp->roundi, (int) valueContextp->p, (int) valueContextp->q, (int) valueContextp->r, (int) leftb, (int) rightb, (int) resultb);
+  GENERICLOGGER_DEBUGF(valueContextp->genericLoggerp, ".............. {P, Q, R} = {%d, %d, %d}... %d IMPLIES %d : %d", (int) valueContextp->p, (int) valueContextp->q, (int) valueContextp->r, (int) leftb, (int) rightb, (int) resultb);
 
   return marpaESLIFValue_stack_set_shortb(marpaESLIFValuep, resulti, 1 /* must be != 0, not used */, resultb);
 }
@@ -412,7 +411,7 @@ static short action_equivalent(void *userDatavp, marpaESLIFValue_t *marpaESLIFVa
   }
 
   resultb = (leftb == rightb) ? 1 : 0;
-  GENERICLOGGER_DEBUGF(valueContextp->genericLoggerp, "[Round %d] with {P, Q, R} = {%d, %d, %d}... ... %d EQUIVALENT %d : %d", valueContextp->roundi, (int) valueContextp->p, (int) valueContextp->q, (int) valueContextp->r, (int) leftb, (int) rightb, (int) resultb);
+  GENERICLOGGER_DEBUGF(valueContextp->genericLoggerp, ".............. {P, Q, R} = {%d, %d, %d}... %d EQUIVALENT %d : %d", (int) valueContextp->p, (int) valueContextp->q, (int) valueContextp->r, (int) leftb, (int) rightb, (int) resultb);
 
   return marpaESLIFValue_stack_set_shortb(marpaESLIFValuep, resulti, 1 /* must be != 0, not used */, resultb);
 }
