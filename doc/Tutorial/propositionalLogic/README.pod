@@ -8,7 +8,7 @@ marpaESLIF_PROPOSITIONALLOGIC - Extended Marpa's Scanless Interface Propositiona
 
 marpaESLIF is a Scanless Interface expressed in a BNF format, that is using L<marpaWrapper|https://github.com/jddurand/c-marpaWrapper>, itself being a thin interface on top of L<libmarpa|https://jeffreykegler.github.io/Marpa-web-site/libmarpa.html> parser.
 
-This documentation is giving a tutorial using propositional logic and an external lexer. We will make a binary that is evaluating the sentence as the input goes on.
+This documentation is giving a tutorial using propositional logic and an external lexing.
 
 =head2 GRAMMAR
 
