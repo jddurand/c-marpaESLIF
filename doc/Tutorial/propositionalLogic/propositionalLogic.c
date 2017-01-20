@@ -6,19 +6,6 @@
 #include <marpaESLIF.h>
 #include <genericLogger.h>
 
-#define DO_LEXEMES_EXPECTED() do {                                      \
-    size_t nLexemel;                                                    \
-    size_t lexemel;                                                     \
-    char **lexemesArrayp;                                               \
-                                                                        \
-    if (! marpaESLIFRecognizer_lexeme_expectedb(marpaESLIFRecognizerp, &nLexemel, &lexemesArrayp)) { \
-      goto err;                                                         \
-    }                                                                   \
-    for (lexemel = 0; lexemel < nLexemel; lexemel++) {                  \
-      GENERICLOGGER_DEBUGF(genericLoggerp, "... Expected lexeme: <%s>", lexemesArrayp[lexemel]); \
-    }                                                                   \
- } while (0)
-
 #define DO_ALTERNATIVE_UNDEF(names) do {                                \
     marpaESLIFAlternative_t  marpaESLIFAlternative;                     \
                                                                         \

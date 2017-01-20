@@ -14,20 +14,26 @@ This documentation is giving a tutorial using propositional logic and an externa
 
 The BNF for propositional logic is:
 
-    Sentence        ::= Atomicsentence | ComplexSentence
-    Atomicsentence  ::= TRUE | FALSE | Symbol
-    Symbol          ::= /[^\s]+/; /* Anything that is not a space or special characters */
-    ComplexSentence ::=                        NOT Sentence
-                     || LPAREN Sentence        AND Sentence RPAREN
-                     || LPAREN Sentence         OR Sentence RPAREN
-                     || LPAREN Sentence    IMPLIES Sentence RPAREN
-                     || LPAREN Sentence EQUIVALENT Sentence RPAREN
-    TRUE        ~ 'TRUE':i | '1'
-    FALSE       ~ 'FALSE':i | '0'
-    LPAREN      ~ '('
-    RPAREN      ~ ')'
-    NOT         ~ 'NOT':i | '!'
-    AND         ~ 'AND':i | '&'
-    OR          ~ 'OR':i  | '|'
-    IMPLIES     ~ 'IMPLIES':i  | '=>'
-    EQUIVALENT  ~ 'EQUIVALENT':i  | '<=>'
+    :default ::= action => ::shift
+
+    Sentence        ::= TRUE
+                      | FALSE
+                      | SYMBOL
+                      | LPAREN Sentence RPAREN              assoc => group action => ::copy[1]
+                     || NOT Sentence                                       action => action_not
+                     ||        Sentence        AND Sentence                action => action_and
+                     ||        Sentence         OR Sentence                action => action_or
+                     ||        Sentence    IMPLIES Sentence                action => action_implies
+                      |        Sentence EQUIVALENT Sentence                action => action_equivalent
+
+    _DUMMY      ~ [^\s\S]
+    TRUE        ~ _DUMMY
+    FALSE       ~ _DUMMY
+    LPAREN      ~ _DUMMY
+    RPAREN      ~ _DUMMY
+    NOT         ~ _DUMMY
+    AND         ~ _DUMMY
+    OR          ~ _DUMMY
+    IMPLIES     ~ _DUMMY
+    EQUIVALENT  ~ _DUMMY
+    SYMBOL      ~ _DUMMY
