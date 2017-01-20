@@ -5345,6 +5345,10 @@ short marpaESLIFRecognizer_lexeme_alternativeb(marpaESLIFRecognizer_t *marpaESLI
   marpaESLIFGrammarp = marpaESLIFRecognizerp->marpaESLIFGrammarp;
   grammarp           = marpaESLIFGrammarp->grammarp;
 
+  /* It is very important to do that NOW because _marpaESLIFRecognizer_lexeme_alternativeb() */
+  /* is not an atomic operation, and replaced the alternative's value to indicate it is ok. */
+  alternative.valuep = NULL;
+  
   if (marpaESLIFAlternativep == NULL) {
     MARPAESLIF_ERROR(marpaESLIFp, "Alternative is NULL");
     goto err;
@@ -5393,8 +5397,8 @@ short marpaESLIFRecognizer_lexeme_alternativeb(marpaESLIFRecognizer_t *marpaESLI
   goto done;
 
  err:
-  if (marpaESLIFValueResultp != NULL) {
-    free(marpaESLIFValueResultp);
+  if (alternative.valuep != NULL) { /* and not marpaESLIFValueResultp -; */
+    free(alternative.valuep);
   }
   rcb = 0;
 
