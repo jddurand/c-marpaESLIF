@@ -6,106 +6,115 @@
 #include <marpaESLIF.h>
 #include <genericLogger.h>
 
-#define EXTEND_ALTERNATIVE() {                                          \
-    if (marpaESLIFAlternativel == 0) {                                  \
-      marpaESLIFAlternativep = (marpaESLIFAlternative_t *) malloc(sizeof(marpaESLIFAlternative_t)); \
-      if (marpaESLIFAlternativep == NULL) {                             \
-        GENERICLOGGER_ERRORF(genericLoggerp, "malloc failure, %s", strerror(errno)); \
-        goto err;                                                       \
-      }                                                                 \
-    } else {                                                            \
-      marpaESLIFAlternative_t *tmp = (marpaESLIFAlternative_t *) realloc(marpaESLIFAlternativep, marpaESLIFAlternativel + 1); \
-      if (tmp == NULL) {                                                \
-        GENERICLOGGER_ERRORF(genericLoggerp, "realloc failure, %s", strerror(errno)); \
-        goto err;                                                       \
-      }                                                                 \
-      marpaESLIFAlternativep = tmp;                                     \
+#define DO_LEXEMES_EXPECTED() do {                                      \
+    size_t nLexemel;                                                    \
+    size_t lexemel;                                                     \
+    char **lexemesArrayp;                                               \
+                                                                        \
+    if (! marpaESLIFRecognizer_lexeme_expectedb(marpaESLIFRecognizerp, &nLexemel, &lexemesArrayp)) { \
+      goto err;                                                         \
     }                                                                   \
-    ++marpaESLIFAlternativel;                                           \
-  }
+    for (lexemel = 0; lexemel < nLexemel; lexemel++) {                  \
+      GENERICLOGGER_DEBUGF(genericLoggerp, "... Expected lexeme: <%s>", lexemesArrayp[lexemel]); \
+    }                                                                   \
+ } while (0)
+
+#define DO_ALTERNATIVE_UNDEF(names) do {                                \
+    marpaESLIFAlternative_t  marpaESLIFAlternative;                     \
+                                                                        \
+    marpaESLIFAlternative.lexemes        = names;                       \
+    marpaESLIFAlternative.value.type     = MARPAESLIF_VALUE_TYPE_UNDEF; \
+    marpaESLIFAlternative.value.contexti = 0;                           \
+    marpaESLIFAlternative.value.sizel    = 0;                           \
+    marpaESLIFAlternative.grammarLengthl = 1;                           \
+                                                                        \
+    GENERICLOGGER_DEBUGF(genericLoggerp, "Injecting <%s>", names);      \
+    if (! marpaESLIFRecognizer_lexeme_readb(marpaESLIFRecognizerp, &marpaESLIFAlternative, 0)) { \
+      GENERICLOGGER_ERRORF(genericLoggerp, "Failure to set <%s> alternative", names); \
+      marpaESLIFRecognizer_progressLogb(marpaESLIFRecognizerp, -1, -1, GENERICLOGGER_LOGLEVEL_ERROR); \
+      goto err;                                                         \
+    }                                                                   \
+  } while (0)
+
+#define DO_ALTERNATIVE_CHAR(names, val) do {                            \
+    marpaESLIFAlternative_t  marpaESLIFAlternative;                     \
+                                                                        \
+    marpaESLIFAlternative.lexemes        = names;                       \
+    marpaESLIFAlternative.value.type     = MARPAESLIF_VALUE_TYPE_CHAR;  \
+    marpaESLIFAlternative.value.u.c      = val;                         \
+    marpaESLIFAlternative.value.contexti = 0;                           \
+    marpaESLIFAlternative.value.sizel    = 0;                           \
+    marpaESLIFAlternative.grammarLengthl = 1;                           \
+                                                                        \
+    GENERICLOGGER_DEBUGF(genericLoggerp, "Injecting <%s> with value '%c'", names, val); \
+    if (! marpaESLIFRecognizer_lexeme_readb(marpaESLIFRecognizerp, &marpaESLIFAlternative, 0)) { \
+      GENERICLOGGER_ERRORF(genericLoggerp, "Failure to set <%s> alternative", names); \
+      marpaESLIFRecognizer_progressLogb(marpaESLIFRecognizerp, -1, -1, GENERICLOGGER_LOGLEVEL_ERROR); \
+      goto err;                                                         \
+    }                                                                   \
+  } while (0)
 
 const static char *grammars =
-  "    Start           ::= <Init many> <Sentence any>\n"
-  "    <Sentence any>  ::= Sentence*\n"
-  "    <Init many>     ::= Init+\n"
-  "    Init            ::= Symbol Set Boolean\n"
-  "    Set             ::= SET\n"
-  "    Boolean         ::= TRUE | FALSE\n"
+  "\n"
+  "    :default ::= action => ::shift\n"
+  "\n"
   "    Sentence        ::= Atomicsentence | ComplexSentence\n"
-  "    Atomicsentence  ::= Boolean | Symbol\n"
+  "    Boolean         ::= TRUE           | FALSE\n"
+  "    Atomicsentence  ::= Boolean        | Symbol\n"
+  "\n"
   "    Symbol          ::= SYMBOL /* Anything that is not a space or special characters */\n"
-  "    ComplexSentence ::=                        NOT Sentence\n"
-  "                     || LPAREN Sentence        AND Sentence RPAREN\n"
-  "                     || LPAREN Sentence         OR Sentence RPAREN\n"
-  "                     || LPAREN Sentence    IMPLIES Sentence RPAREN\n"
-  "                     || LPAREN Sentence EQUIVALENT Sentence RPAREN\n"
-  "    SET         ~ '='\n"
-  "    TRUE        ~ 'TRUE':i | '1'\n"
-  "    FALSE       ~ 'FALSE':i | '0'\n"
-  "    LPAREN      ~ '('\n"
-  "    RPAREN      ~ ')'\n"
-  "    NOT         ~ 'NOT':i | '!'\n"
-  "    AND         ~ 'AND':i | '&'\n"
-  "    OR          ~ 'OR':i  | '|'\n"
-  "    IMPLIES     ~ 'IMPLIES':i  | '=>'\n"
-  "    EQUIVALENT  ~ 'EQUIVALENT':i  | '<=>'\n"
-  "    SYMBOL      ~ /[^\\s]+/n\n"
+  "    ComplexSentence ::= NOT Sentence                                  action => action_not\n"
+  "                      | LPAREN Sentence RPAREN                        action => ::copy[1]\n"
+  "                     ||        Sentence        AND Sentence           action => action_and\n"
+  "                     ||        Sentence         OR Sentence           action => action_or\n"
+  "                     ||        Sentence    IMPLIES Sentence           action => action_implies\n"
+  "                      |        Sentence EQUIVALENT Sentence           action => action_equivalent\n"
   "\n"
-  "    :discard    ::= whitespaces event => discard_whitespaces$\n"
-  "    whitespaces  ::= [\\s]+\n"
-  "\n"
-  "event ^Symbol  = predicted Symbol\n"
-  "event ^Set     = predicted Set\n"
-  "event ^Boolean = predicted Boolean\n"
-  "event Init$ = completed Init\n"
+  "    _DUMMY      ~ [^\\s\\S]\n"
+  "    TRUE        ~ _DUMMY\n"
+  "    FALSE       ~ _DUMMY\n"
+  "    LPAREN      ~ _DUMMY\n"
+  "    RPAREN      ~ _DUMMY\n"
+  "    NOT         ~ _DUMMY\n"
+  "    AND         ~ _DUMMY\n"
+  "    OR          ~ _DUMMY\n"
+  "    IMPLIES     ~ _DUMMY\n"
+  "    EQUIVALENT  ~ _DUMMY\n"
+  "    SYMBOL      ~ _DUMMY\n"
   ;
 
-static short stdinReaderb(void *userDatavp, char **inputsp, size_t *inputlp, short *eofbp, short *characterStreambp, char **encodingOfEncodingsp, char **encodingsp, size_t *encodinglp);
+static short                         failReaderb(void *userDatavp, char **inputsp, size_t *inputlp, short *eofbp, short *characterStreambp, char **encodingOfEncodingsp, char **encodingsp, size_t *encodinglp);
+static marpaESLIFValueRuleCallback_t ruleActionResolverp(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions);
+static short                         action_not(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
+static short                         action_and(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
+static short                         action_or(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
+static short                         action_implies(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
+static short                         action_equivalent(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
+static short                         get_valueb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int argi, short *valuebp);
 
-typedef enum alternativeContext {
-  ALTERNATIVE_SYMBOL,
-  ALTERNATIVE_BOOLEAN
-} alternativeContext_t;
-
-typedef struct readerContext {
+typedef struct valueContext {
   genericLogger_t *genericLoggerp;
-  char             c;
-} readerContext_t;
+  int              roundi;
+  short            p;
+  short            q;
+  short            r;
+} valueContext_t;
 
 int main() {
   genericLogger_t             *genericLoggerp        = NULL;
   marpaESLIF_t                *marpaESLIFp           = NULL;
   marpaESLIFGrammar_t         *marpaESLIFGrammarp    = NULL;
   marpaESLIFRecognizer_t      *marpaESLIFRecognizerp = NULL;
+  marpaESLIFValue_t           *marpaESLIFValuep = NULL;
   int                          rci;
   marpaESLIFOption_t           marpaESLIFOption;
   marpaESLIFGrammarOption_t    marpaESLIFGrammarOption;
-  int                          leveli;
-  int                          ngrammari;
-  char                        *grammarshows;
-  readerContext_t              readerContext;
   marpaESLIFRecognizerOption_t marpaESLIFRecognizerOption;
-  size_t                       nEventl;
-  size_t                       eventl;
-  marpaESLIFEvent_t           *eventArrayp;
-  short                        eofb;
-  short                        discardb;
-  char                        *discards;
-  size_t                       discardl;
-  short                        symbolb;
-  char                        *symbols;
-  size_t                       symboll;
-  char                        *inputs;
-  size_t                       inputl;
-  short                        setb;
-  short                        trueb;
-  short                        falseb;
-  marpaESLIFAlternative_t     *marpaESLIFAlternativep;
-  marpaESLIFAlternative_t     *thismarpaESLIFAlternativep;
-  size_t                       marpaESLIFAlternativel = 0;
-  size_t                       l;
-  char                        *pauses;
-  size_t                       pausel;
+  marpaESLIFAlternative_t      marpaESLIFAlternative;
+  marpaESLIFValueOption_t      marpaESLIFValueOption;
+  marpaESLIFValueResult_t      marpaESLIFValueResult;
+  char                        *examples = "(P AND R IMPLIES Q) AND P AND R AND NOT Q";
+  valueContext_t               valueContext;
 
   genericLoggerp = GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_DEBUG);
   if (genericLoggerp == NULL) {
@@ -119,6 +128,7 @@ int main() {
     goto err;
   }
 
+  GENERICLOGGER_INFOF(genericLoggerp, "Generating grammar:\n%s", grammars);
   marpaESLIFGrammarOption.bytep               = (void *) grammars;
   marpaESLIFGrammarOption.bytel               = strlen(grammars);
   marpaESLIFGrammarOption.encodings           = NULL;
@@ -129,24 +139,8 @@ int main() {
     goto err;
   }
 
-#if 0
-  /* Dump grammar */
-  if (marpaESLIFGrammar_ngrammarib(marpaESLIFGrammarp, &ngrammari)) {
-    for (leveli = 0; leveli < ngrammari; leveli++) {
-      if (marpaESLIFGrammar_grammarshowform_by_levelb(marpaESLIFGrammarp, &grammarshows, leveli, NULL)) {
-        GENERICLOGGER_INFO (marpaESLIFOption.genericLoggerp, "-------------------------");
-        GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "Grammar at level %d:", leveli);
-        GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "-------------------------\n\n%s", grammarshows);
-      }
-    }
-  }
-#endif
-
-  /* Start a recognizer */
-  readerContext.genericLoggerp = genericLoggerp;
-
-  marpaESLIFRecognizerOption.userDatavp                = &readerContext;
-  marpaESLIFRecognizerOption.marpaESLIFReaderCallbackp = stdinReaderb;
+  marpaESLIFRecognizerOption.userDatavp                = NULL;
+  marpaESLIFRecognizerOption.marpaESLIFReaderCallbackp = failReaderb;
   marpaESLIFRecognizerOption.disableThresholdb         = 0;  /* No disable of threshold warning */
   marpaESLIFRecognizerOption.exhaustedb                = 0;  /* No exhaustion event */
   marpaESLIFRecognizerOption.newlineb                  = 1;  /* Do newline counting */
@@ -158,99 +152,58 @@ int main() {
     exit(1);
   }
 
-  /* Loop on events */
-  while (marpaESLIFRecognizer_eventb(marpaESLIFRecognizerp, &nEventl, &eventArrayp)) {
-    if (! marpaESLIFRecognizer_inputb(marpaESLIFRecognizerp, &inputs, &inputl)) {
-      goto err;
-    }
-    GENERICLOGGER_DEBUGF(genericLoggerp, "Current input length is %ld", (unsigned long) inputl);
-    /* Try discard */
-    if (! marpaESLIFRecognizer_discard_tryb(marpaESLIFRecognizerp, &discardb)) {
-      goto err;
-    }
-    if (discardb) {
-      /* Get the discarded data as the recognizer saw it */
-      if (! marpaESLIFRecognizer_discard_last_tryb(marpaESLIFRecognizerp, &discards, &discardl)) {
-        goto err;
-      }
-      GENERICLOGGER_INFOF(genericLoggerp, "... :discard match on \"%s\"", discards);
-      goto done;
-    }
-   GENERICLOGGER_INFOF(genericLoggerp, "... :discard try is %s", discardb ? "ok" : "ko");
-    for (eventl = 0; eventl < nEventl; eventl++) {
-      /* Note that events are always sorted in order: predictions, nullables, completions, discard, exhaustion */
-      GENERICLOGGER_INFOF(genericLoggerp, "Event %s on symbol %s", eventArrayp[eventl].events, eventArrayp[eventl].symbols);
-      if (strcmp(eventArrayp[eventl].events, "^Symbol") == 0) {
-        /* By putting the rule Symbol ::= SYMBOL, we know that ^Symbol */
-        /* is equivalent to "I need the SYMBOL lexeme" */
-        if (! marpaESLIFRecognizer_lexeme_tryb(marpaESLIFRecognizerp, "SYMBOL", &symbolb)) {
+  GENERICLOGGER_INFOF(genericLoggerp, "Injecting lexemes for: %s", examples);
+  DO_ALTERNATIVE_UNDEF("LPAREN");
+  DO_ALTERNATIVE_CHAR ("SYMBOL", 'P');
+  DO_ALTERNATIVE_UNDEF("AND");
+  DO_ALTERNATIVE_CHAR ("SYMBOL", 'R');
+  DO_ALTERNATIVE_UNDEF("IMPLIES");
+  DO_ALTERNATIVE_CHAR ("SYMBOL", 'Q');
+  DO_ALTERNATIVE_UNDEF("RPAREN");
+  DO_ALTERNATIVE_UNDEF("AND");
+  DO_ALTERNATIVE_CHAR ("SYMBOL", 'P');
+  DO_ALTERNATIVE_UNDEF("AND");
+  DO_ALTERNATIVE_CHAR ("SYMBOL", 'R');
+  DO_ALTERNATIVE_UNDEF("AND");
+  DO_ALTERNATIVE_UNDEF("NOT");
+  DO_ALTERNATIVE_CHAR ("SYMBOL", 'Q');
+
+  /* Do valuation - we expect 0 in any case */
+
+  valueContext.genericLoggerp = genericLoggerp;
+  for (valueContext.p = 0; valueContext.p < 2; valueContext.p++) {
+    for (valueContext.q = 0; valueContext.q < 2; valueContext.q++) {
+      for (valueContext.r = 0; valueContext.r < 2; valueContext.r++) {
+
+        marpaESLIFValueOption.userDatavp             = &valueContext;
+        marpaESLIFValueOption.ruleActionResolverp    = ruleActionResolverp;
+        marpaESLIFValueOption.symbolActionResolverp  = NULL; /* No symbol action resolver... Okay we use the default */
+        marpaESLIFValueOption.freeActionResolverp    = NULL; /* No free action resolver... Okay if we generate no pointer */
+        marpaESLIFValueOption.highRankOnlyb          = 1;    /* Recommended value */
+        marpaESLIFValueOption.orderByRankb           = 1;    /* Recommended value */
+        marpaESLIFValueOption.ambiguousb             = 1;    /* our BNF is ambiguous by nature but this has no importance ./.. */
+        marpaESLIFValueOption.maxParsesi             = 0;    /* ./.. because of associativity: all values should be the same */
+        marpaESLIFValueOption.nullb                  = 0;    /* Recommended value */
+
+        marpaESLIFValue_freev(marpaESLIFValuep); /* This is NULL protected */
+        marpaESLIFValuep = marpaESLIFValue_newp(marpaESLIFRecognizerp, &marpaESLIFValueOption);
+        if (marpaESLIFValuep == NULL) {
           goto err;
         }
-        GENERICLOGGER_INFOF(genericLoggerp, "... SYMBOL try is %s", symbolb ? "ok" : "ko");
-        if (symbolb) {
-          /* Get the symbol as the recognizer saw it */
-          if (! marpaESLIFRecognizer_lexeme_last_tryb(marpaESLIFRecognizerp, "SYMBOL", &symbols, &symboll)) {
+        valueContext.roundi = 1;
+        while (marpaESLIFValue_valueb(marpaESLIFValuep, &marpaESLIFValueResult) > 0) {
+          if (marpaESLIFValueResult.type != MARPAESLIF_VALUE_TYPE_SHORT) {
+            GENERICLOGGER_ERROR(genericLoggerp, "Valuation result is not a boolean !?");
             goto err;
           }
-          GENERICLOGGER_INFOF(genericLoggerp, "... SYMBOL match on \"%s\"", symbols);
-          /* Feed symbol */
-          EXTEND_ALTERNATIVE();
-          thismarpaESLIFAlternativep = &(marpaESLIFAlternativep[marpaESLIFAlternativel - 1]);
-          thismarpaESLIFAlternativep->lexemes = "SYMBOL";
-          thismarpaESLIFAlternativep->value.type = MARPAESLIF_VALUE_TYPE_ARRAY;
-          thismarpaESLIFAlternativep->value.u.p = malloc(symboll);
-          if (thismarpaESLIFAlternativep->value.u.p == NULL) {
-            GENERICLOGGER_ERRORF(genericLoggerp, "malloc failure, %s", strerror(errno));
+          GENERICLOGGER_INFOF(genericLoggerp, "Valuation with {P, Q, R} = {%d, %d, %d}... %s : %d ", (int) valueContext.p, (int) valueContext.q, (int) valueContext.r, examples, (int) marpaESLIFValueResult.u.b);
+          if (marpaESLIFValueResult.u.b != 0) {
+            GENERICLOGGER_ERROR(genericLoggerp, "Valuation result is not zero !?");
             goto err;
           }
-          memcpy(thismarpaESLIFAlternativep->value.u.p, symbols, symboll);
-          thismarpaESLIFAlternativep->value.contexti = ALTERNATIVE_SYMBOL;
-          thismarpaESLIFAlternativep->value.sizel = symboll;
-          thismarpaESLIFAlternativep->grammarLengthl = 1;
-          /* Push it */
-          if (! marpaESLIFRecognizer_lexeme_readb(marpaESLIFRecognizerp, thismarpaESLIFAlternativep, symboll)) {
-            goto err;
-          }
+          valueContext.roundi++;
         }
       }
-      else if (strcmp(eventArrayp[eventl].events, "^Set") == 0) {
-        if (! marpaESLIFRecognizer_lexeme_tryb(marpaESLIFRecognizerp, "SET", &setb)) {
-          goto err;
-        }
-        GENERICLOGGER_INFOF(genericLoggerp, "... SET try is %s", setb ? "ok" : "ko");
-        if (setb) {
-        }
-      }
-      else if (strcmp(eventArrayp[eventl].events, "^Boolean") == 0) {
-        /* No proof that recognizer saw TRUE or FALSE - we have to try */
-        if ((! marpaESLIFRecognizer_lexeme_tryb(marpaESLIFRecognizerp, "TRUE", &trueb)) ||
-            (! marpaESLIFRecognizer_lexeme_tryb(marpaESLIFRecognizerp, "FALSE", &falseb))) {
-          goto err;
-        }
-        if (trueb) {
-          GENERICLOGGER_INFO(genericLoggerp, "... TRUE will match");
-          goto done;
-        }
-        if (falseb) {
-          GENERICLOGGER_INFO(genericLoggerp, "... FALSE will match");
-          goto done;
-        }
-      }
-      if (strcmp(eventArrayp[eventl].events, "Init$") == 0) {
-        /* Get last symbol and boolean */
-        if (! marpaESLIFRecognizer_lexeme_last_pauseb(marpaESLIFRecognizerp, "SYMBOL", &pauses, &pausel)) {
-          goto err;
-        }
-        GENERICLOGGER_INFOF(genericLoggerp, "... Last SYMBOL is %s", pauses);
-      }
-    }
-    /* Stop if eof */
-    if (! marpaESLIFRecognizer_isEofb(marpaESLIFRecognizerp, &eofb)) {
-      goto err;
-    }
-    if (eofb) {
-      GENERICLOGGER_INFO(genericLoggerp, "EOF");
-      break;
     }
   }
 
@@ -262,53 +215,204 @@ int main() {
 
  done:
   /* All these calls are NULL protected */
+  marpaESLIFValue_freev(marpaESLIFValuep);
   marpaESLIFRecognizer_freev(marpaESLIFRecognizerp);
   marpaESLIFGrammar_freev(marpaESLIFGrammarp);
   marpaESLIF_freev(marpaESLIFp);
   GENERICLOGGER_FREE(genericLoggerp);
-  for (l = 0; l < marpaESLIFAlternativel; l++) {
-    thismarpaESLIFAlternativep = &(marpaESLIFAlternativep[l]);
-    if (thismarpaESLIFAlternativep->value.u.p != NULL) {
-      free(thismarpaESLIFAlternativep->value.u.p);
-    }
-  }
 
   exit(rci);
 }
 
 /*****************************************************************************/
-static short stdinReaderb(void *userDatavp, char **inputsp, size_t *inputlp, short *eofbp, short *characterStreambp, char **encodingOfEncodingsp, char **encodingsp, size_t *encodinglp)
+static short failReaderb(void *userDatavp, char **inputsp, size_t *inputlp, short *eofbp, short *characterStreambp, char **encodingOfEncodingsp, char **encodingsp, size_t *encodinglp)
 /*****************************************************************************/
 {
-  readerContext_t *readerContextp = (readerContext_t *) userDatavp;
-  genericLogger_t *genericLoggerp = readerContextp->genericLoggerp;
-  int              i;
+  return 0;
+}
 
-  i = fgetc(stdin);
-  if (i != EOF) {
-    readerContextp->c = (unsigned char) i;
+/*****************************************************************************/
+static marpaESLIFValueRuleCallback_t ruleActionResolverp(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions)
+/*****************************************************************************/
+{
+  valueContext_t *valueContextp = (valueContext_t *) userDatavp;
 
-    *inputsp              = (char *) &(readerContextp->c);
-    *inputlp              = sizeof(char);
-    *eofbp                = 0;
-    if (iscntrl(i)) {
-      GENERICLOGGER_DEBUGF(genericLoggerp, "... fgetc(stdin) returned 0x%x", readerContextp->c);
-    } else {
-      GENERICLOGGER_DEBUGF(genericLoggerp, "... fgetc(stdin) returned '%c' (0x%x)", readerContextp->c, readerContextp->c);
-    }
-  } else {
-    *inputsp              = NULL;
-    *inputlp              = 0;
-    *eofbp                = 1;    /* One chunk */
-    GENERICLOGGER_DEBUG(genericLoggerp, "... fgetc(stdin) returned EOF");
+  if (strcmp(actions, "action_not") == 0) {
+    return action_not;
+  }
+  else if (strcmp(actions, "action_and") == 0) {
+    return action_and;
+  }
+  else if (strcmp(actions, "action_or") == 0) {
+    return action_or;
+  }
+  else if (strcmp(actions, "action_implies") == 0) {
+    return action_implies;
+  }
+  else if (strcmp(actions, "action_equivalent") == 0) {
+    return action_equivalent;
+  }
+  else {
+    GENERICLOGGER_ERRORF(valueContextp->genericLoggerp, "Unknown action %s", actions);
+    return NULL;
+  }
+}
+
+/* On the stack, value type is either a ARRAY (our input), either a SHORT (a result) */
+/*****************************************************************************/
+static short get_valueb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int argi, short *valuebp)
+/*****************************************************************************/
+{
+  valueContext_t          *valueContextp = (valueContext_t *) userDatavp;
+  marpaESLIFValueResult_t *alternativep;
+  size_t                   sizel;
+  short                    shortb;
+  short                    valueb;
+  char                     c;
+
+  if (! marpaESLIFValue_stack_is_shortb(marpaESLIFValuep, argi, &shortb)) {
+    return 0;
   }
 
+  if (shortb) {
+    if (! marpaESLIFValue_stack_get_shortb(marpaESLIFValuep, argi, NULL, &valueb)) {
+      return 0;
+    }
+  } else {
+    if (! marpaESLIFValue_stack_get_arrayb(marpaESLIFValuep, argi, NULL, (void **) &alternativep, &sizel, NULL)) {
+      return 0;
+    }
+    if (sizel > 0) {
+      GENERICLOGGER_ERRORF(valueContextp->genericLoggerp, "Got array with size %ld", (unsigned long) sizel);
+      return 0;
+    }
+    if (alternativep->type != MARPAESLIF_VALUE_TYPE_CHAR) {
+      GENERICLOGGER_ERRORF(valueContextp->genericLoggerp, "Got value type %d", alternativep->type);
+      return 0;
+    }
+    c = alternativep->u.c;
+    switch (c) {
+    case 'P':
+      valueb = valueContextp->p;
+      break;
+    case 'Q':
+      valueb = valueContextp->q;
+      break;
+    case 'R':
+      valueb = valueContextp->r;
+      break;
+    default:
+      GENERICLOGGER_ERRORF(valueContextp->genericLoggerp, "Unknown char '%c'", c);
+      return 0;
+    }
+  }
 
-  *characterStreambp    = 1;    /* We say this is a stream of characters */
-  *encodingOfEncodingsp = NULL; /* let marpaESLIF deal with encoding */
-  *encodingsp           = NULL;
-  *encodinglp           = 0;
+  if (valuebp != NULL) {
+    *valuebp = valueb;
+  }
 
   return 1;
 }
 
+/*****************************************************************************/
+static short action_not(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
+/*****************************************************************************/
+{
+  valueContext_t *valueContextp = (valueContext_t *) userDatavp;
+  short           valb;
+  short           resultb;
+
+  if (! get_valueb(userDatavp, marpaESLIFValuep, argni, &valb)) {
+    return 0;
+  }
+
+  resultb = (valb ? 0 : 1);
+  GENERICLOGGER_DEBUGF(valueContextp->genericLoggerp, "[Round %d] with {P, Q, R} = {%d, %d, %d}... NOT %d : %d", valueContextp->roundi, (int) valueContextp->p, (int) valueContextp->q, (int) valueContextp->r, (int) valb, (int) resultb);
+  return marpaESLIFValue_stack_set_shortb(marpaESLIFValuep, resulti, 1 /* must be != 0, not used */, resultb);
+}
+
+/*****************************************************************************/
+static short action_and(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
+/*****************************************************************************/
+{
+  valueContext_t *valueContextp = (valueContext_t *) userDatavp;
+  short           leftb;
+  short           rightb;
+  short           resultb;
+
+  if (! get_valueb(userDatavp, marpaESLIFValuep, arg0i, &leftb)) {
+    return 0;
+  }
+  if (! get_valueb(userDatavp, marpaESLIFValuep, argni, &rightb)) {
+    return 0;
+  }
+
+  resultb = (leftb && rightb) ? 1 : 0;
+  GENERICLOGGER_DEBUGF(valueContextp->genericLoggerp, "[Round %d] with {P, Q, R} = {%d, %d, %d}... ... %d AND %d : %d", valueContextp->roundi, (int) valueContextp->p, (int) valueContextp->q, (int) valueContextp->r, (int) leftb, (int) rightb, (int) resultb);
+  return marpaESLIFValue_stack_set_shortb(marpaESLIFValuep, resulti, 1 /* must be != 0, not used */, resultb);
+}
+
+/*****************************************************************************/
+static short action_or(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
+/*****************************************************************************/
+{
+  valueContext_t *valueContextp = (valueContext_t *) userDatavp;
+  short           leftb;
+  short           rightb;
+  short           resultb;
+
+  if (! get_valueb(userDatavp, marpaESLIFValuep, arg0i, &leftb)) {
+    return 0;
+  }
+  if (! get_valueb(userDatavp, marpaESLIFValuep, argni, &rightb)) {
+    return 0;
+  }
+
+  resultb = (leftb || rightb) ? 1 : 0;
+  GENERICLOGGER_DEBUGF(valueContextp->genericLoggerp, "[Round %d] with {P, Q, R} = {%d, %d, %d}... ... %d OR %d : %d", valueContextp->roundi, (int) valueContextp->p, (int) valueContextp->q, (int) valueContextp->r, (int) leftb, (int) rightb, (int) resultb);
+  return marpaESLIFValue_stack_set_shortb(marpaESLIFValuep, resulti, 1 /* must be != 0, not used */, resultb);
+}
+
+/*****************************************************************************/
+static short action_implies(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
+/*****************************************************************************/
+{
+  valueContext_t *valueContextp = (valueContext_t *) userDatavp;
+  short           leftb;
+  short           rightb;
+  short           resultb;
+
+  if (! get_valueb(userDatavp, marpaESLIFValuep, arg0i, &leftb)) {
+    return 0;
+  }
+  if (! get_valueb(userDatavp, marpaESLIFValuep, argni, &rightb)) {
+    return 0;
+  }
+
+  resultb = leftb ? rightb : 1;
+  GENERICLOGGER_DEBUGF(valueContextp->genericLoggerp, "[Round %d] with {P, Q, R} = {%d, %d, %d}... ... %d IMPLIES %d : %d", valueContextp->roundi, (int) valueContextp->p, (int) valueContextp->q, (int) valueContextp->r, (int) leftb, (int) rightb, (int) resultb);
+
+  return marpaESLIFValue_stack_set_shortb(marpaESLIFValuep, resulti, 1 /* must be != 0, not used */, resultb);
+}
+
+/*****************************************************************************/
+static short action_equivalent(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
+/*****************************************************************************/
+{
+  valueContext_t *valueContextp = (valueContext_t *) userDatavp;
+  short           leftb;
+  short           rightb;
+  short           resultb;
+
+  if (! get_valueb(userDatavp, marpaESLIFValuep, arg0i, &leftb)) {
+    return 0;
+  }
+  if (! get_valueb(userDatavp, marpaESLIFValuep, argni, &rightb)) {
+    return 0;
+  }
+
+  resultb = (leftb == rightb) ? 1 : 0;
+  GENERICLOGGER_DEBUGF(valueContextp->genericLoggerp, "[Round %d] with {P, Q, R} = {%d, %d, %d}... ... %d EQUIVALENT %d : %d", valueContextp->roundi, (int) valueContextp->p, (int) valueContextp->q, (int) valueContextp->r, (int) leftb, (int) rightb, (int) resultb);
+
+  return marpaESLIFValue_stack_set_shortb(marpaESLIFValuep, resulti, 1 /* must be != 0, not used */, resultb);
+}
