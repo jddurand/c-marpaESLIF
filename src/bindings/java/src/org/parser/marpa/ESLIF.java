@@ -28,7 +28,8 @@ import java.nio.ByteBuffer;
  *   &#125;
  * &#125;
  * </pre>
- * This class and its derivatives is thread-safe.
+ * This class and its derivatives is thread-safe. Although there can be many ESLIF instance, in practice a single instance is enough,
+ * unless you want different logging interfaces.
  */
 public class ESLIF {
 	private final static String  MARPAESLIFJAVA_LIBRARY_NAME = "marpaESLIFJava";

@@ -115,8 +115,7 @@ public class AppParse  {
 			AppValue eslifAppValue = new AppValue();
 			eslifLogger.info("Testing parse() on " + string);
 			try {
-				eslifGrammar.parse(eslifAppRecognizer, eslifAppValue);
-				Object result = eslifAppValue.getResult();
+				Object result = eslifGrammar.parse(eslifAppRecognizer, eslifAppValue);
 				eslifLogger.info("Result: " + result);
 			} catch (Exception e) {
 				eslifLogger.error("Exception: " + e);
