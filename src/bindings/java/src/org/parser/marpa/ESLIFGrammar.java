@@ -3,6 +3,17 @@ package org.parser.marpa;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 
+/**
+ * ESLIFGrammar is the second step after getting an ESLIF instance. As many grammars as wanted
+ * can be created using the same ESLIF parent, though dispose of resources should follow the reverse order
+ * of creation, i.e.:
+ * 
+ * ESLIF eslif = new ESLIF(...)
+ * ESLIFGrammar eslifGrammar = new ESLIFGrammar(...);
+ * ...
+ * eslifGrammar.free();
+ * eslif.free()
+ */
 public class ESLIFGrammar {
 	private ESLIF          eslif              = null;
 	private ByteBuffer     marpaESLIFGrammarp = null;
@@ -20,11 +31,19 @@ public class ESLIFGrammar {
 	private native String  jniRuleShowByLevel(int level, int rule) throws ESLIFException;
 	private native String  jniShow() throws ESLIFException;
 	private native String  jniShowByLevel(int level) throws ESLIFException;
-	private native boolean jniParse(ESLIFRecognizerInterface recognizerInterface, ESLIFValueInterface valueInterface) throws ESLIFException;
+	private native void    jniParse(ESLIFRecognizerInterface recognizerInterface, ESLIFValueInterface valueInterface) throws ESLIFException;
 	/*
 	 * ********************************************
 	 * Public methods
 	 * ********************************************
+	 */
+	/**
+	 * Creation of an ESLIFGrammar instance
+	 * 
+	 * @param eslif an instance of ESLIF
+	 * @param grammar the grammar to compile
+	 * @throws UnsupportedEncodingException
+	 * @throws ESLIFException
 	 */
 	public ESLIFGrammar(ESLIF eslif, String grammar) throws UnsupportedEncodingException, ESLIFException {
 		if (eslif == null) {
@@ -36,47 +55,144 @@ public class ESLIFGrammar {
 		setEslif(eslif);
 		jniNew(grammar.getBytes("UTF-8"));
 	}
+	/**
+	 * Dispose of an ESLIFGrammar resources.
+	 * 
+	 * @throws ESLIFException
+	 */
 	public synchronized void free() throws ESLIFException {
 		jniFree();
 	}
+	/**
+	 * A grammar can have multiple "sub-grammars", identified by a level.
+	 * This is a "sparse" array of grammar view: it is legal that a level is no defined. 
+	 * 
+	 * @return the number of sub-grammars, always > 0.
+	 * @throws ESLIFException
+	 */
 	public synchronized int ngrammar() throws ESLIFException {
 		return jniNgrammar();
 	}
+	/**
+	 * @return the current level, which is always the first defined level of the grammar
+	 * @throws ESLIFException
+	 */
 	public synchronized int currentLevel() throws ESLIFException {
 		return jniCurrentLevel();
 	}
+	/**
+	 * 
+	 * @return the description of the current level
+	 * @throws ESLIFException
+	 */
 	public synchronized String currentDescription() throws ESLIFException {
 		return jniCurrentDescription();
 	}
+	/**
+	 * 
+	 * @param level
+	 * @return the description of the grammar at the specified <code>level</code>
+	 * @throws ESLIFException
+	 */
 	public synchronized String descriptionByLevel(int level) throws ESLIFException {
 		return jniDescriptionByLevel(level);
 	}
+	/**
+	 * Rule identifiers are integers that uniquely identify a rule
+	 * 
+	 * @return the list of rule identifiers of the current grammar
+	 * @throws ESLIFException
+	 */
 	public synchronized int[] currentRuleIds() throws ESLIFException {
 		return jniCurrentRuleIds();
 	}
+	/**
+	 * Rule identifiers are integers that uniquely identify a rule
+	 * 
+	 * @param level
+	 * @return the list of rule identifiers of the grammar at the specified <code>level</code>
+	 * @throws ESLIFException
+	 */
 	public synchronized int[] ruleIdsByLevel(int level) throws ESLIFException {
 		return jniRuleIdsByLevel(level);
 	}
+	/**
+	 * This method return the name of a rule
+	 * 
+	 * @param rule the rule ID
+	 * @return the name of the rule
+	 * @throws ESLIFException
+	 */
 	public synchronized String ruleDisplay(int rule) throws ESLIFException {
 		return jniRuleDisplay(rule);
 	}
+	/**
+	 * This method returns a human-readable description of the rule
+	 * 
+	 * @param rule the rule ID
+	 * @return the description of the rule
+	 * @throws ESLIFException
+	 */
 	public synchronized String ruleShow(int rule) throws ESLIFException {
 		return jniRuleShow(rule);
 	}
+	/**
+	 * This method return the name of a rule at a given level
+	 * 
+	 * @param level the grammar level
+	 * @param rule the rule ID
+	 * @return the name of the rule
+	 * @throws ESLIFException
+	 */
 	public synchronized String ruleDisplayByLevel(int level, int rule) throws ESLIFException {
 		return jniRuleDisplayByLevel(level, rule);
 	}
+	/**
+	 * This method returns a human-readable description of the rule
+	 * 
+	 * @param level the grammar level
+	 * @param rule the rule ID
+	 * @return the description of the rule
+	 * @throws ESLIFException
+	 */
 	public synchronized String ruleShowByLevel(int level, int rule) throws ESLIFException {
 		return jniRuleShowByLevel(level, rule);
 	}
+	/**
+	 * 
+	 * @return the description of the grammar
+	 * @throws ESLIFException
+	 */
 	public synchronized String show() throws ESLIFException {
 		return jniShow();
 	}
+	/**
+	 * 
+	 * @param level
+	 * @return the description of the grammar at the specified <code>level</code>
+	 * @throws ESLIFException
+	 */
 	public synchronized String showByLevel(int level) throws ESLIFException {
 		return jniShowByLevel(level);
 	}
-	public synchronized boolean parse(ESLIFRecognizerInterface recognizerInterface, ESLIFValueInterface valueInterface) throws ESLIFException {
-		return jniParse(recognizerInterface, valueInterface);
+	/**
+	 * Short version of input validation and valuation, that will never give back control to the user until the end or a failure.
+	 * No event is possible when using this method.
+	 * 
+	 * @param recognizerInterface the recognizer interface, must not be null
+	 * @param valueInterface the value interface, must not be null
+	 * @return a boolean indicating if the parse was successful or not
+	 * @throws Exception
+	 */
+	public synchronized Object parse(ESLIFRecognizerInterface recognizerInterface, ESLIFValueInterface valueInterface) throws Exception {
+		if (recognizerInterface == null) {
+			throw new Exception("recognizerInterface must not be null");
+		}
+		if (valueInterface == null) {
+			throw new Exception("valueInterface must not be null");
+		}
+		jniParse(recognizerInterface, valueInterface);
+		return valueInterface.getResult();
 	}
 	/*
 	 * ********************************************
