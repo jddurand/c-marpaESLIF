@@ -288,7 +288,7 @@ static marpaESLIFMethodCache_t marpaESLIFMethodCacheArrayp[] = {
   {      &MARPAESLIF_ESLIFRECOGNIZER_CLASSCACHE, "setExhausted",                    "(Z)V", 0, NULL },
 
   #define MARPAESLIF_ESLIFRECOGNIZERINTERFACE_CLASS_read_METHODP                    marpaESLIFMethodCacheArrayp[29].methodp
-  {      &MARPAESLIF_ESLIFRECOGNIZERINTERFACE_CLASSCACHE, "read",                   "()S", 0, NULL },
+  {      &MARPAESLIF_ESLIFRECOGNIZERINTERFACE_CLASSCACHE, "read",                   "()V", 0, NULL },
 
   #define MARPAESLIF_ESLIFRECOGNIZERINTERFACE_CLASS_isEof_METHODP                   marpaESLIFMethodCacheArrayp[30].methodp
   {      &MARPAESLIF_ESLIFRECOGNIZERINTERFACE_CLASSCACHE, "isEof",                  "()Z", 0, NULL },
@@ -2916,8 +2916,10 @@ static short recognizerReaderCallbackb(void *userDatavp, char **inputcpp, size_t
 
   marpaESLIFRecognizerContextCleanup(envp, marpaESLIFRecognizerContextp);
 
-  /* Call the read interface */
-  if ((*envp)->CallBooleanMethod(envp, eslifRecognizerInterfacep, MARPAESLIF_ESLIFRECOGNIZERINTERFACE_CLASS_read_METHODP) != JNI_TRUE) {
+  /* Call the read interface - we use exception to detect failure */
+  (*envp)->ExceptionClear(envp);
+  (*envp)->CallVoidMethod(envp, eslifRecognizerInterfacep, MARPAESLIF_ESLIFRECOGNIZERINTERFACE_CLASS_read_METHODP);
+  if (HAVEEXCEPTION(envp)) {
     return 0;
   }
 
