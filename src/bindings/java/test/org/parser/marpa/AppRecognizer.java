@@ -1,12 +1,10 @@
 package org.parser.marpa;
 
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.nio.charset.Charset;
 
 public class AppRecognizer implements ESLIFRecognizerInterface {
 		private String         line           = null;
-		private boolean        eof            = false; 
 		private BufferedReader bufferedReader = null;
 
 		public AppRecognizer(BufferedReader bufferedReader) throws Exception {
@@ -16,23 +14,12 @@ public class AppRecognizer implements ESLIFRecognizerInterface {
 			this.bufferedReader = bufferedReader;
 		}
 
-		public short read() {
-			short rc;
-
-			try {
-				line = bufferedReader.readLine();
-				eof = (line == null);
-				rc = 1;
-			} catch (IOException e) {
-				e.printStackTrace();
-				rc = 0;
-			}
-			
-			return rc;
+		public void read() throws Exception {
+			line = bufferedReader.readLine();
 		}
 
 		public boolean isEof() {
-			return this.eof;
+			return (line == null);
 		}
 
 		public boolean isCharacterStream() {
