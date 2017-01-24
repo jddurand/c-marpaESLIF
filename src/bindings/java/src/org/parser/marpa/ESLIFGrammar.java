@@ -7,12 +7,14 @@ import java.nio.ByteBuffer;
  * ESLIFGrammar is the second step after getting an ESLIF instance. As many grammars as wanted
  * can be created using the same ESLIF parent, though dispose of resources should follow the reverse order
  * of creation, i.e.:
- * 
+ *
+ * <pre>
  * ESLIF eslif = new ESLIF(...)
  * ESLIFGrammar eslifGrammar = new ESLIFGrammar(...);
  * ...
  * eslifGrammar.free();
  * eslif.free()
+ * </pre>
  */
 public class ESLIFGrammar {
 	private ESLIF          eslif              = null;
@@ -42,8 +44,8 @@ public class ESLIFGrammar {
 	 * 
 	 * @param eslif an instance of ESLIF
 	 * @param grammar the grammar to compile
-	 * @throws UnsupportedEncodingException
-	 * @throws ESLIFException
+	 * @throws UnsupportedEncodingException if internal grammar cannot be converted to strict UTF-8
+	 * @throws ESLIFException if grammar parse failed
 	 */
 	public ESLIFGrammar(ESLIF eslif, String grammar) throws UnsupportedEncodingException, ESLIFException {
 		if (eslif == null) {
@@ -58,7 +60,7 @@ public class ESLIFGrammar {
 	/**
 	 * Dispose of an ESLIFGrammar resources.
 	 * 
-	 * @throws ESLIFException
+	 * @throws ESLIFException if the interface failed
 	 */
 	public synchronized void free() throws ESLIFException {
 		jniFree();
@@ -67,15 +69,15 @@ public class ESLIFGrammar {
 	 * A grammar can have multiple "sub-grammars", identified by a level.
 	 * This is a "sparse" array of grammar view: it is legal that a level is no defined. 
 	 * 
-	 * @return the number of sub-grammars, always > 0.
-	 * @throws ESLIFException
+	 * @return the number of sub-grammars, always &gt; 0.
+	 * @throws ESLIFException if the interface failed
 	 */
 	public synchronized int ngrammar() throws ESLIFException {
 		return jniNgrammar();
 	}
 	/**
 	 * @return the current level, which is always the first defined level of the grammar
-	 * @throws ESLIFException
+	 * @throws ESLIFException if the interface failed
 	 */
 	public synchronized int currentLevel() throws ESLIFException {
 		return jniCurrentLevel();
@@ -83,16 +85,16 @@ public class ESLIFGrammar {
 	/**
 	 * 
 	 * @return the description of the current level
-	 * @throws ESLIFException
+	 * @throws ESLIFException if the interface failed
 	 */
 	public synchronized String currentDescription() throws ESLIFException {
 		return jniCurrentDescription();
 	}
 	/**
 	 * 
-	 * @param level
+	 * @param level the grammar level
 	 * @return the description of the grammar at the specified <code>level</code>
-	 * @throws ESLIFException
+	 * @throws ESLIFException if the interface failed
 	 */
 	public synchronized String descriptionByLevel(int level) throws ESLIFException {
 		return jniDescriptionByLevel(level);
@@ -101,7 +103,7 @@ public class ESLIFGrammar {
 	 * Rule identifiers are integers that uniquely identify a rule
 	 * 
 	 * @return the list of rule identifiers of the current grammar
-	 * @throws ESLIFException
+	 * @throws ESLIFException if the interface failed
 	 */
 	public synchronized int[] currentRuleIds() throws ESLIFException {
 		return jniCurrentRuleIds();
@@ -109,9 +111,9 @@ public class ESLIFGrammar {
 	/**
 	 * Rule identifiers are integers that uniquely identify a rule
 	 * 
-	 * @param level
+	 * @param level the grammar level
 	 * @return the list of rule identifiers of the grammar at the specified <code>level</code>
-	 * @throws ESLIFException
+	 * @throws ESLIFException if the interface failed
 	 */
 	public synchronized int[] ruleIdsByLevel(int level) throws ESLIFException {
 		return jniRuleIdsByLevel(level);
@@ -121,7 +123,7 @@ public class ESLIFGrammar {
 	 * 
 	 * @param rule the rule ID
 	 * @return the name of the rule
-	 * @throws ESLIFException
+	 * @throws ESLIFException if the interface failed
 	 */
 	public synchronized String ruleDisplay(int rule) throws ESLIFException {
 		return jniRuleDisplay(rule);
@@ -131,7 +133,7 @@ public class ESLIFGrammar {
 	 * 
 	 * @param rule the rule ID
 	 * @return the description of the rule
-	 * @throws ESLIFException
+	 * @throws ESLIFException if the interface failed
 	 */
 	public synchronized String ruleShow(int rule) throws ESLIFException {
 		return jniRuleShow(rule);
@@ -142,7 +144,7 @@ public class ESLIFGrammar {
 	 * @param level the grammar level
 	 * @param rule the rule ID
 	 * @return the name of the rule
-	 * @throws ESLIFException
+	 * @throws ESLIFException if the interface failed
 	 */
 	public synchronized String ruleDisplayByLevel(int level, int rule) throws ESLIFException {
 		return jniRuleDisplayByLevel(level, rule);
@@ -153,7 +155,7 @@ public class ESLIFGrammar {
 	 * @param level the grammar level
 	 * @param rule the rule ID
 	 * @return the description of the rule
-	 * @throws ESLIFException
+	 * @throws ESLIFException if the interface failed
 	 */
 	public synchronized String ruleShowByLevel(int level, int rule) throws ESLIFException {
 		return jniRuleShowByLevel(level, rule);
@@ -161,16 +163,16 @@ public class ESLIFGrammar {
 	/**
 	 * 
 	 * @return the description of the grammar
-	 * @throws ESLIFException
+	 * @throws ESLIFException if the interface failed
 	 */
 	public synchronized String show() throws ESLIFException {
 		return jniShow();
 	}
 	/**
 	 * 
-	 * @param level
+	 * @param level the grammar level
 	 * @return the description of the grammar at the specified <code>level</code>
-	 * @throws ESLIFException
+	 * @throws ESLIFException if the interface failed
 	 */
 	public synchronized String showByLevel(int level) throws ESLIFException {
 		return jniShowByLevel(level);
@@ -182,7 +184,7 @@ public class ESLIFGrammar {
 	 * @param recognizerInterface the recognizer interface, must not be null
 	 * @param valueInterface the value interface, must not be null
 	 * @return a boolean indicating if the parse was successful or not
-	 * @throws Exception
+	 * @throws Exception if the interface failed
 	 */
 	public synchronized Object parse(ESLIFRecognizerInterface recognizerInterface, ESLIFValueInterface valueInterface) throws Exception {
 		if (recognizerInterface == null) {
