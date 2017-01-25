@@ -76,3 +76,5 @@ src/bindings/java/bin
 config.h
 cmake-build/
 javadoc/
+*.pdb
+src/bindings/java/doc/
