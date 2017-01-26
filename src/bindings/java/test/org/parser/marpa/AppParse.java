@@ -7,24 +7,6 @@ import java.util.Arrays;
 
 public class AppParse  {
 	
-	public void test() {
-		
-		 ESLIF eslif = null;
-		 try {
-		   eslif = new ESLIF();
-		 } catch (ESLIFException e) {
-		  // ...
-		 } finally {
-		   if (eslif != null) {
-		     try {
-		       eslif.free();
-		     } catch (ESLIFException e) {
-		       // ...
-		     }
-		   }
-		 }
-	}
-	
 	public static void main(String[] args) throws Exception {
 		AppLogger eslifLogger = new AppLogger();
 
