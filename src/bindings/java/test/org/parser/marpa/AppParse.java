@@ -296,10 +296,10 @@ public class AppParse  {
 	
 	private static void showLastCompletion(String context, ESLIFLoggerInterface eslifLogger, ESLIFRecognizer eslifRecognizer, String symbol, String origin) {
 		try {
-			int lastExpressionOffset = eslifRecognizer.lastCompletedOffset(symbol);
-			int lastExpressionLength = eslifRecognizer.lastCompletedLength(symbol);
+			long lastExpressionOffset = eslifRecognizer.lastCompletedOffset(symbol);
+			long lastExpressionLength = eslifRecognizer.lastCompletedLength(symbol);
 			byte[] string2byte = origin.getBytes();
-			byte[] matchedbytes = Arrays.copyOfRange(string2byte, lastExpressionOffset, lastExpressionOffset + lastExpressionLength);
+			byte[] matchedbytes = Arrays.copyOfRange(string2byte, (int) lastExpressionOffset, (int) (lastExpressionOffset + lastExpressionLength));
 			String matchedString = new String(matchedbytes, "UTF-8");
 			eslifLogger.debug("[" + context + "]  Last " + symbol + " completion is: " + matchedString);
 		} catch (Exception e) {
