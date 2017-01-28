@@ -57,8 +57,8 @@ public class ESLIFRecognizer {
 	private native byte[]            jniRead() throws ESLIFException;
 	private native byte[]            jniInput() throws ESLIFException;
 	private native void              jniProgressLog(int start, int end, ESLIFLoggerLevel level) throws ESLIFException;
-	private native int               jniLastCompletedOffset(String name) throws ESLIFException;
-	private native int               jniLastCompletedLength(String name) throws ESLIFException;
+	private native long              jniLastCompletedOffset(String name) throws ESLIFException;
+	private native long              jniLastCompletedLength(String name) throws ESLIFException;
 
 	/**
 	 * 
@@ -317,7 +317,7 @@ public class ESLIFRecognizer {
 	 * @return the internal buffer absolute offset, in byte unit
 	 * @throws ESLIFException if the interface failed
 	 */
-	public synchronized int lastCompletedOffset(String name) throws ESLIFException {
+	public synchronized long lastCompletedOffset(String name) throws ESLIFException {
 		return jniLastCompletedOffset(name);
 	}
 
@@ -329,7 +329,7 @@ public class ESLIFRecognizer {
 	 * @return the internal buffer consumed length, in byte unit
 	 * @throws ESLIFException if the interface failed
 	 */
-	public synchronized int lastCompletedLength(String name) throws ESLIFException {
+	public synchronized long lastCompletedLength(String name) throws ESLIFException {
 		return jniLastCompletedLength(name);
 	}
 	/*

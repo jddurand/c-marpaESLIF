@@ -2,6 +2,22 @@ PROJECT (marpaESLIFJava)
 INCLUDE (UseJava)
 INCLUDE_DIRECTORIES (${JAVA_INCLUDE_PATH} ${JAVA_INCLUDE_PATH2})
 
+#
+# This is to setup a hook trying to shut down gcc (at least) warning when
+# doing: char *x; jlong l = (jlong) x
+#
+INCLUDE(CheckIncludeFile)
+CHECK_INCLUDE_FILE("stdint.h" HAVE_STDINT_H)
+IF (HAVE_STDINT_H)
+  ADD_DEFINITIONS(-DHAVE_STDINT_H)
+ENDIF ()
+INCLUDE(CheckTypeSize)
+CHECK_TYPE_SIZE(intptr_t INTPTR_T)
+IF (HAVE_INTPTR_T)
+  MESSAGE(STATUS "Using intptr_t for casting a pointer to jlong")
+  ADD_DEFINITIONS(-DHAVE_INTPTR_T)
+ENDIF ()
+
 # ------------------------------------------
 # JNI
 # ------------------------------------------

@@ -1,5 +1,8 @@
 /* Java JNI bindings for marpaESLIF                          */
 #include <jni.h>
+#ifdef HAVE_STDINT_H
+#include <stdint.h>
+#endif
 #include <marpaESLIF.h>
 #include <genericStack.h>
 #include <stdlib.h>
@@ -47,8 +50,8 @@ JNIEXPORT jbyteArray   JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniLexemeLa
 JNIEXPORT jbyteArray   JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniLexemeLastTry          (JNIEnv *envp, jobject eslifRecognizerp, jstring lexemep);
 JNIEXPORT jbyteArray   JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniDiscardLastTry         (JNIEnv *envp, jobject eslifRecognizerp);
 JNIEXPORT jobjectArray JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniEvent                  (JNIEnv *envp, jobject eslifRecognizerp);
-JNIEXPORT jint         JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniLastCompletedOffset    (JNIEnv *envp, jobject eslifRecognizerp, jstring namep);
-JNIEXPORT jint         JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniLastCompletedLength    (JNIEnv *envp, jobject eslifRecognizerp, jstring namep);
+JNIEXPORT jlong        JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniLastCompletedOffset    (JNIEnv *envp, jobject eslifRecognizerp, jstring namep);
+JNIEXPORT jlong        JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniLastCompletedLength    (JNIEnv *envp, jobject eslifRecognizerp, jstring namep);
 JNIEXPORT void         JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniEventOnOff             (JNIEnv *envp, jobject eslifRecognizerp, jstring symbolp, jobjectArray eventTypesp, jboolean onOff);
 JNIEXPORT void         JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniProgressLog            (JNIEnv *envp, jobject eslifRecognizerp, int starti, int endi, jobject levelp);
 JNIEXPORT void         JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniFree                   (JNIEnv *envp, jobject eslifRecognizerp);
@@ -133,6 +136,13 @@ typedef struct marpaESLIF_stringGenerator { /* We use genericLogger to generate 
 
 #define MARPAESLIF_ESLIFVALUEINTERFACE_SYMBOLACTION_SIGNATURE "(Ljava/nio/ByteBuffer;)Ljava/lang/Object;"
 #define MARPAESLIF_ESLIFVALUEINTERFACE_RULEACTION_SIGNATURE   "([Ljava/lang/Object;)Ljava/lang/Object;"
+
+#ifdef HAVE_INTPTR_T
+#define PTR_TO_JLONG(p) ((jlong) ((intptr_t) (p)))
+#else
+/* Likely to raise a warning */
+#define PTR_TO_JLONG(p) ((jlong) (p))
+#endif
 
 /* -------------------------------- */
 /* Globals and accessors as macros */
@@ -2335,7 +2345,7 @@ JNIEXPORT jbyteArray JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniDiscardLas
 }
 
 /*****************************************************************************/
-JNIEXPORT jint JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniLastCompletedOffset(JNIEnv *envp, jobject eslifRecognizerp, jstring namep)
+JNIEXPORT jlong JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniLastCompletedOffset(JNIEnv *envp, jobject eslifRecognizerp, jstring namep)
 /*****************************************************************************/
 {
   marpaESLIFRecognizer_t *marpaESLIFRecognizerp;
@@ -2374,11 +2384,11 @@ JNIEXPORT jint JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniLastCompletedOff
   }
 
  done:
-  return (jint) offsetp;
+  return PTR_TO_JLONG(offsetp);
 }
 
 /*****************************************************************************/
-JNIEXPORT jint JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniLastCompletedLength(JNIEnv *envp, jobject eslifRecognizerp, jstring namep)
+JNIEXPORT jlong JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniLastCompletedLength(JNIEnv *envp, jobject eslifRecognizerp, jstring namep)
 /*****************************************************************************/
 {
   marpaESLIFRecognizer_t *marpaESLIFRecognizerp;
@@ -2421,7 +2431,7 @@ JNIEXPORT jint JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniLastCompletedLen
     }
   }
 
-  return (jint) lengthl;
+  return (jlong) lengthl;
 }
 
 /*****************************************************************************/
