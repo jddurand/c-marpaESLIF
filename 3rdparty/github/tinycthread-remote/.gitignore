@@ -1,7 +1,0 @@
-*~
-*.o
-/doc/html/*
-/test/hello
-/test/test
-/test/hello.exe
-/test/test.exe
