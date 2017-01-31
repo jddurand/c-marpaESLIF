@@ -2,8 +2,8 @@ use strict;
 use warnings FATAL => 'all';
 
 package MarpaX::ESLIF;
-use Scalar::Util;
-use Params::Validate;
+use Scalar::Util qw/blessed/;
+use Params::Validate qw/validate_pos/;
 use Class::Tiny;
 use Role::Tiny;
 use Carp qw/croak/;
@@ -17,15 +17,29 @@ use Carp qw/croak/;
 =cut
 
 our %_validate = (
-    #
-    # Every argument is passed by value in $_[0]
-    #
-    class  => { callbacks => {    defined($_[0])  && (! blessed($_[0])                                            ) } },
-    logger => { callbacks => { (! defined($_[0])) ||    Role::Tiny::does_role($_[0], 'MarpaX::ESLIF::Role::Logger') } }
+    'class'  => { callbacks => { 'is a class'  => \&_isClass } },
+    'logger' => { callbacks => { 'is a logger' => \&_isLogger } },
+    'undef'  => { callbacks => { 'is undef'    => \&_isUndef } },
     );
 
+sub _isClass {
+    return defined($_[0]) && ! blessed($_[0])
+}
+
+sub _isLogger {
+    return defined($_[0]) && Role::Tiny::does_role($_[0], 'MarpaX::ESLIF::Role::Logger')
+}
+
+sub _isUndef {
+    return ! defined($_[0])
+}
+
 sub new {
-    my ($class, $logger) = validate_pos( @_, $_validate{class}, $_validate{logger});
+    #
+    # Extend if necessary - necessary for validate_pos()
+    #
+    $_[1] //= undef;
+    my ($class, $logger) = validate_pos( @_, $_validate{class}, { callbacks => { 'is undef or a logger' => sub { _isUndef($_[0]) || _isLogger($_[0]) } } } );
 
     return bless { logger => $logger }, $class;
 }
