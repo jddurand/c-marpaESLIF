@@ -17,29 +17,36 @@ use Carp qw/croak/;
 =cut
 
 our %_validate = (
-    'class'  => { callbacks => { 'is a class'  => \&_isClass } },
-    'logger' => { callbacks => { 'is a logger' => \&_isLogger } },
-    'undef'  => { callbacks => { 'is undef'    => \&_isUndef } },
+    'class'   => { callbacks => { 'is a class'  => \&_isClass } },
+    'logger'  => { callbacks => { 'is a logger' => \&_isLogger } },
+    'undef'   => { callbacks => { 'is undef'    => \&_isUndef } },
+    'defined' => { callbacks => { 'is defined'  => \&_isDefined } },
     );
 
 sub _isClass {
-    return defined($_[0]) && ! blessed($_[0])
+    return _isDefined($_[0]) && ! blessed($_[0])
 }
 
 sub _isLogger {
-    return defined($_[0]) && Role::Tiny::does_role($_[0], 'MarpaX::ESLIF::Role::Logger')
+    return _isDefined($_[0]) && Role::Tiny::does_role($_[0], 'MarpaX::ESLIF::Role::Logger')
 }
 
 sub _isUndef {
-    return ! defined($_[0])
+    return ! _isDefined($_[0])
+}
+
+sub _isDefined {
+    return defined($_[0])
 }
 
 sub new {
     #
-    # Extend if necessary - necessary for validate_pos()
+    # Extend if necessary - needed for validate_pos()
     #
-    $_[1] //= undef;
-    my ($class, $logger) = validate_pos( @_, $_validate{class}, { callbacks => { 'is undef or a logger' => sub { _isUndef($_[0]) || _isLogger($_[0]) } } } );
+    $#_ = 1;
+    my ($class, $logger) = validate_pos(@_,
+					$_validate{class},
+					{ callbacks => { 'is undef or a logger' => sub { _isUndef($_[0]) || _isLogger($_[0]) }}} );
 
     return bless { logger => $logger }, $class;
 }
