@@ -10,6 +10,8 @@ use Carp qw/croak/;
 
 # ABSTRACT: Marpa Extended Scanless Interface
 
+# AUTHORITY
+
 # VERSION
 
 =head1 DESCRIPTION
