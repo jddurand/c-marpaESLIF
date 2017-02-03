@@ -6,7 +6,7 @@
 
 MODULE = MarpaX::ESLIF            PACKAGE = MarpaX::ESLIF
 
-char *
+const char *
 version()
   CODE:
     RETVAL = marpaESLIF_versions();
