@@ -7,7 +7,7 @@ use Params::Validate qw/validate_pos/;
 use Class::Tiny;
 use Role::Tiny;
 use Carp qw/croak/;
-use vars qw(@ISA $VERSION);
+use vars qw(@ISA $VERSION $XS_VERSION);
 
 # ABSTRACT: Marpa Extended Scanless Interface
 
@@ -20,10 +20,10 @@ use vars qw(@ISA $VERSION);
 # (this happen at least when doing make check in the package source tree)
 #
 BEGIN {
-    $VERSION //= '0.001';
+    $XS_VERSION = '0.001';
     eval {
 	require XSLoader;
-	XSLoader::load( __PACKAGE__, $VERSION);
+	XSLoader::load(__PACKAGE__, $XS_VERSION);
 	1;
     } or do {
 	require DynaLoader;
@@ -36,7 +36,7 @@ BEGIN {
 	    my $dl_resolve_using = shift @dl_resolve_using;
 	    DynaLoader::dl_load_file($dl_resolve_using, 0x01);
 	}
-	DynaLoader::bootstrap(__PACKAGE__, $VERSION);
+	DynaLoader::bootstrap(__PACKAGE__, $XS_VERSION);
     }
 }
 
@@ -79,11 +79,11 @@ sub new {
     return bless { logger => $logger }, $class;
 }
 
-sub ESLIF_version {
+sub version {
     #
     # This is working without a namespace
     #
-    return MarpaX::ESLIF::version();
+    return MarpaX::ESLIF::Thin::version();
 }
 
 1;

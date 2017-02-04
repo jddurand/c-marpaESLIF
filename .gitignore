@@ -78,3 +78,7 @@ cmake-build/
 javadoc/
 *.pdb
 src/bindings/java/doc/
+src/bindings/perl/.build
+src/bindings/perl/Changes
+src/bindings/perl/META.json
+src/bindings/perl/README.pod
