@@ -21,7 +21,7 @@ INCLUDE (InstallRequiredSystemLibraries)
 
 SET (MARPAWRAPPER_VERSION_MAJOR 1)
 SET (MARPAWRAPPER_VERSION_MINOR 0)
-SET (MARPAWRAPPER_VERSION_PATCH 39)
+SET (MARPAWRAPPER_VERSION_PATCH 40)
 SET (MARPAWRAPPER_VERSION "${MARPAWRAPPER_VERSION_MAJOR}.${MARPAWRAPPER_VERSION_MINOR}.${MARPAWRAPPER_VERSION_PATCH}")
 
 SET (CMAKE_MODULE_PATH              ${PROJECT_SOURCE_DIR}/cmake)           # General module search path
@@ -138,7 +138,8 @@ FILE (GLOB lib_marpa_src "${MARPA__R2_DIR}/cpan/engine/read_only/*.c")
 # marpaWrapper library
 # -----------------
 FILE (GLOB lib_src ${lib_marpa_src} src/internal/*.c src/*.c)
-ADD_LIBRARY (marpaWrapper SHARED ${lib_src})
+ADD_LIBRARY (marpaWrapper        SHARED ${lib_src})
+ADD_LIBRARY (marpaWrapper_static STATIC ${lib_src})
 IF (GENERICSTACK_FOUND)
   INCLUDE_DIRECTORIES (
     "${MARPA__R2_DIR}/cpan/engine/read_only/"            # Include path for marpa
@@ -160,6 +161,7 @@ ELSE (GENERICSTACK_FOUND)
     )
 ENDIF (GENERICSTACK_FOUND)
 TARGET_LINK_LIBRARIES (marpaWrapper ${GENERICLOGGER_LIBRARIES})
+TARGET_LINK_LIBRARIES (marpaWrapper_static ${GENERICLOGGER_STATIC_LIBRARIES})
 SET_TARGET_PROPERTIES (marpaWrapper
   PROPERTIES
   COMPILE_FLAGS "-DmarpaWrapper_EXPORTS"
@@ -181,11 +183,16 @@ ADD_CUSTOM_TARGET(marpaWrapperExport SOURCES "${INCLUDE_OUTPUT_PATH}/marpaWrappe
 # ----------------------------------------
 # Explicit dependencies on generated files
 # ----------------------------------------
-ADD_DEPENDENCIES(marpaWrapper marpaWrapperConfig marpaWrapperExport)
-SET_TARGET_PROPERTIES(marpaWrapper PROPERTIES COMPILE_FLAGS "-DmarpaWrapper_EXPORTS"
-                                               VERSION       "${MARPAWRAPPER_VERSION}"
-                                               SOVERSION     "${MARPAWRAPPER_VERSION_MAJOR}"
-                                               LINKER_LANGUAGE C)
+ADD_DEPENDENCIES(marpaWrapper        marpaWrapperConfig marpaWrapperExport)
+ADD_DEPENDENCIES(marpaWrapper_static marpaWrapperConfig marpaWrapperExport)
+SET_TARGET_PROPERTIES(marpaWrapper        PROPERTIES COMPILE_FLAGS "-DmarpaWrapper_EXPORTS"
+                                                     VERSION       "${MARPAWRAPPER_VERSION}"
+                                                     SOVERSION     "${MARPAWRAPPER_VERSION_MAJOR}"
+                                                     LINKER_LANGUAGE C)
+SET_TARGET_PROPERTIES(marpaWrapper_static PROPERTIES COMPILE_FLAGS "-DmarpaWrapper_EXPORTS"
+                                                     VERSION       "${MARPAWRAPPER_VERSION}"
+                                                     SOVERSION     "${MARPAWRAPPER_VERSION_MAJOR}"
+                                                     LINKER_LANGUAGE C)
 
 
 IF (GENERICSTACK_FOUND)
@@ -205,8 +212,8 @@ IF (GENERICSTACK_FOUND)
   TARGET_LINK_LIBRARIES (marpaWrapperTester marpaWrapper)
 
   ADD_TEST              (NAME marpaWrapperTest
-    COMMAND marpaWrapperTester
-    WORKING_DIRECTORY ${LIBRARY_OUTPUT_PATH})
+                         COMMAND marpaWrapperTester
+                         WORKING_DIRECTORY ${LIBRARY_OUTPUT_PATH})
 
   ADD_EXECUTABLE        (marpaWrapperAsfTester EXCLUDE_FROM_ALL test/marpaWrapperAsfTester.c)
   SET_TARGET_PROPERTIES (marpaWrapperAsfTester PROPERTIES LINKER_LANGUAGE C RUNTIME_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH})
@@ -229,13 +236,42 @@ IF (GENERICSTACK_FOUND)
     COMMAND marpaWrapperAsfAmbiguousTester
     WORKING_DIRECTORY ${LIBRARY_OUTPUT_PATH})
 
-  ADD_CUSTOM_TARGET     (check COMMAND ${CMAKE_CTEST_COMMAND} DEPENDS marpaWrapperTester marpaWrapperAsfTester marpaWrapperAsfValueTester marpaWrapperAsfAmbiguousTester)
+  #
+  # Per def static version should not need the WORKING_DIRECTORY thingy
+  #
+  ADD_EXECUTABLE        (marpaWrapperTesterStatic EXCLUDE_FROM_ALL test/marpaWrapperTester.c)
+  SET_TARGET_PROPERTIES (marpaWrapperTesterStatic PROPERTIES LINKER_LANGUAGE C)
+  TARGET_LINK_LIBRARIES (marpaWrapperTesterStatic marpaWrapper_static)
+
+  ADD_TEST              (NAME marpaWrapperTestStatic
+                         COMMAND marpaWrapperTesterStatic)
+
+  ADD_EXECUTABLE        (marpaWrapperAsfTesterStatic EXCLUDE_FROM_ALL test/marpaWrapperAsfTester.c)
+  SET_TARGET_PROPERTIES (marpaWrapperAsfTesterStatic PROPERTIES LINKER_LANGUAGE C)
+  TARGET_LINK_LIBRARIES (marpaWrapperAsfTesterStatic marpaWrapper_static)
+  ADD_TEST              (NAME marpaWrapperAsfTestStatic
+                         COMMAND marpaWrapperAsfTesterStatic)
+
+  ADD_EXECUTABLE        (marpaWrapperAsfValueTesterStatic EXCLUDE_FROM_ALL test/marpaWrapperAsfValueTester.c)
+  SET_TARGET_PROPERTIES (marpaWrapperAsfValueTesterStatic PROPERTIES LINKER_LANGUAGE C)
+  TARGET_LINK_LIBRARIES (marpaWrapperAsfValueTesterStatic marpaWrapper_static)
+  ADD_TEST              (NAME marpaWrapperAsfValueTestStatic
+                         COMMAND marpaWrapperAsfValueTesterStatic)
+
+  ADD_EXECUTABLE        (marpaWrapperAsfAmbiguousTesterStatic EXCLUDE_FROM_ALL test/marpaWrapperAsfAmbiguousTester.c)
+  SET_TARGET_PROPERTIES (marpaWrapperAsfAmbiguousTesterStatic PROPERTIES LINKER_LANGUAGE C)
+  TARGET_LINK_LIBRARIES (marpaWrapperAsfAmbiguousTesterStatic marpaWrapper_static)
+  ADD_TEST              (NAME marpaWrapperAsfAmbiguousTestStatic
+                         COMMAND marpaWrapperAsfAmbiguousTesterStatic)
+
+  ADD_CUSTOM_TARGET     (check COMMAND ${CMAKE_CTEST_COMMAND} DEPENDS marpaWrapperTester marpaWrapperAsfTester marpaWrapperAsfValueTester marpaWrapperAsfAmbiguousTester marpaWrapperTesterStatic marpaWrapperAsfTesterStatic marpaWrapperAsfValueTesterStatic marpaWrapperAsfAmbiguousTesterStatic)
 ENDIF (GENERICSTACK_FOUND)
 
 # -------
 # Install
 # -------
-INSTALL (TARGETS marpaWrapper ARCHIVE DESTINATION lib LIBRARY DESTINATION lib RUNTIME DESTINATION bin COMPONENT libraries)
+INSTALL (TARGETS marpaWrapper        ARCHIVE DESTINATION lib LIBRARY DESTINATION lib RUNTIME DESTINATION bin COMPONENT libraries)
+INSTALL (TARGETS marpaWrapper_static ARCHIVE DESTINATION lib LIBRARY DESTINATION lib RUNTIME DESTINATION bin COMPONENT libraries)
 INSTALL (FILES ${INCLUDE_OUTPUT_PATH}/marpaWrapper/export.h DESTINATION include/marpaWrapper)
 FILE (GLOB include_marpa_src "include/marpaWrapper/*.h")
 INSTALL (FILES ${include_marpa_src} DESTINATION include/marpaWrapper)
