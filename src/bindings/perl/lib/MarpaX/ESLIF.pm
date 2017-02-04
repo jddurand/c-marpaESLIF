@@ -7,12 +7,38 @@ use Params::Validate qw/validate_pos/;
 use Class::Tiny;
 use Role::Tiny;
 use Carp qw/croak/;
+use vars qw(@ISA $VERSION);
 
 # ABSTRACT: Marpa Extended Scanless Interface
 
 # AUTHORITY
 
 # VERSION
+
+#
+# In case library is not in the default path
+# (this happen at least when doing make check in the package source tree)
+#
+BEGIN {
+    $VERSION //= '0.001';
+    eval {
+	require XSLoader;
+	XSLoader::load( __PACKAGE__, $VERSION);
+	1;
+    } or do {
+	require DynaLoader;
+	push(@ISA, 'DynaLoader');
+	if ($ENV{MARPAESLIF_LIBRARY_ABSOLUTEPATH}) {
+	    #
+	    push @DynaLoader::dl_library_path, $ENV{MARPAESLIF_LIBRARY_ABSOLUTEPATH};
+	    my @dl_resolve_using = DynaLoader::dl_findfile(qw/-lmarpaESLIF/);
+	    die "Cannot resolve marpaESLIF library after adding $ENV{MARPAESLIF_LIBRARY_ABSOLUTEPATH}" unless @dl_resolve_using;
+	    my $dl_resolve_using = shift @dl_resolve_using;
+	    DynaLoader::dl_load_file($dl_resolve_using, 0x01);
+	}
+	DynaLoader::bootstrap(__PACKAGE__, $VERSION);
+    }
+}
 
 =head1 DESCRIPTION
 
@@ -51,6 +77,13 @@ sub new {
 					{ callbacks => { 'is undef or a logger' => sub { _isUndef($_[0]) || _isLogger($_[0]) }}} );
 
     return bless { logger => $logger }, $class;
+}
+
+sub ESLIF_version {
+    #
+    # This is working without a namespace
+    #
+    return MarpaX::ESLIF::version();
 }
 
 1;

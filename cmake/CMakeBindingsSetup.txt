@@ -14,95 +14,13 @@ IF (JNI_FOUND AND JAVA_FOUND)
   MESSAGE(STATUS "Path to jni_md.h : " ${JAVA_INCLUDE_PATH2})
   ADD_SUBDIRECTORY(src/bindings/java)
 ENDIF ()
-
-FIND_PACKAGE(Perl)
-FIND_PACKAGE(PerlLibs)
 #
-# PerlLibs might fail and this is known.
-# Copied from https://raw.githubusercontent.com/apache/qpid-proton/master/tools/cmake/Modules/ProtonFindPerl.cmake
+# Perl sub-dir is entirely relying on the dzil command
 #
-IF (NOT PERLLIBS_FOUND)
-  MESSAGE ( STATUS "Trying alternative search for Perl" )
-
-  # taken from Cmake 2.8 FindPerlLibs.cmake
-  EXECUTE_PROCESS ( COMMAND ${PERL_EXECUTABLE}
-    -V:installarchlib
-    OUTPUT_VARIABLE PERL_ARCHLIB_OUTPUT_VARIABLE
-    RESULT_VARIABLE PERL_ARCHLIB_RESULT_VARIABLE )
-
-  IF (NOT PERL_ARCHLIB_RESULT_VARIABLE)
-    STRING(REGEX REPLACE "install[a-z]+='([^']+)'.*" "\\1" PERL_ARCHLIB ${PERL_ARCHLIB_OUTPUT_VARIABLE})
-    FILE(TO_CMAKE_PATH "${PERL_ARCHLIB}" PERL_ARCHLIB)
-  ENDIF ( NOT PERL_ARCHLIB_RESULT_VARIABLE )
-
-  EXECUTE_PROCESS ( COMMAND ${PERL_EXECUTABLE}
-    -MConfig -e "print \$Config{archlibexp}"
-    OUTPUT_VARIABLE PERL_OUTPUT
-    RESULT_VARIABLE PERL_RETURN_VALUE )
-
-  IF ( NOT PERL_RETURN_VALUE )
-    FIND_PATH ( PERL_INCLUDE_PATH perl.h ${PERL_OUTPUT}/CORE )
-
-    IF (PERL_INCLUDE_PATH MATCHES .*-NOTFOUND OR NOT PERL_INCLUDE_PATH)
-      MESSAGE(STATUS "Could not find perl.h")
-    ENDIF ()
-
-  ENDIF ( NOT PERL_RETURN_VALUE )
-
-  # if either the library path is not found not set at all
-  # then do our own search
-  if ( NOT PERL_LIBRARY )
-    EXECUTE_PROCESS( COMMAND ${PERL_EXECUTABLE} -V:libperl
-      OUTPUT_VARIABLE PERL_LIBRARY_OUTPUT
-      RESULT_VARIABLE PERL_LIBRARY_RESULT )
-
-    IF ( NOT PERL_LIBRARY_RESULT )
-      STRING(REGEX REPLACE "libperl='([^']+)'.*" "\\1" PERL_POSSIBLE_LIBRARIES ${PERL_LIBRARY_OUTPUT})
-    ENDIF ( NOT PERL_LIBRARY_RESULT )
-
-    MESSAGE ( STATUS  "Looking for ${PERL_POSSIBLE_LIBRARIES}" )
-
-    FIND_FILE(PERL_LIBRARY
-      NAMES ${PERL_POSSIBLE_LIBRARIES}
-      PATHS /usr/lib
-      ${PERL_ARCHLIB}/CORE
-      )
-
-  ENDIF ( NOT PERL_LIBRARY )
-
-  IF ( PERL_LIBRARY MATCHES .*-NOTFOUND OR NOT PERL_LIBRARY )
-    EXECUTE_PROCESS ( COMMAND ${PERL_EXECUTABLE}
-      -MConfig -e "print \$Config{libperl}"
-      OUTPUT_VARIABLE PERL_OUTPUT
-      RESULT_VARIABLE PERL_RETURN_VALUE )
-
-    IF ( NOT PERL_RETURN_VALUE )
-      FIND_LIBRARY ( PERL_LIBRARY NAMES ${PERL_OUTPUT}
-        PATHS ${PERL_INCLUDE_PATH} )
-
-    ENDIF ( NOT PERL_RETURN_VALUE )
-  ENDIF ( PERL_LIBRARY MATCHES .*-NOTFOUND OR NOT PERL_LIBRARY )
-
-  IF(PERL_LIBRARY MATCHES .*-NOTFOUND OR NOT PERL_LIBRARY OR
-      PERL_INCLUDE_PATH MATCHES .*-NOTFOUND OR NOT PERL_INCLUDE_PATH)
-    MESSAGE (STATUS "No Perl devel environment found - skipping Perl bindings")
-  ELSE()
-    SET (PERLLIBS_FOUND TRUE)
-  ENDIF()
-
-endif(NOT PERLLIBS_FOUND)
-
-IF (PERL_FOUND AND PERLLIBS_FOUND)
+FIND_PROGRAM(DZIL dzil)
+IF (DZIL)
   MESSAGE(STATUS "")
-  MESSAGE(STATUS "PERL Setup:")
-  MESSAGE(STATUS "----------")
-  MESSAGE(STATUS "Path to perl     : " ${PERL_EXECUTABLE})
-  MESSAGE(STATUS "Version of perl  : " ${PERL_VERSION_STRING})
-  MESSAGE(STATUS "")
-  MESSAGE(STATUS "PERLLIBS Setup:")
-  MESSAGE(STATUS "---------------")
-  MESSAGE(STATUS "Path to perl.h   : " ${PERL_INCLUDE_PATH})
-  MESSAGE(STATUS "Path to perl lib : " ${PERL_LIBRARY})
+  MESSAGE(STATUS "PERL Packaging will be done with dzil command")
   ADD_SUBDIRECTORY(src/bindings/perl)
 ENDIF ()
 
