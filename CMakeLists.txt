@@ -28,7 +28,7 @@ INCLUDE (InstallRequiredSystemLibraries)
 # -------
 SET (GENERICLOGGER_VERSION_MAJOR 1)
 SET (GENERICLOGGER_VERSION_MINOR 0)
-SET (GENERICLOGGER_VERSION_PATCH 1)
+SET (GENERICLOGGER_VERSION_PATCH 2)
 SET (GENERICLOGGER_VERSION ${GENERICLOGGER_VERSION_MAJOR}.${GENERICLOGGER_VERSION_MINOR}.${GENERICLOGGER_VERSION_PATCH})
 
 # ---------
@@ -94,29 +94,31 @@ ADD_LIBRARY (genericLogger        SHARED ${lib_src})
 ADD_LIBRARY (genericLogger_static STATIC ${lib_src})
 
 # ----------------------------------------------------
-# Export flags - Note the GENERICLOGGER_STATIC keyword
+# Export flags - Note the genericLogger_STATIC keyword
 # ----------------------------------------------------
 INCLUDE (GenerateExportHeader)
 EXECUTE_PROCESS(COMMAND "${CMAKE_COMMAND}" -E make_directory "${INCLUDE_OUTPUT_PATH}/genericLogger")
 GENERATE_EXPORT_HEADER(genericLogger
     BASE_NAME genericLogger
-    EXPORT_MACRO_NAME GENERICLOGGER_EXPORT
+    EXPORT_MACRO_NAME genericLogger_EXPORT
     EXPORT_FILE_NAME "${INCLUDE_OUTPUT_PATH}/genericLogger/export.h"
-    STATIC_DEFINE GENERICLOGGER_STATIC)
+    STATIC_DEFINE genericLogger_STATIC)
 ADD_CUSTOM_TARGET(genericLoggerExport SOURCES "${INCLUDE_OUTPUT_PATH}/genericLogger/export.h")
 
 # -----------------------------------------------------
 # Targets dependencies and properties
 # -----------------------------------------------------
-ADD_DEPENDENCIES(genericLogger genericLoggerConfig genericLoggerExport)
+ADD_DEPENDENCIES(genericLogger        genericLoggerConfig genericLoggerExport)
 ADD_DEPENDENCIES(genericLogger_static genericLoggerConfig genericLoggerExport)
 
-SET_TARGET_PROPERTIES(genericLogger PROPERTIES COMPILE_FLAGS "-DgenericLogger_EXPORTS"
-                                               VERSION       "${GENERICLOGGER_VERSION}"
-                                               SOVERSION     "${GENERICLOGGER_VERSION_MAJOR}"
-                                               LINKER_LANGUAGE C)
+SET_TARGET_PROPERTIES(genericLogger        PROPERTIES COMPILE_FLAGS "-DgenericLogger_EXPORTS"
+                                                      VERSION       "${GENERICLOGGER_VERSION}"
+                                                      SOVERSION     "${GENERICLOGGER_VERSION_MAJOR}"
+                                                      LINKER_LANGUAGE C)
 
-SET_TARGET_PROPERTIES(genericLogger_static PROPERTIES COMPILE_FLAGS "-DGENERICLOGGER_STATIC"
+SET_TARGET_PROPERTIES(genericLogger_static PROPERTIES COMPILE_FLAGS "-DgenericLogger_STATIC"
+                                                      VERSION       "${GENERICLOGGER_VERSION}"
+                                                      SOVERSION     "${GENERICLOGGER_VERSION_MAJOR}"
                                                       LINKER_LANGUAGE C)
 
 # -----
@@ -133,7 +135,7 @@ ADD_EXECUTABLE        (genericLoggerTesterStatic EXCLUDE_FROM_ALL test/genericLo
 # and since we must do that for the dynamic test, we do it as well for any runtime thingy, just for coherency.
 #
 SET_TARGET_PROPERTIES (genericLoggerTester       PROPERTIES LINKER_LANGUAGE C RUNTIME_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH})
-SET_TARGET_PROPERTIES (genericLoggerTesterStatic PROPERTIES LINKER_LANGUAGE C RUNTIME_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH} COMPILE_FLAGS "-DGENERICLOGGER_STATIC")
+SET_TARGET_PROPERTIES (genericLoggerTesterStatic PROPERTIES LINKER_LANGUAGE C RUNTIME_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH} COMPILE_FLAGS "-DgenericLogger_STATIC")
 
 TARGET_LINK_LIBRARIES (genericLoggerTester       genericLogger)
 TARGET_LINK_LIBRARIES (genericLoggerTesterStatic genericLogger_static)
