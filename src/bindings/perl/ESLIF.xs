@@ -6,6 +6,8 @@
 
 MODULE = MarpaX::ESLIF            PACKAGE = MarpaX::ESLIF::Thin
 
+PROTOTYPES: ENABLE
+
 const char *
 version()
   CODE:
