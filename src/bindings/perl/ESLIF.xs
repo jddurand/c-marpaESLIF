@@ -4,7 +4,7 @@
 #include "XSUB.h"
 #include <marpaESLIF.h>
 
-MODULE = MarpaX::ESLIF            PACKAGE = MarpaX::ESLIF
+MODULE = MarpaX::ESLIF            PACKAGE = MarpaX::ESLIF::Thin
 
 const char *
 version()

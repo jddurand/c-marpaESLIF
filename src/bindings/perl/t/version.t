@@ -18,7 +18,7 @@ sub tests {
 sub test_version {
     my ($eslif) = @_;
 
-    my $version = $eslif->ESLIF_version;
+    my $version = $eslif->version;
     if (defined($version)) {
 	ok (1, "version is $version");
     } else {
