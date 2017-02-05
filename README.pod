@@ -137,6 +137,12 @@ Set the log level to C<leveLeveli> and return it.
 
 Return the current log level.
 
+=head2 genericLogger_versions
+
+  const char *genericLogger_versions();
+
+Return the version number.
+
 =head1 CONVENIENCE MACROS
 
 =head2 GENERICLOGGER_NEW
