@@ -97,14 +97,14 @@ static TCONV_C_INLINE short _tconvDefaultCharsetOption(tconv_t tconvp, tconv_cha
 static TCONV_C_INLINE short _tconvDefaultConvertOption(tconv_t tconvp, tconv_convert_external_t *tconvConvertExternalp);
 
 /****************************************************************************/
-TCONV_EXPORT tconv_t tconv_open(const char *tocodes, const char *fromcodes)
+tconv_t tconv_open(const char *tocodes, const char *fromcodes)
 /****************************************************************************/
 {
   return tconv_open_ext(tocodes, fromcodes, NULL);
 }
 
 /****************************************************************************/
-TCONV_EXPORT void tconv_trace_on(tconv_t tconvp)
+void tconv_trace_on(tconv_t tconvp)
 /****************************************************************************/
 {
   static const char funcs[] = "tconv_trace_on";
@@ -116,7 +116,7 @@ TCONV_EXPORT void tconv_trace_on(tconv_t tconvp)
 }
 
 /****************************************************************************/
-TCONV_EXPORT void tconv_trace_off(tconv_t tconvp)
+void tconv_trace_off(tconv_t tconvp)
 /****************************************************************************/
 {
   static const char funcs[] = "tconv_trace_off";
@@ -128,7 +128,7 @@ TCONV_EXPORT void tconv_trace_off(tconv_t tconvp)
 }
 
 /****************************************************************************/
-TCONV_EXPORT void tconv_trace(tconv_t tconvp, const char *fmts, ...)
+void tconv_trace(tconv_t tconvp, const char *fmts, ...)
 /****************************************************************************/
 {
   va_list ap;
@@ -145,7 +145,7 @@ TCONV_EXPORT void tconv_trace(tconv_t tconvp, const char *fmts, ...)
 }
 
 /****************************************************************************/
-TCONV_EXPORT int tconv_close(tconv_t tconvp)
+int tconv_close(tconv_t tconvp)
 /****************************************************************************/
 {
   static const char funcs[] = "tconv_close";
@@ -202,7 +202,7 @@ TCONV_EXPORT int tconv_close(tconv_t tconvp)
 }
 
 /****************************************************************************/
-TCONV_EXPORT tconv_t tconv_open_ext(const char *tocodes, const char *fromcodes, tconv_option_t *tconvOptionp)
+tconv_t tconv_open_ext(const char *tocodes, const char *fromcodes, tconv_option_t *tconvOptionp)
 /****************************************************************************/
 {
   static const char funcs[]              = "tconv_open_ext";
@@ -462,7 +462,7 @@ TCONV_EXPORT tconv_t tconv_open_ext(const char *tocodes, const char *fromcodes, 
 }
 
 /****************************************************************************/
-TCONV_EXPORT size_t tconv(tconv_t tconvp, char **inbufsp, size_t *inbytesleftlp, char **outbufsp, size_t *outbytesleftlp)
+size_t tconv(tconv_t tconvp, char **inbufsp, size_t *inbytesleftlp, char **outbufsp, size_t *outbytesleftlp)
 /****************************************************************************/
 {
   static const char funcs[]         = "tconv";
@@ -682,7 +682,7 @@ static TCONV_C_INLINE void _tconvTraceCallbackProxy(void *userDatavp, genericLog
 }
 
 /****************************************************************************/
-TCONV_EXPORT char *tconv_error_set(tconv_t tconvp, const char *msgs)
+char *tconv_error_set(tconv_t tconvp, const char *msgs)
 /****************************************************************************/
 {
   static const char funcs[] = "tconv_error_set";
@@ -711,7 +711,7 @@ TCONV_EXPORT char *tconv_error_set(tconv_t tconvp, const char *msgs)
 }
 
 /****************************************************************************/
-TCONV_EXPORT char *tconv_error(tconv_t tconvp)
+char *tconv_error(tconv_t tconvp)
 /****************************************************************************/
 {
   static const char funcs[] = "tconv_error";
@@ -735,7 +735,7 @@ TCONV_EXPORT char *tconv_error(tconv_t tconvp)
 }
 
 /****************************************************************************/
-TCONV_EXPORT char *tconv_fromcode(tconv_t tconvp)
+char *tconv_fromcode(tconv_t tconvp)
 /****************************************************************************/
 {
   static const char funcs[]   = "tconv_fromcode";
@@ -758,7 +758,7 @@ TCONV_EXPORT char *tconv_fromcode(tconv_t tconvp)
   return fromcodes;
 }
 /****************************************************************************/
-TCONV_EXPORT char *tconv_tocode(tconv_t tconvp)
+char *tconv_tocode(tconv_t tconvp)
 /****************************************************************************/
 {
   static const char funcs[]   = "tconv_tocode";

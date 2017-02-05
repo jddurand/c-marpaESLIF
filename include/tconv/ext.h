@@ -128,15 +128,15 @@ typedef struct tconv_option {
   void                 *traceUserDatavp;
 } tconv_option_t;
 
-TCONV_EXPORT tconv_t tconv_open_ext(const char *tocodes, const char *fromcodes, tconv_option_t *tconvOptionp);
+tconv_EXPORT tconv_t tconv_open_ext(const char *tocodes, const char *fromcodes, tconv_option_t *tconvOptionp);
 
 /**********************************************************************/
 /* For plugins wanting to trace                                       */
 /* If environment variable TCONV_ENV_TRACE exist and is a true value, */
 /* then trace is on by default, otherwise it is off by default        */
 /**********************************************************************/
-TCONV_EXPORT void tconv_trace_on(tconv_t tconvp);
-TCONV_EXPORT void tconv_trace_off(tconv_t tconvp);
+tconv_EXPORT void tconv_trace_on(tconv_t tconvp);
+tconv_EXPORT void tconv_trace_off(tconv_t tconvp);
 
 /**********************************************************************/
 /* The only way to have tracing is:                                   */
@@ -145,7 +145,7 @@ TCONV_EXPORT void tconv_trace_off(tconv_t tconvp);
 /* trconv itself will also trace IF it is compiled without #define    */
 /* TCONV_NTRACE, including its built-in plugins                       */
 /**********************************************************************/
-TCONV_EXPORT void tconv_trace(tconv_t tconvp, const char *fmts, ...);
+tconv_EXPORT void tconv_trace(tconv_t tconvp, const char *fmts, ...);
 
 /**********************************************************************/
 /* Plugins can (and should) set the last error string using           */
@@ -156,15 +156,15 @@ TCONV_EXPORT void tconv_trace(tconv_t tconvp, const char *fmts, ...);
 /*                                                                    */
 /* Retreival of last error string is done via tconv_error().          */
 /**********************************************************************/
-TCONV_EXPORT char *tconv_error_set(tconv_t tconvp, const char *msgs);
-TCONV_EXPORT char *tconv_error(tconv_t tconvp);
+tconv_EXPORT char *tconv_error_set(tconv_t tconvp, const char *msgs);
+tconv_EXPORT char *tconv_error(tconv_t tconvp);
 
 /**********************************************************************/
 /* Since origin charset may be NULL, it may be interesting to know    */
 /* what tconv think it was.                                           */
 /* Destination charset is available for symmetry.                     */
 /**********************************************************************/
-TCONV_EXPORT char *tconv_fromcode(tconv_t tconvp);
-TCONV_EXPORT char *tconv_tocode(tconv_t tconvp);
+tconv_EXPORT char *tconv_fromcode(tconv_t tconvp);
+tconv_EXPORT char *tconv_tocode(tconv_t tconvp);
 
 #endif /* TCONV_EXT_H */
