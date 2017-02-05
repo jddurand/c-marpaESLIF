@@ -27,7 +27,7 @@ SET (CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 SET (TCONV_VERSION_MAJOR 1)
 SET (TCONV_VERSION_MINOR 0)
-SET (TCONV_VERSION_PATCH 7)
+SET (TCONV_VERSION_PATCH 8)
 SET (TCONV_VERSION "${TCONV_VERSION_MAJOR}.${TCONV_VERSION_MINOR}.${TCONV_VERSION_PATCH}")
 
 SET (CMAKE_MODULE_PATH              ${PROJECT_SOURCE_DIR}/cmake)           # General module search path
@@ -97,10 +97,7 @@ FILE (GLOB lib_cchardet_src
   "${3RDPARTY_OUTPUT_PATH}/cchardet-1.0.0/src/ext/libcharsetdetect/mozilla/extensions/universalchardet/src/base/*.cpp"
   "${3RDPARTY_OUTPUT_PATH}/cchardet-1.0.0/src/ext/libcharsetdetect/charsetdetect.cpp"
 )
-ADD_LIBRARY (charsetdetect STATIC ${lib_cchardet_src})
-SET_PROPERTY (TARGET charsetdetect
-  PROPERTY
-  INCLUDE_DIRECTORIES
+INCLUDE_DIRECTORIES(
   "${3RDPARTY_OUTPUT_PATH}/cchardet-1.0.0/src/ext/libcharsetdetect/mozilla/extensions/universalchardet/src/base"
   "${3RDPARTY_OUTPUT_PATH}/cchardet-1.0.0/src/ext/libcharsetdetect/nspr-emu"
   "${3RDPARTY_OUTPUT_PATH}/cchardet-1.0.0/src/ext/libcharsetdetect"
@@ -117,10 +114,8 @@ IF (WIN32 AND NOT CYGWIN)
     )
   SET (DLFCNWIN32_FOUND TRUE)
   SET (DLFCNWIN32_DIR            "${3RDPARTY_OUTPUT_PATH}/dlfcn-win32-remote")
-  SET (DLFCNWIN32_INCLUDE_DIR    "${DLFCNWIN32_DIR}")
-  SET (DLFCNWIN32_LIBRARY_TARGET "dlfcn-win32")
   SET (DLFCNWIN32_LIBRARY_TARGET_DEPEND "psapi")
-  ADD_LIBRARY (dlfcn-win32 STATIC "${DLFCNWIN32_DIR}/dlfcn.c")
+  FILE (lib_dlfcn_win32_src "${DLFCNWIN32_DIR}/dlfcn.c")
 ENDIF (WIN32 AND NOT CYGWIN)
 
 # ---------------
@@ -160,9 +155,9 @@ IF (NOT ICONV_FOUND)
       COMMAND "${CMAKE_COMMAND}" -E copy_directory "${PROJECT_SOURCE_DIR}/3rdparty/github/winiconv-remote" "${3RDPARTY_OUTPUT_PATH}/winiconv-remote"
       WORKING_DIRECTORY "${3RDPARTY_OUTPUT_PATH}"
       )
+    SET (WINICONV_FOUND TRUE)
     SET (WINICONV_DIR            "${3RDPARTY_OUTPUT_PATH}/winiconv-remote")
-    SET (WINICONV_INCLUDE        "${WINICONV_DIR}")
-    SET (WINICONV_SRC            "${WINICONV_DIR}/win_iconv.c")
+    SET (lib_winiconv_src "${WINICONV_DIR}/win_iconv.c")
     SET (ICONV_FOUND TRUE)
     SET (ICONV_INCLUDE_DIR "${WINICONV_INCLUDE}")
     SET (ICONV_SECOND_ARGUMENT_IS_CONST TRUE)
@@ -189,7 +184,6 @@ ADD_CUSTOM_TARGET(tconvConfig SOURCES "${CONFIG_H}")
 INCLUDE_DIRECTORIES(
   "${INCLUDE_OUTPUT_PATH}"                                # Include path for generated files (internal)
   "${PROJECT_SOURCE_DIR}/include"                         # Include path for the other headers (internal)
-  "${CCHARDET_INCLUDE_DIR}"                               # Include path for ccharset (internal)
   "${GENERICLOGGER_INCLUDE_DIRS}"                         # Include path for genericLogger (external - required)
   )
 IF (ICU_FOUND)
@@ -224,25 +218,37 @@ IF (ICONV_FOUND)
     FILE (GLOB lib_src_convert_iconv src/tconv/convert/iconv.c)
   ENDIF (WINICONV_SRC)
 ENDIF (ICONV_FOUND)
-ADD_LIBRARY (tconv SHARED
+SET (tconv_src
   ${lib_src}
   ${lib_header}
+  ${lib_cchardet_src}
   ${lib_src_charset_cchardet}
   ${lib_src_charset_ICU}
   ${lib_src_convert_ICU}
   ${lib_src_convert_iconv})
-TARGET_LINK_LIBRARIES (tconv
-  ${CCHARDET_LIBRARY_TARGET}
-  ${DLFCNWIN32_LIBRARY_TARGET}
+IF (DLFCNWIN32_FOUND)
+  LIST(APPEND tconv_src ${lib_dlfcn_win32_src})
+ENDIF ()
+IF (WINICONV_FOUND)
+  LIST(APPEND tconv_src ${lib_winiconv_src})
+ENDIF ()
+ADD_LIBRARY (tconv        SHARED ${tconv_src})
+ADD_LIBRARY (tconv_static STATIC ${tconv_src})
+SET (tconv_lib
   ${DLFCNWIN32_LIBRARY_TARGET_DEPEND}
-  ${GENERICLOGGER_LIBRARIES}
   ${ICU_LIBRARIES}
   ${ICONV_LIBRARIES}
-  ${CMAKE_DL_LIBS}
-)
+  ${CMAKE_DL_LIBS})
+TARGET_LINK_LIBRARIES (tconv        ${tconv_lib} ${GENERICLOGGER_LIBRARIES})
+TARGET_LINK_LIBRARIES (tconv_static ${tconv_lib} ${GENERICLOGGER_LIBRARIES})
 SET_TARGET_PROPERTIES (tconv
   PROPERTIES
   COMPILE_FLAGS "-Dtconv_EXPORTS"
+  VERSION       "${TCONV_VERSION}"
+  SOVERSION     "${TCONV_VERSION_MAJOR}")
+SET_TARGET_PROPERTIES (tconv_static
+  PROPERTIES
+  COMPILE_FLAGS "-Dtconv_STATIC"
   VERSION       "${TCONV_VERSION}"
   SOVERSION     "${TCONV_VERSION_MAJOR}")
 
@@ -253,20 +259,21 @@ INCLUDE (GenerateExportHeader)
 EXECUTE_PROCESS(COMMAND "${CMAKE_COMMAND}" -E make_directory "${INCLUDE_OUTPUT_PATH}/tconv")
 GENERATE_EXPORT_HEADER(tconv
     BASE_NAME tconv
-    EXPORT_MACRO_NAME TCONV_EXPORT
+    EXPORT_MACRO_NAME tconv_EXPORT
     EXPORT_FILE_NAME "${INCLUDE_OUTPUT_PATH}/tconv/export.h"
-    STATIC_DEFINE TCONV_STATIC)
+    STATIC_DEFINE tconv_STATIC)
 ADD_CUSTOM_TARGET(tconvExport SOURCES "${INCLUDE_OUTPUT_PATH}/tconv/export.h")
 
 # ----------------------------------------
 # Explicit dependencies on generated files
 # ----------------------------------------
-ADD_DEPENDENCIES(tconv tconvConfig tconvExport)
+ADD_DEPENDENCIES(tconv        tconvConfig tconvExport)
+ADD_DEPENDENCIES(tconv_static tconvConfig tconvExport)
 
 # ----------
 # Executable
 # ----------
-ADD_EXECUTABLE(tconvExec bin/tconv.c)
+ADD_EXECUTABLE(tconvExec       bin/tconv.c)
 SET_TARGET_PROPERTIES(tconvExec PROPERTIES
   OUTPUT_NAME                             "tconv"
   RUNTIME_OUTPUT_DIRECTORY                "${BINARY_OUTPUT_PATH}"
@@ -285,7 +292,7 @@ SET_PROPERTY(TARGET tconvExec
   "${GENERICLOGGER_INCLUDE_DIRS}"                         # Include path for genericLogger (external - required)
   "${OPTPARSE_INCLUDE_DIR}"                               # Include path for optparse (builtin)
   )
-TARGET_LINK_LIBRARIES(tconvExec tconv optparse)
+TARGET_LINK_LIBRARIES(tconvExec       tconv        optparse)
 
 # -----
 # Check
@@ -303,7 +310,7 @@ ADD_CUSTOM_TARGET (check COMMAND ${CMAKE_CTEST_COMMAND} DEPENDS tconvExec)
 # -------
 # Install
 # -------
-INSTALL (TARGETS tconv tconvExec ARCHIVE DESTINATION lib LIBRARY DESTINATION lib RUNTIME DESTINATION bin)
+INSTALL (TARGETS tconv tconv_static tconvExec ARCHIVE DESTINATION lib LIBRARY DESTINATION lib RUNTIME DESTINATION bin)
 INSTALL (FILES ${INCLUDE_OUTPUT_PATH}/tconv/export.h DESTINATION include/tconv)
 INSTALL (FILES include/tconv.h DESTINATION include)
 INSTALL (FILES include/tconv/ext.h DESTINATION include/tconv)
