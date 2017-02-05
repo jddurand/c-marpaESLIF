@@ -21,7 +21,7 @@ INCLUDE (InstallRequiredSystemLibraries)
 
 SET (MARPAWRAPPER_VERSION_MAJOR 1)
 SET (MARPAWRAPPER_VERSION_MINOR 0)
-SET (MARPAWRAPPER_VERSION_PATCH 40)
+SET (MARPAWRAPPER_VERSION_PATCH 41)
 SET (MARPAWRAPPER_VERSION "${MARPAWRAPPER_VERSION_MAJOR}.${MARPAWRAPPER_VERSION_MINOR}.${MARPAWRAPPER_VERSION_PATCH}")
 
 SET (CMAKE_MODULE_PATH              ${PROJECT_SOURCE_DIR}/cmake)           # General module search path
@@ -189,7 +189,7 @@ SET_TARGET_PROPERTIES(marpaWrapper        PROPERTIES COMPILE_FLAGS "-DmarpaWrapp
                                                      VERSION       "${MARPAWRAPPER_VERSION}"
                                                      SOVERSION     "${MARPAWRAPPER_VERSION_MAJOR}"
                                                      LINKER_LANGUAGE C)
-SET_TARGET_PROPERTIES(marpaWrapper_static PROPERTIES COMPILE_FLAGS "-DmarpaWrapper_EXPORTS"
+SET_TARGET_PROPERTIES(marpaWrapper_static PROPERTIES COMPILE_FLAGS "-DmarpaWrapper_STATIC"
                                                      VERSION       "${MARPAWRAPPER_VERSION}"
                                                      SOVERSION     "${MARPAWRAPPER_VERSION_MAJOR}"
                                                      LINKER_LANGUAGE C)
