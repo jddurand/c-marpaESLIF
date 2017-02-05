@@ -77,6 +77,13 @@ genericLoggerCallback_t genericLogger_defaultLogCallbackp(void) {
   return &_genericLogger_defaultCallbackp;
 }
 
+/*************************************/
+/* genericLogger_defaultLogCallbackp */
+/*************************************/
+const char *genericLogger_versions() {
+  return GENERICLOGGER_VERSION;
+}
+
 /***********************/
 /* genericLogger_freev */
 /***********************/
