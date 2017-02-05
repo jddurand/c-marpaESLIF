@@ -21,7 +21,7 @@ INCLUDE (InstallRequiredSystemLibraries)
 
 SET (MARPAWRAPPER_VERSION_MAJOR 1)
 SET (MARPAWRAPPER_VERSION_MINOR 0)
-SET (MARPAWRAPPER_VERSION_PATCH 41)
+SET (MARPAWRAPPER_VERSION_PATCH 42)
 SET (MARPAWRAPPER_VERSION "${MARPAWRAPPER_VERSION_MAJOR}.${MARPAWRAPPER_VERSION_MINOR}.${MARPAWRAPPER_VERSION_PATCH}")
 
 SET (CMAKE_MODULE_PATH              ${PROJECT_SOURCE_DIR}/cmake)           # General module search path
@@ -160,8 +160,8 @@ ELSE (GENERICSTACK_FOUND)
     "${GENERICSPARSEARRAY_INCLUDE_DIRS}"                 # Include path for genericHash (external - required)
     )
 ENDIF (GENERICSTACK_FOUND)
-TARGET_LINK_LIBRARIES (marpaWrapper ${GENERICLOGGER_LIBRARIES})
-TARGET_LINK_LIBRARIES (marpaWrapper_static ${GENERICLOGGER_STATIC_LIBRARIES})
+TARGET_LINK_LIBRARIES (marpaWrapper        ${GENERICLOGGER_LIBRARIES})
+TARGET_LINK_LIBRARIES (marpaWrapper_static ${GENERICLOGGER_LIBRARIES})
 SET_TARGET_PROPERTIES(marpaWrapper
   PROPERTIES
   COMPILE_FLAGS "-DmarpaWrapper_EXPORTS"
@@ -234,35 +234,7 @@ IF (GENERICSTACK_FOUND)
     COMMAND marpaWrapperAsfAmbiguousTester
     WORKING_DIRECTORY ${LIBRARY_OUTPUT_PATH})
 
-  #
-  # Per def static version should not need the WORKING_DIRECTORY thingy
-  #
-  ADD_EXECUTABLE        (marpaWrapperTesterStatic EXCLUDE_FROM_ALL test/marpaWrapperTester.c)
-  SET_TARGET_PROPERTIES (marpaWrapperTesterStatic PROPERTIES LINKER_LANGUAGE C)
-  TARGET_LINK_LIBRARIES (marpaWrapperTesterStatic marpaWrapper_static)
-
-  ADD_TEST              (NAME marpaWrapperTestStatic
-                         COMMAND marpaWrapperTesterStatic)
-
-  ADD_EXECUTABLE        (marpaWrapperAsfTesterStatic EXCLUDE_FROM_ALL test/marpaWrapperAsfTester.c)
-  SET_TARGET_PROPERTIES (marpaWrapperAsfTesterStatic PROPERTIES LINKER_LANGUAGE C)
-  TARGET_LINK_LIBRARIES (marpaWrapperAsfTesterStatic marpaWrapper_static)
-  ADD_TEST              (NAME marpaWrapperAsfTestStatic
-                         COMMAND marpaWrapperAsfTesterStatic)
-
-  ADD_EXECUTABLE        (marpaWrapperAsfValueTesterStatic EXCLUDE_FROM_ALL test/marpaWrapperAsfValueTester.c)
-  SET_TARGET_PROPERTIES (marpaWrapperAsfValueTesterStatic PROPERTIES LINKER_LANGUAGE C)
-  TARGET_LINK_LIBRARIES (marpaWrapperAsfValueTesterStatic marpaWrapper_static)
-  ADD_TEST              (NAME marpaWrapperAsfValueTestStatic
-                         COMMAND marpaWrapperAsfValueTesterStatic)
-
-  ADD_EXECUTABLE        (marpaWrapperAsfAmbiguousTesterStatic EXCLUDE_FROM_ALL test/marpaWrapperAsfAmbiguousTester.c)
-  SET_TARGET_PROPERTIES (marpaWrapperAsfAmbiguousTesterStatic PROPERTIES LINKER_LANGUAGE C)
-  TARGET_LINK_LIBRARIES (marpaWrapperAsfAmbiguousTesterStatic marpaWrapper_static)
-  ADD_TEST              (NAME marpaWrapperAsfAmbiguousTestStatic
-                         COMMAND marpaWrapperAsfAmbiguousTesterStatic)
-
-  ADD_CUSTOM_TARGET     (check COMMAND ${CMAKE_CTEST_COMMAND} DEPENDS marpaWrapperTester marpaWrapperAsfTester marpaWrapperAsfValueTester marpaWrapperAsfAmbiguousTester marpaWrapperTesterStatic marpaWrapperAsfTesterStatic marpaWrapperAsfValueTesterStatic marpaWrapperAsfAmbiguousTesterStatic)
+  ADD_CUSTOM_TARGET     (check COMMAND ${CMAKE_CTEST_COMMAND} DEPENDS marpaWrapperTester marpaWrapperAsfTester marpaWrapperAsfValueTester marpaWrapperAsfAmbiguousTester)
 ENDIF (GENERICSTACK_FOUND)
 
 # -------
