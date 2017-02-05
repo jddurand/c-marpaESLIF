@@ -162,11 +162,18 @@ ELSE (GENERICSTACK_FOUND)
 ENDIF (GENERICSTACK_FOUND)
 TARGET_LINK_LIBRARIES (marpaWrapper ${GENERICLOGGER_LIBRARIES})
 TARGET_LINK_LIBRARIES (marpaWrapper_static ${GENERICLOGGER_STATIC_LIBRARIES})
-SET_TARGET_PROPERTIES (marpaWrapper
+SET_TARGET_PROPERTIES(marpaWrapper
   PROPERTIES
   COMPILE_FLAGS "-DmarpaWrapper_EXPORTS"
-  VERSION "${MARPAWRAPPER_VERSION}"
-  SOVERSION "${MARPAWRAPPER_VERSION_MAJOR}")
+  VERSION       "${MARPAWRAPPER_VERSION}"
+  SOVERSION     "${MARPAWRAPPER_VERSION_MAJOR}"
+  LINKER_LANGUAGE C)
+SET_TARGET_PROPERTIES(marpaWrapper_static
+  PROPERTIES
+  COMPILE_FLAGS "-DmarpaWrapper_STATIC"
+  VERSION       "${MARPAWRAPPER_VERSION}"
+  SOVERSION     "${MARPAWRAPPER_VERSION_MAJOR}"
+  LINKER_LANGUAGE C)
 
 # ------------
 # Export flags
@@ -185,15 +192,6 @@ ADD_CUSTOM_TARGET(marpaWrapperExport SOURCES "${INCLUDE_OUTPUT_PATH}/marpaWrappe
 # ----------------------------------------
 ADD_DEPENDENCIES(marpaWrapper        marpaWrapperConfig marpaWrapperExport)
 ADD_DEPENDENCIES(marpaWrapper_static marpaWrapperConfig marpaWrapperExport)
-SET_TARGET_PROPERTIES(marpaWrapper        PROPERTIES COMPILE_FLAGS "-DmarpaWrapper_EXPORTS"
-                                                     VERSION       "${MARPAWRAPPER_VERSION}"
-                                                     SOVERSION     "${MARPAWRAPPER_VERSION_MAJOR}"
-                                                     LINKER_LANGUAGE C)
-SET_TARGET_PROPERTIES(marpaWrapper_static PROPERTIES COMPILE_FLAGS "-DmarpaWrapper_STATIC"
-                                                     VERSION       "${MARPAWRAPPER_VERSION}"
-                                                     SOVERSION     "${MARPAWRAPPER_VERSION_MAJOR}"
-                                                     LINKER_LANGUAGE C)
-
 
 IF (GENERICSTACK_FOUND)
   # -----
