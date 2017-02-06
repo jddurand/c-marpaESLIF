@@ -18,10 +18,9 @@ my $ac = Config::AutoConf->new(logfile => $log);
 my ($GENERICLOGGER_VERSION_MAJOR, $GENERICLOGGER_VERSION_MINOR, $GENERICLOGGER_VERSION_PATCH) = get_version();
 print "Generating $config for genericLogger version $GENERICLOGGER_VERSION_MAJOR.$GENERICLOGGER_VERSION_MINOR.$GENERICLOGGER_VERSION_PATCH\n";
 $ac->check_cc;
-find_inline($ac);
-$ac->define_var('GENERICLOGGER_VERSION_MAJOR', $GENERICLOGGER_VERSION_MAJOR);
-$ac->define_var('GENERICLOGGER_VERSION_MINOR', $GENERICLOGGER_VERSION_MINOR);
-$ac->define_var('GENERICLOGGER_VERSION_PATCH', $GENERICLOGGER_VERSION_PATCH);
+$ac->define_var('GENERICLOGGER_VERSION_MAJOR', "($GENERICLOGGER_VERSION_MAJOR)");
+$ac->define_var('GENERICLOGGER_VERSION_MINOR', "($GENERICLOGGER_VERSION_MINOR)");
+$ac->define_var('GENERICLOGGER_VERSION_PATCH', "($GENERICLOGGER_VERSION_PATCH)");
 $ac->check_header('stdio.h');
 $ac->check_header('stddef.h');
 $ac->check_header('stdlib.h');
@@ -34,6 +33,8 @@ $ac->check_header('string.h');
 $ac->check_header('unistd.h');
 $ac->check_header('io.h');
 $ac->check_header('time.h');
+find_inline($ac);
+$ac->write_config_h($config);
 
 sub get_version {
   open(my $fh, '<', 'CMakeLists.txt') || die "Cannot open CMakeLists.txt, $!";
