@@ -8,6 +8,7 @@ use File::Basename;
 use POSIX qw/EXIT_SUCCESS/;
 use File::Find qw/find/;
 use File::Path qw/make_path/;
+use Config;
 
 #
 # Generation of the library using perl compiler
@@ -66,7 +67,12 @@ find(
 my $export_h = File::Spec->catfile('output', 'include', 'genericLogger', 'export.h');
 make_path(dirname($export_h));
 open(my $fh, '>', $export_h) || die "Cannot open $export_h, $!";
-print $fh "#define genericLogger_EXPORT\n";
+# We know that when $Config{ccname} is gcc we can do this - else we do nothing
+if (($Config{ccname} || '') eq 'gcc') {
+    print $fh "#define genericLogger_EXPORT __attribute__((visibility(\"hidden\")))\n";
+} else {
+    print $fh "#define genericLogger_EXPORT\n";
+}
 close($fh) || warn "Cannot close $export_h, $!";
 #
 # Generate object individually (not efficient but I do not see how CBuilder mixes C and C++ source files)
