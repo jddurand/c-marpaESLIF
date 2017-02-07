@@ -61,21 +61,35 @@ find(
     'src');
 
 #
+# Create a fake export.h
+#
+my $export_h = File::Spec->catfile('output', 'include', 'genericLogger', 'export.h');
+make_path(dirname($export_h));
+open(my $fh, '>', $export_h) || die "Cannot open $export_h, $!";
+print $fh "#define genericLogger_EXPORT\n";
+close($fh) || warn "Cannot close $export_h, $!";
+#
 # Generate object individually (not efficient but I do not see how CBuilder mixes C and C++ source files)
 #
 my $cbuilder = ExtUtils::CBuilder->new();
 my $have_cplusplus = 0;
 my @objects;
+my $obj_dir = File::Spec->catfile('output', 'obj');
+
+make_path($obj_dir);
 foreach my $source (@sources) {
     my $is_cplusplus = ($source =~ /\.cpp$/i || $source =~ /\.c\+\+$/i);
     if ($is_cplusplus) {
 	$have_cplusplus = 1 unless $have_cplusplus;
     }
+    my $obj = basename($cbuilder->object_file($source));
+    $obj = File::Spec->catfile($obj_dir, basename($cbuilder->object_file($source)));
     push(@objects, $cbuilder->object_file($source));
     $cbuilder->compile(
-	source => $source,
-	include_dirs   => [ 'include', File::Spec->catdir('output', 'include') ],
-	have_cplusplus => $is_cplusplus,
+	source               => $source,
+	object_file          => $obj,
+	include_dirs         => [ 'include', File::Spec->catdir('output', 'include') ],
+	have_cplusplus       => $is_cplusplus,
 	extra_compiler_flags => "-DGENERICLOGGER_VERSION=\\\"$ac{GENERICLOGGER_VERSION}\\\""
 	);
 }
