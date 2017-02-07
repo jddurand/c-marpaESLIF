@@ -73,6 +73,8 @@ if (($Config{ccname} || '') eq 'gcc') {
 } else {
     print $fh "#define genericLogger_EXPORT\n";
 }
+# I do not want to play with extra_compiler_flags, I use the fake export.h instead
+print $fh "#define GENERICLOGGER_VERSION \"$ac{GENERICLOGGER_VERSION}\"\n";
 close($fh) || warn "Cannot close $export_h, $!";
 #
 # Generate object individually (not efficient but I do not see how CBuilder mixes C and C++ source files)
@@ -95,8 +97,7 @@ foreach my $source (@sources) {
 	source               => $source,
 	object_file          => $obj,
 	include_dirs         => [ 'include', File::Spec->catdir('output', 'include') ],
-	have_cplusplus       => $is_cplusplus,
-	extra_compiler_flags => "-DGENERICLOGGER_VERSION=\\\"$ac{GENERICLOGGER_VERSION}\\\""
+	have_cplusplus       => $is_cplusplus
 	);
 }
 
