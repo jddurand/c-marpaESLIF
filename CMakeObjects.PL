@@ -41,7 +41,7 @@ find_this($ac, \%ac, 'C_VSNPRINTF',   File::Spec->catfile('cmake', 'vsnprintf.c'
 find_this($ac, \%ac, 'C_LOCALTIME_R', File::Spec->catfile('cmake', 'localtime_r.c'), [qw/HAVE_TIME_H/],                 [qw/localtime_r _localtime_r __localtime_r/]);
 
 my $config_h_in = File::Spec->catfile('include', 'genericLogger_config.h.in');
-my $config_h    = File::Spec->catfile('output', 'include', 'config.h');
+my $config_h    = File::Spec->catfile('output', 'include', 'genericLogger', 'config.h');
 write_config($ac, \%ac, $config_h_in, $config_h);
 
 #
@@ -74,7 +74,7 @@ foreach my $source (@sources) {
     push(@objects, $cbuilder->object_file($source));
     $cbuilder->compile(
 	source => $source,
-	include_dirs   => [ dirname($config_h), 'include' ],
+	include_dirs   => [ 'include', File::Spec->catdir('output', 'include') ],
 	have_cplusplus => $is_cplusplus,
 	extra_compiler_flags => "-DGENERICLOGGER_VERSION=\\\"$ac{GENERICLOGGER_VERSION}\\\""
 	);
@@ -140,6 +140,7 @@ sub find_this {
 sub write_config {
     my ($ac, $acp, $input, $output) = @_;
 
+    make_path(dirname($output));
     open(my $fh, '<', $input) || die "Cannot open $input, $!";
     my $source = do { local $/; <$fh>; };
     close($fh) || warn "Cannot close $input, $!";
