@@ -2,7 +2,6 @@
 use strict;
 use diagnostics;
 use Config::AutoConf::INI;
-use Capture::Tiny qw/capture/;
 use ExtUtils::CBuilder;
 use File::Basename;
 use POSIX qw/EXIT_SUCCESS/;
