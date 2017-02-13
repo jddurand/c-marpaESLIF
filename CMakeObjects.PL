@@ -4,25 +4,37 @@ use diagnostics;
 use Config::AutoConf::INI;
 use ExtUtils::CBuilder;
 use File::Basename;
-use POSIX qw/EXIT_SUCCESS/;
 use File::Find qw/find/;
 use File::Path qw/make_path/;
+use POSIX qw/EXIT_SUCCESS/;
 
-#
-# Generation of the library using perl compiler
-#
+# ------------------------------------------------------------
+# Generation of objects using perl setup, for use in perl's XS
+# ------------------------------------------------------------
 my $version = get_version();
 print "Generating config for genericLogger version $version\n";
 
-Config::AutoConf::INI->new(logfile => 'config.log')->check;
+# ------------------------
+# Write configuration file
+# ------------------------
 my $config_h_in = File::Spec->catfile('include', 'genericLogger_config.h.in');
 my $config_h    = File::Spec->catfile('output', 'include', 'genericLogger', 'config.h');
 make_path(dirname($config_h));
+Config::AutoConf::INI->new(logfile => 'config.log')->check;
 write_config($version, $config_h_in, $config_h);
 
-#
+# -------------
+# Fake export.h
+# -------------
+my $export_h = File::Spec->catfile('output', 'include', 'genericLogger', 'export.h');
+make_path(dirname($export_h));
+open(my $fh, '>', $export_h) || die "Cannot open $export_h, $!";
+print $fh "#define genericLogger_EXPORT\n";
+close($fh) || warn "Cannot close $export_h, $!";
+
+# ----------------
 # Get source files
-#
+# ----------------
 my @sources;
 find(
     {
@@ -36,42 +48,31 @@ find(
     },
     'src');
 
-#
-# Create a fake export.h
-#
-my $export_h = File::Spec->catfile('output', 'include', 'genericLogger', 'export.h');
-make_path(dirname($export_h));
-open(my $fh, '>', $export_h) || die "Cannot open $export_h, $!";
-print $fh "#define genericLogger_EXPORT\n";
-close($fh) || warn "Cannot close $export_h, $!";
-#
-# Generate object individually (not efficient but I do not see how CBuilder mixes C and C++ source files)
-#
+# ----------------------------------------------------------------------------------------
+# Generate objects
+# (individually- not efficient but I do not see how CBuilder mixes C and C++ source files)
+# ----------------------------------------------------------------------------------------
 my $cbuilder = ExtUtils::CBuilder->new();
-my $have_cplusplus = 0;
 my @objects;
 my $obj_dir = File::Spec->catfile('output', 'obj');
 
 make_path($obj_dir);
 foreach my $source (@sources) {
     my $is_cplusplus = ($source =~ /\.cpp$/i || $source =~ /\.c\+\+$/i);
-    if ($is_cplusplus) {
-	$have_cplusplus = 1 unless $have_cplusplus;
-    }
     my $obj = basename($cbuilder->object_file($source));
     $obj = File::Spec->catfile($obj_dir, basename($cbuilder->object_file($source)));
     push(@objects, $cbuilder->object_file($source));
     $cbuilder->compile(
-	source               => $source,
-	object_file          => $obj,
-	include_dirs         => [ 'include', File::Spec->catdir('output', 'include') ],
-	have_cplusplus       => $is_cplusplus
+	source        => $source,
+	object_file   => $obj,
+	include_dirs  => [ 'include', File::Spec->catdir('output', 'include') ],
+	'C++'         => $is_cplusplus
 	);
 }
 
-#
+# ----
 # Done
-#
+# ----
 exit(EXIT_SUCCESS);
 
 sub get_version {
