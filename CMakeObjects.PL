@@ -106,7 +106,7 @@ sub write_config {
     my $c_va_copy = get_C_WRAPPER('va_copy');
     my $c_fileno = get_C_WRAPPER('fileno');
     my $c_vsnprintf = get_C_WRAPPER('vsnprintf');
-    my $c_localtime_r = get_C_WRAPPER('localtime_r');
+    my $c_localtime_r = get_C_WRAPPER('localtime_r', 0);
     my $c_write = get_C_WRAPPER('write');
     print $fh <<CONFIG;
 #ifndef GENERICLOGGER_CONFIG_WRAPPER_H
@@ -131,9 +131,12 @@ CONFIG
 }
 
 sub get_C_WRAPPER {
-    my ($what) = @_;
+    my ($what, $required) = @_;
+
+    $required //= 1;
 
     my $WHAT = uc($what);
+    my $error = $required ? "#error \"C_$WHAT is undefined\"" : '';
 
     my $c_wrapper = <<C_WRAPPER;
 #ifdef HAVE_$WHAT
@@ -145,7 +148,7 @@ sub get_C_WRAPPER {
 #    ifdef HAVE___$WHAT
 #      define C_$WHAT __$what
 #    else
-#      error "C_$WHAT is undefined"
+$error
 #    endif
 #  endif
 #endif
