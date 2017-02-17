@@ -73,13 +73,6 @@
 #endif
 #endif
 
-#ifdef C_VA_COPY
-/* Used when passing a va_list on the stack to another function taking a va_list */
-#define REAL_AP ap2
-#else
-#define REAL_AP ap
-#endif
-
 static marpaWrapperAsfOption_t marpaWrapperAsfOptionDefault = {
   NULL,   /* genericLoggerp */
    1,     /* highRankOnlyb */

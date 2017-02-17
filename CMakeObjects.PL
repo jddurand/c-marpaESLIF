@@ -26,6 +26,7 @@ my $ac = Config::AutoConf::INI->new(logfile => 'config.log')->check;
 $ac->define_var('MARPA_LIB_MAJOR_VERSION', 'MARPA_MAJOR_VERSION');
 $ac->define_var('MARPA_LIB_MICRO_VERSION', 'MARPA_MICRO_VERSION');
 $ac->define_var('MARPA_LIB_MINOR_VERSION', 'MARPA_MINOR_VERSION');
+$ac->define_var('MARPAWRAPPER_NTRACE', 1);
 $ac->check;
 write_config($version, $config_h_in, $config_h);
 
@@ -36,6 +37,7 @@ my $export_h = File::Spec->catfile('output', 'include', 'marpaWrapper', 'export.
 make_path(dirname($export_h));
 open(my $fh, '>', $export_h) || die "Cannot open $export_h, $!";
 print $fh "#define marpaWrapper_EXPORT\n";
+print $fh "#define MARPAWRAPPER_NO_EXPORT\n";
 close($fh) || warn "Cannot close $export_h, $!";
 
 # ------------------------------
@@ -67,7 +69,7 @@ find(
 	    }
 	},
     },
-    'src');
+    'src', File::Spec->catdir('3rdparty', 'output'));
 
 # ----------------------------------------------------------------------------------------
 # Generate objects
@@ -130,7 +132,6 @@ sub write_config {
 
 #include <marpaWrapper/config_autoconf.h>
 
-#define C_INLINE
 #define MARPAWRAPPER_VERSION "$version"
    
 $source
