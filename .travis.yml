@@ -7,6 +7,10 @@ addons:
       - cmake
       - cmake-data
 before_script:
+# We want to try perl standalone first
+  - cpanm Config::AutoConf::INI ExtUtils::CBuilder File::Basename File::Find File::Path
+  - perl CMakeObjects.PL
+  - rm -rf output
   - cmake .
 script:
   - make check
