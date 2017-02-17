@@ -22,7 +22,7 @@ my $config_h_in = File::Spec->catfile('include', 'config.h.in');
 my $config_h    = File::Spec->catfile('output', 'include', 'config.h');
 make_path(dirname($config_h));
 
-my $ac = Config::AutoConf::INI->new(logfile => 'config.log')->check;
+my $ac = Config::AutoConf::INI->new(logfile => 'config.log');
 $ac->define_var('MARPA_LIB_MAJOR_VERSION', 'MARPA_MAJOR_VERSION');
 $ac->define_var('MARPA_LIB_MICRO_VERSION', 'MARPA_MICRO_VERSION');
 $ac->define_var('MARPA_LIB_MINOR_VERSION', 'MARPA_MINOR_VERSION');
