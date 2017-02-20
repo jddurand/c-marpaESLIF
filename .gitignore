@@ -31,3 +31,17 @@
 # Debug files
 *.dSYM/
 *.su
+
+*~
+CMakeCache.txt
+CMakeFiles
+CTestTestfile.cmake
+Makefile
+Testing
+cmake_install.cmake
+genericHashTester*
+output
+install_manifest.txt
+CPack*.cmake
+LICENSE.txt
+GENERICHASH.3*
