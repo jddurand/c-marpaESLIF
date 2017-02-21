@@ -3,10 +3,12 @@ use strict;
 use diagnostics;
 use Config::AutoConf::INI;
 use ExtUtils::CBuilder;
-use File::Basename;
+use File::chdir;
+use File::Basename qw/basename dirname/;
 use File::Find qw/find/;
 use File::Path qw/make_path/;
 use File::Copy::Recursive qw/dircopy/;
+use IPC::Run qw/run/;
 use POSIX qw/EXIT_SUCCESS/;
 
 # ------------------------------------------------------------
@@ -40,19 +42,51 @@ print $fh "#define marpaWrapper_EXPORT\n";
 print $fh "#define MARPAWRAPPER_NO_EXPORT\n";
 close($fh) || warn "Cannot close $export_h, $!";
 
+my @additional_includes = ();
+my @additional_srcdir = ();
 # ------------------------------
 # We depend on marpa third party
 # ------------------------------
+print "... Copying Marpa--R2-remote\n";
 if (! dircopy(File::Spec->catdir('3rdparty', 'github', 'Marpa--R2-remote'),
-              File::Spec->catdir('3rdparty', 'output', 'Marpa--R2-remote'))) {
+              File::Spec->catdir('3rdparty', 'output', 'Marpa--R2'))) {
   die 'Failed to copy Marpa--R2--remote';
 }
+push(@additional_includes, File::Spec->catdir('3rdparty', 'output', 'Marpa--R2', 'cpan', 'engine', 'read_only'));
+push(@additional_srcdir, File::Spec->catdir('3rdparty', 'output', 'Marpa--R2', 'cpan', 'engine', 'read_only'));
 
 # ---------------------------------
 # We depend on these generic* stuff
 # ---------------------------------
 foreach (qw/genericLogger genericHash genericSparseArray genericStack/) {
-  $ac->push_includes(File::Spec->catdir('output', '3rdparty', $_, 'include'));
+    if (! dircopy(File::Spec->catdir('3rdparty', 'github', "${_}-remote"),
+                  File::Spec->catdir('3rdparty', 'output', $_))) {
+        die "Failed to copy $_";
+    }
+    print "... Copying $_\n";
+    my $CMakeObjects = File::Spec->catfile('3rdparty', 'output', $_, 'CMakeObjects.PL');
+    if (-e $CMakeObjects) {
+        print "... Executing $CMakeObjects\n";
+        my $in;
+        my $out;
+        my $err;
+        {
+            local $CWD = dirname($CMakeObjects);
+            run([$^X, basename($CMakeObjects)], \$in, \$out, \$err) || die "Failed to execute $CMakeObjects" . ($err ? "\n$err" : '');
+        }
+        if ($out) {
+            foreach (grep {defined} split(/\R/, $out)) {
+                print "... ... $_\n";
+            }
+        }
+        print $out if $out;
+        my $inc = File::Spec->catdir('3rdparty', 'output', $_, 'output', 'include');
+        push(@additional_includes, $inc) if (-d $inc);
+    }
+    my $inc = File::Spec->catdir('3rdparty', 'output', $_, 'include');
+    push(@additional_includes, $inc) if (-d $inc);
+    my $src = File::Spec->catdir('3rdparty', 'output', $_, 'src');
+    push(@additional_srcdir, $src) if (-d $src);
 }
 
 # ----------------
@@ -69,7 +103,7 @@ find(
 	    }
 	},
     },
-    'src', File::Spec->catdir('3rdparty', 'output'));
+    'src', @additional_srcdir);
 
 # ----------------------------------------------------------------------------------------
 # Generate objects
@@ -88,7 +122,7 @@ foreach my $source (@sources) {
     $cbuilder->compile(
 	source        => $source,
 	object_file   => $obj,
-	include_dirs  => [ 'include', File::Spec->catdir('output', 'include'), File::Spec->catdir('3rdparty', 'github', 'Marpa--R2-remote', 'cpan', 'engine', 'read_only') ],
+	include_dirs  => [ 'include', File::Spec->catdir('output', 'include'), @additional_includes ],
 	'C++'         => $is_cplusplus
 	);
 }
