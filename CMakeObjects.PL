@@ -44,9 +44,9 @@ close($fh) || warn "Cannot close $export_h, $!";
 
 my @additional_includes = ();
 my @additional_srcdir = ();
-# ------------------------------
-# We depend on marpa third party
-# ------------------------------
+# -----------------------------------------------------
+# We depend on marpa third party that we manage ourself
+# -----------------------------------------------------
 print "... Copying Marpa--R2-remote\n";
 if (! dircopy(File::Spec->catdir('3rdparty', 'github', 'Marpa--R2-remote'),
               File::Spec->catdir('3rdparty', 'output', 'Marpa--R2'))) {
@@ -55,9 +55,9 @@ if (! dircopy(File::Spec->catdir('3rdparty', 'github', 'Marpa--R2-remote'),
 push(@additional_includes, File::Spec->catdir('3rdparty', 'output', 'Marpa--R2', 'cpan', 'engine', 'read_only'));
 push(@additional_srcdir, File::Spec->catdir('3rdparty', 'output', 'Marpa--R2', 'cpan', 'engine', 'read_only'));
 
-# ---------------------------------
-# We depend on these generic* stuff
-# ---------------------------------
+# -----------------------------------------------------------------------
+# We depend on these generic* stuff that can manage themselvs, eventually
+# -----------------------------------------------------------------------
 foreach (qw/genericLogger genericHash genericSparseArray genericStack/) {
     if (! dircopy(File::Spec->catdir('3rdparty', 'github', "${_}-remote"),
                   File::Spec->catdir('3rdparty', 'output', $_))) {
@@ -79,14 +79,11 @@ foreach (qw/genericLogger genericHash genericSparseArray genericStack/) {
                 print "... ... $_\n";
             }
         }
-        print $out if $out;
         my $inc = File::Spec->catdir('3rdparty', 'output', $_, 'output', 'include');
         push(@additional_includes, $inc) if (-d $inc);
     }
     my $inc = File::Spec->catdir('3rdparty', 'output', $_, 'include');
     push(@additional_includes, $inc) if (-d $inc);
-    my $src = File::Spec->catdir('3rdparty', 'output', $_, 'src');
-    push(@additional_srcdir, $src) if (-d $src);
 }
 
 # ----------------
