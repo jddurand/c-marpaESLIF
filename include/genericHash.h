@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <errno.h>
 #include <genericStack.h>
+#include <genericHash/cloak.h>
 
 /* A hash is nothing else but a generic stack of generic stacks */
 
@@ -142,30 +143,41 @@ typedef struct genericHash {
 /* ====================================================================== */
 /* Copy key/value to internal variables                                   */
 /* ====================================================================== */
+/* We use the cloak hacks to prevent unnecessary code generation */
+#define GENERICHASH_COMPARE_PTR(x) x
+
 #define _GENERICHASH_COPY(hashName, userDatavp, keyType, keyVal, keyValCopy, valType, valVal, valValCopy) do { \
 									\
-    if ((GENERICSTACKITEMTYPE_##keyType == GENERICSTACKITEMTYPE_PTR) && (hashName->keyCopyFunctionp != NULL)) { \
-      void *_keyValForCopy = (void *) (keyVal);				\
-      void *_p = hashName->keyCopyFunctionp((void *) userDatavp, (void **) &_keyValForCopy); \
-      if ((_keyValForCopy != NULL) && (_p == NULL)) {			\
-	hashName->error = 1;						\
-      } else {                                                          \
-        keyValCopy = (GENERICSTACKITEMTYPE2TYPE_##keyType) _p;          \
+    GENERICHASH_IIF(GENERICHASH_EQUAL(keyType, PTR)) (                  \
+      if (hashName->keyCopyFunctionp != NULL) {                         \
+        GENERICSTACKITEMTYPE2TYPE_##keyType _keyValForCopy = (keyVal);  \
+        GENERICSTACKITEMTYPE2TYPE_##keyType _p = hashName->keyCopyFunctionp((void *) userDatavp, &_keyValForCopy); \
+        if ((_keyValForCopy != NULL) && (_p == NULL)) {			\
+          hashName->error = 1;						\
+        } else {                                                        \
+          keyValCopy = _p;                                              \
+        }                                                               \
+      } else {								\
+        keyValCopy = keyVal;						\
       }                                                                 \
-    } else {								\
+      ,                                                                 \
       keyValCopy = keyVal;						\
-    }									\
-    if ((GENERICSTACKITEMTYPE_##valType == GENERICSTACKITEMTYPE_PTR) && (hashName->valCopyFunctionp != NULL)) { \
-      void *_valValForCopy = (void *) (valVal);				\
-      void *_p = hashName->valCopyFunctionp((void *) userDatavp, (void **) &_valValForCopy); \
-      if ((_valValForCopy != NULL) && (_p == NULL)) {				\
-	hashName->error = 1;						\
-      } else {                                                          \
-        valValCopy = (GENERICSTACKITEMTYPE2TYPE_##valType) _p;          \
+    )                                                                   \
+    GENERICHASH_IIF(GENERICHASH_EQUAL(valType, PTR)) (                  \
+      if (hashName->valCopyFunctionp != NULL) {                         \
+        GENERICSTACKITEMTYPE2TYPE_##valType _valValForCopy = (valVal);  \
+        GENERICSTACKITEMTYPE2TYPE_##valType _p = hashName->valCopyFunctionp((void *) userDatavp, &_valValForCopy); \
+        if ((_valValForCopy != NULL) && (_p == NULL)) {                 \
+          hashName->error = 1;						\
+        } else {                                                        \
+          valValCopy = _p;                                              \
+        }                                                               \
+      } else {								\
+        valValCopy = valVal;						\
       }                                                                 \
-    } else {								\
+      ,                                                                 \
       valValCopy = valVal;						\
-    }									\
+    )                                                                   \
   } while (0)
 
 /* ====================================================================== */
@@ -262,23 +274,32 @@ typedef struct genericHash {
 	  }								\
 									\
 	  _gotKeyVal = GENERICSTACK_GET_##keyType(_subKeyStackp, _i);	\
-	  if ((GENERICSTACKITEMTYPE_##keyType == GENERICSTACKITEMTYPE_PTR) && (hashName->keyCmpFunctionp != NULL)) { \
-	    if (! hashName->keyCmpFunctionp((void *) userDatavp, (void **) &_keyVal, (void **) &_gotKeyVal)) { \
-	      continue;							\
-	    }								\
-	  } else {							\
+          GENERICHASH_IIF(GENERICHASH_EQUAL(keyType, PTR)) (            \
+            if (hashName->keyCmpFunctionp != NULL) {                    \
+              if (! hashName->keyCmpFunctionp((void *) userDatavp, &_keyVal, &_gotKeyVal)) { \
+                continue;                                               \
+              }								\
+            } else {							\
+              if (_keyVal != _gotKeyVal) {				\
+                continue;                                               \
+              }								\
+            }                                                           \
+            ,                                                           \
 	    if (_keyVal != _gotKeyVal) {				\
 	      continue;							\
 	    }								\
-	  }								\
+          )                                                             \
 									\
-	  if ((GENERICSTACKITEMTYPE_##keyType == GENERICSTACKITEMTYPE_PTR) && ((void *) _gotKeyVal != NULL) && (hashName->keyFreeFunctionp != NULL)) { \
-	    hashName->keyFreeFunctionp((void *) userDatavp, (void **) &_gotKeyVal); \
-	  }								\
+          GENERICHASH_IIF(GENERICHASH_EQUAL(keyType, PTR)) (            \
+            if ((_gotKeyVal != NULL) && (hashName->keyFreeFunctionp != NULL)) { \
+              hashName->keyFreeFunctionp((void *) userDatavp, &_gotKeyVal); \
+            }								\
+            ,                                                           \
+          )                                                             \
 	  if ((GENERICSTACKITEMTYPE(_subValStackp, _i) == GENERICSTACKITEMTYPE_PTR)) { \
 	    GENERICSTACKITEMTYPE2TYPE_PTR _gotValVal = GENERICSTACK_GET_PTR(_subValStackp, _i); \
 	    if ((_gotValVal != NULL) && (hashName->valFreeFunctionp != NULL)) { \
-	      hashName->valFreeFunctionp((void *) userDatavp, (void **) &_gotValVal); \
+	      hashName->valFreeFunctionp((void *) userDatavp, &_gotValVal); \
 	    }								\
 	  }								\
 		    							\
@@ -330,15 +351,21 @@ typedef struct genericHash {
 	  }								\
 									\
 	  _gotKeyVal = GENERICSTACK_GET_##keyType(_subKeyStackp, _i);	\
-	  if ((GENERICSTACKITEMTYPE_##keyType == GENERICSTACKITEMTYPE_PTR) && (hashName->keyCmpFunctionp != NULL)) { \
-	    if (! hashName->keyCmpFunctionp((void *) userDatavp, (void **) &keyVal, (void **) &_gotKeyVal)) { \
-	      continue;							\
-	    }								\
-	  } else {							\
+          GENERICHASH_IIF(GENERICHASH_EQUAL(keyType, PTR)) (            \
+            if ((GENERICSTACKITEMTYPE_##keyType == GENERICSTACKITEMTYPE_PTR) && (hashName->keyCmpFunctionp != NULL)) { \
+              if (! hashName->keyCmpFunctionp((void *) userDatavp, (void **) &keyVal, (void **) &_gotKeyVal)) { \
+                continue;                                               \
+              }								\
+            } else {							\
+              if (keyVal != _gotKeyVal) {                               \
+                continue;                                               \
+              }								\
+            }                                                           \
+            ,                                                           \
 	    if (keyVal != _gotKeyVal) {					\
 	      continue;							\
 	    }								\
-	  }								\
+          )                                                             \
 	  findResult = 1;						\
                                                                         \
 	  if ((valValp) != NULL) {					\
@@ -346,9 +373,12 @@ typedef struct genericHash {
 	    *_valValp = GENERICSTACK_GET_##valType(_subValStackp, _i);	\
 	  }								\
 	  if (remove) {							\
-	    if ((GENERICSTACKITEMTYPE_##keyType == GENERICSTACKITEMTYPE_PTR) && ((void *) _gotKeyVal != NULL) && (hashName->keyFreeFunctionp != NULL)) { \
-	      hashName->keyFreeFunctionp((void *) userDatavp, (void **) &_gotKeyVal); \
-	    }								\
+            GENERICHASH_IIF(GENERICHASH_EQUAL(keyType, PTR)) (          \
+	      if ((_gotKeyVal != NULL) && (hashName->keyFreeFunctionp != NULL)) { \
+                hashName->keyFreeFunctionp((void *) userDatavp, &_gotKeyVal); \
+              }								\
+              ,                                                         \
+            )                                                           \
 	    GENERICSTACK_SET_NA(_subKeyStackp, _i);			\
 	    GENERICSTACK_SWITCH(_subKeyStackp, _i, -1);			\
 	    GENERICSTACK_POP_NA(_subKeyStackp);				\
@@ -357,7 +387,7 @@ typedef struct genericHash {
 	      if ((GENERICSTACKITEMTYPE(_subValStackp, _i) == GENERICSTACKITEMTYPE_PTR) && (hashName->valFreeFunctionp == NULL)) { \
 		GENERICSTACKITEMTYPE2TYPE_PTR _valVal = GENERICSTACK_GET_PTR(_subValStackp, _i); \
 		if (_valVal != NULL) {					\
-		  hashName->valFreeFunctionp((void *) userDatavp, (void **) &_valVal); \
+		  hashName->valFreeFunctionp((void *) userDatavp, &_valVal); \
 		}							\
 	      }								\
 	    }								\
@@ -396,13 +426,13 @@ typedef struct genericHash {
 	  if ((GENERICSTACKITEMTYPE(_subKeyStackp, _j) == GENERICSTACKITEMTYPE_PTR) && (hashName->keyFreeFunctionp != NULL)) { \
 	    GENERICSTACKITEMTYPE2TYPE_PTR _keyValp = GENERICSTACK_GET_PTR(_subKeyStackp, _j); \
 	    if (_keyValp != NULL) {					\
-	      hashName->keyFreeFunctionp(userDatavp, (void **) &_keyValp); \
+	      hashName->keyFreeFunctionp(userDatavp, &_keyValp);        \
 	    }								\
 	  }								\
 	  if ((GENERICSTACKITEMTYPE(_subValStackp, _j) == GENERICSTACKITEMTYPE_PTR) && (hashName->valFreeFunctionp != NULL)) { \
 	    GENERICSTACKITEMTYPE2TYPE_PTR _valValp = GENERICSTACK_GET_PTR(_subValStackp, _j); \
 	    if (_valValp != NULL) {					\
-	      hashName->valFreeFunctionp(userDatavp, (void **) &_valValp); \
+	      hashName->valFreeFunctionp(userDatavp, &_valValp);        \
 	    }								\
 	  }								\
 	}								\
