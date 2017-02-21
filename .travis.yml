@@ -11,7 +11,7 @@ before_script:
 # We want to try perl standalone first
   - sudo apt-get update
   - sudo apt-get install cpanminus
-  - sudo cpanm Config::AutoConf::INI ExtUtils::CBuilder File::Basename File::Find File::Path
+  - sudo cpanm Config::AutoConf::INI ExtUtils::CBuilder File::chdir File::Basename File::Find File::Path IPC::Run
   - perl CMakeObjects.PL
   - rm -rf output
   - sh ./install-c-genericLogger.sh
