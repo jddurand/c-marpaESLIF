@@ -4,6 +4,8 @@
 CMAKE_MINIMUM_REQUIRED (VERSION 3.0)
 PROJECT (marpaWrapper C CXX)
 
+OPTION(ALL_IN_ONE "Compile all dependencies locally" OFF)
+
 IF (POLICY CMP0063)
   CMAKE_POLICY (SET CMP0063 NEW)
 ENDIF ()
@@ -67,17 +69,37 @@ ADD_DEFINITIONS(-DMARPAWRAPPER_VERSION="${MARPAWRAPPER_VERSION}")
 #############################
 EXECUTE_PROCESS(COMMAND "${CMAKE_COMMAND}" -E make_directory "${3RDPARTY_OUTPUT_PATH}")
 
+IF (ALL_IN_ONE)
+  INCLUDE (BuildDependency)
+ENDIF ()
+
 # -----------------------------------
 # genericLogger: required
 # -----------------------------------
+IF (ALL_IN_ONE)
+  BuildDependency(
+    "genericLogger-remote"
+    "${PROJECT_SOURCE_DIR}/3rdparty/github/genericLogger-remote"
+    "${3RDPARTY_OUTPUT_PATH}/genericLogger-remote"
+    "${3RDPARTY_OUTPUT_PATH}")
+  SET (GENERICLOGGER_ROOT_DIR "${3RDPARTY_OUTPUT_PATH}/genericLogger-remote/output")
+ENDIF ()
 FIND_PACKAGE (genericLogger)
 IF (NOT GENERICLOGGER_FOUND)
-    MESSAGE (FATAL_ERROR "genericLogger must be detected")
+  MESSAGE (FATAL_ERROR "genericLogger must be detected")
 ENDIF ()
 
 # -----------------------------------
 # genericHash: required
 # -----------------------------------
+IF (ALL_IN_ONE)
+  BuildDependency(
+    "genericHash-remote"
+    "${PROJECT_SOURCE_DIR}/3rdparty/github/genericHash-remote"
+    "${3RDPARTY_OUTPUT_PATH}/genericHash-remote"
+    "${3RDPARTY_OUTPUT_PATH}")
+  SET (GENERICHASH_ROOT_DIR "${3RDPARTY_OUTPUT_PATH}/genericHash-remote/output")
+ENDIF ()
 FIND_PACKAGE (genericHash)
 IF (NOT GENERICHASH_FOUND)
     MESSAGE (FATAL_ERROR "genericHash must be detected")
@@ -86,6 +108,14 @@ ENDIF ()
 # -----------------------------------
 # genericSparseArray: required
 # -----------------------------------
+IF (ALL_IN_ONE)
+  BuildDependency(
+    "genericSparseArray-remote"
+    "${PROJECT_SOURCE_DIR}/3rdparty/github/genericSparseArray-remote"
+    "${3RDPARTY_OUTPUT_PATH}/genericSparseArray-remote"
+    "${3RDPARTY_OUTPUT_PATH}")
+  SET (GENERICSTACK_ROOT_DIR "${3RDPARTY_OUTPUT_PATH}/genericSparseArray-remote/output")
+ENDIF ()
 FIND_PACKAGE (genericSparseArray)
 IF (NOT GENERICSPARSEARRAY_FOUND)
     MESSAGE (FATAL_ERROR "genericSparseArray must be detected")
@@ -94,6 +124,14 @@ ENDIF ()
 # -----------------------------------
 # genericStack: required
 # -----------------------------------
+IF (ALL_IN_ONE)
+  BuildDependency(
+    "genericStack-remote"
+    "${PROJECT_SOURCE_DIR}/3rdparty/github/genericStack-remote"
+    "${3RDPARTY_OUTPUT_PATH}/genericStack-remote"
+    "${3RDPARTY_OUTPUT_PATH}")
+  SET (GENERICSTACK_ROOT_DIR "${3RDPARTY_OUTPUT_PATH}/genericStack-remote/output")
+ENDIF ()
 FIND_PACKAGE (genericStack)
 IF (NOT GENERICSTACK_FOUND)
     MESSAGE (STATUS "genericStack must be detected")
