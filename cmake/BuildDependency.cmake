@@ -1,11 +1,4 @@
-MACRO (BuildDependency arg_name arg_srcdir arg_workdir arg_cpworkdir)
-  #
-  # arg1: name
-  # arg2: source dir
-  # arg3: working dir
-  # arg4: copy working dir
-  #
-  SET (GENERICLOGGER_BUILD_DIR "${3RDPARTY_OUTPUT_PATH}/genericLogger-remote")
+MACRO (BuildDependency arg_name arg_srcdir arg_workdir arg_installprefix arg_cpworkdir)
   MESSAGE (STATUS "Copying ${arg_name}")
   EXECUTE_PROCESS(
     COMMAND "${CMAKE_COMMAND}" -E copy_directory "${arg_srcdir}" "${arg_workdir}"
@@ -13,12 +6,12 @@ MACRO (BuildDependency arg_name arg_srcdir arg_workdir arg_cpworkdir)
     )
   MESSAGE (STATUS "Setting up ${arg_name}")
   EXECUTE_PROCESS(
-    COMMAND "${CMAKE_COMMAND}" -G "${CMAKE_GENERATOR}" . -DALL_IN_ONE=ON
+    COMMAND "${CMAKE_COMMAND}" -G "${CMAKE_GENERATOR}" . -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCMAKE_INSTALL_PREFIX=${arg_installprefix} -DALL_IN_ONE=ON
     WORKING_DIRECTORY "${arg_workdir}"
     )
-  MESSAGE (STATUS "Buildind ${arg_name}")
+  MESSAGE (STATUS "Building and installing ${arg_name}")
   EXECUTE_PROCESS(
-    COMMAND "${CMAKE_COMMAND}" --build .
+    COMMAND "${CMAKE_MAKE_PROGRAM}" install
     WORKING_DIRECTORY "${arg_workdir}"
     )
 ENDMACRO ()

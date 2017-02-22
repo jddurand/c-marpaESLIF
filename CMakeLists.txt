@@ -77,12 +77,15 @@ ENDIF ()
 # genericLogger: required
 # -----------------------------------
 IF (ALL_IN_ONE)
-  BuildDependency(
-    "genericLogger-remote"
-    "${PROJECT_SOURCE_DIR}/3rdparty/github/genericLogger-remote"
-    "${3RDPARTY_OUTPUT_PATH}/genericLogger-remote"
-    "${3RDPARTY_OUTPUT_PATH}")
-  SET (GENERICLOGGER_ROOT_DIR "${3RDPARTY_OUTPUT_PATH}/genericLogger-remote/output")
+  IF (NOT GENERICLOGGER_ROOT_DIR)
+    SET (GENERICLOGGER_ROOT_DIR "${3RDPARTY_OUTPUT_PATH}/genericLogger-remote/install")
+    BuildDependency(
+      "genericLogger-remote"
+      "${PROJECT_SOURCE_DIR}/3rdparty/github/genericLogger-remote"
+      "${3RDPARTY_OUTPUT_PATH}/genericLogger-remote"
+      "install"
+      "${3RDPARTY_OUTPUT_PATH}")
+  ENDIF ()
 ENDIF ()
 FIND_PACKAGE (genericLogger)
 IF (NOT GENERICLOGGER_FOUND)
@@ -93,12 +96,15 @@ ENDIF ()
 # genericHash: required
 # -----------------------------------
 IF (ALL_IN_ONE)
-  BuildDependency(
-    "genericHash-remote"
-    "${PROJECT_SOURCE_DIR}/3rdparty/github/genericHash-remote"
-    "${3RDPARTY_OUTPUT_PATH}/genericHash-remote"
-    "${3RDPARTY_OUTPUT_PATH}")
-  SET (GENERICHASH_ROOT_DIR "${3RDPARTY_OUTPUT_PATH}/genericHash-remote/output")
+  IF (NOT GENERICHASH_ROOT_DIR)
+    SET (GENERICHASH_ROOT_DIR "${3RDPARTY_OUTPUT_PATH}/genericHash-remote/install")
+    BuildDependency(
+      "genericHash-remote"
+      "${PROJECT_SOURCE_DIR}/3rdparty/github/genericHash-remote"
+      "${3RDPARTY_OUTPUT_PATH}/genericHash-remote"
+      "install"
+      "${3RDPARTY_OUTPUT_PATH}")
+  ENDIF ()
 ENDIF ()
 FIND_PACKAGE (genericHash)
 IF (NOT GENERICHASH_FOUND)
@@ -109,12 +115,15 @@ ENDIF ()
 # genericSparseArray: required
 # -----------------------------------
 IF (ALL_IN_ONE)
-  BuildDependency(
-    "genericSparseArray-remote"
-    "${PROJECT_SOURCE_DIR}/3rdparty/github/genericSparseArray-remote"
-    "${3RDPARTY_OUTPUT_PATH}/genericSparseArray-remote"
-    "${3RDPARTY_OUTPUT_PATH}")
-  SET (GENERICSTACK_ROOT_DIR "${3RDPARTY_OUTPUT_PATH}/genericSparseArray-remote/output")
+  IF (NOT GENERICSPARSEARRAY_ROOT_DIR)
+    SET (GENERICSPARSEARRAY_ROOT_DIR "${3RDPARTY_OUTPUT_PATH}/genericSparseArray-remote/install")
+    BuildDependency(
+      "genericSparseArray-remote"
+      "${PROJECT_SOURCE_DIR}/3rdparty/github/genericSparseArray-remote"
+      "${3RDPARTY_OUTPUT_PATH}/genericSparseArray-remote"
+      "install"
+      "${3RDPARTY_OUTPUT_PATH}")
+  ENDIF ()
 ENDIF ()
 FIND_PACKAGE (genericSparseArray)
 IF (NOT GENERICSPARSEARRAY_FOUND)
@@ -125,12 +134,15 @@ ENDIF ()
 # genericStack: required
 # -----------------------------------
 IF (ALL_IN_ONE)
-  BuildDependency(
-    "genericStack-remote"
-    "${PROJECT_SOURCE_DIR}/3rdparty/github/genericStack-remote"
-    "${3RDPARTY_OUTPUT_PATH}/genericStack-remote"
-    "${3RDPARTY_OUTPUT_PATH}")
-  SET (GENERICSTACK_ROOT_DIR "${3RDPARTY_OUTPUT_PATH}/genericStack-remote/output")
+  IF (NOT GENERICSTACK_ROOT_DIR)
+    SET (GENERICSTACK_ROOT_DIR "${3RDPARTY_OUTPUT_PATH}/genericStack-remote/install")
+    BuildDependency(
+      "genericStack-remote"
+      "${PROJECT_SOURCE_DIR}/3rdparty/github/genericStack-remote"
+      "${3RDPARTY_OUTPUT_PATH}/genericStack-remote"
+      "install"
+      "${3RDPARTY_OUTPUT_PATH}")
+  ENDIF ()
 ENDIF ()
 FIND_PACKAGE (genericStack)
 IF (NOT GENERICSTACK_FOUND)
