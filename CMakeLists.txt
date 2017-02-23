@@ -71,7 +71,6 @@ EXECUTE_PROCESS(COMMAND "${CMAKE_COMMAND}" -E make_directory "${3RDPARTY_OUTPUT_
 
 IF (ALL_IN_ONE)
   INCLUDE (BuildDependency)
-  SET (ALL_IN_ONE_ARG_CFLAGS "")
 ENDIF ()
 
 # -----------------------------------
@@ -88,9 +87,9 @@ IF (ALL_IN_ONE)
       "${PROJECT_SOURCE_DIR}/3rdparty/github/genericLogger-remote"
       "${3RDPARTY_OUTPUT_PATH}/genericLogger-remote"
       "install"
-      ALL_IN_ONE_ARG_CFLAGS
       )
   ENDIF ()
+  SET(ENV{GENERICLOGGER_ROOT_DIR} "${GENERICLOGGER_ROOT_DIR}")
 ENDIF ()
 FIND_PACKAGE (genericLogger)
 IF (NOT GENERICLOGGER_FOUND)
@@ -98,7 +97,6 @@ IF (NOT GENERICLOGGER_FOUND)
 ENDIF ()
 IF (ALL_IN_ONE)
   ADD_DEFINITIONS(-DgenericLogger_STATIC)
-  SET(ALL_IN_ONE_ARG_CFLAGS "${ALL_IN_ONE_ARG_CFLAGS} -DGENERICLOGGER_ROOT_DIR=${GENERICLOGGER_ROOT_DIR} -DgenericLogger_STATIC")
 ENDIF ()
 
 # -----------------------------------
@@ -115,9 +113,9 @@ IF (ALL_IN_ONE)
       "${PROJECT_SOURCE_DIR}/3rdparty/github/genericStack-remote"
       "${3RDPARTY_OUTPUT_PATH}/genericStack-remote"
       "install"
-      ALL_IN_ONE_ARG_CFLAGS
       )
   ENDIF ()
+  SET(ENV{GENERICSTACK_ROOT_DIR} "${GENERICSTACK_ROOT_DIR}")
 ENDIF ()
 FIND_PACKAGE (genericStack)
 IF (NOT GENERICSTACK_FOUND)
@@ -125,7 +123,6 @@ IF (NOT GENERICSTACK_FOUND)
 ENDIF ()
 IF (ALL_IN_ONE)
   ADD_DEFINITIONS(-DgenericStack_STATIC)
-  SET(ALL_IN_ONE_ARG_CFLAGS "${ALL_IN_ONE_ARG_CFLAGS} -DGENERICSTACK_ROOT_DIR=${GENERICSTACK_ROOT_DIR} -DgenericStack_STATIC")
 ENDIF ()
 
 # -----------------------------------
@@ -142,9 +139,9 @@ IF (ALL_IN_ONE)
       "${PROJECT_SOURCE_DIR}/3rdparty/github/genericHash-remote"
       "${3RDPARTY_OUTPUT_PATH}/genericHash-remote"
       "install"
-      ALL_IN_ONE_ARG_CFLAGS
       )
   ENDIF ()
+  SET(ENV{GENERICHASH_ROOT_DIR} "${GENERICHASH_ROOT_DIR}")
 ENDIF ()
 FIND_PACKAGE (genericHash)
 IF (NOT GENERICHASH_FOUND)
@@ -152,7 +149,6 @@ IF (NOT GENERICHASH_FOUND)
 ENDIF ()
 IF (ALL_IN_ONE)
   ADD_DEFINITIONS(-DgenericHash_STATIC)
-  SET(ALL_IN_ONE_ARG_CFLAGS "${ALL_IN_ONE_ARG_CFLAGS} -DGENERICHASH_ROOT_DIR=${GENERICHASH_ROOT_DIR} -DgenericHash_STATIC")
 ENDIF ()
 
 # -----------------------------------
@@ -169,9 +165,9 @@ IF (ALL_IN_ONE)
       "${PROJECT_SOURCE_DIR}/3rdparty/github/genericSparseArray-remote"
       "${3RDPARTY_OUTPUT_PATH}/genericSparseArray-remote"
       "install"
-      ALL_IN_ONE_ARG_CFLAGS
       )
   ENDIF ()
+  SET(ENV{GENERICSPARSEARRAY_ROOT_DIR} "${GENERICSPARSEARRAY_ROOT_DIR}")
 ENDIF ()
 FIND_PACKAGE (genericSparseArray)
 IF (NOT GENERICSPARSEARRAY_FOUND)
@@ -179,7 +175,6 @@ IF (NOT GENERICSPARSEARRAY_FOUND)
 ENDIF ()
 IF (ALL_IN_ONE)
   ADD_DEFINITIONS(-DgenericSparseArray_STATIC)
-  SET(ALL_IN_ONE_ARG_CFLAGS "${ALL_IN_ONE_ARG_CFLAGS} -DGENERICSPARSEARRAY_ROOT_DIR=${GENERICSPARSEARRAY_ROOT_DIR} -DgenericSparseArray_STATIC")
 ENDIF ()
 
 # --------------------------------------
