@@ -79,12 +79,13 @@ ENDIF ()
 IF (ALL_IN_ONE)
   IF (NOT GENERICLOGGER_ROOT_DIR)
     SET (GENERICLOGGER_ROOT_DIR "${3RDPARTY_OUTPUT_PATH}/genericLogger-remote/install")
+    SET (GENERICLOGGER_ARG_EXTRA)
     BuildDependency(
       "genericLogger-remote"
       "${PROJECT_SOURCE_DIR}/3rdparty/github/genericLogger-remote"
       "${3RDPARTY_OUTPUT_PATH}/genericLogger-remote"
       "install"
-      "${3RDPARTY_OUTPUT_PATH}")
+      GENERICLOGGER_ARG_EXTRA)
   ENDIF ()
 ENDIF ()
 FIND_PACKAGE (genericLogger)
@@ -93,17 +94,40 @@ IF (NOT GENERICLOGGER_FOUND)
 ENDIF ()
 
 # -----------------------------------
+# genericStack: required
+# -----------------------------------
+IF (ALL_IN_ONE)
+  IF (NOT GENERICSTACK_ROOT_DIR)
+    SET (GENERICSTACK_ROOT_DIR "${3RDPARTY_OUTPUT_PATH}/genericStack-remote/install")
+    SET (GENERICSTACK_ARG_EXTRA)
+    BuildDependency(
+      "genericStack-remote"
+      "${PROJECT_SOURCE_DIR}/3rdparty/github/genericStack-remote"
+      "${3RDPARTY_OUTPUT_PATH}/genericStack-remote"
+      "install"
+      GENERICSTACK_ARG_EXTRA
+      )
+  ENDIF ()
+ENDIF ()
+FIND_PACKAGE (genericStack)
+IF (NOT GENERICSTACK_FOUND)
+    MESSAGE (STATUS "genericStack must be detected")
+ENDIF ()
+
+# -----------------------------------
 # genericHash: required
 # -----------------------------------
 IF (ALL_IN_ONE)
   IF (NOT GENERICHASH_ROOT_DIR)
     SET (GENERICHASH_ROOT_DIR "${3RDPARTY_OUTPUT_PATH}/genericHash-remote/install")
+    SET (GENERICHASH_ARG_EXTRA -DGENERICSTACK_ROOT_DIR=${GENERICSTACK_ROOT_DIR})
     BuildDependency(
       "genericHash-remote"
       "${PROJECT_SOURCE_DIR}/3rdparty/github/genericHash-remote"
       "${3RDPARTY_OUTPUT_PATH}/genericHash-remote"
       "install"
-      "${3RDPARTY_OUTPUT_PATH}")
+      GENERICHASH_ARG_EXTRA
+      )
   ENDIF ()
 ENDIF ()
 FIND_PACKAGE (genericHash)
@@ -117,36 +141,19 @@ ENDIF ()
 IF (ALL_IN_ONE)
   IF (NOT GENERICSPARSEARRAY_ROOT_DIR)
     SET (GENERICSPARSEARRAY_ROOT_DIR "${3RDPARTY_OUTPUT_PATH}/genericSparseArray-remote/install")
+    SET (GENERICSPARSEARRAY_ARG_EXTRA -DGENERICSTACK_ROOT_DIR=${GENERICSTACK_ROOT_DIR} -DGENERICHASH_ROOT_DIR=${GENERICHASH_ROOT_DIR})
     BuildDependency(
       "genericSparseArray-remote"
       "${PROJECT_SOURCE_DIR}/3rdparty/github/genericSparseArray-remote"
       "${3RDPARTY_OUTPUT_PATH}/genericSparseArray-remote"
       "install"
-      "${3RDPARTY_OUTPUT_PATH}")
+      GENERICSPARSEARRAY_ARG_EXTRA
+      )
   ENDIF ()
 ENDIF ()
 FIND_PACKAGE (genericSparseArray)
 IF (NOT GENERICSPARSEARRAY_FOUND)
     MESSAGE (FATAL_ERROR "genericSparseArray must be detected")
-ENDIF ()
-
-# -----------------------------------
-# genericStack: required
-# -----------------------------------
-IF (ALL_IN_ONE)
-  IF (NOT GENERICSTACK_ROOT_DIR)
-    SET (GENERICSTACK_ROOT_DIR "${3RDPARTY_OUTPUT_PATH}/genericStack-remote/install")
-    BuildDependency(
-      "genericStack-remote"
-      "${PROJECT_SOURCE_DIR}/3rdparty/github/genericStack-remote"
-      "${3RDPARTY_OUTPUT_PATH}/genericStack-remote"
-      "install"
-      "${3RDPARTY_OUTPUT_PATH}")
-  ENDIF ()
-ENDIF ()
-FIND_PACKAGE (genericStack)
-IF (NOT GENERICSTACK_FOUND)
-    MESSAGE (STATUS "genericStack must be detected")
 ENDIF ()
 
 # --------------------------------------
@@ -208,8 +215,17 @@ ELSE (GENERICSTACK_FOUND)
     "${GENERICSPARSEARRAY_INCLUDE_DIRS}"                 # Include path for genericHash (external - required)
     )
 ENDIF (GENERICSTACK_FOUND)
-TARGET_LINK_LIBRARIES (marpaWrapper        ${GENERICLOGGER_LIBRARIES})
-TARGET_LINK_LIBRARIES (marpaWrapper_static ${GENERICLOGGER_LIBRARIES})
+IF (ALL_IN_ONE)
+  #
+  # In the ALL_IN_MODE, all extra dependencies are linked
+  # using the static libraries
+  #
+  TARGET_LINK_LIBRARIES (marpaWrapper        ${GENERICLOGGER_STATIC_LIBRARIES})
+  TARGET_LINK_LIBRARIES (marpaWrapper_static ${GENERICLOGGER_STATIC_LIBRARIES})
+ELSE ()
+  TARGET_LINK_LIBRARIES (marpaWrapper        ${GENERICLOGGER_LIBRARIES})
+  TARGET_LINK_LIBRARIES (marpaWrapper_static ${GENERICLOGGER_LIBRARIES})
+ENDIF ()
 SET_TARGET_PROPERTIES(marpaWrapper
   PROPERTIES
   COMPILE_FLAGS "-DmarpaWrapper_EXPORTS"
