@@ -14,6 +14,10 @@ before_script:
   - sudo cpanm Config::AutoConf::INI ExtUtils::CBuilder File::chdir File::Basename File::Find File::Path File::Copy::Recursive IPC::Run
   - perl CMakeObjects.PL
   - rm -rf output
+  - cmake . -DALL_IN_ONE=ON
+  - make check
+  - make install DESTDIR=/tmp
+  - rm -rf output CMakeCache.txt CMakeFiles
   - sh ./install-c-genericLogger.sh
   - sh ./install-c-genericStack.sh
   - sh ./install-c-genericHash.sh

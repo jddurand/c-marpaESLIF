@@ -58,13 +58,13 @@ push(@additional_srcdir, File::Spec->catdir('3rdparty', 'output', 'Marpa--R2', '
 # -----------------------------------------------------------------------
 # We depend on these generic* stuff that can manage themselvs, eventually
 # -----------------------------------------------------------------------
-foreach (qw/genericLogger genericHash genericSparseArray genericStack/) {
-    if (! dircopy(File::Spec->catdir('3rdparty', 'github', "${_}-remote"),
-                  File::Spec->catdir('3rdparty', 'output', $_))) {
+foreach (qw/genericLogger-remote genericStack-remote genericHash-remote genericSparseArray-remote/) {
+    if (! dircopy(File::Spec->catdir('3rdparty', 'github', $_),
+                  File::Spec->catdir('output', '3rdparty', $_))) {
         die "Failed to copy $_";
     }
     print "... Copying $_\n";
-    my $CMakeObjects = File::Spec->catfile('3rdparty', 'output', $_, 'CMakeObjects.PL');
+    my $CMakeObjects = File::Spec->catfile('output', '3rdparty', $_, 'CMakeObjects.PL');
     if (-e $CMakeObjects) {
         print "... Executing $CMakeObjects\n";
         my $in;
@@ -79,10 +79,10 @@ foreach (qw/genericLogger genericHash genericSparseArray genericStack/) {
                 print "... ... $_\n";
             }
         }
-        my $inc = File::Spec->catdir('3rdparty', 'output', $_, 'output', 'include');
+        my $inc = File::Spec->catdir('output', '3rdparty', $_, 'output', 'include');
         push(@additional_includes, $inc) if (-d $inc);
     }
-    my $inc = File::Spec->catdir('3rdparty', 'output', $_, 'include');
+    my $inc = File::Spec->catdir('output', '3rdparty', $_, 'include');
     push(@additional_includes, $inc) if (-d $inc);
 }
 
@@ -108,7 +108,7 @@ find(
 # ----------------------------------------------------------------------------------------
 my $cbuilder = ExtUtils::CBuilder->new();
 my @objects;
-my $obj_dir = File::Spec->catfile('output', 'obj');
+my $obj_dir = File::Spec->catfile('output', 'obj4perl');
 
 make_path($obj_dir);
 foreach my $source (@sources) {
