@@ -71,6 +71,7 @@ EXECUTE_PROCESS(COMMAND "${CMAKE_COMMAND}" -E make_directory "${3RDPARTY_OUTPUT_
 
 IF (ALL_IN_ONE)
   INCLUDE (BuildDependency)
+  SET (ALL_IN_ONE_ARG_CFLAGS "")
 ENDIF ()
 
 # -----------------------------------
@@ -79,18 +80,25 @@ ENDIF ()
 IF (ALL_IN_ONE)
   IF (NOT GENERICLOGGER_ROOT_DIR)
     SET (GENERICLOGGER_ROOT_DIR "${3RDPARTY_OUTPUT_PATH}/genericLogger-remote/install")
-    SET (GENERICLOGGER_ARG_EXTRA)
+    #
+    # All-in-one mode means static linking
+    #
     BuildDependency(
       "genericLogger-remote"
       "${PROJECT_SOURCE_DIR}/3rdparty/github/genericLogger-remote"
       "${3RDPARTY_OUTPUT_PATH}/genericLogger-remote"
       "install"
-      GENERICLOGGER_ARG_EXTRA)
+      ALL_IN_ONE_ARG_CFLAGS
+      )
   ENDIF ()
 ENDIF ()
 FIND_PACKAGE (genericLogger)
 IF (NOT GENERICLOGGER_FOUND)
   MESSAGE (FATAL_ERROR "genericLogger must be detected")
+ENDIF ()
+IF (ALL_IN_ONE)
+  ADD_DEFINITIONS(-DgenericLogger_STATIC)
+  SET(ALL_IN_ONE_ARG_CFLAGS "${ALL_IN_ONE_ARG_CFLAGS} -DGENERICLOGGER_ROOT_DIR=${GENERICLOGGER_ROOT_DIR} -DgenericLogger_STATIC")
 ENDIF ()
 
 # -----------------------------------
@@ -99,19 +107,25 @@ ENDIF ()
 IF (ALL_IN_ONE)
   IF (NOT GENERICSTACK_ROOT_DIR)
     SET (GENERICSTACK_ROOT_DIR "${3RDPARTY_OUTPUT_PATH}/genericStack-remote/install")
-    SET (GENERICSTACK_ARG_EXTRA)
+    #
+    # All-in-one mode means static linking
+    #
     BuildDependency(
       "genericStack-remote"
       "${PROJECT_SOURCE_DIR}/3rdparty/github/genericStack-remote"
       "${3RDPARTY_OUTPUT_PATH}/genericStack-remote"
       "install"
-      GENERICSTACK_ARG_EXTRA
+      ALL_IN_ONE_ARG_CFLAGS
       )
   ENDIF ()
 ENDIF ()
 FIND_PACKAGE (genericStack)
 IF (NOT GENERICSTACK_FOUND)
     MESSAGE (STATUS "genericStack must be detected")
+ENDIF ()
+IF (ALL_IN_ONE)
+  ADD_DEFINITIONS(-DgenericStack_STATIC)
+  SET(ALL_IN_ONE_ARG_CFLAGS "${ALL_IN_ONE_ARG_CFLAGS} -DGENERICSTACK_ROOT_DIR=${GENERICSTACK_ROOT_DIR} -DgenericStack_STATIC")
 ENDIF ()
 
 # -----------------------------------
@@ -120,19 +134,25 @@ ENDIF ()
 IF (ALL_IN_ONE)
   IF (NOT GENERICHASH_ROOT_DIR)
     SET (GENERICHASH_ROOT_DIR "${3RDPARTY_OUTPUT_PATH}/genericHash-remote/install")
-    SET (GENERICHASH_ARG_EXTRA -DGENERICSTACK_ROOT_DIR=${GENERICSTACK_ROOT_DIR})
+    #
+    # All-in-one mode means static linking
+    #
     BuildDependency(
       "genericHash-remote"
       "${PROJECT_SOURCE_DIR}/3rdparty/github/genericHash-remote"
       "${3RDPARTY_OUTPUT_PATH}/genericHash-remote"
       "install"
-      GENERICHASH_ARG_EXTRA
+      ALL_IN_ONE_ARG_CFLAGS
       )
   ENDIF ()
 ENDIF ()
 FIND_PACKAGE (genericHash)
 IF (NOT GENERICHASH_FOUND)
     MESSAGE (FATAL_ERROR "genericHash must be detected")
+ENDIF ()
+IF (ALL_IN_ONE)
+  ADD_DEFINITIONS(-DgenericHash_STATIC)
+  SET(ALL_IN_ONE_ARG_CFLAGS "${ALL_IN_ONE_ARG_CFLAGS} -DGENERICHASH_ROOT_DIR=${GENERICHASH_ROOT_DIR} -DgenericHash_STATIC")
 ENDIF ()
 
 # -----------------------------------
@@ -141,19 +161,25 @@ ENDIF ()
 IF (ALL_IN_ONE)
   IF (NOT GENERICSPARSEARRAY_ROOT_DIR)
     SET (GENERICSPARSEARRAY_ROOT_DIR "${3RDPARTY_OUTPUT_PATH}/genericSparseArray-remote/install")
-    SET (GENERICSPARSEARRAY_ARG_EXTRA -DGENERICSTACK_ROOT_DIR=${GENERICSTACK_ROOT_DIR} -DGENERICHASH_ROOT_DIR=${GENERICHASH_ROOT_DIR})
+    #
+    # All-in-one mode means static linking
+    #
     BuildDependency(
       "genericSparseArray-remote"
       "${PROJECT_SOURCE_DIR}/3rdparty/github/genericSparseArray-remote"
       "${3RDPARTY_OUTPUT_PATH}/genericSparseArray-remote"
       "install"
-      GENERICSPARSEARRAY_ARG_EXTRA
+      ALL_IN_ONE_ARG_CFLAGS
       )
   ENDIF ()
 ENDIF ()
 FIND_PACKAGE (genericSparseArray)
 IF (NOT GENERICSPARSEARRAY_FOUND)
     MESSAGE (FATAL_ERROR "genericSparseArray must be detected")
+ENDIF ()
+IF (ALL_IN_ONE)
+  ADD_DEFINITIONS(-DgenericSparseArray_STATIC)
+  SET(ALL_IN_ONE_ARG_CFLAGS "${ALL_IN_ONE_ARG_CFLAGS} -DGENERICSPARSEARRAY_ROOT_DIR=${GENERICSPARSEARRAY_ROOT_DIR} -DgenericSparseArray_STATIC")
 ENDIF ()
 
 # --------------------------------------
@@ -277,28 +303,57 @@ IF (GENERICSTACK_FOUND)
                          COMMAND marpaWrapperTester
                          WORKING_DIRECTORY ${LIBRARY_OUTPUT_PATH})
 
+  ADD_EXECUTABLE        (marpaWrapperTester_static EXCLUDE_FROM_ALL test/marpaWrapperTester.c)
+  SET_TARGET_PROPERTIES (marpaWrapperTester_static PROPERTIES COMPILE_FLAGS "-DmarpaWrapper_STATIC" LINKER_LANGUAGE C RUNTIME_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH})
+  TARGET_LINK_LIBRARIES (marpaWrapperTester_static marpaWrapper_static)
+
+  ADD_TEST              (NAME marpaWrapperTest_static
+                         COMMAND marpaWrapperTester_static
+                         WORKING_DIRECTORY ${LIBRARY_OUTPUT_PATH})
+
   ADD_EXECUTABLE        (marpaWrapperAsfTester EXCLUDE_FROM_ALL test/marpaWrapperAsfTester.c)
   SET_TARGET_PROPERTIES (marpaWrapperAsfTester PROPERTIES LINKER_LANGUAGE C RUNTIME_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH})
   TARGET_LINK_LIBRARIES (marpaWrapperAsfTester marpaWrapper)
   ADD_TEST              (NAME marpaWrapperAsfTest
-    COMMAND marpaWrapperAsfTester
-    WORKING_DIRECTORY ${LIBRARY_OUTPUT_PATH})
+                         COMMAND marpaWrapperAsfTester
+                         WORKING_DIRECTORY ${LIBRARY_OUTPUT_PATH})
+
+  ADD_EXECUTABLE        (marpaWrapperAsfTester_static EXCLUDE_FROM_ALL test/marpaWrapperAsfTester.c)
+  SET_TARGET_PROPERTIES (marpaWrapperAsfTester_static PROPERTIES COMPILE_FLAGS "-DmarpaWrapper_STATIC" LINKER_LANGUAGE C RUNTIME_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH})
+  TARGET_LINK_LIBRARIES (marpaWrapperAsfTester_static marpaWrapper_static)
+  ADD_TEST              (NAME marpaWrapperAsfTest_static
+                         COMMAND marpaWrapperAsfTester_static
+                         WORKING_DIRECTORY ${LIBRARY_OUTPUT_PATH})
 
   ADD_EXECUTABLE        (marpaWrapperAsfValueTester EXCLUDE_FROM_ALL test/marpaWrapperAsfValueTester.c)
   SET_TARGET_PROPERTIES (marpaWrapperAsfValueTester PROPERTIES LINKER_LANGUAGE C RUNTIME_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH})
   TARGET_LINK_LIBRARIES (marpaWrapperAsfValueTester marpaWrapper)
   ADD_TEST              (NAME marpaWrapperAsfValueTest
-    COMMAND marpaWrapperAsfValueTester
-    WORKING_DIRECTORY ${LIBRARY_OUTPUT_PATH})
+                         COMMAND marpaWrapperAsfValueTester
+                         WORKING_DIRECTORY ${LIBRARY_OUTPUT_PATH})
+
+  ADD_EXECUTABLE        (marpaWrapperAsfValueTester_static EXCLUDE_FROM_ALL test/marpaWrapperAsfValueTester.c)
+  SET_TARGET_PROPERTIES (marpaWrapperAsfValueTester_static PROPERTIES COMPILE_FLAGS "-DmarpaWrapper_STATIC" LINKER_LANGUAGE C RUNTIME_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH})
+  TARGET_LINK_LIBRARIES (marpaWrapperAsfValueTester_static marpaWrapper_static)
+  ADD_TEST              (NAME marpaWrapperAsfValueTest_static
+                         COMMAND marpaWrapperAsfValueTester_static
+                         WORKING_DIRECTORY ${LIBRARY_OUTPUT_PATH})
 
   ADD_EXECUTABLE        (marpaWrapperAsfAmbiguousTester EXCLUDE_FROM_ALL test/marpaWrapperAsfAmbiguousTester.c)
   SET_TARGET_PROPERTIES (marpaWrapperAsfAmbiguousTester PROPERTIES LINKER_LANGUAGE C RUNTIME_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH})
   TARGET_LINK_LIBRARIES (marpaWrapperAsfAmbiguousTester marpaWrapper)
   ADD_TEST              (NAME marpaWrapperAsfAmbiguousTest
-    COMMAND marpaWrapperAsfAmbiguousTester
-    WORKING_DIRECTORY ${LIBRARY_OUTPUT_PATH})
+                         COMMAND marpaWrapperAsfAmbiguousTester
+                         WORKING_DIRECTORY ${LIBRARY_OUTPUT_PATH})
 
-  ADD_CUSTOM_TARGET     (check COMMAND ${CMAKE_CTEST_COMMAND} DEPENDS marpaWrapperTester marpaWrapperAsfTester marpaWrapperAsfValueTester marpaWrapperAsfAmbiguousTester)
+  ADD_EXECUTABLE        (marpaWrapperAsfAmbiguousTester_static EXCLUDE_FROM_ALL test/marpaWrapperAsfAmbiguousTester.c)
+  SET_TARGET_PROPERTIES (marpaWrapperAsfAmbiguousTester_static PROPERTIES COMPILE_FLAGS "-DmarpaWrapper_STATIC" LINKER_LANGUAGE C RUNTIME_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH})
+  TARGET_LINK_LIBRARIES (marpaWrapperAsfAmbiguousTester_static marpaWrapper_static)
+  ADD_TEST              (NAME marpaWrapperAsfAmbiguousTest_static
+                         COMMAND marpaWrapperAsfAmbiguousTester_static
+                         WORKING_DIRECTORY ${LIBRARY_OUTPUT_PATH})
+
+  ADD_CUSTOM_TARGET     (check COMMAND ${CMAKE_CTEST_COMMAND} DEPENDS marpaWrapperTester marpaWrapperTester_static marpaWrapperAsfTester marpaWrapperAsfTester_static marpaWrapperAsfValueTester marpaWrapperAsfValueTester_static marpaWrapperAsfAmbiguousTester marpaWrapperAsfAmbiguousTester_static)
 ENDIF (GENERICSTACK_FOUND)
 
 # -------
