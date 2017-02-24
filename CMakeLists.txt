@@ -8,6 +8,8 @@
 CMAKE_MINIMUM_REQUIRED (VERSION 3.0.0 FATAL_ERROR)
 PROJECT (tconv C CXX)
 
+OPTION(ALL_IN_ONE "Compile all dependencies locally" OFF)
+
 IF (POLICY CMP0063)
   CMAKE_POLICY (SET CMP0063 NEW)
 ENDIF ()
@@ -67,6 +69,10 @@ ADD_DEFINITIONS(-DTCONV_VERSION="${TCONV_VERSION}")
 #############################
 EXECUTE_PROCESS(COMMAND "${CMAKE_COMMAND}" -E make_directory "${3RDPARTY_OUTPUT_PATH}")
 
+IF (ALL_IN_ONE)
+  INCLUDE (BuildDependency)
+ENDIF ()
+
 # ----------------------------------
 # C language
 # ----------------------------------
@@ -78,9 +84,27 @@ SET     (TCONV_C_VA_COPY "${C_VA_COPY}")
 # -----------------------------------
 # genericLogger: required
 # -----------------------------------
+IF (ALL_IN_ONE)
+  IF (NOT GENERICLOGGER_ROOT_DIR)
+    SET (GENERICLOGGER_ROOT_DIR "${3RDPARTY_OUTPUT_PATH}/genericLogger-remote/install")
+    #
+    # All-in-one mode means static linking
+    #
+    BuildDependency(
+      "genericLogger-remote"
+      "${PROJECT_SOURCE_DIR}/3rdparty/github/genericLogger-remote"
+      "${3RDPARTY_OUTPUT_PATH}/genericLogger-remote"
+      "install"
+      )
+  ENDIF ()
+  SET(ENV{GENERICLOGGER_ROOT_DIR} "${GENERICLOGGER_ROOT_DIR}")
+ENDIF ()
 FIND_PACKAGE (genericLogger)
 IF (NOT GENERICLOGGER_FOUND)
-    MESSAGE (FATAL_ERROR "genericLogger must be detected")
+  MESSAGE (FATAL_ERROR "genericLogger must be detected")
+ENDIF ()
+IF (ALL_IN_ONE)
+  ADD_DEFINITIONS(-DgenericLogger_STATIC)
 ENDIF ()
 
 # ----------------------------------
