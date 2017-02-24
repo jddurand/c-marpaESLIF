@@ -1,0 +1,35 @@
+commit 83a135f9aa177362156d225a0a19682d8a4fe7cb
+Merge: d215f01 f656250
+Author: Jeffrey Kegler <jeffreykegler@jeffreykegler.com>
+Date:   Tue Mar 3 21:47:52 2015 -0800
+
+    Merge pull request #63 from rns/fix_for_msvc
+    
+    fix missing ';' before 'const' under msvc
+
+commit f6562509faa321a55521a1116e7abdb785908a95
+Author: rns <ruslan.shvedov@gmail.com>
+Date:   Wed Mar 4 07:43:34 2015 +0200
+
+    fix missing ';' before 'const' under msvc
+
+commit d215f010fe3b46b935a17ee9adde9c46f8ccb3b4
+Author: Jeffrey Kegler <JKEGL@cpan.org>
+Date:   Mon Mar 2 08:43:04 2015 -0800
+
+    Address github issue #60
+
+commit ee1f0660e9a02d3595aebca9901d49cc5e00b100
+Author: Jeffrey Kegler <JKEGL@cpan.org>
+Date:   Mon Mar 2 08:36:02 2015 -0800
+
+    Followup on pull request #62
+
+commit 54e931b2c4f1f356be1773248309b45cf008f2ea
+Merge: 2c77a3e f6cae0c
+Author: Jeffrey Kegler <jeffreykegler@jeffreykegler.com>
+Date:   Mon Mar 2 08:10:45 2015 -0800
+
+    Merge pull request #62 from rns/followup_on_method_census
+    
+    Followup on method census

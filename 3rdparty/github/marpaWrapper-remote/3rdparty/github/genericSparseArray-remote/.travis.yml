@@ -1,0 +1,18 @@
+language: c
+sudo: required
+addons:
+  apt:
+    sources:
+      - george-edison55-precise-backports
+    packages:
+      - cmake
+      - cmake-data
+before_script:
+  - sh ./install-c-genericLogger.sh
+  - sh ./install-c-genericStack.sh
+  - sh ./install-c-genericHash.sh
+  - cmake .
+script:
+  - make check
+  - ./output/bin/genericSparseArrayTester
+  - sudo make install
