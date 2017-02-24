@@ -6,6 +6,7 @@ use Alien::CMake;
 use POSIX qw/EXIT_SUCCESS/;
 use File::Spec;
 use File::chdir;
+use File::which;
 use File::Temp qw/tempdir/;
 use IO::Handle;
 use ExtUtils::CBuilder;
@@ -24,45 +25,10 @@ my $updir = File::Spec->updir;
 my $curdir = File::Spec->curdir;
 
 #
-# Mapping of perl's setting to environment for cmake
-#
-my %perl2cmake = (
-    ccname                   => 'CC',
-    cccdlflags               => 'CFLAGS',
-    ccdlflags                => 'CFLAGS',
-    ccflags                  => 'CFLAGS',
-    optimize                 => 'CFLAGS',
-    lddlflags                => 'LDFLAGS',
-    ldflags                  => 'LDFLAGS',
-    lkflags                  => 'LDFLAGS',
-    );
-my %perl2cmakedone;
-
-foreach (keys %perl2cmake) {
-    next unless exists($Config{$_});
-    next unless defined($Config{$_});
-    next unless $Config{$_};
-
-    my $envname = $perl2cmake{$_};
-    if (defined($ENV{$envname})) {
-	# print "... Appending \$Config{$_}=$Config{$_} to \$ENV{$envname}\n";
-	$ENV{$envname} .= " $Config{$_}";
-    } else {
-	# print "... Setting \$Config{$_}=$Config{$_} in \$ENV{$envname}\n";
-	$ENV{$envname} = $Config{$_};
-    }
-    $perl2cmakedone{$envname}++;
-}
-foreach (sort keys %perl2cmakedone) {
-    print "... Setted \$ENV{$_} to $ENV{$_}\n";
-}
-
-#
 # Make sure current working directory is the location of this script
 #
 BEGIN {
     chdir(dirname($0)) || die $!;
-    print STDERR "... Current directory is " . getcwd . "\n";
 }
 
 my $cmake_bin_dir = Alien::CMake->config('bin_dir');
@@ -82,16 +48,42 @@ foreach (qw/genericLogger-remote/) {
 
 exit(EXIT_SUCCESS);
 
+our %_more_config = (ar => 'CMAKE_AR');
+sub _get_config {
+    #
+    # We use ExtUtils::CBuilder for C and CXX setup
+    #
+    my $b = ExtUtils::CBuilder->new();
+    my %bconfig = $b->get_config();
+    my %config = (
+	C => $bconfig{c}
+	);
+    #
+    # And add others
+    #
+    foreach (keys %_more_config) {
+	next unless exists $Config{$_};
+	next unless $Config{$_};
+	$config{$_} = which($Config{$_}) || $_;
+    }
+}
+
 sub do_external {
     my ($cmake, $what) = @_;
     my $dir = tempdir(CLEANUP => 1);
 
     my $orig = File::Spec->catdir(($updir) x 4, '3rdparty', 'github', $what);
-    print "... Copying $orig in $dir\n";
     dircopy($orig, $dir) or die $!;
-    print "... Building $what in $dir\n";
 
     local $CWD = $dir;
+    # Just in case
+    unlink 'CMakeLists.txt';
+    # Push our setting
+    my $tmp = File::Temp->new(UNLINK => 0, SUFFIX => '.cmake');
+    print $tmp "SET (Some data\n";
+      print "Filename is $tmp\n";
+      $tmp->seek( 0, SEEK_END );
+
     run(['cmake', $curdir]) or die "$?";
     run(['make', 'VERBOSE=1']) or die "$?";
 }
