@@ -8,6 +8,10 @@ addons:
       - cmake
       - cmake-data
 before_script:
+  - cmake . -DALL_IN_ONE=ON
+  - make check
+  - make install DESTDIR=/tmp
+  - rm -rf output CMakeCache.txt CMakeFiles
   - sh ./install-c-genericLogger.sh
   - sh ./install-c-genericStack.sh
   - sh ./install-c-genericHash.sh
@@ -23,4 +27,5 @@ script:
 #  - ./output/lib/russellParadoxTester
 #  - ./output/lib/jsonTester
 #  - ./output/lib/selfTester
+  - sudo make package
   - sudo make install
