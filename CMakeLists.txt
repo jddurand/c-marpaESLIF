@@ -368,7 +368,7 @@ ADD_TEST (NAME tconvTest
 ADD_TEST (NAME tconvStaticTest
           COMMAND ../bin/tconv_static -t UTF-16 -o tconv.tconv-UTF-16.c "${PROJECT_SOURCE_DIR}/src/tconv.c"
           WORKING_DIRECTORY "${LIBRARY_OUTPUT_PATH}")
-ADD_CUSTOM_TARGET (check COMMAND ${CMAKE_CTEST_COMMAND} DEPENDS tconvExecStatic)
+ADD_CUSTOM_TARGET (check COMMAND ${CMAKE_CTEST_COMMAND} DEPENDS tconvExec tconvExecStatic)
 #
 # Please note that test is likely to fail if libraries are not already in your path.
 # This is why the working directory is "${LIBRARY_OUTPUT_PATH}".
