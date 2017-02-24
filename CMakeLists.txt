@@ -29,7 +29,7 @@ SET (CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 SET (TCONV_VERSION_MAJOR 1)
 SET (TCONV_VERSION_MINOR 0)
-SET (TCONV_VERSION_PATCH 8)
+SET (TCONV_VERSION_PATCH 9)
 SET (TCONV_VERSION "${TCONV_VERSION_MAJOR}.${TCONV_VERSION_MINOR}.${TCONV_VERSION_PATCH}")
 
 SET (CMAKE_MODULE_PATH              ${PROJECT_SOURCE_DIR}/cmake)           # General module search path
@@ -220,8 +220,17 @@ IF (DLFCNWIN32_FOUND)
   INCLUDE_DIRECTORIES ("${DLFCNWIN32_INCLUDE_DIR}")
 ENDIF (DLFCNWIN32_FOUND)
 
-SET (CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}   $ENV{CFLAGS} ${ICU_C_FLAGS_SHARED}   ${GENERICLOGGER_C_FLAGS_SHARED}")
-SET (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{CFLAGS} ${ICU_CXX_FLAGS_SHARED} ${GENERICLOGGER_CXX_FLAGS_SHARED}")
+IF (ALL_IN_ONE)
+  #
+  # In the ALL_IN_MODE, all extra dependencies are linked
+  # using the static libraries
+  #
+  SET (CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}   $ENV{CFLAGS} ${ICU_C_FLAGS_SHARED}")
+  SET (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{CFLAGS} ${ICU_CXX_FLAGS_SHARED}")
+ELSE ()
+  SET (CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}   $ENV{CFLAGS} ${ICU_C_FLAGS_SHARED}   ${GENERICLOGGER_C_FLAGS_SHARED}")
+  SET (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{CFLAGS} ${ICU_CXX_FLAGS_SHARED} ${GENERICLOGGER_CXX_FLAGS_SHARED}")
+ENDIF ()
 
 #############################
 # Makefile details
@@ -263,8 +272,17 @@ SET (tconv_lib
   ${ICU_LIBRARIES}
   ${ICONV_LIBRARIES}
   ${CMAKE_DL_LIBS})
-TARGET_LINK_LIBRARIES (tconv        ${tconv_lib} ${GENERICLOGGER_LIBRARIES})
-TARGET_LINK_LIBRARIES (tconv_static ${tconv_lib} ${GENERICLOGGER_LIBRARIES})
+IF (ALL_IN_ONE)
+  #
+  # In the ALL_IN_MODE, all extra dependencies are linked
+  # using the static libraries
+  #
+  TARGET_LINK_LIBRARIES (tconv        ${tconv_lib} ${GENERICLOGGER_STATIC_LIBRARIES})
+  TARGET_LINK_LIBRARIES (tconv_static ${tconv_lib} ${GENERICLOGGER_STATIC_LIBRARIES})
+ELSE ()
+  TARGET_LINK_LIBRARIES (tconv        ${tconv_lib} ${GENERICLOGGER_LIBRARIES})
+  TARGET_LINK_LIBRARIES (tconv_static ${tconv_lib} ${GENERICLOGGER_LIBRARIES})
+ENDIF ()
 SET_TARGET_PROPERTIES (tconv
   PROPERTIES
   COMPILE_FLAGS "-Dtconv_EXPORTS"
@@ -316,7 +334,28 @@ SET_PROPERTY(TARGET tconvExec
   "${GENERICLOGGER_INCLUDE_DIRS}"                         # Include path for genericLogger (external - required)
   "${OPTPARSE_INCLUDE_DIR}"                               # Include path for optparse (builtin)
   )
-TARGET_LINK_LIBRARIES(tconvExec       tconv        optparse)
+TARGET_LINK_LIBRARIES(tconvExec tconv optparse)
+
+ADD_EXECUTABLE(tconvExecStatic  bin/tconv.c)
+SET_TARGET_PROPERTIES(tconvExecStatic PROPERTIES
+  OUTPUT_NAME                             "tconv_static"
+  RUNTIME_OUTPUT_DIRECTORY                "${BINARY_OUTPUT_PATH}"
+  RUNTIME_OUTPUT_DIRECTORY_DEBUG          "${BINARY_OUTPUT_PATH}"
+  RUNTIME_OUTPUT_DIRECTORY_RELEASE        "${BINARY_OUTPUT_PATH}"
+  RUNTIME_OUTPUT_DIRECTORY_MINSIZEREL     "${BINARY_OUTPUT_PATH}"
+  RUNTIME_OUTPUT_DIRECTORY_RELWITHDEBINFO "${BINARY_OUTPUT_PATH}"
+  INSTALL_RPATH                           "${CMAKE_INSTALL_PREFIX}/lib"
+  INSTALL_RPATH_USE_LINK_PATH             TRUE
+)
+SET_PROPERTY(TARGET tconvExecStatic
+  PROPERTY
+  INCLUDE_DIRECTORIES
+  "${INCLUDE_OUTPUT_PATH}"                                # Include path for generated files (internal)
+  "${PROJECT_SOURCE_DIR}/include"                         # Include path for the other headers (internal)
+  "${GENERICLOGGER_INCLUDE_DIRS}"                         # Include path for genericLogger (external - required)
+  "${OPTPARSE_INCLUDE_DIR}"                               # Include path for optparse (builtin)
+  )
+TARGET_LINK_LIBRARIES(tconvExecStatic tconv_static optparse)
 
 # -----
 # Check
@@ -325,7 +364,10 @@ ENABLE_TESTING()
 ADD_TEST (NAME tconvTest
           COMMAND ../bin/tconv -t UTF-16 -o tconv.tconv-UTF-16.c "${PROJECT_SOURCE_DIR}/src/tconv.c"
           WORKING_DIRECTORY "${LIBRARY_OUTPUT_PATH}")
-ADD_CUSTOM_TARGET (check COMMAND ${CMAKE_CTEST_COMMAND} DEPENDS tconvExec)
+ADD_TEST (NAME tconvStaticTest
+          COMMAND ../bin/tconv_static -t UTF-16 -o tconv.tconv-UTF-16.c "${PROJECT_SOURCE_DIR}/src/tconv.c"
+          WORKING_DIRECTORY "${LIBRARY_OUTPUT_PATH}")
+ADD_CUSTOM_TARGET (check COMMAND ${CMAKE_CTEST_COMMAND} DEPENDS tconvExecStatic)
 #
 # Please note that test is likely to fail if libraries are not already in your path.
 # This is why the working directory is "${LIBRARY_OUTPUT_PATH}".
