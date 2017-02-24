@@ -1,0 +1,405 @@
+#
+# Usage: With nmake: cmake -G "NMake Makefiles", then nmake install
+#        With  make: cmake -G "UNIX Makefiles", then make install
+#
+#############################
+# Global settings
+#############################
+CMAKE_MINIMUM_REQUIRED (VERSION 3.0.0 FATAL_ERROR)
+PROJECT (tconv C CXX)
+
+OPTION(ALL_IN_ONE "Compile all dependencies locally" OFF)
+
+IF (POLICY CMP0063)
+  CMAKE_POLICY (SET CMP0063 NEW)
+ENDIF ()
+IF (POLICY CMP0018)
+  CMAKE_POLICY (SET CMP0018 NEW)
+ENDIF ()
+
+# Use GNUInstallDirs in order to enforce lib64 if needed
+INCLUDE (GNUInstallDirs)
+
+# Include system libraries if needed (like on Windows)
+INCLUDE (InstallRequiredSystemLibraries)
+
+SET (CMAKE_C_VISIBILITY_PRESET   hidden)
+SET (CMAKE_CXX_VISIBILITY_PRESET hidden)
+SET (CMAKE_POSITION_INDEPENDENT_CODE ON)
+
+SET (TCONV_VERSION_MAJOR 1)
+SET (TCONV_VERSION_MINOR 0)
+SET (TCONV_VERSION_PATCH 10)
+SET (TCONV_VERSION "${TCONV_VERSION_MAJOR}.${TCONV_VERSION_MINOR}.${TCONV_VERSION_PATCH}")
+
+SET (CMAKE_MODULE_PATH              ${PROJECT_SOURCE_DIR}/cmake)           # General module search path
+SET (INCLUDE_OUTPUT_PATH            ${PROJECT_SOURCE_DIR}/output/include)  # General include output path
+SET (LIBRARY_OUTPUT_PATH            ${PROJECT_SOURCE_DIR}/output/lib)      # General library output path
+SET (BINARY_OUTPUT_PATH             ${PROJECT_SOURCE_DIR}/output/bin)      # General binary output path
+SET (3RDPARTY_OUTPUT_PATH           ${PROJECT_SOURCE_DIR}/output/3rdparty) # General 3rdparty output path
+
+# For all outputs directories
+# C.f. http://stackoverflow.com/questions/7747857/in-cmake-how-do-i-work-around-the-debug-and-release-directories-visual-studio-2
+SET (CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${LIBRARY_OUTPUT_PATH}")
+SET (CMAKE_LIBRARY_OUTPUT_DIRECTORY "${LIBRARY_OUTPUT_PATH}")
+SET (CMAKE_RUNTIME_OUTPUT_DIRECTORY "${LIBRARY_OUTPUT_PATH}")
+FOREACH (OUTPUTCONFIG ${CMAKE_CONFIGURATION_TYPES})
+    STRING( TOUPPER ${OUTPUTCONFIG} OUTPUTCONFIG )
+    SET ( CMAKE_LIBRARY_OUTPUT_DIRECTORY_${OUTPUTCONFIG} "${LIBRARY_OUTPUT_PATH}")
+    SET ( CMAKE_ARCHIVE_OUTPUT_DIRECTORY_${OUTPUTCONFIG} "${LIBRARY_OUTPUT_PATH}")
+    SET ( CMAKE_RUNTIME_OUTPUT_DIRECTORY_${OUTPUTCONFIG} "${LIBRARY_OUTPUT_PATH}")
+ENDFOREACH (OUTPUTCONFIG CMAKE_CONFIGURATION_TYPES)
+
+# --------------------
+# CFLAGS customization
+# --------------------
+if (("${CMAKE_C_COMPILER_ID} x" MATCHES "MSVC") OR MSVC)
+  # Loosely based on http://www.hdfgroup.org/ftp/HDF/HDF_Current/src/unpacked/config/cmake/ConfigureChecks.cmake
+  ADD_DEFINITIONS(-DWIN32_LEAN_AND_MEAN)
+  ADD_DEFINITIONS(-D_CRT_SECURE_NO_WARNINGS)
+  ADD_DEFINITIONS(-D_CRT_NONSTDC_NO_DEPRECATE)
+ENDIF ()
+IF ((NOT CMAKE_BUILD_TYPE MATCHES Debug) AND (NOT CMAKE_BUILD_TYPE MATCHES RelWithDebInfo))
+  ADD_DEFINITIONS(-DTCONV_NTRACE)
+ENDIF ((NOT CMAKE_BUILD_TYPE MATCHES Debug) AND (NOT CMAKE_BUILD_TYPE MATCHES RelWithDebInfo))
+ADD_DEFINITIONS(-DTCONV_VERSION="${TCONV_VERSION}")
+
+#############################
+# Dependencies
+#############################
+EXECUTE_PROCESS(COMMAND "${CMAKE_COMMAND}" -E make_directory "${3RDPARTY_OUTPUT_PATH}")
+
+IF (ALL_IN_ONE)
+  INCLUDE (BuildDependency)
+ENDIF ()
+
+# ----------------------------------
+# C language
+# ----------------------------------
+INCLUDE (FindInline)
+SET     (TCONV_C_INLINE "${C_INLINE}")
+INCLUDE (FindVaCopy)
+SET     (TCONV_C_VA_COPY "${C_VA_COPY}")
+
+# -----------------------------------
+# genericLogger: required
+# -----------------------------------
+IF (ALL_IN_ONE)
+  IF (NOT GENERICLOGGER_ROOT_DIR)
+    SET (GENERICLOGGER_ROOT_DIR "${3RDPARTY_OUTPUT_PATH}/genericLogger-remote/install")
+    #
+    # All-in-one mode means static linking
+    #
+    BuildDependency(
+      "genericLogger-remote"
+      "${PROJECT_SOURCE_DIR}/3rdparty/github/genericLogger-remote"
+      "${3RDPARTY_OUTPUT_PATH}/genericLogger-remote"
+      "install"
+      )
+  ENDIF ()
+  SET(ENV{GENERICLOGGER_ROOT_DIR} "${GENERICLOGGER_ROOT_DIR}")
+ENDIF ()
+FIND_PACKAGE (genericLogger)
+IF (NOT GENERICLOGGER_FOUND)
+  MESSAGE (FATAL_ERROR "genericLogger must be detected")
+ENDIF ()
+IF (ALL_IN_ONE)
+  ADD_DEFINITIONS(-DgenericLogger_STATIC)
+ENDIF ()
+
+# ----------------------------------
+# ccharset Charset Provider: builtin
+# ----------------------------------
+EXECUTE_PROCESS(
+  COMMAND "${CMAKE_COMMAND}" -E tar xzf "${PROJECT_SOURCE_DIR}/3rdparty/tar/cchardet-1.0.0.tar.gz"
+  WORKING_DIRECTORY "${3RDPARTY_OUTPUT_PATH}"
+  )
+SET              (CCHARDET_DIR            "${3RDPARTY_OUTPUT_PATH}/cchardet-1.0.0/src/ext/libcharsetdetect")
+SET              (CCHARDET_INCLUDE_DIR    "${CCHARDET_DIR}")
+SET              (CCHARDET_LIBRARY_TARGET "charsetdetect")
+FILE (GLOB lib_cchardet_src
+  "${3RDPARTY_OUTPUT_PATH}/cchardet-1.0.0/src/ext/libcharsetdetect/mozilla/extensions/universalchardet/src/base/*.cpp"
+  "${3RDPARTY_OUTPUT_PATH}/cchardet-1.0.0/src/ext/libcharsetdetect/charsetdetect.cpp"
+)
+INCLUDE_DIRECTORIES(
+  "${3RDPARTY_OUTPUT_PATH}/cchardet-1.0.0/src/ext/libcharsetdetect/mozilla/extensions/universalchardet/src/base"
+  "${3RDPARTY_OUTPUT_PATH}/cchardet-1.0.0/src/ext/libcharsetdetect/nspr-emu"
+  "${3RDPARTY_OUTPUT_PATH}/cchardet-1.0.0/src/ext/libcharsetdetect"
+  )
+
+# -----------------------------------------
+# portable dlopen and al. Provider: builtin
+# -----------------------------------------
+IF (WIN32 AND NOT CYGWIN)
+  MESSAGE (STATUS "dlfcn-win32 third party will be used")
+  EXECUTE_PROCESS(
+    COMMAND "${CMAKE_COMMAND}" -E copy_directory "${PROJECT_SOURCE_DIR}/3rdparty/github/dlfcn-win32-remote" "${3RDPARTY_OUTPUT_PATH}/dlfcn-win32-remote"
+    WORKING_DIRECTORY "${3RDPARTY_OUTPUT_PATH}"
+    )
+  SET (DLFCNWIN32_FOUND TRUE)
+  SET (DLFCNWIN32_DIR            "${3RDPARTY_OUTPUT_PATH}/dlfcn-win32-remote")
+  SET (DLFCNWIN32_INCLUDE_DIR    "${DLFCNWIN32_DIR}")
+  SET (DLFCNWIN32_LIBRARY_TARGET_DEPEND "psapi")
+  FILE (GLOB lib_dlfcn_win32_src "${DLFCNWIN32_DIR}/dlfcn.c")
+ENDIF (WIN32 AND NOT CYGWIN)
+
+# ---------------
+# portable getopt
+# ---------------
+EXECUTE_PROCESS(
+  COMMAND "${CMAKE_COMMAND}" -E copy_directory "${PROJECT_SOURCE_DIR}/3rdparty/github/optparse-remote" "${3RDPARTY_OUTPUT_PATH}/optparse-remote"
+  WORKING_DIRECTORY "${3RDPARTY_OUTPUT_PATH}"
+  )
+SET (OPTPARSE_FOUND TRUE)
+SET (OPTPARSE_DIR            "${3RDPARTY_OUTPUT_PATH}/optparse-remote")
+SET (OPTPARSE_INCLUDE_DIR    "${OPTPARSE_DIR}")
+SET (OPTPARSE_LIBRARY_TARGET "optparse")
+ADD_LIBRARY (optparse STATIC "${OPTPARSE_DIR}/optparse.c")
+
+# -----------------------------------
+# ICU: optional
+# -----------------------------------
+FIND_PACKAGE (ICU)
+IF (NOT ICU_FOUND)
+    MESSAGE (STATUS "ICU is not detected")
+ELSE (NOT ICU_FOUND)
+    SET (TCONV_HAVE_ICU 1)
+ENDIF (NOT ICU_FOUND)
+
+# -----------------------------------
+# ICONV: optional
+# -----------------------------------
+FIND_PACKAGE (Iconv)
+IF (NOT ICONV_FOUND)
+  IF (WIN32 AND NOT CYGWIN)
+    # -------------------------
+    # win-iconv Text Provider
+    # -------------------------
+    MESSAGE (STATUS "win-iconv third party will be used")
+    EXECUTE_PROCESS(
+      COMMAND "${CMAKE_COMMAND}" -E copy_directory "${PROJECT_SOURCE_DIR}/3rdparty/github/winiconv-remote" "${3RDPARTY_OUTPUT_PATH}/winiconv-remote"
+      WORKING_DIRECTORY "${3RDPARTY_OUTPUT_PATH}"
+      )
+    SET (WINICONV_FOUND TRUE)
+    SET (WINICONV_DIR            "${3RDPARTY_OUTPUT_PATH}/winiconv-remote")
+    SET (lib_winiconv_src "${WINICONV_DIR}/win_iconv.c")
+    SET (ICONV_FOUND TRUE)
+    SET (ICONV_INCLUDE_DIR "${WINICONV_DIR}")
+    SET (ICONV_SECOND_ARGUMENT_IS_CONST TRUE)
+    SET (TCONV_HAVE_ICONV 1)
+    SET (ICONV_LIBRARIES "")
+  ELSE (WIN32 AND NOT CYGWIN)
+    MESSAGE (STATUS "Iconv is not detected")
+  ENDIF (WIN32 AND NOT CYGWIN)
+ELSE (NOT ICONV_FOUND)
+  SET (TCONV_HAVE_ICONV 1)
+ENDIF (NOT ICONV_FOUND)
+
+#############################
+# Configuration
+#############################
+SET               (CONFIG_H "${INCLUDE_OUTPUT_PATH}/tconv_config.h")
+SET               (CONFIG_H_IN "${CMAKE_CURRENT_SOURCE_DIR}/include/tconv_config.h.in")
+CONFIGURE_FILE    (${CONFIG_H_IN} ${CONFIG_H})
+ADD_CUSTOM_TARGET(tconvConfig SOURCES "${CONFIG_H}")
+
+#############################
+# Configuration result impact
+#############################
+INCLUDE_DIRECTORIES(
+  "${INCLUDE_OUTPUT_PATH}"                                # Include path for generated files (internal)
+  "${PROJECT_SOURCE_DIR}/include"                         # Include path for the other headers (internal)
+  "${GENERICLOGGER_INCLUDE_DIRS}"                         # Include path for genericLogger (external - required)
+  )
+IF (ICU_FOUND)
+  INCLUDE_DIRECTORIES ("${ICU_INCLUDE_DIRS}")
+ENDIF (ICU_FOUND)
+IF (ICONV_FOUND)
+  INCLUDE_DIRECTORIES ("${ICONV_INCLUDE_DIR}")
+ENDIF (ICONV_FOUND)
+IF (DLFCNWIN32_FOUND)
+  INCLUDE_DIRECTORIES ("${DLFCNWIN32_INCLUDE_DIR}")
+ENDIF (DLFCNWIN32_FOUND)
+
+IF (ALL_IN_ONE)
+  #
+  # In the ALL_IN_MODE, all extra dependencies are linked
+  # using the static libraries
+  #
+  SET (CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}   $ENV{CFLAGS} ${ICU_C_FLAGS_SHARED}")
+  SET (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{CFLAGS} ${ICU_CXX_FLAGS_SHARED}")
+ELSE ()
+  SET (CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}   $ENV{CFLAGS} ${ICU_C_FLAGS_SHARED}   ${GENERICLOGGER_C_FLAGS_SHARED}")
+  SET (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{CFLAGS} ${ICU_CXX_FLAGS_SHARED} ${GENERICLOGGER_CXX_FLAGS_SHARED}")
+ENDIF ()
+
+#############################
+# Makefile details
+#############################
+FILE (GLOB lib_header include/*.h "${PROJECT_SOURCE_DIR}/output/include/*.h")
+FILE (GLOB lib_src src/*.c)
+FILE (GLOB lib_src_charset_cchardet src/tconv/charset/cchardet.c)
+IF (ICU_FOUND)
+  FILE (GLOB lib_src_charset_ICU src/tconv/charset/ICU.c)
+  FILE (GLOB lib_src_convert_ICU src/tconv/convert/ICU.c)
+ELSE (ICU_FOUND)
+  SET(ICU_LIBRARIES "")
+ENDIF (ICU_FOUND)
+IF (ICONV_FOUND)
+  IF (WINICONV_SRC)
+    FILE (GLOB lib_src_convert_iconv src/tconv/convert/iconv.c "${WINICONV_SRC}")
+  ELSE (WINICONV_SRC)
+    FILE (GLOB lib_src_convert_iconv src/tconv/convert/iconv.c)
+  ENDIF (WINICONV_SRC)
+ENDIF (ICONV_FOUND)
+SET (tconv_src
+  ${lib_src}
+  ${lib_header}
+  ${lib_cchardet_src}
+  ${lib_src_charset_cchardet}
+  ${lib_src_charset_ICU}
+  ${lib_src_convert_ICU}
+  ${lib_src_convert_iconv})
+IF (DLFCNWIN32_FOUND)
+  LIST(APPEND tconv_src ${lib_dlfcn_win32_src})
+ENDIF ()
+IF (WINICONV_FOUND)
+  LIST(APPEND tconv_src ${lib_winiconv_src})
+ENDIF ()
+ADD_LIBRARY (tconv        SHARED ${tconv_src})
+ADD_LIBRARY (tconv_static STATIC ${tconv_src})
+SET (tconv_lib
+  ${DLFCNWIN32_LIBRARY_TARGET_DEPEND}
+  ${ICU_LIBRARIES}
+  ${ICONV_LIBRARIES}
+  ${CMAKE_DL_LIBS})
+IF (ALL_IN_ONE)
+  #
+  # In the ALL_IN_MODE, all extra dependencies are linked
+  # using the static libraries
+  #
+  TARGET_LINK_LIBRARIES (tconv        ${tconv_lib} ${GENERICLOGGER_STATIC_LIBRARIES})
+  TARGET_LINK_LIBRARIES (tconv_static ${tconv_lib} ${GENERICLOGGER_STATIC_LIBRARIES})
+ELSE ()
+  TARGET_LINK_LIBRARIES (tconv        ${tconv_lib} ${GENERICLOGGER_LIBRARIES})
+  TARGET_LINK_LIBRARIES (tconv_static ${tconv_lib} ${GENERICLOGGER_LIBRARIES})
+ENDIF ()
+SET_TARGET_PROPERTIES (tconv
+  PROPERTIES
+  COMPILE_FLAGS "-Dtconv_EXPORTS"
+  VERSION       "${TCONV_VERSION}"
+  SOVERSION     "${TCONV_VERSION_MAJOR}")
+SET_TARGET_PROPERTIES (tconv_static
+  PROPERTIES
+  COMPILE_FLAGS "-Dtconv_STATIC"
+  VERSION       "${TCONV_VERSION}"
+  SOVERSION     "${TCONV_VERSION_MAJOR}")
+
+# ------------
+# Export flags
+# ------------
+INCLUDE (GenerateExportHeader)
+EXECUTE_PROCESS(COMMAND "${CMAKE_COMMAND}" -E make_directory "${INCLUDE_OUTPUT_PATH}/tconv")
+GENERATE_EXPORT_HEADER(tconv
+    BASE_NAME tconv
+    EXPORT_MACRO_NAME tconv_EXPORT
+    EXPORT_FILE_NAME "${INCLUDE_OUTPUT_PATH}/tconv/export.h"
+    STATIC_DEFINE tconv_STATIC)
+ADD_CUSTOM_TARGET(tconvExport SOURCES "${INCLUDE_OUTPUT_PATH}/tconv/export.h")
+
+# ----------------------------------------
+# Explicit dependencies on generated files
+# ----------------------------------------
+ADD_DEPENDENCIES(tconv        tconvConfig tconvExport)
+ADD_DEPENDENCIES(tconv_static tconvConfig tconvExport)
+
+# ----------
+# Executable
+# ----------
+ADD_EXECUTABLE(tconvExec       bin/tconv.c)
+SET_TARGET_PROPERTIES(tconvExec PROPERTIES
+  OUTPUT_NAME                             "tconv"
+  RUNTIME_OUTPUT_DIRECTORY                "${BINARY_OUTPUT_PATH}"
+  RUNTIME_OUTPUT_DIRECTORY_DEBUG          "${BINARY_OUTPUT_PATH}"
+  RUNTIME_OUTPUT_DIRECTORY_RELEASE        "${BINARY_OUTPUT_PATH}"
+  RUNTIME_OUTPUT_DIRECTORY_MINSIZEREL     "${BINARY_OUTPUT_PATH}"
+  RUNTIME_OUTPUT_DIRECTORY_RELWITHDEBINFO "${BINARY_OUTPUT_PATH}"
+  INSTALL_RPATH                           "${CMAKE_INSTALL_PREFIX}/lib"
+  INSTALL_RPATH_USE_LINK_PATH             TRUE
+)
+SET_PROPERTY(TARGET tconvExec
+  PROPERTY
+  INCLUDE_DIRECTORIES
+  "${INCLUDE_OUTPUT_PATH}"                                # Include path for generated files (internal)
+  "${PROJECT_SOURCE_DIR}/include"                         # Include path for the other headers (internal)
+  "${GENERICLOGGER_INCLUDE_DIRS}"                         # Include path for genericLogger (external - required)
+  "${OPTPARSE_INCLUDE_DIR}"                               # Include path for optparse (builtin)
+  )
+TARGET_LINK_LIBRARIES(tconvExec tconv optparse)
+
+ADD_EXECUTABLE(tconvExecStatic  bin/tconv.c)
+SET_TARGET_PROPERTIES(tconvExecStatic PROPERTIES
+  OUTPUT_NAME                             "tconv_static"
+  RUNTIME_OUTPUT_DIRECTORY                "${BINARY_OUTPUT_PATH}"
+  RUNTIME_OUTPUT_DIRECTORY_DEBUG          "${BINARY_OUTPUT_PATH}"
+  RUNTIME_OUTPUT_DIRECTORY_RELEASE        "${BINARY_OUTPUT_PATH}"
+  RUNTIME_OUTPUT_DIRECTORY_MINSIZEREL     "${BINARY_OUTPUT_PATH}"
+  RUNTIME_OUTPUT_DIRECTORY_RELWITHDEBINFO "${BINARY_OUTPUT_PATH}"
+  INSTALL_RPATH                           "${CMAKE_INSTALL_PREFIX}/lib"
+  INSTALL_RPATH_USE_LINK_PATH             TRUE
+)
+SET_PROPERTY(TARGET tconvExecStatic
+  PROPERTY
+  INCLUDE_DIRECTORIES
+  "${INCLUDE_OUTPUT_PATH}"                                # Include path for generated files (internal)
+  "${PROJECT_SOURCE_DIR}/include"                         # Include path for the other headers (internal)
+  "${GENERICLOGGER_INCLUDE_DIRS}"                         # Include path for genericLogger (external - required)
+  "${OPTPARSE_INCLUDE_DIR}"                               # Include path for optparse (builtin)
+  )
+TARGET_LINK_LIBRARIES(tconvExecStatic tconv_static optparse)
+
+# -----
+# Check
+# -----
+ENABLE_TESTING()
+ADD_TEST (NAME tconvTest
+          COMMAND ../bin/tconv -t UTF-16 -o tconv.tconv-UTF-16.c "${PROJECT_SOURCE_DIR}/src/tconv.c"
+          WORKING_DIRECTORY "${LIBRARY_OUTPUT_PATH}")
+ADD_TEST (NAME tconvStaticTest
+          COMMAND ../bin/tconv_static -t UTF-16 -o tconv.tconv-UTF-16.c "${PROJECT_SOURCE_DIR}/src/tconv.c"
+          WORKING_DIRECTORY "${LIBRARY_OUTPUT_PATH}")
+ADD_CUSTOM_TARGET (check COMMAND ${CMAKE_CTEST_COMMAND} DEPENDS tconvExec tconvExecStatic)
+#
+# Please note that test is likely to fail if libraries are not already in your path.
+# This is why the working directory is "${LIBRARY_OUTPUT_PATH}".
+# (I did not want to play with PATH/LD_LIBRARY_PATH/etc within cmake)
+#
+# -------
+# Install
+# -------
+INSTALL (TARGETS tconv tconv_static tconvExec ARCHIVE DESTINATION lib LIBRARY DESTINATION lib RUNTIME DESTINATION bin)
+INSTALL (FILES ${INCLUDE_OUTPUT_PATH}/tconv/export.h DESTINATION include/tconv)
+INSTALL (FILES include/tconv.h DESTINATION include)
+INSTALL (FILES include/tconv/ext.h DESTINATION include/tconv)
+INSTALL (FILES include/tconv/convert/ICU.h DESTINATION include/tconv/convert)
+INSTALL (FILES include/tconv/convert/iconv.h DESTINATION include/tconv/convert)
+INSTALL (FILES include/tconv/charset/ICU.h DESTINATION include/tconv/charset)
+INSTALL (FILES include/tconv/charset/cchardet.h DESTINATION include/tconv/charset)
+
+IF (UNIX)
+  INCLUDE (Pod2Man)
+  ADD_MANPAGE_TARGET()
+  POD2MAN(include/README.pod "TCONV" "3" "${TCONV_VERSION}")
+  POD2MAN(include/tconv/README.pod "TCONV_EXT" "3" "${TCONV_VERSION}")
+ENDIF (UNIX)
+
+# ---------
+# Packaging
+# ---------
+# Section CPack
+SET (CPACK_PACKAGE_VERSION_MAJOR "${TCONV_VERSION_MAJOR}")
+SET (CPACK_PACKAGE_VERSION_MINOR "${TCONV_VERSION_MINOR}")
+SET (CPACK_PACKAGE_VERSION_PATCH "${TCONV_VERSION_PATCH}")
+CONFIGURE_FILE ("${PROJECT_SOURCE_DIR}/LICENSE"  "${CMAKE_CURRENT_BINARY_DIR}/LICENSE.txt")
+SET (CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_BINARY_DIR}/LICENSE.txt")
+INCLUDE (CPack)
