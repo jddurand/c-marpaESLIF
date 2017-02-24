@@ -1,0 +1,11 @@
+*~
+CMakeCache.txt
+CMakeFiles
+CTestTestfile.cmake
+Makefile
+Testing
+cmake_install.cmake
+genericStackTester*
+output
+install_manifest.txt
+GENERICSTACK.3.gz
