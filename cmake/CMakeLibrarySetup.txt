@@ -23,6 +23,7 @@ IF (ALL_IN_ONE)
       "${PROJECT_SOURCE_DIR}/3rdparty/github/genericLogger-remote"
       "${3RDPARTY_OUTPUT_PATH}/genericLogger-remote"
       "install"
+      FALSE
       )
   ENDIF ()
   SET(ENV{GENERICLOGGER_ROOT_DIR} "${GENERICLOGGER_ROOT_DIR}")
@@ -49,6 +50,7 @@ IF (ALL_IN_ONE)
       "${PROJECT_SOURCE_DIR}/3rdparty/github/genericStack-remote"
       "${3RDPARTY_OUTPUT_PATH}/genericStack-remote"
       "install"
+      FALSE
       )
   ENDIF ()
   SET(ENV{GENERICSTACK_ROOT_DIR} "${GENERICSTACK_ROOT_DIR}")
@@ -75,6 +77,7 @@ IF (ALL_IN_ONE)
       "${PROJECT_SOURCE_DIR}/3rdparty/github/marpaWrapper-remote"
       "${3RDPARTY_OUTPUT_PATH}/marpaWrapper-remote"
       "install"
+      TRUE
       )
   ENDIF ()
   SET(ENV{MARPAWRAPPER_ROOT_DIR} "${MARPAWRAPPER_ROOT_DIR}")
@@ -101,6 +104,7 @@ IF (ALL_IN_ONE)
       "${PROJECT_SOURCE_DIR}/3rdparty/github/tconv-remote"
       "${3RDPARTY_OUTPUT_PATH}/tconv-remote"
       "install"
+      TRUE
       )
   ENDIF ()
   SET(ENV{TCONV_ROOT_DIR} "${TCONV_ROOT_DIR}")
@@ -200,7 +204,18 @@ INCLUDE_DIRECTORIES (
 FILE (GLOB lib_src src/marpaESLIF.c)
 ADD_LIBRARY (marpaESLIF        SHARED ${lib_src})
 ADD_LIBRARY (marpaESLIF_static STATIC ${lib_src})
-SET (MARPAESLIF_TARGET_LINK_LIBRARIES ${GENERICLOGGER_LIBRARIES} ${MARPAWRAPPER_LIBRARIES} ${TCONV_LIBRARIES} ${PCRE2_LIBRARIES})
+IF (ALL_IN_ONE)
+  #
+  # In the ALL_IN_MODE, all extra dependencies are linked
+  # using the static libraries
+  #
+  SET (MARPAESLIF_TARGET_LIBRARIES        ${GENERICLOGGER_STATIC_LIBRARIES} ${MARPAWRAPPER_STATIC_LIBRARIES} ${TCONV_STATIC_LIBRARIES} ${PCRE2_LIBRARIES})
+ELSE ()
+  SET (MARPAESLIF_TARGET_LIBRARIES        ${GENERICLOGGER_LIBRARIES}        ${MARPAWRAPPER_LIBRARIES}        ${TCONV_LIBRARIES}        ${PCRE2_LIBRARIES})
+ENDIF ()
+#
+# Because of ICU and/or iconv, MARPAESLIF_STATIC_TARGET_LINK_LIBRARIES may be different than MARPAESLIF_TARGET_LINK_LIBRARIES
+#
 SET (MARPAESLIF_STATIC_TARGET_LINK_LIBRARIES ${MARPAESLIF_TARGET_LINK_LIBRARIES})
 IF (ICU_LIBRARIES)
   LIST (APPEND MARPAESLIF_STATIC_TARGET_LINK_LIBRARIES ${ICU_LIBRARIES})
