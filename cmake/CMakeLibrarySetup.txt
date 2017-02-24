@@ -38,25 +38,79 @@ ENDIF ()
 # -----------------------------------
 # genericStack: required
 # -----------------------------------
+IF (ALL_IN_ONE)
+  IF (NOT GENERICSTACK_ROOT_DIR)
+    SET (GENERICSTACK_ROOT_DIR "${3RDPARTY_OUTPUT_PATH}/genericStack-remote/install")
+    #
+    # All-in-one mode means static linking
+    #
+    BuildDependency(
+      "genericStack-remote"
+      "${PROJECT_SOURCE_DIR}/3rdparty/github/genericStack-remote"
+      "${3RDPARTY_OUTPUT_PATH}/genericStack-remote"
+      "install"
+      )
+  ENDIF ()
+  SET(ENV{GENERICSTACK_ROOT_DIR} "${GENERICSTACK_ROOT_DIR}")
+ENDIF ()
 FIND_PACKAGE (genericStack)
 IF (NOT GENERICSTACK_FOUND)
-    MESSAGE (FATAL_ERROR "genericStack must be detected")
+    MESSAGE (STATUS "genericStack must be detected")
+ENDIF ()
+IF (ALL_IN_ONE)
+  ADD_DEFINITIONS(-DgenericStack_STATIC)
 ENDIF ()
 
 # -----------------------------------
 # marpaWrapper: required
 # -----------------------------------
+IF (ALL_IN_ONE)
+  IF (NOT MARPAWRAPPER_ROOT_DIR)
+    SET (MARPAWRAPPER_ROOT_DIR "${3RDPARTY_OUTPUT_PATH}/marpaWrapper-remote/install")
+    #
+    # All-in-one mode means static linking
+    #
+    BuildDependency(
+      "marpaWrapper-remote"
+      "${PROJECT_SOURCE_DIR}/3rdparty/github/marpaWrapper-remote"
+      "${3RDPARTY_OUTPUT_PATH}/marpaWrapper-remote"
+      "install"
+      )
+  ENDIF ()
+  SET(ENV{MARPAWRAPPER_ROOT_DIR} "${MARPAWRAPPER_ROOT_DIR}")
+ENDIF ()
 FIND_PACKAGE (marpaWrapper)
 IF (NOT MARPAWRAPPER_FOUND)
-    MESSAGE (FATAL_ERROR "marpaWrapper must be detected")
+    MESSAGE (STATUS "marpaWrapper must be detected")
+ENDIF ()
+IF (ALL_IN_ONE)
+  ADD_DEFINITIONS(-DmarpaWrapper_STATIC)
 ENDIF ()
 
 # -----------------------------------
 # tconv: required
 # -----------------------------------
+IF (ALL_IN_ONE)
+  IF (NOT TCONV_ROOT_DIR)
+    SET (TCONV_ROOT_DIR "${3RDPARTY_OUTPUT_PATH}/tconv-remote/install")
+    #
+    # All-in-one mode means static linking
+    #
+    BuildDependency(
+      "tconv-remote"
+      "${PROJECT_SOURCE_DIR}/3rdparty/github/tconv-remote"
+      "${3RDPARTY_OUTPUT_PATH}/tconv-remote"
+      "install"
+      )
+  ENDIF ()
+  SET(ENV{TCONV_ROOT_DIR} "${TCONV_ROOT_DIR}")
+ENDIF ()
 FIND_PACKAGE (tconv)
 IF (NOT TCONV_FOUND)
-    MESSAGE (FATAL_ERROR "tconv must be detected")
+    MESSAGE (STATUS "tconv must be detected")
+ENDIF ()
+IF (ALL_IN_ONE)
+  ADD_DEFINITIONS(-Dtconv_STATIC)
 ENDIF ()
 
 # -----------------------------------
