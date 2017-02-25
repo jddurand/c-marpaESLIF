@@ -4,7 +4,7 @@
 CMAKE_MINIMUM_REQUIRED (VERSION 3.0)
 PROJECT (marpaWrapper C CXX)
 
-OPTION(ALL_IN_ONE "Compile all dependencies locally" OFF)
+OPTION(ALL_IN_ONE "Compile non-system wide dependencies locally" OFF)
 
 IF (POLICY CMP0063)
   CMAKE_POLICY (SET CMP0063 NEW)
@@ -23,7 +23,7 @@ INCLUDE (InstallRequiredSystemLibraries)
 
 SET (MARPAWRAPPER_VERSION_MAJOR 1)
 SET (MARPAWRAPPER_VERSION_MINOR 0)
-SET (MARPAWRAPPER_VERSION_PATCH 42)
+SET (MARPAWRAPPER_VERSION_PATCH 43)
 SET (MARPAWRAPPER_VERSION "${MARPAWRAPPER_VERSION_MAJOR}.${MARPAWRAPPER_VERSION_MINOR}.${MARPAWRAPPER_VERSION_PATCH}")
 
 SET (CMAKE_MODULE_PATH              ${PROJECT_SOURCE_DIR}/cmake)           # General module search path
@@ -95,9 +95,6 @@ FIND_PACKAGE (genericLogger)
 IF (NOT GENERICLOGGER_FOUND)
   MESSAGE (FATAL_ERROR "genericLogger must be detected")
 ENDIF ()
-IF (ALL_IN_ONE)
-  ADD_DEFINITIONS(-DgenericLogger_STATIC)
-ENDIF ()
 
 # -----------------------------------
 # genericStack: required
@@ -120,9 +117,6 @@ ENDIF ()
 FIND_PACKAGE (genericStack)
 IF (NOT GENERICSTACK_FOUND)
     MESSAGE (STATUS "genericStack must be detected")
-ENDIF ()
-IF (ALL_IN_ONE)
-  ADD_DEFINITIONS(-DgenericStack_STATIC)
 ENDIF ()
 
 # -----------------------------------
@@ -147,9 +141,6 @@ FIND_PACKAGE (genericHash)
 IF (NOT GENERICHASH_FOUND)
     MESSAGE (FATAL_ERROR "genericHash must be detected")
 ENDIF ()
-IF (ALL_IN_ONE)
-  ADD_DEFINITIONS(-DgenericHash_STATIC)
-ENDIF ()
 
 # -----------------------------------
 # genericSparseArray: required
@@ -172,9 +163,6 @@ ENDIF ()
 FIND_PACKAGE (genericSparseArray)
 IF (NOT GENERICSPARSEARRAY_FOUND)
     MESSAGE (FATAL_ERROR "genericSparseArray must be detected")
-ENDIF ()
-IF (ALL_IN_ONE)
-  ADD_DEFINITIONS(-DgenericSparseArray_STATIC)
 ENDIF ()
 
 # --------------------------------------
@@ -236,17 +224,8 @@ ELSE (GENERICSTACK_FOUND)
     "${GENERICSPARSEARRAY_INCLUDE_DIRS}"                 # Include path for genericHash (external - required)
     )
 ENDIF (GENERICSTACK_FOUND)
-IF (ALL_IN_ONE)
-  #
-  # In the ALL_IN_MODE, all extra dependencies are linked
-  # using the static libraries
-  #
-  TARGET_LINK_LIBRARIES (marpaWrapper        ${GENERICLOGGER_STATIC_LIBRARIES})
-  TARGET_LINK_LIBRARIES (marpaWrapper_static ${GENERICLOGGER_STATIC_LIBRARIES})
-ELSE ()
-  TARGET_LINK_LIBRARIES (marpaWrapper        ${GENERICLOGGER_LIBRARIES})
-  TARGET_LINK_LIBRARIES (marpaWrapper_static ${GENERICLOGGER_LIBRARIES})
-ENDIF ()
+TARGET_LINK_LIBRARIES (marpaWrapper        ${GENERICLOGGER_LIBRARIES})
+TARGET_LINK_LIBRARIES (marpaWrapper_static ${GENERICLOGGER_LIBRARIES})
 SET_TARGET_PROPERTIES(marpaWrapper
   PROPERTIES
   COMPILE_FLAGS "-DmarpaWrapper_EXPORTS"
