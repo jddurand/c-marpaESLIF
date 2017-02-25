@@ -4,6 +4,7 @@ use warnings;
 use File::Spec;
 use File::Basename;
 use Cwd ();
+use File::Which qw/which/;
 use Config;
 use Text::ParseWords;
 use IPC::Cmd qw(can_run);
@@ -43,15 +44,22 @@ sub new {
   $self->{config}{ldflags} = join(" ", $self->{config}{ldflags}, $ENV{LDFLAGS})
      if defined $ENV{LDFLAGS};
 
+  foreach (qw/cc cxx/) {
+      next unless exists $self->{config}{$_};
+      $self->{config}{$_} //= '';
+      next if File::Spec->file_name_is_absolute($self->{config}{$_});
+      $self->{config}{$_} = which($self->{config}{$_});
+  }
+
   unless ( exists $self->{config}{cxx} ) {
     my ($ccbase, $ccpath, $ccsfx ) = fileparse($self->{config}{cc}, qr/\.[^.]*/);
     foreach my $cxx (@{$cc2cxx{$ccbase}}) {
-      if( can_run( File::Spec->catfile( $ccpath, $cxx, $ccsfx ) ) ) {
-        $self->{config}{cxx} = File::Spec->catfile( $ccpath, $cxx, $ccsfx );
+      if( can_run( File::Spec->catfile( $ccpath, "$cxx$ccsfx" ) ) ) {
+        $self->{config}{cxx} = File::Spec->catfile( $ccpath, "$cxx$ccsfx" );
 	last;
       }
-      if( can_run( File::Spec->catfile( $cxx, $ccsfx ) ) ) {
-        $self->{config}{cxx} = File::Spec->catfile( $cxx, $ccsfx );
+      if( can_run( "$cxx$ccsfx" ) ) {
+        $self->{config}{cxx} = "$cxx$ccsfx";
 	last;
       }
       if( can_run( $cxx ) ) {
