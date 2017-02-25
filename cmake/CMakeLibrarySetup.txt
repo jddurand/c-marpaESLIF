@@ -1,4 +1,4 @@
-OPTION(ALL_IN_ONE "Compile all dependencies locally" OFF)
+OPTION(ALL_IN_ONE "Compile non-system wide dependencies locally" OFF)
 
 IF (ALL_IN_ONE)
   INCLUDE (BuildDependency)
@@ -32,9 +32,6 @@ FIND_PACKAGE (genericLogger)
 IF (NOT GENERICLOGGER_FOUND)
   MESSAGE (FATAL_ERROR "genericLogger must be detected")
 ENDIF ()
-IF (ALL_IN_ONE)
-  ADD_DEFINITIONS(-DgenericLogger_STATIC)
-ENDIF ()
 
 # -----------------------------------
 # genericStack: required
@@ -58,9 +55,6 @@ ENDIF ()
 FIND_PACKAGE (genericStack)
 IF (NOT GENERICSTACK_FOUND)
     MESSAGE (STATUS "genericStack must be detected")
-ENDIF ()
-IF (ALL_IN_ONE)
-  ADD_DEFINITIONS(-DgenericStack_STATIC)
 ENDIF ()
 
 # -----------------------------------
@@ -86,9 +80,6 @@ FIND_PACKAGE (marpaWrapper)
 IF (NOT MARPAWRAPPER_FOUND)
     MESSAGE (STATUS "marpaWrapper must be detected")
 ENDIF ()
-IF (ALL_IN_ONE)
-  ADD_DEFINITIONS(-DmarpaWrapper_STATIC)
-ENDIF ()
 
 # -----------------------------------
 # tconv: required
@@ -112,9 +103,6 @@ ENDIF ()
 FIND_PACKAGE (tconv)
 IF (NOT TCONV_FOUND)
     MESSAGE (STATUS "tconv must be detected")
-ENDIF ()
-IF (ALL_IN_ONE)
-  ADD_DEFINITIONS(-Dtconv_STATIC)
 ENDIF ()
 
 # -----------------------------------
@@ -204,15 +192,7 @@ INCLUDE_DIRECTORIES (
 FILE (GLOB lib_src src/marpaESLIF.c)
 ADD_LIBRARY (marpaESLIF        SHARED ${lib_src})
 ADD_LIBRARY (marpaESLIF_static STATIC ${lib_src})
-IF (ALL_IN_ONE)
-  #
-  # In the ALL_IN_MODE, all extra dependencies are linked
-  # using the static libraries
-  #
-  SET (MARPAESLIF_TARGET_LINK_LIBRARIES        ${GENERICLOGGER_STATIC_LIBRARIES} ${MARPAWRAPPER_STATIC_LIBRARIES} ${TCONV_STATIC_LIBRARIES} ${PCRE2_LIBRARIES})
-ELSE ()
-  SET (MARPAESLIF_TARGET_LINK_LIBRARIES        ${GENERICLOGGER_LIBRARIES}        ${MARPAWRAPPER_LIBRARIES}        ${TCONV_LIBRARIES}        ${PCRE2_LIBRARIES})
-ENDIF ()
+SET (MARPAESLIF_TARGET_LINK_LIBRARIES ${GENERICLOGGER_LIBRARIES} ${MARPAWRAPPER_LIBRARIES} ${TCONV_LIBRARIES} ${PCRE2_LIBRARIES})
 #
 # Because of ICU and/or iconv, MARPAESLIF_STATIC_TARGET_LINK_LIBRARIES may be different than MARPAESLIF_TARGET_LINK_LIBRARIES
 #
