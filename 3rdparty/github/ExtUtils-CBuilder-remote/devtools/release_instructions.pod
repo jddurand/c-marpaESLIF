@@ -1,0 +1,84 @@
+=head1 Release instructions for ExtUtils::CBuilder
+
+=head2 Prerequisites
+
+ExtUtils::CBuilder is now managed using Dist::Zilla.  You should install
+Dist::Zilla from CPAN and then run C<dzil authordeps> to get a list of
+plugins to install.  If you have F<cpanm> you can install any that you
+need with:
+
+  $ dzil authordeps | cpanm
+
+=head2 Updating from bleadperl
+
+From the bleadperl repo, generate patch emails in the EU::CB repo directory.
+Look in the F<devtools/last-commit> file for a commit ID to sync from.  E.g.
+assuming EU::CB repo directory is F<~/git/extutils-cbuilder>:
+
+  $ git format-patch -o ~/git/extutils-cbuilder cbf59d5a \
+    -- dist/ExtUtils-CBuilder
+
+Change to the EU::CB repo and apply the patch emails:
+
+  $ cd ~/git/extutils-cbuilder
+  $ git am -p 3 -s 000*
+
+Confirm that you are in sync with blead using the F<bleadcheck.pl> tool.
+Assuming your bleadperl repository is F<~/git/perl>, run this command from the
+top level of the EU::CB repo:
+
+  $ perl devtools/bleadcheck.pl ~/git/perl
+
+If everything is in sync, there will be no output except for the commit ID
+of the perl repo HEAD.  Record that in F<devtools/last-commit>:
+
+  $ perl devtools/bleadcheck.pl ~/git/perl > devtools/last-commit
+
+Update the Changes file for any commits that were made.  Then delete
+the 000* patch files.  Commit the F<Changes> and F<last-commit> files.
+
+  $ git add Changes last-commit
+  $ git commit -m "Updated Changes and last-commit"
+
+=head2 Testing
+
+You can run tests with C<dzil test> and release tests with C<dzil xtest>.
+
+  $ dzil test
+  $ dzil xtest
+
+If tests fail, you *must* submit changes upstream in the bleadperl repository
+and then resynchronize from blead.
+
+=head2 Packaging and shipping
+
+Make sure the EU::CB version number has been updated since the last release.
+If not, change it (for all EU::CB modules) in blead and then merge in the 
+change as above.
+
+Update the Changes file with a timestamp for release, then commit it.
+
+  $ vim Changes
+  $ git add Changes
+  $ git commit -m "timestamp Changes for release"
+
+Check what the final distribution will look like:
+
+  $ dzil build
+
+If everything looks good, ship it!
+
+  $ dzil release
+
+=head2 After shipping
+
+If the release uploaded, tag the release in git (replace XX.YY with the
+correct version, of course).
+
+  $ git tag -m "release XX.YY" release-XX.YY
+
+Then update the F<Porting/Maintainers.pl> file in the Perl 5 source with
+the new tarball version number.
+
+=cut
+
