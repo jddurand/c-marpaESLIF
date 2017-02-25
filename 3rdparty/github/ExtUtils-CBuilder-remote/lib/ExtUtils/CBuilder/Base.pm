@@ -73,6 +73,10 @@ sub new {
       $self->{config}{cxxflags} = '-x c++';
       $self->{config}{cxxflags} .= " $cflags" if defined $cflags;
     }
+    unless ( exists $self->{config}{cxxflags} ) {
+      my $cflags = $self->{config}{ccflags};
+      $self->{config}{cxxflags} .= " $cflags" if defined $cflags;
+    }
   }
 
   return $self;
