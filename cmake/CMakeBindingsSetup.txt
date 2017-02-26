@@ -17,11 +17,17 @@ ENDIF ()
 #
 # Perl sub-dir is entirely relying on the dzil command
 #
-FIND_PROGRAM(DZIL dzil)
-IF (DZIL)
+INCLUDE(FindPerl)
+IF (PERL_FOUND)
+  FIND_PROGRAM(DZIL dzil)
+  IF (DZIL)
+    MESSAGE(STATUS "")
+    MESSAGE(STATUS "PERL Packaging will be done with dzil command")
+    ADD_SUBDIRECTORY(src/bindings/perl)
+  ENDIF ()
+ELSE ()
   MESSAGE(STATUS "")
-  MESSAGE(STATUS "PERL Packaging will be done with dzil command")
-  ADD_SUBDIRECTORY(src/bindings/perl)
+  MESSAGE(STATUS "PERL Packaging must be done with dzil command, please run cpan Dist::Zilla")
 ENDIF ()
 
 MESSAGE(STATUS "")
