@@ -5,7 +5,7 @@
 #ifdef ICONV_SECOND_ARGUMENT_IS_CONST
 #define ICONV_SECOND_ARGUMENT const
 #else
-#define ICONV_SECOND_ARGUMENT const
+#define ICONV_SECOND_ARGUMENT
 #endif
 
 /* iconv interface is a direct proxy to iconv */

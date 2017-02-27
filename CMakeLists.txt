@@ -29,7 +29,7 @@ SET (CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 SET (TCONV_VERSION_MAJOR 1)
 SET (TCONV_VERSION_MINOR 0)
-SET (TCONV_VERSION_PATCH 13)
+SET (TCONV_VERSION_PATCH 14)
 SET (TCONV_VERSION "${TCONV_VERSION_MAJOR}.${TCONV_VERSION_MINOR}.${TCONV_VERSION_PATCH}")
 
 SET (CMAKE_MODULE_PATH              ${PROJECT_SOURCE_DIR}/cmake)           # General module search path
@@ -76,6 +76,9 @@ ENDIF ()
 # ----------------------------------
 # C language
 # ----------------------------------
+INCLUDE (CheckIncludeFiles)
+CHECK_INCLUDE_FILES (stdlib.h HAVE_STDLIB_H)
+CHECK_INCLUDE_FILES (stdarg.h HAVE_STDARG_H)
 INCLUDE (FindInline)
 SET     (TCONV_C_INLINE "${C_INLINE}")
 INCLUDE (FindVaCopy)
