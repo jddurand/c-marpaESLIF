@@ -12,6 +12,9 @@ use File::Copy::Recursive qw/dircopy/;
 use IPC::Run qw/run/;
 use Perl::OSType qw/is_os_type/;
 use POSIX qw/EXIT_SUCCESS/;
+use IO::Handle;
+
+autoflush STDOUT 1;
 
 # ------------------------------------------------------------
 # Generation of objects using perl setup, for use in perl's XS
@@ -50,7 +53,7 @@ my @additional_srcdir = ();
 my $tar=Archive::Tar->new();
 my $cchardet_tar = File::Spec->catfile('3rdparty', 'tar', 'cchardet-1.0.0.tar.gz');
 $tar->read($cchardet_tar);
-print "... Extracing $cchardet_tar in 3rdparty/output\n";
+print "... Extracting $cchardet_tar in 3rdparty/output\n";
 make_path(File::Spec->catdir('3rdparty', 'output'));
 {
     local $CWD = File::Spec->catdir('3rdparty', 'output');
@@ -63,6 +66,7 @@ push(@additional_includes, File::Spec->catdir('3rdparty', 'output', 'cchardet-1.
 push(@additional_includes, File::Spec->catdir('3rdparty', 'output', 'cchardet-1.0.0', 'src', 'ext', 'libcharsetdetect', 'nspr-emu'));
 push(@additional_includes, File::Spec->catdir('3rdparty', 'output', 'cchardet-1.0.0', 'src', 'ext', 'libcharsetdetect'));
 
+my $extra_compiler_flags = '';
 # ------------------------------------------------
 # On Windows, we will use dlfcn-win32 and winiconv
 # ------------------------------------------------
@@ -73,8 +77,17 @@ if (is_os_type('Windows')) {
     #
     # This depend on psapi, and perl's cflags always include that by default
     #
-    push(@additional_srcdir, File::Spec->catdir('3rdparty', 'output', 'dlfcn-win32-remote', 'dlfcn.c'));
-    push(@additional_srcdir, File::Spec->catdir('3rdparty', 'output', 'winiconv-remote', 'win_iconv.c'));
+    push(@additional_srcdir, File::Spec->catdir('output', '3rdparty', 'dlfcn-win32-remote', 'dlfcn.c'));
+    push(@additional_srcdir, File::Spec->catdir('output', '3rdparty', 'winiconv-remote', 'win_iconv.c'));
+    #
+    # Well, dlfcn.h is at dlfcn-win32-remote level
+    #
+    push(@additional_includes, File::Spec->catdir('output', '3rdparty', 'dlfcn-win32-remote'));
+    #
+    # And we want to make sure we will get the iconv.h from winiconv-remote, not the one from the system
+    #
+    push(@additional_includes, File::Spec->catdir('output', '3rdparty', 'winiconv-remote'));
+    $extra_compiler_flags = "-DICONV_SECOND_ARGUMENT_IS_CONST";
 }
 
 $ac->define_var('TCONV_HAVE_ICONV', 1);
@@ -150,11 +163,12 @@ foreach my $source (@sources) {
     $obj = File::Spec->catfile($obj_dir, basename($cbuilder->object_file($source)));
     push(@objects, $cbuilder->object_file($source));
     $cbuilder->compile(
-	source        => $source,
-	object_file   => $obj,
-	include_dirs  => [ 'include', File::Spec->catdir('output', 'include'), @additional_includes ],
-	'C++'         => $is_cplusplus
-	);
+                       source        => $source,
+                       extra_compiler_flags => $extra_compiler_flags,
+                       object_file   => $obj,
+                       include_dirs  => [ 'include', File::Spec->catdir('output', 'include'), @additional_includes ],
+                       'C++'         => $is_cplusplus
+                      );
 }
 
 # ----
