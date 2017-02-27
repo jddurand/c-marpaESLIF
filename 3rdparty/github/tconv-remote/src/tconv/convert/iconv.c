@@ -2,6 +2,12 @@
 
 #include "tconv/convert/iconv.h"
 
+#ifdef ICONV_SECOND_ARGUMENT_IS_CONST
+#define ICONV_SECOND_ARGUMENT const
+#else
+#define ICONV_SECOND_ARGUMENT const
+#endif
+
 /* iconv interface is a direct proxy to iconv */
 
 /*****************************************************************************/
@@ -15,7 +21,7 @@ void  *tconv_convert_iconv_new(tconv_t tconvp, const char *tocodes, const char *
 size_t tconv_convert_iconv_run(tconv_t tconvp, void *voidp, char **inbufpp, size_t *inbytesleftlp, char **outbufpp, size_t *outbytesleftlp)
 /*****************************************************************************/
 {
-  return iconv((iconv_t) voidp, inbufpp, inbytesleftlp, outbufpp, outbytesleftlp);
+  return iconv((iconv_t) voidp, (ICONV_SECOND_ARGUMENT char **) inbufpp, inbytesleftlp, outbufpp, outbytesleftlp);
 }
 
 /*****************************************************************************/
