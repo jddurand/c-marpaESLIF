@@ -3,6 +3,7 @@ use strict;
 use diagnostics;
 use Archive::Tar;
 use Config;
+use Config::AutoConf;
 use Config::AutoConf::INI;
 use ExtUtils::CBuilder;
 use File::chdir;
@@ -12,6 +13,7 @@ use File::Path qw/make_path/;
 use File::Copy qw/copy/;
 use File::Copy::Recursive qw/dircopy/;
 use IPC::Run qw/run/;
+use Perl::OSType qw/is_os_type/;
 use POSIX qw/EXIT_SUCCESS strftime/;
 #
 # Move to current dir of this script
@@ -145,7 +147,7 @@ AUTOCONF
     $cbuilder->compile(
 	source        => $source,
 	object_file   => $obj,
-        extra_compiler_flags => "-DHAVE_CONFIG_H -DPCRE2_CODE_UNIT_WIDTH=8",
+        extra_compiler_flags => "-DHAVE_CONFIG_H -DPCRE2_CODE_UNIT_WIDTH=8 -DPCRE2_STATIC",
 	include_dirs  => [ File::Spec->curdir, 'src' ]
 	);
   }
@@ -201,7 +203,7 @@ foreach my $source (@sources) {
     $cbuilder->compile(
 	source        => $source,
 	object_file   => $obj,
-        extra_compiler_flags => "-DPCRE2_CODE_UNIT_WIDTH=8 -DMARPAESLIF_BUFSIZ=1048576 -DMARPAESLIF_NTRACE=1",
+        extra_compiler_flags => "-DPCRE2_CODE_UNIT_WIDTH=8 -DPCRE2_STATIC -DMARPAESLIF_BUFSIZ=1048576 -DMARPAESLIF_NTRACE=1",
 	include_dirs  => [ 'include', File::Spec->catdir('output', 'include'), @additional_includes ],
 	'C++'         => $is_cplusplus
 	);
