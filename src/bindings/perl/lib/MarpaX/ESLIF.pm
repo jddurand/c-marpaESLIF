@@ -13,31 +13,11 @@ use vars qw(@ISA $VERSION $XS_VERSION);
 
 # AUTHORITY
 
-# VERSION
-
-#
-# In case library is not in the default path
-# (this happen at least when doing make check in the package source tree)
-#
 BEGIN {
-    $XS_VERSION = '0.001';
-    eval {
-	require XSLoader;
-	XSLoader::load(__PACKAGE__, $XS_VERSION);
-	1;
-    } or do {
-	require DynaLoader;
-	push(@ISA, 'DynaLoader');
-	if ($ENV{MARPAESLIF_LIBRARY_ABSOLUTEPATH}) {
-	    #
-	    push @DynaLoader::dl_library_path, $ENV{MARPAESLIF_LIBRARY_ABSOLUTEPATH};
-	    my @dl_resolve_using = DynaLoader::dl_findfile(qw/-lmarpaESLIF/);
-	    die "Cannot resolve marpaESLIF library after adding $ENV{MARPAESLIF_LIBRARY_ABSOLUTEPATH}" unless @dl_resolve_using;
-	    my $dl_resolve_using = shift @dl_resolve_using;
-	    DynaLoader::dl_load_file($dl_resolve_using, 0x01);
-	}
-	DynaLoader::bootstrap(__PACKAGE__, $XS_VERSION);
-    }
+
+    # VERSION
+
+    XSLoader::load __PACKAGE__, $VERSION;
 }
 
 =head1 DESCRIPTION
