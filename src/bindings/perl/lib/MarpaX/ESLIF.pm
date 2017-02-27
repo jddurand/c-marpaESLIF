@@ -7,7 +7,7 @@ use Params::Validate qw/validate_pos/;
 use Class::Tiny;
 use Role::Tiny;
 use Carp qw/croak/;
-use vars qw(@ISA $VERSION $XS_VERSION);
+use vars qw/$VERSION/;
 
 # ABSTRACT: Marpa Extended Scanless Interface
 
