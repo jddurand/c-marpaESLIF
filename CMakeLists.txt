@@ -35,7 +35,7 @@ INCLUDE (InstallRequiredSystemLibraries)
 # -------
 SET (GENERICLOGGER_VERSION_MAJOR 1)
 SET (GENERICLOGGER_VERSION_MINOR 0)
-SET (GENERICLOGGER_VERSION_PATCH 5)
+SET (GENERICLOGGER_VERSION_PATCH 6)
 SET (GENERICLOGGER_VERSION ${GENERICLOGGER_VERSION_MAJOR}.${GENERICLOGGER_VERSION_MINOR}.${GENERICLOGGER_VERSION_PATCH})
 ADD_DEFINITIONS(-DGENERICLOGGER_VERSION="${GENERICLOGGER_VERSION}")
 
@@ -100,6 +100,7 @@ FILE (GLOB lib_src src/*.c)
 
 ADD_LIBRARY (genericLogger        SHARED ${lib_src})
 ADD_LIBRARY (genericLogger_static STATIC ${lib_src})
+ADD_LIBRARY (genericLogger_object OBJECT ${lib_src})
 
 # ----------------------------------------------------
 # Export flags - Note the genericLogger_STATIC keyword
