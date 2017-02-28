@@ -17,6 +17,13 @@ IF (POLICY CMP0018)
   CMAKE_POLICY (SET CMP0018 NEW)
 ENDIF ()
 
+# -----------------------------------------------------------------------
+# We want to be the first one that create check target, so that we own it
+# -----------------------------------------------------------------------
+IF (NOT TARGET check)
+  ADD_CUSTOM_TARGET (check COMMAND ${CMAKE_CTEST_COMMAND})
+ENDIF ()
+
 # Use GNUInstallDirs in order to enforce lib64 if needed
 INCLUDE (GNUInstallDirs)
 
@@ -29,7 +36,7 @@ SET (CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 SET (TCONV_VERSION_MAJOR 1)
 SET (TCONV_VERSION_MINOR 0)
-SET (TCONV_VERSION_PATCH 14)
+SET (TCONV_VERSION_PATCH 15)
 SET (TCONV_VERSION "${TCONV_VERSION_MAJOR}.${TCONV_VERSION_MINOR}.${TCONV_VERSION_PATCH}")
 
 SET (CMAKE_MODULE_PATH              ${PROJECT_SOURCE_DIR}/cmake)           # General module search path
@@ -69,10 +76,6 @@ ADD_DEFINITIONS(-DTCONV_VERSION="${TCONV_VERSION}")
 #############################
 EXECUTE_PROCESS(COMMAND "${CMAKE_COMMAND}" -E make_directory "${3RDPARTY_OUTPUT_PATH}")
 
-IF (ALL_IN_ONE)
-  INCLUDE (BuildDependency)
-ENDIF ()
-
 # ----------------------------------
 # C language
 # ----------------------------------
@@ -88,23 +91,16 @@ SET     (TCONV_C_VA_COPY "${C_VA_COPY}")
 # genericLogger: required
 # -----------------------------------
 IF (ALL_IN_ONE)
-  IF (NOT GENERICLOGGER_ROOT_DIR)
-    SET (GENERICLOGGER_ROOT_DIR "${3RDPARTY_OUTPUT_PATH}/genericLogger-remote/install")
-    #
-    # All-in-one mode means static linking
-    #
-    BuildDependency(
-      "genericLogger-remote"
-      "${PROJECT_SOURCE_DIR}/3rdparty/github/genericLogger-remote"
-      "${3RDPARTY_OUTPUT_PATH}/genericLogger-remote"
-      "install"
-      )
+  #
+  # Absolute path, otherwise using it as include dir for compilation will croak
+  #
+  SET (GENERICLOGGER_SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/genericLogger-remote")
+  ADD_SUBDIRECTORY(${GENERICLOGGER_SRC_DIR})
+ELSE ()
+  FIND_PACKAGE (genericLogger)
+  IF (NOT GENERICLOGGER_FOUND)
+    MESSAGE (FATAL_ERROR "genericLogger must be detected")
   ENDIF ()
-  SET(ENV{GENERICLOGGER_ROOT_DIR} "${GENERICLOGGER_ROOT_DIR}")
-ENDIF ()
-FIND_PACKAGE (genericLogger)
-IF (NOT GENERICLOGGER_FOUND)
-  MESSAGE (FATAL_ERROR "genericLogger must be detected")
 ENDIF ()
 
 # ----------------------------------
@@ -206,11 +202,20 @@ ADD_CUSTOM_TARGET(tconvConfig SOURCES "${CONFIG_H}")
 #############################
 # Configuration result impact
 #############################
-INCLUDE_DIRECTORIES(
-  "${INCLUDE_OUTPUT_PATH}"                                # Include path for generated files (internal)
-  "${PROJECT_SOURCE_DIR}/include"                         # Include path for the other headers (internal)
-  "${GENERICLOGGER_INCLUDE_DIRS}"                         # Include path for genericLogger (external - required)
-  )
+IF (ALL_IN_ONE)
+  INCLUDE_DIRECTORIES(
+    "${INCLUDE_OUTPUT_PATH}"                                # Include path for generated files (internal)
+    "${PROJECT_SOURCE_DIR}/include"                         # Include path for the other headers (internal)
+    "${GENERICLOGGER_SRC_DIR}/output/include"               # Include path for genericLogger (external - generated)
+    "${GENERICLOGGER_SRC_DIR}/include"                      # Include path for genericLogger (external - generated)
+    )
+ELSE ()
+  INCLUDE_DIRECTORIES(
+    "${INCLUDE_OUTPUT_PATH}"                                # Include path for generated files (internal)
+    "${PROJECT_SOURCE_DIR}/include"                         # Include path for the other headers (internal)
+    "${GENERICLOGGER_INCLUDE_DIRS}"                         # Include path for genericLogger (external - required)
+    )
+ENDIF ()
 IF (ICU_FOUND)
   INCLUDE_DIRECTORIES ("${ICU_INCLUDE_DIRS}")
 ENDIF (ICU_FOUND)
@@ -224,8 +229,13 @@ IF (DLFCNWIN32_FOUND)
   INCLUDE_DIRECTORIES ("${DLFCNWIN32_INCLUDE_DIR}")
 ENDIF (DLFCNWIN32_FOUND)
 
-SET (CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}   $ENV{CFLAGS} ${ICU_C_FLAGS_SHARED}   ${GENERICLOGGER_C_FLAGS_SHARED}")
-SET (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{CFLAGS} ${ICU_CXX_FLAGS_SHARED} ${GENERICLOGGER_CXX_FLAGS_SHARED}")
+IF (ALL_IN_ONE)
+  SET (CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}   $ENV{CFLAGS} ${ICU_C_FLAGS_SHARED}")
+  SET (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{CFLAGS} ${ICU_CXX_FLAGS_SHARED}")
+ELSE ()
+  SET (CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}   $ENV{CFLAGS} ${ICU_C_FLAGS_SHARED}   ${GENERICLOGGER_C_FLAGS_SHARED}")
+  SET (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{CFLAGS} ${ICU_CXX_FLAGS_SHARED} ${GENERICLOGGER_CXX_FLAGS_SHARED}")
+ENDIF ()
 
 #############################
 # Makefile details
@@ -262,14 +272,26 @@ IF (WINICONV_FOUND)
 ENDIF ()
 ADD_LIBRARY (tconv        SHARED ${tconv_src})
 ADD_LIBRARY (tconv_static STATIC ${tconv_src})
-SET (tconv_lib
-  ${DLFCNWIN32_LIBRARY_TARGET_DEPEND}
-  ${ICU_LIBRARIES}
-  ${ICONV_LIBRARIES}
-  ${CMAKE_DL_LIBS}
-  ${GENERICLOGGER_LIBRARIES})
-TARGET_LINK_LIBRARIES (tconv        ${tconv_lib})
-TARGET_LINK_LIBRARIES (tconv_static ${tconv_lib})
+IF (ALL_IN_ONE)
+  SET (tconv_lib
+    ${DLFCNWIN32_LIBRARY_TARGET_DEPEND}
+    ${ICU_LIBRARIES}
+    ${ICONV_LIBRARIES}
+    ${CMAKE_DL_LIBS}
+    )
+    TARGET_LINK_LIBRARIES (tconv        ${tconv_lib} genericLogger)
+    TARGET_LINK_LIBRARIES (tconv_static ${tconv_lib} genericLogger_static)
+ELSE ()
+  SET (tconv_lib
+    ${DLFCNWIN32_LIBRARY_TARGET_DEPEND}
+    ${ICU_LIBRARIES}
+    ${ICONV_LIBRARIES}
+    ${CMAKE_DL_LIBS}
+    ${GENERICLOGGER_LIBRARIES}
+    )
+  TARGET_LINK_LIBRARIES (tconv        ${tconv_lib})
+  TARGET_LINK_LIBRARIES (tconv_static ${tconv_lib})
+ENDIF ()
 SET_TARGET_PROPERTIES (tconv
   PROPERTIES
   COMPILE_FLAGS "-Dtconv_EXPORTS"
@@ -312,15 +334,27 @@ SET_TARGET_PROPERTIES(tconvExec PROPERTIES
   RUNTIME_OUTPUT_DIRECTORY_RELWITHDEBINFO "${BINARY_OUTPUT_PATH}"
   INSTALL_RPATH                           "${CMAKE_INSTALL_PREFIX}/lib"
   INSTALL_RPATH_USE_LINK_PATH             TRUE
-)
-SET_PROPERTY(TARGET tconvExec
-  PROPERTY
-  INCLUDE_DIRECTORIES
-  "${INCLUDE_OUTPUT_PATH}"                                # Include path for generated files (internal)
-  "${PROJECT_SOURCE_DIR}/include"                         # Include path for the other headers (internal)
-  "${GENERICLOGGER_INCLUDE_DIRS}"                         # Include path for genericLogger (external - required)
-  "${OPTPARSE_INCLUDE_DIR}"                               # Include path for optparse (builtin)
   )
+IF (ALL_IN_ONE)
+  SET_PROPERTY(TARGET tconvExec
+    PROPERTY
+    INCLUDE_DIRECTORIES
+    "${INCLUDE_OUTPUT_PATH}"                                # Include path for generated files (internal)
+    "${PROJECT_SOURCE_DIR}/include"                         # Include path for the other headers (internal)
+    "${GENERICLOGGER_SRC_DIR}/output/include"               # Include path for genericLogger (external - generated)
+    "${GENERICLOGGER_SRC_DIR}/include"                      # Include path for genericLogger (external - generated)
+    "${OPTPARSE_INCLUDE_DIR}"                               # Include path for optparse (builtin)
+    )
+ELSE ()
+  SET_PROPERTY(TARGET tconvExec
+    PROPERTY
+    INCLUDE_DIRECTORIES
+    "${INCLUDE_OUTPUT_PATH}"                                # Include path for generated files (internal)
+    "${PROJECT_SOURCE_DIR}/include"                         # Include path for the other headers (internal)
+    "${GENERICLOGGER_INCLUDE_DIRS}"                         # Include path for genericLogger (external - required)
+    "${OPTPARSE_INCLUDE_DIR}"                               # Include path for optparse (builtin)
+    )
+ENDIF ()
 TARGET_LINK_LIBRARIES(tconvExec tconv optparse)
 
 ADD_EXECUTABLE(tconvExecStatic  bin/tconv.c)
@@ -335,14 +369,26 @@ SET_TARGET_PROPERTIES(tconvExecStatic PROPERTIES
   INSTALL_RPATH                           "${CMAKE_INSTALL_PREFIX}/lib"
   INSTALL_RPATH_USE_LINK_PATH             TRUE
 )
-SET_PROPERTY(TARGET tconvExecStatic
-  PROPERTY
-  INCLUDE_DIRECTORIES
-  "${INCLUDE_OUTPUT_PATH}"                                # Include path for generated files (internal)
-  "${PROJECT_SOURCE_DIR}/include"                         # Include path for the other headers (internal)
-  "${GENERICLOGGER_INCLUDE_DIRS}"                         # Include path for genericLogger (external - required)
-  "${OPTPARSE_INCLUDE_DIR}"                               # Include path for optparse (builtin)
-  )
+IF (ALL_IN_ONE)
+  SET_PROPERTY(TARGET tconvExecStatic
+    PROPERTY
+    INCLUDE_DIRECTORIES
+    "${INCLUDE_OUTPUT_PATH}"                                # Include path for generated files (internal)
+    "${PROJECT_SOURCE_DIR}/include"                         # Include path for the other headers (internal)
+    "${GENERICLOGGER_SRC_DIR}/output/include"               # Include path for genericLogger (external - generated)
+    "${GENERICLOGGER_SRC_DIR}/include"                      # Include path for genericLogger (external - generated)
+    "${OPTPARSE_INCLUDE_DIR}"                               # Include path for optparse (builtin)
+    )
+ELSE ()
+  SET_PROPERTY(TARGET tconvExecStatic
+    PROPERTY
+    INCLUDE_DIRECTORIES
+    "${INCLUDE_OUTPUT_PATH}"                                # Include path for generated files (internal)
+    "${PROJECT_SOURCE_DIR}/include"                         # Include path for the other headers (internal)
+    "${GENERICLOGGER_INCLUDE_DIRS}"                         # Include path for genericLogger (external - required)
+    "${OPTPARSE_INCLUDE_DIR}"                               # Include path for optparse (builtin)
+    )
+ENDIF ()
 TARGET_LINK_LIBRARIES(tconvExecStatic tconv_static optparse)
 
 # -----
@@ -355,7 +401,7 @@ ADD_TEST (NAME tconvTest
 ADD_TEST (NAME tconvStaticTest
           COMMAND ../bin/tconv_static -t UTF-16 -o tconv.tconv-UTF-16.c "${PROJECT_SOURCE_DIR}/src/tconv.c"
           WORKING_DIRECTORY "${LIBRARY_OUTPUT_PATH}")
-ADD_CUSTOM_TARGET (check COMMAND ${CMAKE_CTEST_COMMAND} DEPENDS tconvExec tconvExecStatic)
+ADD_DEPENDENCIES  (check tconvExec tconvExecStatic)
 #
 # Please note that test is likely to fail if libraries are not already in your path.
 # This is why the working directory is "${LIBRARY_OUTPUT_PATH}".
