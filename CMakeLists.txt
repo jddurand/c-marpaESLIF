@@ -36,7 +36,7 @@ SET (CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 SET (TCONV_VERSION_MAJOR 1)
 SET (TCONV_VERSION_MINOR 0)
-SET (TCONV_VERSION_PATCH 15)
+SET (TCONV_VERSION_PATCH 16)
 SET (TCONV_VERSION "${TCONV_VERSION_MAJOR}.${TCONV_VERSION_MINOR}.${TCONV_VERSION_PATCH}")
 
 SET (CMAKE_MODULE_PATH              ${PROJECT_SOURCE_DIR}/cmake)           # General module search path
@@ -270,8 +270,6 @@ ENDIF ()
 IF (WINICONV_FOUND)
   LIST(APPEND tconv_src ${lib_winiconv_src})
 ENDIF ()
-ADD_LIBRARY (tconv        SHARED ${tconv_src})
-ADD_LIBRARY (tconv_static STATIC ${tconv_src})
 IF (ALL_IN_ONE)
   SET (tconv_lib
     ${DLFCNWIN32_LIBRARY_TARGET_DEPEND}
@@ -279,8 +277,8 @@ IF (ALL_IN_ONE)
     ${ICONV_LIBRARIES}
     ${CMAKE_DL_LIBS}
     )
-    TARGET_LINK_LIBRARIES (tconv        ${tconv_lib} genericLogger)
-    TARGET_LINK_LIBRARIES (tconv_static ${tconv_lib} genericLogger_static)
+  ADD_LIBRARY (tconv        SHARED ${tconv_src} $<TARGET_OBJECTS:genericLogger_object>)
+  ADD_LIBRARY (tconv_static STATIC ${tconv_src} $<TARGET_OBJECTS:genericLogger_object>)
 ELSE ()
   SET (tconv_lib
     ${DLFCNWIN32_LIBRARY_TARGET_DEPEND}
@@ -289,9 +287,11 @@ ELSE ()
     ${CMAKE_DL_LIBS}
     ${GENERICLOGGER_LIBRARIES}
     )
-  TARGET_LINK_LIBRARIES (tconv        ${tconv_lib})
-  TARGET_LINK_LIBRARIES (tconv_static ${tconv_lib})
+  ADD_LIBRARY (tconv        SHARED ${tconv_src})
+  ADD_LIBRARY (tconv_static STATIC ${tconv_src})
 ENDIF ()
+TARGET_LINK_LIBRARIES (tconv        ${tconv_lib})
+TARGET_LINK_LIBRARIES (tconv_static ${tconv_lib})
 SET_TARGET_PROPERTIES (tconv
   PROPERTIES
   COMPILE_FLAGS "-Dtconv_EXPORTS"
