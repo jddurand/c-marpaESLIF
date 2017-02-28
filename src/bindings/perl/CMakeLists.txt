@@ -13,13 +13,13 @@ ADD_CUSTOM_COMMAND(OUTPUT ${MARPAESLIFCOPY_CMAKEOBJECTS_PL}
   )
 
 ADD_CUSTOM_TARGET(marpaESLIFPerlPackage ALL
-  DEPENDS ${MARPAESLIFCOPY_CMAKEOBJECTS_PL} dist.ini
-  COMMAND dzil build)
+  DEPENDS ${MARPAESLIFCOPY_CMAKEOBJECTS_PL} ${MARPAESLIFPERL_SRC_PM} ${MARPAESLIFPERL_SRC_XS} ${MARPAESLIFPERL_SRC_PL} ${MARPAESLIFPERL_SRC_T} dist.ini
+  COMMAND dzil clean build)
 
 # ------------------------------------------------
 # TEST (executed with make check at the top level)
 # ------------------------------------------------
 ENABLE_TESTING()
-ADD_TEST (marpaESLIFPerlTest ${CMAKE_COMMAND} "${DZIL}" test --all --test-verbose)
+ADD_TEST (NAME marpaESLIFPerlTest COMMAND dzil test)
 ADD_CUSTOM_TARGET(marpaESLIFPerlTester DEPENDS marpaESLIFPerlPackage)
 ADD_DEPENDENCIES(check marpaESLIFPerlTester)
