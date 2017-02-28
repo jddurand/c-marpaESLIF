@@ -15,6 +15,13 @@ SET (CMAKE_C_VISIBILITY_PRESET   hidden)
 SET (CMAKE_CXX_VISIBILITY_PRESET hidden)
 SET (CMAKE_POSITION_INDEPENDENT_CODE ON)
 
+# -----------------------------------------------------------------------
+# We want to be the first one that create check target, so that we own it
+# -----------------------------------------------------------------------
+IF (NOT TARGET check)
+  ADD_CUSTOM_TARGET (check COMMAND ${CMAKE_CTEST_COMMAND})
+ENDIF ()
+
 # --------------
 # Install tricks
 # --------------
@@ -28,7 +35,7 @@ INCLUDE (InstallRequiredSystemLibraries)
 # -------
 SET (GENERICLOGGER_VERSION_MAJOR 1)
 SET (GENERICLOGGER_VERSION_MINOR 0)
-SET (GENERICLOGGER_VERSION_PATCH 3)
+SET (GENERICLOGGER_VERSION_PATCH 5)
 SET (GENERICLOGGER_VERSION ${GENERICLOGGER_VERSION_MAJOR}.${GENERICLOGGER_VERSION_MINOR}.${GENERICLOGGER_VERSION_PATCH})
 ADD_DEFINITIONS(-DGENERICLOGGER_VERSION="${GENERICLOGGER_VERSION}")
 
@@ -148,7 +155,7 @@ ADD_TEST              (NAME genericLoggerTestStatic
                        COMMAND genericLoggerTesterStatic
                        WORKING_DIRECTORY ${LIBRARY_OUTPUT_PATH})
 
-ADD_CUSTOM_TARGET     (check COMMAND ${CMAKE_CTEST_COMMAND} DEPENDS genericLoggerTester genericLoggerTesterStatic)
+ADD_DEPENDENCIES      (check genericLoggerTester genericLoggerTesterStatic)
 
 # -------
 # Install
@@ -161,7 +168,7 @@ INSTALL (FILES include/genericLogger.h DESTINATION include)
 IF (UNIX)
   INCLUDE (Pod2Man)
   ADD_MANPAGE_TARGET()
-  POD2MAN(README.pod "GENERICLOGGER" "3" "${GENERICLOGGER_VERSION}")
+  POD2MAN("${PROJECT_SOURCE_DIR}/README.pod" "GENERICLOGGER" "3" "${GENERICLOGGER_VERSION}")
 ENDIF (UNIX)
 
 # ---------
