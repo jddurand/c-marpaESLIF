@@ -11,8 +11,10 @@ CMake macros customized for /my/ packages
 # - Tests always overwrite PATH with value of variable TEST_PATH
 # - Sourcedir of package Xx is always inside current package as 3rdparty/github/Xx
 # - There all under github at https://github.com/jddurand/c-Xx.git
+# - They are pure libraries, no window stuff
 #
 
 List of macros:
 
 MACRO (MYPACKAGEDEPENDENCY dependTarget dependSourceDir dependIncludeDirsVarname)
+MACRO (MYPACKAGESTART      packageName)
