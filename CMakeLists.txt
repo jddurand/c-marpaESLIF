@@ -50,6 +50,18 @@ INCLUDE_DIRECTORIES (
   ${PROJECT_SOURCE_DIR}/include                        # Include path for the other headers
   )
 
+# For all outputs directories
+# C.f. http://stackoverflow.com/questions/7747857/in-cmake-how-do-i-work-around-the-debug-and-release-directories-visual-studio-2
+SET (CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${LIBRARY_OUTPUT_PATH}")
+SET (CMAKE_LIBRARY_OUTPUT_DIRECTORY "${LIBRARY_OUTPUT_PATH}")
+SET (CMAKE_RUNTIME_OUTPUT_DIRECTORY "${LIBRARY_OUTPUT_PATH}")
+FOREACH (OUTPUTCONFIG ${CMAKE_CONFIGURATION_TYPES})
+    STRING( TOUPPER ${OUTPUTCONFIG} OUTPUTCONFIG )
+    SET ( CMAKE_LIBRARY_OUTPUT_DIRECTORY_${OUTPUTCONFIG} "${LIBRARY_OUTPUT_PATH}")
+    SET ( CMAKE_ARCHIVE_OUTPUT_DIRECTORY_${OUTPUTCONFIG} "${LIBRARY_OUTPUT_PATH}")
+    SET ( CMAKE_RUNTIME_OUTPUT_DIRECTORY_${OUTPUTCONFIG} "${LIBRARY_OUTPUT_PATH}")
+ENDFOREACH (OUTPUTCONFIG CMAKE_CONFIGURATION_TYPES)
+
 # --------------------
 # CFLAGS customization
 # --------------------
@@ -126,6 +138,11 @@ SET_TARGET_PROPERTIES(genericLogger        PROPERTIES COMPILE_FLAGS "-DgenericLo
                                                       LINKER_LANGUAGE C)
 
 SET_TARGET_PROPERTIES(genericLogger_static PROPERTIES COMPILE_FLAGS "-DgenericLogger_STATIC"
+                                                      VERSION       "${GENERICLOGGER_VERSION}"
+                                                      SOVERSION     "${GENERICLOGGER_VERSION_MAJOR}"
+                                                      LINKER_LANGUAGE C)
+
+SET_TARGET_PROPERTIES(genericLogger_object PROPERTIES COMPILE_FLAGS "-DgenericLogger_STATIC"
                                                       VERSION       "${GENERICLOGGER_VERSION}"
                                                       SOVERSION     "${GENERICLOGGER_VERSION_MAJOR}"
                                                       LINKER_LANGUAGE C)
