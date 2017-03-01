@@ -93,78 +93,8 @@ SET     (TCONV_C_VA_COPY "${C_VA_COPY}")
 # -----------------------------------
 # genericLogger: required
 # -----------------------------------
-IF (ALL_IN_ONE)
-  # INCLUDE (AllInOneDependency)
-  # AllInOneDependency(genericLogger "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/genericLogger-remote" GENERICLOGGER_REAL_INCLUDE_DIRS genericLogger)
-  IF (NOT TARGET genericLogger)
-    #
-    # Absolute path, otherwise using it as include dir for compilation will croak
-    #
-    SET (GENERICLOGGER_SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/genericLogger-remote")
-
-    MESSAGE(STATUS "Using genericLogger target from subdirectory ${GENERICLOGGER_SRC_DIR}")
-    ADD_SUBDIRECTORY(${GENERICLOGGER_SRC_DIR})
-    SET (GENERICLOGGER_REAL_INCLUDE_DIRS
-      "${GENERICLOGGER_SRC_DIR}/output/include"               # Include path for genericLogger (external - generated)
-      "${GENERICLOGGER_SRC_DIR}/include"                      # Include path for genericLogger (external - generated)
-      )
-    #
-    # Test path management
-    #
-    SET (_GENERICLOGGER_RUNTIME_DIRECTORY "${GENERICLOGGER_SRC_DIR}/output/lib")
-    IF ("${CMAKE_HOST_SYSTEM}" MATCHES ".*Windows.*")
-      STRING(REGEX REPLACE "/" "\\\\"  _GENERICLOGGER_RUNTIME_DIRECTORY "${_GENERICLOGGER_RUNTIME_DIRECTORY}")
-    ELSE ()
-      STRING(REGEX REPLACE " " "\\ "  _GENERICLOGGER_RUNTIME_DIRECTORY "${_GENERICLOGGER_RUNTIME_DIRECTORY}")
-    ENDIF ()
-    SET(GENERICLOGGER_RUNTIME_DIRECTORY "${_GENERICLOGGER_RUNTIME_DIRECTORY}" CACHE INTERNAL "genericLogger Runtime Directory")
-    IF (NOT TEST_PATH)
-      MESSAGE(STATUS "Initializing TEST_PATH with PATH")
-      SET (TEST_PATH "$ENV{PATH}" )
-    ENDIF ()
-    IF ("${CMAKE_HOST_SYSTEM}" MATCHES ".*Windows.*")
-      SET (SEP "\\;")
-    ELSE ()
-      SET (SEP ":")
-    ENDIF ()
-    MESSAGE(STATUS "Adding ${GENERICLOGGER_RUNTIME_DIRECTORY} to test path")
-    SET (TEST_PATH "${GENERICLOGGER_RUNTIME_DIRECTORY}${SEP}${TEST_PATH}" CACHE INTERNAL "Test Path")
-  ELSE ()
-    MESSAGE(STATUS "Re-using already existing genericLogger target")
-  ENDIF ()
-ELSE ()
-  FIND_PACKAGE (genericLogger)
-  IF (NOT GENERICLOGGER_FOUND)
-    MESSAGE (FATAL_ERROR "genericLogger must be detected")
-  ENDIF ()
-  SET (GENERICLOGGER_REAL_INCLUDE_DIRS
-    "${GENERICLOGGER_INCLUDE_DIRS}"                         # Include path for genericLogger (external - required)
-    )
-  IF (NOT GENERICLOGGER_RUNTIME_DIRECTORY)
-    #
-    # Test path management
-    #
-    IF ("${CMAKE_HOST_SYSTEM}" MATCHES ".*Windows.*")
-      SET(_GENERICLOGGER_RUNTIME_DIRECTORY "${GENERICLOGGER_ROOT_DIR}/bin")
-      STRING(REGEX REPLACE "/" "\\\\"  _GENERICLOGGER_RUNTIME_DIRECTORY "${_GENERICLOGGER_RUNTIME_DIRECTORY}")
-    ELSE ()
-      SET(_GENERICLOGGER_RUNTIME_DIRECTORY "${GENERICLOGGER_ROOT_DIR}/lib")
-      STRING(REGEX REPLACE " " "\\ "  _GENERICLOGGER_RUNTIME_DIRECTORY "${_GENERICLOGGER_RUNTIME_DIRECTORY}")
-    ENDIF ()
-    SET(GENERICLOGGER_RUNTIME_DIRECTORY "${_GENERICLOGGER_RUNTIME_DIRECTORY}" CACHE INTERNAL "genericLogger Runtime Directory")
-    IF (NOT TEST_PATH)
-      MESSAGE(STATUS "Initializing TEST_PATH with PATH")
-      SET (TEST_PATH "$ENV{PATH}")
-    ENDIF ()
-    IF ("${CMAKE_HOST_SYSTEM}" MATCHES ".*Windows.*")
-      SET (SEP "\\;")
-    ELSE ()
-      SET (SEP ":")
-    ENDIF ()
-    MESSAGE(STATUS "Adding ${GENERICLOGGER_RUNTIME_DIRECTORY} to test path")
-    SET (TEST_PATH "${GENERICLOGGER_RUNTIME_DIRECTORY}${SEP}${TEST_PATH}" CACHE INTERNAL "Test Path")
-  ENDIF ()
-ENDIF ()
+INCLUDE (MyPackageDependency)
+MYPACKAGEDEPENDENCY(genericLogger "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/genericLogger-remote" GENERICLOGGER_REAL_INCLUDE_DIRS)
 
 # ----------------------------------
 # ccharset Charset Provider: builtin
