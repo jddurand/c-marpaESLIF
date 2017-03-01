@@ -18,15 +18,7 @@ ENDIF ()
 # -------
 # Options
 # -------
-SET (ALL_IN_ONE_DESCRIPTION              "Compile non-system wide dependencies locally")
-SET (GENERATE_OBJECT_TARGETS_DESCRIPTION "Generate OBJECT targets - useful if used as a ADD_SUBDIRECTORY and parent want import objects files")
-
-OPTION(ALL_IN_ONE              ${ALL_IN_ONE_DESCRIPTION} OFF)
-IF (ALL_IN_ONE)
-  OPTION(GENERATE_OBJECT_TARGETS ${GENERATE_OBJECT_TARGETS_DESCRIPTION} ON)
-ELSE ()
-  OPTION(GENERATE_OBJECT_TARGETS ${GENERATE_OBJECT_TARGETS_DESCRIPTION} OFF)
-ENDIF ()
+OPTION (ALL_IN_ONE "Compile non-system wide dependencies locally" OFF)
 
 # -----------------------------------------------------------------------
 # We want to be the first one that create check target, so that we own it
@@ -102,24 +94,42 @@ SET     (TCONV_C_VA_COPY "${C_VA_COPY}")
 # genericLogger: required
 # -----------------------------------
 IF (ALL_IN_ONE)
-  #
-  # Absolute path, otherwise using it as include dir for compilation will croak
-  #
-  SET (GENERICLOGGER_SRC_DIR          "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/genericLogger-remote")
+  IF (NOT TARGET genericLogger)
+    #
+    # Absolute path, otherwise using it as include dir for compilation will croak
+    #
+    SET (GENERICLOGGER_SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/genericLogger-remote")
 
-  MESSAGE(STATUS "-----------------------------------------")
-  MESSAGE(STATUS "All-in-one mode: configuring for genericLogger")
-  MESSAGE(STATUS "   Adding subdirectory ${GENERICLOGGER_SRC_DIR}")
-  ADD_SUBDIRECTORY(${GENERICLOGGER_SRC_DIR})
-  SET (GENERICLOGGER_REAL_INCLUDE_DIRS
-    "${GENERICLOGGER_SRC_DIR}/output/include"               # Include path for genericLogger (external - generated)
-    "${GENERICLOGGER_SRC_DIR}/include"                      # Include path for genericLogger (external - generated)
-    )
-
-  MESSAGE(STATUS "   Setting genericLogger compile flags to -DgenericLogger_STATIC for every static mode")
-  SET (GENERICLOGGER_C_FLAGS_STATIC   "-DgenericLogger_STATIC")
-  SET (GENERICLOGGER_CXX_FLAGS_STATIC "-DgenericLogger_STATIC")
-  MESSAGE(STATUS "-----------------------------------------")
+    MESSAGE(STATUS "Using genericLogger target from subdirectory ${GENERICLOGGER_SRC_DIR}")
+    ADD_SUBDIRECTORY(${GENERICLOGGER_SRC_DIR})
+    SET (GENERICLOGGER_REAL_INCLUDE_DIRS
+      "${GENERICLOGGER_SRC_DIR}/output/include"               # Include path for genericLogger (external - generated)
+      "${GENERICLOGGER_SRC_DIR}/include"                      # Include path for genericLogger (external - generated)
+      )
+    #
+    # Test path management
+    #
+    SET (_GENERICLOGGER_RUNTIME_DIRECTORY "${GENERICLOGGER_SRC_DIR}/output/lib")
+    IF ("${CMAKE_HOST_SYSTEM}" MATCHES ".*Windows.*")
+      STRING(REGEX REPLACE "/" "\\\\"  _GENERICLOGGER_RUNTIME_DIRECTORY "${_GENERICLOGGER_RUNTIME_DIRECTORY}")
+    ELSE ()
+      STRING(REGEX REPLACE " " "\\ "  _GENERICLOGGER_RUNTIME_DIRECTORY "${_GENERICLOGGER_RUNTIME_DIRECTORY}")
+    ENDIF ()
+    SET(GENERICLOGGER_RUNTIME_DIRECTORY "${_GENERICLOGGER_RUNTIME_DIRECTORY}" CACHE INTERNAL "genericLogger Runtime Directory")
+    IF (NOT TEST_PATH)
+      MESSAGE(STATUS "Initializing TEST_PATH with PATH")
+      SET (TEST_PATH "$ENV{PATH}" )
+    ENDIF ()
+    IF ("${CMAKE_HOST_SYSTEM}" MATCHES ".*Windows.*")
+      SET (SEP "\\;")
+    ELSE ()
+      SET (SEP ":")
+    ENDIF ()
+    MESSAGE(STATUS "Adding ${GENERICLOGGER_RUNTIME_DIRECTORY} to test path")
+    SET (TEST_PATH "${TEST_PATH}${SEP}${GENERICLOGGER_RUNTIME_DIRECTORY}" CACHE INTERNAL "Test Path")
+  ELSE ()
+    MESSAGE(STATUS "Re-using already existing genericLogger target")
+  ENDIF ()
 ELSE ()
   FIND_PACKAGE (genericLogger)
   IF (NOT GENERICLOGGER_FOUND)
@@ -128,6 +138,30 @@ ELSE ()
   SET (GENERICLOGGER_REAL_INCLUDE_DIRS
     "${GENERICLOGGER_INCLUDE_DIRS}"                         # Include path for genericLogger (external - required)
     )
+  IF (NOT GENERICLOGGER_RUNTIME_DIRECTORY)
+    #
+    # Test path management
+    #
+    IF ("${CMAKE_HOST_SYSTEM}" MATCHES ".*Windows.*")
+      SET(_GENERICLOGGER_RUNTIME_DIRECTORY "${GENERICLOGGER_ROOT_DIR}/bin")
+      STRING(REGEX REPLACE "/" "\\\\"  _GENERICLOGGER_RUNTIME_DIRECTORY "${_GENERICLOGGER_RUNTIME_DIRECTORY}")
+    ELSE ()
+      SET(_GENERICLOGGER_RUNTIME_DIRECTORY "${GENERICLOGGER_ROOT_DIR}/lib")
+      STRING(REGEX REPLACE " " "\\ "  _GENERICLOGGER_RUNTIME_DIRECTORY "${_GENERICLOGGER_RUNTIME_DIRECTORY}")
+    ENDIF ()
+    SET(GENERICLOGGER_RUNTIME_DIRECTORY "${_GENERICLOGGER_RUNTIME_DIRECTORY}" CACHE INTERNAL "genericLogger Runtime Directory")
+    IF (NOT TEST_PATH)
+      MESSAGE(STATUS "Initializing TEST_PATH with PATH")
+      SET (TEST_PATH "$ENV{PATH}")
+    ENDIF ()
+    IF ("${CMAKE_HOST_SYSTEM}" MATCHES ".*Windows.*")
+      SET (SEP "\\;")
+    ELSE ()
+      SET (SEP ":")
+    ENDIF ()
+    MESSAGE(STATUS "Adding ${GENERICLOGGER_RUNTIME_DIRECTORY} to test path")
+    SET (TEST_PATH "${TEST_PATH}${SEP}${GENERICLOGGER_RUNTIME_DIRECTORY}" CACHE INTERNAL "Test Path")
+  ENDIF ()
 ENDIF ()
 
 # ----------------------------------
@@ -248,7 +282,7 @@ IF (DLFCNWIN32_FOUND)
 ENDIF (DLFCNWIN32_FOUND)
 
 #
-# Note: ${GENERICLOGGER_C_FLAGS_SHARED} and ${GENERICLOGGER_CXX_FLAGS_SHARED} are empty in ALL_IN_ONE mode
+# Note: ${GENERICLOGGER_C_FLAGS_SHARED} and ${GENERICLOGGER_CXX_FLAGS_SHARED} may be empty
 #
 SET (CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}   $ENV{CFLAGS} ${ICU_C_FLAGS_SHARED}   ${GENERICLOGGER_C_FLAGS_SHARED}")
 SET (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{CFLAGS} ${ICU_CXX_FLAGS_SHARED} ${GENERICLOGGER_CXX_FLAGS_SHARED}")
@@ -293,7 +327,9 @@ SET (tconv_lib
   ${ICONV_LIBRARIES}
   ${CMAKE_DL_LIBS}
   )
-IF (NOT ALL_IN_ONE)
+IF (ALL_IN_ONE)
+  LIST(APPEND tconv_lib genericLogger)
+ELSE ()
   LIST(APPEND tconv_lib ${GENERICLOGGER_LIBRARIES})
 ENDIF ()
 
@@ -309,16 +345,9 @@ SET_TARGET_PROPERTIES (tconv
   SOVERSION     "${TCONV_VERSION_MAJOR}")
 SET_TARGET_PROPERTIES (tconv_static
   PROPERTIES
-  COMPILE_FLAGS "-Dtconv_STATIC ${GENERICLOGGER_C_FLAGS_STATIC}"
+  COMPILE_FLAGS "-Dtconv_STATIC"
   VERSION       "${TCONV_VERSION}"
   SOVERSION     "${TCONV_VERSION_MAJOR}")
-
-IF (GENERATE_OBJECT_TARGETS)
-  ADD_LIBRARY          (tconv_object        OBJECT ${tconv_src})
-  SET_TARGET_PROPERTIES(tconv_object        PROPERTIES COMPILE_FLAGS "-Dtconv_EXPORTS")
-  ADD_LIBRARY          (tconv_object_static OBJECT ${tconv_src})
-  SET_TARGET_PROPERTIES(tconv_object_static PROPERTIES COMPILE_FLAGS "-Dtconv_STATIC")
-ENDIF ()
 
 # ------------
 # Export flags
@@ -341,11 +370,7 @@ ADD_DEPENDENCIES(tconv_static tconvConfig tconvExport)
 # ----------
 # Executable
 # ----------
-IF (ALL_IN_ONE)
-  ADD_EXECUTABLE(tconvExec       bin/tconv.c $<TARGET_OBJECTS:genericLogger_object>)
-ELSE ()
-  ADD_EXECUTABLE(tconvExec       bin/tconv.c)
-ENDIF ()
+ADD_EXECUTABLE(tconvExec bin/tconv.c)
 SET_TARGET_PROPERTIES(tconvExec PROPERTIES
   OUTPUT_NAME                             "tconv"
   RUNTIME_OUTPUT_DIRECTORY                "${BINARY_OUTPUT_PATH}"
@@ -366,14 +391,10 @@ SET_PROPERTY(TARGET tconvExec
   )
 TARGET_LINK_LIBRARIES(tconvExec tconv optparse)
 
-IF (ALL_IN_ONE)
-  ADD_EXECUTABLE(tconvExecStatic  bin/tconv.c $<TARGET_OBJECTS:genericLogger_object_static>)
-ELSE ()
-  ADD_EXECUTABLE(tconvExecStatic  bin/tconv.c)
-ENDIF ()
+ADD_EXECUTABLE(tconvExecStatic bin/tconv.c)
 SET_TARGET_PROPERTIES(tconvExecStatic PROPERTIES
-  OUTPUT_NAME                             "tconv_static"
-  COMPILE_FLAGS                           "-Dtconv_STATIC ${GENERICLOGGER_C_FLAGS_STATIC}"
+  OUTPUT_NAME                             "tconvStatic"
+  COMPILE_FLAGS                           "-Dtconv_STATIC"
   RUNTIME_OUTPUT_DIRECTORY                "${BINARY_OUTPUT_PATH}"
   RUNTIME_OUTPUT_DIRECTORY_DEBUG          "${BINARY_OUTPUT_PATH}"
   RUNTIME_OUTPUT_DIRECTORY_RELEASE        "${BINARY_OUTPUT_PATH}"
@@ -397,10 +418,10 @@ TARGET_LINK_LIBRARIES(tconvExecStatic tconv_static optparse)
 # -----
 ENABLE_TESTING()
 ADD_TEST (NAME tconvTest
-          COMMAND ../bin/tconv -t UTF-16 -o tconv.tconv-UTF-16.c "${PROJECT_SOURCE_DIR}/src/tconv.c"
+          COMMAND ${CMAKE_COMMAND} -E env "PATH=${TEST_PATH}" ../bin/tconv -t UTF-16 -o tconv.tconv-UTF-16.c "${PROJECT_SOURCE_DIR}/src/tconv.c"
           WORKING_DIRECTORY "${LIBRARY_OUTPUT_PATH}")
 ADD_TEST (NAME tconvStaticTest
-          COMMAND ../bin/tconv_static -t UTF-16 -o tconv.tconv-UTF-16.c "${PROJECT_SOURCE_DIR}/src/tconv.c"
+          COMMAND ${CMAKE_COMMAND} -E env "PATH=${TEST_PATH}" ../bin/tconvStatic -t UTF-16 -o tconv.tconv-UTF-16.c "${PROJECT_SOURCE_DIR}/src/tconv.c"
           WORKING_DIRECTORY "${LIBRARY_OUTPUT_PATH}")
 ADD_DEPENDENCIES  (check tconvExec tconvExecStatic)
 #
@@ -411,7 +432,7 @@ ADD_DEPENDENCIES  (check tconvExec tconvExecStatic)
 # -------
 # Install
 # -------
-INSTALL (TARGETS tconv tconv_static tconvExec ARCHIVE DESTINATION lib LIBRARY DESTINATION lib RUNTIME DESTINATION bin)
+INSTALL (TARGETS tconv tconvExecStatic tconvExec ARCHIVE DESTINATION lib LIBRARY DESTINATION lib RUNTIME DESTINATION bin)
 INSTALL (FILES ${INCLUDE_OUTPUT_PATH}/tconv/export.h DESTINATION include/tconv)
 INSTALL (FILES include/tconv.h DESTINATION include)
 INSTALL (FILES include/tconv/ext.h DESTINATION include/tconv)
