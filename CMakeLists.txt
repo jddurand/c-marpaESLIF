@@ -1,87 +1,10 @@
-#
-# Usage: With nmake: cmake -G "NMake Makefiles", then nmake install
-#        With  make: cmake -G "UNIX Makefiles", then make install
-#
-#############################
-# Global settings
-#############################
 CMAKE_MINIMUM_REQUIRED (VERSION 3.0.0 FATAL_ERROR)
-PROJECT (tconv C CXX)
+INCLUDE ("3rdparty/github/cmake-utils/cmake/MyPackageStart.cmake")
+MYPACKAGESTART (tconv 1 0 17)
 
-IF (POLICY CMP0063)
-  CMAKE_POLICY (SET CMP0063 NEW)
-ENDIF ()
-IF (POLICY CMP0018)
-  CMAKE_POLICY (SET CMP0018 NEW)
-ENDIF ()
-
-# -------
-# Options
-# -------
-OPTION (ALL_IN_ONE "Compile non-system wide dependencies locally" OFF)
-
-# -----------------------------------------------------------------------
-# We want to be the first one that create check target, so that we own it
-# -----------------------------------------------------------------------
-IF (NOT TARGET check)
-  ADD_CUSTOM_TARGET (check COMMAND ${CMAKE_CTEST_COMMAND})
-ENDIF ()
-
-# Use GNUInstallDirs in order to enforce lib64 if needed
-INCLUDE (GNUInstallDirs)
-
-# Include system libraries if needed (like on Windows)
-INCLUDE (InstallRequiredSystemLibraries)
-
-SET (CMAKE_C_VISIBILITY_PRESET   hidden)
-SET (CMAKE_CXX_VISIBILITY_PRESET hidden)
-SET (CMAKE_POSITION_INDEPENDENT_CODE ON)
-
-SET (TCONV_VERSION_MAJOR 1)
-SET (TCONV_VERSION_MINOR 0)
-SET (TCONV_VERSION_PATCH 16)
-SET (TCONV_VERSION "${TCONV_VERSION_MAJOR}.${TCONV_VERSION_MINOR}.${TCONV_VERSION_PATCH}")
-
-SET (CMAKE_MODULE_PATH              "${PROJECT_SOURCE_DIR}/cmake" "${PROJECT_SOURCE_DIR}/3rdparty/github/cmake-utils/cmake") # General module search path
-SET (INCLUDE_OUTPUT_PATH            "${PROJECT_SOURCE_DIR}/output/include")  # General include output path
-SET (LIBRARY_OUTPUT_PATH            "${PROJECT_SOURCE_DIR}/output/lib")      # General library output path
-SET (BINARY_OUTPUT_PATH             "${PROJECT_SOURCE_DIR}/output/bin")      # General binary output path
-SET (3RDPARTY_OUTPUT_PATH           "${PROJECT_SOURCE_DIR}/output/3rdparty") # General 3rdparty output path
-
-# For all outputs directories
-# C.f. http://stackoverflow.com/questions/7747857/in-cmake-how-do-i-work-around-the-debug-and-release-directories-visual-studio-2
-SET (CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${LIBRARY_OUTPUT_PATH}")
-SET (CMAKE_LIBRARY_OUTPUT_DIRECTORY "${LIBRARY_OUTPUT_PATH}")
-SET (CMAKE_RUNTIME_OUTPUT_DIRECTORY "${LIBRARY_OUTPUT_PATH}")
-FOREACH (OUTPUTCONFIG ${CMAKE_CONFIGURATION_TYPES})
-    STRING( TOUPPER ${OUTPUTCONFIG} OUTPUTCONFIG )
-    SET ( CMAKE_LIBRARY_OUTPUT_DIRECTORY_${OUTPUTCONFIG} "${LIBRARY_OUTPUT_PATH}")
-    SET ( CMAKE_ARCHIVE_OUTPUT_DIRECTORY_${OUTPUTCONFIG} "${LIBRARY_OUTPUT_PATH}")
-    SET ( CMAKE_RUNTIME_OUTPUT_DIRECTORY_${OUTPUTCONFIG} "${LIBRARY_OUTPUT_PATH}")
-ENDFOREACH (OUTPUTCONFIG CMAKE_CONFIGURATION_TYPES)
-
-# --------------------
-# CFLAGS customization
-# --------------------
-if (("${CMAKE_C_COMPILER_ID} x" MATCHES "MSVC") OR MSVC)
-  # Loosely based on http://www.hdfgroup.org/ftp/HDF/HDF_Current/src/unpacked/config/cmake/ConfigureChecks.cmake
-  ADD_DEFINITIONS(-DWIN32_LEAN_AND_MEAN)
-  ADD_DEFINITIONS(-D_CRT_SECURE_NO_WARNINGS)
-  ADD_DEFINITIONS(-D_CRT_NONSTDC_NO_DEPRECATE)
-ENDIF ()
-IF ((NOT CMAKE_BUILD_TYPE MATCHES Debug) AND (NOT CMAKE_BUILD_TYPE MATCHES RelWithDebInfo))
-  ADD_DEFINITIONS(-DTCONV_NTRACE)
-ENDIF ((NOT CMAKE_BUILD_TYPE MATCHES Debug) AND (NOT CMAKE_BUILD_TYPE MATCHES RelWithDebInfo))
-ADD_DEFINITIONS(-DTCONV_VERSION="${TCONV_VERSION}")
-
-#############################
-# Dependencies
-#############################
-EXECUTE_PROCESS(COMMAND "${CMAKE_COMMAND}" -E make_directory "${3RDPARTY_OUTPUT_PATH}")
-
-# ----------------------------------
-# C language
-# ----------------------------------
+################
+# System setup #
+################
 INCLUDE (CheckIncludeFiles)
 CHECK_INCLUDE_FILES (stdlib.h HAVE_STDLIB_H)
 CHECK_INCLUDE_FILES (stdarg.h HAVE_STDARG_H)
@@ -90,10 +13,14 @@ SET     (TCONV_C_INLINE "${C_INLINE}")
 INCLUDE (FindVaCopy)
 SET     (TCONV_C_VA_COPY "${C_VA_COPY}")
 
+################
+# Dependencies #
+################
+INCLUDE (MyPackageDependency)
+
 # -----------------------------------
 # genericLogger: required
 # -----------------------------------
-INCLUDE (MyPackageDependency)
 MYPACKAGEDEPENDENCY(genericLogger "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/genericLogger-remote" GENERICLOGGER_REAL_INCLUDE_DIRS)
 
 # ----------------------------------
@@ -132,9 +59,9 @@ IF (WIN32 AND NOT CYGWIN)
   FILE (GLOB lib_dlfcn_win32_src "${DLFCNWIN32_DIR}/dlfcn.c")
 ENDIF (WIN32 AND NOT CYGWIN)
 
-# ---------------
-# portable getopt
-# ---------------
+# ------------------------
+# portable getopt: builtin
+# ------------------------
 EXECUTE_PROCESS(
   COMMAND "${CMAKE_COMMAND}" -E copy_directory "${PROJECT_SOURCE_DIR}/3rdparty/github/optparse-remote" "${3RDPARTY_OUTPUT_PATH}/optparse-remote"
   WORKING_DIRECTORY "${3RDPARTY_OUTPUT_PATH}"
@@ -184,17 +111,17 @@ ELSE (NOT ICONV_FOUND)
   SET (TCONV_HAVE_ICONV 1)
 ENDIF (NOT ICONV_FOUND)
 
-#############################
-# Configuration
-#############################
+#################
+# Configuration #
+#################
 SET               (CONFIG_H "${INCLUDE_OUTPUT_PATH}/tconv_config.h")
 SET               (CONFIG_H_IN "${CMAKE_CURRENT_SOURCE_DIR}/include/tconv_config.h.in")
 CONFIGURE_FILE    (${CONFIG_H_IN} ${CONFIG_H})
 ADD_CUSTOM_TARGET(tconvConfig SOURCES "${CONFIG_H}")
 
-#############################
-# Configuration result impact
-#############################
+#######################
+# Include directories #
+#######################
 INCLUDE_DIRECTORIES(
   "${INCLUDE_OUTPUT_PATH}"                                # Include path for generated files (internal)
   "${PROJECT_SOURCE_DIR}/include"                         # Include path for the other headers (internal)
@@ -213,15 +140,18 @@ IF (DLFCNWIN32_FOUND)
   INCLUDE_DIRECTORIES ("${DLFCNWIN32_INCLUDE_DIR}")
 ENDIF (DLFCNWIN32_FOUND)
 
+##############################################
+# Impact of found packages to compiler flags #
+##############################################
 #
 # Note: ${GENERICLOGGER_C_FLAGS_SHARED} and ${GENERICLOGGER_CXX_FLAGS_SHARED} may be empty
 #
 SET (CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}   $ENV{CFLAGS} ${ICU_C_FLAGS_SHARED}   ${GENERICLOGGER_C_FLAGS_SHARED}")
 SET (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{CFLAGS} ${ICU_CXX_FLAGS_SHARED} ${GENERICLOGGER_CXX_FLAGS_SHARED}")
 
-#############################
-# Makefile details
-#############################
+###################
+# Libraries setup #
+###################
 FILE (GLOB lib_header include/*.h "${PROJECT_SOURCE_DIR}/output/include/*.h")
 FILE (GLOB lib_src src/*.c)
 FILE (GLOB lib_src_charset_cchardet src/tconv/charset/cchardet.c)
@@ -281,9 +211,12 @@ SET_TARGET_PROPERTIES (tconv_static
   VERSION       "${TCONV_VERSION}"
   SOVERSION     "${TCONV_VERSION_MAJOR}")
 
-# ------------
-# Export flags
-# ------------
+ADD_DEPENDENCIES(tconv        tconvConfig tconvExport)
+ADD_DEPENDENCIES(tconv_static tconvConfig tconvExport)
+
+################
+# Export flags #
+################
 INCLUDE (GenerateExportHeader)
 EXECUTE_PROCESS(COMMAND "${CMAKE_COMMAND}" -E make_directory "${INCLUDE_OUTPUT_PATH}/tconv")
 GENERATE_EXPORT_HEADER(tconv
@@ -293,15 +226,9 @@ GENERATE_EXPORT_HEADER(tconv
     STATIC_DEFINE tconv_STATIC)
 ADD_CUSTOM_TARGET(tconvExport SOURCES "${INCLUDE_OUTPUT_PATH}/tconv/export.h")
 
-# ----------------------------------------
-# Explicit dependencies on generated files
-# ----------------------------------------
-ADD_DEPENDENCIES(tconv        tconvConfig tconvExport)
-ADD_DEPENDENCIES(tconv_static tconvConfig tconvExport)
-
-# ----------
-# Executable
-# ----------
+###############
+# Executables #
+###############
 ADD_EXECUTABLE(tconvExec bin/tconv.c)
 SET_TARGET_PROPERTIES(tconvExec PROPERTIES
   OUTPUT_NAME                             "tconv"
@@ -345,9 +272,9 @@ SET_PROPERTY(TARGET tconvExecStatic
   )
 TARGET_LINK_LIBRARIES(tconvExecStatic tconv_static optparse)
 
-# -----
-# Check
-# -----
+#########
+# Check #
+#########
 ENABLE_TESTING()
 ADD_TEST (NAME tconvTest
           COMMAND ${CMAKE_COMMAND} -E env "PATH=${TEST_PATH}" ../bin/tconv -t UTF-16 -o tconv.tconv-UTF-16.c "${PROJECT_SOURCE_DIR}/src/tconv.c"
@@ -356,14 +283,10 @@ ADD_TEST (NAME tconvStaticTest
           COMMAND ${CMAKE_COMMAND} -E env "PATH=${TEST_PATH}" ../bin/tconvStatic -t UTF-16 -o tconv.tconv-UTF-16.c "${PROJECT_SOURCE_DIR}/src/tconv.c"
           WORKING_DIRECTORY "${LIBRARY_OUTPUT_PATH}")
 ADD_DEPENDENCIES  (check tconvExec tconvExecStatic)
-#
-# Please note that test is likely to fail if libraries are not already in your path.
-# This is why the working directory is "${LIBRARY_OUTPUT_PATH}".
-# (I did not want to play with PATH/LD_LIBRARY_PATH/etc within cmake)
-#
-# -------
-# Install
-# -------
+
+###########
+# Install #
+###########
 INSTALL (TARGETS tconv tconvExecStatic tconvExec ARCHIVE DESTINATION lib LIBRARY DESTINATION lib RUNTIME DESTINATION bin)
 INSTALL (FILES ${INCLUDE_OUTPUT_PATH}/tconv/export.h DESTINATION include/tconv)
 INSTALL (FILES include/tconv.h DESTINATION include)
@@ -380,10 +303,9 @@ IF (UNIX)
   POD2MAN(include/tconv/README.pod "TCONV_EXT" "3" "${TCONV_VERSION}")
 ENDIF (UNIX)
 
-# ---------
-# Packaging
-# ---------
-# Section CPack
+#############
+# Packaging #
+#############
 SET (CPACK_PACKAGE_VERSION_MAJOR "${TCONV_VERSION_MAJOR}")
 SET (CPACK_PACKAGE_VERSION_MINOR "${TCONV_VERSION_MINOR}")
 SET (CPACK_PACKAGE_VERSION_PATCH "${TCONV_VERSION_PATCH}")
