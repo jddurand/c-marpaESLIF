@@ -5,12 +5,6 @@
 CMAKE_MINIMUM_REQUIRED (VERSION 3.0.0 FATAL_ERROR)
 PROJECT (genericLogger C CXX)
 
-# -------
-# Options
-# -------
-SET (GENERATE_OBJECT_TARGETS_DESCRIPTION "Generate OBJECT targets - useful if used as a ADD_SUBDIRECTORY and parent want import objects files")
-OPTION(GENERATE_OBJECT_TARGETS ${GENERATE_OBJECT_TARGETS_DESCRIPTION} OFF)
-
 # ---------------------------
 # Export no symbol by default
 # ---------------------------
@@ -118,12 +112,6 @@ FILE (GLOB lib_src src/*.c)
 
 ADD_LIBRARY (genericLogger        SHARED ${lib_src})
 ADD_LIBRARY (genericLogger_static STATIC ${lib_src})
-IF (GENERATE_OBJECT_TARGETS)
-  ADD_LIBRARY          (genericLogger_object        OBJECT ${lib_src})
-  SET_TARGET_PROPERTIES(genericLogger_object        PROPERTIES COMPILE_FLAGS "-DgenericLogger_EXPORTS")
-  ADD_LIBRARY          (genericLogger_object_static OBJECT ${lib_src})
-  SET_TARGET_PROPERTIES(genericLogger_object_static PROPERTIES COMPILE_FLAGS "-DgenericLogger_STATIC")
-ENDIF ()
 
 # ----------------------------------------------------
 # Export flags - Note the genericLogger_STATIC keyword
