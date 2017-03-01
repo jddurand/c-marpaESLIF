@@ -31,7 +31,7 @@ MACRO (MYPACKAGEDEPENDENCY dependTarget dependSourceDir dependIncludeDirsVarname
       IF ("${CMAKE_HOST_SYSTEM}" MATCHES ".*Windows.*")
         STRING(REGEX REPLACE "/" "\\\\"  _dependLibraryRuntimeDirectory "${_dependLibraryRuntimeDirectory}")
       ELSE ()
-        STRING(REGEX REPLACE " " "\\ "  _dependLibraryRuntimeDirectory "${_dependLibraryRuntimeDirectory}")
+        STRING(REGEX REPLACE " " "\\\\ "  _dependLibraryRuntimeDirectory "${_dependLibraryRuntimeDirectory}")
       ENDIF ()
       SET(${_FINDPACKAGE}_RUNTIME_DIRECTORY "${_dependLibraryRuntimeDirectory}" CACHE INTERNAL "${dependTarget} Runtime Directory")
       IF (NOT TEST_PATH)
