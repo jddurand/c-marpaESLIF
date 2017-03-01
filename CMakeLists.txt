@@ -26,7 +26,7 @@ SET (MARPAWRAPPER_VERSION_MINOR 0)
 SET (MARPAWRAPPER_VERSION_PATCH 43)
 SET (MARPAWRAPPER_VERSION "${MARPAWRAPPER_VERSION_MAJOR}.${MARPAWRAPPER_VERSION_MINOR}.${MARPAWRAPPER_VERSION_PATCH}")
 
-SET (CMAKE_MODULE_PATH              "${PROJECT_SOURCE_DIR}/cmake" "${PROJECT_SOURCE_DIR}/3rdparty/github/cmake-utils/cmake") # General module search path
+SET (CMAKE_MODULE_PATH              "${PROJECT_SOURCE_DIR}/cmake" "${PROJECT_SOURCE_DIR}/3rdparty/github/cmake-utils-remote/cmake") # General module search path
 SET (INCLUDE_OUTPUT_PATH            "${PROJECT_SOURCE_DIR}/output/include")  # General include output path
 SET (LIBRARY_OUTPUT_PATH            "${PROJECT_SOURCE_DIR}/output/lib")      # General library output path
 SET (BINARY_OUTPUT_PATH             "${PROJECT_SOURCE_DIR}/output/bin")      # General binary output path
