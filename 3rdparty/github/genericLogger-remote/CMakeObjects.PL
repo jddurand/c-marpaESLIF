@@ -54,7 +54,7 @@ find(
 # ----------------------------------------------------------------------------------------
 my $cbuilder = ExtUtils::CBuilder->new();
 my @objects;
-my $obj_dir = File::Spec->catfile('output', 'obj');
+my $obj_dir = File::Spec->catfile('output', 'obj4perl');
 
 make_path($obj_dir);
 foreach my $source (@sources) {
