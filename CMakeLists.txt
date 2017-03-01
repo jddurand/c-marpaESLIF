@@ -8,13 +8,24 @@
 CMAKE_MINIMUM_REQUIRED (VERSION 3.0.0 FATAL_ERROR)
 PROJECT (tconv C CXX)
 
-OPTION(ALL_IN_ONE "Compile non-system wide dependencies locally" OFF)
-
 IF (POLICY CMP0063)
   CMAKE_POLICY (SET CMP0063 NEW)
 ENDIF ()
 IF (POLICY CMP0018)
   CMAKE_POLICY (SET CMP0018 NEW)
+ENDIF ()
+
+# -------
+# Options
+# -------
+SET (ALL_IN_ONE_DESCRIPTION              "Compile non-system wide dependencies locally")
+SET (GENERATE_OBJECT_TARGETS_DESCRIPTION "Generate OBJECT targets - useful if used as a ADD_SUBDIRECTORY and parent want import objects files")
+
+OPTION(ALL_IN_ONE              ${ALL_IN_ONE_DESCRIPTION} OFF)
+IF (ALL_IN_ONE)
+  OPTION(GENERATE_OBJECT_TARGETS ${GENERATE_OBJECT_TARGETS_DESCRIPTION} ON)
+ELSE ()
+  OPTION(GENERATE_OBJECT_TARGETS ${GENERATE_OBJECT_TARGETS_DESCRIPTION} OFF)
 ENDIF ()
 
 # -----------------------------------------------------------------------
@@ -278,7 +289,7 @@ IF (ALL_IN_ONE)
     ${CMAKE_DL_LIBS}
     )
   ADD_LIBRARY (tconv        SHARED ${tconv_src} $<TARGET_OBJECTS:genericLogger_object>)
-  ADD_LIBRARY (tconv_static STATIC ${tconv_src} $<TARGET_OBJECTS:genericLogger_object>)
+  ADD_LIBRARY (tconv_static STATIC ${tconv_src} $<TARGET_OBJECTS:genericLogger_object_static>)
 ELSE ()
   SET (tconv_lib
     ${DLFCNWIN32_LIBRARY_TARGET_DEPEND}
