@@ -52,7 +52,7 @@ MACRO (MYPACKAGEDEPENDENCY dependTarget dependSourceDir dependIncludeDirsVarname
     MESSAGE(STATUS "Looking for ${dependTarget}")
     FIND_PACKAGE (${dependTarget})
     IF (NOT ${_FINDPACKAGE}_FOUND)
-      MESSAGE (FATAL ERROR "find ${dependTarget} failure")
+      MESSAGE (FATAL_ERROR "find ${dependTarget} failure")
     ENDIF ()
     #
     # The following lines are experimental
