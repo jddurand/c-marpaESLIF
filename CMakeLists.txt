@@ -26,11 +26,11 @@ SET (MARPAWRAPPER_VERSION_MINOR 0)
 SET (MARPAWRAPPER_VERSION_PATCH 43)
 SET (MARPAWRAPPER_VERSION "${MARPAWRAPPER_VERSION_MAJOR}.${MARPAWRAPPER_VERSION_MINOR}.${MARPAWRAPPER_VERSION_PATCH}")
 
-SET (CMAKE_MODULE_PATH              ${PROJECT_SOURCE_DIR}/cmake)           # General module search path
-SET (INCLUDE_OUTPUT_PATH            ${PROJECT_SOURCE_DIR}/output/include)  # General include output path
-SET (LIBRARY_OUTPUT_PATH            ${PROJECT_SOURCE_DIR}/output/lib)      # General library output path
-SET (BINARY_OUTPUT_PATH             ${PROJECT_SOURCE_DIR}/output/bin)      # General binary output path
-SET (3RDPARTY_OUTPUT_PATH           ${PROJECT_SOURCE_DIR}/output/3rdparty) # General 3rdparty output path
+SET (CMAKE_MODULE_PATH              "${PROJECT_SOURCE_DIR}/cmake" "${PROJECT_SOURCE_DIR}/3rdparty/github/cmake-utils/cmake") # General module search path
+SET (INCLUDE_OUTPUT_PATH            "${PROJECT_SOURCE_DIR}/output/include")  # General include output path
+SET (LIBRARY_OUTPUT_PATH            "${PROJECT_SOURCE_DIR}/output/lib")      # General library output path
+SET (BINARY_OUTPUT_PATH             "${PROJECT_SOURCE_DIR}/output/bin")      # General binary output path
+SET (3RDPARTY_OUTPUT_PATH           "${PROJECT_SOURCE_DIR}/output/3rdparty") # General 3rdparty output path
 
 # For all outputs directories
 # C.f. http://stackoverflow.com/questions/7747857/in-cmake-how-do-i-work-around-the-debug-and-release-directories-visual-studio-2
@@ -68,102 +68,27 @@ ADD_DEFINITIONS(-DMARPAWRAPPER_VERSION="${MARPAWRAPPER_VERSION}")
 # Dependencies
 #############################
 EXECUTE_PROCESS(COMMAND "${CMAKE_COMMAND}" -E make_directory "${3RDPARTY_OUTPUT_PATH}")
-
-IF (ALL_IN_ONE)
-  INCLUDE (BuildDependency)
-ENDIF ()
+INCLUDE (MyPackageDependency)
 
 # -----------------------------------
 # genericLogger: required
 # -----------------------------------
-IF (ALL_IN_ONE)
-  IF (NOT GENERICLOGGER_ROOT_DIR)
-    SET (GENERICLOGGER_ROOT_DIR "${3RDPARTY_OUTPUT_PATH}/genericLogger-remote/install")
-    #
-    # All-in-one mode means static linking
-    #
-    BuildDependency(
-      "genericLogger-remote"
-      "${PROJECT_SOURCE_DIR}/3rdparty/github/genericLogger-remote"
-      "${3RDPARTY_OUTPUT_PATH}/genericLogger-remote"
-      "install"
-      )
-  ENDIF ()
-  SET(ENV{GENERICLOGGER_ROOT_DIR} "${GENERICLOGGER_ROOT_DIR}")
-ENDIF ()
-FIND_PACKAGE (genericLogger)
-IF (NOT GENERICLOGGER_FOUND)
-  MESSAGE (FATAL_ERROR "genericLogger must be detected")
-ENDIF ()
+MYPACKAGEDEPENDENCY(genericLogger "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/genericLogger-remote" GENERICLOGGER_REAL_INCLUDE_DIRS)
 
 # -----------------------------------
 # genericStack: required
 # -----------------------------------
-IF (ALL_IN_ONE)
-  IF (NOT GENERICSTACK_ROOT_DIR)
-    SET (GENERICSTACK_ROOT_DIR "${3RDPARTY_OUTPUT_PATH}/genericStack-remote/install")
-    #
-    # All-in-one mode means static linking
-    #
-    BuildDependency(
-      "genericStack-remote"
-      "${PROJECT_SOURCE_DIR}/3rdparty/github/genericStack-remote"
-      "${3RDPARTY_OUTPUT_PATH}/genericStack-remote"
-      "install"
-      )
-  ENDIF ()
-  SET(ENV{GENERICSTACK_ROOT_DIR} "${GENERICSTACK_ROOT_DIR}")
-ENDIF ()
-FIND_PACKAGE (genericStack)
-IF (NOT GENERICSTACK_FOUND)
-    MESSAGE (STATUS "genericStack must be detected")
-ENDIF ()
+MYPACKAGEDEPENDENCY(genericStack "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/genericStack-remote" GENERICSTACK_REAL_INCLUDE_DIRS)
 
 # -----------------------------------
 # genericHash: required
 # -----------------------------------
-IF (ALL_IN_ONE)
-  IF (NOT GENERICHASH_ROOT_DIR)
-    SET (GENERICHASH_ROOT_DIR "${3RDPARTY_OUTPUT_PATH}/genericHash-remote/install")
-    #
-    # All-in-one mode means static linking
-    #
-    BuildDependency(
-      "genericHash-remote"
-      "${PROJECT_SOURCE_DIR}/3rdparty/github/genericHash-remote"
-      "${3RDPARTY_OUTPUT_PATH}/genericHash-remote"
-      "install"
-      )
-  ENDIF ()
-  SET(ENV{GENERICHASH_ROOT_DIR} "${GENERICHASH_ROOT_DIR}")
-ENDIF ()
-FIND_PACKAGE (genericHash)
-IF (NOT GENERICHASH_FOUND)
-    MESSAGE (FATAL_ERROR "genericHash must be detected")
-ENDIF ()
+MYPACKAGEDEPENDENCY(genericHash "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/genericHash-remote" GENERICHASH_REAL_INCLUDE_DIRS)
 
 # -----------------------------------
 # genericSparseArray: required
 # -----------------------------------
-IF (ALL_IN_ONE)
-  IF (NOT GENERICSPARSEARRAY_ROOT_DIR)
-    SET (GENERICSPARSEARRAY_ROOT_DIR "${3RDPARTY_OUTPUT_PATH}/genericSparseArray-remote/install")
-    #
-    # All-in-one mode means static linking
-    #
-    BuildDependency(
-      "genericSparseArray-remote"
-      "${PROJECT_SOURCE_DIR}/3rdparty/github/genericSparseArray-remote"
-      "${3RDPARTY_OUTPUT_PATH}/genericSparseArray-remote"
-      "install"
-      )
-  ENDIF ()
-  SET(ENV{GENERICSPARSEARRAY_ROOT_DIR} "${GENERICSPARSEARRAY_ROOT_DIR}")
-ENDIF ()
-FIND_PACKAGE (genericSparseArray)
-IF (NOT GENERICSPARSEARRAY_FOUND)
-    MESSAGE (FATAL_ERROR "genericSparseArray must be detected")
-ENDIF ()
+MYPACKAGEDEPENDENCY(genericSparseArray "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/genericSparseArray-remote" GENERICSPARSEARRAY_REAL_INCLUDE_DIRS)
 
 # --------------------------------------
 # config.h (we will share it with marpa)
@@ -204,28 +129,22 @@ FILE (GLOB lib_marpa_src "${MARPA__R2_DIR}/cpan/engine/read_only/*.c")
 FILE (GLOB lib_src ${lib_marpa_src} src/internal/*.c src/*.c)
 ADD_LIBRARY (marpaWrapper        SHARED ${lib_src})
 ADD_LIBRARY (marpaWrapper_static STATIC ${lib_src})
-IF (GENERICSTACK_FOUND)
-  INCLUDE_DIRECTORIES (
-    "${MARPA__R2_DIR}/cpan/engine/read_only/"            # Include path for marpa
-    "${INCLUDE_OUTPUT_PATH}"                             # Include path for generated files
-    "${PROJECT_SOURCE_DIR}/include"                      # Include path for the other headers
-    "${GENERICLOGGER_INCLUDE_DIRS}"                      # Include path for genericLogger (external - required)
-    "${GENERICHASH_INCLUDE_DIRS}"                        # Include path for genericHash (external - required)
-    "${GENERICSTACK_INCLUDE_DIRS}"                       # Include path for genericStack (external - optional)
-    "${GENERICSPARSEARRAY_INCLUDE_DIRS}"                 # Include path for genericHash (external - required)
-    )
-ELSE (GENERICSTACK_FOUND)
-  INCLUDE_DIRECTORIES (
-    "${MARPA__R2_DIR}/cpan/engine/read_only/"            # Include path for marpa
-    "${INCLUDE_OUTPUT_PATH}"                             # Include path for generated files
-    "${PROJECT_SOURCE_DIR}/include"                      # Include path for the other headers
-    "${GENERICLOGGER_INCLUDE_DIRS}"                      # Include path for genericLogger (external - required)
-    "${GENERICHASH_INCLUDE_DIRS}"                        # Include path for genericHash (external - required)
-    "${GENERICSPARSEARRAY_INCLUDE_DIRS}"                 # Include path for genericHash (external - required)
-    )
-ENDIF (GENERICSTACK_FOUND)
-TARGET_LINK_LIBRARIES (marpaWrapper        ${GENERICLOGGER_LIBRARIES})
-TARGET_LINK_LIBRARIES (marpaWrapper_static ${GENERICLOGGER_LIBRARIES})
+INCLUDE_DIRECTORIES (
+  "${MARPA__R2_DIR}/cpan/engine/read_only/"            # Include path for marpa
+  "${INCLUDE_OUTPUT_PATH}"                             # Include path for generated files
+  "${PROJECT_SOURCE_DIR}/include"                      # Include path for the other headers
+  ${GENERICLOGGER_REAL_INCLUDE_DIRS}                   # Include path for genericLogger (external - required)
+  ${GENERICHASH_REAL_INCLUDE_DIRS}                     # Include path for genericHash (external - required)
+  ${GENERICSTACK_REAL_INCLUDE_DIRS}                    # Include path for genericStack (external - required)
+  ${GENERICSPARSEARRAY_REAL_INCLUDE_DIRS}              # Include path for genericHash (external - required)
+  )
+IF (ALL_IN_ONE)
+  TARGET_LINK_LIBRARIES (marpaWrapper        genericLogger)
+  TARGET_LINK_LIBRARIES (marpaWrapper_static genericLogger)
+ELSE ()
+  TARGET_LINK_LIBRARIES (marpaWrapper        ${GENERICLOGGER_LIBRARIES})
+  TARGET_LINK_LIBRARIES (marpaWrapper_static ${GENERICLOGGER_LIBRARIES})
+ENDIF ()
 SET_TARGET_PROPERTIES(marpaWrapper
   PROPERTIES
   COMPILE_FLAGS "-DmarpaWrapper_EXPORTS"
