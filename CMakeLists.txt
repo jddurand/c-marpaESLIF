@@ -94,6 +94,8 @@ SET     (TCONV_C_VA_COPY "${C_VA_COPY}")
 # genericLogger: required
 # -----------------------------------
 IF (ALL_IN_ONE)
+  # INCLUDE (AllInOneDependency)
+  # AllInOneDependency(genericLogger "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/genericLogger-remote" GENERICLOGGER_REAL_INCLUDE_DIRS genericLogger)
   IF (NOT TARGET genericLogger)
     #
     # Absolute path, otherwise using it as include dir for compilation will croak
@@ -126,7 +128,7 @@ IF (ALL_IN_ONE)
       SET (SEP ":")
     ENDIF ()
     MESSAGE(STATUS "Adding ${GENERICLOGGER_RUNTIME_DIRECTORY} to test path")
-    SET (TEST_PATH "${TEST_PATH}${SEP}${GENERICLOGGER_RUNTIME_DIRECTORY}" CACHE INTERNAL "Test Path")
+    SET (TEST_PATH "${GENERICLOGGER_RUNTIME_DIRECTORY}${SEP}${TEST_PATH}" CACHE INTERNAL "Test Path")
   ELSE ()
     MESSAGE(STATUS "Re-using already existing genericLogger target")
   ENDIF ()
@@ -160,7 +162,7 @@ ELSE ()
       SET (SEP ":")
     ENDIF ()
     MESSAGE(STATUS "Adding ${GENERICLOGGER_RUNTIME_DIRECTORY} to test path")
-    SET (TEST_PATH "${TEST_PATH}${SEP}${GENERICLOGGER_RUNTIME_DIRECTORY}" CACHE INTERNAL "Test Path")
+    SET (TEST_PATH "${GENERICLOGGER_RUNTIME_DIRECTORY}${SEP}${TEST_PATH}" CACHE INTERNAL "Test Path")
   ENDIF ()
 ENDIF ()
 
