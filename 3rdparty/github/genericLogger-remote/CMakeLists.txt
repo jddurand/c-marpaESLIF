@@ -1,75 +1,6 @@
-#
-# Usage: With nmake: cmake -G "NMake Makefiles", then nmake install
-#        With  make: cmake -G "UNIX Makefiles", then make install
-#
 CMAKE_MINIMUM_REQUIRED (VERSION 3.0.0 FATAL_ERROR)
-PROJECT (genericLogger C CXX)
-
-# ---------------------------
-# Export no symbol by default
-# ---------------------------
-IF (POLICY CMP0063)
-  CMAKE_POLICY (SET CMP0063 NEW)
-ENDIF (POLICY CMP0063)
-SET (CMAKE_C_VISIBILITY_PRESET   hidden)
-SET (CMAKE_CXX_VISIBILITY_PRESET hidden)
-SET (CMAKE_POSITION_INDEPENDENT_CODE ON)
-
-# -----------------------------------------------------------------------
-# We want to be the first one that create check target, so that we own it
-# -----------------------------------------------------------------------
-IF (NOT TARGET check)
-  ADD_CUSTOM_TARGET (check COMMAND ${CMAKE_CTEST_COMMAND})
-ENDIF ()
-
-# --------------
-# Install tricks
-# --------------
-# Use GNUInstallDirs in order to enforce lib64 if needed
-INCLUDE (GNUInstallDirs)
-# Include system libraries if needed (like on Windows)
-INCLUDE (InstallRequiredSystemLibraries)
-
-# -------
-# Version
-# -------
-SET (GENERICLOGGER_VERSION_MAJOR 1)
-SET (GENERICLOGGER_VERSION_MINOR 0)
-SET (GENERICLOGGER_VERSION_PATCH 6)
-SET (GENERICLOGGER_VERSION ${GENERICLOGGER_VERSION_MAJOR}.${GENERICLOGGER_VERSION_MINOR}.${GENERICLOGGER_VERSION_PATCH})
-ADD_DEFINITIONS(-DGENERICLOGGER_VERSION="${GENERICLOGGER_VERSION}")
-
-# ---------
-# Set paths
-# ---------
-SET (CMAKE_MODULE_PATH              ${PROJECT_SOURCE_DIR}/cmake)          # General module search path
-SET (INCLUDE_OUTPUT_PATH            ${PROJECT_SOURCE_DIR}/output/include) # General include output path
-SET (LIBRARY_OUTPUT_PATH            ${PROJECT_SOURCE_DIR}/output/lib)     # General library output path
-INCLUDE_DIRECTORIES (
-  ${INCLUDE_OUTPUT_PATH}                               # Include path for generated files
-  ${PROJECT_SOURCE_DIR}/include                        # Include path for the other headers
-  )
-
-# For all outputs directories
-# C.f. http://stackoverflow.com/questions/7747857/in-cmake-how-do-i-work-around-the-debug-and-release-directories-visual-studio-2
-SET (CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${LIBRARY_OUTPUT_PATH}")
-SET (CMAKE_LIBRARY_OUTPUT_DIRECTORY "${LIBRARY_OUTPUT_PATH}")
-SET (CMAKE_RUNTIME_OUTPUT_DIRECTORY "${LIBRARY_OUTPUT_PATH}")
-FOREACH (OUTPUTCONFIG ${CMAKE_CONFIGURATION_TYPES})
-    STRING( TOUPPER ${OUTPUTCONFIG} OUTPUTCONFIG )
-    SET ( CMAKE_LIBRARY_OUTPUT_DIRECTORY_${OUTPUTCONFIG} "${LIBRARY_OUTPUT_PATH}")
-    SET ( CMAKE_ARCHIVE_OUTPUT_DIRECTORY_${OUTPUTCONFIG} "${LIBRARY_OUTPUT_PATH}")
-    SET ( CMAKE_RUNTIME_OUTPUT_DIRECTORY_${OUTPUTCONFIG} "${LIBRARY_OUTPUT_PATH}")
-ENDFOREACH (OUTPUTCONFIG CMAKE_CONFIGURATION_TYPES)
-
-# --------------------
-# CFLAGS customization
-# --------------------
-if (("${CMAKE_C_COMPILER_ID} x" MATCHES "MSVC") OR MSVC)
-  # Loosely based on http://www.hdfgroup.org/ftp/HDF/HDF_Current/src/unpacked/config/cmake/ConfigureChecks.cmake
-  ADD_DEFINITIONS("-D_CRT_SECURE_NO_WARNINGS")
-  ADD_DEFINITIONS("-D_CRT_NONSTDC_NO_DEPRECATE")
-ENDIF ()
+INCLUDE ("3rdparty/github/cmake-utils-remote/cmake/MyPackageStart.cmake")
+MYPACKAGESTART (genericLogger 1 0 7)
 
 # --------
 # config.h
@@ -97,25 +28,31 @@ INCLUDE (FindWrite)
 INCLUDE (FindVsnprintf)
 INCLUDE (FindLocaltime_r)
 
-# ----------------------------------------------------
-# Configuration
-# ----------------------------------------------------
 SET (CONFIG_H ${INCLUDE_OUTPUT_PATH}/genericLogger/config.h)
 SET (CONFIG_H_IN ${CMAKE_CURRENT_SOURCE_DIR}/include/genericLogger_config.h.in)
 CONFIGURE_FILE(${CONFIG_H_IN} ${CONFIG_H})
 ADD_CUSTOM_TARGET(genericLoggerConfig SOURCES "${CONFIG_H}")
 
-# -----------------------------------------------------
-# Targets
-# -----------------------------------------------------
+#######################
+# Include directories #
+#######################
+INCLUDE_DIRECTORIES(
+  "${INCLUDE_OUTPUT_PATH}"                                # Include path for generated files (internal)
+  "${PROJECT_SOURCE_DIR}/include"                         # Include path for the other headers (internal)
+  ${GENERICLOGGER_REAL_INCLUDE_DIRS}
+  )
+
+###########
+# Targets #
+###########
 FILE (GLOB lib_src src/*.c)
 
 ADD_LIBRARY (genericLogger        SHARED ${lib_src})
 ADD_LIBRARY (genericLogger_static STATIC ${lib_src})
 
-# ----------------------------------------------------
-# Export flags - Note the genericLogger_STATIC keyword
-# ----------------------------------------------------
+# ------------
+# Export flags
+# ------------
 INCLUDE (GenerateExportHeader)
 EXECUTE_PROCESS(COMMAND "${CMAKE_COMMAND}" -E make_directory "${INCLUDE_OUTPUT_PATH}/genericLogger")
 GENERATE_EXPORT_HEADER(genericLogger
