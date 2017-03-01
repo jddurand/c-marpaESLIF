@@ -286,28 +286,22 @@ ENDIF ()
 IF (WINICONV_FOUND)
   LIST(APPEND tconv_src ${lib_winiconv_src})
 ENDIF ()
-IF (ALL_IN_ONE)
-  SET (tconv_lib
-    ${DLFCNWIN32_LIBRARY_TARGET_DEPEND}
-    ${ICU_LIBRARIES}
-    ${ICONV_LIBRARIES}
-    ${CMAKE_DL_LIBS}
-    )
-  ADD_LIBRARY (tconv        SHARED ${tconv_src} $<TARGET_OBJECTS:genericLogger_object>)
-  ADD_LIBRARY (tconv_static STATIC ${tconv_src} $<TARGET_OBJECTS:genericLogger_object_static>)
-ELSE ()
-  SET (tconv_lib
-    ${DLFCNWIN32_LIBRARY_TARGET_DEPEND}
-    ${ICU_LIBRARIES}
-    ${ICONV_LIBRARIES}
-    ${CMAKE_DL_LIBS}
-    ${GENERICLOGGER_LIBRARIES}
-    )
-  ADD_LIBRARY (tconv        SHARED ${tconv_src})
-  ADD_LIBRARY (tconv_static STATIC ${tconv_src})
+
+SET (tconv_lib
+  ${DLFCNWIN32_LIBRARY_TARGET_DEPEND}
+  ${ICU_LIBRARIES}
+  ${ICONV_LIBRARIES}
+  ${CMAKE_DL_LIBS}
+  )
+IF (NOT ALL_IN_ONE)
+  LIST(APPEND tconv_lib ${GENERICLOGGER_LIBRARIES})
 ENDIF ()
-TARGET_LINK_LIBRARIES (tconv        ${tconv_lib})
-TARGET_LINK_LIBRARIES (tconv_static ${tconv_lib})
+
+ADD_LIBRARY           (tconv        SHARED ${tconv_src})
+ADD_LIBRARY           (tconv_static STATIC ${tconv_src})
+TARGET_LINK_LIBRARIES (tconv               ${tconv_lib})
+TARGET_LINK_LIBRARIES (tconv_static        ${tconv_lib})
+
 SET_TARGET_PROPERTIES (tconv
   PROPERTIES
   COMPILE_FLAGS "-Dtconv_EXPORTS"
@@ -347,7 +341,11 @@ ADD_DEPENDENCIES(tconv_static tconvConfig tconvExport)
 # ----------
 # Executable
 # ----------
-ADD_EXECUTABLE(tconvExec       bin/tconv.c)
+IF (ALL_IN_ONE)
+  ADD_EXECUTABLE(tconvExec       bin/tconv.c $<TARGET_OBJECTS:genericLogger_object>)
+ELSE ()
+  ADD_EXECUTABLE(tconvExec       bin/tconv.c)
+ENDIF ()
 SET_TARGET_PROPERTIES(tconvExec PROPERTIES
   OUTPUT_NAME                             "tconv"
   RUNTIME_OUTPUT_DIRECTORY                "${BINARY_OUTPUT_PATH}"
@@ -368,7 +366,11 @@ SET_PROPERTY(TARGET tconvExec
   )
 TARGET_LINK_LIBRARIES(tconvExec tconv optparse)
 
-ADD_EXECUTABLE(tconvExecStatic  bin/tconv.c)
+IF (ALL_IN_ONE)
+  ADD_EXECUTABLE(tconvExecStatic  bin/tconv.c $<TARGET_OBJECTS:genericLogger_object_static>)
+ELSE ()
+  ADD_EXECUTABLE(tconvExecStatic  bin/tconv.c)
+ENDIF ()
 SET_TARGET_PROPERTIES(tconvExecStatic PROPERTIES
   OUTPUT_NAME                             "tconv_static"
   COMPILE_FLAGS                           "-Dtconv_STATIC ${GENERICLOGGER_C_FLAGS_STATIC}"
