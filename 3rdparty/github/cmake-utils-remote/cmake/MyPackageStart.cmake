@@ -34,11 +34,11 @@ MACRO (MYPACKAGESTART packageName versionMajor versionMinor versionPatch)
   #
   # Paths
   #
-  SET (CMAKE_MODULE_PATH      "${PROJECT_SOURCE_DIR}/cmake" "${PROJECT_SOURCE_DIR}/3rdparty/github/cmake-utils/cmake") # General module search path
-  SET (INCLUDE_OUTPUT_PATH    "${PROJECT_SOURCE_DIR}/output/include")                                                  # General include output path
-  SET (LIBRARY_OUTPUT_PATH    "${PROJECT_SOURCE_DIR}/output/lib")                                                      # General library output path
-  SET (BINARY_OUTPUT_PATH     "${PROJECT_SOURCE_DIR}/output/bin")                                                      # General binary output path
-  SET (3RDPARTY_OUTPUT_PATH   "${PROJECT_SOURCE_DIR}/output/3rdparty")                                                 # General 3rdparty output path
+  SET (CMAKE_MODULE_PATH      "${PROJECT_SOURCE_DIR}/cmake" "${PROJECT_SOURCE_DIR}/3rdparty/github/cmake-utils-remote/cmake") # General module search path
+  SET (INCLUDE_OUTPUT_PATH    "${PROJECT_SOURCE_DIR}/output/include")                                                         # General include output path
+  SET (LIBRARY_OUTPUT_PATH    "${PROJECT_SOURCE_DIR}/output/lib")                                                             # General library output path
+  SET (BINARY_OUTPUT_PATH     "${PROJECT_SOURCE_DIR}/output/bin")                                                             # General binary output path
+  SET (3RDPARTY_OUTPUT_PATH   "${PROJECT_SOURCE_DIR}/output/3rdparty")                                                        # General 3rdparty output path
   #
   # Output directories
   # C.f. http://stackoverflow.com/questions/7747857/in-cmake-how-do-i-work-around-the-debug-and-release-directories-visual-studio-2
