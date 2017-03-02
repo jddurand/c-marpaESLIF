@@ -24,6 +24,13 @@ MACRO (MYPACKAGESTART packageName versionMajor versionMinor versionPatch)
     ADD_CUSTOM_TARGET (check COMMAND ${CMAKE_CTEST_COMMAND})
   ENDIF ()
   #
+  # Ditto for the man target, appended to install processing
+  #
+  IF (NOT TARGET man)
+    INSTALL (CODE "EXECUTE_PROCESS(COMMAND ${CMAKE_MAKE_PROGRAM} man)")
+    ADD_CUSTOM_TARGET (man)
+  ENDIF ()
+  #
   # Use GNUInstallDirs in order to enforce lib64 if needed
   #
   INCLUDE (GNUInstallDirs)
