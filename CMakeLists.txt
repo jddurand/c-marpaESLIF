@@ -33,10 +33,10 @@ ADD_EXECUTABLE        (genericHashTesterStatic EXCLUDE_FROM_ALL test/genericHash
 
 IF (ALL_IN_ONE)
   TARGET_LINK_LIBRARIES (genericHashTester       genericLogger)
-  TARGET_LINK_LIBRARIES (genericHashTesterStatic genericLogger_static)
+  TARGET_LINK_LIBRARIES (genericHashTesterStatic genericLogger)
 ELSE ()
   TARGET_LINK_LIBRARIES (genericHashTester       ${GENERICLOGGER_LIBRARIES})
-  TARGET_LINK_LIBRARIES (genericHashTesterStatic ${GENERICLOGGER_STATIC_LIBRARIES})
+  TARGET_LINK_LIBRARIES (genericHashTesterStatic ${GENERICLOGGER_LIBRARIES})
 ENDIF ()
 
 SET_TARGET_PROPERTIES (genericHashTester       PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH})
