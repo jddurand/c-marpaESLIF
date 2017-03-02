@@ -43,8 +43,8 @@ SET_TARGET_PROPERTIES (genericHashTester       PROPERTIES RUNTIME_OUTPUT_DIRECTO
 SET_TARGET_PROPERTIES (genericHashTesterStatic PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH})
 
 INCLUDE (MyPackageCheck)
-MYPACKAGECHECK (genericHashTest genericHashTester)
-MYPACKAGECHECK (genericHashTestStatic genericHashTesterStatic)
+MYPACKAGECHECK (genericHashTest "${LIBRARY_OUTPUT_PATH}/genericHashTester")
+MYPACKAGECHECK (genericHashTestStatic "${LIBRARY_OUTPUT_PATH}/genericHashTesterStatic")
 ADD_DEPENDENCIES  (check genericHashTester genericHashTesterStatic)
 
 # -------
