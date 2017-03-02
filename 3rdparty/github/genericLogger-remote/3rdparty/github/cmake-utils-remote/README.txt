@@ -17,5 +17,6 @@ CMake macros customized for /my/ packages
 List of macros:
 
 MACRO (MYPACKAGEDEPENDENCY dependTarget dependSourceDir dependIncludeDirsVarname)
-MACRO (MYPACKAGESTART packageName versionMajor versionMinor versionPatch)
-MACRO (MyPackageMan PODFILE MANFILE SECTION VERSION)
+MACRO (MYPACKAGESTART      packageName versionMajor versionMinor versionPatch)
+MACRO (MYPACKAGEMAN        PODFILE MANFILE SECTION VERSION)
+MACRO (MYPACKAGECHECK      targetName [command arg1 arg2 ...])
