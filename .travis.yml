@@ -11,4 +11,5 @@ before_script:
 script:
   - make
   - make check
+  - make package
   - sudo make install
