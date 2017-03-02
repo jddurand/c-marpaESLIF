@@ -98,8 +98,8 @@ TARGET_LINK_LIBRARIES (genericLoggerTester       genericLogger)
 TARGET_LINK_LIBRARIES (genericLoggerTesterStatic genericLogger_static)
 
 INCLUDE (MyPackageCheck)
-MYPACKAGECHECK (genericLoggerTest       genericLoggerTester)
-MYPACKAGECHECK (genericLoggerTestStatic genericLoggerTesterStatic)
+MYPACKAGECHECK (genericLoggerTest       "${LIBRARY_OUTPUT_PATH}/genericLoggerTester")
+MYPACKAGECHECK (genericLoggerTestStatic "${LIBRARY_OUTPUT_PATH}/genericLoggerTesterStatic")
 ADD_DEPENDENCIES (check genericLoggerTester genericLoggerTesterStatic)
 
 # -------
