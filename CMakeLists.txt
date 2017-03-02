@@ -19,9 +19,9 @@ ADD_EXECUTABLE        (genericStackTesterNoInitialStack       EXCLUDE_FROM_ALL t
 SET_TARGET_PROPERTIES (genericStackTesterNoInitialStack       PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH})
 
 INCLUDE (MyPackageCheck)
-MYPACKAGECHECK (genericStackTestDefaultInitialStack genericStackTesterDefaultInitialStack)
-MYPACKAGECHECK (genericStackTestSmallInitialStack genericStackTesterSmallInitialStack)
-MYPACKAGECHECK (genericStackTestNoInitialStack genericStackTesterNoInitialStack)
+MYPACKAGECHECK (genericStackTestDefaultInitialStack "${LIBRARY_OUTPUT_PATH}/genericStackTesterDefaultInitialStack")
+MYPACKAGECHECK (genericStackTestSmallInitialStack "${LIBRARY_OUTPUT_PATH}/genericStackTesterSmallInitialStack")
+MYPACKAGECHECK (genericStackTestNoInitialStack "${LIBRARY_OUTPUT_PATH}/genericStackTesterNoInitialStack")
 ADD_DEPENDENCIES (check genericStackTesterDefaultInitialStack genericStackTesterSmallInitialStack genericStackTesterNoInitialStack)
 
 # -------
