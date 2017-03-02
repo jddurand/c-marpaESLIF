@@ -1,4 +1,11 @@
 language: c
+addons:
+  apt:
+    sources:
+      - george-edison55-precise-backports
+    packages:
+      - cmake
+      - cmake-data
 before_script:
   - cmake .
 script:
