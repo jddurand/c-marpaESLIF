@@ -14,7 +14,7 @@ before_script:
 script:
   - cmake . -DALL_IN_ONE=ON
   - make check
-  - sudo make install DESTDIR=/tmp
+  - make install DESTDIR=/tmp
   - rm -rf output CMakeCache.txt CMakeFiles
   - cmake .
   - make check
