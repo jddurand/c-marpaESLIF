@@ -1,6 +1,6 @@
 CMAKE_MINIMUM_REQUIRED (VERSION 3.0.0 FATAL_ERROR)
 INCLUDE ("3rdparty/github/cmake-utils-remote/cmake/MyPackageStart.cmake")
-MYPACKAGESTART (genericLogger 1 0 7)
+MYPACKAGESTART (genericLogger 1 0 8)
 
 # --------
 # config.h
@@ -114,11 +114,8 @@ INSTALL (TARGETS genericLogger_static ARCHIVE DESTINATION lib LIBRARY DESTINATIO
 INSTALL (FILES ${INCLUDE_OUTPUT_PATH}/genericLogger/export.h DESTINATION include/genericLogger)
 INSTALL (FILES include/genericLogger.h DESTINATION include)
 
-IF (UNIX)
-  INCLUDE (Pod2Man)
-  ADD_MANPAGE_TARGET()
-  POD2MAN("${PROJECT_SOURCE_DIR}/README.pod" "GENERICLOGGER" "3" "${GENERICLOGGER_VERSION}")
-ENDIF (UNIX)
+INCLUDE (MyPackageMan)
+MYPACKAGEMAN("${PROJECT_SOURCE_DIR}/README.pod" "GENERICLOGGER" "3" "${GENERICLOGGER_VERSION}")
 
 # ---------
 # Packaging
