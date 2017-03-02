@@ -1,6 +1,6 @@
 CMAKE_MINIMUM_REQUIRED (VERSION 3.0.0 FATAL_ERROR)
 INCLUDE ("3rdparty/github/cmake-utils-remote/cmake/MyPackageStart.cmake")
-MYPACKAGESTART (genericLogger 1 0 7)
+MYPACKAGESTART (genericLogger 1 0 8)
 
 # --------
 # config.h
