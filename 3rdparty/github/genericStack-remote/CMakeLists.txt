@@ -1,6 +1,6 @@
 CMAKE_MINIMUM_REQUIRED (VERSION 3.0.0 FATAL_ERROR)
 INCLUDE ("3rdparty/github/cmake-utils-remote/cmake/MyPackageStart.cmake")
-MYPACKAGESTART (genericStack 1 0 27)
+MYPACKAGESTART (genericStack 1 0 28)
 
 INCLUDE_DIRECTORIES (${PROJECT_SOURCE_DIR}/include)
 
@@ -28,11 +28,8 @@ ADD_DEPENDENCIES      (check genericStackTesterDefaultInitialStack genericStackT
 # -------
 INSTALL (FILES include/genericStack.h DESTINATION include)
 
-IF (UNIX)
-  INCLUDE (Pod2Man)
-  ADD_MANPAGE_TARGET()
-  POD2MAN(README.pod "GENERICSTACK" "3" "${GENERICSTACK_VERSION}")
-ENDIF (UNIX)
+INCLUDE (MyPackageMan)
+MYPACKAGEMAN("${PROJECT_SOURCE_DIR}/README.pod" "GENERICSTACK" "3" "${GENERICSTACK_VERSION}")
 
 #############
 # Packaging #
