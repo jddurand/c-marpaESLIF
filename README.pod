@@ -221,6 +221,24 @@ Switches items at positions C<i1> and C<i2>.
 
 Returns the type of the item at position C<index> within stack C<stackName>.
 
+=head2 GENERICSTACKITEMTYPE_XXX
+
+Convenient enum associating a value to the item type C<XXX>, for example:
+
+=over
+
+=item GENERICSTACKITEMTYPE_NA
+
+is the value C<0>
+
+=item GENERICSTACKITEMTYPE_CHAR
+
+is the value C<1>
+
+=back
+
+and so on.
+
 =head2 GENERICSTACKITEMTYPE2TYPE_XXX
 
 Generates a basic C type from the item type C<XXX>, for example:
