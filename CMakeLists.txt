@@ -1,32 +1,7 @@
-#
-# Usage: With nmake: cmake -G "NMake Makefiles", then nmake install
-#        With  make: cmake -G "UNIX Makefiles", then make install
-#
-CMAKE_MINIMUM_REQUIRED (VERSION 2.4)
-PROJECT (genericStack)
+CMAKE_MINIMUM_REQUIRED (VERSION 3.0.0 FATAL_ERROR)
+INCLUDE ("3rdparty/github/cmake-utils-remote/cmake/MyPackageStart.cmake")
+MYPACKAGESTART (genericStack 1 0 27)
 
-# -------
-# Version
-# -------
-SET (GENERICSTACK_VERSION_MAJOR 1)
-SET (GENERICSTACK_VERSION_MINOR 0)
-SET (GENERICSTACK_VERSION_PATCH 27)
-SET (GENERICSTACK_VERSION ${GENERICSTACK_VERSION_MAJOR}.${GENERICSTACK_VERSION_MINOR}.${GENERICSTACK_VERSION_PATCH})
-
-# --------------------
-# CFLAGS customization
-# --------------------
-if (("${CMAKE_C_COMPILER_ID} x" MATCHES "MSVC") OR MSVC)
-  # Loosely based on http://www.hdfgroup.org/ftp/HDF/HDF_Current/src/unpacked/config/cmake/ConfigureChecks.cmake
-  ADD_DEFINITIONS("-D_CRT_SECURE_NO_WARNINGS")
-  ADD_DEFINITIONS("-D_CRT_NONSTDC_NO_DEPRECATE")
-ENDIF ()
-
-# ---------
-# Set paths
-# ---------
-SET (CMAKE_MODULE_PATH              ${PROJECT_SOURCE_DIR}/cmake)          # General module search path
-SET (BINARY_OUTPUT_PATH             ${PROJECT_SOURCE_DIR}/output/bin)     # General binary output path
 INCLUDE_DIRECTORIES (${PROJECT_SOURCE_DIR}/include)
 
 # -----
@@ -46,7 +21,7 @@ ADD_EXECUTABLE        (genericStackTesterNoInitialStack       EXCLUDE_FROM_ALL t
 SET_TARGET_PROPERTIES (genericStackTesterNoInitialStack       PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${BINARY_OUTPUT_PATH})
 ADD_TEST              (NAME genericStackTestNoInitialStack    COMMAND genericStackTesterNoInitialStack WORKING_DIRECTORY ${BINARY_OUTPUT_PATH})
 
-ADD_CUSTOM_TARGET     (check COMMAND ${CMAKE_CTEST_COMMAND} DEPENDS genericStackTesterDefaultInitialStack genericStackTesterSmallInitialStack genericStackTesterNoInitialStack)
+ADD_DEPENDENCIES      (check genericStackTesterDefaultInitialStack genericStackTesterSmallInitialStack genericStackTesterNoInitialStack)
 
 # -------
 # Install
@@ -58,3 +33,13 @@ IF (UNIX)
   ADD_MANPAGE_TARGET()
   POD2MAN(README.pod "GENERICSTACK" "3" "${GENERICSTACK_VERSION}")
 ENDIF (UNIX)
+
+#############
+# Packaging #
+#############
+SET (CPACK_PACKAGE_VERSION_MAJOR "${GENERICSTACK_VERSION_MAJOR}")
+SET (CPACK_PACKAGE_VERSION_MINOR "${GENERICSTACK_VERSION_MINOR}")
+SET (CPACK_PACKAGE_VERSION_PATCH "${GENERICSTACK_VERSION_PATCH}")
+CONFIGURE_FILE ("${PROJECT_SOURCE_DIR}/LICENSE"  "${CMAKE_CURRENT_BINARY_DIR}/LICENSE.txt")
+SET (CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_BINARY_DIR}/LICENSE.txt")
+INCLUDE (CPack)
