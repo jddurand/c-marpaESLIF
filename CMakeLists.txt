@@ -1,6 +1,6 @@
 CMAKE_MINIMUM_REQUIRED (VERSION 3.0.0 FATAL_ERROR)
 INCLUDE ("3rdparty/github/cmake-utils-remote/cmake/MyPackageStart.cmake")
-MYPACKAGESTART (genericHash 1 0 22)
+MYPACKAGESTART (genericHash 1 0 23)
 
 #############################
 # Dependencies
