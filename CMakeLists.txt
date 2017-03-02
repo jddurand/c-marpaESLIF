@@ -97,14 +97,10 @@ SET_TARGET_PROPERTIES (genericLoggerTesterStatic PROPERTIES LINKER_LANGUAGE C RU
 TARGET_LINK_LIBRARIES (genericLoggerTester       genericLogger)
 TARGET_LINK_LIBRARIES (genericLoggerTesterStatic genericLogger_static)
 
-ADD_TEST              (NAME genericLoggerTest
-                       COMMAND genericLoggerTester
-                       WORKING_DIRECTORY ${LIBRARY_OUTPUT_PATH})
-ADD_TEST              (NAME genericLoggerTestStatic
-                       COMMAND genericLoggerTesterStatic
-                       WORKING_DIRECTORY ${LIBRARY_OUTPUT_PATH})
-
-ADD_DEPENDENCIES      (check genericLoggerTester genericLoggerTesterStatic)
+INCLUDE (MyPackageCheck)
+MYPACKAGECHECK (genericLoggerTest       genericLoggerTester)
+MYPACKAGECHECK (genericLoggerTestStatic genericLoggerTesterStatic)
+ADD_DEPENDENCIES (check genericLoggerTester genericLoggerTesterStatic)
 
 # -------
 # Install
