@@ -18,3 +18,4 @@ List of macros:
 
 MACRO (MYPACKAGEDEPENDENCY dependTarget dependSourceDir dependIncludeDirsVarname)
 MACRO (MYPACKAGESTART packageName versionMajor versionMinor versionPatch)
+MACRO (MyPackageMan PODFILE MANFILE SECTION VERSION)
