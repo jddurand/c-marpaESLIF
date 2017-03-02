@@ -1,6 +1,6 @@
 CMAKE_MINIMUM_REQUIRED (VERSION 3.0.0 FATAL_ERROR)
 INCLUDE ("3rdparty/github/cmake-utils-remote/cmake/MyPackageStart.cmake")
-MYPACKAGESTART (genericHash 1 0 21)
+MYPACKAGESTART (genericHash 1 0 22)
 
 #############################
 # Dependencies
@@ -39,13 +39,13 @@ ELSE ()
   TARGET_LINK_LIBRARIES (genericHashTesterStatic ${GENERICLOGGER_STATIC_LIBRARIES})
 ENDIF ()
 
-SET_TARGET_PROPERTIES (genericHashTester       PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${BINARY_OUTPUT_PATH})
-SET_TARGET_PROPERTIES (genericHashTesterStatic PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${BINARY_OUTPUT_PATH})
+SET_TARGET_PROPERTIES (genericHashTester       PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH})
+SET_TARGET_PROPERTIES (genericHashTesterStatic PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH})
 
-ADD_TEST              (NAME genericHashTest       COMMAND genericHashTester       WORKING_DIRECTORY ${BINARY_OUTPUT_PATH})
-ADD_TEST              (NAME genericHashTestStatic COMMAND genericHashTesterStatic WORKING_DIRECTORY ${BINARY_OUTPUT_PATH})
-
-ADD_DEPENDENCIES  (check tconvExec genericHashTester genericHashTesterStatic)
+INCLUDE (MyPackageCheck)
+MYPACKAGECHECK (genericHashTest genericHashTester)
+MYPACKAGECHECK (genericHashTestStatic genericHashTesterStatic)
+ADD_DEPENDENCIES  (check genericHashTester genericHashTesterStatic)
 
 # -------
 # Install
@@ -53,11 +53,8 @@ ADD_DEPENDENCIES  (check tconvExec genericHashTester genericHashTesterStatic)
 INSTALL (FILES include/genericHash.h DESTINATION include)
 INSTALL (FILES include/genericHash/cloak.h DESTINATION include/genericHash)
 
-IF (UNIX)
-  INCLUDE (Pod2Man)
-  ADD_MANPAGE_TARGET()
-  POD2MAN(README.pod "GENERICHASH" "3" "${GENERICHASH_VERSION}")
-ENDIF (UNIX)
+INCLUDE (MyPackageMan)
+MYPACKAGEMAN("${PROJECT_SOURCE_DIR}/README.pod" "GENERICHASH" "3" "${GENERICHASH_VERSION}")
 
 #############
 # Packaging #
