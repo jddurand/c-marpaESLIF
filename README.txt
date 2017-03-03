@@ -12,6 +12,8 @@ CMake macros customized for /my/ packages
 # - Sourcedir of package Xx is always inside current package as 3rdparty/github/Xx
 # - There all under github at https://github.com/jddurand/c-Xx.git
 # - They are pure libraries, no window stuff
+# - They all have a -DXX_NTRACE to enable tracing at compile time
+# - They may use -DXX_VERSION, and -DXX_VERSION_[MAJOR,MINOR,PATCH}
 #
 
 List of macros:
