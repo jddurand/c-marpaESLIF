@@ -1,175 +1,188 @@
-MACRO (MYPACKAGEDEPENDENCY dependTarget dependSourceDir dependIncludeDirsVarname)
-  STRING (TOUPPER ${dependTarget} _FINDPACKAGE)
-  IF (ALL_IN_ONE)
-    IF (NOT TARGET ${dependTarget})
-      #
-      # Absolute path, otherwise using it as include dir for compilation will croak
-      #
-      GET_FILENAME_COMPONENT(dependSourceDirAbsolute ${dependSourceDir} ABSOLUTE)
-
-      MESSAGE(STATUS "Using ${dependTarget} target from subdirectory ${dependSourceDirAbsolute}")
-      ADD_SUBDIRECTORY(${dependSourceDirAbsolute})
-      SET (${dependIncludeDirsVarname}
-        "${dependSourceDirAbsolute}/output/include"
-        "${dependSourceDirAbsolute}/include"
-        )
-      #
-      # Test path management
-      #
-      SET (_dependLibraryRuntimeDirectory "${dependSourceDirAbsolute}/output/lib")
-      IF ("${CMAKE_HOST_SYSTEM}" MATCHES ".*Windows.*")
-        STRING(REGEX REPLACE "/" "\\\\"  _dependLibraryRuntimeDirectory "${_dependLibraryRuntimeDirectory}")
-      ELSE ()
-        STRING(REGEX REPLACE " " "\\\\ "  _dependLibraryRuntimeDirectory "${_dependLibraryRuntimeDirectory}")
-      ENDIF ()
-      SET(${_FINDPACKAGE}_RUNTIME_DIRECTORY "${_dependLibraryRuntimeDirectory}" CACHE INTERNAL "${dependTarget} Runtime Directory")
-      IF (NOT TEST_PATH)
-        MESSAGE(STATUS "Initializing TEST_PATH with PATH")
-        SET (TEST_PATH "$ENV{PATH}" )
-      ENDIF ()
-      IF ("${CMAKE_HOST_SYSTEM}" MATCHES ".*Windows.*")
-        SET (SEP "\\;")
-      ELSE ()
-        SET (SEP ":")
-      ENDIF ()
-      SET (TEST_PATH "${${_FINDPACKAGE}_RUNTIME_DIRECTORY}${SEP}${TEST_PATH}")
-      MESSAGE(STATUS "Added ${${_FINDPACKAGE}_RUNTIME_DIRECTORY} to test path")
+MACRO (MYPACKAGEDEPENDENCY packageDepend packageDependSourceDir)
+  #
+  # Optional argument: TESTS, LIBS, EXES
+  #
+  SET (_TESTS TRUE)
+  SET (_LIBS TRUE)
+  SET (_EXES TRUE)
+  FOREACH (_var ${ARGN})
+    IF ("\"${_var}\"" STREQUAL TESTS)
+      SET (_TESTS TRUE)
     ELSE ()
-      MESSAGE(STATUS "Re-using already existing ${dependTarget} target")
+      IF ("\"${_var}\"" STREQUAL LIBS)
+        SET (_LIBS TRUE)
+      ELSE ()
+        IF ("\"${_var}\"" STREQUAL EXES)
+          SET (_EXES TRUE)
+        ENDIF ()
+      ENDIF ()
+    ENDIF ()
+  ENDFOREACH ()
+  #
+  # Check if inclusion was already done - via us or another mechanism... guessed with TARGET check
+  #
+  GET_PROPERTY(_packageDepend_set GLOBAL PROPERTY MYPACKAGE_DEPENDENCY_${packageDepend} SET)
+  IF (${_packageDepend_set})
+    GET_PROPERTY(_packageDepend GLOBAL PROPERTY MYPACKAGE_DEPENDENCY_${packageDepend})
+  ELSE ()
+    SET (_packageDepend "")
+  ENDIF ()
+  IF ((NOT ("${_packageDepend}" STREQUAL "")) OR (TARGET ${packageDepend}))
+    IF (${_packageDepend_set})
+      IF (${_packageDepend} STREQUAL "PENDING")
+        MESSAGE (STATUS "[${PROJECT_NAME}-DEPEND-STATUS] ${packageDepend} is already being processed")
+      ELSE ()
+        IF (${_packageDepend} STREQUAL "DONE")
+          MESSAGE (STATUS "[${PROJECT_NAME}-DEPEND-STATUS] ${packageDepend} is already available")
+        ELSE ()
+          MESSAGE (FATAL_ERROR "[${PROJECT_NAME}-DEPEND-STATUS] ${packageDepend} state is ${_packageDepend}, should be DONE or PENDING")
+        ENDIF ()
+      ENDIF ()
+    ELSE ()
+      MESSAGE (WARNING "[${PROJECT_NAME}-DEPEND-WARNING] Target ${packageDepend} already exist - use MyPackageDependency to avoid this warning")
+      IF (MYPACKAGE_DEBUG)
+        MESSAGE (STATUS "[${PROJECT_NAME}-DEPEND-DEBUG] Setting property MYPACKAGE_DEPENDENCY_${packageDepend} to DONE")
+      ENDIF ()
+      SET_PROPERTY(GLOBAL PROPERTY MYPACKAGE_DEPENDENCY_${packageDepend} "DONE")
     ENDIF ()
   ELSE ()
-    MESSAGE(STATUS "Looking for ${dependTarget}")
-    FIND_PACKAGE (${dependTarget})
-    IF (NOT ${_FINDPACKAGE}_FOUND)
-      MESSAGE (FATAL_ERROR "find ${dependTarget} failure")
+    MESSAGE (STATUS "[${PROJECT_NAME}-DEPEND-STATUS] ${packageDepend} is not yet available")
+    IF (MYPACKAGE_DEBUG)
+      MESSAGE (STATUS "[${PROJECT_NAME}-DEPEND-DEBUG] Setting property MYPACKAGE_DEPENDENCY_${packageDepend} to PENDING")
     ENDIF ()
+    SET_PROPERTY(GLOBAL PROPERTY MYPACKAGE_DEPENDENCY_${packageDepend} "PENDING")
     #
-    # The following lines are experimental
+    # ===================================================
+    # Do the dependency: ADD_SUBDIRECTORY or FIND_PACKAGE
+    # ===================================================
     #
-    # IF (NOT ${_FINDPACKAGE}_FOUND)
-    #   SET (_GIT_REPOSITORY "https://github.com/jddurand/c-${dependTarget}.git")
-    #   GET_FILENAME_COMPONENT(_INSTALL_DIR "output/3rdparty/${dependTarget}" ABSOLUTE)
-    #    MESSAGE (STATUS "find ${dependTarget} failure - trying with ${_GIT_REPOSITORY}")
-    #    INCLUDE(ExternalProject)
-    #    ExternalProject_Add("${dependTarget}ExternalProject"
-    #      GIT_REPOSITORY ${_GIT_REPOSITORY}
-    #      INSTALL_DIR ${_INSTALL_DIR}
-    #      LOG_DOWNLOAD 1
-    #      LOG_CONFIGURE 1
-    #      LOG_BUILD 1
-    #      LOG_INSTALL 1
-    #      )
-    #    #
-    #    # Cross the fingers that this will work -;
-    #    #
-    #    SET (${_FINDPACKAGE}_ROOT_DIR     ${_INSTALL_DIR})
-    #    SET (${_FINDPACKAGE}_INCLUDE_DIRS "${_INSTALL_DIR}/include")
-    #  ENDIF ()
-    SET (${dependIncludeDirsVarname}  "${${_FINDPACKAGE}_INCLUDE_DIRS}" )
+    IF (ALL_IN_ONE)
+      GET_FILENAME_COMPONENT(packageDependSourceDirAbsolute ${packageDependSourceDir} ABSOLUTE)
+      MESSAGE (STATUS "[${PROJECT_NAME}-DEPEND-STATUS] Adding subdirectory ${packageDependSourceDirAbsolute}")
+      ADD_SUBDIRECTORY(${packageDependSourceDirAbsolute})
+    ELSE ()
+      MESSAGE(STATUS "[${PROJECT_NAME}-DEPEND-STATUS] Looking for ${packageDepend}")
+      FIND_PACKAGE (${packageDepend})
+      STRING (TOUPPER ${packageDepend} _FINDPACKAGE)
+      IF (NOT ${_FINDPACKAGE}_FOUND)
+        MESSAGE (FATAL_ERROR "[${PROJECT_NAME}-DEPEND-STATUS] Find ${packageDepend} failed")
+      ENDIF ()
+    ENDIF ()
+    IF (MYPACKAGE_DEBUG)
+      MESSAGE (STATUS "[${PROJECT_NAME}-DEPEND-DEBUG] Setting property MYPACKAGE_DEPENDENCY_${packageDepend} to DONE")
+    ENDIF ()
+    SET_PROPERTY(GLOBAL PROPERTY MYPACKAGE_DEPENDENCY_${packageDepend} "DONE")
+    #
+    # Manage dependencies
+    #
+    SET (_test_candidates ${${PROJECT_NAME}_TEST_EXECUTABLE})
+    SET (_lib_candidates  ${PROJECT_NAME} ${PROJECT_NAME}_static)
+    SET (_exe_candidates  ${${PROJECT_NAME}_EXECUTABLE})
+    SET (_candidates)
+    IF (_TESTS)
+      LIST (APPEND _candidates ${_test_candidates})
+    ENDIF ()
+    IF (_LIBS)
+      LIST (APPEND _candidates ${_lib_candidates})
+    ENDIF ()
+    IF (_EXES)
+      LIST (APPEND _candidates ${_exe_candidates})
+    ENDIF ()
+    FOREACH (_target ${_candidates})
+      IF (TARGET ${_target})
+        IF (ALL_IN_ONE)
+          #
+          # Dependency by target
+          #
+          IF (TARGET ${packageDepend})
+            IF (MYPACKAGE_DEBUG)
+              MESSAGE (STATUS "[${PROJECT_NAME}-DEPEND-DEBUG] Adding ${packageDepend} dependency to ${_target}")
+            ENDIF ()
+            TARGET_LINK_LIBRARIES(${_target} ${packageDepend})
+          ELSE ()
+            #
+            # Bad luck, this target does not generate a library
+            #
+            FOREACH (_include_directory ${packageDependSourceDir}/output/include ${packageDependSourceDir}/include)
+              IF (MYPACKAGE_DEBUG)
+                MESSAGE (STATUS "[${PROJECT_NAME}-DEPEND-DEBUG] Adding ${_include_directory} include dependency to ${_target}")
+              ENDIF ()
+              TARGET_INCLUDE_DIRECTORIES(${_target} PUBLIC ${_include_directory})
+            ENDFOREACH ()
+          ENDIF ()
+        ELSE ()
+          #
+          # Include dependency
+          #
+          FOREACH (_include_directory ${${packageDepend}_INCLUDE_DIRS})
+            IF (MYPACKAGE_DEBUG)
+              MESSAGE (STATUS "[${PROJECT_NAME}-DEPEND-DEBUG] Adding ${_include_directory} include dependency to ${_target}")
+            ENDIF ()
+            TARGET_INCLUDE_DIRECTORIES(${_target} PUBLIC ${_include_directory})
+          ENDFOREACH ()
+          #
+          # Library dependency
+          #
+          FOREACH (_library ${${packageDepend}_LIBRARIES})
+            IF (MYPACKAGE_DEBUG)
+              MESSAGE (STATUS "[${PROJECT_NAME}-DEPEND-DEBUG] Adding ${_library} library dependency to ${_target}")
+            ENDIF ()
+            TARGET_LINK_LIBRARIES(${_target} PUBLIC ${_library})
+          ENDFOREACH ()
+          #
+          # Compile definitions
+          #
+          FOREACH (_flag ${${packageDepend}_C_FLAGS_SHARED})
+            IF (MYPACKAGE_DEBUG)
+              MESSAGE (STATUS "[${PROJECT_NAME}-DEPEND-DEBUG] Adding ${_flag} compile definition dependency to ${_target}")
+            ENDIF ()
+            TARGET_COMPILE_DEFINITIONS(${_target} PUBLIC ${_library})
+          ENDFOREACH ()
+          #
+          # Link flags
+          #
+          FOREACH (_flag ${${packageDepend}_C_FLAGS_SHARED})
+            IF (MYPACKAGE_DEBUG)
+              MESSAGE (STATUS "[${PROJECT_NAME}-DEPEND-DEBUG] Adding ${_flag} link flag dependency to ${_target}")
+            ENDIF ()
+            SET_TARGET_PROPERTIES(${_target}
+              PROPERTIES
+              LINK_FLAGS ${_flag}
+              )
+          ENDFOREACH ()
+        ENDIF ()
+      ENDIF ()
+    ENDFOREACH ()
     #
     # Test path management
     #
-    IF ("${CMAKE_HOST_SYSTEM}" MATCHES ".*Windows.*")
-      SET(_${_FINDPACKAGE}_RUNTIME_DIRECTORY "${${_FINDPACKAGE}_ROOT_DIR}/bin")
-      STRING(REGEX REPLACE "/" "\\\\"  _${_FINDPACKAGE}_RUNTIME_DIRECTORY "${_${_FINDPACKAGE}_RUNTIME_DIRECTORY}")
+    GET_PROPERTY(_test_path_set GLOBAL PROPERTY MYPACKAGE_TEST_PATH SET)
+    IF (${_test_path_set})
+      GET_PROPERTY(_test_path GLOBAL PROPERTY MYPACKAGE_TEST_PATH)
     ELSE ()
-      SET(_${_FINDPACKAGE}_RUNTIME_DIRECTORY "${${_FINDPACKAGE}_ROOT_DIR}/lib")
-      STRING(REGEX REPLACE " " "\\\\ "  _${_FINDPACKAGE}_RUNTIME_DIRECTORY "${_${_FINDPACKAGE}_RUNTIME_DIRECTORY}")
+      SET (_test_path "")
     ENDIF ()
-    SET(${_FINDPACKAGE}_RUNTIME_DIRECTORY "${_${_FINDPACKAGE}_RUNTIME_DIRECTORY}" CACHE INTERNAL "${dependTarget} Runtime Directory")
-    IF (NOT TEST_PATH)
-      MESSAGE(STATUS "Initializing TEST_PATH with PATH")
-      SET (TEST_PATH "$ENV{PATH}")
+
+    SET (_dependLibraryRuntimeDirectory "${packageDependSourceDirAbsolute}/output/lib")
+    IF ("${CMAKE_HOST_SYSTEM}" MATCHES ".*Windows.*")
+      STRING(REGEX REPLACE "/" "\\\\"  _dependLibraryRuntimeDirectory "${_dependLibraryRuntimeDirectory}")
+    ELSE ()
+      STRING(REGEX REPLACE " " "\\\\ "  _dependLibraryRuntimeDirectory "${_dependLibraryRuntimeDirectory}")
+    ENDIF ()
+    SET(${_FINDPACKAGE}_RUNTIME_DIRECTORY "${_dependLibraryRuntimeDirectory}")
+    IF ("${_test_path}" STREQUAL "")
+      MESSAGE(STATUS "[${PROJECT_NAME}-DEPEND-STATUS] Initializing TEST_PATH with PATH")
+      SET (_test_path "$ENV{PATH}" )
     ENDIF ()
     IF ("${CMAKE_HOST_SYSTEM}" MATCHES ".*Windows.*")
       SET (SEP "\\;")
     ELSE ()
       SET (SEP ":")
     ENDIF ()
-    SET (TEST_PATH "${${_FINDPACKAGE}_RUNTIME_DIRECTORY}${SEP}${TEST_PATH}")
-    MESSAGE(STATUS "Added ${${_FINDPACKAGE}_RUNTIME_DIRECTORY} to test path")
+    SET (_test_path "${${_FINDPACKAGE}_RUNTIME_DIRECTORY}${SEP}${_test_path}")
+    IF (MYPACKAGE_DEBUG)
+      MESSAGE (STATUS "[${PROJECT_NAME}-DEPEND-STATUS] Prepended ${${_FINDPACKAGE}_RUNTIME_DIRECTORY} to TEST_PATH")
+    ENDIF ()
+    SET_PROPERTY(GLOBAL PROPERTY MYPACKAGE_TEST_PATH "${_test_path}")
   ENDIF ()
-  MESSAGE(STATUS "Setted ${dependIncludeDirsVarname} to ${${dependIncludeDirsVarname}}")
-ENDMACRO()
-
-MACRO (MYPACKAGESTART packageName versionMajor versionMinor versionPath)
-  STRING (TOUPPER ${packageName} _PACKAGENAME)
-  #
-  # Start
-  #
-  CMAKE_MINIMUM_REQUIRED (VERSION 3.0.0 FATAL_ERROR)
-  PROJECT (${packageName} C CXX)
-  #
-  # Policies
-  #
-  IF (POLICY CMP0063)
-    CMAKE_POLICY (SET CMP0063 NEW)
-  ENDIF ()
-  IF (POLICY CMP0018)
-    CMAKE_POLICY (SET CMP0018 NEW)
-  ENDIF ()
-  #
-  # Options
-  #
-  OPTION (ALL_IN_ONE "Compile non-system wide dependencies locally" OFF)
-  #
-  # We want to be the first one that create check target, so that we own it
-  #
-  IF (NOT TARGET check)
-    ADD_CUSTOM_TARGET (check COMMAND ${CMAKE_CTEST_COMMAND})
-  ENDIF ()
-  #
-  # Use GNUInstallDirs in order to enforce lib64 if needed
-  #
-  INCLUDE (GNUInstallDirs)
-  #
-  # Include system libraries if needed (like on Windows)
-  #
-  INCLUDE (InstallRequiredSystemLibraries)
-  #
-  # Paths
-  #
-  SET (CMAKE_MODULE_PATH      "${PROJECT_SOURCE_DIR}/cmake")           # General module search path
-  SET (INCLUDE_OUTPUT_PATH    "${PROJECT_SOURCE_DIR}/output/include")  # General include output path
-  SET (LIBRARY_OUTPUT_PATH    "${PROJECT_SOURCE_DIR}/output/lib")      # General library output path
-  SET (BINARY_OUTPUT_PATH     "${PROJECT_SOURCE_DIR}/output/bin")      # General binary output path
-  SET (3RDPARTY_OUTPUT_PATH   "${PROJECT_SOURCE_DIR}/output/3rdparty") # General 3rdparty output path
-  #
-  # Output directories
-  # C.f. http://stackoverflow.com/questions/7747857/in-cmake-how-do-i-work-around-the-debug-and-release-directories-visual-studio-2
-  #
-  SET (CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${LIBRARY_OUTPUT_PATH}")
-  SET (CMAKE_LIBRARY_OUTPUT_DIRECTORY "${LIBRARY_OUTPUT_PATH}")
-  SET (CMAKE_RUNTIME_OUTPUT_DIRECTORY "${LIBRARY_OUTPUT_PATH}")
-  FOREACH (OUTPUTCONFIG ${CMAKE_CONFIGURATION_TYPES})
-    STRING( TOUPPER ${OUTPUTCONFIG} OUTPUTCONFIG )
-    SET ( CMAKE_LIBRARY_OUTPUT_DIRECTORY_${OUTPUTCONFIG} "${LIBRARY_OUTPUT_PATH}")
-    SET ( CMAKE_ARCHIVE_OUTPUT_DIRECTORY_${OUTPUTCONFIG} "${LIBRARY_OUTPUT_PATH}")
-    SET ( CMAKE_RUNTIME_OUTPUT_DIRECTORY_${OUTPUTCONFIG} "${LIBRARY_OUTPUT_PATH}")
-  ENDFOREACH (OUTPUTCONFIG CMAKE_CONFIGURATION_TYPES)
-  #
-  # Compilers settings
-  #
-  SET (CMAKE_C_VISIBILITY_PRESET   hidden)
-  SET (CMAKE_CXX_VISIBILITY_PRESET hidden)
-  SET (CMAKE_POSITION_INDEPENDENT_CODE ON)
-  if (("${CMAKE_C_COMPILER_ID} x" MATCHES "MSVC") OR MSVC)
-    # Loosely based on http://www.hdfgroup.org/ftp/HDF/HDF_Current/src/unpacked/config/cmake/ConfigureChecks.cmake
-    ADD_DEFINITIONS(-DWIN32_LEAN_AND_MEAN)
-    ADD_DEFINITIONS(-D_CRT_SECURE_NO_WARNINGS)
-    ADD_DEFINITIONS(-D_CRT_NONSTDC_NO_DEPRECATE)
-  ENDIF ()
-  IF ((NOT CMAKE_BUILD_TYPE MATCHES Debug) AND (NOT CMAKE_BUILD_TYPE MATCHES RelWithDebInfo))
-    ADD_DEFINITIONS(-D${_PACKAGENAME}_NTRACE)
-  ENDIF ((NOT CMAKE_BUILD_TYPE MATCHES Debug) AND (NOT CMAKE_BUILD_TYPE MATCHES RelWithDebInfo))
-  SET (${_PACKAGENAME}_VERSION_MAJOR 1)
-  SET (${_PACKAGENAME}_VERSION_MINOR 0)
-  SET (${_PACKAGENAME}_VERSION_PATCH 16)
-  SET (${_PACKAGENAME}_VERSION "${${_PACKAGENAME}_VERSION_MAJOR}.${${_PACKAGENAME}_VERSION_MINOR}.${${_PACKAGENAME}_VERSION_PATCH}")
-
-  ADD_DEFINITIONS(-D${_PACKAGENAME}_VERSION="${${_PACKAGENAME}_VERSION}")
-  #
-  # Prepare dependencies
-  #
-  EXECUTE_PROCESS(COMMAND "${CMAKE_COMMAND}" -E make_directory "${3RDPARTY_OUTPUT_PATH}")
 ENDMACRO()
