@@ -2,45 +2,17 @@ MACRO (MYPACKAGESTART packageName versionMajor versionMinor versionPatch)
   #
   # Start
   #
-  PROJECT (${packageName} VERSION ${versionMajor}, ${versionMinor}, ${versionPatch} LANGUAGES C CXX)
-  MESSAGE (STATUS "[${packageName}] Starting version ${versionMajor}.${versionMinor}.${versionPatch}")
-  #
-  # Remember project name
-  #
-  SET_PROPERTY(DIRECTORY ${PROJECT_SOURCE_DIR} PROPERTY MYPACKAGESTART_NAME "${packageName}")
+  PROJECT (${packageName} VERSION ${versionMajor}.${versionMinor}.${versionPatch} LANGUAGES C CXX)  # This is setting PROJECT_NAME -;
+  MESSAGE (STATUS "[${PROJECT_NAME}-START-STATUS] Starting version ${versionMajor}.${versionMinor}.${versionPatch}")
   #
   # Options
   #
   OPTION (ALL_IN_ONE "Compile non-system wide dependencies locally" OFF)
-  MESSAGE (STATUS "[${packageName}] ALL_IN_ONE option is ${ALL_IN_ONE}")
-  #
-  # We want to be the first one that create check target, so that we own it
-  #
-  GET_PROPERTY(_target_check GLOBAL PROPERTY "MYPACKAGESTART_${packageName}_TARGET_check")
-  IF (NOT ${_target_check})
-    MESSAGE (STATUS "[${packageName}] Creating target check")
-    SET_PROPERTY(GLOBAL PROPERTY "MYPACKAGESTART_${packageName}_TARGET_check" TRUE)
-    ADD_CUSTOM_TARGET (check COMMAND ${CMAKE_CTEST_COMMAND})
+  OPTION (MYPACKAGE_DEBUG "Debug message from MyPackage*.cmake" OFF)
+  MESSAGE (STATUS "[${PROJECT_NAME}-START-STATUS] ALL_IN_ONE option is ${ALL_IN_ONE}")
+  IF (MYPACKAGE_DEBUG)
+    MESSAGE (STATUS "[${PROJECT_NAME}-START-DEBUG] MYPACKAGE_DEBUG option is ${MYPACKAGE_DEBUG}")
   ENDIF ()
-  #
-  # Ditto for the man target, appended to install processing
-  #
-  GET_PROPERTY(_target_man GLOBAL PROPERTY "MYPACKAGESTART_${packageName}_TARGET_man")
-  IF (NOT ${_target_man})
-    MESSAGE (STATUS "[${packageName}] Creating target man")
-    SET_PROPERTY(GLOBAL PROPERTY "MYPACKAGESTART_${packageName}_TARGET_man" TRUE)
-    INSTALL (CODE "EXECUTE_PROCESS(COMMAND ${CMAKE_MAKE_PROGRAM} man)")
-    ADD_CUSTOM_TARGET (man)
-  ENDIF ()
-  #
-  # Policies
-  #
-  FOREACH (_policy IN ITEMS CMP0063 CMP0018)
-    IF (POLICY ${_policy})
-      MESSAGE (STATUS "[${packageName}] Setting policy ${_policy} to NEW")
-      CMAKE_POLICY (SET ${_policy} NEW)
-    ENDIF ()
-  ENDFOREACH ()
   #
   # Use GNUInstallDirs in order to enforce lib64 if needed
   #
@@ -50,18 +22,30 @@ MACRO (MYPACKAGESTART packageName versionMajor versionMinor versionPatch)
   #
   INCLUDE (InstallRequiredSystemLibraries)
   #
-  # Paths - ensure MyPackageDependency is the one distributed with this version of MyPackageStart
+  # General module search path
   #
-  GET_PROPERTY(${_mypackagestart_project_source_dir} GLOBAL PROPERTY MYPACKAGESTART_PROJECT_SOURCE_DIR)
-  IF (NOT ${_mypackagestart_project_source_dir})
-    SET (_mypackagestart_project_source_dir "${PROJECT_SOURCE_DIR}/3rdparty/github/cmake-utils-remote/cmake")
-    SET_PROPERTY(GLOBAL PROPERTY MYPACKAGESTART_PROJECT_SOURCE_DIR "${_mypackagestart_project_source_dir}")
-  ENDIF ()
-  SET (CMAKE_MODULE_PATH    "${PROJECT_SOURCE_DIR}/cmake" "${_mypackagestart_project_source_dir}")                          # General module search path
-  SET (INCLUDE_OUTPUT_PATH  "${PROJECT_SOURCE_DIR}/output/include")                                                         # General include output path
-  SET (LIBRARY_OUTPUT_PATH  "${PROJECT_SOURCE_DIR}/output/lib")                                                             # General library output path
-  SET (BINARY_OUTPUT_PATH   "${PROJECT_SOURCE_DIR}/output/bin")                                                             # General binary output path
-  SET (3RDPARTY_OUTPUT_PATH "${PROJECT_SOURCE_DIR}/output/3rdparty")                                                        # General 3rdparty output path
+  SET (CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
+  MESSAGE (STATUS "[${PROJECT_NAME}-START-STATUS] Setted CMAKE_MODULE_PATH to ${CMAKE_MODULE_PATH}")
+  #
+  # General include output path
+  #
+  SET (INCLUDE_OUTPUT_PATH  "${PROJECT_SOURCE_DIR}/output/include")
+  MESSAGE (STATUS "[${PROJECT_NAME}-START-STATUS] Setted INCLUDE_OUTPUT_PATH to ${INCLUDE_OUTPUT_PATH}")
+  #
+  # General library output path
+  #
+  SET (LIBRARY_OUTPUT_PATH  "${PROJECT_SOURCE_DIR}/output/lib")
+  MESSAGE (STATUS "[${PROJECT_NAME}-START-STATUS] Setted LIBRARY_OUTPUT_PATH to ${LIBRARY_OUTPUT_PATH}")
+  #
+  # General binary output path
+  #
+  SET (BINARY_OUTPUT_PATH   "${PROJECT_SOURCE_DIR}/output/bin")
+  MESSAGE (STATUS "[${PROJECT_NAME}-START-STATUS] Setted BINARY_OUTPUT_PATH to ${BINARY_OUTPUT_PATH}")
+  #
+  # General 3rdparty output path
+  #
+  SET (3RDPARTY_OUTPUT_PATH "${PROJECT_SOURCE_DIR}/output/3rdparty")
+  MESSAGE (STATUS "[${PROJECT_NAME}-START-STATUS] Setted 3RDPARTY_OUTPUT_PATH to ${3RDPARTY_OUTPUT_PATH}")
   #
   # Output directories
   # C.f. http://stackoverflow.com/questions/7747857/in-cmake-how-do-i-work-around-the-debug-and-release-directories-visual-studio-2
@@ -75,6 +59,11 @@ MACRO (MYPACKAGESTART packageName versionMajor versionMinor versionPatch)
     SET ( CMAKE_ARCHIVE_OUTPUT_DIRECTORY_${OUTPUTCONFIG} "${LIBRARY_OUTPUT_PATH}")
     SET ( CMAKE_RUNTIME_OUTPUT_DIRECTORY_${OUTPUTCONFIG} "${LIBRARY_OUTPUT_PATH}")
   ENDFOREACH (OUTPUTCONFIG CMAKE_CONFIGURATION_TYPES)
+  MESSAGE (STATUS "[${PROJECT_NAME}-START-STATUS] Setted all output directories to ${LIBRARY_OUTPUT_PATH}")
+  SET (CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
+  MESSAGE (STATUS "[${PROJECT_NAME}-START-STATUS] Setted CMAKE_INSTALL_RPATH to ${CMAKE_INSTALL_RPATH}")
+  SET (CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+  MESSAGE (STATUS "[${PROJECT_NAME}-START-STATUS] Setted CMAKE_INSTALL_RPATH_USE_LINK_PATH to ${CMAKE_INSTALL_RPATH_USE_LINK_PATH}")
   #
   # Compilers settings
   #
@@ -87,40 +76,84 @@ MACRO (MYPACKAGESTART packageName versionMajor versionMinor versionPatch)
     ADD_DEFINITIONS(-D_CRT_SECURE_NO_WARNINGS)
     ADD_DEFINITIONS(-D_CRT_NONSTDC_NO_DEPRECATE)
   ENDIF ()
-  GET_FILENAME_COMPONENT(projectSourceDirAbsolute ${PROJECT_SOURCE_DIR} ABSOLUTE)
-  SET (_include_directories "${projectSourceDirAbsolute}/output/include" "${projectSourceDirAbsolute}/include")
-  SET_PROPERTY(GLOBAL "MYPACKAGEDEPENDENCY_${packageName}_INCLUDE_DIRECTORIES" ${_include_directories})
-  FOREACH (_include_directory IN LISTS ${_include_directories})
-    MESSAGE(STATUS "[${_packageName}] Adding include directory ${_include_directory}")
-    INCLUDE_DIRECTORIES(${_include_directory})
-  ENDFOREACH ()
   #
   # ... Tracing
   #
-  STRING (TOUPPER ${packageName} _PACKAGENAME)
+  STRING (TOUPPER ${PROJECT_NAME} _PROJECTNAME)
   IF ((NOT CMAKE_BUILD_TYPE MATCHES Debug) AND (NOT CMAKE_BUILD_TYPE MATCHES RelWithDebInfo))
-    ADD_DEFINITIONS(-D${_PACKAGENAME}_NTRACE)
+    ADD_DEFINITIONS(-D${_PROJECTNAME}_NTRACE)
   ENDIF ((NOT CMAKE_BUILD_TYPE MATCHES Debug) AND (NOT CMAKE_BUILD_TYPE MATCHES RelWithDebInfo))
   #
   # ... Version information
   #
-  SET (${_PACKAGENAME}_VERSION_MAJOR ${versionMajor})
-  SET (${_PACKAGENAME}_VERSION_MINOR ${versionMinor})
-  SET (${_PACKAGENAME}_VERSION_PATCH ${versionPatch})
-  SET (${_PACKAGENAME}_VERSION "${${_PACKAGENAME}_VERSION_MAJOR}.${${_PACKAGENAME}_VERSION_MINOR}.${${_PACKAGENAME}_VERSION_PATCH}")
+  SET (${_PROJECTNAME}_VERSION_MAJOR ${versionMajor})
+  SET (${_PROJECTNAME}_VERSION_MINOR ${versionMinor})
+  SET (${_PROJECTNAME}_VERSION_PATCH ${versionPatch})
+  SET (${_PROJECTNAME}_VERSION "${${_PROJECTNAME}_VERSION_MAJOR}.${${_PROJECTNAME}_VERSION_MINOR}.${${_PROJECTNAME}_VERSION_PATCH}")
 
-  ADD_DEFINITIONS(-D${_PACKAGENAME}_VERSION_MAJOR=${versionMajor})
-  ADD_DEFINITIONS(-D${_PACKAGENAME}_VERSION_MINOR=${versionMinor})
-  ADD_DEFINITIONS(-D${_PACKAGENAME}_VERSION_PATCH=${versionPatch})
-  ADD_DEFINITIONS(-D${_PACKAGENAME}_VERSION="${${_PACKAGENAME}_VERSION}")
+  ADD_DEFINITIONS(-D${_PROJECTNAME}_VERSION_MAJOR=${versionMajor})
+  ADD_DEFINITIONS(-D${_PROJECTNAME}_VERSION_MINOR=${versionMinor})
+  ADD_DEFINITIONS(-D${_PROJECTNAME}_VERSION_PATCH=${versionPatch})
+  ADD_DEFINITIONS(-D${_PROJECTNAME}_VERSION="${${_PROJECTNAME}_VERSION}")
   #
-  # Prepare dependencies
+  # Prepare output directories
   #
+  IF (MYPACKAGE_DEBUG)
+    MESSAGE (STATUS "[${PROJECT_NAME}-START-DEBUG] Creating directory ${3RDPARTY_OUTPUT_PATH}")
+  ENDIF ()
   EXECUTE_PROCESS(COMMAND "${CMAKE_COMMAND}" -E make_directory "${3RDPARTY_OUTPUT_PATH}")
+  IF (MYPACKAGE_DEBUG)
+    MESSAGE (STATUS "[${PROJECT_NAME}-START-DEBUG] Creating directory ${INCLUDE_OUTPUT_PATH}/${PROJECT_NAME}")
+  ENDIF ()
+  EXECUTE_PROCESS(COMMAND "${CMAKE_COMMAND}" -E make_directory "${INCLUDE_OUTPUT_PATH}/${PROJECT_NAME}")
   #
-  # Remember we were used, so that any invocation of MyPackageDependency will use the
-  # macro if this current cmake directory. So that, if we depend on a package that has
-  # not been updated, we always the version of MyPackageDependency distributed together
-  # with MyPackageStart
+  # Set-up packaging
   #
+  IF (MYPACKAGE_DEBUG)
+    MESSAGE (STATUS "[${PROJECT_NAME}-START-DEBUG] Configure packaging")
+  ENDIF ()
+  SET (CPACK_PACKAGE_VERSION_MAJOR "${${PROJECT_NAME}_VERSION_MAJOR}")
+  SET (CPACK_PACKAGE_VERSION_MINOR "${${PROJECT_NAME}_VERSION_MINOR}")
+  SET (CPACK_PACKAGE_VERSION_PATCH "${${PROJECT_NAME}_VERSION_PATCH}")
+  IF (EXISTS "${PROJECT_SOURCE_DIR}/LICENSE")
+    CONFIGURE_FILE ("${PROJECT_SOURCE_DIR}/LICENSE"  "${CMAKE_CURRENT_BINARY_DIR}/LICENSE.txt")
+    SET (CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_BINARY_DIR}/LICENSE.txt")
+  ELSE ()
+    IF (MYPACKAGE_DEBUG)
+      MESSAGE (STATUS "[${PROJECT_NAME}-START-DEBUG] No LICENSE...")
+    ENDIF ()
+    SET (CPACK_RESOURCE_FILE_LICENSE)
+  ENDIF ()
+  #
+  # We consider that every .h file in the include directory is to be installed
+  # unless it is starting with an '_'.
+  #
+  FILE (GLOB_RECURSE _include include/*.h)
+  FOREACH (_file ${_include} )
+    GET_FILENAME_COMPONENT(_basename ${_file} NAME)
+    STRING (REGEX MATCH "^_" _hiden ${_basename})
+    IF ("${_hiden}" STREQUAL "_")
+      CONTINUE ()
+    ENDIF ()
+    FILE (RELATIVE_PATH _relfile ${PROJECT_SOURCE_DIR} ${_file})
+    GET_FILENAME_COMPONENT(_dir ${_relfile} DIRECTORY)
+    INSTALL(FILES ${_file} DESTINATION ${_dir})
+  ENDFOREACH()
+  #
+  # We consider that if there is a README.pod, then it is a candidate for installation
+  #
+  IF (EXISTS README.pod)
+    MYPACKAGEMAN(README.pod ${_PROJECTNAME} "3" "${_PROJECTNAME}_VERSION")
+  ENDIF ()
+  #
+  # Execute common tasks
+  #
+  IF (MYPACKAGE_DEBUG)
+    MESSAGE (STATUS "[${PROJECT_NAME}-START-DEBUG] Checking for common include files")
+  ENDIF ()
+  MYPACKAGECHECKCOMMONINCLUDEFILES()
+  IF (MYPACKAGE_DEBUG)
+    MESSAGE (STATUS "[${PROJECT_NAME}-START-DEBUG] Checking for common features")
+  ENDIF ()
+  MYPACKAGECHECKCOMMONFEATURES()
 ENDMACRO()
