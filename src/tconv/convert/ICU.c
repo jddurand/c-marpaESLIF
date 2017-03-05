@@ -53,10 +53,10 @@ typedef struct tconv_convert_ICU_context {
 size_t _tconv_convert_ICU_run(tconv_t tconvp, tconv_convert_ICU_context_t *contextp, char **inbufpp, size_t *inbytesleftlp, char **outbufpp, size_t *outbytesleftlp, UBool flushb);
 
 #if !UCONFIG_NO_TRANSLITERATION
-static TCONV_C_INLINE int32_t _getChunkLimit(const UChar *prevp, int32_t prevlenl, const UChar *p, int32_t lengthl);
-static TCONV_C_INLINE int32_t _cnvSigType(UConverter *uConverterp);
-static TCONV_C_INLINE UBool   _increaseChunkBuffer(tconv_convert_ICU_context_t *contextp, int32_t chunkcapacity);
-static TCONV_C_INLINE UBool   _increaseOutBuffer(tconv_convert_ICU_context_t *contextp, int32_t outcapacity);
+static inline int32_t _getChunkLimit(const UChar *prevp, int32_t prevlenl, const UChar *p, int32_t lengthl);
+static inline int32_t _cnvSigType(UConverter *uConverterp);
+static inline UBool   _increaseChunkBuffer(tconv_convert_ICU_context_t *contextp, int32_t chunkcapacity);
+static inline UBool   _increaseOutBuffer(tconv_convert_ICU_context_t *contextp, int32_t outcapacity);
 #endif
 
 /*****************************************************************************/
@@ -906,7 +906,7 @@ enum {
 };
 
 /*****************************************************************************/
-static TCONV_C_INLINE int32_t _getChunkLimit(const UChar *prevp, int32_t prevlenl, const UChar *p, int32_t lengthl)
+static inline int32_t _getChunkLimit(const UChar *prevp, int32_t prevlenl, const UChar *p, int32_t lengthl)
 /*****************************************************************************/
 {
   const UChar *up     = p;
@@ -955,7 +955,7 @@ static TCONV_C_INLINE int32_t _getChunkLimit(const UChar *prevp, int32_t prevlen
 }
 
 /*****************************************************************************/
-static TCONV_C_INLINE int32_t _cnvSigType(UConverter *uConverterp)
+static inline int32_t _cnvSigType(UConverter *uConverterp)
 /*****************************************************************************/
 /* Note: it is guaranteed that _cnvSigType() is called for a converter       */
 /* before it is used to effectively convert data.                            */
@@ -1008,7 +1008,7 @@ static TCONV_C_INLINE int32_t _cnvSigType(UConverter *uConverterp)
 }
 
 /*****************************************************************************/
-static TCONV_C_INLINE UBool _increaseChunkBuffer(tconv_convert_ICU_context_t *contextp, int32_t chunkCapacityl)
+static inline UBool _increaseChunkBuffer(tconv_convert_ICU_context_t *contextp, int32_t chunkCapacityl)
 /*****************************************************************************/
 {
   /* + 1 for the eventual signature */
@@ -1030,7 +1030,7 @@ static TCONV_C_INLINE UBool _increaseChunkBuffer(tconv_convert_ICU_context_t *co
 }
 
 /*****************************************************************************/
-static TCONV_C_INLINE UBool _increaseOutBuffer(tconv_convert_ICU_context_t *contextp, int32_t outCapacityl)
+static inline UBool _increaseOutBuffer(tconv_convert_ICU_context_t *contextp, int32_t outCapacityl)
 /*****************************************************************************/
 {
   /* + 1 for the eventual signature */
