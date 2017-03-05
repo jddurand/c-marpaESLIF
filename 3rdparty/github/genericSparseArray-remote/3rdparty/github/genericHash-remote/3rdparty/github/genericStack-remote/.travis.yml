@@ -1,0 +1,15 @@
+language: c
+addons:
+  apt:
+    sources:
+      - george-edison55-precise-backports
+    packages:
+      - cmake
+      - cmake-data
+before_script:
+  - cmake .
+script:
+  - make
+  - make check
+  - make package
+  - sudo make install
