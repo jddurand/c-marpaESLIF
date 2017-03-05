@@ -76,7 +76,7 @@ MACRO (MYPACKAGEDEPENDENCY packageDepend packageDependSourceDir)
     # Remember all eventual packageDepend variables we depend upon
     #
     FOREACH (_what INCLUDE_DIRS LIBRARIES C_FLAGS_SHARED LINK_FLAGS)
-      SET (_val ${${_PACKAGEDEPEND}_${_what})
+      SET (_val ${${_PACKAGEDEPEND}_${_what}})
       IF (MYPACKAGE_DEBUG)
         MESSAGE (STATUS "[${PROJECT_NAME}-DEPEND-DEBUG] Setting property MYPACKAGE_DEPENDENCY_${packageDepend}_${_what} to ${_val}")
       ENDIF ()
