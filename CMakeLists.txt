@@ -2,7 +2,7 @@ CMAKE_MINIMUM_REQUIRED (VERSION 3.0.0 FATAL_ERROR)
 IF (NOT MYPACKAGEBOOTSTRAP_DONE)
   INCLUDE ("3rdparty/github/cmake-utils-remote/cmake/MyPackageBootstrap.cmake")
 ENDIF ()
-MYPACKAGESTART (marpaWrapper 1 0 43)
+MYPACKAGESTART (marpaWrapper 1 0 44)
 
 ####################
 # libmarpa sources #
@@ -46,5 +46,7 @@ MYPACKAGETESTEXECUTABLE(marpaWrapperAsfAmbiguousTester test/marpaWrapperAsfAmbig
 ################
 # Dependencies #
 ################
-MYPACKAGEDEPENDENCY (genericStack  "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/genericStack-remote" TESTS)
-MYPACKAGEDEPENDENCY (genericLogger "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/genericLogger-remote" LIBS)
+MYPACKAGEDEPENDENCY (genericStack       "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/genericStack-remote" LIBS TESTS)
+MYPACKAGEDEPENDENCY (genericLogger      "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/genericLogger-remote" LIBS TESTS)
+MYPACKAGEDEPENDENCY (genericHash        "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/genericHash-remote" LIBS)
+MYPACKAGEDEPENDENCY (genericSparseArray "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/genericSparseArray-remote" LIBS)
