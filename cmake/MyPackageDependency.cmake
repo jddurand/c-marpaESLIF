@@ -73,116 +73,127 @@ MACRO (MYPACKAGEDEPENDENCY packageDepend packageDependSourceDir)
     ENDIF ()
     SET_PROPERTY(GLOBAL PROPERTY MYPACKAGE_DEPENDENCY_${packageDepend} "DONE")
     #
-    # Manage dependencies
+    # Remember all eventual packageDepend variables we depend upon
     #
-    SET (_test_candidates ${${PROJECT_NAME}_TEST_EXECUTABLE})
-    SET (_lib_candidates  ${PROJECT_NAME} ${PROJECT_NAME}_static)
-    SET (_exe_candidates  ${${PROJECT_NAME}_EXECUTABLE})
-    SET (_candidates)
-    IF (_TESTS)
-      LIST (APPEND _candidates ${_test_candidates})
-    ENDIF ()
-    IF (_LIBS)
-      LIST (APPEND _candidates ${_lib_candidates})
-    ENDIF ()
-    IF (_EXES)
-      LIST (APPEND _candidates ${_exe_candidates})
-    ENDIF ()
-    FOREACH (_target ${_candidates})
-      IF (TARGET ${_target})
-        IF (ALL_IN_ONE)
-          #
-          # Dependency by target
-          #
-          IF (TARGET ${packageDepend})
-            IF (MYPACKAGE_DEBUG)
-              MESSAGE (STATUS "[${PROJECT_NAME}-DEPEND-DEBUG] Adding ${packageDepend} dependency to ${_target}")
-            ENDIF ()
-            TARGET_LINK_LIBRARIES(${_target} ${packageDepend})
-          ELSE ()
-            #
-            # Bad luck, this target does not generate a library
-            #
-            FOREACH (_include_directory ${packageDependSourceDir}/output/include ${packageDependSourceDir}/include)
-              IF (MYPACKAGE_DEBUG)
-                MESSAGE (STATUS "[${PROJECT_NAME}-DEPEND-DEBUG] Adding ${_include_directory} include dependency to ${_target}")
-              ENDIF ()
-              TARGET_INCLUDE_DIRECTORIES(${_target} PUBLIC ${_include_directory})
-            ENDFOREACH ()
+    FOREACH (_what INCLUDE_DIRS LIBRARIES C_FLAGS_SHARED LINK_FLAGS)
+      SET (_val ${${_PACKAGEDEPEND}_${_what})
+      IF (MYPACKAGE_DEBUG)
+        MESSAGE (STATUS "[${PROJECT_NAME}-DEPEND-DEBUG] Setting property MYPACKAGE_DEPENDENCY_${packageDepend}_${_what} to ${_val}")
+      ENDIF ()
+      SET_PROPERTY(GLOBAL PROPERTY MYPACKAGE_DEPENDENCY_${packageDepend}_${_what} ${_val})
+    ENDFOREACH ()
+  ENDIF ()
+
+  #
+  # Manage dependencies
+  #
+  SET (_test_candidates ${${PROJECT_NAME}_TEST_EXECUTABLE})
+  SET (_lib_candidates  ${PROJECT_NAME} ${PROJECT_NAME}_static)
+  SET (_exe_candidates  ${${PROJECT_NAME}_EXECUTABLE})
+  SET (_candidates)
+  IF (_TESTS)
+    LIST (APPEND _candidates ${_test_candidates})
+  ENDIF ()
+  IF (_LIBS)
+    LIST (APPEND _candidates ${_lib_candidates})
+  ENDIF ()
+  IF (_EXES)
+    LIST (APPEND _candidates ${_exe_candidates})
+  ENDIF ()
+  FOREACH (_target ${_candidates})
+    IF (TARGET ${_target})
+      IF (ALL_IN_ONE)
+        #
+        # Dependency by target
+        #
+        IF (TARGET ${packageDepend})
+          IF (MYPACKAGE_DEBUG)
+            MESSAGE (STATUS "[${PROJECT_NAME}-DEPEND-DEBUG] Adding ${packageDepend} dependency to ${_target}")
           ENDIF ()
+          TARGET_LINK_LIBRARIES(${_target} ${packageDepend})
         ELSE ()
           #
-          # Include dependency
+          # Bad luck, this target does not generate a library
           #
-          FOREACH (_include_directory ${${_PACKAGEDEPEND}_INCLUDE_DIRS})
+          FOREACH (_include_directory ${packageDependSourceDir}/output/include ${packageDependSourceDir}/include)
             IF (MYPACKAGE_DEBUG)
               MESSAGE (STATUS "[${PROJECT_NAME}-DEPEND-DEBUG] Adding ${_include_directory} include dependency to ${_target}")
             ENDIF ()
             TARGET_INCLUDE_DIRECTORIES(${_target} PUBLIC ${_include_directory})
           ENDFOREACH ()
-          #
-          # Library dependency
-          #
-          FOREACH (_library ${${_PACKAGEDEPEND}_LIBRARIES})
-            IF (MYPACKAGE_DEBUG)
-              MESSAGE (STATUS "[${PROJECT_NAME}-DEPEND-DEBUG] Adding ${_library} library dependency to ${_target}")
-            ENDIF ()
-            TARGET_LINK_LIBRARIES(${_target} PUBLIC ${_library})
-          ENDFOREACH ()
-          #
-          # Compile definitions
-          #
-          FOREACH (_flag ${${_PACKAGEDEPEND}_C_FLAGS_SHARED})
-            IF (MYPACKAGE_DEBUG)
-              MESSAGE (STATUS "[${PROJECT_NAME}-DEPEND-DEBUG] Adding ${_flag} compile definition dependency to ${_target}")
-            ENDIF ()
-            TARGET_COMPILE_DEFINITIONS(${_target} PUBLIC ${_library})
-          ENDFOREACH ()
-          #
-          # Link flags
-          #
-          FOREACH (_flag ${${_PACKAGEDEPEND}_LINK_FLAGS})
-            IF (MYPACKAGE_DEBUG)
-              MESSAGE (STATUS "[${PROJECT_NAME}-DEPEND-DEBUG] Adding ${_flag} link flag dependency to ${_target}")
-            ENDIF ()
-            SET_TARGET_PROPERTIES(${_target}
-              PROPERTIES
-              LINK_FLAGS ${_flag}
-              )
-          ENDFOREACH ()
         ENDIF ()
+      ELSE ()
+        #
+        # Include dependency
+        #
+        FOREACH (_include_directory ${MYPACKAGE_DEPENDENCY_${packageDepend}_INCLUDE_DIRS})
+          IF (MYPACKAGE_DEBUG)
+            MESSAGE (STATUS "[${PROJECT_NAME}-DEPEND-DEBUG] Adding ${_include_directory} include dependency to ${_target}")
+          ENDIF ()
+          TARGET_INCLUDE_DIRECTORIES(${_target} PUBLIC ${_include_directory})
+        ENDFOREACH ()
+        #
+        # Library dependency
+        #
+        FOREACH (_library ${MYPACKAGE_DEPENDENCY_${packageDepend}_LIBRARIES})
+          IF (MYPACKAGE_DEBUG)
+            MESSAGE (STATUS "[${PROJECT_NAME}-DEPEND-DEBUG] Adding ${_library} library dependency to ${_target}")
+          ENDIF ()
+          TARGET_LINK_LIBRARIES(${_target} PUBLIC ${_library})
+        ENDFOREACH ()
+        #
+        # Compile definitions
+        #
+        FOREACH (_flag ${MYPACKAGE_DEPENDENCY_${packageDepend}_C_FLAGS_SHARED})
+          IF (MYPACKAGE_DEBUG)
+            MESSAGE (STATUS "[${PROJECT_NAME}-DEPEND-DEBUG] Adding ${_flag} compile definition dependency to ${_target}")
+          ENDIF ()
+          TARGET_COMPILE_DEFINITIONS(${_target} PUBLIC ${_library})
+        ENDFOREACH ()
+        #
+        # Link flags
+        #
+        FOREACH (_flag ${MYPACKAGE_DEPENDENCY_${packageDepend}_LINK_FLAGS})
+          IF (MYPACKAGE_DEBUG)
+            MESSAGE (STATUS "[${PROJECT_NAME}-DEPEND-DEBUG] Adding ${_flag} link flag dependency to ${_target}")
+          ENDIF ()
+          SET_TARGET_PROPERTIES(${_target}
+            PROPERTIES
+            LINK_FLAGS ${_flag}
+            )
+        ENDFOREACH ()
       ENDIF ()
-    ENDFOREACH ()
-    #
-    # Test path management
-    #
-    GET_PROPERTY(_test_path_set GLOBAL PROPERTY MYPACKAGE_TEST_PATH SET)
-    IF (${_test_path_set})
-      GET_PROPERTY(_test_path GLOBAL PROPERTY MYPACKAGE_TEST_PATH)
-    ELSE ()
-      SET (_test_path "")
     ENDIF ()
-
-    SET (_dependLibraryRuntimeDirectory "${packageDependSourceDirAbsolute}/output/lib")
-    IF ("${CMAKE_HOST_SYSTEM}" MATCHES ".*Windows.*")
-      STRING(REGEX REPLACE "/" "\\\\"  _dependLibraryRuntimeDirectory "${_dependLibraryRuntimeDirectory}")
-    ELSE ()
-      STRING(REGEX REPLACE " " "\\\\ "  _dependLibraryRuntimeDirectory "${_dependLibraryRuntimeDirectory}")
-    ENDIF ()
-    SET(${_PACKAGEDEPEND}_RUNTIME_DIRECTORY "${_dependLibraryRuntimeDirectory}")
-    IF ("${_test_path}" STREQUAL "")
-      MESSAGE(STATUS "[${PROJECT_NAME}-DEPEND-STATUS] Initializing TEST_PATH with PATH")
-      SET (_test_path "$ENV{PATH}" )
-    ENDIF ()
-    IF ("${CMAKE_HOST_SYSTEM}" MATCHES ".*Windows.*")
-      SET (SEP "\\;")
-    ELSE ()
-      SET (SEP ":")
-    ENDIF ()
-    SET (_test_path "${${_PACKAGEDEPEND}_RUNTIME_DIRECTORY}${SEP}${_test_path}")
-    IF (MYPACKAGE_DEBUG)
-      MESSAGE (STATUS "[${PROJECT_NAME}-DEPEND-STATUS] Prepended ${${_PACKAGEDEPEND}_RUNTIME_DIRECTORY} to TEST_PATH")
-    ENDIF ()
-    SET_PROPERTY(GLOBAL PROPERTY MYPACKAGE_TEST_PATH "${_test_path}")
+  ENDFOREACH ()
+  #
+  # Test path management
+  #
+  GET_PROPERTY(_test_path_set GLOBAL PROPERTY MYPACKAGE_TEST_PATH SET)
+  IF (${_test_path_set})
+    GET_PROPERTY(_test_path GLOBAL PROPERTY MYPACKAGE_TEST_PATH)
+  ELSE ()
+    SET (_test_path "")
   ENDIF ()
+
+  SET (_dependLibraryRuntimeDirectory "${packageDependSourceDirAbsolute}/output/lib")
+  IF ("${CMAKE_HOST_SYSTEM}" MATCHES ".*Windows.*")
+    STRING(REGEX REPLACE "/" "\\\\"  _dependLibraryRuntimeDirectory "${_dependLibraryRuntimeDirectory}")
+  ELSE ()
+    STRING(REGEX REPLACE " " "\\\\ "  _dependLibraryRuntimeDirectory "${_dependLibraryRuntimeDirectory}")
+  ENDIF ()
+  SET(${_PACKAGEDEPEND}_RUNTIME_DIRECTORY "${_dependLibraryRuntimeDirectory}")
+  IF ("${_test_path}" STREQUAL "")
+    MESSAGE(STATUS "[${PROJECT_NAME}-DEPEND-STATUS] Initializing TEST_PATH with PATH")
+    SET (_test_path "$ENV{PATH}" )
+  ENDIF ()
+  IF ("${CMAKE_HOST_SYSTEM}" MATCHES ".*Windows.*")
+    SET (SEP "\\;")
+  ELSE ()
+    SET (SEP ":")
+  ENDIF ()
+  SET (_test_path "${${_PACKAGEDEPEND}_RUNTIME_DIRECTORY}${SEP}${_test_path}")
+  IF (MYPACKAGE_DEBUG)
+    MESSAGE (STATUS "[${PROJECT_NAME}-DEPEND-STATUS] Prepended ${${_PACKAGEDEPEND}_RUNTIME_DIRECTORY} to TEST_PATH")
+  ENDIF ()
+  SET_PROPERTY(GLOBAL PROPERTY MYPACKAGE_TEST_PATH "${_test_path}")
 ENDMACRO()
