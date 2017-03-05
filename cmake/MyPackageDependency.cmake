@@ -75,12 +75,11 @@ MACRO (MYPACKAGEDEPENDENCY packageDepend packageDependSourceDir)
     #
     # Remember all eventual packageDepend variables we depend upon
     #
-    FOREACH (_what INCLUDE_DIRS LIBRARIES C_FLAGS_SHARED LINK_FLAGS)
-      SET (_val ${${_PACKAGEDEPEND}_${_what}})
+    FOREACH (_what "INCLUDE_DIRS" "LIBRARIES" "C_FLAGS_SHARED" "LINK_FLAGS")
       IF (MYPACKAGE_DEBUG)
-        MESSAGE (STATUS "[${PROJECT_NAME}-DEPEND-DEBUG] Setting property MYPACKAGE_DEPENDENCY_${packageDepend}_${_what} to ${_val}")
+        MESSAGE (STATUS "[${PROJECT_NAME}-DEPEND-DEBUG] Setting property MYPACKAGE_DEPENDENCY_${packageDepend}_${_what} to ${${_PACKAGEDEPEND}_${_what}}")
       ENDIF ()
-      SET_PROPERTY(GLOBAL PROPERTY MYPACKAGE_DEPENDENCY_${packageDepend}_${_what} ${_val})
+      SET_PROPERTY(GLOBAL PROPERTY MYPACKAGE_DEPENDENCY_${packageDepend}_${_what} ${${_PACKAGEDEPEND}_${_what}})
     ENDFOREACH ()
   ENDIF ()
 
@@ -101,6 +100,9 @@ MACRO (MYPACKAGEDEPENDENCY packageDepend packageDependSourceDir)
     LIST (APPEND _candidates ${_exe_candidates})
   ENDIF ()
   FOREACH (_target ${_candidates})
+    IF (MYPACKAGE_DEBUG)
+      MESSAGE (STATUS "[${PROJECT_NAME}-DEPEND-DEBUG] Inspecting target candidate ${_target}")
+    ENDIF ()
     IF (TARGET ${_target})
       IF (ALL_IN_ONE)
         #
@@ -117,7 +119,7 @@ MACRO (MYPACKAGEDEPENDENCY packageDepend packageDependSourceDir)
           #
           FOREACH (_include_directory ${packageDependSourceDir}/output/include ${packageDependSourceDir}/include)
             IF (MYPACKAGE_DEBUG)
-              MESSAGE (STATUS "[${PROJECT_NAME}-DEPEND-DEBUG] Adding ${_include_directory} include dependency to ${_target}")
+              MESSAGE (STATUS "[${PROJECT_NAME}-DEPEND-DEBUG] Adding -I${_include_directory} include to ${_target}")
             ENDIF ()
             TARGET_INCLUDE_DIRECTORIES(${_target} PUBLIC ${_include_directory})
           ENDFOREACH ()
@@ -126,36 +128,40 @@ MACRO (MYPACKAGEDEPENDENCY packageDepend packageDependSourceDir)
         #
         # Include dependency
         #
-        FOREACH (_include_directory ${MYPACKAGE_DEPENDENCY_${packageDepend}_INCLUDE_DIRS})
+        GET_PROPERTY(_property GLOBAL PROPERTY MYPACKAGE_DEPENDENCY_${packageDepend}_INCLUDE_DIRS)
+        FOREACH (_include_directory ${_property})
           IF (MYPACKAGE_DEBUG)
-            MESSAGE (STATUS "[${PROJECT_NAME}-DEPEND-DEBUG] Adding ${_include_directory} include dependency to ${_target}")
+            MESSAGE (STATUS "[${PROJECT_NAME}-DEPEND-DEBUG] Adding -I${_include_directory} include to ${_target}")
           ENDIF ()
           TARGET_INCLUDE_DIRECTORIES(${_target} PUBLIC ${_include_directory})
         ENDFOREACH ()
         #
         # Library dependency
         #
-        FOREACH (_library ${MYPACKAGE_DEPENDENCY_${packageDepend}_LIBRARIES})
+        GET_PROPERTY(_property GLOBAL PROPERTY MYPACKAGE_DEPENDENCY_${packageDepend}_LIBRARIES)
+        FOREACH (_library ${_property})
           IF (MYPACKAGE_DEBUG)
-            MESSAGE (STATUS "[${PROJECT_NAME}-DEPEND-DEBUG] Adding ${_library} library dependency to ${_target}")
+            MESSAGE (STATUS "[${PROJECT_NAME}-DEPEND-DEBUG] Adding ${_library} library to ${_target}")
           ENDIF ()
           TARGET_LINK_LIBRARIES(${_target} PUBLIC ${_library})
         ENDFOREACH ()
         #
         # Compile definitions
         #
-        FOREACH (_flag ${MYPACKAGE_DEPENDENCY_${packageDepend}_C_FLAGS_SHARED})
+        GET_PROPERTY(_property GLOBAL PROPERTY MYPACKAGE_DEPENDENCY_${packageDepend}_C_FLAGS_SHARED)
+        FOREACH (_flag ${_property})
           IF (MYPACKAGE_DEBUG)
-            MESSAGE (STATUS "[${PROJECT_NAME}-DEPEND-DEBUG] Adding ${_flag} compile definition dependency to ${_target}")
+            MESSAGE (STATUS "[${PROJECT_NAME}-DEPEND-DEBUG] Adding ${_flag} compile flag to ${_target}")
           ENDIF ()
           TARGET_COMPILE_DEFINITIONS(${_target} PUBLIC ${_library})
         ENDFOREACH ()
         #
         # Link flags
         #
-        FOREACH (_flag ${MYPACKAGE_DEPENDENCY_${packageDepend}_LINK_FLAGS})
+        GET_PROPERTY(_property GLOBAL PROPERTY MYPACKAGE_DEPENDENCY_${packageDepend}_LINK_FLAGS)
+        FOREACH (_flag ${_property})
           IF (MYPACKAGE_DEBUG)
-            MESSAGE (STATUS "[${PROJECT_NAME}-DEPEND-DEBUG] Adding ${_flag} link flag dependency to ${_target}")
+            MESSAGE (STATUS "[${PROJECT_NAME}-DEPEND-DEBUG] Adding ${_flag} link flag to ${_target}")
           ENDIF ()
           SET_TARGET_PROPERTIES(${_target}
             PROPERTIES
