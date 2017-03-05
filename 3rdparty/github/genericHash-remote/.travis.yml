@@ -1,0 +1,22 @@
+language: c
+sudo: required
+addons:
+  apt:
+    sources:
+      - george-edison55-precise-backports
+    packages:
+      - cmake
+      - cmake-data
+before_script:
+# Dependencies
+  - sh ./install-c-genericLogger.sh
+  - sh ./install-c-genericStack.sh
+script:
+  - cmake . -DALL_IN_ONE=ON
+  - make check
+  - make install DESTDIR=/tmp
+  - rm -rf output CMakeCache.txt CMakeFiles
+  - cmake .
+  - make check
+  - make package
+  - sudo make install
