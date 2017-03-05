@@ -7,10 +7,10 @@
 
 #include "marpa.h"
 #include "config.h"
-#include "marpaWrapper/internal/asf.h"
-#include "marpaWrapper/internal/recognizer.h"
-#include "marpaWrapper/internal/grammar.h"
-#include "marpaWrapper/internal/logging.h"
+#include "marpaWrapper/internal/_asf.h"
+#include "marpaWrapper/internal/_recognizer.h"
+#include "marpaWrapper/internal/_grammar.h"
+#include "marpaWrapper/internal/_logging.h"
 
 #ifndef MARPAWRAPPERASF_INTSET_MAXROWS
 #define MARPAWRAPPERASF_INTSET_MAXROWS 65536   /* x &0xFFFF */
