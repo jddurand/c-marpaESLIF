@@ -145,7 +145,7 @@ MACRO (MYPACKAGEDEPENDENCY packageDepend packageDependSourceDir)
           IF (MYPACKAGE_DEBUG)
             MESSAGE (STATUS "[${PROJECT_NAME}-DEPEND-DEBUG] Adding target ${packageDepend} dependency to target ${_target}")
           ENDIF ()
-          TARGET_LINK_LIBRARIES(${_target} ${packageDepend})
+          TARGET_LINK_LIBRARIES(${_target} PUBLIC ${packageDepend})
         ELSE ()
           #
           # Bad luck, this target does not generate a library

@@ -32,7 +32,7 @@ MACRO (MYPACKAGEEXECUTABLE name)
         IF (MYPACKAGE_DEBUG)
           MESSAGE (STATUS "[${PROJECT_NAME}-EXECUTABLE-DEBUG] Adding ${PROJECT_NAME} link library to ${_name}")
         ENDIF ()
-        TARGET_LINK_LIBRARIES(${_name} ${PROJECT_NAME})
+        TARGET_LINK_LIBRARIES(${_name} PUBLIC ${PROJECT_NAME})
       ELSE ()
         #
         # Current project does not define a library
@@ -52,7 +52,7 @@ MACRO (MYPACKAGEEXECUTABLE name)
         IF (MYPACKAGE_DEBUG)
           MESSAGE (STATUS "[${PROJECT_NAME}-EXECUTABLE-DEBUG] Adding ${PROJECT_NAME}_static link library to ${_name}")
         ENDIF ()
-        TARGET_LINK_LIBRARIES(${_name} ${PROJECT_NAME}_static)
+        TARGET_LINK_LIBRARIES(${_name} PUBLIC ${PROJECT_NAME}_static)
       ELSE ()
         #
         # Current project does not define a static library
