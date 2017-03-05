@@ -56,6 +56,7 @@ MACRO (MYPACKAGEDEPENDENCY packageDepend packageDependSourceDir)
     # Do the dependency: ADD_SUBDIRECTORY or FIND_PACKAGE
     # ===================================================
     #
+    STRING (TOUPPER ${packageDepend} _PACKAGEDEPEND)
     IF (ALL_IN_ONE)
       GET_FILENAME_COMPONENT(packageDependSourceDirAbsolute ${packageDependSourceDir} ABSOLUTE)
       MESSAGE (STATUS "[${PROJECT_NAME}-DEPEND-STATUS] Adding subdirectory ${packageDependSourceDirAbsolute}")
@@ -63,8 +64,7 @@ MACRO (MYPACKAGEDEPENDENCY packageDepend packageDependSourceDir)
     ELSE ()
       MESSAGE(STATUS "[${PROJECT_NAME}-DEPEND-STATUS] Looking for ${packageDepend}")
       FIND_PACKAGE (${packageDepend})
-      STRING (TOUPPER ${packageDepend} _FINDPACKAGE)
-      IF (NOT ${_FINDPACKAGE}_FOUND)
+      IF (NOT ${_PACKAGEDEPEND}_FOUND)
         MESSAGE (FATAL_ERROR "[${PROJECT_NAME}-DEPEND-STATUS] Find ${packageDepend} failed")
       ENDIF ()
     ENDIF ()
@@ -114,7 +114,7 @@ MACRO (MYPACKAGEDEPENDENCY packageDepend packageDependSourceDir)
           #
           # Include dependency
           #
-          FOREACH (_include_directory ${${packageDepend}_INCLUDE_DIRS})
+          FOREACH (_include_directory ${${_PACKAGEDEPEND}_INCLUDE_DIRS})
             IF (MYPACKAGE_DEBUG)
               MESSAGE (STATUS "[${PROJECT_NAME}-DEPEND-DEBUG] Adding ${_include_directory} include dependency to ${_target}")
             ENDIF ()
@@ -123,7 +123,7 @@ MACRO (MYPACKAGEDEPENDENCY packageDepend packageDependSourceDir)
           #
           # Library dependency
           #
-          FOREACH (_library ${${packageDepend}_LIBRARIES})
+          FOREACH (_library ${${_PACKAGEDEPEND}_LIBRARIES})
             IF (MYPACKAGE_DEBUG)
               MESSAGE (STATUS "[${PROJECT_NAME}-DEPEND-DEBUG] Adding ${_library} library dependency to ${_target}")
             ENDIF ()
@@ -132,7 +132,7 @@ MACRO (MYPACKAGEDEPENDENCY packageDepend packageDependSourceDir)
           #
           # Compile definitions
           #
-          FOREACH (_flag ${${packageDepend}_C_FLAGS_SHARED})
+          FOREACH (_flag ${${_PACKAGEDEPEND}_C_FLAGS_SHARED})
             IF (MYPACKAGE_DEBUG)
               MESSAGE (STATUS "[${PROJECT_NAME}-DEPEND-DEBUG] Adding ${_flag} compile definition dependency to ${_target}")
             ENDIF ()
@@ -141,7 +141,7 @@ MACRO (MYPACKAGEDEPENDENCY packageDepend packageDependSourceDir)
           #
           # Link flags
           #
-          FOREACH (_flag ${${packageDepend}_C_FLAGS_SHARED})
+          FOREACH (_flag ${${_PACKAGEDEPEND}_LINK_FLAGS})
             IF (MYPACKAGE_DEBUG)
               MESSAGE (STATUS "[${PROJECT_NAME}-DEPEND-DEBUG] Adding ${_flag} link flag dependency to ${_target}")
             ENDIF ()
@@ -169,7 +169,7 @@ MACRO (MYPACKAGEDEPENDENCY packageDepend packageDependSourceDir)
     ELSE ()
       STRING(REGEX REPLACE " " "\\\\ "  _dependLibraryRuntimeDirectory "${_dependLibraryRuntimeDirectory}")
     ENDIF ()
-    SET(${_FINDPACKAGE}_RUNTIME_DIRECTORY "${_dependLibraryRuntimeDirectory}")
+    SET(${_PACKAGEDEPEND}_RUNTIME_DIRECTORY "${_dependLibraryRuntimeDirectory}")
     IF ("${_test_path}" STREQUAL "")
       MESSAGE(STATUS "[${PROJECT_NAME}-DEPEND-STATUS] Initializing TEST_PATH with PATH")
       SET (_test_path "$ENV{PATH}" )
@@ -179,9 +179,9 @@ MACRO (MYPACKAGEDEPENDENCY packageDepend packageDependSourceDir)
     ELSE ()
       SET (SEP ":")
     ENDIF ()
-    SET (_test_path "${${_FINDPACKAGE}_RUNTIME_DIRECTORY}${SEP}${_test_path}")
+    SET (_test_path "${${_PACKAGEDEPEND}_RUNTIME_DIRECTORY}${SEP}${_test_path}")
     IF (MYPACKAGE_DEBUG)
-      MESSAGE (STATUS "[${PROJECT_NAME}-DEPEND-STATUS] Prepended ${${_FINDPACKAGE}_RUNTIME_DIRECTORY} to TEST_PATH")
+      MESSAGE (STATUS "[${PROJECT_NAME}-DEPEND-STATUS] Prepended ${${_PACKAGEDEPEND}_RUNTIME_DIRECTORY} to TEST_PATH")
     ENDIF ()
     SET_PROPERTY(GLOBAL PROPERTY MYPACKAGE_TEST_PATH "${_test_path}")
   ENDIF ()
