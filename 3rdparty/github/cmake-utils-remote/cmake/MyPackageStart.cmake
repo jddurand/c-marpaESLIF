@@ -140,6 +140,18 @@ MACRO (MYPACKAGESTART packageName versionMajor versionMinor versionPatch)
     INSTALL(FILES ${_file} DESTINATION ${_dir})
   ENDFOREACH()
   #
+  # Make sure current project have a property associating its default directories
+  #
+  SET (_project_fake_include_dirs)
+  FOREACH (_include_directory output/include include)
+    GET_FILENAME_COMPONENT(_absolute_include_directory ${_include_directory} ABSOLUTE)
+    IF (MYPACKAGE_DEBUG)
+      MESSAGE (STATUS "[${PROJECT_NAME}-START-DEBUG] MYPACKAGE_DEPENDENCY_${PROJECT_NAME}_FAKE_INCLUDE_DIRS appended with ${_absolute_include_directory}")
+    ENDIF ()
+    LIST (APPEND _project_fake_include_dirs ${_absolute_include_directory})
+  ENDFOREACH ()
+  SET_PROPERTY(GLOBAL PROPERTY MYPACKAGE_DEPENDENCY_${PROJECT_NAME}_FAKE_INCLUDE_DIRS ${_project_fake_include_dirs})
+  #
   # We consider that if there is a README.pod, then it is a candidate for installation
   #
   IF (EXISTS README.pod)
