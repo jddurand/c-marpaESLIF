@@ -1,0 +1,20 @@
+language: c
+addons:
+  apt:
+    sources:
+      - george-edison55-precise-backports
+    packages:
+      - cmake
+      - cmake-data
+before_script:
+# We want to try perl standalone first
+  - sudo apt-get update
+  - sudo apt-get install cpanminus
+  - sudo cpanm Config::AutoConf::INI ExtUtils::CBuilder File::Basename File::Find File::Path
+  - perl CMakeObjects.PL
+  - rm -rf output
+  - cmake .
+script:
+  - make check
+  - make package
+  - sudo make install
