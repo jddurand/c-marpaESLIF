@@ -8,10 +8,9 @@ addons:
       - cmake
       - cmake-data
 before_script:
+# Dependencies
   - sh ./install-c-genericLogger.sh
   - sh ./install-c-genericStack.sh
-  - sh ./install-c-genericHash.sh
-  - cmake .
 script:
   - cmake . -DALL_IN_ONE=ON
   - make check
