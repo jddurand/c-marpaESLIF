@@ -58,7 +58,7 @@ push(@additional_srcdir, File::Spec->catdir('3rdparty', 'output', 'Marpa--R2', '
 # -----------------------------------------------------------------------
 # We depend on these generic* stuff that can manage themselvs, eventually
 # -----------------------------------------------------------------------
-foreach (qw/genericLogger-remote genericStack-remote/) {
+foreach (qw/genericLogger-remote genericStack-remote genericHash-remote genericSparseArray-remote/) {
     if (! dircopy(File::Spec->catdir('3rdparty', 'github', $_),
                   File::Spec->catdir('output', '3rdparty', $_))) {
         die "Failed to copy $_";
