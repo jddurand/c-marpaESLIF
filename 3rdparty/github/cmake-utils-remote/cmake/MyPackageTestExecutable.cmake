@@ -50,6 +50,10 @@ MACRO (MYPACKAGETESTEXECUTABLE name)
     ENDIF ()
 
     IF (${_name} STREQUAL ${name}_static)
+      IF (MYPACKAGE_DEBUG)
+        MESSAGE (STATUS "[${PROJECT_NAME}-TESTEXECUTABLE-DEBUG] Setting -D${PROJECT_NAME}_STATIC to ${_name}")
+      ENDIF ()
+      TARGET_COMPILE_DEFINITIONS(${_name} PRIVATE -D${PROJECT_NAME}_STATIC)
       IF (TARGET ${PROJECT_NAME}_static)
         IF (MYPACKAGE_DEBUG)
           MESSAGE (STATUS "[${PROJECT_NAME}-TESTEXECUTABLE-DEBUG] Adding ${PROJECT_NAME}_static link library to ${_name}")
@@ -68,15 +72,6 @@ MACRO (MYPACKAGETESTEXECUTABLE name)
         ENDFOREACH ()
       ENDIF ()
     ENDIF ()
-
-    IF (MYPACKAGE_DEBUG)
-      MESSAGE (STATUS "[${PROJECT_NAME}-TESTEXECUTABLE-DEBUG] Adding ${_name} to check target")
-    ENDIF ()
-    ADD_TEST (NAME ${_name}_test
-      COMMAND ${CMAKE_COMMAND} -E env "PATH=${TEST_PATH}" ${_name}
-      WORKING_DIRECTORY ${LIBRARY_OUTPUT_PATH})
-    ADD_DEPENDENCIES(check ${_name})
-
   ENDFOREACH ()
 
 ENDMACRO()
