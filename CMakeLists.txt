@@ -2,7 +2,7 @@ CMAKE_MINIMUM_REQUIRED (VERSION 3.0.0 FATAL_ERROR)
 IF (NOT MYPACKAGEBOOTSTRAP_DONE)
   INCLUDE ("3rdparty/github/cmake-utils-remote/cmake/MyPackageBootstrap.cmake")
 ENDIF ()
-MYPACKAGESTART (genericHash 1 0 28)
+MYPACKAGESTART (genericHash 1 0 29)
 
 ###############
 # Executables #
