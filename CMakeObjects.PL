@@ -135,12 +135,16 @@ sub get_version {
     close($fh) || warn "Failed to close CMakeLists.txt, $!";
 
     my @rc;
-    foreach (qw/MARPAWRAPPER_VERSION_MAJOR MARPAWRAPPER_VERSION_MINOR MARPAWRAPPER_VERSION_PATCH/) {
-	if ($content =~ /^SET\s*\(\s*$_\s*(\d+)\s*\)/sm) {
-            push(@rc, $1);
-	} else {
-	    die "Failed to find $_",
-	}
+    if ($content =~ /^MYPACKAGESTART\s*\(\s*marpaWrapper\s+(\d+)\s+(\d+)\s+(\d+)\s*\)/sm) {
+        @rc = ($1, $2, $3);
+    } else {
+        foreach (qw/MARPAWRAPPER_VERSION_MAJOR MARPAWRAPPER_VERSION_MINOR MARPAWRAPPER_VERSION_PATCH/) {
+            if ($content =~ /^SET\s*\(\s*$_\s*(\d+)\s*\)/sm) {
+                push(@rc, $1);
+            } else {
+                die "Failed to find $_",
+            }
+        }
     }
 
     return join('.', @rc)
