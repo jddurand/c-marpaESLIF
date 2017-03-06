@@ -24,6 +24,7 @@ before_script:
   - sh ./install-c-genericSparseArray.sh
   - cmake .
 script:
+  - make
   - make check
-  - sudo make package
+  - make package
   - sudo make install
