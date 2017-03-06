@@ -44,13 +44,33 @@ MACRO (MYPACKAGELIBRARY config_in config_out)
     SOVERSION     "${${PROJECT_NAME}_VERSION_MAJOR}"
     )
   #
+  # ... Tracing
+  #
+  STRING (TOUPPER ${PROJECT_NAME} _PROJECTNAME)
+  IF ((NOT CMAKE_BUILD_TYPE MATCHES Debug) AND (NOT CMAKE_BUILD_TYPE MATCHES RelWithDebInfo))
+    FOREACH (_target ${PROJECT_NAME} ${PROJECT_NAME}_static)
+      TARGET_COMPILE_DEFINITIONS(${_target} PRIVATE -D${_PROJECTNAME}_NTRACE)
+    ENDFOREACH ()
+  ENDIF ()
+  #
+  # ... Version information
+  #
+  FOREACH (_target ${PROJECT_NAME} ${PROJECT_NAME}_static)
+    TARGET_COMPILE_DEFINITIONS(${_target}
+      PRIVATE -D${_PROJECTNAME}_VERSION_MAJOR=${${PROJECT_NAME}_VERSION_MAJOR}
+      PRIVATE -D${_PROJECTNAME}_VERSION_MINOR=${${PROJECT_NAME}_VERSION_MINOR}
+      PRIVATE -D${_PROJECTNAME}_VERSION_PATCH=${${PROJECT_NAME}_VERSION_PATCH}
+      PRIVATE -D${_PROJECTNAME}_VERSION="${${PROJECT_NAME}_VERSION}"
+      )
+  ENDFOREACH ()
+  #
   # Project's own include directories
   #
   SET (_project_include_directories "${PROJECT_SOURCE_DIR}/output/include" "${PROJECT_SOURCE_DIR}/include")
   FOREACH (_target ${PROJECT_NAME} ${PROJECT_NAME}_static)
     FOREACH (_include_directory ${_project_include_directories})
       IF (MYPACKAGE_DEBUG)
-        MESSAGE (STATUS "[${PROJECT_NAME}-DEPEND-DEBUG] Adding ${_include_directory} include dependency to ${_target}")
+        MESSAGE (STATUS "[${PROJECT_NAME}-LIBRARY-DEBUG] Adding ${_include_directory} include dependency to ${_target}")
       ENDIF ()
       TARGET_INCLUDE_DIRECTORIES(${_target} PUBLIC ${_include_directory})
     ENDFOREACH ()
