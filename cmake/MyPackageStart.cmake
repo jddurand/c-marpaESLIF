@@ -4,6 +4,11 @@ MACRO (MYPACKAGESTART packageName versionMajor versionMinor versionPatch)
   #
   PROJECT (${packageName} VERSION ${versionMajor}.${versionMinor}.${versionPatch} LANGUAGES C CXX)  # This is setting PROJECT_NAME -;
   MESSAGE (STATUS "[${PROJECT_NAME}-START-STATUS] Starting version ${versionMajor}.${versionMinor}.${versionPatch}")
+  STRING (TOUPPER ${PROJECT_NAME} _PROJECTNAME)
+  SET (${_PROJECTNAME}_VERSION_MAJOR ${versionMajor})
+  SET (${_PROJECTNAME}_VERSION_MINOR ${versionMinor})
+  SET (${_PROJECTNAME}_VERSION_PATCH ${versionPatch})
+  SET (${_PROJECTNAME}_VERSION "${${_PROJECTNAME}_VERSION_MAJOR}.${${_PROJECTNAME}_VERSION_MINOR}.${${_PROJECTNAME}_VERSION_PATCH}")
   #
   # Options
   #
@@ -136,7 +141,6 @@ MACRO (MYPACKAGESTART packageName versionMajor versionMinor versionPatch)
   # We consider that if there is a README.pod, then it is a candidate for installation
   #
   IF (EXISTS README.pod)
-    STRING (TOUPPER ${PROJECT_NAME} _PROJECTNAME)
     MYPACKAGEMAN(README.pod ${_PROJECTNAME} "3" "${_PROJECTNAME}_VERSION")
   ENDIF ()
   #
