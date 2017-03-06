@@ -9,8 +9,8 @@ MACRO (MYPACKAGESTART packageName versionMajor versionMinor versionPatch)
   #
   OPTION (ALL_IN_ONE "Compile non-system wide dependencies locally" OFF)
   OPTION (MYPACKAGE_DEBUG "Debug message from MyPackage*.cmake" OFF)
-  MESSAGE (STATUS "[${PROJECT_NAME}-START-STATUS] ALL_IN_ONE option is ${ALL_IN_ONE}")
   IF (MYPACKAGE_DEBUG)
+    MESSAGE (STATUS "[${PROJECT_NAME}-START-STATUS] ALL_IN_ONE option is ${ALL_IN_ONE}")
     MESSAGE (STATUS "[${PROJECT_NAME}-START-DEBUG] MYPACKAGE_DEBUG option is ${MYPACKAGE_DEBUG}")
   ENDIF ()
   #
@@ -25,27 +25,37 @@ MACRO (MYPACKAGESTART packageName versionMajor versionMinor versionPatch)
   # General module search path
   #
   SET (CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
-  MESSAGE (STATUS "[${PROJECT_NAME}-START-STATUS] Setted CMAKE_MODULE_PATH to ${CMAKE_MODULE_PATH}")
+  IF (MYPACKAGE_DEBUG)
+    MESSAGE (STATUS "[${PROJECT_NAME}-START-STATUS] Setted CMAKE_MODULE_PATH to ${CMAKE_MODULE_PATH}")
+  ENDIF ()
   #
   # General include output path
   #
   SET (INCLUDE_OUTPUT_PATH  "${PROJECT_SOURCE_DIR}/output/include")
-  MESSAGE (STATUS "[${PROJECT_NAME}-START-STATUS] Setted INCLUDE_OUTPUT_PATH to ${INCLUDE_OUTPUT_PATH}")
+  IF (MYPACKAGE_DEBUG)
+    MESSAGE (STATUS "[${PROJECT_NAME}-START-STATUS] Setted INCLUDE_OUTPUT_PATH to ${INCLUDE_OUTPUT_PATH}")
+  ENDIF ()
   #
   # General library output path
   #
   SET (LIBRARY_OUTPUT_PATH  "${PROJECT_SOURCE_DIR}/output/lib")
-  MESSAGE (STATUS "[${PROJECT_NAME}-START-STATUS] Setted LIBRARY_OUTPUT_PATH to ${LIBRARY_OUTPUT_PATH}")
+  IF (MYPACKAGE_DEBUG)
+    MESSAGE (STATUS "[${PROJECT_NAME}-START-STATUS] Setted LIBRARY_OUTPUT_PATH to ${LIBRARY_OUTPUT_PATH}")
+  ENDIF ()
   #
   # General binary output path
   #
   SET (BINARY_OUTPUT_PATH   "${PROJECT_SOURCE_DIR}/output/bin")
-  MESSAGE (STATUS "[${PROJECT_NAME}-START-STATUS] Setted BINARY_OUTPUT_PATH to ${BINARY_OUTPUT_PATH}")
+  IF (MYPACKAGE_DEBUG)
+    MESSAGE (STATUS "[${PROJECT_NAME}-START-STATUS] Setted BINARY_OUTPUT_PATH to ${BINARY_OUTPUT_PATH}")
+  ENDIF ()
   #
   # General 3rdparty output path
   #
   SET (3RDPARTY_OUTPUT_PATH "${PROJECT_SOURCE_DIR}/output/3rdparty")
-  MESSAGE (STATUS "[${PROJECT_NAME}-START-STATUS] Setted 3RDPARTY_OUTPUT_PATH to ${3RDPARTY_OUTPUT_PATH}")
+  IF (MYPACKAGE_DEBUG)
+    MESSAGE (STATUS "[${PROJECT_NAME}-START-STATUS] Setted 3RDPARTY_OUTPUT_PATH to ${3RDPARTY_OUTPUT_PATH}")
+  ENDIF ()
   #
   # Output directories
   # C.f. http://stackoverflow.com/questions/7747857/in-cmake-how-do-i-work-around-the-debug-and-release-directories-visual-studio-2
@@ -59,11 +69,17 @@ MACRO (MYPACKAGESTART packageName versionMajor versionMinor versionPatch)
     SET ( CMAKE_ARCHIVE_OUTPUT_DIRECTORY_${OUTPUTCONFIG} "${LIBRARY_OUTPUT_PATH}")
     SET ( CMAKE_RUNTIME_OUTPUT_DIRECTORY_${OUTPUTCONFIG} "${LIBRARY_OUTPUT_PATH}")
   ENDFOREACH (OUTPUTCONFIG CMAKE_CONFIGURATION_TYPES)
-  MESSAGE (STATUS "[${PROJECT_NAME}-START-STATUS] Setted all output directories to ${LIBRARY_OUTPUT_PATH}")
+  IF (MYPACKAGE_DEBUG)
+    MESSAGE (STATUS "[${PROJECT_NAME}-START-STATUS] Setted all output directories to ${LIBRARY_OUTPUT_PATH}")
+  ENDIF ()
   SET (CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
-  MESSAGE (STATUS "[${PROJECT_NAME}-START-STATUS] Setted CMAKE_INSTALL_RPATH to ${CMAKE_INSTALL_RPATH}")
+  IF (MYPACKAGE_DEBUG)
+    MESSAGE (STATUS "[${PROJECT_NAME}-START-STATUS] Setted CMAKE_INSTALL_RPATH to ${CMAKE_INSTALL_RPATH}")
+  ENDIF ()
   SET (CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
-  MESSAGE (STATUS "[${PROJECT_NAME}-START-STATUS] Setted CMAKE_INSTALL_RPATH_USE_LINK_PATH to ${CMAKE_INSTALL_RPATH_USE_LINK_PATH}")
+  IF (MYPACKAGE_DEBUG)
+    MESSAGE (STATUS "[${PROJECT_NAME}-START-STATUS] Setted CMAKE_INSTALL_RPATH_USE_LINK_PATH to ${CMAKE_INSTALL_RPATH_USE_LINK_PATH}")
+  ENDIF ()
   #
   # Compilers settings
   #
@@ -76,25 +92,6 @@ MACRO (MYPACKAGESTART packageName versionMajor versionMinor versionPatch)
     ADD_DEFINITIONS(-D_CRT_SECURE_NO_WARNINGS)
     ADD_DEFINITIONS(-D_CRT_NONSTDC_NO_DEPRECATE)
   ENDIF ()
-  #
-  # ... Tracing
-  #
-  STRING (TOUPPER ${PROJECT_NAME} _PROJECTNAME)
-  IF ((NOT CMAKE_BUILD_TYPE MATCHES Debug) AND (NOT CMAKE_BUILD_TYPE MATCHES RelWithDebInfo))
-    ADD_DEFINITIONS(-D${_PROJECTNAME}_NTRACE)
-  ENDIF ((NOT CMAKE_BUILD_TYPE MATCHES Debug) AND (NOT CMAKE_BUILD_TYPE MATCHES RelWithDebInfo))
-  #
-  # ... Version information
-  #
-  SET (${_PROJECTNAME}_VERSION_MAJOR ${versionMajor})
-  SET (${_PROJECTNAME}_VERSION_MINOR ${versionMinor})
-  SET (${_PROJECTNAME}_VERSION_PATCH ${versionPatch})
-  SET (${_PROJECTNAME}_VERSION "${${_PROJECTNAME}_VERSION_MAJOR}.${${_PROJECTNAME}_VERSION_MINOR}.${${_PROJECTNAME}_VERSION_PATCH}")
-
-  ADD_DEFINITIONS(-D${_PROJECTNAME}_VERSION_MAJOR=${versionMajor})
-  ADD_DEFINITIONS(-D${_PROJECTNAME}_VERSION_MINOR=${versionMinor})
-  ADD_DEFINITIONS(-D${_PROJECTNAME}_VERSION_PATCH=${versionPatch})
-  ADD_DEFINITIONS(-D${_PROJECTNAME}_VERSION="${${_PROJECTNAME}_VERSION}")
   #
   # Prepare output directories
   #
@@ -140,10 +137,23 @@ MACRO (MYPACKAGESTART packageName versionMajor versionMinor versionPatch)
     INSTALL(FILES ${_file} DESTINATION ${_dir})
   ENDFOREACH()
   #
+  # Make sure current project have a property associating its default directories
+  #
+  SET (_project_fake_include_dirs)
+  FOREACH (_include_directory output/include include)
+    GET_FILENAME_COMPONENT(_absolute_include_directory ${_include_directory} ABSOLUTE)
+    IF (MYPACKAGE_DEBUG)
+      MESSAGE (STATUS "[${PROJECT_NAME}-START-DEBUG] MYPACKAGE_DEPENDENCY_${PROJECT_NAME}_FAKE_INCLUDE_DIRS appended with ${_absolute_include_directory}")
+    ENDIF ()
+    LIST (APPEND _project_fake_include_dirs ${_absolute_include_directory})
+  ENDFOREACH ()
+  SET_PROPERTY(GLOBAL PROPERTY MYPACKAGE_DEPENDENCY_${PROJECT_NAME}_FAKE_INCLUDE_DIRS ${_project_fake_include_dirs})
+  #
   # We consider that if there is a README.pod, then it is a candidate for installation
   #
   IF (EXISTS README.pod)
-    MYPACKAGEMAN(README.pod ${_PROJECTNAME} "3" "${_PROJECTNAME}_VERSION")
+    STRING (TOUPPER ${PROJECT_NAME} _PROJECTNAME)
+    MYPACKAGEMAN(README.pod ${_PROJECTNAME} "3" "${${PROJECT_NAME}}_VERSION")
   ENDIF ()
   #
   # Execute common tasks
@@ -156,4 +166,8 @@ MACRO (MYPACKAGESTART packageName versionMajor versionMinor versionPatch)
     MESSAGE (STATUS "[${PROJECT_NAME}-START-DEBUG] Checking for common features")
   ENDIF ()
   MYPACKAGECHECKCOMMONFEATURES()
+  IF (MYPACKAGE_DEBUG)
+    MESSAGE (STATUS "[${PROJECT_NAME}-START-DEBUG] Checking for sizes")
+  ENDIF ()
+  MYPACKAGECHECKCOMMONSIZES()
 ENDMACRO()
