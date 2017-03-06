@@ -124,6 +124,7 @@ EXECUTE_PROCESS(
   WORKING_DIRECTORY "${3RDPARTY_OUTPUT_PATH}"
   )
 MYPACKAGEEXECUTABLE(tconvExe bin/tconv.c)
+MYPACKAGEADDEXECUTABLESTOTESTS(tconvExe)
 FOREACH (_target tconvExe tconvExe_static)
   TARGET_COMPILE_DEFINITIONS(${_target} PRIVATE -DOPTPARSE_IMPLEMENTATION -DOPTPARSE_API=static -DTCONV_VERSION="${TCONV_VERSION}")
   TARGET_INCLUDE_DIRECTORIES(${_target} PRIVATE ${3RDPARTY_OUTPUT_PATH}/optparse-remote)
@@ -139,11 +140,9 @@ ENDFOREACH ()
 ################
 MYPACKAGEDEPENDENCY (genericLogger "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/genericLogger-remote" LIBS)
 
-
 #########
 # Tests #
 #########
-MYPACKAGEADDEXECUTABLESTOTESTS(tconvExe)
 MYPACKAGECHECK(tconvExe -t UTF-16 -o tconv.tconv-UTF-16.c "${PROJECT_SOURCE_DIR}/src/tconv.c")
 
 ###########
