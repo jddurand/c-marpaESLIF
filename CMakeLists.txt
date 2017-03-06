@@ -132,7 +132,6 @@ FOREACH (_target tconvExe tconvExe_static)
   ELSE ()
     SET_TARGET_PROPERTIES(${_target} PROPERTIES OUTPUT_NAME tconv_static)
   ENDIF ()
-  LIST (APPEND ${PROJECT_NAME}_TEST_EXECUTABLE ${_target})
 ENDFOREACH ()
 
 ################
@@ -142,12 +141,9 @@ MYPACKAGEDEPENDENCY (genericLogger "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/
 
 
 #########
-# Check #
-#########
-
-#########
 # Tests #
 #########
+MYPACKAGEADDEXECUTABLESTOTESTS(tconvExe)
 MYPACKAGECHECK(tconvExe -t UTF-16 -o tconv.tconv-UTF-16.c "${PROJECT_SOURCE_DIR}/src/tconv.c")
 
 ###########
