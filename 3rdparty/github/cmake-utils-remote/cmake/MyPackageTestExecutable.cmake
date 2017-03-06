@@ -72,15 +72,6 @@ MACRO (MYPACKAGETESTEXECUTABLE name)
         ENDFOREACH ()
       ENDIF ()
     ENDIF ()
-
-    IF (MYPACKAGE_DEBUG)
-      MESSAGE (STATUS "[${PROJECT_NAME}-TESTEXECUTABLE-DEBUG] Adding ${_name} to check target")
-    ENDIF ()
-    ADD_TEST (NAME ${_name}_test
-      COMMAND ${CMAKE_COMMAND} -E env "PATH=${TEST_PATH}" ${_name}
-      WORKING_DIRECTORY ${LIBRARY_OUTPUT_PATH})
-    ADD_DEPENDENCIES(check ${_name})
-
   ENDFOREACH ()
 
 ENDMACRO()
