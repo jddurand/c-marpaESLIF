@@ -43,7 +43,13 @@ IF (NOT MYPACKAGEBOOTSTRAP_DONE)
   IF (MYPACKAGE_DEBUG)
     MESSAGE (STATUS "[${PROJECT_NAME}-BOOTSTRAP-DEBUG] Creating target check")
   ENDIF ()
-  ADD_CUSTOM_TARGET (check COMMAND ${CMAKE_CTEST_COMMAND})
+  ADD_CUSTOM_TARGET(check 
+            ${CMAKE_COMMAND} -E echo ----------------------------------
+    COMMAND ${CMAKE_COMMAND} -E echo Test command:
+    COMMAND ${CMAKE_COMMAND} -E echo ${CMAKE_CTEST_COMMAND} -C $<CONFIG>
+    COMMAND ${CMAKE_COMMAND} -E echo ----------------------------------
+    COMMAND ${CMAKE_COMMAND} -E env CTEST_OUTPUT_ON_FAILURE=1 ${CMAKE_CTEST_COMMAND} -C $<CONFIG>
+    )
   IF (MYPACKAGE_DEBUG)
     MESSAGE (STATUS "[${PROJECT_NAME}-BOOTSTRAP-DEBUG] Creating target man")
   ENDIF ()
