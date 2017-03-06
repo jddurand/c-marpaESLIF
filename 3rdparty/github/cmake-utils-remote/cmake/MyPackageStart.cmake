@@ -77,25 +77,6 @@ MACRO (MYPACKAGESTART packageName versionMajor versionMinor versionPatch)
     ADD_DEFINITIONS(-D_CRT_NONSTDC_NO_DEPRECATE)
   ENDIF ()
   #
-  # ... Tracing
-  #
-  STRING (TOUPPER ${PROJECT_NAME} _PROJECTNAME)
-  IF ((NOT CMAKE_BUILD_TYPE MATCHES Debug) AND (NOT CMAKE_BUILD_TYPE MATCHES RelWithDebInfo))
-    ADD_DEFINITIONS(-D${_PROJECTNAME}_NTRACE)
-  ENDIF ((NOT CMAKE_BUILD_TYPE MATCHES Debug) AND (NOT CMAKE_BUILD_TYPE MATCHES RelWithDebInfo))
-  #
-  # ... Version information
-  #
-  SET (${_PROJECTNAME}_VERSION_MAJOR ${versionMajor})
-  SET (${_PROJECTNAME}_VERSION_MINOR ${versionMinor})
-  SET (${_PROJECTNAME}_VERSION_PATCH ${versionPatch})
-  SET (${_PROJECTNAME}_VERSION "${${_PROJECTNAME}_VERSION_MAJOR}.${${_PROJECTNAME}_VERSION_MINOR}.${${_PROJECTNAME}_VERSION_PATCH}")
-
-  ADD_DEFINITIONS(-D${_PROJECTNAME}_VERSION_MAJOR=${versionMajor})
-  ADD_DEFINITIONS(-D${_PROJECTNAME}_VERSION_MINOR=${versionMinor})
-  ADD_DEFINITIONS(-D${_PROJECTNAME}_VERSION_PATCH=${versionPatch})
-  ADD_DEFINITIONS(-D${_PROJECTNAME}_VERSION="${${_PROJECTNAME}_VERSION}")
-  #
   # Prepare output directories
   #
   IF (MYPACKAGE_DEBUG)
@@ -155,7 +136,8 @@ MACRO (MYPACKAGESTART packageName versionMajor versionMinor versionPatch)
   # We consider that if there is a README.pod, then it is a candidate for installation
   #
   IF (EXISTS README.pod)
-    MYPACKAGEMAN(README.pod ${_PROJECTNAME} "3" "${_PROJECTNAME}_VERSION")
+    STRING (TOUPPER ${PROJECT_NAME} _PROJECTNAME)
+    MYPACKAGEMAN(README.pod ${_PROJECTNAME} "3" "${${PROJECT_NAME}}_VERSION")
   ENDIF ()
   #
   # Execute common tasks
