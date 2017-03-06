@@ -2,7 +2,7 @@ CMAKE_MINIMUM_REQUIRED (VERSION 3.0.0 FATAL_ERROR)
 IF (NOT MYPACKAGEBOOTSTRAP_DONE)
   INCLUDE ("3rdparty/github/cmake-utils-remote/cmake/MyPackageBootstrap.cmake")
 ENDIF ()
-MYPACKAGESTART (tconv 1 0 19)
+MYPACKAGESTART (tconv 1 0 20)
 
 ###########
 # Library #
@@ -71,6 +71,7 @@ IF (NOT ICONV_FOUND)
       COMMAND "${CMAKE_COMMAND}" -E copy_directory "${PROJECT_SOURCE_DIR}/3rdparty/github/winiconv-remote" "${3RDPARTY_OUTPUT_PATH}/winiconv-remote"
       WORKING_DIRECTORY "${3RDPARTY_OUTPUT_PATH}"
       )
+    SET (ICONV_FOUND TRUE)
     SET (TCONV_HAVE_ICONV 1)
     LIST (APPEND libtconv_src "${3RDPARTY_OUTPUT_PATH}/winiconv-remote/win_iconv.c")
     LIST (APPEND libtconv_inc "${3RDPARTY_OUTPUT_PATH}/winiconv-remote")
@@ -103,7 +104,7 @@ FOREACH (_target tconv tconv_static)
   IF (ICONV_FOUND AND (NOT ("${ICONV_LINK_FLAGS}" STREQUAL "")))
     TARGET_LINK_LIBRARIES(${_target} PUBLIC ${ICONV_LINK_FLAGS})
   ENDIF ()
-  IF (NOT (${CMAKE_DL_LIBS} STREQUAL ""))
+  IF (NOT ("${CMAKE_DL_LIBS}" STREQUAL ""))
     TARGET_LINK_LIBRARIES(${_target} PUBLIC ${CMAKE_DL_LIBS})
   ENDIF ()
   IF (DLFCNWIN32_FOUND)
@@ -124,8 +125,8 @@ EXECUTE_PROCESS(
   )
 MYPACKAGEEXECUTABLE(tconvExe bin/tconv.c)
 FOREACH (_target tconvExe tconvExe_static)
-  TARGET_COMPILE_DEFINITIONS(${_target} PUBLIC -DOPTPARSE_IMPLEMENTATION -DOPTPARSE_API=static)
-  TARGET_INCLUDE_DIRECTORIES(${_target} PUBLIC ${3RDPARTY_OUTPUT_PATH}/optparse-remote)
+  TARGET_COMPILE_DEFINITIONS(${_target} PRIVATE -DOPTPARSE_IMPLEMENTATION -DOPTPARSE_API=static -DTCONV_VERSION="${TCONV_VERSION}")
+  TARGET_INCLUDE_DIRECTORIES(${_target} PRIVATE ${3RDPARTY_OUTPUT_PATH}/optparse-remote)
   IF (${_target} STREQUAL "tconvExe")
     SET_TARGET_PROPERTIES(${_target} PROPERTIES OUTPUT_NAME tconv)
   ELSE ()
@@ -137,6 +138,7 @@ ENDFOREACH ()
 # Dependencies #
 ################
 MYPACKAGEDEPENDENCY (genericLogger "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/genericLogger-remote" LIBS)
+
 
 #########
 # Check #
