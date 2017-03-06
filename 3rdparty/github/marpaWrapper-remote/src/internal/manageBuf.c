@@ -3,8 +3,8 @@
 #include <string.h>
 
 #include "config.h"
-#include "marpaWrapper/internal/manageBuf.h"
-#include "marpaWrapper/internal/logging.h"
+#include "marpaWrapper/internal/_manageBuf.h"
+#include "marpaWrapper/internal/_logging.h"
 
 /*********************/
 /* manageBuf_createp */

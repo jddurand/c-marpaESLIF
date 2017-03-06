@@ -5,9 +5,9 @@
 
 #include "marpa.h"
 #include "config.h"
-#include "marpaWrapper/internal/manageBuf.h"
-#include "marpaWrapper/internal/logging.h"
-#include "marpaWrapper/internal/grammar.h"
+#include "marpaWrapper/internal/_manageBuf.h"
+#include "marpaWrapper/internal/_logging.h"
+#include "marpaWrapper/internal/_grammar.h"
 
 static marpaWrapperGrammarOption_t marpaWrapperGrammarOptionDefault = {
   NULL,    /* genericLoggerp             */
