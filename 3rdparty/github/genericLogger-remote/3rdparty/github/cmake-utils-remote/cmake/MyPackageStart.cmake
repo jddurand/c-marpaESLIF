@@ -77,25 +77,6 @@ MACRO (MYPACKAGESTART packageName versionMajor versionMinor versionPatch)
     ADD_DEFINITIONS(-D_CRT_NONSTDC_NO_DEPRECATE)
   ENDIF ()
   #
-  # ... Tracing
-  #
-  STRING (TOUPPER ${PROJECT_NAME} _PROJECTNAME)
-  IF ((NOT CMAKE_BUILD_TYPE MATCHES Debug) AND (NOT CMAKE_BUILD_TYPE MATCHES RelWithDebInfo))
-    ADD_DEFINITIONS(-D${_PROJECTNAME}_NTRACE)
-  ENDIF ((NOT CMAKE_BUILD_TYPE MATCHES Debug) AND (NOT CMAKE_BUILD_TYPE MATCHES RelWithDebInfo))
-  #
-  # ... Version information
-  #
-  SET (${_PROJECTNAME}_VERSION_MAJOR ${versionMajor})
-  SET (${_PROJECTNAME}_VERSION_MINOR ${versionMinor})
-  SET (${_PROJECTNAME}_VERSION_PATCH ${versionPatch})
-  SET (${_PROJECTNAME}_VERSION "${${_PROJECTNAME}_VERSION_MAJOR}.${${_PROJECTNAME}_VERSION_MINOR}.${${_PROJECTNAME}_VERSION_PATCH}")
-
-  ADD_DEFINITIONS(-D${_PROJECTNAME}_VERSION_MAJOR=${versionMajor})
-  ADD_DEFINITIONS(-D${_PROJECTNAME}_VERSION_MINOR=${versionMinor})
-  ADD_DEFINITIONS(-D${_PROJECTNAME}_VERSION_PATCH=${versionPatch})
-  ADD_DEFINITIONS(-D${_PROJECTNAME}_VERSION="${${_PROJECTNAME}_VERSION}")
-  #
   # Prepare output directories
   #
   IF (MYPACKAGE_DEBUG)
@@ -140,10 +121,23 @@ MACRO (MYPACKAGESTART packageName versionMajor versionMinor versionPatch)
     INSTALL(FILES ${_file} DESTINATION ${_dir})
   ENDFOREACH()
   #
+  # Make sure current project have a property associating its default directories
+  #
+  SET (_project_fake_include_dirs)
+  FOREACH (_include_directory output/include include)
+    GET_FILENAME_COMPONENT(_absolute_include_directory ${_include_directory} ABSOLUTE)
+    IF (MYPACKAGE_DEBUG)
+      MESSAGE (STATUS "[${PROJECT_NAME}-START-DEBUG] MYPACKAGE_DEPENDENCY_${PROJECT_NAME}_FAKE_INCLUDE_DIRS appended with ${_absolute_include_directory}")
+    ENDIF ()
+    LIST (APPEND _project_fake_include_dirs ${_absolute_include_directory})
+  ENDFOREACH ()
+  SET_PROPERTY(GLOBAL PROPERTY MYPACKAGE_DEPENDENCY_${PROJECT_NAME}_FAKE_INCLUDE_DIRS ${_project_fake_include_dirs})
+  #
   # We consider that if there is a README.pod, then it is a candidate for installation
   #
   IF (EXISTS README.pod)
-    MYPACKAGEMAN(README.pod ${_PROJECTNAME} "3" "${_PROJECTNAME}_VERSION")
+    STRING (TOUPPER ${PROJECT_NAME} _PROJECTNAME)
+    MYPACKAGEMAN(README.pod ${_PROJECTNAME} "3" "${${PROJECT_NAME}}_VERSION")
   ENDIF ()
   #
   # Execute common tasks
@@ -156,4 +150,8 @@ MACRO (MYPACKAGESTART packageName versionMajor versionMinor versionPatch)
     MESSAGE (STATUS "[${PROJECT_NAME}-START-DEBUG] Checking for common features")
   ENDIF ()
   MYPACKAGECHECKCOMMONFEATURES()
+  IF (MYPACKAGE_DEBUG)
+    MESSAGE (STATUS "[${PROJECT_NAME}-START-DEBUG] Checking for sizes")
+  ENDIF ()
+  MYPACKAGECHECKCOMMONSIZES()
 ENDMACRO()
