@@ -5,16 +5,11 @@ MACRO (MYPACKAGESTART packageName versionMajor versionMinor versionPatch)
   PROJECT (${packageName} VERSION ${versionMajor}.${versionMinor}.${versionPatch} LANGUAGES C CXX)  # This is setting PROJECT_NAME -;
   MESSAGE (STATUS "[${PROJECT_NAME}-START-STATUS] Starting version ${versionMajor}.${versionMinor}.${versionPatch}")
   STRING (TOUPPER ${PROJECT_NAME} _PROJECTNAME)
-  SET (${_PROJECTNAME}_VERSION_MAJOR ${versionMajor})
-  SET (${_PROJECTNAME}_VERSION_MINOR ${versionMinor})
-  SET (${_PROJECTNAME}_VERSION_PATCH ${versionPatch})
-  SET (${_PROJECTNAME}_VERSION "${${_PROJECTNAME}_VERSION_MAJOR}.${${_PROJECTNAME}_VERSION_MINOR}.${${_PROJECTNAME}_VERSION_PATCH}")
-  MARK_AS_ADVANCED(
-    ${_PROJECTNAME}_VERSION_MAJOR
-    ${_PROJECTNAME}_VERSION_MINOR
-    ${_PROJECTNAME}_VERSION_PATH
-    ${_PROJECTNAME}_VERSION
-    )
+  SET (${_PROJECTNAME}_VERSION_MAJOR ${versionMajor} CACHE STRING "${PROJECT_NAME} major version")
+  SET (${_PROJECTNAME}_VERSION_MINOR ${versionMinor} CACHE STRING "${PROJECT_NAME} minor version")
+  SET (${_PROJECTNAME}_VERSION_PATCH ${versionPatch} CACHE STRING "${PROJECT_NAME} patch version")
+  SET (${_PROJECTNAME}_VERSION "${${_PROJECTNAME}_VERSION_MAJOR}.${${_PROJECTNAME}_VERSION_MINOR}.${${_PROJECTNAME}_VERSION_PATCH}"
+     CACHE STRING "${PROJECT_NAME} version")
   #
   # Options
   #
