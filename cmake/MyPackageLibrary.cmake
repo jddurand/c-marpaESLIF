@@ -44,6 +44,30 @@ MACRO (MYPACKAGELIBRARY config_in config_out)
     SOVERSION     "${${PROJECT_NAME}_VERSION_MAJOR}"
     )
   #
+  # ... Tracing
+  #
+  STRING (TOUPPER ${PROJECT_NAME} _PROJECTNAME)
+  IF ((NOT CMAKE_BUILD_TYPE MATCHES Debug) AND (NOT CMAKE_BUILD_TYPE MATCHES RelWithDebInfo))
+    FOREACH (_target ${PROJECT_NAME} ${PROJECT_NAME}_static)
+      TARGET_COMPILE_DEFINITIONS(${_target} PUBLIC -D${_PROJECTNAME}_NTRACE)
+    ENDFOREACH ()
+  ENDIF ()
+  #
+  # ... Version information
+  #
+  SET (${_PROJECTNAME}_VERSION_MAJOR ${versionMajor})
+  SET (${_PROJECTNAME}_VERSION_MINOR ${versionMinor})
+  SET (${_PROJECTNAME}_VERSION_PATCH ${versionPatch})
+  SET (${_PROJECTNAME}_VERSION "${${_PROJECTNAME}_VERSION_MAJOR}.${${_PROJECTNAME}_VERSION_MINOR}.${${_PROJECTNAME}_VERSION_PATCH}")
+  FOREACH (_target ${PROJECT_NAME} ${PROJECT_NAME}_static)
+    TARGET_COMPILE_DEFINITIONS(${_target}
+      PUBLIC -D${_PROJECTNAME}_VERSION_MAJOR=${versionMajor}
+      PUBLIC -D${_PROJECTNAME}_VERSION_MINOR=${versionMinor}
+      PUBLIC -D${_PROJECTNAME}_VERSION_PATCH=${versionPatch}
+      PUBLIC -D${_PROJECTNAME}_VERSION="${${_PROJECTNAME}_VERSION}"
+      )
+  ENDFOREACH ()
+  #
   # Project's own include directories
   #
   SET (_project_include_directories "${PROJECT_SOURCE_DIR}/output/include" "${PROJECT_SOURCE_DIR}/include")
