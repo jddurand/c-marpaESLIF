@@ -37,6 +37,7 @@ MACRO (MYPACKAGECHECK name)
     ADD_TEST (NAME ${_name}
       COMMAND ${CMAKE_COMMAND} -E env "PATH=${_test_path}" ${_name}
       WORKING_DIRECTORY ${LIBRARY_OUTPUT_PATH})
+    ADD_DEPENDENCIES(check ${_name})
   ENDFOREACH ()
 
 ENDMACRO()
