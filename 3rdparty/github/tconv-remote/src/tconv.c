@@ -13,7 +13,7 @@
 /* For logging */
 static char *files = "tconv.c";
 #define TCONV_ENV_TRACE "TCONV_ENV_TRACE"
-static TCONV_C_INLINE void _tconvTraceCallbackProxy(void *userDatavp, genericLoggerLevel_t logLeveli, const char *msgs);
+static inline void _tconvTraceCallbackProxy(void *userDatavp, genericLoggerLevel_t logLeveli, const char *msgs);
 
 /* For options */
 #define TCONV_ENV_CHARSET      "TCONV_ENV_CHARSET"
@@ -92,9 +92,9 @@ struct tconv {
     }									\
   } while (0)
 
-static TCONV_C_INLINE short _tconvDefaultCharsetAndConvertOptions(tconv_t tconvp);
-static TCONV_C_INLINE short _tconvDefaultCharsetOption(tconv_t tconvp, tconv_charset_external_t *tconvCharsetExternalp);
-static TCONV_C_INLINE short _tconvDefaultConvertOption(tconv_t tconvp, tconv_convert_external_t *tconvConvertExternalp);
+static inline short _tconvDefaultCharsetAndConvertOptions(tconv_t tconvp);
+static inline short _tconvDefaultCharsetOption(tconv_t tconvp, tconv_charset_external_t *tconvCharsetExternalp);
+static inline short _tconvDefaultConvertOption(tconv_t tconvp, tconv_convert_external_t *tconvConvertExternalp);
 
 /****************************************************************************/
 tconv_t tconv_open(const char *tocodes, const char *fromcodes)
@@ -555,7 +555,7 @@ size_t tconv(tconv_t tconvp, char **inbufsp, size_t *inbytesleftlp, char **outbu
 }
 
 /****************************************************************************/
-static TCONV_C_INLINE short _tconvDefaultCharsetAndConvertOptions(tconv_t tconvp)
+static inline short _tconvDefaultCharsetAndConvertOptions(tconv_t tconvp)
 /****************************************************************************/
 {
   static const char funcs[] = "_tconvDefaultCharsetAndConvertOptions";
@@ -577,7 +577,7 @@ static TCONV_C_INLINE short _tconvDefaultCharsetAndConvertOptions(tconv_t tconvp
 }
 
 /****************************************************************************/
-static TCONV_C_INLINE short _tconvDefaultCharsetOption(tconv_t tconvp, tconv_charset_external_t *tconvCharsetExternalp)
+static inline short _tconvDefaultCharsetOption(tconv_t tconvp, tconv_charset_external_t *tconvCharsetExternalp)
 /****************************************************************************/
 {
   static const char funcs[]  = "_tconvDefaultCharsetOption";
@@ -618,7 +618,7 @@ static TCONV_C_INLINE short _tconvDefaultCharsetOption(tconv_t tconvp, tconv_cha
 }
 
 /****************************************************************************/
- static TCONV_C_INLINE short _tconvDefaultConvertOption(tconv_t tconvp, tconv_convert_external_t *tconvConvertExternalp)
+ static inline short _tconvDefaultConvertOption(tconv_t tconvp, tconv_convert_external_t *tconvConvertExternalp)
 /****************************************************************************/
 {
   static const char funcs[]  = "_tconvDefaultConvertOption";
@@ -671,7 +671,7 @@ static TCONV_C_INLINE short _tconvDefaultCharsetOption(tconv_t tconvp, tconv_cha
 }
 
 /****************************************************************************/
-static TCONV_C_INLINE void _tconvTraceCallbackProxy(void *userDatavp, genericLoggerLevel_t logLeveli, const char *msgs)
+static inline void _tconvTraceCallbackProxy(void *userDatavp, genericLoggerLevel_t logLeveli, const char *msgs)
 /****************************************************************************/
 {
   tconv_t tconvp = (tconv_t) userDatavp;

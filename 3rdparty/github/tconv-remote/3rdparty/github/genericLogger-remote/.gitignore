@@ -10,3 +10,4 @@ output
 install_manifest.txt
 CPack*.cmake
 LICENSE.txt
+GENERICLOGGER.*
