@@ -2,7 +2,7 @@ CMAKE_MINIMUM_REQUIRED (VERSION 3.0.0 FATAL_ERROR)
 IF (NOT MYPACKAGEBOOTSTRAP_DONE)
   INCLUDE ("3rdparty/github/cmake-utils-remote/cmake/MyPackageBootstrap.cmake")
 ENDIF ()
-MYPACKAGESTART (genericLogger 1 0 14)
+MYPACKAGESTART (genericLogger 1 0 18)
 
 ######################
 # Library definition #
@@ -17,3 +17,8 @@ MYPACKAGELIBRARY(
 # Executables #
 ###############
 MYPACKAGETESTEXECUTABLE(genericLoggerTester test/genericLoggerTester.c)
+
+#########
+# Tests #
+#########
+MYPACKAGECHECK(genericLoggerTester)
