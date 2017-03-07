@@ -4,6 +4,7 @@ use diagnostics;
 use File::Basename;
 use File::Copy qw/copy/;
 use File::Copy::Recursive qw/dircopy/;
+use File::Find qw/find/;
 use File::Path qw/rmtree/;
 use File::Spec;
 use POSIX qw/EXIT_SUCCESS/;
@@ -31,6 +32,38 @@ mkdir($src) || die "Failed to create $src directory, $!";
 
 print "... Copying directory ../../../3rdparty to marpaESLIFCopy/3rdparty\n";
 dircopy(File::Spec->catdir(($updir) x 3, '3rdparty'), File::Spec->catdir('marpaESLIFCopy', '3rdparty'));
+
+#
+# 3rd party copy is likely to contain garbage. This can happen only in the ALL_IN_ONE case, and in such
+# a case we know that every directory named CMakeFiles or output can be removed
+# There are all eventual left over CTestTestfile.cmake files
+#
+my @toremove = ();
+find({
+      wanted => sub {
+        if (-d $_) {
+          my $b = basename($_);
+          if (($b eq 'CMakeFiles') || ($b eq 'output')) {
+            push(@toremove, File::Spec->canonpath($_));
+          }
+        } elsif (-f $_) {
+          my $b = basename($_);
+          if ($b eq 'CTestTestfile.cmake') {
+            push(@toremove, File::Spec->canonpath($_));
+          }
+        }
+      },
+      no_chdir => 1
+     }, 'marpaESLIFCopy');
+foreach (@toremove) {
+  if (-d $_) {
+    print "... Removing $_\n";
+    rmtree($_);
+  } elsif (-f $_) {
+    print "... Removing $_\n";
+    unlink($_);
+  }
+}
 
 print "... Copying directory ../../../include to marpaESLIFCopy/include\n";
 dircopy(File::Spec->catdir(($updir) x 3, 'include'), File::Spec->catdir('marpaESLIFCopy', 'include'));
