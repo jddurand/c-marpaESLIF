@@ -14,8 +14,9 @@ MACRO (MYPACKAGECHECKCOMMONSIZES)
   #
   FOREACH (_sign "" "u")
     FOREACH (_size 8 16 32 64)
-      SET (_MYTYPE    MYPACKAGE_${_sign}INT${_size})
-      SET (_MYTYPEDEF MYPACKAGE_${_sign}INT${_size}_TYPEDEF)
+      SET (_mytype    MYPACKAGE_${_sign}int${_size})
+      STRING (TOUPPER ${_mytype} _MYTYPE)
+      SET (_MYTYPEDEF ${_MYTYPE}_TYPEDEF)
 
       SET (HAVE_${_MYTYPE} FALSE)
       SET (${_MYTYPE} "")
