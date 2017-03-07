@@ -76,7 +76,11 @@ MYPACKAGECHECK(russellParadoxTester)
 MYPACKAGECHECK(jsonTester)
 MYPACKAGECHECK(selfTester)
 
-#INCLUDE (cmake/CMakeTestSetup.txt)
-#INCLUDE (cmake/CMakeDocumentationSetup.txt)
+###########
+# Install #
+###########
+MYPACKAGEMAN("doc/Tutorial/Calculator/README.pod" "MARPAESLIF_CALCULATOR" "3" "${MARPAESLIF_VERSION}")
+MYPACKAGEMAN("doc/BNF/README.pod"                 "MARPAESLIF_BNF"        "3" "${MARPAESLIF_VERSION}")
+MYPACKAGEMAN("doc/API/README.pod"                 "MARPAESLIF_API"        "3" "${MARPAESLIF_VERSION}")
+
 #INCLUDE (cmake/CMakeBindingsSetup.txt)
-#INCLUDE (cmake/CMakePackagingSetup.txt)
