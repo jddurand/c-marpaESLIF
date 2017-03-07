@@ -96,11 +96,11 @@ SET(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake) # for FindReadline.cmake
 
 SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -I${PROJECT_SOURCE_DIR}/src")
 
-# external packages
-FIND_PACKAGE( BZip2 )
-FIND_PACKAGE( ZLIB )
-FIND_PACKAGE( Readline )
-FIND_PACKAGE( Editline )
+# external packages - not wanted in any case
+# FIND_PACKAGE( BZip2 )
+# FIND_PACKAGE( ZLIB )
+# FIND_PACKAGE( Readline )
+# FIND_PACKAGE( Editline )
 
 # Configuration checks
 
