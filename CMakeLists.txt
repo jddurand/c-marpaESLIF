@@ -52,6 +52,15 @@ FOREACH (_target marpaESLIF marpaESLIF_static)
   TARGET_LINK_LIBRARIES(${_target} PUBLIC ${PCRE2_LIBRARIES})
 ENDFOREACH ()
 
+###############
+# Executables #
+###############
+MYPACKAGETESTEXECUTABLE(marpaESLIFTester     test/marpaESLIFTester.c)
+MYPACKAGETESTEXECUTABLE(adventTester         test/adventTester.c)
+MYPACKAGETESTEXECUTABLE(russellParadoxTester test/russellParadoxTester.c)
+MYPACKAGETESTEXECUTABLE(jsonTester           test/jsonTester.c)
+MYPACKAGETESTEXECUTABLE(selfTester           test/selfTester.c)
+
 ################
 # Dependencies #
 ################
@@ -59,6 +68,15 @@ MYPACKAGEDEPENDENCY (genericLogger "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/
 MYPACKAGEDEPENDENCY (genericStack  "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/genericStack-remote"  LIBS)
 MYPACKAGEDEPENDENCY (marpaWrapper  "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/marpaWrapper-remote"  LIBS)
 MYPACKAGEDEPENDENCY (tconv         "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/tconv-remote"         LIBS)
+
+#########
+# Tests #
+#########
+MYPACKAGECHECK(marpaESLIFTester)
+MYPACKAGECHECK(adventTester)
+MYPACKAGECHECK(russellParadoxTester)
+MYPACKAGECHECK(jsonTester)
+MYPACKAGECHECK(selfTester)
 
 #INCLUDE (cmake/CMakeTestSetup.txt)
 #INCLUDE (cmake/CMakeDocumentationSetup.txt)
