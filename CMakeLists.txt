@@ -18,26 +18,12 @@ ENDIF ()
 #
 # ... Portable uint32 type
 #
-INCLUDE (CheckTypeSize)
-CHECK_TYPE_SIZE (uint32_t UINT32_T)
-CHECK_TYPE_SIZE (__uint32 __UINT32)
-CHECK_TYPE_SIZE ("unsigned long" UNSIGNED_LONG_INT)
-CHECK_TYPE_SIZE ("unsigned int" UNSIGNED_INT)
-IF (HAVE_UINT32_T)
-  MESSAGE (STATUS "... Unsigned 32-bit integer type is uint32_t")
-  SET (MARPSESLIF_UINT32_T uint32_t)
-ELSEIF (HAVE___UINT32)
-  MESSAGE (STATUS "... Unsigned 32-bit integer type is __uint32")
-  SET (MARPSESLIF_UINT32 __uint32)
-ELSEIF (HAVE_UNSIGNED_LONG_INT AND (${UNSIGNED_LONG_INT} EQUAL 4))
-  MESSAGE (STATUS "... Unsigned 32-bit integer type is unsigned long")
-  SET (MARPSESLIF_UINT32 "unsigned long")
-ELSEIF (HAVE_UNSIGNED_INT AND (${UNSIGNED_INT} EQUAL 4))
-  MESSAGE (STATUS "... Unsigned 32-bit integer type is unsigned int")
-  SET (MARPSESLIF_UINT32 "unsigned int")
-ELSE ()
+IF (NOT HAVE_MYPACKAGE_UINT32)
   MESSAGE (FATAL_ERROR "Could not detect a valid unsigned 32-bit integer type")
+ELSE ()
+  MESSAGE (STATUS ".. unsigned 32-bit integer type is ${MYPACKAGE_UINT32_TYPEDEF}")
 ENDIF ()
+SET (MARPSESLIF_UINT32_T ${MYPACKAGE_UINT32_TYPEDEF})
 #
 # ... PCRE2 dependency
 #
