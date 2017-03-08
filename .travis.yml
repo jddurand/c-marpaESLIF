@@ -10,11 +10,11 @@ addons:
 before_script:
   - sudo apt-get update
   - sudo apt-get install cpanminus
-  - sudo cpanm Archive::Tar Config::AutoConf::INI ExtUtils::CBuilder File::chdir File::Basename File::Find File::Path File::Copy File::Copy::Recursive IPC::Run Perl::OSType
+  - sudo cpanm --quiet --notest Archive::Tar Config::AutoConf::INI ExtUtils::CBuilder File::chdir File::Basename File::Find File::Path File::Copy File::Copy::Recursive IPC::Run Perl::OSType
   - perl CMakeObjects.PL
   - rm -rf output
-  - sudo cpanm Dist::Zilla Dist::Zilla::PluginBundle::RJBS
-  - dzil authordeps --missing | xargs sudo cpanm
+  - sudo cpanm --quiet --notest Dist::Zilla Dist::Zilla::PluginBundle::RJBS
+  - dzil authordeps --missing | xargs sudo cpanm --quiet --notest
   - cmake . -DALL_IN_ONE=ON
   - make check
   - make install DESTDIR=/tmp
