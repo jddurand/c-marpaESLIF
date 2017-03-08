@@ -10,7 +10,9 @@ addons:
 before_script:
   - sudo apt-get update
   - sudo apt-get install cpanminus
-  - sudo apt-get install libdist-zilla-perl
+  - sudo apt-get install libdist-zilla-perl libdist-zilla-plugin-autometaresources-perl libdist-zilla-plugin-metaprovides-perl libdist-zilla-plugin-ourpkgversion-perl libdist-zilla-plugin-podweaver-perl libdist-zilla-plugin-readmefrompod-perl
+# We need up-to-date MooseX::Role::Parameterized
+  - sudo cpanm --quiet --notest MooseX::Role::Parameterized
   - sudo cpanm --quiet --notest Archive::Tar Config::AutoConf::INI ExtUtils::CBuilder File::chdir File::Basename File::Find File::Path File::Copy File::Copy::Recursive IPC::Run Perl::OSType
   - perl CMakeObjects.PL
   - rm -rf output
