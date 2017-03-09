@@ -13,12 +13,12 @@ before_script:
 # Standard Dist::Zilla, this will install a bunch of prereqs, speeding up the upgrade
   - sudo apt-get install libdist-zilla-perl
 # Upgrade Dist::Zilla
-  - sudo cpanm Dist::Zilla
-  - sudo cpanm Archive::Tar Config::AutoConf::INI ExtUtils::CBuilder File::chdir File::Basename File::Find File::Path File::Copy File::Copy::Recursive IPC::Run Perl::OSType
+  - sudo cpanm --notest Dist::Zilla
+  - sudo cpanm --notest Archive::Tar Config::AutoConf::INI ExtUtils::CBuilder File::chdir File::Basename File::Find File::Path File::Copy File::Copy::Recursive IPC::Run Perl::OSType
   - perl CMakeObjects.PL
   - rm -rf output
-  - sudo cpanm Dist::Zilla::PluginBundle::RJBS
-  - dzil authordeps --missing | xargs sudo cpanm
+  - sudo cpanm --notest Dist::Zilla::PluginBundle::RJBS
+  - dzil authordeps --missing | xargs sudo cpanm --notest
   - cmake . -DALL_IN_ONE=ON
   - make check
   - make install DESTDIR=/tmp
