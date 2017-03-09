@@ -21,7 +21,7 @@ before_script:
   - perl CMakeObjects.PL
   - rm -rf output
   - sudo cpanm --notest Dist::Zilla::PluginBundle::RJBS
-  - dzil authordeps --missing | xargs sudo cpanm --notest
+  - pushd src/bindings/perl && dzil authordeps --missing | xargs sudo cpanm --notest && popd
   - cmake . -DALL_IN_ONE=ON
   - make check
   - make install DESTDIR=/tmp
