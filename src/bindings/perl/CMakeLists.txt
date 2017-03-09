@@ -9,14 +9,10 @@ SET (MARPAESLIFCOPY_CMAKEOBJECTS_PL marpaESLIFCopy/CMakeObjects.PL)
 
 ADD_CUSTOM_COMMAND(OUTPUT ${MARPAESLIFCOPY_CMAKEOBJECTS_PL}
   COMMAND ${PERL_EXECUTABLE} etc/copyDirs.PL
-  DEPENDS etc/copyDirs.PL
-  )
-
-ADD_CUSTOM_TARGET(marpaESLIFPerlPackage ALL ${CMAKE_COMMAND} -E echo "... dzil clean"
+  COMMAND ${CMAKE_COMMAND} -E echo "... dzil clean"
   COMMAND dzil clean
   COMMAND ${CMAKE_COMMAND} -E echo "... dzil build"
   COMMAND dzil build
-  DEPENDS ${MARPAESLIFCOPY_CMAKEOBJECTS_PL} ${MARPAESLIFPERL_SRC_PM} ${MARPAESLIFPERL_SRC_XS} ${MARPAESLIFPERL_SRC_PL} ${MARPAESLIFPERL_SRC_T} dist.ini
   )
 
 # ------------------------------------------------
@@ -24,5 +20,5 @@ ADD_CUSTOM_TARGET(marpaESLIFPerlPackage ALL ${CMAKE_COMMAND} -E echo "... dzil c
 # ------------------------------------------------
 ENABLE_TESTING()
 ADD_TEST (NAME marpaESLIFPerlTest COMMAND dzil test)
-ADD_CUSTOM_TARGET(marpaESLIFPerlTester DEPENDS marpaESLIFPerlPackage)
-ADD_DEPENDENCIES(check marpaESLIFPerlTester)
+#ADD_CUSTOM_TARGET(marpaESLIFPerlTester DEPENDS marpaESLIFPerlPackage)
+#ADD_DEPENDENCIES(check marpaESLIFPerlTester)
