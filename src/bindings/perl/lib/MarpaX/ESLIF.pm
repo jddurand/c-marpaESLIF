@@ -27,13 +27,17 @@ Please note that the call to the free() method is required to dispose the resour
 
 Example:
 
+ use Try::Tiny;
+
  my $eslif;
  try {
-   eslif = ESLIF->new();
+   $eslif = ESLIF->new();
    # Your work
  } catch {
    # Exception in $_
   // ...
+ } finally {
+   $eslif = undef;
  }
  
 This class and its derivatives is thread-safe. Although there can be many ESLIF instance, in practice a single instance is enough, unless you want different logging interfaces.
@@ -61,7 +65,7 @@ has '_marpaESLIFp'    => (is => 'rwp', reader => '_get_marpaESLIFp',    writer =
 
 #
 # Internal tracing is always in the form $self->xxx($message)
-# so no need to unstack, we cal use $_[0] and $_[1] directly
+# so no need to unstack, we can use $_[0] and $_[1] directly
 #
 sub _trace     { $_[0]->_logger->trace    ($_[1]) }
 sub _debug     { $_[0]->_logger->debug    ($_[1]) }
