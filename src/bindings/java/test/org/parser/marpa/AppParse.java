@@ -266,7 +266,7 @@ public class AppParse  {
 		if (events != null) {
 			for (int j = 0; j < events.length; j++) {
 				ESLIFEvent event     = events[j];
-				ESLIFEventType type  = event.getEslifEventType();
+				ESLIFEventType type  = event.getType();
 				String         symbol = event.getSymbol();
 				String         name   = event.getEvent();
 			    eslifLogger.debug("[" + context + "]" + " Event: {Type, Symbol, Name}={" + type + ", " + symbol + ", " + name + "}");
