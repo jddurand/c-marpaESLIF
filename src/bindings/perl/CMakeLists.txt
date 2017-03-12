@@ -4,21 +4,21 @@ FILE (GLOB_RECURSE MARPAESLIFPERL_SRC_PM src "*.pm")
 FILE (GLOB_RECURSE MARPAESLIFPERL_SRC_XS src "*.xs")
 FILE (GLOB_RECURSE MARPAESLIFPERL_SRC_PL src "*.pl")
 FILE (GLOB_RECURSE MARPAESLIFPERL_SRC_T src "*.t")
+SET  (MARPAESLIFCOPY_CMAKEOBJECTS_PL marpaESLIFCopy/CMakeObjects.PL)
 
-SET (MARPAESLIFCOPY_CMAKEOBJECTS_PL marpaESLIFCopy/CMakeObjects.PL)
-
-ADD_CUSTOM_COMMAND(OUTPUT ${MARPAESLIFCOPY_CMAKEOBJECTS_PL}
-  COMMAND ${PERL_EXECUTABLE} etc/copyDirs.PL
+ADD_CUSTOM_TARGET (marpaESLIFPerlCopy ${PERL_EXECUTABLE} etc/copyDirs.PL
   COMMAND ${CMAKE_COMMAND} -E echo "... dzil clean"
   COMMAND dzil clean
-  COMMAND ${CMAKE_COMMAND} -E echo "... dzil build"
-  COMMAND dzil build
+  SOURCES etc/copyDirs.PL
+  DEPENDS ${MARPAESLIFCOPY_CMAKEOBJECTS_PL} ${MARPAESLIFPERL_SRC_PM} ${MARPAESLIFPERL_SRC_XS} ${MARPAESLIFPERL_SRC_PL} ${MARPAESLIFPERL_SRC_T} dist.ini
   )
 
-# ------------------------------------------------
-# TEST (executed with make check at the top level)
-# ------------------------------------------------
-ENABLE_TESTING()
+ADD_CUSTOM_TARGET (marpaESLIFPerlPackage dzil build
+  DEPENDS marpaESLIFPerlCopy
+  )
+
+# -----
+# Check
+# -----
 ADD_TEST (NAME marpaESLIFPerlTest COMMAND dzil test)
-#ADD_CUSTOM_TARGET(marpaESLIFPerlTester DEPENDS marpaESLIFPerlPackage)
-#ADD_DEPENDENCIES(check marpaESLIFPerlTester)
+ADD_DEPENDENCIES (check marpaESLIFPerlCopy)

@@ -20,8 +20,10 @@ chdir($okupdir) || die "Cannot move to $okupdir, $!";
 #
 # Copy everything needed
 #
-print "... Removing marpaESLIFCopy if any\n";
-rmtree('marpaESLIFCopy');
+if (-d 'marpaESLIFCopy') {
+    print "... Removing marpaESLIFCopy\n";
+    rmtree('marpaESLIFCopy');
+}
 
 print "... Creating directory marpaESLIFCopy\n";
 mkdir('marpaESLIFCopy') || die "Failed to create marpaESLIFCopy directory, $!";

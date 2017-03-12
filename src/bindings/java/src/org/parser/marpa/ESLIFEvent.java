@@ -7,28 +7,28 @@ package org.parser.marpa;
  * @see ESLIFRecognizer#events()
  */
 public class ESLIFEvent {
-	private ESLIFEventType eslifEventType;
+	private ESLIFEventType type;
 	private String         symbol;
 	private String         event;
 	
 	/**
 	 * 
-	 * @param eslifEventType the event type
+	 * @param type the event type
 	 * @param symbol the symbol name
 	 * @param event the event name
 	 */
-	ESLIFEvent(ESLIFEventType eslifEventType, String symbol, String event) {
-		this.eslifEventType = eslifEventType;
-		this.symbol         = symbol;
-		this.event          = event;
+	ESLIFEvent(ESLIFEventType type, String symbol, String event) {
+		this.type   = type;
+		this.symbol = symbol;
+		this.event  = event;
 	}
 
 	/**
 	 * 
 	 * @return the event type
 	 */
-	public ESLIFEventType getEslifEventType() {
-		return eslifEventType;
+	public ESLIFEventType getType() {
+		return type;
 	}
 
 	/**
