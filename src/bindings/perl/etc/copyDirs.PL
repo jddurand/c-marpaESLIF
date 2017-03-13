@@ -79,6 +79,9 @@ copy(File::Spec->catfile(($updir) x 3, 'CMakeObjects.PL'), File::Spec->catfile('
 print "... Copying file ../../../config_autoconf.ini to marpaESLIFCopy/config_autoconf.ini\n";
 copy(File::Spec->catfile(($updir) x 3, 'config_autoconf.ini'), File::Spec->catfile('marpaESLIFCopy', 'config_autoconf.ini'));
 
+print "... Copying file ../../../CMakeLists.txt to marpaESLIFCopy/CMakeLists.txt\n";
+copy(File::Spec->catfile(($updir) x 3, 'CMakeLists.txt'), File::Spec->catfile('marpaESLIFCopy', 'CMakeLists.txt'));
+
 foreach (qw/config.h.in bootstrap_actions.c marpaESLIF.c/) {
     print "... Copying file ../../../src/$_ to $src/$_\n";
     copy(File::Spec->catfile(($updir) x 3, 'src', $_), File::Spec->catfile($src, $_));
