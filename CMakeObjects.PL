@@ -215,17 +215,21 @@ foreach my $source (@sources) {
 exit(EXIT_SUCCESS);
 
 sub get_version {
-    open(my $fh, '<', File::Spec->catfile('cmake', 'CMakeCompilerSetup.txt')) || die "Cannot open cmake/CMakeCompilerSetup.txt, $!";
+    open(my $fh, '<', 'CMakeLists.txt') || die "Cannot open CMakeLists.txt, $!";
     my $content = do { local $/; <$fh>; };
-    close($fh) || warn "Failed to close cmake/CMakeCompilerSetup.txt, $!";
+    close($fh) || warn "Failed to close CMakeLists.txt, $!";
 
     my @rc;
-    foreach (qw/MARPAESLIF_VERSION_MAJOR MARPAESLIF_VERSION_MINOR MARPAESLIF_VERSION_PATCH/) {
-	if ($content =~ /^SET\s*\(\s*$_\s*(\d+)\s*\)/sm) {
-            push(@rc, $1);
-	} else {
-	    die "Failed to find $_",
-	}
+    if ($content =~ /^MYPACKAGESTART\s*\(\s*marpaESLIF\s+(\d+)\s+(\d+)\s+(\d+)\s*\)/sm) {
+        @rc = ($1, $2, $3);
+    } else {
+        foreach (qw/MARPAESLIF_VERSION_MAJOR MARPAESLIF_VERSION_MINOR MARPAESLIF_VERSION_PATCH/) {
+            if ($content =~ /^SET\s*\(\s*$_\s*(\d+)\s*\)/sm) {
+                push(@rc, $1);
+            } else {
+                die "Failed to find $_",
+            }
+        }
     }
 
     return join('.', @rc)
