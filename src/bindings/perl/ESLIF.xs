@@ -18,74 +18,6 @@ typedef marpaESLIFGrammar_t MarpaX_ESLIF_Grammar_t;
 typedef MarpaX_ESLIF_t         *MarpaX_ESLIF;
 typedef MarpaX_ESLIF_Grammar_t *MarpaX_ESLIF_Grammar;
 
-/* ------------------------------------------------------- */
-/* Exception raise                                         */
-/* ------------------------------------------------------- */
-static void _ESLIF_croak(pTHX_ char *message) {
-  dSP;
-
-  ENTER;
-  SAVETMPS;
-  EXTEND(SP, 2);
-  PUSHMARK(SP);
-  XPUSHs(sv_2mortal(newSVpv("MarpaX::ESLIF::Exception", 0)));
-  XPUSHs(sv_2mortal(newSVpv(message, 0)));
-  PUTBACK;
-  call_method("throw", G_DISCARD);
-  FREETMPS;
-  LEAVE;
-}
-
-/* ------------------------------------------------------- */
-/* All the getters and setters we need are always          */
-/* $self->_setXxx(void *p)                                 */
-/* ... and we always store it as an IV                     */
-/* or                                                      */
-/* void *p = $self->_getXxx()                              */
-/* ... and we always convert the IV to a void *            */
-/* ------------------------------------------------------- */
-static void _ESLIF_set(pTHX_ SV *Perl_selfp, char *method, void *p) {
-  dSP;
-
-  ENTER;
-  SAVETMPS;
-  EXTEND(SP, 2);
-  PUSHMARK(SP);
-  XPUSHs(sv_2mortal(newSVsv(Perl_selfp)));
-  XPUSHs(sv_2mortal(newSViv(PTR2IV(p))));
-  PUTBACK;
-  call_method(method, G_DISCARD);
-  FREETMPS;
-  LEAVE;
-}
-
-static void *_ESLIF_get(pTHX_ SV *Perl_selfp, char *method) {
-  SV *sv;
-  void *p;
-  int count;
-  dSP;
-
-  ENTER;
-  SAVETMPS;
-  EXTEND(SP, 1);
-  PUSHMARK(SP);
-  XPUSHs(sv_2mortal(newSVsv(Perl_selfp)));
-  PUTBACK;
-  count = call_method(method, G_SCALAR);
-  SPAGAIN;
-  if (count != 1) {
-    _ESLIF_croak(aTHX_ method);
-  }
-  /* We get an SV that we convert to a void *, it is ok if we loose the SV */
-  sv = POPs;
-  p = INT2PTR(void *, SvIV(sv));
-  PUTBACK;
-  FREETMPS;
-  LEAVE;
-  
-  return p;
-}
-
 /* ----------------------- */
 /* generic Logger Callback */
 /* ----------------------- */
@@ -109,6 +41,7 @@ static void marpaESLIF_genericLoggerCallback(void *userDatavp, genericLoggerLeve
   if (method != NULL) {
     dTHX;
     dSP;
+
     PUSHMARK(SP);
     EXTEND(SP, 2);
     PUSHs(Perl_loggerInterfacep);
@@ -210,6 +143,12 @@ CODE:
   RETVAL = marpaESLIF_versions();
 OUTPUT:
   RETVAL
+
+=for comment
+  /* ======================================================================= */
+  /* MarpaX::ESLIF::Grammar                                                  */
+  /* ======================================================================= */
+=cut
 
 MODULE = MarpaX::ESLIF            PACKAGE = MarpaX::ESLIF::Grammar
 
