@@ -5,9 +5,18 @@
 #include <marpaESLIF.h>
 #include <genericLogger.h>
 
-typedef struct genericLoggerContextp {
-  SV *Perl_loggerInterfacep;
-} genericLoggerContext_t;
+/* Creating marpaESLIF includes genericLogger */
+typedef struct MarpaX_ESLIF {
+  SV              *Perl_loggerInterfacep;
+  genericLogger_t *genericLoggerp;
+  marpaESLIF_t    *marpaESLIFp;
+} MarpaX_ESLIF_t;
+/* Nothing special for the other types */
+typedef marpaESLIFGrammar_t MarpaX_ESLIF_Grammar_t;
+
+/* For typemap */
+typedef MarpaX_ESLIF_t         *MarpaX_ESLIF;
+typedef MarpaX_ESLIF_Grammar_t *MarpaX_ESLIF_Grammar;
 
 /* ------------------------------------------------------- */
 /* Exception raise                                         */
@@ -81,8 +90,8 @@ static void *_ESLIF_get(pTHX_ SV *Perl_selfp, char *method) {
 /* generic Logger Callback */
 /* ----------------------- */
 static void marpaESLIF_genericLoggerCallback(void *userDatavp, genericLoggerLevel_t logLeveli, const char *msgs) {
-  genericLoggerContext_t *genericLoggerContextp = (genericLoggerContext_t *) userDatavp;
-  char                   *method;
+  SV   *Perl_loggerInterfacep = (SV *) userDatavp;
+  char *method;
 
   switch (logLeveli) {
   case GENERICLOGGER_LOGLEVEL_TRACE:     method = "trace";     break;
@@ -102,271 +111,235 @@ static void marpaESLIF_genericLoggerCallback(void *userDatavp, genericLoggerLeve
     dSP;
     PUSHMARK(SP);
     EXTEND(SP, 2);
-    PUSHs(genericLoggerContextp->Perl_loggerInterfacep);
+    PUSHs(Perl_loggerInterfacep);
     PUSHs(sv_2mortal(newSVpv(msgs,0)));
     PUTBACK;
 
-    call_method(method, G_DISCARD);           /* method call */
+    call_method(method, G_DISCARD);
   }
 }
 
 =for comment
   /* ======================================================================= */
-  /* MarpaX::ESLIF::Thin                                                     */
+  /* MarpaX::ESLIF                                                           */
   /* ======================================================================= */
 =cut
 
-MODULE = MarpaX::ESLIF            PACKAGE = MarpaX::ESLIF::Thin
+MODULE = MarpaX::ESLIF            PACKAGE = MarpaX::ESLIF
 
 PROTOTYPES: ENABLE
 
 =for comment
   /* ----------------------------------------------------------------------- */
-  /* MarpaX::ESLIF::Thin::new                                                */
+  /* MarpaX::ESLIF::new                                                      */
   /* ----------------------------------------------------------------------- */
 =cut
 
-void
-new(Perl_selfp, Perl_loggerInterfacep)
-  SV *Perl_selfp;
-  SV *Perl_loggerInterfacep;
+MarpaX_ESLIF
+new(Perl_packagep, ...)
+  SV *Perl_packagep;
+PREINIT:
+  SV *Perl_loggerInterfacep = &PL_sv_undef;
 CODE:
-{
-  genericLoggerContext_t *genericLoggerContextp = NULL;
-  genericLogger_t        *genericLoggerp = NULL;
-  marpaESLIF_t           *marpaESLIFp    = NULL;
-  marpaESLIFOption_t      marpaESLIFOption;
+  MarpaX_ESLIF       MarpaX_ESLIFp;
+  marpaESLIFOption_t marpaESLIFOption;
 
-  /* -------------------------------------- */
-  /* Create and save generic logger context */
-  /* -------------------------------------- */
-  Newx(genericLoggerContextp, 1, genericLoggerContext_t);
-  genericLoggerContextp->Perl_loggerInterfacep = &PL_sv_undef;
-  _ESLIF_set(aTHX_ Perl_selfp, "_setGenericLoggerContextp", genericLoggerContextp);
-  /* Intentionnaly done after the set */
-  genericLoggerContextp->Perl_loggerInterfacep = newSVsv(Perl_loggerInterfacep);
-
-  /* ------------------------------ */
-  /* Create and save generic logger */
-  /* ------------------------------ */
-  genericLoggerp = genericLogger_newp(marpaESLIF_genericLoggerCallback,
-                                      genericLoggerContextp,
-                                      GENERICLOGGER_LOGLEVEL_TRACE);
-  if (genericLoggerp == NULL) {
-    _ESLIF_croak(aTHX_ strerror(errno));
+  if(items > 1) {
+    Perl_loggerInterfacep = ST(1);
   }
-  _ESLIF_set(aTHX_ Perl_selfp, "_setGenericLoggerp", genericLoggerp);
 
-  /* --------------------------- */
-  /* Create and save marpaESLIFp */
-  /* --------------------------- */
-  marpaESLIFOption.genericLoggerp = genericLoggerp;
-  marpaESLIFp = marpaESLIF_newp(&marpaESLIFOption);
-  if (marpaESLIFp == NULL) {
-    _ESLIF_croak(aTHX_ "marpaESLIF_newp failure");
-  }
-  _ESLIF_set(aTHX_ Perl_selfp, "_setMarpaESLIFp", marpaESLIFp);
-}
+  Newx(MarpaX_ESLIFp, 1, MarpaX_ESLIF_t);
+  MarpaX_ESLIFp->Perl_loggerInterfacep = &PL_sv_undef;
+  MarpaX_ESLIFp->genericLoggerp        = NULL;
+  MarpaX_ESLIFp->marpaESLIFp           = NULL;
 
-=for comment
-  /* ----------------------------------------------------------------------- */
-  /* MarpaX::ESLIF::Thin::free                                               */
-  /* ----------------------------------------------------------------------- */
-=cut
-
-void
-free(Perl_selfp, Perl_marpaESLIFp, Perl_genericLoggerp, Perl_genericLoggerContextp)
-  SV   *Perl_selfp;
-  IV    Perl_marpaESLIFp;
-  IV    Perl_genericLoggerp;
-  IV    Perl_genericLoggerContextp;
-CODE:
-{
-  marpaESLIF_t           *marpaESLIFp           = INT2PTR(marpaESLIF_t *,           Perl_marpaESLIFp);
-  genericLogger_t        *genericLoggerp        = INT2PTR(genericLogger_t *,        Perl_genericLoggerp);
-  genericLoggerContext_t *genericLoggerContextp = INT2PTR(genericLoggerContext_t *, Perl_genericLoggerContextp);
-
-  marpaESLIF_freev(marpaESLIFp);        /* This is NULL protected */
-  genericLogger_freev(&genericLoggerp); /* Ditto */
-
-  if (genericLoggerContextp != NULL) {
-    if (genericLoggerContextp->Perl_loggerInterfacep != &PL_sv_undef) {
-      SvREFCNT_dec(genericLoggerContextp->Perl_loggerInterfacep);
+  /* ------------- */
+  /* genericLogger */
+  /* ------------- */
+  if (Perl_loggerInterfacep != &PL_sv_undef) {
+    MarpaX_ESLIFp->Perl_loggerInterfacep = SvREFCNT_inc(Perl_loggerInterfacep);
+    MarpaX_ESLIFp->genericLoggerp        = genericLogger_newp(marpaESLIF_genericLoggerCallback,
+                                                                        MarpaX_ESLIFp->Perl_loggerInterfacep,
+                                                                        GENERICLOGGER_LOGLEVEL_TRACE);
+    if (MarpaX_ESLIFp->genericLoggerp == NULL) {
+      croak(strerror(errno));
     }
-    Safefree(genericLoggerContextp);
   }
-}
+
+  /* ---------- */
+  /* marpaESLIF */
+  /* ---------- */
+  marpaESLIFOption.genericLoggerp = MarpaX_ESLIFp->genericLoggerp;
+  MarpaX_ESLIFp->marpaESLIFp = marpaESLIF_newp(&marpaESLIFOption);
+  if (MarpaX_ESLIFp->marpaESLIFp == NULL) {
+      croak(strerror(errno));
+  }
+
+  RETVAL = MarpaX_ESLIFp;
+OUTPUT:
+  RETVAL
 
 =for comment
   /* ----------------------------------------------------------------------- */
-  /* MarpaX::ESLIF::Thin::version                                            */
+  /* MarpaX::ESLIF::DESTROY                                                  */
+  /* ----------------------------------------------------------------------- */
+=cut
+
+void
+DESTROY(MarpaX_ESLIFp)
+  MarpaX_ESLIF MarpaX_ESLIFp;
+CODE:
+  if (MarpaX_ESLIFp->Perl_loggerInterfacep != &PL_sv_undef) {
+    SvREFCNT_dec(MarpaX_ESLIFp->Perl_loggerInterfacep);
+  }
+  marpaESLIF_freev(MarpaX_ESLIFp->marpaESLIFp);
+  genericLogger_freev(&(MarpaX_ESLIFp->genericLoggerp));
+  Safefree(MarpaX_ESLIFp);
+
+=for comment
+  /* ----------------------------------------------------------------------- */
+  /* MarpaX::ESLIF::version                                                  */
   /* ----------------------------------------------------------------------- */
 =cut
 
 const char *
-version()
+version(MarpaX_ESLIFp)
+  MarpaX_ESLIF MarpaX_ESLIFp;
 CODE:
-{
-  /* In reality Perl_selfp is not needed -; */
+  /* In reality MarpaX_ESLIFp is not needed -; */
   RETVAL = marpaESLIF_versions();
-}
 OUTPUT:
   RETVAL
 
-MODULE = MarpaX::ESLIF            PACKAGE = MarpaX::ESLIF::Grammar::Thin
+MODULE = MarpaX::ESLIF            PACKAGE = MarpaX::ESLIF::Grammar
 
 PROTOTYPES: ENABLE
 
 =for comment
   /* ----------------------------------------------------------------------- */
-  /* MarpaX::ESLIF::Grammar::Thin::new                                       */
+  /* MarpaX::ESLIF::Grammar::new                                             */
   /* ----------------------------------------------------------------------- */
 =cut
 
-void
-new(Perl_selfp, Perl_eslifp, Perl_utf8octets)
-  SV     *Perl_selfp;
-  SV     *Perl_eslifp;
-  SV     *Perl_utf8octets;
+MarpaX_ESLIF_Grammar
+new(Perl_packagep, MarpaX_ESLIFp, Perl_grammarp)
+  SV           *Perl_packagep;
+  MarpaX_ESLIF  MarpaX_ESLIFp;
+  SV           *Perl_grammarp;
 CODE:
-{
-  marpaESLIF_t              *marpaESLIFp;
-  marpaESLIFGrammar_t       *marpaESLIFGrammarp;
+  MarpaX_ESLIF_Grammar       MarpaX_ESLIF_Grammarp;
   marpaESLIFGrammarOption_t  marpaESLIFGrammarOption;
+  marpaESLIFGrammar_t       *marpaESLIFGrammarp;
   char                      *utf8p;
   STRLEN                     utf8l;
 
-  utf8p = SvPV(Perl_utf8octets, utf8l);
+  /* The grammar has to be a valid string, whatever its encoding */
+  utf8p = SvPVutf8(Perl_grammarp, utf8l);
 
-  /* Create C object */
   marpaESLIFGrammarOption.bytep               = (void *) utf8p;
   marpaESLIFGrammarOption.bytel               = (size_t) utf8l;
   marpaESLIFGrammarOption.encodings           = "UTF-8";
   marpaESLIFGrammarOption.encodingl           = strlen("UTF-8");
   marpaESLIFGrammarOption.encodingOfEncodings = "ASCII";
 
-  marpaESLIFp = _ESLIF_get(aTHX_ Perl_eslifp, "_getMarpaESLIFp");
-  marpaESLIFGrammarp = marpaESLIFGrammar_newp(marpaESLIFp, &marpaESLIFGrammarOption);
+  marpaESLIFGrammarp = marpaESLIFGrammar_newp(MarpaX_ESLIFp->marpaESLIFp, &marpaESLIFGrammarOption);
   if (marpaESLIFGrammarp == NULL) {
-    _ESLIF_croak(aTHX_ strerror(errno));
+    croak(strerror(errno));
   }
-  _ESLIF_set(aTHX_ Perl_selfp, "_setMarpaESLIFGrammarp", marpaESLIFGrammarp);
-}
+  RETVAL = marpaESLIFGrammarp;
+OUTPUT:
+  RETVAL
 
 =for comment
   /* ----------------------------------------------------------------------- */
-  /* MarpaX::ESLIF::Grammar::Thin::free                                      */
+  /* MarpaX::ESLIF::Grammar::DESTROY                                         */
   /* ----------------------------------------------------------------------- */
 =cut
 
 void
-free(Perl_selfp, Perl_marpaESLIFGrammarp)
-  SV *Perl_selfp;
-  IV  Perl_marpaESLIFGrammarp;
+DESTROY(MarpaX_ESLIF_Grammarp)
+  MarpaX_ESLIF_Grammar MarpaX_ESLIF_Grammarp;
 CODE:
-{
-  marpaESLIFGrammar_t *marpaESLIFGrammarp = INT2PTR(marpaESLIFGrammar_t *, Perl_marpaESLIFGrammarp);
-
-  marpaESLIFGrammar_freev(marpaESLIFGrammarp); /* This is NULL protected */
-}
+  marpaESLIFGrammar_freev(MarpaX_ESLIF_Grammarp);
 
 =for comment
   /* ----------------------------------------------------------------------- */
-  /* MarpaX::ESLIF::Grammar::Thin::ngrammar                                  */
+  /* MarpaX::ESLIF::Grammar::ngrammar                                        */
   /* ----------------------------------------------------------------------- */
 =cut
 
 IV
-ngrammar(Perl_selfp, Perl_marpaESLIFGrammarp)
-  SV *Perl_selfp;
-  IV  Perl_marpaESLIFGrammarp;
+ngrammar(MarpaX_ESLIF_Grammarp)
+  MarpaX_ESLIF_Grammar MarpaX_ESLIF_Grammarp;
 CODE:
-{
-  marpaESLIFGrammar_t *marpaESLIFGrammarp = INT2PTR(marpaESLIFGrammar_t *, Perl_marpaESLIFGrammarp);
-  int                  ngrammari;
+  int ngrammari;
 
-  if (! marpaESLIFGrammar_ngrammarib(marpaESLIFGrammarp, &ngrammari)) {
-    _ESLIF_croak(aTHX_ "marpaESLIFGrammar_ngrammarib failure");
+  if (! marpaESLIFGrammar_ngrammarib(MarpaX_ESLIF_Grammarp, &ngrammari)) {
+    croak("marpaESLIFGrammar_ngrammarib failure");
   }
+
   RETVAL = (IV) ngrammari;
-}
 OUTPUT:
   RETVAL
 
 =for comment
   /* ----------------------------------------------------------------------- */
-  /* MarpaX::ESLIF::Grammar::Thin::currentLevel                              */
+  /* MarpaX::ESLIF::Grammar::currentLevel                                    */
   /* ----------------------------------------------------------------------- */
 =cut
 
 IV
-currentLevel(Perl_selfp, Perl_marpaESLIFGrammarp)
-  SV *Perl_selfp;
-  IV  Perl_marpaESLIFGrammarp;
+currentLevel(MarpaX_ESLIF_Grammarp)
+  MarpaX_ESLIF_Grammar MarpaX_ESLIF_Grammarp;
 CODE:
-{
-  marpaESLIFGrammar_t *marpaESLIFGrammarp = INT2PTR(marpaESLIFGrammar_t *, Perl_marpaESLIFGrammarp);
-  int                  leveli;
+  int leveli;
 
-  if (! marpaESLIFGrammar_grammar_currentb(marpaESLIFGrammarp, &leveli, NULL)) {
-    _ESLIF_croak(aTHX_ "marpaESLIFGrammar_grammar_currentb failure");
+  if (! marpaESLIFGrammar_grammar_currentb(MarpaX_ESLIF_Grammarp, &leveli, NULL)) {
+    croak("marpaESLIFGrammar_grammar_currentb failure");
   }
   RETVAL = (IV) leveli;
-}
 OUTPUT:
   RETVAL
 
 =for comment
   /* ----------------------------------------------------------------------- */
-  /* MarpaX::ESLIF::Grammar::Thin::currentDescription                        */
+  /* MarpaX::ESLIF::Grammar::currentDescription                              */
   /* ----------------------------------------------------------------------- */
 =cut
 
 SV *
-currentDescription(Perl_selfp, Perl_marpaESLIFGrammarp)
-  SV *Perl_selfp;
-  IV  Perl_marpaESLIFGrammarp;
+currentDescription(MarpaX_ESLIF_Grammarp)
+  MarpaX_ESLIF_Grammar MarpaX_ESLIF_Grammarp;
 CODE:
-{
-  marpaESLIFGrammar_t *marpaESLIFGrammarp = INT2PTR(marpaESLIFGrammar_t *, Perl_marpaESLIFGrammarp);
   marpaESLIFString_t  *descp;
   SV                  *sv;
 
-  if (! marpaESLIFGrammar_grammar_currentb(marpaESLIFGrammarp, NULL, &descp)) {
-    _ESLIF_croak(aTHX_ "marpaESLIFGrammar_grammar_currentb failure");
+  if (! marpaESLIFGrammar_grammar_currentb(MarpaX_ESLIF_Grammarp, NULL, &descp)) {
+    croak("marpaESLIFGrammar_grammar_currentb failure");
   }
   /* We enforced UTF-8 when parsing the grammar, so description is also in UTF-8 */
-  sv = newSVpv(descp->bytep, descp->bytel);
-  sv_utf8_upgrade(sv);
-  RETVAL = sv;
-}
+  RETVAL = newSVpvn_utf8(descp->bytep, descp->bytel, 1);
 OUTPUT:
   RETVAL
 
 =for comment
   /* ----------------------------------------------------------------------- */
-  /* MarpaX::ESLIF::Grammar::Thin::descriptionByLevel                        */
+  /* MarpaX::ESLIF::Grammar::descriptionByLevel                              */
   /* ----------------------------------------------------------------------- */
 =cut
 
 SV *
-descriptionByLevel(Perl_selfp, Perl_marpaESLIFGrammarp, Perl_leveli)
-  SV *Perl_selfp;
-  IV  Perl_marpaESLIFGrammarp;
+descriptionByLevel(MarpaX_ESLIF_Grammarp, Perl_leveli)
+  MarpaX_ESLIF_Grammar MarpaX_ESLIF_Grammarp;
   IV  Perl_leveli;
 CODE:
-{
-  marpaESLIFGrammar_t *marpaESLIFGrammarp = INT2PTR(marpaESLIFGrammar_t *, Perl_marpaESLIFGrammarp);
   marpaESLIFString_t  *descp;
   SV                  *sv;
 
-  if (! marpaESLIFGrammar_grammar_by_levelb(marpaESLIFGrammarp, (int) Perl_leveli, NULL, NULL, &descp)) {
-    _ESLIF_croak(aTHX_ "marpaESLIFGrammar_grammar_by_levelb failure");
+  if (! marpaESLIFGrammar_grammar_by_levelb(MarpaX_ESLIF_Grammarp, (int) Perl_leveli, NULL, NULL, &descp)) {
+    croak("marpaESLIFGrammar_grammar_by_levelb failure");
   }
   /* We enforced UTF-8 when parsing the grammar, so description is also in UTF-8 */
-  sv = newSVpv(descp->bytep, descp->bytel);
-  sv_utf8_upgrade(sv);
-  RETVAL = sv;
-}
+  RETVAL = newSVpvn_utf8(descp->bytep, descp->bytel, 1);
 OUTPUT:
   RETVAL
