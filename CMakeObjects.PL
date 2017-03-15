@@ -47,10 +47,10 @@ my @additional_srcdir = ();
 # -----------------------------------------------------
 # We depend on marpa third party that we manage ourself
 # -----------------------------------------------------
-print "... Copying Marpa--R2-remote\n";
-if (! dircopy(File::Spec->catdir('3rdparty', 'github', 'Marpa--R2-remote'),
+print "... Copying Marpa--R2\n";
+if (! dircopy(File::Spec->catdir('3rdparty', 'github', 'Marpa--R2'),
               File::Spec->catdir('3rdparty', 'output', 'Marpa--R2'))) {
-  die 'Failed to copy Marpa--R2--remote';
+  die 'Failed to copy Marpa--R2';
 }
 push(@additional_includes, File::Spec->catdir('3rdparty', 'output', 'Marpa--R2', 'cpan', 'engine', 'read_only'));
 push(@additional_srcdir, File::Spec->catdir('3rdparty', 'output', 'Marpa--R2', 'cpan', 'engine', 'read_only'));
@@ -58,7 +58,7 @@ push(@additional_srcdir, File::Spec->catdir('3rdparty', 'output', 'Marpa--R2', '
 # -----------------------------------------------------------------------
 # We depend on these generic* stuff that can manage themselvs, eventually
 # -----------------------------------------------------------------------
-foreach (qw/genericLogger-remote genericStack-remote genericHash-remote genericSparseArray-remote/) {
+foreach (qw/genericLogger genericStack genericHash genericSparseArray/) {
     if (! dircopy(File::Spec->catdir('3rdparty', 'github', $_),
                   File::Spec->catdir('output', '3rdparty', $_))) {
         die "Failed to copy $_";
