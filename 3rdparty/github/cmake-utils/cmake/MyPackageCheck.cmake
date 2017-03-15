@@ -35,7 +35,7 @@ MACRO (MYPACKAGECHECK name)
 
   FOREACH (_name ${name} ${name}_static)
     ADD_TEST (NAME ${_name}
-      COMMAND ${CMAKE_COMMAND} -E env "PATH=${_test_path}" $<TARGET_FILE:${_name}>
+      COMMAND ${CMAKE_COMMAND} -E env "PATH=${_test_path}" $<TARGET_FILE:${_name}> ${ARGN}
       WORKING_DIRECTORY ${LIBRARY_OUTPUT_PATH})
     ADD_DEPENDENCIES(check ${_name})
   ENDFOREACH ()
