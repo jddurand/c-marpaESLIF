@@ -70,23 +70,23 @@ my $extra_compiler_flags = '';
 # ------------------------------------------------
 # On Windows, we will use dlfcn-win32 and winiconv
 # ------------------------------------------------
-my @additional_remote = ();
+my @additional = ();
 if (is_os_type('Windows')) {
-    push(@additional_remote, 'dlfcn-win32-remote');
-    push(@additional_remote, 'winiconv-remote');
+    push(@additional, 'dlfcn-win32');
+    push(@additional, 'winiconv');
     #
     # This depend on psapi, and perl's cflags always include that by default
     #
-    push(@additional_srcdir, File::Spec->catdir('output', '3rdparty', 'dlfcn-win32-remote', 'dlfcn.c'));
-    push(@additional_srcdir, File::Spec->catdir('output', '3rdparty', 'winiconv-remote', 'win_iconv.c'));
+    push(@additional_srcdir, File::Spec->catdir('output', '3rdparty', 'dlfcn-win32', 'dlfcn.c'));
+    push(@additional_srcdir, File::Spec->catdir('output', '3rdparty', 'winiconv', 'win_iconv.c'));
     #
-    # Well, dlfcn.h is at dlfcn-win32-remote level
+    # Well, dlfcn.h is at dlfcn-win32 level
     #
-    push(@additional_includes, File::Spec->catdir('output', '3rdparty', 'dlfcn-win32-remote'));
+    push(@additional_includes, File::Spec->catdir('output', '3rdparty', 'dlfcn-win32'));
     #
-    # And we want to make sure we will get the iconv.h from winiconv-remote, not the one from the system
+    # And we want to make sure we will get the iconv.h from winiconv, not the one from the system
     #
-    push(@additional_includes, File::Spec->catdir('output', '3rdparty', 'winiconv-remote'));
+    push(@additional_includes, File::Spec->catdir('output', '3rdparty', 'winiconv'));
     $extra_compiler_flags = "-DICONV_SECOND_ARGUMENT_IS_CONST";
 }
 
@@ -99,7 +99,7 @@ $ac->define_var('TCONV_HAVE_ICONV', 1);
 # -----------------------------------------------------------------
 # We depend on these* stuff that can manage themselvess, eventually
 # -----------------------------------------------------------------
-foreach (qw/genericLogger-remote/, @additional_remote) {
+foreach (qw/genericLogger/, @additional) {
     if (! dircopy(File::Spec->catdir('3rdparty', 'github', $_),
                   File::Spec->catdir('output', '3rdparty', $_))) {
         die "Failed to copy $_";
