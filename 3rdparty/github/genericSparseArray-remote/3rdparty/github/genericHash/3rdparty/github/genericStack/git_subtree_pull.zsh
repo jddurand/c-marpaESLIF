@@ -1,12 +1,12 @@
 #!zsh -x
 
 git fetch origin
-foreach this (cmake-utils genericHash genericLogger) {
+foreach this (cmake-utils) {
   git fetch $this master
 }
 
 git clean -ffdx
-foreach this (cmake-utils genericHash genericLogger) {
+foreach this (cmake-utils) {
   git subtree pull --prefix 3rdparty/github/$this $this master --squash
 }
 
