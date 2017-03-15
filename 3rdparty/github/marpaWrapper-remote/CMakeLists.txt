@@ -1,18 +1,18 @@
 CMAKE_MINIMUM_REQUIRED (VERSION 3.0.0 FATAL_ERROR)
 IF (NOT MYPACKAGEBOOTSTRAP_DONE)
-  INCLUDE ("3rdparty/github/cmake-utils-remote/cmake/MyPackageBootstrap.cmake")
+  INCLUDE ("3rdparty/github/cmake-utils/cmake/MyPackageBootstrap.cmake")
 ENDIF ()
-MYPACKAGESTART (marpaWrapper 1 0 45)
+MYPACKAGESTART (marpaWrapper 1 0 46)
 
 ####################
 # libmarpa sources #
 ####################
 EXECUTE_PROCESS(
-  COMMAND "${CMAKE_COMMAND}" -E copy_directory "${PROJECT_SOURCE_DIR}/3rdparty/github/Marpa--R2-remote" "${3RDPARTY_OUTPUT_PATH}/Marpa--R2-remote"
+  COMMAND "${CMAKE_COMMAND}" -E copy_directory "${PROJECT_SOURCE_DIR}/3rdparty/github/Marpa--R2" "${3RDPARTY_OUTPUT_PATH}/Marpa--R2"
   WORKING_DIRECTORY "${3RDPARTY_OUTPUT_PATH}"
   )
 SET (MARPA__R2_FOUND TRUE)
-SET (MARPA__R2_DIR            "${3RDPARTY_OUTPUT_PATH}/Marpa--R2-remote")
+SET (MARPA__R2_DIR            "${3RDPARTY_OUTPUT_PATH}/Marpa--R2")
 SET (MARPA__R2_INCLUDE_DIR    "${MARPA__R2_DIR}")
 SET (MARPA__R2_LIBRARY_TARGET "marpa")
 
@@ -46,7 +46,15 @@ MYPACKAGETESTEXECUTABLE(marpaWrapperAsfAmbiguousTester test/marpaWrapperAsfAmbig
 ################
 # Dependencies #
 ################
-MYPACKAGEDEPENDENCY (genericStack       "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/genericStack-remote" LIBS TESTS)
-MYPACKAGEDEPENDENCY (genericLogger      "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/genericLogger-remote" LIBS TESTS)
-MYPACKAGEDEPENDENCY (genericHash        "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/genericHash-remote" LIBS)
-MYPACKAGEDEPENDENCY (genericSparseArray "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/genericSparseArray-remote" LIBS)
+MYPACKAGEDEPENDENCY (genericStack       "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/genericStack" LIBS TESTS)
+MYPACKAGEDEPENDENCY (genericLogger      "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/genericLogger" LIBS TESTS)
+MYPACKAGEDEPENDENCY (genericHash        "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/genericHash" LIBS)
+MYPACKAGEDEPENDENCY (genericSparseArray "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/genericSparseArray" LIBS)
+
+#########
+# Tests #
+#########
+MYPACKAGECHECK(marpaWrapperTester)
+MYPACKAGECHECK(marpaWrapperAsfTester)
+MYPACKAGECHECK(marpaWrapperAsfValueTester)
+MYPACKAGECHECK(marpaWrapperAsfAmbiguousTester)
