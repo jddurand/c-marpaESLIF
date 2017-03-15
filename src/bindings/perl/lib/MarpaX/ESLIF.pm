@@ -2,10 +2,6 @@ use strict;
 use warnings FATAL => 'all';
 
 package MarpaX::ESLIF;
-#
-# Make sure Encode is loaded
-#
-use Encode qw//;
 
 # ABSTRACT: ESLIF is Extended ScanLess InterFace
 

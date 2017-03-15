@@ -161,30 +161,38 @@ PROTOTYPES: ENABLE
 =cut
 
 MarpaX_ESLIF_Grammar
-new(Perl_packagep, MarpaX_ESLIFp, Perl_grammarp)
+new(Perl_packagep, MarpaX_ESLIFp, Perl_grammarp, ...)
   SV           *Perl_packagep;
   MarpaX_ESLIF  MarpaX_ESLIFp;
   SV           *Perl_grammarp;
+PREINIT:
+  SV           *Perl_encodingp = &PL_sv_undef;
 CODE:
   MarpaX_ESLIF_Grammar       MarpaX_ESLIF_Grammarp;
   marpaESLIFGrammarOption_t  marpaESLIFGrammarOption;
   marpaESLIFGrammar_t       *marpaESLIFGrammarp;
-  char                      *utf8p;
-  STRLEN                     utf8l;
+  char                      *bytep;
+  STRLEN                     bytel;
+  char                      *encodings = NULL;
+  STRLEN                     encodingl = 0;
 
-  /* The grammar has to be a valid string, whatever its encoding */
-  utf8p = SvPVutf8(Perl_grammarp, utf8l);
+  if (items > 2) {
+    Perl_encodingp = ST(2);
+    encodings = SvPV(Perl_encodingp, encodingl);
+  }
+  bytep = SvPV(Perl_grammarp, bytel);
 
-  marpaESLIFGrammarOption.bytep               = (void *) utf8p;
-  marpaESLIFGrammarOption.bytel               = (size_t) utf8l;
-  marpaESLIFGrammarOption.encodings           = "UTF-8";
-  marpaESLIFGrammarOption.encodingl           = strlen("UTF-8");
-  marpaESLIFGrammarOption.encodingOfEncodings = "ASCII";
+  marpaESLIFGrammarOption.bytep               = (void *) bytep;
+  marpaESLIFGrammarOption.bytel               = (size_t) bytel;
+  marpaESLIFGrammarOption.encodings           = (char *) encodings;
+  marpaESLIFGrammarOption.encodingl           = (size_t) encodingl;
+  marpaESLIFGrammarOption.encodingOfEncodings = NULL;
 
   marpaESLIFGrammarp = marpaESLIFGrammar_newp(MarpaX_ESLIFp->marpaESLIFp, &marpaESLIFGrammarOption);
   if (marpaESLIFGrammarp == NULL) {
     croak(strerror(errno));
   }
+
   RETVAL = marpaESLIFGrammarp;
 OUTPUT:
   RETVAL
@@ -256,8 +264,8 @@ CODE:
   if (! marpaESLIFGrammar_grammar_currentb(MarpaX_ESLIF_Grammarp, NULL, &descp)) {
     croak("marpaESLIFGrammar_grammar_currentb failure");
   }
-  /* We enforced UTF-8 when parsing the grammar, so description is also in UTF-8 */
-  RETVAL = newSVpvn_utf8(descp->bytep, descp->bytel, 1);
+  /* It is in the same encoding as original grammar */
+  RETVAL = newSVpvn(descp->bytep, descp->bytel);
 OUTPUT:
   RETVAL
 
@@ -278,7 +286,7 @@ CODE:
   if (! marpaESLIFGrammar_grammar_by_levelb(MarpaX_ESLIF_Grammarp, (int) Perl_leveli, NULL, NULL, &descp)) {
     croak("marpaESLIFGrammar_grammar_by_levelb failure");
   }
-  /* We enforced UTF-8 when parsing the grammar, so description is also in UTF-8 */
-  RETVAL = newSVpvn_utf8(descp->bytep, descp->bytel, 1);
+  /* It is in the same encoding as original grammar */
+  RETVAL = newSVpvn(descp->bytep, descp->bytel);
 OUTPUT:
   RETVAL
