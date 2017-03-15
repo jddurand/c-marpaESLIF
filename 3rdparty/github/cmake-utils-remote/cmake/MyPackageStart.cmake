@@ -151,9 +151,9 @@ MACRO (MYPACKAGESTART packageName versionMajor versionMinor versionPatch)
   #
   # We consider that if there is a README.pod, then it is a candidate for installation
   #
-  IF (EXISTS README.pod)
+  IF (EXISTS "${PROJECT_SOURCE_DIR}/README.pod")
     STRING (TOUPPER ${PROJECT_NAME} _PROJECTNAME)
-    MYPACKAGEMAN(README.pod ${_PROJECTNAME} "3" "${${PROJECT_NAME}}_VERSION")
+    MYPACKAGEMAN("${PROJECT_SOURCE_DIR}/README.pod" ${_PROJECTNAME} "3" "${${PROJECT_NAME}}_VERSION")
   ENDIF ()
   #
   # Execute common tasks
