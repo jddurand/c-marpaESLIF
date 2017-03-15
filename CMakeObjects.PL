@@ -18,8 +18,30 @@ use POSIX qw/EXIT_SUCCESS strftime/;
 #
 # Move to current dir of this script
 #
-my $okupdir = dirname($0), File::Spec->updir;
+my $okupdir = dirname($0);
 chdir($okupdir) || die "Cannot move to $okupdir, $!";
+
+print "Working directory set to $okupdir\n";
+
+make_path(File::Spec->catdir('output', '3rdparty'));
+
+local $Archive::Tar::INSECURE_EXTRACT_MODE = 1;
+my $pcre2_tar = File::Spec->catfile('3rdparty', 'tar', 'pcre2-10.22.tar.gz');
+system("dir $pcre2_tar");
+my $tar=Archive::Tar->new();
+$tar->read($pcre2_tar);
+my @properties;
+my @files = $tar->list_files(\@properties);
+use Data::Dumper;
+print STDERR Dumper(\@properties);
+print STDERR Dumper(\@files);
+{
+    local $CWD = File::Spec->catdir('output', '3rdparty');
+    print "... Extracting pcre2 in $CWD\n";
+    $tar->extract();
+}
+undef $tar;
+exit;
 
 # ------------------------------------------------------------
 # Generation of objects using perl setup, for use in perl's XS
@@ -52,18 +74,20 @@ my @additional_srcdir = ();
 # ----------------------------------------------------------------------
 # We provide ourself PCRE2 that is a special beast, compiled stand-alone
 # ----------------------------------------------------------------------
-my $tar=Archive::Tar->new();
-my $pcre2_tar = File::Spec->catfile('3rdparty', 'tar', 'pcre2-10.22.tar.gz');
-$tar->read($pcre2_tar);
-print "... Extracing $pcre2_tar in output/3rdparty\n";
 make_path(File::Spec->catdir('output', '3rdparty'));
 {
     local $CWD = File::Spec->catdir('output', '3rdparty');
+    my $pcre2_tar = File::Spec->catfile(File::Spec->updir, File::Spec->updir, '3rdparty', 'tar', 'pcre2-10.22.tar.gz');
+    print "... Extracting pcre2 in $CWD\n";
+    system("dir $pcre2_tar");
+    my $tar=Archive::Tar->new();
+    $tar->read($pcre2_tar);
     $tar->extract();
+    undef $tar;
 }
-undef $tar;
 {
     local $CWD = File::Spec->catdir('output', '3rdparty', 'pcre2-10.22');
+    print "... Compiling pcre2 $CWD\n";
     my $fh;
     open($fh, '>', 'config_autoconf.ini') || die "Cannot open config_autoconf.ini, $!";
 
