@@ -21,20 +21,20 @@ chdir($okupdir) || die "Cannot move to $okupdir, $!";
 #
 # Copy everything needed
 #
-if (-d 'marpaESLIFCopy') {
-    print "... Removing marpaESLIFCopy\n";
-    rmtree('marpaESLIFCopy');
+if (-d 'src') {
+    print "... Removing src\n";
+    rmtree('src');
 }
 
-print "... Creating directory marpaESLIFCopy\n";
-mkdir('marpaESLIFCopy') || die "Failed to create marpaESLIFCopy directory, $!";
+print "... Creating directory src\n";
+mkdir('src') || die "Failed to create src directory, $!";
 
-print "... Creating directory marpaESLIFCopy/src\n";
-my $src = File::Spec->catdir('marpaESLIFCopy', 'src');
+print "... Creating directory src/src\n";
+my $src = File::Spec->catdir('src', 'src');
 mkdir($src) || die "Failed to create $src directory, $!";
 
-print "... Copying directory ../../../3rdparty to marpaESLIFCopy/3rdparty\n";
-_dircopy(File::Spec->catdir(($updir) x 3, '3rdparty'), File::Spec->catdir('marpaESLIFCopy', '3rdparty'));
+print "... Copying directory ../../../3rdparty to src/3rdparty\n";
+_dircopy(File::Spec->catdir(($updir) x 3, '3rdparty'), File::Spec->catdir('src', '3rdparty'));
 
 #
 # 3rd party copy is likely to contain garbage. This can happen only in the ALL_IN_ONE case, and in such
@@ -57,7 +57,7 @@ find({
         }
       },
       no_chdir => 1
-     }, 'marpaESLIFCopy');
+     }, 'src');
 foreach (@toremove) {
   if (-d $_) {
     print "... Removing $_\n";
@@ -68,20 +68,20 @@ foreach (@toremove) {
   }
 }
 
-print "... Copying directory ../../../include to marpaESLIFCopy/include\n";
-_dircopy(File::Spec->catdir(($updir) x 3, 'include'), File::Spec->catdir('marpaESLIFCopy', 'include'));
+print "... Copying directory ../../../include to src/include\n";
+_dircopy(File::Spec->catdir(($updir) x 3, 'include'), File::Spec->catdir('src', 'include'));
 
-print "... Copying directory ../../../cmake to marpaESLIFCopy/cmake\n";
-_dircopy(File::Spec->catdir(($updir) x 3, 'cmake'), File::Spec->catdir('marpaESLIFCopy', 'cmake'));
+print "... Copying directory ../../../cmake to src/cmake\n";
+_dircopy(File::Spec->catdir(($updir) x 3, 'cmake'), File::Spec->catdir('src', 'cmake'));
 
-print "... Copying file ../../../CMakeObjects.PL to marpaESLIFCopy/CMakeObjects.PL\n";
-copy(File::Spec->catfile(($updir) x 3, 'CMakeObjects.PL'), File::Spec->catfile('marpaESLIFCopy', 'CMakeObjects.PL')) || die "$!";
+print "... Copying file ../../../CMakeObjects.PL to src/CMakeObjects.PL\n";
+copy(File::Spec->catfile(($updir) x 3, 'CMakeObjects.PL'), File::Spec->catfile('src', 'CMakeObjects.PL')) || die "$!";
 
-print "... Copying file ../../../config_autoconf.ini to marpaESLIFCopy/config_autoconf.ini\n";
-copy(File::Spec->catfile(($updir) x 3, 'config_autoconf.ini'), File::Spec->catfile('marpaESLIFCopy', 'config_autoconf.ini')) || die "$!";
+print "... Copying file ../../../config_autoconf.ini to src/config_autoconf.ini\n";
+copy(File::Spec->catfile(($updir) x 3, 'config_autoconf.ini'), File::Spec->catfile('src', 'config_autoconf.ini')) || die "$!";
 
-print "... Copying file ../../../CMakeLists.txt to marpaESLIFCopy/CMakeLists.txt\n";
-copy(File::Spec->catfile(($updir) x 3, 'CMakeLists.txt'), File::Spec->catfile('marpaESLIFCopy', 'CMakeLists.txt')) || die "$!";
+print "... Copying file ../../../CMakeLists.txt to src/CMakeLists.txt\n";
+copy(File::Spec->catfile(($updir) x 3, 'CMakeLists.txt'), File::Spec->catfile('src', 'CMakeLists.txt')) || die "$!";
 
 foreach (qw/bootstrap_actions.c marpaESLIF.c/) {
     print "... Copying file ../../../src/$_ to $src/$_\n";
