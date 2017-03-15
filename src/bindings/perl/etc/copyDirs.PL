@@ -129,7 +129,7 @@ sub _dircopy {
         # Do not copy known stuff we can skip
         #
         next if $_ eq 'cmake';
-        next if $_ eq 'cmake-utils-remote';
+        next if $_ eq 'cmake-utils';
         next if $_ eq 'test';
         next if $_ eq 'blog';
         next if $_ eq 't';
