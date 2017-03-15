@@ -176,8 +176,8 @@ CODE:
   char                      *encodings = NULL;
   STRLEN                     encodingl = 0;
 
-  if (items > 2) {
-    Perl_encodingp = ST(2);
+  if (items > 3) {
+    Perl_encodingp = ST(3);
     encodings = SvPV(Perl_encodingp, encodingl);
   }
   bytep = SvPV(Perl_grammarp, bytel);
