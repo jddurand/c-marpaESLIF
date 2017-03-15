@@ -1,8 +1,8 @@
 CMAKE_MINIMUM_REQUIRED (VERSION 3.0.0 FATAL_ERROR)
 IF (NOT MYPACKAGEBOOTSTRAP_DONE)
-  INCLUDE ("3rdparty/github/cmake-utils-remote/cmake/MyPackageBootstrap.cmake")
+  INCLUDE ("3rdparty/github/cmake-utils/cmake/MyPackageBootstrap.cmake")
 ENDIF ()
-MYPACKAGESTART (genericLogger 1 0 18)
+MYPACKAGESTART (genericLogger 1 0 19)
 
 ######################
 # Library definition #
