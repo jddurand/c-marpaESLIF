@@ -1,8 +1,8 @@
 CMAKE_MINIMUM_REQUIRED (VERSION 3.0.0 FATAL_ERROR)
 IF (NOT MYPACKAGEBOOTSTRAP_DONE)
-  INCLUDE ("3rdparty/github/cmake-utils-remote/cmake/MyPackageBootstrap.cmake")
+  INCLUDE ("3rdparty/github/cmake-utils/cmake/MyPackageBootstrap.cmake")
 ENDIF ()
-MYPACKAGESTART (tconv 1 0 21)
+MYPACKAGESTART (tconv 1 0 22)
 
 ###########
 # Library #
@@ -33,12 +33,12 @@ LIST (APPEND libtconv_inc
 # ---------------
 IF (WIN32 AND NOT CYGWIN)
   EXECUTE_PROCESS(
-    COMMAND "${CMAKE_COMMAND}" -E copy_directory "${PROJECT_SOURCE_DIR}/3rdparty/github/dlfcn-win32-remote" "${3RDPARTY_OUTPUT_PATH}/dlfcn-win32-remote"
+    COMMAND "${CMAKE_COMMAND}" -E copy_directory "${PROJECT_SOURCE_DIR}/3rdparty/github/dlfcn-win32" "${3RDPARTY_OUTPUT_PATH}/dlfcn-win32"
     WORKING_DIRECTORY "${3RDPARTY_OUTPUT_PATH}"
     )
-  SET (dlfcn_src "${3RDPARTY_OUTPUT_PATH}/dlfcn-win32-remote/dlfcn.c")
+  SET (dlfcn_src "${3RDPARTY_OUTPUT_PATH}/dlfcn-win32/dlfcn.c")
   LIST (APPEND libtconv_src ${dlfcn_src})
-  LIST (APPEND libtconv_inc ${3RDPARTY_OUTPUT_PATH}/dlfcn-win32-remote)
+  LIST (APPEND libtconv_inc ${3RDPARTY_OUTPUT_PATH}/dlfcn-win32)
   SET (DLFCNWIN32_FOUND TRUE)
 ELSE ()
   SET (DLFCNWIN32_FOUND FALSE)
@@ -68,13 +68,13 @@ FIND_PACKAGE (Iconv)
 IF (NOT ICONV_FOUND)
   IF (WIN32 AND NOT CYGWIN)
     EXECUTE_PROCESS(
-      COMMAND "${CMAKE_COMMAND}" -E copy_directory "${PROJECT_SOURCE_DIR}/3rdparty/github/winiconv-remote" "${3RDPARTY_OUTPUT_PATH}/winiconv-remote"
+      COMMAND "${CMAKE_COMMAND}" -E copy_directory "${PROJECT_SOURCE_DIR}/3rdparty/github/winiconv" "${3RDPARTY_OUTPUT_PATH}/winiconv"
       WORKING_DIRECTORY "${3RDPARTY_OUTPUT_PATH}"
       )
     SET (ICONV_FOUND TRUE)
     SET (TCONV_HAVE_ICONV 1)
-    LIST (APPEND libtconv_src "${3RDPARTY_OUTPUT_PATH}/winiconv-remote/win_iconv.c")
-    LIST (APPEND libtconv_inc "${3RDPARTY_OUTPUT_PATH}/winiconv-remote")
+    LIST (APPEND libtconv_src "${3RDPARTY_OUTPUT_PATH}/winiconv/win_iconv.c")
+    LIST (APPEND libtconv_inc "${3RDPARTY_OUTPUT_PATH}/winiconv")
     SET (ICONV_SECOND_ARGUMENT_IS_CONST TRUE)
   ENDIF ()
 ELSE ()
@@ -120,14 +120,14 @@ ENDFOREACH ()
 # optparse
 # --------
 EXECUTE_PROCESS(
-  COMMAND "${CMAKE_COMMAND}" -E copy_directory "${PROJECT_SOURCE_DIR}/3rdparty/github/optparse-remote" "${3RDPARTY_OUTPUT_PATH}/optparse-remote"
+  COMMAND "${CMAKE_COMMAND}" -E copy_directory "${PROJECT_SOURCE_DIR}/3rdparty/github/optparse" "${3RDPARTY_OUTPUT_PATH}/optparse"
   WORKING_DIRECTORY "${3RDPARTY_OUTPUT_PATH}"
   )
 MYPACKAGEEXECUTABLE(tconvExe bin/tconv.c)
 MYPACKAGEADDEXECUTABLESTOTESTS(tconvExe)
 FOREACH (_target tconvExe tconvExe_static)
   TARGET_COMPILE_DEFINITIONS(${_target} PRIVATE -DOPTPARSE_IMPLEMENTATION -DOPTPARSE_API=static -DTCONV_VERSION="${TCONV_VERSION}")
-  TARGET_INCLUDE_DIRECTORIES(${_target} PRIVATE ${3RDPARTY_OUTPUT_PATH}/optparse-remote)
+  TARGET_INCLUDE_DIRECTORIES(${_target} PRIVATE ${3RDPARTY_OUTPUT_PATH}/optparse)
   IF (${_target} STREQUAL "tconvExe")
     SET_TARGET_PROPERTIES(${_target} PROPERTIES OUTPUT_NAME tconv)
   ELSE ()
@@ -138,7 +138,7 @@ ENDFOREACH ()
 ################
 # Dependencies #
 ################
-MYPACKAGEDEPENDENCY (genericLogger "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/genericLogger-remote" LIBS)
+MYPACKAGEDEPENDENCY (genericLogger "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/genericLogger" LIBS)
 
 #########
 # Tests #
