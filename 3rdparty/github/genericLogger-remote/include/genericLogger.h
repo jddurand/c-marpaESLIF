@@ -16,7 +16,7 @@
 /* - A variable/function that is a string (char * or char[]) end with s                         */
 /************************************************************************************************/
 
-#include "genericLogger/export.h"
+#include <genericLogger/export.h>
 
 typedef enum genericLoggerLevel {
   GENERICLOGGER_LOGLEVEL_TRACE = 0,
