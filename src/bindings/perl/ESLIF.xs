@@ -525,7 +525,7 @@ parse(MarpaX_ESLIF_Grammarp, option)
   HV *option;
 CODE:
   marpaESLIFRecognizerOption_t marpaESLIFRecognizerOption;
-  marpaESLIFValueOption_t      marpaESLIFValueOptionp;
+  marpaESLIFValueOption_t      marpaESLIFValueOption;
   short                        exhaustedb;
 
   /* Put default and/or recommended option values */
