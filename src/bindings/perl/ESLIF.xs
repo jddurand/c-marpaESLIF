@@ -71,6 +71,9 @@ static void marpaESLIF_genericLoggerCallback(void *userDatavp, genericLoggerLeve
     dTHX;
     dSP;
 
+    ENTER;
+    SAVETMPS;
+
     PUSHMARK(SP);
     EXTEND(SP, 2);
     PUSHs(Perl_loggerInterfacep);
@@ -78,7 +81,6 @@ static void marpaESLIF_genericLoggerCallback(void *userDatavp, genericLoggerLeve
     PUTBACK;
 
     call_method(method, G_DISCARD);
-
     FREETMPS;
     LEAVE;
   }
@@ -132,7 +134,7 @@ CODE:
   /* genericLogger */
   /* ------------- */
   if (Perl_loggerInterfacep != &PL_sv_undef) {
-    MarpaX_ESLIFp->Perl_loggerInterfacep = SvREFCNT_inc(Perl_loggerInterfacep);
+    MarpaX_ESLIFp->Perl_loggerInterfacep = newSVsv(Perl_loggerInterfacep);
     MarpaX_ESLIFp->genericLoggerp        = genericLogger_newp(marpaESLIF_genericLoggerCallback,
                                                                         MarpaX_ESLIFp->Perl_loggerInterfacep,
                                                                         GENERICLOGGER_LOGLEVEL_TRACE);
