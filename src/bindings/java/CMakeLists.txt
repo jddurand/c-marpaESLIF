@@ -71,10 +71,14 @@ ADD_JAR(marpaESLIFJavaTest_jar
         OUTPUT_NAME marpaESLIFJavaTest
         )
 ADD_DEPENDENCIES(marpaESLIFJavaTest_jar marpaESLIFJava_jar)
-      
+   
 # -----
 # Check
 # -----
-ADD_TEST (marpaESLIFJavaTest ${CMAKE_COMMAND} -E env "PATH=${TEST_PATH}" "${Java_JAVA_EXECUTABLE}" -Djava.library.path=${LIBRARY_OUTPUT_PATH} -jar marpaESLIFJavaTest.jar org.parser.marpa.AppParse)
-ADD_CUSTOM_TARGET(marpaESLIFJavaTester DEPENDS marpaESLIFJavaTest_jar)
-ADD_DEPENDENCIES(check marpaESLIFJavaTester)
+IF (${CMAKE_COMPILER_IS_GNUCC})
+  #
+  # Work only compiles having rdynamic-path
+  #
+  ADD_TEST (marpaESLIFJavaTest ${CMAKE_COMMAND} -E env "PATH=${_test_path}" "${Java_JAVA_EXECUTABLE}" -Djava.library.path=${LIBRARY_OUTPUT_PATH} -jar marpaESLIFJavaTest.jar org.parser.marpa.AppParse)
+  ADD_DEPENDENCIES(check marpaESLIFJavaTest_jar)
+ENDIF ()
