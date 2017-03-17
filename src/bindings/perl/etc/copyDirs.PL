@@ -26,15 +26,19 @@ if (-d 'src') {
     rmtree('src');
 }
 
+my ($src, $dst);
+
 print "... Creating directory src\n";
 mkdir('src') || die "Failed to create src directory, $!";
 
 print "... Creating directory src/src\n";
-my $src = File::Spec->catdir('src', 'src');
+$src = File::Spec->catdir('src', 'src');
 mkdir($src) || die "Failed to create $src directory, $!";
 
-print "... Copying directory ../../../3rdparty to src/3rdparty\n";
-_dircopy(File::Spec->catdir(($updir) x 3, '3rdparty'), File::Spec->catdir('src', '3rdparty'));
+$src = File::Spec->catdir(($updir) x 3, '3rdparty');
+$dst = File::Spec->catdir('src', '3rdparty');
+print "... Copying directory $src to $dst\n",
+_dircopy($src, $dst);
 
 #
 # 3rd party copy is likely to contain garbage. This can happen only in the ALL_IN_ONE case, and in such
@@ -68,24 +72,36 @@ foreach (@toremove) {
   }
 }
 
-print "... Copying directory ../../../include to src/include\n";
-_dircopy(File::Spec->catdir(($updir) x 3, 'include'), File::Spec->catdir('src', 'include'));
+$src = File::Spec->catdir(($updir) x 3, 'include');
+$dst = File::Spec->catdir('src', 'include');
+print "... Copying directory $src to $dst\n",
+_dircopy($src, $dst);
 
-print "... Copying directory ../../../cmake to src/cmake\n";
-_dircopy(File::Spec->catdir(($updir) x 3, 'cmake'), File::Spec->catdir('src', 'cmake'));
+$src = File::Spec->catdir(($updir) x 3, 'cmake');
+$dst = File::Spec->catdir('src', 'cmake');
+print "... Copying directory $src to $dst\n",
+_dircopy($src, $dst);
 
-print "... Copying file ../../../CMakeObjects.PL to src/CMakeObjects.PL\n";
-copy(File::Spec->catfile(($updir) x 3, 'CMakeObjects.PL'), File::Spec->catfile('src', 'CMakeObjects.PL')) || die "$!";
+$src = File::Spec->catfile(($updir) x 3, 'CMakeObjects.PL');
+$dst = File::Spec->catfile('src', 'CMakeObjects.PL');
+print "... Copying file $src to $dst\n";
+copy($src, $dst)|| die "$!";
 
-print "... Copying file ../../../config_autoconf.ini to src/config_autoconf.ini\n";
-copy(File::Spec->catfile(($updir) x 3, 'config_autoconf.ini'), File::Spec->catfile('src', 'config_autoconf.ini')) || die "$!";
+$src = File::Spec->catfile(($updir) x 3, 'config_autoconf.ini');
+$dst = File::Spec->catfile('src', 'config_autoconf.ini');
+print "... Copying file $src to $dst\n";
+copy($src, $dst)|| die "$!";
 
-print "... Copying file ../../../CMakeLists.txt to src/CMakeLists.txt\n";
-copy(File::Spec->catfile(($updir) x 3, 'CMakeLists.txt'), File::Spec->catfile('src', 'CMakeLists.txt')) || die "$!";
+$src = File::Spec->catfile(($updir) x 3, 'CMakeLists.txt');
+$dst = File::Spec->catfile('src', 'CMakeLists.txt');
+print "... Copying file $src to $dst\n";
+copy($src, $dst)|| die "$!";
 
 foreach (qw/bootstrap_actions.c marpaESLIF.c/) {
-    print "... Copying file ../../../src/$_ to $src/$_\n";
-    copy(File::Spec->catfile(($updir) x 3, 'src', $_), File::Spec->catfile($src, $_)) || die "$!";
+  $src = File::Spec->catfile(($updir) x 3, 'src', $_);
+  $dst = File::Spec->catfile('src', 'src', $_);
+  print "... Copying file $src to $dst\n";
+  copy($src, $dst)|| die "$!";
 }
 
 exit(EXIT_SUCCESS);
@@ -210,12 +226,14 @@ sub _copy {
     #
     my $workdir = cwd;
     _chdir($srcdir);
-    open(my $in, '<', $entry) || die "Cannot open $srcfile, $!";   
+    open(my $in, '<', $entry) || die "Cannot open $srcfile, $!";
+    binmode($in) || die "Failed to set binary mode on $srcfile, $!";
 
     chdir($workdir) || die "Failed to chdir to $workdir, $!";
     _chdir($dstdir);
 
     open(my $out, '>', $entry) || die "Cannot open $dstfile, $!";
+    binmode($out) || die "Failed to set binary mode on $dstfile, $!";
     chdir($workdir) || die "Failed to chdir to $workdir, $!";
 
     #
