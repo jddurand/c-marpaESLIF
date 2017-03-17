@@ -513,3 +513,42 @@ CODE:
 OUTPUT:
   RETVAL
 
+=for comment
+  /* ----------------------------------------------------------------------- */
+  /* MarpaX::ESLIF::Grammar::parse                                           */
+  /* ----------------------------------------------------------------------- */
+=cut
+
+SV *
+parse(MarpaX_ESLIF_Grammarp, option)
+  MarpaX_ESLIF_Grammar MarpaX_ESLIF_Grammarp;
+  HV *option;
+CODE:
+  marpaESLIFRecognizerOption_t marpaESLIFRecognizerOption;
+  marpaESLIFValueOption_t      marpaESLIFValueOptionp;
+  short                        exhaustedb;
+
+  /* Put default and/or recommended option values */
+  marpaESLIFRecognizerOption.userDatavp                = NULL;
+  marpaESLIFRecognizerOption.marpaESLIFReaderCallbackp = NULL;
+  marpaESLIFRecognizerOption.disableThresholdb         = 0;
+  marpaESLIFRecognizerOption.exhaustedb                = 0;
+  marpaESLIFRecognizerOption.newlineb                  = 0;
+  marpaESLIFRecognizerOption.bufsizl                   = 0;
+  marpaESLIFRecognizerOption.buftriggerperci           = 50;
+  marpaESLIFRecognizerOption.bufaddperci               = 50;
+
+  marpaESLIFValueOption.userDatavp            = NULL;
+  marpaESLIFValueOption.ruleActionResolverp   = NULL;
+  marpaESLIFValueOption.symbolActionResolverp = NULL;
+  marpaESLIFValueOption.freeActionResolverp   = NULL;
+  marpaESLIFValueOption.highRankOnlyb         = 1;
+  marpaESLIFValueOption.orderByRankb          = 1;
+  marpaESLIFValueOption.ambiguousb            = 0;
+  marpaESLIFValueOption.nullb                 = 0;
+  marpaESLIFValueOption.maxParsesi            = 0;
+
+  RETVAL = &PL_sv_undef;
+OUTPUT:
+  RETVAL
+
