@@ -62,7 +62,6 @@ CREATE_JAVADOC(marpaESLIF
 # ------------------------------------------------
 # TEST (executed with make check at the top level)
 # ------------------------------------------------
-ENABLE_TESTING()
 FILE (GLOB_RECURSE MARPAESLIFJAVA_TEST test "*.java")
 SET (CMAKE_JNI_TARGET FALSE)
 SET (CMAKE_JAVA_TARGET_VERSION FALSE)
@@ -73,6 +72,9 @@ ADD_JAR(marpaESLIFJavaTest_jar
         )
 ADD_DEPENDENCIES(marpaESLIFJavaTest_jar marpaESLIFJava_jar)
       
+# -----
+# Check
+# -----
 ADD_TEST (marpaESLIFJavaTest ${CMAKE_COMMAND} -E env "PATH=${TEST_PATH}" "${Java_JAVA_EXECUTABLE}" -Djava.library.path=${LIBRARY_OUTPUT_PATH} -jar marpaESLIFJavaTest.jar org.parser.marpa.AppParse)
 ADD_CUSTOM_TARGET(marpaESLIFJavaTester DEPENDS marpaESLIFJavaTest_jar)
 ADD_DEPENDENCIES(check marpaESLIFJavaTester)
