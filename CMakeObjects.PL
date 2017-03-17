@@ -152,7 +152,7 @@ AUTOCONF
     $cbuilder->compile(
 	source        => $source,
 	object_file   => $obj,
-        extra_compiler_flags => "-DHAVE_CONFIG_H -DPCRE2_CODE_UNIT_WIDTH=8 -DPCRE2_STATIC",
+        extra_compiler_flags => "-DHAVE_CONFIG_H -DPCRE2_CODE_UNIT_WIDTH=8 -DPCRE2_STATIC -DSUPPORT_JIT=1",
 	include_dirs  => [ File::Spec->curdir, 'src' ]
 	);
   }
