@@ -18,6 +18,34 @@ typedef marpaESLIFGrammar_t MarpaX_ESLIF_Grammar_t;
 typedef MarpaX_ESLIF_t         *MarpaX_ESLIF;
 typedef MarpaX_ESLIF_Grammar_t *MarpaX_ESLIF_Grammar;
 
+/* ----------------------------------------------- */
+/* Use UNIVERSAL::can, taken from Haskells's Plugs */
+/* ----------------------------------------------- */
+static short marpaESLIF_can(pTHX_ SV *sv, char *method) {
+  short ok;
+  dSP;
+
+  ENTER;
+  SAVETMPS;
+
+  PUSHMARK(SP);
+  XPUSHs(sv);
+  XPUSHs(newSVpv(method, 0));
+  PUTBACK;
+
+  call_pv("UNIVERSAL::can", G_SCALAR);
+
+  SPAGAIN;
+
+  ok = (POPi != 0);
+
+  PUTBACK;
+  FREETMPS;
+  LEAVE;
+
+  return ok;
+}
+
 /* ----------------------- */
 /* generic Logger Callback */
 /* ----------------------- */
@@ -39,6 +67,7 @@ static void marpaESLIF_genericLoggerCallback(void *userDatavp, genericLoggerLeve
   }
 
   if (method != NULL) {
+    /* It should never happen that method is NULL -; */
     dTHX;
     dSP;
 
@@ -49,6 +78,9 @@ static void marpaESLIF_genericLoggerCallback(void *userDatavp, genericLoggerLeve
     PUTBACK;
 
     call_method(method, G_DISCARD);
+
+    FREETMPS;
+    LEAVE;
   }
 }
 
@@ -79,6 +111,16 @@ CODE:
 
   if(items > 1) {
     Perl_loggerInterfacep = ST(1);
+    /* Check this is an SV that can do logging */
+    if (! marpaESLIF_can(aTHX_ Perl_loggerInterfacep, "trace"))     croak("Logger interface must be an object that can do \"trace\"");
+    if (! marpaESLIF_can(aTHX_ Perl_loggerInterfacep, "debug"))     croak("Logger interface must be an object that can do \"debug\"");
+    if (! marpaESLIF_can(aTHX_ Perl_loggerInterfacep, "info"))      croak("Logger interface must be an object that can do \"info\"");
+    if (! marpaESLIF_can(aTHX_ Perl_loggerInterfacep, "notice"))    croak("Logger interface must be an object that can do \"notice\"");
+    if (! marpaESLIF_can(aTHX_ Perl_loggerInterfacep, "warning"))   croak("Logger interface must be an object that can do \"warning\"");
+    if (! marpaESLIF_can(aTHX_ Perl_loggerInterfacep, "error"))     croak("Logger interface must be an object that can do \"error\"");
+    if (! marpaESLIF_can(aTHX_ Perl_loggerInterfacep, "critical"))  croak("Logger interface must be an object that can do \"critical\"");
+    if (! marpaESLIF_can(aTHX_ Perl_loggerInterfacep, "alert"))     croak("Logger interface must be an object that can do \"alert\"");
+    if (! marpaESLIF_can(aTHX_ Perl_loggerInterfacep, "emergency")) croak("Logger interface must be an object that can do \"emergency\"");
   }
 
   Newx(MarpaX_ESLIFp, 1, MarpaX_ESLIF_t);
@@ -290,3 +332,184 @@ CODE:
   RETVAL = newSVpvn(descp->bytep, descp->bytel);
 OUTPUT:
   RETVAL
+
+=for comment
+  /* ----------------------------------------------------------------------- */
+  /* MarpaX::ESLIF::Grammar::currentRuleIds                                  */
+  /* ----------------------------------------------------------------------- */
+=cut
+
+AV *
+currentRuleIds(MarpaX_ESLIF_Grammarp)
+  MarpaX_ESLIF_Grammar MarpaX_ESLIF_Grammarp;
+CODE:
+  int                 *ruleip;
+  size_t               rulel;
+  size_t               i;
+  AV                  *av;
+
+  if (! marpaESLIFGrammar_rulearray_currentb(MarpaX_ESLIF_Grammarp, &ruleip, &rulel)) {
+    croak("marpaESLIFGrammar_rulearray_currentb failure");
+  }
+  if (rulel <= 0) {
+    croak("marpaESLIFGrammar_rulearray_currentb returned no rule");
+  }
+  av = newAV();
+  for (i = 0; i < rulel; i++) {
+    av_push(av, newSViv((IV) ruleip[i]));
+  }
+  RETVAL = av;
+OUTPUT:
+  RETVAL
+
+=for comment
+  /* ----------------------------------------------------------------------- */
+  /* MarpaX::ESLIF::Grammar::ruleIdsByLevel                                  */
+  /* ----------------------------------------------------------------------- */
+=cut
+
+AV *
+ruleIdsByLevel(MarpaX_ESLIF_Grammarp, Perl_leveli)
+  MarpaX_ESLIF_Grammar MarpaX_ESLIF_Grammarp;
+  IV  Perl_leveli;
+CODE:
+  int                 *ruleip;
+  size_t               rulel;
+  size_t               i;
+  AV                  *av;
+
+  if (! marpaESLIFGrammar_rulearray_by_levelb(MarpaX_ESLIF_Grammarp, &ruleip, &rulel, (int) Perl_leveli, NULL)) {
+    croak("marpaESLIFGrammar_rulearray_by_levelb failure");
+  }
+  if (rulel <= 0) {
+    croak("marpaESLIFGrammar_rulearray_by_levelb returned no rule");
+  }
+  av = newAV();
+  for (i = 0; i < rulel; i++) {
+    av_push(av, newSViv((IV) ruleip[i]));
+  }
+  RETVAL = av;
+OUTPUT:
+  RETVAL
+
+=for comment
+  /* ----------------------------------------------------------------------- */
+  /* MarpaX::ESLIF::Grammar::ruleDisplay                                     */
+  /* ----------------------------------------------------------------------- */
+=cut
+
+char *
+ruleDisplay(MarpaX_ESLIF_Grammarp, Perl_rulei)
+  MarpaX_ESLIF_Grammar MarpaX_ESLIF_Grammarp;
+  IV  Perl_rulei;
+CODE:
+  char *ruledisplays;
+
+  if (! marpaESLIFGrammar_ruleshowform_currentb(MarpaX_ESLIF_Grammarp, (int) Perl_rulei, &ruledisplays)) {
+    croak("marpaESLIFGrammar_ruledisplayform_currentb failure");
+  }
+  RETVAL = ruledisplays;
+OUTPUT:
+  RETVAL
+
+=for comment
+  /* ----------------------------------------------------------------------- */
+  /* MarpaX::ESLIF::Grammar::ruleShow                                        */
+  /* ----------------------------------------------------------------------- */
+=cut
+
+char *
+ruleShow(MarpaX_ESLIF_Grammarp, Perl_rulei)
+  MarpaX_ESLIF_Grammar MarpaX_ESLIF_Grammarp;
+  IV  Perl_rulei;
+CODE:
+  char *ruleshows;
+
+  if (! marpaESLIFGrammar_ruleshowform_currentb(MarpaX_ESLIF_Grammarp, (int) Perl_rulei, &ruleshows)) {
+    croak("marpaESLIFGrammar_ruleshowform_currentb failure");
+  }
+  RETVAL = ruleshows;
+OUTPUT:
+  RETVAL
+
+=for comment
+  /* ----------------------------------------------------------------------- */
+  /* MarpaX::ESLIF::Grammar::ruleDisplayByLevel                              */
+  /* ----------------------------------------------------------------------- */
+=cut
+
+char *
+ruleDisplayByLevel(MarpaX_ESLIF_Grammarp, Perl_leveli, Perl_rulei)
+  MarpaX_ESLIF_Grammar MarpaX_ESLIF_Grammarp;
+  IV  Perl_leveli;
+  IV  Perl_rulei;
+CODE:
+  char *ruledisplays;
+
+  if (! marpaESLIFGrammar_ruledisplayform_by_levelb(MarpaX_ESLIF_Grammarp, (int) Perl_rulei, &ruledisplays, (int) Perl_leveli, NULL)) {
+    croak("marpaESLIFGrammar_ruledisplayform_by_levelb failure");
+  }
+  RETVAL = ruledisplays;
+OUTPUT:
+  RETVAL
+
+=for comment
+  /* ----------------------------------------------------------------------- */
+  /* MarpaX::ESLIF::Grammar::ruleShowByLevel                                 */
+  /* ----------------------------------------------------------------------- */
+=cut
+
+char *
+ruleShowByLevel(MarpaX_ESLIF_Grammarp, Perl_leveli, Perl_rulei)
+  MarpaX_ESLIF_Grammar MarpaX_ESLIF_Grammarp;
+  IV  Perl_leveli;
+  IV  Perl_rulei;
+CODE:
+  char *ruleshows;
+
+  if (! marpaESLIFGrammar_ruleshowform_by_levelb(MarpaX_ESLIF_Grammarp, (int) Perl_rulei, &ruleshows, (int) Perl_leveli, NULL)) {
+    croak("marpaESLIFGrammar_ruleshowform_by_levelb failure");
+  }
+  RETVAL = ruleshows;
+OUTPUT:
+  RETVAL
+
+=for comment
+  /* ----------------------------------------------------------------------- */
+  /* MarpaX::ESLIF::Grammar::show                                            */
+  /* ----------------------------------------------------------------------- */
+=cut
+
+char *
+show(MarpaX_ESLIF_Grammarp)
+  MarpaX_ESLIF_Grammar MarpaX_ESLIF_Grammarp;
+CODE:
+  char *shows;
+
+  if (! marpaESLIFGrammar_grammarshowform_currentb(MarpaX_ESLIF_Grammarp, &shows)) {
+    croak("marpaESLIFGrammar_ruleshowform_by_levelb failure");
+  }
+  RETVAL = shows;
+OUTPUT:
+  RETVAL
+
+=for comment
+  /* ----------------------------------------------------------------------- */
+  /* MarpaX::ESLIF::Grammar::showByLevel                                     */
+  /* ----------------------------------------------------------------------- */
+=cut
+
+char *
+showByLevel(MarpaX_ESLIF_Grammarp, Perl_leveli)
+  MarpaX_ESLIF_Grammar MarpaX_ESLIF_Grammarp;
+  IV Perl_leveli;
+CODE:
+  char *shows;
+
+  if (! marpaESLIFGrammar_grammarshowform_by_levelb(MarpaX_ESLIF_Grammarp, &shows, (int) Perl_leveli, NULL)) {
+    croak("marpaESLIFGrammar_grammarshowform_by_levelb failure");
+  }
+  RETVAL = shows;
+OUTPUT:
+  RETVAL
+
