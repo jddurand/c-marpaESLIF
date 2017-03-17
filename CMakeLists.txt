@@ -83,7 +83,26 @@ MYPACKAGEMAN("doc/Tutorial/Calculator/README.pod" "MARPAESLIF_CALCULATOR" "3" "$
 MYPACKAGEMAN("doc/BNF/README.pod"                 "MARPAESLIF_BNF"        "3" "${MARPAESLIF_VERSION}")
 MYPACKAGEMAN("doc/API/README.pod"                 "MARPAESLIF_API"        "3" "${MARPAESLIF_VERSION}")
 
-#INCLUDE (cmake/CMakeBindingsSetup.txt)
+############
+# Bindings #
+############
+FIND_PACKAGE(Java)
+FIND_PACKAGE(JNI)
+IF (JNI_FOUND AND JAVA_FOUND)
+  MESSAGE(STATUS "")
+  MESSAGE(STATUS "JAVA Setup:")
+  MESSAGE(STATUS "----------")
+  MESSAGE(STATUS "Path to javac    : " ${Java_JAVAC_EXECUTABLE})
+  MESSAGE(STATUS "Path to javadoc  : " ${Java_JAVADOC_EXECUTABLE})
+  MESSAGE(STATUS "Path to jar      : " ${Java_JAR_EXECUTABLE})
+  MESSAGE(STATUS "")
+  MESSAGE(STATUS "JNI Setup:")
+  MESSAGE(STATUS "----------")
+  MESSAGE(STATUS "Path to jni.h    : " ${JAVA_INCLUDE_PATH})
+  MESSAGE(STATUS "Path to jni_md.h : " ${JAVA_INCLUDE_PATH2})
+  ADD_SUBDIRECTORY(src/bindings/java)
+ENDIF ()
+
 INCLUDE(FindPerl)
 IF (PERL_FOUND)
   FIND_PROGRAM(DZIL dzil)

@@ -1072,7 +1072,6 @@ JNIEXPORT jintArray JNICALL Java_org_parser_marpa_ESLIFGrammar_jniRuleShow(JNIEn
   marpaESLIFGrammar_t *marpaESLIFGrammarp;
   int                  rulei = (int) rule;
   char                *ruleshows;
-  genericLogger_t     *genericLoggerp = NULL;
 
   if (! ESLIFGrammar_contextb(envp, eslifGrammarp, eslifGrammarp, MARPAESLIF_ESLIFGRAMMAR_CLASS_getLoggerInterfacep_METHODP,
                               NULL /* genericLoggerpp */,
