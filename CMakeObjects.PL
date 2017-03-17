@@ -163,11 +163,11 @@ push(@additional_includes, File::Spec->catdir('output', '3rdparty', 'pcre2-10.22
 # We depend on these* stuff that can manage themselves, eventually
 # ----------------------------------------------------------------
 foreach (qw/genericLogger genericStack marpaWrapper tconv/) {
+    print "... Copying $_\n";
     if (! dircopy(File::Spec->catdir('3rdparty', 'github', $_),
                   File::Spec->catdir('output', '3rdparty', $_))) {
         die "Failed to copy $_";
     }
-    print "... Copying $_\n";
     my $CMakeObjects = File::Spec->catfile('output', '3rdparty', $_, 'CMakeObjects.PL');
     if (-e $CMakeObjects) {
         print "... Executing $CMakeObjects\n";
