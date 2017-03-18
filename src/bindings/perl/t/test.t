@@ -1,14 +1,167 @@
+package MyRecognizer;
+use strict;
+use diagnostics;
+
+sub new {
+    my ($pkg, $string, $log) = @_;
+    open my $fh, "<", \$string;
+    return bless { line => undef, fh => $fh, log => $log }, $pkg;
+}
+
+
+sub read {
+    my $self = shift;
+    $self->{log}->trace("read");
+    $self->{line} = readline($self->{fh});
+}
+
+sub isEof {
+    my $self = shift;
+    $self->{log}->trace("isEof");
+    return eof($self->{fh});
+}
+
+sub isCharacterStream {
+    my ($self) = @_;
+    $self->{log}->trace("isCharacterStream");
+    return 1;
+}
+
+sub encoding {
+    my ($self) = @_;
+    $self->{log}->trace("encoding");
+    return;
+}
+
+sub data {
+    my $self = shift;
+    $self->{log}->trace("data");
+    return $self->{line};
+}
+
+sub isWithDisableThreshold {
+    my ($self) = @_;
+    $self->{log}->trace("isWithDisableThreshold");
+    return 0;
+}
+
+sub isWithExhaustion {
+    my ($self) = @_;
+    $self->{log}->trace("isWithExhaustion");
+    return 0;
+}
+
+sub isWithNewline {
+    my ($self) = @_;
+    $self->{log}->trace("isWithNewline");
+    return 1;
+}
+
+package MyValue;
+use strict;
+use diagnostics;
+use Carp qw/croak/;
+#
+# In our example we have NOT specified a symbol action, therefore
+# lexemes that come directly from the grammar are exactly what is in the input
+#*/
+
+sub new {
+    my ($pkg, $log) = @_;
+
+    return bless { result => undef, log => $log }, $pkg;
+}
+	
+sub do_int {
+    my ($self, $number) = @_;
+
+    $self->{log}->tracef("do_int(%s)", $number);
+    return int($number);
+}
+
+sub do_op {
+    my ($self, $left, $op, $right) = @_;
+
+    $self->{log}->tracef("do_op(%s, %s, %s)", $left, $op, $right);
+
+    my $result;
+    if ($op eq '**') {
+        $result = $left ** $right;
+    }
+    elsif ($op eq '*') {
+        $result = $left * $right;
+    }
+    elsif ($op eq '/') {
+        $result = $left / $right;
+    }
+    elsif ($op eq '+') {
+        $result = $left + $right;
+    }
+    elsif ($op eq '-') {
+        $result = $left - $right;
+    }
+    else {
+        croak "Unsupported op $op";
+    }
+
+    return $result;
+}
+
+sub isWithHighRankOnly {
+    my ($self) = @_;
+    $self->{log}->trace("isWithHighRankOnly");
+    return 1;
+}
+
+sub isWithOrderByRank {
+    my ($self) = @_;
+    $self->{log}->trace("isWithOrderByRank");
+    return 1;
+}
+
+sub isWithAmbiguous {
+    my ($self) = @_;
+    $self->{log}->trace("isWithAmbiguous");
+    return 0;
+}
+
+sub isWithNull {
+    my ($self) = @_;
+    $self->{log}->trace("isWithNull");
+    return 0;
+}
+
+sub maxParses {
+    my ($self) = @_;
+    $self->{log}->trace("maxParses");
+    return 0;
+}
+
+sub getResult {
+    my ($self) = @_;
+    $self->{log}->trace("result");
+    return $self->{result};
+}
+
+sub setResult {
+    my ($self, $result) = @_;
+    $self->{log}->trace("setResult(%s)", $result);
+    $self->{result} = $result;
+}
+
+package main;
 use strict;
 use warnings FATAL => 'all';
 use Test::More;
 use Log::Log4perl qw/:easy/;
 use Log::Any::Adapter;
 use Log::Any qw/$log/;
+use Try::Tiny;
 #
 # Init log
 #
 our $defaultLog4perlConf = '
-log4perl.rootLogger              = WARN, Screen
+log4perl.rootLogger              = DEBUG, Screen
 log4perl.appender.Screen         = Log::Log4perl::Appender::Screen
 log4perl.appender.Screen.stderr  = 0
 log4perl.appender.Screen.layout  = PatternLayout
@@ -75,6 +228,33 @@ foreach my $level (0..$ngrammar-1) {
     my $showByLevel = $eslifGrammar->showByLevel($level);
     ok($show ne '', "Show of grammar at level $level");
     diag("Show of grammar at level $level:\n$showByLevel");
+}
+
+my @strings = (
+    "(((3 * 4) + 2 * 7) / 2 - 1)/* This is a\n comment \n */** 3",
+    "5 / (2 * 3)",
+    "5 / 2 * 3",
+    "(5 ** 2) ** 3",
+    "5 * (2 * 3)",
+    "5 ** (2 ** 3)",
+    "5 ** (2 / 3)",
+    "1 + ( 2 + ( 3 + ( 4 + 5) )",
+    "1 + ( 2 + ( 3 + ( 4 + 50) ) )   /* comment after */",
+    " 100"
+    );
+
+for (my $i = 0; $i <= $#strings; $i++) {
+    my $string = $strings[$i];
+
+    $log->infof("Testing parse() on %s", $string);
+    try {
+        my $recognizerInterface = MyRecognizer->new($string, $log);
+        my $valueInterface = MyValue->new($log);
+        $eslifGrammar->parse($recognizerInterface, $valueInterface);
+        $log->infof("Result: %s", $valueInterface->getResult);
+    } catch {
+        $log->error($_);
+    }
 }
 
 done_testing();
