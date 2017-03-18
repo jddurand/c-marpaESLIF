@@ -1209,10 +1209,10 @@ JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIFGrammar_jniParse(JNIEnv *envp,
   marpaESLIFGrammar_t           *marpaESLIFGrammarp;
   marpaESLIFRecognizerOption_t   marpaESLIFRecognizerOption;
   marpaESLIFValueOption_t        marpaESLIFValueOption;
-  short                          exhaustedb;
   marpaESLIFRecognizerContext_t  marpaESLIFRecognizerContext;
   marpaESLIFValueContext_t       marpaESLIFValueContext;
   marpaESLIFValueResult_t        marpaESLIFValueResult;
+  short                          exhaustedb;
   int                            indicei;
 
   if (! ESLIFGrammar_contextb(envp, eslifGrammarp, eslifGrammarp, MARPAESLIF_ESLIFGRAMMAR_CLASS_getLoggerInterfacep_METHODP,
@@ -3059,7 +3059,7 @@ static short marpaESLIFValueRuleCallback(void *userDatavp, marpaESLIFValue_t *ma
       }
       if (intb) {
         if (! marpaESLIFValue_stack_get_intb(marpaESLIFValuep, i, &contexti, &indicei)) {
-          RAISEEXCEPTION(envp, "marpaESLIFValue_stack_is_intb failure");
+          RAISEEXCEPTION(envp, "marpaESLIFValue_stack_get_intb failure");
         }
         objectp = (jobject) GENERICSTACK_GET_PTR(stackp, indicei);
         /* This is an object created by the user interface, that we globalized */
@@ -3098,7 +3098,7 @@ static short marpaESLIFValueRuleCallback(void *userDatavp, marpaESLIFValue_t *ma
           if (marpaESLIFValueResultp->type != MARPAESLIF_VALUE_TYPE_PTR) {
             RAISEEXCEPTIONF(envp, "User-defined value type is not MARPAESLIF_VALUE_TYPE_PTR (got %d)", marpaESLIFValueResultp->type);
           }
-          globalObjectp = marpaESLIFValueResultp->u.p;
+          globalObjectp = (jobject) marpaESLIFValueResultp->u.p;
           (*envp)->SetObjectArrayElement(envp, list, i - arg0i, globalObjectp);
           if (HAVEEXCEPTION(envp)) {
             goto err;
@@ -3321,33 +3321,6 @@ static jmethodID marpaESLIFValueActionResolver(JNIEnv *envp, marpaESLIFValueCont
 }
 
 /*****************************************************************************/
-static void marpaESLIFValueContextCleanup(JNIEnv *envp, marpaESLIFValueContext_t *marpaESLIFValueContextp)
-/*****************************************************************************/
-{
-  genericStack_t          *stackp;
-  jobject                  objectp;
-  int                      i; 
-
-  if (marpaESLIFValueContextp != NULL) {
-    stackp = marpaESLIFValueContextp->stackp;
-    if (stackp != NULL) {
-      /* It is important to removed global references in the reverse order of their creation */
-      while (GENERICSTACK_USED(stackp) > 0) {
-        i = GENERICSTACK_USED(stackp) - 1;
-        if (GENERICSTACK_IS_PTR(stackp, i)) {
-          objectp = GENERICSTACK_POP_PTR(stackp);
-          if (objectp != NULL) {
-            (*envp)->DeleteGlobalRef(envp, objectp);
-          }
-        } else {
-          GENERICSTACK_USED(stackp)--;
-        }
-      }
-    }
-  }
-}
- 
-/*****************************************************************************/
 static void marpaESLIFValueContextFree(JNIEnv *envp, marpaESLIFValueContext_t *marpaESLIFValueContextp, short onStackb)
 /*****************************************************************************/
 {
@@ -3391,25 +3364,32 @@ static void marpaESLIFValueContextFree(JNIEnv *envp, marpaESLIFValueContext_t *m
 }
  
 /*****************************************************************************/
-static void marpaESLIFRecognizerContextCleanup(JNIEnv *envp, marpaESLIFRecognizerContext_t *marpaESLIFRecognizerContextp)
+static void marpaESLIFValueContextCleanup(JNIEnv *envp, marpaESLIFValueContext_t *marpaESLIFValueContextp)
 /*****************************************************************************/
 {
-  if (marpaESLIFRecognizerContextp != NULL) {
-    /* Prevent local references exhaustion */
-    if ((marpaESLIFRecognizerContextp->previousByteArrayp != NULL) && (marpaESLIFRecognizerContextp->previousDatap != NULL)) {
-      (*envp)->ReleaseByteArrayElements(envp, marpaESLIFRecognizerContextp->previousByteArrayp, marpaESLIFRecognizerContextp->previousDatap, JNI_ABORT);
-    }
-    marpaESLIFRecognizerContextp->previousByteArrayp = NULL;
-    marpaESLIFRecognizerContextp->previousDatap      = NULL;
+  genericStack_t          *stackp;
+  jobject                  objectp;
+  int                      i; 
 
-    if ((marpaESLIFRecognizerContextp->previousEncodingp != NULL) && (marpaESLIFRecognizerContextp->previousUTFCharp != NULL)) {
-      (*envp)->ReleaseStringUTFChars(envp, marpaESLIFRecognizerContextp->previousEncodingp, marpaESLIFRecognizerContextp->previousUTFCharp);
+  if (marpaESLIFValueContextp != NULL) {
+    stackp = marpaESLIFValueContextp->stackp;
+    if (stackp != NULL) {
+      /* It is important to removed global references in the reverse order of their creation */
+      while (GENERICSTACK_USED(stackp) > 0) {
+        i = GENERICSTACK_USED(stackp) - 1;
+        if (GENERICSTACK_IS_PTR(stackp, i)) {
+          objectp = GENERICSTACK_POP_PTR(stackp);
+          if (objectp != NULL) {
+            (*envp)->DeleteGlobalRef(envp, objectp);
+          }
+        } else {
+          GENERICSTACK_USED(stackp)--;
+        }
+      }
     }
-    marpaESLIFRecognizerContextp->previousEncodingp = NULL;
-    marpaESLIFRecognizerContextp->previousUTFCharp  = NULL;
   }
 }
-
+ 
 /*****************************************************************************/
 static void marpaESLIFRecognizerContextFree(JNIEnv *envp, marpaESLIFRecognizerContext_t *marpaESLIFRecognizerContextp, short onStackb)
 /*****************************************************************************/
@@ -3438,6 +3418,26 @@ static void marpaESLIFRecognizerContextFree(JNIEnv *envp, marpaESLIFRecognizerCo
     if (! onStackb) {
       free(marpaESLIFRecognizerContextp);
     }
+  }
+}
+
+/*****************************************************************************/
+static void marpaESLIFRecognizerContextCleanup(JNIEnv *envp, marpaESLIFRecognizerContext_t *marpaESLIFRecognizerContextp)
+/*****************************************************************************/
+{
+  if (marpaESLIFRecognizerContextp != NULL) {
+    /* Prevent local references exhaustion */
+    if ((marpaESLIFRecognizerContextp->previousByteArrayp != NULL) && (marpaESLIFRecognizerContextp->previousDatap != NULL)) {
+      (*envp)->ReleaseByteArrayElements(envp, marpaESLIFRecognizerContextp->previousByteArrayp, marpaESLIFRecognizerContextp->previousDatap, JNI_ABORT);
+    }
+    marpaESLIFRecognizerContextp->previousByteArrayp = NULL;
+    marpaESLIFRecognizerContextp->previousDatap      = NULL;
+
+    if ((marpaESLIFRecognizerContextp->previousEncodingp != NULL) && (marpaESLIFRecognizerContextp->previousUTFCharp != NULL)) {
+      (*envp)->ReleaseStringUTFChars(envp, marpaESLIFRecognizerContextp->previousEncodingp, marpaESLIFRecognizerContextp->previousUTFCharp);
+    }
+    marpaESLIFRecognizerContextp->previousEncodingp = NULL;
+    marpaESLIFRecognizerContextp->previousUTFCharp  = NULL;
   }
 }
 
