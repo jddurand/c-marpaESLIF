@@ -10,11 +10,20 @@ ADD_CUSTOM_TARGET (marpaESLIFPerlCopy ${CMAKE_COMMAND} -E echo "${PERL_EXECUTABL
   DEPENDS ${ETC_COPYDIRS_PL} ${MARPAESLIFPERL_SRC_PM} ${MARPAESLIFPERL_SRC_XS} ${MARPAESLIFPERL_SRC_T} dist.ini
   )
 
-ADD_CUSTOM_TARGET (marpaESLIFPerlPackage ${CMAKE_COMMAND} -E echo "... dzil clean"
+# -----
+# Clean
+# -----
+ADD_CUSTOM_TARGET (marpaESLIFPerlClean ${CMAKE_COMMAND} -E echo "... dzil clean"
   COMMAND dzil clean
-  COMMAND ${CMAKE_COMMAND} -E echo "... dzil build"
-  COMMAND dzil build
   DEPENDS marpaESLIFPerlCopy
+  )
+
+# -------
+# Package
+# -------
+ADD_CUSTOM_TARGET (marpaESLIFPerlPackage ALL ${CMAKE_COMMAND} -E echo "... dzil build"
+  COMMAND dzil build
+  DEPENDS marpaESLIFPerlClean
   )
 
 # -----
