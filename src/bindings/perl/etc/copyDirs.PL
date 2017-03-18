@@ -160,6 +160,8 @@ sub _dircopy {
         next if $_ eq '.travis.yml';
         next if $_ eq 'visual-studio';
         next if $_ =~ /\..?sh$/;
+        next if $_ =~ /\.3$/;
+        next if $_ =~ /\.3\.gz$/;
 
         my $mode = $stats->{$_}->[2];
 
