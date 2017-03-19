@@ -156,7 +156,6 @@ use Test::More;
 use Log::Log4perl qw/:easy/;
 use Log::Any::Adapter;
 use Log::Any qw/$log/;
-use Try::Tiny;
 #
 # Init log
 #
@@ -247,13 +246,10 @@ for (my $i = 0; $i <= $#strings; $i++) {
     my $string = $strings[$i];
 
     $log->infof("Testing parse() on %s", $string);
-    try {
-        my $recognizerInterface = MyRecognizer->new($string, $log);
-        my $valueInterface = MyValue->new($log);
-        $eslifGrammar->parse($recognizerInterface, $valueInterface);
+    my $recognizerInterface = MyRecognizer->new($string, $log);
+    my $valueInterface = MyValue->new($log);
+    if ($eslifGrammar->parse($recognizerInterface, $valueInterface)) {
         $log->infof("Result: %s", $valueInterface->getResult);
-    } catch {
-        $log->error($_);
     }
 }
 
