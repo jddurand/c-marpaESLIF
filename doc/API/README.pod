@@ -864,7 +864,7 @@ Returns a true value on success, a false value on failure.
 
 Try to match the lexeme with name C<lexemes> that must be non-C<NULL> against the input seen by the recognizer. Returns in C<matchbp>, when not C<NULL>, a true value if there is a match, a false value otherwise. This method generates no event.
 
-Returns a true value on success, a false value on failure.
+This function should never fail, a false value indicates something fatal happened or the arguments are not correct.
 
 =head3 C<marpaESLIFRecognizer_discard_tryb>
 
@@ -873,7 +873,7 @@ Returns a true value on success, a false value on failure.
 
 Try to match the :discard rule against the input seen by the recognizer. Returns in C<matchbp>, when not C<NULL>, a true value if there is a match, a false value otherwise. This method generates no event.
 
-Returns a true value on success, a false value on failure.
+This function should never fail, a false value indicates something fatal happened or the arguments are not correct.
 
 =head3 C<marpaESLIFRecognizer_lexeme_expectedb>
 
@@ -883,7 +883,7 @@ Returns a true value on success, a false value on failure.
 
 For the current recognizer C<marpaESLIFRecognizerp>, get the list of I<lexemes> expected. C<*nLexemelp>, if not C<NULL>, is filled with the number of expected lexemes, and C<*lexemesArraypp>, if not C<NULL>, will contain the array of NUL-terminated ASCII symbol names.
 
-Returns a true value on success, a false value on failure.
+This function should never fail, a false value indicates something fatal happened or the arguments are not correct.
 
 =head3 C<marpaESLIFRecognizer_isEofb>
 
@@ -891,7 +891,7 @@ Returns a true value on success, a false value on failure.
 
 Returns in the value pointed by C<eofbp> the current EOF state, when it is not C<NULL>.
 
-Returns a true value on success, a false value on failure.
+This function should never fail, a false value indicates something fatal happened or the arguments are not correct.
 
 =head3 C<marpaESLIFRecognizer_event_onoffb>
 
@@ -961,7 +961,7 @@ Discard event. This can happen only for C<:discard> rules, and happen everytime 
 
 =back
 
-Returns a true value on success, a false value on failure.
+This function should never fail, a false value indicates something fatal happened or the arguments are not correct.
 
 =head3 C<marpaESLIFRecognizer_eventb>
 
@@ -993,7 +993,7 @@ The name of the event. Always a NUL-terminated ASCII string, except for exhausti
 
 =back
 
-Returns a true value on success, a false value on failure.
+This function should never fail, a false value indicates something fatal happened or the arguments are not correct.
 
 =head3 C<marpaESLIFRecognizer_progressLogb>
 
@@ -1004,7 +1004,7 @@ Returns a true value on success, a false value on failure.
 
 Send to the logger configured at the marpaESLIF instanciation step, the current progress of parsing of the C<marpaESLIFRecognizerp> recognizer instance. Logging is do at level C<logleveli> (c.f. L<genericLogger|https://github.com/jddurand/c-genericLogger> documentation), and from C<starti> to C<endi> indices. The C<starti> and C<endi> indices are Earleme Set Ids, and obey the Perl language convention, i.e. a negative indice means it far back from the end. The format of the strings generated is totally under the L<marpaWrapper|https://github.com/jddurand/c-marpaWrapper> library. This method should be used when the end user want to have a progress report during valuation, c.f. the C<marpaESLIFValue_value_startb> and C<marpaESLIFValue_value_lengthb> methods.
 
-Returns a true value on success, a false value on failure.
+This function should never fail, a false value indicates something fatal happened or the arguments are not correct.
 
 =head3 C<marpaESLIFRecognizer_inputb>
 
@@ -1039,7 +1039,7 @@ Returns a true value on success, a false value on failure.
 
 For the recognizer instance pointed by C<marpaESLIFRecognizerp>, returns a pointer to the last portion of input stream that generated a I<lexeme pause> event for lexeme C<lexemes> in the value pointed by C<pausesp> if it is not NULL, and the length in the value pointed by C<pauselp> if it is not NULL. For convenience if the last pause is not NULL, the buffer holding the pause information is always NUL-terminated, even if the C<\0> NUL character is I<not> in the returned length. In case of user-defined alternatives, the empty string "" is returned in C<pausesp>.
 
-Returns a true value on success, a false value on failure.
+This function should never fail, a false value indicates something fatal happened or the arguments are not correct.
 
 =head3 C<marpaESLIFRecognizer_lexeme_last_tryb>
 
@@ -1050,7 +1050,7 @@ Returns a true value on success, a false value on failure.
 
 For the recognizer instance pointed by C<marpaESLIFRecognizerp>, returns a pointer to the last portion of input stream into the value pointed by C<trysp>, when it is non-C<NULL>, and corresponding length in the value pointed by C<trylp> when it is is non-C<NULL>, of the last successful try for lexeme C<lexemes>, via a call to C<marpaESLIFRecognizer_lexeme_tryb>. If C<*trysp> is non-NULL, it is guaranteed that C<*trylp> is greater than zero, and the block of memory is NUL-terminated, even if the additional NUL byte will not be included into C<trylp>.
 
-Returns a true value on success, a false value on failure.
+This function should never fail, a false value indicates something fatal happened or the arguments are not correct.
 
 =head3 C<marpaESLIFRecognizer_discard_last_tryb>
 
@@ -1060,7 +1060,7 @@ Returns a true value on success, a false value on failure.
 
 For the recognizer instance pointed by C<marpaESLIFRecognizerp>, returns a pointer to the last portion of input stream into the value pointed by C<trysp>, when it is non-C<NULL>, and corresponding length in the value pointed by C<trylp> when it is is non-C<NULL>, of the last successful discard try, via a call to C<marpaESLIFRecognizer_discard_tryb>. If C<*trysp> is non-NULL, it is guaranteed that C<*trylp> is greater than zero, and the block of memory is NUL-terminated, even if the additional NUL byte will not be included into C<trylp>.
 
-Returns a true value on success, a false value on failure.
+This function should never fail, a false value indicates something fatal happened or the arguments are not correct.
 
 =head3 C<marpaESLIFRecognizer_readb>
 
@@ -1314,6 +1314,8 @@ where C<p> is a pointer to the memory holding previous value at stack indice C<0
 =back
 
 Nothing differentiate symbol actions v.s. rule action except that there is no range of indices in input, only a single indice.
+
+Returns C<NULL> is no valuation is possible at this stage, else return a non-C<NULL> value.
 
 =head3 C<marpaESLIFValue_recognizerp>
 
