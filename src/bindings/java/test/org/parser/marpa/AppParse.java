@@ -96,11 +96,8 @@ public class AppParse  {
 			AppRecognizer eslifAppRecognizer = new AppRecognizer(reader);
 			AppValue eslifAppValue = new AppValue();
 			eslifLogger.info("Testing parse() on " + string);
-			try {
-				Object result = eslifGrammar.parse(eslifAppRecognizer, eslifAppValue);
-				eslifLogger.info("Result: " + result);
-			} catch (Exception e) {
-				eslifLogger.error("Exception: " + e);
+			if (eslifGrammar.parse(eslifAppRecognizer, eslifAppValue)) {
+				eslifLogger.info("Result: " + eslifAppValue.getResult());
 			}
 		}
 		/*
@@ -120,56 +117,63 @@ public class AppParse  {
 			eslifLogger.info("***********************************************************");
 			eslifLogger.info("");
 			try {
-				doScan(eslifLogger, eslifRecognizer, true);
+				if (doScan(eslifLogger, eslifRecognizer, true)) {
 
-				if (! eslifRecognizer.isEof()) {
-					eslifRecognizer.read();
-					showRecognizerInput("after read", eslifLogger, eslifRecognizer);
-				}
-				if (i == 0) {
-					eslifRecognizer.progressLog(-1, -1, ESLIFLoggerLevel.get(ESLIFLoggerLevel.NOTICE.getCode()));
-				}
-				int j = 0;
-				while (eslifRecognizer.isCanContinue()) {
-					doResume(eslifLogger, eslifRecognizer, 0);
-
-					ESLIFEvent[] events = eslifRecognizer.events();
-					if (events != null) {
-						for (int k = 0; k < events.length; k++) {
-							ESLIFEvent event = events[k];
-						    if ("^NUMBER".equals(event.getEvent())) {
-						    	//
-						    	// Recognizer will wait forever if we do not feed the number
-						    	//
-								byte[] bytes = eslifRecognizer.lexemeLastPause("NUMBER");
-								if (bytes == null) {
-									throw new Exception("Pause before on NUMBER but no pause information!");
-								}
-								doLexemeRead(eslifLogger, eslifRecognizer, "NUMBER", j, bytes);
-								doDiscardTry(eslifLogger, eslifRecognizer);
-								doLexemeTry(eslifLogger, eslifRecognizer, "WHITESPACES");
-								doLexemeTry(eslifLogger, eslifRecognizer, "whitespaces");
-						    }
+					if (! eslifRecognizer.isEof()) {
+						if (! eslifRecognizer.read()) {
+							break;
 						}
+						showRecognizerInput("after read", eslifLogger, eslifRecognizer);
 					}
-					if (j == 0) {
-						changeEventState("Loop No " + j, eslifLogger, eslifRecognizer, "Expression", ESLIFEventType.PREDICTED, false);
-						changeEventState("Loop No " + j, eslifLogger, eslifRecognizer, "whitespaces", ESLIFEventType.DISCARD, false);
-						changeEventState("Loop No " + j, eslifLogger, eslifRecognizer, "NUMBER", ESLIFEventType.AFTER, false);
+					if (i == 0) {
+						eslifRecognizer.progressLog(-1, -1, ESLIFLoggerLevel.get(ESLIFLoggerLevel.NOTICE.getCode()));
 					}
-					showLastCompletion("Loop No " + j, eslifLogger, eslifRecognizer, "Expression", string);
-					showLastCompletion("Loop No " + j, eslifLogger, eslifRecognizer, "Number", string);
-					j++;
+					int j = 0;
+					while (eslifRecognizer.isCanContinue()) {
+						if (! doResume(eslifLogger, eslifRecognizer, 0)) {
+							break;
+						}
+	
+						ESLIFEvent[] events = eslifRecognizer.events();
+						if (events != null) {
+							for (int k = 0; k < events.length; k++) {
+								ESLIFEvent event = events[k];
+							    if ("^NUMBER".equals(event.getEvent())) {
+							    	//
+							    	// Recognizer will wait forever if we do not feed the number
+							    	//
+									byte[] bytes = eslifRecognizer.lexemeLastPause("NUMBER");
+									if (bytes == null) {
+										throw new Exception("Pause before on NUMBER but no pause information!");
+									}
+									if (! doLexemeRead(eslifLogger, eslifRecognizer, "NUMBER", j, bytes)) {
+										throw new Exception("NUMBER expected but reading such lexeme fails!");
+									}
+									doDiscardTry(eslifLogger, eslifRecognizer);
+									doLexemeTry(eslifLogger, eslifRecognizer, "WHITESPACES");
+									doLexemeTry(eslifLogger, eslifRecognizer, "whitespaces");
+							    }
+							}
+						}
+						if (j == 0) {
+							changeEventState("Loop No " + j, eslifLogger, eslifRecognizer, "Expression", ESLIFEventType.PREDICTED, false);
+							changeEventState("Loop No " + j, eslifLogger, eslifRecognizer, "whitespaces", ESLIFEventType.DISCARD, false);
+							changeEventState("Loop No " + j, eslifLogger, eslifRecognizer, "NUMBER", ESLIFEventType.AFTER, false);
+						}
+						showLastCompletion("Loop No " + j, eslifLogger, eslifRecognizer, "Expression", string);
+						showLastCompletion("Loop No " + j, eslifLogger, eslifRecognizer, "Number", string);
+						j++;
+					}
+					// Thread.sleep(10000);
+					AppValue eslifAppValue = new AppValue();
+					eslifLogger.info("Testing value() on " + string);
+					ESLIFValue value = new ESLIFValue(eslifRecognizer, eslifAppValue);
+					while (value.value()) {
+						Object result = eslifAppValue.getResult();
+						eslifLogger.info("Result: " + result);
+					}
+					value.free();
 				}
-				// Thread.sleep(10000);
-				AppValue eslifAppValue = new AppValue();
-				eslifLogger.info("Testing value() on " + string);
-				ESLIFValue value = new ESLIFValue(eslifRecognizer, eslifAppValue);
-				while (value.value()) {
-					Object result = eslifAppValue.getResult();
-					eslifLogger.info("Result: " + result);
-				}
-				value.free();
 			} catch (Exception e) {
 				eslifLogger.error("Exception: " + e);
 			}
@@ -180,28 +184,36 @@ public class AppParse  {
 		eslif.free();
 	}
 	
-	private static void doScan(ESLIFLoggerInterface eslifLogger, ESLIFRecognizer eslifRecognizer, boolean initialEvents) throws Exception {
+	private static boolean doScan(ESLIFLoggerInterface eslifLogger, ESLIFRecognizer eslifRecognizer, boolean initialEvents) throws Exception {
 		String context;
 		
 		eslifLogger.debug(" =============> scan(initialEvents=" + initialEvents + ")");
-		eslifRecognizer.scan(initialEvents);
+		if (! eslifRecognizer.scan(initialEvents)) {
+			return false;
+		}
 
 		context = "after scan";
 		showRecognizerInput(context, eslifLogger, eslifRecognizer);
 		showEvents(context, eslifLogger, eslifRecognizer);
 		showLexemeExpected(context, eslifLogger, eslifRecognizer);
+		
+		return true;
 	}
 
-	private static void doResume(ESLIFLoggerInterface eslifLogger, ESLIFRecognizer eslifRecognizer, int deltaLength) throws Exception {
+	private static boolean doResume(ESLIFLoggerInterface eslifLogger, ESLIFRecognizer eslifRecognizer, int deltaLength) throws Exception {
 		String context;
 		
 		eslifLogger.debug(" =============> resume(deltaLength=" + deltaLength + ")");
-		eslifRecognizer.resume(deltaLength);
+		if (! eslifRecognizer.resume(deltaLength)) {
+			return false;
+		}
 
 		context = "after resume";
 		showRecognizerInput(context, eslifLogger, eslifRecognizer);
 		showEvents(context, eslifLogger, eslifRecognizer);
 		showLexemeExpected(context, eslifLogger, eslifRecognizer);
+		
+		return true;
 	}
 
 	private static void doDiscardTry(ESLIFLoggerInterface eslifLogger, ESLIFRecognizer eslifRecognizer) throws UnsupportedEncodingException {
@@ -238,17 +250,21 @@ public class AppParse  {
 	//
 	// We replace current NUMBER by the Integer object representing value
 	//
-	private static void doLexemeRead(ESLIFLoggerInterface eslifLogger, ESLIFRecognizer eslifRecognizer, String symbol, int value, byte[] bytes) throws Exception {
+	private static boolean doLexemeRead(ESLIFLoggerInterface eslifLogger, ESLIFRecognizer eslifRecognizer, String symbol, int value, byte[] bytes) throws Exception {
 		String context;
 		String old = new String(bytes, "UTF-8");
 		
 		eslifLogger.debug("... Forcing Integer object for \"" + value + "\" spanned on " + bytes.length + " bytes" + " instead of \"" + old + "\"");
-		eslifRecognizer.lexemeRead(symbol, new Integer(value), 1 /* grammarLength */, bytes.length);
+		if (! eslifRecognizer.lexemeRead(symbol, new Integer(value), 1 /* grammarLength */, bytes.length)) {
+			return false;
+		}
 
 		context = "after lexemeRead";
 		showRecognizerInput(context, eslifLogger, eslifRecognizer);
 		showEvents(context, eslifLogger, eslifRecognizer);
 		showLexemeExpected(context, eslifLogger, eslifRecognizer);
+		
+		return true;
 	}
 
 	private static void showRecognizerInput(String context, ESLIFLoggerInterface eslifLogger, ESLIFRecognizer eslifRecognizer) throws UnsupportedEncodingException, ESLIFException {

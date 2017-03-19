@@ -40,13 +40,13 @@ public class ESLIFRecognizer {
 	private boolean                  exhausted      = false;
 	private native void              jniNew(ESLIFGrammar eslifGrammar) throws ESLIFException;
 	private native void              jniFree() throws ESLIFException;
-	private native void              jniScan(boolean initialEvents) throws ESLIFException;
-	private native void              jniResume(int deltaLength) throws ESLIFException;
+	private native boolean			 jniScan(boolean initialEvents) throws ESLIFException;
+	private native boolean 			 jniResume(int deltaLength) throws ESLIFException;
 	private native ESLIFEvent[]      jniEvent() throws ESLIFException;
 	private native void              jniEventOnOff(String symbol, ESLIFEventType[] eventTypes, boolean onOff) throws ESLIFException;
-	private native void              jniLexemeAlternative(String name, Object object, int grammarLength) throws ESLIFException;
-	private native void              jniLexemeComplete(int length) throws ESLIFException;
-	private native void              jniLexemeRead(String name, Object object, int grammarLength, int length) throws ESLIFException;
+	private native boolean       	 jniLexemeAlternative(String name, Object object, int grammarLength) throws ESLIFException;
+	private native boolean			 jniLexemeComplete(int length) throws ESLIFException;
+	private native boolean           jniLexemeRead(String name, Object object, int grammarLength, int length) throws ESLIFException;
 	private native boolean           jniLexemeTry(String name) throws ESLIFException;
 	private native boolean           jniDiscardTry() throws ESLIFException;
 	private native String[]          jniLexemeExpected() throws ESLIFException;
@@ -54,7 +54,7 @@ public class ESLIFRecognizer {
 	private native byte[]            jniLexemeLastTry(String lexeme) throws ESLIFException;
 	private native byte[]            jniDiscardLastTry() throws ESLIFException;
 	private native boolean           jniIsEof() throws ESLIFException;
-	private native byte[]            jniRead() throws ESLIFException;
+	private native boolean           jniRead() throws ESLIFException;
 	private native byte[]            jniInput() throws ESLIFException;
 	private native void              jniProgressLog(int start, int end, ESLIFLoggerLevel level) throws ESLIFException;
 	private native long              jniLastCompletedOffset(String name) throws ESLIFException;
@@ -113,10 +113,11 @@ public class ESLIFRecognizer {
 	 * before the first data read.
 	 * 
 	 * @param initialEvents a boolean indicating if initial events should happen.
+	 * @return a boolean indicating if the call was successful or not
 	 * @throws ESLIFException if the interface failed
 	 */
-	public synchronized void scan(boolean initialEvents) throws ESLIFException {
-		jniScan(initialEvents);
+	public synchronized boolean scan(boolean initialEvents) throws ESLIFException {
+		return jniScan(initialEvents);
 	}
 
 	/**
@@ -126,8 +127,8 @@ public class ESLIFRecognizer {
 	 * @param deltaLength the number of bytes to skip before resume goes on, must be positive or greater than 0
 	 * @throws ESLIFException if the interface failed
 	 */
-	public synchronized void resume(int deltaLength) throws ESLIFException {
-		jniResume(deltaLength);
+	public synchronized boolean resume(int deltaLength) throws ESLIFException {
+		return jniResume(deltaLength);
 	}
 	
 	/**
@@ -162,10 +163,11 @@ public class ESLIFRecognizer {
 	 * @param name the name of the lexeme
 	 * @param object the object that will represent the value of this lexeme at this parsing stage
 	 * @param grammarLength the length in the grammar, must be greater or equal than one
+	 * @return a boolean indicating if the call was successful or not
 	 * @throws ESLIFException if the interface failed
 	 */
-	public synchronized void lexemeAlternative(String name, Object object, int grammarLength) throws ESLIFException {
-		jniLexemeAlternative(name, object, grammarLength);
+	public synchronized boolean lexemeAlternative(String name, Object object, int grammarLength) throws ESLIFException {
+		return jniLexemeAlternative(name, object, grammarLength);
 	}
 	
 	/**
@@ -174,10 +176,11 @@ public class ESLIFRecognizer {
 	 * This method can generate events.
 	 * 
 	 * @param length the number of bytes consumed by the latest set of alternatives
+	 * @return a boolean indicating if the call was successful or not
 	 * @throws ESLIFException if the interface failed
 	 */
-	public synchronized void lexemeComplete(int length) throws ESLIFException {
-		jniLexemeComplete(length);
+	public synchronized boolean lexemeComplete(int length) throws ESLIFException {
+		return jniLexemeComplete(length);
 	}
 	
 	/**
@@ -188,10 +191,11 @@ public class ESLIFRecognizer {
 	 * @param object the object that will represent the value of this lexeme at this parsing stage
 	 * @param grammarLength the length in the grammar, must be greater or equal than one
 	 * @param length the number of bytes consumed by the latest set of alternatives
+	 * @return a boolean indicating if the call was successful or not
 	 * @throws ESLIFException if the interface failed
 	 */
-	public synchronized void lexemeRead(String name, Object object, int grammarLength, int length) throws ESLIFException {
-		jniLexemeRead(name, object, grammarLength, length);
+	public synchronized boolean lexemeRead(String name, Object object, int grammarLength, int length) throws ESLIFException {
+		return jniLexemeRead(name, object, grammarLength, length);
 	}
 	
 	/**
@@ -275,12 +279,12 @@ public class ESLIFRecognizer {
 	}
 
 	/**
-	 * Forces the recognizer to read more data. This is usually, the recognizer interface being called automatically whenever needed
+	 * Forces the recognizer to read more data. Usually, the recognizer interface is called automatically whenever needed
 	 * 
-	 * @return the current internal recognizer buffer after read completion, at the pointer where resume() would start
+	 * @return a boolean value indicating success or not
 	 * @throws ESLIFException if the interface failed
 	 */
-	public synchronized byte[] read() throws ESLIFException {
+	public synchronized boolean read() throws ESLIFException {
 		return jniRead();
 	}
 

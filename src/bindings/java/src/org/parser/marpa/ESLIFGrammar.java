@@ -33,7 +33,7 @@ public class ESLIFGrammar {
 	private native String  jniRuleShowByLevel(int level, int rule) throws ESLIFException;
 	private native String  jniShow() throws ESLIFException;
 	private native String  jniShowByLevel(int level) throws ESLIFException;
-	private native void    jniParse(ESLIFRecognizerInterface recognizerInterface, ESLIFValueInterface valueInterface) throws ESLIFException;
+	private native boolean jniParse(ESLIFRecognizerInterface recognizerInterface, ESLIFValueInterface valueInterface) throws ESLIFException;
 	/*
 	 * ********************************************
 	 * Public methods
@@ -179,22 +179,22 @@ public class ESLIFGrammar {
 	}
 	/**
 	 * Short version of input validation and valuation, that will never give back control to the user until the end or a failure.
-	 * No event is possible when using this method.
+	 * No event is possible when using this method. If this method returns true, then it is guaranteed that the result is in
+	 * valueInterface.getResult().
 	 * 
 	 * @param recognizerInterface the recognizer interface, must not be null
 	 * @param valueInterface the value interface, must not be null
 	 * @return a boolean indicating if the parse was successful or not
 	 * @throws Exception if the interface failed
 	 */
-	public synchronized Object parse(ESLIFRecognizerInterface recognizerInterface, ESLIFValueInterface valueInterface) throws Exception {
+	public synchronized boolean parse(ESLIFRecognizerInterface recognizerInterface, ESLIFValueInterface valueInterface) throws Exception {
 		if (recognizerInterface == null) {
 			throw new Exception("recognizerInterface must not be null");
 		}
 		if (valueInterface == null) {
 			throw new Exception("valueInterface must not be null");
 		}
-		jniParse(recognizerInterface, valueInterface);
-		return valueInterface.getResult();
+		return jniParse(recognizerInterface, valueInterface);
 	}
 	/*
 	 * ********************************************
