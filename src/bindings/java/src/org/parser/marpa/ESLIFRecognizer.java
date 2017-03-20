@@ -125,6 +125,7 @@ public class ESLIFRecognizer {
 	 * Events can be generate after resume completion.
 	 * 
 	 * @param deltaLength the number of bytes to skip before resume goes on, must be positive or greater than 0
+	 * @return a boolean indicating if the call was successful or not
 	 * @throws ESLIFException if the interface failed
 	 */
 	public synchronized boolean resume(int deltaLength) throws ESLIFException {
