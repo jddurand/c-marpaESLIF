@@ -1666,7 +1666,6 @@ JNIEXPORT jboolean JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniScan(JNIEnv 
   short                   initialEventsb = (initialEvents == JNI_TRUE);
   short                   continueb;
   short                   exhaustedb;
-  jboolean                rcb;
 
   if (! ESLIFRecognizer_contextb(envp, eslifRecognizerp, eslifRecognizerp, MARPAESLIF_ESLIFRECOGNIZER_CLASS_getLoggerInterfacep_METHODP,
                                  NULL /* genericLoggerpp */,
@@ -2117,7 +2116,6 @@ JNIEXPORT jboolean JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniRead(JNIEnv 
 {
   static const char      *funcs = "Java_org_parser_marpa_ESLIFRecognizer_jniRead";
   marpaESLIFRecognizer_t *marpaESLIFRecognizerp;
-  jboolean                rcb;
 
   if (! ESLIFRecognizer_contextb(envp, eslifRecognizerp, eslifRecognizerp, MARPAESLIF_ESLIFRECOGNIZER_CLASS_getLoggerInterfacep_METHODP,
                                  NULL /* genericLoggerpp */,
