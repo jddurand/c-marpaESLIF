@@ -81,7 +81,10 @@ public class AppParse  {
 				"5 ** (2 / 3)",
 				"1 + ( 2 + ( 3 + ( 4 + 5) )",
 				"1 + ( 2 + ( 3 + ( 4 + 50) ) )   /* comment after */",
-				" 100"
+				" 100",
+				"not scannable at all",
+				"100\nsecond line not scannable",
+				"100 * /* incomplete */"
 				};
 
 		/*
@@ -116,66 +119,69 @@ public class AppParse  {
 			eslifLogger.info("Testing scan()/resume() on " + string);
 			eslifLogger.info("***********************************************************");
 			eslifLogger.info("");
-			try {
-				if (doScan(eslifLogger, eslifRecognizer, true)) {
+			if (doScan(eslifLogger, eslifRecognizer, true)) {
 
-					if (! eslifRecognizer.isEof()) {
-						if (! eslifRecognizer.read()) {
-							break;
-						}
-						showRecognizerInput("after read", eslifLogger, eslifRecognizer);
+				if (! eslifRecognizer.isEof()) {
+					if (! eslifRecognizer.read()) {
+						break;
 					}
-					if (i == 0) {
-						eslifRecognizer.progressLog(-1, -1, ESLIFLoggerLevel.get(ESLIFLoggerLevel.NOTICE.getCode()));
-					}
-					int j = 0;
-					while (eslifRecognizer.isCanContinue()) {
-						if (! doResume(eslifLogger, eslifRecognizer, 0)) {
-							break;
-						}
-	
-						ESLIFEvent[] events = eslifRecognizer.events();
-						if (events != null) {
-							for (int k = 0; k < events.length; k++) {
-								ESLIFEvent event = events[k];
-							    if ("^NUMBER".equals(event.getEvent())) {
-							    	//
-							    	// Recognizer will wait forever if we do not feed the number
-							    	//
-									byte[] bytes = eslifRecognizer.lexemeLastPause("NUMBER");
-									if (bytes == null) {
-										throw new Exception("Pause before on NUMBER but no pause information!");
-									}
-									if (! doLexemeRead(eslifLogger, eslifRecognizer, "NUMBER", j, bytes)) {
-										throw new Exception("NUMBER expected but reading such lexeme fails!");
-									}
-									doDiscardTry(eslifLogger, eslifRecognizer);
-									doLexemeTry(eslifLogger, eslifRecognizer, "WHITESPACES");
-									doLexemeTry(eslifLogger, eslifRecognizer, "whitespaces");
-							    }
-							}
-						}
-						if (j == 0) {
-							changeEventState("Loop No " + j, eslifLogger, eslifRecognizer, "Expression", ESLIFEventType.PREDICTED, false);
-							changeEventState("Loop No " + j, eslifLogger, eslifRecognizer, "whitespaces", ESLIFEventType.DISCARD, false);
-							changeEventState("Loop No " + j, eslifLogger, eslifRecognizer, "NUMBER", ESLIFEventType.AFTER, false);
-						}
-						showLastCompletion("Loop No " + j, eslifLogger, eslifRecognizer, "Expression", string);
-						showLastCompletion("Loop No " + j, eslifLogger, eslifRecognizer, "Number", string);
-						j++;
-					}
-					// Thread.sleep(10000);
-					AppValue eslifAppValue = new AppValue();
-					eslifLogger.info("Testing value() on " + string);
-					ESLIFValue value = new ESLIFValue(eslifRecognizer, eslifAppValue);
-					while (value.value()) {
-						Object result = eslifAppValue.getResult();
-						eslifLogger.info("Result: " + result);
-					}
-					value.free();
+					showRecognizerInput("after read", eslifLogger, eslifRecognizer);
 				}
-			} catch (Exception e) {
-				eslifLogger.error("Exception: " + e);
+				if (i == 0) {
+					eslifRecognizer.progressLog(-1, -1, ESLIFLoggerLevel.get(ESLIFLoggerLevel.NOTICE.getCode()));
+				}
+				int j = 0;
+				while (eslifRecognizer.isCanContinue()) {
+					if (! doResume(eslifLogger, eslifRecognizer, 0)) {
+						break;
+					}
+
+					ESLIFEvent[] events = eslifRecognizer.events();
+					if (events != null) {
+						for (int k = 0; k < events.length; k++) {
+							ESLIFEvent event = events[k];
+						    if ("^NUMBER".equals(event.getEvent())) {
+						    	//
+						    	// Recognizer will wait forever if we do not feed the number
+						    	//
+								byte[] bytes = eslifRecognizer.lexemeLastPause("NUMBER");
+								if (bytes == null) {
+									throw new Exception("Pause before on NUMBER but no pause information!");
+								}
+								if (! doLexemeRead(eslifLogger, eslifRecognizer, "NUMBER", j, bytes)) {
+									throw new Exception("NUMBER expected but reading such lexeme fails!");
+								}
+								doDiscardTry(eslifLogger, eslifRecognizer);
+								doLexemeTry(eslifLogger, eslifRecognizer, "WHITESPACES");
+								doLexemeTry(eslifLogger, eslifRecognizer, "whitespaces");
+						    }
+						}
+					}
+					if (j == 0) {
+						changeEventState("Loop No " + j, eslifLogger, eslifRecognizer, "Expression", ESLIFEventType.PREDICTED, false);
+						changeEventState("Loop No " + j, eslifLogger, eslifRecognizer, "whitespaces", ESLIFEventType.DISCARD, false);
+						changeEventState("Loop No " + j, eslifLogger, eslifRecognizer, "NUMBER", ESLIFEventType.AFTER, false);
+					}
+					showLastCompletion("Loop No " + j, eslifLogger, eslifRecognizer, "Expression", string);
+					showLastCompletion("Loop No " + j, eslifLogger, eslifRecognizer, "Number", string);
+					j++;
+				}
+				if (! eslifRecognizer.isExhausted()) {
+					eslifLogger.warning("Parsing is not exhausted - skipping valuation");
+				} else {
+					try {
+						AppValue eslifAppValue = new AppValue();
+						eslifLogger.info("Testing value() on " + string);
+						ESLIFValue value = new ESLIFValue(eslifRecognizer, eslifAppValue);
+						while (value.value()) {
+							Object result = eslifAppValue.getResult();
+							eslifLogger.info("Result: " + result);
+						}
+						value.free();
+					} catch (Exception e){
+						eslifLogger.error("Cannot value the input" + e);
+					}
+				}
 			}
 			eslifRecognizer.free();
 		}
