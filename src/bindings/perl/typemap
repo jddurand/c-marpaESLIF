@@ -7,8 +7,7 @@ MarpaX_ESLIF_Value      T_PTROBJ_SPECIAL
 INPUT
 T_PTROBJ_SPECIAL
     if (sv_derived_from($arg, \"${(my $ntt=$ntype)=~s/_/::/g; \$ntt}\")) {
-        IV tmp = SvIV((SV*)SvRV($arg));
-        $var = ($type) tmp;
+        $var = INT2PTR($type, SvIV((SV*)SvRV($arg)));
     } else if ($arg == &PL_sv_undef) {
 	$var = ($type)NULL;
     } else {
