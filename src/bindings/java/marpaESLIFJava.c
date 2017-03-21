@@ -104,7 +104,7 @@ typedef struct marpaESLIFValueContext {
   size_t                         methodCacheSizel;
   jmethodID                      methodp;                      /* Current resolved method ID */
   char                          *actions;                      /* shallow copy of last resolved name */
-  genericStack_t                *stackp;                       /* Stack of objects */
+  genericStack_t                *objectStackp;                 /* Stack of objects */
   marpaESLIFRecognizerContext_t *marpaESLIFRecognizerContextp; /* Shallow copy of associated recognizer context */
 } marpaESLIFValueContext_t;
 
@@ -1275,14 +1275,14 @@ JNIEXPORT jboolean JNICALL Java_org_parser_marpa_ESLIFGrammar_jniParse(JNIEnv *e
   }
   indicei = marpaESLIFValueResult.u.i;
 
-  if (! GENERICSTACK_IS_PTR(marpaESLIFValueContext.stackp, indicei)) {
-    RAISEEXCEPTIONF(envp, "marpaESLIFValueResult.stackp[%d] is not PTR (found %d)", indicei, GENERICSTACKITEMTYPE(marpaESLIFValueContext.stackp, indicei));
+  if (! GENERICSTACK_IS_PTR(marpaESLIFValueContext.objectStackp, indicei)) {
+    RAISEEXCEPTIONF(envp, "marpaESLIFValueResult.objectStackp[%d] is not PTR (found %d)", indicei, GENERICSTACKITEMTYPE(marpaESLIFValueContext.objectStackp, indicei));
   }
 
-  result = GENERICSTACK_GET_PTR(marpaESLIFValueContext.stackp, indicei);
+  result = GENERICSTACK_GET_PTR(marpaESLIFValueContext.objectStackp, indicei);
   /* We do NOT want this reference to be destroyed */
-  GENERICSTACK_SET_NA(marpaESLIFValueContext.stackp, indicei);
-  if (GENERICSTACK_ERROR(marpaESLIFValueContext.stackp)) {
+  GENERICSTACK_SET_NA(marpaESLIFValueContext.objectStackp, indicei);
+  if (GENERICSTACK_ERROR(marpaESLIFValueContext.objectStackp)) {
     /* We do not want a double free of result, c.f. the call to marpaESLIFValueContextFree() */
     RAISEEXCEPTIONF(envp, "Stack set failure, %s", strerror(errno));
   }
@@ -1776,7 +1776,7 @@ JNIEXPORT jboolean JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniLexemeAltern
     }
   }
 
-  /* Our user-defined value is the indice in marpaESLIFRecognizerContextp->objectStackp */
+  /* We maintain lifetime of this object */
   if (objectp != NULL) {
     /* It has to survive the JNI calls */
     globalObjectp = (*envp)->NewGlobalRef(envp, objectp);
@@ -1895,7 +1895,7 @@ JNIEXPORT jboolean JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniLexemeRead(J
     }
   }
 
-  /* Our user-defined value is the indice in marpaESLIFRecognizerContextp->objectStackp */
+  /* We maintain lifetime of this object */
   if (objectp != NULL) {
     /* It has to survive the JNI calls */
     globalObjectp = (*envp)->NewGlobalRef(envp, objectp);
@@ -2874,14 +2874,14 @@ JNIEXPORT jboolean JNICALL Java_org_parser_marpa_ESLIFValue_jniValue(JNIEnv *env
     }
     indicei = marpaESLIFValueResult.u.i;
 
-    if (! GENERICSTACK_IS_PTR(marpaESLIFValueContextp->stackp, indicei)) {
-      RAISEEXCEPTIONF(envp, "marpaESLIFValueResultp->stackp[%d] is not PTR (found %d)", indicei, GENERICSTACKITEMTYPE(marpaESLIFValueContextp->stackp, indicei));
+    if (! GENERICSTACK_IS_PTR(marpaESLIFValueContextp->objectStackp, indicei)) {
+      RAISEEXCEPTIONF(envp, "marpaESLIFValueResultp->objectStackp[%d] is not PTR (found %d)", indicei, GENERICSTACKITEMTYPE(marpaESLIFValueContextp->objectStackp, indicei));
     }
 
-    result = GENERICSTACK_GET_PTR(marpaESLIFValueContextp->stackp, indicei);
+    result = GENERICSTACK_GET_PTR(marpaESLIFValueContextp->objectStackp, indicei);
     /* We do NOT want this reference to be destroyed */
-    GENERICSTACK_SET_NA(marpaESLIFValueContextp->stackp, indicei);
-    if (GENERICSTACK_ERROR(marpaESLIFValueContextp->stackp)) {
+    GENERICSTACK_SET_NA(marpaESLIFValueContextp->objectStackp, indicei);
+    if (GENERICSTACK_ERROR(marpaESLIFValueContextp->objectStackp)) {
       /* We do not want a double free of result, c.f. the call to marpaESLIFValueContextFree() */
       RAISEEXCEPTIONF(envp, "Stack set failure, %s", strerror(errno));
     }
@@ -3043,7 +3043,7 @@ static short marpaESLIFValueRuleCallback(void *userDatavp, marpaESLIFValue_t *ma
   JNIEnv                        *envp;
   marpaESLIFValueContext_t      *marpaESLIFValueContextp      = (marpaESLIFValueContext_t *) userDatavp;
   marpaESLIFRecognizerContext_t *marpaESLIFRecognizerContextp = marpaESLIFValueContextp->marpaESLIFRecognizerContextp;
-  genericStack_t                *stackp                       = marpaESLIFValueContextp->stackp;
+  genericStack_t                *objectStackp                 = marpaESLIFValueContextp->objectStackp;
   jobjectArray                   list                         = NULL;
   jobject                        actionResult                 = NULL;
   jobject                        actionResultGlobalRef        = NULL;
@@ -3088,7 +3088,7 @@ static short marpaESLIFValueRuleCallback(void *userDatavp, marpaESLIFValue_t *ma
         if (! marpaESLIFValue_stack_get_intb(marpaESLIFValuep, i, &contexti, &indicei)) {
           RAISEEXCEPTION(envp, "marpaESLIFValue_stack_get_intb failure");
         }
-        objectp = (jobject) GENERICSTACK_GET_PTR(stackp, indicei);
+        objectp = (jobject) GENERICSTACK_GET_PTR(objectStackp, indicei);
         /* This is an object created by the user interface, that we globalized */
         (*envp)->SetObjectArrayElement(envp, list, i - arg0i, objectp);
         if (HAVEEXCEPTION(envp)) {
@@ -3149,13 +3149,13 @@ static short marpaESLIFValueRuleCallback(void *userDatavp, marpaESLIFValue_t *ma
   }
 
   /* Remember the global ref */
-  GENERICSTACK_PUSH_PTR(stackp, actionResultGlobalRef);
-  if (GENERICSTACK_ERROR(stackp)) {
+  GENERICSTACK_PUSH_PTR(objectStackp, actionResultGlobalRef);
+  if (GENERICSTACK_ERROR(objectStackp)) {
     RAISEEXCEPTIONF(envp, "Stack push failure, %s", strerror(errno));
   }
 
   /* shallowb to a true value is very important because we get independant of an eventual free-action in the grammar */
-  rcb =  marpaESLIFValue_stack_set_intb(marpaESLIFValuep, resulti, 1 /* context: any value != 0 */, GENERICSTACK_USED(stackp) - 1);
+  rcb =  marpaESLIFValue_stack_set_intb(marpaESLIFValuep, resulti, 1 /* context: any value != 0 */, GENERICSTACK_USED(objectStackp) - 1);
   if (! rcb) {
     RAISEEXCEPTION(envp, "marpaESLIFValue_stack_set_intb failure");
   }
@@ -3196,8 +3196,7 @@ static short marpaESLIFValueSymbolCallback(void *userDatavp, marpaESLIFValue_t *
   static const char             *funcs = "marpaESLIFValueSymbolCallback";
   JNIEnv                        *envp;
   marpaESLIFValueContext_t      *marpaESLIFValueContextp      = (marpaESLIFValueContext_t *) userDatavp;
-  marpaESLIFRecognizerContext_t *marpaESLIFRecognizerContextp = marpaESLIFValueContextp->marpaESLIFRecognizerContextp;
-  genericStack_t                *stackp                       = marpaESLIFRecognizerContextp->objectStackp;
+  genericStack_t                *objectStackp                 = marpaESLIFValueContextp->objectStackp;
   jobject                        byteBuffer                   = NULL;
   jobject                        actionResult                 = NULL;
   jobject                        actionResultGlobalRef        = NULL;
@@ -3240,13 +3239,13 @@ static short marpaESLIFValueSymbolCallback(void *userDatavp, marpaESLIFValue_t *
   }
 
   /* Remember the global ref */
-  GENERICSTACK_PUSH_PTR(stackp, actionResultGlobalRef);
-  if (GENERICSTACK_ERROR(stackp)) {
+  GENERICSTACK_PUSH_PTR(objectStackp, actionResultGlobalRef);
+  if (GENERICSTACK_ERROR(objectStackp)) {
     RAISEEXCEPTIONF(envp, "Stack push failure, %s", strerror(errno));
   }
 
   /* shallowb to a true value is very important because we get independant of an eventual free-action in the grammar */
-  rcb =  marpaESLIFValue_stack_set_intb(marpaESLIFValuep, resulti, 1 /* context: any value != 0 */, GENERICSTACK_USED(stackp) - 1);
+  rcb =  marpaESLIFValue_stack_set_intb(marpaESLIFValuep, resulti, 1 /* context: any value != 0 */, GENERICSTACK_USED(objectStackp) - 1);
   if (! rcb) {
     RAISEEXCEPTION(envp, "marpaESLIFValue_stack_set_intb failure");
   }
@@ -3383,8 +3382,8 @@ static void marpaESLIFValueContextFree(JNIEnv *envp, marpaESLIFValueContext_t *m
       }
       free(marpaESLIFValueContextp->methodCachep);
     }
-    if (marpaESLIFValueContextp->stackp != NULL) {
-      GENERICSTACK_FREE(marpaESLIFValueContextp->stackp);
+    if (marpaESLIFValueContextp->objectStackp != NULL) {
+      GENERICSTACK_FREE(marpaESLIFValueContextp->objectStackp);
     }
     if (! onStackb) {
       free(marpaESLIFValueContextp);
@@ -3396,23 +3395,23 @@ static void marpaESLIFValueContextFree(JNIEnv *envp, marpaESLIFValueContext_t *m
 static void marpaESLIFValueContextCleanup(JNIEnv *envp, marpaESLIFValueContext_t *marpaESLIFValueContextp)
 /*****************************************************************************/
 {
-  genericStack_t          *stackp;
-  jobject                  objectp;
-  int                      i; 
+  genericStack_t *objectStackp;
+  jobject         objectp;
+  int             i; 
 
   if (marpaESLIFValueContextp != NULL) {
-    stackp = marpaESLIFValueContextp->stackp;
-    if (stackp != NULL) {
+    objectStackp = marpaESLIFValueContextp->objectStackp;
+    if (objectStackp != NULL) {
       /* It is important to removed global references in the reverse order of their creation */
-      while (GENERICSTACK_USED(stackp) > 0) {
-        i = GENERICSTACK_USED(stackp) - 1;
-        if (GENERICSTACK_IS_PTR(stackp, i)) {
-          objectp = GENERICSTACK_POP_PTR(stackp);
+      while (GENERICSTACK_USED(objectStackp) > 0) {
+        i = GENERICSTACK_USED(objectStackp) - 1;
+        if (GENERICSTACK_IS_PTR(objectStackp, i)) {
+          objectp = GENERICSTACK_POP_PTR(objectStackp);
           if (objectp != NULL) {
             (*envp)->DeleteGlobalRef(envp, objectp);
           }
         } else {
-          GENERICSTACK_USED(stackp)--;
+          GENERICSTACK_USED(objectStackp)--;
         }
       }
     }
@@ -3425,22 +3424,22 @@ static void marpaESLIFRecognizerContextFree(JNIEnv *envp, marpaESLIFRecognizerCo
 {
   int             i;
   jobject         objectp;
-  genericStack_t *stackp;
+  genericStack_t *objectStackp;
 
   if (marpaESLIFRecognizerContextp != NULL) {
     marpaESLIFRecognizerContextCleanup(envp, marpaESLIFRecognizerContextp);
-    stackp = marpaESLIFRecognizerContextp->objectStackp;
-    if (stackp != NULL) {
+    objectStackp = marpaESLIFRecognizerContextp->objectStackp;
+    if (objectStackp != NULL) {
       /* It is important to delete global references in the reverse order of their creation */
-      while (GENERICSTACK_USED(stackp) > 0) {
-        i = GENERICSTACK_USED(stackp) - 1;
-        if (GENERICSTACK_IS_PTR(stackp, i)) {
-          objectp = (jobject) GENERICSTACK_POP_PTR(stackp);
+      while (GENERICSTACK_USED(objectStackp) > 0) {
+        i = GENERICSTACK_USED(objectStackp) - 1;
+        if (GENERICSTACK_IS_PTR(objectStackp, i)) {
+          objectp = (jobject) GENERICSTACK_POP_PTR(objectStackp);
           if (objectp != NULL) {
             (*envp)->DeleteGlobalRef(envp, objectp);
           }
         } else {
-          GENERICSTACK_USED(stackp)--;
+          GENERICSTACK_USED(objectStackp)--;
         }
       }
     }
@@ -3488,7 +3487,7 @@ static short marpaESLIFValueContextInit(JNIEnv *envp, jobject eslifValueInterfac
   marpaESLIFValueContextp->methodCacheSizel               = 0;
   marpaESLIFValueContextp->methodp                        = 0;
   marpaESLIFValueContextp->actions                        = NULL;
-  marpaESLIFValueContextp->stackp                         = NULL;
+  marpaESLIFValueContextp->objectStackp                   = NULL;
   marpaESLIFValueContextp->marpaESLIFRecognizerContextp   = marpaESLIFRecognizerContextp;
 
   /* For run-time resolving of actions we need current jclass */
@@ -3520,8 +3519,8 @@ static short marpaESLIFValueContextInit(JNIEnv *envp, jobject eslifValueInterfac
     RAISEEXCEPTION(envp, "NewGlobalRef failure");
   }
 
-  GENERICSTACK_NEW(marpaESLIFValueContextp->stackp);
-  if (GENERICSTACK_ERROR(marpaESLIFValueContextp->stackp)) {
+  GENERICSTACK_NEW(marpaESLIFValueContextp->objectStackp);
+  if (GENERICSTACK_ERROR(marpaESLIFValueContextp->objectStackp)) {
     RAISEEXCEPTIONF(envp, "Stack initialization failure, %s", strerror(errno));
   }
 
