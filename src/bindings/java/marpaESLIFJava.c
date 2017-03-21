@@ -3154,7 +3154,6 @@ static short marpaESLIFValueRuleCallback(void *userDatavp, marpaESLIFValue_t *ma
     RAISEEXCEPTIONF(envp, "Stack push failure, %s", strerror(errno));
   }
 
-  /* shallowb to a true value is very important because we get independant of an eventual free-action in the grammar */
   rcb =  marpaESLIFValue_stack_set_intb(marpaESLIFValuep, resulti, 1 /* context: any value != 0 */, GENERICSTACK_USED(objectStackp) - 1);
   if (! rcb) {
     RAISEEXCEPTION(envp, "marpaESLIFValue_stack_set_intb failure");
