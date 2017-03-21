@@ -25,8 +25,9 @@ ESLIF events are mapped to constants. This module is giving access to them.
 
 =cut
 
-use vars qw/$VERSION/;
 use Carp qw/croak/;
+
+# VERSION
 
 # This section should be replaced on-the-fly at build time
 # AUTOLOAD
