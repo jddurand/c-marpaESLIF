@@ -7,6 +7,44 @@
 #include <genericStack.h>
 #include <stdio.h>
 
+#include "c-constant-types.inc"
+#include "c-event-types.inc"
+#include "c-value-types.inc"
+
+/* Just painful: perl does overwrite malloc() and free(), but not calloc... */
+#ifndef calloc
+/*  t* p = calloc(n, s)            Newxz(p, n, t) */
+#define calloc(n, s) marpaESLIF_calloc(n, s)
+static void *marpaESLIF_calloc(size_t n, size_t s) {
+  void *p;
+  Newxz(p, n, void);
+  return p;
+}
+#endif
+
+#ifndef malloc
+/* t* p = malloc(n)               Newx(p, n, t) */
+#define malloc(s) marpaESLIF_malloc(s)
+static void *marpaESLIF_malloc(size_t s) {
+  void *p;
+  Newx(p, n, void);
+  return p;
+}
+#endif
+
+#ifndef realloc
+#define realloc(p, s) marpaESLIF_realloc(p, s)
+/* p = realloc(p, s)              Renew(p, s, t)      */
+static void *marpaESLIF_realloc(void *p, size_t s) {
+  Renew(p, s, void);
+  return p;
+}
+#endif
+
+#ifndef free
+#define free(p) Safefree(p)
+#endif
+
 /* ESLIF context */
 typedef struct MarpaX_ESLIF {
   SV              *Perl_loggerInterfacep;
@@ -169,8 +207,9 @@ static SV *marpaESLIF_canp(pTHX_ SV *sv, char *method) {
   SAVETMPS;
 
   PUSHMARK(SP);
-  XPUSHs(sv);
-  XPUSHs(newSVpv(method, 0));
+  EXTEND(SP, 2);
+  PUSHs(sv_2mortal(newSVsv(sv)));
+  PUSHs(sv_2mortal(newSVpv(method, 0)));
   PUTBACK;
 
   call_pv("UNIVERSAL::can", G_SCALAR);
@@ -197,9 +236,9 @@ static void marpaESLIF_call_methodv(pTHX_ SV *svp, char *methods, SV *argsvp) {
 
   PUSHMARK(SP);
   EXTEND(SP, 1 + ((argsvp != NULL) ? 1 : 0));
-  PUSHs(svp);
+  PUSHs(sv_2mortal(newSVsv(svp)));
   if (argsvp != NULL) {
-    PUSHs(argsvp);
+    PUSHs(sv_2mortal(newSVsv(argsvp)));
   }
   PUTBACK;
 
@@ -231,7 +270,7 @@ static SV *marpaESLIF_call_actionp(pTHX_ SV *svp, char *methods, AV *avp) {
 
   PUSHMARK(SP);
   EXTEND(SP, 1 + avsizel);
-  PUSHs(svp);
+  PUSHs(sv_2mortal(newSVsv(svp)));
   for (aviteratol = 0; aviteratol < avsizel; aviteratol++) {
     SV **svpp = av_fetch(avp, aviteratol, 0); /* We manage ourself the avp, SV's are real */
     if (svpp == NULL) {
@@ -266,7 +305,7 @@ static IV marpaESLIF_call_methodi(pTHX_ SV *svp, char *methods) {
 
   PUSHMARK(SP);
   EXTEND(SP, 1);
-  PUSHs(svp);
+  PUSHs(sv_2mortal(newSVsv(svp)));
   PUTBACK;
 
   call_method(methods, G_SCALAR);
@@ -294,7 +333,7 @@ static short marpaESLIF_call_methodb(pTHX_ SV *svp, char *methods) {
 
   PUSHMARK(SP);
   EXTEND(SP, 1);
-  PUSHs(svp);
+  PUSHs(sv_2mortal(newSVsv(svp)));
   PUTBACK;
 
   call_method(methods, G_SCALAR);
@@ -340,7 +379,7 @@ static void marpaESLIF_genericLoggerCallbackv(void *userDatavp, genericLoggerLev
 
     PUSHMARK(SP);
     EXTEND(SP, 2);
-    PUSHs(Perl_loggerInterfacep);
+    PUSHs(sv_2mortal(newSVsv(Perl_loggerInterfacep)));
     PUSHs(sv_2mortal(newSVpv(msgs,0)));
     PUTBACK;
 
@@ -686,7 +725,6 @@ static void marpaESLIF_valueContextInit(pTHX_ SV *Perl_valueInterfacep, marpaESL
   if (GENERICSTACK_ERROR(marpaESLIFValueContextp->svStackp)) {
     MARPAESLIF_CROAKF("Stack initialization failure, %s", strerror(errno));
   }
-
 }
 
 /* ----------------------------------- */
@@ -1343,3 +1381,40 @@ CODE:
   RETVAL = marpaESLIFRecognizerContextp;
 OUTPUT:
   RETVAL
+
+=for comment
+  /* ======================================================================= */
+  /* MarpaX::ESLIF::Event::Type                                              */
+  /* ======================================================================= */
+=cut
+
+MODULE = MarpaX::ESLIF            PACKAGE = MarpaX::ESLIF::Event::Type
+
+PROTOTYPES: ENABLE
+
+=for comment
+  /* ----------------------------------------------------------------------- */
+  /* MarpaX::ESLIF::Event::constant                                          */
+  /* ----------------------------------------------------------------------- */
+=cut
+
+INCLUDE: xs-event-types.inc
+
+=for comment
+  /* ======================================================================= */
+  /* MarpaX::ESLIF::Value::Type                                              */
+  /* ======================================================================= */
+=cut
+
+MODULE = MarpaX::ESLIF            PACKAGE = MarpaX::ESLIF::Value::Type
+
+PROTOTYPES: ENABLE
+
+
+=for comment
+  /* ----------------------------------------------------------------------- */
+  /* MarpaX::ESLIF::Value::constant                                          */
+  /* ----------------------------------------------------------------------- */
+=cut
+
+INCLUDE: xs-value-types.inc
