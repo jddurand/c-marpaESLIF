@@ -28,14 +28,8 @@ ESLIF values are mapped to constants. This module is giving access to them.
 
 =cut
 
-require XSLoader;
 use vars qw/$VERSION/;
-
-BEGIN {
-    # VERSION
-
-    XSLoader::load __PACKAGE__, $VERSION;
-}
+use Carp qw/croak/;
 
 # This section should be replaced on-the-fly at build time
 # AUTOLOAD
