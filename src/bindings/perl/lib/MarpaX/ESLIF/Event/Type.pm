@@ -34,4 +34,7 @@ BEGIN {
     XSLoader::load __PACKAGE__, $VERSION;
 }
 
+# This section should be replaced on-the-fly at build time
+# AUTOLOAD
+
 1;
