@@ -11,50 +11,58 @@ sub new {
 
 sub read {
     my $self = shift;
-    $self->{log}->trace("read");
-    $self->{line} = readline($self->{fh});
+    my $line = $self->{line} = readline($self->{fh});
+    $self->{log}->tracef("read => $line");
+    return;
 }
 
 sub isEof {
     my $self = shift;
-    $self->{log}->trace("isEof");
-    return eof($self->{fh});
+    my $isEof = eof($self->{fh});
+    $self->{log}->tracef("isEof => %s", $isEof);
+    return $isEof;
 }
 
 sub isCharacterStream {
     my ($self) = @_;
-    $self->{log}->trace("isCharacterStream");
-    return 1;
+    my $isCharacterStream = 1;
+    $self->{log}->tracef("isCharacterStream => %s", $isCharacterStream);
+    return $isCharacterStream;
 }
 
 sub encoding {
-    my ($self) = @_;
-    $self->{log}->trace("encoding");
-    return;
+  my ($self) = @_;
+  my $encoding = undef;
+  $self->{log}->tracef("encoding => %s", $encoding);
+  return $encoding;
 }
 
 sub data {
     my $self = shift;
-    $self->{log}->trace("data");
-    return $self->{line};
+    my $data = $self->{line};
+    $self->{log}->tracef("data => %s", $data);
+    return $data;
 }
 
 sub isWithDisableThreshold {
     my ($self) = @_;
-    $self->{log}->trace("isWithDisableThreshold");
-    return 0;
+    my $isWithDisableThreshold = 0;
+    $self->{log}->tracef("isWithDisableThreshold => %s", $isWithDisableThreshold);
+    return $isWithDisableThreshold;
 }
 
 sub isWithExhaustion {
     my ($self) = @_;
-    $self->{log}->trace("isWithExhaustion");
-    return 0;
+    my $isWithExhaustion = 0;
+    $self->{log}->tracef("isWithExhaustion => %s", $isWithExhaustion);
+    return $isWithExhaustion;
 }
 
 sub isWithNewline {
     my ($self) = @_;
-    $self->{log}->trace("isWithNewline");
-    return 1;
+    my $isWithNewline = 1;
+    $self->{log}->tracef("isWithNewline = %s", $isWithNewline);
+    return $isWithNewline;
 }
 
 package MyValue;
@@ -71,18 +79,17 @@ sub new {
 
     return bless { result => undef, log => $log }, $pkg;
 }
-	
+
 sub do_int {
     my ($self, $number) = @_;
 
-    $self->{log}->tracef("do_int(%s)", $number);
-    return int($number);
+    my $do_int = int($number);
+    $self->{log}->tracef("do_int(%s) => %s", $number, $do_int);
+    return $do_int;
 }
 
 sub do_op {
     my ($self, $left, $op, $right) = @_;
-
-    $self->{log}->tracef("do_op(%s, %s, %s)", $left, $op, $right);
 
     my $result;
     if ($op eq '**') {
@@ -104,49 +111,57 @@ sub do_op {
         croak "Unsupported op $op";
     }
 
+    $self->{log}->tracef("do_op(%s, %s, %s) => %s", $left, $op, $right, $result);
     return $result;
 }
 
 sub isWithHighRankOnly {
     my ($self) = @_;
-    $self->{log}->trace("isWithHighRankOnly");
-    return 1;
+    my $isWithHighRankOnly = 1;
+    $self->{log}->tracef("isWithHighRankOnly => %s");
+    return $isWithHighRankOnly;
 }
 
 sub isWithOrderByRank {
     my ($self) = @_;
-    $self->{log}->trace("isWithOrderByRank");
-    return 1;
+    my $isWithOrderByRank = 1;
+    $self->{log}->tracef("isWithOrderByRank => %s", $isWithOrderByRank);
+    return $isWithOrderByRank;
 }
 
 sub isWithAmbiguous {
     my ($self) = @_;
-    $self->{log}->trace("isWithAmbiguous");
-    return 0;
+    my $isWithAmbiguous = 0;
+    $self->{log}->tracef("isWithAmbiguous => %s", $isWithAmbiguous);
+    return $isWithAmbiguous;
 }
 
 sub isWithNull {
     my ($self) = @_;
-    $self->{log}->trace("isWithNull");
-    return 0;
+    my $isWithNull = 0;
+    $self->{log}->tracef("isWithNull => %s", $isWithNull);
+    return $isWithNull;
 }
 
 sub maxParses {
     my ($self) = @_;
-    $self->{log}->trace("maxParses");
-    return 0;
+    my $maxParses = 0;
+    $self->{log}->tracef("maxParses => %s", $maxParses);
+    return $maxParses;
 }
 
 sub getResult {
     my ($self) = @_;
-    $self->{log}->trace("result");
-    return $self->{result};
+    my $getResult = $self->{result};
+    $self->{log}->tracef("getResult => %s", $getResult);
+    return $getResult;
 }
 
 sub setResult {
     my ($self, $result) = @_;
     $self->{log}->tracef("setResult(%s)", $result);
     $self->{result} = $result;
+    return;
 }
 
 package main;
@@ -170,6 +185,22 @@ Log::Log4perl::init(\$defaultLog4perlConf);
 Log::Any::Adapter->set('Log4perl');
 
 BEGIN { require_ok('MarpaX::ESLIF') };
+BEGIN { require_ok('MarpaX::ESLIF::Event::Type') };
+BEGIN { require_ok('MarpaX::ESLIF::Value::Type') };
+
+#
+# Test Event constants
+#
+foreach (qw/MARPAESLIF_EVENTTYPE_NONE MARPAESLIF_EVENTTYPE_COMPLETED MARPAESLIF_EVENTTYPE_NULLED MARPAESLIF_EVENTTYPE_PREDICTED MARPAESLIF_EVENTTYPE_BEFORE MARPAESLIF_EVENTTYPE_AFTER MARPAESLIF_EVENTTYPE_EXHAUSTED MARPAESLIF_EVENTTYPE_DISCARD/) {
+  ok (defined(MarpaX::ESLIF::Event::Type->$_), "MarpaX::ESLIF::Event::Type->$_ is defined: " . MarpaX::ESLIF::Event::Type->$_);
+}
+
+#
+# Test Value constants
+#
+foreach (qw/MARPAESLIF_VALUE_TYPE_UNDEF MARPAESLIF_VALUE_TYPE_CHAR MARPAESLIF_VALUE_TYPE_SHORT MARPAESLIF_VALUE_TYPE_INT MARPAESLIF_VALUE_TYPE_LONG MARPAESLIF_VALUE_TYPE_FLOAT MARPAESLIF_VALUE_TYPE_DOUBLE MARPAESLIF_VALUE_TYPE_PTR MARPAESLIF_VALUE_TYPE_PTR_SHALLOW MARPAESLIF_VALUE_TYPE_ARRAY MARPAESLIF_VALUE_TYPE_ARRAY_SHALLOW/) {
+  ok (defined(MarpaX::ESLIF::Value::Type->$_), "MarpaX::ESLIF::Value::Type->$_ is defined: " . MarpaX::ESLIF::Value::Type->$_);
+}
 
 my $eslif = MarpaX::ESLIF->new($log);
 isa_ok($eslif, 'MarpaX::ESLIF');
@@ -185,48 +216,48 @@ ok($currentLevel >= 0, "Current level is >= 0");
 
 my $currentDescription = $eslifGrammar->currentDescription;
 ok($currentDescription ne '', "Current description is not empty");
-diag("Current Description: $currentDescription");
+diag($currentDescription);
 foreach my $level (0..$ngrammar-1) {
     my $descriptionByLevel = $eslifGrammar->descriptionByLevel($level);
     ok($descriptionByLevel ne '', "Description of level $level is not empty");
-    diag("Description of level $level: $descriptionByLevel");
+    diag($descriptionByLevel);
 }
 
 my $currentRuleIds = $eslifGrammar->currentRuleIds;
 ok($#{$currentRuleIds} >= 0, "Number of current rules is > 0");
-diag("Current Rule Ids: @{$currentRuleIds}");
+diag("@{$currentRuleIds}");
 foreach my $ruleId (0..$#{$currentRuleIds}) {
     my $ruleDisplay = $eslifGrammar->ruleDisplay($currentRuleIds->[$ruleId]);
     ok($ruleDisplay ne '', "Display of rule No " . $currentRuleIds->[$ruleId]);
-    diag("Display of rule No $ruleId: $ruleDisplay");
+    diag($ruleDisplay);
     my $ruleShow = $eslifGrammar->ruleShow($currentRuleIds->[$ruleId]);
     ok($ruleShow ne '', "Show of rule No " . $currentRuleIds->[$ruleId]);
-    diag("Show    of rule No $ruleId: $ruleShow");
+    diag($ruleShow);
 }
 
 foreach my $level (0..$ngrammar-1) {
     my $ruleIdsByLevel = $eslifGrammar->ruleIdsByLevel($level);
     ok($#{$ruleIdsByLevel} >= 0, "Number of rules at level $level is > 0");
-    diag("Rule Ids at level $level: @{$ruleIdsByLevel}");
+    diag("@{$ruleIdsByLevel}");
 
     foreach my $ruleId (0..$#{$ruleIdsByLevel}) {
         my $ruleDisplayByLevel = $eslifGrammar->ruleDisplayByLevel($level, $ruleIdsByLevel->[$ruleId]);
         ok($ruleDisplayByLevel ne '', "Display of rule No " . $ruleIdsByLevel->[$ruleId] . " of level $level");
-        diag("Display of rule No " . $ruleIdsByLevel->[$ruleId] . " of level $level: $ruleDisplayByLevel");
+        diag($ruleDisplayByLevel);
 
         my $ruleShowByLevel = $eslifGrammar->ruleShowByLevel($level, $ruleIdsByLevel->[$ruleId]);
         ok($ruleShowByLevel ne '', "Show of rule No " . $ruleIdsByLevel->[$ruleId] . " of level $level");
-        diag("Show    of rule No " . $ruleIdsByLevel->[$ruleId] . " of level $level: $ruleShowByLevel");
+        diag($ruleShowByLevel);
     }
 }
 
 my $show = $eslifGrammar->show;
 ok($show ne '', "Show of current grammar");
-diag("Show of current grammar:\n$show");
+diag($show);
 foreach my $level (0..$ngrammar-1) {
     my $showByLevel = $eslifGrammar->showByLevel($level);
     ok($show ne '', "Show of grammar at level $level");
-    diag("Show of grammar at level $level:\n$showByLevel");
+    diag($showByLevel);
 }
 
 my @strings = (
@@ -243,14 +274,18 @@ my @strings = (
     );
 
 for (my $i = 0; $i <= $#strings; $i++) {
-    my $string = $strings[$i];
+  my $string = $strings[$i];
 
-    $log->infof("Testing parse() on %s", $string);
-    my $recognizerInterface = MyRecognizer->new($string, $log);
-    my $valueInterface = MyValue->new($log);
-    if ($eslifGrammar->parse($recognizerInterface, $valueInterface)) {
-        $log->infof("Result: %s", $valueInterface->getResult);
-    }
+  $log->infof("Testing parse() on %s", $string);
+  my $recognizerInterface = MyRecognizer->new($string, $log);
+  my $valueInterface = MyValue->new($log);
+  if ($eslifGrammar->parse($recognizerInterface, $valueInterface)) {
+    my $result = $valueInterface->getResult;
+    $log->infof("Result: %s", $result);
+    diag("$string => $result");
+  } else {
+    diag("$string => <undef>");
+  }
 }
 
 done_testing();
