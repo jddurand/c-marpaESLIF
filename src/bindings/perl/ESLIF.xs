@@ -31,6 +31,9 @@
 #ifdef memcpy
 #define current_memcpy memcpy
 #endif
+#ifdef memmove
+#define current_memmove memmove
+#endif
 
 #undef malloc
 #undef calloc
@@ -38,6 +41,7 @@
 #undef free
 #undef memset
 #undef memcpy
+#undef memmove
 
 static void *marpaESLIF_GENERICSTACK_NEW() {
   genericStack_t *stackp;
@@ -93,6 +97,9 @@ static int marpaESLIF_GENERICSTACK_SET_USED(genericStack_t *stackp, int usedi) {
 #endif
 #ifdef current_memcpy
 #define memcpy current_memcpy
+#endif
+#ifdef current_memmove
+#define memmove current_memmove
 #endif
 
 /* ESLIF context */
