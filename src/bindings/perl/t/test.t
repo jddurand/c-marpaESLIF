@@ -80,6 +80,21 @@ sub new {
     return bless { result => undef, log => $log }, $pkg;
 }
 
+sub do_symbol {
+    my ($self, $symbol) = @_;
+
+    my $do_symbol = $symbol;
+    $self->{log}->tracef("do_symbol(%s) => %s", $symbol, $do_symbol);
+    return $do_symbol;
+}
+
+sub do_free {
+    my ($self, $result) = @_;
+
+    $self->{log}->tracef("do_free(%s)", $result);
+    undef $result;
+}
+
 sub do_int {
     my ($self, $number) = @_;
 
@@ -294,7 +309,9 @@ done_testing();
 
 __DATA__
 :start   ::= Expression
-:default ::=             action => do_op
+:default ::=             action        => do_op
+                         symbol-action => do_symbol
+                         free-action   => do_free
 :discard ::= whitespaces event  => discard_whitespaces$
 :discard ::= comment     event  => discard_comment$
 
