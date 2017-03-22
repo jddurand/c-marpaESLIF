@@ -236,33 +236,20 @@ static int marpaESLIF_getTypei(pTHX_ SV* sv) {
   return UNKNOWN;
 }
 
-/* ----------------------------------------------- */
-/* Use UNIVERSAL::can, taken from Haskells's Plugs */
-/* ----------------------------------------------- */
+/* ---------------------- */
+/* Method existence check */
+/* ---------------------- */
 static short marpaESLIF_canb(pTHX_ SV *sv, char *method) {
+  AV *list = newAV();
+  SV *rcp;
   int type;
-  SV *svp;
-  dSP;
 
-  ENTER;
-  SAVETMPS;
+  av_push(list, newSVpv(method, 0));
+  rcp = marpaESLIF_call_actionp(aTHX_ sv, "can", list);
+  av_undef(list);
 
-  PUSHMARK(SP);
-  EXTEND(SP, 2);
-  PUSHs(sv_2mortal(newSVsv(sv)));
-  PUSHs(sv_2mortal(newSVpv(method, 0)));
-  PUTBACK;
-
-  call_pv("UNIVERSAL::can", G_SCALAR);
-
-  SPAGAIN;
-
-  svp = POPs;
-  type = marpaESLIF_getTypei(aTHX_ svp);
-
-  PUTBACK;
-  FREETMPS;
-  LEAVE;
+  type = marpaESLIF_getTypei(aTHX_ rcp);
+  SvREFCNT_dec(rcp);
 
   return (type & CODEREF) == CODEREF;
 }
