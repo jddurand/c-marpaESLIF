@@ -301,6 +301,7 @@ for (my $i = 0; $i <= $#strings; $i++) {
   } else {
     diag("$string => <undef>");
   }
+  last;
 }
 
 done_testing();
