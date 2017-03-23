@@ -6,6 +6,8 @@
 #include <genericLogger.h>
 #include <genericStack.h>
 #include <stdio.h>
+#include <errno.h>
+#include <string.h>
 
 #include "c-constant-types.inc"
 #include "c-event-types.inc"
@@ -69,6 +71,10 @@ static short marpaESLIF_GENERICSTACK_IS_PTR(genericStack_t *stackp, int indicei)
 
 static void marpaESLIF_GENERICSTACK_PUSH_PTR(genericStack_t *stackp, void *p) {
   GENERICSTACK_PUSH_PTR(stackp, p);
+}
+
+static void marpaESLIF_GENERICSTACK_SET_NA(genericStack_t *stackp, int indicei) {
+  GENERICSTACK_SET_NA(stackp, indicei);
 }
 
 static short marpaESLIF_GENERICSTACK_ERROR(genericStack_t *stackp) {
@@ -149,14 +155,13 @@ static void                            marpaESLIF_genericLoggerCallbackv(void *u
 static short                           marpaESLIF_recognizerReaderCallbackb(void *userDatavp, char **inputcpp, size_t *inputlp, short *eofbp, short *characterStreambp, char **encodingOfEncodingsp, char **encodingsp, size_t *encodinglp);
 static marpaESLIFValueRuleCallback_t   marpaESLIF_valueRuleActionResolver(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions);
 static marpaESLIFValueSymbolCallback_t marpaESLIF_valueSymbolActionResolver(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions);
-static marpaESLIFValueFreeCallback_t   marpaESLIF_valueFreeActionResolver(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions);
-static SV                             *marpaESLIF_getSvFromStack(pTHX_ marpaESLIFValueContext_t *marpaESLIFValueContextp, marpaESLIFValue_t *marpaESLIFValuep, int i, short trueSVOnlyb);
+static SV                             *marpaESLIF_getSvFromStack(pTHX_ marpaESLIFValueContext_t *marpaESLIFValueContextp, marpaESLIFValue_t *marpaESLIFValuep, int i, char *bytep, size_t bytel, short trueSVOnlyb);
 static void                            marpaESLIF_setSvToStack(pTHX_ marpaESLIFValueContext_t *marpaESLIFValueContextp, marpaESLIFValue_t *marpaESLIFValuep, SV *svp, int i);
 static short                           marpaESLIF_valueRuleCallback(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static short                           marpaESLIF_valueSymbolCallback(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *bytep, size_t bytel, int resulti);
-static void                            marpaESLIF_valueFreeCallback(void *userDatavp, int contexti, void *p, size_t sizel);
 static void                            marpaESLIF_valueContextFreev(pTHX_ marpaESLIFValueContext_t *marpaESLIFValueContextp, short onStackb);
-static void                            marpaESLIF_valueContextCleanup(pTHX_ marpaESLIFValueContext_t *marpaESLIFValueContextp);
+static void                            marpaESLIF_svStackCleanByIndicev(pTHX_ genericStack_t *valueStackp, int i, short setNAb);
+static void                            marpaESLIF_valueContextCleanv(pTHX_ marpaESLIFValueContext_t *marpaESLIFValueContextp);
 static void                            marpaESLIF_recognizerContextFreev(pTHX_ marpaESLIFRecognizerContext_t *marpaESLIFRecognizerContextp, short onStackb);
 static void                            marpaESLIF_recognizerContextCleanupv(pTHX_ marpaESLIFRecognizerContext_t *marpaESLIFRecognizerContextp);
 static void                            marpaESLIF_recognizerContextInit(pTHX_ SV *Perl_recognizerInterfacep, marpaESLIFRecognizerContext_t *marpaESLIFRecognizerContextp);
@@ -553,22 +558,11 @@ static marpaESLIFValueSymbolCallback_t marpaESLIF_valueSymbolActionResolver(void
 }
 
 /*****************************************************************************/
-static marpaESLIFValueFreeCallback_t marpaESLIF_valueFreeActionResolver(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions)
-/*****************************************************************************/
-{
-  marpaESLIFValueContext_t *marpaESLIFValueContextp = (marpaESLIFValueContext_t *) userDatavp;
-
-  /* Just remember the action name - perl will croak if calling this method fails */
-  marpaESLIFValueContextp->actions = actions;
-
-  return marpaESLIF_valueFreeCallback;
-}
-
-/*****************************************************************************/
-static SV *marpaESLIF_getSvFromStack(pTHX_ marpaESLIFValueContext_t *marpaESLIFValueContextp, marpaESLIFValue_t *marpaESLIFValuep, int i, short trueSVOnlyb)
+static SV *marpaESLIF_getSvFromStack(pTHX_ marpaESLIFValueContext_t *marpaESLIFValueContextp, marpaESLIFValue_t *marpaESLIFValuep, int i, char *bytep, size_t bytel, short trueSVOnlyb)
 /*****************************************************************************/
 /* When called with !trueSVOnlyb, this function is guaranteed to return an SV in any case, it will HAVE TO BE refcount_dec'ed */
 /* When called with  trueSVOnlyb, this function is guaranteed to return only an SV returned by the user, its refcount is not affected */
+/* When called with bytep != NULL, then this will take that as a forced ARRAY element instead of inspecting the stack */
 {
   static const char       *funcs = "marpaESLIF_getSvFromStack";
   genericStack_t          *valueStackp = marpaESLIFValueContextp->valueStackp;
@@ -576,11 +570,13 @@ static SV *marpaESLIF_getSvFromStack(pTHX_ marpaESLIFValueContext_t *marpaESLIFV
   short                    intb;
   int                      indicei;
   short                    arrayb;
-  void                    *bytep;
-  size_t                   bytel;
   marpaESLIFValueResult_t *marpaESLIFValueResultp;
   int                     contexti;
-  
+
+  if (bytep != NULL) {
+    /* Go immediately to array processing */
+    goto is_array;
+  }
   if (! marpaESLIFValue_stack_is_intb(marpaESLIFValuep, i, &intb)) {
     MARPAESLIF_CROAK("marpaESLIFValue_stack_is_intb");
   }
@@ -600,13 +596,14 @@ static SV *marpaESLIF_getSvFromStack(pTHX_ marpaESLIFValueContext_t *marpaESLIFV
     if (! arrayb) {
       MARPAESLIF_CROAK("Internal stack error, item not an ARRAY");
     }
-    if (! marpaESLIFValue_stack_get_arrayb(marpaESLIFValuep, i, &contexti, &bytep, &bytel, NULL /* shallowbp */)) {
+    if (! marpaESLIFValue_stack_get_arrayb(marpaESLIFValuep, i, &contexti, (void **) &bytep, &bytel, NULL /* shallowbp */)) {
       MARPAESLIF_CROAK("marpaESLIFValue_stack_get_arrayb failure");
     }
     /* We never push array, i.e. contexti must be 0 in any case here */
     if (contexti != 0) {
       MARPAESLIF_CROAKF("marpaESLIFValue_stack_get_array success but contexti is %d instead of 0", contexti);
     }
+  is_array:
     /* Either bytel is > 0, then this is the input, else this is a user-defined object */
     if (bytel > 0) {
       objectp = trueSVOnlyb ? NULL : newSVpvn(bytep, bytel);
@@ -663,19 +660,13 @@ static short marpaESLIF_valueRuleCallback(void *userDatavp, marpaESLIFValue_t *m
   SV                            *objectp;
   int                            contexti;
 
-  /* Prototype of a rule action is: public Object action(List<Object> list) */
   if (! nullableb) {
-    /* Make the list */
     list = newAV();
     for (i = arg0i; i <= argni; i++) {
-      av_push(list, marpaESLIF_getSvFromStack(aTHX_ marpaESLIFValueContextp, marpaESLIFValuep, i, 0 /* trueSVOnlyb */));
+      av_push(list, marpaESLIF_getSvFromStack(aTHX_ marpaESLIFValueContextp, marpaESLIFValuep, i, NULL /* bytep */, 0 /* bytel */, 0 /* trueSVOnlyb */));
     }
   }
-
-  /* Call the action - actionResult is an SV that we own */
   actionResult = marpaESLIF_call_actionp(aTHX_ marpaESLIFValueContextp->Perl_valueInterfacep, marpaESLIFValueContextp->actions, list);
-
-  /* Free av immediately in case we croak -; */
   if (list != NULL) {
     av_undef(list);
   }
@@ -700,47 +691,15 @@ static short marpaESLIF_valueSymbolCallback(void *userDatavp, marpaESLIFValue_t 
   dTHX;
 
   list = newAV();
+  av_push(list, marpaESLIF_getSvFromStack(aTHX_ marpaESLIFValueContextp, marpaESLIFValuep, -1 /* not used */, bytep, bytel, 0 /* trueSVOnlyb */));
 
-  /* Either bytel is > 0, then this is the input, else this is a user-defined object */
-  if (bytel > 0) {
-    /* Will vanish automatically at av_undef */
-    av_push(list, newSVpvn(bytep, bytel));
-  } else {
-    marpaESLIFValueResultp = (marpaESLIFValueResult_t *) bytep;
-    if (marpaESLIFValueResultp->type != MARPAESLIF_VALUE_TYPE_PTR) {
-      MARPAESLIF_CROAKF("User-defined value type is not MARPAESLIF_VALUE_TYPE_PTR but %d", marpaESLIFValueResultp->type);
-    }
-    av_push(list, SvREFCNT_inc((SV *) marpaESLIFValueResultp->u.p));
-  }
-
-  /* Call the action - actionResult is an SV that we own */
   actionResult = marpaESLIF_call_actionp(aTHX_ marpaESLIFValueContextp->Perl_valueInterfacep, marpaESLIFValueContextp->actions, list);
 
-  /* Free av immediately in case we croak -; */
-  if (list != NULL) {
-    av_undef(list);
-  }
+  av_undef(list);
 
   marpaESLIF_setSvToStack(aTHX_ marpaESLIFValueContextp, marpaESLIFValuep, actionResult, resulti);
 
   return 1;
-}
-
-/*****************************************************************************/
-static void marpaESLIF_valueFreeCallback(void *userDatavp, int contexti, void *p, size_t sizel)
-/*****************************************************************************/
-{
-  static const char             *funcs                        = "marpaESLIF_valueFreeCallback";
-  marpaESLIFValueContext_t      *marpaESLIFValueContextp      = (marpaESLIFValueContext_t *) userDatavp;
-  AV                            *list                         = NULL;
-  dTHX;
-
-  list = newAV();
-
-  /* By construction (because we push only SVs into value stack), p is an SV */
-  av_push(list, SvREFCNT_inc((SV *) p));
-  marpaESLIF_call_actionv(aTHX_ marpaESLIFValueContextp->Perl_valueInterfacep, marpaESLIFValueContextp->actions, list);
-  av_undef(list);
 }
 
 /*****************************************************************************/
@@ -750,7 +709,7 @@ static void marpaESLIF_valueContextFreev(pTHX_ marpaESLIFValueContext_t *marpaES
   int i; 
 
   if (marpaESLIFValueContextp != NULL) {
-    marpaESLIF_valueContextCleanup(aTHX_ marpaESLIFValueContextp);
+    marpaESLIF_valueContextCleanv(aTHX_ marpaESLIFValueContextp);
     if (marpaESLIFValueContextp->valueStackp != NULL) {
       marpaESLIF_GENERICSTACK_FREE(marpaESLIFValueContextp->valueStackp);
     }
@@ -765,7 +724,27 @@ static void marpaESLIF_valueContextFreev(pTHX_ marpaESLIFValueContext_t *marpaES
 }
  
 /*****************************************************************************/
-static void marpaESLIF_valueContextCleanup(pTHX_ marpaESLIFValueContext_t *marpaESLIFValueContextp)
+static void marpaESLIF_svStackCleanByIndicev(pTHX_ genericStack_t *valueStackp, int i, short setNAb)
+/*****************************************************************************/
+{
+  static const char *funcs = "marpaESLIF_svStackCleanByIndicev";
+  SV                *svp;
+
+  /* There can be only PTR's in our stack */
+  if (marpaESLIF_GENERICSTACK_IS_PTR(valueStackp, i)) {
+    svp = (SV *) marpaESLIF_GENERICSTACK_GET_PTR(valueStackp, i);
+    SvREFCNT_dec(svp);
+    if (setNAb) {
+      marpaESLIF_GENERICSTACK_SET_NA(valueStackp, i);
+      if (marpaESLIF_GENERICSTACK_ERROR(valueStackp)) {
+        MARPAESLIF_CROAKF("GENERICSTACK_SET_NA failure, %s", strerror(errno));
+      }
+    }
+  }
+}
+
+/*****************************************************************************/
+static void marpaESLIF_valueContextCleanv(pTHX_ marpaESLIFValueContext_t *marpaESLIFValueContextp)
 /*****************************************************************************/
 {
   genericStack_t *valueStackp;
@@ -777,13 +756,12 @@ static void marpaESLIF_valueContextCleanup(pTHX_ marpaESLIFValueContext_t *marpa
     if (valueStackp != NULL) {
       /* It is important to decrease references in the reverse order of their creation */
       while (marpaESLIF_GENERICSTACK_USED(valueStackp) > 0) {
+        /* Last indice ... */
         i = marpaESLIF_GENERICSTACK_USED(valueStackp) - 1;
-        if (GENERICSTACK_IS_PTR(valueStackp, i)) {
-          svp = (SV *) marpaESLIF_GENERICSTACK_POP_PTR(valueStackp);
-          SvREFCNT_dec(svp);
-        } else {
-          marpaESLIF_GENERICSTACK_SET_USED(valueStackp, marpaESLIF_GENERICSTACK_USED(valueStackp) - 1);
-        }
+        /* ... is cleared ... */
+        marpaESLIF_svStackCleanByIndicev(aTHX_ valueStackp, i, 0 /* setNAb */);
+        /* ... and becomes current used size */
+        marpaESLIF_GENERICSTACK_SET_USED(valueStackp, i);
       }
     }
   }
@@ -803,13 +781,12 @@ static void marpaESLIF_recognizerContextFreev(pTHX_ marpaESLIFRecognizerContext_
     if (lexemeStackp != NULL) {
       /* It is important to delete references in the reverse order of their creation */
       while (marpaESLIF_GENERICSTACK_USED(lexemeStackp) > 0) {
+        /* Last indice ... */
         i = marpaESLIF_GENERICSTACK_USED(lexemeStackp) - 1;
-        if (marpaESLIF_GENERICSTACK_IS_PTR(lexemeStackp, i)) {
-          svp = (SV *) marpaESLIF_GENERICSTACK_POP_PTR(lexemeStackp);
-          SvREFCNT_dec(svp);
-        } else {
-          marpaESLIF_GENERICSTACK_SET_USED(lexemeStackp, marpaESLIF_GENERICSTACK_USED(lexemeStackp) - 1);
-        }
+        /* ... is cleared ... */
+        marpaESLIF_svStackCleanByIndicev(aTHX_ lexemeStackp, i, 0 /* setNAb */);
+        /* ... and becomes current used size */
+        marpaESLIF_GENERICSTACK_SET_USED(lexemeStackp, i);
       }
     }
     SvREFCNT_dec(marpaESLIFRecognizerContextp->Perl_recognizerInterfacep);
@@ -1431,7 +1408,7 @@ CODE:
   marpaESLIFValueOption.userDatavp                     = &marpaESLIFValueContext;
   marpaESLIFValueOption.ruleActionResolverp            = marpaESLIF_valueRuleActionResolver;
   marpaESLIFValueOption.symbolActionResolverp          = marpaESLIF_valueSymbolActionResolver;
-  marpaESLIFValueOption.freeActionResolverp            = marpaESLIF_valueFreeActionResolver;
+  marpaESLIFValueOption.freeActionResolverp            = NULL;
   marpaESLIFValueOption.highRankOnlyb                  = marpaESLIF_call_methodb(aTHX_ Perl_valueInterfacep, "isWithHighRankOnly");
   marpaESLIFValueOption.orderByRankb                   = marpaESLIF_call_methodb(aTHX_ Perl_valueInterfacep, "isWithOrderByRank");
   marpaESLIFValueOption.ambiguousb                     = marpaESLIF_call_methodb(aTHX_ Perl_valueInterfacep, "isWithAmbiguous");
