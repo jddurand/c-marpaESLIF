@@ -6,6 +6,8 @@
 #include <genericLogger.h>
 #include <genericStack.h>
 #include <stdio.h>
+#include <errno.h>
+#include <string.h>
 
 #include "c-constant-types.inc"
 #include "c-event-types.inc"
@@ -69,6 +71,10 @@ static short marpaESLIF_GENERICSTACK_IS_PTR(genericStack_t *stackp, int indicei)
 
 static void marpaESLIF_GENERICSTACK_PUSH_PTR(genericStack_t *stackp, void *p) {
   GENERICSTACK_PUSH_PTR(stackp, p);
+}
+
+static void marpaESLIF_GENERICSTACK_SET_NA(genericStack_t *stackp, int indicei) {
+  GENERICSTACK_SET_NA(stackp, indicei);
 }
 
 static short marpaESLIF_GENERICSTACK_ERROR(genericStack_t *stackp) {
@@ -154,7 +160,8 @@ static void                            marpaESLIF_setSvToStack(pTHX_ marpaESLIFV
 static short                           marpaESLIF_valueRuleCallback(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static short                           marpaESLIF_valueSymbolCallback(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *bytep, size_t bytel, int resulti);
 static void                            marpaESLIF_valueContextFreev(pTHX_ marpaESLIFValueContext_t *marpaESLIFValueContextp, short onStackb);
-static void                            marpaESLIF_valueContextCleanup(pTHX_ marpaESLIFValueContext_t *marpaESLIFValueContextp);
+static void                            marpaESLIF_svStackCleanByIndicev(pTHX_ genericStack_t *valueStackp, int i, short setNAb);
+static void                            marpaESLIF_valueContextCleanv(pTHX_ marpaESLIFValueContext_t *marpaESLIFValueContextp);
 static void                            marpaESLIF_recognizerContextFreev(pTHX_ marpaESLIFRecognizerContext_t *marpaESLIFRecognizerContextp, short onStackb);
 static void                            marpaESLIF_recognizerContextCleanupv(pTHX_ marpaESLIFRecognizerContext_t *marpaESLIFRecognizerContextp);
 static void                            marpaESLIF_recognizerContextInit(pTHX_ SV *Perl_recognizerInterfacep, marpaESLIFRecognizerContext_t *marpaESLIFRecognizerContextp);
@@ -702,7 +709,7 @@ static void marpaESLIF_valueContextFreev(pTHX_ marpaESLIFValueContext_t *marpaES
   int i; 
 
   if (marpaESLIFValueContextp != NULL) {
-    marpaESLIF_valueContextCleanup(aTHX_ marpaESLIFValueContextp);
+    marpaESLIF_valueContextCleanv(aTHX_ marpaESLIFValueContextp);
     if (marpaESLIFValueContextp->valueStackp != NULL) {
       marpaESLIF_GENERICSTACK_FREE(marpaESLIFValueContextp->valueStackp);
     }
@@ -717,7 +724,27 @@ static void marpaESLIF_valueContextFreev(pTHX_ marpaESLIFValueContext_t *marpaES
 }
  
 /*****************************************************************************/
-static void marpaESLIF_valueContextCleanup(pTHX_ marpaESLIFValueContext_t *marpaESLIFValueContextp)
+static void marpaESLIF_svStackCleanByIndicev(pTHX_ genericStack_t *valueStackp, int i, short setNAb)
+/*****************************************************************************/
+{
+  static const char *funcs = "marpaESLIF_svStackCleanByIndicev";
+  SV                *svp;
+
+  /* There can be only PTR's in our stack */
+  if (marpaESLIF_GENERICSTACK_IS_PTR(valueStackp, i)) {
+    svp = (SV *) marpaESLIF_GENERICSTACK_GET_PTR(valueStackp, i);
+    SvREFCNT_dec(svp);
+    if (setNAb) {
+      marpaESLIF_GENERICSTACK_SET_NA(valueStackp, i);
+      if (marpaESLIF_GENERICSTACK_ERROR(valueStackp)) {
+        MARPAESLIF_CROAKF("GENERICSTACK_SET_NA failure, %s", strerror(errno));
+      }
+    }
+  }
+}
+
+/*****************************************************************************/
+static void marpaESLIF_valueContextCleanv(pTHX_ marpaESLIFValueContext_t *marpaESLIFValueContextp)
 /*****************************************************************************/
 {
   genericStack_t *valueStackp;
@@ -729,13 +756,12 @@ static void marpaESLIF_valueContextCleanup(pTHX_ marpaESLIFValueContext_t *marpa
     if (valueStackp != NULL) {
       /* It is important to decrease references in the reverse order of their creation */
       while (marpaESLIF_GENERICSTACK_USED(valueStackp) > 0) {
+        /* Last indice ... */
         i = marpaESLIF_GENERICSTACK_USED(valueStackp) - 1;
-        if (GENERICSTACK_IS_PTR(valueStackp, i)) {
-          svp = (SV *) marpaESLIF_GENERICSTACK_POP_PTR(valueStackp);
-          SvREFCNT_dec(svp);
-        } else {
-          marpaESLIF_GENERICSTACK_SET_USED(valueStackp, marpaESLIF_GENERICSTACK_USED(valueStackp) - 1);
-        }
+        /* ... is cleared ... */
+        marpaESLIF_svStackCleanByIndicev(aTHX_ valueStackp, i, 0 /* setNAb */);
+        /* ... and becomes current used size */
+        marpaESLIF_GENERICSTACK_SET_USED(valueStackp, i);
       }
     }
   }
@@ -755,13 +781,12 @@ static void marpaESLIF_recognizerContextFreev(pTHX_ marpaESLIFRecognizerContext_
     if (lexemeStackp != NULL) {
       /* It is important to delete references in the reverse order of their creation */
       while (marpaESLIF_GENERICSTACK_USED(lexemeStackp) > 0) {
+        /* Last indice ... */
         i = marpaESLIF_GENERICSTACK_USED(lexemeStackp) - 1;
-        if (marpaESLIF_GENERICSTACK_IS_PTR(lexemeStackp, i)) {
-          svp = (SV *) marpaESLIF_GENERICSTACK_POP_PTR(lexemeStackp);
-          SvREFCNT_dec(svp);
-        } else {
-          marpaESLIF_GENERICSTACK_SET_USED(lexemeStackp, marpaESLIF_GENERICSTACK_USED(lexemeStackp) - 1);
-        }
+        /* ... is cleared ... */
+        marpaESLIF_svStackCleanByIndicev(aTHX_ lexemeStackp, i, 0 /* setNAb */);
+        /* ... and becomes current used size */
+        marpaESLIF_GENERICSTACK_SET_USED(lexemeStackp, i);
       }
     }
     SvREFCNT_dec(marpaESLIFRecognizerContextp->Perl_recognizerInterfacep);
