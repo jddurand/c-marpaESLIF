@@ -236,6 +236,7 @@ int main() {
   genericLogger_t             *genericLoggerp;
   marpaESLIFTester_context_t   marpaESLIFTester_context;
   marpaESLIFRecognizerOption_t marpaESLIFRecognizerOption;
+  marpaESLIFGrammarDefaults_t  marpaESLIFGrammarDefaults;
 
   genericLoggerp = GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_DEBUG);
 
@@ -268,13 +269,14 @@ int main() {
   }
 
   /* Dump grammar */
-  if (marpaESLIFGrammar_ngrammarib(marpaESLIFGrammarp, &ngrammari)) {
-    for (leveli = 0; leveli < ngrammari; leveli++) {
-      if (marpaESLIFGrammar_grammarshowform_by_levelb(marpaESLIFGrammarp, &grammarshows, leveli, NULL)) {
-        GENERICLOGGER_INFO (marpaESLIFOption.genericLoggerp, "-------------------------");
-        GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "TEST grammar at level %d:", leveli);
-        GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "-------------------------\n\n%s", grammarshows);
-      }
+  if (! marpaESLIFGrammar_ngrammarib(marpaESLIFGrammarp, &ngrammari)) {
+    goto err;
+  }
+  for (leveli = 0; leveli < ngrammari; leveli++) {
+    if (marpaESLIFGrammar_grammarshowform_by_levelb(marpaESLIFGrammarp, &grammarshows, leveli, NULL)) {
+      GENERICLOGGER_INFO (marpaESLIFOption.genericLoggerp, "-------------------------");
+      GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "TEST grammar at level %d:", leveli);
+      GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "-------------------------\n\n%s", grammarshows);
     }
   }
 
@@ -296,6 +298,27 @@ int main() {
   }
 
   fprintf(stderr, " OK FOR:\n%s", selfs);
+
+  /* Play with defaults */
+  for (leveli = 0; leveli < ngrammari; leveli++) {
+    GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "Getting defaults of grammar at level %d", leveli);
+    if (! marpaESLIFGrammar_defaults_by_levelb(marpaESLIFGrammarp, &marpaESLIFGrammarDefaults, leveli, NULL /* descp */)) {
+      goto err;
+    }
+    GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "Overwriting defaultFreeActions of grammar at level %d", leveli);
+    marpaESLIFGrammarDefaults.defaultFreeActions = ":defaultFreeActions";
+    if (! marpaESLIFGrammar_defaults_by_level_setb(marpaESLIFGrammarp, &marpaESLIFGrammarDefaults, leveli, NULL /* descp */)) {
+      goto err;
+    }
+    GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "Checking overwrite of defaultFreeActions for grammar at level %d", leveli);
+    if (! marpaESLIFGrammar_defaults_by_levelb(marpaESLIFGrammarp, &marpaESLIFGrammarDefaults, leveli, NULL /* descp */)) {
+      goto err;
+    }
+    if (strncmp(marpaESLIFGrammarDefaults.defaultFreeActions, ":defaultFreeActions", strlen(":defaultFreeActions")) != 0) {
+      GENERICLOGGER_ERRORF(marpaESLIFOption.genericLoggerp, "Wrong defaultFreeActions: %s instead of %s", marpaESLIFGrammarDefaults.defaultFreeActions != NULL ? marpaESLIFGrammarDefaults.defaultFreeActions : "", ":defaultFreeActions");
+      goto err;
+    }
+  }
 
   marpaESLIFGrammar_freev(marpaESLIFGrammarp);
   marpaESLIF_freev(marpaESLIFp);
