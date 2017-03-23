@@ -154,13 +154,74 @@ Put the number of grammars in the value pointed by C<ngrammarip>, which can be C
 
 Return a true value on failure, a false value on failure.
 
-=head3 C<marpaESLIFGrammar_grammar_currentb>
+=head3 C<marpaESLIFGrammar_ngrammarib>
 
-  short marpaESLIFGrammar_grammar_currentb(marpaESLIFGrammar_t *marpaESLIFGrammarp,
-                                           int                 *levelip,
-                                           marpaESLIFString_t **descpp);
+  short marpaESLIFGrammar_ngrammarib(marpaESLIFGrammar_t *marpaESLIFGrammarp,
+                                     int                 *ngrammarip);
 
-Put in the values pointed by C<levelip> and C<descpp>, which can be both C<NULL>, the level and description of current grammar from C<marpaESLIFGrammarp>.
+Put the number of grammars in the value pointed by C<ngrammarip>, which can be C<NULL>, of the current grammar from C<marpaESLIFGrammarp>. The number of grammars is the highest level plus one, and it is B<allowed> to have undefined grammars at any indice but level 0.
+
+Return a true value on failure, a false value on failure.
+
+=head3 C<marpaESLIFGrammar_defaultsb>
+
+  typedef struct marpaESLIFGrammarDefaults {
+    char *defaultRuleActions;   /* Default action for rules */
+    char *defaultSymbolActions; /* Default action for symbols */
+    char *defaultFreeActions;   /* Default action for free */
+  } marpaESLIFGrammarDefaults_t;
+
+  short marpaESLIFGrammar_defaultsb(marpaESLIFGrammar_t         *marpaESLIFGrammarp,
+                                    marpaESLIFGrammarDefaults_t *marpaESLIFGrammarDefaultsp);
+
+Put in the structure pointed by C<marpaESLIFGrammarDefaultsp>, if it is not C<NULL>, the current grammar defaults, where a C<NULL> value for a default means it is not set in the grammar.
+
+=over
+
+=item defaultRuleActions
+
+Default action for symbols, and correspond to the grammar keyword C<action>.
+
+=item defaultSymbolActions
+
+Default action for symbols, and correspond to the grammar keyword C<symbol-action>.
+
+=item defaultSymbolActions
+
+Default action for symbols, and correspond to the grammar keyword C<free-action>.
+
+=back
+
+Return a true value on failure, a false value on failure.
+
+=head3 C<marpaESLIFGrammar_defaults_by_levelb>
+
+  short marpaESLIFGrammar_defaults_by_levelb(marpaESLIFGrammar_t         *marpaESLIFGrammarp,
+                                             marpaESLIFGrammarDefaults_t *marpaESLIFGrammarDefaultsp,
+                                             int                          leveli,
+                                             marpaESLIFString_t          *descp);
+
+Put in the structure pointed by C<marpaESLIFGrammarDefaultsp>, if it is not C<NULL>, the grammar at level C<leveli> and/or description C<descp> defaults, where a C<NULL> value for a default means it is not set in the grammar.
+
+Return a true value on failure, a false value on failure.
+
+=head3 C<marpaESLIFGrammar_defaults_setb>
+
+  short marpaESLIFGrammar_defaults_setb(marpaESLIFGrammar_t         *marpaESLIFGrammarp,
+                                        marpaESLIFGrammarDefaults_t *marpaESLIFGrammarDefaultsp);
+
+Set all grammar default using the structure pointed by C<marpaESLIFGrammarDefaultsp>, if it is not C<NULL>. A C<NULL> value for a default has the same effect as if original grammar never had the associated keyword.
+
+Return a true value on failure, a false value on failure.
+
+=head3 C<marpaESLIFGrammar_defaults_by_level_setb>
+
+  short marpaESLIFGrammar_defaults_by_level_setb(marpaESLIFGrammar_t         *marpaESLIFGrammarp,
+                                                 marpaESLIFGrammarDefaults_t *marpaESLIFGrammarDefaultsp,
+                                                 int                          leveli,
+                                                 marpaESLIFString_t          *descp);
+
+Put in the structure pointed by C<marpaESLIFGrammarDefaultsp>, if it is not C<NULL>, the grammar defaults at level C<leveli> and/or description C<descp>, where a C<NULL> value for a default means it is not set in the grammar.
 
 Return a true value on failure, a false value on failure.
 

@@ -10166,6 +10166,171 @@ short marpaESLIFGrammar_ngrammarib(marpaESLIFGrammar_t *marpaESLIFGrammarp, int 
   return 1;
 }
 
+/*****************************************************************************/
+short marpaESLIFGrammar_defaultsb(marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaESLIFGrammarDefaults_t *marpaESLIFGrammarDefaultsp)
+/*****************************************************************************/
+{
+  marpaESLIF_grammar_t        *grammarp;
+
+  if (marpaESLIFGrammarp == NULL) {
+    errno = EINVAL;
+    return 0;
+  }
+
+  grammarp = marpaESLIFGrammarp->grammarp;
+
+  if (grammarp == NULL) {
+    errno = EINVAL;
+    return 0;
+  }
+
+  return marpaESLIFGrammar_defaults_by_levelb(marpaESLIFGrammarp, marpaESLIFGrammarDefaultsp, grammarp->leveli, NULL /* descp */);
+}
+
+/*****************************************************************************/
+short marpaESLIFGrammar_defaults_by_levelb(marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaESLIFGrammarDefaults_t *marpaESLIFGrammarDefaultsp, int leveli, marpaESLIFString_t *descp)
+/*****************************************************************************/
+{
+  marpaESLIF_grammar_t        *grammarp;
+  marpaESLIFGrammarDefaults_t  marpaESLIFGrammarDefaults;
+  short                        rcb;
+
+  if (marpaESLIFGrammarp == NULL) {
+    errno = EINVAL;
+    goto err;
+  }
+
+  grammarp = _marpaESLIFGrammar_grammar_findp(marpaESLIFGrammarp, leveli, descp);
+  if (grammarp == NULL) {
+    errno = EINVAL;
+    goto err;
+  }
+
+  marpaESLIFGrammarDefaults.defaultRuleActions   = grammarp->defaultRuleActions;
+  marpaESLIFGrammarDefaults.defaultSymbolActions = grammarp->defaultSymbolActions;
+  marpaESLIFGrammarDefaults.defaultFreeActions   = grammarp->defaultFreeActions;
+
+  if (marpaESLIFGrammarDefaultsp != NULL) {
+    *marpaESLIFGrammarDefaultsp = marpaESLIFGrammarDefaults;
+  }
+
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  return rcb;
+}
+
+/*****************************************************************************/
+short marpaESLIFGrammar_defaults_setb(marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaESLIFGrammarDefaults_t *marpaESLIFGrammarDefaultsp)
+/*****************************************************************************/
+{
+  marpaESLIF_grammar_t        *grammarp;
+
+  if (marpaESLIFGrammarp == NULL) {
+    errno = EINVAL;
+    return 0;
+  }
+
+  grammarp = marpaESLIFGrammarp->grammarp;
+
+  if (grammarp == NULL) {
+    errno = EINVAL;
+    return 0;
+  }
+
+  return marpaESLIFGrammar_defaults_by_level_setb(marpaESLIFGrammarp, marpaESLIFGrammarDefaultsp, grammarp->leveli, NULL /* descp */);
+}
+
+/*****************************************************************************/
+short marpaESLIFGrammar_defaults_by_level_setb(marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaESLIFGrammarDefaults_t *marpaESLIFGrammarDefaultsp, int leveli, marpaESLIFString_t *descp)
+/*****************************************************************************/
+{
+  marpaESLIF_grammar_t        *grammarp;
+  short                        rcb;
+  char                        *previousp;
+
+  if (marpaESLIFGrammarp == NULL) {
+    errno = EINVAL;
+    goto err;
+  }
+
+  grammarp = _marpaESLIFGrammar_grammar_findp(marpaESLIFGrammarp, leveli, descp);
+  if (grammarp == NULL) {
+    errno = EINVAL;
+    goto err;
+  }
+
+  if (marpaESLIFGrammarDefaultsp != NULL) {
+
+    if (marpaESLIFGrammarDefaultsp->defaultRuleActions != NULL) {
+      previousp = grammarp->defaultRuleActions;
+      grammarp->defaultRuleActions = strdup(marpaESLIFGrammarDefaultsp->defaultRuleActions);
+      if (grammarp->defaultRuleActions == NULL) {
+        grammarp->defaultRuleActions = previousp;
+        MARPAESLIF_ERRORF(marpaESLIFGrammarp->marpaESLIFp, "strdup failure, %s", strerror(errno));
+        goto err;
+      }
+      if (previousp != NULL) {
+        free(previousp);
+      }
+    } else {
+      if (grammarp->defaultRuleActions != NULL) {
+        free(grammarp->defaultRuleActions);
+        grammarp->defaultRuleActions = NULL;
+      }
+    }
+
+    if (marpaESLIFGrammarDefaultsp->defaultSymbolActions != NULL) {
+      previousp = grammarp->defaultSymbolActions;
+      grammarp->defaultSymbolActions = strdup(marpaESLIFGrammarDefaultsp->defaultSymbolActions);
+      if (grammarp->defaultSymbolActions == NULL) {
+        grammarp->defaultSymbolActions = previousp;
+        MARPAESLIF_ERRORF(marpaESLIFGrammarp->marpaESLIFp, "strdup failure, %s", strerror(errno));
+        goto err;
+      }
+      if (previousp != NULL) {
+        free(previousp);
+      }
+    } else {
+      if (grammarp->defaultSymbolActions != NULL) {
+        free(grammarp->defaultSymbolActions);
+        grammarp->defaultSymbolActions = NULL;
+      }
+    }
+
+    if (marpaESLIFGrammarDefaultsp->defaultFreeActions != NULL) {
+      previousp = grammarp->defaultFreeActions;
+      grammarp->defaultFreeActions = strdup(marpaESLIFGrammarDefaultsp->defaultFreeActions);
+      if (grammarp->defaultFreeActions == NULL) {
+        grammarp->defaultFreeActions = previousp;
+        MARPAESLIF_ERRORF(marpaESLIFGrammarp->marpaESLIFp, "strdup failure, %s", strerror(errno));
+        goto err;
+      }
+      if (previousp != NULL) {
+        free(previousp);
+      }
+    } else {
+      if (grammarp->defaultFreeActions != NULL) {
+        free(grammarp->defaultFreeActions);
+        grammarp->defaultFreeActions = NULL;
+      }
+    }
+
+  }
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  return rcb;
+}
+
 #if MARPAESLIF_VALUEERRORPROGRESSREPORT
 /*****************************************************************************/
 static inline void _marpaESLIFValueErrorProgressReportv(marpaESLIFValue_t *marpaESLIFValuep)

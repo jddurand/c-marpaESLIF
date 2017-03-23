@@ -130,6 +130,12 @@ typedef struct marpaESLIFRecognizerProgress {
   int positioni;
 } marpaESLIFRecognizerProgress_t;
 
+typedef struct marpaESLIFGrammarDefaults {
+  char *defaultRuleActions;   /* Default action for rules */
+  char *defaultSymbolActions; /* Default action for symbols */
+  char *defaultFreeActions;   /* Default action for free */
+} marpaESLIFGrammarDefaults_t;
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -140,6 +146,10 @@ extern "C" {
   marpaESLIF_EXPORT marpaESLIFGrammar_t    *marpaESLIFGrammar_newp(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammarOption_t *marpaESLIFGrammarOptionp);
   marpaESLIF_EXPORT marpaESLIF_t           *marpaESLIFGrammar_eslifp(marpaESLIFGrammar_t *marpaESLIFGrammarp);
   marpaESLIF_EXPORT short                   marpaESLIFGrammar_ngrammarib(marpaESLIFGrammar_t *marpaESLIFGrammarp, int *ngrammarip);
+  marpaESLIF_EXPORT short                   marpaESLIFGrammar_defaultsb(marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaESLIFGrammarDefaults_t *marpaESLIFGrammarDefaultsp);
+  marpaESLIF_EXPORT short                   marpaESLIFGrammar_defaults_by_levelb(marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaESLIFGrammarDefaults_t *marpaESLIFGrammarDefaultsp, int leveli, marpaESLIFString_t *descp);
+  marpaESLIF_EXPORT short                   marpaESLIFGrammar_defaults_setb(marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaESLIFGrammarDefaults_t *marpaESLIFGrammarDefaultsp);
+  marpaESLIF_EXPORT short                   marpaESLIFGrammar_defaults_by_level_setb(marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaESLIFGrammarDefaults_t *marpaESLIFGrammarDefaultsp, int leveli, marpaESLIFString_t *descp);
   marpaESLIF_EXPORT short                   marpaESLIFGrammar_grammar_currentb(marpaESLIFGrammar_t *marpaESLIFGrammarp, int *levelip, marpaESLIFString_t **descpp);
   marpaESLIF_EXPORT short                   marpaESLIFGrammar_grammar_by_levelb(marpaESLIFGrammar_t *marpaESLIFGrammarp, int leveli, marpaESLIFString_t *descp, int *levelip, marpaESLIFString_t **descpp);
   marpaESLIF_EXPORT short                   marpaESLIFGrammar_rulearray_currentb(marpaESLIFGrammar_t *marpaESLIFGrammarp, int **ruleipp, size_t *rulelp);
