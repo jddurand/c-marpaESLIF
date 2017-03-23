@@ -7399,10 +7399,9 @@ void marpaESLIFValue_freev(marpaESLIFValue_t *marpaESLIFValuep)
     if (marpaWrapperAsfValuep != NULL) {
       marpaWrapperAsfValue_freev(marpaWrapperAsfValuep);
     }
-    /* The stacks should never be something different than NULL */
+    /* The stacks should never be something different than NULL at this stage. */
     /* The methods to use them are protected so that it is impossible */
-    /* to use them outside of valuation mode. Except the versions starting with "_" */
-    /* that we use internally. Then the methods doing so are responsible to free the stacks. */
+    /* to use them outside of valuation mode. */
     /*
     GENERICSTACK_FREE(marpaESLIFValuep->valueStackp);
     GENERICSTACK_FREE(marpaESLIFValuep->typeStackp);
@@ -11451,6 +11450,7 @@ static inline marpaESLIFValue_t *_marpaESLIFValue_newp(marpaESLIFRecognizer_t *m
   marpaESLIFValuep->valueStackp                 = NULL;
   marpaESLIFValuep->typeStackp                  = NULL;
   marpaESLIFValuep->contextStackp               = NULL;
+  marpaESLIFValuep->ptrRefcountHashp            = NULL;
   marpaESLIFValuep->inValuationb                = 0;
   marpaESLIFValuep->symbolp                     = NULL;
   marpaESLIFValuep->rulep                       = NULL;
