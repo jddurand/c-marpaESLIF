@@ -593,7 +593,7 @@ static SV *marpaESLIF_getSvFromStack(pTHX_ marpaESLIFValueContext_t *marpaESLIFV
   marpaESLIFValueResult_t *marpaESLIFValueResultp;
   int                      contexti;
 
-  fprintf(stderr, "In %s for indice %d, bytep %p, bytel %ld\n", funcs, i, bytep, (unsigned long) bytel);
+  /* fprintf(stderr, "In %s for indice %d, bytep %p, bytel %ld\n", funcs, i, bytep, (unsigned long) bytel); */
   if (bytep != NULL) {
     /* Go immediately to array processing */
     goto is_array;
@@ -639,6 +639,7 @@ static SV *marpaESLIF_getSvFromStack(pTHX_ marpaESLIFValueContext_t *marpaESLIFV
     }
   }
 
+  /*
   if (objectp != NULL) {
     if (SvOK(objectp)) {
       char *s;
@@ -652,6 +653,7 @@ static SV *marpaESLIF_getSvFromStack(pTHX_ marpaESLIFValueContext_t *marpaESLIFV
   } else {
     fprintf(stderr, "... ... Retreived NULL\n");
   }
+  */
 
   return objectp;
 }
@@ -676,7 +678,7 @@ static short marpaESLIF_valueRuleCallbackb(void *userDatavp, marpaESLIFValue_t *
   SV                            *objectp;
   int                            contexti;
 
-  fprintf(stderr, "... Rule action %s Stack[%d..%d] => Stack[%d]\n", marpaESLIFValueContextp->actions, arg0i, argni, resulti);
+  /* fprintf(stderr, "... Rule action %s Stack[%d..%d] => Stack[%d]\n", marpaESLIFValueContextp->actions, arg0i, argni, resulti); */
 
   if (! nullableb) {
     list = newAV();
@@ -709,7 +711,7 @@ static short marpaESLIF_valueSymbolCallbackb(void *userDatavp, marpaESLIFValue_t
   marpaESLIFValueResult_t       *marpaESLIFValueResultp;
   dTHX;
 
-  fprintf(stderr, "... Symbol action %s => Stack[%d]\n", marpaESLIFValueContextp->actions, resulti);
+  /* fprintf(stderr, "... Symbol action %s => Stack[%d]\n", marpaESLIFValueContextp->actions, resulti); */
 
   list = newAV();
   av_push(list, marpaESLIF_getSvFromStack(aTHX_ marpaESLIFValueContextp, marpaESLIFValuep, -1 /* not used */, bytep, bytel, 0 /* trueSVOnlyb */));
@@ -731,8 +733,10 @@ static void marpaESLIF_valueFreeCallbackv(void *userDatavp, int contexti, void *
 
   /* We are called when valuation is doing to withdraw an item in the stack that is a PTR or an ARRAY that we own */
   /* It is guaranteed to be non-NULL at this stage */
+  /*
   fprintf(stderr, "Withdrawing:\n");
   sv_dump((SV *) p);
+  */
   SvREFCNT_dec(p);
 }
 
