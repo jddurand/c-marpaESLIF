@@ -103,6 +103,7 @@ public class AppParse  {
 				eslifLogger.info("Result: " + eslifAppValue.getResult());
 			}
 		}
+
 		/*
 		 * ====================================================================
 		 * Test the recognizer's scan()/resume and the value's result() methods
@@ -166,21 +167,17 @@ public class AppParse  {
 					showLastCompletion("Loop No " + j, eslifLogger, eslifRecognizer, "Number", string);
 					j++;
 				}
-				if (! eslifRecognizer.isExhausted()) {
-					eslifLogger.warning("Parsing is not exhausted - skipping valuation");
-				} else {
-					try {
-						AppValue eslifAppValue = new AppValue();
-						eslifLogger.info("Testing value() on " + string);
-						ESLIFValue value = new ESLIFValue(eslifRecognizer, eslifAppValue);
-						while (value.value()) {
-							Object result = eslifAppValue.getResult();
-							eslifLogger.info("Result: " + result);
-						}
-						value.free();
-					} catch (Exception e){
-						eslifLogger.error("Cannot value the input" + e);
+				try {
+					AppValue eslifAppValue = new AppValue();
+					eslifLogger.info("Testing value() on " + string);
+					ESLIFValue value = new ESLIFValue(eslifRecognizer, eslifAppValue);
+					while (value.value()) {
+						Object result = eslifAppValue.getResult();
+						eslifLogger.info("Result: " + result);
 					}
+					value.free();
+				} catch (Exception e){
+					eslifLogger.error("Cannot value the input: " + e);
 				}
 			}
 			eslifRecognizer.free();
