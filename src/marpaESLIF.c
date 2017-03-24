@@ -11004,7 +11004,7 @@ static inline short _marpaESLIFValue_stack_i_resetb(marpaESLIFValue_t *marpaESLI
   void                               *userDatavp;
 
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
-  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "start indice=%d", indicei);
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "start indice=%d forgetb=%d", indicei, (int) forgetb);
 
   if (indicei >= GENERICSTACK_USED(marpaESLIFValuep->typeStackp)) {
     MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Reset on something that does not yet exist: indice %d >= %d", indicei, GENERICSTACK_USED(marpaESLIFValuep->typeStackp));
@@ -11450,7 +11450,6 @@ static inline marpaESLIFValue_t *_marpaESLIFValue_newp(marpaESLIFRecognizer_t *m
   marpaESLIFValuep->valueStackp                 = NULL;
   marpaESLIFValuep->typeStackp                  = NULL;
   marpaESLIFValuep->contextStackp               = NULL;
-  marpaESLIFValuep->ptrRefcountHashp            = NULL;
   marpaESLIFValuep->inValuationb                = 0;
   marpaESLIFValuep->symbolp                     = NULL;
   marpaESLIFValuep->rulep                       = NULL;
@@ -12316,12 +12315,22 @@ static short _marpaESLIF_rule_action_copyb(void *userDatavp, marpaESLIFValue_t *
 
   if (nullableb) {
     /* No choice: result is undef */
-    rcb = _marpaESLIFValue_stack_set_undefb(marpaESLIFValuep, resulti);
-    goto done;
+    if (! _marpaESLIFValue_stack_set_undefb(marpaESLIFValuep, resulti)) {
+      goto err;
+    }
+    goto forget;
   }
 
   if ((argi < arg0i) || (argi > argni)) {
     MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "Indice %d in out of range [%d..%d]", argi, arg0i, argni);
+    goto err;
+  }
+
+  /* When argi is resulti, this is a no-op */
+  if (argi == resulti) {
+    MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "No-op");
+    rcb = 1;
+    goto done;
   }
 
   /* Undef ? */
@@ -12329,8 +12338,10 @@ static short _marpaESLIF_rule_action_copyb(void *userDatavp, marpaESLIFValue_t *
     goto err;
   }
   if (flagb) {
-    rcb = _marpaESLIFValue_stack_set_undefb(marpaESLIFValuep, resulti);
-    goto done;
+    if (! _marpaESLIFValue_stack_set_undefb(marpaESLIFValuep, resulti)) {
+      goto err;
+    }
+    goto forget;
   }
 
   /* Char ? */
@@ -12341,8 +12352,10 @@ static short _marpaESLIF_rule_action_copyb(void *userDatavp, marpaESLIFValue_t *
     if (! _marpaESLIFValue_stack_get_charb(marpaESLIFValuep, argi, &contexti, &c)) {
       goto err;
     }
-    rcb = _marpaESLIFValue_stack_set_charb(marpaESLIFValuep, resulti, contexti, c);
-    goto done;
+    if (! _marpaESLIFValue_stack_set_charb(marpaESLIFValuep, resulti, contexti, c)) {
+      goto err;
+    }
+    goto forget;
   }
   
   /* short ? */
@@ -12353,8 +12366,10 @@ static short _marpaESLIF_rule_action_copyb(void *userDatavp, marpaESLIFValue_t *
     if (! _marpaESLIFValue_stack_get_shortb(marpaESLIFValuep, argi, &contexti, &b)) {
       goto err;
     }
-    rcb = _marpaESLIFValue_stack_set_shortb(marpaESLIFValuep, resulti, contexti, b);
-    goto done;
+    if (! _marpaESLIFValue_stack_set_shortb(marpaESLIFValuep, resulti, contexti, b)) {
+      goto err;
+    }
+    goto forget;
   }
   
   /* int ? */
@@ -12365,8 +12380,10 @@ static short _marpaESLIF_rule_action_copyb(void *userDatavp, marpaESLIFValue_t *
     if (! _marpaESLIFValue_stack_get_intb(marpaESLIFValuep, argi, &contexti, &i)) {
       goto err;
     }
-    rcb = _marpaESLIFValue_stack_set_intb(marpaESLIFValuep, resulti, contexti, i);
-    goto done;
+    if (! _marpaESLIFValue_stack_set_intb(marpaESLIFValuep, resulti, contexti, i)) {
+      goto err;
+    }
+    goto forget;
   }
   
   /* long ? */
@@ -12377,8 +12394,10 @@ static short _marpaESLIF_rule_action_copyb(void *userDatavp, marpaESLIFValue_t *
     if (! _marpaESLIFValue_stack_get_longb(marpaESLIFValuep, argi, &contexti, &l)) {
       goto err;
     }
-    rcb = _marpaESLIFValue_stack_set_longb(marpaESLIFValuep, resulti, contexti, l);
-    goto done;
+    if (! _marpaESLIFValue_stack_set_longb(marpaESLIFValuep, resulti, contexti, l)) {
+      goto err;
+    }
+    goto forget;
   }
   
   /* float ? */
@@ -12389,8 +12408,10 @@ static short _marpaESLIF_rule_action_copyb(void *userDatavp, marpaESLIFValue_t *
     if (! _marpaESLIFValue_stack_get_floatb(marpaESLIFValuep, argi, &contexti, &f)) {
       goto err;
     }
-    rcb = _marpaESLIFValue_stack_set_floatb(marpaESLIFValuep, resulti, contexti, f);
-    goto done;
+    if (! _marpaESLIFValue_stack_set_floatb(marpaESLIFValuep, resulti, contexti, f)) {
+      goto err;
+    }
+    goto forget;
   }
   
   /* double ? */
@@ -12401,8 +12422,10 @@ static short _marpaESLIF_rule_action_copyb(void *userDatavp, marpaESLIFValue_t *
     if (! _marpaESLIFValue_stack_get_doubleb(marpaESLIFValuep, argi, &contexti, &d)) {
       goto err;
     }
-    rcb = _marpaESLIFValue_stack_set_doubleb(marpaESLIFValuep, resulti, contexti, d);
-    goto done;
+    if (! _marpaESLIFValue_stack_set_doubleb(marpaESLIFValuep, resulti, contexti, d)) {
+      goto err;
+    }
+    goto forget;
   }
   
   /* ptr ? */
@@ -12413,8 +12436,10 @@ static short _marpaESLIF_rule_action_copyb(void *userDatavp, marpaESLIFValue_t *
     if (! _marpaESLIFValue_stack_get_ptrb(marpaESLIFValuep, argi, &contexti, &p, &shallowb)) {
       goto err;
     }
-    rcb = _marpaESLIFValue_stack_set_ptrb(marpaESLIFValuep, resulti, contexti, p, shallowb);
-    goto done;
+    if (! _marpaESLIFValue_stack_set_ptrb(marpaESLIFValuep, resulti, contexti, p, shallowb)) {
+      goto err;
+    }
+    goto forget;
   }
   
   /* array ? */
@@ -12425,10 +12450,17 @@ static short _marpaESLIF_rule_action_copyb(void *userDatavp, marpaESLIFValue_t *
     if (! _marpaESLIFValue_stack_get_arrayb(marpaESLIFValuep, argi, &contexti, &p, &sizel, &shallowb)) {
       goto err;
     }
-    rcb = _marpaESLIFValue_stack_set_arrayb(marpaESLIFValuep, resulti, contexti, p, sizel, shallowb);
-    goto done;
+    if (! _marpaESLIFValue_stack_set_arrayb(marpaESLIFValuep, resulti, contexti, p, sizel, shallowb)) {
+      goto err;
+    }
+    goto forget;
   }
-  
+
+ forget:
+  /* We did a copy - this mean that the we can forget about the original */
+  rcb = _marpaESLIFValue_stack_forgetb(marpaESLIFValuep, argi);
+  goto done;
+
   /* Not a known type !? */
   if (! GENERICSTACK_IS_INT(marpaESLIFValuep->typeStackp, argi)) {
     MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "Indice %d in stack is not typed (genericStack type: %s)", argi, _marpaESLIF_genericStack_i_types(marpaESLIFValuep->typeStackp, argi));
