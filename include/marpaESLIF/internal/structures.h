@@ -2,7 +2,6 @@
 #define MARPAESLIF_INTERNAL_STRUCTURES_H
 
 #include <genericStack.h>
-#include <genericHash.h>
 #include <pcre2.h>
 #include <tconv.h>
 
@@ -245,7 +244,6 @@ struct marpaESLIFValue {
   genericStack_t           *valueStackp;
   genericStack_t           *typeStackp;
   genericStack_t           *contextStackp;
-  genericHash_t            *ptrRefcountHashp;
   short                     inValuationb;
   marpaESLIF_symbol_t      *symbolp;
   marpaESLIF_rule_t        *rulep;
