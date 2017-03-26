@@ -38,8 +38,8 @@ ADD_CUSTOM_TARGET (marpaESLIFPerlReleaseTrial ALL ${CMAKE_COMMAND} -E echo "dzil
 # -------
 # Release
 # -------
-ADD_CUSTOM_TARGET (marpaESLIFPerlReleaseTrial ALL ${CMAKE_COMMAND} -E echo "dzil release"
-  COMMAND dzil release --trial
+ADD_CUSTOM_TARGET (marpaESLIFPerlRelease ALL ${CMAKE_COMMAND} -E echo "dzil release"
+  COMMAND dzil release
   DEPENDS marpaESLIFPerlCopy
   )
 
