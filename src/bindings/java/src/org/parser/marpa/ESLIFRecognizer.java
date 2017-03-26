@@ -135,7 +135,7 @@ public class ESLIFRecognizer {
 	/**
 	 * When control is given back to the end-user, he can always ask what are the current events.
 	 * 
-	 * @return the array of events
+	 * @return the array of events, eventually empty if there is none
 	 * @throws ESLIFException if the interface failed
 	 */
 	public synchronized ESLIFEvent[] events() throws ESLIFException {
@@ -172,6 +172,18 @@ public class ESLIFRecognizer {
 	}
 	
 	/**
+	 * Short-hand version of lexemeAlternative, where grammar length default to the recommended value of 1.
+	 * 
+	 * @param name the name of the lexeme
+	 * @param object the object that will represent the value of this lexeme at this parsing stage
+	 * @return a boolean indicating if the call was successful or not
+	 * @throws ESLIFException if the interface failed
+	 */
+	public synchronized boolean lexemeAlternative(String name, Object object) throws ESLIFException {
+		return jniLexemeAlternative(name, object, 1);
+	}
+	
+	/**
 	 * Say the recognizer that alternatives are complete at this precise moment of parsing, and that the recognizer must move
 	 * forward by <code>length</code> bytes, which can be zero (end-user's responsibility).
 	 * This method can generate events.
@@ -190,13 +202,26 @@ public class ESLIFRecognizer {
 	 * 
 	 * @param name the name of the lexeme
 	 * @param object the object that will represent the value of this lexeme at this parsing stage
+	 * @param length the number of bytes consumed by the latest set of alternatives
 	 * @param grammarLength the length in the grammar, must be greater or equal than one
+	 * @return a boolean indicating if the call was successful or not
+	 * @throws ESLIFException if the interface failed
+	 */
+	public synchronized boolean lexemeRead(String name, Object object, int length, int grammarLength) throws ESLIFException {
+		return jniLexemeRead(name, object, length, grammarLength);
+	}
+	
+	/**
+	 * A short-hand version of lexemeComplete() where grammarLength default to the recommended value of 1.
+	 * 
+	 * @param name the name of the lexeme
+	 * @param object the object that will represent the value of this lexeme at this parsing stage
 	 * @param length the number of bytes consumed by the latest set of alternatives
 	 * @return a boolean indicating if the call was successful or not
 	 * @throws ESLIFException if the interface failed
 	 */
-	public synchronized boolean lexemeRead(String name, Object object, int grammarLength, int length) throws ESLIFException {
-		return jniLexemeRead(name, object, grammarLength, length);
+	public synchronized boolean lexemeRead(String name, Object object, int length) throws ESLIFException {
+		return jniLexemeRead(name, object, length, 1);
 	}
 	
 	/**
@@ -270,7 +295,8 @@ public class ESLIFRecognizer {
 	}
 
 	/**
-	 * This method is a sort of proxy of the isEof() recognizer interface.
+	 * This method is similar to the isEof()'s recognizer interface. Except that this is asking the question directly to the recognizer's
+	 * internal state, that maintains a copy of this flag.
 	 * 
 	 * @return a boolean indicating of end-of-user-data is reached
 	 * @throws ESLIFException if the interface failed
@@ -290,9 +316,10 @@ public class ESLIFRecognizer {
 	}
 
 	/**
-	 * Get a copy of the current internal recognizer buffer, starting at the exact byte where resume() would start
+	 * Get a copy of the current internal recognizer buffer, starting at the exact byte where resume() would start.
+	 * A null output does not mean there is an error, ESLIF will automatically require more data unless the EOF flag is set.
 	 * 
-	 * @return an array of bytes
+	 * @return an array of bytes, or null
 	 * @throws ESLIFException if the interface failed
 	 */
 	public synchronized byte[] input() throws ESLIFException {

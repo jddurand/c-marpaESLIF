@@ -138,25 +138,23 @@ public class AppParse  {
 					}
 
 					ESLIFEvent[] events = eslifRecognizer.events();
-					if (events != null) {
-						for (int k = 0; k < events.length; k++) {
-							ESLIFEvent event = events[k];
-						    if ("^NUMBER".equals(event.getEvent())) {
-						    	//
-						    	// Recognizer will wait forever if we do not feed the number
-						    	//
-								byte[] bytes = eslifRecognizer.lexemeLastPause("NUMBER");
-								if (bytes == null) {
-									throw new Exception("Pause before on NUMBER but no pause information!");
-								}
-								if (! doLexemeRead(eslifLogger, eslifRecognizer, "NUMBER", j, bytes)) {
-									throw new Exception("NUMBER expected but reading such lexeme fails!");
-								}
-								doDiscardTry(eslifLogger, eslifRecognizer);
-								doLexemeTry(eslifLogger, eslifRecognizer, "WHITESPACES");
-								doLexemeTry(eslifLogger, eslifRecognizer, "whitespaces");
-						    }
-						}
+					for (int k = 0; k < events.length; k++) {
+						ESLIFEvent event = events[k];
+					    if ("^NUMBER".equals(event.getEvent())) {
+					    	//
+					    	// Recognizer will wait forever if we do not feed the number
+					    	//
+							byte[] bytes = eslifRecognizer.lexemeLastPause("NUMBER");
+							if (bytes == null) {
+								throw new Exception("Pause before on NUMBER but no pause information!");
+							}
+							if (! doLexemeRead(eslifLogger, eslifRecognizer, "NUMBER", j, bytes)) {
+								throw new Exception("NUMBER expected but reading such lexeme fails!");
+							}
+							doDiscardTry(eslifLogger, eslifRecognizer);
+							doLexemeTry(eslifLogger, eslifRecognizer, "WHITESPACES");
+							doLexemeTry(eslifLogger, eslifRecognizer, "whitespaces");
+					    }
 					}
 					if (j == 0) {
 						changeEventState("Loop No " + j, eslifLogger, eslifRecognizer, "Expression", ESLIFEventType.PREDICTED, false);
@@ -282,20 +280,18 @@ public class AppParse  {
 	
 	private static void showEvents(String context, ESLIFLoggerInterface eslifLogger, ESLIFRecognizer eslifRecognizer) throws Exception {
 		ESLIFEvent[] events = eslifRecognizer.events();
-		if (events != null) {
-			for (int j = 0; j < events.length; j++) {
-				ESLIFEvent event     = events[j];
-				ESLIFEventType type  = event.getType();
-				String         symbol = event.getSymbol();
-				String         name   = event.getEvent();
-			    eslifLogger.debug("[" + context + "]" + " Event: {Type, Symbol, Name}={" + type + ", " + symbol + ", " + name + "}");
-			    if (ESLIFEventType.BEFORE.equals(type)) {
-					byte[] bytes = eslifRecognizer.lexemeLastPause(symbol);
-					if (bytes == null) {
-						throw new Exception("Pause before on " + symbol + " but no pause information!");
-					}
-			    }
-			}
+		for (int j = 0; j < events.length; j++) {
+			ESLIFEvent event     = events[j];
+			ESLIFEventType type  = event.getType();
+			String         symbol = event.getSymbol();
+			String         name   = event.getEvent();
+		    eslifLogger.debug("[" + context + "]" + " Event: {Type, Symbol, Name}={" + type + ", " + symbol + ", " + name + "}");
+		    if (ESLIFEventType.BEFORE.equals(type)) {
+				byte[] bytes = eslifRecognizer.lexemeLastPause(symbol);
+				if (bytes == null) {
+					throw new Exception("Pause before on " + symbol + " but no pause information!");
+				}
+		    }
 		}
 	}
 	

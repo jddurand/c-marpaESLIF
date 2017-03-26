@@ -5765,7 +5765,7 @@ short marpaESLIFRecognizer_lexeme_tryb(marpaESLIFRecognizer_t *marpaESLIFRecogni
 
   symbolp = _marpaESLIF_symbol_findp(marpaESLIFp, grammarp, lexemes, -1, NULL /* symbolip */);
   if (symbolp == NULL) {
-    MARPAESLIF_ERRORF(marpaESLIFp, "Failed to symbol <%s>", lexemes);
+    MARPAESLIF_ERRORF(marpaESLIFp, "Failed to find symbol <%s>", lexemes);
     goto err;
   }
 
@@ -6328,7 +6328,10 @@ static inline marpaESLIF_symbol_t *_marpaESLIF_symbol_findp(marpaESLIF_t *marpaE
     if (symbolip != NULL) {
       *symbolip = rcp->idi;
     }
+  } else {
+    errno = EINVAL;
   }
+
   return rcp;
 }
 
@@ -13108,6 +13111,7 @@ static inline short _marpaESLIFRecognizer_last_lexemeDatab(marpaESLIFRecognizer_
 
   if (lexemes == NULL) {
     MARPAESLIF_ERROR(marpaESLIFp, "Lexeme name is NULL");
+    errno = EINVAL;
     goto err;
   }
 
@@ -13119,6 +13123,7 @@ static inline short _marpaESLIFRecognizer_last_lexemeDatab(marpaESLIFRecognizer_
   lexemeDatap = lexemeDatapp[symbolp->idi];
   if (lexemeDatap == NULL) {
     MARPAESLIF_ERRORF(marpaESLIFp, "Symbol <%s> has no data setting", lexemes);
+    errno = EINVAL;
     goto err;
   }
 
@@ -13359,6 +13364,7 @@ short marpaESLIFRecognizer_last_completedb(marpaESLIFRecognizer_t *marpaESLIFRec
 
   if (names == NULL) {
     MARPAESLIF_ERROR(marpaESLIFp, "Symbol name is NULL");
+    errno = EINVAL;
     goto err;
   }
 
@@ -13414,6 +13420,7 @@ short marpaESLIFRecognizer_last_completedb(marpaESLIFRecognizer_t *marpaESLIFRec
   if (earleySetIdi < 0) {
     /* Not found */
     MARPAESLIF_ERRORF(marpaESLIFp, "No match for <%s> in input stack", names);
+    errno = EINVAL;
     goto err;
   }
 
