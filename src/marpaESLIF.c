@@ -5518,6 +5518,9 @@ static inline short _marpaESLIFRecognizer_lexeme_completeb(marpaESLIFRecognizer_
       if (! _marpaESLIFRecognizer_readb(marpaESLIFRecognizerp)) {
         goto err;
       }
+      /* We are caching inputs for performance, but this is dangerous because */
+      /* _marpaESLIFRecognizer_read() can change it */
+      inputs = marpaESLIFRecognizerp->inputs;
     } else {
       MARPAESLIF_ERRORF(marpaESLIFp, "Completion length is %ld but must be <= %ld (number of remaining bytes in the recognizer internal buffer)", (unsigned long) lengthl, (unsigned long) marpaESLIFRecognizerp->inputl);
       goto err;
