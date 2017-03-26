@@ -12,21 +12,21 @@ sub new {
 sub read {
     my $self = shift;
     my $line = $self->{line} = readline($self->{fh});
-    $self->{log}->tracef("read => $line");
+    $self->{log}->tracef("read => %s", $line);
     return;
 }
 
 sub isEof {
     my $self = shift;
     my $isEof = eof($self->{fh});
-    $self->{log}->tracef("isEof => %s", $isEof);
+    $self->{log}->tracef("isEof => %d", $isEof);
     return $isEof;
 }
 
 sub isCharacterStream {
     my ($self) = @_;
     my $isCharacterStream = 1;
-    $self->{log}->tracef("isCharacterStream => %s", $isCharacterStream);
+    $self->{log}->tracef("isCharacterStream => %d", $isCharacterStream);
     return $isCharacterStream;
 }
 
@@ -47,21 +47,21 @@ sub data {
 sub isWithDisableThreshold {
     my ($self) = @_;
     my $isWithDisableThreshold = 0;
-    $self->{log}->tracef("isWithDisableThreshold => %s", $isWithDisableThreshold);
+    $self->{log}->tracef("isWithDisableThreshold => %d", $isWithDisableThreshold);
     return $isWithDisableThreshold;
 }
 
 sub isWithExhaustion {
     my ($self) = @_;
     my $isWithExhaustion = 0;
-    $self->{log}->tracef("isWithExhaustion => %s", $isWithExhaustion);
+    $self->{log}->tracef("isWithExhaustion => %d", $isWithExhaustion);
     return $isWithExhaustion;
 }
 
 sub isWithNewline {
     my ($self) = @_;
     my $isWithNewline = 1;
-    $self->{log}->tracef("isWithNewline = %s", $isWithNewline);
+    $self->{log}->tracef("isWithNewline = %d", $isWithNewline);
     return $isWithNewline;
 }
 
@@ -186,6 +186,9 @@ use Test::More;
 use Log::Log4perl qw/:easy/;
 use Log::Any::Adapter;
 use Log::Any qw/$log/;
+use Try::Tiny;
+use Encode qw/decode encode/;
+
 #
 # Init log
 #
@@ -202,6 +205,7 @@ Log::Any::Adapter->set('Log4perl');
 BEGIN { require_ok('MarpaX::ESLIF') };
 BEGIN { require_ok('MarpaX::ESLIF::Event::Type') };
 BEGIN { require_ok('MarpaX::ESLIF::Value::Type') };
+BEGIN { require_ok('MarpaX::ESLIF::LoggerLevel::Type') };
 
 #
 # Test Event constants
@@ -287,7 +291,9 @@ my @strings = (
     "1 + ( 2 + ( 3 + ( 4 + 50) ) )   /* comment after */",
     " 100"
     );
-
+#
+# Test the parse() interface
+#
 for (my $i = 0; $i <= $#strings; $i++) {
   my $string = $strings[$i];
 
@@ -303,7 +309,202 @@ for (my $i = 0; $i <= $#strings; $i++) {
   }
 }
 
+#
+# Test the scan()/resume() interface
+#
+for (my $i = 0; $i <= $#strings; $i++) {
+    my $string = $strings[$i];
+
+    $log->infof("Testing scan()/resume() on %s", $string);
+    my $recognizerInterface = MyRecognizer->new($string, $log);
+    my $eslifRecognizer = MarpaX::ESLIF::Recognizer->new($eslifGrammar, $recognizerInterface);
+    isa_ok($eslifRecognizer, 'MarpaX::ESLIF::Recognizer');
+    if (doScan($log, $eslifRecognizer, 1)) {
+        if (! $eslifRecognizer->isEof()) {
+            if (! $eslifRecognizer->read()) {
+                last;
+            }
+            showRecognizerInput("after read", $log, $eslifRecognizer);
+        }
+        if ($i == 0) {
+            $eslifRecognizer->progressLog(-1, -1, MarpaX::ESLIF::LoggerLevel::Type->GENERICLOGGER_LOGLEVEL_NOTICE);
+        }
+        my $j = 0;
+        while ($eslifRecognizer->isCanContinue()) {
+            if (! doResume($log, $eslifRecognizer, 0)) {
+                last;
+            }
+
+            my $events = $eslifRecognizer->events();
+            for (my $k = 0; $k < scalar(@{$events}); $k++) {
+                my $event = $events->[$k];
+                if ($event->{event} eq "^NUMBER") {
+                    #
+                    # Recognizer will wait forever if we do not feed the number
+                    #
+                    my $bytes = $eslifRecognizer->lexemeLastPause("NUMBER");
+                    if (! defined($bytes)) {
+                        BAIl_OUT("Pause before on NUMBER but no pause information!");
+                    }
+                    if (! doLexemeRead($log, $eslifRecognizer, "NUMBER", $j, $bytes)) {
+                        BAIL_OUT("NUMBER expected but reading such lexeme fails!");
+                    }
+                    doDiscardTry($log, $eslifRecognizer);
+                    doLexemeTry($log, $eslifRecognizer, "WHITESPACES");
+                    doLexemeTry($log, $eslifRecognizer, "whitespaces");
+                }
+            }
+            if ($j == 0) {
+                changeEventState("Loop No $j", $log, $eslifRecognizer, "Expression", [ MarpaX::ESLIF::Event::Type->MARPAESLIF_EVENTTYPE_PREDICTED ], 0);
+                changeEventState("Loop No $j", $log, $eslifRecognizer, "whitespaces", [ MarpaX::ESLIF::Event::Type->MARPAESLIF_EVENTTYPE_DISCARD ], 0);
+                changeEventState("Loop No $j", $log, $eslifRecognizer, "NUMBER", [ MarpaX::ESLIF::Event::Type->MARPAESLIF_EVENTTYPE_AFTER ], 0);
+            }
+            showLastCompletion("Loop No $j", $log, $eslifRecognizer, "Expression", $string);
+            showLastCompletion("Loop No $j", $log, $eslifRecognizer, "Number", $string);
+            $j++;
+        }
+        try {
+            my $eslifAppValue = MyValue->new($log);
+            $log->infof("Testing value() on %s", $string);
+            my $value = MarpaX::ESLIF::Value->new($eslifRecognizer, $eslifAppValue);
+            while ($value->value()) {
+                $log->infof("Result: %s", $eslifAppValue->getResult());
+            }
+        } catch {
+            $log->errorf("Cannot value the input: %s", $_);
+        }
+    }
+}
+
 done_testing();
+
+sub doScan {
+    my ($log, $eslifRecognizer, $initialEvents) = @_;
+		
+    $log->debugf(" =============> scan(initialEvents=%s", $initialEvents);
+    if (! $eslifRecognizer->scan($initialEvents)) {
+        return 0;
+    }
+    my $context = "after scan";
+    showRecognizerInput($context, $log, $eslifRecognizer);
+    showEvents($context, $log, $eslifRecognizer);
+    showLexemeExpected($context, $log, $eslifRecognizer);
+		
+    return 1;
+}
+
+sub showRecognizerInput {
+    my ($context, $log, $eslifRecognizer) = @_;
+
+    my $input = $eslifRecognizer->input();
+    $log->debugf("[%s] Recognizer buffer:\n%s", $context, $input);
+}
+
+sub showEvents {
+    my ($context, $log, $eslifRecognizer) = @_;
+
+    $log->debugf("[%s] Events: %s", $context, $eslifRecognizer->events);
+}
+
+sub showLexemeExpected {
+    my ($context, $log, $eslifRecognizer) = @_;
+
+    $log->debugf("[%s] Expected lexemes: %s", $context, $eslifRecognizer->lexemeExpected);
+}
+
+sub doResume {
+    my ($log, $eslifRecognizer, $deltaLength) = @_;
+    my $context;
+		
+    $log->debugf(" =============> resume(deltaLength=%d)", $deltaLength);
+    if (! $eslifRecognizer->resume($deltaLength)) {
+        return 0;
+    }
+
+    $context = "after resume";
+    showRecognizerInput($context, $log, $eslifRecognizer);
+    showEvents($context, $log, $eslifRecognizer);
+    showLexemeExpected($context, $log, $eslifRecognizer);
+		
+    return 1;
+}
+
+sub changeEventState {
+    my ($context, $log, $eslifRecognizer, $symbol, $type, $state) = @_;
+    $log->debugf("[%s] Changing %s event state of symbol %s to %s", $context, $type, $symbol, $state);
+    $eslifRecognizer->eventOnOff($symbol, $type, $state);
+}
+
+sub showLastCompletion {
+    my ($context, $log, $eslifRecognizer, $symbol, $origin)  = @_;
+
+    try {
+        my $lastExpressionOffset = $eslifRecognizer->lastCompletedOffset($symbol);
+        my $lastExpressionLength = $eslifRecognizer->lastCompletedLength($symbol);
+        my $string2byte = encode('UTF-8', $origin, Encode::FB_CROAK);
+        my $matchedbytes = substr($string2byte, $lastExpressionOffset, $lastExpressionOffset, $lastExpressionLength);
+        my $matchedString = decode('UTF-8', $matchedbytes, Encode::FB_CROAK);
+        $log->debugf("[%s] Last %s completion is %s", $context, $symbol, $matchedString);
+    } catch {
+        $log->warnf("[%s] Last %s completion raised an exception, %s", $context, $symbol, $_);
+    }
+}
+
+#
+# We replace current NUMBER by the Integer object representing value
+#
+sub doLexemeRead {
+    my ($log, $eslifRecognizer, $symbol, $value, $bytes) = @_;
+    my $context;
+    my $old = decode('UTF-8', $bytes, Encode::FB_CROAK);
+		
+    $log->debugf("... Forcing Integer object for \"%s\" spanned on %d bytes instead of \"%s\"", $value, length($bytes), $old);
+    if (! $eslifRecognizer->lexemeRead($symbol, int($value), length($bytes), 1)) {
+        return 0;
+    }
+
+    $context = "after lexemeRead";
+    showRecognizerInput($context, $log, $eslifRecognizer);
+    showEvents($context, $log, $eslifRecognizer);
+    showLexemeExpected($context, $log, $eslifRecognizer);
+		
+    return 1;
+}
+
+sub doDiscardTry {
+    my ($log, $eslifRecognizer) = @_;
+
+    my $test;
+    try {
+        $test = $eslifRecognizer->discardTry();
+        $log->debugf("... Testing discard at current position returns %d", $test);
+        if ($test) {
+            my $bytes = $eslifRecognizer->discardLastTry();
+            my $string = decode('UTF-8', $bytes, Encode::FB_CROAK);
+            $log->debugf("... Testing discard at current position gave \"%s\"", $string);
+        }
+    } catch {
+        # Because we test with a symbol that is not a lexeme, and that raises an exception
+        $log->debugf($_);
+    }
+}
+
+sub doLexemeTry {
+    my ($log, $eslifRecognizer, $symbol) = @_;
+    my $test;
+    try {
+        $test = $eslifRecognizer->lexemeTry($symbol);
+        $log->debugf("... Testing %s lexeme at current position returns %d", $symbol, $test);
+        if ($test) {
+            my $bytes = $eslifRecognizer->lexemeLastTry($symbol);
+            my $string = decode('UTF-8', $bytes, Encode::FB_CROAK);
+            $log->debugf("... Testing symbol %s at current position gave \"%s\"", $symbol, $string);
+        }
+    } catch {
+        # Because we test with a symbol that is not a lexeme, and that raises an exception
+        $log->debugf($_);
+    }
+}
 
 1;
 
