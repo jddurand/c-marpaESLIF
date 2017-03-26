@@ -15,7 +15,8 @@ ADD_CUSTOM_TARGET (marpaESLIFPerlCopy ${CMAKE_COMMAND} -E echo "${PERL_EXECUTABL
 # -----
 ADD_CUSTOM_TARGET (marpaESLIFPerlClean ${CMAKE_COMMAND} -E echo "... dzil clean"
   COMMAND dzil clean
-  DEPENDS marpaESLIFPerlCopy
+  COMMAND ${CMAKE_COMMAND} -E echo "${CMAKE_COMMAND} -E remove_directory src"
+  COMMAND ${CMAKE_COMMAND} -E remove_directory src
   )
 
 # -------
@@ -23,7 +24,23 @@ ADD_CUSTOM_TARGET (marpaESLIFPerlClean ${CMAKE_COMMAND} -E echo "... dzil clean"
 # -------
 ADD_CUSTOM_TARGET (marpaESLIFPerlPackage ALL ${CMAKE_COMMAND} -E echo "... dzil build"
   COMMAND dzil build
-  DEPENDS marpaESLIFPerlClean
+  DEPENDS marpaESLIFPerlCopy
+  )
+
+# -------------
+# Trial Release
+# -------------
+ADD_CUSTOM_TARGET (marpaESLIFPerlReleaseTrial ALL ${CMAKE_COMMAND} -E echo "dzil release --trial"
+  COMMAND dzil release --trial
+  DEPENDS marpaESLIFPerlCopy
+  )
+
+# -------
+# Release
+# -------
+ADD_CUSTOM_TARGET (marpaESLIFPerlReleaseTrial ALL ${CMAKE_COMMAND} -E echo "dzil release"
+  COMMAND dzil release --trial
+  DEPENDS marpaESLIFPerlCopy
   )
 
 # -----
