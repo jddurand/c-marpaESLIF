@@ -2021,7 +2021,7 @@ CODE:
   if (!  marpaESLIFRecognizer_last_completedb(Perl_MarpaX_ESLIF_Recognizer->marpaESLIFRecognizerp, name, &offsetp, NULL /* lengthlp */)) {
     MARPAESLIF_CROAKF("marpaESLIFRecognizer_last_completedb failure, %s", strerror(errno));
   }
-  RETVAL = (IV) offsetp;
+  RETVAL = PTR2IV(offsetp);
 OUTPUT:
   RETVAL
 
