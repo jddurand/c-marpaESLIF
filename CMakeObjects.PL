@@ -8,6 +8,7 @@ use File::chdir;
 use File::Basename qw/basename dirname/;
 use File::Find qw/find/;
 use File::Path qw/make_path/;
+use File::Copy qw/copy/;
 use File::Copy::Recursive qw/dircopy/;
 use IPC::Run qw/run/;
 use Perl::OSType qw/is_os_type/;
@@ -60,6 +61,8 @@ make_path(File::Spec->catdir('3rdparty', 'output'));
     $tar->extract();
 }
 undef $tar;
+print "... Copying 3rdparty/tar/cchardet-1.0.0/prcpucfg_solaris.h to 3rdparty/output/cchardet-1.0.0/src/ext/libcharsetdetect/nspr-emu\n";
+copy(File::Spec->catfile('3rdparty', 'tar', 'cchardet-1.0.0', 'prcpucfg_solaris.h'), File::Spec->catdir('3rdparty', 'output', 'cchardet-1.0.0', 'src', 'ext', 'libcharsetdetect', 'nspr-emu'));
 push(@additional_srcdir, File::Spec->catdir('3rdparty', 'output', 'cchardet-1.0.0', 'src', 'ext', 'libcharsetdetect', 'mozilla', 'extensions', 'universalchardet', 'src', 'base'));
 push(@additional_srcdir, File::Spec->catfile('3rdparty', 'output', 'cchardet-1.0.0', 'src', 'ext', 'libcharsetdetect', 'charsetdetect.cpp'));
 push(@additional_includes, File::Spec->catdir('3rdparty', 'output', 'cchardet-1.0.0', 'src', 'ext', 'libcharsetdetect', 'mozilla', 'extensions', 'universalchardet', 'src', 'base'));
