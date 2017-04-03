@@ -5832,7 +5832,7 @@ short marpaESLIFRecognizer_event_onoffb(marpaESLIFRecognizer_t *marpaESLIFRecogn
   marpaESLIFGrammar_t  *marpaESLIFGrammarp;
   marpaESLIF_grammar_t *grammarp;
   marpaESLIFSymbol_t   *symbolp;
-  short                 seti;
+  int                   seti;
   short                 rcb;
 
   if (marpaESLIFRecognizerp == NULL) {
@@ -12462,11 +12462,6 @@ static short _marpaESLIF_rule_action_copyb(void *userDatavp, marpaESLIFValue_t *
     goto forget;
   }
 
- forget:
-  /* We did a copy - this mean that the we can forget about the original */
-  rcb = _marpaESLIFValue_stack_forgetb(marpaESLIFValuep, argi);
-  goto done;
-
   /* Not a known type !? */
   if (! GENERICSTACK_IS_INT(marpaESLIFValuep->typeStackp, argi)) {
     MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "Indice %d in stack is not typed (genericStack type: %s)", argi, _marpaESLIF_genericStack_i_types(marpaESLIFValuep->typeStackp, argi));
@@ -12474,6 +12469,11 @@ static short _marpaESLIF_rule_action_copyb(void *userDatavp, marpaESLIFValue_t *
     MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "Indice %d in stack is not supported (internal type: %d)", argi, GENERICSTACK_IS_INT(marpaESLIFValuep->typeStackp, argi));
   }
   rcb = 0;
+  goto done;
+
+ forget:
+  /* We did a copy - this mean that the we can forget about the original */
+  rcb = _marpaESLIFValue_stack_forgetb(marpaESLIFValuep, argi);
   goto done;
 
  err:
