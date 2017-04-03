@@ -130,6 +130,8 @@ Here's the same thing translated to Optparse.
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#define OPTPARSE_IMPLEMENTATION
+#define OPTPARSE_API static
 #include "optparse.h"
 
 int main(int argc, char **argv)
@@ -139,9 +141,11 @@ int main(int argc, char **argv)
     const char *color = "white";
     int delay = 0;
 
-    struct optparse options;
-    optparse_init(&options, argv);
+    char *arg;
     int option;
+    struct optparse options;
+
+    optparse_init(&options, argv);
     while ((option = optparse(&options, "abc:d::")) != -1) {
         switch (option) {
         case 'a':
@@ -163,7 +167,6 @@ int main(int argc, char **argv)
     }
 
     /* Print remaining arguments. */
-    char *arg;
     while ((arg = optparse_arg(&options)))
         printf("%s\n", arg);
     return 0;
@@ -176,17 +179,12 @@ And here's a conversion to long options.
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#define OPTPARSE_IMPLEMENTATION
+#define OPTPARSE_API static
 #include "optparse.h"
 
 int main(int argc, char **argv)
 {
-    bool amend = false;
-    bool brief = false;
-    const char *color = "white";
-    int delay = 0;
-
-    struct optparse options;
-    optparse_init(&options, argv);
     struct optparse_long longopts[] = {
         {"amend", 'a', OPTPARSE_NONE},
         {"brief", 'b', OPTPARSE_NONE},
@@ -194,7 +192,17 @@ int main(int argc, char **argv)
         {"delay", 'd', OPTPARSE_OPTIONAL},
         {0}
     };
+
+    bool amend = false;
+    bool brief = false;
+    const char *color = "white";
+    int delay = 0;
+
+    char *arg;
     int option;
+    struct optparse options;
+
+    optparse_init(&options, argv);
     while ((option = optparse_long(&options, longopts, NULL)) != -1) {
         switch (option) {
         case 'a':
@@ -204,10 +212,10 @@ int main(int argc, char **argv)
             brief = true;
             break;
         case 'c':
-            color = optarg;
+            color = options.optarg;
             break;
         case 'd':
-            delay = optarg ? atoi(options.optarg) : 1;
+            delay = options.optarg ? atoi(options.optarg) : 1;
             break;
         case '?':
             fprintf(stderr, "%s: %s\n", argv[0], options.errmsg);
@@ -216,9 +224,9 @@ int main(int argc, char **argv)
     }
 
     /* Print remaining arguments. */
-    char *arg;
     while ((arg = optparse_arg(&options)))
         printf("%s\n", arg);
+
     return 0;
 }
 ~~~
