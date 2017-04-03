@@ -17,6 +17,9 @@ EXECUTE_PROCESS(
   COMMAND "${CMAKE_COMMAND}" -E tar xzf ${PROJECT_SOURCE_DIR}/3rdparty/tar/cchardet-1.0.0.tar.gz
   WORKING_DIRECTORY "${3RDPARTY_OUTPUT_PATH}"
   )
+EXECUTE_PROCESS(
+  COMMAND "${CMAKE_COMMAND}" -E copy ${PROJECT_SOURCE_DIR}/3rdparty/tar/cchardet-1.0.0/prcpucfg_solaris.h "${3RDPARTY_OUTPUT_PATH}/cchardet-1.0.0/src/ext/libcharsetdetect/nspr-emu/prcpucfg_solaris.h"
+  )
 FILE (GLOB ccharset_src
   ${3RDPARTY_OUTPUT_PATH}/cchardet-1.0.0/src/ext/libcharsetdetect/mozilla/extensions/universalchardet/src/base/*.cpp
   ${3RDPARTY_OUTPUT_PATH}/cchardet-1.0.0/src/ext/libcharsetdetect/charsetdetect.cpp
