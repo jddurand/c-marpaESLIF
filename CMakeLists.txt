@@ -2,7 +2,7 @@ CMAKE_MINIMUM_REQUIRED (VERSION 3.0.0 FATAL_ERROR)
 IF (NOT MYPACKAGEBOOTSTRAP_DONE)
   INCLUDE ("3rdparty/github/cmake-utils/cmake/MyPackageBootstrap.cmake")
 ENDIF ()
-MYPACKAGESTART (tconv 1 0 22)
+MYPACKAGESTART (tconv 1 0 24)
 
 ###########
 # Library #
@@ -16,6 +16,9 @@ SET (libtconv_inc)
 EXECUTE_PROCESS(
   COMMAND "${CMAKE_COMMAND}" -E tar xzf ${PROJECT_SOURCE_DIR}/3rdparty/tar/cchardet-1.0.0.tar.gz
   WORKING_DIRECTORY "${3RDPARTY_OUTPUT_PATH}"
+  )
+EXECUTE_PROCESS(
+  COMMAND "${CMAKE_COMMAND}" -E copy ${PROJECT_SOURCE_DIR}/3rdparty/tar/cchardet-1.0.0/prcpucfg_solaris.h "${3RDPARTY_OUTPUT_PATH}/cchardet-1.0.0/src/ext/libcharsetdetect/nspr-emu/prcpucfg_solaris.h"
   )
 FILE (GLOB ccharset_src
   ${3RDPARTY_OUTPUT_PATH}/cchardet-1.0.0/src/ext/libcharsetdetect/mozilla/extensions/universalchardet/src/base/*.cpp
