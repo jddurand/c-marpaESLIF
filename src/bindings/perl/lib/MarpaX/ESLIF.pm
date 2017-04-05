@@ -31,9 +31,13 @@ This class and its derivatives are thread-safe. Although there can be many ESLIF
 
 =head2 C<MarpaX::ESLIF->new()>
 
+  my $eslif = MarpaX::ESLIF->new();
+
 Returns an instance of MarpaX::ESLIF, noted C<$self> below.
 
 =head2 C<$self->version()>
+
+  printf "ESLIF library version: %s\n", $eslif->version;
 
 Returns a string containing the current underlying ESLIF library version.
 

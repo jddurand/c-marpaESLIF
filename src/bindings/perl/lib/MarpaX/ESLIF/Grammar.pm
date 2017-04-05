@@ -61,6 +61,8 @@ ESLIFGrammar is the second step after getting an ESLIF instance. As many grammar
 
 =head2 C<MarpaX::ESLIF::Grammar->new($eslif, $grammar, $encoding);>
 
+   my $eslifGrammar = MarpaX::ESLIF::Grammar->new($eslif, $data);
+
 Returns a grammar instance, noted C<$self> later. Parameters are:
 
 =over
@@ -81,19 +83,45 @@ Encoding will always be guessed if not given.
 
 =back
 
-=head2 C<$self->ngrammar>
+=head2 C<$self->ngrammar()>
+
+  printf "Maximum grammar indice: %d\n", $self->ngrammar + 1;
 
 Return the number of sub-grammars, represented as the latest grammar indice plus 1.
 
 A grammar can have multiple I<sub-grammars>, identified by a level. Internally this is a I<sparse> array of grammars, and it is legal that a level is not defined.
 
-=head2 C<$self->currentLevel>
+=head2 C<$self->currentLevel()>
+
+  printf "Current indice: %d\n", $self->currentLevel;
 
 Return the current level, which is always the first defined level of the grammar.
 
-=head2 C<$self->currentDescription>
+=head2 C<$self->currentDescription()>
+
+  printf "Current description: %s\n", $self->currentDescription;
 
 Return the description of the current level, with the same encoding as found in the grammar.
+
+=head2 C<$self->descriptionByLevel($level)>
+
+  printf "Level 0 description: %s\n", $self->descriptionByLevel(0);
+
+Return the description of the grammar at indice C<$level>, with the same encoding as found in the grammar.
+
+=head2 C<$self->currentRuleIds>
+
+  printf "Current Rule Ids: %s\n", join(' ', @{$self->currentRuleIds});
+
+Return the list of rule identifiers of the current grammar, as a reference to an array of integers.
+
+I<Rule identifiers are integers that uniquely identify a rule>.
+
+=head2 C<$self->ruleIdsByLevel($level)>
+
+  printf "Level 0 Rule Ids: %s\n", join(' ', @{$self->ruleIdsByLevel(0)});
+
+Return the list of rule identifiers at indice C<$level>, as a reference to an array of integers.
 
 =cut
 
