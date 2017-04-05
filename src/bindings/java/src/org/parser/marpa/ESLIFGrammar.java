@@ -67,7 +67,7 @@ public class ESLIFGrammar {
 	}
 	/**
 	 * A grammar can have multiple "sub-grammars", identified by a level.
-	 * This is a "sparse" array of grammar view: it is legal that a level is no defined. 
+	 * Internally this is a "sparse" array of grammars, and it is legal that a level is not defined. 
 	 * 
 	 * @return the number of sub-grammars, always &gt; 0.
 	 * @throws ESLIFException if the interface failed
