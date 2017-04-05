@@ -91,7 +91,8 @@ sub do_symbol {
 sub do_free {
     my ($self, $result) = @_;
 
-    $self->{log}->tracef("do_free(%s)", $result);
+    $self->{log}->fatalf("do_free(%s) called and this should never happen", $result);
+    die "do_free() called and this should never happen";
     undef $result;
 }
 
