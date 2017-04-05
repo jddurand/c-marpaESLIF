@@ -14,18 +14,19 @@ ESLIF is an extension of perl's L<Marpa::R2> BNF, written as a stand-alone L<mar
 =head1 SYNOPSIS
 
   my $eslif = MarpaX::ESLIF->new();
+  printf "ESLIF library version: %s\n", $eslif->version;
 
 This class and its derivatives are thread-safe. Although there can be many ESLIF instance, in practice a single instance is enough, unless you want different logging interfaces.
 
 =cut
 
-require XSLoader;
 use vars qw/$VERSION/;
 
 BEGIN {
     # VERSION
 
-    XSLoader::load __PACKAGE__, $VERSION;
+    require XSLoader;
+    XSLoader::load(__PACKAGE__, $VERSION);
 }
 
 1;
