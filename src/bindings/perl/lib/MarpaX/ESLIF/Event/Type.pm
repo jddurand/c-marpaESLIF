@@ -29,6 +29,42 @@ use Carp qw/croak/;
 
 # VERSION
 
+=head1 CONSTANTS
+
+=head2 MARPAESLIF_EVENTTYPE_NONE
+
+No event. User-space should never see it.
+
+=head2 MARPAESLIF_EVENTTYPE_COMPLETED
+
+Symbol completion event.
+
+=head2 MARPAESLIF_EVENTTYPE_NULLED
+
+Symbol nulling event.
+
+=head2 MARPAESLIF_EVENTTYPE_PREDICTED
+
+Symbol prediction event.
+
+=head2 MARPAESLIF_EVENTTYPE_BEFORE
+
+Lexeme prediction event.
+
+=head2 MARPAESLIF_EVENTTYPE_AFTER
+
+Lexeme consumption event.
+
+=head2 MARPAESLIF_EVENTTYPE_EXHAUSTED
+
+Exhaustion event.
+
+=head2 MARPAESLIF_EVENTTYPE_DISCARD
+
+Discard event.
+
+=cut
+
 # This section should be replaced on-the-fly at build time
 # AUTOLOAD
 
