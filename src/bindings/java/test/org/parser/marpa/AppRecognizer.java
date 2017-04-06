@@ -14,8 +14,15 @@ public class AppRecognizer implements ESLIFRecognizerInterface {
 			this.bufferedReader = bufferedReader;
 		}
 
-		public void read() throws Exception {
-			line = bufferedReader.readLine();
+		public boolean read() {
+			boolean rcb;
+			try {
+				line = bufferedReader.readLine();
+				rcb = true;
+			} catch (Exception e) {
+				rcb = false;
+			}
+			return rcb;
 		}
 
 		public boolean isEof() {
