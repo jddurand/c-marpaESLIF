@@ -18,14 +18,25 @@ BEGIN {
 
 =head1 DESCRIPTION
 
-ESLIF is an extension of perl's L<Marpa::R2> BNF, written as a stand-alone L<marpaESLIF|http://github.com/jddurand/c-marpaESLIF> library.
+ESLIF is an extension of perl's L<Marpa::R2> BNF, implemented as a stand-alone L<marpaESLIF|http://github.com/jddurand/c-marpaESLIF> C library.
 
 =head1 SYNOPSIS
+
+  use MarpaX::ESLIF;
 
   my $eslif = MarpaX::ESLIF->new();
   printf "ESLIF library version: %s\n", $eslif->version;
 
-This class and its derivatives are thread-safe. Although there can be many ESLIF instance, in practice a single instance is enough, unless you want different logging interfaces.
+With a logger, using Log::Any::Adapter::Stderr as an example:
+
+  use MarpaX::ESLIF;
+  use Log::Any qw/$log/;
+  use Log::Any::Adapter ('Stderr', log_level => 'trace' );
+
+  my $eslif = MarpaX::ESLIF->new($log);
+  printf "ESLIF library version: %s\n", $eslif->version;
+
+This class and its derivatives are thread-safe. Although there can be many ESLIF instance, in practice a single instance is enough, unless you want different logging interfaces. Once a MarpaX::ESLIF instance is created, the user should create a L<MarpaX::ESLIF::Grammar> instance to have a working grammar.
 
 =head1 METHODS
 
@@ -88,7 +99,7 @@ Returns a string containing the current underlying ESLIF library version.
 
 =head1 SEE ALSO
 
-L<c-marpaESLIF|https://github.com/jddurand/c-marpaESLIF>, L<c-genericLogger|https://github.com/jddurand/c-genericLogger>, L<Log::Any>
+L<MarpaX::ESLIF::Grammar>
 
 =cut
 
