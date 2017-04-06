@@ -120,6 +120,7 @@ public class ESLIFGrammar {
 	}
 	/**
 	 * This method return the name of a rule
+	 * This correspond to the <code>name</code> adverb, if present, else a default naming applies.
 	 * 
 	 * @param rule the rule ID
 	 * @return the name of the rule
@@ -140,6 +141,7 @@ public class ESLIFGrammar {
 	}
 	/**
 	 * This method return the name of a rule at a given level
+	 * This correspond to the <code>name</code> adverb, if present, else a default naming applies.
 	 * 
 	 * @param level the grammar level
 	 * @param rule the rule ID
