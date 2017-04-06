@@ -163,7 +163,9 @@ Return the description of the grammar at indice C<$level>.
 
   my $recognizerInterface = My::Recognizer::Interface->new();
   my $valueInterface      = My::Value::Interface->new();
-  printf "Parse result: %s\n", $self->parse($recognizerInterface, $valueInterface);
+  if ($self->parse($recognizerInterface, $valueInterface)) {
+    printf "Parse result: %s\n", $valueInterface->getResult;
+  }
 
 Short version of input validation and valuation, that will never give back control to the user until the end or a failure. No event is possible when using this method. If this method returns true, then it is guaranteed that the result is in C<$valueInterface->getResult()>.
 
