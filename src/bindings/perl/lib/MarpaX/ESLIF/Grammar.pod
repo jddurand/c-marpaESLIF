@@ -5,6 +5,7 @@ MarpaX::ESLIF::Grammar is the second step after getting a MarpaX::ESLIF instance
 =head1 SYNOPSIS
 
   use MarpaX::ESLIF;
+
   my $eslif = MarpaX::ESLIF->new();
   my $data = do { local $/; <DATA> };
   my $eslifGrammar = MarpaX::ESLIF::Grammar->new($eslif, $data);
@@ -54,7 +55,7 @@ As many grammars as wanted can be created using the same MarpaX::ESLIF parent. A
 
    my $eslifGrammar = MarpaX::ESLIF::Grammar->new($eslif, $data);
 
-Returns a grammar instance, noted C<$self> later. Parameters are:
+Returns a grammar instance, noted C<$eslifGrammar> later. Parameters are:
 
 =over
 
@@ -74,87 +75,87 @@ Encoding will always be guessed if not given.
 
 =back
 
-=head2 $self->ngrammar()
+=head2 $eslifGrammar->ngrammar()
 
-  printf "Number of sub-grammars: %d\n", $self->ngrammar;
+  printf "Number of sub-grammars: %d\n", $eslifGrammar->ngrammar;
 
 Return the number of sub-grammars.
 
 A grammar can have multiple I<sub-grammars>, identified by a level. Internally this is a I<sparse> array of grammars, and it is legal that a level is not defined.
 
-=head2 $self->currentLevel()
+=head2 $eslifGrammar->currentLevel()
 
-  printf "Current indice: %d\n", $self->currentLevel;
+  printf "Current indice: %d\n", $eslifGrammar->currentLevel;
 
 Return the current level, which is always the first indice that have a defined sub-grammar.
 
-=head2 $self->currentDescription()
+=head2 $eslifGrammar->currentDescription()
 
-  printf "Current description: %s\n", $self->currentDescription;
+  printf "Current description: %s\n", $eslifGrammar->currentDescription;
 
 Return the description of the current level, with the same encoding as found in the grammar. This correspong to the C<:desc> meta-symbol in a grammar.
 
-=head2 $self->descriptionByLevel($level)
+=head2 $eslifGrammar->descriptionByLevel($level)
 
-  printf "Level 1 description: %s\n", $self->descriptionByLevel(1);
+  printf "Level 1 description: %s\n", $eslifGrammar->descriptionByLevel(1);
 
 Return the description of the grammar at indice C<$level>, with the same encoding as found in the grammar.
 
-=head2 $self->currentRuleIds
+=head2 $eslifGrammar->currentRuleIds
 
-  printf "Current Rule Ids: %s\n", join(' ', @{$self->currentRuleIds});
+  printf "Current Rule Ids: %s\n", join(' ', @{$eslifGrammar->currentRuleIds});
 
 Return the list of rule identifiers of the current grammar, as a reference to an array of integers.
 
 I<Rule identifiers are integers that uniquely identify a rule>.
 
-=head2 $self->ruleIdsByLevel($level)
+=head2 $eslifGrammar->ruleIdsByLevel($level)
 
-  printf "Level 1 Rule Ids: %s\n", join(' ', @{$self->ruleIdsByLevel(1)});
+  printf "Level 1 Rule Ids: %s\n", join(' ', @{$eslifGrammar->ruleIdsByLevel(1)});
 
 Return the list of rule identifiers at indice C<$level>, as a reference to an array of integers.
 
-=head2 $self->ruleDisplay($ruleId)
+=head2 $eslifGrammar->ruleDisplay($ruleId)
 
-  printf "Rules names:\n\t%s\n", join("\n\t", map { $self->ruleDisplay($_) } @{$self->currentRuleIds});
+  printf "Rules names:\n\t%s\n", join("\n\t", map { $eslifGrammar->ruleDisplay($_) } @{$eslifGrammar->currentRuleIds});
 
 Return the name of a rule identified by its rule ID C<$ruleId>.
 
-=head2 $self->ruleShow($ruleId)
+=head2 $eslifGrammar->ruleShow($ruleId)
 
-  printf "Rules shows:\n\t%s\n", join("\n\t", map { $self->ruleShow($_) } @{$self->currentRuleIds});
+  printf "Rules shows:\n\t%s\n", join("\n\t", map { $eslifGrammar->ruleShow($_) } @{$eslifGrammar->currentRuleIds});
 
 Return the description of a rule identified by its rule ID C<$ruleId>.
 
-=head2 $self->ruleDisplayByLevel($level, $ruleId)
+=head2 $eslifGrammar->ruleDisplayByLevel($level, $ruleId)
 
-  printf "Level 1 Rule names 1:\n\t%s\n", join("\n\t", map { $self->ruleDisplayByLevel(1, $_) } @{$self->ruleIdsByLevel(1)});
+  printf "Level 1 Rule names 1:\n\t%s\n", join("\n\t", map { $eslifGrammar->ruleDisplayByLevel(1, $_) } @{$eslifGrammar->ruleIdsByLevel(1)});
 
 Return the name of a rule at a specificed indice C<$level> identified by its rule ID C<$ruleId>. This correspond to the C<name> adverb, if present, else a default naming applies.
 
-=head2 $self->ruleShowByLevel($level, $ruleId)
+=head2 $eslifGrammar->ruleShowByLevel($level, $ruleId)
 
-  printf "Level 1 Rules shows:\n\t%s\n", join("\n\t", map { $self->ruleShowByLevel(1, $_) } @{$self->ruleIdsByLevel(1)});
+  printf "Level 1 Rules shows:\n\t%s\n", join("\n\t", map { $eslifGrammar->ruleShowByLevel(1, $_) } @{$eslifGrammar->ruleIdsByLevel(1)});
 
 Return the description of a rule at a specified indice C<$level>, identified by its rule ID C<$ruleId>.
 
-=head2 $self->show()
+=head2 $eslifGrammar->show()
 
-  printf "Description of current grammar: %s\n", $self->show();
+  printf "Description of current grammar: %s\n", $eslifGrammar->show();
 
 Return the description of current grammar.
 
-=head2 $self->showByLevel($level)
+=head2 $eslifGrammar->showByLevel($level)
 
-  printf "Level 1 grammar description: %s\n", $self->showByLevel(1);
+  printf "Level 1 grammar description: %s\n", $eslifGrammar->showByLevel(1);
 
 Return the description of the grammar at indice C<$level>.
 
-=head2 $self->parse($recognizerInterface, $valueInterface)
+=head2 $eslifGrammar->parse($recognizerInterface, $valueInterface)
 
-  my $recognizerInterface = My::Recognizer::Interface->new();
-  my $valueInterface      = My::Value::Interface->new();
-  if ($self->parse($recognizerInterface, $valueInterface)) {
+  my $recognizerInterface = MyRecognizer->new();
+  my $valueInterface      = MyValue->new();
+  if ($eslifGrammar->parse($recognizerInterface, $valueInterface)) {
     printf "Parse result: %s\n", $valueInterface->getResult;
   }
 
