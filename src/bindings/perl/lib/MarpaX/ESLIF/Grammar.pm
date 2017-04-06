@@ -166,107 +166,12 @@ Return the description of the grammar at indice C<$level>.
   printf "Parse result: %s\n", $self->parse($recognizerInterface, $valueInterface);
 
 Short version of input validation and valuation, that will never give back control to the user until the end or a failure. No event is possible when using this method. If this method returns true, then it is guaranteed that the result is in C<$valueInterface->getResult()>.
-C<$recognizerInterface> and C<$valueInterface> must be object instances that provide the following methods:
 
-=over
+Please refer to L<MarpaX::ESLIF::Recognizer::Interface> and L<MarpaX::ESLIF::Value::Interface> for the C<$recognizerInterface> and C<$valueInterface> required parameters.
 
-=item Recognizer Interface
+=head1 SEE ALSO
 
-=over
-
-=item $recognizerInterface->read()
-
-Performs read of user data and returns a true value on success, a false value otherwise. C<$recognizerInterface> is responsible to maintain the status in terms of: data content, data type (binary or character), eof flag, eventual encoding information, that are queried using the following methods:
-
-=item $recognizerInterface->isEof()
-
-Returns a boolean value indicating the end of the stream.
-
-=item $recognizerInterface->isCharacterStream()
-
-Returns a boolean value indicating if current chunk is a character stream or not.
-
-=item $recognizerInterface->encoding()
-
-Encoding of latest chunk of data, when the later is a character chunk. It is legal to return C<undef>.
-
-If current chunk of data is a character stream, and this method returns C<undef>, then marpaESLIF will either:
-
-=over
-
-=item guess the encoding if there previous chunk of data was not a character stream,
-
-=item continue with previous encoding if previous chunk of data was a character stream
-
-=back
-
-=item $recognizerInterface->data()
-
-Returns data content of current chunk, may be of zero size.
-
-=item $recognizerInterface->isWithDisableThreshold()
-
-Returns a boolean indicating if exhaustion should trigger an exhaustion event.
-
-When the parse is exhausted, the normal behavior is to exit with an error if the eof flag is not set. This method is saying that an exhaustion event should be raised instead, and is used at recognizer creation step only.
-
-=item $recognizerInterface->isWithNewline()
-
-Returns a boolean indicating if line/number accounting is on.
-
-Error reporting can be accurate up to line and column numbers when this is happening on a character stream enabled chunk of data. This is handy, but has an extra cost on parsing performance. This method is used at recognizer creation step only.
-
-=back
-
-=item C<$valueInterface>
-
-=over
-
-=item $valueInterface->isWithHighRankOnly()
-
-Returns the rank order preference.
-
-When the interface returns true, only the choices with the highest rank are kept. This method is used at valuation instance creation step only.
-
-=item $valueInterface->isWithOrderByRank()
-
-Returns the rank order preference.
-
-Orders the parse tree values by their rank value. This method is used at valuation instance creation step only.
-
-=item $valueInterface->isWithAmbiguous()
-
-Returns the ambiguity acceptance.
-
-Accept ambiguous parse tree. This method is used at valuation instance creation step only.
-
-=item $valueInterface->isWithNull()
-
-Returns the null acceptance.
-
-Accept a null parse tree value (e.g. when the start rule is not complete). This method is used at valuation instance creation step only.
-
-=item $valueInterface->maxParses()
-
-Returns the maximum number of wanted parses, 0 for all parse trees.
-
-A very ambiguous parsing can provide a lot of parse tree values, it is possible to reduce such number, at the cost of not having all the valuation possibilities. This method is used at valuation instance creation step only.
-
-=item $valueInterface->setResult($result)
-
-Store the parsing result.
-
-When valuation is successful, marpaESLIF is using this callback.
-
-=item $valueInterface->getResult()
-
-Returns the parsing result.
-
-marpaESLIF is not using this method per-se, but it is nevertheless required to ensure the interface coherency v.s. the C<getResult()> required method.
-
-=back
-
-=back
+L<MarpaX::ESLIF::Recognizer::Interface>, L<MarpaX::ESLIF::Value::Interface>
 
 =cut
 
