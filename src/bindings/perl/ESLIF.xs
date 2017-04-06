@@ -495,7 +495,9 @@ static short marpaESLIF_recognizerReaderCallbackb(void *userDatavp, char **input
   marpaESLIF_recognizerContextCleanupv(aTHX_ marpaESLIFRecognizerContextp);
 
   /* Call the read interface */
-  marpaESLIF_call_methodv(aTHX_ Perl_recognizerInterfacep, "read", NULL);
+  if (! marpaESLIF_call_methodb(aTHX_ Perl_recognizerInterfacep, "read")) {
+    MARPAESLIF_CROAK("Recognizer->read() method failure");
+  }
 
   /* Call the data interface */
   Perl_datap = marpaESLIF_call_methodp(aTHX_ Perl_recognizerInterfacep, "data");

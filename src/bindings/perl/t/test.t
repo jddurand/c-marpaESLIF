@@ -12,8 +12,13 @@ sub new {
 sub read {
     my $self = shift;
     my $line = $self->{line} = readline($self->{fh});
-    $self->{log}->tracef("read => %s", $line);
-    return;
+    if (! defined($line)) {
+      $self->{log}->errorf("read failure, %s", $!);
+      return 0;
+    } else {
+      $self->{log}->tracef("read => %s", $line);
+      return 1;
+    }
 }
 
 sub isEof {

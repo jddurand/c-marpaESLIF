@@ -13,9 +13,9 @@ public interface ESLIFRecognizerInterface {
 	 *   <li> <code>data()</code>
 	 * </ul>
 	 * 
-	 * @throws Exception the exception when there is a fatal error
+	 * @return a boolean value indicating read success or failure
 	 */
-	public void read() throws Exception;
+	public boolean read();
 	/**
 	 * End of data flag. 
 	 * 
