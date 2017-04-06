@@ -45,7 +45,7 @@ This class and its derivatives are thread-safe. Although there can be many ESLIF
   my $loggerInterface = My::Logger::Interface->new();
   my $eslif = MarpaX::ESLIF->new();
 
-Returns an instance of MarpaX::ESLIF, noted C<$self> below.
+Returns an instance of MarpaX::ESLIF, noted C<$eslif> below.
 
 C<$loggerInterface> is an optional parameter that, when set, must be an object instance that can do the following methods, inspired from Log4perl terminology:
 
@@ -91,7 +91,7 @@ Logging of a string C<$message> at the I<EMERGENCY> level.
 
 An example of implementation can be a L<Log::Any> adapter.
 
-=head2 $self->version()
+=head2 $eslif->version()
 
   printf "ESLIF library version: %s\n", $eslif->version;
 
