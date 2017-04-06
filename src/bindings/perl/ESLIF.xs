@@ -1262,7 +1262,7 @@ CODE:
   static const char *funcs = "MarpaX::ESLIF::Grammar::ruleDisplay";
   char              *ruledisplays;
 
-  if (! marpaESLIFGrammar_ruleshowform_currentb(MarpaX_ESLIF_Grammarp, (int) Perl_rulei, &ruledisplays)) {
+  if (! marpaESLIFGrammar_ruledisplayform_currentb(MarpaX_ESLIF_Grammarp, (int) Perl_rulei, &ruledisplays)) {
     MARPAESLIF_CROAK("marpaESLIFGrammar_ruledisplayform_currentb failure");
   }
   RETVAL = ruledisplays;
