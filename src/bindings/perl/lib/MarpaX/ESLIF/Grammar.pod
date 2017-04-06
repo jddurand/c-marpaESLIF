@@ -1,25 +1,10 @@
-use strict;
-use warnings FATAL => 'all';
-
-package MarpaX::ESLIF::Grammar;
-#
-# Make sure loading ESLIF::Grammar is nothing else but a load of MarpaX::ESLIF
-# (everything is in the XS loaded by the later)
-#
-use MarpaX::ESLIF;
-
-# ABSTRACT: ESLIF's Grammar
-
-# AUTHORITY
-
-# VERSION
-
 =head1 DESCRIPTION
 
-ESLIFGrammar is the second step after getting an ESLIF instance. As many grammars as wanted can be created using the same ESLIF parent.
+MarpaX::ESLIF::Grammar is the second step after getting a MarpaX::ESLIF instance.
 
 =head1 SYNOPSIS
 
+  use MarpaX::ESLIF;
   my $eslif = MarpaX::ESLIF->new();
   my $data = do { local $/; <DATA> };
   my $eslifGrammar = MarpaX::ESLIF::Grammar->new($eslif, $data);
@@ -32,6 +17,7 @@ ESLIFGrammar is the second step after getting an ESLIF instance. As many grammar
   :default ::=             action        => do_op
                            symbol-action => do_symbol
                            free-action   => do_free     # Supported but useless
+  :desc    ::= 'Calculator'
   :discard ::= whitespaces event  => discard_whitespaces$
   :discard ::= comment     event  => discard_comment$
 
@@ -50,12 +36,17 @@ ESLIFGrammar is the second step after getting an ESLIF instance. As many grammar
      ||     Expression  '+' Expression
       |     Expression  '-' Expression
 
+  whitespaces ::= WHITESPACES
+  comment ::= /(?:(?:(?:\/\/)(?:[^\n]*)(?:\n|\z))|(?:(?:\/\*)(?:(?:[^\*]+|\*(?!\/))*)(?:\*\/)))/u
+
   :lexeme ::= NUMBER pause => before event => ^NUMBER
   :lexeme ::= NUMBER pause => after  event => NUMBER$
-  NUMBER     ~ /[\d]+/
-  whitespaces ::= WHITESPACES
-  WHITESPACES ~ [\s]+
-  comment ::= /(?:(?:(?:\/\/)(?:[^\n]*)(?:\n|\z))|(?:(?:\/\*)(?:(?:[^\*]+|\*(?!\/))*)(?:\*\/)))/u
+
+  :desc      ~ 'Calculator Tokens'
+  NUMBER     ~ /[\d]+/   name => 'NUMBER Lexeme'
+  WHITESPACES ~ [\s]+    name => 'WHITESPACES Lexeme'
+
+As many grammars as wanted can be created using the same MarpaX::ESLIF parent. After creating a MarpaX::ESLIF::Grammar instance, the user can use the C<parse()> method to have an immediate parse value, or create a L<MarpaX::ESLIF::Recognizer> instance to control the parse.
 
 =head1 METHODS
 
@@ -85,9 +76,9 @@ Encoding will always be guessed if not given.
 
 =head2 $self->ngrammar()
 
-  printf "Maximum grammar indice: %d\n", $self->ngrammar + 1;
+  printf "Number of sub-grammars: %d\n", $self->ngrammar;
 
-Return the number of sub-grammars, represented as the latest grammar indice plus 1.
+Return the number of sub-grammars.
 
 A grammar can have multiple I<sub-grammars>, identified by a level. Internally this is a I<sparse> array of grammars, and it is legal that a level is not defined.
 
@@ -95,17 +86,17 @@ A grammar can have multiple I<sub-grammars>, identified by a level. Internally t
 
   printf "Current indice: %d\n", $self->currentLevel;
 
-Return the current level, which is always the first defined level of the grammar.
+Return the current level, which is always the first indice that have a defined sub-grammar.
 
 =head2 $self->currentDescription()
 
   printf "Current description: %s\n", $self->currentDescription;
 
-Return the description of the current level, with the same encoding as found in the grammar.
+Return the description of the current level, with the same encoding as found in the grammar. This correspong to the C<:desc> meta-symbol in a grammar.
 
 =head2 $self->descriptionByLevel($level)
 
-  printf "Level 0 description: %s\n", $self->descriptionByLevel(0);
+  printf "Level 1 description: %s\n", $self->descriptionByLevel(1);
 
 Return the description of the grammar at indice C<$level>, with the same encoding as found in the grammar.
 
@@ -119,31 +110,31 @@ I<Rule identifiers are integers that uniquely identify a rule>.
 
 =head2 $self->ruleIdsByLevel($level)
 
-  printf "Level 0 Rule Ids: %s\n", join(' ', @{$self->ruleIdsByLevel(0)});
+  printf "Level 1 Rule Ids: %s\n", join(' ', @{$self->ruleIdsByLevel(1)});
 
 Return the list of rule identifiers at indice C<$level>, as a reference to an array of integers.
 
 =head2 $self->ruleDisplay($ruleId)
 
-  printf "Name of first rule: %s\n", $self->ruleDisplay($self->currentRuleIds->[0]);
+  printf "Rules names:\n\t%s\n", join("\n\t", map { $self->ruleDisplay($_) } @{$self->currentRuleIds});
 
 Return the name of a rule identified by its rule ID C<$ruleId>.
 
 =head2 $self->ruleShow($ruleId)
 
-  printf "Description of first rule: %s\n", $self->ruleShow($self->currentRuleIds->[0]);
+  printf "Rules shows:\n\t%s\n", join("\n\t", map { $self->ruleShow($_) } @{$self->currentRuleIds});
 
 Return the description of a rule identified by its rule ID C<$ruleId>.
 
 =head2 $self->ruleDisplayByLevel($level, $ruleId)
 
-  printf "Name of first rule of level 0: %s\n", $self->ruleDisplayByLevel(0, $self->ruleIdsByLevel(0)->[0]);
+  printf "Level 1 Rule names 1:\n\t%s\n", join("\n\t", map { $self->ruleDisplayByLevel(1, $_) } @{$self->ruleIdsByLevel(1)});
 
-Return the name of a rule at a specificed indice C<$level> identified by its rule ID C<$ruleId>.
+Return the name of a rule at a specificed indice C<$level> identified by its rule ID C<$ruleId>. This correspond to the C<name> adverb, if present, else a default naming applies.
 
 =head2 $self->ruleShowByLevel($level, $ruleId)
 
-  printf "Description of first rule of level 0: %s\n", $self->ruleShowByLevel(0, $self->ruleIdsByLevel(0)->[0]);
+  printf "Level 1 Rules shows:\n\t%s\n", join("\n\t", map { $self->ruleShowByLevel(1, $_) } @{$self->ruleIdsByLevel(1)});
 
 Return the description of a rule at a specified indice C<$level>, identified by its rule ID C<$ruleId>.
 
@@ -155,7 +146,7 @@ Return the description of current grammar.
 
 =head2 $self->showByLevel($level)
 
-  printf "Description of first grammar: %s\n", $self->showByLevel(0);
+  printf "Level 1 grammar description: %s\n", $self->showByLevel(1);
 
 Return the description of the grammar at indice C<$level>.
 
@@ -173,8 +164,6 @@ Please refer to L<MarpaX::ESLIF::Recognizer::Interface> and L<MarpaX::ESLIF::Val
 
 =head1 SEE ALSO
 
-L<MarpaX::ESLIF::Recognizer::Interface>, L<MarpaX::ESLIF::Value::Interface>
+L<MarpaX::ESLIF::Recognizer::Interface>, L<MarpaX::ESLIF::Recognizer::Interface>, L<MarpaX::ESLIF::Value::Interface>
 
 =cut
-
-1;
