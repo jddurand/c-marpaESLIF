@@ -1,0 +1,51 @@
+# PODNAME: MarpaX::ESLIF::Logger::Interface
+
+# ABSTRACT: MarpaX::ESLIF's logger interface
+
+=head1 DESCRIPTION
+
+Logger interface is a list of methods that are required by MarpaX::ESLIF at run-time to perform logging. It has to be an object instance, referenced with C<$loggerInterface> below.
+
+=head1 METHODS
+
+=over
+
+=item $loggerInterface->trace($message)
+
+Log the string C<$message> at the I<TRACE> level.
+
+=item $loggerInterface->debug($message)
+
+Log the string C<$message> at the I<DEBUG> level.
+
+=item $loggerInterface->info($message)
+
+Log the string C<$message> at the I<INFO> level.
+
+=item $loggerInterface->notice($message)
+
+Log the string C<$message> at the I<NOTICE> level.
+
+=item $loggerInterface->warning($message)
+
+Log the string C<$message> at the I<WARNING> level.
+
+=item $loggerInterface->error($message)
+
+Log the string C<$message> at the I<ERROR> level.
+
+=item $loggerInterface->critical($message)
+
+Log the string C<$message> at the I<CRITICAL> level.
+
+=item $loggerInterface->alert($message)
+
+Log the string C<$message> at the I<ALERT> level.
+
+=item $loggerInterface->emergency($message)
+
+Log the string C<$message> at the I<EMERGENCY> level.
+
+=back
+
+=cut
