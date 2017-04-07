@@ -54,7 +54,7 @@ public class ESLIFValue {
 	/**
 	 * Returns true when there is a value, false otherwise. Ambiguous parsing typically return more than one value.
 	 * 
-	 * @return a boolean indicating if there a value to retrieve via the valueInterface
+	 * @return a boolean indicating if there a value to retrieve via the valueInterface's getResult() method
 	 * @throws ESLIFException when the interface fails
 	 */
 	public boolean value() throws ESLIFException {

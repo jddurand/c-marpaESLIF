@@ -11,8 +11,7 @@ MarpaX::ESLIF::Recognizer is a possible step after a MarpaX::ESLIF::Grammar inst
   my $eslifRecognizer = MarpaX::ESLIF::Recognizer->new($eslifGrammar, $recognizerInterface);
 
 The recognizer interface is used to read chunks of data, that the internal recognizer will keep in its internal buffers, until it is consumed. The recognizer internal buffer may not be an exact duplicate of the external data that was read: in case of a character stream, the external data is systematically converted to UTF-8 sequence of bytes. If the user is pushing alternatives, he will have to know how many bytes this represent: native number of bytes
- * in case of a binary stream, number of bytes in the UTF-8 encoding in case of a character stream.
- */
+
 =head1 METHODS
 
 =head2 MarpaX::ESLIF::Recognizer->new($eslifGrammar, $recognizerInterface)
