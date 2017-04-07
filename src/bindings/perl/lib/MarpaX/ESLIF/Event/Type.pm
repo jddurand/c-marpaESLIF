@@ -9,7 +9,7 @@ package MarpaX::ESLIF::Event::Type;
 
 =head1 DESCRIPTION
 
-ESLIF events are mapped to constants. This module is giving access to them, although they have no use in the perl interface.
+ESLIF events are mapped to constants. This module is giving access to them.
 
 =head1 SYNOPSIS
 
