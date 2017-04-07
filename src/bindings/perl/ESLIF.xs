@@ -2192,17 +2192,17 @@ INCLUDE: xs-value-types.inc
 
 =for comment
   /* ======================================================================= */
-  /* MarpaX::ESLIF::LoggerLevel                                              */
+  /* MarpaX::ESLIF::Logger::Level                                            */
   /* ======================================================================= */
 =cut
 
-MODULE = MarpaX::ESLIF            PACKAGE = MarpaX::ESLIF::LoggerLevel::Type
+MODULE = MarpaX::ESLIF            PACKAGE = MarpaX::ESLIF::Logger::Level
 
 PROTOTYPES: ENABLE
 
 =for comment
   /* ----------------------------------------------------------------------- */
-  /* MarpaX::ESLIF::LoggerLevel::Type::constant                              */
+  /* MarpaX::ESLIF::Logger::Level::constant                                  */
   /* ----------------------------------------------------------------------- */
 =cut
 

@@ -211,7 +211,7 @@ Log::Any::Adapter->set('Log4perl');
 BEGIN { require_ok('MarpaX::ESLIF') };
 BEGIN { require_ok('MarpaX::ESLIF::Event::Type') };
 BEGIN { require_ok('MarpaX::ESLIF::Value::Type') };
-BEGIN { require_ok('MarpaX::ESLIF::LoggerLevel::Type') };
+BEGIN { require_ok('MarpaX::ESLIF::Logger::Level') };
 
 #
 # Test Event constants
@@ -333,7 +333,7 @@ for (my $i = 0; $i <= $#strings; $i++) {
             showRecognizerInput("after read", $log, $eslifRecognizer);
         }
         if ($i == 0) {
-            $eslifRecognizer->progressLog(-1, -1, MarpaX::ESLIF::LoggerLevel::Type->GENERICLOGGER_LOGLEVEL_NOTICE);
+            $eslifRecognizer->progressLog(-1, -1, MarpaX::ESLIF::Logger::Level->GENERICLOGGER_LOGLEVEL_NOTICE);
         }
         my $j = 0;
         while ($eslifRecognizer->isCanContinue()) {
