@@ -1,5 +1,7 @@
 # PODNAME: MarpaX::ESLIF::Recognizer::Interface
 
+# ABSTRACT: MarpaX::ESLIF's recognizer interface
+
 =head1 DESCRIPTION
 
 Recognizer interface is a list of methods that that required by MarpaX::ESLIF at run-time when it needs more data. It has to be an object instance, referenced with C<$recognizerInterface> below.
