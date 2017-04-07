@@ -1694,7 +1694,7 @@ lexemeAlternative(Perl_MarpaX_ESLIF_Recognizer, name, sv, ...)
 CODE:
   static const char       *funcs = "MarpaX::ESLIF::Recognizer::lexemeAlternative";
   marpaESLIFAlternative_t  marpaESLIFAlternative;
-  int                      grammarLength = 1;
+  int                      grammarLength;
 
   if (items > 3) {
     SV *Perl_grammarLength = ST(3);
@@ -1702,6 +1702,8 @@ CODE:
       MARPAESLIF_CROAK("Third argument must be a scalar");
     }
     grammarLength = (int) SvIV(Perl_grammarLength);
+  } else {
+    grammarLength = 1;
   }
 
   if (grammarLength <= 0) {

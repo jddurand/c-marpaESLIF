@@ -124,7 +124,7 @@ public class ESLIFRecognizer {
 	 * This method tell the recognizer to continue.
 	 * Events can be generate after resume completion.
 	 * 
-	 * @param deltaLength the number of bytes to skip before resume goes on, must be positive or greater than 0
+	 * @param deltaLength the number of bytes to skip before resume goes on, must be positive or greater than 0.  In case of a character stream, user will have to compute the number of bytes as if the input was in the UTF-8 encoding.
 	 * @return a boolean indicating if the call was successful or not
 	 * @throws ESLIFException if the interface failed
 	 */
@@ -143,12 +143,14 @@ public class ESLIFRecognizer {
 	}
 
 	/**
-	 * Events can be switched on or off. For performance reasons, if you know that you do not need an event, it can be a godd idea to switch if off
+	 * Events can be switched on or off. For performance reasons, if you know that you do not need an event, it can be a good idea to switch if off
 	 * 
 	 * @param symbol the symbol name to which the event is associated
 	 * @param eventTypes an array of event types
-	 * @param onOff the boolean indicating the state of the event types
+	 * @param onOff the boolean indicating the state of the event types.
 	 * @throws ESLIFException if the interface failed
+	 * 
+	 * Note that trying to change the state of an event that was not pre-declared in the grammar is a no-op.
 	 */
 	public synchronized void eventOnOff(String symbol, ESLIFEventType[] eventTypes, boolean onOff) throws ESLIFException {
 		jniEventOnOff(symbol, eventTypes, onOff);
