@@ -47,49 +47,9 @@ This class and its derivatives are thread-safe. Although there can be many ESLIF
 
 Returns an instance of MarpaX::ESLIF, noted C<$eslif> below.
 
-C<$loggerInterface> is an optional parameter that, when set, must be an object instance that can do the following methods, inspired from Log4perl terminology:
+C<$loggerInterface> is an optional parameter that, when set, must be an object instance that can do the methods documented in L<MarpaX::ESLIF::Logger::Interface>.
 
-=over
-
-=item $loggerInterface->trace($message)
-
-Logging of a string C<$message> at the I<TRACE> level.
-
-=item $loggerInterface->debug($message)
-
-Logging of a string C<$message> at the I<DEBUG> level.
-
-=item $loggerInterface->info($message)
-
-Logging of a string C<$message> at the I<INFO> level.
-
-=item $loggerInterface->notice($message)
-
-Logging of a string C<$message> at the I<NOTICE> level.
-
-=item $loggerInterface->warning($message)
-
-Logging of a string C<$message> at the I<WARNING> level.
-
-=item $loggerInterface->error($message)
-
-Logging of a string C<$message> at the I<ERROR> level.
-
-=item $loggerInterface->critical($message)
-
-Logging of a string C<$message> at the I<CRITICAL> level.
-
-=item $loggerInterface->alert($message)
-
-Logging of a string C<$message> at the I<ALERT> level.
-
-=item $loggerInterface->emergency($message)
-
-Logging of a string C<$message> at the I<EMERGENCY> level.
-
-=back
-
-An example of implementation can be a L<Log::Any> adapter.
+An example of logging implementation can be a L<Log::Any> adapter.
 
 =head2 $eslif->version()
 
@@ -99,7 +59,7 @@ Returns a string containing the current underlying ESLIF library version.
 
 =head1 SEE ALSO
 
-L<MarpaX::ESLIF::Grammar>
+L<MarpaX::ESLIF::Logger::Interface>, L<MarpaX::ESLIF::Grammar>
 
 =cut
 

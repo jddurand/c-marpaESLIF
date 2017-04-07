@@ -9,7 +9,7 @@ package MarpaX::ESLIF::Value::Type;
 
 =head1 DESCRIPTION
 
-ESLIF values are mapped to constants. This module is giving access to them, although this will never be visible from perl interface.
+ESLIF values are mapped to constants. This module is giving access to them, although they have no use in the perl interface.
 
 =head1 SYNOPSIS
 

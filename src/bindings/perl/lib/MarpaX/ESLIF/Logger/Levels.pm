@@ -1,7 +1,7 @@
 use strict;
 use warnings FATAL => 'all';
 
-package MarpaX::ESLIF::LoggerLevel::Type;
+package MarpaX::ESLIF::Logger::Levels;
 
 # ABSTRACT: ESLIF LoggerLevel Types
 
@@ -9,7 +9,7 @@ package MarpaX::ESLIF::LoggerLevel::Type;
 
 =head1 DESCRIPTION
 
-ESLIF lgoger levels are mapped to constants. This module is giving access to them.
+ESLIF logger levels are mapped to constants. This module is giving access to them, although they have no use in the perl interface.
 
 =head1 SYNOPSIS
 
