@@ -4,7 +4,7 @@
 
 =head1 DESCRIPTION
 
-Value interface is a list of methods that that required by MarpaX::ESLIF at run-time to perform valuation. It has to be an object instance, referenced with C<$valueInterface> below.
+Value interface is a list of methods that are required by MarpaX::ESLIF at run-time to perform valuation. It has to be an object instance, referenced with C<$valueInterface> below.
 
 =head1 METHODS
 
