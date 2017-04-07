@@ -1,0 +1,109 @@
+# PODNAME: MarpaX::ESLIF::Recognizer
+
+=head1 DESCRIPTION
+
+MarpaX::ESLIF::Recognizer is a possible step after a MarpaX::ESLIF::Grammar instance is created.
+
+=head1 SYNOPSIS
+
+  my $eslifRecognizer = MarpaX::ESLIF::Recognizer->new($eslifGrammar, $recognizerInterface);
+
+=head1 METHODS
+
+=head2 MarpaX::ESLIF::Recognizer->new($eslifGrammar, $recognizerInterface)
+
+  my $eslifRecognizer = MarpaX::ESLIF::Recognizer->new($eslifGrammar, $recognizerInterface);
+
+Returns a recognizer instance, noted C<$eslifRecognizer> later. Parameters are:
+
+=over
+
+=item C<$eslifGrammar>
+
+MarpaX::ESLIF:Grammar object instance. Required.
+
+=item C<$recognizerInterface>
+
+An object implementing L<MarpaX::ESLIF::Recognizer::Interface> methods. Required.
+
+=back
+
+=head2 $eslifRecognizer->isCanContinue()
+
+Returns a true value if recognizing can continue.
+
+=head2 $eslifRecognizer->isExhausted()
+
+Returns a true value if parse is exhausted, always set even if there is no exhaustion event.
+
+=head2 $eslifRecognizer->scan($initialEvents)
+
+Start a recognizer scanning. This call is allowed once in recognizer lifetime. If specified, C<$initialEvents> must be a scalar. Default value is 0.
+
+This method can generate events. Initial events are those that are happening at the very first step, and can be only prediction events. This may be annoying, and most applications do not want that - but some can use this to get the control before the first data read.
+
+Returns a boolean indicating if the call was successful or not.
+
+=head2 $eslifRecognizer->resume($deltaLength)
+
+This method tell the recognizer to continue. Events can be generate after resume completion.
+
+C<$deltaLength> is the number of B<bytes> to skip before resume goes on, must be positive or greater than 0. In case of a character stream, user will have to compute the number of bytes as if the input was in the UTF-8 encoding.
+
+Returns a boolean indicating if the call was successful or not.
+
+=head2 $eslifRecognizer->events()
+
+When control is given back to the end-user, he can always ask what are the current events.
+
+Returns a reference to an array of hash references, eventually empty if there is none. Each array element is a reference to a hash containing these keys:
+
+=over
+
+=item type
+
+The type of event, that is one one the value listed in L<MarpaX::ESLIF::Event::Type>.
+
+=item symbol
+
+The name of the symbol that triggered the event. Can be C<undef> in case of exhaustion event.
+
+=item event
+
+The name of the event that triggered the event. Can be C<undef> in case of exhaustion event.
+
+=back
+
+=head2 $eslifRecognizer->eventOnOff($symbol, $eventTypes, $onOff)
+
+Events can be switched on or off. For performance reasons, if you know that you do not need an event, it can be a good idea to switch if off. Required parameters are:
+
+=over
+
+=item C<$symbol>
+
+The symbol name to which the event is associated.
+
+=item C<$symbol>
+
+The symbol name to which the event is associated.
+
+=item C<$eventTypes>
+
+A reference to an array of event types, as per L<MarpaX::ESLIF::Event::Type>.
+
+=item C<$onOff>
+
+A flag that set the event on or off.
+
+=back
+
+Note that trying to change the state of an event that was not pre-declared in the grammar is a no-op.
+
+Returns a reference to an array of hash references, eventually empty if there is none. Each array element is a reference to a hash containing these keys:
+
+=head1 SEE ALSO
+
+L<MarpaX::ESLIF::Recognizer::Interface>, L<MarpaX::ESLIF::Value::Interface>
+
+=cut

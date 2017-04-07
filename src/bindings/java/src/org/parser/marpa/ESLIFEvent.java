@@ -33,7 +33,7 @@ public class ESLIFEvent {
 
 	/**
 	 * 
-	 * @return the symbol name, never null
+	 * @return the symbol name, null only when this the exhaustion event
 	 */
 	public String getSymbol() {
 		return symbol;
@@ -41,7 +41,7 @@ public class ESLIFEvent {
 
 	/**
 	 * 
-	 * @return the event name, never null
+	 * @return the event name, null only when this the exhaustion event
 	 */
 	public String getEvent() {
 		return event;
