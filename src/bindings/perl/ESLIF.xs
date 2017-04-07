@@ -1549,11 +1549,23 @@ OUTPUT:
 =cut
 
 bool
-scan(Perl_MarpaX_ESLIF_Recognizer, initialEvents)
+scan(Perl_MarpaX_ESLIF_Recognizer, ...)
   MarpaX_ESLIF_Recognizer Perl_MarpaX_ESLIF_Recognizer;
-  bool initialEvents;
 CODE:
-  RETVAL = marpaESLIFRecognizer_scanb(Perl_MarpaX_ESLIF_Recognizer->marpaESLIFRecognizerp, initialEvents, &(Perl_MarpaX_ESLIF_Recognizer->canContinueb), &(Perl_MarpaX_ESLIF_Recognizer->exhaustedb));
+  static const char *funcs = "MarpaX::ESLIF::Recognizer::scan";
+  short initialEventsb;
+
+  if (items > 1) {
+    SV *Perl_initialEvents = ST(1);
+    if ((marpaESLIF_getTypei(aTHX_ Perl_initialEvents) & SCALAR) != SCALAR) {
+      MARPAESLIF_CROAK("First argument must be a scalar");
+    }
+    initialEventsb = SvIV(Perl_initialEvents) ? 1 : 0;
+  } else {
+    initialEventsb = 0;
+  }
+
+  RETVAL = marpaESLIFRecognizer_scanb(Perl_MarpaX_ESLIF_Recognizer->marpaESLIFRecognizerp, initialEventsb, &(Perl_MarpaX_ESLIF_Recognizer->canContinueb), &(Perl_MarpaX_ESLIF_Recognizer->exhaustedb));
 OUTPUT:
   RETVAL
 
@@ -1569,6 +1581,7 @@ resume(Perl_MarpaX_ESLIF_Recognizer, deltaLength)
   int deltaLength;
 CODE:
   static const char *funcs = "MarpaX::ESLIF::Recognizer::resume";
+
   if (deltaLength < 0) {
     MARPAESLIF_CROAK("Resume delta length cannot be negative");
   }
