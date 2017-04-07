@@ -182,7 +182,7 @@ Returns the associated input bytes, or C<undef>.
 
 =head2 $eslifRecognizer->progressLog($start, $end, $loggerLevel)
 
-Asks to get a logging representation of the current parse progress. The format is fixed by the underlying libraries. The C<$start> and C<$end> parameters follow the perl convention of indices, i.e. when they are negative, start that far from the end. For example, -1 mean the last indice, -2 mean one before the last indice, etc... C<$loggerLevel> is a level as per L<MarpaX::ESLIF::Logger::Levels>.
+Asks to get a logging representation of the current parse progress. The format is fixed by the underlying libraries. The C<$start> and C<$end> parameters follow the perl convention of indices, i.e. when they are negative, start that far from the end. For example, -1 mean the last indice, -2 mean one before the last indice, etc... C<$loggerLevel> is a level as per L<MarpaX::ESLIF::Logger::Level>.
 
 Nothing is returned.
 
@@ -200,6 +200,6 @@ Returns the absolute length in bytes.
 
 =head1 SEE ALSO
 
-L<MarpaX::ESLIF::Recognizer::Interface>, L<MarpaX::ESLIF::Event::Type>, L<MarpaX::ESLIF::Logger::Levels>
+L<MarpaX::ESLIF::Recognizer::Interface>, L<MarpaX::ESLIF::Event::Type>, L<MarpaX::ESLIF::Logger::Level>
 
 =cut
