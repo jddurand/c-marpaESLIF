@@ -1,5 +1,7 @@
 # PODNAME: MarpaX::ESLIF::Grammar
 
+# ABSTRACT: MarpaX::ESLIF's grammar
+
 =head1 DESCRIPTION
 
 MarpaX::ESLIF::Grammar is the second step after getting a MarpaX::ESLIF instance.
