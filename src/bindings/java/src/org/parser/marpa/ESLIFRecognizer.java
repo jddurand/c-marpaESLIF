@@ -30,6 +30,8 @@ import java.nio.ByteBuffer;
  * The recognizer interface is used to read chunks of data, that the internal recognizer will keep in its internal
  * buffers, until it is consumed. The recognizer internal buffer may not be an exact duplicate of the external data
  * that was read: in case of a character stream, the external data is systematically converted to UTF-8 sequence of bytes.
+ * If the user is pushing alternatives, he will have to know how many bytes this represent: native number of bytes
+ * in case of a binary stream, number of bytes in the UTF-8 encoding in case of a character stream.
  */
 public class ESLIFRecognizer {
 	private ESLIFGrammar             eslifGrammar                 = null;
@@ -157,9 +159,9 @@ public class ESLIFRecognizer {
 	}
 
 	/**
-	 * A lexeme is a terminal in the legacy parsing terminology. The lexeme word mean that in the grammar if is associated to a sub-grammar.
-	 * Pushing an alternative mean that the end-user is intructing the recognizer that, at this precise moment of lexing, there is a given
-	 * lexeme, with a given opaque value.  
+	 * A lexeme is a terminal in the legacy parsing terminology. The lexeme word mean that in the grammar it is associated to a sub-grammar.
+	 * Pushing an alternative mean that the end-user is instructing the recognizer that, at this precise moment of lexing, there is a given
+	 * lexeme associated to the name parameter, with a given opaque value.  
 	 * Grammar length is usually one, i.e. one lexeme (which is a symbol in the grammar) correspond to one token.
 	 * Nevertheless it is possible to say that an alternative span over more than one symbol.
 	 * 
@@ -214,7 +216,8 @@ public class ESLIFRecognizer {
 	}
 	
 	/**
-	 * A short-hand version of lexemeComplete() where grammarLength default to the recommended value of 1.
+	 * A short-hand version of lexemeAlternative() followed by lexemeComplete() where grammarLength default to the recommended value of 1.
+	 * This method can generate events.
 	 * 
 	 * @param name the name of the lexeme
 	 * @param object the object that will represent the value of this lexeme at this parsing stage
@@ -319,7 +322,8 @@ public class ESLIFRecognizer {
 
 	/**
 	 * Get a copy of the current internal recognizer buffer, starting at the exact byte where resume() would start.
-	 * A null output does not mean there is an error, ESLIF will automatically require more data unless the EOF flag is set.
+	 * A null output does not mean there is an error, but that internal buffers are completely consumed. ESLIF will automatically require more data unless the EOF flag is set.
+	 * Internal buffer is always UTF-8 encoded to every chunk of data that was declared to be a character stream.
 	 * 
 	 * @return an array of bytes, or null
 	 * @throws ESLIFException if the interface failed
@@ -344,10 +348,10 @@ public class ESLIFRecognizer {
 	
 	/**
 	 * The recognizer is tentatively keeping an absolute offset every time a lexeme is complete. We say tentatively in the sense
-	 * that no overflow checking is done, thus this number is not reliable in case the userdata spanned over a very large number of bytes.
-	 * In addition, the unit is bytes on the internal recognizer buffer, never on the external data.
+	 * that no overflow checking is done, thus this number is not reliable in case the user data spanned over a very large number of bytes.
+	 * In addition, the unit is in bytes.
 	 * 
-	 * @param name the last absolute offset when then symbol <code>name</code> is complete. <code>name</code> is any symbol in the grammar.
+	 * @param name the last absolute offset where the symbol <code>name</code> was complete. <code>name</code> is any symbol in the grammar.
 	 * @return the internal buffer absolute offset, in byte unit
 	 * @throws ESLIFException if the interface failed
 	 */
@@ -356,7 +360,7 @@ public class ESLIFRecognizer {
 	}
 
 	/**
-	 * The recognizer is tentatively computing the length of every symbol completion. Since this value depend on the absolute offset,
+	 * The recognizer is tentatively computing the length of every symbol completion. Since this value depend internally on the absolute previous offset,
 	 * it is not guaranteed to be exact, in the sense that no overflow check is done.
 	 * 
 	 * @param name the last length of the symbol <code>name</code> completion. <code>name</code> is any symbol in the grammar.

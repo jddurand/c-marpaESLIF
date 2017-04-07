@@ -8,6 +8,9 @@ MarpaX::ESLIF::Recognizer is a possible step after a MarpaX::ESLIF::Grammar inst
 
   my $eslifRecognizer = MarpaX::ESLIF::Recognizer->new($eslifGrammar, $recognizerInterface);
 
+The recognizer interface is used to read chunks of data, that the internal recognizer will keep in its internal buffers, until it is consumed. The recognizer internal buffer may not be an exact duplicate of the external data that was read: in case of a character stream, the external data is systematically converted to UTF-8 sequence of bytes. If the user is pushing alternatives, he will have to know how many bytes this represent: native number of bytes
+ * in case of a binary stream, number of bytes in the UTF-8 encoding in case of a character stream.
+ */
 =head1 METHODS
 
 =head2 MarpaX::ESLIF::Recognizer->new($eslifGrammar, $recognizerInterface)
@@ -102,8 +105,100 @@ Note that trying to change the state of an event that was not pre-declared in th
 
 Returns a reference to an array of hash references, eventually empty if there is none. Each array element is a reference to a hash containing these keys:
 
+=head2 $eslifRecognizer->lexemeAlternative($name, $anything, $grammarLength)
+
+A lexeme is a terminal in the legacy parsing terminology. The lexeme word mean that in the grammar it is associated to a sub-grammar. Pushing an alternative mean that the end-user is intructing the recognizer that, at this precise moment of lexing, there is a given lexeme associated with the C<$name> parameter, with a given opaque value <$anything>. Grammar length parameter C<$grammarLength> is optional, and defaults to C<1>, i.e. one lexeme (which is a symbol in the grammar) correspond to one token. Nevertheless it is possible to say that an alternative span over more than one symbol.
+
+Returns a boolean indicating if the call was successful or not.
+
+=head2 $eslifRecognizer->lexemeComplete($length)
+
+Say the recognizer that alternatives are complete at this precise moment of parsing, and that the recognizer must move forward by C<$length> B<bytes>, which can be zero (end-user's responsibility).
+This method can generate events.
+
+Returns a boolean indicating if the call was successful or not.
+
+=head2 $eslifRecognizer->lexemeRead($name, $anything, $length, $grammarLength)
+
+A short-hand version of lexemeAlternative() followed by lexemeComplete(), with the same meaning for all parameters.
+This method can generate events.
+
+Returns a boolean indicating if the call was successful or not.
+
+=head2 $eslifRecognizer->lexemeTry($name)
+
+The end-user can ask the recognizer if a lexeme C<$name> may match.
+
+Returns a boolean indicating if the lexeme is recognized.
+
+=head2 $eslifRecognizer->discardTry()
+
+The end-user can ask the recognizer if C<:discard> rule may match.
+
+Returns a boolean indicating if :discard is recognized.
+
+=head2 $eslifRecognizer->lexemeExpected()
+
+Ask the recognizer a list of expected lexemes.
+
+Returns a reference to an array of names, eventually empty.
+
+=head2 $eslifRecognizer->lexemeLastPause($name)
+
+Ask the recognizer the end-user data associated to last lexeme I<pause after> event. A I<pause after> event is the when the recognizer was responsible of lexeme recognition, after a call to scan() or resume() methods. This data will be an exact copy of the last bytes that matched for a given lexeme, where data is the internal representation of end-user data, meaning that it may be UTF-8 sequence of bytes in case of character stream.
+
+Returns the associated bytes, or C<undef>.
+
+=head2 $eslifRecognizer->lexemeLastTry($name)
+
+Ask the recognizer the end-user data associated to last successful lexeme try. This data will be an exact copy of the last bytes that matched for a given lexeme, where data is the internal representation of end-user data, meaning that it may be UTF-8 sequence of bytes in case of character stream.
+
+Returns the associated bytes, or C<undef>.
+
+=head2 $eslifRecognizer->discardLastTry()
+
+Ask the recognizer the end-user data associated to last successful discard try. This data will be an exact copy of the last bytes that matched for a given lexeme, where data is the internal representation of end-user data, meaning that it may be UTF-8 sequence of bytes in case of character stream.
+
+Returns the associated bytes, or C<undef>.
+
+=head2 $eslifRecognizer->isEof()
+
+This method is similar to the isEof()'s recognizer interface. Except that this is asking the question directly to the recognizer's internal state, that maintains a copy of this flag.
+
+Returns a boolean indicating of end-of-user-data is reached.
+
+=head2 $eslifRecognizer->read()
+
+Forces the recognizer to read more data. Usually, the recognizer interface is called automatically whenever needed.
+
+Returns a boolean value indicating success or not.
+
+=head2 $eslifRecognizer->input()
+
+Get a copy of the current internal recognizer buffer, starting at the exact byte where resume() would start. An undefined output does not mean there is an error, but that internal buffers are completely consumed. ESLIF will automatically require more data unless the EOF flag is set. Internal buffer is always UTF-8 encoded to every chunk of data that was declared to be a character stream.
+
+Returns the associated input bytes, or C<undef>.
+
+=head2 $eslifRecognizer->progressLog($start, $end, $loggerLevel)
+
+Asks to get a logging representation of the current parse progress. The format is fixed by the underlying libraries. The C<$start> and C<$end> parameters follow the perl convention of indices, i.e. when they are negative, start that far from the end. For example, -1 mean the last indice, -2 mean one before the last indice, etc... C<$loggerLevel> is a level as per L<MarpaX::ESLIF::Logger::Levels>.
+
+Nothing is returned.
+
+=head2 $eslifRecognizer->lastCompletedOffset($name)
+
+The recognizer is tentatively keeping an absolute offset every time a lexeme is complete. We say tentatively in the sense that no overflow checking is done, thus this number is not reliable in case the user data spanned over a very large number of bytes. In addition, the unit is in bytes. C<$name> can be any symbol in the grammar.
+
+Returns the absolute offset in bytes.
+
+=head2 $eslifRecognizer->lastCompletedLength($name)
+
+The recognizer is tentatively computing the length of every symbol completion. Since this value depend internally on the absolute previous offset, it is not guaranteed to be exact, in the sense that no overflow check is done. C<$name> can be any symbol in the grammar.
+
+Returns the absolute length in bytes.
+
 =head1 SEE ALSO
 
-L<MarpaX::ESLIF::Recognizer::Interface>, L<MarpaX::ESLIF::Value::Interface>
+L<MarpaX::ESLIF::Recognizer::Interface>, L<MarpaX::ESLIF::Event::Type>, L<MarpaX::ESLIF::Logger::Levels>
 
 =cut
