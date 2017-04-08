@@ -18,7 +18,7 @@ BEGIN {
 
 =head1 DESCRIPTION
 
-ESLIF is an extension of perl's L<Marpa::R2> BNF, implemented as a stand-alone L<marpaESLIF|http://github.com/jddurand/c-marpaESLIF> C library.
+ESLIF is derived from perl's L<Marpa::R2>, and has its own BNF, documented in L<MarpaX::ESLIF::BNF>.
 
 =head1 SYNOPSIS
 
@@ -59,7 +59,7 @@ Returns a string containing the current underlying ESLIF library version.
 
 =head1 SEE ALSO
 
-L<MarpaX::ESLIF::Logger::Interface>, L<MarpaX::ESLIF::Grammar>
+L<MarpaX::ESLIF::Logger::Interface>, L<MarpaX::ESLIF::BNF>, L<MarpaX::ESLIF::Grammar>
 
 =cut
 
