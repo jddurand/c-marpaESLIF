@@ -104,6 +104,26 @@ foreach (qw/bootstrap_actions.c marpaESLIF.c/) {
   copy($src, $dst)|| die "$!";
 }
 
+#
+# We tweak doc/BNF/README.pod
+#
+$src = File::Spec->catfile(($updir) x 3, 'doc', 'BNF', 'README.pod');
+$dst = File::Spec->catfile('lib', 'MarpaX', 'ESLIF', 'BNF.pod');
+print "... Copying file $src to $dst\n";
+copy($src, $dst)|| die "$!";
+print "... Adapating $dst to perl\n";
+open(BNF, '<', $dst) || die "Cannot open $dst, $!";
+my $BNF = do { local $/; <BNF>; };
+close(BNF) || warn "Cannot close $dst, $!";
+$BNF =~ s/^=for html.*?$//sxmg;
+$BNF =~ s/marpaESLIF_/MarpaX::ESLIF::/g;
+$BNF =~ s/marpaESLIF /MarpaX::ESLIF /g;
+open(BNF, '>', $dst) || die "Cannot open $dst, $!";
+print BNF "# PODNAME: MarpaX::ESLIF::BNF\n\n";
+print BNF "# ABSTRACT: MarpaX::ESLIF's BNF\n\n";
+print BNF $BNF;
+close(BNF) || warn "Cannot close $dst, $!";
+
 exit(EXIT_SUCCESS);
 
 #
