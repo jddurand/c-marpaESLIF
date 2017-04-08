@@ -59,7 +59,7 @@ my @additional_srcdir = ();
 make_path(File::Spec->catdir('output', '3rdparty'));
 {
     local $CWD = File::Spec->catdir('output', '3rdparty');
-    my $pcre2_tar = File::Spec->catfile(File::Spec->updir, File::Spec->updir, '3rdparty', 'tar', 'pcre2-10.22.tar.gz');
+    my $pcre2_tar = File::Spec->catfile(File::Spec->updir, File::Spec->updir, '3rdparty', 'tar', 'pcre2-10.23.tar.gz');
     print "... Extracting pcre2\n";
     my $tar=Archive::Tar->new();
     $tar->read($pcre2_tar);
@@ -67,7 +67,7 @@ make_path(File::Spec->catdir('output', '3rdparty'));
     undef $tar;
 }
 {
-    local $CWD = File::Spec->catdir('output', '3rdparty', 'pcre2-10.22');
+    local $CWD = File::Spec->catdir('output', '3rdparty', 'pcre2-10.23');
     print "... Compiling pcre2\n";
     my $fh;
     open($fh, '>', 'config_autoconf.ini') || die "Cannot open config_autoconf.ini, $!";
@@ -157,7 +157,7 @@ AUTOCONF
 	);
   }
 }
-push(@additional_includes, File::Spec->catdir('output', '3rdparty', 'pcre2-10.22'));
+push(@additional_includes, File::Spec->catdir('output', '3rdparty', 'pcre2-10.23'));
 
 # ----------------------------------------------------------------
 # We depend on these* stuff that can manage themselves, eventually
