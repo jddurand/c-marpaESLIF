@@ -20,6 +20,24 @@ BEGIN {
 
 ESLIF is derived from perl's L<Marpa::R2>, and has its own BNF, documented in L<MarpaX::ESLIF::BNF>.
 
+The main features of this BNF are:
+
+=over
+
+=item Sub-grammars
+
+The number of sub grammars is unlimited.
+
+=item Regular expressions
+
+Native support of regular expression using the L<PCRE2|http://www.pcre.org/> library (i.e. this is <not> exactly perl regexps, although very closed).
+
+=item Streaming
+
+Native support of streaming input.
+
+=back
+
 =head1 SYNOPSIS
 
   use MarpaX::ESLIF;
@@ -59,7 +77,7 @@ Returns a string containing the current underlying ESLIF library version.
 
 =head1 SEE ALSO
 
-L<MarpaX::ESLIF::Logger::Interface>, L<MarpaX::ESLIF::BNF>, L<MarpaX::ESLIF::Grammar>
+L<PCRE2|http://www.pcre.org/>, L<MarpaX::ESLIF::BNF>, L<MarpaX::ESLIF::Logger::Interface>, L<MarpaX::ESLIF::Grammar>
 
 =cut
 
