@@ -1,0 +1,147 @@
+# PODNAME: MarpaX::ESLIF::Tutorial::Calculator
+
+# ABSTRACT: MarpaX::ESLIF Calculator Tutorial
+
+=head1 DESCRIPTION
+
+This documentation is giving a tutorial with a calculator as example. The reader might want first to read the L<MarpaX::ESLIF::BNF> specification.
+
+=head2 STARTUP
+
+First we get an ESLIF instance, we use the L<Log::Any::Adapter::Stderr> implementation for logging:
+
+  package main;
+  use strict;
+  use diagnostics;
+  use Log::Any qw/$log/;
+  use Log::Any::Adapter qw/Stderr/;
+  use MarpaX::ESLIF;
+
+  my $eslif = MarpaX::ESLIF->new($log);
+
+=head2 Grammar v1
+
+Grammar will support parenthesis, and the C<**>, C<*>, C</>, C<+>, C<-> operators:
+
+  my $grammar_v1 = q{
+  Expression ::=
+      /[\d]+/
+      | '(' Expression ')'              assoc => group
+     ||     Expression '**' Expression  assoc => right
+     ||     Expression  '*' Expression
+      |     Expression  '/' Expression
+     ||     Expression  '+' Expression
+      |     Expression  '-' Expression
+  };
+
+Compiling the grammar is done with:
+
+  my $eslifGrammar = MarpaX::ESLIF::Grammar->new($eslif, $grammar_v1);
+
+The C<::=> mean this is the top-level grammar. It could have be writen as C<:[0]:=>.
+
+The C<||> loosen separator is a shortcut for grouping rules, Together with the associativity adverbs, the grammar listed upper is stricly equivalent to this traditional BNF form:
+
+  Expression   ::= Expression_0
+  Expression_0 ::= Expression_1
+  Expression_1 ::= Expression_2
+  Expression_2 ::= Expression_3
+  Expression_3 ::= /[\d]+/
+  Expression_3 ::= '(' Expression_0 ')'
+  Expression_2 ::= Expression_3 '**' Expression_2
+  Expression_1 ::= Expression_1 '*' Expression_2
+  Expression_1 ::= Expression_1 '/' Expression_2
+  Expression_0 ::= Expression_0 '+' Expression_1
+  Expression_0 ::= Expression_0 '-' Expression_1
+
+With I<no associativity>, this would have been equivalent to:
+
+  Expression   ::= Expression_0
+  Expression_0 ::= Expression_1
+  Expression_1 ::= Expression_2
+  Expression_2 ::= Expression_3
+  Expression_3 ::= /[\d]+/
+  Expression_3 ::= '(' Expression_3 ')'
+  Expression_2 ::= Expression_2 '**' Expression_3
+  Expression_1 ::= Expression_1 '*' Expression_2
+  Expression_1 ::= Expression_1 '/' Expression_2
+  Expression_0 ::= Expression_0 '+' Expression_1
+  Expression_0 ::= Expression_0 '-' Expression_1
+
+You can see the impact of group associativity in the C<Expression_3> rule, and the impact of right associativity in the C<Expression_2> rule.
+
+Since internally, a pure BNF implementation is in use, the use of the C<||> loosen operator is indeed forcing the engine to act as if you would have writen in traditional BNF, this can be seen by asking for a dump of the grammar:
+
+  print $eslifGrammar->show;
+
+One can already try to parse some input. Neverthless, to do so, MarpaX::ESLIF imposes to have I<recognizer> instance and a I<valuator> instances:
+
+=over
+
+=item Recognizer interface
+
+A recognizer must provide the following methods: C<read>, C<isEof>, C<isCharacterStream>, C<encoding>, C<data>, C<isWithDisableThreshold>, C<isWithExhaustion> and C<isWithNewline>. We will instanciate a recognizer for a string;
+
+  package MyRecognizer;
+  use strict;
+  use diagnostics;
+  sub new {
+    my ($pkg, $string) = @_;
+    open my $fh, "<", \$string;
+    return bless { line => undef, fh => $fh }, $pkg;
+  }
+
+C<read> returns a true value if data was read, C<isEof> returns a true value if EOF is reached, C<isCharacterStream> returns a true value if this is a stream of characters, C<encoding> return the encoding if known, C<data> returns the data, C<isWithDisableThreshold> switches off a hardcoded internal warning when grammar seems to have problems -; C<isWithExhaustion> enables exhaustion event and C<isWithNewline> enables newline counting for error reporting:
+
+  # read data
+  sub read                   {
+                               my ($self) = @_;
+                               defined($self->{line} = readline($self->{fh}))
+                             }
+  # End of data ?
+  sub isEof                  {  eof shift->{fh} }
+  # Character stream ?
+  sub isCharacterStream      {                1 }
+  # Encoding ?
+  sub encoding               {                  }
+  # data
+  sub data                   {    shift->{line} }
+  # Disable threshold warning ?
+  sub isWithDisableThreshold {                0 }
+  # Exhaustion event ?
+  sub isWithExhaustion       {                0 }
+  # Newline count ?
+  sub isWithNewline          {                1 }
+
+=item Valuator interface
+
+A valuator must be an object that can do: C<isWithHighRankOnly>, C<isWithOrderByRank>, C<isWithAmbiguous>, C<isWithNull>, C<maxParses>, C<getResult> and C<setResult>:
+
+  package MyValue;
+  use strict;
+  use diagnostics;
+  sub new { bless { result => undef}, shift }
+
+  # When there is the rank adverb: highest ranks only ?
+  sub isWithHighRankOnly { 1 }
+  # When there is the rank adverb: order by rank ?
+  sub isWithOrderByRank  { 1 }
+  # Allow ambiguous parse ?
+  sub isWithAmbiguous    { 0 }
+  # Allow null parse ?
+  sub isWithNull         { 0 }
+  # Maximum number of parse tree values
+  sub maxParses          { 0 }
+  # Retreive result
+  sub getResult          { my ($self) = @_; $self->{result} }
+  # Set result
+  sub setResult          { my ($self, $result) = @_; $self->{result} = $result }
+
+
+=head1 NOTES
+
+This example is adapted from L<Marpa::R2's Semantics|https://metacpan.org/pod/distribution/Marpa-R2/pod/Semantics.pod> documentation.
+
+=head1 SEE ALSO
+
+L<MarpaX::ESLIF>
