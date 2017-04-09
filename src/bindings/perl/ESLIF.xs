@@ -1427,10 +1427,16 @@ CODE:
   if (! marpaESLIFGrammar_parseb(MarpaX_ESLIF_Grammarp, &marpaESLIFRecognizerOption, &marpaESLIFValueOption, &exhaustedb, &marpaESLIFValueResult)) {
     goto err;
   }
-  if (marpaESLIFValueResult.type != MARPAESLIF_VALUE_TYPE_PTR) {
-    MARPAESLIF_CROAKF("marpaESLIFValueResult.type is not MARPAESLIF_VALUE_TYPE_PTR but %d", marpaESLIFValueResult.type);
+  switch (marpaESLIFValueResult.type) {
+  case MARPAESLIF_VALUE_TYPE_PTR:
+    svp = (SV *) marpaESLIFValueResult.u.p;
+    break;
+  case MARPAESLIF_VALUE_TYPE_ARRAY:
+    svp = newSVpvn(marpaESLIFValueResult.u.p, marpaESLIFValueResult.sizel);
+    break;
+  default:
+    MARPAESLIF_CROAKF("marpaESLIFValueResult.type is not MARPAESLIF_VALUE_TYPE_PTR nor MARPAESLIF_VALUE_TYPE_ARRAY but %d", marpaESLIFValueResult.type);
   }
-  svp = (SV *) marpaESLIFValueResult.u.p;
 
   marpaESLIF_call_methodv(aTHX_ Perl_valueInterfacep, "setResult", svp);
   rcb = 1;
