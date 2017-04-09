@@ -169,15 +169,7 @@ if a discard tentative is instancuated on grammar at level 0 using the symbol C<
 
 =head1 Streaming, character and binary modes
 
-Everytime any recognizer need more data, a callback to userspace is triggered. This callback is set up in the top recognizer's option, and shared with any sub-recognizer. Its definition is:
-
-  typedef short (*marpaESLIFReader_t)(void *userDatavp, char **inputcpp, size_t *inputlp, short *eofbp, short *characterStreambp, char **encodingOfEncodingsp, char **encodingsp, size_t *encodinglp);
-
-where C<userDatavp> is an opaque pointer holding user's context. If this function return a true value, marpaESLIF expect the user to have filled in C<*inputcp>, C<*inputlp> and C<*eofbp> the location of the next buffer, its number of B<bytes>, and the eventual EOF information, respectively.
-
-Mixing character streaming and binary streaming is possible, though it will be under the user responsibility to split the chunks of data accordingly. Usage of grammar I<events> will be helpful in such a case. It is possible to use characters streaming in a binary mode though, but then the grammar itself has to be instructed to B<not> work with characters.
-
-When the user know it is a stream of characters, he is setting the C<*characterStreambp> to a true value, and can eventually give the encoding itself in C<*encodingsp>, that has C<*encodinglp> byte, and is itself encoded using the C<*encodingOfEncodingsp> charset (which have to be an ASCII thingy). It is perfectly legal to say you do not know the encoding by setting C<NULL>, C<NULL> and C<0> in these three pointers. Then marpaESLIF will guess about the charset for this chunk of data, although you should give enough bytes to have an accurate guess. Encoding of encoding information obey the same rule: you can set C<NULL> in C<*encodingOfEncodingsp>, though giving information in C<*encodingsp> and C<*encodinglp>.
+Everytime any recognizer need more data, a callback to userspace is triggered. It is legal to not give the encoding when it is a character stream, then the engine will guess (the user should give enough data so that the guess is correct, though).
 
 Internally, all chunks of characters are converted to UTF-8. This guarantees three things:
 
@@ -535,7 +527,7 @@ LATM (Longest Acceptable Token Match) is preventing the scanner to push alternat
 
 =item syntactic exception is supported
 
-... dand it is managed at I<valuation> phase.
+... and it is managed at I<valuation> phase.
 
 =item native regular expression support (via L<PCRE2|http://www.pcre.org/>)
 
