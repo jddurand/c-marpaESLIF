@@ -305,7 +305,7 @@ public class AppParse  {
 	}
 	
 	private static void changeEventState(String context, ESLIFLoggerInterface eslifLogger, ESLIFRecognizer eslifRecognizer, String symbol, ESLIFEventType type, boolean state) throws ESLIFException {
-	    eslifLogger.debug("[" + context + "]" + " Changing " + type + " event state of symbol " + symbol + " to " + state);
+	    eslifLogger.debug("[" + context + "]" + " Changing event state  " + type + " of symbol " + symbol + " to " + state);
 		eslifRecognizer.eventOnOff(symbol, new ESLIFEventType[] { ESLIFEventType.get(type.getCode()) },	state);
 	}
 	
