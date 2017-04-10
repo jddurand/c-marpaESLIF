@@ -99,8 +99,12 @@ public class AppParse  {
 			AppRecognizer eslifAppRecognizer = new AppRecognizer(reader);
 			AppValue eslifAppValue = new AppValue();
 			eslifLogger.info("Testing parse() on " + string);
-			if (eslifGrammar.parse(eslifAppRecognizer, eslifAppValue)) {
-				eslifLogger.info("Result: " + eslifAppValue.getResult());
+			try {
+				if (eslifGrammar.parse(eslifAppRecognizer, eslifAppValue)) {
+					eslifLogger.info("Result: " + eslifAppValue.getResult());
+				}
+			} catch (Exception e) {
+				System.err.println("Failed to parse " + string + ": " + e.getMessage());
 			}
 		}
 
@@ -168,12 +172,16 @@ public class AppParse  {
 				try {
 					AppValue eslifAppValue = new AppValue();
 					eslifLogger.info("Testing value() on " + string);
-					ESLIFValue value = new ESLIFValue(eslifRecognizer, eslifAppValue);
-					while (value.value()) {
-						Object result = eslifAppValue.getResult();
-						eslifLogger.info("Result: " + result);
+					try {
+						ESLIFValue value = new ESLIFValue(eslifRecognizer, eslifAppValue);
+						while (value.value()) {
+							Object result = eslifAppValue.getResult();
+							eslifLogger.info("Result: " + result);
+						}
+						value.free();
+					} catch (Exception e) {
+						eslifLogger.error("Failed to parse " + string + ": " + e.getMessage());
 					}
-					value.free();
 				} catch (Exception e){
 					eslifLogger.error("Cannot value the input: " + e);
 				}
