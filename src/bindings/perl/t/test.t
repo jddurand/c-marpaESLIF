@@ -309,9 +309,13 @@ for (my $i = 0; $i <= $#strings; $i++) {
   if ($eslifGrammar->parse($recognizerInterface, $valueInterface)) {
     my $result = $valueInterface->getResult;
     $log->infof("Result: %s", $result);
-    diag("$string => $result");
+    if (defined($result)) {
+      diag("$string => $result");
+    } else {
+      diag("$string => <undef>");
+    }
   } else {
-    diag("$string => <undef>");
+    diag("$string => ?");
   }
 }
 
@@ -350,8 +354,8 @@ for (my $i = 0; $i <= $#strings; $i++) {
                     #
                     my $bytes = $eslifRecognizer->lexemeLastPause("NUMBER");
                     if (! defined($bytes)) {
-                        BAIl_OUT("Pause before on NUMBER but no pause information!");
-                    }
+                        BAIL_OUT("Pause before on NUMBER but no pause information!");
+                      }
                     if (! doLexemeRead($log, $eslifRecognizer, "NUMBER", $j, $bytes)) {
                         BAIL_OUT("NUMBER expected but reading such lexeme fails!");
                     }
@@ -437,7 +441,7 @@ sub doResume {
 
 sub changeEventState {
     my ($context, $log, $eslifRecognizer, $symbol, $type, $state) = @_;
-    $log->debugf("[%s] Changing %s event state of symbol %s to %s", $context, $type, $symbol, $state);
+    $log->debugf("[%s] Changing event state %s of symbol %s to %s", $context, $type, $symbol, $state);
     $eslifRecognizer->eventOnOff($symbol, $type, $state);
 }
 
@@ -461,11 +465,11 @@ sub showLastCompletion {
 #
 sub doLexemeRead {
     my ($log, $eslifRecognizer, $symbol, $value, $bytes) = @_;
+    my @bytes = unpack('C*', $bytes);
     my $context;
-    my $old = decode('UTF-8', $bytes, Encode::FB_CROAK);
-		
-    $log->debugf("... Forcing Integer object for \"%s\" spanned on %d bytes instead of \"%s\"", $value, length($bytes), $old);
-    if (! $eslifRecognizer->lexemeRead($symbol, int($value), length($bytes), 1)) {
+    my $old = decode('UTF-8', my $tmp = $bytes, Encode::FB_CROAK);
+    $log->debugf("... Forcing Integer object for \"%s\" spanned on %d bytes instead of \"%s\"", $value, scalar(@bytes), $old);
+    if (! $eslifRecognizer->lexemeRead($symbol, int($value), scalar(@bytes), 1)) {
         return 0;
     }
 
@@ -517,7 +521,7 @@ sub doLexemeTry {
 __DATA__
 :start   ::= Expression
 :default ::=             action        => do_op
-                         symbol-action => do_symbol
+                         #symbol-action => do_symbol
                          free-action   => do_free
 :discard ::= whitespaces event  => discard_whitespaces$
 :discard ::= comment     event  => discard_comment$
@@ -543,4 +547,4 @@ NUMBER     ~ /[\d]+/
 whitespaces ::= WHITESPACES
 WHITESPACES ~ [\s]+
 comment ::= /(?:(?:(?:\/\/)(?:[^\n]*)(?:\n|\z))|(?:(?:\/\*)(?:(?:[^\*]+|\*(?!\/))*)(?:\*\/)))/u
-    
+
