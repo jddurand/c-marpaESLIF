@@ -1234,7 +1234,7 @@ JNIEXPORT jboolean JNICALL Java_org_parser_marpa_ESLIFGrammar_jniParse(JNIEnv *e
   static const char             *funcs = "Java_org_parser_marpa_ESLIFGrammar_jniParse";
   jobject                        resultp = NULL;
   jobject                        objectp = NULL;
-  jbyteArray                     byteArrayp;
+  jobject                        byteBuffer = NULL;
   marpaESLIFGrammar_t           *marpaESLIFGrammarp;
   marpaESLIFRecognizerOption_t   marpaESLIFRecognizerOption;
   marpaESLIFValueOption_t        marpaESLIFValueOption;
@@ -1302,23 +1302,19 @@ JNIEXPORT jboolean JNICALL Java_org_parser_marpa_ESLIFGrammar_jniParse(JNIEnv *e
     break;
   case MARPAESLIF_VALUE_TYPE_ARRAY:
     /* This is a lexeme, or a concatenation of lexemes */
-    byteArrayp = (*envp)->NewByteArray(envp, marpaESLIFValueResult.sizel);
-    if (byteArrayp == NULL) {
-      goto err;
-    }
-    (*envp)->SetByteArrayRegion(envp, byteArrayp, (jsize) 0, (jsize) marpaESLIFValueResult.sizel, (jbyte *) marpaESLIFValueResult.u.p);
+    byteBuffer = (*envp)->NewDirectByteBuffer(envp, marpaESLIFValueResult.u.p, (jlong) marpaESLIFValueResult.sizel);
     if (HAVEEXCEPTION(envp)) {
       goto err;
     }
-    resultp = (jobject) byteArrayp;
-    fprintf(stderr, "===================> BYTE ARRAY\n");
+    resultp = (jobject) byteBuffer;
+    fprintf(stderr, "===================> BYTE BUFFER\n");
     break;
   default:
     RAISEEXCEPTIONF(envp, "marpaESLIFValueResult.type is not MARPAESLIF_VALUE_TYPE_PTR nor MARPAESLIF_VALUE_TYPE_ARRAY but %d", marpaESLIFValueResult.type);
     goto err;
   }
 
-  (*envp)->CallVoidMethod(envp, eslifValueInterfacep, MARPAESLIF_ESLIFVALUEINTERFACE_CLASS_setResult_METHODP, objectp != NULL ? objectp : byteArrayp);
+  (*envp)->CallVoidMethod(envp, eslifValueInterfacep, MARPAESLIF_ESLIFVALUEINTERFACE_CLASS_setResult_METHODP, objectp != NULL ? objectp : byteBuffer);
   if (HAVEEXCEPTION(envp)) {
     goto err;
   }
