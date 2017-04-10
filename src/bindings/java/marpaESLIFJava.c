@@ -1297,8 +1297,11 @@ JNIEXPORT jboolean JNICALL Java_org_parser_marpa_ESLIFGrammar_jniParse(JNIEnv *e
       RAISEEXCEPTION(envp, "NewDirectByteBuffer failure");
     }
     break;
+  case MARPAESLIF_VALUE_TYPE_UNDEF:
+    /* We are okay with the NULL byteBufferp value here */
+    break;
   default:
-    RAISEEXCEPTIONF(envp, "marpaESLIFValueResult.type is not MARPAESLIF_VALUE_TYPE_PTR nor MARPAESLIF_VALUE_TYPE_ARRAY but %d", marpaESLIFValueResult.type);
+    RAISEEXCEPTIONF(envp, "marpaESLIFValueResult.type is not MARPAESLIF_VALUE_TYPE_PTR, MARPAESLIF_VALUE_TYPE_ARRAY nor  MARPAESLIF_VALUE_TYPE_UNDEF but %d", marpaESLIFValueResult.type);
   }
 
   (*envp)->CallVoidMethod(envp, eslifValueInterfacep, MARPAESLIF_ESLIFVALUEINTERFACE_CLASS_setResult_METHODP, globalObjectp != NULL ? globalObjectp : byteBufferp);
@@ -2900,8 +2903,11 @@ JNIEXPORT jboolean JNICALL Java_org_parser_marpa_ESLIFValue_jniValue(JNIEnv *env
         RAISEEXCEPTION(envp, "NewDirectByteBuffer failure");
       }
       break;
+    case MARPAESLIF_VALUE_TYPE_UNDEF:
+      /* We are okay with the NULL byteBufferp value here */
+      break;
     default:
-      RAISEEXCEPTIONF(envp, "marpaESLIFValueResult.type is not MARPAESLIF_VALUE_TYPE_PTR nor MARPAESLIF_VALUE_TYPE_ARRAY but %d", marpaESLIFValueResult.type);
+      RAISEEXCEPTIONF(envp, "marpaESLIFValueResult.type is not MARPAESLIF_VALUE_TYPE_PTR, MARPAESLIF_VALUE_TYPE_ARRAY nor  MARPAESLIF_VALUE_TYPE_UNDEF but %d", marpaESLIFValueResult.type);
     }
 
     (*envp)->CallVoidMethod(envp, eslifValueInterfacep, MARPAESLIF_ESLIFVALUEINTERFACE_CLASS_setResult_METHODP, globalObjectp != NULL ? globalObjectp : byteBufferp);
@@ -2913,7 +2919,7 @@ JNIEXPORT jboolean JNICALL Java_org_parser_marpa_ESLIFValue_jniValue(JNIEnv *env
     rcb = JNI_FALSE;
   }
 
-  goto done;
+goto done;
 
  err:
   /* Well, caller will see an exception at this stage */
