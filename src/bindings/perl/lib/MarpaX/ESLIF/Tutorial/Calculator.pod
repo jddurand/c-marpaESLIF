@@ -141,7 +141,7 @@ C<isWithHighRankOnly> select only rules that have the highest eventual C<rank> a
 
 =back
 
-So far, so good. The default actions for symbols and rules is always to concatenate any accepted token. So we expect the output of pqrsing e.g. C<(1+2)*3> to be... C<(1+2)*3>:
+So far, so good. The default actions for symbols and rules is always to concatenate any accepted token. So we expect the output of parsing e.g. C<(1+2)*3> to be... C<(1+2)*3>:
 
   package main;
 
@@ -152,7 +152,7 @@ So far, so good. The default actions for symbols and rules is always to concaten
   my $result = $eslifGrammar->parse($eslifRecognizer, $eslifValue) ? $eslifValue->getResult : '??';
   printf "Default parse tree value of $input: %s\n", $result;
 
-Usually, input is liley to have newlines, spaces, etc... we introduce as many. :discard symbols as wanted, for example to discard spaces, C-like and perl comments:
+Usually, input is likey to have newlines, spaces, etc... we introduce as many. :discard symbols as wanted, for example to discard spaces, C-like and perl comments:
 
   my $grammar_v2 = $grammar_v1 . q{
   :discard ::= /[\s]+/
@@ -161,9 +161,19 @@ Usually, input is liley to have newlines, spaces, etc... we introduce as many. :
   };
   $eslifGrammar = MarpaX::ESLIF::Grammar->new($eslif, $grammar_v2);
 
+We test it on an input that have things to discard, i.e.:
+
+  $input = q{( /* C comment */1+2)
+  # perl comment
+  *3};
+  $eslifRecognizer = MyRecognizer->new($input);
+  $eslifValue = MyValue->new();
+  $result = $eslifGrammar->parse($eslifRecognizer, $eslifValue) ? $eslifValue->getResult : '??';
+  printf "Default parse tree value of $input: %s\n", $result;
+
 The output is the same: C<:discard> rules have skipped everything non-accepted by the grammar, but declared with C<:discard> definitions.
 
-You will have noticed that regular expressions are allowed, and MarpaX::ESLIF arranges with the case when there is a match but the stream is not finished. For instance, reading character by character would produce the same result:
+You will have noticed that regular expressions are allowed, and MarpaX::ESLIF arranges with the case when there is a match but the stream is not finished. For instance, reading character by character would produce the B<same> result:
 
   package MyRecognizer;
   no warnings 'redefine';
@@ -173,7 +183,7 @@ You will have noticed that regular expressions are allowed, and MarpaX::ESLIF ar
                              }
 
 
-Though please note that reading character per character, which means very few bytes per very few bytes without encoding information, can drive to a false encoding guess from MarpaX::ESLIF. Our input being for the moment pure ASCII, we could have said:
+Though please note that reading character per character, which means very few bytes per very few bytes without encoding information, can drive to a false encoding guess from MarpaX::ESLIF. Our input being for the moment pure ASCII, we could have avoid the guess with the C<encoding> method of the recognizer:
 
   package MyRecognizer;
   no warnings 'redefine';
