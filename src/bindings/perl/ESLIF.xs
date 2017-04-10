@@ -534,8 +534,8 @@ static short marpaESLIF_recognizerReaderCallbackb(void *userDatavp, char **input
   *eofbp                = marpaESLIF_call_methodb(aTHX_ Perl_recognizerInterfacep, "isEof");
   *characterStreambp    = marpaESLIF_call_methodb(aTHX_ Perl_recognizerInterfacep, "isCharacterStream");
   *encodingOfEncodingsp = NULL;
-  *encodingsp           = NULL;
-  *encodinglp           = 0;
+  *encodingsp           = encodings;
+  *encodinglp           = encodingl;
 
   marpaESLIFRecognizerContextp->previous_Perl_datap     = Perl_datap;
   marpaESLIFRecognizerContextp->previous_Perl_encodingp = Perl_encodingp;
