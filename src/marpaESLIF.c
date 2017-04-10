@@ -12233,21 +12233,12 @@ static short _marpaESLIF_rule_action___concatb(void *userDatavp, marpaESLIFValue
     goto done;
   }
 
-  /* All arguments must be of type ARRAY */
+  /* Only arguments of type ARRAY are taken into account */
   for (i = arg0i; i <= argni; i++) {
     if (! _marpaESLIFValue_stack_is_arrayb(marpaESLIFValuep, i, &flagb)) {
       goto err;
     }
-    if (! flagb) {
-      /* This is acceptable only if it is an undefined value */
-      if (! _marpaESLIFValue_stack_is_undefb(marpaESLIFValuep, i, &flagb)) {
-        goto err;
-      }
-      if (! flagb) {
-        MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "Indice %d in stack is not ARRAY neither UNDEF (genericStack type: %s)", i, _marpaESLIF_genericStack_i_types(marpaESLIFValuep->typeStackp, i));
-        goto err;
-      }
-    } else {
+    if (flagb) {
       if (! _marpaESLIFValue_stack_get_arrayb(marpaESLIFValuep, i, NULL /* contextip */, &thisbytep, &thisbytel, NULL /* shallowbp */)) {
         goto err;
       }
@@ -12281,8 +12272,14 @@ static short _marpaESLIF_rule_action___concatb(void *userDatavp, marpaESLIFValue
     ((char *) bytep)[bytel] = '\0';
   }
 
-  if (! _marpaESLIFValue_stack_set_arrayb(marpaESLIFValuep, resulti, 0 /* 0 is a value not allowed from outside */, bytep, bytel, 0 /* shallowb */)) {
-    goto err;
+  if (bytel > 0) {
+    if (! _marpaESLIFValue_stack_set_arrayb(marpaESLIFValuep, resulti, 0 /* 0 is a value not allowed from outside */, bytep, bytel, 0 /* shallowb */)) {
+      goto err;
+    }
+  } else {
+    if (! _marpaESLIFValue_stack_set_undefb(marpaESLIFValuep, resulti)) {
+      goto err;
+    }
   }
 
   rcb = 1;
