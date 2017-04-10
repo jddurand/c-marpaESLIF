@@ -161,7 +161,7 @@ Usually, input is liley to have newlines, spaces, etc... we introduce as many. :
   };
   $eslifGrammar = MarpaX::ESLIF::Grammar->new($eslif, $grammar_v2);
 
-The output is the same: C<:discard> rules have skipped everything non-accepted by the graééar, but declared with C<:discard> definitions.
+The output is the same: C<:discard> rules have skipped everything non-accepted by the grammar, but declared with C<:discard> definitions.
 
 You will have noticed that regular expressions are allowed, and MarpaX::ESLIF arranges with the case when there is a match but the stream is not finished. For instance, reading character by character would produce the same result:
 
