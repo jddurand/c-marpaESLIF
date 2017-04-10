@@ -72,9 +72,9 @@ You can see the impact of group associativity in the C<Expression_3> rule, and t
 
 Since internally, a pure BNF implementation is in use, the use of the C<||> loosen operator is indeed forcing the engine to act as if you would have writen in traditional BNF, this can be seen by asking for a dump of the grammar:
 
-  print $eslifGrammar->show;
+  #print $eslifGrammar->show;
 
-One can already try to parse some input. Neverthless, to do so, MarpaX::ESLIF imposes to have I<recognizer> instance and a I<valuator> instances:
+One can already try to parse some input. Neverthless, to do so, MarpaX::ESLIF imposes to have a I<recognizer> and a I<valuator> instances:
 
 =over
 
@@ -85,33 +85,31 @@ A recognizer must provide the following methods: C<read>, C<isEof>, C<isCharacte
   package MyRecognizer;
   use strict;
   use diagnostics;
+  #
+  # Constructor
+  #
   sub new {
     my ($pkg, $string) = @_;
     open my $fh, "<", \$string;
-    return bless { line => undef, fh => $fh }, $pkg;
+    return bless { data => undef, fh => $fh }, $pkg;
   }
 
-C<read> returns a true value if data was read, C<isEof> returns a true value if EOF is reached, C<isCharacterStream> returns a true value if this is a stream of characters, C<encoding> return the encoding if known, C<data> returns the data, C<isWithDisableThreshold> switches off a hardcoded internal warning when grammar seems to have problems -; C<isWithExhaustion> enables exhaustion event and C<isWithNewline> enables newline counting for error reporting:
+C<read> returns a true value if data was read, C<isEof> returns a true value if EOF is reached, C<isCharacterStream> returns a true value if this the last data is composed of characters, C<encoding> return the encoding if known, C<data> returns the data, C<isWithDisableThreshold> switches off a hardcoded internal warning when grammar seems to have problems -; C<isWithExhaustion> enables exhaustion event and C<isWithNewline> enables newline counting for error reporting:
 
-  # read data
+  #
+  # Required methods
+  #
   sub read                   {
-                               my ($self) = @_;
-                               defined($self->{line} = readline($self->{fh}))
+                               my ($self) = @_;   # read data
+                               defined($self->{data} = readline($self->{fh}))
                              }
-  # End of data ?
-  sub isEof                  {  eof shift->{fh} }
-  # Character stream ?
-  sub isCharacterStream      {                1 }
-  # Encoding ?
-  sub encoding               {                  }
-  # data
-  sub data                   {    shift->{line} }
-  # Disable threshold warning ?
-  sub isWithDisableThreshold {                0 }
-  # Exhaustion event ?
-  sub isWithExhaustion       {                0 }
-  # Newline count ?
-  sub isWithNewline          {                1 }
+  sub isEof                  {  eof shift->{fh} } # End of data ?
+  sub isCharacterStream      {                1 } # Character stream ?
+  sub encoding               {                  } # Encoding ?
+  sub data                   {    shift->{data} } # data
+  sub isWithDisableThreshold {                0 } # Disable threshold warning ?
+  sub isWithExhaustion       {                0 } # Exhaustion event ?
+  sub isWithNewline          {                1 } # Newline count ?
 
 =item Valuator interface
 
@@ -120,22 +118,61 @@ A valuator must be an object that can do: C<isWithHighRankOnly>, C<isWithOrderBy
   package MyValue;
   use strict;
   use diagnostics;
+  #
+  # Constructor
+  #
   sub new { bless { result => undef}, shift }
 
-  # When there is the rank adverb: highest ranks only ?
-  sub isWithHighRankOnly { 1 }
-  # When there is the rank adverb: order by rank ?
-  sub isWithOrderByRank  { 1 }
-  # Allow ambiguous parse ?
-  sub isWithAmbiguous    { 0 }
-  # Allow null parse ?
-  sub isWithNull         { 0 }
-  # Maximum number of parse tree values
-  sub maxParses          { 0 }
-  # Retreive result
+C<isWithHighRankOnly> select only rules that have the highest eventual C<rank> adverb, C<isWithOrderByRank> orders by rank, C<isWithAmbiguous> allows ambiguous parse tree value (i.e. there is more than one value), C<isWithNull> allows a null parse, C<maxParses> gives the maximum number of wanted parse tree values (C<0> means unlimited), and for every value iteration, there are a getters and a setter on the result: C<getResult> and C<setResult>, respectively.
+
+  #
+  # Required methods
+  #
+  sub isWithHighRankOnly { 1 }  # When there is the rank adverb: highest ranks only ?
+  sub isWithOrderByRank  { 1 }  # When there is the rank adverb: order by rank ?
+  sub isWithAmbiguous    { 0 }  # Allow ambiguous parse ?
+  sub isWithNull         { 0 }  # Allow null parse ?
+  sub maxParses          { 0 }  # Maximum number of parse tree values
+  #
+  # ... result getter and setter
+  #
   sub getResult          { my ($self) = @_; $self->{result} }
-  # Set result
   sub setResult          { my ($self, $result) = @_; $self->{result} = $result }
+
+=back
+
+So far, so good. The default actions for symbols and rules is always to concatenate any accepted token. So we expect the output of pqrsing e.g. C<(1+2)*3> to be... C<(1+2)*3>:
+
+  package main;
+
+  my $input = '(1+2)*3';
+  my $eslifRecognizer = MyRecognizer->new($input);
+  my $eslifValue = MyValue->new();
+
+  my $result = $eslifGrammar->parse($eslifRecognizer, $eslifValue) ? $eslifValue->getResult : '??';
+  printf "Default parse tree value of $input: %s\n", $result;
+
+Usually, input is liley to have newlines, spaces, etc... we introduce as many. :discard symbols as wanted, for example to discard spaces, C-like and perl comments:
+
+  my $grammar_v2 = $grammar_v1 . q{
+  :discard ::= /[\s]+/
+  :discard ::= /(?:(?:(?:\/\/)(?:[^\n]*)(?:\n|\z))|(?:(?:\/\*)(?:(?:[^\*]+|\*(?!\/))*)(?:\*\/)))/
+  :discard ::= /#[^\n]*(?:\n|\z)/
+  };
+  $eslifGrammar = MarpaX::ESLIF::Grammar->new($eslif, $grammar_v2);
+
+The output is the same: C<:discard> rules have skipped everything non-accepted by the graééar, but declared with C<:discard> definitions.
+
+You will have noticed that regular expressions are allowed, and MarpaX::ESLIF arranges with the case when there is a match but the stream is not finished. For instance, reading character by character would produce the same result:
+
+  package MyRecognizer;
+  no warnings 'redefine';
+  sub read                   {
+                               my ($self) = @_;   # read data
+                               my $rc = CORE::read($self->{fh}, $self->{data}, 1) // 0;
+                               print STDERR "===> $rc " . $self->{data} . "\n";
+                               return $rc;
+                             }
 
 
 =head1 NOTES
