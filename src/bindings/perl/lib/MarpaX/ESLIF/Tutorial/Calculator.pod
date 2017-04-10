@@ -91,7 +91,7 @@ A recognizer must provide the following methods: C<read>, C<isEof>, C<isCharacte
   sub new {
     my ($pkg, $string) = @_;
     open my $fh, "<", \$string;
-    return bless { data => undef, fh => $fh }, $pkg;
+    bless { data => undef, fh => $fh }, $pkg
   }
 
 C<read> returns a true value if data was read, C<isEof> returns a true value if EOF is reached, C<isCharacterStream> returns a true value if this the last data is composed of characters, C<encoding> return the encoding if known, C<data> returns the data, C<isWithDisableThreshold> switches off a hardcoded internal warning when grammar seems to have problems -; C<isWithExhaustion> enables exhaustion event and C<isWithNewline> enables newline counting for error reporting:
@@ -169,11 +169,15 @@ You will have noticed that regular expressions are allowed, and MarpaX::ESLIF ar
   no warnings 'redefine';
   sub read                   {
                                my ($self) = @_;   # read data
-                               my $rc = CORE::read($self->{fh}, $self->{data}, 1) // 0;
-                               print STDERR "===> $rc " . $self->{data} . "\n";
-                               return $rc;
+                               CORE::read($self->{fh}, $self->{data}, 2) ? 1 : 0
                              }
 
+
+Though please note that reading character per character, which means very few bytes per very few bytes without encoding information, can drive to a false encoding guess from MarpaX::ESLIF. Our input being for the moment pure ASCII, we could have said:
+
+  package MyRecognizer;
+  no warnings 'redefine';
+  sub encoding               { 'ASCII' } # Encoding ?
 
 =head1 NOTES
 
