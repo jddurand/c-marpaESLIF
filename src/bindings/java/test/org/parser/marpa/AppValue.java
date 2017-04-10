@@ -118,7 +118,15 @@ public class AppValue implements ESLIFValueInterface {
 	}
 
 	public void setResult(Object result) {
-		this.result = result;
+		if (result instanceof ByteBuffer) {
+			try {
+				this.result = byteBufferToString((ByteBuffer) result);
+			} catch (UnsupportedEncodingException e) {
+				this.result = null;
+			}
+		} else {
+			this.result = result;
+		}
 	}
 
 }
