@@ -145,7 +145,9 @@ By default, symbol action is C<::shift> and rule action is C<::concat>, i.e. the
 
 Predefined actions are available for rules and symbols. Please refer the API documentation to know more about value types.
 
-The free-action is required when the end-user is pushing an opaque value of type C<PTR> or C<ARRAY> that is not declared shallowed. The internal stack manipulation may require decide it does not need this value anymore: the free action is then called. This is used in low-level programming, in practice interface to high-level languages like Perl, Java etc... should I<hide> that, making the presence of this keyword in the grammar meaningless.
+The C<free-action> adverb is required when the end-user is pushing an opaque value of type C<PTR> or C<ARRAY> that is not declared shallowed. The internal stack manipulation may decide it does not need this value anymore: the free action is then called. This is used in low-level programming, in practice interface to high-level languages like Perl, Java etc... should I<hide> that, making the presence of this keyword in the grammar meaningless.
+
+The C<symbol-action> adverb is rather dangerous, since it is changing the meaning of a lexeme in the current grammar (but not in the eventual sub-grammars): in high-level languages, where it is in principle not possible to push an C<ARRAY> (i.e. a byte array) value type, then the default rule action, that is to concatenate the RHSs (this is the C<::concat> reserved keyword), will silently drop these lexemes.
 
 =over
 
@@ -163,7 +165,9 @@ Same as C<::ascii> though translate whenever possible, ignoring untranslatable s
 
 =item C<::concat>
 
-Concatenate all RHS's value. Only values of type ARRAY or UNDEF accepted. ARRAY values with a length greater than 0 are concatenated, UNDEF values are ignored. Please note that for symbols, C<::concat> is allowed but in reality is not doing any concatenation, it is doing a C<::shift>. The result is always of ARRAY type. If something was found during concatenation, the area pointed by the ARRAY is guaranteed to be NUL terminated, even if the exposed size does not contain the extra byte for this NUL character.
+Concatenate all RHS's value. Only values of type ARRAY are accepted. ARRAY values with a length greater than 0 are concatenated. Please note that for symbols, C<::concat> is allowed but in reality is not doing any concatenation, it is doing a C<::shift>. The result is always of ARRAY type. If something was found during concatenation, the area pointed by the ARRAY is guaranteed to be NUL terminated, even if the exposed size does not contain the extra byte for this NUL character. In the extreme case where nothing can be concatenated, then C<::concat> result can be equivalent to C<::undef>.
+
+Take care, using the C<symbol-action> to change the meaning of a lexeme has an impact on the default C<::concat> action, that is likely to ignore user-defined lexemes unless you pushed an C<ARRAY> ESLIF value type, that is in principle not possible with high-level languages.
 
 =item C<::copy[x]>
 
