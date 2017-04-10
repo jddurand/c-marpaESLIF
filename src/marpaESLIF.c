@@ -3400,6 +3400,7 @@ static inline short _marpaESLIFRecognizer_regex_matcherb(marpaESLIFRecognizer_t 
           MARPAESLIF_WARNF(marpaESLIFp, "%s: Uncaught pcre2 match failure: %s", terminalp->descp->asciis, pcre2ErrorBuffer);
         }
         rci = MARPAESLIF_MATCH_FAILURE;
+        MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "MARPAESLIF_MATCH_FAILURE");
       } else {
         /* Check the length of matched data */
         if (pcre2_get_ovector_count(marpaESLIF_regex.match_datap) <= 0) {
@@ -3420,6 +3421,7 @@ static inline short _marpaESLIFRecognizer_regex_matcherb(marpaESLIFRecognizer_t 
         /* Very good -; */
         matchedp = inputs + pcre2_ovectorp[0];
         rci = MARPAESLIF_MATCH_OK;
+        MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "MARPAESLIF_MATCH_OK");
       }
     } else {
       if (pcre2Errornumberi >= 0) {
@@ -3443,10 +3445,12 @@ static inline short _marpaESLIFRecognizer_regex_matcherb(marpaESLIFRecognizer_t 
         if (matchedLengthl >= inputl) {
           /* But end of the buffer is reached, and we are not at the eof! We have to ask for more bytes. */
           rci = MARPAESLIF_MATCH_AGAIN;
+          MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "MARPAESLIF_MATCH_AGAIN");
         } else {
           /* And end of the buffer is not reached */
           matchedp = inputs + pcre2_ovectorp[0];
           rci = MARPAESLIF_MATCH_OK;
+          MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "MARPAESLIF_MATCH_OK");
         }
       } else {
         /* Do a partial match. This section cannot return MARPAESLIF_MATCH_OK. */
@@ -3485,14 +3489,17 @@ static inline short _marpaESLIFRecognizer_regex_matcherb(marpaESLIFRecognizer_t 
         if (pcre2Errornumberi == PCRE2_ERROR_PARTIAL) {
           /* Partial match is successful */
           rci = MARPAESLIF_MATCH_AGAIN;
+          MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "MARPAESLIF_MATCH_AGAIN");
         } else {
           /* Partial match is not successful */
           rci = MARPAESLIF_MATCH_FAILURE;
+          MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "MARPAESLIF_MATCH_FAILURE");
         }
       }
     }
   } else {
     rci = eofb ? MARPAESLIF_MATCH_FAILURE : MARPAESLIF_MATCH_AGAIN;
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s", eofb ? "MARPAESLIF_MATCH_FAILURE" : "MARPAESLIF_MATCH_AGAIN");
   }
 
   if (rcip != NULL) {
