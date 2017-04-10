@@ -186,7 +186,7 @@ static void                            marpaESLIF_paramIsValueInterfacev(pTHX_ S
 #define MARPAESLIF_FILENAMES "ESLIF.xs"
 
 #define MARPAESLIF_CROAK(msgs)       croak("[In %s at %s:%d] %s", funcs, MARPAESLIF_FILENAMES, __LINE__, msgs)
-#define MARPAESLIF_CROAKF(fmts, ...) croak("[In %s at %s:%d]" fmts, funcs, MARPAESLIF_FILENAMES, __LINE__, __VA_ARGS__)
+#define MARPAESLIF_CROAKF(fmts, ...) croak("[In %s at %s:%d] " fmts, funcs, MARPAESLIF_FILENAMES, __LINE__, __VA_ARGS__)
 
 /*****************************************************************************/
 /* Copy of Params-Validate-1.26/lib/Params/Validate/XS.xs                    */
@@ -2159,14 +2159,29 @@ CODE:
     MARPAESLIF_CROAKF("marpaESLIFValue_valueb failure, %s", strerror(errno));
   }
   if (valueb > 0) {
-    if (marpaESLIFValueResult.type != MARPAESLIF_VALUE_TYPE_PTR) {
-      MARPAESLIF_CROAKF("marpaESLIFValueResult.type is not MARPAESLIF_VALUE_TYPE_PTR (found %d)", marpaESLIFValueResult.type);
+    /* It is our responsbility to free the final value */
+    switch (marpaESLIFValueResult.type) {
+    case MARPAESLIF_VALUE_TYPE_PTR:
+      /* This is a user-defined object */
+      svp = (SV *) marpaESLIFValueResult.u.p;
+      marpaESLIF_call_methodv(aTHX_ MarpaX_ESLIF_Valuep->Perl_valueInterfacep, "setResult", svp);
+      SvREFCNT_dec(svp);
+      break;
+    case MARPAESLIF_VALUE_TYPE_ARRAY:
+      /* This is a lexeme, or a concatenation of lexemes */
+      svp = newSVpvn(marpaESLIFValueResult.u.p, marpaESLIFValueResult.sizel);
+      marpaESLIF_call_methodv(aTHX_ MarpaX_ESLIF_Valuep->Perl_valueInterfacep, "setResult", svp);
+      SvREFCNT_dec(svp);
+      if (marpaESLIFValueResult.u.p != NULL) {
+        marpaESLIF_SYSTEM_FREE(marpaESLIFValueResult.u.p);
+      }
+      break;
+    default:
+      MARPAESLIF_CROAKF("marpaESLIFValueResult.type is not MARPAESLIF_VALUE_TYPE_PTR nor MARPAESLIF_VALUE_TYPE_ARRAY but %d", marpaESLIFValueResult.type);
     }
-    svp = (SV *) marpaESLIFValueResult.u.p;
-    marpaESLIF_call_methodv(aTHX_ MarpaX_ESLIF_Valuep->Perl_valueInterfacep, "setResult", svp);
     RETVAL = 1;
   } else {
-    RETVAL = 0;
+   RETVAL = 0;
   }
 OUTPUT:
   RETVAL
