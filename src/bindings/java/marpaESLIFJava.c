@@ -1232,9 +1232,8 @@ JNIEXPORT jboolean JNICALL Java_org_parser_marpa_ESLIFGrammar_jniParse(JNIEnv *e
 /*****************************************************************************/
 {
   static const char             *funcs = "Java_org_parser_marpa_ESLIFGrammar_jniParse";
-  jobject                        resultp = NULL;
-  jobject                        objectp = NULL;
-  jobject                        byteBuffer = NULL;
+  jobject                        globalObjectp = NULL;
+  jobject                        byteBufferp = NULL;
   marpaESLIFGrammar_t           *marpaESLIFGrammarp;
   marpaESLIFRecognizerOption_t   marpaESLIFRecognizerOption;
   marpaESLIFValueOption_t        marpaESLIFValueOption;
@@ -1290,31 +1289,19 @@ JNIEXPORT jboolean JNICALL Java_org_parser_marpa_ESLIFGrammar_jniParse(JNIEnv *e
   switch (marpaESLIFValueResult.type) {
   case MARPAESLIF_VALUE_TYPE_PTR:
     /* This is a user-defined global reference */
-    /* Make a local reference from it */
-    objectp =  (*envp)->NewLocalRef(envp, marpaESLIFValueResult.u.p);
-    if (HAVEEXCEPTION(envp)) {
-      goto err;
-    }
-    /* And delete the global reference */
-    (*envp)->DeleteGlobalRef(envp, marpaESLIFValueResult.u.p);
-    resultp = (jobject) objectp;
-    fprintf(stderr, "===================> OBJECT\n");
+    globalObjectp =  (jobject) marpaESLIFValueResult.u.p;
     break;
   case MARPAESLIF_VALUE_TYPE_ARRAY:
-    /* This is a lexeme, or a concatenation of lexemes */
-    byteBuffer = (*envp)->NewDirectByteBuffer(envp, marpaESLIFValueResult.u.p, (jlong) marpaESLIFValueResult.sizel);
-    if (HAVEEXCEPTION(envp)) {
-      goto err;
+    byteBufferp = (*envp)->NewDirectByteBuffer(envp, marpaESLIFValueResult.u.p, (jlong) marpaESLIFValueResult.sizel);
+    if (byteBufferp == NULL) {
+      RAISEEXCEPTION(envp, "NewDirectByteBuffer failure");
     }
-    resultp = (jobject) byteBuffer;
-    fprintf(stderr, "===================> BYTE BUFFER\n");
     break;
   default:
     RAISEEXCEPTIONF(envp, "marpaESLIFValueResult.type is not MARPAESLIF_VALUE_TYPE_PTR nor MARPAESLIF_VALUE_TYPE_ARRAY but %d", marpaESLIFValueResult.type);
-    goto err;
   }
 
-  (*envp)->CallVoidMethod(envp, eslifValueInterfacep, MARPAESLIF_ESLIFVALUEINTERFACE_CLASS_setResult_METHODP, objectp != NULL ? objectp : byteBuffer);
+  (*envp)->CallVoidMethod(envp, eslifValueInterfacep, MARPAESLIF_ESLIFVALUEINTERFACE_CLASS_setResult_METHODP, globalObjectp != NULL ? globalObjectp : byteBufferp);
   if (HAVEEXCEPTION(envp)) {
     goto err;
   }
@@ -1326,9 +1313,14 @@ JNIEXPORT jboolean JNICALL Java_org_parser_marpa_ESLIFGrammar_jniParse(JNIEnv *e
   rcb = JNI_FALSE;
 
  done:
-  if (resultp != NULL) {
-    (*envp)->DeleteLocalRef(envp, resultp);
+  if (globalObjectp != NULL) {
+    (*envp)->DeleteGlobalRef(envp, globalObjectp);
   }
+  if (byteBufferp != NULL) {
+    (*envp)->DeleteLocalRef(envp, byteBufferp);
+    free(marpaESLIFValueResult.u.p);
+  }
+
   marpaESLIFValueContextFree(envp, &marpaESLIFValueContext, 1 /* onStackb */);
   marpaESLIFRecognizerContextFree(envp, &marpaESLIFRecognizerContext, 1 /* onStackb */);
   return rcb;
@@ -2867,13 +2859,14 @@ JNIEXPORT jboolean JNICALL Java_org_parser_marpa_ESLIFValue_jniValue(JNIEnv *env
 /*****************************************************************************/
 {
   static const char         *funcs = "Java_org_parser_marpa_ESLIFValue_jniValue";
+  jobject                    globalObjectp = NULL;
+  jobject                    byteBufferp = NULL;
   marpaESLIFValue_t         *marpaESLIFValuep;
   short                      valueb;
   jboolean                   rcb;
   marpaESLIFValueContext_t  *marpaESLIFValueContextp;
   jobject                    eslifValueInterfacep;
   marpaESLIFValueResult_t    marpaESLIFValueResult;
-  jobject                    result;
   
   if (! ESLIFValue_contextb(envp, eslifValuep, eslifValuep, MARPAESLIF_ESLIFVALUE_CLASS_getLoggerInterfacep_METHODP,
                             NULL /* genericLoggerpp */,
@@ -2895,12 +2888,23 @@ JNIEXPORT jboolean JNICALL Java_org_parser_marpa_ESLIFValue_jniValue(JNIEnv *env
   }
 
   if (valueb > 0) {
-    if (marpaESLIFValueResult.type != MARPAESLIF_VALUE_TYPE_PTR) {
-      RAISEEXCEPTIONF(envp, "marpaESLIFValueResult.type is not MARPAESLIF_VALUE_TYPE_PTR (found %d)", marpaESLIFValueResult.type);
+    /* It is our responsbility to free the final value */
+    switch (marpaESLIFValueResult.type) {
+    case MARPAESLIF_VALUE_TYPE_PTR:
+      /* This is a user-defined global reference */
+      globalObjectp =  (jobject) marpaESLIFValueResult.u.p;
+      break;
+    case MARPAESLIF_VALUE_TYPE_ARRAY:
+      byteBufferp = (*envp)->NewDirectByteBuffer(envp, marpaESLIFValueResult.u.p, (jlong) marpaESLIFValueResult.sizel);
+      if (byteBufferp == NULL) {
+        RAISEEXCEPTION(envp, "NewDirectByteBuffer failure");
+      }
+      break;
+    default:
+      RAISEEXCEPTIONF(envp, "marpaESLIFValueResult.type is not MARPAESLIF_VALUE_TYPE_PTR nor MARPAESLIF_VALUE_TYPE_ARRAY but %d", marpaESLIFValueResult.type);
     }
-    result = marpaESLIFValueResult.u.p;
 
-    (*envp)->CallVoidMethod(envp, eslifValueInterfacep, MARPAESLIF_ESLIFVALUEINTERFACE_CLASS_setResult_METHODP, result);
+    (*envp)->CallVoidMethod(envp, eslifValueInterfacep, MARPAESLIF_ESLIFVALUEINTERFACE_CLASS_setResult_METHODP, globalObjectp != NULL ? globalObjectp : byteBufferp);
     if (HAVEEXCEPTION(envp)) {
       goto err;
     }
@@ -2916,6 +2920,13 @@ JNIEXPORT jboolean JNICALL Java_org_parser_marpa_ESLIFValue_jniValue(JNIEnv *env
   rcb = JNI_FALSE;
 
  done:
+  if (globalObjectp != NULL) {
+    (*envp)->DeleteGlobalRef(envp, globalObjectp);
+  }
+  if (byteBufferp != NULL) {
+    (*envp)->DeleteLocalRef(envp, byteBufferp);
+    free(marpaESLIFValueResult.u.p);
+  }
  return rcb;
 }
 
