@@ -54,6 +54,10 @@ static void *marpaESLIF_GENERICSTACK_NEW() {
   return stackp;
 }
 
+static void *marpaESLIF_SYSTEM_FREE(void *p) {
+  free(p);
+}
+
 static void *marpaESLIF_GENERICSTACK_FREE(genericStack_t *stackp) {
   GENERICSTACK_FREE(stackp);
 }
@@ -1423,22 +1427,30 @@ CODE:
   marpaESLIFValueOption.nullb                          = marpaESLIF_call_methodb(aTHX_ Perl_valueInterfacep, "isWithNull");
   marpaESLIFValueOption.maxParsesi                     = (int) marpaESLIF_call_methodi(aTHX_ Perl_valueInterfacep, "maxParses");
 
-  /* We never need marpaESLIF to keep the stack of values because it is managed directly in Java */
   if (! marpaESLIFGrammar_parseb(MarpaX_ESLIF_Grammarp, &marpaESLIFRecognizerOption, &marpaESLIFValueOption, &exhaustedb, &marpaESLIFValueResult)) {
     goto err;
   }
+  /* It is our responsbility to free the final value */
   switch (marpaESLIFValueResult.type) {
   case MARPAESLIF_VALUE_TYPE_PTR:
+    /* This is a user-defined object */
     svp = (SV *) marpaESLIFValueResult.u.p;
+    marpaESLIF_call_methodv(aTHX_ Perl_valueInterfacep, "setResult", svp);
+    SvREFCNT_dec(svp);
     break;
   case MARPAESLIF_VALUE_TYPE_ARRAY:
+    /* This is a lexeme, or a concatenation of lexemes */
     svp = newSVpvn(marpaESLIFValueResult.u.p, marpaESLIFValueResult.sizel);
+    marpaESLIF_call_methodv(aTHX_ Perl_valueInterfacep, "setResult", svp);
+    SvREFCNT_dec(svp);
+    if (marpaESLIFValueResult.u.p != NULL) {
+      marpaESLIF_SYSTEM_FREE(marpaESLIFValueResult.u.p);
+    }
     break;
   default:
     MARPAESLIF_CROAKF("marpaESLIFValueResult.type is not MARPAESLIF_VALUE_TYPE_PTR nor MARPAESLIF_VALUE_TYPE_ARRAY but %d", marpaESLIFValueResult.type);
   }
 
-  marpaESLIF_call_methodv(aTHX_ Perl_valueInterfacep, "setResult", svp);
   rcb = 1;
   goto done;
 
