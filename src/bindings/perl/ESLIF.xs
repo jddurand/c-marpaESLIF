@@ -1447,8 +1447,11 @@ CODE:
       marpaESLIF_SYSTEM_FREE(marpaESLIFValueResult.u.p);
     }
     break;
+  case MARPAESLIF_VALUE_TYPE_UNDEF: /* In the extreme case where symbol-action catched up everything */
+    marpaESLIF_call_methodv(aTHX_ Perl_valueInterfacep, "setResult", &PL_sv_undef);
+    break;
   default:
-    MARPAESLIF_CROAKF("marpaESLIFValueResult.type is not MARPAESLIF_VALUE_TYPE_PTR nor MARPAESLIF_VALUE_TYPE_ARRAY but %d", marpaESLIFValueResult.type);
+    MARPAESLIF_CROAKF("marpaESLIFValueResult.type is not MARPAESLIF_VALUE_TYPE_PTR, MARPAESLIF_VALUE_TYPE_ARRAY nor MARPAESLIF_VALUE_TYPE_UNDEF but %d", marpaESLIFValueResult.type);
   }
 
   rcb = 1;
@@ -2176,8 +2179,11 @@ CODE:
         marpaESLIF_SYSTEM_FREE(marpaESLIFValueResult.u.p);
       }
       break;
+  case MARPAESLIF_VALUE_TYPE_UNDEF: /* In the extreme case where symbol-action catched up everything */
+      marpaESLIF_call_methodv(aTHX_ MarpaX_ESLIF_Valuep->Perl_valueInterfacep, "setResult", &PL_sv_undef);
+      break;
     default:
-      MARPAESLIF_CROAKF("marpaESLIFValueResult.type is not MARPAESLIF_VALUE_TYPE_PTR nor MARPAESLIF_VALUE_TYPE_ARRAY but %d", marpaESLIFValueResult.type);
+      MARPAESLIF_CROAKF("marpaESLIFValueResult.type is not MARPAESLIF_VALUE_TYPE_PTR, MARPAESLIF_VALUE_TYPE_ARRAY nor MARPAESLIF_VALUE_TYPE_UNDEF but %d", marpaESLIFValueResult.type);
     }
     RETVAL = 1;
   } else {
