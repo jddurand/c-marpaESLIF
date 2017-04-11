@@ -241,6 +241,8 @@ Any error is automatically sent to the logger with the I<error> logging level, f
   $eslifValue = MyValue->new();
   $eslifGrammar->parse($eslifRecognizer, $eslifValue);
 
+would produce:
+
   --------------------------------------------
   Recognizer failure. Current state:
   [P1@9..9] Expression[0] ::= . Expression[1]
