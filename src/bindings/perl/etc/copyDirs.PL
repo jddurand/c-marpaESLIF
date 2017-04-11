@@ -139,7 +139,7 @@ close(INTRO) || warn "Cannot close $dst, $!";
 $INTRO =~ s/^=for html.*?$//sm;
 $INTRO =~ s/^=encoding.*?$//sm;
 $INTRO =~ s/=head1 NAME.*=head1 DESCRIPTION/=head1 DESCRIPTION/sg;
-$INTRO =~ s/=head1 ARCHITECTURE/=head1 EXAMPLE\n\nBeginners might want to look the L<MarpaX::ESLIF::Introduction> and L<MarpaX::ESLIF::Tutorial::Calculator>.\n\n=head1 ARCHITECTURE/;
+$INTRO =~ s/=head1 ARCHITECTURE/=head1 EXAMPLE\n\nPlease look at L<MarpaX::ESLIF::Tutorial::Calculator>.\n\n=head1 ARCHITECTURE/;
 $INTRO =~ s/marpaESLIF BNF\|https:\/\/github.com\/jddurand\/c\-marpaESLIF\/tree\/master\/doc\/BNF/MarpaX::ESLIF::BNF/g;
 $INTRO =~ s/marpaESLIF_/MarpaX::ESLIF::/g;
 $INTRO =~ s/marpaESLIF/MarpaX::ESLIF/g;
