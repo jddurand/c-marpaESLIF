@@ -141,6 +141,8 @@ C<isWithHighRankOnly> select only rules that have the highest eventual C<rank> a
 
 =back
 
+=item Immediate parsing
+
 So far, so good. The default actions for symbols and rules is always to concatenate any accepted token. So we expect the output of parsing e.g. C<(1+2)*3> to be... C<(1+2)*3>:
 
   package main;
@@ -152,6 +154,8 @@ So far, so good. The default actions for symbols and rules is always to concaten
   my $result = $eslifGrammar->parse($eslifRecognizer, $eslifValue) ? $eslifValue->getResult : '??';
   printf "Default parse tree value of $input: %s\n", $result;
   # Default parse tree value of (1+2)*3: (1+2)*3
+
+We used the C<parse()> method of the grammar, a short-hand version of parsing that I<does not allow interaction not any event>.
 
 =head2 Grammar v2
 
