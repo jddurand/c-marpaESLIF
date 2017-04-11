@@ -217,7 +217,9 @@ The actions must be implemented in the valuator interface, otherwise parsing wil
 
   # Can't locate object method "do_plus" via package "MyValue" at ...
 
-=head3 Grammar actions
+=over
+
+=item Grammar actions
 
 The special action C<::copy[1]> is clear: take the RHS number C<1> (first is at indice C<0>) and copy its value.
 The actions are trivial:
@@ -239,7 +241,7 @@ The actions are trivial:
 
 What would have happened with the C<::copy[1]> action ? The default is always to concatenate I<only> what is under the engine control, i.e. C<'(' Expression ')'> would produce C<()>, because C<Expression> that is in the middle is an external object from MarpaX::ESLIF point of view.
 
-=head3 Error output
+=item Error output
 
 Any error is automatically sent to the logger with the I<error> logging level, for example with an unparsable input:
 
@@ -306,6 +308,8 @@ This the I<default> behaviour: parsing failure always outputs:
 =item In case of a character stream, dump is the UTF-8 representation of the input
 
 =item In case of a binary stream, dump is the exact representation of the input
+
+=back
 
 =back
 
