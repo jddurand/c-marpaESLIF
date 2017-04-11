@@ -77,7 +77,6 @@ my $eslifValue = MyValue->new();
 
 my $result = $eslifGrammar->parse($eslifRecognizer, $eslifValue) ? $eslifValue->getResult : '??';
 printf "Default parse tree value of $input: %s\n", $result;
-exit;
 
 my $grammar_v2 = $grammar_v1 . q{
       :discard ::= /[\s]+/
@@ -97,11 +96,41 @@ package MyRecognizer;
 no warnings 'redefine';
 sub read {
   my ($self) = @_;   # read data
-  CORE::read($self->{fh}, $self->{data}, 2) ? 1 : 0x
+  CORE::read($self->{fh}, $self->{data}, 1) ? 1 : 0x
 }
 
-package MyRecognizer;
-no warnings 'redefine';
-sub encoding               { 'ASCII' } # Encoding ?
+#package MyRecognizer;
+#no warnings 'redefine';
+#sub encoding               { 'ASCII' } # Encoding ?
 
+package MyValue;
+sub do_pow   { my ($self, $left, $op, $right) = @_; $left**$right }
+sub do_mul   { my ($self, $left, $op, $right) = @_; $left*$right }
+sub do_div   { my ($self, $left, $op, $right) = @_; $left/$right }
+sub do_plus  { my ($self, $left, $op, $right) = @_; $left+$right }
+sub do_minus { my ($self, $left, $op, $right) = @_; $left-$right }
 
+package main;
+my $grammar_v3 = q{
+  Expression ::=
+      /[\d]+/
+      | '(' Expression ')'              assoc => group action => ::copy[1]
+     ||     Expression '**' Expression  assoc => right action => do_pow
+     ||     Expression  '*' Expression                 action => do_mul
+      |     Expression  '/' Expression                 action => do_div
+     ||     Expression  '+' Expression                 action => do_plus
+      |     Expression  '-' Expression                 action => do_minus
+      :discard ::= /[\s]+/
+  };
+$eslifGrammar = MarpaX::ESLIF::Grammar->new($eslif, $grammar_v3);
+$input = q{(1 + 2) * 3};
+$eslifRecognizer = MyRecognizer->new($input);
+$eslifValue = MyValue->new();
+$result = $eslifGrammar->parse($eslifRecognizer, $eslifValue) ? $eslifValue->getResult : '??';
+printf "Default parse tree value of $input: %s\n", $result;
+
+$input = q{(1 + 2) * 3 + ( abcdef};
+# Remember that we are using the 'read-one-character-per-character' implementation
+$eslifRecognizer = MyRecognizer->new($input);
+$eslifValue = MyValue->new();
+$eslifGrammar->parse($eslifRecognizer, $eslifValue);

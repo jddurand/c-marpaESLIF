@@ -151,6 +151,7 @@ So far, so good. The default actions for symbols and rules is always to concaten
 
   my $result = $eslifGrammar->parse($eslifRecognizer, $eslifValue) ? $eslifValue->getResult : '??';
   printf "Default parse tree value of $input: %s\n", $result;
+  # Default parse tree value of (1+2)*3: (1+2)*3
 
 Usually, input is likey to have newlines, spaces, etc... we introduce as many. :discard symbols as wanted, for example to discard spaces, C-like and perl comments:
 
@@ -170,6 +171,9 @@ We test it on an input that have things to discard, i.e.:
   $eslifValue = MyValue->new();
   $result = $eslifGrammar->parse($eslifRecognizer, $eslifValue) ? $eslifValue->getResult : '??';
   printf "Default parse tree value of $input: %s\n", $result;
+  # Default parse tree value of ( /* C comment */1+2)
+  # # perl comment
+  # *3: (1+2)*3
 
 The output is the same: C<:discard> rules have skipped everything non-accepted by the grammar, but declared with C<:discard> definitions.
 
@@ -179,15 +183,122 @@ You will have noticed that regular expressions are allowed, and MarpaX::ESLIF ar
   no warnings 'redefine';
   sub read                   {
                                my ($self) = @_;   # read data
-                               CORE::read($self->{fh}, $self->{data}, 2) ? 1 : 0
+                               CORE::read($self->{fh}, $self->{data}, 1) ? 1 : 0
                              }
 
 
-Though please note that reading character per character, which means very few bytes per very few bytes without encoding information, can drive to a false encoding guess from MarpaX::ESLIF. Our input being for the moment pure ASCII, we could have avoid the guess with the C<encoding> method of the recognizer:
+Though please note that reading character per character, which means very few bytes per very few bytes without encoding information, can drive to a false encoding guess from MarpaX::ESLIF. In such a case, you can help the engine by giving the encoding of the latest chunk of data:
 
-  package MyRecognizer;
-  no warnings 'redefine';
-  sub encoding               { 'ASCII' } # Encoding ?
+  #package MyRecognizer;
+  #no warnings 'redefine';
+  #sub encoding               { 'ASCII' } # Encoding ?
+
+Obviously we want the calculator to be able to perform the arithmetic: taking advantage that perl will always convert when necessary depending on the context, we do not need to have an action on C</[\d]+/>, just action on the expression with the operators:
+
+  package main;
+  my $grammar_v3 = q{
+  Expression ::=
+      /[\d]+/
+      | '(' Expression ')'              assoc => group action => ::copy[1]
+     ||     Expression '**' Expression  assoc => right action => do_pow
+     ||     Expression  '*' Expression                 action => do_mul
+      |     Expression  '/' Expression                 action => do_div
+     ||     Expression  '+' Expression                 action => do_plus
+      |     Expression  '-' Expression                 action => do_minus
+      :discard ::= /[\s]+/
+  };
+  $eslifGrammar = MarpaX::ESLIF::Grammar->new($eslif, $grammar_v3);
+
+The actions must be implemented in the valuator interface, otherwise parsing will well with something like:
+
+  # Can't locate object method "do_plus" via package "MyValue" at ...
+
+The special action C<::copy[1]> is clear: take the RHS number C<1> (first is at indice C<0>) and copy its value.
+The actions are trivial:
+
+  package MyValue;
+  sub do_pow   { my ($self, $left, $op, $right) = @_; $left**$right }
+  sub do_mul   { my ($self, $left, $op, $right) = @_; $left*$right }
+  sub do_div   { my ($self, $left, $op, $right) = @_; $left/$right }
+  sub do_plus  { my ($self, $left, $op, $right) = @_; $left+$right }
+  sub do_minus { my ($self, $left, $op, $right) = @_; $left-$right }
+
+  package main;
+  $input = q{(1 + 2) * 3};
+  $eslifRecognizer = MyRecognizer->new($input);
+  $eslifValue = MyValue->new();
+  $result = $eslifGrammar->parse($eslifRecognizer, $eslifValue) ? $eslifValue->getResult : '??';
+  printf "Default parse tree value of $input: %s\n", $result;
+  # Default parse tree value of (1 + 2) * 3: 9
+
+What would have happened with the C<::copy[1]> action ? The default is always to concatenate I<only> what is under the engine control, i.e. C<'(' Expression ')'> would produce C<()>, because C<Expression> that is in the middle is an external object from MarpaX::ESLIF point of view.
+
+Any error is automatically sent to the logger with the I<error> logging level, for example with an unparsable input:
+
+  $input = q{(1 + 2) * 3 + ( ab};
+  # Remember that we are using the 'read-one-character-per-character' implementation
+  $eslifRecognizer = MyRecognizer->new($input);
+  $eslifValue = MyValue->new();
+  $eslifGrammar->parse($eslifRecognizer, $eslifValue);
+
+  --------------------------------------------
+  Recognizer failure. Current state:
+  [P1@9..9] Expression[0] ::= . Expression[1]
+  [P2@9..9] Expression[1] ::= . Expression[2]
+  [P3@9..9] Expression[2] ::= . Expression[3]
+  [P4@9..9] Expression[3] ::= . /[\d]+/
+  [P5@9..9] Expression[3] ::= . '('
+  [P5@9..9]                   Expression[0]
+  [P5@9..9]                   ')'
+  [P6@9..9] Expression[2] ::= . Expression[3]
+  [P6@9..9]                   '**'
+  [P6@9..9]                   Expression[2]
+  [P7@9..9] Expression[1] ::= . Expression[1]
+  [P7@9..9]                   '*'
+  [P7@9..9]                   Expression[2]
+  [P8@9..9] Expression[1] ::= . Expression[1]
+  [P8@9..9]                   '/'
+  [P8@9..9]                   Expression[2]
+  [P9@9..9] Expression[0] ::= . Expression[0]
+  [P9@9..9]                   '+'
+  [P9@9..9]                   Expression[1]
+  [P10@9..9] Expression[0] ::= . Expression[0]
+  [P10@9..9]                   '-'
+  [P10@9..9]                   Expression[1]
+  [R5@8..9] Expression[3] ::= '('
+  [R5@8..9]                   . Expression[0]
+  [R5@8..9]                   ')'
+  --------------------------------------------
+  Expected terminal: /[\d]+/
+  Expected terminal: '('
+  --------------------------------------------
+  UTF-8 converted data before the failure (16 bytes)
+  0x000000: 28 31 20 2b 20 32 29 20 2a 20 33 20 2b 20 28 20 (1 + 2) * 3 + ( 
+  --------------------------------------------
+  <<<<<< RECOGNIZER FAILURE AFTER LINE No 1 COLUMN No 16, HERE: >>>>>>
+  --------------------------------------------
+  UTF-8 converted data after the failure (1 bytes)
+  0x000000: 61                                              a               
+  --------------------------------------------
+
+This the I<default> behaviour: parsing failure always outputs:
+=over
+
+=item the position in the grammar
+
+=item the expected I<lexemes> (i.e. terminals)
+
+=item an hexadecimal dump before and after the failure
+
+=over
+
+=item In case of a character stream, dump is the UTF-8 representation of the input
+
+=item In case of a binary stream, dump is the exact representation of the input
+
+=back
+
+=back
 
 =head1 NOTES
 
