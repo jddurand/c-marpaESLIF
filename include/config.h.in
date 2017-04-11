@@ -5,7 +5,7 @@
 #cmakedefine C_INLINE_IS_INLINE @C_INLINE_IS_INLINE@
 #ifndef __cplusplus
 #  ifndef C_INLINE
-#    undef inline
+#    define inline
 #  else
 #    ifndef C_INLINE_IS_INLINE
 /* Next line is never executed when inline is "inline" */
