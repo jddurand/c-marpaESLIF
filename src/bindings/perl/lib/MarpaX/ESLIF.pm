@@ -75,6 +75,10 @@ An example of logging implementation can be a L<Log::Any> adapter.
 
 Returns a string containing the current underlying ESLIF library version.
 
+=head1 NOTES
+
+The perl interface is an I<all-in-one> version of L<marpaESLIF|https://github.com/jddurand/c-marpaESLIF> library, which means that character conversion is using C<iconv> (or C<iconv>-like on Windows) instead of ICU, even if the later is available on your system.
+
 =head1 SEE ALSO
 
 L<PCRE2|http://www.pcre.org/>, L<MarpaX::ESLIF::BNF>, L<MarpaX::ESLIF::Logger::Interface>, L<MarpaX::ESLIF::Grammar>
