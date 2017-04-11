@@ -153,6 +153,8 @@ So far, so good. The default actions for symbols and rules is always to concaten
   printf "Default parse tree value of $input: %s\n", $result;
   # Default parse tree value of (1+2)*3: (1+2)*3
 
+=head2 Grammar v2
+
 Usually, input is likey to have newlines, spaces, etc... we introduce as many. :discard symbols as wanted, for example to discard spaces, C-like and perl comments:
 
   my $grammar_v2 = $grammar_v1 . q{
@@ -193,6 +195,8 @@ Though please note that reading character per character, which means very few by
   #no warnings 'redefine';
   #sub encoding               { 'ASCII' } # Encoding ?
 
+=head2 Grammar v3
+
 Obviously we want the calculator to be able to perform the arithmetic: taking advantage that perl will always convert when necessary depending on the context, we do not need to have an action on C</[\d]+/>, just action on the expression with the operators:
 
   package main;
@@ -213,6 +217,8 @@ The actions must be implemented in the valuator interface, otherwise parsing wil
 
   # Can't locate object method "do_plus" via package "MyValue" at ...
 
+=head3 Grammar actions
+
 The special action C<::copy[1]> is clear: take the RHS number C<1> (first is at indice C<0>) and copy its value.
 The actions are trivial:
 
@@ -232,6 +238,8 @@ The actions are trivial:
   # Default parse tree value of (1 + 2) * 3: 9
 
 What would have happened with the C<::copy[1]> action ? The default is always to concatenate I<only> what is under the engine control, i.e. C<'(' Expression ')'> would produce C<()>, because C<Expression> that is in the middle is an external object from MarpaX::ESLIF point of view.
+
+=head3 Error output
 
 Any error is automatically sent to the logger with the I<error> logging level, for example with an unparsable input:
 
