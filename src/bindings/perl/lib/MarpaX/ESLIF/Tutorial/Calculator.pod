@@ -284,6 +284,7 @@ would produce:
   --------------------------------------------
 
 This the I<default> behaviour: parsing failure always outputs:
+
 =over
 
 =item the position in the grammar
