@@ -72,10 +72,10 @@ sub setResult          { my ($self, $result) = @_; $self->{result} = $result }
 package main;
 
 my $input = '(1+2)*3';
-my $eslifRecognizer = MyRecognizer->new($input);
-my $eslifValue = MyValue->new();
+my $eslifRecognizerInterface = MyRecognizer->new($input);
+my $eslifValueInterface = MyValue->new();
 
-my $result = $eslifGrammar->parse($eslifRecognizer, $eslifValue) ? $eslifValue->getResult : '??';
+my $result = $eslifGrammar->parse($eslifRecognizerInterface, $eslifValueInterface) ? $eslifValueInterface->getResult : '??';
 printf "Default parse tree value of $input: %s\n", $result;
 
 my $grammar_v2 = $grammar_v1 . q{
@@ -87,9 +87,9 @@ $eslifGrammar = MarpaX::ESLIF::Grammar->new($eslif, $grammar_v2);
 $input = q{( /* C comment */1+2)
 # perl comment
 *3};
-$eslifRecognizer = MyRecognizer->new($input);
-$eslifValue = MyValue->new();
-$result = $eslifGrammar->parse($eslifRecognizer, $eslifValue) ? $eslifValue->getResult : '??';
+$eslifRecognizerInterface = MyRecognizer->new($input);
+$eslifValueInterface = MyValue->new();
+$result = $eslifGrammar->parse($eslifRecognizerInterface, $eslifValueInterface) ? $eslifValueInterface->getResult : '??';
 printf "Default parse tree value of $input: %s\n", $result;
 
 package MyRecognizer;
@@ -120,17 +120,39 @@ my $grammar_v3 = q{
       |     Expression  '/' Expression                 action => do_div
      ||     Expression  '+' Expression                 action => do_plus
       |     Expression  '-' Expression                 action => do_minus
-      :discard ::= /[\s]+/
+  :discard ::= /[\s]+/
   };
 $eslifGrammar = MarpaX::ESLIF::Grammar->new($eslif, $grammar_v3);
 $input = q{(1 + 2) * 3};
-$eslifRecognizer = MyRecognizer->new($input);
-$eslifValue = MyValue->new();
-$result = $eslifGrammar->parse($eslifRecognizer, $eslifValue) ? $eslifValue->getResult : '??';
+$eslifRecognizerInterface = MyRecognizer->new($input);
+$eslifValueInterface = MyValue->new();
+$result = $eslifGrammar->parse($eslifRecognizerInterface, $eslifValueInterface) ? $eslifValueInterface->getResult : '??';
 printf "Default parse tree value of $input: %s\n", $result;
 
 $input = q{(1 + 2) * 3 + ( abcdef};
 # Remember that we are using the 'read-one-character-per-character' implementation
-$eslifRecognizer = MyRecognizer->new($input);
-$eslifValue = MyValue->new();
-$eslifGrammar->parse($eslifRecognizer, $eslifValue);
+$eslifRecognizerInterface = MyRecognizer->new($input);
+$eslifValueInterface = MyValue->new();
+$eslifGrammar->parse($eslifRecognizerInterface, $eslifValueInterface);
+
+$input = q{(1 + 2) * 3};
+# Our usual ESLIF Recognizer interface
+$eslifRecognizerInterface = MyRecognizer->new($input);
+# ESLIF Recognizer engine
+my $eslifRecognizer = MarpaX::ESLIF::Recognizer->new($eslifGrammar, $eslifRecognizerInterface);
+#
+# Start scanning the input, we want initial events here
+#
+$eslifRecognizer->scan(1);
+my $eventsRef = $eslifRecognizer->events();
+use Data::Dumper;
+print "Events after scan():\n" . Dumper($eventsRef);
+
+my $grammar_v4 = $grammar_v3 . q{
+  event ^Expression = predicted Expression
+  };
+$eslifGrammar = MarpaX::ESLIF::Grammar->new($eslif, $grammar_v4);
+$eslifRecognizer = MarpaX::ESLIF::Recognizer->new($eslifGrammar, $eslifRecognizerInterface);
+$eslifRecognizer->scan(1);
+my $eventsRef = $eslifRecognizer->events();
+print "Events after scan():\n" . Dumper($eventsRef);
