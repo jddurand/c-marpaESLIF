@@ -19,7 +19,9 @@ First we get an ESLIF instance, we use the L<Log::Any::Adapter::Stderr> implemen
 
   my $eslif = MarpaX::ESLIF->new($log);
 
-=head2 Grammar v1
+=head2 Direct result with the grammar's parse() method
+
+=head3 Grammar v1
 
 Grammar will support parenthesis, and the C<**>, C<*>, C</>, C<+>, C<-> operators:
 
@@ -148,16 +150,16 @@ So far, so good. The default actions for symbols and rules is always to concaten
   package main;
 
   my $input = '(1+2)*3';
-  my $eslifRecognizer = MyRecognizer->new($input);
-  my $eslifValue = MyValue->new();
+  my $eslifRecognizerInterface = MyRecognizer->new($input);
+  my $eslifValueInterface = MyValue->new();
 
-  my $result = $eslifGrammar->parse($eslifRecognizer, $eslifValue) ? $eslifValue->getResult : '??';
+  my $result = $eslifGrammar->parse($eslifRecognizerInterface, $eslifValueInterface) ? $eslifValueInterface->getResult : '??';
   printf "Default parse tree value of $input: %s\n", $result;
   # Default parse tree value of (1+2)*3: (1+2)*3
 
 We used the C<parse()> method of the grammar, a short-hand version of parsing that I<does not allow interaction not any event>.
 
-=head2 Grammar v2
+=head3 Grammar v2
 
 Usually, input is likey to have newlines, spaces, etc... we introduce as many. :discard symbols as wanted, for example to discard spaces, C-like and perl comments:
 
@@ -173,9 +175,9 @@ We test it on an input that have things to discard, i.e.:
   $input = q{( /* C comment */1+2)
   # perl comment
   *3};
-  $eslifRecognizer = MyRecognizer->new($input);
-  $eslifValue = MyValue->new();
-  $result = $eslifGrammar->parse($eslifRecognizer, $eslifValue) ? $eslifValue->getResult : '??';
+  $eslifRecognizerInterface = MyRecognizer->new($input);
+  $eslifValueInterface = MyValue->new();
+  $result = $eslifGrammar->parse($eslifRecognizerInterface, $eslifValueInterface) ? $eslifValueInterface->getResult : '??';
   printf "Default parse tree value of $input: %s\n", $result;
   # Default parse tree value of ( /* C comment */1+2)
   # # perl comment
@@ -199,7 +201,7 @@ Though please note that reading character per character, which means very few by
   #no warnings 'redefine';
   #sub encoding               { 'ASCII' } # Encoding ?
 
-=head2 Grammar v3
+=head3 Grammar v3
 
 Obviously we want the calculator to be able to perform the arithmetic: taking advantage that perl will always convert when necessary depending on the context, we do not need to have an action on C</[\d]+/>, just action on the expression with the operators:
 
@@ -237,9 +239,9 @@ The actions are trivial:
 
   package main;
   $input = q{(1 + 2) * 3};
-  $eslifRecognizer = MyRecognizer->new($input);
-  $eslifValue = MyValue->new();
-  $result = $eslifGrammar->parse($eslifRecognizer, $eslifValue) ? $eslifValue->getResult : '??';
+  $eslifRecognizerInterface = MyRecognizer->new($input);
+  $eslifValueInterface = MyValue->new();
+  $result = $eslifGrammar->parse($eslifRecognizerInterface, $eslifValueInterface) ? $eslifValueInterface->getResult : '??';
   printf "Default parse tree value of $input: %s\n", $result;
   # Default parse tree value of (1 + 2) * 3: 9
 
@@ -251,9 +253,9 @@ Any error is automatically sent to the logger with the I<error> logging level, f
 
   $input = q{(1 + 2) * 3 + ( ab};
   # Remember that we are using the 'read-one-character-per-character' implementation
-  $eslifRecognizer = MyRecognizer->new($input);
-  $eslifValue = MyValue->new();
-  $eslifGrammar->parse($eslifRecognizer, $eslifValue);
+  $eslifRecognizerInterface = MyRecognizer->new($input);
+  $eslifValueInterface = MyValue->new();
+  $eslifGrammar->parse($eslifRecognizerInterface, $eslifValueInterface);
 
 would produce:
 
@@ -318,6 +320,41 @@ This the I<default> behaviour: parsing failure always outputs:
 =back
 
 =back
+
+=head2 Interaction with the MarpaX::ESLIF::Recognizer's scan()/resume()/events() methods
+
+Grammar's parse() method is great for an immediate valuation. This nevertheless imposes that no interaction is possible while parsing the input, and this include any notion of event (any eventual event in the grammar is switched off automatically - we come back later on the events).
+
+Events are possible on both terminals (aka the lexemes) and rules.
+
+=head3 General structure of interaction
+
+This is always starting with an MarpaX::ESLIF::Recognizer's instance C<scan()> method, that can be called only once in a recognizer's lifetime, and only at its very beginning. It is rarelly needed to have the very early events, this is why this C<scan()> method have an optional scalar argument that, when it is a true value, enables the initial events:
+
+
+  $input = q{(1 + 2) * 3};
+  # Our usual ESLIF Recognizer interface
+  $eslifRecognizerInterface = MyRecognizer->new($input);
+  # ESLIF Recognizer engine
+  my $eslifRecognizer = MarpaX::ESLIF::Recognizer->new($eslifGrammar, $eslifRecognizerInterface);
+  #
+  # Start scanning the input, we want initial events here
+  #
+  $eslifRecognizer->scan(1);
+
+C<scan()> can stop if there is an error, or if the parsing ended, or if there are events. To check for events you can the recognizer's C<events()> method, that return a reference to an array of hashes:
+
+  my $eventsRef = $eslifRecognizer->events();
+  use Data::Dumper;
+  print "Events are scan():\n" . Dumper($eventsRef);
+
+So let's introduce I<grammar> events, that can be of three types: prediction, nulled or completion.
+
+=head4 Events on rules
+
+  The syntax is: C<event event_name = event_type symbol>
+
+
 
 =head1 NOTES
 
