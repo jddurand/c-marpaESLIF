@@ -10,7 +10,7 @@ marpaESLIF - Extended Marpa's Scanless Interface
 
 marpaESLIF is a Scanless Interface expressed in a BNF format, that is using L<marpaWrapper|https://github.com/jddurand/c-marpaWrapper>, itself being a thin interface on top of L<libmarpa|https://jeffreykegler.github.io/Marpa-web-site/libmarpa.html> parser.
 
-The L<marpaESLIF BNF|https://github.com/jddurand/c-marpaESLIF/tree/master/doc/BNF> is inspired from L<Marpa::R2's DSL|https://metacpan.org/pod/distribution/Marpa-R2/pod/Scanless/DSL.pod>, though with some incompatible changes and add-ons, in particular:
+The L<marpaESLIF BNF|https://github.com/jddurand/c-marpaESLIF/tree/master/doc/BNF> is inspired from L<Marpa::R2's DSL|https://metacpan.org/pod/distribution/Marpa-R2/pod/Scanless/DSL.pod>, though with some incompatible changes and add-ons:
 
 =over
 
@@ -24,9 +24,9 @@ The L<marpaESLIF BNF|https://github.com/jddurand/c-marpaESLIF/tree/master/doc/BN
 
 =back
 
-The following sections are a general presentation of marpaESLIF architecture, features, things-to-know. Please refer to the L<marpaESLIF API|https://github.com/jddurand/c-marpaESLIF/tree/master/doc/API> and L<marpaESLIF Tutorial|https://github.com/jddurand/c-marpaESLIF/tree/master/doc/API> for precise and exhaustive documentation of the C library behind.
+The following sections are a general presentation of marpaESLIF architecture, features, things-to-know.
 
-=head1 Architecture
+=head1 ARCHITECTURE
 
 =head2 Grammars
 
@@ -167,7 +167,7 @@ As soon as there is no match, and if C<:discard> rule exist, any recognizer is a
 
 if a discard tentative is instancuated on grammar at level 0 using the symbol C<whitespace> of level 1, and if C<whitespace> of level 1 does not match, there will be no tentative for try to discard in level 1, even it is has a C<:discard> rule that is defined to be C<somethingelse>.
 
-=head1 Streaming, character and binary modes
+=head1 STREAMING, CHARACTER AND BINARY MODES
 
 Everytime any recognizer need more data, a callback to userspace is triggered. It is legal to not give the encoding when it is a character stream, then the engine will guess (the user should give enough data so that the guess is correct, though).
 
@@ -183,7 +183,7 @@ Internally, all chunks of characters are converted to UTF-8. This guarantees thr
 
 =back
 
-=head1 Terminals and Regular expression engine
+=head1 TERMINALS AND REGULAR EXPRESSIONS
 
 As mentionned above, regular expression are totally handled using L<PCRE2|http://www.pcre.org/>. Therefore the syntax of regular expression is the PCRE2 syntax. It is obvious that a regular expression define an internal "terminal", and there are three ways to define such a terminal, all of them being converted to a regular expression:
 
@@ -485,11 +485,11 @@ Modifiers are always executed I<in order>, and I<before> the regular expression 
 
 =back
 
-=head1 Logging
+=head1 LOGGING
 
 All the logging is done via L<genericLogger|https://github.com/jddurand/c-genericLogger>, and if the later is not set, nothing is logged.
 
-=head1 Grammar
+=head1 GRAMMAR
 
 Please refer to L<marpaESLIF BNF|https://github.com/jddurand/c-marpaESLIF/tree/master/doc/BNF> for the ESLIF BNF expressed with itself. Fundamentals of the ESLIF grammar are the followings (incompatible change v.s. L<Marpa::R2's DSL|https://metacpan.org/pod/distribution/Marpa-R2/pod/Scanless/DSL.pod> are highlighted):
 
