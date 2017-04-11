@@ -115,9 +115,7 @@ print "... Adapting $dst to perl\n";
 open(BNF, '<', $dst) || die "Cannot open $dst, $!";
 my $BNF = do { local $/; <BNF>; };
 close(BNF) || warn "Cannot close $dst, $!";
-$BNF =~ s/^=for html.*?$//sxmg;
-$BNF =~ s/=head1 NAME//;
-$BNF =~ s/=head1 Architecture/=head1 Example\n\nBeginners might want to look the L<MarpaX::ESLIF::Tutorial::Calculator> example.\n\n=head1 Architecture/;
+$BNF =~ s/^=for html.*?$//sm;
 $BNF =~ s/^marpaESLIF_BNF.*?$//sxmg;
 $BNF =~ s/marpaESLIF_/MarpaX::ESLIF::/g;
 $BNF =~ s/marpaESLIF /MarpaX::ESLIF /g;
@@ -126,6 +124,43 @@ print BNF "# PODNAME: MarpaX::ESLIF::BNF\n\n";
 print BNF "# ABSTRACT: MarpaX::ESLIF's BNF\n\n";
 print BNF $BNF;
 close(BNF) || warn "Cannot close $dst, $!";
+
+#
+# Idem for README.pod
+#
+$src = File::Spec->catfile(($updir) x 3, 'README.pod');
+$dst = File::Spec->catfile('lib', 'MarpaX', 'ESLIF', 'Introduction.pod');
+print "... Copying file $src to $dst\n";
+copy($src, $dst)|| die "$!";
+print "... Adapting $dst to perl\n";
+open(INTRO, '<', $dst) || die "Cannot open $dst, $!";
+my $INTRO = do { local $/; <INTRO>; };
+close(INTRO) || warn "Cannot close $dst, $!";
+$INTRO =~ s/^=for html.*?$//sm;
+$INTRO =~ s/^=encoding.*?$//sm;
+$INTRO =~ s/=head1 NAME.*=head1 DESCRIPTION/=head1 DESCRIPTION/sg;
+$INTRO =~ s/=head1 ARCHITECTURE/=head1 EXAMPLE\n\nBeginners might want to look the L<MarpaX::ESLIF::Introduction> and L<MarpaX::ESLIF::Tutorial::Calculator>.\n\n=head1 ARCHITECTURE/;
+$INTRO =~ s/marpaESLIF BNF\|https:\/\/github.com\/jddurand\/c\-marpaESLIF\/tree\/master\/doc\/BNF/MarpaX::ESLIF::BNF/g;
+$INTRO =~ s/marpaESLIF_/MarpaX::ESLIF::/g;
+$INTRO =~ s/marpaESLIF/MarpaX::ESLIF/g;
+$INTRO =~ s/^=head1 LOGGING.*?$//sm;
+$INTRO =~ s/^All the logging.*?$//sm;
+$INTRO =~ s/=head1 SEE ALSO.*//s;
+open(INTRO, '>', $dst) || die "Cannot open $dst, $!";
+print INTRO "# PODNAME: MarpaX::ESLIF::Introduction\n\n";
+print INTRO "# ABSTRACT: MarpaX::ESLIF's Introduction\n\n";
+print INTRO $INTRO;
+print INTRO <<TRAILER;
+
+=head1 SEE ALSO
+
+L<MarpaX::ESLIF::BNF>, L<MarpaX::ESLIF::Tutorial::Calculator>, L<PCRE2|http://www.pcre.org/>, L<jpcre2|https://github.com/jpcre2/jpcre2>.
+
+=head1 NOTES
+
+The perl interface is using an I<all-in-one> version of the underlying L<marpaESLIF C library|https://github.com/jddurand/c-marpaESLIF>. This mean that character conversion relies on I<iconv> (or native API on Windows) to do character translation if needed.
+TRAILER
+close(INTRO) || warn "Cannot close $dst, $!";
 
 exit(EXIT_SUCCESS);
 
