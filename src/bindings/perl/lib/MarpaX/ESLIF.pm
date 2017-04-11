@@ -38,6 +38,8 @@ Native support of streaming input.
 
 =back
 
+Beginners might want to look at L<MarpaX::ESLIF::Introduction>.
+
 =head1 SYNOPSIS
 
   use MarpaX::ESLIF;
