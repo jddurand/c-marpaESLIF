@@ -381,6 +381,76 @@ and this is because we started the recognizer with the very initial events: C<$e
   use MarpaX::ESLIF::Event::Type;
   printf "MARPAESLIF_EVENTTYPE_PREDICTED is: %d\n", MarpaX::ESLIF::Event::Type->MARPAESLIF_EVENTTYPE_PREDICTED; # 4
 
+Before resuming you have to check if you I<can> resume, leading to the typical loop:
+
+  scan()
+  while (canContinue()) {
+    resume()
+  }
+
+In the example below we take care to I<disable> the initial event otherwise the loop would never end...: resume would retrigger the C<^Expression> event forever. Instead let's have a completion C<Expression$> event (having only grammar completion events makes always possible to resume at current position):
+
+  my $grammar_v5 = $grammar_v4 . q{
+    event Expression$ = completed Expression
+    };
+  $eslifGrammar = MarpaX::ESLIF::Grammar->new($eslif, $grammar_v5);
+  $eslifRecognizer = MarpaX::ESLIF::Recognizer->new($eslifGrammar, $eslifRecognizerInterface);
+  #
+  # Always start with scan()
+  # ------------------------
+  $eslifRecognizer->scan(1);
+  print "Events after scan():\n" . Dumper($eslifRecognizer->events());
+  $eslifRecognizer->eventOnOff('Expression', [ MarpaX::ESLIF::Event::Type->MARPAESLIF_EVENTTYPE_PREDICTED ], 0);
+  #
+  # -------------------------------
+  # Always check if we can continue
+  # -------------------------------
+  while ($eslifRecognizer->isCanContinue) {
+      #
+      # resume() optional parameter is a number of BYTES.
+      # Because we stopped with initial event ^Expression, it is okay in this specific case
+      # and this specific grammar to resume() without changing the position, since we switched off
+      # the only possible initial event ^Expression
+      #
+      $eslifRecognizer->resume();
+      print "Events after resume():\n" . Dumper($eslifRecognizer->events());
+  }
+
+  Output is:
+
+  Events after scan():
+  $VAR1 = [
+            {
+              'event' => '^Expression',
+              'symbol' => 'Expression',
+              'type' => 4
+            }
+          ];
+  Events after resume():
+  $VAR1 = [
+            {
+              'type' => 1,
+              'event' => 'Expression$',
+              'symbol' => 'Expression'
+            }
+          ];
+  Events after resume():
+  $VAR1 = [
+            {
+              'type' => 1,
+              'event' => 'Expression$',
+              'symbol' => 'Expression'
+            }
+          ];
+  Events after resume():
+  $VAR1 = [
+            {
+              'symbol' => 'Expression',
+              'event' => 'Expression$',
+              'type' => 1
+            }
+          ];
+
 =head1 NOTES
 
 This example is adapted from L<Marpa::R2's Semantics|https://metacpan.org/pod/distribution/Marpa-R2/pod/Semantics.pod> documentation.
