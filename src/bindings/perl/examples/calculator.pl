@@ -154,5 +154,5 @@ my $grammar_v4 = $grammar_v3 . q{
 $eslifGrammar = MarpaX::ESLIF::Grammar->new($eslif, $grammar_v4);
 $eslifRecognizer = MarpaX::ESLIF::Recognizer->new($eslifGrammar, $eslifRecognizerInterface);
 $eslifRecognizer->scan(1);
-my $eventsRef = $eslifRecognizer->events();
+$eventsRef = $eslifRecognizer->events();
 print "Events after scan():\n" . Dumper($eventsRef);
