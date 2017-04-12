@@ -342,19 +342,41 @@ This is always starting with an MarpaX::ESLIF::Recognizer's instance C<scan()> m
   #
   $eslifRecognizer->scan(1);
 
-C<scan()> can stop if there is an error, or if the parsing ended, or if there are events. To check for events you can the recognizer's C<events()> method, that return a reference to an array of hashes:
+C<scan()> can stop if there is an error, or if the parsing ended, or if there are events. To check for events you use the recognizer's C<events()> method, that return a reference to an array of hashes:
 
   my $eventsRef = $eslifRecognizer->events();
   use Data::Dumper;
   print "Events are scan():\n" . Dumper($eventsRef);
 
-So let's introduce I<grammar> events, that can be of three types: prediction, nulled or completion.
+Events remain untouched until you C<resume()> the parsing, or interact with a method that can produce new events.
 
-=head4 Events on rules
+There are two major event scopes: grammar events, and lexeme events.
 
-  The syntax is: C<event event_name = event_type symbol>
+=head4 Grammar events
 
+These events are on symbols or parse status, and generated directly by the marpa parser engine. The syntax in MarpaX::ESLIF BNF is: C<event event_name = event_type symbol>, for example:
 
+  my $grammar_v4 = $grammar_v3 . q{
+    event ^Expression = predicted Expression
+    };
+  $eslifGrammar = MarpaX::ESLIF::Grammar->new($eslif, $grammar_v4);
+  $eslifRecognizer = MarpaX::ESLIF::Recognizer->new($eslifGrammar, $eslifRecognizerInterface);
+  $eslifRecognizer->scan(1);
+  $eventsRef = $eslifRecognizer->events();
+  print "Events after scan():\n" . Dumper($eventsRef);
+
+will produce:
+
+  Events after scan():
+  $VAR1 = [
+            {
+              'symbol' => 'Expression',
+              'event' => '^Expression',
+              'type' => 4
+            }
+          ];
+
+and this is because we started the recognizer with the very initial events: C<$eslifRecognizer->scan(1)>, and indeed, the grammar start with the symbol C<Expression>, we asked for the eventual prediction event and named it C<^Expression>. The C<type> is always one of the values listed in L<MarpaX::ESLIF::Event::Type>. For instance, C<4> is the value for C<MarpaX::ESLIF::Event::Type->MARPAESLIF_EVENTTYPE_PREDICTED>.
 
 =head1 NOTES
 
