@@ -379,7 +379,7 @@ will produce:
 and this is because we started the recognizer with the very initial events: C<$eslifRecognizer->scan(1)>, and indeed, the grammar start with the symbol C<Expression>, we asked for the eventual prediction event and named it C<^Expression>. The C<type> is always one of the values listed in L<MarpaX::ESLIF::Event::Type>. For instance, C<4> is the value for the prediction event type:
 
   use MarpaX::ESLIF::Event::Type;
-  print MarpaX::ESLIF::Event::Type->MARPAESLIF_EVENTTYPE_PREDICTED . "\n"; # 4
+  printf "MARPAESLIF_EVENTTYPE_PREDICTED is: %d\n", MarpaX::ESLIF::Event::Type->MARPAESLIF_EVENTTYPE_PREDICTED; # 4
 
 =head1 NOTES
 
