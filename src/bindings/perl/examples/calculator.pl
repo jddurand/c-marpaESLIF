@@ -156,3 +156,5 @@ $eslifRecognizer = MarpaX::ESLIF::Recognizer->new($eslifGrammar, $eslifRecognize
 $eslifRecognizer->scan(1);
 $eventsRef = $eslifRecognizer->events();
 print "Events after scan():\n" . Dumper($eventsRef);
+use MarpaX::ESLIF::Event::Type;
+printf "MARPAESLIF_EVENTTYPE_PREDICTED is: %d\n", MarpaX::ESLIF::Event::Type->MARPAESLIF_EVENTTYPE_PREDICTED; # 4
