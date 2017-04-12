@@ -21,7 +21,7 @@ First we get an ESLIF instance, we use the L<Log::Any::Adapter::Stderr> implemen
 
 =head2 Direct result with the grammar's parse() method
 
-=head3 Grammar v1
+=head3 Basic grammar
 
 Grammar will support parenthesis, and the C<**>, C<*>, C</>, C<+>, C<-> operators:
 
@@ -143,7 +143,7 @@ C<isWithHighRankOnly> select only rules that have the highest eventual C<rank> a
 
 =back
 
-=item Immediate parsing
+=head3 Immediate parsing
 
 So far, so good. The default actions for symbols and rules is always to concatenate any accepted token. So we expect the output of parsing e.g. C<(1+2)*3> to be... C<(1+2)*3>:
 
@@ -159,7 +159,7 @@ So far, so good. The default actions for symbols and rules is always to concaten
 
 We used the C<parse()> method of the grammar, a short-hand version of parsing that I<does not allow interaction not any event>.
 
-=head3 Grammar v2
+=head3 Grammar and C<:discard> symbol
 
 Usually, input is likey to have newlines, spaces, etc... we introduce as many. :discard symbols as wanted, for example to discard spaces, C-like and perl comments:
 
@@ -201,7 +201,7 @@ Though please note that reading character per character, which means very few by
   #no warnings 'redefine';
   #sub encoding               { 'ASCII' } # Encoding ?
 
-=head3 Grammar v3
+=head3 Grammar and actions
 
 Obviously we want the calculator to be able to perform the arithmetic: taking advantage that perl will always convert when necessary depending on the context, we do not need to have an action on C</[\d]+/>, just action on the expression with the operators:
 
