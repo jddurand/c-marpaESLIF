@@ -52,7 +52,7 @@ Returns a boolean indicating if the call was successful or not.
 
 This method tell the recognizer to continue. Events can be generate after resume completion.
 
-C<$deltaLength> is the number of B<bytes> to skip before resume goes on, must be positive or greater than 0. In case of a character stream, user will have to compute the number of bytes as if the input was in the UTF-8 encoding.
+C<$deltaLength> is optiona and is a number of B<bytes> to skip forward before resume goes on, must be positive or greater than 0. In case of a character stream, user will have to compute the number of bytes as if the input was in the UTF-8 encoding. Default value is C<0>.
 
 Returns a boolean indicating if the call was successful or not.
 

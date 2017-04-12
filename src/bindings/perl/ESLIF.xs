@@ -1650,11 +1650,21 @@ OUTPUT:
 =cut
 
 bool
-resume(Perl_MarpaX_ESLIF_Recognizer, deltaLength)
+resume(Perl_MarpaX_ESLIF_Recognizer, ...)
   MarpaX_ESLIF_Recognizer Perl_MarpaX_ESLIF_Recognizer;
-  int deltaLength;
 CODE:
   static const char *funcs = "MarpaX::ESLIF::Recognizer::resume";
+  int deltaLength;
+
+  if (items > 1) {
+    SV *Perl_deltaLength = ST(1);
+    if ((marpaESLIF_getTypei(aTHX_ Perl_deltaLength) & SCALAR) != SCALAR) {
+      MARPAESLIF_CROAK("First argument must be a scalar");
+    }
+    deltaLength = (int) SvIV(Perl_deltaLength);
+  } else {
+    deltaLength = 0;
+  }
 
   if (deltaLength < 0) {
     MARPAESLIF_CROAK("Resume delta length cannot be negative");
