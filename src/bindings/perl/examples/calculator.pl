@@ -39,7 +39,7 @@ sub read                   {
   my ($self) = @_;   # read data
   defined($self->{data} = readline($self->{fh}))
 }
-sub isEof                  {  eof shift->{fh} } # End of data ?
+sub isEof                  {  eof $_[0]->{fh} } # End of data ?
 sub isCharacterStream      {                1 } # Character stream ?
 sub encoding               {                  } # Encoding ?
 sub data                   {    shift->{data} } # data
@@ -152,9 +152,36 @@ my $grammar_v4 = $grammar_v3 . q{
   event ^Expression = predicted Expression
   };
 $eslifGrammar = MarpaX::ESLIF::Grammar->new($eslif, $grammar_v4);
+$eslifRecognizerInterface = MyRecognizer->new($input);
 $eslifRecognizer = MarpaX::ESLIF::Recognizer->new($eslifGrammar, $eslifRecognizerInterface);
 $eslifRecognizer->scan(1);
 $eventsRef = $eslifRecognizer->events();
 print "Events after scan():\n" . Dumper($eventsRef);
 use MarpaX::ESLIF::Event::Type;
 printf "MARPAESLIF_EVENTTYPE_PREDICTED is: %d\n", MarpaX::ESLIF::Event::Type->MARPAESLIF_EVENTTYPE_PREDICTED; # 4
+
+my $grammar_v5 = $grammar_v4 . q{
+    event Expression$ = completed Expression
+    };
+$eslifGrammar = MarpaX::ESLIF::Grammar->new($eslif, $grammar_v5);
+$eslifRecognizer = MarpaX::ESLIF::Recognizer->new($eslifGrammar, $eslifRecognizerInterface);
+#
+# Always start with scan()
+# ------------------------
+$eslifRecognizer->scan(1);
+print "Events after scan():\n" . Dumper($eslifRecognizer->events());
+$eslifRecognizer->eventOnOff('Expression', [ MarpaX::ESLIF::Event::Type->MARPAESLIF_EVENTTYPE_PREDICTED ], 0);
+#
+# -------------------------------
+# Always check if we can continue
+# -------------------------------
+while ($eslifRecognizer->isCanContinue) {
+    #
+    # resume() optional parameter is a number of BYTES.
+    # Because we stopped with initial event ^Expression, it is okay in this specific case
+    # and this specific grammar to resume() without changing the position, since we switched off
+    # the only possible initial event ^Expression
+    #
+    $eslifRecognizer->resume();
+    print "Events after resume():\n" . Dumper($eslifRecognizer->events());
+}
