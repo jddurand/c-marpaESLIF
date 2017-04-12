@@ -321,7 +321,7 @@ This the I<default> behaviour: parsing failure always outputs:
 
 =back
 
-=head2 Interaction with the MarpaX::ESLIF::Recognizer's scan()/resume()/events() methods
+=head2 Interaction with parsing
 
 Grammar's parse() method is great for an immediate valuation. This nevertheless imposes that no interaction is possible while parsing the input, and this include any notion of event (any eventual event in the grammar is switched off automatically - we come back later on the events).
 
@@ -376,7 +376,10 @@ will produce:
             }
           ];
 
-and this is because we started the recognizer with the very initial events: C<$eslifRecognizer->scan(1)>, and indeed, the grammar start with the symbol C<Expression>, we asked for the eventual prediction event and named it C<^Expression>. The C<type> is always one of the values listed in L<MarpaX::ESLIF::Event::Type>. For instance, C<4> is the value for C<MarpaX::ESLIF::Event::Type->MARPAESLIF_EVENTTYPE_PREDICTED>.
+and this is because we started the recognizer with the very initial events: C<$eslifRecognizer->scan(1)>, and indeed, the grammar start with the symbol C<Expression>, we asked for the eventual prediction event and named it C<^Expression>. The C<type> is always one of the values listed in L<MarpaX::ESLIF::Event::Type>. For instance, C<4> is the value for the prediction event type:
+
+  use MarpaX::ESLIF::Event::Type;
+  print MarpaX::ESLIF::Event::Type->MARPAESLIF_EVENTTYPE_PREDICTED . "\n"; # 4
 
 =head1 NOTES
 
