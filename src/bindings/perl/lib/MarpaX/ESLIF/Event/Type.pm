@@ -2,6 +2,7 @@ use strict;
 use warnings FATAL => 'all';
 
 package MarpaX::ESLIF::Event::Type;
+use MarpaX::ESLIF;
 
 # ABSTRACT: ESLIF Event Types
 
