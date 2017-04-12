@@ -8,8 +8,6 @@ INPUT
 T_PTROBJ_SPECIAL
     if (sv_derived_from($arg, \"${(my $ntt=$ntype)=~s/_/::/g; \$ntt}\")) {
         $var = INT2PTR($type, SvIV((SV*)SvRV($arg)));
-    } else if ($arg == &PL_sv_undef) {
-	$var = ($type)NULL;
     } else {
         croak(\"$var is not of type ${(my $ntt=$ntype)=~s/_/::/g; \$ntt}\");
     }
