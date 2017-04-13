@@ -324,7 +324,9 @@ As you can see statements has been grouped at every occurence of C<||> operator.
 
 The following is copied almost verbatim from the L<Marpa::R2 section on precedence|https://metacpan.org/pod/distribution/Marpa-R2/pod/Scanless/DSL.pod#Precedence>:
 
-In prioritized statements, every alternative has a I<unary> number, that is the number of times the LHS appear. Anything else is considered as an I<operand>. When unary is C<0>, precedence and associativy are meaningless and ignored. When unary is C<1>, precedence have affect, but not left nor right associativity. Else, in left associativity only the leftmost operand associates and operands after the first will have the next-tighest priority level, in right associativity only the rightmost operand associates and all operands except the last will have the next-tightest priority level. In group associativity, all operands associates at the lowest priority.
+In prioritized statements, every alternative has an I<arity>. The arity is the number of times an operand appears on the RHS.  A RHS symbol is an I<operand> if and only if it is the same as the LHS symbol.  Anything else is considered as an I<operator>. When the arity is C<0>, precedence and associativy are meaningless and ignored. When the arity is C<1>, precedence has effect, but not left nor right associativity.
+
+If arity is 2 or more and the alternative is left associative, the leftmost operand associates and operands after the first will have the next-tighest priority level. If arity is 2 or more and the alternative is right associative, the last operand associates and operands before the last will have the next-tighest priority level. In group associativity, all operands associate at the lowest priority.
 
 =item Adverbs
 
