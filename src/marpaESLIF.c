@@ -12240,6 +12240,13 @@ static short _marpaESLIF_rule_action___concatb(void *userDatavp, marpaESLIFValue
     goto done;
   }
 
+  /* If there is a single RHS, then ::concat is changed to ::shift that is guaranteed */
+  /* to not change the nature of the RHS */
+  if (arg0i == argni) {
+    rcb = _marpaESLIF_rule_action___shiftb(userDatavp, marpaESLIFValuep, arg0i, argni, resulti, nullableb);
+    goto done;
+  }
+
   /* Only arguments of type ARRAY are taken into account */
   for (i = arg0i; i <= argni; i++) {
     if (! _marpaESLIFValue_stack_is_arrayb(marpaESLIFValuep, i, &flagb)) {

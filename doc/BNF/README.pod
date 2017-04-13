@@ -147,7 +147,7 @@ Predefined actions are available for rules and symbols. Please refer the API doc
 
 The C<free-action> adverb is required when the end-user is pushing an opaque value of type C<PTR> or C<ARRAY> that is not declared shallowed. The internal stack manipulation may decide it does not need this value anymore: the free action is then called. This is used in low-level programming, in practice interface to high-level languages like Perl, Java etc... should I<hide> that, making the presence of this keyword in the grammar meaningless.
 
-The C<symbol-action> adverb is rather dangerous, since it is changing the meaning of a lexeme in the current grammar (but not in the eventual sub-grammars): in high-level languages, where it is in principle not possible to push an C<ARRAY> (i.e. a byte array) value type, then the default rule action, that is to concatenate the RHSs (this is the C<::concat> reserved keyword), will silently drop these lexemes.
+The C<symbol-action> adverb is rather dangerous, since it is changing the meaning of a lexeme in the current grammar (but not in the eventual sub-grammars): in high-level languages, where it is in principle not possible to push an C<ARRAY> (i.e. a byte array) value type, then the rule action C<::concat>, that is to concatenate the RHSs (this is the C<::concat> reserved keyword), will silently drop these lexemes, I<unless> there is a single RHS since then rule's C<::concat> is moved to C<::shift> that is guaranteed to not change the nature of the value being transfered.
 
 =over
 
@@ -165,13 +165,15 @@ Same as C<::ascii> though translate whenever possible, ignoring untranslatable s
 
 =item C<::concat>
 
-Concatenate all RHS's values. Only values of type ARRAY are accepted. ARRAY values with a length greater than 0 are concatenated. Please note that for symbols, C<::concat> is allowed but in reality is not doing any concatenation, it is doing a copy, meaning that the type of the result is unchanged. This is because formally symbol values come directly from the I<input>, as a single entity. There is no notion of concatenation here. In addition, the user can change the value of a symbol using the C<symbol-action> adverb, eventually. Then the notion of concatenation, even applied on a single object, is not correct - the real notion is a copy.
+Concatenate all RHS's values. Only values of type ARRAY are accepted. ARRAY values with a length greater than 0 are concatenated. Please note that for symbols, C<::concat> is allowed but in reality is not doing any concatenation, it is doing a C<::shift>, meaning that the type of the result is unchanged. This is because formally symbol values come directly from the I<input>, as a single entity. There is no notion of concatenation here. In addition, the user can change the value of a symbol using the C<symbol-action> adverb, eventually. Then the notion of concatenation, even applied on a single object, is not correct - the real notion is a copy.
+
+The same logic applies on a rule that have a C<::concat> action: if the rule contain a single RHS, then C<::concat> is a synonym for C<::shift>, that is guaranteed to not change the nature of the RHS. But if there are more than one RHS, then C<::concat> behaviour will I<drop anything coming from the userspace>.
 
 The result is always of ARRAY type. If something was found during concatenation, the area pointed by the ARRAY is guaranteed to be NUL terminated, even if the exposed size does not contain the extra byte for this NUL character. In the extreme case where nothing can be concatenated, then C<::concat> result can be equivalent to C<::undef>.
 
 Take care, using the C<symbol-action> to change the meaning of a lexeme has an impact on the default C<::concat> action, that is likely to ignore user-defined lexemes unless you pushed an C<ARRAY> ESLIF value type, that is in principle not possible with high-level languages.
 
-This is the default action for rules.
+C<::concat> is the default action for rules.
 
 =item C<::copy[x]>
 
