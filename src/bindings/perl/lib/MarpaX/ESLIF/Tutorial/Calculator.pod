@@ -512,7 +512,7 @@ Since injecting values is possible only for lexemes, it is often practical to re
 
   $eslifRecognizer->lexemeLastPause(symbolName)
 
-which will return a perl's string for the last paused inforéation for lexeme C<symbolName>, or C<undef> if there is none. The number of C<bytes> in this string is the relevant thing here.
+which will return a perl's string for the last paused information for lexeme C<symbolName>, or C<undef> if there is none. The number of C<bytes> in this string is the relevant thing here.
 
 User can also I<try> lexemes, using:
 
