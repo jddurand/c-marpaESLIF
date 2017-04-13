@@ -629,7 +629,20 @@ static SV *marpaESLIF_getSvFromStack(pTHX_ MarpaX_ESLIF_Value_t *MarpaX_ESLIF_Va
       MARPAESLIF_CROAK("marpaESLIFValue_stack_is_arrayb failure");
     }
     if (! arrayb) {
-      MARPAESLIF_CROAK("Internal stack error, item not an ARRAY");
+      char *foundType;
+      short flagb;
+      if      (marpaESLIFValue_stack_is_undefb (marpaESLIFValuep, i, &flagb) && flagb) foundType = "UNDEF\n";
+      else if (marpaESLIFValue_stack_is_charb  (marpaESLIFValuep, i, &flagb) && flagb) foundType = "CHAR\n";
+      else if (marpaESLIFValue_stack_is_shortb (marpaESLIFValuep, i, &flagb) && flagb) foundType = "SHORT\n";
+      else if (marpaESLIFValue_stack_is_intb   (marpaESLIFValuep, i, &flagb) && flagb) foundType = "INT\n";
+      else if (marpaESLIFValue_stack_is_longb  (marpaESLIFValuep, i, &flagb) && flagb) foundType = "LONG\n";
+      else if (marpaESLIFValue_stack_is_floatb (marpaESLIFValuep, i, &flagb) && flagb) foundType = "FLOAT\n";
+      else if (marpaESLIFValue_stack_is_doubleb(marpaESLIFValuep, i, &flagb) && flagb) foundType = "DOUBLE\n";
+      else if (marpaESLIFValue_stack_is_ptrb   (marpaESLIFValuep, i, &flagb) && flagb) foundType = "PTR\n"; /*...*/
+      else if (marpaESLIFValue_stack_is_arrayb (marpaESLIFValuep, i, &flagb) && flagb) foundType = "ARRAY\n"; /*...*/
+      else                                                                             foundType = "UNKNOWN\n";
+
+      MARPAESLIF_CROAKF("Internal stack error, item not an ARRAY at indice %d, found %s instead", i, foundType);
     }
     if (! marpaESLIFValue_stack_get_arrayb(marpaESLIFValuep, i, &contexti, (void **) &bytep, &bytel, NULL /* shallowbp */)) {
       MARPAESLIF_CROAK("marpaESLIFValue_stack_get_arrayb failure");
