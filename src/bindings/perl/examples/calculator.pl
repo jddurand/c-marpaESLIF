@@ -285,6 +285,9 @@ if ($eslifRecognizer->isCanContinue) {
 my $eslifValueInterface = MyValue->new();
 my $eslifValue = MarpaX::ESLIF::Value->new($eslifRecognizer, $eslifValueInterface);
 while ($eslifValue->value()) {
+  #
+  # (1**2 + 2**2) * 3**2 = 45
+  #
   printf "======> %s\n", $eslifValueInterface->getResult;
 }
 
