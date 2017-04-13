@@ -8,6 +8,7 @@ use Log::Any::Adapter qw/Stderr/;
 use MarpaX::ESLIF;
 
 my $eslif = MarpaX::ESLIF->new($log);
+print  "************************************************************\n";
 my $grammar_v1 = q{
       Expression ::=
           /[\d]+/
@@ -18,6 +19,7 @@ my $grammar_v1 = q{
          ||     Expression  '+' Expression
           |     Expression  '-' Expression
       };
+printf "Grammar:%s\n", $grammar_v1;
 my $eslifGrammar = MarpaX::ESLIF::Grammar->new($eslif, $grammar_v1);
 
 package MyRecognizer;
@@ -78,11 +80,13 @@ my $eslifValueInterface = MyValue->new();
 my $result = $eslifGrammar->parse($eslifRecognizerInterface, $eslifValueInterface) ? $eslifValueInterface->getResult : '??';
 printf "Default parse tree value of $input: %s\n", $result;
 
+print  "************************************************************\n";
 my $grammar_v2 = $grammar_v1 . q{
       :discard ::= /[\s]+/
       :discard ::= /(?:(?:(?:\/\/)(?:[^\n]*)(?:\n|\z))|(?:(?:\/\*)(?:(?:[^\*]+|\*(?!\/))*)(?:\*\/)))/
       :discard ::= /#[^\n]*(?:\n|\z)/
       };
+printf "Grammar:%s\n", $grammar_v2;
 $eslifGrammar = MarpaX::ESLIF::Grammar->new($eslif, $grammar_v2);
 $input = q{( /* C comment */1+2)
 # perl comment
@@ -111,6 +115,7 @@ sub do_plus  { my ($self, $left, $op, $right) = @_; $left+$right }
 sub do_minus { my ($self, $left, $op, $right) = @_; $left-$right }
 
 package main;
+print  "************************************************************\n";
 my $grammar_v3 = q{
   Expression ::=
       /[\d]+/
@@ -122,6 +127,7 @@ my $grammar_v3 = q{
       |     Expression  '-' Expression                 action => do_minus
   :discard ::= /[\s]+/
   };
+printf "Grammar:%s\n", $grammar_v3;
 $eslifGrammar = MarpaX::ESLIF::Grammar->new($eslif, $grammar_v3);
 $input = q{(1 + 2) * 3};
 $eslifRecognizerInterface = MyRecognizer->new($input);
@@ -148,9 +154,11 @@ my $eventsRef = $eslifRecognizer->events();
 use Data::Dumper;
 print "Events after scan():\n" . Dumper($eventsRef);
 
+print  "************************************************************\n";
 my $grammar_v4 = $grammar_v3 . q{
   event ^Expression = predicted Expression
   };
+printf "Grammar:%s\n", $grammar_v4;
 $eslifGrammar = MarpaX::ESLIF::Grammar->new($eslif, $grammar_v4);
 $eslifRecognizerInterface = MyRecognizer->new($input);
 $eslifRecognizer = MarpaX::ESLIF::Recognizer->new($eslifGrammar, $eslifRecognizerInterface);
@@ -160,9 +168,11 @@ print "Events after scan():\n" . Dumper($eventsRef);
 use MarpaX::ESLIF::Event::Type;
 printf "MARPAESLIF_EVENTTYPE_PREDICTED is: %d\n", MarpaX::ESLIF::Event::Type->MARPAESLIF_EVENTTYPE_PREDICTED; # 4
 
+print  "************************************************************\n";
 my $grammar_v5 = $grammar_v4 . q{
     event Expression$ = completed Expression
     };
+printf "Grammar:%s\n", $grammar_v5;
 $eslifGrammar = MarpaX::ESLIF::Grammar->new($eslif, $grammar_v5);
 $eslifRecognizer = MarpaX::ESLIF::Recognizer->new($eslifGrammar, $eslifRecognizerInterface);
 #
@@ -175,7 +185,8 @@ $eslifRecognizer->eventOnOff('Expression', [ MarpaX::ESLIF::Event::Type->MARPAES
 # -------------------------------
 # Always check if we can continue
 # -------------------------------
-while ($eslifRecognizer->isCanContinue) {
+if ($eslifRecognizer->isCanContinue) {
+  do {
     #
     # resume() optional parameter is a number of BYTES.
     # Because we stopped with initial event ^Expression, it is okay in this specific case
@@ -184,4 +195,96 @@ while ($eslifRecognizer->isCanContinue) {
     #
     $eslifRecognizer->resume();
     print "Events after resume():\n" . Dumper($eslifRecognizer->events());
+  } while ($eslifRecognizer->isCanContinue)
+};
+
+print  "************************************************************\n";
+my $grammar_v6 = q{
+Expression ::=
+               /[\d]+/
+             | '(' NulledSymbol Expression ')' assoc => group action => ::copy[1]
+            ||     Expression '**' Expression  assoc => right action => do_pow
+            ||     Expression  '*' Expression                 action => do_mul
+             |     Expression  '/' Expression                 action => do_div
+            ||     Expression  '+' Expression                 action => do_plus
+             |     Expression  '-' Expression                 action => do_minus
+NulledSymbol ::=
+:discard ::= /[\s]+/
+event Expression$ = completed Expression
+event NulledSymbol[] = nulled NulledSymbol
+};
+printf "Grammar:%s\n", $grammar_v6;
+$eslifGrammar = MarpaX::ESLIF::Grammar->new($eslif, $grammar_v6);
+
+print  "************************************************************\n";
+my $grammar_v7 = q{
+Expression ::=
+               /[\d]+/
+             | LPAREN Expression RPAREN           assoc => group action => ::copy[1]
+            ||        Expression '**' Expression  assoc => right action => do_pow
+            ||        Expression  '*' Expression                 action => do_mul
+             |        Expression  '/' Expression                 action => do_div
+            ||        Expression  '+' Expression                 action => do_plus
+             |        Expression  '-' Expression                 action => do_minus
+:discard ::= /[\s]+/
+event Expression$ = completed Expression
+LPAREN ~ '('
+RPAREN ~ ')'
+:lexeme ::= LPAREN pause => after event => LPAREN$
+:lexeme ::= RPAREN pause => after event => RPAREN$
+};
+printf "Grammar:%s\n", $grammar_v7;
+$eslifGrammar = MarpaX::ESLIF::Grammar->new($eslif, $grammar_v7);
+
+print  "************************************************************\n";
+my $grammar_v8 = q{
+Expression ::=
+               NUMBER
+             | '(' Expression ')'              assoc => group action => ::copy[1]
+            ||     Expression  POW Expression  assoc => right action => do_pow
+            ||     Expression  '*' Expression                 action => do_mul
+             |     Expression  '/' Expression                 action => do_div
+            ||     Expression  '+' Expression                 action => do_plus
+             |     Expression  '-' Expression                 action => do_minus
+:discard ::= /[\s]+/
+:lexeme ::= NUMBER pause => before event => ^NUMBER
+NUMBER     ~ /[\d]+/
+POW        ~ '**'
+};
+printf "Grammar:%s\n", $grammar_v8;
+$eslifGrammar = MarpaX::ESLIF::Grammar->new($eslif, $grammar_v8);
+$eslifRecognizerInterface = MyRecognizer->new($input);
+$eslifRecognizer = MarpaX::ESLIF::Recognizer->new($eslifGrammar, $eslifRecognizerInterface);
+$eslifRecognizer->scan();
+if ($eslifRecognizer->isCanContinue) {
+  do {
+    my $alreadyResumed = 0;
+    foreach (@{$eslifRecognizer->events()}) {
+      if ($_->{event}) {   # Can be undef for exhaustion
+        if ($_->{event} eq '^NUMBER') {
+          my $lastPause = $eslifRecognizer->lexemeLastPause($_->{symbol});
+          printf "Pause before event %s for symbol %s: \"%s\"\n", $_->{event}, $_->{symbol}, $lastPause;
+          # ------------------------------
+          # We replace NUMBER by NUMBER*10
+          # ------------------------------
+          $eslifRecognizer->lexemeRead('NUMBER', $lastPause, 0);
+          $eslifRecognizer->lexemeRead('POW', '*', 0);
+          $eslifRecognizer->lexemeRead('NUMBER', '2', 0);
+          # -------------------------------------------
+          # We say to resume exactly where NUMBER ended
+          # -------------------------------------------
+          $eslifRecognizer->resume(bytes::length($lastPause));
+          $alreadyResumed = 1;
+          last
+        }
+      }
+    }
+    $eslifRecognizer->resume() unless $alreadyResumed
+  } while ($eslifRecognizer->isCanContinue)
 }
+my $eslifValueInterface = MyValue->new();
+my $eslifValue = MarpaX::ESLIF::Value->new($eslifRecognizer, $eslifValueInterface);
+while ($eslifValue->value()) {
+  printf "======> %s\n", $eslifValueInterface->getResult;
+}
+
