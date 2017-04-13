@@ -282,7 +282,7 @@ if ($eslifRecognizer->isCanContinue) {
     $eslifRecognizer->resume() unless $alreadyResumed
   } while ($eslifRecognizer->isCanContinue)
 }
-my $eslifValueInterface = MyValue->new();
+$eslifValueInterface = MyValue->new();
 my $eslifValue = MarpaX::ESLIF::Value->new($eslifRecognizer, $eslifValueInterface);
 while ($eslifValue->value()) {
   #
