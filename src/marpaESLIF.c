@@ -12173,13 +12173,15 @@ static short _marpaESLIFValue_okRuleCallbackWrapperb(void *userDatavp, genericSt
     if (! _marpaESLIFValue_stack_is_arrayb(marpaESLIFValuep, arg0i, &arrayb)) {
       goto err;
     }
-    if (! _marpaESLIFValue_stack_get_arrayb(marpaESLIFValuep, arg0i, NULL /* contextip */, &bytep, &bytel, NULL /* shallowbp */)) {
-      goto err;
-    }
-    if (_marpaESLIFRecognizer_exception_matcherb(marpaESLIFRecognizerp, rulep, bytep, bytel, &rci)) {
-      if (rci == MARPAESLIF_MATCH_OK) {
-        MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Rule %d (%s) exception match", rulep->idi, rulep->asciishows);
+    if (arrayb) {
+      if (! _marpaESLIFValue_stack_get_arrayb(marpaESLIFValuep, arg0i, NULL /* contextip */, &bytep, &bytel, NULL /* shallowbp */)) {
         goto err;
+      }
+      if (_marpaESLIFRecognizer_exception_matcherb(marpaESLIFRecognizerp, rulep, bytep, bytel, &rci)) {
+        if (rci == MARPAESLIF_MATCH_OK) {
+          MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Rule %d (%s) exception match", rulep->idi, rulep->asciishows);
+          goto err;
+        }
       }
     }
   }
