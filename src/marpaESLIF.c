@@ -13101,6 +13101,25 @@ short marpaESLIFRecognizer_inputb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp,
 }
 
 /*****************************************************************************/
+short marpaESLIFRecognizer_locationb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, size_t *linelp, size_t *columnlp)
+/*****************************************************************************/
+{
+  if (marpaESLIFRecognizerp == NULL) {
+    errno = EINVAL;
+    return 0;
+  }
+
+  if (linelp != NULL) {
+    *linelp = marpaESLIFRecognizerp->linel;
+  }
+  if (columnlp != NULL) {
+    *columnlp = marpaESLIFRecognizerp->columnl;
+  }
+
+  return 1;
+}
+
+/*****************************************************************************/
 static inline short _marpaESLIFRecognizer_last_lexemeDatab(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *lexemes, char **bytesp, size_t *bytelp, marpaESLIF_lexeme_data_t **lexemeDatapp)
 /*****************************************************************************/
 {
