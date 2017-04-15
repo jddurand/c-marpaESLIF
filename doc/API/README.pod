@@ -1091,6 +1091,30 @@ These pointers are intentionnaly not having a I<const> keyword, though it is obv
 
 Returns a true value on success, a false value on failure.
 
+=head3 C<marpaESLIFRecognizer_inputb>
+
+  short marpaESLIFRecognizer_locationb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp,
+                                       size_t *linelp,
+                                       size_t *columnlp);
+
+For the recognizer instance pointed by C<marpaESLIFRecognizerp>, returns the current absolute location in terms of line and column numbers:
+
+=over
+
+=item linelp
+
+If not C<NULL>, will contain the line number.
+
+=item columnlp
+
+If not C<NULL>, will contain the column number.
+
+=back
+
+These values are meaningful only if the recognizer option setted C<newlineb> to a true value, otherwise line number is fixed to C<1>, and column number if fixed to C<0>.
+
+Returns a true value on success, a false value on failure.
+
 =head3 C<marpaESLIFRecognizer_lexeme_last_pauseb>
 
   short marpaESLIFRecognizer_lexeme_last_pauseb(marpaESLIFRecognizer_t  *marpaESLIFRecognizerp,
