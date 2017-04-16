@@ -170,6 +170,7 @@ static inline short                  _marpaESLIFGrammar_parseb(marpaESLIFGrammar
 static        void                   _marpaESLIF_generateStringWithLoggerCallback(void *userDatavp, genericLoggerLevel_t logLeveli, const char *msgs);
 static        void                   _marpaESLIF_generateSeparatedStringWithLoggerCallback(void *userDatavp, genericLoggerLevel_t logLeveli, const char *msgs);
 static        void                   _marpaESLIF_traceLoggerCallback(void *userDatavp, genericLoggerLevel_t logLeveli, const char *msgs);
+static inline short                  _marpaESLIF_appendOpaqueDataToStringGenerator(marpaESLIF_stringGenerator_t *marpaESLIF_stringGeneratorp, char *p, size_t sizel);
 static inline short                  _marpaESLIFRecognizer_readb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp);
 static inline short                  _marpaESLIFRecognizer_flush_charconv(marpaESLIFRecognizer_t *marpaESLIFRecognizerp);
 static inline short                  _marpaESLIFRecognizer_start_charconvp(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *encodingOfEncodings, char *encodings, size_t encodingl, char *srcs, size_t srcl);
@@ -1883,7 +1884,7 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
   }
 
   /*
-    4. If at least one rule have rejection, rejection mode is on at the grammar level.
+    4. If at least one rule have rejection, rejection mode is on at the grammar level if the rule is productive.
   */
   for (grammari = 0; grammari < GENERICSTACK_USED(grammarStackp); grammari++) {
     if (! GENERICSTACK_IS_PTR(grammarStackp, grammari)) {
@@ -1902,10 +1903,17 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
       }
       rulep = (marpaESLIF_rule_t *) GENERICSTACK_GET_PTR(ruleStackp, rulei);
       if (rulep->exceptionp != NULL) {
-        if (! grammarp->haveRejectionb) {
-          MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Marking rejection flag for grammar at level %d (%s)", grammari, grammarp->descp->asciis);
-          grammarp->haveRejectionb = 1;
-          break;
+        int propertyBitSet;
+        if (! marpaWrapperGrammar_rulePropertyb(grammarp->marpaWrapperGrammarStartp, rulep->idi, &propertyBitSet)) {
+          MARPAESLIF_ERRORF(marpaESLIFp, "marpaWrapperGrammar_rulePropertyb failure for grammar level %d (%s)", grammarp->leveli, grammarp->descp->asciis);
+          goto err;
+        }
+        if ((propertyBitSet & MARPAWRAPPER_RULE_IS_PRODUCTIVE) == MARPAWRAPPER_RULE_IS_PRODUCTIVE) {
+          if (! grammarp->haveRejectionb) {
+            MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Marking rejection flag for grammar at level %d (%s)", grammari, grammarp->descp->asciis);
+            grammarp->haveRejectionb = 1;
+            break;
+          }
         }
       }
     }
@@ -2226,7 +2234,7 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_grammar_newp(marpaESLIF_t *marpa
   static const char             *funcs          = "_marpaESLIF_grammar_newp";
   genericLogger_t               *genericLoggerp = NULL;
   marpaESLIF_grammar_t          *grammarp       = NULL;
-  marpaESLIF_stringGenerator_t  marpaESLIF_stringGenerator;
+  marpaESLIF_stringGenerator_t   marpaESLIF_stringGenerator;
 
   /* MARPAESLIF_TRACE(marpaESLIFp, funcs, "Building ESLIF grammar"); */
 
@@ -7136,35 +7144,7 @@ static inline short _marpaESLIFGrammar_parseb(marpaESLIFGrammar_t *marpaESLIFGra
 static void _marpaESLIF_generateStringWithLoggerCallback(void *userDatavp, genericLoggerLevel_t logLeveli, const char *msgs)
 /*****************************************************************************/
 {
-  marpaESLIF_stringGenerator_t *contextp = (marpaESLIF_stringGenerator_t *) userDatavp;
-  char                         *tmps;
-
-  if (contextp->s == NULL) {
-    /* First time */
-    contextp->l = strlen(msgs) + 1;
-    contextp->s = strdup(msgs);
-    if (contextp->s == NULL) {
-      contextp->l = 0;
-      MARPAESLIF_ERRORF(contextp->marpaESLIFp, "strdup failure, %s", strerror(errno));
-      /* contextp->okb = 0; */ /* We initialized it with a false value -; */
-    } else {
-      contextp->okb = 1;
-    }
-  } else if (contextp->okb) {
-    /* Only if previous round was ok */
-    contextp->l = strlen(contextp->s) + strlen(msgs) + 1;
-    tmps = (char *) realloc(contextp->s, contextp->l);
-    if (tmps != NULL) {
-      strcat(tmps, msgs);
-      contextp->s = tmps;
-    } else {
-      contextp->okb = 0;
-      contextp->l = 0;
-      free(contextp->s);
-      contextp->s = NULL;
-      MARPAESLIF_ERRORF(contextp->marpaESLIFp, "realloc failure, %s", strerror(errno));
-    }
-  }
+  _marpaESLIF_appendOpaqueDataToStringGenerator((marpaESLIF_stringGenerator_t *) userDatavp, (char *) msgs, strlen(msgs));
 }
 
 /*****************************************************************************/
@@ -7173,32 +7153,14 @@ static void _marpaESLIF_generateSeparatedStringWithLoggerCallback(void *userData
 {
   marpaESLIF_stringGenerator_t *contextp = (marpaESLIF_stringGenerator_t *) userDatavp;
   char                         *tmps;
+  size_t                        newl;
 
   if (contextp->s == NULL) {
     /* First time */
-    contextp->l = strlen(msgs) + 1;
-    contextp->s = strdup(msgs);
-    if (contextp->s == NULL) {
-      contextp->l = 0;
-      MARPAESLIF_ERRORF(contextp->marpaESLIFp, "strdup failure, %s", strerror(errno));
-      /* contextp->okb = 0; */ /* We initialized it with a false value -; */
-    } else {
-      contextp->okb = 1;
-    }
-  } else if (contextp->okb) {
-    /* Only if previous round was ok */
-    contextp->l = strlen(contextp->s) + strlen("|") + strlen(msgs) + 1;
-    tmps = (char *) realloc(contextp->s, contextp->l);
-    if (tmps != NULL) {
-      strcat(tmps, "|");
-      strcat(tmps, msgs);
-      contextp->s = tmps;
-    } else {
-      contextp->okb = 0;
-      contextp->l = 0;
-      free(contextp->s);
-      contextp->s = NULL;
-      MARPAESLIF_ERRORF(contextp->marpaESLIFp, "realloc failure, %s", strerror(errno));
+    _marpaESLIF_appendOpaqueDataToStringGenerator((marpaESLIF_stringGenerator_t *) userDatavp, (char *) msgs, strlen(msgs));
+  } else {
+    if (_marpaESLIF_appendOpaqueDataToStringGenerator((marpaESLIF_stringGenerator_t *) userDatavp, (char *) "|", 1)) {
+      _marpaESLIF_appendOpaqueDataToStringGenerator((marpaESLIF_stringGenerator_t *) userDatavp, (char *) msgs, strlen(msgs));
     }
   }
 }
@@ -7215,6 +7177,55 @@ static void _marpaESLIF_traceLoggerCallback(void *userDatavp, genericLoggerLevel
     MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s", msgs);
   }
 #endif
+}
+
+/*****************************************************************************/
+static inline short _marpaESLIF_appendOpaqueDataToStringGenerator(marpaESLIF_stringGenerator_t *marpaESLIF_stringGeneratorp, char *p, size_t sizel)
+/*****************************************************************************/
+{
+  static const char *funcs = "_marpaESLIF_appendOpaqueDataToStringGenerator";
+  char              *tmpp;
+  short              rcb;
+
+  /* Note: caller must guarantee that marpaESLIF_stringGeneratorp->marpaESLIFp, p != NULL and l > 0 */
+  if (marpaESLIF_stringGeneratorp->s == NULL) {
+    marpaESLIF_stringGeneratorp->s  = malloc(sizel + 1);
+    if (marpaESLIF_stringGeneratorp->s == NULL) {
+      MARPAESLIF_ERRORF(marpaESLIF_stringGeneratorp->marpaESLIFp, "malloc failure, %s", strerror(errno));
+      goto err;
+    }
+    memcpy(marpaESLIF_stringGeneratorp->s, p, sizel);
+    marpaESLIF_stringGeneratorp->l = sizel + 1;
+    marpaESLIF_stringGeneratorp->okb = 1;
+  } else if (marpaESLIF_stringGeneratorp->okb) {
+    tmpp = realloc(marpaESLIF_stringGeneratorp->s, marpaESLIF_stringGeneratorp->l + sizel); /* The +1 for the NULL byte is already in */
+    if (tmpp == NULL) {
+      MARPAESLIF_ERRORF(marpaESLIF_stringGeneratorp->marpaESLIFp, "realloc failure, %s", strerror(errno));
+      goto err;
+    }
+    marpaESLIF_stringGeneratorp->s  = tmpp;
+    memcpy(marpaESLIF_stringGeneratorp->s + marpaESLIF_stringGeneratorp->l - 1, p, sizel);
+    marpaESLIF_stringGeneratorp->l += sizel;
+  } else {
+    MARPAESLIF_ERRORF(marpaESLIF_stringGeneratorp->marpaESLIFp, "Invalid internal call to %s", funcs);
+    goto err;
+  }
+
+  marpaESLIF_stringGeneratorp->s[marpaESLIF_stringGeneratorp->l - 1] = '\0';
+  rcb = 1;
+  goto done;
+
+ err:
+  if (marpaESLIF_stringGeneratorp->s != NULL) {
+    free(marpaESLIF_stringGeneratorp->s);
+    marpaESLIF_stringGeneratorp->s = NULL;
+  }
+  marpaESLIF_stringGeneratorp->okb = 0;
+  marpaESLIF_stringGeneratorp->l   = 0;
+  rcb = 0;
+
+ done:
+  return rcb;
 }
 
 /*****************************************************************************/
@@ -12221,17 +12232,30 @@ static short _marpaESLIF_rule_action___shiftb(void *userDatavp, marpaESLIFValue_
 static short _marpaESLIF_rule_action___concatb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
 /*****************************************************************************/
 {
-  static const char      *funcs                 = "_marpaESLIF_rule_action___concatb";
-  marpaESLIFRecognizer_t *marpaESLIFRecognizerp = marpaESLIFValuep->marpaESLIFRecognizerp;
-  marpaESLIF_t           *marpaESLIFp           = marpaESLIFValuep->marpaESLIFp;
-  short                   rcb;
-  short                   flagb;
-  int                     i;
-  void                   *bytep = NULL;
-  size_t                  bytel = 0;
-  void                   *thisbytep = NULL;
-  size_t                  thisbytel = 0;
-  char                   *p;
+  static const char            *funcs                 = "_marpaESLIF_rule_action___concatb";
+  marpaESLIFRecognizer_t       *marpaESLIFRecognizerp = marpaESLIFValuep->marpaESLIFRecognizerp;
+  marpaESLIF_t                 *marpaESLIFp           = marpaESLIFValuep->marpaESLIFp;
+  genericLogger_t              *genericLoggerp        = NULL;
+  char                         *encodingasciis        = NULL;
+  char                         *utf8s                 = NULL;
+  char                         *utf8withoutboms       = NULL;
+  size_t                        utf8l;
+  size_t                        utf8withoutboml;
+  short                         rcb;
+  short                         flagb;
+  int                           argi;
+  marpaESLIF_stringGenerator_t  marpaESLIF_stringGenerator;
+  void                         *p;
+  char                          c;
+  short                         b;
+  int                           i;
+  long                          l;
+  float                         f;
+  double                        d;
+  size_t                        sizel;
+  marpaESLIF_matcher_value_t    rci;
+  marpaESLIFValueResult_t       marpaESLIFValueResult;
+  char                         *tmpp;
 
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
@@ -12242,56 +12266,277 @@ static short _marpaESLIF_rule_action___concatb(void *userDatavp, marpaESLIFValue
     goto done;
   }
 
-  /* If there is a single RHS, then ::concat is changed to ::shift that is guaranteed */
-  /* to not change the nature of the RHS */
-  if (arg0i == argni) {
-    rcb = _marpaESLIF_rule_action___shiftb(userDatavp, marpaESLIFValuep, arg0i, argni, resulti, nullableb);
-    goto done;
+  /* Generate a concatenation */
+  marpaESLIF_stringGenerator.marpaESLIFp = marpaESLIFp;
+  marpaESLIF_stringGenerator.s           = NULL;
+  marpaESLIF_stringGenerator.l           = 0;
+  marpaESLIF_stringGenerator.okb         = 0;
+
+  genericLoggerp = GENERICLOGGER_CUSTOM(_marpaESLIF_generateStringWithLoggerCallback, (void *) &marpaESLIF_stringGenerator, GENERICLOGGER_LOGLEVEL_TRACE);
+  if (genericLoggerp == NULL) {
+    goto err;
   }
 
-  /* Only arguments of type ARRAY are taken into account */
-  for (i = arg0i; i <= argni; i++) {
-    if (! _marpaESLIFValue_stack_is_arrayb(marpaESLIFValuep, i, &flagb)) {
+  for (argi = arg0i; argi <= argni; argi++) {
+
+    /* Undef ? */
+    if (! _marpaESLIFValue_stack_is_undefb(marpaESLIFValuep, argi, &flagb)) {
       goto err;
     }
     if (flagb) {
-      if (! _marpaESLIFValue_stack_get_arrayb(marpaESLIFValuep, i, NULL /* contextip */, &thisbytep, &thisbytel, NULL /* shallowbp */)) {
+      continue;
+    }
+
+    /* Char ? */
+    if (! _marpaESLIFValue_stack_is_charb(marpaESLIFValuep, argi, &flagb)) {
+      goto err;
+    }
+    if (flagb) {
+      if (! _marpaESLIFValue_stack_get_charb(marpaESLIFValuep, argi, NULL /* contextip */, &c)) {
         goto err;
       }
-      if ((thisbytep != NULL) && (thisbytel > 0)) {
-        bytel += thisbytel;
+      GENERICLOGGER_TRACEF(genericLoggerp, "%c", c);
+      if (! marpaESLIF_stringGenerator.okb) {
+        goto err;
+      }
+      continue;
+    }
+  
+    /* short ? */
+    if (! _marpaESLIFValue_stack_is_shortb(marpaESLIFValuep, argi, &flagb)) {
+      goto err;
+    }
+    if (flagb) {
+      if (! _marpaESLIFValue_stack_get_shortb(marpaESLIFValuep, argi, NULL /* contextip */, &b)) {
+        goto err;
+      }
+      GENERICLOGGER_TRACEF(genericLoggerp, "%d", (int) b);
+      if (! marpaESLIF_stringGenerator.okb) {
+        goto err;
+      }
+      continue;
+    }
+  
+    /* int ? */
+    if (! _marpaESLIFValue_stack_is_intb(marpaESLIFValuep, argi, &flagb)) {
+      goto err;
+    }
+    if (flagb) {
+      if (! _marpaESLIFValue_stack_get_intb(marpaESLIFValuep, argi, NULL /* contextip */, &i)) {
+        goto err;
+      }
+      GENERICLOGGER_TRACEF(genericLoggerp, "%d", i);
+      if (! marpaESLIF_stringGenerator.okb) {
+        goto err;
+      }
+      continue;
+    }
+  
+    /* long ? */
+    if (! _marpaESLIFValue_stack_is_longb(marpaESLIFValuep, argi, &flagb)) {
+      goto err;
+    }
+    if (flagb) {
+      if (! _marpaESLIFValue_stack_get_longb(marpaESLIFValuep, argi, NULL /* contextip */, &l)) {
+        goto err;
+      }
+      GENERICLOGGER_TRACEF(genericLoggerp, "%ld", l);
+      if (! marpaESLIF_stringGenerator.okb) {
+        goto err;
+      }
+      continue;
+    }
+  
+    /* float ? */
+    if (! _marpaESLIFValue_stack_is_floatb(marpaESLIFValuep, argi, &flagb)) {
+      goto err;
+    }
+    if (flagb) {
+      if (! _marpaESLIFValue_stack_get_floatb(marpaESLIFValuep, argi, NULL /* contextip */, &f)) {
+        goto err;
+      }
+      GENERICLOGGER_TRACEF(genericLoggerp, "%f", (double) f);
+      if (! marpaESLIF_stringGenerator.okb) {
+        goto err;
+      }
+      continue;
+    }
+  
+    /* double ? */
+    if (! _marpaESLIFValue_stack_is_doubleb(marpaESLIFValuep, argi, &flagb)) {
+      goto err;
+    }
+    if (flagb) {
+      if (! _marpaESLIFValue_stack_get_doubleb(marpaESLIFValuep, argi, NULL /* contextip */, &d)) {
+        goto err;
+      }
+      GENERICLOGGER_TRACEF(genericLoggerp, "%f", d);
+      if (! marpaESLIF_stringGenerator.okb) {
+        goto err;
+      }
+      continue;
+    }
+  
+    /* ptr ? */
+    if (! _marpaESLIFValue_stack_is_ptrb(marpaESLIFValuep, argi, &flagb)) {
+      goto err;
+    }
+    if (flagb) {
+      if (! _marpaESLIFValue_stack_get_ptrb(marpaESLIFValuep, argi, NULL /* contextip */, &p, NULL /* shallowbp */)) {
+        goto err;
+      }
+      GENERICLOGGER_TRACEF(genericLoggerp, "%p", p);
+      if (! marpaESLIF_stringGenerator.okb) {
+        goto err;
+      }
+      continue;
+    }
+  
+    /* array ? */
+    if (! _marpaESLIFValue_stack_is_arrayb(marpaESLIFValuep, argi, &flagb)) {
+      goto err;
+    }
+    if (flagb) {
+      if (! _marpaESLIFValue_stack_get_arrayb(marpaESLIFValuep, argi, NULL /* contextip */, &p, &sizel, NULL /* shallowbp */)) {
+        goto err;
+      }
+      if (p != NULL) {
+        if ((sizel > 0)) {
+          if (! _marpaESLIF_appendOpaqueDataToStringGenerator(&marpaESLIF_stringGenerator, p, sizel)) {
+            goto err;
+          }
+        } else {
+          /* sizel is == 0, this is a user-land lexeme */
+          marpaESLIFValueResult_t    *marpaESLIFValueResultp = (marpaESLIFValueResult_t *) p;
+          marpaESLIFRepresentation_t  marpaESLIFRepresentationp = marpaESLIFValueResultp->representationp;
+          if (marpaESLIFRepresentationp != NULL) {
+            char   *srcs                = NULL;
+            size_t  srcl                = 0;
+            short   characterStreamb    = 0;
+            char   *encodingOfEncodings = NULL;
+            char   *encodings           = NULL;
+            size_t  encodingl           = 0;
+            if (! marpaESLIFRepresentationp(userDatavp, marpaESLIFValueResultp, &srcs, &srcl, &characterStreamb, &encodingOfEncodings, &encodings, &encodingl)) {
+              goto err;
+            }
+
+            if (characterStreamb) {
+
+              /* Free eventual previous round */
+              if (encodingasciis != NULL) {
+                free(encodingasciis);
+                encodingasciis = NULL;
+              }
+              if (utf8s != NULL) {
+                free(utf8s);
+                utf8s = NULL;
+              }
+
+              /* Get an eventual ASCII version of input encoding */
+              if ((encodings != NULL) && (encodingl > 0)) {
+                /* Encoding is in ASCII as per IANA - we do not not conform exactly to IANA in the sense they say that non ASCII should be translated to "_" if I remember well */
+                /* We ignore non-ASCII characters. */
+                encodingasciis = _marpaESLIF_charconvp(marpaESLIFp, "ASCII//IGNORE", encodingOfEncodings, encodings, encodingl, NULL /* dstlp */, NULL /* fromEncodingsp */, NULL /* tconvpp */);
+                if (encodingasciis == NULL) {
+                  goto err;
+                }
+              }
+
+              /* Convert input */
+              utf8s = _marpaESLIF_charconvp(marpaESLIFp, "UTF-8", encodingasciis, srcs, srcl, &utf8l, NULL /* fromEncodingsp */, NULL /* tconvpp */);
+              if (utf8s == NULL) {
+                goto err;
+              }
+
+              /* Remove eventually the BOM */
+              if (! _marpaESLIFRecognizer_regex_matcherb(marpaESLIFRecognizerp, marpaESLIFp->utf8bomp, utf8s, utf8l, 1 /* eofb */, &rci, &marpaESLIFValueResult)) {
+                goto err;
+              }
+              if (rci == MARPAESLIF_MATCH_OK) {
+                utf8withoutboms = utf8s + marpaESLIFValueResult.sizel;
+                utf8withoutboml = utf8l - marpaESLIFValueResult.sizel;
+                free(marpaESLIFValueResult.u.p);
+              } else {
+                utf8withoutboms = utf8s;
+                utf8withoutboml = utf8l;
+              }
+
+              if (! _marpaESLIF_appendOpaqueDataToStringGenerator(&marpaESLIF_stringGenerator, utf8withoutboms, utf8withoutboml)) {
+                goto err;
+              }
+            }
+          } else {
+            /* No use representation: use the default */
+            switch (marpaESLIFValueResultp->type) {
+            case MARPAESLIF_VALUE_TYPE_UNDEF:
+              break;
+            case MARPAESLIF_VALUE_TYPE_CHAR:
+              GENERICLOGGER_TRACEF(genericLoggerp, "%c", marpaESLIFValueResultp->u.c);
+              if (! marpaESLIF_stringGenerator.okb) {
+                goto err;
+              }
+              break;
+            case MARPAESLIF_VALUE_TYPE_SHORT:
+              GENERICLOGGER_TRACEF(genericLoggerp, "%d", (int) marpaESLIFValueResultp->u.b);
+              if (! marpaESLIF_stringGenerator.okb) {
+                goto err;
+              }
+              break;
+            case MARPAESLIF_VALUE_TYPE_INT:
+              GENERICLOGGER_TRACEF(genericLoggerp, "%d", marpaESLIFValueResultp->u.i);
+              if (! marpaESLIF_stringGenerator.okb) {
+                goto err;
+              }
+              break;
+            case MARPAESLIF_VALUE_TYPE_LONG:
+              GENERICLOGGER_TRACEF(genericLoggerp, "%ld", marpaESLIFValueResultp->u.l);
+              if (! marpaESLIF_stringGenerator.okb) {
+                goto err;
+              }
+              break;
+            case MARPAESLIF_VALUE_TYPE_FLOAT:
+              GENERICLOGGER_TRACEF(genericLoggerp, "%f", (double) marpaESLIFValueResultp->u.f);
+              if (! marpaESLIF_stringGenerator.okb) {
+                goto err;
+              }
+              break;
+            case MARPAESLIF_VALUE_TYPE_DOUBLE:
+              GENERICLOGGER_TRACEF(genericLoggerp, "%f", marpaESLIFValueResultp->u.d);
+              if (! marpaESLIF_stringGenerator.okb) {
+                goto err;
+              }
+              break;
+            case MARPAESLIF_VALUE_TYPE_PTR:
+            case MARPAESLIF_VALUE_TYPE_PTR_SHALLOW:
+              GENERICLOGGER_TRACEF(genericLoggerp, "%p", marpaESLIFValueResultp->u.p);
+              if (! marpaESLIF_stringGenerator.okb) {
+                goto err;
+              }
+              break;
+            case MARPAESLIF_VALUE_TYPE_ARRAY:
+            case MARPAESLIF_VALUE_TYPE_ARRAY_SHALLOW:
+              if ((marpaESLIFValueResultp->u.p != NULL) && (marpaESLIFValueResultp->sizel > 0)) {
+                if (! _marpaESLIF_appendOpaqueDataToStringGenerator(&marpaESLIF_stringGenerator, (char *) marpaESLIFValueResultp->u.p, marpaESLIFValueResultp->sizel)) {
+                  goto err;
+                }
+              }
+              break;
+            default:
+              MARPAESLIF_ERRORF(marpaESLIFp, "Unsupported value type with end-user lexeme: %d", marpaESLIFValueResultp->type);
+              goto err;
+            }
+          }
+        }
       }
     }
   }
 
-  if (bytel > 0) {
-    bytep = malloc(bytel + 1); /* We always add a NUL byte for convenience */
-    if (bytep == NULL) {
-      MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
+  if (marpaESLIF_stringGenerator.l > 1) { /* Because of implicit NULL byte */
+    if (! _marpaESLIFValue_stack_set_arrayb(marpaESLIFValuep, resulti, 0 /* 0 is a value not allowed from outside */, marpaESLIF_stringGenerator.s, --marpaESLIF_stringGenerator.l, 0 /* shallowb */)) {
       goto err;
     }
-    p = (char *) bytep;
-    for (i = arg0i; i <= argni; i++) {
-      if (! _marpaESLIFValue_stack_is_arrayb(marpaESLIFValuep, i, &flagb)) {
-        goto err;
-      }
-      if (flagb) {
-        if (! _marpaESLIFValue_stack_get_arrayb(marpaESLIFValuep, i, NULL /* contextip */, &thisbytep, &thisbytel, NULL /* shallowbp */)) {
-          goto err;
-        }
-        if ((thisbytep != NULL) && (thisbytel > 0)) {
-          memcpy(p, thisbytep, thisbytel);
-          p += thisbytel;
-        }
-      }
-    }
-    ((char *) bytep)[bytel] = '\0';
-  }
-
-  if (bytel > 0) {
-    if (! _marpaESLIFValue_stack_set_arrayb(marpaESLIFValuep, resulti, 0 /* 0 is a value not allowed from outside */, bytep, bytel, 0 /* shallowb */)) {
-      goto err;
-    }
+    /* marpaESLIF_stringGenerator.s is now in the value stack - remember it */
+    marpaESLIF_stringGenerator.s = NULL;
   } else {
     if (! _marpaESLIFValue_stack_set_undefb(marpaESLIFValuep, resulti)) {
       goto err;
@@ -12305,6 +12550,21 @@ static short _marpaESLIF_rule_action___concatb(void *userDatavp, marpaESLIFValue
   rcb = 0;
 
  done:
+  if (! nullableb) {
+    if (marpaESLIF_stringGenerator.s != NULL) {
+      free(marpaESLIF_stringGenerator.s);
+    }
+    if (encodingasciis != NULL) {
+      free(encodingasciis);
+      encodingasciis = NULL;
+    }
+    if (utf8s != NULL) {
+      free(utf8s);
+      utf8s = NULL;
+    }
+    GENERICLOGGER_FREE(genericLoggerp);
+  }
+  
   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC;
   return rcb;
