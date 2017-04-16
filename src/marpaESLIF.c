@@ -12420,49 +12420,56 @@ static short _marpaESLIF_rule_action___concatb(void *userDatavp, marpaESLIFValue
               goto err;
             }
 
-            if (characterStreamb) {
+            if ((srcs != NULL) && (srcl > 0)) {
+              if (characterStreamb) {
 
-              /* Free eventual previous round */
-              if (encodingasciis != NULL) {
-                free(encodingasciis);
-                encodingasciis = NULL;
-              }
-              if (utf8s != NULL) {
-                free(utf8s);
-                utf8s = NULL;
-              }
+                /* Free eventual previous round */
+                if (encodingasciis != NULL) {
+                  free(encodingasciis);
+                  encodingasciis = NULL;
+                }
+                if (utf8s != NULL) {
+                  free(utf8s);
+                  utf8s = NULL;
+                }
 
-              /* Get an eventual ASCII version of input encoding */
-              if ((encodings != NULL) && (encodingl > 0)) {
-                /* Encoding is in ASCII as per IANA - we do not not conform exactly to IANA in the sense they say that non ASCII should be translated to "_" if I remember well */
-                /* We ignore non-ASCII characters. */
-                encodingasciis = _marpaESLIF_charconvp(marpaESLIFp, "ASCII//IGNORE", encodingOfEncodings, encodings, encodingl, NULL /* dstlp */, NULL /* fromEncodingsp */, NULL /* tconvpp */);
-                if (encodingasciis == NULL) {
+                /* Get an eventual ASCII version of input encoding */
+                if ((encodings != NULL) && (encodingl > 0)) {
+                  /* Encoding is in ASCII as per IANA - we do not not conform exactly to IANA in the sense they say that non ASCII should be translated to "_" if I remember well */
+                  /* We ignore non-ASCII characters. */
+                  encodingasciis = _marpaESLIF_charconvp(marpaESLIFp, "ASCII//IGNORE", encodingOfEncodings, encodings, encodingl, NULL /* dstlp */, NULL /* fromEncodingsp */, NULL /* tconvpp */);
+                  if (encodingasciis == NULL) {
+                    goto err;
+                  }
+                }
+
+                /* Convert and/or validate input */
+                utf8s = _marpaESLIF_charconvp(marpaESLIFp, "UTF-8", encodingasciis, srcs, srcl, &utf8l, NULL /* fromEncodingsp */, NULL /* tconvpp */);
+                if (utf8s == NULL) {
                   goto err;
                 }
-              }
 
-              /* Convert input */
-              utf8s = _marpaESLIF_charconvp(marpaESLIFp, "UTF-8", encodingasciis, srcs, srcl, &utf8l, NULL /* fromEncodingsp */, NULL /* tconvpp */);
-              if (utf8s == NULL) {
-                goto err;
-              }
+                /* Remove eventually the BOM */
+                if (! _marpaESLIFRecognizer_regex_matcherb(marpaESLIFRecognizerp, marpaESLIFp->utf8bomp, utf8s, utf8l, 1 /* eofb */, &rci, &marpaESLIFValueResult)) {
+                  goto err;
+                }
+                if (rci == MARPAESLIF_MATCH_OK) {
+                  utf8withoutboms = utf8s + marpaESLIFValueResult.sizel;
+                  utf8withoutboml = utf8l - marpaESLIFValueResult.sizel;
+                  free(marpaESLIFValueResult.u.p);
+                } else {
+                  utf8withoutboms = utf8s;
+                  utf8withoutboml = utf8l;
+                }
 
-              /* Remove eventually the BOM */
-              if (! _marpaESLIFRecognizer_regex_matcherb(marpaESLIFRecognizerp, marpaESLIFp->utf8bomp, utf8s, utf8l, 1 /* eofb */, &rci, &marpaESLIFValueResult)) {
-                goto err;
-              }
-              if (rci == MARPAESLIF_MATCH_OK) {
-                utf8withoutboms = utf8s + marpaESLIFValueResult.sizel;
-                utf8withoutboml = utf8l - marpaESLIFValueResult.sizel;
-                free(marpaESLIFValueResult.u.p);
+                if (! _marpaESLIF_appendOpaqueDataToStringGenerator(&marpaESLIF_stringGenerator, utf8withoutboms, utf8withoutboml)) {
+                  goto err;
+                }
               } else {
-                utf8withoutboms = utf8s;
-                utf8withoutboml = utf8l;
-              }
-
-              if (! _marpaESLIF_appendOpaqueDataToStringGenerator(&marpaESLIF_stringGenerator, utf8withoutboms, utf8withoutboml)) {
-                goto err;
+                /* Binary: append as-is */
+                if (! _marpaESLIF_appendOpaqueDataToStringGenerator(&marpaESLIF_stringGenerator, srcs, srcl)) {
+                  goto err;
+                }
               }
             }
           } else {
