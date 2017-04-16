@@ -9,11 +9,12 @@ typedef struct marpaESLIFOption {
   genericLogger_t *genericLoggerp;  /* Logger. Default: NULL */
 } marpaESLIFOption_t;
 
-typedef struct marpaESLIF           marpaESLIF_t;
-typedef struct marpaESLIFGrammar    marpaESLIFGrammar_t;
-typedef struct marpaESLIFRecognizer marpaESLIFRecognizer_t;
-typedef struct marpaESLIFValue      marpaESLIFValue_t;
-typedef struct marpaESLIFSymbol     marpaESLIFSymbol_t;
+typedef struct marpaESLIF            marpaESLIF_t;
+typedef struct marpaESLIFGrammar     marpaESLIFGrammar_t;
+typedef struct marpaESLIFRecognizer  marpaESLIFRecognizer_t;
+typedef struct marpaESLIFValue       marpaESLIFValue_t;
+typedef struct marpaESLIFSymbol      marpaESLIFSymbol_t;
+typedef struct marpaESLIFValueResult marpaESLIFValueResult_t;
 
 /* A string */
 typedef struct marpaESLIFString {
@@ -89,26 +90,29 @@ typedef enum marpaESLIFValueType {
 } marpaESLIFValueType_t;
 
 /* Valuation result */
+/* The representation can return encoding information, giving eventual encoding of this information in encodingOfEncodingsp, starting at *encodingsp, spreaded over *encodinglp bytes */
+typedef short (*marpaESLIFRepresentation_t)(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp, char **inputcpp, size_t *inputlp, short *characterStreambp, char **encodingOfEncodingsp, char **encodingsp, size_t *encodinglp);
 typedef struct marpaESLIFValueResult {
   marpaESLIFValueType_t type;
   union {
-    char c;          /* Value is a char */
-    short b;         /* Value is a short */
-    int i;           /* Value is an int */
-    long l;          /* Value is a long */
-    float f;         /* Value is a float */
-    double d;        /* Value is a double */
-    void *p;         /* Value is a pointer */
+    char c;                                   /* Value is a char */
+    short b;                                  /* Value is a short */
+    int i;                                    /* Value is an int */
+    long l;                                   /* Value is a long */
+    float f;                                  /* Value is a float */
+    double d;                                 /* Value is a double */
+    void *p;                                  /* Value is a pointer */
   } u;
-  int contexti;      /* Free value meaninful to the user */
-  size_t sizel;      /* Length of data in case value is an ARRAY - always 0 otherwise */
+  int contexti;                               /* Free value meaninful to the user */
+  size_t sizel;                               /* Length of data in case value is an ARRAY - always 0 otherwise */
+  marpaESLIFRepresentation_t representationp; /* How a user-land alternative is represented if it was in the input */
 } marpaESLIFValueResult_t;
 
 /* An alternative from external lexer point of view */
 typedef struct marpaESLIFAlternative {
-  char                   *lexemes;     /* Lexeme name */
-  marpaESLIFValueResult_t value;       /* Value */
-  size_t                  grammarLengthl; /* Length within the grammar (1 in the token-stream model) */
+  char                      *lexemes;     /* Lexeme name */
+  marpaESLIFValueResult_t    value;       /* Value */
+  size_t                     grammarLengthl; /* Length within the grammar (1 in the token-stream model) */
 } marpaESLIFAlternative_t;
 
 typedef struct marpaESLIFValueOption {
