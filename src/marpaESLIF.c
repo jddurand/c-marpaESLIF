@@ -30,12 +30,16 @@
 
 #define MARPAESLIFRECOGNIZER_RESET_EVENTS(marpaESLIFRecognizerp) (marpaESLIFRecognizerp)->eventArrayl = 0
 
+/* This macro make sure we return a multiple of (chunk) that is always at least ONE BYTE more than (size) */
+#define MARPAESLIF_CHUNKED_SIZE_UPPER(size, chunk) ((size) < (chunk)) ? (chunk) : ((1 + ((size) / (chunk))) * (chunk))
+
 /* This is very internal: I use the genericLogger to generate strings */
 typedef struct marpaESLIF_stringGenerator {
   marpaESLIF_t *marpaESLIFp;
-  char         *s;
-  size_t        l;
-  short         okb;
+  char         *s;      /* Pointer */
+  size_t        l;      /* Used size */
+  short         okb;    /* Status */
+  size_t        allocl; /* Allocate size */
 } marpaESLIF_stringGenerator_t;
 
 #undef  FILENAMES
@@ -2286,6 +2290,7 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_grammar_newp(marpaESLIF_t *marpa
     marpaESLIF_stringGenerator.s           = NULL;
     marpaESLIF_stringGenerator.l           = 0;
     marpaESLIF_stringGenerator.okb         = 0;
+    marpaESLIF_stringGenerator.allocl      = 0;
 
     genericLoggerp = GENERICLOGGER_CUSTOM(_marpaESLIF_generateStringWithLoggerCallback, (void *) &marpaESLIF_stringGenerator, GENERICLOGGER_LOGLEVEL_TRACE);
     if (genericLoggerp == NULL) {
@@ -2766,6 +2771,7 @@ static inline marpaESLIF_rule_t *_marpaESLIF_rule_newp(marpaESLIF_t *marpaESLIFp
     marpaESLIF_stringGenerator.s           = NULL;
     marpaESLIF_stringGenerator.l           = 0;
     marpaESLIF_stringGenerator.okb         = 0;
+    marpaESLIF_stringGenerator.allocl      = 0;
 
     genericLoggerp = GENERICLOGGER_CUSTOM(_marpaESLIF_generateStringWithLoggerCallback, (void *) &marpaESLIF_stringGenerator, GENERICLOGGER_LOGLEVEL_TRACE);
     if (genericLoggerp == NULL) {
@@ -7186,26 +7192,53 @@ static inline short _marpaESLIF_appendOpaqueDataToStringGenerator(marpaESLIF_str
   static const char *funcs = "_marpaESLIF_appendOpaqueDataToStringGenerator";
   char              *tmpp;
   short              rcb;
+  size_t             allocl;
+  size_t             wantedl;
 
   /* Note: caller must guarantee that marpaESLIF_stringGeneratorp->marpaESLIFp, p != NULL and l > 0 */
+
   if (marpaESLIF_stringGeneratorp->s == NULL) {
-    marpaESLIF_stringGeneratorp->s  = malloc(sizel + 1);
+    /* Get an allocl that is a multiple of 1024 */
+    /* 1023 -> 1024 */
+    /* 1024 -> 2048 */
+    /* 2047 -> 2048 */
+    /* 2048 -> 3072 */
+    /* ... */
+    /* i.e. this is the upper multiple of 1024 and have space for the NUL byte */
+    allocl = MARPAESLIF_CHUNKED_SIZE_UPPER(sizel, 1024);
+    /* Check for turn-around, should never happen */
+    if (allocl < sizel) {
+      MARPAESLIF_ERROR(marpaESLIF_stringGeneratorp->marpaESLIFp, "size_t turnaround detected");
+      goto err;
+    }
+    marpaESLIF_stringGeneratorp->s  = malloc(allocl);
     if (marpaESLIF_stringGeneratorp->s == NULL) {
       MARPAESLIF_ERRORF(marpaESLIF_stringGeneratorp->marpaESLIFp, "malloc failure, %s", strerror(errno));
       goto err;
     }
     memcpy(marpaESLIF_stringGeneratorp->s, p, sizel);
-    marpaESLIF_stringGeneratorp->l = sizel + 1;
-    marpaESLIF_stringGeneratorp->okb = 1;
+    marpaESLIF_stringGeneratorp->allocl = allocl;
+    marpaESLIF_stringGeneratorp->l      = sizel + 1;  /* NUL byte is set at exit of the routine */
+    marpaESLIF_stringGeneratorp->okb    = 1;
   } else if (marpaESLIF_stringGeneratorp->okb) {
-    tmpp = realloc(marpaESLIF_stringGeneratorp->s, marpaESLIF_stringGeneratorp->l + sizel); /* The +1 for the NULL byte is already in */
-    if (tmpp == NULL) {
-      MARPAESLIF_ERRORF(marpaESLIF_stringGeneratorp->marpaESLIFp, "realloc failure, %s", strerror(errno));
+    wantedl = marpaESLIF_stringGeneratorp->l + sizel; /* +1 for the NUL is already accounted in marpaESLIF_stringGeneratorp->l */
+    allocl = MARPAESLIF_CHUNKED_SIZE_UPPER(wantedl, 1024);
+    /* Check for turn-around, should never happen */
+    if (allocl < wantedl) {
+      MARPAESLIF_ERROR(marpaESLIF_stringGeneratorp->marpaESLIFp, "size_t turnaround detected");
       goto err;
     }
-    marpaESLIF_stringGeneratorp->s  = tmpp;
+    if (allocl > marpaESLIF_stringGeneratorp->allocl) {
+      tmpp = realloc(marpaESLIF_stringGeneratorp->s, allocl); /* The +1 for the NULL byte is already in */
+      if (tmpp == NULL) {
+        MARPAESLIF_ERRORF(marpaESLIF_stringGeneratorp->marpaESLIFp, "realloc failure, %s", strerror(errno));
+        goto err;
+      }
+      marpaESLIF_stringGeneratorp->s      = tmpp;
+      marpaESLIF_stringGeneratorp->allocl = allocl;
+    }
     memcpy(marpaESLIF_stringGeneratorp->s + marpaESLIF_stringGeneratorp->l - 1, p, sizel);
-    marpaESLIF_stringGeneratorp->l += sizel;
+    marpaESLIF_stringGeneratorp->l = wantedl; /* Already contains the +1 fir the NUL byte */
   } else {
     MARPAESLIF_ERRORF(marpaESLIF_stringGeneratorp->marpaESLIFp, "Invalid internal call to %s", funcs);
     goto err;
@@ -7220,8 +7253,9 @@ static inline short _marpaESLIF_appendOpaqueDataToStringGenerator(marpaESLIF_str
     free(marpaESLIF_stringGeneratorp->s);
     marpaESLIF_stringGeneratorp->s = NULL;
   }
-  marpaESLIF_stringGeneratorp->okb = 0;
-  marpaESLIF_stringGeneratorp->l   = 0;
+  marpaESLIF_stringGeneratorp->okb    = 0;
+  marpaESLIF_stringGeneratorp->l      = 0;
+  marpaESLIF_stringGeneratorp->allocl = 0;
   rcb = 0;
 
  done:
@@ -8821,6 +8855,8 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIFGrammar_t *marpaESL
     marpaESLIF_stringGenerator.s           = NULL;
     marpaESLIF_stringGenerator.l           = 0;
     marpaESLIF_stringGenerator.okb         = 0;
+    marpaESLIF_stringGenerator.allocl      = 0;
+
     genericLoggerp = GENERICLOGGER_CUSTOM(_marpaESLIF_generateStringWithLoggerCallback, (void *) &marpaESLIF_stringGenerator, GENERICLOGGER_LOGLEVEL_TRACE);
     if (genericLoggerp != NULL) {
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "\n");
@@ -8937,6 +8973,8 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIFGrammar_t *marpaESL
         marpaESLIF_stringGenerator.s           = NULL;
         marpaESLIF_stringGenerator.l           = 0;
         marpaESLIF_stringGenerator.okb         = 0;
+        marpaESLIF_stringGenerator.allocl      = 0;
+
         genericLoggerp = GENERICLOGGER_CUSTOM(_marpaESLIF_generateStringWithLoggerCallback, (void *) &marpaESLIF_stringGenerator, GENERICLOGGER_LOGLEVEL_TRACE);
         if (genericLoggerp != NULL) {
           size_t i;
@@ -8987,6 +9025,8 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIFGrammar_t *marpaESL
       marpaESLIF_stringGenerator.s           = NULL;
       marpaESLIF_stringGenerator.l           = 0;
       marpaESLIF_stringGenerator.okb         = 0;
+      marpaESLIF_stringGenerator.allocl      = 0;
+
       genericLoggerp = GENERICLOGGER_CUSTOM(_marpaESLIF_generateSeparatedStringWithLoggerCallback, (void *) &marpaESLIF_stringGenerator, GENERICLOGGER_LOGLEVEL_TRACE);
       if (genericLoggerp != NULL) {
         pcre2Errornumberi = pcre2_pattern_info(symbolp->u.terminalp->regex.patternp, PCRE2_INFO_ALLOPTIONS, &pcre2Optioni);
@@ -12271,6 +12311,7 @@ static short _marpaESLIF_rule_action___concatb(void *userDatavp, marpaESLIFValue
   marpaESLIF_stringGenerator.s           = NULL;
   marpaESLIF_stringGenerator.l           = 0;
   marpaESLIF_stringGenerator.okb         = 0;
+  marpaESLIF_stringGenerator.allocl      = 0;
 
   genericLoggerp = GENERICLOGGER_CUSTOM(_marpaESLIF_generateStringWithLoggerCallback, (void *) &marpaESLIF_stringGenerator, GENERICLOGGER_LOGLEVEL_TRACE);
   if (genericLoggerp == NULL) {
@@ -12295,8 +12336,7 @@ static short _marpaESLIF_rule_action___concatb(void *userDatavp, marpaESLIFValue
       if (! _marpaESLIFValue_stack_get_charb(marpaESLIFValuep, argi, NULL /* contextip */, &c)) {
         goto err;
       }
-      GENERICLOGGER_TRACEF(genericLoggerp, "%c", c);
-      if (! marpaESLIF_stringGenerator.okb) {
+      if (! _marpaESLIF_appendOpaqueDataToStringGenerator(&marpaESLIF_stringGenerator, &c, sizeof(char))) {
         goto err;
       }
       continue;
@@ -12310,8 +12350,7 @@ static short _marpaESLIF_rule_action___concatb(void *userDatavp, marpaESLIFValue
       if (! _marpaESLIFValue_stack_get_shortb(marpaESLIFValuep, argi, NULL /* contextip */, &b)) {
         goto err;
       }
-      GENERICLOGGER_TRACEF(genericLoggerp, "%d", (int) b);
-      if (! marpaESLIF_stringGenerator.okb) {
+      if (! _marpaESLIF_appendOpaqueDataToStringGenerator(&marpaESLIF_stringGenerator, (char *) &b, sizeof(short))) {
         goto err;
       }
       continue;
@@ -12325,8 +12364,7 @@ static short _marpaESLIF_rule_action___concatb(void *userDatavp, marpaESLIFValue
       if (! _marpaESLIFValue_stack_get_intb(marpaESLIFValuep, argi, NULL /* contextip */, &i)) {
         goto err;
       }
-      GENERICLOGGER_TRACEF(genericLoggerp, "%d", i);
-      if (! marpaESLIF_stringGenerator.okb) {
+      if (! _marpaESLIF_appendOpaqueDataToStringGenerator(&marpaESLIF_stringGenerator, (char *) &i, sizeof(int))) {
         goto err;
       }
       continue;
@@ -12340,8 +12378,7 @@ static short _marpaESLIF_rule_action___concatb(void *userDatavp, marpaESLIFValue
       if (! _marpaESLIFValue_stack_get_longb(marpaESLIFValuep, argi, NULL /* contextip */, &l)) {
         goto err;
       }
-      GENERICLOGGER_TRACEF(genericLoggerp, "%ld", l);
-      if (! marpaESLIF_stringGenerator.okb) {
+      if (! _marpaESLIF_appendOpaqueDataToStringGenerator(&marpaESLIF_stringGenerator, (char *) &l, sizeof(long))) {
         goto err;
       }
       continue;
@@ -12355,8 +12392,7 @@ static short _marpaESLIF_rule_action___concatb(void *userDatavp, marpaESLIFValue
       if (! _marpaESLIFValue_stack_get_floatb(marpaESLIFValuep, argi, NULL /* contextip */, &f)) {
         goto err;
       }
-      GENERICLOGGER_TRACEF(genericLoggerp, "%f", (double) f);
-      if (! marpaESLIF_stringGenerator.okb) {
+      if (! _marpaESLIF_appendOpaqueDataToStringGenerator(&marpaESLIF_stringGenerator, (char *) &f, sizeof(float))) {
         goto err;
       }
       continue;
@@ -12370,8 +12406,7 @@ static short _marpaESLIF_rule_action___concatb(void *userDatavp, marpaESLIFValue
       if (! _marpaESLIFValue_stack_get_doubleb(marpaESLIFValuep, argi, NULL /* contextip */, &d)) {
         goto err;
       }
-      GENERICLOGGER_TRACEF(genericLoggerp, "%f", d);
-      if (! marpaESLIF_stringGenerator.okb) {
+      if (! _marpaESLIF_appendOpaqueDataToStringGenerator(&marpaESLIF_stringGenerator, (char *) &d, sizeof(double))) {
         goto err;
       }
       continue;
@@ -12385,8 +12420,7 @@ static short _marpaESLIF_rule_action___concatb(void *userDatavp, marpaESLIFValue
       if (! _marpaESLIFValue_stack_get_ptrb(marpaESLIFValuep, argi, NULL /* contextip */, &p, NULL /* shallowbp */)) {
         goto err;
       }
-      GENERICLOGGER_TRACEF(genericLoggerp, "%p", p);
-      if (! marpaESLIF_stringGenerator.okb) {
+      if (! _marpaESLIF_appendOpaqueDataToStringGenerator(&marpaESLIF_stringGenerator, (char *) &p, sizeof(void *))) {
         goto err;
       }
       continue;
@@ -12478,45 +12512,38 @@ static short _marpaESLIF_rule_action___concatb(void *userDatavp, marpaESLIFValue
             case MARPAESLIF_VALUE_TYPE_UNDEF:
               break;
             case MARPAESLIF_VALUE_TYPE_CHAR:
-              GENERICLOGGER_TRACEF(genericLoggerp, "%c", marpaESLIFValueResultp->u.c);
-              if (! marpaESLIF_stringGenerator.okb) {
+              if (! _marpaESLIF_appendOpaqueDataToStringGenerator(&marpaESLIF_stringGenerator, (char *) &(marpaESLIFValueResultp->u.c), sizeof(char))) {
                 goto err;
               }
               break;
             case MARPAESLIF_VALUE_TYPE_SHORT:
-              GENERICLOGGER_TRACEF(genericLoggerp, "%d", (int) marpaESLIFValueResultp->u.b);
-              if (! marpaESLIF_stringGenerator.okb) {
+              if (! _marpaESLIF_appendOpaqueDataToStringGenerator(&marpaESLIF_stringGenerator, (char *) &(marpaESLIFValueResultp->u.b), sizeof(short))) {
                 goto err;
               }
               break;
             case MARPAESLIF_VALUE_TYPE_INT:
-              GENERICLOGGER_TRACEF(genericLoggerp, "%d", marpaESLIFValueResultp->u.i);
-              if (! marpaESLIF_stringGenerator.okb) {
+              if (! _marpaESLIF_appendOpaqueDataToStringGenerator(&marpaESLIF_stringGenerator, (char *) &(marpaESLIFValueResultp->u.i), sizeof(int))) {
                 goto err;
               }
               break;
             case MARPAESLIF_VALUE_TYPE_LONG:
-              GENERICLOGGER_TRACEF(genericLoggerp, "%ld", marpaESLIFValueResultp->u.l);
-              if (! marpaESLIF_stringGenerator.okb) {
+              if (! _marpaESLIF_appendOpaqueDataToStringGenerator(&marpaESLIF_stringGenerator, (char *) &(marpaESLIFValueResultp->u.l), sizeof(long))) {
                 goto err;
               }
               break;
             case MARPAESLIF_VALUE_TYPE_FLOAT:
-              GENERICLOGGER_TRACEF(genericLoggerp, "%f", (double) marpaESLIFValueResultp->u.f);
-              if (! marpaESLIF_stringGenerator.okb) {
+              if (! _marpaESLIF_appendOpaqueDataToStringGenerator(&marpaESLIF_stringGenerator, (char *) &(marpaESLIFValueResultp->u.f), sizeof(float))) {
                 goto err;
               }
               break;
             case MARPAESLIF_VALUE_TYPE_DOUBLE:
-              GENERICLOGGER_TRACEF(genericLoggerp, "%f", marpaESLIFValueResultp->u.d);
-              if (! marpaESLIF_stringGenerator.okb) {
+              if (! _marpaESLIF_appendOpaqueDataToStringGenerator(&marpaESLIF_stringGenerator, (char *) &(marpaESLIFValueResultp->u.d), sizeof(double))) {
                 goto err;
               }
               break;
             case MARPAESLIF_VALUE_TYPE_PTR:
             case MARPAESLIF_VALUE_TYPE_PTR_SHALLOW:
-              GENERICLOGGER_TRACEF(genericLoggerp, "%p", marpaESLIFValueResultp->u.p);
-              if (! marpaESLIF_stringGenerator.okb) {
+              if (! _marpaESLIF_appendOpaqueDataToStringGenerator(&marpaESLIF_stringGenerator, (char *) &(marpaESLIFValueResultp->u.p), sizeof(void *))) {
                 goto err;
               }
               break;
