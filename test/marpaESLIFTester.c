@@ -11,6 +11,7 @@ static short                           default_lexeme_actionb(void *userDatavp, 
 static short                           inputReaderb(void *userDatavp, char **inputsp, size_t *inputlp, short *eofbp, short *characterStreambp, char **encodingOfEncodingsp, char **encodingsp, size_t *encodinglp);
 static short                           eventManagerb(int *eventCountip, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, genericLogger_t *genericLoggerp);
 static void                            genericLoggerCallback(void *userDatavp, genericLoggerLevel_t logLeveli, const char *msgs);
+static short                           alternativeRepresentation(void *userDatavp, marpaESLIFValueResult_t *valueResultp, char **inputcpp, size_t *inputlp, short *characterStreambp, char **encodingOfEncodingsp, char **encodingsp, size_t *encodinglp);
 
 typedef struct marpaESLIFTester_context {
   genericLogger_t *genericLoggerp;
@@ -359,12 +360,13 @@ static short eventManagerb(int *eventCountip, marpaESLIFRecognizer_t *marpaESLIF
       GENERICLOGGER_INFOF(genericLoggerp, "[%3d] Event %s for symbol <%s> (character is %c (0x%lx), eofb is %d)", *eventCountip, eventArrayp[eventArrayIteratorl].events, eventArrayp[eventArrayIteratorl].symbols, *inputs, (unsigned long) *inputs, (int) eofb);
       if (strcmp(eventArrayp[eventArrayIteratorl].events, "^[a-zA-Z0-9_:]") == 0) {
         GENERICLOGGER_INFOF(genericLoggerp, "[%3d] ... Pushing single alternative <%s>", *eventCountip, eventArrayp[eventArrayIteratorl].symbols);
-        marpaESLIFAlternative.lexemes        = eventArrayp[eventArrayIteratorl].symbols;
-        marpaESLIFAlternative.value.type     = MARPAESLIF_VALUE_TYPE_CHAR;
-        marpaESLIFAlternative.value.u.c      = *inputs;
-        marpaESLIFAlternative.value.contexti =  0; /* Not used */
-        marpaESLIFAlternative.value.sizel    =  0; /* Not used */
-        marpaESLIFAlternative.grammarLengthl = 1;
+        marpaESLIFAlternative.lexemes               = eventArrayp[eventArrayIteratorl].symbols;
+        marpaESLIFAlternative.value.type            = MARPAESLIF_VALUE_TYPE_CHAR;
+        marpaESLIFAlternative.value.u.c             = *inputs;
+        marpaESLIFAlternative.value.contexti        =  0; /* Not used */
+        marpaESLIFAlternative.value.sizel           =  0; /* Not used */
+        marpaESLIFAlternative.value.representationp = alternativeRepresentation;
+        marpaESLIFAlternative.grammarLengthl        = 1;
         if (! marpaESLIFRecognizer_lexeme_readb(marpaESLIFRecognizerp, &marpaESLIFAlternative, 1 /* Length in the real input */)) {
           goto err;
         }
@@ -447,3 +449,15 @@ static void genericLoggerCallback(void *userDatavp, genericLoggerLevel_t logLeve
     break;
   }
 }
+
+/*****************************************************************************/
+static short alternativeRepresentation(void *userDatavp, marpaESLIFValueResult_t *valueResultp, char **inputcpp, size_t *inputlp, short *characterStreambp, char **encodingOfEncodingsp, char **encodingsp, size_t *encodinglp)
+/*****************************************************************************/
+{
+  /* We know that we are pushing a CHAR */
+
+  *inputcpp          = &valueResultp->u.c;
+  *inputlp           = 1;
+  *characterStreambp = 1;
+}
+
