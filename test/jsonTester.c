@@ -78,6 +78,9 @@ int main() {
   int                          i;
   char                        *pauses;
   size_t                       pausel;
+  size_t                       linel;
+  size_t                       columnl;
+
   const static char           *inputs[] = {
     "{\"test\":\"1\"}",
     "{\"test\":[1,2,3]}",
@@ -226,10 +229,13 @@ int main() {
 
     while (continueb) {
       /* We have a single event, no need to ask what it is */
+      if (! marpaESLIFRecognizer_locationb(marpaESLIFRecognizerp, &linel, &columnl)) {
+        goto err;
+      }
       if (! marpaESLIFRecognizer_lexeme_last_pauseb(marpaESLIFRecognizerp, "lstring", &pauses, &pausel)) {
         goto err;
       }
-      GENERICLOGGER_INFOF(genericLoggerp, "Got lstring: %s; length=%ld", pauses, pausel);
+      GENERICLOGGER_INFOF(genericLoggerp, "Got lstring: %s; length=%ld, current position is {line, column} = {%ld, ld}", pauses, (unsigned long) pausel, (unsigned long) linel, (unsigned long) columnl);
 
       /* Resume */
       if (! marpaESLIFRecognizer_resumeb(marpaESLIFRecognizerp, 0, &continueb, &exhaustedb)) {
