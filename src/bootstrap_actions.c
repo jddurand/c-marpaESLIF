@@ -2862,7 +2862,7 @@ static short _marpaESLIF_bootstrap_G1_action_single_symbol_4b(void *userDatavp, 
     goto err;
   }
 
-  /* action is the result of ::shift, i.e. a lexeme in any case  */
+  /* action is the result of ::transfer, i.e. a lexeme in any case  */
   if (! marpaESLIFValue_stack_getAndForget_arrayb(marpaESLIFValuep, arg0i, NULL /* contextip */, &bytep, &bytel, NULL /* shallowbp */)) {
     goto err;
   }

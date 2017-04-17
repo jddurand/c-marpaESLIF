@@ -29,6 +29,7 @@ typedef struct  marpaESLIF_cloneContext    marpaESLIF_cloneContext_t;
 typedef         marpaESLIFValueType_t      marpaESLIF_stack_type_t;
 typedef struct  marpaESLIF_lexeme_data     marpaESLIF_lexeme_data_t;
 typedef struct  marpaESLIF_alternative     marpaESLIF_alternative_t;
+typedef struct  marpaESLIF_stringGenerator marpaESLIF_stringGenerator_t;
 
 /* Symbol types */
 enum marpaESLIF_symbol_type {
@@ -232,23 +233,32 @@ struct marpaESLIFGrammar {
   short                     autorankb;         /* Current autorank setting */
 };
 
+struct marpaESLIF_stringGenerator {
+  marpaESLIF_t *marpaESLIFp;
+  char         *s;      /* Pointer */
+  size_t        l;      /* Used size */
+  short         okb;    /* Status */
+  size_t        allocl; /* Allocated size */
+};
+
 struct marpaESLIFValue {
-  marpaESLIF_t             *marpaESLIFp;
-  marpaESLIFRecognizer_t   *marpaESLIFRecognizerp;
-  marpaESLIFValueOption_t   marpaESLIFValueOption;
-  marpaWrapperValue_t      *marpaWrapperValuep;
-  marpaWrapperAsfValue_t   *marpaWrapperAsfValuep;
-  short                     previousPassWasPassthroughb;
-  int                       previousArg0i;
-  int                       previousArgni;
-  genericStack_t           *valueStackp;
-  genericStack_t           *typeStackp;
-  genericStack_t           *contextStackp;
-  short                     inValuationb;
-  marpaESLIF_symbol_t      *symbolp;
-  marpaESLIF_rule_t        *rulep;
-  char                     *actions;
-  int                       wantedOutputStacki;
+  marpaESLIF_t                *marpaESLIFp;
+  marpaESLIFRecognizer_t      *marpaESLIFRecognizerp;
+  marpaESLIFValueOption_t      marpaESLIFValueOption;
+  marpaWrapperValue_t         *marpaWrapperValuep;
+  marpaWrapperAsfValue_t      *marpaWrapperAsfValuep;
+  short                        previousPassWasPassthroughb;
+  int                          previousArg0i;
+  int                          previousArgni;
+  genericStack_t              *valueStackp;
+  genericStack_t              *typeStackp;
+  genericStack_t              *contextStackp;
+  short                        inValuationb;
+  marpaESLIF_symbol_t         *symbolp;
+  marpaESLIF_rule_t           *rulep;
+  char                        *actions;
+  int                          wantedOutputStacki;
+  marpaESLIF_stringGenerator_t marpaESLIF_stringGenerator; /* Concatenation of input up to this point */
 };
 
 struct marpaESLIFRecognizer {
