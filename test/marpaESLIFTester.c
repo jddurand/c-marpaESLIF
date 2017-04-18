@@ -82,12 +82,13 @@ int main() {
   marpaESLIFValue_t           *marpaESLIFValuep = NULL;
   short                        continueb;
   short                        exhaustedb;
-  const static char           *inputs = "abc 123de@ @f";
+  const static char           *inputs = "abc:123de@ @f";
   short                        rcValueb;
   int                          eventCounti = 0;
   size_t                       nLexemel;
   size_t                       lexemel;
   char                       **lexemesArrayp;
+  marpaESLIFValueResult_t      marpaESLIFValueResult;
 
   genericLoggerp = genericLogger_newp(genericLoggerCallback, NULL /* userDatavp */, GENERICLOGGER_LOGLEVEL_DEBUG);
 
@@ -189,18 +190,27 @@ int main() {
   marpaESLIFValueOption.nullb                  = 0;
   marpaESLIFValueOption.maxParsesi             = 0;
 
-  /* genericLogger_logLevel_seti(genericLoggerp, GENERICLOGGER_LOGLEVEL_TRACE); */
+  genericLogger_logLevel_seti(genericLoggerp, GENERICLOGGER_LOGLEVEL_TRACE);
   marpaESLIFValuep = marpaESLIFValue_newp(marpaESLIFRecognizerp, &marpaESLIFValueOption);
   if (marpaESLIFValuep == NULL) {
     goto err;
   }
 
   while (1) {
-    rcValueb = marpaESLIFValue_valueb(marpaESLIFValuep, NULL);
+    rcValueb = marpaESLIFValue_valueb(marpaESLIFValuep, &marpaESLIFValueResult);
     if (rcValueb < 0) {
       goto err;
     } else if (rcValueb == 0) {
       break;
+    } else {
+      /* We use the default that is ::concat, i.e. it is guaranteed to a NUL byte terminated array */
+      /* and in our case we made sure input is ASCII compliant... */
+      if (marpaESLIFValueResult.u.p != NULL) {
+        GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "Value result: %s", marpaESLIFValueResult.u.p);
+        free(marpaESLIFValueResult.u.p);
+      } else {
+        GENERICLOGGER_WARN(marpaESLIFOption.genericLoggerp, "Value result is NULL");
+      }
     }
   }
 
@@ -365,7 +375,9 @@ static short eventManagerb(int *eventCountip, marpaESLIFRecognizer_t *marpaESLIF
         marpaESLIFAlternative.value.u.c             = *inputs;
         marpaESLIFAlternative.value.contexti        =  0; /* Not used */
         marpaESLIFAlternative.value.sizel           =  0; /* Not used */
-        marpaESLIFAlternative.value.representationp = alternativeRepresentation;
+        /* We push a MARPAESLIF_VALUE_TYPE_CHAR : default representation is ok */
+        marpaESLIFAlternative.value.representationp = NULL;
+        /* marpaESLIFAlternative.value.representationp = alternativeRepresentation; */
         marpaESLIFAlternative.grammarLengthl        = 1;
         if (! marpaESLIFRecognizer_lexeme_readb(marpaESLIFRecognizerp, &marpaESLIFAlternative, 1 /* Length in the real input */)) {
           goto err;
