@@ -155,6 +155,7 @@ struct marpaESLIFSymbol {
   char                        *nullableActions;        /* Nullable semantic */
   int                          propertyBitSet;
   genericStack_t              *lhsRuleStackp;          /* Stack of rules having this symbol as LHS */
+  short                        grammarEventsInternalb; /* If true, any grammar event on this symbol will remain internal */
 };
 
 /* A rule */
