@@ -1754,6 +1754,7 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
             MARPAESLIF_ERRORF(marpaESLIFp, "symbolp->lhsRuleStackp push failure, %s", strerror(errno));
             goto err;
           }
+          break;
         }
       }
       symbolp->lhsb = lhsb;
