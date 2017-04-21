@@ -55,7 +55,6 @@ ENDFOREACH ()
 ###############
 MYPACKAGETESTEXECUTABLE(marpaESLIFTester     test/marpaESLIFTester.c)
 MYPACKAGETESTEXECUTABLE(adventTester         test/adventTester.c)
-MYPACKAGETESTEXECUTABLE(russellParadoxTester test/russellParadoxTester.c)
 MYPACKAGETESTEXECUTABLE(jsonTester           test/jsonTester.c)
 MYPACKAGETESTEXECUTABLE(selfTester           test/selfTester.c)
 
@@ -72,7 +71,6 @@ MYPACKAGEDEPENDENCY (tconv         "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/
 #########
 MYPACKAGECHECK(marpaESLIFTester)
 MYPACKAGECHECK(adventTester)
-MYPACKAGECHECK(russellParadoxTester)
 MYPACKAGECHECK(jsonTester)
 MYPACKAGECHECK(selfTester)
 
