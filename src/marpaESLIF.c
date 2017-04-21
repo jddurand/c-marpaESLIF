@@ -2749,7 +2749,12 @@ static inline marpaESLIF_rule_t *_marpaESLIF_rule_newp(marpaESLIF_t *marpaESLIFp
       goto err;
     }
     rulep->exceptionp = GENERICSTACK_GET_PTR(grammarp->symbolStackp, exceptioni);
-}
+    /* ... and make sure that there is only one RHS */
+    if (nrhsl != 1) {
+      MARPAESLIF_ERRORF(marpaESLIFp, "At grammar level %d, rule %s: There must be exactly one RHS, instead of %ld, before the '-' exception sign", grammarp->leveli, rulep->descp->asciis, (unsigned long) nrhsl);
+      goto err;
+    }
+  }
   
   marpaWrapperGrammarRuleOption.ranki            = ranki;
   marpaWrapperGrammarRuleOption.nullRanksHighb   = nullRanksHighb;
