@@ -221,6 +221,22 @@ sub _dircopy {
         next if $_ =~ /\..?sh$/;
         next if $_ =~ /\.3$/;
         next if $_ =~ /\.3\.gz$/;
+        next if $_ =~ /\.o(?:bj)?$/;
+        next if $_ =~ /\.pdb$/;
+        next if $_ =~ /\.tlog$/;
+        next if $_ =~ /\.vcxproj$/;
+        next if $_ =~ /\.vcxproj\.filters$/;
+        next if $_ =~ /\.vcxproj\.user$/;
+        next if $_ =~ /\.opensdf$/;
+        next if $_ =~ /\.sln$/;
+        next if $_ =~ /\.suo$/;
+        next if $_ =~ /\.sdf$/;
+        next if $_ =~ /\.dir$/;
+        next if $_ =~ /\.psess$/;
+        next if $_ =~ /\.vsp$/;
+        next if $_ eq 'Testing';
+        next if $_ eq 'Win32';
+        next if $_ eq 'ipch';
 
         my $mode = $stats->{$_}->[2];
 
