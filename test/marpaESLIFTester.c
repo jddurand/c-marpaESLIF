@@ -28,32 +28,15 @@ const static char *exceptions = "\n"
   "event start$ = completed start\n"
   "start ::= thisstart - startException\n"
   "\n"
-  "event ^thisstart = predicted thisstart\n"
-  "event thisstart[] = nulled thisstart\n"
-  "event thisstart$ = completed thisstart\n"
-  "thisstart ::= chars hereiam\n"
+  "thisstart ~ chars\n"
   "\n"
-  "event ^hereiam = predicted hereiam\n"
-  "event hereiam[] = nulled hereiam\n"
-  "event hereiam = completed hereiam\n"
-  "hereiam ::= \n"
+  "chars ~ char*\n"
   "\n"
-  "event ^chars = predicted chars\n"
-  "event chars[] = nulled chars\n"
-  "event chars$ = completed chars\n"
-  "chars ::= char*\n"
-  "\n"
-  "event ^char = predicted start\n"
-  "event char[] = nulled start\n"
-  "event char$ = completed start\n"
   ":lexeme ::= <char> pause => before event => ^[a-zA-Z0-9_:]\n"
   ":lexeme ::= <char> pause => after event => [a-zA-Z0-9_:]$\n"
   "char ~ [a-zA-Z0-9_:]\n"
   "\n"
-  "event ^start_exception = predicted startException\n"
-  "event start_exception[] = nulled startException\n"
-  "event start_exception$ = completed startException\n"
-  "startException ::= chars ':' chars\n"
+  "startException ~ chars ':' chars\n"
   "\n"
   "event ^whitespace = predicted whitespace\n"
   "event whitespace[] = nulled whitespace\n"
@@ -149,6 +132,7 @@ int main() {
   if (marpaESLIFRecognizerp == NULL) {
     goto err;
   }
+  genericLogger_logLevel_seti(genericLoggerp, GENERICLOGGER_LOGLEVEL_TRACE);
   if (! marpaESLIFRecognizer_scanb(marpaESLIFRecognizerp, 1 /* initialEventsb */, &continueb, &exhaustedb)) {
     goto err;
   }
@@ -190,7 +174,6 @@ int main() {
   marpaESLIFValueOption.nullb                  = 0;
   marpaESLIFValueOption.maxParsesi             = 0;
 
-  genericLogger_logLevel_seti(genericLoggerp, GENERICLOGGER_LOGLEVEL_TRACE);
   marpaESLIFValuep = marpaESLIFValue_newp(marpaESLIFRecognizerp, &marpaESLIFValueOption);
   if (marpaESLIFValuep == NULL) {
     goto err;

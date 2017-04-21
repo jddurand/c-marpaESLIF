@@ -2878,10 +2878,11 @@ static short _marpaESLIF_bootstrap_G1_action_single_symbol_4b(void *userDatavp, 
                                                      NULL, /* marpaESLIFRecognizerOptionp */
                                                      0, /* discardb - no effect anway because we are in fake mode */
                                                      1, /* noEventb - no effect anway because we are in fake mode */
-                                                     NULL, /* exceptionStackp */
                                                      0, /* silentb */
                                                      NULL, /* marpaESLIFRecognizerParentp */
-                                                     1 /* fakeb */);
+                                                     1, /* fakeb */
+                                                     0, /* exceptionb */
+                                                     0 /* minExceptionSizel */);
   if (marpaESLIFRecognizerp == NULL) {
     goto err;
   }
@@ -4894,10 +4895,11 @@ static inline marpaESLIF_bootstrap_utf_string_t *_marpaESLIF_bootstrap_regex_to_
                                                      NULL, /* marpaESLIFRecognizerOptionp */
                                                      0, /* discardb - no effect anway because we are in fake mode */
                                                      1, /* noEventb - no effect anway because we are in fake mode */
-                                                     NULL, /* exceptionStackp */
                                                      0, /* silentb */
                                                      NULL, /* marpaESLIFRecognizerParentp */
-                                                     1 /* fakeb */);
+                                                     1, /* fakeb */
+                                                     0, /* exceptionb */
+                                                     0 /* minExceptionSizel */);
   if (marpaESLIFRecognizerp == NULL) {
     goto err;
   }
@@ -5006,10 +5008,11 @@ static inline marpaESLIF_bootstrap_utf_string_t *_marpaESLIF_bootstrap_character
                                                      NULL, /* marpaESLIFRecognizerOptionp */
                                                      0, /* discardb */
                                                      1, /* noEventb - no effect anway because we are in fake mode */
-                                                     NULL, /* exceptionStackp */
                                                      0, /* silentb */
                                                      NULL, /* marpaESLIFRecognizerParentp */
-                                                     1 /* fakeb */);
+                                                     1, /* fakeb */
+                                                     0, /* exceptionb */
+                                                     0 /* minExceptionSizel */);
   if (marpaESLIFRecognizerp == NULL) {
     goto err;
   }
