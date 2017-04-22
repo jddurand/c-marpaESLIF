@@ -1945,6 +1945,12 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
       marpaESLIF_cloneContext.grammarp = subgrammarp;
       marpaESLIF_cloneContext.forcedEndEventi = symbolp->haveExceptionb ? subSymbolp->idi : -1;
       marpaWrapperGrammarCloneOption.grammarOptionSetterp = NULL; /* _marpaESLIFGrammar_grammarOptionSetterNoLoggerb; */
+      /* The _marpaESLIFGrammar_symbolOptionSetterEndEventb exploits a vicious and internal case of marpaESLIF:
+         it is setting a grammar event directly on the symbol, WITHOUT attaching a name to it.
+         This cannot conflict with lexeme events on the current grammar.
+         And the _marpaESLIFRecognizer_newp(), despite its noEvent parameter, is just cloning the passed grammar, and
+         manage lexeme events initial state.
+      */
       marpaWrapperGrammarCloneOption.symbolOptionSetterp  = symbolp->haveExceptionb ? _marpaESLIFGrammar_symbolOptionSetterEndEventb : _marpaESLIFGrammar_symbolOptionSetterNoEventb;
       marpaWrapperGrammarClonep = marpaWrapperGrammar_clonep(subgrammarp->marpaWrapperGrammarStartp, &marpaWrapperGrammarCloneOption);
       if (marpaWrapperGrammarClonep == NULL) {
