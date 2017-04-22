@@ -154,8 +154,8 @@ struct marpaESLIFSymbol {
   char                        *nullableActions;        /* Nullable semantic */
   int                          propertyBitSet;
   genericStack_t              *lhsRuleStackp;          /* Stack of rules having this symbol as LHS */
-  short                        exceptionb;             /* If true, this is a lexeme and this is the RHS of an exception rule */
-  marpaESLIF_symbol_t         *exceptionp;             /* Pointer to the exception symbol Exception itself, the one after the '-' character */
+  short                        haveExceptionb;         /* If true, this is the symbol before the '-' character of an exception */
+  marpaESLIF_symbol_t         *exceptionp;             /* Pointer to the exception itself, the one after the '-' character */
 };
 
 /* A rule */
