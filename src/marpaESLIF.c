@@ -25,7 +25,7 @@
 #endif
 
 #define MARPAESLIF_EVENTTYPE_EXHAUSTED_NAME "'exhauted'"
-#define MARPAESLIF_IS_LEXEME(symbolp)  (((symbolp)->type == MARPAESLIF_SYMBOL_TYPE_META) && ((symbolp)->u.metap->marpaWrapperGrammarLexemeClonep != NULL))
+#define MARPAESLIF_IS_LEXEME(symbolp)  (((symbolp)->type == MARPAESLIF_SYMBOL_TYPE_META) && (! (symbolp)->lhsb))
 #define MARPAESLIF_IS_DISCARD(symbolp) (symbolp)->discardb
 
 #define MARPAESLIFRECOGNIZER_RESET_EVENTS(marpaESLIFRecognizerp) (marpaESLIFRecognizerp)->eventArrayl = 0
@@ -1797,11 +1797,11 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
       */
       symbolp = (marpaESLIF_symbol_t *) GENERICSTACK_GET_PTR(rulep->rhsStackp, 0);
       if (symbolp->lhsb) {
-        MARPAESLIF_ERRORF(marpaESLIFp, "At grammar level %d (%s), symbol %d <%s> is part of an exception and must be a lexeme", grammari, grammarp->descp->asciis, symbolp->idi, symbolp->descp->asciis);
+        MARPAESLIF_ERRORF(marpaESLIFp, "At grammar level %d (%s), symbol %d <%s> is on the left side of an exception: it cannot be an LHS elsewhere in this grammar", grammari, grammarp->descp->asciis, symbolp->idi, symbolp->descp->asciis);
         goto err;
       }
       if (exceptionp->lhsb) {
-        MARPAESLIF_ERRORF(marpaESLIFp, "At grammar level %d (%s), symbol %d <%s> is part of an exception and must be a lexeme", grammari, grammarp->descp->asciis, exceptionp->idi, exceptionp->descp->asciis);
+        MARPAESLIF_ERRORF(marpaESLIFp, "At grammar level %d (%s), symbol %d <%s> is on the right side of an exception: it cannot be an LHS elsewhere in this grammar", grammari, grammarp->descp->asciis, exceptionp->idi, exceptionp->descp->asciis);
         goto err;
       }
       for (rulej = 0; rulej < GENERICSTACK_USED(ruleStackp); rulej++) {
