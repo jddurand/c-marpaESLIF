@@ -51,6 +51,8 @@
     }                                                                   \
   } while (0)
 #else
+#define MARPAESLIF_CHECK_MATCH_RESULT(funcs, marpaESLIFRecognizerp, symbolp, rci, marpaESLIFValueResult) \
+    _MARPAESLIF_CHECK_MATCH_RESULT(funcs, marpaESLIFRecognizerp, symbolp, rci, marpaESLIFValueResult)
 #endif
 
 #define MARPAESLIFRECOGNIZER_RESET_EVENTS(marpaESLIFRecognizerp) (marpaESLIFRecognizerp)->eventArrayl = 0
@@ -1817,13 +1819,32 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
         continue;
       }
       /* An exception rule have the following constraints:
-         - The left side must be a lexeme (for an unicity reason)
+         - The left side must be a lexeme not access anywhere else in this grammar, for an unicity reason: the exception will be part of the lexeme definition
          - The right side cannot be a meta symbol (same constraint as in ISO EBNF: a syntactic exception cannot be a meta identifier)
       */
       symbolp = (marpaESLIF_symbol_t *) GENERICSTACK_GET_PTR(rulep->rhsStackp, 0);
       if (! MARPAESLIF_IS_LEXEME(symbolp)) {
         MARPAESLIF_ERRORF(marpaESLIFp, "At grammar level %d (%s), symbol %d <%s> is on the left side of an exception: it must be a lexeme", grammari, grammarp->descp->asciis, symbolp->idi, symbolp->descp->asciis);
         goto err;
+      }
+      for (rulej = 0; rulej < GENERICSTACK_USED(ruleStackp); rulej++) {
+        if (rulei == rulej) {
+          continue;
+        }
+        if (! GENERICSTACK_IS_PTR(ruleStackp, rulej)) {
+          /* Should never happen, but who knows */
+          continue;
+        }
+        ruletmpp = (marpaESLIF_rule_t *) GENERICSTACK_GET_PTR(ruleStackp, rulej);
+        for (rhsi = 0; rhsi < GENERICSTACK_USED(ruletmpp->rhsStackp); rhsi++) {
+          if (! GENERICSTACK_IS_PTR(ruletmpp->rhsStackp, rhsi)) {
+            continue;
+          }
+          if (GENERICSTACK_GET_PTR(ruletmpp->rhsStackp, rhsi) == (void *) symbolp) {
+            MARPAESLIF_ERRORF(marpaESLIFp, "At grammar level %d (%s), symbol %d <%s> is on the left side of an exception: it must be a lexeme that does not appear anywhere else in the grammar, because the exception is considered as being part of the lexeme definition", grammari, grammarp->descp->asciis, symbolp->idi, symbolp->descp->asciis);
+            goto err;
+          }
+        }
       }
       if (exceptionp->lhsb) {
         MARPAESLIF_ERRORF(marpaESLIFp, "At grammar level %d (%s), symbol %d <%s> is on the right side of an exception and must be a lexeme or an explicit terminal", grammari, grammarp->descp->asciis, exceptionp->idi, exceptionp->descp->asciis);
