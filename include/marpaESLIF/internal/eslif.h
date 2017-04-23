@@ -242,7 +242,7 @@
 #define G1_ACTION_ACTION_NAME_2                    "::ascii" /* <action name> ::= '::shift' */
 #define G1_ACTION_ACTION_NAME_3                    "::ascii" /* <action name> ::= '::undef' */
 #define G1_ACTION_ACTION_NAME_4                    "::ascii" /* <action name> ::= '::ascii' */
-#define G1_ACTION_ACTION_NAME_5                    "::ascii" /* <action name> ::= '::convert\\[[[:ascii:]]+\\]/ */
+#define G1_ACTION_ACTION_NAME_5                    "::ascii" /* <action name> ::= '::convert\\[[^\\]]+\\]/\n" */
 #define G1_ACTION_ACTION_NAME_6                    "::ascii" /* <action name> ::= '::concat' */
 #define G1_ACTION_ACTION_NAME_7                    "::ascii" /* <action name> ::= /::copy\\[\\d+\\]/ */
 #define G1_ACTION_FREE_NAME                        "::ascii" /* <free name> ::= <ascii graph name> */

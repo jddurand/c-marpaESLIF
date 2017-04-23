@@ -15,7 +15,9 @@ public class AppParse  {
 		eslifLogger.info("marpaESLIF version is " + eslif.version());
 
 		final String grammar = 
-				    ":start   ::= Expression\n"
+				    ":start   ::= Object2\n"
+				  + "Object2  ::= Object action => ::concat\n"
+				  + "Object   ::= Expression action => ::concat\n"
 				  + ":default ::=             action => do_op\n"
 				  + ":discard ::= whitespaces event  => discard_whitespaces$\n"
 				  + ":discard ::= comment     event  => discard_comment$\n"

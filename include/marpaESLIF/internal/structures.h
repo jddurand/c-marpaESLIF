@@ -243,6 +243,7 @@ struct marpaESLIFValue {
   genericStack_t          *valueStackp;
   genericStack_t          *typeStackp;
   genericStack_t          *contextStackp;
+  genericStack_t          *representationStackp;
   short                    inValuationb;
   marpaESLIF_symbol_t     *symbolp;
   marpaESLIF_rule_t       *rulep;
