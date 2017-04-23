@@ -1037,28 +1037,30 @@ static short marpaESLIF_representation(void *userDatavp, marpaESLIFValueResult_t
     if (! sv_utf8_downgrade(tmp, 1)) {
       MARPAESLIF_WARN("Wide character in SV");
     } else {
-      strings               = SvPVbyte(tmp, len);
-      okb                   = 1;
-      *characterStreambp    = 1;
-      *encodingOfEncodingsp = (char *) ASCIIs;
-      *encodingsp           = (char *) UTF8s;
-      *encodinglp           = UTF8l;
+      strings = SvPVbyte(tmp, len);
+      if (strings != NULL) {
+        okb                   = 1;
+        *characterStreambp    = 1;
+        *encodingOfEncodingsp = (char *) ASCIIs;
+        *encodingsp           = (char *) UTF8s;
+        *encodinglp           = UTF8l;
+      }
     }
   } else {
     /* This is opaque - a Perl "string" can contain anything, even the NUL byte */
-    okb                   = 1;
-    *characterStreambp    = 0;
-    *encodingOfEncodingsp = NULL;
-    *encodingsp           = NULL;
-    *encodinglp           = 0;
+    if (strings != NULL) {
+      okb                   = 1;
+      *characterStreambp    = 0;
+      *encodingOfEncodingsp = NULL;
+      *encodingsp           = NULL;
+      *encodinglp           = 0;
+    }
   }
 
-  if (okb) {
+  if (okb) { /* Else nothing will be appended */
     Newx(MarpaX_ESLIF_Valuep->previous_strings, (int) len, void *);
     *inputcpp = CopyD(strings, MarpaX_ESLIF_Valuep->previous_strings, (int) len, char *);
     *inputlp = (size_t) len;
-  } else {
-    /* Nothing will be appended */
   }
  
   FREETMPS;
