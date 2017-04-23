@@ -198,6 +198,26 @@ The recognizer is tentatively computing the length of every symbol completion. S
 
 Returns the absolute length in bytes.
 
+=head2 $eslifRecognizer->lastCompletedLocation($name)
+
+Returns an array containing at indices 0 and 1 the values of C<$eslifRecognizer->lastCompletedOffset($name)> and C<$eslifRecognizer->lastCompletedLocation($name)>, respectively.
+
+=head2 $eslifRecognizer->line()
+
+If, at creation, the recognizer interface returned a true value for the C<$recognizerInterface->isWithNewline()> method, then the recognizer will track the number of lines for ever character-oriented chunk of data.
+
+Returns the line number, or 0.
+
+=head2 $eslifRecognizer->column()
+
+If, at creation, the recognizer interface returned a true value for the C<$recognizerInterface->isWithNewline()> method, then the recognizer will track the number of columns for ever character-oriented chunk of data.
+
+Returns the column number, or 0.
+
+=head2 $eslifRecognizer->location()
+
+Returns an array containing at indices 0 and 1 the values of C<$eslifRecognizer->line()> and C<$eslifRecognizer->column()>, respectively.
+
 =head1 SEE ALSO
 
 L<MarpaX::ESLIF::Recognizer::Interface>, L<MarpaX::ESLIF::Event::Type>, L<MarpaX::ESLIF::Logger::Level>
