@@ -330,6 +330,7 @@ for (my $i = 0; $i <= $#strings; $i++) {
     my $eslifRecognizer = MarpaX::ESLIF::Recognizer->new($eslifGrammar, $recognizerInterface);
     isa_ok($eslifRecognizer, 'MarpaX::ESLIF::Recognizer');
     if (doScan($log, $eslifRecognizer, 1)) {
+        showLocation("After doScan", $log, $eslifRecognizer);
         if (! $eslifRecognizer->isEof()) {
             if (! $eslifRecognizer->read()) {
                 last;
@@ -344,6 +345,7 @@ for (my $i = 0; $i <= $#strings; $i++) {
             if (! doResume($log, $eslifRecognizer, 0)) {
                 last;
             }
+            showLocation("Loop No $j", $log, $eslifRecognizer);
 
             my $events = $eslifRecognizer->events();
             for (my $k = 0; $k < scalar(@{$events}); $k++) {
@@ -451,12 +453,32 @@ sub showLastCompletion {
     try {
         my $lastExpressionOffset = $eslifRecognizer->lastCompletedOffset($symbol);
         my $lastExpressionLength = $eslifRecognizer->lastCompletedLength($symbol);
+        my ($lastExpressionOffsetV2, $lastExpressionLengthV2) = $eslifRecognizer->lastCompletedLocation($symbol);
+        if (($lastExpressionOffset != $lastExpressionOffsetV2) || ($lastExpressionLength != $lastExpressionLengthV2)) {
+            BAIL_OUT("\$eslifRecognizer->lastCompletedLocation() is not equivalent to (\$eslifRecognizer->lastCompletedOffset, \$eslifRecognizer->lastCompletedLength)");
+        }
         my $string2byte = encode('UTF-8', $origin, Encode::FB_CROAK);
         my $matchedbytes = substr($string2byte, $lastExpressionOffset, $lastExpressionOffset, $lastExpressionLength);
         my $matchedString = decode('UTF-8', $matchedbytes, Encode::FB_CROAK);
         $log->debugf("[%s] Last %s completion is %s", $context, $symbol, $matchedString);
     } catch {
         $log->warnf("[%s] Last %s completion raised an exception, %s", $context, $symbol, $_);
+    }
+}
+
+sub showLocation {
+    my ($context, $log, $eslifRecognizer)  = @_;
+
+    try {
+        my $line = $eslifRecognizer->line();
+        my $column = $eslifRecognizer->column();
+        my ($lineV2, $columnV2) = $eslifRecognizer->location();
+        if (($line != $lineV2) || ($column != $columnV2)) {
+            BAIL_OUT("\$eslifRecognizer->location() is not equivalent to (\$eslifRecognizer->line, \$eslifRecognizer->column)");
+        }
+        $log->debugf("[%s] Location is %s", $context, [$line, $column]);
+    } catch {
+        $log->warnf("[%s] Location raised an exception, %s", $_);
     }
 }
 

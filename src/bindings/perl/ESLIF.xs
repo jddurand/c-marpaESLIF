@@ -2111,7 +2111,7 @@ lastCompletedOffset(Perl_MarpaX_ESLIF_Recognizer, name)
   char                   *name;
 CODE:
   static const char *funcs = "MarpaX::ESLIF::Recognizer::lastCompletedOffset";
-  char              *offsetp = NULL;
+  char              *offsetp;
 
   if (!  marpaESLIFRecognizer_last_completedb(Perl_MarpaX_ESLIF_Recognizer->marpaESLIFRecognizerp, name, &offsetp, NULL /* lengthlp */)) {
     MARPAESLIF_CROAKF("marpaESLIFRecognizer_last_completedb failure, %s", strerror(errno));
@@ -2141,6 +2141,88 @@ CODE:
 OUTPUT:
   RETVAL
 
+=for comment
+  /* ----------------------------------------------------------------------- */
+  /* MarpaX::ESLIF::Recognizer::lastCompletedLocation                        */
+  /* ----------------------------------------------------------------------- */
+=cut
+
+void
+lastCompletedLocation(Perl_MarpaX_ESLIF_Recognizer, name)
+  MarpaX_ESLIF_Recognizer Perl_MarpaX_ESLIF_Recognizer;
+  char                   *name;
+PREINIT:
+  static const char *funcs = "MarpaX::ESLIF::Recognizer::lastCompletedLocation";
+  size_t             lengthl;
+  char              *offsetp;
+PPCODE:
+  if (!  marpaESLIFRecognizer_last_completedb(Perl_MarpaX_ESLIF_Recognizer->marpaESLIFRecognizerp, name, &offsetp, &lengthl)) {
+    MARPAESLIF_CROAKF("marpaESLIFRecognizer_last_completedb failure, %s", strerror(errno));
+  }
+  EXTEND(SP, 2);
+  PUSHs(sv_2mortal(newSViv(PTR2IV(offsetp))));
+  PUSHs(sv_2mortal(newSViv((IV) lengthl)));
+
+=for comment
+  /* ----------------------------------------------------------------------- */
+  /* MarpaX::ESLIF::Recognizer::line                                         */
+  /* ----------------------------------------------------------------------- */
+=cut
+
+IV
+line(Perl_MarpaX_ESLIF_Recognizer)
+  MarpaX_ESLIF_Recognizer Perl_MarpaX_ESLIF_Recognizer;
+CODE:
+  static const char *funcs = "MarpaX::ESLIF::Recognizer::line";
+  size_t             linel;
+
+  if (!  marpaESLIFRecognizer_locationb(Perl_MarpaX_ESLIF_Recognizer->marpaESLIFRecognizerp, &linel, NULL /* columnlp */)) {
+    MARPAESLIF_CROAKF("marpaESLIFRecognizer_locationb failure, %s", strerror(errno));
+  }
+  RETVAL = (IV) linel;
+OUTPUT:
+  RETVAL
+
+=for comment
+  /* ----------------------------------------------------------------------- */
+  /* MarpaX::ESLIF::Recognizer::column                                       */
+  /* ----------------------------------------------------------------------- */
+=cut
+
+IV
+column(Perl_MarpaX_ESLIF_Recognizer)
+  MarpaX_ESLIF_Recognizer Perl_MarpaX_ESLIF_Recognizer;
+CODE:
+  static const char *funcs = "MarpaX::ESLIF::Recognizer::column";
+  size_t             columnl;
+
+  if (!  marpaESLIFRecognizer_locationb(Perl_MarpaX_ESLIF_Recognizer->marpaESLIFRecognizerp, NULL /* linelp */, &columnl)) {
+    MARPAESLIF_CROAKF("marpaESLIFRecognizer_locationb failure, %s", strerror(errno));
+  }
+  RETVAL = (IV) columnl;
+OUTPUT:
+  RETVAL
+
+=for comment
+  /* ----------------------------------------------------------------------- */
+  /* MarpaX::ESLIF::Recognizer::location                                     */
+  /* ----------------------------------------------------------------------- */
+=cut
+
+void
+location(Perl_MarpaX_ESLIF_Recognizer)
+  MarpaX_ESLIF_Recognizer Perl_MarpaX_ESLIF_Recognizer;
+PREINIT:
+  static const char *funcs = "MarpaX::ESLIF::Recognizer::location";
+  size_t             linel;
+  size_t             columnl;
+PPCODE:
+  if (!  marpaESLIFRecognizer_locationb(Perl_MarpaX_ESLIF_Recognizer->marpaESLIFRecognizerp, &linel, &columnl)) {
+    MARPAESLIF_CROAKF("marpaESLIFRecognizer_locationb failure, %s", strerror(errno));
+  }
+  EXTEND(SP, 2);
+  PUSHs(sv_2mortal(newSViv((IV) linel)));
+  PUSHs(sv_2mortal(newSViv((IV) columnl)));
 
 MODULE = MarpaX::ESLIF            PACKAGE = MarpaX::ESLIF::Value
 
