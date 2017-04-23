@@ -125,7 +125,7 @@ public class AppParse  {
 			eslifLogger.info("***********************************************************");
 			eslifLogger.info("");
 			if (doScan(eslifLogger, eslifRecognizer, true)) {
-
+				showLocation("After doScan", eslifLogger, eslifRecognizer);
 				if (! eslifRecognizer.isEof()) {
 					if (! eslifRecognizer.read()) {
 						break;
@@ -140,7 +140,7 @@ public class AppParse  {
 					if (! doResume(eslifLogger, eslifRecognizer, 0)) {
 						break;
 					}
-
+					showLocation("After doResume", eslifLogger, eslifRecognizer);
 					ESLIFEvent[] events = eslifRecognizer.events();
 					for (int k = 0; k < events.length; k++) {
 						ESLIFEvent event = events[k];
@@ -327,6 +327,16 @@ public class AppParse  {
 			eslifLogger.debug("[" + context + "]  Last " + symbol + " completion is: " + matchedString);
 		} catch (Exception e) {
 			eslifLogger.warning("[" + context + "]  Last " + symbol + " completion raised an exception");
+		}
+	}
+
+	private static void showLocation(String context, ESLIFLoggerInterface eslifLogger, ESLIFRecognizer eslifRecognizer) {
+		try {
+			long line   = eslifRecognizer.line();
+			long column = eslifRecognizer.column();
+			eslifLogger.debug("[" + context + "]  Location is [" + line + "," + column + "]");
+		} catch (Exception e) {
+			eslifLogger.warning("[" + context + "]  line() or column() raised an exception");
 		}
 	}
 }
