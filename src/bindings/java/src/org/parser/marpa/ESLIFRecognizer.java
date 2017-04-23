@@ -61,6 +61,8 @@ public class ESLIFRecognizer {
 	private native void              jniProgressLog(int start, int end, ESLIFLoggerLevel level) throws ESLIFException;
 	private native long              jniLastCompletedOffset(String name) throws ESLIFException;
 	private native long              jniLastCompletedLength(String name) throws ESLIFException;
+	private native long              jniLine() throws ESLIFException;
+	private native long              jniColumn() throws ESLIFException;
 
 	/**
 	 * 
@@ -370,6 +372,28 @@ public class ESLIFRecognizer {
 	public synchronized long lastCompletedLength(String name) throws ESLIFException {
 		return jniLastCompletedLength(name);
 	}
+
+	/**
+	 * The recognizer is keeping a count of current line number if the interface is return a true value for isWithNewline() method.
+	 * 
+	 * @return the current line number, or 0 if line number count is switched off
+	 * @throws ESLIFException if the interface failed
+	 */
+	public synchronized long line() throws ESLIFException {
+		return jniLine();
+	}
+
+	/**
+	 * The recognizer is keeping a count of current column number if the interface is return a true value for isWithNewline() method.
+	 * 
+	 * @return the current column number, or 0 if column number count is switched off
+	 * @throws ESLIFException if the interface failed
+	 */
+	public synchronized long column() throws ESLIFException {
+		return jniColumn();
+	}
+
+	/*
 	/*
 	 * ********************************************
 	 * Private methods - used by the JNI
