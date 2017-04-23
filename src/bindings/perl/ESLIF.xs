@@ -626,7 +626,7 @@ static SV *marpaESLIF_getSvFromStack(pTHX_ MarpaX_ESLIF_Value_t *MarpaX_ESLIF_Va
     MARPAESLIF_CROAKF("marpaESLIFValue_stack_is_ptrb failure, %s", strerror(errno));
   }
   if (ptrb) {
-    if (! marpaESLIFValue_stack_get_ptrb(marpaESLIFValuep, i, NULL /* contextip */, (void **) &objectp, NULL /* shallowbp */)) {
+    if (! marpaESLIFValue_stack_get_ptrb(marpaESLIFValuep, i, NULL /* contextip */, NULL /* representationpp */, (void **) &objectp, NULL /* shallowbp */)) {
       MARPAESLIF_CROAKF("marpaESLIFValue_stack_get_ptrb failure, %s", strerror(errno));
     }
     if (! trueSVOnlyb) {
@@ -653,7 +653,7 @@ static SV *marpaESLIF_getSvFromStack(pTHX_ MarpaX_ESLIF_Value_t *MarpaX_ESLIF_Va
 
       MARPAESLIF_CROAKF("Internal stack error, item not an ARRAY at indice %d, found %s instead", i, foundType);
     }
-    if (! marpaESLIFValue_stack_get_arrayb(marpaESLIFValuep, i, &contexti, (void **) &bytep, &bytel, NULL /* shallowbp */)) {
+    if (! marpaESLIFValue_stack_get_arrayb(marpaESLIFValuep, i, &contexti, NULL /* representationpp */, (void **) &bytep, &bytel, NULL /* shallowbp */)) {
       MARPAESLIF_CROAK("marpaESLIFValue_stack_get_arrayb failure");
     }
     /* We never push array, i.e. contexti must be 0 in any case here */
@@ -720,7 +720,7 @@ static short marpaESLIF_valueRuleCallbackb(void *userDatavp, marpaESLIFValue_t *
     av_undef(list);
   }
 
-  if (! marpaESLIFValue_stack_set_ptrb(marpaESLIFValuep, resulti, 1 /* context: any value != 0 */, (void *) actionResult, 0 /* shallowb */)) {
+  if (! marpaESLIFValue_stack_set_ptrb(marpaESLIFValuep, resulti, 1 /* context: any value != 0 */, marpaESLIF_representation, (void *) actionResult, 0 /* shallowb */)) {
     MARPAESLIF_CROAK("marpaESLIFValue_stack_set_ptrb failure");
   }
 
@@ -745,7 +745,7 @@ static short marpaESLIF_valueSymbolCallbackb(void *userDatavp, marpaESLIFValue_t
   actionResult = marpaESLIF_call_actionp(aTHX_ MarpaX_ESLIF_Valuep->Perl_valueInterfacep, MarpaX_ESLIF_Valuep->actions, list);
   av_undef(list);
 
-  if (! marpaESLIFValue_stack_set_ptrb(marpaESLIFValuep, resulti, 1 /* context: any value != 0 */, (void *) actionResult, 0 /* shallowb */)) {
+  if (! marpaESLIFValue_stack_set_ptrb(marpaESLIFValuep, resulti, 1 /* context: any value != 0 */, marpaESLIF_representation, (void *) actionResult, 0 /* shallowb */)) {
     MARPAESLIF_CROAK("marpaESLIFValue_stack_set_ptrb failure");
   }
 
