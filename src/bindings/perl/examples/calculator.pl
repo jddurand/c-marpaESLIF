@@ -348,3 +348,59 @@ while ($eslifValue->value()) {
   printf "======> %s\n", $eslifValueInterface->getResult;
 }
 
+print  "************************************************************\n";
+my $grammar_v10 = q{
+Expression ::=
+               NUMBER
+             | '(' Expression ')'              assoc => group
+            ||     Expression  POW Expression  assoc => right
+            ||     Expression  '*' Expression
+             |     Expression  '/' Expression
+            ||     Expression  '+' Expression
+             |     Expression  '-' Expression
+:discard ::= /[\s]+/
+:lexeme ::= NUMBER pause => before event => ^NUMBER
+NUMBER     ~ /[\d]+/
+POW        ~ '**'
+};
+printf "Grammar:%s\n", $grammar_v10;
+$eslifGrammar = MarpaX::ESLIF::Grammar->new($eslif, $grammar_v10);
+$eslifRecognizerInterface = MyRecognizer->new($input);
+$eslifRecognizer = MarpaX::ESLIF::Recognizer->new($eslifGrammar, $eslifRecognizerInterface);
+$eslifRecognizer->scan();
+if ($eslifRecognizer->isCanContinue) {
+  do {
+    my $alreadyResumed = 0;
+    foreach (@{$eslifRecognizer->events()}) {
+      if ($_->{event}) {   # Can be undef for exhaustion
+        if ($_->{event} eq '^NUMBER') {
+          my $lastPause = $eslifRecognizer->lexemeLastPause($_->{symbol});
+          printf "Pause before event %s for symbol %s: \"%s\"\n", $_->{event}, $_->{symbol}, $lastPause;
+          printf "  Replacing $lastPause by $lastPause*ANYTHING*2 saying that *ANYTHING* is the representation of POW token!\n";
+          # ------------------------------
+          # We replace NUMBER by NUMBER**2
+          # ------------------------------
+          $eslifRecognizer->lexemeRead('NUMBER', $lastPause, 0);
+          $eslifRecognizer->lexemeRead('POW', '*ANYTHING*', 0);
+          $eslifRecognizer->lexemeRead('NUMBER', '2', 0);
+          # -------------------------------------------
+          # We say to resume exactly where NUMBER ended
+          # -------------------------------------------
+          $eslifRecognizer->resume(bytes::length($lastPause));
+          $alreadyResumed = 1;
+          last
+        }
+      }
+    }
+    $eslifRecognizer->resume() unless $alreadyResumed
+  } while ($eslifRecognizer->isCanContinue)
+}
+$eslifValueInterface = MyValue->new();
+my $eslifValue = MarpaX::ESLIF::Value->new($eslifRecognizer, $eslifValueInterface);
+while ($eslifValue->value()) {
+  #
+  # (1**2 + 2**2) * 3**2 = (1*ANYTHING*2+2*ANYTHING*2)*3*ANYTHING*2
+  #
+  printf "======> %s\n", $eslifValueInterface->getResult;
+}
+
