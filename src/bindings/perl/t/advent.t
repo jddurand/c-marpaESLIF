@@ -155,13 +155,6 @@ for my $test_data (@tests) {
           my $length = length $input;
           my %played = ();
           my $pos;
-          print STDERR "\$re: $re\n";
-          use Data::Dumper;
-          print STDERR Dumper($re);
-          use Devel::Peek;
-          Dump($re);
-          $re->read;
-          
           my $eval_ok = eval { $re->read(); 1 };
           while ( $eval_ok and not $recognizerInterface->isEof ) {
 
