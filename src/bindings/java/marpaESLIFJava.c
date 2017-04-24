@@ -3750,7 +3750,6 @@ static short marpaESLIFRepresentationCallback(void *userDatavp, marpaESLIFValueR
   jclass                    classp = NULL;
   jobject                   objectp;
   jmethodID                 methodp;
-  jboolean                  isCopy;
   jsize                     size;
   size_t                    len;
   short                     rcb;
