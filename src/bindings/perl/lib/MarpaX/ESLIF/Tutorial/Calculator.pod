@@ -588,6 +588,14 @@ You may rememember that we said that the default value for a rule is always to c
 
 i.e. the parse tree result is the concatenation of all the valid input, this is a neat way to remove automatically C<:discard> rules from the input -;
 
+You have to notice also that I<nothing> obliges you to inject a alternative value that would be of the same length of what I<should> be in the input: an alternative is totally is totally under user's responsbility. For instance, injecting the string C<*ANYTHING*> for the C<POW> token:
+
+          $eslifRecognizer->lexemeRead('POW', '*ANYTHING*', 0);
+
+would result in this stringification:
+
+  (1*ANYTHING*2+2*ANYTHING*2)*3*ANYTHING*2
+
 =head1 NOTES
 
 Always remember that rule default action is C<::concat>, that will silently drop everything coming from user-space (i.e. lexeme injection), I<except> when there is a single RHS: then C<::concat> is changed to <::shift> that is guaranteed to not change the nature of the RHS.
