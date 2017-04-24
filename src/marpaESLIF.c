@@ -3793,12 +3793,6 @@ static inline short _marpaESLIFRecognizer_symbol_matcherb(marpaESLIFRecognizer_t
   short                           exhaustedb         = 0;
   size_t                          minExceptionSizel  = 0;
   marpaESLIF_matcher_value_t      rcExceptioni;
-  marpaESLIFGrammar_t             marpaESLIFGrammar; /* Fake marpaESLIFGrammar with the grammar sent in the stack */
-  marpaESLIF_grammar_t            grammar;
-  marpaESLIF_grammar_t           *grammarp;
-  marpaESLIFRecognizerOption_t    marpaESLIFRecognizerOption = marpaESLIFRecognizerp->marpaESLIFRecognizerOption; /* This is an internal recognizer */
-  marpaESLIFValueOption_t         marpaESLIFValueOption = marpaESLIFValueOption_default_template;
-  marpaESLIF_meta_t              *metap;
   marpaESLIFValueResult_t         marpaESLIFValueResult;
   marpaESLIFValueResult_t         previousMarpaESLIFValueResult;
   short                           exceptionTryb;
