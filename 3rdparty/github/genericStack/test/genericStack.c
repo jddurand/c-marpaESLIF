@@ -1,10 +1,19 @@
 #include <stdio.h>
 #include <stdlib.h>
+
+typedef struct myStruct {
+  short isstring;
+  union {
+    int   i;
+    char *s;
+  } u;
+} myStruct_t;
+
+#define GENERICSTACK_CUSTOM myStruct_t
 #include "genericStack.h"
 
 static short myFunction1(genericStack_t *myStackp);
 static short myFunction2(genericStack_t *myStackp);
-static short myFunction3(genericStack_t *myStackp);
 static short subMain(genericStack_t *myStackp);
 
 typedef struct myStruct1 {
@@ -51,6 +60,7 @@ int main(int argc, char **argv) {
 static short subMain(genericStack_t *myStackp) {
   myStruct1_t     myStruct1 = { 50 };
   myStruct2_t     myStruct2 = { 60, "70" };
+  myStruct_t      myStruct;
   GENERICSTACKITEMTYPE2TYPE_ARRAY array;
   GENERICSTACKITEMTYPE2TYPE_ARRAY array2;
 
@@ -59,6 +69,9 @@ static short subMain(genericStack_t *myStackp) {
 
   GENERICSTACK_ARRAYP_LENGTH(&array2) = 20;
   GENERICSTACK_ARRAYP_PTR(&array2) = malloc(GENERICSTACK_ARRAYP_LENGTH(&array2));
+
+  myStruct.isstring = 1;
+  myStruct.u.s      = strdup("OK");
 
   GENERICSTACK_ERROR_RESET(myStackp);  /* Not meaningful here, but just to test it */
 
@@ -87,6 +100,8 @@ static short subMain(genericStack_t *myStackp) {
   printf("... Use/size: %d/%d (initial+heap=%d+%d)\n", (int) GENERICSTACK_USED(myStackp), (int) GENERICSTACK_LENGTH(myStackp), (int) GENERICSTACK_INITIAL_LENGTH(myStackp), (int) GENERICSTACK_HEAP_LENGTH(myStackp));
   printf("[ 8] Arrayp\n");                                           GENERICSTACK_PUSH_ARRAYP(myStackp, &array2); if (GENERICSTACK_ERROR(myStackp)) { return 1; }
   printf("... Use/size: %d/%d (initial+heap=%d+%d)\n", (int) GENERICSTACK_USED(myStackp), (int) GENERICSTACK_LENGTH(myStackp), (int) GENERICSTACK_INITIAL_LENGTH(myStackp), (int) GENERICSTACK_HEAP_LENGTH(myStackp));
+  printf("[ 9] Custom\n");                                           GENERICSTACK_PUSH_CUSTOM(myStackp, myStruct); if (GENERICSTACK_ERROR(myStackp)) { return 1; }
+  printf("... Use/size: %d/%d (initial+heap=%d+%d)\n", (int) GENERICSTACK_USED(myStackp), (int) GENERICSTACK_LENGTH(myStackp), (int) GENERICSTACK_INITIAL_LENGTH(myStackp), (int) GENERICSTACK_HEAP_LENGTH(myStackp));
 
   if (myFunction1(myStackp) == 0) { return 1; }
 
@@ -100,9 +115,11 @@ static short subMain(genericStack_t *myStackp) {
   printf("[16] N/A\n"); GENERICSTACK_SET_NA(myStackp, 16); if (GENERICSTACK_ERROR(myStackp)) { return 1; }
   printf("... Use/size: %d/%d (initial+heap=%d+%d)\n", (int) GENERICSTACK_USED(myStackp), (int) GENERICSTACK_LENGTH(myStackp), (int) GENERICSTACK_INITIAL_LENGTH(myStackp), (int) GENERICSTACK_HEAP_LENGTH(myStackp));
   GENERICSTACK_DUMP(myStackp);
+  printf("[17] CUSTOM\n"); GENERICSTACK_SET_CUSTOM(myStackp, myStruct, 17); if (GENERICSTACK_ERROR(myStackp)) { return 1; }
+  printf("... Use/size: %d/%d (initial+heap=%d+%d)\n", (int) GENERICSTACK_USED(myStackp), (int) GENERICSTACK_LENGTH(myStackp), (int) GENERICSTACK_INITIAL_LENGTH(myStackp), (int) GENERICSTACK_HEAP_LENGTH(myStackp));
+  GENERICSTACK_DUMP(myStackp);
 
   if (myFunction2(myStackp) == 0) { return 1; }
-  if (myFunction3(myStackp) == 0) { return 1; }
 
   return 0;
 }
@@ -129,9 +146,11 @@ static short myFunction1(genericStack_t *myStackp) {
   printf("... Use/size: %d/%d (initial+heap=%d+%d)\n", (int) GENERICSTACK_USED(myStackp), (int) GENERICSTACK_LENGTH(myStackp), (int) GENERICSTACK_INITIAL_LENGTH(myStackp), (int) GENERICSTACK_HEAP_LENGTH(myStackp));
   printf("[ 2] float    : %f\n",         GENERICSTACK_GET_FLOAT (myStackp, 2));
   printf("... Use/size: %d/%d (initial+heap=%d+%d)\n", (int) GENERICSTACK_USED(myStackp), (int) GENERICSTACK_LENGTH(myStackp), (int) GENERICSTACK_INITIAL_LENGTH(myStackp), (int) GENERICSTACK_HEAP_LENGTH(myStackp));
+  printf("[ 9] Custom   : {isstring=%d,u.s=%s}\n", GENERICSTACK_GET_CUSTOM(myStackp, 9).isstring, GENERICSTACK_GET_CUSTOM(myStackp, 9).u.s);
+  printf("... Use/size: %d/%d (initial+heap=%d+%d)\n", (int) GENERICSTACK_USED(myStackp), (int) GENERICSTACK_LENGTH(myStackp), (int) GENERICSTACK_INITIAL_LENGTH(myStackp), (int) GENERICSTACK_HEAP_LENGTH(myStackp));
   
-  printf("\nSWITCH interface:\n");
-  printf("------------------:\n\n");
+  printf("\nSWITCH interface (indices 2 (FLOAT) and 5 (PTR)):\n");
+  printf("------------------------------------------------:\n\n");
   GENERICSTACK_SWITCH(myStackp, 5, 2); if (GENERICSTACK_ERROR(myStackp)) { return 1; }
   printf("[ 2] myStruct2: {%d, \"%s\"}\n", ((myStruct2_t *) GENERICSTACK_GET_PTR (myStackp, 2))->i, ((myStruct2_t *) GENERICSTACK_GET_PTR (myStackp, 2))->s);
   printf("... Use/size: %d/%d (initial+heap=%d+%d)\n", (int) GENERICSTACK_USED(myStackp), (int) GENERICSTACK_LENGTH(myStackp), (int) GENERICSTACK_INITIAL_LENGTH(myStackp), (int) GENERICSTACK_HEAP_LENGTH(myStackp));
@@ -145,9 +164,33 @@ static short myFunction1(genericStack_t *myStackp) {
   printf("[ 5] myStruct2: {%d, \"%s\"}\n", ((myStruct2_t *) GENERICSTACK_GET_PTR (myStackp, 5))->i, ((myStruct2_t *) GENERICSTACK_GET_PTR (myStackp, 5))->s);
   printf("... Use/size: %d/%d (initial+heap=%d+%d)\n", (int) GENERICSTACK_USED(myStackp), (int) GENERICSTACK_LENGTH(myStackp), (int) GENERICSTACK_INITIAL_LENGTH(myStackp), (int) GENERICSTACK_HEAP_LENGTH(myStackp));
 
+  printf("\nSWITCH interface (indices 5 (PTR) and 9 (CUSTOM)):\n");
+  printf("-------------------------------------------------:\n\n");
+  GENERICSTACK_SWITCH(myStackp, 5, 9); if (GENERICSTACK_ERROR(myStackp)) { return 1; }
+  printf("[ 5] Custom   : {isstring=%d,u.s=%s}\n", GENERICSTACK_GET_CUSTOM(myStackp, 5).isstring, GENERICSTACK_GET_CUSTOM(myStackp, 5).u.s);
+  printf("... Use/size: %d/%d (initial+heap=%d+%d)\n", (int) GENERICSTACK_USED(myStackp), (int) GENERICSTACK_LENGTH(myStackp), (int) GENERICSTACK_INITIAL_LENGTH(myStackp), (int) GENERICSTACK_HEAP_LENGTH(myStackp));
+  printf("[ 9] myStruct2: {%d, \"%s\"}\n", ((myStruct2_t *) GENERICSTACK_GET_PTR (myStackp, 9))->i, ((myStruct2_t *) GENERICSTACK_GET_PTR (myStackp, 9))->s);
+  printf("... Use/size: %d/%d (initial+heap=%d+%d)\n", (int) GENERICSTACK_USED(myStackp), (int) GENERICSTACK_LENGTH(myStackp), (int) GENERICSTACK_INITIAL_LENGTH(myStackp), (int) GENERICSTACK_HEAP_LENGTH(myStackp));
+
+  printf("\n...SWITCH again:\n");
+  GENERICSTACK_SWITCH(myStackp, 5, 9); if (GENERICSTACK_ERROR(myStackp)) { return 1; }
+  printf("[ 5] myStruct2: {%d, \"%s\"}\n", ((myStruct2_t *) GENERICSTACK_GET_PTR (myStackp, 5))->i, ((myStruct2_t *) GENERICSTACK_GET_PTR (myStackp, 5))->s);
+  printf("... Use/size: %d/%d (initial+heap=%d+%d)\n", (int) GENERICSTACK_USED(myStackp), (int) GENERICSTACK_LENGTH(myStackp), (int) GENERICSTACK_INITIAL_LENGTH(myStackp), (int) GENERICSTACK_HEAP_LENGTH(myStackp));
+  printf("[ 9] Custom   : {isstring=%d,u.s=%s}\n", GENERICSTACK_GET_CUSTOM(myStackp, 9).isstring, GENERICSTACK_GET_CUSTOM(myStackp, 9).u.s);
+  printf("... Use/size: %d/%d (initial+heap=%d+%d)\n", (int) GENERICSTACK_USED(myStackp), (int) GENERICSTACK_LENGTH(myStackp), (int) GENERICSTACK_INITIAL_LENGTH(myStackp), (int) GENERICSTACK_HEAP_LENGTH(myStackp));
+
   printf("\nPOP interface:\n");
   printf("-------------:\n\n");
   printf("Current use/size: %d/%d\n", (int) GENERICSTACK_USED(myStackp), (int) GENERICSTACK_LENGTH(myStackp));
+  {
+    myStruct_t custom;
+    printf("[ 9] POP Custom\n");  custom = GENERICSTACK_POP_CUSTOM(myStackp);
+    printf("... Use/size: %d/%d (initial+heap=%d+%d)\n", (int) GENERICSTACK_USED(myStackp), (int) GENERICSTACK_LENGTH(myStackp), (int) GENERICSTACK_INITIAL_LENGTH(myStackp), (int) GENERICSTACK_HEAP_LENGTH(myStackp));
+    /*
+     * VOLONTARILY NOT free'ed, because re-used in myFunction2
+    free(custom.u.s);
+    */
+  }
   {
     GENERICSTACKITEMTYPE2TYPE_ARRAY array;
     printf("[ 8] POP Array\n");  array = GENERICSTACK_POP_ARRAY(myStackp);
@@ -187,20 +230,10 @@ static short myFunction1(genericStack_t *myStackp) {
 }
 
 static short myFunction2(genericStack_t *myStackp) {
-  
-  printf("\nGET interface:\n");
-  printf("-------------:\n\n");
-  printf("[10] float : %f\n",         GENERICSTACK_GET_FLOAT (myStackp, 10));
-  printf("... Use/size: %d/%d (initial+heap=%d+%d)\n", (int) GENERICSTACK_USED(myStackp), (int) GENERICSTACK_LENGTH(myStackp), (int) GENERICSTACK_INITIAL_LENGTH(myStackp), (int) GENERICSTACK_HEAP_LENGTH(myStackp));
-
-  return 1;
-}
-
-static short myFunction3(genericStack_t *myStackp) {
   short rcb = 1;
   
-  printf("\nEXISTS and IF interfaces:\n");
-  printf("--------------------------:\n\n");
+  printf("\nEXISTS interface:\n");
+  printf("----------------:\n\n");
   printf("EXISTS : %s\n",                     (rcb = GENERICSTACK_EXISTS(myStackp, 10)    ? 1 : 0) ? "OK" : "KO");
   if (rcb != 0) { printf("IS_ARRAY : %s\n",   (rcb = GENERICSTACK_IS_ARRAY(myStackp, 10)  ? 0 : 1) ? "OK" : "KO"); }
   printf("... Use/size: %d/%d (initial+heap=%d+%d)\n", (int) GENERICSTACK_USED(myStackp), (int) GENERICSTACK_LENGTH(myStackp), (int) GENERICSTACK_INITIAL_LENGTH(myStackp), (int) GENERICSTACK_HEAP_LENGTH(myStackp));
@@ -221,6 +254,11 @@ static short myFunction3(genericStack_t *myStackp) {
   printf("... Use/size: %d/%d (initial+heap=%d+%d)\n", (int) GENERICSTACK_USED(myStackp), (int) GENERICSTACK_LENGTH(myStackp), (int) GENERICSTACK_INITIAL_LENGTH(myStackp), (int) GENERICSTACK_HEAP_LENGTH(myStackp));
   if (rcb != 0) { printf("IS_PTR : %s\n",     (rcb = GENERICSTACK_IS_PTR(myStackp, 10)    ? 0 : 1) ? "OK" : "KO"); }
   printf("... Use/size: %d/%d (initial+heap=%d+%d)\n", (int) GENERICSTACK_USED(myStackp), (int) GENERICSTACK_LENGTH(myStackp), (int) GENERICSTACK_INITIAL_LENGTH(myStackp), (int) GENERICSTACK_HEAP_LENGTH(myStackp));
+  if (rcb != 0) { printf("IS_CUSTOM : %s\n",  (rcb = GENERICSTACK_IS_CUSTOM(myStackp, 17) ? 1 : 0) ? "OK" : "KO"); }
+  printf("... Use/size: %d/%d (initial+heap=%d+%d)\n", (int) GENERICSTACK_USED(myStackp), (int) GENERICSTACK_LENGTH(myStackp), (int) GENERICSTACK_INITIAL_LENGTH(myStackp), (int) GENERICSTACK_HEAP_LENGTH(myStackp));
+  if (rcb) {
+    free(GENERICSTACK_GET_CUSTOM(myStackp, 17).u.s);
+  }
 
   return rcb;
 }
