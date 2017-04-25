@@ -113,6 +113,20 @@ Set C<var> expression result, explicitely typecasted into a C<long double _Compl
 
 =back
 
+Custom datatype (see NOTES) is available via:
+
+=over
+
+=item GENERICSTACK_SET_CUSTOM
+
+Set C<var> expression result, explicitely typecasted into a C<GENERICSTACK_CUSTOM>.
+
+=item GENERICSTACK_SET_CUSTOMP
+
+Set C<*var> expression result, explicitely typecasted into a C<GENERICSTACK_CUSTOM>.
+
+=back
+
 =head2 GENERICSTACK_SET_NA(stackName, index)
 
 Specific macro that removes any association at position C<index>.
@@ -158,6 +172,16 @@ C99 datatypes (see NOTES) may be available via:
 =item GENERICSTACK_GET_DOUBLE__COMPLEX
 
 =item GENERICSTACK_GET_LONG_DOUBLE__COMPLEX
+
+=back
+
+Custom datatype (see NOTES) may be available via:
+
+=over
+
+=item GENERICSTACK_GET_CUSTOM
+
+=item GENERICSTACK_GET_CUSTOMP
 
 =back
 
@@ -357,6 +381,27 @@ If this #define is a true value, then C<_Bool> is supported.
 =item GENERICSTACK_HAVE__COMPLEX
 
 If this #define is a true value, then C<float _Complex>, C<double _Complex> and C<long double _Complex> are supported.
+
+=item GENERICSTACK_HAVE_CUSTOM
+
+If this #define is a true value, then C<GENERICSTACK_CUSTOM> custom type, that has to be defined prior to the include of C<genericStack.h>, is supported, 
+
+=item GENERICSTACK_CUSTOM
+
+If this #define is a true value, this must be a valid datatype, then C<GENERICSTACK_HAVE_CUSTOM> is automatically set to a true value. Example:
+
+  typedef struct myStruct {
+    short isstring;
+    union {
+      int   i;
+      char *s;
+    } u;
+  } myStruct_t;
+
+  #define GENERICSTACK_CUSTOM myStruct_t
+  #include <genericStack.h>
+
+The C<GENERICSTACK_GET_CUSTOMP> macro is in particulary very convenient if you want to work with the data directly in the stack.
 
 =back
 

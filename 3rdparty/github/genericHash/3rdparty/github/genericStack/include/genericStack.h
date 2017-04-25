@@ -19,7 +19,8 @@
 /* Purists will notice this is an array-based implementation. This        */
 /* choice was made because it is fits all my applications.                */
 /*                                                                        */
-/* Define GENERICSTACK_C99 to have C99 data type                          */
+/* Define GENERICSTACK_C99           to have C99 data type                */
+/* Define GENERICSTACK_CUSTOM to XXX to have a custom type XXX            */
 /*                                                                        */
 /* Stack general rules are:                                               */
 /* - a PUSH always increases the stack size if necessary                  */
@@ -159,6 +160,14 @@ const static int __genericStack_max_initial_indice = -1; /* Not used */
 #    define GENERICSTACK_HAVE__COMPLEX  0
 #  endif
 #endif
+#ifdef GENERICSTACK_CUSTOM
+#  undef GENERICSTACK_HAVE_CUSTOM
+#  define GENERICSTACK_HAVE_CUSTOM 1
+#else
+#  ifndef GENERICSTACK_HAVE_CUSTOM
+#    define GENERICSTACK_HAVE_CUSTOM 0
+#  endif
+#endif
 
 typedef void *(*genericStackClone_t)(void *p);
 typedef void  (*genericStackFree_t)(void *p);
@@ -188,6 +197,9 @@ typedef enum genericStackItemType {
   GENERICSTACKITEMTYPE_DOUBLE__COMPLEX,
   GENERICSTACKITEMTYPE_LONG_DOUBLE__COMPLEX,
 #endif
+#if GENERICSTACK_HAVE_CUSTOM
+  GENERICSTACKITEMTYPE_CUSTOM,
+#endif
   _GENERICSTACKITEMTYPE_MAX
 } genericStackItemType_t;
 
@@ -212,6 +224,9 @@ typedef struct genericStackItem {
     float _Complex fc;
     double _Complex dc;
     long double _Complex ldc;
+#endif
+#if GENERICSTACK_HAVE_CUSTOM > 0
+    GENERICSTACK_CUSTOM custom;
 #endif
   } u;
 } genericStackItem_t;
@@ -441,6 +456,10 @@ typedef struct genericStack {
 #define GENERICSTACK_SET_DOUBLE__COMPLEX(stackName, var, index) _GENERICSTACK_SET_BY_TYPE((stackName), double _Complex, (var), GENERICSTACKITEMTYPE_LONG_LONG, dc, (index))
 #define GENERICSTACK_SET_LONG_DOUBLE__COMPLEX(stackName, var, index) _GENERICSTACK_SET_BY_TYPE((stackName), long double _Complex, (var), GENERICSTACKITEMTYPE_LONG_LONG, ldc, (index))
 #endif
+#if GENERICSTACK_HAVE_CUSTOM > 0
+#define GENERICSTACK_SET_CUSTOM(stackName, var, index) _GENERICSTACK_SET_BY_TYPE((stackName), GENERICSTACK_CUSTOM, (var), GENERICSTACKITEMTYPE_CUSTOM, custom, (index))
+#define GENERICSTACK_SET_CUSTOMP(stackName, var, index) _GENERICSTACK_SET_BY_TYPE((stackName), GENERICSTACK_CUSTOM, *(var), GENERICSTACKITEMTYPE_CUSTOM, custom, (index))
+#endif
 
 /* Special case for NA: there is not associated data */
 #define GENERICSTACK_SET_NA(stackName, index) do {			\
@@ -517,6 +536,10 @@ typedef struct genericStack {
 #define GENERICSTACK_GET_DOUBLE__COMPLEX(stackName, index)      _GENERICSTACK_ITEM_DST((stackName), (index), u.dc)
 #define GENERICSTACK_GET_LONG_DOUBLE__COMPLEX(stackName, index) _GENERICSTACK_ITEM_DST((stackName), (index), u.ldc)
 #endif
+#if GENERICSTACK_HAVE_CUSTOM > 0
+#define GENERICSTACK_GET_CUSTOM(stackName, index)  _GENERICSTACK_ITEM_DST((stackName), (index), u.custom)
+#define GENERICSTACK_GET_CUSTOMP(stackName, index)  _GENERICSTACK_ITEM_DST_ADDR((stackName), (index), u.custom)
+#endif
 /* Per def N/A value is undefined - we just have to make */
 /* sure index is processed (c.f. POP operations)         */
 #define GENERICSTACK_GET_NA(stackName, index) index
@@ -544,6 +567,10 @@ typedef struct genericStack {
 #define GENERICSTACK_PUSH_DOUBLE__COMPLEX(stackName, var) GENERICSTACK_SET_DOUBLE__COMPLEX((stackName), (var), (stackName)->used)
 #define GENERICSTACK_PUSH_LONG_DOUBLE__COMPLEX(stackName, var) GENERICSTACK_SET_LONG_DOUBLE__COMPLEX((stackName), (var), (stackName)->used)
 #endif
+#if GENERICSTACK_HAVE_CUSTOM > 0
+#define GENERICSTACK_PUSH_CUSTOM(stackName, var) GENERICSTACK_SET_CUSTOM((stackName), (var), (stackName)->used)
+#define GENERICSTACK_PUSH_CUSTOMP(stackName, var) GENERICSTACK_SET_CUSTOMP((stackName), (var), (stackName)->used)
+#endif
 #define GENERICSTACK_PUSH_NA(stackName) GENERICSTACK_SET_NA((stackName), (stackName)->used)
 
 /* ====================================================================== */
@@ -567,6 +594,9 @@ typedef struct genericStack {
 #define GENERICSTACK_POP_FLOAT__COMPLEX(stackName)       (_GENERICSTACK_REDUCE_LENGTH((stackName)), GENERICSTACK_GET_FLOAT__COMPLEX((stackName),       --(stackName)->used))
 #define GENERICSTACK_POP_DOUBLE__COMPLEX(stackName)      (_GENERICSTACK_REDUCE_LENGTH((stackName)), GENERICSTACK_GET_DOUBLE__COMPLEX((stackName),      --(stackName)->used))
 #define GENERICSTACK_POP_LONG_DOUBLE__COMPLEX(stackName) (_GENERICSTACK_REDUCE_LENGTH((stackName)), GENERICSTACK_GET_LONG_DOUBLE__COMPLEX((stackName), --(stackName)->used))
+#endif
+#if GENERICSTACK_HAVE_CUSTOM > 0
+#define GENERICSTACK_POP_CUSTOM(stackName)  (_GENERICSTACK_REDUCE_LENGTH((stackName)), GENERICSTACK_GET_CUSTOM((stackName), --(stackName)->used))
 #endif
 #define GENERICSTACK_POP_NA(stackName) (_GENERICSTACK_REDUCE_LENGTH((stackName)), GENERICSTACK_GET_NA((stackName), --(stackName)->used))
 
@@ -625,6 +655,10 @@ typedef struct genericStack {
   #define GENERICSTACKITEMTYPE2TYPE_DOUBLE__COMPLEX      double _Complex
   #define GENERICSTACKITEMTYPE2TYPE_LONG_DOUBLE__COMPLEX long double _Complex
 #endif
+#if GENERICSTACK_HAVE_CUSTOM
+  #define GENERICSTACKITEMTYPE2TYPE_CUSTOM GENERICSTACK_CUSTOM
+  #define GENERICSTACKITEMTYPE2TYPE_CUSTOMP GENERICSTACK_CUSTOM *
+#endif
 
 /* ====================================================================== */
 /* Switches two entries                                                   */
@@ -675,10 +709,18 @@ typedef struct genericStack {
 #define GENERICSTACK_IS_DOUBLE__COMPLEX(stackName, i) (GENERICSTACK_EXISTS(stackName, i) && (GENERICSTACKITEMTYPE((stackName), (i)) == GENERICSTACKITEMTYPE_DOUBLE__COMPLEX))
 #define GENERICSTACK_IS_LONG_DOUBLE__COMPLEX(stackName, i) (GENERICSTACK_EXISTS(stackName, i) && (GENERICSTACKITEMTYPE((stackName), (i)) == GENERICSTACKITEMTYPE_LONG_DOUBLE__COMPLEX))
 #endif
+#if GENERICSTACK_HAVE_CUSTOM
+#define GENERICSTACK_IS_CUSTOM(stackName, i) (GENERICSTACK_EXISTS(stackName, i) && (GENERICSTACKITEMTYPE((stackName), (i)) == GENERICSTACKITEMTYPE_CUSTOM))
+#endif
 
 /* ====================================================================== */
 /* Dump macro for development purpose. Fixed to stderr.                   */
 /* ====================================================================== */
+#if GENERICSTACK_HAVE_CUSTOM
+#define _GENERICSTACK_DUMP_CASE_CUSTOM(stackName,indice) case GENERICSTACKITEMTYPE_CUSTOM: fprintf(stderr, "Element[%3d/%3d] type     : CUSTOM\n", indice, GENERICSTACK_USED(stackName)); break;
+#else
+#define _GENERICSTACK_DUMP_CASE_CUSTOM(stackName,indice)
+#endif
 #define GENERICSTACK_DUMP(stackName) do {				\
     int _i_for_dump;							\
     fprintf(stderr, "GENERIC STACK DUMP\n");				\
@@ -719,6 +761,7 @@ typedef struct genericStack {
       default:								\
 	fprintf(stderr, "Element[%3d/%3d] type     : %d\n", _i_for_dump, GENERICSTACK_USED(stackName), GENERICSTACKITEMTYPE(stackName, _i_for_dump)); \
 	break;								\
+        _GENERICSTACK_DUMP_CASE_CUSTOM(stackName,_i_for_dump)           \
       }									\
     }									\
  } while (0)
