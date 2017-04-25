@@ -1,7 +1,24 @@
 #ifndef MARPAESLIF_INTERNAL_STRUCTURES_H
 #define MARPAESLIF_INTERNAL_STRUCTURES_H
 
+#include <marpaESLIF.h>
+#include <marpaWrapper.h>
+
+/*
+ * Prior to genericStack inclusion, we want to define a custom type for performance
+ */
+
+typedef struct marpaESLIFValueMeta {
+  int                         type;
+  int                         contexti;
+  marpaESLIFRepresentation_t  representationp;
+  char                       *encodings;   /* Only for ARRAY type */
+} marpaESLIFValueMeta_t;
+
+#define GENERICSTACK_CUSTOM marpaESLIFValueMeta_t
+
 #include <genericStack.h>
+#include <genericLogger.h>
 #include <pcre2.h>
 #include <tconv.h>
 
