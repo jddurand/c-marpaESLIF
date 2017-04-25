@@ -1,11 +1,6 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <string.h>
-#include <genericLogger.h>
-#include <marpaESLIF.h>
-#include <marpaWrapper.h>
-#include <genericStack.h>
-#include <tconv.h>
 #include <ctype.h>
 #include "marpaESLIF/internal/config.h"
 #include "marpaESLIF/internal/structures.h"
