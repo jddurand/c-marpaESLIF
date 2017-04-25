@@ -14,11 +14,19 @@ ADD_CUSTOM_TARGET (marpaESLIFPerlCopy ${CMAKE_COMMAND} -E echo "${PERL_EXECUTABL
   DEPENDS ${ETC_COPYDIRS_PL} ${MARPAESLIFPERL_SRC_PM} ${MARPAESLIFPERL_SRC_XS} ${MARPAESLIFPERL_SRC_T} dist.ini
   )
 
+#
+# On windows, saying dzil goes to the perl "script" within ADD_TEST !
+# For coherency, we replace everywhere
+# dzil
+# by
+# ${PERL_EXECUTABLE} -MDist::Zilla::App -e "Dist::Zilla::App->run" --
+#
+
 # -----
 # Clean
 # -----
-ADD_CUSTOM_TARGET (marpaESLIFPerlClean ${CMAKE_COMMAND} -E echo "... dzil clean"
-  COMMAND dzil clean
+ADD_CUSTOM_TARGET (marpaESLIFPerlClean ${CMAKE_COMMAND} -E echo "... ${PERL_EXECUTABLE} -MDist::Zilla::App -e \"Dist::Zilla::App->run\" -- clean"
+  COMMAND ${PERL_EXECUTABLE} -MDist::Zilla::App -e "Dist::Zilla::App->run" -- clean
   COMMAND ${CMAKE_COMMAND} -E echo "${CMAKE_COMMAND} -E remove_directory src"
   COMMAND ${CMAKE_COMMAND} -E remove_directory src
   )
@@ -26,29 +34,29 @@ ADD_CUSTOM_TARGET (marpaESLIFPerlClean ${CMAKE_COMMAND} -E echo "... dzil clean"
 # -------
 # Package
 # -------
-ADD_CUSTOM_TARGET (marpaESLIFPerlPackage ALL ${CMAKE_COMMAND} -E echo "... dzil build"
-  COMMAND dzil build
+ADD_CUSTOM_TARGET (marpaESLIFPerlPackage ALL ${CMAKE_COMMAND} -E echo "... ${PERL_EXECUTABLE} -MDist::Zilla::App -e \"Dist::Zilla::App->run\" -- build"
+  COMMAND ${PERL_EXECUTABLE} -MDist::Zilla::App -e "Dist::Zilla::App->run" -- build
   DEPENDS marpaESLIFPerlCopy
   )
 
 # -------------
 # Trial Release
 # -------------
-ADD_CUSTOM_TARGET (marpaESLIFPerlReleaseTrial ${CMAKE_COMMAND} -E echo "dzil release --trial"
-  COMMAND dzil release --trial
+ADD_CUSTOM_TARGET (marpaESLIFPerlReleaseTrial ${CMAKE_COMMAND} -E echo "${PERL_EXECUTABLE} -MDist::Zilla::App -e \"Dist::Zilla::App->run\" -- release --trial"
+  COMMAND ${PERL_EXECUTABLE} -MDist::Zilla::App -e "Dist::Zilla::App->run" -- release --trial
   DEPENDS marpaESLIFPerlCopy
   )
 
 # -------
 # Release
 # -------
-ADD_CUSTOM_TARGET (marpaESLIFPerlRelease ${CMAKE_COMMAND} -E echo "dzil release"
-  COMMAND dzil release
+ADD_CUSTOM_TARGET (marpaESLIFPerlRelease ${CMAKE_COMMAND} -E echo "${PERL_EXECUTABLE} -MDist::Zilla::App -e \"Dist::Zilla::App->run\" -- release"
+  COMMAND ${PERL_EXECUTABLE} -MDist::Zilla::App -e "Dist::Zilla::App->run" -- release
   DEPENDS marpaESLIFPerlCopy
   )
 
 # -----
 # Check
 # -----
-ADD_TEST (NAME marpaESLIFPerlTest COMMAND dzil test)
+ADD_TEST (marpaESLIFPerlTest ${PERL_EXECUTABLE} -MDist::Zilla::App -e "Dist::Zilla::App->run" -- test)
 ADD_DEPENDENCIES (check marpaESLIFPerlCopy)

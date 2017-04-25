@@ -103,13 +103,30 @@ ENDIF ()
 
 INCLUDE(FindPerl)
 IF (PERL_FOUND)
-  FIND_PROGRAM(DZIL_EXECUTABLE dzil)
-  IF (DZIL_EXECUTABLE)
+  EXECUTE_PROCESS(COMMAND ${PERL_EXECUTABLE} -MDist::Zilla::App -e "Dist::Zilla::App->run" -- version
+    OUTPUT_VARIABLE PERL_OUTPUT_VARIABLE
+    ERROR_VARIABLE PERL_ERROR_VARIABLE
+    RESULT_VARIABLE PERL_RETURN_VALUE )
+  IF (NOT PERL_RETURN_VALUE)
+    #
+    # dzil command available or not, we will NOT use the "dzil" command, because on Windows,
+    # at least, doing a FIND_EXECUTABLE on dzil would return a DZIL_EXECUTABLE that is
+    # the PERL SCRIPT version of dzil, not the one with the .bat extension...
+    # This is fatal for at least CTest.
+    #
+    # So let's remain independant on configuration, environment, etc... by using explicitly THIS
+    # perl that wew have found and nothing else
+    #
     MESSAGE(STATUS "")
-    MESSAGE(STATUS "PERL Packaging will be done with dzil command, located at: ${DZIL_EXECUTABLE}")
+    MESSAGE(STATUS "PERL Packaging will be done with Dist::Zilla::App package")
+    MESSAGE(STATUS "Asking for Dist::Zilla version said: ${PERL_OUTPUT_VARIABLE}")
     ADD_SUBDIRECTORY(src/bindings/perl)
+  ELSE ()
+    MESSAGE(STATUS "")
+    MESSAGE(STATUS "PERL Packaging cannot be done without the Dist::Zilla package")
+    MESSAGE(STATUS "Asking for Dist::Zilla version said: ${PERL_ERROR_VARIABLE}")
   ENDIF ()
 ELSE ()
   MESSAGE(STATUS "")
-  MESSAGE(STATUS "PERL Packaging must be done with dzil command, please run cpan Dist::Zilla")
+  MESSAGE(STATUS "PERL Packaging cannot be done without perl -;")
 ENDIF ()
