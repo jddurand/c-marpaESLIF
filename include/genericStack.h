@@ -458,6 +458,7 @@ typedef struct genericStack {
 #endif
 #if GENERICSTACK_HAVE_CUSTOM > 0
 #define GENERICSTACK_SET_CUSTOM(stackName, var, index) _GENERICSTACK_SET_BY_TYPE((stackName), GENERICSTACK_CUSTOM, (var), GENERICSTACKITEMTYPE_CUSTOM, custom, (index))
+#define GENERICSTACK_SET_CUSTOMP(stackName, var, index) _GENERICSTACK_SET_BY_TYPE((stackName), GENERICSTACK_CUSTOM, *(var), GENERICSTACKITEMTYPE_CUSTOM, custom, (index))
 #endif
 
 /* Special case for NA: there is not associated data */
@@ -537,6 +538,7 @@ typedef struct genericStack {
 #endif
 #if GENERICSTACK_HAVE_CUSTOM > 0
 #define GENERICSTACK_GET_CUSTOM(stackName, index)  _GENERICSTACK_ITEM_DST((stackName), (index), u.custom)
+#define GENERICSTACK_GET_CUSTOMP(stackName, index)  _GENERICSTACK_ITEM_DST_ADDR((stackName), (index), u.custom)
 #endif
 /* Per def N/A value is undefined - we just have to make */
 /* sure index is processed (c.f. POP operations)         */
@@ -567,6 +569,7 @@ typedef struct genericStack {
 #endif
 #if GENERICSTACK_HAVE_CUSTOM > 0
 #define GENERICSTACK_PUSH_CUSTOM(stackName, var) GENERICSTACK_SET_CUSTOM((stackName), (var), (stackName)->used)
+#define GENERICSTACK_PUSH_CUSTOMP(stackName, var) GENERICSTACK_SET_CUSTOMP((stackName), (var), (stackName)->used)
 #endif
 #define GENERICSTACK_PUSH_NA(stackName) GENERICSTACK_SET_NA((stackName), (stackName)->used)
 
@@ -654,6 +657,7 @@ typedef struct genericStack {
 #endif
 #if GENERICSTACK_HAVE_CUSTOM
   #define GENERICSTACKITEMTYPE2TYPE_CUSTOM GENERICSTACK_CUSTOM
+  #define GENERICSTACKITEMTYPE2TYPE_CUSTOMP GENERICSTACK_CUSTOM *
 #endif
 
 /* ====================================================================== */
