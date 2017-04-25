@@ -121,6 +121,10 @@ Custom datatype (see NOTES) is available via:
 
 Set C<var> expression result, explicitely typecasted into a C<GENERICSTACK_CUSTOM>.
 
+=item GENERICSTACK_SET_CUSTOMP
+
+Set C<*var> expression result, explicitely typecasted into a C<GENERICSTACK_CUSTOM>.
+
 =back
 
 =head2 GENERICSTACK_SET_NA(stackName, index)
@@ -176,6 +180,8 @@ Custom datatype (see NOTES) may be available via:
 =over
 
 =item GENERICSTACK_GET_CUSTOM
+
+=item GENERICSTACK_GET_CUSTOMP
 
 =back
 
@@ -394,6 +400,8 @@ If this #define is a true value, this must be a valid datatype, then C<GENERICST
 
   #define GENERICSTACK_CUSTOM myStruct_t
   #include <genericStack.h>
+
+The C<GENERICSTACK_GET_CUSTOMP> macro is in particulary very convenient if you want to work with the data directly in the stack.
 
 =back
 
