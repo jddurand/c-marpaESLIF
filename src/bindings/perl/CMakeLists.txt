@@ -19,14 +19,14 @@ ADD_CUSTOM_TARGET (marpaESLIFPerlCopy ${CMAKE_COMMAND} -E echo "${PERL_EXECUTABL
 # For coherency, we replace everywhere
 # dzil
 # by
-# ${PERL_EXECUTABLE} -MDist::Zilla::App -e "Dist::Zilla::App->run" --
+# ${PERL_EXECUTABLE} -MDist::Zilla::App -e "\"Dist::Zilla::App->run\"" --
 #
 
 # -----
 # Clean
 # -----
 ADD_CUSTOM_TARGET (marpaESLIFPerlClean ${CMAKE_COMMAND} -E echo "... ${PERL_EXECUTABLE} -MDist::Zilla::App -e \"Dist::Zilla::App->run\" -- clean"
-  COMMAND ${PERL_EXECUTABLE} -MDist::Zilla::App -e "Dist::Zilla::App->run" -- clean
+  COMMAND ${PERL_EXECUTABLE} -MDist::Zilla::App -e "\"Dist::Zilla::App->run\"" -- clean
   COMMAND ${CMAKE_COMMAND} -E echo "${CMAKE_COMMAND} -E remove_directory src"
   COMMAND ${CMAKE_COMMAND} -E remove_directory src
   )
@@ -35,7 +35,7 @@ ADD_CUSTOM_TARGET (marpaESLIFPerlClean ${CMAKE_COMMAND} -E echo "... ${PERL_EXEC
 # Package
 # -------
 ADD_CUSTOM_TARGET (marpaESLIFPerlPackage ALL ${CMAKE_COMMAND} -E echo "... ${PERL_EXECUTABLE} -MDist::Zilla::App -e \"Dist::Zilla::App->run\" -- build"
-  COMMAND ${PERL_EXECUTABLE} -MDist::Zilla::App -e "Dist::Zilla::App->run" -- build
+  COMMAND ${PERL_EXECUTABLE} -MDist::Zilla::App -e "\"Dist::Zilla::App->run\"" -- build
   DEPENDS marpaESLIFPerlCopy
   )
 
@@ -43,7 +43,7 @@ ADD_CUSTOM_TARGET (marpaESLIFPerlPackage ALL ${CMAKE_COMMAND} -E echo "... ${PER
 # Trial Release
 # -------------
 ADD_CUSTOM_TARGET (marpaESLIFPerlReleaseTrial ${CMAKE_COMMAND} -E echo "${PERL_EXECUTABLE} -MDist::Zilla::App -e \"Dist::Zilla::App->run\" -- release --trial"
-  COMMAND ${PERL_EXECUTABLE} -MDist::Zilla::App -e "Dist::Zilla::App->run" -- release --trial
+  COMMAND ${PERL_EXECUTABLE} -MDist::Zilla::App -e "\"Dist::Zilla::App->run\"" -- release --trial
   DEPENDS marpaESLIFPerlCopy
   )
 
@@ -51,12 +51,12 @@ ADD_CUSTOM_TARGET (marpaESLIFPerlReleaseTrial ${CMAKE_COMMAND} -E echo "${PERL_E
 # Release
 # -------
 ADD_CUSTOM_TARGET (marpaESLIFPerlRelease ${CMAKE_COMMAND} -E echo "${PERL_EXECUTABLE} -MDist::Zilla::App -e \"Dist::Zilla::App->run\" -- release"
-  COMMAND ${PERL_EXECUTABLE} -MDist::Zilla::App -e "Dist::Zilla::App->run" -- release
+  COMMAND ${PERL_EXECUTABLE} -MDist::Zilla::App -e "\"Dist::Zilla::App->run\"" -- release
   DEPENDS marpaESLIFPerlCopy
   )
 
 # -----
 # Check
 # -----
-ADD_TEST (marpaESLIFPerlTest ${PERL_EXECUTABLE} -MDist::Zilla::App -e "Dist::Zilla::App->run" -- test)
+ADD_TEST (marpaESLIFPerlTest ${PERL_EXECUTABLE} -MDist::Zilla::App -e "\"Dist::Zilla::App->run\"" -- test)
 ADD_DEPENDENCIES (check marpaESLIFPerlCopy)
