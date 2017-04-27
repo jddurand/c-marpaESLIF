@@ -171,7 +171,8 @@ for my $test_data (@tests) {
               last PROCESSING;
           }
 
-          my $status = eval { MarpaX::ESLIF::Value->new($re, MyValueInterface->new())->value(); 1 };
+          my $valueInterface = MyValueInterface->new();
+          my $status = eval { MarpaX::ESLIF::Value->new($re, $valueInterface)->value(); 1 };
           my $last_hand;
           my ($handoffset, $handlength) = eval { $re->lastCompletedLocation('hand') };
           if ( $handlength ) {
