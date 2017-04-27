@@ -223,7 +223,7 @@ foreach (qw/MARPAESLIF_EVENTTYPE_NONE MARPAESLIF_EVENTTYPE_COMPLETED MARPAESLIF_
 #
 # Test Value constants
 #
-foreach (qw/MARPAESLIF_VALUE_TYPE_UNDEF MARPAESLIF_VALUE_TYPE_CHAR MARPAESLIF_VALUE_TYPE_SHORT MARPAESLIF_VALUE_TYPE_INT MARPAESLIF_VALUE_TYPE_LONG MARPAESLIF_VALUE_TYPE_FLOAT MARPAESLIF_VALUE_TYPE_DOUBLE MARPAESLIF_VALUE_TYPE_PTR MARPAESLIF_VALUE_TYPE_PTR_SHALLOW MARPAESLIF_VALUE_TYPE_ARRAY MARPAESLIF_VALUE_TYPE_ARRAY_SHALLOW/) {
+foreach (qw/MARPAESLIF_VALUE_TYPE_UNDEF MARPAESLIF_VALUE_TYPE_CHAR MARPAESLIF_VALUE_TYPE_SHORT MARPAESLIF_VALUE_TYPE_INT MARPAESLIF_VALUE_TYPE_LONG MARPAESLIF_VALUE_TYPE_FLOAT MARPAESLIF_VALUE_TYPE_DOUBLE MARPAESLIF_VALUE_TYPE_PTR MARPAESLIF_VALUE_TYPE_ARRAY/) {
   ok (defined(MarpaX::ESLIF::Value::Type->$_), "MarpaX::ESLIF::Value::Type->$_ is defined: " . MarpaX::ESLIF::Value::Type->$_);
 }
 
@@ -297,6 +297,7 @@ my @strings = (
     "1 + ( 2 + ( 3 + ( 4 + 50) ) )   /* comment after */",
     " 100"
     );
+
 #
 # Test the parse() interface
 #
@@ -306,6 +307,7 @@ for (my $i = 0; $i <= $#strings; $i++) {
   $log->infof("Testing parse() on %s", $string);
   my $recognizerInterface = MyRecognizer->new($string, $log);
   my $valueInterface = MyValue->new($log);
+
   if ($eslifGrammar->parse($recognizerInterface, $valueInterface)) {
     my $result = $valueInterface->getResult;
     $log->infof("Result: %s", $result);

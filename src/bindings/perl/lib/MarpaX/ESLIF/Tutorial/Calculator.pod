@@ -145,7 +145,7 @@ C<isWithHighRankOnly> select only rules that have the highest eventual C<rank> a
 
 =head3 Immediate parsing
 
-So far, so good. The default actions for symbols and rules is always to concatenate any accepted token. So we expect the output of parsing e.g. C<(1+2)*3> to be... C<(1+2)*3>:
+So far, so good. The default actions for symbols and rules is always to concatenate token that was read automatically. Characters are always interpreted in B<UTF-8> encoding, regardless of the original encoding. So we expect the output of parsing e.g. C<(1+2)*3> to be... C<(1+2)*3>:
 
   package main;
 
@@ -159,7 +159,7 @@ So far, so good. The default actions for symbols and rules is always to concaten
 
 We used the C<parse()> method of the grammar, a short-hand version of parsing that I<does not allow interaction not any event>.
 
-Tare care with rules default action though: it is C<::concat> so this will try to concatenate all the RHSs. If one the RHSs is a user-defined value, then MarpaX::ESLIF cannot know how to represent it, so this will be silently dropped when doing the concatenation. The exception is when there is a single RHSs: rule's C<::concat> is forced to be equivalent to C<::shift>, that is guaranteed to not change the nature of the value being transfered from the right-hand side of the rule to the left-hand side.
+Note that C<::concat> will also happily concatenate alternatives pushed by the end-user, then it is the Perl's "stringification" of the alternative that is taken, I<as-is>, i.e. as an array of bytes regardless of any encoding. Up to the end user to eventually make sure this is UTF-8 compatible (and it is the case by default in Perl).
 
 =head3 Grammar and C<:discard> symbol
 
@@ -246,8 +246,6 @@ The actions are trivial:
   $result = $eslifGrammar->parse($eslifRecognizerInterface, $eslifValueInterface) ? $eslifValueInterface->getResult : '??';
   printf "Default parse tree value of $input: %s\n", $result;
   # Default parse tree value of (1 + 2) * 3: 9
-
-What would have happened with the C<::copy[1]> action ? The default is always to concatenate I<only> what is under the engine control, i.e. C<'(' Expression ')'> would produce C<()>, because C<Expression> that is in the middle is an external object from MarpaX::ESLIF point of view.
 
 =item Error output
 
@@ -582,13 +580,13 @@ You have to create a valuator that is using your valuation interface: C<MarpaX::
     printf "======> %s\n", $eslifValueInterface->getResult;
   }
 
-You may rememember that we said that the default value for a rule is always to concatenate the input. And indeed, if we remove all the actions from the grammar above, it will try to concatenate all the lexemes and alternatives together, that would leave to this output:
+You may rememember that we said that the default value for a rule is always to concatenate the input and the alternatives stringification. And indeed, if we remove all the actions from the grammar above, it will try to concatenate all the lexemes and alternatives together, that would leave to this output:
 
   (1**2+2**2)*3**2
 
-i.e. the parse tree result is the concatenation of all the valid input, this is a neat way to remove automatically C<:discard> rules from the input -;
+This is a neat way to remove automatically C<:discard> rules from the input -;
 
-You have to notice also that I<nothing> obliges you to inject a alternative value that would be of the same length of what I<should> be in the input: an alternative is totally is totally under user's responsbility. For instance, injecting the string C<*ANYTHING*> for the C<POW> token:
+You have to notice also that I<nothing> obliges you to inject a alternative value that would be of the same length of what I<should> be in the input. For instance, injecting the string C<*ANYTHING*> for the C<POW> token:
 
           $eslifRecognizer->lexemeRead('POW', '*ANYTHING*', 0);
 
@@ -597,12 +595,6 @@ would result in this stringification:
   (1*ANYTHING*2+2*ANYTHING*2)*3*ANYTHING*2
 
 =head1 NOTES
-
-Always remember that rule default action is C<::concat>, that will silently drop everything coming from user-space (i.e. lexeme injection), I<except> when there is a single RHS: then C<::concat> is changed to <::shift> that is guaranteed to not change the nature of the RHS.
-
-Also, for symbols, C<::concat> is an exact synonym for C<::shift>.
-
-This is why the default action for both rules and symbols is: C<::concat>.
 
 All the examples above are adapted from L<Marpa::R2's Semantics|https://metacpan.org/pod/distribution/Marpa-R2/pod/Semantics.pod> documentation.
 

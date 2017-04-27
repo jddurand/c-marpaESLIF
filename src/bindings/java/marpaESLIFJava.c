@@ -145,6 +145,76 @@ typedef struct marpaESLIF_stringGenerator { /* We use genericLogger to generate 
 #define PTR_TO_JLONG(p) ((jlong) (p))
 #endif
 
+#define MARPAESLIF_IS_PTR(marpaESLIFValuep, indicei, rcb) do {          \
+    marpaESLIFValueResult_t *_marpaESLIFValueResultp;                   \
+                                                                        \
+    _marpaESLIFValueResultp = marpaESLIFValue_stack_getp(marpaESLIFValuep, indicei); \
+    if (_marpaESLIFValueResultp == NULL) {                              \
+      RAISEEXCEPTION(envp, "marpaESLIFValue_stack_getp failure");       \
+    }                                                                   \
+                                                                        \
+    rcb = (_marpaESLIFValueResultp->type == MARPAESLIF_VALUE_TYPE_PTR); \
+  } while (0)
+
+#define MARPAESLIF_IS_ARRAY(marpaESLIFValuep, indicei, rcb) do {        \
+    marpaESLIFValueResult_t *_marpaESLIFValueResultp;                   \
+                                                                        \
+    _marpaESLIFValueResultp = marpaESLIFValue_stack_getp(marpaESLIFValuep, indicei); \
+    if (_marpaESLIFValueResultp == NULL) {                              \
+      RAISEEXCEPTION(envp, "marpaESLIFValue_stack_getp failure");       \
+    }                                                                   \
+                                                                        \
+    rcb = (_marpaESLIFValueResultp->type == MARPAESLIF_VALUE_TYPE_ARRAY); \
+  } while (0)
+
+#define MARPAESLIF_GET_PTR(marpaESLIFValuep, indicei, _p) do {          \
+    marpaESLIFValueResult_t *_marpaESLIFValueResultp;                   \
+                                                                        \
+    _marpaESLIFValueResultp = marpaESLIFValue_stack_getp(marpaESLIFValuep, indicei); \
+    if (_marpaESLIFValueResultp == NULL) {                              \
+      RAISEEXCEPTION(envp, "marpaESLIFValue_stack_getp failure");       \
+    }                                                                   \
+                                                                        \
+    if (_marpaESLIFValueResultp->type != MARPAESLIF_VALUE_TYPE_PTR) {   \
+      RAISEEXCEPTIONF(envp, "marpaESLIFValueResultp->type is not PTR (got %d)", _marpaESLIFValueResultp->type); \
+    }                                                                   \
+                                                                        \
+    _p = _marpaESLIFValueResultp->u.p;                                  \
+  } while (0)
+
+#define MARPAESLIF_SET_PTR(marpaESLIFValuep, indicei, _contexti, _representationp,_p) do { \
+    marpaESLIFValueResult_t _marpaESLIFValueResult;                     \
+                                                                        \
+    _marpaESLIFValueResult.contexti        = _contexti;                 \
+    _marpaESLIFValueResult.sizel           = 0;                         \
+    _marpaESLIFValueResult.representationp = _representationp;          \
+    _marpaESLIFValueResult.shallowb        = 0;                         \
+    _marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_PTR; \
+    _marpaESLIFValueResult.u.p             = _p;                        \
+                                                                        \
+    if (! marpaESLIFValue_stack_setb(marpaESLIFValuep, indicei, &_marpaESLIFValueResult)) { \
+      RAISEEXCEPTION(envp, "marpaESLIFValue_stack_setb failure");       \
+    }                                                                   \
+                                                                        \
+  } while (0)
+
+#define MARPAESLIF_GET_ARRAY(marpaESLIFValuep, indicei, _contexti, _p, _l) do { \
+    marpaESLIFValueResult_t *_marpaESLIFValueResultp;                   \
+                                                                        \
+    _marpaESLIFValueResultp = marpaESLIFValue_stack_getp(marpaESLIFValuep, indicei); \
+    if (_marpaESLIFValueResultp == NULL) {                              \
+      RAISEEXCEPTION(envp, "marpaESLIFValue_stack_getp failure");       \
+    }                                                                   \
+                                                                        \
+    if (_marpaESLIFValueResultp->type != MARPAESLIF_VALUE_TYPE_ARRAY) { \
+      RAISEEXCEPTIONF(envp, "marpaESLIFValueResultp->type is not ARRAY (got %d)", _marpaESLIFValueResultp->type); \
+    }                                                                   \
+                                                                        \
+    _contexti = _marpaESLIFValueResultp->contexti;                      \
+    _p        = _marpaESLIFValueResultp->u.p;                           \
+    _l        = _marpaESLIFValueResultp->sizel;                         \
+  } while (0)
+
 /* -------------------------------- */
 /* Globals and accessors as macros */
 /* -------------------------------- */
@@ -3285,13 +3355,9 @@ static short marpaESLIFValueRuleCallback(void *userDatavp, marpaESLIFValue_t *ma
     }
 
     for (i = arg0i; i <= argni; i++) {
-      if (! marpaESLIFValue_stack_is_ptrb(marpaESLIFValuep, i, &ptrb)) {
-        RAISEEXCEPTION(envp, "marpaESLIFValue_stack_is_ptrb failure");
-      }
+      MARPAESLIF_IS_PTR(marpaESLIFValuep, i, ptrb);
       if (ptrb) {
-        if (! marpaESLIFValue_stack_get_ptrb(marpaESLIFValuep, i, NULL /* contextip */, NULL /* representationp */, (void **) &objectp, NULL /* shallowbp */)) {
-          RAISEEXCEPTION(envp, "marpaESLIFValue_stack_get_intb failure");
-        }
+        MARPAESLIF_GET_PTR(marpaESLIFValuep, i, objectp);
         /* This is an object created by the user interface, that we globalized */
         (*envp)->SetObjectArrayElement(envp, list, i - arg0i, objectp);
         if (HAVEEXCEPTION(envp)) {
@@ -3299,15 +3365,11 @@ static short marpaESLIFValueRuleCallback(void *userDatavp, marpaESLIFValue_t *ma
         }
       } else {
         /* This must be a lexeme - always in the form of an array */
-        if (! marpaESLIFValue_stack_is_arrayb(marpaESLIFValuep, i, &arrayb)) {
-          RAISEEXCEPTION(envp, "marpaESLIFValue_stack_is_arrayb failure");
-        }
+        MARPAESLIF_IS_ARRAY(marpaESLIFValuep, i, arrayb);
         if (! arrayb) {
           RAISEEXCEPTIONF(envp, "At indice %d of stack, item not an ARRAY", i);
         }
-        if (! marpaESLIFValue_stack_get_arrayb(marpaESLIFValuep, i, &contexti, NULL /* representationp */, &bytep, &bytel, NULL /* shallowbp */)) {
-          RAISEEXCEPTION(envp, "marpaESLIFValue_stack_get_arrayb failure");
-        }
+        MARPAESLIF_GET_ARRAY(marpaESLIFValuep, i, contexti, bytep, bytel);
         /* We never push array, i.e. contexti must be 0 in any case here */
         if (contexti != 0) {
           RAISEEXCEPTIONF(envp, "marpaESLIFValue_stack_get_array success but contexti is %d instead of 0", contexti);
@@ -3351,11 +3413,9 @@ static short marpaESLIFValueRuleCallback(void *userDatavp, marpaESLIFValue_t *ma
     }
   }
 
-  rcb =  marpaESLIFValue_stack_set_ptrb(marpaESLIFValuep, resulti, 1 /* context: any value != 0 */, marpaESLIFRepresentationCallback, (void *) actionResultGlobalRef, 0 /* shallowb */);
-  if (! rcb) {
-    RAISEEXCEPTION(envp, "marpaESLIFValue_stack_set_ptrb failure");
-  }
+  MARPAESLIF_SET_PTR(marpaESLIFValuep, resulti, 1 /* context: any value != 0 */, marpaESLIFRepresentationCallback, actionResultGlobalRef);
 
+  rcb = 1;
   goto done;
 
  err:
@@ -3433,10 +3493,7 @@ static short marpaESLIFValueSymbolCallback(void *userDatavp, marpaESLIFValue_t *
     }
   }
 
-  rcb =  marpaESLIFValue_stack_set_ptrb(marpaESLIFValuep, resulti, 1 /* context: any value != 0 */, marpaESLIFRepresentationCallback, (void *) actionResultGlobalRef, 0 /* shallowb */);
-  if (! rcb) {
-    RAISEEXCEPTION(envp, "marpaESLIFValue_stack_set_ptrb failure");
-  }
+  MARPAESLIF_SET_PTR(marpaESLIFValuep, resulti, 1 /* context: any value != 0 */, marpaESLIFRepresentationCallback, actionResultGlobalRef);
 
   goto done;
 

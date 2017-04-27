@@ -2,21 +2,13 @@
 #define MARPAESLIF_INTERNAL_STRUCTURES_H
 
 #include <marpaESLIF.h>
-#include <marpaWrapper.h>
-
 /*
  * Prior to genericStack inclusion, we want to define a custom type for performance
  */
 
-typedef struct marpaESLIFValueMeta {
-  int                         type;
-  int                         contexti;
-  marpaESLIFRepresentation_t  representationp;
-  char                       *encodings;   /* Only for ARRAY type */
-} marpaESLIFValueMeta_t;
+#define GENERICSTACK_CUSTOM marpaESLIFValueResult_t
 
-#define GENERICSTACK_CUSTOM marpaESLIFValueMeta_t
-
+#include <marpaWrapper.h>
 #include <genericStack.h>
 #include <genericLogger.h>
 #include <pcre2.h>
@@ -257,10 +249,7 @@ struct marpaESLIFValue {
   short                    previousPassWasPassthroughb;
   int                      previousArg0i;
   int                      previousArgni;
-  genericStack_t          *valueStackp;
-  genericStack_t          *typeStackp;
-  genericStack_t          *contextStackp;
-  genericStack_t          *representationStackp;
+  genericStack_t          *valueResultStackp;
   short                    inValuationb;
   marpaESLIF_symbol_t     *symbolp;
   marpaESLIF_rule_t       *rulep;

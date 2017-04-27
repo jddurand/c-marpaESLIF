@@ -159,7 +159,7 @@ typedef MarpaX_ESLIF_Value_t      *MarpaX_ESLIF_Value;
 
 /* Static functions declarations */
 static int                             marpaESLIF_getTypei(pTHX_ SV* svp);
-static short                           marpaESLIF_canb(pTHX_ SV *svp, char *method);
+static short                           marpaESLIF_canb(pTHX_ SV *svp, char *methods);
 static void                            marpaESLIF_call_methodv(pTHX_ SV *svp, char *methods, SV *argsvp);
 static SV                             *marpaESLIF_call_methodp(pTHX_ SV *svp, char *methods);
 static SV                             *marpaESLIF_call_actionp(pTHX_ SV *svp, char *methods, AV *avp);
@@ -206,6 +206,65 @@ static const char   *ASCIIs = "ASCII";
 #define MARPAESLIF_CROAKF(fmts, ...) croak("[In %s at %s:%d] " fmts, funcs, MARPAESLIF_FILENAMES, __LINE__, __VA_ARGS__)
 #define MARPAESLIF_WARN(msgs)        warn("[In %s at %s:%d] %s", funcs, MARPAESLIF_FILENAMES, __LINE__, msgs)
 #define MARPAESLIF_WARNF(fmts, ...)  warn("[In %s at %s:%d] " fmts, funcs, MARPAESLIF_FILENAMES, __LINE__, __VA_ARGS__)
+
+#define MARPAESLIF_IS_PTR(marpaESLIFValuep, indicei, rcb) do {          \
+    marpaESLIFValueResult_t *_marpaESLIFValueResultp;                   \
+                                                                        \
+    _marpaESLIFValueResultp = marpaESLIFValue_stack_getp(marpaESLIFValuep, indicei); \
+    if (_marpaESLIFValueResultp == NULL) {                              \
+      MARPAESLIF_CROAKF("marpaESLIFValue_stack_getp failure, %s", strerror(errno)); \
+    }                                                                   \
+                                                                        \
+    rcb = (_marpaESLIFValueResultp->type == MARPAESLIF_VALUE_TYPE_PTR); \
+  } while (0)
+
+#define MARPAESLIF_GET_PTR(marpaESLIFValuep, indicei, _p) do {          \
+    marpaESLIFValueResult_t *_marpaESLIFValueResultp;                   \
+                                                                        \
+    _marpaESLIFValueResultp = marpaESLIFValue_stack_getp(marpaESLIFValuep, indicei); \
+    if (_marpaESLIFValueResultp == NULL) {                              \
+      MARPAESLIF_CROAKF("marpaESLIFValue_stack_getp failure, %s", strerror(errno)); \
+    }                                                                   \
+                                                                        \
+    if (_marpaESLIFValueResultp->type != MARPAESLIF_VALUE_TYPE_PTR) {   \
+      MARPAESLIF_CROAKF("marpaESLIFValueResultp->type is not PTR (got %d)", _marpaESLIFValueResultp->type); \
+    }                                                                   \
+                                                                        \
+    _p = _marpaESLIFValueResultp->u.p;                                  \
+  } while (0)
+
+#define MARPAESLIF_SET_PTR(marpaESLIFValuep, indicei, _contexti, _representationp, _p) do { \
+    marpaESLIFValueResult_t _marpaESLIFValueResult;                     \
+                                                                        \
+    _marpaESLIFValueResult.contexti        = _contexti;                 \
+    _marpaESLIFValueResult.sizel           = 0;                         \
+    _marpaESLIFValueResult.representationp = _representationp;          \
+    _marpaESLIFValueResult.shallowb        = 0;                         \
+    _marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_PTR; \
+    _marpaESLIFValueResult.u.p             = _p;                        \
+                                                                        \
+    if (! marpaESLIFValue_stack_setb(marpaESLIFValuep, indicei, &_marpaESLIFValueResult)) { \
+      MARPAESLIF_CROAKF("marpaESLIFValue_stack_setb failure, %s", strerror(errno)); \
+    }                                                                   \
+                                                                        \
+  } while (0)
+
+#define MARPAESLIF_GET_ARRAY(marpaESLIFValuep, indicei, _p, _l) do {    \
+    marpaESLIFValueResult_t *_marpaESLIFValueResultp;                   \
+                                                                        \
+    _marpaESLIFValueResultp = marpaESLIFValue_stack_getp(marpaESLIFValuep, indicei); \
+    if (_marpaESLIFValueResultp == NULL) {                              \
+      MARPAESLIF_CROAKF("marpaESLIFValue_stack_getp failure, %s", strerror(errno)); \
+    }                                                                   \
+                                                                        \
+    if (_marpaESLIFValueResultp->type != MARPAESLIF_VALUE_TYPE_ARRAY) { \
+      MARPAESLIF_CROAKF("marpaESLIFValueResultp->type is not ARRAY (got %d)", _marpaESLIFValueResultp->type); \
+    }                                                                   \
+                                                                        \
+    _p = _marpaESLIFValueResultp->u.p;                                  \
+    _l = _marpaESLIFValueResultp->sizel;                                \
+  } while (0)
+
 
 /*****************************************************************************/
 /* Copy of Params-Validate-1.26/lib/Params/Validate/XS.xs                    */
@@ -281,20 +340,26 @@ static int marpaESLIF_getTypei(pTHX_ SV* svp) {
 }
 
 /*****************************************************************************/
-static short marpaESLIF_canb(pTHX_ SV *svp, char *method)
+static short marpaESLIF_canb(pTHX_ SV *svp, char *methods)
 /*****************************************************************************/
 {
   AV *list = newAV();
   SV *rcp;
   int type;
 
-  av_push(list, newSVpv(method, 0));
+  /*
+    fprintf(stderr, "START marpaESLIF_canb(pTHX_ SV *svp, \"%s\")\n", methods);
+  */
+  av_push(list, newSVpv(methods, 0));
   rcp = marpaESLIF_call_actionp(aTHX_ svp, "can", list);
   av_undef(list);
 
   type = marpaESLIF_getTypei(aTHX_ rcp);
   SvREFCNT_dec(rcp);
 
+  /*
+    fprintf(stderr, "END marpaESLIF_canb(pTHX_ SV *svp, \"%s\")\n", methods);
+  */
   return (type & CODEREF) == CODEREF;
 }
 
@@ -304,6 +369,9 @@ static void marpaESLIF_call_methodv(pTHX_ SV *svp, char *methods, SV *argsvp)
 {
   dSP;
 
+  /*
+    fprintf(stderr, "START marpaESLIF_call_methodv(pTHX_ SV *svp, \"%s\", SV *argsvp)\n", methods);
+  */
   ENTER;
   SAVETMPS;
 
@@ -319,13 +387,26 @@ static void marpaESLIF_call_methodv(pTHX_ SV *svp, char *methods, SV *argsvp)
 
   FREETMPS;
   LEAVE;
+  /*
+    fprintf(stderr, "END marpaESLIF_call_methodv(pTHX_ SV *svp, \"%s\", SV *argsvp)\n", methods);
+  */
 }
 
 /*****************************************************************************/
 static SV *marpaESLIF_call_methodp(pTHX_ SV *svp, char *methods)
 /*****************************************************************************/
 {
-  return marpaESLIF_call_actionp(aTHX_ svp, methods, NULL);
+  SV *rcp;
+
+  /*
+    fprintf(stderr, "START marpaESLIF_call_methodp(pTHX_ SV *svp, \"%s\")\n", methods);
+  */
+  rcp = marpaESLIF_call_actionp(aTHX_ svp, methods, NULL);
+  /*
+    fprintf(stderr, "END marpaESLIF_call_methodp(pTHX_ SV *svp, \"%s\")\n", methods);
+  */
+
+  return rcp;
 }
 
 /*****************************************************************************/
@@ -338,6 +419,9 @@ static SV *marpaESLIF_call_actionp(pTHX_ SV *svp, char *methods, AV *avp)
   SSize_t aviteratol;
   dSP;
 
+  /*
+    fprintf(stderr, "START marpaESLIF_call_actionp(pTHX_ SV *svp, \"%s\", AV *avp)\n", methods);
+  */
   ENTER;
   SAVETMPS;
 
@@ -363,6 +447,9 @@ static SV *marpaESLIF_call_actionp(pTHX_ SV *svp, char *methods, AV *avp)
   FREETMPS;
   LEAVE;
 
+  /*
+    fprintf(stderr, "END marpaESLIF_call_actionp(pTHX_ SV *svp, \"%s\", AV *avp)\n", methods);
+  */
   return rcp;
 }
 
@@ -370,11 +457,14 @@ static SV *marpaESLIF_call_actionp(pTHX_ SV *svp, char *methods, AV *avp)
 static SV *marpaESLIF_call_actionv(pTHX_ SV *svp, char *methods, AV *avp)
 /*****************************************************************************/
 {
-  static const char *funcs = "marpaESLIF_call_actionp";
+  static const char *funcs = "marpaESLIF_call_actionv";
   SSize_t avsizel = (avp != NULL) ? av_len(avp) + 1 : 0;
   SSize_t aviteratol;
   dSP;
 
+  /*
+    fprintf(stderr, "START marpaESLIF_call_actionv(pTHX_ SV *svp, \"%s\", AV *avp)\n", methods);
+  */
   ENTER;
   SAVETMPS;
 
@@ -397,6 +487,9 @@ static SV *marpaESLIF_call_actionv(pTHX_ SV *svp, char *methods, AV *avp)
   PUTBACK;
   FREETMPS;
   LEAVE;
+  /*
+    fprintf(stderr, "END marpaESLIF_call_actionv(pTHX_ SV *svp, \"%s\", AV *avp)\n", methods);
+  */
 }
 
 /*****************************************************************************/
@@ -406,6 +499,9 @@ static IV marpaESLIF_call_methodi(pTHX_ SV *svp, char *methods)
   IV rci;
   dSP;
 
+  /*
+    fprintf(stderr, "START marpaESLIF_call_methodi(pTHX_ SV *svp, \"%s\")\n", methods);
+  */
   ENTER;
   SAVETMPS;
 
@@ -424,6 +520,9 @@ static IV marpaESLIF_call_methodi(pTHX_ SV *svp, char *methods)
   FREETMPS;
   LEAVE;
 
+  /*
+    fprintf(stderr, "END marpaESLIF_call_methodi(pTHX_ SV *svp, \"%s\")\n", methods);
+  */
   return rci;
 }
 
@@ -434,6 +533,9 @@ static short marpaESLIF_call_methodb(pTHX_ SV *svp, char *methods)
   short rcb;
   dSP;
 
+  /*
+    fprintf(stderr, "START marpaESLIF_call_methodb(pTHX_ SV *svp, \"%s\")\n", methods);
+  */
   ENTER;
   SAVETMPS;
 
@@ -452,6 +554,9 @@ static short marpaESLIF_call_methodb(pTHX_ SV *svp, char *methods)
   FREETMPS;
   LEAVE;
 
+  /*
+    fprintf(stderr, "END marpaESLIF_call_methodb(pTHX_ SV *svp, \"%s\")\n", methods);
+  */
   return rcb;
 }
 
@@ -615,53 +720,22 @@ static SV *marpaESLIF_getSvFromStack(pTHX_ MarpaX_ESLIF_Value_t *MarpaX_ESLIF_Va
   static const char       *funcs = "marpaESLIF_getSvFromStack";
   SV                      *objectp;
   short                    ptrb;
-  short                    arrayb;
   marpaESLIFValueResult_t *marpaESLIFValueResultp;
-  int                      contexti;
 
   /* fprintf(stderr, "In %s for indice %d, bytep %p, bytel %ld\n", funcs, i, bytep, (unsigned long) bytel); */
   if (bytep != NULL) {
     /* Go immediately to array processing */
     goto is_array;
   }
-  if (! marpaESLIFValue_stack_is_ptrb(marpaESLIFValuep, i, &ptrb)) {
-    MARPAESLIF_CROAKF("marpaESLIFValue_stack_is_ptrb failure, %s", strerror(errno));
-  }
+  MARPAESLIF_IS_PTR(marpaESLIFValuep, i, ptrb);
   if (ptrb) {
-    if (! marpaESLIFValue_stack_get_ptrb(marpaESLIFValuep, i, NULL /* contextip */, NULL /* representationpp */, (void **) &objectp, NULL /* shallowbp */)) {
-      MARPAESLIF_CROAKF("marpaESLIFValue_stack_get_ptrb failure, %s", strerror(errno));
-    }
+    MARPAESLIF_GET_PTR(marpaESLIFValuep, i, objectp);
     if (! trueSVOnlyb) {
       objectp = SvREFCNT_inc(objectp);
     }
   } else {
     /* This must be a lexeme or user-land object - always in the form of an array */
-    if (! marpaESLIFValue_stack_is_arrayb(marpaESLIFValuep, i, &arrayb)) {
-      MARPAESLIF_CROAK("marpaESLIFValue_stack_is_arrayb failure");
-    }
-    if (! arrayb) {
-      char *foundType;
-      short flagb;
-      if      (marpaESLIFValue_stack_is_undefb (marpaESLIFValuep, i, &flagb) && flagb) foundType = "UNDEF\n";
-      else if (marpaESLIFValue_stack_is_charb  (marpaESLIFValuep, i, &flagb) && flagb) foundType = "CHAR\n";
-      else if (marpaESLIFValue_stack_is_shortb (marpaESLIFValuep, i, &flagb) && flagb) foundType = "SHORT\n";
-      else if (marpaESLIFValue_stack_is_intb   (marpaESLIFValuep, i, &flagb) && flagb) foundType = "INT\n";
-      else if (marpaESLIFValue_stack_is_longb  (marpaESLIFValuep, i, &flagb) && flagb) foundType = "LONG\n";
-      else if (marpaESLIFValue_stack_is_floatb (marpaESLIFValuep, i, &flagb) && flagb) foundType = "FLOAT\n";
-      else if (marpaESLIFValue_stack_is_doubleb(marpaESLIFValuep, i, &flagb) && flagb) foundType = "DOUBLE\n";
-      else if (marpaESLIFValue_stack_is_ptrb   (marpaESLIFValuep, i, &flagb) && flagb) foundType = "PTR\n"; /*...*/
-      else if (marpaESLIFValue_stack_is_arrayb (marpaESLIFValuep, i, &flagb) && flagb) foundType = "ARRAY\n"; /*...*/
-      else                                                                             foundType = "UNKNOWN\n";
-
-      MARPAESLIF_CROAKF("Internal stack error, item not an ARRAY at indice %d, found %s instead", i, foundType);
-    }
-    if (! marpaESLIFValue_stack_get_arrayb(marpaESLIFValuep, i, &contexti, NULL /* representationpp */, (void **) &bytep, &bytel, NULL /* shallowbp */)) {
-      MARPAESLIF_CROAK("marpaESLIFValue_stack_get_arrayb failure");
-    }
-    /* We never push array, i.e. contexti must be 0 in any case here */
-    if (contexti != 0) {
-      MARPAESLIF_CROAKF("marpaESLIFValue_stack_get_array success but contexti is %d instead of 0", contexti);
-    }
+    MARPAESLIF_GET_ARRAY(marpaESLIFValuep, i, bytep, bytel);
   is_array:
     /* Either bytel is > 0, then this is the input, else this is a user-defined object */
     if (bytel > 0) {
@@ -703,10 +777,11 @@ static short marpaESLIF_valueRuleCallbackb(void *userDatavp, marpaESLIFValue_t *
 /*****************************************************************************/
 {
   dTHX;
-  static const char        *funcs = "marpaESLIF_valueRuleCallbackb";
+  static const char        *funcs               = "marpaESLIF_valueRuleCallbackb";
   MarpaX_ESLIF_Value_t     *MarpaX_ESLIF_Valuep = (MarpaX_ESLIF_Value_t *) userDatavp;
-  AV                       *list                    = NULL;
+  AV                       *list                = NULL;
   SV                       *actionResult;
+  SV                       *svp;
   int                       i;
 
   /* fprintf(stderr, "... Rule action %s Stack[%d..%d] => Stack[%d]\n", MarpaX_ESLIF_Valuep->actions, arg0i, argni, resulti); */
@@ -714,7 +789,11 @@ static short marpaESLIF_valueRuleCallbackb(void *userDatavp, marpaESLIFValue_t *
   if (! nullableb) {
     list = newAV();
     for (i = arg0i; i <= argni; i++) {
-      av_push(list, marpaESLIF_getSvFromStack(aTHX_ MarpaX_ESLIF_Valuep, marpaESLIFValuep, i, NULL /* bytep */, 0 /* bytel */, 0 /* trueSVOnlyb */));
+      svp = marpaESLIF_getSvFromStack(aTHX_ MarpaX_ESLIF_Valuep, marpaESLIFValuep, i, NULL /* bytep */, 0 /* bytel */, 0 /* trueSVOnlyb */);
+      /*
+        sv_dump(svp);
+      */
+      av_push(list, svp);
     }
   }
   actionResult = marpaESLIF_call_actionp(aTHX_ MarpaX_ESLIF_Valuep->Perl_valueInterfacep, MarpaX_ESLIF_Valuep->actions, list);
@@ -722,9 +801,7 @@ static short marpaESLIF_valueRuleCallbackb(void *userDatavp, marpaESLIFValue_t *
     av_undef(list);
   }
 
-  if (! marpaESLIFValue_stack_set_ptrb(marpaESLIFValuep, resulti, 1 /* context: any value != 0 */, marpaESLIF_representation, (void *) actionResult, 0 /* shallowb */)) {
-    MARPAESLIF_CROAK("marpaESLIFValue_stack_set_ptrb failure");
-  }
+  MARPAESLIF_SET_PTR(marpaESLIFValuep, resulti, 1 /* context: any value != 0 */, marpaESLIF_representation, actionResult);
 
   return 1;
 }
@@ -747,9 +824,7 @@ static short marpaESLIF_valueSymbolCallbackb(void *userDatavp, marpaESLIFValue_t
   actionResult = marpaESLIF_call_actionp(aTHX_ MarpaX_ESLIF_Valuep->Perl_valueInterfacep, MarpaX_ESLIF_Valuep->actions, list);
   av_undef(list);
 
-  if (! marpaESLIFValue_stack_set_ptrb(marpaESLIFValuep, resulti, 1 /* context: any value != 0 */, marpaESLIF_representation, (void *) actionResult, 0 /* shallowb */)) {
-    MARPAESLIF_CROAK("marpaESLIFValue_stack_set_ptrb failure");
-  }
+  MARPAESLIF_SET_PTR(marpaESLIFValuep, resulti, 1 /* context: any value != 0 */, marpaESLIF_representation, actionResult);
 
   return 1;
 }
@@ -763,8 +838,10 @@ static void marpaESLIF_valueFreeCallbackv(void *userDatavp, int contexti, void *
   /* We are called when valuation is doing to withdraw an item in the stack that is a PTR or an ARRAY that we own */
   /* It is guaranteed to be non-NULL at this stage */
   /*
+  fprintf(stderr, "------------\n");
   fprintf(stderr, "Withdrawing:\n");
   sv_dump((SV *) p);
+  fprintf(stderr, "------------\n");
   */
   SvREFCNT_dec(p);
 }
