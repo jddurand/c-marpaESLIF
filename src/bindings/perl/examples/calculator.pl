@@ -340,7 +340,7 @@ if ($eslifRecognizer->isCanContinue) {
   } while ($eslifRecognizer->isCanContinue)
 }
 $eslifValueInterface = MyValue->new();
-my $eslifValue = MarpaX::ESLIF::Value->new($eslifRecognizer, $eslifValueInterface);
+$eslifValue = MarpaX::ESLIF::Value->new($eslifRecognizer, $eslifValueInterface);
 while ($eslifValue->value()) {
   #
   # (1**2 + 2**2) * 3**2 = (1**2+2**2)*3**2
@@ -396,7 +396,7 @@ if ($eslifRecognizer->isCanContinue) {
   } while ($eslifRecognizer->isCanContinue)
 }
 $eslifValueInterface = MyValue->new();
-my $eslifValue = MarpaX::ESLIF::Value->new($eslifRecognizer, $eslifValueInterface);
+$eslifValue = MarpaX::ESLIF::Value->new($eslifRecognizer, $eslifValueInterface);
 while ($eslifValue->value()) {
   #
   # (1**2 + 2**2) * 3**2 = (1*ANYTHING*2+2*ANYTHING*2)*3*ANYTHING*2

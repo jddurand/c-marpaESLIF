@@ -84,28 +84,27 @@ typedef enum marpaESLIFValueType {
   MARPAESLIF_VALUE_TYPE_FLOAT,
   MARPAESLIF_VALUE_TYPE_DOUBLE,
   MARPAESLIF_VALUE_TYPE_PTR,
-  MARPAESLIF_VALUE_TYPE_PTR_SHALLOW,
-  MARPAESLIF_VALUE_TYPE_ARRAY,
-  MARPAESLIF_VALUE_TYPE_ARRAY_SHALLOW
+  MARPAESLIF_VALUE_TYPE_ARRAY
 } marpaESLIFValueType_t;
 
 /* Valuation result */
 /* The representation can return encoding information, giving eventual encoding of this information in encodingOfEncodingsp, starting at *encodingsp, spreaded over *encodinglp bytes */
 typedef short (*marpaESLIFRepresentation_t)(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp, char **inputcpp, size_t *inputlp, short *characterStreambp, char **encodingOfEncodingsp, char **encodingsp, size_t *encodinglp);
 typedef struct marpaESLIFValueResult {
-  marpaESLIFValueType_t type;
+  int                        contexti;          /* Free value meaningful only to the user */
+  size_t                     sizel;             /* Length of data in case value is an ARRAY - always 0 otherwise */
+  marpaESLIFRepresentation_t representationp;   /* How a user-land alternative is represented if it was in the input */
+  short                      shallowb;          /* In case of PTR or ARRAY, indicate if this is a shallow pointer */
+  marpaESLIFValueType_t      type;              /* Type for tagging the following union */
   union {
-    char c;                                   /* Value is a char */
-    short b;                                  /* Value is a short */
-    int i;                                    /* Value is an int */
-    long l;                                   /* Value is a long */
-    float f;                                  /* Value is a float */
-    double d;                                 /* Value is a double */
-    void *p;                                  /* Value is a pointer */
+    char    c;                                  /* Value is a char */
+    short   b;                                  /* Value is a short */
+    int     i;                                  /* Value is an int */
+    long    l;                                  /* Value is a long */
+    float   f;                                  /* Value is a float */
+    double  d;                                  /* Value is a double */
+    void   *p;                                  /* Value is a pointer */
   } u;
-  int contexti;                               /* Free value meaninful to the user */
-  size_t sizel;                               /* Length of data in case value is an ARRAY - always 0 otherwise */
-  marpaESLIFRepresentation_t representationp; /* How a user-land alternative is represented if it was in the input */
 } marpaESLIFValueResult_t;
 
 /* An alternative from external lexer point of view */
@@ -202,49 +201,14 @@ extern "C" {
   marpaESLIF_EXPORT void                    marpaESLIFValue_freev(marpaESLIFValue_t *marpaESLIFValuep);
 
   /* Stack management when doing valuation */
-  marpaESLIF_EXPORT short                   marpaESLIFValue_stack_set_undefb(marpaESLIFValue_t *marpaESLIFValuep, int indicei);
-  marpaESLIF_EXPORT short                   marpaESLIFValue_stack_set_charb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int contexti, marpaESLIFRepresentation_t representationp, char c);
-  marpaESLIF_EXPORT short                   marpaESLIFValue_stack_set_shortb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int contexti, marpaESLIFRepresentation_t representationp, short b);
-  marpaESLIF_EXPORT short                   marpaESLIFValue_stack_set_intb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int contexti, marpaESLIFRepresentation_t representationp, int i);
-  marpaESLIF_EXPORT short                   marpaESLIFValue_stack_set_longb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int contexti, marpaESLIFRepresentation_t representationp, long l);
-  marpaESLIF_EXPORT short                   marpaESLIFValue_stack_set_floatb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int contexti, marpaESLIFRepresentation_t representationp, float f);
-  marpaESLIF_EXPORT short                   marpaESLIFValue_stack_set_doubleb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int contexti, marpaESLIFRepresentation_t representationp, double d);
-  marpaESLIF_EXPORT short                   marpaESLIFValue_stack_set_ptrb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int contexti, marpaESLIFRepresentation_t representationp, void *p, short shallowb);
-  marpaESLIF_EXPORT short                   marpaESLIFValue_stack_set_arrayb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int contexti, marpaESLIFRepresentation_t representationp, void *p, size_t l, short shallowb);
-
-  /* forget is like undef except that memory management is switched off - a possible use for it is when a PTR in the stack is stored into another structure, the later pushed in the result stack */
-  /* For example X ::= Y, where Y is a PTR with value yp, and X is a PTR to a struct with value xp and content { void *yp } : xp and yp are not the same, though xp contain yp. */
+  marpaESLIF_EXPORT short                   marpaESLIFValue_stack_setb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, marpaESLIFValueResult_t *marpaESLIFValueResultp);
+  /* forget is like setting a value of type MARPAESLIFVALUE_TYPE_UNDEF except that memory management is switched off */
   marpaESLIF_EXPORT short                   marpaESLIFValue_stack_forgetb(marpaESLIFValue_t *marpaESLIFValuep, int indicei);
-  marpaESLIF_EXPORT short                   marpaESLIFValue_stack_get_contextb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int *contextip);
-  marpaESLIF_EXPORT short                   marpaESLIFValue_stack_get_representationb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, marpaESLIFRepresentation_t *representationpp);
+  marpaESLIF_EXPORT short                   marpaESLIFValue_stack_getb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, marpaESLIFValueResult_t *marpaESLIFValueResultp);
+  marpaESLIF_EXPORT marpaESLIFValueResult_t *marpaESLIFValue_stack_getp(marpaESLIFValue_t *marpaESLIFValuep, int indicei);
 
-  marpaESLIF_EXPORT short                   marpaESLIFValue_stack_is_undefb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, short *undefbp);
-  marpaESLIF_EXPORT short                   marpaESLIFValue_stack_is_charb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, short *charbp);
-  marpaESLIF_EXPORT short                   marpaESLIFValue_stack_is_shortb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, short *shortbp);
-  marpaESLIF_EXPORT short                   marpaESLIFValue_stack_is_intb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, short *intbp);
-  marpaESLIF_EXPORT short                   marpaESLIFValue_stack_is_longb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, short *longbp);
-  marpaESLIF_EXPORT short                   marpaESLIFValue_stack_is_floatb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, short *floatbp);
-  marpaESLIF_EXPORT short                   marpaESLIFValue_stack_is_doubleb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, short *doublebp);
-  marpaESLIF_EXPORT short                   marpaESLIFValue_stack_is_ptrb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, short *ptrbp);
-  marpaESLIF_EXPORT short                   marpaESLIFValue_stack_is_arrayb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, short *arraybp);
-
-  marpaESLIF_EXPORT short                   marpaESLIFValue_stack_get_charb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int *contextip, marpaESLIFRepresentation_t *representationpp, char *cp);
-  marpaESLIF_EXPORT short                   marpaESLIFValue_stack_get_shortb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int *contextip, marpaESLIFRepresentation_t *representationpp, short *bp);
-  marpaESLIF_EXPORT short                   marpaESLIFValue_stack_get_intb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int *contextip, marpaESLIFRepresentation_t *representationpp, int *ip);
-  marpaESLIF_EXPORT short                   marpaESLIFValue_stack_get_longb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int *contextip, marpaESLIFRepresentation_t *representationpp, long *lp);
-  marpaESLIF_EXPORT short                   marpaESLIFValue_stack_get_floatb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int *contextip, marpaESLIFRepresentation_t *representationpp, float *fp);
-  marpaESLIF_EXPORT short                   marpaESLIFValue_stack_get_doubleb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int *contextip, marpaESLIFRepresentation_t *representationpp, double *dp);
-  marpaESLIF_EXPORT short                   marpaESLIFValue_stack_get_ptrb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int *contextip, marpaESLIFRepresentation_t *representationpp, void **pp, short *shallowbp);
-  marpaESLIF_EXPORT short                   marpaESLIFValue_stack_get_arrayb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int *contextip, marpaESLIFRepresentation_t *representationpp, void **pp, size_t *lp, short *shallowbp);
-
-  marpaESLIF_EXPORT short                   marpaESLIFValue_stack_getAndForget_charb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int *contextip, marpaESLIFRepresentation_t *representationpp, char *cp);
-  marpaESLIF_EXPORT short                   marpaESLIFValue_stack_getAndForget_shortb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int *contextip, marpaESLIFRepresentation_t *representationpp, short *bp);
-  marpaESLIF_EXPORT short                   marpaESLIFValue_stack_getAndForget_intb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int *contextip, marpaESLIFRepresentation_t *representationpp, int *ip);
-  marpaESLIF_EXPORT short                   marpaESLIFValue_stack_getAndForget_longb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int *contextip, marpaESLIFRepresentation_t *representationpp, long *lp);
-  marpaESLIF_EXPORT short                   marpaESLIFValue_stack_getAndForget_floatb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int *contextip, marpaESLIFRepresentation_t *representationpp, float *fp);
-  marpaESLIF_EXPORT short                   marpaESLIFValue_stack_getAndForget_doubleb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int *contextip, marpaESLIFRepresentation_t *representationpp, double *dp);
-  marpaESLIF_EXPORT short                   marpaESLIFValue_stack_getAndForget_ptrb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int *contextip, marpaESLIFRepresentation_t *representationpp, void **pp, short *shallowbp);
-  marpaESLIF_EXPORT short                   marpaESLIFValue_stack_getAndForget_arrayb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, int *contextip, marpaESLIFRepresentation_t *representationpp, void **pp, size_t *lp, short *shallowbp);
+  /* getAndForgetb transfers the memory management from the stack to the end-user in one call */
+  marpaESLIF_EXPORT short                   marpaESLIFValue_stack_getAndForgetb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, marpaESLIFValueResult_t *marpaESLIFValueResultp);
 
   marpaESLIF_EXPORT void                    marpaESLIF_freev(marpaESLIF_t *marpaESLIFp);
 #ifdef __cplusplus

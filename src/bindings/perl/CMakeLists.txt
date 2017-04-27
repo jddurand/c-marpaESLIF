@@ -14,19 +14,20 @@ ADD_CUSTOM_TARGET (marpaESLIFPerlCopy ${CMAKE_COMMAND} -E echo "${PERL_EXECUTABL
   DEPENDS ${ETC_COPYDIRS_PL} ${MARPAESLIFPERL_SRC_PM} ${MARPAESLIFPERL_SRC_XS} ${MARPAESLIFPERL_SRC_T} dist.ini
   )
 
+SET (DIST_ZILLA_APP_RUN "\"Dist::Zilla::App->run\"")
 #
 # On windows, saying dzil goes to the perl "script" within ADD_TEST !
 # For coherency, we replace everywhere
 # dzil
 # by
-# ${PERL_EXECUTABLE} -MDist::Zilla::App -e "\"Dist::Zilla::App->run\"" --
+# ${PERL_EXECUTABLE} -MDist::Zilla::App -e ${DIST_ZILLA_APP_RUN} --
 #
 
 # -----
 # Clean
 # -----
-ADD_CUSTOM_TARGET (marpaESLIFPerlClean ${CMAKE_COMMAND} -E echo "... ${PERL_EXECUTABLE} -MDist::Zilla::App -e \"Dist::Zilla::App->run\" -- clean"
-  COMMAND ${PERL_EXECUTABLE} -MDist::Zilla::App -e "\"Dist::Zilla::App->run\"" -- clean
+ADD_CUSTOM_TARGET (marpaESLIFPerlClean ${CMAKE_COMMAND} -E echo "... ${PERL_EXECUTABLE} -MDist::Zilla::App -e ${DIST_ZILLA_APP_RUN} -- clean"
+  COMMAND ${PERL_EXECUTABLE} -MDist::Zilla::App -e ${DIST_ZILLA_APP_RUN} -- clean
   COMMAND ${CMAKE_COMMAND} -E echo "${CMAKE_COMMAND} -E remove_directory src"
   COMMAND ${CMAKE_COMMAND} -E remove_directory src
   )
@@ -34,29 +35,34 @@ ADD_CUSTOM_TARGET (marpaESLIFPerlClean ${CMAKE_COMMAND} -E echo "... ${PERL_EXEC
 # -------
 # Package
 # -------
-ADD_CUSTOM_TARGET (marpaESLIFPerlPackage ALL ${CMAKE_COMMAND} -E echo "... ${PERL_EXECUTABLE} -MDist::Zilla::App -e \"Dist::Zilla::App->run\" -- build"
-  COMMAND ${PERL_EXECUTABLE} -MDist::Zilla::App -e "\"Dist::Zilla::App->run\"" -- build
+ADD_CUSTOM_TARGET (marpaESLIFPerlPackage ALL ${CMAKE_COMMAND} -E echo "... ${PERL_EXECUTABLE} -MDist::Zilla::App -e ${DIST_ZILLA_APP_RUN} -- build"
+  COMMAND ${PERL_EXECUTABLE} -MDist::Zilla::App -e "${DIST_ZILLA_APP_RUN}" -- build
   DEPENDS marpaESLIFPerlCopy
   )
 
 # -------------
 # Trial Release
 # -------------
-ADD_CUSTOM_TARGET (marpaESLIFPerlReleaseTrial ${CMAKE_COMMAND} -E echo "${PERL_EXECUTABLE} -MDist::Zilla::App -e \"Dist::Zilla::App->run\" -- release --trial"
-  COMMAND ${PERL_EXECUTABLE} -MDist::Zilla::App -e "\"Dist::Zilla::App->run\"" -- release --trial
+ADD_CUSTOM_TARGET (marpaESLIFPerlReleaseTrial ${CMAKE_COMMAND} -E echo "${PERL_EXECUTABLE} -MDist::Zilla::App -e ${DIST_ZILLA_APP_RUN} -- release --trial"
+  COMMAND ${PERL_EXECUTABLE} -MDist::Zilla::App -e "${DIST_ZILLA_APP_RUN}" -- release --trial
   DEPENDS marpaESLIFPerlCopy
   )
 
 # -------
 # Release
 # -------
-ADD_CUSTOM_TARGET (marpaESLIFPerlRelease ${CMAKE_COMMAND} -E echo "${PERL_EXECUTABLE} -MDist::Zilla::App -e \"Dist::Zilla::App->run\" -- release"
-  COMMAND ${PERL_EXECUTABLE} -MDist::Zilla::App -e "\"Dist::Zilla::App->run\"" -- release
+ADD_CUSTOM_TARGET (marpaESLIFPerlRelease ${CMAKE_COMMAND} -E echo "${PERL_EXECUTABLE} -MDist::Zilla::App -e ${DIST_ZILLA_APP_RUN} -- release"
+  COMMAND ${PERL_EXECUTABLE} -MDist::Zilla::App -e "${DIST_ZILLA_APP_RUN}" -- release
   DEPENDS marpaESLIFPerlCopy
   )
 
 # -----
 # Check
 # -----
-ADD_TEST (marpaESLIFPerlTest ${PERL_EXECUTABLE} -MDist::Zilla::App -e "\"Dist::Zilla::App->run\"" -- test)
+# Quite painful but apparently CTest revisit all parameters differently v.s. the OS...
+if (WIN32)
+  ADD_TEST (marpaESLIFPerlTest ${PERL_EXECUTABLE} -MDist::Zilla::App -e "Dist::Zilla::App->run" -- test)
+ELSE ()
+  ADD_TEST (marpaESLIFPerlTest ${PERL_EXECUTABLE} -MDist::Zilla::App -e "\"Dist::Zilla::App->run\"" -- test)
+ENDIF ()
 ADD_DEPENDENCIES (check marpaESLIFPerlCopy)

@@ -23,9 +23,7 @@ ESLIF values are mapped to constants. This module is giving access to them, alth
   $valueType = MarpaX::ESLIF::Value::Type->MARPAESLIF_VALUE_TYPE_FLOAT;         #  5
   $valueType = MarpaX::ESLIF::Value::Type->MARPAESLIF_VALUE_TYPE_DOUBLE;        #  6
   $valueType = MarpaX::ESLIF::Value::Type->MARPAESLIF_VALUE_TYPE_PTR;           #  7
-  $valueType = MarpaX::ESLIF::Value::Type->MARPAESLIF_VALUE_TYPE_PTR_SHALLOW;   #  8
-  $valueType = MarpaX::ESLIF::Value::Type->MARPAESLIF_VALUE_TYPE_ARRAY;         #  9
-  $valueType = MarpaX::ESLIF::Value::Type->MARPAESLIF_VALUE_TYPE_ARRAY_SHALLOW; # 10
+  $valueType = MarpaX::ESLIF::Value::Type->MARPAESLIF_VALUE_TYPE_ARRAY;         #  8
 
 =cut
 
@@ -67,17 +65,9 @@ I<C>'s C<double>.
 
 I<C>'s C<void *>.
 
-=head2 MARPAESLIF_VALUE_TYPE_PTR_SHALLOW
-
-I<C>'s C<void *> where the later is a shallow copy.
-
 =head2 MARPAESLIF_VALUE_TYPE_ARRAY
 
 I<C>'s pointer to a C<{void *, size_t}> structure.
-
-=head2 MARPAESLIF_VALUE_TYPE_ARRAY_SHALLOW
-
-I<C>'s pointer to a C<{void *, size_t}> structure where C<void *> is a shallow copy.
 
 =cut
 
