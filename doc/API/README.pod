@@ -191,7 +191,7 @@ Default action for symbols, and correspond to the grammar keyword C<action>.
 
 Default action for symbols, and correspond to the grammar keyword C<symbol-action>.
 
-=item defaultSymbolActions
+=item defaultFreeActions
 
 Default action for symbols, and correspond to the grammar keyword C<free-action>.
 
