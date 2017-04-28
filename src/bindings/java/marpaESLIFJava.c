@@ -502,7 +502,7 @@ static void marpaESLIFValueContextCleanup(JNIEnv *envp, marpaESLIFValueContext_t
 static void marpaESLIFRecognizerContextFree(JNIEnv *envp, marpaESLIFRecognizerContext_t *marpaESLIFRecognizerContextp, short onStackb);
 static void marpaESLIFRecognizerContextCleanup(JNIEnv *envp, marpaESLIFRecognizerContext_t *marpaESLIFRecognizerContextp);
 static short marpaESLIFValueContextInit(JNIEnv *envp, jobject eslifValueInterfacep, marpaESLIFValueContext_t *marpaESLIFValueContextp);
-static short marpaESLIFRepresentationCallback(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp, char **inputcpp, size_t *inputlp, short *characterStreambp, char **encodingOfEncodingsp, char **encodingsp, size_t *encodinglp);
+static short marpaESLIFRepresentationCallback(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp, char **inputcpp, size_t *inputlp);
 
 /* --------------- */
 /* Internal macros */
@@ -3797,7 +3797,7 @@ static short marpaESLIFValueContextInit(JNIEnv *envp, jobject eslifValueInterfac
 }
 
 /*****************************************************************************/
-static short marpaESLIFRepresentationCallback(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp, char **inputcpp, size_t *inputlp, short *characterStreambp, char **encodingOfEncodingsp, char **encodingsp, size_t *encodinglp)
+static short marpaESLIFRepresentationCallback(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp, char **inputcpp, size_t *inputlp)
 /*****************************************************************************/
 {
   static const char        *funcs = "marpaESLIFRepresentationCallback";
@@ -3858,10 +3858,6 @@ static short marpaESLIFRepresentationCallback(void *userDatavp, marpaESLIFValueR
       if (marpaESLIFValueContextp->previous_utf16s != NULL) {
         *inputcpp             = (char *) marpaESLIFValueContextp->previous_utf16s;
         *inputlp              = (size_t) len;
-        *characterStreambp    = 1;
-        *encodingOfEncodingsp = (char *) ASCIIs;
-        *encodingsp           = (char *) UTF16s;
-        *encodinglp           = UTF16l;
       }
     }
   }

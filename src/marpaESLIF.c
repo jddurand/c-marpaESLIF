@@ -11434,12 +11434,8 @@ static short _marpaESLIFRecognizer_concat_valueResultCallback(void *userDatavp, 
   } else {
     srcs                = NULL;
     srcl                = 0;
-    characterStreamb    = 0;
-    encodingOfEncodings = NULL;
-    encodings           = NULL;
-    encodingl           = 0;
 
-    if (! representationp(contextp->userDatavp, marpaESLIFValueResultp, &srcs, &srcl, &characterStreamb, &encodingOfEncodings, &encodings, &encodingl)) {
+    if (! representationp(contextp->userDatavp, marpaESLIFValueResultp, &srcs, &srcl)) {
       goto err;
     }
 

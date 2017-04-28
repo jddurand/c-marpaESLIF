@@ -189,8 +189,8 @@ static void                            marpaESLIF_paramIsEncodingv(pTHX_ SV *sv)
 static void                            marpaESLIF_paramIsLoggerInterfacev(pTHX_ SV *sv);
 static void                            marpaESLIF_paramIsRecognizerInterfacev(pTHX_ SV *sv);
 static void                            marpaESLIF_paramIsValueInterfacev(pTHX_ SV *sv);
-static short                           marpaESLIF_representation(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp, char **inputcpp, size_t *inputlp, short *characterStreambp, char **encodingOfEncodingsp, char **encodingsp, size_t *encodinglp);
-static char                           *marpaESLIF_sv2byte(pTHX_ SV *svp, char **bytepp, size_t *bytelp, short *characterStreambp, char **encodingOfEncodingsp, char **encodingsp, size_t *encodinglp, short warnIsFatalb);
+static short                           marpaESLIF_representation(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp, char **inputcpp, size_t *inputlp);
+static char                           *marpaESLIF_sv2byte(pTHX_ SV *svp, char **bytepp, size_t *bytelp, short encodingInformationb, short *characterStreambp, char **encodingOfEncodingsp, char **encodingsp, size_t *encodinglp, short warnIsFatalb);
 
 /* Static constants */
 static const char   *UTF8s = "UTF-8";
@@ -1116,7 +1116,7 @@ static void marpaESLIF_paramIsValueInterfacev(pTHX_ SV *sv)
 }
 
 /*****************************************************************************/
-static short marpaESLIF_representation(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp, char **inputcpp, size_t *inputlp, short *characterStreambp, char **encodingOfEncodingsp, char **encodingsp, size_t *encodinglp)
+static short marpaESLIF_representation(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp, char **inputcpp, size_t *inputlp)
 /*****************************************************************************/
 {
   static const char    *funcs               = "marpaESLIF_representation";
@@ -1129,14 +1129,14 @@ static short marpaESLIF_representation(void *userDatavp, marpaESLIFValueResult_t
   if (marpaESLIFValueResultp->type != MARPAESLIF_VALUE_TYPE_PTR) {
     MARPAESLIF_CROAKF("User-defined value type is not MARPAESLIF_VALUE_TYPE_PTR but %d", marpaESLIFValueResultp->type);
   }
-  MarpaX_ESLIF_Valuep->previous_strings = marpaESLIF_sv2byte(aTHX_ (SV *) marpaESLIFValueResultp->u.p, inputcpp, inputlp, characterStreambp, encodingOfEncodingsp, encodingsp, encodinglp, 0 /* warnIsFatalb */);
+  MarpaX_ESLIF_Valuep->previous_strings = marpaESLIF_sv2byte(aTHX_ (SV *) marpaESLIFValueResultp->u.p, inputcpp, inputlp, 0 /* encodingInformationb */, NULL /* characterStreambp */, NULL /* encodingOfEncodingsp */, NULL /* encodingsp */, NULL /* encodinglp */, 0 /* warnIsFatalb */);
 
   /* Always return a true value, else ::concat will abort */
   return 1;
 }
 
 /*****************************************************************************/
-static char *marpaESLIF_sv2byte(pTHX_ SV *svp, char **bytepp, size_t *bytelp, short *characterStreambp, char **encodingOfEncodingsp, char **encodingsp, size_t *encodinglp, short warnIsFatalb)
+static char *marpaESLIF_sv2byte(pTHX_ SV *svp, char **bytepp, size_t *bytelp, short encodingInformationb, short *characterStreambp, char **encodingOfEncodingsp, char **encodingsp, size_t *encodinglp, short warnIsFatalb)
 /*****************************************************************************/
 {
   static const char *funcs = "marpaESLIF_sv2byte";
@@ -1166,7 +1166,7 @@ static char *marpaESLIF_sv2byte(pTHX_ SV *svp, char **bytepp, size_t *bytelp, sh
 
   if ((strings != NULL) && (len > 0)) {
     okb = 1;
-    if (DO_UTF8(svtmp)) {
+    if (encodingInformationb && DO_UTF8(svtmp)) {
       characterStreamb    = 1;
       encodingOfEncodings = (char *) ASCIIs;
       encodings           = (char *) UTF8s;
@@ -1355,15 +1355,17 @@ CODE:
     marpaESLIF_sv2byte(aTHX_ Perl_encodingp,
                        &(marpaESLIFGrammarOption.encodings),
                        &(marpaESLIFGrammarOption.encodingl),
-                       NULL /* characterStreambp */,
+                       1, /* encodingInformationb */
+                       NULL, /* characterStreambp */
                        &(marpaESLIFGrammarOption.encodingOfEncodings),
-                       NULL /* encodingsp */,
-                       NULL /* encodinglp */,
+                       NULL, /* encodingsp */
+                       NULL, /* encodinglp */
                        1 /* warnIsFatalb */);
     marpaESLIF_sv2byte(aTHX_ Perl_grammarp,
                        (char **) &(marpaESLIFGrammarOption.bytep),
                        &(marpaESLIFGrammarOption.bytel),
-                       NULL /* characterStreambp */,
+                       0, /* encodingInformationb */
+                       NULL, /* characterStreambp */
                        NULL, /* encodingOfEncodingsp */
                        NULL, /* encodingsp */
                        NULL, /* encodinglp */
@@ -1372,7 +1374,8 @@ CODE:
     marpaESLIF_sv2byte(aTHX_ Perl_grammarp,
                        (char **) &(marpaESLIFGrammarOption.bytep),
                        &(marpaESLIFGrammarOption.bytel),
-                       NULL /* characterStreambp */,
+                       1, /* encodingInformationb */
+                       NULL, /* characterStreambp */
                        &(marpaESLIFGrammarOption.encodingOfEncodings),
                        &(marpaESLIFGrammarOption.encodings),
                        &(marpaESLIFGrammarOption.encodingl),
