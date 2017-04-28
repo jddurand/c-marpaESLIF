@@ -88,8 +88,9 @@ typedef enum marpaESLIFValueType {
 } marpaESLIFValueType_t;
 
 /* Valuation result */
-/* The representation can return encoding information, giving eventual encoding of this information in encodingOfEncodingsp, starting at *encodingsp, spreaded over *encodinglp bytes */
-typedef short (*marpaESLIFRepresentation_t)(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp, char **inputcpp, size_t *inputlp, short *characterStreambp, char **encodingOfEncodingsp, char **encodingsp, size_t *encodinglp);
+/* The representation returns a sequence of bytes and is appended AS-IS */
+/* It is legal to return NULL in *inputcpp or 0 in *inputlp: representation will be ignored */
+typedef short (*marpaESLIFRepresentation_t)(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp, char **inputcpp, size_t *inputlp);
 typedef struct marpaESLIFValueResult {
   int                        contexti;          /* Free value meaningful only to the user */
   size_t                     sizel;             /* Length of data in case value is an ARRAY - always 0 otherwise */
