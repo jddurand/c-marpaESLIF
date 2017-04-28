@@ -60,9 +60,5 @@ ADD_CUSTOM_TARGET (marpaESLIFPerlRelease ${CMAKE_COMMAND} -E echo "${PERL_EXECUT
 # Check
 # -----
 # Quite painful but apparently CTest revisit all parameters differently v.s. the OS...
-if (WIN32)
-  ADD_TEST (marpaESLIFPerlTest ${PERL_EXECUTABLE} -MDist::Zilla::App -e "Dist::Zilla::App->run" -- test)
-ELSE ()
-  ADD_TEST (marpaESLIFPerlTest ${PERL_EXECUTABLE} -MDist::Zilla::App -e "\"Dist::Zilla::App->run\"" -- test)
-ENDIF ()
+ADD_TEST (marpaESLIFPerlTest ${PERL_EXECUTABLE} -MDist::Zilla::App -e "Dist::Zilla::App->run" -- test)
 ADD_DEPENDENCIES (check marpaESLIFPerlCopy)
