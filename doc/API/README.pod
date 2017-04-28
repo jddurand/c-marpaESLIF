@@ -47,7 +47,7 @@ which describe what is a I<string>: this is a sequence of C<bytel> bytes, starti
 
 =head2 ESLIF
 
-Any application must start by instanciating a main ESLIF. This object is thread-safe, re-entrant, and can be reused as many times as needed (in contrary to grammars that may be derived from it, see ESLIFGrammar section below). The recommended usage is to create an ESLIF instance once for the entire process lifetime.
+Any application must start by instanciating a main ESLIF. This object is thread-safe, re-entrant, and can be reused as many times as needed, in contrary to other namespaces. The recommended usage is to create an ESLIF instance once for the entire process lifetime.
 
 =head3 C<marpaESLIF_versions>
 
@@ -63,13 +63,13 @@ Returns a non-C<NULL> string describing the ESLIF version, in the form "MAJOR.MI
 
   marpaESLIF_t *marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptionp);
 
-This method is returning a C<marpaESLIF> object, or C<NULL> in case of failure, using C<marpaESLIFOptionp> that is an eventual pointer to a C<marpaESLIFOption_t> structure, or C<NULL>. The C<marpaESLIFOption_t> structure contains:
+This method is returning a C<marpaESLIF> object, or C<NULL> in case of failure. The parameter C<marpaESLIFOptionp> is a pointer to a C<marpaESLIFOption_t> structure, or C<NULL>. The C<marpaESLIFOption_t> has, as of this version, the single following component:
 
 =over
 
 =item C<genericLoggerp>
 
-A pointer to a C<genericLogger_t> instance. If it is C<NULL>, then ESLIF will never log. Otherwise, all namespaces will inherit this logger object and use it.
+A pointer to a L<genericLogger|https://github.com/jddurand/c-genericLogger> instance. If it is C<NULL>, then ESLIF will never log. Otherwise, all namespaces will inherit this logger object and use it.
 
 =back
 
@@ -81,7 +81,12 @@ The destructor of a marpaESLIF instance C<marpaESLIFp> instance. No-op if C<marp
 
 =head2 ESLIFGrammar
 
-An I<ESLIFGrammar> is sparse array of grammars, each identified by a I<level>, that is the indice in this array. Most of the APIs in this section have two form, one for the I<current> grammar, one for a grammar at a wanted I<indice> or I<description> (a I<description> is a string identifying a level, this can be set when definition the grammar).
+An I<ESLIFGrammar> is a sparse array of grammars, each is identified by a I<level>, that is the indice in this array, i.e. C<0>, C<1>, and so on.
+
+Most of the APIs in this section have two forms, one for the I<current> grammar, one for a grammar at a wanted I<indice> or I<description>. A I<description> is a string identifying a grammar, set using the C<:desc> keyword, e.g.:
+
+  :desc :[0]: 'Description of the grammar at level 0'
+  :desc :[7]: 'Description of the grammar at level 7'
 
 The default current grammar is always at level C<0>, that must exist. Level <0> is naturally considered like the I<top level> grammar. Nevertheless it is possible to instanciate a parsing at a I<different> level, in which case current grammar in derived namespaces like the recognizer or the valuation, is the level you asked for. For example:
 
