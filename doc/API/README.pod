@@ -43,11 +43,11 @@ and a transversal type:
     char   *asciis;           /* ASCII transliteration - never NULL if bytep is not NULL */
   } marpaESLIFString_t;
 
-which describe what is a I<string>: this is a sequence of C<bytel> bytes, starting at C<bytep> in memory, in eventual C<encodingasciis> encoding, and transliterated into C<asciis>.
-
-A dedicated section on I<stack manipulation> is also described.
+which describe what is a I<string>: this is a sequence of C<bytel> bytes, starting at C<bytep> in memory, in eventual C<encodingasciis> encoding, and transliterated as much as possible into C<asciis>.
 
 =head2 ESLIF
+
+Any application must start by instanciating a main ESLIF. This object is thread-safe, re-entrant, and can be reused as many times as needed (in contrary to grammars that may be derived from it, see ESLIFGrammar section below). The recommended usage is to create an ESLIF instance once for the entire process lifetime.
 
 =head3 C<marpaESLIF_versions>
 
@@ -63,13 +63,13 @@ Returns a non-C<NULL> string describing the ESLIF version, in the form "MAJOR.MI
 
   marpaESLIF_t *marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptionp);
 
-Any application must start by instanciating a main ESLIF. This method is returning such a main C<marpaESLIF> object, or C<NULL> is failure, using C<marpaESLIFOptionp> that is an eventual pointer to a C<marpaESLIFOption_t> structure. This structure contain:
+This method is returning a C<marpaESLIF> object, or C<NULL> in case of failure, using C<marpaESLIFOptionp> that is an eventual pointer to a C<marpaESLIFOption_t> structure, or C<NULL>. The C<marpaESLIFOption_t> structure contains:
 
 =over
 
 =item C<genericLoggerp>
 
-A pointer to a C<genericLogger_t> instance. If it is C<NULL>, then C<marpaESLIF> instance, neither any of the other namespaces, will do logging. Otherwise, all will inherit this logger object and use it.
+A pointer to a C<genericLogger_t> instance. If it is C<NULL>, then ESLIF will never log. Otherwise, all namespaces will inherit this logger object and use it.
 
 =back
 
@@ -81,8 +81,9 @@ The destructor of a marpaESLIF instance C<marpaESLIFp> instance. No-op if C<marp
 
 =head2 ESLIFGrammar
 
-An I<ESLIFGrammar> is an array of grammars, each identified by a I<level>, that is the indice in this array. Most of the APIs in this section have a version to deal with I<current> grammar, and a version for the grammar at a wanted I<indice> or I<description>.
-The default current grammar is always at level C<0>, nevertheless it is possible to instanciate a parsing at a different level, and if, as a use case, you are sharing the same actions between different levels, this is the way to know in I<which grammar> you are.
+An I<ESLIFGrammar> is sparse array of grammars, each identified by a I<level>, that is the indice in this array. Most of the APIs in this section have two form, one for the I<current> grammar, one for a grammar at a wanted I<indice> or I<description> (a I<description> is a string identifying a level, this can be set when definition the grammar).
+
+The default current grammar is always at level C<0>, that must exist. Level <0> is naturally considered like the I<top level> grammar. Nevertheless it is possible to instanciate a parsing at a I<different> level, in which case current grammar in derived namespaces like the recognizer or the valuation, is the level you asked for.
 
 =head3 C<marpaESLIFGrammar_newp>
 
@@ -97,17 +98,17 @@ The default current grammar is always at level C<0>, nevertheless it is possible
   marpaESLIFGrammar_t *marpaESLIFGrammar_newp(marpaESLIF_t              *marpaESLIFp,
                                               marpaESLIFGrammarOption_t *marpaESLIFGrammarOptionp);
 
-This is creating a grammar object instance, with parameters:
+Creates a grammar object instance, with parameters:
 
 =over
 
 =item C<marpaESLIFp>
 
-Object instance of the main ESLIF.
+An <required> ESLIF object instance.
 
 =item C<marpaESLIFGrammarOptionp>
 
-Required pointer to a C<marpaESLIFGrammarOption_t> structure, that contain:
+A I<required> pointer to a C<marpaESLIFGrammarOption_t> structure, defined as:
 
 =over
 
@@ -117,7 +118,7 @@ A pointer to the start of the grammar. Must be non-NULL.
 
 =item C<bytel>
 
-Number of bytes. Must be > 0.
+Number of B<bytes>. Must be > 0.
 
 =item C<encodings>
 
@@ -129,13 +130,13 @@ Number of bytes of the buffer containing encoding information. Can be 0.
 
 =item C<encodingOfEncodings>
 
-ASCII and NUL-terminated string giving the encoding of the encoding information itself. Can be NULL.
+ASCII and NUL-terminated string giving the encoding of the encoding information itself. Can be, and is usually, NULL.
 
 =back
 
 =back
 
-In real life-programming, grammars are assumed to always fit within a single block of memory. So there is no reader of grammar definition, we assume that C<bytep> and C<bytel> are enough for this job.
+Grammars themselves are assumed to always fit within a single block of memory. So there is no I<grammar reader> here: we assume that a single buffer starting at C<bytep>, spanning over C<bytel> bytes, is always possible and enough for a grammar definition.
 
 Return C<NULL> if failure, a grammar object instance on success.
 
@@ -143,25 +144,16 @@ Return C<NULL> if failure, a grammar object instance on success.
 
   marpaESLIF_t *marpaESLIFGrammar_eslifp(marpaESLIFGrammar_t *marpaESLIFGrammarp);
 
-Return the main ESLIF object instance from a C<marpaESLIFGrammarp> ESLIFGrammar instance, or C<NULL> is failure. It never returns C<NULL> if C<marpaESLIFGrammarp> is not C<NULL>.
+Returns the ESLIF parent object instance from a C<marpaESLIFGrammarp>, or C<NULL> if failure. It never returns C<NULL> if C<marpaESLIFGrammarp> is not C<NULL>.
 
 =head3 C<marpaESLIFGrammar_ngrammarib>
 
   short marpaESLIFGrammar_ngrammarib(marpaESLIFGrammar_t *marpaESLIFGrammarp,
                                      int                 *ngrammarip);
 
-Put the number of grammars in the value pointed by C<ngrammarip>, which can be C<NULL>, of the current grammar from C<marpaESLIFGrammarp>. The number of grammars is the highest level plus one, and it is B<allowed> to have undefined grammars at any indice but level 0.
+Puts the number of sub-grammars in the value pointed by C<ngrammarip>, which can be C<NULL>. The number of grammars is the highest level plus one, and it is B<allowed> to have undefined grammars at any indice but level 0.
 
-Return a true value on failure, a false value on failure.
-
-=head3 C<marpaESLIFGrammar_ngrammarib>
-
-  short marpaESLIFGrammar_ngrammarib(marpaESLIFGrammar_t *marpaESLIFGrammarp,
-                                     int                 *ngrammarip);
-
-Put the number of grammars in the value pointed by C<ngrammarip>, which can be C<NULL>, of the current grammar from C<marpaESLIFGrammarp>. The number of grammars is the highest level plus one, and it is B<allowed> to have undefined grammars at any indice but level 0.
-
-Return a true value on failure, a false value on failure.
+Returns a true value on failure, a false value on failure.
 
 =head3 C<marpaESLIFGrammar_defaultsb>
 
@@ -174,7 +166,7 @@ Return a true value on failure, a false value on failure.
   short marpaESLIFGrammar_defaultsb(marpaESLIFGrammar_t         *marpaESLIFGrammarp,
                                     marpaESLIFGrammarDefaults_t *marpaESLIFGrammarDefaultsp);
 
-Put in the structure pointed by C<marpaESLIFGrammarDefaultsp>, if it is not C<NULL>, the current grammar defaults, where a C<NULL> value for a default means it is not set in the grammar.
+Puts in the structure pointed by C<marpaESLIFGrammarDefaultsp>, if it is not C<NULL>, the current grammar defaults, where a C<NULL> value for a default means it is not set in the grammar.
 
 =over
 
