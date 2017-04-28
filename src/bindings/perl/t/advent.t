@@ -56,6 +56,7 @@ Log::Any::Adapter->set('Log4perl');
 BEGIN { require_ok('MarpaX::ESLIF') };
 
 my $base_dsl = <<'END_OF_BASE_DSL';
+:desc ::= '$TEST'
 :start ::= deal
 deal ::= hands
 hands ::= hand | hands ';' hand
@@ -144,7 +145,14 @@ for my $test_data (@tests) {
           # Note: in production, you would compute the three grammar variants
           # ahead of time.
           my $full_dsl = $base_dsl . $suit_line;
+          $full_dsl =~ s/\$TEST/$input/;
           my $grammar = MarpaX::ESLIF::Grammar->new($eslif, $full_dsl);
+          my $description = $grammar->currentDescription;
+          my $descriptionByLevel0 = $grammar->descriptionByLevel(0);
+          my $descriptionByLevel1 = $grammar->descriptionByLevel(1);
+          ok(utf8::is_utf8($description), "Description '$description' have the utf8 flag");
+          ok(utf8::is_utf8($descriptionByLevel0), "descriptionByLevel(0) '$descriptionByLevel0' have the utf8 flag");
+          ok(utf8::is_utf8($descriptionByLevel1), "descriptionByLevel(1) '$descriptionByLevel1' have the utf8 flag");
           my $recognizerInterface = MyRecognizerInterface->new($input);
           my $re = MarpaX::ESLIF::Recognizer->new($grammar, $recognizerInterface);
           my %played = ();
@@ -153,15 +161,12 @@ for my $test_data (@tests) {
           while ($ok && $re->isCanContinue()) {
 
             # In our example there is a single event: no need to ask what it is
-            my $bytes = eval { $re->lexemeLastPause('card') };
-            if (defined $bytes) {
-              my @bytes = unpack('C*', $bytes);
-              my $card = decode('UTF-8', my $tmp = $bytes, Encode::FB_CROAK);
-              if ( ++$played{$card} > 1 ) {
+            my $card = $re->lexemeLastPause('card');
+            ok(utf8::is_utf8($card), "Card '$card' have the utf8 flag");
+            if ( ++$played{$card} > 1 ) {
                 $actual_result = 'Parse stopped by application';
                 $actual_value  = "Duplicate card " . $card;
                 last PROCESSING;
-              }
             }
             $ok = $re->resume();
           }
@@ -172,13 +177,15 @@ for my $test_data (@tests) {
           }
 
           my $valueInterface = MyValueInterface->new();
-          my $status = eval { MarpaX::ESLIF::Value->new($re, $valueInterface)->value(); 1 };
+          my $status = eval { MarpaX::ESLIF::Value->new($re, $valueInterface)->value() };
           my $last_hand;
           my ($handoffset, $handlength) = eval { $re->lastCompletedLocation('hand') };
           if ( $handlength ) {
               $last_hand = decode('UTF-8', my $tmp = substr($byte_input, $handoffset, $handlength), Encode::FB_CROAK);
           }
           if ($status) {
+              my $value = $valueInterface->getResult();
+              ok(utf8::is_utf8($value), "Value '$value' have the utf8 flag");
               $actual_result = 'Parse OK';
               $actual_value  = "Hand was $last_hand";
               last PROCESSING;

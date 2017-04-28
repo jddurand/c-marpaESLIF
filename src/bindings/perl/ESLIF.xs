@@ -1152,6 +1152,8 @@ static char *marpaESLIF_sv2byte(pTHX_ SV *svp, char **bytepp, size_t *bytelp, sh
   char              *encodings;
   size_t             encodingl;
 
+  /* svp == NULL should never happen because we always push an SV* out of actions
+     but &PL_sv_undef is of course possible */
   if ((svp == NULL) || (svp == &PL_sv_undef)) {
     return NULL;
   }
@@ -1177,9 +1179,9 @@ static char *marpaESLIF_sv2byte(pTHX_ SV *svp, char **bytepp, size_t *bytelp, sh
     }
   } else {
     if (warnIsFatalb) {
-      MARPAESLIF_WARNF("SvPVbyte() returned {pointer,length}={%p,%ld}", strings, (unsigned long) len);
+      MARPAESLIF_WARNF("SvPV() returned {pointer,length}={%p,%ld}", strings, (unsigned long) len);
     } else {
-      MARPAESLIF_CROAKF("SvPVbyte() returned {pointer,length}={%p,%ld}", strings, (unsigned long) len);
+      MARPAESLIF_CROAKF("SvPV() returned {pointer,length}={%p,%ld}", strings, (unsigned long) len);
     }
   }
 
@@ -1477,12 +1479,17 @@ currentDescription(MarpaX_ESLIF_Grammarp)
 CODE:
   static const char   *funcs = "MarpaX::ESLIF::Grammar::currentDescription";
   marpaESLIFString_t  *descp;
+  SV                  *svp;
 
   if (! marpaESLIFGrammar_grammar_currentb(MarpaX_ESLIF_Grammarp->marpaESLIFGrammarp, NULL, &descp)) {
     MARPAESLIF_CROAK("marpaESLIFGrammar_grammar_currentb failure");
   }
   /* It is in the same encoding as original grammar */
-  RETVAL = newSVpvn(descp->bytep, descp->bytel);
+  svp = newSVpvn(descp->bytep, descp->bytel);
+  if (is_utf8_string((const U8 *) descp->bytep, (STRLEN) descp->bytel)) {
+    SvUTF8_on(svp);
+  }
+  RETVAL = svp;
 OUTPUT:
   RETVAL
 
@@ -1499,12 +1506,17 @@ descriptionByLevel(MarpaX_ESLIF_Grammarp, Perl_leveli)
 CODE:
   static const char   *funcs = "MarpaX::ESLIF::Grammar::descriptionByLevel";
   marpaESLIFString_t  *descp;
+  SV                  *svp;
 
   if (! marpaESLIFGrammar_grammar_by_levelb(MarpaX_ESLIF_Grammarp->marpaESLIFGrammarp, (int) Perl_leveli, NULL, NULL, &descp)) {
     MARPAESLIF_CROAK("marpaESLIFGrammar_grammar_by_levelb failure");
   }
   /* It is in the same encoding as original grammar */
-  RETVAL = newSVpvn(descp->bytep, descp->bytel);
+  svp = newSVpvn(descp->bytep, descp->bytel);
+  if (is_utf8_string((const U8 *) descp->bytep, (STRLEN) descp->bytel)) {
+    SvUTF8_on(svp);
+  }
+  RETVAL = svp;
 OUTPUT:
   RETVAL
 
@@ -1757,6 +1769,9 @@ CODE:
   case MARPAESLIF_VALUE_TYPE_ARRAY:
     /* This is a lexeme, or a concatenation of lexemes */
     svp = newSVpvn(marpaESLIFValueResult.u.p, marpaESLIFValueResult.sizel);
+    if (is_utf8_string((const U8 *) marpaESLIFValueResult.u.p, (STRLEN) marpaESLIFValueResult.sizel)) {
+      SvUTF8_on(svp);
+    }
     marpaESLIF_call_methodv(aTHX_ Perl_valueInterfacep, "setResult", svp);
     SvREFCNT_dec(svp);
     if (marpaESLIFValueResult.u.p != NULL) {
@@ -1955,6 +1970,7 @@ CODE:
   size_t             i;
   size_t             eventArrayl;
   marpaESLIFEvent_t *eventArrayp;
+  SV                *svp;
 
   if (! marpaESLIFRecognizer_eventb(Perl_MarpaX_ESLIF_Recognizer->marpaESLIFRecognizerp, &eventArrayl, &eventArrayp)) {
     MARPAESLIF_CROAKF("marpaESLIFRecognizer_eventb failure, %s", strerror(errno));
@@ -1965,10 +1981,28 @@ CODE:
     if (hv_store(hv, "type", strlen("type"), newSViv(eventArrayp[i].type), 0) == NULL) {
       MARPAESLIF_CROAKF("hv_store failure for type => %d", eventArrayp[i].type);
     }
-    if (hv_store(hv, "symbol", strlen("symbol"), (eventArrayp[i].symbols != NULL) ? newSVpv(eventArrayp[i].symbols, 0) : &PL_sv_undef, 0) == NULL) {
+
+    if (eventArrayp[i].symbols != NULL) {
+      svp = newSVpv(eventArrayp[i].symbols, 0);
+      if (is_utf8_string((const U8 *) eventArrayp[i].symbols, 0)) {
+        SvUTF8_on(svp);
+      }
+    } else {
+      svp = &PL_sv_undef;
+    }
+    if (hv_store(hv, "symbol", strlen("symbol"), svp, 0) == NULL) {
       MARPAESLIF_CROAKF("hv_store failure for symbol => %s", (eventArrayp[i].symbols != NULL) ? eventArrayp[i].symbols : "");
     }
-    if (hv_store(hv, "event",  strlen("event"),  (eventArrayp[i].events != NULL) ? newSVpv(eventArrayp[i].events, 0) : &PL_sv_undef, 0) == NULL) {
+
+    if (eventArrayp[i].events != NULL) {
+      svp = newSVpv(eventArrayp[i].events, 0);
+      if (is_utf8_string((const U8 *) eventArrayp[i].events, 0)) {
+        SvUTF8_on(svp);
+      }
+    } else {
+      svp = &PL_sv_undef;
+    }
+    if (hv_store(hv, "event",  strlen("event"),  svp, 0) == NULL) {
       MARPAESLIF_CROAKF("hv_store failure for event => %s", (eventArrayp[i].events != NULL) ? eventArrayp[i].events : "");
     }
 
@@ -2201,6 +2235,7 @@ CODE:
   size_t             nLexeme;
   size_t             i;
   char             **lexemesArrayp;
+  SV                *svp;
 
   if (! marpaESLIFRecognizer_lexeme_expectedb(Perl_MarpaX_ESLIF_Recognizer->marpaESLIFRecognizerp, &nLexeme, &lexemesArrayp)) {
     MARPAESLIF_CROAKF("marpaESLIFRecognizer_lexeme_expectedb failure, %s", strerror(errno));
@@ -2208,7 +2243,15 @@ CODE:
   if (nLexeme > 0) {
     EXTEND(sp, (int) nLexeme);
     for (i = 0; i < nLexeme; i++) {
-      av_push(list, (lexemesArrayp[i] != NULL) ? newSVpv(lexemesArrayp[i], 0) : &PL_sv_undef);
+      if (lexemesArrayp[i] != NULL) {
+        svp = newSVpv(lexemesArrayp[i], 0);
+        if (is_utf8_string((const U8 *) lexemesArrayp[i], 0)) {
+          SvUTF8_on(svp);
+        }
+      } else {
+        svp = &PL_sv_undef;
+      }
+      av_push(list, svp);
     }
   }
   RETVAL = newRV((SV *)list);
@@ -2229,11 +2272,20 @@ CODE:
   static const char *funcs = "MarpaX::ESLIF::Recognizer::lexemeLastPause";
   char              *pauses;
   size_t             pausel;
+  SV                *svp;
 
   if (!  marpaESLIFRecognizer_lexeme_last_pauseb(Perl_MarpaX_ESLIF_Recognizer->marpaESLIFRecognizerp, (char *) lexeme, &pauses, &pausel)) {
     MARPAESLIF_CROAKF("marpaESLIFRecognizer_lexeme_last_pauseb failure, %s", strerror(errno));
   }
-  RETVAL = ((pauses != NULL) && (pausel > 0)) ? newSVpvn(pauses, pausel) : &PL_sv_undef;
+  if ((pauses != NULL) && (pausel > 0)) {
+    svp = newSVpvn(pauses, pausel);
+    if (is_utf8_string((const U8 *) pauses, (STRLEN) pausel)) {
+      SvUTF8_on(svp);
+    }
+  } else {
+    svp = &PL_sv_undef;
+  }
+  RETVAL = svp;
 OUTPUT:
   RETVAL
 
@@ -2251,11 +2303,20 @@ CODE:
   static const char *funcs = "MarpaX::ESLIF::Recognizer::lexemeLastTry";
   char              *trys;
   size_t             tryl;
+  SV                *svp;
 
   if (!  marpaESLIFRecognizer_lexeme_last_tryb(Perl_MarpaX_ESLIF_Recognizer->marpaESLIFRecognizerp, (char *) lexeme, &trys, &tryl)) {
     MARPAESLIF_CROAKF("marpaESLIFRecognizer_lexeme_last_tryb failure, %s", strerror(errno));
   }
-  RETVAL = ((trys != NULL) && (tryl > 0)) ? newSVpvn(trys, tryl) : &PL_sv_undef;
+  if ((trys != NULL) && (tryl > 0)) {
+    svp = newSVpvn(trys, tryl);
+    if (is_utf8_string((const U8 *) trys, (STRLEN) tryl)) {
+      SvUTF8_on(svp);
+    }
+  } else {
+    svp = &PL_sv_undef;
+  }
+  RETVAL = svp;
 OUTPUT:
   RETVAL
 
@@ -2272,11 +2333,20 @@ CODE:
   static const char *funcs = "MarpaX::ESLIF::Recognizer::discardLastTry";
   char              *discards;
   size_t             discardl;
+  SV                *svp;
 
   if (!  marpaESLIFRecognizer_discard_last_tryb(Perl_MarpaX_ESLIF_Recognizer->marpaESLIFRecognizerp, &discards, &discardl)) {
     MARPAESLIF_CROAKF("marpaESLIFRecognizer_discard_last_tryb failure, %s", strerror(errno));
   }
-  RETVAL = ((discards != NULL) && (discardl > 0)) ? newSVpvn(discards, discardl) : &PL_sv_undef;
+  if ((discards != NULL) && (discardl > 0)) {
+    svp = newSVpvn(discards, discardl);
+    if (is_utf8_string((const U8 *) discards, (STRLEN) discardl)) {
+      SvUTF8_on(svp);
+    }
+  } else {
+    svp = &PL_sv_undef;
+  }
+  RETVAL = svp;
 OUTPUT:
   RETVAL
 
@@ -2329,11 +2399,20 @@ CODE:
   static const char *funcs = "MarpaX::ESLIF::Recognizer::input";
   char              *inputs;
   size_t             inputl;
+  SV                *svp;
 
   if (! marpaESLIFRecognizer_inputb(Perl_MarpaX_ESLIF_Recognizer->marpaESLIFRecognizerp, &inputs, &inputl)) {
     MARPAESLIF_CROAKF("marpaESLIFRecognizer_inputb failure, %s", strerror(errno));
   }
-  RETVAL = ((inputs != NULL) && (inputl > 0)) ? newSVpvn(inputs, inputl) : &PL_sv_undef;
+  if ((inputs != NULL) && (inputl > 0)) {
+    svp = newSVpvn(inputs, inputl);
+    if (is_utf8_string((const U8 *) inputs, (STRLEN) inputl)) {
+      SvUTF8_on(svp);
+    }
+  } else {
+    svp = &PL_sv_undef;
+  }
+  RETVAL = svp;
 OUTPUT:
   RETVAL
 
@@ -2586,6 +2665,9 @@ CODE:
     case MARPAESLIF_VALUE_TYPE_ARRAY:
       /* This is a lexeme, or a concatenation of lexemes */
       svp = newSVpvn(marpaESLIFValueResult.u.p, marpaESLIFValueResult.sizel);
+      if (is_utf8_string((const U8 *) marpaESLIFValueResult.u.p, (STRLEN) marpaESLIFValueResult.sizel)) {
+        SvUTF8_on(svp);
+      }
       marpaESLIF_call_methodv(aTHX_ MarpaX_ESLIF_Valuep->Perl_valueInterfacep, "setResult", svp);
       SvREFCNT_dec(svp);
       if (marpaESLIFValueResult.u.p != NULL) {
