@@ -83,7 +83,13 @@ The destructor of a marpaESLIF instance C<marpaESLIFp> instance. No-op if C<marp
 
 An I<ESLIFGrammar> is sparse array of grammars, each identified by a I<level>, that is the indice in this array. Most of the APIs in this section have two form, one for the I<current> grammar, one for a grammar at a wanted I<indice> or I<description> (a I<description> is a string identifying a level, this can be set when definition the grammar).
 
-The default current grammar is always at level C<0>, that must exist. Level <0> is naturally considered like the I<top level> grammar. Nevertheless it is possible to instanciate a parsing at a I<different> level, in which case current grammar in derived namespaces like the recognizer or the valuation, is the level you asked for.
+The default current grammar is always at level C<0>, that must exist. Level <0> is naturally considered like the I<top level> grammar. Nevertheless it is possible to instanciate a parsing at a I<different> level, in which case current grammar in derived namespaces like the recognizer or the valuation, is the level you asked for. For example:
+
+  A :[0]:= X          # Could have been A ::= X, '::=' is an alias for ':[0]:'
+  X :[1]:= Y@+2       # Could have been X ~ Y@+2, '~' is an alias for ':[1]:'
+  Y :[3]:= 'Z'
+
+declares grammars at level C<0>, C<1> and C<3>. Grammar at level C<2> is undefined.
 
 =head3 C<marpaESLIFGrammar_newp>
 
@@ -138,20 +144,27 @@ ASCII and NUL-terminated string giving the encoding of the encoding information 
 
 Grammars themselves are assumed to always fit within a single block of memory. So there is no I<grammar reader> here: we assume that a single buffer starting at C<bytep>, spanning over C<bytel> bytes, is always possible and enough for a grammar definition.
 
-Return C<NULL> if failure, a grammar object instance on success.
+Returns C<NULL> if failure, a grammar object instance on success.
 
 =head3 C<marpaESLIFGrammar_eslifp>
 
   marpaESLIF_t *marpaESLIFGrammar_eslifp(marpaESLIFGrammar_t *marpaESLIFGrammarp);
 
-Returns the ESLIF parent object instance from a C<marpaESLIFGrammarp>, or C<NULL> if failure. It never returns C<NULL> if C<marpaESLIFGrammarp> is not C<NULL>.
+Returns the ESLIF parent object instance of C<marpaESLIFGrammarp>, or C<NULL> if failure. It never returns C<NULL> if C<marpaESLIFGrammarp> is not C<NULL>.
 
 =head3 C<marpaESLIFGrammar_ngrammarib>
 
   short marpaESLIFGrammar_ngrammarib(marpaESLIFGrammar_t *marpaESLIFGrammarp,
                                      int                 *ngrammarip);
 
-Puts the number of sub-grammars in the value pointed by C<ngrammarip>, which can be C<NULL>. The number of grammars is the highest level plus one, and it is B<allowed> to have undefined grammars at any indice but level 0.
+Puts the number of sub-grammars in the value pointed by C<ngrammarip>, which can be C<NULL>. The number of grammars is the highest level plus one, and it is B<allowed> to have undefined grammars at any indice but level 0. For example:
+
+  A :[0]:= X          # First grammar
+  X :[1]:= Y@+2       # Second grammar
+                      # Third grammar (undefined)
+  Y :[3]:= 'Z'        # Fourth grammar
+
+would return C<4>: there are four grammars, the third one being undefined.
 
 Returns a true value on failure, a false value on failure.
 
@@ -166,7 +179,7 @@ Returns a true value on failure, a false value on failure.
   short marpaESLIFGrammar_defaultsb(marpaESLIFGrammar_t         *marpaESLIFGrammarp,
                                     marpaESLIFGrammarDefaults_t *marpaESLIFGrammarDefaultsp);
 
-Puts in the structure pointed by C<marpaESLIFGrammarDefaultsp>, if it is not C<NULL>, the current grammar defaults, where a C<NULL> value for a default means it is not set in the grammar.
+Puts in the structure pointed by C<marpaESLIFGrammarDefaultsp>, if it is not C<NULL>, the current grammar defaults, all of them being ASCII NUL terminated string pointers or C<NULL> when not set.
 
 =over
 
@@ -184,7 +197,13 @@ Default action for symbols, and correspond to the grammar keyword C<free-action>
 
 =back
 
-Return a true value on failure, a false value on failure.
+The keywords mentionned upper are set within a I<:default> statement, e.g.:
+
+  :default ::= action        => myRuleAction
+               symbol-action => mySymbolAction
+               free-action   => myFreeAction
+
+Returns a true value on failure, a false value on failure.
 
 =head3 C<marpaESLIFGrammar_defaults_by_levelb>
 
@@ -193,18 +212,18 @@ Return a true value on failure, a false value on failure.
                                              int                          leveli,
                                              marpaESLIFString_t          *descp);
 
-Put in the structure pointed by C<marpaESLIFGrammarDefaultsp>, if it is not C<NULL>, the grammar at level C<leveli> and/or description C<descp> defaults, where a C<NULL> value for a default means it is not set in the grammar.
+Put in the structure pointed by C<marpaESLIFGrammarDefaultsp>, if it is not C<NULL>, the grammar at level C<leveli> and/or description C<descp> defaults, where a C<NULL> value for a default means it is not set.
 
-Return a true value on failure, a false value on failure.
+Returns a true value on failure, a false value on failure.
 
 =head3 C<marpaESLIFGrammar_defaults_setb>
 
   short marpaESLIFGrammar_defaults_setb(marpaESLIFGrammar_t         *marpaESLIFGrammarp,
                                         marpaESLIFGrammarDefaults_t *marpaESLIFGrammarDefaultsp);
 
-Set all grammar default using the structure pointed by C<marpaESLIFGrammarDefaultsp>, if it is not C<NULL>. A C<NULL> value for a default has the same effect as if original grammar never had the associated keyword.
+Sets all grammar defaults using the structure pointed by C<marpaESLIFGrammarDefaultsp>, if it is not C<NULL>. A C<NULL> value for a default has the same effect as if original grammar never had the associated keyword.
 
-Return a true value on failure, a false value on failure.
+Returns a true value on failure, a false value on failure.
 
 =head3 C<marpaESLIFGrammar_defaults_by_level_setb>
 
@@ -213,9 +232,9 @@ Return a true value on failure, a false value on failure.
                                                  int                          leveli,
                                                  marpaESLIFString_t          *descp);
 
-Put in the structure pointed by C<marpaESLIFGrammarDefaultsp>, if it is not C<NULL>, the grammar defaults at level C<leveli> and/or description C<descp>, where a C<NULL> value for a default means it is not set in the grammar.
+Puts in the structure pointed by C<marpaESLIFGrammarDefaultsp>, if it is not C<NULL>. A C<NULL> value for a default has the same effect as if original grammar never had the associated keyword.
 
-Return a true value on failure, a false value on failure.
+Returns a true value on failure, a false value on failure.
 
 =head3 C<marpaESLIFGrammar_grammar_by_levelb>
 
@@ -231,7 +250,7 @@ Put in the values pointed by C<levelip> and C<descpp>, which can be both C<NULL>
 
 =item C<leveli>
 
-is the eventual explicit wanted level, ignored if < C<0>.
+is the eventual explicit wanted level, ignored if lower than C<0>.
 
 =item C<descp>
 
@@ -239,9 +258,9 @@ is the eventual explicit description, ignored if C<NULL>.
 
 =back
 
-C<descp> have precedence of C<leveli>.
+When both C<leveli> and C<descp> are set, C<descp> have precedence over C<leveli>.
 
-Return a true value on failure, a false value on failure.
+Returns a true value on failure, a false value on failure.
 
 =head3 C<marpaESLIFGrammar_rulearray_currentb>
 
@@ -249,9 +268,9 @@ Return a true value on failure, a false value on failure.
                                              int                 **ruleipp,
                                              size_t               *rulelp);
 
-Put in the values pointed by C<ruleipp> and C<rulelp> the rule indices and the number of such indices of current grammar from C<marpaESLIFGrammarp>.
+Puts in the values pointed by C<ruleipp> and C<rulelp> a pointer to an array of integer, and the number of them, respectively, of current grammar. User must B<not> try to free C<rulelp>.
 
-Return a true value on failure, a false value on failure.
+Returns a true value on failure, a false value on failure. C<*ruleipp> is never C<NULL> in case of success.
 
 =head3 C<marpaESLIFGrammar_rulearray_by_levelb>
 
@@ -262,13 +281,13 @@ Return a true value on failure, a false value on failure.
                                               marpaESLIFString_t   *descp);
 
 
-Put in the values pointed by C<ruleipp> and C<rulelp> the rule indices and the number of such indices of wanted grammar from C<marpaESLIFGrammarp>:
+Put in the values pointed by C<ruleipp> and C<rulelp> a pointer to an array of integer, and the number of them, respectively, of the grammar referenced by C<leveli> or C<descp>. 
 
 =over
 
 =item C<leveli>
 
-is the eventual explicit wanted level, ignored if < C<0>.
+is the eventual explicit wanted level, ignored if lower than C<0>.
 
 =item C<descp>
 
@@ -276,9 +295,9 @@ is the eventual explicit description, ignored if C<NULL>.
 
 =back
 
-C<descp> have precedence of C<leveli>.
+When both C<leveli> and C<descp> are set, C<descp> have precedence over C<leveli>.
 
-Return a true value on failure, a false value on failure.
+Returns a true value on failure, a false value on failure. C<*ruleipp> is never C<NULL> in case of success.
 
 =head3 C<marpaESLIFGrammar_ruledisplayform_currentb>
 
@@ -286,9 +305,9 @@ Return a true value on failure, a false value on failure.
                                                    int                   rulei,
                                                    char                **ruledisplaysp);
 
-Put in the value pointed by C<ruledisplaysp>, which can be C<NULL>, a NUL-terminated I<ASCII encoded> version of rule name at indice C<rulei> of the current grammar from C<marpaESLIFGrammarp>.
+Put in the value pointed by C<ruledisplaysp>, which can be C<NULL>, a NUL-terminated I<ASCII encoded> version of rule name at indice C<rulei> of the current grammar.
 
-Return a true value on failure, a false value on failure.
+Returns a true value on failure, a false value on failure.
 
 Example of a rule display form:
 
