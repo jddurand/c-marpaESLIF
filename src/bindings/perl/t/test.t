@@ -356,11 +356,11 @@ for (my $i = 0; $i <= $#strings; $i++) {
                     #
                     # Recognizer will wait forever if we do not feed the number
                     #
-                    my $bytes = $eslifRecognizer->lexemeLastPause("NUMBER");
-                    if (! defined($bytes)) {
+                    my $pause = $eslifRecognizer->lexemeLastPause("NUMBER");
+                    if (! defined($pause)) {
                         BAIL_OUT("Pause before on NUMBER but no pause information!");
                       }
-                    if (! doLexemeRead($log, $eslifRecognizer, "NUMBER", $j, $bytes)) {
+                    if (! doLexemeRead($log, $eslifRecognizer, "NUMBER", $j, $pause)) {
                         BAIL_OUT("NUMBER expected but reading such lexeme fails!");
                     }
                     doDiscardTry($log, $eslifRecognizer);
@@ -488,12 +488,11 @@ sub showLocation {
 # We replace current NUMBER by the Integer object representing value
 #
 sub doLexemeRead {
-    my ($log, $eslifRecognizer, $symbol, $value, $bytes) = @_;
-    my @bytes = unpack('C*', $bytes);
+    my ($log, $eslifRecognizer, $symbol, $value, $pause) = @_;
+    my $length = length(encode('UTF-8', $pause));
     my $context;
-    my $old = decode('UTF-8', my $tmp = $bytes, Encode::FB_CROAK);
-    $log->debugf("... Forcing Integer object for \"%s\" spanned on %d bytes instead of \"%s\"", $value, scalar(@bytes), $old);
-    if (! $eslifRecognizer->lexemeRead($symbol, int($value), scalar(@bytes), 1)) {
+    $log->debugf("... Forcing Integer object for \"%s\" spanned on %d bytes instead of \"%s\"", $value, $length, $pause);
+    if (! $eslifRecognizer->lexemeRead($symbol, int($value), $length, 1)) {
         return 0;
     }
 
@@ -513,9 +512,8 @@ sub doDiscardTry {
         $test = $eslifRecognizer->discardTry();
         $log->debugf("... Testing discard at current position returns %d", $test);
         if ($test) {
-            my $bytes = $eslifRecognizer->discardLastTry();
-            my $string = decode('UTF-8', $bytes, Encode::FB_CROAK);
-            $log->debugf("... Testing discard at current position gave \"%s\"", $string);
+            my $discard = $eslifRecognizer->discardLastTry();
+            $log->debugf("... Testing discard at current position gave \"%s\"", $discard);
         }
     } catch {
         # Because we test with a symbol that is not a lexeme, and that raises an exception
@@ -530,9 +528,8 @@ sub doLexemeTry {
         $test = $eslifRecognizer->lexemeTry($symbol);
         $log->debugf("... Testing %s lexeme at current position returns %d", $symbol, $test);
         if ($test) {
-            my $bytes = $eslifRecognizer->lexemeLastTry($symbol);
-            my $string = decode('UTF-8', $bytes, Encode::FB_CROAK);
-            $log->debugf("... Testing symbol %s at current position gave \"%s\"", $symbol, $string);
+            my $try = $eslifRecognizer->lexemeLastTry($symbol);
+            $log->debugf("... Testing symbol %s at current position gave \"%s\"", $symbol, $try);
         }
     } catch {
         # Because we test with a symbol that is not a lexeme, and that raises an exception
