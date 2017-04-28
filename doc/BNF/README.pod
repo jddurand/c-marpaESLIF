@@ -136,7 +136,7 @@ By default, a grammar of level C<n> has the description C<Grammar level n>. This
 
 =item Defaults
 
-By default, symbol action is C<::shift> and rule action is C<::concat>, i.e. the parse tree value of a grammar is a concatenation of every matched input, without the eventual discard. Stack manipulation may require the trigger of a I<free> function, and this has no default. Only expected terminals or lexemes are looked up, this is the Longest Acceptable Token Match (LATM) setting, defaulting to a true value. You should not change that. Defaults can be set once, for example like this:
+By default, symbol action is C<::transfer> and rule action is C<::concat>, i.e. the parse tree value of a grammar is a binary concatenation of every input representation (see the I<representation> section below), without the eventual discard. Stack manipulation may require the trigger of a I<free> function, and this has no default. Only expected terminals or lexemes are looked up, this is the Longest Acceptable Token Match (LATM) setting, defaulting to a true value. You should not change that. Defaults can be set once, for example like this:
 
   :default ::= action        => defaultRuleAction
                latm          => 1
@@ -147,43 +147,53 @@ Predefined actions are available for rules and symbols. Please refer the API doc
 
 The C<free-action> adverb is required when the end-user is pushing an opaque value of type C<PTR> or C<ARRAY> that is not declared shallowed. The internal stack manipulation may decide it does not need this value anymore: the free action is then called. This is used in low-level programming, in practice interface to high-level languages like Perl, Java etc... should I<hide> that, making the presence of this keyword in the grammar meaningless.
 
-The C<symbol-action> adverb is rather dangerous, since it is changing the meaning of a lexeme in the current grammar (but not in the eventual sub-grammars): in high-level languages, where it is in principle not possible to push an C<ARRAY> (i.e. a byte array) value type, then the rule action C<::concat>, that is to concatenate the RHSs (this is the C<::concat> reserved keyword), will silently drop these lexemes, I<unless> there is a single RHS since then rule's C<::concat> is moved to C<::shift> that is guaranteed to not change the nature of the value being transfered.
+The C<symbol-action> adverb is how a match within a sub-grammar is transfered.
 
 =over
 
 =item C<::undef>
 
-Put a value of type UNDEF.
+Creates a value of type UNDEF.
+
+Meaningful for both rule and symbol actions.
 
 =item C<::ascii>
 
-Convert to ASCII charset the concatenation of all RHS's value. Only values of type ARRAY are accepted. ARRAY values with a null pointer or a length <= 0 are ignored. The value type is PTR, guaranteed to never be NULL, and always NUL terminated. If there was nothing to concatenate this will be the empty string "".
+Creates a value of type PTR from the right-hand side representation, guaranteed to be a NUL byte terminated sequence of ASCII characters, or UNDEF if representation is empty. Please refer to the I<representation> section below.
 
-=item C<::translit>
+Meaningful for both rule and symbol actions.
 
-Same as C<::ascii> though translate whenever possible, ignoring untranslatable sequences of bytes (think to I<iconv>'s I<//ASCII//TRANSLIT//IGNORE> option).
+=item C<::convert[[^]]+]>
+
+Creates a value of type ARRAY from the right-hand side representation encoded in the charset specified within the brackets, or UNDEF if representation is empty. I<iconv> convention is used for the charset, i.e. a charset name, followed by eventual options like C<//TRANSLIT> and/or C<//IGNORE>. Any other option depend on how the L<tconv|https://github.com/jddurand/c-tconv> library is built, and may probably not be supported. Note that using the I<iconv> notation does not mean that this is iconv running behind.
+
+Please refer to the I<representation> section below.
+
+Meaningful for both rule and symbol actions.
 
 =item C<::concat>
 
-Concatenate all RHS's values. Only values of type ARRAY are accepted. ARRAY values with a length greater than 0 are concatenated. Please note that for symbols, C<::concat> is allowed but in reality is not doing any concatenation, it is doing a C<::shift>, meaning that the type of the result is unchanged. This is because formally symbol values come directly from the I<input>, as a single entity. There is no notion of concatenation here. In addition, the user can change the value of a symbol using the C<symbol-action> adverb, eventually. Then the notion of concatenation, even applied on a single object, is not correct - the real notion is a copy.
+Creates a value of type ARRAY from the binary concatenatation all the RHS's representation, or UNDEF if representation is empty.
 
-The same logic applies on a rule that have a C<::concat> action: if the rule contain a single RHS, then C<::concat> is a synonym for C<::shift>, that is guaranteed to not change the nature of the RHS. But if there are more than one RHS, then C<::concat> behaviour will I<drop anything coming from the userspace>.
+Please refer to the I<representation> section below.
 
-The result is always of ARRAY type. If something was found during concatenation, the area pointed by the ARRAY is guaranteed to be NUL terminated, even if the exposed size does not contain the extra byte for this NUL character. In the extreme case where nothing can be concatenated, then C<::concat> result can be equivalent to C<::undef>.
-
-Take care, using the C<symbol-action> to change the meaning of a lexeme has an impact on the default C<::concat> action, that is likely to ignore user-defined lexemes unless you pushed an C<ARRAY> ESLIF value type, that is in principle not possible with high-level languages.
-
-C<::concat> is the default action for rules.
+Meaningful for both rule and symbol actions, and is the B<default rule action>.
 
 =item C<::copy[x]>
 
-Copies the RHS number C<x> (first RHS is at indice C<0>), putting UNDEF if it does not exist.
+Copies the RHS number C<x> (first RHS is at indice C<0>), putting UNDEF if it does not exist. This action is the only one that guarantees that the nature of the RHS value is unchanged.
+
+Meaningful only for rule actions.
 
 =item C<::shift>
 
 Alias for C<::copy[0]>.
 
-This is also the default action for symbols.
+=item C<::transfer>
+
+Copies the single RHS number value. This action guarantees that the nature of the RHS value is unchanged.
+
+Meaningful only for symbol actions, and is the B<default symbol action>.
 
 =back
 
@@ -531,7 +541,7 @@ marpaESLIF BNF can be expressed in itself:
                                    | 'latm' '=>' <true>
   naming                         ::= 'name' '=>' <alternative name>
   <null adverb>                  ::= ','
-  <symbol action>                ::= 'symbol-action' '=>' <action name>
+  <symbol action>                ::= 'symbol-action' '=>' <symbol action name>
   <free action>                  ::= 'free-action' '=>' <free name>
   <alternative name>             ::= <standard name>
   <alternative name>             ::= <quoted name>
@@ -552,10 +562,16 @@ marpaESLIF BNF can be expressed in itself:
                                    | '::shift'
                                    | '::undef'
                                    | '::ascii'
-                                   | '::translit'
+                                   | /::convert\[[^\]]+\]/
                                    | '::concat'
                                    | /::copy\[\d+\]/
   <free name>                    ::= <restricted ascii graph name>
+  <symbol action name>           ::= <restricted ascii graph name>
+                                   | '::transfer'
+                                   | '::undef'
+                                   | '::ascii'
+                                   | /::convert\[[^\]]+\]/
+                                   | '::concat'
   <quantifier>                   ::= '*'
                                    | '+'
   <signed integer>               ::= /[+-]?\d+/
@@ -620,4 +636,4 @@ marpaESLIF BNF can be expressed in itself:
 
 =head1 SEE ALSO
 
-L<marpaESLIF|https://github.com/jddurand/c-marpaESLIF>, L<ICU|http://site.icu-project.org/>
+L<marpaESLIF|https://github.com/jddurand/c-marpaESLIF>, L<tconv|https://github.com/jddurand/c-tconv>, L<ICU|http://site.icu-project.org/>
