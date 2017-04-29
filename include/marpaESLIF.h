@@ -92,7 +92,7 @@ typedef enum marpaESLIFValueType {
 /* The representation returns a sequence of bytes and is appended AS-IS */
 /* It is legal to return NULL in *inputcpp or 0 in *inputlp: representation will be ignored */
 typedef short (*marpaESLIFRepresentation_t)(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp, char **inputcpp, size_t *inputlp);
-typedef struct marpaESLIFValueResult {
+struct marpaESLIFValueResult {
   int                        contexti;          /* Free value meaningful only to the user */
   size_t                     sizel;             /* Length of data in case value is an ARRAY - always 0 otherwise */
   marpaESLIFRepresentation_t representationp;   /* How a user-land alternative is represented if it was in the input */
@@ -107,7 +107,7 @@ typedef struct marpaESLIFValueResult {
     double  d;                                  /* Value is a double */
     void   *p;                                  /* Value is a pointer */
   } u;
-} marpaESLIFValueResult_t;
+};
 
 /* An alternative from external lexer point of view */
 typedef struct marpaESLIFAlternative {
