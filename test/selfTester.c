@@ -155,13 +155,18 @@ const static char *selfs = "\n"
   "  <quantifier>                   ::= '*'\n"
   "                                   | '+'\n"
   "  <signed integer>               ::= /[+-]?\\d+/\n"
+  "  <unsigned integer>             ::= /\\d+/\n"
   "  <grammar reference>            ::= <quoted string>\n"
   "                                   | <signed integer>\n"
+  "                                   | '=' <unsigned integer>\n"
+  "  <jdd> ::= <op declare any grammar>@=1\n"
   "\n"
   "  #\n"
-  "  # ---------------------------------------\n"
-  "  # Lexemes of the grammar given above are:\n"
-  "  # ---------------------------------------\n"
+  "  # The following is giving information on grammar components: resolved lexemes, rules and symbols properties\n"
+  "  #\n"
+  "  # -----------------\n"
+  "  # Resolved lexemes:\n"
+  "  # -----------------\n"
   "  #\n"
   "  # <op declare any grammar> ::= <op declare any grammar>@+1\n"
   "  # <op declare top grammar> ::= <op declare top grammar>@+1\n"
@@ -257,7 +262,7 @@ int main() {
     for (leveli = 0; leveli < ngrammari; leveli++) {
       if (marpaESLIFGrammar_grammarshowform_by_levelb(marpaESLIF_grammarp(marpaESLIFp), &grammarshows, leveli, NULL)) {
         GENERICLOGGER_INFO (marpaESLIFOption.genericLoggerp, "-------------------------");
-        GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "TEST grammar at level %d:", leveli);
+        GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "ESLIF grammar at level %d:", leveli);
         GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "-------------------------\n\n%s", grammarshows);
       }
     }
