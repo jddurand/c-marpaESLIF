@@ -75,7 +75,7 @@ typedef marpaESLIFValueRuleCallback_t   (*marpaESLIFValueRuleActionResolver_t)(v
 typedef marpaESLIFValueSymbolCallback_t (*marpaESLIFValueSymbolActionResolver_t)(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions);
 typedef marpaESLIFValueFreeCallback_t   (*marpaESLIFValueFreeActionResolver_t)(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions);
 
-/* Stack types */
+/* Value types */
 typedef enum marpaESLIFValueType {
   MARPAESLIF_VALUE_TYPE_UNDEF = 0,
   MARPAESLIF_VALUE_TYPE_CHAR,
