@@ -12,7 +12,7 @@ typedef struct reader_context {
 
 typedef enum stack_context {
   INTEGER_CONTEXT = 1,
-  DOUBLE_CONTEXT = 1
+  DOUBLE_CONTEXT
 } stack_context_t;
 
 static short                         inputReaderb(void *userDatavp, char **inputsp, size_t *inputlp, short *eofbp, short *characterStreambp, char **encodingOfEncodingsp, char **encodingsp, size_t *encodinglp);
@@ -52,7 +52,6 @@ int main() {
   marpaESLIFValueOption_t      marpaESLIFValueOption;
   marpaESLIFValue_t           *marpaESLIFValuep;
   marpaESLIFValueResult_t      marpaESLIFValueResult;
-  int                          rcValueb;
   char                        *offsetp;
   size_t                       lengthl;
   char                        *expressions;
@@ -142,10 +141,11 @@ int main() {
   memcpy(expressions, inputs + (size_t) offsetp, lengthl);
   expressions[lengthl] = '\0';
 
-  switch (marpaESLIFValueResult.type) {
-  case MARPAESLIF_VALUE_TYPE_INT:
+  switch (marpaESLIFValueResult.contexti) {
+  case INTEGER_CONTEXT:
     fprintf(stdout, "%s = %d\n", expressions, marpaESLIFValueResult.u.i);
     break;
+  case DOUBLE_CONTEXT:
   case MARPAESLIF_VALUE_TYPE_DOUBLE:
     fprintf(stdout, "%s = %f\n", expressions, marpaESLIFValueResult.u.d);
     break;
@@ -185,27 +185,35 @@ static short do_int(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int a
 /*****************************************************************************/
 {
   /* /[\d]+/  action => do_int */
-  void   *bytep;
-  size_t  bytel;
-  int     i;
+  marpaESLIFValueResult_t *marpaESLIFValueResultp;
+  marpaESLIFValueResult_t  marpaESLIFValueResult;
+  int                      i;
 
   if (nullableb) {
     fprintf(stderr, "Nullable is impossible here!\n");
     return 0;
   }
 
-  if (! marpaESLIFValue_stack_get_arrayb(marpaESLIFValuep, arg0i, NULL /* contextip */, &bytep, &bytel, NULL /* shallowbp */)) {
-    fprintf(stderr, "marpaESLIFValue_stack_get_arrayb failure!\n");
+  marpaESLIFValueResultp = marpaESLIFValue_stack_getp(marpaESLIFValuep, arg0i);
+  if (marpaESLIFValueResultp == NULL) {
+    fprintf(stderr, "marpaESLIFValue_stack_getp failure!\n");
+    return 0;
+  }
+  if (marpaESLIFValueResultp->type != MARPAESLIF_VALUE_TYPE_ARRAY) {
+    fprintf(stderr, "marpaESLIFValueResultp->type is not ARRAY but %d!\n", marpaESLIFValueResultp->type);
     return 0;
   }
 
-  i = atoi((char *) bytep);
+  i = atoi((char *) marpaESLIFValueResultp->u.p);
 
-  if (! marpaESLIFValue_stack_set_intb(marpaESLIFValuep, resulti, INTEGER_CONTEXT /* Anything but 0 */, i)) {
-    return 0;
-  }
+  marpaESLIFValueResult.contexti        = INTEGER_CONTEXT;           /* Anything but 0 */
+  marpaESLIFValueResult.sizel           = 0;                         /* Not relevant */
+  marpaESLIFValueResult.representationp = NULL;                      /* No representation */
+  marpaESLIFValueResult.shallowb        = 0;                         /* Not relevant */
+  marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_INT; /* Integer type */
+  marpaESLIFValueResult.u.i             = i;                         /* Integer value */
 
-  return 1; /* Ok */
+  return marpaESLIFValue_stack_setb(marpaESLIFValuep, resulti, &marpaESLIFValueResult);
 }
 
 /*****************************************************************************/
@@ -213,12 +221,14 @@ static short do_op(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int ar
 /*****************************************************************************/
 {
   /* Expression OPERATOR Expression */
+  marpaESLIFValueResult_t *marpaESLIFValueResultpp[3];
+  marpaESLIFValueResult_t marpaESLIFValueResult;
+  int     j;
   int     i[2];
   double  d[2];
   short   intb[2];
   short   doubleb[2];
-  void   *bytep;
-  size_t  bytel;
+  char   *ops;
   int     valuei;
   double  valued;
   short   resultIsIntb;
@@ -228,137 +238,122 @@ static short do_op(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int ar
     return 0;
   }
 
-  /* First expression is an int or a double */
-  if (! marpaESLIFValue_stack_is_intb(marpaESLIFValuep, arg0i, &(intb[0]))) {
-    fprintf(stderr, "marpaESLIFValue_stack_is_intb failure!\n");
+  marpaESLIFValueResultpp[0] = marpaESLIFValue_stack_getp(marpaESLIFValuep, arg0i);
+  if (marpaESLIFValueResultpp[0] == NULL) {
+    fprintf(stderr, "marpaESLIFValue_stack_getp failure!\n");
     return 0;
   }
-  if (! intb[0]) {
-    /* Then it must be a double */
-    if (! marpaESLIFValue_stack_is_doubleb(marpaESLIFValuep, arg0i, &(doubleb[0]))) {
-      fprintf(stderr, "marpaESLIFValue_stack_is_doubleb failure!\n");
+  marpaESLIFValueResultpp[1] = marpaESLIFValue_stack_getp(marpaESLIFValuep, argni);
+  if (marpaESLIFValueResultpp[0] == NULL) {
+    fprintf(stderr, "marpaESLIFValue_stack_getp failure!\n");
+    return 0;
+  }
+
+  intb[0] = (marpaESLIFValueResultpp[0]->contexti == INTEGER_CONTEXT);
+  intb[1] = (marpaESLIFValueResultpp[1]->contexti == INTEGER_CONTEXT);
+
+  doubleb[0] = (marpaESLIFValueResultpp[0]->contexti == DOUBLE_CONTEXT);
+  doubleb[1] = (marpaESLIFValueResultpp[1]->contexti == DOUBLE_CONTEXT);
+
+  for (j = 0; j < 2; j++) {
+    if ((! intb[j]) && (! doubleb[j])) {
+      fprintf(stderr, "Expression No %d is neither an int or a double!\n", j);
       return 0;
     }
-    if (! doubleb[0]) {
-      fprintf(stderr, "First expression is neither an int or a double!\n");
-      return 0;
+    /* Get values */
+    if (intb[j]) {
+      i[j] = marpaESLIFValueResultpp[j]->u.i;
+      /* fprintf(stderr, "<== %d\n", i[j]); */
+    } else {
+      d[j] = marpaESLIFValueResultpp[j]->u.d;
+      /* fprintf(stderr, "<== %f\n", d[j]); */
     }
   }
 
-  /* Idem for second expression */
-  if (! marpaESLIFValue_stack_is_intb(marpaESLIFValuep, argni, &(intb[1]))) {
-    fprintf(stderr, "marpaESLIFValue_stack_is_intb failure!\n");
+  /* By definition OPERATOR is a lexeme, i.e. an ARRAY */
+  marpaESLIFValueResultpp[2] = marpaESLIFValue_stack_getp(marpaESLIFValuep, arg0i + 1);
+  if (marpaESLIFValueResultpp[2] == NULL) {
+    fprintf(stderr, "marpaESLIFValue_stack_getp failure!\n");
     return 0;
   }
-  if (! intb[1]) {
-    /* Then it must be a double */
-    if (! marpaESLIFValue_stack_is_doubleb(marpaESLIFValuep, argni, &(doubleb[1]))) {
-      fprintf(stderr, "marpaESLIFValue_stack_is_doubleb failure!\n");
-      return 0;
-    }
-    if (! doubleb[1]) {
-      fprintf(stderr, "Second expression is neither an int or a double!\n");
-      return 0;
-    }
-  }
-
-  /* Get values */
-  if (intb[0]) {
-    if (! marpaESLIFValue_stack_get_intb(marpaESLIFValuep, arg0i, NULL /* contextip */, &(i[0]))) {
-      fprintf(stderr, "marpaESLIFValue_stack_get_intb failure!\n");
-      return 0;
-    }
-  } else {
-    if (! marpaESLIFValue_stack_get_doubleb(marpaESLIFValuep, arg0i, NULL /* contextip */, &(d[0]))) {
-      fprintf(stderr, "marpaESLIFValue_stack_get_double failure!\n");
-      return 0;
-    }
-  }
-  if (intb[1]) {
-    if (! marpaESLIFValue_stack_get_intb(marpaESLIFValuep, argni, NULL /* contextip */, &(i[1]))) {
-      fprintf(stderr, "marpaESLIFValue_stack_get_intb failure!\n");
-      return 0;
-    }
-  } else {
-    if (! marpaESLIFValue_stack_get_doubleb(marpaESLIFValuep, argni, NULL /* contextip */, &(d[1]))) {
-      fprintf(stderr, "marpaESLIFValue_stack_get_double failure!\n");
-      return 0;
-    }
-  }
-  
-  /* Operator is a lexeme */
-  if (! marpaESLIFValue_stack_get_arrayb(marpaESLIFValuep, arg0i + 1, NULL /* contextip */, &bytep, &bytel, NULL /* shallowbp */)) {
-    fprintf(stderr, "marpaESLIFValue_stack_get_arrayb failure!\n");
-    return 0;
-  }
+  ops = (char *) marpaESLIFValueResultpp[2]->u.p;
   /* For convenience, marpaESLIF is ALWAYS putting a NUL character after every lexeme buffer. */
-  if (strcmp((char *) bytep, "**") == 0) {
+  
+  if (strcmp(ops, "**") == 0) {
     /* Both are int ? */
     if (intb[0] && intb[1]) {
-      /* fprintf(stdout, "%d ** %d\n", i[0], i[1]); */
       valued = pow((double) i[0], (double) i[1]);
     } else {
-      /* fprintf(stdout, "%f ** %f\n", (intb[0] ? (double) i[0] : d[0]), (intb[1] ? (double) i[1] : d[1])); */
       valued = pow((intb[0] ? (double) i[0] : d[0]), (intb[1] ? (double) i[1] : d[1]));
     }
     resultIsIntb = 0;
-  } else if (strcmp((char *) bytep, "*") == 0) {
+  } else if (strcmp(ops, "*") == 0) {
     /* Both are int ? */
     if (intb[0] && intb[1]) {
-      /* fprintf(stdout, "%d * %d\n", i[0], i[1]); */
       valuei = i[0] * i[1];
       resultIsIntb = 1;
     } else {
-      /* fprintf(stdout, "%f * %f\n", (intb[0] ? (double) i[0] : d[0]), (intb[1] ? (double) i[1] : d[1])); */
       valued = (intb[0] ? (double) i[0] : d[0]) * (intb[1] ? (double) i[1] : d[1]);
       resultIsIntb = 0;
     }
-  } else if (strcmp((char *) bytep, "/") == 0) {
+  } else if (strcmp(ops, "/") == 0) {
     /* Both are int ? */
     if (intb[0] && intb[1]) {
       if (intb[1] == 0) {
         fprintf(stderr, "Division by zero!\n");
         return 0;
       }
-      /* fprintf(stdout, "%f / %f\n", (double) i[0], (double) i[1]); */
       valued = (double) i[0] / (double) i[1];
     } else {
       if ((intb[1] ? (double) i[1] : d[1]) < 0.E-8) {
         fprintf(stderr, "Division by zero (well, value is < 10E-8) !\n");
         return 0;
       }
-      /* fprintf(stdout, "%f / %f\n", (intb[0] ? (double) i[0] : d[0]), (intb[1] ? (double) i[1] : d[1])); */
       valued = (intb[0] ? (double) i[0] : d[0]) / (intb[1] ? (double) i[1] : d[1]);
     }
     resultIsIntb = 0;
-  } else if (strcmp((char *) bytep, "+") == 0) {
+  } else if (strcmp(ops, "+") == 0) {
     /* Both are int ? */
     if (intb[0] && intb[1]) {
-      /* fprintf(stdout, "%d + %d\n", i[0], i[1]); */
       valuei = i[0] + i[1];
       resultIsIntb = 1;
     } else {
-      /* fprintf(stdout, "%f + %f\n", (intb[0] ? (double) i[0] : d[0]), (intb[1] ? (double) i[1] : d[1])); */
       valued = (intb[0] ? (double) i[0] : d[0]) + (intb[1] ? (double) i[1] : d[1]);
       resultIsIntb = 0;
     }
-  } else if (strcmp((char *) bytep, "-") == 0) {
+  } else if (strcmp(ops, "-") == 0) {
     /* Both are int ? */
     if (intb[0] && intb[1]) {
-      /* fprintf(stdout, "%d - %d\n", i[0], i[1]); */
       valuei = i[0] - i[1];
       resultIsIntb = 1;
     } else {
-      /* fprintf(stdout, "%f - %f\n", (intb[0] ? (double) i[0] : d[0]), (intb[1] ? (double) i[1] : d[1])); */
       valued = (intb[0] ? (double) i[0] : d[0]) - (intb[1] ? (double) i[1] : d[1]);
       resultIsIntb = 0;
     }
   } else {
-    fprintf(stderr, "Unknown operator %s!\n", (char *) bytep);
+    fprintf(stderr, "Unknown operator %s!\n", ops);
     return 0;
   }
 
-  return resultIsIntb ? marpaESLIFValue_stack_set_intb(marpaESLIFValuep, resulti, INTEGER_CONTEXT, valuei) : marpaESLIFValue_stack_set_doubleb(marpaESLIFValuep, resulti, DOUBLE_CONTEXT, valued);
+  if (resultIsIntb) {
+    marpaESLIFValueResult.contexti        = INTEGER_CONTEXT;              /* Anything but 0 */
+    marpaESLIFValueResult.sizel           = 0;                            /* Not relevant */
+    marpaESLIFValueResult.representationp = NULL;                         /* No representation */
+    marpaESLIFValueResult.shallowb        = 0;                            /* Not relevant */
+    marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_INT;    /* Integer type */
+    marpaESLIFValueResult.u.i             = valuei;                       /* Integer value */
+    /* fprintf(stderr, "==> %d\n", valuei); */
+  } else {
+    marpaESLIFValueResult.contexti        = DOUBLE_CONTEXT;               /* Anything but 0 */
+    marpaESLIFValueResult.sizel           = 0;                            /* Not relevant */
+    marpaESLIFValueResult.representationp = NULL;                         /* No representation */
+    marpaESLIFValueResult.shallowb        = 0;                            /* Not relevant */
+    marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_DOUBLE; /* Double type */
+    marpaESLIFValueResult.u.d             = valued;                       /* Double value */
+    /* fprintf(stderr, "==> %f\n", valued); */
+  }
+  
+  return marpaESLIFValue_stack_setb(marpaESLIFValuep, resulti, &marpaESLIFValueResult);
 }
 
 /*****************************************************************************/
