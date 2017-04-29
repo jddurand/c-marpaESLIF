@@ -575,8 +575,10 @@ marpaESLIF BNF can be expressed in itself:
   <quantifier>                   ::= '*'
                                    | '+'
   <signed integer>               ::= /[+-]?\d+/
+  <unsigned integer>             ::= /\d+/
   <grammar reference>            ::= <quoted string>
                                    | <signed integer>
+                                   | '=' <unsigned integer>
 
   #
   # ---------------------------------------
