@@ -10,6 +10,8 @@ marpaESLIF is a Scanless Interface expressed in a BNF format, that is using L<ma
 
 This documentation is giving a tutorial using propositional logic and an external lexing.
 
+Some tutorials on propositional logic can be found on the web, for example L<this lecture|http://pages.cs.wisc.edu/~jerryzhu/cs540/handouts/pl.pdf>.
+
 =head2 GRAMMAR
 
 The BNF for propositional logic is:
@@ -33,3 +35,162 @@ The BNF for propositional logic is:
     IMPLIES     ~ _DUMMY
     EQUIVALENT  ~ _DUMMY
     SYMBOL      ~ _DUMMY
+
+=head2 Goal
+
+We will test the propositional logic table on the sentence
+
+  (P AND R IMPLIES Q) AND P AND R AND NOT Q
+
+that always returns a I<false> value, regardless if C<P>, C<Q> or C<R> are true or false.
+
+=head2 A totally externalized lexing
+
+You saw from the grammar that we arrange it to never match any input since all lexemes are defined to be derivations of the
+
+  _DUMMY ~ [^\s\S]
+
+sentence in the lexing sub-grammar.
+
+Indeed, this will because we will inject everything by hand using I<alternatives>. The following macros are doing this:
+
+=over
+
+=item Lexemes that are not of interest for valuation
+
+We can directly inject an UNDEF:
+
+  #define DO_ALTERNATIVE_UNDEF(names) do {                                \
+      marpaESLIFAlternative_t  marpaESLIFAlternative;                     \
+                                                                          \
+      marpaESLIFAlternative.lexemes        = names;                       \
+      marpaESLIFAlternative.value.type     = MARPAESLIF_VALUE_TYPE_UNDEF; \
+      marpaESLIFAlternative.value.contexti = 0;                           \
+      marpaESLIFAlternative.value.sizel    = 0;                           \
+      marpaESLIFAlternative.grammarLengthl = 1;                           \
+                                                                          \
+      if (! marpaESLIFRecognizer_lexeme_readb(marpaESLIFRecognizerp,      \
+                                              &marpaESLIFAlternative,     \
+                                              0)) {                       \
+        goto err;                                                         \
+      }                                                                   \
+    } while (0)
+
+=item Lexemes that are of interest for valuation
+
+We insert a boolean, expressed using the SHORT value type:
+
+  #define DO_ALTERNATIVE_CHAR(names, boolval) do {                        \
+      marpaESLIFAlternative_t  marpaESLIFAlternative;                     \
+                                                                          \
+      marpaESLIFAlternative.lexemes        = names;                       \
+      marpaESLIFAlternative.value.type     = MARPAESLIF_VALUE_TYPE_CHAR;  \
+      marpaESLIFAlternative.value.u.c      = boolval;                     \
+      marpaESLIFAlternative.value.contexti = 0;                           \
+      marpaESLIFAlternative.value.sizel    = 0;                           \
+      marpaESLIFAlternative.grammarLengthl = 1;                           \
+                                                                          \
+      if (! marpaESLIFRecognizer_lexeme_readb(marpaESLIFRecognizerp,      \
+                                              &marpaESLIFAlternative,     \
+                                              0)) {                       \
+        goto err;                                                         \
+      }                                                                   \
+    } while (0)
+
+=back
+
+and we will test all combinaisons of C<P>, C<Q> and C<R> values, storing in a private valuation context, that is passed as-is to all valuation callback functions:
+
+  for (valueContext.p = 0; valueContext.p < 2; valueContext.p++) {
+    for (valueContext.q = 0; valueContext.q < 2; valueContext.q++) {
+      for (valueContext.r = 0; valueContext.r < 2; valueContext.r++) {
+        /* ... */
+        marpaESLIFValuep = marpaESLIFValue_newp(marpaESLIFRecognizerp, &marpaESLIFValueOption);
+        marpaESLIFValue_valueb(marpaESLIFValuep, &marpaESLIFValueResult);
+        /* Result is in marpaESLIFValueResult.u.b */
+      }
+    }
+  }
+
+Please look to the code, you will see that indeed, the final result is always a false value!
+
+   INFO Injecting lexemes for: (P AND R IMPLIES Q) AND P AND R AND NOT Q
+  DEBUG Injecting <LPAREN>
+  DEBUG Injecting <SYMBOL> with value 'P'
+  DEBUG Injecting <AND>
+  DEBUG Injecting <SYMBOL> with value 'R'
+  DEBUG Injecting <IMPLIES>
+  DEBUG Injecting <SYMBOL> with value 'Q'
+  DEBUG Injecting <RPAREN>
+  DEBUG Injecting <AND>
+  DEBUG Injecting <SYMBOL> with value 'P'
+  DEBUG Injecting <AND>
+  DEBUG Injecting <SYMBOL> with value 'R'
+  DEBUG Injecting <AND>
+  DEBUG Injecting <NOT>
+  DEBUG Injecting <SYMBOL> with value 'Q'
+   INFO Valuation with {P, Q, R} = {0, 0, 0} of (P AND R IMPLIES Q) AND P AND R AND NOT Q 
+  DEBUG .............. {P, Q, R} = {0, 0, 0}... 0 AND 0 : 0
+  DEBUG .............. {P, Q, R} = {0, 0, 0}... 0 IMPLIES 0 : 1
+  DEBUG .............. {P, Q, R} = {0, 0, 0}... 1 AND 0 : 0
+  DEBUG .............. {P, Q, R} = {0, 0, 0}... 0 AND 0 : 0
+  DEBUG .............. {P, Q, R} = {0, 0, 0}... NOT 0 : 1
+  DEBUG .............. {P, Q, R} = {0, 0, 0}... 0 AND 1 : 0
+   INFO .............. {P, Q, R} = {0, 0, 0}... 0 
+   INFO Valuation with {P, Q, R} = {0, 0, 1} of (P AND R IMPLIES Q) AND P AND R AND NOT Q 
+  DEBUG .............. {P, Q, R} = {0, 0, 1}... 0 AND 1 : 0
+  DEBUG .............. {P, Q, R} = {0, 0, 1}... 0 IMPLIES 0 : 1
+  DEBUG .............. {P, Q, R} = {0, 0, 1}... 1 AND 0 : 0
+  DEBUG .............. {P, Q, R} = {0, 0, 1}... 0 AND 1 : 0
+  DEBUG .............. {P, Q, R} = {0, 0, 1}... NOT 0 : 1
+  DEBUG .............. {P, Q, R} = {0, 0, 1}... 0 AND 1 : 0
+   INFO .............. {P, Q, R} = {0, 0, 1}... 0 
+   INFO Valuation with {P, Q, R} = {0, 1, 0} of (P AND R IMPLIES Q) AND P AND R AND NOT Q 
+  DEBUG .............. {P, Q, R} = {0, 1, 0}... 0 AND 0 : 0
+  DEBUG .............. {P, Q, R} = {0, 1, 0}... 0 IMPLIES 1 : 1
+  DEBUG .............. {P, Q, R} = {0, 1, 0}... 1 AND 0 : 0
+  DEBUG .............. {P, Q, R} = {0, 1, 0}... 0 AND 0 : 0
+  DEBUG .............. {P, Q, R} = {0, 1, 0}... NOT 1 : 0
+  DEBUG .............. {P, Q, R} = {0, 1, 0}... 0 AND 0 : 0
+   INFO .............. {P, Q, R} = {0, 1, 0}... 0 
+   INFO Valuation with {P, Q, R} = {0, 1, 1} of (P AND R IMPLIES Q) AND P AND R AND NOT Q 
+  DEBUG .............. {P, Q, R} = {0, 1, 1}... 0 AND 1 : 0
+  DEBUG .............. {P, Q, R} = {0, 1, 1}... 0 IMPLIES 1 : 1
+  DEBUG .............. {P, Q, R} = {0, 1, 1}... 1 AND 0 : 0
+  DEBUG .............. {P, Q, R} = {0, 1, 1}... 0 AND 1 : 0
+  DEBUG .............. {P, Q, R} = {0, 1, 1}... NOT 1 : 0
+  DEBUG .............. {P, Q, R} = {0, 1, 1}... 0 AND 0 : 0
+   INFO .............. {P, Q, R} = {0, 1, 1}... 0 
+   INFO Valuation with {P, Q, R} = {1, 0, 0} of (P AND R IMPLIES Q) AND P AND R AND NOT Q 
+  DEBUG .............. {P, Q, R} = {1, 0, 0}... 1 AND 0 : 0
+  DEBUG .............. {P, Q, R} = {1, 0, 0}... 0 IMPLIES 0 : 1
+  DEBUG .............. {P, Q, R} = {1, 0, 0}... 1 AND 1 : 1
+  DEBUG .............. {P, Q, R} = {1, 0, 0}... 1 AND 0 : 0
+  DEBUG .............. {P, Q, R} = {1, 0, 0}... NOT 0 : 1
+  DEBUG .............. {P, Q, R} = {1, 0, 0}... 0 AND 1 : 0
+   INFO .............. {P, Q, R} = {1, 0, 0}... 0 
+   INFO Valuation with {P, Q, R} = {1, 0, 1} of (P AND R IMPLIES Q) AND P AND R AND NOT Q 
+  DEBUG .............. {P, Q, R} = {1, 0, 1}... 1 AND 1 : 1
+  DEBUG .............. {P, Q, R} = {1, 0, 1}... 1 IMPLIES 0 : 0
+  DEBUG .............. {P, Q, R} = {1, 0, 1}... 0 AND 1 : 0
+  DEBUG .............. {P, Q, R} = {1, 0, 1}... 0 AND 1 : 0
+  DEBUG .............. {P, Q, R} = {1, 0, 1}... NOT 0 : 1
+  DEBUG .............. {P, Q, R} = {1, 0, 1}... 0 AND 1 : 0
+   INFO .............. {P, Q, R} = {1, 0, 1}... 0 
+   INFO Valuation with {P, Q, R} = {1, 1, 0} of (P AND R IMPLIES Q) AND P AND R AND NOT Q 
+  DEBUG .............. {P, Q, R} = {1, 1, 0}... 1 AND 0 : 0
+  DEBUG .............. {P, Q, R} = {1, 1, 0}... 0 IMPLIES 1 : 1
+  DEBUG .............. {P, Q, R} = {1, 1, 0}... 1 AND 1 : 1
+  DEBUG .............. {P, Q, R} = {1, 1, 0}... 1 AND 0 : 0
+  DEBUG .............. {P, Q, R} = {1, 1, 0}... NOT 1 : 0
+  DEBUG .............. {P, Q, R} = {1, 1, 0}... 0 AND 0 : 0
+   INFO .............. {P, Q, R} = {1, 1, 0}... 0 
+   INFO Valuation with {P, Q, R} = {1, 1, 1} of (P AND R IMPLIES Q) AND P AND R AND NOT Q 
+  DEBUG .............. {P, Q, R} = {1, 1, 1}... 1 AND 1 : 1
+  DEBUG .............. {P, Q, R} = {1, 1, 1}... 1 IMPLIES 1 : 1
+  DEBUG .............. {P, Q, R} = {1, 1, 1}... 1 AND 1 : 1
+  DEBUG .............. {P, Q, R} = {1, 1, 1}... 1 AND 1 : 1
+  DEBUG .............. {P, Q, R} = {1, 1, 1}... NOT 1 : 0
+  DEBUG .............. {P, Q, R} = {1, 1, 1}... 1 AND 0 : 0
+   INFO .............. {P, Q, R} = {1, 1, 1}... 0 
+
