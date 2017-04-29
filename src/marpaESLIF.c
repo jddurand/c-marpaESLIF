@@ -3756,6 +3756,7 @@ static inline short _marpaESLIFRecognizer_exceptionmeta_matcherb(marpaESLIFRecog
   marpaESLIFRecognizerOption.disableThresholdb           = 1; /* No threshold warning when parsing an exception */
   marpaESLIFRecognizerOption.exhaustedb                  = 1; /* Exhaustion is ok */
   marpaESLIFRecognizerOption.newlineb                    = 0; /* No line/columns numbers counnt when parsing an exception */
+  marpaESLIFRecognizerOption.trackb                      = 0; /* Track absolute position */
 
   marpaESLIFValueOption.userDatavp            = NULL; /* exception will work entirely in the lexeme mode */
   marpaESLIFValueOption.ruleActionResolverp   = NULL;
@@ -4276,6 +4277,7 @@ marpaESLIFGrammar_t *marpaESLIFGrammar_newp(marpaESLIF_t *marpaESLIFp, marpaESLI
   marpaESLIFRecognizerOption.marpaESLIFReaderCallbackp   = _marpaESLIFReader_grammarReader;
   marpaESLIFRecognizerOption.disableThresholdb           = 1; /* No threshold warning when parsing a grammar */
   marpaESLIFRecognizerOption.newlineb                    = 1; /* Grammars are short - we can count line/columns numbers */
+  marpaESLIFRecognizerOption.trackb                      = 0; /* Track absolute position - recognizer is never accessible at this stage */
 
   marpaESLIFValueOption.userDatavp            = (void *) marpaESLIFGrammarp; /* Used by _marpaESLIF_bootstrap_freeCallbackv and statement rule actions */
   marpaESLIFValueOption.ruleActionResolverp   = _marpaESLIF_bootstrap_ruleActionResolver;
@@ -4966,7 +4968,8 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
 
   marpaESLIFRecognizerOptionDiscard.disableThresholdb = 1; /* If discard, prepare the option to disable threshold */
   marpaESLIFRecognizerOptionDiscard.exhaustedb        = 1; /* ... and have the exhausted event */
-  marpaESLIFRecognizerOptionDiscard.newlineb          = 0; /* ... and not count line/column numbers */
+  marpaESLIFRecognizerOptionDiscard.newlineb          = 0; /* ... do not count line/column numbers */
+  marpaESLIFRecognizerOptionDiscard.trackb            = 0; /* ... do not count track absolute position */
 
   /* The context of a discard is current recognizer */
   marpaESLIFValueOptionDiscard.userDatavp             = (void *) marpaESLIFRecognizerp; /* Used by _marpaESLIF_lexeme_freeCallbackv */
@@ -5715,8 +5718,8 @@ static inline short _marpaESLIFRecognizer_lexeme_completeb(marpaESLIFRecognizer_
     goto err;
   }
 
-  /* set latest earleme set id mapping - only available from the top recognizer */
-  if (marpaESLIFRecognizerp->parentRecognizerp == NULL) {
+  /* set latest earleme set id mapping if trackb is true */
+  if (marpaESLIFRecognizerp->marpaESLIFRecognizerOption.trackb) {
     /* Get latest earleme set id */
     if (!  marpaWrapperRecognizer_latestb(marpaESLIFRecognizerp->marpaWrapperRecognizerp, &latestEarleySetIdi)) {
       goto err;
@@ -5857,7 +5860,8 @@ static inline short _marpaESLIFRecognizer_discard_tryb(marpaESLIFRecognizer_t *m
 
   marpaESLIFRecognizerOptionDiscard.disableThresholdb = 1; /* If discard, prepare the option to disable threshold */
   marpaESLIFRecognizerOptionDiscard.exhaustedb        = 1; /* ... and have the exhausted event */
-  marpaESLIFRecognizerOptionDiscard.newlineb          = 0; /* ... and not count line/column numbers */
+  marpaESLIFRecognizerOptionDiscard.newlineb          = 0; /* ... do not count line/column numbers */
+  marpaESLIFRecognizerOptionDiscard.trackb            = 0; /* ... do not track absolute position */
 
   /* The context of a discard is current recognizer */
   marpaESLIFValueOptionDiscard.userDatavp             = (void *) marpaESLIFRecognizerp; /* Used by _marpaESLIF_lexeme_freeCallbackv */
@@ -6255,7 +6259,9 @@ void marpaESLIFRecognizer_freev(marpaESLIFRecognizer_t *marpaESLIFRecognizerp)
     _marpaESLIFrecognizer_lexemeStack_freev(marpaESLIFRecognizerp, marpaESLIFRecognizerp->lexemeInputStackp);
     _marpaESLIFRecognizer_alternativeStackSymbol_freev(marpaESLIFRecognizerp, marpaESLIFRecognizerp->alternativeStackSymbolp);
     GENERICSTACK_FREE(marpaESLIFRecognizerp->commitedAlternativeStackSymbolp);
-    GENERICSTACK_FREE(marpaESLIFRecognizerp->set2InputStackp);
+    if (marpaESLIFRecognizerp->marpaESLIFRecognizerOption.trackb) {
+      GENERICSTACK_FREE(marpaESLIFRecognizerp->set2InputStackp);
+    }
     if (marpaESLIFRecognizerp->lexemesArrayp != NULL) {
       free(marpaESLIFRecognizerp->lexemesArrayp);
     }
@@ -7175,8 +7181,8 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGramm
     goto err;
   }
 
-  /* The mapping of earley set to pointer and length in input is available only from the top recognizer */
-  if (marpaESLIFRecognizerParentp == NULL) {
+  /* The mapping of earley set to pointer and length in input is available only if trackb is true */
+  if (marpaESLIFRecognizerp->marpaESLIFRecognizerOption.trackb) {
     GENERICSTACK_NEW(marpaESLIFRecognizerp->set2InputStackp);
     if (GENERICSTACK_ERROR(marpaESLIFRecognizerp->set2InputStackp)) {
       MARPAESLIF_ERRORF(marpaESLIFp, "set2InputStackp initialization failure, %s", strerror(errno));
@@ -12257,6 +12263,13 @@ short marpaESLIFRecognizer_last_completedb(marpaESLIFRecognizer_t *marpaESLIFRec
   }
   marpaESLIFp             = marpaESLIFRecognizerp->marpaESLIFp;
   marpaWrapperRecognizerp = marpaESLIFRecognizerp->marpaWrapperRecognizerp;
+  if (! marpaESLIFRecognizerp->marpaESLIFRecognizerOption.trackb) {
+    /* Is that information available ? */
+    MARPAESLIF_ERROR(marpaESLIFp, "Last completion information is available only if recognizer is instanciated with the trackb option on");
+    errno = ENOSYS;
+    goto err;
+  }
+  
   marpaESLIFGrammarp      = marpaESLIFRecognizerp->marpaESLIFGrammarp;
   grammarp                = marpaESLIFGrammarp->grammarp;
   set2InputStackp         = marpaESLIFRecognizerp->set2InputStackp;
@@ -12319,7 +12332,7 @@ short marpaESLIFRecognizer_last_completedb(marpaESLIFRecognizer_t *marpaESLIFRec
   if (earleySetIdi < 0) {
     /* Not found */
     MARPAESLIF_ERRORF(marpaESLIFp, "No match for <%s> in input stack", names);
-    errno = EINVAL;
+    errno = ENOENT;
     goto err;
   }
 

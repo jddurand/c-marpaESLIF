@@ -124,6 +124,7 @@ int main() {
   marpaESLIFRecognizerOption.disableThresholdb         = 0;  /* No disable of threshold warning */
   marpaESLIFRecognizerOption.exhaustedb                = 0;  /* No exhaustion event */
   marpaESLIFRecognizerOption.newlineb                  = 1;  /* Do newline counting */
+  marpaESLIFRecognizerOption.trackb                    = 0;  /* Do absolute position tracking */
   marpaESLIFRecognizerOption.bufsizl                   = 0;  /* Recommended value */
   marpaESLIFRecognizerOption.buftriggerperci           = 50; /* Recommended value */
   marpaESLIFRecognizerOption.bufaddperci               = 50; /* Recommended value */

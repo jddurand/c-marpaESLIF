@@ -902,16 +902,14 @@ static void marpaESLIF_valueContextFreev(pTHX_ MarpaX_ESLIF_Value_t *MarpaX_ESLI
     if (MarpaX_ESLIF_Valuep->marpaESLIFValuep != NULL) {
       marpaESLIFValue_freev(MarpaX_ESLIF_Valuep->marpaESLIFValuep);
     }
-    if (! onStackb) {
-      Safefree(MarpaX_ESLIF_Valuep);
-    }
-
     SvREFCNT_dec(Perl_valueInterfacep);
     if (Perl_MarpaX_ESLIF_Recognizerp != NULL) {
       /* It is NULL in case of parse() */
       SvREFCNT_dec(Perl_MarpaX_ESLIF_Recognizerp);
     }
-
+    if (! onStackb) {
+      Safefree(MarpaX_ESLIF_Valuep);
+    }
   }
 }
  
@@ -959,14 +957,13 @@ static void marpaESLIF_recognizerContextFreev(pTHX_ MarpaX_ESLIF_Recognizer_t *M
     if (MarpaX_ESLIF_Recognizerp->marpaESLIFRecognizerp != NULL) {
       marpaESLIFRecognizer_freev(MarpaX_ESLIF_Recognizerp->marpaESLIFRecognizerp);
     }
-    if (! onStackb) {
-      Safefree(MarpaX_ESLIF_Recognizerp);
-    }
-
     SvREFCNT_dec(Perl_recognizerInterfacep);
     if (Perl_MarpaX_ESLIF_Grammarp != NULL) {
       /* It is NULL in the context of parse() */
       SvREFCNT_dec(Perl_MarpaX_ESLIF_Grammarp);
+    }
+    if (! onStackb) {
+      Safefree(MarpaX_ESLIF_Recognizerp);
     }
   }
 }
@@ -1093,6 +1090,7 @@ static void marpaESLIF_paramIsRecognizerInterfacev(pTHX_ SV *sv)
   if (! marpaESLIF_canb(aTHX_ sv, "isWithDisableThreshold")) MARPAESLIF_CROAK("Recognizer interface must be an object that can do \"isWithDisableThreshold\"");
   if (! marpaESLIF_canb(aTHX_ sv, "isWithExhaustion"))       MARPAESLIF_CROAK("Recognizer interface must be an object that can do \"isWithExhaustion\"");
   if (! marpaESLIF_canb(aTHX_ sv, "isWithNewline"))          MARPAESLIF_CROAK("Recognizer interface must be an object that can do \"isWithNewline\"");
+  if (! marpaESLIF_canb(aTHX_ sv, "isWithTrack"))            MARPAESLIF_CROAK("Recognizer interface must be an object that can do \"isWithTrack\"");
 }
 
 /*****************************************************************************/
@@ -1348,38 +1346,41 @@ CODE:
   int                          ngrammari;
   int                          i;
   marpaESLIFGrammarDefaults_t  marpaESLIFGrammarDefaults;
+  void                        *string1s = NULL;
+  void                        *string2s = NULL;
+  void                        *string3s = NULL;
 
   marpaESLIF_paramIsGrammarv(aTHX_ Perl_grammarp);
   if (items > 3) {
     marpaESLIF_paramIsEncodingv(aTHX_ Perl_encodingp = ST(3));
-    marpaESLIF_sv2byte(aTHX_ Perl_encodingp,
-                       &(marpaESLIFGrammarOption.encodings),
-                       &(marpaESLIFGrammarOption.encodingl),
-                       1, /* encodingInformationb */
-                       NULL, /* characterStreambp */
-                       &(marpaESLIFGrammarOption.encodingOfEncodings),
-                       NULL, /* encodingsp */
-                       NULL, /* encodinglp */
-                       1 /* warnIsFatalb */);
-    marpaESLIF_sv2byte(aTHX_ Perl_grammarp,
-                       (char **) &(marpaESLIFGrammarOption.bytep),
-                       &(marpaESLIFGrammarOption.bytel),
-                       0, /* encodingInformationb */
-                       NULL, /* characterStreambp */
-                       NULL, /* encodingOfEncodingsp */
-                       NULL, /* encodingsp */
-                       NULL, /* encodinglp */
-                       1 /* warnIsFatalb */);
+    string1s = marpaESLIF_sv2byte(aTHX_ Perl_encodingp,
+                                  &(marpaESLIFGrammarOption.encodings),
+                                  &(marpaESLIFGrammarOption.encodingl),
+                                  1, /* encodingInformationb */
+                                  NULL, /* characterStreambp */
+                                  &(marpaESLIFGrammarOption.encodingOfEncodings),
+                                  NULL, /* encodingsp */
+                                  NULL, /* encodinglp */
+                                  1 /* warnIsFatalb */);
+    string2s = marpaESLIF_sv2byte(aTHX_ Perl_grammarp,
+                                  (char **) &(marpaESLIFGrammarOption.bytep),
+                                  &(marpaESLIFGrammarOption.bytel),
+                                  0, /* encodingInformationb */
+                                  NULL, /* characterStreambp */
+                                  NULL, /* encodingOfEncodingsp */
+                                  NULL, /* encodingsp */
+                                  NULL, /* encodinglp */
+                                  1 /* warnIsFatalb */);
   } else {
-    marpaESLIF_sv2byte(aTHX_ Perl_grammarp,
-                       (char **) &(marpaESLIFGrammarOption.bytep),
-                       &(marpaESLIFGrammarOption.bytel),
-                       1, /* encodingInformationb */
-                       NULL, /* characterStreambp */
-                       &(marpaESLIFGrammarOption.encodingOfEncodings),
-                       &(marpaESLIFGrammarOption.encodings),
-                       &(marpaESLIFGrammarOption.encodingl),
-                       1 /* warnIsFatalb */);
+    string3s = marpaESLIF_sv2byte(aTHX_ Perl_grammarp,
+                                  (char **) &(marpaESLIFGrammarOption.bytep),
+                                  &(marpaESLIFGrammarOption.bytel),
+                                  1, /* encodingInformationb */
+                                  NULL, /* characterStreambp */
+                                  &(marpaESLIFGrammarOption.encodingOfEncodings),
+                                  &(marpaESLIFGrammarOption.encodings),
+                                  &(marpaESLIFGrammarOption.encodingl),
+                                  1 /* warnIsFatalb */);
   }
 
   Newx(MarpaX_ESLIF_Grammarp, 1, MarpaX_ESLIF_Grammar_t);
@@ -1397,21 +1398,34 @@ CODE:
   if (! marpaESLIFGrammar_ngrammarib(marpaESLIFGrammarp, &ngrammari)) {
     int save_errno = errno;
     marpaESLIF_grammarContextFreev(aTHX_ MarpaX_ESLIF_Grammarp);
+    if (string1s != NULL) { Safefree(string1s); }
+    if (string2s != NULL) { Safefree(string2s); }
+    if (string3s != NULL) { Safefree(string3s); }
     MARPAESLIF_CROAKF("marpaESLIFGrammar_ngrammarib failure, %s", strerror(save_errno));
   }
   for (i = 0; i < ngrammari; i++) {
     if (! marpaESLIFGrammar_defaults_by_levelb(marpaESLIFGrammarp, &marpaESLIFGrammarDefaults, i, NULL /* descp */)) {
       int save_errno = errno;
       marpaESLIF_grammarContextFreev(aTHX_ MarpaX_ESLIF_Grammarp);
+      if (string1s != NULL) { Safefree(string1s); }
+      if (string2s != NULL) { Safefree(string2s); }
+      if (string3s != NULL) { Safefree(string3s); }
       MARPAESLIF_CROAKF("marpaESLIFGrammar_defaults_by_levelb failure, %s", strerror(save_errno));
     }
     marpaESLIFGrammarDefaults.defaultFreeActions = ":defaultFreeActions";
     if (! marpaESLIFGrammar_defaults_by_level_setb(marpaESLIFGrammarp, &marpaESLIFGrammarDefaults, i, NULL /* descp */)) {
       int save_errno = errno;
       marpaESLIF_grammarContextFreev(aTHX_ MarpaX_ESLIF_Grammarp);
+      if (string1s != NULL) { Safefree(string1s); }
+      if (string2s != NULL) { Safefree(string2s); }
+      if (string3s != NULL) { Safefree(string3s); }
       MARPAESLIF_CROAKF("marpaESLIFGrammar_defaults_by_levelb failure, %s", strerror(save_errno));
     }
   }
+
+  if (string1s != NULL) { Safefree(string1s); }
+  if (string2s != NULL) { Safefree(string2s); }
+  if (string3s != NULL) { Safefree(string3s); }
 
   RETVAL = MarpaX_ESLIF_Grammarp;
 OUTPUT:
@@ -1744,6 +1758,7 @@ CODE:
   marpaESLIFRecognizerOption.disableThresholdb         = marpaESLIF_call_methodb(aTHX_ Perl_recognizerInterfacep, "isWithDisableThreshold");
   marpaESLIFRecognizerOption.exhaustedb                = marpaESLIF_call_methodb(aTHX_ Perl_recognizerInterfacep, "isWithExhaustion");
   marpaESLIFRecognizerOption.newlineb                  = marpaESLIF_call_methodb(aTHX_ Perl_recognizerInterfacep, "isWithNewline");
+  marpaESLIFRecognizerOption.trackb                    = marpaESLIF_call_methodb(aTHX_ Perl_recognizerInterfacep, "isWithTrack");
   marpaESLIFRecognizerOption.bufsizl                   = 0; /* Recommended value */
   marpaESLIFRecognizerOption.buftriggerperci           = 50; /* Recommended value */
   marpaESLIFRecognizerOption.bufaddperci               = 50; /* Recommended value */
@@ -1836,7 +1851,7 @@ CODE:
   MarpaX_ESLIF_Recognizerp->lexemeStackp = marpaESLIF_GENERICSTACK_NEW();
   if (MarpaX_ESLIF_Recognizerp->lexemeStackp == NULL) {
     int save_errno = errno;
-    marpaESLIF_recognizerContextFreev(aTHX_ MarpaX_ESLIF_Recognizerp, 1 /* onStackb */);
+    marpaESLIF_recognizerContextFreev(aTHX_ MarpaX_ESLIF_Recognizerp, 0 /* onStackb */);
     MARPAESLIF_CROAKF("GENERICSTACK_NEW() failure, %s", strerror(save_errno));
   }
 
@@ -1845,6 +1860,7 @@ CODE:
   marpaESLIFRecognizerOption.disableThresholdb         = marpaESLIF_call_methodb(aTHX_ Perl_recognizerInterfacep, "isWithDisableThreshold");
   marpaESLIFRecognizerOption.exhaustedb                = marpaESLIF_call_methodb(aTHX_ Perl_recognizerInterfacep, "isWithExhaustion");
   marpaESLIFRecognizerOption.newlineb                  = marpaESLIF_call_methodb(aTHX_ Perl_recognizerInterfacep, "isWithNewline");
+  marpaESLIFRecognizerOption.trackb                    = marpaESLIF_call_methodb(aTHX_ Perl_recognizerInterfacep, "isWithTrack");
   marpaESLIFRecognizerOption.bufsizl                   = 0; /* Recommended value */
   marpaESLIFRecognizerOption.buftriggerperci           = 50; /* Recommended value */
   marpaESLIFRecognizerOption.bufaddperci               = 50; /* Recommended value */
@@ -1852,7 +1868,7 @@ CODE:
   MarpaX_ESLIF_Recognizerp->marpaESLIFRecognizerp = marpaESLIFRecognizer_newp(MarpaX_ESLIF_Grammarp->marpaESLIFGrammarp, &marpaESLIFRecognizerOption);
   if (MarpaX_ESLIF_Recognizerp->marpaESLIFRecognizerp == NULL) {
     int save_errno = errno;
-    marpaESLIF_recognizerContextFreev(aTHX_ MarpaX_ESLIF_Recognizerp, 1 /* onStackb */);
+    marpaESLIF_recognizerContextFreev(aTHX_ MarpaX_ESLIF_Recognizerp, 0 /* onStackb */);
     MARPAESLIF_CROAKF("marpaESLIFRecognizer_newp failure, %s", strerror(errno));
   }
 
@@ -1870,7 +1886,7 @@ void
 DESTROY(MarpaX_ESLIF_Recognizerp)
   MarpaX_ESLIF_Recognizer MarpaX_ESLIF_Recognizerp;
 CODE:
-  marpaESLIF_recognizerContextFreev(aTHX_ MarpaX_ESLIF_Recognizerp, 1 /* onStackb */);
+  marpaESLIF_recognizerContextFreev(aTHX_ MarpaX_ESLIF_Recognizerp, 0 /* onStackb */);
 
 =for comment
   /* ----------------------------------------------------------------------- */

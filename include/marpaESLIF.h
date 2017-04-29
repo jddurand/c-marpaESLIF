@@ -44,6 +44,7 @@ typedef struct marpaESLIFRecognizerOption {
   short                disableThresholdb;           /* Default: 0 */
   short                exhaustedb;                  /* Exhaustion event. Default: 0 */
   short                newlineb;                    /* Count line/column numbers. Default: 0 */
+  short                trackb;                      /* Track absolute position. Default: 0 */
   size_t               bufsizl;                     /* Minimum stream buffer size: Recommended: 0 (internally, a system default will apply) */
   unsigned int         buftriggerperci;             /* Excess number of bytes, in percentage of bufsizl, where stream buffer size is reduced. Recommended: 50 */
   unsigned int         bufaddperci;                 /* Policy of minimum of bytes for increase, in percentage of current allocated size, when stream buffer size need to augment. Recommended: 50 */

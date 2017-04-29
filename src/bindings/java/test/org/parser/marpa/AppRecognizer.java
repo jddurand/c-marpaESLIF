@@ -53,5 +53,9 @@ public class AppRecognizer implements ESLIFRecognizerInterface {
 			return true;
 		}
 		
+		public boolean isWithTrack() {
+			return true;
+		}
+		
 	}
 

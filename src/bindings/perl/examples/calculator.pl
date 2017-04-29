@@ -48,6 +48,7 @@ sub data                   {    shift->{data} } # data
 sub isWithDisableThreshold {                0 } # Disable threshold warning ?
 sub isWithExhaustion       {                0 } # Exhaustion event ?
 sub isWithNewline          {                1 } # Newline count ?
+sub isWithTrack            {                0 } # Absolute position tracking ?
 
 package MyValue;
 use strict;

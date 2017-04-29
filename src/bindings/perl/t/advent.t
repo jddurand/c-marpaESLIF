@@ -14,6 +14,7 @@ sub data                   { $_[0]->{string} }
 sub isWithDisableThreshold { 0 }
 sub isWithExhaustion       { 0 }
 sub isWithNewline          { 1 }
+sub isWithTrack            { 1 }
 
 package MyValueInterface;
 use strict;
