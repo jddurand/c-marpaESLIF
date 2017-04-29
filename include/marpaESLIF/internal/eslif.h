@@ -125,8 +125,10 @@
 #define G1_RULE_QUANTIFIER_1                     "G1_rule_quantifier_1"
 #define G1_RULE_QUANTIFIER_2                     "G1_rule_quantifier_2"
 #define G1_RULE_SIGNED_INTEGER                   "G1_rule_signed_integer"
+#define G1_RULE_UNSIGNED_INTEGER                 "G1_rule_unsigned_integer"
 #define G1_RULE_GRAMMAR_REFERENCE_1              "G1_rule_grammar_reference_1"
 #define G1_RULE_GRAMMAR_REFERENCE_2              "G1_rule_grammar_reference_2"
+#define G1_RULE_GRAMMAR_REFERENCE_3              "G1_rule_grammar_reference_3"
 #define G1_RULE_DISCARD_1                        "G1_rule_discard_1"
 #define G1_RULE_DISCARD_2                        "G1_rule_discard_2"
 #define G1_RULE_DISCARD_3                        "G1_rule_discard_3"
@@ -255,8 +257,10 @@
 #define G1_ACTION_QUANTIFIER_1                     "G1_action_quantifier_1"                     /* done */
 #define G1_ACTION_QUANTIFIER_2                     "G1_action_quantifier_2"                     /* done */
 #define G1_ACTION_SIGNED_INTEGER                   "::ascii" /* <signed integer> ::= /[+-]?\d+/ */
+#define G1_ACTION_UNSIGNED_INTEGER                 "::ascii" /* <unsigned integer> ::= /\d+/ */
 #define G1_ACTION_GRAMMAR_REFERENCE_1              "G1_action_grammar_reference_1"              /* done */
 #define G1_ACTION_GRAMMAR_REFERENCE_2              "G1_action_grammar_reference_2"              /* done */
+#define G1_ACTION_GRAMMAR_REFERENCE_3              "G1_action_grammar_reference_3"              /* done */
 
 typedef struct bootstrap_grammar_terminal {
   int                        idi;                 /* Identifier */

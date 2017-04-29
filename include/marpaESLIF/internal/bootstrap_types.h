@@ -136,7 +136,8 @@ enum marpaESLIF_bootstrap_rhs_primary_type {
 enum marpaESLIF_bootstrap_grammar_reference_type {
   MARPAESLIF_BOOTSTRAP_GRAMMAR_REFERENCE_TYPE_NA = 0,
   MARPAESLIF_BOOTSTRAP_GRAMMAR_REFERENCE_TYPE_STRING,
-  MARPAESLIF_BOOTSTRAP_GRAMMAR_REFERENCE_TYPE_SIGNED_INTEGER
+  MARPAESLIF_BOOTSTRAP_GRAMMAR_REFERENCE_TYPE_SIGNED_INTEGER,
+  MARPAESLIF_BOOTSTRAP_GRAMMAR_REFERENCE_TYPE_UNSIGNED_INTEGER
 };
 
 struct marpaESLIF_bootstrap_grammar_reference {
@@ -144,6 +145,7 @@ struct marpaESLIF_bootstrap_grammar_reference {
   union {
     marpaESLIF_bootstrap_utf_string_t *quotedStringp;
     int                                signedIntegeri;
+    unsigned int                       unsignedIntegeri;
   } u;
 };
 
