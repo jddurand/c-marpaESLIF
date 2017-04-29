@@ -112,6 +112,36 @@ Lexemes are meta-symbols that does appear as the LHS symbol anywhere within the 
 
 say that symbol C<something> at grammar level C<0> is a reference to C<something> at grammar level C<1>.
 
+Lexemes can be references:
+
+=over
+
+=item implicitely
+
+Without any indication, a lexeme is always assumed to be at the grammar of the next level
+
+=item explicity by grammar description
+
+  X ::= Y@'Grammar Description'
+
+This is working because a grammar description is unique across all sub-grammars.
+
+=item explicitely by relative level
+
+  X ::= Y@+1
+  X ::= Y@-2
+  X ::= Y@3
+
+The signed integer is interpreted as a delta with current grammar level.
+
+=item explicitely by absolute level
+
+  X ::= Y@=1
+
+The unsigned integer is interpreted as an explicit grammar level.
+
+=back
+
 =item Discard
 
 Everytime expected terminals cannot be match, marpaESLIF will try to match the special rule C<:discard>. The C<:discard> rule also have precedence if it matches longer than the longest acceptable lexeme. and can not be ambiguous (else discard silently fail).
