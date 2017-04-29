@@ -75,4 +75,15 @@ public interface ESLIFRecognizerInterface {
 	 * @return a boolean indicating if line/number accounting is on
 	 */
 	public boolean isWithNewline();
+	/**
+	 * Absolute position tracking.
+	 * 
+	 * Absolute position tracking is telling the recognizer to keep track of absolute position at every new alternative.
+	 * This function not only has a cost, but is not fully reliable because there is no tentative to check for internal turnaround
+	 * of the associated implied internal variables.
+	 * You should turn this option to true <i>only</i> if you plan to use the lastCompletedOffset() or lastCompletedLEngth() methods.
+	 * 
+	 * @return a boolean indicating if absolute position tracking is on
+	 */
+	public boolean isWithTrack();
 }

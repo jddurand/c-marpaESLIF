@@ -392,6 +392,7 @@ marpaESLIFRecognizerOption_t marpaESLIFRecognizerOption_default_template = {
   0,                 /* disableThresholdb */
   0,                 /* exhaustedb */
   0,                 /* newlineb */
+  0,                 /* trackb */
   MARPAESLIF_BUFSIZ, /* bufsizl */
   50,                /* buftriggerperci */
   50                 /* bufaddperci */

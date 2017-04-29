@@ -52,6 +52,12 @@ Returns a boolean indicating if line/number accounting is on.
 
 Error reporting can be accurate up to line and column numbers when this is happening on a character stream enabled chunk of data. This is handy, but has an extra cost on parsing performance. This method is used at recognizer creation step only.
 
+=item $recognizerInterface->isWithTrack()
+
+Returns a boolean indicating if absolute position tracking is on.
+
+Absolute position tracking must be on if you plan to use one of the lastCompletedOffset(), lastCompletedLength() or lastCompletedLocation() recognizer methods. The information returned by these methods is not fully reliable, because ESLIF will not check if there is a turnaround with associated internal variables.
+
 =back
 
 =cut

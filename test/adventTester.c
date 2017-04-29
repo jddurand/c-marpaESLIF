@@ -168,6 +168,7 @@ int main() {
       marpaESLIFRecognizerOption.disableThresholdb         = 0;
       marpaESLIFRecognizerOption.exhaustedb                = 0;
       marpaESLIFRecognizerOption.newlineb                  = 1;
+      marpaESLIFRecognizerOption.trackb                    = 1;
       marpaESLIFRecognizerOption.bufsizl                   = 0;
       marpaESLIFRecognizerOption.buftriggerperci           = 50;
       marpaESLIFRecognizerOption.bufaddperci               = 50;

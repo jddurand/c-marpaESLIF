@@ -2,7 +2,7 @@ package org.parser.marpa;
 
 public class AppLogger implements ESLIFLoggerInterface {
 	public void trace(String message) {
-		System.out.println("<TRACE> " + message);
+		// System.out.println("<TRACE> " + message);
 		System.out.flush();
 	}
 

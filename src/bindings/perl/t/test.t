@@ -70,6 +70,13 @@ sub isWithNewline {
     return $isWithNewline;
 }
 
+sub isWithTrack {
+    my ($self) = @_;
+    my $isWithTrack = 1;
+    $self->{log}->tracef("isWithTrack = %d", $isWithTrack);
+    return $isWithTrack;
+}
+
 package MyValue;
 use strict;
 use diagnostics;

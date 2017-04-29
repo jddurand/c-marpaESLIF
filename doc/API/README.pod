@@ -88,7 +88,7 @@ Most of the APIs in this section have two forms, one for the I<current> grammar,
   :desc :[0]: 'Description of the grammar at level 0'
   :desc :[7]: 'Description of the grammar at level 7'
 
-The default current grammar is always at level C<0>, that must exist. Level <0> is naturally considered like the I<top level> grammar. Nevertheless it is possible to instanciate a parsing at a I<different> level, in which case current grammar in derived namespaces like the recognizer or the valuation, is the level you asked for. For example:
+The default current grammar is always at level C<0>, that must exist. Level <0> is naturally considered like the I<top level> grammar. Nevertheless it is possible to instanciate a parsing at a I<different> level, then the I<current grammar> in derived namespaces like the recognizer or the valuation is I<the level you asked for>. For example:
 
   A :[0]:= X          # Could have been A ::= X, '::=' is an alias for ':[0]:'
   X :[1]:= Y@+2       # Could have been X ~ Y@+2, '~' is an alias for ':[1]:'
@@ -579,6 +579,7 @@ Secondly, if, at any location in the grammar, possible alternatives are of both 
     short                disableThresholdb;           /* Disable threshold warning.  Recommended: 0 */
     short                exhaustedb;                  /* Exhaustion event.           Recommended: 0 */
     short                newlineb;                    /* Count line/column numbers.  Recommended: 0 */
+    short                trackb;                      /* Absolute position tracking. Recommended: 0 */
     size_t               bufsizl;                     /* Minimum stream buffer size. Recommended: 0 */
 
     /* Excess number of bytes, in % of bufsizl, where stream buffer size is reduced */
@@ -701,6 +702,10 @@ Support of exhaustion event. Recommended value is a false value, because the mos
 =item C<newlineb>
 
 Support of newline count. This is used when the parser fails to produce ab accurate report with line and number information. Works at the granularity of data chunk, and is meaningless if data chunk is not declared as a character stream. Any Unicode line ending sequence is considered.
+
+=item C<trackb>
+
+Support of absolute position tracking. The recognizer have to track absolute position to successfuly process the C<marpaESLIFRecognizer_last_completedb()> method (see below). Nevertheless, maintaining such information has a cost and is not fully reliable because there is no attempt to check for an eventual turnaround of the associated internal variables. You should put this option to a true value only if you plan to use C<marpaESLIFRecognizer_last_completedb()>.
 
 =item C<bufsizl>
 

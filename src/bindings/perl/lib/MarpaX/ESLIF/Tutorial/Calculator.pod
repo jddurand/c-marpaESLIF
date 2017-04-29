@@ -82,7 +82,7 @@ One can already try to parse some input. Neverthless, to do so, MarpaX::ESLIF im
 
 =item Recognizer interface
 
-A recognizer must provide the following methods: C<read>, C<isEof>, C<isCharacterStream>, C<encoding>, C<data>, C<isWithDisableThreshold>, C<isWithExhaustion> and C<isWithNewline>. We will instanciate a recognizer for a string;
+A recognizer must provide the following methods: C<read>, C<isEof>, C<isCharacterStream>, C<encoding>, C<data>, C<isWithDisableThreshold>, C<isWithExhaustion>, C<isWithNewline> and C<isWithTrack>. We will instanciate a recognizer for a string;
 
   package MyRecognizer;
   use strict;
@@ -96,7 +96,7 @@ A recognizer must provide the following methods: C<read>, C<isEof>, C<isCharacte
     bless { data => undef, fh => $fh }, $pkg
   }
 
-C<read> returns a true value if data was read, C<isEof> returns a true value if EOF is reached, C<isCharacterStream> returns a true value if this the last data is composed of characters, C<encoding> return the encoding if known, C<data> returns the data, C<isWithDisableThreshold> switches off a hardcoded internal warning when grammar seems to have problems -; C<isWithExhaustion> enables exhaustion event and C<isWithNewline> enables newline counting for error reporting:
+C<read> returns a true value if data was read, C<isEof> returns a true value if EOF is reached, C<isCharacterStream> returns a true value if this the last data is composed of characters, C<encoding> return the encoding if known, C<data> returns the data, C<isWithDisableThreshold> switches off a hardcoded internal warning when grammar seems to have problems -; C<isWithExhaustion> enables exhaustion event, C<isWithNewline> enables newline counting for error reporting, and C<isWithTrack> enables absolute position tracking if you plan to use one of the lastCompletedOffset(), lastCompletedLength() or lastCompletedLocation() recognizer methods:
 
   #
   # Required methods
@@ -112,6 +112,7 @@ C<read> returns a true value if data was read, C<isEof> returns a true value if 
   sub isWithDisableThreshold {                0 } # Disable threshold warning ?
   sub isWithExhaustion       {                0 } # Exhaustion event ?
   sub isWithNewline          {                1 } # Newline count ?
+  sub isWithTrack            {                0 } # Absolute position tracking ?
 
 =item Valuator interface
 
