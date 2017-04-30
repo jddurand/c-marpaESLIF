@@ -881,6 +881,9 @@ static inline marpaESLIF_symbol_t  *_marpaESLIF_bootstrap_check_rhsPrimaryp(marp
   symbolp = NULL;
 
  done:
+  if (referencedSymbols != NULL) {
+    free(referencedSymbols);
+  }
   return symbolp;
 }
 
@@ -2642,7 +2645,6 @@ static inline short _marpaESLIF_bootstrap_G1_action_priority_flat_ruleb(marpaESL
   static const char                  *funcs             = "_marpaESLIF_bootstrap_G1_action_priority_flat_ruleb";
   marpaESLIF_t                       *marpaESLIFp       = marpaESLIFGrammar_eslifp(marpaESLIFRecognizer_grammarp(marpaESLIFValue_recognizerp(marpaESLIFValuep)));
   marpaESLIF_rule_t                  *rulep             = NULL;
-  char                               *referencedSymbols = NULL;
   int                                *rhsip             = NULL;
   int                                 nrhsi;
   genericStack_t                     *alternativeStackp;
@@ -2792,9 +2794,6 @@ static inline short _marpaESLIF_bootstrap_G1_action_priority_flat_ruleb(marpaESL
  done:
   if (rhsip != NULL) {
     free(rhsip);
-  }
-  if (referencedSymbols != NULL) {
-    free(referencedSymbols);
   }
   _marpaESLIF_rule_freev(rulep);
   return rcb;
