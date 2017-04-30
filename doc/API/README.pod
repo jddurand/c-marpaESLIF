@@ -1272,7 +1272,31 @@ If not C<NULL>, will contain the current input internal buffer length.
 
 =back
 
-These pointers are intentionnaly not having a I<const> keyword, though it is obvious that any attempt to modify C<*inputsp> or C<*inputlp> is likely to make the process crash. The internal buffer may I<not> correspond to what the callback returned in case there is character conversion: in this case the internal buffer contains UTF-8 character sequences.
+These pointers are intentionaly not having a I<const> keyword, though it is obvious that any attempt to modify C<*inputsp> or C<*inputlp> is likely to make the process crash. The internal buffer may I<not> correspond to what the callback returned in case there is character conversion: in this case the internal buffer contains UTF-8 character sequences.
+
+Returns a true value on success, a false value on failure.
+
+=head3 C<marpaESLIFRecognizer_locationb>
+
+  short marpaESLIFRecognizer_locationb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp,
+                                       size_t *linelp,
+                                       size_t *columnlp);
+
+For the recognizer instance pointed by C<marpaESLIFRecognizerp>, returns the current line and number, i.e.:
+
+=over
+
+=item linelp
+
+If not C<NULL>, will contain the current absolute line number.
+
+=item columnlp
+
+If not C<NULL>, will contain the current absolute column number.
+
+=back
+
+Please note that this is in effect only if the recognizer option have a true value for C<newlineb>, and for character chunks.
 
 Returns a true value on success, a false value on failure.
 
