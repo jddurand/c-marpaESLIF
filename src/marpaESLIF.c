@@ -5432,14 +5432,12 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
           dumps = *(marpaESLIFRecognizerp->buffersp);
           dumpl = marpaESLIFRecognizerp->inputs - *(marpaESLIFRecognizerp->buffersp);
         }
-#ifndef MARPAESLIF_NTRACE
         MARPAESLIF_HEXDUMPV(marpaESLIFRecognizerp,
                             "",
                             *(marpaESLIFRecognizerp->utfbp) ? "UTF-8 converted data before the failure" : "Raw data before the failure",
                             dumps,
                             dumpl,
                             0 /* traceb */);
-#endif
       }
       if ((*(marpaESLIFRecognizerp->utfbp)) && marpaESLIFRecognizerp->marpaESLIFRecognizerOption.newlineb) {
         if (marpaESLIFRecognizerp->columnl > 0) {
@@ -5459,14 +5457,12 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
 
         dumps = marpaESLIFRecognizerp->inputs;
         dumpl = marpaESLIFRecognizerp->inputl > 128 ? 128 : marpaESLIFRecognizerp->inputl;
-#ifndef MARPAESLIF_NTRACE
         MARPAESLIF_HEXDUMPV(marpaESLIFRecognizerp,
                             "",
                             *(marpaESLIFRecognizerp->utfbp) ? "UTF-8 converted data after the failure" : "Raw data after the failure",
                             dumps,
                             dumpl,
                             0 /* traceb */);
-#endif
       }
     }
   }
