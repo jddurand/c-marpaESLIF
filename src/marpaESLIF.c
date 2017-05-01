@@ -5736,8 +5736,6 @@ static inline short _marpaESLIFRecognizer_lexeme_completeb(marpaESLIFRecognizer_
       MARPAESLIF_ERRORF(marpaESLIFp, "set2InputStackp set failure, %s", strerror(errno));
       goto err;
     }
-
-    fprintf(stderr, "Earley Set Id %ld: {%ld,%ld}\n", (unsigned long) latestEarleySetIdi, (unsigned long) currentOffsetp, (unsigned long) lengthl);
   }
 
   if (! marpaWrapperRecognizer_completeb(marpaESLIFRecognizerp->marpaWrapperRecognizerp)) {
@@ -12362,9 +12360,6 @@ short marpaESLIFRecognizer_last_completedb(marpaESLIFRecognizer_t *marpaESLIFRec
   array[0] = GENERICSTACK_GET_ARRAY(set2InputStackp, starti);
   array[1] = GENERICSTACK_GET_ARRAY(set2InputStackp, endi);
 
-  fprintf(stderr, "Start Earley Set Id %ld: {%ld,%ld}\n", (unsigned long) starti, (unsigned long) GENERICSTACK_ARRAY_PTR(array[0]), (unsigned long) GENERICSTACK_ARRAY_LENGTH(array[0]));
-  fprintf(stderr, "End   Earley Set Id %ld: {%ld,%ld}\n", (unsigned long) endi,   (unsigned long) GENERICSTACK_ARRAY_PTR(array[1]), (unsigned long) GENERICSTACK_ARRAY_LENGTH(array[1]));
-
   firstStartPositionp = (char *) GENERICSTACK_ARRAY_PTR(array[0]);
   lastStartPositionp  = (char *) GENERICSTACK_ARRAY_PTR(array[1]);
   lastLengthl         =          GENERICSTACK_ARRAY_LENGTH(array[1]);
@@ -12378,8 +12373,6 @@ short marpaESLIFRecognizer_last_completedb(marpaESLIFRecognizer_t *marpaESLIFRec
   if (lengthlp != NULL) {
     *lengthlp = lengthl;
   }
-
-  fprintf(stderr, "====>                    {%ld,%ld}\n", (unsigned long) offsetp, (unsigned long) lengthl);
 
   rcb = 1;
   goto done;
