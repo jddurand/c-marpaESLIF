@@ -157,6 +157,17 @@ typedef struct marpaESLIF_stringGenerator { /* We use genericLogger to generate 
     rcb = (_marpaESLIFValueResultp->type == MARPAESLIF_VALUE_TYPE_PTR); \
   } while (0)
 
+#define MARPAESLIF_IS_UNDEF(marpaESLIFValuep, indicei, rcb) do {        \
+    marpaESLIFValueResult_t *_marpaESLIFValueResultp;                   \
+                                                                        \
+    _marpaESLIFValueResultp = marpaESLIFValue_stack_getp(marpaESLIFValuep, indicei); \
+    if (_marpaESLIFValueResultp == NULL) {                              \
+      RAISEEXCEPTION(envp, "marpaESLIFValue_stack_getp failure");       \
+    }                                                                   \
+                                                                        \
+    rcb = (_marpaESLIFValueResultp->type == MARPAESLIF_VALUE_TYPE_UNDEF); \
+  } while (0)
+
 #define MARPAESLIF_IS_ARRAY(marpaESLIFValuep, indicei, rcb) do {        \
     marpaESLIFValueResult_t *_marpaESLIFValueResultp;                   \
                                                                         \
@@ -3366,6 +3377,7 @@ static short marpaESLIFValueRuleCallback(void *userDatavp, marpaESLIFValue_t *ma
   int                            i;
   short                          ptrb;
   short                          arrayb;
+  short                          undefb;
   void                          *bytep;
   size_t                         bytel;
   marpaESLIFValueResult_t       *marpaESLIFValueResultp;
@@ -3403,36 +3415,44 @@ static short marpaESLIFValueRuleCallback(void *userDatavp, marpaESLIFValue_t *ma
           goto err;
         }
       } else {
-        /* This must be a lexeme - always in the form of an array */
-        MARPAESLIF_IS_ARRAY(marpaESLIFValuep, i, arrayb);
-        if (! arrayb) {
-          RAISEEXCEPTIONF(envp, "At indice %d of stack, item not an ARRAY", i);
-        }
-        MARPAESLIF_GET_ARRAY(marpaESLIFValuep, i, contexti, bytep, bytel);
-        /* We never push array, i.e. contexti must be 0 in any case here */
-        if (contexti != 0) {
-          RAISEEXCEPTIONF(envp, "marpaESLIFValue_stack_get_array success but contexti is %d instead of 0", contexti);
-        }
-        /* Either bytel is > 0, then this is the input, else this is a user-defined object */
-        if (bytel > 0) {
-          byteBuffer = (*envp)->NewDirectByteBuffer(envp, bytep, (jlong) bytel);
-          if (byteBuffer == NULL) {
-            RAISEEXCEPTION(envp, "NewDirectByteBuffer failure");
-          }
-          (*envp)->SetObjectArrayElement(envp, list, i - arg0i, byteBuffer);
+        /* This must be a lexeme, or undef (case of a nullable or a ::concat that failed), or a userland alternative (always in the form of an array) */
+        MARPAESLIF_IS_UNDEF(marpaESLIFValuep, i, undefb);
+        if (undefb) {
+          (*envp)->SetObjectArrayElement(envp, list, i - arg0i, NULL); /* Java will see null */
           if (HAVEEXCEPTION(envp)) {
             goto err;
           }
-          byteBuffer = NULL; /* byteBuffer is in the list - at exit other local references will be destroyed automatically */
         } else {
-          marpaESLIFValueResultp = (marpaESLIFValueResult_t *) bytep;
-          if (marpaESLIFValueResultp->type != MARPAESLIF_VALUE_TYPE_PTR) {
-            RAISEEXCEPTIONF(envp, "User-defined value type is not MARPAESLIF_VALUE_TYPE_PTR (got %d)", marpaESLIFValueResultp->type);
+          MARPAESLIF_IS_ARRAY(marpaESLIFValuep, i, arrayb);
+          if (! arrayb) {
+            RAISEEXCEPTIONF(envp, "At indice %d of stack, item not an ARRAY", i);
           }
-          globalObjectp = (jobject) marpaESLIFValueResultp->u.p;
-          (*envp)->SetObjectArrayElement(envp, list, i - arg0i, globalObjectp);
-          if (HAVEEXCEPTION(envp)) {
-            goto err;
+          MARPAESLIF_GET_ARRAY(marpaESLIFValuep, i, contexti, bytep, bytel);
+          /* We never push array, i.e. contexti must be 0 in any case here */
+          if (contexti != 0) {
+            RAISEEXCEPTIONF(envp, "marpaESLIFValue_stack_get_array success but contexti is %d instead of 0", contexti);
+          }
+          /* Either bytel is > 0, then this is the input, else this is a user-defined object */
+          if (bytel > 0) {
+            byteBuffer = (*envp)->NewDirectByteBuffer(envp, bytep, (jlong) bytel);
+            if (byteBuffer == NULL) {
+              RAISEEXCEPTION(envp, "NewDirectByteBuffer failure");
+            }
+            (*envp)->SetObjectArrayElement(envp, list, i - arg0i, byteBuffer);
+            if (HAVEEXCEPTION(envp)) {
+              goto err;
+            }
+            byteBuffer = NULL; /* byteBuffer is in the list - at exit other local references will be destroyed automatically */
+          } else {
+            marpaESLIFValueResultp = (marpaESLIFValueResult_t *) bytep;
+            if (marpaESLIFValueResultp->type != MARPAESLIF_VALUE_TYPE_PTR) {
+              RAISEEXCEPTIONF(envp, "User-defined value type is not MARPAESLIF_VALUE_TYPE_PTR (got %d)", marpaESLIFValueResultp->type);
+            }
+            globalObjectp = (jobject) marpaESLIFValueResultp->u.p;
+            (*envp)->SetObjectArrayElement(envp, list, i - arg0i, globalObjectp);
+            if (HAVEEXCEPTION(envp)) {
+              goto err;
+            }
           }
         }
       }
