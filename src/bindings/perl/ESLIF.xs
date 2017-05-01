@@ -218,6 +218,17 @@ static const char   *ASCIIs = "ASCII";
     rcb = (_marpaESLIFValueResultp->type == MARPAESLIF_VALUE_TYPE_PTR); \
   } while (0)
 
+#define MARPAESLIF_IS_UNDEF(marpaESLIFValuep, indicei, rcb) do {        \
+    marpaESLIFValueResult_t *_marpaESLIFValueResultp;                   \
+                                                                        \
+    _marpaESLIFValueResultp = marpaESLIFValue_stack_getp(marpaESLIFValuep, indicei); \
+    if (_marpaESLIFValueResultp == NULL) {                              \
+      MARPAESLIF_CROAKF("marpaESLIFValue_stack_getp failure, %s", strerror(errno)); \
+    }                                                                   \
+                                                                        \
+    rcb = (_marpaESLIFValueResultp->type == MARPAESLIF_VALUE_TYPE_UNDEF); \
+  } while (0)
+
 #define MARPAESLIF_GET_PTR(marpaESLIFValuep, indicei, _p) do {          \
     marpaESLIFValueResult_t *_marpaESLIFValueResultp;                   \
                                                                         \
@@ -730,6 +741,7 @@ static SV *marpaESLIF_getSvFromStack(pTHX_ MarpaX_ESLIF_Value_t *MarpaX_ESLIF_Va
   static const char       *funcs = "marpaESLIF_getSvFromStack";
   SV                      *objectp;
   short                    ptrb;
+  short                    undefb;
   marpaESLIFValueResult_t *marpaESLIFValueResultp;
 
   /* fprintf(stderr, "In %s for indice %d, bytep %p, bytel %ld\n", funcs, i, bytep, (unsigned long) bytel); */
@@ -742,22 +754,27 @@ static SV *marpaESLIF_getSvFromStack(pTHX_ MarpaX_ESLIF_Value_t *MarpaX_ESLIF_Va
     MARPAESLIF_GET_PTR(marpaESLIFValuep, i, objectp);
     objectp = SvREFCNT_inc(objectp);
   } else {
-    /* This must be a lexeme or user-land object - always in the form of an array */
-    MARPAESLIF_GET_ARRAY(marpaESLIFValuep, i, bytep, bytel);
-  is_array:
-    /* Either bytel is > 0, then this is the input, else this is a user-defined object */
-    if (bytel > 0) {
-      objectp = newSVpvn(bytep, bytel);
-      if (is_utf8_string((const U8 *) bytep, (STRLEN) bytel)) {
-        SvUTF8_on(objectp);
-      }
+    /* This must be a lexeme, undef (result of a nullable or ::concat that failed) or user-land object (always in the form of an array) */
+    MARPAESLIF_IS_UNDEF(marpaESLIFValuep, i, undefb);
+    if (undefb) {
+      objectp = &PL_sv_undef;
     } else {
-      marpaESLIFValueResultp = (marpaESLIFValueResult_t *) bytep;
-      if (marpaESLIFValueResultp->type != MARPAESLIF_VALUE_TYPE_PTR) {
-        MARPAESLIF_CROAKF("User-defined value type is not MARPAESLIF_VALUE_TYPE_PTR but %d", marpaESLIFValueResultp->type);
+      MARPAESLIF_GET_ARRAY(marpaESLIFValuep, i, bytep, bytel);
+  is_array:
+      /* Either bytel is > 0, then this is the input, else this is a user-defined object */
+      if (bytel > 0) {
+        objectp = newSVpvn(bytep, bytel);
+        if (is_utf8_string((const U8 *) bytep, (STRLEN) bytel)) {
+          SvUTF8_on(objectp);
+        }
+      } else {
+        marpaESLIFValueResultp = (marpaESLIFValueResult_t *) bytep;
+        if (marpaESLIFValueResultp->type != MARPAESLIF_VALUE_TYPE_PTR) {
+          MARPAESLIF_CROAKF("User-defined value type is not MARPAESLIF_VALUE_TYPE_PTR but %d", marpaESLIFValueResultp->type);
+        }
+        objectp = (SV *) marpaESLIFValueResultp->u.p;
+        objectp = SvREFCNT_inc(objectp);
       }
-      objectp = (SV *) marpaESLIFValueResultp->u.p;
-      objectp = SvREFCNT_inc(objectp);
     }
   }
 
