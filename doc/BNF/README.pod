@@ -272,6 +272,8 @@ Please note that the C<:discard[on]> and C<:discard[off]> events will I<never> h
   $eslifValue->value;
   $valueInterface->getResult;
 
+Please remark that if you grammar I<only> have internal events, then there is no need to call C<$eslifRecognizer->resume()> -;
+
 instead of a single:
 
   $eslifGrammar->parse($recognizerInterface, $valueInterface);
