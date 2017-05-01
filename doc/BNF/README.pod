@@ -260,6 +260,17 @@ Hook that is enabling C<:discard> rule for the current recognizer. Equivalent to
 
 =back
 
+Please note that the C<:discard[on]> and C<:discard[off]> events will I<never> happen if you use the grammar's C<parse()> method, the later is I<always> disabling any event. Therefore, if you grammar relies on recognizer's hooks, you will have to use the following workflow:
+
+  $eslifRecognizer->scan();
+  while ($eslifRecognizer->isCanContinue) {
+    $eslifRecognizer->resume();
+  }
+
+instead of a single:
+
+  $eslifGrammar->parse($recognizerInterface, $valueInterface);
+
 =item * Event initializers
 
 By default, events are on, this is equivalent to appending C<=on> after the event name. The C<=off> characters are putting event off at startup.
