@@ -5100,8 +5100,8 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
   }
   
   if (alternativeStackSymboli <= 0) {
-    /* If we are not already in the discard mode, try to discard */
-    if ((! marpaESLIFRecognizerp->discardb) && (grammarp->discardi >= 0)) {
+    /* If we are not already in the discard mode, try to discard if discardOnOffb is true */
+    if ((! marpaESLIFRecognizerp->discardb) && marpaESLIFRecognizerp->discardOnOffb && (grammarp->discardi >= 0)) {
       /* Always reset this shallow pointer */
       marpaESLIFRecognizerp->discardEvents  = NULL;
       marpaESLIFRecognizerp->discardSymbolp = NULL;
@@ -5257,6 +5257,8 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
   /* It is a non-sense to have lexemes of length maxMatchedl and a discard rule that would be greater. */
   /* In this case, :discard have precedence. */
   if ((! marpaESLIFRecognizerp->discardb) /* Done only if we are not already in discard mode */
+      &&
+      marpaESLIFRecognizerp->discardOnOffb /* :discard is enabled */
       &&
       (grammarp->discardi >= 0) /* And if there is a :discard entry point */
       ) {
@@ -5734,6 +5736,8 @@ static inline short _marpaESLIFRecognizer_lexeme_completeb(marpaESLIFRecognizer_
       MARPAESLIF_ERRORF(marpaESLIFp, "set2InputStackp set failure, %s", strerror(errno));
       goto err;
     }
+
+    fprintf(stderr, "Earley Set Id %ld: {%ld,%ld}\n", (unsigned long) latestEarleySetIdi, (unsigned long) currentOffsetp, (unsigned long) lengthl);
   }
 
   if (! marpaWrapperRecognizer_completeb(marpaESLIFRecognizerp->marpaWrapperRecognizerp)) {
@@ -6828,6 +6832,18 @@ static inline short _marpaESLIFRecognizer_push_grammar_eventsb(marpaESLIFRecogni
         break;
       }
 
+      /* Detect hook events and process them instead of pushing to the end-user */
+      if (events != NULL) {
+        if (strcmp(events, ":discard[on]") == 0) {
+          MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: event %s: enabling discard", (symbolp != NULL) ? symbolp->descp->asciis : "??", events);
+          marpaESLIFRecognizerp->discardOnOffb = 1;
+          continue;
+        } else if (strcmp(events, ":discard[off]") == 0) {
+          MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: event %s: disabling discard", (symbolp != NULL) ? symbolp->descp->asciis : "??", events);
+          marpaESLIFRecognizerp->discardOnOffb = 0;
+          continue;
+        }
+      }
       if (! _marpaESLIFRecognizer_push_eventb(marpaESLIFRecognizerp, type, symbolp, events)) {
         goto err;
       }
@@ -7057,6 +7073,7 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGramm
   marpaESLIFRecognizerp->afterEventStatebp               = NULL;
   marpaESLIFRecognizerp->minExceptionSizel               = minExceptionSizel;
   marpaESLIFRecognizerp->totalMatchedSizel               = 0;
+  marpaESLIFRecognizerp->discardOnOffb                   = 1; /* By default :discard is enabled */
 
   marpaWrapperRecognizerOption.genericLoggerp       = silentb ? NULL : marpaESLIFp->marpaESLIFOption.genericLoggerp;
   marpaWrapperRecognizerOption.disableThresholdb    = marpaESLIFRecognizerOptionp->disableThresholdb;
@@ -11417,10 +11434,6 @@ static short _marpaESLIFRecognizer_concat_valueResultCallback(void *userDatavp, 
   marpaESLIFRepresentation_t              representationp             = marpaESLIFValueResultp->representationp;
   char                                   *srcs;
   size_t                                  srcl;
-  short                                   characterStreamb;
-  char                                   *encodingOfEncodings;
-  char                                   *encodings;
-  size_t                                  encodingl;
   short                                   rcb;
 
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
@@ -12349,6 +12362,9 @@ short marpaESLIFRecognizer_last_completedb(marpaESLIFRecognizer_t *marpaESLIFRec
   array[0] = GENERICSTACK_GET_ARRAY(set2InputStackp, starti);
   array[1] = GENERICSTACK_GET_ARRAY(set2InputStackp, endi);
 
+  fprintf(stderr, "Start Earley Set Id %ld: {%ld,%ld}\n", (unsigned long) starti, (unsigned long) GENERICSTACK_ARRAY_PTR(array[0]), (unsigned long) GENERICSTACK_ARRAY_LENGTH(array[0]));
+  fprintf(stderr, "End   Earley Set Id %ld: {%ld,%ld}\n", (unsigned long) endi,   (unsigned long) GENERICSTACK_ARRAY_PTR(array[1]), (unsigned long) GENERICSTACK_ARRAY_LENGTH(array[1]));
+
   firstStartPositionp = (char *) GENERICSTACK_ARRAY_PTR(array[0]);
   lastStartPositionp  = (char *) GENERICSTACK_ARRAY_PTR(array[1]);
   lastLengthl         =          GENERICSTACK_ARRAY_LENGTH(array[1]);
@@ -12363,6 +12379,8 @@ short marpaESLIFRecognizer_last_completedb(marpaESLIFRecognizer_t *marpaESLIFRec
     *lengthlp = lengthl;
   }
 
+  fprintf(stderr, "====>                    {%ld,%ld}\n", (unsigned long) offsetp, (unsigned long) lengthl);
+
   rcb = 1;
   goto done;
 
@@ -12371,6 +12389,20 @@ short marpaESLIFRecognizer_last_completedb(marpaESLIFRecognizer_t *marpaESLIFRec
 
  done:
   return rcb;
+}
+
+/*****************************************************************************/
+short marpaESLIFRecognizer_hook_discardb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, short discardOnOffb)
+/*****************************************************************************/
+{
+  if (marpaESLIFRecognizerp == NULL) {
+    errno = EINVAL;
+    return 0;
+  }
+
+  marpaESLIFRecognizerp->discardOnOffb = discardOnOffb;
+
+  return 1;
 }
 
 /*****************************************************************************/

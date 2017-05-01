@@ -97,6 +97,8 @@
 #define G1_RULE_ALTERNATIVE_NAME_2               "G1_rule_alternative_name_2"
 #define G1_RULE_EVENT_NAME_1                     "G1_rule_event_name_1"
 #define G1_RULE_EVENT_NAME_2                     "G1_rule_event_name_2"
+#define G1_RULE_EVENT_NAME_3                     "G1_rule_event_name_3"
+#define G1_RULE_EVENT_NAME_4                     "G1_rule_event_name_4"
 #define G1_RULE_LHS                              "G1_rule_lhs"
 #define G1_RULE_RHS                              "G1_rule_rhs"
 #define G1_RULE_RHS_PRIMARY_1                    "G1_rule_rhs_primary_1"
@@ -229,6 +231,8 @@
 #define G1_ACTION_ALTERNATIVE_NAME_2               "G1_action_alternative_name_2"               /* done */
 #define G1_ACTION_EVENT_NAME_1                     "::ascii" /* <event name> ::= <ascii graph name> */
 #define G1_ACTION_EVENT_NAME_2                     "::ascii" /* <event name> ::= ':symbol' */
+#define G1_ACTION_EVENT_NAME_3                     "::ascii" /* <event name> ::= ':discard[on]' */
+#define G1_ACTION_EVENT_NAME_4                     "::ascii" /* <event name> ::= ':discard[off]' */
 #define G1_ACTION_LHS                              "::shift" /* lhs ::= <symbol name> */
 #define G1_ACTION_RHS                              "G1_action_rhs"                              /* done */
 #define G1_ACTION_RHS_PRIMARY_1                    "G1_action_rhs_primary_1"                    /* done */

@@ -2595,6 +2595,23 @@ PPCODE:
   PUSHs(sv_2mortal(newSViv((IV) linel)));
   PUSHs(sv_2mortal(newSViv((IV) columnl)));
 
+=for comment
+  /* ----------------------------------------------------------------------- */
+  /* MarpaX::ESLIF::Recognizer::hookDiscard                                  */
+  /* ----------------------------------------------------------------------- */
+=cut
+
+void
+hookDiscard(Perl_MarpaX_ESLIF_Recognizer, discardOnOffb)
+  MarpaX_ESLIF_Recognizer Perl_MarpaX_ESLIF_Recognizer;
+  short discardOnOffb;
+PREINIT:
+  static const char *funcs = "MarpaX::ESLIF::Recognizer::hookDiscard";
+PPCODE:
+  if (!  marpaESLIFRecognizer_hook_discardb(Perl_MarpaX_ESLIF_Recognizer->marpaESLIFRecognizerp, discardOnOffb)) {
+    MARPAESLIF_CROAKF("marpaESLIFRecognizer_hook_discardb failure, %s", strerror(errno));
+  }
+
 MODULE = MarpaX::ESLIF            PACKAGE = MarpaX::ESLIF::Value
 
 PROTOTYPES: ENABLE

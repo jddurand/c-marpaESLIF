@@ -218,6 +218,10 @@ Returns the column number, or 0.
 
 Returns an array containing at indices 0 and 1 the values of C<$eslifRecognizer->line()> and C<$eslifRecognizer->column()>, respectively.
 
+=head2 $eslifRecognizer->hookDiscard($discardOnOff)
+
+Hook the recognizer to enable or disable the use of C<:discard> if it exists. Default mode is on. This is a I<permanent> setting.
+
 =head1 SEE ALSO
 
 L<MarpaX::ESLIF::Recognizer::Interface>, L<MarpaX::ESLIF::Event::Type>, L<MarpaX::ESLIF::Logger::Level>

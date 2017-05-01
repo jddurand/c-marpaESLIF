@@ -361,6 +361,11 @@ for (my $i = 0; $i <= $#strings; $i++) {
                 my $event = $events->[$k];
                 if ($event->{event} eq "^NUMBER") {
                     #
+                    # Take opportunity of this event to test the hooks
+                    #
+                    $eslifRecognizer->hookDiscard(0);
+                    $eslifRecognizer->hookDiscard(1);
+                    #
                     # Recognizer will wait forever if we do not feed the number
                     #
                     my $pause = $eslifRecognizer->lexemeLastPause("NUMBER");
@@ -467,7 +472,7 @@ sub showLastCompletion {
             BAIL_OUT("\$eslifRecognizer->lastCompletedLocation() is not equivalent to (\$eslifRecognizer->lastCompletedOffset, \$eslifRecognizer->lastCompletedLength)");
         }
         my $string2byte = encode('UTF-8', $origin, Encode::FB_CROAK);
-        my $matchedbytes = substr($string2byte, $lastExpressionOffset, $lastExpressionOffset, $lastExpressionLength);
+        my $matchedbytes = substr($string2byte, $lastExpressionOffset, $lastExpressionLength);
         my $matchedString = decode('UTF-8', $matchedbytes, Encode::FB_CROAK);
         $log->debugf("[%s] Last %s completion is %s", $context, $symbol, $matchedString);
     } catch {
