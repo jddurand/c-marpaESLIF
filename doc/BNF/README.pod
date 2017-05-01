@@ -242,7 +242,23 @@ Note than when an event is set, this will be triggered only on the C<:discard>'s
 
 =item * Event names
 
-They are composed of a restricted set of the ASCII graph characters. The name ':symbol' is restricted and is transformed to the symbol name for which the event is triggered.
+They are composed of a restricted set of the ASCII graph characters. Special cases are:
+
+=over
+
+=item C<:symbol>
+
+Transformed to the symbol name for which the event is triggered.
+
+=item C<:discard[on]>
+
+Hook that is disabling C<:discard> rule for the current recognizer. Equivalent to a call to C<marpaESLIF_recognizer_hook_discardb(1)>. Not propagated.
+
+=item C<:discard[off]>
+
+Hook that is enabling C<:discard> rule for the current recognizer. Equivalent to a call to C<marpaESLIF_recognizer_hook_discardb(0)>. Not propagated.
+
+=back
 
 =item * Event initializers
 
@@ -577,6 +593,8 @@ marpaESLIF BNF can be expressed in itself:
   <alternative name>             ::= <quoted name>
   <event name>                   ::= <restricted ascii graph name>
                                    | ':symbol'
+                                   | ':discard[on]'
+                                   | ':discard[off]'
   lhs                            ::= <symbol name>
   rhs                            ::= <rhs primary>+
   <rhs primary>                  ::= <single symbol>

@@ -55,6 +55,7 @@ JNIEXPORT jlong        JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniLastComp
 JNIEXPORT jlong        JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniLine                   (JNIEnv *envp, jobject eslifRecognizerp);
 JNIEXPORT jlong        JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniColumn                 (JNIEnv *envp, jobject eslifRecognizerp);
 JNIEXPORT void         JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniEventOnOff             (JNIEnv *envp, jobject eslifRecognizerp, jstring symbolp, jobjectArray eventTypesp, jboolean onOff);
+JNIEXPORT void         JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniHookDiscardOnOff       (JNIEnv *envp, jobject eslifRecognizerp, jboolean onOff);
 JNIEXPORT void         JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniProgressLog            (JNIEnv *envp, jobject eslifRecognizerp, int starti, int endi, jobject levelp);
 JNIEXPORT void         JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniFree                   (JNIEnv *envp, jobject eslifRecognizerp);
 JNIEXPORT void         JNICALL Java_org_parser_marpa_ESLIFValue_jniNew                         (JNIEnv *envp, jobject eslifValuep, jobject eslifRecognizerp);
@@ -2847,6 +2848,33 @@ JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniEventOnOff(JNIEn
       (*envp)->DeleteLocalRef(envp, eventTypep);
     }
   }
+
+  return;
+}
+
+/*****************************************************************************/
+JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniHookDiscardOnOff(JNIEnv *envp, jobject eslifRecognizerp, jboolean onOff)
+/*****************************************************************************/
+{
+  static const char      *funcs = "Java_org_parser_marpa_ESLIFRecognizer_jniHookDiscardOnOff";
+  marpaESLIFRecognizer_t *marpaESLIFRecognizerp;
+  short                   discardOnoffb = (onOff == JNI_TRUE);
+
+  if (! ESLIFRecognizer_contextb(envp, eslifRecognizerp, eslifRecognizerp, MARPAESLIF_ESLIFRECOGNIZER_CLASS_getLoggerInterfacep_METHODP,
+                                 NULL /* genericLoggerpp */,
+                                 NULL /* genericLoggerContextpp */,
+                                 NULL /* marpaESLIFpp */,
+                                 NULL /* marpaESLIFGrammarpp */,
+                                 &marpaESLIFRecognizerp,
+                                 NULL /* marpaESLIFRecognizerContextpp */)) {
+    goto err;
+  }
+
+  if (! marpaESLIFRecognizer_hook_discardb(marpaESLIFRecognizerp, discardOnoffb)) {
+    RAISEEXCEPTIONF(envp, "marpaESLIFRecognizer_hook_discardb failure, %s", strerror(errno));
+  }
+
+ err: /* err and done share the same code */
 
   return;
 }

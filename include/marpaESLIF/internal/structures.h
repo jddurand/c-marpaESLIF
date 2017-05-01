@@ -338,6 +338,7 @@ struct marpaESLIFRecognizer {
   marpaESLIF_lexeme_data_t   **lastTrypp;           /* Lexeme or :discard last try for the CURRENT grammar */
   size_t                       minExceptionSizel;   /* Minimum total matched size before a completion event on a symbol to be checked for exception is considered */
   size_t                       totalMatchedSizel;   /* Total matched - used only when exceptionb is set */
+  short                        discardOnOffb;       /* Discard is on or off ? */
 };
 
 struct marpaESLIF_lexeme_data {

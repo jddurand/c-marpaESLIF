@@ -72,6 +72,8 @@ typedef enum bootstrap_grammar_G1_enum {
   G1_TERMINAL_AFTER,
   G1_TERMINAL_SIGNED_INTEGER,
   G1_TERMINAL_UNSIGNED_INTEGER,
+  G1_TERMINAL__DISCARD_ON,
+  G1_TERMINAL__DISCARD_OFF,
   /* ----- Non terminals ------ */
   G1_META_STATEMENTS,
   G1_META_STATEMENT,
@@ -755,6 +757,22 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
   { G1_TERMINAL_UNSIGNED_INTEGER, MARPAESLIF_TERMINAL_TYPE_REGEX, NULL,
     "\\d+",
     NULL, NULL
+  },
+  { G1_TERMINAL__DISCARD_ON, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
+    "':discard[on]'",
+#ifndef MARPAESLIF_NTRACE
+    ":discard[on]", ":dis"
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL__DISCARD_OFF, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
+    "':discard[off]'",
+#ifndef MARPAESLIF_NTRACE
+    ":discard[off]", ":dis"
+#else
+    NULL, NULL
+#endif
   }
 };
 
@@ -1015,6 +1033,8 @@ bootstrap_grammar_rule_t bootstrap_grammar_G1_rules[] = {
     lhsi                                      descs                                           type                          nrhsl  { rhsi }                                       }  minimumi           separatori  properb
   */
   { G1_META_EVENT_NAME,                       G1_RULE_EVENT_NAME_2,                           MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL__SYMBOL                          }, -1,                        -1, -1 , G1_ACTION_EVENT_NAME_2 },
+  { G1_META_EVENT_NAME,                       G1_RULE_EVENT_NAME_3,                           MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL__DISCARD_ON                      }, -1,                        -1, -1 , G1_ACTION_EVENT_NAME_3 },
+  { G1_META_EVENT_NAME,                       G1_RULE_EVENT_NAME_4,                           MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL__DISCARD_OFF                     }, -1,                        -1, -1 , G1_ACTION_EVENT_NAME_4 },
   { G1_META_LHS,                              G1_RULE_LHS,                                    MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_SYMBOL_NAME                          }, -1,                        -1, -1 , G1_ACTION_LHS },
   { G1_META_RHS,                              G1_RULE_RHS,                                    MARPAESLIF_RULE_TYPE_SEQUENCE,    1, { G1_META_RHS_PRIMARY                          },  1,                        -1,  0 , G1_ACTION_RHS },
   /*
