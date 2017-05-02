@@ -49,7 +49,7 @@ const static int __genericStack_max_initial_indice = -1; /* Not used */
 #ifdef GENERICSTACK_ZERO_INT_IS_NOT_ZERO_BYTES
 #define _GENERICSTACK_CALLOC(memsetflag, dst, nmemb, size) do {		\
     memsetflag = 1;							\
-    dst = calloc(nmemb, size);						\
+    dst = malloc(nmemb * size);						\
   } while (0)
 #define _GENERICSTACK_MALLOC(memsetflag, size) memsetflag=1, malloc(size)
 #if GENERICSTACK_DEFAULT_LENGTH > 0
@@ -356,7 +356,7 @@ typedef struct genericStack {
   } while (0)
 
 #define GENERICSTACK_NEW(stackName) do {				\
-    (stackName) = calloc(1, sizeof(genericStack_t));			\
+    (stackName) = malloc(sizeof(genericStack_t));			\
     GENERICSTACK_INIT((stackName));					\
   } while (0)
 
