@@ -457,8 +457,8 @@ typedef struct genericStack {
 #define GENERICSTACK_SET_LONG_DOUBLE__COMPLEX(stackName, var, index) _GENERICSTACK_SET_BY_TYPE((stackName), long double _Complex, (var), GENERICSTACKITEMTYPE_LONG_LONG, ldc, (index))
 #endif
 #if GENERICSTACK_HAVE_CUSTOM > 0
-#define GENERICSTACK_SET_CUSTOM(stackName, var, index) _GENERICSTACK_SET_BY_TYPE((stackName), GENERICSTACK_CUSTOM, (var), GENERICSTACKITEMTYPE_CUSTOM, custom, (index))
-#define GENERICSTACK_SET_CUSTOMP(stackName, var, index) _GENERICSTACK_SET_BY_TYPE((stackName), GENERICSTACK_CUSTOM, *(var), GENERICSTACKITEMTYPE_CUSTOM, custom, (index))
+#define GENERICSTACK_SET_CUSTOM(stackName, var, index) _GENERICSTACK_SET_BY_TYPE_NOCAST((stackName), (var), GENERICSTACKITEMTYPE_CUSTOM, custom, (index))
+#define GENERICSTACK_SET_CUSTOMP(stackName, var, index) _GENERICSTACK_SET_BY_TYPE_NOCAST((stackName), *(var), GENERICSTACKITEMTYPE_CUSTOM, custom, (index))
 #endif
 
 /* Special case for NA: there is not associated data */
