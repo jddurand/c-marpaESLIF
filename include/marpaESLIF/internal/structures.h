@@ -159,10 +159,12 @@ struct marpaESLIFSymbol {
   int                          priorityi;              /* Symbol priority */
   char                        *actions;                /* Action */
   unsigned int                 nbupdatei;              /* Number of updates - used in grammar ESLIF actions */
-  genericStack_t              *nullableRuleStackp;     /* Used during validation, to determine nullable semantics */
+  genericStack_t               _nullableRuleStack;     /* Used during validation, to determine nullable semantics */
+  genericStack_t              *nullableRuleStackp;     /* Pointer to _nullableRuleStack */
   char                        *nullableActions;        /* Nullable semantic */
   int                          propertyBitSet;
-  genericStack_t              *lhsRuleStackp;          /* Stack of rules having this symbol as LHS */
+  genericStack_t               _lhsRuleStack;          /* Stack of rules having this symbol as LHS */
+  genericStack_t              *lhsRuleStackp;          /* Pointer to stack of rules having this symbol as LHS */
   short                        haveExceptionb;         /* If true, this is the symbol before the '-' character of an exception */
   marpaESLIF_symbol_t         *exceptionp;             /* Pointer to the exception itself, the one after the '-' character */
 };
@@ -175,7 +177,8 @@ struct marpaESLIF_rule {
   char                  *asciishows;                   /* Rule show (ASCII) */
   marpaESLIF_symbol_t   *lhsp;                         /* LHS symbol */
   marpaESLIF_symbol_t   *separatorp;                   /* Eventual separator symbol */
-  genericStack_t        *rhsStackp;                    /* Stack of RHS symbols */
+  genericStack_t         _rhsStack;                    /* Stack of RHS symbols */
+  genericStack_t        *rhsStackp;                    /* Pointer to stack of RHS symbols */
   marpaESLIF_symbol_t   *exceptionp;                   /* Exception symbol */
   int                    exceptionIdi;                 /* Exception symbol Id */
   char                  *actions;                      /* Action */
@@ -203,8 +206,10 @@ struct marpaESLIF_grammar {
   marpaWrapperGrammar_t *marpaWrapperGrammarDiscardp;        /* Grammar implementation at :discard */
   marpaWrapperGrammar_t *marpaWrapperGrammarDiscardNoEventp; /* Grammar implementation at :discard forcing no event */
   marpaESLIF_symbol_t   *discardp;                           /* Discard symbol, used at grammar validation */
-  genericStack_t        *symbolStackp;                       /* Stack of symbols */
-  genericStack_t        *ruleStackp;                         /* Stack of rules */
+  genericStack_t         _symbolStack;                       /* Stack of symbols */
+  genericStack_t        *symbolStackp;                       /* Pointer to stack of symbols */
+  genericStack_t         _ruleStack;                         /* Stack of rules */
+  genericStack_t        *ruleStackp;                         /* Pointer to stack of rules */
   char                  *defaultSymbolActions;               /* Default action for symbols */
   char                  *defaultRuleActions;                 /* Default action for rules */
   char                  *defaultFreeActions;                 /* Default action for free */
@@ -234,7 +239,8 @@ struct marpaESLIF {
 
 struct marpaESLIFGrammar {
   marpaESLIF_t             *marpaESLIFp;
-  genericStack_t           *grammarStackp;
+  genericStack_t            _grammarStack;     /* Stack of grammars */
+  genericStack_t           *grammarStackp;     /* Pointer to stack of grammars */
   marpaESLIF_grammar_t     *grammarp;          /* This is a SHALLOW copy of current grammar in grammarStackp, defaulting to the top grammar */
   short                     warningIsErrorb;   /* Current warningIsErrorb setting (used when parsing grammars ) */
   short                     warningIsIgnoredb; /* Current warningIsErrorb setting (used when parsing grammars ) */
@@ -265,7 +271,8 @@ struct marpaESLIFRecognizer {
   marpaESLIFRecognizerOption_t marpaESLIFRecognizerOption;
   marpaWrapperRecognizer_t    *marpaWrapperRecognizerp; /* Current recognizer */
   marpaWrapperGrammar_t       *marpaWrapperGrammarp; /* Shallow copy of cached grammar in use */
-  genericStack_t              *lexemeInputStackp;  /* Internal input stack of lexemes */
+  genericStack_t               _lexemeInputStack;  /* Internal input stack of lexemes */
+  genericStack_t              *lexemeInputStackp;  /* Pointer to internal input stack of lexemes */
   marpaESLIFEvent_t           *eventArrayp;        /* For the events */
   size_t                       eventArrayl;        /* Current number of events */
   size_t                       eventArraySizel;    /* Real allocated size (to avoid constant free/deletes) */
@@ -324,9 +331,12 @@ struct marpaESLIFRecognizer {
   short                        exhaustedb;     /* Internally, every recognizer need to know if parsing is exhausted */
   short                        completedb;     /* Ditto for completion (used in case od discard events) */
   short                        continueb;
-  genericStack_t              *alternativeStackSymbolp;          /* Current alternative stack containing symbol information and the matched size */
-  genericStack_t              *commitedAlternativeStackSymbolp;  /* Commited alternative stack */
-  genericStack_t              *set2InputStackp;
+  genericStack_t               _alternativeStackSymbol;          /* Current alternative stack containing symbol information and the matched size */
+  genericStack_t              *alternativeStackSymbolp;          /* Pointer to current alternative stack containing symbol information and the matched size */
+  genericStack_t               _commitedAlternativeStackSymbol;  /* Commited alternative stack */
+  genericStack_t              *commitedAlternativeStackSymbolp;  /* Pointer to commited alternative stack */
+  genericStack_t               _set2InputStack;                  /* Mapping latest Earley Set to absolute input offset and length */
+  genericStack_t              *set2InputStackp;                  /* Pointer to mapping latest Earley Set to absolute input offset and length */
   char                       **lexemesArrayp;      /* Persistent buffer of last call to marpaESLIFRecognizer_lexeme_expectedb */
   size_t                       lexemesArrayAllocl; /* Current allocated size -; */
   short                       *discardEventStatebp; /* Discard current event states for the CURRENT grammar (marpaESLIFRecognizerp->marpaESLIFGrammarp->grammarp) */
