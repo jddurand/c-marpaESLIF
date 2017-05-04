@@ -162,7 +162,7 @@ push(@additional_includes, File::Spec->catdir('output', '3rdparty', 'pcre2-10.23
 # ----------------------------------------------------------------
 # We depend on these* stuff that can manage themselves, eventually
 # ----------------------------------------------------------------
-foreach (qw/genericLogger genericStack marpaWrapper tconv/) {
+foreach (qw/genericLogger genericStack genericHash marpaWrapper tconv/) {
     print "... Copying $_\n";
     if (! dircopy(File::Spec->catdir('3rdparty', 'github', $_),
                   File::Spec->catdir('output', '3rdparty', $_))) {

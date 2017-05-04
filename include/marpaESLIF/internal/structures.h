@@ -10,6 +10,7 @@
 
 #include <marpaWrapper.h>
 #include <genericStack.h>
+#include <genericHash.h>
 #include <genericLogger.h>
 #include <pcre2.h>
 #include <tconv.h>
@@ -267,7 +268,13 @@ struct marpaESLIFRecognizer {
   /* except in very precise situations (typically the new()/free() or when */
   /* faking a new() method). */
   marpaESLIF_t                *marpaESLIFp;
+
+  /* Because recognizers can be cached we cannot afford marpaESLIFGrammarp to point to something on the stack when we free: Grammarp and grammarp */
+  /* We guarantee that pointers below grammarp are correct (these are shallow pointers) */
+  marpaESLIFGrammar_t          _marpaESLIFGrammar;
+  marpaESLIF_grammar_t         _grammar;
   marpaESLIFGrammar_t         *marpaESLIFGrammarp;
+  
   marpaESLIFRecognizerOption_t marpaESLIFRecognizerOption;
   marpaWrapperRecognizer_t    *marpaWrapperRecognizerp; /* Current recognizer */
   marpaWrapperGrammar_t       *marpaWrapperGrammarp; /* Shallow copy of cached grammar in use */
@@ -284,6 +291,7 @@ struct marpaESLIFRecognizer {
   int                          resumeCounteri;    /* Internal counter for tracing - no functional impact */
   int                          callstackCounteri; /* Internal counter for tracing - no functional impact */
 
+  /* ------------------ Internal elements that are shared with all children ------------------------ */
   char                        *_buffers;       /* Pointer to allocated buffer containing input */
   size_t                       _bufferl;       /* Number of valid bytes in this buffer (!= allocated size) */
   size_t                       _bufferallocl;  /* Number of allocated bytes in this buffer (!= valid bytes) */
@@ -291,6 +299,8 @@ struct marpaESLIFRecognizer {
   short                        _eofb;          /* EOF flag */
   short                        _utfb;          /* A flag to say if input is UTF-8 correct. Automatically true if _charconv is true. Can set be regex engine as well. */
   short                        _charconvb;     /* A flag to say if latest stream chunk was converted to UTF-8 */
+  genericHash_t                _marpaESLIFRecognizerHash; /* Cache of recognizers ready for re-use */
+  /* --------------- End of internal elements that are shared with all children --------------------- */
 
   int                          leveli;         /* Recognizer level (!= grammar level) */
 
@@ -347,6 +357,8 @@ struct marpaESLIFRecognizer {
   size_t                       minExceptionSizel;   /* Minimum total matched size before a completion event on a symbol to be checked for exception is considered */
   size_t                       totalMatchedSizel;   /* Total matched - used only when exceptionb is set */
   short                        discardOnOffb;       /* Discard is on or off ? */
+  short                        pristineb;           /* 1: pristine, i.e. can be reused, 0: have at least one thing that happened at the raw grammar level, modulo the eventual initial events */
+  genericHash_t               *marpaESLIFRecognizerHashp; /* Ditto for recognizers cache */
 };
 
 struct marpaESLIF_lexeme_data {
