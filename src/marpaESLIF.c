@@ -2327,8 +2327,8 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_grammar_newp(marpaESLIF_t *marpa
   grammarp->marpaWrapperGrammarDiscardp        = NULL;
   grammarp->marpaWrapperGrammarDiscardNoEventp = NULL;
   grammarp->discardp                           = NULL;
-  grammarp->symbolStackp                       = NULL;
-  grammarp->ruleStackp                         = NULL;
+  grammarp->symbolStackp                       = NULL; /* Take care, pointer to a stack inside grammar structure */
+  grammarp->ruleStackp                         = NULL; /* Take care, pointer to a stack inside grammar structure */
   grammarp->defaultSymbolActions               = NULL;
   grammarp->defaultRuleActions                 = NULL;
   grammarp->defaultFreeActions                 = NULL;
@@ -2372,14 +2372,20 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_grammar_newp(marpaESLIF_t *marpa
   if (grammarp->descp == NULL) {
     goto err;
   }
-  GENERICSTACK_NEW(grammarp->symbolStackp);
+
+  grammarp->symbolStackp = &(grammarp->_symbolStack);
+  GENERICSTACK_INIT(grammarp->symbolStackp);
   if (GENERICSTACK_ERROR(grammarp->symbolStackp)) {
     MARPAESLIF_ERRORF(marpaESLIFp, "symbolStackp initialization failure, %s", strerror(errno));
+    grammarp->symbolStackp = NULL;
     goto err;
   }
-  GENERICSTACK_NEW(grammarp->ruleStackp);
+
+  grammarp->ruleStackp = &(grammarp->_ruleStack);
+  GENERICSTACK_INIT(grammarp->ruleStackp);
   if (GENERICSTACK_ERROR(grammarp->ruleStackp)) {
     MARPAESLIF_ERRORF(marpaESLIFp, "ruleStackp initialization failure, %s", strerror(errno));
+    grammarp->ruleStackp = NULL;
     goto err;
   }
 
@@ -2472,7 +2478,7 @@ static inline void _marpaESLIF_ruleStack_freev(genericStack_t *ruleStackp)
 	GENERICSTACK_USED(ruleStackp)--;
       }
     }
-    GENERICSTACK_FREE(ruleStackp);
+    GENERICSTACK_RESET(ruleStackp); /* Take care, ruleStackp is a pointer to a stack inside grammar structure */
   }
 }
 
@@ -2487,7 +2493,7 @@ static inline void _marpaESLIFrecognizer_lexemeStack_freev(marpaESLIFRecognizer_
     MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
 
     _marpaESLIFrecognizer_lexemeStack_resetv(marpaESLIFRecognizerp, lexemeStackp);
-    GENERICSTACK_FREE(lexemeStackp);
+    GENERICSTACK_RESET(lexemeStackp); /* Take care, lexemeStackp is a pointer to a static genericStack_t in recognizer's structure */
 
     MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "return");
     MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC;
@@ -2731,7 +2737,7 @@ static inline marpaESLIF_rule_t *_marpaESLIF_rule_newp(marpaESLIF_t *marpaESLIFp
   rulep->asciishows     = NULL; /* Filled by grammar validation */
   rulep->lhsp           = NULL;
   rulep->separatorp     = NULL;
-  rulep->rhsStackp      = NULL;
+  rulep->rhsStackp      = NULL; /* Take care, pointer to a stack inside rule structure */
   rulep->exceptionp     = NULL;
   rulep->exceptionIdi   = -1;
   rulep->actions        = NULL;
@@ -2789,9 +2795,11 @@ static inline marpaESLIF_rule_t *_marpaESLIF_rule_newp(marpaESLIF_t *marpaESLIFp
     rulep->separatorp = symbolp;
   }
 
-  GENERICSTACK_NEW(rulep->rhsStackp);
+  rulep->rhsStackp = &(rulep->_rhsStack);
+  GENERICSTACK_INIT(rulep->rhsStackp);
   if (GENERICSTACK_ERROR(rulep->rhsStackp)) {
     MARPAESLIF_ERRORF(marpaESLIFp, "rhsStackp initialization failure, %s", strerror(errno));
+    rulep->rhsStackp = NULL;
     goto err;
   }
 
@@ -2911,7 +2919,7 @@ static inline void _marpaESLIF_rule_freev(marpaESLIF_rule_t *rulep)
     _marpaESLIF_symbolStack_freev(rulep->rhsStackp);
     _marpaESLIF_symbol_freev(marpaESLIFp, exceptionp);
     */
-    GENERICSTACK_FREE(rulep->rhsStackp);
+    GENERICSTACK_RESET(rulep->rhsStackp); /* Take care, this is a pointer to a stack inside rule structure */
     free(rulep);
   }
 }
@@ -2958,22 +2966,26 @@ static inline marpaESLIF_symbol_t *_marpaESLIF_symbol_newp(marpaESLIF_t *marpaES
   symbolp->priorityi              = 0; /* Default priority is 0 */
   symbolp->actions                = NULL;
   symbolp->nbupdatei              = 0;
-  symbolp->nullableRuleStackp     = NULL;
+  symbolp->nullableRuleStackp     = NULL; /* Take care, this is a pointer to an stack inside symbol structure */
   symbolp->nullableActions        = NULL;
   symbolp->propertyBitSet         = 0; /* Filled by grammar validation */
   symbolp->lhsRuleStackp          = NULL;
   symbolp->haveExceptionb         = 0;
   symbolp->exceptionp             = 0;
 
-  GENERICSTACK_NEW(symbolp->nullableRuleStackp);
+  symbolp->nullableRuleStackp = &(symbolp->_nullableRuleStack);
+  GENERICSTACK_INIT(symbolp->nullableRuleStackp);
   if (GENERICSTACK_ERROR(symbolp->nullableRuleStackp)) {
     MARPAESLIF_ERRORF(marpaESLIFp, "symbolp->nullableRuleStackp initialization failure, %s", strerror(errno));
+    symbolp->nullableRuleStackp = NULL;
     goto err;
   }
-  
-  GENERICSTACK_NEW(symbolp->lhsRuleStackp);
+
+  symbolp->lhsRuleStackp = &(symbolp->_lhsRuleStack);
+  GENERICSTACK_INIT(symbolp->lhsRuleStackp);
   if (GENERICSTACK_ERROR(symbolp->lhsRuleStackp)) {
     MARPAESLIF_ERRORF(marpaESLIFp, "symbolp->lhsRuleStackp initialization failure, %s", strerror(errno));
+    symbolp->lhsRuleStackp = NULL;
     goto err;
   }
   
@@ -3025,9 +3037,10 @@ static inline void _marpaESLIF_symbol_freev(marpaESLIF_symbol_t *symbolp)
     if (symbolp->actions != NULL) {
       free(symbolp->actions);
     }
-    GENERICSTACK_FREE(symbolp->nullableRuleStackp);
-    GENERICSTACK_FREE(symbolp->lhsRuleStackp);
-    /* Take care, when not NULL, this will be anyway a shallow pointer */
+    GENERICSTACK_RESET(symbolp->nullableRuleStackp); /* Take care, this is a pointer to stack internal to symbol structure */
+    GENERICSTACK_RESET(symbolp->lhsRuleStackp); /* Take care, this is a pointer to stack internal to symbol structure */
+
+    /* Take care, when not NULL, nullableActions is a shallow pointer */
     /*
     if (symbolp->nullableActions != NULL) {
       free(symbolp->nullableActions);
@@ -3050,7 +3063,7 @@ static inline void _marpaESLIF_symbolStack_freev(genericStack_t *symbolStackp)
 	GENERICSTACK_USED(symbolStackp)--;
       }
     }
-    GENERICSTACK_FREE(symbolStackp);
+    GENERICSTACK_RESET(symbolStackp); /* Take care, this is a pointer to a stack inside symbol structure */
   }
 }
 
@@ -3256,9 +3269,11 @@ marpaESLIF_t *marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptionp)
   marpaESLIFp->marpaESLIFGrammarp->grammarStackp = NULL;
   marpaESLIFp->marpaESLIFGrammarp->grammarp      = NULL;
 
-  GENERICSTACK_NEW(marpaESLIFp->marpaESLIFGrammarp->grammarStackp);
+  marpaESLIFp->marpaESLIFGrammarp->grammarStackp = &(marpaESLIFp->marpaESLIFGrammarp->_grammarStack);
+  GENERICSTACK_INIT(marpaESLIFp->marpaESLIFGrammarp->grammarStackp);
   if (GENERICSTACK_ERROR(marpaESLIFp->marpaESLIFGrammarp->grammarStackp)) {
     GENERICLOGGER_ERRORF(marpaESLIFOptionp->genericLoggerp, "marpaESLIFp->marpaESLIFGrammarp->grammarStackp initialization failure, %s", strerror(errno));
+    marpaESLIFp->marpaESLIFGrammarp->grammarStackp = NULL;
     goto err;
   }
 
@@ -4892,7 +4907,7 @@ static inline void _marpaESLIFRecognizer_alternativeStackSymbol_freev(marpaESLIF
         }
       }
     }
-    GENERICSTACK_FREE(alternativeStackSymbolp);
+    GENERICSTACK_RESET(alternativeStackSymbolp); /* Take care, alternativeStackSymbolp is a pointer to a static stack in recognizer's structure */
   }
 }
 
@@ -6270,9 +6285,9 @@ void marpaESLIFRecognizer_freev(marpaESLIFRecognizer_t *marpaESLIFRecognizerp)
 
     _marpaESLIFrecognizer_lexemeStack_freev(marpaESLIFRecognizerp, marpaESLIFRecognizerp->lexemeInputStackp);
     _marpaESLIFRecognizer_alternativeStackSymbol_freev(marpaESLIFRecognizerp, marpaESLIFRecognizerp->alternativeStackSymbolp);
-    GENERICSTACK_FREE(marpaESLIFRecognizerp->commitedAlternativeStackSymbolp);
+    GENERICSTACK_RESET(marpaESLIFRecognizerp->commitedAlternativeStackSymbolp); /* Take care, this is a pointer to a stack inside recognizer's structure */
     if (marpaESLIFRecognizerp->marpaESLIFRecognizerOption.trackb) {
-      GENERICSTACK_FREE(marpaESLIFRecognizerp->set2InputStackp);
+      GENERICSTACK_RESET(marpaESLIFRecognizerp->set2InputStackp); /* Take care, this is a pointer to a stack inside recognizer's structure */
     }
     if (marpaESLIFRecognizerp->lexemesArrayp != NULL) {
       free(marpaESLIFRecognizerp->lexemesArrayp);
@@ -6965,7 +6980,7 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGramm
   marpaESLIFRecognizerp->marpaESLIFRecognizerOption   = *marpaESLIFRecognizerOptionp;
   marpaESLIFRecognizerp->marpaWrapperRecognizerp      = NULL;
   marpaESLIFRecognizerp->marpaWrapperGrammarp         = NULL;
-  marpaESLIFRecognizerp->lexemeInputStackp            = NULL;
+  marpaESLIFRecognizerp->lexemeInputStackp            = NULL;  /* Take care, it is pointer to internal _lexemeInputstack if stack init is ok */
   marpaESLIFRecognizerp->eventArrayp                  = NULL;
   marpaESLIFRecognizerp->eventArrayl                  = 0;
   marpaESLIFRecognizerp->eventArraySizel              = 0;
@@ -7050,11 +7065,11 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGramm
   marpaESLIFRecognizerp->exhaustedb                      = 0;
   marpaESLIFRecognizerp->completedb                      = 0;
   marpaESLIFRecognizerp->continueb                       = 0;
-  marpaESLIFRecognizerp->alternativeStackSymbolp         = NULL;
-  marpaESLIFRecognizerp->commitedAlternativeStackSymbolp = NULL;
+  marpaESLIFRecognizerp->alternativeStackSymbolp         = NULL;  /* Take care, it is pointer to internal _alternativeStackSymbolp if stack init is ok */
+  marpaESLIFRecognizerp->commitedAlternativeStackSymbolp = NULL;  /* Take care, it is pointer to internal _commitedAlternativeStackSymbolp if stack init is ok */
   marpaESLIFRecognizerp->lastPausepp                     = NULL;
   marpaESLIFRecognizerp->lastTrypp                       = NULL;
-  marpaESLIFRecognizerp->set2InputStackp                 = NULL;
+  marpaESLIFRecognizerp->set2InputStackp                 = NULL;  /* Take care, it is pointer to internal _set2InputStackp if stack init is ok */
   marpaESLIFRecognizerp->lexemesArrayp                   = NULL;
   marpaESLIFRecognizerp->lexemesArrayAllocl              = 0;
   marpaESLIFRecognizerp->discardEventStatebp             = NULL;
@@ -7180,30 +7195,38 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGramm
     marpaESLIFRecognizerp->marpaWrapperRecognizerp = NULL;
   }
 
-  GENERICSTACK_NEW(marpaESLIFRecognizerp->alternativeStackSymbolp);
+  marpaESLIFRecognizerp->alternativeStackSymbolp = &(marpaESLIFRecognizerp->_alternativeStackSymbol);
+  GENERICSTACK_INIT(marpaESLIFRecognizerp->alternativeStackSymbolp);
   if (GENERICSTACK_ERROR(marpaESLIFRecognizerp->alternativeStackSymbolp)) {
     MARPAESLIF_ERRORF(marpaESLIFp, "alternativeStackSymbolp initialization failure, %s", strerror(errno));
+    marpaESLIFRecognizerp->alternativeStackSymbolp = NULL;
     goto err;
   }
 
-  GENERICSTACK_NEW(marpaESLIFRecognizerp->commitedAlternativeStackSymbolp);
+  marpaESLIFRecognizerp->commitedAlternativeStackSymbolp = &(marpaESLIFRecognizerp->_commitedAlternativeStackSymbol);
+  GENERICSTACK_INIT(marpaESLIFRecognizerp->commitedAlternativeStackSymbolp);
   if (GENERICSTACK_ERROR(marpaESLIFRecognizerp->commitedAlternativeStackSymbolp)) {
     MARPAESLIF_ERRORF(marpaESLIFp, "commitedAlternativeStackSymbolp initialization failure, %s", strerror(errno));
+    marpaESLIFRecognizerp->commitedAlternativeStackSymbolp = NULL;
     goto err;
   }
 
   /* The mapping of earley set to pointer and length in input is available only if trackb is true */
   if (marpaESLIFRecognizerp->marpaESLIFRecognizerOption.trackb) {
-    GENERICSTACK_NEW(marpaESLIFRecognizerp->set2InputStackp);
+    marpaESLIFRecognizerp->set2InputStackp = &(marpaESLIFRecognizerp->_set2InputStack);
+    GENERICSTACK_INIT(marpaESLIFRecognizerp->set2InputStackp);
     if (GENERICSTACK_ERROR(marpaESLIFRecognizerp->set2InputStackp)) {
       MARPAESLIF_ERRORF(marpaESLIFp, "set2InputStackp initialization failure, %s", strerror(errno));
+      marpaESLIFRecognizerp->set2InputStackp = NULL;
       goto err;
     }
   }
 
-  GENERICSTACK_NEW(marpaESLIFRecognizerp->lexemeInputStackp);
+  marpaESLIFRecognizerp->lexemeInputStackp = &(marpaESLIFRecognizerp->_lexemeInputStack);
+  GENERICSTACK_INIT(marpaESLIFRecognizerp->lexemeInputStackp);
   if (GENERICSTACK_ERROR(marpaESLIFRecognizerp->lexemeInputStackp)) {
     MARPAESLIF_ERRORF(marpaESLIFp, "lexemeInputStackp initialization failure, %s", strerror(errno));
+    marpaESLIFRecognizerp->lexemeInputStackp = NULL;
     goto err;
   }
 
@@ -7950,7 +7973,7 @@ static inline void _marpaESLIFGrammar_grammarStack_freev(marpaESLIFGrammar_t *ma
         GENERICSTACK_USED(grammarStackp)--;
       }
     }
-    GENERICSTACK_FREE(grammarStackp);
+    GENERICSTACK_RESET(grammarStackp); /* Take care, this a pointer to a stack inside Grammar structure */
   }
 }
 

@@ -524,10 +524,12 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_check_grammarp(marpaES
   marpaWrapperGrammarOption_t marpaWrapperGrammarOption;
 
   if (marpaESLIFGrammarp->grammarStackp == NULL) {
-    /* Make sure that the stack of grammars exist */
-    GENERICSTACK_NEW(marpaESLIFGrammarp->grammarStackp);
+    /* Make sure that the stack of grammars exist - Take care this is a stack inside Grammar structure */
+    marpaESLIFGrammarp->grammarStackp = &(marpaESLIFGrammarp->_grammarStack);
+    GENERICSTACK_INIT(marpaESLIFGrammarp->grammarStackp);
     if (GENERICSTACK_ERROR(marpaESLIFGrammarp->grammarStackp)) {
       MARPAESLIF_ERRORF(marpaESLIFp, "marpaESLIFGrammarp->grammarStackp initialization failure, %s", strerror(errno));
+      marpaESLIFGrammarp->grammarStackp = NULL;
       goto err;
     }
   }
