@@ -3,6 +3,11 @@
 #undef  FILENAMES
 #define FILENAMES "bootstrap_actions.c" /* For logging */
 
+/* For take terminals, avoid an unnecessary call to ASCII conversion of the content */
+static const char  *_marpaESLIF_bootstrap_descEncodingInternals = "ASCII";
+static const char  *_marpaESLIF_bootstrap_descInternals = "INTERNAL";
+static const size_t _marpaESLIF_bootstrap_descInternall = 8; /* strlen("INTERNAL") */
+
 /* This file contain the definition of all bootstrap actions, i.e. the ESLIF grammar itself */
 /* This is an example of how to use the API */
 
@@ -581,9 +586,12 @@ static inline marpaESLIF_symbol_t *_marpaESLIF_bootstrap_check_meta_by_namep(mar
   int                  i;
 
   for (i = 0; i < GENERICSTACK_USED(grammarp->symbolStackp); i++) {
+#ifndef MARPAESLIF_NTRACE
+    /* Should never happen */
     if (! GENERICSTACK_IS_PTR(grammarp->symbolStackp, i)) {
       continue;
     }
+#endif
     symbol_i_p = GENERICSTACK_GET_PTR(grammarp->symbolStackp, i);
     if (symbol_i_p->type != MARPAESLIF_SYMBOL_TYPE_META) {
       continue;
@@ -642,9 +650,9 @@ static inline short _marpaESLIF_bootstrap_search_terminal_by_descriptionb(marpaE
   terminalp = _marpaESLIF_terminal_newp(marpaESLIFp,
                                         NULL, /* grammarp: this is what make the terminal only in memory */
                                         MARPAWRAPPERGRAMMAR_EVENTTYPE_NONE,
-                                        NULL /* descEncodings */,
-                                        NULL /* descs */,
-                                        0 /* descl */,
+                                        (char *) _marpaESLIF_bootstrap_descEncodingInternals,
+                                        (char *) _marpaESLIF_bootstrap_descInternals,
+                                        _marpaESLIF_bootstrap_descInternall,
                                         terminalType,
                                         stringp->modifiers,
                                         stringp->bytep,
@@ -657,6 +665,7 @@ static inline short _marpaESLIF_bootstrap_search_terminal_by_descriptionb(marpaE
 
   for (i = 0; i < GENERICSTACK_USED(grammarp->symbolStackp); i++) {
     if (! GENERICSTACK_IS_PTR(grammarp->symbolStackp, i)) {
+      /* Sparse array */
       continue;
     }
     symbol_i_p = GENERICSTACK_GET_PTR(grammarp->symbolStackp, i);
@@ -962,10 +971,13 @@ static inline short _marpaESLIF_bootstrap_unpack_adverbListItemStackb(marpaESLIF
 
   if (adverbListItemStackp != NULL) {
     for (adverbListItemi = 0; adverbListItemi < GENERICSTACK_USED(adverbListItemStackp); adverbListItemi++) {
+#ifndef MARPAESLIF_NTRACE
+      /* Should never happen */
       if (! GENERICSTACK_IS_PTR(adverbListItemStackp, adverbListItemi)) {
         MARPAESLIF_ERRORF(marpaESLIFp, "adverbListItemStackp at indice %d is not PTR (got %s, value %d)", adverbListItemi, _marpaESLIF_genericStack_i_types(adverbListItemStackp, adverbListItemi), GENERICSTACKITEMTYPE(adverbListItemStackp, adverbListItemi));
         goto err;
       }
+#endif
       adverbListItemp = (marpaESLIF_bootstrap_adverb_list_item_t *) GENERICSTACK_GET_PTR(adverbListItemStackp, adverbListItemi);
       switch (adverbListItemp->type) {
       case MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_ACTION:
@@ -2403,10 +2415,13 @@ static inline short _marpaESLIF_bootstrap_G1_action_priority_loosen_ruleb(marpaE
 
   /* Evaluate current priority of every alternative, change symbols, and push it in the flat version */
   for (alternativesi = 0; alternativesi < priorityCounti; alternativesi++) {
+#ifndef MARPAESLIF_NTRACE
+    /* Should never happen */
     if (! GENERICSTACK_IS_PTR(alternativesStackp, alternativesi)) {
       MARPAESLIF_ERRORF(marpaESLIFp, "alternativesStackp at indice %d is not PTR (got %s, value %d)", alternativesi, _marpaESLIF_genericStack_i_types(alternativesStackp, alternativesi), GENERICSTACKITEMTYPE(alternativesStackp, alternativesi));
       goto err;
     }
+#endif
 
     priorityi = priorityCounti - (alternativesi + 1);
 
@@ -2459,10 +2474,13 @@ static inline short _marpaESLIF_bootstrap_G1_action_priority_loosen_ruleb(marpaE
     /* Alternatives (things separator by the | operator) is a stack of alternative */
     alternativeStackp = GENERICSTACK_GET_PTR(alternativesStackp, alternativesi);
     for (alternativei = 0; alternativei < GENERICSTACK_USED(alternativeStackp); alternativei++) {
+#ifndef MARPAESLIF_NTRACE
+      /* Should never happen */
       if (! GENERICSTACK_IS_PTR(alternativeStackp, alternativei)) {
         MARPAESLIF_ERRORF(marpaESLIFp, "alternativeStackp at indice %d is not PTR (got %s, value %d)", alternativei, _marpaESLIF_genericStack_i_types(alternativeStackp, alternativei), GENERICSTACKITEMTYPE(alternativeStackp, alternativei));
         goto err;
       }
+#endif
       alternativep = (marpaESLIF_bootstrap_alternative_t *) GENERICSTACK_GET_PTR(alternativeStackp, alternativei);
       /* Alternatives is a stack of RHS followed by adverb items */
       alternativep->priorityi = priorityi;
@@ -2484,10 +2502,13 @@ static inline short _marpaESLIF_bootstrap_G1_action_priority_loosen_ruleb(marpaE
 
       /* Every occurence of LHS in the RHS list increases the arity */
       for (rhsi = 0; rhsi < nrhsi; rhsi++) {
+#ifndef MARPAESLIF_NTRACE
+        /* Should never happen */
         if (! GENERICSTACK_IS_PTR(rhsPrimaryStackp, rhsi)) {
           MARPAESLIF_ERRORF(marpaESLIFp, "rhsPrimaryStackp at indice %d is not PTR (got %s, value %d)", rhsi, _marpaESLIF_genericStack_i_types(rhsPrimaryStackp, rhsi), GENERICSTACKITEMTYPE(rhsPrimaryStackp, rhsi));
           goto err;
         }
+#endif
         rhsPrimaryp = (marpaESLIF_bootstrap_rhs_primary_t *) GENERICSTACK_GET_PTR(rhsPrimaryStackp, rhsi);
         rhsp = _marpaESLIF_bootstrap_check_rhsPrimaryp(marpaESLIFp, marpaESLIFGrammarp, grammarp, rhsPrimaryp, 1 /* createb */);
         if (rhsp == NULL) {
@@ -2544,10 +2565,13 @@ static inline short _marpaESLIF_bootstrap_G1_action_priority_loosen_ruleb(marpaE
         /* Do the association by reworking RHS's matching the LHS */
         for (arityixi = 0; arityixi < arityi; arityixi++) {
           rhsi = arityip[arityixi];
+#ifndef MARPAESLIF_NTRACE
+          /* Should never happen */
           if (! GENERICSTACK_IS_PTR(rhsPrimaryStackp, rhsi)) {
             MARPAESLIF_ERRORF(marpaESLIFp, "rhsPrimaryStackp at indice %d is not PTR (got %s, value %d)", rhsi, _marpaESLIF_genericStack_i_types(rhsPrimaryStackp, rhsi), GENERICSTACKITEMTYPE(rhsPrimaryStackp, rhsi));
             goto err;
           }
+#endif
           rhsPrimaryp = (marpaESLIF_bootstrap_rhs_primary_t *) GENERICSTACK_GET_PTR(rhsPrimaryStackp, rhsi);
           _marpaESLIF_bootstrap_rhs_primary_freev(prioritizedRhsPrimaryp);
           prioritizedRhsPrimaryp = (marpaESLIF_bootstrap_rhs_primary_t *)  malloc(sizeof(marpaESLIF_bootstrap_rhs_primary_t));
@@ -2667,17 +2691,23 @@ static inline short _marpaESLIF_bootstrap_G1_action_priority_flat_ruleb(marpaESL
 
   /* Priorities (things separated by the || operator) are IGNORED in this method */
   for (alternativesi = 0; alternativesi < GENERICSTACK_USED(alternativesStackp); alternativesi++) {
+#ifndef MARPAESLIF_NTRACE
+    /* Should never happen */
     if (! GENERICSTACK_IS_PTR(alternativesStackp, alternativesi)) {
       MARPAESLIF_ERRORF(marpaESLIFp, "alternativesStackp at indice %d is not PTR (got %s, value %d)", alternativesi, _marpaESLIF_genericStack_i_types(alternativesStackp, alternativesi), GENERICSTACKITEMTYPE(alternativesStackp, alternativesi));
       goto err;
     }
+#endif
     /* Alternatives (things separator by the | operator) is a stack of alternative */
     alternativeStackp = GENERICSTACK_GET_PTR(alternativesStackp, alternativesi);
     for (alternativei = 0; alternativei < GENERICSTACK_USED(alternativeStackp); alternativei++) {
+#ifndef MARPAESLIF_NTRACE
+      /* Should never happen */
       if (! GENERICSTACK_IS_PTR(alternativeStackp, alternativei)) {
         MARPAESLIF_ERRORF(marpaESLIFp, "alternativeStackp at indice %d is not PTR (got %s, value %d)", alternativei, _marpaESLIF_genericStack_i_types(alternativeStackp, alternativei), GENERICSTACKITEMTYPE(alternativeStackp, alternativei));
         goto err;
       }
+#endif
       alternativep = (marpaESLIF_bootstrap_alternative_t *) GENERICSTACK_GET_PTR(alternativeStackp, alternativei);
       /* Alternatives is a stack of RHS followed by adverb items */
       rhsPrimaryStackp     = alternativep->rhsPrimaryStackp;
@@ -2693,10 +2723,13 @@ static inline short _marpaESLIF_bootstrap_G1_action_priority_flat_ruleb(marpaESL
 
       /* Analyse RHS list */
       for (rhsPrimaryi = 0; rhsPrimaryi < nrhsi; rhsPrimaryi++) {
+#ifndef MARPAESLIF_NTRACE
+        /* Should never happen */
         if (! GENERICSTACK_IS_PTR(rhsPrimaryStackp, rhsPrimaryi)) {
           MARPAESLIF_ERRORF(marpaESLIFp, "alternativeStackp at indice %d is not PTR (got %s, value %d)", rhsPrimaryi, _marpaESLIF_genericStack_i_types(rhsPrimaryStackp, rhsPrimaryi), GENERICSTACKITEMTYPE(rhsPrimaryStackp, rhsPrimaryi));
           goto err;
         }
+#endif
         rhsPrimaryp = (marpaESLIF_bootstrap_rhs_primary_t *) GENERICSTACK_GET_PTR(rhsPrimaryStackp, rhsPrimaryi);
         rhsp = _marpaESLIF_bootstrap_check_rhsPrimaryp(marpaESLIFp, marpaESLIFGrammarp, grammarp, rhsPrimaryp, 1 /* createb */);
         if (rhsp == NULL) {
@@ -2739,10 +2772,13 @@ static inline short _marpaESLIF_bootstrap_G1_action_priority_flat_ruleb(marpaESL
       MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Creating rule %s at grammar level %d", (alternativep->forcedLhsp != NULL) ? alternativep->forcedLhsp->descp->asciis : lhsp->descp->asciis, grammarp->leveli);
       MARPAESLIF_TRACEF(marpaESLIFp, funcs, "... LHS     : %d %s", (alternativep->forcedLhsp != NULL) ? alternativep->forcedLhsp->idi : lhsp->idi, (alternativep->forcedLhsp != NULL) ? alternativep->forcedLhsp->descp->asciis : lhsp->descp->asciis);
       for (rhsPrimaryi = 0; rhsPrimaryi < nrhsi; rhsPrimaryi++) {
+#ifndef MARPAESLIF_NTRACE
+        /* Should never happen */
         if (! GENERICSTACK_IS_PTR(rhsPrimaryStackp, rhsPrimaryi)) {
           MARPAESLIF_ERRORF(marpaESLIFp, "alternativeStackp at indice %d is not PTR (got %s, value %d)", rhsPrimaryi, _marpaESLIF_genericStack_i_types(rhsPrimaryStackp, rhsPrimaryi), GENERICSTACKITEMTYPE(rhsPrimaryStackp, rhsPrimaryi));
           goto err;
         }
+#endif
         rhsPrimaryp = (marpaESLIF_bootstrap_rhs_primary_t *) GENERICSTACK_GET_PTR(rhsPrimaryStackp, rhsPrimaryi);
         rhsp = _marpaESLIF_bootstrap_check_rhsPrimaryp(marpaESLIFp, marpaESLIFGrammarp, grammarp, rhsPrimaryp, 1 /* createb */);
         if (rhsp == NULL) {
