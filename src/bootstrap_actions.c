@@ -664,10 +664,12 @@ static inline short _marpaESLIF_bootstrap_search_terminal_by_descriptionb(marpaE
   }
 
   for (i = 0; i < GENERICSTACK_USED(grammarp->symbolStackp); i++) {
+#ifndef MARPAESLIF_NTRACE
+    /* Should never happen */
     if (! GENERICSTACK_IS_PTR(grammarp->symbolStackp, i)) {
-      /* Sparse array */
       continue;
     }
+#endif
     symbol_i_p = GENERICSTACK_GET_PTR(grammarp->symbolStackp, i);
     if (symbol_i_p->type != MARPAESLIF_SYMBOL_TYPE_TERMINAL) {
       continue;
