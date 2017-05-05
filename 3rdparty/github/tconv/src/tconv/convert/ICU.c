@@ -372,7 +372,7 @@ void  *tconv_convert_ICU_new(tconv_t tconvp, const char *tocodes, const char *fr
   }
 
   /* ----------------------------------------------------------- */
-  /* Setup the context                                           /
+  /* Setup the context                                           */
   /* ----------------------------------------------------------- */
   contextp = (tconv_convert_ICU_context_t *) malloc(sizeof(tconv_convert_ICU_context_t));
   if (contextp == NULL) {
@@ -505,8 +505,8 @@ size_t tconv_convert_ICU_run(tconv_t tconvp, void *voidp, char **inbufpp, size_t
   }
 
   rcl = _tconv_convert_ICU_run(tconvp, contextp, &inbufp, &inbytesleftl, &outbufp, &outbytesleftl, flushb);
-  if ((rcl != (size_t)-1) ||
-      (rcl == (size_t)-1) && (errno == E2BIG)) {
+  if ( (rcl != (size_t)-1) ||
+      ((rcl == (size_t)-1) && (errno == E2BIG))) {
     if (inbufpp != NULL) {
       *inbufpp       = inbufp;
       *inbytesleftlp = inbytesleftl;
