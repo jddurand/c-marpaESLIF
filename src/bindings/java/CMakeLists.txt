@@ -86,6 +86,7 @@ IF (${CMAKE_COMPILER_IS_GNUCC})
   #
   # Work only compiles having rdynamic-path
   #
+  GET_PROPERTY(_test_path GLOBAL PROPERTY MYPACKAGE_TEST_PATH)
   GET_FILENAME_COMPONENT(_absolute_library_output_path ${LIBRARY_OUTPUT_PATH} ABSOLUTE)
   ADD_TEST (marpaESLIFJavaTest ${CMAKE_COMMAND} -E env "PATH=${_test_path}" "${Java_JAVA_EXECUTABLE}" -Djava.library.path=${_absolute_library_output_path} -jar marpaESLIFJavaTest.jar org.parser.marpa.AppParse)
   ADD_DEPENDENCIES(check marpaESLIFJavaTest_jar)

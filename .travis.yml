@@ -41,5 +41,6 @@ script:
 #  - ./output/lib/russellParadoxTester
 #  - ./output/lib/jsonTester
 #  - ./output/lib/selfTester
+  - cat Testing/Temporary/LastTest.log
   - sudo make package
   - sudo make install
