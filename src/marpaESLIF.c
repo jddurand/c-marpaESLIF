@@ -224,7 +224,7 @@ static inline void                   _marpaESLIFRecognizer_alternativeStackSymbo
 static inline short                  _marpaESLIFRecognizer_alternativeStackSymbol_setb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, genericStack_t *alternativeStackSymbolp, marpaESLIF_alternative_t *alternativep, int indicei);
 static inline short                  _marpaESLIFRecognizer_alternative_and_valueb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIF_alternative_t *alternativep, int valuei);
 static inline short                  _marpaESLIFRecognizer_push_eventb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFEventType_t type, marpaESLIFSymbol_t *symbolp, char *events);
-static inline short                  _marpaESLIFRecognizer_last_lexemeDatab(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *lexemes, char **bytesp, size_t *bytelp, marpaESLIF_lexeme_data_t **lexemeDatapp);
+static inline short                  _marpaESLIFRecognizer_last_lexemeDatab(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *lexemes, char **bytesp, size_t *bytelp, marpaESLIF_lexeme_data_t **lexemeDatapp, short forPauseb);
 static inline short                  _marpaESLIFRecognizer_set_lexemeDatab(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIF_grammar_t *grammarp, marpaESLIF_symbol_t *symbolp, char *xsbytes, size_t bytel, marpaESLIF_lexeme_data_t **lexemeDatapp);
 static inline short                  _marpaESLIFRecognizer_set_pauseb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIF_grammar_t *grammarp, marpaESLIF_symbol_t *symbolp, char *bytes, size_t bytel);
 static inline short                  _marpaESLIFRecognizer_set_tryb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIF_grammar_t *grammarp, marpaESLIF_symbol_t *symbolp, char *bytes, size_t bytel);
@@ -266,7 +266,7 @@ static inline short                  _marpaESLIFRecognizer_appendDatab(marpaESLI
 static inline short                  _marpaESLIFRecognizer_createDiscardStateb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp);
 static inline short                  _marpaESLIFRecognizer_createBeforeStateb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp);
 static inline short                  _marpaESLIFRecognizer_createAfterStateb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp);
-static inline short                  _marpaESLIFRecognizer_createLexemeDatab(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIF_lexeme_data_t ***lexemeDatappp, short forPauseb, short forTryb);
+static inline short                  _marpaESLIFRecognizer_createLexemeDatab(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIF_lexeme_data_t ***lexemeDatappp, short forPauseb);
 static inline void                   _marpaESLIFrecognizer_lexemeData_freev(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIF_lexeme_data_t **lexemeDatapp);
 static inline short                  _marpaESLIFRecognizer_createLastPauseb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp);
 static inline void                   _marpaESLIFrecognizer_lastPause_freev(marpaESLIFRecognizer_t *marpaESLIFRecognizerp);
@@ -3119,6 +3119,8 @@ marpaESLIF_t *marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptionp)
   marpaESLIF_t          *marpaESLIFp = NULL;
   genericLogger_t       *genericLoggerp;
   genericLoggerLevel_t   genericLoggerLeveli;
+  void                  *NULLp       = NULL;
+  void                  *p           = NULL;
 
   if (marpaESLIFOptionp == NULL) {
     marpaESLIFOptionp = &marpaESLIFOption_default_template;
@@ -3149,6 +3151,17 @@ marpaESLIF_t *marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptionp)
   marpaESLIFp->characterClassModifiersp = NULL;
   marpaESLIFp->regexModifiersp          = NULL;
   marpaESLIFp->traceLoggerp             = NULL;
+  marpaESLIFp->NULLisZeroBytesb         = 0;
+
+  /* Check if zero bytes (.i.e calloc'ed memory) is the same thing as NULL */
+  p = calloc(1, sizeof(void *));
+  if (p == NULL) {
+    if (marpaESLIFOptionp->genericLoggerp != NULL) {
+      GENERICLOGGER_ERRORF(marpaESLIFOptionp->genericLoggerp, "calloc failure, %s", strerror(errno));
+      goto err;
+    }
+  }
+  marpaESLIFp->NULLisZeroBytesb = (memcmp(p, &NULLp, sizeof(void *)) == 0);
 
   /* **************************************************************** */
   /* It is very important to NOT create terminals of type STRING here */
@@ -3340,6 +3353,9 @@ marpaESLIF_t *marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptionp)
   marpaESLIFp = NULL;
 
  done:
+  if (p != NULL) {
+    free(p);
+  }
   /* Restore log-level if user provided one */
   if (marpaESLIFOptionp->genericLoggerp != NULL) {
     genericLogger_logLevel_seti(marpaESLIFOptionp->genericLoggerp, genericLoggerLeveli);
@@ -6615,6 +6631,20 @@ static inline short _marpaESLIFRecognizer_set_lexemeDatab(marpaESLIFRecognizer_t
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
 
+  /* lexemeDatapp is guaranteed to have been allocated. But this is originally an array of NULL pointers */
+  if (lexemeDatap == NULL) {
+    lexemeDatap = malloc(sizeof(marpaESLIF_lexeme_data_t));
+    if (lexemeDatap == NULL) {
+      MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "malloc failure, %s", strerror(errno));
+      goto err;
+    }
+    lexemeDatap->bytes     = NULL;
+    lexemeDatap->bytel     = 0;
+    lexemeDatap->byteSizel = 0;
+
+    lexemeDatapp[symbolp->idi] = lexemeDatap;
+  }
+  
   /* In theory it is not possible to have a pause event if there is a parent recognizer.
 
    Memory management of the pause chunk is done so that free/malloc/realloc are avoided as much as
@@ -9816,12 +9846,13 @@ static inline short _marpaESLIFRecognizer_createAfterStateb(marpaESLIFRecognizer
 }
 
 /*****************************************************************************/
-static inline short _marpaESLIFRecognizer_createLexemeDatab(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIF_lexeme_data_t ***lexemeDatappp, short forPauseb, short forTryb)
+static inline short _marpaESLIFRecognizer_createLexemeDatab(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIF_lexeme_data_t ***lexemeDatappp, short forPauseb)
 /*****************************************************************************/
 {
   /* It assumed that lexemeDatappp is != NULL */
-  static const char         *funcs              = "_marpaESLIFRecognizer_createLexemeDatab";
-  marpaESLIF_lexeme_data_t **lexemeDatapp       = *lexemeDatappp;
+  static const char         *funcs        = "_marpaESLIFRecognizer_createLexemeDatab";
+  marpaESLIF_t              *marpaESLIFp  = marpaESLIFRecognizerp->marpaESLIFp;
+  marpaESLIF_lexeme_data_t **lexemeDatapp = *lexemeDatappp;
   marpaESLIFGrammar_t        *marpaESLIFGrammarp;
   marpaESLIF_grammar_t       *grammarp;
   genericStack_t             *symbolStackp;
@@ -9840,37 +9871,19 @@ static inline short _marpaESLIFRecognizer_createLexemeDatab(marpaESLIFRecognizer
     grammarp            = marpaESLIFGrammarp->grammarp;
     symbolStackp        = grammarp->symbolStackp;;
 
-    lexemeDatapp = (marpaESLIF_lexeme_data_t **) malloc(sizeof(marpaESLIF_lexeme_data_t *) * GENERICSTACK_USED(symbolStackp));
-    if (lexemeDatapp == NULL) {
-      MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "malloc failure, %s", strerror(errno));
-      goto err;
-    }
-    for (symboli = 0; symboli < GENERICSTACK_USED(symbolStackp); symboli++) {
-#ifndef MARPAESLIF_NTRACE
-      if (! GENERICSTACK_IS_PTR(symbolStackp, symboli)) {
-        /* Should never happen */
-        lexemeDatapp[symboli] = NULL;
-        continue;
+    if (marpaESLIFp->NULLisZeroBytesb) {
+      lexemeDatapp = (marpaESLIF_lexeme_data_t **) calloc(GENERICSTACK_USED(symbolStackp), sizeof(marpaESLIF_lexeme_data_t *));
+      if (lexemeDatapp == NULL) {
+        MARPAESLIF_ERRORF(marpaESLIFp, "calloc failure, %s", strerror(errno));
+        goto err;
       }
-#endif
-      symbolp = (marpaESLIF_symbol_t *) GENERICSTACK_GET_PTR(symbolStackp, symboli);
-      if (forPauseb) {
-        /* Any lexeme that as an event (grammar validation made sure that only lexemes can have such events) */
-        conditionb = (symbolp->eventBefores != NULL) || (symbolp->eventAfters != NULL);
-      } else {
-        /* Any symbol that is a lexeme or the :discard entry */
-        conditionb = MARPAESLIF_IS_LEXEME(symbolp) || MARPAESLIF_IS_DISCARD(symbolp);
+    } else {
+      lexemeDatapp = (marpaESLIF_lexeme_data_t **) malloc(sizeof(marpaESLIF_lexeme_data_t *) * GENERICSTACK_USED(symbolStackp));
+      if (lexemeDatapp == NULL) {
+        MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
+        goto err;
       }
-      if (conditionb) {
-        lexemeDatapp[symboli] = (marpaESLIF_lexeme_data_t *) malloc(sizeof(marpaESLIF_lexeme_data_t));
-        if (lexemeDatapp[symboli] == NULL) {
-          MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "malloc failure, %s", strerror(errno));
-          goto err;
-        }
-        lexemeDatapp[symboli]->bytes     = NULL;
-        lexemeDatapp[symboli]->bytel     = 0;
-        lexemeDatapp[symboli]->byteSizel = 0;
-      } else {
+      for (symboli = 0; symboli < GENERICSTACK_USED(symbolStackp); symboli++) {
         lexemeDatapp[symboli] = NULL;
       }
     }
@@ -9895,14 +9908,14 @@ static inline short _marpaESLIFRecognizer_createLexemeDatab(marpaESLIFRecognizer
 static inline short _marpaESLIFRecognizer_createLastPauseb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp)
 /*****************************************************************************/
 {
-  return _marpaESLIFRecognizer_createLexemeDatab(marpaESLIFRecognizerp, &(marpaESLIFRecognizerp->lastPausepp), 1 /* forPauseb */, 0 /* forTryb */);
+  return _marpaESLIFRecognizer_createLexemeDatab(marpaESLIFRecognizerp, &(marpaESLIFRecognizerp->lastPausepp), 1 /* forPauseb */);
 }
 
 /*****************************************************************************/
 static inline short _marpaESLIFRecognizer_createLastTryb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp)
 /*****************************************************************************/
 {
-  return _marpaESLIFRecognizer_createLexemeDatab(marpaESLIFRecognizerp, &(marpaESLIFRecognizerp->lastTrypp), 0 /* forPauseb */, 1 /* forTryb */);
+  return _marpaESLIFRecognizer_createLexemeDatab(marpaESLIFRecognizerp, &(marpaESLIFRecognizerp->lastTrypp), 0 /* forPauseb */);
 }
 
 /*****************************************************************************/
@@ -11914,7 +11927,7 @@ short marpaESLIFRecognizer_locationb(marpaESLIFRecognizer_t *marpaESLIFRecognize
 }
 
 /*****************************************************************************/
-static inline short _marpaESLIFRecognizer_last_lexemeDatab(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *lexemes, char **bytesp, size_t *bytelp, marpaESLIF_lexeme_data_t **lexemeDatapp)
+static inline short _marpaESLIFRecognizer_last_lexemeDatab(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *lexemes, char **bytesp, size_t *bytelp, marpaESLIF_lexeme_data_t **lexemeDatapp, short forPauseb)
 /*****************************************************************************/
 {
   marpaESLIF_t              *marpaESLIFp;
@@ -11922,6 +11935,9 @@ static inline short _marpaESLIFRecognizer_last_lexemeDatab(marpaESLIFRecognizer_
   marpaESLIF_grammar_t      *grammarp;
   marpaESLIFSymbol_t        *symbolp;
   marpaESLIF_lexeme_data_t  *lexemeDatap;
+  short                      conditionb;
+  char                      *bytes;
+  size_t                     bytel;
   short                      rcb;
 
   if (marpaESLIFRecognizerp == NULL) {
@@ -11944,18 +11960,34 @@ static inline short _marpaESLIFRecognizer_last_lexemeDatab(marpaESLIFRecognizer_
     MARPAESLIF_ERRORF(marpaESLIFp, "Failed to find <%s>", lexemes);
     goto err;
   }
-  lexemeDatap = lexemeDatapp[symbolp->idi];
-  if (lexemeDatap == NULL) {
-    MARPAESLIF_ERRORF(marpaESLIFp, "Symbol <%s> has no data setting", lexemes);
-    errno = EINVAL;
-    goto err;
+  if (forPauseb) {
+    /* Any lexeme that as an event (grammar validation made sure that only lexemes can have such events) */
+    conditionb = (symbolp->eventBefores != NULL) || (symbolp->eventAfters != NULL);
+  } else {
+    /* Any symbol that is a lexeme or the :discard entry */
+    conditionb = MARPAESLIF_IS_LEXEME(symbolp) || MARPAESLIF_IS_DISCARD(symbolp);
   }
 
+  lexemeDatap = lexemeDatapp[symbolp->idi];
+  if (lexemeDatap == NULL) {
+    /* This is an error unless conditionb is true - then it means it was not set */
+    if (! conditionb) {
+      MARPAESLIF_ERRORF(marpaESLIFp, "Symbol <%s> has no data setting", lexemes);
+      errno = EINVAL;
+      goto err;
+    }
+    bytes = NULL;
+    bytel = 0;
+  } else {
+    bytes = lexemeDatap->bytes;
+    bytel = lexemeDatap->bytel;
+  }
+  
   if (bytesp != NULL) {
-    *bytesp = lexemeDatap->bytes;
+    *bytesp = bytes;
   }
   if (bytelp != NULL) {
-    *bytelp = lexemeDatap->bytel;
+    *bytelp = bytel;
   }
   rcb = 1;
   goto done;
@@ -11976,7 +12008,7 @@ short marpaESLIFRecognizer_lexeme_last_pauseb(marpaESLIFRecognizer_t *marpaESLIF
     return 0;
   }
 
-  return _marpaESLIFRecognizer_last_lexemeDatab(marpaESLIFRecognizerp, lexemes, pausesp, pauselp, marpaESLIFRecognizerp->lastPausepp);
+  return _marpaESLIFRecognizer_last_lexemeDatab(marpaESLIFRecognizerp, lexemes, pausesp, pauselp, marpaESLIFRecognizerp->lastPausepp, 1 /* forPauseb */);
 }
 
 /*****************************************************************************/
@@ -11988,7 +12020,7 @@ short marpaESLIFRecognizer_lexeme_last_tryb(marpaESLIFRecognizer_t *marpaESLIFRe
     return 0;
   }
 
-  return _marpaESLIFRecognizer_last_lexemeDatab(marpaESLIFRecognizerp, lexemes, trysp, trylp, marpaESLIFRecognizerp->lastTrypp);
+  return _marpaESLIFRecognizer_last_lexemeDatab(marpaESLIFRecognizerp, lexemes, trysp, trylp, marpaESLIFRecognizerp->lastTrypp, 0 /* forPauseb */);
 }
 
 /*****************************************************************************/
@@ -12000,7 +12032,7 @@ short marpaESLIFRecognizer_discard_last_tryb(marpaESLIFRecognizer_t *marpaESLIFR
     return 0;
   }
 
-  return _marpaESLIFRecognizer_last_lexemeDatab(marpaESLIFRecognizerp, ":discard", trysp, trylp, marpaESLIFRecognizerp->lastTrypp);
+  return _marpaESLIFRecognizer_last_lexemeDatab(marpaESLIFRecognizerp, ":discard", trysp, trylp, marpaESLIFRecognizerp->lastTrypp, 0 /* forPauseb */);
 }
 
 /*****************************************************************************/
