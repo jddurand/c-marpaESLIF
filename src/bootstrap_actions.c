@@ -550,7 +550,7 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_check_grammarp(marpaES
     marpaWrapperGrammarOption.warningIsIgnoredb = marpaESLIFGrammarp->warningIsIgnoredb;
     marpaWrapperGrammarOption.autorankb         = marpaESLIFGrammarp->autorankb;
 
-    grammarp = _marpaESLIF_grammar_newp(marpaESLIFp,
+    grammarp = _marpaESLIF_grammar_newp(marpaESLIFGrammarp,
                                         &marpaWrapperGrammarOption,
                                         leveli,
                                         NULL /* descEncodings */,
