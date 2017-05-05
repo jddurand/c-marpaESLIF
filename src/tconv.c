@@ -11,7 +11,6 @@
 #define TCONV_ERROR_SIZE 1024
 
 /* For logging */
-static char *files = "tconv.c";
 #define TCONV_ENV_TRACE "TCONV_ENV_TRACE"
 static inline void _tconvTraceCallbackProxy(void *userDatavp, genericLoggerLevel_t logLeveli, const char *msgs);
 
@@ -198,7 +197,7 @@ int tconv_close(tconv_t tconvp)
     }
   }
 
-  return 0;
+  return rci;
 }
 
 /****************************************************************************/
@@ -206,7 +205,6 @@ tconv_t tconv_open_ext(const char *tocodes, const char *fromcodes, tconv_option_
 /****************************************************************************/
 {
   static const char funcs[]              = "tconv_open_ext";
-  void             *sharedLibraryHandlep = NULL;
   tconv_t           tconvp               = NULL;
   char             *traces               = NULL;
   char             *charset_news         = NULL;
