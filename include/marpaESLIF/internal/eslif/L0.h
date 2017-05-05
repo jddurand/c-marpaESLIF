@@ -318,8 +318,8 @@ __DATA__
   /* --------------------------------------------------------------------------------------------------------------------------------- */
   /* Taken from Regexp::Common::delimited, $RE{delimited}{-delim=>"/"}{-cdelim=>"/"} */
   /* Perl stringified version is: (?:(?|(?:\/)(?:[^\\\/]*(?:\\.[^\\\/]*)*)(?:\/))) */
-  /* We add a protection against /* and // so that it does not conflict with C++ comments. */
-  /* And it appears that is ok because a regexp starting with /* have no sense, as well */
+  /* We add a protection against so that it does not conflict with C++ comments. */
+  /* And it appears that is ok because a regexp starting with C comment have no sense, as well */
   /* as an empty regexp starting with // */
   { L0_TERMINAL_REGULAR_EXPRESSION, MARPAESLIF_TERMINAL_TYPE_REGEX, "su",
     "(?:(?|(?:/(?![*/]))(?:[^\\\\/]*(?:\\\\.[^\\\\/]*)*)(?:/)))",

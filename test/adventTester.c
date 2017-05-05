@@ -88,7 +88,6 @@ int main() {
   marpaESLIFValue_t           *marpaESLIFValuep = NULL;
   short                        continueb;
   short                        exhaustedb;
-  const static char           *inputs = "abc 123:de@ @f";
   short                        rcValueb;
   int                          suit_linei;
   int                          test_datai;

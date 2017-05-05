@@ -529,7 +529,6 @@ short is_bigendian;
 #define MARPAESLIF_IS_BIGENDIAN() ( (*(char*)&i_for_is_bigendian) == 0 )
 static const char *UTF16_LEs = "UTF-16LE";
 static const char *UTF16_BEs = "UTF-16BE";
-static const char *ASCIIs = "ASCII";
 static char *UTF16s;
 static size_t UTF16l;
 
@@ -733,8 +732,8 @@ JNIEXPORT void JNICALL JNI_OnUnLoad(JavaVM *vmp, void* reservedp)
   }
 
   /* ---------------------------------------------- */
-  /* Remove global references created by JNI_OnLoad
-  /* ----------------------------------g------------ -*/
+  /* Remove global references created by JNI_OnLoad */
+  /* -----------------------------------------------*/
   while (marpaESLIFClassCachep->classs != NULL) {
     if (marpaESLIFClassCachep->classp != NULL) {
       (*envp)->DeleteGlobalRef(envp, marpaESLIFClassCachep->classp);
@@ -870,7 +869,6 @@ JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIFGrammar_jniNew(JNIEnv *envp, j
   marpaESLIFGrammarOption_t         marpaESLIFGrammarOption;
   jobject                           BYTEBUFFER(marpaESLIFGrammar);
   jsize                             utf8lengthl;
-  jboolean                          isCopyb = JNI_FALSE;
   int                               ngrammari;
   int                               i;
   marpaESLIFGrammarDefaults_t       marpaESLIFGrammarDefaults;
@@ -2601,7 +2599,7 @@ JNIEXPORT jlong JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniLastCompletedLe
   const char             *names = NULL;
   jboolean                isCopy;
   size_t                  lengthl;
-  jint                    rci;
+  jlong                   rcl;
 
   if (! ESLIFRecognizer_contextb(envp, eslifRecognizerp, eslifRecognizerp, MARPAESLIF_ESLIFRECOGNIZER_CLASS_getLoggerInterfacep_METHODP,
                                  NULL /* genericLoggerpp */,
@@ -2624,11 +2622,11 @@ JNIEXPORT jlong JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniLastCompletedLe
     RAISEEXCEPTION(envp, "marpaESLIFRecognizer_last_completedb failure");
   }
 
-  rci = (jint) lengthl;
+  rcl = (jlong) lengthl;
   goto done;
 
  err:
-  rci = -1;
+  rcl = -1;
 
  done:
   if (envp != NULL) {
@@ -2637,7 +2635,7 @@ JNIEXPORT jlong JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniLastCompletedLe
     }
   }
 
-  return (jlong) lengthl;
+  return rcl;
 }
 
 /*****************************************************************************/
