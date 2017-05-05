@@ -196,7 +196,7 @@ struct marpaESLIF_rule {
 
 /* A grammar */
 struct marpaESLIF_grammar {
-  marpaESLIF_t          *marpaESLIFp;                        /* Shallow pointer to top marpaESLIFp */
+  marpaESLIFGrammar_t   *marpaESLIFGrammarp;                 /* Shallow pointer to parent structure marpaESLIFGrammarp */
   marpaESLIF_grammar_t  *selfp;                              /* This is vicious: internally the grammar is duplicated on the stack. This pointer give the original allocated memory. */
   int                    leveli;                             /* Grammar level */
   marpaESLIF_string_t   *descp;                              /* Grammar description */
