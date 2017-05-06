@@ -7,7 +7,7 @@ use ExtUtils::CBuilder;
 use File::chdir;
 use File::Basename qw/basename dirname/;
 use File::Find qw/find/;
-use File::Path qw/make_path/;
+use File::Path qw/make_path remove_tree/;
 use File::Copy qw/copy/;
 use File::Copy::Recursive qw/dircopy/;
 use IPC::Run qw/run/;
@@ -61,13 +61,41 @@ make_path(File::Spec->catdir('3rdparty', 'output'));
     $tar->extract();
 }
 undef $tar;
-print "... Copying 3rdparty/tar/cchardet-1.0.0/prcpucfg_solaris.h to 3rdparty/output/cchardet-1.0.0/src/ext/libcharsetdetect/nspr-emu\n";
-copy(File::Spec->catfile('3rdparty', 'tar', 'cchardet-1.0.0', 'prcpucfg_solaris.h'), File::Spec->catdir('3rdparty', 'output', 'cchardet-1.0.0', 'src', 'ext', 'libcharsetdetect', 'nspr-emu'));
+#
+# nspr-emu mess, we fix it by generating ourself what is needed
+#
+my $libcharsetdetect = File::Spec->catdir('3rdparty', 'output', 'cchardet-1.0.0', 'src', 'ext', 'libcharsetdetect');
+my $nspremu = File::Spec->catdir($libcharsetdetect, 'nspr-emu');
+print "... Suppress directory $nspremu\n";
+remove_tree($nspremu);
+print "... Generate directory $nspremu\n";
+make_path($nspremu);
+#
+# nsDebug.h.in have no dependency on cmake discoveries
+#
+my $nsDebug = File::Spec->catfile($nspremu, 'nsDebug.h');
+print "... Generate file $nsDebug\n";
+copy(File::Spec->catfile('include', 'nsDebug.h.in'), $nsDebug);
+#
+# prmem.h.in have no dependency on cmake discoveries
+#
+my $prmem = File::Spec->catfile($nspremu, 'prmem.h');
+print "... Generate file $prmem\n";
+copy(File::Spec->catfile('include', 'prmem.h.in'), $prmem);
+#
+# nscore.h.in depend on some type sizes
+#
+my $nscore = File::Spec->catfile($libcharsetdetect, 'nscore.h');
+print "... Suppress file $nscore\n";
+unlink($nscore);
+print "... Generate file $nscore\n";
+write_nscore(File::Spec->catfile('include', 'nscore.h.in'), $nscore);
+
 push(@additional_srcdir, File::Spec->catdir('3rdparty', 'output', 'cchardet-1.0.0', 'src', 'ext', 'libcharsetdetect', 'mozilla', 'extensions', 'universalchardet', 'src', 'base'));
-push(@additional_srcdir, File::Spec->catfile('3rdparty', 'output', 'cchardet-1.0.0', 'src', 'ext', 'libcharsetdetect', 'charsetdetect.cpp'));
-push(@additional_includes, File::Spec->catdir('3rdparty', 'output', 'cchardet-1.0.0', 'src', 'ext', 'libcharsetdetect', 'mozilla', 'extensions', 'universalchardet', 'src', 'base'));
-push(@additional_includes, File::Spec->catdir('3rdparty', 'output', 'cchardet-1.0.0', 'src', 'ext', 'libcharsetdetect', 'nspr-emu'));
-push(@additional_includes, File::Spec->catdir('3rdparty', 'output', 'cchardet-1.0.0', 'src', 'ext', 'libcharsetdetect'));
+push(@additional_srcdir, File::Spec->catfile($libcharsetdetect, 'charsetdetect.cpp'));
+push(@additional_includes, File::Spec->catdir($libcharsetdetect, 'mozilla', 'extensions', 'universalchardet', 'src', 'base'));
+push(@additional_includes, File::Spec->catdir($libcharsetdetect, 'nspr-emu'));
+push(@additional_includes, $libcharsetdetect);
 
 my $extra_compiler_flags = '';
 # ------------------------------------------------
@@ -260,4 +288,29 @@ $error
 C_WRAPPER
         
     return $c_wrapper
+}
+
+sub write_nscore {
+    my ($input, $output) = @_;
+
+    make_path(dirname($output));
+    open(my $fh, '<', $input) || die "Cannot open $input, $!";
+    my $source = do { local $/; <$fh>; };
+    close($fh) || warn "Cannot close $input, $!";
+
+    $source =~ s/^[ \t]*#[ \t]*cmakedefine\b.*?$//smg;
+    $source =~ s/^[ \t]*#[ \t]*define\s+SIZEOF.*?$//smg;
+
+    open($fh, '>', $output) || die "Cannot open $output, $!";
+    print $fh <<NSCORE;
+#ifndef NSCORE_WRAPPER_H
+#define NSCORE_WRAPPER_H
+
+#include <tconv/config_autoconf.h>
+
+$source
+
+#endif /* TCONV_CONFIG_WRAPPER_H */
+NSCORE
+    close($fh) || warn "Cannot close $output, $!";
 }
