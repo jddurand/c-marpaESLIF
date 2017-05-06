@@ -26,7 +26,7 @@ PR_END_EXTERN_C
 #cmakedefine HAVE_INT32_T
 
 /* Always exist */
-#define SIZEOF_CHAR           @SIZEOF_CHAR@
+#define SIZEOF_CHAR           1 /* Per def */
 #define SIZEOF_SHORT          @SIZEOF_SHORT@
 #define SIZEOF_INT            @SIZEOF_INT@
 #define SIZEOF_LONG           @SIZEOF_LONG@

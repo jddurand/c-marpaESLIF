@@ -30,7 +30,7 @@ EXECUTE_PROCESS(
 #
 MYPACKAGECHECKCOMMONINCLUDEFILES()
 MYPACKAGECHECKCOMMONSIZES()
-MESSAGE(STATUS "Generate file cchardet-1.0.0/src/ext/libcharsetdetect/nspr-emu/nscore.h")
+MESSAGE(STATUS "Generate file cchardet-1.0.0/src/ext/libcharsetdetect/nscore.h")
 CONFIGURE_FILE(
   ${CMAKE_CURRENT_SOURCE_DIR}/include/nscore.h.in
   ${3RDPARTY_OUTPUT_PATH}/cchardet-1.0.0/src/ext/libcharsetdetect/nscore.h
