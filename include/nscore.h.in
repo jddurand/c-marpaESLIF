@@ -22,15 +22,16 @@ PR_END_EXTERN_C
 
 /* May exist */
 #cmakedefine HAVE_UINT8_T
+#cmakedefine HAVE_INT16_T
 #cmakedefine HAVE_UINT32_T
 #cmakedefine HAVE_INT32_T
 
 /* Always exist */
-#define SIZEOF_CHAR           1 /* Per def */
+#define SIZEOF_CHAR           1 /* Per def */g
 #define SIZEOF_SHORT          @SIZEOF_SHORT@
 #define SIZEOF_INT            @SIZEOF_INT@
 #define SIZEOF_LONG           @SIZEOF_LONG@
-#define SIZEOF_UNSIGNED_CHAR  @SIZEOF_UNSIGNED_CHAR@
+#define SIZEOF_UNSIGNED_CHAR  1
 #define SIZEOF_UNSIGNED_SHORT @SIZEOF_UNSIGNED_SHORT@
 #define SIZEOF_UNSIGNED_INT   @SIZEOF_UNSIGNED_INT@
 #define SIZEOF_UNSIGNED_LONG  @SIZEOF_UNSIGNED_LONG@
