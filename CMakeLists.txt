@@ -17,23 +17,19 @@ EXECUTE_PROCESS(
   COMMAND "${CMAKE_COMMAND}" -E tar xzf ${PROJECT_SOURCE_DIR}/3rdparty/tar/cchardet-1.0.0.tar.gz
   WORKING_DIRECTORY "${3RDPARTY_OUTPUT_PATH}"
   )
-MESSAGE(STATUS "Suppress directory cchardet-1.0.0/src/ext/libcharsetdetect/nspr-emu")
-EXECUTE_PROCESS(
-  COMMAND "${CMAKE_COMMAND}" -E remove_directory ${3RDPARTY_OUTPUT_PATH}/cchardet-1.0.0/src/ext/libcharsetdetect/nspr-emu
-  )
-MESSAGE(STATUS "Suppress file cchardet-1.0.0/src/ext/libcharsetdetect/nscore.h")
-EXECUTE_PROCESS(
-  COMMAND "${CMAKE_COMMAND}" -E remove -f ${3RDPARTY_OUTPUT_PATH}/cchardet-1.0.0/src/ext/libcharsetdetect/nscore.h
-  )
 #
+# nspr-emu mess revisit
 # We will need common includes and sizes now - so let's call the macro doing that
 #
 MYPACKAGECHECKCOMMONINCLUDEFILES()
 MYPACKAGECHECKCOMMONSIZES()
-MESSAGE(STATUS "Generate file cchardet-1.0.0/src/ext/libcharsetdetect/nscore.h")
-CONFIGURE_FILE(
-  ${CMAKE_CURRENT_SOURCE_DIR}/include/nscore.h.in
-  ${3RDPARTY_OUTPUT_PATH}/cchardet-1.0.0/src/ext/libcharsetdetect/nscore.h
+MESSAGE(STATUS "Suppress directory cchardet-1.0.0/src/ext/libcharsetdetect/nspr-emu")
+EXECUTE_PROCESS(
+  COMMAND "${CMAKE_COMMAND}" -E remove_directory ${3RDPARTY_OUTPUT_PATH}/cchardet-1.0.0/src/ext/libcharsetdetect/nspr-emu
+  )
+MESSAGE(STATUS "Generate directory cchardet-1.0.0/src/ext/libcharsetdetect/nspr-emu")
+EXECUTE_PROCESS(
+  COMMAND "${CMAKE_COMMAND}" -E make_directory ${3RDPARTY_OUTPUT_PATH}/cchardet-1.0.0/src/ext/libcharsetdetect/nspr-emu
   )
 MESSAGE(STATUS "Generate file cchardet-1.0.0/src/ext/libcharsetdetect/nspr-emu/nsDebug.h")
 CONFIGURE_FILE(
@@ -45,9 +41,14 @@ CONFIGURE_FILE(
   ${CMAKE_CURRENT_SOURCE_DIR}/include/prmem.h.in
   ${3RDPARTY_OUTPUT_PATH}/cchardet-1.0.0/src/ext/libcharsetdetect/prmem.h
   )
-
+MESSAGE(STATUS "Suppress file cchardet-1.0.0/src/ext/libcharsetdetect/nscore.h")
 EXECUTE_PROCESS(
-  COMMAND "${CMAKE_COMMAND}" -E copy ${PROJECT_SOURCE_DIR}/3rdparty/tar/cchardet-1.0.0/prcpucfg_solaris.h "${3RDPARTY_OUTPUT_PATH}/cchardet-1.0.0/src/ext/libcharsetdetect/nspr-emu/prcpucfg_solaris.h"
+  COMMAND "${CMAKE_COMMAND}" -E remove -f ${3RDPARTY_OUTPUT_PATH}/cchardet-1.0.0/src/ext/libcharsetdetect/nscore.h
+  )
+MESSAGE(STATUS "Generate file cchardet-1.0.0/src/ext/libcharsetdetect/nscore.h")
+CONFIGURE_FILE(
+  ${CMAKE_CURRENT_SOURCE_DIR}/include/nscore.h.in
+  ${3RDPARTY_OUTPUT_PATH}/cchardet-1.0.0/src/ext/libcharsetdetect/nscore.h
   )
 FILE (GLOB ccharset_src
   ${3RDPARTY_OUTPUT_PATH}/cchardet-1.0.0/src/ext/libcharsetdetect/mozilla/extensions/universalchardet/src/base/*.cpp
