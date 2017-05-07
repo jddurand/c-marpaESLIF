@@ -711,12 +711,12 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
         if (lastcodepointi != codepointi) {
           /* Note that we know that our regexp start and end with printable characters */
           if (isprint((unsigned char) codepointi)) {
-            MARPAESLIF_ERRORF(marpaESLIFp, "First and last characters to not correspond: %c (0x%02lx) v.s. %c (0x%02lx) (wanted %c (0x%lx))",
+            MARPAESLIF_ERRORF(marpaESLIFp, "First and last characters do not correspond: %c (0x%02lx) v.s. %c (0x%02lx) (wanted %c (0x%lx))",
                               (unsigned char) firstcodepointi, (unsigned long) firstcodepointi,
                               (unsigned char) codepointi, (unsigned long) codepointi,
                               (unsigned char) lastcodepointi, (unsigned long) lastcodepointi);
           } else {
-            MARPAESLIF_ERRORF(marpaESLIFp, "First and last characters to not correspond: %c (0x%02lx) v.s. 0x%02lx (wanted %c (0x%lx))",
+            MARPAESLIF_ERRORF(marpaESLIFp, "First and last characters do not correspond: %c (0x%02lx) v.s. 0x%02lx (wanted %c (0x%lx))",
                               (unsigned char) firstcodepointi, (unsigned long) firstcodepointi,
                               (unsigned long) codepointi,
                               (unsigned char) lastcodepointi, (unsigned long) lastcodepointi);
