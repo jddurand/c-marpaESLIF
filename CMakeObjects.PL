@@ -59,7 +59,7 @@ my @additional_srcdir = ();
 make_path(File::Spec->catdir('output', '3rdparty'));
 {
     local $CWD = File::Spec->catdir('output', '3rdparty');
-    my $pcre2_tar = File::Spec->catfile(File::Spec->updir, File::Spec->updir, '3rdparty', 'tar', 'pcre2-10.23.tar.gz');
+    my $pcre2_tar = File::Spec->catfile(File::Spec->updir, File::Spec->updir, '3rdparty', 'tar', 'pcre2-10.23-patched.tar.gz');
     print "... Extracting pcre2\n";
     my $tar=Archive::Tar->new();
     $tar->read($pcre2_tar);

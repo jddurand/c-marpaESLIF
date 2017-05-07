@@ -15,7 +15,7 @@ IF (MSVC)
 ENDIF ()
 
 EXTERNALPROJECT_ADD(pcre2
-  URL "${PROJECT_SOURCE_DIR}/3rdparty/tar/pcre2-10.23.tar.gz"
+  URL "${PROJECT_SOURCE_DIR}/3rdparty/tar/pcre2-10.23-patched.tar.gz"
   UPDATE_COMMAND "${CMAKE_COMMAND}" -E copy "${PROJECT_SOURCE_DIR}/3rdparty/tar/pcre2-10.23/CMakeLists_fixed.txt" "${CMAKE_CURRENT_BINARY_DIR}/pcre2/src/pcre2/CMakeLists.txt"
   PREFIX "${CMAKE_CURRENT_BINARY_DIR}/pcre2"
   CMAKE_ARGS ${_PCRE2_CMAKE_ARGS}
