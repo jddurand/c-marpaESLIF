@@ -256,6 +256,20 @@ $c_va_copy
 #define TCONV_C_VA_COPY C_VA_COPY
 #endif
 
+#ifdef HAVE__STRNICMP
+#define C_STRNICMP _strnicmp
+#else
+  #ifdef HAVE_STRNICMP
+  #define C_STRNICMP strnicmp
+  #else
+    #ifdef HAVE_STRNCASECMP
+    #define C_STRNICMP strncasecmp
+    #else
+    #define C_STRNICMP _tconv_strnicmp
+    #endif
+  #endif
+#endif
+
 $source
 
 #endif /* TCONV_CONFIG_WRAPPER_H */
