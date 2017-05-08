@@ -13,7 +13,7 @@ before_script:
 # We want to try perl standalone first
   - sudo apt-get update
   - sudo apt-get install cpanminus
-  - sudo cpanm Archive::Tar Config::AutoConf::INI ExtUtils::CBuilder File::chdir File::Basename File::Find File::Path File::Copy::Recursive IPC::Run Perl::OSType
+  - sudo cpanm --notest Archive::Tar Config::AutoConf::INI ExtUtils::CBuilder File::chdir File::Basename File::Find File::Path File::Copy::Recursive IPC::Run Perl::OSType
   - perl CMakeObjects.PL
   - rm -rf output
   - cmake . -DALL_IN_ONE=ON
