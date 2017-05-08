@@ -517,6 +517,10 @@ size_t tconv(tconv_t tconvp, char **inbufsp, size_t *inbytesleftlp, char **outbu
     TCONV_STRDUP(tconvp, funcs, tconvp->tocodes, tconvp->fromcodes);
   }
 
+  /* Regardless if there are transformations, there is no point to convert from a charset to the same charset. */
+  /* Indeed, some iconv() implementations will return EINVAL in such a case, at best. Some could loop. */
+  /* TO DO */
+
   if (tconvp->convertContextp == NULL) {
     /* Initialize converter context if not already done */
     /* it is legal to have no new() for convert engine, but if there is one */
