@@ -44,6 +44,8 @@ struct tconv {
   tconv_convert_external_t convertExternal;
   /* 6. last error */
   char                     errors[TCONV_ERROR_SIZE];
+  /* 7. strnicmp done ? */
+  short                    strnicmpDoneb;
 };
 
 #define TCONV_MAX(tconvp, literalA, literalB) (((literalA) > (literalB)) ? (literalA) : (literalB))
@@ -94,6 +96,8 @@ struct tconv {
 static inline short _tconvDefaultCharsetAndConvertOptions(tconv_t tconvp);
 static inline short _tconvDefaultCharsetOption(tconv_t tconvp, tconv_charset_external_t *tconvCharsetExternalp);
 static inline short _tconvDefaultConvertOption(tconv_t tconvp, tconv_convert_external_t *tconvConvertExternalp);
+static inline int   _tconv_strnicmp(const char *ptr0, const char *ptr1, int len);
+static inline size_t tconvDirectIconv(tconv_t tconvp, void *voidp, char **inbuf, size_t *inbytesleft, char **outbuf, size_t *outbytesleft);
 
 /****************************************************************************/
 tconv_t tconv_open(const char *tocodes, const char *fromcodes)
@@ -239,7 +243,8 @@ tconv_t tconv_open_ext(const char *tocodes, const char *fromcodes, tconv_option_
   tconvp->errors[0]                    = '\0';
   /* Last byte can never change, because we do an strncpy */
   tconvp->errors[TCONV_ERROR_SIZE - 1] = '\0';
-
+  /* Charsets check done ? */
+  tconvp->strnicmpDoneb = 0;
   /* 1. trace */
   traces                       = getenv(TCONV_ENV_TRACE);
   tconvp->traceb               = (traces != NULL) ? (atoi(traces) != 0 ? 1 : 0) : 0;
@@ -447,6 +452,16 @@ tconv_t tconv_open_ext(const char *tocodes, const char *fromcodes, tconv_option_
     }
   }
 
+  /* Check charsets */
+  if ((tconvp->tocodes != NULL) && (tconvp->fromcodes != NULL)) {
+    if (C_STRNICMP((const char *) tconvp->tocodes, (const char *) tconvp->fromcodes, strlen(tconvp->fromcodes)) == 0) {
+      TCONV_TRACE(tconvp, "%s - charsets considered equivalent: direct byte copy will happen", funcs);
+      tconvp->strnicmpDoneb = 1;
+      /* Direct copy */
+      tconvp->convertExternal.tconv_convert_runp  = tconvDirectIconv;
+    }
+  }
+
   TCONV_TRACE(tconvp, "%s - return %p", funcs, tconvp);
   return tconvp;
   
@@ -517,9 +532,21 @@ size_t tconv(tconv_t tconvp, char **inbufsp, size_t *inbytesleftlp, char **outbu
     TCONV_STRDUP(tconvp, funcs, tconvp->tocodes, tconvp->fromcodes);
   }
 
-  /* Regardless if there are transformations, there is no point to convert from a charset to the same charset. */
-  /* Indeed, some iconv() implementations will return EINVAL in such a case, at best. Some could loop. */
-  /* TO DO */
+  if ((tconvp->tocodes == NULL) && (tconvp->fromcodes == NULL)) {
+    /* No charset */
+    errno = EINVAL;
+    goto err;
+  }
+
+  /* Check charsets if not done in the open phase */
+  if ((! tconvp->strnicmpDoneb) && (tconvp->tocodes != NULL) && (tconvp->fromcodes != NULL)) {
+    if (C_STRNICMP((const char *) tconvp->tocodes, (const char *) tconvp->fromcodes, strlen(tconvp->fromcodes)) == 0) {
+      TCONV_TRACE(tconvp, "%s - charsets considered equivalent: direct byte copy will happen", funcs);
+      tconvp->strnicmpDoneb = 1;
+      /* Direct copy */
+      tconvp->convertExternal.tconv_convert_runp  = tconvDirectIconv;
+    }
+  }
 
   if (tconvp->convertContextp == NULL) {
     /* Initialize converter context if not already done */
@@ -782,3 +809,81 @@ char *tconv_tocode(tconv_t tconvp)
 
   return tocodes;
 }
+
+/****************************************************************************/
+static inline int _tconv_strnicmp(const char *ptr0, const char *ptr1, int len)
+/****************************************************************************/
+{
+  /* C.f. http://mgronhol.github.io/fast-strcmp/ */
+  int fast = len/sizeof(size_t) + 1;
+  int offset = (fast-1)*sizeof(size_t);
+  int current_block = 0;
+
+  if( len <= sizeof(size_t)){ fast = 0; }
+
+
+  size_t *lptr0 = (size_t*)ptr0;
+  size_t *lptr1 = (size_t*)ptr1;
+
+  while( current_block < fast ){
+    if( (lptr0[current_block] ^ lptr1[current_block] )){
+      int pos;
+      for(pos = current_block*sizeof(size_t); pos < len ; ++pos ){
+        if( (ptr0[pos] ^ ptr1[pos]) || (ptr0[pos] == 0) || (ptr1[pos] == 0) ){
+          return  (int)((unsigned char)ptr0[pos] - (unsigned char)ptr1[pos]);
+        }
+      }
+    }
+
+    ++current_block;
+  }
+
+  while( len > offset ){
+    if( (ptr0[offset] ^ ptr1[offset] )){ 
+      return (int)((unsigned char)ptr0[offset] - (unsigned char)ptr1[offset]); 
+    }
+    ++offset;
+  }
+
+
+  return 0;
+}
+
+/*****************************************************************************/
+static inline size_t tconvDirectIconv(tconv_t tconvp, void *voidp, char **inbufpp, size_t *inbytesleftlp, char **outbufpp, size_t *outbytesleftlp)
+/*****************************************************************************/
+{
+  /* C.f. https://dev.openwrt.org/browser/packages/libs/libiconv/src/iconv.c?rev=24777&order=name */
+  size_t len = 0;
+	
+  if (tconvp != NULL) {
+    if ((inbytesleftlp  == NULL) || (*inbytesleftlp  < 0) ||
+        (outbytesleftlp == NULL) || (*outbytesleftlp < 0) ||
+        (outbufpp       == NULL) || (*outbufpp == NULL)) {
+      errno = EINVAL;
+      return (size_t)(-1);
+    }
+	
+    if ((inbufpp != NULL) && (*inbufpp != NULL)) {
+      len = (*inbytesleftlp > *outbytesleftlp) ? *outbytesleftlp : *inbytesleftlp;
+	
+      memcpy(*outbufpp, *inbufpp, len);
+	
+      *inbufpp        += len;
+      *inbytesleftlp  -= len;
+      *outbufpp       += len;
+      *outbytesleftlp -= len;
+	
+      if (*inbytesleftlp > 0) {
+        errno = E2BIG;
+        return (size_t)(-1);
+      }
+    }
+	
+    return (size_t)(0);
+  } else {
+    errno = EBADF;
+    return (size_t)(-1);
+  }
+}
+

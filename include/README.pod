@@ -88,6 +88,10 @@ It is guaranteed that tconv() will behave exactly like iconv() if the character 
 
 By POSIX compliance, we mean that, when the output buffer is too small, iconv should stop updating the input and output pointers prior to when the limit is reached. When the character conversion engine is ICONV on an UNIX platform, it is the behaviour of this UNIX platform that happen. In any other case, the plug-ins guarantee at least that input and output pointers are left in a state that, if being called again, will correctly handle the continuation of the conversion.
 
+=item Same charsets
+
+If the destination charset compares to the source charset, then tconv() will I<trust> the parameters and do direct byte copy, simulating iconv() behaviour.
+
 =back
 
 =back
