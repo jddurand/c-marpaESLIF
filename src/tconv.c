@@ -283,7 +283,7 @@ tconv_t tconv_open_ext(const char *tocodes, const char *fromcodes, tconv_option_
   /* 5. options - we always end up in an "external"-like configuration */
   if (tconvOptionp != NULL) {
 
-    TCONV_TRACE(tconvp, "%s - validation user option", funcs);
+    TCONV_TRACE(tconvp, "%s - validating user option", funcs);
 
     /* Charset */
     if (tconvOptionp->charsetp != NULL) {
