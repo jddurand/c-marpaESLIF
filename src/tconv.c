@@ -456,10 +456,10 @@ tconv_t tconv_open_ext(const char *tocodes, const char *fromcodes, tconv_option_
   if ((tconvp->tocodes != NULL) && (tconvp->fromcodes != NULL)) {
     if (C_STRNICMP((const char *) tconvp->tocodes, (const char *) tconvp->fromcodes, strlen(tconvp->fromcodes)) == 0) {
       TCONV_TRACE(tconvp, "%s - charsets considered equivalent: direct byte copy will happen", funcs);
-      tconvp->strnicmpDoneb = 1;
       /* Direct copy */
       tconvp->convertExternal.tconv_convert_runp  = tconvDirectIconv;
     }
+    tconvp->strnicmpDoneb = 1;
   }
 
   TCONV_TRACE(tconvp, "%s - return %p", funcs, tconvp);
@@ -534,19 +534,18 @@ size_t tconv(tconv_t tconvp, char **inbufsp, size_t *inbytesleftlp, char **outbu
 
   /* Check charsets if not done in the open phase */
   if (! tconvp->strnicmpDoneb) {
-
+    /* Per def charsets were not yet checked */
     if ((tconvp->tocodes == NULL) && (tconvp->fromcodes == NULL)) {
       /* No charset */
       errno = EINVAL;
       goto err;
     }
-
     if (C_STRNICMP((const char *) tconvp->tocodes, (const char *) tconvp->fromcodes, strlen(tconvp->fromcodes)) == 0) {
       TCONV_TRACE(tconvp, "%s - charsets considered equivalent: direct byte copy will happen", funcs);
-      tconvp->strnicmpDoneb = 1;
       /* Direct copy */
       tconvp->convertExternal.tconv_convert_runp  = tconvDirectIconv;
     }
+    tconvp->strnicmpDoneb = 1;
   }
 
   if (tconvp->convertContextp == NULL) {
