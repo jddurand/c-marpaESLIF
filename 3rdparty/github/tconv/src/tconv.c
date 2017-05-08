@@ -97,7 +97,7 @@ static inline short _tconvDefaultCharsetAndConvertOptions(tconv_t tconvp);
 static inline short _tconvDefaultCharsetOption(tconv_t tconvp, tconv_charset_external_t *tconvCharsetExternalp);
 static inline short _tconvDefaultConvertOption(tconv_t tconvp, tconv_convert_external_t *tconvConvertExternalp);
 static inline int   _tconv_strnicmp(const char *ptr0, const char *ptr1, int len);
-static inline size_t tconvDirectIconv(tconv_t tconvp, void *voidp, char **inbuf, size_t *inbytesleft, char **outbuf, size_t *outbytesleft);
+static inline size_t tconvDirectCopy(tconv_t tconvp, void *voidp, char **inbuf, size_t *inbytesleft, char **outbuf, size_t *outbytesleft);
 
 /****************************************************************************/
 tconv_t tconv_open(const char *tocodes, const char *fromcodes)
@@ -457,7 +457,9 @@ tconv_t tconv_open_ext(const char *tocodes, const char *fromcodes, tconv_option_
     if (C_STRNICMP((const char *) tconvp->tocodes, (const char *) tconvp->fromcodes, strlen(tconvp->fromcodes)) == 0) {
       TCONV_TRACE(tconvp, "%s - charsets considered equivalent: direct byte copy will happen", funcs);
       /* Direct copy */
-      tconvp->convertExternal.tconv_convert_runp  = tconvDirectIconv;
+      tconvp->convertExternal.tconv_convert_newp  = NULL;
+      tconvp->convertExternal.tconv_convert_runp  = tconvDirectCopy;
+      tconvp->convertExternal.tconv_convert_freep = NULL;
     }
     tconvp->strnicmpDoneb = 1;
   }
@@ -543,7 +545,9 @@ size_t tconv(tconv_t tconvp, char **inbufsp, size_t *inbytesleftlp, char **outbu
     if (C_STRNICMP((const char *) tconvp->tocodes, (const char *) tconvp->fromcodes, strlen(tconvp->fromcodes)) == 0) {
       TCONV_TRACE(tconvp, "%s - charsets considered equivalent: direct byte copy will happen", funcs);
       /* Direct copy */
-      tconvp->convertExternal.tconv_convert_runp  = tconvDirectIconv;
+      tconvp->convertExternal.tconv_convert_newp  = NULL;
+      tconvp->convertExternal.tconv_convert_runp  = tconvDirectCopy;
+      tconvp->convertExternal.tconv_convert_freep = NULL;
     }
     tconvp->strnicmpDoneb = 1;
   }
@@ -850,7 +854,7 @@ static inline int _tconv_strnicmp(const char *ptr0, const char *ptr1, int len)
 }
 
 /*****************************************************************************/
-static inline size_t tconvDirectIconv(tconv_t tconvp, void *voidp, char **inbufpp, size_t *inbytesleftlp, char **outbufpp, size_t *outbytesleftlp)
+static inline size_t tconvDirectCopy(tconv_t tconvp, void *voidp, char **inbufpp, size_t *inbytesleftlp, char **outbufpp, size_t *outbytesleftlp)
 /*****************************************************************************/
 {
   /* C.f. https://dev.openwrt.org/browser/packages/libs/libiconv/src/iconv.c?rev=24777&order=name */
