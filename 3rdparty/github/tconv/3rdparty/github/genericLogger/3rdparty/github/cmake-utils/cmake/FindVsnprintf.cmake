@@ -7,14 +7,20 @@ MACRO (FINDVSNPRINTF)
       GET_PROPERTY(source_dir GLOBAL PROPERTY MYPACKAGE_SOURCE_DIR)
       SET (_C_VSNPRINTF_FOUND FALSE)
       #
-      # We depend on stdio
+      # We depend on stdio and stdarg
       #
       INCLUDE (CheckIncludeFile)
       CHECK_INCLUDE_FILE ("stdio.h" HAVE_STDIO_H)
+      CHECK_INCLUDE_FILE ("stdarg.h" HAVE_STDARG_H)
       IF (HAVE_STDIO_H)
         SET (_HAVE_STDIO_H 1)
       ELSE ()
         SET (_HAVE_STDIO_H 0)
+      ENDIF ()
+      IF (HAVE_STDARG_H)
+        SET (_HAVE_STDARG_H 1)
+      ELSE ()
+        SET (_HAVE_STDARG_H 0)
       ENDIF ()
       #
       # Test
@@ -23,7 +29,7 @@ MACRO (FINDVSNPRINTF)
         MESSAGE(STATUS "Looking for ${KEYWORD}")
         TRY_COMPILE (C_HAS_${KEYWORD} ${CMAKE_CURRENT_BINARY_DIR}
           ${source_dir}/vsnprintf.c
-          COMPILE_DEFINITIONS "-DC_VSNPRINTF=${KEYWORD} -DHAVE_STDIO_H=${_HAVE_STDIO_H}")
+          COMPILE_DEFINITIONS "-DC_VSNPRINTF=${KEYWORD} -DHAVE_STDIO_H=${_HAVE_STDIO_H} -DHAVE_STDARG_H=${_HAVE_STDARG_H}")
         IF (C_HAS_${KEYWORD})
           MESSAGE(STATUS "Looking for ${KEYWORD} - found")
           SET (_C_VSNPRINTF ${KEYWORD})
