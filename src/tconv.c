@@ -532,14 +532,15 @@ size_t tconv(tconv_t tconvp, char **inbufsp, size_t *inbytesleftlp, char **outbu
     TCONV_STRDUP(tconvp, funcs, tconvp->tocodes, tconvp->fromcodes);
   }
 
-  if ((tconvp->tocodes == NULL) && (tconvp->fromcodes == NULL)) {
-    /* No charset */
-    errno = EINVAL;
-    goto err;
-  }
-
   /* Check charsets if not done in the open phase */
-  if ((! tconvp->strnicmpDoneb) && (tconvp->tocodes != NULL) && (tconvp->fromcodes != NULL)) {
+  if (! tconvp->strnicmpDoneb) {
+
+    if ((tconvp->tocodes == NULL) && (tconvp->fromcodes == NULL)) {
+      /* No charset */
+      errno = EINVAL;
+      goto err;
+    }
+
     if (C_STRNICMP((const char *) tconvp->tocodes, (const char *) tconvp->fromcodes, strlen(tconvp->fromcodes)) == 0) {
       TCONV_TRACE(tconvp, "%s - charsets considered equivalent: direct byte copy will happen", funcs);
       tconvp->strnicmpDoneb = 1;
@@ -857,6 +858,19 @@ static inline size_t tconvDirectIconv(tconv_t tconvp, void *voidp, char **inbufp
   size_t len = 0;
 	
   if (tconvp != NULL) {
+
+    if (((inbufpp == NULL) || (*inbufpp == NULL)) &&
+        ((outbufpp != NULL) && (*outbufpp != NULL))) {
+      /* Flush: no-op, no shift sequence */
+      return 0;
+    }
+
+    if (((inbufpp == NULL) || (*inbufpp == NULL)) &&
+        ((outbufpp == NULL) || (*outbufpp == NULL))) {
+      /* Back to initial state: no-op */
+      return 0;
+    }
+
     if ((inbytesleftlp  == NULL) || (*inbytesleftlp  < 0) ||
         (outbytesleftlp == NULL) || (*outbytesleftlp < 0) ||
         (outbufpp       == NULL) || (*outbufpp == NULL)) {
