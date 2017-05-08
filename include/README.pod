@@ -90,7 +90,7 @@ By POSIX compliance, we mean that, when the output buffer is too small, iconv sh
 
 =item Same charsets
 
-If the destination charset compares to the source charset, then tconv() will I<trust> the parameters and do direct byte copy, simulating iconv() behaviour.
+If the destination charset compares to the source charset, then tconv() will I<trust> the parameters and do direct byte copy, simulating iconv() behaviour. Therefore it is desirable to specify the input charset when you can, or at least give a large enough first input buffer so that encoding guess is reliable.
 
 =back
 
