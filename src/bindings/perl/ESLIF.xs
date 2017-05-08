@@ -1194,8 +1194,6 @@ static char *marpaESLIF_sv2byte(pTHX_ SV *svp, char **bytepp, size_t *bytelp, sh
     }
   } else {
     if (warnIsFatalb) {
-      MARPAESLIF_WARNF("SvPV() returned {pointer,length}={%p,%ld}", strings, (unsigned long) len);
-    } else {
       MARPAESLIF_CROAKF("SvPV() returned {pointer,length}={%p,%ld}", strings, (unsigned long) len);
     }
   }
