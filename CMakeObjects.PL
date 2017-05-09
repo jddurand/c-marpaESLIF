@@ -10,12 +10,15 @@ use File::Find qw/find/;
 use File::Path qw/make_path remove_tree/;
 use File::Copy qw/copy/;
 use File::Copy::Recursive qw/dircopy/;
+use File::Temp qw/tempfile/;
 use IPC::Run qw/run/;
 use Perl::OSType qw/is_os_type/;
 use POSIX qw/EXIT_SUCCESS/;
 use IO::Handle;
 
 autoflush STDOUT 1;
+
+our $DATA = do { local $/; <DATA>; };
 
 # ------------------------------------------------------------
 # Generation of objects using perl setup, for use in perl's XS
@@ -102,6 +105,7 @@ my $extra_compiler_flags = '';
 # On Windows, we will use dlfcn-win32 and winiconv
 # ------------------------------------------------
 my @additional = ();
+my $winiconv = 0;
 if (is_os_type('Windows')) {
     push(@additional, 'dlfcn-win32');
     push(@additional, 'winiconv');
@@ -119,9 +123,71 @@ if (is_os_type('Windows')) {
     #
     push(@additional_includes, File::Spec->catdir('output', '3rdparty', 'winiconv'));
     $extra_compiler_flags = "-DICONV_SECOND_ARGUMENT_IS_CONST";
+    $winiconv = 1;
 }
 
+my $twobytes_ok = "\"!!\"";
+my $twobytes_ko = "\"\\xa0\\xa1\"";
+
 $ac->define_var('TCONV_HAVE_ICONV', 1);
+
+print "...\n";
+print "... Please ignore the next lines, until we say \"Checking for ...\"\n";
+print "...\n";
+
+my $iconv_can_same_charsets      = get_iconv_capability("UTF-8",           "UTF-8", $twobytes_ok, $winiconv, $extra_compiler_flags, @additional_includes);
+my $iconv_can_translit           = get_iconv_capability("ASCII//TRANSLIT", "UTF-8", $twobytes_ok, $winiconv, $extra_compiler_flags, @additional_includes);
+my $iconv_without_translit_is_ok = get_iconv_capability("ASCII",           "UTF-8", $twobytes_ok, $winiconv, $extra_compiler_flags, @additional_includes);
+my $iconv_can_ignore             = $iconv_can_same_charsets ?
+  get_iconv_capability("ASCII//IGNORE", "ASCII", $twobytes_ko, $winiconv, $extra_compiler_flags, @additional_includes) :
+  get_iconv_capability("ASCII//IGNORE", "UTF-8", $twobytes_ko, $winiconv, $extra_compiler_flags, @additional_includes) ;
+my $iconv_without_ignore_is_ok   = $iconv_can_same_charsets ?
+  get_iconv_capability("ASCII",         "ASCII", $twobytes_ko, $winiconv, $extra_compiler_flags, @additional_includes) :
+  get_iconv_capability("ASCII",         "UTF-8", $twobytes_ko, $winiconv, $extra_compiler_flags, @additional_includes) ;
+
+$ac->msg_checking('ICONV_CAN_SAME_CHARSETS');
+if ($iconv_can_same_charsets) {
+  $ac->define_var('ICONV_CAN_SAME_CHARSETS', 1);
+  $ac->msg_result('yes');
+} else {
+  $ac->msg_result('no');
+}
+
+$ac->msg_checking('ICONV_CAN_TRANSLIT');
+if ($iconv_can_translit) {
+  $ac->define_var('ICONV_CAN_TRANSLIT', 1);
+  $ac->msg_result('yes');
+} else {
+  $ac->msg_result('no');
+}
+
+$ac->msg_checking('ICONV_WITHOUT_TRANSLIT_IS_OK');
+if ($iconv_without_translit_is_ok) {
+  $ac->define_var('ICONV_WITHOUT_TRANSLIT_IS_OK', 1);
+  $ac->msg_result('yes');
+} else {
+  $ac->msg_result('no');
+}
+
+$ac->msg_checking('ICONV_CAN_IGNORE');
+if ($iconv_can_ignore) {
+  $ac->define_var('ICONV_CAN_IGNORE', 1);
+  $ac->msg_result('yes');
+} else {
+  $ac->msg_result('no');
+}
+
+$ac->msg_checking('ICONV_WITHOUT_IGNORE_IS_OK');
+if ($iconv_without_ignore_is_ok) {
+  $ac->define_var('ICONV_WITHOUT_IGNORE_IS_OK', 1);
+  $ac->msg_result('yes');
+} else {
+  $ac->msg_result('no');
+}
+
+#
+# We want to check iconv capabilities
+#
 
 # --------------------------------------------------------------------------------
 # getopt is only used for the tconv binary - not needed from library point of view
@@ -190,8 +256,7 @@ my $obj_dir = File::Spec->catfile('output', 'obj4perl');
 make_path($obj_dir);
 foreach my $source (@sources) {
     my $is_cplusplus = ($source =~ /\.cpp$/i || $source =~ /\.c\+\+$/i);
-    my $obj = basename($cbuilder->object_file($source));
-    $obj = File::Spec->catfile($obj_dir, basename($cbuilder->object_file($source)));
+    my $obj = File::Spec->catfile($obj_dir, basename($cbuilder->object_file($source)));
     push(@objects, $cbuilder->object_file($source));
     $cbuilder->compile(
                        source        => $source,
@@ -300,7 +365,6 @@ $error
 #  endif
 #endif
 C_WRAPPER
-        
     return $c_wrapper
 }
 
@@ -328,3 +392,74 @@ $source
 NSCORE
     close($fh) || warn "Cannot close $output, $!";
 }
+
+sub get_iconv_capability {
+  my ($tocharset, $fromcharset, $twobytes, $winiconv, $extra_compiler_flags, @additional_includes) = @_;
+
+  my $include_winiconv = $winiconv ? '#include <win_iconv.c>' : '';
+  my $source = <<SOURCE_HEADERS;
+  #include <stdlib.h>
+  #include <stdio.h>
+  #include <stddef.h>
+  $include_winiconv
+  #include <iconv.h>
+SOURCE_HEADERS
+  $source .= q'
+  int main(){
+    iconv_t  conv;
+    char    *src = "123\xe2\x82\xac" "456" ';
+  $source .= ${twobytes};
+  my $data = $DATA;
+  $data =~ s/__TO__/$tocharset/;
+  $data =~ s/__FROM__/$fromcharset/;
+  $source .= $data;
+  # print $source;
+  my $cbuilder = ExtUtils::CBuilder->new();
+  my ($fh, $filename) = tempfile(SUFFIX => '.c', UNLINK => 0);
+  print $fh $source;
+  close($fh) || warn "Cannot close $filename, $!";
+
+  my $rc =
+  eval {
+    my $obj = $cbuilder->object_file($filename);
+    $cbuilder->compile(
+                       source        => $filename,
+                       extra_compiler_flags => $extra_compiler_flags,
+                       object_file   => $obj,
+                       include_dirs  => [ 'include', File::Spec->catdir('output', 'include'), @additional_includes ],
+                       'C++'         => 0
+                      );
+    $cbuilder->link_executable(
+                               module_name => 'ICONV::TEST',
+                               objects => $obj
+                              );
+    system($cbuilder->exe_file($obj), 'unused', 'parameter');
+    my $exitcode =  $? >> 8;
+    unlink $cbuilder->exe_file($obj);
+    unlink $obj;
+    $exitcode ? 0 : 1;
+  } // 1;
+  unlink $filename;
+
+  return $rc;
+}
+
+__DATA__
+; /* In UTF8: 123, euro sign, 456 */
+    char     dst[1024];
+    char    *inp = src;                             /* Input moving pointer */
+    char    *outp = dst;                            /* Output moving pointer */
+    size_t   inl = 11;                              /* In UTF8: 9 bytes OK, 2 bytes that the caller is setting */
+    size_t   outl = 1024;                           /* 1024 bytes available in output buffer */
+
+    memset((void *) dst, '\0', 1024);
+    conv = iconv_open("__TO__", "__FROM__");
+    if (conv == (iconv_t)-1) { perror("iconv_open"); return 1; }
+    if (iconv(conv, &inp, &inl, &outp, &outl) == (size_t)-1)  { perror("iconv"); return 1; }
+    /* Flush */
+    if (iconv(conv, NULL, NULL, &outp, &outl) == (size_t)-1)  { perror("iconv"); return 1; }
+    if (iconv_close(conv) == -1)  { perror("iconv_close"); return 1; }
+    fprintf(stdout, "%s\n", dst);
+    return 0;
+  }
+
