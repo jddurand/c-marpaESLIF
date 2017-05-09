@@ -7,10 +7,10 @@
 
 #
 # Just to be sure, we do not limit the calls to iconv_open, but do the full thing
-# Input is FORCED to be UTF-8 in any case. Caller have the choice of destination charset
-# and have to provide TWO TRAILING BYTES.
+# Input is FORCED to start with valid UTF-8, but invalid ASCII in any case.
+# Caller have the choice of destination charset and have to provide TWO TRAILING BYTES.
 #
-MACRO(_FINDICONVCAPABILITY tocharset outputvariable twobytes)
+MACRO(_FINDICONVCAPABILITY tocharset fromcharset outputvariable twobytes)
   include(CheckCSourceRuns)
   SET (CMAKE_REQUIRED_INCLUDES_PREVIOUS ${CMAKE_REQUIRED_INCLUDES})
   SET (CMAKE_REQUIRED_LIBRARIES_PREVIOUS ${CMAKE_REQUIRED_LIBRARIES})
@@ -40,7 +40,7 @@ MACRO(_FINDICONVCAPABILITY tocharset outputvariable twobytes)
     size_t   outl = 1024;                           /* 1024 bytes available in output buffer */
 
     memset((void *) dst, '\\\\0', 1024);
-    conv = iconv_open(\"${tocharset}\", \"UTF-8\");
+    conv = iconv_open(\"${tocharset}\", \"${fromcharset}\");
     if (conv == (iconv_t)-1) { perror(\"iconv_open\"); return 1; }
     if (iconv(conv, &inp, &inl, &outp, &outl) == (size_t)-1)  { perror(\"iconv\"); return 1; }
     /* Flush */
@@ -67,11 +67,16 @@ ENDMACRO()
 SET (TWO_UTF8_BYTES_OK "\"!!\"")
 SET (TWO_UTF8_BYTES_KO "\"\\\\\\\\xa0\\\\\\\\xa1\"")
 
-_FINDICONVCAPABILITY("UTF-8"           ICONV_CAN_SAME_CHARSETS      ${TWO_UTF8_BYTES_OK})
-_FINDICONVCAPABILITY("ASCII//TRANSLIT" ICONV_CAN_TRANSLIT           ${TWO_UTF8_BYTES_OK})
-_FINDICONVCAPABILITY("ASCII"           ICONV_WITHOUT_TRANSLIT_IS_OK ${TWO_UTF8_BYTES_OK})
-_FINDICONVCAPABILITY("ASCII//IGNORE"   ICONV_CAN_IGNORE             ${TWO_UTF8_BYTES_KO})
-_FINDICONVCAPABILITY("ASCII"           ICONV_WITHOUT_IGNORE_IS_OK   ${TWO_UTF8_BYTES_KO})
+_FINDICONVCAPABILITY("UTF-8"           "UTF-8" ICONV_CAN_SAME_CHARSETS      ${TWO_UTF8_BYTES_OK})
+_FINDICONVCAPABILITY("ASCII//TRANSLIT" "UTF-8" ICONV_CAN_TRANSLIT           ${TWO_UTF8_BYTES_OK})
+_FINDICONVCAPABILITY("ASCII"           "UTF-8" ICONV_WITHOUT_TRANSLIT_IS_OK ${TWO_UTF8_BYTES_OK})
+IF (ICONV_CAN_SAME_CHARSETS)
+  _FINDICONVCAPABILITY("ASCII//IGNORE"   "ASCII" ICONV_CAN_IGNORE             ${TWO_UTF8_BYTES_KO})
+  _FINDICONVCAPABILITY("ASCII"           "ASCII" ICONV_WITHOUT_IGNORE_IS_OK   ${TWO_UTF8_BYTES_KO})
+ELSE ()
+  _FINDICONVCAPABILITY("ASCII//IGNORE"   "UTF-8" ICONV_CAN_IGNORE             ${TWO_UTF8_BYTES_KO})
+  _FINDICONVCAPABILITY("ASCII"           "UTF-8" ICONV_WITHOUT_IGNORE_IS_OK   ${TWO_UTF8_BYTES_KO})
+ENDIF ()
 
 IF (NOT ICONV_CAN_SAME_CHARSETS)
   MESSAGE (WARNING "When input and destination charsets are equivalent, they will NOT be checked and fuzzy conversion will happen")
