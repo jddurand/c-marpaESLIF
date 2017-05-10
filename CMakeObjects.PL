@@ -171,12 +171,34 @@ $ac->define_var('TCONV_HAVE_ICONV', 1);
 
 print "\n";
 print "..........................................................\n";
+print " Checking iconv location\n";
+print "..........................................................\n";
+print "\n";
+
+my $extra_linker_flags = '';
+if (! is_os_type('Windows')) {
+    foreach my $this_lib ('', 'iconv', 'iconv-2') {
+	$ac->msg_checking(sprintf "iconv is in %s library", $this_lib || 'standard');
+	my $conftest = $ac->lang_build_program("#include <stdlib.h>\n#include <iconv.h>", "{iconv_t cd; iconv(cd, NULL, NULL, NULL, NULL);}");
+	$ac->push_libraries($this_lib) if $this_lib;
+	if ($ac->link_if_else($conftest)) {
+	    $ac->msg_result('yes');
+	    $extra_linker_flags = "-l${this_lib}" if $this_lib;
+	    last;
+	} else {
+	    $ac->msg_result('no');
+	}
+    }
+}
+
+print "\n";
+print "..........................................................\n";
 print " Checking iconv capability - please ignore the next lines \n";
 print "..........................................................\n";
 print "\n";
 
-my $iconv_can_translit = get_iconv_capability("ASCII//TRANSLIT", "UTF-8", $twobytes_ok, $winiconv, $extra_compiler_flags, @additional_includes);
-my $iconv_can_ignore   = get_iconv_capability("ASCII//IGNORE",   "UTF-8", $twobytes_ok, $winiconv, $extra_compiler_flags, @additional_includes);
+my $iconv_can_translit = get_iconv_capability("ASCII//TRANSLIT", "UTF-8", $twobytes_ok, $winiconv, $extra_compiler_flags, $extra_linker_flags, @additional_includes);
+my $iconv_can_ignore   = get_iconv_capability("ASCII//IGNORE",   "UTF-8", $twobytes_ok, $winiconv, $extra_compiler_flags, $extra_linker_flags, @additional_includes);
 
 print "\n";
 print " The iconv we are using triggered the following settings:\n";
@@ -376,7 +398,7 @@ NSCORE
 }
 
 sub get_iconv_capability {
-  my ($tocharset, $fromcharset, $twobytes, $winiconv, $extra_compiler_flags, @additional_includes) = @_;
+  my ($tocharset, $fromcharset, $twobytes, $winiconv, $extra_compiler_flags, $extra_linker_flags, @additional_includes) = @_;
 
   my $include_winiconv = $winiconv ? '#include <win_iconv.c>' : '';
   my $source = <<SOURCE_HEADERS;
@@ -412,6 +434,7 @@ SOURCE_HEADERS
                     );
   $cbuilder->link_executable(
                              module_name => 'ICONV::TEST',
+                             extra_linker_flags =>, $extra_linker_flags,
                              objects => $obj
                             );
   system($cbuilder->exe_file($obj), 'unused', 'parameter');
