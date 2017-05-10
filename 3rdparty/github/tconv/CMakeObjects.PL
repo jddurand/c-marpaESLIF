@@ -126,6 +126,44 @@ if (is_os_type('Windows')) {
     $winiconv = 1;
 }
 
+# --------------------------------------------------------------------------------
+# getopt is only used for the tconv binary - not needed from library point of view
+# --------------------------------------------------------------------------------
+
+# -----------------------------------------------------------------
+# We depend on these* stuff that can manage themselvess, eventually
+# -----------------------------------------------------------------
+foreach (qw/genericLogger/, @additional) {
+    if (! dircopy(File::Spec->catdir('3rdparty', 'github', $_),
+                  File::Spec->catdir('output', '3rdparty', $_))) {
+        die "Failed to copy $_";
+    }
+    print "... Copying $_\n";
+    my $CMakeObjects = File::Spec->catfile('output', '3rdparty', $_, 'CMakeObjects.PL');
+    if (-e $CMakeObjects) {
+        print "... Executing $CMakeObjects\n";
+        my $in;
+        my $out;
+        my $err;
+        {
+            local $CWD = dirname($CMakeObjects);
+            run([$^X, basename($CMakeObjects)], \$in, \$out, \$err) || die "Failed to execute $CMakeObjects" . ($err ? "\n$err" : '');
+        }
+        if ($out) {
+            foreach (grep {defined} split(/\R/, $out)) {
+                print "... ... $_\n";
+            }
+        }
+        my $inc = File::Spec->catdir('output', '3rdparty', $_, 'output', 'include');
+        push(@additional_includes, $inc) if (-d $inc);
+    }
+    my $inc = File::Spec->catdir('output', '3rdparty', $_, 'include');
+    push(@additional_includes, $inc) if (-d $inc);
+}
+
+# ------------------------------------------------
+# Everything is in place: check iconv capabilities
+# ------------------------------------------------
 my $twobytes_ok = "\"!!\"";
 my $twobytes_ko = "\"\\xa0\\xa1\"";
 
@@ -167,41 +205,6 @@ print "..........................................................\n";
 print "\n";
 
 $ac->write_config_h(File::Spec->catfile('output', 'include', 'tconv', 'config_autoconf.h'));
-
-# --------------------------------------------------------------------------------
-# getopt is only used for the tconv binary - not needed from library point of view
-# --------------------------------------------------------------------------------
-
-# -----------------------------------------------------------------
-# We depend on these* stuff that can manage themselvess, eventually
-# -----------------------------------------------------------------
-foreach (qw/genericLogger/, @additional) {
-    if (! dircopy(File::Spec->catdir('3rdparty', 'github', $_),
-                  File::Spec->catdir('output', '3rdparty', $_))) {
-        die "Failed to copy $_";
-    }
-    print "... Copying $_\n";
-    my $CMakeObjects = File::Spec->catfile('output', '3rdparty', $_, 'CMakeObjects.PL');
-    if (-e $CMakeObjects) {
-        print "... Executing $CMakeObjects\n";
-        my $in;
-        my $out;
-        my $err;
-        {
-            local $CWD = dirname($CMakeObjects);
-            run([$^X, basename($CMakeObjects)], \$in, \$out, \$err) || die "Failed to execute $CMakeObjects" . ($err ? "\n$err" : '');
-        }
-        if ($out) {
-            foreach (grep {defined} split(/\R/, $out)) {
-                print "... ... $_\n";
-            }
-        }
-        my $inc = File::Spec->catdir('output', '3rdparty', $_, 'output', 'include');
-        push(@additional_includes, $inc) if (-d $inc);
-    }
-    my $inc = File::Spec->catdir('output', '3rdparty', $_, 'include');
-    push(@additional_includes, $inc) if (-d $inc);
-}
 
 # ----------------
 # Get source files
@@ -399,26 +402,23 @@ SOURCE_HEADERS
   print $fh $source;
   close($fh) || warn "Cannot close $filename, $!";
 
-  my $rc =
-  eval {
-    my $obj = $cbuilder->object_file($filename);
-    $cbuilder->compile(
-                       source        => $filename,
-                       extra_compiler_flags => $extra_compiler_flags,
-                       object_file   => $obj,
-                       include_dirs  => [ 'include', File::Spec->catdir('output', 'include'), @additional_includes ],
-                       'C++'         => 0
-                      );
-    $cbuilder->link_executable(
-                               module_name => 'ICONV::TEST',
-                               objects => $obj
-                              );
-    system($cbuilder->exe_file($obj), 'unused', 'parameter');
-    my $exitcode =  $? >> 8;
-    unlink $cbuilder->exe_file($obj);
-    unlink $obj;
-    $exitcode ? 0 : 1;
-  } // 1;
+  my $obj = $cbuilder->object_file($filename);
+  $cbuilder->compile(
+                     source        => $filename,
+                     extra_compiler_flags => $extra_compiler_flags,
+                     object_file   => $obj,
+                     include_dirs  => [ 'include', File::Spec->catdir('output', 'include'), @additional_includes ],
+                     'C++'         => 0
+                    );
+  $cbuilder->link_executable(
+                             module_name => 'ICONV::TEST',
+                             objects => $obj
+                            );
+  system($cbuilder->exe_file($obj), 'unused', 'parameter');
+  my $exitcode =  $? >> 8;
+  unlink $cbuilder->exe_file($obj);
+  unlink $obj;
+  my $rc = $exitcode ? 0 : 1;
   unlink $filename;
 
   return $rc;
@@ -442,4 +442,3 @@ __DATA__
     fprintf(stdout, "%s\n", dst);
     return 0;
   }
-
