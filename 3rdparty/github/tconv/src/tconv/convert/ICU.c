@@ -11,7 +11,6 @@
 #include <unicode/ustring.h>
 
 #include "tconv/convert/ICU.h"
-/* Because this is a built-in, it can take advantage of TCONV_TRACE macro */
 #include "tconv_config.h"
 
 #define TCONV_ICU_IGNORE   "//IGNORE"

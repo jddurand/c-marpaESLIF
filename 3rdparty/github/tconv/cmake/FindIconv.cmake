@@ -7,7 +7,7 @@
 #  ICONV_LDFLAGS - Link these to use Iconv (string)
 #  ICONV_SECOND_ARGUMENT_IS_CONST - the second argument for iconv() is const
 # 
-include(CheckCXXSourceCompiles)
+include(CheckCSourceCompiles)
 
 IF (ICONV_INCLUDE_DIR AND ICONV_LIBRARIES)
   # Already in cache, be silent
@@ -27,7 +27,7 @@ IF (_ICONV_FOUND)
   SET (CMAKE_REQUIRED_LIBRARIES_PREVIOUS ${CMAKE_REQUIRED_LIBRARIES})
   SET (CMAKE_REQUIRED_INCLUDES ${ICONV_INCLUDE_DIR})
   SET (CMAKE_REQUIRED_LIBRARIES ${ICONV_LIBRARIES})
-  CHECK_CXX_SOURCE_COMPILES ("
+  CHECK_C_SOURCE_COMPILES ("
   #include <iconv.h>
   int main(){
     iconv_t conv = 0;

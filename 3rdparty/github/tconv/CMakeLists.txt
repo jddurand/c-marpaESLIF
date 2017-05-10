@@ -2,7 +2,7 @@ CMAKE_MINIMUM_REQUIRED (VERSION 3.0.0 FATAL_ERROR)
 IF (NOT MYPACKAGEBOOTSTRAP_DONE)
   INCLUDE ("3rdparty/github/cmake-utils/cmake/MyPackageBootstrap.cmake")
 ENDIF ()
-MYPACKAGESTART (tconv 1 0 32)
+MYPACKAGESTART (tconv 1 0 33)
 
 ###########
 # Library #
@@ -106,6 +106,8 @@ IF (NOT ICONV_FOUND)
     SET (TCONV_HAVE_ICONV 1)
     LIST (APPEND libtconv_src "${3RDPARTY_OUTPUT_PATH}/winiconv/win_iconv.c")
     LIST (APPEND libtconv_inc "${3RDPARTY_OUTPUT_PATH}/winiconv")
+    SET (ICONV_INCLUDE_DIR "${3RDPARTY_OUTPUT_PATH}/winiconv")
+    SET (ICONV_LINK_FLAGS)
     SET (ICONV_SECOND_ARGUMENT_IS_CONST TRUE)
   ENDIF ()
   SET (WINICONV TRUE)
@@ -114,6 +116,7 @@ ELSE ()
   SET (WINICONV FALSE)
 ENDIF ()
 IF (ICONV_FOUND)
+  FIND_PACKAGE (IconvCapabilities)
   SET (iconv_src src/tconv/convert/iconv.c)
   LIST (APPEND libtconv_src ${iconv_src})
   IF (NOT ("${ICONV_INCLUDE_DIRS}" STREQUAL ""))
@@ -145,11 +148,10 @@ IF (NOT STRNICMP)
   ENDIF ()
 ENDIF ()
 IF (NOT STRNICMP)
-  MESSGE ( STATUS "_strnicmp, strnicmp, or strncasecmp not found - falling back to internal version _tconv_strnicmp" )
+  MESSGE ( STATUS "_strnicmp, strnicmp, nor strncasecmp found - falling back to internal version _tconv_strnicmp" )
   SET (STRNICMP _tconv_strnicmp)
 ENDIF ( )
 ADD_DEFINITIONS (-DC_STRNICMP=${STRNICMP} )
-
 
 MYPACKAGELIBRARY(
   ${CMAKE_CURRENT_SOURCE_DIR}/include/tconv_config.h.in
