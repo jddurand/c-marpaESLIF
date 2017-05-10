@@ -2,7 +2,7 @@ CMAKE_MINIMUM_REQUIRED (VERSION 3.0.0 FATAL_ERROR)
 IF (NOT MYPACKAGEBOOTSTRAP_DONE)
   INCLUDE ("3rdparty/github/cmake-utils/cmake/MyPackageBootstrap.cmake")
 ENDIF ()
-MYPACKAGESTART (tconv 1 0 32)
+MYPACKAGESTART (tconv 1 0 33)
 
 ###########
 # Library #
@@ -148,7 +148,7 @@ IF (NOT STRNICMP)
   ENDIF ()
 ENDIF ()
 IF (NOT STRNICMP)
-  MESSGE ( STATUS "_strnicmp, strnicmp, or strncasecmp not found - falling back to internal version _tconv_strnicmp" )
+  MESSGE ( STATUS "_strnicmp, strnicmp, nor strncasecmp found - falling back to internal version _tconv_strnicmp" )
   SET (STRNICMP _tconv_strnicmp)
 ENDIF ( )
 ADD_DEFINITIONS (-DC_STRNICMP=${STRNICMP} )

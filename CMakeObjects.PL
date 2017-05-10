@@ -131,39 +131,22 @@ my $twobytes_ko = "\"\\xa0\\xa1\"";
 
 $ac->define_var('TCONV_HAVE_ICONV', 1);
 
-print "...\n";
-print "... Please ignore the next lines, until we say \"Checking for ...\"\n";
-print "...\n";
+print "\n";
+print "..........................................................\n";
+print " Checking iconv capability - please ignore the next lines \n";
+print "..........................................................\n";
+print "\n";
 
-my $iconv_can_same_charsets      = get_iconv_capability("UTF-8",           "UTF-8", $twobytes_ok, $winiconv, $extra_compiler_flags, @additional_includes);
-my $iconv_can_translit           = get_iconv_capability("ASCII//TRANSLIT", "UTF-8", $twobytes_ok, $winiconv, $extra_compiler_flags, @additional_includes);
-my $iconv_without_translit_is_ok = get_iconv_capability("ASCII",           "UTF-8", $twobytes_ok, $winiconv, $extra_compiler_flags, @additional_includes);
-my $iconv_can_ignore             = $iconv_can_same_charsets ?
-  get_iconv_capability("ASCII//IGNORE", "ASCII", $twobytes_ko, $winiconv, $extra_compiler_flags, @additional_includes) :
-  get_iconv_capability("ASCII//IGNORE", "UTF-8", $twobytes_ko, $winiconv, $extra_compiler_flags, @additional_includes) ;
-my $iconv_without_ignore_is_ok   = $iconv_can_same_charsets ?
-  get_iconv_capability("ASCII",         "ASCII", $twobytes_ko, $winiconv, $extra_compiler_flags, @additional_includes) :
-  get_iconv_capability("ASCII",         "UTF-8", $twobytes_ko, $winiconv, $extra_compiler_flags, @additional_includes) ;
+my $iconv_can_translit = get_iconv_capability("ASCII//TRANSLIT", "UTF-8", $twobytes_ok, $winiconv, $extra_compiler_flags, @additional_includes);
+my $iconv_can_ignore   = get_iconv_capability("ASCII//IGNORE",   "UTF-8", $twobytes_ok, $winiconv, $extra_compiler_flags, @additional_includes);
 
-$ac->msg_checking('ICONV_CAN_SAME_CHARSETS');
-if ($iconv_can_same_charsets) {
-  $ac->define_var('ICONV_CAN_SAME_CHARSETS', 1);
-  $ac->msg_result('yes');
-} else {
-  $ac->msg_result('no');
-}
+print "\n";
+print " The iconv we are using triggered the following settings:\n";
+print "\n";
 
 $ac->msg_checking('ICONV_CAN_TRANSLIT');
 if ($iconv_can_translit) {
   $ac->define_var('ICONV_CAN_TRANSLIT', 1);
-  $ac->msg_result('yes');
-} else {
-  $ac->msg_result('no');
-}
-
-$ac->msg_checking('ICONV_WITHOUT_TRANSLIT_IS_OK');
-if ($iconv_without_translit_is_ok) {
-  $ac->define_var('ICONV_WITHOUT_TRANSLIT_IS_OK', 1);
   $ac->msg_result('yes');
 } else {
   $ac->msg_result('no');
@@ -177,17 +160,13 @@ if ($iconv_can_ignore) {
   $ac->msg_result('no');
 }
 
-$ac->msg_checking('ICONV_WITHOUT_IGNORE_IS_OK');
-if ($iconv_without_ignore_is_ok) {
-  $ac->define_var('ICONV_WITHOUT_IGNORE_IS_OK', 1);
-  $ac->msg_result('yes');
-} else {
-  $ac->msg_result('no');
-}
+print "\n";
+print "..........................................................\n";
+print " Checking iconv capability done                           \n";
+print "..........................................................\n";
+print "\n";
 
-#
-# We want to check iconv capabilities
-#
+$ac->write_config_h(File::Spec->catfile('output', 'include', 'tconv', 'config_autoconf.h'));
 
 # --------------------------------------------------------------------------------
 # getopt is only used for the tconv binary - not needed from library point of view
@@ -401,13 +380,14 @@ sub get_iconv_capability {
   #include <stdlib.h>
   #include <stdio.h>
   #include <stddef.h>
+  #include <string.h>
   $include_winiconv
   #include <iconv.h>
 SOURCE_HEADERS
   $source .= q'
   int main(){
     iconv_t  conv;
-    char    *src = "123\xe2\x82\xac" "456" ';
+    char    *src = "123456" ';
   $source .= ${twobytes};
   my $data = $DATA;
   $data =~ s/__TO__/$tocharset/;
@@ -449,7 +429,7 @@ __DATA__
     char     dst[1024];
     char    *inp = src;                             /* Input moving pointer */
     char    *outp = dst;                            /* Output moving pointer */
-    size_t   inl = 11;                              /* In UTF8: 9 bytes OK, 2 bytes that the caller is setting */
+    size_t   inl = 8;                               /* 6 + 2 */
     size_t   outl = 1024;                           /* 1024 bytes available in output buffer */
 
     memset((void *) dst, '\0', 1024);
