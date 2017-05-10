@@ -2061,7 +2061,7 @@ eventOnOff(Perl_MarpaX_ESLIF_Recognizer, symbol, eventTypes, onOff)
   bool                    onOff;
 CODE:
   static const char     *funcs = "MarpaX::ESLIF::Recognizer::eventOnOff";
-  SSize_t                avsizel = av_len(eventTypes);
+  SSize_t                avsizel = av_len(eventTypes) + 1;
   SSize_t                aviteratol;
   marpaESLIFEventType_t  eventSeti  = MARPAESLIF_EVENTTYPE_NONE;
 
@@ -2093,7 +2093,7 @@ CODE:
     }
   }
 
-  if (! marpaESLIFRecognizer_event_onoffb(Perl_MarpaX_ESLIF_Recognizer->marpaESLIFRecognizerp, (char *) symbol, eventSeti, onOff ? 1 : 0)) {
+  if (! marpaESLIFRecognizer_event_onoffb(Perl_MarpaX_ESLIF_Recognizer->marpaESLIFRecognizerp, symbol, eventSeti, onOff ? 1 : 0)) {
     MARPAESLIF_CROAKF("marpaESLIFRecognizer_event_onoffb failure, %s", strerror(errno));
   }
 
