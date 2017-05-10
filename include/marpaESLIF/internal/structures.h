@@ -158,8 +158,6 @@ struct marpaESLIFSymbol {
   char                        *lookupMetas;            /* Referenced lookup meta name - shallow pointer */
   int                          lookupResolvedLeveli;   /* Referenced grammar level */
   int                          priorityi;              /* Symbol priority */
-  char                        *actions;                /* Action */
-  unsigned int                 nbupdatei;              /* Number of updates - used in grammar ESLIF actions */
   genericStack_t               _nullableRuleStack;     /* Used during validation, to determine nullable semantics */
   genericStack_t              *nullableRuleStackp;     /* Pointer to _nullableRuleStack */
   char                        *nullableActions;        /* Nullable semantic */
