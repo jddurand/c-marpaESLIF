@@ -2976,8 +2976,6 @@ static inline marpaESLIF_symbol_t *_marpaESLIF_symbol_newp(marpaESLIF_t *marpaES
   symbolp->lookupMetas            = NULL;
   symbolp->lookupResolvedLeveli   = 0; /* This will be overwriten by _marpaESLIFGrammar_validateb() and used only when symbol is a lexeme from another grammar */
   symbolp->priorityi              = 0; /* Default priority is 0 */
-  symbolp->actions                = NULL;
-  symbolp->nbupdatei              = 0;
   symbolp->nullableRuleStackp     = NULL; /* Take care, this is a pointer to an stack inside symbol structure */
   symbolp->nullableActions        = NULL;
   symbolp->propertyBitSet         = 0; /* Filled by grammar validation */
@@ -3045,9 +3043,6 @@ static inline void _marpaESLIF_symbol_freev(marpaESLIF_symbol_t *symbolp)
     }
     if (symbolp->discardEvents) {
       free(symbolp->discardEvents);
-    }
-    if (symbolp->actions != NULL) {
-      free(symbolp->actions);
     }
     GENERICSTACK_RESET(symbolp->nullableRuleStackp); /* Take care, this is a pointer to stack internal to symbol structure */
     GENERICSTACK_RESET(symbolp->lhsRuleStackp); /* Take care, this is a pointer to stack internal to symbol structure */
