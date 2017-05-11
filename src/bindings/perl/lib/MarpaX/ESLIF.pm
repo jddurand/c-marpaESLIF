@@ -67,7 +67,7 @@ This class and its derivatives are thread-safe. Although there can be many ESLIF
 
 Returns an instance of MarpaX::ESLIF, noted C<$eslif> below.
 
-C<$loggerInterface> is an optional parameter that, when set, must be an object instance that can do the methods documented in L<MarpaX::ESLIF::Logger::Interface>.
+C<$loggerInterface> is an optional parameter that, when its exists, must be an object instance that can do the methods documented in L<MarpaX::ESLIF::Logger::Interface>, or C<undef>.
 
 An example of logging implementation can be a L<Log::Any> adapter.
 
