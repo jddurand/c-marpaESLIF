@@ -204,9 +204,9 @@ struct marpaESLIF_grammar {
   marpaWrapperGrammar_t *marpaWrapperGrammarDiscardp;        /* Grammar implementation at :discard */
   marpaWrapperGrammar_t *marpaWrapperGrammarDiscardNoEventp; /* Grammar implementation at :discard forcing no event */
   marpaESLIF_symbol_t   *discardp;                           /* Discard symbol, used at grammar validation */
-  genericStack_t         _symbolStack;                       /* Stack of symbols */
+  genericStack_t         _symbolStackp;                      /* Stack of symbols */
   genericStack_t        *symbolStackp;                       /* Pointer to stack of symbols */
-  genericStack_t         _ruleStack;                         /* Stack of rules */
+  genericStack_t         _ruleStackp;                        /* Stack of rules */
   genericStack_t        *ruleStackp;                         /* Pointer to stack of rules */
   char                  *defaultSymbolActions;               /* Default action for symbols */
   char                  *defaultRuleActions;                 /* Default action for rules */
