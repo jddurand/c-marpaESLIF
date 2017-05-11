@@ -2384,7 +2384,7 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_grammar_newp(marpaESLIFGrammar_t
     goto err;
   }
 
-  grammarp->symbolStackp = &(grammarp->_symbolStackp);
+  grammarp->symbolStackp = &(grammarp->_symbolStack);
   GENERICSTACK_INIT(grammarp->symbolStackp);
   if (GENERICSTACK_ERROR(grammarp->symbolStackp)) {
     MARPAESLIF_ERRORF(marpaESLIFp, "symbolStackp initialization failure, %s", strerror(errno));
@@ -2392,7 +2392,7 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_grammar_newp(marpaESLIFGrammar_t
     goto err;
   }
 
-  grammarp->ruleStackp = &(grammarp->_ruleStackp);
+  grammarp->ruleStackp = &(grammarp->_ruleStack);
   GENERICSTACK_INIT(grammarp->ruleStackp);
   if (GENERICSTACK_ERROR(grammarp->ruleStackp)) {
     MARPAESLIF_ERRORF(marpaESLIFp, "ruleStackp initialization failure, %s", strerror(errno));
