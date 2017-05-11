@@ -86,12 +86,19 @@
 /* Get a symbol from stack - with an extra check when not in production mode                    */
 /* -------------------------------------------------------------------------------------------- */
 #ifndef MARPAESLIF_NTRACE
-#define MARPAESLIF_GET_SYMBOL_FROM_STACK(marpaESLIFp, symbolp, symbolStackp, symboli) \
-  symbolp = (marpaESLIF_symbol_t *) GENERICSTACK_GET_PTR(symbolStackp, symboli)
+#define MARPAESLIF_GET_SYMBOL_FROM_STACK(marpaESLIFp, symbolp, symbolStackp, symboli) do { \
+    if (symboli < 0) {                                                  \
+      MARPAESLIF_ERRORF(marpaESLIFp, "Symbol no %d is unknown from symbolStackp", symboli); \
+      errno = EINVAL;                                                   \
+      goto err;                                                         \
+    }                                                                   \
+    symbolp = (marpaESLIF_symbol_t *) GENERICSTACK_GET_PTR(symbolStackp, symboli); \
+  } while (0)
 #else
 #define MARPAESLIF_GET_SYMBOL_FROM_STACK(marpaESLIFp, symbolp, symbolStackp, symboli) do { \
-    if (! GENERICSTACK_IS_PTR(symbolStackp, symboli)) {                 \
+    if ((symboli < 0) || (! GENERICSTACK_IS_PTR(symbolStackp, symboli))) { \
       MARPAESLIF_ERRORF(marpaESLIFp, "Symbol no %d is unknown from symbolStackp", symboli); \
+      errno = EINVAL;                                                   \
       goto err;                                                         \
     }                                                                   \
     symbolp = (marpaESLIF_symbol_t *) GENERICSTACK_GET_PTR(symbolStackp, symboli); \
@@ -102,12 +109,19 @@
 /* Get a rule from stack - with an extra check when not in production mode                      */
 /* -------------------------------------------------------------------------------------------- */
 #ifndef MARPAESLIF_NTRACE
-#define MARPAESLIF_GET_RULE_FROM_STACK(marpaESLIFp, rulep, ruleStackp, rulei) \
-  rulep = (marpaESLIF_rule_t *) GENERICSTACK_GET_PTR(ruleStackp, rulei)
+#define MARPAESLIF_GET_RULE_FROM_STACK(marpaESLIFp, rulep, ruleStackp, rulei) do { \
+    if (rulei < 0) {                                                    \
+      MARPAESLIF_ERRORF(marpaESLIFp, "Rule no %d is unknown from ruleStackp", rulei); \
+      errno = EINVAL;                                                   \
+      goto err;                                                         \
+    }                                                                   \
+    rulep = (marpaESLIF_rule_t *) GENERICSTACK_GET_PTR(ruleStackp, rulei); \
+  } while (0)
 #else
 #define MARPAESLIF_GET_RULE_FROM_STACK(marpaESLIFp, rulep, ruleStackp, rulei) do { \
-    if (! GENERICSTACK_IS_PTR(ruleStackp, rulei)) {                 \
+    if ((rulei < 0) || (! GENERICSTACK_IS_PTR(ruleStackp, rulei))) {    \
       MARPAESLIF_ERRORF(marpaESLIFp, "Rule no %d is unknown from ruleStackp", rulei); \
+      errno = EINVAL;                                                   \
       goto err;                                                         \
     }                                                                   \
     rulep = (marpaESLIF_rule_t *) GENERICSTACK_GET_PTR(ruleStackp, rulei); \
