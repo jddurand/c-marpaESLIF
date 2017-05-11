@@ -15,19 +15,38 @@
 #define MARPAESLIF_VALUEERRORPROGRESSREPORT 0 /* Left in the code, although not needed IMHO */
 #endif
 
-#ifndef MARPAESLIF_VALUECHECK_IF_LEXEME_MODE
-#define MARPAESLIF_VALUECHECK_IF_LEXEME_MODE 0 /* Check marpaESLIFValueResult */
-#endif
-
 #ifndef MARPAESLIF_HASH_SIZE
 #define MARPAESLIF_HASH_SIZE 128 /* Subjective number */
 #endif
 
+/* -------------------------------------------------------------------------------------------- */
+/* Check if a marpaESLIFValueResult is a well-formed lexeme                                     */
+/* -------------------------------------------------------------------------------------------- */
+#define MARPAESLIF_VALUECHECK_IF_LEXEME_MODE(marpaESLIFp, marpaESLIFValueResult) do { \
+    if (marpaESLIFValueResult.type != MARPAESLIF_VALUE_TYPE_ARRAY) {    \
+      MARPAESLIF_ERRORF(marpaESLIFp, "marpaESLIFValueResult.type is %d instead of %d (MARPAESLIF_VALUE_TYPE_ARRAY)", marpaESLIFValueResult.type, MARPAESLIF_VALUE_TYPE_ARRAY); \
+      goto err;                                                         \
+    }                                                                   \
+    if ((marpaESLIFValueResult.u.p == NULL) || (marpaESLIFValueResult.sizel <= 0)) { \
+      MARPAESLIF_ERRORF(marpaESLIFp, "marpaESLIFValueResult array is {%p,%ld}", marpaESLIFValueResult.u.p, (unsigned long) marpaESLIFValueResult.sizel); \
+      goto err;                                                         \
+    }                                                                   \
+  } while (0)
+
+/* -------------------------------------------------------------------------------------------- */
+/* Exhaustion event name is hardcoded                                                           */
+/* -------------------------------------------------------------------------------------------- */
 #define MARPAESLIF_EVENTTYPE_EXHAUSTED_NAME "'exhauted'"
+
+/* -------------------------------------------------------------------------------------------- */
+/* Util macros on symbol                                                                        */
+/* -------------------------------------------------------------------------------------------- */
 #define MARPAESLIF_IS_LEXEME(symbolp)  (((symbolp)->type == MARPAESLIF_SYMBOL_TYPE_META) && (! (symbolp)->lhsb))
 #define MARPAESLIF_IS_DISCARD(symbolp) (symbolp)->discardb
 
+/* -------------------------------------------------------------------------------------------- */
 /* In theory, when rci is MARPAESLIF_MATCH_OK, marpaESLIFValueResult.type must be a valid ARRAY */
+/* -------------------------------------------------------------------------------------------- */
 #define _MARPAESLIF_CHECK_MATCH_RESULT(funcs, marpaESLIFRecognizerp, symbolp, rci, marpaESLIFValueResult) do { \
     if (rci == MARPAESLIF_MATCH_OK) {                                   \
       if (marpaESLIFValueResult.type != MARPAESLIF_VALUE_TYPE_ARRAY) {  \
@@ -53,13 +72,53 @@
 #define MARPAESLIF_CHECK_MATCH_RESULT(funcs, marpaESLIFRecognizerp, symbolp, rci, marpaESLIFValueResult)
 #endif
 
+/* -------------------------------------------------------------------------------------------- */
+/* Reset recognizer events                                                                      */
+/* -------------------------------------------------------------------------------------------- */
 #define MARPAESLIFRECOGNIZER_RESET_EVENTS(marpaESLIFRecognizerp) (marpaESLIFRecognizerp)->eventArrayl = 0
 
-/* This macro make sure we return a multiple of (chunk) that is always at least ONE BYTE more than (size) */
+/* -------------------------------------------------------------------------------------------- */
+/* This macro makes sure we return a multiple of chunk of always at least 1 BYTE more than size */
+/* -------------------------------------------------------------------------------------------- */
 #define MARPAESLIF_CHUNKED_SIZE_UPPER(size, chunk) ((size) < (chunk)) ? (chunk) : ((1 + ((size) / (chunk))) * (chunk))
 
+/* -------------------------------------------------------------------------------------------- */
+/* Get a symbol from stack - with an extra check when not in production mode                    */
+/* -------------------------------------------------------------------------------------------- */
+#ifndef MARPAESLIF_NTRACE
+#define MARPAESLIF_GET_SYMBOL_FROM_STACK(marpaESLIFp, symbolp, symbolStackp, symboli) \
+  symbolp = (marpaESLIF_symbol_t *) GENERICSTACK_GET_PTR(symbolStackp, symboli)
+#else
+#define MARPAESLIF_GET_SYMBOL_FROM_STACK(marpaESLIFp, symbolp, symbolStackp, symboli) do { \
+    if (! GENERICSTACK_IS_PTR(symbolStackp, symboli)) {                 \
+      MARPAESLIF_ERRORF(marpaESLIFp, "Symbol no %d is unknown from symbolStackp", symboli); \
+      goto err;                                                         \
+    }                                                                   \
+    symbolp = (marpaESLIF_symbol_t *) GENERICSTACK_GET_PTR(symbolStackp, symboli); \
+  } while (0)
+#endif
+
+/* -------------------------------------------------------------------------------------------- */
+/* Get a rule from stack - with an extra check when not in production mode                      */
+/* -------------------------------------------------------------------------------------------- */
+#ifndef MARPAESLIF_NTRACE
+#define MARPAESLIF_GET_RULE_FROM_STACK(marpaESLIFp, rulep, ruleStackp, rulei) \
+  rulep = (marpaESLIF_rule_t *) GENERICSTACK_GET_PTR(ruleStackp, rulei)
+#else
+#define MARPAESLIF_GET_RULE_FROM_STACK(marpaESLIFp, rulep, ruleStackp, rulei) do { \
+    if (! GENERICSTACK_IS_PTR(ruleStackp, rulei)) {                 \
+      MARPAESLIF_ERRORF(marpaESLIFp, "Rule no %d is unknown from ruleStackp", rulei); \
+      goto err;                                                         \
+    }                                                                   \
+    rulep = (marpaESLIF_rule_t *) GENERICSTACK_GET_PTR(ruleStackp, rulei); \
+  } while (0)
+#endif
+
+/* -------------------------------------------------------------------------------------------- */
+/* For logging                                                                                  */
+/* -------------------------------------------------------------------------------------------- */
 #undef  FILENAMES
-#define FILENAMES "marpaESLIF.c" /* For logging */
+#define FILENAMES "marpaESLIF.c"
 
 typedef struct marpaESLIF_stringGenerator {
   marpaESLIF_t *marpaESLIFp;
@@ -641,21 +700,8 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
         MARPAESLIF_ERROR(marpaESLIFp, "Failed to detect all characters of terminal string");
         goto err;
       }
-#if MARPAESLIF_VALUECHECK_IF_LEXEME_MODE != 0
-      /* It is a non-sense to have a regex match returning something else but MARPAESLIF_VALUE_TYPE_ARRAY */
-      if (marpaESLIFValueResult.type != MARPAESLIF_VALUE_TYPE_ARRAY) {
-        MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "newline regex returned type %d}", marpaESLIFValueResult.type);
-        goto err;
-      }
-      /* It is a non-sense to have a match returning nothing */
-      if (marpaESLIFValueResult.u.p == NULL) {
-        MARPAESLIF_ERROR(marpaESLIFRecognizerp->marpaESLIFp, "anychar regex return NULL pointer");
-        goto err;
-      }
-      if (marpaESLIFValueResult.sizel <= 0) {
-        MARPAESLIF_ERROR(marpaESLIFRecognizerp->marpaESLIFp, "anychar regex matched zero byte");
-        goto err;
-      }
+#ifndef MARPAESLIF_NTRACE
+      MARPAESLIF_VALUECHECK_IF_LEXEME_MODE(marpaESLIFp, marpaESLIFValueResult);
 #endif
       if (! _marpaESLIFRecognizer_lexemeStack_i_setb(marpaESLIFRecognizerp, marpaESLIFRecognizerp->lexemeInputStackp, GENERICSTACK_USED(marpaESLIFRecognizerp->lexemeInputStackp), marpaESLIFValueResult.u.p, marpaESLIFValueResult.sizel)) {
         free(marpaESLIFValueResult.u.p);
@@ -824,7 +870,7 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
         }
         strings = tmps;
       }
-      strings[stringl] = '\0'; /* Make sure the string always end with NUL */
+      strings[stringl] = '\0'; /* Makes sure the string always end with NUL */
       if (asciisafeb > 0) {
         if (asciisafeb > 1) {
           sprintf(strings + strlen(strings), "\\%c", (unsigned char) codepointi);
@@ -890,21 +936,8 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
           MARPAESLIF_ERROR(marpaESLIFp, "Failed to detect all characters of terminal string");
           goto err;
         }
-#if MARPAESLIF_VALUECHECK_IF_LEXEME_MODE != 0
-        /* It is a non-sense to have a regex match returning something else but MARPAESLIF_VALUE_TYPE_ARRAY */
-        if (marpaESLIFValueResult.type != MARPAESLIF_VALUE_TYPE_ARRAY) {
-          MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "newline regex returned type %d}", marpaESLIFValueResult.type);
-          goto err;
-        }
-        /* It is a non-sense to have a match returning nothing */
-        if (marpaESLIFValueResult.u.p == NULL) {
-          MARPAESLIF_ERROR(marpaESLIFRecognizerp->marpaESLIFp, "anychar regex return NULL pointer");
-          goto err;
-        }
-        if (marpaESLIFValueResult.sizel <= 0) {
-          MARPAESLIF_ERROR(marpaESLIFRecognizerp->marpaESLIFp, "anychar regex matched zero byte");
-          goto err;
-        }
+#ifndef MARPAESLIF_NTRACE
+        MARPAESLIF_VALUECHECK_IF_LEXEME_MODE(marpaESLIFp, marpaESLIFValueResult);
 #endif
         if (! _marpaESLIFRecognizer_lexemeStack_i_setb(marpaESLIFRecognizerp, marpaESLIFRecognizerp->lexemeInputStackp, GENERICSTACK_USED(marpaESLIFRecognizerp->lexemeInputStackp), marpaESLIFValueResult.u.p, marpaESLIFValueResult.sizel)) {
           free(marpaESLIFValueResult.u.p);
@@ -1988,7 +2021,7 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
 
       /* Commit resolved level in symbol */
       symbolp->lookupResolvedLeveli = subgrammarp->leveli;
-      /* Make sure this RHS is an LHS in the sub grammar, ignoring the case where sub grammar would be current grammar */
+      /* Makes sure this RHS is an LHS in the sub grammar, ignoring the case where sub grammar would be current grammar */
       if (subgrammarp == grammarp) {
         continue;
       }
@@ -4852,7 +4885,7 @@ static inline short _marpaESLIFRecognizer_resumeb(marpaESLIFRecognizer_t *marpaE
     if (! rcb) {
       goto err;
     }
-    /* Make sure initialEvents is true once only */
+    /* Makes sure initialEvents is true once only */
     if (initialEventsb) {
       initialEventsb = 0;
     }
@@ -5110,17 +5143,8 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
     case MARPAESLIF_MATCH_FAILURE:
       break;
     case MARPAESLIF_MATCH_OK:
-#if MARPAESLIF_VALUECHECK_IF_LEXEME_MODE != 0
-      /* It is a non-sense if matchedMarpaESLIFStackTypei is not MARPAESLIF_VALUE_TYPE_ARRAY */
-      if (marpaESLIFValueResult.type != MARPAESLIF_VALUE_TYPE_ARRAY) {
-        MARPAESLIF_ERRORF(marpaESLIFp, "marpaESLIFValueResult.type is %d instead of %d (MARPAESLIF_VALUE_TYPE_ARRAY)", marpaESLIFValueResult.type, MARPAESLIF_VALUE_TYPE_ARRAY);
-        goto err;
-      }
-      /* It is a non-sense that we matched a lexeme a null size */
-      if ((marpaESLIFValueResult.u.p == NULL) || (marpaESLIFValueResult.sizel <= 0)) {
-        MARPAESLIF_ERRORF(marpaESLIFp, "symbol matcher returned {%p, %ld}", marpaESLIFValueResult.u.p, marpaESLIFValueResult.sizel);
-        goto err;
-      }
+#ifndef MARPAESLIF_NTRACE
+      MARPAESLIF_VALUECHECK_IF_LEXEME_MODE(marpaESLIFp, marpaESLIFValueResult);
 #endif
       /* Note that by definition marpaESLIFValueResult.u.p is the result of ::concat, i.e. it always have a hiden NUL byte */
       alternative.symbolp        = symbolp;
@@ -5170,17 +5194,8 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
                                     &marpaESLIFValueResult,
                                     0, /* exceptionb */
                                     0 /* minExceptionSizel */)) {
-#if MARPAESLIF_VALUECHECK_IF_LEXEME_MODE != 0
-        /* It is a non-sense if matchedMarpaESLIFStackTypei is not MARPAESLIF_VALUE_TYPE_ARRAY */
-        if (marpaESLIFValueResult.type != MARPAESLIF_VALUE_TYPE_ARRAY) {
-          MARPAESLIF_ERRORF(marpaESLIFp, "marpaESLIFValueResult.type is %d instead of %d (MARPAESLIF_VALUE_TYPE_ARRAY)", marpaESLIFValueResult.type, MARPAESLIF_VALUE_TYPE_ARRAY);
-          goto err;
-        }
-        /* So ptr must not be NULL nor size <= 0 */
-        if ((marpaESLIFValueResult.u.p == NULL) || (marpaESLIFValueResult.sizel <= 0)) {
-          MARPAESLIF_ERRORF(marpaESLIFp, "Discard matcher returned {%p, %ld}", marpaESLIFValueResult.u.p, marpaESLIFValueResult.sizel);
-          goto err;
-        }
+#ifndef MARPAESLIF_NTRACE
+        MARPAESLIF_VALUECHECK_IF_LEXEME_MODE(marpaESLIFp, marpaESLIFValueResult);
 #endif
         /* New line processing, etc... */
         if (! _marpaESLIFRecognizer_matchPostProcessingb(marpaESLIFRecognizerp, marpaESLIFValueResult.sizel)) {
@@ -5330,17 +5345,8 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
                                   &marpaESLIFValueResult,
                                   0, /* exceptionb */
                                   0 /* minExceptionSizel */)) {
-#if MARPAESLIF_VALUECHECK_IF_LEXEME_MODE != 0
-      /* It is a non-sense if matchedMarpaESLIFStackTypei is not MARPAESLIF_VALUE_TYPE_ARRAY */
-      if (marpaESLIFValueResult.type != MARPAESLIF_VALUE_TYPE_ARRAY) {
-        MARPAESLIF_ERRORF(marpaESLIFp, "marpaESLIFValueResult.type is %d instead of %d (MARPAESLIF_VALUE_TYPE_ARRAY)", marpaESLIFValueResult.type, MARPAESLIF_VALUE_TYPE_ARRAY);
-        goto err;
-      }
-      /* So ptr must not be NULL nor size <= 0 */
-      if ((marpaESLIFValueResult.u.p == NULL) || (marpaESLIFValueResult.sizel <= 0)) {
-        MARPAESLIF_ERRORF(marpaESLIFp, "Discard matcher returned {%p, %ld}", marpaESLIFValueResult.u.p, marpaESLIFValueResult.sizel);
-        goto err;
-      }
+#ifndef MARPAESLIF_NTRACE
+      MARPAESLIF_VALUECHECK_IF_LEXEME_MODE(marpaESLIFp, marpaESLIFValueResult);
 #endif
       if (marpaESLIFValueResult.sizel > maxMatchedl) {
         /* New line processing, etc... */
@@ -6215,7 +6221,7 @@ short marpaESLIFRecognizer_lexeme_expectedb(marpaESLIFRecognizer_t *marpaESLIFRe
     lexemesArrayp[nLexemel - 1] = symbolp->u.metap->asciinames;
   }
 
-  /* Make sure we reset the others - not needed but more beautiful from debugger perspective -; */
+  /* Makes sure we reset the others - not needed but more beautiful from debugger perspective -; */
   for (symboll = nLexemel; symboll < lexemesArrayAllocl; symboll++) {
     lexemesArrayp[symboll] = NULL;
   }
@@ -7304,15 +7310,8 @@ static inline short _marpaESLIFGrammar_parseb(marpaESLIFGrammar_t *marpaESLIFGra
     if (marpaESLIFValue_valueb(marpaESLIFValuep, &marpaESLIFValueResult) <= 0) {
       goto err;
     }
-#if MARPAESLIF_VALUECHECK_IF_LEXEME_MODE != 0
-    if (marpaESLIFValueResult.type != MARPAESLIF_VALUE_TYPE_ARRAY) {
-      MARPAESLIF_ERRORF(marpaESLIFp, "marpaESLIFValueResult.type is not ARRAY (internal type: %d)", marpaESLIFValueResult.type);
-      goto err;
-    }
-    if ((marpaESLIFValueResult.u.p == NULL) || (marpaESLIFValueResult.sizel <= 0)) {
-      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Lexeme valuation returned {%d,%ld}", marpaESLIFValueResult.u.p, (unsigned long) marpaESLIFValueResult.sizel);
-      goto err;
-    }
+#ifndef MARPAESLIF_NTRACE
+    MARPAESLIF_VALUECHECK_IF_LEXEME_MODE(marpaESLIFp, marpaESLIFValueResult);
 #endif
     if (marpaESLIFValueResultp != NULL) {
       *marpaESLIFValueResultp = marpaESLIFValueResult;
@@ -9420,22 +9419,8 @@ static inline short _marpaESLIFRecognizer_matchPostProcessingb(marpaESLIFRecogni
       if (rci != MARPAESLIF_MATCH_OK) {
         break;
       }
-#if MARPAESLIF_VALUECHECK_IF_LEXEME_MODE != 0
-      /* It is a non-sense to have a regex match returning something else but MARPAESLIF_VALUE_TYPE_ARRAY */
-      if (marpaESLIFValueResult.type != MARPAESLIF_VALUE_TYPE_ARRAY) {
-        MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "newline regex returned type %d}", marpaESLIFValueResult.type);
-        goto err;
-      }
-      /* It is a non-sense to have a match returning nothing */
-      if (marpaESLIFValueResult.u.p == NULL) {
-        MARPAESLIF_ERROR(marpaESLIFRecognizerp->marpaESLIFp, "newline regex return NULL pointer");
-        goto err;
-      }
-      /* It is a non-sense to have a match returning nothing */
-      if (marpaESLIFValueResult.sizel <= 0) {
-        MARPAESLIF_ERROR(marpaESLIFRecognizerp->marpaESLIFp, "newline regex matched zero byte");
-        goto err;
-      }
+#ifndef MARPAESLIF_NTRACE
+    MARPAESLIF_VALUECHECK_IF_LEXEME_MODE(marpaESLIFRecognizerp->marpaESLIFp, marpaESLIFValueResult);
 #endif
       linep += marpaESLIFValueResult.sizel;
       linel -= marpaESLIFValueResult.sizel;
@@ -9462,22 +9447,8 @@ static inline short _marpaESLIFRecognizer_matchPostProcessingb(marpaESLIFRecogni
         if (rci != MARPAESLIF_MATCH_OK) {
           break;
         }
-#if MARPAESLIF_VALUECHECK_IF_LEXEME_MODE != 0
-        /* It is a non-sense to have a regex match returning something else but MARPAESLIF_VALUE_TYPE_ARRAY */
-        if (marpaESLIFValueResult.type != MARPAESLIF_VALUE_TYPE_ARRAY) {
-          MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "newline regex returned type %d}", marpaESLIFValueResult.type);
-          goto err;
-        }
-        /* It is a non-sense to have a match returning nothing */
-        if (marpaESLIFValueResult.u.p == NULL) {
-          MARPAESLIF_ERROR(marpaESLIFRecognizerp->marpaESLIFp, "newline regex return NULL pointer");
-          goto err;
-        }
-        /* It is a non-sense to have a match returning nothing */
-        if (marpaESLIFValueResult.sizel <= 0) {
-          MARPAESLIF_ERROR(marpaESLIFRecognizerp->marpaESLIFp, "newline regex matched zero byte");
-          goto err;
-        }
+#ifndef MARPAESLIF_NTRACE
+        MARPAESLIF_VALUECHECK_IF_LEXEME_MODE(marpaESLIFRecognizerp->marpaESLIFp, marpaESLIFValueResult);
 #endif
         linep += marpaESLIFValueResult.sizel;
         linel -= marpaESLIFValueResult.sizel;
@@ -10158,22 +10129,8 @@ static inline short _marpaESLIFRecognizer_start_charconvp(marpaESLIFRecognizer_t
     goto err;
   }
   if (rci == MARPAESLIF_MATCH_OK) {
-#if MARPAESLIF_VALUECHECK_IF_LEXEME_MODE != 0
-    /* It is a non-sense to have a regex match returning something else but MARPAESLIF_VALUE_TYPE_ARRAY */
-    if (marpaESLIFValueResult.type != MARPAESLIF_VALUE_TYPE_ARRAY) {
-      MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "newline regex returned type %d}", marpaESLIFValueResult.type);
-      goto err;
-    }
-    /* It is a non-sense to have a match returning nothing */
-    if (marpaESLIFValueResult.u.p == NULL) {
-      MARPAESLIF_ERROR(marpaESLIFRecognizerp->marpaESLIFp, "newline regex return NULL pointer");
-      goto err;
-    }
-    /* It is a non-sense to have a match returning nothing */
-    if (marpaESLIFValueResult.sizel <= 0) {
-      MARPAESLIF_ERROR(marpaESLIFRecognizerp->marpaESLIFp, "newline regex matched zero byte");
-      goto err;
-    }
+#ifndef MARPAESLIF_NTRACE
+    MARPAESLIF_VALUECHECK_IF_LEXEME_MODE(marpaESLIFRecognizerp->marpaESLIFp, marpaESLIFValueResult);
 #endif
     utf8withoutboms = utf8s + marpaESLIFValueResult.sizel;
     utf8withoutboml = utf8l - marpaESLIFValueResult.sizel;
@@ -11267,7 +11224,7 @@ static inline short _marpaESLIFValue_stack_freeb(marpaESLIFValue_t *marpaESLIFVa
   rcb = 1;
   goto done;
  err:
-  /* Make sure all pointers are NULL anyway */
+  /* Makes sure all pointers are NULL anyway */
   if (marpaESLIFValuep != NULL) {
     marpaESLIFValuep->valueResultStackp = NULL;
   }
