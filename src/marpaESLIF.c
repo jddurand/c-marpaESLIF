@@ -2329,7 +2329,6 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_grammar_newp(marpaESLIFGrammar_t
   }
 
   grammarp->marpaESLIFGrammarp                 = marpaESLIFGrammarp;
-  grammarp->selfp                              = NULL;
   grammarp->leveli                             = leveli;
   grammarp->descp                              = NULL;
   grammarp->descautob                          = 0;
@@ -2425,7 +2424,6 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_grammar_newp(marpaESLIFGrammar_t
     }
   }
 
-  grammarp->selfp = grammarp;
   goto done;
 
  err:
