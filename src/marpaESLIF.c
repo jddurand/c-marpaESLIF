@@ -254,9 +254,9 @@ static inline void                   _marpaESLIFGrammar_freev(marpaESLIFGrammar_
 static inline void                   _marpaESLIFGrammar_grammarStack_freev(marpaESLIFGrammar_t *marpaESLIFGrammarp, genericStack_t *grammarStackp);
 static        char                  *_marpaESLIFGrammar_symbolDescriptionCallback(void *userDatavp, int symboli);
 static        short                  _marpaESLIFGrammar_symbolOptionSetterInitb(void *userDatavp, int symboli, marpaWrapperGrammarSymbolOption_t *marpaWrapperGrammarSymbolOptionp);
-static        short                  _marpaESLIFGrammar_symbolOptionSetterDiscardb(void *userDatavp, int symboli, marpaWrapperGrammarSymbolOption_t *marpaWrapperGrammarSymbolOptionp);
-static        short                  _marpaESLIFGrammar_symbolOptionSetterNoEventb(void *userDatavp, int symboli, marpaWrapperGrammarSymbolOption_t *marpaWrapperGrammarSymbolOptionp);
-static        short                  _marpaESLIFGrammar_symbolOptionSetterEndEventb(void *userDatavp, int symboli, marpaWrapperGrammarSymbolOption_t *marpaWrapperGrammarSymbolOptionp);
+static        short                  _marpaESLIFGrammar_symbolOptionSetterDiscardAndInternalb(void *userDatavp, int symboli, marpaWrapperGrammarSymbolOption_t *marpaWrapperGrammarSymbolOptionp);
+static        short                  _marpaESLIFGrammar_symbolOptionSetterInternalb(void *userDatavp, int symboli, marpaWrapperGrammarSymbolOption_t *marpaWrapperGrammarSymbolOptionp);
+static        short                  _marpaESLIFGrammar_symbolOptionSetterEndAndInternalb(void *userDatavp, int symboli, marpaWrapperGrammarSymbolOption_t *marpaWrapperGrammarSymbolOptionp);
 static        short                  _marpaESLIFGrammar_grammarOptionSetterNoLoggerb(void *userDatavp, marpaWrapperGrammarOption_t *marpaWrapperGrammarOptionp);
 static inline void                   _marpaESLIF_rule_createshowv(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, marpaESLIF_rule_t *rulep, char *asciishows, size_t *asciishowlp);
 static inline void                   _marpaESLIF_grammar_createshowv(marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaESLIF_grammar_t *grammarp, char *asciishows, size_t *asciishowlp);
@@ -1619,7 +1619,7 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
 
     /* Same but with no event */
     marpaWrapperGrammarCloneOption.grammarOptionSetterp = NULL;
-    marpaWrapperGrammarCloneOption.symbolOptionSetterp = _marpaESLIFGrammar_symbolOptionSetterNoEventb;
+    marpaWrapperGrammarCloneOption.symbolOptionSetterp = _marpaESLIFGrammar_symbolOptionSetterInternalb;
     marpaWrapperGrammarClonep = marpaWrapperGrammar_clonep(grammarp->marpaWrapperGrammarStartp, &marpaWrapperGrammarCloneOption);
     if (marpaWrapperGrammarClonep == NULL) {
         MARPAESLIF_ERRORF(marpaESLIFp, "Grammar level %d (%s): cloning failure", grammari, grammarp->descp->asciis);
@@ -1733,7 +1733,7 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
       marpaESLIF_cloneContext.forcedEndEventi = -1;
       /* Clone for the discard mode at grammar level */
       marpaWrapperGrammarCloneOption.grammarOptionSetterp = _marpaESLIFGrammar_grammarOptionSetterNoLoggerb;
-      marpaWrapperGrammarCloneOption.symbolOptionSetterp  = _marpaESLIFGrammar_symbolOptionSetterDiscardb;
+      marpaWrapperGrammarCloneOption.symbolOptionSetterp  = _marpaESLIFGrammar_symbolOptionSetterDiscardAndInternalb;
       marpaWrapperGrammarClonep = marpaWrapperGrammar_clonep(grammarp->marpaWrapperGrammarStartp, &marpaWrapperGrammarCloneOption);
       if (marpaWrapperGrammarClonep == NULL) {
         MARPAESLIF_ERRORF(marpaESLIFp, "Grammar level %d (%s) at discard symbol %d <%s>: cloning failure", grammari, grammarp->descp->asciis, discardp->idi, discardp->descp->asciis);
@@ -1747,7 +1747,7 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
       marpaWrapperGrammarClonep = NULL;
       /* Same but with no event */
       marpaWrapperGrammarCloneOption.grammarOptionSetterp = _marpaESLIFGrammar_grammarOptionSetterNoLoggerb;
-      marpaWrapperGrammarCloneOption.symbolOptionSetterp  = _marpaESLIFGrammar_symbolOptionSetterNoEventb;
+      marpaWrapperGrammarCloneOption.symbolOptionSetterp  = _marpaESLIFGrammar_symbolOptionSetterInternalb;
       marpaWrapperGrammarClonep = marpaWrapperGrammar_clonep(grammarp->marpaWrapperGrammarStartp, &marpaWrapperGrammarCloneOption);
       if (marpaWrapperGrammarClonep == NULL) {
         MARPAESLIF_ERRORF(marpaESLIFp, "Grammar level %d (%s) at discard symbol %d <%s>: cloning failure", grammari, grammarp->descp->asciis, discardp->idi, discardp->descp->asciis);
@@ -1967,13 +1967,13 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
       marpaESLIF_cloneContext.grammarp = subgrammarp;
       marpaESLIF_cloneContext.forcedEndEventi = symbolp->haveExceptionb ? subSymbolp->idi : -1;
       marpaWrapperGrammarCloneOption.grammarOptionSetterp = NULL; /* _marpaESLIFGrammar_grammarOptionSetterNoLoggerb; */
-      /* The _marpaESLIFGrammar_symbolOptionSetterEndEventb exploits a vicious and internal case of marpaESLIF:
+      /* The _marpaESLIFGrammar_symbolOptionSetterEndAndInternalb exploits a vicious and internal case of marpaESLIF:
          it is setting a grammar event directly on the symbol, WITHOUT attaching a name to it.
          This cannot conflict with lexeme events on the current grammar.
          And the _marpaESLIFRecognizer_newp(), despite its noEvent parameter, is just cloning the passed grammar, and
          manage lexeme events initial state.
       */
-      marpaWrapperGrammarCloneOption.symbolOptionSetterp  = symbolp->haveExceptionb ? _marpaESLIFGrammar_symbolOptionSetterEndEventb : _marpaESLIFGrammar_symbolOptionSetterNoEventb;
+      marpaWrapperGrammarCloneOption.symbolOptionSetterp  = symbolp->haveExceptionb ? _marpaESLIFGrammar_symbolOptionSetterEndAndInternalb : _marpaESLIFGrammar_symbolOptionSetterInternalb;
       marpaWrapperGrammarClonep = marpaWrapperGrammar_clonep(subgrammarp->marpaWrapperGrammarStartp, &marpaWrapperGrammarCloneOption);
       if (marpaWrapperGrammarClonep == NULL) {
         goto err;
@@ -8214,10 +8214,10 @@ static char *_marpaESLIFGrammar_symbolDescriptionCallback(void *userDatavp, int 
 }
 
 /*****************************************************************************/
- static short _marpaESLIFGrammar_symbolOptionSetterNoEventb(void *userDatavp, int symboli, marpaWrapperGrammarSymbolOption_t *marpaWrapperGrammarSymbolOptionp)
+ static short _marpaESLIFGrammar_symbolOptionSetterInternalb(void *userDatavp, int symboli, marpaWrapperGrammarSymbolOption_t *marpaWrapperGrammarSymbolOptionp)
 /*****************************************************************************/
 {
-  static const char         *funcs                    = "_marpaESLIFGrammar_symbolOptionSetterNoEventb";
+  static const char         *funcs                    = "_marpaESLIFGrammar_symbolOptionSetterInternalb";
   marpaESLIF_cloneContext_t *marpaESLIF_cloneContextp = (marpaESLIF_cloneContext_t *) userDatavp;
   marpaESLIF_grammar_t      *grammarp                 = marpaESLIF_cloneContextp->grammarp;
   genericStack_t            *symbolStackp             = grammarp->symbolStackp;
@@ -8239,7 +8239,12 @@ static char *_marpaESLIFGrammar_symbolDescriptionCallback(void *userDatavp, int 
     goto err;
   }
 
-  if (marpaWrapperGrammarSymbolOptionp->eventSeti != MARPAWRAPPERGRAMMAR_EVENTTYPE_NONE) {
+  if ((symbolp->eventNulleds != NULL) && ((strcmp(symbolp->eventNulleds, ":discard[on]") == 0) || (strcmp(symbolp->eventNulleds, ":discard[off]") == 0))) {
+    if (marpaWrapperGrammarSymbolOptionp->eventSeti != MARPAWRAPPERGRAMMAR_EVENTTYPE_NULLED) {
+      MARPAESLIF_TRACEF(marpaESLIF_cloneContextp->marpaESLIFp, funcs, "Setting nullable event for symbol %d <%s> at grammar level %d (%s) on completion", symbolp->idi, symbolp->descp->asciis, grammarp->leveli, grammarp->descp->asciis);
+      marpaWrapperGrammarSymbolOptionp->eventSeti = MARPAWRAPPERGRAMMAR_EVENTTYPE_NULLED;
+    }
+  } else if (marpaWrapperGrammarSymbolOptionp->eventSeti != MARPAWRAPPERGRAMMAR_EVENTTYPE_NONE) {
     MARPAESLIF_TRACEF(marpaESLIF_cloneContextp->marpaESLIFp, funcs, "Resetting event set for symbol %d <%s> at grammar level %d (%s)", symbolp->idi, symbolp->descp->asciis, grammarp->leveli, grammarp->descp->asciis);
     marpaWrapperGrammarSymbolOptionp->eventSeti = MARPAWRAPPERGRAMMAR_EVENTTYPE_NONE;
   }
@@ -8255,10 +8260,10 @@ static char *_marpaESLIFGrammar_symbolDescriptionCallback(void *userDatavp, int 
 }
 
 /*****************************************************************************/
- static short _marpaESLIFGrammar_symbolOptionSetterEndEventb(void *userDatavp, int symboli, marpaWrapperGrammarSymbolOption_t *marpaWrapperGrammarSymbolOptionp)
+ static short _marpaESLIFGrammar_symbolOptionSetterEndAndInternalb(void *userDatavp, int symboli, marpaWrapperGrammarSymbolOption_t *marpaWrapperGrammarSymbolOptionp)
 /*****************************************************************************/
 {
-  static const char         *funcs                    = "_marpaESLIFGrammar_symbolOptionSetterNoEventb";
+  static const char         *funcs                    = "_marpaESLIFGrammar_symbolOptionSetterEndAndInternalb";
   marpaESLIF_cloneContext_t *marpaESLIF_cloneContextp = (marpaESLIF_cloneContext_t *) userDatavp;
   marpaESLIF_grammar_t      *grammarp                 = marpaESLIF_cloneContextp->grammarp;
   int                        forcedEndEventi          = marpaESLIF_cloneContextp->forcedEndEventi;
@@ -8285,6 +8290,13 @@ static char *_marpaESLIFGrammar_symbolDescriptionCallback(void *userDatavp, int 
     if (marpaWrapperGrammarSymbolOptionp->eventSeti != MARPAWRAPPERGRAMMAR_EVENTTYPE_COMPLETION) {
       MARPAESLIF_TRACEF(marpaESLIF_cloneContextp->marpaESLIFp, funcs, "Setting completion event set for symbol %d <%s> at grammar level %d (%s)", symbolp->idi, symbolp->descp->asciis, grammarp->leveli, grammarp->descp->asciis);
       marpaWrapperGrammarSymbolOptionp->eventSeti = MARPAWRAPPERGRAMMAR_EVENTTYPE_COMPLETION;
+    }
+  } else if ((symbolp->eventNulleds != NULL) && ((strcmp(symbolp->eventNulleds, ":discard[on]") == 0) || (strcmp(symbolp->eventNulleds, ":discard[off]") == 0))) {
+    /* No clash is possible with forcedEndEventi because this condition is set only for the lsft side of an exception, i.e. the left side of '-' */
+    /* itself forced to be a lexeme. And a lexeme is a terminal in grammar terminology. And a terminal cannot be nullable */
+    if (marpaWrapperGrammarSymbolOptionp->eventSeti != MARPAWRAPPERGRAMMAR_EVENTTYPE_NULLED) {
+      MARPAESLIF_TRACEF(marpaESLIF_cloneContextp->marpaESLIFp, funcs, "Setting nullable event for symbol %d <%s> at grammar level %d (%s) on completion", symbolp->idi, symbolp->descp->asciis, grammarp->leveli, grammarp->descp->asciis);
+      marpaWrapperGrammarSymbolOptionp->eventSeti = MARPAWRAPPERGRAMMAR_EVENTTYPE_NULLED;
     }
   } else {
     if (marpaWrapperGrammarSymbolOptionp->eventSeti != MARPAWRAPPERGRAMMAR_EVENTTYPE_NONE) {
@@ -8319,10 +8331,10 @@ static short _marpaESLIFGrammar_grammarOptionSetterNoLoggerb(void *userDatavp, m
 }
 
 /*****************************************************************************/
- static short _marpaESLIFGrammar_symbolOptionSetterDiscardb(void *userDatavp, int symboli, marpaWrapperGrammarSymbolOption_t *marpaWrapperGrammarSymbolOptionp)
+ static short _marpaESLIFGrammar_symbolOptionSetterDiscardAndInternalb(void *userDatavp, int symboli, marpaWrapperGrammarSymbolOption_t *marpaWrapperGrammarSymbolOptionp)
 /*****************************************************************************/
 {
-  static const char         *funcs                    = "_marpaESLIFGrammar_symbolOptionSetterDiscardb";
+  static const char         *funcs                    = "_marpaESLIFGrammar_symbolOptionSetterDiscardAndInternalb";
   marpaESLIF_cloneContext_t *marpaESLIF_cloneContextp = (marpaESLIF_cloneContext_t *) userDatavp;
   marpaESLIF_grammar_t      *grammarp                 = marpaESLIF_cloneContextp->grammarp;
   genericStack_t            *symbolStackp             = grammarp->symbolStackp;
@@ -8347,14 +8359,17 @@ static short _marpaESLIFGrammar_grammarOptionSetterNoLoggerb(void *userDatavp, m
   /* A "discard" event is possible only for symbols that are the RHS of a :discard in the current grammar */
   if (symbolp->discardRhsb && (symbolp->discardEvents != NULL)) {
     if (marpaWrapperGrammarSymbolOptionp->eventSeti != MARPAWRAPPERGRAMMAR_EVENTTYPE_COMPLETION) {
-      MARPAESLIF_TRACEF(marpaESLIF_cloneContextp->marpaESLIFp, funcs, "Setting discard event set for symbol %d <%s> at grammar level %d (%s) on completion", symbolp->idi, symbolp->descp->asciis, grammarp->leveli, grammarp->descp->asciis);
+      MARPAESLIF_TRACEF(marpaESLIF_cloneContextp->marpaESLIFp, funcs, "Setting completion event for symbol %d <%s> at grammar level %d (%s) on completion", symbolp->idi, symbolp->descp->asciis, grammarp->leveli, grammarp->descp->asciis);
       marpaWrapperGrammarSymbolOptionp->eventSeti = MARPAWRAPPERGRAMMAR_EVENTTYPE_COMPLETION;
     }
-  } else {
-    if (marpaWrapperGrammarSymbolOptionp->eventSeti != MARPAWRAPPERGRAMMAR_EVENTTYPE_NONE) {
-      MARPAESLIF_TRACEF(marpaESLIF_cloneContextp->marpaESLIFp, funcs, "Resetting event set for symbol %d <%s> at grammar level %d (%s)", symbolp->idi, symbolp->descp->asciis, grammarp->leveli, grammarp->descp->asciis);
-      marpaWrapperGrammarSymbolOptionp->eventSeti = MARPAWRAPPERGRAMMAR_EVENTTYPE_NONE;
+  } else if ((symbolp->eventNulleds != NULL) && ((strcmp(symbolp->eventNulleds, ":discard[on]") == 0) || (strcmp(symbolp->eventNulleds, ":discard[off]") == 0))) {
+    if (marpaWrapperGrammarSymbolOptionp->eventSeti != MARPAWRAPPERGRAMMAR_EVENTTYPE_NULLED) {
+      MARPAESLIF_TRACEF(marpaESLIF_cloneContextp->marpaESLIFp, funcs, "Setting nullable event for symbol %d <%s> at grammar level %d (%s) on completion", symbolp->idi, symbolp->descp->asciis, grammarp->leveli, grammarp->descp->asciis);
+      marpaWrapperGrammarSymbolOptionp->eventSeti = MARPAWRAPPERGRAMMAR_EVENTTYPE_NULLED;
     }
+  } else if (marpaWrapperGrammarSymbolOptionp->eventSeti != MARPAWRAPPERGRAMMAR_EVENTTYPE_NONE) {
+    MARPAESLIF_TRACEF(marpaESLIF_cloneContextp->marpaESLIFp, funcs, "Resetting event set for symbol %d <%s> at grammar level %d (%s)", symbolp->idi, symbolp->descp->asciis, grammarp->leveli, grammarp->descp->asciis);
+    marpaWrapperGrammarSymbolOptionp->eventSeti = MARPAWRAPPERGRAMMAR_EVENTTYPE_NONE;
   }
 
   rcb = 1;
@@ -9851,8 +9866,6 @@ static inline short _marpaESLIFRecognizer_createLexemeDatab(marpaESLIFRecognizer
   genericStack_t             *symbolStackp;
   short                       rcb;
   int                         symboli;
-  marpaESLIF_symbol_t        *symbolp;
-  short                       conditionb;
 
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
