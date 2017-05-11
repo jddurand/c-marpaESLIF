@@ -86,16 +86,10 @@
 /* Get a symbol from stack - with an extra check when not in production mode                    */
 /* -------------------------------------------------------------------------------------------- */
 #ifndef MARPAESLIF_NTRACE
-#define MARPAESLIF_GET_SYMBOL_FROM_STACK(marpaESLIFp, symbolp, symbolStackp, symboli) do { \
-    if (symboli < 0) {                                                  \
-      MARPAESLIF_ERRORF(marpaESLIFp, "Symbol no %d is unknown from symbolStackp", symboli); \
-      errno = EINVAL;                                                   \
-      goto err;                                                         \
-    }                                                                   \
-    symbolp = (marpaESLIF_symbol_t *) GENERICSTACK_GET_PTR(symbolStackp, symboli); \
-  } while (0)
+#define MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFp, symbolp, symbolStackp, symboli) \
+  symbolp = (marpaESLIF_symbol_t *) GENERICSTACK_GET_PTR(symbolStackp, symboli)
 #else
-#define MARPAESLIF_GET_SYMBOL_FROM_STACK(marpaESLIFp, symbolp, symbolStackp, symboli) do { \
+#define MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFp, symbolp, symbolStackp, symboli) do { \
     if ((symboli < 0) || (! GENERICSTACK_IS_PTR(symbolStackp, symboli))) { \
       MARPAESLIF_ERRORF(marpaESLIFp, "Symbol no %d is unknown from symbolStackp", symboli); \
       errno = EINVAL;                                                   \
@@ -109,16 +103,10 @@
 /* Get a rule from stack - with an extra check when not in production mode                      */
 /* -------------------------------------------------------------------------------------------- */
 #ifndef MARPAESLIF_NTRACE
-#define MARPAESLIF_GET_RULE_FROM_STACK(marpaESLIFp, rulep, ruleStackp, rulei) do { \
-    if (rulei < 0) {                                                    \
-      MARPAESLIF_ERRORF(marpaESLIFp, "Rule no %d is unknown from ruleStackp", rulei); \
-      errno = EINVAL;                                                   \
-      goto err;                                                         \
-    }                                                                   \
-    rulep = (marpaESLIF_rule_t *) GENERICSTACK_GET_PTR(ruleStackp, rulei); \
-  } while (0)
+#define MARPAESLIF_INTERNAL_GET_RULE_FROM_STACK(marpaESLIFp, rulep, ruleStackp, rulei) \
+  rulep = (marpaESLIF_rule_t *) GENERICSTACK_GET_PTR(ruleStackp, rulei)
 #else
-#define MARPAESLIF_GET_RULE_FROM_STACK(marpaESLIFp, rulep, ruleStackp, rulei) do { \
+#define MARPAESLIF_INTERNAL_GET_RULE_FROM_STACK(marpaESLIFp, rulep, ruleStackp, rulei) do { \
     if ((rulei < 0) || (! GENERICSTACK_IS_PTR(ruleStackp, rulei))) {    \
       MARPAESLIF_ERRORF(marpaESLIFp, "Rule no %d is unknown from ruleStackp", rulei); \
       errno = EINVAL;                                                   \
@@ -1577,18 +1565,10 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
     symbolStackp = grammarp->symbolStackp;
     ruleStackp = grammarp->ruleStackp;
     for (symboli = 0; symboli < GENERICSTACK_USED(symbolStackp); symboli++) {
-      if (! GENERICSTACK_IS_PTR(symbolStackp, symboli)) {
-        /* Should never happen, but who knows */
-        continue;
-      }
-      symbolp = (marpaESLIF_symbol_t *) GENERICSTACK_GET_PTR(symbolStackp, symboli);
+      MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFp, symbolp, symbolStackp, symboli);
       symbolp->topb = 1;
       for (rulei = 0; rulei < GENERICSTACK_USED(ruleStackp); rulei++) {
-        if (! GENERICSTACK_IS_PTR(ruleStackp, rulei)) {
-          /* Should never happen, but who knows */
-          continue;
-        }
-        rulep = (marpaESLIF_rule_t *) GENERICSTACK_GET_PTR(ruleStackp, rulei);
+        MARPAESLIF_INTERNAL_GET_RULE_FROM_STACK(marpaESLIFp, rulep, ruleStackp, rulei);
         for (rhsi = 0; rhsi < GENERICSTACK_USED(rulep->rhsStackp); rhsi++) {
           if (! GENERICSTACK_IS_PTR(rulep->rhsStackp, rhsi)) {
             continue;
@@ -1633,11 +1613,7 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
     /* :start meta symbol check */
     startp = NULL;
     for (symboli = 0; symboli < GENERICSTACK_USED(symbolStackp); symboli++) {
-      if (! GENERICSTACK_IS_PTR(symbolStackp, symboli)) {
-        /* Should never happen, but who knows */
-        continue;
-      }
-      symbolp = (marpaESLIF_symbol_t *) GENERICSTACK_GET_PTR(symbolStackp, symboli);
+      MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFp, symbolp, symbolStackp, symboli);
       if (symbolp->startb) {
         if (startp == NULL) {
           startp = symbolp;
@@ -1679,15 +1655,7 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
       /* Use the first rule */
       rulep = NULL;
       for (rulei = 0; rulei < GENERICSTACK_USED(ruleStackp); rulei++) {
-        if (! GENERICSTACK_IS_PTR(ruleStackp, rulei)) {
-          /* Should never happen, but who knows */
-          continue;
-        }
-        rulep = (marpaESLIF_rule_t *) GENERICSTACK_GET_PTR(ruleStackp, rulei);
-        if (rulep == NULL) {
-          /* Ditto */
-          continue;
-        }
+        MARPAESLIF_INTERNAL_GET_RULE_FROM_STACK(marpaESLIFp, rulep, ruleStackp, rulei);
         /* Take care! discard is an internal rule that should never be the start symbol... */
         if (rulep->lhsp->discardb) {
           rulep = NULL;
@@ -1729,11 +1697,7 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
     /* :discard meta symbol check */
     discardp = NULL;
     for (symboli = 0; symboli < GENERICSTACK_USED(symbolStackp); symboli++) {
-      if (! GENERICSTACK_IS_PTR(symbolStackp, symboli)) {
-        /* Should never happen, but who knows */
-        continue;
-      }
-      symbolp = (marpaESLIF_symbol_t *) GENERICSTACK_GET_PTR(symbolStackp, symboli);
+      MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFp, symbolp, symbolStackp, symboli);
       if (symbolp->discardb) {
         if (discardp == NULL) {
           discardp = symbolp;
@@ -1758,11 +1722,7 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
       /* Per def a :discard rule has only one RHS, we mark its discardRhsb flag and copy the rule's discard settings */
       /* (Note that saying :discard :[x]:= RHS event => EVENT twice will overwrite first setting) */
       for (rulei = 0; rulei < GENERICSTACK_USED(ruleStackp); rulei++) {
-        if (! GENERICSTACK_IS_PTR(ruleStackp, rulei)) {
-          /* Should never happen, but who knows */
-          continue;
-        }
-        rulep = (marpaESLIF_rule_t *) GENERICSTACK_GET_PTR(ruleStackp, rulei);
+        MARPAESLIF_INTERNAL_GET_RULE_FROM_STACK(marpaESLIFp, rulep, ruleStackp, rulei);
         if (rulep->lhsp != discardp) {
           continue;
         }
@@ -1834,11 +1794,7 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
     symbolStackp = grammarp->symbolStackp;
     ruleStackp = grammarp->ruleStackp;
     for (symboli = 0; symboli < GENERICSTACK_USED(symbolStackp); symboli++) {
-      if (! GENERICSTACK_IS_PTR(symbolStackp, symboli)) {
-        /* Should never happen, but who knows */
-        continue;
-      }
-      symbolp = (marpaESLIF_symbol_t *) GENERICSTACK_GET_PTR(symbolStackp, symboli);
+      MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFp, symbolp, symbolStackp, symboli);
       /* Only meta symbols should be looked at: if not an LHS then it is a dependency on a LHS of another grammar */
       if (symbolp->type != MARPAESLIF_SYMBOL_TYPE_META) {
         continue;
@@ -1847,11 +1803,7 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
       lhsb = 0;
       lhsRuleStackp = symbolp->lhsRuleStackp;
       for (rulei = 0; rulei < GENERICSTACK_USED(ruleStackp); rulei++) {
-        if (! GENERICSTACK_IS_PTR(ruleStackp, rulei)) {
-          /* Should never happen, but who knows */
-          continue;
-        }
-        rulep = (marpaESLIF_rule_t *) GENERICSTACK_GET_PTR(ruleStackp, rulei);
+        MARPAESLIF_INTERNAL_GET_RULE_FROM_STACK(marpaESLIFp, rulep, ruleStackp, rulei);
         lhsp = rulep->lhsp;
         if (_marpaESLIF_string_eqb(lhsp->descp, symbolp->descp)) {
           /* Found */
@@ -1878,11 +1830,7 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
     ruleStackp = grammarp->ruleStackp;
     /* exception check */
     for (rulei = 0; rulei < GENERICSTACK_USED(ruleStackp); rulei++) {
-      if (! GENERICSTACK_IS_PTR(ruleStackp, rulei)) {
-        /* Should never happen, but who knows */
-        continue;
-      }
-      rulep = (marpaESLIF_rule_t *) GENERICSTACK_GET_PTR(ruleStackp, rulei);
+      MARPAESLIF_INTERNAL_GET_RULE_FROM_STACK(marpaESLIFp, rulep, ruleStackp, rulei);
       exceptionp = rulep->exceptionp;
       if (exceptionp == NULL) {
         continue;
@@ -1900,11 +1848,7 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
         if (rulei == rulej) {
           continue;
         }
-        if (! GENERICSTACK_IS_PTR(ruleStackp, rulej)) {
-          /* Should never happen, but who knows */
-          continue;
-        }
-        ruletmpp = (marpaESLIF_rule_t *) GENERICSTACK_GET_PTR(ruleStackp, rulej);
+        MARPAESLIF_INTERNAL_GET_RULE_FROM_STACK(marpaESLIFp, ruletmpp, ruleStackp, rulej);
         for (rhsi = 0; rhsi < GENERICSTACK_USED(ruletmpp->rhsStackp); rhsi++) {
           if (! GENERICSTACK_IS_PTR(ruletmpp->rhsStackp, rhsi)) {
             continue;
@@ -1923,11 +1867,7 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
         if (rulei == rulej) {
           continue;
         }
-        if (! GENERICSTACK_IS_PTR(ruleStackp, rulej)) {
-          /* Should never happen, but who knows */
-          continue;
-        }
-        ruletmpp = (marpaESLIF_rule_t *) GENERICSTACK_GET_PTR(ruleStackp, rulej);
+        MARPAESLIF_INTERNAL_GET_RULE_FROM_STACK(marpaESLIFp, ruletmpp, ruleStackp, rulej);
         for (rhsi = 0; rhsi < GENERICSTACK_USED(ruletmpp->rhsStackp); rhsi++) {
           if (! GENERICSTACK_IS_PTR(ruletmpp->rhsStackp, rhsi)) {
             continue;
@@ -1961,11 +1901,7 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
     symbolStackp = grammarp->symbolStackp;
     for (symboli = 0; symboli <= GENERICSTACK_USED(symbolStackp); symboli++) {
       if (symboli < GENERICSTACK_USED(symbolStackp)) {
-        if (! GENERICSTACK_IS_PTR(symbolStackp, symboli)) {
-          /* Should never happen, but who knows */
-          continue;
-        }
-        symbolp = (marpaESLIF_symbol_t *) GENERICSTACK_GET_PTR(symbolStackp, symboli);
+        MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFp, symbolp, symbolStackp, symboli);
       } else {
         /* Faked additional entry */
         if (rulep->separatorp == NULL) {
@@ -2058,21 +1994,13 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
     /* Loop on rules */
     ruleStackp = grammarp->ruleStackp;
     for (rulei = 0; rulei < GENERICSTACK_USED(ruleStackp); rulei++) {
-      if (! GENERICSTACK_IS_PTR(ruleStackp, rulei)) {
-        /* Should never happen, but who knows */
-        continue;
-      }
-      rulep = (marpaESLIF_rule_t *) GENERICSTACK_GET_PTR(ruleStackp, rulei);
+      MARPAESLIF_INTERNAL_GET_RULE_FROM_STACK(marpaESLIFp, rulep, ruleStackp, rulei);
       if (rulep->passthroughb) {
         for (rulej = 0; rulej < GENERICSTACK_USED(ruleStackp); rulej++) {
           if (rulei == rulej) {
             continue;
           }
-          if (! GENERICSTACK_IS_PTR(ruleStackp, rulej)) {
-            /* Should never happen, but who knows */
-            continue;
-          }
-          ruletmpp = (marpaESLIF_rule_t *) GENERICSTACK_GET_PTR(ruleStackp, rulej);
+          MARPAESLIF_INTERNAL_GET_RULE_FROM_STACK(marpaESLIFp, ruletmpp, ruleStackp, rulej);
           if (rulep->lhsp == ruletmpp->lhsp) {
             MARPAESLIF_ERRORF(marpaESLIFp, "Looking at rules in grammar level %d (%s): symbol %d (%s) is an LHS of a prioritized rule and cannot be appear as an LHS is any other rule", grammari, grammarp->descp->asciis, rulep->lhsp->idi, rulep->lhsp->descp->asciis);
             goto err;
@@ -2094,10 +2022,7 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
     /* First we collect the nullable rule Ids by LHS Id */
     ruleStackp = grammarp->ruleStackp;
     for (rulei = 0; rulei < GENERICSTACK_USED(ruleStackp); rulei++) {
-      if (! GENERICSTACK_IS_PTR(ruleStackp, rulei)) {
-        continue;
-      }
-      rulep = (marpaESLIF_rule_t *) GENERICSTACK_GET_PTR(ruleStackp, rulei);
+      MARPAESLIF_INTERNAL_GET_RULE_FROM_STACK(marpaESLIFp, rulep, ruleStackp, rulei);
       if (! marpaWrapperGrammar_rulePropertyb(grammarp->marpaWrapperGrammarStartp, rulep->idi, &(rulep->propertyBitSet))) {
         MARPAESLIF_ERRORF(marpaESLIFp, "marpaWrapperGrammar_rulePropertyb failure for grammar level %d (%s)", grammarp->leveli, grammarp->descp->asciis);
         goto err;
@@ -2114,11 +2039,7 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
     /* Then we determine the nullable semantic */
     symbolStackp = grammarp->symbolStackp;
     for (symboli = 0; symboli < GENERICSTACK_USED(symbolStackp); symboli++) {
-      if (! GENERICSTACK_IS_PTR(symbolStackp, symboli)) {
-        /* Should never happen, but who knows */
-        continue;
-      }
-      symbolp = (marpaESLIF_symbol_t *) GENERICSTACK_GET_PTR(symbolStackp, symboli);
+      MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFp, symbolp, symbolStackp, symboli);
       /* Always fetch properties - this is used in the grammar show */
       if (! marpaWrapperGrammar_symbolPropertyb(grammarp->marpaWrapperGrammarStartp, symbolp->idi, &(symbolp->propertyBitSet))) {
         goto err;
@@ -2215,11 +2136,7 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
 
     symbolStackp = grammarp->symbolStackp;
     for (symboli = 0; symboli < GENERICSTACK_USED(symbolStackp); symboli++) {
-      if (! GENERICSTACK_IS_PTR(symbolStackp, symboli)) {
-        /* Should never happen, but who knows */
-        continue;
-      }
-      symbolp = (marpaESLIF_symbol_t *) GENERICSTACK_GET_PTR(symbolStackp, symboli);
+      MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFp, symbolp, symbolStackp, symboli);
       if ((symbolp->lhsb) || (symbolp->type != MARPAESLIF_SYMBOL_TYPE_META)) {
         /* This symbol is not a lexeme */
         if ((symbolp->eventBefores != NULL) || (symbolp->eventAfters != NULL)) {
@@ -2273,11 +2190,7 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
 
     symbolStackp = grammarp->symbolStackp;
     for (symboli = 0; symboli < GENERICSTACK_USED(symbolStackp); symboli++) {
-      if (! GENERICSTACK_IS_PTR(symbolStackp, symboli)) {
-        /* Should never happen, but who knows */
-        continue;
-      }
-      symbolp = (marpaESLIF_symbol_t *) GENERICSTACK_GET_PTR(symbolStackp, symboli);
+      MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFp, symbolp, symbolStackp, symboli);
       if (! symbolp->discardRhsb) {
         continue;
       }
@@ -2304,13 +2217,7 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
     MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Filling rule IDs array in grammar level %d (%s)", grammari, grammarp->descp->asciis);
 
     ruleStackp = grammarp->ruleStackp;
-    grammarp->rulel = 0;
-    for (rulei = 0; rulei < GENERICSTACK_USED(ruleStackp); rulei++) {
-      if (! GENERICSTACK_IS_PTR(ruleStackp, rulei)) {
-        continue;
-      }
-      grammarp->rulel++;
-    }
+    grammarp->rulel = GENERICSTACK_USED(ruleStackp);
     if (grammarp->rulel > 0) {
       grammarp->ruleip = (int *) malloc(grammarp->rulel * sizeof(int));
       if (grammarp->ruleip == NULL) {
@@ -2319,10 +2226,7 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
       }
       grammarp->rulel = 0;
       for (rulei = 0; rulei < GENERICSTACK_USED(ruleStackp); rulei++) {
-        if (! GENERICSTACK_IS_PTR(ruleStackp, rulei)) {
-          continue;
-        }
-        rulep = (marpaESLIF_rule_t *) GENERICSTACK_GET_PTR(ruleStackp, rulei);
+        MARPAESLIF_INTERNAL_GET_RULE_FROM_STACK(marpaESLIFp, rulep, ruleStackp, rulei);
         grammarp->ruleip[grammarp->rulel++] = rulep->idi;
         _marpaESLIF_rule_createshowv(marpaESLIFp, grammarp, rulep, NULL, &asciishowl);
         rulep->asciishows = (char *) malloc(asciishowl);
@@ -2810,13 +2714,7 @@ static inline marpaESLIF_rule_t *_marpaESLIF_rule_newp(marpaESLIF_t *marpaESLIFp
 
   /* Look to the symbol itself, and remember it is an LHS - this is used when validating the grammar */
   for (symboli = 0; symboli < GENERICSTACK_USED(symbolStackp); symboli++) {
-#ifndef MARPAESLIF_NTRACE
-  /* Should never happen */
-    if (! GENERICSTACK_IS_PTR(symbolStackp, symboli)) {
-      continue;
-    }
-#endif
-    symbolp = (marpaESLIF_symbol_t *) GENERICSTACK_GET_PTR(symbolStackp, symboli);
+    MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFp, symbolp, symbolStackp, symboli);
     if (symbolp->idi == lhsi) {
       symbolFoundb = 1;
       break;
@@ -2833,13 +2731,7 @@ static inline marpaESLIF_rule_t *_marpaESLIF_rule_newp(marpaESLIF_t *marpaESLIFp
   if (sequenceb && (separatori >= 0)) {
     separatorFoundb = 0;
     for (symboli = 0; symboli < GENERICSTACK_USED(symbolStackp); symboli++) {
-#ifndef MARPAESLIF_NTRACE
-      /* Should never happen */
-      if (! GENERICSTACK_IS_PTR(symbolStackp, symboli)) {
-        continue;
-      }
-#endif
-      symbolp = (marpaESLIF_symbol_t *) GENERICSTACK_GET_PTR(symbolStackp, symboli);
+      MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFp, symbolp, symbolStackp, symboli);
       if (symbolp->idi == separatori) {
         separatorFoundb = 1;
         break;
@@ -2863,14 +2755,8 @@ static inline marpaESLIF_rule_t *_marpaESLIF_rule_newp(marpaESLIF_t *marpaESLIFp
   /* Fill rhs symbol stack */
   if (rhsip != NULL) {
     for (i = 0; i < nrhsl; i++) {
-#ifndef MARPAESLIF_NTRACE
-      /* Should never happen */
-      if (! GENERICSTACK_IS_PTR(grammarp->symbolStackp, rhsip[i])) {
-        MARPAESLIF_ERRORF(marpaESLIFp, "At grammar level %d: No such RHS symbol No %d", grammarp->leveli, rhsip[i]);
-        goto err;
-      }
-#endif
-      GENERICSTACK_PUSH_PTR(rulep->rhsStackp, GENERICSTACK_GET_PTR(grammarp->symbolStackp, rhsip[i]));
+      MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFp, symbolp, symbolStackp, rhsip[i]);
+      GENERICSTACK_PUSH_PTR(rulep->rhsStackp, symbolp);
       if (GENERICSTACK_ERROR(rulep->rhsStackp)) {
         MARPAESLIF_ERRORF(marpaESLIFp, "rhsStackp push failure, %s", strerror(errno));
         goto err;
@@ -2880,14 +2766,7 @@ static inline marpaESLIF_rule_t *_marpaESLIF_rule_newp(marpaESLIF_t *marpaESLIFp
   
   /* Fill exception symbol */
   if (exceptioni >= 0) {
-#ifndef MARPAESLIF_NTRACE
-    /* Should never happen */
-    if (! GENERICSTACK_IS_PTR(grammarp->symbolStackp, exceptioni)) {
-      MARPAESLIF_ERRORF(marpaESLIFp, "At grammar level %d: No such RHS exception symbol No %d", grammarp->leveli, exceptioni);
-      goto err;
-    }
-#endif
-    rulep->exceptionp = GENERICSTACK_GET_PTR(grammarp->symbolStackp, exceptioni);
+    MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFp, rulep->exceptionp, symbolStackp, exceptioni);
     /* ... and make sure that there is only one RHS */
     if (nrhsl != 1) {
       MARPAESLIF_ERRORF(marpaESLIFp, "At grammar level %d: There must be exactly one RHS, instead of %ld, before the '-' exception sign", grammarp->leveli, (unsigned long) nrhsl);
@@ -5129,14 +5008,7 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
   retry:
   for (symboll = 0; symboll < nSymboll; symboll++) {
     symboli = symbolArrayp[symboll];
-#ifndef MARPAESLIF_NTRACE
-    /* Should never happen */
-    if (! GENERICSTACK_IS_PTR(symbolStackp, symboli)) {
-      MARPAESLIF_ERRORF(marpaESLIFp, "No such symbol ID %d", symboli);
-      goto err;
-    }
-#endif
-    symbolp = GENERICSTACK_GET_PTR(symbolStackp, symboli);
+    MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFp, symbolp, symbolStackp, symboli);
     MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Trying to match %s", symbolp->descp->asciis);
   match_again:
     if (! _marpaESLIFRecognizer_symbol_matcherb(marpaESLIFRecognizerp, symbolp, &rci, &marpaESLIFValueResult)) {
@@ -5492,13 +5364,7 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
       } else {
         for (symboll = 0; symboll < nSymboll; symboll++) {
           symboli = symbolArrayp[symboll];
-#ifndef MARPAESLIF_NTRACE
-          /* Should never happen */
-          if (! GENERICSTACK_IS_PTR(symbolStackp, symboli)) {
-            continue;
-          }
-#endif
-          symbolp = GENERICSTACK_GET_PTR(symbolStackp, symboli);
+          MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFp, symbolp, symbolStackp, symboli);
           MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "Expected terminal: %s", symbolp->descp->asciis);
         }
       }
@@ -6448,15 +6314,21 @@ static inline marpaESLIF_rule_t *_marpaESLIF_rule_findp(marpaESLIF_t *marpaESLIF
 {
   static const char    *funcs        = "_marpaESLIF_rule_findp";
   genericStack_t       *ruleStackp   = grammarp->ruleStackp;
-  marpaESLIF_rule_t    *rcp          = NULL;
+  marpaESLIF_rule_t    *rulep;
 
-  if (rulei >= 0) {
-    if (GENERICSTACK_IS_PTR(ruleStackp, rulei)) {
-      rcp = (marpaESLIF_rule_t *) GENERICSTACK_GET_PTR(ruleStackp, rulei);
-    }
+  if (rulei < 0) {
+    MARPAESLIF_ERRORF(marpaESLIFp, "Invalid rule ID %d", rulei);
+    goto err;
   }
 
-  return rcp;
+  MARPAESLIF_INTERNAL_GET_RULE_FROM_STACK(marpaESLIFp, rulep, ruleStackp, rulei);
+  goto done;
+
+ err:
+  rulep = NULL;
+
+ done:
+  return rulep;
 }
 
 /*****************************************************************************/
@@ -6472,13 +6344,7 @@ static inline marpaESLIF_symbol_t *_marpaESLIF_symbol_findp(marpaESLIF_t *marpaE
   if (asciis != NULL) {
     /* Give precedence to symbol by name - which is possible only for meta symbols */
     for (i = 0; i < GENERICSTACK_USED(symbolStackp); i++) {
-#ifndef MARPAESLIF_NTRACE
-      /* Should never happen */
-      if (! GENERICSTACK_IS_PTR(symbolStackp, i)) {
-        continue;
-      }
-#endif
-      symbolp = (marpaESLIF_symbol_t *) GENERICSTACK_GET_PTR(symbolStackp, i);
+      MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFp, symbolp, symbolStackp, i);
       if (symbolp->type == MARPAESLIF_SYMBOL_TYPE_META) {
         if (strcmp(asciis, symbolp->u.metap->asciinames) == 0) {
           rcp = symbolp;
@@ -6497,6 +6363,7 @@ static inline marpaESLIF_symbol_t *_marpaESLIF_symbol_findp(marpaESLIF_t *marpaE
       *symbolip = rcp->idi;
     }
   } else {
+  err:
     errno = EINVAL;
   }
 
@@ -6769,14 +6636,7 @@ static inline short _marpaESLIFRecognizer_push_grammar_eventsb(marpaESLIFRecogni
       events  = NULL;
       if (symboli >= 0) {
         /* Look for the symbol */
-#ifndef MARPAESLIF_NTRACE
-        /* Should never happen */
-        if (! GENERICSTACK_IS_PTR(symbolStackp, symboli)) {
-          MARPAESLIF_ERRORF(marpaESLIFp, "No such symbol ID %d", symboli);
-          goto err;
-        }
-#endif
-        symbolp = GENERICSTACK_GET_PTR(symbolStackp, symboli);
+        MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFp, symbolp, symbolStackp, symboli);
       } else {
         symbolp = NULL;
       }
@@ -7111,13 +6971,7 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGramm
     if (! noEventb) {
 
       for (symboli = 0; symboli < GENERICSTACK_USED(symbolStackp); symboli++) {
-#ifndef MARPAESLIF_NTRACE
-        /* Should never happen */
-        if (! GENERICSTACK_IS_PTR(symbolStackp, symboli)) {
-          continue;
-        }
-#endif
-        symbolp = (marpaESLIF_symbol_t *) GENERICSTACK_GET_PTR(symbolStackp, symboli);
+        MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFp, symbolp, symbolStackp, symboli);
         if (symbolp->eventPredicteds != NULL) {
           MARPAESLIF_TRACEF(marpaESLIFp, funcs,
                             "Setting prediction event state for symbol %d <%s> at grammar level %d (%s) to %s (recognizer discard mode: %d)",
@@ -7167,13 +7021,7 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGramm
     } else {
       /* Events outside of marpa that need to be switched off: lexeme before, lexeme after and exhaustion */
       for (symboli = 0; symboli < GENERICSTACK_USED(symbolStackp); symboli++) {
-#ifndef MARPAESLIF_NTRACE
-        /* Should never happen */
-        if (! GENERICSTACK_IS_PTR(symbolStackp, symboli)) {
-          continue;
-        }
-#endif
-        symbolp = (marpaESLIF_symbol_t *) GENERICSTACK_GET_PTR(symbolStackp, symboli);
+        MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFp, symbolp, symbolStackp, symboli);
         if (symbolp->eventBefores != NULL) {
           MARPAESLIF_TRACEF(marpaESLIFp, funcs,
                             "Setting :lexeme before event state for symbol %d <%s> at grammar level %d (%s) to off (recognizer discard mode: %d)",
@@ -8178,14 +8026,7 @@ static char *_marpaESLIFGrammar_symbolDescriptionCallback(void *userDatavp, int 
   marpaESLIF_symbol_t       *symbolp;
   short                      rcb;
 
-#ifndef MARPAESLIF_NTRACE
-  /* Should never happen */
-  if (! GENERICSTACK_IS_PTR(symbolStackp, symboli)) {
-    MARPAESLIF_ERRORF(marpaESLIF_cloneContextp->marpaESLIFp, "Cannot find symbol No %d", symboli);
-    goto err;
-  }
-#endif
-  symbolp = (marpaESLIF_symbol_t *) GENERICSTACK_GET_PTR(symbolStackp, symboli);
+  MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIF_cloneContextp->marpaESLIFp, symbolp, symbolStackp, symboli);
 
   /* Consistenty check */
   if (symbolp->idi != symboli) {
@@ -8237,14 +8078,7 @@ static char *_marpaESLIFGrammar_symbolDescriptionCallback(void *userDatavp, int 
   marpaESLIF_symbol_t       *symbolp;
   short                     rcb;
 
-#ifndef MARPAESLIF_NTRACE
-  /* Should never happen */
-  if (! GENERICSTACK_IS_PTR(symbolStackp, symboli)) {
-    MARPAESLIF_ERRORF(marpaESLIF_cloneContextp->marpaESLIFp, "Cannot find symbol No %d", symboli);
-    goto err;
-  }
-#endif
-  symbolp = (marpaESLIF_symbol_t *) GENERICSTACK_GET_PTR(symbolStackp, symboli);
+  MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIF_cloneContextp->marpaESLIFp, symbolp, symbolStackp, symboli);
 
   /* Consistenty check */
   if (symbolp->idi != symboli) {
@@ -8284,14 +8118,7 @@ static char *_marpaESLIFGrammar_symbolDescriptionCallback(void *userDatavp, int 
   marpaESLIF_symbol_t       *symbolp;
   short                     rcb;
 
-#ifndef MARPAESLIF_NTRACE
-  /* Should never happen */
-  if (! GENERICSTACK_IS_PTR(symbolStackp, symboli)) {
-    MARPAESLIF_ERRORF(marpaESLIF_cloneContextp->marpaESLIFp, "Cannot find symbol No %d", symboli);
-    goto err;
-  }
-#endif
-  symbolp = (marpaESLIF_symbol_t *) GENERICSTACK_GET_PTR(symbolStackp, symboli);
+  MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIF_cloneContextp->marpaESLIFp, symbolp, symbolStackp, symboli);
 
   /* Consistenty check */
   if (symbolp->idi != symboli) {
@@ -8354,14 +8181,7 @@ static short _marpaESLIFGrammar_grammarOptionSetterNoLoggerb(void *userDatavp, m
   marpaESLIF_symbol_t       *symbolp;
   short                     rcb;
 
-#ifndef MARPAESLIF_NTRACE
-  /* Should never happen */
-  if (! GENERICSTACK_IS_PTR(symbolStackp, symboli)) {
-    MARPAESLIF_ERRORF(marpaESLIF_cloneContextp->marpaESLIFp, "Cannot find symbol No %d", symboli);
-    goto err;
-  }
-#endif
-  symbolp = (marpaESLIF_symbol_t *) GENERICSTACK_GET_PTR(symbolStackp, symboli);
+  MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIF_cloneContextp->marpaESLIFp, symbolp, symbolStackp, symboli);
 
   /* Consistenty check */
   if (symbolp->idi != symboli) {
@@ -9705,13 +9525,8 @@ static inline short _marpaESLIFRecognizer_createDiscardStateb(marpaESLIFRecogniz
       goto err;
     }
     for (symboli = 0; symboli < GENERICSTACK_USED(symbolStackp); symboli++) {
-      if (GENERICSTACK_IS_PTR(symbolStackp, symboli)) {
-        symbolp = (marpaESLIF_symbol_t *) GENERICSTACK_GET_PTR(symbolStackp, symboli);
-        /* Can be 1 event if symbolp->discardEvents is NULL - this is the default */
-        discardEventStatebp[symboli] = symbolp->discardEventb;
-      } else {
-        discardEventStatebp[symboli] = 0;
-      }
+      MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFRecognizerp->marpaESLIFp, symbolp, symbolStackp, symboli);
+      discardEventStatebp[symboli] = symbolp->discardEventb;
     }
 
     /* Initialization ok */
@@ -9759,13 +9574,8 @@ static inline short _marpaESLIFRecognizer_createBeforeStateb(marpaESLIFRecognize
       goto err;
     }
     for (symboli = 0; symboli < GENERICSTACK_USED(symbolStackp); symboli++) {
-      if (GENERICSTACK_IS_PTR(symbolStackp, symboli)) {
-        symbolp = (marpaESLIF_symbol_t *) GENERICSTACK_GET_PTR(symbolStackp, symboli);
-        /* Can be 1 event if symbolp->beforeEvents is NULL - this is the default */
-        beforeEventStatebp[symboli] = symbolp->eventBeforeb;
-      } else {
-        beforeEventStatebp[symboli] = 0;
-      }
+      MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFRecognizerp->marpaESLIFp, symbolp, symbolStackp, symboli);
+      beforeEventStatebp[symboli] = symbolp->eventBeforeb;
     }
 
     /* Initialization ok */
@@ -9813,13 +9623,8 @@ static inline short _marpaESLIFRecognizer_createAfterStateb(marpaESLIFRecognizer
       goto err;
     }
     for (symboli = 0; symboli < GENERICSTACK_USED(symbolStackp); symboli++) {
-      if (GENERICSTACK_IS_PTR(symbolStackp, symboli)) {
-        symbolp = (marpaESLIF_symbol_t *) GENERICSTACK_GET_PTR(symbolStackp, symboli);
-        /* Can be 1 event if symbolp->afterEvents is NULL - this is the default */
-        afterEventStatebp[symboli] = symbolp->eventAfterb;
-      } else {
-        afterEventStatebp[symboli] = 0;
-      }
+      MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFRecognizerp->marpaESLIFp, symbolp, symbolStackp, symboli);
+      afterEventStatebp[symboli] = symbolp->eventAfterb;
     }
 
     /* Initialization ok */
