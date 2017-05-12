@@ -99,7 +99,10 @@ struct marpaESLIF_terminal {
   size_t                      patternl;
   marpaESLIF_uint32_t         patterni;            /* ... this includes pattern options */
   marpaESLIF_terminal_type_t  type;                /* Original type. Used for description. When origin is STRING we know that patterns if ASCII safe */
-  marpaESLIF_regex_t          regex;
+  marpaESLIF_regex_t          regex;               /* Regex version */
+  short                       memcmpb;             /* Flag saying that memcmp is possible */
+  char                       *bytes;               /* Original UTF-8 bytes, used for memcmp() when possible */
+  size_t                      bytel;               /* i.e. when this is a string terminal without modifier */
 };
 
 struct marpaESLIF_meta {
