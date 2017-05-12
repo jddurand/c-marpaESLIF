@@ -1044,13 +1044,25 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
       goto err;
     }
 
-    terminalp->regex.patternp = pcre2_compile(
-                                              (PCRE2_SPTR) utf8s,      /* An UTF-8 pattern */
-                                              (PCRE2_SIZE) utf8l,      /* In code units (!= code points) - in UTF-8 a code unit is a byte */
-                                              pcre2Optioni,
-                                              &pcre2Errornumberi, /* for error number */
-                                              &pcre2ErrorOffsetl, /* for error offset */
-                                              NULL);        /* use default compile context */
+    if (utf8s == NULL) {
+      /* Case of the empty string => empty pattern */
+      /* Note that this is different from // in the grammar: // generates an empty rule. */
+      terminalp->regex.patternp = pcre2_compile(
+                                                (PCRE2_SPTR) "",
+                                                (PCRE2_SIZE) 0,
+                                                pcre2Optioni,
+                                                &pcre2Errornumberi, /* for error number */
+                                                &pcre2ErrorOffsetl, /* for error offset */
+                                                NULL);        /* use default compile context */
+    } else {
+      terminalp->regex.patternp = pcre2_compile(
+                                                (PCRE2_SPTR) utf8s,      /* An UTF-8 pattern */
+                                                (PCRE2_SIZE) utf8l,      /* In code units (!= code points) - in UTF-8 a code unit is a byte */
+                                                pcre2Optioni,
+                                                &pcre2Errornumberi, /* for error number */
+                                                &pcre2ErrorOffsetl, /* for error offset */
+                                                NULL);        /* use default compile context */
+    }
     if (terminalp->regex.patternp == NULL) {
       pcre2_get_error_message(pcre2Errornumberi, pcre2ErrorBuffer, sizeof(pcre2ErrorBuffer));
       MARPAESLIF_ERRORF(marpaESLIFp, "%s: pcre2_compile failure at offset %ld: %s", terminalp->descp->asciis, (unsigned long) pcre2ErrorOffsetl, pcre2ErrorBuffer);
