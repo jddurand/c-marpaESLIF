@@ -28,7 +28,7 @@ const static char *exceptions = "\n"
   "event start$ = completed start\n"
   "start ::= thisstart - startException\n"
   "\n"
-  "thisstart ~ chars\n"
+  "thisstart ~ chars '!'\n"
   "\n"
   "chars ~ char*\n"
   "\n"
@@ -65,7 +65,7 @@ int main() {
   marpaESLIFValue_t           *marpaESLIFValuep = NULL;
   short                        continueb;
   short                        exhaustedb;
-  const static char           *inputs = "abc:123de@ @f";
+  const static char           *inputs = "abc! 123de@:@f";
   short                        rcValueb;
   int                          eventCounti = 0;
   size_t                       nLexemel;

@@ -311,8 +311,6 @@ int main() {
     goto err;
   }
 
-  fprintf(stderr, " OK FOR:\n%s", selfs);
-
   /* Play with defaults */
   for (leveli = 0; leveli < ngrammari; leveli++) {
     GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "Getting defaults of grammar at level %d", leveli);
@@ -334,9 +332,6 @@ int main() {
     }
   }
 
-  marpaESLIFGrammar_freev(marpaESLIFGrammarp);
-  marpaESLIF_freev(marpaESLIFp);
-
   exiti = 0;
   goto done;
 
@@ -344,6 +339,8 @@ int main() {
   exiti = 1;
 
  done:
+  marpaESLIFGrammar_freev(marpaESLIFGrammarp);
+  marpaESLIF_freev(marpaESLIFp);
   GENERICLOGGER_FREE(genericLoggerp);
   return exiti;
 }
