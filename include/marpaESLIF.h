@@ -141,6 +141,36 @@ typedef struct marpaESLIFGrammarDefaults {
   char *defaultFreeActions;   /* Default action for free */
 } marpaESLIFGrammarDefaults_t;
 
+/* Rule property */
+
+typedef enum marpaESLIFRulePropertyBit {
+  MARPAESLIF_RULE_IS_ACCESSIBLE = 0x01,
+  MARPAESLIF_RULE_IS_NULLABLE   = 0x02,
+  MARPAESLIF_RULE_IS_NULLING    = 0x04,
+  MARPAESLIF_RULE_IS_LOOP       = 0x08,
+  MARPAESLIF_RULE_IS_PRODUCTIVE = 0x10
+} marpaESLIFRulePropertyBit_t;
+
+typedef struct marpaESLIFRuleProperty {
+  int                    idi;                          /* Rule Id */
+  marpaESLIFString_t    *descp;                        /* Rule alternative name (auto-generated if none) */
+  char                  *asciishows;                   /* Rule show (ASCII) */
+  int                    lhsi;                         /* LHS symbol Id */
+  int                    separatori;                   /* Eventual separator symbol Id (-1 if none) */
+  size_t                 nrhsl;                        /* Number of RHS, 0 in case of a nullable */
+  int                   *rhsip;                        /* Array of RHS Ids, NULL in case of a nullable */
+  int                    exceptioni;                   /* Exception symbol Id (-1 if none) */
+  char                  *actions;                      /* Action */
+  char                  *discardEvents;                /* Discard event name - shallowed with its RHS */
+  short                  discardEventb;                /* Discard event initial state: 0: off, 1: on - copied to its RHS */
+  int                    ranki;                        /* Rank */
+  short                  nullRanksHighb;               /* Null ranks high ? */
+  short                  sequenceb;                    /* Sequence ? */
+  short                  properb;                      /* Proper ? */
+  int                    minimumi;                     /* minimum in case of sequence ? */
+  short                  internalb;                    /* This rule is internal */
+} marpaESLIFRuleProperty_t;
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -159,6 +189,8 @@ extern "C" {
   marpaESLIF_EXPORT short                   marpaESLIFGrammar_grammar_by_levelb(marpaESLIFGrammar_t *marpaESLIFGrammarp, int leveli, marpaESLIFString_t *descp, int *levelip, marpaESLIFString_t **descpp);
   marpaESLIF_EXPORT short                   marpaESLIFGrammar_rulearray_currentb(marpaESLIFGrammar_t *marpaESLIFGrammarp, int **ruleipp, size_t *rulelp);
   marpaESLIF_EXPORT short                   marpaESLIFGrammar_rulearray_by_levelb(marpaESLIFGrammar_t *marpaESLIFGrammarp, int **ruleipp, size_t *rulelp, int leveli, marpaESLIFString_t *descp);
+  marpaESLIF_EXPORT short                   marpaESLIFGrammar_ruleproperty_currentb(marpaESLIFGrammar_t *marpaESLIFGrammarp, int rulei, marpaESLIFRuleProperty_t *rulePropertyp);
+  marpaESLIF_EXPORT short                   marpaESLIFGrammar_ruleproperty_by_levelb(marpaESLIFGrammar_t *marpaESLIFGrammarp, int rulei, marpaESLIFRuleProperty_t *rulePropertyp, int leveli, marpaESLIFString_t *descp);
   marpaESLIF_EXPORT short                   marpaESLIFGrammar_ruledisplayform_currentb(marpaESLIFGrammar_t *marpaESLIFGrammarp, int rulei, char **ruledisplaysp);
   marpaESLIF_EXPORT short                   marpaESLIFGrammar_ruledisplayform_by_levelb(marpaESLIFGrammar_t *marpaESLIFGrammarp, int rulei, char **ruledisplaysp, int leveli, marpaESLIFString_t *descp);
   marpaESLIF_EXPORT short                   marpaESLIFGrammar_symboldisplayform_currentb(marpaESLIFGrammar_t *marpaESLIFGrammarp, int symboli, char **symboldisplaysp);
