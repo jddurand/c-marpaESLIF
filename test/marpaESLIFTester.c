@@ -77,6 +77,8 @@ int main() {
   int                          rulei;
   marpaESLIFRuleProperty_t     ruleProperty;
   size_t                       rhsl;
+  marpaESLIFGrammarProperty_t  grammarProperty;
+  size_t                       symboll;
   
   genericLoggerp = genericLogger_newp(genericLoggerCallback, NULL /* userDatavp */, GENERICLOGGER_LOGLEVEL_DEBUG);
 
@@ -125,6 +127,25 @@ int main() {
       GENERICLOGGER_INFO (marpaESLIFOption.genericLoggerp, "---------------------------------------");
       GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "TEST grammar introspection at level %d:", leveli);
       GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "---------------------------------------\n\n%s", grammarshows);
+      if (marpaESLIFGrammar_grammarproperty_by_levelb(marpaESLIFGrammarp, &grammarProperty, leveli, NULL)) {
+        GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... Grammar No %d", leveli);
+        GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... Level                 : %d", grammarProperty.leveli);
+        GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... Grammar description   : %s", grammarProperty.descp->asciis);
+        GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... LATM ?                : %d", (int) grammarProperty.latmb);
+        GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... Default symbol action : %s", grammarProperty.defaultSymbolActions);
+        GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... Default rule action   : %s", grammarProperty.defaultRuleActions);
+        GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... Default free action   : %s", (grammarProperty.defaultFreeActions != NULL) ? grammarProperty.defaultFreeActions : "");
+        GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... Start symbol Id       : %d", grammarProperty.starti);
+        GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... Discard symbol Id     : %d", grammarProperty.discardi);
+        GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... Number of symbols     : %ld", (unsigned long) grammarProperty.nsymboll);
+        for (symboll = 0; symboll < grammarProperty.nsymboll; symboll++) {
+          GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... ... Symbol Id %ld       : %d", (unsigned long) symboll, grammarProperty.symbolip[symboll]);
+        }
+        GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... Number of rules       : %ld", (unsigned long) grammarProperty.nrulel);
+        for (rulel = 0; rulel < grammarProperty.nrulel; rulel++) {
+          GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... ... Rule Id %ld         : %d", (unsigned long) rulel, grammarProperty.ruleip[rulel]);
+        }
+      }
       if (marpaESLIFGrammar_rulearray_by_levelb(marpaESLIFGrammarp, &ruleip, &rulel, leveli, NULL)) {
         for (rulei = 0; rulei < rulel; rulei++) {
           if (marpaESLIFGrammar_ruleproperty_by_levelb(marpaESLIFGrammarp, rulei, &ruleProperty, leveli, NULL)) {
