@@ -72,7 +72,12 @@ int main() {
   size_t                       lexemel;
   char                       **lexemesArrayp;
   marpaESLIFValueResult_t      marpaESLIFValueResult;
-
+  int                         *ruleip;
+  size_t                       rulel;
+  int                          rulei;
+  marpaESLIFRuleProperty_t     ruleProperty;
+  size_t                       rhsl;
+  
   genericLoggerp = genericLogger_newp(genericLoggerCallback, NULL /* userDatavp */, GENERICLOGGER_LOGLEVEL_DEBUG);
 
   marpaESLIFOption.genericLoggerp = genericLoggerp;
@@ -110,6 +115,41 @@ int main() {
         GENERICLOGGER_INFO (marpaESLIFOption.genericLoggerp, "-------------------------");
         GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "TEST grammar at level %d:", leveli);
         GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "-------------------------\n\n%s", grammarshows);
+      }
+    }
+  }
+
+  /* Grammar introspection */
+  if (marpaESLIFGrammar_ngrammarib(marpaESLIFGrammarp, &ngrammari)) {
+    for (leveli = 0; leveli < ngrammari; leveli++) {
+      GENERICLOGGER_INFO (marpaESLIFOption.genericLoggerp, "---------------------------------------");
+      GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "TEST grammar introspection at level %d:", leveli);
+      GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "---------------------------------------\n\n%s", grammarshows);
+      if (marpaESLIFGrammar_rulearray_by_levelb(marpaESLIFGrammarp, &ruleip, &rulel, leveli, NULL)) {
+        for (rulei = 0; rulei < rulel; rulei++) {
+          if (marpaESLIFGrammar_ruleproperty_by_levelb(marpaESLIFGrammarp, rulei, &ruleProperty, leveli, NULL)) {
+            GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... Rule No %d", rulei);
+            GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... Rule Id               : %d", ruleProperty.idi);
+            GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... Rule description      : %s", ruleProperty.descp->asciis);
+            GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... Rule show             : %s", ruleProperty.asciishows);
+            GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... LHS Id                : %d", ruleProperty.lhsi);
+            GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... Separator Id          : %d", ruleProperty.separatori);
+            GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... Number of RHS         : %ld", (unsigned long) ruleProperty.nrhsl);
+            for (rhsl = 0; rhsl < ruleProperty.nrhsl; rhsl++) {
+              GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... ... RHS No %ld         : %d", (unsigned long) rhsl, ruleProperty.rhsip[rhsl]);
+            }
+            GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... Exception Id          : %d", ruleProperty.exceptioni);
+            GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... Action                : %s", (ruleProperty.actions != NULL) ? ruleProperty.actions : "");
+            GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... Discard event         : %s", (ruleProperty.discardEvents != NULL) ? ruleProperty.discardEvents : "");
+            GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... Discard initial state : %d", ruleProperty.discardEventb);
+            GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... Rank                  : %d", ruleProperty.ranki);
+            GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... Null ranks high ?     : %d", (int) ruleProperty.nullRanksHighb);
+            GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... Sequence ?            : %d", (int) ruleProperty.sequenceb);
+            GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... Proper ?              : %d", (int) ruleProperty.properb);
+            GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... Sequence minimum      : %d", ruleProperty.minimumi);
+            GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... Internal ?            : %d", (int) ruleProperty.internalb);
+          }
+        }
       }
     }
   }

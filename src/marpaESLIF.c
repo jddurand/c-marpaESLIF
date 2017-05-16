@@ -4324,6 +4324,79 @@ short marpaESLIFGrammar_rulearray_by_levelb(marpaESLIFGrammar_t *marpaESLIFGramm
 }
 
 /*****************************************************************************/
+short marpaESLIFGrammar_ruleproperty_currentb(marpaESLIFGrammar_t *marpaESLIFGrammarp, int rulei, marpaESLIFRuleProperty_t *rulePropertyp)
+/*****************************************************************************/
+{
+  marpaESLIF_grammar_t *grammarp;
+
+  if (marpaESLIFGrammarp == NULL) {
+    errno = EINVAL;
+    return 0;
+  }
+
+  grammarp = marpaESLIFGrammarp->grammarp;
+
+  if (grammarp == NULL) {
+    errno = EINVAL;
+    return 0;
+  }
+
+  return marpaESLIFGrammar_ruleproperty_by_levelb(marpaESLIFGrammarp, rulei, rulePropertyp, grammarp->leveli, NULL /* descp */);
+}
+
+/*****************************************************************************/
+short marpaESLIFGrammar_ruleproperty_by_levelb(marpaESLIFGrammar_t *marpaESLIFGrammarp, int rulei, marpaESLIFRuleProperty_t *rulePropertyp, int leveli, marpaESLIFString_t *descp)
+/*****************************************************************************/
+{
+  marpaESLIF_grammar_t *grammarp;
+  marpaESLIF_rule_t    *rulep;
+  short                 rcb;
+
+  if (marpaESLIFGrammarp == NULL) {
+    errno = EINVAL;
+    return 0;
+  }
+
+  grammarp = _marpaESLIFGrammar_grammar_findp(marpaESLIFGrammarp, leveli, descp);
+  if (grammarp == NULL) {
+    goto err;
+  }
+  rulep = _marpaESLIF_rule_findp(marpaESLIFGrammarp->marpaESLIFp, grammarp, rulei);
+  if (rulep == NULL) {
+    goto err;
+  }
+ 
+  if (rulePropertyp != NULL) {
+    rulePropertyp->idi            = rulep->idi;
+    rulePropertyp->descp          = rulep->descp;
+    rulePropertyp->asciishows     = rulep->asciishows;
+    rulePropertyp->lhsi           = rulep->lhsp->idi;    /* rulep->lhsp is never NULL */
+    rulePropertyp->separatori     = (rulep->separatorp != NULL) ? rulep->separatorp->idi : -1;
+    rulePropertyp->rhsip          = rulep->rhsip;
+    rulePropertyp->nrhsl          = (size_t) GENERICSTACK_USED(rulep->rhsStackp); /* Can be == 0 */
+    rulePropertyp->rhsip          = rulep->rhsip;  /* Can be NULL */
+    rulePropertyp->exceptioni     = (rulep->exceptionp != NULL) ? rulep->exceptionp->idi : -1;
+    rulePropertyp->actions        = rulep->actions; /* Can be NULL */
+    rulePropertyp->discardEvents  = rulep->discardEvents; /* Can be NULL */
+    rulePropertyp->discardEventb  = rulep->discardEventb;
+    rulePropertyp->ranki          = rulep->ranki;
+    rulePropertyp->nullRanksHighb = rulep->nullRanksHighb;
+    rulePropertyp->sequenceb      = rulep->sequenceb;
+    rulePropertyp->properb        = rulep->properb;
+    rulePropertyp->minimumi       = rulep->minimumi;
+    rulePropertyp->internalb      = rulep->passthroughb;  /* Currently only passthrough rules are internal */
+  }
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  return rcb;
+}
+
+/*****************************************************************************/
 short marpaESLIFGrammar_ruledisplayform_currentb(marpaESLIFGrammar_t *marpaESLIFGrammarp, int rulei, char **ruledisplaysp)
 /*****************************************************************************/
 {
