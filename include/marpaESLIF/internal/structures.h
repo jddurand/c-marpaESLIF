@@ -181,6 +181,7 @@ struct marpaESLIF_rule {
   marpaESLIF_symbol_t   *separatorp;                   /* Eventual separator symbol */
   genericStack_t         _rhsStack;                    /* Stack of RHS symbols */
   genericStack_t        *rhsStackp;                    /* Pointer to stack of RHS symbols */
+  int                   *rhsip;                        /* Convenience array of RHS ids for rule introspection */
   marpaESLIF_symbol_t   *exceptionp;                   /* Exception symbol */
   int                    exceptionIdi;                 /* Exception symbol Id */
   char                  *actions;                      /* Action */

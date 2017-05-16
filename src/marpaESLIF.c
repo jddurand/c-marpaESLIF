@@ -2737,6 +2737,7 @@ static inline marpaESLIF_rule_t *_marpaESLIF_rule_newp(marpaESLIF_t *marpaESLIFp
   rulep->lhsp           = NULL;
   rulep->separatorp     = NULL;
   rulep->rhsStackp      = NULL; /* Take care, pointer to a stack inside rule structure */
+  rulep->rhsip          = NULL; /* Convenience array of RHS ids for rule introspection */
   rulep->exceptionp     = NULL;
   rulep->exceptionIdi   = -1;
   rulep->actions        = NULL;
@@ -2800,6 +2801,13 @@ static inline marpaESLIF_rule_t *_marpaESLIF_rule_newp(marpaESLIF_t *marpaESLIFp
         goto err;
       }
     }
+    /* And duplicate this array */
+    rulep->rhsip = (int *) malloc(sizeof(int) * nrhsl);
+    if (rulep->rhsip == NULL) {
+      MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
+      goto err;
+    }
+    memcpy(rulep->rhsip, rhsip, sizeof(int) * nrhsl);
   }
   
   /* Fill exception symbol */
@@ -2885,6 +2893,9 @@ static inline void _marpaESLIF_rule_freev(marpaESLIF_rule_t *rulep)
     }
     if (rulep->actions != NULL) {
       free(rulep->actions);
+    }
+    if (rulep->rhsip != NULL) {
+      free(rulep->rhsip);
     }
     /* In the rule structure, lhsp, rhsStackp and exceptionp contain shallow pointers */
     /* Only the stack themselves should be freed. */
