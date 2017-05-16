@@ -218,7 +218,9 @@ struct marpaESLIF_grammar {
   int                    starti;                             /* Default start symbol ID - filled during grammar validation */
   char                  *starts;                             /* Default start symbol name - filled during grammar validation - shallow pointer */
   int                   *ruleip;                             /* Array of rule IDs - filled by grammar validation */
-  size_t                 rulel;                              /* Size of the rule IDs array - filled by grammar validation */
+  size_t                 nrulel;                             /* Size of the rule IDs array - filled by grammar validation */
+  int                   *symbolip;                           /* Array of symbol IDs - filled by grammar validation */
+  size_t                 nsymboll;                           /* Size of the symbol IDs array - filled by grammar validation */
   unsigned int           nbupdatei;                          /* Number of updates - used in grammar ESLIF actions */
   char                  *asciishows;                         /* Grammar show (ASCII) */
   int                    discardi;                           /* Discard symbol ID - filled during grammar validation */
