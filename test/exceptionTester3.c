@@ -29,13 +29,9 @@ int main() {
   marpaESLIFOption_t           marpaESLIFOption;
   marpaESLIFGrammarOption_t    marpaESLIFGrammarOption;
   int                          exiti;
-  int                          ngrammari;
-  char                        *grammarshows;
-  int                          leveli;
   genericLogger_t             *genericLoggerp;
   marpaESLIFTester_context_t   marpaESLIFTester_context;
   marpaESLIFRecognizerOption_t marpaESLIFRecognizerOption;
-  marpaESLIFGrammarDefaults_t  marpaESLIFGrammarDefaults;
 
   genericLoggerp = GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_DEBUG);
 
