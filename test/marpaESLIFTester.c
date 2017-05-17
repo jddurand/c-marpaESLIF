@@ -89,7 +89,7 @@ int main() {
   }
 
   /* Extend ESLIF */
-  if (! marpaESLIF_extendb(&marpaESLIFp, "<action name> ::= '::array' action => ::ascii")) {
+  if (! marpaESLIF_extendb(marpaESLIFp, "<action name> ::= '::array' action => ::ascii")) {
     GENERICLOGGER_ERROR(marpaESLIFOption.genericLoggerp, "Extension failed");
     goto err;
   }

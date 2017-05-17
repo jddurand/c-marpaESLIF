@@ -3423,19 +3423,19 @@ static inline marpaESLIF_t *_marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptio
 }
 
 /*****************************************************************************/
-short marpaESLIF_extendb(marpaESLIF_t **marpaESLIFpp, char *extensions)
+short marpaESLIF_extendb(marpaESLIF_t *marpaESLIFp, char *extensions)
 /*****************************************************************************/
 {
-  marpaESLIF_t              *marpaESLIFNewp = NULL;
+  marpaESLIF_t              *marpaESLIFTmpp = NULL;
   marpaESLIFGrammarOption_t  marpaESLIFGrammarOption;
   short                      rcb;
 
-  if ((marpaESLIFpp == NULL) || (*marpaESLIFpp == NULL)) {
+  if (marpaESLIFp == NULL) {
     errno = EINVAL;
     goto err;
   }
   if (extensions == NULL) {
-    MARPAESLIF_ERRORF(*marpaESLIFpp, "extension pointer is NULL");
+    MARPAESLIF_ERROR(marpaESLIFp, "extension pointer is NULL");
     goto err;
   }
 
@@ -3444,8 +3444,8 @@ short marpaESLIF_extendb(marpaESLIF_t **marpaESLIFpp, char *extensions)
    * - inject this pristine's marpaESLIF's marpaESLIfGrammar into normal marpaESLIfGrammar_newp
    * - validate
    */
-  marpaESLIFNewp = _marpaESLIF_newp(&((*marpaESLIFpp)->marpaESLIFOption), 0 /* validateb */);
-  if (marpaESLIFNewp == NULL) {
+  marpaESLIFTmpp = _marpaESLIF_newp(&(marpaESLIFp->marpaESLIFOption), 0 /* validateb */);
+  if (marpaESLIFTmpp == NULL) {
     /* In theory this can NEVER fail, because we start with a marpaESLIFp that already */
     /* passed this step. */
     goto err;
@@ -3456,26 +3456,33 @@ short marpaESLIF_extendb(marpaESLIF_t **marpaESLIFpp, char *extensions)
   marpaESLIFGrammarOption.encodings           = NULL;
   marpaESLIFGrammarOption.encodingl           = 0;
   marpaESLIFGrammarOption.encodingOfEncodings = NULL;
-  if (_marpaESLIFGrammar_newp(*marpaESLIFpp, &marpaESLIFGrammarOption, marpaESLIFNewp->marpaESLIFGrammarp /* marpaESLIfGrammarPreviousp */) == NULL) {
+  /* Per def the output of _marpaESLIFGrammar_newp() will be marpaESLIFTmpp->marpaESLIFGrammarp if success */
+  if (_marpaESLIFGrammar_newp(marpaESLIFp, &marpaESLIFGrammarOption, marpaESLIFTmpp->marpaESLIFGrammarp /* marpaESLIfGrammarPreviousp */) == NULL) {
     goto err;
   }
 
-  if (! _marpaESLIFGrammar_validateb(marpaESLIFNewp->marpaESLIFGrammarp)) {
+  if (! _marpaESLIFGrammar_validateb(marpaESLIFTmpp->marpaESLIFGrammarp)) {
     goto err;
   }
 
-  /* All is fine: just replace current marpaESLIFp */
-  marpaESLIF_freev(*marpaESLIFpp);
-  *marpaESLIFpp = marpaESLIFNewp;
+  /* Just free the underlying grammar */
+  marpaESLIFGrammar_freev(marpaESLIFp->marpaESLIFGrammarp);
+  /* Copy the new grammar */
+  marpaESLIFp->marpaESLIFGrammarp = marpaESLIFTmpp->marpaESLIFGrammarp;
+  /* Remember this was copied */
+  marpaESLIFTmpp->marpaESLIFGrammarp = NULL;
+  /* Though take care, marpaESLIFGrammarp maintains a pointer to its parent... */
+  marpaESLIFp->marpaESLIFGrammarp->marpaESLIFp = marpaESLIFp;
 
   rcb = 1;
   goto done;
 
  err:
-  marpaESLIF_freev(marpaESLIFNewp);
   rcb = 0;
 
  done:
+  /* Free marpaESLIFTmpp in any case */
+  marpaESLIF_freev(marpaESLIFTmpp);
   return rcb;
 }
 
@@ -7186,6 +7193,7 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGramm
       }
     }
   } else {
+    marpaESLIFRecognizerp->marpaWrapperGrammarp         = NULL;
     marpaESLIFRecognizerp->marpaWrapperRecognizerp      = NULL;
     marpaESLIFRecognizerp->discardEventStatebp          = NULL;
     marpaESLIFRecognizerp->beforeEventStatebp           = NULL;
