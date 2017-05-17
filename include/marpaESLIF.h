@@ -177,7 +177,7 @@ typedef struct marpaESLIFRuleProperty {
   int                    exceptioni;                   /* Exception symbol Id (-1 if none) */
   char                  *actions;                      /* Action */
   char                  *discardEvents;                /* Discard event name - shallowed with its RHS */
-  short                  discardEventb;                /* Discard event initial state: 0: off, 1: on - copied to its RHS */
+  short                  discardEventb;                /* Discard event initial state: 0: off, 1: on */
   int                    ranki;                        /* Rank */
   short                  nullRanksHighb;               /* Null ranks high ? */
   short                  sequenceb;                    /* Sequence ? */
