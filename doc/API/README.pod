@@ -267,13 +267,44 @@ When both C<leveli> and C<descp> are set, C<descp> have precedence over C<leveli
 
 Returns a true value on failure, a false value on failure.
 
+=head3 C<marpaESLIFGrammar_grammarproperty_currentb>
+
+  typedef struct marpaESLIFGrammarProperty {
+    int                    leveli;                       /* Grammar level */
+    marpaESLIFString_t    *descp;                        /* Grammar description (auto-generated if none) */
+    short                  latmb;                        /* LATM ? */
+    char                  *defaultSymbolActions;         /* Default action for symbols - never NULL */
+    char                  *defaultRuleActions;           /* Default action for rules - never NULL */
+    char                  *defaultFreeActions;           /* Default action for free - can be NULL */
+    int                    starti;                       /* Start symbol Id - always >= 0 */
+    int                    discardi;                     /* Discard symbol Id (-1 if none) */
+    size_t                 nsymboll;                     /* Number of symbols - always > 0*/
+    int                   *symbolip;                     /* Array of symbols Ids - never NULL */
+    size_t                 nrulel;                       /* Number of rules - always > 0*/
+    int                   *ruleip;                       /* Array of rule Ids - never NULL */
+  } marpaESLIFGrammarProperty_t;
+
+  marpaESLIFGrammar_grammarproperty_currentb(marpaESLIFGrammar_t *marpaESLIFGrammarp,
+                                             marpaESLIFGrammarProperty_t *grammarPropertyp);
+
+Put in the value pointed by C<grammarPropertyp>, if it is not C<NULL>, current C<marpaESLIFGrammarp>'s grammar properties.
+
+=head3 C<marpaESLIFGrammar_grammarproperty_by_levelb>
+
+  marpaESLIFGrammar_grammarproperty_by_levelb(marpaESLIFGrammar_t *marpaESLIFGrammarp,
+                                              marpaESLIFGrammarProperty_t *grammarPropertyp,
+                                              int leveli,
+                                              marpaESLIFString_t *descp);
+
+Put in the value pointed by C<grammarPropertyp>, if it is not C<NULL>, C<marpaESLIFGrammarp>'s grammar's at level C<leveli> or with description C<descp> properties.
+
 =head3 C<marpaESLIFGrammar_rulearray_currentb>
 
   short marpaESLIFGrammar_rulearray_currentb(marpaESLIFGrammar_t  *marpaESLIFGrammarp,
                                              int                 **ruleipp,
                                              size_t               *rulelp);
 
-Puts in the values pointed by C<ruleipp> and C<rulelp> a pointer to an array of integer, and the number of them, respectively, of current grammar. User must B<not> try to free C<rulelp>.
+Puts in the values pointed by C<ruleipp> and C<rulelp> a pointer to an array of integer, and the number of them, respectively, of current grammar. User must B<not> try to free C<rulelp>. Please note that this is exactly the same information as the tuple C<{nrulel,ruleip>} returned by C<marpaESLIFGrammar_grammarproperty_currentb>.
 
 Returns a true value on failure, a false value on failure. C<*ruleipp> is never C<NULL> in case of success.
 
@@ -303,6 +334,58 @@ is the eventual explicit description, ignored if C<NULL>.
 When both C<leveli> and C<descp> are set, C<descp> have precedence over C<leveli>.
 
 Returns a true value on failure, a false value on failure. C<*ruleipp> is never C<NULL> in case of success.
+
+=head3 C<marpaESLIFGrammar_ruleproperty_currentb>
+
+  typedef enum marpaESLIFRulePropertyBit {
+    MARPAESLIF_RULE_IS_ACCESSIBLE = 0x01,
+    MARPAESLIF_RULE_IS_NULLABLE   = 0x02,
+    MARPAESLIF_RULE_IS_NULLING    = 0x04,
+    MARPAESLIF_RULE_IS_LOOP       = 0x08,
+    MARPAESLIF_RULE_IS_PRODUCTIVE = 0x10
+  } marpaESLIFRulePropertyBit_t;
+  
+  typedef struct marpaESLIFRuleProperty {
+    int                    idi;                          /* Rule Id */
+    marpaESLIFString_t    *descp;                        /* Rule alternative name (auto-generated if none) */
+    char                  *asciishows;                   /* Rule show (ASCII) */
+    int                    lhsi;                         /* LHS symbol Id */
+    int                    separatori;                   /* Eventual separator symbol Id (-1 if none) */
+    size_t                 nrhsl;                        /* Number of RHS, 0 in case of a nullable */
+    int                   *rhsip;                        /* Array of RHS Ids, NULL in case of a nullable */
+    int                    exceptioni;                   /* Exception symbol Id (-1 if none) */
+    char                  *actions;                      /* Action */
+    char                  *discardEvents;                /* Discard event name - shallowed with its RHS */
+    short                  discardEventb;                /* Discard event initial state: 0: off, 1: on - copied to its RHS */
+    int                    ranki;                        /* Rank */
+    short                  nullRanksHighb;               /* Null ranks high ? */
+    short                  sequenceb;                    /* Sequence ? */
+    short                  properb;                      /* Proper ? */
+    int                    minimumi;                     /* minimum in case of sequence ? */
+    short                  internalb;                    /* This rule is internal */
+    int                    propertyBitSet;               /* C.f. marpaESLIFRulePropertyBit_t */
+  } marpaESLIFRuleProperty_t;
+  
+
+  short marpaESLIFGrammar_ruleproperty_currentb(marpaESLIFGrammar_t *marpaESLIFGrammarp,
+                                                int rulei,
+                                                marpaESLIFRuleProperty_t *rulePropertyp);
+
+Puts in the value pointed by C<rulePropertyp>, if it is not C<NULL>, properties of rule number C<rulei> of current C<marpaESLIFGrammarp>'s grammar.
+
+Returns a true value on failure, a false value on failure.
+
+=head3 C<marpaESLIFGrammar_ruleproperty_by_levelb>
+
+  short marpaESLIFGrammar_ruleproperty_by_levelb(marpaESLIFGrammar_t *marpaESLIFGrammarp,
+                                                 int rulei,
+                                                 marpaESLIFRuleProperty_t *rulePropertyp,
+                                                 int leveli,
+                                                 marpaESLIFString_t *descp);
+
+Puts in the value pointed by C<rulePropertyp>, if it is not C<NULL>, properties of rule number C<rulei> of C<marpaESLIFGrammarp>'s grammar's level C<leveli> or description C<descp>.
+
+Returns a true value on failure, a false value on failure.
 
 =head3 C<marpaESLIFGrammar_ruledisplayform_currentb>
 
