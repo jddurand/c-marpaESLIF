@@ -199,6 +199,7 @@ static const marpaESLIF_stringGenerator_t  marpaESLIF_stringGeneratorTemplate = 
 
 /* Please note that EVERY _marpaESLIFRecognizer_xxx() method is logging at start and at return */
 
+static inline marpaESLIF_t          *_marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptionp, short validateb);
 static inline marpaESLIF_string_t   *_marpaESLIF_string_newp(marpaESLIF_t *marpaESLIFp, char *encodingasciis, char *bytep, size_t bytel, short asciib);
 static inline marpaESLIF_string_t   *_marpaESLIF_string_clonep(marpaESLIF_t *marpaESLIFp, marpaESLIF_string_t *stringp);
 static inline void                   _marpaESLIF_string_freev(marpaESLIF_string_t *stringp);
@@ -250,6 +251,7 @@ static inline marpaESLIF_grammar_t  *_marpaESLIF_bootstrap_grammarp(marpaESLIFGr
                                                                     char *defaultRuleActions,
                                                                     char *defaultFreeActions);
 static inline short                  _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIFGrammar);
+static inline marpaESLIFGrammar_t   *_marpaESLIFGrammar_newp(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammarOption_t *marpaESLIFGrammarOptionp, marpaESLIFGrammar_t *marpaESLIfGrammarPreviousp);
 
 static inline short                  _marpaESLIFRecognizer_terminal_matcherb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIF_terminal_t *terminalp, char *inputs, size_t inputl, short eofb, marpaESLIF_matcher_value_t *rcip, marpaESLIFValueResult_t *marpaESLIFValueResultp);
 static inline short                  _marpaESLIFRecognizer_meta_matcherb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIF_symbol_t *symbolp, marpaESLIF_matcher_value_t *rcip, marpaESLIFValueResult_t *marpaESLIFValueResultp, short *exhaustedbp);
@@ -1587,6 +1589,13 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
       It is not illegal to have sparse items in grammarStackp.
 
       The end of this routine is filling grammar information.
+
+      =================================================================================
+      Note that when we are extending a grammar, the same marpaESLIFGrammarp is reused.
+      For this reason, all pointers that are the result of an explicit or an implicit
+      malloc are explicitely checked before being writen.
+      =================================================================================
+
   */
 
   /*
@@ -1694,6 +1703,9 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
         MARPAESLIF_ERRORF(marpaESLIFp, "Grammar level %d (%s): cloning failure", grammari, grammarp->descp->asciis);
         goto err;
     }
+    if (grammarp->marpaWrapperGrammarStartNoEventp != NULL) {
+      marpaWrapperGrammar_freev(grammarp->marpaWrapperGrammarStartNoEventp);
+    }
     grammarp->marpaWrapperGrammarStartNoEventp = marpaWrapperGrammarClonep;
     marpaWrapperGrammarClonep = NULL;
 
@@ -1795,6 +1807,9 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
         MARPAESLIF_ERRORF(marpaESLIFp, "Precomputing grammar level %d (%s) at discard symbol %d <%s> failure", grammari, grammarp->descp->asciis, discardp->idi, discardp->descp->asciis);
         goto err;
       }
+      if (grammarp->marpaWrapperGrammarDiscardp != NULL) {
+        marpaWrapperGrammar_freev(grammarp->marpaWrapperGrammarDiscardp);
+      }      
       grammarp->marpaWrapperGrammarDiscardp = marpaWrapperGrammarClonep;
       marpaWrapperGrammarClonep = NULL;
       /* Same but with no event */
@@ -1809,6 +1824,9 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
         MARPAESLIF_ERRORF(marpaESLIFp, "Precomputing grammar level %d (%s) at discard symbol %d <%s> failure", grammari, grammarp->descp->asciis, discardp->idi, discardp->descp->asciis);
         goto err;
       }
+      if (grammarp->marpaWrapperGrammarDiscardNoEventp != NULL) {
+        marpaWrapperGrammar_freev(grammarp->marpaWrapperGrammarDiscardNoEventp);
+      }      
       grammarp->marpaWrapperGrammarDiscardNoEventp = marpaWrapperGrammarClonep;
       marpaWrapperGrammarClonep = NULL;
 
@@ -2003,6 +2021,9 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
         MARPAESLIF_ERRORF(marpaESLIFp, "Precomputing grammar level %d (%s) at symbol %d <%s> failure", subgrammarp->leveli, subgrammarp->descp->asciis, subSymbolp->idi, subSymbolp->descp->asciis);
         goto err;
       }
+      if (metap->marpaWrapperGrammarLexemeClonep != NULL) {
+        marpaWrapperGrammar_freev(metap->marpaWrapperGrammarLexemeClonep);
+      }      
       metap->marpaWrapperGrammarLexemeClonep = marpaWrapperGrammarClonep;
       metap->lexemeIdi                       = subSymbolp->idi;
       marpaWrapperGrammarClonep = NULL;
@@ -2258,6 +2279,9 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
     ruleStackp = grammarp->ruleStackp;
     grammarp->nrulel = GENERICSTACK_USED(ruleStackp);
     if (grammarp->nrulel > 0) {
+      if (grammarp->ruleip != NULL) {
+        free(grammarp->ruleip);
+      }
       grammarp->ruleip = (int *) malloc(grammarp->nrulel * sizeof(int));
       if (grammarp->ruleip == NULL) {
         MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
@@ -2267,6 +2291,9 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
         MARPAESLIF_INTERNAL_GET_RULE_FROM_STACK(marpaESLIFp, rulep, ruleStackp, rulei);
         grammarp->ruleip[rulei] = rulep->idi;
         _marpaESLIF_rule_createshowv(marpaESLIFp, grammarp, rulep, NULL, &asciishowl);
+        if (rulep->asciishows != NULL) {
+          free(rulep->asciishows);
+        }
         rulep->asciishows = (char *) malloc(asciishowl);
         if (rulep->asciishows == NULL) {
           MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
@@ -2282,6 +2309,9 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
     symbolStackp = grammarp->symbolStackp;
     grammarp->nsymboll = GENERICSTACK_USED(symbolStackp);
     if (grammarp->nsymboll > 0) {
+      if (grammarp->symbolip != NULL) {
+        free(grammarp->symbolip);
+      }
       grammarp->symbolip = (int *) malloc(grammarp->nsymboll * sizeof(int));
       if (grammarp->symbolip == NULL) {
         MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
@@ -3105,6 +3135,13 @@ const char *marpaESLIF_versions()
 marpaESLIF_t *marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptionp)
 /*****************************************************************************/
 {
+  return _marpaESLIF_newp(marpaESLIFOptionp, 1 /* validateb */);
+}
+
+/*****************************************************************************/
+static inline marpaESLIF_t *_marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptionp, short validateb)
+/*****************************************************************************/
+{
   static const char     *funcs       = "marpaESLIF_newp";
   marpaESLIF_grammar_t  *grammarp    = NULL;
   marpaESLIF_t          *marpaESLIFp = NULL;
@@ -3323,9 +3360,11 @@ marpaESLIF_t *marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptionp)
   }
   grammarp = NULL;
 
-  /* Validate the bootstrap grammar */
-  if (! _marpaESLIFGrammar_validateb(marpaESLIFp->marpaESLIFGrammarp)) {
-    goto err;
+  if (validateb) {
+    /* Validate the bootstrap grammar - this will precompute it: it can never be modified */
+    if (! _marpaESLIFGrammar_validateb(marpaESLIFp->marpaESLIFGrammarp)) {
+      goto err;
+    }
   }
 
   /* Check there is a top-level grammar */
@@ -3383,6 +3422,62 @@ marpaESLIF_t *marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptionp)
   return marpaESLIFp;
 }
 
+/*****************************************************************************/
+short marpaESLIF_extendb(marpaESLIF_t **marpaESLIFpp, char *extensions)
+/*****************************************************************************/
+{
+  marpaESLIF_t              *marpaESLIFNewp = NULL;
+  marpaESLIFGrammarOption_t  marpaESLIFGrammarOption;
+  short                      rcb;
+
+  if ((marpaESLIFpp == NULL) || (*marpaESLIFpp == NULL)) {
+    errno = EINVAL;
+    goto err;
+  }
+  if (extensions == NULL) {
+    MARPAESLIF_ERRORF(*marpaESLIFpp, "extension pointer is NULL");
+    goto err;
+  }
+
+  /* Extension is done in three steps:
+   * - create a pristine marpaESLIF_t (i.e. without validation)
+   * - inject this pristine's marpaESLIF's marpaESLIfGrammar into normal marpaESLIfGrammar_newp
+   * - validate
+   */
+  marpaESLIFNewp = _marpaESLIF_newp(&((*marpaESLIFpp)->marpaESLIFOption), 0 /* validateb */);
+  if (marpaESLIFNewp == NULL) {
+    /* In theory this can NEVER fail, because we start with a marpaESLIFp that already */
+    /* passed this step. */
+    goto err;
+  }
+
+  marpaESLIFGrammarOption.bytep               = (void *) extensions;
+  marpaESLIFGrammarOption.bytel               = strlen(extensions);
+  marpaESLIFGrammarOption.encodings           = NULL;
+  marpaESLIFGrammarOption.encodingl           = 0;
+  marpaESLIFGrammarOption.encodingOfEncodings = NULL;
+  if (_marpaESLIFGrammar_newp(*marpaESLIFpp, &marpaESLIFGrammarOption, marpaESLIFNewp->marpaESLIFGrammarp /* marpaESLIfGrammarPreviousp */) == NULL) {
+    goto err;
+  }
+
+  if (! _marpaESLIFGrammar_validateb(marpaESLIFNewp->marpaESLIFGrammarp)) {
+    goto err;
+  }
+
+  /* All is fine: just replace current marpaESLIFp */
+  marpaESLIF_freev(*marpaESLIFpp);
+  *marpaESLIFpp = marpaESLIFNewp;
+
+  rcb = 1;
+  goto done;
+
+ err:
+  marpaESLIF_freev(marpaESLIFNewp);
+  rcb = 0;
+
+ done:
+  return rcb;
+}
 
 /*****************************************************************************/
 void marpaESLIF_freev(marpaESLIF_t *marpaESLIFp)
@@ -4143,11 +4238,23 @@ static inline char *_marpaESLIF_charconvp(marpaESLIF_t *marpaESLIFp, char *toEnc
 marpaESLIFGrammar_t *marpaESLIFGrammar_newp(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammarOption_t *marpaESLIFGrammarOptionp)
 /*****************************************************************************/
 {
-  static const char                *funcs              = "marpaESLIFGrammar_newp";
-  marpaESLIFGrammar_t              *marpaESLIFGrammarp = NULL;
-  marpaESLIF_readerContext_t        marpaESLIF_readerContext;
+  if (marpaESLIFp == NULL) {
+    errno = EINVAL;
+    return NULL;
+  }
+  
+  return _marpaESLIFGrammar_newp(marpaESLIFp, marpaESLIFGrammarOptionp, NULL /* marpaESLIfGrammarPreviousp */);
+}
+
+/*****************************************************************************/
+static inline marpaESLIFGrammar_t *_marpaESLIFGrammar_newp(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammarOption_t *marpaESLIFGrammarOptionp, marpaESLIFGrammar_t *marpaESLIfGrammarPreviousp)
+/*****************************************************************************/
+{
+  static const char                *funcs                      = "_marpaESLIFGrammar_newp";
   marpaESLIFRecognizerOption_t      marpaESLIFRecognizerOption = marpaESLIFRecognizerOption_default_template;
   marpaESLIFValueOption_t           marpaESLIFValueOption      = marpaESLIFValueOption_default_template;
+  marpaESLIFGrammar_t              *marpaESLIFGrammarp         = NULL;
+  marpaESLIF_readerContext_t        marpaESLIF_readerContext;
   int                               grammari;
 
   /* MARPAESLIF_TRACE(marpaESLIFp, funcs, "Building Grammar"); */
@@ -4162,21 +4269,24 @@ marpaESLIFGrammar_t *marpaESLIFGrammar_newp(marpaESLIF_t *marpaESLIFp, marpaESLI
     goto err;
   }
 
-  marpaESLIFGrammarp = (marpaESLIFGrammar_t *) malloc(sizeof(marpaESLIFGrammar_t));
-  if (marpaESLIFGrammarp == NULL) {
-    MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
-    goto err;
+  if (marpaESLIfGrammarPreviousp == NULL) {
+    marpaESLIFGrammarp = (marpaESLIFGrammar_t *) malloc(sizeof(marpaESLIFGrammar_t));
+    if (marpaESLIFGrammarp == NULL) {
+      MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
+      goto err;
+    }
+    marpaESLIFGrammarp->marpaESLIFp       = marpaESLIFp;
+    marpaESLIFGrammarp->grammarStackp     = NULL;
+    marpaESLIFGrammarp->grammarp          = NULL;
+    marpaESLIFGrammarp->warningIsErrorb   = 0;
+    marpaESLIFGrammarp->warningIsIgnoredb = 0;
+    marpaESLIFGrammarp->autorankb         = 0;
+  } else {
+    marpaESLIFGrammarp = marpaESLIfGrammarPreviousp;
   }
 
-  marpaESLIFGrammarp->marpaESLIFp       = marpaESLIFp;
-  marpaESLIFGrammarp->grammarStackp     = NULL;
-  marpaESLIFGrammarp->grammarp          = NULL;
-  marpaESLIFGrammarp->warningIsErrorb   = 0;
-  marpaESLIFGrammarp->warningIsIgnoredb = 0;
-  marpaESLIFGrammarp->autorankb         = 0;
-
   /* Our internal grammar reader callback */
-  marpaESLIF_readerContext.marpaESLIFp = marpaESLIFp;
+  marpaESLIF_readerContext.marpaESLIFp              = marpaESLIFp;
   marpaESLIF_readerContext.marpaESLIFGrammarOptionp = marpaESLIFGrammarOptionp;
 
   /* Overwrite things not setted in the template, or with which we want a change */
@@ -4222,7 +4332,10 @@ marpaESLIFGrammar_t *marpaESLIFGrammar_newp(marpaESLIF_t *marpaESLIFp, marpaESLI
   goto done;
 
  err:
-  marpaESLIFGrammar_freev(marpaESLIFGrammarp);
+  /* We do not want to free it, if it was injected: parent should take care of that */
+  if (marpaESLIfGrammarPreviousp == NULL) {
+    marpaESLIFGrammar_freev(marpaESLIFGrammarp);
+  }
   marpaESLIFGrammarp = NULL;
 
  done:

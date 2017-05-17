@@ -88,6 +88,12 @@ int main() {
     goto err;
   }
 
+  /* Extend ESLIF */
+  if (! marpaESLIF_extendb(&marpaESLIFp, "<action name> ::= '::array' action => ::ascii")) {
+    GENERICLOGGER_ERROR(marpaESLIFOption.genericLoggerp, "Extension failed");
+    goto err;
+  }
+  
   /* Dump ESLIF grammar */
   if (marpaESLIFGrammar_ngrammarib(marpaESLIF_grammarp(marpaESLIFp), &ngrammari)) {
     for (leveli = 0; leveli < ngrammari; leveli++) {
