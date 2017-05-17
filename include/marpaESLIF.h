@@ -192,6 +192,7 @@ extern "C" {
 #endif
   marpaESLIF_EXPORT const char             *marpaESLIF_versions();
   marpaESLIF_EXPORT marpaESLIF_t           *marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptionp);
+  marpaESLIF_EXPORT short                   marpaESLIF_extendb(marpaESLIF_t **marpaESLIFpp, char *extensions);
   marpaESLIF_EXPORT marpaESLIFGrammar_t    *marpaESLIF_grammarp(marpaESLIF_t *marpaESLIFp);
 
   marpaESLIF_EXPORT marpaESLIFGrammar_t    *marpaESLIFGrammar_newp(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammarOption_t *marpaESLIFGrammarOptionp);
