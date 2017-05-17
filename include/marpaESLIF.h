@@ -184,6 +184,7 @@ typedef struct marpaESLIFRuleProperty {
   short                  properb;                      /* Proper ? */
   int                    minimumi;                     /* minimum in case of sequence ? */
   short                  internalb;                    /* This rule is internal */
+  int                    propertyBitSet;               /* C.f. marpaESLIFRulePropertyBit_t */
 } marpaESLIFRuleProperty_t;
 
 #ifdef __cplusplus

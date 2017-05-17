@@ -169,6 +169,11 @@ int main() {
             GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... Proper ?              : %d", (int) ruleProperty.properb);
             GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... Sequence minimum      : %d", ruleProperty.minimumi);
             GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... Internal ?            : %d", (int) ruleProperty.internalb);
+            GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... Accessible ?          : %s", ((ruleProperty.propertyBitSet & MARPAESLIF_RULE_IS_ACCESSIBLE) == MARPAESLIF_RULE_IS_ACCESSIBLE) ? "yes" : "no");
+            GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... Nullable ?            : %s", ((ruleProperty.propertyBitSet & MARPAESLIF_RULE_IS_NULLABLE) == MARPAESLIF_RULE_IS_NULLABLE) ? "yes" : "no");
+            GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... Nulling ?             : %s", ((ruleProperty.propertyBitSet & MARPAESLIF_RULE_IS_NULLING) == MARPAESLIF_RULE_IS_NULLING) ? "yes" : "no");
+            GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... Loop ?                : %s", ((ruleProperty.propertyBitSet & MARPAESLIF_RULE_IS_LOOP) == MARPAESLIF_RULE_IS_LOOP) ? "yes" : "no");
+            GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... Productive ?          : %s", ((ruleProperty.propertyBitSet & MARPAESLIF_RULE_IS_PRODUCTIVE) == MARPAESLIF_RULE_IS_PRODUCTIVE) ? "yes" : "no");
           }
         }
       }
