@@ -10803,11 +10803,15 @@ static inline short _marpaESLIFValue_stack_i_resetb(marpaESLIFValue_t *marpaESLI
 }
 
 /*****************************************************************************/
-short marpaESLIFValue_contextb(marpaESLIFValue_t *marpaESLIFValuep, char **symbolsp, char **rulesp)
+short marpaESLIFValue_contextb(marpaESLIFValue_t *marpaESLIFValuep, char **symbolsp, int *symbolip, char **rulesp, int *ruleip)
 /*****************************************************************************/
 {
   static const char *funcs  = "marpaESLIFValue_contextb";
   short              rcb;
+  char              *symbols;
+  int                symboli;
+  char              *rules;
+  int                rulei;
 
   if (marpaESLIFValuep == NULL) {
     errno = EINVAL;
@@ -10819,15 +10823,32 @@ short marpaESLIFValue_contextb(marpaESLIFValue_t *marpaESLIFValuep, char **symbo
     goto err;
   }
 
+  if (marpaESLIFValuep->symbolp != NULL) {
+    symbols = marpaESLIFValuep->symbolp->descp->asciis;
+    symboli = marpaESLIFValuep->symbolp->idi;
+    rules = NULL;
+    rulei = 0;
+  } else if (marpaESLIFValuep->rulep != NULL) {
+    symbols = NULL;
+    symboli = 0;
+    rules   = marpaESLIFValuep->rulep->descp->asciis;
+    rulei   = marpaESLIFValuep->rulep->idi;
+  } else {
+    MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "%s found no symbol nor rule in current context", funcs);
+    goto err;
+  }
+
   if (symbolsp != NULL) {
-    if (marpaESLIFValuep->symbolp != NULL) {
-      *symbolsp = marpaESLIFValuep->symbolp->descp->asciis;
-    }
+    *symbolsp = symbols;
+  }
+  if (symbolip != NULL) {
+    *symbolip = symboli;
   }
   if (rulesp != NULL) {
-    if (marpaESLIFValuep->rulep != NULL) {
-      *rulesp = marpaESLIFValuep->rulep->descp->asciis;
-    }
+    *rulesp = rules;
+  }
+  if (ruleip != NULL) {
+    *ruleip = rulei;
   }
 
   rcb = 1;

@@ -1769,9 +1769,11 @@ Returns a true value on success, else a false value.
 
   short marpaESLIFValue_contextb(marpaESLIFValue_t  *marpaESLIFValuep,
                                  char              **symbolsp,
-                                 char               *rulesp);
+                                 int                *symbolip,
+                                 char              **rulesp,
+                                 int                *ruleip);
 
-Puts in the value pointed by C<symbolsp> if it is not C<NULL>, the current symbol name if valuation occurs on a symbol, or in the value pointed by C<rulesp> if it is not C<NULL>, the current current rule name if valuation occurs on a rule.
+Puts in the value pointed by C<symbolsp> if it is not C<NULL>, the current symbol name if valuation occurs on a symbol, or in the value pointed by C<rulesp> if it is not C<NULL>, the current current rule name if valuation occurs on a rule. Idem for C<symbolip> and C<ruleip> concerning symbol Id and rule Id, respectively.
 
 Returns a true value on success, a false value on failure.
 
