@@ -73,45 +73,6 @@ A pointer to a L<genericLogger|https://github.com/jddurand/c-genericLogger> inst
 
 =back
 
-=head3 C<marpaESLIF_newp>
-
-  typedef struct marpaESLIFOption {
-    genericLogger_t *genericLoggerp;  /* Logger. Default: NULL */
-  } marpaESLIFOption_t;
-
-  marpaESLIF_t *marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptionp);
-
-This method is returning a C<marpaESLIF> object, or C<NULL> in case of failure. The parameter C<marpaESLIFOptionp> is a pointer to a C<marpaESLIFOption_t> structure, or C<NULL>. The C<marpaESLIFOption_t> has, as of this version, the single following component:
-
-=head3 C<marpaESLIF_extendb>
-
-  short marpaESLIF_extendb(marpaESLIF_t **marpaESLIFpp,
-                           char *extensions);
-
-Extends and replace ESLIF grammar pointed by C<*marpaESLIFpp> using the string pointed by C<extensions>.
-
-This extension I<must> comply with current ESLIF grammar, that you should inspect first using C<marpaESLIFGrammar_grammarshowform_currentb> and/or C<marpaESLIFGrammar_grammarshowform_by_levelb>, getting current grammar with C<marpaESLIF_grammarp(marpaESLIFp)>. For example to extend built-in rules to accept the reserved keyword C<::myRule>, you would first dump current grammar and realize that actions are treated like this:
-
-  <action name> ::= <restricted ascii graph name> action => ::ascii
-  <action name> ::= '::shift' action => ::ascii
-  <action name> ::= '::undef' action => ::ascii
-  <action name> ::= '::ascii' action => ::ascii
-  <action name> ::= /::convert\[[^\]]+\]/ action => ::ascii
-  <action name> ::= '::concat' action => ::ascii
-  <action name> ::= /::copy\[\d+\]/ action => ::ascii
-
-This clearly indicates that all actions are treated the same way, so your extension should be:
-
-  <action name> ::= '::myRule' action => ::ascii
-
-i.e.:
-
-  marpaESLIF_extendb(&marpaESLIFp, "<action name> ::= '::myRule' action => ::ascii")
-
-Inspecting raw grammar is essential to get the right action associated to your extension. In case your extension failed, a comprehensive error should be printed out, usually saying that the associated action is not of the expected type. At most, inspection of ESLIF source code that is parsing a grammar migh be necessary: this is the file C<src/bootstrap_actions.c> in I<c-marpaESLIF> repository.
-
-Please note that extensions are not cumulative: the latest call C<marpaESLIF_extendb> replaces all the others.
-
 =head3 C<marpaESLIF_freev>
 
   void marpaESLIF_freev(marpaESLIF_t *marpaESLIFp);
