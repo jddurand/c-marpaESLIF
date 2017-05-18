@@ -276,6 +276,8 @@ static const char   *ASCIIs = "ASCII";
     _l = _marpaESLIFValueResultp->sizel;                                \
   } while (0)
 
+#define MARPAESLIF_NOSEP_HOOK        "nosep->"
+#define MARPAESLIF_NOSEP_HOOK_LENGTH 7
 
 /*****************************************************************************/
 /* Copy of Params-Validate-1.26/lib/Params/Validate/XS.xs                    */
@@ -430,6 +432,11 @@ static SV *marpaESLIF_call_actionp(pTHX_ SV *svp, char *methods, AV *avp)
   SSize_t avsizel = (avp != NULL) ? av_len(avp) + 1 : 0;
   SSize_t aviteratol;
   dSP;
+
+  /* Here we handle perl specific actions that are impossible in userspace -; */
+  if (strcmp(methods, "[]") == 0) {
+    return newRV_noinc((SV *) ((avp != NULL) ? avp : newAV()));
+  }
 
   /*
     fprintf(stderr, "START marpaESLIF_call_actionp(pTHX_ SV *svp, \"%s\", %p)\n", methods, avp);
@@ -805,16 +812,47 @@ static short marpaESLIF_valueRuleCallbackb(void *userDatavp, marpaESLIFValue_t *
   dTHX;
   static const char        *funcs               = "marpaESLIF_valueRuleCallbackb";
   MarpaX_ESLIF_Value_t     *MarpaX_ESLIF_Valuep = (MarpaX_ESLIF_Value_t *) userDatavp;
+  char                     *actions             = MarpaX_ESLIF_Valuep->actions;
   AV                       *list                = NULL;
+  short                     nosepb              = 0;
+  short                     oddb                = 0;
   SV                       *actionResult;
   SV                       *svp;
   int                       i;
+  int                       rulei;
+  marpaESLIFRuleProperty_t  marpaESLIFRuleProperty;
 
   /* fprintf(stderr, "... Rule action %s Stack[%d..%d] => Stack[%d]\n", MarpaX_ESLIF_Valuep->actions, arg0i, argni, resulti); */
 
+  /* If this is a special perl hook, starting with "nosep->", inspect the rule to know if it has a separator */
+  if (strncmp(actions, MARPAESLIF_NOSEP_HOOK, MARPAESLIF_NOSEP_HOOK_LENGTH) == 0) {
+    if (! marpaESLIFValue_contextb(marpaESLIFValuep, NULL /* symbolsp */, NULL /* symbolip */, NULL /* rulesp */, &rulei)) {
+      MARPAESLIF_CROAKF("marpaESLIFValue_contextb failure, %s", strerror(errno));
+    }
+    if (rulei < 0) {
+      MARPAESLIF_CROAKF("Rule callback but rulei is %d", rulei);
+    }
+    if (! marpaESLIFGrammar_ruleproperty_currentb(marpaESLIFRecognizer_grammarp(marpaESLIFValue_recognizerp(marpaESLIFValuep)), rulei, &marpaESLIFRuleProperty)) {
+      MARPAESLIF_CROAKF("marpaESLIFGrammar_ruleproperty_currentb failure, %s", strerror(errno));
+    }
+    if (marpaESLIFRuleProperty.separatori >= 0) {
+      /* Skip the separator... */
+      nosepb = 1;
+    }
+
+    /* Remember the real action is what is after "nosep->" */
+    actions += MARPAESLIF_NOSEP_HOOK_LENGTH;
+  }
+
   if (! nullableb) {
     list = newAV();
-    for (i = arg0i; i <= argni; i++) {
+    for (i = arg0i; i <= argni; i++, oddb = !oddb) {
+
+      if (nosepb && oddb) {
+        /* By definition, a rule having a separator is a sequence: value[0] sep value[1] sep value[2] etc... */
+        /* i.e. odd value must be skipped */
+        continue;
+      }
       svp = marpaESLIF_getSvFromStack(aTHX_ MarpaX_ESLIF_Valuep, marpaESLIFValuep, i, NULL /* bytep */, 0 /* bytel */);
       /*
         sv_dump(svp);
@@ -822,7 +860,8 @@ static short marpaESLIF_valueRuleCallbackb(void *userDatavp, marpaESLIFValue_t *
       av_push(list, svp);
     }
   }
-  actionResult = marpaESLIF_call_actionp(aTHX_ MarpaX_ESLIF_Valuep->Perl_valueInterfacep, MarpaX_ESLIF_Valuep->actions, list);
+
+  actionResult = marpaESLIF_call_actionp(aTHX_ MarpaX_ESLIF_Valuep->Perl_valueInterfacep, actions, list);
   if (list != NULL) {
     av_undef(list);
   }
