@@ -162,7 +162,7 @@ static int                             marpaESLIF_getTypei(pTHX_ SV* svp);
 static short                           marpaESLIF_canb(pTHX_ SV *svp, char *methods);
 static void                            marpaESLIF_call_methodv(pTHX_ SV *svp, char *methods, SV *argsvp);
 static SV                             *marpaESLIF_call_methodp(pTHX_ SV *svp, char *methods);
-static SV                             *marpaESLIF_call_actionp(pTHX_ SV *svp, char *methods, AV *avp);
+static SV                             *marpaESLIF_call_actionp(pTHX_ SV *svp, char *methods, AV *avp, short *av_undefbp);
 static SV                             *marpaESLIF_call_actionv(pTHX_ SV *svp, char *methods, AV *avp);
 static IV                              marpaESLIF_call_methodi(pTHX_ SV *svp, char *methods);
 static short                           marpaESLIF_call_methodb(pTHX_ SV *svp, char *methods);
@@ -365,7 +365,7 @@ static short marpaESLIF_canb(pTHX_ SV *svp, char *methods)
   */
   /* We always check methods that have ASCII only characters */
   av_push(list, newSVpv(methods, 0));
-  rcp = marpaESLIF_call_actionp(aTHX_ svp, "can", list);
+  rcp = marpaESLIF_call_actionp(aTHX_ svp, "can", list, NULL);
   av_undef(list);
 
   type = marpaESLIF_getTypei(aTHX_ rcp);
@@ -415,7 +415,7 @@ static SV *marpaESLIF_call_methodp(pTHX_ SV *svp, char *methods)
   /*
     fprintf(stderr, "START marpaESLIF_call_methodp(pTHX_ SV *svp, \"%s\")\n", methods);
   */
-  rcp = marpaESLIF_call_actionp(aTHX_ svp, methods, NULL);
+  rcp = marpaESLIF_call_actionp(aTHX_ svp, methods, NULL, NULL);
   /*
     fprintf(stderr, "END marpaESLIF_call_methodp(pTHX_ SV *svp, \"%s\")\n", methods);
   */
@@ -424,7 +424,7 @@ static SV *marpaESLIF_call_methodp(pTHX_ SV *svp, char *methods)
 }
 
 /*****************************************************************************/
-static SV *marpaESLIF_call_actionp(pTHX_ SV *svp, char *methods, AV *avp)
+static SV *marpaESLIF_call_actionp(pTHX_ SV *svp, char *methods, AV *avp, short *av_undefbp)
 /*****************************************************************************/
 {
   static const char *funcs = "marpaESLIF_call_actionp";
@@ -435,6 +435,9 @@ static SV *marpaESLIF_call_actionp(pTHX_ SV *svp, char *methods, AV *avp)
 
   /* Here we handle perl specific actions that are impossible in userspace -; */
   if (strcmp(methods, "[]") == 0) {
+    if (av_undefbp != NULL) {
+      *av_undefbp = 0;
+    }
     return newRV_noinc((SV *) ((avp != NULL) ? avp : newAV()));
   }
 
@@ -821,6 +824,7 @@ static short marpaESLIF_valueRuleCallbackb(void *userDatavp, marpaESLIFValue_t *
   int                       i;
   int                       rulei;
   marpaESLIFRuleProperty_t  marpaESLIFRuleProperty;
+  short                     av_undefb = 1;
 
   /* fprintf(stderr, "... Rule action %s Stack[%d..%d] => Stack[%d]\n", MarpaX_ESLIF_Valuep->actions, arg0i, argni, resulti); */
 
@@ -861,8 +865,8 @@ static short marpaESLIF_valueRuleCallbackb(void *userDatavp, marpaESLIFValue_t *
     }
   }
 
-  actionResult = marpaESLIF_call_actionp(aTHX_ MarpaX_ESLIF_Valuep->Perl_valueInterfacep, actions, list);
-  if (list != NULL) {
+  actionResult = marpaESLIF_call_actionp(aTHX_ MarpaX_ESLIF_Valuep->Perl_valueInterfacep, actions, list, &av_undefb);
+  if (av_undefb && (list != NULL)) {
     av_undef(list);
   }
 
@@ -880,14 +884,17 @@ static short marpaESLIF_valueSymbolCallbackb(void *userDatavp, marpaESLIFValue_t
   MarpaX_ESLIF_Value_t     *MarpaX_ESLIF_Valuep = (MarpaX_ESLIF_Value_t *) userDatavp;
   AV                       *list                    = NULL;
   SV                       *actionResult;
+  short                     av_undefb = 1;
   dTHX;
 
   /* fprintf(stderr, "... Symbol action %s => Stack[%d]\n", MarpaX_ESLIF_Valuep->actions, resulti); */
 
   list = newAV();
   av_push(list, marpaESLIF_getSvFromStack(aTHX_ MarpaX_ESLIF_Valuep, marpaESLIFValuep, -1 /* not used */, bytep, bytel));
-  actionResult = marpaESLIF_call_actionp(aTHX_ MarpaX_ESLIF_Valuep->Perl_valueInterfacep, MarpaX_ESLIF_Valuep->actions, list);
-  av_undef(list);
+  actionResult = marpaESLIF_call_actionp(aTHX_ MarpaX_ESLIF_Valuep->Perl_valueInterfacep, MarpaX_ESLIF_Valuep->actions, list, &av_undefb);
+  if (av_undefb) {
+    av_undef(list);
+  }
 
   MARPAESLIF_SET_PTR(marpaESLIFValuep, resulti, 1 /* context: any value != 0 */, marpaESLIF_representation, actionResult);
 
