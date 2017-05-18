@@ -2947,6 +2947,9 @@ static inline void _marpaESLIF_rule_freev(marpaESLIF_rule_t *rulep)
     if (rulep->rhsip != NULL) {
       free(rulep->rhsip);
     }
+    if (rulep->discardEvents) {
+      free(rulep->discardEvents);
+    }
     /* In the rule structure, lhsp, rhsStackp and exceptionp contain shallow pointers */
     /* Only the stack themselves should be freed. */
     /*
@@ -2993,7 +2996,7 @@ static inline marpaESLIF_symbol_t *_marpaESLIF_symbol_newp(marpaESLIF_t *marpaES
   symbolp->eventNulledb           = 1; /* An event is on by default */
   symbolp->eventCompleteds        = NULL;
   symbolp->eventCompletedb        = 1; /* An event is on by default */
-  symbolp->discardEvents          = NULL;
+  symbolp->discardEvents          = NULL; /* Shallow copy */
   symbolp->discardEventb          = 1; /* An event is on by default */
   symbolp->lookupLevelDeltai      = 1;   /* Default lookup is the next grammar level */
   symbolp->lookupMetas            = NULL;
@@ -3063,9 +3066,6 @@ static inline void _marpaESLIF_symbol_freev(marpaESLIF_symbol_t *symbolp)
     }
     if (symbolp->eventCompleteds) {
       free(symbolp->eventCompleteds);
-    }
-    if (symbolp->discardEvents) {
-      free(symbolp->discardEvents);
     }
     GENERICSTACK_RESET(symbolp->nullableRuleStackp); /* Take care, this is a pointer to stack internal to symbol structure */
     GENERICSTACK_RESET(symbolp->lhsRuleStackp); /* Take care, this is a pointer to stack internal to symbol structure */

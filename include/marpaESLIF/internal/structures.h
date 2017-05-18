@@ -155,7 +155,7 @@ struct marpaESLIFSymbol {
   short                        eventNulledb;           /* Nulled initial state: 0: off, 1: on */
   char                        *eventCompleteds;        /* Event name for completion */
   short                        eventCompletedb;        /* Completion initial state: 0: off, 1: on */
-  char                        *discardEvents;          /* Discard event name - shallow pointer to a :discard rule */
+  char                        *discardEvents;          /* Discard event name - shallow pointer to a :discard rule's discardEvents */
   short                        discardEventb;          /* Discard event initial state: 0: off, 1: on - copy of :discard's rule value */
   int                          lookupLevelDeltai;      /* Referenced grammar delta level */
   char                        *lookupMetas;            /* Referenced lookup meta name - shallow pointer */
@@ -185,7 +185,7 @@ struct marpaESLIF_rule {
   marpaESLIF_symbol_t   *exceptionp;                   /* Exception symbol */
   int                    exceptionIdi;                 /* Exception symbol Id */
   char                  *actions;                      /* Action */
-  char                  *discardEvents;                /* Discard event name - shallowed with its RHS */
+  char                  *discardEvents;                /* Discard event name - shallowed to its RHS */
   short                  discardEventb;                /* Discard event initial state: 0: off, 1: on - copied to its RHS */
   int                    ranki;
   short                  nullRanksHighb;
