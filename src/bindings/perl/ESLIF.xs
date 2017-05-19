@@ -19,6 +19,9 @@
 /* Pre-action filter on arguments */
 #define MARPAESLIF_PERL_ARG_FILTER "(?:%nosep\\->)?(?:%skip\\(-?\\d+(?:,-?\\d+)*\\)\\->)?" /* Eventual skip(list), eventually prepended by %nosep-> */
 
+#define MARPAESLIF_PERL_ARG_FILTER_NOSEP        "%nosep->"
+#define MARPAESLIF_PERL_ARG_FILTER_NOSEP_LENGTH 8
+
 /* Built-in actions extensions */
 static const char *actionsArrayp[] = {
   "/" MARPAESLIF_PERL_ARG_FILTER "%\\[\\]" "/",     /* Generates an array ref, with optional element selection */
@@ -176,7 +179,7 @@ static int                             marpaESLIF_getTypei(pTHX_ SV* svp);
 static short                           marpaESLIF_canb(pTHX_ SV *svp, char *methods);
 static void                            marpaESLIF_call_methodv(pTHX_ SV *svp, char *methods, SV *argsvp);
 static SV                             *marpaESLIF_call_methodp(pTHX_ SV *svp, char *methods);
-static SV                             *marpaESLIF_call_actionp(pTHX_ SV *svp, char *methods, AV *avp);
+static SV                             *marpaESLIF_call_actionp(pTHX_ SV *svp, char *methods, AV *avp, marpaESLIFValue_t *marpaESLIFValuep, int rulei);
 static SV                             *marpaESLIF_call_actionv(pTHX_ SV *svp, char *methods, AV *avp);
 static IV                              marpaESLIF_call_methodi(pTHX_ SV *svp, char *methods);
 static short                           marpaESLIF_call_methodb(pTHX_ SV *svp, char *methods);
@@ -376,7 +379,7 @@ static short marpaESLIF_canb(pTHX_ SV *svp, char *methods)
   */
   /* We always check methods that have ASCII only characters */
   av_push(list, newSVpv(methods, 0));
-  rcp = marpaESLIF_call_actionp(aTHX_ svp, "can", list);
+  rcp = marpaESLIF_call_actionp(aTHX_ svp, "can", list, NULL /* marpaESLIFValuep */, -1 /* rulei */);
   av_undef(list);
 
   type = marpaESLIF_getTypei(aTHX_ rcp);
@@ -426,7 +429,7 @@ static SV *marpaESLIF_call_methodp(pTHX_ SV *svp, char *methods)
   /*
     fprintf(stderr, "START marpaESLIF_call_methodp(pTHX_ SV *svp, \"%s\")\n", methods);
   */
-  rcp = marpaESLIF_call_actionp(aTHX_ svp, methods, NULL);
+  rcp = marpaESLIF_call_actionp(aTHX_ svp, methods, NULL /* avp */, NULL /* marpaESLIFValuep */, -1 /* rulei */);
   /*
     fprintf(stderr, "END marpaESLIF_call_methodp(pTHX_ SV *svp, \"%s\")\n", methods);
   */
@@ -435,17 +438,53 @@ static SV *marpaESLIF_call_methodp(pTHX_ SV *svp, char *methods)
 }
 
 /*****************************************************************************/
-static SV *marpaESLIF_call_actionp(pTHX_ SV *svp, char *methods, AV *avp)
+static SV *marpaESLIF_call_actionp(pTHX_ SV *svp, char *methods, AV *avp, marpaESLIFValue_t *marpaESLIFValuep, int rulei)
 /*****************************************************************************/
 {
-  static const char *funcs = "marpaESLIF_call_actionp";
-  SV *rcp;
-  SSize_t avsizel = (avp != NULL) ? av_len(avp) + 1 : 0;
-  SSize_t aviteratol;
+  static const char        *funcs = "marpaESLIF_call_actionp";
+  SV                       *rcp;
+  SSize_t                   avsizel = (avp != NULL) ? av_len(avp) + 1 : 0;
+  SSize_t                   aviteratol;
+  marpaESLIFRuleProperty_t  ruleProperty;
+  marpaESLIFGrammar_t      *marpaESLIFGrammarp;
+  SSize_t                   keyToDelete;
   dSP;
 
+  /* It is here that we manage the action built-in extensions */
+  /* Eventual "%nosep->" */
+  if (strncmp(methods, MARPAESLIF_PERL_ARG_FILTER_NOSEP, MARPAESLIF_PERL_ARG_FILTER_NOSEP_LENGTH) == 0) {
+    /* This is meaningul only if rulei is >= 0 and there are arguments */
+    if ((rulei >= 0) && (avsizel > 0)) {
+      marpaESLIFGrammarp = marpaESLIFRecognizer_grammarp(marpaESLIFValue_recognizerp(marpaESLIFValuep));
+      if (! marpaESLIFGrammar_ruleproperty_currentb(marpaESLIFGrammarp, rulei, &ruleProperty)) {
+        MARPAESLIF_CROAKF("marpaESLIFGrammar_ruleproperty_currentb failure, %s", strerror(errno));
+      }
+      if (ruleProperty.separatori >= 0) {
+        /* Yes, this is a rule with a separator */
+        /* This mean that arguments are: value1 separator value2 separator etc... */
+        /* It MAY end with separator if rule have proper => 0 */
+        if ((avsizel << 1) != 0) {
+          /* Odd number of elements: it ends with a separator */
+          keyToDelete = avsizel;
+        } else {
+          /* Event number of elements: it does not end with a separator */
+          keyToDelete = avsizel - 1;
+        }
+        while (keyToDelete > 0) {
+          av_delete(avp, keyToDelete, G_DISCARD);
+          if (keyToDelete <= 0) {
+            /* Done */
+            break;
+          }
+          keyToDelete -= 2;
+        }
+      }
+    }
+    methods += MARPAESLIF_PERL_ARG_FILTER_NOSEP_LENGTH;
+  }
+  
   /*
-    fprintf(stderr, "START marpaESLIF_call_actionp(pTHX_ SV *svp, \"%s\", %p)\n", methods, avp);
+    fprintf(stderr, "START marpaESLIF_call_actionp(pTHX_ SV *svp, \"%s\", %p, %p, %d)\n", methods, avp, marpaESLIFValuep, rulei);
   */
   ENTER;
   SAVETMPS;
@@ -473,7 +512,7 @@ static SV *marpaESLIF_call_actionp(pTHX_ SV *svp, char *methods, AV *avp)
   LEAVE;
 
   /*
-    fprintf(stderr, "END marpaESLIF_call_actionp(pTHX_ SV *svp, \"%s\", AV *avp)\n", methods);
+    fprintf(stderr, "END marpaESLIF_call_actionp(pTHX_ SV *svp, \"%s\", %p, %p, %d)\n", methods, avp, marpaESLIFValuep, rulei);
   */
   return rcp;
 }
@@ -823,6 +862,12 @@ static short marpaESLIF_valueRuleCallbackb(void *userDatavp, marpaESLIFValue_t *
   SV                       *actionResult;
   SV                       *svp;
   int                       i;
+  int                       rulei;
+
+  /* Get rule number */
+  if (! marpaESLIFValue_contextb(marpaESLIFValuep, NULL /* symbolsp */, NULL /* symbolip */, NULL /* rulesp */, &rulei)) {
+    MARPAESLIF_CROAKF("marpaESLIFValue_contextb failure, %s", strerror(errno));
+  }
 
   /* fprintf(stderr, "... Rule action %s Stack[%d..%d] => Stack[%d]\n", MarpaX_ESLIF_Valuep->actions, arg0i, argni, resulti); */
   if (! nullableb) {
@@ -836,7 +881,7 @@ static short marpaESLIF_valueRuleCallbackb(void *userDatavp, marpaESLIFValue_t *
     }
   }
 
-  actionResult = marpaESLIF_call_actionp(aTHX_ MarpaX_ESLIF_Valuep->Perl_valueInterfacep, actions, list);
+  actionResult = marpaESLIF_call_actionp(aTHX_ MarpaX_ESLIF_Valuep->Perl_valueInterfacep, actions, list, marpaESLIFValuep, rulei);
   if (list != NULL) {
     av_undef(list);
   }
@@ -861,7 +906,7 @@ static short marpaESLIF_valueSymbolCallbackb(void *userDatavp, marpaESLIFValue_t
 
   list = newAV();
   av_push(list, marpaESLIF_getSvFromStack(aTHX_ MarpaX_ESLIF_Valuep, marpaESLIFValuep, -1 /* not used */, bytep, bytel));
-  actionResult = marpaESLIF_call_actionp(aTHX_ MarpaX_ESLIF_Valuep->Perl_valueInterfacep, MarpaX_ESLIF_Valuep->actions, list);
+  actionResult = marpaESLIF_call_actionp(aTHX_ MarpaX_ESLIF_Valuep->Perl_valueInterfacep, MarpaX_ESLIF_Valuep->actions, list, marpaESLIFValuep, -1);
   av_undef(list);
 
   MARPAESLIF_SET_PTR(marpaESLIFValuep, resulti, 1 /* context: any value != 0 */, marpaESLIF_representation, actionResult);
