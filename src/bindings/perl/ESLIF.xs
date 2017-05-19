@@ -18,20 +18,20 @@
 /* Built-in extensions are all surrounded with "/" because they are regexes */
 
 /* Pre-action filter on arguments */
-#define MARPAESLIF_PERL_ARG_FILTER "(?:%nosep\\->)?(?:%skip\\(-?\\d+(?:,-?\\d+)*\\)\\->)?" /* Eventual skip(list), eventually prepended by %nosep-> */
+#define MARPAESLIF_PERL_ARG_FILTER "(?:::nosep\\->)?(?:::skip\\(-?\\d+(?:,-?\\d+)*\\)\\->)?" /* Eventual ::skip(list)->, eventually prepended by ::nosep-> */
 
-#define MARPAESLIF_PERL_ARG_FILTER_NOSEP              "%nosep->"
-#define MARPAESLIF_PERL_ARG_FILTER_NOSEP_LENGTH       8
-#define MARPAESLIF_PERL_ARG_FILTER_SKIP_START         "%skip("
-#define MARPAESLIF_PERL_ARG_FILTER_SKIP_START_LENGTH  6
+#define MARPAESLIF_PERL_ARG_FILTER_NOSEP              "::nosep->"
+#define MARPAESLIF_PERL_ARG_FILTER_NOSEP_LENGTH       9
+#define MARPAESLIF_PERL_ARG_FILTER_SKIP_START         "::skip("
+#define MARPAESLIF_PERL_ARG_FILTER_SKIP_START_LENGTH  7
 
 /* Built-in actions extensions */
 static const char *actionsArrayp[] = {
-  "/" MARPAESLIF_PERL_ARG_FILTER "%\\[\\]" "/",     /* Generates an array ref, with optional element selection */
-  "/" MARPAESLIF_PERL_ARG_FILTER "%\\{\\}" "/",     /* Generates a hash ref, with optional element selection */
-  "/" MARPAESLIF_PERL_ARG_FILTER "%undef"  "/",     /* Generates a perl's undef */
-  "/" MARPAESLIF_PERL_ARG_FILTER "%true"   "/",     /* Generates a perl's true */
-  "/" MARPAESLIF_PERL_ARG_FILTER "%false"  "/"      /* Generates a perl's false */
+  "/" MARPAESLIF_PERL_ARG_FILTER "::\\[\\]" "/",     /* Generates an array ref */
+  "/" MARPAESLIF_PERL_ARG_FILTER "::undef"  "/",     /* Generates a perl's undef */
+  "/" MARPAESLIF_PERL_ARG_FILTER "::true"   "/",     /* Generates a perl's true */
+  "/" MARPAESLIF_PERL_ARG_FILTER "::false"  "/",     /* Generates a perl's false */
+  "/" MARPAESLIF_PERL_ARG_FILTER "\\w+"     "/"      /* Normal perl routine name */
 };
 
 /* Perl wrapper around malloc, free, etc... are just painful for genericstack, which is */
@@ -307,16 +307,17 @@ static const char   *ASCIIs = "ASCII";
 /* - Else we delete at the indice, copy backwards all remaining elements, and shtink the size */
 #define MARPAESLIF_AV_SPLICE(avp, indice) do {                          \
     SSize_t _indice = indice;                                           \
+    SV      *ignoredp;                                                  \
                                                                         \
     av_delete(avp, _indice, G_DISCARD);                                 \
                                                                         \
     if (_indice == 0) {                                                 \
-      av_shift(avp);                                                    \
+      ignoredp = av_shift(avp);                                         \
     } else {                                                            \
       SSize_t _top = av_top_index(avp);                                 \
                                                                         \
       if (_indice == _top) {                                            \
-        av_pop(avp);                                                    \
+        ignoredp = av_pop(avp);                                         \
       } else {                                                          \
         SSize_t _start = _indice + 1;                                   \
         SSize_t _prev = _indice;                                        \
@@ -507,7 +508,7 @@ static SV *marpaESLIF_call_actionp(pTHX_ SV *svp, char *methods, AV *avp, marpaE
   /* It is here that we manage the action built-in extensions */
 
   /* Arguments filter */
-  /* Eventual "%nosep->" */
+  /* Eventual "::nosep->" */
   /* fprintf(stderr, "01 methods=%s, avsizel=%ld\n", methods, (unsigned long) avsizel); */
   if (strncmp(methods, MARPAESLIF_PERL_ARG_FILTER_NOSEP, MARPAESLIF_PERL_ARG_FILTER_NOSEP_LENGTH) == 0) {
     /* This is meaningul only if rulei is >= 0 and there are arguments */
@@ -541,7 +542,7 @@ static SV *marpaESLIF_call_actionp(pTHX_ SV *svp, char *methods, AV *avp, marpaE
   }
   /* fprintf(stderr, "02 methods=%s, avsizel=%ld\n", methods, (unsigned long) avsizel); */
 
-  /* Eventual %skip(sequence of integers separated by comma) */
+  /* Eventual ::skip(sequence of integers separated by comma)-> */
   if (strncmp(methods, MARPAESLIF_PERL_ARG_FILTER_SKIP_START, MARPAESLIF_PERL_ARG_FILTER_SKIP_START_LENGTH) == 0) {
     /* Collect the indices to skip */
     methods += MARPAESLIF_PERL_ARG_FILTER_SKIP_START_LENGTH;
@@ -574,7 +575,7 @@ static SV *marpaESLIF_call_actionp(pTHX_ SV *svp, char *methods, AV *avp, marpaE
         c = *(++methods);          
       }
     }
-    /* Very last char is guaranteed to be ')', so it is guaranteed that we are at the ")->" step */
+    /* This char is guaranteed to be ')' */
     methods += 3;
     /* fprintf(stderr, "05 methods=%s, avsizel=%ld\n", methods, (unsigned long) avsizel); */
   }
@@ -596,8 +597,7 @@ static SV *marpaESLIF_call_actionp(pTHX_ SV *svp, char *methods, AV *avp, marpaE
 
   /* fprintf(stderr, "06 methods=%s, avsizel=%ld\n", methods, (unsigned long) avsizel); */
   /* Finally, the method itself */
-  if (strcmp(methods, "[]") == 0) {
-    /* Fake \@_ */
+  if (strcmp(methods, "::[]") == 0) {
     AV *newavp = newAV();
     for (aviteratol = 0; aviteratol < avsizel; aviteratol++) {
       SV **svpp = av_fetch(avp, aviteratol, 0); /* We manage ourself the avp, SV's are real */
@@ -606,8 +606,19 @@ static SV *marpaESLIF_call_actionp(pTHX_ SV *svp, char *methods, AV *avp, marpaE
       }
       av_push(newavp, newSVsv(*svpp)); /* This is incrementing newSVsv(*svpp) ref count */
     }
-    /* Remember: we return an SV on which we manage a ref count */
     rcp = newRV_noinc((SV *) newavp);
+    goto done;
+  }
+  else if (strcmp(methods, "::undef") == 0) {
+    rcp = &PL_sv_undef;
+    goto done;
+  }
+  else if (strcmp(methods, "::true") == 0) {
+    rcp = newSViv(1);
+    goto done;
+  }
+  else if (strcmp(methods, "::false") == 0) {
+    rcp = newSViv(0);
     goto done;
   }
   
