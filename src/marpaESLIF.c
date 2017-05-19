@@ -200,7 +200,6 @@ static const marpaESLIF_stringGenerator_t  marpaESLIF_stringGeneratorTemplate = 
 /* Please note that EVERY _marpaESLIFRecognizer_xxx() method is logging at start and at return */
 
 static inline marpaESLIF_t          *_marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptionp, short validateb);
-static inline short                  _marpaESLIF_extendb(marpaESLIF_t *marpaESLIFp, char *extensions);
 static inline marpaESLIF_string_t   *_marpaESLIF_string_newp(marpaESLIF_t *marpaESLIFp, char *encodingasciis, char *bytep, size_t bytel, short asciib);
 static inline marpaESLIF_string_t   *_marpaESLIF_string_clonep(marpaESLIF_t *marpaESLIFp, marpaESLIF_string_t *stringp);
 static inline void                   _marpaESLIF_string_freev(marpaESLIF_string_t *stringp);
@@ -3424,10 +3423,16 @@ static inline marpaESLIF_t *_marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptio
 }
 
 /*****************************************************************************/
-static inline short _marpaESLIF_extendb(marpaESLIF_t *marpaESLIFp, char *extensions)
+short marpaESLIF_extend_builtin_actionb(marpaESLIF_t *marpaESLIFp, char **actionsArrayp, size_t actionsArrayl)
 /*****************************************************************************/
 {
+  /* Exensions are limited to things that we can entirely control, because bootstrap have */
+  /* hardcoded options. Every action is transformed into a string "<action name> => XXX action => '::ascii'. */
+  static const char         *funcs          = "marpaESLIF_extend_builtin_actionb";
   marpaESLIF_t              *marpaESLIFTmpp = NULL;
+  char                      *extensions     = NULL;
+  size_t                     actionIteratorl;
+  size_t                     extensionl;
   marpaESLIFGrammarOption_t  marpaESLIFGrammarOption;
   short                      rcb;
 
@@ -3435,10 +3440,35 @@ static inline short _marpaESLIF_extendb(marpaESLIF_t *marpaESLIFp, char *extensi
     errno = EINVAL;
     goto err;
   }
-  if (extensions == NULL) {
-    MARPAESLIF_ERROR(marpaESLIFp, "extension pointer is NULL");
+  if ((actionsArrayp == NULL) || (actionsArrayl <= 0)) {
+    MARPAESLIF_ERROR(marpaESLIFp, "No action extension given");
     goto err;
   }
+
+  /* Compute needed size for full extension */
+  extensionl = 0;
+  for (actionIteratorl = 0; actionIteratorl < actionsArrayl; actionIteratorl++) {
+    extensionl +=
+      1 /* newline */ +
+      strlen("<action name> ::= ") +
+      strlen(actionsArrayp[actionIteratorl]) +
+      1 /* space */ +
+      strlen("action => ::ascii");
+  }
+  extensions = (char *) malloc(extensionl + 1);
+  if (extensions == NULL) {
+    MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
+    goto err;
+  }
+  extensions[0] = '\0';
+  for (actionIteratorl = 0; actionIteratorl < actionsArrayl; actionIteratorl++) {
+    strcat(extensions, "\n");
+    strcat(extensions, "<action name> ::= ");
+    strcat(extensions, actionsArrayp[actionIteratorl]);
+    strcat(extensions, " ");
+    strcat(extensions, "action => ::ascii");
+  }
+  MARPAESLIF_ERRORF(marpaESLIFp, "Extensing grammar with:%s", extensions);
 
   /* Extension is done in three steps:
    * - create a pristine marpaESLIF_t (i.e. without validation)
@@ -3484,6 +3514,9 @@ static inline short _marpaESLIF_extendb(marpaESLIF_t *marpaESLIFp, char *extensi
  done:
   /* Free marpaESLIFTmpp in any case */
   marpaESLIF_freev(marpaESLIFTmpp);
+  if (extensions != NULL) {
+    free(extensions);
+  }
   return rcb;
 }
 

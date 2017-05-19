@@ -48,6 +48,15 @@ const static char *exceptions = "\n"
   "arobace ::= '@'\n"
   ;
 
+/* Built-in actions extensions */
+static const char *actionsArrayp[] = {
+  "'%[]'",
+  "'%{}'",
+  "'%undef'",
+  "'%true'",
+  "'%false'",
+};
+
 int main() {
   marpaESLIF_t                *marpaESLIFp        = NULL;
   marpaESLIFGrammar_t         *marpaESLIFGrammarp = NULL;
@@ -88,6 +97,11 @@ int main() {
     goto err;
   }
 
+  /* Grammar builtin actions extension */
+  if (! marpaESLIF_extend_builtin_actionb(marpaESLIFp, (char **) actionsArrayp, sizeof(actionsArrayp)/sizeof(actionsArrayp[0]))) {
+    goto err;
+  }
+  
   /* Dump ESLIF grammar */
   if (marpaESLIFGrammar_ngrammarib(marpaESLIF_grammarp(marpaESLIFp), &ngrammari)) {
     for (leveli = 0; leveli < ngrammari; leveli++) {
