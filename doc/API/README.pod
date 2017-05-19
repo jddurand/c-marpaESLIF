@@ -105,7 +105,9 @@ For example:
 
   marpaESLIF_extend_builtin_actionb(marpaESLIFp, (char **) actionsArrayp, sizeof(actionsArrayp)/sizeof(actionsArrayp[0]))) {
 
-will add C<%[]>, C<%{}> etc... built-in action names, that will I<not> be managed by ESLIF anyway, but by the caller's valuation callback: the action name is a parameter of this callback.
+will add C<%[]>, C<%{}> etc... built-in action names, that will I<not> be managed by ESLIF anyway, but by the caller's valuation callback: the action name is a parameter of this callback. The implementation is hardcoding every new buil-in as a new rule in the BNF in this form:
+
+  <action name> ::= NEW_BUILTIN action => ::ascii
 
 =head3 C<marpaESLIF_freev>
 
