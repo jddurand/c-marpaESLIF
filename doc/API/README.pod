@@ -73,6 +73,40 @@ A pointer to a L<genericLogger|https://github.com/jddurand/c-genericLogger> inst
 
 =back
 
+=head3 C<marpaESLIF_extend_builtin_actionb>
+
+  short marpaESLIF_extend_builtin_actionb(marpaESLIF_t *marpaESLIFp,
+                                          char **actionsArrayp,
+                                          size_t actionsArrayl);
+
+ESLIF grammar built-in action names extension is possible using this method, where:
+
+=over
+
+=item C<actionsArrayp>
+
+is a pointer to an array of new actions built-ins, defined as terminals as per the ESLIF grammar.
+
+=item C<actionsArrayl>
+
+is the number of elements in the array.
+
+=back
+
+For example:
+
+  static const char *actionsArrayp[] = {
+    "'%[]'",
+    "'%{}'",
+    "'%undef'",
+    "'%true'",
+    "'%false'",
+  };
+
+  marpaESLIF_extend_builtin_actionb(marpaESLIFp, (char **) actionsArrayp, sizeof(actionsArrayp)/sizeof(actionsArrayp[0]))) {
+
+will add C<%[]>, C<%{}> etc... built-in action names, that will I<not> be managed by ESLIF anyway, but by the caller's valuation callback: the action name is a parameter of this callback.
+
 =head3 C<marpaESLIF_freev>
 
   void marpaESLIF_freev(marpaESLIF_t *marpaESLIFp);
