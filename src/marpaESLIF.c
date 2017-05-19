@@ -3468,7 +3468,6 @@ short marpaESLIF_extend_builtin_actionb(marpaESLIF_t *marpaESLIFp, char **action
     strcat(extensions, " ");
     strcat(extensions, "action => ::ascii");
   }
-  MARPAESLIF_ERRORF(marpaESLIFp, "Extensing grammar with:%s", extensions);
 
   /* Extension is done in three steps:
    * - create a pristine marpaESLIF_t (i.e. without validation)
