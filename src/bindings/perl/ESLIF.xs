@@ -17,15 +17,15 @@
 /* Built-in extensions are all surrounded with "/" because they are regexes */
 
 /* Pre-action filter on arguments */
-#define MARPAESLIF_PERL_ARG_FILTER "::skip\\(-?\\d+(?:,-?\\d+)*\\)\\->" /* Example: skip(-1)->, skip(0,3)->, etc... */
+#define MARPAESLIF_PERL_ARG_FILTER "(?:%nosep\\->)?(?:%skip\\(-?\\d+(?:,-?\\d+)*\\)\\->)?" /* Eventual skip(list), eventually prepended by %nosep-> */
 
 /* Built-in actions extensions */
 static const char *actionsArrayp[] = {
-  "/" MARPAESLIF_PERL_ARG_FILTER "::\\[\\]" "/",     /* Generates an array ref, with optional element selection */
-  "/" MARPAESLIF_PERL_ARG_FILTER "::\\{\\}" "/",     /* Generates a hash ref, with optional element selection */
-  "/" MARPAESLIF_PERL_ARG_FILTER "::undef"  "/",     /* Generates a perl's undef */
-  "/" MARPAESLIF_PERL_ARG_FILTER "::true"   "/",     /* Generates a perl's true */
-  "/" MARPAESLIF_PERL_ARG_FILTER "::false"  "/"      /* Generates a perl's false */
+  "/" MARPAESLIF_PERL_ARG_FILTER "%\\[\\]" "/",     /* Generates an array ref, with optional element selection */
+  "/" MARPAESLIF_PERL_ARG_FILTER "%\\{\\}" "/",     /* Generates a hash ref, with optional element selection */
+  "/" MARPAESLIF_PERL_ARG_FILTER "%undef"  "/",     /* Generates a perl's undef */
+  "/" MARPAESLIF_PERL_ARG_FILTER "%true"   "/",     /* Generates a perl's true */
+  "/" MARPAESLIF_PERL_ARG_FILTER "%false"  "/"      /* Generates a perl's false */
 };
 
 /* Perl wrapper around malloc, free, etc... are just painful for genericstack, which is */
