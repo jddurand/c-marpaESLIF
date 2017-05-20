@@ -28,7 +28,6 @@
 /* Built-in actions extensions */
 static const char *actionsArrayp[] = {
   "/" MARPAESLIF_PERL_ARG_FILTER "::\\[\\]" "/",     /* Generates an array ref */
-  "/" MARPAESLIF_PERL_ARG_FILTER "::undef"  "/",     /* Generates a perl's undef */
   "/" MARPAESLIF_PERL_ARG_FILTER "::true"   "/",     /* Generates a perl's true */
   "/" MARPAESLIF_PERL_ARG_FILTER "::false"  "/",     /* Generates a perl's false */
   "/" MARPAESLIF_PERL_ARG_FILTER "\\w+"     "/"      /* Normal perl routine name */
@@ -607,10 +606,6 @@ static SV *marpaESLIF_call_actionp(pTHX_ SV *svp, char *methods, AV *avp, marpaE
       av_push(newavp, newSVsv(*svpp)); /* This is incrementing newSVsv(*svpp) ref count */
     }
     rcp = newRV_noinc((SV *) newavp);
-    goto done;
-  }
-  else if (strcmp(methods, "::undef") == 0) {
-    rcp = &PL_sv_undef;
     goto done;
   }
   else if (strcmp(methods, "::true") == 0) {
