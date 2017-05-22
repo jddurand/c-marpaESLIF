@@ -2162,8 +2162,10 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
               doneFirstSemanticb = 1;
             } else {
               /* This is is ok if it is NULL btw */
-              if (firstSemantics != rulep->actions) {
-                MARPAESLIF_ERRORF(marpaESLIFp, "When nulled, symbol %d (%s) can have more than once semantic, and this is not allowed", symbolp->idi, symbolp->descp->asciis);
+              if (((firstSemantics == NULL) && (rulep->actions != NULL)) ||
+                  ((firstSemantics != NULL) && (rulep->actions == NULL)) ||
+                  ((firstSemantics != NULL) && (strcmp(firstSemantics, rulep->actions) != 0))) {
+                MARPAESLIF_ERRORF(marpaESLIFp, "When nulled, symbol %d (%s) can have more than one semantic, and this is not allowed", symbolp->idi, symbolp->descp->asciis);
                 goto err;
               }
             }
