@@ -10859,10 +10859,10 @@ short marpaESLIFValue_contextb(marpaESLIFValue_t *marpaESLIFValuep, char **symbo
     symbols = marpaESLIFValuep->symbolp->descp->asciis;
     symboli = marpaESLIFValuep->symbolp->idi;
     rules = NULL;
-    rulei = 0;
+    rulei = -1;
   } else if (marpaESLIFValuep->rulep != NULL) {
     symbols = NULL;
-    symboli = 0;
+    symboli = -1;
     rules   = marpaESLIFValuep->rulep->descp->asciis;
     rulei   = marpaESLIFValuep->rulep->idi;
   } else {
