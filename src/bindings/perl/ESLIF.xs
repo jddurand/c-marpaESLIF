@@ -28,6 +28,7 @@
 /* Built-in actions extensions */
 static const char *actionsArrayp[] = {
   "/" MARPAESLIF_PERL_ARG_FILTER "::\\[\\]" "/",     /* Generates an array ref */
+  "/" MARPAESLIF_PERL_ARG_FILTER "::\\{\\}" "/",     /* Generates a hash ref */
   "/" MARPAESLIF_PERL_ARG_FILTER "::true"   "/",     /* Generates a perl's true */
   "/" MARPAESLIF_PERL_ARG_FILTER "::false"  "/",     /* Generates a perl's false */
   "/" MARPAESLIF_PERL_ARG_FILTER "\\w+"     "/"      /* Normal perl routine name */
@@ -606,6 +607,44 @@ static SV *marpaESLIF_call_actionp(pTHX_ SV *svp, char *methods, AV *avp, marpaE
       av_push(newavp, newSVsv(*svpp)); /* This is incrementing newSVsv(*svpp) ref count */
     }
     rcp = newRV_noinc((SV *) newavp);
+    goto done;
+  }
+  else if (strcmp(methods, "::{}") == 0) {
+    HV *newhvp;
+    /*
+     * Croak immediately if the number of arguments is odd
+     */
+    if ((avsizel % 2) != 0) {
+      MARPAESLIF_CROAK("Action ::{} requires an even number of arguments");
+    }
+    newhvp = newHV();
+    for (aviteratol = 0; aviteratol < avsizel; aviteratol += 2) {
+      SV **svpp;
+      SV *keyp;
+      SV *valp;
+
+      svpp = av_fetch(avp, aviteratol, 0); /* We manage ourself the avp, SV's are real */
+      if (svpp == NULL) {
+        MARPAESLIF_CROAK("av_fetch returned NULL");
+      }
+      keyp = *svpp;
+
+      svpp = av_fetch(avp, aviteratol+1, 0); /* We manage ourself the avp, SV's are real */
+      if (svpp == NULL) {
+        MARPAESLIF_CROAK("av_fetch returned NULL");
+      }
+      valp = *svpp;
+
+      SvREFCNT_inc(keyp);
+      SvREFCNT_inc(valp);
+      if (hv_store_ent(newhvp, keyp, valp, 0) == NULL) {
+        SvREFCNT_dec(keyp);
+        SvREFCNT_dec(valp);
+        hv_undef(newhvp);
+        MARPAESLIF_CROAK("hv_store_ent failure");
+      }
+    }
+    rcp = newRV_noinc((SV *) newhvp);
     goto done;
   }
   else if (strcmp(methods, "::true") == 0) {
