@@ -812,7 +812,7 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
             MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "Escaped backslash character accepted");
             backslashb = 0;
           }
-        } else if ((codepointi == lastcodepointi) || (codepointi == '\\')) {
+        } else if (codepointi == lastcodepointi) {
           if (! backslashb) {
             /* This is a priori impossible to not have the first or backslash character if it is not preceeded by backslash */
             if (codepointi == lastcodepointi) {
@@ -822,6 +822,9 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
             }
             goto err;
           }
+          /* This is escaped first character */
+          MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "Escaped quote character accepted");
+          backslashb = 0;
         } else {
           if (backslashb) {
             /* Here the backslash flag must not be true */
