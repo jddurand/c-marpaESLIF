@@ -18,12 +18,32 @@
 /* Built-in extensions are all surrounded with "/" because they are regexes */
 
 /* Pre-action filter on arguments */
-#define MARPAESLIF_PERL_ARG_FILTER "(?:::nosep\\->)?(?:::skip\\(-?\\d+(?:,-?\\d+)*\\)\\->)?" /* Eventual ::skip(list)->, eventually prepended by ::nosep-> */
+#define MARPAESLIF_PERL_ARG_FILTER "(?:::nosep\\->)?(?:::(?:skip|keep)\\(-?[\\d\\*]?(?:,-?[\\d\\*]+)*\\)\\->)?" /* Eventual ::(?:skip|keep)(list)->, eventually prepended by ::nosep-> */
 
 #define MARPAESLIF_PERL_ARG_FILTER_NOSEP              "::nosep->"
 #define MARPAESLIF_PERL_ARG_FILTER_NOSEP_LENGTH       9
 #define MARPAESLIF_PERL_ARG_FILTER_SKIP_START         "::skip("
 #define MARPAESLIF_PERL_ARG_FILTER_SKIP_START_LENGTH  7
+#define MARPAESLIF_PERL_ARG_FILTER_KEEP_START         "::keep("
+#define MARPAESLIF_PERL_ARG_FILTER_KEEP_START_LENGTH  7
+
+/* Handy macro to store parsed indice */
+#define MARPAESLIF_PERL_ARG_FILTER_HAVE_INDICE(indicei, avsizel, indiceip, alloci, reali) do { \
+    int _indicei = indicei;                                             \
+    if (_indicei < 0) {                                                 \
+      _indicei = avsizel + _indicei;                                    \
+    }                                                                   \
+    if (_indicei >= 0) {                                                \
+      if (reali <= 0) {                                                 \
+        alloci = 1024;                                                  \
+        Newx(indiceip, alloci, int);                                    \
+      } else if (reali >= alloci)  {                                    \
+        alloci += 1024;                                                 \
+        Renew(indiceip, alloci, int);                                   \
+      }                                                                 \
+      indiceip[reali++] = _indicei;                                     \
+    }                                                                   \
+  } while (0)
 
 /* Built-in actions extensions */
 static const char *actionsArrayp[] = {
@@ -31,8 +51,16 @@ static const char *actionsArrayp[] = {
   "/" MARPAESLIF_PERL_ARG_FILTER "::\\{\\}" "/",     /* Generates a hash ref */
   "/" MARPAESLIF_PERL_ARG_FILTER "::true"   "/",     /* Generates a perl's true */
   "/" MARPAESLIF_PERL_ARG_FILTER "::false"  "/",     /* Generates a perl's false */
+  "/" MARPAESLIF_PERL_ARG_FILTER "::printf\\((?:(?|(?:')(?:[^\\\\']*(?:\\\\.[^\\\\']*)*)(?:')|(?:\")(?:[^\\\\\"]*(?:\\\\.[^\\\\\"]*)*)(?:\")))\\)" "/",     /* C.f. sv_vcatpvfn_flags() */
+  "/" MARPAESLIF_PERL_ARG_FILTER "::pack\\((?:(?|(?:')(?:[^\\\\']*(?:\\\\.[^\\\\']*)*)(?:')|(?:\")(?:[^\\\\\"]*(?:\\\\.[^\\\\\"]*)*)(?:\")))\\)" "/",     /* C.f. packlist() */
   "/" MARPAESLIF_PERL_ARG_FILTER "\\w+"     "/"      /* Normal perl routine name */
 };
+
+#define MARPAESLIF_PERL_ARG_ENDPOINT_PRINTF_START        "::printf("
+#define MARPAESLIF_PERL_ARG_ENDPOINT_PRINTF_START_LENGTH 9
+
+#define MARPAESLIF_PERL_ARG_ENDPOINT_PACK_START          "::pack("
+#define MARPAESLIF_PERL_ARG_ENDPOINT_PACK_START_LENGTH   7
 
 /* Perl wrapper around malloc, free, etc... are just painful for genericstack, which is */
 /* is implemented using header files, not a library... */
@@ -180,12 +208,12 @@ typedef MarpaX_ESLIF_Value_t      *MarpaX_ESLIF_Value;
 /* Static functions declarations */
 static int                             marpaESLIF_getTypei(pTHX_ SV* svp);
 static short                           marpaESLIF_canb(pTHX_ SV *svp, char *methods);
-static void                            marpaESLIF_call_methodv(pTHX_ SV *svp, char *methods, SV *argsvp);
-static SV                             *marpaESLIF_call_methodp(pTHX_ SV *svp, char *methods);
-static SV                             *marpaESLIF_call_actionp(pTHX_ SV *svp, char *methods, AV *avp, marpaESLIFValue_t *marpaESLIFValuep, int rulei);
-static SV                             *marpaESLIF_call_actionv(pTHX_ SV *svp, char *methods, AV *avp);
-static IV                              marpaESLIF_call_methodi(pTHX_ SV *svp, char *methods);
-static short                           marpaESLIF_call_methodb(pTHX_ SV *svp, char *methods);
+static void                            marpaESLIF_call_methodv(pTHX_ SV *interfacep, char *methods, SV *argsvp);
+static SV                             *marpaESLIF_call_methodp(pTHX_ SV *interfacep, char *methods);
+static SV                             *marpaESLIF_call_actionp(pTHX_ SV *interfacep, char *methods, AV *avp, marpaESLIFValue_t *marpaESLIFValuep, int rulei);
+static SV                             *marpaESLIF_call_actionv(pTHX_ SV *interfacep, char *methods, AV *avp);
+static IV                              marpaESLIF_call_methodi(pTHX_ SV *interfacep, char *methods);
+static short                           marpaESLIF_call_methodb(pTHX_ SV *interfacep, char *methods);
 static void                            marpaESLIF_genericLoggerCallbackv(void *userDatavp, genericLoggerLevel_t logLeveli, const char *msgs);
 static short                           marpaESLIF_recognizerReaderCallbackb(void *userDatavp, char **inputcpp, size_t *inputlp, short *eofbp, short *characterStreambp, char **encodingOfEncodingsp, char **encodingsp, size_t *encodinglp);
 static marpaESLIFValueRuleCallback_t   marpaESLIF_valueRuleActionResolver(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions);
@@ -211,7 +239,9 @@ static void                            marpaESLIF_paramIsRecognizerInterfacev(pT
 static void                            marpaESLIF_paramIsValueInterfacev(pTHX_ SV *sv);
 static short                           marpaESLIF_representation(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp, char **inputcpp, size_t *inputlp);
 static char                           *marpaESLIF_sv2byte(pTHX_ SV *svp, char **bytepp, size_t *bytelp, short encodingInformationb, short *characterStreambp, char **encodingOfEncodingsp, char **encodingsp, size_t *encodinglp, short warnIsFatalb);
-static int                             marpaESLIF_skipi_cmpi(const void *p1, const void *p2);
+static int                             marpaESLIF_indicei_cmpi(const void *p1, const void *p2);
+static void                            marpaESLIF_remove_indice_from_avp(pTHX_ AV *avp, int indicei);
+static void                            marpaESLIF_unquote_eval_string(pTHX_ char *methods, char quote);
 
 /* Static constants */
 static const char   *UTF8s = "UTF-8";
@@ -301,45 +331,104 @@ static const char   *ASCIIs = "ASCII";
 /* need for such a general method - at most we want to remove ONE indice                      */
 /* and the caller made sure this indice exist -;                                              */
 /* Note that these are array that we manage: no mg_xxx stuff in there.                        */
-/* - We NEVER av_delete, this would affect the ref count of the SV that is in valuation stack */
 /* - If the indice is the first one: av_shift (this will return &PL_sv_undef)                 */
 /* - If the indice is the last one: av_pop (ditto)                                            */
 /* - Else we delete at the indice, copy backwards all remaining elements, and shtink the size */
-#define MARPAESLIF_AV_SPLICE(avp, indice) do {                          \
-    SSize_t _indice = indice;                                           \
-    SV      *ignoredp;                                                  \
-                                                                        \
-    av_delete(avp, _indice, G_DISCARD);                                 \
-                                                                        \
-    if (_indice == 0) {                                                 \
-      ignoredp = av_shift(avp);                                         \
-    } else {                                                            \
-      SSize_t _top = av_top_index(avp);                                 \
-                                                                        \
-      if (_indice == _top) {                                            \
-        ignoredp = av_pop(avp);                                         \
-      } else {                                                          \
-        SSize_t _start = _indice + 1;                                   \
-        SSize_t _prev = _indice;                                        \
-        SSize_t _i = 0;                                                 \
-        SV **_svpp;                                                     \
-                                                                        \
-        for (_i = _start; _i <= _top; _i++, _prev++) {                  \
-          _svpp = av_fetch(avp, _i, 0);                                 \
-          if (_svpp == NULL) {                                          \
-            MARPAESLIF_CROAK("av_fetch returned NULL");                 \
-          }                                                             \
-          SvREFCNT_inc(*_svpp);                                         \
-          if (av_store(avp, _prev, *_svpp) == NULL) {                   \
-            SvREFCNT_dec(*_svpp);                                       \
-            MARPAESLIF_CROAK("av_store failure");                       \
-          }                                                             \
-        }                                                               \
-                                                                        \
-        av_fill(avp, --_top);                                           \
-      }                                                                 \
-    }                                                                   \
-  } while (0)
+static void marpaESLIF_remove_indice_from_avp(pTHX_ AV *avp, int indicei) {
+  static const char *funcs = "marpaESLIF_remove_indice_from_avp";
+  SV                *removedp;
+
+  if (indicei == 0) {
+    removedp = av_shift(avp);
+    if (removedp != &PL_sv_undef) {
+      SvREFCNT_dec(removedp);
+    }
+  } else {
+    SSize_t _top = av_top_index(avp);
+
+    if (indicei == _top) {
+      removedp = av_pop(avp);
+      if (removedp != &PL_sv_undef) {
+        SvREFCNT_dec(removedp);
+      }
+    } else {
+      SSize_t _start = indicei + 1;
+      SSize_t _prev = indicei;
+      SSize_t _i = 0;
+      SV **_svpp;
+
+      av_delete(avp, indicei, G_DISCARD);
+      for (_i = _start; _i <= _top; _i++, _prev++) {
+        _svpp = av_fetch(avp, _i, 0);
+        if (_svpp == NULL) {
+          MARPAESLIF_CROAK("av_fetch returned NULL");
+        }
+        SvREFCNT_inc(*_svpp);
+        if (av_store(avp, _prev, *_svpp) == NULL) {
+          SvREFCNT_dec(*_svpp);
+          MARPAESLIF_CROAK("av_store failure");
+        }
+      }
+
+      av_fill(avp, --_top);
+    }
+  }
+}
+
+/*****************************************************************************/
+static void marpaESLIF_unquote_eval_string(pTHX_ char *methods, char quote)
+/*****************************************************************************/
+{
+  static const char *funcs      = "marpaESLIF_unquote_eval_string";
+  short              backslashb = 0;
+  char              *p          = methods;
+  STRLEN             lenl       = strlen(methods);
+  char              *dups;
+  char              *q;
+  int                i;
+  char               c;
+
+  Newx(dups, strlen(methods)+1, char);
+  dups[0] = '\0';
+  q = dups;
+
+  while ((c = *p++) != '\0') {
+    if (c == '\\') {
+      if (! backslashb) {
+        /* Next character MAY BE escaped. Only backslash itself or the first character is considered as per the regexp. */
+        backslashb = 1;
+        continue;
+      } else {
+        /* This is escaped backslash */
+        *q++ = '\\';
+        backslashb = 0;
+      }
+    } else if (c == quote) {
+      if (! backslashb) {
+        /* This is a priori impossible to not have the first or backslash character if it is not preceeded by backslash */
+        if (c == quote) {
+          MARPAESLIF_CROAKF("First character %c found but no preceeding backslash", (unsigned char) c);
+        } else {
+          MARPAESLIF_CROAK("Backslash character found but no preceeding backslash");
+        }
+      }
+      *q++ = c;
+      backslashb = 0;
+    } else {
+      if (backslashb) {
+        /* Here the backslash flag must not be true */
+        MARPAESLIF_CROAKF("Got character '%c' preceeded by backslash: in your string only backslash character (\\) or the string delimitor (%c) can be escaped", c, (unsigned char) quote);
+      }
+      /* All is well */
+      *q++ = c;
+    }
+  }
+
+  /* It is impossible that dups is longer than methods */
+  *q = '\0';
+  strcpy(methods, dups);
+  Safefree(dups);
+}
 
 /*****************************************************************************/
 /* Copy of Params-Validate-1.26/lib/Params/Validate/XS.xs                    */
@@ -440,7 +529,7 @@ static short marpaESLIF_canb(pTHX_ SV *svp, char *methods)
 }
 
 /*****************************************************************************/
-static void marpaESLIF_call_methodv(pTHX_ SV *svp, char *methods, SV *argsvp)
+static void marpaESLIF_call_methodv(pTHX_ SV *interfacep, char *methods, SV *argsvp)
 /*****************************************************************************/
 {
   dSP;
@@ -453,7 +542,7 @@ static void marpaESLIF_call_methodv(pTHX_ SV *svp, char *methods, SV *argsvp)
 
   PUSHMARK(SP);
   EXTEND(SP, 1 + ((argsvp != NULL) ? 1 : 0));
-  PUSHs(sv_2mortal(newSVsv(svp)));
+  PUSHs(sv_2mortal(newSVsv(interfacep)));
   if (argsvp != NULL) {
     PUSHs(sv_2mortal(newSVsv(argsvp)));
   }
@@ -469,7 +558,7 @@ static void marpaESLIF_call_methodv(pTHX_ SV *svp, char *methods, SV *argsvp)
 }
 
 /*****************************************************************************/
-static SV *marpaESLIF_call_methodp(pTHX_ SV *svp, char *methods)
+static SV *marpaESLIF_call_methodp(pTHX_ SV *interfacep, char *methods)
 /*****************************************************************************/
 {
   SV *rcp;
@@ -477,7 +566,7 @@ static SV *marpaESLIF_call_methodp(pTHX_ SV *svp, char *methods)
   /*
     fprintf(stderr, "START marpaESLIF_call_methodp(pTHX_ SV *svp, \"%s\")\n", methods);
   */
-  rcp = marpaESLIF_call_actionp(aTHX_ svp, methods, NULL /* avp */, NULL /* marpaESLIFValuep */, -1 /* rulei */);
+  rcp = marpaESLIF_call_actionp(aTHX_ interfacep, methods, NULL /* avp */, NULL /* marpaESLIFValuep */, -1 /* rulei */);
   /*
     fprintf(stderr, "END marpaESLIF_call_methodp(pTHX_ SV *svp, \"%s\")\n", methods);
   */
@@ -486,30 +575,43 @@ static SV *marpaESLIF_call_methodp(pTHX_ SV *svp, char *methods)
 }
 
 /*****************************************************************************/
-static SV *marpaESLIF_call_actionp(pTHX_ SV *svp, char *methods, AV *avp, marpaESLIFValue_t *marpaESLIFValuep, int rulei)
+static SV *marpaESLIF_call_actionp(pTHX_ SV *interfacep, char *methods, AV *avp, marpaESLIFValue_t *marpaESLIFValuep, int rulei)
 /*****************************************************************************/
 {
   static const char        *funcs      = "marpaESLIF_call_actionp";
-  int                      *skipip     = NULL;
   SSize_t                   avsizel    = (avp != NULL) ? av_top_index(avp) + 1 : 0;
+  int                      *skipip     = NULL;
   int                       skipalloci = 0;  /* Avoid allocation at every discovery of skipped indice -; */
   int                       skipreali  = 0;
+  int                      *keepip     = NULL;
+  int                       keepalloci = 0;  /* Avoid allocation at every discovery of keepped indice -; */
+  int                       keepreali  = 0;
+  SV                      **svargs     = NULL;
+  char                     *origtmps   = NULL; /* Used when this is a format string */
+  SV                       *evalp      = NULL;
+  char                     *tmps;
+  STRLEN                    tmpl;
   SV                       *rcp;
   SSize_t                   aviteratol;
   marpaESLIFRuleProperty_t  ruleProperty;
   marpaESLIFGrammar_t      *marpaESLIFGrammarp;
-  SSize_t                   keyToDelete;
+  SSize_t                   keyToDeletei;
   int                       skipi;
   int                       skippedi;
+  int                       keepi;
+  int                       keeppedi;
   char                      c;
+  char                      quotec;
   int                       i;
   dSP;
 
   /* It is here that we manage the action built-in extensions */
 
   /* Arguments filter */
-  /* Eventual "::nosep->" */
-  /* fprintf(stderr, "01 methods=%s, avsizel=%ld\n", methods, (unsigned long) avsizel); */
+
+  /* --------- */
+  /* ::nosep-> */
+  /* --------- */
   if (strncmp(methods, MARPAESLIF_PERL_ARG_FILTER_NOSEP, MARPAESLIF_PERL_ARG_FILTER_NOSEP_LENGTH) == 0) {
     /* This is meaningul only if rulei is >= 0 and there are arguments */
     if ((rulei >= 0) && (avsizel > 0)) {
@@ -524,80 +626,139 @@ static SV *marpaESLIF_call_actionp(pTHX_ SV *svp, char *methods, AV *avp, marpaE
         if ((avsizel % 2) == 0) {
           /* value1 separator value2 separator ... valuen separator */
           /* Even number of elements: it ends with a separator */
-          keyToDelete = avsizel - 1; /* Per def avsizel >= 2, so avsizel - 1 >= 1 */
+          keyToDeletei = avsizel - 1; /* Per def avsizel >= 2, so avsizel - 1 >= 1 */
         } else {
           /* value1 separator value2 separator ... valuen */
           /* Odd number of elements: it does not end with a separator */
-          keyToDelete = avsizel - 2; /* Can be -1 if there is only one value, else it is 1, or 3, or 5, or ... */
+          keyToDeletei = avsizel - 2; /* Can be -1 if there is only one value, else it is 1, or 3, or 5, or ... */
         }
-        /* In any case, keyToDelete must be > 0 to start deletion */
-        while (keyToDelete > 0) {
-          MARPAESLIF_AV_SPLICE(avp, keyToDelete);
-          keyToDelete -= 2;
+        /* In any case, keyToDeletei must be > 0 to start deletion */
+        while (keyToDeletei > 0) {
+          marpaESLIF_remove_indice_from_avp(aTHX_ avp, keyToDeletei);
+          keyToDeletei -= 2;
           avsizel--;
         }
       }
     }
     methods += MARPAESLIF_PERL_ARG_FILTER_NOSEP_LENGTH;
   }
-  /* fprintf(stderr, "02 methods=%s, avsizel=%ld\n", methods, (unsigned long) avsizel); */
 
-  /* Eventual ::skip(sequence of integers separated by comma)-> */
   if (strncmp(methods, MARPAESLIF_PERL_ARG_FILTER_SKIP_START, MARPAESLIF_PERL_ARG_FILTER_SKIP_START_LENGTH) == 0) {
+
+    /* ------------------------------------------------- */
+    /* ::skip(sequence of integers separated by comma)-> */
+    /* ------------------------------------------------- */
+
     /* Collect the indices to skip */
     methods += MARPAESLIF_PERL_ARG_FILTER_SKIP_START_LENGTH;
-    /* fprintf(stderr, "03 methods=%s, avsizel=%ld\n", methods, (unsigned long) avsizel); */
     c = *methods;
     while ((c != ',') && (c != ')')) {
-      skipi = atoi(methods); /* This will naturally stop at comma or parenthesis */
-      if (skipi < 0) {
-        /* Perl convention: start that far from the end */
-        skipi = avsizel + 1 - skipi;
-      }
-      if (skipi >= 0) {
-        if (skipreali <= 0) {
-          /* First indice discovered */
-          skipalloci = 1024;
-          Newx(skipip, skipalloci, int);
-        } else if (skipreali >= skipalloci)  {
-          skipalloci += 1024;
-          Renew(skipip, skipalloci, int);
+      /* It is either '*' either an integer */
+      if (*methods == '*') {
+        for (aviteratol = 0; aviteratol < avsizel; aviteratol++) {
+          MARPAESLIF_PERL_ARG_FILTER_HAVE_INDICE(aviteratol, avsizel, skipip, skipalloci, skipreali);
         }
-        skipip[skipreali++] = skipi;
+      } else {
+        MARPAESLIF_PERL_ARG_FILTER_HAVE_INDICE(atoi(methods), avsizel, skipip, skipalloci, skipreali);
       }
       /* Go to the next value */
       do {
         c = *(++methods);
-        /* fprintf(stderr, "04 methods=%s, avsizel=%ld\n", methods, (unsigned long) avsizel); */
       } while ((c != ',') && (c != ')'));
       if (c == ',') {
         /* There is another indice -; */
         c = *(++methods);          
       }
     }
-    /* This char is guaranteed to be ')' */
+    /* This char is guaranteed to be ')' followed by "->" */
     methods += 3;
-    /* fprintf(stderr, "05 methods=%s, avsizel=%ld\n", methods, (unsigned long) avsizel); */
-  }
-  if (skipreali > 0) {
-    /* Sort the elements from highest to lowest */
-    qsort(skipip, skipreali, sizeof(int), marpaESLIF_skipi_cmpi);
-    skippedi = -1;
-    for (i = 0; i < skipreali; i++) {
-      /* Do not skip twice the same indice */
-      skipi = skipip[i];
-      if (skipi == skippedi) {
-        continue;
+    if (skipreali > 0) {
+      /* Sort the elements from highest to lowest */
+      qsort(skipip, skipreali, sizeof(int), marpaESLIF_indicei_cmpi);
+      skippedi = -1;
+      for (i = 0; i < skipreali; i++) {
+        /* Do not skip twice the same indice */
+        skipi = skipip[i];
+        if (skipi == skippedi) {
+          continue;
+        }
+        marpaESLIF_remove_indice_from_avp(aTHX_ avp, skipi);
+        avsizel--;
+        skippedi = skipi;
       }
-      MARPAESLIF_AV_SPLICE(avp, skipi);
-      avsizel--;
-      skippedi = skipi;
     }
   }
 
-  /* fprintf(stderr, "06 methods=%s, avsizel=%ld\n", methods, (unsigned long) avsizel); */
+  else if (strncmp(methods, MARPAESLIF_PERL_ARG_FILTER_KEEP_START, MARPAESLIF_PERL_ARG_FILTER_KEEP_START_LENGTH) == 0) {
+
+    /* ------------------------------------------------- */
+    /* ::keep(sequence of integers separated by comma)-> */
+    /* ------------------------------------------------- */
+
+    /* Collect the indices to keep */
+    methods += MARPAESLIF_PERL_ARG_FILTER_KEEP_START_LENGTH;
+    c = *methods;
+    while ((c != ',') && (c != ')')) {
+      /* It is either '*' either an integer */
+      if (*methods == '*') {
+        for (aviteratol = 0; aviteratol < avsizel; aviteratol++) {
+          MARPAESLIF_PERL_ARG_FILTER_HAVE_INDICE(aviteratol, avsizel, keepip, keepalloci, keepreali);
+        }
+      } else {
+        MARPAESLIF_PERL_ARG_FILTER_HAVE_INDICE(atoi(methods), avsizel, keepip, keepalloci, keepreali);
+      }
+      /* Go to the next value */
+      do {
+        c = *(++methods);
+      } while ((c != ',') && (c != ')'));
+      if (c == ',') {
+        /* There is another indice -; */
+        c = *(++methods);          
+      }
+    }
+    /* This char is guaranteed to be ')' followed by "->" */
+    methods += 3;
+
+    if (avsizel > 0) {
+      if (keepreali <= 0) {
+        /* Nothing to keep... */
+        for (aviteratol = avsizel - 1; aviteratol >= 0; aviteratol--) {
+          marpaESLIF_remove_indice_from_avp(aTHX_ avp, (int) aviteratol);
+          avsizel--;
+        }
+      } else {
+        /* Sort the elements from highest to lowest */
+        qsort(keepip, keepreali, sizeof(int), marpaESLIF_indicei_cmpi);
+        for (aviteratol = avsizel - 1; aviteratol >= 0; aviteratol--) {
+          keeppedi = -1;
+          for (i = 0; i < keepreali; i++) {
+            keepi = keepip[i];
+            if (keepi == aviteratol) {
+              keeppedi = keepi;
+              break;
+            } else if (keepi < aviteratol) {
+              /* No need to go further */
+              break;
+            }
+          }
+          if (keeppedi < 0) {
+            /* No found: skip indice aviteratol */
+            marpaESLIF_remove_indice_from_avp(aTHX_ avp, (int) aviteratol);
+            avsizel--;
+          }
+        }
+      }
+    }
+  }
+  
   /* Finally, the method itself */
+
   if (strcmp(methods, "::[]") == 0) {
+
+    /* ---- */
+    /* ::[] */
+    /* ---- */
+
     AV *newavp = newAV();
     for (aviteratol = 0; aviteratol < avsizel; aviteratol++) {
       SV **svpp = av_fetch(avp, aviteratol, 0); /* We manage ourself the avp, SV's are real */
@@ -607,9 +768,13 @@ static SV *marpaESLIF_call_actionp(pTHX_ SV *svp, char *methods, AV *avp, marpaE
       av_push(newavp, newSVsv(*svpp)); /* This is incrementing newSVsv(*svpp) ref count */
     }
     rcp = newRV_noinc((SV *) newavp);
-    goto done;
   }
   else if (strcmp(methods, "::{}") == 0) {
+
+    /* ---- */
+    /* ::{} */
+    /* ---- */
+
     HV *newhvp;
     /*
      * Croak immediately if the number of arguments is odd
@@ -645,51 +810,157 @@ static SV *marpaESLIF_call_actionp(pTHX_ SV *svp, char *methods, AV *avp, marpaE
       }
     }
     rcp = newRV_noinc((SV *) newhvp);
-    goto done;
   }
   else if (strcmp(methods, "::true") == 0) {
+
+    /* ------ */
+    /* ::true */
+    /* ------ */
+
     rcp = newSViv(1);
-    goto done;
   }
   else if (strcmp(methods, "::false") == 0) {
+
+    /* ------- */
+    /* ::false */
+    /* ------- */
+
     rcp = newSViv(0);
-    goto done;
   }
-  
-  ENTER;
-  SAVETMPS;
+  else if (strncmp(methods, MARPAESLIF_PERL_ARG_ENDPOINT_PRINTF_START, MARPAESLIF_PERL_ARG_ENDPOINT_PRINTF_START_LENGTH) == 0) {
 
-  PUSHMARK(SP);
-  EXTEND(SP, 1 + avsizel);
-  PUSHs(sv_2mortal(newSVsv(svp)));
-  for (aviteratol = 0; aviteratol < avsizel; aviteratol++) {
-    SV **svpp = av_fetch(avp, aviteratol, 0); /* We manage ourself the avp, SV's are real */
-    if (svpp == NULL) {
-      MARPAESLIF_CROAK("av_fetch returned NULL");
+    /* ------------- */
+    /* format string */
+    /* ------------- */
+
+    methods += MARPAESLIF_PERL_ARG_ENDPOINT_PRINTF_START_LENGTH;
+
+    /* The grammar made sure this is composed only of ASCII letters and it NUL terminated because this is an endpoint -; */
+    /* We just remove the surrounding quote (whatever it is) */
+    origtmps = tmps = savepv(methods);
+    /* It ends with ") or ') per definition */
+    tmps[strlen(origtmps) - 2] = '\0';
+    /* It starts with " or ' */
+    quotec = *tmps++;
+    marpaESLIF_unquote_eval_string(aTHX_ tmps, quotec);
+    rcp = newSVpvn("", 0);
+
+    /* If it is the empty string, no need to call for format */
+    tmpl = (STRLEN) strlen(tmps);
+    if (tmpl > 0) {
+      /* Create an array of SV from interfacep+@avp */
+      if (avsizel > 0) {
+        Newx(svargs, (int) avsizel, SV *);
+        for (aviteratol = 0; aviteratol < avsizel; aviteratol++) {
+          SV **svpp = av_fetch(avp, aviteratol, 0); /* We manage ourself the avp, SV's are real */
+          if (svpp == NULL) {
+            MARPAESLIF_CROAK("av_fetch returned NULL");
+          }
+          svargs[aviteratol] = *svpp;
+        }
+      }
+      sv_vcatpvfn(rcp,
+                  tmps,
+                  tmpl,
+                  NULL, /* va_list *const args */
+                  svargs,
+                  avsizel,
+                  NULL /* bool *const maybe_tainted */);
     }
-    PUSHs(sv_2mortal(newSVsv(*svpp)));
   }
-  PUTBACK;
+  else if (strncmp(methods, MARPAESLIF_PERL_ARG_ENDPOINT_PACK_START, MARPAESLIF_PERL_ARG_ENDPOINT_PACK_START_LENGTH) == 0) {
 
-  call_method(methods, G_SCALAR);
+    /* ------------- */
+    /* pack template */
+    /* ------------- */
 
-  SPAGAIN;
+    methods += MARPAESLIF_PERL_ARG_ENDPOINT_PACK_START_LENGTH;
 
-  rcp = SvREFCNT_inc(POPs);
+    /* The grammar made sure this is composed only of ASCII letters and it NUL terminated because this is an endpoint -; */
+    /* We just remove the surrounding quote (whatever it is) */
+    origtmps = tmps = savepv(methods);
+    /* It ends with ") or ') per definition */
+    tmps[strlen(origtmps) - 2] = '\0';
+    /* It starts with " or ' */
+    quotec = *tmps++;
+    marpaESLIF_unquote_eval_string(aTHX_ tmps, quotec);
+    rcp = newSVpvn("", 0);
 
-  PUTBACK;
-  FREETMPS;
-  LEAVE;
+    /* If it is the empty template, no need to call for packlist */
+    tmpl = (STRLEN) strlen(tmps);
+    if (tmpl > 0) {
+      /* Create an array of SV from interfacep+@avp */
+      if (avsizel > 0) {
+        Newx(svargs, (int) avsizel, SV *);
+        for (aviteratol = 0; aviteratol < avsizel; aviteratol++) {
+          SV **svpp = av_fetch(avp, aviteratol, 0); /* We manage ourself the avp, SV's are real */
+          if (svpp == NULL) {
+            MARPAESLIF_CROAK("av_fetch returned NULL");
+          }
+          svargs[aviteratol] = *svpp;
+        }
+      }
+      packlist(rcp,
+               tmps,
+               tmps + strlen(tmps),
+               svargs,
+               svargs + avsizel);
+    }
+    fprintf(stderr, "AFTER PACK:\n"); fflush(stderr); sv_dump(rcp);
+  }
+  else  {
 
- done:
+    /* ----------- */
+    /* user action */
+    /* ----------- */
+
+    ENTER;
+    SAVETMPS;
+
+    PUSHMARK(SP);
+    EXTEND(SP, 1 + avsizel);
+    PUSHs(sv_2mortal(newSVsv(interfacep)));
+    for (aviteratol = 0; aviteratol < avsizel; aviteratol++) {
+      SV **svpp = av_fetch(avp, aviteratol, 0); /* We manage ourself the avp, SV's are real */
+      if (svpp == NULL) {
+        MARPAESLIF_CROAK("av_fetch returned NULL");
+      }
+      PUSHs(sv_2mortal(newSVsv(*svpp)));
+    }
+    PUTBACK;
+
+    call_method(methods, G_SCALAR);
+
+    SPAGAIN;
+
+    rcp = SvREFCNT_inc(POPs);
+
+    PUTBACK;
+    FREETMPS;
+    LEAVE;
+  }
+
   if (skipip != NULL) {
     Safefree(skipip);
   }
+  if (keepip != NULL) {
+    Safefree(keepip);
+  }
+  if (svargs != NULL) {
+    Safefree(svargs);
+  }
+  if (origtmps != NULL) {
+    Safefree(origtmps);
+  }
+  if (evalp != NULL) {
+    SvREFCNT_dec(evalp);
+  }
+
   return rcp;
 }
 
 /*****************************************************************************/
-static SV *marpaESLIF_call_actionv(pTHX_ SV *svp, char *methods, AV *avp)
+static SV *marpaESLIF_call_actionv(pTHX_ SV *interfacep, char *methods, AV *avp)
 /*****************************************************************************/
 {
   static const char *funcs = "marpaESLIF_call_actionv";
@@ -705,7 +976,7 @@ static SV *marpaESLIF_call_actionv(pTHX_ SV *svp, char *methods, AV *avp)
 
   PUSHMARK(SP);
   EXTEND(SP, 1 + avsizel);
-  PUSHs(sv_2mortal(newSVsv(svp)));
+  PUSHs(sv_2mortal(newSVsv(interfacep)));
   for (aviteratol = 0; aviteratol < avsizel; aviteratol++) {
     SV **svpp = av_fetch(avp, aviteratol, 0); /* We manage ourself the avp, SV's are real */
     if (svpp == NULL) {
@@ -728,7 +999,7 @@ static SV *marpaESLIF_call_actionv(pTHX_ SV *svp, char *methods, AV *avp)
 }
 
 /*****************************************************************************/
-static IV marpaESLIF_call_methodi(pTHX_ SV *svp, char *methods)
+static IV marpaESLIF_call_methodi(pTHX_ SV *interfacep, char *methods)
 /*****************************************************************************/
 {
   IV rci;
@@ -742,7 +1013,7 @@ static IV marpaESLIF_call_methodi(pTHX_ SV *svp, char *methods)
 
   PUSHMARK(SP);
   EXTEND(SP, 1);
-  PUSHs(sv_2mortal(newSVsv(svp)));
+  PUSHs(sv_2mortal(newSVsv(interfacep)));
   PUTBACK;
 
   call_method(methods, G_SCALAR);
@@ -762,7 +1033,7 @@ static IV marpaESLIF_call_methodi(pTHX_ SV *svp, char *methods)
 }
 
 /*****************************************************************************/
-static short marpaESLIF_call_methodb(pTHX_ SV *svp, char *methods)
+static short marpaESLIF_call_methodb(pTHX_ SV *interfacep, char *methods)
 /*****************************************************************************/
 {
   short rcb;
@@ -776,7 +1047,7 @@ static short marpaESLIF_call_methodb(pTHX_ SV *svp, char *methods)
 
   PUSHMARK(SP);
   EXTEND(SP, 1);
-  PUSHs(sv_2mortal(newSVsv(svp)));
+  PUSHs(sv_2mortal(newSVsv(interfacep)));
   PUTBACK;
 
   call_method(methods, G_SCALAR);
@@ -1466,7 +1737,7 @@ static char *marpaESLIF_sv2byte(pTHX_ SV *svp, char **bytepp, size_t *bytelp, sh
 }
 
 /*****************************************************************************/
-static int marpaESLIF_skipi_cmpi(const void *p1, const void *p2)
+static int marpaESLIF_indicei_cmpi(const void *p1, const void *p2)
 /*****************************************************************************/
 {
   /* Sort in reverse order */
