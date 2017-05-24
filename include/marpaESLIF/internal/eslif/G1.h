@@ -940,9 +940,12 @@ bootstrap_grammar_rule_t bootstrap_grammar_G1_rules[] = {
   { G1_META_ADVERB_ITEM,                      G1_RULE_ADVERB_ITEM_14,                         MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_SYMBOL_ACTION                        }, -1,                        -1, -1 , G1_ACTION_ADVERB_ITEM_14 },
   { G1_META_ADVERB_ITEM,                      G1_RULE_ADVERB_ITEM_15,                         MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_FREE_ACTION                          }, -1,                        -1, -1 , G1_ACTION_ADVERB_ITEM_15 },
   { G1_META_ADVERB_ITEM,                      G1_RULE_ADVERB_ITEM_16,                         MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_EVENT_SPECIFICATION                  }, -1,                        -1, -1 , G1_ACTION_ADVERB_ITEM_16 },
-  { G1_META_ACTION,                           G1_RULE_ACTION,                                 MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_TERMINAL_ACTION,
+  { G1_META_ACTION,                           G1_RULE_ACTION_1,                               MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_TERMINAL_ACTION,
                                                                                                                                      G1_TERMINAL_THEN,
-                                                                                                                                     G1_META_ACTION_NAME                          }, -1,                        -1, -1 , G1_ACTION_ACTION },
+                                                                                                                                     G1_META_ACTION_NAME                          }, -1,                        -1, -1 , G1_ACTION_ACTION_1 },
+  { G1_META_ACTION,                           G1_RULE_ACTION_2,                               MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_TERMINAL_ACTION,
+                                                                                                                                     G1_TERMINAL_THEN,
+                                                                                                                                     G1_META_QUOTED_STRING                        }, -1,                        -1, -1 , G1_ACTION_ACTION_2 },
   /*
     lhsi                                      descs                                           type                          nrhsl  { rhsi }                                       }  minimumi           separatori  properb
   */

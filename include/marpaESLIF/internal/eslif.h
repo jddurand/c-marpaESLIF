@@ -66,7 +66,8 @@
 #define G1_RULE_ADVERB_ITEM_14                   "G1_rule_adverb_item_14"
 #define G1_RULE_ADVERB_ITEM_15                   "G1_rule_adverb_item_15"
 #define G1_RULE_ADVERB_ITEM_16                   "G1_rule_adverb_item_16"
-#define G1_RULE_ACTION                           "G1_rule_action"
+#define G1_RULE_ACTION_1                         "G1_rule_action_1"
+#define G1_RULE_ACTION_2                         "G1_rule_action_2"
 #define G1_RULE_SYMBOL_ACTION                    "G1_rule_symbol_action"
 #define G1_RULE_FREE_ACTION                      "G1_rule_free_action"
 #define G1_RULE_LEFT_ASSOCIATION                 "G1_rule_left_association"
@@ -200,7 +201,8 @@
 #define G1_ACTION_ADVERB_ITEM_14                   "::shift" /* <adverb item> ::= symbolaction */
 #define G1_ACTION_ADVERB_ITEM_15                   "::shift" /* <adverb item> ::= freeaction */
 #define G1_ACTION_ADVERB_ITEM_16                   "::shift" /* <adverb item> ::= <event specification> */
-#define G1_ACTION_ACTION                           "G1_action_action"                           /* done */
+#define G1_ACTION_ACTION_1                         "G1_action_action_1"                         /* done */
+#define G1_ACTION_ACTION_2                         "G1_action_action_2"                         /* done */
 #define G1_ACTION_SYMBOLACTION                     "G1_action_symbolaction"                     /* done */
 #define G1_ACTION_FREEACTION                       "G1_action_freeaction"                       /* done */
 #define G1_ACTION_LEFT_ASSOCIATION                 "G1_action_left_association"                 /* done */
