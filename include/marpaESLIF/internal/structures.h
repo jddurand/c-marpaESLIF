@@ -33,7 +33,6 @@ typedef struct  marpaESLIF_rule            marpaESLIF_rule_t;
 typedef struct  marpaESLIF_grammar         marpaESLIF_grammar_t;
 typedef enum    marpaESLIF_matcher_value   marpaESLIF_matcher_value_t;
 typedef enum    marpaESLIF_event_type      marpaESLIF_event_type_t;
-typedef enum    marpaESLIF_array_type      marpaESLIF_array_type_t;
 typedef struct  marpaESLIF_readerContext   marpaESLIF_readerContext_t;
 typedef struct  marpaESLIF_cloneContext    marpaESLIF_cloneContext_t;
 typedef         marpaESLIFValueType_t      marpaESLIF_stack_type_t;
@@ -185,6 +184,7 @@ struct marpaESLIF_rule {
   marpaESLIF_symbol_t   *exceptionp;                   /* Exception symbol */
   int                    exceptionIdi;                 /* Exception symbol Id */
   char                  *actions;                      /* Action */
+  marpaESLIF_string_t   *literalp;                     /* When action is a string literal (UTF-8 encoding) */
   char                  *discardEvents;                /* Discard event name - shallowed to its RHS */
   short                  discardEventb;                /* Discard event initial state: 0: off, 1: on - copied to its RHS */
   int                    ranki;

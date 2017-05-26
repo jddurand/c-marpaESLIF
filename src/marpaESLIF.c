@@ -2801,6 +2801,7 @@ static inline marpaESLIF_rule_t *_marpaESLIF_rule_newp(marpaESLIF_t *marpaESLIFp
   rulep->exceptionp     = NULL;
   rulep->exceptionIdi   = -1;
   rulep->actions        = NULL;
+  rulep->literalp       = NULL;
   rulep->discardEvents  = NULL;
   rulep->discardEventb  = 0;
   rulep->ranki          = ranki;
@@ -2954,6 +2955,7 @@ static inline void _marpaESLIF_rule_freev(marpaESLIF_rule_t *rulep)
     if (rulep->actions != NULL) {
       free(rulep->actions);
     }
+    _marpaESLIF_string_freev(rulep->literalp);
     if (rulep->rhsip != NULL) {
       free(rulep->rhsip);
     }
