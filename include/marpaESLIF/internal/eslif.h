@@ -278,9 +278,9 @@
 #define G1_ACTION_GRAMMAR_REFERENCE_2              "G1_action_grammar_reference_2"              /* done */
 #define G1_ACTION_GRAMMAR_REFERENCE_3              "G1_action_grammar_reference_3"              /* done */
 #define G1_ACTION_STRING_LITERAL                   "G1_action_string_literal"                   /* done */
-#define G1_ACTION_STRING_LITERAL_UNIT              "::copy[2]" /* <string literal unit> ::= '::"' <switch :discard off> <string literal inside any> '"' <switch :discard on> */
+#define G1_ACTION_STRING_LITERAL_UNIT              "::copy[2]" /* <string literal unit> ::= '::u8"' <switch :discard off> <string literal inside many> '"' <switch :discard on> */
 #define G1_ACTION_STRING_LITERAL_INSIDE_ANY        "::concat" /* <string literal inside any> ::= <string literal inside>* */
-#define G1_ACTION_STRING_LITERAL_INSIDE_1          "::transfer" /* <string literal inside> ::= /[^"\\\n]/ */
+#define G1_ACTION_STRING_LITERAL_INSIDE_1          "::shift" /* <string literal inside> ::= /[^"\\\n]/ */
 #define G1_ACTION_STRING_LITERAL_INSIDE_2          "G1_action_string_literal_inside_2"          /* done */
 #define G1_ACTION_STRING_LITERAL_INSIDE_3          "G1_action_string_literal_inside_3"          /* done */
 #define G1_ACTION_STRING_LITERAL_INSIDE_4          "G1_action_string_literal_inside_4"          /* done */

@@ -816,7 +816,7 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
     NULL, NULL
   },
   { G1_TERMINAL_STRING_LITERAL_ESCAPED_CHAR, MARPAESLIF_TERMINAL_TYPE_REGEX, NULL,
-    "[\"\\\\abfnrtve]",
+    "[\"'?\\\\abfnrtve]",
     NULL, NULL
   },
   { G1_TERMINAL_STRING_LITERAL_ESCAPED_HEX, MARPAESLIF_TERMINAL_TYPE_REGEX, NULL,
