@@ -65,6 +65,8 @@ static        short _marpaESLIF_bootstrap_G1_action_rhsb(void *userDatavp, marpa
 static        short _marpaESLIF_bootstrap_G1_action_adverb_list_itemsb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short _marpaESLIF_bootstrap_G1_action_action_1b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short _marpaESLIF_bootstrap_G1_action_action_2b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
+static        short _marpaESLIF_bootstrap_G1_action_string_literal_inside_2b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
+static        short _marpaESLIF_bootstrap_G1_action_string_literal_inside_3b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short _marpaESLIF_bootstrap_G1_action_symbolactionb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short _marpaESLIF_bootstrap_G1_action_freeactionb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short _marpaESLIF_bootstrap_G1_action_symbolactionb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
@@ -1232,6 +1234,10 @@ static void _marpaESLIF_bootstrap_freeDefaultActionv(void *userDatavp, int conte
     break;
   case MARPAESLIF_BOOTSTRAP_STACK_TYPE_ALTERNATIVE_NAME:
     free(p);
+    break;
+  case MARPAESLIF_BOOTSTRAP_STACK_TYPE_CHAR:
+    free(p);
+    break;
   default:
     break;
   }
@@ -1262,6 +1268,8 @@ static marpaESLIFValueRuleCallback_t _marpaESLIF_bootstrap_ruleActionResolver(vo
   else if (strcmp(actions, "G1_action_adverb_list_items")                == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_adverb_list_itemsb;                }
   else if (strcmp(actions, "G1_action_action_1")                         == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_action_1b;                         }
   else if (strcmp(actions, "G1_action_action_2")                         == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_action_2b;                         }
+  else if (strcmp(actions, "G1_action_string_literal_inside_2")          == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_string_literal_inside_2b;          }
+  else if (strcmp(actions, "G1_action_string_literal_inside_3")          == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_string_literal_inside_3b;          }
   else if (strcmp(actions, "G1_action_symbolaction")                     == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_symbolactionb;                     }
   else if (strcmp(actions, "G1_action_freeaction")                       == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_freeactionb;                       }
   else if (strcmp(actions, "G1_action_left_association")                 == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_left_associationb;                 }
@@ -1827,6 +1835,284 @@ static short _marpaESLIF_bootstrap_G1_action_action_2b(void *userDatavp, marpaES
   goto done;
 
  err:
+  rcb = 0;
+
+ done:
+  return rcb;
+}
+
+/*****************************************************************************/
+static short _marpaESLIF_bootstrap_G1_action_string_literal_inside_2b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
+/*****************************************************************************/
+{
+  /* <string literal inside> ::= '\\' ["\\abfnrtve] */
+  marpaESLIF_t *marpaESLIFp = marpaESLIFGrammar_eslifp(marpaESLIFRecognizer_grammarp(marpaESLIFValue_recognizerp(marpaESLIFValuep)));
+  char         *charp       = NULL;
+  size_t        charl       = sizeof(char);
+  char         *p;
+  char          q;
+  void         *bytep;
+  size_t        bytel;
+  char          c;
+  short         rcb;
+
+  /* Cannot be nullable */
+  if (nullableb) {
+    MARPAESLIF_ERROR(marpaESLIFp, "Nullable mode is not supported");
+    goto err;
+  }
+
+  /* ["\\abfnrtve] is a lexeme of size 1 */
+  MARPAESLIF_GET_ARRAY(marpaESLIFValuep, argni, bytep, bytel);
+  if (bytel != 1) {
+    MARPAESLIF_ERROR(marpaESLIFp, "Escaped character must be of size 1");
+    goto err;
+  }
+  /* We use the \x notation in case the current compiler does not know all the escape sequences */
+  p = (char *) bytep;
+  switch (q = *p) {
+  case '"':
+    c = '"';
+    break;
+  case '\\':
+    c = '\\';
+    break;
+  case 'a':
+    c = '\x7';
+    break;
+  case 'b':
+    c = '\x8';
+    break;
+  case 'f':
+    c = '\xC';
+    break;
+  case 'n':
+    c = '\xA';
+    break;
+  case 'r':
+    c = '\xD';
+    break;
+  case 't':
+    c = '\x9';
+    break;
+  case 'v':
+    c = '\xB';
+    break;
+  case 'e':
+    c = '\x1B';
+    break;
+  default:
+    MARPAESLIF_ERRORF(marpaESLIFp, "Unsupported escaped character '%c' (0x%lx)", q, (unsigned long) q);
+    goto err;
+  }
+
+  charp = (char *) malloc(charl);
+  if (charp == NULL) {
+    MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
+    goto err;
+  }
+  *charp = c;
+  MARPAESLIF_SET_ARRAY(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_CHAR, charp, charl);
+
+  {
+    static const char *funcs = "_marpaESLIF_bootstrap_G1_action_string_literal_inside_2b";
+    MARPAESLIF_HEXDUMPV(marpaESLIFValue_recognizerp(marpaESLIFValuep),
+                        "<string literal inside> ::= '\\\\' [\"\\\\abfnrtve]",
+                        "",
+                        charp,
+                        charl,
+                        0 /* traceb */);
+  }
+
+  rcb = 1;
+  goto done;
+
+ err:
+  if (charp != NULL) {
+    free(charp);
+  }
+  rcb = 0;
+
+ done:
+  return rcb;
+}
+
+/*****************************************************************************/
+static short _marpaESLIF_bootstrap_G1_action_string_literal_inside_3b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
+/*****************************************************************************/
+{
+  /* <string literal inside> ::= '\\' /x\{[a-fA-F0-9]{2}\}/ */
+  marpaESLIF_t *marpaESLIFp = marpaESLIFGrammar_eslifp(marpaESLIFRecognizer_grammarp(marpaESLIFValue_recognizerp(marpaESLIFValuep)));
+  char         *charp       = NULL;
+  size_t        charl       = sizeof(char);
+  char         *p;
+  char          q;
+  void         *bytep;
+  size_t        bytel;
+  char          c;
+  short         rcb;
+
+  /* Cannot be nullable */
+  if (nullableb) {
+    MARPAESLIF_ERROR(marpaESLIFp, "Nullable mode is not supported");
+    goto err;
+  }
+
+  /* /x\\{[a-fA-F0-9]{2}\\}/ is a lexeme of size 5 */
+  MARPAESLIF_GET_ARRAY(marpaESLIFValuep, argni, bytep, bytel);
+  if (bytel != 5) {
+    MARPAESLIF_ERROR(marpaESLIFp, "Escaped hex character must be of size 5");
+    goto err;
+  }
+  /* We use the \x notation in case the current compiler does not know all the escape sequences */
+  p = (char *) bytep;
+  p += 2;
+  switch (q = *p++) {
+  case '0':
+    c = 0x00;
+    break;
+  case '1':
+    c = 0x01;
+    break;
+  case '2':
+    c = 0x02;
+    break;
+  case '3':
+    c = 0x03;
+    break;
+  case '4':
+    c = 0x04;
+    break;
+  case '5':
+    c = 0x05;
+    break;
+  case '6':
+    c = 0x06;
+    break;
+  case '7':
+    c = 0x07;
+    break;
+  case '8':
+    c = 0x08;
+    break;
+  case '9':
+    c = 0x09;
+    break;
+  case 'a':
+  case 'A':
+    c = 0x0A;
+    break;
+  case 'b':
+  case 'B':
+    c = 0x0B;
+    break;
+  case 'c':
+  case 'C':
+    c = 0x0C;
+    break;
+  case 'd':
+  case 'D':
+    c = 0x0D;
+    break;
+  case 'e':
+  case 'E':
+    c = 0x0E;
+    break;
+  case 'f':
+  case 'F':
+    c = 0x0F;
+    break;
+  default:
+    MARPAESLIF_ERRORF(marpaESLIFp, "Unsupported hexadecimal character '%c' (0x%lx)", q, (unsigned long) q);
+    goto err;
+  }
+
+  c <<= 4;
+  switch (q = *p) {
+  case '0':
+    c |= 0x00;
+    break;
+  case '1':
+    c |= 0x01;
+    break;
+  case '2':
+    c |= 0x02;
+    break;
+  case '3':
+    c |= 0x03;
+    break;
+  case '4':
+    c |= 0x04;
+    break;
+  case '5':
+    c |= 0x05;
+    break;
+  case '6':
+    c |= 0x06;
+    break;
+  case '7':
+    c |= 0x07;
+    break;
+  case '8':
+    c |= 0x08;
+    break;
+  case '9':
+    c |= 0x09;
+    break;
+  case 'a':
+  case 'A':
+    c |= 0x0A;
+    break;
+  case 'b':
+  case 'B':
+    c |= 0x0B;
+    break;
+  case 'c':
+  case 'C':
+    c |= 0x0C;
+    break;
+  case 'd':
+  case 'D':
+    c |= 0x0D;
+    break;
+  case 'e':
+  case 'E':
+    c |= 0x0E;
+    break;
+  case 'f':
+  case 'F':
+    c |= 0x0F;
+    break;
+  default:
+    MARPAESLIF_ERRORF(marpaESLIFp, "Unsupported hexadecimal character '%c' (0x%lx)", q, (unsigned long) q);
+    goto err;
+  }
+  
+  charp = (char *) malloc(charl);
+  if (charp == NULL) {
+    MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
+    goto err;
+  }
+  *charp = c;
+  MARPAESLIF_SET_ARRAY(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_CHAR, charp, charl);
+  
+  {
+    static const char *funcs = "_marpaESLIF_bootstrap_G1_action_string_literal_inside_3b";
+    MARPAESLIF_HEXDUMPV(marpaESLIFValue_recognizerp(marpaESLIFValuep),
+                        "<string literal inside> ::= '\\\\' /x\\{[a-fA-F0-9]{2}\\}/",
+                        "",
+                        charp,
+                        charl,
+                        0 /* traceb */);
+  }
+
+  rcb = 1;
+  goto done;
+
+ err:
+  if (charp != NULL) {
+    free(charp);
+  }
   rcb = 0;
 
  done:
