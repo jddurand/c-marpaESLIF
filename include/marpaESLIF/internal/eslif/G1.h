@@ -74,6 +74,14 @@ typedef enum bootstrap_grammar_G1_enum {
   G1_TERMINAL_UNSIGNED_INTEGER,
   G1_TERMINAL__DISCARD_ON,
   G1_TERMINAL__DISCARD_OFF,
+  G1_TERMINAL_STRING_LITERAL_START,
+  G1_TERMINAL_STRING_LITERAL_END,
+  G1_TERMINAL_BACKSLASH,
+  G1_TERMINAL_STRING_LITERAL_NOT_ESCAPED,
+  G1_TERMINAL_STRING_LITERAL_ESCAPED_CHAR,
+  G1_TERMINAL_STRING_LITERAL_ESCAPED_HEX,
+  G1_TERMINAL_STRING_LITERAL_ESCAPED_CODEPOINT,
+  G1_TERMINAL_STRING_LITERAL_ESCAPED_LARGE_CODEPOINT,
   /* ----- Non terminals ------ */
   G1_META_STATEMENTS,
   G1_META_STATEMENT,
@@ -141,6 +149,12 @@ typedef enum bootstrap_grammar_G1_enum {
   G1_META_GRAMMAR_REFERENCE,
   G1_META_SIGNED_INTEGER,
   G1_META_UNSIGNED_INTEGER,
+  G1_META_STRING_LITERAL,
+  G1_META_STRING_LITERAL_UNIT,
+  G1_META_STRING_LITERAL_INSIDE,
+  G1_META_STRING_LITERAL_INSIDE_ANY,
+  G1_META_SWITCH_DISCARD_OFF,
+  G1_META_SWITCH_DISCARD_ON,
   /* This symbol is special, c.f. bootstrap_grammar_G1_metas[] array below: it has the discard flag on */
   G1_META_DISCARD,
   /* These meta identifiers are handled by L0 */
@@ -161,87 +175,94 @@ typedef enum bootstrap_grammar_G1_enum {
 
 /* All non-terminals are listed here */
 bootstrap_grammar_meta_t bootstrap_grammar_G1_metas[] = {
-  { G1_META_STATEMENTS,                       "statements", 1, 0 },
-  { G1_META_STATEMENT,                        "statement", 0, 0 },
-  { G1_META_START_RULE,                       "start rule", 0, 0 },
-  { G1_META_DESC_RULE,                        "desc rule", 0, 0 },
-  { G1_META_EMPTY_RULE,                       "empty rule", 0, 0 },
-  { G1_META_NULL_STATEMENT,                   "null statement", 0, 0 },
-  { G1_META_STATEMENT_GROUP,                  "statement group", 0, 0 },
-  { G1_META_PRIORITY_RULE,                    "priority rule", 0, 0 },
-  { G1_META_QUANTIFIED_RULE,                  "quantified rule", 0, 0 },
-  { G1_META_DISCARD_RULE,                     "discard rule", 0, 0 },
-  { G1_META_DEFAULT_RULE,                     "default rule", 0, 0 },
-  { G1_META_LEXEME_RULE,                      "lexeme rule", 0, 0 },
-  { G1_META_COMPLETION_EVENT_DECLARATION,     "completion event declaration", 0, 0 },
-  { G1_META_NULLED_EVENT_DECLARATION,         "nulled event declaration", 0, 0 },
-  { G1_META_PREDICTION_EVENT_DECLARATION,     "prediction event declaration", 0, 0 },
-  { G1_META_INACCESSIBLE_STATEMENT,           "inaccessible statement", 0, 0 },
-  { G1_META_INACCESSIBLE_TREATMENT,           "inaccessible treatment", 0, 0 },
-  { G1_META_EXCEPTION_STATEMENT,              "exception statement", 0, 0 },
-  { G1_META_AUTORANK_STATEMENT,               "autorank statement", 0, 0 },
-  { G1_META_OP_DECLARE,                       "op declare", 0, 0 },
-  { G1_META_OP_DECLARE_ANY_GRAMMAR,           L0_JOIN_G1_META_OP_DECLARE_ANY_GRAMMAR, 0, 0 },
-  { G1_META_OP_DECLARE_TOP_GRAMMAR,           L0_JOIN_G1_META_OP_DECLARE_TOP_GRAMMAR, 0, 0 },
-  { G1_META_OP_DECLARE_LEX_GRAMMAR,           L0_JOIN_G1_META_OP_DECLARE_LEX_GRAMMAR, 0, 0 },
-  { G1_META_OP_LOOSEN,                        L0_JOIN_G1_META_OP_LOOSEN, 0, 0 },
-  { G1_META_OP_EQUAL_PRIORITY,                L0_JOIN_G1_META_OP_EQUAL_PRIORITY, 0, 0 },
-  { G1_META_PRIORITIES,                       "priorities", 0, 0 },
-  { G1_META_ALTERNATIVES,                     "alternatives", 0, 0 },
-  { G1_META_ALTERNATIVE,                      "alternative", 0, 0 },
-  { G1_META_ADVERB_LIST,                      "adverb list", 0, 0 },
-  { G1_META_ADVERB_LIST_ITEMS,                "adverb list items", 0, 0 },
-  { G1_META_ADVERB_ITEM,                      "adverb item", 0, 0 },
-  { G1_META_ACTION,                           "action", 0, 0 },
-  { G1_META_SYMBOL_ACTION,                    "symbol action", 0, 0 },
-  { G1_META_FREE_ACTION,                      "free action", 0, 0 },
-  { G1_META_LEFT_ASSOCIATION,                 "left association", 0, 0 },
-  { G1_META_RIGHT_ASSOCIATION,                "right association", 0, 0 },
-  { G1_META_GROUP_ASSOCIATION,                "group association", 0, 0 },
-  { G1_META_SEPARATOR_SPECIFICATION,          "separator specification", 0, 0 },
-  { G1_META_PROPER_SPECIFICATION,             "proper specification", 0, 0 },
-  { G1_META_RANK_SPECIFICATION,               "rank specification", 0, 0 },
-  { G1_META_NULL_RANKING_SPECIFICATION,       "null ranking specification", 0, 0 },
-  { G1_META_NULL_RANKING_CONSTANT,            "null ranking constant", 0, 0 },
-  { G1_META_PRIORITY_SPECIFICATION,           "priority specification", 0, 0 },
-  { G1_META_PAUSE_SPECIFICATION,              "pause specification", 0, 0 },
-  { G1_META_EVENT_SPECIFICATION,              "event specification", 0, 0 },
-  { G1_META_EVENT_INITIALIZATION,             "event initialization", 0, 0 },
-  { G1_META_EVENT_INITIALIZER,                "event initializer", 0, 0 },
-  { G1_META_ON_OR_OFF,                        "on or off", 0, 0 },
-  { G1_META_LATM_SPECIFICATION,               "latm specification", 0, 0 },
-  { G1_META_NAMING,                           "naming", 0, 0 },
-  { G1_META_NULL_ADVERB,                      "null adverb", 0, 0 },
-  { G1_META_ALTERNATIVE_NAME,                 "alternative name", 0, 0 },
-  { G1_META_EVENT_NAME,                       "event name", 0, 0 },
-  { G1_META_LHS,                              "lhs", 0, 0 },
-  { G1_META_RHS,                              "rhs", 0, 0 },
-  { G1_META_RHS_PRIMARY,                      "rhs primary", 0, 0 },
-  { G1_META_SINGLE_SYMBOL,                    "single symbol", 0, 0 },
-  { G1_META_SYMBOL,                           "symbol", 0, 0 },
-  { G1_META_SYMBOL_NAME,                      "symbol name", 0, 0 },
-  { G1_META_ACTION_NAME,                      "action name", 0, 0 },
-  { G1_META_FREE_NAME,                        "free name", 0, 0 },
-  { G1_META_SYMBOLACTION_NAME,                "symbol action name", 0, 0 },
-  { G1_META_QUANTIFIER,                       "quantifier", 0, 0 },
-  { G1_META_GRAMMAR_REFERENCE,                "grammar reference", 0, 0 },
-  { G1_META_SIGNED_INTEGER,                   "signed integer", 0, 0 },
-  { G1_META_UNSIGNED_INTEGER,                 "unsigned integer", 0, 0 },
-  { G1_META_DISCARD,                          ":discard", 0, 1 },
+  /* Identifier                               Description                              Start  Discard :discard[on] :discard[off] */
+  { G1_META_STATEMENTS,                       "statements",                                1, 0 },
+  { G1_META_STATEMENT,                        "statement",                                 0, 0 },
+  { G1_META_START_RULE,                       "start rule",                                0, 0 },
+  { G1_META_DESC_RULE,                        "desc rule",                                 0, 0 },
+  { G1_META_EMPTY_RULE,                       "empty rule",                                0, 0 },
+  { G1_META_NULL_STATEMENT,                   "null statement",                            0, 0 },
+  { G1_META_STATEMENT_GROUP,                  "statement group",                           0, 0 },
+  { G1_META_PRIORITY_RULE,                    "priority rule",                             0, 0 },
+  { G1_META_QUANTIFIED_RULE,                  "quantified rule",                           0, 0 },
+  { G1_META_DISCARD_RULE,                     "discard rule",                              0, 0 },
+  { G1_META_DEFAULT_RULE,                     "default rule",                              0, 0 },
+  { G1_META_LEXEME_RULE,                      "lexeme rule",                               0, 0 },
+  { G1_META_COMPLETION_EVENT_DECLARATION,     "completion event declaration",              0, 0 },
+  { G1_META_NULLED_EVENT_DECLARATION,         "nulled event declaration",                  0, 0 },
+  { G1_META_PREDICTION_EVENT_DECLARATION,     "prediction event declaration",              0, 0 },
+  { G1_META_INACCESSIBLE_STATEMENT,           "inaccessible statement",                    0, 0 },
+  { G1_META_INACCESSIBLE_TREATMENT,           "inaccessible treatment",                    0, 0 },
+  { G1_META_EXCEPTION_STATEMENT,              "exception statement",                       0, 0 },
+  { G1_META_AUTORANK_STATEMENT,               "autorank statement",                        0, 0 },
+  { G1_META_OP_DECLARE,                       "op declare",                                0, 0 },
+  { G1_META_OP_DECLARE_ANY_GRAMMAR,           L0_JOIN_G1_META_OP_DECLARE_ANY_GRAMMAR,      0, 0 },
+  { G1_META_OP_DECLARE_TOP_GRAMMAR,           L0_JOIN_G1_META_OP_DECLARE_TOP_GRAMMAR,      0, 0 },
+  { G1_META_OP_DECLARE_LEX_GRAMMAR,           L0_JOIN_G1_META_OP_DECLARE_LEX_GRAMMAR,      0, 0 },
+  { G1_META_OP_LOOSEN,                        L0_JOIN_G1_META_OP_LOOSEN,                   0, 0 },
+  { G1_META_OP_EQUAL_PRIORITY,                L0_JOIN_G1_META_OP_EQUAL_PRIORITY,           0, 0 },
+  { G1_META_PRIORITIES,                       "priorities",                                0, 0 },
+  { G1_META_ALTERNATIVES,                     "alternatives",                              0, 0 },
+  { G1_META_ALTERNATIVE,                      "alternative",                               0, 0 },
+  { G1_META_ADVERB_LIST,                      "adverb list",                               0, 0 },
+  { G1_META_ADVERB_LIST_ITEMS,                "adverb list items",                         0, 0 },
+  { G1_META_ADVERB_ITEM,                      "adverb item",                               0, 0 },
+  { G1_META_ACTION,                           "action",                                    0, 0 },
+  { G1_META_SYMBOL_ACTION,                    "symbol action",                             0, 0 },
+  { G1_META_FREE_ACTION,                      "free action",                               0, 0 },
+  { G1_META_LEFT_ASSOCIATION,                 "left association",                          0, 0 },
+  { G1_META_RIGHT_ASSOCIATION,                "right association",                         0, 0 },
+  { G1_META_GROUP_ASSOCIATION,                "group association",                         0, 0 },
+  { G1_META_SEPARATOR_SPECIFICATION,          "separator specification",                   0, 0 },
+  { G1_META_PROPER_SPECIFICATION,             "proper specification",                      0, 0 },
+  { G1_META_RANK_SPECIFICATION,               "rank specification",                        0, 0 },
+  { G1_META_NULL_RANKING_SPECIFICATION,       "null ranking specification",                0, 0 },
+  { G1_META_NULL_RANKING_CONSTANT,            "null ranking constant",                     0, 0 },
+  { G1_META_PRIORITY_SPECIFICATION,           "priority specification",                    0, 0 },
+  { G1_META_PAUSE_SPECIFICATION,              "pause specification",                       0, 0 },
+  { G1_META_EVENT_SPECIFICATION,              "event specification",                       0, 0 },
+  { G1_META_EVENT_INITIALIZATION,             "event initialization",                      0, 0 },
+  { G1_META_EVENT_INITIALIZER,                "event initializer",                         0, 0 },
+  { G1_META_ON_OR_OFF,                        "on or off",                                 0, 0 },
+  { G1_META_LATM_SPECIFICATION,               "latm specification",                        0, 0 },
+  { G1_META_NAMING,                           "naming",                                    0, 0 },
+  { G1_META_NULL_ADVERB,                      "null adverb",                               0, 0 },
+  { G1_META_ALTERNATIVE_NAME,                 "alternative name",                          0, 0 },
+  { G1_META_EVENT_NAME,                       "event name",                                0, 0 },
+  { G1_META_LHS,                              "lhs",                                       0, 0 },
+  { G1_META_RHS,                              "rhs",                                       0, 0 },
+  { G1_META_RHS_PRIMARY,                      "rhs primary",                               0, 0 },
+  { G1_META_SINGLE_SYMBOL,                    "single symbol",                             0, 0 },
+  { G1_META_SYMBOL,                           "symbol",                                    0, 0 },
+  { G1_META_SYMBOL_NAME,                      "symbol name",                               0, 0 },
+  { G1_META_ACTION_NAME,                      "action name",                               0, 0 },
+  { G1_META_FREE_NAME,                        "free name",                                 0, 0 },
+  { G1_META_SYMBOLACTION_NAME,                "symbol action name",                        0, 0 },
+  { G1_META_QUANTIFIER,                       "quantifier",                                0, 0 },
+  { G1_META_GRAMMAR_REFERENCE,                "grammar reference",                         0, 0 },
+  { G1_META_SIGNED_INTEGER,                   "signed integer",                            0, 0 },
+  { G1_META_UNSIGNED_INTEGER,                 "unsigned integer",                          0, 0 },
+  { G1_META_STRING_LITERAL,                   "string literal",                            0, 0 },
+  { G1_META_STRING_LITERAL_UNIT,              "string literal unit",                       0, 0 },
+  { G1_META_STRING_LITERAL_INSIDE,            "string literal inside",                     0, 0 },
+  { G1_META_STRING_LITERAL_INSIDE_ANY,        "string literal inside any",                 0, 0 },
+  { G1_META_SWITCH_DISCARD_OFF,               "switch :discard off",                       0, 0 },
+  { G1_META_SWITCH_DISCARD_ON,                "switch :discard on",                        0, 0 },
+  { G1_META_DISCARD,                          ":discard",                                  0, 1 },
   /* L0 join */
-  { G1_META_FALSE,                            L0_JOIN_G1_META_FALSE, 0, 0 },
-  { G1_META_TRUE,                             L0_JOIN_G1_META_TRUE, 0, 0 },
-  { G1_META_STANDARD_NAME,                    L0_JOIN_G1_META_STANDARD_NAME, 0, 0 },
-  { G1_META_QUOTED_NAME,                      L0_JOIN_G1_META_QUOTED_NAME, 0, 0 },
-  { G1_META_QUOTED_STRING,                    L0_JOIN_G1_META_QUOTED_STRING, 0, 0 },
-  { G1_META_CHARACTER_CLASS,                  L0_JOIN_G1_META_CHARACTER_CLASS, 0, 0 },
-  { G1_META_REGULAR_EXPRESSION,               L0_JOIN_G1_META_REGULAR_EXPRESSION, 0, 0 },
-  { G1_META_BARE_NAME,                        L0_JOIN_G1_META_BARE_NAME, 0, 0 },
-  { G1_META_BRACKETED_NAME,                   L0_JOIN_G1_META_BRACKETED_NAME, 0, 0 },
+  { G1_META_FALSE,                            L0_JOIN_G1_META_FALSE,                       0, 0 },
+  { G1_META_TRUE,                             L0_JOIN_G1_META_TRUE,                        0, 0 },
+  { G1_META_STANDARD_NAME,                    L0_JOIN_G1_META_STANDARD_NAME,               0, 0 },
+  { G1_META_QUOTED_NAME,                      L0_JOIN_G1_META_QUOTED_NAME,                 0, 0 },
+  { G1_META_QUOTED_STRING,                    L0_JOIN_G1_META_QUOTED_STRING,               0, 0 },
+  { G1_META_CHARACTER_CLASS,                  L0_JOIN_G1_META_CHARACTER_CLASS,             0, 0 },
+  { G1_META_REGULAR_EXPRESSION,               L0_JOIN_G1_META_REGULAR_EXPRESSION,          0, 0 },
+  { G1_META_BARE_NAME,                        L0_JOIN_G1_META_BARE_NAME,                   0, 0 },
+  { G1_META_BRACKETED_NAME,                   L0_JOIN_G1_META_BRACKETED_NAME,              0, 0 },
   { G1_META_RESTRICTED_ASCII_GRAPH_NAME,      L0_JOIN_G1_META_RESTRICTED_ASCII_GRAPH_NAME, 0, 0 },
-  { G1_META_WHITESPACE,                       L0_JOIN_G1_META_WHITESPACE, 0, 0 },
-  { G1_META_PERL_COMMENT,                     L0_JOIN_G1_META_PERL_COMMENT, 0, 0 },
-  { G1_META_CPLUSPLUS_COMMENT,                L0_JOIN_G1_META_CPLUSPLUS_COMMENT, 0, 0 }
+  { G1_META_WHITESPACE,                       L0_JOIN_G1_META_WHITESPACE,                  0, 0 },
+  { G1_META_PERL_COMMENT,                     L0_JOIN_G1_META_PERL_COMMENT,                0, 0 },
+  { G1_META_CPLUSPLUS_COMMENT,                L0_JOIN_G1_META_CPLUSPLUS_COMMENT,           0, 0 }
 };
 
 /* Here it is very important that all the string constants are UTF-8 compatible - this is the case */
@@ -773,6 +794,54 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
 #else
     NULL, NULL
 #endif
+  },
+  { G1_TERMINAL_STRING_LITERAL_START, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
+    "'::u8\"'",
+#ifndef MARPAESLIF_NTRACE
+    "::u8\"", "::u8"
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_STRING_LITERAL_END, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
+    "'\"'",
+    NULL, NULL
+  },
+  { G1_TERMINAL_BACKSLASH, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
+    "'\\\\'",
+    NULL, NULL
+  },
+  { G1_TERMINAL_STRING_LITERAL_NOT_ESCAPED, MARPAESLIF_TERMINAL_TYPE_REGEX, NULL,
+    "[^\"\\\\\\n]",
+    NULL, NULL
+  },
+  { G1_TERMINAL_STRING_LITERAL_ESCAPED_CHAR, MARPAESLIF_TERMINAL_TYPE_REGEX, NULL,
+    "[\"\\\\abfnrtve]",
+    NULL, NULL
+  },
+  { G1_TERMINAL_STRING_LITERAL_ESCAPED_HEX, MARPAESLIF_TERMINAL_TYPE_REGEX, NULL,
+    "x\\{[a-fA-F0-9]{2}\\}",
+#ifndef MARPAESLIF_NTRACE
+    "x{0a}", "x{0"
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_STRING_LITERAL_ESCAPED_CODEPOINT, MARPAESLIF_TERMINAL_TYPE_REGEX, NULL,
+    "u\\{[a-fA-F0-9]{4}\\}",
+#ifndef MARPAESLIF_NTRACE
+    "u{000a}", "u{00"
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_STRING_LITERAL_ESCAPED_LARGE_CODEPOINT, MARPAESLIF_TERMINAL_TYPE_REGEX, NULL,
+    "U\\{[a-fA-F0-9]{8}\\}",
+#ifndef MARPAESLIF_NTRACE
+    "U{0000000a}", "U{000000"
+#else
+    NULL, NULL
+#endif
   }
 };
 
@@ -945,7 +1014,7 @@ bootstrap_grammar_rule_t bootstrap_grammar_G1_rules[] = {
                                                                                                                                      G1_META_ACTION_NAME                          }, -1,                        -1, -1 , G1_ACTION_ACTION_1 },
   { G1_META_ACTION,                           G1_RULE_ACTION_2,                               MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_TERMINAL_ACTION,
                                                                                                                                      G1_TERMINAL_THEN,
-                                                                                                                                     G1_META_QUOTED_STRING                        }, -1,                        -1, -1 , G1_ACTION_ACTION_2 },
+                                                                                                                                     G1_META_STRING_LITERAL                       }, -1,                        -1, -1 , G1_ACTION_ACTION_2 },
   /*
     lhsi                                      descs                                           type                          nrhsl  { rhsi }                                       }  minimumi           separatori  properb
   */
@@ -1087,7 +1156,26 @@ bootstrap_grammar_rule_t bootstrap_grammar_G1_rules[] = {
                                                                                                                                      G1_META_UNSIGNED_INTEGER                     }, -1,                        -1, -1 , G1_ACTION_GRAMMAR_REFERENCE_3 },
   { G1_META_DISCARD,                          G1_RULE_DISCARD_1,                              MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_WHITESPACE                           }, -1,                        -1, -1 , NULL },
   { G1_META_DISCARD,                          G1_RULE_DISCARD_2,                              MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_PERL_COMMENT                         }, -1,                        -1, -1 , NULL },
-  { G1_META_DISCARD,                          G1_RULE_DISCARD_3,                              MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_CPLUSPLUS_COMMENT                    }, -1,                        -1, -1 , NULL }
+  { G1_META_DISCARD,                          G1_RULE_DISCARD_3,                              MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_CPLUSPLUS_COMMENT                    }, -1,                        -1, -1 , NULL },
+
+  { G1_META_STRING_LITERAL,                   G1_RULE_STRING_LITERAL,                         MARPAESLIF_RULE_TYPE_SEQUENCE,    1, { G1_META_STRING_LITERAL_UNIT                  },  1,                        -1, -1 , G1_ACTION_STRING_LITERAL },
+  { G1_META_STRING_LITERAL_UNIT,              G1_RULE_STRING_LITERAL_UNIT,                    MARPAESLIF_RULE_TYPE_ALTERNATIVE, 5, { G1_TERMINAL_STRING_LITERAL_START,
+                                                                                                                                     G1_META_SWITCH_DISCARD_OFF,
+                                                                                                                                     G1_META_STRING_LITERAL_INSIDE_ANY,
+                                                                                                                                     G1_TERMINAL_STRING_LITERAL_END,
+                                                                                                                                     G1_META_SWITCH_DISCARD_ON                    }, -1,                        -1, -1 , G1_ACTION_STRING_LITERAL_UNIT },
+  { G1_META_SWITCH_DISCARD_OFF,               G1_RULE_SWITCH_DISCARD_OFF,                     MARPAESLIF_RULE_TYPE_ALTERNATIVE, 0, { -1                                           }, -1,                        -1, -1 , G1_ACTION_SWITCH_DISCARD_OFF },
+  { G1_META_SWITCH_DISCARD_ON,                G1_RULE_SWITCH_DISCARD_ON,                      MARPAESLIF_RULE_TYPE_ALTERNATIVE, 0, { -1                                           }, -1,                        -1, -1 , G1_ACTION_SWITCH_DISCARD_ON },
+  { G1_META_STRING_LITERAL_INSIDE_ANY,        G1_RULE_STRING_LITERAL_INSIDE_ANY,              MARPAESLIF_RULE_TYPE_SEQUENCE,    1, { G1_META_STRING_LITERAL_INSIDE                },  0,                        -1, -1 , G1_ACTION_STRING_LITERAL_INSIDE_ANY },
+  { G1_META_STRING_LITERAL_INSIDE,            G1_RULE_STRING_LITERAL_INSIDE_1,                MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL_STRING_LITERAL_NOT_ESCAPED       }, -1,                        -1, -1 , G1_ACTION_STRING_LITERAL_INSIDE_1 },
+  { G1_META_STRING_LITERAL_INSIDE,            G1_RULE_STRING_LITERAL_INSIDE_2,                MARPAESLIF_RULE_TYPE_ALTERNATIVE, 2, { G1_TERMINAL_BACKSLASH,
+                                                                                                                                     G1_TERMINAL_STRING_LITERAL_ESCAPED_CHAR      }, -1,                        -1, -1 , G1_ACTION_STRING_LITERAL_INSIDE_2 },
+  { G1_META_STRING_LITERAL_INSIDE,            G1_RULE_STRING_LITERAL_INSIDE_3,                MARPAESLIF_RULE_TYPE_ALTERNATIVE, 2, { G1_TERMINAL_BACKSLASH,
+                                                                                                                                     G1_TERMINAL_STRING_LITERAL_ESCAPED_HEX       }, -1,                        -1, -1 , G1_ACTION_STRING_LITERAL_INSIDE_3 },
+  { G1_META_STRING_LITERAL_INSIDE,            G1_RULE_STRING_LITERAL_INSIDE_4,                MARPAESLIF_RULE_TYPE_ALTERNATIVE, 2, { G1_TERMINAL_BACKSLASH,
+                                                                                                                                     G1_TERMINAL_STRING_LITERAL_ESCAPED_CODEPOINT }, -1,                        -1, -1 , G1_ACTION_STRING_LITERAL_INSIDE_4 },
+  { G1_META_STRING_LITERAL_INSIDE,            G1_RULE_STRING_LITERAL_INSIDE_4,                MARPAESLIF_RULE_TYPE_ALTERNATIVE, 2, { G1_TERMINAL_BACKSLASH,
+                                                                                                                                     G1_TERMINAL_STRING_LITERAL_ESCAPED_LARGE_CODEPOINT }, -1,                  -1, -1 , G1_ACTION_STRING_LITERAL_INSIDE_5 }
 };
 
 #endif /* MARPAESLIF_INTERNAL_ESLIF_G1_H */

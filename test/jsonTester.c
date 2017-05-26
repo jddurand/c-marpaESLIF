@@ -5,7 +5,9 @@
 #include <genericLogger.h>
 #include <marpaESLIF.h>
 
-static short inputReaderb(void *userDatavp, char **inputsp, size_t *inputlp, short *eofbp, short *characterStreambp, char **encodingOfEncodingsp, char **encodingsp, size_t *encodinglp);
+static short                         inputReaderb(void *userDatavp, char **inputsp, size_t *inputlp, short *eofbp, short *characterStreambp, char **encodingOfEncodingsp, char **encodingsp, size_t *encodinglp);
+static marpaESLIFValueRuleCallback_t ruleActionResolver(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions);
+short                                noop(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 
 typedef struct marpaESLIFTester_context {
   genericLogger_t *genericLoggerp;
@@ -18,9 +20,9 @@ const static char *dsl = "\n"
 ":start       ::= json\n"
 "json         ::= object\n"
 "               | array\n"
-"object       ::= '{' members '}'       action => do_object\n"
 "# comma is provided as a char class here, to ensure that char classes\n"
 "# as separators are in the test suite.\n"
+"object       ::= '{' members '}'       action => ::\"\\a\\x{FF}\\r\"\n"
 "members      ::= pair*                 action => do_array separator => ','\n"
 "pair         ::= string ':' value      action => do_array\n"
 "value        ::= string\n"
@@ -80,6 +82,8 @@ int main() {
   size_t                       pausel;
   size_t                       linel;
   size_t                       columnl;
+  marpaESLIFValue_t           *marpaESLIFValuep = NULL;
+  marpaESLIFValueOption_t      marpaESLIFValueOption;
 
   const static char           *inputs[] = {
     "{\"test\":\"1\"}",
@@ -212,7 +216,16 @@ int main() {
     marpaESLIFRecognizerOption.buftriggerperci           = 50;
     marpaESLIFRecognizerOption.bufaddperci               = 50;
 
-    marpaESLIFRecognizer_freev(marpaESLIFRecognizerp);
+    /* Free previous round */
+    if (marpaESLIFValuep != NULL) {
+      marpaESLIFValue_freev(marpaESLIFValuep);
+      marpaESLIFValuep = NULL;
+    }
+    if (marpaESLIFRecognizerp != NULL) {
+      marpaESLIFRecognizer_freev(marpaESLIFRecognizerp);
+      marpaESLIFRecognizerp = NULL;
+    }
+    
     marpaESLIFRecognizerp = marpaESLIFRecognizer_newp(marpaESLIFGrammarp, &marpaESLIFRecognizerOption);
     if (marpaESLIFRecognizerp == NULL) {
       goto err;
@@ -243,6 +256,24 @@ int main() {
         goto err;
       }
     }
+
+    /* Call for valuation, letting marpaESLIF free the result */
+    marpaESLIFValueOption.userDatavp            = NULL; /* User specific context */
+    marpaESLIFValueOption.ruleActionResolverp   = ruleActionResolver; /* Will return the function doing the wanted rule action */
+    marpaESLIFValueOption.symbolActionResolverp = NULL; /* Will return the function doing the wanted symbol action */
+    marpaESLIFValueOption.freeActionResolverp   = NULL; /* Will return the function doing the free */
+    marpaESLIFValueOption.highRankOnlyb         = 1;    /* Default: 1 */
+    marpaESLIFValueOption.orderByRankb          = 1;    /* Default: 1 */
+    marpaESLIFValueOption.ambiguousb            = 0;    /* Default: 0 */
+    marpaESLIFValueOption.nullb                 = 0;    /* Default: 0 */
+    marpaESLIFValueOption.maxParsesi            = 0;    /* Default: 0 */
+    marpaESLIFValuep = marpaESLIFValue_newp(marpaESLIFRecognizerp, &marpaESLIFValueOption);
+    if (marpaESLIFValuep == NULL) {
+      goto err;
+    }
+    if (! marpaESLIFValue_valueb(marpaESLIFValuep, NULL /* marpaESLIFValueResultp */)) {
+      goto err;
+    }
   }
 
   exiti = 0;
@@ -252,6 +283,7 @@ int main() {
   exiti = 1;
 
  done:
+  marpaESLIFValue_freev(marpaESLIFValuep);
   marpaESLIFRecognizer_freev(marpaESLIFRecognizerp);
   marpaESLIFGrammar_freev(marpaESLIFGrammarp);
   marpaESLIF_freev(marpaESLIFp);
@@ -276,3 +308,18 @@ static short inputReaderb(void *userDatavp, char **inputsp, size_t *inputlp, sho
 
   return 1;
 }
+
+/*****************************************************************************/
+static marpaESLIFValueRuleCallback_t ruleActionResolver(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions)
+/*****************************************************************************/
+{
+  return noop;
+}
+
+/*****************************************************************************/
+short noop(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
+/*****************************************************************************/
+{
+  return 1;
+}
+

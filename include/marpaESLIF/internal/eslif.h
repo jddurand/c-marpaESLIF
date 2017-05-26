@@ -135,6 +135,16 @@
 #define G1_RULE_DISCARD_1                        "G1_rule_discard_1"
 #define G1_RULE_DISCARD_2                        "G1_rule_discard_2"
 #define G1_RULE_DISCARD_3                        "G1_rule_discard_3"
+#define G1_RULE_STRING_LITERAL                   "G1_rule_string_literal"
+#define G1_RULE_STRING_LITERAL_UNIT              "G1_rule_string_literal_unit"
+#define G1_RULE_STRING_LITERAL_INSIDE_ANY        "G1_rule_string_literal_inside_any"
+#define G1_RULE_STRING_LITERAL_INSIDE_1          "G1_rule_string_literal_inside_1"
+#define G1_RULE_STRING_LITERAL_INSIDE_2          "G1_rule_string_literal_inside_2"
+#define G1_RULE_STRING_LITERAL_INSIDE_3          "G1_rule_string_literal_inside_3"
+#define G1_RULE_STRING_LITERAL_INSIDE_4          "G1_rule_string_literal_inside_4"
+#define G1_RULE_STRING_LITERAL_INSIDE_5          "G1_rule_string_literal_inside_5"
+#define G1_RULE_SWITCH_DISCARD_OFF               "G1_rule_switch_discard_off"
+#define G1_RULE_SWITCH_DISCARD_ON                "G1_rule_switch_discard_on"
 
 #define G1_ACTION_STATEMENTS                       "::undef"
 #define G1_ACTION_STATEMENT_01                     "::undef"
@@ -267,6 +277,16 @@
 #define G1_ACTION_GRAMMAR_REFERENCE_1              "G1_action_grammar_reference_1"              /* done */
 #define G1_ACTION_GRAMMAR_REFERENCE_2              "G1_action_grammar_reference_2"              /* done */
 #define G1_ACTION_GRAMMAR_REFERENCE_3              "G1_action_grammar_reference_3"              /* done */
+#define G1_ACTION_STRING_LITERAL                   "G1_action_string_literal"                   /* done */
+#define G1_ACTION_STRING_LITERAL_UNIT              "::copy[2]" /* <string literal unit> ::= '::"' <switch :discard off> <string literal inside any> '"' <switch :discard on> */
+#define G1_ACTION_STRING_LITERAL_INSIDE_ANY        "::concat" /* <string literal inside any> ::= <string literal inside>* */
+#define G1_ACTION_STRING_LITERAL_INSIDE_1          "::transfer" /* <string literal inside> ::= /[^"\\\n]/ */
+#define G1_ACTION_STRING_LITERAL_INSIDE_2          "G1_action_string_literal_inside_2"          /* done */
+#define G1_ACTION_STRING_LITERAL_INSIDE_3          "G1_action_string_literal_inside_3"          /* done */
+#define G1_ACTION_STRING_LITERAL_INSIDE_4          "G1_action_string_literal_inside_4"          /* done */
+#define G1_ACTION_STRING_LITERAL_INSIDE_5          "G1_action_string_literal_inside_5"          /* done */
+#define G1_ACTION_SWITCH_DISCARD_OFF               "::undef"
+#define G1_ACTION_SWITCH_DISCARD_ON                "::undef"
 
 typedef struct bootstrap_grammar_terminal {
   int                        idi;                 /* Identifier */
@@ -282,8 +302,8 @@ typedef struct bootstrap_grammar_meta {
   char  *descs;                /* Description */
   short  startb;               /* Start symbol ? */
   short  discardb;             /* Discard symbol ? */
-  char  *defaultSymbolactions; /* Default symbol action */
-  char  *defaultRuleactions;   /* Default rule action */
+  short  discardonb;           /* :discard[on] event ? */
+  short  discardoffb;          /* :discard[off] event ? */
 } bootstrap_grammar_meta_t;
 
 typedef enum bootstrap_grammar_rule_type {
