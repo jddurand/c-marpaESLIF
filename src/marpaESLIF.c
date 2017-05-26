@@ -782,6 +782,11 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
         MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Last character must be %c", (unsigned char) lastcodepointi);
         continue;
       } else if (i == (GENERICSTACK_USED(marpaESLIFRecognizerp->lexemeInputStackp) - 1)) {
+        /* Trailing backslash ? */
+        if (backslashb) {
+          MARPAESLIF_ERROR(marpaESLIFp, "Trailing backslash in string is not allowed");
+          goto err;
+        }
         /* Non-sense to not have the same value */
         if (lastcodepointi != codepointi) {
           /* Note that we know that our regexp start and end with printable characters */
