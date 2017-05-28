@@ -135,10 +135,23 @@ typedef struct marpaESLIFRecognizerProgress {
   int positioni;
 } marpaESLIFRecognizerProgress_t;
 
+typedef enum marpaESLIFActionType {
+  MARPAESLIF_ACTION_TYPE_NAME = 0,
+  MARPAESLIF_ACTION_TYPE_STRING
+} marpaESLIFActionType_t;
+
+typedef struct marpaESLIFAction {
+  marpaESLIFActionType_t type;
+  union {
+    char               *names;
+    marpaESLIFString_t *stringp;
+  } u;
+} marpaESLIFAction_t;
+
 typedef struct marpaESLIFGrammarDefaults {
-  char *defaultRuleActions;   /* Default action for rules */
-  char *defaultSymbolActions; /* Default action for symbols */
-  char *defaultFreeActions;   /* Default action for free */
+  marpaESLIFAction_t *defaultRuleActionp;   /* Default action for rules */
+  marpaESLIFAction_t *defaultSymbolActionp; /* Default action for symbols */
+  marpaESLIFAction_t *defaultFreeActionp;   /* Default action for free - if not NULL, type can never be MARPAESLIF_ACION_TYPE_STRING */
 } marpaESLIFGrammarDefaults_t;
 
 /* Rule property */
@@ -155,9 +168,9 @@ typedef struct marpaESLIFGrammarProperty {
   int                    leveli;                       /* Grammar level */
   marpaESLIFString_t    *descp;                        /* Grammar description (auto-generated if none) */
   short                  latmb;                        /* LATM ? */
-  char                  *defaultSymbolActions;         /* Default action for symbols - never NULL */
-  char                  *defaultRuleActions;           /* Default action for rules - never NULL */
-  char                  *defaultFreeActions;           /* Default action for free - can be NULL */
+  marpaESLIFAction_t    *defaultSymbolActionp;         /* Default action for symbols - never NULL */
+  marpaESLIFAction_t    *defaultRuleActionp;           /* Default action for rules - never NULL */
+  marpaESLIFAction_t    *defaultFreeActionp;           /* Default action for free - can be NULL */
   int                    starti;                       /* Start symbol Id - always >= 0 */
   int                    discardi;                     /* Discard symbol Id (-1 if none) */
   size_t                 nsymboll;                     /* Number of symbols - always > 0*/
@@ -175,7 +188,7 @@ typedef struct marpaESLIFRuleProperty {
   size_t                 nrhsl;                        /* Number of RHS, 0 in case of a nullable */
   int                   *rhsip;                        /* Array of RHS Ids, NULL in case of a nullable */
   int                    exceptioni;                   /* Exception symbol Id (-1 if none) */
-  char                  *actions;                      /* Action */
+  marpaESLIFAction_t    *actionp;                      /* Action */
   char                  *discardEvents;                /* Discard event name - shallowed with its RHS */
   short                  discardEventb;                /* Discard event initial state: 0: off, 1: on */
   int                    ranki;                        /* Rank */

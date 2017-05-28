@@ -69,28 +69,29 @@ typedef enum bootstrap_grammar_L0_enum {
 
 /* All non-terminals are listed here */
 bootstrap_grammar_meta_t bootstrap_grammar_L0_metas[] = {
-  { L0_META_WHITESPACE,                         L0_JOIN_G1_META_WHITESPACE, 0, 0 },
-  { L0_META_PERL_COMMENT,                       L0_JOIN_G1_META_PERL_COMMENT, 0, 0 },
-  { L0_META_CPLUSPLUS_COMMENT,                  L0_JOIN_G1_META_CPLUSPLUS_COMMENT, 0, 0 },
-  { L0_META_OP_DECLARE_ANY_GRAMMAR,             L0_JOIN_G1_META_OP_DECLARE_ANY_GRAMMAR, 0, 0 },
-  { L0_META_OP_DECLARE_TOP_GRAMMAR,             L0_JOIN_G1_META_OP_DECLARE_TOP_GRAMMAR, 0, 0 },
-  { L0_META_OP_DECLARE_LEX_GRAMMAR,             L0_JOIN_G1_META_OP_DECLARE_LEX_GRAMMAR, 0, 0 },
-  { L0_META_OP_LOOSEN,                          L0_JOIN_G1_META_OP_LOOSEN, 0, 0 },
-  { L0_META_OP_EQUAL_PRIORITY,                  L0_JOIN_G1_META_OP_EQUAL_PRIORITY, 0, 0 },
-  { L0_META_TRUE,                               L0_JOIN_G1_META_TRUE, 0, 0 },
-  { L0_META_FALSE,                              L0_JOIN_G1_META_FALSE, 0, 0 },
-  { L0_META_WORD_CHARACTER,                     "word character", 0, 0 },
-  { L0_META_ONE_OR_MORE_WORD_CHARACTERS,        "one or more word characters", 0, 0 },
-  { L0_META_ZERO_OR_MORE_WORD_CHARACTERS,       "zero or more word characters", 0, 0 },
-  { L0_META_RESTRICTED_ASCII_GRAPH_NAME,        L0_JOIN_G1_META_RESTRICTED_ASCII_GRAPH_NAME, 0, 0 },
-  { L0_META_BARE_NAME,                          L0_JOIN_G1_META_BARE_NAME, 0, 0 },
-  { L0_META_STANDARD_NAME,                      L0_JOIN_G1_META_STANDARD_NAME, 0, 0 },
-  { L0_META_BRACKETED_NAME,                     L0_JOIN_G1_META_BRACKETED_NAME, 0, 0 },
-  { L0_META_BRACKETED_NAME_STRING,              "bracketed name string", 0, 0 },
-  { L0_META_QUOTED_STRING,                      L0_JOIN_G1_META_QUOTED_STRING, 0, 0 },
-  { L0_META_QUOTED_NAME,                        L0_JOIN_G1_META_QUOTED_NAME, 0, 0 },
-  { L0_META_CHARACTER_CLASS,                    L0_JOIN_G1_META_CHARACTER_CLASS, 0, 0 },
-  { L0_META_REGULAR_EXPRESSION,                 L0_JOIN_G1_META_REGULAR_EXPRESSION, 0, 0 }
+  /* Identifier                           Description                              Start  Discard :discard[on] :discard[off] */
+  { L0_META_WHITESPACE,                   L0_JOIN_G1_META_WHITESPACE,                  0,       0,           0,            0 },
+  { L0_META_PERL_COMMENT,                 L0_JOIN_G1_META_PERL_COMMENT,                0,       0,           0,            0 },
+  { L0_META_CPLUSPLUS_COMMENT,            L0_JOIN_G1_META_CPLUSPLUS_COMMENT,           0,       0,           0,            0 },
+  { L0_META_OP_DECLARE_ANY_GRAMMAR,       L0_JOIN_G1_META_OP_DECLARE_ANY_GRAMMAR,      0,       0,           0,            0 },
+  { L0_META_OP_DECLARE_TOP_GRAMMAR,       L0_JOIN_G1_META_OP_DECLARE_TOP_GRAMMAR,      0,       0,           0,            0 },
+  { L0_META_OP_DECLARE_LEX_GRAMMAR,       L0_JOIN_G1_META_OP_DECLARE_LEX_GRAMMAR,      0,       0,           0,            0 },
+  { L0_META_OP_LOOSEN,                    L0_JOIN_G1_META_OP_LOOSEN,                   0,       0,           0,            0 },
+  { L0_META_OP_EQUAL_PRIORITY,            L0_JOIN_G1_META_OP_EQUAL_PRIORITY,           0,       0,           0,            0 },
+  { L0_META_TRUE,                         L0_JOIN_G1_META_TRUE,                        0,       0,           0,            0 },
+  { L0_META_FALSE,                        L0_JOIN_G1_META_FALSE,                       0,       0,           0,            0 },
+  { L0_META_WORD_CHARACTER,               "word character",                            0,       0,           0,            0 },
+  { L0_META_ONE_OR_MORE_WORD_CHARACTERS,  "one or more word characters",               0,       0,           0,            0 },
+  { L0_META_ZERO_OR_MORE_WORD_CHARACTERS, "zero or more word characters",              0,       0,           0,            0 },
+  { L0_META_RESTRICTED_ASCII_GRAPH_NAME,  L0_JOIN_G1_META_RESTRICTED_ASCII_GRAPH_NAME, 0,       0,           0,            0 },
+  { L0_META_BARE_NAME,                    L0_JOIN_G1_META_BARE_NAME,                   0,       0,           0,            0 },
+  { L0_META_STANDARD_NAME,                L0_JOIN_G1_META_STANDARD_NAME,               0,       0,           0,            0 },
+  { L0_META_BRACKETED_NAME,               L0_JOIN_G1_META_BRACKETED_NAME,              0,       0,           0,            0 },
+  { L0_META_BRACKETED_NAME_STRING,        "bracketed name string",                     0,       0,           0,            0 },
+  { L0_META_QUOTED_STRING,                L0_JOIN_G1_META_QUOTED_STRING,               0,       0,           0,            0 },
+  { L0_META_QUOTED_NAME,                  L0_JOIN_G1_META_QUOTED_NAME,                 0,       0,           0,            0 },
+  { L0_META_CHARACTER_CLASS,              L0_JOIN_G1_META_CHARACTER_CLASS,             0,       0,           0,            0 },
+  { L0_META_REGULAR_EXPRESSION,           L0_JOIN_G1_META_REGULAR_EXPRESSION,          0,       0,           0,            0 }
 };
 
 /* Here it is very important that all the string constants are UTF-8 compatible - this is the case */

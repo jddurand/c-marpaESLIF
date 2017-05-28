@@ -27,6 +27,14 @@ const static char *selfs = "\n"
   "  :discard                       ::= <cplusplus comment> \n"
   "\n"
   "  /*\n"
+  "   * ***************\n"
+  "   * Event settings:\n"
+  "   * ***************\n"
+  "   */\n"
+  "  event :discard[off]=on = nulled <switch discard off>\n"
+  "  event :discard[on]=on = nulled <switch discard on>\n"
+  "\n"
+  "  /*\n"
   "   * ******\n"
   "   * Rules:\n"
   "   * ******\n"
@@ -97,6 +105,7 @@ const static char *selfs = "\n"
   "                                   | <free action>\n"
   "                                   | <event specification>\n"
   "  <action>                       ::= 'action' '=>' <action name>\n"
+  "  <action>                       ::= 'action' '=>' <string literal>\n"
   "  <left association>             ::= 'assoc' '=>' 'left'\n"
   "  <right association>            ::= 'assoc' '=>' 'right'\n"
   "  <group association>            ::= 'assoc' '=>' 'group'\n"
@@ -161,6 +170,16 @@ const static char *selfs = "\n"
   "  <grammar reference>            ::= <quoted string>\n"
   "                                   | <signed integer>\n"
   "                                   | '=' <unsigned integer>\n"
+  "<string literal>                 ::= <string literal unit>+\n"
+  "<string literal unit>            ::= '::u8\"' <switch discard off> <string literal inside any> '\"' <switch discard on>\n"
+  "<switch discard off>             ::=\n"
+  "<switch discard on>              ::=\n"
+  "<string literal inside any>      ::= <string literal inside>*\n"
+  "<string literal inside>          ::= /[^\"\\\\\\n]/\n"
+  "<string literal inside>          ::= '\\\\' /[\"'?\\\\abfnrtve]/\n"
+  "<string literal inside>          ::= '\\\\' /x\\{[a-fA-F0-9]{2}\\}/\n"
+  "<string literal inside>          ::= '\\\\' /u\\{[a-fA-F0-9]{4}\\}/\n"
+  "<string literal inside>          ::= '\\\\' /U\\{[a-fA-F0-9]{8}\\}/\n"
   "  <jdd> ::= <op declare any grammar>@=1\n"
   "\n"
   "  #\n"
@@ -250,6 +269,7 @@ int main() {
   marpaESLIFTester_context_t   marpaESLIFTester_context;
   marpaESLIFRecognizerOption_t marpaESLIFRecognizerOption;
   marpaESLIFGrammarDefaults_t  marpaESLIFGrammarDefaults;
+  marpaESLIFAction_t           defaultFreeAction;
 
   genericLoggerp = GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_DEBUG);
 
@@ -318,7 +338,9 @@ int main() {
       goto err;
     }
     GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "Overwriting defaultFreeActions of grammar at level %d", leveli);
-    marpaESLIFGrammarDefaults.defaultFreeActions = ":defaultFreeActions";
+    defaultFreeAction.type    = MARPAESLIF_ACTION_TYPE_NAME;
+    defaultFreeAction.u.names = ":defaultFreeActions";
+    marpaESLIFGrammarDefaults.defaultFreeActionp = &defaultFreeAction;
     if (! marpaESLIFGrammar_defaults_by_level_setb(marpaESLIFGrammarp, &marpaESLIFGrammarDefaults, leveli, NULL /* descp */)) {
       goto err;
     }
@@ -326,8 +348,12 @@ int main() {
     if (! marpaESLIFGrammar_defaults_by_levelb(marpaESLIFGrammarp, &marpaESLIFGrammarDefaults, leveli, NULL /* descp */)) {
       goto err;
     }
-    if (strncmp(marpaESLIFGrammarDefaults.defaultFreeActions, ":defaultFreeActions", strlen(":defaultFreeActions")) != 0) {
-      GENERICLOGGER_ERRORF(marpaESLIFOption.genericLoggerp, "Wrong defaultFreeActions: %s instead of %s", marpaESLIFGrammarDefaults.defaultFreeActions != NULL ? marpaESLIFGrammarDefaults.defaultFreeActions : "", ":defaultFreeActions");
+    if (marpaESLIFGrammarDefaults.defaultFreeActionp->type != MARPAESLIF_ACTION_TYPE_NAME) {
+      GENERICLOGGER_ERRORF(marpaESLIFOption.genericLoggerp, "Wrong defaultFreeActions type: %d instead of %d", marpaESLIFGrammarDefaults.defaultFreeActionp->type, MARPAESLIF_ACTION_TYPE_NAME);
+      goto err;
+    }
+    if (strncmp(marpaESLIFGrammarDefaults.defaultFreeActionp->u.names, ":defaultFreeActions", strlen(":defaultFreeActions")) != 0) {
+      GENERICLOGGER_ERRORF(marpaESLIFOption.genericLoggerp, "Wrong defaultFreeActions: %s instead of %s", marpaESLIFGrammarDefaults.defaultFreeActionp->u.names, ":defaultFreeActions");
       goto err;
     }
   }
