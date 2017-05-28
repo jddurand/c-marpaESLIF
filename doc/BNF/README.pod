@@ -507,8 +507,8 @@ marpaESLIF BNF can be expressed in itself:
    * Event settings:
    * ***************
    */
-  event :discard[off]=on           = nulled <switch discard off>
-  event :discard[on]=on            = nulled <switch discard on>
+  event :discard[off]=on           = nulled <discard off>
+  event :discard[on]=on            = nulled <discard on>
 
   /*
    * ******
@@ -649,9 +649,9 @@ marpaESLIF BNF can be expressed in itself:
                                    | '=' <unsigned integer>
 
   <string literal>               ::= <string literal unit>+
-  <string literal unit>          ::= '::u8"' <switch discard off> <string literal inside any> '"' <switch discard on>
-  <switch discard off>           ::=
-  <switch discard on>            ::=
+  <string literal unit>          ::= '::u8"' <discard off> <string literal inside any> '"' <discard on>
+  <discard off>                  ::=
+  <discard on>                   ::=
   <string literal inside any>    ::= <string literal inside>*
   <string literal inside>        ::= /[^"\\\n]/
   <string literal inside>        ::= '\\' /["'?\\abfnrtve]/

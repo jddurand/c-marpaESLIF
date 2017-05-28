@@ -144,8 +144,8 @@
 #define G1_RULE_STRING_LITERAL_INSIDE_3          "G1_rule_string_literal_inside_3"
 #define G1_RULE_STRING_LITERAL_INSIDE_4          "G1_rule_string_literal_inside_4"
 #define G1_RULE_STRING_LITERAL_INSIDE_5          "G1_rule_string_literal_inside_5"
-#define G1_RULE_SWITCH_DISCARD_OFF               "G1_rule_switch_discard_off"
-#define G1_RULE_SWITCH_DISCARD_ON                "G1_rule_switch_discard_on"
+#define G1_RULE_DISCARD_OFF                      "G1_rule_discard_off"
+#define G1_RULE_DISCARD_ON                       "G1_rule_discard_on"
 
 #define G1_ACTION_STATEMENTS                       "::undef"
 #define G1_ACTION_STATEMENT_01                     "::undef"
@@ -287,8 +287,8 @@
 #define G1_ACTION_STRING_LITERAL_INSIDE_3          "G1_action_string_literal_inside_3"          /* done */
 #define G1_ACTION_STRING_LITERAL_INSIDE_4          "G1_action_string_literal_inside_4"          /* done */
 #define G1_ACTION_STRING_LITERAL_INSIDE_5          "G1_action_string_literal_inside_5"          /* done */
-#define G1_ACTION_SWITCH_DISCARD_OFF               "::undef"
-#define G1_ACTION_SWITCH_DISCARD_ON                "::undef"
+#define G1_ACTION_DISCARD_OFF                      "::undef"
+#define G1_ACTION_DISCARD_ON                       "::undef"
 
 typedef struct bootstrap_grammar_terminal {
   int                        idi;                 /* Identifier */

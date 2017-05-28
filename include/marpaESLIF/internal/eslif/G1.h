@@ -153,8 +153,8 @@ typedef enum bootstrap_grammar_G1_enum {
   G1_META_STRING_LITERAL_UNIT,
   G1_META_STRING_LITERAL_INSIDE,
   G1_META_STRING_LITERAL_INSIDE_ANY,
-  G1_META_SWITCH_DISCARD_OFF,
-  G1_META_SWITCH_DISCARD_ON,
+  G1_META_DISCARD_OFF,
+  G1_META_DISCARD_ON,
   /* This symbol is special, c.f. bootstrap_grammar_G1_metas[] array below: it has the discard flag on */
   G1_META_DISCARD,
   /* These meta identifiers are handled by L0 */
@@ -246,8 +246,8 @@ bootstrap_grammar_meta_t bootstrap_grammar_G1_metas[] = {
   { G1_META_STRING_LITERAL_UNIT,              "string literal unit",                       0,       0,           0,            0 },
   { G1_META_STRING_LITERAL_INSIDE,            "string literal inside",                     0,       0,           0,            0 },
   { G1_META_STRING_LITERAL_INSIDE_ANY,        "string literal inside any",                 0,       0,           0,            0 },
-  { G1_META_SWITCH_DISCARD_OFF,               "switch discard off",                        0,       0,           0,            1 },
-  { G1_META_SWITCH_DISCARD_ON,                "switch discard on",                         0,       0,           1,            0 },
+  { G1_META_DISCARD_OFF,                      "discard off",                               0,       0,           0,            1 },
+  { G1_META_DISCARD_ON,                       "discard on",                                0,       0,           1,            0 },
   { G1_META_DISCARD,                          ":discard",                                  0,       1,           0,            0 },
   /* L0 join */
   { G1_META_FALSE,                            L0_JOIN_G1_META_FALSE,                       0,       0,           0,            0 },
@@ -1163,12 +1163,12 @@ bootstrap_grammar_rule_t bootstrap_grammar_G1_rules[] = {
 
   { G1_META_STRING_LITERAL,                   G1_RULE_STRING_LITERAL,                         MARPAESLIF_RULE_TYPE_SEQUENCE,    1, { G1_META_STRING_LITERAL_UNIT                  },  1,                        -1, -1 , G1_ACTION_STRING_LITERAL },
   { G1_META_STRING_LITERAL_UNIT,              G1_RULE_STRING_LITERAL_UNIT,                    MARPAESLIF_RULE_TYPE_ALTERNATIVE, 5, { G1_TERMINAL_STRING_LITERAL_START,
-                                                                                                                                     G1_META_SWITCH_DISCARD_OFF,
+                                                                                                                                     G1_META_DISCARD_OFF,
                                                                                                                                      G1_META_STRING_LITERAL_INSIDE_ANY,
                                                                                                                                      G1_TERMINAL_STRING_LITERAL_END,
-                                                                                                                                     G1_META_SWITCH_DISCARD_ON                    }, -1,                        -1, -1 , G1_ACTION_STRING_LITERAL_UNIT },
-  { G1_META_SWITCH_DISCARD_OFF,               G1_RULE_SWITCH_DISCARD_OFF,                     MARPAESLIF_RULE_TYPE_ALTERNATIVE, 0, { -1                                           }, -1,                        -1, -1 , G1_ACTION_SWITCH_DISCARD_OFF },
-  { G1_META_SWITCH_DISCARD_ON,                G1_RULE_SWITCH_DISCARD_ON,                      MARPAESLIF_RULE_TYPE_ALTERNATIVE, 0, { -1                                           }, -1,                        -1, -1 , G1_ACTION_SWITCH_DISCARD_ON },
+                                                                                                                                     G1_META_DISCARD_ON                           }, -1,                        -1, -1 , G1_ACTION_STRING_LITERAL_UNIT },
+  { G1_META_DISCARD_OFF,                      G1_RULE_DISCARD_OFF,                            MARPAESLIF_RULE_TYPE_ALTERNATIVE, 0, { -1                                           }, -1,                        -1, -1 , G1_ACTION_DISCARD_OFF },
+  { G1_META_DISCARD_ON,                       G1_RULE_DISCARD_ON,                             MARPAESLIF_RULE_TYPE_ALTERNATIVE, 0, { -1                                           }, -1,                        -1, -1 , G1_ACTION_DISCARD_ON },
   { G1_META_STRING_LITERAL_INSIDE_ANY,        G1_RULE_STRING_LITERAL_INSIDE_ANY,              MARPAESLIF_RULE_TYPE_SEQUENCE,    1, { G1_META_STRING_LITERAL_INSIDE                },  0,                        -1, -1 , G1_ACTION_STRING_LITERAL_INSIDE_ANY },
   { G1_META_STRING_LITERAL_INSIDE,            G1_RULE_STRING_LITERAL_INSIDE_1,                MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL_STRING_LITERAL_NOT_ESCAPED       }, -1,                        -1, -1 , G1_ACTION_STRING_LITERAL_INSIDE_1 },
   { G1_META_STRING_LITERAL_INSIDE,            G1_RULE_STRING_LITERAL_INSIDE_2,                MARPAESLIF_RULE_TYPE_ALTERNATIVE, 2, { G1_TERMINAL_BACKSLASH,
