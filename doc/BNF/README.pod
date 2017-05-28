@@ -607,6 +607,7 @@ marpaESLIF BNF can be expressed in itself:
   naming                         ::= 'name' '=>' <alternative name>
   <null adverb>                  ::= ','
   <symbol action>                ::= 'symbol-action' '=>' <symbol action name>
+  <symbol action>                ::= 'symbol-action' '=>' <string literal>
   <free action>                  ::= 'free-action' '=>' <free name>
   <alternative name>             ::= <standard name>
   <alternative name>             ::= <quoted name>
