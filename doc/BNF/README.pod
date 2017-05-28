@@ -262,7 +262,7 @@ Hook that is enabling C<:discard> rule for the current recognizer. Equivalent to
 
 =back
 
-Please note that the C<:discard[on]> and C<:discard[off]> events will I<always> happen if specified in the grammar, at any level of parsing, regardless if you the grammar's C<parse()> method. This is because these are internal events, not visible by the user.
+Please note that the C<:discard[on]> and C<:discard[off]> events will I<always> happen if specified in the grammar, at any level of parsing, regardless if you use the grammar's C<parse()> method (that is never propagating any event to the end user) or not. This is because these are internal events, not visible by the end user, and categorized as parsing hooks, not as a facility in the user-space.
 
 =item * Event initializers
 
