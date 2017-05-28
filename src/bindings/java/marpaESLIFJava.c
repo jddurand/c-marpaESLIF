@@ -872,6 +872,7 @@ JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIFGrammar_jniNew(JNIEnv *envp, j
   int                               ngrammari;
   int                               i;
   marpaESLIFGrammarDefaults_t       marpaESLIFGrammarDefaults;
+  marpaESLIFAction_t                defaultFreeAction;
 
   /* Always update genericLogger context */
   if (! ESLIFGrammar_contextb(envp, eslifGrammarp, eslifGrammarp, MARPAESLIF_ESLIFGRAMMAR_CLASS_getLoggerInterfacep_METHODP,
@@ -916,7 +917,9 @@ JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIFGrammar_jniNew(JNIEnv *envp, j
     if (! marpaESLIFGrammar_defaults_by_levelb(marpaESLIFGrammarp, &marpaESLIFGrammarDefaults, i, NULL /* descp */)) {
       RAISEEXCEPTIONF(envp, "marpaESLIFGrammar_defaults_by_levelb failure, %s", strerror(errno));
     }
-    marpaESLIFGrammarDefaults.defaultFreeActions = ":defaultFreeActions";
+    defaultFreeAction.type    = MARPAESLIF_ACTION_TYPE_NAME;
+    defaultFreeAction.u.names = ":defaultFreeActions";
+    marpaESLIFGrammarDefaults.defaultFreeActionp = &defaultFreeAction;
     if (! marpaESLIFGrammar_defaults_by_level_setb(marpaESLIFGrammarp, &marpaESLIFGrammarDefaults, i, NULL /* descp */)) {
       RAISEEXCEPTIONF(envp, "marpaESLIFGrammar_defaults_by_levelb failure, %s", strerror(errno));
     }

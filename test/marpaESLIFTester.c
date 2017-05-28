@@ -146,9 +146,51 @@ int main() {
         GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... Level                 : %d", grammarProperty.leveli);
         GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... Grammar description   : %s", grammarProperty.descp->asciis);
         GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... LATM ?                : %d", (int) grammarProperty.latmb);
-        GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... Default symbol action : %s", grammarProperty.defaultSymbolActions);
-        GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... Default rule action   : %s", grammarProperty.defaultRuleActions);
-        GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... Default free action   : %s", (grammarProperty.defaultFreeActions != NULL) ? grammarProperty.defaultFreeActions : "");
+        if (grammarProperty.defaultSymbolActionp != NULL) {
+          switch (grammarProperty.defaultSymbolActionp->type) {
+          case MARPAESLIF_ACTION_TYPE_NAME:
+            GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... Default symbol action : %s (type: name)", grammarProperty.defaultSymbolActionp->u.names);
+            break;
+          case MARPAESLIF_ACTION_TYPE_STRING:
+            GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... Default symbol action : %s (type: string)", grammarProperty.defaultSymbolActionp->u.stringp->asciis);
+            break;
+          default:
+            GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... Default symbol action : ??? (type: %d)", grammarProperty.defaultSymbolActionp->type);
+            break;
+          }
+        } else {
+          GENERICLOGGER_INFO(marpaESLIFOption.genericLoggerp, "... ... Default symbol action : ??? (NULL)");
+        }
+        if (grammarProperty.defaultRuleActionp != NULL) {
+          switch (grammarProperty.defaultRuleActionp->type) {
+          case MARPAESLIF_ACTION_TYPE_NAME:
+            GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... Default rule action   : %s (type: name)", grammarProperty.defaultRuleActionp->u.names);
+            break;
+          case MARPAESLIF_ACTION_TYPE_STRING:
+            GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... Default rule action   : %s (type: string)", grammarProperty.defaultRuleActionp->u.stringp->asciis);
+            break;
+          default:
+            GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... Default rule action   : ??? (type: %d)", grammarProperty.defaultRuleActionp->type);
+            break;
+          }
+        } else {
+          GENERICLOGGER_INFO(marpaESLIFOption.genericLoggerp, "... ... Default rule action   : ??? (NULL)");
+        }
+        if (grammarProperty.defaultFreeActionp != NULL) {
+          switch (grammarProperty.defaultFreeActionp->type) {
+          case MARPAESLIF_ACTION_TYPE_NAME:
+            GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... Default free action   : %s (type: name)", grammarProperty.defaultFreeActionp->u.names);
+            break;
+          case MARPAESLIF_ACTION_TYPE_STRING:
+            GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... Default free action   : %s (type: string)", grammarProperty.defaultFreeActionp->u.stringp->asciis);
+            break;
+          default:
+            GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... Default free action   : ??? (type: %d)", grammarProperty.defaultFreeActionp->type);
+            break;
+          }
+        } else {
+          GENERICLOGGER_INFO(marpaESLIFOption.genericLoggerp, "... ... Default free action   : ??? (NULL)");
+        }
         GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... Start symbol Id       : %d", grammarProperty.starti);
         GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... Discard symbol Id     : %d", grammarProperty.discardi);
         GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... Number of symbols     : %ld", (unsigned long) grammarProperty.nsymboll);
@@ -174,7 +216,21 @@ int main() {
               GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... ... RHS No %ld         : %d", (unsigned long) rhsl, ruleProperty.rhsip[rhsl]);
             }
             GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... Exception Id          : %d", ruleProperty.exceptioni);
-            GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... Action                : %s", (ruleProperty.actions != NULL) ? ruleProperty.actions : "");
+            if (ruleProperty.actionp != NULL) {
+              switch (ruleProperty.actionp->type) {
+              case MARPAESLIF_ACTION_TYPE_NAME:
+                GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... Action                : %s (type: name)", ruleProperty.actionp->u.names);
+                break;
+              case MARPAESLIF_ACTION_TYPE_STRING:
+                GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... Action                : %s (type: string)", ruleProperty.actionp->u.stringp->asciis);
+                break;
+              default:
+                GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... Action                : ??? (type: %d)", ruleProperty.actionp->type);
+                break;
+              }
+            } else {
+              GENERICLOGGER_INFO(marpaESLIFOption.genericLoggerp, "... ... Action                : ??? (NULL)");
+            }
             GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... Discard event         : %s", (ruleProperty.discardEvents != NULL) ? ruleProperty.discardEvents : "");
             GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... Discard initial state : %d", ruleProperty.discardEventb);
             GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... Rank                  : %d", ruleProperty.ranki);

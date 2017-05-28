@@ -906,7 +906,7 @@ static SV *marpaESLIF_call_actionp(pTHX_ SV *interfacep, char *methods, AV *avp,
                svargs,
                svargs + avsizel);
     }
-    fprintf(stderr, "AFTER PACK:\n"); fflush(stderr); sv_dump(rcp);
+    /* fprintf(stderr, "AFTER PACK:\n"); fflush(stderr); sv_dump(rcp); */
   }
   else  {
 
@@ -1890,6 +1890,7 @@ CODE:
   void                        *string1s = NULL;
   void                        *string2s = NULL;
   void                        *string3s = NULL;
+  marpaESLIFAction_t           defaultFreeAction;
 
   marpaESLIF_paramIsGrammarv(aTHX_ Perl_grammarp);
   if (items > 3) {
@@ -1953,7 +1954,9 @@ CODE:
       if (string3s != NULL) { Safefree(string3s); }
       MARPAESLIF_CROAKF("marpaESLIFGrammar_defaults_by_levelb failure, %s", strerror(save_errno));
     }
-    marpaESLIFGrammarDefaults.defaultFreeActions = ":defaultFreeActions";
+    defaultFreeAction.type    = MARPAESLIF_ACTION_TYPE_NAME;
+    defaultFreeAction.u.names = ":defaultFreeActions";
+    marpaESLIFGrammarDefaults.defaultFreeActionp = &defaultFreeAction;
     if (! marpaESLIFGrammar_defaults_by_level_setb(marpaESLIFGrammarp, &marpaESLIFGrammarDefaults, i, NULL /* descp */)) {
       int save_errno = errno;
       marpaESLIF_grammarContextFreev(aTHX_ MarpaX_ESLIF_Grammarp);

@@ -55,7 +55,8 @@ enum marpaESLIF_bootstrap_stack_context {
   MARPAESLIF_BOOTSTRAP_STACK_TYPE_EVENT_INITIALIZER,
   MARPAESLIF_BOOTSTRAP_STACK_TYPE_EVENT_INITIALIZATION,
   MARPAESLIF_BOOTSTRAP_STACK_TYPE_ALTERNATIVE_NAME,
-  MARPAESLIF_BOOTSTRAP_STACK_TYPE_ARRAY
+  MARPAESLIF_BOOTSTRAP_STACK_TYPE_ARRAY,
+  MARPAESLIF_BOOTSTRAP_STACK_TYPE_STRING
 };
 
 enum marpaESLIF_bootstrap_adverb_list_item_type {
@@ -110,7 +111,7 @@ struct marpaESLIF_bootstrap_single_symbol {
 struct marpaESLIF_bootstrap_adverb_list_item {
   marpaESLIF_bootstrap_adverb_list_item_type_t type;
   union {
-    char                                        *actions;
+    marpaESLIF_action_t                         *actionp;
     short                                        left_associationb;
     short                                        right_associationb;
     short                                        group_associationb;
@@ -122,8 +123,8 @@ struct marpaESLIF_bootstrap_adverb_list_item {
     marpaESLIF_bootstrap_pause_type_t            pausei;
     short                                        latmb;
     marpaESLIF_bootstrap_utf_string_t           *namingp;
-    char                                        *symbolactions;
-    char                                        *freeactions;
+    marpaESLIF_action_t                         *symbolactionp;
+    marpaESLIF_action_t                         *freeactionp;
     marpaESLIF_bootstrap_event_initialization_t *eventInitializationp;
   } u;
 };
