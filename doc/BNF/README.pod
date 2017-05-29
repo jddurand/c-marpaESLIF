@@ -441,6 +441,12 @@ Sequence rules can be I<proper>, i.e. without trailing separator:
 
   proper => 1
 
+=item Hiding separator specification
+
+Default for sequence rules actions is to always include the separator in the stack. This may be changed in the grammar using:
+
+  hide-separator => 1
+
 =item Rank specification
 
 During valuation, rules can have a rank to get prioritized. Rank is a signed integer and default to C<0>:
@@ -580,6 +586,7 @@ marpaESLIF BNF can be expressed in itself:
                                    | <symbol action>
                                    | <free action>
                                    | <event specification>
+                                   | <hide separator specification>
   <action>                       ::= 'action' '=>' <action name>
   <action>                       ::= 'action' '=>' <string literal>
   <left association>             ::= 'assoc' '=>' 'left'
@@ -588,6 +595,8 @@ marpaESLIF BNF can be expressed in itself:
   <separator specification>      ::= 'separator' '=>' <single symbol>
   <proper specification>         ::= 'proper' '=>' false
                                    | 'proper' '=>' true
+  <hide separator specification> ::= 'hide-separator' '=>' false
+  <hide separator specification> ::= 'hide-separator' '=>' true
   <rank specification>           ::= 'rank' '=>' <signed integer>
   <null ranking specification>   ::= 'null-ranking' '=>' <null ranking constant>
                                    | 'null' 'rank' '=>' <null ranking constant>
