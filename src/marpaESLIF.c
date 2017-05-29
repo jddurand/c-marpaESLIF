@@ -12904,15 +12904,13 @@ static inline short _marpaESLIFValue_ruleActionCallbackb(marpaESLIFValue_t *marp
   marpaESLIFGrammar_t                 *marpaESLIFGrammarp    = marpaESLIFRecognizerp->marpaESLIFGrammarp;
   marpaESLIF_grammar_t                *grammarp              = marpaESLIFGrammarp->grammarp;
   marpaESLIFValueRuleCallback_t        ruleCallbackp;
-  char                                *names;
-  marpaESLIF_string_t                 *stringp;
   short                                rcb;
 
   if (marpaESLIFRecognizerp->parentRecognizerp != NULL) {
     /* Lexeme mode: everything is fixed */
-    ruleCallbackp = _marpaESLIF_lexeme_concatb;
-    names         = "::concat (internal)";
-    stringp       = NULL;
+    ruleCallbackp             = _marpaESLIF_lexeme_concatb;
+    marpaESLIFValuep->actions = "::concat (internal)";
+    marpaESLIFValuep->stringp = NULL;
   } else {
 
     if (actionp == NULL) {
@@ -12930,47 +12928,52 @@ static inline short _marpaESLIFValue_ruleActionCallbackb(marpaESLIFValue_t *marp
 
     switch (actionp->type) {
     case MARPAESLIF_ACTION_TYPE_NAME:
-      /* Action is a normal name */
-      names   = actionp->u.names;
-      stringp = NULL;
+      {
+        /* Action is a normal name */
+        char *names;
 
-      /* Get the callback pointer */
+        marpaESLIFValuep->actions = actionp->u.names;
+        marpaESLIFValuep->stringp = NULL;
 
-      /* If this is a built-in action, we do not need the resolver */
-      if (strcmp(names, "::shift") == 0) {
-        ruleCallbackp = _marpaESLIF_rule_action___shiftb;
-      } else if (strcmp(names, "::undef") == 0) {
-        ruleCallbackp = _marpaESLIF_rule_action___undefb;
-      } else if (strcmp(names, "::ascii") == 0) {
-        ruleCallbackp = _marpaESLIF_rule_action___asciib;
-      } else if (strncmp(names, "::convert", convertl) == 0) {
-        ruleCallbackp = _marpaESLIF_rule_action___convertb;
-      } else if (strcmp(names, "::concat") == 0) {
-        ruleCallbackp = _marpaESLIF_rule_action___concatb;
-      } else if (strncmp(names, "::copy", copyl) == 0) {
-        ruleCallbackp = _marpaESLIF_rule_action___copyb;
-      } else {
-        /* Not a built-in: ask to the resolver */
-        if (ruleActionResolverp == NULL) {
-          MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "Cannot execute action \"%s\": no rule action resolver", names);
-          goto err;
+        /* Get the callback pointer */
+
+        /* If this is a built-in action, we do not need the resolver */
+        names = marpaESLIFValuep->actions;
+        if (strcmp(names, "::shift") == 0) {
+          ruleCallbackp = _marpaESLIF_rule_action___shiftb;
+        } else if (strcmp(names, "::undef") == 0) {
+          ruleCallbackp = _marpaESLIF_rule_action___undefb;
+        } else if (strcmp(names, "::ascii") == 0) {
+          ruleCallbackp = _marpaESLIF_rule_action___asciib;
+        } else if (strncmp(names, "::convert", convertl) == 0) {
+          ruleCallbackp = _marpaESLIF_rule_action___convertb;
+        } else if (strcmp(names, "::concat") == 0) {
+          ruleCallbackp = _marpaESLIF_rule_action___concatb;
+        } else if (strncmp(names, "::copy", copyl) == 0) {
+          ruleCallbackp = _marpaESLIF_rule_action___copyb;
+        } else {
+          /* Not a built-in: ask to the resolver */
+          if (ruleActionResolverp == NULL) {
+            MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "Cannot execute action \"%s\": no rule action resolver", names);
+            goto err;
+          }
+          ruleCallbackp = ruleActionResolverp(marpaESLIFValueOption.userDatavp, marpaESLIFValuep, names);
         }
-        ruleCallbackp = ruleActionResolverp(marpaESLIFValueOption.userDatavp, marpaESLIFValuep, names);
-      }
-      if (ruleCallbackp == NULL) {
-        MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "%s: action \"%s\" resolved to NULL", asciishows, names);
-        goto err;
-      } else {
-        MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: action \"%s\" resolved to %p", asciishows, names, ruleCallbackp);
+        if (ruleCallbackp == NULL) {
+          MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "%s: action \"%s\" resolved to NULL", asciishows, names);
+          goto err;
+        } else {
+          MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: action \"%s\" resolved to %p", asciishows, names, ruleCallbackp);
+        }
       }
       break;
 
     case MARPAESLIF_ACTION_TYPE_STRING:
       /* String literal: this is a built-in */
       /* Action name is the ASCII best-effort translation */
-      ruleCallbackp = _marpaESLIF_rule_literal_transferb;
-      names         = actionp->u.stringp->asciis;
-      stringp       = actionp->u.stringp;
+      ruleCallbackp             = _marpaESLIF_rule_literal_transferb;
+      marpaESLIFValuep->actions = actionp->u.stringp->asciis;
+      marpaESLIFValuep->stringp = actionp->u.stringp;
       break;
 
     default:
@@ -12979,9 +12982,7 @@ static inline short _marpaESLIFValue_ruleActionCallbackb(marpaESLIFValue_t *marp
     }
   }
 
-  *ruleCallbackpp           = ruleCallbackp; /* Never NULL */
-  marpaESLIFValuep->actions = names;         /* True external name of best-effort ASCII translation in case of a literal */
-  marpaESLIFValuep->stringp = stringp;       /* eventual literal - can be NULL */
+  *ruleCallbackpp = ruleCallbackp; /* Never NULL */
 
   rcb = 1;
   goto done;
@@ -13007,16 +13008,14 @@ static inline short _marpaESLIFValue_symbolActionCallbackb(marpaESLIFValue_t *ma
   marpaESLIFValueSymbolCallback_t       symbolCallbackp;
   marpaESLIFValueRuleCallback_t         ruleCallbackp;
   marpaESLIF_action_t                  *actionp;
-  char                                 *names;
-  marpaESLIF_string_t                  *stringp;
   short                                 rcb;
 
   if (marpaESLIFRecognizerp->parentRecognizerp != NULL) {
     /* Lexeme mode: everything is fixed */
-    symbolCallbackp = _marpaESLIF_lexeme_transferb;
-    ruleCallbackp   = NULL;
-    names           = "::transfer (internal)";
-    stringp         = NULL;
+    symbolCallbackp           = _marpaESLIF_lexeme_transferb;
+    ruleCallbackp             = NULL;
+    marpaESLIFValuep->actions = "::transfer (internal)";
+    marpaESLIFValuep->stringp = NULL;
   } else {
 
     if (nullableb) {
@@ -13041,45 +13040,50 @@ static inline short _marpaESLIFValue_symbolActionCallbackb(marpaESLIFValue_t *ma
 
       switch (actionp->type) {
       case MARPAESLIF_ACTION_TYPE_NAME:
-        /* Action is a normal name */
-        names   = actionp->u.names;
-        stringp = NULL;
+        {
+          /* Action is a normal name */
+          char *names;
 
-        /* Get the callback pointer */
+          marpaESLIFValuep->actions = actionp->u.names;
+          marpaESLIFValuep->stringp = NULL;
 
-        /* If this is a built-in action, we do not need the resolver */
-        if (strcmp(names, "::transfer") == 0) {
-          symbolCallbackp = _marpaESLIF_symbol_action___transferb;
-        } else if (strcmp(names, "::undef") == 0) {
-          symbolCallbackp = _marpaESLIF_symbol_action___undefb;
-        } else if (strcmp(names, "::ascii") == 0) {
-          symbolCallbackp = _marpaESLIF_symbol_action___asciib;
-        } else if (strncmp(names, "::convert", convertl) == 0) {
-          symbolCallbackp = _marpaESLIF_symbol_action___convertb;
-        } else if (strcmp(names, "::concat") == 0) {
-          symbolCallbackp = _marpaESLIF_symbol_action___concatb;
-        } else {
-          /* Not a built-in: ask to the resolver */
-          if (symbolActionResolverp == NULL) {
-            MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "Cannot execute symbol action \"%s\": no symbol action resolver", names);
-            goto err;
+          /* Get the callback pointer */
+
+          /* If this is a built-in action, we do not need the resolver */
+          names = marpaESLIFValuep->actions;
+          if (strcmp(names, "::transfer") == 0) {
+            symbolCallbackp = _marpaESLIF_symbol_action___transferb;
+          } else if (strcmp(names, "::undef") == 0) {
+            symbolCallbackp = _marpaESLIF_symbol_action___undefb;
+          } else if (strcmp(names, "::ascii") == 0) {
+            symbolCallbackp = _marpaESLIF_symbol_action___asciib;
+          } else if (strncmp(names, "::convert", convertl) == 0) {
+            symbolCallbackp = _marpaESLIF_symbol_action___convertb;
+          } else if (strcmp(names, "::concat") == 0) {
+            symbolCallbackp = _marpaESLIF_symbol_action___concatb;
+          } else {
+            /* Not a built-in: ask to the resolver */
+            if (symbolActionResolverp == NULL) {
+              MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "Cannot execute symbol action \"%s\": no symbol action resolver", names);
+              goto err;
+            }
+            symbolCallbackp = symbolActionResolverp(marpaESLIFValueOption.userDatavp, marpaESLIFValuep, names);
           }
-          symbolCallbackp = symbolActionResolverp(marpaESLIFValueOption.userDatavp, marpaESLIFValuep, names);
-        }
-        if (symbolCallbackp == NULL) {
-          MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "%s: action \"%s\" resolved to NULL", asciishows, names);
-          goto err;
-        } else {
-          MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: action \"%s\" resolved to %p", asciishows, names, ruleCallbackp);
+          if (symbolCallbackp == NULL) {
+            MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "%s: action \"%s\" resolved to NULL", asciishows, names);
+            goto err;
+          } else {
+            MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: action \"%s\" resolved to %p", asciishows, names, ruleCallbackp);
+          }
         }
         break;
 
       case MARPAESLIF_ACTION_TYPE_STRING:
         /* String literal: this is a built-in */
         /* Action name is the ASCII best-effort translation */
-        symbolCallbackp = _marpaESLIF_symbol_literal_transferb;
-        names         = actionp->u.stringp->asciis;
-        stringp       = actionp->u.stringp;
+        symbolCallbackp           = _marpaESLIF_symbol_literal_transferb;
+        marpaESLIFValuep->actions = actionp->u.stringp->asciis;
+        marpaESLIFValuep->stringp = actionp->u.stringp;
         break;
 
       default:
@@ -13089,10 +13093,8 @@ static inline short _marpaESLIFValue_symbolActionCallbackb(marpaESLIFValue_t *ma
     }
   }
 
-  *symbolCallbackpp         = symbolCallbackp; /* Can be NULL */
-  *ruleCallbackpp           = ruleCallbackp;   /* Can be NULL (but both cannot be NULL) */
-  marpaESLIFValuep->actions = names;         /* True external name of best-effort ASCII translation in case of a literal */
-  marpaESLIFValuep->stringp = stringp;       /* eventual literal - can be NULL */
+  *symbolCallbackpp = symbolCallbackp; /* Can be NULL */
+  *ruleCallbackpp   = ruleCallbackp;   /* Can be NULL (but both cannot be NULL) */
 
   rcb = 1;
   goto done;
