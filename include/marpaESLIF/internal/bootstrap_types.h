@@ -34,6 +34,7 @@ enum marpaESLIF_bootstrap_stack_context {
   MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_GROUP_ASSOCIATION,
   MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_SEPARATOR,
   MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_PROPER,
+  MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_HIDESEPARATOR,
   MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_RANK,
   MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_NULL_RANKING,
   MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_PRIORITY,
@@ -67,6 +68,7 @@ enum marpaESLIF_bootstrap_adverb_list_item_type {
   MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_GROUP_ASSOCIATION,
   MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_SEPARATOR,
   MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_PROPER,
+  MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_HIDESEPARATOR,
   MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_RANK,
   MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_NULL_RANKING,
   MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_PRIORITY,
@@ -117,6 +119,7 @@ struct marpaESLIF_bootstrap_adverb_list_item {
     short                                        group_associationb;
     marpaESLIF_bootstrap_single_symbol_t        *separatorSingleSymbolp;
     short                                        properb;
+    short                                        hideseparatorb;
     int                                          ranki;
     short                                        nullRanksHighb;
     int                                          priorityi;

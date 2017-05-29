@@ -198,6 +198,7 @@ typedef struct marpaESLIFRuleProperty {
   int                    minimumi;                     /* minimum in case of sequence ? */
   short                  internalb;                    /* This rule is internal */
   int                    propertyBitSet;               /* C.f. marpaESLIFRulePropertyBit_t */
+  short                  hideseparatorb;               /* Separator hiden from arguments ? */
 } marpaESLIFRuleProperty_t;
 
 #ifdef __cplusplus
