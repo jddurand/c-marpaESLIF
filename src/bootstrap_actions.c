@@ -47,6 +47,7 @@ static inline short _marpaESLIF_bootstrap_unpack_adverbListItemStackb(marpaESLIF
                                                                       short                                        *group_associationbp,
                                                                       marpaESLIF_bootstrap_single_symbol_t        **separatorSingleSymbolpp,
                                                                       short                                        *properbp,
+                                                                      short                                        *hideseparatorbp,
                                                                       int                                          *rankip,
                                                                       short                                        *nullRanksHighbp,
                                                                       int                                          *priorityip,
@@ -117,6 +118,8 @@ static        short _marpaESLIF_bootstrap_G1_action_latm_specification_1b(void *
 static        short _marpaESLIF_bootstrap_G1_action_latm_specification_2b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short _marpaESLIF_bootstrap_G1_action_proper_specification_1b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short _marpaESLIF_bootstrap_G1_action_proper_specification_2b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
+static        short _marpaESLIF_bootstrap_G1_action_hideseparator_specification_1b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
+static        short _marpaESLIF_bootstrap_G1_action_hideseparator_specification_2b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short _marpaESLIF_bootstrap_G1_action_rank_specificationb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short _marpaESLIF_bootstrap_G1_action_null_ranking_specification_1b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short _marpaESLIF_bootstrap_G1_action_null_ranking_specification_2b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
@@ -977,6 +980,7 @@ static inline short _marpaESLIF_bootstrap_unpack_adverbListItemStackb(marpaESLIF
                                                                       short                                        *group_associationbp,
                                                                       marpaESLIF_bootstrap_single_symbol_t        **separatorSingleSymbolpp,
                                                                       short                                        *properbp,
+                                                                      short                                        *hideseparatorbp,
                                                                       int                                          *rankip,
                                                                       short                                        *nullRanksHighbp,
                                                                       int                                          *priorityip,
@@ -1011,6 +1015,9 @@ static inline short _marpaESLIF_bootstrap_unpack_adverbListItemStackb(marpaESLIF
   }
   if (properbp != NULL) {
     *properbp = 0;
+  }
+  if (hideseparatorbp != NULL) {
+    *hideseparatorbp = 0;
   }
   if (rankip != NULL) {
     *rankip = 0;
@@ -1092,6 +1099,13 @@ static inline short _marpaESLIF_bootstrap_unpack_adverbListItemStackb(marpaESLIF
           goto err;
         }
         *properbp = adverbListItemp->u.properb;
+        break;
+      case MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_HIDESEPARATOR:
+        if (hideseparatorbp == NULL) {
+          MARPAESLIF_ERRORF(marpaESLIFp, "hide-separator adverb is not allowed in %s context", contexts);
+          goto err;
+        }
+        *hideseparatorbp = adverbListItemp->u.hideseparatorb;
         break;
       case MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_RANK:
         if (rankip == NULL) {
@@ -1190,6 +1204,8 @@ static inline void _marpaESLIF_bootstrap_adverb_list_item_freev(marpaESLIF_boots
       break;
     case MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_PROPER:
       break;
+    case MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_HIDESEPARATOR:
+      break;
     case MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_RANK:
       break;
     case MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_NULL_RANKING:
@@ -1248,6 +1264,8 @@ static void _marpaESLIF_bootstrap_freeDefaultActionv(void *userDatavp, int conte
     _marpaESLIF_bootstrap_single_symbol_freev((marpaESLIF_bootstrap_single_symbol_t *) p);
     break;
   case MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_PROPER:
+    break;
+  case MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_HIDESEPARATOR:
     break;
   case MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_RANK:
     break;
@@ -1383,6 +1401,8 @@ static marpaESLIFValueRuleCallback_t _marpaESLIF_bootstrap_ruleActionResolver(vo
   else if (strcmp(actions, "G1_action_latm_specification_2")             == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_latm_specification_2b;             }
   else if (strcmp(actions, "G1_action_proper_specification_1")           == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_proper_specification_1b;           }
   else if (strcmp(actions, "G1_action_proper_specification_2")           == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_proper_specification_2b;           }
+  else if (strcmp(actions, "G1_action_hideseparator_specification_1")    == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_hideseparator_specification_1b;    }
+  else if (strcmp(actions, "G1_action_hideseparator_specification_2")    == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_hideseparator_specification_2b;    }
   else if (strcmp(actions, "G1_action_rank_specification")               == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_rank_specificationb;               }
   else if (strcmp(actions, "G1_action_null_ranking_specification_1")     == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_null_ranking_specification_1b;     }
   else if (strcmp(actions, "G1_action_null_ranking_specification_2")     == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_null_ranking_specification_2b;     }
@@ -1655,6 +1675,7 @@ static short _marpaESLIF_bootstrap_G1_action_adverb_list_itemsb(void *userDatavp
   short                                        group_associationb     = 0;
   marpaESLIF_bootstrap_single_symbol_t        *separatorSingleSymbolp = NULL;
   short                                        properb                = 0;
+  short                                        hideseparatorb         = 0;
   int                                          ranki                  = 0;
   short                                        nullRanksHighb         = 0;
   int                                          priorityi              = 0;
@@ -1734,6 +1755,11 @@ static short _marpaESLIF_bootstrap_G1_action_adverb_list_itemsb(void *userDatavp
         MARPAESLIF_GET_SHORT(marpaESLIFValuep, i, properb);
         adverbListItemp->type      = MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_PROPER;
         adverbListItemp->u.properb = properb;
+        break;
+      case MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_HIDESEPARATOR:
+        MARPAESLIF_GET_SHORT(marpaESLIFValuep, i, hideseparatorb);
+        adverbListItemp->type      = MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_HIDESEPARATOR;
+        adverbListItemp->u.properb = hideseparatorb;
         break;
       case MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_RANK:
         MARPAESLIF_GET_INT(marpaESLIFValuep, i, ranki);
@@ -2717,7 +2743,7 @@ static short _marpaESLIF_bootstrap_G1_action_alternativeb(void *userDatavp, marp
 static short _marpaESLIF_bootstrap_G1_action_alternativesb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
 /*****************************************************************************/
 {
-  /* alternatives ::= alternative+  separator => <op equal priority> proper => 1 */
+  /* alternatives ::= alternative+  separator => <op equal priority> proper => 1 hide-separator => 1*/
   marpaESLIF_t                       *marpaESLIFp       = marpaESLIFGrammar_eslifp(marpaESLIFRecognizer_grammarp(marpaESLIFValue_recognizerp(marpaESLIFValuep)));
   genericStack_t                     *alternativeStackp = NULL;
   marpaESLIF_bootstrap_alternative_t *alternativep      = NULL;
@@ -2730,7 +2756,7 @@ static short _marpaESLIF_bootstrap_G1_action_alternativesb(void *userDatavp, mar
     goto err;
   }
 
-  for (i = arg0i; i <= argni; i += 2) { /* The separator is NOT skipped from the list of arguments */
+  for (i = arg0i; i <= argni; i++) { /* The separator is skipped from the list of arguments */
     MARPAESLIF_GETANDFORGET_PTR(marpaESLIFValuep, i, alternativep);
     GENERICSTACK_PUSH_PTR(alternativeStackp, (void *) alternativep);
     if (GENERICSTACK_ERROR(alternativeStackp)) {
@@ -2758,7 +2784,7 @@ static short _marpaESLIF_bootstrap_G1_action_alternativesb(void *userDatavp, mar
 static short _marpaESLIF_bootstrap_G1_action_prioritiesb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
 /*****************************************************************************/
 {
-  /* priorities ::= alternatives+ separator => <op loosen>         proper => 1 */
+  /* priorities ::= alternatives+ separator => <op loosen> proper => 1 hide-separator => 1*/
   marpaESLIF_t   *marpaESLIFp        = marpaESLIFGrammar_eslifp(marpaESLIFRecognizer_grammarp(marpaESLIFValue_recognizerp(marpaESLIFValuep)));
   genericStack_t *alternativesStackp = NULL;
   genericStack_t *alternativeStackp  = NULL;
@@ -2771,7 +2797,7 @@ static short _marpaESLIF_bootstrap_G1_action_prioritiesb(void *userDatavp, marpa
     goto err;
   }
 
-  for (i = arg0i; i <= argni; i += 2) { /* The separator is NOT skipped from the list of arguments */
+  for (i = arg0i; i <= argni; i++) { /* The separator is skipped from the list of arguments */
     MARPAESLIF_GETANDFORGET_PTR(marpaESLIFValuep, i, alternativeStackp);
     GENERICSTACK_PUSH_PTR(alternativesStackp, (void *) alternativeStackp);
     if (GENERICSTACK_ERROR(alternativesStackp)) {
@@ -2887,7 +2913,8 @@ static inline short _marpaESLIF_bootstrap_G1_action_priority_loosen_ruleb(marpaE
                                 -1, /* separatori */
                                 0, /* properb */
                                 &action,
-                                0 /* passthroughb */);
+                                0, /* passthroughb */
+                                0 /* hideseparatorb */);
   if (rulep == NULL) {
     goto err;
   }
@@ -2970,7 +2997,8 @@ static inline short _marpaESLIF_bootstrap_G1_action_priority_loosen_ruleb(marpaE
                                   -1, /* separatori */
                                   0, /* properb */
                                   &action,
-                                  0 /* passthroughb */);
+                                  0, /* passthroughb */
+                                  0 /* hideseparatorb */);
     if (rulep == NULL) {
       goto err;
     }
@@ -3097,6 +3125,7 @@ static inline short _marpaESLIF_bootstrap_G1_action_priority_loosen_ruleb(marpaE
                                                               &group_associationb,
                                                               NULL, /* separatorSingleSymbolpp */
                                                               NULL, /* properbp */
+                                                              NULL, /* hideseparatorbp */
                                                               &ranki,
                                                               &nullRanksHighb,
                                                               NULL, /* priorityip */
@@ -3324,6 +3353,7 @@ static inline short _marpaESLIF_bootstrap_G1_action_priority_flat_ruleb(marpaESL
                                                               &group_associationb,
                                                               NULL, /* separatorSingleSymbolpp */
                                                               NULL, /* properbp */
+                                                              NULL, /* hideseparatorbp */
                                                               &ranki,
                                                               &nullRanksHighb,
                                                               NULL, /* priorityip */
@@ -3373,7 +3403,8 @@ static inline short _marpaESLIF_bootstrap_G1_action_priority_flat_ruleb(marpaESL
                                     -1, /* separatori */
                                     0, /* properb */
                                     actionp,
-                                    0 /* passthroughb */);
+                                    0, /* passthroughb */
+                                    0 /* hideseparatorb */);
       if (rulep == NULL) {
         goto err;
       }
@@ -4111,6 +4142,7 @@ static short _marpaESLIF_bootstrap_G1_action_quantified_ruleb(void *userDatavp, 
   int                                   ranki = 0;
   short                                 nullRanksHighb = 0;
   short                                 properb = 0;
+  short                                 hideseparatorb = 0;
   marpaESLIF_bootstrap_utf_string_t    *namingp;
   
   MARPAESLIF_GET_PTR(marpaESLIFValuep, arg0i, symbolNames);
@@ -4156,6 +4188,7 @@ static short _marpaESLIF_bootstrap_G1_action_quantified_ruleb(void *userDatavp, 
                                                           NULL, /* group_associationbp */
                                                           &separatorSingleSymbolp,
                                                           &properb,
+                                                          &hideseparatorb,
                                                           &ranki,
                                                           &nullRanksHighb,
                                                           NULL, /* priorityip */
@@ -4181,7 +4214,7 @@ static short _marpaESLIF_bootstrap_G1_action_quantified_ruleb(void *userDatavp, 
 
 #ifndef MARPAESLIF_NTRACE
   if (separatorp != NULL) {
-    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Creating rule %s ::= %s%s ranki=>%d separator=>%s proper=>%d null-ranking=>%s at grammar level %d", lhsp->descp->asciis, rhsp->descp->asciis, minimumi ? "+" : "*", ranki, separatorp->descp->asciis, (int) properb, nullRanksHighb ? "high" : "low", grammarp->leveli);
+    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Creating rule %s ::= %s%s ranki=>%d separator=>%s proper=>%d hide-separator=>%d null-ranking=>%s at grammar level %d", lhsp->descp->asciis, rhsp->descp->asciis, minimumi ? "+" : "*", ranki, separatorp->descp->asciis, (int) properb, (int) hideseparatorb, nullRanksHighb ? "high" : "low", grammarp->leveli);
   } else {
     MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Creating rule %s ::= %s%s ranki=>%d null-ranking=>%s at grammar level %d", lhsp->descp->asciis, rhsp->descp->asciis, minimumi ? "+" : "*", ranki, nullRanksHighb ? "high" : "low", grammarp->leveli);
   }
@@ -4203,7 +4236,8 @@ static short _marpaESLIF_bootstrap_G1_action_quantified_ruleb(void *userDatavp, 
                                 (separatorp != NULL) ? separatorp->idi : -1, /* separatori */
                                 properb,
                                 actionp,
-                                0 /* passthroughb */);
+                                0, /* passthroughb */
+                                hideseparatorb);
   if (rulep == NULL) {
     goto err;
   }
@@ -4398,6 +4432,7 @@ static short _marpaESLIF_bootstrap_G1_action_empty_ruleb(void *userDatavp, marpa
                                                           NULL, /* group_associationbp */
                                                           NULL, /* separatorSingleSymbolpp */
                                                           NULL, /* properbp */
+                                                          NULL, /* hideseparatorbp */
                                                           &ranki,
                                                           &nullRanksHighb,
                                                           NULL, /* priorityip */
@@ -4430,7 +4465,8 @@ static short _marpaESLIF_bootstrap_G1_action_empty_ruleb(void *userDatavp, marpa
                                 -1, /* separatori */
                                 0, /* properb */
                                 actionp,
-                                0 /* passthroughb */);
+                                0, /* passthroughb */
+                                0 /* hideseparatorb */);
   if (rulep == NULL) {
     goto err;
   }
@@ -4510,6 +4546,7 @@ static short _marpaESLIF_bootstrap_G1_action_default_ruleb(void *userDatavp, mar
                                                           NULL, /* group_associationbp */
                                                           NULL, /* separatorSingleSymbolpp */
                                                           NULL, /* properbp */
+                                                          NULL, /* hideseparatorbp */
                                                           NULL, /* rankip */
                                                           NULL, /* nullRanksHighbp */
                                                           NULL, /* priorityip */
@@ -4632,6 +4669,44 @@ static short _marpaESLIF_bootstrap_G1_action_proper_specification_2b(void *userD
   short rcb;
 
   MARPAESLIF_SET_SHORT(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_PROPER, 1);
+
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  return rcb;
+}
+
+/*****************************************************************************/
+static short _marpaESLIF_bootstrap_G1_action_hideseparator_specification_1b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
+/*****************************************************************************/
+{
+  /* <hide separator specification> ::= 'hide-separator' '=>' false */
+  short rcb;
+
+  MARPAESLIF_SET_SHORT(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_HIDESEPARATOR, 0);
+
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  return rcb;
+}
+
+/*****************************************************************************/
+static short _marpaESLIF_bootstrap_G1_action_hideseparator_specification_2b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
+/*****************************************************************************/
+{
+  /* <hide separator specification> ::= 'hide-separator' '=>' true */
+  short rcb;
+
+  MARPAESLIF_SET_SHORT(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_HIDESEPARATOR, 1);
 
   rcb = 1;
   goto done;
@@ -5047,6 +5122,7 @@ static short _marpaESLIF_bootstrap_G1_action_lexeme_ruleb(void *userDatavp, marp
                                                           NULL, /* group_associationbp */
                                                           NULL, /* separatorSingleSymbolpp */
                                                           NULL, /* properbp */
+                                                          NULL, /* hideseparatorbp */
                                                           NULL, /* rankip */
                                                           NULL, /* nullRanksHighbp */
                                                           &priorityi,
@@ -5208,6 +5284,7 @@ static short _marpaESLIF_bootstrap_G1_action_discard_ruleb(void *userDatavp, mar
                                                           NULL, /* group_associationbp */
                                                           NULL, /* separatorSingleSymbolpp */
                                                           NULL, /* properbp */
+                                                          NULL, /* hideseparatorbp */
                                                           NULL, /* ranki */
                                                           NULL, /* nullRanksHighb */
                                                           NULL, /* priorityip */
@@ -5232,14 +5309,15 @@ static short _marpaESLIF_bootstrap_G1_action_discard_ruleb(void *userDatavp, mar
                                 1, /* nrhsl */
                                 &(rhsp->idi), /* rhsip */
                                 -1, /* exceptioni */
-                                0,
-                                0,
+                                0, /* ranki */
+                                0, /* nullRanksHighb */
                                 0, /* sequenceb */
-                                -1,
+                                -1, /* minimumi */
                                 -1, /* separatori */
-                                0,
+                                0, /* properb */
                                 NULL, /* actionp */
-                                0 /* passthroughb */);
+                                0, /* passthroughb */
+                                0 /* hideseparatorb */);
   if (rulep == NULL) {
     goto err;
   }
@@ -5628,6 +5706,7 @@ static short _marpaESLIF_bootstrap_G1_action_exception_statementb(void *userData
                                                           NULL, /* group_associationbp */
                                                           NULL, /* separatorSingleSymbolbp */
                                                           NULL, /* properbp */
+                                                          NULL, /* hideseparatorbp */
                                                           &ranki,
                                                           &nullRanksHighb,
                                                           NULL, /* priorityip */
@@ -5659,7 +5738,8 @@ static short _marpaESLIF_bootstrap_G1_action_exception_statementb(void *userData
                                 -1, /* separatori */
                                 0, /* properb */
                                 actionp,
-                                0 /* passthroughb */);
+                                0, /* passthroughb */
+                                0 /* hideseparatorb */);
   if (rulep == NULL) {
     goto err;
   }

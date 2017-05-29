@@ -233,7 +233,7 @@ static inline short                  _marpaESLIFRecognizer_lexemeStack_i_moveb(m
 static inline const char            *_marpaESLIF_genericStack_i_types(genericStack_t *stackp, int i);
 static inline const char            *_marpaESLIF_stack_types(int typei);
 
-static inline marpaESLIF_rule_t     *_marpaESLIF_rule_newp(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, char *descEncodings, char *descs, size_t descl, int lhsi, size_t nrhsl, int *rhsip, int exceptioni, int ranki, short nullRanksHighb, short sequenceb, int minimumi, int separatori, short properb, marpaESLIF_action_t *actionp, short passthroughb);
+static inline marpaESLIF_rule_t     *_marpaESLIF_rule_newp(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, char *descEncodings, char *descs, size_t descl, int lhsi, size_t nrhsl, int *rhsip, int exceptioni, int ranki, short nullRanksHighb, short sequenceb, int minimumi, int separatori, short properb, marpaESLIF_action_t *actionp, short passthroughb, short hideseparatorb);
 static inline void                   _marpaESLIF_rule_freev(marpaESLIF_rule_t *rulep);
 
 static inline marpaESLIF_symbol_t   *_marpaESLIF_symbol_newp(marpaESLIF_t *marpaESLIFp);
@@ -1536,7 +1536,8 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_grammarp(marpaESLIFGra
 				  bootstrap_grammar_rulep[i].separatori,
 				  bootstrap_grammar_rulep[i].properb,
                                   (ruleAction.u.names != NULL) ? &ruleAction : NULL,
-                                  0 /* passthroughb */
+                                  0, /* passthroughb */
+                                  bootstrap_grammar_rulep[i].hideseparatorb
 				  );
     if (rulep == NULL) {
       goto err;
@@ -2823,7 +2824,7 @@ static inline short _marpaESLIFRecognizer_lexemeStack_i_moveb(marpaESLIFRecogniz
 }
 
 /*****************************************************************************/
-static inline marpaESLIF_rule_t *_marpaESLIF_rule_newp(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, char *descEncodings, char *descs, size_t descl, int lhsi, size_t nrhsl, int *rhsip, int exceptioni, int ranki, short nullRanksHighb, short sequenceb, int minimumi, int separatori, short properb, marpaESLIF_action_t *actionp, short passthroughb)
+static inline marpaESLIF_rule_t *_marpaESLIF_rule_newp(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, char *descEncodings, char *descs, size_t descl, int lhsi, size_t nrhsl, int *rhsip, int exceptioni, int ranki, short nullRanksHighb, short sequenceb, int minimumi, int separatori, short properb, marpaESLIF_action_t *actionp, short passthroughb, short hideseparatorb)
 /*****************************************************************************/
 {
   static const char               *funcs          = "_marpaESLIF_rule_newp";
@@ -2866,6 +2867,7 @@ static inline marpaESLIF_rule_t *_marpaESLIF_rule_newp(marpaESLIF_t *marpaESLIFp
   rulep->minimumi       = minimumi;
   rulep->passthroughb   = passthroughb;
   rulep->propertyBitSet = 0; /* Filled by grammar validation */
+  rulep->hideseparatorb = hideseparatorb;
 
   /* Look to the symbol itself, and remember it is an LHS - this is used when validating the grammar */
   for (symboli = 0; symboli < GENERICSTACK_USED(symbolStackp); symboli++) {
@@ -4689,6 +4691,7 @@ short marpaESLIFGrammar_ruleproperty_by_levelb(marpaESLIFGrammar_t *marpaESLIFGr
     if ((rulep->propertyBitSet & MARPAWRAPPER_RULE_IS_NULLING)    == MARPAWRAPPER_RULE_IS_NULLING   ) { rulePropertyp->propertyBitSet |= MARPAESLIF_RULE_IS_NULLING; }
     if ((rulep->propertyBitSet & MARPAWRAPPER_RULE_IS_LOOP)       == MARPAWRAPPER_RULE_IS_LOOP      ) { rulePropertyp->propertyBitSet |= MARPAESLIF_RULE_IS_LOOP; }
     if ((rulep->propertyBitSet & MARPAWRAPPER_RULE_IS_PRODUCTIVE) == MARPAWRAPPER_RULE_IS_PRODUCTIVE) { rulePropertyp->propertyBitSet |= MARPAESLIF_RULE_IS_PRODUCTIVE; }
+    rulePropertyp->hideseparatorb = rulep->hideseparatorb;
   }
   rcb = 1;
   goto done;
@@ -7690,6 +7693,8 @@ static short _marpaESLIFValue_ruleCallbackWrapperb(void *userDatavp, int rulei, 
   marpaESLIFValueRuleCallback_t       ruleCallbackp         = NULL;
   marpaESLIF_rule_t                  *rulep;
   short                               rcb;
+  int                                 i;
+  int                                 j;
   
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "start [%d] = [%d-%d]", resulti, arg0i, argni);
@@ -7783,6 +7788,21 @@ static short _marpaESLIFValue_ruleCallbackWrapperb(void *userDatavp, int rulei, 
       goto err;
     }
 
+    /* If the rule have a separator, eventually remove it */
+    if ((rulep->separatorp != NULL) && rulep->hideseparatorb
+        /* && (argni > arg0i) */             /* test not necessary in theory because we are not nullable */
+        ) {
+      for (i = arg0i, j = arg0i; i <= argni; i += 2) {
+        if (i == j) {
+          continue;
+        }
+        if (! _marpaESLIF_generic_action_copyb(marpaESLIFValueOption.userDatavp, marpaESLIFValuep, arg0i, argni, i, ++j, 0 /* nullable */)) {
+          goto err;
+        }
+      }
+      argni = j;
+    }
+    
     if (! ruleCallbackp(marpaESLIFValueOption.userDatavp, marpaESLIFValuep, arg0i, argni, resulti, 0 /* nullableb */)) {
       /* marpaWrapper logging will not give rule description, so do we */
       MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "Action %s failed for rule: %s", marpaESLIFValuep->actions, rulep->asciishows);
@@ -8605,6 +8625,9 @@ static inline void _marpaESLIF_rule_createshowv(marpaESLIF_t *marpaESLIFp, marpa
     }
     if (rulep->properb) {
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " proper => 1");
+    }
+    if (rulep->hideseparatorb) {
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " hide-separator => 1");
     }
   }
   if (rulep->exceptionp != NULL) {

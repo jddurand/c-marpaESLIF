@@ -66,6 +66,7 @@
 #define G1_RULE_ADVERB_ITEM_14                   "G1_rule_adverb_item_14"
 #define G1_RULE_ADVERB_ITEM_15                   "G1_rule_adverb_item_15"
 #define G1_RULE_ADVERB_ITEM_16                   "G1_rule_adverb_item_16"
+#define G1_RULE_ADVERB_ITEM_17                   "G1_rule_adverb_item_17"
 #define G1_RULE_ACTION_1                         "G1_rule_action_1"
 #define G1_RULE_ACTION_2                         "G1_rule_action_2"
 #define G1_RULE_SYMBOL_ACTION_1                  "G1_rule_symbol_action_1"
@@ -77,6 +78,8 @@
 #define G1_RULE_SEPARATOR_SPECIFICATION          "G1_rule_separator_specification"
 #define G1_RULE_PROPER_SPECIFICATION_1           "G1_rule_proper_specification_1"
 #define G1_RULE_PROPER_SPECIFICATION_2           "G1_rule_proper_specification_2"
+#define G1_RULE_HIDESEPARATOR_SPECIFICATION_1    "G1_rule_hideseparator_specification_1"
+#define G1_RULE_HIDESEPARATOR_SPECIFICATION_2    "G1_rule_hideseparator_specification_2"
 #define G1_RULE_RANK_SPECIFICATION               "G1_rule_rank_specification"
 #define G1_RULE_NULL_RANKING_SPECIFICATION_1     "G1_rule_null_ranking_specification_1"
 #define G1_RULE_NULL_RANKING_SPECIFICATION_2     "G1_rule_null_ranking_specification_2"
@@ -200,8 +203,8 @@
 #define G1_ACTION_ADVERB_ITEM_02                   "::shift" /* <adverb item> ::= <left association> */
 #define G1_ACTION_ADVERB_ITEM_03                   "::shift" /* <adverb item> ::= <right association> */
 #define G1_ACTION_ADVERB_ITEM_04                   "::shift" /* <adverb item> ::= <group association> */
-#define G1_ACTION_ADVERB_ITEM_05                   "::shift" /* <adverb item> ::= <separator association> */
-#define G1_ACTION_ADVERB_ITEM_06                   "::shift" /* <adverb item> ::= <proper association> */
+#define G1_ACTION_ADVERB_ITEM_05                   "::shift" /* <adverb item> ::= <separator specification> */
+#define G1_ACTION_ADVERB_ITEM_06                   "::shift" /* <adverb item> ::= <proper specification> */
 #define G1_ACTION_ADVERB_ITEM_07                   "::shift" /* <adverb item> ::= <rank specification> */
 #define G1_ACTION_ADVERB_ITEM_08                   "::shift" /* <adverb item> ::= <null ranking specification> */
 #define G1_ACTION_ADVERB_ITEM_09                   "::shift" /* <adverb item> ::= <priority specification> */
@@ -212,6 +215,7 @@
 #define G1_ACTION_ADVERB_ITEM_14                   "::shift" /* <adverb item> ::= symbolaction */
 #define G1_ACTION_ADVERB_ITEM_15                   "::shift" /* <adverb item> ::= freeaction */
 #define G1_ACTION_ADVERB_ITEM_16                   "::shift" /* <adverb item> ::= <event specification> */
+#define G1_ACTION_ADVERB_ITEM_17                   "::shift" /* <adverb item> ::= <hide separator specification> */
 #define G1_ACTION_ACTION_1                         "G1_action_action_1"                         /* done */
 #define G1_ACTION_ACTION_2                         "G1_action_action_2"                         /* done */
 #define G1_ACTION_SYMBOLACTION_1                   "G1_action_symbolaction_1"                   /* done */
@@ -223,6 +227,8 @@
 #define G1_ACTION_SEPARATOR_SPECIFICATION          "G1_action_separator_specification"          /* done */
 #define G1_ACTION_PROPER_SPECIFICATION_1           "G1_action_proper_specification_1"           /* done */
 #define G1_ACTION_PROPER_SPECIFICATION_2           "G1_action_proper_specification_2"           /* done */
+#define G1_ACTION_HIDESEPARATOR_SPECIFICATION_1    "G1_action_hideseparator_specification_1"    /* done */
+#define G1_ACTION_HIDESEPARATOR_SPECIFICATION_2    "G1_action_hideseparator_specification_2"    /* done */
 #define G1_ACTION_RANK_SPECIFICATION               "G1_action_rank_specification"               /* done */
 #define G1_ACTION_NULL_RANKING_SPECIFICATION_1     "G1_action_null_ranking_specification_1"     /* done */
 #define G1_ACTION_NULL_RANKING_SPECIFICATION_2     "G1_action_null_ranking_specification_2"     /* done */
@@ -322,6 +328,7 @@ typedef struct bootstrap_grammar_rule {
   int                           minimumi;
   int                           separatori;
   short                         properb;
+  short                         hideseparatorb;
   char                         *actions;
 } bootstrap_grammar_rule_t;
 

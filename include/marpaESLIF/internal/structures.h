@@ -195,6 +195,7 @@ struct marpaESLIF_rule {
   int                    minimumi;
   short                  passthroughb;                 /* This rule is a passthrough */
   int                    propertyBitSet;
+  short                  hideseparatorb;
 };
 
 /* A grammar */
