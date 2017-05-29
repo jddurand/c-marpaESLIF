@@ -18,10 +18,8 @@
 /* Built-in extensions are all surrounded with "/" because they are regexes */
 
 /* Pre-action filter on arguments */
-#define MARPAESLIF_PERL_ARG_FILTER "(?:::nosep\\->)?(?:::(?:skip|keep)\\(-?[\\d\\*]?(?:,-?[\\d\\*]+)*\\)\\->)?" /* Eventual ::(?:skip|keep)(list)->, eventually prepended by ::nosep-> */
+#define MARPAESLIF_PERL_ARG_FILTER "(?:::(?:skip|keep)\\(-?[\\d\\*]?(?:,-?[\\d\\*]+)*\\)\\->)?" /* Eventual ::(?:skip|keep)(list)-> */
 
-#define MARPAESLIF_PERL_ARG_FILTER_NOSEP              "::nosep->"
-#define MARPAESLIF_PERL_ARG_FILTER_NOSEP_LENGTH       9
 #define MARPAESLIF_PERL_ARG_FILTER_SKIP_START         "::skip("
 #define MARPAESLIF_PERL_ARG_FILTER_SKIP_START_LENGTH  7
 #define MARPAESLIF_PERL_ARG_FILTER_KEEP_START         "::keep("
@@ -51,8 +49,7 @@ static const char *actionsArrayp[] = {
   "/" MARPAESLIF_PERL_ARG_FILTER "::\\{\\}" "/",     /* Generates a hash ref */
   "/" MARPAESLIF_PERL_ARG_FILTER "::true"   "/",     /* Generates a perl's true */
   "/" MARPAESLIF_PERL_ARG_FILTER "::false"  "/",     /* Generates a perl's false */
-  "/" MARPAESLIF_PERL_ARG_FILTER "::printf\\((?:(?|(?:')(?:[^\\\\']*(?:\\\\.[^\\\\']*)*)(?:')|(?:\")(?:[^\\\\\"]*(?:\\\\.[^\\\\\"]*)*)(?:\")))\\)" "/",     /* C.f. sv_vcatpvfn_flags() */
-  "/" MARPAESLIF_PERL_ARG_FILTER "::pack\\((?:(?|(?:')(?:[^\\\\']*(?:\\\\.[^\\\\']*)*)(?:')|(?:\")(?:[^\\\\\"]*(?:\\\\.[^\\\\\"]*)*)(?:\")))\\)" "/",     /* C.f. packlist() */
+  "/" MARPAESLIF_PERL_ARG_FILTER "::(?:printf|pack)\\((?:(?|(?:')(?:[^\\\\']*(?:\\\\.[^\\\\']*)*)(?:')|(?:\")(?:[^\\\\\"]*(?:\\\\.[^\\\\\"]*)*)(?:\")))\\)" "/",
   "/" MARPAESLIF_PERL_ARG_FILTER "\\w+"     "/"      /* Normal perl routine name */
 };
 
@@ -210,7 +207,7 @@ static int                             marpaESLIF_getTypei(pTHX_ SV* svp);
 static short                           marpaESLIF_canb(pTHX_ SV *svp, char *methods);
 static void                            marpaESLIF_call_methodv(pTHX_ SV *interfacep, char *methods, SV *argsvp);
 static SV                             *marpaESLIF_call_methodp(pTHX_ SV *interfacep, char *methods);
-static SV                             *marpaESLIF_call_actionp(pTHX_ SV *interfacep, char *methods, AV *avp, marpaESLIFValue_t *marpaESLIFValuep, int rulei);
+static SV                             *marpaESLIF_call_actionp(pTHX_ SV *interfacep, char *methods, AV *avp, marpaESLIFValue_t *marpaESLIFValuep, int rulei, short *av_undefbp);
 static SV                             *marpaESLIF_call_actionv(pTHX_ SV *interfacep, char *methods, AV *avp);
 static IV                              marpaESLIF_call_methodi(pTHX_ SV *interfacep, char *methods);
 static short                           marpaESLIF_call_methodb(pTHX_ SV *interfacep, char *methods);
@@ -257,6 +254,15 @@ static const char   *ASCIIs = "ASCII";
 #define MARPAESLIF_CROAKF(fmts, ...) croak("[In %s at %s:%d] " fmts, funcs, MARPAESLIF_FILENAMES, __LINE__, __VA_ARGS__)
 #define MARPAESLIF_WARN(msgs)        warn("[In %s at %s:%d] %s", funcs, MARPAESLIF_FILENAMES, __LINE__, msgs)
 #define MARPAESLIF_WARNF(fmts, ...)  warn("[In %s at %s:%d] " fmts, funcs, MARPAESLIF_FILENAMES, __LINE__, __VA_ARGS__)
+#define MARPAESLIF_REFCNT_DEC(svp) do {          \
+    SV *_svp = svp;                              \
+    if (((_svp) != NULL)         &&              \
+        ((_svp) != &PL_sv_undef) &&              \
+        ((_svp) != &PL_sv_yes) &&                \
+        ((_svp) != &PL_sv_no)) {                 \
+      SvREFCNT_dec(_svp);                        \
+    }                                            \
+  } while (0)
 
 #define MARPAESLIF_IS_PTR(marpaESLIFValuep, indicei, rcb) do {          \
     marpaESLIFValueResult_t *_marpaESLIFValueResultp;                   \
@@ -336,41 +342,38 @@ static const char   *ASCIIs = "ASCII";
 /* - Else we delete at the indice, copy backwards all remaining elements, and shtink the size */
 static void marpaESLIF_remove_indice_from_avp(pTHX_ AV *avp, int indicei) {
   static const char *funcs = "marpaESLIF_remove_indice_from_avp";
-  SV                *removedp;
+
+  if (avp == NULL) {
+    return;
+  }
 
   if (indicei == 0) {
-    removedp = av_shift(avp);
-    if (removedp != &PL_sv_undef) {
-      SvREFCNT_dec(removedp);
-    }
+    MARPAESLIF_REFCNT_DEC(av_shift(avp));
   } else {
-    SSize_t _top = av_top_index(avp);
+    SSize_t maxindicei = av_top_index(avp);
 
-    if (indicei == _top) {
-      removedp = av_pop(avp);
-      if (removedp != &PL_sv_undef) {
-        SvREFCNT_dec(removedp);
-      }
-    } else {
+    if (indicei == maxindicei) {
+      MARPAESLIF_REFCNT_DEC(av_pop(avp));
+    } else if (indicei < maxindicei) {
       SSize_t _start = indicei + 1;
       SSize_t _prev = indicei;
       SSize_t _i = 0;
       SV **_svpp;
 
       av_delete(avp, indicei, G_DISCARD);
-      for (_i = _start; _i <= _top; _i++, _prev++) {
+      for (_i = _start; _i <= maxindicei; _i++, _prev++) {
         _svpp = av_fetch(avp, _i, 0);
         if (_svpp == NULL) {
           MARPAESLIF_CROAK("av_fetch returned NULL");
         }
         SvREFCNT_inc(*_svpp);
         if (av_store(avp, _prev, *_svpp) == NULL) {
-          SvREFCNT_dec(*_svpp);
+          MARPAESLIF_REFCNT_DEC(*_svpp);
           MARPAESLIF_CROAK("av_store failure");
         }
       }
 
-      av_fill(avp, --_top);
+      av_fill(avp, --maxindicei);
     }
   }
 }
@@ -385,7 +388,6 @@ static void marpaESLIF_unquote_eval_string(pTHX_ char *methods, char quote)
   STRLEN             lenl       = strlen(methods);
   char              *dups;
   char              *q;
-  int                i;
   char               c;
 
   Newx(dups, strlen(methods)+1, char);
@@ -516,11 +518,11 @@ static short marpaESLIF_canb(pTHX_ SV *svp, char *methods)
   */
   /* We always check methods that have ASCII only characters */
   av_push(list, newSVpv(methods, 0));
-  rcp = marpaESLIF_call_actionp(aTHX_ svp, "can", list, NULL /* marpaESLIFValuep */, -1 /* rulei */);
+  rcp = marpaESLIF_call_actionp(aTHX_ svp, "can", list, NULL /* marpaESLIFValuep */, -1 /* rulei */, NULL /* av_undefbp */);
   av_undef(list);
 
   type = marpaESLIF_getTypei(aTHX_ rcp);
-  SvREFCNT_dec(rcp);
+  MARPAESLIF_REFCNT_DEC(rcp);
 
   /*
     fprintf(stderr, "END marpaESLIF_canb(pTHX_ SV *svp, \"%s\")\n", methods);
@@ -566,7 +568,7 @@ static SV *marpaESLIF_call_methodp(pTHX_ SV *interfacep, char *methods)
   /*
     fprintf(stderr, "START marpaESLIF_call_methodp(pTHX_ SV *svp, \"%s\")\n", methods);
   */
-  rcp = marpaESLIF_call_actionp(aTHX_ interfacep, methods, NULL /* avp */, NULL /* marpaESLIFValuep */, -1 /* rulei */);
+  rcp = marpaESLIF_call_actionp(aTHX_ interfacep, methods, NULL /* avp */, NULL /* marpaESLIFValuep */, -1 /* rulei */, NULL /* av_undefbp */);
   /*
     fprintf(stderr, "END marpaESLIF_call_methodp(pTHX_ SV *svp, \"%s\")\n", methods);
   */
@@ -575,7 +577,7 @@ static SV *marpaESLIF_call_methodp(pTHX_ SV *interfacep, char *methods)
 }
 
 /*****************************************************************************/
-static SV *marpaESLIF_call_actionp(pTHX_ SV *interfacep, char *methods, AV *avp, marpaESLIFValue_t *marpaESLIFValuep, int rulei)
+static SV *marpaESLIF_call_actionp(pTHX_ SV *interfacep, char *methods, AV *avp, marpaESLIFValue_t *marpaESLIFValuep, int rulei, short *av_undefbp)
 /*****************************************************************************/
 {
   static const char        *funcs      = "marpaESLIF_call_actionp";
@@ -588,14 +590,10 @@ static SV *marpaESLIF_call_actionp(pTHX_ SV *interfacep, char *methods, AV *avp,
   int                       keepreali  = 0;
   SV                      **svargs     = NULL;
   char                     *origtmps   = NULL; /* Used when this is a format string */
-  SV                       *evalp      = NULL;
   char                     *tmps;
   STRLEN                    tmpl;
   SV                       *rcp;
-  SSize_t                   aviteratol;
-  marpaESLIFRuleProperty_t  ruleProperty;
-  marpaESLIFGrammar_t      *marpaESLIFGrammarp;
-  SSize_t                   keyToDeletei;
+  SSize_t                   aviteratorl;
   int                       skipi;
   int                       skippedi;
   int                       keepi;
@@ -608,41 +606,6 @@ static SV *marpaESLIF_call_actionp(pTHX_ SV *interfacep, char *methods, AV *avp,
   /* It is here that we manage the action built-in extensions */
 
   /* Arguments filter */
-
-  /* --------- */
-  /* ::nosep-> */
-  /* --------- */
-  if (strncmp(methods, MARPAESLIF_PERL_ARG_FILTER_NOSEP, MARPAESLIF_PERL_ARG_FILTER_NOSEP_LENGTH) == 0) {
-    /* This is meaningul only if rulei is >= 0 and there are arguments */
-    if ((rulei >= 0) && (avsizel > 0)) {
-      marpaESLIFGrammarp = marpaESLIFRecognizer_grammarp(marpaESLIFValue_recognizerp(marpaESLIFValuep));
-      if (! marpaESLIFGrammar_ruleproperty_currentb(marpaESLIFGrammarp, rulei, &ruleProperty)) {
-        MARPAESLIF_CROAKF("marpaESLIFGrammar_ruleproperty_currentb failure, %s", strerror(errno));
-      }
-      if (ruleProperty.separatori >= 0) {
-        /* Yes, this is a rule with a separator */
-        /* This mean that arguments are: value1 separator value2 separator etc... */
-        /* It MAY end with separator if rule have proper => 0 */
-        if ((avsizel % 2) == 0) {
-          /* value1 separator value2 separator ... valuen separator */
-          /* Even number of elements: it ends with a separator */
-          keyToDeletei = avsizel - 1; /* Per def avsizel >= 2, so avsizel - 1 >= 1 */
-        } else {
-          /* value1 separator value2 separator ... valuen */
-          /* Odd number of elements: it does not end with a separator */
-          keyToDeletei = avsizel - 2; /* Can be -1 if there is only one value, else it is 1, or 3, or 5, or ... */
-        }
-        /* In any case, keyToDeletei must be > 0 to start deletion */
-        while (keyToDeletei > 0) {
-          marpaESLIF_remove_indice_from_avp(aTHX_ avp, keyToDeletei);
-          keyToDeletei -= 2;
-          avsizel--;
-        }
-      }
-    }
-    methods += MARPAESLIF_PERL_ARG_FILTER_NOSEP_LENGTH;
-  }
-
   if (strncmp(methods, MARPAESLIF_PERL_ARG_FILTER_SKIP_START, MARPAESLIF_PERL_ARG_FILTER_SKIP_START_LENGTH) == 0) {
 
     /* ------------------------------------------------- */
@@ -655,8 +618,8 @@ static SV *marpaESLIF_call_actionp(pTHX_ SV *interfacep, char *methods, AV *avp,
     while ((c != ',') && (c != ')')) {
       /* It is either '*' either an integer */
       if (*methods == '*') {
-        for (aviteratol = 0; aviteratol < avsizel; aviteratol++) {
-          MARPAESLIF_PERL_ARG_FILTER_HAVE_INDICE(aviteratol, avsizel, skipip, skipalloci, skipreali);
+        for (aviteratorl = 0; aviteratorl < avsizel; aviteratorl++) {
+          MARPAESLIF_PERL_ARG_FILTER_HAVE_INDICE(aviteratorl, avsizel, skipip, skipalloci, skipreali);
         }
       } else {
         MARPAESLIF_PERL_ARG_FILTER_HAVE_INDICE(atoi(methods), avsizel, skipip, skipalloci, skipreali);
@@ -701,8 +664,8 @@ static SV *marpaESLIF_call_actionp(pTHX_ SV *interfacep, char *methods, AV *avp,
     while ((c != ',') && (c != ')')) {
       /* It is either '*' either an integer */
       if (*methods == '*') {
-        for (aviteratol = 0; aviteratol < avsizel; aviteratol++) {
-          MARPAESLIF_PERL_ARG_FILTER_HAVE_INDICE(aviteratol, avsizel, keepip, keepalloci, keepreali);
+        for (aviteratorl = 0; aviteratorl < avsizel; aviteratorl++) {
+          MARPAESLIF_PERL_ARG_FILTER_HAVE_INDICE(aviteratorl, avsizel, keepip, keepalloci, keepreali);
         }
       } else {
         MARPAESLIF_PERL_ARG_FILTER_HAVE_INDICE(atoi(methods), avsizel, keepip, keepalloci, keepreali);
@@ -722,28 +685,28 @@ static SV *marpaESLIF_call_actionp(pTHX_ SV *interfacep, char *methods, AV *avp,
     if (avsizel > 0) {
       if (keepreali <= 0) {
         /* Nothing to keep... */
-        for (aviteratol = avsizel - 1; aviteratol >= 0; aviteratol--) {
-          marpaESLIF_remove_indice_from_avp(aTHX_ avp, (int) aviteratol);
+        for (aviteratorl = avsizel - 1; aviteratorl >= 0; aviteratorl--) {
+          marpaESLIF_remove_indice_from_avp(aTHX_ avp, (int) aviteratorl);
           avsizel--;
         }
       } else {
         /* Sort the elements from highest to lowest */
         qsort(keepip, keepreali, sizeof(int), marpaESLIF_indicei_cmpi);
-        for (aviteratol = avsizel - 1; aviteratol >= 0; aviteratol--) {
+        for (aviteratorl = avsizel - 1; aviteratorl >= 0; aviteratorl--) {
           keeppedi = -1;
           for (i = 0; i < keepreali; i++) {
             keepi = keepip[i];
-            if (keepi == aviteratol) {
+            if (keepi == aviteratorl) {
               keeppedi = keepi;
               break;
-            } else if (keepi < aviteratol) {
+            } else if (keepi < aviteratorl) {
               /* No need to go further */
               break;
             }
           }
           if (keeppedi < 0) {
-            /* No found: skip indice aviteratol */
-            marpaESLIF_remove_indice_from_avp(aTHX_ avp, (int) aviteratol);
+            /* No found: skip indice aviteratorl */
+            marpaESLIF_remove_indice_from_avp(aTHX_ avp, (int) aviteratorl);
             avsizel--;
           }
         }
@@ -759,15 +722,22 @@ static SV *marpaESLIF_call_actionp(pTHX_ SV *interfacep, char *methods, AV *avp,
     /* ::[] */
     /* ---- */
 
-    AV *newavp = newAV();
-    for (aviteratol = 0; aviteratol < avsizel; aviteratol++) {
-      SV **svpp = av_fetch(avp, aviteratol, 0); /* We manage ourself the avp, SV's are real */
-      if (svpp == NULL) {
-        MARPAESLIF_CROAK("av_fetch returned NULL");
+    if ((avp != NULL) && (av_undefbp != NULL)) {
+      /* Caller supports setting of this flag. Very good, we reuse current avp. */
+      rcp = newRV_noinc((SV *) avp);
+      *av_undefbp = 0;
+    } else {
+      /* This case also work when avp is NULL, then avsizel is 0 */
+      AV *newavp = newAV();
+      for (aviteratorl = 0; aviteratorl < avsizel; aviteratorl++) {
+        SV **svpp = av_fetch(avp, aviteratorl, 0); /* We manage ourself the avp, SV's are real */
+        if (svpp == NULL) {
+          MARPAESLIF_CROAK("av_fetch returned NULL");
+        }
+        av_push(newavp, newSVsv(*svpp)); /* This is incrementing newSVsv(*svpp) ref count */
       }
-      av_push(newavp, newSVsv(*svpp)); /* This is incrementing newSVsv(*svpp) ref count */
+      rcp = newRV_noinc((SV *) newavp);
     }
-    rcp = newRV_noinc((SV *) newavp);
   }
   else if (strcmp(methods, "::{}") == 0) {
 
@@ -783,18 +753,18 @@ static SV *marpaESLIF_call_actionp(pTHX_ SV *interfacep, char *methods, AV *avp,
       MARPAESLIF_CROAK("Action ::{} requires an even number of arguments");
     }
     newhvp = newHV();
-    for (aviteratol = 0; aviteratol < avsizel; aviteratol += 2) {
+    for (aviteratorl = 0; aviteratorl < avsizel; aviteratorl += 2) {
       SV **svpp;
       SV *keyp;
       SV *valp;
 
-      svpp = av_fetch(avp, aviteratol, 0); /* We manage ourself the avp, SV's are real */
+      svpp = av_fetch(avp, aviteratorl, 0); /* We manage ourself the avp, SV's are real */
       if (svpp == NULL) {
         MARPAESLIF_CROAK("av_fetch returned NULL");
       }
       keyp = *svpp;
 
-      svpp = av_fetch(avp, aviteratol+1, 0); /* We manage ourself the avp, SV's are real */
+      svpp = av_fetch(avp, aviteratorl+1, 0); /* We manage ourself the avp, SV's are real */
       if (svpp == NULL) {
         MARPAESLIF_CROAK("av_fetch returned NULL");
       }
@@ -803,8 +773,8 @@ static SV *marpaESLIF_call_actionp(pTHX_ SV *interfacep, char *methods, AV *avp,
       SvREFCNT_inc(keyp);
       SvREFCNT_inc(valp);
       if (hv_store_ent(newhvp, keyp, valp, 0) == NULL) {
-        SvREFCNT_dec(keyp);
-        SvREFCNT_dec(valp);
+        MARPAESLIF_REFCNT_DEC(keyp);
+        MARPAESLIF_REFCNT_DEC(valp);
         hv_undef(newhvp);
         MARPAESLIF_CROAK("hv_store_ent failure");
       }
@@ -817,7 +787,7 @@ static SV *marpaESLIF_call_actionp(pTHX_ SV *interfacep, char *methods, AV *avp,
     /* ::true */
     /* ------ */
 
-    rcp = newSViv(1);
+    rcp = &PL_sv_yes;
   }
   else if (strcmp(methods, "::false") == 0) {
 
@@ -825,7 +795,7 @@ static SV *marpaESLIF_call_actionp(pTHX_ SV *interfacep, char *methods, AV *avp,
     /* ::false */
     /* ------- */
 
-    rcp = newSViv(0);
+    rcp = &PL_sv_no;
   }
   else if (strncmp(methods, MARPAESLIF_PERL_ARG_ENDPOINT_PRINTF_START, MARPAESLIF_PERL_ARG_ENDPOINT_PRINTF_START_LENGTH) == 0) {
 
@@ -851,12 +821,12 @@ static SV *marpaESLIF_call_actionp(pTHX_ SV *interfacep, char *methods, AV *avp,
       /* Create an array of SV from interfacep+@avp */
       if (avsizel > 0) {
         Newx(svargs, (int) avsizel, SV *);
-        for (aviteratol = 0; aviteratol < avsizel; aviteratol++) {
-          SV **svpp = av_fetch(avp, aviteratol, 0); /* We manage ourself the avp, SV's are real */
+        for (aviteratorl = 0; aviteratorl < avsizel; aviteratorl++) {
+          SV **svpp = av_fetch(avp, aviteratorl, 0); /* We manage ourself the avp, SV's are real */
           if (svpp == NULL) {
             MARPAESLIF_CROAK("av_fetch returned NULL");
           }
-          svargs[aviteratol] = *svpp;
+          svargs[aviteratorl] = *svpp;
         }
       }
       sv_vcatpvfn(rcp,
@@ -892,12 +862,12 @@ static SV *marpaESLIF_call_actionp(pTHX_ SV *interfacep, char *methods, AV *avp,
       /* Create an array of SV from interfacep+@avp */
       if (avsizel > 0) {
         Newx(svargs, (int) avsizel, SV *);
-        for (aviteratol = 0; aviteratol < avsizel; aviteratol++) {
-          SV **svpp = av_fetch(avp, aviteratol, 0); /* We manage ourself the avp, SV's are real */
+        for (aviteratorl = 0; aviteratorl < avsizel; aviteratorl++) {
+          SV **svpp = av_fetch(avp, aviteratorl, 0); /* We manage ourself the avp, SV's are real */
           if (svpp == NULL) {
             MARPAESLIF_CROAK("av_fetch returned NULL");
           }
-          svargs[aviteratol] = *svpp;
+          svargs[aviteratorl] = *svpp;
         }
       }
       packlist(rcp,
@@ -906,7 +876,6 @@ static SV *marpaESLIF_call_actionp(pTHX_ SV *interfacep, char *methods, AV *avp,
                svargs,
                svargs + avsizel);
     }
-    /* fprintf(stderr, "AFTER PACK:\n"); fflush(stderr); sv_dump(rcp); */
   }
   else  {
 
@@ -920,8 +889,8 @@ static SV *marpaESLIF_call_actionp(pTHX_ SV *interfacep, char *methods, AV *avp,
     PUSHMARK(SP);
     EXTEND(SP, 1 + avsizel);
     PUSHs(sv_2mortal(newSVsv(interfacep)));
-    for (aviteratol = 0; aviteratol < avsizel; aviteratol++) {
-      SV **svpp = av_fetch(avp, aviteratol, 0); /* We manage ourself the avp, SV's are real */
+    for (aviteratorl = 0; aviteratorl < avsizel; aviteratorl++) {
+      SV **svpp = av_fetch(avp, aviteratorl, 0); /* We manage ourself the avp, SV's are real */
       if (svpp == NULL) {
         MARPAESLIF_CROAK("av_fetch returned NULL");
       }
@@ -952,9 +921,6 @@ static SV *marpaESLIF_call_actionp(pTHX_ SV *interfacep, char *methods, AV *avp,
   if (origtmps != NULL) {
     Safefree(origtmps);
   }
-  if (evalp != NULL) {
-    SvREFCNT_dec(evalp);
-  }
 
   return rcp;
 }
@@ -965,7 +931,7 @@ static SV *marpaESLIF_call_actionv(pTHX_ SV *interfacep, char *methods, AV *avp)
 {
   static const char *funcs = "marpaESLIF_call_actionv";
   SSize_t avsizel = (avp != NULL) ? av_top_index(avp) + 1 : 0;
-  SSize_t aviteratol;
+  SSize_t aviteratorl;
   dSP;
 
   /*
@@ -977,8 +943,8 @@ static SV *marpaESLIF_call_actionv(pTHX_ SV *interfacep, char *methods, AV *avp)
   PUSHMARK(SP);
   EXTEND(SP, 1 + avsizel);
   PUSHs(sv_2mortal(newSVsv(interfacep)));
-  for (aviteratol = 0; aviteratol < avsizel; aviteratol++) {
-    SV **svpp = av_fetch(avp, aviteratol, 0); /* We manage ourself the avp, SV's are real */
+  for (aviteratorl = 0; aviteratorl < avsizel; aviteratorl++) {
+    SV **svpp = av_fetch(avp, aviteratorl, 0); /* We manage ourself the avp, SV's are real */
     if (svpp == NULL) {
       MARPAESLIF_CROAK("av_fetch returned NULL");
     }
@@ -1300,6 +1266,7 @@ static short marpaESLIF_valueRuleCallbackb(void *userDatavp, marpaESLIFValue_t *
   static const char        *funcs               = "marpaESLIF_valueRuleCallbackb";
   MarpaX_ESLIF_Value_t     *MarpaX_ESLIF_Valuep = (MarpaX_ESLIF_Value_t *) userDatavp;
   AV                       *list                = NULL;
+  short                     av_undefb           = 1;
   SV                       *actionResult;
   SV                       *svp;
   int                       i;
@@ -1321,8 +1288,8 @@ static short marpaESLIF_valueRuleCallbackb(void *userDatavp, marpaESLIFValue_t *
     }
   }
 
-  actionResult = marpaESLIF_call_actionp(aTHX_ MarpaX_ESLIF_Valuep->Perl_valueInterfacep, MarpaX_ESLIF_Valuep->actions, list, marpaESLIFValuep, rulei);
-  if (list != NULL) {
+  actionResult = marpaESLIF_call_actionp(aTHX_ MarpaX_ESLIF_Valuep->Perl_valueInterfacep, MarpaX_ESLIF_Valuep->actions, list, marpaESLIFValuep, rulei, &av_undefb);
+  if (av_undefb && (list != NULL)) {
     av_undef(list);
   }
 
@@ -1339,6 +1306,7 @@ static short marpaESLIF_valueSymbolCallbackb(void *userDatavp, marpaESLIFValue_t
   static const char        *funcs               = "marpaESLIF_valueSymbolCallbackb";
   MarpaX_ESLIF_Value_t     *MarpaX_ESLIF_Valuep = (MarpaX_ESLIF_Value_t *) userDatavp;
   AV                       *list                = NULL;
+  short                     av_undefb           = 1;
   SV                       *actionResult;
   dTHX;
 
@@ -1346,8 +1314,10 @@ static short marpaESLIF_valueSymbolCallbackb(void *userDatavp, marpaESLIFValue_t
 
   list = newAV();
   av_push(list, marpaESLIF_getSvFromStack(aTHX_ MarpaX_ESLIF_Valuep, marpaESLIFValuep, -1 /* not used */, bytep, bytel));
-  actionResult = marpaESLIF_call_actionp(aTHX_ MarpaX_ESLIF_Valuep->Perl_valueInterfacep, MarpaX_ESLIF_Valuep->actions, list, marpaESLIFValuep, -1);
-  av_undef(list);
+  actionResult = marpaESLIF_call_actionp(aTHX_ MarpaX_ESLIF_Valuep->Perl_valueInterfacep, MarpaX_ESLIF_Valuep->actions, list, marpaESLIFValuep, -1, &av_undefb);
+  if (av_undefb) {
+    av_undef(list);
+  }
 
   MARPAESLIF_SET_PTR(marpaESLIFValuep, resulti, 1 /* context: any value != 0 */, marpaESLIF_representation, actionResult);
 
@@ -1361,14 +1331,15 @@ static void marpaESLIF_valueFreeCallbackv(void *userDatavp, int contexti, void *
   dTHX;
 
   /* We are called when valuation is doing to withdraw an item in the stack that is a PTR or an ARRAY that we own */
-  /* It is guaranteed to be non-NULL at this stage */
+  /* It is guaranteed to be non-NULL at this stage. Nevertheless there some SV* in perl that are just pointers */
+  /* to constants: undef, yes, no (we do not use placeholder). */
   /*
   fprintf(stderr, "------------\n");
   fprintf(stderr, "Withdrawing:\n");
   sv_dump((SV *) p);
   fprintf(stderr, "------------\n");
   */
-  SvREFCNT_dec(p);
+  MARPAESLIF_REFCNT_DEC(p);
 }
 
 /*****************************************************************************/
@@ -1376,9 +1347,7 @@ static void marpaESLIF_ContextFreev(pTHX_ MarpaX_ESLIF_t *MarpaX_ESLIFp)
 /*****************************************************************************/
 {
   if (MarpaX_ESLIFp != NULL) {
-    if (MarpaX_ESLIFp->Perl_loggerInterfacep != &PL_sv_undef) {
-      SvREFCNT_dec(MarpaX_ESLIFp->Perl_loggerInterfacep);
-    }
+    MARPAESLIF_REFCNT_DEC(MarpaX_ESLIFp->Perl_loggerInterfacep);
     if (MarpaX_ESLIFp->marpaESLIFp != NULL) {
       marpaESLIF_freev(MarpaX_ESLIFp->marpaESLIFp);
     }
@@ -1399,7 +1368,7 @@ static void marpaESLIF_grammarContextFreev(pTHX_ MarpaX_ESLIF_Grammar_t *MarpaX_
     }
     Safefree(MarpaX_ESLIF_Grammarp);
 
-    SvREFCNT_dec(Perl_MarpaX_ESLIFp);
+    MARPAESLIF_REFCNT_DEC(Perl_MarpaX_ESLIFp);
   }
 }
  
@@ -1418,11 +1387,9 @@ static void marpaESLIF_valueContextFreev(pTHX_ MarpaX_ESLIF_Value_t *MarpaX_ESLI
     if (MarpaX_ESLIF_Valuep->marpaESLIFValuep != NULL) {
       marpaESLIFValue_freev(MarpaX_ESLIF_Valuep->marpaESLIFValuep);
     }
-    SvREFCNT_dec(Perl_valueInterfacep);
-    if (Perl_MarpaX_ESLIF_Recognizerp != NULL) {
-      /* It is NULL in case of parse() */
-      SvREFCNT_dec(Perl_MarpaX_ESLIF_Recognizerp);
-    }
+    MARPAESLIF_REFCNT_DEC(Perl_valueInterfacep);
+    /* Note that Perl_MarpaX_ESLIF_Recognizerp is NULL in case of parse() */
+    MARPAESLIF_REFCNT_DEC(Perl_MarpaX_ESLIF_Recognizerp);
     if (! onStackb) {
       Safefree(MarpaX_ESLIF_Valuep);
     }
@@ -1463,7 +1430,7 @@ static void marpaESLIF_recognizerContextFreev(pTHX_ MarpaX_ESLIF_Recognizer_t *M
         /* ... is cleared ... */
         if (marpaESLIF_GENERICSTACK_IS_PTR(lexemeStackp, i)) {
           svp = (SV *) marpaESLIF_GENERICSTACK_GET_PTR(lexemeStackp, i);
-          SvREFCNT_dec(svp);
+          MARPAESLIF_REFCNT_DEC(svp);
         }
         /* ... and becomes current used size */
         marpaESLIF_GENERICSTACK_SET_USED(lexemeStackp, i);
@@ -1473,11 +1440,9 @@ static void marpaESLIF_recognizerContextFreev(pTHX_ MarpaX_ESLIF_Recognizer_t *M
     if (MarpaX_ESLIF_Recognizerp->marpaESLIFRecognizerp != NULL) {
       marpaESLIFRecognizer_freev(MarpaX_ESLIF_Recognizerp->marpaESLIFRecognizerp);
     }
-    SvREFCNT_dec(Perl_recognizerInterfacep);
-    if (Perl_MarpaX_ESLIF_Grammarp != NULL) {
-      /* It is NULL in the context of parse() */
-      SvREFCNT_dec(Perl_MarpaX_ESLIF_Grammarp);
-    }
+    MARPAESLIF_REFCNT_DEC(Perl_recognizerInterfacep);
+    /* Note that Perl_MarpaX_ESLIF_Grammarp is NULL in the context of parse() */
+    MARPAESLIF_REFCNT_DEC(Perl_MarpaX_ESLIF_Grammarp);
     if (! onStackb) {
       Safefree(MarpaX_ESLIF_Recognizerp);
     }
@@ -1489,15 +1454,13 @@ static void marpaESLIF_recognizerContextCleanupv(pTHX_ MarpaX_ESLIF_Recognizer_t
 /*****************************************************************************/
 {
   if (MarpaX_ESLIF_Recognizerp != NULL) {
-    if (MarpaX_ESLIF_Recognizerp->previous_Perl_datap != NULL) {
-      SvREFCNT_dec(MarpaX_ESLIF_Recognizerp->previous_Perl_datap);
-    }
+
+    MARPAESLIF_REFCNT_DEC(MarpaX_ESLIF_Recognizerp->previous_Perl_datap);
     MarpaX_ESLIF_Recognizerp->previous_Perl_datap = NULL;
 
-    if (MarpaX_ESLIF_Recognizerp->previous_Perl_encodingp != NULL) {
-      SvREFCNT_dec(MarpaX_ESLIF_Recognizerp->previous_Perl_encodingp);
-    }
+    MARPAESLIF_REFCNT_DEC(MarpaX_ESLIF_Recognizerp->previous_Perl_encodingp);
     MarpaX_ESLIF_Recognizerp->previous_Perl_encodingp = NULL;
+
   }
 }
 
@@ -1832,9 +1795,7 @@ void
 DESTROY(MarpaX_ESLIFp)
   MarpaX_ESLIF MarpaX_ESLIFp;
 CODE:
-  if (MarpaX_ESLIFp->Perl_loggerInterfacep != &PL_sv_undef) {
-    SvREFCNT_dec(MarpaX_ESLIFp->Perl_loggerInterfacep);
-  }
+  MARPAESLIF_REFCNT_DEC(MarpaX_ESLIFp->Perl_loggerInterfacep);
   if (MarpaX_ESLIFp->marpaESLIFp != NULL) {
     marpaESLIF_freev(MarpaX_ESLIFp->marpaESLIFp);
   }
@@ -2326,7 +2287,7 @@ CODE:
     /* This is a user-defined object */
     svp = (SV *) marpaESLIFValueResult.u.p;
     marpaESLIF_call_methodv(aTHX_ Perl_valueInterfacep, "setResult", svp);
-    SvREFCNT_dec(svp);
+    MARPAESLIF_REFCNT_DEC(svp);
     break;
   case MARPAESLIF_VALUE_TYPE_ARRAY:
     /* This is a lexeme, or a concatenation of lexemes */
@@ -2335,7 +2296,7 @@ CODE:
       SvUTF8_on(svp);
     }
     marpaESLIF_call_methodv(aTHX_ Perl_valueInterfacep, "setResult", svp);
-    SvREFCNT_dec(svp);
+    MARPAESLIF_REFCNT_DEC(svp);
     if (marpaESLIFValueResult.u.p != NULL) {
       marpaESLIF_SYSTEM_FREE(marpaESLIFValueResult.u.p);
     }
@@ -2591,17 +2552,17 @@ eventOnOff(Perl_MarpaX_ESLIF_Recognizer, symbol, eventTypes, onOff)
 CODE:
   static const char     *funcs = "MarpaX::ESLIF::Recognizer::eventOnOff";
   SSize_t                avsizel = av_top_index(eventTypes) + 1;
-  SSize_t                aviteratol;
+  SSize_t                aviteratorl;
   marpaESLIFEventType_t  eventSeti  = MARPAESLIF_EVENTTYPE_NONE;
 
-  for (aviteratol = 0; aviteratol < avsizel; aviteratol++) {
+  for (aviteratorl = 0; aviteratorl < avsizel; aviteratorl++) {
     int  codei;
-    SV **svpp = av_fetch(eventTypes, aviteratol, 0);
+    SV **svpp = av_fetch(eventTypes, aviteratorl, 0);
     if (svpp == NULL) {
       MARPAESLIF_CROAK("av_fetch returned NULL");
     }
     if ((marpaESLIF_getTypei(aTHX_ *svpp) & SCALAR) != SCALAR) {
-      MARPAESLIF_CROAKF("Element No %d of array must be a scalar", (int) aviteratol);
+      MARPAESLIF_CROAKF("Element No %d of array must be a scalar", (int) aviteratorl);
     }
     codei = (int) SvIV(*svpp);
     switch (codei) {
@@ -3240,7 +3201,7 @@ CODE:
       /* This is a user-defined object */
       svp = (SV *) marpaESLIFValueResult.u.p;
       marpaESLIF_call_methodv(aTHX_ MarpaX_ESLIF_Valuep->Perl_valueInterfacep, "setResult", svp);
-      SvREFCNT_dec(svp);
+      MARPAESLIF_REFCNT_DEC(svp);
       break;
     case MARPAESLIF_VALUE_TYPE_ARRAY:
       /* This is a lexeme, or a concatenation of lexemes */
@@ -3249,7 +3210,7 @@ CODE:
         SvUTF8_on(svp);
       }
       marpaESLIF_call_methodv(aTHX_ MarpaX_ESLIF_Valuep->Perl_valueInterfacep, "setResult", svp);
-      SvREFCNT_dec(svp);
+      MARPAESLIF_REFCNT_DEC(svp);
       if (marpaESLIFValueResult.u.p != NULL) {
         marpaESLIF_SYSTEM_FREE(marpaESLIFValueResult.u.p);
       }
