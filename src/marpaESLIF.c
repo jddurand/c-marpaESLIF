@@ -5390,7 +5390,7 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
 
     /* Discard failure - this is an error unless lexemes were read and:
        - exhaustion is on, or
-       - eof flags is true and all the data is consumed
+       - eof flag is true and all the data is consumed
     */
     MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp,
                                 funcs,
@@ -5962,6 +5962,13 @@ static inline short _marpaESLIFRecognizer_lexeme_completeb(marpaESLIFRecognizer_
     goto err;
   }
 
+  /* Update internal position */
+  if (lengthl > 0) {
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Advancing stream internal position by %ld bytes", (unsigned long) lengthl);
+    marpaESLIFRecognizerp->inputs += lengthl;
+    marpaESLIFRecognizerp->inputl -= lengthl;
+  }
+
   /* Push grammar and eventual pause after events */
   MARPAESLIFRECOGNIZER_RESET_EVENTS(marpaESLIFRecognizerp);
   if (! _marpaESLIFRecognizer_push_grammar_eventsb(marpaESLIFRecognizerp)) {
@@ -5977,12 +5984,6 @@ static inline short _marpaESLIFRecognizer_lexeme_completeb(marpaESLIFRecognizer_
         goto err;
       }
     }
-  }
-
-  if (lengthl > 0) {
-    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Advancing stream internal position by %ld bytes", (unsigned long) lengthl);
-    marpaESLIFRecognizerp->inputs += lengthl;
-    marpaESLIFRecognizerp->inputl -= lengthl;
   }
 
   /* We can reset commited alternatives */
@@ -6926,8 +6927,8 @@ static inline short _marpaESLIFRecognizer_push_grammar_eventsb(marpaESLIFRecogni
         MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: prediction event", (symbolp != NULL) ? symbolp->descp->asciis : "??");
         break;
       case MARPAWRAPPERGRAMMAR_EVENT_EXHAUSTED:
-        /* This is ok at EOF or if the recognizer is ok with exhaustion */
-        if ((! *(marpaESLIFRecognizerp->eofbp)) && (! marpaESLIFRecognizerp->marpaESLIFRecognizerOption.exhaustedb)) {
+        /* This is ok if all data is consumed (EOF + no more inputl) or if the recognizer is ok with exhaustion */
+        if (! ((*(marpaESLIFRecognizerp->eofbp) && (marpaESLIFRecognizerp->inputl <= 0)) || marpaESLIFRecognizerp->marpaESLIFRecognizerOption.exhaustedb)) {
           MARPAESLIF_ERROR(marpaESLIFp, "Grammar is exhausted but lexeme remains");
           goto err;
         }
@@ -6967,15 +6968,15 @@ static inline short _marpaESLIFRecognizer_push_grammar_eventsb(marpaESLIFRecogni
       goto err;
     }
     if (marpaESLIFRecognizerp->exhaustedb) {
-      /* This is ok at EOF or if the recognizer is ok with exhaustion */
-      if ((! *(marpaESLIFRecognizerp->eofbp)) && (! marpaESLIFRecognizerp->marpaESLIFRecognizerOption.exhaustedb)) {
+      /* This is ok if all data is consumed (EOF + no more inputl) or if the recognizer is ok with exhaustion */
+      if (! ((*(marpaESLIFRecognizerp->eofbp) && (marpaESLIFRecognizerp->inputl <= 0)) || marpaESLIFRecognizerp->marpaESLIFRecognizerOption.exhaustedb)) {
         MARPAESLIF_ERROR(marpaESLIFp, "Grammar is exhausted but lexeme remains");
         goto err;
       }
       if (! _marpaESLIFRecognizer_push_eventb(marpaESLIFRecognizerp, MARPAESLIF_EVENTTYPE_EXHAUSTED, NULL /* symbolp */, NULL /* events */)) {
         goto err;
       }
-      MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "Exhausted event");
+      MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "Exhausted event (check mode)");
     }
   }
 
