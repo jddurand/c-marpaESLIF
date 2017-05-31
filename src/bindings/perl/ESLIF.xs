@@ -192,9 +192,6 @@ static void                            marpaESLIF_paramIsRecognizerInterfacev(pT
 static void                            marpaESLIF_paramIsValueInterfacev(pTHX_ SV *sv);
 static short                           marpaESLIF_representation(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp, char **inputcpp, size_t *inputlp);
 static char                           *marpaESLIF_sv2byte(pTHX_ SV *svp, char **bytepp, size_t *bytelp, short encodingInformationb, short *characterStreambp, char **encodingOfEncodingsp, char **encodingsp, size_t *encodinglp, short warnIsFatalb);
-static int                             marpaESLIF_indicei_cmpi(const void *p1, const void *p2);
-static void                            marpaESLIF_remove_indice_from_avp(pTHX_ AV *avp, int indicei);
-static void                            marpaESLIF_unquote_eval_string(pTHX_ char *methods, char quote);
 
 /* Static constants */
 static const char   *UTF8s = "UTF-8";
@@ -288,105 +285,6 @@ static const char   *ASCIIs = "ASCII";
     _p = _marpaESLIFValueResultp->u.p;                                  \
     _l = _marpaESLIFValueResultp->sizel;                                \
   } while (0)
-
-/* There is no av_splice() in perl API, this is ok since we anyway do not                     */
-/* need for such a general method - at most we want to remove ONE indice                      */
-/* and the caller made sure this indice exist -;                                              */
-/* Note that these are array that we manage: no mg_xxx stuff in there.                        */
-/* - If the indice is the first one: av_shift (this will return &PL_sv_undef)                 */
-/* - If the indice is the last one: av_pop (ditto)                                            */
-/* - Else we delete at the indice, copy backwards all remaining elements, and shtink the size */
-static void marpaESLIF_remove_indice_from_avp(pTHX_ AV *avp, int indicei) {
-  static const char *funcs = "marpaESLIF_remove_indice_from_avp";
-
-  if (avp == NULL) {
-    return;
-  }
-
-  if (indicei == 0) {
-    MARPAESLIF_REFCNT_DEC(av_shift(avp));
-  } else {
-    SSize_t maxindicei = av_top_index(avp);
-
-    if (indicei == maxindicei) {
-      MARPAESLIF_REFCNT_DEC(av_pop(avp));
-    } else if (indicei < maxindicei) {
-      SSize_t _start = indicei + 1;
-      SSize_t _prev = indicei;
-      SSize_t _i = 0;
-      SV **_svpp;
-
-      av_delete(avp, indicei, G_DISCARD);
-      for (_i = _start; _i <= maxindicei; _i++, _prev++) {
-        _svpp = av_fetch(avp, _i, 0);
-        if (_svpp == NULL) {
-          MARPAESLIF_CROAK("av_fetch returned NULL");
-        }
-        SvREFCNT_inc(*_svpp);
-        if (av_store(avp, _prev, *_svpp) == NULL) {
-          MARPAESLIF_REFCNT_DEC(*_svpp);
-          MARPAESLIF_CROAK("av_store failure");
-        }
-      }
-
-      av_fill(avp, --maxindicei);
-    }
-  }
-}
-
-/*****************************************************************************/
-static void marpaESLIF_unquote_eval_string(pTHX_ char *methods, char quote)
-/*****************************************************************************/
-{
-  static const char *funcs      = "marpaESLIF_unquote_eval_string";
-  short              backslashb = 0;
-  char              *p          = methods;
-  STRLEN             lenl       = strlen(methods);
-  char              *dups;
-  char              *q;
-  char               c;
-
-  Newx(dups, strlen(methods)+1, char);
-  dups[0] = '\0';
-  q = dups;
-
-  while ((c = *p++) != '\0') {
-    if (c == '\\') {
-      if (! backslashb) {
-        /* Next character MAY BE escaped. Only backslash itself or the first character is considered as per the regexp. */
-        backslashb = 1;
-        continue;
-      } else {
-        /* This is escaped backslash */
-        *q++ = '\\';
-        backslashb = 0;
-      }
-    } else if (c == quote) {
-      if (! backslashb) {
-        /* This is a priori impossible to not have the first or backslash character if it is not preceeded by backslash */
-        if (c == quote) {
-          MARPAESLIF_CROAKF("First character %c found but no preceeding backslash", (unsigned char) c);
-        } else {
-          MARPAESLIF_CROAK("Backslash character found but no preceeding backslash");
-        }
-      }
-      *q++ = c;
-      backslashb = 0;
-    } else {
-      if (backslashb) {
-        /* Here the backslash flag must not be true */
-        MARPAESLIF_CROAKF("Got character '%c' preceeded by backslash: in your string only backslash character (\\) or the string delimitor (%c) can be escaped", c, (unsigned char) quote);
-      }
-      /* All is well */
-      *q++ = c;
-    }
-  }
-
-  /* It is impossible that dups is longer than methods */
-  *q = '\0';
-  strcpy(methods, dups);
-  Safefree(dups);
-}
 
 /*****************************************************************************/
 /* Copy of Params-Validate-1.26/lib/Params/Validate/XS.xs                    */
@@ -537,7 +435,7 @@ static SV *marpaESLIF_call_actionp(pTHX_ SV *interfacep, char *methods, AV *avp,
 /*****************************************************************************/
 {
   static const char        *funcs      = "marpaESLIF_call_actionp";
-  SSize_t                   avsizel    = (avp != NULL) ? av_top_index(avp) + 1 : 0;
+  SSize_t                   avsizel    = (avp != NULL) ? av_len(avp) + 1 : 0;
   SV                      **svargs     = NULL;
   SV                       *rcp;
   SSize_t                   aviteratorl;
@@ -577,7 +475,7 @@ static SV *marpaESLIF_call_actionv(pTHX_ SV *interfacep, char *methods, AV *avp)
 /*****************************************************************************/
 {
   static const char *funcs = "marpaESLIF_call_actionv";
-  SSize_t avsizel = (avp != NULL) ? av_top_index(avp) + 1 : 0;
+  SSize_t avsizel = (avp != NULL) ? av_len(avp) + 1 : 0;
   SSize_t aviteratorl;
   dSP;
 
@@ -1344,17 +1242,6 @@ static char *marpaESLIF_sv2byte(pTHX_ SV *svp, char **bytepp, size_t *bytelp, sh
   }
 
   return rcp;
-}
-
-/*****************************************************************************/
-static int marpaESLIF_indicei_cmpi(const void *p1, const void *p2)
-/*****************************************************************************/
-{
-  /* Sort in reverse order */
-  int i1 = * (int *) p1;
-  int i2 = * (int *) p2;
-
-  return (i1 < i2) ? 1 : ((i1 > i2) ? -1 : 0);
 }
 
 =for comment
@@ -2189,7 +2076,7 @@ eventOnOff(Perl_MarpaX_ESLIF_Recognizer, symbol, eventTypes, onOff)
   bool                    onOff;
 CODE:
   static const char     *funcs = "MarpaX::ESLIF::Recognizer::eventOnOff";
-  SSize_t                avsizel = av_top_index(eventTypes) + 1;
+  SSize_t                avsizel = av_len(eventTypes) + 1;
   SSize_t                aviteratorl;
   marpaESLIFEventType_t  eventSeti  = MARPAESLIF_EVENTTYPE_NONE;
 
