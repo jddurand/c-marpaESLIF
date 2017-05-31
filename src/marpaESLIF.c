@@ -6984,7 +6984,12 @@ static inline short _marpaESLIFRecognizer_push_grammar_eventsb(marpaESLIFRecogni
 
   if (last_discard_loopb) {
     /* If we are not already in the discard mode, try to discard if discardOnOffb is true */
-    if ((! marpaESLIFRecognizerp->discardb) && marpaESLIFRecognizerp->discardOnOffb && (grammarp->discardi >= 0)) {
+    /* This is done only for the top-level recognizer */
+    if (
+        (marpaESLIFRecognizerp->parentRecognizerp == NULL) &&   /* Top-level recognizer */
+        marpaESLIFRecognizerp->discardOnOffb               &&   /* ... is not disabling discard */
+        (grammarp->discardi >= 0)                               /* ... and have discard indeed */
+        ) {
       /* This is the end the parsing (we are called when parsing is exhausted) - we try to discard as much as possible */
       /* to avoid the eventual error message "Grammar is exhausted but lexeme remains" */
 
