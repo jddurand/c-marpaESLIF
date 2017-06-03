@@ -9342,6 +9342,7 @@ CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 -----------------------------------------------------------------------------
+*/
 /* This function reads one or more bytes that represent a UTF-8 character,
 and returns the codepoint of that character. Note that the function supports
 the original UTF-8 definition of RFC 2279, allowing for values in the range 0
