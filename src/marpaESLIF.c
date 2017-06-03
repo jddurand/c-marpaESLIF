@@ -6265,7 +6265,7 @@ short marpaESLIFRecognizer_event_onoffb(marpaESLIFRecognizer_t *marpaESLIFRecogn
   seti = eventSeti;
   seti &= nativeEventSeti;
   if (seti != MARPAWRAPPERGRAMMAR_EVENTTYPE_NONE) {
-    if (! marpaWrapperRecognizer_event_onoffb(marpaESLIFRecognizerp->marpaWrapperRecognizerp, symbolp->idi, eventSeti, (int) onoffb)) {
+    if (! marpaWrapperRecognizer_event_onoffb(marpaESLIFRecognizerp->marpaWrapperRecognizerp, symbolp->idi, (marpaWrapperGrammarEventType_t) eventSeti, (int) onoffb)) {
       goto err;
     }
   }
