@@ -941,7 +941,7 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
         }
       } else {
         hexdigitl -= 4; /* \x{} */
-        sprintf(strings + strlen(strings), "\\x{%0*x}", (int) hexdigitl, codepointi);
+        sprintf(strings + strlen(strings), "\\x{%0*lx}", (int) hexdigitl, (unsigned long) codepointi);
       }
     }
     /* Done - now we can generate a regexp out of that UTF-8 compatible string */
@@ -12891,7 +12891,7 @@ static inline short _marpaESLIF_action_eqb(marpaESLIF_action_t *action1p, marpaE
   if (action1p == NULL) {
     return (action2p == NULL);
   } else {
-    if ((action2p == NULL)) {
+    if (action2p == NULL) {
       return 0;
     }
   }
