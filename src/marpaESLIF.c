@@ -4022,6 +4022,7 @@ static inline short _marpaESLIFRecognizer_symbol_matcherb(marpaESLIFRecognizer_t
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
 
+ match_again:
   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Before %s try: eofb=%d, inputl=%ld", symbolp->descp->asciis, (int) *(marpaESLIFRecognizerp->eofbp), marpaESLIFRecognizerp->inputl);
   switch (symbolp->type) {
   case MARPAESLIF_SYMBOL_TYPE_TERMINAL:
@@ -4035,9 +4036,19 @@ static inline short _marpaESLIFRecognizer_symbol_matcherb(marpaESLIFRecognizer_t
                                                   &marpaESLIFValueResult)) {
       goto err;
     }
+    if (rci == MARPAESLIF_MATCH_AGAIN) {
+      /* We have to load more unless already at EOF */
+      if (! *(marpaESLIFRecognizerp->eofbp)) {
+        if (! _marpaESLIFRecognizer_readb(marpaESLIFRecognizerp)) {
+          goto err;
+        } else {
+          goto match_again;
+        }
+      }
+    }
     break;
   case MARPAESLIF_SYMBOL_TYPE_META:
-    /* A meta matcher MAY recursively call other recognizers, reading new data, etc... : this will update current recognizer inputs, inputl and eof. */
+    /* A meta matcher calls recursively other recognizers, reading new data, etc... : this will update current recognizer inputs, inputl and eof. */
     /* The result will be a parse tree value, at indice 0 of outputStackp */
     if (! _marpaESLIFRecognizer_meta_matcherb(marpaESLIFRecognizerp,
                                               symbolp,
@@ -5294,22 +5305,12 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
     symboli = symbolArrayp[symboll];
     MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFp, symbolp, symbolStackp, symboli);
     MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Trying to match %s", symbolp->descp->asciis);
-  match_again:
+
     if (! _marpaESLIFRecognizer_symbol_matcherb(marpaESLIFRecognizerp, symbolp, &rci, &marpaESLIFValueResult)) {
       /* Go to next predicted symbol */
       continue;
     }
     switch (rci) {
-    case MARPAESLIF_MATCH_AGAIN:
-      /* We have to load more unless already at EOF */
-      if (! *(marpaESLIFRecognizerp->eofbp)) {
-        if (! _marpaESLIFRecognizer_readb(marpaESLIFRecognizerp)) {
-          goto err;
-        } else {
-          goto match_again;
-        }
-      }
-      break;
     case MARPAESLIF_MATCH_FAILURE:
       break;
     case MARPAESLIF_MATCH_OK:
@@ -5342,6 +5343,7 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
       }
       break;
     default:
+      /* The case MARPAESLIF_MATCH_AGAIN is handled in the terminal section of _marpaESLIFRecognizer_symbol_matchb() */
       MARPAESLIF_ERRORF(marpaESLIFp, "Unsupported matcher return code %d", rci);
       goto err;
     }
