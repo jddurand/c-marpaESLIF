@@ -1993,6 +1993,7 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
         MARPAESLIF_ERRORF(marpaESLIFp, "At grammar level %d (%s), symbol %d <%s> is on the right side of an exception and must be a lexeme or an explicit terminal", grammari, grammarp->descp->asciis, exceptionp->idi, exceptionp->descp->asciis);
         goto err;
       }
+      /*
       for (rulej = 0; rulej < GENERICSTACK_USED(ruleStackp); rulej++) {
         if (rulei == rulej) {
           continue;
@@ -2008,6 +2009,7 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
           }
         }
       }
+      */
 
       /* Remember that this RHS is the member of an exception */
       symbolp->haveExceptionb = 1;
