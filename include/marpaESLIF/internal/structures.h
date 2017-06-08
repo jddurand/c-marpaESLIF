@@ -306,7 +306,9 @@ struct marpaESLIFRecognizer {
   short                        _eofb;          /* EOF flag */
   short                        _utfb;          /* A flag to say if input is UTF-8 correct. Automatically true if _charconv is true. Can set be regex engine as well. */
   short                        _charconvb;     /* A flag to say if latest stream chunk was converted to UTF-8 */
+  short                        _exceptionModeb;    /* True when we are checking a syntactic exception */
   genericHash_t                _marpaESLIFRecognizerHash; /* Cache of recognizers ready for re-use */
+  genericStack_t               _exceptionStack; /* For russel paradox, i.e. avoid exception mode recursivity */
   /* --------------- End of internal elements that are shared with all children --------------------- */
 
   int                          leveli;         /* Recognizer level (!= grammar level) */
@@ -318,6 +320,8 @@ struct marpaESLIFRecognizer {
   short                       *eofbp;          /* Ditto for the EOF flag */
   short                       *utfbp;          /* Ditto for the UTF-8 correctness flag */
   short                       *charconvbp;     /* Ditto for the character conversion flag */
+  short                       *exceptionModebp;/* Ditto for the exception mode */
+  genericStack_t              *exceptionStackp;/* Ditto for exception stack */
 
   size_t                       parentDeltal;   /* Parent original delta - used to recovert parent current pointer at our free */
   char                        *inputs;         /* Current pointer in input - specific to every recognizer */
