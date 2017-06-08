@@ -5308,6 +5308,26 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
     MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFp, symbolp, symbolStackp, symboli);
     MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Trying to match %s", symbolp->descp->asciis);
 
+    /* If this symbol is the left side of an exception, per def we are in this situation:
+
+       LHS ::= . SYMBOL
+
+       We want to detect the maximum number of bytes than SYMBOL can have, which is the number
+       of bytes where which we reach this situation:
+
+       LHS ::= EXCEPTION .
+    */
+    if (symbolp->exceptionp != NULL) {
+      /* Flag that we enter exception mode */
+      *(marpaESLIFRecognizerp->exceptionModebp) = 1;
+
+      /* Avoiding recursion, i.e. the rusell paradox, means that we have to remember
+         the symbol being exception'ed */
+
+      /* Un-flag the exception mode */
+      *(marpaESLIFRecognizerp->exceptionModebp) = 0;
+    }
+    
     if (! _marpaESLIFRecognizer_symbol_matcherb(marpaESLIFRecognizerp, symbolp, &rci, &marpaESLIFValueResult)) {
       /* Go to next predicted symbol */
       continue;
@@ -7186,6 +7206,7 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGramm
   marpaESLIFRecognizerp->_eofb                        = fakeb;  /* In fake mode, always make sure there is no reader needed */
   marpaESLIFRecognizerp->_utfb                        = 0;
   marpaESLIFRecognizerp->_charconvb                   = 0;
+  marpaESLIFRecognizerp->_exceptionModeb              = 0;
   marpaESLIFRecognizerp->_encodings                   = 0;
   marpaESLIFRecognizerp->_encodingp                   = NULL;
   marpaESLIFRecognizerp->_tconvp                      = NULL;
@@ -7201,6 +7222,8 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGramm
     marpaESLIFRecognizerp->eofbp                        = marpaESLIFRecognizerParentp->eofbp;
     marpaESLIFRecognizerp->utfbp                        = marpaESLIFRecognizerParentp->utfbp;
     marpaESLIFRecognizerp->charconvbp                   = marpaESLIFRecognizerParentp->charconvbp;
+    marpaESLIFRecognizerp->exceptionModebp              = marpaESLIFRecognizerParentp->exceptionModebp;
+    marpaESLIFRecognizerp->exceptionStackp              = marpaESLIFRecognizerParentp->exceptionStackp;
     marpaESLIFRecognizerp->marpaESLIFRecognizerHashp    = marpaESLIFRecognizerParentp->marpaESLIFRecognizerHashp;
     marpaESLIFRecognizerp->encodingsp                   = marpaESLIFRecognizerParentp->encodingsp;
     marpaESLIFRecognizerp->encodingpp                   = marpaESLIFRecognizerParentp->encodingpp;
@@ -7222,6 +7245,8 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGramm
     marpaESLIFRecognizerp->eofbp                        = &(marpaESLIFRecognizerp->_eofb);
     marpaESLIFRecognizerp->utfbp                        = &(marpaESLIFRecognizerp->_utfb);
     marpaESLIFRecognizerp->charconvbp                   = &(marpaESLIFRecognizerp->_charconvb);
+    marpaESLIFRecognizerp->exceptionModebp              = &(marpaESLIFRecognizerp->_exceptionModeb);
+    marpaESLIFRecognizerp->exceptionStackp              = NULL;   /* Pointer to a stack in the structure, initialized later */
     marpaESLIFRecognizerp->marpaESLIFRecognizerHashp    = NULL;   /* Pointer to a hash in the structure, initialized later */
     marpaESLIFRecognizerp->encodingsp                   = &(marpaESLIFRecognizerp->_encodings);
     marpaESLIFRecognizerp->encodingpp                   = &(marpaESLIFRecognizerp->_encodingp);
@@ -7435,6 +7460,16 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGramm
     if (GENERICHASH_ERROR(marpaESLIFRecognizerp->marpaESLIFRecognizerHashp)) {
       MARPAESLIF_ERRORF(marpaESLIFp, "marpaESLIFRecognizerHashp init failure, %s", strerror(errno));
       marpaESLIFRecognizerp->marpaESLIFRecognizerHashp = NULL;
+      goto err;
+    }
+  }
+
+  if (marpaESLIFRecognizerp->exceptionStackp == NULL) {
+    marpaESLIFRecognizerp->exceptionStackp = &(marpaESLIFRecognizerp->_exceptionStack);
+    GENERICSTACK_INIT(marpaESLIFRecognizerp->exceptionStackp);
+    if (GENERICSTACK_ERROR(marpaESLIFRecognizerp->exceptionStackp)) {
+      MARPAESLIF_ERRORF(marpaESLIFp, "exceptionStackp init failure, %s", strerror(errno));
+      marpaESLIFRecognizerp->exceptionStackp = NULL;
       goto err;
     }
   }
@@ -12515,6 +12550,7 @@ static inline void _marpaESLIFRecognizer_freev(marpaESLIFRecognizer_t *marpaESLI
   static const char      *funcs                       = "_marpaESLIFRecognizer_freev";
   marpaESLIFRecognizer_t *marpaESLIFRecognizerParentp = marpaESLIFRecognizerp->parentRecognizerp;
   genericHash_t          *marpaESLIFRecognizerHashp   = marpaESLIFRecognizerp->marpaESLIFRecognizerHashp;
+  genericStack_t         *exceptionStackp             = marpaESLIFRecognizerp->exceptionStackp;
   short                  *discardEventStatebp;
   short                  *beforeEventStatebp;
   short                  *afterEventStatebp;
@@ -12587,6 +12623,13 @@ static inline void _marpaESLIFRecognizer_freev(marpaESLIFRecognizer_t *marpaESLI
       GENERICHASH_RESET(marpaESLIFRecognizerHashp, NULL);
     }
 
+    if (exceptionStackp != NULL) {
+      /* This stack contains allow shallow pointers to symbols that are on the left side
+         of an exception */
+      GENERICSTACK_RESET(exceptionStackp);
+    }
+
+    
   } else {
     /* Parent's "current" position have to be updated */
     marpaESLIFRecognizerParentp->inputs = *(marpaESLIFRecognizerp->buffersp) + marpaESLIFRecognizerp->parentDeltal;
