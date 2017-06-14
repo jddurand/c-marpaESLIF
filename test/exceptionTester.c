@@ -89,13 +89,14 @@ to augment. Recommended: 50 */
   marpaESLIFTester_context.inputs         = "23]]>45";
   marpaESLIFTester_context.inputl         = 7;
 
-  /* genericLogger_logLevel_seti(genericLoggerp, GENERICLOGGER_LOGLEVEL_TRACE); */
+  genericLogger_logLevel_seti(genericLoggerp, GENERICLOGGER_LOGLEVEL_TRACE);
   if (marpaESLIFGrammar_parseb(marpaESLIFGrammarp, &marpaESLIFRecognizerOption, NULL /* marpaESLIFValueOptionp */, NULL /* exhaustedbp */, NULL /* marpaESLIFValueResultp */)) {
     GENERICLOGGER_ERROR(marpaESLIFOption.genericLoggerp, "\"23]]>45\" does match");
     goto err;
   } else {
     GENERICLOGGER_INFO(marpaESLIFOption.genericLoggerp, "\"23]]>45\" does not match");
   }
+  exit(0);
 
   marpaESLIFTester_context.genericLoggerp = genericLoggerp;
   marpaESLIFTester_context.inputs         = "]]>0";

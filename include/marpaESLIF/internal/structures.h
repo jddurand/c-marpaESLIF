@@ -170,6 +170,7 @@ struct marpaESLIFSymbol {
   genericStack_t              *lhsRuleStackp;          /* Pointer to stack of rules having this symbol as LHS */
   short                        haveExceptionb;         /* If true, this is the symbol before the '-' character of an exception */
   marpaESLIF_symbol_t         *exceptionp;             /* Pointer to the exception itself, the one after the '-' character */
+  short                        isExceptionb;           /* If true, this is the symbol after the '-' character of an exception */
 };
 
 /* A rule */
