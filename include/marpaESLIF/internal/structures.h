@@ -370,6 +370,8 @@ struct marpaESLIFRecognizer {
   size_t                       previousTotalMatchedl;
   size_t                       currentTotalMatchedl;
   size_t                       maxTotalMatchedl;
+  unsigned int                 wantedStartCompletionsi;
+  unsigned int                 currentStartCompletionsi;
 };
 
 struct marpaESLIF_lexeme_data {
