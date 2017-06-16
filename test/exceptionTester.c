@@ -16,13 +16,20 @@ typedef struct marpaESLIFTester_context {
   size_t           inputl;
 } marpaESLIFTester_context_t;
 
+
+  
 const static char *selfs =
-  "\n"
-  "CharData          ::= CHARDATA - CHARDATAEXCEPTION\n"
-  "\n"
-  "_CHARDATA           ~ [^<&]"
-  "CHARDATA            ~ _CHARDATA*"
-  "CHARDATAEXCEPTION   ~ CHARDATA ']]>' CHARDATA"
+  "CDSect          ::= CDStart CData CDEnd\n"
+  "CDStart         ::= '<![CDATA['\n"
+  "CData           ::= CHARDATA - CHARDATAEXCEPTION\n"
+  "CData           ::= # Using CHARDATA removed CData nullable aspect\n"
+  "CDEnd           ::= ']]>'\n"
+  "_CHARDATA         ~ [\\x{9}\\x{A}\\x{D}\\x{20}-\\x{D7FF}\\x{E000}-\\x{FFFD}\\x{10000}-\\x{10FFFF}]:u\n"
+  "CHARDATA          ~ _CHARDATA*\n"
+  "CHARDATAEXCEPTION ~ CHARDATA ']]>' CHARDATA\n"
+#ifdef TEST_STACKOVERFLOW
+  "CHARDATAEXCEPTION ~ CData@-1 - CData@-1\n"
+#endif
   "\n";
 
 int main() {
@@ -34,6 +41,22 @@ int main() {
   genericLogger_t             *genericLoggerp;
   marpaESLIFTester_context_t   marpaESLIFTester_context;
   marpaESLIFRecognizerOption_t marpaESLIFRecognizerOption;
+  struct testdata {
+    char *inputs;
+    short wantedstatusb;
+  } testdata[] = { { "<![CDATA[2]]>",                                                                            1 },
+                   { "<![CDATA[]]>",                                                                             1 },
+                   { "12<![CDATA[]]>",                                                                           0 },
+                   { "<![CDATA[<script>...</script>]]>",                                                         1 },
+                   { "<![CDATA[]]]]>",                                                                           1 },
+                   { "<![CDATA[<data>some embedded xml</data>]]>",                                               1 },
+                   { "<![CDATA[ They're saying \"x < y\" & that \"z > y\" so I guess that means that z > x ]]>", 1 },
+                   { "<![CDATA[An in-depth look at creating applications with XML, using <, >,]]>",              1 },
+                   { "<![CDATA[</this is malformed!</malformed</malformed & worse>]]>",                          1 },
+                   { "<![CDATA[if (c<10)]]>",                                                                    1 },
+                   { "<![CDATA[ something ]]",                                                                   0 }
+  };
+  int i;
 
   genericLoggerp = GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_DEBUG);
 
@@ -42,8 +65,7 @@ int main() {
   if (marpaESLIFp == NULL) {
     goto err;
   }
-
-
+  
   marpaESLIFGrammarOption.bytep               = (void *) selfs;
   marpaESLIFGrammarOption.bytel               = strlen(selfs);
   marpaESLIFGrammarOption.encodings           = UTF_8_STRING;
@@ -66,48 +88,27 @@ int main() {
   marpaESLIFRecognizerOption.bufaddperci                  = 50; /* Policy of minimum of bytes for increase, in percentage of current allocated size, when stream buffer size need 
 to augment. Recommended: 50 */
 
-  /*
-   * [^<&]* - ([^<&]* ']]>' [^<&]*)
-   *
-   * 2 must match
-   * 23]]>45 must not match
-   * ]]>0 must not match
-   */
-  marpaESLIFTester_context.genericLoggerp = genericLoggerp;
-  marpaESLIFTester_context.inputs         = "2";
-  marpaESLIFTester_context.inputl         = 1;
+  for (i = 0; i < sizeof(testdata)/sizeof(testdata[0]); i++) {
+    marpaESLIFTester_context.genericLoggerp = genericLoggerp;
+    marpaESLIFTester_context.inputs         = testdata[i].inputs;
+    marpaESLIFTester_context.inputl         = strlen(testdata[i].inputs);
 
-  /* genericLogger_logLevel_seti(genericLoggerp, GENERICLOGGER_LOGLEVEL_TRACE); */
-  if (! marpaESLIFGrammar_parseb(marpaESLIFGrammarp, &marpaESLIFRecognizerOption, NULL /* marpaESLIFValueOptionp */, NULL /* exhaustedbp */, NULL /* marpaESLIFValueResultp */)) {
-    GENERICLOGGER_ERROR(marpaESLIFOption.genericLoggerp, "\"2\" does not match");
-    goto err;
-  } else {
-    GENERICLOGGER_INFO(marpaESLIFOption.genericLoggerp, "\"2\" does match");
-  }
-
-  marpaESLIFTester_context.genericLoggerp = genericLoggerp;
-  marpaESLIFTester_context.inputs         = "23]]>45";
-  marpaESLIFTester_context.inputl         = 7;
-
-  genericLogger_logLevel_seti(genericLoggerp, GENERICLOGGER_LOGLEVEL_TRACE);
-  if (marpaESLIFGrammar_parseb(marpaESLIFGrammarp, &marpaESLIFRecognizerOption, NULL /* marpaESLIFValueOptionp */, NULL /* exhaustedbp */, NULL /* marpaESLIFValueResultp */)) {
-    GENERICLOGGER_ERROR(marpaESLIFOption.genericLoggerp, "\"23]]>45\" does match");
-    goto err;
-  } else {
-    GENERICLOGGER_INFO(marpaESLIFOption.genericLoggerp, "\"23]]>45\" does not match");
-  }
-  exit(0);
-
-  marpaESLIFTester_context.genericLoggerp = genericLoggerp;
-  marpaESLIFTester_context.inputs         = "]]>0";
-  marpaESLIFTester_context.inputl         = 4;
-
-  /* genericLogger_logLevel_seti(genericLoggerp, GENERICLOGGER_LOGLEVEL_TRACE); */
-  if (marpaESLIFGrammar_parseb(marpaESLIFGrammarp, &marpaESLIFRecognizerOption, NULL /* marpaESLIFValueOptionp */, NULL /* exhaustedbp */, NULL /* marpaESLIFValueResultp */)) {
-    GENERICLOGGER_ERROR(marpaESLIFOption.genericLoggerp, "\"]]>0\" does match");
-    goto err;
-  } else {
-    GENERICLOGGER_INFO(marpaESLIFOption.genericLoggerp, "\"]]>0\" does not match");
+    /* genericLogger_logLevel_seti(genericLoggerp, GENERICLOGGER_LOGLEVEL_TRACE); */
+    if (marpaESLIFGrammar_parseb(marpaESLIFGrammarp, &marpaESLIFRecognizerOption, NULL /* marpaESLIFValueOptionp */, NULL /* exhaustedbp */, NULL /* marpaESLIFValueResultp */)) {
+      if (testdata[i].wantedstatusb) {
+        GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "\"%s\" does match", testdata[i].inputs);
+      } else {
+        GENERICLOGGER_ERRORF(marpaESLIFOption.genericLoggerp, "\"%s\" does match", testdata[i].inputs);
+        goto err;
+      }
+    } else {
+      if (testdata[i].wantedstatusb) {
+        GENERICLOGGER_ERRORF(marpaESLIFOption.genericLoggerp, "\"%s\" does not match", testdata[i].inputs);
+        goto err;
+      } else {
+        GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "\"%s\" does not match", testdata[i].inputs);
+      }
+    }
   }
 
   exiti = 0;
