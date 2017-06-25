@@ -100,7 +100,7 @@ to augment. Recommended: 50 */
   marpaESLIFTester_context.inputs         = "AbC";
   marpaESLIFTester_context.inputl         = 3;
 
-  genericLogger_logLevel_seti(genericLoggerp, GENERICLOGGER_LOGLEVEL_TRACE);
+  /* genericLogger_logLevel_seti(genericLoggerp, GENERICLOGGER_LOGLEVEL_TRACE); */
   if (marpaESLIFGrammar_parseb(marpaESLIFGrammarp, &marpaESLIFRecognizerOption, NULL /* marpaESLIFValueOptionp */, NULL /* exhaustedbp */, NULL /* marpaESLIFValueResultp */)) {
     GENERICLOGGER_ERROR(marpaESLIFOption.genericLoggerp, "\"AbC\" does match");
     goto err;
