@@ -7277,6 +7277,8 @@ static inline short _marpaESLIFRecognizer_push_grammar_eventsb(marpaESLIFRecogni
       /* We can set these variables once */
       marpaESLIFGrammarDiscard                            = *marpaESLIFGrammarp; /* Fake marpaESLIFGrammar with the grammar sent in the stack */
       grammarDiscard                                      = *grammarp;
+      grammarDiscard.starti                               = grammarDiscard.discardi;
+      marpaESLIFGrammarDiscard.grammarp                   = &grammarDiscard;
 
       marpaESLIFRecognizerOptionDiscard                   = marpaESLIFRecognizerp->marpaESLIFRecognizerOption; /* Things overwriten, see below */
       marpaESLIFRecognizerOptionDiscard.disableThresholdb = 1; /* If discard, prepare the option to disable threshold */
