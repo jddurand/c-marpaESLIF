@@ -169,7 +169,6 @@ struct marpaESLIFSymbol {
   genericStack_t               _lhsRuleStack;          /* Stack of rules having this symbol as LHS */
   genericStack_t              *lhsRuleStackp;          /* Pointer to stack of rules having this symbol as LHS */
   marpaESLIF_symbol_t         *exceptionp;             /* Pointer to an exception itself, the one after the '-' character */
-  short                        isExceptionb;           /* If true, this is the symbol after the '-' character of an exception */
 };
 
 /* A rule */
@@ -306,9 +305,7 @@ struct marpaESLIFRecognizer {
   short                        _eofb;          /* EOF flag */
   short                        _utfb;          /* A flag to say if input is UTF-8 correct. Automatically true if _charconv is true. Can set be regex engine as well. */
   short                        _charconvb;     /* A flag to say if latest stream chunk was converted to UTF-8 */
-  short                        _exceptionModeb;    /* True when we are checking a syntactic exception */
   genericHash_t                _marpaESLIFRecognizerHash; /* Cache of recognizers ready for re-use */
-  genericStack_t               _exceptionStack; /* For russel paradox, i.e. avoid exception mode recursivity */
   /* --------------- End of internal elements that are shared with all children --------------------- */
 
   int                          leveli;         /* Recognizer level (!= grammar level) */
@@ -320,9 +317,6 @@ struct marpaESLIFRecognizer {
   short                       *eofbp;          /* Ditto for the EOF flag */
   short                       *utfbp;          /* Ditto for the UTF-8 correctness flag */
   short                       *charconvbp;     /* Ditto for the character conversion flag */
-  short                       *exceptionModebp;/* Ditto for the exception mode */
-  genericStack_t              *exceptionStackp;/* Ditto for exception stack */
-
   size_t                       parentDeltal;   /* Parent original delta - used to recovert parent current pointer at our free */
   char                        *inputs;         /* Current pointer in input - specific to every recognizer */
   size_t                       inputl;         /* Current remaining bytes - specific to every recognizer */
@@ -367,11 +361,11 @@ struct marpaESLIFRecognizer {
   short                        discardOnOffb;       /* Discard is on or off ? */
   short                        pristineb;           /* 1: pristine, i.e. can be reused, 0: have at least one thing that happened at the raw grammar level, modulo the eventual initial events */
   genericHash_t               *marpaESLIFRecognizerHashp; /* Ditto for recognizers cache */
-  size_t                       previousTotalMatchedl;
-  size_t                       currentTotalMatchedl;
-  size_t                       maxTotalMatchedl;
-  unsigned int                 wantedStartCompletionsi;
-  unsigned int                 currentStartCompletionsi;
+  size_t                       previousMaxMatchedl;       /* Always computed */
+  size_t                       lastSizel;                 /* Always computed */
+  int                          wantedStartCompletionsi;
+  int                          numberOfStartCompletionsi; /* Computed only if wantedStartCompletionsi != 0 */
+  size_t                       lastSizeBeforeCompletionl; /* Computed only if wantedStartCompletionsi is != 0 */
 };
 
 struct marpaESLIF_lexeme_data {

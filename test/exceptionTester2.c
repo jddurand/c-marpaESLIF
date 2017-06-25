@@ -18,9 +18,10 @@ typedef struct marpaESLIFTester_context {
 
 const static char *selfs =
   "\n"
-  "number ::= NUMBER - '23'\n"
+  "number ::= NUMBER - NUMBEREXCEPTION\n"
   "\n"
-  "NUMBER            ~ /\\d+/"
+  "NUMBER            ~ /\\d+/\n"
+  "NUMBEREXCEPTION   ~ '23'\n"
   "\n";
 
 int main() {
@@ -99,7 +100,7 @@ to augment. Recommended: 50 */
   marpaESLIFTester_context.inputs         = "234";
   marpaESLIFTester_context.inputl         = 3;
 
-  genericLogger_logLevel_seti(genericLoggerp, GENERICLOGGER_LOGLEVEL_TRACE);
+  /* genericLogger_logLevel_seti(genericLoggerp, GENERICLOGGER_LOGLEVEL_TRACE); */
   if (! marpaESLIFGrammar_parseb(marpaESLIFGrammarp, &marpaESLIFRecognizerOption, NULL /* marpaESLIFValueOptionp */, NULL /* exhaustedbp */, NULL /* marpaESLIFValueResultp */)) {
     GENERICLOGGER_ERROR(marpaESLIFOption.genericLoggerp, "\"234\" does not match");
     goto err;
