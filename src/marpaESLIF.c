@@ -86,9 +86,6 @@
 /* Get a symbol from stack - with an extra check when not in production mode                    */
 /* -------------------------------------------------------------------------------------------- */
 #ifndef MARPAESLIF_NTRACE
-#define MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFp, symbolp, symbolStackp, symboli) \
-  symbolp = (marpaESLIF_symbol_t *) GENERICSTACK_GET_PTR(symbolStackp, symboli)
-#else
 #define MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFp, symbolp, symbolStackp, symboli) do { \
     if ((symboli < 0) || (! GENERICSTACK_IS_PTR(symbolStackp, symboli))) { \
       MARPAESLIF_ERRORF(marpaESLIFp, "Symbol no %d is unknown from symbolStackp", symboli); \
@@ -97,15 +94,15 @@
     }                                                                   \
     symbolp = (marpaESLIF_symbol_t *) GENERICSTACK_GET_PTR(symbolStackp, symboli); \
   } while (0)
+#else
+#define MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFp, symbolp, symbolStackp, symboli) \
+  symbolp = (marpaESLIF_symbol_t *) GENERICSTACK_GET_PTR(symbolStackp, symboli)
 #endif
 
 /* -------------------------------------------------------------------------------------------- */
 /* Get a rule from stack - with an extra check when not in production mode                      */
 /* -------------------------------------------------------------------------------------------- */
 #ifndef MARPAESLIF_NTRACE
-#define MARPAESLIF_INTERNAL_GET_RULE_FROM_STACK(marpaESLIFp, rulep, ruleStackp, rulei) \
-  rulep = (marpaESLIF_rule_t *) GENERICSTACK_GET_PTR(ruleStackp, rulei)
-#else
 #define MARPAESLIF_INTERNAL_GET_RULE_FROM_STACK(marpaESLIFp, rulep, ruleStackp, rulei) do { \
     if ((rulei < 0) || (! GENERICSTACK_IS_PTR(ruleStackp, rulei))) {    \
       MARPAESLIF_ERRORF(marpaESLIFp, "Rule no %d is unknown from ruleStackp", rulei); \
@@ -114,6 +111,9 @@
     }                                                                   \
     rulep = (marpaESLIF_rule_t *) GENERICSTACK_GET_PTR(ruleStackp, rulei); \
   } while (0)
+#else
+#define MARPAESLIF_INTERNAL_GET_RULE_FROM_STACK(marpaESLIFp, rulep, ruleStackp, rulei) \
+  rulep = (marpaESLIF_rule_t *) GENERICSTACK_GET_PTR(ruleStackp, rulei)
 #endif
 
 /* -------------------------------------------------------------------------------------------- */
@@ -5905,6 +5905,9 @@ static inline short _marpaESLIF_recognizer_start_is_completeb(marpaESLIFRecogniz
 /*****************************************************************************/
 {
   static const char                *funcs                   = "_marpaESLIF_recognizer_start_is_completeb";
+#ifndef MARPAESLIF_NTRACE
+  marpaESLIF_t                     *marpaESLIFp             = marpaESLIFRecognizerp->marpaESLIFp;
+#endif
   marpaESLIFGrammar_t              *marpaESLIFGrammarp      = marpaESLIFRecognizerp->marpaESLIFGrammarp;
   marpaESLIF_grammar_t             *grammarp                = marpaESLIFGrammarp->grammarp;
   genericStack_t                   *ruleStackp              = grammarp->ruleStackp;
