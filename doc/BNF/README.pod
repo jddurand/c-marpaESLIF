@@ -344,6 +344,8 @@ This mean that the C<LHS> of an exception statement can never be nullable. You m
 
   LHS ::=
 
+Note that managing an exception can be consuming, eventually reading the whole data if it is writen without special care. Trying to minimize the number of characters needed and/or using well-thinkged regular expressions often lead to the same result with better performance. For example:
+
 
 =item The I<sequence statement>
 
