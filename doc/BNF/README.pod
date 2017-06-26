@@ -330,6 +330,21 @@ Its semantic is a single symbol name following by another single symbol name, wi
 
   LHS ::= RHS1 - RHS2
 
+Constraints are:
+
+=over
+
+=item Both C<RHS1> and <RHS2> must be lexemes
+
+=item Both C<RHS1> and <RHS2> must not contain sub-lexemes
+
+=back
+
+This mean that the C<LHS> of an exception statement can never be nullable. You must add explicitely declare so if this is wanted, i.e.:
+
+  LHS ::=
+
+
 =item The I<sequence statement>
 
 This is a single symbol name following by the C<*> or the C<+> character:
