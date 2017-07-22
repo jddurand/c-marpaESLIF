@@ -108,9 +108,9 @@
           }                                                             \
           if (_marpaESLIF_stringGenerator.okb) {                        \
             if (_traceb) {                                              \
-              MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, _marpaESLIF_stringGenerator.s); \
+              MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s", _marpaESLIF_stringGenerator.s); \
             } else {                                                    \
-              MARPAESLIF_ERROR(_marpaESLIFp, _marpaESLIF_stringGenerator.s); \
+              MARPAESLIF_ERRORF(_marpaESLIFp, "%s", _marpaESLIF_stringGenerator.s); \
             }                                                           \
             free(_marpaESLIF_stringGenerator.s);                        \
             _marpaESLIF_stringGenerator.s = NULL;                       \
