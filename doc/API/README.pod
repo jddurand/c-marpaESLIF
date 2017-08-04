@@ -109,6 +109,15 @@ will add C<%[]>, C<%{}> etc... built-in action names, that will I<not> be manage
 
   <action name> ::= NEW_BUILTIN action => ::ascii
 
+=head3 C<marpaESLIF_optionb>
+
+  short marpaESLIF_optionb(marpaESLIF_t        *marpaESLIFp,
+                           marpaESLIFOption_t **marpaESLIFOptionpp);
+
+Get a pointer to the options used to create an ESLIF instance, put in the value pointed by C<marpaESLIFOptionpp> if it is not C<NULL>. The returned pointer must I<never> be freed.
+
+Returns a true value on failure, a false value on failure.
+
 =head3 C<marpaESLIF_freev>
 
   void marpaESLIF_freev(marpaESLIF_t *marpaESLIFp);
