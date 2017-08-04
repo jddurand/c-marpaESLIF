@@ -3687,6 +3687,32 @@ short marpaESLIF_extend_builtin_actionb(marpaESLIF_t *marpaESLIFp, char **action
 }
 
 /*****************************************************************************/
+short marpaESLIF_optionb(marpaESLIF_t *marpaESLIFp, marpaESLIFOption_t **marpaESLIFOptionpp)
+/*****************************************************************************/
+{
+  static const char         *funcs = "marpaESLIF_optionb";
+  short                      rcb;
+
+  if (marpaESLIFp == NULL) {
+    errno = EINVAL;
+    goto err;
+  }
+
+  if (marpaESLIFOptionpp != NULL) {
+    *marpaESLIFOptionpp = &(marpaESLIFp->marpaESLIFOption);
+  }
+
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  return rcb;
+}
+
+/*****************************************************************************/
 void marpaESLIF_freev(marpaESLIF_t *marpaESLIFp)
 /*****************************************************************************/
 {
