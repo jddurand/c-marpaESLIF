@@ -264,6 +264,7 @@ int main() {
   marpaESLIF_t                *marpaESLIFp        = NULL;
   marpaESLIFGrammar_t         *marpaESLIFGrammarp = NULL;
   marpaESLIFOption_t           marpaESLIFOption;
+  marpaESLIFOption_t          *marpaESLIFOptionp;
   marpaESLIFGrammarOption_t    marpaESLIFGrammarOption;
   int                          exiti;
   int                          ngrammari;
@@ -282,6 +283,17 @@ int main() {
   if (marpaESLIFp == NULL) {
     goto err;
   }
+  if (! marpaESLIF_optionb(marpaESLIFp, &marpaESLIFOptionp)) {
+    goto err;
+  }
+  GENERICLOGGER_INFO (marpaESLIFOption.genericLoggerp, "-------------------------");
+  GENERICLOGGER_INFO (marpaESLIFOption.genericLoggerp, "ESLIF was generated with these options:");
+  GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... genericLoggerp: %p", marpaESLIFOptionp->genericLoggerp);
+  if (marpaESLIFOptionp->genericLoggerp != marpaESLIFOption.genericLoggerp) {
+    GENERICLOGGER_ERRORF(marpaESLIFOption.genericLoggerp, "... genericLoggerp != %p", marpaESLIFOption.genericLoggerp);
+  }
+  GENERICLOGGER_INFO (marpaESLIFOption.genericLoggerp, "-------------------------\n\n");
+
 
   /* Dump grammar */
   if (marpaESLIFGrammar_ngrammarib(marpaESLIF_grammarp(marpaESLIFp), &ngrammari)) {
