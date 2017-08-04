@@ -150,6 +150,11 @@ typedef struct MarpaX_ESLIF_Value {
   char                   *actions;                       /* Shallow copy of last resolved name */
   void                   *previous_strings;              /* Latest stringification result */
   marpaESLIFValue_t      *marpaESLIFValuep;
+  /* Starting from version 2.0.15 */
+  short                   canSetSymbolNameb;
+  short                   canSetSymbolNumberb;
+  short                   canSetRuleNameb;
+  short                   canSetRuleNumberb;
 } MarpaX_ESLIF_Value_t;
 
 /* For typemap */
@@ -163,7 +168,7 @@ static int                             marpaESLIF_getTypei(pTHX_ SV* svp);
 static short                           marpaESLIF_canb(pTHX_ SV *svp, char *methods);
 static void                            marpaESLIF_call_methodv(pTHX_ SV *interfacep, char *methods, SV *argsvp);
 static SV                             *marpaESLIF_call_methodp(pTHX_ SV *interfacep, char *methods);
-static SV                             *marpaESLIF_call_actionp(pTHX_ SV *interfacep, char *methods, AV *avp, marpaESLIFValue_t *marpaESLIFValuep, int rulei, short *av_undefbp);
+static SV                             *marpaESLIF_call_actionp(pTHX_ SV *interfacep, char *methods, AV *avp, marpaESLIFValue_t *marpaESLIFValuep, int rulei);
 static IV                              marpaESLIF_call_methodi(pTHX_ SV *interfacep, char *methods);
 static short                           marpaESLIF_call_methodb(pTHX_ SV *interfacep, char *methods);
 static void                            marpaESLIF_genericLoggerCallbackv(void *userDatavp, genericLoggerLevel_t logLeveli, const char *msgs);
@@ -177,6 +182,7 @@ static short                           marpaESLIF_valueSymbolCallbackb(void *use
 static void                            marpaESLIF_valueFreeCallbackv(void *userDatavp, int contexti, void *p, size_t sizel);
 static void                            marpaESLIF_ContextFreev(pTHX_ MarpaX_ESLIF_t *MarpaX_ESLIFp);
 static void                            marpaESLIF_grammarContextFreev(pTHX_ MarpaX_ESLIF_Grammar_t *MarpaX_ESLIF_Grammarp);
+static void                            marpaESLIF_valueContextSetv(pTHX_ void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char **symbolsp, int *symbolip, char **rulesp, int *ruleip);
 static void                            marpaESLIF_valueContextFreev(pTHX_ MarpaX_ESLIF_Value_t *MarpaX_ESLIF_Valuep, short onStackb);
 static void                            marpaESLIF_valueContextCleanupv(pTHX_ MarpaX_ESLIF_Value_t *MarpaX_ESLIF_Valuep);
 static void                            marpaESLIF_recognizerContextFreev(pTHX_ MarpaX_ESLIF_Recognizer_t *MarpaX_ESLIF_Recognizerp, short onStackb);
@@ -371,7 +377,7 @@ static short marpaESLIF_canb(pTHX_ SV *svp, char *methods)
   */
   /* We always check methods that have ASCII only characters */
   av_push(list, newSVpv(methods, 0));
-  rcp = marpaESLIF_call_actionp(aTHX_ svp, "can", list, NULL /* marpaESLIFValuep */, -1 /* rulei */, NULL /* av_undefbp */);
+  rcp = marpaESLIF_call_actionp(aTHX_ svp, "can", list, NULL /* marpaESLIFValuep */, -1 /* rulei */);
   av_undef(list);
 
   type = marpaESLIF_getTypei(aTHX_ rcp);
@@ -421,7 +427,7 @@ static SV *marpaESLIF_call_methodp(pTHX_ SV *interfacep, char *methods)
   /*
     fprintf(stderr, "START marpaESLIF_call_methodp(pTHX_ SV *svp, \"%s\")\n", methods);
   */
-  rcp = marpaESLIF_call_actionp(aTHX_ interfacep, methods, NULL /* avp */, NULL /* marpaESLIFValuep */, -1 /* rulei */, NULL /* av_undefbp */);
+  rcp = marpaESLIF_call_actionp(aTHX_ interfacep, methods, NULL /* avp */, NULL /* marpaESLIFValuep */, -1 /* rulei */);
   /*
     fprintf(stderr, "END marpaESLIF_call_methodp(pTHX_ SV *svp, \"%s\")\n", methods);
   */
@@ -430,7 +436,7 @@ static SV *marpaESLIF_call_methodp(pTHX_ SV *interfacep, char *methods)
 }
 
 /*****************************************************************************/
-static SV *marpaESLIF_call_actionp(pTHX_ SV *interfacep, char *methods, AV *avp, marpaESLIFValue_t *marpaESLIFValuep, int rulei, short *av_undefbp)
+static SV *marpaESLIF_call_actionp(pTHX_ SV *interfacep, char *methods, AV *avp, marpaESLIFValue_t *marpaESLIFValuep, int rulei)
 /*****************************************************************************/
 {
   static const char        *funcs      = "marpaESLIF_call_actionp";
@@ -770,17 +776,15 @@ static short marpaESLIF_valueRuleCallbackb(void *userDatavp, marpaESLIFValue_t *
   dTHX;
   static const char        *funcs               = "marpaESLIF_valueRuleCallbackb";
   MarpaX_ESLIF_Value_t     *MarpaX_ESLIF_Valuep = (MarpaX_ESLIF_Value_t *) userDatavp;
+  SV                       *Perl_valueInterfacep = MarpaX_ESLIF_Valuep->Perl_valueInterfacep;
   AV                       *list                = NULL;
-  short                     av_undefb           = 1;
   SV                       *actionResult;
   SV                       *svp;
   int                       i;
   int                       rulei;
 
-  /* Get rule number */
-  if (! marpaESLIFValue_contextb(marpaESLIFValuep, NULL /* symbolsp */, NULL /* symbolip */, NULL /* rulesp */, &rulei)) {
-    MARPAESLIF_CROAKF("marpaESLIFValue_contextb failure, %s", strerror(errno));
-  }
+  /* Set value context */
+  marpaESLIF_valueContextSetv(aTHX_ userDatavp, marpaESLIFValuep, NULL /* symbolsp */, NULL /* symbolip */, NULL /* rulesp */, &rulei);
 
   if (! nullableb) {
     list = newAV();
@@ -793,8 +797,8 @@ static short marpaESLIF_valueRuleCallbackb(void *userDatavp, marpaESLIFValue_t *
     }
   }
 
-  actionResult = marpaESLIF_call_actionp(aTHX_ MarpaX_ESLIF_Valuep->Perl_valueInterfacep, MarpaX_ESLIF_Valuep->actions, list, marpaESLIFValuep, rulei, &av_undefb);
-  if (av_undefb && (list != NULL)) {
+  actionResult = marpaESLIF_call_actionp(aTHX_ Perl_valueInterfacep, MarpaX_ESLIF_Valuep->actions, list, marpaESLIFValuep, rulei);
+  if (list != NULL) {
     av_undef(list);
   }
 
@@ -811,18 +815,18 @@ static short marpaESLIF_valueSymbolCallbackb(void *userDatavp, marpaESLIFValue_t
   static const char        *funcs               = "marpaESLIF_valueSymbolCallbackb";
   MarpaX_ESLIF_Value_t     *MarpaX_ESLIF_Valuep = (MarpaX_ESLIF_Value_t *) userDatavp;
   AV                       *list                = NULL;
-  short                     av_undefb           = 1;
   SV                       *actionResult;
   dTHX;
+
+  /* Set value context */
+  marpaESLIF_valueContextSetv(aTHX_ userDatavp, marpaESLIFValuep, NULL /* symbolsp */, NULL /* symbolip */, NULL /* rulesp */, NULL /* ruleip */);
 
   /* fprintf(stderr, "... Symbol action %s => Stack[%d]\n", MarpaX_ESLIF_Valuep->actions, resulti); */
 
   list = newAV();
   av_push(list, marpaESLIF_getSvFromStack(aTHX_ MarpaX_ESLIF_Valuep, marpaESLIFValuep, -1 /* not used */, bytep, bytel));
-  actionResult = marpaESLIF_call_actionp(aTHX_ MarpaX_ESLIF_Valuep->Perl_valueInterfacep, MarpaX_ESLIF_Valuep->actions, list, marpaESLIFValuep, -1, &av_undefb);
-  if (av_undefb) {
-    av_undef(list);
-  }
+  actionResult = marpaESLIF_call_actionp(aTHX_ MarpaX_ESLIF_Valuep->Perl_valueInterfacep, MarpaX_ESLIF_Valuep->actions, list, marpaESLIFValuep, -1);
+  av_undef(list);
 
   MARPAESLIF_SET_PTR(marpaESLIFValuep, resulti, 1 /* context: any value != 0 */, marpaESLIF_representation, actionResult);
 
@@ -877,6 +881,74 @@ static void marpaESLIF_grammarContextFreev(pTHX_ MarpaX_ESLIF_Grammar_t *MarpaX_
   }
 }
  
+/*****************************************************************************/
+static void marpaESLIF_valueContextSetv(pTHX_ void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char **symbolsp, int *symbolip, char **rulesp, int *ruleip)
+/*****************************************************************************/
+{
+  static const char    *funcs               = "marpaESLIF_valueContextSetv";
+  MarpaX_ESLIF_Value_t *MarpaX_ESLIF_Valuep = (MarpaX_ESLIF_Value_t *) userDatavp;
+  SV                   *Perl_valueInterfacep = MarpaX_ESLIF_Valuep->Perl_valueInterfacep;
+  SV                   *svp;
+  char                 *symbols;
+  int                   symboli;
+  char                 *rules;
+  int                   rulei;
+
+  /* Get value context */
+  if (! marpaESLIFValue_contextb(marpaESLIFValuep, &symbols, &symboli, &rules, &rulei)) {
+    MARPAESLIF_CROAKF("marpaESLIFValue_contextb failure, %s", strerror(errno));
+  }
+  if (MarpaX_ESLIF_Valuep->canSetSymbolNameb) {
+    if (symbols != NULL) {
+      svp = newSVpvn(symbols, strlen(symbols));
+      marpaESLIF_call_methodv(aTHX_ Perl_valueInterfacep, "setSymbolName", svp);
+      MARPAESLIF_REFCNT_DEC(svp);
+    } else {
+      marpaESLIF_call_methodv(aTHX_ Perl_valueInterfacep, "setSymbolName", &PL_sv_undef);
+    }
+  }
+  if (MarpaX_ESLIF_Valuep->canSetSymbolNumberb) {
+    if (symboli >= 0) {
+      svp = newSViv(symboli);
+      marpaESLIF_call_methodv(aTHX_ Perl_valueInterfacep, "setSymbolNumber", svp);
+      MARPAESLIF_REFCNT_DEC(svp);
+    } else {
+      marpaESLIF_call_methodv(aTHX_ Perl_valueInterfacep, "setSymbolNumber", &PL_sv_undef);
+    }
+  }
+  if (MarpaX_ESLIF_Valuep->canSetRuleNameb) {
+    if (rules != NULL) {
+      svp = newSVpvn(rules, strlen(rules));
+      marpaESLIF_call_methodv(aTHX_ Perl_valueInterfacep, "setRuleName", svp);
+      MARPAESLIF_REFCNT_DEC(svp);
+    } else {
+      marpaESLIF_call_methodv(aTHX_ Perl_valueInterfacep, "setRuleName", &PL_sv_undef);
+    }
+  }
+  if (MarpaX_ESLIF_Valuep->canSetRuleNumberb) {
+    if (rulei >= 0) {
+      svp = newSViv(rulei);
+      marpaESLIF_call_methodv(aTHX_ Perl_valueInterfacep, "setRuleNumber", svp);
+      MARPAESLIF_REFCNT_DEC(svp);
+    } else {
+      marpaESLIF_call_methodv(aTHX_ Perl_valueInterfacep, "setRuleNumber", &PL_sv_undef);
+    }
+  }
+
+  if (symbolsp != NULL) {
+    *symbolsp = symbols;
+  }
+  if (symbolip != NULL) {
+    *symbolip = symboli;
+  }
+  if (rulesp != NULL) {
+    *rulesp = rules;
+  }
+  if (ruleip != NULL) {
+    *ruleip = rulei;
+  }
+}
+
 /*****************************************************************************/
 static void marpaESLIF_valueContextFreev(pTHX_ MarpaX_ESLIF_Value_t *MarpaX_ESLIF_Valuep, short onStackb)
 /*****************************************************************************/
@@ -1005,8 +1077,12 @@ static void marpaESLIF_valueContextInit(pTHX_ SV *Perl_MarpaX_ESLIF_Recognizerp,
   MarpaX_ESLIF_Valuep->Perl_MarpaX_ESLIF_Recognizerp = (Perl_MarpaX_ESLIF_Recognizerp != NULL) ? SvREFCNT_inc((SV *) SvRV(Perl_MarpaX_ESLIF_Recognizerp)) : NULL;
   MarpaX_ESLIF_Valuep->Perl_valueInterfacep          = SvREFCNT_inc(Perl_valueInterfacep);
   MarpaX_ESLIF_Valuep->actions                       = NULL;
-  MarpaX_ESLIF_Valuep->marpaESLIFValuep              = NULL;
   MarpaX_ESLIF_Valuep->previous_strings              = NULL;
+  MarpaX_ESLIF_Valuep->marpaESLIFValuep              = NULL;
+  MarpaX_ESLIF_Valuep->canSetSymbolNameb             = marpaESLIF_canb(aTHX_ Perl_valueInterfacep, "setSymbolName");
+  MarpaX_ESLIF_Valuep->canSetSymbolNumberb           = marpaESLIF_canb(aTHX_ Perl_valueInterfacep, "setSymbolNumber");
+  MarpaX_ESLIF_Valuep->canSetRuleNameb               = marpaESLIF_canb(aTHX_ Perl_valueInterfacep, "setRuleName");
+  MarpaX_ESLIF_Valuep->canSetRuleNumberb             = marpaESLIF_canb(aTHX_ Perl_valueInterfacep, "setRuleNumber");
 }
 
 /*****************************************************************************/
