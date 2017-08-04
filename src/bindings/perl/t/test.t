@@ -192,6 +192,34 @@ sub setResult {
     return;
 }
 
+sub setSymbolName {
+    my ($self, $info) = @_;
+    $self->{log}->tracef("setSymbolName(%s)", $info);
+    $self->{symbolName} = $info;
+    return;
+}
+
+sub setSymbolNumber {
+    my ($self, $info) = @_;
+    $self->{log}->tracef("setSymbolNumber(%s)", $info);
+    $self->{symbolNumber} = $info;
+    return;
+}
+
+sub setRuleName {
+    my ($self, $info) = @_;
+    $self->{log}->tracef("setRuleName(%s)", $info);
+    $self->{ruleName} = $info;
+    return;
+}
+
+sub setRuleNumber {
+    my ($self, $info) = @_;
+    $self->{log}->tracef("setRuleNumber(%s)", $info);
+    $self->{ruleNumber} = $info;
+    return;
+}
+
 package main;
 use strict;
 use warnings FATAL => 'all';
