@@ -58,36 +58,37 @@ static const char *actionsArrayp[] = {
 };
 
 int main() {
-  marpaESLIF_t                *marpaESLIFp        = NULL;
-  marpaESLIFGrammar_t         *marpaESLIFGrammarp = NULL;
-  marpaESLIFOption_t           marpaESLIFOption;
-  marpaESLIFGrammarOption_t    marpaESLIFGrammarOption;
-  int                          exiti;
-  int                          ngrammari;
-  char                        *grammarshows;
-  int                          leveli;
-  genericLogger_t             *genericLoggerp;
-  marpaESLIFTester_context_t   marpaESLIFTester_context;
-  marpaESLIFRecognizerOption_t marpaESLIFRecognizerOption;
-  marpaESLIFRecognizer_t      *marpaESLIFRecognizerp = NULL;
-  marpaESLIFValueOption_t      marpaESLIFValueOption;
-  marpaESLIFValue_t           *marpaESLIFValuep = NULL;
-  short                        continueb;
-  short                        exhaustedb;
-  const static char           *inputs = "abc! 123de@:@f";
-  short                        rcValueb;
-  int                          eventCounti = 0;
-  size_t                       nLexemel;
-  size_t                       lexemel;
-  char                       **lexemesArrayp;
-  marpaESLIFValueResult_t      marpaESLIFValueResult;
-  int                         *ruleip;
-  size_t                       rulel;
-  int                          rulei;
-  marpaESLIFRuleProperty_t     ruleProperty;
-  size_t                       rhsl;
-  marpaESLIFGrammarProperty_t  grammarProperty;
-  size_t                       symboll;
+  marpaESLIF_t                 *marpaESLIFp        = NULL;
+  marpaESLIFGrammar_t          *marpaESLIFGrammarp = NULL;
+  marpaESLIFOption_t            marpaESLIFOption;
+  marpaESLIFGrammarOption_t     marpaESLIFGrammarOption;
+  int                           exiti;
+  int                           ngrammari;
+  char                         *grammarshows;
+  int                           leveli;
+  genericLogger_t              *genericLoggerp;
+  marpaESLIFTester_context_t    marpaESLIFTester_context;
+  marpaESLIFRecognizerOption_t  marpaESLIFRecognizerOption;
+  marpaESLIFRecognizerOption_t *marpaESLIFRecognizerOptionp;
+  marpaESLIFRecognizer_t       *marpaESLIFRecognizerp = NULL;
+  marpaESLIFValueOption_t       marpaESLIFValueOption;
+  marpaESLIFValue_t            *marpaESLIFValuep = NULL;
+  short                         continueb;
+  short                         exhaustedb;
+  const static char            *inputs = "abc! 123de@:@f";
+  short                         rcValueb;
+  int                           eventCounti = 0;
+  size_t                        nLexemel;
+  size_t                        lexemel;
+  char                        **lexemesArrayp;
+  marpaESLIFValueResult_t       marpaESLIFValueResult;
+  int                          *ruleip;
+  size_t                        rulel;
+  int                           rulei;
+  marpaESLIFRuleProperty_t      ruleProperty;
+  size_t                        rhsl;
+  marpaESLIFGrammarProperty_t   grammarProperty;
+  size_t                        symboll;
   
   genericLoggerp = genericLogger_newp(genericLoggerCallback, NULL /* userDatavp */, GENERICLOGGER_LOGLEVEL_DEBUG);
 
@@ -269,6 +270,23 @@ int main() {
   if (marpaESLIFRecognizerp == NULL) {
     goto err;
   }
+  marpaESLIFRecognizerOptionp = marpaESLIFRecognizer_optionp(marpaESLIFRecognizerp);
+  if (marpaESLIFRecognizerOptionp == NULL) {
+    goto err;
+  }
+  if ((marpaESLIFRecognizerOption.userDatavp                != marpaESLIFRecognizerOption.userDatavp) ||
+      (marpaESLIFRecognizerOption.marpaESLIFReaderCallbackp != marpaESLIFRecognizerOption.marpaESLIFReaderCallbackp) ||
+      (marpaESLIFRecognizerOption.disableThresholdb         != marpaESLIFRecognizerOption.disableThresholdb) ||
+      (marpaESLIFRecognizerOption.exhaustedb                != marpaESLIFRecognizerOption.exhaustedb) ||
+      (marpaESLIFRecognizerOption.newlineb                  != marpaESLIFRecognizerOption.newlineb) ||
+      (marpaESLIFRecognizerOption.trackb                    != marpaESLIFRecognizerOption.trackb) ||
+      (marpaESLIFRecognizerOption.bufsizl                   != marpaESLIFRecognizerOption.bufsizl) ||
+      (marpaESLIFRecognizerOption.buftriggerperci           != marpaESLIFRecognizerOption.buftriggerperci) ||
+      (marpaESLIFRecognizerOption.bufaddperci               != marpaESLIFRecognizerOption.bufaddperci)) {
+    GENERICLOGGER_ERROR(marpaESLIFOption.genericLoggerp, "marpaESLIFRecognizer_optionp does have the correct content");
+    goto err;
+  }
+
   /* genericLogger_logLevel_seti(genericLoggerp, GENERICLOGGER_LOGLEVEL_TRACE); */
   if (! marpaESLIFRecognizer_scanb(marpaESLIFRecognizerp, 1 /* initialEventsb */, &continueb, &exhaustedb)) {
     goto err;
