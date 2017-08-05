@@ -266,6 +266,7 @@ int main() {
   marpaESLIFOption_t           marpaESLIFOption;
   marpaESLIFOption_t          *marpaESLIFOptionp;
   marpaESLIFGrammarOption_t    marpaESLIFGrammarOption;
+  marpaESLIFGrammarOption_t   *marpaESLIFGrammarOptionp;
   int                          exiti;
   int                          ngrammari;
   char                        *grammarshows;
@@ -283,7 +284,8 @@ int main() {
   if (marpaESLIFp == NULL) {
     goto err;
   }
-  if (! marpaESLIF_optionb(marpaESLIFp, &marpaESLIFOptionp)) {
+  marpaESLIFOptionp = marpaESLIF_optionp(marpaESLIFp);
+  if (marpaESLIFOptionp == NULL) {
     goto err;
   }
   GENERICLOGGER_INFO (marpaESLIFOption.genericLoggerp, "-------------------------");
@@ -292,8 +294,21 @@ int main() {
   if (marpaESLIFOptionp->genericLoggerp != marpaESLIFOption.genericLoggerp) {
     GENERICLOGGER_ERRORF(marpaESLIFOption.genericLoggerp, "... genericLoggerp != %p", marpaESLIFOption.genericLoggerp);
   }
-  GENERICLOGGER_INFO (marpaESLIFOption.genericLoggerp, "-------------------------\n\n");
+  GENERICLOGGER_INFO (marpaESLIFOption.genericLoggerp, "-------------------------\n");
 
+  /* Inspect options used to create ESLIF's grammar */
+  marpaESLIFGrammarOptionp = marpaESLIFGrammar_optionp(marpaESLIF_grammarp(marpaESLIFp));
+  if (marpaESLIFGrammarOptionp == NULL) {
+    goto err;
+  }
+  GENERICLOGGER_INFO (marpaESLIFOption.genericLoggerp, "-------------------------");
+  GENERICLOGGER_INFO (marpaESLIFOption.genericLoggerp, "ESLIF's grammar was generated with these options:");
+  GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... bytep    : %p", marpaESLIFGrammarOptionp->bytep);
+  GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... bytel    : %ld", (unsigned long) marpaESLIFGrammarOptionp->bytel);
+  GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... encodings: %p", marpaESLIFGrammarOptionp->encodings);
+  GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... encodingl: %ld", (unsigned long) marpaESLIFGrammarOptionp->encodingl);
+  GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... encodings: %p", marpaESLIFGrammarOptionp->encodingOfEncodings);
+  GENERICLOGGER_INFO (marpaESLIFOption.genericLoggerp, "-------------------------\n");
 
   /* Dump grammar */
   if (marpaESLIFGrammar_ngrammarib(marpaESLIF_grammarp(marpaESLIFp), &ngrammari)) {
@@ -301,7 +316,7 @@ int main() {
       if (marpaESLIFGrammar_grammarshowform_by_levelb(marpaESLIF_grammarp(marpaESLIFp), &grammarshows, leveli, NULL)) {
         GENERICLOGGER_INFO (marpaESLIFOption.genericLoggerp, "-------------------------");
         GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "ESLIF grammar at level %d:", leveli);
-        GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "-------------------------\n\n%s", grammarshows);
+        GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "-------------------------\n%s", grammarshows);
       }
     }
   }
@@ -325,7 +340,7 @@ int main() {
     if (marpaESLIFGrammar_grammarshowform_by_levelb(marpaESLIFGrammarp, &grammarshows, leveli, NULL)) {
       GENERICLOGGER_INFO (marpaESLIFOption.genericLoggerp, "-------------------------");
       GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "TEST grammar at level %d:", leveli);
-      GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "-------------------------\n\n%s", grammarshows);
+      GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "-------------------------\n%s", grammarshows);
     }
   }
 
