@@ -9857,22 +9857,28 @@ short marpaESLIFRecognizer_progressLogb(marpaESLIFRecognizer_t *marpaESLIFRecogn
 marpaESLIFRecognizer_t *marpaESLIFValue_recognizerp(marpaESLIFValue_t *marpaESLIFValuep)
 /*****************************************************************************/
 {
-  static const char      *funcs = "marpaESLIFValue_recognizerp";
-  marpaESLIFRecognizer_t *marpaESLIFRecognizerp;
+  static const char *funcs = "marpaESLIFValue_recognizerp";
 
   if (marpaESLIFValuep == NULL) {
     errno = EINVAL;
     return NULL;
   }
 
-  marpaESLIFRecognizerp = marpaESLIFValuep->marpaESLIFRecognizerp;
+  return marpaESLIFValuep->marpaESLIFRecognizerp;
+}
 
-  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
-  MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
+/*****************************************************************************/
+marpaESLIFValueOption_t *marpaESLIFValue_optionp(marpaESLIFValue_t *marpaESLIFValuep)
+/*****************************************************************************/
+{
+  static const char *funcs = "marpaESLIFValue_optionp";
 
-  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %p", marpaESLIFRecognizerp);
-  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC;
-  return marpaESLIFRecognizerp;
+  if (marpaESLIFValuep == NULL) {
+    errno = EINVAL;
+    return NULL;
+  }
+
+  return &(marpaESLIFValuep->marpaESLIFValueOption);
 }
 
 /*****************************************************************************/

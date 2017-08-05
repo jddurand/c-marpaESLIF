@@ -72,6 +72,7 @@ int main() {
   marpaESLIFRecognizerOption_t *marpaESLIFRecognizerOptionp;
   marpaESLIFRecognizer_t       *marpaESLIFRecognizerp = NULL;
   marpaESLIFValueOption_t       marpaESLIFValueOption;
+  marpaESLIFValueOption_t      *marpaESLIFValueOptionp;
   marpaESLIFValue_t            *marpaESLIFValuep = NULL;
   short                         continueb;
   short                         exhaustedb;
@@ -122,6 +123,11 @@ int main() {
   marpaESLIFGrammarp = marpaESLIFGrammar_newp(marpaESLIFp, &marpaESLIFGrammarOption);
 
   if (marpaESLIFGrammarp == NULL) {
+    goto err;
+  }
+
+  if (marpaESLIFGrammar_eslifp(marpaESLIFGrammarp) != marpaESLIFp) {
+    GENERICLOGGER_ERROR(marpaESLIFOption.genericLoggerp, "marpaESLIFGrammar_eslifp != marpaESLIFp");
     goto err;
   }
 
@@ -270,6 +276,12 @@ int main() {
   if (marpaESLIFRecognizerp == NULL) {
     goto err;
   }
+
+  if (marpaESLIFRecognizer_grammarp(marpaESLIFRecognizerp) == NULL) {
+    GENERICLOGGER_ERROR(marpaESLIFOption.genericLoggerp, "marpaESLIFRecognizer_grammarp returned NULL");
+    goto err;
+  }
+
   marpaESLIFRecognizerOptionp = marpaESLIFRecognizer_optionp(marpaESLIFRecognizerp);
   if (marpaESLIFRecognizerOptionp == NULL) {
     goto err;
@@ -331,6 +343,28 @@ int main() {
 
   marpaESLIFValuep = marpaESLIFValue_newp(marpaESLIFRecognizerp, &marpaESLIFValueOption);
   if (marpaESLIFValuep == NULL) {
+    goto err;
+  }
+
+  if (marpaESLIFValue_recognizerp(marpaESLIFValuep) != marpaESLIFRecognizerp) {
+    GENERICLOGGER_ERROR(marpaESLIFOption.genericLoggerp, "marpaESLIFValue_recognizerp != marpaESLIFRecognizerp");
+    goto err;
+  }
+
+  marpaESLIFValueOptionp = marpaESLIFValue_optionp(marpaESLIFValuep);
+  if (marpaESLIFValueOptionp == NULL) {
+    goto err;
+  }
+  if ((marpaESLIFValueOption.userDatavp            != marpaESLIFValueOption.userDatavp) ||
+      (marpaESLIFValueOption.ruleActionResolverp   != marpaESLIFValueOption.ruleActionResolverp) ||
+      (marpaESLIFValueOption.symbolActionResolverp != marpaESLIFValueOption.symbolActionResolverp) ||
+      (marpaESLIFValueOption.freeActionResolverp   != marpaESLIFValueOption.freeActionResolverp) ||
+      (marpaESLIFValueOption.highRankOnlyb         != marpaESLIFValueOption.highRankOnlyb) ||
+      (marpaESLIFValueOption.orderByRankb          != marpaESLIFValueOption.orderByRankb) ||
+      (marpaESLIFValueOption.ambiguousb            != marpaESLIFValueOption.ambiguousb) ||
+      (marpaESLIFValueOption.nullb                 != marpaESLIFValueOption.nullb) ||
+      (marpaESLIFValueOption.maxParsesi            != marpaESLIFValueOption.maxParsesi)) {
+    GENERICLOGGER_ERROR(marpaESLIFOption.genericLoggerp, "marpaESLIFValue_optionp does have the correct content");
     goto err;
   }
 

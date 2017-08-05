@@ -265,6 +265,7 @@ extern "C" {
 
   marpaESLIF_EXPORT marpaESLIFValue_t            *marpaESLIFValue_newp(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueOption_t *marpaESLIFValueOptionp);
   marpaESLIF_EXPORT marpaESLIFRecognizer_t       *marpaESLIFValue_recognizerp(marpaESLIFValue_t *marpaESLIFValuep);
+  marpaESLIF_EXPORT marpaESLIFValueOption_t      *marpaESLIFValue_optionp(marpaESLIFValue_t *marpaESLIFValuep);
   marpaESLIF_EXPORT short                         marpaESLIFValue_valueb(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFValueResult_t *marpaESLIFValueResultp);
   marpaESLIF_EXPORT short                         marpaESLIFValue_value_startb(marpaESLIFValue_t *marpaESLIFValuep, int *startip);
   marpaESLIF_EXPORT short                         marpaESLIFValue_value_lengthb(marpaESLIFValue_t *marpaESLIFValuep, int *lengthip);
