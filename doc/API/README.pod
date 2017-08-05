@@ -109,14 +109,11 @@ will add C<%[]>, C<%{}> etc... built-in action names, that will I<not> be manage
 
   <action name> ::= NEW_BUILTIN action => ::ascii
 
-=head3 C<marpaESLIF_optionb>
+=head3 C<marpaESLIF_optionp>
 
-  short marpaESLIF_optionb(marpaESLIF_t        *marpaESLIFp,
-                           marpaESLIFOption_t **marpaESLIFOptionpp);
+  marpaESLIFOption_t *marpaESLIF_optionp(marpaESLIF_t *marpaESLIFp);
 
-Get a pointer to the options used to create an ESLIF instance, put in the value pointed by C<marpaESLIFOptionpp> if it is not C<NULL>. The returned pointer must I<never> be freed.
-
-Returns a true value on failure, a false value on failure.
+Returns the options used to create the C<marpaESLIFp> instance, or C<NULL> if failure. The returned pointer must I<never> be freed.
 
 =head3 C<marpaESLIF_freev>
 
@@ -201,6 +198,12 @@ Returns C<NULL> if failure, a grammar object instance on success.
   marpaESLIF_t *marpaESLIFGrammar_eslifp(marpaESLIFGrammar_t *marpaESLIFGrammarp);
 
 Returns the ESLIF parent object instance of C<marpaESLIFGrammarp>, or C<NULL> if failure. It never returns C<NULL> if C<marpaESLIFGrammarp> is not C<NULL>.
+
+=head3 C<marpaESLIFGrammar_optionp>
+
+  marpaESLIFGrammarOption_t *marpaESLIFGrammar_optionp(marpaESLIFGrammar_t *marpaESLIFGrammarp);
+
+Returns the options used to create the C<marpaESLIFGrammarp> instance, or C<NULL> if failure. The returned pointer must I<never> be freed.
 
 =head3 C<marpaESLIFGrammar_ngrammarib>
 

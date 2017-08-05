@@ -244,13 +244,14 @@ struct marpaESLIF {
 };
 
 struct marpaESLIFGrammar {
-  marpaESLIF_t             *marpaESLIFp;
-  genericStack_t            _grammarStack;     /* Stack of grammars */
-  genericStack_t           *grammarStackp;     /* Pointer to stack of grammars */
-  marpaESLIF_grammar_t     *grammarp;          /* This is a SHALLOW copy of current grammar in grammarStackp, defaulting to the top grammar */
-  short                     warningIsErrorb;   /* Current warningIsErrorb setting (used when parsing grammars ) */
-  short                     warningIsIgnoredb; /* Current warningIsErrorb setting (used when parsing grammars ) */
-  short                     autorankb;         /* Current autorank setting */
+  marpaESLIF_t              *marpaESLIFp;
+  marpaESLIFGrammarOption_t  marpaESLIFGrammarOption;
+  genericStack_t             _grammarStack;     /* Stack of grammars */
+  genericStack_t            *grammarStackp;     /* Pointer to stack of grammars */
+  marpaESLIF_grammar_t      *grammarp;          /* This is a SHALLOW copy of current grammar in grammarStackp, defaulting to the top grammar */
+  short                      warningIsErrorb;   /* Current warningIsErrorb setting (used when parsing grammars ) */
+  short                      warningIsIgnoredb; /* Current warningIsErrorb setting (used when parsing grammars ) */
+  short                      autorankb;         /* Current autorank setting */
 };
 
 struct marpaESLIFValue {
@@ -411,6 +412,14 @@ struct marpaESLIF_cloneContext {
 /* ------------------------------------------- */
 marpaESLIFOption_t marpaESLIFOption_default_template = {
   NULL               /* genericLoggerp */
+};
+
+marpaESLIFGrammarOption_t marpaESLIFGrammarOption_default_template = {
+  NULL, /* bytep */
+  0,    /* bytel */
+  NULL, /* encodings */
+  0,    /* encodingl */
+  NULL  /* encodingOfEncodings */
 };
 
 marpaESLIFRecognizerOption_t marpaESLIFRecognizerOption_default_template = {
