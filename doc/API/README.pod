@@ -1057,7 +1057,13 @@ This method returns a recognizer pointer in case of success, C<NULL> in case of 
 
   marpaESLIFGrammar_t *marpaESLIFRecognizer_grammarp(marpaESLIFRecognizer_t *marpaESLIFRecognizerp);
 
-Returns the ESLIFGrammar instance parent of the C<marpaESLIFRecognizerp> instance, C<NULL> in case of failure. It never returns C<NULL> if C<marpaESLIFRecognizerp> is not C<NULL>.
+Returns the ESLIFGrammar instance parent of the C<marpaESLIFRecognizerp> instance, C<NULL> in case of failure. It never returns C<NULL> if C<marpaESLIFRecognizerp> is not C<NULL>. This is <never> the original C<marpaESLIFGrammarp> used when creating the C<marpaESLIFRecognizerp> instance, though it is guaranteed to be a grammar whose functionnality is I<equivalent> to original grammar after applying the recognizer options.
+
+=head3 C<marpaESLIFRecognizer_optionp>
+
+  marpaESLIFRecognizerOption_t *marpaESLIFRecognizer_optionp(marpaESLIFRecognizer_t *marpaESLIFRecognizerp);
+
+Returns the options used to create the C<marpaESLIFRecognizerp> instance, or C<NULL> if failure. The returned pointer must I<never> be freed.
 
 =head3 C<marpaESLIFRecognizer_scanb>
 
@@ -1772,6 +1778,12 @@ Returns C<NULL> is no valuation is possible at this stage, else return a non-C<N
   marpaESLIFRecognizer_t *marpaESLIFValue_recognizerp(marpaESLIFValue_t *marpaESLIFValuep);
 
 Returns the marpaESLIF's recognizer instance used to create the C<marpaESLIFValuep> instance.
+
+=head3 C<marpaESLIFValue_optionp>
+
+  marpaESLIFValueOption_t *marpaESLIFValue_optionp(marpaESLIFValue_t *marpaESLIFValuep);
+
+Returns the options used to create the C<marpaESLIFValuep> instance, or C<NULL> if failure. The returned pointer must I<never> be freed.
 
 =head3 C<marpaESLIFValue_valueb>
 
