@@ -54,4 +54,50 @@ marpaESLIF is not using this method per-se, but it is nevertheless required to e
 
 =back
 
+=head1 LOCALIZED VARIABLES
+
+At each symbol or rule callback, the following values are localized:
+
+=over
+
+=item C<$MarpaX::ESLIF::Context::symbolName>
+
+Symbol name in case of a symbol callback, C<undef> otherwise.
+
+=item C<$MarpaX::ESLIF::Context::symbolNumber>
+
+Symbol number in case of a symbol callback, C<undef> otherwise.
+
+=item C<$MarpaX::ESLIF::Context::ruleName>
+
+Rule name in case of a rule callback, C<undef> otherwise.
+
+=item C<$MarpaX::ESLIF::Context::ruleNumber>
+
+Rule number in case of a rule callback, C<undef> otherwise.
+
+=back
+
+=head1 OPTIONAL METHODS SINCE VERSION 2.0.15
+
+=over
+
+=item $valueInterface->setSymbolName($symbolName)
+
+Stores symbol name. Always set in case of a symbol callback, C<undef> otherwise.
+
+=item $valueInterface->setSymbolNumber($symbolNumber)
+
+Stores symbol number. Always set in case of a symbol callback, C<undef> otherwise.
+
+=item $valueInterface->setRuleName($ruleName)
+
+Stores rule name. Always set in case of a rule callback, C<undef> otherwise.
+
+=item $valueInterface->setRuleNumber($ruleNumber)
+
+Stores rule number. Always set in case of a rule callback, C<undef> otherwise.
+
+=back
+
 =cut

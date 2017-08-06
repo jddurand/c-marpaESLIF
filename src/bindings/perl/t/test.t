@@ -87,16 +87,35 @@ use Carp qw/croak/;
 #*/
 
 sub new {
-    my ($pkg, $log) = @_;
+    my ($pkg, $log, $grammar) = @_;
 
-    return bless { result => undef, log => $log }, $pkg;
+    my $self = bless { result => undef, log => $log, grammar => $grammar }, $pkg;
+    $self->trace_local_variables('new');
+    return $self;
+}
+
+sub DESTROY {
+    my ($self) = @_;
+
+    $self->trace_local_variables('DESTROY');
+}
+
+sub trace_local_variables {
+    my ($self, $context) = @_;
+
+    no warnings 'once';
+    $self->{log}->tracef("... In %s::%s: \$MarpaX::ESLIF::Context::symbolName   is: %s", __PACKAGE__, $context, $MarpaX::ESLIF::Context::symbolName);
+    $self->{log}->tracef("... In %s::%s: \$MarpaX::ESLIF::Context::symbolNumber is: %s", __PACKAGE__, $context, $MarpaX::ESLIF::Context::symbolNumber);
+    $self->{log}->tracef("... In %s::%s: \$MarpaX::ESLIF::Context::ruleName     is: %s", __PACKAGE__, $context, $MarpaX::ESLIF::Context::ruleName);
+    $self->{log}->tracef("... In %s::%s: \$MarpaX::ESLIF::Context::ruleNumber   is: %s", __PACKAGE__, $context, $MarpaX::ESLIF::Context::ruleNumber);
 }
 
 sub do_symbol {
     my ($self, $symbol) = @_;
 
     my $do_symbol = $symbol;
-    $self->{log}->tracef("do_symbol(%s) => %s", $symbol, $do_symbol);
+    $self->{log}->tracef("do_symbol('%s') => %s", $symbol, $do_symbol);
+    $self->trace_local_variables('do_symbol');
     return $do_symbol;
 }
 
@@ -104,6 +123,7 @@ sub do_free {
     my ($self, $result) = @_;
 
     $self->{log}->fatalf("do_free(%s) called and this should never happen", $result);
+    $self->trace_local_variables('do_free');
     die "do_free() called and this should never happen";
     undef $result;
 }
@@ -113,6 +133,7 @@ sub do_int {
 
     my $do_int = int($number);
     $self->{log}->tracef("do_int(%s) => %s", $number, $do_int);
+    $self->trace_local_variables('do_int');
     return $do_int;
 }
 
@@ -140,6 +161,7 @@ sub do_op {
     }
 
     $self->{log}->tracef("do_op(%s, %s, %s) => %s", $left, $op, $right, $result);
+    $self->trace_local_variables('do_op');
     return $result;
 }
 
@@ -194,29 +216,33 @@ sub setResult {
 
 sub setSymbolName {
     my ($self, $info) = @_;
-    $self->{log}->tracef("setSymbolName(%s)", $info);
     $self->{symbolName} = $info;
+    $self->{log}->tracef("setSymbolName('%s')", $self->{symbolName});
+    $self->trace_local_variables('setSymbolName');
     return;
 }
 
 sub setSymbolNumber {
     my ($self, $info) = @_;
-    $self->{log}->tracef("setSymbolNumber(%s)", $info);
     $self->{symbolNumber} = $info;
+    $self->{log}->tracef("setSymbolNumber(%s)", $self->{symbolNumber});
+    $self->trace_local_variables('setSymbolNumber');
     return;
 }
 
 sub setRuleName {
     my ($self, $info) = @_;
-    $self->{log}->tracef("setRuleName(%s)", $info);
     $self->{ruleName} = $info;
+    $self->{log}->tracef("setRuleName('%s')", $self->{ruleName});
+    $self->trace_local_variables('setRuleName');
     return;
 }
 
 sub setRuleNumber {
     my ($self, $info) = @_;
-    $self->{log}->tracef("setRuleNumber(%s)", $info);
     $self->{ruleNumber} = $info;
+    $self->{log}->tracef("setRuleNumber(%s)", $self->{ruleNumber});
+    $self->trace_local_variables('setRuleNumber');
     return;
 }
 
@@ -341,7 +367,11 @@ for (my $i = 0; $i <= $#strings; $i++) {
 
   $log->infof("Testing parse() on %s", $string);
   my $recognizerInterface = MyRecognizer->new($string, $log);
-  my $valueInterface = MyValue->new($log);
+  $MarpaX::ESLIF::Context::symbolName = 'none (original value)';
+  $MarpaX::ESLIF::Context::symbolNumber = 'none (original value)';
+  $MarpaX::ESLIF::Context::ruleName = 'none (original value)';
+  $MarpaX::ESLIF::Context::ruleNumber = 'none (original value)';
+  my $valueInterface = MyValue->new($log, $eslifGrammar);
 
   if ($eslifGrammar->parse($recognizerInterface, $valueInterface)) {
     my $result = $valueInterface->getResult;
@@ -354,6 +384,11 @@ for (my $i = 0; $i <= $#strings; $i++) {
   } else {
     diag("$string => ?");
   }
+
+  $log->tracef("... In %s: \$MarpaX::ESLIF::Context::symbolName   is: %s", __PACKAGE__, $MarpaX::ESLIF::Context::symbolName);
+  $log->tracef("... In %s: \$MarpaX::ESLIF::Context::symbolNumber is: %s", __PACKAGE__, $MarpaX::ESLIF::Context::symbolNumber);
+  $log->tracef("... In %s: \$MarpaX::ESLIF::Context::ruleName     is: %s", __PACKAGE__, $MarpaX::ESLIF::Context::ruleName);
+  $log->tracef("... In %s: \$MarpaX::ESLIF::Context::ruleNumber   is: %s", __PACKAGE__, $MarpaX::ESLIF::Context::ruleNumber);
 }
 
 #
@@ -418,7 +453,7 @@ for (my $i = 0; $i <= $#strings; $i++) {
             $j++;
         }
         try {
-            my $eslifAppValue = MyValue->new($log);
+            my $eslifAppValue = MyValue->new($log, $eslifGrammar);
             $log->infof("Testing value() on %s", $string);
             my $value = MarpaX::ESLIF::Value->new($eslifRecognizer, $eslifAppValue);
             while ($value->value()) {
@@ -582,7 +617,7 @@ sub doLexemeTry {
 __DATA__
 :start   ::= Expression
 :default ::=             action        => do_op
-                         #symbol-action => do_symbol
+                         symbol-action => do_symbol
                          free-action   => do_free
 :discard ::= whitespaces event  => discard_whitespaces$
 :discard ::= comment     event  => discard_comment$
@@ -594,13 +629,13 @@ Number   ::= NUMBER   action => ::shift
 event Expression$ = completed Expression
 event ^Expression = predicted Expression
 Expression ::=
-    Number                                           action => do_int
-    | '(' Expression ')'              assoc => group action => ::copy[1]
-   ||     Expression '**' Expression  assoc => right
-   ||     Expression  '*' Expression
-    |     Expression  '/' Expression
-   ||     Expression  '+' Expression
-    |     Expression  '-' Expression
+    Number                                           action => do_int            name => 'Expression is Number'
+    | '(' Expression ')'              assoc => group action => ::copy[1]         name => 'Expression is ()'
+   ||     Expression '**' Expression  assoc => right                             name => 'Expression is **'
+   ||     Expression  '*' Expression                                             name => 'Expression is *'
+    |     Expression  '/' Expression                                             name => 'Expression is /'
+   ||     Expression  '+' Expression                                             name => 'Expression is +'
+    |     Expression  '-' Expression                                             name => 'Expression is -'
 
 :lexeme ::= NUMBER pause => before event => ^NUMBER
 :lexeme ::= NUMBER pause => after  event => NUMBER$
