@@ -85,7 +85,7 @@ int main() {
   marpaESLIFValueResult_t       marpaESLIFValueResult;
   int                          *ruleip;
   size_t                        rulel;
-  int                           rulei;
+  size_t                        rulei;
   marpaESLIFRuleProperty_t      ruleProperty;
   size_t                        rhsl;
   marpaESLIFGrammarProperty_t   grammarProperty;
