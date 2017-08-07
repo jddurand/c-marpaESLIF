@@ -14,6 +14,7 @@
 #include "c-event-types.inc"
 #include "c-value-types.inc"
 #include "c-loggerLevel-types.inc"
+#include "c-rule-types.inc"
 
 /* Perl wrapper around malloc, free, etc... are just painful for genericstack, which is */
 /* is implemented using header files, not a library... */
@@ -1838,6 +1839,7 @@ CODE:
   MARPAESLIF_HV_STORE_IV         (hvp, "proper",                   ruleProperty.properb);
   MARPAESLIF_HV_STORE_IV         (hvp, "minimum",                  ruleProperty.minimumi);
   MARPAESLIF_HV_STORE_IV         (hvp, "internal",                 ruleProperty.internalb);
+  MARPAESLIF_HV_STORE_IV         (hvp, "propertyBits",             ruleProperty.propertyBitSet);
   MARPAESLIF_HV_STORE_IV         (hvp, "hideseparator",            ruleProperty.hideseparatorb);
 
   RETVAL = newRV_inc((SV *)hvp);
@@ -1881,6 +1883,7 @@ CODE:
   MARPAESLIF_HV_STORE_IV         (hvp, "proper",                   ruleProperty.properb);
   MARPAESLIF_HV_STORE_IV         (hvp, "minimum",                  ruleProperty.minimumi);
   MARPAESLIF_HV_STORE_IV         (hvp, "internal",                 ruleProperty.internalb);
+  MARPAESLIF_HV_STORE_IV         (hvp, "propertyBits",             ruleProperty.propertyBitSet);
   MARPAESLIF_HV_STORE_IV         (hvp, "hideseparator",            ruleProperty.hideseparatorb);
 
   RETVAL = newRV_inc((SV *)hvp);
@@ -3066,4 +3069,22 @@ PROTOTYPES: ENABLE
 =cut
 
 INCLUDE: xs-loggerLevel-types.inc
+
+=for comment
+  /* ======================================================================= */
+  /* MarpaX::ESLIF::Logger::Level                                            */
+  /* ======================================================================= */
+=cut
+
+MODULE = MarpaX::ESLIF            PACKAGE = MarpaX::ESLIF::Rule::Type
+
+PROTOTYPES: ENABLE
+
+=for comment
+  /* ----------------------------------------------------------------------- */
+  /* MarpaX::ESLIF::Rule::Type::constant                                     */
+  /* ----------------------------------------------------------------------- */
+=cut
+
+INCLUDE: xs-rule-types.inc
 
