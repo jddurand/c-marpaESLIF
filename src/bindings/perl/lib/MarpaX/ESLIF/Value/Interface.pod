@@ -76,6 +76,10 @@ Rule name in case of a rule callback, C<undef> otherwise.
 
 Rule number in case of a rule callback, C<undef> otherwise.
 
+=item C<$MarpaX::ESLIF::Context::grammar>
+
+Grammar instance.
+
 =back
 
 =head1 OPTIONAL METHODS SINCE VERSION 2.0.15
@@ -97,6 +101,10 @@ Stores rule name. Always set in case of a rule callback, C<undef> otherwise.
 =item $valueInterface->setRuleNumber($ruleNumber)
 
 Stores rule number. Always set in case of a rule callback, C<undef> otherwise.
+
+=item $valueInterface->setGrammar($grammar)
+
+Stores grammar instance.
 
 =back
 
