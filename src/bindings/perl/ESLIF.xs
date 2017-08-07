@@ -14,7 +14,8 @@
 #include "c-event-types.inc"
 #include "c-value-types.inc"
 #include "c-loggerLevel-types.inc"
-#include "c-rule-types.inc"
+#include "c-rulePropertyBitSet-types.inc"
+#include "c-symbolPropertyBitSet-types.inc"
 
 /* Perl wrapper around malloc, free, etc... are just painful for genericstack, which is */
 /* is implemented using header files, not a library... */
@@ -1839,7 +1840,7 @@ CODE:
   MARPAESLIF_HV_STORE_IV         (hvp, "proper",                   ruleProperty.properb);
   MARPAESLIF_HV_STORE_IV         (hvp, "minimum",                  ruleProperty.minimumi);
   MARPAESLIF_HV_STORE_IV         (hvp, "internal",                 ruleProperty.internalb);
-  MARPAESLIF_HV_STORE_IV         (hvp, "propertyBits",             ruleProperty.propertyBitSet);
+  MARPAESLIF_HV_STORE_IV         (hvp, "propertyBitSet",           ruleProperty.propertyBitSet);
   MARPAESLIF_HV_STORE_IV         (hvp, "hideseparator",            ruleProperty.hideseparatorb);
 
   RETVAL = newRV_inc((SV *)hvp);
@@ -1883,7 +1884,7 @@ CODE:
   MARPAESLIF_HV_STORE_IV         (hvp, "proper",                   ruleProperty.properb);
   MARPAESLIF_HV_STORE_IV         (hvp, "minimum",                  ruleProperty.minimumi);
   MARPAESLIF_HV_STORE_IV         (hvp, "internal",                 ruleProperty.internalb);
-  MARPAESLIF_HV_STORE_IV         (hvp, "propertyBits",             ruleProperty.propertyBitSet);
+  MARPAESLIF_HV_STORE_IV         (hvp, "propertyBitSet",           ruleProperty.propertyBitSet);
   MARPAESLIF_HV_STORE_IV         (hvp, "hideseparator",            ruleProperty.hideseparatorb);
 
   RETVAL = newRV_inc((SV *)hvp);
@@ -3076,15 +3077,27 @@ INCLUDE: xs-loggerLevel-types.inc
   /* ======================================================================= */
 =cut
 
-MODULE = MarpaX::ESLIF            PACKAGE = MarpaX::ESLIF::Rule::Type
+MODULE = MarpaX::ESLIF            PACKAGE = MarpaX::ESLIF::Rule::PropertyBitSet
 
 PROTOTYPES: ENABLE
 
 =for comment
   /* ----------------------------------------------------------------------- */
-  /* MarpaX::ESLIF::Rule::Type::constant                                     */
+  /* MarpaX::ESLIF::Rule::PropertyBitSet::constant                           */
   /* ----------------------------------------------------------------------- */
 =cut
 
-INCLUDE: xs-rule-types.inc
+INCLUDE: xs-rulePropertyBitSet-types.inc
 
+
+MODULE = MarpaX::ESLIF            PACKAGE = MarpaX::ESLIF::Symbol::PropertyBitSet
+
+PROTOTYPES: ENABLE
+
+=for comment
+  /* ----------------------------------------------------------------------- */
+  /* MarpaX::ESLIF::Symbol::PropertyBitSet::constant                         */
+  /* ----------------------------------------------------------------------- */
+=cut
+
+INCLUDE: xs-symbolPropertyBitSet-types.inc
