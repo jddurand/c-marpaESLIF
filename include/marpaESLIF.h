@@ -212,7 +212,7 @@ typedef struct marpaESLIFRuleProperty {
 } marpaESLIFRuleProperty_t;
 
 typedef enum marpaESLIFSymbolType {
-  MARPAESLIF_SYMBOLTYPE_TERMINAL,
+  MARPAESLIF_SYMBOLTYPE_TERMINAL = 0,
   MARPAESLIF_SYMBOLTYPE_META
 } marpaESLIFSymbolType_t;
 

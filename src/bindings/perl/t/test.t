@@ -294,6 +294,7 @@ BEGIN { require_ok('MarpaX::ESLIF::Value::Type') };
 BEGIN { require_ok('MarpaX::ESLIF::Logger::Level') };
 BEGIN { require_ok('MarpaX::ESLIF::Rule::PropertyBitSet') };
 BEGIN { require_ok('MarpaX::ESLIF::Symbol::PropertyBitSet') };
+BEGIN { require_ok('MarpaX::ESLIF::Symbol::Type') };
 
 #
 # Test Event constants
@@ -321,6 +322,13 @@ foreach (qw/MARPAESLIF_RULE_IS_ACCESSIBLE MARPAESLIF_RULE_IS_NULLABLE MARPAESLIF
 #
 foreach (qw/MARPAESLIF_SYMBOL_IS_ACCESSIBLE MARPAESLIF_SYMBOL_IS_NULLABLE MARPAESLIF_SYMBOL_IS_NULLING MARPAESLIF_SYMBOL_IS_PRODUCTIVE MARPAESLIF_SYMBOL_IS_START MARPAESLIF_SYMBOL_IS_TERMINAL/) {
   ok (defined(MarpaX::ESLIF::Symbol::PropertyBitSet->$_), "MarpaX::ESLIF::Symbol::PropertyBitSet->$_ is defined: " . MarpaX::ESLIF::Symbol::PropertyBitSet->$_);
+}
+
+#
+# Test Symbol types
+#
+foreach (qw/MARPAESLIF_SYMBOLTYPE_TERMINAL MARPAESLIF_SYMBOLTYPE_META/) {
+  ok (defined(MarpaX::ESLIF::Symbol::Type->$_), "MarpaX::ESLIF::Symbol::Type->$_ is defined: " . MarpaX::ESLIF::Symbol::Type->$_);
 }
 
 my $eslif = MarpaX::ESLIF->new($log);
@@ -699,6 +707,16 @@ my %RULE_PROPERTIES_BY_LEVEL = (
                  show                     => "<WHITESPACES> ~ /[\\s]/+" }
     }
     );
+
+my %SYMBOL_PROPERTIES_BY_LEVEL = (
+    '0' => {
+            '0' => {}
+    },
+    '1' => {
+            '0' => {}
+    }
+    );
+
 doCmpDeeply($eslifGrammar->currentProperties, $GRAMMAR_PROPERTIES_BY_LEVEL{'0'}, "Grammar current properties");
 
 my $currentDescription = $eslifGrammar->currentDescription;
@@ -728,6 +746,18 @@ foreach my $ruleId (0..$#{$currentRuleIds}) {
     doCmpDeeply($got, $expected, "Rule No $ruleId current properties");
 }
 
+my $currentSymbolIds = $eslifGrammar->currentSymbolIds;
+ok($#{$currentSymbolIds} >= 0, "Number of current symbols is > 0");
+diag("@{$currentSymbolIds}");
+foreach my $symbolId (0..$#{$currentSymbolIds}) {
+    my $symbolDisplay = $eslifGrammar->symbolDisplay($currentSymbolIds->[$symbolId]);
+    ok($symbolDisplay ne '', "Display of symbol No " . $currentSymbolIds->[$symbolId]);
+    diag($symbolDisplay);
+    my $got = $eslifGrammar->currentSymbolProperties($symbolId);
+    my $expected = $SYMBOL_PROPERTIES_BY_LEVEL{'0'}{$symbolId};
+    doCmpDeeply($got, $expected, "Symbol No $symbolId current properties");
+}
+
 foreach my $level (0..$ngrammar-1) {
     my $ruleIdsByLevel = $eslifGrammar->ruleIdsByLevel($level);
     ok($#{$ruleIdsByLevel} >= 0, "Number of rules at level $level is > 0");
@@ -745,6 +775,20 @@ foreach my $level (0..$ngrammar-1) {
         my $got = $eslifGrammar->rulePropertiesByLevel($level, $ruleId);
         my $expected = $RULE_PROPERTIES_BY_LEVEL{$level}{$ruleId};
         doCmpDeeply($got, $expected, "Rule No $ruleId of level $level properties");
+    }
+
+    my $symbolIdsByLevel = $eslifGrammar->symbolIdsByLevel($level);
+    ok($#{$symbolIdsByLevel} >= 0, "Number of symbols at level $level is > 0");
+    diag("@{$symbolIdsByLevel}");
+
+    foreach my $symbolId (0..$#{$symbolIdsByLevel}) {
+        my $symbolDisplayByLevel = $eslifGrammar->symbolDisplayByLevel($level, $symbolIdsByLevel->[$symbolId]);
+        ok($symbolDisplayByLevel ne '', "Display of symbol No " . $symbolIdsByLevel->[$symbolId] . " of level $level");
+        diag($symbolDisplayByLevel);
+
+        my $got = $eslifGrammar->symbolPropertiesByLevel($level, $symbolId);
+        my $expected = $SYMBOL_PROPERTIES_BY_LEVEL{$level}{$symbolId};
+        doCmpDeeply($got, $expected, "Symbol No $symbolId of level $level properties");
     }
 }
 

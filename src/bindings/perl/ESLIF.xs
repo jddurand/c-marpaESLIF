@@ -16,6 +16,7 @@
 #include "c-loggerLevel-types.inc"
 #include "c-rulePropertyBitSet-types.inc"
 #include "c-symbolPropertyBitSet-types.inc"
+#include "c-symbol-types.inc"
 
 /* Perl wrapper around malloc, free, etc... are just painful for genericstack, which is */
 /* is implemented using header files, not a library... */
@@ -1737,6 +1738,67 @@ OUTPUT:
 
 =for comment
   /* ----------------------------------------------------------------------- */
+  /* MarpaX::ESLIF::Grammar::currentSymbolIds                                */
+  /* ----------------------------------------------------------------------- */
+=cut
+
+AV *
+currentSymbolIds(Perl_MarpaX_ESLIF_Grammarp)
+  MarpaX_ESLIF_Grammar Perl_MarpaX_ESLIF_Grammarp;
+CODE:
+  static const char   *funcs = "MarpaX::ESLIF::Grammar::currentSymbolIds";
+  int                 *symbolip;
+  size_t               symboll;
+  size_t               i;
+  AV                  *av;
+
+  if (! marpaESLIFGrammar_symbolarray_currentb(Perl_MarpaX_ESLIF_Grammarp->marpaESLIFGrammarp, &symbolip, &symboll)) {
+    MARPAESLIF_CROAK("marpaESLIFGrammar_symbolarray_currentb failure");
+  }
+  if (symboll <= 0) {
+    MARPAESLIF_CROAK("marpaESLIFGrammar_symbolarray_currentb returned no symbol");
+  }
+  av = newAV();
+  for (i = 0; i < symboll; i++) {
+    av_push(av, newSViv((IV) symbolip[i]));
+  }
+  RETVAL = av;
+OUTPUT:
+  RETVAL
+
+=for comment
+  /* ----------------------------------------------------------------------- */
+  /* MarpaX::ESLIF::Grammar::symbolIdsByLevel                                */
+  /* ----------------------------------------------------------------------- */
+=cut
+
+AV *
+symbolIdsByLevel(Perl_MarpaX_ESLIF_Grammarp, Perl_leveli)
+  MarpaX_ESLIF_Grammar Perl_MarpaX_ESLIF_Grammarp;
+  IV                   Perl_leveli;
+CODE:
+  static const char   *funcs = "MarpaX::ESLIF::Grammar::symbolIdsByLevel";
+  int                 *symbolip;
+  size_t               symboll;
+  size_t               i;
+  AV                  *av;
+
+  if (! marpaESLIFGrammar_symbolarray_by_levelb(Perl_MarpaX_ESLIF_Grammarp->marpaESLIFGrammarp, &symbolip, &symboll, (int) Perl_leveli, NULL)) {
+    MARPAESLIF_CROAK("marpaESLIFGrammar_symbolarray_by_levelb failure");
+  }
+  if (symboll <= 0) {
+    MARPAESLIF_CROAK("marpaESLIFGrammar_symbolarray_by_levelb returned no symbol");
+  }
+  av = newAV();
+  for (i = 0; i < symboll; i++) {
+    av_push(av, newSViv((IV) symbolip[i]));
+  }
+  RETVAL = av;
+OUTPUT:
+  RETVAL
+
+=for comment
+  /* ----------------------------------------------------------------------- */
   /* MarpaX::ESLIF::Grammar::currentProperties                               */
   /* ----------------------------------------------------------------------- */
 =cut
@@ -1893,6 +1955,107 @@ OUTPUT:
 
 =for comment
   /* ----------------------------------------------------------------------- */
+  /* MarpaX::ESLIF::Grammar::currentSymbolProperties                         */
+  /* ----------------------------------------------------------------------- */
+=cut
+
+SV *
+currentSymbolProperties(Perl_MarpaX_ESLIF_Grammarp, Perl_symboli)
+  MarpaX_ESLIF_Grammar Perl_MarpaX_ESLIF_Grammarp;
+  IV                   Perl_symboli;
+CODE:
+  static const char          *funcs = "MarpaX::ESLIF::Grammar::currentSymbolProperties";
+  marpaESLIFSymbolProperty_t  symbolProperty;
+  HV                         *hvp;
+
+  if (! marpaESLIFGrammar_symbolproperty_currentb(Perl_MarpaX_ESLIF_Grammarp->marpaESLIFGrammarp, (int) Perl_symboli, &symbolProperty)) {
+    MARPAESLIF_CROAK("marpaESLIFGrammar_symbolproperty_currentb failure");
+  }
+
+  hvp = newHV();
+  MARPAESLIF_HV_STORE_IV         (hvp, "type",                       symbolProperty.type);
+  MARPAESLIF_HV_STORE_IV         (hvp, "start",                      symbolProperty.startb);
+  MARPAESLIF_HV_STORE_IV         (hvp, "discard",                    symbolProperty.discardb);
+  MARPAESLIF_HV_STORE_IV         (hvp, "discardRhs",                 symbolProperty.discardRhsb);
+  MARPAESLIF_HV_STORE_IV         (hvp, "lhs",                        symbolProperty.lhsb);
+  MARPAESLIF_HV_STORE_IV         (hvp, "top",                        symbolProperty.topb);
+  MARPAESLIF_HV_STORE_IV         (hvp, "id",                         symbolProperty.idi);
+  MARPAESLIF_HV_STORE_STRING     (hvp, "description",                symbolProperty.descp);
+  MARPAESLIF_HV_STORE_ASCIISTRING(hvp, "eventBefore",                symbolProperty.eventBefores);
+  MARPAESLIF_HV_STORE_IV         (hvp, "eventBeforeInitialState",    symbolProperty.eventBeforeb);
+  MARPAESLIF_HV_STORE_ASCIISTRING(hvp, "eventAfter",                 symbolProperty.eventAfters);
+  MARPAESLIF_HV_STORE_IV         (hvp, "eventAfterInitialState",     symbolProperty.eventAfterb);
+  MARPAESLIF_HV_STORE_ASCIISTRING(hvp, "eventPredicted",             symbolProperty.eventPredicteds);
+  MARPAESLIF_HV_STORE_IV         (hvp, "eventPredictedInitialState", symbolProperty.eventPredictedb);
+  MARPAESLIF_HV_STORE_ASCIISTRING(hvp, "eventNulled",                symbolProperty.eventNulleds);
+  MARPAESLIF_HV_STORE_IV         (hvp, "eventNulledInitialState",    symbolProperty.eventNulledb);
+  MARPAESLIF_HV_STORE_ASCIISTRING(hvp, "eventCompleted",             symbolProperty.eventCompleteds);
+  MARPAESLIF_HV_STORE_IV         (hvp, "eventCompletedInitialState", symbolProperty.eventCompletedb);
+  MARPAESLIF_HV_STORE_ASCIISTRING(hvp, "discardEvent",               symbolProperty.discardEvents);
+  MARPAESLIF_HV_STORE_IV         (hvp, "discardEventInitialState",   symbolProperty.discardEventb);
+  MARPAESLIF_HV_STORE_IV         (hvp, "lookupLevelDeltai",          symbolProperty.lookupLevelDeltai);
+  MARPAESLIF_HV_STORE_IV         (hvp, "lookupResolvedLeveli",       symbolProperty.lookupResolvedLeveli);
+  MARPAESLIF_HV_STORE_IV         (hvp, "priorityi",                  symbolProperty.priorityi);
+  MARPAESLIF_HV_STORE_ACTION     (hvp, "nullableActionp",            symbolProperty.nullableActionp);
+  MARPAESLIF_HV_STORE_IV         (hvp, "propertyBitSet",             symbolProperty.propertyBitSet);
+
+  RETVAL = newRV_inc((SV *)hvp);
+OUTPUT:
+  RETVAL
+
+=for comment
+  /* ----------------------------------------------------------------------- */
+  /* MarpaX::ESLIF::Grammar::symbolPropertiesByLevel                           */
+  /* ----------------------------------------------------------------------- */
+=cut
+
+SV *
+symbolPropertiesByLevel(Perl_MarpaX_ESLIF_Grammarp, Perl_leveli, Perl_symboli)
+  MarpaX_ESLIF_Grammar Perl_MarpaX_ESLIF_Grammarp;
+  IV                   Perl_leveli;
+  IV                   Perl_symboli;
+CODE:
+  static const char        *funcs = "MarpaX::ESLIF::Grammar::symbolPropertiesByLevel";
+  marpaESLIFSymbolProperty_t  symbolProperty;
+  HV                       *hvp;
+
+  if (! marpaESLIFGrammar_symbolproperty_by_levelb(Perl_MarpaX_ESLIF_Grammarp->marpaESLIFGrammarp, (int) Perl_symboli, &symbolProperty, (int) Perl_leveli, NULL /* descp */)) {
+    MARPAESLIF_CROAK("marpaESLIFGrammar_symbolproperty_by_levelb failure");
+  }
+
+  hvp = newHV();
+  MARPAESLIF_HV_STORE_IV         (hvp, "type",                       symbolProperty.type);
+  MARPAESLIF_HV_STORE_IV         (hvp, "start",                      symbolProperty.startb);
+  MARPAESLIF_HV_STORE_IV         (hvp, "discard",                    symbolProperty.discardb);
+  MARPAESLIF_HV_STORE_IV         (hvp, "discardRhs",                 symbolProperty.discardRhsb);
+  MARPAESLIF_HV_STORE_IV         (hvp, "lhs",                        symbolProperty.lhsb);
+  MARPAESLIF_HV_STORE_IV         (hvp, "top",                        symbolProperty.topb);
+  MARPAESLIF_HV_STORE_IV         (hvp, "id",                         symbolProperty.idi);
+  MARPAESLIF_HV_STORE_STRING     (hvp, "description",                symbolProperty.descp);
+  MARPAESLIF_HV_STORE_ASCIISTRING(hvp, "eventBefore",                symbolProperty.eventBefores);
+  MARPAESLIF_HV_STORE_IV         (hvp, "eventBeforeInitialState",    symbolProperty.eventBeforeb);
+  MARPAESLIF_HV_STORE_ASCIISTRING(hvp, "eventAfter",                 symbolProperty.eventAfters);
+  MARPAESLIF_HV_STORE_IV         (hvp, "eventAfterInitialState",     symbolProperty.eventAfterb);
+  MARPAESLIF_HV_STORE_ASCIISTRING(hvp, "eventPredicted",             symbolProperty.eventPredicteds);
+  MARPAESLIF_HV_STORE_IV         (hvp, "eventPredictedInitialState", symbolProperty.eventPredictedb);
+  MARPAESLIF_HV_STORE_ASCIISTRING(hvp, "eventNulled",                symbolProperty.eventNulleds);
+  MARPAESLIF_HV_STORE_IV         (hvp, "eventNulledInitialState",    symbolProperty.eventNulledb);
+  MARPAESLIF_HV_STORE_ASCIISTRING(hvp, "eventCompleted",             symbolProperty.eventCompleteds);
+  MARPAESLIF_HV_STORE_IV         (hvp, "eventCompletedInitialState", symbolProperty.eventCompletedb);
+  MARPAESLIF_HV_STORE_ASCIISTRING(hvp, "discardEvent",               symbolProperty.discardEvents);
+  MARPAESLIF_HV_STORE_IV         (hvp, "discardEventInitialState",   symbolProperty.discardEventb);
+  MARPAESLIF_HV_STORE_IV         (hvp, "lookupLevelDeltai",          symbolProperty.lookupLevelDeltai);
+  MARPAESLIF_HV_STORE_IV         (hvp, "lookupResolvedLeveli",       symbolProperty.lookupResolvedLeveli);
+  MARPAESLIF_HV_STORE_IV         (hvp, "priorityi",                  symbolProperty.priorityi);
+  MARPAESLIF_HV_STORE_ACTION     (hvp, "nullableActionp",            symbolProperty.nullableActionp);
+  MARPAESLIF_HV_STORE_IV         (hvp, "propertyBitSet",             symbolProperty.propertyBitSet);
+
+  RETVAL = newRV_inc((SV *)hvp);
+OUTPUT:
+  RETVAL
+
+=for comment
+  /* ----------------------------------------------------------------------- */
   /* MarpaX::ESLIF::Grammar::ruleDisplay                                     */
   /* ----------------------------------------------------------------------- */
 =cut
@@ -1909,6 +2072,27 @@ CODE:
     MARPAESLIF_CROAK("marpaESLIFGrammar_ruledisplayform_currentb failure");
   }
   RETVAL = ruledisplays;
+OUTPUT:
+  RETVAL
+
+=for comment
+  /* ----------------------------------------------------------------------- */
+  /* MarpaX::ESLIF::Grammar::symbolDisplay                                   */
+  /* ----------------------------------------------------------------------- */
+=cut
+
+char *
+symbolDisplay(Perl_MarpaX_ESLIF_Grammarp, Perl_symboli)
+  MarpaX_ESLIF_Grammar Perl_MarpaX_ESLIF_Grammarp;
+  IV                   Perl_symboli;
+CODE:
+  static const char *funcs = "MarpaX::ESLIF::Grammar::symbolDisplay";
+  char              *symboldisplays;
+
+  if (! marpaESLIFGrammar_symboldisplayform_currentb(Perl_MarpaX_ESLIF_Grammarp->marpaESLIFGrammarp, (int) Perl_symboli, &symboldisplays)) {
+    MARPAESLIF_CROAK("marpaESLIFGrammar_symboldisplayform_currentb failure");
+  }
+  RETVAL = symboldisplays;
 OUTPUT:
   RETVAL
 
@@ -1952,6 +2136,28 @@ CODE:
     MARPAESLIF_CROAK("marpaESLIFGrammar_ruledisplayform_by_levelb failure");
   }
   RETVAL = ruledisplays;
+OUTPUT:
+  RETVAL
+
+=for comment
+  /* ----------------------------------------------------------------------- */
+  /* MarpaX::ESLIF::Grammar::symbolDisplayByLevel                            */
+  /* ----------------------------------------------------------------------- */
+=cut
+
+char *
+symbolDisplayByLevel(Perl_MarpaX_ESLIF_Grammarp, Perl_leveli, Perl_symboli)
+  MarpaX_ESLIF_Grammar Perl_MarpaX_ESLIF_Grammarp;
+  IV                   Perl_leveli;
+  IV                   Perl_symboli;
+CODE:
+  static const char *funcs = "MarpaX::ESLIF::Grammar::symbolDisplayByLevel";
+  char              *symboldisplays;
+
+  if (! marpaESLIFGrammar_symboldisplayform_by_levelb(Perl_MarpaX_ESLIF_Grammarp->marpaESLIFGrammarp, (int) Perl_symboli, &symboldisplays, (int) Perl_leveli, NULL)) {
+    MARPAESLIF_CROAK("marpaESLIFGrammar_symboldisplayform_by_levelb failure");
+  }
+  RETVAL = symboldisplays;
 OUTPUT:
   RETVAL
 
@@ -3073,7 +3279,7 @@ INCLUDE: xs-loggerLevel-types.inc
 
 =for comment
   /* ======================================================================= */
-  /* MarpaX::ESLIF::Logger::Level                                            */
+  /* MarpaX::ESLIF::Rule::PropertyBitSet                                     */
   /* ======================================================================= */
 =cut
 
@@ -3089,6 +3295,11 @@ PROTOTYPES: ENABLE
 
 INCLUDE: xs-rulePropertyBitSet-types.inc
 
+=for comment
+  /* ======================================================================= */
+  /* MarpaX::ESLIF::Symbol::PropertyBitSet                                   */
+  /* ======================================================================= */
+=cut
 
 MODULE = MarpaX::ESLIF            PACKAGE = MarpaX::ESLIF::Symbol::PropertyBitSet
 
@@ -3101,3 +3312,21 @@ PROTOTYPES: ENABLE
 =cut
 
 INCLUDE: xs-symbolPropertyBitSet-types.inc
+
+=for comment
+  /* ======================================================================= */
+  /* MarpaX::ESLIF::Symbol::Type                                             */
+  /* ======================================================================= */
+=cut
+
+MODULE = MarpaX::ESLIF            PACKAGE = MarpaX::ESLIF::Symbol::Type
+
+PROTOTYPES: ENABLE
+
+=for comment
+  /* ----------------------------------------------------------------------- */
+  /* MarpaX::ESLIF::Symbol::Type::constant                                   */
+  /* ----------------------------------------------------------------------- */
+=cut
+
+INCLUDE: xs-symbol-types.inc
