@@ -292,7 +292,8 @@ BEGIN { require_ok('MarpaX::ESLIF') };
 BEGIN { require_ok('MarpaX::ESLIF::Event::Type') };
 BEGIN { require_ok('MarpaX::ESLIF::Value::Type') };
 BEGIN { require_ok('MarpaX::ESLIF::Logger::Level') };
-BEGIN { require_ok('MarpaX::ESLIF::Rule::Type') };
+BEGIN { require_ok('MarpaX::ESLIF::Rule::PropertyBitSet') };
+BEGIN { require_ok('MarpaX::ESLIF::Symbol::PropertyBitSet') };
 
 #
 # Test Event constants
@@ -309,10 +310,17 @@ foreach (qw/MARPAESLIF_VALUE_TYPE_UNDEF MARPAESLIF_VALUE_TYPE_CHAR MARPAESLIF_VA
 }
 
 #
-# Test Rule constants
+# Test Rule properties
 #
 foreach (qw/MARPAESLIF_RULE_IS_ACCESSIBLE MARPAESLIF_RULE_IS_NULLABLE MARPAESLIF_RULE_IS_NULLING MARPAESLIF_RULE_IS_LOOP MARPAESLIF_RULE_IS_PRODUCTIVE/) {
-  ok (defined(MarpaX::ESLIF::Rule::Type->$_), "MarpaX::ESLIF::Rule::Type->$_ is defined: " . MarpaX::ESLIF::Rule::Type->$_);
+  ok (defined(MarpaX::ESLIF::Rule::PropertyBitSet->$_), "MarpaX::ESLIF::Rule::PropertyBitSet->$_ is defined: " . MarpaX::ESLIF::Rule::PropertyBitSet->$_);
+}
+
+#
+# Test Symbol properties
+#
+foreach (qw/MARPAESLIF_SYMBOL_IS_ACCESSIBLE MARPAESLIF_SYMBOL_IS_NULLABLE MARPAESLIF_SYMBOL_IS_NULLING MARPAESLIF_SYMBOL_IS_PRODUCTIVE MARPAESLIF_SYMBOL_IS_START MARPAESLIF_SYMBOL_IS_TERMINAL/) {
+  ok (defined(MarpaX::ESLIF::Symbol::PropertyBitSet->$_), "MarpaX::ESLIF::Symbol::PropertyBitSet->$_ is defined: " . MarpaX::ESLIF::Symbol::PropertyBitSet->$_);
 }
 
 my $eslif = MarpaX::ESLIF->new($log);
@@ -366,7 +374,7 @@ my %RULE_PROPERTIES_BY_LEVEL = (
                  rhsIds                   => [2],
                  separatorId              => -1,
                  sequence                 => 0,
-                 propertyBits             => MarpaX::ESLIF::Rule::Type->MARPAESLIF_RULE_IS_PRODUCTIVE,
+                 propertyBitSet           => MarpaX::ESLIF::Rule::PropertyBitSet->MARPAESLIF_RULE_IS_PRODUCTIVE,
                  show                     => ":discard ::= <whitespaces> event => discard_whitespaces\$=on" },
         '1' => { action                   => undef,
                  description              => "Rule No 1",
@@ -384,7 +392,7 @@ my %RULE_PROPERTIES_BY_LEVEL = (
                  rhsIds                   => [3],
                  separatorId              => -1,
                  sequence                 => 0,
-                 propertyBits             => MarpaX::ESLIF::Rule::Type->MARPAESLIF_RULE_IS_PRODUCTIVE,
+                 propertyBitSet           => MarpaX::ESLIF::Rule::PropertyBitSet->MARPAESLIF_RULE_IS_PRODUCTIVE,
                  show                     => ":discard ::= <comment> event => discard_comment\$=on" },
         '2' => { action                   => "::shift",
                  description              => "Rule No 2",
@@ -402,8 +410,8 @@ my %RULE_PROPERTIES_BY_LEVEL = (
                  rhsIds                   => [5],
                  separatorId              => -1,
                  sequence                 => 0,
-                 propertyBits             => MarpaX::ESLIF::Rule::Type->MARPAESLIF_RULE_IS_PRODUCTIVE|
-                                             MarpaX::ESLIF::Rule::Type->MARPAESLIF_RULE_IS_ACCESSIBLE,
+                 propertyBitSet           => MarpaX::ESLIF::Rule::PropertyBitSet->MARPAESLIF_RULE_IS_PRODUCTIVE|
+                                             MarpaX::ESLIF::Rule::PropertyBitSet->MARPAESLIF_RULE_IS_ACCESSIBLE,
                  show                     => "<Number> ::= <NUMBER> action => ::shift" },
         '3' => { action                   => "::shift",
                  description              => "Rule No 3",
@@ -421,8 +429,8 @@ my %RULE_PROPERTIES_BY_LEVEL = (
                  rhsIds                   => [6],
                  separatorId              => -1,
                  sequence                 => 0,
-                 propertyBits             => MarpaX::ESLIF::Rule::Type->MARPAESLIF_RULE_IS_PRODUCTIVE|
-                                             MarpaX::ESLIF::Rule::Type->MARPAESLIF_RULE_IS_ACCESSIBLE,
+                 propertyBitSet           => MarpaX::ESLIF::Rule::PropertyBitSet->MARPAESLIF_RULE_IS_PRODUCTIVE|
+                                             MarpaX::ESLIF::Rule::PropertyBitSet->MARPAESLIF_RULE_IS_ACCESSIBLE,
                  show                     => "<Expression> ::= <Expression[0]> action => ::shift" },
         '4' => { action                   => "::shift",
                  description              => "Rule No 4",
@@ -440,8 +448,8 @@ my %RULE_PROPERTIES_BY_LEVEL = (
                  rhsIds                   => [7],
                  separatorId              => -1,
                  sequence                 => 0,
-                 propertyBits             => MarpaX::ESLIF::Rule::Type->MARPAESLIF_RULE_IS_PRODUCTIVE|
-                                             MarpaX::ESLIF::Rule::Type->MARPAESLIF_RULE_IS_ACCESSIBLE,
+                 propertyBitSet           => MarpaX::ESLIF::Rule::PropertyBitSet->MARPAESLIF_RULE_IS_PRODUCTIVE|
+                                             MarpaX::ESLIF::Rule::PropertyBitSet->MARPAESLIF_RULE_IS_ACCESSIBLE,
                  show => "<Expression[0]> ::= <Expression[1]> action => ::shift" },
         '5' => { action                   => "::shift",
                  description              => "Rule No 5",
@@ -459,8 +467,8 @@ my %RULE_PROPERTIES_BY_LEVEL = (
                  rhsIds                   => [8],
                  separatorId              => -1,
                  sequence                 => 0,
-                 propertyBits             => MarpaX::ESLIF::Rule::Type->MARPAESLIF_RULE_IS_PRODUCTIVE|
-                                             MarpaX::ESLIF::Rule::Type->MARPAESLIF_RULE_IS_ACCESSIBLE,
+                 propertyBitSet           => MarpaX::ESLIF::Rule::PropertyBitSet->MARPAESLIF_RULE_IS_PRODUCTIVE|
+                                             MarpaX::ESLIF::Rule::PropertyBitSet->MARPAESLIF_RULE_IS_ACCESSIBLE,
                  show => "<Expression[1]> ::= <Expression[2]> action => ::shift" },
         '6' => { action                   => "::shift",
                  description              => "Rule No 6",
@@ -478,8 +486,8 @@ my %RULE_PROPERTIES_BY_LEVEL = (
                  rhsIds                   => [9],
                  separatorId              => -1,
                  sequence                 => 0,
-                 propertyBits             => MarpaX::ESLIF::Rule::Type->MARPAESLIF_RULE_IS_PRODUCTIVE|
-                                             MarpaX::ESLIF::Rule::Type->MARPAESLIF_RULE_IS_ACCESSIBLE,
+                 propertyBitSet           => MarpaX::ESLIF::Rule::PropertyBitSet->MARPAESLIF_RULE_IS_PRODUCTIVE|
+                                             MarpaX::ESLIF::Rule::PropertyBitSet->MARPAESLIF_RULE_IS_ACCESSIBLE,
                  show => "<Expression[2]> ::= <Expression[3]> action => ::shift" },
         '7' => { action                   => "do_int",
                  description              => "Expression is Number",
@@ -497,8 +505,8 @@ my %RULE_PROPERTIES_BY_LEVEL = (
                  rhsIds                   => [4],
                  separatorId              => -1,
                  sequence                 => 0,
-                 propertyBits             => MarpaX::ESLIF::Rule::Type->MARPAESLIF_RULE_IS_PRODUCTIVE|
-                                             MarpaX::ESLIF::Rule::Type->MARPAESLIF_RULE_IS_ACCESSIBLE,
+                 propertyBitSet           => MarpaX::ESLIF::Rule::PropertyBitSet->MARPAESLIF_RULE_IS_PRODUCTIVE|
+                                             MarpaX::ESLIF::Rule::PropertyBitSet->MARPAESLIF_RULE_IS_ACCESSIBLE,
                  show                     => "<Expression[3]> ::= <Number> action => do_int name => 'Expression is Number'" },
         '8' => { action                   => "::copy[1]",
                  description              => "Expression is ()",
@@ -516,8 +524,8 @@ my %RULE_PROPERTIES_BY_LEVEL = (
                  rhsIds                   => [10,6,11],
                  separatorId              => -1,
                  sequence                 => 0,
-                 propertyBits             => MarpaX::ESLIF::Rule::Type->MARPAESLIF_RULE_IS_PRODUCTIVE|
-                                             MarpaX::ESLIF::Rule::Type->MARPAESLIF_RULE_IS_ACCESSIBLE,
+                 propertyBitSet           => MarpaX::ESLIF::Rule::PropertyBitSet->MARPAESLIF_RULE_IS_PRODUCTIVE|
+                                             MarpaX::ESLIF::Rule::PropertyBitSet->MARPAESLIF_RULE_IS_ACCESSIBLE,
                  show => "<Expression[3]> ::= '(' <Expression[0]> ')' action => ::copy[1] name => 'Expression is ()'" },
         '9' => { action                   => undef,
                  description              => "Expression is **",
@@ -535,8 +543,8 @@ my %RULE_PROPERTIES_BY_LEVEL = (
                  rhsIds                   => [9,12,8],
                  separatorId              => -1,
                  sequence                 => 0,
-                 propertyBits             => MarpaX::ESLIF::Rule::Type->MARPAESLIF_RULE_IS_PRODUCTIVE|
-                                             MarpaX::ESLIF::Rule::Type->MARPAESLIF_RULE_IS_ACCESSIBLE,
+                 propertyBitSet           => MarpaX::ESLIF::Rule::PropertyBitSet->MARPAESLIF_RULE_IS_PRODUCTIVE|
+                                             MarpaX::ESLIF::Rule::PropertyBitSet->MARPAESLIF_RULE_IS_ACCESSIBLE,
                  show                     => "<Expression[2]> ::= <Expression[3]> '**' <Expression[2]> name => 'Expression is **'" },
         '10' => {action                   => undef,
                  description              => "Expression is *",
@@ -554,8 +562,8 @@ my %RULE_PROPERTIES_BY_LEVEL = (
                  rhsIds                   => [7,13,8],
                  separatorId              => -1,
                  sequence                 => 0,
-                 propertyBits             => MarpaX::ESLIF::Rule::Type->MARPAESLIF_RULE_IS_PRODUCTIVE|
-                                             MarpaX::ESLIF::Rule::Type->MARPAESLIF_RULE_IS_ACCESSIBLE,
+                 propertyBitSet           => MarpaX::ESLIF::Rule::PropertyBitSet->MARPAESLIF_RULE_IS_PRODUCTIVE|
+                                             MarpaX::ESLIF::Rule::PropertyBitSet->MARPAESLIF_RULE_IS_ACCESSIBLE,
                  show                     => "<Expression[1]> ::= <Expression[1]> '*' <Expression[2]> name => 'Expression is *'" },
         '11' => {action                   => undef,
                  description              => "Expression is /",
@@ -573,8 +581,8 @@ my %RULE_PROPERTIES_BY_LEVEL = (
                  rhsIds                   => [7,14,8],
                  separatorId              => -1,
                  sequence                 => 0,
-                 propertyBits             => MarpaX::ESLIF::Rule::Type->MARPAESLIF_RULE_IS_PRODUCTIVE|
-                                             MarpaX::ESLIF::Rule::Type->MARPAESLIF_RULE_IS_ACCESSIBLE,
+                 propertyBitSet           => MarpaX::ESLIF::Rule::PropertyBitSet->MARPAESLIF_RULE_IS_PRODUCTIVE|
+                                             MarpaX::ESLIF::Rule::PropertyBitSet->MARPAESLIF_RULE_IS_ACCESSIBLE,
                  show => "<Expression[1]> ::= <Expression[1]> '/' <Expression[2]> name => 'Expression is /'" },
         '12' => {action                   => undef,
                  description              => "Expression is +",
@@ -592,8 +600,8 @@ my %RULE_PROPERTIES_BY_LEVEL = (
                  rhsIds                   => [6,15,7],
                  separatorId              => -1,
                  sequence                 => 0,
-                 propertyBits             => MarpaX::ESLIF::Rule::Type->MARPAESLIF_RULE_IS_PRODUCTIVE|
-                                             MarpaX::ESLIF::Rule::Type->MARPAESLIF_RULE_IS_ACCESSIBLE,
+                 propertyBitSet           => MarpaX::ESLIF::Rule::PropertyBitSet->MARPAESLIF_RULE_IS_PRODUCTIVE|
+                                             MarpaX::ESLIF::Rule::PropertyBitSet->MARPAESLIF_RULE_IS_ACCESSIBLE,
                  show                     => "<Expression[0]> ::= <Expression[0]> '+' <Expression[1]> name => 'Expression is +'" },
         '13' => {action                   => undef,
                  description              => "Expression is -",
@@ -611,8 +619,8 @@ my %RULE_PROPERTIES_BY_LEVEL = (
                  rhsIds                   => [6,16,7],
                  separatorId              => -1,
                  sequence                 => 0,
-                 propertyBits             => MarpaX::ESLIF::Rule::Type->MARPAESLIF_RULE_IS_PRODUCTIVE|
-                                             MarpaX::ESLIF::Rule::Type->MARPAESLIF_RULE_IS_ACCESSIBLE,
+                 propertyBitSet           => MarpaX::ESLIF::Rule::PropertyBitSet->MARPAESLIF_RULE_IS_PRODUCTIVE|
+                                             MarpaX::ESLIF::Rule::PropertyBitSet->MARPAESLIF_RULE_IS_ACCESSIBLE,
                  show => "<Expression[0]> ::= <Expression[0]> '-' <Expression[1]> name => 'Expression is -'" },
         '14' => {action                   => undef,
                  description              => "Rule No 14",
@@ -630,7 +638,7 @@ my %RULE_PROPERTIES_BY_LEVEL = (
                  rhsIds                   => [17],
                  separatorId              => -1,
                  sequence                 => 0,
-                 propertyBits             => MarpaX::ESLIF::Rule::Type->MARPAESLIF_RULE_IS_PRODUCTIVE,
+                 propertyBitSet           => MarpaX::ESLIF::Rule::PropertyBitSet->MARPAESLIF_RULE_IS_PRODUCTIVE,
                  show                     => "<whitespaces> ::= <WHITESPACES>"},
         '15' => {action                   => undef,
                  description              => "Rule No 15",
@@ -648,7 +656,7 @@ my %RULE_PROPERTIES_BY_LEVEL = (
                  rhsIds                   => [18],
                  separatorId              => -1,
                  sequence                 => 0,
-                 propertyBits             => MarpaX::ESLIF::Rule::Type->MARPAESLIF_RULE_IS_PRODUCTIVE,
+                 propertyBitSet           => MarpaX::ESLIF::Rule::PropertyBitSet->MARPAESLIF_RULE_IS_PRODUCTIVE,
                  show                     => "<comment> ::= /(?:(?:(?:\\/\\/)(?:[^\\n]*)(?:\\n|\\z))|(?:(?:\\/\\*)(?:(?:[^\\*]+|\\*(?!\\/))*)(?:\\*\\/)))/u"},
     },
     '1' => {
@@ -668,8 +676,8 @@ my %RULE_PROPERTIES_BY_LEVEL = (
                  rhsIds                   => [1],
                  separatorId              => -1,
                  sequence                 => 0,
-                 propertyBits             => MarpaX::ESLIF::Rule::Type->MARPAESLIF_RULE_IS_PRODUCTIVE|
-                                             MarpaX::ESLIF::Rule::Type->MARPAESLIF_RULE_IS_ACCESSIBLE,
+                 propertyBitSet           => MarpaX::ESLIF::Rule::PropertyBitSet->MARPAESLIF_RULE_IS_PRODUCTIVE|
+                                             MarpaX::ESLIF::Rule::PropertyBitSet->MARPAESLIF_RULE_IS_ACCESSIBLE,
                  show                     => "<NUMBER> ~ /[\\d]+/" },
         '1' => { action                   => undef,
                  description              => "Rule No 1",
@@ -687,7 +695,7 @@ my %RULE_PROPERTIES_BY_LEVEL = (
                  rhsIds                   => [3],
                  separatorId              => -1,
                  sequence                 => 1,
-                 propertyBits             => MarpaX::ESLIF::Rule::Type->MARPAESLIF_RULE_IS_PRODUCTIVE,
+                 propertyBitSet           => MarpaX::ESLIF::Rule::PropertyBitSet->MARPAESLIF_RULE_IS_PRODUCTIVE,
                  show                     => "<WHITESPACES> ~ /[\\s]/+" }
     }
     );
