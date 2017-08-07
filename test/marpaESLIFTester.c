@@ -87,9 +87,12 @@ int main() {
   size_t                        rulel;
   size_t                        rulei;
   marpaESLIFRuleProperty_t      ruleProperty;
+  int                          *symbolip;
+  size_t                        symboll;
+  size_t                        symboli;
+  marpaESLIFSymbolProperty_t    symbolProperty;
   size_t                        rhsl;
   marpaESLIFGrammarProperty_t   grammarProperty;
-  size_t                        symboll;
   
   genericLoggerp = genericLogger_newp(genericLoggerCallback, NULL /* userDatavp */, GENERICLOGGER_LOGLEVEL_DEBUG);
 
@@ -236,7 +239,7 @@ int main() {
                 break;
               }
             } else {
-              GENERICLOGGER_INFO(marpaESLIFOption.genericLoggerp, "... ... Action                : ??? (NULL)");
+              GENERICLOGGER_INFO (marpaESLIFOption.genericLoggerp, "... ... Action                : ??? (NULL)");
             }
             GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... Discard event         : %s", (ruleProperty.discardEvents != NULL) ? ruleProperty.discardEvents : "");
             GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... Discard initial state : %d", ruleProperty.discardEventb);
@@ -251,6 +254,57 @@ int main() {
             GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... Nulling ?             : %s", ((ruleProperty.propertyBitSet & MARPAESLIF_RULE_IS_NULLING) == MARPAESLIF_RULE_IS_NULLING) ? "yes" : "no");
             GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... Loop ?                : %s", ((ruleProperty.propertyBitSet & MARPAESLIF_RULE_IS_LOOP) == MARPAESLIF_RULE_IS_LOOP) ? "yes" : "no");
             GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... Productive ?          : %s", ((ruleProperty.propertyBitSet & MARPAESLIF_RULE_IS_PRODUCTIVE) == MARPAESLIF_RULE_IS_PRODUCTIVE) ? "yes" : "no");
+          }
+        }
+      }
+      if (marpaESLIFGrammar_symbolarray_by_levelb(marpaESLIFGrammarp, &symbolip, &symboll, leveli, NULL)) {
+        for (symboli = 0; symboli < symboll; symboli++) {
+          if (marpaESLIFGrammar_symbolproperty_by_levelb(marpaESLIFGrammarp, symboli, &symbolProperty, leveli, NULL)) {
+            GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... Symbol No %d", symboli);
+            GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... type                  : %d", symbolProperty.type);
+            GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... startb                : %d", (int) symbolProperty.startb);
+            GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... discardb              : %d", (int) symbolProperty.discardb);
+            GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... discardRhsb           : %d", (int) symbolProperty.discardRhsb);
+            GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... lhsb                  : %d", (int) symbolProperty.lhsb);
+            GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... topb                  : %d", (int) symbolProperty.topb);
+            GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... idi                   : %d", symbolProperty.idi);
+            GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... Description           : %s", symbolProperty.descp->asciis);
+            GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... eventBefores          : %s", symbolProperty.eventBefores != NULL ? symbolProperty.eventBefores : "??? (NULL)");
+            GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... eventBeforeb          : %d", (int) symbolProperty.eventBeforeb);
+            GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... eventAfters           : %s", symbolProperty.eventAfters != NULL ? symbolProperty.eventAfters : "??? (NULL)");
+            GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... eventAfterb           : %d", (int) symbolProperty.eventAfterb);
+            GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... eventPredicteds       : %s", symbolProperty.eventPredicteds != NULL ? symbolProperty.eventPredicteds : "??? (NULL)");
+            GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... eventPredictedb       : %d", (int) symbolProperty.eventPredictedb);
+            GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... eventNulleds          : %s", symbolProperty.eventNulleds != NULL ? symbolProperty.eventNulleds : "??? (NULL)");
+            GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... eventNulledb          : %d", (int) symbolProperty.eventNulledb);
+            GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... eventCompleteds       : %s", symbolProperty.eventCompleteds != NULL ? symbolProperty.eventCompleteds : "??? (NULL)");
+            GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... eventCompletedb       : %d", (int) symbolProperty.eventCompletedb);
+            GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... discardEvents         : %s", symbolProperty.discardEvents != NULL ? symbolProperty.discardEvents : "??? (NULL)");
+            GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... discardEventb         : %d", (int) symbolProperty.discardEventb);
+            GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... lookupLevelDeltai     : %d", symbolProperty.lookupLevelDeltai);
+            GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... lookupResolvedLeveli  : %d", symbolProperty.lookupResolvedLeveli);
+            GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... priorityi             : %d", symbolProperty.priorityi);
+            if (symbolProperty.nullableActionp != NULL) {
+              switch (symbolProperty.nullableActionp->type) {
+              case MARPAESLIF_ACTION_TYPE_NAME:
+                GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... nullableAction        : %s (type: name)", symbolProperty.nullableActionp->u.names);
+                break;
+              case MARPAESLIF_ACTION_TYPE_STRING:
+                GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... nullableAction        : %s (type: string)", symbolProperty.nullableActionp->u.stringp->asciis);
+                break;
+              default:
+                GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... nullableAction        : ??? (type: %d)", symbolProperty.nullableActionp->type);
+                break;
+              }
+            } else {
+              GENERICLOGGER_INFO (marpaESLIFOption.genericLoggerp, "... ... nullableAction        : ??? (NULL)");
+            }
+            GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... Accessible ?          : %s", ((symbolProperty.propertyBitSet & MARPAESLIF_SYMBOL_IS_ACCESSIBLE) == MARPAESLIF_SYMBOL_IS_ACCESSIBLE) ? "yes" : "no");
+            GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... Nullable ?            : %s", ((symbolProperty.propertyBitSet & MARPAESLIF_SYMBOL_IS_NULLABLE) == MARPAESLIF_SYMBOL_IS_NULLABLE) ? "yes" : "no");
+            GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... Nulling ?             : %s", ((symbolProperty.propertyBitSet & MARPAESLIF_SYMBOL_IS_NULLING) == MARPAESLIF_SYMBOL_IS_NULLING) ? "yes" : "no");
+            GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... Productive ?          : %s", ((symbolProperty.propertyBitSet & MARPAESLIF_SYMBOL_IS_PRODUCTIVE) == MARPAESLIF_SYMBOL_IS_PRODUCTIVE) ? "yes" : "no");
+            GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... Start ?               : %s", ((symbolProperty.propertyBitSet & MARPAESLIF_SYMBOL_IS_START) == MARPAESLIF_SYMBOL_IS_START) ? "yes" : "no");
+            GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... Terminal ?            : %s", ((symbolProperty.propertyBitSet & MARPAESLIF_SYMBOL_IS_TERMINAL) == MARPAESLIF_SYMBOL_IS_TERMINAL) ? "yes" : "no");
           }
         }
       }

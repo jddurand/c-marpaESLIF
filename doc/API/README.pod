@@ -376,7 +376,7 @@ Put in the value pointed by C<grammarPropertyp>, if it is not C<NULL>, C<marpaES
                                              int                 **ruleipp,
                                              size_t               *rulelp);
 
-Puts in the values pointed by C<ruleipp> and C<rulelp> a pointer to an array of integer, and the number of them, respectively, of current grammar. User must B<not> try to free C<rulelp>. Please note that this is exactly the same information as the tuple C<{nrulel,ruleip>} returned by C<marpaESLIFGrammar_grammarproperty_currentb>.
+Puts in the values pointed by C<ruleipp> and C<rulelp> a pointer to an array of integer, and the number of them, respectively, of current grammar. User must B<not> try to free C<*ruleipp>. Please note that this is exactly the same information as the tuple C<{nrulel,ruleip>} returned by C<marpaESLIFGrammar_grammarproperty_currentb>.
 
 Returns a true value on failure, a false value on failure. C<*ruleipp> is never C<NULL> in case of success.
 
@@ -416,7 +416,7 @@ Returns a true value on failure, a false value on failure. C<*ruleipp> is never 
     MARPAESLIF_RULE_IS_LOOP       = 0x08,
     MARPAESLIF_RULE_IS_PRODUCTIVE = 0x10
   } marpaESLIFRulePropertyBit_t;
-  
+
   typedef struct marpaESLIFRuleProperty {
     int                    idi;                          /* Rule Id */
     marpaESLIFString_t    *descp;                        /* Rule alternative name (auto-generated if none) */
@@ -437,7 +437,7 @@ Returns a true value on failure, a false value on failure. C<*ruleipp> is never 
     short                  internalb;                    /* This rule is internal */
     int                    propertyBitSet;               /* C.f. marpaESLIFRulePropertyBit_t */
   } marpaESLIFRuleProperty_t;
-  
+
 
   short marpaESLIFGrammar_ruleproperty_currentb(marpaESLIFGrammar_t *marpaESLIFGrammarp,
                                                 int rulei,
@@ -498,6 +498,107 @@ is the eventual explicit description, ignored if C<NULL>.
 C<descp> have precedence of C<leveli>.
 
 Return a true value on failure, a false value on failure.
+
+=head3 C<marpaESLIFGrammar_symbolarray_currentb>
+
+  short marpaESLIFGrammar_symbolarray_currentb(marpaESLIFGrammar_t  *marpaESLIFGrammarp,
+                                               int                 **symbolipp,
+                                               size_t               *symbollp);
+
+Puts in the values pointed by C<symbolipp> and C<symbollp> a pointer to an array of integer, and the number of them, respectively, of current grammar. User must B<not> try to free C<*symbolipp>. Please note that this is exactly the same information as the tuple C<{nsymboll,symbolip>} returned by C<marpaESLIFGrammar_grammarproperty_currentb>.
+
+Returns a true value on failure, a false value on failure. C<*symbolipp> is never C<NULL> in case of success.
+
+=head3 C<marpaESLIFGrammar_symbolarray_by_levelb>
+
+  short marpaESLIFGrammar_symbolarray_by_levelb(marpaESLIFGrammar_t  *marpaESLIFGrammarp,
+                                                int                 **symbolipp,
+                                                size_t               *symbollp,
+                                                int                   leveli,
+                                                marpaESLIFString_t   *descp);
+
+
+Put in the values pointed by C<symbolipp> and C<symbollp> a pointer to an array of integer, and the number of them, respectively, of the grammar referenced by C<leveli> or C<descp>. 
+
+=over
+
+=item C<leveli>
+
+is the eventual explicit wanted level, ignored if lower than C<0>.
+
+=item C<descp>
+
+is the eventual explicit description, ignored if C<NULL>.
+
+=back
+
+When both C<leveli> and C<descp> are set, C<descp> have precedence over C<leveli>.
+
+Returns a true value on failure, a false value on failure. C<*symbolipp> is never C<NULL> in case of success.
+
+=head3 C<marpaESLIFGrammar_symbolproperty_currentb>
+
+  typedef enum marpaESLIFSymbolPropertyBit {
+    MARPAESLIF_SYMBOL_IS_ACCESSIBLE = 0x01,
+    MARPAESLIF_SYMBOL_IS_NULLABLE   = 0x02,
+    MARPAESLIF_SYMBOL_IS_NULLING    = 0x04,
+    MARPAESLIF_SYMBOL_IS_PRODUCTIVE = 0x08,
+    MARPAESLIF_SYMBOL_IS_START      = 0x10,
+    MARPAESLIF_SYMBOL_IS_TERMINAL   = 0x20
+  } marpaESLIFSymbolPropertyBit_t;
+
+  typedef enum marpaESLIFSymbolType {
+    MARPAESLIF_SYMBOLTYPE_TERMINAL,
+    MARPAESLIF_SYMBOLTYPE_META
+  } marpaESLIFSymbolType_t;
+
+  typedef struct marpaESLIFSymbolProperty {
+    marpaESLIFSymbolType_t       type;                   /* Symbol type */
+    short                        startb;                 /* Start symbol ? */
+    short                        discardb;               /* Discard LHS symbol (i.e. :discard) ? */
+    short                        discardRhsb;            /* Discard RHS symbol ? */
+    short                        lhsb;                   /* Is an LHS somewhere in its grammar ? */
+    short                        topb;                   /* Is a top-level symbol in its grammar - implies lhsb */
+    int                          idi;                    /* Marpa ID */
+    marpaESLIFString_t          *descp;                  /* Symbol description */
+    char                        *eventBefores;           /* Pause before */
+    short                        eventBeforeb;           /* Pause before initial state: 0: off, 1: on */
+    char                        *eventAfters;            /* Pause after */
+    short                        eventAfterb;            /* Pause after initial state: 0: off, 1: on */
+    char                        *eventPredicteds;        /* Event name for prediction */
+    short                        eventPredictedb;        /* Prediction initial state: 0: off, 1: on */
+    char                        *eventNulleds;           /* Event name for nulled */
+    short                        eventNulledb;           /* Nulled initial state: 0: off, 1: on */
+    char                        *eventCompleteds;        /* Event name for completion */
+    short                        eventCompletedb;        /* Completion initial state: 0: off, 1: on */
+    char                        *discardEvents;          /* Discard event name - shallow pointer to a :discard rule's discardEvents */
+    short                        discardEventb;          /* Discard event initial state: 0: off, 1: on - copy of :discard's rule value */
+    int                          lookupLevelDeltai;      /* Referenced grammar delta level */
+    int                          lookupResolvedLeveli;   /* Resolved grammar level */
+    int                          priorityi;              /* Symbol priority */
+    marpaESLIFAction_t          *nullableActionp;        /* Nullable semantic */
+    int                          propertyBitSet;
+  } marpaESLIFSymbolProperty_t;
+
+  short marpaESLIFGrammar_symbolproperty_currentb(marpaESLIFGrammar_t *marpaESLIFGrammarp,
+                                                  int symboli,
+                                                  marpaESLIFSymbolProperty_t *symbolPropertyp);
+
+Puts in the value pointed by C<symbolPropertyp>, if it is not C<NULL>, properties of symbol number C<symboli> of current C<marpaESLIFGrammarp>'s grammar.
+
+Returns a true value on failure, a false value on failure.
+
+=head3 C<marpaESLIFGrammar_symbolproperty_by_levelb>
+
+  short marpaESLIFGrammar_symbolproperty_by_levelb(marpaESLIFGrammar_t *marpaESLIFGrammarp,
+                                                   int symboli,
+                                                   marpaESLIFSymbolProperty_t *symbolPropertyp,
+                                                   int leveli,
+                                                   marpaESLIFString_t *descp);
+
+Puts in the value pointed by C<symbolPropertyp>, if it is not C<NULL>, properties of symbol number C<symboli> of C<marpaESLIFGrammarp>'s grammar's level C<leveli> or description C<descp>.
+
+Returns a true value on failure, a false value on failure.
 
 =head3 C<marpaESLIFGrammar_symboldisplayform_currentb>
 
