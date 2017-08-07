@@ -108,6 +108,15 @@ sub trace_local_variables {
     $self->{log}->tracef("... In %s::%s: \$MarpaX::ESLIF::Context::symbolNumber is: %s", __PACKAGE__, $context, $MarpaX::ESLIF::Context::symbolNumber);
     $self->{log}->tracef("... In %s::%s: \$MarpaX::ESLIF::Context::ruleName     is: %s", __PACKAGE__, $context, $MarpaX::ESLIF::Context::ruleName);
     $self->{log}->tracef("... In %s::%s: \$MarpaX::ESLIF::Context::ruleNumber   is: %s", __PACKAGE__, $context, $MarpaX::ESLIF::Context::ruleNumber);
+    $self->{log}->tracef("... In %s::%s: \$MarpaX::ESLIF::Context::grammar      is: %s", __PACKAGE__, $context, $MarpaX::ESLIF::Context::grammar);
+}
+
+sub trace_rule_property {
+    my ($self, $context) = @_;
+
+    if ($MarpaX::ESLIF::Context::ruleNumber && $MarpaX::ESLIF::Context::grammar && ref($MarpaX::ESLIF::Context::grammar)) {
+        $self->{log}->tracef("... In %s::%s: rule %d property is: %s", __PACKAGE__, $context, $MarpaX::ESLIF::Context::ruleNumber, $MarpaX::ESLIF::Context::grammar->currentRuleProperties($MarpaX::ESLIF::Context::ruleNumber));
+    }
 }
 
 sub do_symbol {
@@ -162,6 +171,7 @@ sub do_op {
 
     $self->{log}->tracef("do_op(%s, %s, %s) => %s", $left, $op, $right, $result);
     $self->trace_local_variables('do_op');
+    $self->trace_rule_property('do_op');
     return $result;
 }
 
@@ -246,10 +256,19 @@ sub setRuleNumber {
     return;
 }
 
+sub setGrammar {
+    my ($self, $info) = @_;
+    $self->{grammar} = $info;
+    $self->{log}->tracef("setGrammar(%s)", $self->{grammar});
+    $self->trace_local_variables('setGrammar');
+    return;
+}
+
 package main;
 use strict;
 use warnings FATAL => 'all';
 use Test::More;
+use Test::Deep;
 use Log::Log4perl qw/:easy/;
 use Log::Any::Adapter;
 use Log::Any qw/$log/;
@@ -299,6 +318,341 @@ my $ngrammar = $eslifGrammar->ngrammar;
 ok($ngrammar > 0, "Number of grammars is > 0");
 my $currentLevel = $eslifGrammar->currentLevel;
 ok($currentLevel >= 0, "Current level is >= 0");
+my %GRAMMAR_PROPERTIES_BY_LEVEL = (
+    '0' => { defaultFreeAction   => ":defaultFreeActions",
+             defaultRuleAction   => "do_op",
+             defaultSymbolAction => "do_symbol",
+             description         => "Grammar level 0",
+             discardId           => 1,
+             latm                => 1,
+             level               => 0,
+             ruleIds             => [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15],
+             startId             => 0,
+             symbolIds           => [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18] },
+    '1' => { defaultFreeAction   => ":defaultFreeActions",
+             defaultRuleAction   => "::concat",
+             defaultSymbolAction => "::transfer",
+             description         => "Grammar level 1",
+             discardId           => -1,
+             latm                => 1,
+             level               => 1,
+             ruleIds             => [0,1],
+             startId             => 0,
+             symbolIds           => [0,1,2,3] }
+    );
+my %RULE_PROPERTIES_BY_LEVEL = (
+    '0' => {
+        '0' => { action                   => undef,
+                 description              => "Rule No 0",
+                 discardEvent             => "discard_whitespaces\$",
+                 discardEventInitialState => 1,
+                 exceptionId              => -1,
+                 hideseparator            => 0,
+                 id                       => 0,
+                 internal                 => 0,
+                 lhsId                    => 1,
+                 minimum                  => -1,
+                 nullRanksHigh            => 0,
+                 proper                   => 0,
+                 rank                     => 0,
+                 rhsIds                   => [2],
+                 separatorId              => -1,
+                 sequence                 => 0,
+                 show                     => ":discard ::= <whitespaces> event => discard_whitespaces\$=on" },
+        '1' => { action                   => undef,
+                 description              => "Rule No 1",
+                 discardEvent             => "discard_comment\$",
+                 discardEventInitialState => 1,
+                 exceptionId              => -1,
+                 hideseparator            => 0,
+                 id                       => 1,
+                 internal                 => 0,
+                 lhsId                    => 1,
+                 minimum                  => -1,
+                 nullRanksHigh            => 0,
+                 proper                   => 0,
+                 rank                     => 0,
+                 rhsIds                   => [3],
+                 separatorId              => -1,
+                 sequence                 => 0,
+                 show                     => ":discard ::= <comment> event => discard_comment\$=on" },
+        '2' => { action                   => "::shift",
+                 description              => "Rule No 2",
+                 discardEvent             => undef,
+                 discardEventInitialState => 0,
+                 exceptionId              => -1,
+                 hideseparator            => 0,
+                 id                       => 2,
+                 internal                 => 0,
+                 lhsId                    => 4,
+                 minimum                  => -1,
+                 nullRanksHigh            => 0,
+                 proper                   => 0,
+                 rank                     => 0,
+                 rhsIds                   => [5],
+                 separatorId              => -1,
+                 sequence                 => 0,
+                 show                     => "<Number> ::= <NUMBER> action => ::shift" },
+        '3' => { action                   => "::shift",
+                 description              => "Rule No 3",
+                 discardEvent             => undef,
+                 discardEventInitialState => 0,
+                 exceptionId              => -1,
+                 hideseparator            => 0,
+                 id                       => 3,
+                 internal                 => 0,
+                 lhsId                    => 0,
+                 minimum                  => -1,
+                 nullRanksHigh            => 0,
+                 proper                   => 0,
+                 rank                     => 0,
+                 rhsIds                   => [6],
+                 separatorId              => -1,
+                 sequence                 => 0,
+                 show                     => "<Expression> ::= <Expression[0]> action => ::shift" },
+        '4' => { action                   => "::shift",
+                 description              => "Rule No 4",
+                 discardEvent             => undef,
+                 discardEventInitialState => 0,
+                 exceptionId              => -1,
+                 hideseparator            => 0,
+                 id                       => 4,
+                 internal                 => 0,
+                 lhsId                    => 6,
+                 minimum                  => -1,
+                 nullRanksHigh            => 0,
+                 proper                   => 0,
+                 rank                     => 0,
+                 rhsIds                   => [7],
+                 separatorId              => -1,
+                 sequence                 => 0,
+                 show => "<Expression[0]> ::= <Expression[1]> action => ::shift" },
+        '5' => { action                   => "::shift",
+                 description              => "Rule No 5",
+                 discardEvent             => undef,
+                 discardEventInitialState => 0,
+                 exceptionId              => -1,
+                 hideseparator            => 0,
+                 id                       => 5,
+                 internal                 => 0,
+                 lhsId                    => 7,
+                 minimum                  => -1,
+                 nullRanksHigh            => 0,
+                 proper                   => 0,
+                 rank                     => 0,
+                 rhsIds                   => [8],
+                 separatorId              => -1,
+                 sequence                 => 0,
+                 show => "<Expression[1]> ::= <Expression[2]> action => ::shift" },
+        '6' => { action                   => "::shift",
+                 description              => "Rule No 6",
+                 discardEvent             => undef,
+                 discardEventInitialState => 0,
+                 exceptionId              => -1,
+                 hideseparator            => 0,
+                 id                       => 6,
+                 internal                 => 0,
+                 lhsId                    => 8,
+                 minimum                  => -1,
+                 nullRanksHigh            => 0,
+                 proper                   => 0,
+                 rank                     => 0,
+                 rhsIds                   => [9],
+                 separatorId              => -1,
+                 sequence                 => 0,
+                 show => "<Expression[2]> ::= <Expression[3]> action => ::shift" },
+        '7' => { action                   => "do_int",
+                 description              => "Expression is Number",
+                 discardEvent             => undef,
+                 discardEventInitialState => 0,
+                 exceptionId              => -1,
+                 hideseparator            => 0,
+                 id                       => 7,
+                 internal                 => 0,
+                 lhsId                    => 9,
+                 minimum                  => -1,
+                 nullRanksHigh            => 0,
+                 proper                   => 0,
+                 rank                     => 0,
+                 rhsIds                   => [4],
+                 separatorId              => -1,
+                 sequence                 => 0,
+                 show                     => "<Expression[3]> ::= <Number> action => do_int name => 'Expression is Number'" },
+        '8' => { action                   => "::copy[1]",
+                 description              => "Expression is ()",
+                 discardEvent             => undef,
+                 discardEventInitialState => 0,
+                 exceptionId              => -1,
+                 hideseparator            => 0,
+                 id                       => 8,
+                 internal                 => 0,
+                 lhsId                    => 9,
+                 minimum                  => -1,
+                 nullRanksHigh            => 0,
+                 proper                   => 0,
+                 rank                     => 0,
+                 rhsIds                   => [10,6,11],
+                 separatorId              => -1,
+                 sequence                 => 0,
+                 show => "<Expression[3]> ::= '(' <Expression[0]> ')' action => ::copy[1] name => 'Expression is ()'" },
+        '9' => { action                   => undef,
+                 description              => "Expression is **",
+                 discardEvent             => undef,
+                 discardEventInitialState => 0,
+                 exceptionId              => -1,
+                 hideseparator            => 0,
+                 id                       => 9,
+                 internal                 => 0,
+                 lhsId                    => 8,
+                 minimum                  => -1,
+                 nullRanksHigh            => 0,
+                 proper                   => 0,
+                 rank                     => 0,
+                 rhsIds                   => [9,12,8],
+                 separatorId              => -1,
+                 sequence                 => 0,
+                 show                     => "<Expression[2]> ::= <Expression[3]> '**' <Expression[2]> name => 'Expression is **'" },
+        '10' => {action                   => undef,
+                 description              => "Expression is *",
+                 discardEvent             => undef,
+                 discardEventInitialState => 0,
+                 exceptionId              => -1,
+                 hideseparator            => 0,
+                 id                       => 10,
+                 internal                 => 0,
+                 lhsId                    => 7,
+                 minimum                  => -1,
+                 nullRanksHigh            => 0,
+                 proper                   => 0,
+                 rank                     => 0,
+                 rhsIds                   => [7,13,8],
+                 separatorId              => -1,
+                 sequence                 => 0,
+                 show                     => "<Expression[1]> ::= <Expression[1]> '*' <Expression[2]> name => 'Expression is *'" },
+        '11' => {action                   => undef,
+                 description              => "Expression is /",
+                 discardEvent             => undef,
+                 discardEventInitialState => 0,
+                 exceptionId              => -1,
+                 hideseparator            => 0,
+                 id                       => 11,
+                 internal                 => 0,
+                 lhsId                    => 7,
+                 minimum                  => -1,
+                 nullRanksHigh            => 0,
+                 proper                   => 0,
+                 rank                     => 0,
+                 rhsIds                   => [7,14,8],
+                 separatorId              => -1,
+                 sequence                 => 0,
+                 show => "<Expression[1]> ::= <Expression[1]> '/' <Expression[2]> name => 'Expression is /'" },
+        '12' => {action                   => undef,
+                 description              => "Expression is +",
+                 discardEvent             => undef,
+                 discardEventInitialState => 0,
+                 exceptionId              => -1,
+                 hideseparator            => 0,
+                 id                       => 12,
+                 internal                 => 0,
+                 lhsId                    => 6,
+                 minimum                  => -1,
+                 nullRanksHigh            => 0,
+                 proper                   => 0,
+                 rank                     => 0,
+                 rhsIds                   => [6,15,7],
+                 separatorId              => -1,
+                 sequence                 => 0,
+                 show                     => "<Expression[0]> ::= <Expression[0]> '+' <Expression[1]> name => 'Expression is +'" },
+        '13' => {action                   => undef,
+                 description              => "Expression is -",
+                 discardEvent             => undef,
+                 discardEventInitialState => 0,
+                 exceptionId              => -1,
+                 hideseparator            => 0,
+                 id                       => 13,
+                 internal                 => 0,
+                 lhsId                    => 6,
+                 minimum                  => -1,
+                 nullRanksHigh            => 0,
+                 proper                   => 0,
+                 rank                     => 0,
+                 rhsIds                   => [6,16,7],
+                 separatorId              => -1,
+                 sequence                 => 0,
+                 show => "<Expression[0]> ::= <Expression[0]> '-' <Expression[1]> name => 'Expression is -'" },
+        '14' => {action                   => undef,
+                 description              => "Rule No 14",
+                 discardEvent             => undef,
+                 discardEventInitialState => 0,
+                 exceptionId              => -1,
+                 hideseparator            => 0,
+                 id                       => 14,
+                 internal                 => 0,
+                 lhsId                    => 2,
+                 minimum                  => -1,
+                 nullRanksHigh            => 0,
+                 proper                   => 0,
+                 rank                     => 0,
+                 rhsIds                   => [17],
+                 separatorId              => -1,
+                 sequence                 => 0,
+                 show                     => "<whitespaces> ::= <WHITESPACES>"},
+        '15' => {action                   => undef,
+                 description              => "Rule No 15",
+                 discardEvent             => undef,
+                 discardEventInitialState => 0,
+                 exceptionId              => -1,
+                 hideseparator            => 0,
+                 id                       => 15,
+                 internal                 => 0,
+                 lhsId                    => 3,
+                 minimum                  => -1,
+                 nullRanksHigh            => 0,
+                 proper                   => 0,
+                 rank                     => 0,
+                 rhsIds                   => [18],
+                 separatorId              => -1,
+                 sequence                 => 0,
+                 show                     => "<comment> ::= /(?:(?:(?:\\/\\/)(?:[^\\n]*)(?:\\n|\\z))|(?:(?:\\/\\*)(?:(?:[^\\*]+|\\*(?!\\/))*)(?:\\*\\/)))/u"},
+    },
+    '1' => {
+        '0' => { action                   => undef,
+                 description              => "Rule No 0",
+                 discardEvent             => undef,
+                 discardEventInitialState => 0,
+                 exceptionId              => -1,
+                 hideseparator            => 0,
+                 id                       => 0,
+                 internal                 => 0,
+                 lhsId                    => 0,
+                 minimum                  => -1,
+                 nullRanksHigh            => 0,
+                 proper                   => 0,
+                 rank                     => 0,
+                 rhsIds                   => [1],
+                 separatorId              => -1,
+                 sequence                 => 0,
+                 show                     => "<NUMBER> ~ /[\\d]+/" },
+        '1' => { action                   => undef,
+                 description              => "Rule No 1",
+                 discardEvent             => undef,
+                 discardEventInitialState => 0,
+                 exceptionId              => -1,
+                 hideseparator            => 0,
+                 id                       => 1,
+                 internal                 => 0,
+                 lhsId                    => 2,
+                 minimum                  => 1,
+                 nullRanksHigh            => 0,
+                 proper                   => 0,
+                 rank                     => 0,
+                 rhsIds                   => [3],
+                 separatorId              => -1,
+                 sequence                 => 1,
+                 show                     => "<WHITESPACES> ~ /[\\s]/+" }
+    }
+    );
+cmp_deeply($eslifGrammar->currentProperties, $GRAMMAR_PROPERTIES_BY_LEVEL{'0'}, "Grammar current properties");
 
 my $currentDescription = $eslifGrammar->currentDescription;
 ok($currentDescription ne '', "Current description is not empty");
@@ -307,6 +661,9 @@ foreach my $level (0..$ngrammar-1) {
     my $descriptionByLevel = $eslifGrammar->descriptionByLevel($level);
     ok($descriptionByLevel ne '', "Description of level $level is not empty");
     diag($descriptionByLevel);
+    my $got = $eslifGrammar->propertiesByLevel($level);
+    my $expected = $GRAMMAR_PROPERTIES_BY_LEVEL{$level};
+    cmp_deeply($got, $expected, "Grammar properties at level $level");
 }
 
 my $currentRuleIds = $eslifGrammar->currentRuleIds;
@@ -319,6 +676,9 @@ foreach my $ruleId (0..$#{$currentRuleIds}) {
     my $ruleShow = $eslifGrammar->ruleShow($currentRuleIds->[$ruleId]);
     ok($ruleShow ne '', "Show of rule No " . $currentRuleIds->[$ruleId]);
     diag($ruleShow);
+    my $got = $eslifGrammar->currentRuleProperties($ruleId);
+    my $expected = $RULE_PROPERTIES_BY_LEVEL{'0'}{$ruleId};
+    cmp_deeply($got, $expected, "Rule No $ruleId current properties");
 }
 
 foreach my $level (0..$ngrammar-1) {
@@ -334,6 +694,10 @@ foreach my $level (0..$ngrammar-1) {
         my $ruleShowByLevel = $eslifGrammar->ruleShowByLevel($level, $ruleIdsByLevel->[$ruleId]);
         ok($ruleShowByLevel ne '', "Show of rule No " . $ruleIdsByLevel->[$ruleId] . " of level $level");
         diag($ruleShowByLevel);
+
+        my $got = $eslifGrammar->rulePropertiesByLevel($level, $ruleId);
+        my $expected = $RULE_PROPERTIES_BY_LEVEL{$level}{$ruleId};
+        cmp_deeply($got, $expected, "Rule No $ruleId of level $level properties");
     }
 }
 
@@ -371,6 +735,7 @@ for (my $i = 0; $i <= $#strings; $i++) {
   $MarpaX::ESLIF::Context::symbolNumber = 'none (original value)';
   $MarpaX::ESLIF::Context::ruleName = 'none (original value)';
   $MarpaX::ESLIF::Context::ruleNumber = 'none (original value)';
+  $MarpaX::ESLIF::Context::grammar = 'none (original value)';
   my $valueInterface = MyValue->new($log, $eslifGrammar);
 
   if ($eslifGrammar->parse($recognizerInterface, $valueInterface)) {
