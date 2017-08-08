@@ -1993,10 +1993,9 @@ CODE:
   MARPAESLIF_HV_STORE_IV         (hvp, "eventCompletedInitialState", symbolProperty.eventCompletedb);
   MARPAESLIF_HV_STORE_ASCIISTRING(hvp, "discardEvent",               symbolProperty.discardEvents);
   MARPAESLIF_HV_STORE_IV         (hvp, "discardEventInitialState",   symbolProperty.discardEventb);
-  MARPAESLIF_HV_STORE_IV         (hvp, "lookupLevelDeltai",          symbolProperty.lookupLevelDeltai);
   MARPAESLIF_HV_STORE_IV         (hvp, "lookupResolvedLeveli",       symbolProperty.lookupResolvedLeveli);
   MARPAESLIF_HV_STORE_IV         (hvp, "priorityi",                  symbolProperty.priorityi);
-  MARPAESLIF_HV_STORE_ACTION     (hvp, "nullableActionp",            symbolProperty.nullableActionp);
+  MARPAESLIF_HV_STORE_ACTION     (hvp, "nullableAction",             symbolProperty.nullableActionp);
   MARPAESLIF_HV_STORE_IV         (hvp, "propertyBitSet",             symbolProperty.propertyBitSet);
 
   RETVAL = newRV_inc((SV *)hvp);
@@ -2044,10 +2043,9 @@ CODE:
   MARPAESLIF_HV_STORE_IV         (hvp, "eventCompletedInitialState", symbolProperty.eventCompletedb);
   MARPAESLIF_HV_STORE_ASCIISTRING(hvp, "discardEvent",               symbolProperty.discardEvents);
   MARPAESLIF_HV_STORE_IV         (hvp, "discardEventInitialState",   symbolProperty.discardEventb);
-  MARPAESLIF_HV_STORE_IV         (hvp, "lookupLevelDeltai",          symbolProperty.lookupLevelDeltai);
   MARPAESLIF_HV_STORE_IV         (hvp, "lookupResolvedLeveli",       symbolProperty.lookupResolvedLeveli);
   MARPAESLIF_HV_STORE_IV         (hvp, "priorityi",                  symbolProperty.priorityi);
-  MARPAESLIF_HV_STORE_ACTION     (hvp, "nullableActionp",            symbolProperty.nullableActionp);
+  MARPAESLIF_HV_STORE_ACTION     (hvp, "nullableAction",             symbolProperty.nullableActionp);
   MARPAESLIF_HV_STORE_IV         (hvp, "propertyBitSet",             symbolProperty.propertyBitSet);
 
   RETVAL = newRV_inc((SV *)hvp);
