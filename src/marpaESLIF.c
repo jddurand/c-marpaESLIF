@@ -5195,7 +5195,7 @@ short marpaESLIFGrammar_symbolproperty_by_levelb(marpaESLIFGrammar_t *marpaESLIF
   marpaESLIFSymbolProperty.nullableActionp      = symbolp->nullableActionp;
   /* I could have copied symbolp->propertyBitSet directly, though I believe the code is more maintanable */
   /* and extensible doing that bit per bit. */
-  symbolp->propertyBitSet = 0;
+  marpaESLIFSymbolProperty.propertyBitSet = 0;
   if ((symbolp->propertyBitSet & MARPAESLIF_SYMBOL_IS_ACCESSIBLE) == MARPAESLIF_SYMBOL_IS_ACCESSIBLE) { marpaESLIFSymbolProperty.propertyBitSet |= MARPAESLIF_SYMBOL_IS_ACCESSIBLE; }
   if ((symbolp->propertyBitSet & MARPAESLIF_SYMBOL_IS_NULLABLE)   == MARPAESLIF_SYMBOL_IS_NULLABLE  ) { marpaESLIFSymbolProperty.propertyBitSet |= MARPAESLIF_SYMBOL_IS_NULLABLE; }
   if ((symbolp->propertyBitSet & MARPAESLIF_SYMBOL_IS_NULLING)    == MARPAESLIF_SYMBOL_IS_NULLING   ) { marpaESLIFSymbolProperty.propertyBitSet |= MARPAESLIF_SYMBOL_IS_NULLING; }
