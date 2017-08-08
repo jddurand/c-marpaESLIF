@@ -281,7 +281,6 @@ int main() {
             GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... eventCompletedb       : %d", (int) symbolProperty.eventCompletedb);
             GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... discardEvents         : %s", symbolProperty.discardEvents != NULL ? symbolProperty.discardEvents : "??? (NULL)");
             GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... discardEventb         : %d", (int) symbolProperty.discardEventb);
-            GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... lookupLevelDeltai     : %d", symbolProperty.lookupLevelDeltai);
             GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... lookupResolvedLeveli  : %d", symbolProperty.lookupResolvedLeveli);
             GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... priorityi             : %d", symbolProperty.priorityi);
             if (symbolProperty.nullableActionp != NULL) {

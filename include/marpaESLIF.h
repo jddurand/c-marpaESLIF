@@ -237,7 +237,6 @@ typedef struct marpaESLIFSymbolProperty {
   short                        eventCompletedb;        /* Completion initial state: 0: off, 1: on */
   char                        *discardEvents;          /* Discard event name - shallow pointer to a :discard rule's discardEvents */
   short                        discardEventb;          /* Discard event initial state: 0: off, 1: on - copy of :discard's rule value */
-  int                          lookupLevelDeltai;      /* Referenced grammar delta level */
   int                          lookupResolvedLeveli;   /* Resolved grammar level */
   int                          priorityi;              /* Symbol priority */
   marpaESLIFAction_t          *nullableActionp;        /* Nullable semantic */

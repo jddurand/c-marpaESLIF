@@ -5190,7 +5190,6 @@ short marpaESLIFGrammar_symbolproperty_by_levelb(marpaESLIFGrammar_t *marpaESLIF
   marpaESLIFSymbolProperty.eventCompletedb      = symbolp->eventCompletedb;
   marpaESLIFSymbolProperty.discardEvents        = symbolp->discardEvents;
   marpaESLIFSymbolProperty.discardEventb        = symbolp->discardEventb;
-  marpaESLIFSymbolProperty.lookupLevelDeltai    = symbolp->lookupLevelDeltai;
   marpaESLIFSymbolProperty.lookupResolvedLeveli = symbolp->lookupResolvedLeveli;
   marpaESLIFSymbolProperty.priorityi            = symbolp->priorityi;
   marpaESLIFSymbolProperty.nullableActionp      = symbolp->nullableActionp;
