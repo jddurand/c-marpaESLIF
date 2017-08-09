@@ -2,7 +2,6 @@ use strict;
 use warnings FATAL => 'all';
 
 package MarpaX::ESLIF::Logger::Level;
-use MarpaX::ESLIF;
 
 # ABSTRACT: ESLIF Logger levels
 
@@ -13,6 +12,8 @@ use MarpaX::ESLIF;
 ESLIF logger levels are mapped to constants. This module is giving access to them.
 
 =head1 SYNOPSIS
+
+  use MarpaX::ESLIF;
 
   my $loggerLevelType;
   $loggerLevelType = MarpaX::ESLIF::Logger::Level->GENERICLOGGER_LOGLEVEL_TRACE;      #  0

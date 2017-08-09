@@ -16,6 +16,14 @@ BEGIN {
     XSLoader::load(__PACKAGE__, $VERSION);
 }
 
+# Load our explicit sub-modules
+use MarpaX::ESLIF::Event::Type;
+use MarpaX::ESLIF::Logger::Level;
+use MarpaX::ESLIF::Symbol::PropertyBitSet;
+use MarpaX::ESLIF::Symbol::Type;
+use MarpaX::ESLIF::Value::Type;
+use MarpaX::ESLIF::Rule::PropertyBitSet;
+
 =head1 DESCRIPTION
 
 ESLIF is derived from perl's L<Marpa::R2>, and has its own BNF, documented in L<MarpaX::ESLIF::BNF>.

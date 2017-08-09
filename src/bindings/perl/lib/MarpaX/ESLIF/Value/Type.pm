@@ -2,7 +2,6 @@ use strict;
 use warnings FATAL => 'all';
 
 package MarpaX::ESLIF::Value::Type;
-use MarpaX::ESLIF;
 
 # ABSTRACT: ESLIF Value Types
 
@@ -13,6 +12,8 @@ use MarpaX::ESLIF;
 ESLIF values are mapped to constants. This module is giving access to them, although they have no use in the perl interface.
 
 =head1 SYNOPSIS
+
+  use MarpaX::ESLIF;
 
   my $valueType;
   $valueType = MarpaX::ESLIF::Value::Type->MARPAESLIF_VALUE_TYPE_UNDEF;         #  0
