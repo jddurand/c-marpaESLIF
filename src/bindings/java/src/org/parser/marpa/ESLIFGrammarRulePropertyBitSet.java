@@ -5,11 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * ESLIFLoggerLevel is an enumeration of all ESLIF logging levels.
- * <p>
- * This class is explicitly reproducing the formalism of the <a href="http://github.com/jddurand/c-genericLogger" target="_top">genericLogger</a> C library.
- * 
- * @see ESLIFLoggerInterface
+ * ESLIFGrammarRulePropertyBitSet is an enumeration of all low-level Rule properties, directly coming from libmarpa.
  */
 public enum ESLIFGrammarRulePropertyBitSet {
 
