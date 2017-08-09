@@ -18,29 +18,29 @@ package org.parser.marpa;
  */
 public class ESLIFGrammarSymbolProperties {
 	  private ESLIFGrammarSymbolType type;
-	  private boolean start;
-	  private boolean discard;
-	  private boolean discardRhs;
-	  private boolean lhs;
-	  private boolean top;
-	  private int id;
-	  private String description;
-	  private String eventBefore;
-	  private boolean eventBeforeInitialState;
-	  private String eventAfter;
-	  private boolean eventAfterInitialState;
-	  private String eventPredicted;
-	  private boolean eventPredictedInitialState;
-	  private String eventNulled;
-	  private boolean eventNulledInitialState;
-	  private String eventCompleted;
-	  private boolean eventCompletedInitialState;
-	  private String discardEvent;
-	  private boolean discardEventInitialState;
-	  private int lookupResolvedLeveli;
-	  private int priorityi;
-	  private String nullableAction;
-	  private int propertyBitSet;
+	  private boolean                start;
+	  private boolean                discard;
+	  private boolean                discardRhs;
+	  private boolean                lhs;
+	  private boolean                top;
+	  private int                    id;
+	  private String                 description;
+	  private String                 eventBefore;
+	  private boolean                eventBeforeInitialState;
+	  private String                 eventAfter;
+	  private boolean                eventAfterInitialState;
+	  private String                 eventPredicted;
+	  private boolean                eventPredictedInitialState;
+	  private String                 eventNulled;
+	  private boolean                eventNulledInitialState;
+	  private String                 eventCompleted;
+	  private boolean                eventCompletedInitialState;
+	  private String                 discardEvent;
+	  private boolean                discardEventInitialState;
+	  private int                    lookupResolvedLeveli;
+	  private int                    priorityi;
+	  private String                 nullableAction;
+	  private int                    propertyBitSet;
 
 	/*
 	 * ********************************************
@@ -51,7 +51,30 @@ public class ESLIFGrammarSymbolProperties {
 	 * Creation of an ESLIFGrammarSymbolProperties instance
 	 * 
 	 */
-	public ESLIFGrammarSymbolProperties() {
+	public ESLIFGrammarSymbolProperties(boolean start, boolean discard, boolean discardRhs, boolean lhs, boolean top, int id, String description, String eventBefore, boolean eventBeforeInitialState, String eventAfter, boolean eventAfterInitialState, String eventPredicted, boolean eventPredictedInitialState, String eventNulled, boolean eventNulledInitialState, String eventCompleted, boolean eventCompletedInitialState, String discardEvent, boolean discardEventInitialState, int lookupResolvedLeveli, int priorityi, String nullableAction, int propertyBitSet) {
+		this.start                      = start;
+		this.discard                    = discard;
+		this.discardRhs                 = discardRhs;
+		this.lhs                        = lhs;
+		this.top                        = top;
+		this.id                         = id;
+		this.description                = description;
+		this.eventBefore                = eventBefore;
+		this.eventBeforeInitialState    = eventBeforeInitialState;
+		this.eventAfter                 = eventAfter;
+		this.eventAfterInitialState     = eventAfterInitialState;
+		this.eventPredicted             = eventPredicted;
+		this.eventPredictedInitialState = eventPredictedInitialState;
+		this.eventNulled                = eventNulled;
+		this.eventNulledInitialState    = eventNulledInitialState;
+		this.eventCompleted             = eventCompleted;
+		this.eventCompletedInitialState = eventCompletedInitialState;
+		this.discardEvent               = discardEvent;
+		this.discardEventInitialState   = discardEventInitialState;
+		this.lookupResolvedLeveli       = lookupResolvedLeveli;
+		this.priorityi                  = priorityi;
+		this.nullableAction             = nullableAction;
+		this.propertyBitSet             = propertyBitSet;
 	}
 
 	/**
