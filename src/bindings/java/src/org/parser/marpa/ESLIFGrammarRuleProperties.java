@@ -8,8 +8,9 @@ package org.parser.marpa;
  * <pre>
  * ESLIF eslif = new ESLIF(...)
  * ESLIFGrammar eslifGrammar = new ESLIFGrammar(...);
- * ESLIFGrammarProperties eslifGrammarProperties = eslifGrammar->currentRuleProperties(0);
- * ESLIFGrammarProperties eslifGrammarProperties = eslifGrammar->rulePropertiesByLevel(0, 0);
+ * ESLIFGrammarRuleProperties eSLIFGrammarRuleProperties = eslifGrammar->currentRuleProperties(0);
+ * or
+ * ESLIFGrammarRuleProperties eSLIFGrammarRuleProperties = eslifGrammar->rulePropertiesByLevel(0, 0);
  * ...
  * eslifGrammar.free();
  * eslif.free()
