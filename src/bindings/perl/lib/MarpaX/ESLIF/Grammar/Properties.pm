@@ -67,29 +67,209 @@ Calls to grammar's currentProperties() or propertiesByLevel() methods outputs an
 #
 # old-style perl - getters only in java style
 #
-my @MEMBERS = qw/level
-        description
-        latm
-        defaultSymbolAction
-        defaultRuleAction
-        defaultFreeAction
-        startId
-        discardId
-        symbolIds
-        ruleIds/;
+
+=head1 METHODS
+
+=head2 MarpaX::ESLIF::Grammar::Properties->new(%args)
+
+Creation of an ESLIFGrammarProperties instance, noted C<$self> afterwards. C<%args> is a hash that should contain:
+
+=over
+
+=item level
+
+Grammar level
+
+=item description
+
+Grammar description
+
+=item latm
+
+Grammar is in LATM (Longest Accepted Token Mode) ?
+
+=item defaultSymbolAction
+
+Grammar default symbol action
+
+=item defaultRuleAction
+
+Grammar default rule action
+
+=item defaultFreeAction
+
+Grammar default free action
+
+=item startId
+
+Start symbol Id
+
+=item discardId
+
+Discard symbol Id
+
+=item symbolIds
+
+Symbol Ids (array reference)
+
+=item ruleIds
+
+Rule Ids (array reference)
+
+=back
+
+=cut
 
 sub new {
     my ($pkg, %args) = @_;
-
-    return bless \%args, $pkg
+    #
+    # This should be called ONLY by the XS, and we know what we do
+    #
+    return bless { level               => $args{level},
+                   description         => $args{description},
+                   latm                => $args{latm},
+                   defaultSymbolAction => $args{defaultSymbolAction},
+                   defaultRuleAction   => $args{defaultRuleAction},
+                   defaultFreeAction   => $args{defaultFreeAction},
+                   startId             => $args{startId},
+                   discardId           => $args{discardId},
+                   symbolIds           => $args{symbolIds},
+                   ruleIds             => $args{ruleIds}
+                   }, $pkg
 }
 
 #
 # Explicit getters - XS and this file are in sync, fallbacks to undef value if not
 #
-foreach my $member (@MEMBERS) {
-    my $getter = 'get' . ucfirst($member);
-    eval "sub $getter { return \$_[0]->{$member} }" ## no critic
+
+=head2 $self->getLevel
+
+Returns grammar's level
+
+=cut
+
+sub getLevel {
+  my ($self) = @_;
+
+  return $self->{level}
+}
+
+=head2 $self->getDescription
+
+Returns grammar's description
+
+=cut
+
+sub getDescription {
+  my ($self) = @_;
+
+  return $self->{description}
+}
+
+=head2 $self->isLatm
+
+Returns a boolean that indicates if this grammar is in the LATM (Longest Acceptable Token Mode) or not
+
+=cut
+
+sub isLatm {
+  my ($self) = @_;
+
+  return $self->{latm}
+}
+
+=head2 $self->getLatm
+
+Alias to isLatm()
+
+=cut
+
+sub getLatm {
+  goto &isLatm
+}
+
+=head2 $self->getDefaultSymbolAction
+
+Returns grammar's default symbol action, never null
+
+=cut
+
+sub getDefaultSymbolAction {
+  my ($self) = @_;
+
+  return $self->{defaultSymbolAction}
+}
+
+=head2 $self->getDefaultRuleAction
+
+Returns grammar's default rule action, can be null
+
+=cut
+
+sub getDefaultRuleAction {
+  my ($self) = @_;
+
+  return $self->{defaultRuleAction}
+}
+
+=head2 $self->getDefaultFreeAction
+
+Returns grammar's default free action, never null and always ":defaultFreeActions" (hardcoded in the JNI interface)
+
+=cut
+
+sub getDefaultFreeAction {
+  my ($self) = @_;
+
+  return $self->{defaultFreeAction}
+}
+
+=head2 $self->getStartId
+
+Returns grammar's start symbol id, always >= 0
+
+=cut
+
+sub getStartId {
+  my ($self) = @_;
+
+  return $self->{startId}
+}
+
+=head2 $self->getDiscardId
+
+Returns grammar's discard symbol id, < 0 if none.
+
+=cut
+
+sub getDiscardId {
+  my ($self) = @_;
+
+  return $self->{discardId}
+}
+
+=head2 $self->getSymbolIds
+
+Returns a reference to a list of symbol identifiers
+
+=cut
+
+sub getSymbolIds {
+  my ($self) = @_;
+
+  return $self->{symbolIds}
+}
+
+=head2 $self->getRuleIds
+
+Returns a reference to a list of rule identifiers
+
+=cut
+
+sub getRuleIds {
+  my ($self) = @_;
+
+  return $self->{ruleIds}
 }
 
 1;
