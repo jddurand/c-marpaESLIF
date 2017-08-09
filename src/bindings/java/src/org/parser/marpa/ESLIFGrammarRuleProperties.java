@@ -242,7 +242,7 @@ public class ESLIFGrammarRuleProperties {
 	}
 
 	/**
-	 * @return Rule's low-level property bits
+	 * @return Rule's low-level property bits (combination of ESLIFGrammarRulePropertyBitSet values)
 	 */
 	public int getPropertyBitSet() {
 		return propertyBitSet;
