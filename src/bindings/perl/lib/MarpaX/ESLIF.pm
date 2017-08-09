@@ -18,6 +18,9 @@ BEGIN {
 
 # Load our explicit sub-modules
 use MarpaX::ESLIF::Event::Type;
+use MarpaX::ESLIF::Grammar::Properties;
+use MarpaX::ESLIF::Grammar::Rule::Properties;
+use MarpaX::ESLIF::Grammar::Symbol::Properties;
 use MarpaX::ESLIF::Logger::Level;
 use MarpaX::ESLIF::Symbol::PropertyBitSet;
 use MarpaX::ESLIF::Symbol::Type;

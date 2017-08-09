@@ -1291,7 +1291,9 @@ my %SYMBOL_PROPERTIES_BY_LEVEL = (
     }
     );
 
-doCmpDeeply($eslifGrammar->currentProperties, $GRAMMAR_PROPERTIES_BY_LEVEL{'0'}, "Grammar current properties");
+my $grammarCurrentProperties = $eslifGrammar->currentProperties;
+isa_ok($grammarCurrentProperties, 'MarpaX::ESLIF::Grammar::Properties');
+doCmpProperties($grammarCurrentProperties, bless($GRAMMAR_PROPERTIES_BY_LEVEL{'0'}, 'MarpaX::ESLIF::Grammar::Properties'), "Grammar current properties");
 
 my $currentDescription = $eslifGrammar->currentDescription;
 ok($currentDescription ne '', "Current description is not empty");
@@ -1301,8 +1303,8 @@ foreach my $level (0..$ngrammar-1) {
     ok($descriptionByLevel ne '', "Description of level $level is not empty");
     diag($descriptionByLevel);
     my $got = $eslifGrammar->propertiesByLevel($level);
-    my $expected = $GRAMMAR_PROPERTIES_BY_LEVEL{$level};
-    doCmpDeeply($got, $expected, "Grammar properties at level $level");
+    my $expected = bless($GRAMMAR_PROPERTIES_BY_LEVEL{$level}, 'MarpaX::ESLIF::Grammar::Properties');
+    doCmpProperties($got, $expected, "Grammar properties at level $level");
 }
 
 my $currentRuleIds = $eslifGrammar->currentRuleIds;
@@ -1317,7 +1319,7 @@ foreach my $ruleId (0..$#{$currentRuleIds}) {
     diag($ruleShow);
     my $got = $eslifGrammar->currentRuleProperties($ruleId);
     my $expected = $RULE_PROPERTIES_BY_LEVEL{'0'}{$ruleId};
-    doCmpDeeply($got, $expected, "Rule No $ruleId current properties");
+    doCmpProperties($got, bless($expected, 'MarpaX::ESLIF::Grammar::Rule::Properties'), "Rule No $ruleId current properties");
 }
 
 my $currentSymbolIds = $eslifGrammar->currentSymbolIds;
@@ -1329,7 +1331,7 @@ foreach my $symbolId (0..$#{$currentSymbolIds}) {
     diag($symbolDisplay);
     my $got = $eslifGrammar->currentSymbolProperties($symbolId);
     my $expected = $SYMBOL_PROPERTIES_BY_LEVEL{'0'}{$symbolId};
-    doCmpDeeply($got, $expected, "Symbol No $symbolId current properties");
+    doCmpProperties($got, bless($expected, 'MarpaX::ESLIF::Grammar::Symbol::Properties'), "Symbol No $symbolId current properties");
 }
 
 foreach my $level (0..$ngrammar-1) {
@@ -1348,7 +1350,7 @@ foreach my $level (0..$ngrammar-1) {
 
         my $got = $eslifGrammar->rulePropertiesByLevel($level, $ruleId);
         my $expected = $RULE_PROPERTIES_BY_LEVEL{$level}{$ruleId};
-        doCmpDeeply($got, $expected, "Rule No $ruleId of level $level properties");
+        doCmpProperties($got, bless($expected, 'MarpaX::ESLIF::Grammar::Rule::Properties'), "Rule No $ruleId of level $level properties");
     }
 
     my $symbolIdsByLevel = $eslifGrammar->symbolIdsByLevel($level);
@@ -1363,7 +1365,7 @@ foreach my $level (0..$ngrammar-1) {
         my $got = $eslifGrammar->symbolPropertiesByLevel($level, $symbolId);
         # $log->tracef("\$SYMBOL_PROPERTIES_BY_LEVEL{%d}{%d} = %s", $level, $symbolId, $got);
         my $expected = $SYMBOL_PROPERTIES_BY_LEVEL{$level}{$symbolId};
-        doCmpDeeply($got, $expected, "Symbol No $symbolId of level $level properties");
+        doCmpProperties($got, bless($expected, 'MarpaX::ESLIF::Grammar::Symbol::Properties'), "Symbol No $symbolId of level $level properties");
     }
 }
 my $show = $eslifGrammar->show;
@@ -1642,11 +1644,27 @@ sub doLexemeTry {
     }
 }
 
-sub doCmpDeeply {
+sub doCmpProperties {
   my ($got, $expected, $what) = @_;
 
   my ($ok, $stack) = cmp_details($got, $expected);
   diag(deep_diag($stack)) unless (ok($ok, $what));
+  #
+  # Properties are blessed objects, and we expect to getXxx() members
+  # for every expected hash value
+  #
+  foreach (keys %{$expected}) {
+      my $getter = 'get' . ucfirst($_);
+      #
+      # We know in advance that properties content are either scalars, either array references
+      #
+      my $ref = ref($got) || 'undef';
+      my $got2 = $got->$getter;
+      my $expected2 = $expected->{$_};
+      my $what2 = $ref . "'s $getter method";
+      my ($ok2, $stack2) = cmp_details($got2, $expected2);
+      diag(deep_diag($stack2)) unless (ok($ok2, $what2));
+  }
 }
 
 

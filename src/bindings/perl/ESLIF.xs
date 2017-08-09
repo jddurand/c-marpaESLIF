@@ -211,6 +211,13 @@ static const size_t  UTF8l = 5; /* "UTF-8" is 5 bytes in ASCII encoding */
 static const char   *ASCIIs = "ASCII";
 
 /*****************************************************************************/
+/* Static variables initialized at boot                                      */
+/*****************************************************************************/
+SV *boot_MarpaX__ESLIF__Grammar__Properties_svp;
+SV *boot_MarpaX__ESLIF__Grammar__Rule__Properties_svp;
+SV *boot_MarpaX__ESLIF__Grammar__Symbol__Properties_svp;
+
+/*****************************************************************************/
 /* Macros                                                                    */
 /*****************************************************************************/
 #define MARPAESLIF_FILENAMES "ESLIF.xs"
@@ -298,32 +305,42 @@ static const char   *ASCIIs = "ASCII";
     _l = _marpaESLIFValueResultp->sizel;                                \
   } while (0)
 
-#define MARPAESLIF_HV_STORE_ACTION(hvp, key, actionp) do {              \
+/* In this macro we hack the difference between hv_store and av_push by testing key */
+#define MARPAESLIF_XV_STORE(xvp, key, svp) do {         \
+    if (SvTYPE((SV *)xvp) == SVt_PVHV) {                \
+      hv_store((HV *) xvp, key, strlen(key), svp, 0);   \
+    } else {                                            \
+      av_push((AV *) xvp, newSVpvn(key, strlen(key)));  \
+      av_push((AV *) xvp, svp);                         \
+    }                                                   \
+  } while (0)
+
+#define MARPAESLIF_XV_STORE_ACTION(hvp, key, actionp) do {              \
     SV *_svp;                                                           \
                                                                         \
     if (actionp != NULL) {                                              \
       switch (actionp->type) {                                          \
       case MARPAESLIF_ACTION_TYPE_NAME:                                 \
-        hv_store(hvp, key, strlen(key), newSVpv(actionp->u.names, 0), 0); \
+        MARPAESLIF_XV_STORE(hvp, key, newSVpv(actionp->u.names, 0));    \
         break;                                                          \
       case MARPAESLIF_ACTION_TYPE_STRING:                               \
         _svp = newSVpvn(actionp->u.stringp->bytep, actionp->u.stringp->bytel); \
         if (is_utf8_string((const U8 *) actionp->u.stringp->bytep, (STRLEN) actionp->u.stringp->bytel)) { \
           SvUTF8_on(_svp);                                              \
         }                                                               \
-        hv_store(hvp, key, strlen(key), _svp, 0);                       \
+        MARPAESLIF_XV_STORE(hvp, key, _svp);                            \
         break;                                                          \
       default:                                                          \
         warn("Unsupported action type %d", actionp->type);              \
-        hv_store(hvp, key, strlen(key), &PL_sv_undef, 0);               \
+        MARPAESLIF_XV_STORE(hvp, key, &PL_sv_undef);                    \
         break;                                                          \
       }                                                                 \
     } else {                                                            \
-      hv_store(hvp, key, strlen(key), &PL_sv_undef, 0);                 \
+      MARPAESLIF_XV_STORE(hvp, key, &PL_sv_undef);                      \
     }                                                                   \
   } while (0)
 
-#define MARPAESLIF_HV_STORE_STRING(hvp, key, stringp) do {              \
+#define MARPAESLIF_XV_STORE_STRING(hvp, key, stringp) do {              \
     SV *_svp;                                                           \
                                                                         \
     if (stringp != NULL) {                                              \
@@ -331,25 +348,25 @@ static const char   *ASCIIs = "ASCII";
       if (is_utf8_string((const U8 *) stringp->bytep, (STRLEN) stringp->bytel)) { \
         SvUTF8_on(_svp);                                                \
       }                                                                 \
-      hv_store(hvp, key, strlen(key), _svp, 0);                         \
+      MARPAESLIF_XV_STORE(hvp, key, _svp);                              \
     } else {                                                            \
-      hv_store(hvp, key, strlen(key), &PL_sv_undef, 0);                 \
+      MARPAESLIF_XV_STORE(hvp, key, &PL_sv_undef);                      \
     }                                                                   \
   } while (0)
 
-#define MARPAESLIF_HV_STORE_ASCIISTRING(hvp, key, asciis) do {          \
+#define MARPAESLIF_XV_STORE_ASCIISTRING(hvp, key, asciis) do {          \
     if (asciis != NULL) {                                               \
-      hv_store(hvp, key, strlen(key), newSVpv(asciis, 0), 0);           \
+      MARPAESLIF_XV_STORE(hvp, key, newSVpv(asciis, 0));                \
     } else {                                                            \
-      hv_store(hvp, key, strlen(key), &PL_sv_undef, 0);                 \
+      MARPAESLIF_XV_STORE(hvp, key, &PL_sv_undef);                      \
     }                                                                   \
   } while (0)
 
-#define MARPAESLIF_HV_STORE_IV(hvp, key, iv) do {                       \
-    hv_store(hvp, key, strlen(key), newSViv((IV) iv), 0);               \
+#define MARPAESLIF_XV_STORE_IV(hvp, key, iv) do {                       \
+    MARPAESLIF_XV_STORE(hvp, key, newSViv((IV) iv));                    \
   } while (0)
 
-#define MARPAESLIF_HV_STORE_IVARRAY(hvp, key, ivl, ivp) do {            \
+#define MARPAESLIF_XV_STORE_IVARRAY(hvp, key, ivl, ivp) do {            \
     AV *_avp;                                                           \
     size_t _i;                                                          \
                                                                         \
@@ -359,7 +376,7 @@ static const char   *ASCIIs = "ASCII";
         av_push(_avp, newSViv((IV) ivp[_i]));                           \
       }                                                                 \
     }                                                                   \
-    hv_store(hvp, key, strlen(key), newRV_inc((SV *) _avp), 0);         \
+    MARPAESLIF_XV_STORE(hvp, key, newRV_inc((SV *) _avp));              \
   } while (0)
 
 /*****************************************************************************/
@@ -1460,6 +1477,15 @@ MODULE = MarpaX::ESLIF            PACKAGE = MarpaX::ESLIF::Grammar
 
 PROTOTYPES: ENABLE
 
+BOOT:
+  boot_MarpaX__ESLIF__Grammar__Properties_svp = newSVpvn("MarpaX::ESLIF::Grammar::Properties", strlen("MarpaX::ESLIF::Grammar::Properties"));
+
+BOOT:
+  boot_MarpaX__ESLIF__Grammar__Rule__Properties_svp    = newSVpvn("MarpaX::ESLIF::Grammar::Rule::Properties", strlen("MarpaX::ESLIF::Grammar::Rule::Properties"));
+
+BOOT:
+  boot_MarpaX__ESLIF__Grammar__Symbol__Properties_svp  = newSVpvn("MarpaX::ESLIF::Grammar::Symbol::Properties", strlen("MarpaX::ESLIF::Grammar::Symbol::Properties"));
+
 =for comment
   /* ----------------------------------------------------------------------- */
   /* MarpaX::ESLIF::Grammar::new                                             */
@@ -1809,25 +1835,26 @@ currentProperties(Perl_MarpaX_ESLIF_Grammarp)
 CODE:
   static const char           *funcs = "MarpaX::ESLIF::Grammar::currentProperties";
   marpaESLIFGrammarProperty_t  grammarProperty;
-  HV                          *hvp;
+  AV                          *avp;
 
   if (! marpaESLIFGrammar_grammarproperty_currentb(Perl_MarpaX_ESLIF_Grammarp->marpaESLIFGrammarp, &grammarProperty)) {
     MARPAESLIF_CROAK("marpaESLIFGrammar_grammarproperty_currentb failure");
   }
 
-  hvp = newHV();
-  MARPAESLIF_HV_STORE_IV     (hvp, "level",               grammarProperty.leveli);
-  MARPAESLIF_HV_STORE_STRING (hvp, "description",         grammarProperty.descp);
-  MARPAESLIF_HV_STORE_IV     (hvp, "latm",                grammarProperty.latmb);
-  MARPAESLIF_HV_STORE_ACTION (hvp, "defaultSymbolAction", grammarProperty.defaultSymbolActionp);
-  MARPAESLIF_HV_STORE_ACTION (hvp, "defaultRuleAction",   grammarProperty.defaultRuleActionp);
-  MARPAESLIF_HV_STORE_ACTION (hvp, "defaultFreeAction",   grammarProperty.defaultFreeActionp);
-  MARPAESLIF_HV_STORE_IV     (hvp, "startId",             grammarProperty.starti);
-  MARPAESLIF_HV_STORE_IV     (hvp, "discardId",           grammarProperty.discardi);
-  MARPAESLIF_HV_STORE_IVARRAY(hvp, "symbolIds",           grammarProperty.nsymboll, grammarProperty.symbolip);
-  MARPAESLIF_HV_STORE_IVARRAY(hvp, "ruleIds",             grammarProperty.nrulel, grammarProperty.ruleip);
+  avp = newAV();
+  MARPAESLIF_XV_STORE_IV     (avp, "level",               grammarProperty.leveli);
+  MARPAESLIF_XV_STORE_STRING (avp, "description",         grammarProperty.descp);
+  MARPAESLIF_XV_STORE_IV     (avp, "latm",                grammarProperty.latmb);
+  MARPAESLIF_XV_STORE_ACTION (avp, "defaultSymbolAction", grammarProperty.defaultSymbolActionp);
+  MARPAESLIF_XV_STORE_ACTION (avp, "defaultRuleAction",   grammarProperty.defaultRuleActionp);
+  MARPAESLIF_XV_STORE_ACTION (avp, "defaultFreeAction",   grammarProperty.defaultFreeActionp);
+  MARPAESLIF_XV_STORE_IV     (avp, "startId",             grammarProperty.starti);
+  MARPAESLIF_XV_STORE_IV     (avp, "discardId",           grammarProperty.discardi);
+  MARPAESLIF_XV_STORE_IVARRAY(avp, "symbolIds",           grammarProperty.nsymboll, grammarProperty.symbolip);
+  MARPAESLIF_XV_STORE_IVARRAY(avp, "ruleIds",             grammarProperty.nrulel, grammarProperty.ruleip);
 
-  RETVAL = newRV_inc((SV *)hvp);
+  RETVAL = marpaESLIF_call_actionp(aTHX_ boot_MarpaX__ESLIF__Grammar__Properties_svp, "new", avp, NULL /* Perl_MarpaX_ESLIF_Valuep */);
+  av_undef(avp);
 OUTPUT:
   RETVAL
 
@@ -1844,25 +1871,26 @@ propertiesByLevel(Perl_MarpaX_ESLIF_Grammarp, Perl_leveli)
 CODE:
   static const char           *funcs = "MarpaX::ESLIF::Grammar::propertiesByLevel";
   marpaESLIFGrammarProperty_t  grammarProperty;
-  HV                          *hvp;
+  AV                          *avp;
 
   if (! marpaESLIFGrammar_grammarproperty_by_levelb(Perl_MarpaX_ESLIF_Grammarp->marpaESLIFGrammarp, &grammarProperty, (int) Perl_leveli, NULL /* descp */)) {
     MARPAESLIF_CROAK("marpaESLIFGrammar_grammarproperty_by_levelb failure");
   }
 
-  hvp = newHV();
-  MARPAESLIF_HV_STORE_IV     (hvp, "level",               grammarProperty.leveli);
-  MARPAESLIF_HV_STORE_STRING (hvp, "description",         grammarProperty.descp);
-  MARPAESLIF_HV_STORE_IV     (hvp, "latm",                grammarProperty.latmb);
-  MARPAESLIF_HV_STORE_ACTION (hvp, "defaultSymbolAction", grammarProperty.defaultSymbolActionp);
-  MARPAESLIF_HV_STORE_ACTION (hvp, "defaultRuleAction",   grammarProperty.defaultRuleActionp);
-  MARPAESLIF_HV_STORE_ACTION (hvp, "defaultFreeAction",   grammarProperty.defaultFreeActionp);
-  MARPAESLIF_HV_STORE_IV     (hvp, "startId",             grammarProperty.starti);
-  MARPAESLIF_HV_STORE_IV     (hvp, "discardId",           grammarProperty.discardi);
-  MARPAESLIF_HV_STORE_IVARRAY(hvp, "symbolIds",           grammarProperty.nsymboll, grammarProperty.symbolip);
-  MARPAESLIF_HV_STORE_IVARRAY(hvp, "ruleIds",             grammarProperty.nrulel, grammarProperty.ruleip);
+  avp = newAV();
+  MARPAESLIF_XV_STORE_IV     (avp, "level",               grammarProperty.leveli);
+  MARPAESLIF_XV_STORE_STRING (avp, "description",         grammarProperty.descp);
+  MARPAESLIF_XV_STORE_IV     (avp, "latm",                grammarProperty.latmb);
+  MARPAESLIF_XV_STORE_ACTION (avp, "defaultSymbolAction", grammarProperty.defaultSymbolActionp);
+  MARPAESLIF_XV_STORE_ACTION (avp, "defaultRuleAction",   grammarProperty.defaultRuleActionp);
+  MARPAESLIF_XV_STORE_ACTION (avp, "defaultFreeAction",   grammarProperty.defaultFreeActionp);
+  MARPAESLIF_XV_STORE_IV     (avp, "startId",             grammarProperty.starti);
+  MARPAESLIF_XV_STORE_IV     (avp, "discardId",           grammarProperty.discardi);
+  MARPAESLIF_XV_STORE_IVARRAY(avp, "symbolIds",           grammarProperty.nsymboll, grammarProperty.symbolip);
+  MARPAESLIF_XV_STORE_IVARRAY(avp, "ruleIds",             grammarProperty.nrulel, grammarProperty.ruleip);
 
-  RETVAL = newRV_inc((SV *)hvp);
+  RETVAL = marpaESLIF_call_actionp(aTHX_ boot_MarpaX__ESLIF__Grammar__Properties_svp, "new", avp, NULL /* Perl_MarpaX_ESLIF_Valuep */);
+  av_undef(avp);
 OUTPUT:
   RETVAL
 
@@ -1879,33 +1907,34 @@ currentRuleProperties(Perl_MarpaX_ESLIF_Grammarp, Perl_rulei)
 CODE:
   static const char        *funcs = "MarpaX::ESLIF::Grammar::currentRuleProperties";
   marpaESLIFRuleProperty_t  ruleProperty;
-  HV                       *hvp;
+  AV                       *avp;
 
   if (! marpaESLIFGrammar_ruleproperty_currentb(Perl_MarpaX_ESLIF_Grammarp->marpaESLIFGrammarp, (int) Perl_rulei, &ruleProperty)) {
     MARPAESLIF_CROAK("marpaESLIFGrammar_ruleproperty_currentb failure");
   }
 
-  hvp = newHV();
-  MARPAESLIF_HV_STORE_IV         (hvp, "id",                       ruleProperty.idi);
-  MARPAESLIF_HV_STORE_STRING     (hvp, "description",              ruleProperty.descp);
-  MARPAESLIF_HV_STORE_ASCIISTRING(hvp, "show",                     ruleProperty.asciishows);
-  MARPAESLIF_HV_STORE_IV         (hvp, "lhsId",                    ruleProperty.lhsi);
-  MARPAESLIF_HV_STORE_IV         (hvp, "separatorId",              ruleProperty.separatori);
-  MARPAESLIF_HV_STORE_IVARRAY    (hvp, "rhsIds",                   ruleProperty.nrhsl, ruleProperty.rhsip);
-  MARPAESLIF_HV_STORE_IV         (hvp, "exceptionId",              ruleProperty.exceptioni);
-  MARPAESLIF_HV_STORE_ACTION     (hvp, "action",                   ruleProperty.actionp);
-  MARPAESLIF_HV_STORE_ASCIISTRING(hvp, "discardEvent",             ruleProperty.discardEvents);
-  MARPAESLIF_HV_STORE_IV         (hvp, "discardEventInitialState", ruleProperty.discardEventb);
-  MARPAESLIF_HV_STORE_IV         (hvp, "rank",                     ruleProperty.ranki);
-  MARPAESLIF_HV_STORE_IV         (hvp, "nullRanksHigh",            ruleProperty.nullRanksHighb);
-  MARPAESLIF_HV_STORE_IV         (hvp, "sequence",                 ruleProperty.sequenceb);
-  MARPAESLIF_HV_STORE_IV         (hvp, "proper",                   ruleProperty.properb);
-  MARPAESLIF_HV_STORE_IV         (hvp, "minimum",                  ruleProperty.minimumi);
-  MARPAESLIF_HV_STORE_IV         (hvp, "internal",                 ruleProperty.internalb);
-  MARPAESLIF_HV_STORE_IV         (hvp, "propertyBitSet",           ruleProperty.propertyBitSet);
-  MARPAESLIF_HV_STORE_IV         (hvp, "hideseparator",            ruleProperty.hideseparatorb);
+  avp = newAV();
+  MARPAESLIF_XV_STORE_IV         (avp, "id",                       ruleProperty.idi);
+  MARPAESLIF_XV_STORE_STRING     (avp, "description",              ruleProperty.descp);
+  MARPAESLIF_XV_STORE_ASCIISTRING(avp, "show",                     ruleProperty.asciishows);
+  MARPAESLIF_XV_STORE_IV         (avp, "lhsId",                    ruleProperty.lhsi);
+  MARPAESLIF_XV_STORE_IV         (avp, "separatorId",              ruleProperty.separatori);
+  MARPAESLIF_XV_STORE_IVARRAY    (avp, "rhsIds",                   ruleProperty.nrhsl, ruleProperty.rhsip);
+  MARPAESLIF_XV_STORE_IV         (avp, "exceptionId",              ruleProperty.exceptioni);
+  MARPAESLIF_XV_STORE_ACTION     (avp, "action",                   ruleProperty.actionp);
+  MARPAESLIF_XV_STORE_ASCIISTRING(avp, "discardEvent",             ruleProperty.discardEvents);
+  MARPAESLIF_XV_STORE_IV         (avp, "discardEventInitialState", ruleProperty.discardEventb);
+  MARPAESLIF_XV_STORE_IV         (avp, "rank",                     ruleProperty.ranki);
+  MARPAESLIF_XV_STORE_IV         (avp, "nullRanksHigh",            ruleProperty.nullRanksHighb);
+  MARPAESLIF_XV_STORE_IV         (avp, "sequence",                 ruleProperty.sequenceb);
+  MARPAESLIF_XV_STORE_IV         (avp, "proper",                   ruleProperty.properb);
+  MARPAESLIF_XV_STORE_IV         (avp, "minimum",                  ruleProperty.minimumi);
+  MARPAESLIF_XV_STORE_IV         (avp, "internal",                 ruleProperty.internalb);
+  MARPAESLIF_XV_STORE_IV         (avp, "propertyBitSet",           ruleProperty.propertyBitSet);
+  MARPAESLIF_XV_STORE_IV         (avp, "hideseparator",            ruleProperty.hideseparatorb);
 
-  RETVAL = newRV_inc((SV *)hvp);
+  RETVAL = marpaESLIF_call_actionp(aTHX_ boot_MarpaX__ESLIF__Grammar__Rule__Properties_svp, "new", avp, NULL /* Perl_MarpaX_ESLIF_Valuep */);
+  av_undef(avp);
 OUTPUT:
   RETVAL
 
@@ -1923,33 +1952,34 @@ rulePropertiesByLevel(Perl_MarpaX_ESLIF_Grammarp, Perl_leveli, Perl_rulei)
 CODE:
   static const char        *funcs = "MarpaX::ESLIF::Grammar::rulePropertiesByLevel";
   marpaESLIFRuleProperty_t  ruleProperty;
-  HV                       *hvp;
+  AV                       *avp;
 
   if (! marpaESLIFGrammar_ruleproperty_by_levelb(Perl_MarpaX_ESLIF_Grammarp->marpaESLIFGrammarp, (int) Perl_rulei, &ruleProperty, (int) Perl_leveli, NULL /* descp */)) {
     MARPAESLIF_CROAK("marpaESLIFGrammar_ruleproperty_by_levelb failure");
   }
 
-  hvp = newHV();
-  MARPAESLIF_HV_STORE_IV         (hvp, "id",                       ruleProperty.idi);
-  MARPAESLIF_HV_STORE_STRING     (hvp, "description",              ruleProperty.descp);
-  MARPAESLIF_HV_STORE_ASCIISTRING(hvp, "show",                     ruleProperty.asciishows);
-  MARPAESLIF_HV_STORE_IV         (hvp, "lhsId",                    ruleProperty.lhsi);
-  MARPAESLIF_HV_STORE_IV         (hvp, "separatorId",              ruleProperty.separatori);
-  MARPAESLIF_HV_STORE_IVARRAY    (hvp, "rhsIds",                   ruleProperty.nrhsl, ruleProperty.rhsip);
-  MARPAESLIF_HV_STORE_IV         (hvp, "exceptionId",              ruleProperty.exceptioni);
-  MARPAESLIF_HV_STORE_ACTION     (hvp, "action",                   ruleProperty.actionp);
-  MARPAESLIF_HV_STORE_ASCIISTRING(hvp, "discardEvent",             ruleProperty.discardEvents);
-  MARPAESLIF_HV_STORE_IV         (hvp, "discardEventInitialState", ruleProperty.discardEventb);
-  MARPAESLIF_HV_STORE_IV         (hvp, "rank",                     ruleProperty.ranki);
-  MARPAESLIF_HV_STORE_IV         (hvp, "nullRanksHigh",            ruleProperty.nullRanksHighb);
-  MARPAESLIF_HV_STORE_IV         (hvp, "sequence",                 ruleProperty.sequenceb);
-  MARPAESLIF_HV_STORE_IV         (hvp, "proper",                   ruleProperty.properb);
-  MARPAESLIF_HV_STORE_IV         (hvp, "minimum",                  ruleProperty.minimumi);
-  MARPAESLIF_HV_STORE_IV         (hvp, "internal",                 ruleProperty.internalb);
-  MARPAESLIF_HV_STORE_IV         (hvp, "propertyBitSet",           ruleProperty.propertyBitSet);
-  MARPAESLIF_HV_STORE_IV         (hvp, "hideseparator",            ruleProperty.hideseparatorb);
+  avp = newAV();
+  MARPAESLIF_XV_STORE_IV         (avp, "id",                       ruleProperty.idi);
+  MARPAESLIF_XV_STORE_STRING     (avp, "description",              ruleProperty.descp);
+  MARPAESLIF_XV_STORE_ASCIISTRING(avp, "show",                     ruleProperty.asciishows);
+  MARPAESLIF_XV_STORE_IV         (avp, "lhsId",                    ruleProperty.lhsi);
+  MARPAESLIF_XV_STORE_IV         (avp, "separatorId",              ruleProperty.separatori);
+  MARPAESLIF_XV_STORE_IVARRAY    (avp, "rhsIds",                   ruleProperty.nrhsl, ruleProperty.rhsip);
+  MARPAESLIF_XV_STORE_IV         (avp, "exceptionId",              ruleProperty.exceptioni);
+  MARPAESLIF_XV_STORE_ACTION     (avp, "action",                   ruleProperty.actionp);
+  MARPAESLIF_XV_STORE_ASCIISTRING(avp, "discardEvent",             ruleProperty.discardEvents);
+  MARPAESLIF_XV_STORE_IV         (avp, "discardEventInitialState", ruleProperty.discardEventb);
+  MARPAESLIF_XV_STORE_IV         (avp, "rank",                     ruleProperty.ranki);
+  MARPAESLIF_XV_STORE_IV         (avp, "nullRanksHigh",            ruleProperty.nullRanksHighb);
+  MARPAESLIF_XV_STORE_IV         (avp, "sequence",                 ruleProperty.sequenceb);
+  MARPAESLIF_XV_STORE_IV         (avp, "proper",                   ruleProperty.properb);
+  MARPAESLIF_XV_STORE_IV         (avp, "minimum",                  ruleProperty.minimumi);
+  MARPAESLIF_XV_STORE_IV         (avp, "internal",                 ruleProperty.internalb);
+  MARPAESLIF_XV_STORE_IV         (avp, "propertyBitSet",           ruleProperty.propertyBitSet);
+  MARPAESLIF_XV_STORE_IV         (avp, "hideseparator",            ruleProperty.hideseparatorb);
 
-  RETVAL = newRV_inc((SV *)hvp);
+  RETVAL = marpaESLIF_call_actionp(aTHX_ boot_MarpaX__ESLIF__Grammar__Rule__Properties_svp, "new", avp, NULL /* Perl_MarpaX_ESLIF_Valuep */);
+  av_undef(avp);
 OUTPUT:
   RETVAL
 
@@ -1966,39 +1996,40 @@ currentSymbolProperties(Perl_MarpaX_ESLIF_Grammarp, Perl_symboli)
 CODE:
   static const char          *funcs = "MarpaX::ESLIF::Grammar::currentSymbolProperties";
   marpaESLIFSymbolProperty_t  symbolProperty;
-  HV                         *hvp;
+  AV                         *avp;
 
   if (! marpaESLIFGrammar_symbolproperty_currentb(Perl_MarpaX_ESLIF_Grammarp->marpaESLIFGrammarp, (int) Perl_symboli, &symbolProperty)) {
     MARPAESLIF_CROAK("marpaESLIFGrammar_symbolproperty_currentb failure");
   }
 
-  hvp = newHV();
-  MARPAESLIF_HV_STORE_IV         (hvp, "type",                       symbolProperty.type);
-  MARPAESLIF_HV_STORE_IV         (hvp, "start",                      symbolProperty.startb);
-  MARPAESLIF_HV_STORE_IV         (hvp, "discard",                    symbolProperty.discardb);
-  MARPAESLIF_HV_STORE_IV         (hvp, "discardRhs",                 symbolProperty.discardRhsb);
-  MARPAESLIF_HV_STORE_IV         (hvp, "lhs",                        symbolProperty.lhsb);
-  MARPAESLIF_HV_STORE_IV         (hvp, "top",                        symbolProperty.topb);
-  MARPAESLIF_HV_STORE_IV         (hvp, "id",                         symbolProperty.idi);
-  MARPAESLIF_HV_STORE_STRING     (hvp, "description",                symbolProperty.descp);
-  MARPAESLIF_HV_STORE_ASCIISTRING(hvp, "eventBefore",                symbolProperty.eventBefores);
-  MARPAESLIF_HV_STORE_IV         (hvp, "eventBeforeInitialState",    symbolProperty.eventBeforeb);
-  MARPAESLIF_HV_STORE_ASCIISTRING(hvp, "eventAfter",                 symbolProperty.eventAfters);
-  MARPAESLIF_HV_STORE_IV         (hvp, "eventAfterInitialState",     symbolProperty.eventAfterb);
-  MARPAESLIF_HV_STORE_ASCIISTRING(hvp, "eventPredicted",             symbolProperty.eventPredicteds);
-  MARPAESLIF_HV_STORE_IV         (hvp, "eventPredictedInitialState", symbolProperty.eventPredictedb);
-  MARPAESLIF_HV_STORE_ASCIISTRING(hvp, "eventNulled",                symbolProperty.eventNulleds);
-  MARPAESLIF_HV_STORE_IV         (hvp, "eventNulledInitialState",    symbolProperty.eventNulledb);
-  MARPAESLIF_HV_STORE_ASCIISTRING(hvp, "eventCompleted",             symbolProperty.eventCompleteds);
-  MARPAESLIF_HV_STORE_IV         (hvp, "eventCompletedInitialState", symbolProperty.eventCompletedb);
-  MARPAESLIF_HV_STORE_ASCIISTRING(hvp, "discardEvent",               symbolProperty.discardEvents);
-  MARPAESLIF_HV_STORE_IV         (hvp, "discardEventInitialState",   symbolProperty.discardEventb);
-  MARPAESLIF_HV_STORE_IV         (hvp, "lookupResolvedLeveli",       symbolProperty.lookupResolvedLeveli);
-  MARPAESLIF_HV_STORE_IV         (hvp, "priorityi",                  symbolProperty.priorityi);
-  MARPAESLIF_HV_STORE_ACTION     (hvp, "nullableAction",             symbolProperty.nullableActionp);
-  MARPAESLIF_HV_STORE_IV         (hvp, "propertyBitSet",             symbolProperty.propertyBitSet);
+  avp = newAV();
+  MARPAESLIF_XV_STORE_IV         (avp, "type",                       symbolProperty.type);
+  MARPAESLIF_XV_STORE_IV         (avp, "start",                      symbolProperty.startb);
+  MARPAESLIF_XV_STORE_IV         (avp, "discard",                    symbolProperty.discardb);
+  MARPAESLIF_XV_STORE_IV         (avp, "discardRhs",                 symbolProperty.discardRhsb);
+  MARPAESLIF_XV_STORE_IV         (avp, "lhs",                        symbolProperty.lhsb);
+  MARPAESLIF_XV_STORE_IV         (avp, "top",                        symbolProperty.topb);
+  MARPAESLIF_XV_STORE_IV         (avp, "id",                         symbolProperty.idi);
+  MARPAESLIF_XV_STORE_STRING     (avp, "description",                symbolProperty.descp);
+  MARPAESLIF_XV_STORE_ASCIISTRING(avp, "eventBefore",                symbolProperty.eventBefores);
+  MARPAESLIF_XV_STORE_IV         (avp, "eventBeforeInitialState",    symbolProperty.eventBeforeb);
+  MARPAESLIF_XV_STORE_ASCIISTRING(avp, "eventAfter",                 symbolProperty.eventAfters);
+  MARPAESLIF_XV_STORE_IV         (avp, "eventAfterInitialState",     symbolProperty.eventAfterb);
+  MARPAESLIF_XV_STORE_ASCIISTRING(avp, "eventPredicted",             symbolProperty.eventPredicteds);
+  MARPAESLIF_XV_STORE_IV         (avp, "eventPredictedInitialState", symbolProperty.eventPredictedb);
+  MARPAESLIF_XV_STORE_ASCIISTRING(avp, "eventNulled",                symbolProperty.eventNulleds);
+  MARPAESLIF_XV_STORE_IV         (avp, "eventNulledInitialState",    symbolProperty.eventNulledb);
+  MARPAESLIF_XV_STORE_ASCIISTRING(avp, "eventCompleted",             symbolProperty.eventCompleteds);
+  MARPAESLIF_XV_STORE_IV         (avp, "eventCompletedInitialState", symbolProperty.eventCompletedb);
+  MARPAESLIF_XV_STORE_ASCIISTRING(avp, "discardEvent",               symbolProperty.discardEvents);
+  MARPAESLIF_XV_STORE_IV         (avp, "discardEventInitialState",   symbolProperty.discardEventb);
+  MARPAESLIF_XV_STORE_IV         (avp, "lookupResolvedLeveli",       symbolProperty.lookupResolvedLeveli);
+  MARPAESLIF_XV_STORE_IV         (avp, "priorityi",                  symbolProperty.priorityi);
+  MARPAESLIF_XV_STORE_ACTION     (avp, "nullableAction",             symbolProperty.nullableActionp);
+  MARPAESLIF_XV_STORE_IV         (avp, "propertyBitSet",             symbolProperty.propertyBitSet);
 
-  RETVAL = newRV_inc((SV *)hvp);
+  RETVAL = marpaESLIF_call_actionp(aTHX_ boot_MarpaX__ESLIF__Grammar__Symbol__Properties_svp, "new", avp, NULL /* Perl_MarpaX_ESLIF_Valuep */);
+  av_undef(avp);
 OUTPUT:
   RETVAL
 
@@ -2016,39 +2047,40 @@ symbolPropertiesByLevel(Perl_MarpaX_ESLIF_Grammarp, Perl_leveli, Perl_symboli)
 CODE:
   static const char        *funcs = "MarpaX::ESLIF::Grammar::symbolPropertiesByLevel";
   marpaESLIFSymbolProperty_t  symbolProperty;
-  HV                       *hvp;
+  AV                       *avp;
 
   if (! marpaESLIFGrammar_symbolproperty_by_levelb(Perl_MarpaX_ESLIF_Grammarp->marpaESLIFGrammarp, (int) Perl_symboli, &symbolProperty, (int) Perl_leveli, NULL /* descp */)) {
     MARPAESLIF_CROAK("marpaESLIFGrammar_symbolproperty_by_levelb failure");
   }
 
-  hvp = newHV();
-  MARPAESLIF_HV_STORE_IV         (hvp, "type",                       symbolProperty.type);
-  MARPAESLIF_HV_STORE_IV         (hvp, "start",                      symbolProperty.startb);
-  MARPAESLIF_HV_STORE_IV         (hvp, "discard",                    symbolProperty.discardb);
-  MARPAESLIF_HV_STORE_IV         (hvp, "discardRhs",                 symbolProperty.discardRhsb);
-  MARPAESLIF_HV_STORE_IV         (hvp, "lhs",                        symbolProperty.lhsb);
-  MARPAESLIF_HV_STORE_IV         (hvp, "top",                        symbolProperty.topb);
-  MARPAESLIF_HV_STORE_IV         (hvp, "id",                         symbolProperty.idi);
-  MARPAESLIF_HV_STORE_STRING     (hvp, "description",                symbolProperty.descp);
-  MARPAESLIF_HV_STORE_ASCIISTRING(hvp, "eventBefore",                symbolProperty.eventBefores);
-  MARPAESLIF_HV_STORE_IV         (hvp, "eventBeforeInitialState",    symbolProperty.eventBeforeb);
-  MARPAESLIF_HV_STORE_ASCIISTRING(hvp, "eventAfter",                 symbolProperty.eventAfters);
-  MARPAESLIF_HV_STORE_IV         (hvp, "eventAfterInitialState",     symbolProperty.eventAfterb);
-  MARPAESLIF_HV_STORE_ASCIISTRING(hvp, "eventPredicted",             symbolProperty.eventPredicteds);
-  MARPAESLIF_HV_STORE_IV         (hvp, "eventPredictedInitialState", symbolProperty.eventPredictedb);
-  MARPAESLIF_HV_STORE_ASCIISTRING(hvp, "eventNulled",                symbolProperty.eventNulleds);
-  MARPAESLIF_HV_STORE_IV         (hvp, "eventNulledInitialState",    symbolProperty.eventNulledb);
-  MARPAESLIF_HV_STORE_ASCIISTRING(hvp, "eventCompleted",             symbolProperty.eventCompleteds);
-  MARPAESLIF_HV_STORE_IV         (hvp, "eventCompletedInitialState", symbolProperty.eventCompletedb);
-  MARPAESLIF_HV_STORE_ASCIISTRING(hvp, "discardEvent",               symbolProperty.discardEvents);
-  MARPAESLIF_HV_STORE_IV         (hvp, "discardEventInitialState",   symbolProperty.discardEventb);
-  MARPAESLIF_HV_STORE_IV         (hvp, "lookupResolvedLeveli",       symbolProperty.lookupResolvedLeveli);
-  MARPAESLIF_HV_STORE_IV         (hvp, "priorityi",                  symbolProperty.priorityi);
-  MARPAESLIF_HV_STORE_ACTION     (hvp, "nullableAction",             symbolProperty.nullableActionp);
-  MARPAESLIF_HV_STORE_IV         (hvp, "propertyBitSet",             symbolProperty.propertyBitSet);
+  avp = newAV();
+  MARPAESLIF_XV_STORE_IV         (avp, "type",                       symbolProperty.type);
+  MARPAESLIF_XV_STORE_IV         (avp, "start",                      symbolProperty.startb);
+  MARPAESLIF_XV_STORE_IV         (avp, "discard",                    symbolProperty.discardb);
+  MARPAESLIF_XV_STORE_IV         (avp, "discardRhs",                 symbolProperty.discardRhsb);
+  MARPAESLIF_XV_STORE_IV         (avp, "lhs",                        symbolProperty.lhsb);
+  MARPAESLIF_XV_STORE_IV         (avp, "top",                        symbolProperty.topb);
+  MARPAESLIF_XV_STORE_IV         (avp, "id",                         symbolProperty.idi);
+  MARPAESLIF_XV_STORE_STRING     (avp, "description",                symbolProperty.descp);
+  MARPAESLIF_XV_STORE_ASCIISTRING(avp, "eventBefore",                symbolProperty.eventBefores);
+  MARPAESLIF_XV_STORE_IV         (avp, "eventBeforeInitialState",    symbolProperty.eventBeforeb);
+  MARPAESLIF_XV_STORE_ASCIISTRING(avp, "eventAfter",                 symbolProperty.eventAfters);
+  MARPAESLIF_XV_STORE_IV         (avp, "eventAfterInitialState",     symbolProperty.eventAfterb);
+  MARPAESLIF_XV_STORE_ASCIISTRING(avp, "eventPredicted",             symbolProperty.eventPredicteds);
+  MARPAESLIF_XV_STORE_IV         (avp, "eventPredictedInitialState", symbolProperty.eventPredictedb);
+  MARPAESLIF_XV_STORE_ASCIISTRING(avp, "eventNulled",                symbolProperty.eventNulleds);
+  MARPAESLIF_XV_STORE_IV         (avp, "eventNulledInitialState",    symbolProperty.eventNulledb);
+  MARPAESLIF_XV_STORE_ASCIISTRING(avp, "eventCompleted",             symbolProperty.eventCompleteds);
+  MARPAESLIF_XV_STORE_IV         (avp, "eventCompletedInitialState", symbolProperty.eventCompletedb);
+  MARPAESLIF_XV_STORE_ASCIISTRING(avp, "discardEvent",               symbolProperty.discardEvents);
+  MARPAESLIF_XV_STORE_IV         (avp, "discardEventInitialState",   symbolProperty.discardEventb);
+  MARPAESLIF_XV_STORE_IV         (avp, "lookupResolvedLeveli",       symbolProperty.lookupResolvedLeveli);
+  MARPAESLIF_XV_STORE_IV         (avp, "priorityi",                  symbolProperty.priorityi);
+  MARPAESLIF_XV_STORE_ACTION     (avp, "nullableAction",             symbolProperty.nullableActionp);
+  MARPAESLIF_XV_STORE_IV         (avp, "propertyBitSet",             symbolProperty.propertyBitSet);
 
-  RETVAL = newRV_inc((SV *)hvp);
+  RETVAL = marpaESLIF_call_actionp(aTHX_ boot_MarpaX__ESLIF__Grammar__Symbol__Properties_svp, "new", avp, NULL /* Perl_MarpaX_ESLIF_Valuep */);
+  av_undef(avp);
 OUTPUT:
   RETVAL
 
