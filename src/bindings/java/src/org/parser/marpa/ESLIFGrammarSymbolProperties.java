@@ -8,9 +8,9 @@ package org.parser.marpa;
  * <pre>
  * ESLIF eslif = new ESLIF(...)
  * ESLIFGrammar eslifGrammar = new ESLIFGrammar(...);
- * ESLIFGrammarSymbolProperties eSLIFGrammarSymbolProperties = eslifGrammar->currentRuleProperties(0);
+ * ESLIFGrammarSymbolProperties eSLIFGrammarSymbolProperties = eslifGrammar->currentSymbolProperties(0);
  * or
- * ESLIFGrammarSymbolProperties eSLIFGrammarSymbolProperties = eslifGrammar->rulePropertiesByLevel(0, 0);
+ * ESLIFGrammarSymbolProperties eSLIFGrammarSymbolProperties = eslifGrammar->symbolPropertiesByLevel(0, 0);
  * ...
  * eslifGrammar.free();
  * eslif.free()
@@ -85,38 +85,83 @@ public class ESLIFGrammarSymbolProperties {
 	}
 
 	/**
-	 * @return the start
+	 * @return if this the start symbol
 	 */
 	public boolean isStart() {
 		return start;
 	}
 
 	/**
-	 * @return the discard
+	 * Alias to isStart()
+	 * 
+	 * @return if this the start symbol
+	 */
+	public boolean getStart() {
+		return isStart();
+	}
+
+	/**
+	 * @return if this is the discard symbol
 	 */
 	public boolean isDiscard() {
 		return discard;
 	}
 
 	/**
-	 * @return the discardRhs
+	 * Alias to isDiscard()
+	 * 
+	 * @return if this is the discard symbol
+	 */
+	public boolean getDiscard() {
+		return isDiscard();
+	}
+
+	/**
+	 * @return if this is a RHS of a discard rule
 	 */
 	public boolean isDiscardRhs() {
 		return discardRhs;
 	}
 
 	/**
-	 * @return the lhs
+	 * Alias to isDiscardRhs()
+	 * 
+	 * @return if this is a RHS of a discard rule
+	 */
+	public boolean getDiscardRhs() {
+		return isDiscardRhs();
+	}
+
+	/**
+	 * @return if this is an LHS
 	 */
 	public boolean isLhs() {
 		return lhs;
 	}
 
 	/**
-	 * @return the top
+	 * Alias to isLhs()
+	 * 
+	 * @return if this is an LHS
+	 */
+	public boolean getLhs() {
+		return isLhs();
+	}
+
+	/**
+	 * @return if this is the first symbol of the grammar
 	 */
 	public boolean isTop() {
 		return top;
+	}
+
+	/**
+	 * Alias to isTop()
+	 * 
+	 * @return if this is the first symbol of the grammar
+	 */
+	public boolean getTop() {
+		return isTop();
 	}
 
 	/**
@@ -134,112 +179,166 @@ public class ESLIFGrammarSymbolProperties {
 	}
 
 	/**
-	 * @return the eventBefore
+	 * @return the event before name, null if there is none
 	 */
 	public String getEventBefore() {
 		return eventBefore;
 	}
 
 	/**
-	 * @return the eventBeforeInitialState
+	 * @return if the event before initial state is on, meaningless if there is no event before
 	 */
 	public boolean isEventBeforeInitialState() {
 		return eventBeforeInitialState;
 	}
 
 	/**
-	 * @return the eventAfter
+	 * Alias to isEventBeforeInitialState()
+	 * 
+	 * @return if the eventBefore initial state is on, meaningless if there is no event before
+	 */
+	public boolean getEventBeforeInitialState() {
+		return isEventBeforeInitialState();
+	}
+
+	/**
+	 * @return the event after name, null if there is none
 	 */
 	public String getEventAfter() {
 		return eventAfter;
 	}
 
 	/**
-	 * @return the eventAfterInitialState
+	 * @return if the event after initial state is on, meaningless if there is no event after
 	 */
 	public boolean isEventAfterInitialState() {
 		return eventAfterInitialState;
 	}
 
 	/**
-	 * @return the eventPredicted
+	 * Alias to isEventAfterInitialState()
+	 * 
+	 * @return if the event after initial state is on, meaningless if there is no event after
+	 */
+	public boolean getEventAfterInitialState() {
+		return isEventAfterInitialState();
+	}
+
+	/**
+	 * @return the event predicted name, null if there is none
 	 */
 	public String getEventPredicted() {
 		return eventPredicted;
 	}
 
 	/**
-	 * @return the eventPredictedInitialState
+	 * @return if the event predicted initial state is on, meaningless if there is no prediction event
 	 */
 	public boolean isEventPredictedInitialState() {
 		return eventPredictedInitialState;
 	}
 
 	/**
-	 * @return the eventNulled
+	 * Alias to isEventPredictedInitialState()
+	 * 
+	 * @return if the event predicted initial state is on, meaningless if there is no prediction event
+	 */
+	public boolean getEventPredictedInitialState() {
+		return isEventPredictedInitialState();
+	}
+
+	/**
+	 * @return the null event name, null if there is none - used internally for ":discard[on]" and ":discard[off]" in particular
 	 */
 	public String getEventNulled() {
 		return eventNulled;
 	}
 
 	/**
-	 * @return the eventNulledInitialState
+	 * @return the nulled event initial state, meaningless if there is nulled event
 	 */
 	public boolean isEventNulledInitialState() {
 		return eventNulledInitialState;
 	}
 
 	/**
-	 * @return the eventCompleted
+	 * Alias isEventNulledInitialState()
+	 * 
+	 * @return the nulled event initial state, meaningless if there is nulled event
+	 */
+	public boolean getEventNulledInitialState() {
+		return isEventNulledInitialState();
+	}
+
+	/**
+	 * @return the completion event name, null if there is none
 	 */
 	public String getEventCompleted() {
 		return eventCompleted;
 	}
 
 	/**
-	 * @return the eventCompletedInitialState
+	 * @return the completion event initial state, meaningless if there is no completion event
 	 */
 	public boolean isEventCompletedInitialState() {
 		return eventCompletedInitialState;
 	}
 
 	/**
-	 * @return the discardEvent
+	 * Alias to isEventCompletedInitialState()
+	 * 
+	 * @return the completion event initial state, meaningless if there is no completion event
+	 */
+	public boolean getEventCompletedInitialState() {
+		return isEventCompletedInitialState();
+	}
+
+	/**
+	 * @return the discard event, null if there is none
 	 */
 	public String getDiscardEvent() {
 		return discardEvent;
 	}
 
 	/**
-	 * @return the discardEventInitialState
+	 * @return the discard event initial state, meaningless if there is no discard event
 	 */
 	public boolean isDiscardEventInitialState() {
 		return discardEventInitialState;
 	}
 
 	/**
-	 * @return the lookupResolvedLeveli
+	 * Alias to isDiscardEventInitialState()
+	 * 
+	 * @return the discard event initial state, meaningless if there is no discard event
+	 */
+	public boolean getDiscardEventInitialState() {
+		return isDiscardEventInitialState();
+	}
+
+	/**
+	 * @return the grammar level to which it is resolved, can be different to the grammar used when this is a lexeme
 	 */
 	public int getLookupResolvedLeveli() {
 		return lookupResolvedLeveli;
 	}
 
 	/**
-	 * @return the priorityi
+	 * @return the symbol priority
 	 */
 	public int getPriorityi() {
 		return priorityi;
 	}
 
 	/**
-	 * @return the nullableAction
+	 * @return the nullable action, null if there is none
 	 */
 	public String getNullableAction() {
 		return nullableAction;
 	}
 
 	/**
-	 * @return the propertyBitSet
+	 * @return the low-level properties (combination of ESLIFGrammarSymbolPropertyBitSet values)
 	 */
 	public int getPropertyBitSet() {
 		return propertyBitSet;
