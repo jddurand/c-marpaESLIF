@@ -289,12 +289,6 @@ Log::Log4perl::init(\$defaultLog4perlConf);
 Log::Any::Adapter->set('Log4perl');
 
 BEGIN { require_ok('MarpaX::ESLIF') };
-BEGIN { require_ok('MarpaX::ESLIF::Event::Type') };
-BEGIN { require_ok('MarpaX::ESLIF::Value::Type') };
-BEGIN { require_ok('MarpaX::ESLIF::Logger::Level') };
-BEGIN { require_ok('MarpaX::ESLIF::Rule::PropertyBitSet') };
-BEGIN { require_ok('MarpaX::ESLIF::Symbol::PropertyBitSet') };
-BEGIN { require_ok('MarpaX::ESLIF::Symbol::Type') };
 
 #
 # Test Event constants

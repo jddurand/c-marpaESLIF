@@ -2,7 +2,6 @@ use strict;
 use warnings FATAL => 'all';
 
 package MarpaX::ESLIF::Symbol::PropertyBitSet;
-use MarpaX::ESLIF;
 
 # ABSTRACT: ESLIF Symbol Property Bit Set
 
@@ -13,6 +12,8 @@ use MarpaX::ESLIF;
 ESLIF symbol property bitset is made of constants, mapping the low-level Marpa view of symbol capabilities. This module is giving access to them.
 
 =head1 SYNOPSIS
+
+  use MarpaX::ESLIF;
 
   my $symbolPropertyBitSet;
   $symbolPropertyBitSet = MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_ACCESSIBLE;     #  0x01

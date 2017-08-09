@@ -2,7 +2,6 @@ use strict;
 use warnings FATAL => 'all';
 
 package MarpaX::ESLIF::Rule::PropertyBitSet;
-use MarpaX::ESLIF;
 
 # ABSTRACT: ESLIF Rule Property Bit Set
 
@@ -13,6 +12,8 @@ use MarpaX::ESLIF;
 ESLIF rule property bitset is made of constants, mapping the low-level Marpa view of rule capabilities. This module is giving access to them.
 
 =head1 SYNOPSIS
+
+  use MarpaX::ESLIF;
 
   my $rulePropertyBitSet;
   $rulePropertyBitSet = MarpaX::ESLIF::Rule::PropertyBitSet->MARPAESLIF_RULE_IS_ACCESSIBLE;     #  0x01

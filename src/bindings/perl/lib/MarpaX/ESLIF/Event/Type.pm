@@ -2,7 +2,6 @@ use strict;
 use warnings FATAL => 'all';
 
 package MarpaX::ESLIF::Event::Type;
-use MarpaX::ESLIF;
 
 # ABSTRACT: ESLIF Event Types
 
@@ -13,6 +12,8 @@ use MarpaX::ESLIF;
 ESLIF events are mapped to constants. This module is giving access to them.
 
 =head1 SYNOPSIS
+
+  use MarpaX::ESLIF;
 
   my $eventType;
   $eventType = MarpaX::ESLIF::Event::Type->MARPAESLIF_EVENTTYPE_NONE;       # 0x00

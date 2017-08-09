@@ -2,7 +2,6 @@ use strict;
 use warnings FATAL => 'all';
 
 package MarpaX::ESLIF::Symbol::Type;
-use MarpaX::ESLIF;
 
 # ABSTRACT: ESLIF Symbol Type
 
@@ -13,6 +12,8 @@ use MarpaX::ESLIF;
 ESLIF symbol type is made of constants. This module is giving access to them.
 
 =head1 SYNOPSIS
+
+  use MarpaX::ESLIF;
 
   my $symbolType;
   $symbolType = MarpaX::ESLIF::Symbol::Type->MARPAESLIF_SYMBOLTYPE_TERMINAL;      #  0
