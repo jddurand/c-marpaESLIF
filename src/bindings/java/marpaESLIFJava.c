@@ -553,6 +553,7 @@ static short ESLIFValue_contextb(JNIEnv *envp, jobject eslifValuep, jobject obje
 static marpaESLIFValueRuleCallback_t   marpaESLIFValueRuleActionResolver(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions);
 static marpaESLIFValueSymbolCallback_t marpaESLIFValueSymbolActionResolver(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions);
 static marpaESLIFValueFreeCallback_t   marpaESLIFValueFreeActionResolver(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions);
+static short marpaESLIFValueContextInject(JNIEnv *envp, marpaESLIFValue_t *marpaESLIFValuep, jobject eslifValueInterfacep, marpaESLIFValueContext_t *marpaESLIFValueContextp);
 static short marpaESLIFValueRuleCallback(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static short marpaESLIFValueSymbolCallback(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *bytep, size_t bytel, int resulti);
 static void  marpaESLIFValueFreeCallback(void *userDatavp, int contexti, void *p, size_t sizel);
@@ -3409,6 +3410,76 @@ static marpaESLIFValueFreeCallback_t marpaESLIFValueFreeActionResolver(void *use
 }
 
 /*****************************************************************************/
+static short marpaESLIFValueContextInject(JNIEnv *envp, marpaESLIFValue_t *marpaESLIFValuep, jobject eslifValueInterfacep, marpaESLIFValueContext_t *marpaESLIFValueContextp)
+/*****************************************************************************/
+{
+  static const char *funcs = "marpaESLIFValueContextInject";
+  short              rcb;
+  char              *symbols;
+  int                symboli;
+  char              *rules;
+  int                rulei;
+  jstring            symbolp = NULL;
+  jstring            rulep = NULL;
+
+  /* Get value context */
+  if (! marpaESLIFValue_contextb(marpaESLIFValuep, &symbols, &symboli, &rules, &rulei)) {
+    RAISEEXCEPTION(envp, "marpaESLIFValue_contextb");
+  }
+
+  /* Symbol name */
+  if (symbols != NULL) {
+    symbolp = (*envp)->NewStringUTF(envp, symbols);
+    if (symbolp == NULL) {
+      RAISEEXCEPTION(envp, "NewStringUTF failure");
+    }
+  }
+  (*envp)->CallVoidMethod(envp, eslifValueInterfacep, MARPAESLIF_ESLIFVALUEINTERFACE_CLASS_setSymbolName_METHODP, symbolp /* Can be NULL */);
+  if (HAVEEXCEPTION(envp)) {
+    goto err;
+  }
+
+  /* Symbol number */
+  (*envp)->CallVoidMethod(envp, eslifValueInterfacep, MARPAESLIF_ESLIFVALUEINTERFACE_CLASS_setSymbolNumber_METHODP, symboli);
+  if (HAVEEXCEPTION(envp)) {
+    goto err;
+  }
+
+  /* Rule name */
+  if (rules != NULL) {
+    rulep = (*envp)->NewStringUTF(envp, rules);
+    if (rulep == NULL) {
+      RAISEEXCEPTION(envp, "NewStringUTF failure");
+    }
+  }
+  (*envp)->CallVoidMethod(envp, eslifValueInterfacep, MARPAESLIF_ESLIFVALUEINTERFACE_CLASS_setRuleName_METHODP, rulep /* Can be NULL */);
+  if (HAVEEXCEPTION(envp)) {
+    goto err;
+  }
+
+  /* Rule number */
+  (*envp)->CallVoidMethod(envp, eslifValueInterfacep, MARPAESLIF_ESLIFVALUEINTERFACE_CLASS_setRuleNumber_METHODP, rulei);
+  if (HAVEEXCEPTION(envp)) {
+    goto err;
+  }
+
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  if (symbolp != NULL) {
+    (*envp)->DeleteLocalRef(envp, symbolp);
+  }
+  if (rulep != NULL) {
+    (*envp)->DeleteLocalRef(envp, rulep);
+  }
+  return rcb;
+}
+
+/*****************************************************************************/
 static short marpaESLIFValueRuleCallback(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
 /*****************************************************************************/
 {
@@ -3505,7 +3576,11 @@ static short marpaESLIFValueRuleCallback(void *userDatavp, marpaESLIFValue_t *ma
     }
   }
 
-  /* Call the action */
+  /* Inject the context */
+  if (! marpaESLIFValueContextInject(envp, marpaESLIFValuep, marpaESLIFValueContextp->eslifValueInterfacep, marpaESLIFValueContextp)) {
+    goto err;
+  }
+  /* Call the rule action */
   actionResult = (*envp)->CallObjectMethod(envp, marpaESLIFValueContextp->eslifValueInterfacep, marpaESLIFValueContextp->methodp, list);
   if (HAVEEXCEPTION(envp)) {
     goto err;
@@ -3585,6 +3660,10 @@ static short marpaESLIFValueSymbolCallback(void *userDatavp, marpaESLIFValue_t *
     globalObjectp = marpaESLIFValueResultp->u.p;
   }
 
+  /* Inject the context */
+  if (! marpaESLIFValueContextInject(envp, marpaESLIFValuep, marpaESLIFValueContextp->eslifValueInterfacep, marpaESLIFValueContextp)) {
+    goto err;
+  }
   /* Call the symbol action */
   actionResult = (*envp)->CallObjectMethod(envp, marpaESLIFValueContextp->eslifValueInterfacep, marpaESLIFValueContextp->methodp, (bytel > 0) ? objectp : globalObjectp);
   if (HAVEEXCEPTION(envp)) {
