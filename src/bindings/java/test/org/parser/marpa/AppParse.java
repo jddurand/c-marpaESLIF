@@ -154,7 +154,7 @@ public class AppParse  {
 							if (bytes == null) {
 								throw new Exception("Pause before on NUMBER but no pause information!");
 							}
-							if (! doLexemeRead(eslifLogger, eslifRecognizer, "NUMBER", j, bytes)) {
+							if (! doLexemeRead(eslifLogger, eslifRecognizer, "NUMBER", j+1, bytes)) {
 								throw new Exception("NUMBER expected but reading such lexeme fails!");
 							}
 							doDiscardTry(eslifLogger, eslifRecognizer);
