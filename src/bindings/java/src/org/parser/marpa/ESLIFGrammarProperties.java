@@ -1,5 +1,7 @@
 package org.parser.marpa;
 
+import java.util.Arrays;
+
 /**
  * ESLIFGrammarProperties is describing properties of a grammar.
  * 
@@ -57,6 +59,101 @@ public class ESLIFGrammarProperties {
 		this.discardId           = discardId;
 		this.symbolIds           = symbolIds;
 		this.ruleIds             = ruleIds;
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#hashCode()
+	 */
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((defaultFreeAction == null) ? 0 : defaultFreeAction.hashCode());
+		result = prime * result + ((defaultRuleAction == null) ? 0 : defaultRuleAction.hashCode());
+		result = prime * result + ((defaultSymbolAction == null) ? 0 : defaultSymbolAction.hashCode());
+		result = prime * result + ((description == null) ? 0 : description.hashCode());
+		result = prime * result + discardId;
+		result = prime * result + (latm ? 1231 : 1237);
+		result = prime * result + level;
+		result = prime * result + Arrays.hashCode(ruleIds);
+		result = prime * result + startId;
+		result = prime * result + Arrays.hashCode(symbolIds);
+		return result;
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#equals(java.lang.Object)
+	 */
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) {
+			return true;
+		}
+		if (obj == null) {
+			return false;
+		}
+		if (!(obj instanceof ESLIFGrammarProperties)) {
+			return false;
+		}
+		ESLIFGrammarProperties other = (ESLIFGrammarProperties) obj;
+		if (defaultFreeAction == null) {
+			if (other.defaultFreeAction != null) {
+				return false;
+			}
+		} else if (!defaultFreeAction.equals(other.defaultFreeAction)) {
+			return false;
+		}
+		if (defaultRuleAction == null) {
+			if (other.defaultRuleAction != null) {
+				return false;
+			}
+		} else if (!defaultRuleAction.equals(other.defaultRuleAction)) {
+			return false;
+		}
+		if (defaultSymbolAction == null) {
+			if (other.defaultSymbolAction != null) {
+				return false;
+			}
+		} else if (!defaultSymbolAction.equals(other.defaultSymbolAction)) {
+			return false;
+		}
+		if (description == null) {
+			if (other.description != null) {
+				return false;
+			}
+		} else if (!description.equals(other.description)) {
+			return false;
+		}
+		if (discardId != other.discardId) {
+			return false;
+		}
+		if (latm != other.latm) {
+			return false;
+		}
+		if (level != other.level) {
+			return false;
+		}
+		if (!Arrays.equals(ruleIds, other.ruleIds)) {
+			return false;
+		}
+		if (startId != other.startId) {
+			return false;
+		}
+		if (!Arrays.equals(symbolIds, other.symbolIds)) {
+			return false;
+		}
+		return true;
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return "ESLIFGrammarProperties [level=" + level + ", description=" + description + ", latm=" + latm
+				+ ", defaultSymbolAction=" + defaultSymbolAction + ", defaultRuleAction=" + defaultRuleAction
+				+ ", defaultFreeAction=" + defaultFreeAction + ", startId=" + startId + ", discardId=" + discardId
+				+ ", symbolIds=" + Arrays.toString(symbolIds) + ", ruleIds=" + Arrays.toString(ruleIds) + "]";
 	}
 
 	/**
