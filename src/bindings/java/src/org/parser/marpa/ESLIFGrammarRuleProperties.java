@@ -1,5 +1,7 @@
 package org.parser.marpa;
 
+import java.util.Arrays;
+
 /**
  * ESLIFGrammarRuleProperties is describing properties of a rule within a grammar.
  * 
@@ -82,6 +84,135 @@ public class ESLIFGrammarRuleProperties {
 		  this.internal = internal;
 		  this.propertyBitSet = propertyBitSet;
 		  this.hideseparator = hideseparator;
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#hashCode()
+	 */
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((action == null) ? 0 : action.hashCode());
+		result = prime * result + ((description == null) ? 0 : description.hashCode());
+		result = prime * result + ((discardEvent == null) ? 0 : discardEvent.hashCode());
+		result = prime * result + (discardEventInitialState ? 1231 : 1237);
+		result = prime * result + exceptionId;
+		result = prime * result + (hideseparator ? 1231 : 1237);
+		result = prime * result + id;
+		result = prime * result + (internal ? 1231 : 1237);
+		result = prime * result + lhsId;
+		result = prime * result + minimum;
+		result = prime * result + (nullRanksHigh ? 1231 : 1237);
+		result = prime * result + (proper ? 1231 : 1237);
+		result = prime * result + propertyBitSet;
+		result = prime * result + rank;
+		result = prime * result + Arrays.hashCode(rhsIds);
+		result = prime * result + separatorId;
+		result = prime * result + (sequence ? 1231 : 1237);
+		result = prime * result + ((show == null) ? 0 : show.hashCode());
+		return result;
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#equals(java.lang.Object)
+	 */
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) {
+			return true;
+		}
+		if (obj == null) {
+			return false;
+		}
+		if (!(obj instanceof ESLIFGrammarRuleProperties)) {
+			return false;
+		}
+		ESLIFGrammarRuleProperties other = (ESLIFGrammarRuleProperties) obj;
+		if (action == null) {
+			if (other.action != null) {
+				return false;
+			}
+		} else if (!action.equals(other.action)) {
+			return false;
+		}
+		if (description == null) {
+			if (other.description != null) {
+				return false;
+			}
+		} else if (!description.equals(other.description)) {
+			return false;
+		}
+		if (discardEvent == null) {
+			if (other.discardEvent != null) {
+				return false;
+			}
+		} else if (!discardEvent.equals(other.discardEvent)) {
+			return false;
+		}
+		if (discardEventInitialState != other.discardEventInitialState) {
+			return false;
+		}
+		if (exceptionId != other.exceptionId) {
+			return false;
+		}
+		if (hideseparator != other.hideseparator) {
+			return false;
+		}
+		if (id != other.id) {
+			return false;
+		}
+		if (internal != other.internal) {
+			return false;
+		}
+		if (lhsId != other.lhsId) {
+			return false;
+		}
+		if (minimum != other.minimum) {
+			return false;
+		}
+		if (nullRanksHigh != other.nullRanksHigh) {
+			return false;
+		}
+		if (proper != other.proper) {
+			return false;
+		}
+		if (propertyBitSet != other.propertyBitSet) {
+			return false;
+		}
+		if (rank != other.rank) {
+			return false;
+		}
+		if (!Arrays.equals(rhsIds, other.rhsIds)) {
+			return false;
+		}
+		if (separatorId != other.separatorId) {
+			return false;
+		}
+		if (sequence != other.sequence) {
+			return false;
+		}
+		if (show == null) {
+			if (other.show != null) {
+				return false;
+			}
+		} else if (!show.equals(other.show)) {
+			return false;
+		}
+		return true;
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return "ESLIFGrammarRuleProperties [id=" + id + ", description=" + description + ", show=" + show + ", lhsId="
+				+ lhsId + ", separatorId=" + separatorId + ", rhsIds=" + Arrays.toString(rhsIds) + ", exceptionId="
+				+ exceptionId + ", action=" + action + ", discardEvent=" + discardEvent + ", discardEventInitialState="
+				+ discardEventInitialState + ", rank=" + rank + ", nullRanksHigh=" + nullRanksHigh + ", sequence="
+				+ sequence + ", proper=" + proper + ", minimum=" + minimum + ", internal=" + internal
+				+ ", propertyBitSet=" + propertyBitSet + ", hideseparator=" + hideseparator + "]";
 	}
 
 	/**
@@ -242,7 +373,7 @@ public class ESLIFGrammarRuleProperties {
 	}
 
 	/**
-	 * @return Rule's low-level property bits (combination of ESLIFGrammarRulePropertyBitSet values)
+	 * @return Rule's low-level property bits (combination of ESLIFRulePropertyBitSet values)
 	 */
 	public int getPropertyBitSet() {
 		return propertyBitSet;
