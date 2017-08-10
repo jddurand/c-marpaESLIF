@@ -107,7 +107,7 @@ typedef struct marpaESLIFValueContext {
   size_t                         methodCacheSizel;
   jmethodID                      methodp;                      /* Current resolved method ID */
   char                          *actions;                      /* shallow copy of last resolved name */
-  jchar                         *previous_utf16s;              /* Previous stringification */
+  jchar                         *previous_representations;     /* Previous stringification */
 } marpaESLIFValueContext_t;
 
 typedef struct marpaESLIF_stringGenerator { /* We use genericLogger to generate strings */
@@ -479,22 +479,37 @@ static marpaESLIFMethodCache_t marpaESLIFMethodCacheArrayp[] = {
   #define MARPAESLIF_ESLIFVALUEINTERFACE_CLASS_getResult_METHODP                    marpaESLIFMethodCacheArrayp[51].methodp
   {      &MARPAESLIF_ESLIFVALUEINTERFACE_CLASSCACHE, "getResult",                   "()Ljava/lang/Object;", 0, NULL },
 
-  #define MARPAESLIF_OBJECT_CLASS_getClass_METHODP                                  marpaESLIFMethodCacheArrayp[52].methodp
+  #define MARPAESLIF_ESLIFVALUEINTERFACE_CLASS_setSymbolName_METHODP                marpaESLIFMethodCacheArrayp[52].methodp
+  {      &MARPAESLIF_ESLIFVALUEINTERFACE_CLASSCACHE, "setSymbolName",               "(Ljava/lang/String;)V", 0, NULL },
+
+  #define MARPAESLIF_ESLIFVALUEINTERFACE_CLASS_setSymbolNumber_METHODP              marpaESLIFMethodCacheArrayp[53].methodp
+  {      &MARPAESLIF_ESLIFVALUEINTERFACE_CLASSCACHE, "setSymbolNumber",             "(I)V", 0, NULL },
+
+  #define MARPAESLIF_ESLIFVALUEINTERFACE_CLASS_setRuleName_METHODP                  marpaESLIFMethodCacheArrayp[54].methodp
+  {      &MARPAESLIF_ESLIFVALUEINTERFACE_CLASSCACHE, "setRuleName",                 "(Ljava/lang/String;)V", 0, NULL },
+
+  #define MARPAESLIF_ESLIFVALUEINTERFACE_CLASS_setRuleNumber_METHODP                marpaESLIFMethodCacheArrayp[55].methodp
+  {      &MARPAESLIF_ESLIFVALUEINTERFACE_CLASSCACHE, "setRuleNumber",               "(I)V", 0, NULL },
+
+  #define MARPAESLIF_ESLIFVALUEINTERFACE_CLASS_setGrammar_METHODP                   marpaESLIFMethodCacheArrayp[56].methodp
+  {      &MARPAESLIF_ESLIFVALUEINTERFACE_CLASSCACHE, "setGrammar",                  "(Lorg/parser/marpa/ESLIFGrammar;)V", 0, NULL },
+
+  #define MARPAESLIF_OBJECT_CLASS_getClass_METHODP                                  marpaESLIFMethodCacheArrayp[57].methodp
   {      &MARPAESLIF_OBJECT_CLASSCACHE, "getClass",                                 "()Ljava/lang/Class;", 0, NULL },
 
-  #define MARPAESLIF_CLASS_CLASS_getName_METHODP                                    marpaESLIFMethodCacheArrayp[53].methodp
+  #define MARPAESLIF_CLASS_CLASS_getName_METHODP                                    marpaESLIFMethodCacheArrayp[58].methodp
   {      &MARPAESLIF_CLASS_CLASSCACHE, "getName",                                   "()Ljava/lang/String;", 0, NULL },
 
-  #define MARPAESLIF_ESLIFEVENTTYPE_CLASS_get_METHODP                               marpaESLIFMethodCacheArrayp[54].methodp
+  #define MARPAESLIF_ESLIFEVENTTYPE_CLASS_get_METHODP                               marpaESLIFMethodCacheArrayp[59].methodp
   {      &MARPAESLIF_ESLIFEVENTTYPE_CLASSCACHE, "get",                              "(I)Lorg/parser/marpa/ESLIFEventType;", 1 /* static */, NULL },
 
-  #define MARPAESLIF_ESLIFEVENTTYPE_CLASS_getCode_METHODP                           marpaESLIFMethodCacheArrayp[55].methodp
+  #define MARPAESLIF_ESLIFEVENTTYPE_CLASS_getCode_METHODP                           marpaESLIFMethodCacheArrayp[60].methodp
   {      &MARPAESLIF_ESLIFEVENTTYPE_CLASSCACHE, "getCode",                          "()I", 0, NULL },
 
-  #define MARPAESLIF_ESLIFEVENT_CLASS_init_METHODP                                  marpaESLIFMethodCacheArrayp[56].methodp
+  #define MARPAESLIF_ESLIFEVENT_CLASS_init_METHODP                                  marpaESLIFMethodCacheArrayp[61].methodp
   {      &MARPAESLIF_ESLIFEVENT_CLASSCACHE, "<init>",                               "(Lorg/parser/marpa/ESLIFEventType;Ljava/lang/String;Ljava/lang/String;)V", 0, NULL },
 
-  #define MARPAESLIF_ESLIFLOGGERLEVEL_CLASS_getCode_METHODP                         marpaESLIFMethodCacheArrayp[57].methodp
+  #define MARPAESLIF_ESLIFLOGGERLEVEL_CLASS_getCode_METHODP                         marpaESLIFMethodCacheArrayp[62].methodp
   {      &MARPAESLIF_ESLIFLOGGERLEVEL_CLASSCACHE, "getCode",                        "()I", 0, NULL },
 
   { NULL }
@@ -3742,8 +3757,8 @@ static void marpaESLIFValueContextFree(JNIEnv *envp, marpaESLIFValueContext_t *m
       }
       free(marpaESLIFValueContextp->methodCachep);
     }
-    if (marpaESLIFValueContextp->previous_utf16s != NULL) {
-      free(marpaESLIFValueContextp->previous_utf16s);
+    if (marpaESLIFValueContextp->previous_representations != NULL) {
+      free(marpaESLIFValueContextp->previous_representations);
     }
     if (! onStackb) {
       free(marpaESLIFValueContextp);
@@ -3756,9 +3771,9 @@ static void marpaESLIFValueContextCleanup(JNIEnv *envp, marpaESLIFValueContext_t
 /*****************************************************************************/
 {
   if (marpaESLIFValueContextp != NULL) {
-    if (marpaESLIFValueContextp->previous_utf16s != NULL) {
-      free(marpaESLIFValueContextp->previous_utf16s);
-      marpaESLIFValueContextp->previous_utf16s = NULL;
+    if (marpaESLIFValueContextp->previous_representations != NULL) {
+      free(marpaESLIFValueContextp->previous_representations);
+      marpaESLIFValueContextp->previous_representations = NULL;
     }
   }
 }
@@ -3832,7 +3847,7 @@ static short marpaESLIFValueContextInit(JNIEnv *envp, jobject eslifValueInterfac
   marpaESLIFValueContextp->methodCacheSizel     = 0;
   marpaESLIFValueContextp->methodp              = 0;
   marpaESLIFValueContextp->actions              = NULL;
-  marpaESLIFValueContextp->previous_utf16s      = NULL;
+  marpaESLIFValueContextp->previous_representations      = NULL;
 
   /* For run-time resolving of actions we need current jclass */
   classp = (*envp)->GetObjectClass(envp, eslifValueInterfacep);
@@ -3940,13 +3955,13 @@ static short marpaESLIFRepresentationCallback(void *userDatavp, marpaESLIFValueR
     /* If zero character, we do nothing - nothing will be appended by default */
     if (size > 0) {
       len = size * sizeof(jchar);
-      marpaESLIFValueContextp->previous_utf16s = (jchar *) malloc(len);
-      if (marpaESLIFValueContextp->previous_utf16s == NULL) {
+      marpaESLIFValueContextp->previous_representations = (jchar *) malloc(len);
+      if (marpaESLIFValueContextp->previous_representations == NULL) {
         RAISEEXCEPTIONF(envp, "malloc failure, %s", strerror(errno));
       }
-      (*envp)->GetStringRegion(envp, stringp, 0, size, marpaESLIFValueContextp->previous_utf16s);
-      if (marpaESLIFValueContextp->previous_utf16s != NULL) {
-        *inputcpp             = (char *) marpaESLIFValueContextp->previous_utf16s;
+      (*envp)->GetStringRegion(envp, stringp, 0, size, marpaESLIFValueContextp->previous_representations);
+      if (marpaESLIFValueContextp->previous_representations != NULL) {
+        *inputcpp             = (char *) marpaESLIFValueContextp->previous_representations;
         *inputlp              = (size_t) len;
       }
     }
