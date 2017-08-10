@@ -17,30 +17,30 @@ package org.parser.marpa;
  * </pre>
  */
 public class ESLIFGrammarSymbolProperties {
-	  private ESLIFGrammarSymbolType type;
-	  private boolean                start;
-	  private boolean                discard;
-	  private boolean                discardRhs;
-	  private boolean                lhs;
-	  private boolean                top;
-	  private int                    id;
-	  private String                 description;
-	  private String                 eventBefore;
-	  private boolean                eventBeforeInitialState;
-	  private String                 eventAfter;
-	  private boolean                eventAfterInitialState;
-	  private String                 eventPredicted;
-	  private boolean                eventPredictedInitialState;
-	  private String                 eventNulled;
-	  private boolean                eventNulledInitialState;
-	  private String                 eventCompleted;
-	  private boolean                eventCompletedInitialState;
-	  private String                 discardEvent;
-	  private boolean                discardEventInitialState;
-	  private int                    lookupResolvedLeveli;
-	  private int                    priorityi;
-	  private String                 nullableAction;
-	  private int                    propertyBitSet;
+	  private ESLIFSymbolType type;
+	  private boolean         start;
+	  private boolean         discard;
+	  private boolean         discardRhs;
+	  private boolean         lhs;
+	  private boolean         top;
+	  private int             id;
+	  private String          description;
+	  private String          eventBefore;
+	  private boolean         eventBeforeInitialState;
+	  private String          eventAfter;
+	  private boolean         eventAfterInitialState;
+	  private String          eventPredicted;
+	  private boolean         eventPredictedInitialState;
+	  private String          eventNulled;
+	  private boolean         eventNulledInitialState;
+	  private String          eventCompleted;
+	  private boolean         eventCompletedInitialState;
+	  private String          discardEvent;
+	  private boolean         discardEventInitialState;
+	  private int             lookupResolvedLeveli;
+	  private int             priority;
+	  private String          nullableAction;
+	  private int             propertyBitSet;
 
 	/*
 	 * ********************************************
@@ -51,7 +51,8 @@ public class ESLIFGrammarSymbolProperties {
 	 * Creation of an ESLIFGrammarSymbolProperties instance
 	 * 
 	 */
-	public ESLIFGrammarSymbolProperties(boolean start, boolean discard, boolean discardRhs, boolean lhs, boolean top, int id, String description, String eventBefore, boolean eventBeforeInitialState, String eventAfter, boolean eventAfterInitialState, String eventPredicted, boolean eventPredictedInitialState, String eventNulled, boolean eventNulledInitialState, String eventCompleted, boolean eventCompletedInitialState, String discardEvent, boolean discardEventInitialState, int lookupResolvedLeveli, int priorityi, String nullableAction, int propertyBitSet) {
+	public ESLIFGrammarSymbolProperties(ESLIFSymbolType type, boolean start, boolean discard, boolean discardRhs, boolean lhs, boolean top, int id, String description, String eventBefore, boolean eventBeforeInitialState, String eventAfter, boolean eventAfterInitialState, String eventPredicted, boolean eventPredictedInitialState, String eventNulled, boolean eventNulledInitialState, String eventCompleted, boolean eventCompletedInitialState, String discardEvent, boolean discardEventInitialState, int lookupResolvedLeveli, int priority, String nullableAction, int propertyBitSet) {
+		this.type                       = type;
 		this.start                      = start;
 		this.discard                    = discard;
 		this.discardRhs                 = discardRhs;
@@ -72,7 +73,7 @@ public class ESLIFGrammarSymbolProperties {
 		this.discardEvent               = discardEvent;
 		this.discardEventInitialState   = discardEventInitialState;
 		this.lookupResolvedLeveli       = lookupResolvedLeveli;
-		this.priorityi                  = priorityi;
+		this.priority                   = priority ;
 		this.nullableAction             = nullableAction;
 		this.propertyBitSet             = propertyBitSet;
 	}
@@ -80,7 +81,7 @@ public class ESLIFGrammarSymbolProperties {
 	/**
 	 * @return the type
 	 */
-	public ESLIFGrammarSymbolType getType() {
+	public ESLIFSymbolType getType() {
 		return type;
 	}
 
@@ -94,7 +95,7 @@ public class ESLIFGrammarSymbolProperties {
 	/**
 	 * Alias to isStart()
 	 * 
-	 * @return if this the start symbol
+	 * @return if this is the start symbol
 	 */
 	public boolean getStart() {
 		return isStart();
@@ -326,8 +327,8 @@ public class ESLIFGrammarSymbolProperties {
 	/**
 	 * @return the symbol priority
 	 */
-	public int getPriorityi() {
-		return priorityi;
+	public int getPriority() {
+		return priority;
 	}
 
 	/**
@@ -338,7 +339,7 @@ public class ESLIFGrammarSymbolProperties {
 	}
 
 	/**
-	 * @return the low-level properties (combination of ESLIFGrammarSymbolPropertyBitSet values)
+	 * @return the low-level properties (combination of ESLIFSymbolPropertyBitSet values)
 	 */
 	public int getPropertyBitSet() {
 		return propertyBitSet;

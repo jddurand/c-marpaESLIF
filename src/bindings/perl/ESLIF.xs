@@ -2024,7 +2024,7 @@ CODE:
   MARPAESLIF_XV_STORE_ASCIISTRING(avp, "discardEvent",               symbolProperty.discardEvents);
   MARPAESLIF_XV_STORE_IV         (avp, "discardEventInitialState",   symbolProperty.discardEventb);
   MARPAESLIF_XV_STORE_IV         (avp, "lookupResolvedLeveli",       symbolProperty.lookupResolvedLeveli);
-  MARPAESLIF_XV_STORE_IV         (avp, "priorityi",                  symbolProperty.priorityi);
+  MARPAESLIF_XV_STORE_IV         (avp, "priority",                   symbolProperty.priorityi);
   MARPAESLIF_XV_STORE_ACTION     (avp, "nullableAction",             symbolProperty.nullableActionp);
   MARPAESLIF_XV_STORE_IV         (avp, "propertyBitSet",             symbolProperty.propertyBitSet);
 
@@ -2075,7 +2075,7 @@ CODE:
   MARPAESLIF_XV_STORE_ASCIISTRING(avp, "discardEvent",               symbolProperty.discardEvents);
   MARPAESLIF_XV_STORE_IV         (avp, "discardEventInitialState",   symbolProperty.discardEventb);
   MARPAESLIF_XV_STORE_IV         (avp, "lookupResolvedLeveli",       symbolProperty.lookupResolvedLeveli);
-  MARPAESLIF_XV_STORE_IV         (avp, "priorityi",                  symbolProperty.priorityi);
+  MARPAESLIF_XV_STORE_IV         (avp, "priority",                   symbolProperty.priorityi);
   MARPAESLIF_XV_STORE_ACTION     (avp, "nullableAction",             symbolProperty.nullableActionp);
   MARPAESLIF_XV_STORE_IV         (avp, "propertyBitSet",             symbolProperty.propertyBitSet);
 

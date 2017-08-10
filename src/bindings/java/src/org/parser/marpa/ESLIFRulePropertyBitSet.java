@@ -5,9 +5,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * ESLIFGrammarRulePropertyBitSet is an enumeration of all low-level Rule properties, directly coming from libmarpa.
+ * ESLIFRulePropertyBitSet is an enumeration of all low-level Rule properties, directly coming from libmarpa.
  */
-public enum ESLIFGrammarRulePropertyBitSet {
+public enum ESLIFRulePropertyBitSet {
 
 	/* Thanks to http://www.ajaxonomy.com/2007/java/making-the-most-of-java-50-enum-tricks */
 
@@ -18,15 +18,15 @@ public enum ESLIFGrammarRulePropertyBitSet {
 	MARPAESLIF_RULE_IS_PRODUCTIVE(0x10);
 
 	private int code;
-	private static final Map<Integer,ESLIFGrammarRulePropertyBitSet> lookup = new HashMap<Integer,ESLIFGrammarRulePropertyBitSet>();
+	private static final Map<Integer,ESLIFRulePropertyBitSet> lookup = new HashMap<Integer,ESLIFRulePropertyBitSet>();
 
 	static {
-		for(ESLIFGrammarRulePropertyBitSet s : EnumSet.allOf(ESLIFGrammarRulePropertyBitSet.class)) {
+		for(ESLIFRulePropertyBitSet s : EnumSet.allOf(ESLIFRulePropertyBitSet.class)) {
 			lookup.put(s.getCode(), s);
 		}
 	}
 
-	private ESLIFGrammarRulePropertyBitSet(int code) {
+	private ESLIFRulePropertyBitSet(int code) {
 		this.code = code;
 	}
 
@@ -45,7 +45,7 @@ public enum ESLIFGrammarRulePropertyBitSet {
 	 * @param code the log level value
 	 * @return the ESLIFLoggerLevel instance
 	 */
-	public static ESLIFGrammarRulePropertyBitSet get(int code) { 
+	public static ESLIFRulePropertyBitSet get(int code) { 
 		return lookup.get(code); 
 	}
 	

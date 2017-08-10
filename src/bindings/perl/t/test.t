@@ -274,7 +274,6 @@ use Log::Any::Adapter;
 use Log::Any qw/$log/;
 use Try::Tiny;
 use Encode qw/decode encode/;
-
 #
 # Init log
 #
@@ -723,7 +722,7 @@ my %SYMBOL_PROPERTIES_BY_LEVEL = (
                  lhs => 1,
                  lookupResolvedLeveli => 0,
                  nullableAction => undef,
-                 priorityi => 0,
+                 priority => 0,
                  propertyBitSet => MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_ACCESSIBLE|
                                    MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_PRODUCTIVE|
                                    MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_START,
@@ -749,7 +748,7 @@ my %SYMBOL_PROPERTIES_BY_LEVEL = (
                  lhs => 1,
                  lookupResolvedLeveli => 0,
                  nullableAction => undef,
-                 priorityi => 0,
+                 priority => 0,
                  propertyBitSet => MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_PRODUCTIVE,
                  start => 0,
                  top => 1,
@@ -773,7 +772,7 @@ my %SYMBOL_PROPERTIES_BY_LEVEL = (
                  lhs => 1,
                  lookupResolvedLeveli => 0,
                  nullableAction => undef,
-                 priorityi => 0,
+                 priority => 0,
                  propertyBitSet => MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_PRODUCTIVE,
                  start => 0,
                  top => 0,
@@ -797,7 +796,7 @@ my %SYMBOL_PROPERTIES_BY_LEVEL = (
                  lhs => 1,
                  lookupResolvedLeveli => 0,
                  nullableAction => undef,
-                 priorityi => 0,
+                 priority => 0,
                  propertyBitSet => MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_PRODUCTIVE,
                  start => 0,
                  top => 0,
@@ -821,7 +820,7 @@ my %SYMBOL_PROPERTIES_BY_LEVEL = (
                  lhs => 1,
                  lookupResolvedLeveli => 0,
                  nullableAction => undef,
-                 priorityi => 0,
+                 priority => 0,
                  propertyBitSet => MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_ACCESSIBLE|
                                    MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_PRODUCTIVE,
                  start => 0,
@@ -846,7 +845,7 @@ my %SYMBOL_PROPERTIES_BY_LEVEL = (
                  lhs => 0,
                  lookupResolvedLeveli => 1,
                  nullableAction => undef,
-                 priorityi => 0,
+                 priority => 0,
                  propertyBitSet => MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_ACCESSIBLE|
                                    MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_PRODUCTIVE|
                                    MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_TERMINAL,
@@ -872,7 +871,7 @@ my %SYMBOL_PROPERTIES_BY_LEVEL = (
                  lhs => 1,
                  lookupResolvedLeveli => 0,
                  nullableAction => undef,
-                 priorityi => 0,
+                 priority => 0,
                  propertyBitSet => MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_ACCESSIBLE|
                                    MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_PRODUCTIVE,
                  start => 0,
@@ -897,7 +896,7 @@ my %SYMBOL_PROPERTIES_BY_LEVEL = (
                  lhs => 1,
                  lookupResolvedLeveli => 0,
                  nullableAction => undef,
-                 priorityi => 0,
+                 priority => 0,
                  propertyBitSet => MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_ACCESSIBLE|
                                    MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_PRODUCTIVE,
                  start => 0,
@@ -922,7 +921,7 @@ my %SYMBOL_PROPERTIES_BY_LEVEL = (
                  lhs => 1,
                  lookupResolvedLeveli => 0,
                  nullableAction => undef,
-                 priorityi => 0,
+                 priority => 0,
                  propertyBitSet => MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_ACCESSIBLE|
                                    MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_PRODUCTIVE,
                  start => 0,
@@ -947,7 +946,7 @@ my %SYMBOL_PROPERTIES_BY_LEVEL = (
                  lhs => 1,
                  lookupResolvedLeveli => 0,
                  nullableAction => undef,
-                 priorityi => 0,
+                 priority => 0,
                  propertyBitSet => MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_ACCESSIBLE|
                                    MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_PRODUCTIVE,
                  start => 0,
@@ -972,7 +971,7 @@ my %SYMBOL_PROPERTIES_BY_LEVEL = (
                  lhs => 0,
                  lookupResolvedLeveli => 0,
                  nullableAction => undef,
-                 priorityi => 0,
+                 priority => 0,
                  propertyBitSet => MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_ACCESSIBLE|
                                    MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_PRODUCTIVE|
                                    MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_TERMINAL,
@@ -998,7 +997,7 @@ my %SYMBOL_PROPERTIES_BY_LEVEL = (
                  lhs => 0,
                  lookupResolvedLeveli => 0,
                  nullableAction => undef,
-                 priorityi => 0,
+                 priority => 0,
                  propertyBitSet => MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_ACCESSIBLE|
                                    MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_PRODUCTIVE|
                                    MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_TERMINAL,
@@ -1024,7 +1023,7 @@ my %SYMBOL_PROPERTIES_BY_LEVEL = (
                  lhs => 0,
                  lookupResolvedLeveli => 0,
                  nullableAction => undef,
-                 priorityi => 0,
+                 priority => 0,
                  propertyBitSet => MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_ACCESSIBLE|
                                    MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_PRODUCTIVE|
                                    MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_TERMINAL,
@@ -1050,7 +1049,7 @@ my %SYMBOL_PROPERTIES_BY_LEVEL = (
                  lhs => 0,
                  lookupResolvedLeveli => 0,
                  nullableAction => undef,
-                 priorityi => 0,
+                 priority => 0,
                  propertyBitSet => MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_ACCESSIBLE|
                                    MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_PRODUCTIVE|
                                    MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_TERMINAL,
@@ -1076,7 +1075,7 @@ my %SYMBOL_PROPERTIES_BY_LEVEL = (
                  lhs => 0,
                  lookupResolvedLeveli => 0,
                  nullableAction => undef,
-                 priorityi => 0,
+                 priority => 0,
                  propertyBitSet => MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_ACCESSIBLE|
                                    MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_PRODUCTIVE|
                                    MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_TERMINAL,
@@ -1102,7 +1101,7 @@ my %SYMBOL_PROPERTIES_BY_LEVEL = (
                  lhs => 0,
                  lookupResolvedLeveli => 0,
                  nullableAction => undef,
-                 priorityi => 0,
+                 priority => 0,
                  propertyBitSet => MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_ACCESSIBLE|
                                    MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_PRODUCTIVE|
                                    MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_TERMINAL,
@@ -1128,7 +1127,7 @@ my %SYMBOL_PROPERTIES_BY_LEVEL = (
                  lhs => 0,
                  lookupResolvedLeveli => 0,
                  nullableAction => undef,
-                 priorityi => 0,
+                 priority => 0,
                  propertyBitSet => MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_ACCESSIBLE|
                                    MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_PRODUCTIVE|
                                    MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_TERMINAL,
@@ -1154,7 +1153,7 @@ my %SYMBOL_PROPERTIES_BY_LEVEL = (
                  lhs => 0,
                  lookupResolvedLeveli => 1,
                  nullableAction => undef,
-                 priorityi => 0,
+                 priority => 0,
                  propertyBitSet => MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_PRODUCTIVE|
                                    MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_TERMINAL,
                  start => 0,
@@ -1179,7 +1178,7 @@ my %SYMBOL_PROPERTIES_BY_LEVEL = (
                  lhs => 0,
                  lookupResolvedLeveli => 0,
                  nullableAction => undef,
-                 priorityi => 0,
+                 priority => 0,
                  propertyBitSet => MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_PRODUCTIVE|
                                    MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_TERMINAL,
                  start => 0,
@@ -1206,7 +1205,7 @@ my %SYMBOL_PROPERTIES_BY_LEVEL = (
                  lhs => 1,
                  lookupResolvedLeveli => 1,
                  nullableAction => undef,
-                 priorityi => 0,
+                 priority => 0,
                  propertyBitSet => MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_ACCESSIBLE|
                                    MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_PRODUCTIVE|
                                    MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_START,
@@ -1232,7 +1231,7 @@ my %SYMBOL_PROPERTIES_BY_LEVEL = (
                  lhs => 0,
                  lookupResolvedLeveli => 1,
                  nullableAction => undef,
-                 priorityi => 0,
+                 priority => 0,
                  propertyBitSet => MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_ACCESSIBLE|
                                    MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_PRODUCTIVE|
                                    MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_TERMINAL,
@@ -1258,7 +1257,7 @@ my %SYMBOL_PROPERTIES_BY_LEVEL = (
                  lhs => 1,
                  lookupResolvedLeveli => 1,
                  nullableAction => undef,
-                 priorityi => 0,
+                 priority => 0,
                  propertyBitSet => MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_PRODUCTIVE,
                  start => 0,
                  top => 1,
@@ -1282,7 +1281,7 @@ my %SYMBOL_PROPERTIES_BY_LEVEL = (
                  lhs => 0,
                  lookupResolvedLeveli => 1,
                  nullableAction => undef,
-                 priorityi => 0,
+                 priority => 0,
                  propertyBitSet => MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_PRODUCTIVE|
                                    MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_TERMINAL,
                  start => 0,
@@ -1651,19 +1650,24 @@ sub doCmpProperties {
   diag(deep_diag($stack)) unless (ok($ok, $what));
   #
   # Properties are blessed objects, and we expect to getXxx() members
-  # for every expected hash value
+  # for every expected hash value. cmp_details() made sure this is a
+  # blessed hash ref.
   #
-  foreach (keys %{$expected}) {
-      my $getter = 'get' . ucfirst($_);
-      #
-      # We know in advance that properties content are either scalars, either array references
-      #
-      my $ref = ref($got) || 'undef';
-      my $got2 = $got->$getter;
-      my $expected2 = $expected->{$_};
-      my $what2 = $ref . "'s $getter method";
-      my ($ok2, $stack2) = cmp_details($got2, $expected2);
-      diag(deep_diag($stack2)) unless (ok($ok2, $what2));
+  if ($ok) {
+      foreach (keys %{$expected}) {
+          my $getter = 'get' . ucfirst($_);
+          #
+          # We know in advance that properties content are either scalars, either array references
+          #
+          my $ref = ref($got);
+          if (ok($ref->can($getter), "$ref can $getter")) {
+              my $got2 = $got->$getter;
+              my $expected2 = $expected->{$_};
+              my $what2 = $ref . "'s $getter method";
+              my ($ok2, $stack2) = cmp_details($got2, $expected2);
+              diag(deep_diag($stack2)) unless (ok($ok2, $what2));
+          }
+      }
   }
 }
 
