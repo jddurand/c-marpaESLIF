@@ -266,7 +266,7 @@ public class AppParse  {
 		String old = new String(bytes, "UTF-8");
 		
 		eslifLogger.debug("... Forcing Integer object for \"" + value + "\" spanned on " + bytes.length + " bytes" + " instead of \"" + old + "\"");
-		if (! eslifRecognizer.lexemeRead(symbol, new Integer(value), 1 /* grammarLength */, bytes.length)) {
+		if (! eslifRecognizer.lexemeRead(symbol, new Integer(value), bytes.length, 1 /* grammarLength */)) {
 			return false;
 		}
 
