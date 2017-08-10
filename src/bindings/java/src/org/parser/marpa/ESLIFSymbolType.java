@@ -5,9 +5,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * ESLIFGrammarSymbolType is an enumeration to disambiguate symbol types, that can be either a terminal, either a meta-symbol.
+ * ESLIFSymbolType is an enumeration to disambiguate symbol types, that can be either a terminal, either a meta-symbol.
  */
-public enum ESLIFGrammarSymbolType {
+public enum ESLIFSymbolType {
 
 	/* Thanks to http://www.ajaxonomy.com/2007/java/making-the-most-of-java-50-enum-tricks */
 
@@ -15,15 +15,15 @@ public enum ESLIFGrammarSymbolType {
 	MARPAESLIF_SYMBOLTYPE_META(1);
 
 	private int code;
-	private static final Map<Integer,ESLIFGrammarSymbolType> lookup = new HashMap<Integer,ESLIFGrammarSymbolType>();
+	private static final Map<Integer,ESLIFSymbolType> lookup = new HashMap<Integer,ESLIFSymbolType>();
 
 	static {
-		for(ESLIFGrammarSymbolType s : EnumSet.allOf(ESLIFGrammarSymbolType.class)) {
+		for(ESLIFSymbolType s : EnumSet.allOf(ESLIFSymbolType.class)) {
 			lookup.put(s.getCode(), s);
 		}
 	}
 
-	private ESLIFGrammarSymbolType(int code) {
+	private ESLIFSymbolType(int code) {
 		this.code = code;
 	}
 
@@ -42,7 +42,7 @@ public enum ESLIFGrammarSymbolType {
 	 * @param code the log level value
 	 * @return the ESLIFLoggerLevel instance
 	 */
-	public static ESLIFGrammarSymbolType get(int code) { 
+	public static ESLIFSymbolType get(int code) { 
 		return lookup.get(code); 
 	}
 	

@@ -5,9 +5,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * ESLIFGrammarRulePropertyBitSet is an enumeration of all low-level Rule properties, directly coming from libmarpa.
+ * ESLIFSymbolPropertyBitSet is an enumeration of all low-level Rule properties, directly coming from libmarpa.
  */
-public enum ESLIFGrammarSymbolPropertyBitSet {
+public enum ESLIFSymbolPropertyBitSet {
 
 	/* Thanks to http://www.ajaxonomy.com/2007/java/making-the-most-of-java-50-enum-tricks */
 
@@ -19,15 +19,15 @@ public enum ESLIFGrammarSymbolPropertyBitSet {
 	MARPAESLIF_SYMBOL_IS_TERMINAL(0x10);
 
 	private int code;
-	private static final Map<Integer,ESLIFGrammarSymbolPropertyBitSet> lookup = new HashMap<Integer,ESLIFGrammarSymbolPropertyBitSet>();
+	private static final Map<Integer,ESLIFSymbolPropertyBitSet> lookup = new HashMap<Integer,ESLIFSymbolPropertyBitSet>();
 
 	static {
-		for(ESLIFGrammarSymbolPropertyBitSet s : EnumSet.allOf(ESLIFGrammarSymbolPropertyBitSet.class)) {
+		for(ESLIFSymbolPropertyBitSet s : EnumSet.allOf(ESLIFSymbolPropertyBitSet.class)) {
 			lookup.put(s.getCode(), s);
 		}
 	}
 
-	private ESLIFGrammarSymbolPropertyBitSet(int code) {
+	private ESLIFSymbolPropertyBitSet(int code) {
 		this.code = code;
 	}
 
@@ -46,7 +46,7 @@ public enum ESLIFGrammarSymbolPropertyBitSet {
 	 * @param code the log level value
 	 * @return the ESLIFLoggerLevel instance
 	 */
-	public static ESLIFGrammarSymbolPropertyBitSet get(int code) { 
+	public static ESLIFSymbolPropertyBitSet get(int code) { 
 		return lookup.get(code); 
 	}
 	
