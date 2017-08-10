@@ -10,6 +10,11 @@ import java.nio.ByteBuffer;
  */
 public class AppValue implements ESLIFValueInterface {
 	private Object result = null;
+	private String symbolName;
+	private int symbolNumber;
+	private String ruleName;
+	private int ruleNumber;
+	private ESLIFGrammar grammar;
 	
 	/*
 	 * https://java.net/jira/browse/TYRUS-216
@@ -127,6 +132,66 @@ public class AppValue implements ESLIFValueInterface {
 		} else {
 			this.result = result;
 		}
+	}
+
+	@Override
+	public void setSymbolName(String symbolName) {
+		this.symbolName = symbolName;	
+	}
+
+	@Override
+	public void setSymbolNumber(int symbolNumber) {
+		this.symbolNumber = symbolNumber;
+	}
+
+	@Override
+	public void setRuleName(String ruleName) {
+		this.ruleName = ruleName;	
+	}
+
+	@Override
+	public void setRuleNumber(int ruleNumber) {
+		this.ruleNumber = ruleNumber;	
+	}
+
+	@Override
+	public void setGrammar(ESLIFGrammar grammar) {
+		this.grammar = grammar;
+	}
+
+	/**
+	 * @return the symbolName
+	 */
+	public String getSymbolName() {
+		return symbolName;
+	}
+
+	/**
+	 * @return the symbolNumber
+	 */
+	public int getSymbolNumber() {
+		return symbolNumber;
+	}
+
+	/**
+	 * @return the ruleName
+	 */
+	public String getRuleName() {
+		return ruleName;
+	}
+
+	/**
+	 * @return the ruleNumber
+	 */
+	public int getRuleNumber() {
+		return ruleNumber;
+	}
+
+	/**
+	 * @return the grammar
+	 */
+	public ESLIFGrammar getGrammar() {
+		return grammar;
 	}
 
 }
