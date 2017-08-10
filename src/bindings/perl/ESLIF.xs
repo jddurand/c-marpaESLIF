@@ -305,7 +305,8 @@ SV *boot_MarpaX__ESLIF__Grammar__Symbol__Properties_svp;
     _l = _marpaESLIFValueResultp->sizel;                                \
   } while (0)
 
-/* In this macro we hack the difference between hv_store and av_push by testing key */
+/* In this macro we hack the difference between hv_store and av_push by testing xvp type */
+/* Remember that hv_store() and av_push() takes over one reference count. */
 #define MARPAESLIF_XV_STORE(xvp, key, svp) do {         \
     if (SvTYPE((SV *)xvp) == SVt_PVHV) {                \
       hv_store((HV *) xvp, key, strlen(key), svp, 0);   \
