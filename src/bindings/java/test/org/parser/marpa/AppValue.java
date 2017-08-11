@@ -35,7 +35,7 @@ public class AppValue implements ESLIFValueInterface {
 	}
 	
 	private String byteBufferToString(ByteBuffer byteBuffer) throws UnsupportedEncodingException {
-		return new String(getActiveArray(byteBuffer));
+		return new String(getActiveArray(byteBuffer), "UTF-8");
 	}
 		
 	private Double toDouble(Object object) {
