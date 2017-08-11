@@ -3906,14 +3906,14 @@ static short marpaESLIFValueContextInit(JNIEnv *envp, jobject eslifValueInterfac
   short              rcb;
   jboolean           isCopy;
 
-  marpaESLIFValueContextp->eslifValueInterfacep = eslifValueInterfacep;
-  marpaESLIFValueContextp->classCache.classs    = NULL;
-  marpaESLIFValueContextp->classCache.classp    = NULL;
-  marpaESLIFValueContextp->methodCachep         = NULL;
-  marpaESLIFValueContextp->methodCacheSizel     = 0;
-  marpaESLIFValueContextp->methodp              = 0;
-  marpaESLIFValueContextp->actions              = NULL;
-  marpaESLIFValueContextp->previous_representations      = NULL;
+  marpaESLIFValueContextp->eslifValueInterfacep     = eslifValueInterfacep;
+  marpaESLIFValueContextp->classCache.classs        = NULL;
+  marpaESLIFValueContextp->classCache.classp        = NULL;
+  marpaESLIFValueContextp->methodCachep             = NULL;
+  marpaESLIFValueContextp->methodCacheSizel         = 0;
+  marpaESLIFValueContextp->methodp                  = 0;
+  marpaESLIFValueContextp->actions                  = NULL;
+  marpaESLIFValueContextp->previous_representations = NULL;
 
   /* For run-time resolving of actions we need current jclass */
   classp = (*envp)->GetObjectClass(envp, eslifValueInterfacep);
