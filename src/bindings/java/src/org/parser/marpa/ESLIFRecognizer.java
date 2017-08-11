@@ -266,7 +266,8 @@ public class ESLIFRecognizer {
 	 * Ask the recognizer the end-user data associated to last lexeme "pause after" event.
 	 * A "pause after" event is the when the recognizer was responsible of lexeme recognition, after a call to scan() or resume() methods.
 	 * This data will be an exact copy of the last bytes that matched for a given lexeme, where data is the internal representation of end-user data,
-	 * meaning that it may be UTF-8 sequence of bytes in case of character stream.
+	 * meaning that it may be UTF-8 sequence of bytes in case of character stream, and always an UTF-8 seauence of bytes in case of end-user data
+	 * (end-user data representation is always the toString() result converted to UTF8).
 	 * 
 	 * @param lexeme the lexeme name
 	 * @return an array of bytes
@@ -279,7 +280,8 @@ public class ESLIFRecognizer {
 	/**
 	 * Ask the recognizer the end-user data associated to last successful lexeme try.
 	 * This data will be an exact copy of the last bytes that matched for a given lexeme, where data is the internal representation of end-user data,
-	 * meaning that it may be UTF-8 sequence of bytes in case of character stream.
+	 * meaning that it may be UTF-8 sequence of bytes in case of character stream, and always an UTF-8 seauence of bytes in case of end-user data
+	 * (end-user data representation is always the toString() result converted to UTF8).
 	 * 
 	 * @param lexeme the lexeme name
 	 * @return an array of bytes
@@ -292,7 +294,8 @@ public class ESLIFRecognizer {
 	/**
 	 * Ask the recognizer the end-user data associated to last successful discard try.
 	 * This data will be an exact copy of the last bytes that matched for a given lexeme, where data is the internal representation of end-user data,
-	 * meaning that it may be UTF-8 sequence of bytes in case of character stream.
+	 * meaning that it may be UTF-8 sequence of bytes in case of character stream, and always an UTF-8 seauence of bytes in case of end-user data
+	 * (end-user data representation is always the toString() result converted to UTF8).
 	 * 
 	 * @return an array of bytes
 	 * @throws ESLIFException if the interface failed
