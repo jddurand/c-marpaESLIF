@@ -559,7 +559,6 @@ static short marpaESLIFValueSymbolCallback(void *userDatavp, marpaESLIFValue_t *
 static void  marpaESLIFValueFreeCallback(void *userDatavp, int contexti, void *p, size_t sizel);
 static jmethodID marpaESLIFValueActionResolver(JNIEnv *envp, marpaESLIFValueContext_t *marpaESLIFValueContextp, char *methods, char *signatures);
 static void marpaESLIFValueContextFree(JNIEnv *envp, marpaESLIFValueContext_t *marpaESLIFValueContextp, short onStackb);
-static void marpaESLIFValueContextCleanup(JNIEnv *envp, marpaESLIFValueContext_t *marpaESLIFValueContextp);
 static void marpaESLIFRecognizerContextFree(JNIEnv *envp, marpaESLIFRecognizerContext_t *marpaESLIFRecognizerContextp, short onStackb);
 static void marpaESLIFRecognizerContextCleanup(JNIEnv *envp, marpaESLIFRecognizerContext_t *marpaESLIFRecognizerContextp);
 static short marpaESLIFValueContextInit(JNIEnv *envp, jobject eslifValueInterfacep, marpaESLIFValueContext_t *marpaESLIFValueContextp);
@@ -3844,18 +3843,6 @@ static void marpaESLIFValueContextFree(JNIEnv *envp, marpaESLIFValueContext_t *m
     }
   }
 }
- 
-/*****************************************************************************/
-static void marpaESLIFValueContextCleanup(JNIEnv *envp, marpaESLIFValueContext_t *marpaESLIFValueContextp)
-/*****************************************************************************/
-{
-  if (marpaESLIFValueContextp != NULL) {
-    if (marpaESLIFValueContextp->previous_representations != NULL) {
-      free(marpaESLIFValueContextp->previous_representations);
-      marpaESLIFValueContextp->previous_representations = NULL;
-    }
-  }
-}
 
 /*****************************************************************************/
 static void marpaESLIFRecognizerContextFree(JNIEnv *envp, marpaESLIFRecognizerContext_t *marpaESLIFRecognizerContextp, short onStackb)
@@ -4000,7 +3987,11 @@ static short marpaESLIFRepresentationCallback(void *userDatavp, marpaESLIFValueR
     goto err;
   }
 
-  marpaESLIFValueContextCleanup(envp, marpaESLIFValueContextp);
+  /* Free marpaESLIFValueContextp->previous_representations and set it NULL if needed */
+  if (marpaESLIFValueContextp->previous_representations != NULL) {
+    free(marpaESLIFValueContextp->previous_representations);
+    marpaESLIFValueContextp->previous_representations = NULL;
+  }
 
   /* We always push a PTR */
   if (marpaESLIFValueResultp->type != MARPAESLIF_VALUE_TYPE_PTR) {
@@ -4033,6 +4024,8 @@ static short marpaESLIFRepresentationCallback(void *userDatavp, marpaESLIFValueR
     size = (*envp)->GetStringLength(envp, stringp);
     /* If zero character, we do nothing - nothing will be appended by default */
     if (size > 0) {
+      /* Take care, JNI document is wrong since almost the beginning, GetStringLength() */
+      /* returns the number of code units, NOT the number of characters */
       len = size * sizeof(jchar);
       marpaESLIFValueContextp->previous_representations = (jchar *) malloc(len);
       if (marpaESLIFValueContextp->previous_representations == NULL) {
