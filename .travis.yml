@@ -4,7 +4,7 @@
 language: c
 sudo: required
 before_script:
-  - sudo add-apt-repository ppa:george-edison55/precise-backports
+  - sudo add-apt-repository ppa:george-edison55/precise-backports < /dev/null
   - sudo apt-get update -qq --allow-unauthenticated
   - sudo apt-get install cmake cmake-data cpanminus
 # Standard Dist::Zilla, this will install a bunch of prereqs, speeding up the upgrade
