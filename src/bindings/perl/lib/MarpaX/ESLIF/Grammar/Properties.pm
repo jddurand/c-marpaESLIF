@@ -80,6 +80,10 @@ Creation of an ESLIFGrammarProperties instance, noted C<$self> afterwards. C<%ar
 
 Grammar level
 
+=item maxLevel
+
+Maximum grammar level
+
 =item description
 
 Grammar description
@@ -126,6 +130,7 @@ sub new {
     # This should be called ONLY by the XS, and we know what we do
     #
     return bless { level               => $args{level},
+                   maxLevel            => $args{maxLevel},
                    description         => $args{description},
                    latm                => $args{latm},
                    defaultSymbolAction => $args{defaultSymbolAction},
@@ -152,6 +157,18 @@ sub getLevel {
   my ($self) = @_;
 
   return $self->{level}
+}
+
+=head2 $self->getMaxLevel
+
+Returns maximum grammar's level
+
+=cut
+
+sub getMaxLevel {
+  my ($self) = @_;
+
+  return $self->{maxLevel}
 }
 
 =head2 $self->getDescription

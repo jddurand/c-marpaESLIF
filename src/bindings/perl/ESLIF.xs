@@ -1844,6 +1844,7 @@ CODE:
 
   avp = newAV();
   MARPAESLIF_XV_STORE_IV     (avp, "level",               grammarProperty.leveli);
+  MARPAESLIF_XV_STORE_IV     (avp, "maxLevel",            grammarProperty.maxLeveli);
   MARPAESLIF_XV_STORE_STRING (avp, "description",         grammarProperty.descp);
   MARPAESLIF_XV_STORE_IV     (avp, "latm",                grammarProperty.latmb);
   MARPAESLIF_XV_STORE_ACTION (avp, "defaultSymbolAction", grammarProperty.defaultSymbolActionp);
@@ -1880,6 +1881,7 @@ CODE:
 
   avp = newAV();
   MARPAESLIF_XV_STORE_IV     (avp, "level",               grammarProperty.leveli);
+  MARPAESLIF_XV_STORE_IV     (avp, "maxLevel",            grammarProperty.maxLeveli);
   MARPAESLIF_XV_STORE_STRING (avp, "description",         grammarProperty.descp);
   MARPAESLIF_XV_STORE_IV     (avp, "latm",                grammarProperty.latmb);
   MARPAESLIF_XV_STORE_ACTION (avp, "defaultSymbolAction", grammarProperty.defaultSymbolActionp);
