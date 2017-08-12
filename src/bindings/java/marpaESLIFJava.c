@@ -3453,7 +3453,6 @@ static short marpaESLIFValueContextInject(JNIEnv *envp, marpaESLIFValue_t *marpa
   int                rulei;
   jstring            symbolp = NULL;
   jstring            rulep = NULL;
-  jobject            eslifGrammarp = NULL;
 
   /* Get value context */
   if (! marpaESLIFValue_contextb(marpaESLIFValuep, &symbols, &symboli, &rules, &rulei)) {
@@ -3497,11 +3496,7 @@ static short marpaESLIFValueContextInject(JNIEnv *envp, marpaESLIFValue_t *marpa
   }
 
   /* Grammar instance - stored as a global reference in  marpaESLIFValueContextp */
-  eslifGrammarp = (*envp)->NewLocalRef(envp, marpaESLIFValueContextp->eslifGrammarp);
-  if (eslifGrammarp == NULL) {
-    RAISEEXCEPTION(envp, "NewLocalRef failure");
-  }
-  (*envp)->CallVoidMethod(envp, eslifValueInterfacep, MARPAESLIF_ESLIFVALUEINTERFACE_CLASS_setGrammar_METHODP, eslifGrammarp);
+  (*envp)->CallVoidMethod(envp, eslifValueInterfacep, MARPAESLIF_ESLIFVALUEINTERFACE_CLASS_setGrammar_METHODP, marpaESLIFValueContextp->eslifGrammarp);
   if (HAVEEXCEPTION(envp)) {
     goto err;
   }
@@ -3518,9 +3513,6 @@ static short marpaESLIFValueContextInject(JNIEnv *envp, marpaESLIFValue_t *marpa
   }
   if (rulep != NULL) {
     (*envp)->DeleteLocalRef(envp, rulep);
-  }
-  if (eslifGrammarp != NULL) {
-    (*envp)->DeleteLocalRef(envp, eslifGrammarp);
   }
   return rcb;
 }
