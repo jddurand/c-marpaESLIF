@@ -3,16 +3,10 @@
 #
 language: c
 sudo: required
-addons:
-  apt:
-    sources:
-      - george-edison55-precise-backports
-    packages:
-      - cmake
-      - cmake-data
 before_script:
-  - sudo apt-get update
-  - sudo apt-get install cpanminus
+  - sudo add-apt-repository ppa:george-edison55/precise-backports --yes --allow-unauthenticated
+  - sudo apt-get update -qq
+  - sudo apt-get install cmake cmake-data cpanminus
 # Standard Dist::Zilla, this will install a bunch of prereqs, speeding up the upgrade
   - sudo apt-get install libdist-zilla-perl
 # Upgrade Dist::Zilla
