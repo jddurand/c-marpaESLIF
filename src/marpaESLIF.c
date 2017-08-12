@@ -4765,6 +4765,7 @@ short marpaESLIFGrammar_grammarproperty_by_levelb(marpaESLIFGrammar_t *marpaESLI
 /*****************************************************************************/
 {
   marpaESLIF_grammar_t *grammarp;
+  genericStack_t       *grammarStackp;
   short                 rcb;
 
   if (marpaESLIFGrammarp == NULL) {
@@ -4776,9 +4777,11 @@ short marpaESLIFGrammar_grammarproperty_by_levelb(marpaESLIFGrammar_t *marpaESLI
   if (grammarp == NULL) {
     goto err;
   }
+  grammarStackp = marpaESLIFGrammarp->grammarStackp;
  
   if (grammarPropertyp != NULL) {
     grammarPropertyp->leveli               = grammarp->leveli;
+    grammarPropertyp->maxLeveli            = GENERICSTACK_USED(grammarStackp) - 1; /* Per def it is > 0 here */
     grammarPropertyp->descp                = grammarp->descp;
     grammarPropertyp->latmb                = grammarp->latmb;
     grammarPropertyp->defaultSymbolActionp = grammarp->defaultSymbolActionp;

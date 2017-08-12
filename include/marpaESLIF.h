@@ -176,6 +176,7 @@ typedef enum marpaESLIFSymbolPropertyBit {
 
 typedef struct marpaESLIFGrammarProperty {
   int                    leveli;                       /* Grammar level */
+  int                    maxLeveli;                    /* Maximum grammar level */
   marpaESLIFString_t    *descp;                        /* Grammar description (auto-generated if none) */
   short                  latmb;                        /* LATM ? */
   marpaESLIFAction_t    *defaultSymbolActionp;         /* Default action for symbols - never NULL */

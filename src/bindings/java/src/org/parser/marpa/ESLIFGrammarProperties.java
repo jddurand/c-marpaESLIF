@@ -19,6 +19,7 @@ import java.util.Arrays;
  */
 public class ESLIFGrammarProperties {
 	private int     level;
+	private int     maxLevel;
     private String  description;
     private boolean latm;
     private String  defaultSymbolAction;
@@ -38,6 +39,7 @@ public class ESLIFGrammarProperties {
 	 * Creation of an ESLIFGrammarProperties instance
 	 * 
 	 * @param level Grammar level
+	 * @param maxLevel Maximum grammar level
 	 * @param description Grammar description
 	 * @param latm Grammar is in LATM (Longest Accepted Token Mode) ?
 	 * @param defaultSymbolAction Grammar default symbol action
@@ -48,8 +50,9 @@ public class ESLIFGrammarProperties {
 	 * @param symbolIds Symbol Ids
 	 * @param ruleIds Rule Ids
 	 */
-	public ESLIFGrammarProperties(int level, String description, boolean latm, String defaultSymbolAction, String defaultRuleAction, String defaultFreeAction, int startId, int discardId, int[] symbolIds, int[] ruleIds) {
+	public ESLIFGrammarProperties(int level, int maxLevel, String description, boolean latm, String defaultSymbolAction, String defaultRuleAction, String defaultFreeAction, int startId, int discardId, int[] symbolIds, int[] ruleIds) {
 		this.level               = level;
+		this.maxLevel            = maxLevel;
 		this.description         = description;
 		this.latm                = latm;
 		this.defaultSymbolAction = defaultSymbolAction;
@@ -75,6 +78,7 @@ public class ESLIFGrammarProperties {
 		result = prime * result + discardId;
 		result = prime * result + (latm ? 1231 : 1237);
 		result = prime * result + level;
+		result = prime * result + maxLevel;
 		result = prime * result + Arrays.hashCode(ruleIds);
 		result = prime * result + startId;
 		result = prime * result + Arrays.hashCode(symbolIds);
@@ -133,6 +137,9 @@ public class ESLIFGrammarProperties {
 		if (level != other.level) {
 			return false;
 		}
+		if (maxLevel != other.maxLevel) {
+			return false;
+		}
 		if (!Arrays.equals(ruleIds, other.ruleIds)) {
 			return false;
 		}
@@ -150,10 +157,11 @@ public class ESLIFGrammarProperties {
 	 */
 	@Override
 	public String toString() {
-		return "ESLIFGrammarProperties [level=" + level + ", description=" + description + ", latm=" + latm
-				+ ", defaultSymbolAction=" + defaultSymbolAction + ", defaultRuleAction=" + defaultRuleAction
-				+ ", defaultFreeAction=" + defaultFreeAction + ", startId=" + startId + ", discardId=" + discardId
-				+ ", symbolIds=" + Arrays.toString(symbolIds) + ", ruleIds=" + Arrays.toString(ruleIds) + "]";
+		return "ESLIFGrammarProperties [level=" + level + ", maxLevel=" + maxLevel + ", description=" + description
+				+ ", latm=" + latm + ", defaultSymbolAction=" + defaultSymbolAction + ", defaultRuleAction="
+				+ defaultRuleAction + ", defaultFreeAction=" + defaultFreeAction + ", startId=" + startId
+				+ ", discardId=" + discardId + ", symbolIds=" + Arrays.toString(symbolIds) + ", ruleIds="
+				+ Arrays.toString(ruleIds) + "]";
 	}
 
 	/**
@@ -161,6 +169,13 @@ public class ESLIFGrammarProperties {
 	 */
 	public int getLevel() {
 		return level;
+	}
+
+	/**
+	 * @return Maximum grammar level
+	 */
+	public int getMaxLevel() {
+		return maxLevel;
 	}
 
 	/**
