@@ -8,6 +8,7 @@ addons:
     sources:
       - george-edison55-precise-backports
     packages:
+      - mail
       - cmake
       - cmake-data
 before_script:
@@ -27,6 +28,7 @@ before_script:
   - pushd src/bindings/perl && dzil authordeps --missing | xargs sudo cpanm --notest && popd
   - cmake . -DALL_IN_ONE=ON
   - make check
+  - mail -a Testing/Temporary/LastTest.log -s "ALL_IN_ONE make check's LastTest.log" jeandamiendurand@free.fr < /dev/null
   - make install DESTDIR=/tmp
   - rm -rf output CMakeCache.txt CMakeFiles pcre2
   - sh ./install-c-genericLogger.sh
@@ -39,6 +41,7 @@ before_script:
 script:
   - make
   - make check
+  - mail -a Testing/Temporary/LastTest.log -s "make check's LastTest.log" jeandamiendurand@free.fr < /dev/null
 #  - ./output/lib/marpaESLIFTester
 #  - ./output/lib/adventTester
 #  - ./output/lib/russellParadoxTester
