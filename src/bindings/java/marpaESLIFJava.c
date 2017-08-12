@@ -102,6 +102,7 @@ typedef struct marpaESLIFFieldCache {
 
 typedef struct marpaESLIFValueContext {
   jobject                        eslifValueInterfacep;          /* Current eslifValueInterface instance */
+  jobject                        eslifGrammarp;                 /* Current eslifGrammarp instance */
   marpaESLIFClassCache_t         classCache;                    /* Cache of current class */
   marpaESLIFMethodCache_t       *methodCachep;                  /* Cache of method IDs */
   size_t                         methodCacheSizel;
@@ -565,7 +566,7 @@ static jmethodID marpaESLIFValueActionResolver(JNIEnv *envp, marpaESLIFValueCont
 static void marpaESLIFValueContextFree(JNIEnv *envp, marpaESLIFValueContext_t *marpaESLIFValueContextp, short onStackb);
 static void marpaESLIFRecognizerContextFree(JNIEnv *envp, marpaESLIFRecognizerContext_t *marpaESLIFRecognizerContextp, short onStackb);
 static void marpaESLIFRecognizerContextCleanup(JNIEnv *envp, marpaESLIFRecognizerContext_t *marpaESLIFRecognizerContextp);
-static short marpaESLIFValueContextInit(JNIEnv *envp, jobject eslifValueInterfacep, marpaESLIFValueContext_t *marpaESLIFValueContextp);
+static short marpaESLIFValueContextInit(JNIEnv *envp, jobject eslifValueInterfacep, jobject eslifGrammarp, marpaESLIFValueContext_t *marpaESLIFValueContextp);
 static short marpaESLIFRepresentationCallback(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp, char **inputcpp, size_t *inputlp);
 
 /* --------------- */
@@ -1460,7 +1461,7 @@ JNIEXPORT jboolean JNICALL Java_org_parser_marpa_ESLIFGrammar_jniParse(JNIEnv *e
   marpaESLIFRecognizerOption.buftriggerperci           = 50; /* Recommended value */
   marpaESLIFRecognizerOption.bufaddperci               = 50; /* Recommended value */
 
-  if (! marpaESLIFValueContextInit(envp, eslifValueInterfacep, &marpaESLIFValueContext)) {
+  if (! marpaESLIFValueContextInit(envp, eslifValueInterfacep, eslifGrammarp, &marpaESLIFValueContext)) {
     goto err;
   }
   
@@ -3102,6 +3103,7 @@ JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIFValue_jniNew(JNIEnv *envp, job
   marpaESLIFValueOption_t           marpaESLIFValueOption;
   marpaESLIFValueContext_t         *marpaESLIFValueContextp;
   jobject                           eslifValueInterfacep;
+  jobject                           eslifGrammarp;
   jobject                           BYTEBUFFER(marpaESLIFValue);
   jobject                           BYTEBUFFER(marpaESLIFValueContext);
 
@@ -3117,7 +3119,13 @@ JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIFValue_jniNew(JNIEnv *envp, job
     goto err;
   }
 
-  /* Get value interface - class is protected to not accept the null argument */
+  /* Get grammar instance */
+  eslifGrammarp = (*envp)->CallObjectMethod(envp, eslifRecognizerp, MARPAESLIF_ESLIFRECOGNIZER_CLASS_getEslifGrammar_METHODP);
+  if (eslifGrammarp == NULL) {
+    RAISEEXCEPTION(envp, "eslifGrammarp is NULL");
+  }
+
+ /* Get value interface - class is protected to not accept the null argument */
   eslifValueInterfacep = (*envp)->CallObjectMethod(envp, eslifValuep, MARPAESLIF_ESLIFVALUE_CLASS_getEslifValueInterface_METHODP);
   if (HAVEEXCEPTION(envp)) {
     goto err;
@@ -3128,7 +3136,7 @@ JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIFValue_jniNew(JNIEnv *envp, job
   if (marpaESLIFValueContextp == NULL) {
     RAISEEXCEPTIONF(envp, "malloc failure, %s", strerror(errno));
   }
-  if (! marpaESLIFValueContextInit(envp, eslifValueInterfacep, marpaESLIFValueContextp)) {
+  if (! marpaESLIFValueContextInit(envp, eslifValueInterfacep, eslifGrammarp, marpaESLIFValueContextp)) {
     goto err;
   }
   
@@ -3445,6 +3453,7 @@ static short marpaESLIFValueContextInject(JNIEnv *envp, marpaESLIFValue_t *marpa
   int                rulei;
   jstring            symbolp = NULL;
   jstring            rulep = NULL;
+  jobject            eslifGrammarp = NULL;
 
   /* Get value context */
   if (! marpaESLIFValue_contextb(marpaESLIFValuep, &symbols, &symboli, &rules, &rulei)) {
@@ -3487,6 +3496,16 @@ static short marpaESLIFValueContextInject(JNIEnv *envp, marpaESLIFValue_t *marpa
     goto err;
   }
 
+  /* Grammar instance - stored as a global reference in  marpaESLIFValueContextp */
+  eslifGrammarp = (*envp)->NewLocalRef(envp, marpaESLIFValueContextp->eslifGrammarp);
+  if (eslifGrammarp == NULL) {
+    RAISEEXCEPTION(envp, "NewLocalRef failure");
+  }
+  (*envp)->CallVoidMethod(envp, eslifValueInterfacep, MARPAESLIF_ESLIFVALUEINTERFACE_CLASS_setGrammar_METHODP, eslifGrammarp);
+  if (HAVEEXCEPTION(envp)) {
+    goto err;
+  }
+
   rcb = 1;
   goto done;
 
@@ -3499,6 +3518,9 @@ static short marpaESLIFValueContextInject(JNIEnv *envp, marpaESLIFValue_t *marpa
   }
   if (rulep != NULL) {
     (*envp)->DeleteLocalRef(envp, rulep);
+  }
+  if (eslifGrammarp != NULL) {
+    (*envp)->DeleteLocalRef(envp, eslifGrammarp);
   }
   return rcb;
 }
@@ -3860,6 +3882,9 @@ static void marpaESLIFValueContextFree(JNIEnv *envp, marpaESLIFValueContext_t *m
       }
       free(marpaESLIFValueContextp->methodCachep);
     }
+    if (marpaESLIFValueContextp->eslifGrammarp != NULL) {
+      (*envp)->DeleteGlobalRef(envp, marpaESLIFValueContextp->eslifGrammarp);
+    }
     if (marpaESLIFValueContextp->previous_representation_utf8s != NULL) {
       free(marpaESLIFValueContextp->previous_representation_utf8s);
     }
@@ -3921,7 +3946,7 @@ static void marpaESLIFRecognizerContextCleanup(JNIEnv *envp, marpaESLIFRecognize
 }
 
 /*****************************************************************************/
-static short marpaESLIFValueContextInit(JNIEnv *envp, jobject eslifValueInterfacep, marpaESLIFValueContext_t *marpaESLIFValueContextp)
+static short marpaESLIFValueContextInit(JNIEnv *envp, jobject eslifValueInterfacep, jobject eslifGrammarp, marpaESLIFValueContext_t *marpaESLIFValueContextp)
 /*****************************************************************************/
 {
   static const char *funcs   = "marpaESLIFValueContextInit";
@@ -3932,6 +3957,7 @@ static short marpaESLIFValueContextInit(JNIEnv *envp, jobject eslifValueInterfac
   jboolean           isCopy;
 
   marpaESLIFValueContextp->eslifValueInterfacep          = eslifValueInterfacep;
+  marpaESLIFValueContextp->eslifGrammarp                 = NULL;
   marpaESLIFValueContextp->classCache.classs             = NULL;
   marpaESLIFValueContextp->classCache.classp             = NULL;
   marpaESLIFValueContextp->methodCachep                  = NULL;
@@ -3939,6 +3965,12 @@ static short marpaESLIFValueContextInit(JNIEnv *envp, jobject eslifValueInterfac
   marpaESLIFValueContextp->methodp                       = 0;
   marpaESLIFValueContextp->actions                       = NULL;
   marpaESLIFValueContextp->previous_representation_utf8s = NULL;
+
+  /* We want the grammar instance to stay alive until valuation is done */
+  marpaESLIFValueContextp->eslifGrammarp = (*envp)->NewGlobalRef(envp, eslifGrammarp);
+  if (marpaESLIFValueContextp->eslifGrammarp == NULL) {
+    RAISEEXCEPTION(envp, "NewGlobalRef failure");
+  }
 
   /* For run-time resolving of actions we need current jclass */
   classp = (*envp)->GetObjectClass(envp, eslifValueInterfacep);
