@@ -8,7 +8,6 @@ addons:
     sources:
       - george-edison55-precise-backports
     packages:
-      - mail
       - cmake
       - cmake-data
 before_script:
