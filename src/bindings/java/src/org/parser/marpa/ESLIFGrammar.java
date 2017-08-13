@@ -27,10 +27,14 @@ public class ESLIFGrammar {
 	private native String  jniDescriptionByLevel(int level) throws ESLIFException;
 	private native int[]   jniCurrentRuleIds() throws ESLIFException;
 	private native int[]   jniRuleIdsByLevel(int level) throws ESLIFException;
+	private native int[]   jniCurrentSymbolIds() throws ESLIFException;
+	private native int[]   jniSymbolIdsByLevel(int level) throws ESLIFException;
 	private native String  jniRuleDisplay(int rule) throws ESLIFException;
 	private native String  jniRuleShow(int rule) throws ESLIFException;
 	private native String  jniRuleDisplayByLevel(int level, int rule) throws ESLIFException;
 	private native String  jniRuleShowByLevel(int level, int rule) throws ESLIFException;
+	private native String  jniSymbolDisplay(int symbol) throws ESLIFException;
+	private native String  jniSymbolDisplayByLevel(int level, int symbol) throws ESLIFException;
 	private native String  jniShow() throws ESLIFException;
 	private native String  jniShowByLevel(int level) throws ESLIFException;
 	private native boolean jniParse(ESLIFRecognizerInterface recognizerInterface, ESLIFValueInterface valueInterface) throws ESLIFException;
@@ -119,6 +123,25 @@ public class ESLIFGrammar {
 		return jniRuleIdsByLevel(level);
 	}
 	/**
+	 * Symbol identifiers are integers that uniquely identify a symbol
+	 * 
+	 * @return the list of symbol identifiers of the current grammar
+	 * @throws ESLIFException if the interface failed
+	 */
+	public synchronized int[] currentSymbolIds() throws ESLIFException {
+		return jniCurrentSymbolIds();
+	}
+	/**
+	 * Symbol identifiers are integers that uniquely identify a symbol
+	 * 
+	 * @param level the grammar level
+	 * @return the list of symbol identifiers of the grammar at the specified <code>level</code>
+	 * @throws ESLIFException if the interface failed
+	 */
+	public synchronized int[] symbolIdsByLevel(int level) throws ESLIFException {
+		return jniSymbolIdsByLevel(level);
+	}
+	/**
 	 * This method return the name of a rule
 	 * This correspond to the <code>name</code> adverb, if present, else a default naming applies.
 	 * 
@@ -140,6 +163,16 @@ public class ESLIFGrammar {
 		return jniRuleShow(rule);
 	}
 	/**
+	 * This method return the display form of a symbol
+	 * 
+	 * @param symbol the symbol ID
+	 * @return the display form of the symbol
+	 * @throws ESLIFException if the interface failed
+	 */
+	public synchronized String symbolDisplay(int symbol) throws ESLIFException {
+		return jniSymbolDisplay(symbol);
+	}
+	/**
 	 * This method return the name of a rule at a given level
 	 * This correspond to the <code>name</code> adverb, if present, else a default naming applies.
 	 * 
@@ -150,6 +183,17 @@ public class ESLIFGrammar {
 	 */
 	public synchronized String ruleDisplayByLevel(int level, int rule) throws ESLIFException {
 		return jniRuleDisplayByLevel(level, rule);
+	}
+	/**
+	 * This method return the display form of a symbol at a given level
+	 * 
+	 * @param level the grammar level
+	 * @param symbol the symbol ID
+	 * @return the display form of the symbol
+	 * @throws ESLIFException if the interface failed
+	 */
+	public synchronized String symbolDisplayByLevel(int level, int symbol) throws ESLIFException {
+		return jniSymbolDisplayByLevel(level, symbol);
 	}
 	/**
 	 * This method returns a human-readable description of the rule

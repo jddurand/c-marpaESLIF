@@ -25,10 +25,14 @@ JNIEXPORT jint         JNICALL Java_org_parser_marpa_ESLIFGrammar_jniCurrentLeve
 JNIEXPORT jstring      JNICALL Java_org_parser_marpa_ESLIFGrammar_jniCurrentDescription        (JNIEnv *envp, jobject eslifGrammarp);
 JNIEXPORT jstring      JNICALL Java_org_parser_marpa_ESLIFGrammar_jniDescriptionByLevel        (JNIEnv *envp, jobject eslifGrammarp, jint level);
 JNIEXPORT jintArray    JNICALL Java_org_parser_marpa_ESLIFGrammar_jniCurrentRuleIds            (JNIEnv *envp, jobject eslifGrammarp);
+JNIEXPORT jintArray    JNICALL Java_org_parser_marpa_ESLIFGrammar_jniCurrentSymbolIds          (JNIEnv *envp, jobject eslifGrammarp);
 JNIEXPORT jintArray    JNICALL Java_org_parser_marpa_ESLIFGrammar_jniRuleIdsByLevel            (JNIEnv *envp, jobject eslifGrammarp, jint level);
+JNIEXPORT jintArray    JNICALL Java_org_parser_marpa_ESLIFGrammar_jniSymbolIdsByLevel          (JNIEnv *envp, jobject eslifGrammarp, jint level);
 JNIEXPORT jintArray    JNICALL Java_org_parser_marpa_ESLIFGrammar_jniRuleDisplay               (JNIEnv *envp, jobject eslifGrammarp, jint rule);
+JNIEXPORT jintArray    JNICALL Java_org_parser_marpa_ESLIFGrammar_jniSymbolDisplay             (JNIEnv *envp, jobject eslifGrammarp, jint symbol);
 JNIEXPORT jintArray    JNICALL Java_org_parser_marpa_ESLIFGrammar_jniRuleShow                  (JNIEnv *envp, jobject eslifGrammarp, jint rule);
 JNIEXPORT jintArray    JNICALL Java_org_parser_marpa_ESLIFGrammar_jniRuleDisplayByLevel        (JNIEnv *envp, jobject eslifGrammarp, jint level, jint rule);
+JNIEXPORT jintArray    JNICALL Java_org_parser_marpa_ESLIFGrammar_jniSymbolDisplayByLevel      (JNIEnv *envp, jobject eslifGrammarp, jint level, jint symbol);
 JNIEXPORT jintArray    JNICALL Java_org_parser_marpa_ESLIFGrammar_jniRuleShowByLevel           (JNIEnv *envp, jobject eslifGrammarp, jint level, jint rule);
 JNIEXPORT jstring      JNICALL Java_org_parser_marpa_ESLIFGrammar_jniShow                      (JNIEnv *envp, jobject eslifGrammarp);
 JNIEXPORT jstring      JNICALL Java_org_parser_marpa_ESLIFGrammar_jniShowByLevel               (JNIEnv *envp, jobject eslifGrammarp, jint level);
@@ -516,6 +520,9 @@ static marpaESLIFMethodCache_t marpaESLIFMethodCacheArrayp[] = {
 
   #define MARPAESLIF_STRING_CLASS_getBytes_String_METHODP                           marpaESLIFMethodCacheArrayp[63].methodp
   {      &MARPAESLIF_STRING_CLASSCACHE, "getBytes",                                 "(Ljava/lang/String;)[B", 0, NULL },
+
+  #define MARPAESLIF_ESLIFGRAMMARPROPERTIES_CLASS_init_METHODP                      marpaESLIFMethodCacheArrayp[64].methodp
+  {      &MARPAESLIF_ESLIFGRAMMARPROPERTIES_CLASSCACHE, "<init>",                   "(IILjava/lang/String;ZLjava/lang/String;Ljava/lang/String;Ljava/lang/String;II[I[I)V", 0, NULL },
 
   { NULL }
 };
@@ -1190,6 +1197,62 @@ JNIEXPORT jintArray JNICALL Java_org_parser_marpa_ESLIFGrammar_jniCurrentRuleIds
 }
 
 /*****************************************************************************/
+JNIEXPORT jintArray JNICALL Java_org_parser_marpa_ESLIFGrammar_jniCurrentSymbolIds(JNIEnv *envp, jobject eslifGrammarp)
+/*****************************************************************************/
+{
+  static const char   *funcs = "Java_org_parser_marpa_ESLIFGrammar_jniCurrentSymbolIds";
+  jintArray            intArray = NULL;
+  jint                *intp = NULL;
+  marpaESLIFGrammar_t *marpaESLIFGrammarp;
+  int                 *symbolip;
+  size_t               symboll;
+  size_t               i;
+
+  if (! ESLIFGrammar_contextb(envp, eslifGrammarp, eslifGrammarp, MARPAESLIF_ESLIFGRAMMAR_CLASS_getLoggerInterfacep_METHODP,
+                              NULL /* genericLoggerpp */,
+                              NULL /* genericLoggerContextpp */,
+                              NULL /* marpaESLIFpp */,
+                              &marpaESLIFGrammarp)) {
+    goto err;
+  }
+
+  if (! marpaESLIFGrammar_symbolarray_currentb(marpaESLIFGrammarp, &symbolip, &symboll)) {
+    RAISEEXCEPTION(envp, "marpaESLIFGrammar_symbolarray_currentb failure");
+  }
+  if (symboll <= 0) {
+    RAISEEXCEPTION(envp, "marpaESLIFGrammar_symbolarray_currentb returned no symbol");
+  }
+  intp = (jint *) malloc(sizeof(jint) * symboll);
+  if (intp == NULL) {
+    RAISEEXCEPTIONF(envp, "malloc failure, %s", strerror(errno));
+  }
+  for (i = 0; i < symboll; i++) {
+    intp[i] = (jint) symbolip[i];
+  }
+
+  intArray = (*envp)->NewIntArray(envp, (jsize) symboll);
+  if (intArray == NULL) {
+    RAISEEXCEPTION(envp, "NewIntArray failure");
+  }
+
+  /* If it fails the exception will be seen by the Java layer */
+  (*envp)->SetIntArrayRegion(envp, intArray, 0, (jsize) symboll, intp);
+  goto done;
+
+ err:
+  if (intArray != NULL) {
+    (*envp)->DeleteLocalRef(envp, intArray);
+    intArray = NULL;
+  }
+
+ done:
+  if (intp != NULL) {
+    free(intp);
+  }
+  return intArray;
+}
+
+/*****************************************************************************/
 JNIEXPORT jintArray JNICALL Java_org_parser_marpa_ESLIFGrammar_jniRuleIdsByLevel(JNIEnv *envp, jobject eslifGrammarp, jint level)
 /*****************************************************************************/
 {
@@ -1247,6 +1310,63 @@ JNIEXPORT jintArray JNICALL Java_org_parser_marpa_ESLIFGrammar_jniRuleIdsByLevel
 }
 
 /*****************************************************************************/
+JNIEXPORT jintArray JNICALL Java_org_parser_marpa_ESLIFGrammar_jniSymbolIdsByLevel(JNIEnv *envp, jobject eslifGrammarp, jint level)
+/*****************************************************************************/
+{
+  static const char   *funcs = "Java_org_parser_marpa_ESLIFGrammar_jniSymbolIdsByLevel";
+  marpaESLIFGrammar_t *marpaESLIFGrammarp;
+  int                  leveli = (int) level;
+  jintArray            intArray;
+  jint                *intp = NULL;
+  int                 *symbolip;
+  size_t               symboll;
+  size_t               i;
+
+  if (! ESLIFGrammar_contextb(envp, eslifGrammarp, eslifGrammarp, MARPAESLIF_ESLIFGRAMMAR_CLASS_getLoggerInterfacep_METHODP,
+                              NULL /* genericLoggerpp */,
+                              NULL /* genericLoggerContextpp */,
+                              NULL /* marpaESLIFpp */,
+                              &marpaESLIFGrammarp)) {
+    goto err;
+  }
+
+  if (! marpaESLIFGrammar_symbolarray_by_levelb(marpaESLIFGrammarp, &symbolip, &symboll, leveli, NULL)) {
+    RAISEEXCEPTIONF(envp, "marpaESLIFGrammar_symbolarray_by_levelb failure for level %d", leveli);
+  }
+  if (symboll <= 0) {
+    RAISEEXCEPTIONF(envp, "marpaESLIFGrammar_symbolarray_currentb returned no symbol for level %d", leveli);
+  }
+  intp = (jint *) malloc(sizeof(jint) * symboll);
+  if (intp == NULL) {
+    RAISEEXCEPTIONF(envp, "malloc failure, %s", strerror(errno));
+  }
+  for (i = 0; i < symboll; i++) {
+    intp[i] = (jint) symbolip[i];
+  }
+
+  intArray = (*envp)->NewIntArray(envp, (jsize) symboll);
+  if (intArray == NULL) {
+    RAISEEXCEPTION(envp, "NewIntArray failure");
+  }
+
+  /* If it fails the exception will be seen by the Java layer */
+  (*envp)->SetIntArrayRegion(envp, intArray, 0, (jsize) symboll, intp);
+  goto done;
+
+ err:
+  if (intArray != NULL) {
+    (*envp)->DeleteLocalRef(envp, intArray);
+    intArray = NULL;
+  }
+
+ done:
+  if (intp != NULL) {
+    free(intp);
+  }
+  return intArray;
+}
+
+/*****************************************************************************/
 JNIEXPORT jintArray JNICALL Java_org_parser_marpa_ESLIFGrammar_jniRuleDisplay(JNIEnv *envp, jobject eslifGrammarp, jint rule)
 /*****************************************************************************/
 {
@@ -1269,6 +1389,34 @@ JNIEXPORT jintArray JNICALL Java_org_parser_marpa_ESLIFGrammar_jniRuleDisplay(JN
 
   /* If it fails the exception will be seen by the Java layer */
   return (*envp)->NewStringUTF(envp, ruledisplays);
+
+ err:
+  return NULL;
+}
+
+/*****************************************************************************/
+JNIEXPORT jintArray JNICALL Java_org_parser_marpa_ESLIFGrammar_jniSymbolDisplay(JNIEnv *envp, jobject eslifGrammarp, jint symbol)
+/*****************************************************************************/
+{
+  static const char   *funcs = "Java_org_parser_marpa_ESLIFGrammar_jniSymbolDisplay";
+  marpaESLIFGrammar_t *marpaESLIFGrammarp;
+  int                  symboli = (int) symbol;
+  char                *symboldisplays;
+
+  if (! ESLIFGrammar_contextb(envp, eslifGrammarp, eslifGrammarp, MARPAESLIF_ESLIFGRAMMAR_CLASS_getLoggerInterfacep_METHODP,
+                              NULL /* genericLoggerpp */,
+                              NULL /* genericLoggerContextpp */,
+                              NULL /* marpaESLIFpp */,
+                              &marpaESLIFGrammarp)) {
+    goto err;
+  }
+
+  if (! marpaESLIFGrammar_symboldisplayform_currentb(marpaESLIFGrammarp, symboli, &symboldisplays)) {
+    RAISEEXCEPTIONF(envp, "marpaESLIFGrammar_symboldisplayform_currentb failure for symbol %d", symboli);
+  }
+
+  /* If it fails the exception will be seen by the Java layer */
+  return (*envp)->NewStringUTF(envp, symboldisplays);
 
  err:
   return NULL;
@@ -1326,6 +1474,35 @@ JNIEXPORT jintArray JNICALL Java_org_parser_marpa_ESLIFGrammar_jniRuleDisplayByL
 
   /* If it fails the exception will be seen by the Java layer */
   return (*envp)->NewStringUTF(envp, ruledisplays);
+
+ err:
+  return NULL;
+}
+
+/*****************************************************************************/
+JNIEXPORT jintArray JNICALL Java_org_parser_marpa_ESLIFGrammar_jniSymbolDisplayByLevel(JNIEnv *envp, jobject eslifGrammarp, jint level, jint symbol)
+/*****************************************************************************/
+{
+  static const char   *funcs = "Java_org_parser_marpa_ESLIFGrammar_jniSymbolDisplayByLevel";
+  marpaESLIFGrammar_t *marpaESLIFGrammarp;
+  int                  leveli = (int) level;
+  int                  symboli = (int) symbol;
+  char                *symboldisplays;
+
+  if (! ESLIFGrammar_contextb(envp, eslifGrammarp, eslifGrammarp, MARPAESLIF_ESLIFGRAMMAR_CLASS_getLoggerInterfacep_METHODP,
+                              NULL /* genericLoggerpp */,
+                              NULL /* genericLoggerContextpp */,
+                              NULL /* marpaESLIFpp */,
+                              &marpaESLIFGrammarp)) {
+    goto err;
+  }
+
+  if (! marpaESLIFGrammar_symboldisplayform_by_levelb(marpaESLIFGrammarp, symboli, &symboldisplays, leveli, NULL)) {
+    RAISEEXCEPTIONF(envp, "marpaESLIFGrammar_symboldisplayform_currentb failure for symbol %d and level %d", symboli, leveli);
+  }
+
+  /* If it fails the exception will be seen by the Java layer */
+  return (*envp)->NewStringUTF(envp, symboldisplays);
 
  err:
   return NULL;

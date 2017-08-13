@@ -53,7 +53,7 @@ public class AppParse  {
 		for (int level = 0; level < eslifGrammar.ngrammar(); level++) {
 			eslifLogger.info("- grammar description at level " + level + ": " + eslifGrammar.descriptionByLevel(level));;
 		}
-		eslifLogger.info("current grammar show:\n" + eslifGrammar.show());
+		eslifLogger.info("current grammar methods:\n" + eslifGrammar.show());
 		{
 			int[] rules = eslifGrammar.currentRuleIds();
 			for (int i = 0; i < rules.length; i++) {
@@ -61,8 +61,14 @@ public class AppParse  {
 				eslifLogger.info("    display form: " + eslifGrammar.ruleDisplay(i)); 
 				eslifLogger.info("    show    form: " + eslifGrammar.ruleShow(i)); 
 			}
+			int[] symbols = eslifGrammar.currentSymbolIds();
+			for (int i = 0; i < symbols.length; i++) {
+				eslifLogger.info("- current symbol No " + i + ": " + symbols[i]); 
+				eslifLogger.info("    display form: " + eslifGrammar.symbolDisplay(i)); 
+			}
 		}
 		for (int level = 0; level < eslifGrammar.ngrammar(); level++) {
+			eslifLogger.info("grammar methods at level: " + level);
 			eslifLogger.info("- grammar show at level: " + level + "\n:" + eslifGrammar.showByLevel(level));
 			eslifLogger.info("- rule array at level " + level);
 			int[] rules = eslifGrammar.ruleIdsByLevel(level);
@@ -70,6 +76,12 @@ public class AppParse  {
 				eslifLogger.info("  + rule No " + i + ": " + rules[i]); 
 				eslifLogger.info("    display form: " + eslifGrammar.ruleDisplayByLevel(level, i)); 
 				eslifLogger.info("    show    form: " + eslifGrammar.ruleShowByLevel(level, i)); 
+			}
+			eslifLogger.info("- symbol array at level " + level);
+			int[] symbols = eslifGrammar.symbolIdsByLevel(level);
+			for (int i = 0; i < symbols.length; i++) {
+				eslifLogger.info("  + symbol No " + i + ": " + symbols[i]); 
+				eslifLogger.info("    display form: " + eslifGrammar.symbolDisplayByLevel(level, i)); 
 			}
 		}
 		
