@@ -38,6 +38,8 @@ public class ESLIFGrammar {
 	private native String  jniShow() throws ESLIFException;
 	private native String  jniShowByLevel(int level) throws ESLIFException;
 	private native boolean jniParse(ESLIFRecognizerInterface recognizerInterface, ESLIFValueInterface valueInterface) throws ESLIFException;
+	private native ESLIFGrammarProperties jniProperties() throws ESLIFException;
+	private native ESLIFGrammarProperties jniPropertiesByLevel(int level) throws ESLIFException;
 	/*
 	 * ********************************************
 	 * Public methods
@@ -241,6 +243,23 @@ public class ESLIFGrammar {
 			throw new Exception("valueInterface must not be null");
 		}
 		return jniParse(recognizerInterface, valueInterface);
+	}
+	/**
+	 * @return grammar properties
+	 * @throws Exception if the interface failed
+	 */
+	public ESLIFGrammarProperties properties() throws ESLIFException {
+		/* Note that this method does not need to be synchronized */
+		return jniProperties();
+	}
+	/**
+	 * @param level the grammar level
+	 * @return grammar properties
+	 * @throws Exception if the interface failed
+	 */
+	public ESLIFGrammarProperties propertiesByLevel(int level) throws ESLIFException {
+		/* Note that this method does not need to be synchronized */
+		return jniPropertiesByLevel(level);
 	}
 	/*
 	 * ********************************************

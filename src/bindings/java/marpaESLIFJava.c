@@ -37,6 +37,8 @@ JNIEXPORT jintArray    JNICALL Java_org_parser_marpa_ESLIFGrammar_jniRuleShowByL
 JNIEXPORT jstring      JNICALL Java_org_parser_marpa_ESLIFGrammar_jniShow                      (JNIEnv *envp, jobject eslifGrammarp);
 JNIEXPORT jstring      JNICALL Java_org_parser_marpa_ESLIFGrammar_jniShowByLevel               (JNIEnv *envp, jobject eslifGrammarp, jint level);
 JNIEXPORT jboolean     JNICALL Java_org_parser_marpa_ESLIFGrammar_jniParse                     (JNIEnv *envp, jobject eslifGrammarp, jobject eslifRecognizerInterfacep, jobject eslifValueInterfacep);
+JNIEXPORT jobject      JNICALL Java_org_parser_marpa_ESLIFGrammar_jniProperties                (JNIEnv *envp, jobject eslifGrammarp);
+JNIEXPORT jobject      JNICALL Java_org_parser_marpa_ESLIFGrammar_jniPropertiesByLevel         (JNIEnv *envp, jobject eslifGrammarp, jint level);
 JNIEXPORT void         JNICALL Java_org_parser_marpa_ESLIFGrammar_jniFree                      (JNIEnv *envp, jobject eslifGrammarp);
 JNIEXPORT void         JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniNew                    (JNIEnv *envp, jobject eslifRecognizerp, jobject eslifGrammarp);
 JNIEXPORT jboolean     JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniScan                   (JNIEnv *envp, jobject eslifRecognizerp, jboolean initialEvents);
@@ -575,6 +577,7 @@ static void marpaESLIFRecognizerContextFree(JNIEnv *envp, marpaESLIFRecognizerCo
 static void marpaESLIFRecognizerContextCleanup(JNIEnv *envp, marpaESLIFRecognizerContext_t *marpaESLIFRecognizerContextp);
 static short marpaESLIFValueContextInit(JNIEnv *envp, jobject eslifValueInterfacep, jobject eslifGrammarp, marpaESLIFValueContext_t *marpaESLIFValueContextp);
 static short marpaESLIFRepresentationCallback(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp, char **inputcpp, size_t *inputlp);
+static jobject marpaESLIFGrammarProperties(JNIEnv *envp, marpaESLIFGrammarProperty_t *grammarPropertyp);
 
 /* --------------- */
 /* Internal macros */
@@ -1724,6 +1727,68 @@ JNIEXPORT jboolean JNICALL Java_org_parser_marpa_ESLIFGrammar_jniParse(JNIEnv *e
   marpaESLIFValueContextFree(envp, &marpaESLIFValueContext, 1 /* onStackb */);
   marpaESLIFRecognizerContextFree(envp, &marpaESLIFRecognizerContext, 1 /* onStackb */);
   return rcb;
+}
+
+/*****************************************************************************/
+JNIEXPORT jobject JNICALL Java_org_parser_marpa_ESLIFGrammar_jniProperties(JNIEnv *envp, jobject eslifGrammarp)
+/*****************************************************************************/
+{
+  static const char           *funcs = "Java_org_parser_marpa_ESLIFGrammar_jniProperties";
+  marpaESLIFGrammarProperty_t  grammarProperty;
+  marpaESLIFGrammar_t         *marpaESLIFGrammarp;
+  jobject                      propertiesp = NULL;
+
+  if (! ESLIFGrammar_contextb(envp, eslifGrammarp, eslifGrammarp, MARPAESLIF_ESLIFGRAMMAR_CLASS_getLoggerInterfacep_METHODP,
+                              NULL /* genericLoggerpp */,
+                              NULL /* genericLoggerContextpp */,
+                              NULL /* marpaESLIFpp */,
+                              &marpaESLIFGrammarp)) {
+    goto err;
+  }
+
+  if (! marpaESLIFGrammar_grammarproperty_currentb(marpaESLIFGrammarp, &grammarProperty)) {
+    RAISEEXCEPTION(envp, "marpaESLIFGrammar_grammarproperty_currentb failure");
+  }
+
+  propertiesp = marpaESLIFGrammarProperties(envp, &grammarProperty);
+  goto done;
+
+ err:
+  propertiesp = NULL;
+
+ done:
+  return propertiesp;
+}
+
+/*****************************************************************************/
+JNIEXPORT jobject JNICALL Java_org_parser_marpa_ESLIFGrammar_jniPropertiesByLevel(JNIEnv *envp, jobject eslifGrammarp, jint level)
+/*****************************************************************************/
+{
+  static const char           *funcs = "Java_org_parser_marpa_ESLIFGrammar_jniProperties";
+  marpaESLIFGrammarProperty_t  grammarProperty;
+  marpaESLIFGrammar_t         *marpaESLIFGrammarp;
+  jobject                      propertiesp = NULL;
+
+  if (! ESLIFGrammar_contextb(envp, eslifGrammarp, eslifGrammarp, MARPAESLIF_ESLIFGRAMMAR_CLASS_getLoggerInterfacep_METHODP,
+                              NULL /* genericLoggerpp */,
+                              NULL /* genericLoggerContextpp */,
+                              NULL /* marpaESLIFpp */,
+                              &marpaESLIFGrammarp)) {
+    goto err;
+  }
+
+  if (! marpaESLIFGrammar_grammarproperty_by_levelb(marpaESLIFGrammarp, &grammarProperty, (int) level, NULL /* descp */)) {
+    RAISEEXCEPTION(envp, "marpaESLIFGrammar_grammarproperty_by_levelb failure");
+  }
+
+  propertiesp = marpaESLIFGrammarProperties(envp, &grammarProperty);
+  goto done;
+
+ err:
+  propertiesp = NULL;
+
+ done:
+  return propertiesp;
 }
 
 /*****************************************************************************/
@@ -4293,5 +4358,167 @@ static short marpaESLIFRepresentationCallback(void *userDatavp, marpaESLIFValueR
   }
 
   return rcb;
+}
+
+/*****************************************************************************/
+static jobject marpaESLIFGrammarProperties(JNIEnv *envp, marpaESLIFGrammarProperty_t *grammarPropertyp)
+/*****************************************************************************/
+{
+  static const char           *funcs = "marpaESLIFGrammarProperties";
+  jobject                      propertiesp = NULL;
+  jint                         level;
+  jint                         maxLevel;
+  jstring                      description;
+  jboolean                     latm;
+  jstring                      defaultSymbolAction;
+  jstring                      defaultRuleAction;
+  jstring                      defaultFreeAction;
+  jint                         startId;
+  jint                         discardId;
+  jintArray                    symbolIds;
+  jintArray                    ruleIds;
+  jint                         *symbolIdsIntp = NULL;
+  jint                         *ruleIdsIntp = NULL;
+  size_t                        i;
+
+  level     = (jint) grammarPropertyp->leveli;
+  maxLevel  = (jint) grammarPropertyp->maxLeveli;
+  description = (*envp)->NewStringUTF(envp, grammarPropertyp->descp->bytep);
+  if (description == NULL) {
+    /* We want OUR exception to be raised */
+    RAISEEXCEPTION(envp, "NewStringUTF() failure");
+  }
+  latm      = (jboolean) grammarPropertyp->latmb;
+  if (grammarPropertyp->defaultSymbolActionp == NULL) {
+    defaultSymbolAction = NULL;
+  } else {
+    switch (grammarPropertyp->defaultSymbolActionp->type) {
+    case MARPAESLIF_ACTION_TYPE_NAME:
+      defaultSymbolAction = (*envp)->NewStringUTF(envp, grammarPropertyp->defaultSymbolActionp->u.names);
+      if (defaultSymbolAction == NULL) {
+        /* We want OUR exception to be raised */
+        RAISEEXCEPTION(envp, "NewStringUTF() failure");
+      }
+      break;
+    case MARPAESLIF_ACTION_TYPE_STRING:
+      defaultSymbolAction = (*envp)->NewStringUTF(envp, grammarPropertyp->defaultSymbolActionp->u.stringp->bytep);
+      if (defaultSymbolAction == NULL) {
+        /* We want OUR exception to be raised */
+        RAISEEXCEPTION(envp, "NewStringUTF() failure");
+      }
+      break;
+    default:
+      RAISEEXCEPTIONF(envp, "Unsuported action type %d", grammarPropertyp->defaultSymbolActionp->type);
+    }
+  }
+  if (grammarPropertyp->defaultRuleActionp == NULL) {
+    defaultRuleAction = NULL;
+  } else {
+    switch (grammarPropertyp->defaultRuleActionp->type) {
+    case MARPAESLIF_ACTION_TYPE_NAME:
+      defaultRuleAction = (*envp)->NewStringUTF(envp, grammarPropertyp->defaultRuleActionp->u.names);
+      if (defaultRuleAction == NULL) {
+        /* We want OUR exception to be raised */
+        RAISEEXCEPTION(envp, "NewStringUTF() failure");
+      }
+      break;
+    case MARPAESLIF_ACTION_TYPE_STRING:
+      defaultRuleAction = (*envp)->NewStringUTF(envp, grammarPropertyp->defaultRuleActionp->u.stringp->bytep);
+      if (defaultRuleAction == NULL) {
+        /* We want OUR exception to be raised */
+        RAISEEXCEPTION(envp, "NewStringUTF() failure");
+      }
+      break;
+    default:
+      RAISEEXCEPTIONF(envp, "Unsuported action type %d", grammarPropertyp->defaultRuleActionp->type);
+    }
+  }
+  if (grammarPropertyp->defaultFreeActionp == NULL) {
+    defaultFreeAction = NULL;
+  } else {
+    switch (grammarPropertyp->defaultFreeActionp->type) {
+    case MARPAESLIF_ACTION_TYPE_NAME:
+      defaultFreeAction = (*envp)->NewStringUTF(envp, grammarPropertyp->defaultFreeActionp->u.names);
+      if (defaultFreeAction == NULL) {
+        /* We want OUR exception to be raised */
+        RAISEEXCEPTION(envp, "NewStringUTF() failure");
+      }
+      break;
+    case MARPAESLIF_ACTION_TYPE_STRING:
+      defaultFreeAction = (*envp)->NewStringUTF(envp, grammarPropertyp->defaultFreeActionp->u.stringp->bytep);
+      if (defaultFreeAction == NULL) {
+        /* We want OUR exception to be raised */
+        RAISEEXCEPTION(envp, "NewStringUTF() failure");
+      }
+      break;
+    default:
+      RAISEEXCEPTIONF(envp, "Unsuported action type %d", grammarPropertyp->defaultFreeActionp->type);
+    }
+  }
+  startId   = (jint) grammarPropertyp->starti;
+  discardId = (jint) grammarPropertyp->discardi;
+
+  if (grammarPropertyp->nsymboll <= 0) {
+    RAISEEXCEPTION(envp, "marpaESLIFGrammar_grammarproperty_currentb returned no symbol");
+  }
+  symbolIdsIntp = (jint *) malloc(sizeof(jint) * grammarPropertyp->nsymboll);
+  if (symbolIdsIntp == NULL) {
+    RAISEEXCEPTIONF(envp, "malloc failure, %s", strerror(errno));
+  }
+  for (i = 0; i < grammarPropertyp->nsymboll; i++) {
+    symbolIdsIntp[i] = (jint) grammarPropertyp->symbolip[i];
+  }
+
+  symbolIds = (*envp)->NewIntArray(envp, (jsize) grammarPropertyp->nsymboll);
+  if (symbolIds == NULL) {
+    RAISEEXCEPTION(envp, "NewIntArray failure");
+  }
+
+  (*envp)->SetIntArrayRegion(envp, symbolIds, 0, (jsize) grammarPropertyp->nsymboll, symbolIdsIntp);
+  if (HAVEEXCEPTION(envp)) {
+    goto err;
+  }
+
+  if (grammarPropertyp->nrulel <= 0) {
+    RAISEEXCEPTION(envp, "marpaESLIFGrammar_grammarproperty_currentb returned no rule");
+  }
+  ruleIdsIntp = (jint *) malloc(sizeof(jint) * grammarPropertyp->nrulel);
+  if (ruleIdsIntp == NULL) {
+    RAISEEXCEPTIONF(envp, "malloc failure, %s", strerror(errno));
+  }
+  for (i = 0; i < grammarPropertyp->nrulel; i++) {
+    ruleIdsIntp[i] = (jint) grammarPropertyp->ruleip[i];
+  }
+
+  ruleIds = (*envp)->NewIntArray(envp, (jsize) grammarPropertyp->nrulel);
+  if (ruleIds == NULL) {
+    RAISEEXCEPTION(envp, "NewIntArray failure");
+  }
+
+  (*envp)->SetIntArrayRegion(envp, ruleIds, 0, (jsize) grammarPropertyp->nrulel, ruleIdsIntp);
+  if (HAVEEXCEPTION(envp)) {
+    goto err;
+  }
+
+  propertiesp = (*envp)->NewObject(envp, MARPAESLIF_ESLIFGRAMMARPROPERTIES_CLASSP, MARPAESLIF_ESLIFGRAMMARPROPERTIES_CLASS_init_METHODP,
+                                   level,
+                                   maxLevel,
+                                   description,
+                                   latm,
+                                   defaultSymbolAction,
+                                   defaultRuleAction,
+                                   defaultFreeAction,
+                                   startId,
+                                   discardId,
+                                   symbolIds,
+                                   ruleIds
+                                   );
+
+ err:
+  /* Java will immediately see the exception if there is one */
+  if (symbolIdsIntp != NULL) {
+    free(symbolIdsIntp);
+  }
+  return propertiesp;
 }
 
