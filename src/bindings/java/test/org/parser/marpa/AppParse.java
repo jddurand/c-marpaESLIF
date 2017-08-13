@@ -53,6 +53,7 @@ public class AppParse  {
 		for (int level = 0; level < eslifGrammar.ngrammar(); level++) {
 			eslifLogger.info("- grammar description at level " + level + ": " + eslifGrammar.descriptionByLevel(level));;
 		}
+		eslifLogger.info("current grammar properties: " + eslifGrammar.properties());
 		eslifLogger.info("current grammar methods:\n" + eslifGrammar.show());
 		{
 			int[] rules = eslifGrammar.currentRuleIds();
@@ -68,6 +69,7 @@ public class AppParse  {
 			}
 		}
 		for (int level = 0; level < eslifGrammar.ngrammar(); level++) {
+			eslifLogger.info("grammar properties at level " + level+  " : " + eslifGrammar.propertiesByLevel(level));
 			eslifLogger.info("grammar methods at level: " + level);
 			eslifLogger.info("- grammar show at level: " + level + "\n:" + eslifGrammar.showByLevel(level));
 			eslifLogger.info("- rule array at level " + level);
