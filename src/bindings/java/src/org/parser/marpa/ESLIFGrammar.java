@@ -40,6 +40,10 @@ public class ESLIFGrammar {
 	private native boolean jniParse(ESLIFRecognizerInterface recognizerInterface, ESLIFValueInterface valueInterface) throws ESLIFException;
 	private native ESLIFGrammarProperties jniProperties() throws ESLIFException;
 	private native ESLIFGrammarProperties jniPropertiesByLevel(int level) throws ESLIFException;
+	private native ESLIFGrammarRuleProperties jniRuleProperties(int rule) throws ESLIFException;
+	private native ESLIFGrammarRuleProperties jniRulePropertiesByLevel(int level, int rule) throws ESLIFException;
+	private native ESLIFGrammarSymbolProperties jniSymbolProperties(int symbol) throws ESLIFException;
+	private native ESLIFGrammarSymbolProperties jniSymbolPropertiesByLevel(int level, int symbol) throws ESLIFException;
 	/*
 	 * ********************************************
 	 * Public methods
@@ -260,6 +264,44 @@ public class ESLIFGrammar {
 	public ESLIFGrammarProperties propertiesByLevel(int level) throws ESLIFException {
 		/* Note that this method does not need to be synchronized */
 		return jniPropertiesByLevel(level);
+	}
+	/**
+	 * @param rule the rule identifier
+	 * @return ruleproperties
+	 * @throws Exception if the interface failed
+	 */
+	public ESLIFGrammarRuleProperties ruleProperties(int rule) throws ESLIFException {
+		/* Note that this method does not need to be synchronized */
+		return jniRuleProperties(rule);
+	}
+	/**
+	 * @param level the grammar level
+	 * @param rule the rule identifier
+	 * @return ruleproperties
+	 * @throws Exception if the interface failed
+	 */
+	public ESLIFGrammarRuleProperties rulePropertiesByLevel(int level, int rule) throws ESLIFException {
+		/* Note that this method does not need to be synchronized */
+		return jniRulePropertiesByLevel(level, rule);
+	}
+	/**
+	 * @param symbol the symbol identifier
+	 * @return symbolproperties
+	 * @throws Exception if the interface failed
+	 */
+	public ESLIFGrammarSymbolProperties symbolProperties(int symbol) throws ESLIFException {
+		/* Note that this method does not need to be synchronized */
+		return jniSymbolProperties(symbol);
+	}
+	/**
+	 * @param level the grammar level
+	 * @param symbol the symbol identifier
+	 * @return symbolproperties
+	 * @throws Exception if the interface failed
+	 */
+	public ESLIFGrammarSymbolProperties symbolPropertiesByLevel(int level, int symbol) throws ESLIFException {
+		/* Note that this method does not need to be synchronized */
+		return jniSymbolPropertiesByLevel(level, symbol);
 	}
 	/*
 	 * ********************************************

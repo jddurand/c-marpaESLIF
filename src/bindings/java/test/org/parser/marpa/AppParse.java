@@ -59,23 +59,26 @@ public class AppParse  {
 			int[] rules = eslifGrammar.currentRuleIds();
 			for (int i = 0; i < rules.length; i++) {
 				eslifLogger.info("- current rule No " + i + ": " + rules[i]); 
+				eslifLogger.info("    properties: " + eslifGrammar.ruleProperties(i)); 
 				eslifLogger.info("    display form: " + eslifGrammar.ruleDisplay(i)); 
 				eslifLogger.info("    show    form: " + eslifGrammar.ruleShow(i)); 
 			}
 			int[] symbols = eslifGrammar.currentSymbolIds();
 			for (int i = 0; i < symbols.length; i++) {
 				eslifLogger.info("- current symbol No " + i + ": " + symbols[i]); 
+				eslifLogger.info("    properties  : " + eslifGrammar.symbolProperties(i)); 
 				eslifLogger.info("    display form: " + eslifGrammar.symbolDisplay(i)); 
 			}
 		}
 		for (int level = 0; level < eslifGrammar.ngrammar(); level++) {
-			eslifLogger.info("grammar properties at level " + level+  " : " + eslifGrammar.propertiesByLevel(level));
-			eslifLogger.info("grammar methods at level: " + level);
+			eslifLogger.info("grammar at level: " + level);
+			eslifLogger.info("- grammar properties : " + eslifGrammar.propertiesByLevel(level));
 			eslifLogger.info("- grammar show at level: " + level + "\n:" + eslifGrammar.showByLevel(level));
 			eslifLogger.info("- rule array at level " + level);
 			int[] rules = eslifGrammar.ruleIdsByLevel(level);
 			for (int i = 0; i < rules.length; i++) {
 				eslifLogger.info("  + rule No " + i + ": " + rules[i]); 
+				eslifLogger.info("    properties  : " + eslifGrammar.rulePropertiesByLevel(level, i)); 
 				eslifLogger.info("    display form: " + eslifGrammar.ruleDisplayByLevel(level, i)); 
 				eslifLogger.info("    show    form: " + eslifGrammar.ruleShowByLevel(level, i)); 
 			}
@@ -83,6 +86,7 @@ public class AppParse  {
 			int[] symbols = eslifGrammar.symbolIdsByLevel(level);
 			for (int i = 0; i < symbols.length; i++) {
 				eslifLogger.info("  + symbol No " + i + ": " + symbols[i]); 
+				eslifLogger.info("    properties  : " + eslifGrammar.symbolPropertiesByLevel(level, i)); 
 				eslifLogger.info("    display form: " + eslifGrammar.symbolDisplayByLevel(level, i)); 
 			}
 		}

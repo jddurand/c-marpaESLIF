@@ -39,6 +39,10 @@ JNIEXPORT jstring      JNICALL Java_org_parser_marpa_ESLIFGrammar_jniShowByLevel
 JNIEXPORT jboolean     JNICALL Java_org_parser_marpa_ESLIFGrammar_jniParse                     (JNIEnv *envp, jobject eslifGrammarp, jobject eslifRecognizerInterfacep, jobject eslifValueInterfacep);
 JNIEXPORT jobject      JNICALL Java_org_parser_marpa_ESLIFGrammar_jniProperties                (JNIEnv *envp, jobject eslifGrammarp);
 JNIEXPORT jobject      JNICALL Java_org_parser_marpa_ESLIFGrammar_jniPropertiesByLevel         (JNIEnv *envp, jobject eslifGrammarp, jint level);
+JNIEXPORT jobject      JNICALL Java_org_parser_marpa_ESLIFGrammar_jniRuleProperties            (JNIEnv *envp, jobject eslifGrammarp, jint rule);
+JNIEXPORT jobject      JNICALL Java_org_parser_marpa_ESLIFGrammar_jniRulePropertiesByLevel     (JNIEnv *envp, jobject eslifGrammarp, jint level, jint rule);
+JNIEXPORT jobject      JNICALL Java_org_parser_marpa_ESLIFGrammar_jniSymbolProperties          (JNIEnv *envp, jobject eslifGrammarp, jint symbol);
+JNIEXPORT jobject      JNICALL Java_org_parser_marpa_ESLIFGrammar_jniSymbolPropertiesByLevel   (JNIEnv *envp, jobject eslifGrammarp, jint level, jint symbol);
 JNIEXPORT void         JNICALL Java_org_parser_marpa_ESLIFGrammar_jniFree                      (JNIEnv *envp, jobject eslifGrammarp);
 JNIEXPORT void         JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniNew                    (JNIEnv *envp, jobject eslifRecognizerp, jobject eslifGrammarp);
 JNIEXPORT jboolean     JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniScan                   (JNIEnv *envp, jobject eslifRecognizerp, jboolean initialEvents);
@@ -526,6 +530,15 @@ static marpaESLIFMethodCache_t marpaESLIFMethodCacheArrayp[] = {
   #define MARPAESLIF_ESLIFGRAMMARPROPERTIES_CLASS_init_METHODP                      marpaESLIFMethodCacheArrayp[64].methodp
   {      &MARPAESLIF_ESLIFGRAMMARPROPERTIES_CLASSCACHE, "<init>",                   "(IILjava/lang/String;ZLjava/lang/String;Ljava/lang/String;Ljava/lang/String;II[I[I)V", 0, NULL },
 
+  #define MARPAESLIF_ESLIFGRAMMARRULEPROPERTIES_CLASS_init_METHODP                  marpaESLIFMethodCacheArrayp[65].methodp
+  {      &MARPAESLIF_ESLIFGRAMMARRULEPROPERTIES_CLASSCACHE, "<init>",               "(ILjava/lang/String;Ljava/lang/String;II[IILjava/lang/String;Ljava/lang/String;ZIZZZIZIZ)V", 0, NULL },
+
+  #define MARPAESLIF_ESLIFGRAMMARSYMBOLPROPERTIES_CLASS_init_METHODP                marpaESLIFMethodCacheArrayp[66].methodp
+  {      &MARPAESLIF_ESLIFGRAMMARSYMBOLPROPERTIES_CLASSCACHE, "<init>",             "(Lorg/parser/marpa/ESLIFSymbolType;ZZZZZILjava/lang/String;Ljava/lang/String;ZLjava/lang/String;ZLjava/lang/String;ZLjava/lang/String;ZLjava/lang/String;ZLjava/lang/String;ZIILjava/lang/String;I)V", 0, NULL },
+
+  #define MARPAESLIF_ESLIFSYMBOLTYPE_CLASS_get_METHODP                              marpaESLIFMethodCacheArrayp[67].methodp
+  {      &MARPAESLIF_ESLIFSYMBOLTYPE_CLASSCACHE, "get",                             "(I)Lorg/parser/marpa/ESLIFSymbolType;", 1 /* static */, NULL },
+
   { NULL }
 };
 
@@ -578,6 +591,8 @@ static void marpaESLIFRecognizerContextCleanup(JNIEnv *envp, marpaESLIFRecognize
 static short marpaESLIFValueContextInit(JNIEnv *envp, jobject eslifValueInterfacep, jobject eslifGrammarp, marpaESLIFValueContext_t *marpaESLIFValueContextp);
 static short marpaESLIFRepresentationCallback(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp, char **inputcpp, size_t *inputlp);
 static jobject marpaESLIFGrammarProperties(JNIEnv *envp, marpaESLIFGrammarProperty_t *grammarPropertyp);
+static jobject marpaESLIFRuleProperties(JNIEnv *envp, marpaESLIFRuleProperty_t *rulePropertyp);
+static jobject marpaESLIFSymbolProperties(JNIEnv *envp, marpaESLIFSymbolProperty_t *symbolPropertyp);
 
 /* --------------- */
 /* Internal macros */
@@ -1782,6 +1797,130 @@ JNIEXPORT jobject JNICALL Java_org_parser_marpa_ESLIFGrammar_jniPropertiesByLeve
   }
 
   propertiesp = marpaESLIFGrammarProperties(envp, &grammarProperty);
+  goto done;
+
+ err:
+  propertiesp = NULL;
+
+ done:
+  return propertiesp;
+}
+
+/*****************************************************************************/
+JNIEXPORT jobject JNICALL Java_org_parser_marpa_ESLIFGrammar_jniRuleProperties(JNIEnv *envp, jobject eslifGrammarp, jint rule)
+/*****************************************************************************/
+{
+  static const char        *funcs = "Java_org_parser_marpa_ESLIFGrammar_jniRuleProperties";
+  marpaESLIFRuleProperty_t  ruleProperty;
+  marpaESLIFGrammar_t      *marpaESLIFGrammarp;
+  jobject                   propertiesp = NULL;
+
+  if (! ESLIFGrammar_contextb(envp, eslifGrammarp, eslifGrammarp, MARPAESLIF_ESLIFGRAMMAR_CLASS_getLoggerInterfacep_METHODP,
+                              NULL /* genericLoggerpp */,
+                              NULL /* genericLoggerContextpp */,
+                              NULL /* marpaESLIFpp */,
+                              &marpaESLIFGrammarp)) {
+    goto err;
+  }
+
+  if (! marpaESLIFGrammar_ruleproperty_currentb(marpaESLIFGrammarp, (int) rule, &ruleProperty)) {
+    RAISEEXCEPTION(envp, "marpaESLIFGrammar_ruleproperty_currentb failure");
+  }
+
+  propertiesp = marpaESLIFRuleProperties(envp, &ruleProperty);
+  goto done;
+
+ err:
+  propertiesp = NULL;
+
+ done:
+  return propertiesp;
+}
+
+/*****************************************************************************/
+JNIEXPORT jobject JNICALL Java_org_parser_marpa_ESLIFGrammar_jniRulePropertiesByLevel(JNIEnv *envp, jobject eslifGrammarp, jint level, jint rule)
+/*****************************************************************************/
+{
+  static const char        *funcs = "Java_org_parser_marpa_ESLIFGrammar_jniRulePropertiesByLevel";
+  marpaESLIFRuleProperty_t  ruleProperty;
+  marpaESLIFGrammar_t      *marpaESLIFGrammarp;
+  jobject                   propertiesp = NULL;
+
+  if (! ESLIFGrammar_contextb(envp, eslifGrammarp, eslifGrammarp, MARPAESLIF_ESLIFGRAMMAR_CLASS_getLoggerInterfacep_METHODP,
+                              NULL /* genericLoggerpp */,
+                              NULL /* genericLoggerContextpp */,
+                              NULL /* marpaESLIFpp */,
+                              &marpaESLIFGrammarp)) {
+    goto err;
+  }
+
+  if (! marpaESLIFGrammar_ruleproperty_by_levelb(marpaESLIFGrammarp, (int) rule, &ruleProperty, (int) level, NULL /* descp */)) {
+    RAISEEXCEPTION(envp, "marpaESLIFGrammar_ruleproperty_by_levelb failure");
+  }
+
+  propertiesp = marpaESLIFRuleProperties(envp, &ruleProperty);
+  goto done;
+
+ err:
+  propertiesp = NULL;
+
+ done:
+  return propertiesp;
+}
+
+/*****************************************************************************/
+JNIEXPORT jobject JNICALL Java_org_parser_marpa_ESLIFGrammar_jniSymbolProperties(JNIEnv *envp, jobject eslifGrammarp, jint symbol)
+/*****************************************************************************/
+{
+  static const char          *funcs = "Java_org_parser_marpa_ESLIFGrammar_jniSymbolProperties";
+  marpaESLIFSymbolProperty_t  symbolProperty;
+  marpaESLIFGrammar_t        *marpaESLIFGrammarp;
+  jobject                     propertiesp = NULL;
+
+  if (! ESLIFGrammar_contextb(envp, eslifGrammarp, eslifGrammarp, MARPAESLIF_ESLIFGRAMMAR_CLASS_getLoggerInterfacep_METHODP,
+                              NULL /* genericLoggerpp */,
+                              NULL /* genericLoggerContextpp */,
+                              NULL /* marpaESLIFpp */,
+                              &marpaESLIFGrammarp)) {
+    goto err;
+  }
+
+  if (! marpaESLIFGrammar_symbolproperty_currentb(marpaESLIFGrammarp, (int) symbol, &symbolProperty)) {
+    RAISEEXCEPTION(envp, "marpaESLIFGrammar_symbolproperty_currentb failure");
+  }
+
+  propertiesp = marpaESLIFSymbolProperties(envp, &symbolProperty);
+  goto done;
+
+ err:
+  propertiesp = NULL;
+
+ done:
+  return propertiesp;
+}
+
+/*****************************************************************************/
+JNIEXPORT jobject JNICALL Java_org_parser_marpa_ESLIFGrammar_jniSymbolPropertiesByLevel(JNIEnv *envp, jobject eslifGrammarp, jint level, jint symbol)
+/*****************************************************************************/
+{
+  static const char          *funcs = "Java_org_parser_marpa_ESLIFGrammar_jniSymbolPropertiesByLevel";
+  marpaESLIFSymbolProperty_t  symbolProperty;
+  marpaESLIFGrammar_t        *marpaESLIFGrammarp;
+  jobject                     propertiesp = NULL;
+
+  if (! ESLIFGrammar_contextb(envp, eslifGrammarp, eslifGrammarp, MARPAESLIF_ESLIFGRAMMAR_CLASS_getLoggerInterfacep_METHODP,
+                              NULL /* genericLoggerpp */,
+                              NULL /* genericLoggerContextpp */,
+                              NULL /* marpaESLIFpp */,
+                              &marpaESLIFGrammarp)) {
+    goto err;
+  }
+
+  if (! marpaESLIFGrammar_symbolproperty_by_levelb(marpaESLIFGrammarp, (int) symbol, &symbolProperty, (int) level, NULL /* descp */)) {
+    RAISEEXCEPTION(envp, "marpaESLIFGrammar_symbolproperty_by_levelb failure");
+  }
+
+  propertiesp = marpaESLIFSymbolProperties(envp, &symbolProperty);
   goto done;
 
  err:
@@ -4388,7 +4527,7 @@ static jobject marpaESLIFGrammarProperties(JNIEnv *envp, marpaESLIFGrammarProper
     /* We want OUR exception to be raised */
     RAISEEXCEPTION(envp, "NewStringUTF() failure");
   }
-  latm      = (jboolean) grammarPropertyp->latmb;
+  latm      = grammarPropertyp->latmb ? JNI_TRUE : JNI_FALSE;
   if (grammarPropertyp->defaultSymbolActionp == NULL) {
     defaultSymbolAction = NULL;
   } else {
@@ -4500,7 +4639,9 @@ static jobject marpaESLIFGrammarProperties(JNIEnv *envp, marpaESLIFGrammarProper
     goto err;
   }
 
-  propertiesp = (*envp)->NewObject(envp, MARPAESLIF_ESLIFGRAMMARPROPERTIES_CLASSP, MARPAESLIF_ESLIFGRAMMARPROPERTIES_CLASS_init_METHODP,
+  propertiesp = (*envp)->NewObject(envp,
+                                   MARPAESLIF_ESLIFGRAMMARPROPERTIES_CLASSP,
+                                   MARPAESLIF_ESLIFGRAMMARPROPERTIES_CLASS_init_METHODP,
                                    level,
                                    maxLevel,
                                    description,
@@ -4514,11 +4655,330 @@ static jobject marpaESLIFGrammarProperties(JNIEnv *envp, marpaESLIFGrammarProper
                                    ruleIds
                                    );
 
- err:
+ err: /* err and done share the same code */
   /* Java will immediately see the exception if there is one */
   if (symbolIdsIntp != NULL) {
     free(symbolIdsIntp);
   }
+  if (ruleIdsIntp != NULL) {
+    free(ruleIdsIntp);
+  }
+  return propertiesp;
+}
+
+/*****************************************************************************/
+static jobject marpaESLIFRuleProperties(JNIEnv *envp, marpaESLIFRuleProperty_t *rulePropertyp)
+/*****************************************************************************/
+{
+  static const char           *funcs = "marpaESLIFRuleProperties";
+  jobject                      propertiesp = NULL;
+  jint                         id;
+  jstring                      description;
+  jstring                      show;
+  jint                         lhsId;
+  jint                         separatorId;
+  jintArray                    rhsIds;
+  jint                         exceptionId;
+  jstring                      action;
+  jstring                      discardEvent;
+  jboolean                     discardEventInitialState;
+  jint                         rank;
+  jboolean                     nullRanksHigh;
+  jboolean                     sequence;
+  jboolean                     proper;
+  jint                         minimum;
+  jboolean                     internal;
+  jint                         propertyBitSet;
+  jboolean                     hideseparator;
+  jint                        *rhsIdsIntp = NULL;
+  size_t                       i;
+
+  id        = (jint) rulePropertyp->idi;
+  description = (*envp)->NewStringUTF(envp, rulePropertyp->descp->bytep);
+  if (description == NULL) {
+    /* We want OUR exception to be raised */
+    RAISEEXCEPTION(envp, "NewStringUTF() failure");
+  }
+  show = (*envp)->NewStringUTF(envp, rulePropertyp->asciishows);
+  if (show == NULL) {
+    /* We want OUR exception to be raised */
+    RAISEEXCEPTION(envp, "NewStringUTF() failure");
+  }
+  lhsId = (jint) rulePropertyp->lhsi;
+  separatorId = (jint) rulePropertyp->separatori;
+
+  if (rulePropertyp->nrhsl > 0) {
+    rhsIdsIntp = (jint *) malloc(sizeof(jint) * rulePropertyp->nrhsl);
+    if (rhsIdsIntp == NULL) {
+      RAISEEXCEPTIONF(envp, "malloc failure, %s", strerror(errno));
+    }
+    for (i = 0; i < rulePropertyp->nrhsl; i++) {
+      rhsIdsIntp[i] = (jint) rulePropertyp->rhsip[i];
+    }
+  }
+
+  rhsIds = (*envp)->NewIntArray(envp, (jsize) rulePropertyp->nrhsl);
+  if (rhsIds == NULL) {
+    RAISEEXCEPTION(envp, "NewIntArray failure");
+  }
+
+  if (rulePropertyp->nrhsl > 0) {
+    (*envp)->SetIntArrayRegion(envp, rhsIds, 0, (jsize) rulePropertyp->nrhsl, rhsIdsIntp);
+    if (HAVEEXCEPTION(envp)) {
+      goto err;
+    }
+  }
+
+  exceptionId = (jint) rulePropertyp->exceptioni;
+
+  if (rulePropertyp->actionp == NULL) {
+    action = NULL;
+  } else {
+    switch (rulePropertyp->actionp->type) {
+    case MARPAESLIF_ACTION_TYPE_NAME:
+      action = (*envp)->NewStringUTF(envp, rulePropertyp->actionp->u.names);
+      if (action == NULL) {
+        /* We want OUR exception to be raised */
+        RAISEEXCEPTION(envp, "NewStringUTF() failure");
+      }
+      break;
+    case MARPAESLIF_ACTION_TYPE_STRING:
+      action = (*envp)->NewStringUTF(envp, rulePropertyp->actionp->u.stringp->bytep);
+      if (action == NULL) {
+        /* We want OUR exception to be raised */
+        RAISEEXCEPTION(envp, "NewStringUTF() failure");
+      }
+      break;
+    default:
+      RAISEEXCEPTIONF(envp, "Unsuported action type %d", rulePropertyp->actionp->type);
+    }
+  }
+
+  if (rulePropertyp->discardEvents == NULL) {
+    discardEvent = NULL;
+  } else {
+    discardEvent = (*envp)->NewStringUTF(envp, rulePropertyp->discardEvents);
+    if (discardEvent == NULL) {
+      /* We want OUR exception to be raised */
+      RAISEEXCEPTION(envp, "NewStringUTF() failure");
+    }
+  }
+
+  discardEventInitialState = rulePropertyp->discardEventb ? JNI_TRUE : JNI_FALSE;
+  rank                     = (jint) rulePropertyp->ranki;
+  nullRanksHigh            = rulePropertyp->nullRanksHighb ? JNI_TRUE : JNI_FALSE;
+  sequence                 = rulePropertyp->sequenceb ? JNI_TRUE : JNI_FALSE;
+  proper                   = rulePropertyp->properb ? JNI_TRUE : JNI_FALSE;
+  minimum                  = (jint) rulePropertyp->minimumi;
+  internal                 = rulePropertyp->internalb ? JNI_TRUE : JNI_FALSE;
+  propertyBitSet           = (jint) rulePropertyp->propertyBitSet;
+  hideseparator            = rulePropertyp->hideseparatorb ? JNI_TRUE : JNI_FALSE;
+
+  propertiesp = (*envp)->NewObject(envp,
+                                   MARPAESLIF_ESLIFGRAMMARRULEPROPERTIES_CLASSP,
+                                   MARPAESLIF_ESLIFGRAMMARRULEPROPERTIES_CLASS_init_METHODP,
+                                   id,
+                                   description,
+                                   show,
+                                   lhsId,
+                                   separatorId,
+                                   rhsIds,
+                                   exceptionId,
+                                   action,
+                                   discardEvent,
+                                   discardEventInitialState,
+                                   rank,
+                                   nullRanksHigh,
+                                   sequence,
+                                   proper,
+                                   minimum,
+                                   internal,
+                                   propertyBitSet,
+                                   hideseparator,
+                                   rhsIds
+                                   );
+
+ err: /* err and done share the same code */
+  /* Java will immediately see the exception if there is one */
+  if (rhsIdsIntp != NULL) {
+    free(rhsIdsIntp);
+  }
+  return propertiesp;
+}
+
+/*****************************************************************************/
+static jobject marpaESLIFSymbolProperties(JNIEnv *envp, marpaESLIFSymbolProperty_t *symbolPropertyp)
+/*****************************************************************************/
+{
+  static const char *funcs = "marpaESLIFSymbolProperties";
+  jobject            propertiesp = NULL;
+  jobject            type;
+  jboolean           start;
+  jboolean           discard;
+  jboolean           discardRhs;
+  jboolean           lhs;
+  jboolean           top;
+  jint               id;
+  jstring            description;
+  jstring            eventBefore;
+  jboolean           eventBeforeInitialState;
+  jstring            eventAfter;
+  jboolean           eventAfterInitialState;
+  jstring            eventPredicted;
+  jboolean           eventPredictedInitialState;
+  jstring            eventNulled;
+  jboolean           eventNulledInitialState;
+  jstring            eventCompleted;
+  jboolean           eventCompletedInitialState;
+  jstring            discardEvent;
+  jboolean           discardEventInitialState;
+  jint               lookupResolvedLeveli;
+  jint               priority;
+  jstring            nullableAction;
+  jint               propertyBitSet;
+
+  type = (*envp)->CallStaticObjectMethod(envp, MARPAESLIF_ESLIFSYMBOLTYPE_CLASSP, MARPAESLIF_ESLIFSYMBOLTYPE_CLASS_get_METHODP, symbolPropertyp->type);
+  if (type == NULL) {
+    RAISEEXCEPTION(envp, "CallStaticObjectMethod failure");
+  }
+
+
+  start       = symbolPropertyp->startb ? JNI_TRUE : JNI_FALSE;
+  discard     = symbolPropertyp->discardb ? JNI_TRUE : JNI_FALSE;
+  discardRhs  = symbolPropertyp->discardRhsb ? JNI_TRUE : JNI_FALSE;
+  lhs         = symbolPropertyp->lhsb ? JNI_TRUE : JNI_FALSE;
+  top         = symbolPropertyp->topb ? JNI_TRUE : JNI_FALSE;
+  id          = (jint) symbolPropertyp->idi;
+  description = (*envp)->NewStringUTF(envp, symbolPropertyp->descp->bytep);
+  if (description == NULL) {
+    /* We want OUR exception to be raised */
+    RAISEEXCEPTION(envp, "NewStringUTF() failure");
+  }
+
+  if (symbolPropertyp->eventBefores == NULL) {
+    eventBefore = NULL;
+  } else {
+    eventBefore = (*envp)->NewStringUTF(envp, symbolPropertyp->eventBefores);
+    if (eventBefore == NULL) {
+      /* We want OUR exception to be raised */
+      RAISEEXCEPTION(envp, "NewStringUTF() failure");
+    }
+  }
+  eventBeforeInitialState = symbolPropertyp->eventBeforeb ? JNI_TRUE : JNI_FALSE;
+
+  if (symbolPropertyp->eventAfters == NULL) {
+    eventAfter = NULL;
+  } else {
+    eventAfter = (*envp)->NewStringUTF(envp, symbolPropertyp->eventAfters);
+    if (eventAfter == NULL) {
+      /* We want OUR exception to be raised */
+      RAISEEXCEPTION(envp, "NewStringUTF() failure");
+    }
+  }
+  eventAfterInitialState = symbolPropertyp->eventAfterb ? JNI_TRUE : JNI_FALSE;
+
+  if (symbolPropertyp->eventPredicteds == NULL) {
+    eventPredicted = NULL;
+  } else {
+    eventPredicted = (*envp)->NewStringUTF(envp, symbolPropertyp->eventPredicteds);
+    if (eventPredicted == NULL) {
+      /* We want OUR exception to be raised */
+      RAISEEXCEPTION(envp, "NewStringUTF() failure");
+    }
+  }
+  eventPredictedInitialState = symbolPropertyp->eventPredictedb ? JNI_TRUE : JNI_FALSE;
+
+  if (symbolPropertyp->eventNulleds == NULL) {
+    eventNulled = NULL;
+  } else {
+    eventNulled = (*envp)->NewStringUTF(envp, symbolPropertyp->eventNulleds);
+    if (eventNulled == NULL) {
+      /* We want OUR exception to be raised */
+      RAISEEXCEPTION(envp, "NewStringUTF() failure");
+    }
+  }
+  eventNulledInitialState = symbolPropertyp->eventNulledb ? JNI_TRUE : JNI_FALSE;
+
+  if (symbolPropertyp->eventCompleteds == NULL) {
+    eventCompleted = NULL;
+  } else {
+    eventCompleted = (*envp)->NewStringUTF(envp, symbolPropertyp->eventCompleteds);
+    if (eventCompleted == NULL) {
+      /* We want OUR exception to be raised */
+      RAISEEXCEPTION(envp, "NewStringUTF() failure");
+    }
+  }
+  eventCompletedInitialState = symbolPropertyp->eventCompletedb ? JNI_TRUE : JNI_FALSE;
+
+  if (symbolPropertyp->discardEvents == NULL) {
+    discardEvent = NULL;
+  } else {
+    discardEvent = (*envp)->NewStringUTF(envp, symbolPropertyp->discardEvents);
+    if (discardEvent == NULL) {
+      /* We want OUR exception to be raised */
+      RAISEEXCEPTION(envp, "NewStringUTF() failure");
+    }
+  }
+  discardEventInitialState = symbolPropertyp->discardEventb ? JNI_TRUE : JNI_FALSE;
+
+  lookupResolvedLeveli = (jint) symbolPropertyp->lookupResolvedLeveli;
+  priority             = (jint) symbolPropertyp->priorityi;
+
+  if (symbolPropertyp->nullableActionp == NULL) {
+    nullableAction = NULL;
+  } else {
+    switch (symbolPropertyp->nullableActionp->type) {
+    case MARPAESLIF_ACTION_TYPE_NAME:
+      nullableAction = (*envp)->NewStringUTF(envp, symbolPropertyp->nullableActionp->u.names);
+      if (nullableAction == NULL) {
+        /* We want OUR exception to be raised */
+        RAISEEXCEPTION(envp, "NewStringUTF() failure");
+      }
+      break;
+    case MARPAESLIF_ACTION_TYPE_STRING:
+      nullableAction = (*envp)->NewStringUTF(envp, symbolPropertyp->nullableActionp->u.stringp->bytep);
+      if (nullableAction == NULL) {
+        /* We want OUR exception to be raised */
+        RAISEEXCEPTION(envp, "NewStringUTF() failure");
+      }
+      break;
+    default:
+      RAISEEXCEPTIONF(envp, "Unsuported action type %d", symbolPropertyp->nullableActionp->type);
+    }
+  }
+
+  propertyBitSet      = (jint) symbolPropertyp->propertyBitSet;
+
+  propertiesp = (*envp)->NewObject(envp,
+                                   MARPAESLIF_ESLIFGRAMMARSYMBOLPROPERTIES_CLASSP,
+                                   MARPAESLIF_ESLIFGRAMMARSYMBOLPROPERTIES_CLASS_init_METHODP,
+                                   type,
+                                   start,
+                                   discard,
+                                   discardRhs,
+                                   lhs,
+                                   top,
+                                   id,
+                                   description,
+                                   eventBefore,
+                                   eventBeforeInitialState,
+                                   eventAfter,
+                                   eventAfterInitialState,
+                                   eventPredicted,
+                                   eventPredictedInitialState,
+                                   eventNulled,
+                                   eventNulledInitialState,
+                                   eventCompleted,
+                                   eventCompletedInitialState,
+                                   discardEvent,
+                                   discardEventInitialState,
+                                   lookupResolvedLeveli,
+                                   priority,
+                                   nullableAction,
+                                   propertyBitSet
+                                   );
+
+ err: /* err and done share the same code */
   return propertiesp;
 }
 
