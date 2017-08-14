@@ -2,6 +2,10 @@ CMAKE_MINIMUM_REQUIRED (VERSION 3.0.0 FATAL_ERROR)
 IF (NOT MYPACKAGEBOOTSTRAP_DONE)
   INCLUDE ("3rdparty/github/cmake-utils/cmake/MyPackageBootstrap.cmake")
 ENDIF ()
+#
+# Usually the version here correspong to the NEXT version - it is git tagged
+# when we do make marpaESLIFPerlRelease
+#
 MYPACKAGESTART (marpaESLIF 2 0 15)
 
 ###########
