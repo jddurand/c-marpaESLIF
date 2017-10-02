@@ -11,6 +11,7 @@ use vars qw/$VERSION/;
 
 BEGIN {
     # VERSION
+    $VERSION = '2.0.17';
 
     require XSLoader;
     XSLoader::load(__PACKAGE__, $VERSION);
@@ -55,7 +56,7 @@ Beginners might want to look at L<MarpaX::ESLIF::Introduction>.
 
   use MarpaX::ESLIF;
 
-  my $eslif = MarpaX::ESLIF->new();
+  my $eslif = MarpaX::ESLIF->new(); # But prefer multiton please
   printf "ESLIF library version: %s\n", $eslif->version;
 
 With a logger, using Log::Any::Adapter::Stderr as an example:
@@ -64,10 +65,10 @@ With a logger, using Log::Any::Adapter::Stderr as an example:
   use Log::Any qw/$log/;
   use Log::Any::Adapter ('Stderr', log_level => 'trace' );
 
-  my $eslif = MarpaX::ESLIF->new($log);
+  my $eslif = MarpaX::ESLIF->new($log); # But prefer multiton please
   printf "ESLIF library version: %s\n", $eslif->version;
 
-This class and its derivatives are thread-safe. Although there can be many ESLIF instance, in practice a single instance is enough, unless you want different logging interfaces. Once a MarpaX::ESLIF instance is created, the user should create a L<MarpaX::ESLIF::Grammar> instance to have a working grammar.
+This class and its derivatives are thread-safe. Although there can be many ESLIF instances, in practice a single instance is enough, unless you want different logging interfaces. This is why the C<multiton> method, available on demand, is better than the C<new> method. Once a MarpaX::ESLIF instance is created, the user should create a L<MarpaX::ESLIF::Grammar> instance to have a working grammar.
 
 =head1 METHODS
 
@@ -82,11 +83,32 @@ C<$loggerInterface> is an optional parameter that, when its exists, must be an o
 
 An example of logging implementation can be a L<Log::Any> adapter.
 
+Since, for a given <$loggerInterface>, an ESLIF instance can be shared, the L<multiton> method is to be preferred.
+
 =head2 $eslif->version()
 
   printf "ESLIF library version: %s\n", $eslif->version;
 
 Returns a string containing the current underlying ESLIF library version.
+
+=head2 MarpaX::ESLIF->multiton($loggerInterface)
+
+  my $loggerInterface = My::Logger::Interface->new();
+  my $eslif = MarpaX::ESLIF->multiton($logger); # or no logger, or undef
+
+Returns an per-thread perl-logger shared instance of MarpaX::ESLIF.
+
+Despite it is available only on demand, it is preferred over the C<new> method.
+
+=cut
+
+my %multiton = ();
+
+sub multiton {
+  my ($class, $logger) = @_;
+
+  return $multiton{$logger // ''} //= $class->new($logger)
+}
 
 =head1 NOTES
 
