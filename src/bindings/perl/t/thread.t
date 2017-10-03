@@ -33,8 +33,6 @@ use warnings FATAL => 'all';
 use Log::Log4perl qw/:easy/;
 use Log::Any::Adapter;
 use Log::Any qw/$log/;
-use Test::More;
-BEGIN { require_ok('MarpaX::ESLIF') };
 
 BEGIN {
   use Config;
@@ -42,8 +40,15 @@ BEGIN {
     print("1..0 # Skip: No threads\n");
     exit(0);
   } else {
-    eval 'require threads; threads->import(); require threads::shared; threads::shared->import(); 1' || BAIL_OUT($@)
+    eval 'require threads; threads->import(); require threads::shared; threads::shared->import(); 1' || die "$@"
   }
+}
+#
+# As per the doc, Test::More is thread-aware only if threads is loaded before - so we synchronize it
+#
+BEGIN {
+    eval 'use Test::More; 1' || die "$@";
+    require_ok('MarpaX::ESLIF');
 }
 
 #
@@ -77,9 +82,10 @@ sub thr_sub {
   my ($input, $expected, $logger) = @_;
 
   my $tid = threads->tid();
+  # printf STDERR "Thread No %d is starting\n", $tid;
   {
     lock($count);
-    diag(sprintf("Thread No %d is starting", $tid));
+    # diag(sprintf("Thread No %d is starting", $tid));
     ++$count;
   }
   #
@@ -92,19 +98,20 @@ sub thr_sub {
 
   my $eslif = MarpaX::ESLIF->multiton($logger);
   my $eslif2 = MarpaX::ESLIF->multiton($logger);
-  ok($eslif == $eslif2, "Multiton $eslif == $eslif2");
+  ok($eslif == $eslif2, "Thread No $tid - multiton $eslif == $eslif2");
   my $eslifGrammar = MarpaX::ESLIF::Grammar->new($eslif, $grammar);
   my $eslifRecognizerInterface = MyRecognizerInterface->new($input);
   my $eslifValueInterface = MyValueInterface->new();
 
   $eslifGrammar->parse($eslifRecognizerInterface, $eslifValueInterface);
   my $value = $eslifValueInterface->getResult;
-  is($value, $expected, "Got value $value, expected value $expected");
+  is($value, $expected, "Thread No $tid - value $value, expected value $expected");
   {
     lock($count);
-    diag(sprintf("Thread No %d is ending", $tid));
+    # diag(sprintf("Thread No %d is ending", $tid));
     --$count;
   }
+  # printf STDERR "Thread No %d is ending\n", $tid;
 }
 
 my $NTHREAD = 15;
