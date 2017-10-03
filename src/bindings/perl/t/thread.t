@@ -30,26 +30,21 @@ package main;
 use strict;
 use warnings FATAL => 'all';
 
+BEGIN {
+    use Config;
+    if (! $Config{usethreads}) {
+        print("1..0 # Skip: No threads\n");
+        exit(0);
+    }
+}
+
 use Log::Log4perl qw/:easy/;
 use Log::Any::Adapter;
 use Log::Any qw/$log/;
-
-BEGIN {
-  use Config;
-  if (! $Config{usethreads}) {
-    print("1..0 # Skip: No threads\n");
-    exit(0);
-  } else {
-    eval 'require threads; threads->import(); require threads::shared; threads::shared->import(); 1' || die "$@"
-  }
-}
-#
-# As per the doc, Test::More is thread-aware only if threads is loaded before - so we synchronize it
-#
-BEGIN {
-    eval 'use Test::More; 1' || die "$@";
-    require_ok('MarpaX::ESLIF');
-}
+use threads;
+use threads::shared;
+use Test::More tests => 1 + 15 * 2;
+BEGIN { require_ok('MarpaX::ESLIF') }
 
 #
 # Init log
