@@ -10,8 +10,8 @@ import java.util.Arrays;
  * <pre>
  * ESLIF eslif = new ESLIF(...)
  * ESLIFGrammar eslifGrammar = new ESLIFGrammar(...);
- * ESLIFGrammarProperties eslifGrammarProperties = eslifGrammar->currentProperties();
- * ESLIFGrammarProperties eslifGrammarProperties = eslifGrammar->propertiesByLevel(0);
+ * ESLIFGrammarProperties eslifGrammarProperties = eslifGrammar{@code ->}currentProperties();
+ * ESLIFGrammarProperties eslifGrammarProperties = eslifGrammar{@code ->}propertiesByLevel(0);
  * ...
  * eslifGrammar.free();
  * eslif.free()

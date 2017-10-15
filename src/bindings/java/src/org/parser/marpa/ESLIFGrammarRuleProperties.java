@@ -10,9 +10,9 @@ import java.util.Arrays;
  * <pre>
  * ESLIF eslif = new ESLIF(...)
  * ESLIFGrammar eslifGrammar = new ESLIFGrammar(...);
- * ESLIFGrammarRuleProperties eSLIFGrammarRuleProperties = eslifGrammar->currentRuleProperties(0);
+ * ESLIFGrammarRuleProperties eSLIFGrammarRuleProperties = eslifGrammar{@code ->}currentRuleProperties(0);
  * or
- * ESLIFGrammarRuleProperties eSLIFGrammarRuleProperties = eslifGrammar->rulePropertiesByLevel(0, 0);
+ * ESLIFGrammarRuleProperties eSLIFGrammarRuleProperties = eslifGrammar{@code ->}rulePropertiesByLevel(0, 0);
  * ...
  * eslifGrammar.free();
  * eslif.free()
@@ -216,7 +216,7 @@ public class ESLIFGrammarRuleProperties {
 	}
 
 	/**
-	 * @return Rule's id (always >= 0)
+	 * @return Rule's id (always {@code >=} 0)
 	 */
 	public int getId() {
 		return id;
@@ -237,14 +237,14 @@ public class ESLIFGrammarRuleProperties {
 	}
 
 	/**
-	 * @return Rule's LHS symbol id (always >= 0)
+	 * @return Rule's LHS symbol id (always {@code >=} 0)
 	 */
 	public int getLhsId() {
 		return lhsId;
 	}
 
 	/**
-	 * @return Rule's separator symbol id (< 0 if the rule is not a sequence)
+	 * @return Rule's separator symbol id ({@code <} 0 if the rule is not a sequence)
 	 */
 	public int getSeparatorId() {
 		return separatorId;
@@ -258,7 +258,7 @@ public class ESLIFGrammarRuleProperties {
 	}
 
 	/**
-	 * @return Rule's exception id (< 0 if there is no exception)
+	 * @return Rule's exception id ({@code <} 0 if there is no exception)
 	 */
 	public int getExceptionId() {
 		return exceptionId;

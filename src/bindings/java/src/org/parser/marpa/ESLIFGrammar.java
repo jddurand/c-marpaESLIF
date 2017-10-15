@@ -79,7 +79,7 @@ public class ESLIFGrammar {
 	 * A grammar can have multiple "sub-grammars", identified by a level.
 	 * Internally this is a "sparse" array of grammars, and it is legal that a level is not defined. 
 	 * 
-	 * @return the number of sub-grammars, always &gt; 0.
+	 * @return the number of sub-grammars, always {@code >} 0.
 	 * @throws ESLIFException if the interface failed
 	 */
 	public synchronized int ngrammar() throws ESLIFException {
