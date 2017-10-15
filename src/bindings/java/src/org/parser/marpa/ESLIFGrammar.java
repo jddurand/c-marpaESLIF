@@ -250,7 +250,7 @@ public class ESLIFGrammar {
 	}
 	/**
 	 * @return grammar properties
-	 * @throws Exception if the interface failed
+	 * @throws ESLIFException if the interface failed
 	 */
 	public ESLIFGrammarProperties properties() throws ESLIFException {
 		/* Note that this method does not need to be synchronized */
@@ -259,7 +259,7 @@ public class ESLIFGrammar {
 	/**
 	 * @param level the grammar level
 	 * @return grammar properties
-	 * @throws Exception if the interface failed
+	 * @throws ESLIFException if the interface failed
 	 */
 	public ESLIFGrammarProperties propertiesByLevel(int level) throws ESLIFException {
 		/* Note that this method does not need to be synchronized */
@@ -268,7 +268,7 @@ public class ESLIFGrammar {
 	/**
 	 * @param rule the rule identifier
 	 * @return ruleproperties
-	 * @throws Exception if the interface failed
+	 * @throws ESLIFException if the interface failed
 	 */
 	public ESLIFGrammarRuleProperties ruleProperties(int rule) throws ESLIFException {
 		/* Note that this method does not need to be synchronized */
@@ -278,7 +278,7 @@ public class ESLIFGrammar {
 	 * @param level the grammar level
 	 * @param rule the rule identifier
 	 * @return ruleproperties
-	 * @throws Exception if the interface failed
+	 * @throws ESLIFException if the interface failed
 	 */
 	public ESLIFGrammarRuleProperties rulePropertiesByLevel(int level, int rule) throws ESLIFException {
 		/* Note that this method does not need to be synchronized */
@@ -286,8 +286,8 @@ public class ESLIFGrammar {
 	}
 	/**
 	 * @param symbol the symbol identifier
-	 * @return symbolproperties
-	 * @throws Exception if the interface failed
+	 * @return symbol properties
+	 * @throws ESLIFException if the interface failed
 	 */
 	public ESLIFGrammarSymbolProperties symbolProperties(int symbol) throws ESLIFException {
 		/* Note that this method does not need to be synchronized */
@@ -296,8 +296,8 @@ public class ESLIFGrammar {
 	/**
 	 * @param level the grammar level
 	 * @param symbol the symbol identifier
-	 * @return symbolproperties
-	 * @throws Exception if the interface failed
+	 * @return symbol properties
+	 * @throws ESLIFException if the interface failed
 	 */
 	public ESLIFGrammarSymbolProperties symbolPropertiesByLevel(int level, int symbol) throws ESLIFException {
 		/* Note that this method does not need to be synchronized */

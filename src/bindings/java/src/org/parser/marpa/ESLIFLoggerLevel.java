@@ -15,14 +15,41 @@ public enum ESLIFLoggerLevel {
 
 	/* Thanks to http://www.ajaxonomy.com/2007/java/making-the-most-of-java-50-enum-tricks */
 
+	/**
+	 * TRACE log level
+	 */
 	TRACE    (0),
+	/**
+	 * DEBUG log level
+	 */
 	DEBUG    (1),
+	/**
+	 * INFO log level
+	 */
 	INFO     (2),
+	/**
+	 * NOTICE log level
+	 */
 	NOTICE   (3),
+	/**
+	 * WARNING log level
+	 */
 	WARNING  (4),
+	/**
+	 * ERROR log level
+	 */
 	ERROR    (5),
+	/**
+	 * CRITICAL log level
+	 */
 	CRITICAL (6),
+	/**
+	 * ALERT log level
+	 */
 	ALERT    (7),
+	/**
+	 * EMERGENCY log level
+	 */
 	EMERGENCY(8);
 
 	private int code;

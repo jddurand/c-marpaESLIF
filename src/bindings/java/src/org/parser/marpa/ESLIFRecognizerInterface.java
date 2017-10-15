@@ -1,5 +1,8 @@
 package org.parser.marpa;
 
+/**
+ * ESLIF Recognizer Interface
+ */
 public interface ESLIFRecognizerInterface {
 	/**
 	 * Callback executed whenever the recognizer need more data.

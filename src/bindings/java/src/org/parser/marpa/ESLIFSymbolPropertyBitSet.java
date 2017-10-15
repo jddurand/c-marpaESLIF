@@ -11,11 +11,29 @@ public enum ESLIFSymbolPropertyBitSet {
 
 	/* Thanks to http://www.ajaxonomy.com/2007/java/making-the-most-of-java-50-enum-tricks */
 
+	/**
+	 * Set if symbol is accessible
+	 */
 	MARPAESLIF_SYMBOL_IS_ACCESSIBLE(0x01),
+	/**
+	 * Set if symbol is nullable
+	 */
 	MARPAESLIF_SYMBOL_IS_NULLABLE(0x02),
+	/**
+	 * Set if symbol is nulling
+	 */
 	MARPAESLIF_SYMBOL_IS_NULLING(0x04),
+	/**
+	 * Set if symbol is productive
+	 */
 	MARPAESLIF_SYMBOL_IS_PRODUCTIVE(0x08),
+	/**
+	 * Set if symbol is the start symbol
+	 */
 	MARPAESLIF_SYMBOL_IS_START(0x10),
+	/**
+	 * Set if symbol is a terminal
+	 */
 	MARPAESLIF_SYMBOL_IS_TERMINAL(0x10);
 
 	private int code;

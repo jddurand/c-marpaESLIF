@@ -50,6 +50,31 @@ public class ESLIFGrammarSymbolProperties {
 	/**
 	 * Creation of an ESLIFGrammarSymbolProperties instance
 	 * 
+	 * @param type symbol type
+	 * @param start true if this is the start symbol
+	 * @param discard true if this is a discard symbol
+	 * @param discardRhs true if this is on the right-hand side of a discard rule
+	 * @param lhs true if this is on the left-hand side of a rule
+	 * @param top true if this is the first symbol of the grammar
+	 * @param id internal identifier
+	 * @param description description
+	 * @param eventBefore name of the "before" event, null if none
+	 * @param eventBeforeInitialState initial state of the "before" event, meaningless if there is no "before" event
+	 * @param eventAfter name of the "after" event, null if none
+	 * @param eventAfterInitialState initial state of the "after" event, meaningless if there is no "after" event
+	 * @param eventPredicted name of the "predicted" event, null if none
+	 * @param eventPredictedInitialState initial state of "predicted" event, meaningless if there is no "predicted" event
+	 * @param eventNulled name of the "nulled event, null if none
+	 * @param eventNulledInitialState initial state of the "nulled" event, meaningless if there is no "nulled" event
+	 * @param eventCompleted name of the "completed" event, null if none
+	 * @param eventCompletedInitialState initial state of the "completed" event, meaningless if there is no "completed" event
+	 * @param discardEvent name of the "discard" event, null if none
+	 * @param discardEventInitialState initial state of the discard event, meaningless if there is no "discard" event
+	 * @param lookupResolvedLeveli grammar level to which it is resolved, can be different to the grammar used when this is a lexeme
+	 * @param priority symbol priority
+	 * @param nullableAction nullable action, null if there is none
+	 * @param propertyBitSet low-level properties
+	 * 
 	 */
 	public ESLIFGrammarSymbolProperties(ESLIFSymbolType type, boolean start, boolean discard, boolean discardRhs, boolean lhs, boolean top, int id, String description, String eventBefore, boolean eventBeforeInitialState, String eventAfter, boolean eventAfterInitialState, String eventPredicted, boolean eventPredictedInitialState, String eventNulled, boolean eventNulledInitialState, String eventCompleted, boolean eventCompletedInitialState, String discardEvent, boolean discardEventInitialState, int lookupResolvedLeveli, int priority, String nullableAction, int propertyBitSet) {
 		this.type                       = type;

@@ -3,7 +3,9 @@ package org.parser.marpa;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 
-/*
+/**
+ * Test Application Value
+ * 
  * In our example we have NOT specified a symbol action, therefore
  * lexemes that come directly from the grammar are in the form of
  * a ByteBuffer.
@@ -46,6 +48,11 @@ public class AppValue implements ESLIFValueInterface {
 		return (Integer) object;
 	}
 	
+	/**
+	 * @param list object list
+	 * @return resulting object
+	 * @throws UnsupportedEncodingException unsupported encoding exception
+	 */
 	public Object do_int(Object[] list) throws UnsupportedEncodingException {
 		Object result;
 		
@@ -60,6 +67,11 @@ public class AppValue implements ESLIFValueInterface {
 		return result;
 	}
 
+	/**
+	 * @param list list of objects
+	 * @return result object
+	 * @throws UnsupportedEncodingException unsupported encoding exception
+	 */
 	public Object do_op(Object[] list) throws UnsupportedEncodingException {
 		Object left   = list[0];
 		String op     = byteBufferToString((ByteBuffer) list[1]); 

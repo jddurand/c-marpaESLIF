@@ -11,10 +11,25 @@ public enum ESLIFRulePropertyBitSet {
 
 	/* Thanks to http://www.ajaxonomy.com/2007/java/making-the-most-of-java-50-enum-tricks */
 
+	/**
+	 * Set if the rule is accessible
+	 */
 	MARPAESLIF_RULE_IS_ACCESSIBLE(0x01),
+	/**
+	 * Set if the rule is nullable
+	 */
 	MARPAESLIF_RULE_IS_NULLABLE(0x02),
+	/**
+	 * Set if the rule is nulling
+	 */
 	MARPAESLIF_RULE_IS_NULLING(0x04),
+	/**
+	 * Set if this is a loop rule
+	 */
 	MARPAESLIF_RULE_IS_LOOP(0x08),
+	/**
+	 * Set if the rule is productive
+	 */
 	MARPAESLIF_RULE_IS_PRODUCTIVE(0x10);
 
 	private int code;
