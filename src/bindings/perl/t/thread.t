@@ -42,8 +42,11 @@ use Log::Log4perl qw/:easy/;
 use Log::Any::Adapter;
 use Log::Any qw/$log/;
 use threads;
-use threads::shared;
-use Test::More tests => 1 + 15 * 2;
+my $NTHREAD;
+BEGIN {
+    $NTHREAD = 5;
+}
+use Test::More tests => 3 + $NTHREAD * 5;
 BEGIN { require_ok('MarpaX::ESLIF') }
 
 #
@@ -54,10 +57,11 @@ log4perl.rootLogger              = TRACE, Screen
 log4perl.appender.Screen         = Log::Log4perl::Appender::Screen
 log4perl.appender.Screen.stderr  = 0
 log4perl.appender.Screen.layout  = PatternLayout
-log4perl.appender.Screen.layout.ConversionPattern = %d %-5p %6P %m{chomp}%n
+log4perl.appender.Screen.layout.ConversionPattern = %d [Thread %X{tid}] %-5p %6P %m{chomp}%n
 ';
 Log::Log4perl::init(\$defaultLog4perlConf);
 Log::Any::Adapter->set('Log4perl');
+Log::Log4perl::MDC->put("tid", threads->tid());
 
 my $grammar = q{
 Expression ::=
@@ -70,60 +74,77 @@ Expression ::=
     |     Expression  '-' Expression
 };
 
-my $count = 0;
-share($count);
+my $eslif_in_main = MarpaX::ESLIF->new($log);
+my $eslif2_in_main = MarpaX::ESLIF->new($log);
+ok($eslif_in_main == $eslif2_in_main, "Thread 0 - new with logger $eslif_in_main == $eslif2_in_main");
+
+my $eslif_in_main_without_logger = MarpaX::ESLIF->new();
+my $eslif2_in_main_without_logger = MarpaX::ESLIF->new();
+ok($eslif_in_main_without_logger == $eslif2_in_main_without_logger, "Thread 0 - new without logger $eslif_in_main_without_logger == $eslif2_in_main_without_logger");
+
+#
+# We introduce tiny sleeps to make sure threads overlaps
+#
+sub _sleep {
+    my $sleep = 1 + int(rand(2));
+    sleep($sleep);
+}
 
 sub thr_sub {
-  my ($input, $expected, $logger) = @_;
+  my ($input, $expected) = @_;
 
   my $tid = threads->tid();
-  # printf STDERR "Thread No %d is starting\n", $tid;
-  {
-    lock($count);
-    # diag(sprintf("Thread No %d is starting", $tid));
-    ++$count;
-  }
-  #
-  # Do a random sleep - https://alvinalexander.com/perl/perl-random-number-integer-rand-function
-  #
-  # my $lower_limit = 1;
-  # my $upper_limit = 3;
-  # my $random_number = int(rand($upper_limit-$lower_limit)) + $lower_limit;
-  # sleep($random_number) if $random_number;
+  Log::Log4perl::MDC->put("tid", $tid);
 
-  my $eslif = MarpaX::ESLIF->multiton($logger);
-  my $eslif2 = MarpaX::ESLIF->multiton($logger);
-  ok($eslif == $eslif2, "Thread No $tid - multiton $eslif == $eslif2");
+  $log->trace("Starting");
+
+  _sleep;
+
+  $log->tracef("Testing ESLIF creation with logger=%s", "$log");
+
+  my $eslif = MarpaX::ESLIF->new($log);
+  my $eslif2 = MarpaX::ESLIF->new($log);
+  ok($eslif == $eslif2, "Thread $tid - new with logger $eslif == new $eslif2");
+  ok($eslif == $eslif_in_main, "Thread $tid - new with logger $eslif == main $eslif_in_main");
+
+  _sleep;
+
+  $log->trace('Testing ESLIF creation without logger');
+
+  my $eslif_without_logger = MarpaX::ESLIF->new();
+  my $eslif2_without_logger = MarpaX::ESLIF->new();
+  ok($eslif_without_logger == $eslif2_without_logger, "Thread $tid - new without logger $eslif_without_logger == new $eslif2_without_logger");
+  ok($eslif_without_logger == $eslif_in_main_without_logger, "Thread $tid - new without logger $eslif_without_logger == main $eslif_in_main_without_logger");
+
+  _sleep;
+
+  $log->trace('Testing valuation');
+
   my $eslifGrammar = MarpaX::ESLIF::Grammar->new($eslif, $grammar);
   my $eslifRecognizerInterface = MyRecognizerInterface->new($input);
   my $eslifValueInterface = MyValueInterface->new();
 
   $eslifGrammar->parse($eslifRecognizerInterface, $eslifValueInterface);
   my $value = $eslifValueInterface->getResult;
-  is($value, $expected, "Thread No $tid - value $value, expected value $expected");
-  {
-    lock($count);
-    # diag(sprintf("Thread No %d is ending", $tid));
-    --$count;
-  }
-  # printf STDERR "Thread No %d is ending\n", $tid;
-}
+  is($value, $expected, "Thread $tid - value $value == expected $expected");
 
-my $NTHREAD = 15;
+  _sleep;
+  $log->trace('Ending');
+}
 
 my $input = '(1+2)*3';
 my $expected = '(1+2)*3';
-my @t = map {
-  my $logger = $_ ? $log : undef;
-  threads->create(\&thr_sub, $input, $expected, $logger)->detach
+my @t = grep { defined } map {
+  threads->create(\&thr_sub, $input, $expected)
 } (1..$NTHREAD);
-#
-# Time to at least one thread to start
-#
-while (1) {
-  sleep(1);
-  lock($count);
-  last unless $count
+
+my $remains = scalar(@t);
+while ($remains) {
+    foreach (@t) {
+        next unless $_->is_joinable;
+        $_->join;
+        --$remains
+    }
 }
 
 done_testing();

@@ -1,6 +1,13 @@
-# PODNAME: MarpaX::ESLIF::Grammar
+use strict;
+use warnings FATAL => 'all';
+
+package MarpaX::ESLIF::Grammar;
 
 # ABSTRACT: MarpaX::ESLIF's grammar
+
+# AUTHORITY
+
+# VERSION
 
 =head1 DESCRIPTION
 
@@ -78,6 +85,21 @@ A scalar containing the grammar encoding. Optional.
 Encoding will always be guessed if not given.
 
 =back
+
+=cut
+
+#
+# Tiny wrapper on MarpaX::ESLIF::Grammar->new, that is using the instance as void *.
+# Could have been writen in the XS itself, but I feel it is more comprehensible like
+# this.
+#
+sub new {
+    my $class = shift;
+    my $eslif = shift;
+
+    my $self = $class->_new($eslif->_getInstance, @_);
+    return $self
+}
 
 =head2 $eslifGrammar->ngrammar()
 
@@ -232,3 +254,5 @@ Please refer to L<MarpaX::ESLIF::Recognizer::Interface> and L<MarpaX::ESLIF::Val
 L<MarpaX::ESLIF::Recognizer::Interface>, L<MarpaX::ESLIF::Recognizer::Interface>, L<MarpaX::ESLIF::Value::Interface>, L<MarpaX::ESLIF::Grammar::Properties>, L<MarpaX::ESLIF::Grammar::Rule::Properties>, L<MarpaX::ESLIF::Grammar::Symbol::Properties>
 
 =cut
+
+1;

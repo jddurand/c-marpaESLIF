@@ -324,7 +324,7 @@ foreach (qw/MARPAESLIF_SYMBOLTYPE_TERMINAL MARPAESLIF_SYMBOLTYPE_META/) {
   ok (defined(MarpaX::ESLIF::Symbol::Type->$_), "MarpaX::ESLIF::Symbol::Type->$_ is defined: " . MarpaX::ESLIF::Symbol::Type->$_);
 }
 
-my $eslif = MarpaX::ESLIF->multiton($log);
+my $eslif = MarpaX::ESLIF->new($log);
 isa_ok($eslif, 'MarpaX::ESLIF');
 my $version = $eslif->version;
 ok (defined($version), "Library version is defined (currently: $version)");

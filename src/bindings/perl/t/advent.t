@@ -70,7 +70,7 @@ WS ~ [\s]
 :lexeme ::= <card>  pause => after event => card
 END_OF_BASE_DSL
 
-my $eslif = MarpaX::ESLIF->multiton($log);
+my $eslif = MarpaX::ESLIF->new($log);
 isa_ok($eslif, 'MarpaX::ESLIF');
 
 my @tests = ();
