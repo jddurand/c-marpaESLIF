@@ -19,7 +19,7 @@ import java.nio.ByteBuffer;
  * 
  * A typical recognizer usage is:
  * <pre>
- * while (eslifValue.value() &gt; 0) &#123;
+ * while (eslifValue.value() {@code >} 0) &#123;
  *   Object result = eslifValueInterface.getResult();
  * &#125;
  * </pre>
