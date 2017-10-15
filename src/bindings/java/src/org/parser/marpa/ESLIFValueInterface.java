@@ -54,22 +54,32 @@ public interface ESLIFValueInterface {
 	public Object  getResult();
 	/**
 	 * Sets current symbol name, when value interface is called on the context of a symbol.
+	 * 
+	 * @param symbolName symbol name 
 	 */
 	public void  setSymbolName(String symbolName);
 	/**
 	 * Sets current symbol number, when value interface is called on the context of a symbol.
+	 * 
+	 * @param symbolNumber symbol identifier 
 	 */
 	public void  setSymbolNumber(int symbolNumber);
 	/**
 	 * Sets current rule name, when value interface is called on the context of a rule.
+	 * 
+	 * @param ruleName rule name
 	 */
 	public void  setRuleName(String ruleName);
 	/**
 	 * Sets current rule number, when value interface is called on the context of a rule.
+	 * 
+	 * @param ruleNumber rule identifier
 	 */
 	public void  setRuleNumber(int ruleNumber);
 	/**
 	 * Sets current rule grammar at every value interface call.
+	 * 
+	 * @param grammar grammar object 
 	 */
 	public void  setGrammar(ESLIFGrammar grammar);
 }

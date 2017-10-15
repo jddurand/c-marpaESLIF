@@ -102,7 +102,7 @@ sub new {
 
 =head2 $self->getType
 
-Returns the type
+Returns the type, c.f. L<MarpaX::ESLIF::Symbol::Type>
 
 =cut
 
@@ -519,5 +519,9 @@ sub getPropertyBitSet {
 
     return $self->{propertyBitSet}
 }
+
+=head1 SEE ALSO
+
+L<MarpaX::ESLIF::Symbol::Type>
 
 1;

@@ -5,9 +5,16 @@ import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 
+/**
+ * Test Application
+ */
 public class AppParse  {
 	
-	public static void main(String[] args) throws Exception {
+	/**
+	 * @param args arguments (not used)
+	 * @throws Exception exception
+	 */
+	public static void main(String[] args) throws Exception  {
 		AppLogger eslifLogger = new AppLogger();
 
 		ESLIF eslif = new ESLIF(eslifLogger);

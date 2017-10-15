@@ -1,5 +1,8 @@
 package org.parser.marpa;
 
+/**
+ * Test Application Logger
+ */
 public class AppLogger implements ESLIFLoggerInterface {
 	public void trace(String message) {
 		// System.out.println("<TRACE> " + message);

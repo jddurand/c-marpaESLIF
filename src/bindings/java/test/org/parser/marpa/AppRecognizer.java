@@ -3,10 +3,17 @@ package org.parser.marpa;
 import java.io.BufferedReader;
 import java.nio.charset.Charset;
 
+/**
+ * Test Application Recognizer
+ */
 public class AppRecognizer implements ESLIFRecognizerInterface {
 		private String         line           = null;
 		private BufferedReader bufferedReader = null;
 
+		/**
+		 * @param bufferedReader buffered reader
+		 * @throws Exception exception
+		 */
 		public AppRecognizer(BufferedReader bufferedReader) throws Exception {
 			if (bufferedReader == null) {
 				throw new Exception("bufferedReader is null");

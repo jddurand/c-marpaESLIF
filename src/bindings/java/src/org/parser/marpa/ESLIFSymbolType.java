@@ -11,7 +11,13 @@ public enum ESLIFSymbolType {
 
 	/* Thanks to http://www.ajaxonomy.com/2007/java/making-the-most-of-java-50-enum-tricks */
 
+	/**
+	 * Symbol is a terminal
+	 */
 	MARPAESLIF_SYMBOLTYPE_TERMINAL(0),
+	/**
+	 * Symbol is a meta symbol
+	 */
 	MARPAESLIF_SYMBOLTYPE_META(1);
 
 	private int code;
