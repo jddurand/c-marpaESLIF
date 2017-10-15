@@ -223,14 +223,14 @@ public class ESLIFGrammarProperties {
 	}
 
 	/**
-	 * @return Grammar's start symbol id, always >= 0
+	 * @return Grammar's start symbol id, always {@code >=} 0
 	 */
 	public int getStartId() {
 		return startId;
 	}
 
 	/**
-	 * @return Grammar's discard symbol id, < 0 if none.
+	 * @return Grammar's discard symbol id, {@code <} 0 if none.
 	 */
 	public int getDiscardId() {
 		return discardId;
