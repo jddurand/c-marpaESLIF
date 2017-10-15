@@ -6,7 +6,7 @@ sudo: required
 before_script:
 #  - sudo add-apt-repository ppa:george-edison55/precise-backports < /dev/null
   - sudo apt-get update -qq --allow-unauthenticated
-#  - sudo apt-get install cmake cmake-data cpanminus
+#  - sudo apt-get install cmake cmake-data cpanminus mailutils
   - sudo apt-get install cpanminus
 # Standard Dist::Zilla, this will install a bunch of prereqs, speeding up the upgrade
   - sudo apt-get install libdist-zilla-perl
@@ -22,7 +22,7 @@ before_script:
   - pushd src/bindings/perl && dzil authordeps --missing | xargs sudo cpanm --notest && popd
   - cmake . -DALL_IN_ONE=ON
   - make check
-  - mail -a Testing/Temporary/LastTest.log -s "ALL_IN_ONE make check's LastTest.log" jeandamiendurand@free.fr < /dev/null
+#  - mail -a Testing/Temporary/LastTest.log -s "ALL_IN_ONE make check's LastTest.log" jeandamiendurand@free.fr < /dev/null
   - make install DESTDIR=/tmp
   - rm -rf output CMakeCache.txt CMakeFiles pcre2
   - sh ./install-c-genericLogger.sh
@@ -35,12 +35,12 @@ before_script:
 script:
   - make
   - make check
-  - mail -a Testing/Temporary/LastTest.log -s "make check's LastTest.log" jeandamiendurand@free.fr < /dev/null
+#  - mail -a Testing/Temporary/LastTest.log -s "make check's LastTest.log" jeandamiendurand@free.fr < /dev/null
 #  - ./output/lib/marpaESLIFTester
 #  - ./output/lib/adventTester
 #  - ./output/lib/russellParadoxTester
 #  - ./output/lib/jsonTester
 #  - ./output/lib/selfTester
-  - cat Testing/Temporary/LastTest.log
+#  - cat Testing/Temporary/LastTest.log
   - sudo make package
   - sudo make install
