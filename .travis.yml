@@ -10,8 +10,8 @@ before_script:
   - sudo apt-get install cpanminus
 # Standard Dist::Zilla, this will install a bunch of prereqs, speeding up the upgrade
   - sudo apt-get install libdist-zilla-perl
-# Upgrade Dist::Zilla
-  - sudo cpanm --notest Dist::Zilla
+# Upgrade Dist::Zilla, Path::Tiny (I dislike its github issue 144 -;)
+  - sudo cpanm --notest Dist::Zilla Path::Tiny
 # This is not in the prereqs it seems, but the latest MooseX::Role::Parameterized is highly recommended -; let's do it for Moose as well
   - sudo cpanm --notest Moose MooseX::Role::Parameterized
 # For my scripts, prefered over dzil --listdeps that is too long
