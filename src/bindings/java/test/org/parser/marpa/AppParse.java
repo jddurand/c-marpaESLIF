@@ -17,8 +17,8 @@ public class AppParse  {
 	public static void main(String[] args) throws Exception  {
 		AppLogger eslifLogger = new AppLogger();
 
-		ESLIF eslif = new ESLIF(eslifLogger);
-		
+		ESLIF eslif = ESLIFMultiton.getInstance(eslifLogger);
+
 		eslifLogger.info("marpaESLIF version is " + eslif.version());
 
 		final String grammar = 
