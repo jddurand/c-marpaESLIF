@@ -18,7 +18,7 @@ JNIEXPORT void         JNICALL JNI_OnUnLoad                                     
 
 JNIEXPORT void         JNICALL Java_org_parser_marpa_ESLIF_jniNew                              (JNIEnv *envp, jobject eslifp);
 JNIEXPORT jstring      JNICALL Java_org_parser_marpa_ESLIF_jniVersion                          (JNIEnv *envp, jobject eslifp);
-JNIEXPORT void         JNICALL Java_org_parser_marpa_ESLIF_jniFree                             (JNIEnv *envp, jobject eslifp);
+/* JNIEXPORT void         JNICALL Java_org_parser_marpa_ESLIF_jniFree                             (JNIEnv *envp, jobject eslifp); */
 JNIEXPORT void         JNICALL Java_org_parser_marpa_ESLIFGrammar_jniNew                       (JNIEnv *envp, jobject eslifGrammarp, jbyteArray utf8byteArrayp);
 JNIEXPORT jint         JNICALL Java_org_parser_marpa_ESLIFGrammar_jniNgrammar                  (JNIEnv *envp, jobject eslifGrammarp);
 JNIEXPORT jint         JNICALL Java_org_parser_marpa_ESLIFGrammar_jniCurrentLevel              (JNIEnv *envp, jobject eslifGrammarp);
@@ -922,30 +922,26 @@ JNIEXPORT jstring JNICALL Java_org_parser_marpa_ESLIF_jniVersion(JNIEnv *envp, j
   return NULL;
 }
 
-/*****************************************************************************/
+/*
 JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIF_jniFree(JNIEnv *envp, jobject eslifp)
-/*****************************************************************************/
 {
   genericLoggerContext_t *genericLoggerContextp;
   genericLogger_t        *genericLoggerp;
   marpaESLIF_t           *marpaESLIFp;
 
-  /* Always update genericLogger context */
   if (! ESLIF_contextb(envp, eslifp, eslifp, MARPAESLIF_ESLIF_CLASS_getLoggerInterfacep_METHODP,
                        &genericLoggerp,
                        &genericLoggerContextp,
                        &marpaESLIFp)) {
-    /* An exception was raised */
     goto done;
   }
 
-  marpaESLIF_freev(marpaESLIFp); /* This is NULL protected */
-  genericLogger_freev(&genericLoggerp); /* Ditto */
+  marpaESLIF_freev(marpaESLIFp);
+  genericLogger_freev(&genericLoggerp);
   if (genericLoggerContextp != NULL) {
     free(genericLoggerContextp);
   }
 
-  /* We are freeing - no exception check */
   (*envp)->CallVoidMethod(envp, eslifp, MARPAESLIF_ESLIF_CLASS_setGenericLoggerContextp_METHODP, NULL);
   (*envp)->CallVoidMethod(envp, eslifp, MARPAESLIF_ESLIF_CLASS_setGenericLoggerp_METHODP, NULL);
   (*envp)->CallVoidMethod(envp, eslifp, MARPAESLIF_ESLIF_CLASS_setMarpaESLIFp_METHODP, NULL);
@@ -953,6 +949,7 @@ JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIF_jniFree(JNIEnv *envp, jobject
  done:
   return;
 }
+*/
 
 /*****************************************************************************/
 JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIFGrammar_jniNew(JNIEnv *envp, jobject eslifGrammarp, jbyteArray utf8byteArrayp)

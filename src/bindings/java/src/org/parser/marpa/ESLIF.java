@@ -1,6 +1,13 @@
 package org.parser.marpa;
 
 import java.nio.ByteBuffer;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.FutureTask;
 
 /**
  * ESLIF is Extended ScanLess InterFace
@@ -38,8 +45,12 @@ public class ESLIF {
 	private ByteBuffer           genericLoggerContextp = null;
 	private ByteBuffer           genericLoggerp        = null;
 	private native void          jniNew() throws ESLIFException;
-	private native void          jniFree() throws ESLIFException;
+	// private native void          jniFree() throws ESLIFException;
 	private native String        jniVersion();
+    private static final ConcurrentMap<ESLIFLoggerInterface, Future<ESLIF>> multitons = new ConcurrentHashMap<>();
+    /* Because a null key is not possible with a ConcurrentHashMap */
+    private static final ESLIFLoggerInterface nullLoggerInterface = new ESLIFMultitonNullLogger();
+
 	
 	static {
 		try {
@@ -50,40 +61,86 @@ public class ESLIF {
 		}
 	}
 	
-	/*
+    /**
+     * ESLIF multiton callback
+     *
+     * Technical layer so that a parameter can be given to a Callable.
+     */
+    private static final class ESLIFMultitonCallback implements Callable<ESLIF> {
+   		private native ESLIF jniNew(ESLIFLoggerInterface loggerInterface) throws ESLIFException;
+   		ESLIFLoggerInterface loggerInterface = null;
+
+   		/**
+   		 * @param loggerInterface logger interface
+   		 */
+   		public ESLIFMultitonCallback(ESLIFLoggerInterface loggerInterface) {
+   	        this.loggerInterface = loggerInterface;
+   	    }
+
+   	    public ESLIF call() throws ESLIFException {
+   	    	return new ESLIF(this.loggerInterface);
+   	    }
+   	}
+    
+    /**
+     * @return Global instance of ESLIF without a logger
+     * @throws InterruptedException interrupted exception
+     */
+    public static ESLIF getInstance() throws InterruptedException  {
+   	 return getInstance(nullLoggerInterface);
+    }
+
+    /**
+     * @param loggerInterface logger interface
+     * @return Global instance of ESLIF with a logger
+     * @throws InterruptedException interrupted exception
+     */
+    public static ESLIF getInstance(ESLIFLoggerInterface loggerInterface) throws InterruptedException  {
+        while (true) {
+            Future<ESLIF> f = multitons.get(loggerInterface);
+            if (f == null) {
+                FutureTask<ESLIF> ft = new FutureTask<ESLIF>(new ESLIFMultitonCallback(loggerInterface));
+                /*
+                 * ESLIFMultitonCallback does not return a null value, so null can only mean
+                 * that the key previously did not exist.
+                 */
+                f = multitons.putIfAbsent(loggerInterface, ft);
+                if (f == null) {
+                    f = ft;
+                    ft.run();
+                }
+            }
+            try {
+                return f.get();
+            } catch (CancellationException e) {
+                multitons.remove(loggerInterface, f);
+            } catch (ExecutionException e) {
+                throw new RuntimeException(e.getCause());
+            }
+        }
+    }
+
+    /* Voluntarily left commented */
+    /*
+    public static void removeInstance(ESLIFLoggerInterface loggerInterface)  {
+        Future<ESLIF> f = multitons.get(loggerInterface);
+        if (f == null) {
+        	return;
+        }
+        multitons.remove(loggerInterface, f);
+    }
+    */
+    /*
 	 * ********************************************
 	 * Public methods
 	 * ********************************************
 	 */
-	/**
-	 * 
-	 * @param loggerInterface instance of a {@link ESLIFLoggerInterface}, may be null
-	 * @throws ESLIFException exception in case of JNI error or object creation failure
-	 */
-	public ESLIF(ESLIFLoggerInterface loggerInterface) throws ESLIFException {
-		setLoggerInterface(loggerInterface);
-		jniNew();
-	}
-	
-	/**
-	 * Equivalent to {@link #ESLIF(ESLIFLoggerInterface)}, giving a null parameter for the logger interface.
-	 * 
-	 * @throws ESLIFException exception in case of JNI error or object creation failure
-	 */
-	public ESLIF() throws ESLIFException {
-		jniNew();
-	}
-	
-	/**
-	 * Dispose of ESLIF resources.
-	 * <p>
-	 * This call is <b>required</b> when you do not need anymore the ESLIF instance.
-	 * 
-	 * @throws ESLIFException exception in case of JNI error
-	 */
+    /* Voluntarily left commented */
+    /*
 	public synchronized void free() throws ESLIFException {
 		jniFree();
 	}
+	*/
 	
 	/**
 	 * Version of the ESLIF.
@@ -98,6 +155,25 @@ public class ESLIF {
 	 * Private/protected methods - used by the JNI
 	 * *******************************************
 	 */
+	/**
+	 * 
+	 * @param loggerInterface instance of a {@link ESLIFLoggerInterface}, may be null
+	 * @throws ESLIFException exception in case of JNI error or object creation failure
+	 */
+	private ESLIF(ESLIFLoggerInterface loggerInterface) throws ESLIFException {
+		setLoggerInterface(loggerInterface);
+		jniNew();
+	}
+	
+	/**
+	 * Equivalent to {@link #ESLIF(ESLIFLoggerInterface)}, giving a null parameter for the logger interface.
+	 * 
+	 * @throws ESLIFException exception in case of JNI error or object creation failure
+	 */
+	private ESLIF() throws ESLIFException {
+		jniNew();
+	}
+	
 	private static String getMarpaeslifjavaLibraryName() {
 		return MARPAESLIFJAVA_LIBRARY_NAME;
 	}
