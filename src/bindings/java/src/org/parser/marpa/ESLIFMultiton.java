@@ -7,6 +7,13 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
 
+/**
+ * ESLIF multiton
+ *
+ * ESLIF object is thread-safe, provided the logger is thread-safe. For one logger, there can be a single ESLIF.
+ *
+ * This module provides the necessary multiton implementation.
+ */
 public class ESLIFMultiton {
 
      private static final ConcurrentMap<ESLIFLoggerInterface, Future<ESLIF>> multitons = new ConcurrentHashMap<>();
@@ -22,8 +29,8 @@ public class ESLIFMultiton {
      }
 
      /**
-      * @param arg argument
-      * @return instance
+      * @param loggerInterface logger interface
+      * @return instance ESLIF multiton
       * @throws InterruptedException interrupted exception
       */
      public static ESLIF getInstance(ESLIFLoggerInterface loggerInterface) throws InterruptedException  {
