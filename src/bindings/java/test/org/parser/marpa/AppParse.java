@@ -17,7 +17,7 @@ public class AppParse  {
 	public static void main(String[] args) throws Exception  {
 		AppLogger eslifLogger = new AppLogger();
 
-		ESLIF eslif = ESLIFMultiton.getInstance(eslifLogger);
+		ESLIF eslif = ESLIF.getInstance(eslifLogger);
 
 		eslifLogger.info("marpaESLIF version is " + eslif.version());
 
@@ -217,7 +217,6 @@ public class AppParse  {
 		}
 
 		eslifGrammar.free();
-		eslif.free();
 	}
 	
 	private static boolean doScan(ESLIFLoggerInterface eslifLogger, ESLIFRecognizer eslifRecognizer, boolean initialEvents) throws Exception {
