@@ -83,6 +83,10 @@ C<$loggerInterface> is an optional parameter that, when its exists, must be an o
 
 An example of logging implementation can be a L<Log::Any> adapter.
 
+=head2 MarpaX::ESLIF->getInstance($loggerInterface)
+
+Alias to C<new>.
+
 =head2 $eslif->version()
 
   printf "ESLIF library version: %s\n", $eslif->version;
@@ -120,6 +124,10 @@ sub new {
   push(@REGISTRY, $self = bless [ MarpaX::ESLIF::Engine->allocate($loggerInterface), $loggerInterface ], $class) if ! defined($self);
 
   return $self
+}
+
+sub getInstance {
+    goto &new
 }
 
 sub version {
