@@ -1,10 +1,12 @@
 package org.parser.marpa;
 
 import java.nio.ByteBuffer;
+import java.util.Iterator;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
@@ -44,13 +46,14 @@ public class ESLIF {
 	private ByteBuffer           marpaESLIFp           = null;
 	private ByteBuffer           genericLoggerContextp = null;
 	private ByteBuffer           genericLoggerp        = null;
-	private native void          jniNew() throws ESLIFException;
+	private native void          jniNew(int loggerInterfaceIndice) throws ESLIFException;
 	// private native void          jniFree() throws ESLIFException;
 	private native String        jniVersion();
     private static final ConcurrentMap<ESLIFLoggerInterface, Future<ESLIF>> multitons = new ConcurrentHashMap<>();
     /* Because a null key is not possible with a ConcurrentHashMap */
     private static final ESLIFLoggerInterface nullLoggerInterface = new ESLIFMultitonNullLogger();
-
+    /* Because genericLogger needs a "constant" */
+    private static final CopyOnWriteArraySet<ESLIFLoggerInterface> loggerInterfaceArraySet = new CopyOnWriteArraySet<ESLIFLoggerInterface>();
 	
 	static {
 		try {
@@ -74,7 +77,9 @@ public class ESLIF {
    		 * @param loggerInterface logger interface
    		 */
    		public ESLIFMultitonCallback(ESLIFLoggerInterface loggerInterface) {
-   	        this.loggerInterface = loggerInterface;
+   			if (loggerInterface != nullLoggerInterface) {
+   				this.loggerInterface = loggerInterface;
+   			}
    	    }
 
    	    public ESLIF call() throws ESLIFException {
@@ -155,25 +160,42 @@ public class ESLIF {
 	 * Private/protected methods - used by the JNI
 	 * *******************************************
 	 */
-	/**
-	 * 
-	 * @param loggerInterface instance of a {@link ESLIFLoggerInterface}, may be null
-	 * @throws ESLIFException exception in case of JNI error or object creation failure
-	 */
+	private static int getLoggerInterfaceIndice(ESLIFLoggerInterface loggerInterface) {
+		int indice = 0;
+		Iterator<ESLIFLoggerInterface> iterator = loggerInterfaceArraySet.iterator();
+
+		/* The iterator returns elements in the same order in which they were added */
+		while (iterator.hasNext()) {
+			/* null is possible */
+			if (iterator.next() == loggerInterface) {
+				return indice;
+			}
+			++indice;
+		}
+
+		return -1;
+	}
+	private static ESLIFLoggerInterface getLoggerInterfaceByIndice(int indice) {
+		if (indice >= 0) {
+			int i = 0;
+			Iterator<ESLIFLoggerInterface> iterator = loggerInterfaceArraySet.iterator();
+
+			/* The iterator returns elements in the same order in which they were added */
+			while (iterator.hasNext()) {
+				if (i == indice) {
+					return iterator.next();
+				}
+				++i;
+			}
+		}
+
+		return null;
+	}
 	private ESLIF(ESLIFLoggerInterface loggerInterface) throws ESLIFException {
 		setLoggerInterface(loggerInterface);
-		jniNew();
+		loggerInterfaceArraySet.add(loggerInterface); /* No-op if already in the set */
+		jniNew(getLoggerInterfaceIndice(loggerInterface));
 	}
-	
-	/**
-	 * Equivalent to {@link #ESLIF(ESLIFLoggerInterface)}, giving a null parameter for the logger interface.
-	 * 
-	 * @throws ESLIFException exception in case of JNI error or object creation failure
-	 */
-	private ESLIF() throws ESLIFException {
-		jniNew();
-	}
-	
 	private static String getMarpaeslifjavaLibraryName() {
 		return MARPAESLIFJAVA_LIBRARY_NAME;
 	}
