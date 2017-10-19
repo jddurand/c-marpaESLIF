@@ -16,7 +16,7 @@
 JNIEXPORT jint         JNICALL JNI_OnLoad                                                      (JavaVM *vmp, void* reservedp);
 JNIEXPORT void         JNICALL JNI_OnUnLoad                                                    (JavaVM *vmp, void* reservedp);
 
-JNIEXPORT void         JNICALL Java_org_parser_marpa_ESLIF_jniNew                              (JNIEnv *envp, jobject eslifp);
+JNIEXPORT void         JNICALL Java_org_parser_marpa_ESLIF_jniNew                              (JNIEnv *envp, jobject eslifp, jint indice);
 JNIEXPORT jstring      JNICALL Java_org_parser_marpa_ESLIF_jniVersion                          (JNIEnv *envp, jobject eslifp);
 /* JNIEXPORT void         JNICALL Java_org_parser_marpa_ESLIF_jniFree                             (JNIEnv *envp, jobject eslifp); */
 JNIEXPORT void         JNICALL Java_org_parser_marpa_ESLIFGrammar_jniNew                       (JNIEnv *envp, jobject eslifGrammarp, jbyteArray utf8byteArrayp);
@@ -76,8 +76,7 @@ JNIEXPORT void         JNICALL Java_org_parser_marpa_ESLIFValue_jniFree         
 /* Structures */
 /* ---------- */
 typedef struct genericLoggerContext {
-  jobject   objectp;              /* Current object - this can change at every call */
-  jmethodID getLoggerInterfacep;
+  jint      indice;
 } genericLoggerContext_t;
 
 typedef struct marpaESLIFRecognizerContext {
@@ -539,6 +538,9 @@ static marpaESLIFMethodCache_t marpaESLIFMethodCacheArrayp[] = {
   #define MARPAESLIF_ESLIFSYMBOLTYPE_CLASS_get_METHODP                              marpaESLIFMethodCacheArrayp[67].methodp
   {      &MARPAESLIF_ESLIFSYMBOLTYPE_CLASSCACHE, "get",                             "(I)Lorg/parser/marpa/ESLIFSymbolType;", 1 /* static */, NULL },
 
+  #define MARPAESLIF_ESLIF_CLASS_getLoggerInterfaceByIndicep_METHODP                marpaESLIFMethodCacheArrayp[68].methodp
+  {      &MARPAESLIF_ESLIF_CLASSCACHE,       "getLoggerInterfaceByIndice",          "(I)Lorg/parser/marpa/ESLIFLoggerInterface;", 1 /* static */, NULL },
+
   { NULL }
 };
 
@@ -554,23 +556,19 @@ static void  genericLoggerCallbackv(void *userDatavp, genericLoggerLevel_t logLe
 static short recognizerReaderCallbackb(void *userDatavp, char **inputcpp, size_t *inputlp, short *eofbp, short *characterStreambp, char **encodingOfEncodingsp, char **encodingsp, size_t *encodinglp);
 static short ESLIF_contextb(JNIEnv *envp, jobject eslifp, jobject objectp, jmethodID getLoggerInterfacep,
                             genericLogger_t **genericLoggerpp,
-                            genericLoggerContext_t **genericLoggerContextpp,
                             marpaESLIF_t **marpaESLIFpp);
 static short ESLIFGrammar_contextb(JNIEnv *envp, jobject eslifGrammarp, jobject objectp, jmethodID getLoggerInterfacep,
                                    genericLogger_t **genericLoggerpp,
-                                   genericLoggerContext_t **genericLoggerContextpp,
                                    marpaESLIF_t **marpaESLIFpp,
                                    marpaESLIFGrammar_t **marpaESLIFGrammarpp);
 static short ESLIFRecognizer_contextb(JNIEnv *envp, jobject eslifRecognizerp, jobject objectp, jmethodID getLoggerInterfacep,
                                       genericLogger_t **genericLoggerpp,
-                                      genericLoggerContext_t **genericLoggerContextpp,
                                       marpaESLIF_t **marpaESLIFpp,
                                       marpaESLIFGrammar_t **marpaESLIFGrammarpp,
                                       marpaESLIFRecognizer_t **marpaESLIFRecognizerpp,
                                       marpaESLIFRecognizerContext_t **marpaESLIFRecognizerContextpp);
 static short ESLIFValue_contextb(JNIEnv *envp, jobject eslifValuep, jobject objectp, jmethodID getLoggerInterfacep,
                                  genericLogger_t **genericLoggerpp,
-                                 genericLoggerContext_t **genericLoggerContextpp,
                                  marpaESLIF_t **marpaESLIFpp,
                                  marpaESLIFGrammar_t **marpaESLIFGrammarpp,
                                  marpaESLIFRecognizer_t **marpaESLIFRecognizerpp,
@@ -842,7 +840,7 @@ JNIEXPORT void JNICALL JNI_OnUnLoad(JavaVM *vmp, void* reservedp)
 }
 
 /*****************************************************************************/
-JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIF_jniNew(JNIEnv *envp, jobject eslifp)
+JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIF_jniNew(JNIEnv *envp, jobject eslifp, jint indice)
 /*****************************************************************************/
 {
   static const char      *funcs = "Java_org_parser_marpa_ESLIF_jniNew";
@@ -862,8 +860,7 @@ JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIF_jniNew(JNIEnv *envp, jobject 
     RAISEEXCEPTIONF(envp, "malloc failure, %s", strerror(errno));
   }
 
-  genericLoggerContextp->objectp             = eslifp;
-  genericLoggerContextp->getLoggerInterfacep = MARPAESLIF_ESLIF_CLASS_getLoggerInterfacep_METHODP;
+  genericLoggerContextp->indice              = indice;
 
   MARPAESLIF_PTR2BYTEBUFFER(genericLoggerContext, genericLoggerContextp);
  (*envp)->CallVoidMethod(envp, eslifp, MARPAESLIF_ESLIF_CLASS_setGenericLoggerContextp_METHODP, BYTEBUFFER(genericLoggerContext));
@@ -914,7 +911,6 @@ JNIEXPORT jstring JNICALL Java_org_parser_marpa_ESLIF_jniVersion(JNIEnv *envp, j
   /* Always update genericLogger context */
   if (ESLIF_contextb(envp, eslifp, eslifp, MARPAESLIF_ESLIF_CLASS_getLoggerInterfacep_METHODP,
                        NULL /* genericLoggerpp */,
-                       NULL /* genericLoggerContextpp */,
                        NULL /* marpaESLIFpp */)) {
     return (*envp)->NewStringUTF(envp, marpaESLIF_versions());
   }
@@ -970,7 +966,6 @@ JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIFGrammar_jniNew(JNIEnv *envp, j
   /* Always update genericLogger context */
   if (! ESLIFGrammar_contextb(envp, eslifGrammarp, eslifGrammarp, MARPAESLIF_ESLIFGRAMMAR_CLASS_getLoggerInterfacep_METHODP,
                               NULL /* genericLoggerpp */,
-                              NULL /* genericLoggerContextpp */,
                               &marpaESLIFp,
                               NULL /* marpaESLIFGrammarpp */)) {
     goto err;
@@ -1046,7 +1041,6 @@ JNIEXPORT jint JNICALL Java_org_parser_marpa_ESLIFGrammar_jniNgrammar(JNIEnv *en
 
   if (! ESLIFGrammar_contextb(envp, eslifGrammarp, eslifGrammarp, MARPAESLIF_ESLIFGRAMMAR_CLASS_getLoggerInterfacep_METHODP,
                               NULL /* genericLoggerpp */,
-                              NULL /* genericLoggerContextpp */,
                               NULL /* marpaESLIFpp */,
                               &marpaESLIFGrammarp)) {
     goto err;
@@ -1075,7 +1069,6 @@ JNIEXPORT jint JNICALL Java_org_parser_marpa_ESLIFGrammar_jniCurrentLevel(JNIEnv
 
   if (! ESLIFGrammar_contextb(envp, eslifGrammarp, eslifGrammarp, MARPAESLIF_ESLIFGRAMMAR_CLASS_getLoggerInterfacep_METHODP,
                               NULL /* genericLoggerpp */,
-                              NULL /* genericLoggerContextpp */,
                               NULL /* marpaESLIFpp */,
                               &marpaESLIFGrammarp)) {
     goto err;
@@ -1105,7 +1098,6 @@ JNIEXPORT jstring JNICALL Java_org_parser_marpa_ESLIFGrammar_jniCurrentDescripti
 
   if (! ESLIFGrammar_contextb(envp, eslifGrammarp, eslifGrammarp, MARPAESLIF_ESLIFGRAMMAR_CLASS_getLoggerInterfacep_METHODP,
                               NULL /* genericLoggerpp */,
-                              NULL /* genericLoggerContextpp */,
                               NULL /* marpaESLIFpp */,
                               &marpaESLIFGrammarp)) {
     goto err;
@@ -1137,7 +1129,6 @@ JNIEXPORT jstring JNICALL Java_org_parser_marpa_ESLIFGrammar_jniDescriptionByLev
 
   if (! ESLIFGrammar_contextb(envp, eslifGrammarp, eslifGrammarp, MARPAESLIF_ESLIFGRAMMAR_CLASS_getLoggerInterfacep_METHODP,
                               NULL /* genericLoggerpp */,
-                              NULL /* genericLoggerContextpp */,
                               NULL /* marpaESLIFpp */,
                               &marpaESLIFGrammarp)) {
     goto err;
@@ -1169,7 +1160,6 @@ JNIEXPORT jintArray JNICALL Java_org_parser_marpa_ESLIFGrammar_jniCurrentRuleIds
 
   if (! ESLIFGrammar_contextb(envp, eslifGrammarp, eslifGrammarp, MARPAESLIF_ESLIFGRAMMAR_CLASS_getLoggerInterfacep_METHODP,
                               NULL /* genericLoggerpp */,
-                              NULL /* genericLoggerContextpp */,
                               NULL /* marpaESLIFpp */,
                               &marpaESLIFGrammarp)) {
     goto err;
@@ -1225,7 +1215,6 @@ JNIEXPORT jintArray JNICALL Java_org_parser_marpa_ESLIFGrammar_jniCurrentSymbolI
 
   if (! ESLIFGrammar_contextb(envp, eslifGrammarp, eslifGrammarp, MARPAESLIF_ESLIFGRAMMAR_CLASS_getLoggerInterfacep_METHODP,
                               NULL /* genericLoggerpp */,
-                              NULL /* genericLoggerContextpp */,
                               NULL /* marpaESLIFpp */,
                               &marpaESLIFGrammarp)) {
     goto err;
@@ -1282,7 +1271,6 @@ JNIEXPORT jintArray JNICALL Java_org_parser_marpa_ESLIFGrammar_jniRuleIdsByLevel
 
   if (! ESLIFGrammar_contextb(envp, eslifGrammarp, eslifGrammarp, MARPAESLIF_ESLIFGRAMMAR_CLASS_getLoggerInterfacep_METHODP,
                               NULL /* genericLoggerpp */,
-                              NULL /* genericLoggerContextpp */,
                               NULL /* marpaESLIFpp */,
                               &marpaESLIFGrammarp)) {
     goto err;
@@ -1339,7 +1327,6 @@ JNIEXPORT jintArray JNICALL Java_org_parser_marpa_ESLIFGrammar_jniSymbolIdsByLev
 
   if (! ESLIFGrammar_contextb(envp, eslifGrammarp, eslifGrammarp, MARPAESLIF_ESLIFGRAMMAR_CLASS_getLoggerInterfacep_METHODP,
                               NULL /* genericLoggerpp */,
-                              NULL /* genericLoggerContextpp */,
                               NULL /* marpaESLIFpp */,
                               &marpaESLIFGrammarp)) {
     goto err;
@@ -1392,7 +1379,6 @@ JNIEXPORT jintArray JNICALL Java_org_parser_marpa_ESLIFGrammar_jniRuleDisplay(JN
 
   if (! ESLIFGrammar_contextb(envp, eslifGrammarp, eslifGrammarp, MARPAESLIF_ESLIFGRAMMAR_CLASS_getLoggerInterfacep_METHODP,
                               NULL /* genericLoggerpp */,
-                              NULL /* genericLoggerContextpp */,
                               NULL /* marpaESLIFpp */,
                               &marpaESLIFGrammarp)) {
     goto err;
@@ -1420,7 +1406,6 @@ JNIEXPORT jintArray JNICALL Java_org_parser_marpa_ESLIFGrammar_jniSymbolDisplay(
 
   if (! ESLIFGrammar_contextb(envp, eslifGrammarp, eslifGrammarp, MARPAESLIF_ESLIFGRAMMAR_CLASS_getLoggerInterfacep_METHODP,
                               NULL /* genericLoggerpp */,
-                              NULL /* genericLoggerContextpp */,
                               NULL /* marpaESLIFpp */,
                               &marpaESLIFGrammarp)) {
     goto err;
@@ -1448,7 +1433,6 @@ JNIEXPORT jintArray JNICALL Java_org_parser_marpa_ESLIFGrammar_jniRuleShow(JNIEn
 
   if (! ESLIFGrammar_contextb(envp, eslifGrammarp, eslifGrammarp, MARPAESLIF_ESLIFGRAMMAR_CLASS_getLoggerInterfacep_METHODP,
                               NULL /* genericLoggerpp */,
-                              NULL /* genericLoggerContextpp */,
                               NULL /* marpaESLIFpp */,
                               &marpaESLIFGrammarp)) {
     goto err;
@@ -1477,7 +1461,6 @@ JNIEXPORT jintArray JNICALL Java_org_parser_marpa_ESLIFGrammar_jniRuleDisplayByL
 
   if (! ESLIFGrammar_contextb(envp, eslifGrammarp, eslifGrammarp, MARPAESLIF_ESLIFGRAMMAR_CLASS_getLoggerInterfacep_METHODP,
                               NULL /* genericLoggerpp */,
-                              NULL /* genericLoggerContextpp */,
                               NULL /* marpaESLIFpp */,
                               &marpaESLIFGrammarp)) {
     goto err;
@@ -1506,7 +1489,6 @@ JNIEXPORT jintArray JNICALL Java_org_parser_marpa_ESLIFGrammar_jniSymbolDisplayB
 
   if (! ESLIFGrammar_contextb(envp, eslifGrammarp, eslifGrammarp, MARPAESLIF_ESLIFGRAMMAR_CLASS_getLoggerInterfacep_METHODP,
                               NULL /* genericLoggerpp */,
-                              NULL /* genericLoggerContextpp */,
                               NULL /* marpaESLIFpp */,
                               &marpaESLIFGrammarp)) {
     goto err;
@@ -1535,7 +1517,6 @@ JNIEXPORT jintArray JNICALL Java_org_parser_marpa_ESLIFGrammar_jniRuleShowByLeve
 
   if (! ESLIFGrammar_contextb(envp, eslifGrammarp, eslifGrammarp, MARPAESLIF_ESLIFGRAMMAR_CLASS_getLoggerInterfacep_METHODP,
                               NULL /* genericLoggerpp */,
-                              NULL /* genericLoggerContextpp */,
                               NULL /* marpaESLIFpp */,
                               &marpaESLIFGrammarp)) {
     goto err;
@@ -1562,7 +1543,6 @@ JNIEXPORT jstring JNICALL Java_org_parser_marpa_ESLIFGrammar_jniShow(JNIEnv *env
 
   if (! ESLIFGrammar_contextb(envp, eslifGrammarp, eslifGrammarp, MARPAESLIF_ESLIFGRAMMAR_CLASS_getLoggerInterfacep_METHODP,
                               NULL /* genericLoggerpp */,
-                              NULL /* genericLoggerContextpp */,
                               NULL /* marpaESLIFpp */,
                               &marpaESLIFGrammarp)) {
     goto err;
@@ -1590,7 +1570,6 @@ JNIEXPORT jstring JNICALL Java_org_parser_marpa_ESLIFGrammar_jniShowByLevel(JNIE
 
   if (! ESLIFGrammar_contextb(envp, eslifGrammarp, eslifGrammarp, MARPAESLIF_ESLIFGRAMMAR_CLASS_getLoggerInterfacep_METHODP,
                               NULL /* genericLoggerpp */,
-                              NULL /* genericLoggerContextpp */,
                               NULL /* marpaESLIFpp */,
                               &marpaESLIFGrammarp)) {
     goto err;
@@ -1659,7 +1638,6 @@ JNIEXPORT jboolean JNICALL Java_org_parser_marpa_ESLIFGrammar_jniParse(JNIEnv *e
   
   if (! ESLIFGrammar_contextb(envp, eslifGrammarp, eslifGrammarp, MARPAESLIF_ESLIFGRAMMAR_CLASS_getLoggerInterfacep_METHODP,
                               NULL /* genericLoggerpp */,
-                              NULL /* genericLoggerContextpp */,
                               NULL /* marpaESLIFpp */,
                               &marpaESLIFGrammarp)) {
     goto err;
@@ -1752,7 +1730,6 @@ JNIEXPORT jobject JNICALL Java_org_parser_marpa_ESLIFGrammar_jniProperties(JNIEn
 
   if (! ESLIFGrammar_contextb(envp, eslifGrammarp, eslifGrammarp, MARPAESLIF_ESLIFGRAMMAR_CLASS_getLoggerInterfacep_METHODP,
                               NULL /* genericLoggerpp */,
-                              NULL /* genericLoggerContextpp */,
                               NULL /* marpaESLIFpp */,
                               &marpaESLIFGrammarp)) {
     goto err;
@@ -1783,7 +1760,6 @@ JNIEXPORT jobject JNICALL Java_org_parser_marpa_ESLIFGrammar_jniPropertiesByLeve
 
   if (! ESLIFGrammar_contextb(envp, eslifGrammarp, eslifGrammarp, MARPAESLIF_ESLIFGRAMMAR_CLASS_getLoggerInterfacep_METHODP,
                               NULL /* genericLoggerpp */,
-                              NULL /* genericLoggerContextpp */,
                               NULL /* marpaESLIFpp */,
                               &marpaESLIFGrammarp)) {
     goto err;
@@ -1814,7 +1790,6 @@ JNIEXPORT jobject JNICALL Java_org_parser_marpa_ESLIFGrammar_jniRuleProperties(J
 
   if (! ESLIFGrammar_contextb(envp, eslifGrammarp, eslifGrammarp, MARPAESLIF_ESLIFGRAMMAR_CLASS_getLoggerInterfacep_METHODP,
                               NULL /* genericLoggerpp */,
-                              NULL /* genericLoggerContextpp */,
                               NULL /* marpaESLIFpp */,
                               &marpaESLIFGrammarp)) {
     goto err;
@@ -1845,7 +1820,6 @@ JNIEXPORT jobject JNICALL Java_org_parser_marpa_ESLIFGrammar_jniRulePropertiesBy
 
   if (! ESLIFGrammar_contextb(envp, eslifGrammarp, eslifGrammarp, MARPAESLIF_ESLIFGRAMMAR_CLASS_getLoggerInterfacep_METHODP,
                               NULL /* genericLoggerpp */,
-                              NULL /* genericLoggerContextpp */,
                               NULL /* marpaESLIFpp */,
                               &marpaESLIFGrammarp)) {
     goto err;
@@ -1876,7 +1850,6 @@ JNIEXPORT jobject JNICALL Java_org_parser_marpa_ESLIFGrammar_jniSymbolProperties
 
   if (! ESLIFGrammar_contextb(envp, eslifGrammarp, eslifGrammarp, MARPAESLIF_ESLIFGRAMMAR_CLASS_getLoggerInterfacep_METHODP,
                               NULL /* genericLoggerpp */,
-                              NULL /* genericLoggerContextpp */,
                               NULL /* marpaESLIFpp */,
                               &marpaESLIFGrammarp)) {
     goto err;
@@ -1907,7 +1880,6 @@ JNIEXPORT jobject JNICALL Java_org_parser_marpa_ESLIFGrammar_jniSymbolProperties
 
   if (! ESLIFGrammar_contextb(envp, eslifGrammarp, eslifGrammarp, MARPAESLIF_ESLIFGRAMMAR_CLASS_getLoggerInterfacep_METHODP,
                               NULL /* genericLoggerpp */,
-                              NULL /* genericLoggerContextpp */,
                               NULL /* marpaESLIFpp */,
                               &marpaESLIFGrammarp)) {
     goto err;
@@ -1935,7 +1907,6 @@ JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIFGrammar_jniFree(JNIEnv *envp, 
 
   if (ESLIFGrammar_contextb(envp, eslifGrammarp, eslifGrammarp, MARPAESLIF_ESLIFGRAMMAR_CLASS_getLoggerInterfacep_METHODP,
                               NULL /* genericLoggerpp */,
-                              NULL /* genericLoggerContextpp */,
                               NULL /* marpaESLIFpp */,
                               &marpaESLIFGrammarp)) {
     marpaESLIFGrammar_freev(marpaESLIFGrammarp); /* This is NULL protected */
@@ -1956,17 +1927,13 @@ static void genericLoggerCallbackv(void *userDatavp, genericLoggerLevel_t logLev
     /* Impossible IMHO */
     return;
   }
-  if ((genericLoggerContextp->objectp == NULL) || (genericLoggerContextp->getLoggerInterfacep == NULL)) {
-    /* Ditto */
-    return;
-  }
 
   /* Logging callack is never running in another thread - no need to attach */
   if (((*marpaESLIF_vmp)->GetEnv(marpaESLIF_vmp, (void **) &envp, MARPAESLIF_JNI_VERSION) != JNI_OK) || (envp == NULL)) {
     return;
   }
 
-  loggerInterfacep = (*envp)->CallObjectMethod(envp, genericLoggerContextp->objectp, genericLoggerContextp->getLoggerInterfacep);
+  loggerInterfacep = (*envp)->CallStaticObjectMethod(envp, MARPAESLIF_ESLIFEVENTTYPE_CLASSP, MARPAESLIF_ESLIF_CLASS_getLoggerInterfaceByIndicep_METHODP, genericLoggerContextp->indice);
   if (loggerInterfacep == NULL) {
     return;
   }
@@ -2048,7 +2015,7 @@ static void generateStringWithLoggerCallbackv(void *userDatavp, genericLoggerLev
 }
 
 /*****************************************************************************/
-static short ESLIF_contextb(JNIEnv *envp, jobject eslifp, jobject objectp, jmethodID getLoggerInterfacep, genericLogger_t **genericLoggerpp, genericLoggerContext_t **genericLoggerContextpp, marpaESLIF_t **marpaESLIFpp)
+static short ESLIF_contextb(JNIEnv *envp, jobject eslifp, jobject objectp, jmethodID getLoggerInterfacep, genericLogger_t **genericLoggerpp, marpaESLIF_t **marpaESLIFpp)
 /*****************************************************************************/
 {
   static const char      *funcs = "ESLIF_contextb";
@@ -2095,12 +2062,6 @@ static short ESLIF_contextb(JNIEnv *envp, jobject eslifp, jobject objectp, jmeth
   if (genericLoggerContextp == NULL) {
     RAISEEXCEPTION(envp, "genericLoggerContextp is NULL");
   }
-  genericLoggerContextp->objectp             = objectp;
-  genericLoggerContextp->getLoggerInterfacep = getLoggerInterfacep;
-
-  if (genericLoggerContextpp != NULL) {
-    *genericLoggerContextpp = genericLoggerContextp;
-  }
 
   return 1;
 
@@ -2109,7 +2070,7 @@ static short ESLIF_contextb(JNIEnv *envp, jobject eslifp, jobject objectp, jmeth
 }
 
 /*****************************************************************************/
-static short ESLIFGrammar_contextb(JNIEnv *envp, jobject eslifGrammarp, jobject objectp, jmethodID getLoggerInterfacep, genericLogger_t **genericLoggerpp, genericLoggerContext_t **genericLoggerContextpp, marpaESLIF_t **marpaESLIFpp, marpaESLIFGrammar_t **marpaESLIFGrammarpp)
+static short ESLIFGrammar_contextb(JNIEnv *envp, jobject eslifGrammarp, jobject objectp, jmethodID getLoggerInterfacep, genericLogger_t **genericLoggerpp, marpaESLIF_t **marpaESLIFpp, marpaESLIFGrammar_t **marpaESLIFGrammarpp)
 /*****************************************************************************/
 {
   static const char   *funcs = "ESLIFGrammar_contextb";
@@ -2135,7 +2096,7 @@ static short ESLIFGrammar_contextb(JNIEnv *envp, jobject eslifGrammarp, jobject 
     RAISEEXCEPTION(envp, "eslifp is NULL");
   }
 
-  if (! ESLIF_contextb(envp, eslifp, objectp, getLoggerInterfacep, genericLoggerpp, genericLoggerContextpp, marpaESLIFpp)) {
+  if (! ESLIF_contextb(envp, eslifp, objectp, getLoggerInterfacep, genericLoggerpp, marpaESLIFpp)) {
     goto err;
   }
 
@@ -2146,7 +2107,7 @@ static short ESLIFGrammar_contextb(JNIEnv *envp, jobject eslifGrammarp, jobject 
 }
 
 /*****************************************************************************/
-static short ESLIFRecognizer_contextb(JNIEnv *envp, jobject eslifRecognizerp, jobject objectp, jmethodID getLoggerInterfacep, genericLogger_t **genericLoggerpp, genericLoggerContext_t **genericLoggerContextpp, marpaESLIF_t **marpaESLIFpp, marpaESLIFGrammar_t **marpaESLIFGrammarpp, marpaESLIFRecognizer_t **marpaESLIFRecognizerpp, marpaESLIFRecognizerContext_t **marpaESLIFRecognizerContextpp)
+static short ESLIFRecognizer_contextb(JNIEnv *envp, jobject eslifRecognizerp, jobject objectp, jmethodID getLoggerInterfacep, genericLogger_t **genericLoggerpp, marpaESLIF_t **marpaESLIFpp, marpaESLIFGrammar_t **marpaESLIFGrammarpp, marpaESLIFRecognizer_t **marpaESLIFRecognizerpp, marpaESLIFRecognizerContext_t **marpaESLIFRecognizerContextpp)
 /*****************************************************************************/
 {
   static const char            *funcs = "ESLIFRecognizer_contextb";
@@ -2187,7 +2148,7 @@ static short ESLIFRecognizer_contextb(JNIEnv *envp, jobject eslifRecognizerp, jo
     RAISEEXCEPTION(envp, "eslifGrammarp is NULL");
   }
 
-  if (! ESLIFGrammar_contextb(envp, eslifGrammarp, objectp, getLoggerInterfacep, genericLoggerpp, genericLoggerContextpp, marpaESLIFpp, marpaESLIFGrammarpp)) {
+  if (! ESLIFGrammar_contextb(envp, eslifGrammarp, objectp, getLoggerInterfacep, genericLoggerpp, marpaESLIFpp, marpaESLIFGrammarpp)) {
     goto err;
   }
 
@@ -2213,7 +2174,6 @@ JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniNew(JNIEnv *envp
   /* Always update genericLogger context */
   if (! ESLIFGrammar_contextb(envp, eslifGrammarp, eslifGrammarp, MARPAESLIF_ESLIFGRAMMAR_CLASS_getLoggerInterfacep_METHODP,
                               NULL /* genericLoggerpp */,
-                              NULL /* genericLoggerContextpp */,
                               NULL /* marpaESLIFpp */,
                               &marpaESLIFGrammarp)) {
     /* An exception was raised */
@@ -2306,7 +2266,6 @@ JNIEXPORT jboolean JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniScan(JNIEnv 
 
   if (! ESLIFRecognizer_contextb(envp, eslifRecognizerp, eslifRecognizerp, MARPAESLIF_ESLIFRECOGNIZER_CLASS_getLoggerInterfacep_METHODP,
                                  NULL /* genericLoggerpp */,
-                                 NULL /* genericLoggerContextpp */,
                                  NULL /* marpaESLIFpp */,
                                  NULL /* marpaESLIFGrammarpp */,
                                  &marpaESLIFRecognizerp,
@@ -2343,7 +2302,6 @@ JNIEXPORT jboolean JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniResume(JNIEn
 
   if (! ESLIFRecognizer_contextb(envp, eslifRecognizerp, eslifRecognizerp, MARPAESLIF_ESLIFRECOGNIZER_CLASS_getLoggerInterfacep_METHODP,
                                  NULL /* genericLoggerpp */,
-                                 NULL /* genericLoggerContextpp */,
                                  NULL /* marpaESLIFpp */,
                                  NULL /* marpaESLIFGrammarpp */,
                                  &marpaESLIFRecognizerp,
@@ -2391,7 +2349,6 @@ JNIEXPORT jboolean JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniLexemeAltern
 
   if (! ESLIFRecognizer_contextb(envp, eslifRecognizerp, eslifRecognizerp, MARPAESLIF_ESLIFRECOGNIZER_CLASS_getLoggerInterfacep_METHODP,
                                  NULL /* genericLoggerpp */,
-                                 NULL /* genericLoggerContextpp */,
                                  NULL /* marpaESLIFpp */,
                                  NULL /* marpaESLIFGrammarpp */,
                                  &marpaESLIFRecognizerp,
@@ -2468,7 +2425,6 @@ JNIEXPORT jboolean JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniLexemeComple
 
   if (! ESLIFRecognizer_contextb(envp, eslifRecognizerp, eslifRecognizerp, MARPAESLIF_ESLIFRECOGNIZER_CLASS_getLoggerInterfacep_METHODP,
                                  NULL /* genericLoggerpp */,
-                                 NULL /* genericLoggerContextpp */,
                                  NULL /* marpaESLIFpp */,
                                  NULL /* marpaESLIFGrammarpp */,
                                  &marpaESLIFRecognizerp,
@@ -2506,7 +2462,6 @@ JNIEXPORT jboolean JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniLexemeRead(J
 
   if (! ESLIFRecognizer_contextb(envp, eslifRecognizerp, eslifRecognizerp, MARPAESLIF_ESLIFRECOGNIZER_CLASS_getLoggerInterfacep_METHODP,
                                  NULL /* genericLoggerpp */,
-                                 NULL /* genericLoggerContextpp */,
                                  NULL /* marpaESLIFpp */,
                                  NULL /* marpaESLIFGrammarpp */,
                                  &marpaESLIFRecognizerp,
@@ -2591,7 +2546,6 @@ JNIEXPORT jboolean JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniLexemeTry(JN
 
   if (! ESLIFRecognizer_contextb(envp, eslifRecognizerp, eslifRecognizerp, MARPAESLIF_ESLIFRECOGNIZER_CLASS_getLoggerInterfacep_METHODP,
                                  NULL /* genericLoggerpp */,
-                                 NULL /* genericLoggerContextpp */,
                                  NULL /* marpaESLIFpp */,
                                  NULL /* marpaESLIFGrammarpp */,
                                  &marpaESLIFRecognizerp,
@@ -2637,7 +2591,6 @@ JNIEXPORT jboolean JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniDiscardTry(J
 
   if (! ESLIFRecognizer_contextb(envp, eslifRecognizerp, eslifRecognizerp, MARPAESLIF_ESLIFRECOGNIZER_CLASS_getLoggerInterfacep_METHODP,
                                  NULL /* genericLoggerpp */,
-                                 NULL /* genericLoggerContextpp */,
                                  NULL /* marpaESLIFpp */,
                                  NULL /* marpaESLIFGrammarpp */,
                                  &marpaESLIFRecognizerp,
@@ -2673,7 +2626,6 @@ JNIEXPORT jobjectArray JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniLexemeEx
 
   if (! ESLIFRecognizer_contextb(envp, eslifRecognizerp, eslifRecognizerp, MARPAESLIF_ESLIFRECOGNIZER_CLASS_getLoggerInterfacep_METHODP,
                                  NULL /* genericLoggerpp */,
-                                 NULL /* genericLoggerContextpp */,
                                  NULL /* marpaESLIFpp */,
                                  NULL /* marpaESLIFGrammarpp */,
                                  &marpaESLIFRecognizerp,
@@ -2729,7 +2681,6 @@ JNIEXPORT jboolean JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniIsEof(JNIEnv
 
   if (! ESLIFRecognizer_contextb(envp, eslifRecognizerp, eslifRecognizerp, MARPAESLIF_ESLIFRECOGNIZER_CLASS_getLoggerInterfacep_METHODP,
                                  NULL /* genericLoggerpp */,
-                                 NULL /* genericLoggerContextpp */,
                                  NULL /* marpaESLIFpp */,
                                  NULL /* marpaESLIFGrammarpp */,
                                  &marpaESLIFRecognizerp,
@@ -2756,7 +2707,6 @@ JNIEXPORT jboolean JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniRead(JNIEnv 
 
   if (! ESLIFRecognizer_contextb(envp, eslifRecognizerp, eslifRecognizerp, MARPAESLIF_ESLIFRECOGNIZER_CLASS_getLoggerInterfacep_METHODP,
                                  NULL /* genericLoggerpp */,
-                                 NULL /* genericLoggerContextpp */,
                                  NULL /* marpaESLIFpp */,
                                  NULL /* marpaESLIFGrammarpp */,
                                  &marpaESLIFRecognizerp,
@@ -2786,7 +2736,6 @@ JNIEXPORT jbyteArray JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniInput(JNIE
 
   if (! ESLIFRecognizer_contextb(envp, eslifRecognizerp, eslifRecognizerp, MARPAESLIF_ESLIFRECOGNIZER_CLASS_getLoggerInterfacep_METHODP,
                                  NULL /* genericLoggerpp */,
-                                 NULL /* genericLoggerContextpp */,
                                  NULL /* marpaESLIFpp */,
                                  NULL /* marpaESLIFGrammarpp */,
                                  &marpaESLIFRecognizerp,
@@ -2837,7 +2786,6 @@ JNIEXPORT jbyteArray JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniLexemeLast
 
   if (! ESLIFRecognizer_contextb(envp, eslifRecognizerp, eslifRecognizerp, MARPAESLIF_ESLIFRECOGNIZER_CLASS_getLoggerInterfacep_METHODP,
                                  NULL /* genericLoggerpp */,
-                                 NULL /* genericLoggerContextpp */,
                                  NULL /* marpaESLIFpp */,
                                  NULL /* marpaESLIFGrammarpp */,
                                  &marpaESLIFRecognizerp,
@@ -2900,7 +2848,6 @@ JNIEXPORT jbyteArray JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniLexemeLast
 
   if (! ESLIFRecognizer_contextb(envp, eslifRecognizerp, eslifRecognizerp, MARPAESLIF_ESLIFRECOGNIZER_CLASS_getLoggerInterfacep_METHODP,
                                  NULL /* genericLoggerpp */,
-                                 NULL /* genericLoggerContextpp */,
                                  NULL /* marpaESLIFpp */,
                                  NULL /* marpaESLIFGrammarpp */,
                                  &marpaESLIFRecognizerp,
@@ -2961,7 +2908,6 @@ JNIEXPORT jbyteArray JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniDiscardLas
 
   if (! ESLIFRecognizer_contextb(envp, eslifRecognizerp, eslifRecognizerp, MARPAESLIF_ESLIFRECOGNIZER_CLASS_getLoggerInterfacep_METHODP,
                                  NULL /* genericLoggerpp */,
-                                 NULL /* genericLoggerContextpp */,
                                  NULL /* marpaESLIFpp */,
                                  NULL /* marpaESLIFGrammarpp */,
                                  &marpaESLIFRecognizerp,
@@ -3010,7 +2956,6 @@ JNIEXPORT jlong JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniLastCompletedOf
 
   if (! ESLIFRecognizer_contextb(envp, eslifRecognizerp, eslifRecognizerp, MARPAESLIF_ESLIFRECOGNIZER_CLASS_getLoggerInterfacep_METHODP,
                                  NULL /* genericLoggerpp */,
-                                 NULL /* genericLoggerContextpp */,
                                  NULL /* marpaESLIFpp */,
                                  NULL /* marpaESLIFGrammarpp */,
                                  &marpaESLIFRecognizerp,
@@ -3055,7 +3000,6 @@ JNIEXPORT jlong JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniLastCompletedLe
 
   if (! ESLIFRecognizer_contextb(envp, eslifRecognizerp, eslifRecognizerp, MARPAESLIF_ESLIFRECOGNIZER_CLASS_getLoggerInterfacep_METHODP,
                                  NULL /* genericLoggerpp */,
-                                 NULL /* genericLoggerContextpp */,
                                  NULL /* marpaESLIFpp */,
                                  NULL /* marpaESLIFGrammarpp */,
                                  &marpaESLIFRecognizerp,
@@ -3100,7 +3044,6 @@ JNIEXPORT jlong JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniLine(JNIEnv *en
 
   if (! ESLIFRecognizer_contextb(envp, eslifRecognizerp, eslifRecognizerp, MARPAESLIF_ESLIFRECOGNIZER_CLASS_getLoggerInterfacep_METHODP,
                                  NULL /* genericLoggerpp */,
-                                 NULL /* genericLoggerContextpp */,
                                  NULL /* marpaESLIFpp */,
                                  NULL /* marpaESLIFGrammarpp */,
                                  &marpaESLIFRecognizerp,
@@ -3126,7 +3069,6 @@ JNIEXPORT jlong JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniColumn(JNIEnv *
 
   if (! ESLIFRecognizer_contextb(envp, eslifRecognizerp, eslifRecognizerp, MARPAESLIF_ESLIFRECOGNIZER_CLASS_getLoggerInterfacep_METHODP,
                                  NULL /* genericLoggerpp */,
-                                 NULL /* genericLoggerContextpp */,
                                  NULL /* marpaESLIFpp */,
                                  NULL /* marpaESLIFGrammarpp */,
                                  &marpaESLIFRecognizerp,
@@ -3159,7 +3101,6 @@ JNIEXPORT jobjectArray JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniEvent(JN
 
   if (! ESLIFRecognizer_contextb(envp, eslifRecognizerp, eslifRecognizerp, MARPAESLIF_ESLIFRECOGNIZER_CLASS_getLoggerInterfacep_METHODP,
                                  NULL /* genericLoggerpp */,
-                                 NULL /* genericLoggerContextpp */,
                                  NULL /* marpaESLIFpp */,
                                  NULL /* marpaESLIFGrammarpp */,
                                  &marpaESLIFRecognizerp,
@@ -3250,7 +3191,6 @@ JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniEventOnOff(JNIEn
 
   if (! ESLIFRecognizer_contextb(envp, eslifRecognizerp, eslifRecognizerp, MARPAESLIF_ESLIFRECOGNIZER_CLASS_getLoggerInterfacep_METHODP,
                                  NULL /* genericLoggerpp */,
-                                 NULL /* genericLoggerContextpp */,
                                  NULL /* marpaESLIFpp */,
                                  NULL /* marpaESLIFGrammarpp */,
                                  &marpaESLIFRecognizerp,
@@ -3323,7 +3263,6 @@ JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniHookDiscardOnOff
 
   if (! ESLIFRecognizer_contextb(envp, eslifRecognizerp, eslifRecognizerp, MARPAESLIF_ESLIFRECOGNIZER_CLASS_getLoggerInterfacep_METHODP,
                                  NULL /* genericLoggerpp */,
-                                 NULL /* genericLoggerContextpp */,
                                  NULL /* marpaESLIFpp */,
                                  NULL /* marpaESLIFGrammarpp */,
                                  &marpaESLIFRecognizerp,
@@ -3350,7 +3289,6 @@ JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniProgressLog(JNIE
 
   if (! ESLIFRecognizer_contextb(envp, eslifRecognizerp, eslifRecognizerp, MARPAESLIF_ESLIFRECOGNIZER_CLASS_getLoggerInterfacep_METHODP,
                                  NULL /* genericLoggerpp */,
-                                 NULL /* genericLoggerContextpp */,
                                  NULL /* marpaESLIFpp */,
                                  NULL /* marpaESLIFGrammarpp */,
                                  &marpaESLIFRecognizerp,
@@ -3396,7 +3334,6 @@ JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniFree(JNIEnv *env
 
   if (ESLIFRecognizer_contextb(envp, eslifRecognizerp, eslifRecognizerp, MARPAESLIF_ESLIFRECOGNIZER_CLASS_getLoggerInterfacep_METHODP,
                                NULL /* genericLoggerpp */,
-                               NULL /* genericLoggerContextpp */,
                                NULL /* marpaESLIFpp */,
                                NULL /* marpaESLIFGrammarpp */,
                                &marpaESLIFRecognizerp,
@@ -3407,7 +3344,7 @@ JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniFree(JNIEnv *env
 }
 
 /*****************************************************************************/
-static short ESLIFValue_contextb(JNIEnv *envp, jobject eslifValuep, jobject objectp, jmethodID getLoggerInterfacep, genericLogger_t **genericLoggerpp, genericLoggerContext_t **genericLoggerContextpp, marpaESLIF_t **marpaESLIFpp, marpaESLIFGrammar_t **marpaESLIFGrammarpp, marpaESLIFRecognizer_t **marpaESLIFRecognizerpp, marpaESLIFRecognizerContext_t **marpaESLIFRecognizerContextpp, marpaESLIFValue_t **marpaESLIFValuepp, marpaESLIFValueContext_t **marpaESLIFValueContextpp)
+static short ESLIFValue_contextb(JNIEnv *envp, jobject eslifValuep, jobject objectp, jmethodID getLoggerInterfacep, genericLogger_t **genericLoggerpp, marpaESLIF_t **marpaESLIFpp, marpaESLIFGrammar_t **marpaESLIFGrammarpp, marpaESLIFRecognizer_t **marpaESLIFRecognizerpp, marpaESLIFRecognizerContext_t **marpaESLIFRecognizerContextpp, marpaESLIFValue_t **marpaESLIFValuepp, marpaESLIFValueContext_t **marpaESLIFValueContextpp)
 /*****************************************************************************/
 {
   static const char        *funcs = "ESLIFValue_contextb";
@@ -3456,7 +3393,6 @@ static short ESLIFValue_contextb(JNIEnv *envp, jobject eslifValuep, jobject obje
                                  objectp,
                                  getLoggerInterfacep,
                                  genericLoggerpp,
-                                 genericLoggerContextpp,
                                  marpaESLIFpp,
                                  marpaESLIFGrammarpp,
                                  marpaESLIFRecognizerpp,
@@ -3488,7 +3424,6 @@ JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIFValue_jniNew(JNIEnv *envp, job
   /* Always update genericLogger context */
   if (! ESLIFRecognizer_contextb(envp, eslifRecognizerp, eslifRecognizerp, MARPAESLIF_ESLIFRECOGNIZER_CLASS_getLoggerInterfacep_METHODP,
                                  NULL /* genericLoggerpp */,
-                                 NULL /* genericLoggerContextpp */,
                                  NULL /* marpaESLIFpp */,
                                  NULL /* marpaESLIFGrammarpp */,
                                  &marpaESLIFRecognizerp,
@@ -3588,7 +3523,6 @@ JNIEXPORT jboolean JNICALL Java_org_parser_marpa_ESLIFValue_jniValue(JNIEnv *env
   
   if (! ESLIFValue_contextb(envp, eslifValuep, eslifValuep, MARPAESLIF_ESLIFVALUE_CLASS_getLoggerInterfacep_METHODP,
                             NULL /* genericLoggerpp */,
-                            NULL /* genericLoggerContextpp */,
                             NULL /* marpaESLIFpp */,
                             NULL /* marpaESLIFGrammarpp */,
                             NULL /* marpaESLIFRecognizerpp */,
@@ -3663,7 +3597,6 @@ JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIFValue_jniFree(JNIEnv *envp, jo
 
   if (ESLIFValue_contextb(envp, eslifValuep, eslifValuep, MARPAESLIF_ESLIFVALUE_CLASS_getLoggerInterfacep_METHODP,
                           NULL /* genericLoggerpp */,
-                          NULL /* genericLoggerContextpp */,
                           NULL /* marpaESLIFpp */,
                           NULL /* marpaESLIFGrammarpp */,
                           NULL /* marpaESLIFRecognizerpp */,
