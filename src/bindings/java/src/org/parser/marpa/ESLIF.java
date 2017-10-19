@@ -15,7 +15,7 @@ import java.util.concurrent.FutureTask;
  * ESLIF is an extension of perl's <a href="https://metacpan.org/pod/Marpa::R2" target="_top">Marpa::R2</a> BNF,
  * written as a stand-alone <a href="http://github.com/jddurand/c-marpaESLIF" target="_top">marpaESLIF</a> library.
  * <p>
- * Please note that the call to the {@link #free()} method is required to dispose the resources allocated by constructors.
+ * Implementation is a multiton, resources being freed when the program exit.
  * <p>
  * Example:
  * <pre>
