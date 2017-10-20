@@ -11,6 +11,9 @@ import java.util.Arrays;
 public class AppThread implements Runnable {
 	ESLIFLoggerInterface eslifLogger;
 	
+	/**
+	 * @param eslifLogger logger interface
+	 */
 	public AppThread(ESLIFLoggerInterface eslifLogger) {
 		this.eslifLogger = eslifLogger;
 	}
