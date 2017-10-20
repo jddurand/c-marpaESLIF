@@ -193,6 +193,13 @@ Grammars themselves are assumed to always fit within a single block of memory. S
 
 Returns C<NULL> if failure, a grammar object instance on success.
 
+=head3 C<marpaESLIFGrammar_unsafe_newp>
+
+  marpaESLIFGrammar_t *marpaESLIFGrammar_unsafe_newp(marpaESLIF_t              *marpaESLIFp,
+                                                     marpaESLIFGrammarOption_t *marpaESLIFGrammarOptionp);
+
+This is the I<not thread-safe> version of C<marpaESLIFGrammar_newp>: you can call it only when you I<know> that your C<marpaESLIFp> is I<not accessed> concurrently with another call to C<marpaESLIFGrammar_unsafe_newp>.
+
 =head3 C<marpaESLIFGrammar_eslifp>
 
   marpaESLIF_t *marpaESLIFGrammar_eslifp(marpaESLIFGrammar_t *marpaESLIFGrammarp);

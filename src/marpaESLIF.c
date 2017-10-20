@@ -257,7 +257,7 @@ static inline marpaESLIF_grammar_t  *_marpaESLIF_bootstrap_grammarp(marpaESLIFGr
                                                                     marpaESLIF_action_t *defaultFreeActionp);
 static inline short                  _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIFGrammarp);
 static inline short                  _marpaESLIFGrammar_haveLexemeb(marpaESLIFGrammar_t *marpaESLIFGrammarp, int grammari, marpaWrapperGrammar_t *marpaWrapperGrammarp, short *haveLexemebp);
-static inline marpaESLIFGrammar_t   *_marpaESLIFGrammar_newp(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammarOption_t *marpaESLIFGrammarOptionp, marpaESLIFGrammar_t *marpaESLIfGrammarPreviousp);
+static inline marpaESLIFGrammar_t   *_marpaESLIFGrammar_newp(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammarOption_t *marpaESLIFGrammarOptionp, marpaESLIFGrammar_t *marpaESLIfGrammarPreviousp, short unsafeb);
 
 static inline short                  _marpaESLIFRecognizer_terminal_matcherb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIF_terminal_t *terminalp, char *inputs, size_t inputl, short eofb, marpaESLIF_matcher_value_t *rcip, marpaESLIFValueResult_t *marpaESLIFValueResultp);
 static inline short                  _marpaESLIFRecognizer_meta_matcherb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIF_symbol_t *symbolp, marpaESLIF_matcher_value_t *rcip, marpaESLIFValueResult_t *marpaESLIFValueResultp, short *exhaustedbp, int maxStartCompletionsi, size_t *lastSizeBeforeCompletionlp, int *numberOfStartCompletionsip);
@@ -3652,7 +3652,7 @@ short marpaESLIF_extend_builtin_actionb(marpaESLIF_t *marpaESLIFp, char **action
   marpaESLIFGrammarOption.encodingl           = 0;
   marpaESLIFGrammarOption.encodingOfEncodings = NULL;
   /* Per def the output of _marpaESLIFGrammar_newp() will be marpaESLIFTmpp->marpaESLIFGrammarp if success */
-  if (_marpaESLIFGrammar_newp(marpaESLIFp, &marpaESLIFGrammarOption, marpaESLIFTmpp->marpaESLIFGrammarp /* marpaESLIfGrammarPreviousp */) == NULL) {
+  if (_marpaESLIFGrammar_newp(marpaESLIFp, &marpaESLIFGrammarOption, marpaESLIFTmpp->marpaESLIFGrammarp /* marpaESLIfGrammarPreviousp */, 0 /* unsafeb */) == NULL) {
     goto err;
   }
 
@@ -4453,11 +4453,23 @@ marpaESLIFGrammar_t *marpaESLIFGrammar_newp(marpaESLIF_t *marpaESLIFp, marpaESLI
     return NULL;
   }
   
-  return _marpaESLIFGrammar_newp(marpaESLIFp, marpaESLIFGrammarOptionp, NULL /* marpaESLIfGrammarPreviousp */);
+  return _marpaESLIFGrammar_newp(marpaESLIFp, marpaESLIFGrammarOptionp, NULL /* marpaESLIfGrammarPreviousp */, 0 /* unsafeb */);
 }
 
 /*****************************************************************************/
-static inline marpaESLIFGrammar_t *_marpaESLIFGrammar_newp(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammarOption_t *marpaESLIFGrammarOptionp, marpaESLIFGrammar_t *marpaESLIfGrammarPreviousp)
+marpaESLIFGrammar_t *marpaESLIFGrammar_unsafe_newp(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammarOption_t *marpaESLIFGrammarOptionp)
+/*****************************************************************************/
+{
+  if (marpaESLIFp == NULL) {
+    errno = EINVAL;
+    return NULL;
+  }
+  
+  return _marpaESLIFGrammar_newp(marpaESLIFp, marpaESLIFGrammarOptionp, NULL /* marpaESLIfGrammarPreviousp */, 1 /* unsafeb */);
+}
+
+/*****************************************************************************/
+static inline marpaESLIFGrammar_t *_marpaESLIFGrammar_newp(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammarOption_t *marpaESLIFGrammarOptionp, marpaESLIFGrammar_t *marpaESLIfGrammarPreviousp, short unsafeb)
 /*****************************************************************************/
 {
   static const char                *funcs                      = "_marpaESLIFGrammar_newp";
@@ -4468,15 +4480,19 @@ static inline marpaESLIFGrammar_t *_marpaESLIFGrammar_newp(marpaESLIF_t *marpaES
   marpaESLIF_readerContext_t        marpaESLIF_readerContext;
   int                               grammari;
 
-  MARPAESLIF_TRACE(marpaESLIFp, funcs, "Cloning ESLIF");
-  /* We say that ESLIF is thread-safe, this is entirely true if building a grammar from it is thread-safe */
-  /* thus we have to clone ESLIF, because this is itself a grammar, and we will use a recognizer from it */
-  marpaESLIFTmpp = _marpaESLIF_newp(&(marpaESLIFp->marpaESLIFOption), 1 /* validateb */);
-  if (marpaESLIFTmpp == NULL) {
-    goto err;
+  if (! unsafeb) {
+    MARPAESLIF_TRACE(marpaESLIFp, funcs, "Cloning ESLIF");
+    /* We say that ESLIF is thread-safe, this is entirely true if building a grammar from it is thread-safe */
+    /* thus we have to clone ESLIF, because this is itself a grammar, and we will use a recognizer from it */
+    marpaESLIFTmpp = _marpaESLIF_newp(&(marpaESLIFp->marpaESLIFOption), 1 /* validateb */);
+    if (marpaESLIFTmpp == NULL) {
+      goto err;
+    }
+    MARPAESLIF_TRACE(marpaESLIFTmpp, funcs, "Building Grammar using ESLIF clone");
+  } else {
+    marpaESLIFTmpp = marpaESLIFp;
+    MARPAESLIF_TRACE(marpaESLIFTmpp, funcs, "Building Grammar using ESLIF");
   }
-
-  MARPAESLIF_TRACE(marpaESLIFTmpp, funcs, "Building Grammar using ESLIF clone");
 
   if (marpaESLIFGrammarOptionp == NULL) {
     MARPAESLIF_ERROR(marpaESLIFTmpp, "marpaESLIFGrammarOptionp must be set");
@@ -4552,8 +4568,10 @@ static inline marpaESLIFGrammar_t *_marpaESLIFGrammar_newp(marpaESLIF_t *marpaES
     break;
   }
 
-  /* Success. We have to take care of one thing: the new grammar maintains a pointer to its parent's ESLIF */
-  marpaESLIFGrammarp->marpaESLIFp = marpaESLIFp;
+  if (! unsafeb) {
+    /* Success. We have to take care of one thing: the new grammar maintains a pointer to its parent's ESLIF */
+    marpaESLIFGrammarp->marpaESLIFp = marpaESLIFp;
+  }
   
   goto done;
 
@@ -4565,8 +4583,10 @@ static inline marpaESLIFGrammar_t *_marpaESLIFGrammar_newp(marpaESLIF_t *marpaES
   marpaESLIFGrammarp = NULL;
 
  done:
-  if (marpaESLIFTmpp != NULL) {
-    marpaESLIF_freev(marpaESLIFTmpp);
+  if (! unsafeb) {
+    if (marpaESLIFTmpp != NULL) {
+      marpaESLIF_freev(marpaESLIFTmpp);
+    }
   }
 
   return marpaESLIFGrammarp;
