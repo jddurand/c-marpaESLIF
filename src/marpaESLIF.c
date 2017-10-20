@@ -4461,31 +4461,40 @@ static inline marpaESLIFGrammar_t *_marpaESLIFGrammar_newp(marpaESLIF_t *marpaES
 /*****************************************************************************/
 {
   static const char                *funcs                      = "_marpaESLIFGrammar_newp";
+  marpaESLIF_t                     *marpaESLIFTmpp             = NULL;
   marpaESLIFRecognizerOption_t      marpaESLIFRecognizerOption = marpaESLIFRecognizerOption_default_template;
   marpaESLIFValueOption_t           marpaESLIFValueOption      = marpaESLIFValueOption_default_template;
   marpaESLIFGrammar_t              *marpaESLIFGrammarp         = NULL;
   marpaESLIF_readerContext_t        marpaESLIF_readerContext;
   int                               grammari;
 
-  /* MARPAESLIF_TRACE(marpaESLIFp, funcs, "Building Grammar"); */
+  MARPAESLIF_TRACE(marpaESLIFp, funcs, "Cloning ESLIF");
+  /* We say that ESLIF is thread-safe, this is entirely true if building a grammar from it is thread-safe */
+  /* thus we have to clone ESLIF, because this is itself a grammar, and we will use a recognizer from it */
+  marpaESLIFTmpp = _marpaESLIF_newp(&(marpaESLIFp->marpaESLIFOption), 1 /* validateb */);
+  if (marpaESLIFTmpp == NULL) {
+    goto err;
+  }
+
+  MARPAESLIF_TRACE(marpaESLIFTmpp, funcs, "Building Grammar using ESLIF clone");
 
   if (marpaESLIFGrammarOptionp == NULL) {
-    MARPAESLIF_ERROR(marpaESLIFp, "marpaESLIFGrammarOptionp must be set");
+    MARPAESLIF_ERROR(marpaESLIFTmpp, "marpaESLIFGrammarOptionp must be set");
     goto err;
   }
 
   if (marpaESLIFGrammarOptionp->bytep == NULL) {
-    MARPAESLIF_ERRORF(marpaESLIFp, funcs, "Null source pointer");
+    MARPAESLIF_ERRORF(marpaESLIFTmpp, funcs, "Null source pointer");
     goto err;
   }
 
   if (marpaESLIfGrammarPreviousp == NULL) {
     marpaESLIFGrammarp = (marpaESLIFGrammar_t *) malloc(sizeof(marpaESLIFGrammar_t));
     if (marpaESLIFGrammarp == NULL) {
-      MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
+      MARPAESLIF_ERRORF(marpaESLIFTmpp, "malloc failure, %s", strerror(errno));
       goto err;
     }
-    marpaESLIFGrammarp->marpaESLIFp             = marpaESLIFp;
+    marpaESLIFGrammarp->marpaESLIFp             = marpaESLIFTmpp;
     marpaESLIFGrammarp->marpaESLIFGrammarOption = *marpaESLIFGrammarOptionp;
     marpaESLIFGrammarp->grammarStackp           = NULL;
     marpaESLIFGrammarp->grammarp                = NULL;
@@ -4497,7 +4506,7 @@ static inline marpaESLIFGrammar_t *_marpaESLIFGrammar_newp(marpaESLIF_t *marpaES
   }
 
   /* Our internal grammar reader callback */
-  marpaESLIF_readerContext.marpaESLIFp              = marpaESLIFp;
+  marpaESLIF_readerContext.marpaESLIFp              = marpaESLIFTmpp;
   marpaESLIF_readerContext.marpaESLIFGrammarOptionp = marpaESLIFGrammarOptionp;
 
   /* Overwrite things not setted in the template, or with which we want a change */
@@ -4514,7 +4523,7 @@ static inline marpaESLIFGrammar_t *_marpaESLIFGrammar_newp(marpaESLIF_t *marpaES
 
   /* Parser will automatically create marpaESLIFValuep and assign an internal recognizer to its userDatavp */
   /* The value of our internal parser is a grammar stack */
-  if (! _marpaESLIFGrammar_parseb(marpaESLIFp->marpaESLIFGrammarp,
+  if (! _marpaESLIFGrammar_parseb(marpaESLIFTmpp->marpaESLIFGrammarp,
                                   &marpaESLIFRecognizerOption,
                                   &marpaESLIFValueOption,
                                   0, /* discardb */
@@ -4543,6 +4552,9 @@ static inline marpaESLIFGrammar_t *_marpaESLIFGrammar_newp(marpaESLIF_t *marpaES
     break;
   }
 
+  /* Success. We have to take care of one thing: the new grammar maintains a pointer to its parent's ESLIF */
+  marpaESLIFGrammarp->marpaESLIFp = marpaESLIFp;
+  
   goto done;
 
  err:
@@ -4553,6 +4565,10 @@ static inline marpaESLIFGrammar_t *_marpaESLIFGrammar_newp(marpaESLIF_t *marpaES
   marpaESLIFGrammarp = NULL;
 
  done:
+  if (marpaESLIFTmpp != NULL) {
+    marpaESLIF_freev(marpaESLIFTmpp);
+  }
+
   return marpaESLIFGrammarp;
 }
 
