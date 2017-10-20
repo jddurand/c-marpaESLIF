@@ -19,13 +19,15 @@ public class AppParse  {
 		int       ithread;
 		ArrayList<Thread> threadlist = new ArrayList<Thread>();
 		int       nbalive;
-		
+
+		/*
 		eslifLogger.info(" ATTACH ME");
 		try {
 			TimeUnit.SECONDS.sleep(10);
 		} catch (InterruptedException e) {
 			System.err.println(e);
 		}
+		*/
 		
 		eslifLogger.info("Running over " + nbthread + " threads, using two loggers");
 		
