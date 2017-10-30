@@ -550,7 +550,7 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
   marpaESLIF_string_t              *content2descp         = NULL;
   char                             *generatedasciis       = NULL;
   short                             memcmpb               = 0;
-  marpaESLIF_terminal_t            *terminalp;
+  marpaESLIF_terminal_t            *terminalp             = NULL;
   marpaWrapperGrammarSymbolOption_t marpaWrapperGrammarSymbolOption;
   marpaESLIF_uint32_t               pcre2Optioni = PCRE2_ANCHORED;
   int                               pcre2Errornumberi;
