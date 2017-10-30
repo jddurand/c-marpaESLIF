@@ -10516,7 +10516,7 @@ static inline short _marpaESLIFRecognizer_flush_charconv(marpaESLIFRecognizer_t 
 {
   static const char *funcs       = "_marpaESLIFRecognizer_flush_charconv";
   marpaESLIF_t      *marpaESLIFp = marpaESLIFRecognizerp->marpaESLIFp;
-  char              *utf8s;
+  char              *utf8s       = NULL;
   size_t             utf8l;
   short              rcb;
 
