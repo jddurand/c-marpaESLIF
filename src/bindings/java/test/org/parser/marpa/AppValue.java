@@ -146,31 +146,26 @@ public class AppValue implements ESLIFValueInterface {
 		}
 	}
 
-	@Override
 	public void setSymbolName(String symbolName) {
 		this.symbolName = symbolName;	
 		System.err.println("... Symbol name: " + symbolName);
 	}
 
-	@Override
 	public void setSymbolNumber(int symbolNumber) {
 		this.symbolNumber = symbolNumber;
 		System.err.println("... Symbol number: " + symbolNumber);
 	}
 
-	@Override
 	public void setRuleName(String ruleName) {
 		this.ruleName = ruleName;	
 		System.err.println("... Rule name: " + ruleName);
 	}
 
-	@Override
 	public void setRuleNumber(int ruleNumber) {
 		this.ruleNumber = ruleNumber;	
 		System.err.println("... Rule number: " + ruleNumber);
 	}
 
-	@Override
 	public void setGrammar(ESLIFGrammar grammar) {
 		this.grammar = grammar;
 	}

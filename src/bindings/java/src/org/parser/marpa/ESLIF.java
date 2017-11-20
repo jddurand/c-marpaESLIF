@@ -49,7 +49,7 @@ public class ESLIF {
 	private native void          jniNew(int loggerInterfaceIndice) throws ESLIFException;
 	// private native void          jniFree() throws ESLIFException;
 	private native String        jniVersion();
-    private static final ConcurrentMap<ESLIFLoggerInterface, Future<ESLIF>> multitons = new ConcurrentHashMap<>();
+    private static final ConcurrentMap<ESLIFLoggerInterface, Future<ESLIF>> multitons = new ConcurrentHashMap<ESLIFLoggerInterface, Future<ESLIF>>();
     /* Because a null key is not possible with a ConcurrentHashMap */
     private static final ESLIFLoggerInterface nullLoggerInterface = new ESLIFMultitonNullLogger();
     /* Because genericLogger needs a "constant" */
