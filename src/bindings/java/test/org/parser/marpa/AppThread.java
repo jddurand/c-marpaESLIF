@@ -18,7 +18,6 @@ public class AppThread implements Runnable {
 		this.eslifLogger = eslifLogger;
 	}
 
-	@Override
 	public void run() {
 		try {
 			ESLIF eslif = ESLIF.getInstance(eslifLogger);
