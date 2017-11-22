@@ -91,7 +91,4 @@ MACRO (MYPACKAGELIBRARY config_in config_out)
   # Add dependencies to config and export headers
   #
   ADD_DEPENDENCIES(${PROJECT_NAME} ${PROJECT_NAME}Config ${PROJECT_NAME}Export)
-  #
-  # Install targets
-  #
 ENDMACRO()

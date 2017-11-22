@@ -34,6 +34,7 @@ MACRO(MyPackageMan PODFILE MANFILE SECTION VERSION)
           INSTALL(
 	    FILES "${CMAKE_CURRENT_BINARY_DIR}/${MANFILE}.${SECTION}.gz"
 	    DESTINATION "share/man/man${SECTION}"
+            COMPONENT documentations
 	    )
         ENDIF ()
       ENDIF ()
