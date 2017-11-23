@@ -19,3 +19,13 @@ MYPACKAGEDEPENDENCY (genericLogger "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/
 # Tests #
 #########
 MYPACKAGECHECK(genericHashTester)
+
+#############
+# Packaging #
+#############
+MYPACKAGEPACK("" "Generic Logger")
+
+#########
+# Setup #
+#########
+MYPACKAGEPRINTSETUP()
