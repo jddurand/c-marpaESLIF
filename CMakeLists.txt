@@ -22,3 +22,13 @@ MYPACKAGETESTEXECUTABLE(genericLoggerTester test/genericLoggerTester.c)
 # Tests #
 #########
 MYPACKAGECHECK(genericLoggerTester)
+
+#############
+# Packaging #
+#############
+MYPACKAGEPACK("" "Generic Logger")
+
+#########
+# Setup #
+#########
+MYPACKAGEPRINTSETUP()
