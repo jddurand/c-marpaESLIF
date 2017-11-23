@@ -1,13 +1,8 @@
 language: c
 sudo: required
-addons:
-  apt:
-    sources:
-      - george-edison55-precise-backports
-    packages:
-      - cmake
-      - cmake-data
 before_script:
+  - sudo apt-get update
+  - sudo apt-get install nsis
 # Dependencies
   - sh ./install-c-genericLogger.sh
   - sh ./install-c-genericStack.sh
@@ -18,5 +13,6 @@ script:
   - rm -rf output CMakeCache.txt CMakeFiles
   - cmake .
   - make check
-  - make package
+  - make pack
+  - cpack -G NSIS
   - sudo make install
