@@ -75,8 +75,8 @@ MACRO (MYPACKAGELIBRARY config_in config_out)
       TARGET_INCLUDE_DIRECTORIES(${_target} PUBLIC ${_include_directory})
     ENDFOREACH ()
   ENDFOREACH ()
-  INSTALL (TARGETS ${PROJECT_NAME}        LIBRARY DESTINATION lib COMPONENT DynamicLibraryComponent)
-  INSTALL (TARGETS ${PROJECT_NAME}_static ARCHIVE DESTINATION lib COMPONENT StaticLibraryComponent)
+  INSTALL (TARGETS ${PROJECT_NAME}        ARCHIVE DESTINATION lib LIBRARY DESTINATION lib COMPONENT DynamicLibraryComponent)
+  INSTALL (TARGETS ${PROJECT_NAME}_static ARCHIVE DESTINATION lib LIBRARY DESTINATION lib COMPONENT StaticLibraryComponent)
   #
   # Call for the configuration
   #
