@@ -30,7 +30,11 @@ MACRO (MYPACKAGEPACK VENDOR SUMMARY)
   #
   SET (CPACK_COMPONENTS_ALL_IN_ONE_PACKAGE 1)
   #
-  # Finally, include CPack
+  # Do not get fooled by components out of our control
+  #
+  SET (CPACK_COMPONENTS_ALL ManpageComponent DynamicLibraryComponent StaticLibraryComponent HeaderComponent ApplicationComponent)
+  #
+  # Include CPack - from now on we will have access to CPACK own macros
   #
   INCLUDE (CPack)
   #
@@ -74,4 +78,23 @@ MACRO (MYPACKAGEPACK VENDOR SUMMARY)
                       GROUP RuntimeGroup
                       INSTALL_TYPES FullType
                       DEPENDS DynamicLibraryComponent)
+  #
+  # Quite subtil, but the "package" target is not visible at this time. There is a old standing bug
+  # in CMake about this.
+  # We use a custom target for package generation.
+  # In addition documentation is generated using the INSTALL(CODE xxx) hack.
+  #
+  ADD_CUSTOM_TARGET(pack_source
+    COMMAND ${CMAKE_MAKE_PROGRAM} package_source
+    COMMENT "Packaging Source files"
+    DEPENDS man
+    VERBATIM
+    )
+  ADD_CUSTOM_TARGET(pack
+    COMMAND ${CMAKE_MAKE_PROGRAM} package
+    COMMENT "Packaging Source files"
+    DEPENDS man
+    VERBATIM
+    )
+		    
 ENDMACRO()
