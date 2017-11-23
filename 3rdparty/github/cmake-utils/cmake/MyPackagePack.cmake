@@ -136,12 +136,6 @@ MACRO (MYPACKAGEPACK VENDOR SUMMARY)
   # We use a custom target for package generation.
   # In addition documentation is generated using the INSTALL(CODE xxx) hack.
   #
-  ADD_CUSTOM_TARGET(pack_source
-    COMMAND ${CMAKE_MAKE_PROGRAM} package_source
-    COMMENT "Packaging Source files"
-    DEPENDS man
-    VERBATIM
-    )
   ADD_CUSTOM_TARGET(pack
     COMMAND ${CMAKE_MAKE_PROGRAM} package
     COMMENT "Packaging Source files"
