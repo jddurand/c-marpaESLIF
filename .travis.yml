@@ -11,4 +11,5 @@ before_script:
 script:
   - make check
   - make pack
+  - cpack -G NSIS
   - sudo make install
