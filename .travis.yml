@@ -1,11 +1,5 @@
 language: c
-addons:
-  apt:
-    sources:
-      - george-edison55-precise-backports
-    packages:
-      - cmake
-      - cmake-data
+sudo: required
 before_script:
 # We want to try perl standalone first
   - sudo apt-get update
