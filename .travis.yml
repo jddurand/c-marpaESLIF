@@ -16,5 +16,5 @@ before_script:
   - cmake .
 script:
   - make check
-  - make package
+  - make pack
   - sudo make install
