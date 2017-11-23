@@ -40,44 +40,96 @@ MACRO (MYPACKAGEPACK VENDOR SUMMARY)
   #
   # Install types
   #
-  CPACK_ADD_INSTALL_TYPE (FullType        DISPLAY_NAME "Full")
-  CPACK_ADD_INSTALL_TYPE (DevelopmentType DISPLAY_NAME "Development")
+  IF (_HAVE_HEADERCOMPONENT OR _HAVE_DYNAMICLIBRARYCOMPONENT OR _HAVE_STATICLIBRARYCOMPONENT OR _HAVE_APPLICATIONCOMPONENT OR _HAVE_MANPAGECOMPONENT)
+    SET (_CAN_FULLTYPE TRUE)
+  ELSE ()
+    SET (_CAN_FULLTYPE FALSE)
+  ENDIF ()
+  IF (_HAVE_HEADERCOMPONENT OR _HAVE_DYNAMICLIBRARYCOMPONENT OR _HAVE_STATICLIBRARYCOMPONENT)
+    SET (_CAN_DEVELOPMENTTYPE TRUE)
+  ELSE ()
+    SET (_CAN_DEVELOPMENTTYPE FALSE)
+  ENDIF ()
+  IF (_CAN_FULLTYPE)
+    CPACK_ADD_INSTALL_TYPE (FullType        DISPLAY_NAME "Full")
+  ENDIF ()
+  IF (_CAN_DEVELOPMENTTYPE)
+    CPACK_ADD_INSTALL_TYPE (DevelopmentType DISPLAY_NAME "Development")
+  ENDIF ()
   #
   # Groups
   #
-  CPACK_ADD_COMPONENT_GROUP (DevelopmentGroup        DISPLAY_NAME "Development" DESCRIPTION "Develoment files\n\nThis group contains libraries and headers"  EXPANDED)
-  CPACK_ADD_COMPONENT_GROUP (DevelopmentLibraryGroup DISPLAY_NAME "Libraries"   DESCRIPTION "Library files\n\nBoth static and dynamic version are provided" PARENT_GROUP DevelopmentGroup)
-  CPACK_ADD_COMPONENT_GROUP (DocumentGroup           DISPLAY_NAME "Documents"   DESCRIPTION "Document files\n\nThis group contains all the provided documentation" EXPANDED)
-  CPACK_ADD_COMPONENT_GROUP (RuntimeGroup            DISPLAY_NAME "Runtime"     DESCRIPTION "Runtime applications"  EXPANDED)
+  IF (_HAVE_HEADERCOMPONENT)
+    SET (_CAN_DEVELOPMENTGROUP TRUE)
+  ELSE ()
+    SET (_CAN_DEVELOPMENTGROUP FALSE)
+  ENDIF ()
+  IF (_HAVE_DYNAMICLIBRARYCOMPONENT OR _HAVE_STATICLIBRARYCOMPONENT)
+    SET (_CAN_DEVELOPMENTLIBRARYGROUP TRUE)
+  ELSE ()
+    SET (_CAN_DEVELOPMENTLIBRARYGROUP FALSE)
+  ENDIF ()
+  IF (_HAVE_MANPAGECOMPONENT)
+    SET (_CAN_DOCUMENTGROUP TRUE)
+  ELSE ()
+    SET (_CAN_DOCUMENTGROUP FALSE)
+  ENDIF ()
+  IF (_HAVE_APPLICATIONCOMPONENT)
+    SET (_CAN_RUNTIMEGROUP TRUE)
+  ELSE ()
+    SET (_CAN_RUNTIMEGROUP FALSE)
+  ENDIF ()
+  IF (_CAN_DEVELOPMENTGROUP)
+    CPACK_ADD_COMPONENT_GROUP (DevelopmentGroup        DISPLAY_NAME "Development" DESCRIPTION "Develoment files\n\nThis group contains libraries and headers"  EXPANDED)
+  ENDIF ()
+  IF (_CAN_DEVELOPMENTLIBRARYGROUP)
+    CPACK_ADD_COMPONENT_GROUP (DevelopmentLibraryGroup DISPLAY_NAME "Libraries"   DESCRIPTION "Library files\n\nBoth static and dynamic version are provided" PARENT_GROUP DevelopmentGroup)
+  ENDIF ()
+  IF (_CAN_DOCUMENTGROUP)
+    CPACK_ADD_COMPONENT_GROUP (DocumentGroup           DISPLAY_NAME "Documents"   DESCRIPTION "Document files\n\nThis group contains all the provided documentation" EXPANDED)
+  ENDIF ()
+  IF (_CAN_RUNTIMEGROUP)
+    CPACK_ADD_COMPONENT_GROUP (RuntimeGroup            DISPLAY_NAME "Runtime"     DESCRIPTION "Runtime applications"  EXPANDED)
+  ENDIF ()
   #
   # Components
   #
-  CPACK_ADD_COMPONENT(ManpageComponent
-                      DISPLAY_NAME "Man pages"
-                      DESCRIPTION "Documentation in the man format\n\nUseful on all platforms but Windows, in general"
-                      GROUP DocumentGroup
-                      INSTALL_TYPES FullType)
-  CPACK_ADD_COMPONENT(DynamicLibraryComponent
-                      DISPLAY_NAME "Dynamic"
-                      DESCRIPTION "Dynamic Libraries\n\nNecessary almost anytime"
-                      GROUP DevelopmentLibraryGroup
-                      INSTALL_TYPES FullType DevelopmentType)
-  CPACK_ADD_COMPONENT(StaticLibraryComponent
-                      DISPLAY_NAME "Static"
-                      DESCRIPTION "Static Libraries\n\nOnly programmers would eventually need that"
-                      GROUP DevelopmentLibraryGroup
-                      INSTALL_TYPES FullType DevelopmentType)
-  CPACK_ADD_COMPONENT(HeaderComponent
-                      DISPLAY_NAME "Headers"
-                      DESCRIPTION "C/C++ Headers\n\nProgrammers will need these files"
-                      GROUP DevelopmentGroup
-                      INSTALL_TYPES FullType DevelopmentType)
-  CPACK_ADD_COMPONENT(ApplicationComponent
-                      DISPLAY_NAME "Applications"
-                      DESCRIPTION "Executables"
-                      GROUP RuntimeGroup
-                      INSTALL_TYPES FullType
-                      DEPENDS DynamicLibraryComponent)
+  IF (_HAVE_MANPAGECOMPONENT)
+    CPACK_ADD_COMPONENT(ManpageComponent
+                        DISPLAY_NAME "Man pages"
+                        DESCRIPTION "Documentation in the man format\n\nUseful on all platforms but Windows, in general"
+                        GROUP DocumentGroup
+                        INSTALL_TYPES FullType)
+  ENDIF ()
+  IF (_HAVE_DYNAMICLIBRARYCOMPONENT)
+    CPACK_ADD_COMPONENT(DynamicLibraryComponent
+                        DISPLAY_NAME "Dynamic"
+                        DESCRIPTION "Dynamic Libraries\n\nNecessary almost anytime"
+                        GROUP DevelopmentLibraryGroup
+                        INSTALL_TYPES FullType DevelopmentType)
+  ENDIF ()
+  IF (_HAVE_STATICLIBRARYCOMPONENT)
+    CPACK_ADD_COMPONENT(StaticLibraryComponent
+                        DISPLAY_NAME "Static"
+                        DESCRIPTION "Static Libraries\n\nOnly programmers would eventually need that"
+                        GROUP DevelopmentLibraryGroup
+                        INSTALL_TYPES FullType DevelopmentType)
+  ENDIF ()
+  IF (_HAVE_HEADERCOMPONENT)
+    CPACK_ADD_COMPONENT(HeaderComponent
+                        DISPLAY_NAME "Headers"
+                        DESCRIPTION "C/C++ Headers\n\nProgrammers will need these files"
+                        GROUP DevelopmentGroup
+                        INSTALL_TYPES FullType DevelopmentType)
+  ENDIF ()
+  IF (_HAVE_APPLICATIONCOMPONENT)
+    CPACK_ADD_COMPONENT(ApplicationComponent
+                        DISPLAY_NAME "Applications"
+                        DESCRIPTION "Executables"
+                        GROUP RuntimeGroup
+                        INSTALL_TYPES FullType
+                        DEPENDS DynamicLibraryComponent)
+  ENDIF ()
   #
   # Quite subtil, but the "package" target is not visible at this time. There is a old standing bug
   # in CMake about this.
