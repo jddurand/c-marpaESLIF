@@ -1,20 +1,20 @@
-MACRO (MYPACKAGEPACK VENDOR DESCRIPTION)
+MACRO (MYPACKAGEPACK VENDOR SUMMARY)
   #
-  # Set-up packaging
+  # Set common CPack variables
   #
   IF (MYPACKAGE_DEBUG)
-    MESSAGE (STATUS "[${PROJECT_NAME}-PACK-DEBUG] Configure packaging")
+    MESSAGE (STATUS "[${PROJECT_NAME}-BOOTSTRAP-DEBUG] Configuration CPack")
   ENDIF ()
-  SET (CPACK_PACKAGE_NAME          "${PROJECT_NAME}")
-  SET (CPACK_PACKAGE_VENDOR        "${VENDOR}")
-  SET (CPACK_PACKAGE_DESCRIPTION   "${DESCRIPTION}")
-  SET (CPACK_PACKAGE_VERSION       "${${PROJECT_NAME}_VERSION}")
-  SET (CPACK_PACKAGE_VERSION_MAJOR "${${PROJECT_NAME}_VERSION_MAJOR}")
-  SET (CPACK_PACKAGE_VERSION_MINOR "${${PROJECT_NAME}_VERSION_MINOR}")
-  SET (CPACK_PACKAGE_VERSION_PATCH "${${PROJECT_NAME}_VERSION_PATCH}")
+  SET (CPACK_PACKAGE_NAME                "${PROJECT_NAME}")
+  SET (CPACK_PACKAGE_VENDOR              "${VENDOR}")
+  SET (CPACK_PACKAGE_DESCRIPTION_SUMMARY "${SUMMARY}")
+  SET (CPACK_PACKAGE_VERSION             "${${PROJECT_NAME}_VERSION}")
+  SET (CPACK_PACKAGE_VERSION_MAJOR       "${${PROJECT_NAME}_VERSION_MAJOR}")
+  SET (CPACK_PACKAGE_VERSION_MINOR       "${${PROJECT_NAME}_VERSION_MINOR}")
+  SET (CPACK_PACKAGE_VERSION_PATCH       "${${PROJECT_NAME}_VERSION_PATCH}")
   IF (EXISTS "${PROJECT_SOURCE_DIR}/LICENSE")
     CONFIGURE_FILE ("${PROJECT_SOURCE_DIR}/LICENSE"  "${CMAKE_CURRENT_BINARY_DIR}/LICENSE.txt")
-    SET (CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_BINARY_DIR}/LICENSE.txt")
+    SET (CPACK_RESOURCE_FILE_LICENSE     "${CMAKE_CURRENT_BINARY_DIR}/LICENSE.txt")
   ELSE ()
     IF (MYPACKAGE_DEBUG)
       MESSAGE (STATUS "[${PROJECT_NAME}-START-DEBUG] No LICENSE")
@@ -26,49 +26,52 @@ MACRO (MYPACKAGEPACK VENDOR DESCRIPTION)
   #
   SET (CPACK_ARCHIVE_COMPONENT_INSTALL TRUE)
   #
-  # List components automatically setup
-  #
-  SET (CPACK_ALL_INSTALL_TYPES Full Developer)
-
-  SET (CPACK_COMPONENT_DOCUMENTATIONS_INSTALL_TYPES Full)
-  SET (CPACK_COMPONENT_DOCUMENTATIONS_DISPLAY_NAME "Documentations")
-  SET (CPACK_COMPONENT_DOCUMENTATIONS_DESCRIPTION "${PROJECT_NAME} documentation")
-
-  SET (CPACK_COMPONENT_LIBRARIES_INSTALL_TYPES Full Developer)
-  SET (CPACK_COMPONENT_LIBRARIES_DISPLAY_NAME "Libraries")
-  SET (CPACK_COMPONENT_LIBRARIES_DESCRIPTION "${PROJECT_NAME} libraries")
-
-  SET (CPACK_COMPONENT_HEADERS_DEPENDS libraries)
-  SET (CPACK_COMPONENT_HEADERS_INSTALL_TYPES Full Developer)
-  SET (CPACK_COMPONENT_HEADERS_DISPLAY_NAME "C/C++ Headers")
-  SET (CPACK_COMPONENT_HEADERS_DESCRIPTION "${PROJECT_NAME} development headers")
-
-  SET (CPACK_COMPONENT_APPLICATIONS_DEPENDS libraries)
-  SET (CPACK_COMPONENT_APPLICATIONS_INSTALL_TYPES Full)
-  SET (CPACK_COMPONENT_APPLICATIONS_DISPLAY_NAME "Applications")
-  SET (CPACK_COMPONENT_APPLICATIONS_DESCRIPTION "Applications that makes use of ${PROJECT_NAME}")
-
-  SET (CPACK_COMPONENTS_ALL documentations libraries headers applications)
-
-  SET (CPACK_COMPONENT_APPLICATIONS_GROUP "Runtime")
-  SET (CPACK_COMPONENT_LIBRARIES_GROUP "Development")
-  SET (CPACK_COMPONENT_DOCUMENTATIONS_GROUP "Documentation")
-  SET (CPACK_COMPONENT_HEADERS_GROUP "Development")
-
-  SET (CPACK_COMPONENT_GROUP_APPLICATIONS_DESCRIPTION "${PROJECT_NAME} applications")
-  SET (CPACK_COMPONENT_GROUP_RUNTIME_DESCRIPTION "${PROJECT_NAME} runtime files")
-  SET (CPACK_COMPONENT_GROUP_DOCUMENTATIONS_DESCRIPTION "${PROJECT_NAME} documentation")
-  SET (CPACK_COMPONENT_GROUP_DEVELOPMENT_DESCRIPTION "${PROJECT_NAME} development")
-
-  #
   # Get all components in one package
   #
   SET (CPACK_COMPONENTS_ALL_IN_ONE_PACKAGE 1)
   #
-  # Enable Packaging
+  # Finally, include CPack
   #
-  IF (MYPACKAGE_DEBUG)
-    MESSAGE (STATUS "[${PROJECT_NAME}-PACK-DEBUG] Include CPack")
-  ENDIF ()
   INCLUDE (CPack)
+  #
+  # Install types
+  #
+  CPACK_ADD_INSTALL_TYPE (FullType        DISPLAY_NAME "Full")
+  CPACK_ADD_INSTALL_TYPE (DevelopmentType DISPLAY_NAME "Development")
+  #
+  # Groups
+  #
+  CPACK_ADD_COMPONENT_GROUP (DevelopmentGroup        DISPLAY_NAME "Development" DESCRIPTION "Develoment files\n\nThis group contains libraries and headers"  EXPANDED)
+  CPACK_ADD_COMPONENT_GROUP (DevelopmentLibraryGroup DISPLAY_NAME "Libraries"   DESCRIPTION "Library files\n\nBoth static and dynamic version are provided" PARENT_GROUP DevelopmentGroup)
+  CPACK_ADD_COMPONENT_GROUP (DocumentGroup           DISPLAY_NAME "Documents"   DESCRIPTION "Document files\n\nThis group contains all the provided documentation" EXPANDED)
+  CPACK_ADD_COMPONENT_GROUP (RuntimeGroup            DISPLAY_NAME "Runtime"     DESCRIPTION "Runtime applications"  EXPANDED)
+  #
+  # Components
+  #
+  CPACK_ADD_COMPONENT(ManpageComponent
+                      DISPLAY_NAME "Man pages"
+                      DESCRIPTION "Documentation in the man format\n\nUseful on all platforms but Windows, in general"
+                      GROUP DocumentGroup
+                      INSTALL_TYPES FullType)
+  CPACK_ADD_COMPONENT(DynamicLibraryComponent
+                      DISPLAY_NAME "Dynamic"
+                      DESCRIPTION "Dynamic Libraries\n\nNecessary almost anytime"
+                      GROUP DevelopmentLibraryGroup
+                      INSTALL_TYPES FullType DevelopmentType)
+  CPACK_ADD_COMPONENT(StaticLibraryComponent
+                      DISPLAY_NAME "Static"
+                      DESCRIPTION "Static Libraries\n\nOnly programmers would eventually need that"
+                      GROUP DevelopmentLibraryGroup
+                      INSTALL_TYPES FullType DevelopmentType)
+  CPACK_ADD_COMPONENT(HeaderComponent
+                      DISPLAY_NAME "Headers"
+                      DESCRIPTION "C/C++ Headers\n\nProgrammers will need these files"
+                      GROUP DevelopmentGroup
+                      INSTALL_TYPES FullType DevelopmentType)
+  CPACK_ADD_COMPONENT(ApplicationComponent
+                      DISPLAY_NAME "Applications"
+                      DESCRIPTION "Executables"
+                      GROUP RuntimeGroup
+                      INSTALL_TYPES FullType
+                      DEPENDS DynamicLibraryComponent)
 ENDMACRO()

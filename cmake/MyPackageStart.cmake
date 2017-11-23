@@ -116,7 +116,7 @@ MACRO (MYPACKAGESTART packageName versionMajor versionMinor versionPatch)
     ENDIF ()
     FILE (RELATIVE_PATH _relfile ${PROJECT_SOURCE_DIR} ${_file})
     GET_FILENAME_COMPONENT(_dir ${_relfile} DIRECTORY)
-    INSTALL(FILES ${_file} DESTINATION ${_dir} COMPONENT headers)
+    INSTALL(FILES ${_file} DESTINATION ${_dir} COMPONENT HeaderComponent)
   ENDFOREACH()
   #
   # Make sure current project have a property associating its default directories
