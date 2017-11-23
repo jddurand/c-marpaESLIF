@@ -39,6 +39,9 @@ CTestTestfile.cmake
 Makefile
 cmake_install.cmake
 install_manifest.txt
+install_manifest_*.txt
+CPackConfig.cmake
+CPackSourceConfig.cmake
 
 # Visual Studio garbage
 *.vcxproj
@@ -82,3 +85,4 @@ src/bindings/perl/.build
 src/bindings/perl/Changes
 src/bindings/perl/META.json
 src/bindings/perl/README.pod
+LICENSE.txt
