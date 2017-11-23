@@ -7,10 +7,14 @@ before_script:
   - sh ./install-c-genericLogger.sh
   - sh ./install-c-genericStack.sh
 script:
+# ALL_IN_ONE
   - cmake . -DALL_IN_ONE=ON
   - make check
+  - make pack
+  - cpack -G NSIS
   - make install DESTDIR=/tmp
   - rm -rf output CMakeCache.txt CMakeFiles
+# Not ALL_IN_ONE
   - cmake .
   - make check
   - make pack
