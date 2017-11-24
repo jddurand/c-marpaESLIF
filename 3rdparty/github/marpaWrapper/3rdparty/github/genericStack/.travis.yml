@@ -1,18 +1,11 @@
-#
-# travis
-#
 language: c
-addons:
-  apt:
-    sources:
-      - george-edison55-precise-backports
-    packages:
-      - cmake
-      - cmake-data
 before_script:
-  - cmake .
+  - sudo apt-get update
+  - sudo apt-get install nsis
 script:
+  - cmake .
   - make
   - make check
-  - make package
+  - make pack
+  - cpack -G NSIS
   - sudo make install
