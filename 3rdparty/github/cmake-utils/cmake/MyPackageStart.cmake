@@ -117,6 +117,7 @@ MACRO (MYPACKAGESTART packageName versionMajor versionMinor versionPatch)
     FILE (RELATIVE_PATH _relfile ${PROJECT_SOURCE_DIR} ${_file})
     GET_FILENAME_COMPONENT(_dir ${_relfile} DIRECTORY)
     INSTALL(FILES ${_file} DESTINATION ${_dir} COMPONENT HeaderComponent)
+    SET (_HAVE_HEADERCOMPONENT TRUE CACHE INTERNAL "Have HeaderComponent" FORCE)
   ENDFOREACH()
   #
   # Make sure current project have a property associating its default directories

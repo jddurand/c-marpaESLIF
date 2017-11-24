@@ -39,6 +39,7 @@ MACRO(MyPackageMan PODFILE MANFILE SECTION VERSION)
 	    DESTINATION "share/man/man${SECTION}"
             COMPONENT ManpageComponent
 	    )
+          SET (_HAVE_MANPAGECOMPONENT TRUE CACHE INTERNAL "Have ManpageComponent" FORCE)
         ELSE ()
           IF (MYPACKAGE_DEBUG)
             MESSAGE (STATUS "[${PROJECT_NAME}-MAN-DEBUG] Target ${MANPAGE_TARGET} already exist")
