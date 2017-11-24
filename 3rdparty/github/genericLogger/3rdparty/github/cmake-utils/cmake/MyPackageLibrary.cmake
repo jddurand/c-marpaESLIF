@@ -74,11 +74,11 @@ MACRO (MYPACKAGELIBRARY config_in config_out)
       ENDIF ()
       TARGET_INCLUDE_DIRECTORIES(${_target} PUBLIC ${_include_directory})
     ENDFOREACH ()
-    #
-    # Install target
-    #
-    INSTALL (TARGETS ${_target} ARCHIVE DESTINATION lib LIBRARY DESTINATION lib RUNTIME DESTINATION bin COMPONENT libraries)
   ENDFOREACH ()
+  INSTALL (TARGETS ${PROJECT_NAME}        ARCHIVE DESTINATION lib LIBRARY DESTINATION lib COMPONENT DynamicLibraryComponent)
+  INSTALL (TARGETS ${PROJECT_NAME}_static ARCHIVE DESTINATION lib LIBRARY DESTINATION lib COMPONENT StaticLibraryComponent)
+  SET (_HAVE_DYNAMICLIBRARYCOMPONENT TRUE CACHE INTERNAL "Have DynamicLibraryComponent" FORCE)
+  SET (_HAVE_STATICLIBRARYCOMPONENT TRUE CACHE INTERNAL "Have StaticLibraryComponent" FORCE)
   #
   # Call for the configuration
   #
@@ -91,7 +91,4 @@ MACRO (MYPACKAGELIBRARY config_in config_out)
   # Add dependencies to config and export headers
   #
   ADD_DEPENDENCIES(${PROJECT_NAME} ${PROJECT_NAME}Config ${PROJECT_NAME}Export)
-  #
-  # Install targets
-  #
 ENDMACRO()
