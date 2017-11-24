@@ -1,9 +1,9 @@
 MACRO (MYPACKAGEPRINTSETUP)
   #
-  # Print global setup
+  # Print Setup
   #
   MESSAGE(STATUS "================================")
-  MESSAGE(STATUS "Global setup:")
+  MESSAGE(STATUS "${PROJECT_NAME} Setup:")
   MESSAGE(STATUS "                   CMAKE_SYSTEM: ${CMAKE_SYSTEM}")
   MESSAGE(STATUS "         CMAKE_SYSTEM_PROCESSOR: ${CMAKE_SYSTEM_PROCESSOR}")
   MESSAGE(STATUS "               CMAKE_CFG_INTDIR: ${CMAKE_CFG_INTDIR}")
