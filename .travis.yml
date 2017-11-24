@@ -4,10 +4,8 @@
 language: c
 sudo: required
 before_script:
-#  - sudo add-apt-repository ppa:george-edison55/precise-backports < /dev/null
   - sudo apt-get update -qq --allow-unauthenticated
-#  - sudo apt-get install cmake cmake-data cpanminus mailutils
-  - sudo apt-get install cpanminus
+  - sudo apt-get install cpanminus nsis
 # Standard Dist::Zilla, this will install a bunch of prereqs, speeding up the upgrade
   - sudo apt-get install libdist-zilla-perl
 # Upgrade Dist::Zilla, Path::Tiny (I dislike its github issue 144 -;)
@@ -16,31 +14,30 @@ before_script:
   - sudo cpanm --notest Moose MooseX::Role::Parameterized
 # For my scripts, prefered over dzil --listdeps that is too long
   - sudo cpanm --notest Archive::Tar Class::Tiny Config::AutoConf::INI ExtUtils::CBuilder ExtUtils::CppGuess ExtUtils::MakeMaker File::Basename File::chdir File::Copy File::Copy::Recursive File::Find File::Path File::Spec File::Temp IPC::Open3 IPC::Run Params::Validate Perl::OSType Role::Tiny Scalar::Util Test::More Test::More::UTF8 Log::Log4perl Log::Any Log::Any::Adapter Log::Any::Adapter::Log4perl Test::EOL Test::Kwalitee Test::NoTabs Test::Pod::Coverage
-  - perl CMakeObjects.PL
-  - rm -rf output
   - sudo cpanm --notest Dist::Zilla::PluginBundle::RJBS
   - pushd src/bindings/perl && dzil authordeps --missing | xargs sudo cpanm --notest && popd
-  - cmake . -DALL_IN_ONE=ON
-  - make check
-#  - mail -a Testing/Temporary/LastTest.log -s "ALL_IN_ONE make check's LastTest.log" jeandamiendurand@free.fr < /dev/null
-  - make install DESTDIR=/tmp
-  - rm -rf output CMakeCache.txt CMakeFiles pcre2
+# Dependencies
   - sh ./install-c-genericLogger.sh
   - sh ./install-c-genericStack.sh
   - sh ./install-c-genericHash.sh
   - sh ./install-c-genericSparseArray.sh
   - sh ./install-c-marpaWrapper.sh
   - sh ./install-c-tconv.sh
-  - cmake .
 script:
+# We want to try perl standalone first
+  - perl CMakeObjects.PL
+  - rm -rf output
+# ALL_IN_ONE
+  - cmake . -DALL_IN_ONE=ON
+  - make check
+  - make pack
+  - cpack -G NSIS
+  - make install DESTDIR=/tmp
+  - rm -rf output CMakeCache.txt CMakeFiles pcre2
+# Not ALL_IN_ONE
+  - cmake .
   - make
   - make check
-#  - mail -a Testing/Temporary/LastTest.log -s "make check's LastTest.log" jeandamiendurand@free.fr < /dev/null
-#  - ./output/lib/marpaESLIFTester
-#  - ./output/lib/adventTester
-#  - ./output/lib/russellParadoxTester
-#  - ./output/lib/jsonTester
-#  - ./output/lib/selfTester
-#  - cat Testing/Temporary/LastTest.log
-  - sudo make package
+  - make pack
+  - cpack -G NSIS
   - sudo make install
