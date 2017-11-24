@@ -24,13 +24,6 @@ IF (NOT MYPACKAGEBOOTSTRAP_DONE)
     INCLUDE (${_cmake})  # No pb if we re-include ourself -;
   ENDFOREACH ()
   #
-  # Enable Packaging
-  #
-  IF (MYPACKAGE_DEBUG)
-    MESSAGE (STATUS "[${PROJECT_NAME}-BOOTSTRAP-DEBUG] Enable CPack")
-  ENDIF ()
-  INCLUDE (CPack)
-  #
   # Enable Testing
   #
   IF (MYPACKAGE_DEBUG)
