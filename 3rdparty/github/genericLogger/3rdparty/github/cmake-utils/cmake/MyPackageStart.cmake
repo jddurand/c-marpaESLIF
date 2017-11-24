@@ -104,24 +104,6 @@ MACRO (MYPACKAGESTART packageName versionMajor versionMinor versionPatch)
   ENDIF ()
   EXECUTE_PROCESS(COMMAND "${CMAKE_COMMAND}" -E make_directory "${INCLUDE_OUTPUT_PATH}/${PROJECT_NAME}")
   #
-  # Set-up packaging
-  #
-  IF (MYPACKAGE_DEBUG)
-    MESSAGE (STATUS "[${PROJECT_NAME}-START-DEBUG] Configure packaging")
-  ENDIF ()
-  SET (CPACK_PACKAGE_VERSION_MAJOR "${${PROJECT_NAME}_VERSION_MAJOR}")
-  SET (CPACK_PACKAGE_VERSION_MINOR "${${PROJECT_NAME}_VERSION_MINOR}")
-  SET (CPACK_PACKAGE_VERSION_PATCH "${${PROJECT_NAME}_VERSION_PATCH}")
-  IF (EXISTS "${PROJECT_SOURCE_DIR}/LICENSE")
-    CONFIGURE_FILE ("${PROJECT_SOURCE_DIR}/LICENSE"  "${CMAKE_CURRENT_BINARY_DIR}/LICENSE.txt")
-    SET (CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_BINARY_DIR}/LICENSE.txt")
-  ELSE ()
-    IF (MYPACKAGE_DEBUG)
-      MESSAGE (STATUS "[${PROJECT_NAME}-START-DEBUG] No LICENSE...")
-    ENDIF ()
-    SET (CPACK_RESOURCE_FILE_LICENSE)
-  ENDIF ()
-  #
   # We consider that every .h file in the include directory is to be installed
   # unless it is starting with an '_'.
   #
@@ -134,7 +116,8 @@ MACRO (MYPACKAGESTART packageName versionMajor versionMinor versionPatch)
     ENDIF ()
     FILE (RELATIVE_PATH _relfile ${PROJECT_SOURCE_DIR} ${_file})
     GET_FILENAME_COMPONENT(_dir ${_relfile} DIRECTORY)
-    INSTALL(FILES ${_file} DESTINATION ${_dir})
+    INSTALL(FILES ${_file} DESTINATION ${_dir} COMPONENT HeaderComponent)
+    SET (_HAVE_HEADERCOMPONENT TRUE CACHE INTERNAL "Have HeaderComponent" FORCE)
   ENDFOREACH()
   #
   # Make sure current project have a property associating its default directories
