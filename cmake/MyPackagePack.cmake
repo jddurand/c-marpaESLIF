@@ -21,22 +21,18 @@ MACRO (MYPACKAGEPACK VENDOR SUMMARY)
       SET (CPACK_RESOURCE_FILE_LICENSE     "${CMAKE_CURRENT_BINARY_DIR}/LICENSE.txt")
     ELSE ()
       IF (MYPACKAGE_DEBUG)
-        MESSAGE (STATUS "[${PROJECT_NAME}-START-DEBUG] No LICENSE")
+        MESSAGE (STATUS "[${PROJECT_NAME}-PACK-DEBUG] No LICENSE")
       ENDIF ()
       SET (CPACK_RESOURCE_FILE_LICENSE)
     ENDIF ()
     #
-    # Enable component to all archive packaging types
-    #
-    SET (CPACK_ARCHIVE_COMPONENT_INSTALL TRUE)
-    #
     # Get all components in one package
     #
-    SET (CPACK_COMPONENTS_ALL_IN_ONE_PACKAGE 1)
+    SET (CPACK_COMPONENTS_GROUPING ALL_COMPONENTS_IN_ONE)
     #
     # Do not get fooled by components out of our control
     #
-    SET (CPACK_COMPONENTS_ALL ManpageComponent DynamicLibraryComponent StaticLibraryComponent HeaderComponent ApplicationComponent)
+    SET (CPACK_COMPONENTS_ALL)
     #
     # Include CPack - from now on we will have access to CPACK own macros
     #
@@ -53,6 +49,10 @@ MACRO (MYPACKAGEPACK VENDOR SUMMARY)
       SET (_CAN_DEVELOPMENTTYPE TRUE)
     ELSE ()
       SET (_CAN_DEVELOPMENTTYPE FALSE)
+    ENDIF ()
+    IF (MYPACKAGE_DEBUG)
+      MESSAGE (STATUS "[${PROJECT_NAME}-PACK-DEBUG] Full install type        : ${_CAN_FULLTYPE}")
+      MESSAGE (STATUS "[${PROJECT_NAME}-PACK-DEBUG] Development install type : ${_CAN_DEVELOPMENTTYPE}")
     ENDIF ()
     IF (_CAN_FULLTYPE)
       CPACK_ADD_INSTALL_TYPE (FullType        DISPLAY_NAME "Full")
@@ -82,6 +82,12 @@ MACRO (MYPACKAGEPACK VENDOR SUMMARY)
       SET (_CAN_RUNTIMEGROUP TRUE)
     ELSE ()
       SET (_CAN_RUNTIMEGROUP FALSE)
+    ENDIF ()
+    IF (MYPACKAGE_DEBUG)
+      MESSAGE (STATUS "[${PROJECT_NAME}-PACK-DEBUG] Development group        : ${_CAN_DEVELOPMENTGROUP}")
+      MESSAGE (STATUS "[${PROJECT_NAME}-PACK-DEBUG] Development Library group: ${_CAN_DEVELOPMENTLIBRARYGROUP}")
+      MESSAGE (STATUS "[${PROJECT_NAME}-PACK-DEBUG] Document group           : ${_CAN_DOCUMENTGROUP}")
+      MESSAGE (STATUS "[${PROJECT_NAME}-PACK-DEBUG] Runtime group            : ${_CAN_RUNTIMEGROUP}")
     ENDIF ()
     IF (_CAN_DEVELOPMENTGROUP)
       CPACK_ADD_COMPONENT_GROUP (DevelopmentGroup        DISPLAY_NAME "Development" DESCRIPTION "Develoment files\n\nThis group contains libraries and headers"  EXPANDED)
@@ -133,6 +139,13 @@ MACRO (MYPACKAGEPACK VENDOR SUMMARY)
                           GROUP RuntimeGroup
                           INSTALL_TYPES FullType
                           DEPENDS DynamicLibraryComponent)
+    ENDIF ()
+    IF (MYPACKAGE_DEBUG)
+      MESSAGE (STATUS "[${PROJECT_NAME}-PACK-DEBUG] Manpage component        : ${_HAVE_MANPAGECOMPONENT}")
+      MESSAGE (STATUS "[${PROJECT_NAME}-PACK-DEBUG] Dynamic Library component: ${_HAVE_DYNAMICLIBRARYCOMPONENT}")
+      MESSAGE (STATUS "[${PROJECT_NAME}-PACK-DEBUG] Static Library component : ${_HAVE_STATICLIBRARYCOMPONENT}")
+      MESSAGE (STATUS "[${PROJECT_NAME}-PACK-DEBUG] Header component         : ${_HAVE_HEADERCOMPONENT}")
+      MESSAGE (STATUS "[${PROJECT_NAME}-PACK-DEBUG] Application component    : ${_HAVE_APPLICATIONCOMPONENT}")
     ENDIF ()
     #
     # Quite subtil, but the "package" target is not visible at this time. There is a old standing bug
