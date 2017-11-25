@@ -55,9 +55,15 @@ MACRO (MYPACKAGEPACK VENDOR SUMMARY)
       MESSAGE (STATUS "[${PROJECT_NAME}-PACK-DEBUG] Development install type : ${_CAN_DEVELOPMENTTYPE}")
     ENDIF ()
     IF (_CAN_FULLTYPE)
+      IF (MYPACKAGE_DEBUG)
+        MESSAGE (STATUS "[${PROJECT_NAME}-PACK-DEBUG] ... Add FullType")
+      ENDIF ()
       CPACK_ADD_INSTALL_TYPE (FullType        DISPLAY_NAME "Full")
     ENDIF ()
     IF (_CAN_DEVELOPMENTTYPE)
+      IF (MYPACKAGE_DEBUG)
+        MESSAGE (STATUS "[${PROJECT_NAME}-PACK-DEBUG] ... Add DevelopmentType")
+      ENDIF ()
       CPACK_ADD_INSTALL_TYPE (DevelopmentType DISPLAY_NAME "Development")
     ENDIF ()
     #
@@ -90,21 +96,43 @@ MACRO (MYPACKAGEPACK VENDOR SUMMARY)
       MESSAGE (STATUS "[${PROJECT_NAME}-PACK-DEBUG] Runtime group            : ${_CAN_RUNTIMEGROUP}")
     ENDIF ()
     IF (_CAN_DEVELOPMENTGROUP)
+      IF (MYPACKAGE_DEBUG)
+        MESSAGE (STATUS "[${PROJECT_NAME}-PACK-DEBUG] ... Add DevelopmentGroup")
+      ENDIF ()
       CPACK_ADD_COMPONENT_GROUP (DevelopmentGroup        DISPLAY_NAME "Development" DESCRIPTION "Develoment files\n\nThis group contains libraries and headers"  EXPANDED)
     ENDIF ()
     IF (_CAN_DEVELOPMENTLIBRARYGROUP)
+      IF (MYPACKAGE_DEBUG)
+        MESSAGE (STATUS "[${PROJECT_NAME}-PACK-DEBUG] ... Add DevelopmentLibraryGroup")
+      ENDIF ()
       CPACK_ADD_COMPONENT_GROUP (DevelopmentLibraryGroup DISPLAY_NAME "Libraries"   DESCRIPTION "Library files\n\nBoth static and dynamic version are provided" PARENT_GROUP DevelopmentGroup)
     ENDIF ()
     IF (_CAN_DOCUMENTGROUP)
+      IF (MYPACKAGE_DEBUG)
+        MESSAGE (STATUS "[${PROJECT_NAME}-PACK-DEBUG] ... Add DevelopmentLibraryGroup")
+      ENDIF ()
       CPACK_ADD_COMPONENT_GROUP (DocumentGroup           DISPLAY_NAME "Documents"   DESCRIPTION "Document files\n\nThis group contains all the provided documentation" EXPANDED)
     ENDIF ()
     IF (_CAN_RUNTIMEGROUP)
+      IF (MYPACKAGE_DEBUG)
+        MESSAGE (STATUS "[${PROJECT_NAME}-PACK-DEBUG] ... Add RuntimeGroup")
+      ENDIF ()
       CPACK_ADD_COMPONENT_GROUP (RuntimeGroup            DISPLAY_NAME "Runtime"     DESCRIPTION "Runtime applications"  EXPANDED)
     ENDIF ()
     #
     # Components
     #
+    IF (MYPACKAGE_DEBUG)
+      MESSAGE (STATUS "[${PROJECT_NAME}-PACK-DEBUG] Manpage component        : ${_HAVE_MANPAGECOMPONENT}")
+      MESSAGE (STATUS "[${PROJECT_NAME}-PACK-DEBUG] Dynamic Library component: ${_HAVE_DYNAMICLIBRARYCOMPONENT}")
+      MESSAGE (STATUS "[${PROJECT_NAME}-PACK-DEBUG] Static Library component : ${_HAVE_STATICLIBRARYCOMPONENT}")
+      MESSAGE (STATUS "[${PROJECT_NAME}-PACK-DEBUG] Header component         : ${_HAVE_HEADERCOMPONENT}")
+      MESSAGE (STATUS "[${PROJECT_NAME}-PACK-DEBUG] Application component    : ${_HAVE_APPLICATIONCOMPONENT}")
+    ENDIF ()
     IF (_HAVE_MANPAGECOMPONENT)
+      IF (MYPACKAGE_DEBUG)
+        MESSAGE (STATUS "[${PROJECT_NAME}-PACK-DEBUG] ... Add ManpageComponent")
+      ENDIF ()
       CPACK_ADD_COMPONENT(ManpageComponent
                           DISPLAY_NAME "Man pages"
                           DESCRIPTION "Documentation in the man format\n\nUseful on all platforms but Windows, in general"
@@ -112,6 +140,9 @@ MACRO (MYPACKAGEPACK VENDOR SUMMARY)
                           INSTALL_TYPES FullType)
     ENDIF ()
     IF (_HAVE_DYNAMICLIBRARYCOMPONENT)
+      IF (MYPACKAGE_DEBUG)
+        MESSAGE (STATUS "[${PROJECT_NAME}-PACK-DEBUG] ... Add DynamicLibraryComponent")
+      ENDIF ()
       CPACK_ADD_COMPONENT(DynamicLibraryComponent
                           DISPLAY_NAME "Dynamic"
                           DESCRIPTION "Dynamic Libraries\n\nNecessary almost anytime"
@@ -119,6 +150,9 @@ MACRO (MYPACKAGEPACK VENDOR SUMMARY)
                           INSTALL_TYPES FullType DevelopmentType)
     ENDIF ()
     IF (_HAVE_STATICLIBRARYCOMPONENT)
+      IF (MYPACKAGE_DEBUG)
+        MESSAGE (STATUS "[${PROJECT_NAME}-PACK-DEBUG] ... Add StaticLibraryComponent")
+      ENDIF ()
       CPACK_ADD_COMPONENT(StaticLibraryComponent
                           DISPLAY_NAME "Static"
                           DESCRIPTION "Static Libraries\n\nOnly programmers would eventually need that"
@@ -126,6 +160,9 @@ MACRO (MYPACKAGEPACK VENDOR SUMMARY)
                           INSTALL_TYPES FullType DevelopmentType)
     ENDIF ()
     IF (_HAVE_HEADERCOMPONENT)
+      IF (MYPACKAGE_DEBUG)
+        MESSAGE (STATUS "[${PROJECT_NAME}-PACK-DEBUG] ... Add HeaderComponent")
+      ENDIF ()
       CPACK_ADD_COMPONENT(HeaderComponent
                           DISPLAY_NAME "Headers"
                           DESCRIPTION "C/C++ Headers\n\nProgrammers will need these files"
@@ -133,19 +170,15 @@ MACRO (MYPACKAGEPACK VENDOR SUMMARY)
                           INSTALL_TYPES FullType DevelopmentType)
     ENDIF ()
     IF (_HAVE_APPLICATIONCOMPONENT)
+      IF (MYPACKAGE_DEBUG)
+        MESSAGE (STATUS "[${PROJECT_NAME}-PACK-DEBUG] ... Add ApplicationComponent")
+      ENDIF ()
       CPACK_ADD_COMPONENT(ApplicationComponent
                           DISPLAY_NAME "Applications"
                           DESCRIPTION "Executables"
                           GROUP RuntimeGroup
                           INSTALL_TYPES FullType
                           DEPENDS DynamicLibraryComponent)
-    ENDIF ()
-    IF (MYPACKAGE_DEBUG)
-      MESSAGE (STATUS "[${PROJECT_NAME}-PACK-DEBUG] Manpage component        : ${_HAVE_MANPAGECOMPONENT}")
-      MESSAGE (STATUS "[${PROJECT_NAME}-PACK-DEBUG] Dynamic Library component: ${_HAVE_DYNAMICLIBRARYCOMPONENT}")
-      MESSAGE (STATUS "[${PROJECT_NAME}-PACK-DEBUG] Static Library component : ${_HAVE_STATICLIBRARYCOMPONENT}")
-      MESSAGE (STATUS "[${PROJECT_NAME}-PACK-DEBUG] Header component         : ${_HAVE_HEADERCOMPONENT}")
-      MESSAGE (STATUS "[${PROJECT_NAME}-PACK-DEBUG] Application component    : ${_HAVE_APPLICATIONCOMPONENT}")
     ENDIF ()
     #
     # Quite subtil, but the "package" target is not visible at this time. There is a old standing bug
@@ -154,9 +187,8 @@ MACRO (MYPACKAGEPACK VENDOR SUMMARY)
     # In addition documentation is generated using the INSTALL(CODE xxx) hack.
     #
     ADD_CUSTOM_TARGET(pack
-      COMMAND ${CMAKE_MAKE_PROGRAM} package
+      COMMAND ${CMAKE_MAKE_PROGRAM} man package
       COMMENT "Packaging ${PROJECT_NAME}"
-      DEPENDS man
       VERBATIM
     )
   ENDIF ()		    
