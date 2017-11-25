@@ -30,6 +30,10 @@ MACRO (MYPACKAGEPACK VENDOR SUMMARY)
     #
     SET (CPACK_COMPONENTS_GROUPING ALL_COMPONENTS_IN_ONE)
     #
+    # Do not get fooled by components out of our control
+    #
+    SET (CPACK_COMPONENTS_ALL)
+    #
     # Include CPack - from now on we will have access to CPACK own macros
     #
     INCLUDE (CPack)
