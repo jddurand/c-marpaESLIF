@@ -100,7 +100,7 @@ MACRO (MYPACKAGESTART packageName versionMajor versionMinor versionPatch)
         ENDIF ()
       ENDIF ()
       ADD_DEFINITIONS("-D${_definition}")
-    ENDIF ()
+    ENDFOREACH ()
   ENDIF ()
   #
   # Prepare output directories
