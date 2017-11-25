@@ -32,7 +32,37 @@ MACRO (MYPACKAGEPACK VENDOR SUMMARY)
     #
     # Do not get fooled by components out of our control
     #
-    SET (CPACK_COMPONENTS_ALL)
+	SET (CPACK_COMPONENTS_ALL)
+    IF (_HAVE_MANPAGECOMPONENT)
+      IF (MYPACKAGE_DEBUG)
+        MESSAGE (STATUS "[${PROJECT_NAME}-PACK-DEBUG] ... Registering ManpageComponent")
+      ENDIF ()
+	  LIST(APPEND CPACK_COMPONENTS_ALL "ManpageComponent")
+    ENDIF ()
+    IF (_HAVE_DYNAMICLIBRARYCOMPONENT)
+      IF (MYPACKAGE_DEBUG)
+        MESSAGE (STATUS "[${PROJECT_NAME}-PACK-DEBUG] ... Registering DynamicLibraryComponent")
+      ENDIF ()
+	  LIST(APPEND CPACK_COMPONENTS_ALL "DynamicLibraryComponent")
+    ENDIF ()
+    IF (_HAVE_STATICLIBRARYCOMPONENT)
+      IF (MYPACKAGE_DEBUG)
+        MESSAGE (STATUS "[${PROJECT_NAME}-PACK-DEBUG] ... Registering StaticLibraryComponent")
+      ENDIF ()
+	  LIST(APPEND CPACK_COMPONENTS_ALL "StaticLibraryComponent")
+    ENDIF ()
+    IF (_HAVE_HEADERCOMPONENT)
+      IF (MYPACKAGE_DEBUG)
+        MESSAGE (STATUS "[${PROJECT_NAME}-PACK-DEBUG] ... Registering HeaderComponent")
+      ENDIF ()
+	  LIST(APPEND CPACK_COMPONENTS_ALL "HeaderComponent")
+    ENDIF ()
+    IF (_HAVE_APPLICATIONCOMPONENT)
+      IF (MYPACKAGE_DEBUG)
+        MESSAGE (STATUS "[${PROJECT_NAME}-PACK-DEBUG] ... Registering ApplicationComponent")
+      ENDIF ()
+	  LIST(APPEND CPACK_COMPONENTS_ALL "ApplicationComponent")
+    ENDIF ()
     #
     # Include CPack - from now on we will have access to CPACK own macros
     #
@@ -187,8 +217,9 @@ MACRO (MYPACKAGEPACK VENDOR SUMMARY)
     # In addition documentation is generated using the INSTALL(CODE xxx) hack.
     #
     ADD_CUSTOM_TARGET(pack
-      COMMAND ${CMAKE_MAKE_PROGRAM} man package
+      COMMAND ${CMAKE_MAKE_PROGRAM} package
       COMMENT "Packaging ${PROJECT_NAME}"
+	  DEPENDS man
       VERBATIM
     )
   ENDIF ()		    
