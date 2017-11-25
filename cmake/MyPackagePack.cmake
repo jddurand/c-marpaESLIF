@@ -30,39 +30,9 @@ MACRO (MYPACKAGEPACK VENDOR SUMMARY)
     #
     SET (CPACK_COMPONENTS_GROUPING ALL_COMPONENTS_IN_ONE)
     #
-    # Do not get fooled by components out of our control
+    # Always enable archive
     #
-	SET (CPACK_COMPONENTS_ALL)
-    IF (_HAVE_MANPAGECOMPONENT)
-      IF (MYPACKAGE_DEBUG)
-        MESSAGE (STATUS "[${PROJECT_NAME}-PACK-DEBUG] ... Registering ManpageComponent")
-      ENDIF ()
-	  LIST(APPEND CPACK_COMPONENTS_ALL "ManpageComponent")
-    ENDIF ()
-    IF (_HAVE_DYNAMICLIBRARYCOMPONENT)
-      IF (MYPACKAGE_DEBUG)
-        MESSAGE (STATUS "[${PROJECT_NAME}-PACK-DEBUG] ... Registering DynamicLibraryComponent")
-      ENDIF ()
-	  LIST(APPEND CPACK_COMPONENTS_ALL "DynamicLibraryComponent")
-    ENDIF ()
-    IF (_HAVE_STATICLIBRARYCOMPONENT)
-      IF (MYPACKAGE_DEBUG)
-        MESSAGE (STATUS "[${PROJECT_NAME}-PACK-DEBUG] ... Registering StaticLibraryComponent")
-      ENDIF ()
-	  LIST(APPEND CPACK_COMPONENTS_ALL "StaticLibraryComponent")
-    ENDIF ()
-    IF (_HAVE_HEADERCOMPONENT)
-      IF (MYPACKAGE_DEBUG)
-        MESSAGE (STATUS "[${PROJECT_NAME}-PACK-DEBUG] ... Registering HeaderComponent")
-      ENDIF ()
-	  LIST(APPEND CPACK_COMPONENTS_ALL "HeaderComponent")
-    ENDIF ()
-    IF (_HAVE_APPLICATIONCOMPONENT)
-      IF (MYPACKAGE_DEBUG)
-        MESSAGE (STATUS "[${PROJECT_NAME}-PACK-DEBUG] ... Registering ApplicationComponent")
-      ENDIF ()
-	  LIST(APPEND CPACK_COMPONENTS_ALL "ApplicationComponent")
-    ENDIF ()
+    SET (CPACK_ARCHIVE_COMPONENT_INSTALL ON)
     #
     # Include CPack - from now on we will have access to CPACK own macros
     #
@@ -214,7 +184,7 @@ MACRO (MYPACKAGEPACK VENDOR SUMMARY)
     # Quite subtil, but the "package" target is not visible at this time. There is a old standing bug
     # in CMake about this.
     # We use a custom target for package generation.
-    # In addition documentation is generated using the INSTALL(CODE xxx) hack.
+    # In addition man pages is generated using the INSTALL(CODE xxx) hack.
     #
     ADD_CUSTOM_TARGET(pack
       COMMAND ${CMAKE_MAKE_PROGRAM} package
