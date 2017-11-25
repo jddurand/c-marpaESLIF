@@ -101,6 +101,10 @@ MACRO (MYPACKAGESTART packageName versionMajor versionMinor versionPatch)
       ENDIF ()
       ADD_DEFINITIONS("-D${_definition}")
     ENDFOREACH ()
+  ELSE ()
+    IF (MYPACKAGE_DEBUG)
+      MESSAGE (STATUS "[${PROJECT_NAME}-START-STATUS] CMAKE_C_COMPILER_ID does not match MSVC: ${CMAKE_C_COMPILER_ID}")
+    ENDIF ()
   ENDIF ()
   #
   # Prepare output directories
