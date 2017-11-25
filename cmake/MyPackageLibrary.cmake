@@ -69,16 +69,15 @@ MACRO (MYPACKAGELIBRARY config_in config_out)
   SET (_project_include_directories "${PROJECT_SOURCE_DIR}/output/include" "${PROJECT_SOURCE_DIR}/include")
   FOREACH (_target ${PROJECT_NAME} ${PROJECT_NAME}_static)
     FOREACH (_include_directory ${_project_include_directories})
-	  #
-	  # The "internal" include directory is always internal, indeed
-	  #
-	  SET (_l_directory ${_include_directory})
+      #
+      # The "internal" include directory is always internal, indeed
+      #
       STRING (TOLOWER "${_include_directory}" _include_directory_lower )
       IF ( _include_directory_lower MATCHES "/internal/?$" )
-	    SET (_include_directory_scope "PRIVATE")
-	  ELSE ()
-	    SET (_include_directory_scope "PUBLIC")
-	  ENDIF ()
+	SET (_include_directory_scope "PRIVATE")
+      ELSE ()
+	SET (_include_directory_scope "PUBLIC")
+      ENDIF ()
       IF (MYPACKAGE_DEBUG)
         MESSAGE (STATUS "[${PROJECT_NAME}-LIBRARY-DEBUG] Adding ${_include_directory_scope} ${_include_directory} include dependency to ${_target}")
       ENDIF ()
