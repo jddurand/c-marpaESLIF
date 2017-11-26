@@ -1,0 +1,19 @@
+version: '{build}'
+
+init:
+- echo %PATH%
+
+install:
+- cmd: cinst cmake
+- cmd: cinst nsis
+- cmd: cpanm --notest Dist::Zilla
+- cmd: cpanm --notest Path::Tiny
+- cmd: cpanm --notest Moose MooseX::Role::Parameterized
+- cmd: cpanm --notest Archive::Tar Class::Tiny Config::AutoConf::INI ExtUtils::CBuilder ExtUtils::CppGuess ExtUtils::MakeMaker File::Basename File::chdir File::Copy File::Copy::Recursive File::Find File::Path File::Spec File::Temp IPC::Open3 IPC::Run Params::Validate Perl::OSType Role::Tiny Scalar::Util Test::More Test::More::UTF8 Log::Log4perl Log::Any Log::Any::Adapter Log::Any::Adapter::Log4perl Test::EOL Test::Kwalitee Test::NoTabs Test::Pod::Coverage
+- cmd: cpanm --notest Dist::Zilla::PluginBundle::RJBS
+- cmd: pushd src/bindings/perl && dzil authordeps --missing | xargs cpanm --notest && popd
+
+build_script:
+  - cmd: cmake . -DALL_IN_ONE=ON
+  - cmd: nmake check
+  - cmd: nmake pack
