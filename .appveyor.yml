@@ -6,6 +6,7 @@ init:
 install:
 - cmd: cinst cmake
 - cmd: cinst nsis
+- cmd: cpan App::cpanminus
 - cmd: cpanm --notest Config::AutoConf::INI ExtUtils::CBuilder File::Basename File::Find File::Path
 - cmd: cpanm --notest Path::Tiny
 - cmd: cpanm --notest Moose MooseX::Role::Parameterized
