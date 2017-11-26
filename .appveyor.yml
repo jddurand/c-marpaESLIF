@@ -12,36 +12,21 @@ branches:
 configuration:
 - RelWithDebInfo
 
-environment:
-  matrix:
-    - platform: Win32
-      vcproj_dir: vcproj
-      vcproj_file: vcproj\marpaESLIF.sln
-      cmake_gen: "NMake Makefiles"
-      cmake_args: ""
-
-    - platform: x64
-      vcproj_dir: vcproj64
-      vcproj_file: vcproj64\marpaESLIF.sln
-      cmake_gen: "NMake Makefiles"
-      cmake_args: ""
-
-matrix:
-  fast_finish: true
+platform:
+  - x86
+  - x64
 
 before_build:
-  - mkdir build
-  - cd %vcproj_dir%
-  - cmake .. -G "%cmake_gen%" %cmake_args%
-  - cd ..
+  - cpan cpanminus
+  - cpanm --notest Config::AutoConf::INI ExtUtils::CBuilder File::Basename File::Find File::Path
+  - cd C:\projects\c-genericlogger
+  - cmake -G "NMake Makefiles" .
 
 build:
   parallel: true
   verbosity: minimal
 
 build_script:
-  - cpan cpanminus
-  - cpanm --notest Config::AutoConf::INI ExtUtils::CBuilder File::Basename File::Find File::Path
   - perl CMakeObjects.PL
   - del /f /s /q output
   - nmake check
