@@ -1,26 +1,40 @@
 #
 # Loosely based on https://github.com/intercept/intercept/blob/master/appveyor.yml
 #
-version: "{build}"
+version: 1.0.{build}
 
 image: Visual Studio 2017
 
-branches:
-  only:
-  - master
+platform: x64
 
-configuration:
-- RelWithDebInfo
+configuration: Release
 
-platform:
-  - x86
-  - x64
+shallow_clone: true
+clone_depth: 5
+
+matrix:
+  fast_finish: false # set this flag to immediately finish build once one of the jobs fails.
+
+environment:
+  matrix:
+    - PLATFORM: x64
+      BUILDER: CMake
+      GENERATOR: "NMake Makefiles"
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+    - PLATFORM: x86
+      BUILDER: CMake
+      GENERATOR: "NMake Makefiles"
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+
+init:
+  - if "%APPVEYOR_BUILD_WORKER_IMAGE%"=="Visual Studio 2017" if "%GENERATOR%"=="NMake Makefiles" if "%PLATFORM%"=="x86" call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars32.bat"
+  - if "%APPVEYOR_BUILD_WORKER_IMAGE%"=="Visual Studio 2017" if "%GENERATOR%"=="NMake Makefiles" if "%PLATFORM%"=="x64" call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars64.bat"
 
 before_build:
   - cpan App::cpanminus
   - cpanm --notest Config::AutoConf::INI ExtUtils::CBuilder File::Basename File::Find File::Path
   - cd C:\projects\c-genericlogger
-  - cmake -G "NMake Makefiles" .
+  - cmake -G "%GENERATOR%" -DCMAKE_BUILD_TYPE=%CONFIGURATION% .
 
 build:
   parallel: true
