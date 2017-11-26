@@ -1,22 +1,38 @@
-version: '{build}'
+platform:
+- x64
+- x86
+
+environment:
+  matrix:
+    VS_VERSION: Visual Studio 10
+    VS_VERSION: Visual Studio 11
+    VS_VERSION: Visual Studio 12
+
+shallow_clone: true
 
 init:
 - echo %PATH%
+- if "%platform%" == "x64" SET VS_FULL=%VS_VERSION% Win64
+- if "%platform%" == "x86" SET VS_FULL=%VS_VERSION%
+- echo "%VS_FULL%"
 
 install:
 - cmd: cinst cmake
 - cmd: cinst nsis
 - cmd: cpan App::cpanminus
+- cmd: cpanm --notest Log::Log4perl
 - cmd: cpanm --notest Config::AutoConf::INI ExtUtils::CBuilder File::Basename File::Find File::Path
 - cmd: cpanm --notest Path::Tiny
 - cmd: cpanm --notest Moose MooseX::Role::Parameterized
 - cmd: cpanm --notest Archive::Tar Class::Tiny Config::AutoConf::INI ExtUtils::CBuilder ExtUtils::CppGuess ExtUtils::MakeMaker File::Basename File::chdir File::Copy File::Copy::Recursive File::Find File::Path File::Spec File::Temp IPC::Open3 IPC::Run Params::Validate Perl::OSType Role::Tiny Scalar::Util Test::More Test::More::UTF8 Log::Log4perl Log::Any Log::Any::Adapter Log::Any::Adapter::Log4perl Test::EOL Test::Kwalitee Test::NoTabs Test::Pod::Coverage
 - cmd: cpanm --notest Dist::Zilla::PluginBundle::RJBS
-- cmd: pushd src/bindings/perl && dzil authordeps --missing | xargs cpanm --notest && popd
+- cmd: pushd src\bindings\perl && dzil authordeps --missing | xargs cpanm --notest && popd
 
 build_script:
 - cmd: perl CMakeObjects.PL
 - cmd: del /f /s output
-- cmd: cmake .
+- cmd: cmake -G "%VS_FULL%" .
 - cmd: nmake check
 - cmd: nmake pack
+
+deploy: off
