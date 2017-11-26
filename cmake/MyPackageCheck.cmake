@@ -33,9 +33,14 @@ MACRO (MYPACKAGECHECK name)
     ENDFOREACH ()
   ENDIF ()
 
+  IF (NOT ("x${TARGET_TEST_CMAKE_COMMAND}" STREQUAL "x"))
+    GET_FILENAME_COMPONENT(_target_test_cmake_command ${TARGET_TEST_CMAKE_COMMAND} ABSOLUTE)
+  ELSE ()
+    SET (_target_test_cmake_command "")
+  ENDIF ()
   FOREACH (_name ${name} ${name}_static)
     ADD_TEST (NAME ${_name}
-      COMMAND ${CMAKE_COMMAND} -E env "PATH=${_test_path}" $<TARGET_FILE:${_name}> ${ARGN}
+      COMMAND ${CMAKE_COMMAND} -E env "PATH=${_test_path}" ${_target_test_cmake_command} $<TARGET_FILE:${_name}> ${ARGN}
       WORKING_DIRECTORY ${LIBRARY_OUTPUT_PATH})
     ADD_DEPENDENCIES(check ${_name})
   ENDFOREACH ()
