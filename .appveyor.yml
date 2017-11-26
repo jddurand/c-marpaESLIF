@@ -4,9 +4,12 @@ platform:
 
 environment:
   matrix:
-    VS_VERSION: Visual Studio 10
-    VS_VERSION: Visual Studio 11
-    VS_VERSION: Visual Studio 12
+    - VS_VERSION: Visual Studio 10
+    - VS_VERSION: Visual Studio 11
+    - VS_VERSION: Visual Studio 12
+    - VS_VERSION: Visual Studio 13
+    - VS_VERSION: Visual Studio 15
+    - VS_VERSION: Visual Studio 17
 
 shallow_clone: true
 
