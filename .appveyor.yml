@@ -20,10 +20,12 @@ environment:
       BUILDER: CMake
       GENERATOR: "NMake Makefiles"
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+      PROJECT_SOURCE_DIR: C:\projects\c-genericlogger
     - PLATFORM: x86
       BUILDER: CMake
       GENERATOR: "NMake Makefiles"
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+      PROJECT_SOURCE_DIR: C:\projects\c-genericlogger
 
 init:
   - if not exist "C:\strawberry" cinst strawberryperl
@@ -35,16 +37,15 @@ before_build:
   - set PATH
   - perl -V
   - cpanm --notest Config::AutoConf::INI ExtUtils::CBuilder File::Basename File::Find File::Path
-  - cd C:\projects\c-genericlogger
-  - cmake -G "%GENERATOR%" -DCMAKE_BUILD_TYPE=%CONFIGURATION% .
-
-build:
-  parallel: true
-  verbosity: minimal
 
 build_script:
   - perl CMakeObjects.PL
   - del /f /s /q output
+  - cd %PROJECT_SOURCE_DIR%
+  - cmake -G "%GENERATOR%" -DCMAKE_BUILD_TYPE=%CONFIGURATION% .
+  - nmake
+
+test_script:
   - nmake check
   - nmake install
   - nmake package
