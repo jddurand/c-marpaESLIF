@@ -9,8 +9,7 @@ platform: x64
 
 configuration: Release
 
-shallow_clone: true
-clone_depth: 5
+shallow_clone: true # Specific to github
 
 matrix:
   fast_finish: false # set this flag to immediately finish build once one of the jobs fails.
@@ -31,6 +30,8 @@ init:
   - if "%APPVEYOR_BUILD_WORKER_IMAGE%"=="Visual Studio 2017" if "%GENERATOR%"=="NMake Makefiles" if "%PLATFORM%"=="x64" call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars64.bat"
 
 before_build:
+  - set PATH
+  - perl -V
   - cpan App::cpanminus
   - cpanm --notest Config::AutoConf::INI ExtUtils::CBuilder File::Basename File::Find File::Path
   - cd C:\projects\c-genericlogger
