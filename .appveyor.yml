@@ -26,13 +26,14 @@ environment:
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
 
 init:
+  - if not exist "C:\strawberry" cinst strawberryperl
+  - set PATH=C:\strawberry\perl\bin;C:\strawberry\perl\site\bin;C:\strawberry\c\bin;%PATH%
   - if "%APPVEYOR_BUILD_WORKER_IMAGE%"=="Visual Studio 2017" if "%GENERATOR%"=="NMake Makefiles" if "%PLATFORM%"=="x86" call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars32.bat"
   - if "%APPVEYOR_BUILD_WORKER_IMAGE%"=="Visual Studio 2017" if "%GENERATOR%"=="NMake Makefiles" if "%PLATFORM%"=="x64" call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars64.bat"
 
 before_build:
   - set PATH
   - perl -V
-  - cpan App::cpanminus
   - cpanm --notest Config::AutoConf::INI ExtUtils::CBuilder File::Basename File::Find File::Path
   - cd C:\projects\c-genericlogger
   - cmake -G "%GENERATOR%" -DCMAKE_BUILD_TYPE=%CONFIGURATION% .
