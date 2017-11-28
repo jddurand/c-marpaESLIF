@@ -9,7 +9,7 @@ platform: x64
 
 configuration: Release
 
-shallow_clone: true # Specific to github
+# shallow_clone: true # Specific to github
 
 matrix:
   fast_finish: false # set this flag to immediately finish build once one of the jobs fails.
