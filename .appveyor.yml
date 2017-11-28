@@ -19,6 +19,10 @@ environment:
     - PLATFORM: x64
     - PLATFORM: x86
 
+environment:
+  access_token:
+    secure: A/4rfTb0Vd7FoAjKEBq/1u3QjwGegZQKXRm0RJqSQGtZaI28wO/k8AcBq3iWbvaA
+
 init:
   - if not exist "C:\strawberry" cinst strawberryperl
   - set PATH=C:\strawberry\perl\bin;C:\strawberry\perl\site\bin;C:\strawberry\c\bin;%PATH%
@@ -41,3 +45,12 @@ test_script:
   - nmake check
   - nmake install
   - nmake pack
+
+on_success:
+  - git config --global credential.helper store
+  - ps: Add-Content "$env:USERPROFILE\.git-credentials" "https://$($env:access_token):x-oauth-basic@github.com`n"
+  - git config --global user.email "jeandamiendurand@free.fr"
+  - git config --global user.name "Jean-Damien Durand"
+  - git add *.exe
+  - git commit -m "%PLATFORM% package [ci skip]" *.exe
+  - git push
