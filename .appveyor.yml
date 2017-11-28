@@ -49,6 +49,9 @@ on_success:
   - ps: Add-Content "$env:USERPROFILE\.git-credentials" "https://$($env:access_token):x-oauth-basic@github.com`n"
   - git config --global user.email "jeandamiendurand@free.fr"
   - git config --global user.name "Jean-Damien Durand"
-  - git add *.exe
-  - git commit -m "%PLATFORM% package [ci skip]" *.exe
+  - cd C:\projects\c-genericlogger
+  - if not exist "package" mkdir package
+  - copy /y *.exe package
+  - git add package
+  - git commit -m "%PLATFORM% package [ci skip]" package
   - git push
