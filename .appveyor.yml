@@ -15,13 +15,11 @@ matrix:
   fast_finish: false # set this flag to immediately finish build once one of the jobs fails.
 
 environment:
+  access_token:
+    secure: A/4rfTb0Vd7FoAjKEBq/1u3QjwGegZQKXRm0RJqSQGtZaI28wO/k8AcBq3iWbvaA
   matrix:
     - PLATFORM: x64
     - PLATFORM: x86
-
-environment:
-  access_token:
-    secure: A/4rfTb0Vd7FoAjKEBq/1u3QjwGegZQKXRm0RJqSQGtZaI28wO/k8AcBq3iWbvaA
 
 init:
   - if not exist "C:\strawberry" cinst strawberryperl
