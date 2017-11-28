@@ -17,21 +17,13 @@ matrix:
 environment:
   matrix:
     - PLATFORM: x64
-      BUILDER: CMake
-      GENERATOR: "NMake Makefiles"
-      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-      PROJECT_SOURCE_DIR: C:\projects\c-genericlogger
     - PLATFORM: x86
-      BUILDER: CMake
-      GENERATOR: "NMake Makefiles"
-      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-      PROJECT_SOURCE_DIR: C:\projects\c-genericlogger
 
 init:
   - if not exist "C:\strawberry" cinst strawberryperl
   - set PATH=C:\strawberry\perl\bin;C:\strawberry\perl\site\bin;C:\strawberry\c\bin;%PATH%
-  - if "%APPVEYOR_BUILD_WORKER_IMAGE%"=="Visual Studio 2017" if "%GENERATOR%"=="NMake Makefiles" if "%PLATFORM%"=="x86" call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars32.bat"
-  - if "%APPVEYOR_BUILD_WORKER_IMAGE%"=="Visual Studio 2017" if "%GENERATOR%"=="NMake Makefiles" if "%PLATFORM%"=="x64" call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars64.bat"
+  - if "%PLATFORM%"=="x86" call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars32.bat"
+  - if "%PLATFORM%"=="x64" call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars64.bat"
 
 before_build:
   - set PATH
@@ -41,11 +33,11 @@ before_build:
 build_script:
   - perl CMakeObjects.PL
   - del /f /s /q output
-  - cd %PROJECT_SOURCE_DIR%
-  - cmake -G "%GENERATOR%" -DCMAKE_BUILD_TYPE=%CONFIGURATION% .
+  - cd C:\projects\c-genericlogger
+  - cmake -G "NMake Makefiles" -DCMAKE_BUILD_TYPE=%CONFIGURATION% .
   - nmake
 
 test_script:
   - nmake check
   - nmake install
-  - nmake package
+  - nmake pack
