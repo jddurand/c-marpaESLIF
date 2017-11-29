@@ -11,7 +11,7 @@ clone_folder: C:\projects\c-genericlogger
 clone_depth: 2 # Every build is pushing, and we have two possible builds
 
 matrix:
-  fast_finish: true # set this flag to immediately finish build once one of the jobs fails.
+  fast_finish: true # Immediately finish build once one of the jobs fails
 
 environment:
   access_token:
@@ -19,6 +19,9 @@ environment:
   matrix:
     - PLATFORM: x64
     - PLATFORM: x86
+
+cache:
+  - C:\strawberry # Do not reinstall strawberryperl between builds
 
 init:
   - if not exist "C:\strawberry" cinst strawberryperl
