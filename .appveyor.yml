@@ -8,7 +8,7 @@ configuration: Release
 
 clone_folder: C:\projects\c-genericlogger
 
-shallow_clone: true # Specific to github
+clone_depth: 1
 
 matrix:
   fast_finish: true # set this flag to immediately finish build once one of the jobs fails.
