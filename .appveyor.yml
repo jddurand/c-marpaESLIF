@@ -8,7 +8,7 @@ configuration: Release
 
 clone_folder: C:\projects\c-genericlogger
 
-clone_depth: 1
+clone_depth: 2 # Every build is pushing, and we have two possible builds
 
 matrix:
   fast_finish: true # set this flag to immediately finish build once one of the jobs fails.
