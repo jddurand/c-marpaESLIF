@@ -6,7 +6,7 @@ platform: x64
 
 configuration: Release
 
-clone_folder: D:\myproject # Not on NAS so that it is faster
+clone_folder: C:\projects\c-genericlogger
 
 shallow_clone: true # Specific to github
 
@@ -34,7 +34,7 @@ before_build:
 build_script:
   - perl CMakeObjects.PL
   - del /f /s /q output
-  - cd D:\myproject
+  - cd C:\projects\c-genericlogger
   - cmake -G "NMake Makefiles" -DCMAKE_BUILD_TYPE=%CONFIGURATION% .
   - nmake
 
@@ -48,7 +48,7 @@ on_success:
   - ps: Add-Content "$env:USERPROFILE\.git-credentials" "https://$($env:access_token):x-oauth-basic@github.com`n"
   - git config --global user.email "jeandamiendurand@free.fr"
   - git config --global user.name "Jean-Damien Durand"
-  - cd D:\myproject
+  - cd C:\projects\c-genericlogger
   - if not exist "package" mkdir package
   - copy /y *.exe package
   - git checkout master
