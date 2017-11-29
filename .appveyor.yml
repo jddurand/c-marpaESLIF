@@ -1,6 +1,3 @@
-#
-# Loosely based on https://github.com/intercept/intercept/blob/master/appveyor.yml
-#
 version: 1.0.{build}
 
 image: Visual Studio 2017
@@ -9,10 +6,12 @@ platform: x64
 
 configuration: Release
 
-# shallow_clone: true # Specific to github
+clone_folder: D:\projects\myproject # Not on NAS so that it is faster
+
+shallow_clone: true # Specific to github
 
 matrix:
-  fast_finish: false # set this flag to immediately finish build once one of the jobs fails.
+  fast_finish: true # set this flag to immediately finish build once one of the jobs fails.
 
 environment:
   access_token:
@@ -35,7 +34,7 @@ before_build:
 build_script:
   - perl CMakeObjects.PL
   - del /f /s /q output
-  - cd C:\projects\c-genericlogger
+  - cd D:\projects\myproject
   - cmake -G "NMake Makefiles" -DCMAKE_BUILD_TYPE=%CONFIGURATION% .
   - nmake
 
@@ -49,9 +48,10 @@ on_success:
   - ps: Add-Content "$env:USERPROFILE\.git-credentials" "https://$($env:access_token):x-oauth-basic@github.com`n"
   - git config --global user.email "jeandamiendurand@free.fr"
   - git config --global user.name "Jean-Damien Durand"
-  - cd C:\projects\c-genericlogger
+  - cd D:\projects\myproject
   - if not exist "package" mkdir package
   - copy /y *.exe package
+  - git checkout master
   - git add package
   - git commit -m "%PLATFORM% package [ci skip]" package
   - git push
