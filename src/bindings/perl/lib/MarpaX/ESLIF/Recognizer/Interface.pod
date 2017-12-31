@@ -60,4 +60,10 @@ Absolute position tracking must be on if you plan to use one of the lastComplete
 
 =back
 
+=head2 NOTES
+
+The C<isWithDisableThreshold()>, C<isWithExhaustion()>, C<isWithNewline()> and C<isWithTrack()> methods are always called once at the very beginning of a recognizer processing.
+
+The C<read()>, C<encoding()>, C<isEof()> and C<isCharacterStream()> methods are always called whenever the parser needs more data, and in this order.
+
 =cut
