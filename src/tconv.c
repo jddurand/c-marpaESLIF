@@ -44,6 +44,8 @@ struct tconv {
   tconv_convert_external_t convertExternal;
   /* 6. last error */
   char                     errors[TCONV_ERROR_SIZE];
+  /* 7. fuzzy state */
+  short                    fuzzyb;
 };
 
 #define TCONV_MAX(tconvp, literalA, literalB) (((literalA) > (literalB)) ? (literalA) : (literalB))
@@ -236,9 +238,12 @@ tconv_t tconv_open_ext(const char *tocodes, const char *fromcodes, tconv_option_
   /* 5. options - we always end up in an "external"-like configuration */
   /* charsetExternal and convertExternal do not contain malloc thingies */
   /* 6. last error */
-  tconvp->errors[0]                    = '\0';
+  tconvp->errors[0] = '\0';
   /* Last byte can never change, because we do an strncpy */
   tconvp->errors[TCONV_ERROR_SIZE - 1] = '\0';
+  /* 7. fuzzy state */
+  tconvp->fuzzyb = 0;
+
   /* 1. trace */
   traces                       = getenv(TCONV_ENV_TRACE);
   tconvp->traceb               = (traces != NULL) ? (atoi(traces) != 0 ? 1 : 0) : 0;
@@ -776,4 +781,39 @@ char *tconv_tocode(tconv_t tconvp)
 #endif
 
   return tocodes;
+}
+
+/****************************************************************************/
+short tconv_fuzzy_set(tconv_t tconvp, short fuzzy)
+/****************************************************************************/
+{
+  static const char funcs[] = "tconv_fuzzy_set";
+
+  TCONV_TRACE(tconvp, "%s(%p, %d)", funcs, tconvp, (int) fuzzy);
+
+  if (tconvp != NULL) {
+    tconvp->fuzzyb = fuzzy;
+  }
+
+  TCONV_TRACE(tconvp, "%s - return %d", funcs, (int) fuzzy);
+
+  return fuzzy;
+}
+
+/****************************************************************************/
+short tconv_fuzzy(tconv_t tconvp)
+/****************************************************************************/
+{
+  static const char funcs[] = "tconv_fuzzy";
+  short             fuzzyb  = 0;
+
+  TCONV_TRACE(tconvp, "%s(%p)", funcs, tconvp);
+
+  if (tconvp != NULL) {
+    fuzzyb = tconvp->fuzzyb;
+  }
+
+  TCONV_TRACE(tconvp, "%s - return %d", funcs, (int) fuzzyb);
+
+  return fuzzyb;
 }

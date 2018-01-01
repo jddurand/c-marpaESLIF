@@ -62,7 +62,8 @@ static void fileconvert(int outputFd, char *filenames,
                         tconv_convert_t *convertp, tconv_charset_t *charsetp,
 			short guessb,
 			size_t bufsizel,
-			short fromPrintb
+			short fromPrintb,
+			short fuzzyb
 #ifndef TCONV_NTRACE
 			, short verbose
 #endif
@@ -78,6 +79,7 @@ int main(int argc, char **argv)
   short                fromPrintb     = 0;
   char                *fromcodes      = NULL;
   short                guessb         = 0;
+  short                fuzzyb         = 0;
   char                *charsetEngines = NULL;
   char                *convertEngines = NULL;
   short                helpb          = 0;
@@ -103,6 +105,7 @@ int main(int argc, char **argv)
     {       "verbose", 'v', OPTPARSE_OPTIONAL},
 #endif
     {       "version", 'V', OPTPARSE_OPTIONAL},
+    {         "fuzzy", 'z', OPTPARSE_OPTIONAL},
     {0}
   };
 
@@ -187,6 +190,9 @@ int main(int argc, char **argv)
       GENERICLOGGER_INFOF(NULL, "tconv %s", TCONV_VERSION);
       exit(EXIT_SUCCESS);
       break;
+    case 'z':
+      fuzzyb = 1;
+      break;
     case '?':
       GENERICLOGGER_ERRORF(NULL, "%s: %s", argv[0], options.errmsg);
       _usage(argv[0], 0);
@@ -235,7 +241,8 @@ int main(int argc, char **argv)
                 convertp, charsetp,
 		guessb,
 		bufsizel,
-		fromPrintb
+		fromPrintb,
+		fuzzyb
 #ifndef TCONV_NTRACE
 		, verbose
 #endif
@@ -262,7 +269,8 @@ static void fileconvert(int outputFd, char *filenames,
                         tconv_convert_t *convertp, tconv_charset_t *charsetp,
 			short guessb,
 			size_t bufsizel,
-			short fromPrintb
+			short fromPrintb,
+			short fuzzyb
 #ifndef TCONV_NTRACE
 			, short verbose
 #endif
@@ -396,6 +404,10 @@ static void fileconvert(int outputFd, char *filenames,
 	  GENERICLOGGER_INFOF(NULL, "%s: %s", filenames, tconv_fromcode(tconvp));
 	  fromPrintb = 0;
 	}
+	if (fuzzyb != 0) {
+	  GENERICLOGGER_INFOF(NULL, "%s: %s", "Fuzzy conversion", tconv_fuzzy(tconvp) ? "yes" : "no");
+	  fuzzyb = 0;
+	}
       }
 
       if (eofb) {
@@ -470,6 +482,7 @@ static void _usage(char *argv0, short helpb)
 #ifndef TCONV_NTRACE
     printf("  -v, --verbose               Verbose mode.\n");
 #endif
+    printf("  -z, --fuzzy                 Show fuzzy conversion state.\n");
 
     printf("\n");
     printf("Examples:");

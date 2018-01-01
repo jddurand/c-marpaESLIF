@@ -94,6 +94,9 @@ void  *tconv_convert_iconv_new(tconv_t tconvp, const char *tocodes, const char *
 
     if (C_STRNICMP(tocodes, fromcodes, strlen(fromcodes)) == 0) {
       TCONV_TRACE(tconvp, "%s - same destination and source \"%s\": direct byte copy will happen", funcs, tocodes);
+      TCONV_TRACE(tconvp, "%s - calling tconv_fuzzy_set(%p, 1)", funcs, tconvp);
+      tconv_fuzzy_set(tconvp, 1);
+      TCONV_TRACE(tconvp, "%s - return %p", funcs, &fuzzyb);
       return (iconv_t) &fuzzyb;
     }
   }
