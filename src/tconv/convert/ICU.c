@@ -705,7 +705,7 @@ size_t _tconv_convert_ICU_run(tconv_t tconvp, tconv_convert_ICU_context_t *conte
                                &limitl,
                                &uErrorCode);
             if (U_FAILURE(uErrorCode)) {
-              errno = EINVAL;
+              errno = ENOSYS;
               goto err;
             }
           }
@@ -827,7 +827,7 @@ size_t _tconv_convert_ICU_run(tconv_t tconvp, tconv_convert_ICU_context_t *conte
       rcl     = (size_t)-1;
       goto overflow;
     } else if (U_FAILURE(uErrorCode)) {
-      errno = EINVAL;
+      errno = ENOSYS;
       goto err;
     }
 
