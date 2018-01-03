@@ -396,7 +396,7 @@ static void fileconvert(int outputFd, char *filenames,
           goto again;
 	  break;
 	default:
-	  GENERICLOGGER_ERRORF(NULL, "%s: %s", filenames, tconv_error(tconvp));
+	  GENERICLOGGER_ERRORF(NULL, "%s: %s", filenames, strerror(errno));
 	  goto end;
 	}
       } else {

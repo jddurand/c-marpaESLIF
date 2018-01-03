@@ -486,7 +486,7 @@ size_t tconv_convert_ICU_run(tconv_t tconvp, void *voidp, char **inbufpp, size_t
 
   /* else, outbufpp and outbytesleftlp must be non NULL */
   if ((outbufpp == NULL) || (outbytesleftlp == NULL)) {
-    errno = EINVAL;
+    errno = ERANGE;
     goto err;
   }
 
@@ -581,7 +581,11 @@ size_t _tconv_convert_ICU_run(tconv_t tconvp, tconv_convert_ICU_context_t *conte
 		   flushb,
 		   &uErrorCode);
     if (U_FAILURE(uErrorCode) && (uErrorCode != U_BUFFER_OVERFLOW_ERROR)) {
-      errno = ENOSYS;
+      if ((uErrorCode == U_INVALID_CHAR_FOUND) || (uErrorCode == U_ILLEGAL_CHAR_FOUND)) {
+        errno = (*inbytesleftlp > 0) ? EILSEQ : EINVAL;
+      } else {
+        errno = ENOSYS;
+      }
       goto err;
     }
 
