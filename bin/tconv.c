@@ -287,12 +287,14 @@ static void fileconvert(int outputFd, char *filenames,
   tconv_option_t  tconvOption;
   size_t          nconvl;
   size_t          nwritel;
+  size_t          inbufallocl;
 
   inbuforigp = malloc(bufsizel);
   if (inbuforigp == NULL) {
     GENERICLOGGER_ERRORF(NULL, "malloc: %s", strerror(errno));
     goto end;
   }
+  inbufallocl = bufsizel;
 
   /* We start with an outbuf size the same as inbuf */
   outbuforigp = malloc(outsizel);
@@ -339,18 +341,35 @@ static void fileconvert(int outputFd, char *filenames,
 #endif
 
   while (1) {
-    char *inbufp    = inbuforigp;
-    char *outbufp   = outbuforigp;
-    size_t outleftl = outsizel;
-    short  eofb     = 0;
-    size_t inleftl  = (size_t) read(fd, inbuforigp, bufsizel);
-   
-    if (inleftl == (size_t)-1) {
+    char *inbufp;
+    char *outbufp;
+    short  eofb;
+    size_t outleftl;
+    size_t inleftl;
+    size_t memmovedl;
+    size_t readl;
+
+    memmovedl = 0;            /* != 0 only when previous iteration reached EINVAL */
+  einval_case:
+    inbufp   = inbuforigp;
+    outbufp  = outbuforigp;
+    outleftl = outsizel;
+    eofb     = 0;
+#ifndef TCONV_NTRACE
+    if (verbose) {
+      GENERICLOGGER_TRACEF(NULL, "%s: reading %ld bytes, leftover of %ld bytes", filenames, (unsigned long) bufsizel, (unsigned long) memmovedl);
+    }
+#endif
+    readl = (size_t) read(fd, inbufp + memmovedl, bufsizel);
+
+    if (readl == (size_t)-1) {
       GENERICLOGGER_ERRORF(NULL, "Failed to read from %s: %s", filenames, strerror(errno));
       goto end;
-    } else if (inleftl == 0) {
+    } else if (readl == 0) {
       eofb = 1;
     }
+
+    inleftl = readl + memmovedl;
 
     if (guessb) {
       /* Force an E2BIG situation */
@@ -376,7 +395,7 @@ static void fileconvert(int outputFd, char *filenames,
 	switch (errno) {
 	case E2BIG:
 	  if (guessb != 0) {
-	    /* Print from codeset, simulate eof and exit the loop, no writing */
+	    /* Print the "from" codeset, simulate eof and exit the loop, no writing */
 	    GENERICLOGGER_INFOF(NULL, "%s: %s", filenames, tconv_fromcode(tconvp));
 	    fromPrintb = 0;
 	    eofb = 1;
@@ -397,6 +416,43 @@ static void fileconvert(int outputFd, char *filenames,
 	  }
           goto again;
 	  break;
+        case EILSEQ:
+          /* Invalid byte sequence */
+	  GENERICLOGGER_ERRORF(NULL, "%s: %s", filenames, strerror(errno));
+	  goto end;
+        case EINVAL:
+          /* Incomplete byte sequence */
+#ifndef TCONV_NTRACE
+          if (verbose) {
+            GENERICLOGGER_TRACEF(NULL, "%s: %s, %ld bytes left", filenames, strerror(errno), (unsigned long) inleftl);
+          }
+#endif
+          /* It is impossible in theory to have inleftl == 0 */
+          if (inleftl <= 0) {
+            GENERICLOGGER_ERRORF(NULL, "%s: Incomplete byte sequence but no byte left in the input buffer?", filenames);
+            goto end;
+          }
+          if ((inleftl + bufsizel) <= inbufallocl) {
+            memmove(inbuforigp, inbufp, inleftl);
+          } else {
+            /* The whole allocated input buffer is occupied by the invalid byte sequence! */
+            char *tmps;
+
+#ifndef TCONV_NTRACE
+            if (verbose) {
+              GENERICLOGGER_TRACEF(NULL, "%s: increasing input buffer from %ld to %ld", filenames, (unsigned long) inbufallocl, (unsigned long) (inleftl + bufsizel));
+            }
+#endif
+            tmps = realloc(inbuforigp, inleftl + bufsizel);
+            if (tmps == NULL) {
+              GENERICLOGGER_ERRORF(NULL, "realloc: %s", strerror(errno));
+              goto end;
+            }
+            inbuforigp  = tmps;
+            inbufallocl = inleftl + bufsizel;
+          }
+          memmovedl = inleftl;
+          goto einval_case;
 	default:
 	  GENERICLOGGER_ERRORF(NULL, "%s: %s", filenames, strerror(errno));
 	  goto end;
