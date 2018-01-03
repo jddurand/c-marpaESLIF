@@ -11,6 +11,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <locale.h>
 #ifndef _WIN32
 #  include <unistd.h>
 #else
@@ -234,6 +235,7 @@ int main(int argc, char **argv)
     outputFd = fileno(stdout);
   }
 
+  setlocale(LC_ALL, "");
   while ((args = optparse_arg(&options)) != NULL) {
     doneSomethingb = 1;
     fileconvert(outputFd, args,
