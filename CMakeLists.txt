@@ -124,35 +124,6 @@ IF (ICONV_FOUND)
   ENDIF ()
 ENDIF ()
 
-# -----------------------------------------------------------------------------------------------------
-# Some iconv implementation dislike very much when from and to charsets are the same (case insensitive)
-# We require that the the system provides a meaningul strcasecmp'like function.
-# As a last resort we will fall back to a horribe internal version.
-# The folloying CMake check is a copy/paste of what is doing luacom.
-# -----------------------------------------------------------------------------------------------------
-INCLUDE ( CheckSymbolExists )
-CHECK_SYMBOL_EXISTS ( _strnicmp string.h HAVE__STRNICMP )
-IF (HAVE__STRNICMP)
-  SET (STRNICMP _strnicmp)
-ENDIF ()
-IF (NOT STRNICMP)
-  CHECK_SYMBOL_EXISTS (strnicmp string.h HAVE_STRNICMP)
-  IF (HAVE_STRNICMP)
-    SET (STRNICMP strnicmp)
-  ENDIF ( )
-ENDIF ( )
-IF (NOT STRNICMP)
-  CHECK_SYMBOL_EXISTS (strncasecmp string.h HAVE_STRNCASECMP)
-  IF (HAVE_STRNCASECMP)
-    SET (STRNICMP strncasecmp)
-  ENDIF ()
-ENDIF ()
-IF (NOT STRNICMP)
-  MESSGE ( STATUS "_strnicmp, strnicmp, nor strncasecmp found - falling back to internal version _tconv_strnicmp" )
-  SET (STRNICMP _tconv_strnicmp)
-ENDIF ( )
-ADD_DEFINITIONS (-DC_STRNICMP=${STRNICMP} )
-
 MYPACKAGELIBRARY(
   ${CMAKE_CURRENT_SOURCE_DIR}/include/tconv_config.h.in
   ${INCLUDE_OUTPUT_PATH}/tconv_config.h

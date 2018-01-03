@@ -52,15 +52,35 @@ typedef struct tconv_iconv_alias2category {
   char *alias;                                 /* Normalized version */
   char *categoriesp[TCONV_ICONV_MAX_CATEGORY]; /* Categories */
 } tconv_iconv_alias2category_t;
-
+    
 #define TCONV_ICONV_NB_ALIAS $nbalias
-tconv_iconv_alias2category_t alias2category[] = {
+static tconv_iconv_alias2category_t alias2category[] = {
 ";
     my @content;
     #
     # We precompute the maximum number of categories
+    # Most probable categories are on the top.
     #
-    foreach my $alias (sort keys %alias2categories) {
+    my %weight;
+    foreach (keys %alias2categories) {
+             if ($_ eq 'utf8')     { $weight{$_} = -11;
+        } elsif ($_ eq 'utf16')    { $weight{$_} = -10;
+        } elsif ($_ eq 'utf16le')  { $weight{$_} =  -9;
+        } elsif ($_ eq 'utf16be')  { $weight{$_} =  -8;
+        } elsif ($_ eq 'utf32')    { $weight{$_} =  -7;
+        } elsif ($_ eq 'utf32le')  { $weight{$_} =  -6;
+        } elsif ($_ eq 'utf32be')  { $weight{$_} =  -5;
+        } elsif ($_ =~ /^utf16/)   { $weight{$_} =  -4;
+        } elsif ($_ =~ /^utf32/)   { $weight{$_} =  -3;
+        } elsif ($_ =~ /^windows/) { $weight{$_} =  -2;
+        } elsif ($_ =~ /^cp/)      { $weight{$_} =  -1;
+        } else                     { $weight{$_} =   0;
+        }
+    }
+    foreach my $alias (sort
+                       {
+                           ($weight{$a} <=> $weight{$b}) || ($a cmp $b)
+                       } keys %alias2categories) {
         my $categories = $alias2categories{$alias};
         my @categories = map { "\"$_\"" } @{$categories};
         for (my $i = scalar(@categories); $i < $categoryl; $i++) {

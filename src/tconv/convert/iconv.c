@@ -22,7 +22,14 @@
 /*   charset is not UTF-8, or                           */
 /* - UTF-32 intermediate encoding                       */
 /* The implementation is simply calling recursively     */
-/* tconv -;                                             */
+/* tconv.                                               */
+/*                                                      */
+/* The difficulty is how to know in advance which type  */
+/* of conversion iconv will apply. Again this is not    */
+/* possible AFAIK. So we take the list from ICU to      */
+/* derive a list of "categories". This is particularly  */
+/* usefull when the input is an alias. If the category  */
+/* lookup fails, we fallback to simple name comparison. */
 /* ==================================================== */
 
 #include "tconv/convert/iconv.h"
@@ -30,10 +37,24 @@
 #include "alias.c"
 
 /* Context */
-#define TCONV_ICONV_BUFFER_SIZE 4096
+#define TCONV_ICONV_INITIAL_SIZE 4096
 typedef struct tconv_convert_iconv_context {
-  iconv_t iconvp;                           /* iconv itself */
-  char    buffers[TCONV_ICONV_BUFFER_SIZE]; /* Intermediate to avoid fuzzy mode */
+  iconv_t  iconvp;            /* iconv itself */
+  short    fuzzyb;            /* Fuzzy flag */
+  short    samecategoryb;     /* Same category flag */
+
+  /* --------------------------------------------- */
+  /* When samecategoryb is a true value            */
+  /* --------------------------------------------- */
+  /* input   ->  internal  -> output               */
+  /*     iconvfromp       iconvtop                 */
+  /* --------------------------------------------- */
+  iconv_t  iconvfromp;    /* iconv instances */
+  char    *internals;     /* Internal buffers */
+  size_t   internall;     /* Internal buffers length */
+  char    *internalp;     /* Internal buffers current position */
+  size_t   internalleftl; /* Internal buffers current position */
+  iconv_t  iconvtop;      /* iconv instances */
 } tconv_convert_iconv_context_t;
 
 #ifdef ICONV_SECOND_ARGUMENT_IS_CONST
@@ -42,11 +63,11 @@ typedef struct tconv_convert_iconv_context {
 #define ICONV_SECOND_ARGUMENT
 #endif
 
-const static short fuzzyb;
-static int    _tconv_strnicmp(const char *s1, const char *s2, size_t n);
 static size_t _tconv_convert_iconv_directl(tconv_t tconvp, char **inbuf, size_t *inbytesleft, char **outbuf, size_t *outbytesleft);
-static char  *_tconv_convert_charset_normalizeds(tconv_t tconvp, char *charsets);
-static short  _tconv_convert_charset_categoriesb(tconv_t tconvp, char *charsets, char ***categoriespp);
+static size_t _tconv_convert_iconv_internalfluhsl(tconv_t tconvp, tconv_convert_iconv_context_t *contextp, char **outbufpp, size_t *outbytesleftp);
+static size_t _tconv_convert_iconv_internall(tconv_t tconvp, tconv_convert_iconv_context_t *contextp, char **inbuf, size_t *inbytesleft, char **outbuf, size_t *outbytesleft);
+static char  *_tconv_convert_iconv_charset_normalizeds(tconv_t tconvp, const char *charsets);
+static char  *_tconv_convert_iconv_charset_lookupp(tconv_t tconvp, const char *charsets, char ***categoriespp);
 
 #ifndef ICONV_CAN_IGNORE
 #define TCONV_ICONV_IGNORE   "//IGNORE"
@@ -65,9 +86,25 @@ short is_bigendian;
 void  *tconv_convert_iconv_new(tconv_t tconvp, const char *tocodes, const char *fromcodes, void *voidp)
 /*****************************************************************************/
 {
-  static const char funcs[] = "tconv_convert_iconv_new";
-  short cancheckb           = ((tocodes != NULL) && (fromcodes != NULL));
-
+  static const char               funcs[]         = "tconv_convert_iconv_new";
+  short                           cancheckb       = ((tocodes != NULL) && (fromcodes != NULL));
+  char                           *tonormaliseds   = NULL;
+  char                           *fromnormaliseds = NULL;
+  iconv_t                         iconvp          = NULL;
+  short                           fuzzyb          = 0;
+  short                           samecategoryb   = 0;
+  iconv_t                         iconvfromp      = NULL;
+  iconv_t                         iconvtop        = NULL;
+  char                           *internals       = NULL;
+  size_t                          internall       = TCONV_ICONV_INITIAL_SIZE;
+  tconv_convert_iconv_context_t  *contextp        = NULL;
+  char                          **tocategoriespp;
+  char                          **fromcategoriespp;
+  char                            isutf8b;
+  char                           *intermediatecharsets;
+  int                             i;
+  int                             j;
+  
   if (cancheckb) {
 #ifndef ICONV_CAN_IGNORE
     {
@@ -126,31 +163,150 @@ void  *tconv_convert_iconv_new(tconv_t tconvp, const char *tocodes, const char *
     }
 #endif
 
-    if (C_STRNICMP(tocodes, fromcodes, strlen(fromcodes)) == 0) {
-      TCONV_TRACE(tconvp, "%s - same destination and source \"%s\": direct byte copy will happen", funcs, tocodes);
-      TCONV_TRACE(tconvp, "%s - calling tconv_fuzzy_set(%p, 1)", funcs, tconvp);
-      tconv_fuzzy_set(tconvp, 1);
-      TCONV_TRACE(tconvp, "%s - return %p", funcs, &fuzzyb);
-      return (iconv_t) &fuzzyb;
+    /* Normalized version should never be NULL - though categories can be */
+    tonormaliseds = _tconv_convert_iconv_charset_lookupp(tconvp, tocodes, &tocategoriespp);
+    if (tonormaliseds == NULL) {
+      goto err;
+    }
+    fromnormaliseds = _tconv_convert_iconv_charset_lookupp(tconvp, fromcodes, &fromcategoriespp);
+    if (fromnormaliseds == NULL) {
+      goto err;
+    }
+    if ((tocategoriespp != NULL) && ((fromcategoriespp != NULL))) {
+      for (i = 0; i < TCONV_ICONV_MAX_CATEGORY; i++) {
+        if (tocategoriespp[i] == NULL) {
+          break;
+        }
+        for (j = 0; j < TCONV_ICONV_MAX_CATEGORY; j++) {
+          if (fromcategoriespp[j] == NULL) {
+            break;
+          }
+          TCONV_TRACE(tconvp, "%s - tocategoriespp[%d] = \"%s\", fromcategoriespp[%d] = \"%s\"", funcs, i, tocategoriespp[i], j, fromcategoriespp[j]);
+          if (strcmp(tocategoriespp[i], fromcategoriespp[j]) == 0) {
+            TCONV_TRACE(tconvp, "%s - same category", funcs);
+            samecategoryb = 1;
+            break;
+          }
+        }
+      }
+    }
+    if (samecategoryb) {
+      /* Determine the intermediate encoding: UTF-8 or UTF-32 */
+      for (i = 0; (samecategoryb != 0) && (i < TCONV_ICONV_MAX_CATEGORY); i++) {
+        if (tocategoriespp[i] != NULL) {
+          isutf8b = (strcmp(tocategoriespp[i], "UTF-8") == 0) ? 1 : 0;
+          if (isutf8b) {
+            break;
+          }
+        } else {
+          break;
+        }
+      }
+
+      TCONV_TRACE(tconvp, "%s - same category is %sUTF-8", funcs, isutf8b ? "" : "not ");
+      intermediatecharsets = isutf8b ? "UTF-32" : "UTF-8";
+
+      TCONV_TRACE(tconvp, "%s - iconv_open(\"%s\", \"%s\")", funcs, intermediatecharsets, fromcodes);
+      iconvfromp = iconv_open(intermediatecharsets, fromcodes);
+      if (iconvfromp == NULL) {
+        goto err;
+      }
+      TCONV_TRACE(tconvp, "%s - iconv_open(\"%s\", \"%s\") returned %p", funcs, intermediatecharsets, fromcodes, iconvfromp);
+
+      TCONV_TRACE(tconvp, "%s - iconv_open(\"%s\", \"%s\")", funcs, tocodes, intermediatecharsets);
+      iconvtop = iconv_open(tocodes, intermediatecharsets);
+      if (iconvtop == NULL) {
+        goto err;
+      }
+      TCONV_TRACE(tconvp, "%s - iconv_open(\"%s\", \"%s\") returned %p", funcs, tocodes, intermediatecharsets, iconvtop);
+
+      TCONV_TRACE(tconvp, "%s - malloc(%ld)", funcs, (unsigned long) TCONV_ICONV_INITIAL_SIZE);
+      internals = (char *) malloc(TCONV_ICONV_INITIAL_SIZE);
+      if (internals == NULL) {
+        goto err;
+      }
+    } else {
+      /* Categories lookup failed, or succeeded but say the charset are not in the same category - do a basic strcmp on normalized charsets */
+      fuzzyb = (strcmp(tonormaliseds, fromnormaliseds) == 0) ? 1 : 0;
+      if (fuzzyb) {
+        TCONV_TRACE(tconvp, "%s - tconv_fuzzy_set(%p, 1)", funcs, tconvp);
+        tconv_fuzzy_set(tconvp, 1);
+      } else {
+        TCONV_TRACE(tconvp, "%s - iconv_open(\"%s\", \"%s\")", funcs, tocodes, fromcodes);
+        iconvp = iconv_open(tocodes, fromcodes);
+        if (iconvp == NULL) {
+          goto err;
+        }
+      }
     }
   }
 
-  TCONV_TRACE(tconvp, "%s - return iconv_open(%p, %p,)", funcs, tocodes, fromcodes);
-  return iconv_open(tocodes, fromcodes);
+  /* Setup the context */
+  TCONV_TRACE(tconvp, "%s - malloc(%ld)", funcs, (unsigned long) sizeof(tconv_convert_iconv_context_t));
+  contextp = (tconv_convert_iconv_context_t *) malloc(sizeof(tconv_convert_iconv_context_t));
+  if (contextp == NULL) {
+    goto err;
+  }
+  TCONV_TRACE(tconvp, "%s - contextp is %p", funcs, contextp);
+
+  contextp->iconvp            = iconvp;
+  contextp->fuzzyb            = fuzzyb;
+  contextp->samecategoryb     = samecategoryb;
+  contextp->iconvfromp        = iconvfromp;
+  contextp->internals         = internals;
+  contextp->internall         = internall;
+  contextp->internalp         = internals;
+  contextp->internalleftl     = internall;
+  contextp->iconvtop          = iconvtop;
+
+  goto done;
+
+ err:
+  if (iconvp != NULL) {
+    TCONV_TRACE(tconvp, "%s - iconv_close(%p)", funcs, iconvp);
+    iconv_close(iconvp);
+  }
+  if (iconvfromp != NULL) {
+    TCONV_TRACE(tconvp, "%s - iconv_close(%p)", funcs, contextp->iconvfromp);
+    iconv_close(iconvfromp);
+  }
+  if (iconvtop != NULL) {
+    TCONV_TRACE(tconvp, "%s - iconv_close(%p)", funcs, iconvtop);
+    iconv_close(iconvtop);
+  }
+  if (internals != NULL) {
+    TCONV_TRACE(tconvp, "%s - free(%p)", funcs, internals);
+    free(internals);
+  }
+
+ done:
+  if (tonormaliseds != NULL) {
+    free(tonormaliseds);
+  }
+  if (fromnormaliseds != NULL) {
+    free(fromnormaliseds);
+  }
+
+  TCONV_TRACE(tconvp, "%s - return %p", funcs, contextp);
+  return contextp;
 }
 
 /*****************************************************************************/
 size_t tconv_convert_iconv_run(tconv_t tconvp, void *voidp, char **inbufpp, size_t *inbytesleftlp, char **outbufpp, size_t *outbytesleftlp)
 /*****************************************************************************/
 {
-  static const char funcs[] = "tconv_convert_iconv_run";
+  static const char              funcs[] = "tconv_convert_iconv_run";
+  tconv_convert_iconv_context_t *contextp = (tconv_convert_iconv_context_t *) voidp;
 
-  if (voidp == (void *) &fuzzyb) {
+  if (contextp->fuzzyb) {
     TCONV_TRACE(tconvp, "%s - return _tconv_convert_iconv_directl(%p, %p, %p, %p, %p)", funcs, tconvp, inbufpp, inbytesleftlp, outbufpp, outbytesleftlp);
     return _tconv_convert_iconv_directl(tconvp, inbufpp, inbytesleftlp, outbufpp, outbytesleftlp);
+  } else if (contextp->samecategoryb) {
+    TCONV_TRACE(tconvp, "%s - return _tconv_convert_iconv_internall(%p, %p, %p, %p, %p, %p)", funcs, tconvp, contextp, inbufpp, inbytesleftlp, outbufpp, outbytesleftlp);
+    return _tconv_convert_iconv_internall(tconvp, contextp, inbufpp, inbytesleftlp, outbufpp, outbytesleftlp);
   } else {
-    TCONV_TRACE(tconvp, "%s - return iconv(%p, %p, %p, %p, %p)", funcs, voidp, inbufpp, inbytesleftlp, outbufpp, outbytesleftlp);
-    return iconv((iconv_t) voidp, (ICONV_SECOND_ARGUMENT char **) inbufpp, inbytesleftlp, outbufpp, outbytesleftlp);
+    TCONV_TRACE(tconvp, "%s - return iconv(%p, %p, %p, %p, %p)", funcs, contextp->iconvp, inbufpp, inbytesleftlp, outbufpp, outbytesleftlp);
+    return iconv(contextp->iconvp, (ICONV_SECOND_ARGUMENT char **) inbufpp, inbytesleftlp, outbufpp, outbytesleftlp);
   }
 }
 
@@ -158,32 +314,46 @@ size_t tconv_convert_iconv_run(tconv_t tconvp, void *voidp, char **inbufpp, size
 int tconv_convert_iconv_free(tconv_t tconvp, void *voidp)
 /*****************************************************************************/
 {
-  static const char funcs[] = "tconv_convert_iconv_free";
+  static const char              funcs[] = "tconv_convert_iconv_free";
+  tconv_convert_iconv_context_t *contextp = (tconv_convert_iconv_context_t *) voidp;
+  short                          errb;
+  int                            save_errno;
 
-  if (voidp == (void *) &fuzzyb) {
-    TCONV_TRACE(tconvp, "%s - return 0", funcs);
-    return 0;
+  if (contextp == NULL) {
+    errno = EINVAL;
+    goto err;
   } else {
-    TCONV_TRACE(tconvp, "%s - return iconv_close(%p)", funcs, voidp);
-    return iconv_close((iconv_t) voidp);
+    errb = 0;
+    if (contextp->iconvp != NULL) {
+      TCONV_TRACE(tconvp, "%s - iconv_close(%p)", funcs, contextp->iconvp);
+      if (iconv_close(contextp->iconvp) != 0) {
+        errb = 1;
+      }
+    }
+    if (contextp->iconvfromp != NULL) {
+      TCONV_TRACE(tconvp, "%s - iconv_close(%p)", funcs, contextp->iconvfromp);
+      if (iconv_close(contextp->iconvfromp) != 0) {
+        errb = 1;
+      }
+    }
+    if (contextp->iconvtop != NULL) {
+      TCONV_TRACE(tconvp, "%s - iconv_close(%p)", funcs, contextp->iconvtop);
+      if (iconv_close(contextp->iconvtop) != 0) {
+        errb = 1;
+      }
+    }
+    if (contextp->internals != NULL) {
+      TCONV_TRACE(tconvp, "%s - free(%p)", funcs, contextp->internals);
+      free(contextp->internals);
+    }
+    TCONV_TRACE(tconvp, "%s - free(contextp = %p)", funcs, contextp);
+    free(contextp);
   }
-}
 
-/****************************************************************************/
-static int _tconv_strnicmp(const char *s1, const char *s2, size_t n)
-/****************************************************************************/
-{
-  const unsigned char *ucs1 = (const unsigned char *) s1;
-  const unsigned char *ucs2 = (const unsigned char *) s2;
-  int d = 0;
+  return errb ? -1 : 0;
 
-  for ( ; n != 0; n--) {
-    const int c1 = tolower(*ucs1++);
-    const int c2 = tolower(*ucs2++);
-    if (((d = c1 - c2) != 0) || (c2 == '\0'))
-      break;
-  }
-  return d;
+ err:
+  return -1;
 }
 
 /*****************************************************************************/
@@ -236,11 +406,138 @@ static size_t _tconv_convert_iconv_directl(tconv_t tconvp, char **inbufpp, size_
   return (size_t)(0);
 }
 
+#define TCONV_ICONV_E2BIG_MANAGER(workbufp, workbytesleftl, bufs, bufl) do { \
+    char   *tmps;                                                       \
+    size_t  tmpl;                                                       \
+    size_t  deltal;                                                     \
+    char   *deltap;                                                     \
+                                                                        \
+    if (bufs == NULL) {                                                 \
+      tmpl = TCONV_ICONV_INITIAL_SIZE;                                  \
+      deltal = TCONV_ICONV_INITIAL_SIZE;                                \
+      TCONV_TRACE(tconvp, "%s - malloc(%ld)", funcs, (unsigned long) TCONV_ICONV_INITIAL_SIZE); \
+      tmps = (char *) malloc(TCONV_ICONV_INITIAL_SIZE);                 \
+    } else {                                                            \
+      tmpl = bufl * 2;                                                  \
+      deltal = bufl;                                                    \
+      if (tmpl < bufl) {                                                \
+        TCONV_TRACE(tconvp, "%s - size_t flip", funcs);                 \
+        errno = ERANGE;                                                 \
+        rcl = (size_t)-1;                                               \
+        goto err;                                                       \
+      }                                                                 \
+      TCONV_TRACE(tconvp, "%s - realloc(%p, %ld)", funcs, bufs, (unsigned long) tmpl); \
+      tmps = (char *) realloc(bufs, tmpl);                              \
+    }                                                                   \
+    if (tmps == NULL) {                                                 \
+      rcl = (size_t)-1;                                                 \
+      goto err;                                                         \
+    }                                                                   \
+    workbytesleftl += deltal;                                           \
+    deltap = bufs - workbytesleftl;                                     \
+    workbufp = tmps;                                                    \
+    deltal = (size_t) deltap;                                           \
+    workbufp += deltal;                                                 \
+    bufs = tmps;                                                        \
+    bufl = tmpl;                                                        \
+    TCONV_TRACE(tconvp, "%s - %s is now %p, length %ld", funcs, #bufs, bufs, (unsigned long) bufl); \
+  } while (1)
+
 /*****************************************************************************/
-static char  *_tconv_convert_charset_normalizeds(tconv_t tconvp, char *charsets)
+static size_t _tconv_convert_iconv_internalfluhsl(tconv_t tconvp, tconv_convert_iconv_context_t *contextp, char **outbufpp, size_t *outbytesleftlp)
 /*****************************************************************************/
 {
-  static const char funcs[] = "_tconv_convert_charset_normalizeds";
+  static const char  funcs[]        = "_tconv_convert_iconv_internalfluhsl";
+  char              *tmpinbufp      = contextp->internals;
+  size_t             tmpinbyteslefl = contextp->internalp - contextp->internals;
+  size_t             rcl;
+
+  if (tmpinbyteslefl > 0) {
+    TCONV_TRACE(tconvp, "%s - remains %ld bytes to flush", funcs, (unsigned long) tmpinbyteslefl);
+    rcl = iconv(contextp->iconvtop, (ICONV_SECOND_ARGUMENT char **) &tmpinbufp, &tmpinbyteslefl, outbufpp, outbytesleftlp);
+    contextp->internalp = contextp->internals + tmpinbyteslefl;
+#ifndef TCONV_NTRACE
+    if (rcl == (size_t)-1) {
+      TCONV_TRACE(tconvp, "%s - iconv on output returned -1, errno %d", funcs, errno);
+    } else {
+      TCONV_TRACE(tconvp, "%s - iconv on output returned %ld", funcs, (unsigned long) rcl);
+    }
+#endif
+  } else {
+    rcl = 0;
+  }
+
+  return rcl;
+}
+
+/*****************************************************************************/
+static size_t _tconv_convert_iconv_internall(tconv_t tconvp, tconv_convert_iconv_context_t *contextp, char **inbufpp, size_t *inbytesleftlp, char **outbufpp, size_t *outbytesleftlp)
+/*****************************************************************************/
+{
+  static const char  funcs[]  = "_tconv_convert_iconv_internall";
+  size_t             rcl;
+  int                errnoi;
+  char              *tmpinbufp;
+  size_t             tmpinbyteslefl;
+
+  /* A special case is then the user is asking for a reset to initial state without flush. */
+  if (((inbufpp == NULL) || (*inbufpp == NULL)) && ((outbufpp == NULL) || (*outbufpp == NULL))) {
+    TCONV_TRACE(tconvp, "%s - iconv(%p, NULL, NULL, NULL, NULL)", funcs, contextp->iconvfromp);
+    iconv(contextp->iconvfromp, NULL, NULL, NULL, NULL);
+    TCONV_TRACE(tconvp, "%s - iconv(%p, NULL, NULL, NULL, NULL)", funcs, contextp->iconvtop);
+    iconv(contextp->iconvtop, NULL, NULL, NULL, NULL);
+    TCONV_TRACE(tconvp, "%s - reset internal buffer backlog", funcs);
+    contextp->internalp = contextp->internals;
+    return 0;
+  }
+
+  /* We always want to flush previous state */
+  if (_tconv_convert_iconv_internalfluhsl(tconvp, contextp, outbufpp, outbytesleftlp) == (size_t)-1) {
+    return (size_t)-1;
+  }
+
+  /* Here it is guaranteed that the output buffer can be used entirely */
+  contextp->internalp     = contextp->internals; /* This can be NULL */
+  contextp->internalleftl = contextp->internall; /* This can be 0 */
+  while (1) {
+    rcl = iconv(contextp->iconvfromp,
+                (ICONV_SECOND_ARGUMENT char **) inbufpp,
+                inbytesleftlp,
+                &(contextp->internalp),
+                &(contextp->internalleftl));
+    errnoi = errno;
+#ifndef TCONV_NTRACE
+    /* Note that TCONV_TRACE is guaranteed to not alter errno */
+    if (rcl == (size_t)-1) {
+      TCONV_TRACE(tconvp, "%s - iconv on input returned -1, errno %d", funcs, errnoi);
+    } else {
+      TCONV_TRACE(tconvp, "%s - iconv on input returned %ld", funcs, (unsigned long) rcl);
+    }
+#endif
+    if ((rcl == (size_t)-1) && (errno == E2BIG)) {
+      TCONV_ICONV_E2BIG_MANAGER(contextp->internalp, contextp->internalleftl, contextp->internals, contextp->internall);
+    } else {
+      break;
+    }
+  }
+
+  /* We always want to flush current state */
+  if (_tconv_convert_iconv_internalfluhsl(tconvp, contextp, outbufpp, outbytesleftlp) == (size_t)-1) {
+    return (size_t)-1;
+  }
+
+  errno = errnoi;
+  return rcl;
+
+ err:
+  return (size_t)-1;
+}
+
+/*****************************************************************************/
+static char  *_tconv_convert_iconv_charset_normalizeds(tconv_t tconvp, const char *charsets)
+/*****************************************************************************/
+{
+  static const char funcs[] = "_tconv_convert_iconv_charset_normalizeds";
   char             *normalizeds;
   char             *p;
   char             *q;
@@ -259,7 +556,7 @@ static char  *_tconv_convert_charset_normalizeds(tconv_t tconvp, char *charsets)
     return NULL;
   }
 
-  p = charsets;
+  p = (char *) charsets;
   q = normalizeds;
   
   while ((c = (unsigned char) *p++) != '\0') {
@@ -285,50 +582,30 @@ static char  *_tconv_convert_charset_normalizeds(tconv_t tconvp, char *charsets)
 }
 
 /*****************************************************************************/
-static short _tconv_convert_charset_categoryb(tconv_t tconvp, char *charsets, char ***categoriespp)
+static char *_tconv_convert_iconv_charset_lookupp(tconv_t tconvp, const char *charsets, char ***categoriespp)
 /*****************************************************************************/
 {
   static const char             funcs[] = "_tconv_convert_charset_categorys";
   tconv_iconv_alias2category_t *alias2categoryp = alias2category;
   char                         *normalizeds;
-  char                        **categoriesp = NULL;
   short                         rcb;
   int                           i;
 
-  normalizeds = _tconv_convert_charset_normalizeds(tconvp, charsets);
-  if (normalizeds == NULL) {
-    goto err;
-  }
-
-  for (i = 0; i < TCONV_ICONV_NB_ALIAS; alias2categoryp++, i++) {
-    if (strcmp(alias2categoryp->alias, normalizeds) == 0) {
-      categoriesp = alias2categoryp->categoriesp;
-      break;
-    }
-  }
-
-  *categoriespp = categoriesp;
-  rcb = 1;
-  goto done;
-
- err:
-  rcb = 0;
-
- done:
+  normalizeds = _tconv_convert_iconv_charset_normalizeds(tconvp, charsets);
   if (normalizeds != NULL) {
-    free(normalizeds);
-  }
-
-#ifndef TCONV_NTRACE
-  if (rcb) {
-    if (*categoriespp != NULL) {
-      TCONV_TRACE(tconvp, "%s - return %d (*categoriespp = \"%s\"", funcs, (int) rcb, *categoriespp);
-    } else {
-      TCONV_TRACE(tconvp, "%s - return %d (*categoriespp = NULL)", funcs, (int) rcb);
+    for (i = 0; i < TCONV_ICONV_NB_ALIAS; alias2categoryp++, i++) {
+      TCONV_TRACE(tconvp, "%s - strcmp(\"%s\", \"%s\")", funcs, alias2categoryp->alias, normalizeds);
+      if (strcmp(alias2categoryp->alias, normalizeds) == 0) {
+        *categoriespp = alias2categoryp->categoriesp;
+        TCONV_TRACE(tconvp, "%s - return \"%s\" (*categoriespp = %p)", funcs, normalizeds, *categoriespp);
+        return normalizeds;
+      }
     }
+    *categoriespp = NULL;
+    TCONV_TRACE(tconvp, "%s - return \"%s\" (*categoriespp = NULL)", funcs, normalizeds);
+    return normalizeds;
   } else {
-    TCONV_TRACE(tconvp, "%s - return %d", funcs, (int) rcb);
+    TCONV_TRACE(tconvp, "%s - return NULL", funcs);
+    return NULL;
   }
-#endif
-  return rcb;
 }

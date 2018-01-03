@@ -308,7 +308,6 @@ sub write_config {
     $source =~ s/^[ \t]*#[ \t]*cmakedefine[ \t]+(\w+)+[ \t]+\@([^ \t@]*)\@//smg;
 
     open($fh, '>', $output) || die "Cannot open $output, $!";
-    my $c_va_copy = get_C_WRAPPER('va_copy');
     print $fh <<CONFIG;
 #ifndef TCONV_CONFIG_WRAPPER_H
 #define TCONV_CONFIG_WRAPPER_H
@@ -319,57 +318,11 @@ sub write_config {
 #define TCONV_HAVE_ICONV 1
 #define TCONV_VERSION "$version"
 
-$c_va_copy
-
-#ifdef C_VA_COPY
-#define TCONV_C_VA_COPY C_VA_COPY
-#endif
-
-#ifdef HAVE__STRNICMP
-#define C_STRNICMP _strnicmp
-#else
-  #ifdef HAVE_STRNICMP
-  #define C_STRNICMP strnicmp
-  #else
-    #ifdef HAVE_STRNCASECMP
-    #define C_STRNICMP strncasecmp
-    #else
-    #define C_STRNICMP _tconv_strnicmp
-    #endif
-  #endif
-#endif
-
 $source
 
 #endif /* TCONV_CONFIG_WRAPPER_H */
 CONFIG
     close($fh) || warn "Cannot close $output, $!";
-}
-
-sub get_C_WRAPPER {
-    my ($what, $required) = @_;
-
-    $required //= 1;
-
-    my $WHAT = uc($what);
-    my $error = $required ? "#error \"C_$WHAT is undefined\"" : '';
-
-    my $c_wrapper = <<C_WRAPPER;
-#ifdef HAVE_$WHAT
-#  define C_$WHAT $what
-#else
-#  ifdef HAVE__$WHAT
-#    define C_$WHAT _$what
-#  else
-#    ifdef HAVE___$WHAT
-#      define C_$WHAT __$what
-#    else
-$error
-#    endif
-#  endif
-#endif
-C_WRAPPER
-    return $c_wrapper
 }
 
 sub write_nscore {
