@@ -573,6 +573,7 @@ static char  *_tconv_convert_iconv_charset_normalizeds(tconv_t tconvp, const cha
     else if  (c == '+')             { *q++ = c; }
     else if  (c == '.')             { *q++ = c; }
     else if  (c == ':')             { *q++ = c; }
+    else if  (c == '/')             { break;    }
   };
 
   *q = '\0';
