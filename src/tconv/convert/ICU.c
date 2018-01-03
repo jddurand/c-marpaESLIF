@@ -582,7 +582,9 @@ size_t _tconv_convert_ICU_run(tconv_t tconvp, tconv_convert_ICU_context_t *conte
 		   &uErrorCode);
     if (U_FAILURE(uErrorCode) && (uErrorCode != U_BUFFER_OVERFLOW_ERROR)) {
       if ((uErrorCode == U_INVALID_CHAR_FOUND) || (uErrorCode == U_ILLEGAL_CHAR_FOUND)) {
-        errno = (*inbytesleftlp > 0) ? EILSEQ : EINVAL;
+        errno = EILSEQ;
+      } else if (uErrorCode == U_TRUNCATED_CHAR_FOUND) {
+        errno = EINVAL;
       } else {
         errno = ENOSYS;
       }
