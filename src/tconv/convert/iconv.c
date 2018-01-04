@@ -523,7 +523,9 @@ static size_t _tconv_convert_iconv_internall(tconv_t tconvp, tconv_convert_iconv
     return (size_t)-1;
   }
 
-  errno = errnoi;
+  if (rcl == (size_t)-1) {
+    errno = errnoi;
+  }
   return rcl;
 
  err:
