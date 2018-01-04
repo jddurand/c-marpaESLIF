@@ -3,6 +3,7 @@
 #include <errno.h>
 #include <ctype.h>
 #include <iconv.h>
+#include <assert.h>
 
 /* iconv interface is a direct proxy to iconv */
 
@@ -365,44 +366,40 @@ static size_t _tconv_convert_iconv_directl(tconv_t tconvp, char **inbufpp, size_
   /* C.f. https://dev.openwrt.org/browser/packages/libs/libiconv/src/iconv.c?rev=24777&order=name */
   size_t len = 0;
 
-  if (((inbufpp == NULL) || (*inbufpp == NULL)) &&
-      ((outbufpp != NULL) && (*outbufpp != NULL))) {
-    TCONV_TRACE(tconvp, "%s - Flush: no shift sequence - return 0", funcs);
-    return 0;
-  }
-
-  if (((inbufpp == NULL) || (*inbufpp == NULL)) &&
-      ((outbufpp == NULL) || (*outbufpp == NULL))) {
-    TCONV_TRACE(tconvp, "%s - Back to initial state - return 0", funcs);
-    return 0;
-  }
-
-  if ((inbytesleftlp  == NULL) || (*inbytesleftlp  < 0) ||
-      (outbytesleftlp == NULL) || (*outbytesleftlp < 0) ||
-      (outbufpp       == NULL) || (*outbufpp == NULL)) {
-    TCONV_TRACE(tconvp, "%s - EINVAL - return -1", funcs);
-    errno = EINVAL;
-    return (size_t)(-1);
-  }
-
-  if ((inbufpp != NULL) && (*inbufpp != NULL)) {
-    len = (*inbytesleftlp > *outbytesleftlp) ? *outbytesleftlp : *inbytesleftlp;
-
-    memcpy(*outbufpp, *inbufpp, len);
-
-    *inbufpp        += len;
-    *inbytesleftlp  -= len;
-    *outbufpp       += len;
-    *outbytesleftlp -= len;
-
-    if (*inbytesleftlp > 0) {
-      TCONV_TRACE(tconvp, "%s - E2BIG - return -1", funcs);
-      errno = E2BIG;
-      return (size_t)(-1);
+  if ((inbufpp == NULL) || (*inbufpp == NULL)) {
+    if ((outbufpp != NULL) && (*outbufpp != NULL)) {
+      TCONV_TRACE(tconvp, "%s - Flush: no shift sequence - return 0", funcs);
+      return 0;
+    } else {
+      TCONV_TRACE(tconvp, "%s - Back to initial state - return 0", funcs);
+      return 0;
     }
   }
 
-  TCONV_TRACE(tconvp, "%s - return 0", funcs);
+  /* From there it is illegal that outbufpp is NULL or *outbufpp is NULL */
+  assert((outbufpp == NULL) || (*outbufpp == NULL));
+
+  if ((inbytesleftlp  == NULL) || (*inbytesleftlp  <= 0) ||
+      (outbytesleftlp == NULL) || (*outbytesleftlp <= 0)) {
+    TCONV_TRACE(tconvp, "%s - Nothing to do - return 0", funcs);
+    return 0;
+  }
+
+  len = (*inbytesleftlp > *outbytesleftlp) ? *outbytesleftlp : *inbytesleftlp;
+  memcpy(*outbufpp, *inbufpp, len);
+
+  *inbufpp        += len;
+  *inbytesleftlp  -= len;
+  *outbufpp       += len;
+  *outbytesleftlp -= len;
+
+  if (*inbytesleftlp > 0) {
+    TCONV_TRACE(tconvp, "%s - E2BIG - return -1", funcs);
+    errno = E2BIG;
+    return (size_t)(-1);
+  }
+
+  TCONV_TRACE(tconvp, "%s - All is well - return 0", funcs);
   return (size_t)(0);
 }
 
