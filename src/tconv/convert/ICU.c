@@ -195,7 +195,7 @@ void  *tconv_convert_ICU_new(tconv_t tconvp, const char *tocodes, const char *fr
   TCONV_TRACE(tconvp, "%s - options are {uCharCapacityl=%lld, fallbackb=%s, signaturei=%d}", funcs, (unsigned long long) uCharCapacityl, (fallbackb == TRUE) ? "TRUE" : "FALSE", signaturei);
 
   /* ----------------------------------------------------------- */
-  /* Setup the from converter                                    */
+  /* Setup the from converter: handles the //IGNORE              */
   /* ----------------------------------------------------------- */
   toUCallbackp   = (ignoreb == TRUE) ? UCNV_TO_U_CALLBACK_SKIP : UCNV_TO_U_CALLBACK_STOP;
   toUContextp    = NULL;
@@ -216,9 +216,9 @@ void  *tconv_convert_ICU_new(tconv_t tconvp, const char *tocodes, const char *fr
 
   ucnv_setFallback(uConverterFromp, fallbackb);
 
-  /* ----------------------------------------------------------- */
-  /* Setup the proxy unicode buffer                              */
-  /* ----------------------------------------------------------- */
+  /* ------------------------------------------------------------------------------------------------------------------------ */
+  /* Setup the proxy unicode buffer: //TRANSLIT is done on that, with a fallback to Latin1 for any character outside of "to"  */
+  /* ------------------------------------------------------------------------------------------------------------------------ */
   {
     size_t uCharSizel = uCharCapacityl * sizeof(UChar);
     /* +1 hiden for eventual signature add */
@@ -229,10 +229,10 @@ void  *tconv_convert_ICU_new(tconv_t tconvp, const char *tocodes, const char *fr
     uCharBufLimitp = (const UChar *) (uCharBufOrigp + uCharCapacityl); /* In unit of UChar */
   }
 
-  /* ----------------------------------------------------------- */
-  /* Setup the to converter                                      */
-  /* ----------------------------------------------------------- */
-  fromUCallbackp = (ignoreb == TRUE) ? UCNV_FROM_U_CALLBACK_SKIP : UCNV_FROM_U_CALLBACK_STOP;
+  /* --------------------------------------------------------------------------------------- */
+  /* Setup the to converter: if //TRANSLIT apply substitution character if needed, else stop */
+  /* --------------------------------------------------------------------------------------- */
+  fromUCallbackp = (translitb == TRUE) ? UCNV_FROM_U_CALLBACK_SUBSTITUTE : UCNV_FROM_U_CALLBACK_STOP;
   fromUContextp  = NULL;
 
   uErrorCode = U_ZERO_ERROR;
@@ -287,7 +287,7 @@ void  *tconv_convert_ICU_new(tconv_t tconvp, const char *tocodes, const char *fr
     /* Get the complement */
     uset_complement(uSetTop);
 
-    /* then the string representation of the complement */
+    /* Get the string representation of the set */
     uErrorCode = U_ZERO_ERROR;
     uSetPatternTol = uset_toPattern(uSetTop, NULL, 0, TRUE, &uErrorCode);
     if (uErrorCode != U_BUFFER_OVERFLOW_ERROR) {
@@ -309,6 +309,28 @@ void  *tconv_convert_ICU_new(tconv_t tconvp, const char *tocodes, const char *fr
     *p++ = '\0';
     *p   = '\0';
 
+#ifndef TCONV_NTRACE
+    {
+      int32_t  patternCapacityl = 0;
+  
+      uErrorCode = U_ZERO_ERROR;
+      u_strToUTF8(NULL, 0, &patternCapacityl, uSetPatternTos, uSetPatternTol, &uErrorCode);
+      if (uErrorCode == U_BUFFER_OVERFLOW_ERROR) {
+	char *patterns = (char *) malloc(patternCapacityl + 1);
+	if (patterns != NULL) {
+	  uErrorCode = U_ZERO_ERROR;
+	  u_strToUTF8(patterns, patternCapacityl, &patternCapacityl, uSetPatternTos, uSetPatternTol, &uErrorCode);
+	  if (U_SUCCESS(uErrorCode)) {
+	    patterns[patternCapacityl] = '\0';
+	    /* In theory the pattern should have no non-ASCII character - if false, tant pis -; */
+	    TCONV_TRACE(tconvp, "%s - string representation of the complement of the \"to\" converter pattern set: %s", funcs, patterns);
+	  }
+	  free(patterns);
+	}
+      }
+    }
+#endif
+
     /* ---------------------------------------------------------------------------- */
     /* Create transliterator: "[toPattern] Any-Latin; Latin-ASCII"                  */
     /* ---------------------------------------------------------------------------- */
@@ -326,29 +348,7 @@ void  *tconv_convert_ICU_new(tconv_t tconvp, const char *tocodes, const char *fr
       goto err;
     }
 
-    /* Add a filter to this transliterator using "to" pattern */
-#ifndef TCONV_NTRACE
-    {
-      int32_t  patternCapacityl = 0;
-  
-      uErrorCode = U_ZERO_ERROR;
-      u_strToUTF8(NULL, 0, &patternCapacityl, uSetPatternTos, uSetPatternTol, &uErrorCode);
-      if (uErrorCode == U_BUFFER_OVERFLOW_ERROR) {
-	char *patterns = (char *) malloc(patternCapacityl + 1);
-	if (patterns != NULL) {
-	  uErrorCode = U_ZERO_ERROR;
-	  u_strToUTF8(patterns, patternCapacityl, &patternCapacityl, uSetPatternTos, uSetPatternTol, &uErrorCode);
-	  if (U_SUCCESS(uErrorCode)) {
-	    patterns[patternCapacityl] = '\0';
-	    /* In theory the pattern should have no non-ASCII character - if false, tant pis -; */
-	    TCONV_TRACE(tconvp, "%s - filtering transliterator with the complement of \"to\" converter pattern: %s", funcs, patterns);
-	  }
-	  free(patterns);
-	}
-      }
-    }
-#endif
-
+    TCONV_TRACE(tconvp, "%s - saying transliterator to act on the complement of the \"to\" pattern set", funcs);
     uErrorCode = U_ZERO_ERROR;
     utrans_setFilter(uTransliteratorp,
                      uSetPatternTos,
