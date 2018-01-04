@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <string.h>
+#include <assert.h>
 
 #include <unicode/uconfig.h>
 #include <unicode/ucnv.h>
@@ -471,10 +472,7 @@ size_t tconv_convert_ICU_run(tconv_t tconvp, void *voidp, char **inbufpp, size_t
   UBool                        flushb;
 
   /* Converters reset ? */
-  if (((inbufpp == NULL) || (*inbufpp == NULL))
-      &&
-      ((outbufpp == NULL) || (*outbufpp == NULL))
-      ) {
+  if (((inbufpp == NULL) || (*inbufpp == NULL)) && ((outbufpp == NULL) || (*outbufpp == NULL))) {
     TCONV_TRACE(tconvp, "%s - reset", funcs);
     ucnv_reset(contextp->uConverterFromp);
     ucnv_reset(contextp->uConverterTop);
@@ -484,33 +482,30 @@ size_t tconv_convert_ICU_run(tconv_t tconvp, void *voidp, char **inbufpp, size_t
     return 0;
   }
 
-  /* else, outbufpp and outbytesleftlp must be non NULL */
-  if ((outbufpp == NULL) || (outbytesleftlp == NULL)) {
-    errno = ERANGE;
-    goto err;
-  }
+  /* From there it is illegal that outbufpp is NULL or *outbufpp is NULL */
+  assert((outbufpp == NULL) || (*outbufpp == NULL));
 
   /* Prepare work variables */
-  inbufp        = ((inbufpp      != NULL) && (*inbufpp != NULL)) ? *inbufpp       : dummys;
-  inbytesleftl  = (inbytesleftlp != NULL)                        ? *inbytesleftlp : 0;
+  inbufp        = ((inbufpp      != NULL) && (*inbufpp != NULL)) ? *inbufpp        : dummys;
+  inbytesleftl  = (inbytesleftlp != NULL)                        ? *inbytesleftlp  : 0;
   outbufp       = *outbufpp;
-  outbytesleftl = *outbytesleftlp;
+  outbytesleftl = (outbytesleftlp != NULL)                       ? *outbytesleftlp : 0;
+  flushb        = ((inbufpp == NULL) || (*inbufpp == NULL))      ? TRUE            : FALSE;
 
-  /* Flush mode ? */
-  flushb        = ((inbufpp != NULL) && (*inbufpp != NULL)) ? FALSE : TRUE;
   if ((flushb == TRUE) && (inbytesleftl != 0)) {
     /* make sure no byte is read in any case if this is a flush */
     inbytesleftl = 0;
   }
 
   rcl = _tconv_convert_ICU_run(tconvp, contextp, &inbufp, &inbytesleftl, &outbufp, &outbytesleftl, flushb);
-  if ( (rcl != (size_t)-1) ||
-      ((rcl == (size_t)-1) && (errno == E2BIG))) {
+  if ((rcl != (size_t)-1) || ((rcl == (size_t)-1) && (errno == E2BIG))) {
     if (inbufpp != NULL) {
       *inbufpp       = inbufp;
       *inbytesleftlp = inbytesleftl;
     }
-    *outbytesleftlp = outbytesleftl;
+    if (outbytesleftlp != NULL) {
+      *outbytesleftlp = outbytesleftl;
+    }
     *outbufpp       = outbufp;
   }
   
