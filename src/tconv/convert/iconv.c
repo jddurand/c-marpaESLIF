@@ -182,14 +182,13 @@ void  *tconv_convert_iconv_new(tconv_t tconvp, const char *tocodes, const char *
           if (fromcategoriespp[j] == NULL) {
             break;
           }
-          TCONV_TRACE(tconvp, "%s - tocategoriespp[%d] = \"%s\", fromcategoriespp[%d] = \"%s\"", funcs, i, tocategoriespp[i], j, fromcategoriespp[j]);
           if (strcmp(tocategoriespp[i], fromcategoriespp[j]) == 0) {
-            TCONV_TRACE(tconvp, "%s - same category", funcs);
             samecategoryb = 1;
             break;
           }
         }
       }
+      TCONV_TRACE(tconvp, "%s - same category mode is %s", funcs, samecategoryb ? "on" : "off");
     }
     if (samecategoryb) {
       /* Determine the intermediate encoding: UTF-8 or UTF-32 */
@@ -227,7 +226,7 @@ void  *tconv_convert_iconv_new(tconv_t tconvp, const char *tocodes, const char *
         goto err;
       }
     } else {
-      /* Categories lookup failed, or succeeded but say the charset are not in the same category - do a basic strcmp on normalized charsets */
+      /* Categories lookup failed, or succeeded but say the charsets are not in the same category - do a basic strcmp on normalized charsets */
       fuzzyb = (strcmp(tonormaliseds, fromnormaliseds) == 0) ? 1 : 0;
       if (fuzzyb) {
         TCONV_TRACE(tconvp, "%s - tconv_fuzzy_set(%p, 1)", funcs, tconvp);
@@ -438,7 +437,7 @@ static size_t _tconv_convert_iconv_directl(tconv_t tconvp, char **inbufpp, size_
     bufs = tmps;                                                        \
     bufl = tmpl;                                                        \
     TCONV_TRACE(tconvp, "%s - %s is now %p, length %ld", funcs, #bufs, bufs, (unsigned long) bufl); \
-  } while (1)
+  } while (0)
 
 /*****************************************************************************/
 static size_t _tconv_convert_iconv_internalfluhsl(tconv_t tconvp, tconv_convert_iconv_context_t *contextp, char **outbufpp, size_t *outbytesleftlp)
@@ -572,7 +571,7 @@ static char  *_tconv_convert_iconv_charset_normalizeds(tconv_t tconvp, const cha
     else if  (c == '+')             { *q++ = c; }
     else if  (c == '.')             { *q++ = c; }
     else if  (c == ':')             { *q++ = c; }
-    else if  (c == '/')             { break;    }
+    else if  (c == '/')             { break;    } /* iconv specific extensions, means end of the charset in any case */
   };
 
   *q = '\0';
