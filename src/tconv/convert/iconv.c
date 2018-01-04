@@ -594,9 +594,16 @@ static char *_tconv_convert_iconv_charset_lookupp(tconv_t tconvp, const char *ch
   normalizeds = _tconv_convert_iconv_charset_normalizeds(tconvp, charsets);
   if (normalizeds != NULL) {
     for (i = 0; i < TCONV_ICONV_NB_ALIAS; alias2categoryp++, i++) {
-      TCONV_TRACE(tconvp, "%s - strcmp(\"%s\", \"%s\")", funcs, alias2categoryp->alias, normalizeds);
       if (strcmp(alias2categoryp->alias, normalizeds) == 0) {
         *categoriespp = alias2categoryp->categoriesp;
+#ifndef TCONV_NTRACE
+        for (i = 0; i < TCONV_ICONV_MAX_CATEGORY; i++) {
+          if  (alias2categoryp->categoriesp[i] == NULL) {
+            break;
+          }
+          TCONV_TRACE(tconvp, "%s - normalized charset %s associated to category %s", funcs, normalizeds, alias2categoryp->categoriesp[i]);
+        }
+#endif
         TCONV_TRACE(tconvp, "%s - return \"%s\" (*categoriespp = %p)", funcs, normalizeds, *categoriespp);
         return normalizeds;
       }
