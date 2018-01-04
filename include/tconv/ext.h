@@ -173,7 +173,21 @@ tconv_EXPORT char *tconv_tocode(tconv_t tconvp);
 /* methods are setter and getter for this fuzzy state.                */
 /* A true value indicates fuzzy mode. Default is a false value.       */
 /**********************************************************************/
-tconv_EXPORT short tconv_fuzzy_set(tconv_t tconvp, short fuzzy);
+tconv_EXPORT short tconv_fuzzy_set(tconv_t tconvp, short fuzzyb);
 tconv_EXPORT short tconv_fuzzy(tconv_t tconvp);
+
+/**********************************************************************/
+/* Helper                                                             */
+/**********************************************************************/
+typedef struct tconv_helper tconv_helper_t;
+typedef short (*tconv_producer_t)(void *contextp, char **bufpp, size_t *countlp, short *eofbp);
+typedef short (*tconv_consumer_t)(void *contextp, char *bufp, size_t countl, short eofb, size_t *resultlp);
+
+tconv_EXPORT tconv_helper_t *tconv_helper_newp(char *tos, char *froms, void *contextp, tconv_producer_t producerp, tconv_consumer_t consumerp);
+tconv_EXPORT short tconv_helper(tconv_t  tconvp,
+                   void    *contextp,
+                   short   (*producerp)(void *contextp, char **bufpp, size_t *countlp, short *eofbp),
+                   short   (*consumerp)(void *contextp, char *bufp, size_t countl, short eofb, size_t *resultlp)
+                   );
 
 #endif /* TCONV_EXT_H */

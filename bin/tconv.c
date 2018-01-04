@@ -54,6 +54,17 @@
 #define BUFSIZ 1024
 #endif
 
+typedef struct tconv_helper_context {
+  char   *filenames;
+  int     fd;
+  int     outputFd;
+  char   *inbufp;
+  size_t  bufsizel;
+#ifndef TCONV_NTRACE
+  short   verbose;
+#endif
+} tconv_helper_context_t;
+  
 static void _usage(char *argv0, short helpb);
 #ifndef TCONV_NTRACE
 static void traceCallback(void *userDatavp, const char *msgs);
@@ -266,238 +277,6 @@ int main(int argc, char **argv)
 }
 
 /*****************************************************************************/
-static void fileconvert(int outputFd, char *filenames,
-			char *tocodes, char *fromcodes,
-                        tconv_convert_t *convertp, tconv_charset_t *charsetp,
-			short guessb,
-			size_t bufsizel,
-			short fromPrintb,
-			short fuzzyb
-#ifndef TCONV_NTRACE
-			, short verbose
-#endif
-			)
-/*****************************************************************************/
-{
-  char           *inbuforigp  = NULL;
-  char           *outbuforigp = NULL;
-  size_t          outsizel = bufsizel;
-  tconv_t         tconvp = (tconv_t)-1;
-  int             fd;
-  tconv_option_t  tconvOption;
-  size_t          nconvl;
-  size_t          nwritel;
-  size_t          inbufallocl;
-
-  inbuforigp = malloc(bufsizel);
-  if (inbuforigp == NULL) {
-    GENERICLOGGER_ERRORF(NULL, "malloc: %s", strerror(errno));
-    goto end;
-  }
-  inbufallocl = bufsizel;
-
-  /* We start with an outbuf size the same as inbuf */
-  outbuforigp = malloc(outsizel);
-  if (outbuforigp == NULL) {
-    GENERICLOGGER_ERRORF(NULL, "malloc: %s", strerror(errno));
-    goto end;
-  }
-
-  fd = open(filenames,
-            O_RDONLY
-#ifdef O_BINARY
-            |O_BINARY
-#endif
-            );
-  if (fd < 0) {
-    GENERICLOGGER_ERRORF(NULL, "Failed to open %s: %s", filenames, strerror(errno));
-    goto end;
-  }
-
-  tconvOption.charsetp = charsetp;
-  tconvOption.convertp = convertp;
-  tconvOption.traceCallbackp =
-#ifndef TCONV_NTRACE
-    (verbose != 0) ? traceCallback :
-#endif
-    NULL;
-  tconvOption.traceUserDatavp = NULL;
-  
-#ifndef TCONV_NTRACE
-  /* For very early trace */
-  putenv("TCONV_ENV_TRACE=1");
-#endif
-
-  tconvp = tconv_open_ext(tocodes, fromcodes, &tconvOption);
-  if (tconvp == (tconv_t) -1) {
-    GENERICLOGGER_ERRORF(NULL, "tconv_open_ext: %s", strerror(errno));
-    goto end;
-  }
-
-#ifndef TCONV_NTRACE
-  if (verbose != 0) {
-    tconv_trace_on(tconvp);
-  }
-#endif
-
-  while (1) {
-    char *inbufp;
-    char *outbufp;
-    short  eofb;
-    size_t outleftl;
-    size_t inleftl;
-    size_t memmovedl;
-    size_t readl;
-
-    memmovedl = 0;            /* != 0 only when previous iteration reached EINVAL */
-  einval_case:
-    inbufp   = inbuforigp;
-    outbufp  = outbuforigp;
-    outleftl = outsizel;
-    eofb     = 0;
-#ifndef TCONV_NTRACE
-    if (verbose) {
-      GENERICLOGGER_TRACEF(NULL, "%s: reading %ld bytes, leftover of %ld bytes", filenames, (unsigned long) bufsizel, (unsigned long) memmovedl);
-    }
-#endif
-    readl = (size_t) read(fd, inbufp + memmovedl, bufsizel);
-
-    if (readl == (size_t)-1) {
-      GENERICLOGGER_ERRORF(NULL, "Failed to read from %s: %s", filenames, strerror(errno));
-      goto end;
-    } else if (readl == 0) {
-      eofb = 1;
-    }
-
-    inleftl = readl + memmovedl;
-
-    if (guessb) {
-      /* Force an E2BIG situation */
-      outleftl = 0;
-    }
-
-    while (eofb || (inleftl > 0)) {
-    again:
-      nconvl = tconv(tconvp, eofb ? NULL : &inbufp, eofb ? NULL : &inleftl, &outbufp, &outleftl);
-      nwritel = outsizel - outleftl;
-      if (nwritel > 0) {
-	if (outputFd >= 0) {
-	  if (write(outputFd, outbuforigp, nwritel) != nwritel) {
-	    GENERICLOGGER_ERRORF(NULL, "Failed to write output: %s", strerror(errno));
-	    goto end;
-	  }
-	}
-        outbufp  = outbuforigp;
-        outleftl = outsizel;
-      }
-
-      if (nconvl == (size_t) -1) {
-	switch (errno) {
-	case E2BIG:
-	  if (guessb != 0) {
-	    /* Print the "from" codeset, simulate eof and exit the loop, no writing */
-	    GENERICLOGGER_INFOF(NULL, "%s: %s", filenames, tconv_fromcode(tconvp));
-	    fromPrintb = 0;
-	    eofb = 1;
-	    break;
-	  }
-          /* We realloc only if we wrote nothing */
-	  if (nwritel <= 0) {
-	    char *tmp;
-	    
-	    tmp = realloc(outbuforigp, outsizel + bufsizel);
-	    if (tmp == NULL) {
-	      GENERICLOGGER_ERRORF(NULL, "realloc: %s", strerror(errno));
-	      goto end;
-	    }
-	    outbufp    = outbuforigp = tmp;
-            outsizel  += bufsizel;
-            outleftl   = outsizel;
-	  }
-          goto again;
-	  break;
-        case EILSEQ:
-          /* Invalid byte sequence */
-	  GENERICLOGGER_ERRORF(NULL, "%s: %s", filenames, strerror(errno));
-	  goto end;
-        case EINVAL:
-          /* Incomplete byte sequence */
-#ifndef TCONV_NTRACE
-          if (verbose) {
-            GENERICLOGGER_TRACEF(NULL, "%s: %s, %ld bytes left", filenames, strerror(errno), (unsigned long) inleftl);
-          }
-#endif
-          /* It is impossible in theory to have inleftl == 0 */
-          if (inleftl <= 0) {
-            GENERICLOGGER_ERRORF(NULL, "%s: Incomplete byte sequence but no byte left in the input buffer?", filenames);
-            goto end;
-          }
-          if ((inleftl + bufsizel) <= inbufallocl) {
-            memmove(inbuforigp, inbufp, inleftl);
-          } else {
-            /* The whole allocated input buffer is occupied by the invalid byte sequence! */
-            char *tmps;
-
-#ifndef TCONV_NTRACE
-            if (verbose) {
-              GENERICLOGGER_TRACEF(NULL, "%s: increasing input buffer from %ld to %ld", filenames, (unsigned long) inbufallocl, (unsigned long) (inleftl + bufsizel));
-            }
-#endif
-            tmps = realloc(inbuforigp, inleftl + bufsizel);
-            if (tmps == NULL) {
-              GENERICLOGGER_ERRORF(NULL, "realloc: %s", strerror(errno));
-              goto end;
-            }
-            inbuforigp  = tmps;
-            inbufallocl = inleftl + bufsizel;
-          }
-          memmovedl = inleftl;
-          goto einval_case;
-	default:
-	  GENERICLOGGER_ERRORF(NULL, "%s: %s", filenames, strerror(errno));
-	  goto end;
-	}
-      } else {
-	if (fromPrintb != 0) {
-	  GENERICLOGGER_INFOF(NULL, "%s: %s", filenames, tconv_fromcode(tconvp));
-	  fromPrintb = 0;
-	}
-	if (fuzzyb != 0) {
-	  GENERICLOGGER_INFOF(NULL, "%s: %s", "Fuzzy conversion", tconv_fuzzy(tconvp) ? "yes" : "no");
-	  fuzzyb = 0;
-	}
-      }
-
-      if (eofb) {
-        break;
-      }
-    }
-
-    if (eofb) {
-      break;
-    }
-  }
-
-  end:
-  if (fd >= 0) {
-    if (close(fd) != 0) {
-      GENERICLOGGER_ERRORF(NULL, "Failed to close %s: %s", filenames, strerror(errno));
-    }
-  }
-  if (tconvp != (tconv_t)-1) {
-    if (tconv_close(tconvp) != 0) {
-      GENERICLOGGER_ERRORF(NULL, "Failed to close tconv: %s", strerror(errno));
-    }
-  }
-  if (outbuforigp != NULL) {
-    free(outbuforigp);
-  }
-  if (inbuforigp != NULL) {
-    free(inbuforigp);
-  }
-}
-
-/*****************************************************************************/
 static void traceCallback(void *userDatavp, const char *msgs)
 /*****************************************************************************/
 {
@@ -574,3 +353,133 @@ static void _usage(char *argv0, short helpb)
   }
 }
 
+/*****************************************************************************/
+static short producer(void *voidp, char **bufpp, size_t *countlp, short *eofbp)
+/*****************************************************************************/
+{
+  tconv_helper_context_t *contextp = (tconv_helper_context_t *) voidp;
+  size_t                  countl   = (size_t) read(contextp->fd, contextp->inbufp, contextp->bufsizel);
+
+#ifndef TCONV_NTRACE
+  if (contextp->verbose) {
+    GENERICLOGGER_TRACEF(NULL, "%s: reading %ld bytes returned %ld bytes", contextp->filenames, (unsigned long) contextp->bufsizel, (long) countl);
+  }
+#endif
+
+  if (countl == (size_t)-1) {
+    return 0;
+  }
+  *bufpp   = contextp->inbufp;
+  *countlp = countl;
+  *eofbp   = (countl == 0);  /* True when this is a file descriptor */
+}
+
+/*****************************************************************************/
+static short consumer(void *voidp, char *bufp, size_t countl, short eofb, size_t *resultlp)
+/*****************************************************************************/
+{
+  tconv_helper_context_t *contextp = (tconv_helper_context_t *) voidp;
+
+  if (contextp->outputFd >= 0) {
+    if (write(contextp->outputFd, bufp, countl) != countl) {
+      GENERICLOGGER_ERRORF(NULL, "Failed to write output: %s", strerror(errno));
+      return 0;
+    }
+  }
+
+  *resultlp = countl;
+  return 1;
+}
+
+/*****************************************************************************/
+static void fileconvert(int outputFd, char *filenames,
+                        char *tocodes, char *fromcodes,
+                        tconv_convert_t *convertp, tconv_charset_t *charsetp,
+                        short guessb,
+                        size_t bufsizel,
+                        short fromPrintb,
+                        short fuzzyb
+#ifndef TCONV_NTRACE
+                        , short verbose
+#endif
+                        )
+/*****************************************************************************/
+{
+  char                   *inbufp = NULL;
+  int                     fd     = -1;
+  tconv_t                 tconvp = NULL;
+  tconv_option_t          tconvOption;
+  tconv_helper_context_t  context;
+
+  inbufp = malloc(bufsizel);
+  if (inbufp == NULL) {
+    GENERICLOGGER_ERRORF(NULL, "malloc: %s", strerror(errno));
+    goto end;
+  }
+
+  fd = open(filenames,
+            O_RDONLY
+#ifdef O_BINARY
+            |O_BINARY
+#endif
+            );
+  if (fd < 0) {
+    GENERICLOGGER_ERRORF(NULL, "Failed to open %s: %s", filenames, strerror(errno));
+    goto end;
+  }
+
+  tconvOption.charsetp = charsetp;
+  tconvOption.convertp = convertp;
+  tconvOption.traceCallbackp =
+#ifndef TCONV_NTRACE
+    (verbose != 0) ? traceCallback :
+#endif
+    NULL;
+  tconvOption.traceUserDatavp = NULL;
+  
+#ifndef TCONV_NTRACE
+  /* For very early trace */
+  putenv("TCONV_ENV_TRACE=1");
+#endif
+
+  tconvp = tconv_open_ext(tocodes, fromcodes, &tconvOption);
+  if (tconvp == (tconv_t) -1) {
+    GENERICLOGGER_ERRORF(NULL, "tconv_open_ext: %s", strerror(errno));
+    goto end;
+  }
+
+#ifndef TCONV_NTRACE
+  if (verbose != 0) {
+    tconv_trace_on(tconvp);
+  }
+#endif
+
+
+  context.filenames = filenames;
+  context.fd        = fd;
+  context.outputFd  = outputFd;
+  context.inbufp    = inbufp;
+  context.bufsizel  = bufsizel;
+#ifndef TCONV_NTRACE
+  context.verbose   = verbose;
+#endif
+  
+  if (! tconv_helper(tconvp, &context, producer, consumer)) {
+    GENERICLOGGER_ERRORF(NULL, "%s: %s", filenames, strerror(errno));
+  }
+
+ end:
+  if (inbufp != NULL) {
+    free(inbufp);
+  }
+  if (fd >= 0) {
+    if (close(fd) != 0) {
+      GENERICLOGGER_ERRORF(NULL, "Failed to close %s: %s", filenames, strerror(errno));
+    }
+  }
+  if (tconvp != NULL) {
+    if (tconv_close(tconvp) != 0) {
+      GENERICLOGGER_ERRORF(NULL, "Failed to close tconv: %s", strerror(errno));
+    }
+  }
+}

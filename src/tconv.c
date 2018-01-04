@@ -8,20 +8,31 @@
 #include "tconv_config.h"
 
 /* Maximum size for last error. */
+#ifndef TCONV_ERROR_SIZE
 #define TCONV_ERROR_SIZE 1024
+#endif
 
 /* For logging */
+#undef  TCONV_ENV_TRACE
 #define TCONV_ENV_TRACE "TCONV_ENV_TRACE"
 static inline void _tconvTraceCallbackProxy(void *userDatavp, genericLoggerLevel_t logLeveli, const char *msgs);
 
 /* For options */
+#undef  TCONV_ENV_CHARSET
 #define TCONV_ENV_CHARSET      "TCONV_ENV_CHARSET"
+#undef  TCONV_ENV_CHARSET_NEW
 #define TCONV_ENV_CHARSET_NEW  "TCONV_ENV_CHARSET_NEW"
+#undef  TCONV_ENV_CHARSET_RUN
 #define TCONV_ENV_CHARSET_RUN  "TCONV_ENV_CHARSET_RUN"
+#undef  TCONV_ENV_CHARSET_FREE
 #define TCONV_ENV_CHARSET_FREE "TCONV_ENV_CHARSET_FREE"
+#undef  TCONV_ENV_CONVERT
 #define TCONV_ENV_CONVERT      "TCONV_ENV_CONVERT"
+#undef  TCONV_ENV_CONVERT_NEW
 #define TCONV_ENV_CONVERT_NEW  "TCONV_ENV_CONVERT_NEW"
+#undef  TCONV_ENV_CONVERT_RUN
 #define TCONV_ENV_CONVERT_RUN  "TCONV_ENV_CONVERT_RUN"
+#undef  TCONV_ENV_CONVERT_FREE
 #define TCONV_ENV_CONVERT_FREE "TCONV_ENV_CONVERT_FREE"
 
 /* Internal structure */
@@ -48,16 +59,31 @@ struct tconv {
   short                    fuzzyb;
 };
 
+#ifndef TCONV_HELPER_BUFSIZ
+#define TCONV_HELPER_BUFSIZ 4096 /* Why ? Why not -; */
+#endif
+
+struct tconv_helper {
+  tconv_t           tconvp;
+  void             *contextp;
+  tconv_producer_t  producerp;
+  tconv_consumer_t  consumerp;
+};
+
+#undef  TCONV_MAX
 #define TCONV_MAX(tconvp, literalA, literalB) (((literalA) > (literalB)) ? (literalA) : (literalB))
+#undef  TCONV_MIN
 #define TCONV_MIN(tconvp, literalA, literalB) (((literalA) < (literalB)) ? (literalA) : (literalB))
 
 /* All our functions have an err label if necessary */
+#undef  TCONV_FREE
 #define TCONV_FREE(tconvp, funcs, ptr) do {		\
     TCONV_TRACE((tconvp), "%s - free(%p)", (funcs), (ptr));		\
     free(ptr);								\
     (ptr) = NULL;							\
   } while (0)
 
+#undef  TCONV_MALLOC
 #define TCONV_MALLOC(tconvp, funcs, ptr, type, size) do {		\
     TCONV_TRACE((tconvp), "%s - malloc(%lld)", (funcs), (unsigned long long) (size)); \
     (ptr) = (type) malloc(size);					\
@@ -69,6 +95,7 @@ struct tconv {
     }									\
   } while (0)
 
+#undef  TCONV_REALLOC
 #define TCONV_REALLOC(tconvp, funcs, ptr, type, size) do {		\
     type tmp;								\
     TCONV_TRACE((tconvp), "%s - realloc(%p, %lld)", (funcs), (ptr), (unsigned long long) (size)); \
@@ -82,6 +109,7 @@ struct tconv {
     }									\
   } while (0)
 
+#undef  TCONV_STRDUP
 #define TCONV_STRDUP(tconvp, funcs, dst, src) do {			\
     TCONV_TRACE((tconvp), "%s - strdup(\"%s\")", (funcs), (src));	\
     (dst) = strdup(src);						\
@@ -784,20 +812,19 @@ char *tconv_tocode(tconv_t tconvp)
 }
 
 /****************************************************************************/
-short tconv_fuzzy_set(tconv_t tconvp, short fuzzy)
+short tconv_fuzzy_set(tconv_t tconvp, short fuzzyb)
 /****************************************************************************/
 {
   static const char funcs[] = "tconv_fuzzy_set";
 
-  TCONV_TRACE(tconvp, "%s(%p, %d)", funcs, tconvp, (int) fuzzy);
+  TCONV_TRACE(tconvp, "%s(%p, %d)", funcs, tconvp, (int) fuzzyb);
 
   if (tconvp != NULL) {
-    tconvp->fuzzyb = fuzzy;
+    tconvp->fuzzyb = fuzzyb;
   }
 
-  TCONV_TRACE(tconvp, "%s - return %d", funcs, (int) fuzzy);
-
-  return fuzzy;
+  TCONV_TRACE(tconvp, "%s - return %d", funcs, (int) fuzzyb);
+  return fuzzyb;
 }
 
 /****************************************************************************/
@@ -816,4 +843,328 @@ short tconv_fuzzy(tconv_t tconvp)
   TCONV_TRACE(tconvp, "%s - return %d", funcs, (int) fuzzyb);
 
   return fuzzyb;
+}
+
+/****************************************************************************/
+tconv_helper_t *tconv_helper_newp(char *tos, char *froms, void *contextp, tconv_producer_t producerp, tconv_consumer_t consumerp)
+/****************************************************************************/
+{
+}
+
+/****************************************************************************/
+short tconv_helper(tconv_t  tconvp,
+                   void    *contextp,
+                   short   (*producerp)(void *contextp, char **bufpp, size_t *countlp, short *eofbp),
+                   short   (*consumerp)(void *contextp, char *bufp, size_t countl, short eofb, size_t *resultlp)
+                   )
+/****************************************************************************/
+{
+  static const char funcs[]       = "tconv_helper";
+  /* Local memory management */
+  char             *inputp        = NULL;
+  char             *outputp       = NULL;
+  size_t            inputallocl   = 0;
+  size_t            outputallocl; /* Initialized at runtime */
+  size_t            inputguardl   = 0;
+  size_t            outputguardl; /* Initialized at runtime */
+  char             *inputguardp;  /* Always re-evaluated at runtime */
+  char             *inputendp;    /* Always re-evaluated at runtime */
+  char             *outputguardp; /* Always re-evaluated at runtime */
+  char             *outputendp;   /* Always re-evaluated at runtime */
+  /* Callbacks output */
+  char             *producerbufp;
+  size_t            producercountl;
+  short             producereofb;
+  char             *consumerbufp;
+  size_t            consumercountl;
+  size_t            consumerresultl;
+  /* convertion parameters */
+  char             *inbufp;
+  size_t            inbufbytesleftl;
+  char             *outbufp;
+  size_t            outbufbytesleftl;
+  /* temporary work variables */
+  short             producerb;
+  short             consumerb;
+  size_t            tconvl;
+  char             *tmps;
+  size_t            allocl;
+  size_t            notusedl;
+  size_t            deltal;
+  short             rcb;
+  short             outputbufmemmovedb;
+
+  TCONV_TRACE(tconvp, "%s(%p, %p, %p, %p)", funcs, tconvp, contextp, producerp, consumerp);
+
+  if ((tconvp == NULL) || (producerp == NULL) || (consumerp == NULL)) {
+    errno = EINVAL;
+    return 0;
+  }
+
+  /* We always create an output buffer first, it is illegal to call tconv() with a null area */
+  /* for the storage, with the exception of total reset, which we do not do here.  */
+  TCONV_TRACE(tconvp, "%s - initialize output", funcs);
+  TCONV_MALLOC(tconvp, funcs, outputp, char *, TCONV_HELPER_BUFSIZ);
+  outputallocl = TCONV_HELPER_BUFSIZ;
+  outputguardl = 0;
+  
+  producereofb   = 0;
+  do {
+    producerbufp   = NULL;
+    producercountl = 0;
+    TCONV_TRACE(tconvp, "%s - producerp(%p, %p, %p, %p)", funcs, contextp, &producerbufp, &producercountl, &producereofb);
+    producerb = producerp(contextp, &producerbufp, &producercountl, &producereofb);
+#ifndef TCONV_NTRACE
+    if (producerb) {
+      TCONV_TRACE(tconvp, "%s - producerp(...) success: producerbufp=%p, producercountl=%ld, producereofb=%d", funcs, producerbufp, (unsigned long) producercountl, (int) producereofb);
+    } else {
+      TCONV_TRACE(tconvp, "%s - producerp(...) failure", funcs);
+    }
+#endif
+    if (producerb) {
+      if ((producerbufp != NULL) && (producercountl > 0)) {
+        if (inputp == NULL) {
+          /* First time */
+          TCONV_TRACE(tconvp, "%s - initialize input", funcs);
+          TCONV_MALLOC(tconvp, funcs, inputp, char *, producercountl);
+          inputallocl = producercountl;
+          memcpy(inputp, producerbufp, producercountl);
+          inputguardl = inputallocl;
+        } else {
+          /* Not the first time - check if there is enough room */
+          notusedl = inputallocl - inputguardl;
+          if (notusedl < producercountl) {
+            deltal = producercountl - notusedl;
+            /* Will that really happen in real-life ? Possible in theory, though. */
+            allocl = inputallocl + deltal;
+            if (allocl < inputallocl) {
+              errno = ERANGE;
+              goto err;
+            }
+            TCONV_TRACE(tconvp, "%s - increase input by %lld bytes", funcs, (unsigned long long) deltal);
+            TCONV_REALLOC(tconvp, funcs, inputp, char *, allocl);
+            inputallocl = allocl;
+            memcpy(inputp + inputguardl, producerbufp, producercountl);
+            inputguardl = inputallocl;
+          } else {
+            memcpy(inputp + inputguardl, producerbufp, producercountl);
+            inputguardl += producercountl;
+          }
+        }
+#ifndef TCONV_NTRACE
+        if (inputguardl < inputallocl) {
+          if (inputguardl > 0) {
+            TCONV_TRACE(tconvp, "%s - ...... input  buffer is %p[0 ...used... %ld][%ld ...unused... %ld]", funcs, inputp, (unsigned long) (inputguardl - 1), (unsigned long) inputguardl, (unsigned long) inputallocl);
+          } else {
+            TCONV_TRACE(tconvp, "%s - ...... input  buffer is %p[%ld ...unused... %ld]", funcs, inputp, (unsigned long) inputguardl, (unsigned long) inputguardl, (unsigned long) inputallocl);
+          }
+        } else {
+          TCONV_TRACE(tconvp, "%s - ...... input  buffer is %p[0 ...used... %ld]", funcs, inputp, (unsigned long) inputallocl);
+        }
+#endif
+        inputguardp = inputp + inputguardl;
+        inputendp   = inputp + inputallocl;
+
+#ifndef TCONV_NTRACE
+        if (outputguardl < outputallocl) {
+          if (outputguardl > 0) {
+            TCONV_TRACE(tconvp, "%s - ...... output buffer is %p[0 ...used... %ld][%ld ...unused... %ld]", funcs, outputp, (unsigned long) (outputguardl - 1), (unsigned long) outputguardl, (unsigned long) outputallocl);
+          } else {
+            TCONV_TRACE(tconvp, "%s - ...... output buffer is %p[%ld ...unused... %ld]", funcs, outputp, (unsigned long) outputguardl, (unsigned long) outputallocl);
+          }
+        } else {
+          TCONV_TRACE(tconvp, "%s - ...... output buffer is %p[0 ...used... %ld]", funcs, outputp, (unsigned long) outputallocl);
+        }
+#endif
+        outputguardp = outputp + outputguardl;
+        outputendp   = outputp + outputallocl;
+
+        inbufp           = inputp;
+        inbufbytesleftl  = inputguardl;
+
+        /*
+         * local input buffer is like this:
+         *
+         * inputp                                     inputguardp              inputendp
+         * 0                                          inputguardl              inputallocl
+         * ---------------------------------------------------------------------
+         * |      used area                           |  unused area           |
+         * ---------------------------------------------------------------------
+         * inbufp
+         * ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+         * input area of size inbufbytesleftl
+         */
+        
+        outbufp          = outputguardp;
+        outbufbytesleftl = outputallocl - outputguardl;
+
+        /*
+         * local output buffer is like this:
+         *
+         * outputp                                    outputguardp             outputendp
+         * 0                                          outputguardl             outputallocl
+         * ---------------------------------------------------------------------
+         * |      used area                           |  unused area           |
+         * ---------------------------------------------------------------------
+         * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!outbufp
+         * area not consumed by the end user          ^^^^^^^^^^^^^^^^^^^^^^^^^
+         *                                            output area of size outbufbytesleftl
+         *
+         */
+
+        TCONV_TRACE(tconvp, "%s - calling tconv with inbufbytesleftl=%ld and outbufbytesleftl=%ld", funcs, (unsigned long) inbufbytesleftl, (unsigned long) outbufbytesleftl);
+        tconvl = tconv(tconvp, &inbufp, &inbufbytesleftl, &outbufp, &outbufbytesleftl);
+#ifndef TCONV_NTRACE
+        if (tconvl == (size_t)-1) {
+          TCONV_TRACE(tconvp, "%s - tconv(...) returned -1, errno %d (%s)", funcs, errno, strerror(errno));
+        } else {
+          TCONV_TRACE(tconvp, "%s - tconv(...) returned %ld", funcs, (unsigned long) tconvl);
+        }
+#endif
+
+        /*
+         * local output buffer is now like this:
+         *
+         * outputp                                    outputguardp             outputendp
+         * 0                                          outputguardl             outputallocl
+         * ---------------------------------------------------------------------
+         * |      used area                           | new bytes  |           |
+         * ---------------------------------------------------------------------
+         * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!outbufp
+         * area not consumed by the end user                       ^^^^^^^^^^^^
+         *                                                         unconsumed area
+         *                                                         of size outbufbytesleftl
+         */
+
+        outputbufmemmovedb = 0;
+        if (outbufp > outputp) { /* Regardless if new bytes were produced -; */
+
+          /* For now on we do not need to use outbufp variable anymore */
+          consumerbufp    = outputp;
+          consumercountl  = outputallocl - outbufbytesleftl;
+          consumerresultl = 0;
+          consumerb = consumerp(contextp, consumerbufp, consumercountl, producereofb, &consumerresultl);
+#ifndef TCONV_NTRACE
+          if (consumerb) {
+            TCONV_TRACE(tconvp, "%s - consumerp(...) success: consumerresultl=%ld", funcs, (unsigned long) consumerresultl);
+          } else {
+            TCONV_TRACE(tconvp, "%s - producerp(...) consumerp", funcs);
+          }
+#endif
+          if (! consumerb) {
+            goto err;
+          } else {
+            /* Consumer says it has used this number of bytes (can be zero) */
+            if (consumerresultl > consumercountl) {
+              /* Non sense, consumer says it has used more than what we provided -; */
+              errno = ERANGE;
+              goto err;
+            }
+            /*
+             * outputp                                outputguardp             outputendp
+             * 0                                      outputguardl             outputallocl
+             * -----------------------------------------------------------------
+             * |      used area                       | new bytes  |           |
+             * -----------------------------------------------------------------
+             *                    consumerresultl      deltal bytes
+             * +++++++++++++++++++!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+             * user said so       area not consumed by the end user^^^^^^^^^^^^
+             *                                                     unconsumed area
+             *                                                     of size outbufbytesleftl
+             */
+            deltal = outputallocl - outbufbytesleftl - outputguardl;
+            outputguardp += deltal;
+            outputguardl += deltal;
+            /*
+             * outputp                                             outputguardp outputendp
+             * 0                                                   outputguardl outputallocl
+             * -----------------------------------------------------------------
+             * |      used area                                    |           |
+             * -----------------------------------------------------------------
+             *                    consumerresultl
+             * +++++++++++++++++++!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+             * user said so       area not consumed by the end user
+             */
+
+            memmove(outputp, outputp + consumerresultl, outputguardl - consumerresultl);
+            outputguardp -= consumerresultl;
+            outputguardl -= consumerresultl;
+            outputbufmemmovedb = 1;
+
+            /*
+             * outputp                                    outputguardp             outputendp
+             * 0                                          outputguardl             outputallocl
+             * ---------------------------------------------------------------------
+             * |      used area                           |                        |
+             * ---------------------------------------------------------------------
+             * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+             * area not consumed by the end user
+             *
+             */
+          }
+        }
+
+        /*
+         * local input buffer is now like this:
+         *
+         * inputp                                     inputp               inputp
+         * +0                                         +inputguardl         +inputallocl
+         * -----------------------------------------------------------------
+         * |      consumed area                |      |  unused area       |
+         * -----------------------------------------------------------------
+         *                                     inbufp
+         *                                     ^^^^^^^
+         *                                     intentionaly leftover area
+         *                                     of size inbufbytesleftl
+         *
+         */
+
+        if (tconvl == (size_t)-1) {
+          if (errno == E2BIG) {
+            /* Regardless if we memmoved in the output buffer, handle a resize. */
+            /* A resize failure should be fatal unless we get some free bytes via the */
+            /* memmove indeed. We consider that fatal in any case -; */
+            allocl = outputallocl * 2;
+            /* Will that really happen in real-life ? Possible in theory, though. */
+            if (allocl < outputallocl) {
+              errno = ERANGE;
+              goto err;
+            }
+            TCONV_REALLOC(tconvp, funcs, outputp, char *, allocl);
+            outputallocl = allocl;
+          } else if (errno == EINVAL) {
+            /* Invalid byte sequence at the end of the input buffer */
+            /* If inbufp moved this is handled at the end of the "if" on tconvl */
+          } else {
+            /* Invalid byte sequence or another error */
+            goto err;
+          }
+        }
+        /* In any case, move unconsumed bytes to the beginning */
+        if ((inbufp > inputp) && (inbufbytesleftl > 0)) {
+          TCONV_TRACE(tconvp, "%s - moving %ld unconsumed bytes at the beginning of the input buffer", funcs, (unsigned long) inbufbytesleftl);
+          memmove(inputp, inbufp, inbufbytesleftl);
+        }
+        inputguardl = inbufbytesleftl;
+      }
+    }
+  } while (! producereofb);
+
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  if (inputp != NULL) {
+    free(inputp);
+  }
+  if (outputp != NULL) {
+    free(outputp);
+  }
+    
+  TCONV_TRACE(tconvp, "%s - return %d", funcs, (int) rcb);
+
+  return rcb;
 }
