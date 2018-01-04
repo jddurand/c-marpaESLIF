@@ -483,7 +483,7 @@ size_t tconv_convert_ICU_run(tconv_t tconvp, void *voidp, char **inbufpp, size_t
   }
 
   /* From there it is illegal that outbufpp is NULL or *outbufpp is NULL */
-  assert((outbufpp == NULL) || (*outbufpp == NULL));
+  assert((outbufpp != NULL) && (*outbufpp != NULL));
 
   /* Prepare work variables */
   inbufp        = ((inbufpp      != NULL) && (*inbufpp != NULL)) ? *inbufpp        : dummys;

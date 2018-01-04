@@ -377,7 +377,7 @@ static size_t _tconv_convert_iconv_directl(tconv_t tconvp, char **inbufpp, size_
   }
 
   /* From there it is illegal that outbufpp is NULL or *outbufpp is NULL */
-  assert((outbufpp == NULL) || (*outbufpp == NULL));
+  assert((outbufpp != NULL) && (*outbufpp != NULL));
 
   if ((inbytesleftlp  == NULL) || (*inbytesleftlp  <= 0) ||
       (outbytesleftlp == NULL) || (*outbytesleftlp <= 0)) {
