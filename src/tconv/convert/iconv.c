@@ -405,17 +405,18 @@ static size_t _tconv_convert_iconv_directl(tconv_t tconvp, char **inbufpp, size_
 #define TCONV_ICONV_E2BIG_MANAGER(workbufp, workbytesleftl, bufs, bufl) do { \
     char   *tmps;                                                       \
     size_t  tmpl;                                                       \
+    size_t  incl;                                                       \
     size_t  deltal;                                                     \
-    char   *deltap;                                                     \
                                                                         \
+    TCONV_TRACE(tconvp, "%s - E2BIG manager - %s=%p, %s=%ld, %s=%p, %s=%ld", funcs, #workbufp, workbufp, #workbytesleftl, (unsigned long) workbytesleftl, #bufs, bufs, #bufl, (unsigned long) bufl); \
     if (bufs == NULL) {                                                 \
       tmpl = TCONV_ICONV_INITIAL_SIZE;                                  \
-      deltal = TCONV_ICONV_INITIAL_SIZE;                                \
+      incl = TCONV_ICONV_INITIAL_SIZE;                                  \
       TCONV_TRACE(tconvp, "%s - malloc(%ld)", funcs, (unsigned long) TCONV_ICONV_INITIAL_SIZE); \
       tmps = (char *) malloc(TCONV_ICONV_INITIAL_SIZE);                 \
     } else {                                                            \
       tmpl = bufl * 2;                                                  \
-      deltal = bufl;                                                    \
+      incl = bufl;                                                      \
       if (tmpl < bufl) {                                                \
         TCONV_TRACE(tconvp, "%s - size_t flip", funcs);                 \
         errno = ERANGE;                                                 \
@@ -429,13 +430,11 @@ static size_t _tconv_convert_iconv_directl(tconv_t tconvp, char **inbufpp, size_
       rcl = (size_t)-1;                                                 \
       goto err;                                                         \
     }                                                                   \
-    workbytesleftl += deltal;                                           \
-    deltap = bufs - workbytesleftl;                                     \
-    workbufp = tmps;                                                    \
-    deltal = (size_t) deltap;                                           \
-    workbufp += deltal;                                                 \
+    deltal = bufl - workbytesleftl;                                     \
     bufs = tmps;                                                        \
     bufl = tmpl;                                                        \
+    workbufp = bufs + deltal;                                           \
+    workbytesleftl += incl;                                             \
     TCONV_TRACE(tconvp, "%s - %s is now %p, length %ld", funcs, #bufs, bufs, (unsigned long) bufl); \
   } while (0)
 
@@ -505,7 +504,7 @@ static size_t _tconv_convert_iconv_internall(tconv_t tconvp, tconv_convert_iconv
 #ifndef TCONV_NTRACE
     /* Note that TCONV_TRACE is guaranteed to not alter errno */
     if (rcl == (size_t)-1) {
-      TCONV_TRACE(tconvp, "%s - iconv on input returned -1, errno %d", funcs, errnoi);
+      TCONV_TRACE(tconvp, "%s - iconv on input returned -1, errno %d (%s)", funcs, errnoi, strerror(errno));
     } else {
       TCONV_TRACE(tconvp, "%s - iconv on input returned %ld", funcs, (unsigned long) rcl);
     }
