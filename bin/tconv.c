@@ -86,8 +86,6 @@ int main(int argc, char **argv)
 /*****************************************************************************/
 {
   int                  longindex      = 0;
-  short                doneSomethingb = 0;
-
   short                fromPrintb     = 0;
   char                *fromcodes      = NULL;
   short                guessb         = 0;
@@ -247,30 +245,26 @@ int main(int argc, char **argv)
   }
 
   setlocale(LC_ALL, "");
-  while ((args = optparse_arg(&options)) != NULL) {
-    doneSomethingb = 1;
-    fileconvert(outputFd, args,
-		tocodes, fromcodes,
-                convertp, charsetp,
-		guessb,
-		bufsizel,
-		fromPrintb,
-		fuzzyb
 #ifndef TCONV_NTRACE
-		, verbose
+#define TCONV_FILECONVERT(outputFd, args, tocodes, fromcodes, convertp, charsetp, guessb, bufsizel, fromPrintb, fuzzyb) \
+  fileconvert(outputFd, args, tocodes, fromcodes, convertp, charsetp, guessb, bufsizel, fromPrintb, fuzzyb, verbose)
+#else
+#define TCONV_FILECONVERT(outputFd, args, tocodes, fromcodes, convertp, charsetp, guessb, bufsizel, fromPrintb, fuzzyb) \
+  fileconvert(outputFd, args, tocodes, fromcodes, convertp, charsetp, guessb, bufsizel, fromPrintb, fuzzyb)
 #endif
-		);
+
+  if (optind <= 1) {
+    TCONV_FILECONVERT(outputFd, NULL, tocodes, fromcodes, convertp, charsetp, guessb, bufsizel, fromPrintb, fuzzyb);
+  } else {
+    while ((args = optparse_arg(&options)) != NULL) {
+      TCONV_FILECONVERT(outputFd, args, tocodes, fromcodes, convertp, charsetp, guessb, bufsizel, fromPrintb, fuzzyb);
+    }
   }
 
   if ((outputFd >= 0) && (outputFd != fileno(stdout))) {
     if (close(outputFd) != 0) {
       GENERICLOGGER_ERRORF(NULL, "Failed to close %s: %s", outputs, strerror(errno));
     }
-  }
-
-  if (doneSomethingb == 0) {
-    /* Nothing processed ? */
-    _usage(argv[0], 0);
   }
 
   exit(EXIT_SUCCESS);
@@ -337,13 +331,13 @@ static void _usage(char *argv0, short helpb)
     printf("  %s -g *\n", argv0);
     printf("\n");
     printf("NOTES\n");
+    printf("- Any unprocessed argument is treaded as a filename, where \"-\" is an alias for standard input. If there is no unprocessed argument, standard input is assumed.\n");
     printf("- Entry points to a charset plugin are not available via options.\n\tThe environment variables TCONV_ENV_CHARSET_NEW, TCONV_ENV_CHARSET_RUN and TCONV_ENV_CHARSET_FREE can be used to overwrite the default function names.\n\tDefault functions entry point names are: \"tconv_charset_newp\", \"tconv_charset_run\" and \"tconv_charset_free\".\n");
     printf("- Entry points to a convert plugin are not available via options.\n\tThe environment variables TCONV_ENV_CONVERT_NEW, TCONV_ENV_CONVERT_RUN and TCONV_ENV_CONVERT_FREE can be used to overwrite the default function names.\n\tDefault functions entry point names are: \"tconv_convert_newp\", \"tconv_convert_run\" and \"tconv_convert_free\".\n");
     printf("- The default convert engine is ICU if tconv has been compiled with it, else iconv if it has been compiled with it, else none.\n");
     printf("\tIf the --convert-engine option value is \"ICU\", tconv is forced to use ICU, and will fail if it does not have this support.\n");
     printf("\tSimilarly for iconv, if the option value is \"ICONV\".\n");
     printf("\tAny other option value will be considered like a path to a plugin, that will be loaded dynamically. Up to the plugin to be able to get options via, eventually, environment variables.\n");
-    printf("\n");
     printf("- The default charset detection engine is cchardet and is always available. tconv optionally have support of ICU charset detection engine if it has been compiled with it.\n");
     printf("\tIf the --charset-engine option value is \"CCHARDET\", tconv will use cchardet.\n");
     printf("\tIf the option value is \"ICU\", tconv is forced to use ICU, and will fail if it does have this support.\n");
@@ -362,7 +356,7 @@ static short producer(void *voidp, char **bufpp, size_t *countlp, short *eofbp, 
 
 #ifndef TCONV_NTRACE
   if (contextp->verbose) {
-    GENERICLOGGER_TRACEF(NULL, "%s: reading %ld bytes returned %ld bytes", contextp->filenames, (unsigned long) contextp->bufsizel, (long) countl);
+    GENERICLOGGER_TRACEF(NULL, "%s: reading %ld bytes returned %ld bytes", (contextp->filenames != NULL) ? contextp->filenames : "(standard input)", (unsigned long) contextp->bufsizel, (long) countl);
   }
 #endif
 
@@ -418,12 +412,16 @@ static void fileconvert(int outputFd, char *filenames,
     goto end;
   }
 
-  fd = open(filenames,
-            O_RDONLY
+  if ((filenames == NULL) || (strcmp(filenames, "-") == 0)) {
+    fd = fileno(stdin);
+  } else {
+    fd = open(filenames,
+              O_RDONLY
 #ifdef O_BINARY
-            |O_BINARY
+              |O_BINARY
 #endif
-            );
+              );
+  }
   if (fd < 0) {
     GENERICLOGGER_ERRORF(NULL, "Failed to open %s: %s", filenames, strerror(errno));
     goto end;
@@ -464,7 +462,7 @@ static void fileconvert(int outputFd, char *filenames,
 #ifndef TCONV_NTRACE
   context.verbose   = verbose;
 #endif
-  
+
   if (! tconv_helper(tconvp, &context, producer, consumer)) {
     GENERICLOGGER_ERRORF(NULL, "%s: %s", filenames, strerror(errno));
   }
@@ -473,9 +471,11 @@ static void fileconvert(int outputFd, char *filenames,
   if (inbufp != NULL) {
     free(inbufp);
   }
-  if (fd >= 0) {
-    if (close(fd) != 0) {
-      GENERICLOGGER_ERRORF(NULL, "Failed to close %s: %s", filenames, strerror(errno));
+  if ((filenames != NULL) && (strcmp(filenames, "-") != 0)) {
+    if (fd >= 0) {
+      if (close(fd) != 0) {
+        GENERICLOGGER_ERRORF(NULL, "Failed to close %s: %s", filenames, strerror(errno));
+      }
     }
   }
   if (tconvp != NULL) {
