@@ -255,6 +255,7 @@ void  *tconv_convert_ICU_new(tconv_t tconvp, const char *tocodes, const char *fr
     goto err;
   }
 
+#ifdef TCONV_ICU_USE_QUESTION_MARK_AS_SUBSTITUTEE
   uErrorCode = U_ZERO_ERROR;
   /* Since ICU-3.6, a very old release from 2006 that I assume everybody is away as of 2018 -; */
   ucnv_setSubstString(uConverterTop, substitutionCharacters, substitutionCharacterLength, &uErrorCode);
@@ -268,7 +269,7 @@ void  *tconv_convert_ICU_new(tconv_t tconvp, const char *tocodes, const char *fr
     */
   }
 #endif
-
+#endif
                                 
   /* No need anymore of realToCodes */
   free(realToCodes);
