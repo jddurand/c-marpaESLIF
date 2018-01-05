@@ -846,9 +846,59 @@ short tconv_fuzzy(tconv_t tconvp)
 }
 
 /****************************************************************************/
-tconv_helper_t *tconv_helper_newp(char *tos, char *froms, void *contextp, tconv_producer_t producerp, tconv_consumer_t consumerp)
+tconv_helper_t *tconv_helper_newp(char *tocodes, char *fromcodes, void *contextp, tconv_producer_t producerp, tconv_consumer_t consumerp)
 /****************************************************************************/
 {
+  static const char  funcs[] = "tconv_helper_newp";
+  tconv_helper_t    *tconv_helperp = NULL;
+  char              *toclones = NULL;
+  char              *fromclones = NULL;
+  tconv_t            tconvp;
+
+  if ((tocodes == NULL) || (fromcodes == NULL) || (producerp == NULL) || (consumerp == NULL)) {
+    errno = EINVAL;
+    return NULL;
+  }
+
+  tconvp = tconv_open(tocodes, fromcodes);
+  if (tconvp == NULL) {
+    return NULL;
+  }
+
+  /* From now on we can use TCONV macros */
+  TCONV_MALLOC(tconvp, funcs, tconv_helperp, tconv_helper_t *, sizeof(tconv_helper_t));
+
+  tconv_helperp->tconvp = NULL;
+  tconv_helperp->contextp = NULL;
+  tconv_helperp->producerp = NULL;
+  tconv_helperp->consumerp = NULL;
+
+  tconv_helperp->tconvp = tconv_open(tocodes, fromcodes);
+  if (tconv_helperp->tconvp == NULL) {
+    goto err;
+  }
+  tconv_helperp->contextp = contextp;
+  tconv_helperp->producerp = producerp;
+  tconv_helperp->consumerp = consumerp;
+
+  goto done;
+
+ err:
+  tconv_helper_freev(tconv_helperp);
+  tconv_helperp = NULL;
+
+ done:
+  return tconv_helperp;
+}
+
+/****************************************************************************/
+tconv_EXPORT void tconv_helper_freev(tconv_helper_t *tconv_helperp)
+/****************************************************************************/
+{
+  if (tconv_helperp != NULL) {
+    tconv_close(tconv_helperp->tconvp);
+    free(tconv_helperp);
+  }
 }
 
 /****************************************************************************/
