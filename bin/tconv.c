@@ -354,7 +354,7 @@ static void _usage(char *argv0, short helpb)
 }
 
 /*****************************************************************************/
-static short producer(void *voidp, char **bufpp, size_t *countlp, short *eofbp)
+static short producer(void *voidp, char **bufpp, size_t *countlp, short *eofbp, short *pausebp)
 /*****************************************************************************/
 {
   tconv_helper_context_t *contextp = (tconv_helper_context_t *) voidp;
@@ -371,6 +371,7 @@ static short producer(void *voidp, char **bufpp, size_t *countlp, short *eofbp)
   }
   *bufpp   = contextp->inbufp;
   *countlp = countl;
+  *pausebp = 0;
   *eofbp   = (countl == 0);  /* True when this is a file descriptor */
 }
 

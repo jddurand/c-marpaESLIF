@@ -180,17 +180,13 @@ tconv_EXPORT short tconv_fuzzy(tconv_t tconvp);
 /* Helper                                                             */
 /**********************************************************************/
 typedef struct tconv_helper tconv_helper_t;
-typedef short (*tconv_producer_t)(void *contextp, char **bufpp, size_t *countlp, short *eofbp);
+typedef short (*tconv_producer_t)(void *contextp, char **bufpp, size_t *countlp, short *eofbp, short *pausebp);
 typedef short (*tconv_consumer_t)(void *contextp, char *bufp, size_t countl, short eofb, size_t *resultlp);
 
 tconv_EXPORT tconv_helper_t *tconv_helper_newp(char *tocodes, char *fromcodes, void *contextp, tconv_producer_t producerp, tconv_consumer_t consumerp);
 tconv_EXPORT void tconv_helper_freev(tconv_helper_t *tconv_helperp);
 tconv_EXPORT tconv_t tconv_helper_tconvp(tconv_helper_t *tconv_helperp);
 tconv_EXPORT short tconv_helper_readi(tconv_helper_t *tconv_helperp);
-tconv_EXPORT short tconv_helper(tconv_t  tconvp,
-                   void    *contextp,
-                   short   (*producerp)(void *contextp, char **bufpp, size_t *countlp, short *eofbp),
-                   short   (*consumerp)(void *contextp, char *bufp, size_t countl, short eofb, size_t *resultlp)
-                   );
+tconv_EXPORT short tconv_helper(tconv_t tconvp, void *contextp, tconv_producer_t producerp, tconv_consumer_t consumerp);
 
 #endif /* TCONV_EXT_H */
