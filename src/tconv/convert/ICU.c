@@ -29,6 +29,7 @@ tconv_convert_ICU_option_t tconv_convert_icu_option_default = {
   0,    /* signaturei */
 };
 
+/* The following is for testing when UCONFIG_NO_TRANSLITERATION is true */
 /*
 #undef UCONFIG_NO_TRANSLITERATION
 #define UCONFIG_NO_TRANSLITERATION 1
