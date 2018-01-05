@@ -892,7 +892,19 @@ tconv_helper_t *tconv_helper_newp(char *tocodes, char *fromcodes, void *contextp
 }
 
 /****************************************************************************/
-tconv_EXPORT void tconv_helper_freev(tconv_helper_t *tconv_helperp)
+tconv_t tconv_helper_tconvp(tconv_helper_t *tconv_helperp)
+/****************************************************************************/
+{
+  if (tconv_helperp == NULL) {
+    errno = EINVAL;
+    return NULL;
+  }
+
+  return tconv_helperp->tconvp;
+}
+
+/****************************************************************************/
+void tconv_helper_freev(tconv_helper_t *tconv_helperp)
 /****************************************************************************/
 {
   if (tconv_helperp != NULL) {

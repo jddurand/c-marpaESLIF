@@ -185,6 +185,7 @@ typedef short (*tconv_consumer_t)(void *contextp, char *bufp, size_t countl, sho
 
 tconv_EXPORT tconv_helper_t *tconv_helper_newp(char *tocodes, char *fromcodes, void *contextp, tconv_producer_t producerp, tconv_consumer_t consumerp);
 tconv_EXPORT void tconv_helper_freev(tconv_helper_t *tconv_helperp);
+tconv_EXPORT tconv_t tconv_helper_tconvp(tconv_helper_t *tconv_helperp);
 tconv_EXPORT short tconv_helper_readi(tconv_helper_t *tconv_helperp);
 tconv_EXPORT short tconv_helper(tconv_t  tconvp,
                    void    *contextp,
