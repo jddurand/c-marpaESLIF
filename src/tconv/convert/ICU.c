@@ -8,6 +8,7 @@
 #if !UCONFIG_NO_TRANSLITERATION
 #include <unicode/utrans.h>
 #endif
+#include <unicode/ures.h>
 #include <unicode/uset.h>
 #include <unicode/ustring.h>
 
@@ -28,8 +29,10 @@ tconv_convert_ICU_option_t tconv_convert_icu_option_default = {
   0,    /* signaturei */
 };
 
+/*
 #undef UCONFIG_NO_TRANSLITERATION
 #define UCONFIG_NO_TRANSLITERATION 1
+*/
 /* Context */
 typedef struct tconv_convert_ICU_context {
   UConverter                 *uConverterFromp;   /* Input => UChar  */
@@ -80,7 +83,11 @@ void  *tconv_convert_ICU_new(tconv_t tconvp, const char *tocodes, const char *fr
   const UChar                 *uCharBufLimitp   = NULL;
   int32_t                      uCharCapacityl   = 0;
 #if !UCONFIG_NO_TRANSLITERATION
+  UResourceBundle             *uResourceBundlep = NULL;
   UTransliterator             *uTransliteratorp = NULL;
+  UChar                       *uLocales         = NULL;
+  int32_t                      uLocaleLength;
+  const char                  *locales;
 #endif
   UConverter                  *uConverterTop    = NULL;
   UConverterFromUCallback      fromUCallbackp   = NULL;
@@ -221,9 +228,9 @@ void  *tconv_convert_ICU_new(tconv_t tconvp, const char *tocodes, const char *fr
 
   ucnv_setFallback(uConverterFromp, fallbackb);
 
-  /* ------------------------------------------------------------------------------------------------------------------------ */
-  /* Setup the proxy unicode buffer: //TRANSLIT is done on that, with a fallback to Latin1 for any character outside of "to"  */
-  /* ------------------------------------------------------------------------------------------------------------------------ */
+  /* ------------------------------ */
+  /* Setup the proxy unicode buffer */
+  /* ------------------------------ */
   {
     size_t uCharSizel = uCharCapacityl * sizeof(UChar);
     /* +1 hiden for eventual signature add */
@@ -234,9 +241,9 @@ void  *tconv_convert_ICU_new(tconv_t tconvp, const char *tocodes, const char *fr
     uCharBufLimitp = (const UChar *) (uCharBufOrigp + uCharCapacityl); /* In unit of UChar */
   }
 
-  /* --------------------------------------------------------------------------------------- */
-  /* Setup the to converter: if //TRANSLIT apply substitution character if needed, else stop */
-  /* --------------------------------------------------------------------------------------- */
+  /* ---------------------------------------------- */
+  /* Setup the to converter: handles the //TRANSLIT */
+  /* ---------------------------------------------- */
   fromUCallbackp = (translitb == TRUE) ? UCNV_FROM_U_CALLBACK_SUBSTITUTE : UCNV_FROM_U_CALLBACK_STOP;
   fromUContextp  = NULL;
 
@@ -280,18 +287,12 @@ void  *tconv_convert_ICU_new(tconv_t tconvp, const char *tocodes, const char *fr
   /* ----------------------------------------------------------- */
   if (translitb == TRUE) {
 #if UCONFIG_NO_TRANSLITERATION
-    TCONV_TRACE(tconvp, "%s - translitb is TRUE but config says UCONFIG_NO_TRANSLITERATION", funcs);
-    // errno = ENOSYS;
-    // goto err;
+    TCONV_TRACE(tconvp, "%s - translitb is TRUE but config says UCONFIG_NO_TRANSLITERATION - falling back to normal substitution character", funcs);
 #else
+
+    /* We want to know the exact pattern set of the destination charset */
     whichSet = (fallbackb == TRUE) ? UCNV_ROUNDTRIP_AND_FALLBACK_SET : UCNV_ROUNDTRIP_SET;
 
-    /* Transliterator is generated on-the-fly using the unicode */
-    /* sets from the two converters.                            */
-    
-    /* ------------------------- */
-    /* Uset for the to converter */
-    /* ------------------------- */
     uSetTop = uset_openEmpty();
     if (uSetTop == NULL) { /* errno ? */
       errno = ENOSYS;
@@ -352,35 +353,90 @@ void  *tconv_convert_ICU_new(tconv_t tconvp, const char *tocodes, const char *fr
     }
 #endif
 
-    /* ---------------------------------------------------------------------------- */
-    /* Create transliterator: "[toPattern] Any-Latin; Latin-ASCII"                  */
-    /* ---------------------------------------------------------------------------- */
-    TCONV_TRACE(tconvp, "%s - creating a \"%s\" transliterator", funcs, "Any-Latin; Latin-ASCII");
+    /* We want to know the current locale */
     uErrorCode = U_ZERO_ERROR;
-    uTransliteratorp = utrans_openU(universalTransliterators,
-                                    universalTransliteratorsLength,
-                                    UTRANS_FORWARD,
-                                    NULL,
-                                    0,
-                                    NULL,
-                                    &uErrorCode);
-    if (U_FAILURE(uErrorCode)) {
+    uResourceBundlep = ures_open(NULL, NULL, &uErrorCode);
+    if (! U_SUCCESS(uErrorCode)) {
       errno = ENOSYS;
       goto err;
     }
 
-    TCONV_TRACE(tconvp, "%s - saying transliterator to act on the complement of the \"to\" pattern set", funcs);
     uErrorCode = U_ZERO_ERROR;
-    utrans_setFilter(uTransliteratorp,
-                     uSetPatternTos,
-                     uSetPatternTol,
-                     &uErrorCode);
+    locales = ures_getLocaleByType(uResourceBundlep, ULOC_VALID_LOCALE, &uErrorCode);
     if (U_FAILURE(uErrorCode)) {
       errno = ENOSYS;
       goto err;
     }
+    if (locales == NULL) {
+      TCONV_TRACE(tconvp, "%s - locale is NULL", funcs);
+      errno = ENOSYS;
+      goto err;
+    }
+    if (strlen(locales) <= 0) {
+      TCONV_TRACE(tconvp, "%s - empty locale", funcs);
+      errno = ENOSYS;
+      goto err;
+    }
 
-    /* Cleanup */
+    if (strcmp(locales, "root") == 0) {
+      TCONV_TRACE(tconvp, "%s - current locale is %s: skipped", funcs, locales);
+    } else {
+      TCONV_TRACE(tconvp, "%s - current locale is %s", funcs, locales);
+      uErrorCode = U_ZERO_ERROR;
+      u_strFromUTF8(NULL, 0, &uLocaleLength, locales, strlen(locales), &uErrorCode);
+      if (uErrorCode != U_BUFFER_OVERFLOW_ERROR) {
+        errno = ENOSYS;
+        goto err;
+      }
+      uLocales = (UChar *) malloc(uLocaleLength * sizeof(UChar));
+      if (uLocales == NULL) {
+        goto err;
+      }
+      uErrorCode = U_ZERO_ERROR;
+      u_strFromUTF8(uLocales, uLocaleLength, NULL, locales, strlen(locales), &uErrorCode);
+      if (U_FAILURE(uErrorCode)) {
+        errno = ENOSYS;
+        goto err;
+      }
+    }
+
+    /* --------------------- */
+    /* Create transliterator */
+    /* --------------------- */
+    if (uLocales != NULL) {
+      TCONV_TRACE(tconvp, "%s - creating a \"%s\" transliterator", funcs, locales);
+      uErrorCode = U_ZERO_ERROR;
+      uTransliteratorp = utrans_openU(uLocales,
+                                      uLocaleLength,
+                                      UTRANS_FORWARD,
+                                      NULL,
+                                      0,
+                                      NULL,
+                                      &uErrorCode);
+#ifndef TCONV_NTRACE
+      if (U_FAILURE(uErrorCode)) {
+        /* Formally this is not fatal, we will switch to the default to character substitution character */
+        TCONV_TRACE(tconvp, "%s - ucnv_setSubstString failure, %s", funcs, u_errorName(uErrorCode));
+        /*
+          errno = ENOSYS;
+          goto err;
+        */
+      }
+#endif
+      if (uTransliteratorp != NULL) {
+        TCONV_TRACE(tconvp, "%s - saying transliterator to act only on the complement of the \"to\" pattern set", funcs);
+        uErrorCode = U_ZERO_ERROR;
+        utrans_setFilter(uTransliteratorp,
+                         uSetPatternTos,
+                         uSetPatternTol,
+                         &uErrorCode);
+        if (U_FAILURE(uErrorCode)) {
+          errno = ENOSYS;
+          goto err;
+        }
+      }
+    }
+
     uset_close(uSetTop);
     uSetTop = NULL;
 
@@ -389,6 +445,11 @@ void  *tconv_convert_ICU_new(tconv_t tconvp, const char *tocodes, const char *fr
 
     free(uSetPatternTos);
     uSetPatternTos = NULL;
+
+    ures_close(uResourceBundlep);
+    uResourceBundlep = NULL;
+
+    free(uLocales);
 #endif /* UCONFIG_NO_TRANSLITERATION */
   }
 
@@ -449,6 +510,12 @@ void  *tconv_convert_ICU_new(tconv_t tconvp, const char *tocodes, const char *fr
       uset_close(uSetp);
     }
 #if !UCONFIG_NO_TRANSLITERATION
+    if (uResourceBundlep != NULL) {
+      ures_close(uResourceBundlep);
+    }
+    if (uLocales != NULL) {
+      free(uLocales);
+    }
     if (uTransliteratorp != NULL) {
       utrans_close(uTransliteratorp);
     }
