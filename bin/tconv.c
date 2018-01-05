@@ -123,10 +123,11 @@ int main(int argc, char **argv)
   int                  outputFd;
   int                  option;
   struct optparse      options;
-  tconv_charset_t      *charsetp = NULL;
-  tconv_charset_t       charset;
-  tconv_convert_t      *convertp = NULL;
-  tconv_convert_t       convert;
+  tconv_charset_t     *charsetp = NULL;
+  tconv_charset_t      charset;
+  tconv_convert_t     *convertp = NULL;
+  tconv_convert_t      convert;
+  short                haveoptionsb = 0;
 
   optparse_init(&options, argv);
   while ((option = optparse_long(&options, longopts, &longindex)) != -1) {
@@ -253,12 +254,12 @@ int main(int argc, char **argv)
   fileconvert(outputFd, args, tocodes, fromcodes, convertp, charsetp, guessb, bufsizel, fromPrintb, fuzzyb)
 #endif
 
-  if (optind <= 1) {
+  while ((args = optparse_arg(&options)) != NULL) {
+    haveoptionsb = 1;
+    TCONV_FILECONVERT(outputFd, args, tocodes, fromcodes, convertp, charsetp, guessb, bufsizel, fromPrintb, fuzzyb);
+  }
+  if (! haveoptionsb) {
     TCONV_FILECONVERT(outputFd, NULL, tocodes, fromcodes, convertp, charsetp, guessb, bufsizel, fromPrintb, fuzzyb);
-  } else {
-    while ((args = optparse_arg(&options)) != NULL) {
-      TCONV_FILECONVERT(outputFd, args, tocodes, fromcodes, convertp, charsetp, guessb, bufsizel, fromPrintb, fuzzyb);
-    }
   }
 
   if ((outputFd >= 0) && (outputFd != fileno(stdout))) {
