@@ -1310,6 +1310,9 @@ static short _tconv_helper_run_onceb(tconv_helper_t *tconv_helperp, short flushb
 
   TCONV_TRACE(tconvp, "%s(%p, %d, %d)", funcs, tconv_helperp, (int) flushb, (int) resetb);
 
+  /* ------------------------- */
+  /* Call eventually for input */
+  /* ------------------------- */
   if (flushb || resetb) {
     inbufp           = NULL;
     inbufbytesleftl  = 0;
@@ -1374,37 +1377,34 @@ static short _tconv_helper_run_onceb(tconv_helper_t *tconv_helperp, short flushb
       tconv_helperp->inputguardp = tconv_helperp->inputp + tconv_helperp->inputguardl;
       tconv_helperp->inputendp   = tconv_helperp->inputp + tconv_helperp->inputallocl;
 
-#ifndef TCONV_NTRACE
-      if (tconv_helperp->outputguardl < tconv_helperp->outputallocl) {
-        if (tconv_helperp->outputguardl > 0) {
-          TCONV_TRACE(tconvp, "%s - ...... output buffer is %p[0 ...used... %ld][%ld ...unused... %ld]", funcs, tconv_helperp->outputp, (unsigned long) (tconv_helperp->outputguardl - 1), (unsigned long) tconv_helperp->outputguardl, (unsigned long) tconv_helperp->outputallocl);
-        } else {
-          TCONV_TRACE(tconvp, "%s - ...... output buffer is %p[%ld ...unused... %ld]", funcs, tconv_helperp->outputp, (unsigned long) tconv_helperp->outputguardl, (unsigned long) tconv_helperp->outputallocl);
-        }
-      } else {
-        TCONV_TRACE(tconvp, "%s - ...... output buffer is %p[0 ...used... %ld]", funcs, tconv_helperp->outputp, (unsigned long) tconv_helperp->outputallocl);
-      }
-#endif
-      tconv_helperp->outputguardp = tconv_helperp->outputp + tconv_helperp->outputguardl;
-      tconv_helperp->outputendp   = tconv_helperp->outputp + tconv_helperp->outputallocl;
     } /* (producerbufp != NULL) && (producercountl > 0) */
-
-      /*
-       * local input buffer is now like this:
-       *
-       * inputp                                     inputguardp              inputendp
-       * 0                                          inputguardl              inputallocl
-       * ---------------------------------------------------------------------
-       * |      used area                           |  unused area           |
-       * ---------------------------------------------------------------------
-       * inbufp
-       * ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-       * input area of size inbufbytesleftl
-       */
 
     inbufp           = tconv_helperp->inputp;
     inbufbytesleftl  = tconv_helperp->inputguardl;
+
+    /*
+     * local input buffer is like this:
+     *
+     * inputp                                     inputguardp              inputendp
+     * 0                                          inputguardl              inputallocl
+     * ---------------------------------------------------------------------
+     * |      used area                           |  unused area           |
+     * ---------------------------------------------------------------------
+     * inbufp
+     * ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     * input area of size inbufbytesleftl
+     */
+
   } /* (! flushb) && (! resetb) */
+
+  /* ------------------------- */
+  /* Manage output buffer      */
+  /* ------------------------- */
+  /* These calls could be done only when not in reset mode, but left here as a safety
+     measure. Please note that this output buffer is always defined.
+  */
+  tconv_helperp->outputguardp = tconv_helperp->outputp + tconv_helperp->outputguardl;
+  tconv_helperp->outputendp   = tconv_helperp->outputp + tconv_helperp->outputallocl;
 
   if (resetb) {
     outbufp          = NULL;
@@ -1412,21 +1412,34 @@ static short _tconv_helper_run_onceb(tconv_helper_t *tconv_helperp, short flushb
   } else {
     outbufp          = tconv_helperp->outputguardp;
     outbufbytesleftl = tconv_helperp->outputallocl - tconv_helperp->outputguardl;
-  }
 
-  /*
-   * local output buffer is like this (when outputp is not NULL):
-   *
-   * outputp                                    outputguardp             outputendp
-   * 0                                          outputguardl             outputallocl
-   * ---------------------------------------------------------------------
-   * |      used area                           |  unused area           |
-   * ---------------------------------------------------------------------
-   * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!outbufp
-   * area not consumed by the end user          ^^^^^^^^^^^^^^^^^^^^^^^^^
-   *                                            output area of size outbufbytesleftl
-   *
-   */
+#ifndef TCONV_NTRACE
+    if (tconv_helperp->outputguardl < tconv_helperp->outputallocl) {
+      if (tconv_helperp->outputguardl > 0) {
+        TCONV_TRACE(tconvp, "%s - ...... output buffer is %p[0 ...used... %ld][%ld ...unused... %ld]", funcs, tconv_helperp->outputp, (unsigned long) (tconv_helperp->outputguardl - 1), (unsigned long) tconv_helperp->outputguardl, (unsigned long) tconv_helperp->outputallocl);
+      } else {
+        TCONV_TRACE(tconvp, "%s - ...... output buffer is %p[%ld ...unused... %ld]", funcs, tconv_helperp->outputp, (unsigned long) tconv_helperp->outputguardl, (unsigned long) tconv_helperp->outputallocl);
+      }
+    } else {
+      TCONV_TRACE(tconvp, "%s - ...... output buffer is %p[0 ...used... %ld]", funcs, tconv_helperp->outputp, (unsigned long) tconv_helperp->outputallocl);
+    }
+#endif
+
+    /*
+     * local output buffer is like this:
+     *
+     * outputp                                    outputguardp             outputendp
+     * 0                                          outputguardl             outputallocl
+     * ---------------------------------------------------------------------
+     * |      used area                           |  unused area           |
+     * ---------------------------------------------------------------------
+     * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!outbufp
+     * area not consumed by the end user          ^^^^^^^^^^^^^^^^^^^^^^^^^
+     *                                            output area of size outbufbytesleftl
+     *
+     */
+
+  }
 
   TCONV_TRACE(tconvp, "%s - calling tconv with {inbufp=%p,inbufbytesleftl=%ld} and {outbufp=%p,outbufbytesleftl=%ld}", funcs, inbufp, (unsigned long) inbufbytesleftl, outbufp, (unsigned long) outbufbytesleftl);
   tconvl = tconv(tconvp, &inbufp, &inbufbytesleftl, &outbufp, &outbufbytesleftl);
@@ -1557,7 +1570,7 @@ static short _tconv_helper_run_onceb(tconv_helper_t *tconv_helperp, short flushb
       /* Regardless if we memmoved in the output buffer, handle a resize. */
       /* A resize failure should be fatal unless we get some free bytes via the */
       /* memmove indeed. We consider that fatal in any case -; */
-      allocl = tconv_helperp->outputallocl * 2;
+      allocl = tconv_helperp->outputallocl + TCONV_HELPER_BUFSIZ;
       /* Will that really happen in real-life ? Possible in theory, though. */
       if (allocl < tconv_helperp->outputallocl) {
         errno = ERANGE;
