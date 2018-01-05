@@ -451,6 +451,7 @@ void  *tconv_convert_ICU_new(tconv_t tconvp, const char *tocodes, const char *fr
     uResourceBundlep = NULL;
 
     free(uLocales);
+    uLocales = NULL;
 #endif /* UCONFIG_NO_TRANSLITERATION */
   }
 
