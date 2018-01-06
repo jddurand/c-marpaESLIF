@@ -190,6 +190,7 @@ tconv_EXPORT short           tconv_helper_set_resetb(tconv_helper_t *tconv_helpe
 tconv_EXPORT short           tconv_helper_set_flushb(tconv_helper_t *tconv_helperp, short flushb);
 tconv_EXPORT short           tconv_helper_set_pauseb(tconv_helper_t *tconv_helperp, short pauseb);
 tconv_EXPORT short           tconv_helper_set_endb(tconv_helper_t *tconv_helperp, short endb);
+tconv_EXPORT short           tconv_helper_set_stopb(tconv_helper_t *tconv_helperp, short stopb);
 tconv_EXPORT void            tconv_helper_freev(tconv_helper_t *tconv_helperp);
 tconv_EXPORT short           tconv_helper(tconv_t tconvp, void *contextp, tconv_producer_t producerp, tconv_consumer_t consumerp);
 

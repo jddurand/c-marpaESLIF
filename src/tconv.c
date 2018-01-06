@@ -82,7 +82,7 @@ struct tconv_helper {
   short             flushb;
   short             pauseb;
   short             endb;
-  short             stopb; /* Internal state to force last run to be executed even if endb is on */
+  short             stopb;
   size_t            tconvl;
   int               errnoi;
 };
@@ -940,7 +940,7 @@ short tconv_helper(tconv_t tconvp, void *contextp, tconv_producer_t producerp, t
     goto err;
   }
 
-  while (tconv_helperp->endb == 0) {
+  while ((tconv_helperp->endb == 0) && (tconv_helperp->stopb == 0)) {
     if (! tconv_helper_runb(tconv_helperp)) {
       goto err;
     }
@@ -953,7 +953,8 @@ short tconv_helper(tconv_t tconvp, void *contextp, tconv_producer_t producerp, t
   if (! tconv_helper_set_resetb(tconv_helperp, 0)) {
     goto err;
   }
-  /* Set internal flag to force tconv_helper_runb() very last execution */
+
+  /* Force internal stop flag in any case */
   tconv_helperp->stopb = 1;
   if (! tconv_helper_runb(tconv_helperp)) {
     goto err;
@@ -1651,7 +1652,7 @@ short tconv_helper_runb(tconv_helper_t *tconv_helperp)
       goto err;
     }
   } else {
-    while (tconv_helperp->endb == 0) {
+    while ((tconv_helperp->endb == 0) && (tconv_helperp->stopb == 0)) {
       if (! _tconv_helper_run_oneb(tconv_helperp)) {
         goto err;
       }
@@ -1789,6 +1790,27 @@ short tconv_helper_set_endb(tconv_helper_t *tconv_helperp, short endb)
     }
   }
   tconv_helperp->endb = endb;
+
+  TCONV_TRACE(tconvp, "%s - return 1", funcs);
+  return 1;
+}
+
+/****************************************************************************/
+short tconv_helper_set_stopb(tconv_helper_t *tconv_helperp, short stopb)
+/****************************************************************************/
+{
+  static const char funcs[] = "tconv_helper_set_stopb";
+  tconv_t           tconvp;
+
+  if (tconv_helperp == NULL) {
+    errno = EINVAL;
+    return 0;
+  }
+
+  tconvp = tconv_helperp->tconvp;
+  TCONV_TRACE(tconvp, "%s(%p, %d)", funcs, tconv_helperp, (int) stopb);
+
+  tconv_helperp->stopb = stopb;
 
   TCONV_TRACE(tconvp, "%s - return 1", funcs);
   return 1;

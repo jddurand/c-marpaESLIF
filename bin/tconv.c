@@ -377,7 +377,7 @@ static short producer(tconv_helper_t *tconv_helperp, void *voidp, char **bufpp, 
       GENERICLOGGER_TRACEF(NULL, "%s: guess mode - faking eof", (contextp->filenames != NULL) ? contextp->filenames : "(standard input)");
     }
 #endif
-    return tconv_helper_set_endb(tconv_helperp, 1);
+    return tconv_helper_set_stopb(tconv_helperp, 1);
   } else if (countl == 0) {
     /* For a file descriptor, if countl is 0 then this is a eof */
 #ifndef TCONV_NTRACE
