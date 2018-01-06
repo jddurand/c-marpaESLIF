@@ -1321,7 +1321,7 @@ static short _tconv_helper_run_oneb(tconv_helper_t *tconv_helperp)
 
   TCONV_TRACE(tconvp, "%s(%p)", funcs, tconv_helperp);
 
-  if (tconv_helperp->endb == 0) {
+  if ((tconv_helperp->endb == 0) && (tconv_helperp->stopb == 0)) {
     /* ----------------- */
     /* Call the producer */
     /* ----------------- */
