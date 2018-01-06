@@ -592,14 +592,18 @@ size_t tconv_convert_ICU_run(tconv_t tconvp, void *voidp, char **inbufpp, size_t
 
   rcl = _tconv_convert_ICU_run(tconvp, contextp, &inbufp, &inbytesleftl, &outbufp, &outbytesleftl, flushb);
   if ((rcl != (size_t)-1) || ((rcl == (size_t)-1) && (errno == E2BIG))) {
-    if (inbufpp != NULL) {
-      *inbufpp       = inbufp;
+    if ((inbufpp != NULL) && (*inbufpp != NULL)) {
+      *inbufpp = inbufp;
+    }
+    if (inbytesleftlp != NULL) {
       *inbytesleftlp = inbytesleftl;
+    }
+    if ((outbufpp != NULL) && (*outbufpp != NULL)) {
+      *outbufpp = outbufp;
     }
     if (outbytesleftlp != NULL) {
       *outbytesleftlp = outbytesleftl;
     }
-    *outbufpp       = outbufp;
   }
   
   return rcl;
