@@ -55,11 +55,14 @@
 #endif
 
 typedef struct tconv_helper_context {
+  tconv_t tconvp;
   char   *filenames;
   int     fd;
   int     outputFd;
   char   *inbufp;
   size_t  bufsizel;
+  short   guessb;
+  short   firstconsumercallb;
 #ifndef TCONV_NTRACE
   short   verbose;
 #endif
@@ -349,7 +352,7 @@ static void _usage(char *argv0, short helpb)
 }
 
 /*****************************************************************************/
-static short producer(void *voidp, char **bufpp, size_t *countlp, short *eofbp, short *pausebp)
+static short producer(tconv_helper_t *tconv_helperp, void *voidp, char **bufpp, size_t *countlp)
 /*****************************************************************************/
 {
   tconv_helper_context_t *contextp = (tconv_helper_context_t *) voidp;
@@ -366,24 +369,50 @@ static short producer(void *voidp, char **bufpp, size_t *countlp, short *eofbp, 
   }
   *bufpp   = contextp->inbufp;
   *countlp = countl;
-  *pausebp = 0;
-  *eofbp   = (countl == 0);  /* True when this is a file descriptor */
+
+  if (contextp->guessb) {
+    /* We do not want to continue */
+#ifndef TCONV_NTRACE
+    if (contextp->verbose) {
+      GENERICLOGGER_TRACEF(NULL, "%s: guess mode - faking eof", (contextp->filenames != NULL) ? contextp->filenames : "(standard input)");
+    }
+#endif
+    return tconv_helper_set_endb(tconv_helperp, 1);
+  } else if (countl == 0) {
+    /* For a file descriptor, if countl is 0 then this is a eof */
+#ifndef TCONV_NTRACE
+    if (contextp->verbose) {
+      GENERICLOGGER_TRACEF(NULL, "%s: eof", (contextp->filenames != NULL) ? contextp->filenames : "(standard input)");
+    }
+#endif
+    return tconv_helper_set_endb(tconv_helperp, (countl == 0) ? 1 : 0);
+  } else {
+    return 1;
+  }
 }
 
 /*****************************************************************************/
-static short consumer(void *voidp, char *bufp, size_t countl, short eofb, size_t *resultlp)
+static short consumer(tconv_helper_t *tconv_helperp, void *voidp, char *bufp, size_t countl, size_t *countlp)
 /*****************************************************************************/
 {
-  tconv_helper_context_t *contextp = (tconv_helper_context_t *) voidp;
+  tconv_helper_context_t *contextp  = (tconv_helper_context_t *) voidp;
+  size_t                  consumedl;
 
   if (contextp->outputFd >= 0) {
-    if (write(contextp->outputFd, bufp, countl) != countl) {
-      GENERICLOGGER_ERRORF(NULL, "Failed to write output: %s", strerror(errno));
-      return 0;
+    consumedl = write(contextp->outputFd, bufp, countl);
+  } else {
+    consumedl = 0;
+  }
+
+  *countlp = consumedl;
+
+  if (contextp->guessb) {
+    if (contextp->firstconsumercallb != 0) {
+      GENERICLOGGER_INFOF(NULL, "%s: %s", (contextp->filenames != NULL) ? contextp->filenames : "(standard input)", tconv_fromcode(contextp->tconvp));
+      contextp->firstconsumercallb = 0;
     }
   }
 
-  *resultlp = countl;
   return 1;
 }
 
@@ -454,12 +483,14 @@ static void fileconvert(int outputFd, char *filenames,
   }
 #endif
 
-
-  context.filenames = filenames;
-  context.fd        = fd;
-  context.outputFd  = outputFd;
-  context.inbufp    = inbufp;
-  context.bufsizel  = bufsizel;
+  context.tconvp             = tconvp;
+  context.filenames          = filenames;
+  context.fd                 = fd;
+  context.outputFd           = outputFd;
+  context.inbufp             = inbufp;
+  context.bufsizel           = bufsizel;
+  context.guessb             = guessb;
+  context.firstconsumercallb = 1;
 #ifndef TCONV_NTRACE
   context.verbose   = verbose;
 #endif

@@ -180,13 +180,16 @@ tconv_EXPORT short tconv_fuzzy(tconv_t tconvp);
 /* Helper                                                             */
 /**********************************************************************/
 typedef struct tconv_helper tconv_helper_t;
-typedef short (*tconv_producer_t)(void *contextp, char **bufpp, size_t *countlp, short *eofbp, short *pausebp);
-typedef short (*tconv_consumer_t)(void *contextp, char *bufp, size_t countl, short eofb, size_t *resultlp);
+typedef short (*tconv_producer_t)(tconv_helper_t *tconv_helperp, void *contextp, char **bufpp, size_t *countlp);
+typedef short (*tconv_consumer_t)(tconv_helper_t *tconv_helperp, void *contextp, char *bufp, size_t countl, size_t *countlp);
 
 tconv_EXPORT tconv_helper_t *tconv_helper_newp(tconv_t tconvp, void *contextp, tconv_producer_t producerp, tconv_consumer_t consumerp);
-tconv_EXPORT short           tconv_helper_runb(tconv_helper_t *tconv_helperp, short *continuebp);
-tconv_EXPORT short           tconv_helper_resetb(tconv_helper_t *tconv_helperp);
-tconv_EXPORT short           tconv_helper_flushb(tconv_helper_t *tconv_helperp);
+tconv_EXPORT short           tconv_helper_runb(tconv_helper_t *tconv_helperp);
+tconv_EXPORT short           tconv_helper_get_tconv_statusb(tconv_helper_t *tconv_helperp, size_t *tconvlp, int *errnoip);
+tconv_EXPORT short           tconv_helper_set_resetb(tconv_helper_t *tconv_helperp, short resetb);
+tconv_EXPORT short           tconv_helper_set_flushb(tconv_helper_t *tconv_helperp, short flushb);
+tconv_EXPORT short           tconv_helper_set_pauseb(tconv_helper_t *tconv_helperp, short pauseb);
+tconv_EXPORT short           tconv_helper_set_endb(tconv_helper_t *tconv_helperp, short endb);
 tconv_EXPORT void            tconv_helper_freev(tconv_helper_t *tconv_helperp);
 tconv_EXPORT short           tconv_helper(tconv_t tconvp, void *contextp, tconv_producer_t producerp, tconv_consumer_t consumerp);
 
