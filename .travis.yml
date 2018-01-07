@@ -2,8 +2,6 @@ language: c
 before_script:
 # We want to try perl standalone first
   - sudo apt-get update
-# For coveralls-cmake
-  - sudo apt-get install curl
   - sudo apt-get install cpanminus nsis
   - sudo cpanm --notest Archive::Tar Config::AutoConf::INI ExtUtils::CBuilder File::chdir File::Basename File::Find File::Path File::Copy::Recursive File::Temp IPC::Run Perl::OSType
   - sh ./install-c-genericLogger.sh
@@ -21,7 +19,6 @@ script:
 # Not ALL_IN_ONE
   - cmake .
   - make check
-  - make coveralls
   - make pack
   - cpack -G NSIS
   - sudo make install
@@ -36,11 +33,14 @@ script:
   - diff /tmp/tconv.uconv-UTF-16.c /tmp/tconv.tconv-ICONV-UTF-16.c
   - tconv -g `find ./output/3rdparty/cchardet-1.0.0/test/testdata/ -type f`
   - rm -rf output CMakeCache.txt CMakeFiles
-# Not ALL_IN_ONE and coveralls
+# Not ALL_IN_ONE and codecov
   - cmake -DENABLE_COVERAGE=ON -DENABLE_COVERAGE_ALL=ON .
   - make
+  - make check
   - ./output/lib/tconv -b 3 -C ICONV -f ASCII -t UTF-16 -o /tmp/tconv.tconv-ICONV-UTF-16.c src/tconv.c
   - ./output/lib/tconv -b 3 -C ICU   -f ASCII -t UTF-16 -o /tmp/tconv.tconv-ICU-UTF-16.c src/tconv.c
   - ./output/lib/tconv -g `find ./output/3rdparty/cchardet-1.0.0/test/testdata/ -type f`
-  - make coveralls
-  - rm -rf output CMakeCache.txt CMakeFiles
+  - make gcov
+
+after_success:
+- bash <(curl -s https://codecov.io/bash) -X gcov
