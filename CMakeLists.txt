@@ -5,16 +5,6 @@ ENDIF ()
 MYPACKAGESTART (tconv 1 0 42)
 
 ###########
-# Codecov #
-###########
-SET (CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/3rdparty/github/CMake-codecov/cmake")
-FIND_PACKAGE(codecov)
-SET (COMPILER_C ${CMAKE_C_COMPILER_ID})
-SET (COMPILER_CXX ${CMAKE_CXX_COMPILER_ID})
-SET (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${COVERAGE_${COMPILER_C}_FLAGS}")
-SET (CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} ${COVERAGE_${COMPILER_CXX}_FLAGS}")
-  
-###########
 # Library #
 ###########
 SET (libtconv_src src/tconv.c src/tconv/charset/cchardet.c)
@@ -207,9 +197,9 @@ MYPACKAGEPACK ("" "Portable Iconv-like interface")
 #########
 MYPACKAGEPRINTSETUP()
 
-#########
-# codecov
-#########
-IF (CODECOV)
-  coverage_evaluate()
-ENDIF ()
+###########
+# Codecov #
+###########
+SET (CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/3rdparty/github/CMake-codecov/cmake")
+FIND_PACKAGE(codecov)
+coverage_evaluate()
