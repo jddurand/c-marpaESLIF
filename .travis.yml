@@ -25,11 +25,22 @@ script:
   - make pack
   - cpack -G NSIS
   - sudo make install
-  - tconv -f ASCII -t UTF-16 -o output/lib/tconv.tconv-UTF-16.c src/tconv.c
-  - iconv -f ASCII -t UTF-16 -o output/lib/tconv.iconv-UTF-16.c src/tconv.c
-  - uconv -f ASCII -t UTF-16 -o output/lib/tconv.uconv-UTF-16.c src/tconv.c
-  - ls -l src/tconv.c output/lib/tconv.iconv-UTF-16.c output/lib/tconv.uconv-UTF-16.c output/lib/tconv.tconv-UTF-16.c
-  - file src/tconv.c output/lib/tconv.iconv-UTF-16.c output/lib/tconv.uconv-UTF-16.c output/lib/tconv.tconv-UTF-16.c
-  - diff output/lib/tconv.iconv-UTF-16.c output/lib/tconv.tconv-UTF-16.c
-  - diff output/lib/tconv.uconv-UTF-16.c output/lib/tconv.tconv-UTF-16.c
+  - tconv -b 3 -C ICONV -f ASCII -t UTF-16 -o /tmp/tconv.tconv-ICONV-UTF-16.c src/tconv.c
+  - tconv -b 3 -C ICU   -f ASCII -t UTF-16 -o /tmp/tconv.tconv-ICU-UTF-16.c src/tconv.c
+  - iconv -f ASCII -t UTF-16 -o /tmp/tconv.iconv-UTF-16.c src/tconv.c
+  - uconv -f ASCII -t UTF-16 -o /tmp/tconv.uconv-UTF-16.c src/tconv.c
+  - ls -l src/tconv.c /tmp/tconv.iconv-UTF-16.c /tmp/tconv.uconv-UTF-16.c /tmp/tconv.tconv-ICONV-UTF-16.c /tmp/tconv.tconv-ICU-UTF-16.c
+  - file src/tconv.c /tmp/tconv.iconv-UTF-16.c /tmp/tconv.uconv-UTF-16.c /tmp/tconv.tconv-ICONV-UTF-16.c /tmp/tconv.tconv-ICU-UTF-16.c
+  - diff /tmp/tconv.iconv-UTF-16.c /tmp/tconv.tconv-ICONV-UTF-16.c
+  - diff /tmp/tconv.iconv-UTF-16.c /tmp/tconv.tconv-ICU-UTF-16.c
+  - diff /tmp/tconv.uconv-UTF-16.c /tmp/tconv.tconv-ICONV-UTF-16.c
   - tconv -g `find ./output/3rdparty/cchardet-1.0.0/test/testdata/ -type f`
+  - rm -rf output CMakeCache.txt CMakeFiles
+# Not ALL_IN_ONE and coveralls
+  - cmake -DCOVERALLS=ON -DCMAKE_BUILD_TYPE=Debug .
+  - make
+  - ./output/lib/tconv -b 3 -C ICONV -f ASCII -t UTF-16 -o /tmp/tconv.tconv-ICONV-UTF-16.c src/tconv.c
+  - ./output/lib/tconv -b 3 -C ICU   -f ASCII -t UTF-16 -o /tmp/tconv.tconv-ICU-UTF-16.c src/tconv.c
+  - ./output/lib/tconv -g `find ./output/3rdparty/cchardet-1.0.0/test/testdata/ -type f`
+  - make coveralls
+  - rm -rf output CMakeCache.txt CMakeFiles
