@@ -57,7 +57,7 @@ script:
   # TRANSLIT is nothing special in ICONV builtin
   - ./output/lib/tconv -C ICONV -f UTF-16 -t ASCII//TRANSLIT -o /tmp/tconv.tconv-ICONV-ASCII-TRANSLIT.c /tmp/tconv.tconv-ICU-UTF-16.c
   # TRANSLIT is a special path in ICU builtin
-  - ./output/lib/tconv -C ICONV -f UTF-16 -t ASCII//TRANSLIT -o /tmp/tconv.tconv-ICU-ASCII-TRANSLIT.c /tmp/tconv.tconv-ICU-UTF-16.c
+  - ./output/lib/tconv -C ICU -f UTF-16 -t ASCII//TRANSLIT -o /tmp/tconv.tconv-ICU-ASCII-TRANSLIT.c /tmp/tconv.tconv-ICU-UTF-16.c
   - ./output/lib/tconv -g `find ./output/3rdparty/cchardet-1.0.0/test/testdata/ -type f`
   - make gcov
 
