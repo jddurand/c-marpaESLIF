@@ -37,7 +37,7 @@ script:
   - tconv -g `find ./output/3rdparty/cchardet-1.0.0/test/testdata/ -type f`
   - rm -rf output CMakeCache.txt CMakeFiles
 # Not ALL_IN_ONE and coveralls
-  - cmake -DCOVERALLS=ON -DCMAKE_BUILD_TYPE=Debug .
+  - cmake -DENABLE_COVERAGE=ON -DENABLE_COVERAGE_ALL=ON .
   - make
   - ./output/lib/tconv -b 3 -C ICONV -f ASCII -t UTF-16 -o /tmp/tconv.tconv-ICONV-UTF-16.c src/tconv.c
   - ./output/lib/tconv -b 3 -C ICU   -f ASCII -t UTF-16 -o /tmp/tconv.tconv-ICU-UTF-16.c src/tconv.c

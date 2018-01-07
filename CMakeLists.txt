@@ -4,21 +4,11 @@ IF (NOT MYPACKAGEBOOTSTRAP_DONE)
 ENDIF ()
 MYPACKAGESTART (tconv 1 0 42)
 
-#############
-# Coveralls #
-#############
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/3rdparty/github/coveralls-cmake/cmake")
-FIND_PROGRAM(CURL_EXECUTABLE curl)
-IF (CURL_EXECUTABLE AND (CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX))
-  OPTION(COVERALLS "Generate coveralls data" OFF)
-ENDIF ()
-
-IF (COVERALLS)
-  INCLUDE (Coveralls)
-  coveralls_turn_on_coverage()
-ELSE ()
-  ADD_CUSTOM_TARGET(coveralls)
-ENDIF ()
+###########
+# Codecov #
+###########
+SET (CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/3rdparty/github/CMake-codecov/cmake")
+FIND_PACKAGE(codecov)
   
 ###########
 # Library #
@@ -213,15 +203,9 @@ MYPACKAGEPACK ("" "Portable Iconv-like interface")
 #########
 MYPACKAGEPRINTSETUP()
 
-###########
-# coveralls
-###########
-IF (COVERALLS)
-  SET (COVERAGE_SRCS ${libtconv_src} bin/tconv.c)
-
-  # Create the coveralls target.
-  coveralls_setup(
-    "${COVERAGE_SRCS}" # The source files.
-    ON                 # If we should upload.
-    )
+#########
+# codecov
+#########
+IF (CODECOV)
+  coverage_evaluate()
 ENDIF ()
