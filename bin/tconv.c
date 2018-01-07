@@ -267,7 +267,7 @@ int main(int argc, char **argv)
 
   if ((outputFd >= 0) && (outputFd != fileno(stdout))) {
     if (close(outputFd) != 0) {
-      GENERICLOGGER_ERRORF(NULL, "Failed to close %s: %s", outputs, strerror(errno));
+      GENERICLOGGER_WARNF(NULL, "Failed to close %s: %s", outputs, strerror(errno));
     }
   }
 
@@ -506,13 +506,13 @@ static void fileconvert(int outputFd, char *filenames,
   if ((filenames != NULL) && (strcmp(filenames, "-") != 0)) {
     if (fd >= 0) {
       if (close(fd) != 0) {
-        GENERICLOGGER_ERRORF(NULL, "Failed to close %s: %s", filenames, strerror(errno));
+        GENERICLOGGER_WARNF(NULL, "Failed to close %s: %s", filenames, strerror(errno));
       }
     }
   }
-  if (tconvp != NULL) {
+  if (tconvp != (tconv_t) -1) {
     if (tconv_close(tconvp) != 0) {
-      GENERICLOGGER_ERRORF(NULL, "Failed to close tconv: %s", strerror(errno));
+      GENERICLOGGER_WARNF(NULL, "Failed to close tconv: %s", strerror(errno));
     }
   }
 }
