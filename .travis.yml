@@ -34,7 +34,7 @@ script:
   - tconv -g `find ./output/3rdparty/cchardet-1.0.0/test/testdata/ -type f`
   - rm -rf output CMakeCache.txt CMakeFiles
 # Not ALL_IN_ONE and codecov
-  - cmake -DENABLE_COVERAGE=ON -DENABLE_COVERAGE_ALL=ON .
+  - cmake -DENABLE_COVERAGE=ON .
   - make
   - make check
   - ./output/lib/tconv -b 3 -C ICONV -f ASCII -t UTF-16 -o /tmp/tconv.tconv-ICONV-UTF-16.c src/tconv.c

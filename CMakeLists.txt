@@ -192,14 +192,17 @@ MYPACKAGEMAN("include/tconv/README.pod" "TCONV_EXT" "3" "${TCONV_VERSION}")
 #############
 MYPACKAGEPACK ("" "Portable Iconv-like interface")
 
-#########
-# Setup #
-#########
-MYPACKAGEPRINTSETUP()
-
 ###########
 # Codecov #
 ###########
 SET (CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/3rdparty/github/CMake-codecov/cmake")
 FIND_PACKAGE(codecov)
+FOREACH (_target tconv tconv_static tconvExe tconvExe_static)
+  add_coverage(${_target})
+ENDFOREACH ()
 coverage_evaluate()
+
+#########
+# Setup #
+#########
+MYPACKAGEPRINTSETUP()
