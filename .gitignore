@@ -56,3 +56,8 @@ ipch/
 output/
 CPack*.cmake
 LICENSE.txt
+
+# Coveralls garbage
+\#*
+coveralls.json
+config.log

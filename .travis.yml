@@ -2,6 +2,8 @@ language: c
 before_script:
 # We want to try perl standalone first
   - sudo apt-get update
+# For coveralls-cmake
+  - sudo apt-get install gcov curl
   - sudo apt-get install cpanminus nsis
   - sudo cpanm --notest Archive::Tar Config::AutoConf::INI ExtUtils::CBuilder File::chdir File::Basename File::Find File::Path File::Copy::Recursive File::Temp IPC::Run Perl::OSType
   - sh ./install-c-genericLogger.sh
@@ -19,6 +21,7 @@ script:
 # Not ALL_IN_ONE
   - cmake .
   - make check
+  - make coveralls
   - make pack
   - cpack -G NSIS
   - sudo make install
