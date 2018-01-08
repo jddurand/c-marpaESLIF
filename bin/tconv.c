@@ -432,7 +432,7 @@ static void fileconvert(int outputFd, char *filenames,
 {
   char                   *inbufp = NULL;
   int                     fd     = -1;
-  tconv_t                 tconvp = NULL;
+  tconv_t                 tconvp = (tconv_t)-1;
   tconv_option_t          tconvOption;
   tconv_helper_context_t  context;
 

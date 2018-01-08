@@ -201,7 +201,7 @@ int tconv_close(tconv_t tconvp)
 
   TCONV_TRACE(tconvp, "%s(%p)", funcs, tconvp);
 
-  if (tconvp != NULL) {
+  if ((tconvp != NULL) && (tconvp != (tconv_t)-1)) {
     if (tconvp->charsetContextp != NULL) {
       if (tconvp->charsetExternal.tconv_charset_freep != NULL) {
         TCONV_TRACE(tconvp, "%s - freeing charset engine: %p(%p, %p)", funcs, tconvp->charsetExternal.tconv_charset_freep, tconvp, tconvp->charsetContextp);
