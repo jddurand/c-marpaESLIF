@@ -1332,11 +1332,9 @@ static short _tconv_helper_run_oneb(tconv_helper_t *tconv_helperp)
     TCONV_TRACE(tconvp, "%s - end mode - not calling the producer", funcs);
   }
 
-  /* -------------------------------------- */
-  /* If the producer says to stop, so do we */
-  /* -------------------------------------- */
-  if (tconv_helperp->stopb) {
-    goto stop;
+  /* If user said to pause, so do we */
+  if (tconv_helperp->pauseb) {
+    goto pause;
   }
 
  retry:
@@ -1554,7 +1552,7 @@ static short _tconv_helper_run_oneb(tconv_helper_t *tconv_helperp)
 
   }
 
- stop:
+ pause:
   rcb = 1;
   goto done;
 
@@ -1592,14 +1590,14 @@ short tconv_helper_runb(tconv_helper_t *tconv_helperp)
 #endif
     goto err;
   } else if (tconv_helperp->endb != 0) {
-    /* Indicates this will be end */
-    if (! tconv_helper_stopb(tconv_helperp)) {
-      goto err;
-    }
     /* Set internal flush flag */
     tconv_helperp->flushb = 1;
     /* Run the last possible call of _tconv_helper_run_oneb() */
     if (! _tconv_helper_run_oneb(tconv_helperp)) {
+      goto err;
+    }
+    /* Indicates this is the end */
+    if (! tconv_helper_stopb(tconv_helperp)) {
       goto err;
     }
   } else {
@@ -1608,7 +1606,7 @@ short tconv_helper_runb(tconv_helper_t *tconv_helperp)
         goto err;
       }
       if (tconv_helperp->pauseb != 0) {
-        /* Break the loop, pause is processed so we reset the flag */
+        /* Reset pause flag and break the loop */
         tconv_helperp->pauseb = 0;
         break;
       }
