@@ -1677,6 +1677,8 @@ short tconv_helper_runb(tconv_helper_t *tconv_helperp)
         goto err;
       }
       if (tconv_helperp->pauseb != 0) {
+        /* Break the loop, pause is processedso we reset the flag */
+        tconv_helperp->pauseb = 0;
         break;
       }
     }
