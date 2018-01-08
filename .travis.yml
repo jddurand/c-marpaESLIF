@@ -68,6 +68,9 @@ script:
   - TCONV_ENV_CONVERT_ICU_SIGNATURE=0 ./output/lib/tconv -C ICU -f UTF-16 -t UTF-8 -o /tmp/tconv.tconv-ICU-UTF8-SIGNATURE.c /tmp/tconv.tconv-ICU-UTF-16.c
   # A special case when ICU internal translit buffer need to increase
   - ./output/lib/tconv -C ICU -t UTF-8//TRANSLIT ./3rdparty/output/cchardet-1.0.0/test/testdata/wikipediaTw_One_Thousand_and_One_Nights_GB2312.txt -o /dev/null
+  # Forces some internal buffers to reallocate
+  - ./output/lib/tconv -C ICONV -t ASCII//TRANSLIT -b 10000 ./output/3rdparty/cchardet-1.0.0/test/testdata/wikipediaJa_One_Thousand_and_One_Nights_SJIS.txt -o /dev/null
+  - ./output/lib/tconv -C ICU   -t ASCII//TRANSLIT -b 10000 ./output/3rdparty/cchardet-1.0.0/test/testdata/wikipediaJa_One_Thousand_and_One_Nights_SJIS.txt -o /dev/null
   # Build coverage
   - make gcov
 
