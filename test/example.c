@@ -5,9 +5,9 @@
 #include <optparse.h>
 
 static short producer(tconv_helper_t *tconv_helperp, void *voidp, char **bufpp, size_t *countlp);
-static short byte_producer(tconv_helper_t *tconv_helperp, void *voidp, char **bufpp, size_t *countlp);
 static short consumer(tconv_helper_t *tconv_helperp, void *voidp, char *bufp, size_t countl, size_t *countlp);
-static short byte_consumer(tconv_helper_t *tconv_helperp, void *voidp, char *bufp, size_t countl, size_t *countlp);
+static short my_byte_producer(tconv_helper_t *tconv_helperp, void *voidp, char **bufpp, size_t *countlp);
+static short my_byte_consumer(tconv_helper_t *tconv_helperp, void *voidp, char *bufp, size_t countl, size_t *countlp);
 static short my_tconv_helper(tconv_t tconvp, void *contextp, tconv_producer_t producerp, tconv_consumer_t consumerp);
 
 char *datas    = "\xe4\xb8\xad\xe6\x96\x87\x00"; /* Chinese sample */
@@ -17,11 +17,12 @@ size_t datal   = 6;
 int main(int argc, char **argv)
 /*****************************************************************************/
 {
-  char    *froms  = "UTF-8";
-  char    *tos    = (argc >= 2) ? argv[1] : "UTF-32";
-  tconv_t  tconvp = (tconv_t)-1;
-  char    *p      = datas;
-  int      exiti;
+  char           *froms  = "UTF-8";
+  char           *tos    = (argc >= 2) ? argv[1] : "UTF-32";
+  tconv_t         tconvp = (tconv_t)-1;
+  tconv_helper_t *tconv_helperp = NULL;
+  char           *p      = datas;
+  int             exiti;
 
   tconvp = tconv_open(tos, froms);
   if (tconvp == (tconv_t)-1) {
@@ -29,12 +30,17 @@ int main(int argc, char **argv)
     goto err;
   }
 
-  if (! tconv_helper(tconvp, NULL /* contextp */, producer, consumer)) {
+  tconv_helperp = tconv_helper_newp(tconvp, NULL /* contextp */, producer, consumer);
+  if (tconv_helperp == NULL) {
+    goto err;
+  }
+  
+  if (! tconv_helper_runb(tconv_helperp)) {
     perror("tconv_helper");
     goto err;
   }
 
-  if (! my_tconv_helper(tconvp, &p, byte_producer, byte_consumer)) {
+  if (! my_tconv_helper(tconvp, &p, my_byte_producer, my_byte_consumer)) {
     perror("my_tconv_helper");
     goto err;
   }
@@ -43,6 +49,9 @@ int main(int argc, char **argv)
   goto done;
 
  err:
+  if (tconv_helperp != NULL) {
+    tconv_helper_freev(tconv_helperp);
+  }
   if (tconvp != (tconv_t) -1) {
     tconv_close(tconvp);
   }
@@ -59,11 +68,12 @@ static short producer(tconv_helper_t *tconv_helperp, void *voidp, char **bufpp, 
   *bufpp   = datas;
   *countlp = datal;
   fprintf(stderr, "Produced %ld bytes\n", (unsigned long) *countlp);
-  return tconv_helper_set_endb(tconv_helperp, 1);
+  fprintf(stderr, "... Say end\n");
+  return tconv_helper_endb(tconv_helperp);
 }
 
 /*****************************************************************************/
-static short byte_producer(tconv_helper_t *tconv_helperp, void *voidp, char **bufpp, size_t *countlp)
+static short my_byte_producer(tconv_helper_t *tconv_helperp, void *voidp, char **bufpp, size_t *countlp)
 /*****************************************************************************/
 {
   char **pp = (char **) voidp;
@@ -80,7 +90,7 @@ static short byte_producer(tconv_helper_t *tconv_helperp, void *voidp, char **bu
 
   if (c == '\x00') {
     fprintf(stderr, "... Say stop\n");
-    return tconv_helper_set_stopb(tconv_helperp, 1);
+    return tconv_helper_stopb(tconv_helperp);
   } else {
     return 1;
   }
@@ -96,7 +106,7 @@ static short consumer(tconv_helper_t *tconv_helperp, void *voidp, char *bufp, si
 }
 
 /*****************************************************************************/
-static short byte_consumer(tconv_helper_t *tconv_helperp, void *voidp, char *bufp, size_t countl, size_t *countlp)
+static short my_byte_consumer(tconv_helper_t *tconv_helperp, void *voidp, char *bufp, size_t countl, size_t *countlp)
 /*****************************************************************************/
 {
   *countlp = (countl > 0) ? 1 : 0;
@@ -106,7 +116,7 @@ static short byte_consumer(tconv_helper_t *tconv_helperp, void *voidp, char *buf
     fprintf(stderr, "Consumed 0 byte from %ld\n", (unsigned long) countl);
   }
   fprintf(stderr, "... Say pause\n");
-  return tconv_helper_set_pauseb(tconv_helperp, 1);
+  return tconv_helper_pauseb(tconv_helperp);
 }
 
 /****************************************************************************/
@@ -126,12 +136,6 @@ static short my_tconv_helper(tconv_t tconvp, void *contextp, tconv_producer_t pr
 
   if (! tconv_helper_runb(tconv_helperp)) {
     perror("tconv_helper_runb");
-    goto err;
-  }
-
-  fprintf(stderr, "... Say reset\n");
-  if (! tconv_helper_set_resetb(tconv_helperp, 1)) {
-    perror("tconv_helper_set_resetb");
     goto err;
   }
 

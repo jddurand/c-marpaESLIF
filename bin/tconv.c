@@ -377,7 +377,7 @@ static short producer(tconv_helper_t *tconv_helperp, void *voidp, char **bufpp, 
       GENERICLOGGER_TRACEF(NULL, "%s: guess mode - faking eof", (contextp->filenames != NULL) ? contextp->filenames : "(standard input)");
     }
 #endif
-    return tconv_helper_set_stopb(tconv_helperp, 1);
+    return tconv_helper_stopb(tconv_helperp);
   } else if (countl == 0) {
     /* For a file descriptor, if countl is 0 then this is a eof */
 #ifndef TCONV_NTRACE
@@ -385,7 +385,7 @@ static short producer(tconv_helper_t *tconv_helperp, void *voidp, char **bufpp, 
       GENERICLOGGER_TRACEF(NULL, "%s: eof", (contextp->filenames != NULL) ? contextp->filenames : "(standard input)");
     }
 #endif
-    return tconv_helper_set_endb(tconv_helperp, (countl == 0) ? 1 : 0);
+    return tconv_helper_endb(tconv_helperp);
   } else {
     return 1;
   }
@@ -434,6 +434,7 @@ static void fileconvert(int outputFd, char *filenames,
   int                     fd     = -1;
   tconv_t                 tconvp = (tconv_t)-1;
   tconv_option_t          tconvOption;
+  tconv_helper_t         *tconv_helperp = NULL;
   tconv_helper_context_t  context;
 
   inbufp = malloc(bufsizel);
@@ -495,7 +496,12 @@ static void fileconvert(int outputFd, char *filenames,
   context.verbose   = verbose;
 #endif
 
-  if (! tconv_helper(tconvp, &context, producer, consumer)) {
+  tconv_helperp = tconv_helper_newp(tconvp, &context, producer, consumer);
+  if (tconv_helperp == NULL) {
+    goto end;
+  }
+  
+  if (! tconv_helper_runb(tconv_helperp)) {
     GENERICLOGGER_ERRORF(NULL, "%s: %s", filenames, strerror(errno));
   }
 
@@ -509,6 +515,9 @@ static void fileconvert(int outputFd, char *filenames,
         GENERICLOGGER_WARNF(NULL, "Failed to close %s: %s", filenames, strerror(errno));
       }
     }
+  }
+  if (tconv_helperp != NULL) {
+    tconv_helper_freev(tconv_helperp);
   }
   if (tconvp != (tconv_t) -1) {
     if (tconv_close(tconvp) != 0) {

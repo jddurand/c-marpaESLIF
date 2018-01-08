@@ -78,13 +78,10 @@ struct tconv_helper {
   char             *inputendp;
   char             *outputguardp;
   char             *outputendp;
-  short             resetb;
-  short             flushb;
   short             pauseb;
   short             endb;
   short             stopb;
-  size_t            tconvl;
-  int               errnoi;
+  short             flushb;
 };
 
 #undef  TCONV_MAX
@@ -892,13 +889,10 @@ tconv_helper_t *tconv_helper_newp(tconv_t tconvp, void *contextp, tconv_producer
   tconv_helperp->inputendp      = NULL;
   tconv_helperp->outputguardp   = NULL;
   tconv_helperp->outputendp     = NULL;
-  tconv_helperp->resetb         = 0;
-  tconv_helperp->flushb         = 0;
   tconv_helperp->pauseb         = 0;
   tconv_helperp->endb           = 0;
   tconv_helperp->stopb          = 0;
-  tconv_helperp->tconvl         = 0;
-  tconv_helperp->errnoi         = 0;
+  tconv_helperp->flushb         = 0;
 
   TCONV_MALLOC(tconvp, funcs, tconv_helperp->outputp, char *, TCONV_HELPER_BUFSIZ);
   tconv_helperp->outputallocl = TCONV_HELPER_BUFSIZ;
@@ -926,69 +920,6 @@ void tconv_helper_freev(tconv_helper_t *tconv_helperp)
     TCONV_FREE(tconvp, funcs, tconv_helperp->outputp);
     TCONV_FREE(tconvp, funcs, tconv_helperp);
   }
-}
-
-/****************************************************************************/
-short tconv_helper(tconv_t tconvp, void *contextp, tconv_producer_t producerp, tconv_consumer_t consumerp)
-/****************************************************************************/
-{
-  tconv_helper_t *tconv_helperp = NULL;
-  short           endb;
-  short           stopb;
-  short           rcb;
-
-  tconv_helperp = tconv_helper_newp(tconvp, contextp, producerp, consumerp);
-  if (tconv_helperp == NULL) {
-    goto err;
-  }
-
-  while (1) {
-    /* Check for end flag */
-    if (! tconv_helper_get_endb(tconv_helperp, &endb)) {
-      goto err;
-    }
-    if (endb != 0) {
-      break;
-    }
-    /* Check for stop flag */
-    if (! tconv_helper_get_stopb(tconv_helperp, &stopb)) {
-      goto err;
-    }
-    if (stopb != 0) {
-      break;
-    }
-    /* Run the helper */
-    if (! tconv_helper_runb(tconv_helperp)) {
-      goto err;
-    }
-  }
-
-  /* Mark the end of the processing */
-  if (! tconv_helper_set_stopb(tconv_helperp, 1)) {
-    goto err;
-  }
-  /* Call for flush, not a reset */
-  if (! tconv_helper_set_flushb(tconv_helperp, 1)) {
-    goto err;
-  }
-  /* And not for a reset */
-  if (! tconv_helper_set_resetb(tconv_helperp, 0)) {
-    goto err;
-  }
-  /* Execute the last run */
-  if (! tconv_helper_runb(tconv_helperp)) {
-    goto err;
-  }
-
-  rcb = 1;
-  goto done;
-
- err:
-  rcb = 0;
-
- done:
-  tconv_helper_freev(tconv_helperp);
-  return rcb;
 }
 
 #if 0
@@ -1333,6 +1264,8 @@ static short _tconv_helper_run_oneb(tconv_helper_t *tconv_helperp)
   char             *outbufp;
   size_t            outbufbytesleftl;
   /* Temporary work variables */
+  size_t            tconvl;
+  int               errnoi;
   char             *tmps;
   size_t            allocl;
   size_t            notusedl;
@@ -1341,15 +1274,11 @@ static short _tconv_helper_run_oneb(tconv_helper_t *tconv_helperp)
 
   TCONV_TRACE(tconvp, "%s(%p)", funcs, tconv_helperp);
 
-  if ((tconv_helperp->endb == 0) && (tconv_helperp->stopb == 0)) {
+  /* flushb is an internal flag that indicates the very end */
+  if (tconv_helperp->flushb == 0) {
     /* ----------------- */
     /* Call the producer */
     /* ----------------- */
-
-    /* Producer can change the following states: reset, flush, pause, end (which is already 0) */
-    tconv_helperp->resetb = 0;
-    tconv_helperp->flushb = 0;
-    tconv_helperp->pauseb = 0;
 
     producerbufp   = NULL;
     producercountl = 0;
@@ -1403,11 +1332,18 @@ static short _tconv_helper_run_oneb(tconv_helper_t *tconv_helperp)
     TCONV_TRACE(tconvp, "%s - end mode - not calling the producer", funcs);
   }
 
+  /* -------------------------------------- */
+  /* If the producer says to stop, so do we */
+  /* -------------------------------------- */
+  if (tconv_helperp->stopb) {
+    goto stop;
+  }
+
  retry:
-  /* -------------------------------------------------------------------------------------------- */
-  /* Prepare conversion input parameters: if used the input always start at tconv_helperp->inputp */
-  /* -------------------------------------------------------------------------------------------- */
-  if (tconv_helperp->flushb || tconv_helperp->resetb) {
+  /* ----------------------------------- */
+  /* Prepare conversion input parameters */
+  /* ----------------------------------- */
+  if (tconv_helperp->flushb) {
     inbufp           = NULL;
     inbufbytesleftl  = 0;
   } else {
@@ -1431,13 +1367,9 @@ static short _tconv_helper_run_oneb(tconv_helper_t *tconv_helperp)
   /* ----------------------------------------------------------------------------------------------------- */
   tconv_helperp->outputguardp = tconv_helperp->outputp + tconv_helperp->outputguardl;
   tconv_helperp->outputendp   = tconv_helperp->outputp + tconv_helperp->outputallocl;
-  if (tconv_helperp->resetb != 0) {
-    outbufp          = NULL;
-    outbufbytesleftl = 0;
-  } else {
-    outbufp          = tconv_helperp->outputguardp;
-    outbufbytesleftl = tconv_helperp->outputallocl - tconv_helperp->outputguardl;
-  }
+  outbufp          = tconv_helperp->outputguardp;
+  outbufbytesleftl = tconv_helperp->outputallocl - tconv_helperp->outputguardl;
+
 #ifndef TCONV_NTRACE
   if (tconv_helperp->outputguardl < tconv_helperp->outputallocl) {
     if (tconv_helperp->outputguardl > 0) {
@@ -1450,7 +1382,7 @@ static short _tconv_helper_run_oneb(tconv_helper_t *tconv_helperp)
   }
 #endif
 
-  /* There is no need to call for conversion if inbufp is not NULL and inbufbytesleftl is <= 0, unless  */
+  /* There is no need to call for conversion if inbufp is not NULL and inbufbytesleftl is <= 0  */
   if ((inbufp == NULL) || (inbufbytesleftl > 0)) {
 
     /*
@@ -1473,11 +1405,9 @@ static short _tconv_helper_run_oneb(tconv_helper_t *tconv_helperp)
      * ---------------------------------------------------------------------
      * |      used area                           |  unused area           |
      * ---------------------------------------------------------------------
-     * if (! resetb) {
      * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!outbufp
      * area not consumed by the end user          ^^^^^^^^^^^^^^^^^^^^^^^^^
      *                                            output area of size outbufbytesleftl
-     *}
      *
      */
 
@@ -1485,23 +1415,19 @@ static short _tconv_helper_run_oneb(tconv_helper_t *tconv_helperp)
     /* Call the converter */
     /* ------------------ */
     TCONV_TRACE(tconvp, "%s - values before tconv: {inbufp=%p,inbufbytesleftl=%ld} and {outbufp=%p,outbufbytesleftl=%ld}", funcs, inbufp, (unsigned long) inbufbytesleftl, outbufp, (unsigned long) outbufbytesleftl);
-    tconv_helperp->tconvl = tconv(tconvp, &inbufp, &inbufbytesleftl, &outbufp, &outbufbytesleftl);
+    tconvl = tconv(tconvp, &inbufp, &inbufbytesleftl, &outbufp, &outbufbytesleftl);
     TCONV_TRACE(tconvp, "%s - values after  tconv: {inbufp=%p,inbufbytesleftl=%ld} and {outbufp=%p,outbufbytesleftl=%ld}", funcs, inbufp, (unsigned long) inbufbytesleftl, outbufp, (unsigned long) outbufbytesleftl);
-    tconv_helperp->errnoi = (tconv_helperp->tconvl == (size_t)-1) ? errno : 0;
+    errnoi = (tconvl == (size_t)-1) ? errno : 0;
 #ifndef TCONV_NTRACE
-    if (tconv_helperp->tconvl == (size_t)-1) {
+    if (tconvl == (size_t)-1) {
       TCONV_TRACE(tconvp, "%s - tconv(...) returned -1, errno %d (%s)", funcs, errno, strerror(errno));
     } else {
-      TCONV_TRACE(tconvp, "%s - tconv(...) returned %ld", funcs, (unsigned long) tconv_helperp->tconvl);
+      TCONV_TRACE(tconvp, "%s - tconv(...) returned %ld", funcs, (unsigned long) tconvl);
     }
-    if (tconv_helperp->resetb) {
-      TCONV_TRACE(tconvp, "%s - reset mode - nothing to report", funcs, inbufp, (unsigned long) inbufbytesleftl, outbufp, (unsigned long) outbufbytesleftl);
+    if (tconv_helperp->flushb) {
+      TCONV_TRACE(tconvp, "%s - flush mode - produced output bytes: %ld", funcs, (unsigned long) (outbufp - tconv_helperp->outputguardp));
     } else {
-      if (tconv_helperp->flushb) {
-        TCONV_TRACE(tconvp, "%s - flush mode - produced output bytes: %ld", funcs, (unsigned long) (outbufp - tconv_helperp->outputguardp));
-      } else {
-        TCONV_TRACE(tconvp, "%s - normal mode - consumed input bytes: %ld, remaining input bytes: %ld, produced output bytes: %ld", funcs, (unsigned long) (inbufp - tconv_helperp->inputp), (unsigned long) inbufbytesleftl, (unsigned long) (outbufp - tconv_helperp->outputguardp));
-      }
+      TCONV_TRACE(tconvp, "%s - normal mode - consumed input bytes: %ld, remaining input bytes: %ld, produced output bytes: %ld", funcs, (unsigned long) (inbufp - tconv_helperp->inputp), (unsigned long) inbufbytesleftl, (unsigned long) (outbufp - tconv_helperp->outputguardp));
     }
 #endif
 
@@ -1527,8 +1453,6 @@ static short _tconv_helper_run_oneb(tconv_helper_t *tconv_helperp)
     }
 
     /*
-     * If outbufp is not NULL, it is positionned like this:
-     *
      * outputp                                    outputguardp             outputendp
      * 0                                          outputguardl             outputallocl
      * ---------------------------------------------------------------------
@@ -1541,13 +1465,13 @@ static short _tconv_helper_run_oneb(tconv_helper_t *tconv_helperp)
      */
 
     /* Account the new bytes */
-    if ((outbufp != NULL) && (outbufp > tconv_helperp->outputguardp)) {
+    if (outbufp > tconv_helperp->outputguardp) {
       tconv_helperp->outputguardp = outbufp;
       tconv_helperp->outputguardl = tconv_helperp->outputallocl - outbufbytesleftl;
     }
 
-    if (tconv_helperp->tconvl == (size_t)-1) {
-      if (tconv_helperp->errnoi == E2BIG) {
+    if (tconvl == (size_t)-1) {
+      if (errnoi == E2BIG) {
         /* Note that it is a non-sense to have E2BIG in reset mode */
         allocl = tconv_helperp->outputallocl + TCONV_HELPER_BUFSIZ;
         /* Will that really happen in real-life ? Possible in theory, though. */
@@ -1570,8 +1494,6 @@ static short _tconv_helper_run_oneb(tconv_helper_t *tconv_helperp)
     }
   } else {
     TCONV_TRACE(tconvp, "%s - no need to call the converter", funcs);
-    tconv_helperp->tconvl = 0;
-    tconv_helperp->errnoi = 0;
   }
 
   /* ------------------------ */
@@ -1589,11 +1511,6 @@ static short _tconv_helper_run_oneb(tconv_helper_t *tconv_helperp)
    * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    *
    */
-
-  /* Consumer can change the following states: reset, flush, pause, end (protected, i.e. can never go back to 0 if it is != 0) */
-  tconv_helperp->resetb = 0;
-  tconv_helperp->flushb = 0;
-  tconv_helperp->pauseb = 0;
 
   consumercountl = 0;
   TCONV_TRACE(tconvp, "%s - consumerp(%p, %p, %p, %ld, %p)", funcs, tconv_helperp, tconv_helperp->contextp, tconv_helperp->outputp, (unsigned long) tconv_helperp->outputguardl, &consumercountl);
@@ -1637,6 +1554,7 @@ static short _tconv_helper_run_oneb(tconv_helper_t *tconv_helperp)
 
   }
 
+ stop:
   rcb = 1;
   goto done;
 
@@ -1667,7 +1585,20 @@ short tconv_helper_runb(tconv_helper_t *tconv_helperp)
   tconvp = tconv_helperp->tconvp;
 
   if (tconv_helperp->stopb != 0) {
-    /* Last run - ignore the test on endb */
+#ifdef EPERM
+    errno = EPERM;
+#else
+    errno = EINVAL;
+#endif
+    goto err;
+  } else if (tconv_helperp->endb != 0) {
+    /* Indicates this will be end */
+    if (! tconv_helper_stopb(tconv_helperp)) {
+      goto err;
+    }
+    /* Set internal flush flag */
+    tconv_helperp->flushb = 1;
+    /* Run the last possible call of _tconv_helper_run_oneb() */
     if (! _tconv_helper_run_oneb(tconv_helperp)) {
       goto err;
     }
@@ -1677,7 +1608,7 @@ short tconv_helper_runb(tconv_helper_t *tconv_helperp)
         goto err;
       }
       if (tconv_helperp->pauseb != 0) {
-        /* Break the loop, pause is processedso we reset the flag */
+        /* Break the loop, pause is processed so we reset the flag */
         tconv_helperp->pauseb = 0;
         break;
       }
@@ -1697,10 +1628,29 @@ short tconv_helper_runb(tconv_helper_t *tconv_helperp)
 }
 
 /****************************************************************************/
-short tconv_helper_get_tconv_statusb(tconv_helper_t *tconv_helperp, size_t *tconvlp, int *errnoip)
+tconv_t tconv_helper_tconvp(tconv_helper_t *tconv_helperp)
 /****************************************************************************/
 {
-  static const char funcs[] = "tconv_helper_get_tconv_statusb";
+  static const char funcs[] = "tconv_helper_tconvp";
+  tconv_t           tconvp;
+
+  if (tconv_helperp == NULL) {
+    errno = EINVAL;
+    return (tconv_t)-1;
+  }
+
+  tconvp = tconv_helperp->tconvp;
+  TCONV_TRACE(tconvp, "%s(%p)", funcs, tconv_helperp);
+
+  TCONV_TRACE(tconvp, "%s - return %p", funcs, tconvp);
+  return tconvp;
+}
+
+/****************************************************************************/
+short tconv_helper_pauseb(tconv_helper_t *tconv_helperp)
+/****************************************************************************/
+{
+  static const char funcs[] = "tconv_helper_pauseb";
   tconv_t           tconvp;
 
   if (tconv_helperp == NULL) {
@@ -1709,24 +1659,19 @@ short tconv_helper_get_tconv_statusb(tconv_helper_t *tconv_helperp, size_t *tcon
   }
 
   tconvp = tconv_helperp->tconvp;
-  TCONV_TRACE(tconvp, "%s(%p, %p, %p)", funcs, tconv_helperp, tconvlp, errnoip);
+  TCONV_TRACE(tconvp, "%s(%p)", funcs, tconv_helperp);
 
-  if (tconvlp != NULL) {
-    *tconvlp = tconv_helperp->tconvl;
-  }
-  if (errnoip != NULL) {
-    *errnoip = tconv_helperp->errnoi;
-  }
+  tconv_helperp->pauseb = 1;
 
   TCONV_TRACE(tconvp, "%s - return 1", funcs);
   return 1;
 }
 
 /****************************************************************************/
-short tconv_helper_set_resetb(tconv_helper_t *tconv_helperp, short resetb)
+short tconv_helper_endb(tconv_helper_t *tconv_helperp)
 /****************************************************************************/
 {
-  static const char funcs[] = "tconv_helper_set_resetb";
+  static const char funcs[] = "tconv_helper_endb";
   tconv_t           tconvp;
 
   if (tconv_helperp == NULL) {
@@ -1735,19 +1680,19 @@ short tconv_helper_set_resetb(tconv_helper_t *tconv_helperp, short resetb)
   }
 
   tconvp = tconv_helperp->tconvp;
-  TCONV_TRACE(tconvp, "%s(%p, %d)", funcs, tconv_helperp, (int) resetb);
+  TCONV_TRACE(tconvp, "%s(%p)", funcs, tconv_helperp);
 
-  tconv_helperp->resetb = resetb;
+  tconv_helperp->endb = 1;
 
   TCONV_TRACE(tconvp, "%s - return 1", funcs);
   return 1;
 }
 
 /****************************************************************************/
-short tconv_helper_set_flushb(tconv_helper_t *tconv_helperp, short flushb)
+short tconv_helper_stopb(tconv_helper_t *tconv_helperp)
 /****************************************************************************/
 {
-  static const char funcs[] = "tconv_helper_set_flushb";
+  static const char funcs[] = "tconv_helper_stopb";
   tconv_t           tconvp;
 
   if (tconv_helperp == NULL) {
@@ -1756,129 +1701,9 @@ short tconv_helper_set_flushb(tconv_helper_t *tconv_helperp, short flushb)
   }
 
   tconvp = tconv_helperp->tconvp;
-  TCONV_TRACE(tconvp, "%s(%p, %d)", funcs, tconv_helperp, (int) flushb);
+  TCONV_TRACE(tconvp, "%s(%p)", funcs, tconv_helperp);
 
-  tconv_helperp->flushb = flushb;
-
-  TCONV_TRACE(tconvp, "%s - return 1", funcs);
-  return 1;
-}
-
-/****************************************************************************/
-short tconv_helper_set_pauseb(tconv_helper_t *tconv_helperp, short pauseb)
-/****************************************************************************/
-{
-  static const char funcs[] = "tconv_helper_set_pauseb";
-  tconv_t           tconvp;
-
-  if (tconv_helperp == NULL) {
-    errno = EINVAL;
-    return 0;
-  }
-
-  tconvp = tconv_helperp->tconvp;
-  TCONV_TRACE(tconvp, "%s(%p, %d)", funcs, tconv_helperp, (int) pauseb);
-
-  tconv_helperp->pauseb = pauseb;
-
-  TCONV_TRACE(tconvp, "%s - return 1", funcs);
-  return 1;
-}
-
-/****************************************************************************/
-short tconv_helper_set_endb(tconv_helper_t *tconv_helperp, short endb)
-/****************************************************************************/
-{
-  static const char funcs[] = "tconv_helper_set_endb";
-  tconv_t           tconvp;
-
-  if (tconv_helperp == NULL) {
-    errno = EINVAL;
-    return 0;
-  }
-
-  tconvp = tconv_helperp->tconvp;
-  TCONV_TRACE(tconvp, "%s(%p, %d)", funcs, tconv_helperp, (int) endb);
-
-  if (endb == 0) {
-    /* It is illegal to switch back to endb == 0 if it is already set */
-    if (tconv_helperp->endb != 0) {
-#ifdef EPERM
-      errno = EPERM;
-#else
-      errno = EINVAL;
-#endif
-      return 0;
-    }
-  }
-  tconv_helperp->endb = endb;
-
-  TCONV_TRACE(tconvp, "%s - return 1", funcs);
-  return 1;
-}
-
-/****************************************************************************/
-short tconv_helper_set_stopb(tconv_helper_t *tconv_helperp, short stopb)
-/****************************************************************************/
-{
-  static const char funcs[] = "tconv_helper_set_stopb";
-  tconv_t           tconvp;
-
-  if (tconv_helperp == NULL) {
-    errno = EINVAL;
-    return 0;
-  }
-
-  tconvp = tconv_helperp->tconvp;
-  TCONV_TRACE(tconvp, "%s(%p, %d)", funcs, tconv_helperp, (int) stopb);
-
-  tconv_helperp->stopb = stopb;
-
-  TCONV_TRACE(tconvp, "%s - return 1", funcs);
-  return 1;
-}
-
-/****************************************************************************/
-short tconv_helper_get_endb(tconv_helper_t *tconv_helperp, short *endbp)
-/****************************************************************************/
-{
-  static const char funcs[] = "tconv_helper_get_endb";
-  tconv_t           tconvp;
-
-  if (tconv_helperp == NULL) {
-    errno = EINVAL;
-    return 0;
-  }
-
-  tconvp = tconv_helperp->tconvp;
-  TCONV_TRACE(tconvp, "%s(%p, %p)", funcs, tconv_helperp, endbp);
-
-  if (endbp != NULL) {
-    *endbp = tconv_helperp->endb;
-  }
-
-  TCONV_TRACE(tconvp, "%s - return 1", funcs);
-  return 1;
-}
-
-/****************************************************************************/
-short tconv_helper_get_stopb(tconv_helper_t *tconv_helperp, short *stopbp)
-/****************************************************************************/
-{
-  static const char funcs[] = "tconv_helper_get_stopb";
-  tconv_t           tconvp;
-
-  if (tconv_helperp == NULL) {
-    errno = EINVAL;
-    return 0;
-  }
-
-  tconvp = tconv_helperp->tconvp;
-  TCONV_TRACE(tconvp, "%s(%p, %p)", funcs, tconv_helperp, stopbp);
-
-  if (stopbp != NULL) {
-    *stopbp = tconv_helperp->stopb;
-  }
+  tconv_helperp->stopb = 1;
 
   TCONV_TRACE(tconvp, "%s - return 1", funcs);
   return 1;
