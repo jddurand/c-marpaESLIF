@@ -207,7 +207,7 @@ MYPACKAGEPACK ("" "Portable Iconv-like interface")
 ###########
 SET (CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/3rdparty/github/CMake-codecov/cmake")
 FIND_PACKAGE(codecov)
-FOREACH (_target tconv tconv_static tconvExe tconvExe_static)
+FOREACH (_target tconv tconv_static tconvExe tconvExe_static tconvExample tconvExample_static)
   add_coverage(${_target})
 ENDFOREACH ()
 coverage_evaluate()
