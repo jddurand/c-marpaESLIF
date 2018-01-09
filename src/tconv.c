@@ -827,37 +827,46 @@ char *tconv_tocode(tconv_t tconvp)
 }
 
 /****************************************************************************/
-short tconv_fuzzy_set(tconv_t tconvp, short fuzzyb)
+short tconv_fuzzy_setb(tconv_t tconvp, short fuzzyb)
 /****************************************************************************/
 {
-  static const char funcs[] = "tconv_fuzzy_set";
+  static const char funcs[] = "tconv_fuzzy_setb";
+
+  if (tconvp == NULL) {
+    errno = EINVAL;
+    return 0;
+  }
 
   TCONV_TRACE(tconvp, "%s(%p, %d)", funcs, tconvp, (int) fuzzyb);
 
-  if (tconvp != NULL) {
-    tconvp->fuzzyb = fuzzyb;
-  }
+  tconvp->fuzzyb = fuzzyb;
 
-  TCONV_TRACE(tconvp, "%s - return %d", funcs, (int) fuzzyb);
+  TCONV_TRACE(tconvp, "%s - return %d (fuzzyb=%d)", funcs, (int) tconvp->fuzzyb);
+
   return fuzzyb;
 }
 
 /****************************************************************************/
-short tconv_fuzzy(tconv_t tconvp)
+short tconv_fuzzy_getb(tconv_t tconvp, short *fuzzybp)
 /****************************************************************************/
 {
-  static const char funcs[] = "tconv_fuzzy";
-  short             fuzzyb  = 0;
+  static const char funcs[] = "tconv_fuzzy_get";
+
+  if (tconvp == NULL) {
+    errno = EINVAL;
+    return 0;
+  }
+
 
   TCONV_TRACE(tconvp, "%s(%p)", funcs, tconvp);
 
-  if (tconvp != NULL) {
-    fuzzyb = tconvp->fuzzyb;
+  if (fuzzybp != NULL) {
+    *fuzzybp = tconvp->fuzzyb;
   }
 
-  TCONV_TRACE(tconvp, "%s - return %d", funcs, (int) fuzzyb);
+  TCONV_TRACE(tconvp, "%s - return %d (fuzzyb=%d)", funcs, (int) tconvp->fuzzyb);
 
-  return fuzzyb;
+  return 1;
 }
 
 /****************************************************************************/

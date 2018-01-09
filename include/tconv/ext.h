@@ -171,10 +171,9 @@ tconv_EXPORT char *tconv_tocode(tconv_t tconvp);
 /* If source and destination charsets are equivalent, implementations */
 /* MAY do fuzzy convertion (i.e. no conversion at all). The following */
 /* methods are setter and getter for this fuzzy state.                */
-/* A true value indicates fuzzy mode. Default is a false value.       */
 /**********************************************************************/
-tconv_EXPORT short tconv_fuzzy_set(tconv_t tconvp, short fuzzyb);
-tconv_EXPORT short tconv_fuzzy(tconv_t tconvp);
+tconv_EXPORT short tconv_fuzzy_setb(tconv_t tconvp, short fuzzyb);
+tconv_EXPORT short tconv_fuzzy_getb(tconv_t tconvp, short *fuzzybp);
 
 /**********************************************************************/
 /* Helper                                                             */

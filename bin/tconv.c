@@ -62,6 +62,8 @@ typedef struct tconv_helper_context {
   char   *inbufp;
   size_t  bufsizel;
   short   guessb;
+  short   fromPrintb;
+  short   fuzzyb;
   short   firstconsumercallb;
 #ifndef TCONV_NTRACE
   short   verbose;
@@ -397,6 +399,7 @@ static short consumer(tconv_helper_t *tconv_helperp, void *voidp, char *bufp, si
 {
   tconv_helper_context_t *contextp  = (tconv_helper_context_t *) voidp;
   size_t                  consumedl;
+  short                   fuzzyb;
 
   if (contextp->outputFd >= 0) {
     consumedl = write(contextp->outputFd, bufp, countl);
@@ -406,9 +409,17 @@ static short consumer(tconv_helper_t *tconv_helperp, void *voidp, char *bufp, si
 
   *countlp = consumedl;
 
-  if (contextp->guessb) {
+  if (contextp->guessb || contextp->fromPrintb || contextp->fuzzyb) {
     if (contextp->firstconsumercallb != 0) {
-      GENERICLOGGER_INFOF(NULL, "%s: %s", (contextp->filenames != NULL) ? contextp->filenames : "(standard input)", tconv_fromcode(contextp->tconvp));
+      if (contextp->guessb || contextp->fromPrintb) {
+        GENERICLOGGER_INFOF(NULL, "%s: %s", (contextp->filenames != NULL) ? contextp->filenames : "(standard input)", tconv_fromcode(contextp->tconvp));
+      }
+      if (contextp->fuzzyb) {
+        if (! tconv_fuzzy_getb(contextp->tconvp, &fuzzyb)) {
+          return 0;
+        }
+        GENERICLOGGER_INFOF(NULL, "%s: fuzzy mode is %s", (contextp->filenames != NULL) ? contextp->filenames : "(standard input)", fuzzyb ? "on" : "off");
+      }
       contextp->firstconsumercallb = 0;
     }
   }
@@ -491,6 +502,7 @@ static void fileconvert(int outputFd, char *filenames,
   context.inbufp             = inbufp;
   context.bufsizel           = bufsizel;
   context.guessb             = guessb;
+  context.fromPrintb         = fromPrintb;
   context.firstconsumercallb = 1;
 #ifndef TCONV_NTRACE
   context.verbose   = verbose;

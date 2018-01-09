@@ -72,9 +72,14 @@ script:
   - ./output/lib/tconv -C ICONV -t ASCII//TRANSLIT -b 10000 ./output/3rdparty/cchardet-1.0.0/test/testdata/wikipediaJa_One_Thousand_and_One_Nights_SJIS.txt -o /dev/null
   - ./output/lib/tconv -C ICU   -t ASCII//TRANSLIT -b 10000 ./output/3rdparty/cchardet-1.0.0/test/testdata/wikipediaJa_One_Thousand_and_One_Nights_SJIS.txt -o /dev/null
   # ICONV charset not found
-  - ./output/lib/tconv -v -C ICONV -f MS-ANSI -t MS-ANSI -o /dev/null ./src/tconv/convert/alias.c
+  - ./output/lib/tconv -v -z -F -C ICONV -f MS-ANSI -t MS-ANSI -o /dev/null ./src/tconv/convert/alias.c
   # ICONV charset not found and maybe EBADF
   - ./output/lib/tconv -v -C ICONV -f MS-ANSI -t ANSI -o /dev/null ./src/tconv/convert/alias.c
+  # Retry all types, printing found code
+  - ./output/lib/tconv -G CCHARDET -C ICONV -F -t ASCII//TRANSLIT -o /dev/null `find ./output/3rdparty/cchardet-1.0.0/test/testdata/ -type f`
+  - ./output/lib/tconv -G ICU      -C ICONV -F -t ASCII//TRANSLIT -o /dev/null `find ./output/3rdparty/cchardet-1.0.0/test/testdata/ -type f`
+  - ./output/lib/tconv -G CCHARDET -C ICU   -F -t ASCII//TRANSLIT -o /dev/null `find ./output/3rdparty/cchardet-1.0.0/test/testdata/ -type f`
+  - ./output/lib/tconv -G ICU      -C ICU   -F -t ASCII//TRANSLIT -o /dev/null `find ./output/3rdparty/cchardet-1.0.0/test/testdata/ -type f`
   # Build coverage
   - make gcov
 

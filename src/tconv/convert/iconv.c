@@ -230,7 +230,9 @@ void  *tconv_convert_iconv_new(tconv_t tconvp, const char *tocodes, const char *
       fuzzyb = (strcmp(tonormaliseds, fromnormaliseds) == 0) ? 1 : 0;
       if (fuzzyb) {
         TCONV_TRACE(tconvp, "%s - tconv_fuzzy_set(%p, 1)", funcs, tconvp);
-        tconv_fuzzy_set(tconvp, 1);
+        if (! tconv_fuzzy_setb(tconvp, 1)) {
+          goto err;
+        }
       } else {
         TCONV_TRACE(tconvp, "%s - iconv_open(\"%s\", \"%s\")", funcs, tocodes, fromcodes);
         iconvp = iconv_open(tocodes, fromcodes);
