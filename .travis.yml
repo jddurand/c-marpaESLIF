@@ -83,7 +83,7 @@ script:
   - ./output/lib/tconv -G CCHARDET -C ICU   -F -t ASCII//TRANSLIT -o /dev/null `find ./output/3rdparty/cchardet-1.0.0/test/testdata/ -type f`
   - ./output/lib/tconv -G ICU      -C ICU   -F -t ASCII//TRANSLIT -o /dev/null `find ./output/3rdparty/cchardet-1.0.0/test/testdata/ -type f`
   # Try to reach some error codes
-  - ./output/lib/tconv -v -g -G CCHARDET -C ICONV `find . -type f`
+  - ./output/lib/tconv -g -G CCHARDET -C ICONV `find . -type f`
   - gdb ./output/lib/tconv core -ex "thread apply all bt" -ex "set pagination 0" -batch
   - ./output/lib/tconv -g -G ICU      -C ICONV `find . -type f`
   - ./output/lib/tconv -g -G CCHARDET -C ICU   `find . -type f`
