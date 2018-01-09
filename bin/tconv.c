@@ -503,6 +503,7 @@ static void fileconvert(int outputFd, char *filenames,
   context.bufsizel           = bufsizel;
   context.guessb             = guessb;
   context.fromPrintb         = fromPrintb;
+  context.fuzzyb             = fuzzyb;
   context.firstconsumercallb = 1;
 #ifndef TCONV_NTRACE
   context.verbose   = verbose;
