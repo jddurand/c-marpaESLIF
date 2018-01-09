@@ -2,15 +2,12 @@ language: c
 before_script:
 # We want to try perl standalone first
   - sudo apt-get update
-  - sudo apt-get install cpanminus nsis valgrind
+  - sudo apt-get install cpanminus nsis valgrind gdb
   - sudo cpanm --notest Archive::Tar Config::AutoConf::INI ExtUtils::CBuilder File::chdir File::Basename File::Find File::Path File::Copy::Recursive File::Temp IPC::Run Perl::OSType
   - sh ./install-c-genericLogger.sh
 script:
-# Not ALL_IN_ONE and codecov
-  - cmake -DCMAKE_BUILD_TYPE=Debug -DENABLE_COVERAGE=ON .
-  - make
-  - make check
-  - valgrind --leak-check=full ./output/lib/tconv -v -g -G CCHARDET -C ICONV ./README.md  ./3rdparty/github/genericLogger/CMakeFiles/genericLoggerConfig.dir/build.make ./3rdparty/github/genericLogger/CMakeFiles/genericLoggerConfig.dir/cmake_clean.cmake ./3rdparty/github/genericLogger/CMakeFiles/genericLogger.dir/depend.make ./3rdparty/github/genericLogger/CMakeFiles/genericLogger.dir/C.includecache ./3rdparty/github/genericLogger/CMakeFiles/genericLogger.dir/depend.internal ./3rdparty/github/genericLogger/CMakeFiles/genericLogger.dir/DependInfo.cmake ./3rdparty/github/genericLogger/CMakeFiles/genericLogger.dir/progress.make ./3rdparty/github/genericLogger/CMakeFiles/genericLogger.dir/flags.make ./3rdparty/github/genericLogger/CMakeFiles/genericLogger.dir/build.make ./3rdparty/github/genericLogger/CMakeFiles/genericLogger.dir/link.txt ./3rdparty/github/genericLogger/CMakeFiles/genericLogger.dir/cmake_clean.cmake ./3rdparty/github/genericLogger/CMakeFiles/genericLogger.dir/src/genericLogger.c.o ./3rdparty/github/genericLogger/CMakeFiles/progress.marks ./3rdparty/github/genericLogger/include/genericLogger.h ./3rdparty/github/genericLogger/include/genericLogger/_runtime.h ./3rdparty/github/genericLogger/include/genericLogger_config.h.in ./3rdparty/github/genericLogger/3rdparty/github/cmake-utils/cmake/MyPackageCheckCommonFeatures.cmake ./3rdparty/github/genericLogger/3rdparty/github/cmake-utils/cmake/localtime_r.c ./3rdparty/github/genericLogger/3rdparty/github/cmake-utils/cmake/MyPackageStart.cmake ./3rdparty/github/genericLogger/3rdparty/github/cmake-utils/cmake/FindVaCopy.cmake ./3rdparty/github/genericLogger/3rdparty/github/cmake-utils/cmake/FindLocaltime_r.cmake ./3rdparty/github/genericLogger/3rdparty/github/cmake-utils/cmake/MyPackagePack.cmake ./3rdparty/github/genericLogger/3rdparty/github/cmake-utils/cmake/MyPackageExecutable.cmake ./3rdparty/github/genericLogger/3rdparty/github/cmake-utils/cmake/MyPackageCheckCommonIncludeFiles.cmake ./3rdparty/github/genericLogger/3rdparty/github/cmake-utils/cmake/fileno.c ./3rdparty/github/genericLogger/3rdparty/github/cmake-utils/cmake/MyPackageCheck.cmake ./3rdparty/github/genericLogger/3rdparty/github/cmake-utils/cmake/MyPackageMan.cmake ./3rdparty/github/genericLogger/3rdparty/github/cmake-utils/cmake/FindWrite.cmake ./3rdparty/github/genericLogger/3rdparty/github/cmake-utils/cmake/MyPackageAddExecutableToTests.cmake ./3rdparty/github/genericLogger/3rdparty/github/cmake-utils/cmake/inline.c ./3rdparty/github/genericLogger/3rdparty/github/cmake-utils/cmake/MyPackageConfig.cmake ./3rdparty/github/genericLogger/3rdparty/github/cmake-utils/cmake/FindVsnprintf.cmake ./3rdparty/github/genericLogger/3rdparty/github/cmake-utils/cmake/write.c ./3rdparty/github/genericLogger/3rdparty/github/cmake-utils/cmake/MyPackageCheckCommonSizes.cmake ./3rdparty/github/genericLogger/3rdparty/github/cmake-utils/cmake/va_copy.c ./3rdparty/github/genericLogger/3rdparty/github/cmake-utils/cmake/MyPackageBootstrap.cmake ./3rdparty/github/genericLogger/3rdparty/github/cmake-utils/cmake/FindInline.cmake ./3rdparty/github/genericLogger/3rdparty/github/cmake-utils/cmake/FindFileno.cmake ./3rdparty/github/genericLogger/3rdparty/github/cmake-utils/cmake/MyPackageLibrary.cmake ./3rdparty/github/genericLogger/3rdparty/github/cmake-utils/cmake/MyPackageExport.cmake ./3rdparty/github/genericLogger/3rdparty/github/cmake-utils/cmake/MyPackageDependency.cmake ./3rdparty/github/genericLogger/3rdparty/github/cmake-utils/cmake/vsnprintf.c ./3rdparty/github/genericLogger/3rdparty/github/cmake-utils/cmake/MyPackageTestExecutable.cmake ./3rdparty/github/genericLogger/3rdparty/github/cmake-utils/cmake/MyPackagePrintSetup.cmake ./3rdparty/github/genericLogger/3rdparty/github/cmake-utils/LICENSE ./3rdparty/github/genericLogger/3rdparty/github/cmake-utils/README.txt ./3rdparty/github/genericLogger/3rdparty/github/cmake-utils/.gitignore ./3rdparty/github/genericLogger/LICENSE ./3rdparty/github/genericLogger/Makefile ./3rdparty/github/genericLogger/GENERICLOGGER.3.gz ./3rdparty/github/genericLogger/config_autoconf.ini ./3rdparty/github/genericLogger/.gitignore ./3rdparty/github/genericLogger/.travis.yml ./3rdparty/github/genericLogger/cmake_install.cmake ./3rdparty/github/genericLogger/GENERICLOGGER.3
+# Enable unlimited core file size
+  - ulimit -c unlimited -S
 # We want to try perl standalone first
   - perl CMakeObjects.PL
   - rm -rf output
@@ -27,8 +24,8 @@ script:
   - make pack
   - cpack -G NSIS
   - sudo make install
-  - valgrind --leak-check=full tconv -b 3 -C ICONV -f ASCII -t UTF-16 -o /tmp/tconv.tconv-ICONV-UTF-16.c src/tconv.c
-  - valgrind --leak-check=full tconv -b 3 -C ICU   -f ASCII -t UTF-16 -o /tmp/tconv.tconv-ICU-UTF-16.c src/tconv.c
+  - tconv -b 3 -C ICONV -f ASCII -t UTF-16 -o /tmp/tconv.tconv-ICONV-UTF-16.c src/tconv.c
+  - tconv -b 3 -C ICU   -f ASCII -t UTF-16 -o /tmp/tconv.tconv-ICU-UTF-16.c src/tconv.c
   - iconv -f ASCII -t UTF-16 -o /tmp/tconv.iconv-UTF-16.c src/tconv.c
   - uconv -f ASCII -t UTF-16 -o /tmp/tconv.uconv-UTF-16.c src/tconv.c
   - ls -l src/tconv.c /tmp/tconv.iconv-UTF-16.c /tmp/tconv.uconv-UTF-16.c /tmp/tconv.tconv-ICONV-UTF-16.c /tmp/tconv.tconv-ICU-UTF-16.c
@@ -36,60 +33,61 @@ script:
   - diff /tmp/tconv.iconv-UTF-16.c /tmp/tconv.tconv-ICONV-UTF-16.c
   - diff /tmp/tconv.iconv-UTF-16.c /tmp/tconv.tconv-ICU-UTF-16.c
   - diff /tmp/tconv.uconv-UTF-16.c /tmp/tconv.tconv-ICONV-UTF-16.c
-  - valgrind --leak-check=full tconv -g `find ./output/3rdparty/cchardet-1.0.0/test/testdata/ -type f`
+  - tconv -g `find ./output/3rdparty/cchardet-1.0.0/test/testdata/ -type f`
   - rm -rf output CMakeCache.txt CMakeFiles
 # Not ALL_IN_ONE and codecov
   - cmake -DCMAKE_BUILD_TYPE=Debug -DENABLE_COVERAGE=ON .
   - make
   - make check
-  - valgrind --leak-check=full ./output/lib/tconv --help
-  - valgrind --leak-check=full ./output/lib/tconv --usage
-  - valgrind --leak-check=full ./output/lib/tconv -V
-  - valgrind --leak-check=full ./output/lib/tconv --bufsize 3 --convert-engine XXXXX --from-code ASCII --to-code UTF-16 --output /tmp/tconv.tconv-ICONV-UTF-16.c -- src/tconv.c
-  - valgrind --leak-check=full ./output/lib/tconv -b        3 -C               ICONV -f          ASCII -t        UTF-16 -o       /tmp/tconv.tconv-ICONV-UTF-16.c src/tconv.c -G XXXXX
-  - valgrind --leak-check=full ./output/lib/tconv -b        3 -C               ICONV -f          ASCII -t        UTF-16 -o       /tmp/tconv.tconv-ICONV-UTF-16.c src/tconv.c -G ICU
-  - valgrind --leak-check=full ./output/lib/tconv -b        3 -C               ICONV -f          ASCII -t        UTF-16 -o       /tmp/tconv.tconv-ICONV-UTF-16.c src/tconv.c -G CCHARDET
-  - valgrind --leak-check=full ./output/lib/tconv -b        3 -C               ICONV -f          ASCII -t        UTF-16 -o       /tmp/tconv.tconv-ICONV-UTF-16.c src/tconv.c -z
-  - valgrind --leak-check=full ./output/lib/tconv -b        3 -C               ICONV -f          ASCII -t        XXXXXX -o       /tmp/tconv.tconv-ICONV-UTF-16.c src/tconv.c || [ $? -ne 0 ]
-  - valgrind --leak-check=full ./output/lib/tconv -b        3 -C               ICONV -f          ASCII -t        UTF-16 -o       /etc/passwd                     src/tconv.c || [ $? -ne 0 ]
-  - valgrind --leak-check=full ./output/lib/tconv -b        3 -C               ICONV -f          ASCII -t        UTF-16 -o       /tmp/tconv.tconv-ICONV-UTF-16.c src/tconv.c
-  - valgrind --leak-check=full ./output/lib/tconv --bufsize 3 --convert-engine ICONV --from-code ASCII --to-code UTF-16 --output /tmp/tconv.tconv-ICONV-UTF-16.c src/tconv.c
-  - valgrind --leak-check=full ./output/lib/tconv -b 3 -C ICU   -f ASCII -t UTF-16 -o /tmp/tconv.tconv-ICU-UTF-16.c src/tconv.c
+  - ./output/lib/tconv --help
+  - ./output/lib/tconv --usage
+  - ./output/lib/tconv -V
+  - ./output/lib/tconv --bufsize 3 --convert-engine XXXXX --from-code ASCII --to-code UTF-16 --output /tmp/tconv.tconv-ICONV-UTF-16.c -- src/tconv.c
+  - ./output/lib/tconv -b        3 -C               ICONV -f          ASCII -t        UTF-16 -o       /tmp/tconv.tconv-ICONV-UTF-16.c src/tconv.c -G XXXXX
+  - ./output/lib/tconv -b        3 -C               ICONV -f          ASCII -t        UTF-16 -o       /tmp/tconv.tconv-ICONV-UTF-16.c src/tconv.c -G ICU
+  - ./output/lib/tconv -b        3 -C               ICONV -f          ASCII -t        UTF-16 -o       /tmp/tconv.tconv-ICONV-UTF-16.c src/tconv.c -G CCHARDET
+  - ./output/lib/tconv -b        3 -C               ICONV -f          ASCII -t        UTF-16 -o       /tmp/tconv.tconv-ICONV-UTF-16.c src/tconv.c -z
+  - ./output/lib/tconv -b        3 -C               ICONV -f          ASCII -t        XXXXXX -o       /tmp/tconv.tconv-ICONV-UTF-16.c src/tconv.c || [ $? -ne 0 ]
+  - ./output/lib/tconv -b        3 -C               ICONV -f          ASCII -t        UTF-16 -o       /etc/passwd                     src/tconv.c || [ $? -ne 0 ]
+  - ./output/lib/tconv -b        3 -C               ICONV -f          ASCII -t        UTF-16 -o       /tmp/tconv.tconv-ICONV-UTF-16.c src/tconv.c
+  - ./output/lib/tconv --bufsize 3 --convert-engine ICONV --from-code ASCII --to-code UTF-16 --output /tmp/tconv.tconv-ICONV-UTF-16.c src/tconv.c
+  - ./output/lib/tconv -b 3 -C ICU   -f ASCII -t UTF-16 -o /tmp/tconv.tconv-ICU-UTF-16.c src/tconv.c
   # Same charset is nothing special in ICU builtin
-  - valgrind --leak-check=full ./output/lib/tconv -C ICU -f UTF-16 -t UTF-16 -o /dev/null /tmp/tconv.tconv-ICU-UTF-16.c
+  - ./output/lib/tconv -C ICU -f UTF-16 -t UTF-16 -o /dev/null /tmp/tconv.tconv-ICU-UTF-16.c
   # Same charset is a special thing in ICONV builtin
-  - valgrind --leak-check=full ./output/lib/tconv -C ICONV -f UTF-16 -t UTF-16 -o /dev/null /tmp/tconv.tconv-ICONV-UTF-16.c
+  - ./output/lib/tconv -C ICONV -f UTF-16 -t UTF-16 -o /dev/null /tmp/tconv.tconv-ICONV-UTF-16.c
   # TRANSLIT is nothing special in ICONV builtin
-  - valgrind --leak-check=full ./output/lib/tconv -C ICONV -f UTF-16 -t ASCII//TRANSLIT -o /tmp/tconv.tconv-ICONV-ASCII-TRANSLIT.c /tmp/tconv.tconv-ICU-UTF-16.c
+  - ./output/lib/tconv -C ICONV -f UTF-16 -t ASCII//TRANSLIT -o /tmp/tconv.tconv-ICONV-ASCII-TRANSLIT.c /tmp/tconv.tconv-ICU-UTF-16.c
   # TRANSLIT is a special path in ICU builtin
-  - valgrind --leak-check=full ./output/lib/tconv -C ICU -f UTF-16 -t ASCII//TRANSLIT -o /tmp/tconv.tconv-ICU-ASCII-TRANSLIT.c /tmp/tconv.tconv-ICU-UTF-16.c
+  - ./output/lib/tconv -C ICU -f UTF-16 -t ASCII//TRANSLIT -o /tmp/tconv.tconv-ICU-ASCII-TRANSLIT.c /tmp/tconv.tconv-ICU-UTF-16.c
   # Charset discovery
-  - valgrind --leak-check=full ./output/lib/tconv --charset-engine CCHARDET -g `find ./output/3rdparty/cchardet-1.0.0/test/testdata/ -type f`
-  - valgrind --leak-check=full ./output/lib/tconv --charset-engine ICU -g `find ./output/3rdparty/cchardet-1.0.0/test/testdata/ -type f`
-  - valgrind --leak-check=full ./output/lib/tconv --charset-engine XXXXXXXX -g `find ./output/3rdparty/cchardet-1.0.0/test/testdata/ -type f | tail -1`
+  - ./output/lib/tconv --charset-engine CCHARDET -g `find ./output/3rdparty/cchardet-1.0.0/test/testdata/ -type f`
+  - ./output/lib/tconv --charset-engine ICU -g `find ./output/3rdparty/cchardet-1.0.0/test/testdata/ -type f`
+  - ./output/lib/tconv --charset-engine XXXXXXXX -g `find ./output/3rdparty/cchardet-1.0.0/test/testdata/ -type f | tail -1`
   # Signature is specific to ICU
   - TCONV_ENV_CONVERT_ICU_SIGNATURE=-1 ./output/lib/tconv -C ICU -f UTF-16 -t UTF-8 -o /tmp/tconv.tconv-ICU-UTF8-SIGNATURE.c /tmp/tconv.tconv-ICU-UTF-16.c
   - TCONV_ENV_CONVERT_ICU_SIGNATURE=1 ./output/lib/tconv -C ICU -f UTF-16 -t UTF-8 -o /tmp/tconv.tconv-ICU-UTF8-SIGNATURE.c /tmp/tconv.tconv-ICU-UTF-16.c
   - TCONV_ENV_CONVERT_ICU_SIGNATURE=0 ./output/lib/tconv -C ICU -f UTF-16 -t UTF-8 -o /tmp/tconv.tconv-ICU-UTF8-SIGNATURE.c /tmp/tconv.tconv-ICU-UTF-16.c
   # A special case when ICU internal translit buffer need to increase
-  - valgrind --leak-check=full ./output/lib/tconv -C ICU -t UTF-8//TRANSLIT ./3rdparty/output/cchardet-1.0.0/test/testdata/wikipediaTw_One_Thousand_and_One_Nights_GB2312.txt -o /dev/null
+  - ./output/lib/tconv -C ICU -t UTF-8//TRANSLIT ./3rdparty/output/cchardet-1.0.0/test/testdata/wikipediaTw_One_Thousand_and_One_Nights_GB2312.txt -o /dev/null
   # Forces some internal buffers to reallocate
-  - valgrind --leak-check=full ./output/lib/tconv -C ICONV -t ASCII//TRANSLIT -b 10000 ./output/3rdparty/cchardet-1.0.0/test/testdata/wikipediaJa_One_Thousand_and_One_Nights_SJIS.txt -o /dev/null
-  - valgrind --leak-check=full ./output/lib/tconv -C ICU   -t ASCII//TRANSLIT -b 10000 ./output/3rdparty/cchardet-1.0.0/test/testdata/wikipediaJa_One_Thousand_and_One_Nights_SJIS.txt -o /dev/null
+  - ./output/lib/tconv -C ICONV -t ASCII//TRANSLIT -b 10000 ./output/3rdparty/cchardet-1.0.0/test/testdata/wikipediaJa_One_Thousand_and_One_Nights_SJIS.txt -o /dev/null
+  - ./output/lib/tconv -C ICU   -t ASCII//TRANSLIT -b 10000 ./output/3rdparty/cchardet-1.0.0/test/testdata/wikipediaJa_One_Thousand_and_One_Nights_SJIS.txt -o /dev/null
   # ICONV charset not found
-  - valgrind --leak-check=full ./output/lib/tconv -v -z -F -C ICONV -f MS-ANSI -t MS-ANSI -o /dev/null ./src/tconv/convert/alias.c
+  - ./output/lib/tconv -v -z -F -C ICONV -f MS-ANSI -t MS-ANSI -o /dev/null ./src/tconv/convert/alias.c
   # ICONV charset not found and maybe EBADF
-  - valgrind --leak-check=full ./output/lib/tconv -v -C ICONV -f MS-ANSI -t ANSI -o /dev/null ./src/tconv/convert/alias.c
+  - ./output/lib/tconv -v -C ICONV -f MS-ANSI -t ANSI -o /dev/null ./src/tconv/convert/alias.c
   # Retry all types, printing found code
-  - valgrind --leak-check=full ./output/lib/tconv -G CCHARDET -C ICONV -F -t ASCII//TRANSLIT -o /dev/null `find ./output/3rdparty/cchardet-1.0.0/test/testdata/ -type f`
-  - valgrind --leak-check=full ./output/lib/tconv -G ICU      -C ICONV -F -t ASCII//TRANSLIT -o /dev/null `find ./output/3rdparty/cchardet-1.0.0/test/testdata/ -type f`
-  - valgrind --leak-check=full ./output/lib/tconv -G CCHARDET -C ICU   -F -t ASCII//TRANSLIT -o /dev/null `find ./output/3rdparty/cchardet-1.0.0/test/testdata/ -type f`
-  - valgrind --leak-check=full ./output/lib/tconv -G ICU      -C ICU   -F -t ASCII//TRANSLIT -o /dev/null `find ./output/3rdparty/cchardet-1.0.0/test/testdata/ -type f`
+  - ./output/lib/tconv -G CCHARDET -C ICONV -F -t ASCII//TRANSLIT -o /dev/null `find ./output/3rdparty/cchardet-1.0.0/test/testdata/ -type f`
+  - ./output/lib/tconv -G ICU      -C ICONV -F -t ASCII//TRANSLIT -o /dev/null `find ./output/3rdparty/cchardet-1.0.0/test/testdata/ -type f`
+  - ./output/lib/tconv -G CCHARDET -C ICU   -F -t ASCII//TRANSLIT -o /dev/null `find ./output/3rdparty/cchardet-1.0.0/test/testdata/ -type f`
+  - ./output/lib/tconv -G ICU      -C ICU   -F -t ASCII//TRANSLIT -o /dev/null `find ./output/3rdparty/cchardet-1.0.0/test/testdata/ -type f`
   # Try to reach some error codes
-  - valgrind --leak-check=full ./output/lib/tconv -v -g -G CCHARDET -C ICONV `find . -type f`
-  - valgrind --leak-check=full ./output/lib/tconv -g -G ICU      -C ICONV `find . -type f`
-  - valgrind --leak-check=full ./output/lib/tconv -g -G CCHARDET -C ICU   `find . -type f`
-  - valgrind --leak-check=full ./output/lib/tconv -g -G ICU      -C ICU   `find . -type f`
+  - ./output/lib/tconv -v -g -G CCHARDET -C ICONV `find . -type f`
+  - gdb ./output/lib/tconv core -ex "thread apply all bt" -ex "set pagination 0" -batch
+  - ./output/lib/tconv -g -G ICU      -C ICONV `find . -type f`
+  - ./output/lib/tconv -g -G CCHARDET -C ICU   `find . -type f`
+  - ./output/lib/tconv -g -G ICU      -C ICU   `find . -type f`
   # Build coverage
   - make gcov
 
