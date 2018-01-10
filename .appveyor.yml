@@ -45,15 +45,15 @@ test_script:
   - nmake install
   - nmake pack
 
-on_success:
-  - git config --global credential.helper store
-  - ps: Add-Content "$env:USERPROFILE\.git-credentials" "https://$($env:access_token):x-oauth-basic@github.com`n"
-  - git config --global user.email "jeandamiendurand@free.fr"
-  - git config --global user.name "Jean-Damien Durand"
-  - cd C:\projects\c-genericlogger
-  - if not exist "package" mkdir package
-  - copy /y *.exe package
-  - git checkout master
-  - git add package
-  - git commit -m "%PLATFORM% package [ci skip]" package
-  - git push
+#on_success:
+#  - git config --global credential.helper store
+#  - ps: Add-Content "$env:USERPROFILE\.git-credentials" "https://$($env:access_token):x-oauth-basic@github.com`n"
+#  - git config --global user.email "jeandamiendurand@free.fr"
+#  - git config --global user.name "Jean-Damien Durand"
+#  - cd C:\projects\c-genericlogger
+#  - if not exist "package" mkdir package
+#  - copy /y *.exe package
+#  - git checkout master
+#  - git add package
+#  - git commit -m "%PLATFORM% package [ci skip]" package
+#  - git push
