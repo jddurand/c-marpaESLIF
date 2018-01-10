@@ -457,14 +457,15 @@ static void fileconvert(int outputFd, char *filenames,
   if ((filenames == NULL) || (strcmp(filenames, "-") == 0)) {
     fd = fileno(stdin);
   } else {
+    if (strcmp(filenames, "./3rdparty/github/genericLogger/.travis.yml") == 0) {
+      verbose = 1;
+    }
     fd = open(filenames,
               O_RDONLY
 #ifdef O_BINARY
               |O_BINARY
 #endif
               );
-  } else if (strcmp(filenames, "./3rdparty/github/genericLogger/.travis.yml") == 0) {
-    verbose = 1;
   }
   if (fd < 0) {
     GENERICLOGGER_ERRORF(NULL, "Failed to open %s: %s", filenames, strerror(errno));
