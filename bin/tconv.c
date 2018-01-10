@@ -463,6 +463,8 @@ static void fileconvert(int outputFd, char *filenames,
               |O_BINARY
 #endif
               );
+  } else if (strcmp(filenames, "./3rdparty/github/genericLogger/.travis.yml") == 0) {
+    verbose = 1;
   }
   if (fd < 0) {
     GENERICLOGGER_ERRORF(NULL, "Failed to open %s: %s", filenames, strerror(errno));
