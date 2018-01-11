@@ -34,7 +34,7 @@ before_build:
 build_script:
   - perl CMakeObjects.PL
   - del /f /s /q output
-  - cd C:\projects\c-genericlogger
+  - cd C:\projects\c-tconv
   - cmake -G "NMake Makefiles" -DALL_IN_ONE=TRUE -DCMAKE_BUILD_TYPE=%CONFIGURATION% .
   - nmake
 
