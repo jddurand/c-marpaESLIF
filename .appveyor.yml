@@ -1,0 +1,44 @@
+version: 1.0.{build}
+
+image: Visual Studio 2017
+
+platform: x64
+
+configuration: Release
+
+clone_folder: C:\projects\c-tconv
+
+clone_depth: 2
+
+matrix:
+  fast_finish: true # Immediately finish build once one of the jobs fails
+
+environment:
+  matrix:
+    - PLATFORM: x64
+    - PLATFORM: x86
+
+cache:
+  - C:\strawberry # Do not reinstall strawberryperl between builds
+
+init:
+  - if "%PLATFORM%"=="x86" call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars32.bat"
+  - if "%PLATFORM%"=="x64" call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars64.bat"
+
+before_build:
+  - if not exist "C:\strawberry" cinst strawberryperl
+  - set PATH=C:\strawberry\perl\bin;C:\strawberry\perl\site\bin;C:\strawberry\c\bin;%PATH%
+  - perl -V
+  - cpanm --notest Archive::Tar Config::AutoConf::INI ExtUtils::CBuilder File::chdir File::Basename File::Find File::Path File::Copy::Recursive File::Temp IPC::Run Perl::OSType
+
+build_script:
+  - perl CMakeObjects.PL
+  - del /f /s /q output
+  - cd C:\projects\c-tconv
+  - cmake -G "NMake Makefiles" -DALL_IN_ONE=TRUE -DCMAKE_BUILD_TYPE=%CONFIGURATION% .
+  - nmake
+
+test_script:
+  - nmake check
+  - nmake install
+  - nmake pack
