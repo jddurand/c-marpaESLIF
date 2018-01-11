@@ -29,13 +29,13 @@ before_build:
   - if not exist "C:\strawberry" cinst strawberryperl
   - set PATH=C:\strawberry\perl\bin;C:\strawberry\perl\site\bin;C:\strawberry\c\bin;%PATH%
   - perl -V
-  - cpanm --notest Config::AutoConf::INI ExtUtils::CBuilder File::Basename File::Find File::Path
+  - cpanm --notest Archive::Tar Config::AutoConf::INI ExtUtils::CBuilder File::chdir File::Basename File::Find File::Path File::Copy::Recursive File::Temp IPC::Run Perl::OSType
 
 build_script:
   - perl CMakeObjects.PL
   - del /f /s /q output
   - cd C:\projects\c-genericlogger
-  - cmake -G "NMake Makefiles" -DCMAKE_BUILD_TYPE=%CONFIGURATION% .
+  - cmake -G "NMake Makefiles" -DALL_IN_ONE=TRUE -DCMAKE_BUILD_TYPE=%CONFIGURATION% .
   - nmake
 
 test_script:
