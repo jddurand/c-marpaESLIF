@@ -4398,17 +4398,20 @@ static inline char *_marpaESLIF_charconvp(marpaESLIF_t *marpaESLIFp, char *toEnc
     }
 
     if (inleftl <= 0) {
-      /* Next round is the last one */
-      inbufp = NULL;
+      /* Nothing left in input buffer. */
+      if (tconvpp == NULL) {
+        /* Caller does not want to know about tconvp: we flush */
+        inbufp = NULL;
+      } else {
+        /* Caller wants to remember. He is responsible to call for flush */
+        break;
+      }
     }
   }
 
   /* Remember that we ALWAYS allocate one byte more. This mean that outbufp points exactly at this extra byte */
   *outbufp = '\0';
 
-  if (dstlp != NULL) {
-    *dstlp = outbufp - outbuforigp;
-  }
   if (fromEncodingsp != NULL) {
     if (fromEncodings != NULL) {
       *fromEncodingsp = strdup(fromEncodings);
@@ -4433,6 +4436,9 @@ static inline char *_marpaESLIF_charconvp(marpaESLIF_t *marpaESLIFp, char *toEnc
 	goto err;
       }
     }
+  }
+  if (dstlp != NULL) {
+    *dstlp = outbufp - outbuforigp;
   }
   goto done;
 
