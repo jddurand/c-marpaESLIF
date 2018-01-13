@@ -4357,8 +4357,10 @@ static inline char *_marpaESLIF_charconvp(marpaESLIF_t *marpaESLIFp, char *toEnc
           errno = EILSEQ;
           MARPAESLIF_ERRORF(marpaESLIFp, "tconv failure, %s", tconv_error(tconvp));
           goto err;
+        } else {
+          goto end_of_loop;
         }
-        break;
+        break; /* Code never reach but this is ok */
       case E2BIG:
         /* Try to alloc more. outleftdeltal is the number of bytes added to output buffer */
         /* Default is to double allocate space, else use arbitrarily 1023 bytes (because of the +1 for the hiden NUL byte)*/
@@ -4409,6 +4411,7 @@ static inline char *_marpaESLIF_charconvp(marpaESLIF_t *marpaESLIFp, char *toEnc
     }
   }
 
+ end_of_loop:
   /* Remember that we ALWAYS allocate one byte more. This mean that outbufp points exactly at this extra byte */
   *outbufp = '\0';
 
