@@ -4437,6 +4437,51 @@ static inline char *_marpaESLIF_charconvp(marpaESLIF_t *marpaESLIFp, char *toEnc
   goto done;
 
  err:
+  /* If errno is EILSEQ then input pointer should be at the last successful converted location */
+  if ((tconvp != NULL) && (errno == EILSEQ) && (inbuforigp != NULL) && (inleftorigl > 0)) {
+    char                   *fromCodes = tconv_fromcode(tconvp);
+    size_t                  consumedl = inleftorigl - inleftl;
+    /* We have to fake a recognizer - this is how the MARPAESLIF_HEXDUMPV() macros works */
+    marpaESLIFRecognizer_t  marpaESLIFRecognizer;
+    marpaESLIFRecognizer_t *marpaESLIFRecognizerp = &marpaESLIFRecognizer;
+
+    marpaESLIFRecognizerp->marpaESLIFp = marpaESLIFp;
+
+    /* If there is some information before, show it */
+    if (consumedl > 0) {
+      char  *dumps;
+      size_t dumpl;
+
+      if (consumedl > 128) {
+        dumps = inbufp - 128;
+        dumpl = 128;
+      } else {
+        dumps = inbuforigp;
+        dumpl = consumedl;
+      }
+      MARPAESLIF_HEXDUMPV(marpaESLIFRecognizerp,
+                          (fromCodes != NULL) ? fromCodes : "", /* In theory, it is impossible to have fromCodes == NULL here */
+                          " data before the failure",
+                          dumps,
+                          dumpl,
+                          0 /* traceb */);
+    }
+    MARPAESLIF_ERROR(marpaESLIFp, "<<<<<< CHARACTER FAILURE HERE: >>>>>>");
+    /* If there is some information after, show it */
+    if (inleftl > 0) {
+      char  *dumps;
+      size_t dumpl;
+
+      dumps = inbuforigp + consumedl;
+      dumpl = inleftl > 128 ? 128 : inleftl;
+      MARPAESLIF_HEXDUMPV(marpaESLIFRecognizerp,
+                          (fromCodes != NULL) ? fromCodes : "", /* In theory, it is impossible to have fromCodes == NULL here */
+                          " data after the failure",
+                          dumps,
+                          dumpl,
+                          0 /* traceb */);
+    }
+  }
   if (outbuforigp != NULL) {
     free(outbuforigp);
   }
