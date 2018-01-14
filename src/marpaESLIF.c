@@ -10784,7 +10784,7 @@ static inline short _marpaESLIFRecognizer_start_charconvp(marpaESLIFRecognizer_t
     goto err;
   }
   memcpy(*(marpaESLIFRecognizerp->lastFromsp), encodings, encodingl);
-  *(marpaESLIFRecognizerp->lastFromsp)[encodingl] = '\0';
+  (*(marpaESLIFRecognizerp->lastFromsp))[encodingl] = '\0';
   *(marpaESLIFRecognizerp->lastFromlp) = encodingl;
   
   /* Put global flag to on */
