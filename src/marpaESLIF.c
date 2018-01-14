@@ -7735,6 +7735,8 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGramm
   marpaESLIFRecognizerp->_eofb                        = fakeb;  /* In fake mode, always make sure there is no reader needed */
   marpaESLIFRecognizerp->_utfb                        = utfb;
   marpaESLIFRecognizerp->_charconvb                   = 0;
+  marpaESLIFRecognizerp->_lastFroms                   = NULL;
+  marpaESLIFRecognizerp->_lastFroml                   = 0;
   marpaESLIFRecognizerp->_encodings                   = 0;
   marpaESLIFRecognizerp->_encodingp                   = NULL;
   marpaESLIFRecognizerp->_tconvp                      = NULL;
@@ -7751,6 +7753,8 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGramm
     marpaESLIFRecognizerp->utfbp                        = marpaESLIFRecognizerParentp->utfbp;
     marpaESLIFRecognizerp->charconvbp                   = marpaESLIFRecognizerParentp->charconvbp;
     marpaESLIFRecognizerp->marpaESLIFRecognizerHashp    = marpaESLIFRecognizerParentp->marpaESLIFRecognizerHashp;
+    marpaESLIFRecognizerp->lastFromsp                   = marpaESLIFRecognizerParentp->lastFromsp;
+    marpaESLIFRecognizerp->lastFromlp                   = marpaESLIFRecognizerParentp->lastFromlp;
     marpaESLIFRecognizerp->encodingsp                   = marpaESLIFRecognizerParentp->encodingsp;
     marpaESLIFRecognizerp->encodingpp                   = marpaESLIFRecognizerParentp->encodingpp;
     marpaESLIFRecognizerp->tconvpp                      = marpaESLIFRecognizerParentp->tconvpp;
@@ -7772,6 +7776,8 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGramm
     marpaESLIFRecognizerp->utfbp                        = &(marpaESLIFRecognizerp->_utfb);
     marpaESLIFRecognizerp->charconvbp                   = &(marpaESLIFRecognizerp->_charconvb);
     marpaESLIFRecognizerp->marpaESLIFRecognizerHashp    = NULL;   /* Pointer to a hash in the structure, initialized later */
+    marpaESLIFRecognizerp->lastFromsp                   = &(marpaESLIFRecognizerp->_lastFroms);
+    marpaESLIFRecognizerp->lastFromlp                   = &(marpaESLIFRecognizerp->_lastFroml);
     marpaESLIFRecognizerp->encodingsp                   = &(marpaESLIFRecognizerp->_encodings);
     marpaESLIFRecognizerp->encodingpp                   = &(marpaESLIFRecognizerp->_encodingp);
     marpaESLIFRecognizerp->tconvpp                      = &(marpaESLIFRecognizerp->_tconvp);
@@ -10501,6 +10507,7 @@ static inline short _marpaESLIFRecognizer_createLastTryb(marpaESLIFRecognizer_t 
 static inline short _marpaESLIFRecognizer_encoding_eqb(marpaESLIFRecognizer_t *marpaESLIFRecognizerParentp, marpaESLIF_terminal_t *terminalp, char *encodings, char *inputs, size_t inputl)
 /*****************************************************************************/
 {
+  /* Note that we do not support aliases nor case insensitivity */
   static const char         *funcs                 = "_marpaESLIFRecognizer_encoding_eqb";
   marpaESLIF_t              *marpaESLIFp           = marpaESLIFRecognizerParentp->marpaESLIFp;
   marpaESLIFRecognizer_t    *marpaESLIFRecognizerp = NULL;
@@ -10514,6 +10521,16 @@ static inline short _marpaESLIFRecognizer_encoding_eqb(marpaESLIFRecognizer_t *m
   marpaESLIFRecognizerParentp->callstackCounteri++;
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerParentp, funcs, "start");
 #endif
+
+  /* Before launching the bazooka, the very typical use case if that the encoding */
+  /* is always the same... So a simple and fast memcmp will do it. */
+  if (*(marpaESLIFRecognizerParentp->lastFromsp) != NULL) {
+    if (*(marpaESLIFRecognizerParentp->lastFromlp) == inputl) {
+      if (memcmp(*(marpaESLIFRecognizerParentp->lastFromsp), inputs, inputl) == 0) {
+        return 1;
+      }
+    }
+  }
 
   /* First we want to make sure that the inputs is in UTF-8 */
   utf8s = _marpaESLIF_charconvp(marpaESLIFRecognizerParentp->marpaESLIFp, "UTF-8", encodings, inputs, inputl, &utf8l, NULL /* fromEncodingsp */, NULL /* tconvpp */, 1 /* eofb */);
@@ -10559,6 +10576,15 @@ static inline short _marpaESLIFRecognizer_encoding_eqb(marpaESLIFRecognizer_t *m
     free(utf8s);
   }
   marpaESLIFRecognizer_freev(marpaESLIFRecognizerp);
+
+  if (*(marpaESLIFRecognizerParentp->lastFromsp) == NULL) {
+    if (*(marpaESLIFRecognizerParentp->lastFromlp) == inputl) {
+      if (memcmp(*(marpaESLIFRecognizerParentp->lastFromsp), inputs, inputl) == 0) {
+        return 1;
+      }
+    }
+  }
+
 
 #ifndef MARPAESLIF_NTRACE
   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerParentp, funcs, "return %d", (int) rcb);
@@ -10748,6 +10774,19 @@ static inline short _marpaESLIFRecognizer_start_charconvp(marpaESLIFRecognizer_t
     goto err;
   }
 
+  /* For the fast check */
+  if (*(marpaESLIFRecognizerp->lastFromsp) != NULL) {
+    free(*(marpaESLIFRecognizerp->lastFromsp));
+  }
+  *(marpaESLIFRecognizerp->lastFromsp) = malloc(encodingl + 1); /* Add a NUL byte for convenience */
+  if (*(marpaESLIFRecognizerp->lastFromsp) == NULL) {
+    MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
+    goto err;
+  }
+  memcpy(*(marpaESLIFRecognizerp->lastFromsp), encodings, encodingl);
+  *(marpaESLIFRecognizerp->lastFromsp)[encodingl] = '\0';
+  *(marpaESLIFRecognizerp->lastFromlp) = encodingl;
+  
   /* Put global flag to on */
   *(marpaESLIFRecognizerp->charconvbp) = 1;
 
@@ -13168,10 +13207,12 @@ static inline void _marpaESLIFRecognizer_freev(marpaESLIFRecognizer_t *marpaESLI
     if (marpaESLIFRecognizerp->_tconvp != NULL) {
       tconv_close(marpaESLIFRecognizerp->_tconvp);
     }
-
     if (marpaESLIFRecognizerHashp != NULL) {
       /* This will free all cached recognizers in cascade -; */
       GENERICHASH_RESET(marpaESLIFRecognizerHashp, NULL);
+    }
+    if (marpaESLIFRecognizerp->_lastFroms != NULL) {
+      free(marpaESLIFRecognizerp->_lastFroms);
     }
 
   } else {
