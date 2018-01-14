@@ -221,7 +221,7 @@ void  *tconv_convert_iconv_new(tconv_t tconvp, const char *tocodes, const char *
       TCONV_TRACE(tconvp, "%s - iconv_open(\"%s\", \"%s\") returned %p", funcs, tocodes, intermediatecharsets, iconvtop);
 
       TCONV_TRACE(tconvp, "%s - malloc(%ld)", funcs, (unsigned long) TCONV_ICONV_INITIAL_SIZE);
-      internals = (char *) malloc(TCONV_ICONV_INITIAL_SIZE);
+      internals = (char *) malloc(internall);
       if (internals == NULL) {
         goto err;
       }
@@ -493,9 +493,9 @@ static size_t _tconv_convert_iconv_internall(tconv_t tconvp, tconv_convert_iconv
     return (size_t)-1;
   }
 
-  /* Here it is guaranteed that the output buffer can be used entirely */
-  contextp->internalp     = contextp->internals; /* This can be NULL */
-  contextp->internalleftl = contextp->internall; /* This can be 0 */
+  /* Here it is guaranteed that the internal buffer can be used entirely */
+  contextp->internalp     = contextp->internals;
+  contextp->internalleftl = contextp->internall;
   while (1) {
     rcl = iconv(contextp->iconvfromp,
                 (ICONV_SECOND_ARGUMENT char **) inbufpp,
