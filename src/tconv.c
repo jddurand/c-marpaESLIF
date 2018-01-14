@@ -1284,7 +1284,7 @@ static short _tconv_helper_run_oneb(tconv_helper_t *tconv_helperp)
   TCONV_TRACE(tconvp, "%s(%p)", funcs, tconv_helperp);
 
   /* flushb is an internal flag that indicates the very end */
-  if (tconv_helperp->flushb == 0) {
+  if (! tconv_helperp->flushb) {
     /* ----------------- */
     /* Call the producer */
     /* ----------------- */
@@ -1575,7 +1575,6 @@ short tconv_helper_runb(tconv_helper_t *tconv_helperp)
 /****************************************************************************/
 {
   static const char funcs[] = "tconv_helper_runb";
-  tconv_t           tconvp;
   short             rcb;
   short             continueb;
 
@@ -1584,16 +1583,15 @@ short tconv_helper_runb(tconv_helper_t *tconv_helperp)
     return 0;
   }
 
-  tconvp = tconv_helperp->tconvp;
-
-  if (tconv_helperp->stopb != 0) {
+  if (tconv_helperp->stopb) {
 #ifdef EPERM
     errno = EPERM;
 #else
     errno = EINVAL;
 #endif
     goto err;
-  } else if (tconv_helperp->endb != 0) {
+  } else if (tconv_helperp->endb) {
+  end:
     /* Set internal flush flag */
     tconv_helperp->flushb = 1;
     /* Run the last possible call of _tconv_helper_run_oneb() */
@@ -1605,11 +1603,18 @@ short tconv_helper_runb(tconv_helper_t *tconv_helperp)
       goto err;
     }
   } else {
-    while ((tconv_helperp->endb == 0) && (tconv_helperp->stopb == 0)) {
+    while (1) {
+      /* the stop, end or pause flags can be by producer and consumer */
       if (! _tconv_helper_run_oneb(tconv_helperp)) {
         goto err;
       }
-      if (tconv_helperp->pauseb != 0) {
+      if (tconv_helperp->stopb) {
+        /* Stop immediately */
+        break;
+      } else if (tconv_helperp->endb) {
+        /* Flush and stop */
+        goto end;
+      } else if (tconv_helperp->pauseb != 0) {
         /* Reset pause flag and break the loop */
         tconv_helperp->pauseb = 0;
         break;
@@ -1624,7 +1629,12 @@ short tconv_helper_runb(tconv_helper_t *tconv_helperp)
   rcb = 0;
 
  done:
-  TCONV_TRACE(tconvp, "%s - return %d", funcs, (int) rcb);
+#ifndef TCONV_NTRACE
+  {
+    tconv_t tconvp = tconv_helperp->tconvp;
+    TCONV_TRACE(tconvp, "%s - return %d", funcs, (int) rcb);
+  }
+#endif
   return rcb;
 
 }
