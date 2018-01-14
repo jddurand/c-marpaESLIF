@@ -1389,118 +1389,113 @@ static short _tconv_helper_run_oneb(tconv_helper_t *tconv_helperp)
   }
 #endif
 
-  /* There is no need to call for conversion if inbufp is not NULL and inbufbytesleftl is <= 0  */
-  if ((inbufp == NULL) || (inbufbytesleftl > 0)) {
+  /*
+   * Input staging area:
+   * ===================
+   * inputp                                     inputguardp              inputendp
+   * 0                                          inputguardl              inputallocl
+   * ---------------------------------------------------------------------
+   * |      used area                           |  unused area           |
+   * ---------------------------------------------------------------------
+   * inbufp (when not NULL)
+   * ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   * input area of size inbufbytesleftl
+   *
+   * Output staging area:
+   * ====================
+   *
+   * outputp                                    outputguardp             outputendp
+   * 0                                          outputguardl             outputallocl
+   * ---------------------------------------------------------------------
+   * |      used area                           |  unused area           |
+   * ---------------------------------------------------------------------
+   * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!outbufp
+   * area not consumed by the end user          ^^^^^^^^^^^^^^^^^^^^^^^^^
+   *                                            output area of size outbufbytesleftl
+   *
+   */
 
-    /*
-     * Input staging area:
-     * ===================
-     * inputp                                     inputguardp              inputendp
-     * 0                                          inputguardl              inputallocl
-     * ---------------------------------------------------------------------
-     * |      used area                           |  unused area           |
-     * ---------------------------------------------------------------------
-     * inbufp 
-     * ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-     * input area of size inbufbytesleftl
-     *
-     * Output staging area:
-     * ====================
-     *
-     * outputp                                    outputguardp             outputendp
-     * 0                                          outputguardl             outputallocl
-     * ---------------------------------------------------------------------
-     * |      used area                           |  unused area           |
-     * ---------------------------------------------------------------------
-     * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!outbufp
-     * area not consumed by the end user          ^^^^^^^^^^^^^^^^^^^^^^^^^
-     *                                            output area of size outbufbytesleftl
-     *
-     */
-
-    /* ------------------ */
-    /* Call the converter */
-    /* ------------------ */
-    TCONV_TRACE(tconvp, "%s - values before tconv: {inbufp=%p,inbufbytesleftl=%ld} and {outbufp=%p,outbufbytesleftl=%ld}", funcs, inbufp, (unsigned long) inbufbytesleftl, outbufp, (unsigned long) outbufbytesleftl);
-    tconvl = tconv(tconvp, &inbufp, &inbufbytesleftl, &outbufp, &outbufbytesleftl);
-    TCONV_TRACE(tconvp, "%s - values after  tconv: {inbufp=%p,inbufbytesleftl=%ld} and {outbufp=%p,outbufbytesleftl=%ld}", funcs, inbufp, (unsigned long) inbufbytesleftl, outbufp, (unsigned long) outbufbytesleftl);
-    errnoi = (tconvl == (size_t)-1) ? errno : 0;
+  /* ------------------ */
+  /* Call the converter */
+  /* ------------------ */
+  TCONV_TRACE(tconvp, "%s - values before tconv: {inbufp=%p,inbufbytesleftl=%ld} and {outbufp=%p,outbufbytesleftl=%ld}", funcs, inbufp, (unsigned long) inbufbytesleftl, outbufp, (unsigned long) outbufbytesleftl);
+  tconvl = tconv(tconvp, &inbufp, &inbufbytesleftl, &outbufp, &outbufbytesleftl);
+  TCONV_TRACE(tconvp, "%s - values after  tconv: {inbufp=%p,inbufbytesleftl=%ld} and {outbufp=%p,outbufbytesleftl=%ld}", funcs, inbufp, (unsigned long) inbufbytesleftl, outbufp, (unsigned long) outbufbytesleftl);
+  errnoi = (tconvl == (size_t)-1) ? errno : 0;
 #ifndef TCONV_NTRACE
-    if (tconvl == (size_t)-1) {
-      TCONV_TRACE(tconvp, "%s - tconv(...) returned -1, errno %d (%s)", funcs, errno, strerror(errno));
-    } else {
-      TCONV_TRACE(tconvp, "%s - tconv(...) returned %ld", funcs, (unsigned long) tconvl);
-    }
-    if (tconv_helperp->flushb) {
-      TCONV_TRACE(tconvp, "%s - flush mode - produced output bytes: %ld", funcs, (unsigned long) (outbufp - tconv_helperp->outputguardp));
-    } else {
-      TCONV_TRACE(tconvp, "%s - normal mode - consumed input bytes: %ld, remaining input bytes: %ld, produced output bytes: %ld", funcs, (unsigned long) (inbufp - tconv_helperp->inputp), (unsigned long) inbufbytesleftl, (unsigned long) (outbufp - tconv_helperp->outputguardp));
-    }
+  if (tconvl == (size_t)-1) {
+    TCONV_TRACE(tconvp, "%s - tconv(...) returned -1, errno %d (%s)", funcs, errno, strerror(errno));
+  } else {
+    TCONV_TRACE(tconvp, "%s - tconv(...) returned %ld", funcs, (unsigned long) tconvl);
+  }
+  if (tconv_helperp->flushb) {
+    TCONV_TRACE(tconvp, "%s - flush mode - produced output bytes: %ld", funcs, (unsigned long) (outbufp - tconv_helperp->outputguardp));
+  } else {
+    TCONV_TRACE(tconvp, "%s - normal mode - consumed input bytes: %ld, remaining input bytes: %ld, produced output bytes: %ld", funcs, (unsigned long) (inbufp - tconv_helperp->inputp), (unsigned long) inbufbytesleftl, (unsigned long) (outbufp - tconv_helperp->outputguardp));
+  }
 #endif
 
-    /*
-     * inputp                                     inputp               inputp
-     * +0                                         +inputguardl         +inputallocl
-     * -----------------------------------------------------------------
-     * |      consumed area                |      |  unused area       |
-     * -----------------------------------------------------------------
-     *                                     inbufp
-     *                                     ^^^^^^^
-     *                                     intentionaly leftover area
-     *                                     of size inbufbytesleftl
-     *
-     */
+  /*
+   * inputp                                     inputp               inputp
+   * +0                                         +inputguardl         +inputallocl
+   * -----------------------------------------------------------------
+   * |      consumed area                |      |  unused area       |
+   * -----------------------------------------------------------------
+   *                                     inbufp
+   *                                     ^^^^^^^
+   *                                     intentionaly leftover area
+   *                                     of size inbufbytesleftl
+   *
+   */
 
-    /* Move unconsumed bytes at the beginning of the input buffer */
-    if ((inbufp != NULL) && (inbufp > tconv_helperp->inputp)) {
-      deltal = tconv_helperp->inputguardl - inbufbytesleftl;
-      TCONV_TRACE(tconvp, "%s - removing %ld consumed bytes from the beginning of the input buffer", funcs, (unsigned long) deltal);
+  /* Move unconsumed bytes at the beginning of the input buffer */
+  if ((inbufp != NULL) && (inbufp > tconv_helperp->inputp)) {
+    if (inbufbytesleftl > 0) {
+      TCONV_TRACE(tconvp, "%s - removing %ld consumed bytes from the beginning of the input buffer", funcs, (unsigned long) (tconv_helperp->inputguardl - inbufbytesleftl));
       memmove(tconv_helperp->inputp, inbufp, inbufbytesleftl);
-      tconv_helperp->inputguardl = inbufbytesleftl;
     }
+    tconv_helperp->inputguardl = inbufbytesleftl;
+  }
 
-    /*
-     * outputp                                    outputguardp             outputendp
-     * 0                                          outputguardl             outputallocl
-     * ---------------------------------------------------------------------
-     * |      used area                           | new bytes  |           |
-     * ---------------------------------------------------------------------
-     * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!outbufp
-     *                                                         ^^^^^^^^^^^^
-     *                                                         unconsumed area
-     *                                                         of size outbufbytesleftl
-     */
+  /*
+   * outputp                                    outputguardp             outputendp
+   * 0                                          outputguardl             outputallocl
+   * ---------------------------------------------------------------------
+   * |      used area                           | new bytes  |           |
+   * ---------------------------------------------------------------------
+   * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!outbufp
+   *                                                         ^^^^^^^^^^^^
+   *                                                         unconsumed area
+   *                                                         of size outbufbytesleftl
+   */
 
-    /* Account the new bytes */
-    if (outbufp > tconv_helperp->outputguardp) {
-      tconv_helperp->outputguardp = outbufp;
-      tconv_helperp->outputguardl = tconv_helperp->outputallocl - outbufbytesleftl;
-    }
+  /* Account the new bytes */
+  if (outbufp > tconv_helperp->outputguardp) {
+    tconv_helperp->outputguardp = outbufp;
+    tconv_helperp->outputguardl = tconv_helperp->outputallocl - outbufbytesleftl;
+  }
 
-    if (tconvl == (size_t)-1) {
-      if (errnoi == E2BIG) {
-        /* Note that it is a non-sense to have E2BIG in reset mode */
-        allocl = tconv_helperp->outputallocl + TCONV_HELPER_BUFSIZ;
-        /* Will that really happen in real-life ? Possible in theory, though. */
-        if (allocl < tconv_helperp->outputallocl) {
-          errno = ERANGE;
-          goto err;
-        }
-        TCONV_REALLOC(tconvp, funcs, tconv_helperp->outputp, char *, allocl);
-        tconv_helperp->outputallocl = allocl;
-        goto retry;
-      } else if (errno == EINVAL) {
-        /* Invalid byte sequence at the end of the input buffer - this is an error only if we are at the end */
-        if (tconv_helperp->endb != 0) {
-          goto err;
-        }
-      } else {
-        /* Fatal error */
+  if (tconvl == (size_t)-1) {
+    if (errnoi == E2BIG) {
+      /* Note that it is a non-sense to have E2BIG in reset mode */
+      allocl = tconv_helperp->outputallocl + TCONV_HELPER_BUFSIZ;
+      /* Will that really happen in real-life ? Possible in theory, though. */
+      if (allocl < tconv_helperp->outputallocl) {
+        errno = ERANGE;
         goto err;
       }
+      TCONV_REALLOC(tconvp, funcs, tconv_helperp->outputp, char *, allocl);
+      tconv_helperp->outputallocl = allocl;
+      goto retry;
+    } else if (errno == EINVAL) {
+      /* Invalid byte sequence at the end of the input buffer - this is an error only if we are at the end */
+      if (tconv_helperp->endb != 0) {
+        goto err;
+      }
+    } else {
+      /* Fatal error */
+      goto err;
     }
-  } else {
-    TCONV_TRACE(tconvp, "%s - no need to call the converter", funcs);
   }
 
   /* ------------------------ */
