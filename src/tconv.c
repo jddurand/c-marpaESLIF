@@ -178,7 +178,7 @@ void tconv_trace(tconv_t tconvp, const char *fmts, ...)
   va_list ap;
   int     errnol;
   
-  if ((tconvp != NULL) && (tconvp->traceb != 0) && (tconvp->genericLoggerp != NULL)) {
+  if ((tconvp != NULL) && tconvp->traceb && (tconvp->genericLoggerp != NULL)) {
     /* In any case we do not want errno to change when doing logging */
     errnol = errno;
     va_start(ap, fmts);
@@ -1341,8 +1341,8 @@ static short _tconv_helper_run_oneb(tconv_helper_t *tconv_helperp)
     TCONV_TRACE(tconvp, "%s - end mode - not calling the producer", funcs);
   }
 
-  /* If user said to pause, so do we */
-  if (tconv_helperp->pauseb) {
+  /* If user said to pause or stop, so do we */
+  if (tconv_helperp->stopb || tconv_helperp->pauseb) {
     goto pause;
   }
 
@@ -1489,7 +1489,7 @@ static short _tconv_helper_run_oneb(tconv_helper_t *tconv_helperp)
       goto retry;
     } else if (errno == EINVAL) {
       /* Invalid byte sequence at the end of the input buffer - this is an error only if we are at the end */
-      if (tconv_helperp->endb != 0) {
+      if (tconv_helperp->endb) {
         goto err;
       }
     } else {
@@ -1498,9 +1498,9 @@ static short _tconv_helper_run_oneb(tconv_helper_t *tconv_helperp)
     }
   }
 
-  /* ------------------------ */
-  /* Always call the consumer */
-  /* ------------------------ */
+  /* ----------------- */
+  /* Call the consumer */
+  /* ----------------- */
 
   /*
    * Output staging area is like this:
@@ -1584,41 +1584,43 @@ short tconv_helper_runb(tconv_helper_t *tconv_helperp)
   }
 
   if (tconv_helperp->stopb) {
+    /* Not possible anymore */
 #ifdef EPERM
     errno = EPERM;
 #else
     errno = EINVAL;
 #endif
     goto err;
-  } else if (tconv_helperp->endb) {
-  end:
-    /* Set internal flush flag */
-    tconv_helperp->flushb = 1;
-    /* Run the last possible call of _tconv_helper_run_oneb() */
+  }
+
+  while (1) {
+    /* the stop, end or pause flags can be set by producer and consumer */
     if (! _tconv_helper_run_oneb(tconv_helperp)) {
       goto err;
     }
-    /* Indicates this is the end */
-    if (! tconv_helper_stopb(tconv_helperp)) {
-      goto err;
+    if (tconv_helperp->stopb) {
+      /* Stop the loop forever */
+      break;
     }
-  } else {
-    while (1) {
-      /* the stop, end or pause flags can be by producer and consumer */
+    if (tconv_helperp->endb) {
+      /* Set internal flush flag */
+      tconv_helperp->flushb = 1;
+      /* Run the last possible call of _tconv_helper_run_oneb() */
       if (! _tconv_helper_run_oneb(tconv_helperp)) {
         goto err;
       }
-      if (tconv_helperp->stopb) {
-        /* Stop immediately */
-        break;
-      } else if (tconv_helperp->endb) {
-        /* Flush and stop */
-        goto end;
-      } else if (tconv_helperp->pauseb != 0) {
-        /* Reset pause flag and break the loop */
-        tconv_helperp->pauseb = 0;
-        break;
+      /* Indicates this is the end */
+      if (! tconv_helper_stopb(tconv_helperp)) {
+        goto err;
       }
+      /* Stop the loop */
+      break;
+    }
+    if (tconv_helperp->pauseb) {
+      /* Reset pause flag so that this method can be executed again */
+      tconv_helperp->pauseb = 0;
+      /* Stop the loop */
+      break;
     }
   }
 
