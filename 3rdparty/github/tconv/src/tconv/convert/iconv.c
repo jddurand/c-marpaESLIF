@@ -54,7 +54,6 @@ typedef struct tconv_convert_iconv_context {
   char    *internals;     /* Internal buffers */
   size_t   internall;     /* Internal buffers length */
   char    *internalp;     /* Internal buffers current position */
-  size_t   internalleftl; /* Internal buffers current position */
   iconv_t  iconvtop;      /* iconv instances */
 } tconv_convert_iconv_context_t;
 
@@ -221,7 +220,7 @@ void  *tconv_convert_iconv_new(tconv_t tconvp, const char *tocodes, const char *
       TCONV_TRACE(tconvp, "%s - iconv_open(\"%s\", \"%s\") returned %p", funcs, tocodes, intermediatecharsets, iconvtop);
 
       TCONV_TRACE(tconvp, "%s - malloc(%ld)", funcs, (unsigned long) TCONV_ICONV_INITIAL_SIZE);
-      internals = (char *) malloc(TCONV_ICONV_INITIAL_SIZE);
+      internals = (char *) malloc(internall);
       if (internals == NULL) {
         goto err;
       }
@@ -258,7 +257,6 @@ void  *tconv_convert_iconv_new(tconv_t tconvp, const char *tocodes, const char *
   contextp->internals         = internals;
   contextp->internall         = internall;
   contextp->internalp         = internals;
-  contextp->internalleftl     = internall;
   contextp->iconvtop          = iconvtop;
 
   goto done;
@@ -444,15 +442,31 @@ static size_t _tconv_convert_iconv_directl(tconv_t tconvp, char **inbufpp, size_
 static size_t _tconv_convert_iconv_internalfluhsl(tconv_t tconvp, tconv_convert_iconv_context_t *contextp, char **outbufpp, size_t *outbytesleftlp)
 /*****************************************************************************/
 {
-  static const char  funcs[]        = "_tconv_convert_iconv_internalfluhsl";
-  char              *tmpinbufp      = contextp->internals;
-  size_t             tmpinbyteslefl = contextp->internalp - contextp->internals;
+  static const char  funcs[]             = "_tconv_convert_iconv_internalfluhsl";
+  char              *tmpinbufp;
+  size_t             tmpinbytesleftl;
+  size_t             origtmpinbytesleftl;
+  size_t             consumedl;
   size_t             rcl;
 
-  if (tmpinbyteslefl > 0) {
-    TCONV_TRACE(tconvp, "%s - remains %ld bytes to flush", funcs, (unsigned long) tmpinbyteslefl);
-    rcl = iconv(contextp->iconvtop, (ICONV_SECOND_ARGUMENT char **) &tmpinbufp, &tmpinbyteslefl, outbufpp, outbytesleftlp);
-    contextp->internalp = contextp->internals + tmpinbyteslefl;
+  if (contextp->internalp > contextp->internals) {
+    tmpinbufp           = contextp->internals;
+    tmpinbytesleftl     = contextp->internalp - contextp->internals;
+    origtmpinbytesleftl = tmpinbytesleftl;
+
+    TCONV_TRACE(tconvp, "%s - remains %ld bytes to flush", funcs, (unsigned long) tmpinbytesleftl);
+    rcl = iconv(contextp->iconvtop, (ICONV_SECOND_ARGUMENT char **) &tmpinbufp, &tmpinbytesleftl, outbufpp, outbytesleftlp);
+
+    /* Whatever happened, forget the bytes that were converted into user's output buffer */
+    consumedl = origtmpinbytesleftl - tmpinbytesleftl;
+    if (consumedl < origtmpinbytesleftl) {
+      /* Some bytes were consumed, but not all */
+      memmove(contextp->internals, contextp->internals + consumedl, tmpinbytesleftl);
+      contextp->internalp -= consumedl;
+    } else {
+      /* All bytes were consumed */
+      contextp->internalp = contextp->internals;
+    }
 #ifndef TCONV_NTRACE
     if (rcl == (size_t)-1) {
       TCONV_TRACE(tconvp, "%s - iconv on output returned -1, errno %d", funcs, errno);
@@ -474,8 +488,7 @@ static size_t _tconv_convert_iconv_internall(tconv_t tconvp, tconv_convert_iconv
   static const char  funcs[]  = "_tconv_convert_iconv_internall";
   size_t             rcl;
   int                errnoi;
-  char              *tmpinbufp;
-  size_t             tmpinbyteslefl;
+  size_t             internalleftl;
 
   /* A special case is then the user is asking for a reset to initial state without flush. */
   if (((inbufpp == NULL) || (*inbufpp == NULL)) && ((outbufpp == NULL) || (*outbufpp == NULL))) {
@@ -493,15 +506,15 @@ static size_t _tconv_convert_iconv_internall(tconv_t tconvp, tconv_convert_iconv
     return (size_t)-1;
   }
 
-  /* Here it is guaranteed that the output buffer can be used entirely */
-  contextp->internalp     = contextp->internals; /* This can be NULL */
-  contextp->internalleftl = contextp->internall; /* This can be 0 */
+  /* Here it is guaranteed that the internal buffer can be used entirely */
+  contextp->internalp = contextp->internals;
+  internalleftl       = contextp->internall;
   while (1) {
     rcl = iconv(contextp->iconvfromp,
                 (ICONV_SECOND_ARGUMENT char **) inbufpp,
                 inbytesleftlp,
                 &(contextp->internalp),
-                &(contextp->internalleftl));
+                &internalleftl);
     errnoi = errno;
 #ifndef TCONV_NTRACE
     /* Note that TCONV_TRACE is guaranteed to not alter errno */
@@ -512,7 +525,7 @@ static size_t _tconv_convert_iconv_internall(tconv_t tconvp, tconv_convert_iconv
     }
 #endif
     if ((rcl == (size_t)-1) && (errno == E2BIG)) {
-      TCONV_ICONV_E2BIG_MANAGER(contextp->internalp, contextp->internalleftl, contextp->internals, contextp->internall);
+      TCONV_ICONV_E2BIG_MANAGER(contextp->internalp, internalleftl, contextp->internals, contextp->internall);
     } else {
       break;
     }
