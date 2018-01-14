@@ -1283,11 +1283,12 @@ static short _tconv_helper_run_oneb(tconv_helper_t *tconv_helperp)
 
   TCONV_TRACE(tconvp, "%s(%p)", funcs, tconv_helperp);
 
+  /* --------------------------- */
+  /* Call the producer if needed */
+  /* --------------------------- */
+
   /* flushb is an internal flag that indicates the very end */
   if (! tconv_helperp->flushb) {
-    /* ----------------- */
-    /* Call the producer */
-    /* ----------------- */
 
     producerbufp   = NULL;
     producercountl = 0;
@@ -1341,9 +1342,9 @@ static short _tconv_helper_run_oneb(tconv_helper_t *tconv_helperp)
     TCONV_TRACE(tconvp, "%s - end mode - not calling the producer", funcs);
   }
 
-  /* If user said to pause or stop, so do we */
+  /* If the producer said to pause or stop now */
   if (tconv_helperp->stopb || tconv_helperp->pauseb) {
-    goto pause;
+    goto exit_method;
   }
 
  retry:
@@ -1498,65 +1499,66 @@ static short _tconv_helper_run_oneb(tconv_helper_t *tconv_helperp)
     }
   }
 
-  /* ----------------- */
-  /* Call the consumer */
-  /* ----------------- */
+  /* --------------------------- */
+  /* Call the consumer if needed */
+  /* --------------------------- */
 
-  /*
-   * Output staging area is like this:
-   *
-   * outputp                                    outputguardp             outputendp
-   * 0                                          outputguardl             outputallocl
-   * ---------------------------------------------------------------------
-   * |      used area                           |  unused area           |
-   * ---------------------------------------------------------------------
-   * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-   *
-   */
+  if (tconv_helperp->outputguardl > 0) {
+    /*
+     * Output staging area is like this:
+     *
+     * outputp                                    outputguardp             outputendp
+     * 0                                          outputguardl             outputallocl
+     * ---------------------------------------------------------------------
+     * |      used area                           |  unused area           |
+     * ---------------------------------------------------------------------
+     * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+     *
+     */
 
-  consumercountl = 0;
-  TCONV_TRACE(tconvp, "%s - consumerp(%p, %p, %p, %ld, %p)", funcs, tconv_helperp, tconv_helperp->contextp, tconv_helperp->outputp, (unsigned long) tconv_helperp->outputguardl, &consumercountl);
-  consumerb = consumerp(tconv_helperp, tconv_helperp->contextp, tconv_helperp->outputp, tconv_helperp->outputguardl, &consumercountl);
+    consumercountl = 0;
+    TCONV_TRACE(tconvp, "%s - consumerp(%p, %p, %p, %ld, %p)", funcs, tconv_helperp, tconv_helperp->contextp, tconv_helperp->outputp, (unsigned long) tconv_helperp->outputguardl, &consumercountl);
+    consumerb = consumerp(tconv_helperp, tconv_helperp->contextp, tconv_helperp->outputp, tconv_helperp->outputguardl, &consumercountl);
 #ifndef TCONV_NTRACE
-  if (consumerb) {
-    TCONV_TRACE(tconvp, "%s - consumerp(...) success: consumercountl=%ld", funcs, (unsigned long) consumercountl);
-  } else {
-    TCONV_TRACE(tconvp, "%s - consumerp(...) failure", funcs);
-  }
+    if (consumerb) {
+      TCONV_TRACE(tconvp, "%s - consumerp(...) success: consumercountl=%ld", funcs, (unsigned long) consumercountl);
+    } else {
+      TCONV_TRACE(tconvp, "%s - consumerp(...) failure", funcs);
+    }
 #endif
-  if (! consumerb) {
-    goto err;
-  }
-
-  if (consumercountl > 0) {
-    if (consumercountl > tconv_helperp->outputguardl) {
-      /* Non sense, consumer says it has used more than what we provided -; */
-      TCONV_TRACE(tconvp, "%s - consumerp(...) error: consumercountl=%ld > tconv_helperp->outputguardl=%ld", funcs, (unsigned long) consumercountl, (unsigned long) tconv_helperp->outputguardl);
-      errno = ERANGE;
+    if (! consumerb) {
       goto err;
     }
 
-    /*
-     * output buffer is now like this:
-     *
-     * outputp                                outputguardp             outputendp
-     * 0                                      outputguardl             outputallocl
-     * -----------------------------------------------------------------
-     * |      used area                       | unused area            |
-     * -----------------------------------------------------------------
-     *                    consumercountl
-     * +++++++++++++++++++!!!!!!!!!!!!!!!!!!!!
-     * area consumed      area not consumed
-     */
+    if (consumercountl > 0) {
+      if (consumercountl > tconv_helperp->outputguardl) {
+        /* Non sense, consumer says it has used more than what we provided -; */
+        TCONV_TRACE(tconvp, "%s - consumerp(...) error: consumercountl=%ld > tconv_helperp->outputguardl=%ld", funcs, (unsigned long) consumercountl, (unsigned long) tconv_helperp->outputguardl);
+        errno = ERANGE;
+        goto err;
+      }
 
-    /* We remove the consumed area from the output buffer */
-    deltal = tconv_helperp->outputguardl - consumercountl;
-    memmove(tconv_helperp->outputp, tconv_helperp->outputp + consumercountl, tconv_helperp->outputguardl - consumercountl);
-    tconv_helperp->outputguardl -= consumercountl;
+      /*
+       * output buffer is now like this:
+       *
+       * outputp                                outputguardp             outputendp
+       * 0                                      outputguardl             outputallocl
+       * -----------------------------------------------------------------
+       * |      used area                       | unused area            |
+       * -----------------------------------------------------------------
+       *                    consumercountl
+       * +++++++++++++++++++!!!!!!!!!!!!!!!!!!!!
+       * area consumed      area not consumed
+       */
 
+      /* We remove the consumed area from the output buffer */
+      deltal = tconv_helperp->outputguardl - consumercountl;
+      memmove(tconv_helperp->outputp, tconv_helperp->outputp + consumercountl, tconv_helperp->outputguardl - consumercountl);
+      tconv_helperp->outputguardl -= consumercountl;
+    }
   }
 
- pause:
+ exit_method:
   rcb = 1;
   goto done;
 
