@@ -4347,10 +4347,6 @@ static inline char *_marpaESLIF_charconvp(marpaESLIF_t *marpaESLIFp, char *toEnc
       size_t outbufdeltal;
 
       switch (errno) {
-      case EILSEQ:
-        /* Malformed multibyte character and not eof - this is a fatal error. */
-	MARPAESLIF_ERRORF(marpaESLIFp, "tconv failure, %s", tconv_error(tconvp));
-	goto err;
       case EINVAL:
         /* Malformed multibyte character but eof of conversion buffer - this is not fatal unless we are ourself at eof! */
         if (eofb) {
@@ -4388,7 +4384,7 @@ static inline char *_marpaESLIF_charconvp(marpaESLIF_t *marpaESLIFp, char *toEnc
         outbufp                  = outbuforigp + outbufdeltal;
         goto again;
       default:
-        /* Unsupported error code - this is fatal */
+        /* Unsupported error code - this is fatal (includes EILSEQ of course) */
 	MARPAESLIF_ERRORF(marpaESLIFp, "tconv failure, %s", tconv_error(tconvp));
 	goto err;
       }
