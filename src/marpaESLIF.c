@@ -10212,12 +10212,6 @@ static inline short _marpaESLIFRecognizer_appendDatab(marpaESLIFRecognizer_t *ma
   size_t              minwantedl;
   char               *tmps;
   short               rcb;
-  size_t              utf8l;
-  int                 ordi;
-  char               *utf8s;
-  marpaESLIF_uint32_t uint32;
-  char               *dumps;
-  size_t              dumpl;
 
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "start (datas=%p, datal=%ld)", datas, (unsigned long) datal);
