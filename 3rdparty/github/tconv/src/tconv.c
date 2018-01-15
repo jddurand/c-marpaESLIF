@@ -1275,7 +1275,6 @@ static short _tconv_helper_run_oneb(tconv_helper_t *tconv_helperp)
   /* Temporary work variables */
   size_t            tconvl;
   int               errnoi;
-  char             *tmps;
   size_t            allocl;
   size_t            notusedl;
   size_t            deltal;
@@ -1578,7 +1577,6 @@ short tconv_helper_runb(tconv_helper_t *tconv_helperp)
 {
   static const char funcs[] = "tconv_helper_runb";
   short             rcb;
-  short             continueb;
 
   if (tconv_helperp == NULL) {
     errno = EINVAL;
