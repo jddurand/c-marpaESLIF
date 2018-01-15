@@ -7766,6 +7766,9 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGramm
   marpaESLIFRecognizerp->_charconvb                   = 0;
   marpaESLIFRecognizerp->_lastFroms                   = NULL;
   marpaESLIFRecognizerp->_lastFroml                   = 0;
+  marpaESLIFRecognizerp->_bytes                       = NULL;
+  marpaESLIFRecognizerp->_bytel                       = 0;
+  marpaESLIFRecognizerp->_byteallocl                  = 0;
   marpaESLIFRecognizerp->_encodings                   = 0;
   marpaESLIFRecognizerp->_encodingp                   = NULL;
   marpaESLIFRecognizerp->_tconvp                      = NULL;
@@ -7784,6 +7787,9 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGramm
     marpaESLIFRecognizerp->marpaESLIFRecognizerHashp    = marpaESLIFRecognizerParentp->marpaESLIFRecognizerHashp;
     marpaESLIFRecognizerp->lastFromsp                   = marpaESLIFRecognizerParentp->lastFromsp;
     marpaESLIFRecognizerp->lastFromlp                   = marpaESLIFRecognizerParentp->lastFromlp;
+    marpaESLIFRecognizerp->bytesp                       = marpaESLIFRecognizerParentp->bytesp;
+    marpaESLIFRecognizerp->bytelp                       = marpaESLIFRecognizerParentp->bytelp;
+    marpaESLIFRecognizerp->bytealloclp                  = marpaESLIFRecognizerParentp->bytealloclp;
     marpaESLIFRecognizerp->encodingsp                   = marpaESLIFRecognizerParentp->encodingsp;
     marpaESLIFRecognizerp->encodingpp                   = marpaESLIFRecognizerParentp->encodingpp;
     marpaESLIFRecognizerp->tconvpp                      = marpaESLIFRecognizerParentp->tconvpp;
@@ -7807,6 +7813,9 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGramm
     marpaESLIFRecognizerp->marpaESLIFRecognizerHashp    = NULL;   /* Pointer to a hash in the structure, initialized later */
     marpaESLIFRecognizerp->lastFromsp                   = &(marpaESLIFRecognizerp->_lastFroms);
     marpaESLIFRecognizerp->lastFromlp                   = &(marpaESLIFRecognizerp->_lastFroml);
+    marpaESLIFRecognizerp->bytesp                       = &(marpaESLIFRecognizerp->_bytes);
+    marpaESLIFRecognizerp->bytelp                       = &(marpaESLIFRecognizerp->_bytel);
+    marpaESLIFRecognizerp->bytealloclp                  = &(marpaESLIFRecognizerp->_byteallocl);
     marpaESLIFRecognizerp->encodingsp                   = &(marpaESLIFRecognizerp->_encodings);
     marpaESLIFRecognizerp->encodingpp                   = &(marpaESLIFRecognizerp->_encodingp);
     marpaESLIFRecognizerp->tconvpp                      = &(marpaESLIFRecognizerp->_tconvp);
@@ -10556,7 +10565,7 @@ static inline short _marpaESLIFRecognizer_encoding_eqb(marpaESLIFRecognizer_t *m
   if (*(marpaESLIFRecognizerParentp->lastFromsp) != NULL) {
     if (*(marpaESLIFRecognizerParentp->lastFromlp) == inputl) {
       if (memcmp(*(marpaESLIFRecognizerParentp->lastFromsp), inputs, inputl) == 0) {
-        return 1;
+        goto immediate_return;
       }
     }
   }
@@ -10606,15 +10615,7 @@ static inline short _marpaESLIFRecognizer_encoding_eqb(marpaESLIFRecognizer_t *m
   }
   marpaESLIFRecognizer_freev(marpaESLIFRecognizerp);
 
-  if (*(marpaESLIFRecognizerParentp->lastFromsp) == NULL) {
-    if (*(marpaESLIFRecognizerParentp->lastFromlp) == inputl) {
-      if (memcmp(*(marpaESLIFRecognizerParentp->lastFromsp), inputs, inputl) == 0) {
-        return 1;
-      }
-    }
-  }
-
-
+ immediate_return:
 #ifndef MARPAESLIF_NTRACE
   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerParentp, funcs, "return %d", (int) rcb);
   marpaESLIFRecognizerParentp->callstackCounteri--;
@@ -13242,6 +13243,9 @@ static inline void _marpaESLIFRecognizer_freev(marpaESLIFRecognizer_t *marpaESLI
     }
     if (marpaESLIFRecognizerp->_lastFroms != NULL) {
       free(marpaESLIFRecognizerp->_lastFroms);
+    }
+    if (marpaESLIFRecognizerp->_bytes != NULL) {
+      free(marpaESLIFRecognizerp->_bytes);
     }
 
   } else {
