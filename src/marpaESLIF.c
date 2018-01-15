@@ -4490,8 +4490,15 @@ static inline char *_marpaESLIF_charconvb(marpaESLIF_t *marpaESLIFp, char *toEnc
     /* User said we want to keep track of remaining bytes */
     if (byteleftl > 0) {
       /* And we already started with at least one remaining byte: */
-      /* the workbuffer was bytelefts, its allocated size does not change. */
-      *byteleftlp = inleftl;
+      /* the workbuffer was bytelefts, its allocated size does not change, */
+      /* the remaining bytes in it in inleftl. */
+      byteleftl = inleftl;
+      if (byteleftl > 0) {
+        /* We want to move unconsumed bytes at the beginning */
+        /* so that next round will see them. */
+	size_t consumedl = inleftorigl - inleftl;
+        memmove(bytelefts, bytelefts + consumedl, byteleftl);
+      }
     } else {
       /* And there was nothing to pick from previous round */
       if (inleftl > 0) {
@@ -4521,10 +4528,6 @@ static inline char *_marpaESLIF_charconvb(marpaESLIF_t *marpaESLIFp, char *toEnc
 	  memcpy(bytelefts, inbuforigp + consumedl, inleftl);
 	  byteleftl = inleftl;
 	}
-
-	*byteleftsp = bytelefts;
-	*byteleftlp = byteleftl;
-	*byteleftalloclp = byteleftallocl;
       }
     }
   }
@@ -4594,6 +4597,12 @@ static inline char *_marpaESLIF_charconvb(marpaESLIF_t *marpaESLIFp, char *toEnc
         MARPAESLIF_ERRORF(marpaESLIFp, "tconv_close failure, %s", strerror(errno));
       }
     }
+  }
+  if (byteleftsp != NULL) {
+    /* Note that in case of an error we do not mind if *byteleftlp is NOT correct: the processing will stop anwyay */
+    *byteleftsp      = bytelefts;
+    *byteleftlp      = byteleftl;
+    *byteleftalloclp = byteleftallocl;
   }
 
   /* MARPAESLIF_TRACEF(marpaESLIFp, funcs, "return %p", outbuforigp); */
