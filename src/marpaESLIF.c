@@ -4402,7 +4402,6 @@ static inline char *_marpaESLIF_charconvb(marpaESLIF_t *marpaESLIFp, char *toEnc
           MARPAESLIF_ERRORF(marpaESLIFp, "tconv failure, %s", tconv_error(tconvp));
           goto err;
         } else {
-          MARPAESLIF_WARNF(marpaESLIFp, "non-fatal tconv failure (remains %ld bytes not converted), %s", (unsigned long) inleftl, tconv_error(tconvp));
           goto end_of_loop;
         }
         break; /* Code never reach but this is ok */
