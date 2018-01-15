@@ -4108,6 +4108,8 @@ static inline short _marpaESLIFRecognizer_meta_matcherb(marpaESLIFRecognizer_t *
 /*****************************************************************************/
 static inline short _marpaESLIFRecognizer_symbol_matcherb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIF_symbol_t *symbolp, marpaESLIF_matcher_value_t *rcip, marpaESLIFValueResult_t *marpaESLIFValueResultp, int maxStartCompletionsi, size_t *lastSizeBeforeCompletionlp, int *numberOfStartCompletionsip)
 /*****************************************************************************/
+/* This function can call for more data. If the later fails, it returns -1 and this is fatal, 0 is a normal error, 1 is ok. */
+/*****************************************************************************/
 {
   static const char          *funcs      = "_marpaESLIFRecognizer_symbol_matcherb";
   short                       rcb;
@@ -4146,7 +4148,8 @@ static inline short _marpaESLIFRecognizer_symbol_matcherb(marpaESLIFRecognizer_t
       /* We have to load more unless already at EOF */
       if (! *(marpaESLIFRecognizerp->eofbp)) {
         if (! _marpaESLIFRecognizer_readb(marpaESLIFRecognizerp)) {
-          goto err;
+          /* We will return -1 */
+          goto fatal;
         } else {
           goto match_again;
         }
@@ -4203,6 +4206,10 @@ static inline short _marpaESLIFRecognizer_symbol_matcherb(marpaESLIFRecognizer_t
     *rcip = rci;
   }
   rcb = 1;
+  goto done;
+
+ fatal:
+  rcb = -1;
   goto done;
 
  err:
@@ -4354,6 +4361,7 @@ static inline char *_marpaESLIF_charconvp(marpaESLIF_t *marpaESLIFp, char *toEnc
           MARPAESLIF_ERRORF(marpaESLIFp, "tconv failure, %s", tconv_error(tconvp));
           goto err;
         } else {
+          MARPAESLIF_WARNF(marpaESLIFp, "non-fatal tconv failure (remains %ld bytes not converted), %s", (unsigned long) inleftl, tconv_error(tconvp));
           goto end_of_loop;
         }
         break; /* Code never reach but this is ok */
@@ -5612,6 +5620,7 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
   size_t                           lastSizeBeforeCompletionl;
   int                              symbolMaxStartCompletionsi;
   int                              exceptionMaxStartCompletionsi;
+  short                            rcMatcherb;
 
   grammarDiscard.starti             = grammarDiscard.discardi;
   marpaESLIFGrammarDiscard.grammarp = &grammarDiscard;
@@ -5689,11 +5698,19 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
     exceptionp = symbolp->exceptionp;
     if (exceptionp == NULL) {
       /* No need to track anything */
-      if (! _marpaESLIFRecognizer_symbol_matcherb(marpaESLIFRecognizerp, symbolp, &rci, &marpaESLIFValueResult, 0 /* maxStartCompletionsi */, NULL /* lastSizeBeforeCompletionlp */, &numberOfStartCompletionsi)) {
+      rcMatcherb = _marpaESLIFRecognizer_symbol_matcherb(marpaESLIFRecognizerp, symbolp, &rci, &marpaESLIFValueResult, 0 /* maxStartCompletionsi */, NULL /* lastSizeBeforeCompletionlp */, &numberOfStartCompletionsi);
+      if (rcMatcherb < 0) {
+        goto err;
+      }
+      if (! rcMatcherb) {
         continue;
       }
     } else {
-      if (! _marpaESLIFRecognizer_symbol_matcherb(marpaESLIFRecognizerp, symbolp, &rci, &marpaESLIFValueResult, -1, NULL /* lastSizeBeforeCompletionlp */, &numberOfStartCompletionsi)) {
+      rcMatcherb = _marpaESLIFRecognizer_symbol_matcherb(marpaESLIFRecognizerp, symbolp, &rci, &marpaESLIFValueResult, -1, NULL /* lastSizeBeforeCompletionlp */, &numberOfStartCompletionsi);
+      if (rcMatcherb < 0) {
+        goto err;
+      }
+      if (! rcMatcherb) {
         continue;
       }
 
@@ -5701,8 +5718,12 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
       exceptionMaxStartCompletionsi = -1;
     exception_again:
       MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Symbol match on %ld bytes using %d completions", (unsigned long) marpaESLIFValueResult.sizel, numberOfStartCompletionsi);
+      rcMatcherb = _marpaESLIFRecognizer_symbol_matcherb(marpaESLIFRecognizerp, exceptionp, &exceptionRci, &exceptionMarpaESLIFValueResult, exceptionMaxStartCompletionsi, &lastSizeBeforeCompletionl, &numberOfExceptionCompletionsi);
+      if (rcMatcherb < 0) {
+        goto err;
+      }
       /* We take current marpaESLIFValueResult and look if it matches exception. */
-      if (_marpaESLIFRecognizer_symbol_matcherb(marpaESLIFRecognizerp, exceptionp, &exceptionRci, &exceptionMarpaESLIFValueResult, exceptionMaxStartCompletionsi, &lastSizeBeforeCompletionl, &numberOfExceptionCompletionsi)) {
+      if (rcMatcherb) {
         if (exceptionRci == MARPAESLIF_MATCH_OK) {
           /* In any case we do not mind about the exception value itself, just the size */
           free(exceptionMarpaESLIFValueResult.u.p);
@@ -5722,7 +5743,11 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
               MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Exception match on %ld bytes: asking for less symbol completions until its size is <= %ld", (unsigned long) exceptionMarpaESLIFValueResult.sizel, (unsigned long) lastSizeBeforeCompletionl);
               while (--symbolMaxStartCompletionsi > 0) {
                 MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Exception match on %ld bytes: asking for %d symbol start completions", (unsigned long) exceptionMarpaESLIFValueResult.sizel, symbolMaxStartCompletionsi);
-                if (! _marpaESLIFRecognizer_symbol_matcherb(marpaESLIFRecognizerp, symbolp, &rci, &marpaESLIFValueResult, symbolMaxStartCompletionsi, NULL /* lastSizeBeforeCompletionlp */, NULL /* numberOfStartCompletionsi */)) {
+                rcMatcherb = _marpaESLIFRecognizer_symbol_matcherb(marpaESLIFRecognizerp, symbolp, &rci, &marpaESLIFValueResult, symbolMaxStartCompletionsi, NULL /* lastSizeBeforeCompletionlp */, NULL /* numberOfStartCompletionsi */);
+                if (rcMatcherb < 0) {
+                  goto err;
+                }
+                if (! rcMatcherb) {
                   /* This should never happen since we already had completions before */
                   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Exception match on %ld bytes: symbol match failure when asking for %d start completions !?", (unsigned long) exceptionMarpaESLIFValueResult.sizel, symbolMaxStartCompletionsi);
                   break;
@@ -6554,15 +6579,19 @@ static inline short _marpaESLIFRecognizer_lexeme_tryb(marpaESLIFRecognizer_t *ma
   short                       rcb;
   marpaESLIF_matcher_value_t  rci;
   marpaESLIFValueResult_t     marpaESLIFValueResult;
+  short                       rcMatcherb;
 
-  /* This function never fails */
-  if (_marpaESLIFRecognizer_symbol_matcherb(marpaESLIFRecognizerp,
-                                            symbolp,
-                                            &rci,
-                                            &marpaESLIFValueResult,
-                                            0, /* maxStartCompletionsi */
-                                            NULL, /* lastSizeBeforeCompletionlp */
-                                            NULL /* numberOfStartCompletionsip */)) {
+  rcMatcherb = _marpaESLIFRecognizer_symbol_matcherb(marpaESLIFRecognizerp,
+                                                     symbolp,
+                                                     &rci,
+                                                     &marpaESLIFValueResult,
+                                                     0, /* maxStartCompletionsi */
+                                                     NULL, /* lastSizeBeforeCompletionlp */
+                                                     NULL /* numberOfStartCompletionsip */);
+  if (rcMatcherb < 0) {
+    goto err;
+  }
+  if (rcMatcherb) {
     matchb = (rci == MARPAESLIF_MATCH_OK);
   } else {
     matchb = 0;
