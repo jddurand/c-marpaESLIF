@@ -124,8 +124,6 @@ static short my_tconv_helper(tconv_t tconvp, void *contextp, tconv_producer_t pr
 /****************************************************************************/
 {
   tconv_helper_t *tconv_helperp = NULL;
-  short           endb;
-  short           stopb;
   short           rcb;
 
   tconv_helperp = tconv_helper_newp(tconvp, contextp, producerp, consumerp);
