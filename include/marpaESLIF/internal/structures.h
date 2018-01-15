@@ -309,9 +309,9 @@ struct marpaESLIFRecognizer {
   genericHash_t                _marpaESLIFRecognizerHash; /* Cache of recognizers ready for re-use */
   char                        *_lastFroms;     /* Last from encoding as per user, in user's encoding */
   size_t                       _lastFroml;     /* Last from encoding length as per user, in user's encoding */
-  char                        *_bytes;         /* Buffer when character conversion needs to reread leftover bytes */
-  size_t                       _bytel;         /* Usable length of this buffer */
-  size_t                       _byteallocl;    /* Allocated length of this buffer */
+  char                        *_bytelefts;     /* Buffer when character conversion needs to reread leftover bytes */
+  size_t                       _byteleftl;     /* Usable length of this buffer */
+  size_t                       _byteleftallocl;/* Allocated length of this buffer */
   /* --------------- End of internal elements that are shared with all children --------------------- */
 
   int                          leveli;         /* Recognizer level (!= grammar level) */
@@ -325,9 +325,9 @@ struct marpaESLIFRecognizer {
   short                       *charconvbp;     /* Ditto for the character conversion flag */
   char                       **lastFromsp;     /* Ditto for last from encoding as per user, in user's encoding */
   size_t                      *lastFromlp;     /* Ditto for last from encoding length as per user, in user's encoding */
-  char                       **bytesp;         /* Ditto for buffer when character conversion needs to reread leftover bytes */
-  size_t                      *bytelp;         /* Ditto for buffer length when character conversion needs to reread leftover bytes */
-  size_t                      *bytealloclp;    /* Ditto for buffer allocated length when character conversion needs to reread leftover bytes */
+  char                       **byteleftsp;     /* Ditto for buffer when character conversion needs to reread leftover bytes */
+  size_t                      *byteleftlp;     /* Ditto for buffer length when character conversion needs to reread leftover bytes */
+  size_t                      *byteleftalloclp;/* Ditto for buffer allocated length when character conversion needs to reread leftover bytes */
 
   size_t                       parentDeltal;   /* Parent original delta - used to recovert parent current pointer at our free */
   char                        *inputs;         /* Current pointer in input - specific to every recognizer */
