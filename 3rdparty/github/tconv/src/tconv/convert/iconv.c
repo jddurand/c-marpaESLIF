@@ -317,7 +317,6 @@ int tconv_convert_iconv_free(tconv_t tconvp, void *voidp)
   static const char              funcs[] = "tconv_convert_iconv_free";
   tconv_convert_iconv_context_t *contextp = (tconv_convert_iconv_context_t *) voidp;
   short                          errb;
-  int                            save_errno;
 
   if (contextp == NULL) {
     errno = EINVAL;
@@ -601,7 +600,6 @@ static char *_tconv_convert_iconv_charset_lookupp(tconv_t tconvp, const char *ch
   static const char             funcs[] = "_tconv_convert_charset_categorys";
   tconv_iconv_alias2category_t *alias2categoryp = alias2category;
   char                         *normalizeds;
-  short                         rcb;
   int                           i;
 
   normalizeds = _tconv_convert_iconv_charset_normalizeds(tconvp, charsets);
