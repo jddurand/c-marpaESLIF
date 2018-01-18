@@ -379,7 +379,8 @@ struct marpaESLIFRecognizer {
   int                          numberOfStartCompletionsi; /* Computed only if maxStartCompletionsi != 0 */
   size_t                       lastSizeBeforeCompletionl; /* Computed only if maxStartCompletionsi is != 0 */
 
-  /* When a recognizer needs to discard, we prepare in advance the correct marpaESLIFGrammarp, marpaESLIFRecognizerOptionp and marpaESLIFValueOptionp options */
+  /* When a recognizer needs to discard, we prepare storage for marpaESLIFGrammarp, marpaESLIFRecognizerOptionp and marpaESLIFValueOptionp. */
+  /* This a lazy initialization, driven by the grammarDiscardInitializedb flag. */
   short                        grammarDiscardInitializedb;
   marpaESLIFGrammar_t          marpaESLIFGrammarDiscard;
   marpaESLIF_grammar_t         grammarDiscard;
