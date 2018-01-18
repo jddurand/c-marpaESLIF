@@ -378,6 +378,13 @@ struct marpaESLIFRecognizer {
   int                          maxStartCompletionsi;
   int                          numberOfStartCompletionsi; /* Computed only if maxStartCompletionsi != 0 */
   size_t                       lastSizeBeforeCompletionl; /* Computed only if maxStartCompletionsi is != 0 */
+
+  /* When a recognizer needs to discard, we prepare in advance the correct marpaESLIFGrammarp, marpaESLIFRecognizerOptionp and marpaESLIFValueOptionp options */
+  short                        grammarDiscardInitializedb;
+  marpaESLIFGrammar_t          marpaESLIFGrammarDiscard;
+  marpaESLIF_grammar_t         grammarDiscard;
+  marpaESLIFRecognizerOption_t marpaESLIFRecognizerOptionDiscard;
+  marpaESLIFValueOption_t      marpaESLIFValueOptionDiscard;
 };
 
 struct marpaESLIF_lexeme_data {
