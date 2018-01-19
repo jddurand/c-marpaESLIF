@@ -3770,7 +3770,7 @@ static inline short _marpaESLIFRecognizer_terminal_matcherb(marpaESLIFRecognizer
     /* Is is a true string and UTF-8 validation is not needed ?  */
     /* Then do a direct memcmp -;                                */
     /* --------------------------------------------------------- */
-    if (terminalp->memcmpb && (! needUtf8Validationb)) {
+    if ((! needUtf8Validationb) && terminalp->memcmpb) {
       bytes = terminalp->bytes;
       bytel = terminalp->bytel;
 
