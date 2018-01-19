@@ -3721,8 +3721,6 @@ static inline short _marpaESLIFRecognizer_terminal_matcherb(marpaESLIFRecognizer
 /*****************************************************************************/
 {
   static const char              *funcs = "_marpaESLIFRecognizer_terminal_matcherb";
-  marpaESLIF_t                   *marpaESLIFp = marpaESLIFRecognizerp->marpaESLIFp;
-
   marpaESLIF_matcher_value_t      rci;
   marpaESLIF_regex_t              marpaESLIF_regex;
   int                             pcre2Errornumberi;
@@ -3824,7 +3822,7 @@ static inline short _marpaESLIFRecognizer_terminal_matcherb(marpaESLIFRecognizer
       if (! *(marpaESLIFRecognizerp->noAnchorIsOkbp)) {
         /* This is an error unless we are at EOF */
         if (! eofb) {
-          MARPAESLIF_ERRORF(marpaESLIFp, "%s: You used the \"A\" modifier to set the pattern non-anchored, but then you must read the whole input in one go, and you have not reached EOF yet", terminalp->descp->asciis);
+          MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "%s: You used the \"A\" modifier to set the pattern non-anchored, but then you must read the whole input in one go, and you have not reached EOF yet", terminalp->descp->asciis);
           goto err;
         }
       }
@@ -3889,25 +3887,25 @@ static inline short _marpaESLIFRecognizer_terminal_matcherb(marpaESLIFRecognizer
         /* Only PCRE2_ERROR_NOMATCH is an acceptable error. */
         if (pcre2Errornumberi != PCRE2_ERROR_NOMATCH) {
           pcre2_get_error_message(pcre2Errornumberi, pcre2ErrorBuffer, sizeof(pcre2ErrorBuffer));
-          MARPAESLIF_WARNF(marpaESLIFp, "%s: Uncaught pcre2 match failure: %s", terminalp->descp->asciis, pcre2ErrorBuffer);
+          MARPAESLIF_WARNF(marpaESLIFRecognizerp->marpaESLIFp, "%s: Uncaught pcre2 match failure: %s", terminalp->descp->asciis, pcre2ErrorBuffer);
         }
         rci = MARPAESLIF_MATCH_FAILURE;
         MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s for %s", "MARPAESLIF_MATCH_FAILURE", terminalp->descp->asciis);
       } else {
         /* Check the length of matched data */
         if (pcre2_get_ovector_count(marpaESLIF_regex.match_datap) <= 0) {
-          MARPAESLIF_ERRORF(marpaESLIFp, "%s: pcre2_get_ovector_count returned no number of pairs of values", terminalp->descp->asciis);
+          MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "%s: pcre2_get_ovector_count returned no number of pairs of values", terminalp->descp->asciis);
           goto err;
         }
         pcre2_ovectorp = pcre2_get_ovector_pointer(marpaESLIF_regex.match_datap);
         if (pcre2_ovectorp == NULL) {
-          MARPAESLIF_ERRORF(marpaESLIFp, "%s: pcre2_get_ovector_pointer returned NULL", terminalp->descp->asciis);
+          MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "%s: pcre2_get_ovector_pointer returned NULL", terminalp->descp->asciis);
           goto err;
         }
         /* We said PCRE2_NOTEMPTY so this cannot be empty */
         matchedLengthl = pcre2_ovectorp[1] - pcre2_ovectorp[0];
         if (matchedLengthl <= 0) {
-          MARPAESLIF_ERRORF(marpaESLIFp, "%s: Empty match when it is configured as not possible", terminalp->descp->asciis);
+          MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "%s: Empty match when it is configured as not possible", terminalp->descp->asciis);
           goto err;
         }
         /* Very good -; */
@@ -3920,18 +3918,18 @@ static inline short _marpaESLIFRecognizer_terminal_matcherb(marpaESLIFRecognizer
         /* Full match is successful. */
         /* Check the length of matched data */
         if (pcre2_get_ovector_count(marpaESLIF_regex.match_datap) <= 0) {
-          MARPAESLIF_ERRORF(marpaESLIFp, "%s: pcre2_get_ovector_count returned no number of pairs of values", terminalp->descp->asciis);
+          MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "%s: pcre2_get_ovector_count returned no number of pairs of values", terminalp->descp->asciis);
           goto err;
         }
         pcre2_ovectorp = pcre2_get_ovector_pointer(marpaESLIF_regex.match_datap);
         if (pcre2_ovectorp == NULL) {
-          MARPAESLIF_ERRORF(marpaESLIFp, "%s: pcre2_get_ovector_pointer returned NULL", terminalp->descp->asciis);
+          MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "%s: pcre2_get_ovector_pointer returned NULL", terminalp->descp->asciis);
           goto err;
         }
         /* We said PCRE2_NOTEMPTY so this cannot be empty */
         matchedLengthl = pcre2_ovectorp[1] - pcre2_ovectorp[0];
         if (matchedLengthl <= 0) {
-          MARPAESLIF_ERRORF(marpaESLIFp, "%s: Empty match when it is configured as not possible", terminalp->descp->asciis);
+          MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "%s: Empty match when it is configured as not possible", terminalp->descp->asciis);
           goto err;
         }
         if (matchedLengthl >= inputl) {
@@ -4003,7 +4001,7 @@ static inline short _marpaESLIFRecognizer_terminal_matcherb(marpaESLIFRecognizer
     marpaESLIFValueResultp->type = MARPAESLIF_VALUE_TYPE_ARRAY;
     marpaESLIFValueResultp->u.p = malloc(matchedLengthl + 1); /* We always add a NUL byte for convenience */
     if (marpaESLIFValueResultp->u.p == NULL) {
-      MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
+      MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "malloc failure, %s", strerror(errno));
       goto err;
     }
     memcpy(marpaESLIFValueResultp->u.p, (void *) matchedp, matchedLengthl);
