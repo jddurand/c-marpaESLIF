@@ -696,7 +696,7 @@ static inline size_t tconv_convert_iconv_check(tconv_t tconvp, iconv_t iconvp, s
     producedl = (size_t) (outbufp - *orig_outbufpp);
     TCONV_TRACE(tconvp, "%s - checking UTF-8 correctness on %ld bytes", funcs, (unsigned long) producedl);
     if (producedl > 0) {
-      if (! tconv_utf8_ok(tconvp, *orig_outbufpp, producedl)) {
+      if (! tconv_utf8_ok(tconvp, (tconv_uint8_t *) *orig_outbufpp, producedl)) {
         rcl = (size_t)-1;
         errno = EILSEQ;
       }
@@ -733,6 +733,7 @@ static inline short tconv_utf8_ok(tconv_t tconvp, tconv_uint8_t *utf8bytes, size
   while (p < maxp) {
     rci = tconv_utf82ordi(p, &uint32);
     if (rci <= 0) {
+      TCONV_TRACE(tconvp, "%s - failure at offset %ld", funcs, (unsigned long) (p - utf8bytes));
       rcb = 0;
       break;
     }
