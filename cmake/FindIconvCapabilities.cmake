@@ -7,8 +7,8 @@
 # Input is FORCED with a valid ASCII and UTF-8 compliant thingy.
 # Caller have the choice of destination charset and have to provide TWO TRAILING BYTES.
 #
-MACRO(_FINDICONVCAPABILITY tocharset fromcharset outputvariable twobytes)
-  include(CheckCSourceRuns)
+MACRO(_FINDICONVCAPABILITY tocharset fromcharset outputvariable twobytes timeout)
+  include(CheckCSourceRunsWithTimeout)
   SET (CMAKE_REQUIRED_INCLUDES_PREVIOUS ${CMAKE_REQUIRED_INCLUDES})
   SET (CMAKE_REQUIRED_LIBRARIES_PREVIOUS ${CMAKE_REQUIRED_LIBRARIES})
   SET (CMAKE_REQUIRED_DEFINITIONS_PREVIOUS ${CMAKE_REQUIRED_DEFINITIONS})
@@ -19,7 +19,7 @@ MACRO(_FINDICONVCAPABILITY tocharset fromcharset outputvariable twobytes)
   ELSE ()
     SET (CMAKE_REQUIRED_DEFINITIONS ${CMAKE_REQUIRED_DEFINITIONS_PREVIOUS} -DWINICONV=0)
   ENDIF ()
-  CHECK_C_SOURCE_RUNS ("
+  CHECK_C_SOURCE_RUNS_WITH_TIMEOUT ("
   #include <stdlib.h>
   #include <stdio.h>
   #include <stddef.h>
@@ -39,15 +39,15 @@ MACRO(_FINDICONVCAPABILITY tocharset fromcharset outputvariable twobytes)
 
     memset((void *) dst, '\\\\0', 1024);
     conv = iconv_open(\"${tocharset}\", \"${fromcharset}\");
-    if (conv == (iconv_t)-1) { perror(\"iconv_open\"); return 1; }
-    if (iconv(conv, &inp, &inl, &outp, &outl) == (size_t)-1)  { perror(\"iconv\"); return 1; }
+    if (conv == (iconv_t)-1) { perror(\"iconv_open\"); exit(1); }
+    if (iconv(conv, &inp, &inl, &outp, &outl) == (size_t)-1)  { perror(\"iconv\"); exit(1); }
     /* Flush */
-    if (iconv(conv, NULL, NULL, &outp, &outl) == (size_t)-1)  { perror(\"iconv\"); return 1; }
-    if (iconv_close(conv) == -1)  { perror(\"iconv_close\"); return 1; }
+    if (iconv(conv, NULL, NULL, &outp, &outl) == (size_t)-1)  { perror(\"iconv\"); exit(1); }
+    if (iconv_close(conv) == -1)  { perror(\"iconv_close\"); exit(1); }
     fprintf(stdout, \"%s\\\\n\", dst);
-    return 0;
+    exit(0);
   }
-" ${outputvariable} )
+" ${outputvariable} ${timeout})
   SET (CMAKE_REQUIRED_INCLUDES ${CMAKE_REQUIRED_INCLUDES_PREVIOUS})
   SET (CMAKE_REQUIRED_LIBRARIES ${CMAKE_REQUIRED_LIBRARIES_PREVIOUS})
   SET (CMAKE_REQUIRED_DEFINITIONS ${CMAKE_REQUIRED_DEFINITIONS_PREVIOUS})
@@ -64,20 +64,25 @@ ENDMACRO()
 
 SET (TWO_UTF8_BYTES_OK "\"!!\"")
 SET (TWO_UTF8_BYTES_KO "\"\\\\\\\\xa0\\\\\\\\xa1\"")
+SET (TIMEOUT 5)
 
-_FINDICONVCAPABILITY("ASCII//TRANSLIT" "UTF-8" ICONV_CAN_TRANSLIT           ${TWO_UTF8_BYTES_OK})
-_FINDICONVCAPABILITY("ASCII//IGNORE"   "UTF-8" ICONV_CAN_IGNORE             ${TWO_UTF8_BYTES_OK})
-
-MESSAGE (WARNING "In the iconv plugin, when input and destination charsets are equivalent, they will NOT be checked and fuzzy conversion will happen")
+_FINDICONVCAPABILITY("ASCII//TRANSLIT" "UTF-8" ICONV_CAN_TRANSLIT     ${TWO_UTF8_BYTES_OK} ${TIMEOUT})
+_FINDICONVCAPABILITY("ASCII//IGNORE"   "UTF-8" ICONV_CAN_IGNORE       ${TWO_UTF8_BYTES_OK} ${TIMEOUT})
+#
+# Have you seen iconv on FreeBSD ? It happily accepts invalid UTF-8.
+#
+_FINDICONVCAPABILITY("UTF-32"          "UTF-8" ICONV_IS_NOT_TRUSTABLE ${TWO_UTF8_BYTES_OK} ${TIMEOUT}) # TEST MUST BE TWO_UTF8_BYTES_KO AT THE END
 
 MESSAGE(STATUS "-----------------------------------------")
 MESSAGE(STATUS "Iconv capabilities:")
 MESSAGE(STATUS "")
 MESSAGE(STATUS "           ICONV_CAN_TRANSLIT: ${ICONV_CAN_TRANSLIT}")
 MESSAGE(STATUS "             ICONV_CAN_IGNORE: ${ICONV_CAN_IGNORE}")
+MESSAGE(STATUS "       ICONV_IS_NOT_TRUSTABLE: ${ICONV_IS_NOT_TRUSTABLE}")
 MESSAGE(STATUS "-----------------------------------------")
 
 MARK_AS_ADVANCED(
   ICONV_CAN_TRANSLIT
   ICONV_CAN_IGNORE
+  ICONV_IS_NOT_TRUSTABLE
   )

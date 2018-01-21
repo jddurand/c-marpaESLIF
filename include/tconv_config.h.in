@@ -8,6 +8,11 @@
 #cmakedefine TCONV_HAVE_ICONV             @TCONV_HAVE_ICONV@
 #cmakedefine ICONV_CAN_TRANSLIT           @ICONV_CAN_TRANSLIT@
 #cmakedefine ICONV_CAN_IGNORE             @ICONV_CAN_IGNORE@
+#cmakedefine ICONV_IS_NOT_TRUSTABLE       @ICONV_IS_NOT_TRUSTABLE@
+#cmakedefine HAVE_SYS_TYPES_H             @HAVE_SYS_TYPES_H@
+#cmakedefine HAVE_STDINT_H                @HAVE_STDINT_H@
+#cmakedefine HAVE_STDDEF_H                @HAVE_STDDEF_H@
+
 
 #ifndef __cplusplus
 #  ifndef C_INLINE
@@ -20,6 +25,19 @@
 #  endif
 #endif
 
+#ifdef HAVE_SYS_TYPES_H
+#include <sys/types.h>
+#endif
+#ifdef HAVE_STDINT_H
+#include <stdint.h>
+#endif
+#ifdef HAVE_STDDEF_H
+#include <stddef.h>
+#endif
+
+/* uint8/uint32 type */
+typedef @TCONV_UINT8_T@ tconv_uint8_t;
+typedef @TCONV_UINT32_T@ tconv_uint32_t;
 
 /* Convenience macro */
 #ifndef TCONV_NTRACE
