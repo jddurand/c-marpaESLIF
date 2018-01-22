@@ -569,7 +569,7 @@ size_t tconv(tconv_t tconvp, char **inbufsp, size_t *inbytesleftlp, char **outbu
       TCONV_TRACE(tconvp, "%s - initializing convert engine: %p(%p, %p, %p, %p)", funcs, tconvp->convertExternal.tconv_convert_newp, tconvp, tconvp->tocodes, tconvp->fromcodes, convertOptionp);
       tconvp->errors[0] = '\0';
       convertContextp = tconvp->convertExternal.tconv_convert_newp(tconvp, tconvp->tocodes, tconvp->fromcodes, convertOptionp);
-      if (convertContextp == (void *)-1) {
+      if (convertContextp == NULL) {
 	goto err;
       }
     }
@@ -831,7 +831,7 @@ tconv_helper_t *tconv_helper_newp(tconv_t tconvp, void *contextp, tconv_producer
   char              *toclones = NULL;
   char              *fromclones = NULL;
 
-  if ((tconvp == NULL) || (producerp == NULL) || (consumerp == NULL)) {
+  if ((tconvp == NULL) || (tconvp == (tconv_t)-1) || (producerp == NULL) || (consumerp == NULL)) {
     errno = EINVAL;
     return NULL;
   }

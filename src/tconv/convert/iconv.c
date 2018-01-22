@@ -98,10 +98,10 @@ void  *tconv_convert_iconv_new(tconv_t tconvp, const char *tocodes, const char *
   short                           cancheckb       = ((tocodes != NULL) && (fromcodes != NULL));
   char                           *tonormaliseds   = NULL;
   char                           *fromnormaliseds = NULL;
-  iconv_t                         iconvp          = NULL;
+  iconv_t                         iconvp          = (iconv_t)-1;
   short                           intermediateb   = 0;
-  iconv_t                         iconvfromp      = NULL;
-  iconv_t                         iconvtop        = NULL;
+  iconv_t                         iconvfromp      = (iconv_t)-1;
+  iconv_t                         iconvtop        = (iconv_t)-1;
   char                           *internals       = NULL;
   size_t                          internall       = TCONV_ICONV_INITIAL_SIZE;
   tconv_convert_iconv_context_t  *contextp        = NULL;
@@ -216,7 +216,8 @@ void  *tconv_convert_iconv_new(tconv_t tconvp, const char *tocodes, const char *
 
   TCONV_TRACE(tconvp, "%s - iconv_open(\"%s\", \"%s\")", funcs, tocodes, fromcodes);
   iconvp = iconv_open(tocodes, fromcodes);
-  if (iconvp == NULL) {
+  TCONV_TRACE(tconvp, "%s - iconv_open(\"%s\", \"%s\") returns %p", funcs, tocodes, fromcodes, iconvp);
+  if (iconvp == (iconv_t)-1) {
     /* On some implementation, for example solaris8, this can fail when we fall */
     /* into categories that have the same number of bytes. We can be sure of what */
     /* we do only when both destination and source categories are determined */
@@ -268,15 +269,15 @@ void  *tconv_convert_iconv_new(tconv_t tconvp, const char *tocodes, const char *
   goto done;
 
  err:
-  if (iconvp != NULL) {
+  if (iconvp != (iconv_t)-1) {
     TCONV_TRACE(tconvp, "%s - iconv_close(%p)", funcs, iconvp);
     iconv_close(iconvp);
   }
-  if (iconvfromp != NULL) {
+  if (iconvfromp != (iconv_t)-1) {
     TCONV_TRACE(tconvp, "%s - iconv_close(%p)", funcs, contextp->iconvfromp);
     iconv_close(iconvfromp);
   }
-  if (iconvtop != NULL) {
+  if (iconvtop != (iconv_t)-1) {
     TCONV_TRACE(tconvp, "%s - iconv_close(%p)", funcs, iconvtop);
     iconv_close(iconvtop);
   }
@@ -311,6 +312,7 @@ size_t tconv_convert_iconv_run(tconv_t tconvp, void *voidp, char **inbufpp, size
   } else {
     TCONV_TRACE(tconvp, "%s - iconv(%p, %p, %p, %p, %p)", funcs, contextp->iconvp, inbufpp, inbytesleftlp, outbufpp, outbytesleftlp);
     rcl = iconv(contextp->iconvp, (ICONV_SECOND_ARGUMENT char **) inbufpp, inbytesleftlp, outbufpp, outbytesleftlp);
+    TCONV_TRACE(tconvp, "%s - iconv(%p, %p, %p, %p, %p) returns %ld", funcs, contextp->iconvp, inbufpp, inbytesleftlp, outbufpp, outbytesleftlp, (long) rcl);
   }
 
   return rcl;
@@ -329,19 +331,19 @@ int tconv_convert_iconv_free(tconv_t tconvp, void *voidp)
     goto err;
   } else {
     errb = 0;
-    if (contextp->iconvp != NULL) {
+    if (contextp->iconvp != (iconv_t)-1) {
       TCONV_TRACE(tconvp, "%s - iconv_close(%p)", funcs, contextp->iconvp);
       if (iconv_close(contextp->iconvp) != 0) {
         errb = 1;
       }
     }
-    if (contextp->iconvfromp != NULL) {
+    if (contextp->iconvfromp != (iconv_t)-1) {
       TCONV_TRACE(tconvp, "%s - iconv_close(%p)", funcs, contextp->iconvfromp);
       if (iconv_close(contextp->iconvfromp) != 0) {
         errb = 1;
       }
     }
-    if (contextp->iconvtop != NULL) {
+    if (contextp->iconvtop != (iconv_t)-1) {
       TCONV_TRACE(tconvp, "%s - iconv_close(%p)", funcs, contextp->iconvtop);
       if (iconv_close(contextp->iconvtop) != 0) {
         errb = 1;
@@ -461,6 +463,7 @@ static inline size_t tconv_convert_iconv_internalflushl(tconv_t tconvp, tconv_co
 
     TCONV_TRACE(tconvp, "%s - remains %ld bytes to flush - iconv(%p, %p, %p, %p, %p)", funcs, (unsigned long) tmpinbytesleftl, contextp->iconvtop, &tmpinbufp, &tmpinbytesleftl, outbufpp, outbytesleftlp);
     rcl = iconv(contextp->iconvtop, (ICONV_SECOND_ARGUMENT char **) &tmpinbufp, &tmpinbytesleftl, outbufpp, outbytesleftlp);
+    TCONV_TRACE(tconvp, "%s - remains %ld bytes to flush - iconv(%p, %p, %p, %p, %p) returns %d", funcs, (unsigned long) tmpinbytesleftl, contextp->iconvtop, &tmpinbufp, &tmpinbytesleftl, outbufpp, outbytesleftlp, (long) rcl);
 
     /* Whatever happened, forget the bytes that were converted into user's output buffer */
     consumedl = origtmpinbytesleftl - tmpinbytesleftl;
@@ -498,9 +501,13 @@ static inline size_t tconv_convert_iconv_intermediatel(tconv_t tconvp, tconv_con
   /* A special case is then the user is asking for a reset to initial state without flush. */
   if (((inbufpp == NULL) || (*inbufpp == NULL)) && ((outbufpp == NULL) || (*outbufpp == NULL))) {
     TCONV_TRACE(tconvp, "%s - ...->%s - iconv(%p, NULL, NULL, NULL, NULL)", funcs, "UTF-8", contextp->iconvfromp);
-    iconv(contextp->iconvfromp, NULL, NULL, NULL, NULL);
+    rcl = iconv(contextp->iconvfromp, NULL, NULL, NULL, NULL);
+    TCONV_TRACE(tconvp, "%s - ...->%s - iconv(%p, NULL, NULL, NULL, NULL) returns %ld", funcs, "UTF-8", contextp->iconvfromp, (long) rcl);
+
     TCONV_TRACE(tconvp, "%s - %s->... - iconv(%p, NULL, NULL, NULL, NULL)", funcs, "UTF-8", contextp->iconvtop);
-    iconv(contextp->iconvtop, NULL, NULL, NULL, NULL);
+    rcl = iconv(contextp->iconvtop, NULL, NULL, NULL, NULL);
+    TCONV_TRACE(tconvp, "%s - %s->... - iconv(%p, NULL, NULL, NULL, NULL) returns %ld", funcs, "UTF-8", contextp->iconvtop, (long) rcl);
+
     TCONV_TRACE(tconvp, "%s - reset internal buffer backlog", funcs);
     contextp->internalp = contextp->internals;
     return 0;
