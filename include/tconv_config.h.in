@@ -35,10 +35,6 @@
 #include <stddef.h>
 #endif
 
-/* uint8/uint32 type */
-typedef @TCONV_UINT8_T@ tconv_uint8_t;
-typedef @TCONV_UINT32_T@ tconv_uint32_t;
-
 /* Convenience macro */
 #ifndef TCONV_NTRACE
 #define TCONV_TRACE(tconvp, fmts, ...) tconv_trace(tconvp, fmts, __VA_ARGS__)

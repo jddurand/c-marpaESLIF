@@ -124,22 +124,6 @@ IF (ICONV_FOUND)
   ENDIF ()
 ENDIF ()
 
-#
-# ... Portable uint8/uint32 type
-#
-IF (NOT HAVE_MYPACKAGE_UINT8)
-  MESSAGE (FATAL_ERROR "Could not detect a valid unsigned 8-bit integer type")
-ELSE ()
-  MESSAGE (STATUS ".. unsigned 8-bit integer type is ${MYPACKAGE_UINT8_TYPEDEF}")
-ENDIF ()
-SET (TCONV_UINT8_T ${MYPACKAGE_UINT8_TYPEDEF})
-IF (NOT HAVE_MYPACKAGE_UINT32)
-  MESSAGE (FATAL_ERROR "Could not detect a valid unsigned 32-bit integer type")
-ELSE ()
-  MESSAGE (STATUS ".. unsigned 32-bit integer type is ${MYPACKAGE_UINT32_TYPEDEF}")
-ENDIF ()
-SET (TCONV_UINT32_T ${MYPACKAGE_UINT32_TYPEDEF})
-
 MYPACKAGELIBRARY(
   ${CMAKE_CURRENT_SOURCE_DIR}/include/tconv_config.h.in
   ${INCLUDE_OUTPUT_PATH}/tconv_config.h
