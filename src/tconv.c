@@ -55,8 +55,6 @@ struct tconv {
   tconv_convert_external_t convertExternal;
   /* 6. last error */
   char                     errors[TCONV_ERROR_SIZE];
-  /* 7. fuzzy state */
-  short                    fuzzyb;
 };
 
 #ifndef TCONV_HELPER_BUFSIZ
@@ -284,8 +282,6 @@ tconv_t tconv_open_ext(const char *tocodes, const char *fromcodes, tconv_option_
   tconvp->errors[0] = '\0';
   /* Last byte can never change, because we do an strncpy */
   tconvp->errors[TCONV_ERROR_SIZE - 1] = '\0';
-  /* 7. fuzzy state */
-  tconvp->fuzzyb = 0;
 
   /* 1. trace */
   traces                       = getenv(TCONV_ENV_TRACE);
@@ -824,49 +820,6 @@ char *tconv_tocode(tconv_t tconvp)
 #endif
 
   return tocodes;
-}
-
-/****************************************************************************/
-short tconv_fuzzy_setb(tconv_t tconvp, short fuzzyb)
-/****************************************************************************/
-{
-  static const char funcs[] = "tconv_fuzzy_setb";
-
-  if (tconvp == NULL) {
-    errno = EINVAL;
-    return 0;
-  }
-
-  TCONV_TRACE(tconvp, "%s(%p, %d)", funcs, tconvp, (int) fuzzyb);
-
-  tconvp->fuzzyb = fuzzyb;
-
-  TCONV_TRACE(tconvp, "%s - return %d (fuzzyb=%d)", funcs, (int) tconvp->fuzzyb);
-
-  return fuzzyb;
-}
-
-/****************************************************************************/
-short tconv_fuzzy_getb(tconv_t tconvp, short *fuzzybp)
-/****************************************************************************/
-{
-  static const char funcs[] = "tconv_fuzzy_get";
-
-  if (tconvp == NULL) {
-    errno = EINVAL;
-    return 0;
-  }
-
-
-  TCONV_TRACE(tconvp, "%s(%p)", funcs, tconvp);
-
-  if (fuzzybp != NULL) {
-    *fuzzybp = tconvp->fuzzyb;
-  }
-
-  TCONV_TRACE(tconvp, "%s - return %d (fuzzyb=%d)", funcs, (int) tconvp->fuzzyb);
-
-  return 1;
 }
 
 /****************************************************************************/
