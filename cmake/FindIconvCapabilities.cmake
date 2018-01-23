@@ -2,6 +2,7 @@
 # 
 # ICONV_CAN_TRANSLIT      - iconv supports //TRANSLIT option
 # ICONV_CAN_IGNORE        - iconv supports //IGNORE option
+# ICONV_IS_NOT_TRUSTABLE  - Some bad iconv's that dup blindly IMHO
 # 
 # Just to be sure, we do not limit the calls to iconv_open, but do the full thing
 # Input is FORCED with a valid ASCII and UTF-8 compliant thingy.
