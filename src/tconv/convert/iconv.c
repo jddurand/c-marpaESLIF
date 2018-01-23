@@ -34,10 +34,11 @@
 #define TCONV_ICONV_INITIAL_SIZE 4096
 typedef struct tconv_convert_iconv_context {
   iconv_t     iconvp;           /* iconv itself */
+  short       toutf8b;          /* 1 when destination charset is UTF-8 */
   short       intermediateb;    /* Use an intermerdiate UTF-8 charset */
   /* ----------------------------------------------- */
   /* When intermediateb is a true value it is        */
-  /* guaranteed that fromutf8b and toutf8b are false */
+  /* guaranteed that fromutf8b and toutf8b are == 0  */
   /* ----------------------------------------------- */
   /* input   ->     UTF-8     ->    output           */
   /*               buffer                            */
@@ -61,6 +62,10 @@ static inline size_t tconv_convert_iconv_internalflushl(tconv_t tconvp, tconv_co
 static inline size_t tconv_convert_iconv_intermediatel(tconv_t tconvp, tconv_convert_iconv_context_t *contextp, char **inbuf, size_t *inbytesleft, char **outbuf, size_t *outbytesleft);
 static inline char  *tconv_convert_iconv_charset_normalizeds(tconv_t tconvp, const char *charsets);
 static inline char  *tconv_convert_iconv_charset_lookupp(tconv_t tconvp, const char *charsets, char ***categoriespp);
+#ifdef ICONV_IS_NOT_TRUSTABLE
+static inline size_t tconv_convert_iconv_wrapperl(tconv_t tconvp, iconv_t iconvp, short utf8b, ICONV_SECOND_ARGUMENT char **inbufpp, size_t *inbytesleftlp, char **outbufpp, size_t *outbytesleftlp);
+static inline int    tconv_utf82ordi(unsigned char *utf8bytes, unsigned long *uint32p);
+#endif
 
 #ifndef ICONV_CAN_IGNORE
 #define TCONV_ICONV_IGNORE   "//IGNORE"
@@ -259,6 +264,7 @@ void  *tconv_convert_iconv_new(tconv_t tconvp, const char *tocodes, const char *
   TCONV_TRACE(tconvp, "%s - contextp is %p", funcs, contextp);
 
   contextp->iconvp             = iconvp;
+  contextp->toutf8b            = toutf8b;
   contextp->intermediateb      = intermediateb;
   contextp->iconvfromp         = iconvfromp;
   contextp->internals          = internals;
@@ -310,9 +316,15 @@ size_t tconv_convert_iconv_run(tconv_t tconvp, void *voidp, char **inbufpp, size
     TCONV_TRACE(tconvp, "%s - tconv_convert_iconv_intermediatel(%p, %p, %p, %p, %p, %p)", funcs, tconvp, contextp, inbufpp, inbytesleftlp, outbufpp, outbytesleftlp);
     rcl = tconv_convert_iconv_intermediatel(tconvp, contextp, inbufpp, inbytesleftlp, outbufpp, outbytesleftlp);
   } else {
+#ifdef ICONV_IS_NOT_TRUSTABLE
+    TCONV_TRACE(tconvp, "%s - tconv_convert_iconv_wrapperl(%p, %p, %d, %p, %p, %p, %p)", funcs, tconvp, contextp->iconvp, (int) contextp->toutf8b, inbufpp, inbytesleftlp, outbufpp, outbytesleftlp);
+    rcl = tconv_convert_iconv_wrapperl(tconvp, contextp->iconvp, contextp->toutf8b, inbufpp, inbytesleftlp, outbufpp, outbytesleftlp);
+    TCONV_TRACE(tconvp, "%s - tconv_convert_iconv_wrapperl(%p, %p, %d, %p, %p, %p, %p) returns %ld", funcs, tconvp, contextp->iconvp, contextp->toutf8b, inbufpp, inbytesleftlp, outbufpp, outbytesleftlp, (long) rcl);
+#else
     TCONV_TRACE(tconvp, "%s - iconv(%p, %p, %p, %p, %p)", funcs, contextp->iconvp, inbufpp, inbytesleftlp, outbufpp, outbytesleftlp);
     rcl = iconv(contextp->iconvp, (ICONV_SECOND_ARGUMENT char **) inbufpp, inbytesleftlp, outbufpp, outbytesleftlp);
     TCONV_TRACE(tconvp, "%s - iconv(%p, %p, %p, %p, %p) returns %ld", funcs, contextp->iconvp, inbufpp, inbytesleftlp, outbufpp, outbytesleftlp, (long) rcl);
+#endif
   }
 
   return rcl;
@@ -461,9 +473,15 @@ static inline size_t tconv_convert_iconv_internalflushl(tconv_t tconvp, tconv_co
     tmpinbytesleftl     = contextp->internalp - contextp->internals;
     origtmpinbytesleftl = tmpinbytesleftl;
 
+#ifdef ICONV_IS_NOT_TRUSTABLE
+    TCONV_TRACE(tconvp, "%s - remains %ld bytes to flush - tconv_convert_iconv_wrapperl(%p, %p, %d, %p, %p, %p, %p)", funcs, (unsigned long) tmpinbytesleftl, tconvp, contextp->iconvtop, (int) contextp->toutf8b, &tmpinbufp, &tmpinbytesleftl, outbufpp, outbytesleftlp);
+    rcl = tconv_convert_iconv_wrapperl(tconvp, contextp->iconvtop, contextp->toutf8b, &tmpinbufp, &tmpinbytesleftl, outbufpp, outbytesleftlp);
+    TCONV_TRACE(tconvp, "%s - remains %ld bytes to flush - tconv_convert_iconv_wrapperl(%p, %p, %d, %p, %p, %p, %p) returns %ld", funcs, (unsigned long) tmpinbytesleftl, tconvp, contextp->iconvtop, (int) contextp->toutf8b, &tmpinbufp, &tmpinbytesleftl, outbufpp, outbytesleftlp, (long) rcl);
+#else
     TCONV_TRACE(tconvp, "%s - remains %ld bytes to flush - iconv(%p, %p, %p, %p, %p)", funcs, (unsigned long) tmpinbytesleftl, contextp->iconvtop, &tmpinbufp, &tmpinbytesleftl, outbufpp, outbytesleftlp);
     rcl = iconv(contextp->iconvtop, (ICONV_SECOND_ARGUMENT char **) &tmpinbufp, &tmpinbytesleftl, outbufpp, outbytesleftlp);
     TCONV_TRACE(tconvp, "%s - remains %ld bytes to flush - iconv(%p, %p, %p, %p, %p) returns %d", funcs, (unsigned long) tmpinbytesleftl, contextp->iconvtop, &tmpinbufp, &tmpinbytesleftl, outbufpp, outbytesleftlp, (long) rcl);
+#endif
 
     /* Whatever happened, forget the bytes that were converted into user's output buffer */
     consumedl = origtmpinbytesleftl - tmpinbytesleftl;
@@ -477,9 +495,7 @@ static inline size_t tconv_convert_iconv_internalflushl(tconv_t tconvp, tconv_co
     }
 #ifndef TCONV_NTRACE
     if (rcl == (size_t)-1) {
-      TCONV_TRACE(tconvp, "%s - iconv on output returned -1, errno %d", funcs, errno);
-    } else {
-      TCONV_TRACE(tconvp, "%s - iconv on output returned %ld", funcs, (unsigned long) rcl);
+      TCONV_TRACE(tconvp, "%s - errno %d (%s)", funcs, errno, strerror(errno));
     }
 #endif
   } else {
@@ -522,19 +538,24 @@ static inline size_t tconv_convert_iconv_intermediatel(tconv_t tconvp, tconv_con
   contextp->internalp = contextp->internals;
   internalleftl       = contextp->internall;
   while (1) {
+#ifdef ICONV_IS_NOT_TRUSTABLE
+    TCONV_TRACE(tconvp, "%s - %s->... - tconv_convert_iconv_wrapperl(%p, %p, %d, %p, %p, %p, %p)", funcs, "UTF-8", tconvp, contextp->iconvfromp, 1, inbufpp, inbytesleftlp, &(contextp->internalp), &internalleftl);
+    rcl = tconv_convert_iconv_wrapperl(tconvp, contextp->iconvfromp, 1, inbufpp, inbytesleftlp, &(contextp->internalp), &internalleftl);
+    TCONV_TRACE(tconvp, "%s - %s->... - tconv_convert_iconv_wrapperl(%p, %p, %d, %p, %p, %p, %p) returns %ld", funcs, "UTF-8", tconvp, contextp->iconvfromp, 1, inbufpp, inbytesleftlp, &(contextp->internalp), &internalleftl, (long) rcl);
+#else
     TCONV_TRACE(tconvp, "%s - %s->... - iconv(%p, %p, %p, %p, %p)", funcs, "UTF-8", contextp->iconvfromp, inbufpp, inbytesleftlp, &(contextp->internalp), &internalleftl);
     rcl = iconv(contextp->iconvfromp,
                 (ICONV_SECOND_ARGUMENT char **) inbufpp,
                 inbytesleftlp,
                 &(contextp->internalp),
                 &internalleftl);
+    TCONV_TRACE(tconvp, "%s - %s->... - iconv(%p, %p, %p, %p, %p) returns %ld", funcs, "UTF-8", contextp->iconvfromp, inbufpp, inbytesleftlp, &(contextp->internalp), &internalleftl, (long) rcl);
+#endif
     errnoi = errno;
 #ifndef TCONV_NTRACE
     /* Note that TCONV_TRACE is guaranteed to not alter errno */
     if (rcl == (size_t)-1) {
-      TCONV_TRACE(tconvp, "%s - iconv on input returned -1, errno %d (%s)", funcs, errnoi, strerror(errno));
-    } else {
-      TCONV_TRACE(tconvp, "%s - iconv on input returned %ld", funcs, (unsigned long) rcl);
+      TCONV_TRACE(tconvp, "%s - errno %d (%s)", funcs, errnoi, strerror(errno));
     }
 #endif
     if ((rcl == (size_t)-1) && (errno == E2BIG)) {
@@ -641,3 +662,155 @@ static inline char *tconv_convert_iconv_charset_lookupp(tconv_t tconvp, const ch
     return NULL;
   }
 }
+
+#ifdef ICONV_IS_NOT_TRUSTABLE
+/*****************************************************************************/
+static inline size_t tconv_convert_iconv_wrapperl(tconv_t tconvp, iconv_t iconvp, short utf8b, ICONV_SECOND_ARGUMENT char **inbufpp, size_t *inbytesleftlp, char **outbufpp, size_t *outbytesleftlp)
+/*****************************************************************************/
+/* This method should be called ONLY when destination charset is UTF-8.      */
+/*****************************************************************************/
+{
+  static const char  funcs[] = "tconv_convert_iconv_wrapperl";
+  char              *orig_outbufp;
+  char              *max_outbufp;
+  size_t             rcl;
+  int                rci;
+  unsigned long      uint32;
+
+  /* We are only interested by the case of real production, not flush, nor reset, nor when then is no output buffer, nor when destination is not UTF-8 */
+  if ((utf8b != 1) || (inbufpp == NULL) || (*inbufpp == NULL) || (outbufpp == NULL) || (*outbufpp == NULL)) {
+    TCONV_TRACE(tconvp, "%s - return iconv(%p, %p, %p, %p, %p)", funcs, iconvp, inbufpp, inbytesleftlp, outbufpp, outbytesleftlp);
+    return iconv(iconvp, inbufpp, inbytesleftlp, outbufpp, outbytesleftlp);
+  }
+
+  orig_outbufp = *outbufpp;
+
+  TCONV_TRACE(tconvp, "%s - iconv(%p, %p, %p, %p, %p)", funcs, iconvp, inbufpp, inbytesleftlp, outbufpp, outbytesleftlp);
+  rcl = iconv(iconvp, inbufpp, inbytesleftlp, outbufpp, outbytesleftlp);
+  TCONV_TRACE(tconvp, "%s - iconv(%p, %p, %p, %p, %p) returns %ld", funcs, iconvp, inbufpp, inbytesleftlp, outbufpp, outbytesleftlp, (long) rcl);
+
+  if (rcl == (size_t)-1) {
+    return rcl;
+  }
+
+  max_outbufp = *outbufpp;
+
+  /* Check that these are valid UTF-8 characters */
+  while (orig_outbufp < max_outbufp) {
+    rci = tconv_utf82ordi((unsigned char *) orig_outbufp, &uint32);
+    if (rci <= 0) {
+      /* There is a malformed UTF-8 character at offset (orig_outbufp + rci) */
+      /* We cannot change iconv state nor pointers, just report about it. */
+      TCONV_TRACE(tconvp, "%s - %p is a malformed UTF-8 character at offset %d", funcs, orig_outbufp, rci);
+      rcl = (size_t)-1;
+      errno = EILSEQ;
+      break;
+    }
+    TCONV_TRACE(tconvp, "%s - %p is a valid UTF-8 character (%d bytes)", funcs, orig_outbufp, rci);
+    orig_outbufp += rci;
+  }
+
+  TCONV_TRACE(tconvp, "%s - return %ld", funcs, (long) rcl);
+  return rcl;
+}
+
+/*****************************************************************************/
+static inline int tconv_utf82ordi(unsigned char *utf8bytes, unsigned long *uint32p)
+/*****************************************************************************/
+/* This is a copy of utf2ord from pcre2test.c
+-----------------------------------------------------------------------------
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+    * Redistributions of source code must retain the above copyright notice,
+      this list of conditions and the following disclaimer.
+
+    * Redistributions in binary form must reproduce the above copyright
+      notice, this list of conditions and the following disclaimer in the
+      documentation and/or other materials provided with the distribution.
+
+    * Neither the name of the University of Cambridge nor the names of its
+      contributors may be used to endorse or promote products derived from
+      this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+POSSIBILITY OF SUCH DAMAGE.
+-----------------------------------------------------------------------------
+*/
+/* This function reads one or more bytes that represent a UTF-8 character,
+and returns the codepoint of that character. Note that the function supports
+the original UTF-8 definition of RFC 2279, allowing for values in the range 0
+to 0x7fffffff, up to 6 bytes long. This makes it possible to generate
+codepoints greater than 0x10ffff which are useful for testing PCRE2's error
+checking, and also for generating 32-bit non-UTF data values above the UTF
+limit.
+
+Argument:
+  utf8bytes   a pointer to the byte vector
+  vptr        a pointer to an int to receive the value
+
+Returns:      >  0 => the number of bytes consumed
+              -6 to 0 => malformed UTF-8 character at offset = (-return)
+*/
+{
+  unsigned long c = (unsigned long) *utf8bytes++;
+  unsigned long d = c;
+  int i, j, s;
+  const int utf8_table1[] = { 0x7f, 0x7ff, 0xffff, 0x1fffff, 0x3ffffff, 0x7fffffff};
+  const int utf8_table3[] = { 0xff, 0x1f, 0x0f, 0x07, 0x03, 0x01};
+  const int utf8_table1_size = sizeof(utf8_table1) / sizeof(int);
+
+  for (i = -1; i < 6; i++) {               /* i is number of additional bytes */
+    if ((d & 0x80) == 0) break;
+    d <<= 1;
+  }
+
+  if (i == -1) {
+    /* ascii character */
+    *uint32p = c;
+    return 1;
+  }
+  if (i == 0 || i == 6) {
+    return 0;
+  } /* invalid UTF-8 */
+
+  /* i now has a value in the range 1-5 */
+
+  s = 6*i;
+  d = (c & utf8_table3[i]) << s;
+
+  for (j = 0; j < i; j++) {
+    c = *utf8bytes++;
+    if ((c & 0xc0) != 0x80) {
+      return -(j+1);
+    }
+    s -= 6;
+    d |= (c & 0x3f) << s;
+  }
+
+  /* Check that encoding was the correct unique one */
+
+  for (j = 0; j < utf8_table1_size; j++) {
+    if (d <= (unsigned long)utf8_table1[j]) {
+      break;
+    }
+  }
+  if (j != i) {
+    return -(i+1);
+  }
+
+  /* Valid value */
+
+  *uint32p = d;
+  return i+1;
+}
+#endif
