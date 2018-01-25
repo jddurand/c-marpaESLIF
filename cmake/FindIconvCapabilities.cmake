@@ -8,7 +8,7 @@
 # Caller have the choice of destination charset and have to provide TWO TRAILING BYTES.
 #
 MACRO(_FINDICONVCAPABILITY tocharset fromcharset outputvariable twobytes)
-  include(CheckCSourceRuns)
+  INCLUDE (CheckCSourceRuns)
   SET (CMAKE_REQUIRED_INCLUDES_PREVIOUS ${CMAKE_REQUIRED_INCLUDES})
   SET (CMAKE_REQUIRED_LIBRARIES_PREVIOUS ${CMAKE_REQUIRED_LIBRARIES})
   SET (CMAKE_REQUIRED_DEFINITIONS_PREVIOUS ${CMAKE_REQUIRED_DEFINITIONS})
@@ -39,15 +39,15 @@ MACRO(_FINDICONVCAPABILITY tocharset fromcharset outputvariable twobytes)
 
     memset((void *) dst, '\\\\0', 1024);
     conv = iconv_open(\"${tocharset}\", \"${fromcharset}\");
-    if (conv == (iconv_t)-1) { perror(\"iconv_open\"); return 1; }
-    if (iconv(conv, &inp, &inl, &outp, &outl) == (size_t)-1)  { perror(\"iconv\"); return 1; }
+    if (conv == (iconv_t)-1) { perror(\"iconv_open\"); exit(1); }
+    if (iconv(conv, &inp, &inl, &outp, &outl) == (size_t)-1)  { perror(\"iconv\"); exit(1); }
     /* Flush */
-    if (iconv(conv, NULL, NULL, &outp, &outl) == (size_t)-1)  { perror(\"iconv\"); return 1; }
-    if (iconv_close(conv) == -1)  { perror(\"iconv_close\"); return 1; }
+    if (iconv(conv, NULL, NULL, &outp, &outl) == (size_t)-1)  { perror(\"iconv\"); exit(1); }
+    if (iconv_close(conv) == -1)  { perror(\"iconv_close\"); exit(1); }
     fprintf(stdout, \"%s\\\\n\", dst);
-    return 0;
+    exit(0);
   }
-" ${outputvariable} )
+" ${outputvariable})
   SET (CMAKE_REQUIRED_INCLUDES ${CMAKE_REQUIRED_INCLUDES_PREVIOUS})
   SET (CMAKE_REQUIRED_LIBRARIES ${CMAKE_REQUIRED_LIBRARIES_PREVIOUS})
   SET (CMAKE_REQUIRED_DEFINITIONS ${CMAKE_REQUIRED_DEFINITIONS_PREVIOUS})
@@ -65,10 +65,8 @@ ENDMACRO()
 SET (TWO_UTF8_BYTES_OK "\"!!\"")
 SET (TWO_UTF8_BYTES_KO "\"\\\\\\\\xa0\\\\\\\\xa1\"")
 
-_FINDICONVCAPABILITY("ASCII//TRANSLIT" "UTF-8" ICONV_CAN_TRANSLIT           ${TWO_UTF8_BYTES_OK})
-_FINDICONVCAPABILITY("ASCII//IGNORE"   "UTF-8" ICONV_CAN_IGNORE             ${TWO_UTF8_BYTES_OK})
-
-MESSAGE (WARNING "In the iconv plugin, when input and destination charsets are equivalent, they will NOT be checked and fuzzy conversion will happen")
+_FINDICONVCAPABILITY("ASCII//TRANSLIT" "UTF-8" ICONV_CAN_TRANSLIT     ${TWO_UTF8_BYTES_OK})
+_FINDICONVCAPABILITY("ASCII//IGNORE"   "UTF-8" ICONV_CAN_IGNORE       ${TWO_UTF8_BYTES_OK})
 
 MESSAGE(STATUS "-----------------------------------------")
 MESSAGE(STATUS "Iconv capabilities:")
