@@ -2,7 +2,6 @@
 # 
 # ICONV_CAN_TRANSLIT      - iconv supports //TRANSLIT option
 # ICONV_CAN_IGNORE        - iconv supports //IGNORE option
-# ICONV_IS_NOT_TRUSTABLE  - Some bad iconv's that dup blindly IMHO
 # 
 # Just to be sure, we do not limit the calls to iconv_open, but do the full thing
 # Input is FORCED with a valid ASCII and UTF-8 compliant thingy.
@@ -68,18 +67,15 @@ SET (TWO_UTF8_BYTES_KO "\"\\\\\\\\xa0\\\\\\\\xa1\"")
 
 _FINDICONVCAPABILITY("ASCII//TRANSLIT" "UTF-8" ICONV_CAN_TRANSLIT     ${TWO_UTF8_BYTES_OK})
 _FINDICONVCAPABILITY("ASCII//IGNORE"   "UTF-8" ICONV_CAN_IGNORE       ${TWO_UTF8_BYTES_OK})
-_FINDICONVCAPABILITY("UTF-8"           "UTF-8" ICONV_IS_NOT_TRUSTABLE ${TWO_UTF8_BYTES_KO})
 
 MESSAGE(STATUS "-----------------------------------------")
 MESSAGE(STATUS "Iconv capabilities:")
 MESSAGE(STATUS "")
 MESSAGE(STATUS "           ICONV_CAN_TRANSLIT: ${ICONV_CAN_TRANSLIT}")
 MESSAGE(STATUS "             ICONV_CAN_IGNORE: ${ICONV_CAN_IGNORE}")
-MESSAGE(STATUS "       ICONV_IS_NOT_TRUSTABLE: ${ICONV_IS_NOT_TRUSTABLE}")
 MESSAGE(STATUS "-----------------------------------------")
 
 MARK_AS_ADVANCED(
   ICONV_CAN_TRANSLIT
   ICONV_CAN_IGNORE
-  ICONV_IS_NOT_TRUSTABLE
   )

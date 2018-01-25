@@ -57,14 +57,20 @@ typedef struct tconv_convert_iconv_context {
 #define ICONV_SECOND_ARGUMENT
 #endif
 
+#undef  ICONV_IS_NOT_TRUSTABLE
+#define ICONV_IS_NOT_TRUSTABLE   /* Sorry guys, but what don't you use ICU instead of iconv... ? */
+
 static inline size_t tconv_convert_iconv_directl(tconv_t tconvp, char **inbuf, size_t *inbytesleft, char **outbuf, size_t *outbytesleft);
 static inline size_t tconv_convert_iconv_internalflushl(tconv_t tconvp, tconv_convert_iconv_context_t *contextp, char **outbufpp, size_t *outbytesleftp);
 static inline size_t tconv_convert_iconv_intermediatel(tconv_t tconvp, tconv_convert_iconv_context_t *contextp, char **inbuf, size_t *inbytesleft, char **outbuf, size_t *outbytesleft);
 static inline char  *tconv_convert_iconv_charset_normalizeds(tconv_t tconvp, const char *charsets);
 static inline char  *tconv_convert_iconv_charset_lookupp(tconv_t tconvp, const char *charsets, char ***categoriespp);
 #ifdef ICONV_IS_NOT_TRUSTABLE
+/* When ICONV_IS_NOT_TRUSTABLE is defined, we always want to check the production:
+   If output is UTF-8 we check the output, else we create an intermediate UTF-8 buffer and check it
+*/
 static inline size_t tconv_convert_iconv_wrapperl(tconv_t tconvp, iconv_t iconvp, short utf8b, ICONV_SECOND_ARGUMENT char **inbufpp, size_t *inbytesleftlp, char **outbufpp, size_t *outbytesleftlp);
-static inline int    tconv_utf82ordi(unsigned char *utf8bytes, unsigned long *uint32p);
+static inline int    tconv_valid_utf(unsigned char *string, size_t length, size_t *erroroffset);
 #endif
 
 #ifndef ICONV_CAN_IGNORE
@@ -219,6 +225,13 @@ void  *tconv_convert_iconv_new(tconv_t tconvp, const char *tocodes, const char *
   TCONV_UPPERCASE(tocodes);
   TCONV_UPPERCASE(fromcodes);
 
+#ifdef ICONV_IS_NOT_TRUSTABLE
+  if (toutf8b != 1) {
+    TCONV_TRACE(tconvp, "%s - forcing an UTF-8 intermediate buffer", funcs);
+    goto force_intermediate;
+  }
+#endif
+
   TCONV_TRACE(tconvp, "%s - iconv_open(\"%s\", \"%s\")", funcs, tocodes, fromcodes);
   iconvp = iconv_open(tocodes, fromcodes);
   TCONV_TRACE(tconvp, "%s - iconv_open(\"%s\", \"%s\") returns %p", funcs, tocodes, fromcodes, iconvp);
@@ -229,6 +242,9 @@ void  *tconv_convert_iconv_new(tconv_t tconvp, const char *tocodes, const char *
     /* and none of them is UTF-8 */
     if ((fromutf8b == 0) && (toutf8b == 0)) {
       TCONV_TRACE(tconvp, "%s - iconv_open() failure - trying with an UTF-8 intermediate buffer", funcs);
+#ifdef ICONV_IS_NOT_TRUSTABLE
+    force_intermediate:
+#endif
       intermediateb = 1;
 
       TCONV_TRACE(tconvp, "%s - iconv_open(\"%s\", \"%s\")", funcs, tocodes, "UTF-8");
@@ -539,17 +555,17 @@ static inline size_t tconv_convert_iconv_intermediatel(tconv_t tconvp, tconv_con
   internalleftl       = contextp->internall;
   while (1) {
 #ifdef ICONV_IS_NOT_TRUSTABLE
-    TCONV_TRACE(tconvp, "%s - %s->... - tconv_convert_iconv_wrapperl(%p, %p, %d, %p, %p, %p, %p)", funcs, "UTF-8", tconvp, contextp->iconvfromp, 1, inbufpp, inbytesleftlp, &(contextp->internalp), &internalleftl);
+    TCONV_TRACE(tconvp, "%s - ...->%s - tconv_convert_iconv_wrapperl(%p, %p, %d, %p, %p, %p, %p)", funcs, "UTF-8", tconvp, contextp->iconvfromp, 1, inbufpp, inbytesleftlp, &(contextp->internalp), &internalleftl);
     rcl = tconv_convert_iconv_wrapperl(tconvp, contextp->iconvfromp, 1, inbufpp, inbytesleftlp, &(contextp->internalp), &internalleftl);
-    TCONV_TRACE(tconvp, "%s - %s->... - tconv_convert_iconv_wrapperl(%p, %p, %d, %p, %p, %p, %p) returns %ld", funcs, "UTF-8", tconvp, contextp->iconvfromp, 1, inbufpp, inbytesleftlp, &(contextp->internalp), &internalleftl, (long) rcl);
+    TCONV_TRACE(tconvp, "%s - ...->%s - tconv_convert_iconv_wrapperl(%p, %p, %d, %p, %p, %p, %p) returns %ld", funcs, "UTF-8", tconvp, contextp->iconvfromp, 1, inbufpp, inbytesleftlp, &(contextp->internalp), &internalleftl, (long) rcl);
 #else
-    TCONV_TRACE(tconvp, "%s - %s->... - iconv(%p, %p, %p, %p, %p)", funcs, "UTF-8", contextp->iconvfromp, inbufpp, inbytesleftlp, &(contextp->internalp), &internalleftl);
+    TCONV_TRACE(tconvp, "%s - ...->%s - iconv(%p, %p, %p, %p, %p)", funcs, "UTF-8", contextp->iconvfromp, inbufpp, inbytesleftlp, &(contextp->internalp), &internalleftl);
     rcl = iconv(contextp->iconvfromp,
                 (ICONV_SECOND_ARGUMENT char **) inbufpp,
                 inbytesleftlp,
                 &(contextp->internalp),
                 &internalleftl);
-    TCONV_TRACE(tconvp, "%s - %s->... - iconv(%p, %p, %p, %p, %p) returns %ld", funcs, "UTF-8", contextp->iconvfromp, inbufpp, inbytesleftlp, &(contextp->internalp), &internalleftl, (long) rcl);
+    TCONV_TRACE(tconvp, "%s - ...->%s - iconv(%p, %p, %p, %p, %p) returns %ld", funcs, "UTF-8", contextp->iconvfromp, inbufpp, inbytesleftlp, &(contextp->internalp), &internalleftl, (long) rcl);
 #endif
     errnoi = errno;
 #ifndef TCONV_NTRACE
@@ -676,6 +692,7 @@ static inline size_t tconv_convert_iconv_wrapperl(tconv_t tconvp, iconv_t iconvp
   size_t             rcl;
   int                rci;
   unsigned long      uint32;
+  size_t             erroroffset;
 
   /* We are only interested by the case of real production, not flush, nor reset, nor when then is no output buffer, nor when destination is not UTF-8 */
   if ((utf8b != 1) || (inbufpp == NULL) || (*inbufpp == NULL) || (outbufpp == NULL) || (*outbufpp == NULL)) {
@@ -695,122 +712,287 @@ static inline size_t tconv_convert_iconv_wrapperl(tconv_t tconvp, iconv_t iconvp
 
   max_outbufp = *outbufpp;
 
-  /* Check that these are valid UTF-8 characters */
-  while (orig_outbufp < max_outbufp) {
-    rci = tconv_utf82ordi((unsigned char *) orig_outbufp, &uint32);
-    if (rci <= 0) {
-      /* There is a malformed UTF-8 character at offset (orig_outbufp + rci) */
-      /* We cannot change iconv state nor pointers, just report about it. */
-      TCONV_TRACE(tconvp, "%s - %p is a malformed UTF-8 character at offset %d", funcs, orig_outbufp, rci);
-      rcl = (size_t)-1;
-      errno = EILSEQ;
-      break;
-    }
-    TCONV_TRACE(tconvp, "%s - %p is a valid UTF-8 character (%d bytes)", funcs, orig_outbufp, rci);
-    orig_outbufp += rci;
+  if (tconv_valid_utf((unsigned char *) orig_outbufp, (size_t) (max_outbufp - orig_outbufp), &erroroffset) != 0) {
+    TCONV_TRACE(tconvp, "%s - output has a malformed UTF-8 character at offset %lld", funcs, (unsigned long long) erroroffset);
+    rcl = (size_t)-1;
+    errno = EILSEQ;
   }
 
   TCONV_TRACE(tconvp, "%s - return %ld", funcs, (long) rcl);
   return rcl;
 }
 
-/*****************************************************************************/
-static inline int tconv_utf82ordi(unsigned char *utf8bytes, unsigned long *uint32p)
-/*****************************************************************************/
-/* This is a copy of utf2ord from pcre2test.c
------------------------------------------------------------------------------
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
+/*************************************************
+*           Validate a UTF string                *
+*************************************************/
+/* This is a copy of PCRE2's valid_utf source */
 
-    * Redistributions of source code must retain the above copyright notice,
-      this list of conditions and the following disclaimer.
+/* This function is called (optionally) at the start of compile or match, to
+check that a supposed UTF string is actually valid. The early check means
+that subsequent code can assume it is dealing with a valid string. The check
+can be turned off for maximum performance, but the consequences of supplying an
+invalid string are then undefined.
 
-    * Redistributions in binary form must reproduce the above copyright
-      notice, this list of conditions and the following disclaimer in the
-      documentation and/or other materials provided with the distribution.
+Arguments:
+  string       points to the string
+  length       length of string
+  errp         pointer to an error position offset variable
 
-    * Neither the name of the University of Cambridge nor the names of its
-      contributors may be used to endorse or promote products derived from
-      this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
-LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-POSSIBILITY OF SUCH DAMAGE.
------------------------------------------------------------------------------
+Returns:       == 0    if the string is a valid UTF string
+               != 0    otherwise, setting the offset of the bad character
 */
-/* This function reads one or more bytes that represent a UTF-8 character,
-and returns the codepoint of that character. Note that the function supports
-the original UTF-8 definition of RFC 2279, allowing for values in the range 0
-to 0x7fffffff, up to 6 bytes long. This makes it possible to generate
-codepoints greater than 0x10ffff which are useful for testing PCRE2's error
-checking, and also for generating 32-bit non-UTF data values above the UTF
-limit.
 
-Argument:
-  utf8bytes   a pointer to the byte vector
-  vptr        a pointer to an int to receive the value
+/* Error codes for UTF-8 validity checks */
 
-Returns:      >  0 => the number of bytes consumed
-              -6 to 0 => malformed UTF-8 character at offset = (-return)
-*/
+#define PCRE2_ERROR_UTF8_ERR1        (-3)
+#define PCRE2_ERROR_UTF8_ERR2        (-4)
+#define PCRE2_ERROR_UTF8_ERR3        (-5)
+#define PCRE2_ERROR_UTF8_ERR4        (-6)
+#define PCRE2_ERROR_UTF8_ERR5        (-7)
+#define PCRE2_ERROR_UTF8_ERR6        (-8)
+#define PCRE2_ERROR_UTF8_ERR7        (-9)
+#define PCRE2_ERROR_UTF8_ERR8       (-10)
+#define PCRE2_ERROR_UTF8_ERR9       (-11)
+#define PCRE2_ERROR_UTF8_ERR10      (-12)
+#define PCRE2_ERROR_UTF8_ERR11      (-13)
+#define PCRE2_ERROR_UTF8_ERR12      (-14)
+#define PCRE2_ERROR_UTF8_ERR13      (-15)
+#define PCRE2_ERROR_UTF8_ERR14      (-16)
+#define PCRE2_ERROR_UTF8_ERR15      (-17)
+#define PCRE2_ERROR_UTF8_ERR16      (-18)
+#define PCRE2_ERROR_UTF8_ERR17      (-19)
+#define PCRE2_ERROR_UTF8_ERR18      (-20)
+#define PCRE2_ERROR_UTF8_ERR19      (-21)
+#define PCRE2_ERROR_UTF8_ERR20      (-22)
+#define PCRE2_ERROR_UTF8_ERR21      (-23)
+
+static const unsigned char utf8_table4[] = {
+  1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+  1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+  2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,
+  3,3,3,3,3,3,3,3,4,4,4,4,5,5,5,5 };
+
+
+static inline int tconv_valid_utf(unsigned char *string, size_t length, size_t *erroroffset)
 {
-  unsigned long c = (unsigned long) *utf8bytes++;
-  unsigned long d = c;
-  int i, j, s;
-  const int utf8_table1[] = { 0x7f, 0x7ff, 0xffff, 0x1fffff, 0x3ffffff, 0x7fffffff};
-  const int utf8_table3[] = { 0xff, 0x1f, 0x0f, 0x07, 0x03, 0x01};
-  const int utf8_table1_size = sizeof(utf8_table1) / sizeof(int);
+  unsigned char * p;
+  unsigned long c;
 
-  for (i = -1; i < 6; i++) {               /* i is number of additional bytes */
-    if ((d & 0x80) == 0) break;
-    d <<= 1;
-  }
+  /* ----------------- Check a UTF-8 string ----------------- */
 
-  if (i == -1) {
-    /* ascii character */
-    *uint32p = c;
-    return 1;
-  }
-  if (i == 0 || i == 6) {
-    return 0;
-  } /* invalid UTF-8 */
+  /* Originally, this function checked according to RFC 2279, allowing for values
+     in the range 0 to 0x7fffffff, up to 6 bytes long, but ensuring that they were
+     in the canonical format. Once somebody had pointed out RFC 3629 to me (it
+     obsoletes 2279), additional restrictions were applied. The values are now
+     limited to be between 0 and 0x0010ffff, no more than 4 bytes long, and the
+     subrange 0xd000 to 0xdfff is excluded. However, the format of 5-byte and 6-byte
+     characters is still checked. Error returns are as follows:
 
-  /* i now has a value in the range 1-5 */
+     PCRE2_ERROR_UTF8_ERR1   Missing 1 byte at the end of the string
+     PCRE2_ERROR_UTF8_ERR2   Missing 2 bytes at the end of the string
+     PCRE2_ERROR_UTF8_ERR3   Missing 3 bytes at the end of the string
+     PCRE2_ERROR_UTF8_ERR4   Missing 4 bytes at the end of the string
+     PCRE2_ERROR_UTF8_ERR5   Missing 5 bytes at the end of the string
+     PCRE2_ERROR_UTF8_ERR6   2nd-byte's two top bits are not 0x80
+     PCRE2_ERROR_UTF8_ERR7   3rd-byte's two top bits are not 0x80
+     PCRE2_ERROR_UTF8_ERR8   4th-byte's two top bits are not 0x80
+     PCRE2_ERROR_UTF8_ERR9   5th-byte's two top bits are not 0x80
+     PCRE2_ERROR_UTF8_ERR10  6th-byte's two top bits are not 0x80
+     PCRE2_ERROR_UTF8_ERR11  5-byte character is not permitted by RFC 3629
+     PCRE2_ERROR_UTF8_ERR12  6-byte character is not permitted by RFC 3629
+     PCRE2_ERROR_UTF8_ERR13  4-byte character with value > 0x10ffff is not permitted
+     PCRE2_ERROR_UTF8_ERR14  3-byte character with value 0xd800-0xdfff is not permitted
+     PCRE2_ERROR_UTF8_ERR15  Overlong 2-byte sequence
+     PCRE2_ERROR_UTF8_ERR16  Overlong 3-byte sequence
+     PCRE2_ERROR_UTF8_ERR17  Overlong 4-byte sequence
+     PCRE2_ERROR_UTF8_ERR18  Overlong 5-byte sequence (won't ever occur)
+     PCRE2_ERROR_UTF8_ERR19  Overlong 6-byte sequence (won't ever occur)
+     PCRE2_ERROR_UTF8_ERR20  Isolated 0x80 byte (not within UTF-8 character)
+     PCRE2_ERROR_UTF8_ERR21  Byte with the illegal value 0xfe or 0xff
+  */
 
-  s = 6*i;
-  d = (c & utf8_table3[i]) << s;
+  for (p = string; length > 0; p++)
+    {
+      unsigned long ab, d;
 
-  for (j = 0; j < i; j++) {
-    c = *utf8bytes++;
-    if ((c & 0xc0) != 0x80) {
-      return -(j+1);
+      c = *p;
+      length--;
+
+      if (c < 128) continue;                /* ASCII character */
+
+      if (c < 0xc0)                         /* Isolated 10xx xxxx byte */
+        {
+          *erroroffset = (size_t)(p - string);
+          return PCRE2_ERROR_UTF8_ERR20;
+        }
+
+      if (c >= 0xfe)                        /* Invalid 0xfe or 0xff bytes */
+        {
+          *erroroffset = (size_t)(p - string);
+          return PCRE2_ERROR_UTF8_ERR21;
+        }
+
+      ab = utf8_table4[c & 0x3f];     /* Number of additional bytes (1-5) */
+      if (length < ab)                      /* Missing bytes */
+        {
+          *erroroffset = (size_t)(p - string);
+          switch(ab - length)
+            {
+            case 1: return PCRE2_ERROR_UTF8_ERR1;
+            case 2: return PCRE2_ERROR_UTF8_ERR2;
+            case 3: return PCRE2_ERROR_UTF8_ERR3;
+            case 4: return PCRE2_ERROR_UTF8_ERR4;
+            case 5: return PCRE2_ERROR_UTF8_ERR5;
+            }
+        }
+      length -= ab;                         /* Length remaining */
+
+      /* Check top bits in the second byte */
+
+      if (((d = *(++p)) & 0xc0) != 0x80)
+        {
+          *erroroffset = (int)(p - string) - 1;
+          return PCRE2_ERROR_UTF8_ERR6;
+        }
+
+      /* For each length, check that the remaining bytes start with the 0x80 bit
+         set and not the 0x40 bit. Then check for an overlong sequence, and for the
+         excluded range 0xd800 to 0xdfff. */
+
+      switch (ab)
+        {
+          /* 2-byte character. No further bytes to check for 0x80. Check first byte
+             for for xx00 000x (overlong sequence). */
+
+        case 1: if ((c & 0x3e) == 0)
+            {
+              *erroroffset = (int)(p - string) - 1;
+              return PCRE2_ERROR_UTF8_ERR15;
+            }
+          break;
+
+          /* 3-byte character. Check third byte for 0x80. Then check first 2 bytes
+             for 1110 0000, xx0x xxxx (overlong sequence) or
+             1110 1101, 1010 xxxx (0xd800 - 0xdfff) */
+
+        case 2:
+          if ((*(++p) & 0xc0) != 0x80)     /* Third byte */
+            {
+              *erroroffset = (int)(p - string) - 2;
+              return PCRE2_ERROR_UTF8_ERR7;
+            }
+          if (c == 0xe0 && (d & 0x20) == 0)
+            {
+              *erroroffset = (int)(p - string) - 2;
+              return PCRE2_ERROR_UTF8_ERR16;
+            }
+          if (c == 0xed && d >= 0xa0)
+            {
+              *erroroffset = (int)(p - string) - 2;
+              return PCRE2_ERROR_UTF8_ERR14;
+            }
+          break;
+
+          /* 4-byte character. Check 3rd and 4th bytes for 0x80. Then check first 2
+             bytes for for 1111 0000, xx00 xxxx (overlong sequence), then check for a
+             character greater than 0x0010ffff (f4 8f bf bf) */
+
+        case 3:
+          if ((*(++p) & 0xc0) != 0x80)     /* Third byte */
+            {
+              *erroroffset = (int)(p - string) - 2;
+              return PCRE2_ERROR_UTF8_ERR7;
+            }
+          if ((*(++p) & 0xc0) != 0x80)     /* Fourth byte */
+            {
+              *erroroffset = (int)(p - string) - 3;
+              return PCRE2_ERROR_UTF8_ERR8;
+            }
+          if (c == 0xf0 && (d & 0x30) == 0)
+            {
+              *erroroffset = (int)(p - string) - 3;
+              return PCRE2_ERROR_UTF8_ERR17;
+            }
+          if (c > 0xf4 || (c == 0xf4 && d > 0x8f))
+            {
+              *erroroffset = (int)(p - string) - 3;
+              return PCRE2_ERROR_UTF8_ERR13;
+            }
+          break;
+
+          /* 5-byte and 6-byte characters are not allowed by RFC 3629, and will be
+             rejected by the length test below. However, we do the appropriate tests
+             here so that overlong sequences get diagnosed, and also in case there is
+             ever an option for handling these larger code points. */
+
+          /* 5-byte character. Check 3rd, 4th, and 5th bytes for 0x80. Then check for
+             1111 1000, xx00 0xxx */
+
+        case 4:
+          if ((*(++p) & 0xc0) != 0x80)     /* Third byte */
+            {
+              *erroroffset = (int)(p - string) - 2;
+              return PCRE2_ERROR_UTF8_ERR7;
+            }
+          if ((*(++p) & 0xc0) != 0x80)     /* Fourth byte */
+            {
+              *erroroffset = (int)(p - string) - 3;
+              return PCRE2_ERROR_UTF8_ERR8;
+            }
+          if ((*(++p) & 0xc0) != 0x80)     /* Fifth byte */
+            {
+              *erroroffset = (int)(p - string) - 4;
+              return PCRE2_ERROR_UTF8_ERR9;
+            }
+          if (c == 0xf8 && (d & 0x38) == 0)
+            {
+              *erroroffset = (int)(p - string) - 4;
+              return PCRE2_ERROR_UTF8_ERR18;
+            }
+          break;
+
+          /* 6-byte character. Check 3rd-6th bytes for 0x80. Then check for
+             1111 1100, xx00 00xx. */
+
+        case 5:
+          if ((*(++p) & 0xc0) != 0x80)     /* Third byte */
+            {
+              *erroroffset = (int)(p - string) - 2;
+              return PCRE2_ERROR_UTF8_ERR7;
+            }
+          if ((*(++p) & 0xc0) != 0x80)     /* Fourth byte */
+            {
+              *erroroffset = (int)(p - string) - 3;
+              return PCRE2_ERROR_UTF8_ERR8;
+            }
+          if ((*(++p) & 0xc0) != 0x80)     /* Fifth byte */
+            {
+              *erroroffset = (int)(p - string) - 4;
+              return PCRE2_ERROR_UTF8_ERR9;
+            }
+          if ((*(++p) & 0xc0) != 0x80)     /* Sixth byte */
+            {
+              *erroroffset = (int)(p - string) - 5;
+              return PCRE2_ERROR_UTF8_ERR10;
+            }
+          if (c == 0xfc && (d & 0x3c) == 0)
+            {
+              *erroroffset = (int)(p - string) - 5;
+              return PCRE2_ERROR_UTF8_ERR19;
+            }
+          break;
+        }
+
+      /* Character is valid under RFC 2279, but 4-byte and 5-byte characters are
+         excluded by RFC 3629. The pointer p is currently at the last byte of the
+         character. */
+
+      if (ab > 3)
+        {
+          *erroroffset = (int)(p - string) - ab;
+          return (ab == 4)? PCRE2_ERROR_UTF8_ERR11 : PCRE2_ERROR_UTF8_ERR12;
+        }
     }
-    s -= 6;
-    d |= (c & 0x3f) << s;
-  }
-
-  /* Check that encoding was the correct unique one */
-
-  for (j = 0; j < utf8_table1_size; j++) {
-    if (d <= (unsigned long)utf8_table1[j]) {
-      break;
-    }
-  }
-  if (j != i) {
-    return -(i+1);
-  }
-
-  /* Valid value */
-
-  *uint32p = d;
-  return i+1;
+  return 0;
 }
 #endif
