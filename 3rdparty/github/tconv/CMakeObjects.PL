@@ -197,8 +197,9 @@ print " Checking iconv capability - please ignore the next lines \n";
 print "..........................................................\n";
 print "\n";
 
-my $iconv_can_translit = get_iconv_capability("ASCII//TRANSLIT", "UTF-8", $twobytes_ok, $winiconv, $extra_compiler_flags, $extra_linker_flags, @additional_includes);
-my $iconv_can_ignore   = get_iconv_capability("ASCII//IGNORE",   "UTF-8", $twobytes_ok, $winiconv, $extra_compiler_flags, $extra_linker_flags, @additional_includes);
+my $iconv_can_translit     = get_iconv_capability("ASCII//TRANSLIT", "UTF-8", $twobytes_ok, $winiconv, $extra_compiler_flags, $extra_linker_flags, @additional_includes);
+my $iconv_can_ignore       = get_iconv_capability("ASCII//IGNORE",   "UTF-8", $twobytes_ok, $winiconv, $extra_compiler_flags, $extra_linker_flags, @additional_includes);
+my $iconv_is_not_trustable = get_iconv_capability("UTF-8",           "UTF-8", $twobytes_ko, $winiconv, $extra_compiler_flags, $extra_linker_flags, @additional_includes);
 
 print "\n";
 print " The iconv we are using triggered the following settings:\n";
@@ -215,6 +216,14 @@ if ($iconv_can_translit) {
 $ac->msg_checking('ICONV_CAN_IGNORE');
 if ($iconv_can_ignore) {
   $ac->define_var('ICONV_CAN_IGNORE', 1);
+  $ac->msg_result('yes');
+} else {
+  $ac->msg_result('no');
+}
+
+$ac->msg_checking('ICONV_IS_NOT_TRUSTABLE');
+if ($iconv_is_not_trustable) {
+  $ac->define_var('ICONV_IS_NOT_TRUSTABLE', 1);
   $ac->msg_result('yes');
 } else {
   $ac->msg_result('no');

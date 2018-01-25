@@ -94,13 +94,9 @@ On Windows, an ICONV-like conversion engine is always available, via the L<win-i
 
 tconv() only guarantees that his plug-ins support the C<//TRANSLIT> and C<//IGNORE> iconv notation.
 
-=item output
+=item pointers in case of error
 
-It is guaranteed that tconv() will behave exactly like iconv() if the character conversion engine is ICONV on an UNIX platform, since in this case tconv() will call iconv() internally. In any other case, the plug-ins have a best-effort policy to behave like C<iconv>.
-
-=item POSIX compliance
-
-By POSIX compliance, we mean that, when the output buffer is too small, iconv should stop updating the input and output pointers prior to when the limit is reached. When the character conversion engine is ICONV on an UNIX platform, it is the behaviour of this UNIX platform that happen. In any other case, the plug-ins guarantee at least that input and output pointers are left in a state that, if being called again, will correctly handle the continuation of the conversion.
+In some cases, an internal buffer is used. This mean that in case of a failure with errno being C<EINVAL> or C<EILSEQ>, input and output pointers are left in a state that, if being called again, will correctly handle the continuation of the conversion, but may not be exactly at the point of failure as per the original iconv specification.
 
 =item Iconv plugin
 
@@ -115,10 +111,6 @@ If native iconv does not support C<//TRANSLIT>, this option is silently removed.
 =item C<//IGNORE> support
 
 If native iconv does not support C<//IGNORE>, this option is silently removed. Only the uppercased C<//IGNORE> is checked.
-
-=item Identical charsets
-
-If charsets appears to be identical (case insensitive), tconv is trusting the user and I<no> call to iconv will happen: data will be transfered as-is.
 
 =back
 
