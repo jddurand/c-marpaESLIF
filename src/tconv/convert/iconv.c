@@ -249,14 +249,14 @@ void  *tconv_convert_iconv_new(tconv_t tconvp, const char *tocodes, const char *
 
       TCONV_TRACE(tconvp, "%s - iconv_open(\"%s\", \"%s\")", funcs, tocodes, "UTF-8");
       iconvtop = iconv_open(tocodes, "UTF-8");
-      if (iconvtop == NULL) {
+      if (iconvtop == (size_t)-1) {
 	goto err;
       }
       TCONV_TRACE(tconvp, "%s - iconv_open(\"%s\", \"%s\") returned %p", funcs, tocodes, "UTF-8", iconvtop);
 
       TCONV_TRACE(tconvp, "%s - iconv_open(\"%s\", \"%s\")", funcs, "UTF-8", fromcodes);
       iconvfromp = iconv_open("UTF-8", fromcodes);
-      if (iconvfromp == NULL) {
+      if (iconvfromp == (size_t)-1) {
 	goto err;
       }
       TCONV_TRACE(tconvp, "%s - iconv_open(\"%s\", \"%s\") returned %p", funcs, "UTF-8", fromcodes, iconvfromp);
