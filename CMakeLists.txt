@@ -169,6 +169,9 @@ FOREACH (_target tconvExe tconvExe_static)
   ELSE ()
     SET_TARGET_PROPERTIES(${_target} PROPERTIES OUTPUT_NAME tconv_static)
   ENDIF ()
+  IF (CMAKE_C_COMPILER_ID STREQUAL SunPro)
+    TARGET_LINK_LIBRARIES(${_target} PUBLIC Crun)
+  ENDIF ()
 ENDFOREACH ()
 
 ################
@@ -183,6 +186,9 @@ MYPACKAGETESTEXECUTABLE(tconvExample test/example.c)
 FOREACH (_target tconvExample tconvExample_static)
   TARGET_COMPILE_DEFINITIONS(${_target} PRIVATE -DOPTPARSE_IMPLEMENTATION -DOPTPARSE_API=static)
   TARGET_INCLUDE_DIRECTORIES(${_target} PRIVATE ${3RDPARTY_OUTPUT_PATH}/optparse)
+  IF (CMAKE_C_COMPILER_ID STREQUAL SunPro)
+    TARGET_LINK_LIBRARIES(${_target} PUBLIC Crun)
+  ENDIF ()
 ENDFOREACH ()
 
 #########
