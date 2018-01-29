@@ -251,10 +251,10 @@ find(
 	    my $file = File::Spec->canonpath($_);
 	    if (-f $file && ($file =~ /\.c$/ || $file =~ /\.cpp$/)) {
                 #
-                # We know that ICU.c and alias.c are exceptions
+                # We know that *ICU.c are exceptions
                 #
                 my $bfile = basename($file);
-                if (! grep { $bfile eq $_ } qw/ICU.c alias.c/) {
+                if (! ($file =~ /ICU\.c$/)) {
                     push(@sources, $file)
                 }
 	    }
