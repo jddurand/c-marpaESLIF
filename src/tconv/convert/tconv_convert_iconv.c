@@ -21,7 +21,7 @@ void  *tconv_convert_iconv_new(tconv_t tconvp, const char *tocodes, const char *
   iconvp = iconv_open(tocodes, fromcodes);
   TCONV_TRACE(tconvp, "%s - iconv_open(\"%s\", \"%s\") returns %p", funcs, tocodes, fromcodes, iconvp);
 
-  return iconvp;
+  return (iconvp == (iconv_t)-1) ? NULL : iconvp;
 }
 
 /*****************************************************************************/
