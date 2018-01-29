@@ -405,27 +405,31 @@ int main(int ac, char **av)
   exit(0);
 }';
 
-    my $cbuilder = ExtUtils::CBuilder->new();
-    my ($fh, $filename) = tempfile(SUFFIX => '.c', UNLINK => 0);
-    print $fh $source;
-    close($fh) || warn "Cannot close $filename, $!";
+    my $rc =  eval {
+        my $cbuilder = ExtUtils::CBuilder->new();
+        my ($fh, $filename) = tempfile(SUFFIX => '.c', UNLINK => 0);
+        print $fh $source;
+        close($fh) || warn "Cannot close $filename, $!";
 
-    my $obj = $cbuilder->object_file($filename);
-    $cbuilder->compile(
-        source        => $filename,
-        object_file   => $obj,
-        'C++'         => 0
-        );
-    $cbuilder->link_executable(
-        module_name => 'ICONV::TEST',
-        objects => $obj
-        );
-    system($cbuilder->exe_file($obj), 'unused', 'parameter');
-    my $exitcode =  $? >> 8;
-    unlink $cbuilder->exe_file($obj);
-    unlink $obj;
-    my $rc = $exitcode ? 0 : 1;
-    unlink $filename;
+        my $obj = $cbuilder->object_file($filename);
+        $cbuilder->compile(
+            source        => $filename,
+            object_file   => $obj,
+            'C++'         => 0
+            );
+        $cbuilder->link_executable(
+            module_name => 'ICONV::TEST',
+            objects => $obj
+            );
+        system($cbuilder->exe_file($obj), 'unused', 'parameter');
+        my $exitcode =  $? >> 8;
+        unlink $cbuilder->exe_file($obj);
+        unlink $obj;
+        unlink $filename;
+        $exitcode ? 0 : 1;
+    } // 0;
+
+    print $@ if $@;
 
     return $rc;
 }
