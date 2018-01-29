@@ -235,6 +235,12 @@ void  *tconv_convert_iconv_new(tconv_t tconvp, const char *tocodes, const char *
     intermediatecharsets = UTF8s;
     intermediateutf8b    = 1;
     goto force_intermediate;
+  } else {
+#endif
+#ifdef ICONV_IS_NOT_TRUSTABLE
+    TCONV_TRACE(tconvp, "%s - Trying immediate iconv", funcs);
+    intermediatecharsets = NULL;
+    intermediateutf8b    = 0;
   }
 #endif
 
