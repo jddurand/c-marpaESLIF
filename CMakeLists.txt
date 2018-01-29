@@ -7,7 +7,7 @@ MYPACKAGESTART (tconv 1 0 46)
 ###########
 # Library #
 ###########
-SET (libtconv_src src/tconv.c src/tconv/charset/cchardet.c)
+SET (libtconv_src src/tconv.c src/tconv/charset/tconv_charset_cchardet.c)
 SET (libtconv_inc)
 
 # ------------------------------------
@@ -30,7 +30,7 @@ FILE (WRITE
 "
   )
 FUNCTION (CREATE_ICONV_H src dst)
-  SET (DLL_VARIABLES "") # Just to be sure
+  SET (DLL_VARIABLE "") # Just to be sure
   SET (EILSEQ 134679) # Fallback value if any
   SET (ICONV_CONST "")
   SET (USE_MBSTATE_T "0")
@@ -47,11 +47,12 @@ CREATE_ICONV_H(${3RDPARTY_OUTPUT_PATH}/libiconv-1.15/include/iconv.h.in ${3RDPAR
 CREATE_LOCALCHARSET_H(${3RDPARTY_OUTPUT_PATH}/libiconv-1.15/libcharset/include/localcharset.h.in ${3RDPARTY_OUTPUT_PATH}/libiconv-1.15/libcharset/include/localcharset.h @ONLY)
 INCLUDE (CheckCSourceCompiles)
 CHECK_C_SOURCE_COMPILES("
+  #include <stdlib.h>
   #include <langinfo.h>
   int main(int ac, char **av)
   {
     char *cs = nl_langinfo(CODESET);
-    return 0;
+    exit(0);
   }"
   HAVE_LANGINFO_CODESET)
 
@@ -183,7 +184,7 @@ ENDIF ()
 FIND_PACKAGE (ICU)
 IF (ICU_FOUND)
   SET (TCONV_HAVE_ICU 1)
-  SET (icu_src src/tconv/charset/ICU.c src/tconv/convert/ICU.c)
+  SET (icu_src src/tconv/charset/tconv_charset_ICU.c src/tconv/convert/tconv_convert_ICU.c)
   LIST (APPEND libtconv_src ${icu_src})
   IF (NOT ("${ICU_INCLUDE_DIRS}" STREQUAL ""))
     LIST (APPEND libtconv_inc ${ICU_INCLUDE_DIRS})
@@ -202,7 +203,7 @@ SET (TCONV_HAVE_ICONV 1)
 SET (ICONV_SECOND_ARGUMENT_IS_CONST FALSE)
 SET (ICONV_CAN_TRANSLIT TRUE)
 SET (ICONV_CAN_IGNORE TRUE)
-LIST (APPEND libtconv_src src/tconv/convert/iconv.c)
+LIST (APPEND libtconv_src src/tconv/convert/tconv_convert_iconv.c)
 LIST (APPEND libtconv_inc ${3RDPARTY_OUTPUT_PATH}/libiconv-1.15/include)
 
 MYPACKAGELIBRARY(
