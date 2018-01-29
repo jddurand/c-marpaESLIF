@@ -58,6 +58,12 @@ CHECK_C_SOURCE_COMPILES("
 INCLUDE ( CheckSymbolExists )
 CHECK_SYMBOL_EXISTS ( getc_unlocked "stdio.h" HAVE_DECL_GETC_UNLOCKED )
 
+INCLUDE (TestBigEndian)
+TEST_BIG_ENDIAN(IS_BIG_ENDIAN)
+IF (NOT IS_BIG_ENDIAN)
+  SET (WORDS_LITTLEENDIAN 1)
+ENDIF ()
+
 LIST (APPEND libtconv_iconv_src
   ${3RDPARTY_OUTPUT_PATH}/libiconv-1.15/libcharset/lib/localcharset.c
   ${3RDPARTY_OUTPUT_PATH}/libiconv-1.15/lib/relocatable.c
@@ -87,7 +93,7 @@ FOREACH (_iconv_src ${libtconv_iconv_src})
     PROPERTY COMPILE_DEFINITIONS
     HAVE_WORKING_O_NOFOLLOW=0
     )
-  FOREACH (_have HAVE_LANGINFO_CODESET HAVE_DECL_GETC_UNLOCKED)
+  FOREACH (_have HAVE_LANGINFO_CODESET HAVE_DECL_GETC_UNLOCKED WORDS_LITTLEENDIAN)
     IF (${${_have}})
       SET_PROPERTY(
 	SOURCE ${_iconv_src}
