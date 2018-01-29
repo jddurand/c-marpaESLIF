@@ -669,8 +669,6 @@ static inline size_t tconv_convert_iconv_wrapperl(tconv_t tconvp, iconv_t iconvp
   char              *orig_outbufp;
   char              *max_outbufp;
   size_t             rcl;
-  int                rci;
-  unsigned long      uint32;
   size_t             erroroffset;
 
   /* We are only interested by the case of real production, not flush, nor reset, nor when then is no output buffer, nor when destination is not UTF-8 */

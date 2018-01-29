@@ -21,13 +21,20 @@ EXECUTE_PROCESS(
 #
 # iconv uses config.h, we are using tconv_config.h, so there is no clash luckily
 #
-FILE (WRITE ${3RDPARTY_OUTPUT_PATH}/libiconv-1.15/include/config.h "/* Generated file */")
+FILE (WRITE
+  ${3RDPARTY_OUTPUT_PATH}/libiconv-1.15/include/config.h
+"
+/* Generated file */
+/* localcharset.c will play itself with WIN32_LEAN_AND_MEAN... */
+#undef WIN32_LEAN_AND_MEAN
+"
+  )
 FUNCTION (CREATE_ICONV_H src dst)
   SET (DLL_VARIABLES "") # Just to be sure
   SET (EILSEQ 134679) # Fallback value if any
   SET (ICONV_CONST "")
-  SET (USE_MBSTATE_T FALSE)
-  SET (HAVE_WCHAR_T FALSE)
+  SET (USE_MBSTATE_T "0")
+  SET (HAVE_WCHAR_T "0")
   MESSAGE (STATUS "Configuring ${dst}")
   CONFIGURE_FILE (${src} ${dst})
 ENDFUNCTION ()
@@ -36,8 +43,20 @@ FUNCTION (CREATE_LOCALCHARSET_H src dst)
   CONFIGURE_FILE (${src} ${dst})
 ENDFUNCTION ()
 
-CREATE_ICONV_H(${3RDPARTY_OUTPUT_PATH}/libiconv-1.15/include/iconv.h.in ${3RDPARTY_OUTPUT_PATH}/libiconv-1.15/include/iconv.h)
-CREATE_LOCALCHARSET_H(${3RDPARTY_OUTPUT_PATH}/libiconv-1.15/libcharset/include/localcharset.h.in ${3RDPARTY_OUTPUT_PATH}/libiconv-1.15/libcharset/include/localcharset.h)
+CREATE_ICONV_H(${3RDPARTY_OUTPUT_PATH}/libiconv-1.15/include/iconv.h.in ${3RDPARTY_OUTPUT_PATH}/libiconv-1.15/include/iconv.h @ONLY)
+CREATE_LOCALCHARSET_H(${3RDPARTY_OUTPUT_PATH}/libiconv-1.15/libcharset/include/localcharset.h.in ${3RDPARTY_OUTPUT_PATH}/libiconv-1.15/libcharset/include/localcharset.h @ONLY)
+INCLUDE (CheckCSourceCompiles)
+CHECK_C_SOURCE_COMPILES("
+  #include <langinfo.h>
+  int main(int ac, char **av)
+  {
+    char *cs = nl_langinfo(CODESET);
+    return 0;
+  }"
+  HAVE_LANGINFO_CODESET)
+
+INCLUDE ( CheckSymbolExists )
+CHECK_SYMBOL_EXISTS ( getc_unlocked "stdio.h" HAVE_DECL_GETC_UNLOCKED )
 
 LIST (APPEND libtconv_iconv_src
   ${3RDPARTY_OUTPUT_PATH}/libiconv-1.15/libcharset/lib/localcharset.c
@@ -68,6 +87,16 @@ FOREACH (_iconv_src ${libtconv_iconv_src})
     PROPERTY COMPILE_DEFINITIONS
     HAVE_WORKING_O_NOFOLLOW=0
     )
+  FOREACH (_have HAVE_LANGINFO_CODESET HAVE_DECL_GETC_UNLOCKED)
+    IF (${${_have}})
+      SET_PROPERTY(
+	SOURCE ${_iconv_src}
+	APPEND
+	PROPERTY COMPILE_DEFINITIONS
+	${_have}=1
+	)
+    ENDIF ()
+  ENDFOREACH ()
 ENDFOREACH ()
 
 LIST (APPEND libtconv_src ${libtconv_iconv_src})
