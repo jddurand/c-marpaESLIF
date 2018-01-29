@@ -111,7 +111,7 @@ my $extra_compiler_flags = '';
     write_localcharset_h($localcharset_h_in, $localcharset_h);
 
     print "... Checking for nl_langinfo(CODESET)\n";
-    $extra_compiler_flags .= " -DICONV_SECOND_ARGUMENT_IS_CONST" if get_have_langinfo_codeset();
+    $extra_compiler_flags .= " -DHAVE_LANGINFO_CODESET" if get_have_langinfo_codeset();
 
     my $have_decl_getc_unlocked;
     $ac->check_func('getc_unlocked', {    # and not check_decl
