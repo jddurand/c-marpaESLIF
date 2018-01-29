@@ -10,9 +10,72 @@ MYPACKAGESTART (tconv 1 0 46)
 SET (libtconv_src src/tconv.c src/tconv/charset/cchardet.c)
 SET (libtconv_inc)
 
+# ------------------------------------
+# iconv sources: libiconv-1.15 builtin
+# ------------------------------------
+MESSAGE (STATUS "Unpacking libiconv")
+EXECUTE_PROCESS(
+  COMMAND "${CMAKE_COMMAND}" -E tar xzf ${PROJECT_SOURCE_DIR}/3rdparty/tar/libiconv-1.15.tar.gz
+  WORKING_DIRECTORY "${3RDPARTY_OUTPUT_PATH}"
+  )
+#
+# iconv uses config.h, we are using tconv_config.h, so there is no clash luckily
+#
+FILE (WRITE ${3RDPARTY_OUTPUT_PATH}/libiconv-1.15/include/config.h "/* Generated file */")
+FUNCTION (CREATE_ICONV_H src dst)
+  SET (DLL_VARIABLES "") # Just to be sure
+  SET (EILSEQ 134679) # Fallback value if any
+  SET (ICONV_CONST "")
+  SET (USE_MBSTATE_T FALSE)
+  SET (HAVE_WCHAR_T FALSE)
+  MESSAGE (STATUS "Configuring ${dst}")
+  CONFIGURE_FILE (${src} ${dst})
+ENDFUNCTION ()
+FUNCTION (CREATE_LOCALCHARSET_H src dst)
+  MESSAGE (STATUS "Configuring ${dst}")
+  CONFIGURE_FILE (${src} ${dst})
+ENDFUNCTION ()
+
+CREATE_ICONV_H(${3RDPARTY_OUTPUT_PATH}/libiconv-1.15/include/iconv.h.in ${3RDPARTY_OUTPUT_PATH}/libiconv-1.15/include/iconv.h)
+CREATE_LOCALCHARSET_H(${3RDPARTY_OUTPUT_PATH}/libiconv-1.15/libcharset/include/localcharset.h.in ${3RDPARTY_OUTPUT_PATH}/libiconv-1.15/libcharset/include/localcharset.h)
+
+LIST (APPEND libtconv_iconv_src
+  ${3RDPARTY_OUTPUT_PATH}/libiconv-1.15/libcharset/lib/localcharset.c
+  ${3RDPARTY_OUTPUT_PATH}/libiconv-1.15/lib/relocatable.c
+  ${3RDPARTY_OUTPUT_PATH}/libiconv-1.15/lib/iconv.c
+  )
+FOREACH (_iconv_src ${libtconv_iconv_src})
+  SET_PROPERTY(
+    SOURCE ${_iconv_src}
+    PROPERTY COMPILE_FLAGS
+    " -I${3RDPARTY_OUTPUT_PATH}/libiconv-1.15/include -I${3RDPARTY_OUTPUT_PATH}/libiconv-1.15/libcharset/include"
+    )
+  SET_PROPERTY(
+    SOURCE ${_iconv_src}
+    APPEND
+    PROPERTY COMPILE_DEFINITIONS
+    ICONV_CONST=
+    )
+  SET_PROPERTY(
+    SOURCE ${_iconv_src}
+    APPEND
+    PROPERTY COMPILE_DEFINITIONS
+    LIBDIR=""
+    )
+  SET_PROPERTY(
+    SOURCE ${_iconv_src}
+    APPEND
+    PROPERTY COMPILE_DEFINITIONS
+    HAVE_WORKING_O_NOFOLLOW=0
+    )
+ENDFOREACH ()
+
+LIST (APPEND libtconv_src ${libtconv_iconv_src})
+
 # ----------------
 # ccharset sources
 # ----------------
+MESSAGE (STATUS "Unpacking cchardet")
 EXECUTE_PROCESS(
   COMMAND "${CMAKE_COMMAND}" -E tar xzf ${PROJECT_SOURCE_DIR}/3rdparty/tar/cchardet-1.0.0.tar.gz
   WORKING_DIRECTORY "${3RDPARTY_OUTPUT_PATH}"
@@ -75,6 +138,10 @@ ELSE ()
   SET (DLFCNWIN32_FOUND FALSE)
 ENDIF ()
 
+###################
+# Default Plugins #
+###################
+
 # ---
 # ICU
 # ---
@@ -95,34 +162,12 @@ ENDIF ()
 # -----
 # ICONV
 # -----
-FIND_PACKAGE (Iconv)
-IF (NOT ICONV_FOUND)
-  IF (WIN32 AND NOT CYGWIN)
-    EXECUTE_PROCESS(
-      COMMAND "${CMAKE_COMMAND}" -E copy_directory "${PROJECT_SOURCE_DIR}/3rdparty/github/winiconv" "${3RDPARTY_OUTPUT_PATH}/winiconv"
-      WORKING_DIRECTORY "${3RDPARTY_OUTPUT_PATH}"
-      )
-    SET (ICONV_FOUND TRUE)
-    SET (TCONV_HAVE_ICONV 1)
-    LIST (APPEND libtconv_src "${3RDPARTY_OUTPUT_PATH}/winiconv/win_iconv.c")
-    LIST (APPEND libtconv_inc "${3RDPARTY_OUTPUT_PATH}/winiconv")
-    SET (ICONV_INCLUDE_DIR "${3RDPARTY_OUTPUT_PATH}/winiconv")
-    SET (ICONV_LINK_FLAGS)
-    SET (ICONV_SECOND_ARGUMENT_IS_CONST TRUE)
-  ENDIF ()
-  SET (WINICONV TRUE)
-ELSE ()
-  SET (TCONV_HAVE_ICONV 1)
-  SET (WINICONV FALSE)
-ENDIF ()
-IF (ICONV_FOUND)
-  FIND_PACKAGE (IconvCapabilities)
-  SET (iconv_src src/tconv/convert/iconv.c)
-  LIST (APPEND libtconv_src ${iconv_src})
-  IF (NOT ("${ICONV_INCLUDE_DIRS}" STREQUAL ""))
-    LIST (APPEND libtconv_inc ${ICONV_INCLUDE_DIRS})
-  ENDIF ()
-ENDIF ()
+SET (ICONV_FOUND TRUE)
+SET (TCONV_HAVE_ICONV 1)
+SET (ICONV_SECOND_ARGUMENT_IS_CONST FALSE)
+SET (ICONV_CAN_TRANSLIT TRUE)
+SET (ICONV_CAN_IGNORE TRUE)
+LIST (APPEND libtconv_src src/tconv/convert/iconv.c)
 
 MYPACKAGELIBRARY(
   ${CMAKE_CURRENT_SOURCE_DIR}/include/tconv_config.h.in
@@ -147,6 +192,11 @@ FOREACH (_target tconv tconv_static)
     TARGET_LINK_LIBRARIES(${_target} PUBLIC "psapi")
   ENDIF ()
 ENDFOREACH ()
+
+################
+# Dependencies #
+################
+MYPACKAGEDEPENDENCY (genericLogger "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/genericLogger" LIBS)
 
 ###############
 # Executables #
@@ -174,14 +224,6 @@ FOREACH (_target tconvExe tconvExe_static)
   ENDIF ()
 ENDFOREACH ()
 
-################
-# Dependencies #
-################
-MYPACKAGEDEPENDENCY (genericLogger "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/genericLogger" LIBS)
-
-###############
-# Executables #
-###############
 MYPACKAGETESTEXECUTABLE(tconvExample test/example.c)
 FOREACH (_target tconvExample tconvExample_static)
   TARGET_COMPILE_DEFINITIONS(${_target} PRIVATE -DOPTPARSE_IMPLEMENTATION -DOPTPARSE_API=static)
