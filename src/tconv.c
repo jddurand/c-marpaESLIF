@@ -453,6 +453,12 @@ tconv_t tconv_open_ext(const char *tocodes, const char *fromcodes, tconv_option_
         tconvp->convertExternal.tconv_convert_runp  = tconv_convert_ICU_run;
         tconvp->convertExternal.tconv_convert_freep = tconv_convert_ICU_free;
         tconvp->convertExternal.optionp             = tconvOptionp->convertp->u.ICUOptionp;
+#else
+	TCONV_TRACE(tconvp, "%s - ICU converter is not available", funcs);
+        tconvp->convertExternal.tconv_convert_newp  = NULL;
+        tconvp->convertExternal.tconv_convert_runp  = NULL;
+        tconvp->convertExternal.tconv_convert_freep = NULL;
+        tconvp->convertExternal.optionp             = NULL;
 #endif
         break;
       case TCONV_CONVERT_ICONV:
@@ -462,6 +468,12 @@ tconv_t tconv_open_ext(const char *tocodes, const char *fromcodes, tconv_option_
         tconvp->convertExternal.tconv_convert_runp  = tconv_convert_iconv_run;
         tconvp->convertExternal.tconv_convert_freep = tconv_convert_iconv_free;
         tconvp->convertExternal.optionp             = tconvOptionp->convertp->u.iconvOptionp;
+#else
+	TCONV_TRACE(tconvp, "%s - ICONV converter is not available", funcs);
+        tconvp->convertExternal.tconv_convert_newp  = NULL;
+        tconvp->convertExternal.tconv_convert_runp  = NULL;
+        tconvp->convertExternal.tconv_convert_freep = NULL;
+        tconvp->convertExternal.optionp             = NULL;
 #endif
         break;
       default:
