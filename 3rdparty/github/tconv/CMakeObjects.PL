@@ -125,6 +125,7 @@ my $extra_compiler_flags = '';
     $extra_compiler_flags .= " -DICONV_CONST=";
     $extra_compiler_flags .= " -DLIBDIR=\\\"\\\"";
     $extra_compiler_flags .= " -DHAVE_WORKING_O_NOFOLLOW=0";
+    $extra_compiler_flags .= " -DENABLE_EXTRA";
     
 
     push(@additional_srcdir, File::Spec->catfile('3rdparty', 'output', 'libiconv-1.15', 'libcharset', 'lib', 'localcharset.c'));
