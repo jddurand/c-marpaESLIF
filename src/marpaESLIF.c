@@ -8219,6 +8219,20 @@ marpaESLIFRecognizer_t *marpaESLIFRecognizer_newFromp(marpaESLIFGrammar_t *marpa
 }
 
 /*****************************************************************************/
+short marpaESLIFRecognizer_set_exhausted_flagb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, short exhaustedb)
+/*****************************************************************************/
+{
+  if (marpaESLIFRecognizerp == NULL) {
+    errno = EINVAL;
+    return 0;
+  }
+
+  marpaESLIFRecognizerp->marpaESLIFRecognizerOption.exhaustedb = exhaustedb;
+
+  return 1;
+}
+
+/*****************************************************************************/
 static inline short _marpaESLIFGrammar_parseb(marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaESLIFRecognizerOption_t *marpaESLIFRecognizerOptionp, marpaESLIFValueOption_t *marpaESLIFValueOptionp, short discardb, short noEventb, short silentb, marpaESLIFRecognizer_t *marpaESLIFRecognizerParentp, short *exhaustedbp, marpaESLIFValueResult_t *marpaESLIFValueResultp, int maxStartCompletionsi, size_t *lastSizeBeforeCompletionlp, int *numberOfStartCompletionsip)
 /*****************************************************************************/
 {
@@ -12750,10 +12764,15 @@ short marpaESLIFRecognizer_readb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, 
 short marpaESLIFRecognizer_inputb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char **inputsp, size_t *inputlp)
 /*****************************************************************************/
 {
+  static const char *funcs = "marpaESLIFRecognizer_inputb";
+
   if (marpaESLIFRecognizerp == NULL) {
     errno = EINVAL;
     return 0;
   }
+
+  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
+  MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
 
   if (inputsp != NULL) {
     *inputsp = marpaESLIFRecognizerp->marpaESLIF_streamp->inputs;
@@ -12761,6 +12780,9 @@ short marpaESLIFRecognizer_inputb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp,
   if (inputlp != NULL) {
     *inputlp = marpaESLIFRecognizerp->marpaESLIF_streamp->inputl;
   }
+
+  MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "return 1");
+  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC;
 
   return 1;
 }

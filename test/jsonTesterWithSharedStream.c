@@ -8,7 +8,7 @@
 static short                         inputReaderb(void *userDatavp, char **inputsp, size_t *inputlp, short *eofbp, short *characterStreambp, char **encodingOfEncodingsp, char **encodingsp, size_t *encodinglp);
 static marpaESLIFValueRuleCallback_t ruleActionResolver(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions);
 short                                noop(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
-static short                         doparseb(genericLogger_t *genericLoggerp, marpaESLIFRecognizer_t *marpaESLIFRecognizerParentp, marpaESLIFGrammar_t *marpaESLIFGrammarObjectp, char *inputs);
+static short                         doparseb(genericLogger_t *genericLoggerp, marpaESLIFRecognizer_t *marpaESLIFRecognizerParentp, marpaESLIFGrammar_t *marpaESLIFGrammarObjectp, char *inputs, int recursionleveli);
 
 typedef struct marpaESLIFTester_context {
   char            *inputs;
@@ -23,6 +23,7 @@ const static char *dsl = "\n"
 "# comma is provided as a char class here, to ensure that char classes\n"
 "# as separators are in the test suite.\n"
 "object       ::= LCURLY members RCURLY action => ::u8\"\\a\\x{FF}\\u{0972}\\U{0001F600}\\r/* Rule: Comment Inside */\" /* Comment */ ::u8\"\" /* Comment again */ ::u8\"xxx\"\n"
+"               | OBJECT_FROM_INNER_GRAMMAR\n"
 "members      ::= pair*                 action => do_array separator => ','\n"
 "pair         ::= string ':' value      action => do_array\n"
 "value        ::= string\n"
@@ -62,8 +63,9 @@ const static char *dsl = "\n"
 "whitespace     ~ [\\s]+\n"
 ":lexeme ::= LCURLY pause => before event => ^LCURLY\n"
 "LCURLY         ~ '{'\n"
-":lexeme ::= RCURLY pause => after event => RCURLY$\n"
+":lexeme ::= RCURLY pause => before event => ^RCURLY\n"
 "RCURLY         ~ '}'\n"
+"OBJECT_FROM_INNER_GRAMMAR ~ [^\\s\\S]\n"
   ;
 
 static char *inputs[] = {
@@ -170,7 +172,7 @@ int main() {
   marpaESLIFRecognizerOption_t marpaESLIFRecognizerOption;
   marpaESLIFRecognizer_t      *marpaESLIFRecognizerJsonp = NULL;
 
-  genericLoggerp = GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_DEBUG);
+  genericLoggerp = GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_INFO);
   if (genericLoggerp == NULL) {
     perror("GENERICLOGGER_NEW");
     goto err;
@@ -228,15 +230,9 @@ int main() {
       goto err;
     }
 
-    /* genericLogger_logLevel_seti(genericLoggerp, GENERICLOGGER_LOGLEVEL_TRACE); */
-    /*
-    fprintf(stderr, "====> ATTACH ME %d\n", getpid());
-    sleep(10);
-    */
-    if (! doparseb(genericLoggerp, marpaESLIFRecognizerJsonp, marpaESLIFGrammarArrayp[OBJECT], inputs[i])) {
+    if (! doparseb(genericLoggerp, marpaESLIFRecognizerJsonp, marpaESLIFGrammarArrayp[OBJECT], inputs[i], 0 /* recursionleveli */)) {
       goto err;
     }
-    genericLogger_logLevel_seti(genericLoggerp, GENERICLOGGER_LOGLEVEL_INFO);
 
     marpaESLIFRecognizer_freev(marpaESLIFRecognizerJsonp);
     marpaESLIFRecognizerJsonp = NULL;
@@ -293,7 +289,7 @@ short noop(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int
 }
 
 /*****************************************************************************/
-static short doparseb(genericLogger_t *genericLoggerp, marpaESLIFRecognizer_t *marpaESLIFRecognizerParentp, marpaESLIFGrammar_t *marpaESLIFGrammarObjectp, char *inputs)
+static short doparseb(genericLogger_t *genericLoggerp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFGrammar_t *marpaESLIFGrammarObjectp, char *inputs, int recursionleveli)
 /*****************************************************************************/
 {
   marpaESLIFValue_t           *marpaESLIFValuep = NULL;
@@ -313,24 +309,25 @@ static short doparseb(genericLogger_t *genericLoggerp, marpaESLIFRecognizer_t *m
   size_t                       l;
   short                        rcb;
   marpaESLIFAlternative_t      marpaESLIFAlternative;
+  size_t                       inputl;
+  short                        eofb;
 
   if (inputs != NULL) {
-    GENERICLOGGER_INFO(genericLoggerp, "Scanning JSON");
+    GENERICLOGGER_INFOF(genericLoggerp, "[%d] Scanning JSON", recursionleveli);
     GENERICLOGGER_INFO(genericLoggerp, "-------------");
     GENERICLOGGER_INFOF(genericLoggerp, "%s", inputs);
     GENERICLOGGER_INFO(genericLoggerp, "-------------");
   } else {
-    GENERICLOGGER_INFO(genericLoggerp, "Scanning JSON's object");
+    GENERICLOGGER_INFOF(genericLoggerp, "[%d] Scanning JSON's object", recursionleveli);
   }
 
   /* Scan the input */
-  /* genericLogger_logLevel_seti(genericLoggerp, GENERICLOGGER_LOGLEVEL_TRACE); */
-  if (! marpaESLIFRecognizer_scanb(marpaESLIFRecognizerParentp, 1 /* initialEventsb */, &continueb, &exhaustedb)) {
+  if (! marpaESLIFRecognizer_scanb(marpaESLIFRecognizerp, 1 /* initialEventsb */, &continueb, &exhaustedb)) {
     goto err;
   }
 
   while (continueb) {
-    if (! marpaESLIFRecognizer_eventb(marpaESLIFRecognizerParentp, &eventArrayl, &eventArrayp)) {
+    if (! marpaESLIFRecognizer_eventb(marpaESLIFRecognizerp, &eventArrayl, &eventArrayp)) {
       goto err;
     }
     for (l = 0; l < eventArrayl; l++) {
@@ -338,13 +335,13 @@ static short doparseb(genericLogger_t *genericLoggerp, marpaESLIFRecognizer_t *m
       if (events == NULL) {
         continue;
       }
-      GENERICLOGGER_INFOF(genericLoggerp, "Event %s", events);
+      GENERICLOGGER_DEBUGF(genericLoggerp, "Event %s", events);
       if (strcmp(events, "lstring$") == 0) {
 
-        if (! marpaESLIFRecognizer_lexeme_last_pauseb(marpaESLIFRecognizerParentp, "lstring", &pauses, &pausel)) {
+        if (! marpaESLIFRecognizer_lexeme_last_pauseb(marpaESLIFRecognizerp, "lstring", &pauses, &pausel)) {
           goto err;
         }
-        if (! marpaESLIFRecognizer_locationb(marpaESLIFRecognizerParentp, &linel, &columnl)) {
+        if (! marpaESLIFRecognizer_locationb(marpaESLIFRecognizerp, &linel, &columnl)) {
           goto err;
         }
         GENERICLOGGER_INFOF(genericLoggerp, "Got lstring: %s; length=%ld, current position is {line, column} = {%ld, %ld}", pauses, (unsigned long) pausel, (unsigned long) linel, (unsigned long) columnl);
@@ -361,11 +358,16 @@ static short doparseb(genericLogger_t *genericLoggerp, marpaESLIFRecognizer_t *m
         marpaESLIFRecognizerOption.buftriggerperci           = 50;
         marpaESLIFRecognizerOption.bufaddperci               = 50;
 
-        marpaESLIFRecognizerObjectp = marpaESLIFRecognizer_newFromp(marpaESLIFGrammarObjectp, marpaESLIFRecognizerParentp);
+        marpaESLIFRecognizerObjectp = marpaESLIFRecognizer_newFromp(marpaESLIFGrammarObjectp, marpaESLIFRecognizerp);
         if (marpaESLIFRecognizerObjectp == NULL) {
           goto err;
         }
 
+        /* Set exhausted flag since this grammar is very likely to exit when data remains */
+        if (! marpaESLIFRecognizer_set_exhausted_flagb(marpaESLIFRecognizerObjectp, 1)) {
+          goto err;
+        }
+  
         /* Force read of the LCURLY lexeme */
         marpaESLIFAlternative.lexemes               = "LCURLY";
         marpaESLIFAlternative.value.type            = MARPAESLIF_VALUE_TYPE_CHAR;
@@ -378,15 +380,33 @@ static short doparseb(genericLogger_t *genericLoggerp, marpaESLIFRecognizer_t *m
           goto err;
         }
 
-        if (! doparseb(genericLoggerp, marpaESLIFRecognizerObjectp, marpaESLIFGrammarObjectp, NULL)) {
+        if (! doparseb(genericLoggerp, marpaESLIFRecognizerObjectp, marpaESLIFGrammarObjectp, NULL, recursionleveli + 1)) {
           goto err;
         }
         marpaESLIFRecognizer_freev(marpaESLIFRecognizerObjectp);
         marpaESLIFRecognizerObjectp = NULL;
 
-      } else if (strcmp(events, "RCURLY$") == 0) {
-        break;
+        /* Read a fake object - no need to advance the stream, because we shared it with marpaESLIFRecognizerObjectp */
+        marpaESLIFAlternative.lexemes               = "OBJECT_FROM_INNER_GRAMMAR";
+        marpaESLIFAlternative.value.type            = MARPAESLIF_VALUE_TYPE_UNDEF;
+        marpaESLIFAlternative.grammarLengthl        = 1;
+        if (! marpaESLIFRecognizer_lexeme_readb(marpaESLIFRecognizerp, &marpaESLIFAlternative, 0 /* Length in the real input */)) {
+          goto err;
+        }
+      } else if (strcmp(events, "^RCURLY") == 0) {
+        /* Force read of the RCURLY lexeme */
+        marpaESLIFAlternative.lexemes               = "RCURLY";
+        marpaESLIFAlternative.value.type            = MARPAESLIF_VALUE_TYPE_CHAR;
+        marpaESLIFAlternative.value.u.c             = '{';
+        marpaESLIFAlternative.value.contexti        =  0; /* Not used */
+        marpaESLIFAlternative.value.sizel           =  0; /* Not used */
+        marpaESLIFAlternative.value.representationp = NULL; /* Default representation is ok */
+        marpaESLIFAlternative.grammarLengthl        = 1;
+        if (! marpaESLIFRecognizer_lexeme_readb(marpaESLIFRecognizerp, &marpaESLIFAlternative, 1 /* Length in the real input */)) {
+          goto err;
+        }
 
+        goto force_valuation;
       } else {
 
         GENERICLOGGER_ERRORF(genericLoggerp, "Unmanaged event %s", events);
@@ -394,12 +414,24 @@ static short doparseb(genericLogger_t *genericLoggerp, marpaESLIFRecognizer_t *m
 
       }
     }
+    /* Check if there is something else to read */
+    if (! marpaESLIFRecognizer_isEofb(marpaESLIFRecognizerp, &eofb)) {
+      goto err;
+    }
+    if (! marpaESLIFRecognizer_inputb(marpaESLIFRecognizerp, NULL /* inputsp */, &inputl)) {
+      goto err;
+    }
+    if ((inputl <= 0) && eofb) {
+      rcb = 1;
+      goto done;
+    }
     /* Resume */
-    if (! marpaESLIFRecognizer_resumeb(marpaESLIFRecognizerParentp, 0, &continueb, &exhaustedb)) {
+    if (! marpaESLIFRecognizer_resumeb(marpaESLIFRecognizerp, 0, &continueb, &exhaustedb)) {
       goto err;
     }
   }
 
+ force_valuation:
   /* Call for valuation, letting marpaESLIF free the result */
   marpaESLIFValueOption.userDatavp            = NULL; /* User specific context */
   marpaESLIFValueOption.ruleActionResolverp   = ruleActionResolver; /* Will return the function doing the wanted rule action */
@@ -410,11 +442,10 @@ static short doparseb(genericLogger_t *genericLoggerp, marpaESLIFRecognizer_t *m
   marpaESLIFValueOption.ambiguousb            = 0;    /* Default: 0 */
   marpaESLIFValueOption.nullb                 = 0;    /* Default: 0 */
   marpaESLIFValueOption.maxParsesi            = 0;    /* Default: 0 */
-  marpaESLIFValuep = marpaESLIFValue_newp(marpaESLIFRecognizerParentp, &marpaESLIFValueOption);
+  marpaESLIFValuep = marpaESLIFValue_newp(marpaESLIFRecognizerp, &marpaESLIFValueOption);
   if (marpaESLIFValuep == NULL) {
     goto err;
   }
-  /* genericLogger_logLevel_seti(genericLoggerp, GENERICLOGGER_LOGLEVEL_TRACE); */
   if (! marpaESLIFValue_valueb(marpaESLIFValuep, NULL /* marpaESLIFValueResultp */)) {
     goto err;
   }
