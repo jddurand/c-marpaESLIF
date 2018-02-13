@@ -57,13 +57,14 @@ ENDFOREACH ()
 ###############
 # Executables #
 ###############
-MYPACKAGETESTEXECUTABLE(marpaESLIFTester     test/marpaESLIFTester.c)
-MYPACKAGETESTEXECUTABLE(adventTester         test/adventTester.c)
-MYPACKAGETESTEXECUTABLE(jsonTester           test/jsonTester.c)
-MYPACKAGETESTEXECUTABLE(selfTester           test/selfTester.c)
-MYPACKAGETESTEXECUTABLE(exceptionTester      test/exceptionTester.c)
-MYPACKAGETESTEXECUTABLE(exceptionTester2     test/exceptionTester2.c)
-MYPACKAGETESTEXECUTABLE(exceptionTester3     test/exceptionTester3.c)
+MYPACKAGETESTEXECUTABLE(marpaESLIFTester           test/marpaESLIFTester.c)
+MYPACKAGETESTEXECUTABLE(adventTester               test/adventTester.c)
+MYPACKAGETESTEXECUTABLE(jsonTester                 test/jsonTester.c)
+MYPACKAGETESTEXECUTABLE(jsonTesterWithSharedStream test/jsonTesterWithSharedStream.c)
+MYPACKAGETESTEXECUTABLE(selfTester                 test/selfTester.c)
+MYPACKAGETESTEXECUTABLE(exceptionTester            test/exceptionTester.c)
+MYPACKAGETESTEXECUTABLE(exceptionTester2           test/exceptionTester2.c)
+MYPACKAGETESTEXECUTABLE(exceptionTester3           test/exceptionTester3.c)
 
 ################
 # Dependencies #

@@ -5447,7 +5447,7 @@ short marpaESLIFRecognizer_shareb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp,
     return 0;
   }
 
-  return marpaESLIFRecognizer_shareb(marpaESLIFRecognizerp, marpaESLIFRecognizerSharedp);
+  return _marpaESLIFRecognizer_shareb(marpaESLIFRecognizerp, marpaESLIFRecognizerSharedp);
 }
 
 /*****************************************************************************/
@@ -8192,6 +8192,30 @@ static inline short _marpaESLIFRecognizer_shareb(marpaESLIFRecognizer_t *marpaES
 
   /* This function never fails */
   return 1;
+}
+
+/*****************************************************************************/
+marpaESLIFRecognizer_t *marpaESLIFRecognizer_newFromp(marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaESLIFRecognizer_t *marpaESLIFRecognizerSharedp)
+/*****************************************************************************/
+{
+  marpaESLIFRecognizer_t *marpaESLIFRecognizerp;
+
+  if (marpaESLIFRecognizerSharedp == NULL) {
+    errno = EINVAL;
+    return NULL;
+  }
+
+  marpaESLIFRecognizerp = marpaESLIFRecognizer_newp(marpaESLIFGrammarp, &(marpaESLIFRecognizerSharedp->marpaESLIFRecognizerOption));
+  if (marpaESLIFRecognizerp == NULL) {
+    return NULL;
+  }
+
+  if (! marpaESLIFRecognizer_shareb(marpaESLIFRecognizerp, marpaESLIFRecognizerSharedp)) {
+    marpaESLIFRecognizer_freev(marpaESLIFRecognizerp);
+    return NULL;
+  }
+
+  return marpaESLIFRecognizerp;
 }
 
 /*****************************************************************************/
