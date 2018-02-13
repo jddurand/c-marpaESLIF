@@ -272,27 +272,27 @@ struct marpaESLIFValue {
 };
 
 struct marpaESLIF_stream {
-  char                 *buffers;              /* Pointer to allocated buffer containing input */
-  size_t                bufferl;              /* Number of valid bytes in this buffer (!= allocated size) */
-  size_t                bufferallocl;         /* Number of allocated bytes in this buffer (!= valid bytes) */
-  char                 *globalOffsetp;        /* The offset between the original start of input, and current buffer */
-  short                 eofb;                 /* EOF flag */
-  short                 utfb;                 /* A flag to say if input is UTF-8 correct. Automatically true if charconvb is true. Can set be regex engine as well. */
-  short                 charconvb;            /* A flag to say if latest stream chunk was converted to UTF-8 */
-  char                 *lastFroms;            /* Last from encoding as per user, in user's encoding */
-  size_t                lastFroml;            /* Last from encoding length as per user, in user's encoding */
-  char                 *bytelefts;            /* Buffer when character conversion needs to reread leftover bytes */
-  size_t                byteleftl;            /* Usable length of this buffer */
-  size_t                byteleftallocl;       /* Allocated length of this buffer */
-  char                 *inputs;               /* Current pointer in input - specific to every recognizer (unless this recognizer attached another stream) */
-  size_t                inputl;               /* Current remaining bytes - specific to every recognizer (unless this recognizer attached another stream) */
-  size_t                bufsizl;              /* Effective bufsizl */
-  size_t                buftriggerl;          /* Minimum number of bytes to trigger crunch of data */
-  short                 nextReadIsFirstReadb; /* Flag to say if this is the first read ever done */
-  short                 noAnchorIsOkb;        /* Flag to say if the "A" flag in regexp modifiers is allowed: removing PCRE2_ANCHOR is allowed ONLY is the whole stream was read once */
-  char                  *encodings;           /* Current encoding. Always != NULL when _charconvb is true. Always NULL when charconvb is false. */
-  marpaESLIF_terminal_t *encodingp;           /* Terminal case-insensitive version of current encoding. Always != NULL when _charconvb is true. Always NULL when charconvb is false. */
-  tconv_t                tconvp;              /* current converter. Always != NULL when _charconvb is true. Always NULL when charconvb is false. */
+  char                  *buffers;              /* Pointer to allocated buffer containing input */
+  size_t                 bufferl;              /* Number of valid bytes in this buffer (!= allocated size) */
+  size_t                 bufferallocl;         /* Number of allocated bytes in this buffer (!= valid bytes) */
+  char                  *globalOffsetp;        /* The offset between the original start of input, and current buffer */
+  short                  eofb;                 /* EOF flag */
+  short                  utfb;                 /* A flag to say if input is UTF-8 correct. Automatically true if charconvb is true. Can be set by regex engine as well. */
+  short                  charconvb;            /* A flag to say if latest stream chunk was converted to UTF-8 */
+  char                  *lastFroms;            /* Last from encoding as per user, in user's encoding */
+  size_t                 lastFroml;            /* Last from encoding length as per user, in user's encoding */
+  char                  *bytelefts;            /* Buffer when character conversion needs to reread leftover bytes */
+  size_t                 byteleftl;            /* Usable length of this buffer */
+  size_t                 byteleftallocl;       /* Allocated length of this buffer */
+  char                  *inputs;               /* Current pointer in buffers */
+  size_t                 inputl;               /* Current remaining bytes */
+  size_t                 bufsizl;              /* Buffer bufsizl policy */
+  size_t                 buftriggerl;          /* Minimum number of bytes to trigger crunch of data */
+  short                  nextReadIsFirstReadb; /* Flag to say if next read is first read */
+  short                  noAnchorIsOkb;        /* Flag to say if the "A" flag in regexp modifiers is allowed: removing PCRE2_ANCHOR is allowed ONLY is the whole stream was read once */
+  char                  *encodings;            /* Current encoding. Always != NULL when charconvb is true. Always NULL when charconvb is false. */
+  marpaESLIF_terminal_t *encodingp;            /* Terminal case-insensitive version of current encoding. Always != NULL when charconvb is true. Always NULL when charconvb is false. */
+  tconv_t                tconvp;               /* current converter. Always != NULL when charconvb is true. Always NULL when charconvb is false. */
 };
 
 struct marpaESLIFRecognizer {
