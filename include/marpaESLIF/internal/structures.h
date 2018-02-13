@@ -40,6 +40,7 @@ typedef struct  marpaESLIF_lexeme_data     marpaESLIF_lexeme_data_t;
 typedef struct  marpaESLIF_alternative     marpaESLIF_alternative_t;
 typedef         marpaESLIFAction_t         marpaESLIF_action_t;
 typedef         marpaESLIFActionType_t     marpaESLIF_action_type_t;
+typedef struct  marpaESLIF_stream          marpaESLIF_stream_t;
 
 /* Symbol types */
 enum marpaESLIF_symbol_type {
@@ -270,6 +271,30 @@ struct marpaESLIFValue {
   marpaESLIF_string_t     *stringp; /* Not NULL only when is a literal - then callback is forced to be internal */
 };
 
+struct marpaESLIF_stream {
+  char                 *buffers;              /* Pointer to allocated buffer containing input */
+  size_t                bufferl;              /* Number of valid bytes in this buffer (!= allocated size) */
+  size_t                bufferallocl;         /* Number of allocated bytes in this buffer (!= valid bytes) */
+  char                 *globalOffsetp;        /* The offset between the original start of input, and current buffer */
+  short                 eofb;                 /* EOF flag */
+  short                 utfb;                 /* A flag to say if input is UTF-8 correct. Automatically true if charconvb is true. Can set be regex engine as well. */
+  short                 charconvb;            /* A flag to say if latest stream chunk was converted to UTF-8 */
+  char                 *lastFroms;            /* Last from encoding as per user, in user's encoding */
+  size_t                lastFroml;            /* Last from encoding length as per user, in user's encoding */
+  char                 *bytelefts;            /* Buffer when character conversion needs to reread leftover bytes */
+  size_t                byteleftl;            /* Usable length of this buffer */
+  size_t                byteleftallocl;       /* Allocated length of this buffer */
+  char                 *inputs;               /* Current pointer in input - specific to every recognizer (unless this recognizer attached another stream) */
+  size_t                inputl;               /* Current remaining bytes - specific to every recognizer (unless this recognizer attached another stream) */
+  size_t                bufsizl;              /* Effective bufsizl */
+  size_t                buftriggerl;          /* Minimum number of bytes to trigger crunch of data */
+  short                 nextReadIsFirstReadb; /* Flag to say if this is the first read ever done */
+  short                 noAnchorIsOkb;        /* Flag to say if the "A" flag in regexp modifiers is allowed: removing PCRE2_ANCHOR is allowed ONLY is the whole stream was read once */
+  char                  *encodings;           /* Current encoding. Always != NULL when _charconvb is true. Always NULL when charconvb is false. */
+  marpaESLIF_terminal_t *encodingp;           /* Terminal case-insensitive version of current encoding. Always != NULL when _charconvb is true. Always NULL when charconvb is false. */
+  tconv_t                tconvp;              /* current converter. Always != NULL when _charconvb is true. Always NULL when charconvb is false. */
+};
+
 struct marpaESLIFRecognizer {
   /* The variables starting with "_" are not supposed to ever be accessed  */
   /* except in very precise situations (typically the new()/free() or when */
@@ -299,6 +324,7 @@ struct marpaESLIFRecognizer {
   int                          callstackCounteri; /* Internal counter for tracing - no functional impact */
 
   /* ------------------ Internal elements that are shared with all children ------------------------ */
+  marpaESLIF_stream_t          _marpaESLIF_stream; /* Stream */
   char                        *_buffers;       /* Pointer to allocated buffer containing input */
   size_t                       _bufferl;       /* Number of valid bytes in this buffer (!= allocated size) */
   size_t                       _bufferallocl;  /* Number of allocated bytes in this buffer (!= valid bytes) */
@@ -375,6 +401,7 @@ struct marpaESLIFRecognizer {
   short                        discardOnOffb;       /* Discard is on or off ? */
   short                        pristineb;           /* 1: pristine, i.e. can be reused, 0: have at least one thing that happened at the raw grammar level, modulo the eventual initial events */
   genericHash_t               *marpaESLIFRecognizerHashp; /* Ditto for recognizers cache */
+  marpaESLIF_stream_t         *marpaESLIF_streamp; /* Stream pointer */
   size_t                       previousMaxMatchedl;       /* Always computed */
   size_t                       lastSizel;                 /* Always computed */
   int                          maxStartCompletionsi;

@@ -301,6 +301,7 @@ static        short                  _marpaESLIFRecognizer_valueResultb(marpaESL
 static        short                  _marpaESLIFRecognizer_concat_valueResultCallback(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
 
 static inline void                   _marpaESLIFRecognizer_sort_eventsb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp);
+static inline short                  _marpaESLIF_stream_initb(marpaESLIF_t *marpaESLIFp, marpaESLIF_stream_t *marpaESLIF_streamp, size_t bufsizl, int buftriggerperci, short eofb, short utfb);
 static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaESLIFRecognizerOption_t *marpaESLIFRecognizerOptionp, short discardb, short noEventb, short silentb, marpaESLIFRecognizer_t *marpaESLIFRecognizerParentp, short fakeb, int maxStartCompletionsi, short utfb);
 static inline short                  _marpaESLIFGrammar_parseb(marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaESLIFRecognizerOption_t *marpaESLIFRecognizerOptionp, marpaESLIFValueOption_t *marpaESLIFValueOptionp, short discardb, short noEventb, short silentb, marpaESLIFRecognizer_t *marpaESLIFRecognizerParentp, short *exhaustedbp, marpaESLIFValueResult_t *marpaESLIFValueResultp, int maxStartCompletionsi, size_t *lastSizeBeforeCompletionlp, int *numberOfStartCompletionsip);
 static        void                   _marpaESLIF_generateStringWithLoggerCallback(void *userDatavp, genericLoggerLevel_t logLeveli, const char *msgs);
@@ -7799,6 +7800,54 @@ static inline void  _marpaESLIFRecognizer_sort_eventsb(marpaESLIFRecognizer_t *m
 }
 
 /*****************************************************************************/
+static inline short _marpaESLIF_stream_initb(marpaESLIF_t *marpaESLIFp, marpaESLIF_stream_t *marpaESLIF_streamp, size_t bufsizl, int buftriggerperci, short eofb, short utfb)
+/*****************************************************************************/
+{
+  static const char *funcs  = "_marpaESLIF_stream_initb";
+  short              rcb;
+
+  if (bufsizl <= 0) {
+    bufsizl = MARPAESLIF_BUFSIZ;
+    /* Still ?! */
+    if (bufsizl <= 0) {
+      MARPAESLIF_ERROR(marpaESLIFp, "Please recompile this project with a default buffer value MARPAESLIF_BUFSIZ > 0");
+      goto err;
+    }
+  }
+
+  marpaESLIF_streamp->buffers              = NULL;
+  marpaESLIF_streamp->bufferl              = 0;
+  marpaESLIF_streamp->bufferallocl         = 0;
+  marpaESLIF_streamp->globalOffsetp        = NULL;
+  marpaESLIF_streamp->eofb                 = eofb;
+  marpaESLIF_streamp->utfb                 = utfb;
+  marpaESLIF_streamp->charconvb            = 0;
+  marpaESLIF_streamp->lastFroms            = NULL;
+  marpaESLIF_streamp->lastFroml            = 0;
+  marpaESLIF_streamp->bytelefts            = NULL;
+  marpaESLIF_streamp->byteleftl            = 0;
+  marpaESLIF_streamp->byteleftallocl       = 0;
+  marpaESLIF_streamp->inputs               = NULL;
+  marpaESLIF_streamp->inputl               = 0;
+  marpaESLIF_streamp->bufsizl              = bufsizl;
+  marpaESLIF_streamp->buftriggerl          = (bufsizl * (100 + buftriggerperci)) / 100;;
+  marpaESLIF_streamp->nextReadIsFirstReadb = 1;
+  marpaESLIF_streamp->noAnchorIsOkb        = eofb;
+  marpaESLIF_streamp->encodings            = NULL;
+  marpaESLIF_streamp->encodingp            = NULL;
+  marpaESLIF_streamp->tconvp               = NULL;
+
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  return rcb;
+}
+
+/*****************************************************************************/
 static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaESLIFRecognizerOption_t *marpaESLIFRecognizerOptionp, short discardb, short noEventb, short silentb, marpaESLIFRecognizer_t *marpaESLIFRecognizerParentp, short fakeb, int maxStartCompletionsi, short utfb)
 /*****************************************************************************/
 {
@@ -7913,6 +7962,7 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGramm
     marpaESLIFRecognizerp->inputlp                      = marpaESLIFRecognizerParentp->inputlp;
     marpaESLIFRecognizerp->bufsizl                      = marpaESLIFRecognizerParentp->bufsizl;
     marpaESLIFRecognizerp->buftriggerl                  = marpaESLIFRecognizerParentp->buftriggerl;
+    marpaESLIFRecognizerp->marpaESLIF_streamp           = marpaESLIFRecognizerParentp->marpaESLIF_streamp;
   } else {
     marpaESLIFRecognizerp->leveli                       = 0;
     marpaESLIFRecognizerp->buffersp                     = &(marpaESLIFRecognizerp->_buffers);
@@ -7947,6 +7997,11 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGramm
       }
     }
     marpaESLIFRecognizerp->buftriggerl                = (marpaESLIFRecognizerp->bufsizl * (100 + marpaESLIFRecognizerp->marpaESLIFRecognizerOption.buftriggerperci)) / 100;
+    marpaESLIFRecognizerp->marpaESLIF_streamp = NULL;
+    if (! _marpaESLIF_stream_initb(marpaESLIFp, &(marpaESLIFRecognizerp->_marpaESLIF_stream), marpaESLIFRecognizerOptionp->bufsizl, marpaESLIFRecognizerOptionp->buftriggerperci, fakeb /* eofb */, utfb)) {
+      goto err;
+    }
+    marpaESLIFRecognizerp->marpaESLIF_streamp = &(marpaESLIFRecognizerp->_marpaESLIF_stream);
   }
   marpaESLIFRecognizerp->scanb                           = 0;
   marpaESLIFRecognizerp->noEventb                        = noEventb;
