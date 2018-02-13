@@ -312,6 +312,8 @@ struct marpaESLIFRecognizer {
   char                        *_bytelefts;     /* Buffer when character conversion needs to reread leftover bytes */
   size_t                       _byteleftl;     /* Usable length of this buffer */
   size_t                       _byteleftallocl;/* Allocated length of this buffer */
+  char                        *_inputs;        /* Current pointer in input - specific to every recognizer (unless this recognizer attached another stream) */
+  size_t                       _inputl;        /* Current remaining bytes - specific to every recognizer (unless this recognizer attached another stream) */
   /* --------------- End of internal elements that are shared with all children --------------------- */
 
   int                          leveli;         /* Recognizer level (!= grammar level) */
@@ -330,8 +332,8 @@ struct marpaESLIFRecognizer {
   size_t                      *byteleftalloclp;/* Ditto for buffer allocated length when character conversion needs to reread leftover bytes */
 
   size_t                       parentDeltal;   /* Parent original delta - used to recovert parent current pointer at our free */
-  char                        *inputs;         /* Current pointer in input - specific to every recognizer */
-  size_t                       inputl;         /* Current remaining bytes - specific to every recognizer */
+  char                       **inputsp;        /* Current pointer in input - specific to every recognizer (unless this recognizer attached another stream) */
+  size_t                      *inputlp;        /* Current remaining bytes - specific to every recognizer (unless this recognizer attached another stream) */
   size_t                       bufsizl;        /* Effective bufsizl */
   size_t                       buftriggerl;    /* Minimum number of bytes to trigger crunch of data */
   short                        _nextReadIsFirstReadb; /* Flag to say if this is the first read ever done */
