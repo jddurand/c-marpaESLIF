@@ -7945,9 +7945,9 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGramm
     if (marpaESLIFRecognizerp->marpaESLIF_streamp == NULL) {
       goto err;
     }
+    /* Increment stream usage */
+    marpaESLIFRecognizerp->marpaESLIF_streamp->toplevelRecognizerUsagel++;
   }
-  /* Increment stream usage in any case */
-  marpaESLIFRecognizerp->marpaESLIF_streamp->toplevelRecognizerUsagel++;
   marpaESLIFRecognizerp->scanb                           = 0;
   marpaESLIFRecognizerp->noEventb                        = noEventb;
   marpaESLIFRecognizerp->discardb                        = discardb;
@@ -13370,16 +13370,14 @@ static inline void _marpaESLIFRecognizer_freev(marpaESLIFRecognizer_t *marpaESLI
   }
 
   if (marpaESLIFRecognizerParentp == NULL) {
-    /* Disconnect from the stream */
-    if (marpaESLIF_streamp != NULL) {
-      if (marpaESLIF_streamp->toplevelRecognizerUsagel > 0) {
-	marpaESLIF_streamp->toplevelRecognizerUsagel--;
-      }
-      _marpaESLIF_stream_freev(marpaESLIF_streamp);
-    }
     if (marpaESLIFRecognizerHashp != NULL) {
       /* This will free all cached recognizers in cascade -; */
       GENERICHASH_RESET(marpaESLIFRecognizerHashp, NULL);
+    }
+    /* Disconnect from the stream */
+    if (marpaESLIF_streamp != NULL) {
+      marpaESLIF_streamp->toplevelRecognizerUsagel--;
+      _marpaESLIF_stream_freev(marpaESLIF_streamp);
     }
   } else {
     /* Parent's "current" position have to be updated */
@@ -13465,6 +13463,7 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_getFromCachep(marpaE
         /* marpaESLIFRecognizerp->callstackCounteri            = 0; */
         marpaESLIFRecognizerp->leveli                       = marpaESLIFRecognizerParentp->leveli + 1;
         marpaESLIFRecognizerp->marpaESLIFRecognizerHashp    = marpaESLIFRecognizerParentp->marpaESLIFRecognizerHashp;
+        marpaESLIFRecognizerp->marpaESLIF_streamp           = marpaESLIFRecognizerParentp->marpaESLIF_streamp;
         marpaESLIFRecognizerp->parentDeltal                 = marpaESLIFRecognizerParentp->marpaESLIF_streamp->inputs - marpaESLIFRecognizerParentp->marpaESLIF_streamp->buffers;
         marpaESLIFRecognizerp->scanb                        = 0;
         /* marpaESLIFRecognizerp->noEventb                     = noEventb; */
@@ -13566,6 +13565,7 @@ static inline short _marpaESLIFRecognizer_putToCacheb(marpaESLIFRecognizer_t *ma
     marpaESLIFRecognizerParentp->marpaESLIF_streamp->inputl = marpaESLIF_streamp->bufferl - marpaESLIFRecognizerp->parentDeltal;
     /* Now we can disconnect */
     marpaESLIFRecognizerp->parentRecognizerp = NULL;
+    marpaESLIFRecognizerp->marpaESLIF_streamp = NULL;
     /* And do not forget to disconnect also the shallow pointer of recognizer's cache */
     marpaESLIFRecognizerp->marpaESLIFRecognizerHashp = NULL;
     MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Recognizer %p pushed to reusable stack of recognizers for grammar %p (length %d)", marpaESLIFRecognizerp, marpaWrapperGrammarp, GENERICSTACK_USED(marpaESLIFRecognizerStackp));
