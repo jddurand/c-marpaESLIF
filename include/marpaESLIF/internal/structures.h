@@ -293,6 +293,8 @@ struct marpaESLIF_stream {
   char                  *encodings;            /* Current encoding. Always != NULL when charconvb is true. Always NULL when charconvb is false. */
   marpaESLIF_terminal_t *encodingp;            /* Terminal case-insensitive version of current encoding. Always != NULL when charconvb is true. Always NULL when charconvb is false. */
   tconv_t                tconvp;               /* current converter. Always != NULL when charconvb is true. Always NULL when charconvb is false. */
+  size_t                 linel;                /* Line number */
+  size_t                 columnl;              /* Column number */
 };
 
 struct marpaESLIFRecognizer {
@@ -331,8 +333,6 @@ struct marpaESLIFRecognizer {
   short                        discardb;       /* Discard mode */
   short                        silentb;        /* Silent mode */
   short                        haveLexemeb;    /* Remember if this recognizer have at least one lexeme */
-  size_t                       linel;          /* Line number */
-  size_t                       columnl;        /* Column number */
   short                        exhaustedb;     /* Internally, every recognizer need to know if parsing is exhausted */
   short                        completedb;     /* Ditto for completion (used in case od discard events) */
   short                        continueb;
