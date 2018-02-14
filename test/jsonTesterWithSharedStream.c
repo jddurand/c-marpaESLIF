@@ -16,7 +16,7 @@ typedef struct marpaESLIFTester_context {
 } marpaESLIFTester_context_t;
 
 const static char *dsl = "\n"
-":default ::= action => ::shift symbol-action => ::u8\"\\a\\x{FF}\\u{0972}\\U{0001F600}\\r/* Symbol: Comment Inside */\" /* Comment */ ::u8\"\" /* Comment again */ ::u8\"xxx\"\n"
+":default ::= action => ::shift\n"
 ":start       ::= XXXXXX # Replaced on-the-fly by json or members\n"
 "json         ::= object\n"
 "               | array\n"
