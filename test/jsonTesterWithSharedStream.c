@@ -17,7 +17,7 @@ typedef struct marpaESLIFTester_context {
 
 const static char *dsl = "\n"
 ":default ::= action => ::shift\n"
-":start       ::= XXXXXX # Replaced on-the-fly by json or members\n"
+":start       ::= XXXXXX # Replaced on-the-fly by json or object\n"
 "json         ::= object\n"
 "               | array\n"
 "# comma is provided as a char class here, to ensure that char classes\n"
@@ -294,7 +294,6 @@ static short doparseb(genericLogger_t *genericLoggerp, marpaESLIFRecognizer_t *m
 {
   marpaESLIFValue_t           *marpaESLIFValuep = NULL;
   marpaESLIFRecognizer_t      *marpaESLIFRecognizerObjectp = NULL;
-  marpaESLIFRecognizerOption_t marpaESLIFRecognizerOption;
   marpaESLIFValueOption_t      marpaESLIFValueOption;
   short                        continueb;
   short                        exhaustedb;
@@ -347,16 +346,6 @@ static short doparseb(genericLogger_t *genericLoggerp, marpaESLIFRecognizer_t *m
         GENERICLOGGER_INFOF(genericLoggerp, "Got lstring: %s; length=%ld, current position is {line, column} = {%ld, %ld}", pauses, (unsigned long) pausel, (unsigned long) linel, (unsigned long) columnl);
 
       } else if (strcmp(events, "^LCURLY") == 0) {
-
-        marpaESLIFRecognizerOption.userDatavp                = NULL;
-        marpaESLIFRecognizerOption.marpaESLIFReaderCallbackp = NULL;
-        marpaESLIFRecognizerOption.disableThresholdb         = 0;
-        marpaESLIFRecognizerOption.exhaustedb                = 0;
-        marpaESLIFRecognizerOption.newlineb                  = 1;
-        marpaESLIFRecognizerOption.trackb                    = 0;
-        marpaESLIFRecognizerOption.bufsizl                   = 0;
-        marpaESLIFRecognizerOption.buftriggerperci           = 50;
-        marpaESLIFRecognizerOption.bufaddperci               = 50;
 
         marpaESLIFRecognizerObjectp = marpaESLIFRecognizer_newFromp(marpaESLIFGrammarObjectp, marpaESLIFRecognizerp);
         if (marpaESLIFRecognizerObjectp == NULL) {
