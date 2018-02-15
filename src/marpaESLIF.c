@@ -7681,7 +7681,7 @@ static inline short _marpaESLIFRecognizer_push_grammar_eventsb(marpaESLIFRecogni
       goto err;
     }
     if (marpaESLIFRecognizerp->exhaustedb) {
-      if (! _marpaESLIFRecognizer_push_eventb(marpaESLIFRecognizerp, MARPAESLIF_EVENTTYPE_EXHAUSTED, NULL /* symbolp */, NULL /* events */)) {
+      if (! _marpaESLIFRecognizer_push_eventb(marpaESLIFRecognizerp, MARPAESLIF_EVENTTYPE_EXHAUSTED, NULL /* symbolp */, MARPAESLIF_EVENTTYPE_EXHAUSTED_NAME)) {
         goto err;
       }
       /* Force discard of remaining data */
@@ -7797,6 +7797,7 @@ static inline void _marpaESLIFRecognizer_clear_grammar_eventsb(marpaESLIFRecogni
     case MARPAESLIF_EVENTTYPE_PREDICTED:
     case MARPAESLIF_EVENTTYPE_NULLED:
     case MARPAESLIF_EVENTTYPE_COMPLETED:
+    case MARPAESLIF_EVENTTYPE_EXHAUSTED:
       eventArrayp[i].type = MARPAESLIF_EVENTTYPE_NONE;
       break;
     default:
