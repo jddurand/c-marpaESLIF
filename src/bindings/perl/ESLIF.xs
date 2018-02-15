@@ -1119,6 +1119,8 @@ static void marpaESLIF_recognizerContextFreev(pTHX_ MarpaX_ESLIF_Recognizer_t *P
     MARPAESLIF_REFCNT_DEC(Perl_recognizerInterfacep);
     /* Note that Perl_MarpaX_ESLIF_Grammarp is NULL in the context of parse() */
     MARPAESLIF_REFCNT_DEC(Perl_MarpaX_ESLIF_Grammarp);
+    /* Note that Perl_MarpaX_ESLIF_Recognizer_origp is NULL if not in the context of a shared recognizer */
+    MARPAESLIF_REFCNT_DEC(Perl_MarpaX_ESLIF_Recognizer_origp);
     if (! onStackb) {
       Safefree(Perl_MarpaX_ESLIF_Recognizerp);
     }
