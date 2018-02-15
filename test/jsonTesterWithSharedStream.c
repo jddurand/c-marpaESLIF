@@ -292,9 +292,7 @@ short noop(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int
 static short doparseb(genericLogger_t *genericLoggerp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFGrammar_t *marpaESLIFGrammarObjectp, char *inputs, int recursionleveli)
 /*****************************************************************************/
 {
-  marpaESLIFValue_t           *marpaESLIFValuep = NULL;
   marpaESLIFRecognizer_t      *marpaESLIFRecognizerObjectp = NULL;
-  marpaESLIFValueOption_t      marpaESLIFValueOption;
   short                        continueb;
   short                        exhaustedb;
   int                          i;
@@ -395,7 +393,8 @@ static short doparseb(genericLogger_t *genericLoggerp, marpaESLIFRecognizer_t *m
           goto err;
         }
 
-        goto force_valuation;
+        rcb = 1;
+        goto done;
       } else {
 
         GENERICLOGGER_ERRORF(genericLoggerp, "Unmanaged event %s", events);
@@ -420,25 +419,6 @@ static short doparseb(genericLogger_t *genericLoggerp, marpaESLIFRecognizer_t *m
     }
   }
 
- force_valuation:
-  /* Call for valuation, letting marpaESLIF free the result */
-  marpaESLIFValueOption.userDatavp            = NULL; /* User specific context */
-  marpaESLIFValueOption.ruleActionResolverp   = ruleActionResolver; /* Will return the function doing the wanted rule action */
-  marpaESLIFValueOption.symbolActionResolverp = NULL; /* Will return the function doing the wanted symbol action */
-  marpaESLIFValueOption.freeActionResolverp   = NULL; /* Will return the function doing the free */
-  marpaESLIFValueOption.highRankOnlyb         = 1;    /* Default: 1 */
-  marpaESLIFValueOption.orderByRankb          = 1;    /* Default: 1 */
-  marpaESLIFValueOption.ambiguousb            = 0;    /* Default: 0 */
-  marpaESLIFValueOption.nullb                 = 0;    /* Default: 0 */
-  marpaESLIFValueOption.maxParsesi            = 0;    /* Default: 0 */
-  marpaESLIFValuep = marpaESLIFValue_newp(marpaESLIFRecognizerp, &marpaESLIFValueOption);
-  if (marpaESLIFValuep == NULL) {
-    goto err;
-  }
-  if (! marpaESLIFValue_valueb(marpaESLIFValuep, NULL /* marpaESLIFValueResultp */)) {
-    goto err;
-  }
-
   rcb = 1;
   goto done;
 
@@ -446,7 +426,6 @@ static short doparseb(genericLogger_t *genericLoggerp, marpaESLIFRecognizer_t *m
   rcb = 0;
 
  done:
-  marpaESLIFValue_freev(marpaESLIFValuep);
   marpaESLIFRecognizer_freev(marpaESLIFRecognizerObjectp);
 
   return rcb;
