@@ -2414,7 +2414,7 @@ CODE:
   MarpaX_ESLIF_Recognizer_t    *Perl_MarpaX_ESLIF_Recognizerp;
 
   Newx(Perl_MarpaX_ESLIF_Recognizerp, 1, MarpaX_ESLIF_Recognizer_t);
-  marpaESLIF_recognizerContextInitv(aTHX_ ST(1) /* SV of MarpaX::ESLIF::Grammar */, Perl_MarpaX_ESLIF_Recognizerp->Perl_recognizerInterfacep, Perl_MarpaX_ESLIF_Recognizerp);
+  marpaESLIF_recognizerContextInitv(aTHX_ ST(1) /* SV of MarpaX::ESLIF::Grammar */, Perl_MarpaX_ESLIF_Recognizer_origp->Perl_recognizerInterfacep, Perl_MarpaX_ESLIF_Recognizerp);
 
   /* We need a lexeme stack in this mode (in contrary to the parse() method that never calls back) */
   Perl_MarpaX_ESLIF_Recognizerp->lexemeStackp = marpaESLIF_GENERICSTACK_NEW();
