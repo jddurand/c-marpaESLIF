@@ -1162,15 +1162,14 @@ This method returns a recognizer pointer in case of success, C<NULL> in case of 
 
 =head3 C<marpaESLIFRecognizer_newFromp>
 
-  marpaESLIFRecognizer_t *marpaESLIFRecognizer_newp(marpaESLIFGrammar_t    *marpaESLIFGrammarp,
-                                                    marpaESLIFRecognizer_t *marpaESLIFRecognizerSharedp);
+  marpaESLIFRecognizer_t *marpaESLIFRecognizer_newFromp(marpaESLIFGrammar_t    *marpaESLIFGrammarp,
+                                                        marpaESLIFRecognizer_t *marpaESLIFRecognizerSharedp);
 
 Creates a recognizer out of a C<marpaESLIFGrammarp> grammar instance, that is using explicitly the I<same> settings as C<marpaESLIFRecognizerSharedp> and shares the later's stream.
 
 From there, any update to the new recognizer's stream or C<marpaESLIFRecognizerSharedp>'s stream are synchronous and shared.
 
 It is the application responsibility to make sure that the lifetime of C<marpaESLIFRecognizerSharedp> is <greater> than newly created recognizer instance.
-
 This method returns a recognizer pointer in case of success, C<NULL> in case of failure.
 
 =head3 C<marpaESLIFRecognizer_set_exhausted_flagb>
