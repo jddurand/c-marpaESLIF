@@ -107,15 +107,6 @@ struct marpaESLIF_terminal {
   size_t                      bytel;               /* i.e. when this is a string terminal without modifier */
 };
 
-struct marpaESLIF_meta {
-  int                          idi;                             /* Non-terminal Id */
-  char                        *asciinames;
-  marpaESLIF_string_t         *descp;                           /* Non-terminal description */
-  marpaWrapperGrammar_t       *marpaWrapperGrammarLexemeClonep; /* Cloned grammar in lexeme search mode (no event) */
-  int                          lexemeIdi;                       /* Lexeme Id in this cloned grammar */
-  short                       *prioritizedb;                    /* Internal flag to prevent a prioritized symbol to appear more than once as an LHS */
-};
-
 /* Matcher return values */
 enum marpaESLIF_matcher_value {
   MARPAESLIF_MATCH_AGAIN   = -1,
@@ -253,6 +244,18 @@ struct marpaESLIFGrammar {
   short                      warningIsErrorb;   /* Current warningIsErrorb setting (used when parsing grammars ) */
   short                      warningIsIgnoredb; /* Current warningIsErrorb setting (used when parsing grammars ) */
   short                      autorankb;         /* Current autorank setting */
+};
+
+struct marpaESLIF_meta {
+  int                          idi;                             /* Non-terminal Id */
+  char                        *asciinames;
+  marpaESLIF_string_t         *descp;                           /* Non-terminal description */
+  marpaWrapperGrammar_t       *marpaWrapperGrammarLexemeClonep; /* Cloned low-level grammar in lexeme search mode (no event) */
+  int                          lexemeIdi;                       /* Lexeme Id in this cloned grammar */
+  short                       *prioritizedb;                    /* Internal flag to prevent a prioritized symbol to appear more than once as an LHS */
+  marpaESLIFGrammar_t         _marpaESLIFGrammarLexemeClone;    /* Cloned ESLIF grammar in lexeme search mode (no event): allocated when meta is allocated */
+  marpaESLIF_grammar_t        _grammar;
+  marpaESLIFGrammar_t         *marpaESLIFGrammarLexemeClonep;   /* Cloned ESLIF grammar in lexeme search mode (no event) */
 };
 
 struct marpaESLIFValue {
