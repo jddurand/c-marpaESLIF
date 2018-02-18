@@ -3760,19 +3760,23 @@ static short recognizerReaderCallbackb(void *userDatavp, char **inputcpp, size_t
   marpaESLIFRecognizerContextp = (marpaESLIFRecognizerContext_t *) userDatavp;
   eslifRecognizerInterfacep   = marpaESLIFRecognizerContextp->eslifRecognizerInterfacep;
 
+  fprintf(stderr, "==> GetEnv\n");
   /* Reader callack is never running in another thread - no need to attach */
   if (((*marpaESLIF_vmp)->GetEnv(marpaESLIF_vmp, (void **) &envp, MARPAESLIF_JNI_VERSION) != JNI_OK) || (envp == NULL)) {
     return 0;
   }
 
+  fprintf(stderr, "==> marpaESLIFRecognizerContextCleanup\n");
   marpaESLIFRecognizerContextCleanup(envp, marpaESLIFRecognizerContextp);
 
   /* Call the read interface */
+  fprintf(stderr, "==> MARPAESLIF_ESLIFRECOGNIZERINTERFACE_CLASS_read_METHODP %p\n", eslifRecognizerInterfacep);
   readb = (*envp)->CallBooleanMethod(envp, eslifRecognizerInterfacep, MARPAESLIF_ESLIFRECOGNIZERINTERFACE_CLASS_read_METHODP);
   if (HAVEEXCEPTION(envp) || (readb != JNI_TRUE)) {
     return 0;
   }
 
+  fprintf(stderr, "==> MARPAESLIF_ESLIFRECOGNIZERINTERFACE_CLASS_data_METHODP %p\n", eslifRecognizerInterfacep);
   byteArrayp = (*envp)->CallObjectMethod(envp, eslifRecognizerInterfacep, MARPAESLIF_ESLIFRECOGNIZERINTERFACE_CLASS_data_METHODP);
   if (HAVEEXCEPTION(envp)) {
     return 0;
