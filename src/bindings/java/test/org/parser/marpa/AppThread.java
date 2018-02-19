@@ -103,18 +103,18 @@ public class AppThread implements Runnable {
 			}
 			
 			String[] strings = {
-//					"(((3 * 4) + 2 * 7) / 2 - 1)/* This is a\n comment \n */** 3",
-//					"5 / (2 * 3)",
-//					"5 / 2 * 3",
-//					"(5 ** 2) ** 3",
-//					"5 * (2 * 3)",
-//					"5 ** (2 ** 3)",
-//					"5 ** (2 / 3)",
-//					"1 + ( 2 + ( 3 + ( 4 + 5) )",
-//					"1 + ( 2 + ( 3 + ( 4 + 50) ) )   /* comment after */",
-//					" 100",
-//					"not scannable at all",
-//					"100\nsecond line not scannable",
+					"(((3 * 4) + 2 * 7) / 2 - 1)/* This is a\n comment \n */** 3",
+					"5 / (2 * 3)",
+					"5 / 2 * 3",
+					"(5 ** 2) ** 3",
+					"5 * (2 * 3)",
+					"5 ** (2 ** 3)",
+					"5 ** (2 / 3)",
+					"1 + ( 2 + ( 3 + ( 4 + 5) )",
+					"1 + ( 2 + ( 3 + ( 4 + 50) ) )   /* comment after */",
+					" 100",
+					"not scannable at all",
+					"100\nsecond line not scannable",
 					"100 * /* incomplete */"
 					};
 	
@@ -149,8 +149,7 @@ public class AppThread implements Runnable {
 	
 				BufferedReader reader = new BufferedReader(new StringReader(string));
 				AppRecognizer eslifAppRecognizer = new AppRecognizer(reader);
-				ESLIFRecognizer eslifRecognizer0 = new ESLIFRecognizer(eslifGrammar, eslifAppRecognizer);
-				ESLIFRecognizer eslifRecognizer = new ESLIFRecognizer(eslifGrammar, eslifRecognizer0);
+				ESLIFRecognizer eslifRecognizer = new ESLIFRecognizer(eslifGrammar, eslifAppRecognizer);
 				eslifLogger.info("");
 				eslifLogger.info("***********************************************************");
 				eslifLogger.info("Testing scan()/resume() on " + string);

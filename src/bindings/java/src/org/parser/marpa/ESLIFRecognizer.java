@@ -89,7 +89,7 @@ public class ESLIFRecognizer {
 	/**
 	 * 
 	 * @param eslifGrammar the ESLIFGrammar instance
-	 * @param share another recognizer that will share its stream with us
+	 * @param eslifRecognizerInterface the recognizer interface
 	 * @throws ESLIFException if the interface failed
 	 */
 	public ESLIFRecognizer(ESLIFGrammar eslifGrammar, ESLIFRecognizer share) throws ESLIFException {
@@ -461,7 +461,7 @@ public class ESLIFRecognizer {
 	 * ********************************************
 	 */
 	private ESLIFRecognizerInterface getEslifRecognizerInterface() {
-		return (share != null) ? share.getEslifRecognizerInterface() : eslifRecognizerInterface;
+		return eslifRecognizerInterface;
 	}
 	private void setEslifRecognizerInterface(ESLIFRecognizerInterface eslifRecognizerInterface) {
 		this.eslifRecognizerInterface = eslifRecognizerInterface;
