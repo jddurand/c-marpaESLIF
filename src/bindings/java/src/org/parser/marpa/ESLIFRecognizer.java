@@ -40,7 +40,6 @@ public class ESLIFRecognizer {
 	private ByteBuffer               marpaESLIFRecognizerContextp = null;
 	private boolean                  canContinue    = false;
 	private boolean                  exhausted      = false;
-	private ESLIFRecognizer          share = null;
 	private native void              jniNew(ESLIFGrammar eslifGrammar) throws ESLIFException;
 	private native void              jniFree() throws ESLIFException;
 	private native boolean			 jniScan(boolean initialEvents) throws ESLIFException;
@@ -64,9 +63,6 @@ public class ESLIFRecognizer {
 	private native long              jniLastCompletedLength(String name) throws ESLIFException;
 	private native long              jniLine() throws ESLIFException;
 	private native long              jniColumn() throws ESLIFException;
-	private native void              jniShare(ESLIFRecognizer share);
-	private native void              jniSetExhaustedFlag(boolean flag);
-	private native void              jniNewFrom(ESLIFGrammar eslifGrammar, ESLIFRecognizer share) throws ESLIFException;
 
 	/**
 	 * 
@@ -84,24 +80,6 @@ public class ESLIFRecognizer {
 		setEslifGrammar(eslifGrammar);
 		setEslifRecognizerInterface(eslifRecognizerInterface);
 		jniNew(eslifGrammar);
-	}
-	
-	/**
-	 * 
-	 * @param eslifGrammar the ESLIFGrammar instance
-	 * @param eslifRecognizerInterface the recognizer interface
-	 * @throws ESLIFException if the interface failed
-	 */
-	public ESLIFRecognizer(ESLIFGrammar eslifGrammar, ESLIFRecognizer share) throws ESLIFException {
-		if (eslifGrammar == null) {
-			throw new IllegalArgumentException("eslifGrammar must not be null");
-		}
-		if (share == null) {
-			throw new IllegalArgumentException("share must not be null");
-		}
-		setEslifGrammar(eslifGrammar);
-		setShare(share);
-		jniNewFrom(eslifGrammar, share);
 	}
 	
 	/**
@@ -131,23 +109,6 @@ public class ESLIFRecognizer {
 		return exhausted;
 	}
 	
-	/**
-	 * 
-	 * @return current shared recognizer - null if none.
-	 */
-	public synchronized ESLIFRecognizer getShare() {
-		return share;
-	}
-
-	/**
-	 * Sets share recognizer.
-	 * 
-	 * @param the shared recognizer
-	 */
-	public synchronized void setShare(ESLIFRecognizer share) {
-		this.share = share;
-	}
-
 	/**
 	 * Start a recognizer scanning. This call is allowed once in recognizer lifetime.
 	 * This method can generate events.
@@ -433,25 +394,6 @@ public class ESLIFRecognizer {
 	 */
 	public synchronized long column() throws ESLIFException {
 		return jniColumn();
-	}
-
-	/**
-	 * A recognizer can say that it will shared its stream with another recognizer.
-	 * 
-	 * @throws ESLIFException if the interface failed
-	 */
-	public synchronized void share(ESLIFRecognizer share) throws ESLIFException {
-		jniShare(share);
-		setShare(share);
-	}
-
-	/**
-	 * The exhausted flag can be changed at anytime during the lifetime of a recognizer.
-	 * 
-	 * @throws ESLIFException if the interface failed
-	 */
-	public synchronized void setExhaustedflag(boolean flag) throws ESLIFException {
-		jniSetExhaustedFlag(flag);
 	}
 
 	/*
