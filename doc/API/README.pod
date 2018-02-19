@@ -1160,11 +1160,37 @@ To prevent too many memory allocations, when marpaESLIF need to increase its int
 
 This method returns a recognizer pointer in case of success, C<NULL> in case of failure.
 
-=head3 C<marpaESLIFRecognizer_grammarp>
+=head3 C<marpaESLIFRecognizer_newFromp>
 
-  marpaESLIFGrammar_t *marpaESLIFRecognizer_grammarp(marpaESLIFRecognizer_t *marpaESLIFRecognizerp);
+  marpaESLIFRecognizer_t *marpaESLIFRecognizer_newFromp(marpaESLIFGrammar_t    *marpaESLIFGrammarp,
+                                                        marpaESLIFRecognizer_t *marpaESLIFRecognizerSharedp);
 
-Returns the ESLIFGrammar instance parent of the C<marpaESLIFRecognizerp> instance, C<NULL> in case of failure. It never returns C<NULL> if C<marpaESLIFRecognizerp> is not C<NULL>. This is <never> the original C<marpaESLIFGrammarp> used when creating the C<marpaESLIFRecognizerp> instance, though it is guaranteed to be a grammar whose functionnality is I<equivalent> to original grammar after applying the recognizer options.
+Creates a recognizer out of a C<marpaESLIFGrammarp> grammar instance, that is using explicitly the I<same> settings as C<marpaESLIFRecognizerSharedp> and shares the later's stream.
+
+From there, any update to the new recognizer's stream or C<marpaESLIFRecognizerSharedp>'s stream are synchronous and shared.
+
+It is the application responsibility to make sure that the lifetime of C<marpaESLIFRecognizerSharedp> is <greater> than newly created recognizer instance.
+This method returns a recognizer pointer in case of success, C<NULL> in case of failure.
+
+=head3 C<marpaESLIFRecognizer_set_exhausted_flagb>
+
+  short marpaESLIFRecognizer_set_exhausted_flagb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp,
+                                                 short                   exhaustedb);
+
+The only recognizer option that can be changed at runtime is the C<exhaustedb> flag. The later is important when the recognizer cannot accept any new data (i.e. parse is exhausted) but unprocessed data remains: if C<exhaustedb> is a false value, then an error is raised.
+
+This method returns a true value in case of success, a false value otherwise.
+
+=head3 C<marpaESLIFRecognizer_shareb>
+
+  short marpaESLIFRecognizer_shareb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp,
+                                    marpaESLIFRecognizer_t *marpaESLIFRecognizerSharedp);
+
+A recognizer can be instructed to share the stream with another C<marpaESLIFRecognizerSharedp> at any time. When C<marpaESLIFRecognizerSharedp> is C<NULL>, sharing is stopped.
+
+It is the application responsibility to make sure that the lifetime of C<marpaESLIFRecognizerSharedp> is <greater> than C<marpaESLIFRecognizerp>.
+
+This method returns a true value in case of success, a false value otherwise.
 
 =head3 C<marpaESLIFRecognizer_optionp>
 
