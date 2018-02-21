@@ -36,6 +36,7 @@ import java.nio.ByteBuffer;
 public class ESLIFRecognizer {
 	private ESLIFGrammar             eslifGrammar                 = null;
 	private ESLIFRecognizerInterface eslifRecognizerInterface     = null;
+	private ESLIFRecognizer          eslifRecognizerShared        = null;
 	private ByteBuffer               marpaESLIFRecognizerp        = null;
 	private ByteBuffer               marpaESLIFRecognizerContextp = null;
 	private boolean                  canContinue    = false;
@@ -63,6 +64,7 @@ public class ESLIFRecognizer {
 	private native long              jniLastCompletedLength(String name) throws ESLIFException;
 	private native long              jniLine() throws ESLIFException;
 	private native long              jniColumn() throws ESLIFException;
+	private native void              jniShare(ESLIFRecognizer eslifRecognizerShared) throws ESLIFException;
 
 	/**
 	 * 
@@ -82,6 +84,19 @@ public class ESLIFRecognizer {
 		jniNew(eslifGrammar);
 	}
 	
+	/**
+	 * 
+	 * @param eslifRecognizerShared shared recognizer
+	 * @throws ESLIFException if the interface failed
+	 * 
+	 * eslifRecognizerShared and current recognizer and eslifRecognizerShared will share this stream.
+	 * The sharing will stop if eslifRecognizerShared is set to a null value.
+	 */
+	public void share(ESLIFRecognizer eslifRecognizerShared) throws ESLIFException {
+		jniShare(eslifRecognizerShared);
+		setEslifRecognizerShared(eslifRecognizerShared);
+	}
+
 	/**
 	 * Dispose of a recognizer resources
 	 * 
@@ -407,6 +422,12 @@ public class ESLIFRecognizer {
 	}
 	private void setEslifRecognizerInterface(ESLIFRecognizerInterface eslifRecognizerInterface) {
 		this.eslifRecognizerInterface = eslifRecognizerInterface;
+	}
+	private ESLIFRecognizer getEslifRecognizerShared() {
+		return eslifRecognizerShared;
+	}
+	private void setEslifRecognizerShared(ESLIFRecognizer eslifRecognizerShared) {
+		this.eslifRecognizerShared = eslifRecognizerShared;
 	}
 	protected ESLIFLoggerInterface getLoggerInterface() {
 		return (eslifGrammar != null) ? eslifGrammar.getLoggerInterface() : null;

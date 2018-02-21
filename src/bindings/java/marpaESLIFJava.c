@@ -45,6 +45,7 @@ JNIEXPORT jobject      JNICALL Java_org_parser_marpa_ESLIFGrammar_jniSymbolPrope
 JNIEXPORT jobject      JNICALL Java_org_parser_marpa_ESLIFGrammar_jniSymbolPropertiesByLevel   (JNIEnv *envp, jobject eslifGrammarp, jint level, jint symbol);
 JNIEXPORT void         JNICALL Java_org_parser_marpa_ESLIFGrammar_jniFree                      (JNIEnv *envp, jobject eslifGrammarp);
 JNIEXPORT void         JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniNew                    (JNIEnv *envp, jobject eslifRecognizerp, jobject eslifGrammarp);
+JNIEXPORT void         JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniShare                  (JNIEnv *envp, jobject eslifRecognizerp, jobject eslifRecognizerSharedp);
 JNIEXPORT jboolean     JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniScan                   (JNIEnv *envp, jobject eslifRecognizerp, jboolean initialEvents);
 JNIEXPORT jboolean     JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniResume                 (JNIEnv *envp, jobject eslifRecognizerp, jint deltaLength);
 JNIEXPORT jboolean     JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniLexemeAlternative      (JNIEnv *envp, jobject eslifRecognizerp, jstring namep, jobject objectp, jint grammarLengthi);
@@ -2250,6 +2251,44 @@ JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniNew(JNIEnv *envp
   Java_org_parser_marpa_ESLIFRecognizer_jniFree(envp, eslifRecognizerp);
 
  done:
+  return;
+}
+
+/*****************************************************************************/
+JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniShare(JNIEnv *envp, jobject eslifRecognizerp, jobject eslifRecognizerSharedp)
+/*****************************************************************************/
+{
+  static const char *funcs = "Java_org_parser_marpa_ESLIFRecognizer_jniShare";
+  marpaESLIFRecognizer_t *marpaESLIFRecognizerp;
+  marpaESLIFRecognizer_t *marpaESLIFRecognizerSharedp;
+
+  if (! ESLIFRecognizer_contextb(envp, eslifRecognizerp, eslifRecognizerp, MARPAESLIF_ESLIFRECOGNIZER_CLASS_getLoggerInterfacep_METHODP,
+                                 NULL /* genericLoggerpp */,
+                                 NULL /* marpaESLIFpp */,
+                                 NULL /* marpaESLIFGrammarpp */,
+                                 &marpaESLIFRecognizerp,
+                                 NULL /* marpaESLIFRecognizerContextpp */)) {
+    goto err;
+  }
+
+  if ((*envp)->IsSameObject(envp, eslifRecognizerSharedp, NULL)) {
+    if (! ESLIFRecognizer_contextb(envp, eslifRecognizerSharedp, eslifRecognizerSharedp, MARPAESLIF_ESLIFRECOGNIZER_CLASS_getLoggerInterfacep_METHODP,
+                                   NULL /* genericLoggerpp */,
+                                   NULL /* marpaESLIFpp */,
+                                   NULL /* marpaESLIFGrammarpp */,
+                                   &marpaESLIFRecognizerSharedp,
+                                   NULL /* marpaESLIFRecognizerContextpp */)) {
+      goto err;
+    }
+  } else {
+    marpaESLIFRecognizerSharedp = NULL;
+  }
+
+  if (! marpaESLIFRecognizer_shareb(marpaESLIFRecognizerp, marpaESLIFRecognizerSharedp)) {
+    RAISEEXCEPTION(envp, "marpaESLIFRecognizer_shareb failure");
+  }
+
+ err: /* err and done share the same code */
   return;
 }
 

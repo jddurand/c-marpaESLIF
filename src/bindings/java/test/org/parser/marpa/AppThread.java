@@ -149,7 +149,9 @@ public class AppThread implements Runnable {
 	
 				BufferedReader reader = new BufferedReader(new StringReader(string));
 				AppRecognizer eslifAppRecognizer = new AppRecognizer(reader);
+				ESLIFRecognizer eslifRecognizerShared = new ESLIFRecognizer(eslifGrammar, eslifAppRecognizer);
 				ESLIFRecognizer eslifRecognizer = new ESLIFRecognizer(eslifGrammar, eslifAppRecognizer);
+				eslifRecognizer.share(eslifRecognizerShared);
 				eslifLogger.info("");
 				eslifLogger.info("***********************************************************");
 				eslifLogger.info("Testing scan()/resume() on " + string);
