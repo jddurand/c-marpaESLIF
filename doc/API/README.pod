@@ -1192,7 +1192,7 @@ A recognizer can be instructed to share the stream with another C<marpaESLIFReco
 
 It is the application responsibility to make sure that the lifetime of C<marpaESLIFRecognizerSharedp> is <greater> than C<marpaESLIFRecognizerp>.
 
-The input stream callback will use C<marpaESLIFRecognizerSharedp> settings if the later is not C<NULL>, the original C<marpaESLIFRecognizerp> otherwise.
+The input stream callback is still using C<marpaESLIFRecognizerp>, but streaming positions of both C<marpaESLIFRecognizerp> are affected.
 
 This method returns a true value in case of success, a false value otherwise.
 
