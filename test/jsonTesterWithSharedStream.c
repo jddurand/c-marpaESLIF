@@ -6,8 +6,6 @@
 #include <marpaESLIF.h>
 
 static short                         inputReaderb(void *userDatavp, char **inputsp, size_t *inputlp, short *eofbp, short *characterStreambp, char **encodingOfEncodingsp, char **encodingsp, size_t *encodinglp);
-static marpaESLIFValueRuleCallback_t ruleActionResolver(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions);
-short                                noop(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static short                         doparseb(genericLogger_t *genericLoggerp, marpaESLIFRecognizer_t *marpaESLIFRecognizerParentp, marpaESLIFGrammar_t *marpaESLIFGrammarObjectp, char *inputs, int recursionleveli);
 
 typedef struct marpaESLIFTester_context {
@@ -161,9 +159,6 @@ int main() {
   marpaESLIFOption_t           marpaESLIFOption;
   marpaESLIFGrammarOption_t    marpaESLIFGrammarOption;
   int                          exiti;
-  int                          ngrammari;
-  char                        *grammarshows;
-  int                          leveli;
   genericLogger_t             *genericLoggerp;
   char                        *grammars = NULL;
   char                        *p;
@@ -275,27 +270,12 @@ static short inputReaderb(void *userDatavp, char **inputsp, size_t *inputlp, sho
 }
 
 /*****************************************************************************/
-static marpaESLIFValueRuleCallback_t ruleActionResolver(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions)
-/*****************************************************************************/
-{
-  return noop;
-}
-
-/*****************************************************************************/
-short noop(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
-/*****************************************************************************/
-{
-  return 1;
-}
-
-/*****************************************************************************/
 static short doparseb(genericLogger_t *genericLoggerp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFGrammar_t *marpaESLIFGrammarObjectp, char *inputs, int recursionleveli)
 /*****************************************************************************/
 {
   marpaESLIFRecognizer_t      *marpaESLIFRecognizerObjectp = NULL;
   short                        continueb;
   short                        exhaustedb;
-  int                          i;
   char                        *pauses;
   size_t                       pausel;
   size_t                       linel;
