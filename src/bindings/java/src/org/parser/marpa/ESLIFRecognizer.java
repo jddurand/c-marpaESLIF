@@ -89,7 +89,7 @@ public class ESLIFRecognizer {
 	 * @param eslifRecognizerShared shared recognizer
 	 * @throws ESLIFException if the interface failed
 	 * 
-	 * eslifRecognizerShared and current recognizer and eslifRecognizerShared will share this stream.
+	 * eslifRecognizerShared and current recognizer will share this stream.
 	 * The sharing will stop if eslifRecognizerShared is set to a null value.
 	 */
 	public void share(ESLIFRecognizer eslifRecognizerShared) throws ESLIFException {
