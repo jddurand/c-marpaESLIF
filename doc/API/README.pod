@@ -1169,6 +1169,8 @@ Creates a recognizer out of a C<marpaESLIFGrammarp> grammar instance, that is us
 
 From there, any update to the new recognizer's stream or C<marpaESLIFRecognizerSharedp>'s stream are synchronous and shared.
 
+The input stream callback will use C<marpaESLIFRecognizerSharedp> settings.
+
 It is the application responsibility to make sure that the lifetime of C<marpaESLIFRecognizerSharedp> is <greater> than newly created recognizer instance.
 This method returns a recognizer pointer in case of success, C<NULL> in case of failure.
 
@@ -1189,6 +1191,8 @@ This method returns a true value in case of success, a false value otherwise.
 A recognizer can be instructed to share the stream with another C<marpaESLIFRecognizerSharedp> at any time. When C<marpaESLIFRecognizerSharedp> is C<NULL>, sharing is stopped.
 
 It is the application responsibility to make sure that the lifetime of C<marpaESLIFRecognizerSharedp> is <greater> than C<marpaESLIFRecognizerp>.
+
+The input stream callback will use C<marpaESLIFRecognizerSharedp> settings if the later is not C<NULL>, the original C<marpaESLIFRecognizerp> otherwise.
 
 This method returns a true value in case of success, a false value otherwise.
 
