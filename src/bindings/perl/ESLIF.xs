@@ -2516,10 +2516,13 @@ PREINIT:
 CODE:
 
   /*
-   * We explicily create a reference on the shared SV to ensure proper destroy order
+   * The eventual previous reference on another shared recognizer has its refcount decreased.
    */
-  MARPAESLIF_REFCNT_INC(ST(1));
-  Perl_MarpaX_ESLIF_Recognizer->Perl_MarpaX_ESLIF_Recognizer_origp = ST(1);
+  MARPAESLIF_REFCNT_DEC(Perl_MarpaX_ESLIF_Recognizer->Perl_MarpaX_ESLIF_Recognizer_origp);
+  /*
+   * We explicily create a reference on the shared SV to ensure proper destroy order - per def ST(1) is an SvRV
+   */
+  Perl_MarpaX_ESLIF_Recognizer->Perl_MarpaX_ESLIF_Recognizer_origp = newRV(SvRV(ST(1)));
 
   if (! marpaESLIFRecognizer_shareb(Perl_MarpaX_ESLIF_Recognizer->marpaESLIFRecognizerp, Perl_MarpaX_ESLIF_RecognizerShared->marpaESLIFRecognizerp)) {
     MARPAESLIF_CROAKF("marpaESLIFRecognizer_shareb failure, %s", strerror(errno));

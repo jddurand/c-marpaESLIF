@@ -211,6 +211,7 @@ foreach (0..$#inputs) {
     }
 }
 
+my $newFromOrshared = 0;
 sub doparse {
     my ($marpaESLIFRecognizer, $inputs, $recursionLevel) = @_;
     my $rc;
@@ -236,7 +237,13 @@ sub doparse {
                 $log->infof("Got lstring: %s; length=%ld, current position is {line, column} = {%ld, %ld}", $pauses, length($pauses), $line, $column);
             }
             elsif ($event->{event} eq '^LCURLY') {
-                my $marpaESLIFRecognizerObject = $marpaESLIFRecognizer->newFrom($GRAMMARARRAY[1]);
+                my $marpaESLIFRecognizerObject;
+                if ((++$newFromOrshared) %2 == 0) {
+                    $marpaESLIFRecognizerObject = $marpaESLIFRecognizer->newFrom($GRAMMARARRAY[1]);
+                } else {
+                    $marpaESLIFRecognizerObject = MarpaX::ESLIF::Recognizer->new($GRAMMARARRAY[1], MyRecognizerInterface->new(undef));
+                    $marpaESLIFRecognizerObject->share($marpaESLIFRecognizer);
+                }
                 # Set exhausted flag since this grammar is very likely to exit when data remains
                 $marpaESLIFRecognizerObject->set_exhausted_flag(1);
                 # Force read of the LCURLY lexeme
