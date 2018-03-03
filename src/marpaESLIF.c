@@ -5683,7 +5683,7 @@ static inline short _marpaESLIFRecognizer_alternativeStackSymbol_setb(marpaESLIF
 /*****************************************************************************/
 {
   static const char        *funcs = "_marpaESLIFRecognizer_alternativeStackSymbol_setb";
-  marpaESLIF_alternative_t *p     = NULL;
+  marpaESLIF_alternative_t *p; /* It is guaranteed that p is set whatever happens - see below */
   short                     rcb;
 
   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Setting alternativeStackSymbolp[%d]", indicei);
@@ -6625,7 +6625,6 @@ static inline short _marpaESLIFRecognizer_lexeme_completeb(marpaESLIFRecognizer_
 /*****************************************************************************/
 {
   static const char                *funcs                           = "_marpaESLIFRecognizer_lexeme_completeb";
-  marpaESLIF_t                     *marpaESLIFp                     = marpaESLIFRecognizerp->marpaESLIFp;
   marpaESLIFGrammar_t              *marpaESLIFGrammarp              = marpaESLIFRecognizerp->marpaESLIFGrammarp;
   marpaESLIF_grammar_t             *grammarp                        = marpaESLIFGrammarp->grammarp;
   genericStack_t                   *commitedAlternativeStackSymbolp = marpaESLIFRecognizerp->commitedAlternativeStackSymbolp;
@@ -6652,15 +6651,18 @@ static inline short _marpaESLIFRecognizer_lexeme_completeb(marpaESLIFRecognizer_
       /* _marpaESLIFRecognizer_read() can change it */
       inputs = marpaESLIF_streamp->inputs;
     } else {
-      MARPAESLIF_ERRORF(marpaESLIFp, "Completion length is %ld but must be <= %ld (number of remaining bytes in the recognizer internal buffer)", (unsigned long) lengthl, (unsigned long) marpaESLIF_streamp->inputl);
+      MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "Completion length is %ld but must be <= %ld (number of remaining bytes in the recognizer internal buffer)", (unsigned long) lengthl, (unsigned long) marpaESLIF_streamp->inputl);
       goto err;
     }
   }
 
+#ifndef MARPAESLIF_NTRACE
+  /* This should never happen in production */
   if (GENERICSTACK_USED(commitedAlternativeStackSymbolp) <= 0) {
-    MARPAESLIF_ERROR(marpaESLIFp, "commitedAlternativeStackSymbolp is empty");
+    MARPAESLIF_ERROR(marpaESLIFRecognizerp->marpaESLIFp, "commitedAlternativeStackSymbolp is empty");
     goto err;
   }
+#endif
 
   /* set latest earleme set id mapping if trackb is true */
   if (marpaESLIFRecognizerp->marpaESLIFRecognizerOption.trackb) {
@@ -6679,7 +6681,7 @@ static inline short _marpaESLIFRecognizer_lexeme_completeb(marpaESLIFRecognizer_
     set2InputStackp = marpaESLIFRecognizerp->set2InputStackp;
     GENERICSTACK_SET_ARRAY(set2InputStackp, array, latestEarleySetIdi);
     if (GENERICSTACK_ERROR(set2InputStackp)) {
-      MARPAESLIF_ERRORF(marpaESLIFp, "set2InputStackp set failure, %s", strerror(errno));
+      MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "set2InputStackp set failure, %s", strerror(errno));
       goto err;
     }
   }
