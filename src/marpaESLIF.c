@@ -3834,7 +3834,7 @@ static inline short _marpaESLIFRecognizer_terminal_matcherb(marpaESLIFRecognizer
     /* --------------------------------------------------------- */
     /*
      Patterns are always compiled with PCRE2_ANCHORED by default,
-     except when there is the "A" modifier. In this case, it allowed
+     except when there is the "A" modifier. In this case, we allow
      to execute the regex ONLY if the whole stream was read in one
      call to the user's read callback.
     */
@@ -7907,6 +7907,7 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGramm
 {
   static const char             *funcs                 = "_marpaESLIFRecognizer_newp";
   marpaESLIF_t                  *marpaESLIFp           = marpaESLIFGrammarp->marpaESLIFp;
+  genericStack_t                *marpaESLIFRecognizerParentStackp;
   marpaESLIFRecognizer_t        *marpaESLIFRecognizerp = NULL;
   marpaWrapperRecognizerOption_t marpaWrapperRecognizerOption;
   short                          marpaESLIFRecognizerOptionb;
@@ -7949,10 +7950,25 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGramm
   }
 
   /* Nope, this will be a fresh new thingy */
-  marpaESLIFRecognizerp = (marpaESLIFRecognizer_t *) malloc(sizeof(marpaESLIFRecognizer_t));
+  /* In case there is a parent, we may have cached an already malloc()ed area */
+  if (marpaESLIFRecognizerParentp != NULL) {
+    marpaESLIFRecognizerParentStackp = marpaESLIFRecognizerParentp->marpaESLIFRecognizerStackp;
+    if (GENERICSTACK_USED(marpaESLIFRecognizerParentStackp) > 0) {
+      marpaESLIFRecognizerp = (marpaESLIFRecognizer_t *) GENERICSTACK_POP_PTR(marpaESLIFRecognizerParentStackp);
+#ifndef MARPAESLIF_NTRACE
+      /* This should never happen */
+      if (marpaESLIFRecognizerp == NULL) {
+        MARPAESLIF_WARN(marpaESLIFp, "marpaESLIFRecognizerParentp->marpaESLIFRecognizerStackp pop returned a null pointer");
+      }
+#endif
+    }
+  }
   if (marpaESLIFRecognizerp == NULL) {
-    MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
-    goto err;
+    marpaESLIFRecognizerp = (marpaESLIFRecognizer_t *) malloc(sizeof(marpaESLIFRecognizer_t));
+    if (marpaESLIFRecognizerp == NULL) {
+      MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
+      goto err;
+    }
   }
 
   marpaESLIFRecognizerp->marpaESLIFp                  = marpaESLIFp;
@@ -7974,11 +7990,13 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGramm
   if (marpaESLIFRecognizerParentp != NULL) {
     marpaESLIFRecognizerp->leveli                       = marpaESLIFRecognizerParentp->leveli + 1;
     marpaESLIFRecognizerp->marpaESLIFRecognizerHashp    = marpaESLIFRecognizerParentp->marpaESLIFRecognizerHashp;
+    marpaESLIFRecognizerp->marpaESLIFRecognizerStackp   = marpaESLIFRecognizerParentp->marpaESLIFRecognizerStackp;
     marpaESLIFRecognizerp->marpaESLIF_streamp           = marpaESLIFRecognizerParentp->marpaESLIF_streamp;
     marpaESLIFRecognizerp->parentDeltal                 = marpaESLIFRecognizerParentp->marpaESLIF_streamp->inputs - marpaESLIFRecognizerParentp->marpaESLIF_streamp->buffers;
   } else {
     marpaESLIFRecognizerp->leveli                       = 0;
     marpaESLIFRecognizerp->marpaESLIFRecognizerHashp    = NULL; /* Pointer to a hash in the structure, initialized later */
+    marpaESLIFRecognizerp->marpaESLIFRecognizerStackp   = NULL; /* Pointer to a stack in the structure, initialized later */
     marpaESLIFRecognizerp->marpaESLIF_streamp           = NULL; /* Initialized below */
     marpaESLIFRecognizerp->parentDeltal                 = 0;
   }
@@ -8177,6 +8195,16 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGramm
     if (GENERICHASH_ERROR(marpaESLIFRecognizerp->marpaESLIFRecognizerHashp)) {
       MARPAESLIF_ERRORF(marpaESLIFp, "marpaESLIFRecognizerHashp init failure, %s", strerror(errno));
       marpaESLIFRecognizerp->marpaESLIFRecognizerHashp = NULL;
+      goto err;
+    }
+  }
+
+  if (marpaESLIFRecognizerp->marpaESLIFRecognizerStackp == NULL) {
+    marpaESLIFRecognizerp->marpaESLIFRecognizerStackp = &(marpaESLIFRecognizerp->_marpaESLIFRecognizerStack);
+    GENERICSTACK_INIT(marpaESLIFRecognizerp->marpaESLIFRecognizerStackp);
+    if (GENERICSTACK_ERROR(marpaESLIFRecognizerp->marpaESLIFRecognizerStackp)) {
+      MARPAESLIF_ERRORF(marpaESLIFp, "marpaESLIFRecognizerStackp initialization failure, %s", strerror(errno));
+      marpaESLIFRecognizerp->marpaESLIFRecognizerStackp = NULL;
       goto err;
     }
   }
@@ -13428,10 +13456,13 @@ static inline void _marpaESLIFRecognizer_freev(marpaESLIFRecognizer_t *marpaESLI
   static const char      *funcs                       = "_marpaESLIFRecognizer_freev";
   marpaESLIFRecognizer_t *marpaESLIFRecognizerParentp = marpaESLIFRecognizerp->parentRecognizerp;
   genericHash_t          *marpaESLIFRecognizerHashp   = marpaESLIFRecognizerp->marpaESLIFRecognizerHashp;
+  genericStack_t         *marpaESLIFRecognizerStackp  = marpaESLIFRecognizerp->marpaESLIFRecognizerStackp;
   marpaESLIF_stream_t    *marpaESLIF_streamp          = marpaESLIFRecognizerp->marpaESLIF_streamp;
   short                  *discardEventStatebp;
   short                  *beforeEventStatebp;
   short                  *afterEventStatebp;
+  int                     i;
+  void                   *p;
     
   /* We may decide to not free but say we can be reused, unless caller definitely want us to get out */
   if (! forceb) {
@@ -13497,7 +13528,27 @@ static inline void _marpaESLIFRecognizer_freev(marpaESLIFRecognizer_t *marpaESLI
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "return");
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC;
 
-  free(marpaESLIFRecognizerp);
+  if ((marpaESLIFRecognizerParentp == NULL) || (marpaESLIFRecognizerStackp == NULL)) {
+    /* This is truely a top recognizer, or we are called on the top recognizer after a new() failure */
+    if (marpaESLIFRecognizerStackp != NULL) {
+      for (i = 0; i < GENERICSTACK_USED(marpaESLIFRecognizerStackp); i++) {
+        void *p = GENERICSTACK_GET_PTR(marpaESLIFRecognizerStackp, i);
+        if (p != NULL) {
+          free(p);
+        }
+      }
+      GENERICSTACK_RESET(marpaESLIFRecognizerStackp);
+    }
+    free(marpaESLIFRecognizerp);
+  } else {
+    /* Push ourself in the stack of already allocated children */
+    GENERICSTACK_PUSH_PTR(marpaESLIFRecognizerStackp, marpaESLIFRecognizerp);
+    if (GENERICSTACK_ERROR(marpaESLIFRecognizerStackp)) {
+      MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "marpaESLIFRecognizerStackp push failure, %s", strerror(errno));
+      /* We have to free anyway - take care we do not own marpaESLIFRecognizerStackp here */
+      free(marpaESLIFRecognizerp);
+    }
+  }
 }
 
 /*****************************************************************************/

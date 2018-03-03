@@ -356,6 +356,8 @@ struct marpaESLIFRecognizer {
   short                        pristineb;           /* 1: pristine, i.e. can be reused, 0: have at least one thing that happened at the raw grammar level, modulo the eventual initial events */
   genericHash_t                _marpaESLIFRecognizerHash; /* Cache of recognizers ready for re-use - shared with all children (lexeme mode) */
   genericHash_t               *marpaESLIFRecognizerHashp;
+  genericStack_t               _marpaESLIFRecognizerStack; /* Cache of recognizers already malloced - not ready for reuse, just already allocated */
+  genericStack_t              *marpaESLIFRecognizerStackp; /* Cache of recognizers already malloced - not ready for reuse, just already allocated */
   marpaESLIF_stream_t          _marpaESLIF_stream;  /* A stream is always owned by one recognizer */
   marpaESLIF_stream_t         *marpaESLIF_streamp;  /* ... But the stream pointer can be shared with others */
   size_t                       previousMaxMatchedl;       /* Always computed */
