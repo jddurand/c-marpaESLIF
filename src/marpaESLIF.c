@@ -3838,7 +3838,7 @@ static inline short _marpaESLIFRecognizer_terminal_matcherb(marpaESLIFRecognizer
      to execute the regex ONLY if the whole stream was read in one
      call to the user's read callback.
     */
-    if (! terminalp->regex.isAnchoredb) {
+    if (! marpaESLIF_regex.isAnchoredb) {
       if (! marpaESLIF_streamp->noAnchorIsOkb) {
         /* This is an error unless we are at EOF */
         if (! eofb) {
