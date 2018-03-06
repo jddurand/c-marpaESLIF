@@ -13534,7 +13534,7 @@ static inline void _marpaESLIFRecognizer_freev(marpaESLIFRecognizer_t *marpaESLI
     /* This is truely a top recognizer, or we are called on the top recognizer after a new() failure */
     if (marpaESLIFRecognizerStackp != NULL) {
       for (i = 0; i < GENERICSTACK_USED(marpaESLIFRecognizerStackp); i++) {
-        void *p = GENERICSTACK_GET_PTR(marpaESLIFRecognizerStackp, i);
+        p = GENERICSTACK_GET_PTR(marpaESLIFRecognizerStackp, i);
         if (p != NULL) {
           free(p);
         }
