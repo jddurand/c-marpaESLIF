@@ -1167,7 +1167,7 @@ This method returns a recognizer pointer in case of success, C<NULL> in case of 
 
 Creates a recognizer out of a C<marpaESLIFGrammarp> grammar instance, that is using explicitly the I<same> settings as C<marpaESLIFRecognizerSharedp> and shares the later's stream.
 
-From there, any update to the new recognizer's stream or C<marpaESLIFRecognizerSharedp>'s stream are synchronous and shared.
+From there, any update to the new recognizer's stream or C<marpaESLIFRecognizerSharedp>'s stream are synchronous and shared. Running the new recognizer and the shared recognizer in parallel is not allowed.
 
 The input stream callback will use C<marpaESLIFRecognizerSharedp> settings.
 
@@ -1188,7 +1188,7 @@ This method returns a true value in case of success, a false value otherwise.
   short marpaESLIFRecognizer_shareb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp,
                                     marpaESLIFRecognizer_t *marpaESLIFRecognizerSharedp);
 
-A recognizer can be instructed to share the stream with another C<marpaESLIFRecognizerSharedp> at any time. When C<marpaESLIFRecognizerSharedp> is C<NULL>, sharing is stopped.
+A recognizer can be instructed to share the stream with another C<marpaESLIFRecognizerSharedp> at any time. When C<marpaESLIFRecognizerSharedp> is C<NULL>, sharing is stopped. Running the new recognizer and the shared recognizer in parallel is not allowed.
 
 It is the application responsibility to make sure that the lifetime of C<marpaESLIFRecognizerSharedp> is <greater> than C<marpaESLIFRecognizerp>.
 
