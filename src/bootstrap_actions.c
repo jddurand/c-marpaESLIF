@@ -3666,7 +3666,7 @@ static short _marpaESLIF_bootstrap_G1_action_single_symbol_4b(void *userDatavp, 
                                                      0, /* discardb - no effect anway because we are in fake mode */
                                                      1, /* noEventb - no effect anway because we are in fake mode */
                                                      0, /* silentb */
-                                                     NULL, /* marpaESLIFRecognizerParentp ==> VERY IMPORTANT - this mean result is malloc()ed */
+                                                     NULL, /* marpaESLIFRecognizerParentp */
                                                      1, /* fakeb */
                                                      0, /* wantedStartCompletionsi */
                                                      1, /* A grammar is always transformed to valid UTF-8 before being parsed */
@@ -5794,7 +5794,7 @@ static inline marpaESLIF_bootstrap_utf_string_t *_marpaESLIF_bootstrap_regex_to_
                                                      0, /* discardb - no effect anway because we are in fake mode */
                                                      1, /* noEventb - no effect anway because we are in fake mode */
                                                      0, /* silentb */
-                                                     NULL, /* marpaESLIFRecognizerParentp ==> VERY IMPORTANT - this mean result is malloc()ed */
+                                                     NULL, /* marpaESLIFRecognizerParentp */
                                                      1, /* fakeb */
                                                      0, /* wantedStartCompletionsi */
                                                      1, /* A grammar is always transformed to valid UTF-8 before being parsed */
@@ -5907,7 +5907,7 @@ static inline marpaESLIF_bootstrap_utf_string_t *_marpaESLIF_bootstrap_character
                                                      0, /* discardb */
                                                      1, /* noEventb - no effect anway because we are in fake mode */
                                                      0, /* silentb */
-                                                     NULL, /* marpaESLIFRecognizerParentp ==> VERY IMPORTANT - this mean result is malloc()ed */
+                                                     NULL, /* marpaESLIFRecognizerParentp */
                                                      1, /* fakeb */
                                                      0, /* wantedStartCompletionsi */
                                                      1, /* A grammar is always transformed to valid UTF-8 before being parsed */
