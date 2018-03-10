@@ -387,6 +387,8 @@ struct marpaESLIF_alternative {
   size_t               valuel;          /* 0 when it is external */
   int                  grammarLengthi;  /* Length within the grammar (1 in the token-stream model) */
   short                usedb;           /* Is this structure in use ? */
+  short                offsetb;         /* Is valuep an offset instead of a NUL-terminated malloced area ? - meaningless when valuel is <= 0 */
+  char                *inputs;          /* Original input pointer when offsetb is a true value */
 };
 
 marpaESLIF_alternative_t marpaESLIF_alternative_default = {
@@ -394,7 +396,9 @@ marpaESLIF_alternative_t marpaESLIF_alternative_default = {
   NULL, /* valuep */
   0,    /* valuel */
   0,    /* grammarLengthi */
-  0     /* usedb */
+  0,    /* usedb */
+  0,    /* offsetb */
+  NULL  /* inputs */
 };
 
 /* ------------------------------- */
