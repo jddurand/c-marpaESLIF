@@ -381,14 +381,18 @@ struct marpaESLIF_lexeme_data {
   size_t  byteSizel;    /* Allocated size */
 };
 
+/* Alternative work in two mode: when there is parent recognizer and when this is a top-level recognizer:
+   - when there is a parent recognizer, we are by definition in computing a lexeme. Then we have the full
+     control. And we guarantee that the input will never crunch. At most it can move. Therefore in this
+     mode we can work with offsets.
+   - when this is a top-level recognizer, everything is allocated on the heap.
+*/
 struct marpaESLIF_alternative {
   marpaESLIF_symbol_t *symbolp;         /* Associated symbol */
   void                *valuep;          /* Associated value and length */
   size_t               valuel;          /* 0 when it is external */
   int                  grammarLengthi;  /* Length within the grammar (1 in the token-stream model) */
   short                usedb;           /* Is this structure in use ? */
-  short                offsetb;         /* Is valuep an offset instead of a NUL-terminated malloced area ? - meaningless when valuel is <= 0 */
-  char                *inputs;          /* Original input pointer when offsetb is a true value */
 };
 
 marpaESLIF_alternative_t marpaESLIF_alternative_default = {
@@ -396,9 +400,7 @@ marpaESLIF_alternative_t marpaESLIF_alternative_default = {
   NULL, /* valuep */
   0,    /* valuel */
   0,    /* grammarLengthi */
-  0,    /* usedb */
-  0,    /* offsetb */
-  NULL  /* inputs */
+  0     /* usedb */
 };
 
 /* ------------------------------- */
