@@ -4365,8 +4365,10 @@ static inline char *_marpaESLIF_charconvb(marpaESLIF_t *marpaESLIFp, char *toEnc
   }
   if (tconvp == NULL) {
     tconvp = tconv_open_ext(toEncodings, fromEncodings, &tconvOption);
-    if (tconvp == NULL) {
+    if (tconvp == (tconv_t)-1) {
       MARPAESLIF_ERRORF(marpaESLIFp, "tconv_open failure, %s", strerror(errno));
+      /* Well, I use NULL instead of -1 */
+      tconvp = NULL;
       goto err;
     }
   }
