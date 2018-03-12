@@ -2788,7 +2788,6 @@ static inline short _marpaESLIFRecognizer_lexemeStack_i_resetb(marpaESLIFRecogni
 /*****************************************************************************/
 {
   static const char               *funcs = "_marpaESLIFRecognizer_lexemeStack_i_resetb";
-  GENERICSTACKITEMTYPE2TYPE_ARRAY  array;
   short                            rcb;
 
 #ifndef MARPAESLIF_NTRACE
@@ -5977,7 +5976,7 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
       if (marpaESLIFRecognizerp->parentRecognizerp != NULL) {
         /* Internal alternatives that remains internal are always offsets */
         alternative.valuep  = marpaESLIFValueResult.u.p;
-        alternative.valuep -= (size_t) marpaESLIF_streamp->inputs;
+        alternative.valuep = ((char *) marpaESLIFValueResult.u.p) - (size_t) marpaESLIF_streamp->inputs;
       } else {
         switch (symbolp->type) {
         case MARPAESLIF_SYMBOL_TYPE_META:
@@ -6487,10 +6486,7 @@ static inline short _marpaESLIFRecognizer_lexeme_alternativeb(marpaESLIFRecogniz
 {
   static const char    *funcs              = "_marpaESLIFRecognizer_lexeme_alternativeb";
   genericStack_t       *lexemeInputStackp  = marpaESLIFRecognizerp->lexemeInputStackp;
-  marpaESLIF_stream_t  *marpaESLIF_streamp;
   short                 rcb;
-  size_t                deltal;
-  char                 *valuep;
 
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
@@ -8469,9 +8465,9 @@ static inline short _marpaESLIFGrammar_parseb(marpaESLIFGrammar_t *marpaESLIFGra
                                 marpaESLIFRecognizerParentp->marpaESLIF_streamp->inputs,
                                 (unsigned long) marpaESLIFValueResultp->u.p,
                                 (unsigned long) marpaESLIFValueResultp->sizel,
-                                marpaESLIFValueResultp->u.p + (size_t) marpaESLIFRecognizerParentp->marpaESLIF_streamp->inputs,
+                                ((char *) marpaESLIFValueResultp->u.p) + (size_t) marpaESLIFRecognizerParentp->marpaESLIF_streamp->inputs,
                                 (unsigned long) marpaESLIFValueResultp->sizel);
-    marpaESLIFValueResultp->u.p += (size_t) marpaESLIFRecognizerParentp->marpaESLIF_streamp->inputs;
+    marpaESLIFValueResultp->u.p = ((char *) marpaESLIFValueResultp->u.p) + (size_t) marpaESLIFRecognizerParentp->marpaESLIF_streamp->inputs;
   }
   return rcb;
 }
