@@ -176,6 +176,9 @@ const marpaESLIF_uint32_t pcre2_option_binary_default  = PCRE2_NOTEMPTY;
 const marpaESLIF_uint32_t pcre2_option_char_default    = PCRE2_NOTEMPTY|PCRE2_NO_UTF_CHECK;
 const marpaESLIF_uint32_t pcre2_option_partial_default = PCRE2_NOTEMPTY|PCRE2_NO_UTF_CHECK|PCRE2_PARTIAL_HARD;
 
+static const short MARPAESLIF_LEXEME_IS_STRING_ACTION = 0;
+void *MARPAESLIF_LEXEME_IS_STRING_ACTION_VOIDP = (void *) &MARPAESLIF_LEXEME_IS_STRING_ACTION;
+
 /* For reset of values in the stack, it is okay to not care about the union -; */
 static const marpaESLIFValueResult_t marpaESLIFValueResultUndef = {
   0,                          /* contexti */
@@ -11941,6 +11944,10 @@ static short _marpaESLIF_lexeme_transferb(void *userDatavp, marpaESLIFValue_t *m
   /* It is very important to NOT depend of userDatavp here. This action bypasses any user action. Only marpaESLIFValuep is a known value */
   /* In addition, this method is ONLY called by sub-recognizers, i.e. user-defined data is =========> IMPOSSIBLE <============ at this stage. */
   /* It is always something that come from the physical input. */
+
+  /* Well, we USE userDatavp but only to distinguish a special case of lexeme: when this is a hardcoded string. Then it does not appear */
+  /* in the source, but in the grammar. Then userDatavp is MARPAESLIF_LEXEME_IS_STRING_ACTION_VOIDP. */
+
   marpaESLIFRecognizer_t     *marpaESLIFRecognizerp = marpaESLIFValuep->marpaESLIFRecognizerp;
   marpaESLIFValueResult_t     marpaESLIFValueResult = marpaESLIFValueResultLexeme;
   /* Is the parent recognizer also in lexeme mode ? */
@@ -11964,8 +11971,11 @@ static short _marpaESLIF_lexeme_transferb(void *userDatavp, marpaESLIFValue_t *m
         goto err;
       }
       /* A lexeme, coming from internal recognizer: we have to take into account that bytep is in reality an offset */
-      offsetl = (size_t) bytep;
-      bytep = marpaESLIFRecognizerp->marpaESLIF_streamp->inputs + offsetl;
+      /* unless userDatavp is MARPAESLIF_LEXEME_IS_STRING_ACTION_VOIDP */
+      if (userDatavp != MARPAESLIF_LEXEME_IS_STRING_ACTION_VOIDP) {
+        offsetl = (size_t) bytep;
+        bytep = marpaESLIFRecognizerp->marpaESLIF_streamp->inputs + offsetl;
+      }
 
       memcpy((void *) newp, bytep, bytel);
       newp[bytel] = '\0';
@@ -12007,7 +12017,7 @@ static short _marpaESLIF_symbol_literal_transferb(void *userDatavp, marpaESLIFVa
 
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "Forcing UTF-8 string literal");
 
-  rcb = _marpaESLIF_lexeme_transferb(userDatavp, marpaESLIFValuep, stringp->bytep, stringp->bytel, resulti);
+  rcb = _marpaESLIF_lexeme_transferb(MARPAESLIF_LEXEME_IS_STRING_ACTION_VOIDP, marpaESLIFValuep, stringp->bytep, stringp->bytel, resulti);
 
   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC;
@@ -12029,7 +12039,7 @@ static short _marpaESLIF_rule_literal_transferb(void *userDatavp, marpaESLIFValu
 
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "Forcing UTF-8 string literal");
 
-  rcb = _marpaESLIF_lexeme_transferb(userDatavp, marpaESLIFValuep, stringp->bytep, stringp->bytel, resulti);
+  rcb = _marpaESLIF_lexeme_transferb(MARPAESLIF_LEXEME_IS_STRING_ACTION_VOIDP, marpaESLIFValuep, stringp->bytep, stringp->bytel, resulti);
 
   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC;
