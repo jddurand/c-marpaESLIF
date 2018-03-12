@@ -6846,10 +6846,12 @@ static inline short _marpaESLIFRecognizer_lexeme_tryb(marpaESLIFRecognizer_t *ma
   rcb = 0;
 
  done:
+  /* We NEVER free because we called for parsing in lexeme mode */
+  /*
   if (valuep != NULL) {
-    /* Data, if any, has been copied in the try section for this symbol */
     free(valuep);
   }
+  */
   return rcb;
 }
 
