@@ -537,8 +537,6 @@ const static char *xmls =
 "#\n"
   ;
 
-#include <Windows.h>
-
 int main() {
   marpaESLIF_t                *marpaESLIFp        = NULL;
   marpaESLIFGrammar_t         *marpaESLIFGrammarp = NULL;
@@ -556,8 +554,6 @@ int main() {
   if (marpaESLIFp == NULL) {
     goto err;
   }
-
-  Sleep(20000);
 
   marpaESLIFGrammarOption.bytep               = (void *) xmls;
   marpaESLIFGrammarOption.bytel               = strlen(xmls);
@@ -583,11 +579,11 @@ to augment. Recommended: 50 */
 
   marpaESLIFTester_context.genericLoggerp = genericLoggerp;
   marpaESLIFTester_context.inputs         =
-" <?xml version=\\\"1.0\\\"?>\n"
+"<?xml version=\"1.0\"?>\n"
 "\n"
-"<gutenprint xmlns=\\\"http://gimp-print.sourceforge.net/xsd/gp.xsd-1.0\\\"\n"
-"xmlns:xsi=\\\"http://www.w3.org/2001/XMLSchema-instance\\\"\n"
-"xsi:schemaLocation=\\\"http://gimp-print.sourceforge.net/xsd/gp.xsd-1.0 gutenprint.xsd\\\">\n"
+"<gutenprint xmlns=\"http://gimp-print.sourceforge.net/xsd/gp.xsd-1.0\"\n"
+"xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n"
+"xsi:schemaLocation=\"http://gimp-print.sourceforge.net/xsd/gp.xsd-1.0 gutenprint.xsd\">\n"
 "<copyright>\n"
 " *   Copyright 2008 Robert Krawitz (rlk@alum.mit.edu)\n"
 " *\n"
@@ -605,9 +601,9 @@ to augment. Recommended: 50 */
 " *   along with this program; if not, write to the Free Software\n"
 " *   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.\n"
 "</copyright>\n"
-"<escp2PrinterWeaves name=\\\"standard\\\">\n"
-" <weave translate=\\\"text\\\" name=\\\"Off\\\" text=\\\"Off\\\" command=\\\"\\033(i\\001\\000\\000\\\"/>\n"
-" <weave translate=\\\"text\\\" name=\\\"On\\\" text=\\\"On\\\" command=\\\"\\033(i\\001\\000\\001\\\"/>\n"
+"<escp2PrinterWeaves name=\"standard\">\n"
+" <weave translate=\"text\" name=\"Off\" text=\"Off\" command=\"\\033(i\\001\\000\\000\"/>\n"
+" <weave translate=\"text\" name=\"On\" text=\"On\" command=\"\\033(i\\001\\000\\001\"/>\n"
 "</escp2PrinterWeaves>\n"
 "</gutenprint>\n"
     ;
