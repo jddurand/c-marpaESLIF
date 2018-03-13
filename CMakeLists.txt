@@ -65,6 +65,7 @@ MYPACKAGETESTEXECUTABLE(selfTester                 test/selfTester.c)
 MYPACKAGETESTEXECUTABLE(exceptionTester            test/exceptionTester.c)
 MYPACKAGETESTEXECUTABLE(exceptionTester2           test/exceptionTester2.c)
 MYPACKAGETESTEXECUTABLE(exceptionTester3           test/exceptionTester3.c)
+MYPACKAGETESTEXECUTABLE(exceptionTester4           test/exceptionTester4.c)
 
 ################
 # Dependencies #
@@ -85,6 +86,7 @@ MYPACKAGECHECK(selfTester)
 MYPACKAGECHECK(exceptionTester)
 MYPACKAGECHECK(exceptionTester2)
 MYPACKAGECHECK(exceptionTester3)
+MYPACKAGECHECK(exceptionTester4)
 
 ###########
 # Install #
