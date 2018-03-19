@@ -186,6 +186,12 @@ This method is similar to the isEof()'s recognizer interface. Except that this i
 
 Returns a boolean indicating of end-of-user-data is reached.
 
+=head2 $eslifRecognizer->isExhausted()
+
+This method returns a true value if the underlying grammar is exhausted, a false value otherwise, and croaks on failure.
+
+Returns a boolean indicating of end-of-user-data is reached.
+
 =head2 $eslifRecognizer->read()
 
 Forces the recognizer to read more data. Usually, the recognizer interface is called automatically whenever needed.

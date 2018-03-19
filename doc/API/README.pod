@@ -1437,6 +1437,14 @@ Returns in the value pointed by C<eofbp> the current EOF state, when it is not C
 
 This function should never fail, a false value indicates something fatal happened or the arguments are not correct.
 
+=head3 C<marpaESLIFRecognizer_isExhaustedb>
+
+  short marpaESLIFRecognizer_isExhaustedb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, short *exhaustedbp);
+
+Returns in the value pointed by C<exhaustedbp> the current grammar exhaustion state, when it is not C<NULL>. This method can be called at any time. It does not conflict with the C<exhaustedbp> parameter in C<marpaESLIFGrammar_parseb()>, C<marpaESLIFGrammar_parse_by_levelb()>, , C<marpaESLIFGrammar_scan()> or C<marpaESLIFGrammar_resumeb()>, that provide the same parameter for convienence.
+
+This function should never fail, a false value indicates something fatal happened or the arguments are not correct.
+
 =head3 C<marpaESLIFRecognizer_event_onoffb>
 
   typedef enum marpaESLIFEventType {
