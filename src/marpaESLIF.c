@@ -6085,12 +6085,35 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
       }
     }
 
-    /* Discard failure - this is an error unless lexemes were read */
+    /* Discard failure - this is an error unless lexemes were read and:
+       - exhaustion is on, or
+       - eof flag is true and all the data is consumed
+    */
     MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp,
                                 funcs,
-                                "No alternative, current state is: haveLexemeb=%d",
-                                (int) marpaESLIFRecognizerp->haveLexemeb);
-    if (marpaESLIFRecognizerp->haveLexemeb) {
+                                "No alternative, current state is: haveLexemeb=%d, marpaESLIFRecognizerOption.exhaustedb=%d, eofb=%d, inputl=%ld",
+                                (int) marpaESLIFRecognizerp->haveLexemeb,
+                                (int) marpaESLIFRecognizerp->marpaESLIFRecognizerOption.exhaustedb,
+                                (int) marpaESLIF_streamp->eofb,
+                                (unsigned long) marpaESLIF_streamp->inputl);
+    if (marpaESLIFRecognizerp->haveLexemeb && (
+                                               marpaESLIFRecognizerp->marpaESLIFRecognizerOption.exhaustedb
+                                               ||
+                                               (marpaESLIF_streamp->eofb && (marpaESLIF_streamp->inputl <= 0))
+                                               )
+        ) {
+      /* If exhaustion option is on, we fake an exhaustion event if grammar itself is not exhausted */
+      if (marpaESLIFRecognizerp->marpaESLIFRecognizerOption.exhaustedb) {
+        if (! _marpaESLIFRecognizer_isExhaustedb(marpaESLIFRecognizerp, &isExhaustedb)) {
+          goto err;
+        }
+        if (! isExhaustedb) {
+          /* Fake an exhaustion event */
+          if (! _marpaESLIFRecognizer_push_eventb(marpaESLIFRecognizerp, MARPAESLIF_EVENTTYPE_EXHAUSTED, NULL /* symbolp */, MARPAESLIF_EVENTTYPE_EXHAUSTED_NAME)) {
+            goto err;
+          }
+        }
+      }
       marpaESLIFRecognizerp->cannotcontinueb = 1;
       rcb = 1;
       goto done;

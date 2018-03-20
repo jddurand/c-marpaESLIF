@@ -6,10 +6,6 @@
 #include <genericStack.h>
 #include <marpaESLIF.h>
 
-static short inputReaderb(void *userDatavp, char **inputsp, size_t *inputlp, short *eofbp, short *characterStreambp, char **encodingOfEncodingsp, char **encodingsp, size_t *encodinglp);
-static int   card2inti(char *inputs, size_t inputl);
-static char *int2cards(genericLogger_t *genericLoggerp, int cardi);
-
 typedef struct marpaESLIFTester_context {
   genericLogger_t *genericLoggerp;
   char            *inputs;
@@ -71,6 +67,11 @@ const static test_parse_result_type_t tests_parse_result[] = {
   PARSE_FAILED_AFTER_FINDING_HANDS
 };
 
+static short inputReaderb(void *userDatavp, char **inputsp, size_t *inputlp, short *eofbp, short *characterStreambp, char **encodingOfEncodingsp, char **encodingsp, size_t *encodinglp);
+static int   card2inti(char *inputs, size_t inputl);
+static char *int2cards(genericLogger_t *genericLoggerp, int cardi);
+static short manage_eventsb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, genericLogger_t *genericLoggerp, genericStack_t *cardStackp, test_parse_result_type_t *test_parse_result_typep);
+
 int main() {
   marpaESLIF_t                *marpaESLIFp        = NULL;
   marpaESLIFGrammar_t         *marpaESLIFGrammarp = NULL;
@@ -94,15 +95,11 @@ int main() {
   size_t                       dsll;
   char                        *dsls = NULL;
   test_parse_result_type_t     test_parse_result_type;
-  char                        *pauses;
-  size_t                       pausel;
-  int                          cardi;
-  char                        *cards = NULL;
   genericStack_t              *cardStackp = NULL;
   char                        *offsetp;
   size_t                       lengthl;
   char                        *handsp = NULL;
-  short                        isWSb;
+  short                        rcmanage_eventsb;
 
   genericLoggerp = GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_DEBUG);
   if (genericLoggerp == NULL) {
@@ -133,7 +130,7 @@ int main() {
       marpaESLIFGrammar_freev(marpaESLIFGrammarp);
       marpaESLIFGrammarp = NULL;
 
-      GENERICLOGGER_INFOF(genericLoggerp, "Test data No %d, suite line No %d", test_datai, suit_linei);
+      GENERICLOGGER_DEBUGF(genericLoggerp, "Test data No %d, suite line No %d", test_datai, suit_linei);
 
       if (dsls != NULL) {
         free(dsls);
@@ -189,43 +186,30 @@ int main() {
         GENERICLOGGER_ERRORF(genericLoggerp, "cardStackp initialization failure, %s", strerror(errno));
         goto err;
       }
-      while (continueb) {
-        /* We have a single event, no need to ask what it is */
-        if (! marpaESLIFRecognizer_lexeme_last_pauseb(marpaESLIFRecognizerp, "card", &pauses, &pausel)) {
+      if (continueb) {
+        /* -1: stopped by the application, 0: failure, 1: ok */
+        rcmanage_eventsb = manage_eventsb(marpaESLIFRecognizerp, genericLoggerp, cardStackp, &test_parse_result_type);
+        if (! rcmanage_eventsb) {
           goto err;
         }
-
-        /* We arbitrarily transform card data into a number to uniquely identify it */
-        cardi = card2inti(pauses, pausel);
-        if (cards != NULL) {
-          free(cards);
-        }
-        cards = int2cards(genericLoggerp, cardi);
-        GENERICLOGGER_DEBUGF(genericLoggerp, "Got card %s", cards);
-
-        /* Try to see if there is whitespace after */
-        if (! marpaESLIFRecognizer_lexeme_tryb(marpaESLIFRecognizerp, "WS", &isWSb)) {
-          goto err;
-        }
-        if (isWSb) {
-          GENERICLOGGER_DEBUGF(genericLoggerp, "Card %s is followed by whitespace", cards);
-        } else {
-          GENERICLOGGER_DEBUGF(genericLoggerp, "Card %s is not followed by whitespace", cards);
-        }
-
-        /* Check for duplicate card */
-        if (GENERICSTACK_IS_SHORT(cardStackp, cardi)) {
-          GENERICLOGGER_DEBUGF(genericLoggerp, "Duplicate card %s", cards);
-          test_parse_result_type = PARSE_STOPPED_BY_APPLICATION;
+        if (rcmanage_eventsb < 0) {
           goto check;
         }
-        GENERICSTACK_SET_SHORT(cardStackp, 1, cardi);
-
-        /* Resume */
-        if (! marpaESLIFRecognizer_resumeb(marpaESLIFRecognizerp, 0, &continueb, &exhaustedb)) {
-          test_parse_result_type = PARSE_FAILED_BEFORE_END;
+        do {
+          /* Resume */
+          if (! marpaESLIFRecognizer_resumeb(marpaESLIFRecognizerp, 0, &continueb, &exhaustedb)) {
+            test_parse_result_type = PARSE_FAILED_BEFORE_END;
+            goto check;
+          }
+          /* -1: stopped by the application, 0: failure, 1: ok */
+          rcmanage_eventsb = manage_eventsb(marpaESLIFRecognizerp, genericLoggerp, cardStackp, &test_parse_result_type);
+          if (! rcmanage_eventsb) {
+            goto err;
+          }
+          if (rcmanage_eventsb < 0) {
           goto check;
-        }
+          }
+        } while (continueb);
       }
 
       /* Get eventual value */
@@ -273,6 +257,31 @@ int main() {
       test_parse_result_type = PARSE_REACHED_END_OF_INPUT_BUT_FAILED;
 
     check:
+      {
+        char *tmps;
+        switch (test_parse_result_type) {
+        case PARSE_OK:
+          tmps = "PARSE_OK";
+          break;
+        case PARSE_STOPPED_BY_APPLICATION:
+          tmps = "PARSE_STOPPED_BY_APPLICATION";
+          break;
+        case PARSE_REACHED_END_OF_INPUT_BUT_FAILED:
+          tmps = "PARSE_REACHED_END_OF_INPUT_BUT_FAILED";
+          break;
+        case PARSE_FAILED_BEFORE_END:
+          tmps = "PARSE_FAILED_BEFORE_END";
+          break;
+        case PARSE_FAILED_AFTER_FINDING_HANDS:
+          tmps = "PARSE_FAILED_AFTER_FINDING_HANDS";
+          break;
+        default:
+          tmps = "UNKNOWN PARSE STATUS!?";
+          break;
+        }
+        GENERICLOGGER_INFOF(genericLoggerp, "Test data No %d, suite line No %d => %s", test_datai, suit_linei, tmps);
+      }
+
       if (test_parse_result_type != tests_parse_result[test_datai]) {
         GENERICLOGGER_ERRORF(genericLoggerp, "Got test parse result %d, excepted %d", test_parse_result_type, tests_parse_result[test_datai]);
         goto err;
@@ -301,9 +310,6 @@ int main() {
  done:
   if (dsls != NULL) {
     free(dsls);
-  }
-  if (cards != NULL) {
-    free(cards);
   }
   if (handsp != NULL) {
     free(handsp);
@@ -429,3 +435,56 @@ static char *int2cards(genericLogger_t *genericLoggerp, int cardi)
   return cards;
 }
  
+/*****************************************************************************/
+static short manage_eventsb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, genericLogger_t *genericLoggerp, genericStack_t *cardStackp, test_parse_result_type_t *test_parse_result_typep)
+/*****************************************************************************/
+{
+  char   *cards = NULL;
+  char   *pauses;
+  size_t  pausel;
+  int     cardi;
+  short   isWSb;
+  short   rcb;
+
+  /* We have a single event, no need to ask what it is */
+  if (! marpaESLIFRecognizer_lexeme_last_pauseb(marpaESLIFRecognizerp, "card", &pauses, &pausel)) {
+    goto err;
+  }
+
+  /* We arbitrarily transform card data into a number to uniquely identify it */
+  cardi = card2inti(pauses, pausel);
+  cards = int2cards(genericLoggerp, cardi);
+  if (cards == NULL) {
+    goto err;
+  }
+  GENERICLOGGER_DEBUGF(genericLoggerp, "Got card %s", cards);
+
+  /* Try to see if there is whitespace after */
+  if (! marpaESLIFRecognizer_lexeme_tryb(marpaESLIFRecognizerp, "WS", &isWSb)) {
+    goto err;
+  }
+  if (isWSb) {
+    GENERICLOGGER_DEBUGF(genericLoggerp, "Card %s is followed by whitespace", cards);
+  } else {
+    GENERICLOGGER_DEBUGF(genericLoggerp, "Card %s is not followed by whitespace", cards);
+  }
+
+  /* Check for duplicate card */
+  if (GENERICSTACK_IS_SHORT(cardStackp, cardi)) {
+    GENERICLOGGER_DEBUGF(genericLoggerp, "Duplicate card %s", cards);
+    *test_parse_result_typep = PARSE_STOPPED_BY_APPLICATION;
+    rcb = -1;
+    goto done;
+  }
+  GENERICSTACK_SET_SHORT(cardStackp, 1, cardi);
+
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  return rcb;
+}
+
