@@ -6674,7 +6674,6 @@ static inline short _marpaESLIFRecognizer_isEofb(marpaESLIFRecognizer_t *marpaES
 {
   /* This method never fails */
   static const char *funcs = "_marpaESLIFRecognizer_isEofb";
-  short              rcb;
 
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
