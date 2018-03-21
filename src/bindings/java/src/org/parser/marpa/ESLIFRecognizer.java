@@ -39,7 +39,6 @@ public class ESLIFRecognizer {
 	private ESLIFRecognizer          eslifRecognizerShared        = null;
 	private ByteBuffer               marpaESLIFRecognizerp        = null;
 	private ByteBuffer               marpaESLIFRecognizerContextp = null;
-	private boolean                  canContinue    = false;
 	private native void              jniNew(ESLIFGrammar eslifGrammar) throws ESLIFException;
 	private native void              jniFree() throws ESLIFException;
 	private native boolean			 jniScan(boolean initialEvents) throws ESLIFException;
@@ -57,6 +56,8 @@ public class ESLIFRecognizer {
 	private native byte[]            jniDiscardLastTry() throws ESLIFException;
 	private native boolean           jniIsEof() throws ESLIFException;
 	private native boolean           jniIsExhausted() throws ESLIFException;
+	private native void              jniSetExhaustedFlag(boolean flag) throws ESLIFException;
+	private native boolean           jniIsCanContinue() throws ESLIFException;
 	private native boolean           jniRead() throws ESLIFException;
 	private native byte[]            jniInput() throws ESLIFException;
 	private native void              jniProgressLog(int start, int end, ESLIFLoggerLevel level) throws ESLIFException;
@@ -112,7 +113,7 @@ public class ESLIFRecognizer {
 	 * @throws ESLIFException if the interface failed
 	 */
 	public synchronized boolean isCanContinue() throws ESLIFException {
-		return canContinue;
+		return jniIsCanContinue();
 	}
 
 	/**
@@ -122,6 +123,15 @@ public class ESLIFRecognizer {
 	 */
 	public synchronized boolean isExhausted() throws ESLIFException {
 		return jniIsExhausted();
+	}
+	
+	/**
+	 *
+	 * @param a flag indicating if exhaustion is supported
+	 * @throws ESLIFException if the interface failed
+	 */
+	public synchronized void setExhaustedFlag(boolean flag) throws ESLIFException {
+		jniSetExhaustedFlag(flag);
 	}
 	
 	/**
@@ -449,8 +459,5 @@ public class ESLIFRecognizer {
 	}
 	private void setMarpaESLIFRecognizerContextp(ByteBuffer marpaESLIFRecognizerContextp) {
 		this.marpaESLIFRecognizerContextp = marpaESLIFRecognizerContextp;
-	}
-	private void setCanContinue(boolean canContinue) {
-		this.canContinue = canContinue;
 	}
 }

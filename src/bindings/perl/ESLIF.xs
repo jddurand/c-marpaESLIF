@@ -2551,7 +2551,11 @@ isCanContinue(Perl_MarpaX_ESLIF_Recognizer)
 PREINIT:
   static const char *funcs = "MarpaX::ESLIF::Recognizer::isCanContinue";
 CODE:
-  RETVAL = (bool) Perl_MarpaX_ESLIF_Recognizer->canContinueb;
+  short isCanContinueb;
+  if (! marpaESLIFRecognizer_isCanContinueb(Perl_MarpaX_ESLIF_Recognizer->marpaESLIFRecognizerp, &(isCanContinueb))) {
+    MARPAESLIF_CROAKF("marpaESLIFRecognizer_isCanContinueb failure, %s", strerror(errno));
+  }
+  RETVAL = (bool) isCanContinueb;
 OUTPUT:
   RETVAL
 
@@ -2569,7 +2573,7 @@ PREINIT:
 CODE:
   short exhaustedb;
   if (! marpaESLIFRecognizer_isExhaustedb(Perl_MarpaX_ESLIF_Recognizer->marpaESLIFRecognizerp, &(exhaustedb))) {
-    MARPAESLIF_CROAKF("marpaESLIFRecognizer_is_exhaustedb failure, %s", strerror(errno));
+    MARPAESLIF_CROAKF("marpaESLIFRecognizer_isExhaustedb failure, %s", strerror(errno));
   }
   RETVAL = (bool) exhaustedb;
 OUTPUT:
