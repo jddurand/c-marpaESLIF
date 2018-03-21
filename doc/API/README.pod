@@ -729,7 +729,7 @@ Return a true value on failure, a false value on failure.
   short marpaESLIFGrammar_parseb(marpaESLIFGrammar_t          *marpaESLIFGrammarp,
                                  marpaESLIFRecognizerOption_t *marpaESLIFRecognizerOptionp,
                                  marpaESLIFValueOption_t      *marpaESLIFValueOptionp,
-                                 short                        *exhaustedbp,
+                                 short                        *isExhaustedbp,
                                  marpaESLIFValueResult_t      *marpaESLIFValueResultp);
 
 Please refer to the documentation of:
@@ -752,7 +752,7 @@ for the C<marpaESLIFValueOption_t> structures documentation.
 
 A short form of parsing and valuation, in which I<no event> is possible: the entire scanning is left to the marpaESLIF engine. The grammar at level C<0> is used.
 
-The value pointed by C<exhaustedbp>, when not C<NULL>, is filled with a true value if the parsing exhausted (exhaustion roughly mean that the parsing stopped without consuming all the data), a false value otherwise. This flag does not depend on the existence of an exhaustion event or not.
+The value pointed by C<isExhaustedbp>, when not C<NULL>, is filled with a true value if the parsing exhausted (exhaustion roughly mean that the parsing stopped without consuming all the data), a false value otherwise. This flag does not depend on the existence of an exhaustion event or not.
 
 Returns a true value on success, a false value otherwise.
 
@@ -761,7 +761,7 @@ Returns a true value on success, a false value otherwise.
   short marpaESLIFGrammar_parse_by_levelb(marpaESLIFGrammar_t          *marpaESLIFGrammarp,
                                           marpaESLIFRecognizerOption_t *marpaESLIFRecognizerOptionp,
                                           marpaESLIFValueOption_t      *marpaESLIFValueOptionp,
-                                          short                        *exhaustedbp,
+                                          short                        *isExhaustedbp,
                                           int                           leveli,
                                           marpaESLIFString_t           *descp,
                                           marpaESLIFValueResult_t      *marpaESLIFValueResultp);
@@ -1206,8 +1206,8 @@ Returns the options used to create the C<marpaESLIFRecognizerp> instance, or C<N
 
   short marpaESLIFRecognizer_scanb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp,
                                    short initialEventsb,
-                                   short *continuebp,
-                                   short *exhaustedbp);
+                                   short *isCanContinuebp,
+                                   short *isExhaustedbp);
 
 Start a scanless parsing using the C<marpaESLIFRecognizerp> instance. Only one such call can be done in the whole lifetime of a recognizer. Parameters are:
 
@@ -1217,28 +1217,28 @@ Start a scanless parsing using the C<marpaESLIFRecognizerp> instance. Only one s
 
 Traditionnally initial events are not of use and are skipped. When true, this flag enable such events.
 
-=item continuebp
+=item isCanContinuebp
 
-The scanning will pause as soon as there is an event or an error. When not C<NULL>, the value pointed by C<continuebp> say that if scanning can continue if it is a true value.
+The scanning will pause as soon as there is an event or an error. When not C<NULL>, the value pointed by C<isCanContinuebp> say that if scanning can continue if it is a true value.
 
-=item exhaustedbp
+=item isExhaustedbp
 
-If not C<NULL>, this value pointed by C<exhaustedbp> will say if the parse is exhausted, regardless if there is an exhaustion event or not.
+If not C<NULL>, this value pointed by C<isExhaustedbp> will say if the parse is exhausted, regardless if there is an exhaustion event or not.
 
 =back
 
 A typical usage of the C<marpaESLIFRecognizer_scanb> method is:
 
-  short continueb;
+  short isCanContinuebp;
   short exhaustedb;
 
   if (! marpaESLIFRecognizer_scanb(marpaESLIFRecognizerp,
                                    0 /* initialEventsb */,
-                                   &continueb,
+                                   &isCanContinuebp,
                                    &exhaustedb)) {
     goto error_processing;
   }
-  while (continueb) {
+  while (isCanContinuebp) {
     /* See below for the events, pause and resume methods */
   }
 
@@ -1248,27 +1248,27 @@ This method returns a true value on success, a false value on failure, and can g
 
   short marpaESLIFRecognizer_resumeb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp,
                                      size_t deltaLengthl,
-                                     short *continuebp,
-                                     short *exhaustedbp);
+                                     short *isCanContinuebp,
+                                     short *isExhaustedbp);
 
 Resume the scanning. All parameters have the same meaning as for C<marpaESLIFRecognizer_scanb>, with an additional C<deltaLengthl> that say to the recognizer to skip this given number of byte before going on. A typical usage is:
 
-  short continueb;
+  short isCanContinuebp;
   short exhaustedb;
 
   if (! marpaESLIFRecognizer_scanb(marpaESLIFRecognizerp,
                                    0 /* initialEventsb */,
-                                   &continueb,
+                                   &isCanContinuebp,
                                    &exhaustedb)) {
     goto error_processing;
   }
-  while (continueb) {
+  while (isCanContinuebp) {
     /* See below for the events and pause */
     /* ... */
     /* Resume */
     if (! marpaESLIFRecognizer_resumeb(marpaESLIFRecognizerp,
                                        0,
-                                       &continueb,
+                                       &isCanContinuebp,
                                        &exhaustedb)) {
       goto error_processing;
     }
@@ -1439,9 +1439,17 @@ This function should never fail, a false value indicates something fatal happene
 
 =head3 C<marpaESLIFRecognizer_isExhaustedb>
 
-  short marpaESLIFRecognizer_isExhaustedb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, short *exhaustedbp);
+  short marpaESLIFRecognizer_isExhaustedb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, short *isExhaustedbp);
 
-Returns in the value pointed by C<exhaustedbp> the current grammar exhaustion state, when it is not C<NULL>. This method can be called at any time. It does not conflict with the C<exhaustedbp> parameter in C<marpaESLIFGrammar_parseb()>, C<marpaESLIFGrammar_parse_by_levelb()>, , C<marpaESLIFGrammar_scan()> or C<marpaESLIFGrammar_resumeb()>, that provide the same parameter for convienence.
+Returns in the value pointed by C<isExhaustedbp> the current grammar exhaustion state, when it is not C<NULL>. This method can be called at any time. It does not conflict with the C<isExhaustedbp> parameter in C<marpaESLIFGrammar_parseb()>, C<marpaESLIFGrammar_parse_by_levelb()>, , C<marpaESLIFGrammar_scan()> or C<marpaESLIFGrammar_resumeb()>, that provide the same parameter for convienence.
+
+This function should never fail, a false value indicates something fatal happened or the arguments are not correct.
+
+=head3 C<marpaESLIFRecognizer_isCanContinueb>
+
+  short marpaESLIFRecognizer_isCanContinueb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, short *isCanContinueb);
+
+Returns in the value pointed by C<isCanContinueb> the current recognizer continuation flag state, when it is not C<NULL>. This method can be called at any time. It does not conflict with the C<isExhaustedbp> parameter in C<marpaESLIFGrammar_parseb()>, C<marpaESLIFGrammar_parse_by_levelb()>, , C<marpaESLIFGrammar_scan()> or C<marpaESLIFGrammar_resumeb()>, that provide the same parameter for convienence.
 
 This function should never fail, a false value indicates something fatal happened or the arguments are not correct.
 
