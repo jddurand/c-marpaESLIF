@@ -306,7 +306,7 @@ __DATA__
     NULL, NULL
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
-  /* Taken from Regexp::Common::delimited, $RE{delimited}{-delim=>q{'"\{}}{-cdelim=>q{'"\}}} */
+  /* Taken from Regexp::Common::delimited, $RE{delimited}{-delim=>q{'"}}{-cdelim=>q{'"}} */
   /* Perl stringified version is: (?:(?|(?:\')(?:[^\\\']*(?:\\.[^\\\']*)*)(?:\')|(?:\")(?:[^\\\"]*(?:\\.[^\\\"]*)*)(?:\"))) */
   { L0_TERMINAL_QUOTED_STRING, MARPAESLIF_TERMINAL_TYPE_REGEX, "su",
     "(?:(?|(?:')(?:[^\\\\']*(?:\\\\.[^\\\\']*)*)(?:')|(?:\")(?:[^\\\\\"]*(?:\\\\.[^\\\\\"]*)*)(?:\")))",
