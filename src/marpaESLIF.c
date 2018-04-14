@@ -800,18 +800,19 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
         case '"':
           lastcodepointi = '"';
           break;
+        case 0x201c:
+          lastcodepointi = 0x201d;
+          break;
         default:
           {
             if (isprint((unsigned char) codepointi)) {
-              MARPAESLIF_ERRORF(marpaESLIFp, "Impossible first codepoint %c (0x%02lx), should be \"'\" or '\"'", (unsigned char) codepointi, (unsigned long) codepointi);
+              MARPAESLIF_ERRORF(marpaESLIFp, "Impossible first codepoint %c (0x%02lx), should be 0x201c, \"'\" or '\"'", (unsigned char) codepointi, (unsigned long) codepointi);
             } else {
-              MARPAESLIF_ERRORF(marpaESLIFp, "Impossible first codepoint 0x%02lx, should be \"'\" or '\"'", (unsigned long) codepointi);
+              MARPAESLIF_ERRORF(marpaESLIFp, "Impossible first codepoint 0x%02lx, should be 0x201c, \"'\" or '\"'", (unsigned long) codepointi);
             }
             goto err;
           }
         }
-        MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "First character     is %c", (unsigned char) codepointi);
-        MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Last character must be %c", (unsigned char) lastcodepointi);
         continue;
       } else if (i == (GENERICSTACK_USED(marpaESLIFRecognizerp->lexemeInputStackp) - 1)) {
         /* Trailing backslash ? */
