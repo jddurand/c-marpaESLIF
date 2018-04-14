@@ -43,13 +43,13 @@ There are three types of explicit terminals.
 
 =item * Strings
 
-They can be single (C<'>), double-quoted (C<">), or LEFT DOUBLE QUOTATION MARK (C<“>) then RIGHT DOUBLE QUOTATION MARK (C<”>) enclosed. The content is any valid unicode character, and the C<\> character can be used to escape the quote or C<\> itself. The C<:i> modifier can be used to force case-insensitive match:
+They can be single (C<'>), double-quoted (C<">), or LEFT DOUBLE QUOTATION MARK (C<“>) then RIGHT DOUBLE QUOTATION MARK (C<”>) enclosed. The content is any valid unicode character, and the C<\> character can be used to escape the expected right-side quote character (i.e. C<'>, C<">, or C<”>) or C<\> itself. The C<:i> modifier can be used to force case-insensitive match:
 
   'string'
   'string':i
   'string\'s'
   "string\"s\\"
-  “str'"ing”:i
+  “str'"\”ing”:i
 
 Please note this is really a I<quoted string>, B<not> a string terminal. I.e. everything inside the quoted is taken as-is, with no interpretation.
 

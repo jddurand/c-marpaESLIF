@@ -45,7 +45,7 @@ const static char *exceptions = "\n"
   "event ^arobace = predicted arobace\n"
   "event arobace[] = nulled arobace\n"
   "event arobace$ = completed arobace\n"
-  "arobace ::= \xE2\x80\x9C@\xE2\x80\x9D\n"
+  "arobace ::= \xE2\x80\x9C@\\\xE2\x80\x9D\xE2\x80\x9D\n"
   ;
 
 /* Built-in actions extensions */
