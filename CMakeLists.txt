@@ -77,6 +77,9 @@ FOREACH (_iconv_src ${libtconv_iconv_src})
     PROPERTY COMPILE_FLAGS
     " -I${3RDPARTY_OUTPUT_PATH}/libiconv-1.15/include -I${3RDPARTY_OUTPUT_PATH}/libiconv-1.15/libcharset/include"
     )
+  #
+  # Remove the const thingy
+  #
   SET_PROPERTY(
     SOURCE ${_iconv_src}
     APPEND
@@ -95,7 +98,34 @@ FOREACH (_iconv_src ${libtconv_iconv_src})
     PROPERTY COMPILE_DEFINITIONS
     HAVE_WORKING_O_NOFOLLOW=0
     )
-  FOREACH (_have HAVE_LANGINFO_CODESET HAVE_DECL_GETC_UNLOCKED ENABLE_EXTRA WORDS_LITTLEENDIAN)
+  IF (WORDS_LITTLEENDIAN)
+    SET_PROPERTY(
+      SOURCE ${_iconv_src}
+      APPEND
+      PROPERTY COMPILE_DEFINITIONS
+      WORDS_LITTLEENDIAN=1
+      )
+  ENDIF ()
+  IF (HAVE_DECL_GETC_UNLOCKED)
+    SET_PROPERTY(
+      SOURCE ${_iconv_src}
+      APPEND
+      PROPERTY COMPILE_DEFINITIONS
+      HAVE_DECL_GETC_UNLOCKED=1
+      )
+  ENDIF ()
+  IF (HAVE_LANGINFO_CODESET)
+    SET_PROPERTY(
+      SOURCE ${_iconv_src}
+      APPEND
+      PROPERTY COMPILE_DEFINITIONS
+      HAVE_LANGINFO_CODESET=1
+      )
+  ENDIF ()
+  #
+  # Flags that are always turned on
+  #
+  FOREACH (_have ENABLE_EXTRA)
     IF (${${_have}})
       SET_PROPERTY(
 	SOURCE ${_iconv_src}
