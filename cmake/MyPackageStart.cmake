@@ -86,6 +86,7 @@ MACRO (MYPACKAGESTART packageName versionMajor versionMinor versionPatch)
   SET (CMAKE_C_VISIBILITY_PRESET   hidden)
   SET (CMAKE_CXX_VISIBILITY_PRESET hidden)
   SET (CMAKE_POSITION_INDEPENDENT_CODE ON)
+  SET (CMAKE_VISIBILITY_INLINES_HIDDEN 1)
   if (("${CMAKE_C_COMPILER_ID} x" MATCHES "MSVC") OR MSVC)
     # Loosely based on http://www.hdfgroup.org/ftp/HDF/HDF_Current/src/unpacked/config/cmake/ConfigureChecks.cmake
     GET_DIRECTORY_PROPERTY (_DirDefs DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} COMPILE_DEFINITIONS)
