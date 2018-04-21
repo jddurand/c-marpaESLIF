@@ -1,0 +1,59 @@
+version: 1.0.{build}
+
+image: Visual Studio 2017
+
+platform: x64
+
+configuration: Release
+
+clone_folder: C:\projects\c-genericlogger
+
+clone_depth: 2 # Every build is pushing, and we have two possible builds
+
+matrix:
+  fast_finish: true # Immediately finish build once one of the jobs fails
+
+environment:
+  access_token:
+    secure: A/4rfTb0Vd7FoAjKEBq/1u3QjwGegZQKXRm0RJqSQGtZaI28wO/k8AcBq3iWbvaA
+  matrix:
+    - PLATFORM: x64
+    - PLATFORM: x86
+
+cache:
+  - C:\strawberry # Do not reinstall strawberryperl between builds
+
+init:
+  - if "%PLATFORM%"=="x86" call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars32.bat"
+  - if "%PLATFORM%"=="x64" call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars64.bat"
+
+before_build:
+  - if not exist "C:\strawberry" cinst strawberryperl
+  - set PATH=C:\strawberry\perl\bin;C:\strawberry\perl\site\bin;C:\strawberry\c\bin;%PATH%
+  - perl -V
+  - cpanm --notest Config::AutoConf::INI ExtUtils::CBuilder File::Basename File::Find File::Path
+
+build_script:
+  - perl CMakeObjects.PL
+  - del /f /s /q output
+  - cd C:\projects\c-genericlogger
+  - cmake -G "NMake Makefiles" -DCMAKE_BUILD_TYPE=%CONFIGURATION% .
+  - nmake
+
+test_script:
+  - nmake check
+  - nmake install
+  - nmake pack
+
+#on_success:
+#  - git config --global credential.helper store
+#  - ps: Add-Content "$env:USERPROFILE\.git-credentials" "https://$($env:access_token):x-oauth-basic@github.com`n"
+#  - git config --global user.email "jeandamiendurand@free.fr"
+#  - git config --global user.name "Jean-Damien Durand"
+#  - cd C:\projects\c-genericlogger
+#  - if not exist "package" mkdir package
+#  - copy /y *.exe package
+#  - git checkout master
+#  - git add package
+#  - git commit -m "%PLATFORM% package [ci skip]" package
+#  - git push
