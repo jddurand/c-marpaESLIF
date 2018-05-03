@@ -1,6 +1,6 @@
 MACRO (MYPACKAGEDEPENDENCY packageDepend packageDependSourceDir)
   #
-  # Optional argument: TESTS, LIBS, EXES
+  # Optional argument: TESTS, LIBS, EXES, SYSTEM, EMBEDDED
   #
   IF (ALL_IN_ONE)
     SET (_ALL_IN_ONE TRUE)
@@ -39,6 +39,15 @@ MACRO (MYPACKAGEDEPENDENCY packageDepend packageDependSourceDir)
         MESSAGE (STATUS "[${PROJECT_NAME}-DEPEND-DEBUG] ${packageDepend} system search")
       ENDIF ()
       SET (_ALL_IN_ONE FALSE)
+    ENDIF ()
+    IF (${_var} STREQUAL EMBEDDED)
+      IF (MYPACKAGE_DEBUG)
+        MESSAGE (STATUS "[${PROJECT_NAME}-DEPEND-DEBUG] ${packageDepend} embedded mode")
+      ENDIF ()
+      SET (_ALL FALSE)
+      SET (_LIBS TRUE)
+      SET (_TESTS TRUE)
+      SET (_ALL_IN_ONE TRUE)
     ENDIF ()
   ENDFOREACH ()
   IF (_ALL)
