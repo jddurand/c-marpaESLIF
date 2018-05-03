@@ -49,27 +49,45 @@ print $fh "#define lua_EXPORT\n";
 print $fh "#define LUA_NO_EXPORT\n";
 close($fh) || warn "Cannot close $export_h, $!";
 
-my @additional_includes = ();
-my @additional_srcdir = ();
-# -----------------------------------------------------
-# Well, no third party
-# -----------------------------------------------------
-
 # ----------------
 # Get source files
 # ----------------
-my @sources;
-find(
-    {
-	no_chdir => 1,
-	wanted => sub {
-	    my $file = File::Spec->canonpath($_);
-	    if (-f $file && ($file =~ /\.c$/ || $file =~ /\.cpp$/)) {
-		push(@sources, $file)
-	    }
-	},
-    },
-    'src', @additional_srcdir);
+my @sources = map { File::Spec->catfile('src', $_) }
+qw/
+    lapi.c
+    lauxlib.c
+    lbaselib.c
+    lbitlib.c
+    lcode.c
+    lcorolib.c
+    lctype.c
+    ldblib.c
+    ldebug.c
+    ldo.c
+    ldump.c
+    lfunc.c
+    lgc.c
+    linit.c
+    liolib.c
+    llex.c
+    lmathlib.c
+    lmem.c
+    loadlib.c
+    lobject.c
+    lopcodes.c
+    loslib.c
+    lparser.c
+    lstate.c
+    lstring.c
+    lstrlib.c
+    ltable.c
+    ltablib.c
+    ltm.c
+    lundump.c
+    lutf8lib.c
+    lvm.c
+    lzio.c
+    /;
 
 # ----------------------------------------------------------------------------------------
 # Generate objects
@@ -88,7 +106,7 @@ foreach my $source (@sources) {
     $cbuilder->compile(
 	source        => $source,
 	object_file   => $obj,
-	include_dirs  => [ 'include', File::Spec->catdir('output', 'include'), @additional_includes ],
+	include_dirs  => [ 'include', File::Spec->catdir('output', 'include') ],
 	'C++'         => $is_cplusplus
 	);
 }
