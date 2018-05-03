@@ -114,6 +114,7 @@ MACRO (MYPACKAGESTART packageName versionMajor versionMinor versionPatch)
   #
   # Regardless of compiler, we always set the following historical macros
   #
+  GET_DIRECTORY_PROPERTY (_DirDefs DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} COMPILE_DEFINITIONS)
   FOREACH (_definition _REENTRANT _THREAD_SAFE)
     LIST (FIND _DirDefs ${_definition} _index)
     IF (${_index} GREATER -1)
