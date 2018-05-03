@@ -70,13 +70,12 @@ MYPACKAGELIBRARY(
   ${liblua_src})
 
 #
-# dl dependency
+# dl and m dependency
 #
 IF (   (NOT ("${CMAKE_DL_LIBS}" STREQUAL ""))
-    OR (NOT ("${CMAKE_MATH_LIBS}" STREQUAL ""))
-    OR (NOT ("${READLINE_LIBRARIES}" STREQUAL "")))
+    OR (NOT ("${CMAKE_MATH_LIBS}" STREQUAL "")))
   FOREACH (_target lua lua_static)
-    TARGET_LINK_LIBRARIES(${_target} PUBLIC ${CMAKE_DL_LIBS} ${CMAKE_MATH_LIBS} ${READLINE_LIBRARIES})
+    TARGET_LINK_LIBRARIES(${_target} PUBLIC ${CMAKE_DL_LIBS} ${CMAKE_MATH_LIBS})
   ENDFOREACH ()
 ENDIF ()
 
