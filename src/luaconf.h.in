@@ -44,38 +44,20 @@
 /* #define LUA_USE_C89 */ /* Global define in CMakeLists.txt */
 
 
-/*
-** By default, Lua on Windows use (some) specific Windows features
-*/
-#cmakedefine LUA_USE_WINDOWS  /* enable goodies for regular Windows */
-
-
 #if defined(LUA_USE_WINDOWS)
-#undef LUA_DL_DLL
 #define LUA_DL_DLL	/* enable support for DLL */
-#undef LUA_USE_C89
 #define LUA_USE_C89	/* broadly, Windows is C89 */
 #endif
 
-
-#cmakedefine LUA_USE_LINUX
 #if defined(LUA_USE_LINUX)
-#undef LUA_USE_POSIX
 #define LUA_USE_POSIX
-#undef LUA_USE_DLOPEN
 #define LUA_USE_DLOPEN		/* needs an extra library: -ldl */
-#undef LUA_USE_READLINE
 #define LUA_USE_READLINE	/* needs some extra libraries */
 #endif
 
-
-#cmakedefine LUA_USE_MACOSX
 #if defined(LUA_USE_MACOSX)
-#undef LUA_USE_POSIX
 #define LUA_USE_POSIX
-#undef LUA_USE_DLOPEN
 #define LUA_USE_DLOPEN		/* MacOS does not need -ldl */
-#undef LUA_USE_READLINE
 #define LUA_USE_READLINE	/* needs an extra library: -lreadline */
 #endif
 
