@@ -29,14 +29,9 @@ ELSE ()
 ENDIF ()
 SET (MARPAESLIF_UINT32_T ${MYPACKAGE_UINT32_TYPEDEF})
 #
-# ... PCRE2 dependency
+# ... PCRE2 is always built-in, and it is built as an external project
 #
-IF (NOT ALL_IN_ONE)
-  FIND_PACKAGE (PCRE2)
-ENDIF ()
-IF (NOT PCRE2_FOUND)
-  INCLUDE(cmake/BuildPCRE2.cmake)
-ENDIF ()
+INCLUDE(cmake/BuildPCRE2.cmake)
 #
 # ... Ok -;
 #
@@ -44,20 +39,6 @@ MYPACKAGELIBRARY(
   ${CMAKE_CURRENT_SOURCE_DIR}/include/config.h.in
   ${INCLUDE_OUTPUT_PATH}/marpaESLIF/internal/config.h
   src/marpaESLIF.c)
-#
-# ... Add our specifics
-#
-FOREACH (_target marpaESLIF marpaESLIF_static)
-  IF (NOT PCRE2_FOUND)
-    SET (PCRE2_SCOPE "PRIVATE")
-    ADD_DEPENDENCIES (${_target} pcre2)
-  ELSE ()
-    SET (PCRE2_SCOPE "PUBLIC")
-  ENDIF ()
-  TARGET_COMPILE_DEFINITIONS(${_target} ${PCRE2_SCOPE} -DMARPAESLIF_BUFSIZ=${MARPAESLIF_BUFSIZ} -DPCRE2_CODE_UNIT_WIDTH=8)
-  TARGET_INCLUDE_DIRECTORIES(${_target} ${PCRE2_SCOPE} ${PCRE2_INCLUDE_DIRS})
-  TARGET_LINK_LIBRARIES     (${_target} ${PCRE2_SCOPE} ${PCRE2_LIBRARIES})
-ENDFOREACH ()
 
 ###############
 # Executables #
@@ -82,12 +63,13 @@ MYPACKAGEDEPENDENCY (marpaWrapper  "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/
 MYPACKAGEDEPENDENCY (tconv         "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/tconv"         LIBS)
 MYPACKAGEDEPENDENCY (lua534        "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/lua534"        LIBS LOCAL)
 #
-# lua is built-in
+# lua and pcre2 are always is built-in
 #
 FOREACH (_target marpaESLIF marpaESLIF_static)
-  TARGET_INCLUDE_DIRECTORIES (${_target} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/lua534/src")
-  TARGET_LINK_LIBRARIES     (${_target} PRIVATE lua_static)
-  ADD_DEPENDENCIES          (${_target} lua_static)
+  ADD_DEPENDENCIES           (${_target} pcre2 lua_static)
+  TARGET_INCLUDE_DIRECTORIES (${_target} PRIVATE ${PCRE2_INCLUDE_DIRS} "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/lua534/src")
+  TARGET_COMPILE_DEFINITIONS (${_target} PRIVATE -DMARPAESLIF_BUFSIZ=${MARPAESLIF_BUFSIZ} -DPCRE2_CODE_UNIT_WIDTH=8)
+  TARGET_LINK_LIBRARIES      (${_target} PRIVATE ${PCRE2_LIBRARIES} lua_static)
 ENDFOREACH ()
 
 #########
