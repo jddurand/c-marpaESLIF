@@ -6,5 +6,7 @@
 #include <lauxlib.h>
 #include <lualib.h>
 
+static lua_State *_marpaESLIF_luaL_newstate(marpaESLIF_t *marpaESLIFp);
+
 #endif /* MARPAESLIF_INTERNAL_LUA_EMBED_H */
 
