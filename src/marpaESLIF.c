@@ -6,6 +6,7 @@
 #include "marpaESLIF/internal/structures.h"
 #include "marpaESLIF/internal/logging.h"
 #include "marpaESLIF/internal/bootstrap_actions.h"
+#include "marpaESLIF/internal/lua_embed.h"
 
 #ifndef MARPAESLIF_INITIAL_REPLACEMENT_LENGTH
 #define MARPAESLIF_INITIAL_REPLACEMENT_LENGTH 8096  /* Subjective number */
@@ -14446,3 +14447,4 @@ static inline short _marpaESLIFValue_symbolActionCallbackb(marpaESLIFValue_t *ma
 }
 
 #include "bootstrap_actions.c"
+#include "lua_embed.c"
