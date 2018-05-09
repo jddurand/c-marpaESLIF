@@ -75,7 +75,7 @@ static short _marpaESLIF_lua_compileb(marpaESLIF_t *marpaESLIFp, lua_State *L, c
   } else {
     if (jmpvalue != -1) {
       char *p = (char *) jmpvalue;
-      MARPAESLIF_ERRORF(marpaESLIFp, "Lua panic: %s", p);
+      MARPAESLIF_ERRORF(marpaESLIFp, "Lua panic:\n%s", p);
       free(p);
     } else {
       MARPAESLIF_ERROR(marpaESLIFp, "Lua panic (no stack information available)");
