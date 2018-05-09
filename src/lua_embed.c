@@ -1,5 +1,7 @@
 #include "marpaESLIF/internal/lua_embed.h"
 #include <setjmp.h>
+#include <string.h>
+#include <stdlib.h>
 
 #undef  FILENAMES
 #define FILENAMES "lua_embed.c" /* For logging */
@@ -15,13 +17,30 @@ static jmp_buf marpaESLIF_lua_panic_jump;
 #define MARPAESLIF_LUA_THROW(x) longjmp(ex_buf__, x)
 
 /*****************************************************************************/
-static int _marpaESLIF_lua_atpanic(lua_State *lua)
+static int _marpaESLIF_lua_atpanic(lua_State *L)
 /*****************************************************************************/
 {
   /* No log here, we do not want to print to stderr bindly - just recover */
-  /* Tant pis for the lua stack */
-  /* MARPAESLIF_ERRORF(marpaESLIFp, "Lua panic: %s", lua_tostring(lua, -1)); */
-  longjmp(marpaESLIF_lua_panic_jump, 1);
+  /* We store the lua stack if a (char *) fits into an int. Value (int)-1 */
+  /* is not usable. */
+  int jmpvalue = -1;
+
+  if (sizeof(int) == sizeof(char *)) {
+    char *p = NULL;
+    char *stackp = (char *) lua_tostring(L, -1);
+    if (stackp != NULL) {
+      p = strdup(stackp);
+      if (p != NULL) {
+        jmpvalue = (int)p;
+        /* Can it be ? */
+        if (jmpvalue == -1) {
+          free(p);
+        }
+      }
+    }
+  }
+
+  longjmp(marpaESLIF_lua_panic_jump, jmpvalue);
   return 0;
 }
 
@@ -44,14 +63,23 @@ static short _marpaESLIF_lua_compileb(marpaESLIF_t *marpaESLIFp, lua_State *L, c
 /*****************************************************************************/
 {
   short rcb;
+  int jmpvalue;
 
   lua_atpanic(L, &_marpaESLIF_lua_atpanic);
-  if (setjmp(marpaESLIF_lua_panic_jump) == 0) {
+
+  jmpvalue = setjmp(marpaESLIF_lua_panic_jump);
+  if (jmpvalue == 0) {
     if (luaL_loadbuffer(L, p, l, names) != LUA_OK) {
       goto err;
     }
   } else {
-    MARPAESLIF_ERROR(marpaESLIFp, "Lua panic");
+    if (jmpvalue != -1) {
+      char *p = (char *) jmpvalue;
+      MARPAESLIF_ERRORF(marpaESLIFp, "Lua panic: %s", p);
+      free(p);
+    } else {
+      MARPAESLIF_ERROR(marpaESLIFp, "Lua panic (no stack information available)");
+    }
     goto err;
   }
 
