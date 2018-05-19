@@ -236,6 +236,7 @@ static void preinit_thread (lua_State *L, global_State *g) {
   L->nny = 1;
   L->status = LUA_OK;
   L->errfunc = 0;
+  L->userdata = NULL;
 }
 
 
@@ -344,4 +345,12 @@ LUA_API void lua_close (lua_State *L) {
   close_state(L);
 }
 
+LUA_API void *lua_setuserdata(lua_State *L, void *userdata) {
+  void *old = L->userdata;
+  L->userdata = userdata;
+  return old;
+}
 
+LUA_API void *lua_getuserdata(lua_State *L) {
+  return L->userdata;
+}

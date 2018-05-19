@@ -8,7 +8,7 @@
 #ifndef lualib_h
 #define lualib_h
 
-#include "lua.h"
+#include <lua/lua.h>
 
 
 /* version suffix for environment variable names */

@@ -13,7 +13,7 @@
 #include <stddef.h>
 
 
-#include "luaconf.h"
+#include <lua/luaconf.h>
 
 #undef LUA_VERSION_MAJOR
 #define LUA_VERSION_MAJOR	"5"
@@ -144,6 +144,8 @@ extern const char lua_ident[];
 /*
 ** state manipulation
 */
+LUA_API void      *(lua_setuserdata) (lua_State *L, void *userdata);
+LUA_API void      *(lua_getuserdata) (lua_State *L);
 LUA_API lua_State *(lua_newstate) (lua_Alloc f, void *ud);
 LUA_API void       (lua_close) (lua_State *L);
 LUA_API lua_State *(lua_newthread) (lua_State *L);

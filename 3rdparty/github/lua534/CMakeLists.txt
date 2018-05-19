@@ -51,7 +51,12 @@ SET (liblua_src
   src/lutf8lib.c
   src/lvm.c
   src/lzio.c
+  src/luaunpanic.c
   )
+#
+# We moved some lua header to include/la
+#
+INCLUDE_DIRECTORIES ("${CMAKE_CURRENT_SOURCE_DIR}/include/lua")
 
 #
 # OS-specifics
@@ -66,9 +71,12 @@ ENDIF ()
 
 MYPACKAGELIBRARY(
   ${CMAKE_CURRENT_SOURCE_DIR}/src/luaconf.h.in
-  ${INCLUDE_OUTPUT_PATH}/luaconf.h
+  ${INCLUDE_OUTPUT_PATH}/lua/luaconf.h
   ${liblua_src})
-
+#
+# Add lua/luaconf.h to installed files
+#
+INSTALL(FILES ${INCLUDE_OUTPUT_PATH}/lua/luaconf.h DESTINATION include/lua COMPONENT HeaderComponent)
 #
 # dl and m dependency
 #
@@ -114,11 +122,14 @@ FOREACH (_target luaCompilerExe luaCompilerExe_static)
   ENDIF ()
 ENDFOREACH ()
 
+MYPACKAGETESTEXECUTABLE(luawrapperTester test/luawrapperTester.c)
+MYPACKAGETESTEXECUTABLE(luawrapperTester2 test/luawrapperTester2.c)
+
 #########
 # Tests #
 #########
-#MYPACKAGECHECK(luaExe xxx)
-#MYPACKAGECHECK(luaCompilerExe yyy)
+MYPACKAGECHECK(luawrapperTester ${CMAKE_CURRENT_SOURCE_DIR}/test/luawrapperTester.lua)
+MYPACKAGECHECK(luawrapperTester2 ${CMAKE_CURRENT_SOURCE_DIR}/test/luawrapperTester2.lua)
 
 #############
 # Packaging #
