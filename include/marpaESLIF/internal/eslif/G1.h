@@ -91,6 +91,7 @@ typedef enum bootstrap_grammar_G1_enum {
   G1_TERMINAL_SCRIPT_TAG_END,
   G1_TERMINAL_SCRIPT_CHARACTER,
   G1_TERMINAL_ALNUM_CHARACTERS,
+  G1_TERMINAL___LUA,
   /* ----- Non terminals ------ */
   G1_META_STATEMENTS,
   G1_META_STATEMENT,
@@ -922,6 +923,14 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
     "[[:alnum:]]",
 #ifndef MARPAESLIF_NTRACE
     "0a123b", NULL
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL___LUA, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
+    "'::lua'",
+#ifndef MARPAESLIF_NTRACE
+    "::lua", "::lu"
 #else
     NULL, NULL
 #endif
