@@ -157,7 +157,8 @@
 #define G1_RULE_EXTERNAL_SCRIPT_SOURCE           "G1_rule_external_script_source"
 #define G1_RULE_EXTERNAL_SCRIPT_CHARACTER        "G1_rule_external_script_character"
 #define G1_RULE_EXTERNAL_SCRIPT_TAG_END          "G1_rule_external_script_tag_end"
-#define G1_RULE_EXTERNAL_SCRIPT_TYPE_VALUE       "G1_rule_external_script_type_value"
+#define G1_RULE_EXTERNAL_SCRIPT_TYPE_VALUE_1     "G1_rule_external_script_type_value_1"
+#define G1_RULE_EXTERNAL_SCRIPT_TYPE_VALUE_2     "G1_rule_external_script_type_value_2"
 #define G1_RULE_EXTERNAL_SCRIPT_ENCODING_VALUE   "G1_rule_external_script_encoding_value"
 
 #define G1_ACTION_STATEMENTS                       "::undef"
@@ -305,6 +306,18 @@
 #define G1_ACTION_STRING_LITERAL_INSIDE_5          "G1_action_string_literal_inside_5"          /* done */
 #define G1_ACTION_DISCARD_OFF                      "::undef"
 #define G1_ACTION_DISCARD_ON                       "::undef"
+#define G1_ACTION_EXTERNAL_SCRIPT_STATEMENT        "G1_action_external_script_statement"
+#define G1_ACTION_EXTERNAL_SCRIPT_TAG_START        "G1_action_external_script_tag_start"
+#define G1_ACTION_EXTERNAL_SCRIPT_TYPE             "::copy[3]"
+#define G1_ACTION_EXTERNAL_SCRIPT_TYPE             "::copy[3]"
+#define G1_ACTION_EXTERNAL_SCRIPT_ENCODING_MAYBE_1 "::copy[3]"
+#define G1_ACTION_EXTERNAL_SCRIPT_ENCODING_MAYBE_2 "::undef"
+#define G1_ACTION_EXTERNAL_SCRIPT_SOURCE           "::concat"
+#define G1_ACTION_EXTERNAL_SCRIPT_CHARACTER        "::shift"
+#define G1_ACTION_EXTERNAL_SCRIPT_TAG_END          "::undef"
+#define G1_ACTION_EXTERNAL_SCRIPT_TYPE_VALUE_1     "::shift"
+#define G1_ACTION_EXTERNAL_SCRIPT_TYPE_VALUE_2     "::shift"
+#define G1_ACTION_EXTERNAL_SCRIPT_ENCODING_VALUE   "::shift"
 
 typedef struct bootstrap_grammar_terminal {
   int                        idi;                 /* Identifier */
