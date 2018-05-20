@@ -63,11 +63,12 @@ MYPACKAGEDEPENDENCY (marpaWrapper  "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/
 MYPACKAGEDEPENDENCY (tconv         "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/tconv"         LIBS)
 MYPACKAGEDEPENDENCY (lua534        "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/lua534"        LIBS LOCAL)
 #
-# lua and pcre2 are always is built-in
+# pcre2 is built as an external project: we have to explicitly give the include path.
+# In addition, using pcre2 requires setting PCRE2_CODE_UNIT_WIDTH.
 #
 FOREACH (_target marpaESLIF marpaESLIF_static)
   ADD_DEPENDENCIES           (${_target} pcre2 lua_static)
-  TARGET_INCLUDE_DIRECTORIES (${_target} PRIVATE ${PCRE2_INCLUDE_DIRS} "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/lua534/src")
+  TARGET_INCLUDE_DIRECTORIES (${_target} PRIVATE ${PCRE2_INCLUDE_DIRS})
   TARGET_COMPILE_DEFINITIONS (${_target} PRIVATE -DMARPAESLIF_BUFSIZ=${MARPAESLIF_BUFSIZ} -DPCRE2_CODE_UNIT_WIDTH=8)
   TARGET_LINK_LIBRARIES      (${_target} PRIVATE ${PCRE2_LIBRARIES} lua_static)
 ENDFOREACH ()

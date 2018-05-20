@@ -344,7 +344,7 @@ int main() {
     }
   }
 
-  /* So in theory we must be able to reparse ESLIF using this generated grammar -; */
+  /* So in theory we must be able to reparse ESLIF using itself -; */
   marpaESLIFTester_context.genericLoggerp = genericLoggerp;
   marpaESLIFTester_context.inputs         = (char *) selfs;
   marpaESLIFTester_context.inputl         = strlen(selfs);

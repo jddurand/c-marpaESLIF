@@ -83,6 +83,14 @@ typedef enum bootstrap_grammar_G1_enum {
   G1_TERMINAL_STRING_LITERAL_ESCAPED_HEX,
   G1_TERMINAL_STRING_LITERAL_ESCAPED_CODEPOINT,
   G1_TERMINAL_STRING_LITERAL_ESCAPED_LARGE_CODEPOINT,
+  G1_TERMINAL_DOUBLE_QUOTE_CHARACTER,
+  G1_TERMINAL_SPACE_CHARACTER,
+  G1_TERMINAL_SCRIPT_TAG_START,
+  G1_TERMINAL_SCRIPT_TYPE,
+  G1_TERMINAL_SCRIPT_ENCODING,
+  G1_TERMINAL_SCRIPT_TAG_END,
+  G1_TERMINAL_SCRIPT_CHARACTER,
+  G1_TERMINAL_ALNUM_CHARACTERS,
   /* ----- Non terminals ------ */
   G1_META_STATEMENTS,
   G1_META_STATEMENT,
@@ -850,6 +858,70 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
     "U\\{[a-fA-F0-9]{8}\\}",
 #ifndef MARPAESLIF_NTRACE
     "U{0000000a}", "U{000000"
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_DOUBLE_QUOTE_CHARACTER, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
+    "'\"'",
+#ifndef MARPAESLIF_NTRACE
+    "\"", NULL
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_SPACE_CHARACTER, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
+    "' '",
+#ifndef MARPAESLIF_NTRACE
+    " ", NULL
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_SCRIPT_TAG_START, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
+    "'<script'",
+#ifndef MARPAESLIF_NTRACE
+    "<script", "<scr"
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_SCRIPT_TYPE, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
+    "'type=\"'",
+#ifndef MARPAESLIF_NTRACE
+    "type=\"", "type="
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_SCRIPT_ENCODING, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
+    "'encoding=\"'",
+#ifndef MARPAESLIF_NTRACE
+    "encoding=\"", "encoding="
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_SCRIPT_TAG_END, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
+    "'</script>'",
+#ifndef MARPAESLIF_NTRACE
+    "</script>", "</script"
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_SCRIPT_CHARACTER, MARPAESLIF_TERMINAL_TYPE_REGEX, NULL,
+    "[\\s\\S]",
+#ifndef MARPAESLIF_NTRACE
+    "\n", NULL
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_ALNUM_CHARACTERS, MARPAESLIF_TERMINAL_TYPE_REGEX, NULL,
+    "[[:alnum:]]",
+#ifndef MARPAESLIF_NTRACE
+    "0a123b", NULL
 #else
     NULL, NULL
 #endif
