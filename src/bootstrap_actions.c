@@ -29,6 +29,7 @@ static inline void _marpaESLIF_bootstrap_priorities_freev(genericStack_t *altern
 static inline void _marpaESLIF_bootstrap_single_symbol_freev(marpaESLIF_bootstrap_single_symbol_t *singleSymbolp);
 static inline void _marpaESLIF_bootstrap_grammar_reference_freev(marpaESLIF_bootstrap_grammar_reference_t *grammarReferencep);
 static inline void _marpaESLIF_bootstrap_event_initialization_freev(marpaESLIF_bootstrap_event_initialization_t *eventInitializationp);
+static inline void _marpaESLIF_bootstrap_external_script_freev(marpaESLIF_bootstrap_external_script_t *externalScriptp);
 
 static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_check_grammarp(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammar_t *marpaESLIFGrammarp, int leveli, marpaESLIF_bootstrap_utf_string_t *stringp);
 static inline marpaESLIF_symbol_t  *_marpaESLIF_bootstrap_check_meta_by_namep(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, char *asciinames, short createb);
@@ -143,6 +144,8 @@ static        short _marpaESLIF_bootstrap_G1_action_predicted_event_declaration_
 static        short _marpaESLIF_bootstrap_G1_action_alternative_name_2b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short _marpaESLIF_bootstrap_G1_action_namingb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short _marpaESLIF_bootstrap_G1_action_exception_statementb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
+static        short _marpaESLIF_bootstrap_G1_action_external_script_tag_startb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
+static        short _marpaESLIF_bootstrap_G1_action_external_script_statementb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 
 /* Helpers */
 #define MARPAESLIF_GET_ARRAY(marpaESLIFValuep, indicei, _p, _l) do {    \
@@ -591,6 +594,24 @@ static inline void _marpaESLIF_bootstrap_event_initialization_freev(marpaESLIF_b
       free(eventInitializationp->eventNames);
     }
     free(eventInitializationp);
+  }
+}
+
+/*****************************************************************************/
+static inline void _marpaESLIF_bootstrap_external_script_freev(marpaESLIF_bootstrap_external_script_t *externalScriptp)
+/*****************************************************************************/
+{
+  if (externalScriptp != NULL) {
+    if (externalScriptp->types != NULL) {
+      free(externalScriptp->types);
+    }
+    if (externalScriptp->encodings != NULL) {
+      free(externalScriptp->encodings);
+    }
+    if (externalScriptp->sources != NULL) {
+      free(externalScriptp->sources);
+    }
+    free(externalScriptp);
   }
 }
 
@@ -1327,6 +1348,9 @@ static void _marpaESLIF_bootstrap_freeDefaultActionv(void *userDatavp, int conte
   case MARPAESLIF_BOOTSTRAP_STACK_TYPE_STRING:
     _marpaESLIF_string_freev((marpaESLIF_string_t *) p);
     break;
+  case MARPAESLIF_BOOTSTRAP_STACK_TYPE_EXTERNAL_SCRIPT:
+    _marpaESLIF_bootstrap_external_script_freev((marpaESLIF_bootstrap_external_script_t *) p);
+    break;
   default:
     break;
   }
@@ -1426,6 +1450,8 @@ static marpaESLIFValueRuleCallback_t _marpaESLIF_bootstrap_ruleActionResolver(vo
   else if (strcmp(actions, "G1_action_alternative_name_2")               == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_alternative_name_2b;               }
   else if (strcmp(actions, "G1_action_naming")                           == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_namingb;                           }
   else if (strcmp(actions, "G1_action_exception_statement")              == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_exception_statementb;              }
+  else if (strcmp(actions, "G1_action_external_script_tag_start")        == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_external_script_tag_startb;        }
+  else if (strcmp(actions, "G1_action_external_script_statement")        == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_external_script_statementb;        }
   else
   {
     MARPAESLIF_ERRORF(marpaESLIFp, "Unsupported action \"%s\"", actions);
@@ -5983,5 +6009,103 @@ static inline int _marpaESLIF_bootstrap_ord2utfb(marpaESLIF_uint32_t uint32, PCR
   }
   *bufferp = utf8_table2[i] | uint32;
   return i + 1;
+}
+
+/*****************************************************************************/
+static short _marpaESLIF_bootstrap_G1_action_external_script_tag_startb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
+/*****************************************************************************/
+{
+  /* <external script tag start> ::= '<script' <external script type> <external script encoding maybe> '>' */
+  marpaESLIF_t                           *marpaESLIFp     = marpaESLIFGrammar_eslifp(marpaESLIFRecognizer_grammarp(marpaESLIFValue_recognizerp(marpaESLIFValuep)));
+  char                                   *types           = NULL;
+  char                                   *encodings       = NULL;
+  marpaESLIF_bootstrap_external_script_t *externalScriptp = NULL;
+  short                                   undefb;
+  size_t                                  typel;
+  size_t                                  encodingl;
+  short                                   rcb;
+
+  /* Cannot be nullable */
+  if (nullableb) {
+    MARPAESLIF_ERROR(marpaESLIFp, "Nullable mode is not supported");
+    goto err;
+  }
+
+  MARPAESLIF_GETANDFORGET_ARRAY(marpaESLIFValuep, arg0i+1, types, typel);
+  if ((types == NULL) || (typel <= 0)) { /* Impossible */
+    MARPAESLIF_ERROR(marpaESLIFp, "External script type is not set");
+    goto err;
+  }
+
+  MARPAESLIF_IS_UNDEF(marpaESLIFValuep, arg0i+2, undefb);
+  if (! undefb) { /* Can be */
+    MARPAESLIF_GETANDFORGET_ARRAY(marpaESLIFValuep, arg0i+2, encodings, encodingl);
+  }
+
+
+  externalScriptp = (marpaESLIF_bootstrap_external_script_t *) malloc(sizeof(marpaESLIF_bootstrap_external_script_t));
+  if (externalScriptp == NULL) {
+    MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
+    goto err;
+  }
+
+  externalScriptp->types = types;
+  types = NULL; /* types in now in externalScriptp */
+  externalScriptp->encodings = encodings;
+  encodings = NULL; /* encodings is now in externalScriptp */
+  externalScriptp->sources = NULL;
+  externalScriptp->sourcel = 0;
+
+  MARPAESLIF_SET_PTR(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_EXTERNAL_SCRIPT, externalScriptp);
+
+  rcb = 1;
+  goto done;
+
+ err:
+  _marpaESLIF_bootstrap_external_script_freev(externalScriptp);
+  
+ done:
+  if (types != NULL) {
+    free(types);
+  }
+  if (encodings != NULL) {
+    free(encodings);
+  }
+  return rcb;
+}
+
+/*****************************************************************************/
+static short _marpaESLIF_bootstrap_G1_action_external_script_statementb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
+/*****************************************************************************/
+{
+  /* <external script statement> ::= <external script tag start> <discard off> <external script source> <external script tag end> <discard on>  */
+  marpaESLIF_t                           *marpaESLIFp     = marpaESLIFGrammar_eslifp(marpaESLIFRecognizer_grammarp(marpaESLIFValue_recognizerp(marpaESLIFValuep)));
+  marpaESLIF_bootstrap_external_script_t *externalScriptp = NULL;
+  short                                   rcb;
+
+  /* Cannot be nullable */
+  if (nullableb) {
+    MARPAESLIF_ERROR(marpaESLIFp, "Nullable mode is not supported");
+    goto err;
+  }
+
+  MARPAESLIF_GETANDFORGET_PTR(marpaESLIFValuep, arg0i, externalScriptp);
+  if (externalScriptp == NULL) {
+    MARPAESLIF_ERROR(marpaESLIFp, "externalScriptp is NULL");
+    goto err;
+  }
+
+  MARPAESLIF_GETANDFORGET_ARRAY(marpaESLIFValuep, arg0i+2, externalScriptp->sources, externalScriptp->sourcel);
+
+  MARPAESLIF_SET_PTR(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_EXTERNAL_SCRIPT, externalScriptp);
+
+  rcb = 1;
+  goto done;
+
+ err:
+  _marpaESLIF_bootstrap_external_script_freev(externalScriptp);
+  
+ done:
+  return rcb;
 }
 

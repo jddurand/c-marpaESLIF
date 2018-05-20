@@ -937,7 +937,7 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
 #endif
   },
   { G1_TERMINAL_ALNUM_CHARACTERS, MARPAESLIF_TERMINAL_TYPE_REGEX, NULL,
-    "[[:alnum:]]",
+    "[[:alnum:]]+",
 #ifndef MARPAESLIF_NTRACE
     "0a123b", NULL
 #else

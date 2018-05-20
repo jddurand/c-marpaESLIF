@@ -21,6 +21,7 @@ typedef struct marpaESLIF_bootstrap_symbol_name_and_reference marpaESLIF_bootstr
 typedef struct marpaESLIF_bootstrap_rhs_primary               marpaESLIF_bootstrap_rhs_primary_t;
 typedef struct marpaESLIF_bootstrap_alternative               marpaESLIF_bootstrap_alternative_t;
 typedef struct marpaESLIF_bootstrap_event_initialization      marpaESLIF_bootstrap_event_initialization_t;
+typedef struct marpaESLIF_bootstrap_external_script           marpaESLIF_bootstrap_external_script_t;
 
 enum marpaESLIF_bootstrap_stack_context {
   MARPAESLIF_BOOTSTRAP_STACK_TYPE_NA = 0,
@@ -57,7 +58,8 @@ enum marpaESLIF_bootstrap_stack_context {
   MARPAESLIF_BOOTSTRAP_STACK_TYPE_EVENT_INITIALIZATION,
   MARPAESLIF_BOOTSTRAP_STACK_TYPE_ALTERNATIVE_NAME,
   MARPAESLIF_BOOTSTRAP_STACK_TYPE_ARRAY,
-  MARPAESLIF_BOOTSTRAP_STACK_TYPE_STRING
+  MARPAESLIF_BOOTSTRAP_STACK_TYPE_STRING,
+  MARPAESLIF_BOOTSTRAP_STACK_TYPE_EXTERNAL_SCRIPT
 };
 
 enum marpaESLIF_bootstrap_adverb_list_item_type {
@@ -199,6 +201,13 @@ enum marpaESLIF_bootstrap_event_initializer_type {
 struct marpaESLIF_bootstrap_event_initialization {
   char                                         *eventNames;
   marpaESLIF_bootstrap_event_initializer_type_t initializerb;
+};
+
+struct marpaESLIF_bootstrap_external_script {
+  char *types;
+  char *encodings;
+  char *sources;
+  size_t sourcel;
 };
 
 #endif /* MARPAESLIF_INTERNAL_BOOTSTRAP_TYPES_H */
