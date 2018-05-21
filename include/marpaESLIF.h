@@ -248,7 +248,8 @@ typedef struct marpaESLIFSymbolProperty {
 /* A script */
 struct marpaESLIFScript {
   char                      *types;             /* Type name, e.g. ::lua, perl, etc... */
-  char                      *encodings;         /* Script encoding */
+  char                      *converts;          /* Script target encoding */
+  char                      *encodings;         /* Source encoding */
   char                      *sources;           /* Script itself in the given encoding */
   size_t                     sourcel;           /* Script length */
 };
