@@ -41,6 +41,7 @@ typedef struct  marpaESLIF_alternative     marpaESLIF_alternative_t;
 typedef         marpaESLIFAction_t         marpaESLIF_action_t;
 typedef         marpaESLIFActionType_t     marpaESLIF_action_type_t;
 typedef struct  marpaESLIF_stream          marpaESLIF_stream_t;
+typedef struct  marpaESLIF_script          marpaESLIF_script_t;
 
 /* Symbol types */
 enum marpaESLIF_symbol_type {
@@ -244,6 +245,11 @@ struct marpaESLIFGrammar {
   short                      warningIsErrorb;   /* Current warningIsErrorb setting (used when parsing grammars ) */
   short                      warningIsIgnoredb; /* Current warningIsErrorb setting (used when parsing grammars ) */
   short                      autorankb;         /* Current autorank setting */
+  genericHash_t              _scriptHash;
+  genericHash_t             *scriptHashp;       /* Hash where key is script type (e.g. ::lua, perl) and value a stack of script sources */
+  genericStack_t             _scriptTypeStack;
+  genericStack_t            *scriptTypeStackp;  /* Hash keys */
+  char                      *scriptshows;
 };
 
 struct marpaESLIF_meta {
@@ -416,6 +422,17 @@ struct marpaESLIF_readerContext {
 struct marpaESLIF_cloneContext {
   marpaESLIF_t         *marpaESLIFp;
   marpaESLIF_grammar_t *grammarp;
+};
+
+/* ---------------------- */
+/* Definition of a script */
+/* ---------------------- */
+
+struct marpaESLIF_script {
+  char                *types; /* Script type */
+  char                *converts; /* Destination encoding */
+  marpaESLIF_string_t *utf8p; /* Original from the grammar */
+  marpaESLIF_string_t *convertp; /* Converted from the grammar */
 };
 
 /* ------------------------------------------- */

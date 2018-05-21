@@ -205,9 +205,9 @@ struct marpaESLIF_bootstrap_event_initialization {
 
 struct marpaESLIF_bootstrap_external_script {
   char *types;
-  char *encodings;
-  char *sources;
-  size_t sourcel;
+  char *converts;
+  char *bytep;
+  size_t bytel;
 };
 
 #endif /* MARPAESLIF_INTERNAL_BOOTSTRAP_TYPES_H */

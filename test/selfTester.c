@@ -186,16 +186,16 @@ const static char *selfs = "\n"
   "                                   | '\\\\' /u\\{[a-fA-F0-9]{4}\\}/\n"
   "                                   | '\\\\' /U\\{[a-fA-F0-9]{8}\\}/\n"
   "<external script statement>      ::= <external script tag start> <discard off> <external script source> <external script tag end> <discard on>\n"
-  "<external script tag start>      ::= '<script' <external script type> <external script encoding maybe> '>'\n"
+  "<external script tag start>      ::= '<script' <external script type> <external script convert maybe> '>'\n"
   "<external script type>           ::= ' ' 'type=\"' <discard off> <external script type value> '\"' <discard on>\n"
-  "<external script encoding maybe> ::= ' ' 'encoding=\"' <discard off> <external script encoding value> '\"' <discard on>\n"
-  "<external script encoding maybe> ::=\n"
+  "<external script convert maybe>  ::= ' ' 'convert=\"' <discard off> <external script convert value> '\"' <discard on>\n"
+  "<external script convert maybe>  ::=\n"
   "<external script source>         ::= <external script character>+ proper => 1\n"
   "<external script character>      ::= /[\\s\\S]/\n"
   "<external script tag end>        ::= '</script>'\n"
-  "<external script type value>     ::= /[[:alnum:]]+/\n"
+  "<external script type value>     ::= /[a-zA-Z0-9.\\/+ -]+/\n"
   "<external script type value>     ::= '::lua'\n"
-  "<external script encoding value> ::= /[[:alnum:]]+/\n"
+  "<external script convert value>  ::= /[a-zA-Z0-9.\\/+ -]+/\n"
   "\n"
   "  <jdd> ::= <op declare any grammar>@=1\n"
   "\n"
@@ -271,7 +271,7 @@ const static char *selfs = "\n"
   " <REG1>                            ~ /[a-z]/u\n"
   " <REG2>                            ~ /[a-z]+/u\n"
   " <REG3>                            ~ /(*LIMIT_MATCH=15)[a-z]+/\n"
-  "<script type=\"perl\">\n"
+  "<script type=\"perl\" convert=\"ASCII\">\n"
   "  use strict;\n"
   "  my $var = 1;\n"
   "</script>\n"
@@ -287,6 +287,7 @@ int main() {
   int                          exiti;
   int                          ngrammari;
   char                        *grammarshows;
+  char                        *scriptshows;
   int                          leveli;
   genericLogger_t             *genericLoggerp;
   marpaESLIFTester_context_t   marpaESLIFTester_context;
@@ -337,6 +338,11 @@ int main() {
       }
     }
   }
+  if (marpaESLIFGrammar_grammarshowscriptb(marpaESLIF_grammarp(marpaESLIFp), &scriptshows)) {
+    GENERICLOGGER_INFO (marpaESLIFOption.genericLoggerp, "-------------------------");
+    GENERICLOGGER_INFO (marpaESLIFOption.genericLoggerp, "ESLIF scripts:");
+    GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "-------------------------\n%s", scriptshows);
+  }
 
   marpaESLIFGrammarOption.bytep               = (void *) selfs;
   marpaESLIFGrammarOption.bytel               = strlen(selfs);
@@ -359,6 +365,11 @@ int main() {
       GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "TEST grammar at level %d:", leveli);
       GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "-------------------------\n%s", grammarshows);
     }
+  }
+  if (marpaESLIFGrammar_grammarshowscriptb(marpaESLIFGrammarp, &scriptshows)) {
+    GENERICLOGGER_INFO (marpaESLIFOption.genericLoggerp, "-------------------------");
+    GENERICLOGGER_INFO (marpaESLIFOption.genericLoggerp, "TEST grammar scripts:");
+    GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "-------------------------\n%s", scriptshows);
   }
 
   /* So in theory we must be able to reparse ESLIF using itself -; */
