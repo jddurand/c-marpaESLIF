@@ -281,6 +281,7 @@ const static char *selfs = "\n"
   "    return x + y\n"
   "  end\n"
   "</script>\n"
+  "/* <script type=\"xxx\">[binary format]</script> is not shown */\n"
   "\n";
 
 int main() {
@@ -300,6 +301,7 @@ int main() {
   marpaESLIFRecognizerOption_t marpaESLIFRecognizerOption;
   marpaESLIFGrammarDefaults_t  marpaESLIFGrammarDefaults;
   marpaESLIFAction_t           defaultFreeAction;
+  marpaESLIFScript_t           marpaESLIFScript;
 
   genericLoggerp = GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_DEBUG);
 
@@ -358,6 +360,27 @@ int main() {
   marpaESLIFGrammarp = marpaESLIFGrammar_newp(marpaESLIFp, &marpaESLIFGrammarOption);
 
   if (marpaESLIFGrammarp == NULL) {
+    goto err;
+  }
+
+  /* Add more script - this is possible because formally external scripts are not part of the computed grammar */
+  marpaESLIFScript.types     = "perl5";
+  marpaESLIFScript.converts  = "UTF-16";
+  marpaESLIFScript.encodings = NULL;
+  marpaESLIFScript.sources   = "\nmy $morePerl\n";
+  marpaESLIFScript.sourcel   = strlen(marpaESLIFScript.sources);
+  marpaESLIFScript.binaryb   = 0;
+  if (! marpaESLIFGrammar_script_addb(marpaESLIFGrammarp, &marpaESLIFScript)) {
+    goto err;
+  }
+  
+  marpaESLIFScript.types     = "perl5";
+  marpaESLIFScript.converts  = NULL;
+  marpaESLIFScript.encodings = NULL;
+  marpaESLIFScript.sources   = "\x0\x1\x2";
+  marpaESLIFScript.sourcel   = 3;
+  marpaESLIFScript.binaryb   = 1;
+  if (! marpaESLIFGrammar_script_addb(marpaESLIFGrammarp, &marpaESLIFScript)) {
     goto err;
   }
 
