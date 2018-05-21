@@ -10591,6 +10591,7 @@ static inline void _marpaESLIF_grammar_createscriptshowv(marpaESLIFGrammar_t *ma
   genericStack_t               *scriptTypeStackp = marpaESLIFGrammarp->scriptTypeStackp;
   size_t                        asciishowl       = 0;
   short                         findb            = 0;
+  short                         firstb           = 1;
   marpaESLIF_script_t          *scriptp;
   int                           i;
   int                           j;
@@ -10616,13 +10617,17 @@ static inline void _marpaESLIF_grammar_createscriptshowv(marpaESLIFGrammar_t *ma
         for (j = 0; j < GENERICSTACK_USED(scriptStackp); j++) {
           scriptp = (marpaESLIF_script_t *) GENERICSTACK_GET_PTR(scriptStackp, j);
           if (scriptp != NULL) {
+            if (! firstb) {
+              MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "\n");
+            }
             MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "<script type=\"");
             MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, scriptp->types);
             MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "\" convert=\"");
             MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, scriptp->converts);
-            MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "\">\n");
+            MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "\">");
             MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, scriptp->utf8p->asciis);
             MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "</script>\n");
+            firstb = 0;
           }
         }
       }

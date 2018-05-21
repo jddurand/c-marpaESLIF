@@ -429,9 +429,9 @@ struct marpaESLIF_cloneContext {
 /* ---------------------- */
 
 struct marpaESLIF_script {
-  char                *types; /* Script type */
+  char                *types;    /* Script type */
   char                *converts; /* Destination encoding */
-  marpaESLIF_string_t *utf8p; /* Original from the grammar */
+  marpaESLIF_string_t *utf8p;    /* Original from the grammar */
   marpaESLIF_string_t *convertp; /* Converted from the grammar */
 };
 
