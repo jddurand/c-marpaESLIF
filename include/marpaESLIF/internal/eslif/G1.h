@@ -937,7 +937,7 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
 #endif
   },
   { G1_TERMINAL_SCRIPT_TAG_CHARACTERS, MARPAESLIF_TERMINAL_TYPE_REGEX, NULL,
-    "[a-zA-Z0-9./+ -]+",
+    "[^\"]+",
 #ifndef MARPAESLIF_NTRACE
     "0a123b", NULL
 #else
@@ -945,9 +945,9 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
 #endif
   },
   { G1_TERMINAL___LUA, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
-    "'::lua'",
+    "'\"lua\"'",
 #ifndef MARPAESLIF_NTRACE
-    "::lua", "::lu"
+    "\"lua\"", "\"lu"
 #else
     NULL, NULL
 #endif

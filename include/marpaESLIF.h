@@ -9,13 +9,14 @@ typedef struct marpaESLIFOption {
   genericLogger_t *genericLoggerp;  /* Logger. Default: NULL */
 } marpaESLIFOption_t;
 
-typedef struct marpaESLIF            marpaESLIF_t;
-typedef struct marpaESLIFGrammar     marpaESLIFGrammar_t;
-typedef struct marpaESLIFRecognizer  marpaESLIFRecognizer_t;
-typedef struct marpaESLIFValue       marpaESLIFValue_t;
-typedef struct marpaESLIFSymbol      marpaESLIFSymbol_t;
-typedef struct marpaESLIFValueResult marpaESLIFValueResult_t;
-typedef struct marpaESLIFScript      marpaESLIFScript_t;
+typedef struct marpaESLIF             marpaESLIF_t;
+typedef struct marpaESLIFGrammar      marpaESLIFGrammar_t;
+typedef struct marpaESLIFRecognizer   marpaESLIFRecognizer_t;
+typedef struct marpaESLIFValue        marpaESLIFValue_t;
+typedef struct marpaESLIFSymbol       marpaESLIFSymbol_t;
+typedef struct marpaESLIFValueResult  marpaESLIFValueResult_t;
+typedef struct marpaESLIFScript       marpaESLIFScript_t;
+typedef struct marpaESLIFScriptEngine marpaESLIFScriptEngine_t;
 
 /* A string */
 typedef struct marpaESLIFString {
@@ -253,6 +254,19 @@ struct marpaESLIFScript {
   char                      *sources;           /* Script itself in the given encoding */
   size_t                     sourcel;           /* Script length */
   short                      binaryb;           /* If script is in binary format, then it will be transmited as is */
+};
+
+/* A script engine */
+typedef short (*marpaESLIFScriptEngineNew_t)(void **userDatavpp);
+typedef short (*marpaESLIFScriptEngineRun_t)(void *userDatavp);
+typedef short (*marpaESLIFScriptEngineCall_t)(void *userDatavp);
+typedef short (*marpaESLIFScriptEngineFree_t)(void *userDatavp);
+struct marpaESLIFScriptEngine {
+  char                         *types;          /* Type name, e.g. ::lua, perl, etc... */
+  marpaESLIFScriptEngineNew_t   newp;
+  marpaESLIFScriptEngineRun_t   runp;
+  marpaESLIFScriptEngineCall_t  callp;
+  marpaESLIFScriptEngineFree_t  freep;
 };
 
 #ifdef __cplusplus

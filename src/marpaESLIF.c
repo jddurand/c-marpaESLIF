@@ -210,6 +210,7 @@ static const marpaESLIF_stringGenerator_t  marpaESLIF_stringGeneratorTemplate = 
 };
 
 static const char *MARPAESLIF_EMPTY_STRING = "";
+static const char *MARPAESLIF_LUA_STRING = "\"lua\"";
 
 /* Please note that EVERY _marpaESLIFRecognizer_xxx() method is logging at start and at return */
 
@@ -14781,6 +14782,22 @@ static inline short _marpaESLIFGrammar_script_addb(marpaESLIFGrammar_t *marpaESL
   scriptp->stringp  = NULL;
   scriptp->convertp = NULL;
   scriptp->convertl = 0;
+
+  /* This is injection not coming from the grammar, so we check grammar compatibility programmatically */
+  /* We know that types cannot contain the " character */
+  if (strchr(marpaESLIFScriptp->types, '"') != NULL) {
+    /* Unless the reserved keyword "lua" -; */
+    if (strcmp(marpaESLIFScriptp->types, MARPAESLIF_LUA_STRING) != 0) {
+      MARPAESLIF_ERRORF(marpaESLIFp, "Script type must not contain the '\"' character: %s", marpaESLIFScriptp->types);
+      goto err;
+    }
+  }
+  if (marpaESLIFScriptp->converts != NULL) {
+    if (strchr(marpaESLIFScriptp->converts, '"') != NULL) {
+      MARPAESLIF_ERRORF(marpaESLIFp, "Script convert must not contain the '\"' character: %s", marpaESLIFScriptp->converts);
+      goto err;
+    }
+  }
 
   scriptp->types = strdup(marpaESLIFScriptp->types);
   if (scriptp->types == NULL) {
