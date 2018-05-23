@@ -548,11 +548,12 @@ short luaunpanicL_dofile(int *rcp, lua_State *L, const char *fn)
     return 1;
   }
 
+  /* No "panic", but luaL_loadfile itself failed */
   if (rc) {
     if (rcp != NULL) {
       *rcp = rc;
     }
-    return rc;
+    return 0;
   }
 
   return luaunpanic_pcall(rcp, L, 0, LUA_MULTRET, 0);
@@ -566,11 +567,12 @@ short luaunpanicL_dostring(int *rcp, lua_State *L, const char *fn)
     return 1;
   }
   
+  /* No "panic", but luaL_loadstring itself failed */
   if (rc) {
     if (rcp != NULL) {
       *rcp = rc;
     }
-    return rc;
+    return 0;
   }
 
   return luaunpanic_pcall(rcp, L, 0, LUA_MULTRET, 0);
