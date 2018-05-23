@@ -86,12 +86,8 @@ typedef enum bootstrap_grammar_G1_enum {
   G1_TERMINAL_DOUBLE_QUOTE_CHARACTER,
   G1_TERMINAL_SPACE_CHARACTER,
   G1_TERMINAL_SCRIPT_TAG_START,
-  G1_TERMINAL_SCRIPT_TYPE,
-  G1_TERMINAL_SCRIPT_CONVERT,
   G1_TERMINAL_SCRIPT_TAG_END,
   G1_TERMINAL_SCRIPT_CHARACTER,
-  G1_TERMINAL_SCRIPT_TAG_CHARACTERS,
-  G1_TERMINAL___LUA,
   /* ----- Non terminals ------ */
   G1_META_STATEMENTS,
   G1_META_STATEMENT,
@@ -168,14 +164,7 @@ typedef enum bootstrap_grammar_G1_enum {
   G1_META_DISCARD_OFF,
   G1_META_DISCARD_ON,
   G1_META_DISCARD, /* This symbol is special, c.f. bootstrap_grammar_G1_metas[] array below: it has the discard flag on */
-  G1_META_EXTERNAL_SCRIPT_TAG_START,
   G1_META_EXTERNAL_SCRIPT_SOURCE,
-  G1_META_EXTERNAL_SCRIPT_TAG_END,
-  G1_META_EXTERNAL_SCRIPT_TYPE,
-  G1_META_EXTERNAL_SCRIPT_CONVERT_MAYBE,
-  G1_META_EXTERNAL_SCRIPT_TYPE_VALUE,
-  G1_META_EXTERNAL_SCRIPT_CONVERT_VALUE,
-  G1_META_EXTERNAL_SCRIPT_CHARACTER,
   /* These meta identifiers are handled by L0 */
   G1_META_FALSE,
   G1_META_TRUE,
@@ -270,14 +259,7 @@ bootstrap_grammar_meta_t bootstrap_grammar_G1_metas[] = {
   { G1_META_DISCARD_OFF,                      "discard off",                               0,       0,           0,            1 },
   { G1_META_DISCARD_ON,                       "discard on",                                0,       0,           1,            0 },
   { G1_META_DISCARD,                          ":discard",                                  0,       1,           0,            0 },
-  { G1_META_EXTERNAL_SCRIPT_TAG_START,        "external script tag start",                 0,       0,           0,            0 },
   { G1_META_EXTERNAL_SCRIPT_SOURCE,           "external script source",                    0,       0,           0,            0 },
-  { G1_META_EXTERNAL_SCRIPT_TAG_END,          "external script tag end",                   0,       0,           0,            0 },
-  { G1_META_EXTERNAL_SCRIPT_TYPE,             "external script type",                      0,       0,           0,            0 },
-  { G1_META_EXTERNAL_SCRIPT_CONVERT_MAYBE,    "external script encoding convertion",       0,       0,           0,            0 },
-  { G1_META_EXTERNAL_SCRIPT_TYPE_VALUE,       "external script type value",                0,       0,           0,            0 },
-  { G1_META_EXTERNAL_SCRIPT_CONVERT_VALUE,    "external script encoding convertion value", 0,       0,           0,            0 },
-  { G1_META_EXTERNAL_SCRIPT_CHARACTER,        "external script character",                 0,       0,           0,            0 },
   /* L0 join */
   { G1_META_FALSE,                            L0_JOIN_G1_META_FALSE,                       0,       0,           0,            0 },
   { G1_META_TRUE,                             L0_JOIN_G1_META_TRUE,                        0,       0,           0,            0 },
@@ -897,33 +879,17 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
 #endif
   },
   { G1_TERMINAL_SCRIPT_TAG_START, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
-    "'<script'",
+    "'<lua>'",
 #ifndef MARPAESLIF_NTRACE
-    "<script", "<scr"
-#else
-    NULL, NULL
-#endif
-  },
-  { G1_TERMINAL_SCRIPT_TYPE, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
-    "'type=\"'",
-#ifndef MARPAESLIF_NTRACE
-    "type=\"", "type="
-#else
-    NULL, NULL
-#endif
-  },
-  { G1_TERMINAL_SCRIPT_CONVERT, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
-    "'convert=\"'",
-#ifndef MARPAESLIF_NTRACE
-    "convert=\"", "convert="
+    "<lua>", "<lua"
 #else
     NULL, NULL
 #endif
   },
   { G1_TERMINAL_SCRIPT_TAG_END, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
-    "'</script>'",
+    "'</lua>'",
 #ifndef MARPAESLIF_NTRACE
-    "</script>", "</script"
+    "</lua>", "</lua"
 #else
     NULL, NULL
 #endif
@@ -936,22 +902,6 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
     NULL, NULL
 #endif
   },
-  { G1_TERMINAL_SCRIPT_TAG_CHARACTERS, MARPAESLIF_TERMINAL_TYPE_REGEX, NULL,
-    "[^\"]+",
-#ifndef MARPAESLIF_NTRACE
-    "0a123b", NULL
-#else
-    NULL, NULL
-#endif
-  },
-  { G1_TERMINAL___LUA, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
-    "'\"lua\"'",
-#ifndef MARPAESLIF_NTRACE
-    "\"lua\"", "\"lu"
-#else
-    NULL, NULL
-#endif
-  }
 };
 
 /* When bootstrapping we decide for convenience that the description is also the action name */
@@ -1311,34 +1261,12 @@ bootstrap_grammar_rule_t bootstrap_grammar_G1_rules[] = {
   /*
     lhsi                                      descs                                           type                          nrhsl  { rhsi }                                       }  minimumi           separatori  properb hideseparatorb  actions
   */
-  { G1_META_EXTERNAL_SCRIPT_STATEMENT,        G1_RULE_EXTERNAL_SCRIPT_STATEMENT,              MARPAESLIF_RULE_TYPE_ALTERNATIVE, 5, { G1_META_EXTERNAL_SCRIPT_TAG_START,
+  { G1_META_EXTERNAL_SCRIPT_STATEMENT,        G1_RULE_EXTERNAL_SCRIPT_STATEMENT,              MARPAESLIF_RULE_TYPE_ALTERNATIVE, 5, { G1_TERMINAL_SCRIPT_TAG_START,
                                                                                                                                      G1_META_DISCARD_OFF,
                                                                                                                                      G1_META_EXTERNAL_SCRIPT_SOURCE,
-                                                                                                                                     G1_META_EXTERNAL_SCRIPT_TAG_END,
-                                                                                                                                     G1_META_DISCARD_ON },                           -1,                  -1,      -1,      0, G1_ACTION_EXTERNAL_SCRIPT_STATEMENT },
-  { G1_META_EXTERNAL_SCRIPT_TAG_START,        G1_RULE_EXTERNAL_SCRIPT_TAG_START,              MARPAESLIF_RULE_TYPE_ALTERNATIVE, 4, { G1_TERMINAL_SCRIPT_TAG_START,
-                                                                                                                                     G1_META_EXTERNAL_SCRIPT_TYPE,
-                                                                                                                                     G1_META_EXTERNAL_SCRIPT_CONVERT_MAYBE,
-                                                                                                                                     G1_TERMINAL_RIGHT_ANGLE },                      -1,                  -1,      -1,      0, G1_ACTION_EXTERNAL_SCRIPT_TAG_START },
-  { G1_META_EXTERNAL_SCRIPT_TYPE,             G1_RULE_EXTERNAL_SCRIPT_TYPE,                   MARPAESLIF_RULE_TYPE_ALTERNATIVE, 6, { G1_TERMINAL_SPACE_CHARACTER,
-                                                                                                                                     G1_TERMINAL_SCRIPT_TYPE,
-                                                                                                                                     G1_META_DISCARD_OFF,
-                                                                                                                                     G1_META_EXTERNAL_SCRIPT_TYPE_VALUE,
-                                                                                                                                     G1_TERMINAL_DOUBLE_QUOTE_CHARACTER,
-                                                                                                                                     G1_META_DISCARD_ON },                           -1,                  -1,      -1,      0, G1_ACTION_EXTERNAL_SCRIPT_TYPE },
-  { G1_META_EXTERNAL_SCRIPT_CONVERT_MAYBE,    G1_RULE_EXTERNAL_SCRIPT_CONVERT_MAYBE,          MARPAESLIF_RULE_TYPE_ALTERNATIVE, 6, { G1_TERMINAL_SPACE_CHARACTER,
-                                                                                                                                     G1_TERMINAL_SCRIPT_CONVERT,
-                                                                                                                                     G1_META_DISCARD_OFF,
-                                                                                                                                     G1_META_EXTERNAL_SCRIPT_CONVERT_VALUE,
-                                                                                                                                     G1_TERMINAL_DOUBLE_QUOTE_CHARACTER,
-                                                                                                                                     G1_META_DISCARD_ON },                           -1,                  -1,      -1,      0, G1_ACTION_EXTERNAL_SCRIPT_CONVERT_MAYBE_1 },
-  { G1_META_EXTERNAL_SCRIPT_CONVERT_MAYBE,    G1_RULE_EXTERNAL_SCRIPT_CONVERT_MAYBE,          MARPAESLIF_RULE_TYPE_ALTERNATIVE, 0, { -1                                           }, -1,                  -1,      -1,      0, G1_ACTION_EXTERNAL_SCRIPT_CONVERT_MAYBE_2 },
-  { G1_META_EXTERNAL_SCRIPT_SOURCE,           G1_RULE_EXTERNAL_SCRIPT_SOURCE,                 MARPAESLIF_RULE_TYPE_SEQUENCE,    1, { G1_META_EXTERNAL_SCRIPT_CHARACTER            },  1,                  -1,      -1,      0, G1_ACTION_EXTERNAL_SCRIPT_SOURCE },
-  { G1_META_EXTERNAL_SCRIPT_CHARACTER,        G1_RULE_EXTERNAL_SCRIPT_CHARACTER,              MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL_SCRIPT_CHARACTER },                 -1,                  -1,      -1,      0, G1_ACTION_EXTERNAL_SCRIPT_CHARACTER },
-  { G1_META_EXTERNAL_SCRIPT_TAG_END,          G1_RULE_EXTERNAL_SCRIPT_TAG_END,                MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL_SCRIPT_TAG_END },                   -1,                  -1,      -1,      0, G1_ACTION_EXTERNAL_SCRIPT_TAG_END },
-  { G1_META_EXTERNAL_SCRIPT_TYPE_VALUE,       G1_RULE_EXTERNAL_SCRIPT_TYPE_VALUE_1,           MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL_SCRIPT_TAG_CHARACTERS },            -1,                  -1,      -1,      0, G1_ACTION_EXTERNAL_SCRIPT_TYPE_VALUE_1 },
-  { G1_META_EXTERNAL_SCRIPT_TYPE_VALUE,       G1_RULE_EXTERNAL_SCRIPT_TYPE_VALUE_2,           MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL___LUA },                            -1,                  -1,      -1,      0, G1_ACTION_EXTERNAL_SCRIPT_TYPE_VALUE_2 },
-  { G1_META_EXTERNAL_SCRIPT_CONVERT_VALUE,    G1_RULE_EXTERNAL_SCRIPT_CONVERT_VALUE,          MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL_SCRIPT_TAG_CHARACTERS },            -1,                  -1,      -1,      0, G1_ACTION_EXTERNAL_SCRIPT_CONVERT_VALUE }
+                                                                                                                                     G1_TERMINAL_SCRIPT_TAG_END,
+                                                                                                                                     G1_META_DISCARD_ON },                                 -1,                  -1,      -1,      0, G1_ACTION_EXTERNAL_SCRIPT_STATEMENT },
+  { G1_META_EXTERNAL_SCRIPT_SOURCE,           G1_RULE_EXTERNAL_SCRIPT_SOURCE,                 MARPAESLIF_RULE_TYPE_SEQUENCE,    1, { G1_TERMINAL_SCRIPT_CHARACTER },                        0,                  -1,       0,      0, G1_ACTION_EXTERNAL_SCRIPT_SOURCE }
 };
 
 #endif /* MARPAESLIF_INTERNAL_ESLIF_G1_H */
