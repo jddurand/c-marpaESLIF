@@ -258,6 +258,10 @@ extern "C" {
   lua_EXPORT short luaunpanicL_pushresult(luaL_Buffer *B);
   lua_EXPORT short luaunpanicL_pushresultsize(luaL_Buffer *B, size_t sz);
   lua_EXPORT short luaunpanicL_buffinitsize(char **rcp, lua_State *L, luaL_Buffer *B, size_t sz);
+#if defined(LUA_COMPAT_MODULE)
+  lua_EXPORT short luaunpanicL_pushmodule(lua_State *L, const char *modname, int sizehint);
+  lua_EXPORT short luaunpanicL_openlib(lua_State *L, const char *libname, const luaL_Reg *l, int nup);
+#endif
   /*
   ** some useful macros that must be replaced by functions
   */
@@ -321,14 +325,19 @@ extern "C" {
 ** some useful macros
 */
 #define luaunpanicL_newlibtable(L,l) luaunpanic_createtable(L, 0, sizeof(l)/sizeof((l)[0]) - 1)
-#define luaunpanicL_newlib(L,l)      (luaunpanicL_checkversion(L), luaunpanicL_newlibtable(L,l), luaunpanicL_setfuncs(L,l,0))
+#define luaunpanicL_newlib(L,l)      (luaunpanicL_checkversion(L) || luaunpanicL_newlibtable(L,l) || luaunpanicL_setfuncs(L,l,0))
 /* luaunpanicL_argcheck explicitely not wrapped, uses a hack on luaL_argerror() that, when successful and no error handler never returns -; */
 #define luaunpanicL_checkstring(rcp, L,n) (luaunpanicL_checklstring(rcp, L, (n), NULL))
 #define luaunpanicL_optstring(rcp, L,n,d) (luaunpanicL_optlstring(rcp, L, (n), (d), NULL))
 #define luaunpanicL_getmetatable(rcp, L,n) (luaunpanic_getfield(rcp, L, LUA_REGISTRYINDEX, (n)))
 /* luaunL_opt(L,f,n,d) cannot be wrapped easily */
 #define luaunpanicL_loadbuffer(rcp, L,s,sz,n) luaunpanicL_loadbufferx(rcp, L,s,sz,n,NULL)
-#define luaunpanicL_addchar(B,c) ((void)((B)->n < (B)->size || luaunpanicL_prepbuffsize(NULL, (B), 1)), ((B)->b[(B)->n++] = (c))) /* unsafe */
-#define luaunpanicL_addsize(B,s) ((B)->n += (s))
+#define luaunpanicL_addchar(B,c) (((B)->n < (B)->size || (!luaunpanicL_prepbuffsize(NULL, (B), 1))) ? 0 : ((B)->b[(B)->n++] = (c), 0)) /* unsafe */
+#define luaunpanicL_addsize(B,s) ((B)->n += (s), 0)
+
+/* compatibility with old module system */
+#if defined(LUA_COMPAT_MODULE)
+#define luaunpanicL_register(L,n,l) (luaunpanicL_openlib(L,(n),(l),0))
+#endif
 
 #endif /* luaunpanic_h */
