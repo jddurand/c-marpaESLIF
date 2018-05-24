@@ -591,6 +591,10 @@ LUAUNPANIC_ON_VOID_FUNCTION    (luaunpanicL_addvalue,    lua_State *L = B->L;,  
 LUAUNPANIC_ON_VOID_FUNCTION    (luaunpanicL_pushresult,  lua_State *L = B->L;,                luaL_pushresult(B), luaL_Buffer *B)
 LUAUNPANIC_ON_VOID_FUNCTION    (luaunpanicL_pushresultsize,lua_State *L = B->L;,              luaL_pushresultsize(B, sz), luaL_Buffer *B, size_t sz)
 LUAUNPANIC_ON_NON_VOID_FUNCTION(luaunpanicL_buffinitsize,,                char *,             luaL_buffinitsize(L, B, sz), lua_State *L, luaL_Buffer *B, size_t sz)
+#if defined(LUA_COMPAT_MODULE)
+LUAUNPANIC_ON_VOID_FUNCTION    (luaunpanicL_pushmodule,  ,                                    luaL_pushmodule(L, modname, sizehint), lua_State *L, const char *modname, int sizehint);
+LUAUNPANIC_ON_VOID_FUNCTION    (luaunpanicL_openlib,     ,                                    luaL_openlib(L, libname, l, nup), lua_State *L, const char *libname, const luaL_Reg *l, int nup)
+#endif
 /*
 ** ***********************************************************************
 ** lualib.h wrapper
