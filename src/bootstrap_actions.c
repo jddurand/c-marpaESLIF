@@ -29,7 +29,6 @@ static inline void _marpaESLIF_bootstrap_priorities_freev(genericStack_t *altern
 static inline void _marpaESLIF_bootstrap_single_symbol_freev(marpaESLIF_bootstrap_single_symbol_t *singleSymbolp);
 static inline void _marpaESLIF_bootstrap_grammar_reference_freev(marpaESLIF_bootstrap_grammar_reference_t *grammarReferencep);
 static inline void _marpaESLIF_bootstrap_event_initialization_freev(marpaESLIF_bootstrap_event_initialization_t *eventInitializationp);
-static inline void _marpaESLIF_bootstrap_external_script_freev(marpaESLIF_bootstrap_external_script_t *externalScriptp);
 
 static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_check_grammarp(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammar_t *marpaESLIFGrammarp, int leveli, marpaESLIF_bootstrap_utf_string_t *stringp);
 static inline marpaESLIF_symbol_t  *_marpaESLIF_bootstrap_check_meta_by_namep(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, char *asciinames, short createb);
@@ -144,7 +143,7 @@ static        short _marpaESLIF_bootstrap_G1_action_predicted_event_declaration_
 static        short _marpaESLIF_bootstrap_G1_action_alternative_name_2b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short _marpaESLIF_bootstrap_G1_action_namingb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short _marpaESLIF_bootstrap_G1_action_exception_statementb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
-static        short _marpaESLIF_bootstrap_G1_action_external_script_statementb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
+static        short _marpaESLIF_bootstrap_G1_action_luascript_statementb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 
 /* Helpers */
 #define MARPAESLIF_GET_ARRAY(marpaESLIFValuep, indicei, _p, _l) do {    \
@@ -593,18 +592,6 @@ static inline void _marpaESLIF_bootstrap_event_initialization_freev(marpaESLIF_b
       free(eventInitializationp->eventNames);
     }
     free(eventInitializationp);
-  }
-}
-
-/*****************************************************************************/
-static inline void _marpaESLIF_bootstrap_external_script_freev(marpaESLIF_bootstrap_external_script_t *externalScriptp)
-/*****************************************************************************/
-{
-  if (externalScriptp != NULL) {
-    if (externalScriptp->bytep != NULL) {
-      free(externalScriptp->bytep);
-    }
-    free(externalScriptp);
   }
 }
 
@@ -1341,9 +1328,6 @@ static void _marpaESLIF_bootstrap_freeDefaultActionv(void *userDatavp, int conte
   case MARPAESLIF_BOOTSTRAP_STACK_TYPE_STRING:
     _marpaESLIF_string_freev((marpaESLIF_string_t *) p);
     break;
-  case MARPAESLIF_BOOTSTRAP_STACK_TYPE_EXTERNAL_SCRIPT:
-    _marpaESLIF_bootstrap_external_script_freev((marpaESLIF_bootstrap_external_script_t *) p);
-    break;
   default:
     break;
   }
@@ -1443,7 +1427,7 @@ static marpaESLIFValueRuleCallback_t _marpaESLIF_bootstrap_ruleActionResolver(vo
   else if (strcmp(actions, "G1_action_alternative_name_2")               == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_alternative_name_2b;               }
   else if (strcmp(actions, "G1_action_naming")                           == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_namingb;                           }
   else if (strcmp(actions, "G1_action_exception_statement")              == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_exception_statementb;              }
-  else if (strcmp(actions, "G1_action_external_script_statement")        == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_external_script_statementb;        }
+  else if (strcmp(actions, "G1_action_luascript_statement")              == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_luascript_statementb;              }
   else
   {
     MARPAESLIF_ERRORF(marpaESLIFp, "Unsupported action \"%s\"", actions);
@@ -6004,13 +5988,19 @@ static inline int _marpaESLIF_bootstrap_ord2utfb(marpaESLIF_uint32_t uint32, PCR
 }
 
 /*****************************************************************************/
-static short _marpaESLIF_bootstrap_G1_action_external_script_statementb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
+static short _marpaESLIF_bootstrap_G1_action_luascript_statementb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
 /*****************************************************************************/
 {
   /* <external script statement> ::= <external script tag start> <discard off> <external script source> <external script tag end> <discard on>  */
-  marpaESLIF_t                           *marpaESLIFp     = marpaESLIFGrammar_eslifp(marpaESLIFRecognizer_grammarp(marpaESLIFValue_recognizerp(marpaESLIFValuep)));
-  marpaESLIF_bootstrap_external_script_t *externalScriptp = NULL;
-  short                                   rcb;
+  static const char   *funcs              = "_marpaESLIF_bootstrap_G1_action_luascript_statementb";
+  marpaESLIFGrammar_t *marpaESLIFGrammarp = (marpaESLIFGrammar_t *) userDatavp;
+  marpaESLIF_t        *marpaESLIFp        = marpaESLIFGrammar_eslifp(marpaESLIFRecognizer_grammarp(marpaESLIFValue_recognizerp(marpaESLIFValuep)));
+  char                *luabytep           = NULL;
+  size_t               luabytel;
+  char                *tmps;
+  size_t               tmpl;
+  short                undefb;
+  short                rcb;
 
   /* Cannot be nullable */
   if (nullableb) {
@@ -6018,22 +6008,50 @@ static short _marpaESLIF_bootstrap_G1_action_external_script_statementb(void *us
     goto err;
   }
 
-  externalScriptp = (marpaESLIF_bootstrap_external_script_t *) malloc(sizeof(marpaESLIF_bootstrap_external_script_t));
-  if (externalScriptp == NULL) {
-    MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
-    goto err;
-  }
-  
-  MARPAESLIF_GETANDFORGET_ARRAY(marpaESLIFValuep, arg0i+2, externalScriptp->bytep, externalScriptp->bytel);
+  /* But source can be nullable */
+  MARPAESLIF_IS_UNDEF(marpaESLIFValuep, arg0i+2, undefb);
 
-  MARPAESLIF_SET_PTR(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_EXTERNAL_SCRIPT, externalScriptp);
+  if (! undefb) {
+    MARPAESLIF_GETANDFORGET_ARRAY(marpaESLIFValuep, arg0i+2, luabytep, luabytel);
+
+    if (marpaESLIFGrammarp->luabytep == NULL) {
+      /* First time */
+      marpaESLIFGrammarp->luabytep = luabytep;
+      marpaESLIFGrammarp->luabytel = luabytel;
+      MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Setted lua script of size %ld luabytes", (unsigned long) luabytel);
+    } else {
+      /* Append bytes - they are guaranteed to be full character bytes, i.e. a raw concat of the buffer is ok */
+      tmpl = marpaESLIFGrammarp->luabytel + luabytel;
+      /* Eventual very improtable turnaround */
+      if (tmpl < marpaESLIFGrammarp->luabytel) {
+        MARPAESLIF_ERROR(marpaESLIFp, "size_t turnaround detected");
+        goto err;
+      }
+      tmps = (char *) realloc(marpaESLIFGrammarp->luabytep, tmpl);
+      if (tmps == NULL) {
+        MARPAESLIF_ERRORF(marpaESLIFp, "realloc failure, %s", strerror(errno));
+        goto err;
+      }
+      marpaESLIFGrammarp->luabytep = tmps;
+      memcpy(marpaESLIFGrammarp->luabytep + marpaESLIFGrammarp->luabytel, luabytep, luabytel);
+      marpaESLIFGrammarp->luabytel = tmpl;
+      MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Appended lua script of size %ld bytes, full script size is now %ld", (unsigned long) luabytel, (unsigned long) marpaESLIFGrammarp->luabytel);
+      free(luabytep);
+    }
+
+    luabytep = NULL;
+  }
+
+  MARPAESLIF_SET_UNDEF(marpaESLIFValuep, resulti, -1 /* context not used */);
 
   rcb = 1;
   goto done;
 
  err:
-  _marpaESLIF_bootstrap_external_script_freev(externalScriptp);
-  
+  if (luabytep != NULL) {
+    free(luabytep);
+  }
+
  done:
   return rcb;
 }

@@ -210,7 +210,6 @@ static const marpaESLIF_stringGenerator_t  marpaESLIF_stringGeneratorTemplate = 
 };
 
 static const char *MARPAESLIF_EMPTY_STRING = "";
-static const char *MARPAESLIF_LUA_STRING = "\"lua\"";
 
 /* Please note that EVERY _marpaESLIFRecognizer_xxx() method is logging at start and at return */
 
@@ -341,7 +340,6 @@ static        short                  _marpaESLIFGrammar_symbolOptionSetterIntern
 static        short                  _marpaESLIFGrammar_grammarOptionSetterNoLoggerb(void *userDatavp, marpaWrapperGrammarOption_t *marpaWrapperGrammarOptionp);
 static inline void                   _marpaESLIF_rule_createshowv(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, marpaESLIF_rule_t *rulep, char *asciishows, size_t *asciishowlp);
 static inline void                   _marpaESLIF_grammar_createshowv(marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaESLIF_grammar_t *grammarp, char *asciishows, size_t *asciishowlp);
-static inline void                   _marpaESLIF_grammar_createscriptshowv(marpaESLIFGrammar_t *marpaESLIFGrammarp, char *asciishows, size_t *asciishowlp);
 static inline int                    _marpaESLIF_utf82ordi(PCRE2_SPTR8 utf8bytes, marpaESLIF_uint32_t *uint32p);
 static inline short                  _marpaESLIFRecognizer_matchPostProcessingb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, size_t matchl);
 static inline short                  _marpaESLIFRecognizer_appendDatab(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *datas, size_t datal);
@@ -400,8 +398,6 @@ int                                  _marpaESLIF_string_hash_callbacki(void *use
 short                                _marpaESLIF_string_cmp_callbackb(void *userDatavp, void **pp1, void **pp2);
 void                                *_marpaESLIF_string_copy_callbackp(void *userDatavp, void **pp);
 void                                 _marpaESLIF_string_free_callbackv(void *userDatavp, void **pp);
-void                                 _marpaESLIF_scriptstackfreev(void *userDatavp, void **pp);
-static inline void                   _marpaESLIF_script_freev(marpaESLIF_script_t *scriptp);
 static        void                   _marpaESLIFRecognizerHash_freev(void *userDatavp, void **pp);
 static inline void                   _marpaESLIFRecognizer_freev(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, short forceb);
 static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_getFromCachep(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammar_t *marpaESLIFGrammarp, short discardb, short noEventb, short silentb, marpaESLIFRecognizer_t *marpaESLIFRecognizerParentp, short fakeb, short grammarIsOnStackb);
@@ -412,8 +408,6 @@ static inline short                   _marpaESLIF_action_validb(marpaESLIF_t *ma
 static inline short                   _marpaESLIF_action_eqb(marpaESLIF_action_t *action1p, marpaESLIF_action_t *action2p);
 static inline marpaESLIF_action_t    *_marpaESLIF_action_clonep(marpaESLIF_t *marpaESLIFp, marpaESLIF_action_t *actionp);
 static inline void                    _marpaESLIF_action_freev(marpaESLIF_action_t *actionp);
-static inline short                   _marpaESLIFGrammar_script_canb(marpaESLIFGrammar_t *marpaESLIFGrammarp);
-static inline short                   _marpaESLIFGrammar_script_addb(marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaESLIFScript_t *marpaESLIFScriptp);
 
 /*****************************************************************************/
 static inline marpaESLIF_string_t *_marpaESLIF_string_newp(marpaESLIF_t *marpaESLIFp, char *encodingasciis, char *bytep, size_t bytel, short asciib)
@@ -1182,9 +1176,8 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
     marpaESLIFGrammar.marpaESLIFp      = marpaESLIFp;
     marpaESLIFGrammar.grammarStackp    = NULL;
     marpaESLIFGrammar.grammarp         = grammarp;
-    marpaESLIFGrammar.scriptHashp      = NULL;
-    marpaESLIFGrammar.scriptTypeStackp = NULL;
-    marpaESLIFGrammar.scriptshows      = NULL;
+    marpaESLIFGrammar.luabytep         = NULL;
+    marpaESLIFGrammar.luadescp         = NULL;
 
     /* Fake a recognizer. EOF flag will be set automatically in fake mode */
     marpaESLIFRecognizerTestp = _marpaESLIFRecognizer_newp(&marpaESLIFGrammar,
@@ -3533,9 +3526,8 @@ static inline marpaESLIF_t *_marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptio
   marpaESLIFp->marpaESLIFGrammarp->marpaESLIFGrammarOption = marpaESLIFGrammarOption_default_template;
   marpaESLIFp->marpaESLIFGrammarp->grammarStackp           = NULL;
   marpaESLIFp->marpaESLIFGrammarp->grammarp                = NULL;
-  marpaESLIFp->marpaESLIFGrammarp->scriptHashp             = NULL; /* There is no "script" in marpaESLIF grammar */
-  marpaESLIFp->marpaESLIFGrammarp->scriptTypeStackp        = NULL; /* Ditto */
-  marpaESLIFp->marpaESLIFGrammarp->scriptshows             = NULL;
+  marpaESLIFp->marpaESLIFGrammarp->luabytep                = NULL; /* There is no "script" in marpaESLIF grammar */
+  marpaESLIFp->marpaESLIFGrammarp->luadescp                = NULL;
 
   marpaESLIFp->marpaESLIFGrammarp->grammarStackp = &(marpaESLIFp->marpaESLIFGrammarp->_grammarStack);
   GENERICSTACK_INIT(marpaESLIFp->marpaESLIFGrammarp->grammarStackp);
@@ -4752,9 +4744,9 @@ static inline marpaESLIFGrammar_t *_marpaESLIFGrammar_newp(marpaESLIF_t *marpaES
     marpaESLIFGrammarp->warningIsErrorb         = 0;
     marpaESLIFGrammarp->warningIsIgnoredb       = 0;
     marpaESLIFGrammarp->autorankb               = 0;
-    marpaESLIFGrammarp->scriptHashp             = NULL;
-    marpaESLIFGrammarp->scriptTypeStackp        = NULL;
-    marpaESLIFGrammarp->scriptshows             = NULL;
+    marpaESLIFGrammarp->luabytep                = NULL;
+    marpaESLIFGrammarp->luabytel                = 0;
+    marpaESLIFGrammarp->luadescp                = NULL;
   } else {
     marpaESLIFGrammarp = marpaESLIfGrammarPreviousp;
   }
@@ -5299,20 +5291,30 @@ short marpaESLIFGrammar_grammarshowform_by_levelb(marpaESLIFGrammar_t *marpaESLI
 }
 
 /*****************************************************************************/
-short marpaESLIFGrammar_grammarshowscriptb(marpaESLIFGrammar_t *marpaESLIFGrammarp, char **scriptshowsp)
+short marpaESLIFGrammar_grammarshowscripb(marpaESLIFGrammar_t *marpaESLIFGrammarp, char **grammarscriptsp)
 /*****************************************************************************/
 {
+  char *grammarscripts;
   short rcb;
-  
+
   if (marpaESLIFGrammarp == NULL) {
     errno = EINVAL;
-    goto err;
+    return 0;
+  }
+  
+  if ((marpaESLIFGrammarp->luadescp == NULL) && (marpaESLIFGrammarp->luabytep != NULL) && (marpaESLIFGrammarp->luabytel > 0)) {
+    marpaESLIFGrammarp->luadescp = _marpaESLIF_string_newp(marpaESLIFGrammarp->marpaESLIFp, "UTF-8" /* Came from the grammar, we know it is UTF-8 */, marpaESLIFGrammarp->luabytep, marpaESLIFGrammarp->luabytel, 1 /* asciib */);
+    if (marpaESLIFGrammarp->luadescp == NULL) {
+      goto err;
+    }
+    grammarscripts = marpaESLIFGrammarp->luadescp->asciis;
+  } else {
+    grammarscripts = (char *) MARPAESLIF_EMPTY_STRING;
   }
 
-  if (scriptshowsp != NULL) {
-    *scriptshowsp = (marpaESLIFGrammarp->scriptshows != NULL) ? marpaESLIFGrammarp->scriptshows : (char *) MARPAESLIF_EMPTY_STRING;
+  if (grammarscriptsp != NULL) {
+    *grammarscriptsp = grammarscripts;
   }
-
   rcb = 1;
   goto done;
 
@@ -9224,30 +9226,11 @@ static short _marpaESLIFValue_nullingCallbackWrapperb(void *userDatavp, int symb
 static inline void _marpaESLIFGrammar_freev(marpaESLIFGrammar_t *marpaESLIFGrammarp, short onStackb)
 /*****************************************************************************/
 {
-  genericStack_t *scriptTypeStackp;
-
   if (marpaESLIFGrammarp != NULL) {
     _marpaESLIFGrammar_grammarStack_freev(marpaESLIFGrammarp, marpaESLIFGrammarp->grammarStackp);
-
-    scriptTypeStackp = marpaESLIFGrammarp->scriptTypeStackp;
-    if (scriptTypeStackp != NULL) {
-      while (GENERICSTACK_USED(scriptTypeStackp) > 0) {
-        if (GENERICSTACK_IS_PTR(scriptTypeStackp, GENERICSTACK_USED(scriptTypeStackp) - 1)) {
-          char *types = (char *) GENERICSTACK_POP_PTR(scriptTypeStackp);
-          if (types != NULL) {
-            free(types);
-          }
-        } else {
-          GENERICSTACK_USED(scriptTypeStackp)--;
-        }
-      }
-      GENERICSTACK_RESET(scriptTypeStackp); /* Take care, scriptTypeStackp is a pointer to a stack inside grammar structure */
-    }
-    if (marpaESLIFGrammarp->scriptHashp != NULL) {
-      GENERICHASH_RESET(marpaESLIFGrammarp->scriptHashp, marpaESLIFGrammarp->marpaESLIFp);
-    }
-    if (marpaESLIFGrammarp->scriptshows != NULL) {
-      free(marpaESLIFGrammarp->scriptshows);
+    _marpaESLIF_string_freev(marpaESLIFGrammarp->luadescp);
+    if (marpaESLIFGrammarp->luabytep != NULL) {
+      free(marpaESLIFGrammarp->luabytep);
     }
     if (! onStackb) {
       free(marpaESLIFGrammarp);
@@ -10517,118 +10500,6 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIFGrammar_t *marpaESL
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->descp->asciis);
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, ">");
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "\n");
-    }
-  }
-
-  asciishowl++; /* NUL byte */
-
-  if (asciishowlp != NULL) {
-    *asciishowlp = asciishowl;
-  }
-}
-
-#ifndef MARPAESLIF_NTRACE
-/*********************************************************************/
-static void _marpaESLIF_scriptHashDump(genericLogger_t *genericLoggerp, genericHash_t *myHashp)
-/*********************************************************************/
-{
-  int i;
-  int j;
-
-  GENERICLOGGER_NOTICEF(genericLoggerp, "Script Hash Dump (used: %d)", GENERICHASH_USED(myHashp));
-  for (i = 0; i < GENERICSTACK_USED(myHashp->keyStackp); i++) {
-    genericStack_t *subKeyStackp;
-    genericStack_t *subValStackp;
-      
-    if (! GENERICSTACK_IS_PTR(myHashp->keyStackp, i)) {
-      continue;
-    }
-    subKeyStackp = GENERICSTACK_GET_PTR(myHashp->keyStackp, i);
-    subValStackp = GENERICSTACK_GET_PTR(myHashp->valStackp, i);
-
-    GENERICLOGGER_NOTICEF(genericLoggerp, "[Row=%d] Key used/length/initial length/heap length=%d/%d/%d/%d",
-                          i,
-                          GENERICSTACK_USED(subKeyStackp),
-                          GENERICSTACK_LENGTH(subKeyStackp),
-                          GENERICSTACK_INITIAL_LENGTH(subKeyStackp),
-                          GENERICSTACK_HEAP_LENGTH(subKeyStackp));
-    GENERICLOGGER_NOTICEF(genericLoggerp, "[Row=%d] Val used/length/initial length/heap length=%d/%d/%d/%d",
-                          i,
-                          GENERICSTACK_USED(subValStackp),
-                          GENERICSTACK_LENGTH(subValStackp),
-                          GENERICSTACK_INITIAL_LENGTH(subValStackp),
-                          GENERICSTACK_HEAP_LENGTH(subValStackp));
-
-    for (j = 0; j < GENERICSTACK_USED(subKeyStackp); j++) {
-      char *key;
-      void *val;
-
-      if (! GENERICSTACK_IS_PTR(subKeyStackp, j)) {
-	continue;
-      }
-      key = GENERICSTACK_GET_PTR(subKeyStackp, j);
-      val = GENERICSTACK_GET_PTR(subValStackp, j);
-      GENERICLOGGER_NOTICEF(genericLoggerp, "[Row/Col=%d/%d] \"%s\" => %p", (int) i, (int) j, key, val);
-    }
-  }
-}
-#endif
-
-/*****************************************************************************/
-static inline void _marpaESLIF_grammar_createscriptshowv(marpaESLIFGrammar_t *marpaESLIFGrammarp, char *asciishows, size_t *asciishowlp)
-/*****************************************************************************/
-{
-  marpaESLIF_t                 *marpaESLIFp      = marpaESLIFGrammarp->marpaESLIFp;
-  genericHash_t                *scriptHashp      = marpaESLIFGrammarp->scriptHashp;
-  genericStack_t               *scriptTypeStackp = marpaESLIFGrammarp->scriptTypeStackp;
-  size_t                        asciishowl       = 0;
-  short                         findb            = 0;
-  short                         firstb           = 1;
-  marpaESLIF_script_t          *scriptp;
-  int                           i;
-  int                           j;
-  genericStack_t               *scriptStackp;
-  char                         *types;
-
-  /* Calculate the size needed to show the grammar in ASCII form */
-
-  MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "/*\n");
-  MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " * ****************\n");
-  MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " * Script settings:\n");
-  MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " * ****************\n");
-  MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " */\n");
-
-  if ((scriptTypeStackp != NULL) && (scriptHashp != NULL)) {
-#ifndef MARPAESLIF_NTRACE
-    _marpaESLIF_scriptHashDump(marpaESLIFp->marpaESLIFOption.genericLoggerp, scriptHashp);
-#endif
-      for (i = 0; i < GENERICSTACK_USED(scriptTypeStackp); i++) {
-      types = (char *) GENERICSTACK_GET_PTR(scriptTypeStackp, i);
-      GENERICHASH_FIND(scriptHashp, marpaESLIFp, PTR, types, PTR, &scriptStackp, findb);
-      if (findb) {
-        for (j = 0; j < GENERICSTACK_USED(scriptStackp); j++) {
-          scriptp = (marpaESLIF_script_t *) GENERICSTACK_GET_PTR(scriptStackp, j);
-          if (scriptp != NULL) {
-            if (! firstb) {
-              MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "\n");
-            }
-            if (scriptp->binaryb) {
-              MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "/* <script type=\"");
-              MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, scriptp->types);
-              MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "\">[binary format]</script> is not shown */\n");
-            } else {
-              MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "<script type=\"");
-              MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, scriptp->types);
-              MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "\" convert=\"");
-              MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, scriptp->converts);
-              MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "\">");
-              MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, scriptp->stringp->asciis);
-              MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "</script>\n");
-            }
-            firstb = 0;
-          }
-        }
-      }
     }
   }
 
@@ -13938,24 +13809,6 @@ void _marpaESLIF_string_free_callbackv(void *userDatavp, void **pp)
 }
 
 /****************************************************************************/
-void _marpaESLIF_scriptstackfreev(void *userDatavp, void **pp)
-/****************************************************************************/
-{
-  /* *pp is a genericStack of marpaESLIF_script structures */
-  genericStack_t      *scriptStackp = (genericStack_t *) *pp;
-  marpaESLIF_script_t *scriptp;
-  int i;
-
-  if (scriptStackp != NULL) {
-    for (i = 0; i < GENERICSTACK_USED(scriptStackp); i++) {
-      scriptp = (marpaESLIF_script_t *) GENERICSTACK_GET_PTR(scriptStackp, i);
-      _marpaESLIF_script_freev(scriptp);
-    }
-    GENERICSTACK_FREE(scriptStackp);
-  }
-}
-
-/****************************************************************************/
 static void _marpaESLIFRecognizerHash_freev(void *userDatavp, void **pp)
 /****************************************************************************/
 {
@@ -14681,254 +14534,6 @@ static inline short _marpaESLIFValue_symbolActionCallbackb(marpaESLIFValue_t *ma
  done:
   return rcb;
 }
-
-/*****************************************************************************/
-static inline short _marpaESLIFGrammar_script_canb(marpaESLIFGrammar_t *marpaESLIFGrammarp)
-/*****************************************************************************/
-{
-  short rcb;
-
-  /* This hash is composed of (char *) strings for keys, (genericStack_t *) stacks for values */
-  /* We are okay for key duplication, though for the values we manage ourself the hash content: */
-  /* if a hash entry does not exist, it is created once for all - thus there is never a "copy" */
-  /* needed. Still, there is a need for value free. */
-  
-  if (marpaESLIFGrammarp->scriptTypeStackp == NULL) {
-    marpaESLIFGrammarp->scriptTypeStackp = &(marpaESLIFGrammarp->_scriptTypeStack);
-    GENERICSTACK_INIT(marpaESLIFGrammarp->scriptTypeStackp);
-    if (GENERICSTACK_ERROR(marpaESLIFGrammarp->scriptTypeStackp)) {
-      MARPAESLIF_ERRORF(marpaESLIFGrammarp->marpaESLIFp, "scriptTypeStackp initialization failure, %s", strerror(errno));
-      marpaESLIFGrammarp->scriptTypeStackp = NULL;
-      goto err;
-    }
-  }
-  
-  if (marpaESLIFGrammarp->scriptHashp == NULL) {
-    /* Take care this is stacked inside Grammar structure */
-    marpaESLIFGrammarp->scriptHashp = &(marpaESLIFGrammarp->_scriptHash);
-    GENERICHASH_INIT_ALL(marpaESLIFGrammarp->scriptHashp,
-                         _marpaESLIF_string_hash_callbacki,
-                         _marpaESLIF_string_cmp_callbackb,
-                         _marpaESLIF_string_copy_callbackp,
-                         _marpaESLIF_string_free_callbackv,
-                         NULL, /* valCopyFunctionp */
-                         _marpaESLIF_scriptstackfreev,
-                         MARPAESLIF_HASH_SIZE,
-                         0 /* wantedSubSize */);
-    if (GENERICHASH_ERROR(marpaESLIFGrammarp->scriptHashp)) {
-      MARPAESLIF_ERRORF(marpaESLIFGrammarp->marpaESLIFp, "scriptHashp initialization failure, %s", strerror(errno));
-      goto err;
-    }
-  }
-
-  rcb = 1;
-  goto done;
-
- err:
-  rcb = 0;
-
- done:
-  return rcb;
-}
-
-/*****************************************************************************/
-short marpaESLIFGrammar_script_addb(marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaESLIFScript_t *marpaESLIFScriptp)
-/*****************************************************************************/
-{
-  if ((marpaESLIFGrammarp == NULL) || (marpaESLIFScriptp == NULL)) {
-    errno = EINVAL;
-    return 0;
-  }
-
-  if (marpaESLIFScriptp->types == NULL) {
-    MARPAESLIF_ERROR(marpaESLIFGrammarp->marpaESLIFp, "Script type is not set");
-    errno = EINVAL;
-    return 0;
-  }
-
-  if ((marpaESLIFScriptp->sources == NULL) || (marpaESLIFScriptp->sourcel <= 0)) {
-    MARPAESLIF_ERROR(marpaESLIFGrammarp->marpaESLIFp, "Script source is not set");
-    errno = EINVAL;
-    return 0;
-  }
-
-  return _marpaESLIFGrammar_script_addb(marpaESLIFGrammarp, marpaESLIFScriptp);
-}
-
-/*****************************************************************************/
-static inline short _marpaESLIFGrammar_script_addb(marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaESLIFScript_t *marpaESLIFScriptp)
-/*****************************************************************************/
-{
-  marpaESLIF_t        *marpaESLIFp = marpaESLIFGrammarp->marpaESLIFp;
-  marpaESLIF_script_t *scriptp     = NULL;
-  short                findb       = 0;
-  char                *types       = NULL;
-  short                rcb;
-  genericStack_t      *scriptStackp;
-  size_t               scriptshowl;
-
-  if (! _marpaESLIFGrammar_script_canb(marpaESLIFGrammarp)) {
-    goto err;
-  }
-
-  scriptp = (marpaESLIF_script_t *) malloc(sizeof(marpaESLIF_script_t));
-  if (scriptp == NULL) {
-    MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
-    goto err;
-  }
-
-  scriptp->types    = NULL;
-  scriptp->converts = NULL;
-  scriptp->stringp  = NULL;
-  scriptp->convertp = NULL;
-  scriptp->convertl = 0;
-
-  /* This is injection not coming from the grammar, so we check grammar compatibility programmatically */
-  /* We know that types cannot contain the " character */
-  if (strchr(marpaESLIFScriptp->types, '"') != NULL) {
-    /* Unless the reserved keyword "lua" -; */
-    if (strcmp(marpaESLIFScriptp->types, MARPAESLIF_LUA_STRING) != 0) {
-      MARPAESLIF_ERRORF(marpaESLIFp, "Script type must not contain the '\"' character: %s", marpaESLIFScriptp->types);
-      goto err;
-    }
-  }
-  if (marpaESLIFScriptp->converts != NULL) {
-    if (strchr(marpaESLIFScriptp->converts, '"') != NULL) {
-      MARPAESLIF_ERRORF(marpaESLIFp, "Script convert must not contain the '\"' character: %s", marpaESLIFScriptp->converts);
-      goto err;
-    }
-  }
-
-  scriptp->types = strdup(marpaESLIFScriptp->types);
-  if (scriptp->types == NULL) {
-    MARPAESLIF_ERRORF(marpaESLIFp, "strdup failure, %s", strerror(errno));
-    goto err;
-  }
-
-  scriptp->binaryb = marpaESLIFScriptp->binaryb;
-  /* A special case: script source is binary */
-  if (scriptp->binaryb) {
-    /* Then {convertp,convertl} is a duplicate of {sources,sourcel} */
-    scriptp->convertp = (char *) calloc(1, marpaESLIFScriptp->sourcel + 1); /* With a hiden NUL byte */
-    if (scriptp->convertp == NULL) {
-      MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
-      goto err;
-    }
-    memcpy(scriptp->convertp, marpaESLIFScriptp->sources, marpaESLIFScriptp->sourcel);
-  } else {
-    /* Source encoding will be guessed if not set */
-    scriptp->stringp = _marpaESLIF_string_newp(marpaESLIFp, marpaESLIFScriptp->encodings, marpaESLIFScriptp->sources, marpaESLIFScriptp->sourcel, 1 /* asciib */);
-    if (scriptp->stringp == NULL) {
-      goto err;
-    }
-
-    /* Here it is guaranteed that scriptp->stringp->encodingasciis is set: either the original, either the guess */
-    scriptp->converts = strdup((marpaESLIFScriptp->converts != NULL) ? marpaESLIFScriptp->converts : scriptp->stringp->encodingasciis);
-    if (scriptp->converts == NULL) {
-      MARPAESLIF_ERRORF(marpaESLIFp, "strdup failure, %s", strerror(errno));
-      goto err;
-    }
-
-    if (strcmp(scriptp->converts, scriptp->stringp->encodingasciis) == 0) {
-      /* Convertion to the same encoding as the origin: no need to reconvert */
-      scriptp->convertp = (char *) calloc(1, marpaESLIFScriptp->sourcel + 1); /* With a hiden NUL byte */
-      if (scriptp->convertp == NULL) {
-        MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
-        goto err;
-      }
-      memcpy(scriptp->convertp, marpaESLIFScriptp->sources, marpaESLIFScriptp->sourcel);
-    } else {
-      scriptp->convertp = _marpaESLIF_charconvb(marpaESLIFp, scriptp->converts, scriptp->stringp->encodingasciis, marpaESLIFScriptp->sources, marpaESLIFScriptp->sourcel, &(scriptp->convertl), NULL /* fromEncodingsp */, NULL /* tconvpp */, 1 /* eofb */, NULL /* byteleftsp */, NULL /* byteleftlp */, NULL /* byteleftalloclp */);
-      if (scriptp->convertp == NULL) {
-        goto err;
-      }
-    }
-  }
-
-  /* Put key in the key stack */
-  types = strdup(scriptp->types);
-  if (types == NULL) {
-    MARPAESLIF_ERRORF(marpaESLIFGrammarp->marpaESLIFp, "strdup failure, %s", strerror(errno));
-    goto err;
-  }
-
-  /* Put in the script hash */
-  GENERICHASH_FIND(marpaESLIFGrammarp->scriptHashp, marpaESLIFp, PTR, types, PTR, &scriptStackp, findb);
-  if (! findb) {
-    GENERICSTACK_NEW(scriptStackp);
-    if (GENERICSTACK_ERROR(scriptStackp)) {
-      MARPAESLIF_ERRORF(marpaESLIFp, "scriptStackp initialization failure, %s", strerror(errno));
-      goto err;
-    }
-    GENERICHASH_SET(marpaESLIFGrammarp->scriptHashp, marpaESLIFp, PTR, types, PTR, scriptStackp);
-    if (GENERICHASH_ERROR(marpaESLIFGrammarp->scriptHashp)) {
-      MARPAESLIF_ERRORF(marpaESLIFp, "scriptHashp set failure, %s", strerror(errno));
-      GENERICSTACK_FREE(scriptStackp);
-      goto err;
-    }
-    /* and in the stack of keys - because GENERICHASH lacks a facility to iterate on keys... */
-    GENERICSTACK_PUSH_PTR(marpaESLIFGrammarp->scriptTypeStackp, types);
-    if (GENERICSTACK_ERROR(marpaESLIFGrammarp->scriptTypeStackp)) {
-      MARPAESLIF_ERRORF(marpaESLIFp, "scriptTypeStackp push failure, %s", strerror(errno));
-      goto err;
-    }
-  }
-  GENERICSTACK_PUSH_PTR(scriptStackp, scriptp);
-  if (GENERICSTACK_ERROR(scriptStackp)) {
-    MARPAESLIF_ERRORF(marpaESLIFp, "scriptStackp push failure, %s", strerror(errno));
-    goto err;
-  }
-  scriptp = NULL; /* scriptp is now in the stack of scripts */
-
-  /* We have to redo the script show, because it can vary, even after grammar creation */
-  if (marpaESLIFGrammarp->scriptshows != NULL) {
-    free(marpaESLIFGrammarp->scriptshows);
-    marpaESLIFGrammarp->scriptshows = NULL;
-  }
-
-  _marpaESLIF_grammar_createscriptshowv(marpaESLIFGrammarp, NULL /* scriptshows */, &scriptshowl);
-  marpaESLIFGrammarp->scriptshows = (char *) malloc(scriptshowl);
-  if (marpaESLIFGrammarp->scriptshows == NULL) {
-    MARPAESLIF_ERRORF(marpaESLIFGrammarp->marpaESLIFp, "malloc failure, %s", strerror(errno));
-    goto err;
-  }
-  /* It is guaranteed that scriptshowl is >= 1 - c.f. _marpaESLIF_grammar_createshowv() */
-  marpaESLIFGrammarp->scriptshows[0] = '\0';
-  _marpaESLIF_grammar_createscriptshowv(marpaESLIFGrammarp, marpaESLIFGrammarp->scriptshows, NULL);
-
-  rcb = 1;
-  goto done;
-
- err:
-  _marpaESLIF_script_freev(scriptp);
-  rcb = 0;
-
- done:
-  if (types == NULL) {
-    free(types);
-  }
-  return rcb;
-}
-
-/*****************************************************************************/
-static inline void _marpaESLIF_script_freev(marpaESLIF_script_t *marpaESLIF_scriptp)
-/*****************************************************************************/
-{
-  if (marpaESLIF_scriptp != NULL) {
-    if (marpaESLIF_scriptp->types != NULL) {
-      free(marpaESLIF_scriptp->types);
-    }
-    if (marpaESLIF_scriptp->converts != NULL) {
-      free(marpaESLIF_scriptp->converts);
-    }
-    _marpaESLIF_string_freev(marpaESLIF_scriptp->stringp);
-    if (marpaESLIF_scriptp->convertp != NULL) {
-      free(marpaESLIF_scriptp->convertp);
-    }
-    free(marpaESLIF_scriptp);
-  }
-}
-
 
 #include "bootstrap_actions.c"
 #include "lua_embed.c"

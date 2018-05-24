@@ -185,7 +185,7 @@ const static char *selfs = "\n"
   "                                   | '\\\\' /x\\{[a-fA-F0-9]{2}\\}/\n"
   "                                   | '\\\\' /u\\{[a-fA-F0-9]{4}\\}/\n"
   "                                   | '\\\\' /U\\{[a-fA-F0-9]{8}\\}/\n"
-  "<external script statement>      ::= '<lua>' <discard off> <external script source> '</lua>' <discard on>\n"
+  "<external script statement>      ::= '<luascript>' <discard off> <external script source> '</luascript>' <discard on>\n"
   "<external script source>         ::= [\\s\\S]*\n"
   "\n"
   "  <jdd> ::= <op declare any grammar>@=1\n"
@@ -262,16 +262,17 @@ const static char *selfs = "\n"
   " <REG1>                            ~ /[a-z]/u\n"
   " <REG2>                            ~ /[a-z]+/u\n"
   " <REG3>                            ~ /(*LIMIT_MATCH=15)[a-z]+/\n"
-  " <SCRIPT ACTION>                 ::= 'script' action => perl::action_name\n"
-  "<lua>\n"
-  "  use strict;\n"
-  "  my $var = 1;\n"
-  "</lua>\n"
-  "<lua>\n"
+  " <SCRIPT ACTION>                 ::= 'script' action => bindedlanguage::action_name\n"
+  "<luascript>\n"
   "  function add ( x, y )\n"
   "    return x + y\n"
   "  end\n"
-  "</lua>\n"
+  "</luascript>\n"
+  "<luascript>\n"
+  "  function add2 ( x, y )\n"
+  "    return x + y\n"
+  "  end\n"
+  "</luascript>\n"
   "\n";
 
 int main() {
@@ -284,14 +285,13 @@ int main() {
   int                          exiti;
   int                          ngrammari;
   char                        *grammarshows;
-  char                        *scriptshows;
   int                          leveli;
   genericLogger_t             *genericLoggerp;
   marpaESLIFTester_context_t   marpaESLIFTester_context;
   marpaESLIFRecognizerOption_t marpaESLIFRecognizerOption;
   marpaESLIFGrammarDefaults_t  marpaESLIFGrammarDefaults;
   marpaESLIFAction_t           defaultFreeAction;
-  marpaESLIFScript_t           marpaESLIFScript;
+  char                        *grammarscripts;
 
   genericLoggerp = GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_DEBUG);
 
@@ -336,11 +336,15 @@ int main() {
       }
     }
   }
-  if (marpaESLIFGrammar_grammarshowscriptb(marpaESLIF_grammarp(marpaESLIFp), &scriptshows)) {
-    GENERICLOGGER_INFO (marpaESLIFOption.genericLoggerp, "-------------------------");
-    GENERICLOGGER_INFO (marpaESLIFOption.genericLoggerp, "ESLIF scripts:");
-    GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "-------------------------\n%s", scriptshows);
+
+  /* Grammar script */
+  if (! marpaESLIFGrammar_grammarshowscripb(marpaESLIF_grammarp(marpaESLIFp), &grammarscripts)) {
+    GENERICLOGGER_ERRORF(marpaESLIFOption.genericLoggerp, "marpaESLIFGrammar_grammarshowscripb failure, %s", strerror(errno));
+    goto err;
   }
+  GENERICLOGGER_INFO (marpaESLIFOption.genericLoggerp, "-------------------------");
+  GENERICLOGGER_INFO (marpaESLIFOption.genericLoggerp, "ESLIF grammar script:");
+  GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "-------------------------\n%s", grammarscripts);
 
   marpaESLIFGrammarOption.bytep               = (void *) selfs;
   marpaESLIFGrammarOption.bytel               = strlen(selfs);
@@ -350,27 +354,6 @@ int main() {
   marpaESLIFGrammarp = marpaESLIFGrammar_newp(marpaESLIFp, &marpaESLIFGrammarOption);
 
   if (marpaESLIFGrammarp == NULL) {
-    goto err;
-  }
-
-  /* Add more script - this is possible because formally external scripts are not part of the computed grammar */
-  marpaESLIFScript.types     = "perl5";
-  marpaESLIFScript.converts  = "UTF-16";
-  marpaESLIFScript.encodings = NULL;
-  marpaESLIFScript.sources   = "\nmy $morePerl\n";
-  marpaESLIFScript.sourcel   = strlen(marpaESLIFScript.sources);
-  marpaESLIFScript.binaryb   = 0;
-  if (! marpaESLIFGrammar_script_addb(marpaESLIFGrammarp, &marpaESLIFScript)) {
-    goto err;
-  }
-  
-  marpaESLIFScript.types     = "perl5";
-  marpaESLIFScript.converts  = NULL;
-  marpaESLIFScript.encodings = NULL;
-  marpaESLIFScript.sources   = "\x0\x1\x2";
-  marpaESLIFScript.sourcel   = 3;
-  marpaESLIFScript.binaryb   = 1;
-  if (! marpaESLIFGrammar_script_addb(marpaESLIFGrammarp, &marpaESLIFScript)) {
     goto err;
   }
 
@@ -385,11 +368,15 @@ int main() {
       GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "-------------------------\n%s", grammarshows);
     }
   }
-  if (marpaESLIFGrammar_grammarshowscriptb(marpaESLIFGrammarp, &scriptshows)) {
-    GENERICLOGGER_INFO (marpaESLIFOption.genericLoggerp, "-------------------------");
-    GENERICLOGGER_INFO (marpaESLIFOption.genericLoggerp, "TEST grammar scripts:");
-    GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "-------------------------\n%s", scriptshows);
+
+  /* Grammar script */
+  if (! marpaESLIFGrammar_grammarshowscripb(marpaESLIFGrammarp, &grammarscripts)) {
+    GENERICLOGGER_ERRORF(marpaESLIFOption.genericLoggerp, "marpaESLIFGrammar_grammarshowscripb failure, %s", strerror(errno));
+    goto err;
   }
+  GENERICLOGGER_INFO (marpaESLIFOption.genericLoggerp, "-------------------------");
+  GENERICLOGGER_INFO (marpaESLIFOption.genericLoggerp, "ESLIF grammar script:");
+  GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "-------------------------\n%s", grammarscripts);
 
   /* So in theory we must be able to reparse ESLIF using itself -; */
   marpaESLIFTester_context.genericLoggerp = genericLoggerp;

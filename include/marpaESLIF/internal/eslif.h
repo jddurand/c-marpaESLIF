@@ -150,8 +150,8 @@
 #define G1_RULE_STRING_LITERAL_INSIDE_5          "G1_rule_string_literal_inside_5"
 #define G1_RULE_DISCARD_OFF                      "G1_rule_discard_off"
 #define G1_RULE_DISCARD_ON                       "G1_rule_discard_on"
-#define G1_RULE_EXTERNAL_SCRIPT_STATEMENT        "G1_rule_external_script_statement"
-#define G1_RULE_EXTERNAL_SCRIPT_SOURCE           "G1_rule_external_script_source"
+#define G1_RULE_LUASCRIPT_STATEMENT              "G1_rule_luascript_statement"
+#define G1_RULE_LUASCRIPT_SOURCE                 "G1_rule_luascript_source"
 
 #define G1_ACTION_STATEMENTS                       "::undef"
 #define G1_ACTION_STATEMENT_01                     "::undef"
@@ -299,8 +299,8 @@
 #define G1_ACTION_STRING_LITERAL_INSIDE_5          "G1_action_string_literal_inside_5"          /* done */
 #define G1_ACTION_DISCARD_OFF                      "::undef"
 #define G1_ACTION_DISCARD_ON                       "::undef"
-#define G1_ACTION_EXTERNAL_SCRIPT_STATEMENT        "G1_action_external_script_statement"
-#define G1_ACTION_EXTERNAL_SCRIPT_SOURCE           "::concat"
+#define G1_ACTION_LUASCRIPT_STATEMENT              "G1_action_luascript_statement"
+#define G1_ACTION_LUASCRIPT_SOURCE                 "::concat"
 
 typedef struct bootstrap_grammar_terminal {
   int                        idi;                 /* Identifier */
