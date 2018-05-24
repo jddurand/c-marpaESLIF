@@ -7410,6 +7410,11 @@ short marpaESLIFGrammar_parse_by_levelb(marpaESLIFGrammar_t *marpaESLIFGrammarp,
     goto err;
   }
 
+  {
+    lua_State* L = _marpaESLIF_lua_newp(marpaESLIFGrammarp->marpaESLIFp);
+    _marpaESLIF_lua_freev(marpaESLIFGrammarp->marpaESLIFp, L);
+  }
+
   rcb = 1;
   goto done;
 
