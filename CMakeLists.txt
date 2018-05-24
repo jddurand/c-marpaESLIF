@@ -7,13 +7,6 @@ MYPACKAGESTART (lua 5 3 4)
 OPTION (LUA_32BITS "Use 32-bit integers and 32-bit floats" ON)
 OPTION (LUA_USE_C89 "Avoid the use of few C99 feature" ON)
 
-IF (LUA_32BITS)
-  ADD_DEFINITIONS(-DLUA_32BITS)
-ENDIF ()
-IF (LUA_USE_C89)
-  ADD_DEFINITIONS(-DLUA_USE_C89)
-ENDIF ()
-
 ###########
 # Library #
 ###########
@@ -86,6 +79,23 @@ IF (   (NOT ("${CMAKE_DL_LIBS}" STREQUAL ""))
     TARGET_LINK_LIBRARIES(${_target} PUBLIC ${CMAKE_DL_LIBS} ${CMAKE_MATH_LIBS})
   ENDFOREACH ()
 ENDIF ()
+#
+# Those definitions have to propagate to those using the library
+#
+SET (LUA_PUBLIC_CFLAGS)
+IF (LUA_32BITS)
+  LIST (APPEND LUA_PUBLIC_CFLAGS "-DLUA_32BITS")
+ENDIF ()
+IF (LUA_USE_C89)
+  LIST (APPEND LUA_PUBLIC_CFLAGS "-DLUA_USE_C89")
+ENDIF ()
+
+LIST(LENGTH LUA_PUBLIC_CFLAGS LUA_PUBLIC_CFLAGS_LENGTH)
+IF (LUA_PUBLIC_CFLAGS_LENGTH GREATER 0)
+  FOREACH (_target lua lua_static)
+    TARGET_COMPILE_DEFINITIONS(${_target} PUBLIC ${LUA_PUBLIC_CFLAGS})
+  ENDFOREACH ()
+ENDIF ()
 
 ###############
 # Executables #
@@ -95,12 +105,6 @@ MYPACKAGEADDEXECUTABLESTOTESTS(luaExe)
 FOREACH (_target luaExe luaExe_static)
   IF (${_target} STREQUAL "luaExe")
     SET_TARGET_PROPERTIES(${_target} PROPERTIES OUTPUT_NAME lua)
-    IF (WIN32 AND NOT CYGWIN)
-      #
-      # DLL import
-      #
-      TARGET_COMPILE_DEFINITIONS(${_target} PRIVATE -DLUA_BUILD_AS_DLL)
-    ENDIF ()
   ELSE ()
     SET_TARGET_PROPERTIES(${_target} PROPERTIES OUTPUT_NAME lua_static)
   ENDIF ()
@@ -111,12 +115,6 @@ MYPACKAGEADDEXECUTABLESTOTESTS(luaCompilerExe)
 FOREACH (_target luaCompilerExe luaCompilerExe_static)
   IF (${_target} STREQUAL "luaCompilerExe")
     SET_TARGET_PROPERTIES(${_target} PROPERTIES OUTPUT_NAME luac)
-    IF (WIN32 AND NOT CYGWIN)
-      #
-      # DLL import
-      #
-      TARGET_COMPILE_DEFINITIONS(${_target} PRIVATE -DLUA_BUILD_AS_DLL)
-    ENDIF ()
   ELSE ()
     SET_TARGET_PROPERTIES(${_target} PROPERTIES OUTPUT_NAME luac_static)
   ENDIF ()
