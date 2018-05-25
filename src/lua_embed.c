@@ -38,10 +38,90 @@ static int l_marpaESLIF_versions(lua_State *L) {
 }
 
 static const struct luaL_Reg marpaESLIF_lualib [] = {
-  {"marpaESLIF_versions", l_marpaESLIF_versions},
+  {"versions", l_marpaESLIF_versions},
   {NULL, NULL}  /* sentinel */
 };
 
+#define LUAL_CHECKVERSION(L) do {                               \
+    if (luaunpanicL_checkversion(L)) {                          \
+      LOG_PANIC_STRING(marpaESLIFp, L, luaL_checkversion);      \
+      errno = ENOSYS;                                           \
+      goto err;                                                 \
+    }                                                           \
+  } while (0)
+
+#define LUAL_OPENLIBS(L) do {                                   \
+    if (luaunpanicL_openlibs(L)) {                              \
+      LOG_PANIC_STRING(marpaESLIFp, L, luaL_openlibs);          \
+      errno = ENOSYS;                                           \
+      goto err;                                                 \
+    }                                                           \
+  } while (0)
+
+#define LUAL_NEWMETATABLE(L, tablename) do {                            \
+    if (luaunpanicL_newmetatable(NULL, L, tablename)) {                 \
+      LOG_PANIC_STRING(marpaESLIFp, L, luaL_newmetatable);              \
+      errno = ENOSYS;                                                   \
+      goto err;                                                         \
+    }                                                                   \
+  } while (0)
+
+#define LUA_PUSHSTRING(L, string) do {                                  \
+    if (luaunpanic_pushstring(NULL, L, string)) {                       \
+      LOG_PANIC_STRING(marpaESLIFp, L, lua_pushstring);                 \
+      errno = ENOSYS;                                                   \
+      goto err;                                                         \
+    }                                                                   \
+  } while (0)
+
+#define LUA_PUSHVALUE(L, index) do {                                    \
+    if (luaunpanic_pushvalue(L, index)) {                               \
+      LOG_PANIC_STRING(marpaESLIFp, L, lua_pushvalue);                  \
+      errno = ENOSYS;                                                   \
+      goto err;                                                         \
+    }                                                                   \
+  } while (0)
+
+#define LUA_SETTABLE(L, index) do {                                     \
+    if (luaunpanic_settable(L, index)) {                                \
+      LOG_PANIC_STRING(marpaESLIFp, L, lua_settable);                   \
+      errno = ENOSYS;                                                   \
+      goto err;                                                         \
+    }                                                                   \
+  } while (0)
+
+#define LUAL_SETFUNCS(L, l, nup) do {                                   \
+    if (luaunpanicL_setfuncs(L, l, nup)) {                              \
+      LOG_PANIC_STRING(marpaESLIFp, L, luaL_setfuncs);                  \
+      errno = ENOSYS;                                                   \
+      goto err;                                                         \
+    }                                                                   \
+  } while (0)
+
+#define LUA_SETGLOBAL(L, name) do {                                     \
+    if (luaunpanic_setglobal(L, name)) {                                \
+      LOG_PANIC_STRING(marpaESLIFp, L, luaL_setfuncs);                  \
+      errno = ENOSYS;                                                   \
+      goto err;                                                         \
+    }                                                                   \
+  } while (0)
+    
+#define LUA_POP(L, numberofelements) do {                               \
+    if (luaunpanic_pop(L, numberofelements)) {                          \
+      LOG_PANIC_STRING(marpaESLIFp, L, lua_pop);                        \
+      errno = ENOSYS;                                                   \
+      goto err;                                                         \
+    }                                                                   \
+  } while (0)
+
+#define LUA_PUSHCFUNCTION(L, f) do {                                    \
+    if (luaunpanic_pushcfunction(L, f)) {                               \
+      LOG_PANIC_STRING(marpaESLIFp, L, lua_pushcfunction);              \
+      errno = ENOSYS;                                                   \
+      goto err;                                                         \
+    }                                                                   \
+  } while (0);
+    
 /*****************************************************************************/
 static lua_State *_marpaESLIF_lua_newp(marpaESLIF_t *marpaESLIFp)
 /*****************************************************************************/
@@ -60,35 +140,18 @@ static lua_State *_marpaESLIF_lua_newp(marpaESLIF_t *marpaESLIFp)
   }
 
   /* Register our functions */
-  if (luaunpanicL_checkversion_(L, LUA_VERSION_NUM, LUAL_NUMSIZES)) {
-    LOG_PANIC_STRING(marpaESLIFp, L, luaunpanicL_checkversion);
-    errno = ENOSYS;
-    goto err;
-  }
-  if (luaunpanicL_checkversion(L)) {
-    LOG_PANIC_STRING(marpaESLIFp, L, luaunpanicL_checkversion);
-    errno = ENOSYS;
-    goto err;
-  }
-  if (luaunpanicL_newlibtable(L, marpaESLIF_lualib)) {
-    LOG_PANIC_STRING(marpaESLIFp, L, luaunpanicL_newlibtable);
-    errno = ENOSYS;
-    goto err;
-  }
-  if (luaunpanicL_setfuncs(L, marpaESLIF_lualib, 0)) {
-    LOG_PANIC_STRING(marpaESLIFp, L, luaunpanicL_setfuncs);
-    errno = ENOSYS;
-    goto err;
-  }
+  LUAL_OPENLIBS(L);
+  LUA_PUSHCFUNCTION(L, l_marpaESLIF_versions);
+  LUA_SETGLOBAL(L, "marpaESLIF_versions");
 
-#ifdef MARPAESLIF_LUA_TEST
+#ifndef MARPAESLIF_LUA_TEST
   {
     int rc;
-    if (luaunpanicL_dostring(&rc, L, "print(mysin(2))")) {
-      LOG_PANIC_STRING(marpaESLIFp, L, luaunpanicL_dostring);
+    if (luaunpanicL_dostring(&rc, L, "print(\"marpaESLIF version is \" .. marpaESLIF_versions(1, 2))")) {
+      LOG_PANIC_STRING(marpaESLIFp, L, luaL_dostring);
     }
     if (rc) {
-      LOG_ERROR_STRING(marpaESLIFp, L, luaunpanicL_dostring);
+      LOG_ERROR_STRING(marpaESLIFp, L, luaL_dostring);
     }
   }
 #endif
@@ -98,7 +161,7 @@ static lua_State *_marpaESLIF_lua_newp(marpaESLIF_t *marpaESLIFp)
  err:
   if (L != NULL) {
     if (luaunpanic_close(L)) {
-      LOG_PANIC_STRING(marpaESLIFp, L, luaunpanic_close);
+      LOG_PANIC_STRING(marpaESLIFp, L, lua_close);
     }
     L = NULL;
   }
