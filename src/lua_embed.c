@@ -8,7 +8,6 @@
 #define FILENAMES "lua_embed.c" /* For logging */
 
 static int lua_marpaESLIF_versions(lua_State *L);
-static int luaL_requiref_marpaESLIF(lua_State *L);
 
 #define LOG_PANIC_STRING(marpaESLIFp, L, f) do {                        \
     char *panicstring;							\
@@ -49,26 +48,19 @@ static int luaL_requiref_marpaESLIF(lua_State *L);
     }                                                           \
   } while (0)
 
-#define LUA_POP(L, numberofelements) do {                               \
-    if (luaunpanic_pop(L, numberofelements)) {                          \
-      LOG_PANIC_STRING(marpaESLIFp, L, lua_pop);                        \
-      errno = ENOSYS;                                                   \
-      goto err;                                                         \
-    }                                                                   \
-  } while (0)
-
-#define LUAL_REQUIREF(L, modname, openf, glb) do {                      \
-    if (luaunpanicL_requiref(L, modname, openf, glb)) {                 \
-      LOG_PANIC_STRING(marpaESLIFp, L, luaL_requiref);                  \
-      errno = ENOSYS;                                                   \
-      goto err;                                                         \
-    }                                                                   \
+#define LUA_REGISTER(L, n ,f) do {                              \
+    if (luaunpaniL_register(L, n,n f)) {                        \
+      LOG_PANIC_STRING(marpaESLIFp, L, lua_register);           \
+      errno = ENOSYS;                                           \
+      goto err;                                                 \
+    }                                                           \
   } while (0)
 
 
 /*****************************************************************************/
 static int lua_marpaESLIF_versions(lua_State *L)
 /*****************************************************************************/
+/* This function is executed inside lua, so no need of luaunpanic */
 {
   const char *versions = marpaESLIF_versions();
 
@@ -80,10 +72,6 @@ static int lua_marpaESLIF_versions(lua_State *L)
 static int luaL_requiref_marpaESLIF(lua_State *L)
 /*****************************************************************************/
 {
-  static const luaL_Reg lua_marpaESLIF_lib[] = {
-    { "versions", &lua_marpaESLIF_versions },
-    { NULL, NULL }
-  };
 	
   /* stack: 0 | "marpaESLIF" | -1 */
   luaL_newlib(L, lua_marpaESLIF_lib);
@@ -103,8 +91,12 @@ static int luaL_requiref_marpaESLIF(lua_State *L)
 static lua_State *_marpaESLIF_lua_newp(marpaESLIF_t *marpaESLIFp)
 /*****************************************************************************/
 {
-  lua_State *L = NULL;
-  int        i;
+  lua_State             *L = NULL;
+  int                    i;
+  static const luaL_Reg  lua_lib[] = {
+    { "marpaESLIF_versions", &lua_marpaESLIF_versions },
+  };
+
 
   /* Create Lua state */
   if (luaunpanicL_newstate(&L)) {
@@ -119,25 +111,22 @@ static lua_State *_marpaESLIF_lua_newp(marpaESLIF_t *marpaESLIFp)
   }
 
   /* Open all available libraries */
-  /* stack: none                  */
   LUAL_OPENLIBS(L);
 
   /* Check Lua version */
-  /* stack: none                  */
   LUAL_CHECKVERSION(L);
 
-  /* Register marpaESLIF functions */
-  /* stack: none                  */
-  LUAL_REQUIREF(L, "marpaESLIF", &luaL_requiref_marpaESLIF, 1);
-
-  /* stack: 0 | "marpaESLIF" | -1 */
-  LUA_POP(L, 1);
+  /* Register all functions into the main namespace - we explicitely do not export */
+  /* constructor and destructors. */
+  for (i = 0; i < sizeof(lua_lib) / sizeof(lua_lib[0]); i++) {
+    LUA_REGISTER(L, lua_lib[i].name, lua_lib[i].func);
+  }
 
 #ifndef MARPAESLIF_LUA_TEST
   {
     int rc;
     /* stack: none                  */
-    if (luaunpanicL_dostring(&rc, L, "print(\"marpaESLIF version is \" .. marpaESLIF.versions())")) {
+    if (luaunpanicL_dostring(&rc, L, "print(\"marpaESLIF version is \" .. marpaESLIF_versions())")) {
       LOG_PANIC_STRING(marpaESLIFp, L, luaL_dostring);
     }
     if (rc) {
