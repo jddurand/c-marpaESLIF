@@ -56,21 +56,22 @@ MYPACKAGETESTEXECUTABLE(exceptionTester4           test/exceptionTester4.c)
 ################
 # Dependencies #
 ################
+SET (MYPACKAGE_DEBUG TRUE)
 MYPACKAGEDEPENDENCY (genericLogger "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/genericLogger" LIBS)
 MYPACKAGEDEPENDENCY (genericStack  "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/genericStack"  LIBS)
 MYPACKAGEDEPENDENCY (genericHash   "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/genericHash"   LIBS)
 MYPACKAGEDEPENDENCY (marpaWrapper  "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/marpaWrapper"  LIBS)
 MYPACKAGEDEPENDENCY (tconv         "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/tconv"         LIBS)
-MYPACKAGEDEPENDENCY (lua534        "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/lua534"        LIBS LOCAL)
+MYPACKAGEDEPENDENCY (lua           "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/lua534"        LIBS STATIC)
 #
 # pcre2 is built as an external project: we have to explicitly give the include path.
 # In addition, using pcre2 requires setting PCRE2_CODE_UNIT_WIDTH.
 #
 FOREACH (_target marpaESLIF marpaESLIF_static)
-  ADD_DEPENDENCIES           (${_target} pcre2 lua_static)
+  ADD_DEPENDENCIES           (${_target} pcre2)
   TARGET_INCLUDE_DIRECTORIES (${_target} PRIVATE ${PCRE2_INCLUDE_DIRS})
-  TARGET_COMPILE_DEFINITIONS (${_target} PRIVATE -DMARPAESLIF_BUFSIZ=${MARPAESLIF_BUFSIZ} -DPCRE2_CODE_UNIT_WIDTH=8 -Dlua_STATIC)
-  TARGET_LINK_LIBRARIES      (${_target} PRIVATE ${PCRE2_LIBRARIES} lua_static)
+  TARGET_COMPILE_DEFINITIONS (${_target} PRIVATE -DMARPAESLIF_BUFSIZ=${MARPAESLIF_BUFSIZ} -DPCRE2_CODE_UNIT_WIDTH=8)
+  TARGET_LINK_LIBRARIES      (${_target} PRIVATE ${PCRE2_LIBRARIES})
 ENDFOREACH ()
 
 #########
