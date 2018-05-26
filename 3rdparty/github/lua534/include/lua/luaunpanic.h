@@ -299,7 +299,7 @@ extern "C" {
 #define luaunpanic_tointeger(rcp, L,i)   luaunpanic_tointegerx(rcp, L,(i),NULL)
 #define luaunpanic_pop(L,n)              luaunpanic_settop(L, -(n)-1)
 #define luaunpanic_newtable(L)           luaunpanic_createtable(L, 0, 0)
-#define luaunpanic_register(L,n,f)       (luaunpanic_pushcfunction(L, (f)), luaunpanic_setglobal(L, (n)))
+#define luaunpanic_register(L,n,f)       (luaunpanic_pushcfunction(L, (f)) || luaunpanic_setglobal(L, (n)))
 #define luaunpanic_pushcfunction(L,f)    luaunpanic_pushcclosure(L, (f), 0)
 #define luaunpanic_pushliteral(rcp, L, s) luaunpanic_pushstring(rcp, L, "" s)
 #define luaunpanic_pushglobaltable(L)    luaunpanic_rawgeti(NULL, L, LUA_REGISTRYINDEX, LUA_RIDX_GLOBALS)
