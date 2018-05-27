@@ -1691,6 +1691,7 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
       malloc are explicitely checked before being writen.
       =================================================================================
 
+  10. If there is some lua code, compile it and remember the bytecode
   */
 
   /*
@@ -2472,6 +2473,14 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
         grammarp->symbolip[symboli] = symbolp->idi;
       }
     }
+  }
+
+  /*
+  10. If there is some lua code, compile it and remember the bytecode
+  */
+  if ((marpaESLIFGrammarp->luabytep != NULL) && (marpaESLIFGrammarp->luabytel)) {
+    lua_State* L = _marpaESLIF_lua_newp(marpaESLIFGrammarp);
+    _marpaESLIF_lua_freev(marpaESLIFGrammarp, L);
   }
 
   rcb = 1;
@@ -3686,7 +3695,7 @@ short marpaESLIF_extend_builtin_actionb(marpaESLIF_t *marpaESLIFp, char **action
 
   /* Extension is done in three steps:
    * - create a pristine marpaESLIF_t (i.e. without validation)
-   * - inject this pristine's marpaESLIF's marpaESLIfGrammar into normal marpaESLIfGrammar_newp
+   * - inject this pristine's marpaESLIF's marpaESLIFGrammar into normal marpaESLIFGrammar_newp
    * - validate
    */
   marpaESLIFTmpp = _marpaESLIF_newp(&(marpaESLIFp->marpaESLIFOption), 0 /* validateb */);
@@ -7408,11 +7417,6 @@ short marpaESLIFGrammar_parse_by_levelb(marpaESLIFGrammar_t *marpaESLIFGrammarp,
                                   NULL /* numberOfStartCompletionsip */,
                                   1 /* grammarIsOnStackb */)) {
     goto err;
-  }
-
-  {
-    lua_State* L = _marpaESLIF_lua_newp(marpaESLIFGrammarp->marpaESLIFp);
-    _marpaESLIF_lua_freev(marpaESLIFGrammarp->marpaESLIFp, L);
   }
 
   rcb = 1;
