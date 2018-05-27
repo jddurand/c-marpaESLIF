@@ -137,7 +137,8 @@ typedef struct marpaESLIFRecognizerProgress {
 
 typedef enum marpaESLIFActionType {
   MARPAESLIF_ACTION_TYPE_NAME = 0,
-  MARPAESLIF_ACTION_TYPE_STRING
+  MARPAESLIF_ACTION_TYPE_STRING,
+  MARPAESLIF_ACTION_TYPE_LUA
 } marpaESLIFActionType_t;
 
 typedef struct marpaESLIFAction {
@@ -145,6 +146,7 @@ typedef struct marpaESLIFAction {
   union {
     char               *names;
     marpaESLIFString_t *stringp;
+    char               *luas;
   } u;
 } marpaESLIFAction_t;
 

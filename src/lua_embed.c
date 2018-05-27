@@ -12,9 +12,6 @@
 #undef  FILENAMES
 #define FILENAMES "lua_embed.c" /* For logging */
 
-static int lua_marpaESLIF_versions(lua_State *L);
-static int lua_marpaESLIF_grammarp(lua_State *L);
-static int lua_marpaESLIFGrammar_eslifp(lua_State *L);
 static int lua_marpaESLIFValue_stack_set_undef(lua_State *L);
 static int lua_marpaESLIFValue_stack_set_char(lua_State *L);
 static int lua_marpaESLIFValue_stack_set_short(lua_State *L);
@@ -119,51 +116,6 @@ static int lua_marpaESLIFValue_stack_set_array(lua_State *L);
     }                                                           \
   } while (0)
 
-
-/*****************************************************************************/
-static int lua_marpaESLIF_versions(lua_State *L)
-/*****************************************************************************/
-/* This function is executed inside lua, so no need of luaunpanic */
-{
-  const char *versions = marpaESLIF_versions();
-
-  lua_pushlstring(L, versions, strlen(versions));
-  return 1;
-}
-
-/*****************************************************************************/
-static int lua_marpaESLIF_grammarp(lua_State *L)
-/*****************************************************************************/
-/* This function is executed inside lua, so no need of luaunpanic */
-{
-  marpaESLIF_t        *marpaESLIFp;
-  marpaESLIFGrammar_t *marpaESLIFGrammarp;
-
-  luaL_checktype(L, 1, LUA_TLIGHTUSERDATA);
-
-  marpaESLIFp        = (marpaESLIF_t *) lua_touserdata(L, 1);
-  marpaESLIFGrammarp = marpaESLIF_grammarp(marpaESLIFp);
-
-  lua_pushlightuserdata(L, (void *) marpaESLIFGrammarp);
-  return 1;
-}
-
-/*****************************************************************************/
-static int lua_marpaESLIFGrammar_eslifp(lua_State *L)
-/*****************************************************************************/
-/* This function is executed inside lua, so no need of luaunpanic */
-{
-  marpaESLIFGrammar_t *marpaESLIFGrammarp;
-  marpaESLIF_t        *marpaESLIFp;
-
-  luaL_checktype(L, 1, LUA_TLIGHTUSERDATA);
-
-  marpaESLIFGrammarp = (marpaESLIFGrammar_t *) lua_touserdata(L, 1);
-  marpaESLIFp        = marpaESLIFGrammar_eslifp(marpaESLIFGrammarp);
-
-  lua_pushlightuserdata(L, (void *) marpaESLIFp);
-  return 1;
-}
 
 /*****************************************************************************/
 static int lua_marpaESLIFValue_stack_set_undef(lua_State *L)
@@ -521,9 +473,6 @@ static lua_State *_marpaESLIF_lua_newp(marpaESLIFGrammar_t *marpaESLIFGrammarp)
   lua_State             *L = NULL;
   int                    i;
   static const luaL_Reg  lua_lib[] = {
-    { "marpaESLIF_versions",              lua_marpaESLIF_versions },
-    { "marpaESLIF_grammarp",              lua_marpaESLIF_grammarp },
-    { "marpaESLIFGrammar_eslifp",         lua_marpaESLIFGrammar_eslifp },
     { "marpaESLIFValue_stack_set_undef",  lua_marpaESLIFValue_stack_set_undef },
     { "marpaESLIFValue_stack_set_char",   lua_marpaESLIFValue_stack_set_char },
     { "marpaESLIFValue_stack_set_short",  lua_marpaESLIFValue_stack_set_short },
@@ -553,20 +502,18 @@ static lua_State *_marpaESLIF_lua_newp(marpaESLIFGrammar_t *marpaESLIFGrammarp)
   /* Check Lua version */
   LUAL_CHECKVERSION(marpaESLIFGrammarp, L);
 
-  /* Register all functions into the main namespace - we explicitely do not export */
-  /* constructor and destructors. */
+  /* Register all stack functions into the main namespace */
   for (i = 0; i < sizeof(lua_lib) / sizeof(lua_lib[0]); i++) {
     LUA_REGISTER(marpaESLIFGrammarp, L, lua_lib[i].name, lua_lib[i].func);
   }
 
-  /* Inject the "global" variable marpaESLIF.marpaESLIFGrammarp */
+  /* Inject some globals */
+  /*
   LUA_NEWTABLE(marpaESLIFGrammarp, L);
   LUA_PUSHSTRING(marpaESLIFGrammarp, NULL, L, "marpaESLIFGrammarp");
   LUA_PUSHLIGHTUSERDATA(marpaESLIFGrammarp, L, marpaESLIFGrammarp);
   LUA_RAWSET(marpaESLIFGrammarp, L, -3);
   LUA_SETGLOBAL(marpaESLIFGrammarp, L, "marpaESLIF");
-
-  /* Inject the "global" variables marpaESLIFValueType.[UNDEF, CHAR, etc...] */
   LUA_NEWTABLE(marpaESLIFGrammarp, L);
   LUA_PUSHSTRING(marpaESLIFGrammarp, NULL, L, "UNDEF");
   LUA_PUSHINTEGER(marpaESLIFGrammarp, L, MARPAESLIF_VALUE_TYPE_UNDEF);
@@ -593,11 +540,12 @@ static lua_State *_marpaESLIF_lua_newp(marpaESLIFGrammar_t *marpaESLIFGrammarp)
   LUA_PUSHINTEGER(marpaESLIFGrammarp, L, MARPAESLIF_VALUE_TYPE_ARRAY);
   LUA_RAWSET(marpaESLIFGrammarp, L, -3);
   LUA_SETGLOBAL(marpaESLIFGrammarp, L, "marpaESLIFValueType");
+  */
 
+  /*
 #ifndef MARPAESLIF_LUA_NTEST
   {
     int rc;
-    /* stack: none                  */
     if (luaunpanicL_dostring(&rc, L,
                              "print(\"marpaESLIF version returns \" .. marpaESLIF_versions())\n"
                              "print(\"marpaESLIFGrammar_eslifp returns \" .. tostring(marpaESLIFGrammar_eslifp(marpaESLIF.marpaESLIFGrammarp)))"
@@ -610,6 +558,7 @@ static lua_State *_marpaESLIF_lua_newp(marpaESLIFGrammar_t *marpaESLIFGrammarp)
     }
   }
 #endif
+  */
 
   goto done;
 

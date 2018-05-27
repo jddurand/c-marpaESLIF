@@ -14230,6 +14230,12 @@ static inline short _marpaESLIF_action_validb(marpaESLIF_t *marpaESLIFp, marpaES
       goto err;    
     }
     break;
+  case MARPAESLIF_ACTION_TYPE_LUA:
+    if (actionp->u.luas == NULL) {
+      MARPAESLIF_ERROR(marpaESLIFp, "actionp->type is MARPAESLIF_ACTION_TYPE_LUA but actionp->u.luas is NULL");
+      goto err;    
+    }
+    break;
   default:
     MARPAESLIF_ERRORF(marpaESLIFp, "Invalid actionp->type %d", actionp->type);
     goto err;    
@@ -14285,13 +14291,20 @@ static inline marpaESLIF_action_t *_marpaESLIF_action_clonep(marpaESLIF_t *marpa
   case MARPAESLIF_ACTION_TYPE_NAME:
     dup->u.names = strdup(actionp->u.names);
     if (dup->u.names == NULL) {
-      MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
+      MARPAESLIF_ERRORF(marpaESLIFp, "strdup failure, %s", strerror(errno));
       goto err;
     }
     break;
   case MARPAESLIF_ACTION_TYPE_STRING:
     dup->u.stringp = _marpaESLIF_string_clonep(marpaESLIFp, actionp->u.stringp);
     if (dup->u.stringp == NULL) {
+      goto err;
+    }
+    break;
+  case MARPAESLIF_ACTION_TYPE_LUA:
+    dup->u.luas = strdup(actionp->u.luas);
+    if (dup->u.luas == NULL) {
+      MARPAESLIF_ERRORF(marpaESLIFp, "strdup failure, %s", strerror(errno));
       goto err;
     }
     break;
@@ -14323,6 +14336,11 @@ static inline void _marpaESLIF_action_freev(marpaESLIF_action_t *actionp)
       break;
     case MARPAESLIF_ACTION_TYPE_STRING:
       _marpaESLIF_string_freev(actionp->u.stringp);
+      break;
+    case MARPAESLIF_ACTION_TYPE_LUA:
+      if (actionp->u.luas != NULL) {
+        free(actionp->u.luas);
+      }
       break;
     default:
       break;
@@ -14409,6 +14427,15 @@ static inline short _marpaESLIFValue_ruleActionCallbackb(marpaESLIFValue_t *marp
     case MARPAESLIF_ACTION_TYPE_STRING:
       /* String literal: this is a built-in */
       /* Action name is the ASCII best-effort translation */
+      ruleCallbackp             = _marpaESLIF_rule_literal_transferb;
+      marpaESLIFValuep->actions = actionp->u.stringp->asciis;
+      marpaESLIFValuep->stringp = actionp->u.stringp;
+      break;
+
+    case MARPAESLIF_ACTION_TYPE_LUA:
+      /* Lua action: this is a built-in */
+      MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "MARPAESLIF_ACTION_TYPE_LUA not yet implemented");
+      goto err;
       ruleCallbackp             = _marpaESLIF_rule_literal_transferb;
       marpaESLIFValuep->actions = actionp->u.stringp->asciis;
       marpaESLIFValuep->stringp = actionp->u.stringp;
@@ -14519,6 +14546,15 @@ static inline short _marpaESLIFValue_symbolActionCallbackb(marpaESLIFValue_t *ma
       case MARPAESLIF_ACTION_TYPE_STRING:
         /* String literal: this is a built-in */
         /* Action name is the ASCII best-effort translation */
+        symbolCallbackp           = _marpaESLIF_symbol_literal_transferb;
+        marpaESLIFValuep->actions = actionp->u.stringp->asciis;
+        marpaESLIFValuep->stringp = actionp->u.stringp;
+        break;
+
+      case MARPAESLIF_ACTION_TYPE_LUA:
+        /* Lua action: this is a built-in */
+        MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "MARPAESLIF_ACTION_TYPE_LUA not yet implemented");
+        goto err;
         symbolCallbackp           = _marpaESLIF_symbol_literal_transferb;
         marpaESLIFValuep->actions = actionp->u.stringp->asciis;
         marpaESLIFValuep->stringp = actionp->u.stringp;
