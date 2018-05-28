@@ -4,8 +4,9 @@
 #include <marpaESLIF.h>
 #include <lua/luaunpanic.h>
 
-static lua_State *_marpaESLIF_lua_newp(marpaESLIFGrammar_t *marpaESLIFGrammarp);
-static void       _marpaESLIF_lua_freev(marpaESLIFGrammar_t *marpaESLIFGrammarp, lua_State *L);
+static short _marpaESLIFValue_lua_newb(marpaESLIFValue_t *marpaESLIFValuep);
+static void  _marpaESLIFValue_lua_freev(marpaESLIFValue_t *marpaESLIFValuep);
+static short _marpaESLIFValue_lua_callb(marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 
 #endif /* MARPAESLIF_INTERNAL_LUA_EMBED_H */
 

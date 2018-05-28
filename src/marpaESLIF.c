@@ -6,7 +6,6 @@
 #include "marpaESLIF/internal/structures.h"
 #include "marpaESLIF/internal/logging.h"
 #include "marpaESLIF/internal/bootstrap_actions.h"
-#include "marpaESLIF/internal/lua_embed.h"
 
 #ifndef MARPAESLIF_INITIAL_REPLACEMENT_LENGTH
 #define MARPAESLIF_INITIAL_REPLACEMENT_LENGTH 8096  /* Subjective number */
@@ -361,6 +360,7 @@ static inline char                  *_marpaESLIF_ascii2ids(marpaESLIF_t *marpaES
 static        short                  _marpaESLIF_lexeme_transferb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *bytep, size_t bytel, int resulti);
 static        short                  _marpaESLIF_symbol_literal_transferb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *bytep, size_t bytel, int resulti);
 static        short                  _marpaESLIF_rule_literal_transferb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
+static        short                  _marpaESLIF_rule_lua_actionb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short                  _marpaESLIF_lexeme_concatb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        void                   _marpaESLIF_lexeme_freeCallbackv(void *userDatavp, int contexti, void *p, size_t sizel);
 static        void                   _marpaESLIF_rule_freeCallbackv(void *userDatavp, int contexti, void *p, size_t sizel);
@@ -1686,7 +1686,6 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
       malloc are explicitely checked before being writen.
       =================================================================================
 
-  10. If there is some lua code, compile it and remember the bytecode
   */
 
   /*
@@ -2468,14 +2467,6 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
         grammarp->symbolip[symboli] = symbolp->idi;
       }
     }
-  }
-
-  /*
-  10. If there is some lua code, compile it and remember the bytecode
-  */
-  if ((marpaESLIFGrammarp->luabytep != NULL) && (marpaESLIFGrammarp->luabytel)) {
-    lua_State* L = _marpaESLIF_lua_newp(marpaESLIFGrammarp);
-    _marpaESLIF_lua_freev(marpaESLIFGrammarp, L);
   }
 
   rcb = 1;
@@ -8953,6 +8944,8 @@ void marpaESLIFValue_freev(marpaESLIFValue_t *marpaESLIFValuep)
     MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "return");
     MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC;
 
+    _marpaESLIFValue_lua_freev(marpaESLIFValuep);
+
     free(marpaESLIFValuep);
   }
 }
@@ -12343,6 +12336,27 @@ static short _marpaESLIF_rule_literal_transferb(void *userDatavp, marpaESLIFValu
 }
 
 /*****************************************************************************/
+static short _marpaESLIF_rule_lua_actionb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
+/*****************************************************************************/
+{
+  short rcb;
+
+  /* Create the lua state if needed */
+  if (! _marpaESLIFValue_lua_newb(marpaESLIFValuep)) {
+    goto err;
+  }
+
+  rcb = _marpaESLIFValue_lua_callb(marpaESLIFValuep, arg0i, argni, resulti, nullableb);
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  return rcb;
+}
+
+/*****************************************************************************/
 static short _marpaESLIF_lexeme_concatb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
 /*****************************************************************************/
 {
@@ -12541,6 +12555,7 @@ static inline marpaESLIFValue_t *_marpaESLIFValue_newp(marpaESLIFRecognizer_t *m
   marpaESLIFValuep->rulep                       = NULL;
   marpaESLIFValuep->actions                     = NULL;
   marpaESLIFValuep->stringp                     = NULL;
+  marpaESLIFValuep->L                           = NULL;
 
   if (! fakeb) {
     marpaWrapperValueOption.genericLoggerp = silentb ? marpaESLIFp->traceLoggerp : marpaESLIFp->marpaESLIFOption.genericLoggerp;
@@ -14481,11 +14496,9 @@ static inline short _marpaESLIFValue_ruleActionCallbackb(marpaESLIFValue_t *marp
 
     case MARPAESLIF_ACTION_TYPE_LUA:
       /* Lua action: this is a built-in */
-      MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "MARPAESLIF_ACTION_TYPE_LUA not yet implemented");
-      goto err;
-      ruleCallbackp             = _marpaESLIF_rule_literal_transferb;
-      marpaESLIFValuep->actions = actionp->u.stringp->asciis;
-      marpaESLIFValuep->stringp = actionp->u.stringp;
+      ruleCallbackp             = _marpaESLIF_rule_lua_actionb;
+      marpaESLIFValuep->actions = actionp->u.luas;
+      marpaESLIFValuep->stringp = NULL;
       break;
 
     default:

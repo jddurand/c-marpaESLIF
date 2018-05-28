@@ -14,6 +14,7 @@
 #include <genericLogger.h>
 #include <pcre2.h>
 #include <tconv.h>
+#include "marpaESLIF/internal/lua_embed.h"
 
 #define INTERNAL_ANYCHAR_PATTERN "."                    /* This ASCII string is UTF-8 compatible */
 #define INTERNAL_UTF8BOM_PATTERN "\\x{FEFF}"            /* FEFF Unicode code point i.e. EFBBBF in UTF-8 encoding */
@@ -275,6 +276,7 @@ struct marpaESLIFValue {
   marpaESLIF_rule_t       *rulep;
   char                    *actions; /* True external name of best-effort ASCII in case of literal */
   marpaESLIF_string_t     *stringp; /* Not NULL only when is a literal - then callback is forced to be internal */
+  lua_State               *L;
 };
 
 struct marpaESLIF_stream {

@@ -6080,11 +6080,12 @@ static short _marpaESLIF_bootstrap_G1_action_luascript_statementb(void *userData
         MARPAESLIF_ERROR(marpaESLIFp, "size_t turnaround detected");
         goto err;
       }
-      tmps = (char *) realloc(marpaESLIFGrammarp->luabytep, tmpl);
+      tmps = (char *) realloc(marpaESLIFGrammarp->luabytep, tmpl + 1); /* Hiden NUL byte */
       if (tmps == NULL) {
         MARPAESLIF_ERRORF(marpaESLIFp, "realloc failure, %s", strerror(errno));
         goto err;
       }
+      tmps[tmpl] = '\0';
       marpaESLIFGrammarp->luabytep = tmps;
       memcpy(marpaESLIFGrammarp->luabytep + marpaESLIFGrammarp->luabytel, luabytep, luabytel);
       marpaESLIFGrammarp->luabytel = tmpl;

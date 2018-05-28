@@ -21,99 +21,136 @@ static int lua_marpaESLIFValue_stack_set_double(lua_State *L);
 static int lua_marpaESLIFValue_stack_set_ptr(lua_State *L);
 static int lua_marpaESLIFValue_stack_set_array(lua_State *L);
 
-#define LOG_PANIC_STRING(marpaESLIFGrammarp, L, f) do {                 \
+#define LOG_PANIC_STRING(marpaESLIFValuep, f) do {                      \
     char *panicstring;							\
-    if (luaunpanic_panicstring(&panicstring, L)) {                      \
-      MARPAESLIF_ERRORF(marpaESLIFGrammarp->marpaESLIFp, "%s panic\n", #f); \
+    if (luaunpanic_panicstring(&panicstring, marpaESLIFValuep->L)) {    \
+      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "%s panic", #f); \
     } else {								\
-      MARPAESLIF_ERRORF(marpaESLIFGrammarp->marpaESLIFp, "%s panic: %s\n", #f, panicstring); \
+      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "%s panic: %s", #f, panicstring); \
     }									\
   } while (0)
 
-#define LOG_ERROR_STRING(marpaESLIFGrammarp, L, f) do {                 \
+#define LOG_ERROR_STRING(marpaESLIFValuep, f) do {                      \
     const char *errorstring;                                            \
-    if (luaunpanic_tostring(&errorstring, L, -1)) {                     \
-      LOG_PANIC_STRING(marpaESLIFGrammarp, L, luaunpanic_tostring);     \
-      MARPAESLIF_ERRORF(marpaESLIFGrammarp->marpaESLIFp, "%s failure\n", #f); \
+    if (luaunpanic_tostring(&errorstring, marpaESLIFValuep->L, -1)) {   \
+      LOG_PANIC_STRING(marpaESLIFValuep, luaunpanic_tostring);          \
+      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "%s failure", #f); \
     } else {                                                            \
       if (errorstring == NULL) {                                        \
-        MARPAESLIF_ERRORF(marpaESLIFGrammarp->marpaESLIFp, "%s failure\n", #f); \
+        MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "%s failure", #f); \
       } else {								\
-        MARPAESLIF_ERRORF(marpaESLIFGrammarp->marpaESLIFp, "%s failure: %s\n", #f, errorstring); \
+        MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "%s failure: %s", #f, errorstring); \
       }									\
     }                                                                   \
   } while (0)
 
-#define LUAL_CHECKVERSION(marpaESLIFGrammarp, L) do {                   \
-    if (luaunpanicL_checkversion(L)) {                                  \
-      LOG_PANIC_STRING(marpaESLIFGrammarp, L, luaL_checkversion);       \
+#define LUAL_CHECKVERSION(marpaESLIFValuep) do {                        \
+    if (luaunpanicL_checkversion(marpaESLIFValuep->L)) {                \
+      LOG_PANIC_STRING(marpaESLIFValuep, luaL_checkversion);            \
       errno = ENOSYS;                                                   \
       goto err;                                                         \
     }                                                                   \
   } while (0)
 
-#define LUAL_OPENLIBS(marpaESLIFGrammarp, L) do {                      \
-    if (luaunpanicL_openlibs(L)) {                                     \
-      LOG_PANIC_STRING(marpaESLIFGrammarp, L, luaL_openlibs);          \
+#define LUAL_OPENLIBS(marpaESLIFValuep) do {                           \
+    if (luaunpanicL_openlibs(marpaESLIFValuep->L)) {                   \
+      LOG_PANIC_STRING(marpaESLIFValuep, luaL_openlibs);               \
       errno = ENOSYS;                                                  \
       goto err;                                                        \
     }                                                                  \
   } while (0)
 
-#define LUA_REGISTER(marpaESLIFGrammarp, L, n ,f) do {          \
-    if (luaunpanic_register(L, n, f)) {                         \
-      LOG_PANIC_STRING(marpaESLIFGrammarp, L, lua_register);    \
+#define LUA_REGISTER(marpaESLIFValuep, n ,f) do {               \
+    if (luaunpanic_register(marpaESLIFValuep->L, n, f)) {       \
+      LOG_PANIC_STRING(marpaESLIFValuep, lua_register);         \
       errno = ENOSYS;                                           \
       goto err;                                                 \
     }                                                           \
   } while (0)
 
-#define LUA_PUSHSTRING(marpaESLIFGrammarp, rcpp, L, s) do {     \
-    if (luaunpanic_pushstring(rcpp, L, s)) {                    \
-      LOG_PANIC_STRING(marpaESLIFGrammarp, L, lua_pushstring);  \
-      errno = ENOSYS;                                           \
-      goto err;                                                 \
-    }                                                           \
-  } while (0)
-
-#define LUA_PUSHLIGHTUSERDATA(marpaESLIFGrammarp, L, p) do {           \
-    if (luaunpanic_pushlightuserdata(L, p)) {                          \
-      LOG_PANIC_STRING(marpaESLIFGrammarp, L, lua_pushlightuserdata);  \
+#define LUA_PUSHLIGHTUSERDATA(marpaESLIFValuep, p) do {                \
+    if (luaunpanic_pushlightuserdata(marpaESLIFValuep->L, p)) {        \
+      LOG_PANIC_STRING(marpaESLIFValuep, lua_pushlightuserdata);       \
       errno = ENOSYS;                                                  \
       goto err;                                                        \
     }                                                                  \
   } while (0)
 
-#define LUA_PUSHINTEGER(marpaESLIFGrammarp, L, i) do {                 \
-    if (luaunpanic_pushinteger(L, i)) {                                \
-      LOG_PANIC_STRING(marpaESLIFGrammarp, L, lua_pushinteger);        \
+#define LUA_PUSHINTEGER(marpaESLIFValuep, i) do {                      \
+    if (luaunpanic_pushinteger(marpaESLIFValuep->L, i)) {              \
+      LOG_PANIC_STRING(marpaESLIFValuep, lua_pushinteger);             \
       errno = ENOSYS;                                                  \
       goto err;                                                        \
     }                                                                  \
   } while (0)
 
-#define LUA_RAWSET(marpaESLIFGrammarp, L, idx) do {                    \
-    if (luaunpanic_rawset(L, idx)) {                                   \
-      LOG_PANIC_STRING(marpaESLIFGrammarp, L, lua_rawset);             \
+#define LUA_PUSHBOOLEAN(marpaESLIFValuep, b) do {                      \
+    if (luaunpanic_pushboolean(marpaESLIFValuep->L, b)) {              \
+      LOG_PANIC_STRING(marpaESLIFValuep, lua_pushboolean);             \
       errno = ENOSYS;                                                  \
       goto err;                                                        \
     }                                                                  \
   } while (0)
 
-#define LUA_NEWTABLE(marpaESLIFGrammarp, L) do {                \
-    if (luaunpanic_newtable(L)) {                               \
-      LOG_PANIC_STRING(marpaESLIFGrammarp, L, lua_newtable);    \
+#define LUA_GETGLOBAL(marpaESLIFValuep, name) do {                      \
+    if (luaunpanic_getglobal(NULL, marpaESLIFValuep->L, name)) {        \
+      LOG_PANIC_STRING(marpaESLIFValuep, lua_getglobal);                \
+      errno = ENOSYS;                                                   \
+      goto err;                                                         \
+    }                                                                   \
+  } while (0)
+
+#define LUAL_LOADBUFFER(marpaESLIFValuep, s, sz, n) do {                \
+    int _rci = -1;                                                      \
+    if (luaunpanicL_loadbuffer(&_rci, marpaESLIFValuep->L, s, sz, n)) { \
+      LOG_PANIC_STRING(marpaESLIFValuep, luaL_loadbuffer);              \
+      errno = ENOSYS;                                                   \
+      goto err;                                                         \
+    }                                                                   \
+    if (_rci != 0) {                                                    \
+      LOG_ERROR_STRING(marpaESLIFValuep, luaL_loadbuffer);              \
+      errno = ENOSYS;                                                   \
+      goto err;                                                         \
+    }                                                                   \
+  } while (0)
+
+#define LUA_CALL(marpaESLIFValuep, n, r) do {                           \
+    int _rci;                                                           \
+    if (luaunpanic_call(marpaESLIFValuep->L, n, r)) {                   \
+      LOG_PANIC_STRING(marpaESLIFValuep, lua_call);                     \
+      errno = ENOSYS;                                                   \
+      goto err;                                                         \
+    }                                                                   \
+  } while (0)
+
+#define LUA_TOBOOLEAN(marpaESLIFValuep, rcp, idx) do {               \
+    if (luaunpanic_toboolean(rcp, marpaESLIFValuep->L, idx)) {       \
+      LOG_PANIC_STRING(marpaESLIFValuep, lua_toboolean);             \
+      errno = ENOSYS;                                                \
+      goto err;                                                      \
+    }                                                                \
+  } while (0)
+
+#define LUA_POP(marpaESLIFValuep, n) do {                       \
+    if (luaunpanic_pop(marpaESLIFValuep->L, n)) {               \
+      LOG_PANIC_STRING(marpaESLIFValuep, lua_pop);              \
       errno = ENOSYS;                                           \
       goto err;                                                 \
     }                                                           \
   } while (0)
 
-#define LUA_SETGLOBAL(marpaESLIFGrammarp, L, name) do {         \
-    if (luaunpanic_setglobal(L, name)) {                        \
-      LOG_PANIC_STRING(marpaESLIFGrammarp, L, lua_setglobal);   \
-      errno = ENOSYS;                                           \
-      goto err;                                                 \
-    }                                                           \
+#define LUA_PCALL(marpaESLIFValuep, n, r, f) do {                       \
+    int _rci;                                                           \
+    if (luaunpanic_pcall(&_rci, marpaESLIFValuep->L, n, r, f)) {        \
+      LOG_PANIC_STRING(marpaESLIFValuep, lua_pcall);                    \
+      errno = ENOSYS;                                                   \
+      goto err;                                                         \
+    }                                                                   \
+    if (_rci != 0) {                                                    \
+      LOG_ERROR_STRING(marpaESLIFValuep, lua_pcall);                    \
+      errno = ENOSYS;                                                   \
+      goto err;                                                         \
+    }                                                                   \
   } while (0)
 
 
@@ -433,6 +470,8 @@ static int lua_marpaESLIFValue_stack_set_array(lua_State *L)
   const char             *stringp;
   size_t                  len = 0;
   int                     isnum = 0;
+  void                   *bytep;
+  size_t                  bytel;
 
   luaL_checktype(L, 1, LUA_TLIGHTUSERDATA);
   luaL_checktype(L, 2, LUA_TNUMBER);
@@ -452,12 +491,20 @@ static int lua_marpaESLIFValue_stack_set_array(lua_State *L)
     return luaL_error(L, "marpaESLIFValue_stack_set_char second argument must be a string of length > 0");
   }
 
+  /* Duplicate lua's string */
+  bytep = malloc(len);
+  if (bytep == NULL) {
+    return luaL_error(L, "malloc failure, %s", strerror(errno));
+  }
+  memcpy(bytep, stringp, len);
+  bytel = len;
+
   marpaESLIFValueResult.contexti = 0;
-  marpaESLIFValueResult.sizel = len;
+  marpaESLIFValueResult.sizel = bytel;
   marpaESLIFValueResult.representationp = NULL;
   marpaESLIFValueResult.shallowb = 0;
   marpaESLIFValueResult.type = MARPAESLIF_VALUE_TYPE_ARRAY;
-  marpaESLIFValueResult.u.p = (void *) stringp;
+  marpaESLIFValueResult.u.p = bytep;
 
   if (! marpaESLIFValue_stack_setb(marpaESLIFValuep, indicei, &marpaESLIFValueResult)) {
     return luaL_error(L, "marpaESLIFValue_stack_setb failure, %s", strerror(errno));
@@ -467,12 +514,13 @@ static int lua_marpaESLIFValue_stack_set_array(lua_State *L)
 }
 
 /*****************************************************************************/
-static lua_State *_marpaESLIF_lua_newp(marpaESLIFGrammar_t *marpaESLIFGrammarp)
+static short _marpaESLIFValue_lua_newb(marpaESLIFValue_t *marpaESLIFValuep)
 /*****************************************************************************/
 {
-  lua_State             *L = NULL;
-  int                    i;
-  static const luaL_Reg  lua_lib[] = {
+  marpaESLIFGrammar_t    *marpaESLIFGrammarp;
+  int                     i;
+  short                   rcb;
+  const static luaL_Reg   lua_lib[] = {
     { "marpaESLIFValue_stack_set_undef",  lua_marpaESLIFValue_stack_set_undef },
     { "marpaESLIFValue_stack_set_char",   lua_marpaESLIFValue_stack_set_char },
     { "marpaESLIFValue_stack_set_short",  lua_marpaESLIFValue_stack_set_short },
@@ -483,105 +531,97 @@ static lua_State *_marpaESLIF_lua_newp(marpaESLIFGrammar_t *marpaESLIFGrammarp)
     { "marpaESLIFValue_stack_set_array",  lua_marpaESLIFValue_stack_set_array }
   };
 
+  if (marpaESLIFValuep->L != NULL) {
+    /* Already done */
+    rcb = 1;
+    goto done;
+  }
+
+  marpaESLIFGrammarp = marpaESLIFValuep->marpaESLIFRecognizerp->marpaESLIFGrammarp;
 
   /* Create Lua state */
-  if (luaunpanicL_newstate(&L)) {
-    MARPAESLIF_ERROR(marpaESLIFGrammarp->marpaESLIFp, "luaunpanicL_newstate failure");
+  if (luaunpanicL_newstate(&(marpaESLIFValuep->L))) {
+    MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "luaunpanicL_newstate failure");
     errno = ENOSYS;
     goto err;
   }
-  if (L == NULL) {
-    MARPAESLIF_ERROR(marpaESLIFGrammarp->marpaESLIFp, "luaunpanicL_success but lua_State is NULL");
+  if (marpaESLIFValuep->L == NULL) {
+    MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "luaunpanicL_success but lua_State is NULL");
     errno = ENOSYS;
     goto err;
   }
 
   /* Open all available libraries */
-  LUAL_OPENLIBS(marpaESLIFGrammarp, L);
+  LUAL_OPENLIBS(marpaESLIFValuep);
 
   /* Check Lua version */
-  LUAL_CHECKVERSION(marpaESLIFGrammarp, L);
+  LUAL_CHECKVERSION(marpaESLIFValuep);
 
   /* Register all stack functions into the main namespace */
   for (i = 0; i < sizeof(lua_lib) / sizeof(lua_lib[0]); i++) {
-    LUA_REGISTER(marpaESLIFGrammarp, L, lua_lib[i].name, lua_lib[i].func);
+    LUA_REGISTER(marpaESLIFValuep, lua_lib[i].name, lua_lib[i].func);
   }
 
-  /* Inject some globals */
-  /*
-  LUA_NEWTABLE(marpaESLIFGrammarp, L);
-  LUA_PUSHSTRING(marpaESLIFGrammarp, NULL, L, "marpaESLIFGrammarp");
-  LUA_PUSHLIGHTUSERDATA(marpaESLIFGrammarp, L, marpaESLIFGrammarp);
-  LUA_RAWSET(marpaESLIFGrammarp, L, -3);
-  LUA_SETGLOBAL(marpaESLIFGrammarp, L, "marpaESLIF");
-  LUA_NEWTABLE(marpaESLIFGrammarp, L);
-  LUA_PUSHSTRING(marpaESLIFGrammarp, NULL, L, "UNDEF");
-  LUA_PUSHINTEGER(marpaESLIFGrammarp, L, MARPAESLIF_VALUE_TYPE_UNDEF);
-  LUA_RAWSET(marpaESLIFGrammarp, L, -3);
-  LUA_PUSHSTRING(marpaESLIFGrammarp, NULL, L, "CHAR");
-  LUA_PUSHINTEGER(marpaESLIFGrammarp, L, MARPAESLIF_VALUE_TYPE_CHAR);
-  LUA_RAWSET(marpaESLIFGrammarp, L, -3);
-  LUA_PUSHSTRING(marpaESLIFGrammarp, NULL, L, "SHORT");
-  LUA_PUSHINTEGER(marpaESLIFGrammarp, L, MARPAESLIF_VALUE_TYPE_SHORT);
-  LUA_RAWSET(marpaESLIFGrammarp, L, -3);
-  LUA_PUSHSTRING(marpaESLIFGrammarp, NULL, L, "INT");
-  LUA_PUSHINTEGER(marpaESLIFGrammarp, L, MARPAESLIF_VALUE_TYPE_INT);
-  LUA_RAWSET(marpaESLIFGrammarp, L, -3);
-  LUA_PUSHSTRING(marpaESLIFGrammarp, NULL, L, "FLOAT");
-  LUA_PUSHINTEGER(marpaESLIFGrammarp, L, MARPAESLIF_VALUE_TYPE_FLOAT);
-  LUA_RAWSET(marpaESLIFGrammarp, L, -3);
-  LUA_PUSHSTRING(marpaESLIFGrammarp, NULL, L, "DOUBLE");
-  LUA_PUSHINTEGER(marpaESLIFGrammarp, L, MARPAESLIF_VALUE_TYPE_DOUBLE);
-  LUA_RAWSET(marpaESLIFGrammarp, L, -3);
-  LUA_PUSHSTRING(marpaESLIFGrammarp, NULL, L, "PTR");
-  LUA_PUSHINTEGER(marpaESLIFGrammarp, L, MARPAESLIF_VALUE_TYPE_PTR);
-  LUA_RAWSET(marpaESLIFGrammarp, L, -3);
-  LUA_PUSHSTRING(marpaESLIFGrammarp, NULL, L, "ARRAY");
-  LUA_PUSHINTEGER(marpaESLIFGrammarp, L, MARPAESLIF_VALUE_TYPE_ARRAY);
-  LUA_RAWSET(marpaESLIFGrammarp, L, -3);
-  LUA_SETGLOBAL(marpaESLIFGrammarp, L, "marpaESLIFValueType");
-  */
-
-  /*
-#ifndef MARPAESLIF_LUA_NTEST
-  {
-    int rc;
-    if (luaunpanicL_dostring(&rc, L,
-                             "print(\"marpaESLIF version returns \" .. marpaESLIF_versions())\n"
-                             "print(\"marpaESLIFGrammar_eslifp returns \" .. tostring(marpaESLIFGrammar_eslifp(marpaESLIF.marpaESLIFGrammarp)))"
-                             "print(\"marpaESLIFValueType.PTR returns \" .. marpaESLIFValueType.PTR)"
-                             )) {
-      LOG_PANIC_STRING(marpaESLIFGrammarp, L, luaL_dostring);
-    }
-    if (rc) {
-      LOG_ERROR_STRING(marpaESLIFGrammarp, L, luaL_dostring);
-    }
+  /* Execute lua scripts present in the grammar */
+  if ((marpaESLIFGrammarp->luabytep != NULL) && (marpaESLIFGrammarp->luabytel > 0)) {
+    LUAL_LOADBUFFER(marpaESLIFValuep, marpaESLIFGrammarp->luabytep, marpaESLIFGrammarp->luabytel, "=(marpaESLIFGrammar)");
+    LUA_PCALL(marpaESLIFValuep, 0, LUA_MULTRET, 0);
   }
-#endif
-  */
 
+  rcb = 1;
   goto done;
 
  err:
-  if (L != NULL) {
-    if (luaunpanic_close(L)) {
-      LOG_PANIC_STRING(marpaESLIFGrammarp, L, lua_close);
+  if (marpaESLIFValuep->L != NULL) {
+    if (luaunpanic_close(marpaESLIFValuep->L)) {
+      LOG_PANIC_STRING(marpaESLIFValuep, lua_close);
     }
-    L = NULL;
+    marpaESLIFValuep->L = NULL;
   }
+  rcb = 0;
 
  done:
-  return L;
+  return rcb;
 }
 
 /*****************************************************************************/
-static void _marpaESLIF_lua_freev(marpaESLIFGrammar_t *marpaESLIFGrammarp, lua_State *L)
+static void _marpaESLIFValue_lua_freev(marpaESLIFValue_t *marpaESLIFValuep)
 /*****************************************************************************/
 {
-  if (L != NULL) {
-    if (luaunpanic_close(L)) {
-      LOG_PANIC_STRING(marpaESLIFGrammarp, L, luaunpanic_close);
+  if (marpaESLIFValuep->L != NULL) {
+    if (luaunpanic_close(marpaESLIFValuep->L)) {
+      LOG_PANIC_STRING(marpaESLIFValuep, luaunpanic_close);
     }
+    marpaESLIFValuep->L = NULL;
   }
 }
 
+/*****************************************************************************/
+static short _marpaESLIFValue_lua_callb(marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
+/*****************************************************************************/
+{
+  int   rci;
+  short rcb;
+
+  LUA_GETGLOBAL(marpaESLIFValuep, marpaESLIFValuep->actions);
+
+  LUA_PUSHLIGHTUSERDATA(marpaESLIFValuep, marpaESLIFValuep);
+  LUA_PUSHINTEGER(marpaESLIFValuep, arg0i);
+  LUA_PUSHINTEGER(marpaESLIFValuep, argni);
+  LUA_PUSHINTEGER(marpaESLIFValuep, resulti);
+  LUA_PUSHBOOLEAN(marpaESLIFValuep, nullableb);
+
+  LUA_CALL(marpaESLIFValuep, 5, 1);
+
+  LUA_TOBOOLEAN(marpaESLIFValuep, &rci, -1);
+  LUA_POP(marpaESLIFValuep, -1);
+
+  rcb = (rci != 0) ? 1 : 0;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  return rcb;
+}
