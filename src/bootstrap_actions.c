@@ -14,6 +14,9 @@ static const int utf8_table1_size = sizeof(utf8_table1) / sizeof(int);
 static const int utf8_table2[] = { 0,    0xc0, 0xe0, 0xf0, 0xf8, 0xfc};
 static const int utf8_table3[] = { 0xff, 0x1f, 0x0f, 0x07, 0x03, 0x01};
 
+/* For ::lua-> action prefix */
+static const char *LUA_ACTION_PREFIX = "::lua->";
+
 /* This file contain the definition of all bootstrap actions, i.e. the ESLIF grammar itself */
 /* This is an example of how to use the API */
 
@@ -1876,6 +1879,8 @@ static short _marpaESLIF_bootstrap_G1_action_action_1b(void *userDatavp, marpaES
   marpaESLIF_t        *marpaESLIFp = marpaESLIFGrammar_eslifp(marpaESLIFRecognizer_grammarp(marpaESLIFValue_recognizerp(marpaESLIFValuep)));
   char                *names       = NULL;
   marpaESLIF_action_t *actionp     = NULL;
+  char                *tmps;
+  short                luab;
   short                rcb;
 
   /* Cannot be nullable */
@@ -1891,14 +1896,37 @@ static short _marpaESLIF_bootstrap_G1_action_action_1b(void *userDatavp, marpaES
     MARPAESLIF_ERRORF(marpaESLIFp, "action at indice %d returned NULL", argni);
     goto err;
   }
+  if (strstr(names, LUA_ACTION_PREFIX) == names) {
+    /* lua action ? */
+    tmps = names + strlen(LUA_ACTION_PREFIX);
+    if (*names == '\0') {
+      MARPAESLIF_ERRORF(marpaESLIFp, "No lua identifier after %s", LUA_ACTION_PREFIX);
+      goto err;
+    }
+    tmps = strdup(tmps);
+    if (tmps == NULL) {
+      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "strdup failure, %s", strerror(errno));
+      goto err;
+    }
+    free(names);
+    names = tmps;
+    luab = 1;
+  } else {
+    luab = 0;
+  }
 
   actionp = (marpaESLIF_action_t *) malloc(sizeof(marpaESLIF_action_t));
   if (actionp == NULL) {
     MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
     goto err;
   }
-  actionp->type = MARPAESLIF_ACTION_TYPE_NAME;
-  actionp->u.names = names;
+  if (luab) {
+    actionp->type = MARPAESLIF_ACTION_TYPE_LUA;
+    actionp->u.luas = names;
+  } else {
+    actionp->type = MARPAESLIF_ACTION_TYPE_NAME;
+    actionp->u.names = names;
+  }
   names = NULL; /* names is now in actionp */
 
   MARPAESLIF_SET_PTR(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_ACTION, actionp);
@@ -2335,6 +2363,8 @@ static short _marpaESLIF_bootstrap_G1_action_symbolaction_1b(void *userDatavp, m
   marpaESLIF_t        *marpaESLIFp   = marpaESLIFGrammar_eslifp(marpaESLIFRecognizer_grammarp(marpaESLIFValue_recognizerp(marpaESLIFValuep)));
   char                *names         = NULL;
   marpaESLIF_action_t *symbolactionp = NULL;
+  char                *tmps;
+  short                luab;
   short                rcb;
 
   /* Cannot be nullable */
@@ -2350,14 +2380,37 @@ static short _marpaESLIF_bootstrap_G1_action_symbolaction_1b(void *userDatavp, m
     MARPAESLIF_ERRORF(marpaESLIFp, "symbol-action at indice %d returned NULL", argni);
     goto err;
   }
+  if (strstr(names, LUA_ACTION_PREFIX) == names) {
+    /* lua action ? */
+    tmps = names + strlen(LUA_ACTION_PREFIX);
+    if (*names == '\0') {
+      MARPAESLIF_ERRORF(marpaESLIFp, "No lua identifier after %s", LUA_ACTION_PREFIX);
+      goto err;
+    }
+    tmps = strdup(tmps);
+    if (tmps == NULL) {
+      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "strdup failure, %s", strerror(errno));
+      goto err;
+    }
+    free(names);
+    names = tmps;
+    luab = 1;
+  } else {
+    luab = 0;
+  }
 
   symbolactionp = (marpaESLIF_action_t *) malloc(sizeof(marpaESLIF_action_t));
   if (symbolactionp == NULL) {
     MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
     goto err;
   }
-  symbolactionp->type = MARPAESLIF_ACTION_TYPE_NAME;
-  symbolactionp->u.names = names;
+  if (luab) {
+    symbolactionp->type = MARPAESLIF_ACTION_TYPE_LUA;
+    symbolactionp->u.luas = names;
+  } else {
+    symbolactionp->type = MARPAESLIF_ACTION_TYPE_NAME;
+    symbolactionp->u.names = names;
+  }
   names = NULL; /* names is now in actionp */
 
   MARPAESLIF_SET_PTR(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_SYMBOLACTION, symbolactionp);

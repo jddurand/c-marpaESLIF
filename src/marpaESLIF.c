@@ -123,12 +123,6 @@
 #undef  FILENAMES
 #define FILENAMES "marpaESLIF.c"
 
-/* -------------------------------------------------------------------------------------------- */
-/* Inlined version for action name comparison for performance                                   */
-/* -------------------------------------------------------------------------------------------- */
-#define MARPAESLIF_ACTION_NAME_EQ(actionp, wantednames)                 \
-  (actionp != NULL) && (wantednames != NULL) && (actionp->type == MARPAESLIF_ACTION_TYPE_NAME) && (strcmp(actionp->u.names, wantednames) == 0)
-
 typedef struct marpaESLIF_stringGenerator {
   marpaESLIF_t *marpaESLIFp;
   char         *s;      /* Pointer */
@@ -210,6 +204,7 @@ static const marpaESLIF_stringGenerator_t  marpaESLIF_stringGeneratorTemplate = 
 };
 
 static const char *MARPAESLIF_EMPTY_STRING = "";
+static const char *MARPAESLIF_UNKNOWN_STRING = "???";
 
 /* Please note that EVERY _marpaESLIFRecognizer_xxx() method is logging at start and at return */
 
@@ -9930,12 +9925,20 @@ static inline void _marpaESLIF_rule_createshowv(marpaESLIF_t *marpaESLIFp, marpa
   }
   if (rulep->actionp != NULL) {
     MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " action => ");
-    if (rulep->actionp->type == MARPAESLIF_ACTION_TYPE_NAME) {
+    switch (rulep->actionp->type) {
+    case MARPAESLIF_ACTION_TYPE_NAME:
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, rulep->actionp->u.names);
-    } else {
+      break;
+    case MARPAESLIF_ACTION_TYPE_STRING:
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "::u8\"");
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, rulep->actionp->u.stringp->asciis); /* Best effort ASCII */
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "\"");
+      break;
+    case MARPAESLIF_ACTION_TYPE_LUA:
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "::lua->");
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, rulep->actionp->u.luas);
+    default:
+      break;
     }
   }
   if ((! rulep->descautob) && (rulep->descp != NULL) && (rulep->descp->asciis != NULL)) {
@@ -10026,33 +10029,59 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIFGrammar_t *marpaESL
     MARPAESLIF_LEVEL_CREATESHOW(grammarp, asciishowl, asciishows);
     if (grammarp->defaultRuleActionp != NULL) {
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " action => ");
-      if (grammarp->defaultRuleActionp->type == MARPAESLIF_ACTION_TYPE_NAME) {
+      switch (grammarp->defaultRuleActionp->type) {
+      case MARPAESLIF_ACTION_TYPE_NAME:
         MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, grammarp->defaultRuleActionp->u.names);
-      } else {
+        break;
+      case MARPAESLIF_ACTION_TYPE_STRING:
         MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "::u8\"");
         MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, grammarp->defaultRuleActionp->u.stringp->asciis); /* Best effort ASCII */
         MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "\"");
+        break;
+      case MARPAESLIF_ACTION_TYPE_LUA:
+        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "::lua->");
+        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, grammarp->defaultRuleActionp->u.luas);
+        break;
+      default:
+        break;
       }
     }
     if (grammarp->defaultSymbolActionp != NULL) {
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " symbol-action => ");
-      if (grammarp->defaultSymbolActionp->type == MARPAESLIF_ACTION_TYPE_NAME) {
+      switch (grammarp->defaultSymbolActionp->type) {
+      case MARPAESLIF_ACTION_TYPE_NAME:
         MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, grammarp->defaultSymbolActionp->u.names);
-      } else {
+        break;
+      case MARPAESLIF_ACTION_TYPE_STRING:
         MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "::u8\"");
         MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, grammarp->defaultSymbolActionp->u.stringp->asciis); /* Best effort ASCII */
         MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "\"");
+        break;
+      case MARPAESLIF_ACTION_TYPE_LUA:
+        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "::lua->");
+        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, grammarp->defaultSymbolActionp->u.luas);
+        break;
+      default:
+        break;
       }
     }
     if (grammarp->defaultFreeActionp != NULL) {
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " free-action => ");
-      if (grammarp->defaultFreeActionp->type == MARPAESLIF_ACTION_TYPE_NAME) {
+      switch (grammarp->defaultFreeActionp->type) {
+      case MARPAESLIF_ACTION_TYPE_NAME:
         MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, grammarp->defaultFreeActionp->u.names);
-      } else {
-        /* Supported in theory in the show, impossible in practice */
+        break;
+      case MARPAESLIF_ACTION_TYPE_STRING:
         MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "::u8\"");
         MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, grammarp->defaultFreeActionp->u.stringp->asciis); /* Best effort ASCII */
         MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "\"");
+        break;
+      case MARPAESLIF_ACTION_TYPE_LUA:
+        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "::lua->");
+        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, grammarp->defaultFreeActionp->u.luas);
+        break;
+      default:
+        break;
       }
     }
     if (grammarp->latmb) {
@@ -14198,7 +14227,16 @@ static inline char *_marpaESLIF_action2asciis(marpaESLIF_action_t *actionp)
 /*****************************************************************************/
 {
   /* Caller have to make sure we are NEVER called with actionp == NULL */
-  return (actionp->type == MARPAESLIF_ACTION_TYPE_NAME) ? actionp->u.names : actionp->u.stringp->asciis;
+  switch (actionp->type) {
+  case MARPAESLIF_ACTION_TYPE_NAME:
+    return actionp->u.names;
+  case MARPAESLIF_ACTION_TYPE_STRING:
+    return actionp->u.stringp->asciis;
+  case MARPAESLIF_ACTION_TYPE_LUA:
+    return actionp->u.luas;
+  default:
+    return (char *) MARPAESLIF_UNKNOWN_STRING;
+  }
 }
 
 /*****************************************************************************/
@@ -14270,7 +14308,16 @@ static inline short _marpaESLIF_action_eqb(marpaESLIF_action_t *action1p, marpaE
   }
 
   /* Here types are equal */
-  return (action1p->type == MARPAESLIF_ACTION_TYPE_NAME) ? (strcmp(action1p->u.names, action2p->u.names) == 0) : _marpaESLIF_string_eqb(action1p->u.stringp, action2p->u.stringp);
+  switch (action1p->type) {
+  case MARPAESLIF_ACTION_TYPE_NAME:
+    return (strcmp(action1p->u.names, action2p->u.names) == 0);
+  case MARPAESLIF_ACTION_TYPE_STRING:
+    return _marpaESLIF_string_eqb(action1p->u.stringp, action2p->u.stringp);
+  case MARPAESLIF_ACTION_TYPE_LUA:
+    return (strcmp(action1p->u.luas, action2p->u.luas) == 0);
+  default:
+    return 0;
+  }
 }
 
 /*****************************************************************************/
