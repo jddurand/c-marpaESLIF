@@ -125,7 +125,6 @@ static short lua_marpaESLIFValue_pop_arg(marpaESLIFValue_t *marpaESLIFValuep, in
   } while (0)
 
 #define LUA_CALL(marpaESLIFValuep, n, r) do {                           \
-    int _rci;                                                           \
     if (luaunpanic_call(marpaESLIFValuep->L, n, r)) {                   \
       LOG_PANIC_STRING(marpaESLIFValuep, lua_call);                     \
       errno = ENOSYS;                                                   \
@@ -220,9 +219,8 @@ static short lua_marpaESLIFValue_pop_arg(marpaESLIFValue_t *marpaESLIFValuep, in
 static short _marpaESLIFValue_lua_newb(marpaESLIFValue_t *marpaESLIFValuep)
 /*****************************************************************************/
 {
-  marpaESLIFGrammar_t    *marpaESLIFGrammarp;
-  int                     i;
-  short                   rcb;
+  marpaESLIFGrammar_t *marpaESLIFGrammarp;
+  short                rcb;
 
   if (marpaESLIFValuep->L != NULL) {
     /* Already done */
@@ -291,7 +289,6 @@ static short _marpaESLIFValue_lua_callb(marpaESLIFValue_t *marpaESLIFValuep, int
 /*****************************************************************************/
 {
   int   i;
-  int   rci;
   short rcb;
   int   nargi;
 
@@ -393,7 +390,7 @@ static short lua_marpaESLIFValue_pop_arg(marpaESLIFValue_t *marpaESLIFValuep, in
   const void             *rcp;
   const char             *bytep;
   size_t                  sizel;
-  lua_Number              rcl;
+  lua_Number              rcd; /* We have forced lua_Number to be a double */
   char                   *p;
 
   LUA_TYPE(marpaESLIFValuep, &type, -1);
@@ -432,13 +429,13 @@ static short lua_marpaESLIFValue_pop_arg(marpaESLIFValue_t *marpaESLIFValuep, in
     marpaESLIFValueResult.u.p             = (void *) rcp;
     break;
   case LUA_TNUMBER:
-    LUA_TONUMBER(marpaESLIFValuep, &rcl, -1);
+    LUA_TONUMBER(marpaESLIFValuep, &rcd, -1);
     marpaESLIFValueResult.contexti        = 0;
     marpaESLIFValueResult.sizel           = 0;
     marpaESLIFValueResult.representationp = NULL;
     marpaESLIFValueResult.shallowb        = 0;
-    marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_LONG;
-    marpaESLIFValueResult.u.l             = rcl;
+    marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_DOUBLE;
+    marpaESLIFValueResult.u.d             = rcd;
     break;
   case LUA_TSTRING:
     LUA_TOLSTRING(marpaESLIFValuep, &bytep, -1, &sizel);
