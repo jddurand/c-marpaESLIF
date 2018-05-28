@@ -23,7 +23,7 @@ typedef struct marpaESLIF_bootstrap_alternative               marpaESLIF_bootstr
 typedef struct marpaESLIF_bootstrap_event_initialization      marpaESLIF_bootstrap_event_initialization_t;
 
 enum marpaESLIF_bootstrap_stack_context {
-  MARPAESLIF_BOOTSTRAP_STACK_TYPE_NA = 0,
+  MARPAESLIF_BOOTSTRAP_STACK_TYPE_NA = 1,
   MARPAESLIF_BOOTSTRAP_STACK_TYPE_OP_DECLARE,
   MARPAESLIF_BOOTSTRAP_STACK_TYPE_SYMBOL_NAME,
   MARPAESLIF_BOOTSTRAP_STACK_TYPE_RHS_PRIMARY,

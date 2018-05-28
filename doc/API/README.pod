@@ -887,7 +887,7 @@ which means:
 
 =item contexti
 
-Except for the value C<0>, that is reserved for ESLIF internals, this can be anything that is meaningul for the end-user.
+This can be anything that is meaningul for the end-user. It must be greater than zero, zero and lower values are reserved by marpaESLIF engine.
 
 =item sizel
 

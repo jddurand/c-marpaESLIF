@@ -12652,8 +12652,8 @@ short marpaESLIFValue_stack_setb(marpaESLIFValue_t *marpaESLIFValuep, int indice
     MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "marpaESLIFValueResultp is NULL");
     return 0;
   }
-  if (marpaESLIFValueResultp->contexti == 0) {
-    MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "%s must be called with a context != 0", funcs);
+  if (marpaESLIFValueResultp->contexti <= 0) {
+    MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "%s must be called with a context > 0", funcs);
     return 0;
   }
   if (! marpaESLIFValuep->inValuationb) {
