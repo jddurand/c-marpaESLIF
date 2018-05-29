@@ -921,7 +921,7 @@ Explicit terminals are never under the user's control: the matched input is what
 
 Lexemes discovered automatically by ESLIF are always in the form of an array: matched input will be appended as-is.
 
-Alternatives pushed by the end-user will follow the upper rules: if the user given a representation callback, the later is used. Else only values of type C<MARPAESLIF_VALUE_TYPE_ARRAY> will be considered and appended as-is.
+Alternatives pushed by the end-user will follow the upper rules: if the user gives a representation callback, the later is used. Else only values of type C<MARPAESLIF_VALUE_TYPE_ARRAY> will be considered and appended as-is.
 
 The notion of I<matched input> refers to the ESLIF I<internal input buffer>: character chunks are always converted to their UTF-8 encoded equivalent data, and it is the UTF-8 version of data that is appended as-is. Binary chunks are taken as-is.
 
@@ -2070,16 +2070,7 @@ Returns a non-C<NULL> value on success, C<NULL> otherwise.
                                             int indicei,
                                             marpaESLIFValueResult_t *marpaESLIFValueResultp);
 
-Puts the C<C>'s C<long> value C<l>, associated to context C<contexti> that must be different than zero, at stack number C<indicei>.
-
-=head3 C<marpaESLIFValue_stack_set_floatb>
-
-  short marpaESLIFValue_stack_set_floatb(marpaESLIFValue_t *marpaESLIFValuep,
-                                         int                indicei,
-                                         int                contexti,
-                                         float              f);
-
-Copies the value result at indice C<indicei> into the C<marpaESLIFValueResultp> pointer, and instruct ESLIF to forget about it.
+Copies the value result at indice C<indicei> into the C<marpaESLIFValueResultp> pointer and tells <marpaESLIF> to forget about it.
 
 Returns a true value on success, a false value otherwise.
 

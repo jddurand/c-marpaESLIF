@@ -11929,7 +11929,7 @@ marpaESLIFValueResult_t *marpaESLIFValue_stack_getp(marpaESLIFValue_t *marpaESLI
 static inline marpaESLIFValueResult_t *_marpaESLIFValue_stack_getp(marpaESLIFValue_t *marpaESLIFValuep, int indicei)
 /*****************************************************************************/
 {
-  /* Special internal version of _marpaESLIFValue_stack that returns the direct pointer into the stack */
+  /* Special internal version of _marpaESLIFValue_stack_getp that returns the direct pointer into the stack */
   static const char       *funcs = "_marpaESLIFValue_stack_getp";
   marpaESLIFRecognizer_t  *marpaESLIFRecognizerp = marpaESLIFValuep->marpaESLIFRecognizerp;
   marpaESLIFValueResult_t *marpaESLIFValueResultp;

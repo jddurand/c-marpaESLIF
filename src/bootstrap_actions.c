@@ -152,7 +152,7 @@ static        short _marpaESLIF_bootstrap_G1_action_luascript_statementb(void *u
 #define MARPAESLIF_GET_ARRAY(marpaESLIFValuep, indicei, _p, _l) do {    \
     marpaESLIFValueResult_t *_marpaESLIFValueResultp;                   \
                                                                         \
-    _marpaESLIFValueResultp = marpaESLIFValue_stack_getp(marpaESLIFValuep, indicei); \
+    _marpaESLIFValueResultp = _marpaESLIFValue_stack_getp(marpaESLIFValuep, indicei); \
     if (_marpaESLIFValueResultp == NULL) {                              \
       goto err;                                                         \
     }                                                                   \
@@ -169,7 +169,7 @@ static        short _marpaESLIF_bootstrap_G1_action_luascript_statementb(void *u
 #define MARPAESLIF_GET_PTR(marpaESLIFValuep, indicei, _p) do {          \
     marpaESLIFValueResult_t *_marpaESLIFValueResultp;                   \
                                                                         \
-    _marpaESLIFValueResultp = marpaESLIFValue_stack_getp(marpaESLIFValuep, indicei); \
+    _marpaESLIFValueResultp = _marpaESLIFValue_stack_getp(marpaESLIFValuep, indicei); \
     if (_marpaESLIFValueResultp == NULL) {                              \
       goto err;                                                         \
     }                                                                   \
@@ -185,7 +185,7 @@ static        short _marpaESLIF_bootstrap_G1_action_luascript_statementb(void *u
 #define MARPAESLIF_GETANDFORGET_PTR(marpaESLIFValuep, indicei, _p) do { \
     marpaESLIFValueResult_t _marpaESLIFValueResult;                     \
                                                                         \
-    if (! marpaESLIFValue_stack_getAndForgetb(marpaESLIFValuep, indicei, &_marpaESLIFValueResult)) { \
+    if (! _marpaESLIFValue_stack_getAndForgetb(marpaESLIFValuep, indicei, &_marpaESLIFValueResult)) { \
       goto err;                                                         \
     }                                                                   \
                                                                         \
@@ -200,7 +200,7 @@ static        short _marpaESLIF_bootstrap_G1_action_luascript_statementb(void *u
 #define MARPAESLIF_GETANDFORGET_ARRAY(marpaESLIFValuep, indicei, _p, _l) do { \
     marpaESLIFValueResult_t _marpaESLIFValueResult;                     \
                                                                         \
-    if (! marpaESLIFValue_stack_getAndForgetb(marpaESLIFValuep, indicei, &_marpaESLIFValueResult)) { \
+    if (! _marpaESLIFValue_stack_getAndForgetb(marpaESLIFValuep, indicei, &_marpaESLIFValueResult)) { \
       goto err;                                                         \
     }                                                                   \
                                                                         \
@@ -216,7 +216,7 @@ static        short _marpaESLIF_bootstrap_G1_action_luascript_statementb(void *u
 #define MARPAESLIF_IS_UNDEF(marpaESLIFValuep, indicei, rcb) do {        \
     marpaESLIFValueResult_t *_marpaESLIFValueResultp;                   \
                                                                         \
-    _marpaESLIFValueResultp = marpaESLIFValue_stack_getp(marpaESLIFValuep, indicei); \
+    _marpaESLIFValueResultp = _marpaESLIFValue_stack_getp(marpaESLIFValuep, indicei); \
     if (_marpaESLIFValueResultp == NULL) {                              \
       goto err;                                                         \
     }                                                                   \
@@ -227,7 +227,7 @@ static        short _marpaESLIF_bootstrap_G1_action_luascript_statementb(void *u
 #define MARPAESLIF_IS_INT(marpaESLIFValuep, indicei, rcb) do {          \
     marpaESLIFValueResult_t *_marpaESLIFValueResultp;                   \
                                                                         \
-    _marpaESLIFValueResultp = marpaESLIFValue_stack_getp(marpaESLIFValuep, indicei); \
+    _marpaESLIFValueResultp = _marpaESLIFValue_stack_getp(marpaESLIFValuep, indicei); \
     if (_marpaESLIFValueResultp == NULL) {                              \
       goto err;                                                         \
     }                                                                   \
@@ -238,7 +238,7 @@ static        short _marpaESLIF_bootstrap_G1_action_luascript_statementb(void *u
 #define MARPAESLIF_GET_CONTEXT(marpaESLIFValuep, indicei, _contexti) do { \
     marpaESLIFValueResult_t *_marpaESLIFValueResultp;                   \
                                                                         \
-    _marpaESLIFValueResultp = marpaESLIFValue_stack_getp(marpaESLIFValuep, indicei); \
+    _marpaESLIFValueResultp = _marpaESLIFValue_stack_getp(marpaESLIFValuep, indicei); \
     if (_marpaESLIFValueResultp == NULL) {                              \
       goto err;                                                         \
     }                                                                   \
@@ -249,7 +249,7 @@ static        short _marpaESLIF_bootstrap_G1_action_luascript_statementb(void *u
 #define MARPAESLIF_GET_SHORT(marpaESLIFValuep, indicei, _b) do {        \
     marpaESLIFValueResult_t *_marpaESLIFValueResultp;                   \
                                                                         \
-    _marpaESLIFValueResultp = marpaESLIFValue_stack_getp(marpaESLIFValuep, indicei); \
+    _marpaESLIFValueResultp = _marpaESLIFValue_stack_getp(marpaESLIFValuep, indicei); \
     if (_marpaESLIFValueResultp == NULL) {                              \
       goto err;                                                         \
     }                                                                   \
@@ -265,7 +265,7 @@ static        short _marpaESLIF_bootstrap_G1_action_luascript_statementb(void *u
 #define MARPAESLIF_GET_INT(marpaESLIFValuep, indicei, _i) do {          \
     marpaESLIFValueResult_t *_marpaESLIFValueResultp;                   \
                                                                         \
-    _marpaESLIFValueResultp = marpaESLIFValue_stack_getp(marpaESLIFValuep, indicei); \
+    _marpaESLIFValueResultp = _marpaESLIFValue_stack_getp(marpaESLIFValuep, indicei); \
     if (_marpaESLIFValueResultp == NULL) {                              \
       goto err;                                                         \
     }                                                                   \
@@ -2700,7 +2700,7 @@ static short _marpaESLIF_bootstrap_G1_action_rhs_primary_2b(void *userDatavp, ma
   MARPAESLIF_GETANDFORGET_PTR(marpaESLIFValuep, arg0i+2, grammarReferencep);
   /* It is a non-sense to not have valid information */
   if (grammarReferencep == NULL) {
-    MARPAESLIF_ERRORF(marpaESLIFp, "marpaESLIFValue_stack_get_getAndForget at indice %d returned NULL", arg0i+2);
+    MARPAESLIF_ERRORF(marpaESLIFp, "_marpaESLIFValue_stack_getAndForgetb at indice %d returned NULL", arg0i+2);
     goto err;
   }
 
@@ -3714,7 +3714,7 @@ static short _marpaESLIF_bootstrap_G1_action_single_symbol_4b(void *userDatavp, 
   MARPAESLIF_GETANDFORGET_ARRAY(marpaESLIFValuep, arg0i, bytep, bytel);
   /* It is a non-sense to not have valid information */
   if ((bytep == NULL) || (bytel <= 0)) {
-    MARPAESLIF_ERRORF(marpaESLIFp, "marpaESLIFValue_stack_get_arrayb at indice %d returned {%p,%ld}", arg0i, bytep, (unsigned long) bytel);
+    MARPAESLIF_ERRORF(marpaESLIFp, "_marpaESLIFValue_stack_getAndForgetb at indice %d returned {%p,%ld}", arg0i, bytep, (unsigned long) bytel);
     goto err;
   }
 
@@ -3823,7 +3823,7 @@ static short _marpaESLIF_bootstrap_G1_action_grammar_reference_1b(void *userData
   MARPAESLIF_GETANDFORGET_ARRAY(marpaESLIFValuep, arg0i, bytep, bytel);
   /* It is a non-sense to have a null information */
   if ((bytep == NULL) || (bytel <= 0)) {
-    MARPAESLIF_ERRORF(marpaESLIFp, "marpaESLIFValue_stack_get_arrayb at indice %d returned {p,%ld}", arg0i, bytep, (unsigned long) bytel);
+    MARPAESLIF_ERRORF(marpaESLIFp, "_marpaESLIFValue_stack_getAndForgetb at indice %d returned {p,%ld}", arg0i, bytep, (unsigned long) bytel);
     goto err;
   }
 
@@ -4378,7 +4378,7 @@ static short _marpaESLIF_bootstrap_G1_action_desc_ruleb(void *userDatavp, marpaE
   MARPAESLIF_GETANDFORGET_ARRAY(marpaESLIFValuep, arg0i+2, bytep, bytel);
   /* It is a non-sense to not have valid information */
   if ((bytep == NULL) || (bytel <= 0)) {
-    MARPAESLIF_ERRORF(marpaESLIFp, "marpaESLIFValue_stack_get_arrayb at indice %d returned {%p,%ld}", arg0i+2, bytep, (unsigned long) bytel);
+    MARPAESLIF_ERRORF(marpaESLIFp, "_marpaESLIFValue_stack_getAndForgetb at indice %d returned {%p,%ld}", arg0i+2, bytep, (unsigned long) bytel);
     goto err;
   }
 
@@ -5106,7 +5106,7 @@ static short _marpaESLIF_bootstrap_G1_action_event_specificationb(void *userData
   MARPAESLIF_GETANDFORGET_PTR(marpaESLIFValuep, arg0i+2, eventInitializationp);
   /* It is a non-sense to have a null information */
   if (eventInitializationp == NULL) {
-    MARPAESLIF_ERRORF(marpaESLIFp, "marpaESLIFValue_stack_get_arrayb at indice %d returned NULL", arg0i+2);
+    MARPAESLIF_ERRORF(marpaESLIFp, "_marpaESLIFValue_stack_getAndForgetb at indice %d returned NULL", arg0i+2);
     goto err;
   }
 
@@ -5453,7 +5453,7 @@ static inline short _marpaESLIF_bootstrap_G1_action_event_declarationb(void *use
   MARPAESLIF_GET_PTR(marpaESLIFValuep, arg0i+1, eventInitializationp);
   /* It is a non-sense to have a null information */
   if (eventInitializationp == NULL) {
-    MARPAESLIF_ERRORF(marpaESLIFp, "marpaESLIFValue_stack_get_arrayb at indice %d returned NULL", arg0i+2);
+    MARPAESLIF_ERRORF(marpaESLIFp, "_marpaESLIFValue_stack_getAndForgetb at indice %d returned NULL", arg0i+2);
     goto err;
   }
   MARPAESLIF_IS_INT(marpaESLIFValuep, arg0i+2, intb);
@@ -5601,7 +5601,7 @@ static short _marpaESLIF_bootstrap_G1_action_alternative_name_2b(void *userDatav
   MARPAESLIF_GETANDFORGET_ARRAY(marpaESLIFValuep, arg0i, bytep, bytel);
   /* It is a non-sense to have a null information */
   if ((bytep == NULL) || (bytel <= 0)) {
-    MARPAESLIF_ERRORF(marpaESLIFp, "marpaESLIFValue_stack_get_arrayb at indice %d returned {p,%ld}", arg0i, bytep, (unsigned long) bytel);
+    MARPAESLIF_ERRORF(marpaESLIFp, "_marpaESLIFValue_stack_getAndForgetb at indice %d returned {p,%ld}", arg0i, bytep, (unsigned long) bytel);
     goto err;
   }
 
@@ -5661,7 +5661,7 @@ static short _marpaESLIF_bootstrap_G1_action_namingb(void *userDatavp, marpaESLI
   MARPAESLIF_GETANDFORGET_ARRAY(marpaESLIFValuep, argni, bytep, bytel);
   /* It is a non-sense to have a null information */
   if ((bytep == NULL) || (bytel <= 0)) {
-    MARPAESLIF_ERRORF(marpaESLIFp, "marpaESLIFValue_stack_get_arrayb at indice %d returned {p,%ld}", arg0i, bytep, (unsigned long) bytel);
+    MARPAESLIF_ERRORF(marpaESLIFp, "_marpaESLIFValue_stack_getAndForgetb at indice %d returned {p,%ld}", arg0i, bytep, (unsigned long) bytel);
     goto err;
   }
 
