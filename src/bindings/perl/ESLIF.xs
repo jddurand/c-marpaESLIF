@@ -289,6 +289,7 @@ SV *boot_MarpaX__ESLIF__Grammar__Symbol__Properties_svp;
     _marpaESLIFValueResult.sizel           = 0;                         \
     _marpaESLIFValueResult.representationp = _representationp;          \
     _marpaESLIFValueResult.shallowb        = 0;                         \
+    _marpaESLIFValueResult.userDatavp      = NULL;                      \
     _marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_PTR; \
     _marpaESLIFValueResult.u.p             = _p;                        \
                                                                         \
@@ -2792,6 +2793,8 @@ CODE:
   marpaESLIFAlternative.value.contexti        = 0; /* Not used */
   marpaESLIFAlternative.value.sizel           = 0; /* Not used */
   marpaESLIFAlternative.value.representationp = marpaESLIF_representationb;
+  marpaESLIFAlternative.value.shallowb        = 0; /* C.f. marpaESLIF_valueFreeCallbackv */
+  marpaESLIFAlternative.value.userDatavp      = NULL; /* Not used */
   marpaESLIFAlternative.grammarLengthl        = (size_t) grammarLength;
 
   RETVAL = (bool) marpaESLIFRecognizer_lexeme_alternativeb(Perl_MarpaX_ESLIF_Recognizer->marpaESLIFRecognizerp, &marpaESLIFAlternative);
@@ -2862,6 +2865,8 @@ CODE:
   marpaESLIFAlternative.value.contexti        = 0; /* Not used */
   marpaESLIFAlternative.value.sizel           = 0; /* Not used */
   marpaESLIFAlternative.value.representationp = marpaESLIF_representationb;
+  marpaESLIFAlternative.value.shallowb        = 0; /* C.f. marpaESLIF_valueFreeCallbackv */
+  marpaESLIFAlternative.value.userDatavp      = NULL; /* Not used */
   marpaESLIFAlternative.grammarLengthl        = (size_t) grammarLength;
 
   RETVAL = (bool) marpaESLIFRecognizer_lexeme_readb(Perl_MarpaX_ESLIF_Recognizer->marpaESLIFRecognizerp, &marpaESLIFAlternative, (size_t) length);

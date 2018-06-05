@@ -1,29 +1,14 @@
-#ifndef MARPAESLIF_INTERNAL_BOOTSTRAP_TYPES_H
-#define MARPAESLIF_INTERNAL_BOOTSTRAP_TYPES_H
+#ifndef MARPAESLIF_INTERNAL_BOOTSTRAP_H
+#define MARPAESLIF_INTERNAL_BOOTSTRAP_H
 
-/* Forward declarations */
-typedef enum   marpaESLIF_bootstrap_stack_context               marpaESLIF_bootstrap_stack_context_t;
-typedef enum   marpaESLIF_bootstrap_adverb_list_item_type       marpaESLIF_bootstrap_adverb_list_item_type_t;
-typedef enum   marpaESLIF_bootstrap_pause_type                  marpaESLIF_bootstrap_pause_type_t;
-typedef enum   marpaESLIF_bootstrap_single_symbol_type          marpaESLIF_bootstrap_single_symbol_type_t;
-typedef enum   marpaESLIF_bootstrap_rhs_primary_type            marpaESLIF_bootstrap_rhs_primary_type_t;
-typedef enum   marpaESLIF_bootstrap_grammar_reference_type      marpaESLIF_bootstrap_grammar_reference_type_t;
-typedef enum   marpaESLIF_bootstrap_inaccessible_treatment_type marpaESLIF_bootstrap_inaccessible_treatment_type_t;
-typedef enum   marpaESLIF_bootstrap_on_or_off_type              marpaESLIF_bootstrap_on_or_off_type_t;
-typedef enum   marpaESLIF_bootstrap_event_initializer_type      marpaESLIF_bootstrap_event_initializer_type_t;
-typedef enum   marpaESLIF_bootstrap_event_declaration_type      marpaESLIF_bootstrap_event_declaration_type_t;
+#include <marpaESLIF.h>
 
-typedef struct marpaESLIF_bootstrap_utf_string                marpaESLIF_bootstrap_utf_string_t;
-typedef struct marpaESLIF_bootstrap_single_symbol             marpaESLIF_bootstrap_single_symbol_t;
-typedef struct marpaESLIF_bootstrap_adverb_list_item          marpaESLIF_bootstrap_adverb_list_item_t;
-typedef struct marpaESLIF_bootstrap_grammar_reference         marpaESLIF_bootstrap_grammar_reference_t;
-typedef struct marpaESLIF_bootstrap_symbol_name_and_reference marpaESLIF_bootstrap_symbol_name_and_reference_t;
-typedef struct marpaESLIF_bootstrap_rhs_primary               marpaESLIF_bootstrap_rhs_primary_t;
-typedef struct marpaESLIF_bootstrap_alternative               marpaESLIF_bootstrap_alternative_t;
-typedef struct marpaESLIF_bootstrap_event_initialization      marpaESLIF_bootstrap_event_initialization_t;
+/* This file contain the declaration of all bootstrap actions, i.e. the ESLIF grammar itself */
+/* This is an example of how to use the API */
 
+/* Context range [-999, -1] is reserved by bootstrap */
 enum marpaESLIF_bootstrap_stack_context {
-  MARPAESLIF_BOOTSTRAP_STACK_TYPE_NA = 1,
+  MARPAESLIF_BOOTSTRAP_STACK_TYPE_NA = -999,
   MARPAESLIF_BOOTSTRAP_STACK_TYPE_OP_DECLARE,
   MARPAESLIF_BOOTSTRAP_STACK_TYPE_SYMBOL_NAME,
   MARPAESLIF_BOOTSTRAP_STACK_TYPE_RHS_PRIMARY,
@@ -59,6 +44,27 @@ enum marpaESLIF_bootstrap_stack_context {
   MARPAESLIF_BOOTSTRAP_STACK_TYPE_ARRAY,
   MARPAESLIF_BOOTSTRAP_STACK_TYPE_STRING
 };
+
+/* Forward declarations */
+typedef enum   marpaESLIF_bootstrap_stack_context               marpaESLIF_bootstrap_stack_context_t;
+typedef enum   marpaESLIF_bootstrap_adverb_list_item_type       marpaESLIF_bootstrap_adverb_list_item_type_t;
+typedef enum   marpaESLIF_bootstrap_pause_type                  marpaESLIF_bootstrap_pause_type_t;
+typedef enum   marpaESLIF_bootstrap_single_symbol_type          marpaESLIF_bootstrap_single_symbol_type_t;
+typedef enum   marpaESLIF_bootstrap_rhs_primary_type            marpaESLIF_bootstrap_rhs_primary_type_t;
+typedef enum   marpaESLIF_bootstrap_grammar_reference_type      marpaESLIF_bootstrap_grammar_reference_type_t;
+typedef enum   marpaESLIF_bootstrap_inaccessible_treatment_type marpaESLIF_bootstrap_inaccessible_treatment_type_t;
+typedef enum   marpaESLIF_bootstrap_on_or_off_type              marpaESLIF_bootstrap_on_or_off_type_t;
+typedef enum   marpaESLIF_bootstrap_event_initializer_type      marpaESLIF_bootstrap_event_initializer_type_t;
+typedef enum   marpaESLIF_bootstrap_event_declaration_type      marpaESLIF_bootstrap_event_declaration_type_t;
+
+typedef struct marpaESLIF_bootstrap_utf_string                marpaESLIF_bootstrap_utf_string_t;
+typedef struct marpaESLIF_bootstrap_single_symbol             marpaESLIF_bootstrap_single_symbol_t;
+typedef struct marpaESLIF_bootstrap_adverb_list_item          marpaESLIF_bootstrap_adverb_list_item_t;
+typedef struct marpaESLIF_bootstrap_grammar_reference         marpaESLIF_bootstrap_grammar_reference_t;
+typedef struct marpaESLIF_bootstrap_symbol_name_and_reference marpaESLIF_bootstrap_symbol_name_and_reference_t;
+typedef struct marpaESLIF_bootstrap_rhs_primary               marpaESLIF_bootstrap_rhs_primary_t;
+typedef struct marpaESLIF_bootstrap_alternative               marpaESLIF_bootstrap_alternative_t;
+typedef struct marpaESLIF_bootstrap_event_initialization      marpaESLIF_bootstrap_event_initialization_t;
 
 enum marpaESLIF_bootstrap_adverb_list_item_type {
   MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_NA = 0,
@@ -201,5 +207,8 @@ struct marpaESLIF_bootstrap_event_initialization {
   marpaESLIF_bootstrap_event_initializer_type_t initializerb;
 };
 
-#endif /* MARPAESLIF_INTERNAL_BOOTSTRAP_TYPES_H */
+static void                          _marpaESLIF_bootstrap_freeDefaultActionv(void *userDatavp, int contexti, void *p, size_t sizel);
+static marpaESLIFValueRuleCallback_t _marpaESLIF_bootstrap_ruleActionResolver(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions);
+
+#endif /* MARPAESLIF_INTERNAL_BOOTSTRAP_H */
 

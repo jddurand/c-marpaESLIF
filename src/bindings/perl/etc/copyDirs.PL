@@ -97,7 +97,7 @@ $dst = File::Spec->catfile('src', 'CMakeLists.txt');
 print "... Copying file $src to $dst\n";
 copy($src, $dst)|| die "$!";
 
-foreach (qw/bootstrap_actions.c marpaESLIF.c/) {
+foreach (qw/bootstrap.c lua.c marpaESLIF.c/) {
   $src = File::Spec->catfile(($updir) x 3, 'src', $_);
   $dst = File::Spec->catfile('src', 'src', $_);
   print "... Copying file $src to $dst\n";
