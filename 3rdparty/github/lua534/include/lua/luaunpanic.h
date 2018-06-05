@@ -305,8 +305,8 @@ extern "C" {
 #define luaunpanic_pushglobaltable(L)    luaunpanic_rawgeti(NULL, L, LUA_REGISTRYINDEX, LUA_RIDX_GLOBALS)
 #define luaunpanic_tostring(rcp, L,i)    luaunpanic_tolstring(rcp, L, (i), NULL)
 #define luaunpanic_insert(L,idx)	 luaunpanic_rotate(L, (idx), 1)
-#define luaunpanic_remove(L,idx)         (luaunpanic_rotate(L, (idx), -1), lua_pop(L, 1))
-#define luaunpanic_replace(L,idx)        (luaunpanic_copy(NULL, L, -1, (idx)), lua_pop(L, 1))
+#define luaunpanic_remove(L,idx)         (luaunpanic_rotate(L, (idx), -1) || lua_pop(L, 1))
+#define luaunpanic_replace(L,idx)        (luaunpanic_copy(NULL, L, -1, (idx)) || lua_pop(L, 1))
 /*
 ** compatibility macros for unsigned conversions
 */
