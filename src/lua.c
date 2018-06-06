@@ -22,8 +22,15 @@
 /* Internal initialization */
 static const char *MARPAESLIF_LUA_WRAPPER = "__marpaESLIFLuaWrapper";
 static const char *MARPAESLIF_LUA_TABLE = "__marpaESLIFLuaTable";
-static const char *MARPAESLIF_LUA_INIT = 
+static const char *MARPAESLIF_LUA_INIT =
+  "--------------------------------------------------------\n"
+  "-- Internal table used to communicate with outside world\n"
+  "--------------------------------------------------------\n"
   "__marpaESLIFLuaTable = {}\n"
+  "\n"
+  "--------------------------------------------------------\n"
+  "-- Function call wrapper\n"
+  "--------------------------------------------------------\n"
   "function __marpaESLIFLuaWrapper(indice, funcname, ...)\n"
   "  local value = funcname(...)\n"
   "  __marpaESLIFLuaTable[indice + 1] = value\n"
@@ -395,9 +402,7 @@ static short _marpaESLIFValue_lua_actionb(void *userDatavp, marpaESLIFValue_t *m
     MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "Lua action %s is not a function", marpaESLIFValuep->actions);
     goto err;
   }
-  /* 4: context */
-  LUA_PUSHLIGHTUSERDATA(marpaESLIFValuep, userDatavp);
-  /* 5...: arguments */
+  /* 4...: arguments */
   if (! nullableb) {
     nargi = argni - arg0i + 1;
     for (i = arg0i; i <= argni; i++) {
@@ -410,7 +415,7 @@ static short _marpaESLIFValue_lua_actionb(void *userDatavp, marpaESLIFValue_t *m
   }
 
   /* Lua will make sure there is a room for at least one argument on the stack at return */
-  LUA_CALL(marpaESLIFValuep, nargi + 3 /* +3 is the for (indice, function, context) */, 1);
+  LUA_CALL(marpaESLIFValuep, nargi + 2 /* +2 is for (indice, function) */, 1);
 
   if (! _marpaESLIF_lua_pop_argb(marpaESLIFValuep, resulti)) {
     goto err;
