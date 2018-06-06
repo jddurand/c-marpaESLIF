@@ -557,7 +557,7 @@ static SV *marpaESLIF_call_actionp(pTHX_ SV *interfacep, char *methods, AV *avp,
 
   if (Perl_MarpaX_ESLIF_Valuep != NULL) {
     /* This is an action context - we localize some variable */
-    /* For GV_ADD: calue is created once if needed - Perl will destroy it at exit */
+    /* For GV_ADD: value is created once if needed - Perl will destroy it at exit */
 
     Perl_valueInterfacep       = Perl_MarpaX_ESLIF_Valuep->Perl_valueInterfacep;
     Perl_MarpaX_ESLIF_Grammarp = Perl_MarpaX_ESLIF_Valuep->Perl_MarpaX_ESLIF_Grammarp;
