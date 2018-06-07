@@ -937,7 +937,7 @@ This rule is nothing else but an alias for C<::convert[ASCII]>.
 
 =item shallowb
 
-Meaningful only when type is C<MARPAESLIF_VALUE_TYPE_PTR> or C<MARPAESLIF_VALUE_TYPE_ARRAY>, this has no impact on representation, but has an impact on internal value stack manipulation: everytime ESLIF tries to set a value, it is looking if this is doing to replace something. It is taking two informations to decide to call a user's eventual free callback: it is the type is C<MARPAESLIF_VALUE_TYPE_PTR> or C<MARPAESLIF_VALUE_TYPE_ARRAY>, and if the value to replaced has been declared shallowed or not. When the value to replace is declared shallowed, the user's free callback is never called.
+Meaningful only when type is C<MARPAESLIF_VALUE_TYPE_PTR> or C<MARPAESLIF_VALUE_TYPE_ARRAY>. This has an impact on internal value stack manipulation: everytime ESLIF tries to set a value, it is looking if this is going to replace something at the same stack indice. If the value to be replaced as this stack indice has been declared of type C<MARPAESLIF_VALUE_TYPE_PTR> or C<MARPAESLIF_VALUE_TYPE_ARRAY> and has a true C<shallowb> flag value, the user's free callback, when defined, is called.
 
 =item type
 
