@@ -203,7 +203,7 @@ sub _dircopy {
         # Do not copy known stuff we can skip
         #
         next if $_ eq 'Makefile';
-        next if $_ eq 'cmake';
+        next if $_ =~ /\bcmake\b/;
         next if $_ eq 'cmake-utils';
         next if $_ eq 'test';
         next if $_ eq 'blog';
