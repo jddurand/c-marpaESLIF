@@ -23,19 +23,18 @@ print "Generating config for lua534 version $version\n";
 # Write configuration file
 # ------------------------
 my $config_h_in = File::Spec->catfile('src', 'luaconf.h.in');
-my $config_h    = File::Spec->catfile('output', 'include', 'luaconf.h');
+my $config_h    = File::Spec->catfile('output', 'include', 'lua', 'luaconf.h');
 make_path(dirname($config_h));
 
 my $ac = Config::AutoConf::INI->new(logfile => 'config.log');
-$ac->define_var('LUA_32BITS', 1);
-$ac->define_var('LUA_USE_C89', 1);
+my @extra_compiler_flags = ("-DLUA_32BITS", "-DLUA_USE_C89");
 if (is_os_type('Windows')) {
-    $ac->define_var('LUA_DL_DLL', 1);
+    push(@extra_compiler_flags, '-DLUA_DL_DLL');
 } else {
-    $ac->define_var('LUA_DL_DLOPEN', 1);
-    $ac->define_var('LUA_USE_POSIX', 1);
+    push(@extra_compiler_flags, '-DLUA_DL_DLOPEN');
+    push(@extra_compiler_flags, '-DLUA_USE_POSIX');
 }
-
+my $extra_compiler_flags = join(' ', @extra_compiler_flags);
 $ac->check;
 write_config($version, $config_h_in, $config_h);
 
@@ -87,6 +86,7 @@ qw/
     lutf8lib.c
     lvm.c
     lzio.c
+    luaunpanic.c
     /;
 
 # ----------------------------------------------------------------------------------------
@@ -106,7 +106,8 @@ foreach my $source (@sources) {
     $cbuilder->compile(
 	source        => $source,
 	object_file   => $obj,
-	include_dirs  => [ 'include', File::Spec->catdir('output', 'include') ],
+        extra_compiler_flags => $extra_compiler_flags,
+	include_dirs  => [ 'include', File::Spec->catdir('include', 'lua'), File::Spec->catdir('output', 'include') ],
 	'C++'         => $is_cplusplus
 	);
 }
