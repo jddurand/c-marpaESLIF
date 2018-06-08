@@ -311,7 +311,7 @@ static inline short                  _marpaESLIFRecognizer_set_pauseb(marpaESLIF
 static inline short                  _marpaESLIFRecognizer_set_tryb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIF_grammar_t *grammarp, marpaESLIF_symbol_t *symbolp, char *bytes, size_t bytel);
 static inline short                  _marpaESLIFRecognizer_push_grammar_eventsb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp);
 static inline void                   _marpaESLIFRecognizer_clear_grammar_eventsb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp);
-static        short                  _marpaESLIFRecognizer_valueResultb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *marpaESLIFValueResultp, void *userDatavp, _marpaESLIFRecognizer_valueResultCallback_t callbackp);
+static        short                  _marpaESLIFRecognizer_value_validb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *marpaESLIFValueResultp, void *userDatavp, _marpaESLIFRecognizer_valueResultCallback_t callbackp);
 static        short                  _marpaESLIFRecognizer_concat_valueResultCallback(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
 
 static inline void                   _marpaESLIFRecognizer_sort_eventsb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp);
@@ -2878,7 +2878,7 @@ static inline short _marpaESLIFRecognizer_lexemeStack_i_setarraypb(marpaESLIFRec
   marpaESLIFValueResult       = marpaESLIFValueResultLexeme;
   marpaESLIFValueResult.u.p   = GENERICSTACK_ARRAYP_PTR(arrayp);
   marpaESLIFValueResult.sizel = GENERICSTACK_ARRAYP_LENGTH(arrayp);
-  if (! _marpaESLIFRecognizer_valueResultb(marpaESLIFRecognizerp, &marpaESLIFValueResult, NULL /* userDatavp */, NULL /* callbackp */)) {
+  if (! _marpaESLIFRecognizer_value_validb(marpaESLIFRecognizerp, &marpaESLIFValueResult, NULL /* userDatavp */, NULL /* callbackp */)) {
     goto err;
   }
   
@@ -6625,6 +6625,7 @@ static inline short _marpaESLIFRecognizer_lexeme_alternativeb(marpaESLIFRecogniz
 short marpaESLIFRecognizer_lexeme_alternativeb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFAlternative_t *marpaESLIFAlternativep)
 /*****************************************************************************/
 {
+  static const char       *funcs                  = "marpaESLIFRecognizer_lexeme_alternativeb";
   marpaESLIFValueResult_t *marpaESLIFValueResultp = NULL;
   marpaESLIF_t            *marpaESLIFp;
   marpaESLIFGrammar_t     *marpaESLIFGrammarp;
@@ -6648,6 +6649,12 @@ short marpaESLIFRecognizer_lexeme_alternativeb(marpaESLIFRecognizer_t *marpaESLI
   
   if (marpaESLIFAlternativep == NULL) {
     MARPAESLIF_ERROR(marpaESLIFp, "Alternative is NULL");
+    goto err;
+  }
+
+  if (marpaESLIFAlternativep->value.contexti <= 0) {
+    /* Context from the external world must be > 0 */
+    MARPAESLIF_ERRORF(marpaESLIFp, "%s must be called with a context > 0", funcs);
     goto err;
   }
 
@@ -11826,7 +11833,7 @@ static inline short _marpaESLIFValue_stack_setb(marpaESLIFValue_t *marpaESLIFVal
   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "start indicei=%d", indicei);
 
   /* Validate the input */
-  if (! _marpaESLIFRecognizer_valueResultb(marpaESLIFRecognizerp, marpaESLIFValueResultp, NULL /* userDatavp */, NULL /* callbackp */)) {
+  if (! _marpaESLIFRecognizer_value_validb(marpaESLIFRecognizerp, marpaESLIFValueResultp, NULL /* userDatavp */, NULL /* callbackp */)) {
     goto err;
   }
   
@@ -12375,7 +12382,7 @@ static short _marpaESLIF_lexeme_concatb(void *userDatavp, marpaESLIFValue_t *mar
   /* How comes that this will not crash then... ? This is because at the end everything is a regular expression. */
   /* and if you look to regular expression implementation _marpaESLIFRecognizer_terminal_matcherb() you will see that it is ok with */
   /* an input of zero size: this will return MARPAESLIF_MATCH_FAILURE or MARPAESLIF_MATCH_AGAIN immediately. */
-  /* i.e. the parent recognizer can never have a MARPAESLIF_MATCH_OK, so it can never recuperate this fake array. */
+  /* i.e. the parent recognizer can never have a MARPAESLIF_MATCH_OK, so it can never recuperate a fake array of zero size. */
 
   marpaESLIFRecognizer_t  *marpaESLIFRecognizerp = marpaESLIFValuep->marpaESLIFRecognizerp;
   short                    shallowb              = (marpaESLIFRecognizerp->parentRecognizerp != NULL) ? 1 : 0;
@@ -12811,7 +12818,7 @@ static inline short _marpaESLIF_generic_action___concatb(void *userDatavp, marpa
       marpaESLIFValueResult       = marpaESLIFValueResultLexeme;
       marpaESLIFValueResult.u.p   = bytep;
       marpaESLIFValueResult.sizel = bytel;
-      if (! _marpaESLIFRecognizer_valueResultb(marpaESLIFRecognizerp, &marpaESLIFValueResult, &context, _marpaESLIFRecognizer_concat_valueResultCallback)) {
+      if (! _marpaESLIFRecognizer_value_validb(marpaESLIFRecognizerp, &marpaESLIFValueResult, &context, _marpaESLIFRecognizer_concat_valueResultCallback)) {
         goto err;
       }
     } else {
@@ -12821,7 +12828,7 @@ static inline short _marpaESLIF_generic_action___concatb(void *userDatavp, marpa
         if (marpaESLIFValueResultp == NULL) {
           goto err;
         }
-        if (! _marpaESLIFRecognizer_valueResultb(marpaESLIFRecognizerp, marpaESLIFValueResultp, &context, _marpaESLIFRecognizer_concat_valueResultCallback)) {
+        if (! _marpaESLIFRecognizer_value_validb(marpaESLIFRecognizerp, marpaESLIFValueResultp, &context, _marpaESLIFRecognizer_concat_valueResultCallback)) {
           goto err;
         }
       }
@@ -13744,10 +13751,10 @@ short marpaESLIFRecognizer_hook_discardb(marpaESLIFRecognizer_t *marpaESLIFRecog
 }
 
 /*****************************************************************************/
-static short _marpaESLIFRecognizer_valueResultb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *marpaESLIFValueResultp, void *userDatavp, _marpaESLIFRecognizer_valueResultCallback_t callbackp)
+static short _marpaESLIFRecognizer_value_validb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *marpaESLIFValueResultp, void *userDatavp, _marpaESLIFRecognizer_valueResultCallback_t callbackp)
 /*****************************************************************************/
 {
-  static const char      *funcs          = "_marpaESLIFRecognizer_valueResultb";
+  static const char      *funcs          = "_marpaESLIFRecognizer_value_validb";
   short                   alternativeokb = 1;
   short                   rcb;
 
