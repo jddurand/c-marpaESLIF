@@ -1307,7 +1307,11 @@ The number of grammar tokens taken by this alternative. A highly recommended val
 
 =back
 
-Because this is representing a lexeme, which is always of type ARRAY in the value stack (i.e. a pointer to bytes together with an associated length), here is how the rule and symbol callbacks can distinguish from user-defined alternatives from the alternatives coming from the internal recognition: the pointer is non-C<NULL>, but the length is C<0>, and the context is C<0> in a rule callback, i.e
+Because this is representing a lexeme, which is always of type ARRAY in the value stack (i.e. a pointer to bytes together with an associated length), here is how the rule and symbol callbacks can distinguish between user-defined alternatives and those coming from the internal recognition: the pointer is non-C<NULL>, but the length is C<0> and the context is C<0> in a rule callback.
+
+ESLIF guarantees that an alternative cannot point to another alternative.
+
+Examples on how to detect user-defined alternatives follows:
 
 =over
 
@@ -1322,23 +1326,23 @@ The stack type of the item at an indice C<indicei> is ARRAY, the context is C<0>
                        int                resulti,
                        short              nullableb) {
 
-    short              arrayb;
-    void              *bytep;
-    size_t             bytel;
-    int                contexti;
-    marpaESLIFValue_t *marpaESLIFValuep;
+    short                    arrayb;
+    void                    *bytep;
+    size_t                   bytel;
+    int                      contexti;
+    marpaESLIFValueResult_t *marpaESLIFValueResultp;
 
     if (! nullableb) {
       /* There is something in the stack - let's try arg0i */
 
-      marpaESLIFValuep = marpaESLIFValue_stack_getp(marpaESLIFValuep, arg0i);
-      if (marpaESLIFValuep == NULL) {
+      marpaESLIFValueResultp = marpaESLIFValue_stack_getp(marpaESLIFValuep, arg0i);
+      if (marpaESLIFValueResultp == NULL) {
         goto err;
       }
-      if (marpaESLIFValuep->type == MARPAESLIF_VALUE_TYPE_ARRAY) {
-        if ((! marpaESLIFValuep->contexti) && (marpaESLIFValuep->u.p != NULL) && (marpaESLIFValuep->sizel <= 0)) {
-          /* This is a user-defined lexeme, referenced by u.p */
-          marpaESLIFValuep = (marpaESLIFValue_t *) marpaESLIFValuep->u.p;
+      if (marpaESLIFValueResultp->type == MARPAESLIF_VALUE_TYPE_ARRAY) {
+        if ((! marpaESLIFValueResultp->contexti) && (marpaESLIFValueResultp->u.p != NULL) && (marpaESLIFValueResultp->sizel <= 0)) {
+          /* This is a user-defined lexeme, i.e. an alternative, referenced by u.p */
+          marpaESLIFValueResultp = (marpaESLIFValueResultp_t *) marpaESLIFValueResultp->u.p;
           /* Here, only the user knows what it is about */
         }
       }
