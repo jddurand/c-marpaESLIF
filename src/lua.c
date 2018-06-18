@@ -693,7 +693,7 @@ static short _marpaESLIF_lua_pop_argb(marpaESLIFValue_t *marpaESLIFValuep, int r
     }
     *resultip = resulti;
     marpaESLIFValueResult.contexti        = MARPAESLIFVALUE_LUA_CONTEXT;
-    marpaESLIFValueResult.sizel           = sizeof(int);
+    marpaESLIFValueResult.sizel           = 0;
     marpaESLIFValueResult.representationp = NULL;
     marpaESLIFValueResult.shallowb        = 0;
     marpaESLIFValueResult.luab            = 1;
