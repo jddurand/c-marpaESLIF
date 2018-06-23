@@ -247,7 +247,11 @@ struct marpaESLIFGrammar {
   short                      autorankb;         /* Current autorank setting */
   char                      *luabytep;          /* Lua script source */
   size_t                     luabytel;          /* Lua script source length in byte */
+  char                      *luaprecompiledp;   /* Lua script source precompiled */
+  size_t                     luaprecompiledl;   /* Lua script source precompiled length in byte */
   marpaESLIF_string_t       *luadescp;          /* Delayed until show is requested */
+  lua_State                 *L;                 /* Temporary lua_State used to precompiled lua script */
+
 };
 
 struct marpaESLIF_meta {

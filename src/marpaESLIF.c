@@ -1182,6 +1182,7 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
     marpaESLIFGrammar.grammarStackp    = NULL;
     marpaESLIFGrammar.grammarp         = grammarp;
     marpaESLIFGrammar.luabytep         = NULL;
+    marpaESLIFGrammar.luaprecompiledp  = NULL;
     marpaESLIFGrammar.luadescp         = NULL;
 
     /* Fake a recognizer. EOF flag will be set automatically in fake mode */
@@ -1685,6 +1686,7 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
    7. lexeme events is meaningul only on lexemes
    8. Grammar names must all be different
    9. :discard events are possible only if the RHS of the :discard rule is not a lexeme
+  10. Precompile lua script if needed
 
       It is not illegal to have sparse items in grammarStackp.
 
@@ -2418,6 +2420,14 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
         goto err;
       }
     }
+  }
+
+  /*
+    10. Precompile lua script
+  */
+  if (! _marpaESLIFGrammar_lua_precompileb(marpaESLIFGrammarp)) {
+    MARPAESLIF_ERROR(marpaESLIFp, "Lua precompilation failure");
+    goto err;
   }
 
   /* Fill grammars information */
@@ -3532,7 +3542,11 @@ static inline marpaESLIF_t *_marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptio
   marpaESLIFp->marpaESLIFGrammarp->grammarStackp           = NULL;
   marpaESLIFp->marpaESLIFGrammarp->grammarp                = NULL;
   marpaESLIFp->marpaESLIFGrammarp->luabytep                = NULL; /* There is no "script" in marpaESLIF grammar */
+  marpaESLIFp->marpaESLIFGrammarp->luabytel                = 0;
+  marpaESLIFp->marpaESLIFGrammarp->luaprecompiledp         = NULL;
+  marpaESLIFp->marpaESLIFGrammarp->luaprecompiledl         = 0;
   marpaESLIFp->marpaESLIFGrammarp->luadescp                = NULL;
+  marpaESLIFp->marpaESLIFGrammarp->L                       = NULL;
 
   marpaESLIFp->marpaESLIFGrammarp->grammarStackp = &(marpaESLIFp->marpaESLIFGrammarp->_grammarStack);
   GENERICSTACK_INIT(marpaESLIFp->marpaESLIFGrammarp->grammarStackp);
@@ -4751,7 +4765,10 @@ static inline marpaESLIFGrammar_t *_marpaESLIFGrammar_newp(marpaESLIF_t *marpaES
     marpaESLIFGrammarp->autorankb               = 0;
     marpaESLIFGrammarp->luabytep                = NULL;
     marpaESLIFGrammarp->luabytel                = 0;
+    marpaESLIFGrammarp->luaprecompiledp         = NULL;
+    marpaESLIFGrammarp->luaprecompiledl         = 0;
     marpaESLIFGrammarp->luadescp                = NULL;
+    marpaESLIFGrammarp->L                       = NULL;
   } else {
     marpaESLIFGrammarp = marpaESLIfGrammarPreviousp;
   }
@@ -8962,7 +8979,7 @@ void marpaESLIFValue_freev(marpaESLIFValue_t *marpaESLIFValuep)
     MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC;
 
     /* Dispose lua if needed */
-    _marpaESLIF_lua_freev(marpaESLIFValuep);
+    _marpaESLIFValue_lua_freev(marpaESLIFValuep);
 
     free(marpaESLIFValuep);
   }
@@ -9246,6 +9263,9 @@ static inline void _marpaESLIFGrammar_freev(marpaESLIFGrammar_t *marpaESLIFGramm
     _marpaESLIF_string_freev(marpaESLIFGrammarp->luadescp);
     if (marpaESLIFGrammarp->luabytep != NULL) {
       free(marpaESLIFGrammarp->luabytep);
+    }
+    if (marpaESLIFGrammarp->luaprecompiledp != NULL) {
+      free(marpaESLIFGrammarp->luaprecompiledp);
     }
     if (! onStackb) {
       free(marpaESLIFGrammarp);
