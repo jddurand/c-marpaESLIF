@@ -1182,8 +1182,11 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
     marpaESLIFGrammar.grammarStackp    = NULL;
     marpaESLIFGrammar.grammarp         = grammarp;
     marpaESLIFGrammar.luabytep         = NULL;
+    marpaESLIFGrammar.luabytel         = 0;
     marpaESLIFGrammar.luaprecompiledp  = NULL;
+    marpaESLIFGrammar.luaprecompiledl  = 0;
     marpaESLIFGrammar.luadescp         = NULL;
+    marpaESLIFGrammar.L                = NULL;
 
     /* Fake a recognizer. EOF flag will be set automatically in fake mode */
     marpaESLIFRecognizerTestp = _marpaESLIFRecognizer_newp(&marpaESLIFGrammar,

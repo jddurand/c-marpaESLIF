@@ -418,7 +418,6 @@ static short _marpaESLIFValue_lua_actionb(void *userDatavp, marpaESLIFValue_t *m
   int                     typei;
 
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
-  MARPAESLIF_NOTICEF(marpaESLIFRecognizerp->marpaESLIFp, "%s(userDatavp=%p, arg0i=%d, argni=%d, resulti=%d, nullableb=%d)", funcs, userDatavp, arg0i, argni, resulti, (int) nullableb);
 
   /* Create the lua state if needed */
   if (! _marpaESLIF_lua_newb(marpaESLIFValuep)) {
@@ -471,7 +470,6 @@ static short _marpaESLIFValue_lua_actionb(void *userDatavp, marpaESLIFValue_t *m
   rcb = 0;
 
  done:
-  MARPAESLIF_NOTICEF(marpaESLIFRecognizerp->marpaESLIFp, "return %d", (int) rcb);
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC;
   return rcb;
 }
@@ -486,7 +484,6 @@ static short _marpaESLIFValue_lua_symbolb(void *userDatavp, marpaESLIFValue_t *m
   int                     typei;
 
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
-  MARPAESLIF_NOTICEF(marpaESLIFRecognizerp->marpaESLIFp, "%s(userDatavp=%p, bytep=%p, bytel=%ld)", funcs, userDatavp, bytep, (unsigned long) bytel);
 
   /* Create the lua state if needed */
   if (! _marpaESLIF_lua_newb(marpaESLIFValuep)) {
@@ -530,7 +527,6 @@ static short _marpaESLIFValue_lua_symbolb(void *userDatavp, marpaESLIFValue_t *m
   rcb = 0;
 
  done:
-  MARPAESLIF_NOTICEF(marpaESLIFRecognizerp->marpaESLIFp, "return %d", (int) rcb);
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC;
   return rcb;
 }
@@ -559,46 +555,46 @@ static short _marpaESLIF_lua_push_argb(marpaESLIFValue_t *marpaESLIFValuep, int 
       goto err;
     }
     indiceip = (int *) marpaESLIFValueResult.u.p;
-    MARPAESLIF_NOTICEF(marpaESLIFValuep->marpaESLIFp, "%s: Pushing %s[%d+1]", funcs, MARPAESLIF_LUA_TABLE, *indiceip);
+    MARPAESLIF_TRACEF(marpaESLIFValuep->marpaESLIFp, funcs, "Pushing %s[%d+1]", MARPAESLIF_LUA_TABLE, *indiceip);
     LUA_RAWGETI(NULL, marpaESLIFValuep, -1, (lua_Integer) (*indiceip + 1));                           /* stack: ..., table, table[++(*indiceip)] */
     LUA_REMOVE(marpaESLIFValuep, -2);                                                                 /* stack: ..., table[++(*indiceip)] */
   } else {
     switch (marpaESLIFValueResult.type) {
       /* This is coming from a world outside of Lua - we do a translation */
     case MARPAESLIF_VALUE_TYPE_UNDEF:
-      MARPAESLIF_NOTICEF(marpaESLIFValuep->marpaESLIFp, "%s: Pushing UNDEF", funcs);
+      MARPAESLIF_TRACE(marpaESLIFValuep->marpaESLIFp, funcs, "MARPAESLIF_VALUE_TYPE_UNDEF => Lua nil");
       LUA_PUSHNIL(marpaESLIFValuep);
       break;
     case MARPAESLIF_VALUE_TYPE_CHAR:
-      MARPAESLIF_NOTICEF(marpaESLIFValuep->marpaESLIFp, "%s: Pushing CHAR", funcs);
+      MARPAESLIF_TRACEF(marpaESLIFValuep->marpaESLIFp, funcs, "MARPAESLIF_VALUE_TYPE_CHAR => Lua string \"%c\" (0x%2x) of length 1", ((marpaESLIFValueResult.u.c >= 128) || (! isprint(marpaESLIFValueResult.u.c & 0xFF))) ? ' ' : marpaESLIFValueResult.u.c, (int) marpaESLIFValueResult.u.c);
       LUA_PUSHLSTRING(marpaESLIFValuep, &marpaESLIFValueResult.u.c, 1);
       break;
     case MARPAESLIF_VALUE_TYPE_SHORT:
-      MARPAESLIF_NOTICEF(marpaESLIFValuep->marpaESLIFp, "%s: Pushing SHORT", funcs);
+      MARPAESLIF_TRACEF(marpaESLIFValuep->marpaESLIFp, funcs, "MARPAESLIF_VALUE_TYPE_SHORT => Lua integer %d", (int) marpaESLIFValueResult.u.b);
       LUA_PUSHINTEGER(marpaESLIFValuep, (lua_Integer) marpaESLIFValueResult.u.b);
       break;
     case MARPAESLIF_VALUE_TYPE_INT:
-      MARPAESLIF_NOTICEF(marpaESLIFValuep->marpaESLIFp, "%s: Pushing INT", funcs);
+      MARPAESLIF_TRACEF(marpaESLIFValuep->marpaESLIFp, funcs, "MARPAESLIF_VALUE_TYPE_INT => Lua integer %d", marpaESLIFValueResult.u.i);
       LUA_PUSHINTEGER(marpaESLIFValuep, (lua_Integer) marpaESLIFValueResult.u.i);
       break;
     case MARPAESLIF_VALUE_TYPE_LONG:
-      MARPAESLIF_NOTICEF(marpaESLIFValuep->marpaESLIFp, "%s: Pushing LONG", funcs);
+      MARPAESLIF_TRACEF(marpaESLIFValuep->marpaESLIFp, funcs, "MARPAESLIF_VALUE_TYPE_LONG => Lua integer %ld", marpaESLIFValueResult.u.l);
       LUA_PUSHINTEGER(marpaESLIFValuep, (lua_Integer) marpaESLIFValueResult.u.l);
       break;
     case MARPAESLIF_VALUE_TYPE_FLOAT:
-      MARPAESLIF_NOTICEF(marpaESLIFValuep->marpaESLIFp, "%s: Pushing FLOAT", funcs);
+      MARPAESLIF_TRACEF(marpaESLIFValuep->marpaESLIFp, funcs, "MARPAESLIF_VALUE_TYPE_FLOAT => Lua number %f", (double) marpaESLIFValueResult.u.f);
       LUA_PUSHNUMBER(marpaESLIFValuep, (lua_Number) marpaESLIFValueResult.u.f);
       break;
     case MARPAESLIF_VALUE_TYPE_DOUBLE:
-      MARPAESLIF_NOTICEF(marpaESLIFValuep->marpaESLIFp, "%s: Pushing DOUBLE", funcs);
+      MARPAESLIF_TRACEF(marpaESLIFValuep->marpaESLIFp, funcs, "MARPAESLIF_VALUE_TYPE_DOUBLE => Lua number %f", marpaESLIFValueResult.u.d, funcs);
       LUA_PUSHNUMBER(marpaESLIFValuep, (lua_Number) marpaESLIFValueResult.u.d);
       break;
     case MARPAESLIF_VALUE_TYPE_PTR:
-      MARPAESLIF_NOTICEF(marpaESLIFValuep->marpaESLIFp, "%s: Pushing PTR", funcs);
+      MARPAESLIF_TRACEF(marpaESLIFValuep->marpaESLIFp, funcs, "MARPAESLIF_VALUE_TYPE_PTR => Lua light userdata %p", marpaESLIFValueResult.u.p, funcs);
       LUA_PUSHLIGHTUSERDATA(marpaESLIFValuep, marpaESLIFValueResult.u.p);
       break;
     case MARPAESLIF_VALUE_TYPE_ARRAY:
-      MARPAESLIF_NOTICEF(marpaESLIFValuep->marpaESLIFp, "%s: Pushing ARRAY", funcs);
+      MARPAESLIF_TRACEF(marpaESLIFValuep->marpaESLIFp, funcs, "MARPAESLIF_VALUE_TYPE_ARRAY => Lua string at %p of size %ld", marpaESLIFValueResult.u.p, (unsigned long) marpaESLIFValueResult.sizel);
       LUA_PUSHLSTRING(marpaESLIFValuep, marpaESLIFValueResult.u.p, marpaESLIFValueResult.sizel);
       break;
     default:
@@ -642,6 +638,7 @@ static short _marpaESLIF_lua_pop_argb(marpaESLIFValue_t *marpaESLIFValuep, int r
     marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_UNDEF;
     /* No need to keep that in our internal lua table */
     _marpaESLIF_lua_freeInternalActionv(marpaESLIFValuep /* userDatavp */, resulti);
+    MARPAESLIF_TRACE(marpaESLIFValuep->marpaESLIFp, funcs, "LUA_TNIL => MARPAESLIF_VALUE_TYPE_UNDEF");
   break;
   case LUA_TNUMBER:
     /* A number is our forced lua implementation is always a double */
@@ -653,10 +650,12 @@ static short _marpaESLIF_lua_pop_argb(marpaESLIFValue_t *marpaESLIFValuep, int r
     marpaESLIFValueResult.userDatavp      = NULL;
 #if LUA_FLOAT_TYPE == LUA_FLOAT_FLOAT
     marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_FLOAT;
+    MARPAESLIF_TRACEF(marpaESLIFValuep->marpaESLIFp, funcs, "LUA_TNUMBER => MARPAESLIF_VALUE_TYPE_FLOAT %f", (double) marpaESLIFValueResult.u.f);
     LUA_TONUMBER(marpaESLIFValuep, &(marpaESLIFValueResult.u.f), -1);
 #else
     marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_DOUBLE;
     LUA_TONUMBER(marpaESLIFValuep, &(marpaESLIFValueResult.u.d), -1);
+    MARPAESLIF_TRACEF(marpaESLIFValuep->marpaESLIFp, funcs, "LUA_TNUMBER => MARPAESLIF_VALUE_TYPE_DOUBLE %f", marpaESLIFValueResult.u.d);
 #endif
     /* No need to keep that in our internal lua table */
     _marpaESLIF_lua_freeInternalActionv(marpaESLIFValuep /* userDatavp */, resulti);
@@ -672,6 +671,7 @@ static short _marpaESLIF_lua_pop_argb(marpaESLIFValue_t *marpaESLIFValuep, int r
     marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_INT;
     LUA_TOBOOLEAN(marpaESLIFValuep, &(marpaESLIFValueResult.u.i), -1);
     /* No need to keep that in our internal lua table */
+    MARPAESLIF_TRACEF(marpaESLIFValuep->marpaESLIFp, funcs, "LUA_TBOOLEAN => MARPAESLIF_VALUE_TYPE_INT %d", marpaESLIFValueResult.u.i);
     _marpaESLIF_lua_freeInternalActionv(marpaESLIFValuep /* userDatavp */, resulti);
     break;
   case LUA_TSTRING:
@@ -687,6 +687,7 @@ static short _marpaESLIF_lua_pop_argb(marpaESLIFValue_t *marpaESLIFValuep, int r
       marpaESLIFValueResult.luab            = 1;
       marpaESLIFValueResult.userDatavp      = NULL;
       marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_UNDEF;
+      MARPAESLIF_TRACE(marpaESLIFValuep->marpaESLIFp, funcs, "LUA_TSTRING empty => MARPAESLIF_VALUE_TYPE_UNDEF");
     } else {
       marpaESLIFValueResult.u.p = (char *) malloc(bytel);
       if (marpaESLIFValueResult.u.p == NULL) {
@@ -701,6 +702,7 @@ static short _marpaESLIF_lua_pop_argb(marpaESLIFValue_t *marpaESLIFValuep, int r
       marpaESLIFValueResult.userDatavp      = NULL;
       marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_ARRAY;
       memcpy(marpaESLIFValueResult.u.p, bytep, bytel);
+      MARPAESLIF_TRACEF(marpaESLIFValuep->marpaESLIFp, funcs, "LUA_TSTRING => MARPAESLIF_VALUE_TYPE_ARRAY at %p of size %ld", bytep, (unsigned long) bytel);
     }
     /* No need to keep that in our internal lua table */
     _marpaESLIF_lua_freeInternalActionv(marpaESLIFValuep /* userDatavp */, resulti);
@@ -726,7 +728,8 @@ static short _marpaESLIF_lua_pop_argb(marpaESLIFValue_t *marpaESLIFValuep, int r
     marpaESLIFValueResult.userDatavp      = (void *) marpaESLIFValuep;
     marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_PTR;
     marpaESLIFValueResult.u.p             = (void *) resultip;
-    MARPAESLIF_NOTICEF(marpaESLIFValuep->marpaESLIFp, "%s: Keeping lua type %s (%d) in internal table at indice %d", funcs, (char *) _marpaESLIF_luatypes(typei), typei, resulti);
+    MARPAESLIF_TRACEF(marpaESLIFValuep->marpaESLIFp, funcs, "Keeping lua type %s (%d) in internal table at indice %d", (char *) _marpaESLIF_luatypes(typei), typei, resulti);
+    MARPAESLIF_TRACEF(marpaESLIFValuep->marpaESLIFp, funcs, "%s => MARPAESLIF_VALUE_TYPE_PTR at %p (pointer to integer, *p: %d)", _marpaESLIF_luatypes(typei), resultip, resulti);
     break;
   case LUA_TLIGHTUSERDATA:
     /* External pointer */
@@ -740,6 +743,7 @@ static short _marpaESLIF_lua_pop_argb(marpaESLIFValue_t *marpaESLIFValuep, int r
     LUA_TOUSERDATA(marpaESLIFValuep, &(marpaESLIFValueResult.u.p), -1);
     /* No need to keep that in our internal lua table */
     _marpaESLIF_lua_freeInternalActionv(marpaESLIFValuep /* userDatavp */, resulti);
+    MARPAESLIF_TRACEF(marpaESLIFValuep->marpaESLIFp, funcs, "LUA_TLIGHTUSERDATA => MARPAESLIF_VALUE_TYPE_PTR at %p", marpaESLIFValueResult.u.p);
     break;
   default:
     MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "Unsupported lua type %d", typei);
@@ -774,7 +778,6 @@ static void _marpaESLIF_lua_freeDefaultActionv(void *userDatavp, int contexti, v
   int                     *indiceip;
 
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
-  MARPAESLIF_NOTICEF(marpaESLIFRecognizerp->marpaESLIFp, "%s(contexti=%d, p=%p, sizel=%ld)", funcs, contexti, p, (unsigned long) sizel);
 
   /* When called with no pointer, this is an internal call done by the pop of values */
   if ((p != NULL) && (sizel > 0)) {
@@ -785,7 +788,6 @@ static void _marpaESLIF_lua_freeDefaultActionv(void *userDatavp, int contexti, v
     if (typei != LUA_TTABLE) {
       MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "%s is not a table", MARPAESLIF_LUA_TABLE);
     } else {
-      MARPAESLIF_NOTICEF(marpaESLIFRecognizerp->marpaESLIFp, "%s: Setting __marpaESLIFLuaTable[%d+1] = nil", funcs, *indiceip);
       LUA_PUSHNIL(marpaESLIFValuep);                                                                    /* stack: table, nil */
       LUA_RAWSETI(marpaESLIFValuep, -2, (lua_Integer) (*indiceip + 1));                                 /* stack: table */
     }
@@ -796,7 +798,6 @@ static void _marpaESLIF_lua_freeDefaultActionv(void *userDatavp, int contexti, v
 
   /* This function returns void, though we need the err label */
  err:
-  MARPAESLIF_NOTICE(marpaESLIFRecognizerp->marpaESLIFp, "return");
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC;
 }
 
@@ -810,14 +811,12 @@ static void _marpaESLIF_lua_freeInternalActionv(void *userDatavp, int resulti)
   int                      typei;
 
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
-  MARPAESLIF_NOTICEF(marpaESLIFRecognizerp->marpaESLIFp, "%s(resulti=%d)", funcs, resulti);
 
   /* The value is always in  MARPAESLIF_LUA_TABLE */
   LUA_GETGLOBAL(&typei, marpaESLIFValuep, MARPAESLIF_LUA_TABLE);                                    /* stack: table */
   if (typei != LUA_TTABLE) {
     MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "%s is not a table", MARPAESLIF_LUA_TABLE);
   } else {
-    MARPAESLIF_NOTICEF(marpaESLIFRecognizerp->marpaESLIFp, "%s: Setting __marpaESLIFLuaTable[%d+1] = nil", funcs, resulti);
     LUA_PUSHNIL(marpaESLIFValuep);                                                                  /* stack: table, nil */
     LUA_RAWSETI(marpaESLIFValuep, -2, (lua_Integer) (resulti + 1));                                 /* stack: table */
   }
@@ -827,7 +826,6 @@ static void _marpaESLIF_lua_freeInternalActionv(void *userDatavp, int resulti)
 
   /* This function returns void, though we need the err label */
  err:
-  MARPAESLIF_NOTICE(marpaESLIFRecognizerp->marpaESLIFp, "return");
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC;
 }
 
