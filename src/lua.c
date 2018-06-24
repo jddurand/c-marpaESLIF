@@ -326,6 +326,8 @@ static const char *LUATYPE_TUNKNOWN_STRING = "UNKNOWN";
 /*****************************************************************************/
 static short _marpaESLIF_lua_newb(marpaESLIFValue_t *marpaESLIFValuep)
 /*****************************************************************************/
+/* This function is called only if there is at least one <luascript/>        */
+/*****************************************************************************/
 {
   marpaESLIFGrammar_t *marpaESLIFGrammarp;
   short                rcb;
@@ -356,12 +358,9 @@ static short _marpaESLIF_lua_newb(marpaESLIFValue_t *marpaESLIFValuep)
   /* Check Lua version */
   LUAL_CHECKVERSION(marpaESLIFValuep);
 
-  /* We execute our own code */
-  LUAL_DOSTRING(marpaESLIFValuep, MARPAESLIF_LUA_INIT);
-  
-  /* Execute lua script present in the grammar, eventually */
+  /* We load byte code generated during grammar validation */
   if ((marpaESLIFGrammarp->luabytep != NULL) && (marpaESLIFGrammarp->luabytel > 0)) {
-    LUAL_LOADBUFFER(marpaESLIFValuep, marpaESLIFGrammarp->luabytep, marpaESLIFGrammarp->luabytel, "=(luascript)");
+    LUAL_LOADBUFFER(marpaESLIFValuep, marpaESLIFGrammarp->luaprecompiledp, marpaESLIFGrammarp->luaprecompiledl, "=(luascript)");
     LUA_PCALL(marpaESLIFValuep, 0, LUA_MULTRET, 0);
     /* Clear the stack */
     LUA_SETTOP(marpaESLIFValuep, 0);
@@ -943,6 +942,7 @@ static int _marpaESLIFGrammar_writer(lua_State *L, const void* p, size_t sz, voi
         MARPAESLIF_ERRORF(marpaESLIFGrammarp->marpaESLIFp, "malloc failure, %s", strerror(errno));
         goto err;
       }
+      q = marpaESLIFGrammarp->luaprecompiledp;
     } else {
       q = (char *) realloc(marpaESLIFGrammarp->luaprecompiledp, marpaESLIFGrammarp->luaprecompiledl + sz);
       if (q == NULL) {
@@ -950,9 +950,10 @@ static int _marpaESLIFGrammar_writer(lua_State *L, const void* p, size_t sz, voi
         goto err;
       }
       marpaESLIFGrammarp->luaprecompiledp = q;
+      q += marpaESLIFGrammarp->luaprecompiledl;
     }
 
-    memcpy(marpaESLIFGrammarp->luaprecompiledp, p, sz);
+    memcpy(q, p, sz);
     marpaESLIFGrammarp->luaprecompiledl += sz;
   }
 
