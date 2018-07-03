@@ -556,8 +556,8 @@ static short _marpaESLIF_lua_push_argb(marpaESLIFValue_t *marpaESLIFValuep, int 
     }
     indiceip = (int *) marpaESLIFValueResult.u.p;
     MARPAESLIF_TRACEF(marpaESLIFValuep->marpaESLIFp, funcs, "Pushing %s[%d+1]", MARPAESLIF_LUA_TABLE, *indiceip);
-    LUA_RAWGETI(NULL, marpaESLIFValuep, -1, (lua_Integer) (*indiceip + 1));                           /* stack: ..., table, table[++(*indiceip)] */
-    LUA_REMOVE(marpaESLIFValuep, -2);                                                                 /* stack: ..., table[++(*indiceip)] */
+    LUA_RAWGETI(NULL, marpaESLIFValuep, -1, (lua_Integer) (*indiceip + 1));                           /* stack: ..., table, table[(*indiceip)+1] */
+    LUA_REMOVE(marpaESLIFValuep, -2);                                                                 /* stack: ..., table[(*indiceip)+1] */
   } else {
     switch (marpaESLIFValueResult.type) {
       /* This is coming from a world outside of Lua - we do a translation */
@@ -780,7 +780,7 @@ static void _marpaESLIF_lua_freeDefaultActionv(void *userDatavp, int contexti, v
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
 
   /* When called with no pointer, this is an internal call done by the pop of values */
-  if ((p != NULL) && (sizel > 0)) {
+  if (p != NULL) {
     indiceip = (int *) p;
 
     /* The value is always in  MARPAESLIF_LUA_TABLE */
@@ -789,11 +789,16 @@ static void _marpaESLIF_lua_freeDefaultActionv(void *userDatavp, int contexti, v
       MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "%s is not a table", MARPAESLIF_LUA_TABLE);
     } else {
       LUA_PUSHNIL(marpaESLIFValuep);                                                                    /* stack: table, nil */
+      MARPAESLIF_TRACEF(marpaESLIFValuep->marpaESLIFp, funcs, "Resetting %s[%d+1]", MARPAESLIF_LUA_TABLE, *indiceip);
       LUA_RAWSETI(marpaESLIFValuep, -2, (lua_Integer) (*indiceip + 1));                                 /* stack: table */
     }
 
     /* Remove table from the stack */
     LUA_POP(marpaESLIFValuep, -1);
+
+    /* Free this malloced integer */
+    MARPAESLIF_TRACEF(marpaESLIFValuep->marpaESLIFp, funcs, "Freeing %p that was hosting internal indice %d", p, *indiceip);
+    free(p);
   }
 
   /* This function returns void, though we need the err label */
