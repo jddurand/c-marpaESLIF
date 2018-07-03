@@ -136,9 +136,6 @@ my @inputs = (
        }
      }"
     );
-@inputs = (
-    "[]"
-    );
 
 my $eslif = MarpaX::ESLIF->new($log);
 isa_ok($eslif, 'MarpaX::ESLIF');
