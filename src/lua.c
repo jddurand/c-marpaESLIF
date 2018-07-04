@@ -857,7 +857,7 @@ static const char *_marpaESLIF_luatypes(int typei)
     return LUATYPE_TTHREAD_STRING;
   case LUA_TLIGHTUSERDATA:
     return LUATYPE_TLIGHTUSERDATA_STRING;
-  defaut:
+  default:
     return LUATYPE_TUNKNOWN_STRING;
   }   
 }
