@@ -930,9 +930,8 @@ static SV *marpaESLIF_getSvp(pTHX_ marpaESLIFValue_t *marpaESLIFValuep, int stac
         }
         break;
       default:
-        /* Not coming from us - ESLIF guarantees that an alternative cannot contain another alternative ./.. */
-        marpaESLIFValueResultp = (marpaESLIFValueResult_t *) bytep;
-        /* ../. so it is safe to do again the switch on this new marpaESLIFValueResultp */
+        /* Not coming from us - ESLIF guarantees that an alternative cannot contain another alternative, */
+        /* so it is safe to do again the switch on this new marpaESLIFValueResultp */
         goto again;
       }
     }
