@@ -11967,6 +11967,129 @@ marpaESLIFValueResult_t *marpaESLIFValue_stack_getp(marpaESLIFValue_t *marpaESLI
 }
 
 /*****************************************************************************/
+short marpaESLIFValue_transformb(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp, marpaESLIFValueResult_t *marpaESLIFValueResultResolvedp, marpaESLIFValueResultTransform_t *marpaESLIFValueResultTransformp)
+/*****************************************************************************/
+{
+  static const char *funcs = "marpaESLIFValueResult_transformb";
+  short              rcb;
+
+  /* Generic transformation helper of a marpaESLIFValueResult for the end user */
+  if (marpaESLIFValueResultTransformp == NULL) {
+    errno = EINVAL;
+    goto err;
+  }
+
+ again:
+  if (marpaESLIFValueResultResolvedp != NULL) {
+    *marpaESLIFValueResultResolvedp = *marpaESLIFValueResultp;
+  }
+  switch (marpaESLIFValueResultp->type) {
+  case MARPAESLIF_VALUE_TYPE_UNDEF:
+    if ((marpaESLIFValueResultTransformp == NULL) || (marpaESLIFValueResultTransformp->undefTransformerp == NULL)) {
+      errno = EINVAL;
+      goto err;
+    }
+    if (! marpaESLIFValueResultTransformp->undefTransformerp(userDatavp, marpaESLIFValueResultp->contexti)) {
+      goto err;
+    }
+    break;
+  case MARPAESLIF_VALUE_TYPE_CHAR:
+    if ((marpaESLIFValueResultTransformp == NULL) || (marpaESLIFValueResultTransformp->charTransformerp == NULL)) {
+      errno = EINVAL;
+      goto err;
+    }
+    if (! marpaESLIFValueResultTransformp->charTransformerp(userDatavp, marpaESLIFValueResultp->contexti, marpaESLIFValueResultp->u.c)) {
+      goto err;
+    }
+    break;
+  case MARPAESLIF_VALUE_TYPE_SHORT:
+    if ((marpaESLIFValueResultTransformp == NULL) || (marpaESLIFValueResultTransformp->shortTransformerp == NULL)) {
+      errno = EINVAL;
+      goto err;
+    }
+    if (! marpaESLIFValueResultTransformp->shortTransformerp(userDatavp, marpaESLIFValueResultp->contexti, marpaESLIFValueResultp->u.b)) {
+      goto err;
+    }
+    break;
+  case MARPAESLIF_VALUE_TYPE_INT:
+    if ((marpaESLIFValueResultTransformp == NULL) || (marpaESLIFValueResultTransformp->intTransformerp == NULL)) {
+      errno = EINVAL;
+      goto err;
+    }
+    if (! marpaESLIFValueResultTransformp->intTransformerp(userDatavp, marpaESLIFValueResultp->contexti, marpaESLIFValueResultp->u.i)) {
+      goto err;
+    }
+    break;
+  case MARPAESLIF_VALUE_TYPE_LONG:
+    if ((marpaESLIFValueResultTransformp == NULL) || (marpaESLIFValueResultTransformp->longTransformerp == NULL)) {
+      errno = EINVAL;
+      goto err;
+    }
+    if (! marpaESLIFValueResultTransformp->longTransformerp(userDatavp, marpaESLIFValueResultp->contexti, marpaESLIFValueResultp->u.l)) {
+      goto err;
+    }
+    break;
+  case MARPAESLIF_VALUE_TYPE_FLOAT:
+    if ((marpaESLIFValueResultTransformp == NULL) || (marpaESLIFValueResultTransformp->floatTransformerp == NULL)) {
+      errno = EINVAL;
+      goto err;
+    }
+    if (! marpaESLIFValueResultTransformp->floatTransformerp(userDatavp, marpaESLIFValueResultp->contexti, marpaESLIFValueResultp->u.f)) {
+      goto err;
+    }
+    break;
+  case MARPAESLIF_VALUE_TYPE_DOUBLE:
+    if ((marpaESLIFValueResultTransformp == NULL) || (marpaESLIFValueResultTransformp->doubleTransformerp == NULL)) {
+      errno = EINVAL;
+      goto err;
+    }
+    if (! marpaESLIFValueResultTransformp->doubleTransformerp(userDatavp, marpaESLIFValueResultp->contexti, marpaESLIFValueResultp->u.d)) {
+      goto err;
+    }
+    break;
+  case MARPAESLIF_VALUE_TYPE_PTR:
+    if ((marpaESLIFValueResultTransformp == NULL) || (marpaESLIFValueResultTransformp->ptrTransformerp == NULL)) {
+      errno = EINVAL;
+      goto err;
+    }
+    if (! marpaESLIFValueResultTransformp->ptrTransformerp(userDatavp, marpaESLIFValueResultp->contexti, marpaESLIFValueResultp->u.p)) {
+      goto err;
+    }
+    break;
+  case MARPAESLIF_VALUE_TYPE_ARRAY:
+    if (marpaESLIFValueResultp->sizel <= 0) {
+      /* An alternative - by construction marpaESLIFValueResultp->sizel is 0 */
+      marpaESLIFValueResultp = (marpaESLIFValueResult_t *) marpaESLIFValueResultp->u.p;
+      /* ESLIF guarantees that an alternative cannot contain another alternative, */
+      /* so it is safe to do again the switch on this new value */
+      goto again;
+    } else {
+      /* Anything else, including lexemes */
+      if ((marpaESLIFValueResultTransformp == NULL) || (marpaESLIFValueResultTransformp->arrayTransformerp == NULL)) {
+        errno = EINVAL;
+        goto err;
+      }
+      if (! marpaESLIFValueResultTransformp->arrayTransformerp(userDatavp, marpaESLIFValueResultp->contexti, marpaESLIFValueResultp->u.p, marpaESLIFValueResultp->sizel)) {
+        goto err;
+      }
+    }
+    break;
+  default:
+    errno = ENOSYS;
+    goto err;
+  }
+
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  return rcb;
+}
+
+/*****************************************************************************/
 static inline marpaESLIFValueResult_t *_marpaESLIFValue_stack_getp(marpaESLIFValue_t *marpaESLIFValuep, int indicei)
 /*****************************************************************************/
 {

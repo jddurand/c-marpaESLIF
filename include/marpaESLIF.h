@@ -248,6 +248,28 @@ typedef struct marpaESLIFSymbolProperty {
   int                          propertyBitSet;
 } marpaESLIFSymbolProperty_t;
 
+/* Value result transformer helper */
+typedef short (*marpaESLIFValueResultTransformUndef_t)(void *userDatavp, int contexti);
+typedef short (*marpaESLIFValueResultTransformChar_t)(void *userDatavp, int contexti, char c);
+typedef short (*marpaESLIFValueResultTransformShort_t)(void *userDatavp, int contexti, short b);
+typedef short (*marpaESLIFValueResultTransformInt_t)(void *userDatavp, int contexti, int i);
+typedef short (*marpaESLIFValueResultTransformLong_t)(void *userDatavp, int contexti, long l);
+typedef short (*marpaESLIFValueResultTransformFloat_t)(void *userDatavp, int contexti, float f);
+typedef short (*marpaESLIFValueResultTransformDouble_t)(void *userDatavp, int contexti, double d);
+typedef short (*marpaESLIFValueResultTransformPtr_t)(void *userDatavp, int contexti, void *p);
+typedef short (*marpaESLIFValueResultTransformArray_t)(void *userDatavp, int contexti, void *p, size_t sizel);
+typedef struct marpaESLIFValueResultTransform {
+  marpaESLIFValueResultTransformUndef_t undefTransformerp;
+  marpaESLIFValueResultTransformChar_t charTransformerp;
+  marpaESLIFValueResultTransformShort_t shortTransformerp;
+  marpaESLIFValueResultTransformInt_t intTransformerp;
+  marpaESLIFValueResultTransformLong_t longTransformerp;
+  marpaESLIFValueResultTransformFloat_t floatTransformerp;
+  marpaESLIFValueResultTransformDouble_t doubleTransformerp;
+  marpaESLIFValueResultTransformPtr_t ptrTransformerp;
+  marpaESLIFValueResultTransformArray_t arrayTransformerp;
+} marpaESLIFValueResultTransform_t;
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -336,6 +358,7 @@ extern "C" {
   marpaESLIF_EXPORT short                         marpaESLIFValue_stack_forgetb(marpaESLIFValue_t *marpaESLIFValuep, int indicei);
   marpaESLIF_EXPORT short                         marpaESLIFValue_stack_getb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, marpaESLIFValueResult_t *marpaESLIFValueResultp);
   marpaESLIF_EXPORT marpaESLIFValueResult_t      *marpaESLIFValue_stack_getp(marpaESLIFValue_t *marpaESLIFValuep, int indicei);
+  marpaESLIF_EXPORT short                         marpaESLIFValue_transformb(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp, marpaESLIFValueResult_t *marpaESLIFValueResultResolvedp, marpaESLIFValueResultTransform_t *marpaESLIFValueResultTransformp);
 
   /* getAndForgetb transfers the memory management from the stack to the end-user in one call */
   marpaESLIF_EXPORT short                         marpaESLIFValue_stack_getAndForgetb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, marpaESLIFValueResult_t *marpaESLIFValueResultp);

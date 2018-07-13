@@ -165,7 +165,22 @@ typedef struct MarpaX_ESLIF_Value {
   int                     symboli;
   char                   *rules;
   int                     rulei;
+  /* For transform callbacks */
+#ifdef PERL_IMPLICIT_CONTEXT
+  pTHX;
+#endif
+  short                   svcastrefincb;
+  SV                     *svp;
 } MarpaX_ESLIF_Value_t;
+
+#ifdef PERL_IMPLICIT_CONTEXT
+#  ifndef tTHX
+#    define tTHX PerlInterpreter*
+#  endif
+#  define dMYTHX(MarpaX_ESLIF_Valuep) tTHX aTHX = MarpaX_ESLIF_Valuep->aTHX
+#else
+#  define dMYTHX(MarpaX_ESLIF_Valuep) dNOOP
+#endif
 
 /* For typemap */
 typedef MarpaX_ESLIF_Engine_t     *MarpaX_ESLIF_Engine;
@@ -186,7 +201,7 @@ static short                           marpaESLIF_recognizerReaderCallbackb(void
 static marpaESLIFValueRuleCallback_t   marpaESLIF_valueRuleActionResolver(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions);
 static marpaESLIFValueSymbolCallback_t marpaESLIF_valueSymbolActionResolver(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions);
 static marpaESLIFValueFreeCallback_t   marpaESLIF_valueFreeActionResolver(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions);
-static SV                             *marpaESLIF_getSvp(pTHX_ marpaESLIFValue_t *marpaESLIFValuep, int i, char *bytep, size_t bytel, short svcastrefincb, marpaESLIFValueResult_t *marpaESLIFValueResultp, marpaESLIFValueResult_t *marpaESLIFValueResultResolvedp);
+static SV                             *marpaESLIF_getSvp(pTHX_ MarpaX_ESLIF_Value_t *Perl_MarpaX_ESLIF_Valuep, marpaESLIFValue_t *marpaESLIFValuep, int stackindicei, char *bytep, size_t bytel, short svcastrefincb, marpaESLIFValueResult_t *marpaESLIFValueResultp, marpaESLIFValueResult_t *marpaESLIFValueResultResolvedp);
 static short                           marpaESLIF_valueRuleCallbackb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static short                           marpaESLIF_valueSymbolCallbackb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *bytep, size_t bytel, int resulti);
 static void                            marpaESLIF_valueFreeCallbackv(void *userDatavp, int contexti, void *p, size_t sizel);
@@ -206,7 +221,29 @@ static void                            marpaESLIF_paramIsRecognizerInterfacev(pT
 static void                            marpaESLIF_paramIsValueInterfacev(pTHX_ SV *sv);
 static short                           marpaESLIF_representationb(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp, char **inputcpp, size_t *inputlp);
 static char                           *marpaESLIF_sv2byte(pTHX_ SV *svp, char **bytepp, size_t *bytelp, short encodingInformationb, short *characterStreambp, char **encodingOfEncodingsp, char **encodingsp, size_t *encodinglp, short warnIsFatalb);
+/* marpaESLIFValueResult transformers */
+static short                           marpaESLIF_TransformUndef(void *userDatavp, int contexti);
+static short                           marpaESLIF_TransformChar(void *userDatavp, int contexti, char c);
+static short                           marpaESLIF_TransformShort(void *userDatavp, int contexti, short b);
+static short                           marpaESLIF_TransformInt(void *userDatavp, int contexti, int i);
+static short                           marpaESLIF_TransformLong(void *userDatavp, int contexti, long l);
+static short                           marpaESLIF_TransformFloat(void *userDatavp, int contexti, float f);
+static short                           marpaESLIF_TransformDouble(void *userDatavp, int contexti, double d);
+static short                           marpaESLIF_TransformPtr(void *userDatavp, int contexti, void *p);
+static short                           marpaESLIF_TransformArray(void *userDatavp, int contexti, void *p, size_t sizel);
 
+/* Transformers */
+static marpaESLIFValueResultTransform_t marpaESLIFValueResultTransformDefault = {
+  marpaESLIF_TransformUndef,
+  marpaESLIF_TransformChar,
+  marpaESLIF_TransformShort,
+  marpaESLIF_TransformInt,
+  marpaESLIF_TransformLong,
+  marpaESLIF_TransformFloat,
+  marpaESLIF_TransformDouble,
+  marpaESLIF_TransformPtr,
+  marpaESLIF_TransformArray
+};
 /* Static constants */
 static const char   *UTF8s = "UTF-8";
 static const size_t  UTF8l = 5; /* "UTF-8" is 5 bytes in ASCII encoding */
@@ -817,7 +854,7 @@ static marpaESLIFValueFreeCallback_t marpaESLIF_valueFreeActionResolver(void *us
 }
 
 /*****************************************************************************/
-static SV *marpaESLIF_getSvp(pTHX_ marpaESLIFValue_t *marpaESLIFValuep, int stackindicei, char *bytep, size_t bytel, short svcastrefincb, marpaESLIFValueResult_t *marpaESLIFValueResultp, marpaESLIFValueResult_t *marpaESLIFValueResultResolvedp)
+static SV *marpaESLIF_getSvp(pTHX_ MarpaX_ESLIF_Value_t *Perl_MarpaX_ESLIF_Valuep, marpaESLIFValue_t *marpaESLIFValuep, int stackindicei, char *bytep, size_t bytel, short svcastrefincb, marpaESLIFValueResult_t *marpaESLIFValueResultp, marpaESLIFValueResult_t *marpaESLIFValueResultResolvedp)
 /*****************************************************************************/
 /* This function is guaranteed to return an SV in any case that will HAVE TO BE refcount_dec'ed: either this is a new SV, either this is an casted SV. */
 /* When this is a casted SV the parameter svcastrefincb controls the reference count: if true, then casted SV will also be refinc'ed */
@@ -825,21 +862,17 @@ static SV *marpaESLIF_getSvp(pTHX_ marpaESLIFValue_t *marpaESLIFValuep, int stac
 /* marpaESLIFValueResultResolvedp contains the resolved marpaESLIFValueResult is it is not NULL */
 {
   static const char       *funcs = "marpaESLIF_getSvp";
-  SV                      *objectp;
   marpaESLIFValueResult_t  marpaESLIFValueResult;
+  marpaESLIFValueResult_t  marpaESLIFValueResultResolved;
 
   /* fprintf(stderr, "In %s for indice %d, bytep %p, bytel %ld\n", funcs, i, bytep, (unsigned long) bytel); */
   if (bytep != NULL) {
-    /* Just to conform to the switch below */
+    /* Fake a marpaESLIFValueResult */
     marpaESLIFValueResult.type     = MARPAESLIF_VALUE_TYPE_ARRAY;
     marpaESLIFValueResult.contexti = 0;
     marpaESLIFValueResult.sizel    = bytel;
     marpaESLIFValueResult.u.p      = bytep;
     marpaESLIFValueResultp = &marpaESLIFValueResult;
-    if (marpaESLIFValueResultResolvedp != NULL) {
-      *marpaESLIFValueResultResolvedp = marpaESLIFValueResult;
-    }
-    goto is_array;
   }
 
   if (marpaESLIFValueResultp == NULL) {
@@ -849,119 +882,32 @@ static SV *marpaESLIF_getSvp(pTHX_ marpaESLIFValue_t *marpaESLIFValuep, int stac
     }
   }
 
- again:
-  if (marpaESLIFValueResultResolvedp != NULL) {
-    *marpaESLIFValueResultResolvedp = *marpaESLIFValueResultp;
-  }
-  switch (marpaESLIFValueResultp->type) {
-  case MARPAESLIF_VALUE_TYPE_UNDEF:
-    objectp = &PL_sv_undef;
-    break;
-  case MARPAESLIF_VALUE_TYPE_CHAR:
-    /* it is like an array of one byte */
-    bytep = &(marpaESLIFValueResultp->u.c);
-    bytel = 1;
-    objectp = newSVpvn(bytep, 1);
-    if (is_utf8_string((const U8 *) bytep, (STRLEN) bytel)) {
-      SvUTF8_on(objectp);
-    }
-    break;
-  case MARPAESLIF_VALUE_TYPE_SHORT:
-    objectp = newSViv((IV) marpaESLIFValueResultp->u.b);
-    break;
-  case MARPAESLIF_VALUE_TYPE_INT:
-    objectp = newSViv((IV) marpaESLIFValueResultp->u.i);
-    break;
-  case MARPAESLIF_VALUE_TYPE_LONG:
-    objectp = newSViv((IV) marpaESLIFValueResultp->u.l);
-    break;
-  case MARPAESLIF_VALUE_TYPE_FLOAT:
-    objectp = newSVnv((double) marpaESLIFValueResultp->u.f);
-    break;
-  case MARPAESLIF_VALUE_TYPE_DOUBLE:
-    objectp = newSVnv(marpaESLIFValueResultp->u.d);
-    break;
-  case MARPAESLIF_VALUE_TYPE_PTR:
-    switch (marpaESLIFValueResultp->contexti) {
-    case ESLIF_PERL_CONTEXT:
-      /* This is an SV that we pushed */
-      objectp = (SV *) marpaESLIFValueResultp->u.p;
-      if (svcastrefincb) {
-        MARPAESLIF_REFCNT_INC(objectp);
-      }
-      break;
-    default:
-      /* This is a pointer coming from another source */
-      objectp = newSViv(PTR2IV(marpaESLIFValueResultp->u.p));
-      break;
-    }
-    break;
-  case MARPAESLIF_VALUE_TYPE_ARRAY:
-    goto is_array;
-  default:
-    MARPAESLIF_CROAKF("Unsupported marpaESLIFValueResultp type %d", marpaESLIFValueResultp->type);
-    break;
-  }
+#ifdef PERL_IMPLICIT_CONTEXT
+  Perl_MarpaX_ESLIF_Valuep->aTHX          = aTHX;
+#endif
+  Perl_MarpaX_ESLIF_Valuep->svcastrefincb = svcastrefincb;
+  Perl_MarpaX_ESLIF_Valuep->svp           = NULL;
 
-  goto end;
-
- is_array:
-  switch (marpaESLIFValueResultp->contexti) {
-  case ESLIF_PERL_CONTEXT:
-    /* We never push an array */
-    MARPAESLIF_CROAK("Got ARRAY on the stack that pretend to come from perl");
-    break;
-  case 0:
-    if (marpaESLIFValueResultp->sizel > 0) {
-      /* A lexeme coming directory from ESLIF */
-      objectp = newSVpvn(marpaESLIFValueResultp->u.p, marpaESLIFValueResultp->sizel);
-      if (is_utf8_string((const U8 *) marpaESLIFValueResultp->u.p, (STRLEN) marpaESLIFValueResultp->sizel)) {
-        SvUTF8_on(objectp);
-      }
-    } else {
-      /* An alternative */
-      marpaESLIFValueResultp = (marpaESLIFValueResult_t *) bytep;
-      switch (marpaESLIFValueResultp->contexti) {
-      case ESLIF_PERL_CONTEXT:
-        /* Coming from us */
-        objectp = (SV *) marpaESLIFValueResultp->u.p;
-        if (svcastrefincb) {
-          MARPAESLIF_REFCNT_INC(objectp);
-        }
-        break;
-      default:
-        /* Not coming from us - ESLIF guarantees that an alternative cannot contain another alternative, */
-        /* so it is safe to do again the switch on this new marpaESLIFValueResultp */
-        goto again;
-      }
-    }
-    break;
-  default:
-    /* Any other source: taken as a sequence of bytes, eventually an UTF8 string */
-    objectp = newSVpvn(bytep, bytel);
-    if (is_utf8_string((const U8 *) bytep, (STRLEN) bytel)) {
-      SvUTF8_on(objectp);
-    }
-    break;
+  if (! marpaESLIFValue_transformb(Perl_MarpaX_ESLIF_Valuep, marpaESLIFValueResultp, &marpaESLIFValueResultResolved, (marpaESLIFValueResultTransform_t *) &marpaESLIFValueResultTransformDefault)) {
+    MARPAESLIF_CROAKF("marpaESLIFValue_transformb failure, %s", strerror(errno));
   }
 
   /*
-  if (objectp != NULL) {
-    if (SvOK(objectp)) {
+  if (Perl_MarpaX_ESLIF_Valuep->svp != NULL) {
+    if (SvOK(Perl_MarpaX_ESLIF_Valuep->svp)) {
       char *s;
       STRLEN l;
-      s = SvPV(objectp, l);
+      s = SvPV(Perl_MarpaX_ESLIF_Valuep->svp, l);
       fprintf(stderr, "... ... Retreived %s\n", s);
     } else {
       fprintf(stderr, "... ... OUPS !?\n");
-      sv_dump(objectp);
+      sv_dump(Perl_MarpaX_ESLIF_Valuep->svp);
     }
   } else {
     fprintf(stderr, "... ... Retreived NULL\n");
   }
   */
- end:
-  return objectp;
+  return Perl_MarpaX_ESLIF_Valuep->svp;
 }
 
 
@@ -986,7 +932,7 @@ static short marpaESLIF_valueRuleCallbackb(void *userDatavp, marpaESLIFValue_t *
   if (! nullableb) {
     list = newAV();
     for (i = arg0i; i <= argni; i++) {
-      svp = marpaESLIF_getSvp(aTHX_ marpaESLIFValuep, i, NULL /* bytep */, 0 /* bytel */, 1 /* svcastrefincb */, NULL /* marpaESLIFValueResultp */, NULL /* marpaESLIFValueResultResolvedp */);
+      svp = marpaESLIF_getSvp(aTHX_ Perl_MarpaX_ESLIF_Valuep, marpaESLIFValuep, i, NULL /* bytep */, 0 /* bytel */, 1 /* svcastrefincb */, NULL /* marpaESLIFValueResultp */, NULL /* marpaESLIFValueResultResolvedp */);
       /*
         sv_dump(svp);
       */
@@ -1024,7 +970,7 @@ static short marpaESLIF_valueSymbolCallbackb(void *userDatavp, marpaESLIFValue_t
 
   list = newAV();
   /* One reference count ownership is transfered to the array */
-  av_push(list, marpaESLIF_getSvp(aTHX_ marpaESLIFValuep, -1 /* not used */, bytep, bytel, 1 /* svcastrefincb */, NULL /* marpaESLIFValueResultp */, NULL /* marpaESLIFValueResultResolvedp */));
+  av_push(list, marpaESLIF_getSvp(aTHX_ Perl_MarpaX_ESLIF_Valuep, NULL /* marpaESLIFValuep */, -1 /* stackindicei */, bytep, bytel, 1 /* svcastrefincb */, NULL /* marpaESLIFValueResultp */, NULL /* marpaESLIFValueResultResolvedp */));
   actionResult = marpaESLIF_call_actionp(aTHX_ Perl_MarpaX_ESLIF_Valuep->Perl_valueInterfacep, Perl_MarpaX_ESLIF_Valuep->actions, list, Perl_MarpaX_ESLIF_Valuep);
   /* This will decrement by one the inner element reference count */
   av_undef(list);
@@ -1427,6 +1373,145 @@ static char *marpaESLIF_sv2byte(pTHX_ SV *svp, char **bytepp, size_t *bytelp, sh
   }
 
   return rcp;
+}
+
+/*****************************************************************************/
+static short marpaESLIF_TransformUndef(void *userDatavp, int contexti)
+/*****************************************************************************/
+{
+  static const char    *funcs                    = "marpaESLIF_TransformUndef";
+  MarpaX_ESLIF_Value_t *Perl_MarpaX_ESLIF_Valuep = (MarpaX_ESLIF_Value_t *) userDatavp;
+  dMYTHX(Perl_MarpaX_ESLIF_Valuep);
+
+  Perl_MarpaX_ESLIF_Valuep->svp = &PL_sv_undef;
+
+  return 1;
+}
+
+/*****************************************************************************/
+static short marpaESLIF_TransformChar(void *userDatavp, int contexti, char c)
+/*****************************************************************************/
+{
+  static const char    *funcs                    = "marpaESLIF_TransformChar";
+  MarpaX_ESLIF_Value_t *Perl_MarpaX_ESLIF_Valuep = (MarpaX_ESLIF_Value_t *) userDatavp;
+  dMYTHX(Perl_MarpaX_ESLIF_Valuep);
+
+  Perl_MarpaX_ESLIF_Valuep->svp = newSVpvn(&c, 1);
+  if (is_utf8_string((const U8 *) &c, (STRLEN) 1)) {
+    SvUTF8_on(Perl_MarpaX_ESLIF_Valuep->svp);
+  }
+
+  return 1;
+}
+
+/*****************************************************************************/
+static short marpaESLIF_TransformShort(void *userDatavp, int contexti, short b)
+/*****************************************************************************/
+{
+  static const char    *funcs                    = "marpaESLIF_TransformShort";
+  MarpaX_ESLIF_Value_t *Perl_MarpaX_ESLIF_Valuep = (MarpaX_ESLIF_Value_t *) userDatavp;
+  dMYTHX(Perl_MarpaX_ESLIF_Valuep);
+
+  Perl_MarpaX_ESLIF_Valuep->svp = newSViv((IV) b);
+
+  return 1;
+}
+
+/*****************************************************************************/
+static short marpaESLIF_TransformInt(void *userDatavp, int contexti, int i)
+/*****************************************************************************/
+{
+  static const char    *funcs                    = "marpaESLIF_TransformInt";
+  MarpaX_ESLIF_Value_t *Perl_MarpaX_ESLIF_Valuep = (MarpaX_ESLIF_Value_t *) userDatavp;
+  dMYTHX(Perl_MarpaX_ESLIF_Valuep);
+
+  Perl_MarpaX_ESLIF_Valuep->svp = newSViv((IV) i);
+
+  return 1;
+}
+
+/*****************************************************************************/
+static short marpaESLIF_TransformLong(void *userDatavp, int contexti, long l)
+/*****************************************************************************/
+{
+  static const char    *funcs                    = "marpaESLIF_TransformLong";
+  MarpaX_ESLIF_Value_t *Perl_MarpaX_ESLIF_Valuep = (MarpaX_ESLIF_Value_t *) userDatavp;
+  dMYTHX(Perl_MarpaX_ESLIF_Valuep);
+
+  Perl_MarpaX_ESLIF_Valuep->svp = newSViv((IV) l);
+
+  return 1;
+}
+
+/*****************************************************************************/
+static short marpaESLIF_TransformFloat(void *userDatavp, int contexti, float f)
+/*****************************************************************************/
+{
+  static const char    *funcs                    = "marpaESLIF_TransformFloat";
+  MarpaX_ESLIF_Value_t *Perl_MarpaX_ESLIF_Valuep = (MarpaX_ESLIF_Value_t *) userDatavp;
+  dMYTHX(Perl_MarpaX_ESLIF_Valuep);
+
+  Perl_MarpaX_ESLIF_Valuep->svp = newSVnv((double) f);
+
+  return 1;
+}
+
+/*****************************************************************************/
+static short marpaESLIF_TransformDouble(void *userDatavp, int contexti, double d)
+/*****************************************************************************/
+{
+  static const char    *funcs                    = "marpaESLIF_TransformDouble";
+  MarpaX_ESLIF_Value_t *Perl_MarpaX_ESLIF_Valuep = (MarpaX_ESLIF_Value_t *) userDatavp;
+  dMYTHX(Perl_MarpaX_ESLIF_Valuep);
+
+  Perl_MarpaX_ESLIF_Valuep->svp = newSVnv(d);
+
+  return 1;
+}
+
+/*****************************************************************************/
+static short marpaESLIF_TransformPtr(void *userDatavp, int contexti, void *p)
+/*****************************************************************************/
+{
+  static const char    *funcs                    = "marpaESLIF_TransformPtr";
+  MarpaX_ESLIF_Value_t *Perl_MarpaX_ESLIF_Valuep = (MarpaX_ESLIF_Value_t *) userDatavp;
+  dMYTHX(Perl_MarpaX_ESLIF_Valuep);
+
+  if (contexti == ESLIF_PERL_CONTEXT) {
+    /* This is an SV that we pushed */
+    Perl_MarpaX_ESLIF_Valuep->svp = (SV *) p;
+    if (Perl_MarpaX_ESLIF_Valuep->svcastrefincb) {
+      /* And the caller want to increase the ref count */
+      MARPAESLIF_REFCNT_INC(Perl_MarpaX_ESLIF_Valuep->svp);
+    }
+  } else {
+    /* This is a pointer coming from another source */
+    Perl_MarpaX_ESLIF_Valuep->svp = newSViv(PTR2IV(p));
+  }
+
+  return 1;
+}
+
+/*****************************************************************************/
+static short marpaESLIF_TransformArray(void *userDatavp, int contexti, void *p, size_t sizel)
+/*****************************************************************************/
+{
+  static const char    *funcs                    = "marpaESLIF_TransformArray";
+  MarpaX_ESLIF_Value_t *Perl_MarpaX_ESLIF_Valuep = (MarpaX_ESLIF_Value_t *) userDatavp;
+  dMYTHX(Perl_MarpaX_ESLIF_Valuep);
+
+  if (contexti == ESLIF_PERL_CONTEXT) {
+    /* We never push an array */
+    MARPAESLIF_CROAK("Got ARRAY on the stack that pretend to come from perl");
+  } else {
+    /* This is a pointer coming from another source */
+    Perl_MarpaX_ESLIF_Valuep->svp = newSVpvn(p, sizel);
+    if (is_utf8_string((const U8 *) p, (STRLEN) sizel)) {
+      SvUTF8_on(Perl_MarpaX_ESLIF_Valuep->svp);
+    }
+  }
+
+  return 1;
 }
 
 =for comment
@@ -2350,6 +2435,7 @@ parse(Perl_MarpaX_ESLIF_Grammarp, Perl_recognizerInterfacep, Perl_valueInterface
 PREINIT:
   static const char *funcs = "MarpaX::ESLIF::Grammar::parse";
 CODE:
+  MarpaX_ESLIF_Value_t          Perl_MarpaX_ESLIF_Value;
   marpaESLIFRecognizerOption_t  marpaESLIFRecognizerOption;
   marpaESLIFValueOption_t       marpaESLIFValueOption;
   marpaESLIFValueResult_t       marpaESLIFValueResult;
@@ -2388,7 +2474,7 @@ CODE:
   if (! marpaESLIFGrammar_parseb(Perl_MarpaX_ESLIF_Grammarp->marpaESLIFGrammarp, &marpaESLIFRecognizerOption, &marpaESLIFValueOption, NULL, &marpaESLIFValueResult)) {
     goto err;
   }
-  svp = marpaESLIF_getSvp(aTHX_ NULL /* marpaESLIFValuep: not used */, -1 /* stackindicei: not used */, NULL /* bytep */, 0 /* bytel */, 0 /* svcastrefincb */, &marpaESLIFValueResult, &marpaESLIFValueResultResolved);
+  svp = marpaESLIF_getSvp(aTHX_ &Perl_MarpaX_ESLIF_Value, NULL /* marpaESLIFValuep */, -1 /* stackindicei */, NULL /* bytep */, 0 /* bytel */, 0 /* svcastrefincb */, &marpaESLIFValueResult, &marpaESLIFValueResultResolved);
   marpaESLIF_call_methodv(aTHX_ Perl_valueInterfacep, "setResult", svp);
   /* Free underlying pointer if necessary */
   if (((marpaESLIFValueResultResolved.type == MARPAESLIF_VALUE_TYPE_ARRAY) || (marpaESLIFValueResultResolved.type == MARPAESLIF_VALUE_TYPE_PTR)) && (marpaESLIFValueResultResolved.u.p != NULL) && (! marpaESLIFValueResultResolved.shallowb)) {
@@ -3411,7 +3497,7 @@ CODE:
     MARPAESLIF_CROAKF("marpaESLIFValue_valueb failure, %s", strerror(errno));
   }
   if (valueb > 0) {
-    svp = marpaESLIF_getSvp(aTHX_ NULL /* marpaESLIFValuep: not used */, -1 /* stackindicei: not used */, NULL /* bytep */, 0 /* bytel */, 0 /* svcastrefincb */, &marpaESLIFValueResult, &marpaESLIFValueResultResolved);
+    svp = marpaESLIF_getSvp(aTHX_ Perl_MarpaX_ESLIF_Valuep, NULL /* marpaESLIFValuep */, -1 /* stackindicei */, NULL /* bytep */, 0 /* bytel */, 0 /* svcastrefincb */, &marpaESLIFValueResult, &marpaESLIFValueResultResolved);
     marpaESLIF_call_methodv(aTHX_ Perl_MarpaX_ESLIF_Valuep->Perl_valueInterfacep, "setResult", svp);
     /* Free underlying pointer if necessary */
     if (((marpaESLIFValueResultResolved.type == MARPAESLIF_VALUE_TYPE_ARRAY) || (marpaESLIFValueResultResolved.type == MARPAESLIF_VALUE_TYPE_PTR)) && (marpaESLIFValueResultResolved.u.p != NULL) && (! marpaESLIFValueResultResolved.shallowb)) {
