@@ -5,7 +5,7 @@
 #include <genericLogger.h>
 #include <marpaESLIF.h>
 
-static short inputReaderb(void *userDatavp, char **inputsp, size_t *inputlp, short *eofbp, short *characterStreambp, char **encodingOfEncodingsp, char **encodingsp, size_t *encodinglp);
+static short inputReaderb(void *userDatavp, char **inputsp, size_t *inputlp, short *eofbp, short *characterStreambp, char **encodingsp, size_t *encodinglp);
 
 typedef struct marpaESLIFTester_context {
   genericLogger_t *genericLoggerp;
@@ -205,7 +205,6 @@ int main() {
   marpaESLIFGrammarOption.bytel               = strlen(dsl);
   marpaESLIFGrammarOption.encodings           = NULL;
   marpaESLIFGrammarOption.encodingl           = 0;
-  marpaESLIFGrammarOption.encodingOfEncodings = NULL;
 
   marpaESLIFGrammarp = marpaESLIFGrammar_newp(marpaESLIFp, &marpaESLIFGrammarOption);
   if (marpaESLIFGrammarp == NULL) {
@@ -316,7 +315,7 @@ int main() {
 }
 
 /*****************************************************************************/
-static short inputReaderb(void *userDatavp, char **inputsp, size_t *inputlp, short *eofbp, short *characterStreambp, char **encodingOfEncodingsp, char **encodingsp, size_t *encodinglp)
+static short inputReaderb(void *userDatavp, char **inputsp, size_t *inputlp, short *eofbp, short *characterStreambp, char **encodingsp, size_t *encodinglp)
 /*****************************************************************************/
 {
   marpaESLIFTester_context_t *marpaESLIFTester_contextp = (marpaESLIFTester_context_t *) userDatavp;
@@ -325,7 +324,6 @@ static short inputReaderb(void *userDatavp, char **inputsp, size_t *inputlp, sho
   *inputlp              = marpaESLIFTester_contextp->inputl;
   *eofbp                = 1;
   *characterStreambp    = 1; /* We say this is a stream of characters */
-  *encodingOfEncodingsp = NULL;
   *encodingsp           = NULL;
   *encodinglp           = 0;
 

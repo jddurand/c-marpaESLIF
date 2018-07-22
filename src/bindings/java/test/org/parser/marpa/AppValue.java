@@ -1,7 +1,6 @@
 package org.parser.marpa;
 
 import java.io.UnsupportedEncodingException;
-import java.nio.ByteBuffer;
 
 /**
  * Test Application Value
@@ -21,25 +20,6 @@ public class AppValue implements ESLIFValueInterface {
 	/*
 	 * https://java.net/jira/browse/TYRUS-216
 	 */
-	private byte[] getActiveArray(ByteBuffer buffer)
-	{
-	  byte[] ret = new byte[buffer.remaining()];
-	  if (buffer.hasArray())
-	  {
-	      byte[] array = buffer.array();
-	      System.arraycopy(array, buffer.arrayOffset() + buffer.position(), ret, 0, ret.length);
-	  }
-	  else
-	  {
-	      buffer.slice().get(ret);
-	  }
-	  return ret;
-	}
-	
-	private String byteBufferToString(ByteBuffer byteBuffer) throws UnsupportedEncodingException {
-		return new String(getActiveArray(byteBuffer), "UTF-8");
-	}
-		
 	private Double toDouble(Object object) {
 		return (object instanceof Integer) ? new Double(((Integer) object).doubleValue()) : (Double) object;
 	}
@@ -48,6 +28,10 @@ public class AppValue implements ESLIFValueInterface {
 		return (Integer) object;
 	}
 	
+	private String toString(Object object) throws UnsupportedEncodingException {
+		return (object instanceof byte[]) ? new String((byte[]) object, "UTF-8") : null;
+	}
+
 	/**
 	 * @param list object list
 	 * @return resulting object
@@ -56,14 +40,14 @@ public class AppValue implements ESLIFValueInterface {
 	public Object do_int(Object[] list) throws UnsupportedEncodingException {
 		Object result;
 		
-		if (list[0] instanceof ByteBuffer) {
-			String input = byteBufferToString((ByteBuffer) list[0]); 
+		if (list[0] instanceof byte[]) {
+			String input = toString(list[0]);
 			result = new Integer(input);
 		} else {
 			result = list[0];
-			return list[0];
 		}
 
+		System.err.println("... " + result);
 		return result;
 	}
 
@@ -74,7 +58,7 @@ public class AppValue implements ESLIFValueInterface {
 	 */
 	public Object do_op(Object[] list) throws UnsupportedEncodingException {
 		Object left   = list[0];
-		String op     = byteBufferToString((ByteBuffer) list[1]); 
+		String op     = toString(list[1]); 
 		Object right  = list[2];
 		Object result = null;
 		
@@ -135,9 +119,9 @@ public class AppValue implements ESLIFValueInterface {
 	}
 
 	public void setResult(Object result) {
-		if (result instanceof ByteBuffer) {
+		if (result instanceof byte[]) {
 			try {
-				this.result = byteBufferToString((ByteBuffer) result);
+				this.result = toString(result);
 			} catch (UnsupportedEncodingException e) {
 				this.result = null;
 			}

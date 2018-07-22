@@ -5,7 +5,7 @@
 #include <genericLogger.h>
 #include <marpaESLIF.h>
 
-static short                         inputReaderb(void *userDatavp, char **inputsp, size_t *inputlp, short *eofbp, short *characterStreambp, char **encodingOfEncodingsp, char **encodingsp, size_t *encodinglp);
+static short                         inputReaderb(void *userDatavp, char **inputsp, size_t *inputlp, short *eofbp, short *characterStreambp, char **encodingsp, size_t *encodinglp);
 static short                         doparseb(genericLogger_t *genericLoggerp, marpaESLIFRecognizer_t *marpaESLIFRecognizerParentp, marpaESLIFGrammar_t *marpaESLIFGrammarObjectp, char *inputs, int recursionleveli);
 
 typedef struct marpaESLIFTester_context {
@@ -188,7 +188,6 @@ int main() {
   marpaESLIFGrammarOption.bytel               = strlen(grammars);
   marpaESLIFGrammarOption.encodings           = NULL;
   marpaESLIFGrammarOption.encodingl           = 0;
-  marpaESLIFGrammarOption.encodingOfEncodings = NULL;
 
   p = strstr(grammars, "XXXXXX");
 
@@ -253,7 +252,7 @@ int main() {
 }
 
 /*****************************************************************************/
-static short inputReaderb(void *userDatavp, char **inputsp, size_t *inputlp, short *eofbp, short *characterStreambp, char **encodingOfEncodingsp, char **encodingsp, size_t *encodinglp)
+static short inputReaderb(void *userDatavp, char **inputsp, size_t *inputlp, short *eofbp, short *characterStreambp, char **encodingsp, size_t *encodinglp)
 /*****************************************************************************/
 {
   marpaESLIFTester_context_t *marpaESLIFTester_contextp = (marpaESLIFTester_context_t *) userDatavp;
@@ -262,7 +261,6 @@ static short inputReaderb(void *userDatavp, char **inputsp, size_t *inputlp, sho
   *inputlp              = marpaESLIFTester_contextp->inputl;
   *eofbp                = 1;
   *characterStreambp    = 1; /* We say this is a stream of characters */
-  *encodingOfEncodingsp = NULL;
   *encodingsp           = NULL;
   *encodinglp           = 0;
 
@@ -339,7 +337,7 @@ static short doparseb(genericLogger_t *genericLoggerp, marpaESLIFRecognizer_t *m
         marpaESLIFAlternative.lexemes               = "LCURLY";
         marpaESLIFAlternative.value.type            = MARPAESLIF_VALUE_TYPE_CHAR;
         marpaESLIFAlternative.value.u.c             = '{';
-        marpaESLIFAlternative.value.contexti        =  0; /* Not used */
+        marpaESLIFAlternative.value.contexti        =  1; /* Must be > 0 */
         marpaESLIFAlternative.value.sizel           =  0; /* Not used */
         marpaESLIFAlternative.value.representationp = NULL; /* Default representation is ok */
         marpaESLIFAlternative.grammarLengthl        = 1;
@@ -365,7 +363,7 @@ static short doparseb(genericLogger_t *genericLoggerp, marpaESLIFRecognizer_t *m
         marpaESLIFAlternative.lexemes               = "RCURLY";
         marpaESLIFAlternative.value.type            = MARPAESLIF_VALUE_TYPE_CHAR;
         marpaESLIFAlternative.value.u.c             = '{';
-        marpaESLIFAlternative.value.contexti        =  0; /* Not used */
+        marpaESLIFAlternative.value.contexti        =  1; /* Must be > 0 */
         marpaESLIFAlternative.value.sizel           =  0; /* Not used */
         marpaESLIFAlternative.value.representationp = NULL; /* Default representation is ok */
         marpaESLIFAlternative.grammarLengthl        = 1;

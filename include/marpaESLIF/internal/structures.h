@@ -438,8 +438,7 @@ marpaESLIFGrammarOption_t marpaESLIFGrammarOption_default_template = {
   NULL, /* bytep */
   0,    /* bytel */
   NULL, /* encodings */
-  0,    /* encodingl */
-  NULL  /* encodingOfEncodings */
+  0     /* encodingl */
 };
 
 marpaESLIFRecognizerOption_t marpaESLIFRecognizerOption_default_template = {

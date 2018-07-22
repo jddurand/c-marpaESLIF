@@ -5,10 +5,9 @@
 #include <genericLogger.h>
 #include <marpaESLIF.h>
 
-static short inputReaderb(void *userDatavp, char **inputsp, size_t *inputlp, short *eofbp, short *characterStreambp, char **encodingOfEncodingsp, char **encodingsp, size_t *encodinglp);
+static short inputReaderb(void *userDatavp, char **inputsp, size_t *inputlp, short *eofbp, short *characterStreambp, char **encodingsp, size_t *encodinglp);
 
 #define UTF_8_STRING "UTF-8"
-#define ASCII_STRING "ASCII"
 
 typedef struct marpaESLIFTester_context {
   genericLogger_t *genericLoggerp;
@@ -340,7 +339,6 @@ int main() {
   GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... bytel    : %ld", (unsigned long) marpaESLIFGrammarOptionp->bytel);
   GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... encodings: %p", marpaESLIFGrammarOptionp->encodings);
   GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... encodingl: %ld", (unsigned long) marpaESLIFGrammarOptionp->encodingl);
-  GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... encodings: %p", marpaESLIFGrammarOptionp->encodingOfEncodings);
   GENERICLOGGER_INFO (marpaESLIFOption.genericLoggerp, "-------------------------\n");
 
   /* Dump grammar */
@@ -367,7 +365,6 @@ int main() {
   marpaESLIFGrammarOption.bytel               = strlen(selfs);
   marpaESLIFGrammarOption.encodings           = UTF_8_STRING;
   marpaESLIFGrammarOption.encodingl           = strlen(UTF_8_STRING);
-  marpaESLIFGrammarOption.encodingOfEncodings = ASCII_STRING;
   marpaESLIFGrammarp = marpaESLIFGrammar_newp(marpaESLIFp, &marpaESLIFGrammarOption);
 
   if (marpaESLIFGrammarp == NULL) {
@@ -454,7 +451,7 @@ int main() {
 }
 
 /*****************************************************************************/
-static short inputReaderb(void *userDatavp, char **inputsp, size_t *inputlp, short *eofbp, short *characterStreambp, char **encodingOfEncodingsp, char **encodingsp, size_t *encodinglp)
+static short inputReaderb(void *userDatavp, char **inputsp, size_t *inputlp, short *eofbp, short *characterStreambp, char **encodingsp, size_t *encodinglp)
 /*****************************************************************************/
 {
   marpaESLIFTester_context_t *marpaESLIFTester_contextp = (marpaESLIFTester_context_t *) userDatavp;
@@ -463,7 +460,6 @@ static short inputReaderb(void *userDatavp, char **inputsp, size_t *inputlp, sho
   *inputlp              = marpaESLIFTester_contextp->inputl;
   *eofbp                = 1;
   *characterStreambp    = 0; /* We say this is not a stream of characters - regexp will adapt and to UTF correctness if needed */
-  *encodingOfEncodingsp = NULL;
   *encodingsp           = NULL;
   *encodinglp           = 0;
 

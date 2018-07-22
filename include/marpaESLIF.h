@@ -33,11 +33,10 @@ typedef struct marpaESLIFGrammarOption {
   size_t  bytel;               /* Input length in byte unit */
   char   *encodings;           /* Input encoding. Default: NULL */
   size_t  encodingl;           /* Length of encoding itself. Default: 0 */
-  char   *encodingOfEncodings; /* Encoding of encoding, in ASCII encoding. Default: NULL. */
 } marpaESLIFGrammarOption_t;
 
-/* The reader can return encoding information, giving eventual encoding of this information in encodingOfEncodingsp, starting at *encodingsp, spreaded over *encodinglp bytes */
-typedef short (*marpaESLIFReader_t)(void *userDatavp, char **inputcpp, size_t *inputlp, short *eofbp, short *characterStreambp, char **encodingOfEncodingsp, char **encodingsp, size_t *encodinglp);
+/* The reader can return encoding information, giving eventual encoding in *encodingsp, spreaded over *encodinglp bytes. Encoding of encoding is free. */
+typedef short (*marpaESLIFReader_t)(void *userDatavp, char **inputcpp, size_t *inputlp, short *eofbp, short *characterStreambp, char **encodingsp, size_t *encodinglp);
 typedef struct marpaESLIFRecognizerOption {
   void                *userDatavp;                  /* User specific context */
   marpaESLIFReader_t   marpaESLIFReaderCallbackp;   /* Reader */
