@@ -216,6 +216,7 @@ int main() {
       marpaESLIFValueOption.ruleActionResolverp    = NULL;
       marpaESLIFValueOption.symbolActionResolverp  = NULL;
       marpaESLIFValueOption.freeActionResolverp    = NULL;
+      marpaESLIFValueOption.transformerp           = NULL;
       marpaESLIFValueOption.highRankOnlyb          = 1;
       marpaESLIFValueOption.orderByRankb           = 1;
       marpaESLIFValueOption.ambiguousb             = 0;
@@ -226,7 +227,7 @@ int main() {
       if (marpaESLIFValuep == NULL) {
         rcValueb = 0;
       } else {
-        rcValueb = marpaESLIFValue_valueb(marpaESLIFValuep, NULL);
+        rcValueb = marpaESLIFValue_valueb(marpaESLIFValuep);
       }
 
       /* Get eventual last hand */

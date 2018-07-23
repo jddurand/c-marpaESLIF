@@ -92,7 +92,7 @@ to augment. Recommended: 50 */
     marpaESLIFTester_context.inputl         = strlen(testdata[i].inputs);
 
     /* genericLogger_logLevel_seti(genericLoggerp, GENERICLOGGER_LOGLEVEL_TRACE); */
-    if (marpaESLIFGrammar_parseb(marpaESLIFGrammarp, &marpaESLIFRecognizerOption, NULL /* marpaESLIFValueOptionp */, NULL /* exhaustedbp */, NULL /* marpaESLIFValueResultp */)) {
+    if (marpaESLIFGrammar_parseb(marpaESLIFGrammarp, &marpaESLIFRecognizerOption, NULL /* marpaESLIFValueOptionp */, NULL /* exhaustedbp */)) {
       if (testdata[i].wantedstatusb) {
         GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "\"%s\" does match", testdata[i].inputs);
       } else {

@@ -608,7 +608,7 @@ to augment. Recommended: 50 */
   marpaESLIFTester_context.inputl         = strlen(marpaESLIFTester_context.inputs);
 
   /* genericLogger_logLevel_seti(genericLoggerp, GENERICLOGGER_LOGLEVEL_TRACE); */
-  exiti = marpaESLIFGrammar_parseb(marpaESLIFGrammarp, &marpaESLIFRecognizerOption, NULL /* marpaESLIFValueOptionp */, NULL /* exhaustedbp */, NULL /* marpaESLIFValueResultp */) ? 0 : 1;
+  exiti = marpaESLIFGrammar_parseb(marpaESLIFGrammarp, &marpaESLIFRecognizerOption, NULL /* marpaESLIFValueOptionp */, NULL /* exhaustedbp */) ? 0 : 1;
   goto done;
 
  err:

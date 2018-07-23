@@ -126,6 +126,8 @@ typedef struct marpaESLIFValueContext {
   jmethodID                      methodp;                       /* Current resolved method ID */
   char                          *actions;                       /* shallow copy of last resolved name */
   jchar                         *previous_representation_utf8s; /* Previous stringification */
+  JNIEnv                        *envp;
+  jobject                        objectp;
 } marpaESLIFValueContext_t;
 
 typedef struct marpaESLIF_stringGenerator { /* We use genericLogger to generate strings */
@@ -133,11 +135,6 @@ typedef struct marpaESLIF_stringGenerator { /* We use genericLogger to generate 
   size_t       l;
   short        okb;
 } marpaESLIF_stringGenerator_t;
-
-typedef struct marpaESLIF_getObjectContext {
-  JNIEnv *envp;
-  jobject objectp;
-} marpaESLIF_getObjectContext_t;
 
 /* ------ */
 /* Macros */
@@ -601,7 +598,7 @@ static short marpaESLIFRepresentationCallback(void *userDatavp, marpaESLIFValueR
 static jobject marpaESLIFGrammarProperties(JNIEnv *envp, marpaESLIFGrammarProperty_t *grammarPropertyp);
 static jobject marpaESLIFRuleProperties(JNIEnv *envp, marpaESLIFRuleProperty_t *rulePropertyp);
 static jobject marpaESLIFSymbolProperties(JNIEnv *envp, marpaESLIFSymbolProperty_t *symbolPropertyp);
-static short marpaESLIFGetObjectp(JNIEnv *envp, jobject *objectpp, marpaESLIFValue_t *marpaESLIFValuep, int stackindicei, char *bytep, size_t bytel, marpaESLIFValueResult_t *marpaESLIFValueResultp, marpaESLIFValueResult_t *marpaESLIFValueResultResolvedp);
+static short marpaESLIFGetObjectp(marpaESLIFValueContext *marpaESLIFValueContextp, marpaESLIFValue_t *marpaESLIFValuep, int stackindicei, char *bytep, size_t bytel, marpaESLIFValueResult_t *marpaESLIFValueResultp);
 /* marpaESLIFValueResult transformers */
 static short                           marpaESLIF_TransformUndef(void *userDatavp, int contexti);
 static short                           marpaESLIF_TransformChar(void *userDatavp, int contexti, char c);
@@ -1666,9 +1663,6 @@ JNIEXPORT jboolean JNICALL Java_org_parser_marpa_ESLIFGrammar_jniParse(JNIEnv *e
   marpaESLIFValueOption_t        marpaESLIFValueOption;
   marpaESLIFRecognizerContext_t  marpaESLIFRecognizerContext;
   marpaESLIFValueContext_t       marpaESLIFValueContext;
-  marpaESLIFValueResult_t        marpaESLIFValueResult;
-  marpaESLIFValueResult_t        marpaESLIFValueResultResolved;
-  jobject                        objectp;
   jboolean                       rcb;
 
   marpaESLIFRecognizerContext.eslifRecognizerInterfacep = eslifRecognizerInterfacep;
@@ -1715,6 +1709,7 @@ JNIEXPORT jboolean JNICALL Java_org_parser_marpa_ESLIFGrammar_jniParse(JNIEnv *e
   marpaESLIFValueOption.ruleActionResolverp            = marpaESLIFValueRuleActionResolver;
   marpaESLIFValueOption.symbolActionResolverp          = marpaESLIFValueSymbolActionResolver;
   marpaESLIFValueOption.freeActionResolverp            = marpaESLIFValueFreeActionResolver;
+  marpaESLIFValueOption.transformerp                   = &marpaESLIFValueResultTransformDefault;
   marpaESLIFValueOption.highRankOnlyb                  = ((*envp)->CallBooleanMethod(envp, eslifValueInterfacep, MARPAESLIF_ESLIFVALUEINTERFACE_CLASS_isWithHighRankOnly_METHODP) == JNI_TRUE);
   if (HAVEEXCEPTION(envp)) {
     goto err;
@@ -1739,13 +1734,8 @@ JNIEXPORT jboolean JNICALL Java_org_parser_marpa_ESLIFGrammar_jniParse(JNIEnv *e
   if (! marpaESLIFGrammar_parseb(marpaESLIFGrammarp, &marpaESLIFRecognizerOption, &marpaESLIFValueOption, NULL, &marpaESLIFValueResult)) {
     goto err;
   }
-  marpaESLIFValueResultp = &marpaESLIFValueResult;
 
-  if (! marpaESLIFGetObjectp(envp, &objectp, NULL /* marpaESLIFValuep */, -1 /* stackindicei */, NULL /* bytep */, 0 /* bytel */, &marpaESLIFValueResult, &marpaESLIFValueResultResolved)) {
-    goto err;
-  }
-
-  (*envp)->CallVoidMethod(envp, eslifValueInterfacep, MARPAESLIF_ESLIFVALUEINTERFACE_CLASS_setResult_METHODP, objectp);
+  (*envp)->CallVoidMethod(envp, eslifValueInterfacep, MARPAESLIF_ESLIFVALUEINTERFACE_CLASS_setResult_METHODP, marpaESLIFValueOption.objectp);
   if (HAVEEXCEPTION(envp)) {
     goto err;
   }
@@ -3629,6 +3619,7 @@ JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIFValue_jniNew(JNIEnv *envp, job
   marpaESLIFValueOption.ruleActionResolverp   = marpaESLIFValueRuleActionResolver;;
   marpaESLIFValueOption.symbolActionResolverp = marpaESLIFValueSymbolActionResolver;
   marpaESLIFValueOption.freeActionResolverp   = marpaESLIFValueFreeActionResolver;
+  marpaESLIFValueOption.transformerp          = &marpaESLIFValueResultTransformDefault;
   marpaESLIFValueOption.highRankOnlyb         = ((*envp)->CallBooleanMethod(envp, eslifValueInterfacep, MARPAESLIF_ESLIFVALUEINTERFACE_CLASS_isWithHighRankOnly_METHODP) == JNI_TRUE);
   if (HAVEEXCEPTION(envp)) {
     goto err;
@@ -3710,41 +3701,10 @@ JNIEXPORT jboolean JNICALL Java_org_parser_marpa_ESLIFValue_jniValue(JNIEnv *env
   }
 
   if (valueb > 0) {
-    if (! marpaESLIFGetObjectp(envp, &objectp, NULL /* marpaESLIFValuep */, -1 /* stackindicei */, NULL /* bytep */, 0 /* bytel */, &marpaESLIFValueResult, &marpaESLIFValueResultResolved)) {
-      goto err;
-    }
-
-    (*envp)->CallVoidMethod(envp, eslifValueInterfacep, MARPAESLIF_ESLIFVALUEINTERFACE_CLASS_setResult_METHODP, objectp);
+    (*envp)->CallVoidMethod(envp, eslifValueInterfacep, MARPAESLIF_ESLIFVALUEINTERFACE_CLASS_setResult_METHODP, marpaESLIFValueContextp->objectp);
     if (HAVEEXCEPTION(envp)) {
       goto err;
     }
-
-    /* It is our responsibility to free the final value */
-    switch (marpaESLIFValueResultResolved.type) {
-    case MARPAESLIF_VALUE_TYPE_ARRAY:
-      /* We never push an array type */
-      if ((marpaESLIFValueResultResolved.u.p != NULL) && (! marpaESLIFValueResultResolved.shallowb)) {
-        free(marpaESLIFValueResultResolved.u.p);
-      }
-      break;
-    case MARPAESLIF_VALUE_TYPE_PTR:
-      if ((marpaESLIFValueResultResolved.u.p != NULL) && (! marpaESLIFValueResultResolved.shallowb)) {
-        switch (marpaESLIFValueResultResolved.contexti) {
-        case MARPAESLIF_JNI_CONTEXT:
-          /* We always push global references to the valuation stack */
-          (*envp)->DeleteGlobalRef(envp, (jobject) marpaESLIFValueResultResolved.u.p);
-          break;
-        default:
-          /* We do not own that */
-          free(marpaESLIFValueResultResolved.u.p);
-          break;
-        }
-      }
-      break;
-    default:
-      break;
-    }
-
     rcb = JNI_TRUE;
   } else {
     rcb = JNI_FALSE;
@@ -4034,7 +3994,7 @@ static short marpaESLIFValueRuleCallback(void *userDatavp, marpaESLIFValue_t *ma
     }
 
     for (i = arg0i; i <= argni; i++) {
-      if (! marpaESLIFGetObjectp(envp, &objectp, marpaESLIFValuep, i, NULL /* bytep */, 0 /* bytel */, NULL /* marpaESLIFValueResultp */, NULL /* marpaESLIFValueResultResolvedp */)) {
+      if (! marpaESLIFGetObjectp(marpaESLIFValueContext, &objectp, marpaESLIFValuep, i, NULL /* bytep */, 0 /* bytel */, NULL /* marpaESLIFValueResultp */)) {
         goto err;
       }
       (*envp)->SetObjectArrayElement(envp, list, i - arg0i, objectp);
@@ -4092,7 +4052,7 @@ static short marpaESLIFValueSymbolCallback(void *userDatavp, marpaESLIFValue_t *
     goto err;
   }
 
-  if (! marpaESLIFGetObjectp(envp, &objectp, NULL /* marpaESLIFValuep */, -1 /* stackindicei */, bytep, bytel, NULL /* marpaESLIFValueResultp */, NULL /* marpaESLIFValueResultResolvedp */)) {
+  if (! marpaESLIFGetObjectp(marpaESLIFValueContext, &objectp, NULL /* marpaESLIFValuep */, -1 /* stackindicei */, bytep, bytel, NULL /* marpaESLIFValueResultp */)) {
     goto err;
   }
 
@@ -4343,6 +4303,8 @@ static short marpaESLIFValueContextInit(JNIEnv *envp, jobject eslifValueInterfac
   marpaESLIFValueContextp->methodp                       = 0;
   marpaESLIFValueContextp->actions                       = NULL;
   marpaESLIFValueContextp->previous_representation_utf8s = NULL;
+  marpaESLIFValueContextp->envp                          = envp;
+  marpaESLIFValueContextp->objectp                       = NULL;
 
   /* We want the grammar instance to stay alive until valuation is done */
   marpaESLIFValueContextp->eslifGrammarp = (*envp)->NewGlobalRef(envp, eslifGrammarp);
@@ -4988,13 +4950,11 @@ static jobject marpaESLIFSymbolProperties(JNIEnv *envp, marpaESLIFSymbolProperty
 }
 
 /*****************************************************************************/
-static short marpaESLIFGetObjectp(JNIEnv *envp, jobject *objectpp, marpaESLIFValue_t *marpaESLIFValuep, int stackindicei, char *bytep, size_t bytel, marpaESLIFValueResult_t *marpaESLIFValueResultp, marpaESLIFValueResult_t *marpaESLIFValueResultResolvedp)
+static short marpaESLIFGetObjectp(marpaESLIFValueContext_t *marpaESLIFValueContextp, jobject *objectpp, marpaESLIFValue_t *marpaESLIFValuep, int stackindicei, char *bytep, size_t bytel, marpaESLIFValueResult_t *marpaESLIFValueResultp)
 /*****************************************************************************/
 {
   static const char            *funcs = "marpaESLIFGetObjectp";
   marpaESLIFValueResult_t        marpaESLIFValueResult;
-  marpaESLIFValueResult_t        marpaESLIFValueResultResolved;
-  marpaESLIF_getObjectContext_t  marpaESLIF_getObjectContext;
   jobject                        objectp;
   short                          rcb;
 
@@ -5014,10 +4974,9 @@ static short marpaESLIFGetObjectp(JNIEnv *envp, jobject *objectpp, marpaESLIFVal
     }
   }
 
-  marpaESLIF_getObjectContext.envp    = envp;
-  marpaESLIF_getObjectContext.objectp = NULL;
+  marpaESLIFValueContextp->objectp = NULL;
 
-  if (! marpaESLIFValue_transformb(&marpaESLIF_getObjectContext, marpaESLIFValueResultp, &marpaESLIFValueResultResolved, (marpaESLIFValueResultTransform_t *) &marpaESLIFValueResultTransformDefault)) {
+  if (! marpaESLIFValue_transformb(marpaESLIFValueResultp, marpaESLIFValueResultp, NULL /* marpaESLIFValueResultResolvedp */)) {
     RAISEEXCEPTIONF(envp, "marpaESLIFValue_transformb failure, %s", strerror(errno));
   }
 

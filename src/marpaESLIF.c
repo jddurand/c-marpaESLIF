@@ -335,6 +335,8 @@ static        short                  _marpaESLIFValue_symbolCallbackWrapperb(voi
 static        short                  _marpaESLIFValue_nullingCallbackWrapperb(void *userDatavp, int symboli, int resulti);
 static inline short                  _marpaESLIFValue_anySymbolCallbackWrapperb(void *userDatavp, int symboli, int argi, int resulti, short nullableb);
 static inline short                  _marpaESLIFValue_symbolActionCallbackb(marpaESLIFValue_t *marpaESLIFValuep, char *asciishows, short nullableb, marpaESLIF_action_t *nullableActionp, marpaESLIFValueSymbolCallback_t *symbolCallbackpp, marpaESLIFValueRuleCallback_t *ruleCallbackpp);
+static inline short                  _marpaESLIFValue_transformb(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFValueResult_t *marpaESLIFValueResultp, marpaESLIFValueResult_t *marpaESLIFValueResultResolvedp);
+static inline short                  _marpaESLIFValue_valueb(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFValueResult_t *marpaESLIFValueResultp);
 
 static inline void                   _marpaESLIFGrammar_freev(marpaESLIFGrammar_t *marpaESLIFGrammarp, short onStackb);
 static inline void                   _marpaESLIFGrammar_grammarStack_freev(marpaESLIFGrammar_t *marpaESLIFGrammarp, genericStack_t *grammarStackp);
@@ -7398,14 +7400,14 @@ void marpaESLIFRecognizer_freev(marpaESLIFRecognizer_t *marpaESLIFRecognizerp)
 }
 
 /*****************************************************************************/
-short marpaESLIFGrammar_parseb(marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaESLIFRecognizerOption_t *marpaESLIFRecognizerOptionp, marpaESLIFValueOption_t *marpaESLIFValueOptionp, short *isExhaustedbp, marpaESLIFValueResult_t *marpaESLIFValueResultp)
+short marpaESLIFGrammar_parseb(marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaESLIFRecognizerOption_t *marpaESLIFRecognizerOptionp, marpaESLIFValueOption_t *marpaESLIFValueOptionp, short *isExhaustedbp)
 /*****************************************************************************/
 {
-  return marpaESLIFGrammar_parse_by_levelb(marpaESLIFGrammarp, marpaESLIFRecognizerOptionp, marpaESLIFValueOptionp, isExhaustedbp, 0 /* leveli */, NULL /* descp */, marpaESLIFValueResultp);
+  return marpaESLIFGrammar_parse_by_levelb(marpaESLIFGrammarp, marpaESLIFRecognizerOptionp, marpaESLIFValueOptionp, isExhaustedbp, 0 /* leveli */, NULL /* descp */);
 }
 
 /*****************************************************************************/
-short marpaESLIFGrammar_parse_by_levelb(marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaESLIFRecognizerOption_t *marpaESLIFRecognizerOptionp, marpaESLIFValueOption_t *marpaESLIFValueOptionp, short *isExhaustedbp, int leveli, marpaESLIFString_t *descp, marpaESLIFValueResult_t *marpaESLIFValueResultp)
+short marpaESLIFGrammar_parse_by_levelb(marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaESLIFRecognizerOption_t *marpaESLIFRecognizerOptionp, marpaESLIFValueOption_t *marpaESLIFValueOptionp, short *isExhaustedbp, int leveli, marpaESLIFString_t *descp)
 /*****************************************************************************/
 {
   marpaESLIF_grammar_t *grammarp;
@@ -7433,7 +7435,7 @@ short marpaESLIFGrammar_parse_by_levelb(marpaESLIFGrammar_t *marpaESLIFGrammarp,
                                   0, /* silentb */
                                   NULL, /* marpaESLIFRecognizerParentp */
                                   isExhaustedbp,
-                                  marpaESLIFValueResultp,
+                                  NULL, /* marpaESLIFValueResultp */
                                   0, /* maxStartCompletionsi */
                                   NULL, /* lastSizeBeforeCompletionlp */
                                   NULL /* numberOfStartCompletionsip */,
@@ -8698,21 +8700,8 @@ static inline short _marpaESLIFGrammar_parseb(marpaESLIFGrammar_t *marpaESLIFGra
     goto err;
   }
   /* No loop because we ask for a non-ambigous parse tree value */
-  if (marpaESLIFRecognizerParentp != NULL) {
-    /* Lexeme mode: we want to be sure that we will ALWAYS have a result in order to check it. */
-    /* This result must be an ARRAY and the parsing will be ok only if the matched size is > 0. */
-    if (marpaESLIFValue_valueb(marpaESLIFValuep, &marpaESLIFValueResult) <= 0) {
-      goto err;
-    }
-    if (marpaESLIFValueResultp != NULL) {
-      *marpaESLIFValueResultp = marpaESLIFValueResult;
-    } else {
-      /* No free: everything is an offset */
-    }
-  } else {
-    if (marpaESLIFValue_valueb(marpaESLIFValuep, marpaESLIFValueResultp) <= 0) {
-      goto err;
-    }
+  if (_marpaESLIFValue_valueb(marpaESLIFValuep, marpaESLIFValueResultp) <= 0) {
+    goto err;
   }
 
   rcb = 1;
@@ -8877,20 +8866,14 @@ marpaESLIFValue_t *marpaESLIFValue_newp(marpaESLIFRecognizer_t *marpaESLIFRecogn
 }
 
 /*****************************************************************************/
-short marpaESLIFValue_valueb(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFValueResult_t *marpaESLIFValueResultp)
+static inline short _marpaESLIFValue_valueb(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFValueResult_t *marpaESLIFValueResultp)
 /*****************************************************************************/
 {
-  static const char                *funcs   = "marpaESLIFValue_valueb";
-  static const int                  indicei = 0;
-  marpaESLIFRecognizer_t           *marpaESLIFRecognizerp;
-  short                             rcb;
-  marpaESLIFValueResult_t           marpaESLIFValueResult;
-
-  if (marpaESLIFValuep == NULL) {
-    errno = EINVAL;
-    return 0;
-  }
-  marpaESLIFRecognizerp = marpaESLIFValuep->marpaESLIFRecognizerp;
+  static const char       *funcs                 = "_marpaESLIFValue_valueb";
+  static const int         indicei               = 0; /* By definition result is always at indice No 0 */
+  marpaESLIFRecognizer_t  *marpaESLIFRecognizerp = marpaESLIFValuep->marpaESLIFRecognizerp;
+  short                    rcb;
+  marpaESLIFValueResult_t  marpaESLIFValueResult;
 
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
@@ -8927,14 +8910,19 @@ short marpaESLIFValue_valueb(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFValu
 #endif
     marpaESLIFValueResult = GENERICSTACK_GET_CUSTOM(marpaESLIFValuep->valueResultStackp, indicei);
 
+    /* Only internal calls set this variable: then we know by construction that we do not want to have a transform */
+    /* and we will manage the consequence of resetting the value at this stack indice. */
     if (marpaESLIFValueResultp != NULL) {
-      /* User is aking for the value: he will responsible to manage its eventual free */
       GENERICSTACK_SET_NA(marpaESLIFValuep->valueResultStackp, indicei);
       if (GENERICSTACK_ERROR(marpaESLIFValuep->valueResultStackp)) {
         MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "marpaESLIFValuep->valueResultStackp set to NA failure at indice %d, %s", strerror(errno), indicei);
-        goto err;
       }
       *marpaESLIFValueResultp = marpaESLIFValueResult;
+    } else {
+      /* Call the end-user transformer */
+      if (! _marpaESLIFValue_transformb(marpaESLIFValuep, &marpaESLIFValueResult, NULL /* marpaESLIFValueResultResolvedp */)) {
+        goto err;
+      }
     }
   }
 
@@ -8950,6 +8938,18 @@ short marpaESLIFValue_valueb(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFValu
   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC;
   return rcb;
+}
+
+/*****************************************************************************/
+short marpaESLIFValue_valueb(marpaESLIFValue_t *marpaESLIFValuep)
+/*****************************************************************************/
+{
+  if (marpaESLIFValuep == NULL) {
+    errno = EINVAL;
+    return 0;
+  }
+
+  return _marpaESLIFValue_valueb(marpaESLIFValuep, NULL /* marpaESLIFValueResultp */);
 }
 
 /*****************************************************************************/
@@ -11964,16 +11964,22 @@ marpaESLIFValueResult_t *marpaESLIFValue_stack_getp(marpaESLIFValue_t *marpaESLI
 }
 
 /*****************************************************************************/
-short marpaESLIFValue_transformb(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp, marpaESLIFValueResult_t *marpaESLIFValueResultResolvedp, marpaESLIFValueResultTransform_t *marpaESLIFValueResultTransformp)
+static inline short _marpaESLIFValue_transformb(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFValueResult_t *marpaESLIFValueResultp, marpaESLIFValueResult_t *marpaESLIFValueResultResolvedp)
 /*****************************************************************************/
 {
-  static const char *funcs = "marpaESLIFValueResult_transformb";
-  short              rcb;
+  static const char                *funcs                 = "_marpaESLIFValueResult_transformb";
+  marpaESLIFRecognizer_t           *marpaESLIFRecognizerp = marpaESLIFValuep->marpaESLIFRecognizerp;
+  marpaESLIFValueOption_t           marpaESLIFValueOption = marpaESLIFValuep->marpaESLIFValueOption;
+  marpaESLIFValueResultTransform_t *transformerp          = marpaESLIFValueOption.transformerp;
+  short                             rcb;
 
-  /* Generic transformation helper of a marpaESLIFValueResult for the end user */
-  if (marpaESLIFValueResultTransformp == NULL) {
-    errno = EINVAL;
-    goto err;
+  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
+  MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
+
+  if (transformerp == NULL) {
+    /* End user do not mind about the final value */
+    rcb = 1;
+    goto done;
   }
 
  again:
@@ -11982,74 +11988,82 @@ short marpaESLIFValue_transformb(void *userDatavp, marpaESLIFValueResult_t *marp
   }
   switch (marpaESLIFValueResultp->type) {
   case MARPAESLIF_VALUE_TYPE_UNDEF:
-    if ((marpaESLIFValueResultTransformp == NULL) || (marpaESLIFValueResultTransformp->undefTransformerp == NULL)) {
+    if ((transformerp == NULL) || (transformerp->undefTransformerp == NULL)) {
+      MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "transformerp->undefTransformerp is undefined");
       errno = EINVAL;
       goto err;
     }
-    if (! marpaESLIFValueResultTransformp->undefTransformerp(userDatavp, marpaESLIFValueResultp->contexti)) {
+    if (! transformerp->undefTransformerp(marpaESLIFValueOption.userDatavp, marpaESLIFValueResultp->contexti)) {
       goto err;
     }
     break;
   case MARPAESLIF_VALUE_TYPE_CHAR:
-    if ((marpaESLIFValueResultTransformp == NULL) || (marpaESLIFValueResultTransformp->charTransformerp == NULL)) {
+    if ((transformerp == NULL) || (transformerp->charTransformerp == NULL)) {
+      MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "transformerp->charTransformerp is undefined");
       errno = EINVAL;
       goto err;
     }
-    if (! marpaESLIFValueResultTransformp->charTransformerp(userDatavp, marpaESLIFValueResultp->contexti, marpaESLIFValueResultp->u.c)) {
+    if (! transformerp->charTransformerp(marpaESLIFValueOption.userDatavp, marpaESLIFValueResultp->contexti, marpaESLIFValueResultp->u.c)) {
       goto err;
     }
     break;
   case MARPAESLIF_VALUE_TYPE_SHORT:
-    if ((marpaESLIFValueResultTransformp == NULL) || (marpaESLIFValueResultTransformp->shortTransformerp == NULL)) {
+    if ((transformerp == NULL) || (transformerp->shortTransformerp == NULL)) {
+      MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "transformerp->shortTransformerp is undefined");
       errno = EINVAL;
       goto err;
     }
-    if (! marpaESLIFValueResultTransformp->shortTransformerp(userDatavp, marpaESLIFValueResultp->contexti, marpaESLIFValueResultp->u.b)) {
+    if (! transformerp->shortTransformerp(marpaESLIFValueOption.userDatavp, marpaESLIFValueResultp->contexti, marpaESLIFValueResultp->u.b)) {
       goto err;
     }
     break;
   case MARPAESLIF_VALUE_TYPE_INT:
-    if ((marpaESLIFValueResultTransformp == NULL) || (marpaESLIFValueResultTransformp->intTransformerp == NULL)) {
+    if ((transformerp == NULL) || (transformerp->intTransformerp == NULL)) {
+      MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "transformerp->intTransformerp is undefined");
       errno = EINVAL;
       goto err;
     }
-    if (! marpaESLIFValueResultTransformp->intTransformerp(userDatavp, marpaESLIFValueResultp->contexti, marpaESLIFValueResultp->u.i)) {
+    if (! transformerp->intTransformerp(marpaESLIFValueOption.userDatavp, marpaESLIFValueResultp->contexti, marpaESLIFValueResultp->u.i)) {
       goto err;
     }
     break;
   case MARPAESLIF_VALUE_TYPE_LONG:
-    if ((marpaESLIFValueResultTransformp == NULL) || (marpaESLIFValueResultTransformp->longTransformerp == NULL)) {
+    if ((transformerp == NULL) || (transformerp->longTransformerp == NULL)) {
+      MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "transformerp->longTransformerp is undefined");
       errno = EINVAL;
       goto err;
     }
-    if (! marpaESLIFValueResultTransformp->longTransformerp(userDatavp, marpaESLIFValueResultp->contexti, marpaESLIFValueResultp->u.l)) {
+    if (! transformerp->longTransformerp(marpaESLIFValueOption.userDatavp, marpaESLIFValueResultp->contexti, marpaESLIFValueResultp->u.l)) {
       goto err;
     }
     break;
   case MARPAESLIF_VALUE_TYPE_FLOAT:
-    if ((marpaESLIFValueResultTransformp == NULL) || (marpaESLIFValueResultTransformp->floatTransformerp == NULL)) {
+    if ((transformerp == NULL) || (transformerp->floatTransformerp == NULL)) {
+      MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "transformerp->floatTransformerp is undefined");
       errno = EINVAL;
       goto err;
     }
-    if (! marpaESLIFValueResultTransformp->floatTransformerp(userDatavp, marpaESLIFValueResultp->contexti, marpaESLIFValueResultp->u.f)) {
+    if (! transformerp->floatTransformerp(marpaESLIFValueOption.userDatavp, marpaESLIFValueResultp->contexti, marpaESLIFValueResultp->u.f)) {
       goto err;
     }
     break;
   case MARPAESLIF_VALUE_TYPE_DOUBLE:
-    if ((marpaESLIFValueResultTransformp == NULL) || (marpaESLIFValueResultTransformp->doubleTransformerp == NULL)) {
+    if ((transformerp == NULL) || (transformerp->doubleTransformerp == NULL)) {
+      MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "transformerp->doubleTransformerp is undefined");
       errno = EINVAL;
       goto err;
     }
-    if (! marpaESLIFValueResultTransformp->doubleTransformerp(userDatavp, marpaESLIFValueResultp->contexti, marpaESLIFValueResultp->u.d)) {
+    if (! transformerp->doubleTransformerp(marpaESLIFValueOption.userDatavp, marpaESLIFValueResultp->contexti, marpaESLIFValueResultp->u.d)) {
       goto err;
     }
     break;
   case MARPAESLIF_VALUE_TYPE_PTR:
-    if ((marpaESLIFValueResultTransformp == NULL) || (marpaESLIFValueResultTransformp->ptrTransformerp == NULL)) {
+    if ((transformerp == NULL) || (transformerp->ptrTransformerp == NULL)) {
+      MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "transformerp->ptrTransformerp is undefined");
       errno = EINVAL;
       goto err;
     }
-    if (! marpaESLIFValueResultTransformp->ptrTransformerp(userDatavp, marpaESLIFValueResultp->contexti, marpaESLIFValueResultp->u.p)) {
+    if (! transformerp->ptrTransformerp(marpaESLIFValueOption.userDatavp, marpaESLIFValueResultp->contexti, marpaESLIFValueResultp->u.p)) {
       goto err;
     }
     break;
@@ -12062,11 +12076,12 @@ short marpaESLIFValue_transformb(void *userDatavp, marpaESLIFValueResult_t *marp
       goto again;
     } else {
       /* Anything else, including lexemes */
-      if ((marpaESLIFValueResultTransformp == NULL) || (marpaESLIFValueResultTransformp->arrayTransformerp == NULL)) {
+      if ((transformerp == NULL) || (transformerp->arrayTransformerp == NULL)) {
+        MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "transformerp->arrayTransformerp is undefined");
         errno = EINVAL;
         goto err;
       }
-      if (! marpaESLIFValueResultTransformp->arrayTransformerp(userDatavp, marpaESLIFValueResultp->contexti, marpaESLIFValueResultp->u.p, marpaESLIFValueResultp->sizel)) {
+      if (! transformerp->arrayTransformerp(marpaESLIFValueOption.userDatavp, marpaESLIFValueResultp->contexti, marpaESLIFValueResultp->u.p, marpaESLIFValueResultp->sizel)) {
         goto err;
       }
     }
@@ -12083,7 +12098,25 @@ short marpaESLIFValue_transformb(void *userDatavp, marpaESLIFValueResult_t *marp
   rcb = 0;
 
  done:
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %p", marpaESLIFValueResultp);
+  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC;
   return rcb;
+}
+
+/*****************************************************************************/
+short marpaESLIFValue_transformb(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFValueResult_t *marpaESLIFValueResultp, marpaESLIFValueResult_t *marpaESLIFValueResultResolvedp)
+/*****************************************************************************/
+{
+  static const char *funcs = "marpaESLIFValueResult_transformb";
+  short              rcb;
+
+  /* Generic transformation helper of a marpaESLIFValueResult during valuation */
+  if (marpaESLIFValuep == NULL) {
+    errno = EINVAL;
+    return 0;
+  }
+
+  return _marpaESLIFValue_transformb(marpaESLIFValuep, marpaESLIFValueResultp, marpaESLIFValueResultResolvedp);
 }
 
 /*****************************************************************************/
@@ -12091,7 +12124,7 @@ static inline marpaESLIFValueResult_t *_marpaESLIFValue_stack_getp(marpaESLIFVal
 /*****************************************************************************/
 {
   /* Special internal version of _marpaESLIFValue_stack_getp that returns the direct pointer into the stack */
-  static const char       *funcs = "_marpaESLIFValue_stack_getp";
+  static const char       *funcs                 = "_marpaESLIFValue_stack_getp";
   marpaESLIFRecognizer_t  *marpaESLIFRecognizerp = marpaESLIFValuep->marpaESLIFRecognizerp;
   marpaESLIFValueResult_t *marpaESLIFValueResultp;
 

@@ -261,6 +261,7 @@ int main() {
     marpaESLIFValueOption.ruleActionResolverp   = ruleActionResolver; /* Will return the function doing the wanted rule action */
     marpaESLIFValueOption.symbolActionResolverp = NULL; /* Will return the function doing the wanted symbol action */
     marpaESLIFValueOption.freeActionResolverp   = NULL; /* Will return the function doing the free */
+    marpaESLIFValueOption.transformerp          = NULL; /* We do not mind about final value */
     marpaESLIFValueOption.highRankOnlyb         = 1;    /* Default: 1 */
     marpaESLIFValueOption.orderByRankb          = 1;    /* Default: 1 */
     marpaESLIFValueOption.ambiguousb            = 0;    /* Default: 0 */
@@ -271,7 +272,7 @@ int main() {
       goto err;
     }
     /* genericLogger_logLevel_seti(genericLoggerp, GENERICLOGGER_LOGLEVEL_TRACE); */
-    if (! marpaESLIFValue_valueb(marpaESLIFValuep, NULL /* marpaESLIFValueResultp */)) {
+    if (! marpaESLIFValue_valueb(marpaESLIFValuep)) {
       goto err;
     }
   }

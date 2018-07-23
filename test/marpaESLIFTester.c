@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <errno.h>
 #include <genericLogger.h>
 #include <marpaESLIF.h>
 
@@ -12,11 +13,26 @@ static short                           inputReaderb(void *userDatavp, char **inp
 static short                           eventManagerb(int *eventCountip, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, genericLogger_t *genericLoggerp);
 static void                            genericLoggerCallback(void *userDatavp, genericLoggerLevel_t logLeveli, const char *msgs);
 static short                           alternativeRepresentation(void *userDatavp, marpaESLIFValueResult_t *valueResultp, char **inputcpp, size_t *inputlp, short *characterStreambp, char **encodingsp, size_t *encodinglp);
+static short                           arrayTransformer(void *userDatavp, int contexti, void *p, size_t sizel);
+
+static marpaESLIFValueResultTransform_t transformer = {
+  NULL, /* undefTransformerp */
+  NULL, /* charTransformerp */
+  NULL, /* shortTransformerp */
+  NULL, /* intTransformerp */
+  NULL, /* longTransformerp */
+  NULL, /* floatTransformerp */
+  NULL, /* doubleTransformerp */
+  NULL, /* ptrTransformerp */
+  arrayTransformer
+};
 
 typedef struct marpaESLIFTester_context {
   genericLogger_t *genericLoggerp;
   char            *inputs;
   size_t           inputl;
+  char            *values;
+  size_t           valuel;
 } marpaESLIFTester_context_t;
 
 const static char *exceptions = "\n"
@@ -60,6 +76,7 @@ static const char *actionsArrayp[] = {
 int main() {
   marpaESLIF_t                 *marpaESLIFp        = NULL;
   marpaESLIFGrammar_t          *marpaESLIFGrammarp = NULL;
+  char                         *lastValues         = NULL;
   marpaESLIFOption_t            marpaESLIFOption;
   marpaESLIFGrammarOption_t     marpaESLIFGrammarOption;
   int                           exiti;
@@ -82,7 +99,6 @@ int main() {
   size_t                        nLexemel;
   size_t                        lexemel;
   char                        **lexemesArrayp;
-  marpaESLIFValueResult_t       marpaESLIFValueResult;
   int                          *ruleip;
   size_t                        rulel;
   size_t                        rulei;
@@ -313,6 +329,8 @@ int main() {
   marpaESLIFTester_context.genericLoggerp = genericLoggerp;
   marpaESLIFTester_context.inputs         = (char *) inputs;
   marpaESLIFTester_context.inputl         = strlen(inputs);
+  marpaESLIFTester_context.values         = NULL;
+  marpaESLIFTester_context.valuel         = 0;
 
   marpaESLIFRecognizerOption.userDatavp                = &marpaESLIFTester_context;
   marpaESLIFRecognizerOption.marpaESLIFReaderCallbackp = inputReaderb;
@@ -383,10 +401,11 @@ int main() {
 
   /* Try value */
   
-  marpaESLIFValueOption.userDatavp             = NULL;
+  marpaESLIFValueOption.userDatavp             = &marpaESLIFTester_context;
   marpaESLIFValueOption.ruleActionResolverp    = NULL;
   marpaESLIFValueOption.symbolActionResolverp  = NULL;
   marpaESLIFValueOption.freeActionResolverp    = NULL;
+  marpaESLIFValueOption.transformerp           = &transformer;
   marpaESLIFValueOption.highRankOnlyb          = 1;
   marpaESLIFValueOption.orderByRankb           = 1;
   marpaESLIFValueOption.ambiguousb             = 0;
@@ -411,6 +430,7 @@ int main() {
       (marpaESLIFValueOption.ruleActionResolverp   != marpaESLIFValueOption.ruleActionResolverp) ||
       (marpaESLIFValueOption.symbolActionResolverp != marpaESLIFValueOption.symbolActionResolverp) ||
       (marpaESLIFValueOption.freeActionResolverp   != marpaESLIFValueOption.freeActionResolverp) ||
+      (marpaESLIFValueOption.transformerp          != marpaESLIFValueOption.transformerp) ||
       (marpaESLIFValueOption.highRankOnlyb         != marpaESLIFValueOption.highRankOnlyb) ||
       (marpaESLIFValueOption.orderByRankb          != marpaESLIFValueOption.orderByRankb) ||
       (marpaESLIFValueOption.ambiguousb            != marpaESLIFValueOption.ambiguousb) ||
@@ -421,17 +441,15 @@ int main() {
   }
 
   while (1) {
-    rcValueb = marpaESLIFValue_valueb(marpaESLIFValuep, &marpaESLIFValueResult);
+    rcValueb = marpaESLIFValue_valueb(marpaESLIFValuep);
     if (rcValueb < 0) {
       goto err;
     } else if (rcValueb == 0) {
       break;
     } else {
-      /* We use the default that is ::concat, i.e. it is guaranteed to a NUL byte terminated array */
-      /* and in our case we made sure input is ASCII compliant... */
-      if (marpaESLIFValueResult.u.p != NULL) {
-        GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "Value result: %s", marpaESLIFValueResult.u.p);
-        free(marpaESLIFValueResult.u.p);
+      lastValues = marpaESLIFTester_context.values;
+      if (lastValues != NULL) {
+        GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "Value result: %s", lastValues);
       } else {
         GENERICLOGGER_WARN(marpaESLIFOption.genericLoggerp, "Value result is NULL");
       }
@@ -445,6 +463,9 @@ int main() {
   exiti = 1;
 
  done:
+  if (lastValues != NULL) {
+    free(lastValues);
+  }
   marpaESLIFValue_freev(marpaESLIFValuep);
   marpaESLIFRecognizer_freev(marpaESLIFRecognizerp);
   marpaESLIFGrammar_freev(marpaESLIFGrammarp);
@@ -694,5 +715,32 @@ static short alternativeRepresentation(void *userDatavp, marpaESLIFValueResult_t
   *inputcpp          = &valueResultp->u.c;
   *inputlp           = 1;
   *characterStreambp = 1;
+}
+
+/*****************************************************************************/
+static short arrayTransformer(void *userDatavp, int contexti, void *p, size_t sizel)
+/*****************************************************************************/
+{
+  marpaESLIFTester_context_t *marpaESLIFTester_contextp = (marpaESLIFTester_context_t *) userDatavp;
+
+  GENERICLOGGER_INFOF(marpaESLIFTester_contextp->genericLoggerp, "arrayTransformer on {p,sizel} = {%p, %ld}", p, (unsigned long) sizel);
+
+  /* Free eventual previous value */
+  if (marpaESLIFTester_contextp->values != NULL) {
+    free(marpaESLIFTester_contextp->values);
+    marpaESLIFTester_contextp->values = NULL;
+  }
+
+  if (p != NULL) {
+    /* We use the default that is ::concat, i.e. it is guaranteed to be a NUL byte terminated array */
+    /* In addition we made sure out input is ASCII compliant */
+    marpaESLIFTester_contextp->values = strdup((char *) p);
+    if (marpaESLIFTester_contextp->values == NULL) {
+      GENERICLOGGER_ERRORF(marpaESLIFTester_contextp->genericLoggerp, "strdup failure, %s", strerror(errno));
+      return 0;
+    }
+  }
+
+  return 1;
 }
 

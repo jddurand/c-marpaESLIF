@@ -75,7 +75,7 @@ to augment. Recommended: 50 */
   marpaESLIFTester_context.inputl         = 1;
 
   /* genericLogger_logLevel_seti(genericLoggerp, GENERICLOGGER_LOGLEVEL_TRACE); */
-  if (marpaESLIFGrammar_parseb(marpaESLIFGrammarp, &marpaESLIFRecognizerOption, NULL /* marpaESLIFValueOptionp */, NULL /* exhaustedbp */, NULL /* marpaESLIFValueResultp */)) {
+  if (marpaESLIFGrammar_parseb(marpaESLIFGrammarp, &marpaESLIFRecognizerOption, NULL /* marpaESLIFValueOptionp */, NULL /* exhaustedbp */)) {
     GENERICLOGGER_ERROR(marpaESLIFOption.genericLoggerp, "\"A\" does match");
     goto err;
   } else {
@@ -87,7 +87,7 @@ to augment. Recommended: 50 */
   marpaESLIFTester_context.inputl         = 2;
 
   /* genericLogger_logLevel_seti(genericLoggerp, GENERICLOGGER_LOGLEVEL_TRACE); */
-  if (! marpaESLIFGrammar_parseb(marpaESLIFGrammarp, &marpaESLIFRecognizerOption, NULL /* marpaESLIFValueOptionp */, NULL /* exhaustedbp */, NULL /* marpaESLIFValueResultp */)) {
+  if (! marpaESLIFGrammar_parseb(marpaESLIFGrammarp, &marpaESLIFRecognizerOption, NULL /* marpaESLIFValueOptionp */, NULL /* exhaustedbp */)) {
     GENERICLOGGER_ERROR(marpaESLIFOption.genericLoggerp, "\"Ab\" does not match");
     goto err;
   } else {
@@ -99,7 +99,7 @@ to augment. Recommended: 50 */
   marpaESLIFTester_context.inputl         = 3;
 
   /* genericLogger_logLevel_seti(genericLoggerp, GENERICLOGGER_LOGLEVEL_TRACE); */
-  if (marpaESLIFGrammar_parseb(marpaESLIFGrammarp, &marpaESLIFRecognizerOption, NULL /* marpaESLIFValueOptionp */, NULL /* exhaustedbp */, NULL /* marpaESLIFValueResultp */)) {
+  if (marpaESLIFGrammar_parseb(marpaESLIFGrammarp, &marpaESLIFRecognizerOption, NULL /* marpaESLIFValueOptionp */, NULL /* exhaustedbp */)) {
     GENERICLOGGER_ERROR(marpaESLIFOption.genericLoggerp, "\"AbC\" does match");
     goto err;
   } else {
@@ -111,7 +111,7 @@ to augment. Recommended: 50 */
   marpaESLIFTester_context.inputl         = 4;
 
   /* genericLogger_logLevel_seti(genericLoggerp, GENERICLOGGER_LOGLEVEL_TRACE); */
-  if (! marpaESLIFGrammar_parseb(marpaESLIFGrammarp, &marpaESLIFRecognizerOption, NULL /* marpaESLIFValueOptionp */, NULL /* exhaustedbp */, NULL /* marpaESLIFValueResultp */)) {
+  if (! marpaESLIFGrammar_parseb(marpaESLIFGrammarp, &marpaESLIFRecognizerOption, NULL /* marpaESLIFValueOptionp */, NULL /* exhaustedbp */)) {
     GENERICLOGGER_ERROR(marpaESLIFOption.genericLoggerp, "\"AbCd\" does not match");
     goto err;
   } else {

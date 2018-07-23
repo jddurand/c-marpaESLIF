@@ -458,6 +458,7 @@ marpaESLIFValueOption_t marpaESLIFValueOption_default_template = {
   NULL, /* ruleActionResolverp */
   NULL, /* symbolActionResolverp */
   NULL, /* freeActionResolverp */
+  NULL, /* transformerp */
   1,    /* highRankOnlyb */
   1,    /* orderByRankb */
   0,    /* ambiguousb */
