@@ -2,6 +2,7 @@
 #include "EXTERN.h"
 #include "perl.h"
 #include "XSUB.h"
+#include "ppport.h"
 #include <marpaESLIF.h>
 #include <genericLogger.h>
 #include <genericStack.h>
@@ -17,6 +18,31 @@
 #include "c-rulePropertyBitSet-types.inc"
 #include "c-symbolPropertyBitSet-types.inc"
 #include "c-symbol-types.inc"
+
+/* Use the inc and dec macros that fit the best our code */
+#ifdef SvREFCNT_dec_NN
+#  define MARPAESLIF_SvREFCNT_dec(svp) SvREFCNT_dec_NN(svp)
+#else
+#  define MARPAESLIF_SvREFCNT_dec(svp) SvREFCNT_dec(svp)
+#endif
+
+#if defined(SvREFCNT_inc_simple_void_NN)
+#  define MARPAESLIF_SvREFCNT_inc(svp) SvREFCNT_inc_simple_void_NN(svp)
+#elif defined(SvREFCNT_inc_void_NN)
+#  define MARPAESLIF_SvREFCNT_inc(svp) SvREFCNT_inc_void_NN(svp)
+#elif defined(SvREFCNT_inc_simple_NN)
+#  define MARPAESLIF_SvREFCNT_inc(svp) SvREFCNT_inc_simple_NN(svp)
+#elif defined(SvREFCNT_inc_NN)
+#  define MARPAESLIF_SvREFCNT_inc(svp) SvREFCNT_inc_NN(svp)
+#elif defined(SvREFCNT_inc_simple_void)
+#  define MARPAESLIF_SvREFCNT_inc(svp) SvREFCNT_inc_simple_void(svp)
+#elif defined(SvREFCNT_inc_void)
+#  define MARPAESLIF_SvREFCNT_inc(svp) SvREFCNT_inc_void(svp)
+#elif defined(SvREFCNT_inc_simple)
+#  define MARPAESLIF_SvREFCNT_inc(svp) SvREFCNT_inc_simple(svp)
+#else
+#  define MARPAESLIF_SvREFCNT_inc(svp) SvREFCNT_inc(svp)
+#endif
 
 /* Perl wrapper around malloc, free, etc... are just painful for genericstack, which is */
 /* is implemented using header files, not a library... */
@@ -269,7 +295,7 @@ SV *boot_MarpaX__ESLIF__Grammar__Symbol__Properties_svp;
         ((_svp) != &PL_sv_yes) &&                \
         ((_svp) != &PL_sv_no)) {                 \
       while (SvREFCNT(_svp) > 0) {               \
-        SvREFCNT_dec(_svp);                      \
+        MARPAESLIF_SvREFCNT_dec(_svp);           \
       }                                          \
     }                                            \
   } while (0)
@@ -281,7 +307,7 @@ SV *boot_MarpaX__ESLIF__Grammar__Symbol__Properties_svp;
         ((_svp) != &PL_sv_yes) &&                \
         ((_svp) != &PL_sv_no)) {                 \
       if (SvREFCNT(_svp) > 0) {                  \
-        SvREFCNT_dec(_svp);                      \
+        MARPAESLIF_SvREFCNT_dec(_svp);           \
       }                                          \
     }                                            \
   } while (0)
@@ -292,7 +318,7 @@ SV *boot_MarpaX__ESLIF__Grammar__Symbol__Properties_svp;
         ((_svp) != &PL_sv_undef) &&              \
         ((_svp) != &PL_sv_yes) &&                \
         ((_svp) != &PL_sv_no)) {                 \
-      SvREFCNT_inc(_svp);                        \
+      MARPAESLIF_SvREFCNT_inc(_svp);             \
     }                                            \
   } while (0)
 
@@ -1136,7 +1162,8 @@ static void marpaESLIF_grammarContextInitv(pTHX_ SV *Perl_MarpaX_ESLIF_Enginep, 
 /*****************************************************************************/
 {
   /* Perl_MarpaX_ESLIF_Enginep is an SvIV */
-  Perl_MarpaX_ESLIF_Grammarp->Perl_MarpaX_ESLIF_Enginep = SvREFCNT_inc(Perl_MarpaX_ESLIF_Enginep);
+  MARPAESLIF_REFCNT_INC(Perl_MarpaX_ESLIF_Enginep);
+  Perl_MarpaX_ESLIF_Grammarp->Perl_MarpaX_ESLIF_Enginep = Perl_MarpaX_ESLIF_Enginep;
   Perl_MarpaX_ESLIF_Grammarp->marpaESLIFGrammarp = NULL;
 }
 
