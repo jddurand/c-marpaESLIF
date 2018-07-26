@@ -4060,22 +4060,16 @@ static void marpaESLIFValueFreeCallback(void *userDatavp, int contexti, void *p,
 {
   /* We are called when valuation is doing to withdraw an item in the stack that is a PTR or an ARRAY that we own */
   /* It is guaranteed to be non-NULL at this stage and to be a local reference */
-  static const char      *funcs = "marpaESLIFValueFreeCallback";
-  JNIEnv                 *envp;
+  static const char        *funcs                   = "marpaESLIFValueFreeCallback";
+  marpaESLIFValueContext_t *marpaESLIFValueContextp = (marpaESLIFValueContext_t *) userDatavp;
+  JNIEnv                   *envp                    = marpaESLIFValueContextp->envp;
 
   /* In theory we should never be called with something else but MARPAESLIF_JNI_CONTEXT for the context */
   if (contexti == MARPAESLIF_JNI_CONTEXT) {
-    /* ------------------------------------------------- */
-    /* It was safe to store JavaVMp in a global variable */
-    /* ------------------------------------------------- */
-    if (((*marpaESLIF_vmp)->GetEnv(marpaESLIF_vmp, (void **) &envp, MARPAESLIF_JNI_VERSION) != JNI_OK) || (envp == NULL)) {
-      RAISEEXCEPTION(envp, "Failed to get environment");
-    } else {
-      /* ----------------------- */
-      /* Remove global reference */
-      /* ----------------------- */
-      (*envp)->DeleteGlobalRef(envp, (jobject) p);
-    }
+    /* ----------------------- */
+    /* Remove global reference */
+    /* ----------------------- */
+    (*envp)->DeleteGlobalRef(envp, (jobject) p);
   }
 
  err:
@@ -5064,7 +5058,7 @@ static short marpaESLIF_TransformInt(void *userDatavp, int contexti, int i)
 static short marpaESLIF_TransformLong(void *userDatavp, int contexti, long l)
 /*****************************************************************************/
 {
-  static const char        *funcs    = "marpaESLIF_TransformLong";
+  static const char        *funcs                   = "marpaESLIF_TransformLong";
   marpaESLIFValueContext_t *marpaESLIFValueContextp = (marpaESLIFValueContext_t *) userDatavp;
   JNIEnv                   *envp                    = marpaESLIFValueContextp->envp;
   short                     rcb;
@@ -5094,7 +5088,7 @@ static short marpaESLIF_TransformLong(void *userDatavp, int contexti, long l)
 static short marpaESLIF_TransformFloat(void *userDatavp, int contexti, float f)
 /*****************************************************************************/
 {
-  static const char        *funcs    = "marpaESLIF_TransformFloat";
+  static const char        *funcs                   = "marpaESLIF_TransformFloat";
   marpaESLIFValueContext_t *marpaESLIFValueContextp = (marpaESLIFValueContext_t *) userDatavp;
   JNIEnv                   *envp                    = marpaESLIFValueContextp->envp;
   short                     rcb;
@@ -5124,7 +5118,7 @@ static short marpaESLIF_TransformFloat(void *userDatavp, int contexti, float f)
 static short marpaESLIF_TransformDouble(void *userDatavp, int contexti, double d)
 /*****************************************************************************/
 {
-  static const char        *funcs    = "marpaESLIF_TransformDouble";
+  static const char        *funcs                   = "marpaESLIF_TransformDouble";
   marpaESLIFValueContext_t *marpaESLIFValueContextp = (marpaESLIFValueContext_t *) userDatavp;
   JNIEnv                   *envp                    = marpaESLIFValueContextp->envp;
   short                     rcb;
@@ -5154,7 +5148,7 @@ static short marpaESLIF_TransformDouble(void *userDatavp, int contexti, double d
 static short marpaESLIF_TransformPtr(void *userDatavp, int contexti, void *p)
 /*****************************************************************************/
 {
-  static const char        *funcs    = "marpaESLIF_TransformPtr";
+  static const char        *funcs                   = "marpaESLIF_TransformPtr";
   marpaESLIFValueContext_t *marpaESLIFValueContextp = (marpaESLIFValueContext_t *) userDatavp;
   JNIEnv                   *envp                    = marpaESLIFValueContextp->envp;
   short                     rcb;
@@ -5186,7 +5180,7 @@ static short marpaESLIF_TransformPtr(void *userDatavp, int contexti, void *p)
 static short marpaESLIF_TransformArray(void *userDatavp, int contexti, void *p, size_t sizel)
 /*****************************************************************************/
 {
-  static const char        *funcs    = "marpaESLIF_TransformArray";
+  static const char        *funcs                   = "marpaESLIF_TransformArray";
   marpaESLIFValueContext_t *marpaESLIFValueContextp = (marpaESLIFValueContext_t *) userDatavp;
   JNIEnv                   *envp                    = marpaESLIFValueContextp->envp;
   short                     rcb;
