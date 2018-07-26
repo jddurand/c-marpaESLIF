@@ -150,6 +150,16 @@ static int marpaESLIF_GENERICSTACK_SET_USED(genericStack_t *stackp, int usedi) {
 /* ESLIF context */
 #define ESLIF_PERL_CONTEXT 1 /* Any value > 0 */
 
+/* For perl interpret retrieval */
+#ifdef PERL_IMPLICIT_CONTEXT
+#  ifndef tTHX
+#    define tTHX PerlInterpreter*
+#  endif
+#  define dMYTHX(contextp) tTHX aTHX = contextp->PerlInterpreterp
+#else
+#  define dMYTHX(contextp) dNOOP
+#endif
+
 typedef struct MarpaX_ESLIF_Engine {
   SV              *Perl_loggerInterfacep;    /* inc()/dec()'ed to ensure proper DESTROY order */
   genericLogger_t *genericLoggerp;
@@ -172,6 +182,9 @@ typedef struct MarpaX_ESLIF_Recognizer {
   genericStack_t         *lexemeStackp;
   marpaESLIFRecognizer_t *marpaESLIFRecognizerp;
   short                   canContinueb;
+#ifdef PERL_IMPLICIT_CONTEXT
+  tTHX                    PerlInterpreterp;
+#endif
 } MarpaX_ESLIF_Recognizer_t;
 
 /* Value context */
@@ -192,15 +205,8 @@ typedef struct MarpaX_ESLIF_Value {
   char                   *rules;
   int                     rulei;
   SV                     *svp;
-  /* For value and transform callbacks */
 #ifdef PERL_IMPLICIT_CONTEXT
-#  ifndef tTHX
-#    define tTHX PerlInterpreter*
-#  endif
   tTHX                    PerlInterpreterp;
-#  define dMYTHX(MarpaX_ESLIF_Valuep) tTHX aTHX = MarpaX_ESLIF_Valuep->PerlInterpreterp
-#else
-#  define dMYTHX(MarpaX_ESLIF_Valuep) dNOOP
 #endif
 } MarpaX_ESLIF_Value_t;
 
@@ -752,6 +758,8 @@ static void marpaESLIF_genericLoggerCallbackv(void *userDatavp, genericLoggerLev
 
   if (method != NULL) {
     /* It should never happen that method is NULL -; */
+    /* In addition ESLIF rarelly logs, propagating envp in the context */
+    /* is an optimization that is almost useless */
     dTHX;
     dSP;
 
@@ -777,8 +785,8 @@ static short marpaESLIF_recognizerReaderCallbackb(void *userDatavp, char **input
 /*****************************************************************************/
 {
   static const char         *funcs = "marpaESLIF_recognizerReaderCallbackb";
-  MarpaX_ESLIF_Recognizer_t *Perl_MarpaX_ESLIF_Recognizerp;
-  SV                        *Perl_recognizerInterfacep;
+  MarpaX_ESLIF_Recognizer_t *Perl_MarpaX_ESLIF_Recognizerp = (MarpaX_ESLIF_Recognizer_t *) userDatavp;
+  SV                        *Perl_recognizerInterfacep = Perl_MarpaX_ESLIF_Recognizerp->Perl_recognizerInterfacep;
   SV                        *Perl_datap;
   SV                        *Perl_encodingp;
   char                      *inputs = NULL;
@@ -786,10 +794,7 @@ static short marpaESLIF_recognizerReaderCallbackb(void *userDatavp, char **input
   char                      *encodings = NULL;
   STRLEN                     encodingl = 0;
   int                        type;
-  dTHX;
-
-  Perl_MarpaX_ESLIF_Recognizerp = (MarpaX_ESLIF_Recognizer_t *) userDatavp;
-  Perl_recognizerInterfacep   = Perl_MarpaX_ESLIF_Recognizerp->Perl_recognizerInterfacep;
+  dMYTHX(Perl_MarpaX_ESLIF_Recognizerp);
 
   marpaESLIF_recognizerContextCleanupv(aTHX_ Perl_MarpaX_ESLIF_Recognizerp);
 
@@ -1010,7 +1015,8 @@ static short marpaESLIF_valueSymbolCallbackb(void *userDatavp, marpaESLIFValue_t
 static void marpaESLIF_valueFreeCallbackv(void *userDatavp, int contexti, void *p, size_t sizel)
 /*****************************************************************************/
 {
-  dTHX;
+  MarpaX_ESLIF_Value_t *Perl_MarpaX_ESLIF_Valuep = (MarpaX_ESLIF_Value_t *) userDatavp;
+  dMYTHX(Perl_MarpaX_ESLIF_Valuep);
 
   /* We are called when valuation is going to withdraw an item in the stack that is a PTR or an ARRAY that we own */
   /* It is guaranteed to be non-NULL at this stage. Nevertheless there some SV* in perl that are just pointers */
@@ -1180,6 +1186,9 @@ static void marpaESLIF_recognizerContextInitv(pTHX_ SV *Perl_MarpaX_ESLIF_Gramma
   Perl_MarpaX_ESLIF_Recognizerp->lexemeStackp                       = NULL;
   Perl_MarpaX_ESLIF_Recognizerp->marpaESLIFRecognizerp              = NULL;
   Perl_MarpaX_ESLIF_Recognizerp->canContinueb                       = 0;
+#ifdef PERL_IMPLICIT_CONTEXT
+  Perl_MarpaX_ESLIF_Recognizerp->PerlInterpreterp                   = aTHX;
+#endif
 }
 
 /*****************************************************************************/
