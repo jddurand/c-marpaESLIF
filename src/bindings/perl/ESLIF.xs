@@ -164,6 +164,9 @@ typedef struct MarpaX_ESLIF_Engine {
   SV              *Perl_loggerInterfacep;    /* inc()/dec()'ed to ensure proper DESTROY order */
   genericLogger_t *genericLoggerp;
   marpaESLIF_t    *marpaESLIFp;
+#ifdef PERL_IMPLICIT_CONTEXT
+  tTHX             PerlInterpreterp;
+#endif
 } MarpaX_ESLIF_Engine_t;
 
 /* Nothing special for the grammar type */
@@ -740,8 +743,10 @@ static short marpaESLIF_call_methodb(pTHX_ SV *interfacep, char *methods)
 static void marpaESLIF_genericLoggerCallbackv(void *userDatavp, genericLoggerLevel_t logLeveli, const char *msgs)
 /*****************************************************************************/
 {
-  SV   *Perl_loggerInterfacep = (SV *) userDatavp;
+  MarpaX_ESLIF_Engine_t *Perl_MarpaX_ESLIF_Enginep = (MarpaX_ESLIF_Engine_t *) userDatavp;
+  SV                    *Perl_loggerInterfacep = Perl_MarpaX_ESLIF_Enginep->Perl_loggerInterfacep;
   char *method;
+  dMYTHX(Perl_MarpaX_ESLIF_Enginep);
 
   switch (logLeveli) {
   case GENERICLOGGER_LOGLEVEL_TRACE:     method = "trace";     break;
@@ -760,7 +765,6 @@ static void marpaESLIF_genericLoggerCallbackv(void *userDatavp, genericLoggerLev
     /* It should never happen that method is NULL -; */
     /* In addition ESLIF rarelly logs, propagating envp in the context */
     /* is an optimization that is almost useless */
-    dTHX;
     dSP;
 
     ENTER;
@@ -1584,6 +1588,9 @@ CODE:
   Perl_MarpaX_ESLIF_Enginep->Perl_loggerInterfacep = &PL_sv_undef;
   Perl_MarpaX_ESLIF_Enginep->genericLoggerp        = NULL;
   Perl_MarpaX_ESLIF_Enginep->marpaESLIFp           = NULL;
+#ifdef PERL_IMPLICIT_CONTEXT
+  Perl_MarpaX_ESLIF_Enginep->PerlInterpreterp      = aTHX;
+#endif
 
   /* ------------- */
   /* genericLogger */
@@ -1591,9 +1598,7 @@ CODE:
   if (loggerInterfaceIsObjectb) {
     MARPAESLIF_REFCNT_INC(Perl_loggerInterfacep);
     Perl_MarpaX_ESLIF_Enginep->Perl_loggerInterfacep = Perl_loggerInterfacep;
-    Perl_MarpaX_ESLIF_Enginep->genericLoggerp        = genericLogger_newp(marpaESLIF_genericLoggerCallbackv,
-                                                                   Perl_MarpaX_ESLIF_Enginep->Perl_loggerInterfacep,
-                                                                   GENERICLOGGER_LOGLEVEL_TRACE);
+    Perl_MarpaX_ESLIF_Enginep->genericLoggerp        = genericLogger_newp(marpaESLIF_genericLoggerCallbackv, Perl_MarpaX_ESLIF_Enginep, GENERICLOGGER_LOGLEVEL_TRACE);
     if (Perl_MarpaX_ESLIF_Enginep->genericLoggerp == NULL) {
       int save_errno = errno;
       marpaESLIF_ContextFreev(aTHX_ Perl_MarpaX_ESLIF_Enginep);
