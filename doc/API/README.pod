@@ -145,7 +145,6 @@ declares grammars at level C<0>, C<1> and C<3>. Grammar at level C<2> is undefin
     size_t  bytel;               /* Input length in byte unit */
     char   *encodings;           /* Input encoding. Default: NULL */
     size_t  encodingl;           /* Length of encoding itself. Default: 0 */
-    char   *encodingOfEncodings; /* Encoding of encoding, in ASCII encoding. Default: NULL. */
   } marpaESLIFGrammarOption_t;
 
   marpaESLIFGrammar_t *marpaESLIFGrammar_newp(marpaESLIF_t              *marpaESLIFp,
@@ -175,15 +174,11 @@ Number of B<bytes>. Must be > 0.
 
 =item C<encodings>
 
-Pointer to a buffer containing encoding information of the grammar. Can be NULL.
+Pointer to a buffer containing encoding information of the grammar, in ASCII. Can be NULL.
 
 =item C<encodingl>
 
 Number of bytes of the buffer containing encoding information. Can be 0.
-
-=item C<encodingOfEncodings>
-
-ASCII and NUL-terminated string giving the encoding of the encoding information itself. Can be, and is usually, NULL.
 
 =back
 
@@ -1007,7 +1002,6 @@ At any location in the grammar, possible alternatives can be of the two major ty
                                       size_t  *inputlp,
                                       short   *eofbp,
                                       short   *characterStreambp,
-                                      char   **encodingOfEncodingsp,
                                       char   **encodingsp,
                                       size_t  *encodinglp);
   typedef struct marpaESLIFRecognizerOption {
@@ -1056,13 +1050,9 @@ The place where the user will set a flag saying this the end of data. Default is
 
 The place where the user will set a flag saying this buffer I<must> be a stream of characters. Default is a false value.
 
-=item C<encodingOfEncodingsp>
-
-The place where the user will give in which encoding is the encoding itself. Default is <NULL>.
-
 =item C<encodingsp>
 
-The place where the user will give a pointer to a buffer containing encoding information, encoded using C<encodingOfEncodingsp> encoding. Default is C<NULL>.
+The place where the user will give a pointer to a buffer containing encoding information, in ASCII encoding. Default is C<NULL>.
 
 =item C<encodinglp>
 
