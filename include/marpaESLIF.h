@@ -9,12 +9,12 @@ typedef struct marpaESLIFOption {
   genericLogger_t *genericLoggerp;  /* Logger. Default: NULL */
 } marpaESLIFOption_t;
 
-typedef struct marpaESLIF             marpaESLIF_t;
-typedef struct marpaESLIFGrammar      marpaESLIFGrammar_t;
-typedef struct marpaESLIFRecognizer   marpaESLIFRecognizer_t;
-typedef struct marpaESLIFValue        marpaESLIFValue_t;
-typedef struct marpaESLIFSymbol       marpaESLIFSymbol_t;
-typedef struct marpaESLIFValueResult  marpaESLIFValueResult_t;
+typedef struct marpaESLIF            marpaESLIF_t;
+typedef struct marpaESLIFGrammar     marpaESLIFGrammar_t;
+typedef struct marpaESLIFRecognizer  marpaESLIFRecognizer_t;
+typedef struct marpaESLIFValue       marpaESLIFValue_t;
+typedef struct marpaESLIFSymbol      marpaESLIFSymbol_t;
+typedef struct marpaESLIFValueResult marpaESLIFValueResult_t;
 
 /* A string */
 typedef struct marpaESLIFString {
