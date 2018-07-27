@@ -10,15 +10,40 @@ typedef struct reader_context {
   size_t           inputl;
 } reader_context_t;
 
-typedef enum stack_context {
+typedef enum value_type {
   INTEGER_CONTEXT = 1,
   DOUBLE_CONTEXT
-} stack_context_t;
+} value_type_t;
 
-static short                         inputReaderb(void *userDatavp, char **inputsp, size_t *inputlp, short *eofbp, short *characterStreambp, char **encodingOfEncodingsp, char **encodingsp, size_t *encodinglp);
+typedef struct value_context {
+  value_type_t typei;
+  union {
+    int i;
+    double d;
+  } u;
+} value_context_t;
+
+static short                         inputReaderb(void *userDatavp, char **inputsp, size_t *inputlp, short *eofbp, short *characterStreambp, char **encodingsp, size_t *encodinglp);
 static marpaESLIFValueRuleCallback_t ruleActionResolverp(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions);
 static short                         do_int(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static short                         do_op(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
+
+/* marpaESLIFValueResult transformers - in this tutorial we support only int and double */
+static short                         marpaESLIF_TransformInt(void *userDatavp, int contexti, int i);
+static short                         marpaESLIF_TransformDouble(void *userDatavp, int contexti, double d);
+
+/* Transformers */
+static marpaESLIFValueResultTransform_t marpaESLIFValueResultTransformDefault = {
+  NULL,
+  NULL,
+  NULL,
+  marpaESLIF_TransformInt,
+  NULL,
+  NULL,
+  marpaESLIF_TransformDouble,
+  NULL,
+  NULL
+};
 
 const static char *grammars =
   ":default ::= action => do_op\n"
@@ -51,11 +76,11 @@ int main() {
   char                         inputs[4096];
   marpaESLIFValueOption_t      marpaESLIFValueOption;
   marpaESLIFValue_t           *marpaESLIFValuep;
-  marpaESLIFValueResult_t      marpaESLIFValueResult;
   char                        *offsetp;
   size_t                       lengthl;
   char                        *expressions;
-  
+  value_context_t              value_context;
+
   genericLoggerp = GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_DEBUG);
   if (genericLoggerp == NULL) {
     perror("GENERICLOGGER_NEW");
@@ -68,11 +93,10 @@ int main() {
     exit(1);
   }
 
-  marpaESLIFGrammarOption.bytep               = (void *) grammars;
-  marpaESLIFGrammarOption.bytel               = strlen(grammars);
-  marpaESLIFGrammarOption.encodings           = NULL;
-  marpaESLIFGrammarOption.encodingl           = 0;
-  marpaESLIFGrammarOption.encodingOfEncodings = NULL;
+  marpaESLIFGrammarOption.bytep     = (void *) grammars;
+  marpaESLIFGrammarOption.bytel     = strlen(grammars);
+  marpaESLIFGrammarOption.encodings = NULL;
+  marpaESLIFGrammarOption.encodingl = 0;
   marpaESLIFGrammarp = marpaESLIFGrammar_newp(marpaESLIFp, &marpaESLIFGrammarOption);
   if (marpaESLIFGrammarp == NULL) {
     exit(1);
@@ -116,10 +140,11 @@ int main() {
     exit(1);
   }
 
-  marpaESLIFValueOption.userDatavp             = NULL; /* No context... why not */
+  marpaESLIFValueOption.userDatavp             = &value_context;
   marpaESLIFValueOption.ruleActionResolverp    = ruleActionResolverp;
   marpaESLIFValueOption.symbolActionResolverp  = NULL; /* No symbol action resolver... Okay we use the default */
   marpaESLIFValueOption.freeActionResolverp    = NULL; /* No free action resolver... Okay if we generate no pointer */
+  marpaESLIFValueOption.transformerp           = &marpaESLIFValueResultTransformDefault;
   marpaESLIFValueOption.highRankOnlyb          = 1;    /* Recommended value */
   marpaESLIFValueOption.orderByRankb           = 1;    /* Recommended value */
   marpaESLIFValueOption.ambiguousb             = 0;    /* Recommended value */
@@ -129,7 +154,7 @@ int main() {
   if (marpaESLIFValuep == NULL) {
     exit(1);
   }
-  if (! marpaESLIFValue_valueb(marpaESLIFValuep, &marpaESLIFValueResult)) {
+  if (! marpaESLIFValue_valueb(marpaESLIFValuep)) {
     exit(1);
   }
   if (! marpaESLIFRecognizer_last_completedb(marpaESLIFRecognizerp, "Expression", &offsetp, &lengthl)) {
@@ -141,16 +166,15 @@ int main() {
   memcpy(expressions, inputs + (size_t) offsetp, lengthl);
   expressions[lengthl] = '\0';
 
-  switch (marpaESLIFValueResult.contexti) {
+  switch (value_context.typei) {
   case INTEGER_CONTEXT:
-    fprintf(stdout, "%s = %d\n", expressions, marpaESLIFValueResult.u.i);
+    fprintf(stdout, "%s = %d\n", expressions, value_context.u.i);
     break;
   case DOUBLE_CONTEXT:
-  case MARPAESLIF_VALUE_TYPE_DOUBLE:
-    fprintf(stdout, "%s = %f\n", expressions, marpaESLIFValueResult.u.d);
+    fprintf(stdout, "%s = %f\n", expressions, value_context.u.d);
     break;
   default:
-    fprintf(stdout, "Result is of unexpected type %d!\n", marpaESLIFValueResult.type);
+    fprintf(stdout, "Result is of unexpected typei %d!\n", value_context.typei);
     exit(1);
   }
   free(expressions);
@@ -164,18 +188,17 @@ int main() {
 }
 
 /*****************************************************************************/
-static short inputReaderb(void *userDatavp, char **inputsp, size_t *inputlp, short *eofbp, short *characterStreambp, char **encodingOfEncodingsp, char **encodingsp, size_t *encodinglp)
+static short inputReaderb(void *userDatavp, char **inputsp, size_t *inputlp, short *eofbp, short *characterStreambp, char **encodingsp, size_t *encodinglp)
 /*****************************************************************************/
 {
   reader_context_t *reader_contextp = (reader_context_t *) userDatavp;
   
-  *inputsp              = reader_contextp->inputs;
-  *inputlp              = reader_contextp->inputl;
-  *eofbp                = 1;    /* One chunk */
-  *characterStreambp    = 1;    /* We say this is a stream of characters */
-  *encodingOfEncodingsp = NULL; /* let marpaESLIF deal with encoding */
-  *encodingsp           = NULL;
-  *encodinglp           = 0;
+  *inputsp           = reader_contextp->inputs;
+  *inputlp           = reader_contextp->inputl;
+  *eofbp             = 1;    /* One chunk */
+  *characterStreambp = 1;    /* We say this is a stream of characters */
+  *encodingsp        = NULL;
+  *encodinglp        = 0;
 
   return 1;
 }
@@ -368,4 +391,28 @@ static marpaESLIFValueRuleCallback_t ruleActionResolverp(void *userDatavp, marpa
     fprintf(stderr, "Unknown action %s!\n", actions);
     return NULL;
   }
+}
+
+/*****************************************************************************/
+static short marpaESLIF_TransformInt(void *userDatavp, int contexti, int i)
+/*****************************************************************************/
+{
+  value_context_t *value_contextp = (value_context_t *) userDatavp;
+
+  value_contextp->typei = INTEGER_CONTEXT;
+  value_contextp->u.i   = i;
+
+  return 1;
+}
+
+/*****************************************************************************/
+static short marpaESLIF_TransformDouble(void *userDatavp, int contexti, double d)
+/*****************************************************************************/
+{
+  value_context_t *value_contextp = (value_context_t *) userDatavp;
+
+  value_contextp->typei = DOUBLE_CONTEXT;
+  value_contextp->u.d   = d;
+
+  return 1;
 }

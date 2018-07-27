@@ -64,7 +64,7 @@ const static char *grammars =
   "    SYMBOL      ~ _DUMMY\n"
   ;
 
-static short                         failReaderb(void *userDatavp, char **inputsp, size_t *inputlp, short *eofbp, short *characterStreambp, char **encodingOfEncodingsp, char **encodingsp, size_t *encodinglp);
+static short                         failReaderb(void *userDatavp, char **inputsp, size_t *inputlp, short *eofbp, short *characterStreambp, char **encodingsp, size_t *encodinglp);
 static marpaESLIFValueRuleCallback_t ruleActionResolverp(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions);
 static short                         action_not(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static short                         action_and(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
@@ -108,11 +108,10 @@ int main() {
   }
 
   GENERICLOGGER_INFOF(genericLoggerp, "Generating grammar:\n%s", grammars);
-  marpaESLIFGrammarOption.bytep               = (void *) grammars;
-  marpaESLIFGrammarOption.bytel               = strlen(grammars);
-  marpaESLIFGrammarOption.encodings           = NULL;
-  marpaESLIFGrammarOption.encodingl           = 0;
-  marpaESLIFGrammarOption.encodingOfEncodings = NULL;
+  marpaESLIFGrammarOption.bytep     = (void *) grammars;
+  marpaESLIFGrammarOption.bytel     = strlen(grammars);
+  marpaESLIFGrammarOption.encodings = NULL;
+  marpaESLIFGrammarOption.encodingl = 0;
   marpaESLIFGrammarp = marpaESLIFGrammar_newp(marpaESLIFp, &marpaESLIFGrammarOption);
   if (marpaESLIFGrammarp == NULL) {
     goto err;
@@ -207,7 +206,7 @@ int main() {
 }
 
 /*****************************************************************************/
-static short failReaderb(void *userDatavp, char **inputsp, size_t *inputlp, short *eofbp, short *characterStreambp, char **encodingOfEncodingsp, char **encodingsp, size_t *encodinglp)
+static short failReaderb(void *userDatavp, char **inputsp, size_t *inputlp, short *eofbp, short *characterStreambp, char **encodingsp, size_t *encodinglp)
 /*****************************************************************************/
 {
   return 0;
