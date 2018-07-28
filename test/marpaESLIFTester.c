@@ -332,15 +332,15 @@ int main() {
   marpaESLIFTester_context.values         = NULL;
   marpaESLIFTester_context.valuel         = 0;
 
-  marpaESLIFRecognizerOption.userDatavp                = &marpaESLIFTester_context;
-  marpaESLIFRecognizerOption.marpaESLIFReaderCallbackp = inputReaderb;
-  marpaESLIFRecognizerOption.disableThresholdb         = 0;
-  marpaESLIFRecognizerOption.exhaustedb                = 1;
-  marpaESLIFRecognizerOption.newlineb                  = 1;
-  marpaESLIFRecognizerOption.trackb                    = 0;
-  marpaESLIFRecognizerOption.bufsizl                   = 0;
-  marpaESLIFRecognizerOption.buftriggerperci           = 50;
-  marpaESLIFRecognizerOption.bufaddperci               = 50;
+  marpaESLIFRecognizerOption.userDatavp        = &marpaESLIFTester_context;
+  marpaESLIFRecognizerOption.readerCallbackp   = inputReaderb;
+  marpaESLIFRecognizerOption.disableThresholdb = 0;
+  marpaESLIFRecognizerOption.exhaustedb        = 1;
+  marpaESLIFRecognizerOption.newlineb          = 1;
+  marpaESLIFRecognizerOption.trackb            = 0;
+  marpaESLIFRecognizerOption.bufsizl           = 0;
+  marpaESLIFRecognizerOption.buftriggerperci   = 50;
+  marpaESLIFRecognizerOption.bufaddperci       = 50;
 
   marpaESLIFRecognizerp = marpaESLIFRecognizer_newp(marpaESLIFGrammarp, &marpaESLIFRecognizerOption);
   if (marpaESLIFRecognizerp == NULL) {
@@ -356,15 +356,15 @@ int main() {
   if (marpaESLIFRecognizerOptionp == NULL) {
     goto err;
   }
-  if ((marpaESLIFRecognizerOption.userDatavp                != marpaESLIFRecognizerOption.userDatavp) ||
-      (marpaESLIFRecognizerOption.marpaESLIFReaderCallbackp != marpaESLIFRecognizerOption.marpaESLIFReaderCallbackp) ||
-      (marpaESLIFRecognizerOption.disableThresholdb         != marpaESLIFRecognizerOption.disableThresholdb) ||
-      (marpaESLIFRecognizerOption.exhaustedb                != marpaESLIFRecognizerOption.exhaustedb) ||
-      (marpaESLIFRecognizerOption.newlineb                  != marpaESLIFRecognizerOption.newlineb) ||
-      (marpaESLIFRecognizerOption.trackb                    != marpaESLIFRecognizerOption.trackb) ||
-      (marpaESLIFRecognizerOption.bufsizl                   != marpaESLIFRecognizerOption.bufsizl) ||
-      (marpaESLIFRecognizerOption.buftriggerperci           != marpaESLIFRecognizerOption.buftriggerperci) ||
-      (marpaESLIFRecognizerOption.bufaddperci               != marpaESLIFRecognizerOption.bufaddperci)) {
+  if ((marpaESLIFRecognizerOption.userDatavp        != marpaESLIFRecognizerOption.userDatavp) ||
+      (marpaESLIFRecognizerOption.readerCallbackp   != marpaESLIFRecognizerOption.readerCallbackp) ||
+      (marpaESLIFRecognizerOption.disableThresholdb != marpaESLIFRecognizerOption.disableThresholdb) ||
+      (marpaESLIFRecognizerOption.exhaustedb        != marpaESLIFRecognizerOption.exhaustedb) ||
+      (marpaESLIFRecognizerOption.newlineb          != marpaESLIFRecognizerOption.newlineb) ||
+      (marpaESLIFRecognizerOption.trackb            != marpaESLIFRecognizerOption.trackb) ||
+      (marpaESLIFRecognizerOption.bufsizl           != marpaESLIFRecognizerOption.bufsizl) ||
+      (marpaESLIFRecognizerOption.buftriggerperci   != marpaESLIFRecognizerOption.buftriggerperci) ||
+      (marpaESLIFRecognizerOption.bufaddperci       != marpaESLIFRecognizerOption.bufaddperci)) {
     GENERICLOGGER_ERROR(marpaESLIFOption.genericLoggerp, "marpaESLIFRecognizer_optionp does have the correct content");
     goto err;
   }

@@ -443,7 +443,7 @@ marpaESLIFGrammarOption_t marpaESLIFGrammarOption_default_template = {
 
 marpaESLIFRecognizerOption_t marpaESLIFRecognizerOption_default_template = {
   NULL,              /* userDatavp */
-  NULL,              /* marpaESLIFReaderCallbackp */
+  NULL,              /* readerCallbackp */
   0,                 /* disableThresholdb */
   0,                 /* exhaustedb */
   0,                 /* newlineb */

@@ -39,7 +39,7 @@ typedef struct marpaESLIFGrammarOption {
 typedef short (*marpaESLIFReader_t)(void *userDatavp, char **inputcpp, size_t *inputlp, short *eofbp, short *characterStreambp, char **encodingsp, size_t *encodinglp);
 typedef struct marpaESLIFRecognizerOption {
   void                *userDatavp;                  /* User specific context */
-  marpaESLIFReader_t   marpaESLIFReaderCallbackp;   /* Reader */
+  marpaESLIFReader_t   readerCallbackp;             /* Reader */
   short                disableThresholdb;           /* Default: 0 */
   short                exhaustedb;                  /* Exhaustion event. Default: 0 */
   short                newlineb;                    /* Count line/column numbers. Default: 0 */
@@ -352,16 +352,29 @@ extern "C" {
   marpaESLIF_EXPORT short                         marpaESLIFValue_contextb(marpaESLIFValue_t *marpaESLIFValuep, char **symbolsp, int *symbolip, char **rulesp, int *ruleip);
   marpaESLIF_EXPORT void                          marpaESLIFValue_freev(marpaESLIFValue_t *marpaESLIFValuep);
 
+  /* ------------------------------------- */
   /* Stack management when doing valuation */
+  /* ------------------------------------- */
+  /* Generic setter */
   marpaESLIF_EXPORT short                         marpaESLIFValue_stack_setb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, marpaESLIFValueResult_t *marpaESLIFValueResultp);
-  /* forget is like setting a value of type MARPAESLIFVALUE_TYPE_UNDEF except that memory management is switched off */
-  marpaESLIF_EXPORT short                         marpaESLIFValue_stack_forgetb(marpaESLIFValue_t *marpaESLIFValuep, int indicei);
+  /* Generic getter */
   marpaESLIF_EXPORT short                         marpaESLIFValue_stack_getb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, marpaESLIFValueResult_t *marpaESLIFValueResultp);
+  /* Optimized generic getter: returns a direct pointer to the marpaESLIFValuep in memory instead of a copy via marpaESLIFValue_stack_getb */
   marpaESLIF_EXPORT marpaESLIFValueResult_t      *marpaESLIFValue_stack_getp(marpaESLIFValue_t *marpaESLIFValuep, int indicei);
-  marpaESLIF_EXPORT short                         marpaESLIFValue_transformb(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFValueResult_t *marpaESLIFValueResultp, marpaESLIFValueResult_t *marpaESLIFValueResultResolvedp);
 
-  /* getAndForgetb transfers the memory management from the stack to the end-user in one call */
+  /* Helpers */
+  
+  /* marpaESLIFValue_stack_forgetb is like setting a value of type MARPAESLIFVALUE_TYPE_UNDEF saying that memory management is switched off at this specific indice */
+  marpaESLIF_EXPORT short                         marpaESLIFValue_stack_forgetb(marpaESLIFValue_t *marpaESLIFValuep, int indicei);
+  /* marpaESLIFValue_stack_getAndForgetb transfers the memory management from the stack to the end-user in one call */
+  /* It is nothing else but a wrapper on marpaESLIFValue_stack_getb followed by marpaESLIFValue_stack_forgetb */
   marpaESLIF_EXPORT short                         marpaESLIFValue_stack_getAndForgetb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, marpaESLIFValueResult_t *marpaESLIFValueResultp);
+  /* marpaESLIFValue_transformb takes the value at stack indice number indice and call the appropriate transform callback */
+  marpaESLIF_EXPORT short                         marpaESLIFValue_transformb(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFValueResult_t *marpaESLIFValueResultp, marpaESLIFValueResult_t *marpaESLIFValueResultResolvedp);
+  /* marpaESLIFValue_stack_get_transformb takes the value at stack indice number indice and call the appropriate transform callback */
+  /* It is nothing else but a wrapper on marpaESLIFValue_stack_getp followed by marpaESLIFValue_transformb */
+  marpaESLIF_EXPORT short                         marpaESLIFValue_stack_get_transformb(marpaESLIFValue_t *marpaESLIFValuep, int indicei);
+
 
   marpaESLIF_EXPORT void                          marpaESLIF_freev(marpaESLIF_t *marpaESLIFp);
 #ifdef __cplusplus

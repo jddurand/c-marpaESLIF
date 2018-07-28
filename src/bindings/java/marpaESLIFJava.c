@@ -560,7 +560,7 @@ static marpaESLIFFieldCache_t marpaESLIFFieldCacheArrayp[] = {
 /* -------------- */
 static void  generateStringWithLoggerCallbackv(void *userDatavp, genericLoggerLevel_t logLeveli, const char *msgs);
 static void  genericLoggerCallbackv(void *userDatavp, genericLoggerLevel_t logLeveli, const char *msgs);
-static short recognizerReaderCallbackb(void *userDatavp, char **inputcpp, size_t *inputlp, short *eofbp, short *characterStreambp, char **encodingsp, size_t *encodinglp);
+static short readerCallbackb(void *userDatavp, char **inputcpp, size_t *inputlp, short *eofbp, short *characterStreambp, char **encodingsp, size_t *encodinglp);
 static short ESLIF_contextb(JNIEnv *envp, jobject eslifp, jobject objectp, jmethodID getLoggerInterfacep,
                             genericLogger_t **genericLoggerpp,
                             marpaESLIF_t **marpaESLIFpp);
@@ -1673,7 +1673,7 @@ JNIEXPORT jboolean JNICALL Java_org_parser_marpa_ESLIFGrammar_jniParse(JNIEnv *e
   marpaESLIFRecognizerContext.lexemeStackp              = NULL;
 
   marpaESLIFRecognizerOption.userDatavp                = &marpaESLIFRecognizerContext;
-  marpaESLIFRecognizerOption.marpaESLIFReaderCallbackp = recognizerReaderCallbackb;
+  marpaESLIFRecognizerOption.readerCallbackp           = readerCallbackb;
   marpaESLIFRecognizerOption.disableThresholdb         = ((*envp)->CallBooleanMethod(envp, eslifRecognizerInterfacep, MARPAESLIF_ESLIFRECOGNIZERINTERFACE_CLASS_isWithDisableThreshold_METHODP) == JNI_TRUE);
   if (HAVEEXCEPTION(envp)) {
     goto err;
@@ -2238,7 +2238,7 @@ JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniNew(JNIEnv *envp
 
   /* Create C object */
   marpaESLIFRecognizerOption.userDatavp                = marpaESLIFRecognizerContextp;
-  marpaESLIFRecognizerOption.marpaESLIFReaderCallbackp = recognizerReaderCallbackb;
+  marpaESLIFRecognizerOption.readerCallbackp           = readerCallbackb;
   marpaESLIFRecognizerOption.disableThresholdb         = ((*envp)->CallBooleanMethod(envp, eslifRecognizerInterfacep, MARPAESLIF_ESLIFRECOGNIZERINTERFACE_CLASS_isWithDisableThreshold_METHODP) == JNI_TRUE);
   if (HAVEEXCEPTION(envp)) {
     goto err;
@@ -3710,7 +3710,7 @@ JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIFValue_jniFree(JNIEnv *envp, jo
 }
 
 /*****************************************************************************/
-static short recognizerReaderCallbackb(void *userDatavp, char **inputcpp, size_t *inputlp, short *eofbp, short *characterStreambp, char **encodingsp, size_t *encodinglp)
+static short readerCallbackb(void *userDatavp, char **inputcpp, size_t *inputlp, short *eofbp, short *characterStreambp, char **encodingsp, size_t *encodinglp)
 /*****************************************************************************/
 {
   marpaESLIFRecognizerContext_t *marpaESLIFRecognizerContextp;

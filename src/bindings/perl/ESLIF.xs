@@ -229,7 +229,7 @@ static SV                             *marpaESLIF_call_actionp(pTHX_ SV *interfa
 static IV                              marpaESLIF_call_methodi(pTHX_ SV *interfacep, char *methods);
 static short                           marpaESLIF_call_methodb(pTHX_ SV *interfacep, char *methods);
 static void                            marpaESLIF_genericLoggerCallbackv(void *userDatavp, genericLoggerLevel_t logLeveli, const char *msgs);
-static short                           marpaESLIF_recognizerReaderCallbackb(void *userDatavp, char **inputcpp, size_t *inputlp, short *eofbp, short *characterStreambp, char **encodingsp, size_t *encodinglp);
+static short                           marpaESLIF_readerCallbackb(void *userDatavp, char **inputcpp, size_t *inputlp, short *eofbp, short *characterStreambp, char **encodingsp, size_t *encodinglp);
 static marpaESLIFValueRuleCallback_t   marpaESLIF_valueRuleActionResolver(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions);
 static marpaESLIFValueSymbolCallback_t marpaESLIF_valueSymbolActionResolver(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions);
 static marpaESLIFValueFreeCallback_t   marpaESLIF_valueFreeActionResolver(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions);
@@ -785,10 +785,10 @@ static void marpaESLIF_genericLoggerCallbackv(void *userDatavp, genericLoggerLev
 }
 
 /*****************************************************************************/
-static short marpaESLIF_recognizerReaderCallbackb(void *userDatavp, char **inputcpp, size_t *inputlp, short *eofbp, short *characterStreambp, char **encodingsp, size_t *encodinglp)
+static short marpaESLIF_readerCallbackb(void *userDatavp, char **inputcpp, size_t *inputlp, short *eofbp, short *characterStreambp, char **encodingsp, size_t *encodinglp)
 /*****************************************************************************/
 {
-  static const char         *funcs = "marpaESLIF_recognizerReaderCallbackb";
+  static const char         *funcs = "marpaESLIF_readerCallbackb";
   MarpaX_ESLIF_Recognizer_t *Perl_MarpaX_ESLIF_Recognizerp = (MarpaX_ESLIF_Recognizer_t *) userDatavp;
   SV                        *Perl_recognizerInterfacep = Perl_MarpaX_ESLIF_Recognizerp->Perl_recognizerInterfacep;
   SV                        *Perl_datap;
@@ -2485,26 +2485,26 @@ CODE:
   marpaESLIF_recognizerContextInitv(aTHX_ ST(0) /* SV of grammar */, ST(1) /* SV of recognizer interface */, &marpaESLIFRecognizerContext, NULL /* Perl_MarpaX_ESLIF_Recognizer_origp */);
   marpaESLIF_valueContextInitv(aTHX_ NULL /* No recognizer */, ST(0) /* SV of grammar */, ST(2) /* SV of value interface */, &marpaESLIFValueContext);
   
-  marpaESLIFRecognizerOption.userDatavp                = &marpaESLIFRecognizerContext;
-  marpaESLIFRecognizerOption.marpaESLIFReaderCallbackp = marpaESLIF_recognizerReaderCallbackb;
-  marpaESLIFRecognizerOption.disableThresholdb         = marpaESLIF_call_methodb(aTHX_ Perl_recognizerInterfacep, "isWithDisableThreshold");
-  marpaESLIFRecognizerOption.exhaustedb                = marpaESLIF_call_methodb(aTHX_ Perl_recognizerInterfacep, "isWithExhaustion");
-  marpaESLIFRecognizerOption.newlineb                  = marpaESLIF_call_methodb(aTHX_ Perl_recognizerInterfacep, "isWithNewline");
-  marpaESLIFRecognizerOption.trackb                    = marpaESLIF_call_methodb(aTHX_ Perl_recognizerInterfacep, "isWithTrack");
-  marpaESLIFRecognizerOption.bufsizl                   = 0; /* Recommended value */
-  marpaESLIFRecognizerOption.buftriggerperci           = 50; /* Recommended value */
-  marpaESLIFRecognizerOption.bufaddperci               = 50; /* Recommended value */
+  marpaESLIFRecognizerOption.userDatavp        = &marpaESLIFRecognizerContext;
+  marpaESLIFRecognizerOption.readerCallbackp   = marpaESLIF_readerCallbackb;
+  marpaESLIFRecognizerOption.disableThresholdb = marpaESLIF_call_methodb(aTHX_ Perl_recognizerInterfacep, "isWithDisableThreshold");
+  marpaESLIFRecognizerOption.exhaustedb        = marpaESLIF_call_methodb(aTHX_ Perl_recognizerInterfacep, "isWithExhaustion");
+  marpaESLIFRecognizerOption.newlineb          = marpaESLIF_call_methodb(aTHX_ Perl_recognizerInterfacep, "isWithNewline");
+  marpaESLIFRecognizerOption.trackb            = marpaESLIF_call_methodb(aTHX_ Perl_recognizerInterfacep, "isWithTrack");
+  marpaESLIFRecognizerOption.bufsizl           = 0; /* Recommended value */
+  marpaESLIFRecognizerOption.buftriggerperci   = 50; /* Recommended value */
+  marpaESLIFRecognizerOption.bufaddperci       = 50; /* Recommended value */
   
-  marpaESLIFValueOption.userDatavp                     = &marpaESLIFValueContext;
-  marpaESLIFValueOption.ruleActionResolverp            = marpaESLIF_valueRuleActionResolver;
-  marpaESLIFValueOption.symbolActionResolverp          = marpaESLIF_valueSymbolActionResolver;
-  marpaESLIFValueOption.freeActionResolverp            = marpaESLIF_valueFreeActionResolver;
-  marpaESLIFValueOption.transformerp                   = &marpaESLIFValueResultTransformDefault;
-  marpaESLIFValueOption.highRankOnlyb                  = marpaESLIF_call_methodb(aTHX_ Perl_valueInterfacep, "isWithHighRankOnly");
-  marpaESLIFValueOption.orderByRankb                   = marpaESLIF_call_methodb(aTHX_ Perl_valueInterfacep, "isWithOrderByRank");
-  marpaESLIFValueOption.ambiguousb                     = marpaESLIF_call_methodb(aTHX_ Perl_valueInterfacep, "isWithAmbiguous");
-  marpaESLIFValueOption.nullb                          = marpaESLIF_call_methodb(aTHX_ Perl_valueInterfacep, "isWithNull");
-  marpaESLIFValueOption.maxParsesi                     = (int) marpaESLIF_call_methodi(aTHX_ Perl_valueInterfacep, "maxParses");
+  marpaESLIFValueOption.userDatavp             = &marpaESLIFValueContext;
+  marpaESLIFValueOption.ruleActionResolverp    = marpaESLIF_valueRuleActionResolver;
+  marpaESLIFValueOption.symbolActionResolverp  = marpaESLIF_valueSymbolActionResolver;
+  marpaESLIFValueOption.freeActionResolverp    = marpaESLIF_valueFreeActionResolver;
+  marpaESLIFValueOption.transformerp           = &marpaESLIFValueResultTransformDefault;
+  marpaESLIFValueOption.highRankOnlyb          = marpaESLIF_call_methodb(aTHX_ Perl_valueInterfacep, "isWithHighRankOnly");
+  marpaESLIFValueOption.orderByRankb           = marpaESLIF_call_methodb(aTHX_ Perl_valueInterfacep, "isWithOrderByRank");
+  marpaESLIFValueOption.ambiguousb             = marpaESLIF_call_methodb(aTHX_ Perl_valueInterfacep, "isWithAmbiguous");
+  marpaESLIFValueOption.nullb                  = marpaESLIF_call_methodb(aTHX_ Perl_valueInterfacep, "isWithNull");
+  marpaESLIFValueOption.maxParsesi             = (int) marpaESLIF_call_methodi(aTHX_ Perl_valueInterfacep, "maxParses");
 
   if (! marpaESLIFGrammar_parseb(Perl_MarpaX_ESLIF_Grammarp->marpaESLIFGrammarp, &marpaESLIFRecognizerOption, &marpaESLIFValueOption, NULL)) {
     goto err;
@@ -2564,15 +2564,15 @@ CODE:
     MARPAESLIF_CROAKF("GENERICSTACK_NEW() failure, %s", strerror(save_errno));
   }
 
-  marpaESLIFRecognizerOption.userDatavp                = Perl_MarpaX_ESLIF_Recognizerp;
-  marpaESLIFRecognizerOption.marpaESLIFReaderCallbackp = marpaESLIF_recognizerReaderCallbackb;
-  marpaESLIFRecognizerOption.disableThresholdb         = marpaESLIF_call_methodb(aTHX_ Perl_recognizerInterfacep, "isWithDisableThreshold");
-  marpaESLIFRecognizerOption.exhaustedb                = marpaESLIF_call_methodb(aTHX_ Perl_recognizerInterfacep, "isWithExhaustion");
-  marpaESLIFRecognizerOption.newlineb                  = marpaESLIF_call_methodb(aTHX_ Perl_recognizerInterfacep, "isWithNewline");
-  marpaESLIFRecognizerOption.trackb                    = marpaESLIF_call_methodb(aTHX_ Perl_recognizerInterfacep, "isWithTrack");
-  marpaESLIFRecognizerOption.bufsizl                   = 0; /* Recommended value */
-  marpaESLIFRecognizerOption.buftriggerperci           = 50; /* Recommended value */
-  marpaESLIFRecognizerOption.bufaddperci               = 50; /* Recommended value */
+  marpaESLIFRecognizerOption.userDatavp        = Perl_MarpaX_ESLIF_Recognizerp;
+  marpaESLIFRecognizerOption.readerCallbackp   = marpaESLIF_readerCallbackb;
+  marpaESLIFRecognizerOption.disableThresholdb = marpaESLIF_call_methodb(aTHX_ Perl_recognizerInterfacep, "isWithDisableThreshold");
+  marpaESLIFRecognizerOption.exhaustedb        = marpaESLIF_call_methodb(aTHX_ Perl_recognizerInterfacep, "isWithExhaustion");
+  marpaESLIFRecognizerOption.newlineb          = marpaESLIF_call_methodb(aTHX_ Perl_recognizerInterfacep, "isWithNewline");
+  marpaESLIFRecognizerOption.trackb            = marpaESLIF_call_methodb(aTHX_ Perl_recognizerInterfacep, "isWithTrack");
+  marpaESLIFRecognizerOption.bufsizl           = 0; /* Recommended value */
+  marpaESLIFRecognizerOption.buftriggerperci   = 50; /* Recommended value */
+  marpaESLIFRecognizerOption.bufaddperci       = 50; /* Recommended value */
 
   Perl_MarpaX_ESLIF_Recognizerp->marpaESLIFRecognizerp = marpaESLIFRecognizer_newp(Perl_MarpaX_ESLIF_Grammarp->marpaESLIFGrammarp, &marpaESLIFRecognizerOption);
   if (Perl_MarpaX_ESLIF_Recognizerp->marpaESLIFRecognizerp == NULL) {

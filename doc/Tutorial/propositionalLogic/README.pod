@@ -56,16 +56,20 @@ Indeed, this will because we will inject everything by hand using I<alternatives
 
 =over
 
+=item Context is any value greater than 0
+
+  #define MY_CONTEXT 1 /* Any value > 0 */
+
 =item Lexemes that are not of interest for valuation
 
-We can directly inject an UNDEF:
+We will inject an UNDEF value on the stack for the keywords C<AND>, C<OR>, C<IMPLIES> and C<EQUIVALENT>:
 
   #define DO_ALTERNATIVE_UNDEF(names) do {                                \
       marpaESLIFAlternative_t  marpaESLIFAlternative;                     \
                                                                           \
       marpaESLIFAlternative.lexemes        = names;                       \
       marpaESLIFAlternative.value.type     = MARPAESLIF_VALUE_TYPE_UNDEF; \
-      marpaESLIFAlternative.value.contexti = 0;                           \
+      marpaESLIFAlternative.value.contexti = MY_CONTEXT;                  \
       marpaESLIFAlternative.value.sizel    = 0;                           \
       marpaESLIFAlternative.grammarLengthl = 1;                           \
                                                                           \
@@ -78,7 +82,7 @@ We can directly inject an UNDEF:
 
 =item Lexemes that are of interest for valuation
 
-We insert a boolean, expressed using the SHORT value type:
+We insert booleans, expressed using the SHORT value type, for the keywords C<P>, C<Q> and C<R>:
 
   #define DO_ALTERNATIVE_CHAR(names, boolval) do {                        \
       marpaESLIFAlternative_t  marpaESLIFAlternative;                     \
@@ -86,7 +90,7 @@ We insert a boolean, expressed using the SHORT value type:
       marpaESLIFAlternative.lexemes        = names;                       \
       marpaESLIFAlternative.value.type     = MARPAESLIF_VALUE_TYPE_CHAR;  \
       marpaESLIFAlternative.value.u.c      = boolval;                     \
-      marpaESLIFAlternative.value.contexti = 0;                           \
+      marpaESLIFAlternative.value.contexti = MY_CONTEXT;                  \
       marpaESLIFAlternative.value.sizel    = 0;                           \
       marpaESLIFAlternative.grammarLengthl = 1;                           \
                                                                           \
@@ -99,12 +103,92 @@ We insert a boolean, expressed using the SHORT value type:
 
 =back
 
-and we will test all combinaisons of C<P>, C<Q> and C<R> values, storing in a private valuation context, that is passed as-is to all valuation callback functions:
+If we would have been using built-in lexing, the symbol values of any keywords would have been of type ARRAY, i.e. an array of bytes. But we have decided to do external lexing: then we can associate what we want to symbol values, and indeed we are injecting either UNDEF when we do not mind, either a CHAR when it is important.
+
+When doing valuation, the grammar will ask for function pointers that implement our actions:
+
+=over
+
+=item action_not
+
+We know that the rule is:
+
+  NOT Sentence
+
+There are two arguments on the stack. C<Sentence> is a "boolean", i.e. a value of type SHORT.
+
+=item action_and
+
+Rule is:
+
+  Sentence        AND Sentence
+
+There are three arguments on the stack. Both C<Sentence>s are "boolean"s, i.e. values of type SHORT. C<AND> is associated to an undefined value.
+
+=item action_or
+
+Rule is:
+
+  Sentence        OR Sentence
+
+There are three arguments on the stack. Both C<Sentence>s are "boolean"s, i.e. values of type SHORT. C<OR> is associated to an undefined value.
+
+=item action_implies
+
+Rule is:
+
+  Sentence        IMPLIES Sentence
+
+There are three arguments on the stack. Both C<Sentence>s are "boolean"s, i.e. values of type SHORT. C<IMPLIES> is associated to an undefined value.
+
+=item action_equivalent
+
+Rule is:
+
+  Sentence        EQUIVALENT Sentence
+
+There are three arguments on the stack. Both C<Sentence>s are "boolean"s, i.e. values of type SHORT. C<EQUIVALENT> is associated to an undefined value.
+
+=back
+
+We will test all combinaisons of C<P>, C<Q> and C<R> values. In the user valuation context, boolean values associated to characters C<P>, C<Q> and C<R> are stored in members of type short C<valueContext.p>, C<valueContext.q> and C<valueContext.r>, respectively:
 
   for (valueContext.p = 0; valueContext.p < 2; valueContext.p++) {
     for (valueContext.q = 0; valueContext.q < 2; valueContext.q++) {
       for (valueContext.r = 0; valueContext.r < 2; valueContext.r++) {
-        /* ... */
+
+        /* User context is a void pointer */
+        marpaESLIFValueOption.userDatavp             = &valueContext;
+
+        /* action names are resolved to a function pointer with the ruleActionResolverp callback: */
+        marpaESLIFValueOption.ruleActionResolverp    = ruleActionResolverp;
+
+        /* We use the default value for what is coming from input recognition, i.e. an array of bytes: */
+        marpaESLIFValueOption.symbolActionResolverp  = NULL;
+
+        /* Our actions will only push values of type SHORT on the stack: no need for a special free callback */
+        marpaESLIFValueOption.freeActionResolverp    = NULL;
+
+        /* To get the final value a transformer is required. This transformer can also, and will, be used inside */
+        /* rule actions */
+        marpaESLIFValueOption.transformerp           = &marpaESLIFValueResultTransformDefault;
+
+        /* There is no "ranking" associated to rules in the grammar, nevertheless it is good practice */
+        /* to always ask explicitly the valuation to consider only the rules with the higher rank */
+        marpaESLIFValueOption.highRankOnlyb          = 1;
+
+        /* Similarly, it is good practice to ask the valuation to order valuation results by rank */
+        marpaESLIFValueOption.orderByRankb           = 1;
+
+        /* Our BNF is not ambiguous, though one can say to the engine to reject valuation if it was ambiguous! */
+        marpaESLIFValueOption.ambiguousb             = 0;
+
+        /* When the grammar is ambiguous, one can ask to not have more than "maxParsesi" values, 0 means that all values can be retreived */
+        marpaESLIFValueOption.maxParsesi             = 0;
+
+        /* It is rare to accept a null valuation result, 0 is a recommended value */
+        marpaESLIFValueOption.nullb                  = 0;
+
         marpaESLIFValuep = marpaESLIFValue_newp(marpaESLIFRecognizerp, &marpaESLIFValueOption);
         marpaESLIFValue_valueb(marpaESLIFValuep, &marpaESLIFValueResult);
         /* Result is in marpaESLIFValueResult.u.b */

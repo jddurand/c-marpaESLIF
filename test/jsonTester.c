@@ -205,15 +205,15 @@ int main() {
     marpaESLIFTester_context.inputs         = (char *) inputs[i];
     marpaESLIFTester_context.inputl         = strlen(inputs[i]);
 
-    marpaESLIFRecognizerOption.userDatavp                = &marpaESLIFTester_context;
-    marpaESLIFRecognizerOption.marpaESLIFReaderCallbackp = inputReaderb;
-    marpaESLIFRecognizerOption.disableThresholdb         = 0;
-    marpaESLIFRecognizerOption.exhaustedb                = 0;
-    marpaESLIFRecognizerOption.newlineb                  = 1;
-    marpaESLIFRecognizerOption.trackb                    = 0;
-    marpaESLIFRecognizerOption.bufsizl                   = 0;
-    marpaESLIFRecognizerOption.buftriggerperci           = 50;
-    marpaESLIFRecognizerOption.bufaddperci               = 50;
+    marpaESLIFRecognizerOption.userDatavp        = &marpaESLIFTester_context;
+    marpaESLIFRecognizerOption.readerCallbackp   = inputReaderb;
+    marpaESLIFRecognizerOption.disableThresholdb = 0;
+    marpaESLIFRecognizerOption.exhaustedb        = 0;
+    marpaESLIFRecognizerOption.newlineb          = 1;
+    marpaESLIFRecognizerOption.trackb            = 0;
+    marpaESLIFRecognizerOption.bufsizl           = 0;
+    marpaESLIFRecognizerOption.buftriggerperci   = 50;
+    marpaESLIFRecognizerOption.bufaddperci       = 50;
 
     /* Free previous round */
     if (marpaESLIFValuep != NULL) {
