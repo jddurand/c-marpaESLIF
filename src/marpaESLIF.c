@@ -335,8 +335,8 @@ static        short                  _marpaESLIFValue_symbolCallbackWrapperb(voi
 static        short                  _marpaESLIFValue_nullingCallbackWrapperb(void *userDatavp, int symboli, int resulti);
 static inline short                  _marpaESLIFValue_anySymbolCallbackWrapperb(void *userDatavp, int symboli, int argi, int resulti, short nullableb);
 static inline short                  _marpaESLIFValue_symbolActionCallbackb(marpaESLIFValue_t *marpaESLIFValuep, char *asciishows, short nullableb, marpaESLIF_action_t *nullableActionp, marpaESLIFValueSymbolCallback_t *symbolCallbackpp, marpaESLIFValueRuleCallback_t *ruleCallbackpp);
-static inline short                  _marpaESLIFValue_transformb(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFValueResult_t *marpaESLIFValueResultp, marpaESLIFValueResult_t *marpaESLIFValueResultResolvedp);
-static inline short                  _marpaESLIFValue_stack_get_transformb(marpaESLIFValue_t *marpaESLIFValuep, int indicei);
+static inline short                  _marpaESLIFValue_transformb(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFValueResult_t *marpaESLIFValueResultp, marpaESLIFValueResult_t *marpaESLIFValueResultResolvedp, void *forcedUserDatavp, marpaESLIFValueResultTransform_t *forcedTransformerp);
+static inline short                  _marpaESLIFValue_stack_get_transformb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, void *forcedUserDatavp, marpaESLIFValueResultTransform_t *forcedTransformerp);
 
 static inline short                  _marpaESLIFValue_valueb(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFValueResult_t *marpaESLIFValueResultp);
 
@@ -8905,7 +8905,7 @@ static inline short _marpaESLIFValue_valueb(marpaESLIFValue_t *marpaESLIFValuep,
       *marpaESLIFValueResultp = marpaESLIFValueResult;
     } else {
       /* Call the end-user transformer */
-      if (! _marpaESLIFValue_transformb(marpaESLIFValuep, &marpaESLIFValueResult, NULL /* marpaESLIFValueResultResolvedp */)) {
+      if (! _marpaESLIFValue_transformb(marpaESLIFValuep, &marpaESLIFValueResult, NULL /* marpaESLIFValueResultResolvedp */, NULL /* forcedUserDatavp */, NULL /* forcedTransformerp */)) {
         goto err;
       }
     }
@@ -11954,7 +11954,7 @@ marpaESLIFValueResult_t *marpaESLIFValue_stack_getp(marpaESLIFValue_t *marpaESLI
 }
 
 /*****************************************************************************/
-static inline short _marpaESLIFValue_stack_get_transformb(marpaESLIFValue_t *marpaESLIFValuep, int indicei)
+static inline short _marpaESLIFValue_stack_get_transformb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, void *forcedUserDatavp, marpaESLIFValueResultTransform_t *forcedTransformerp)
 /*****************************************************************************/
 {
   static const char                *funcs                 = "_marpaESLIFValue_stack_get_transformb";
@@ -11972,7 +11972,7 @@ static inline short _marpaESLIFValue_stack_get_transformb(marpaESLIFValue_t *mar
     goto err;
   }
  
-  rcb = _marpaESLIFValue_transformb(marpaESLIFValuep, marpaESLIFValueResultp, NULL /* marpaESLIFValueResultResolvedp */);
+  rcb = _marpaESLIFValue_transformb(marpaESLIFValuep, marpaESLIFValueResultp, NULL /* marpaESLIFValueResultResolvedp */, forcedUserDatavp, forcedTransformerp);
   goto done;
 
  err:
@@ -11997,17 +11997,19 @@ short marpaESLIFValue_stack_get_transformb(marpaESLIFValue_t *marpaESLIFValuep, 
     return 0;
   }
 
-  return _marpaESLIFValue_stack_get_transformb(marpaESLIFValuep, indicei);
+  return _marpaESLIFValue_stack_get_transformb(marpaESLIFValuep, indicei, NULL /* forcedUserDatavp */, NULL /* forcedTransformerp */);
 }
 
 /*****************************************************************************/
-static inline short _marpaESLIFValue_transformb(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFValueResult_t *marpaESLIFValueResultp, marpaESLIFValueResult_t *marpaESLIFValueResultResolvedp)
+static inline short _marpaESLIFValue_transformb(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFValueResult_t *marpaESLIFValueResultp, marpaESLIFValueResult_t *marpaESLIFValueResultResolvedp, void *forcedUserDatavp, marpaESLIFValueResultTransform_t *forcedTransformerp)
 /*****************************************************************************/
 {
   static const char                *funcs                 = "_marpaESLIFValueResult_transformb";
   marpaESLIFRecognizer_t           *marpaESLIFRecognizerp = marpaESLIFValuep->marpaESLIFRecognizerp;
   marpaESLIFValueOption_t           marpaESLIFValueOption = marpaESLIFValuep->marpaESLIFValueOption;
-  marpaESLIFValueResultTransform_t *transformerp          = marpaESLIFValueOption.transformerp;
+  /* userDatavp is forced to forcedUserDatavp if forcedTransformerp is set */
+  void                             *userDatavp            = (forcedTransformerp != NULL) ? forcedUserDatavp : marpaESLIFValueOption.userDatavp;
+  marpaESLIFValueResultTransform_t *transformerp          = (forcedTransformerp != NULL) ? forcedTransformerp : marpaESLIFValueOption.transformerp;
   short                             rcb;
 
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
@@ -12030,7 +12032,7 @@ static inline short _marpaESLIFValue_transformb(marpaESLIFValue_t *marpaESLIFVal
       errno = EINVAL;
       goto err;
     }
-    if (! transformerp->undefTransformerp(marpaESLIFValueOption.userDatavp, marpaESLIFValueResultp->contexti)) {
+    if (! transformerp->undefTransformerp(userDatavp, marpaESLIFValueResultp->contexti)) {
       goto err;
     }
     break;
@@ -12040,7 +12042,7 @@ static inline short _marpaESLIFValue_transformb(marpaESLIFValue_t *marpaESLIFVal
       errno = EINVAL;
       goto err;
     }
-    if (! transformerp->charTransformerp(marpaESLIFValueOption.userDatavp, marpaESLIFValueResultp->contexti, marpaESLIFValueResultp->u.c)) {
+    if (! transformerp->charTransformerp(userDatavp, marpaESLIFValueResultp->contexti, marpaESLIFValueResultp->u.c)) {
       goto err;
     }
     break;
@@ -12050,7 +12052,7 @@ static inline short _marpaESLIFValue_transformb(marpaESLIFValue_t *marpaESLIFVal
       errno = EINVAL;
       goto err;
     }
-    if (! transformerp->shortTransformerp(marpaESLIFValueOption.userDatavp, marpaESLIFValueResultp->contexti, marpaESLIFValueResultp->u.b)) {
+    if (! transformerp->shortTransformerp(userDatavp, marpaESLIFValueResultp->contexti, marpaESLIFValueResultp->u.b)) {
       goto err;
     }
     break;
@@ -12060,7 +12062,7 @@ static inline short _marpaESLIFValue_transformb(marpaESLIFValue_t *marpaESLIFVal
       errno = EINVAL;
       goto err;
     }
-    if (! transformerp->intTransformerp(marpaESLIFValueOption.userDatavp, marpaESLIFValueResultp->contexti, marpaESLIFValueResultp->u.i)) {
+    if (! transformerp->intTransformerp(userDatavp, marpaESLIFValueResultp->contexti, marpaESLIFValueResultp->u.i)) {
       goto err;
     }
     break;
@@ -12070,7 +12072,7 @@ static inline short _marpaESLIFValue_transformb(marpaESLIFValue_t *marpaESLIFVal
       errno = EINVAL;
       goto err;
     }
-    if (! transformerp->longTransformerp(marpaESLIFValueOption.userDatavp, marpaESLIFValueResultp->contexti, marpaESLIFValueResultp->u.l)) {
+    if (! transformerp->longTransformerp(userDatavp, marpaESLIFValueResultp->contexti, marpaESLIFValueResultp->u.l)) {
       goto err;
     }
     break;
@@ -12080,7 +12082,7 @@ static inline short _marpaESLIFValue_transformb(marpaESLIFValue_t *marpaESLIFVal
       errno = EINVAL;
       goto err;
     }
-    if (! transformerp->floatTransformerp(marpaESLIFValueOption.userDatavp, marpaESLIFValueResultp->contexti, marpaESLIFValueResultp->u.f)) {
+    if (! transformerp->floatTransformerp(userDatavp, marpaESLIFValueResultp->contexti, marpaESLIFValueResultp->u.f)) {
       goto err;
     }
     break;
@@ -12090,7 +12092,7 @@ static inline short _marpaESLIFValue_transformb(marpaESLIFValue_t *marpaESLIFVal
       errno = EINVAL;
       goto err;
     }
-    if (! transformerp->doubleTransformerp(marpaESLIFValueOption.userDatavp, marpaESLIFValueResultp->contexti, marpaESLIFValueResultp->u.d)) {
+    if (! transformerp->doubleTransformerp(userDatavp, marpaESLIFValueResultp->contexti, marpaESLIFValueResultp->u.d)) {
       goto err;
     }
     break;
@@ -12100,7 +12102,7 @@ static inline short _marpaESLIFValue_transformb(marpaESLIFValue_t *marpaESLIFVal
       errno = EINVAL;
       goto err;
     }
-    if (! transformerp->ptrTransformerp(marpaESLIFValueOption.userDatavp, marpaESLIFValueResultp->contexti, marpaESLIFValueResultp->u.p)) {
+    if (! transformerp->ptrTransformerp(userDatavp, marpaESLIFValueResultp->contexti, marpaESLIFValueResultp->u.p)) {
       goto err;
     }
     break;
@@ -12118,7 +12120,7 @@ static inline short _marpaESLIFValue_transformb(marpaESLIFValue_t *marpaESLIFVal
         errno = EINVAL;
         goto err;
       }
-      if (! transformerp->arrayTransformerp(marpaESLIFValueOption.userDatavp, marpaESLIFValueResultp->contexti, marpaESLIFValueResultp->u.p, marpaESLIFValueResultp->sizel)) {
+      if (! transformerp->arrayTransformerp(userDatavp, marpaESLIFValueResultp->contexti, marpaESLIFValueResultp->u.p, marpaESLIFValueResultp->sizel)) {
         goto err;
       }
     }
@@ -12153,7 +12155,7 @@ short marpaESLIFValue_transformb(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF
     return 0;
   }
 
-  return _marpaESLIFValue_transformb(marpaESLIFValuep, marpaESLIFValueResultp, marpaESLIFValueResultResolvedp);
+  return _marpaESLIFValue_transformb(marpaESLIFValuep, marpaESLIFValueResultp, marpaESLIFValueResultResolvedp, NULL /* forcedUserDatavp */, NULL /* forcedTransformerp */);
 }
 
 /*****************************************************************************/
