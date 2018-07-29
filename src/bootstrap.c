@@ -287,8 +287,6 @@ static        short _marpaESLIF_bootstrap_G1_action_luascript_statementb(void *u
     _marpaESLIFValueResult.sizel           = 0;                         \
     _marpaESLIFValueResult.representationp = NULL;                      \
     _marpaESLIFValueResult.shallowb        = 0;                         \
-    _marpaESLIFValueResult.luab            = 0;                         \
-    _marpaESLIFValueResult.userDatavp      = NULL;                      \
     _marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_PTR; \
     _marpaESLIFValueResult.u.p             = _p;                        \
                                                                         \
@@ -305,8 +303,6 @@ static        short _marpaESLIF_bootstrap_G1_action_luascript_statementb(void *u
     _marpaESLIFValueResult.sizel           = _l;                        \
     _marpaESLIFValueResult.representationp = NULL;                      \
     _marpaESLIFValueResult.shallowb        = 0;                         \
-    _marpaESLIFValueResult.luab            = 0;                         \
-    _marpaESLIFValueResult.userDatavp      = NULL;                      \
     _marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_ARRAY; \
     _marpaESLIFValueResult.u.p             = _p;                        \
                                                                         \
@@ -323,8 +319,6 @@ static        short _marpaESLIF_bootstrap_G1_action_luascript_statementb(void *u
     _marpaESLIFValueResult.sizel           = 0;                         \
     _marpaESLIFValueResult.representationp = NULL;                      \
     _marpaESLIFValueResult.shallowb        = 0;                         \
-    _marpaESLIFValueResult.luab            = 0;                         \
-    _marpaESLIFValueResult.userDatavp      = NULL;                      \
     _marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_UNDEF; \
                                                                         \
     if (! _marpaESLIFValue_stack_setb(marpaESLIFValuep, indicei, &_marpaESLIFValueResult)) { \
@@ -340,8 +334,6 @@ static        short _marpaESLIF_bootstrap_G1_action_luascript_statementb(void *u
     _marpaESLIFValueResult.sizel           = 0;                         \
     _marpaESLIFValueResult.representationp = NULL;                      \
     _marpaESLIFValueResult.shallowb        = 0;                         \
-    _marpaESLIFValueResult.luab            = 0;                         \
-    _marpaESLIFValueResult.userDatavp      = NULL;                      \
     _marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_INT; \
     _marpaESLIFValueResult.u.i             = _i;                        \
                                                                         \
@@ -358,8 +350,6 @@ static        short _marpaESLIF_bootstrap_G1_action_luascript_statementb(void *u
     _marpaESLIFValueResult.sizel           = 0;                         \
     _marpaESLIFValueResult.representationp = NULL;                      \
     _marpaESLIFValueResult.shallowb        = 0;                         \
-    _marpaESLIFValueResult.luab            = 0;                         \
-    _marpaESLIFValueResult.userDatavp      = NULL;                      \
     _marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_SHORT; \
     _marpaESLIFValueResult.u.b             = _b;                        \
                                                                         \

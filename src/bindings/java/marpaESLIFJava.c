@@ -186,7 +186,6 @@ typedef struct marpaESLIF_stringGenerator { /* We use genericLogger to generate 
     _marpaESLIFValueResult.sizel           = 0;                         \
     _marpaESLIFValueResult.representationp = _representationp;          \
     _marpaESLIFValueResult.shallowb        = 0;                         \
-    _marpaESLIFValueResult.userDatavp      = NULL;                      \
     _marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_PTR; \
     _marpaESLIFValueResult.u.p             = _p;                        \
                                                                         \
@@ -2437,7 +2436,6 @@ JNIEXPORT jboolean JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniLexemeAltern
   marpaESLIFAlternative.value.sizel           = 0; /* Not used */
   marpaESLIFAlternative.value.representationp = marpaESLIFRepresentationCallback;
   marpaESLIFAlternative.value.shallowb        = 0; /* C.f. marpaESLIFValueFreeCallback */
-  marpaESLIFAlternative.value.userDatavp      = NULL;
   marpaESLIFAlternative.grammarLengthl        = (size_t) grammarLengthi;
 
   if (!  marpaESLIFRecognizer_lexeme_alternativeb(marpaESLIFRecognizerp, &marpaESLIFAlternative)) {
@@ -2557,7 +2555,6 @@ JNIEXPORT jboolean JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniLexemeRead(J
   marpaESLIFAlternative.value.sizel           = 0; /* Not used */
   marpaESLIFAlternative.value.representationp = marpaESLIFRepresentationCallback;
   marpaESLIFAlternative.value.shallowb        = 0; /* C.f. marpaESLIFValueFreeCallback */
-  marpaESLIFAlternative.value.userDatavp      = NULL;
   marpaESLIFAlternative.grammarLengthl        = (size_t) grammarLengthi;
 
   if (! marpaESLIFRecognizer_lexeme_readb(marpaESLIFRecognizerp, &marpaESLIFAlternative, (size_t) lengthi)) {

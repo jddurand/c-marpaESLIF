@@ -96,8 +96,6 @@ struct marpaESLIFValueResult {
   size_t                     sizel;             /* Length of data in case value is an ARRAY - always 0 otherwise */
   marpaESLIFRepresentation_t representationp;   /* How a user-land alternative is represented if it was in the input */
   short                      shallowb;          /* In case of PTR or ARRAY, indicate if this is a shallow pointer */
-  short                      luab;              /* True when the value belongs is meaningful only to Lua. Then userDatavp is the lua state */
-  void                      *userDatavp;        /* Specific user data attached to this value */
   marpaESLIFValueType_t      type;              /* Type for tagging the following union */
   union {
     char    c;                                  /* Value is a char */

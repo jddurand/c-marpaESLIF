@@ -618,8 +618,6 @@ static short _marpaESLIF_lua_pop_argb(marpaESLIFValue_t *marpaESLIFValuep, int r
     marpaESLIFValueResult.sizel           = 0;
     marpaESLIFValueResult.representationp = NULL;
     marpaESLIFValueResult.shallowb        = 0;
-    marpaESLIFValueResult.luab            = 1;
-    marpaESLIFValueResult.userDatavp      = NULL;
     marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_UNDEF;
     /* No need to keep that in our internal lua table */
     _marpaESLIF_lua_freeInternalActionv(marpaESLIFValuep /* userDatavp */, resulti);
@@ -631,8 +629,6 @@ static short _marpaESLIF_lua_pop_argb(marpaESLIFValue_t *marpaESLIFValuep, int r
     marpaESLIFValueResult.sizel           = 0;
     marpaESLIFValueResult.representationp = NULL;
     marpaESLIFValueResult.shallowb        = 0;
-    marpaESLIFValueResult.luab            = 1;
-    marpaESLIFValueResult.userDatavp      = NULL;
 #if LUA_FLOAT_TYPE == LUA_FLOAT_FLOAT
     marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_FLOAT;
     MARPAESLIF_TRACEF(marpaESLIFValuep->marpaESLIFp, funcs, "LUA_TNUMBER => MARPAESLIF_VALUE_TYPE_FLOAT %f", (double) marpaESLIFValueResult.u.f);
@@ -651,8 +647,6 @@ static short _marpaESLIF_lua_pop_argb(marpaESLIFValue_t *marpaESLIFValuep, int r
     marpaESLIFValueResult.sizel           = 0;
     marpaESLIFValueResult.representationp = NULL;
     marpaESLIFValueResult.shallowb        = 0;
-    marpaESLIFValueResult.luab            = 1;
-    marpaESLIFValueResult.userDatavp      = NULL;
     marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_INT;
     LUA_TOBOOLEAN(marpaESLIFValuep, &(marpaESLIFValueResult.u.i), -1);
     /* No need to keep that in our internal lua table */
@@ -669,8 +663,6 @@ static short _marpaESLIF_lua_pop_argb(marpaESLIFValue_t *marpaESLIFValuep, int r
       marpaESLIFValueResult.sizel           = 0;
       marpaESLIFValueResult.representationp = NULL;
       marpaESLIFValueResult.shallowb        = 0;
-      marpaESLIFValueResult.luab            = 1;
-      marpaESLIFValueResult.userDatavp      = NULL;
       marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_UNDEF;
       MARPAESLIF_TRACE(marpaESLIFValuep->marpaESLIFp, funcs, "LUA_TSTRING empty => MARPAESLIF_VALUE_TYPE_UNDEF");
     } else {
@@ -683,8 +675,6 @@ static short _marpaESLIF_lua_pop_argb(marpaESLIFValue_t *marpaESLIFValuep, int r
       marpaESLIFValueResult.sizel           = bytel;
       marpaESLIFValueResult.representationp = NULL;
       marpaESLIFValueResult.shallowb        = 0;
-      marpaESLIFValueResult.luab            = 1;
-      marpaESLIFValueResult.userDatavp      = NULL;
       marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_ARRAY;
       memcpy(marpaESLIFValueResult.u.p, bytep, bytel);
       MARPAESLIF_TRACEF(marpaESLIFValuep->marpaESLIFp, funcs, "LUA_TSTRING => MARPAESLIF_VALUE_TYPE_ARRAY at %p of size %ld", bytep, (unsigned long) bytel);
@@ -709,8 +699,6 @@ static short _marpaESLIF_lua_pop_argb(marpaESLIFValue_t *marpaESLIFValuep, int r
     marpaESLIFValueResult.sizel           = 0;
     marpaESLIFValueResult.representationp = NULL;
     marpaESLIFValueResult.shallowb        = 0;
-    marpaESLIFValueResult.luab            = 1;
-    marpaESLIFValueResult.userDatavp      = (void *) marpaESLIFValuep;
     marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_PTR;
     marpaESLIFValueResult.u.p             = (void *) resultip;
     MARPAESLIF_TRACEF(marpaESLIFValuep->marpaESLIFp, funcs, "Keeping lua type %s (%d) in internal table at indice %d", (char *) _marpaESLIF_lua_types(typei), typei, resulti);
@@ -722,8 +710,6 @@ static short _marpaESLIF_lua_pop_argb(marpaESLIFValue_t *marpaESLIFValuep, int r
     marpaESLIFValueResult.sizel           = 0;
     marpaESLIFValueResult.representationp = NULL;
     marpaESLIFValueResult.shallowb        = 0;
-    marpaESLIFValueResult.luab            = 1;
-    marpaESLIFValueResult.userDatavp      = NULL;
     marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_PTR;
     LUA_TOUSERDATA(marpaESLIFValuep, &(marpaESLIFValueResult.u.p), -1);
     /* No need to keep that in our internal lua table */

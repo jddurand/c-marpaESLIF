@@ -186,8 +186,6 @@ static const marpaESLIFValueResult_t marpaESLIFValueResultUndef = {
   0,                          /* sizel */
   NULL,                       /* representationp */
   0,                          /* shallowb */
-  0,                          /* luab */
-  NULL,                       /* userDatavp */
   MARPAESLIF_VALUE_TYPE_UNDEF /* type */
   /* Here is the union */
 };
@@ -198,8 +196,6 @@ static const marpaESLIFValueResult_t marpaESLIFValueResultLexeme = {
   0,                          /* sizel */
   NULL,                       /* representationp */
   0,                          /* shallowb */
-  0,                          /* luab */
-  NULL,                       /* userDatavp */
   MARPAESLIF_VALUE_TYPE_ARRAY /* type */
   /* Here is the union */
 };
@@ -13076,7 +13072,6 @@ static inline short _marpaESLIF_generic_action___concatb(void *userDatavp, marpa
           marpaESLIFValueResult.sizel           = 0;
           marpaESLIFValueResult.representationp = NULL;
           marpaESLIFValueResult.shallowb        = 0;
-          marpaESLIFValueResult.userDatavp      = NULL;
           marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_PTR;
           marpaESLIFValueResult.u.p             = converteds;
         } else {
@@ -13084,7 +13079,6 @@ static inline short _marpaESLIF_generic_action___concatb(void *userDatavp, marpa
           marpaESLIFValueResult.sizel           = convertedl;
           marpaESLIFValueResult.representationp = NULL;
           marpaESLIFValueResult.shallowb        = 0;
-          marpaESLIFValueResult.userDatavp      = NULL;
           marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_ARRAY;
           marpaESLIFValueResult.u.p             = converteds;
         }
@@ -13100,7 +13094,6 @@ static inline short _marpaESLIF_generic_action___concatb(void *userDatavp, marpa
         marpaESLIFValueResult.sizel           = marpaESLIF_stringGenerator.l - 1;
         marpaESLIFValueResult.representationp = NULL;
         marpaESLIFValueResult.shallowb        = 0;
-        marpaESLIFValueResult.userDatavp      = NULL;
         marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_ARRAY;
         marpaESLIFValueResult.u.p             = marpaESLIF_stringGenerator.s;
 
