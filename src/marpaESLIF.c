@@ -165,6 +165,7 @@ static const char *MARPAESLIF_VALUE_TYPE_FLOAT_STRING         = "FLOAT";
 static const char *MARPAESLIF_VALUE_TYPE_DOUBLE_STRING        = "DOUBLE";
 static const char *MARPAESLIF_VALUE_TYPE_PTR_STRING           = "PTR";
 static const char *MARPAESLIF_VALUE_TYPE_ARRAY_STRING         = "ARRAY";
+static const char *MARPAESLIF_VALUE_TYPE_BOOL_STRING          = "BOOL";
 static const char *MARPAESLIF_VALUE_TYPE_UNKNOWN_STRING       = "UNKNOWN";
 
 static const size_t copyl    = 6; /* strlen("::copy"); */
@@ -9420,6 +9421,9 @@ static inline const char *_marpaESLIF_stack_types(int typei)
   case MARPAESLIF_VALUE_TYPE_ARRAY:
     s = MARPAESLIF_VALUE_TYPE_ARRAY_STRING;
     break;
+  case MARPAESLIF_VALUE_TYPE_BOOL:
+    s = MARPAESLIF_VALUE_TYPE_BOOL_STRING;
+    break;
   default:
     s = MARPAESLIF_VALUE_TYPE_UNKNOWN_STRING;
     break;
@@ -12121,6 +12125,16 @@ static inline short _marpaESLIFValue_transformb(marpaESLIFValue_t *marpaESLIFVal
       }
     }
     break;
+  case MARPAESLIF_VALUE_TYPE_BOOL:
+    if ((transformerp == NULL) || (transformerp->boolTransformerp == NULL)) {
+      MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "transformerp->boolTransformerp is undefined");
+      errno = EINVAL;
+      goto err;
+    }
+    if (! transformerp->boolTransformerp(userDatavp, marpaESLIFValueResultp->contexti, marpaESLIFValueResultp->u.b)) {
+      goto err;
+    }
+    break;
   default:
     errno = ENOSYS;
     goto err;
@@ -14013,6 +14027,8 @@ static short _marpaESLIFRecognizer_value_validb(marpaESLIFRecognizer_t *marpaESL
         }
       }
     }
+    break;
+  case MARPAESLIF_VALUE_TYPE_BOOL:
     break;
   default:
     MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "marpaESLIFValueResultp->type is not ARRAY (got %d, %s)", marpaESLIFValueResultp->type, _marpaESLIF_stack_types(marpaESLIFValueResultp->type));

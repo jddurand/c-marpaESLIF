@@ -255,27 +255,29 @@ static short                           marpaESLIF_representationb(void *userData
 static char                           *marpaESLIF_sv2byte(pTHX_ SV *svp, char **bytepp, size_t *bytelp, short encodingInformationb, short *characterStreambp, char **encodingsp, size_t *encodinglp, short warnIsFatalb);
 
 /* marpaESLIFValueResult transformers */
-static short                           marpaESLIF_TransformUndef(void *userDatavp, int contexti);
-static short                           marpaESLIF_TransformChar(void *userDatavp, int contexti, char c);
-static short                           marpaESLIF_TransformShort(void *userDatavp, int contexti, short b);
-static short                           marpaESLIF_TransformInt(void *userDatavp, int contexti, int i);
-static short                           marpaESLIF_TransformLong(void *userDatavp, int contexti, long l);
-static short                           marpaESLIF_TransformFloat(void *userDatavp, int contexti, float f);
-static short                           marpaESLIF_TransformDouble(void *userDatavp, int contexti, double d);
-static short                           marpaESLIF_TransformPtr(void *userDatavp, int contexti, void *p);
-static short                           marpaESLIF_TransformArray(void *userDatavp, int contexti, void *p, size_t sizel);
+static short                           marpaESLIF_TransformUndefb(void *userDatavp, int contexti);
+static short                           marpaESLIF_TransformCharb(void *userDatavp, int contexti, char c);
+static short                           marpaESLIF_TransformShortb(void *userDatavp, int contexti, short b);
+static short                           marpaESLIF_TransformIntb(void *userDatavp, int contexti, int i);
+static short                           marpaESLIF_TransformLongb(void *userDatavp, int contexti, long l);
+static short                           marpaESLIF_TransformFloatb(void *userDatavp, int contexti, float f);
+static short                           marpaESLIF_TransformDoubleb(void *userDatavp, int contexti, double d);
+static short                           marpaESLIF_TransformPtrb(void *userDatavp, int contexti, void *p);
+static short                           marpaESLIF_TransformArrayb(void *userDatavp, int contexti, void *p, size_t sizel);
+static short                           marpaESLIF_TransformBoolb(void *userDatavp, int contexti, short b);
 
 /* Transformers */
 static marpaESLIFValueResultTransform_t marpaESLIFValueResultTransformDefault = {
-  marpaESLIF_TransformUndef,
-  marpaESLIF_TransformChar,
-  marpaESLIF_TransformShort,
-  marpaESLIF_TransformInt,
-  marpaESLIF_TransformLong,
-  marpaESLIF_TransformFloat,
-  marpaESLIF_TransformDouble,
-  marpaESLIF_TransformPtr,
-  marpaESLIF_TransformArray
+  marpaESLIF_TransformUndefb,
+  marpaESLIF_TransformCharb,
+  marpaESLIF_TransformShortb,
+  marpaESLIF_TransformIntb,
+  marpaESLIF_TransformLongb,
+  marpaESLIF_TransformFloatb,
+  marpaESLIF_TransformDoubleb,
+  marpaESLIF_TransformPtrb,
+  marpaESLIF_TransformArrayb,
+  marpaESLIF_TransformBoolb
 };
 /* Static constants */
 static const char   *UTF8s = "UTF-8";
@@ -1416,10 +1418,10 @@ static char *marpaESLIF_sv2byte(pTHX_ SV *svp, char **bytepp, size_t *bytelp, sh
 }
 
 /*****************************************************************************/
-static short marpaESLIF_TransformUndef(void *userDatavp, int contexti)
+static short marpaESLIF_TransformUndefb(void *userDatavp, int contexti)
 /*****************************************************************************/
 {
-  static const char    *funcs                    = "marpaESLIF_TransformUndef";
+  static const char    *funcs                    = "marpaESLIF_TransformUndefb";
   MarpaX_ESLIF_Value_t *Perl_MarpaX_ESLIF_Valuep = (MarpaX_ESLIF_Value_t *) userDatavp;
   dMYTHX(Perl_MarpaX_ESLIF_Valuep);
 
@@ -1429,10 +1431,10 @@ static short marpaESLIF_TransformUndef(void *userDatavp, int contexti)
 }
 
 /*****************************************************************************/
-static short marpaESLIF_TransformChar(void *userDatavp, int contexti, char c)
+static short marpaESLIF_TransformCharb(void *userDatavp, int contexti, char c)
 /*****************************************************************************/
 {
-  static const char    *funcs                    = "marpaESLIF_TransformChar";
+  static const char    *funcs                    = "marpaESLIF_TransformCharb";
   MarpaX_ESLIF_Value_t *Perl_MarpaX_ESLIF_Valuep = (MarpaX_ESLIF_Value_t *) userDatavp;
   dMYTHX(Perl_MarpaX_ESLIF_Valuep);
 
@@ -1445,10 +1447,10 @@ static short marpaESLIF_TransformChar(void *userDatavp, int contexti, char c)
 }
 
 /*****************************************************************************/
-static short marpaESLIF_TransformShort(void *userDatavp, int contexti, short b)
+static short marpaESLIF_TransformShortb(void *userDatavp, int contexti, short b)
 /*****************************************************************************/
 {
-  static const char    *funcs                    = "marpaESLIF_TransformShort";
+  static const char    *funcs                    = "marpaESLIF_TransformShortb";
   MarpaX_ESLIF_Value_t *Perl_MarpaX_ESLIF_Valuep = (MarpaX_ESLIF_Value_t *) userDatavp;
   dMYTHX(Perl_MarpaX_ESLIF_Valuep);
 
@@ -1458,10 +1460,10 @@ static short marpaESLIF_TransformShort(void *userDatavp, int contexti, short b)
 }
 
 /*****************************************************************************/
-static short marpaESLIF_TransformInt(void *userDatavp, int contexti, int i)
+static short marpaESLIF_TransformIntb(void *userDatavp, int contexti, int i)
 /*****************************************************************************/
 {
-  static const char    *funcs                    = "marpaESLIF_TransformInt";
+  static const char    *funcs                    = "marpaESLIF_TransformIntb";
   MarpaX_ESLIF_Value_t *Perl_MarpaX_ESLIF_Valuep = (MarpaX_ESLIF_Value_t *) userDatavp;
   dMYTHX(Perl_MarpaX_ESLIF_Valuep);
 
@@ -1471,10 +1473,10 @@ static short marpaESLIF_TransformInt(void *userDatavp, int contexti, int i)
 }
 
 /*****************************************************************************/
-static short marpaESLIF_TransformLong(void *userDatavp, int contexti, long l)
+static short marpaESLIF_TransformLongb(void *userDatavp, int contexti, long l)
 /*****************************************************************************/
 {
-  static const char    *funcs                    = "marpaESLIF_TransformLong";
+  static const char    *funcs                    = "marpaESLIF_TransformLongb";
   MarpaX_ESLIF_Value_t *Perl_MarpaX_ESLIF_Valuep = (MarpaX_ESLIF_Value_t *) userDatavp;
   dMYTHX(Perl_MarpaX_ESLIF_Valuep);
 
@@ -1484,10 +1486,10 @@ static short marpaESLIF_TransformLong(void *userDatavp, int contexti, long l)
 }
 
 /*****************************************************************************/
-static short marpaESLIF_TransformFloat(void *userDatavp, int contexti, float f)
+static short marpaESLIF_TransformFloatb(void *userDatavp, int contexti, float f)
 /*****************************************************************************/
 {
-  static const char    *funcs                    = "marpaESLIF_TransformFloat";
+  static const char    *funcs                    = "marpaESLIF_TransformFloatb";
   MarpaX_ESLIF_Value_t *Perl_MarpaX_ESLIF_Valuep = (MarpaX_ESLIF_Value_t *) userDatavp;
   dMYTHX(Perl_MarpaX_ESLIF_Valuep);
 
@@ -1497,10 +1499,10 @@ static short marpaESLIF_TransformFloat(void *userDatavp, int contexti, float f)
 }
 
 /*****************************************************************************/
-static short marpaESLIF_TransformDouble(void *userDatavp, int contexti, double d)
+static short marpaESLIF_TransformDoubleb(void *userDatavp, int contexti, double d)
 /*****************************************************************************/
 {
-  static const char    *funcs                    = "marpaESLIF_TransformDouble";
+  static const char    *funcs                    = "marpaESLIF_TransformDoubleb";
   MarpaX_ESLIF_Value_t *Perl_MarpaX_ESLIF_Valuep = (MarpaX_ESLIF_Value_t *) userDatavp;
   dMYTHX(Perl_MarpaX_ESLIF_Valuep);
 
@@ -1510,10 +1512,10 @@ static short marpaESLIF_TransformDouble(void *userDatavp, int contexti, double d
 }
 
 /*****************************************************************************/
-static short marpaESLIF_TransformPtr(void *userDatavp, int contexti, void *p)
+static short marpaESLIF_TransformPtrb(void *userDatavp, int contexti, void *p)
 /*****************************************************************************/
 {
-  static const char    *funcs                    = "marpaESLIF_TransformPtr";
+  static const char    *funcs                    = "marpaESLIF_TransformPtrb";
   MarpaX_ESLIF_Value_t *Perl_MarpaX_ESLIF_Valuep = (MarpaX_ESLIF_Value_t *) userDatavp;
   dMYTHX(Perl_MarpaX_ESLIF_Valuep);
 
@@ -1531,10 +1533,10 @@ static short marpaESLIF_TransformPtr(void *userDatavp, int contexti, void *p)
 }
 
 /*****************************************************************************/
-static short marpaESLIF_TransformArray(void *userDatavp, int contexti, void *p, size_t sizel)
+static short marpaESLIF_TransformArrayb(void *userDatavp, int contexti, void *p, size_t sizel)
 /*****************************************************************************/
 {
-  static const char    *funcs                    = "marpaESLIF_TransformArray";
+  static const char    *funcs                    = "marpaESLIF_TransformArrayb";
   MarpaX_ESLIF_Value_t *Perl_MarpaX_ESLIF_Valuep = (MarpaX_ESLIF_Value_t *) userDatavp;
   dMYTHX(Perl_MarpaX_ESLIF_Valuep);
 
@@ -1548,6 +1550,19 @@ static short marpaESLIF_TransformArray(void *userDatavp, int contexti, void *p, 
       SvUTF8_on(Perl_MarpaX_ESLIF_Valuep->svp);
     }
   }
+
+  return 1;
+}
+
+/*****************************************************************************/
+static short marpaESLIF_TransformBoolb(void *userDatavp, int contexti, short b)
+/*****************************************************************************/
+{
+  static const char    *funcs                    = "marpaESLIF_TransformBoolb";
+  MarpaX_ESLIF_Value_t *Perl_MarpaX_ESLIF_Valuep = (MarpaX_ESLIF_Value_t *) userDatavp;
+  dMYTHX(Perl_MarpaX_ESLIF_Valuep);
+
+  Perl_MarpaX_ESLIF_Valuep->svp = b ? &PL_sv_yes : &PL_sv_no;
 
   return 1;
 }

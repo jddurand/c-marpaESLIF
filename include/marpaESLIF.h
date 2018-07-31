@@ -84,7 +84,8 @@ typedef enum marpaESLIFValueType {
   MARPAESLIF_VALUE_TYPE_FLOAT,
   MARPAESLIF_VALUE_TYPE_DOUBLE,
   MARPAESLIF_VALUE_TYPE_PTR,
-  MARPAESLIF_VALUE_TYPE_ARRAY
+  MARPAESLIF_VALUE_TYPE_ARRAY,
+  MARPAESLIF_VALUE_TYPE_BOOL
 } marpaESLIFValueType_t;
 
 /* Valuation result */
@@ -125,6 +126,7 @@ typedef short (*marpaESLIFValueResultTransformFloat_t)(void *userDatavp, int con
 typedef short (*marpaESLIFValueResultTransformDouble_t)(void *userDatavp, int contexti, double d);
 typedef short (*marpaESLIFValueResultTransformPtr_t)(void *userDatavp, int contexti, void *p);
 typedef short (*marpaESLIFValueResultTransformArray_t)(void *userDatavp, int contexti, void *p, size_t sizel);
+typedef short (*marpaESLIFValueResultTransformBool_t)(void *userDatavp, int contexti, short b);
 typedef struct marpaESLIFValueResultTransform {
   marpaESLIFValueResultTransformUndef_t undefTransformerp;
   marpaESLIFValueResultTransformChar_t charTransformerp;
@@ -135,6 +137,7 @@ typedef struct marpaESLIFValueResultTransform {
   marpaESLIFValueResultTransformDouble_t doubleTransformerp;
   marpaESLIFValueResultTransformPtr_t ptrTransformerp;
   marpaESLIFValueResultTransformArray_t arrayTransformerp;
+  marpaESLIFValueResultTransformBool_t boolTransformerp;
 } marpaESLIFValueResultTransform_t;
 
 typedef struct marpaESLIFValueOption {

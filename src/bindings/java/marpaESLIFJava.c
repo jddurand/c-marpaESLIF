@@ -168,6 +168,7 @@ typedef struct marpaESLIF_stringGenerator { /* We use genericLogger to generate 
 #define JAVA_LANG_LONG_CLASS                      "java/lang/Long"
 #define JAVA_LANG_FLOAT_CLASS                     "java/lang/Float"
 #define JAVA_LANG_DOUBLE_CLASS                    "java/lang/Double"
+#define JAVA_LANG_BOOLEAN_CLASS                   "java/lang/Boolean"
 
 #define MARPAESLIF_ESLIFVALUEINTERFACE_SYMBOLACTION_SIGNATURE "(Ljava/nio/ByteBuffer;)Ljava/lang/Object;"
 #define MARPAESLIF_ESLIFVALUEINTERFACE_RULEACTION_SIGNATURE   "([Ljava/lang/Object;)Ljava/lang/Object;"
@@ -305,6 +306,10 @@ static marpaESLIFClassCache_t marpaESLIFClassCacheArrayp[] = {
   #define JAVA_LANG_DOUBLE_CLASSCACHE                    marpaESLIFClassCacheArrayp[25]
   #define JAVA_LANG_DOUBLE_CLASSP                        marpaESLIFClassCacheArrayp[25].classp
   {       JAVA_LANG_DOUBLE_CLASS,                        NULL, 1 /* requiredb */ },
+
+  #define JAVA_LANG_BOOLEAN_CLASSCACHE                   marpaESLIFClassCacheArrayp[26]
+  #define JAVA_LANG_BOOLEAN_CLASSP                       marpaESLIFClassCacheArrayp[26].classp
+  {       JAVA_LANG_BOOLEAN_CLASS,                       NULL, 1 /* requiredb */ },
 
   { NULL }
 };
@@ -547,6 +552,12 @@ static marpaESLIFMethodCache_t marpaESLIFMethodCacheArrayp[] = {
   #define JAVA_LANG_DOUBLE_CLASS_valueOf_METHODP                                    marpaESLIFMethodCacheArrayp[77].methodp
   {      &JAVA_LANG_DOUBLE_CLASSCACHE, "valueOf",                                   "(D)Ljava/lang/Double;", 0, NULL, 0 /* requiredb */ },
 
+  #define JAVA_LANG_BOOLEAN_CLASS_init_METHODP                                      marpaESLIFMethodCacheArrayp[78].methodp
+  {      &JAVA_LANG_BOOLEAN_CLASSCACHE, "<init>",                                   "(Z)V", 0, NULL, 1 /* requiredb */ },
+
+  #define JAVA_LANG_BOOLEAN_CLASS_valueOf_METHODP                                   marpaESLIFMethodCacheArrayp[79].methodp
+  {      &JAVA_LANG_BOOLEAN_CLASSCACHE, "valueOf",                                  "(Z)Ljava/lang/Boolean;", 0, NULL, 0 /* requiredb */ },
+
   { NULL }
 };
 
@@ -608,6 +619,7 @@ static short                           marpaESLIF_TransformFloat(void *userDatav
 static short                           marpaESLIF_TransformDouble(void *userDatavp, int contexti, double d);
 static short                           marpaESLIF_TransformPtr(void *userDatavp, int contexti, void *p);
 static short                           marpaESLIF_TransformArray(void *userDatavp, int contexti, void *p, size_t sizel);
+static short                           marpaESLIF_TransformBool(void *userDatavp, int contexti, short b);
 
 /* Transformers */
 static marpaESLIFValueResultTransform_t marpaESLIFValueResultTransformDefault = {
@@ -619,7 +631,8 @@ static marpaESLIFValueResultTransform_t marpaESLIFValueResultTransformDefault = 
   marpaESLIF_TransformFloat,
   marpaESLIF_TransformDouble,
   marpaESLIF_TransformPtr,
-  marpaESLIF_TransformArray
+  marpaESLIF_TransformArray,
+  marpaESLIF_TransformBool
 };
 
 /* --------------- */
@@ -5208,3 +5221,33 @@ static short marpaESLIF_TransformArray(void *userDatavp, int contexti, void *p, 
   return rcb;
 }
 
+/*****************************************************************************/
+static short marpaESLIF_TransformBool(void *userDatavp, int contexti, short b)
+/*****************************************************************************/
+{
+  static const char        *funcs                   = "marpaESLIF_TransformBool";
+  marpaESLIFValueContext_t *marpaESLIFValueContextp = (marpaESLIFValueContext_t *) userDatavp;
+  JNIEnv                   *envp                    = marpaESLIFValueContextp->envp;
+  short                     rcb;
+  jboolean                  jb = b ? JNI_TRUE : JNI_FALSE;
+  jobject                   objectp;
+
+  if (JAVA_LANG_BOOLEAN_CLASS_valueOf_METHODP != NULL) {
+    objectp = (*envp)->CallStaticObjectMethod(envp, JAVA_LANG_BOOLEAN_CLASSP, JAVA_LANG_BOOLEAN_CLASS_valueOf_METHODP, jb);
+  } else {
+    objectp = (*envp)->NewObject(envp, JAVA_LANG_BOOLEAN_CLASSP, JAVA_LANG_BOOLEAN_CLASS_init_METHODP, jb);
+  }
+  if (objectp == NULL) {
+    goto err;
+  }
+
+  marpaESLIFValueContextp->objectp = objectp;
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  return rcb;
+}

@@ -54,6 +54,7 @@ short _marpaESLIF_lua_transformFloatb(void *userDatavp, int contexti, float f);
 short _marpaESLIF_lua_transformDoubleb(void *userDatavp, int contexti, double d);
 short _marpaESLIF_lua_transformPtrb(void *userDatavp, int contexti, void *p);
 short _marpaESLIF_lua_transformArrayb(void *userDatavp, int contexti, void *p, size_t sizel);
+short _marpaESLIF_lua_transformBoolb(void *userDatavp, int contexti, short b);
 static const marpaESLIFValueResultTransform_t marpaESLIF_lua_transform = {
   _marpaESLIF_lua_transformUndefb,
   _marpaESLIF_lua_transformCharb,
@@ -63,7 +64,8 @@ static const marpaESLIFValueResultTransform_t marpaESLIF_lua_transform = {
   _marpaESLIF_lua_transformFloatb,
   _marpaESLIF_lua_transformDoubleb,
   _marpaESLIF_lua_transformPtrb,
-  _marpaESLIF_lua_transformArrayb
+  _marpaESLIF_lua_transformArrayb,
+  _marpaESLIF_lua_transformBoolb
 };
 
 static const char *LUATYPE_TNIL_STRING = "LUA_TNIL";
@@ -609,6 +611,7 @@ static short _marpaESLIF_lua_pop_argb(marpaESLIFValue_t *marpaESLIFValuep, int r
   short                    rcb;
   const char              *bytep;
   size_t                   bytel;
+  int                      booli;
 
   LUA_TYPE(marpaESLIFValuep, &typei, -1);
 
@@ -643,14 +646,15 @@ static short _marpaESLIF_lua_pop_argb(marpaESLIFValue_t *marpaESLIFValuep, int r
     break;
   case LUA_TBOOLEAN:
     /* A boolean in lua maps to an int */
+    LUA_TOBOOLEAN(marpaESLIFValuep, &booli, -1);
     marpaESLIFValueResult.contexti        = 0;
     marpaESLIFValueResult.sizel           = 0;
     marpaESLIFValueResult.representationp = NULL;
     marpaESLIFValueResult.shallowb        = 0;
-    marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_INT;
-    LUA_TOBOOLEAN(marpaESLIFValuep, &(marpaESLIFValueResult.u.i), -1);
+    marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_BOOL;
+    marpaESLIFValueResult.u.b             = (booli != 0) ? 1 : 0;
     /* No need to keep that in our internal lua table */
-    MARPAESLIF_TRACEF(marpaESLIFValuep->marpaESLIFp, funcs, "LUA_TBOOLEAN => MARPAESLIF_VALUE_TYPE_INT %d", marpaESLIFValueResult.u.i);
+    MARPAESLIF_TRACEF(marpaESLIFValuep->marpaESLIFp, funcs, "LUA_TBOOLEAN => MARPAESLIF_VALUE_TYPE_BOOL %d", (int) marpaESLIFValueResult.u.b);
     _marpaESLIF_lua_freeInternalActionv(marpaESLIFValuep /* userDatavp */, resulti);
     break;
   case LUA_TSTRING:
@@ -1138,3 +1142,26 @@ short _marpaESLIF_lua_transformArrayb(void *userDatavp, int contexti, void *p, s
  done:
   return rcb;
 }
+
+/*****************************************************************************/
+short _marpaESLIF_lua_transformBoolb(void *userDatavp, int contexti, short b)
+/*****************************************************************************/
+{
+  static const char *funcs = "_marpaESLIF_lua_transformBoolb";
+  /* userDatavp is forced to be marpaESLIFValuep */
+  marpaESLIFValue_t *marpaESLIFValuep = (marpaESLIFValue_t *) userDatavp;
+  short              rcb;
+
+  MARPAESLIF_TRACEF(marpaESLIFValuep->marpaESLIFp, funcs, "Pushing boolean %s", b ? "true" : "false");
+  LUA_PUSHBOOLEAN(marpaESLIFValuep, (int) b);
+
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  return rcb;
+}
+

@@ -244,7 +244,7 @@ static        short _marpaESLIF_bootstrap_G1_action_luascript_statementb(void *u
     _contexti = _marpaESLIFValueResultp->contexti;                      \
   } while (0)
 
-#define MARPAESLIF_GET_SHORT(marpaESLIFValuep, indicei, _b) do {        \
+#define MARPAESLIF_GET_BOOL(marpaESLIFValuep, indicei, _b) do {         \
     marpaESLIFValueResult_t *_marpaESLIFValueResultp;                   \
                                                                         \
     _marpaESLIFValueResultp = _marpaESLIFValue_stack_getp(marpaESLIFValuep, indicei); \
@@ -252,8 +252,8 @@ static        short _marpaESLIF_bootstrap_G1_action_luascript_statementb(void *u
       goto err;                                                         \
     }                                                                   \
                                                                         \
-    if (_marpaESLIFValueResultp->type != MARPAESLIF_VALUE_TYPE_SHORT) { \
-      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "marpaESLIFValueResultp->type is not SHORT (got %d, %s)", _marpaESLIFValueResultp->type, _marpaESLIF_stack_types(_marpaESLIFValueResultp->type)); \
+    if (_marpaESLIFValueResultp->type != MARPAESLIF_VALUE_TYPE_BOOL) { \
+      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "marpaESLIFValueResultp->type is not BOOL (got %d, %s)", _marpaESLIFValueResultp->type, _marpaESLIF_stack_types(_marpaESLIFValueResultp->type)); \
       goto err;                                                         \
     }                                                                   \
                                                                         \
@@ -343,14 +343,14 @@ static        short _marpaESLIF_bootstrap_G1_action_luascript_statementb(void *u
                                                                         \
   } while (0)
 
-#define MARPAESLIF_SET_SHORT(marpaESLIFValuep, indicei, _contexti, _b) do { \
+#define MARPAESLIF_SET_BOOL(marpaESLIFValuep, indicei, _contexti, _b) do { \
     marpaESLIFValueResult_t _marpaESLIFValueResult;                     \
                                                                         \
     _marpaESLIFValueResult.contexti        = _contexti;                 \
     _marpaESLIFValueResult.sizel           = 0;                         \
     _marpaESLIFValueResult.representationp = NULL;                      \
     _marpaESLIFValueResult.shallowb        = 0;                         \
-    _marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_SHORT; \
+    _marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_BOOL; \
     _marpaESLIFValueResult.u.b             = _b;                        \
                                                                         \
     if (! _marpaESLIFValue_stack_setb(marpaESLIFValuep, indicei, &_marpaESLIFValueResult)) { \
@@ -1710,17 +1710,17 @@ static short _marpaESLIF_bootstrap_G1_action_adverb_list_itemsb(void *userDatavp
         actionp = NULL; /* actionp is now in adverbListItemp */
         break;
       case MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_LEFT_ASSOCIATION:
-        MARPAESLIF_GET_SHORT(marpaESLIFValuep, i, left_associationb);
+        MARPAESLIF_GET_BOOL(marpaESLIFValuep, i, left_associationb);
         adverbListItemp->type                = MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_LEFT_ASSOCIATION;
         adverbListItemp->u.left_associationb = left_associationb;
         break;
       case MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_RIGHT_ASSOCIATION:
-        MARPAESLIF_GET_SHORT(marpaESLIFValuep, i, right_associationb);
+        MARPAESLIF_GET_BOOL(marpaESLIFValuep, i, right_associationb);
         adverbListItemp->type                = MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_RIGHT_ASSOCIATION;
         adverbListItemp->u.right_associationb = right_associationb;
         break;
       case MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_GROUP_ASSOCIATION:
-        MARPAESLIF_GET_SHORT(marpaESLIFValuep, i, group_associationb);
+        MARPAESLIF_GET_BOOL(marpaESLIFValuep, i, group_associationb);
         adverbListItemp->type                = MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_GROUP_ASSOCIATION;
         adverbListItemp->u.group_associationb = group_associationb;
         break;
@@ -1735,12 +1735,12 @@ static short _marpaESLIF_bootstrap_G1_action_adverb_list_itemsb(void *userDatavp
         separatorSingleSymbolp = NULL; /* separatorSingleSymbolp is now in adverbListItemp */
         break;
       case MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_PROPER:
-        MARPAESLIF_GET_SHORT(marpaESLIFValuep, i, properb);
+        MARPAESLIF_GET_BOOL(marpaESLIFValuep, i, properb);
         adverbListItemp->type      = MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_PROPER;
         adverbListItemp->u.properb = properb;
         break;
       case MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_HIDESEPARATOR:
-        MARPAESLIF_GET_SHORT(marpaESLIFValuep, i, hideseparatorb);
+        MARPAESLIF_GET_BOOL(marpaESLIFValuep, i, hideseparatorb);
         adverbListItemp->type      = MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_HIDESEPARATOR;
         adverbListItemp->u.properb = hideseparatorb;
         break;
@@ -1750,7 +1750,7 @@ static short _marpaESLIF_bootstrap_G1_action_adverb_list_itemsb(void *userDatavp
         adverbListItemp->u.ranki = ranki;
         break;
       case MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_NULL_RANKING:
-        MARPAESLIF_GET_SHORT(marpaESLIFValuep, i, nullRanksHighb);
+        MARPAESLIF_GET_BOOL(marpaESLIFValuep, i, nullRanksHighb);
         adverbListItemp->type             = MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_NULL_RANKING;
         adverbListItemp->u.nullRanksHighb = nullRanksHighb;
         break;
@@ -1765,7 +1765,7 @@ static short _marpaESLIF_bootstrap_G1_action_adverb_list_itemsb(void *userDatavp
         adverbListItemp->u.pausei = pausei;
         break;
       case MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_LATM:
-        MARPAESLIF_GET_SHORT(marpaESLIFValuep, i, latmb);
+        MARPAESLIF_GET_BOOL(marpaESLIFValuep, i, latmb);
         adverbListItemp->type    = MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_LATM;
         adverbListItemp->u.latmb = latmb;
         break;
@@ -2545,7 +2545,7 @@ static short _marpaESLIF_bootstrap_G1_action_left_associationb(void *userDatavp,
   /* <left association> ::= 'assoc' '=>' 'left' */
   short rcb;
 
-  MARPAESLIF_SET_SHORT(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_LEFT_ASSOCIATION, 1);
+  MARPAESLIF_SET_BOOL(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_LEFT_ASSOCIATION, 1);
 
   rcb = 1;
   goto done;
@@ -2564,7 +2564,7 @@ static short _marpaESLIF_bootstrap_G1_action_right_associationb(void *userDatavp
   /* <right association> ::= 'assoc' '=>' 'right' */
   short rcb;
 
-  MARPAESLIF_SET_SHORT(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_RIGHT_ASSOCIATION, 1);
+  MARPAESLIF_SET_BOOL(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_RIGHT_ASSOCIATION, 1);
 
   rcb = 1;
   goto done;
@@ -2583,7 +2583,7 @@ static short _marpaESLIF_bootstrap_G1_action_group_associationb(void *userDatavp
   /* <group association> ::= 'assoc' '=>' 'group' */
   short rcb;
 
-  MARPAESLIF_SET_SHORT(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_GROUP_ASSOCIATION, 1);
+  MARPAESLIF_SET_BOOL(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_GROUP_ASSOCIATION, 1);
 
   rcb = 1;
   goto done;
@@ -3949,7 +3949,7 @@ static short _marpaESLIF_bootstrap_G1_action_inaccessible_treatment_1b(void *use
   /* <inaccessible treatment> ::= 'warn' */
   short rcb;
 
-  MARPAESLIF_SET_SHORT(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_INACESSIBLE_TREATMENT, MARPAESLIF_BOOTSTRAP_INACCESSIBLE_TREATMENT_TYPE_WARN);
+  MARPAESLIF_SET_BOOL(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_INACESSIBLE_TREATMENT, MARPAESLIF_BOOTSTRAP_INACCESSIBLE_TREATMENT_TYPE_WARN);
 
   rcb = 1;
   goto done;
@@ -3968,7 +3968,7 @@ static short _marpaESLIF_bootstrap_G1_action_inaccessible_treatment_2b(void *use
   /* <inaccessible treatment> ::= 'ok' */
   short rcb;
 
-  MARPAESLIF_SET_SHORT(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_INACESSIBLE_TREATMENT, MARPAESLIF_BOOTSTRAP_INACCESSIBLE_TREATMENT_TYPE_OK);
+  MARPAESLIF_SET_BOOL(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_INACESSIBLE_TREATMENT, MARPAESLIF_BOOTSTRAP_INACCESSIBLE_TREATMENT_TYPE_OK);
 
   rcb = 1;
   goto done;
@@ -3987,7 +3987,7 @@ static short _marpaESLIF_bootstrap_G1_action_inaccessible_treatment_3b(void *use
   /* <inaccessible treatment> ::= 'fatal' */
   short rcb;
 
-  MARPAESLIF_SET_SHORT(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_INACESSIBLE_TREATMENT, MARPAESLIF_BOOTSTRAP_INACCESSIBLE_TREATMENT_TYPE_FATAL);
+  MARPAESLIF_SET_BOOL(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_INACESSIBLE_TREATMENT, MARPAESLIF_BOOTSTRAP_INACCESSIBLE_TREATMENT_TYPE_FATAL);
 
   rcb = 1;
   goto done;
@@ -4009,7 +4009,7 @@ static short _marpaESLIF_bootstrap_G1_action_inaccessible_statementb(void *userD
   short                inaccessibleTreatmentb;
   short                rcb;
 
-  MARPAESLIF_GET_SHORT(marpaESLIFValuep, arg0i+2, inaccessibleTreatmentb);
+  MARPAESLIF_GET_BOOL(marpaESLIFValuep, arg0i+2, inaccessibleTreatmentb);
 
   switch (inaccessibleTreatmentb) {
   case MARPAESLIF_BOOTSTRAP_INACCESSIBLE_TREATMENT_TYPE_WARN:
@@ -4046,7 +4046,7 @@ static short _marpaESLIF_bootstrap_G1_action_on_or_off_1b(void *userDatavp, marp
   /* <on or off>  ::= 'on' */
   short rcb;
 
-  MARPAESLIF_SET_SHORT(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_ON_OR_OFF, MARPAESLIF_BOOTSTRAP_ON_OR_OFF_TYPE_ON);
+  MARPAESLIF_SET_BOOL(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_ON_OR_OFF, MARPAESLIF_BOOTSTRAP_ON_OR_OFF_TYPE_ON);
 
   rcb = 1;
   goto done;
@@ -4065,7 +4065,7 @@ static short _marpaESLIF_bootstrap_G1_action_on_or_off_2b(void *userDatavp, marp
   /* <on or off>  ::= 'off' */
   short rcb;
 
-  MARPAESLIF_SET_SHORT(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_ON_OR_OFF, MARPAESLIF_BOOTSTRAP_ON_OR_OFF_TYPE_OFF);
+  MARPAESLIF_SET_BOOL(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_ON_OR_OFF, MARPAESLIF_BOOTSTRAP_ON_OR_OFF_TYPE_OFF);
 
   rcb = 1;
   goto done;
@@ -4087,7 +4087,7 @@ static short _marpaESLIF_bootstrap_G1_action_autorank_statementb(void *userDatav
   short                onOrOffb;
   short                rcb;
 
-  MARPAESLIF_GET_SHORT(marpaESLIFValuep, arg0i+2, onOrOffb);
+  MARPAESLIF_GET_BOOL(marpaESLIFValuep, arg0i+2, onOrOffb);
 
   switch (onOrOffb) {
   case MARPAESLIF_BOOTSTRAP_ON_OR_OFF_TYPE_ON:
@@ -4643,7 +4643,7 @@ static short _marpaESLIF_bootstrap_G1_action_latm_specification_1b(void *userDat
   /* <latm specification> ::= 'latm' '=>' false */
   short rcb;
 
-  MARPAESLIF_SET_SHORT(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_LATM, 0);
+  MARPAESLIF_SET_BOOL(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_LATM, 0);
 
   rcb = 1;
   goto done;
@@ -4662,7 +4662,7 @@ static short _marpaESLIF_bootstrap_G1_action_latm_specification_2b(void *userDat
   /* <latm specification> ::= 'latm' '=>' true */
   short rcb;
 
-  MARPAESLIF_SET_SHORT(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_LATM, 1);
+  MARPAESLIF_SET_BOOL(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_LATM, 1);
 
   rcb = 1;
   goto done;
@@ -4681,7 +4681,7 @@ static short _marpaESLIF_bootstrap_G1_action_proper_specification_1b(void *userD
   /* <proper specification> ::= 'proper' '=>' false */
   short rcb;
 
-  MARPAESLIF_SET_SHORT(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_PROPER, 0);
+  MARPAESLIF_SET_BOOL(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_PROPER, 0);
 
   rcb = 1;
   goto done;
@@ -4700,7 +4700,7 @@ static short _marpaESLIF_bootstrap_G1_action_proper_specification_2b(void *userD
   /* <proper specification> ::= 'proper' '=>' true */
   short rcb;
 
-  MARPAESLIF_SET_SHORT(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_PROPER, 1);
+  MARPAESLIF_SET_BOOL(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_PROPER, 1);
 
   rcb = 1;
   goto done;
@@ -4719,7 +4719,7 @@ static short _marpaESLIF_bootstrap_G1_action_hideseparator_specification_1b(void
   /* <hide separator specification> ::= 'hide-separator' '=>' false */
   short rcb;
 
-  MARPAESLIF_SET_SHORT(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_HIDESEPARATOR, 0);
+  MARPAESLIF_SET_BOOL(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_HIDESEPARATOR, 0);
 
   rcb = 1;
   goto done;
@@ -4738,7 +4738,7 @@ static short _marpaESLIF_bootstrap_G1_action_hideseparator_specification_2b(void
   /* <hide separator specification> ::= 'hide-separator' '=>' true */
   short rcb;
 
-  MARPAESLIF_SET_SHORT(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_HIDESEPARATOR, 1);
+  MARPAESLIF_SET_BOOL(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_HIDESEPARATOR, 1);
 
   rcb = 1;
   goto done;
@@ -4799,9 +4799,9 @@ static short _marpaESLIF_bootstrap_G1_action_null_ranking_specification_1b(void 
     goto err;
   }
 
-  MARPAESLIF_GET_SHORT(marpaESLIFValuep, argni, nullRanksHighb);
+  MARPAESLIF_GET_BOOL(marpaESLIFValuep, argni, nullRanksHighb);
 
-  MARPAESLIF_SET_SHORT(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_NULL_RANKING, nullRanksHighb);
+  MARPAESLIF_SET_BOOL(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_NULL_RANKING, nullRanksHighb);
 
   rcb = 1;
   goto done;
@@ -4828,9 +4828,9 @@ static short _marpaESLIF_bootstrap_G1_action_null_ranking_specification_2b(void 
     goto err;
   }
 
-  MARPAESLIF_GET_SHORT(marpaESLIFValuep, argni, nullRanksHighb);
+  MARPAESLIF_GET_BOOL(marpaESLIFValuep, argni, nullRanksHighb);
 
-  MARPAESLIF_SET_SHORT(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_NULL_RANKING, nullRanksHighb);
+  MARPAESLIF_SET_BOOL(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_NULL_RANKING, nullRanksHighb);
 
   rcb = 1;
   goto done;
@@ -4849,7 +4849,7 @@ static short _marpaESLIF_bootstrap_G1_action_null_ranking_constant_1b(void *user
   /* <null ranking constant> ::= 'low' */
   short rcb;
 
-  MARPAESLIF_SET_SHORT(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_NULL_RANKING, 0);
+  MARPAESLIF_SET_BOOL(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_NULL_RANKING, 0);
 
   rcb = 1;
   goto done;
@@ -4868,7 +4868,7 @@ static short _marpaESLIF_bootstrap_G1_action_null_ranking_constant_2b(void *user
   /* <null ranking constant> ::= 'high' */
   short rcb;
 
-  MARPAESLIF_SET_SHORT(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_NULL_RANKING, 1);
+  MARPAESLIF_SET_BOOL(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_NULL_RANKING, 1);
 
   rcb = 1;
   goto done;
@@ -4962,7 +4962,7 @@ static short _marpaESLIF_bootstrap_G1_action_event_initializer_1b(void *userData
   short          eventInitializerb;
   short          rcb;
 
-  MARPAESLIF_GET_SHORT(marpaESLIFValuep, argni, onOrOffb);
+  MARPAESLIF_GET_BOOL(marpaESLIFValuep, argni, onOrOffb);
 
   switch (onOrOffb) {
   case MARPAESLIF_BOOTSTRAP_ON_OR_OFF_TYPE_ON:
@@ -4976,7 +4976,7 @@ static short _marpaESLIF_bootstrap_G1_action_event_initializer_1b(void *userData
     goto err;
   }
   
-  MARPAESLIF_SET_SHORT(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_EVENT_INITIALIZER, eventInitializerb);
+  MARPAESLIF_SET_BOOL(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_EVENT_INITIALIZER, eventInitializerb);
   
   rcb = 1;
   goto done;
@@ -4996,7 +4996,7 @@ static short _marpaESLIF_bootstrap_G1_action_event_initializer_2b(void *userData
   /* Per def this is a nullable - default event state is on */
   short rcb;
 
-  MARPAESLIF_SET_SHORT(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_EVENT_INITIALIZER, MARPAESLIF_BOOTSTRAP_EVENT_INITIALIZER_TYPE_ON);
+  MARPAESLIF_SET_BOOL(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_EVENT_INITIALIZER, MARPAESLIF_BOOTSTRAP_EVENT_INITIALIZER_TYPE_ON);
 
   rcb = 1;
   goto done;
@@ -5034,7 +5034,7 @@ static short _marpaESLIF_bootstrap_G1_action_event_initializationb(void *userDat
     goto err;
   }
 
-  MARPAESLIF_GET_SHORT(marpaESLIFValuep, argni, eventInitializerb);
+  MARPAESLIF_GET_BOOL(marpaESLIFValuep, argni, eventInitializerb);
 
   /* Make that an rhs primary structure */
   eventInitializationp = (marpaESLIF_bootstrap_event_initialization_t *) malloc(sizeof(marpaESLIF_bootstrap_event_initialization_t));
