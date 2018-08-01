@@ -79,15 +79,16 @@ static short                         marpaESLIF_TransformShort(void *userDatavp,
 
 /* Transformers */
 static marpaESLIFValueResultTransform_t marpaESLIFValueResultTransformDefault = {
-  NULL,
+  NULL, /* undefTransformerp */
   marpaESLIF_TransformChar,
   marpaESLIF_TransformShort,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL
+  NULL, /* intTransformerp */
+  NULL, /* longTransformerp */
+  NULL, /* floatTransformerp */
+  NULL, /* doubleTransformerp */
+  NULL, /* ptrTransformerp */
+  NULL, /* arrayTransformerp */
+  NULL /* boolTransformerp */
 };
 typedef struct valueContext {
   genericLogger_t *genericLoggerp;
@@ -134,7 +135,7 @@ int main() {
   }
 
   marpaESLIFRecognizerOption.userDatavp                = NULL;
-  marpaESLIFRecognizerOption.marpaESLIFReaderCallbackp = NULL; /* We completely externalize lexing */
+  marpaESLIFRecognizerOption.readerCallbackp           = NULL; /* We completely externalize lexing */
   marpaESLIFRecognizerOption.disableThresholdb         = 0;  /* No disable of threshold warning */
   marpaESLIFRecognizerOption.exhaustedb                = 0;  /* No exhaustion event */
   marpaESLIFRecognizerOption.newlineb                  = 1;  /* Do newline counting */
