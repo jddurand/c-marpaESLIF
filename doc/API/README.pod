@@ -1006,7 +1006,7 @@ At any location in the grammar, possible alternatives can be of the two major ty
                                       size_t  *encodinglp);
   typedef struct marpaESLIFRecognizerOption {
     void                *userDatavp;                  /* User specific context */
-    marpaESLIFReader_t   marpaESLIFReaderCallbackp;   /* Reader callback */
+    marpaESLIFReader_t   readerCallbackp;             /* Reader callback */
     short                disableThresholdb;           /* Disable threshold warning.  Recommended: 0 */
     short                exhaustedb;                  /* Exhaustion event.           Recommended: 0 */
     short                newlineb;                    /* Count line/column numbers.  Recommended: 0 */
@@ -1114,7 +1114,7 @@ The parameter C<marpaESLIFRecognizerOptionp> is a pointer to a C<marpaESLIFRecog
 
 User context, propagated as-is to reader callback.
 
-=item C<marpaESLIFReaderCallbackp>
+=item C<readerCallbackp>
 
 Pointer to the reader callback. Must not be C<NULL>.
 
