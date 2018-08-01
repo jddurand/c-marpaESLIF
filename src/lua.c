@@ -346,6 +346,13 @@ static const char *LUATYPE_TUNKNOWN_STRING = "UNKNOWN";
     }                                                                   \
   } while (0)
 
+#define LUAL_SETFUNCS(containerp, l, nup) do {                          \
+    if (luaunpanicL_setfuncs(containerp->L, l, nup)) {                  \
+      LOG_PANIC_STRING(containerp, lua_pcall);                          \
+      errno = ENOSYS;                                                   \
+      goto err;                                                         \
+    }                                                                   \
+  } while (0)
 
 /*****************************************************************************/
 static short _marpaESLIF_lua_newb(marpaESLIFValue_t *marpaESLIFValuep)
