@@ -133,15 +133,15 @@ static short marpaESLIF_TransformBool(void *userDatavp, int contexti, short b);
 
 /* Transformers */
 static marpaESLIFValueResultTransform_t marpaESLIFValueResultTransformDefault = {
-  NULL,
+  NULL, /* undefTransformerp */
   marpaESLIF_TransformChar,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
+  NULL, /* intTransformerp */
+  NULL, /* longTransformerp */
+  NULL, /* floatTransformerp */
+  NULL, /* doubleTransformerp */
+  NULL, /* ptrTransformerp */
+  NULL, /* arrayTransformerp */
+  NULL, /* boolTransformerp */
   marpaESLIF_TransformBool
 };
 
