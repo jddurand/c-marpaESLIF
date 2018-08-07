@@ -148,6 +148,11 @@ ELSE ()
   MESSAGE(STATUS "PERL Packaging cannot be done without perl -;")
 ENDIF ()
 
+INCLUDE(FindLua)
+IF (LUA_FOUND)
+  ADD_SUBDIRECTORY(src/bindings/lua EXCLUDE_FROM_ALL)
+ENDIF ()
+
 #############
 # Packaging #
 #############
