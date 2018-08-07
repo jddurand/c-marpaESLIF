@@ -9,7 +9,7 @@
 #include <marpaESLIF.h>
 
 static int installmarpaESLIFLua(lua_State *L);
-static int marpaESLIFLua_open(lua_State *L);
+static int marpaESLIFLua_marpaESLIF_versions(lua_State *L);
 
 /****************************************************************************/
 int luaopen_marpaESLIFLua(lua_State* L)
@@ -24,7 +24,7 @@ static int installmarpaESLIFLua(lua_State *L)
 /****************************************************************************/
 {
    static const luaL_Reg marpaESLIFLuaTable[] = {
-      {"open", marpaESLIFLua_open},
+      {"versions", marpaESLIFLua_marpaESLIF_versions},
       {NULL, NULL}
    };
    luaL_newlib(L, marpaESLIFLuaTable);
@@ -33,8 +33,9 @@ static int installmarpaESLIFLua(lua_State *L)
 }
 
 /****************************************************************************/
-static int marpaESLIFLua_open(lua_State *L)
+static int marpaESLIFLua_marpaESLIF_versions(lua_State *L)
 /****************************************************************************/
 {
-  return 0;
+  lua_pushstring(L, marpaESLIF_versions());
+  return 1;
 }
