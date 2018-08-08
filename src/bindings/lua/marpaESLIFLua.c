@@ -1,7 +1,5 @@
 /* Only 5.3 and upwards is supported */
 
-#define LUA_LIB /* this sets LUA_API correctly */
-
 #include "lua.h"        /* As per CMake doc */
 #include "lauxlib.h"    /* As per CMake doc */
 #include "lualib.h"     /* As per CMake doc */
