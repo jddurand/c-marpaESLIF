@@ -29,6 +29,7 @@ static void genericLoggerCallback(void *userDatavp, genericLoggerLevel_t logLeve
 static int installmarpaESLIFLua(lua_State *L);
 static int marpaESLIFLua_marpaESLIF_versions(lua_State *L);
 static int marpaESLIFLua_marpaESLIF_newp(lua_State *L);
+static int marpaESLIFLua_marpaESLIF_freev(lua_State *L);
 
 /****************************************************************************/
 int luaopen_marpaESLIFLua(lua_State* L)
@@ -45,6 +46,7 @@ static int installmarpaESLIFLua(lua_State *L)
    static const luaL_Reg marpaESLIFLuaTable[] = {
       {"marpaESLIF_versions", marpaESLIFLua_marpaESLIF_versions},
       {"marpaESLIF_newp", marpaESLIFLua_marpaESLIF_newp},
+      {"marpaESLIF_freev", marpaESLIFLua_marpaESLIF_freev},
       {NULL, NULL}
    };
    luaL_newlib(L, marpaESLIFLuaTable);
@@ -125,7 +127,7 @@ static int marpaESLIFLua_marpaESLIF_newp(lua_State *L)
     if (((! loggerb) && lua_isnil(L, -1))
         ||
         ((  loggerb) && lua_compare(L, 1, -1, LUA_OPEQ))) {
-      marpaESLIFp = (marpaESLIF_t *) lua_topointer(L, -3);
+      marpaESLIFp = (marpaESLIF_t *) lua_touserdata(L, -3);
       lua_pop(L, 3);                                                  /* stack: [loggerp,] MARPAESLIF_GLOBAL_TABLE_NAME */
       break;
     }
@@ -226,6 +228,62 @@ static void genericLoggerCallback(void *userDatavp, genericLoggerLevel_t logLeve
 }
 
 /****************************************************************************/
+static int marpaESLIFLua_marpaESLIF_freev(lua_State *L)
+/****************************************************************************/
+{
+  marpaESLIF_t           *marpaESLIFp           = NULL;
+  genericLoggerContext_t *genericLoggerContextp = NULL;
+  lua_Integer             r                     = LUA_NOREF;
+  genericLogger_t        *genericLoggerp        = NULL;
+  marpaESLIFOption_t     *marpaESLIFOptionp;
+
+  if (lua_gettop(L) == 1) {
+    if (lua_islightuserdata(L, 1)) {                           /* stack: marpaESLIFp? */
+      marpaESLIFp = (marpaESLIF_t *) lua_touserdata(L, 1);
+      /* Is that in the registry ? */
+      if (lua_getglobal(L, MARPAESLIF_GLOBAL_TABLE_NAME) == LUA_TTABLE) { /* stack: marpaESLIFp, MARPAESLIF_GLOBAL_TABLE_NAME? */
+        lua_pushnil(L);                                                   /* stack: marpaESLIFp, MARPAESLIF_GLOBAL_TABLE_NAME, nil */
+        while (lua_next(L, -2) != 0) {                                    /* stack: marpaESLIFp, MARPAESLIF_GLOBAL_TABLE_NAME, marpaESLIFp, r */
+          if (lua_touserdata(L, -2) == marpaESLIFp) {
+            r = lua_tointeger(L, -1);
+            /* Remove the entry from MARPAESLIF_GLOBAL_TABLE_NAME */
+            lua_pop(L, 2);                                                /* stack: marpaESLIFp, MARPAESLIF_GLOBAL_TABLE_NAME */
+            lua_pushnil(L);                                               /* stack: marpaESLIFp, MARPAESLIF_GLOBAL_TABLE_NAME, nil */
+            lua_rawsetp(L, -2, marpaESLIFp);                              /* stack: marpaESLIFp, MARPAESLIF_GLOBAL_TABLE_NAME */
+            break;
+          }
+          lua_pop(L, 1);                                                  /* stack: marpaESLIFp, MARPAESLIF_GLOBAL_TABLE_NAME, marpaESLIFp */
+        }                                                                 /* stack: marpaESLIFp, MARPAESLIF_GLOBAL_TABLE_NAME */
+      }
+      lua_pop(L, 1);                                                      /* stack: marpaESLIFp */
+    }
+  }
+
+  if (r != LUA_NOREF) {
+    luaL_unref(L, LUA_REGISTRYINDEX, r);
+
+    marpaESLIFOptionp = marpaESLIF_optionp(marpaESLIFp);
+    if (marpaESLIFOptionp != NULL) {
+      genericLoggerp = marpaESLIFOptionp->genericLoggerp;
+      if (genericLoggerp != NULL) {
+        genericLoggerContextp = (genericLoggerContext_t *) genericLogger_userDatavp_getp(genericLoggerp);
+      }
+    }
+
+    /* Free marpaESLIF, genericLogger, genericLogger context (in this order) */
+    if (marpaESLIFp != NULL) {
+      marpaESLIF_freev(marpaESLIFp);
+    }
+    if (genericLoggerContextp != NULL) {
+      free(genericLoggerContextp);
+    }
+    if (genericLoggerp != NULL) {
+      genericLogger_freev(&genericLoggerp);
+    }
+  }
+}
+
+/****************************************************************************/
 static void stackdump_g(lua_State* L)  
 /****************************************************************************/
 /* Reference: https://groups.google.com/forum/#!topic/lua5/gc3Ghjo6ipg      */
@@ -239,14 +297,23 @@ static void stackdump_g(lua_State* L)
   for (i = 1; i <= top; i++) {
     int t = lua_type(L, i);
     switch (t) {
-    case LUA_TSTRING:  /* strings */
-      printf("  string: '%s'\n", lua_tostring(L, i));
+    case LUA_TNIL:
+      printf("  nil\n");
       break;
-    case LUA_TBOOLEAN:  /* booleans */
+    case LUA_TNUMBER:
+      printf("  number: %g\n", lua_tonumber(L, i));
+      break;
+    case LUA_TBOOLEAN:
       printf("  boolean %s\n",lua_toboolean(L, i) ? "true" : "false");
       break;
-    case LUA_TNUMBER:  /* numbers */
-      printf("  number: %g\n", lua_tonumber(L, i));
+    case LUA_TUSERDATA:
+      printf("  userdata: %p\n", lua_touserdata(L, i));
+      break;
+    case LUA_TLIGHTUSERDATA:
+      printf("  light userdata: %p\n", lua_touserdata(L, i));
+      break;
+    case LUA_TSTRING:
+      printf("  string: '%s'\n", lua_tostring(L, i));
       break;
     default:  /* other values */
       printf("  %s\n", lua_typename(L, t));

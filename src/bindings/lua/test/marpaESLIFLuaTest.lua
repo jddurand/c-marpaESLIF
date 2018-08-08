@@ -61,13 +61,18 @@ logger = {
    ['critical']  = function(msgs) print('CRITICAL '..msgs) end,
    ['emergency'] = function(msgs) print('EMERGENCY '..msgs) end
 }
-print('marpaESLIFLua.marpaESLIF_newp = '..tostring(marpaESLIFLua.marpaESLIF_newp(logger)))
-print('marpaESLIFLua.marpaESLIF_newp = '..tostring(marpaESLIFLua.marpaESLIF_newp(logger)))
-print('marpaESLIFLua.marpaESLIF_newp = '..tostring(marpaESLIFLua.marpaESLIF_newp(logger)))
-print('marpaESLIFLua.marpaESLIF_newp = '..tostring(marpaESLIFLua.marpaESLIF_newp()))
-print('marpaESLIFLua.marpaESLIF_newp = '..tostring(marpaESLIFLua.marpaESLIF_newp()))
-print('marpaESLIFLua.marpaESLIF_newp = '..tostring(marpaESLIFLua.marpaESLIF_newp(logger)))
-print('marpaESLIFLua.marpaESLIF_newp = '..tostring(marpaESLIFLua.marpaESLIF_newp()))
-print('marpaESLIFLua.marpaESLIF_newp = '..tostring(marpaESLIFLua.marpaESLIF_newp()))
+
+
+do
+   local b = setmetatable(
+      {
+         marpaESLIFp = marpaESLIFLua.marpaESLIF_newp(logger)
+      },
+      {
+         __gc = function(self) marpaESLIFLua.marpaESLIF_freev(self.marpaESLIFp) end
+      }
+   )
+end
+collectgarbage();
 
 print(tableDump(__marpaESLIFGlobal))
