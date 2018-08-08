@@ -5,44 +5,33 @@ ENDIF ()
 MYPACKAGESTART (marpaESLIFLua ${marpaESLIF_VERSION_MAJOR} ${marpaESLIF_VERSION_MINOR} ${marpaESLIF_VERSION_PATCH})
 
 INCLUDE (FindLua)
+MESSAGE(STATUS "LUA_LIBRARIES     : ${LUA_LIBRARIES}")
+MESSAGE(STATUS "LUA_INCLUDE_DIR   : ${INCLUDE_DIR}")
+MESSAGE(STATUS "LUA_VERSION_STRING: ${LUA_VERSION_STRING}")
+MESSAGE(STATUS "LUA_VERSION_MAJOR : ${LUA_VERSION_MAJOR}")
+MESSAGE(STATUS "LUA_VERSION_MINOR : ${LUA_VERSION_MINOR}")
+MESSAGE(STATUS "LUA_VERSION_PATCH : ${LUA_VERSION_PATCH}")
 INCLUDE_DIRECTORIES (${LUA_INCLUDE_DIR})
 
 ###########
 # Library #
 ###########
-MYPACKAGELIBRARY(
+MYPACKAGECONFIG(
   ${CMAKE_CURRENT_SOURCE_DIR}/include/config.h.in
   ${INCLUDE_OUTPUT_PATH}/marpaESLIFLua/internal/config.h
-  marpaESLIFLua.c)
-
-################
-# Dependencies #
-################
-MYPACKAGEDEPENDENCY (marpaESLIF "../../.." LIBS)
-
-# ---------------------------------------
-# Lua specifics: no prefix nor versioning
-# ---------------------------------------
+  )
+INCLUDE_DIRECTORIES (include output/include)
+ADD_LIBRARY (marpaESLIFLua SHARED marpaESLIFLua.c)
+TARGET_LINK_LIBRARIES (marpaESLIFLua marpaESLIF ${GENERICLOGGER_LIBRARIES})
+#
+# Lua specifics: no prefix, no versioning
+#
 SET_TARGET_PROPERTIES (marpaESLIFLua
   PROPERTIES
   PREFIX ""
   NO_SONAME TRUE
   )
-SET_TARGET_PROPERTIES (marpaESLIFLua_static
-  PROPERTIES
-  PREFIX ""
-  NO_SONAME TRUE
-  )
-
-#############
-# Packaging #
-#############
-MYPACKAGEPACK ("" "Marpa Extended Scanless Interface Lua (>= 5.3) Bindings")
-
-#########
-# Setup #
-#########
-MYPACKAGEPRINTSETUP()
+INSTALL (TARGETS marpaESLIFLua ARCHIVE DESTINATION lib LIBRARY DESTINATION lib RUNTIME DESTINATION bin COMPONENT libraries)
 
 ########
 # Test #
@@ -56,9 +45,14 @@ IF (${CMAKE_COMPILER_IS_GNUCC})
     MESSAGE (STATUS "Found lua executable: ${LUA_EXECUTABLE}")
     GET_PROPERTY(_test_path GLOBAL PROPERTY MYPACKAGE_TEST_PATH)
     GET_FILENAME_COMPONENT(_absolute_library_output_path ${LIBRARY_OUTPUT_PATH} ABSOLUTE)
+    IF ("${CMAKE_HOST_SYSTEM}" MATCHES ".*Windows.*")
+      SET (SEP "\\;")
+    ELSE ()
+      SET (SEP ":")
+    ENDIF ()
     ADD_TEST (
       NAME marpaESLIFLuaTest
-      COMMAND ${CMAKE_COMMAND} -E env "PATH=${_test_path}" "${LUA_EXECUTABLE}" ../../test/marpaESLIFLuaTest.lua
+      COMMAND ${CMAKE_COMMAND} -E env "PATH=.${SEP}${_test_path}" "${LUA_EXECUTABLE}" ../../test/marpaESLIFLuaTest.lua
       WORKING_DIRECTORY ${_absolute_library_output_path}
       )
     ADD_DEPENDENCIES(check marpaESLIFLua)
