@@ -28,6 +28,7 @@ static int installmarpaESLIFLua(lua_State *L);
 static int marpaESLIFLua_marpaESLIF_versions(lua_State *L);
 static int marpaESLIFLua_marpaESLIF_newp(lua_State *L);
 static int marpaESLIFLua_marpaESLIF_freev(lua_State *L);
+static int marpaESLIFLua_marpaESLIFGrammar_newp(lua_State *L);
 
 /****************************************************************************/
 int luaopen_marpaESLIFLua(lua_State* L)
@@ -45,6 +46,7 @@ static int installmarpaESLIFLua(lua_State *L)
       {"marpaESLIF_versions", marpaESLIFLua_marpaESLIF_versions},
       {"marpaESLIF_newp", marpaESLIFLua_marpaESLIF_newp},
       {"marpaESLIF_freev", marpaESLIFLua_marpaESLIF_freev},
+      {"marpaESLIFGrammar_newp", marpaESLIFLua_marpaESLIFGrammar_newp},
       {NULL, NULL}
    };
    luaL_newlib(L, marpaESLIFLuaTable);
@@ -279,6 +281,44 @@ static int marpaESLIFLua_marpaESLIF_freev(lua_State *L)
       genericLogger_freev(&genericLoggerp);
     }
   }
+}
+
+/****************************************************************************/
+static int marpaESLIFLua_marpaESLIFGrammar_newp(lua_State *L)
+/****************************************************************************/
+{
+  marpaESLIF_t              *marpaESLIFp;
+  marpaESLIFGrammar_t       *marpaESLIFGrammarp;
+  marpaESLIFGrammarOption_t  marpaESLIFGrammarOption = {
+    NULL, /* bytep */
+    0,    /* bytel */
+    NULL, /* encodings */
+    0     /* encodingl */
+  };
+ 
+  switch (lua_gettop(L)) {
+  case 3:
+    marpaESLIFGrammarOption.encodings = (char *) luaL_checklstring(L, 3, &(marpaESLIFGrammarOption.encodingl));
+    /* Intentionnaly no break */
+  case 2:
+    marpaESLIFGrammarOption.bytep = (char *) luaL_checklstring(L, 2, &(marpaESLIFGrammarOption.bytel));
+    /* Verify that the 1st argument is a light user data */
+    if (lua_type(L, 1) != LUA_TLIGHTUSERDATA) {
+      return luaL_error(L, "Usage: marpaESLIFp must be a light user data)");
+    }
+    marpaESLIFp = lua_touserdata(L, 1);
+    break;
+  default:
+    return luaL_error(L, "Usage: marpaESLIFGrammar_newp(marpaESLIFp, string[, encoding])");
+  }
+
+  marpaESLIFGrammarp = marpaESLIFGrammar_newp(marpaESLIFp, &marpaESLIFGrammarOption);
+  if (marpaESLIFGrammarp == NULL) {
+    return luaL_error(L, "marpaESLIFGrammarp failure, %s", strerror(errno));
+  }
+
+  lua_pushlightuserdata(L, marpaESLIFGrammarp);
+  return 1;
 }
 
 /****************************************************************************/
