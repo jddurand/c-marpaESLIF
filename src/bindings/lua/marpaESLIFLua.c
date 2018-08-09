@@ -19,8 +19,8 @@ static void stackdump_g(lua_State* L);
 
 /* Logger proxy: context and callback function */
 typedef struct genericLoggerContext {
-  lua_State  *L; /* Lua state */
-  int         logger_r; /* Logger reference */
+  lua_State *L; /* Logger has its own state */
+  int logger_r; /* Logger reference */
 } genericLoggerContext_t;
 static void genericLoggerCallback(void *userDatavp, genericLoggerLevel_t logLeveli, const char *msgs);
 
@@ -90,18 +90,22 @@ static int marpaESLIFLua_marpaESLIF_newp(lua_State *L)
     loggerb = 0;
     break;
   case 1:
-    /* Verify that the logger can do all wanted methods */
-    if (lua_type(L, 1) != LUA_TTABLE) {
-      return luaL_error(L, "Usage: logger must be a table");
-    }
-    for (i = 0; i < sizeof(loggerFunctions)/sizeof(loggerFunctions[0]); i++) {
-      if (lua_getfield(L, -1, loggerFunctions[i]) != LUA_TFUNCTION) {
-        return luaL_error(L, "Usage: logger table must have a field named '%s' that is a function", loggerFunctions[i]);
-      } else {
-        lua_pop(L, 1);
+    if (lua_type(L, 1) == LUA_TNIL) {
+      loggerb = 0;
+    } else {
+      /* Verify that the logger can do all wanted methods */
+      if (lua_type(L, 1) != LUA_TTABLE) {
+        return luaL_error(L, "Usage: logger must be a table");
       }
+      for (i = 0; i < sizeof(loggerFunctions)/sizeof(loggerFunctions[0]); i++) {
+        if (lua_getfield(L, -1, loggerFunctions[i]) != LUA_TFUNCTION) {
+          return luaL_error(L, "Usage: logger table must have a field named '%s' that is a function", loggerFunctions[i]);
+        } else {
+          lua_pop(L, 1);
+        }
+      }
+      loggerb = 1;
     }
-    loggerb = 1;
     break;
   default:
     return luaL_error(L, "Usage: marpaESLIF_newp([logger]");
@@ -144,13 +148,17 @@ static int marpaESLIFLua_marpaESLIF_newp(lua_State *L)
       genericLoggerContextp = (genericLoggerContext_t *) malloc(sizeof(genericLoggerContext_t));
       if (genericLoggerContextp == NULL) {
         luaL_unref(L, LUA_REGISTRYINDEX, logger_r);
+        free(genericLoggerContextp);
         return luaL_error(L, "malloc failure, %s\n", strerror(errno));
       }
-      genericLoggerContextp->L        = L;
+      /* Create a dedicated lua state */
+      genericLoggerContextp->L = lua_newthread(L);                    /* stack:  loggerp,  MARPAESLIF_GLOBAL_TABLE_NAME, L */
+      lua_pop(L, 1);                                                  /* stack:  loggerp,  MARPAESLIF_GLOBAL_TABLE_NAME */
       genericLoggerContextp->logger_r = logger_r;
       genericLoggerp = genericLogger_newp(genericLoggerCallback, genericLoggerContextp, GENERICLOGGER_LOGLEVEL_TRACE);
       if (genericLoggerp == NULL) {
         luaL_unref(L, LUA_REGISTRYINDEX, logger_r);
+        free(genericLoggerContextp);
         return luaL_error(L, "genericLogger_newp failure, %s\n", strerror(errno));
       }
     } else {
@@ -162,6 +170,7 @@ static int marpaESLIFLua_marpaESLIF_newp(lua_State *L)
     marpaESLIFp = marpaESLIF_newp(&marpaESLIFOption);
     if (marpaESLIFp == NULL) {
       luaL_unref(L, LUA_REGISTRYINDEX, logger_r);
+      free(genericLoggerContextp);
       return luaL_error(L, "marpaESLIF_newp failure, %s\n", strerror(errno));
     }
 
@@ -179,8 +188,8 @@ static void genericLoggerCallback(void *userDatavp, genericLoggerLevel_t logLeve
 /****************************************************************************/
 {
   genericLoggerContext_t *genericLoggerContext = (genericLoggerContext_t *) userDatavp;
-  lua_State              *L                    = genericLoggerContext->L;
   int                     logger_r             = genericLoggerContext->logger_r;
+  lua_State              *L                    = genericLoggerContext->L;;
   const char             *funcs;
   int                     n;
 
@@ -218,12 +227,11 @@ static void genericLoggerCallback(void *userDatavp, genericLoggerLevel_t logLeve
   }
 
   if (funcs != NULL) {
-    n = lua_gettop(L);                           /* stack: ?? */
-    lua_rawgeti(L, LUA_REGISTRYINDEX, logger_r); /* stack: ??, logger */
-    lua_getfield(L, -1, funcs);                  /* stack: ??, logger, logger[funcs] */
-    lua_pushstring(L, msgs);                     /* stack: ??, logger, logger[funcs], msgs */
-    lua_call(L, 1, LUA_MULTRET);                 /* stack: ??, logger, logger[funcs], ?? */
-    lua_settop(L, n);                            /* stack: ?? */
+    lua_rawgeti(L, LUA_REGISTRYINDEX, logger_r); /* stack: logger */
+    lua_getfield(L, -1, funcs);                  /* stack: logger, logger[funcs] */
+    lua_pushstring(L, msgs);                     /* stack: logger, logger[funcs], msgs */
+    lua_call(L, 1, LUA_MULTRET);                 /* stack: logger, logger[funcs], ?? */
+    lua_settop(L, 0);                            /* stack: */
   }
 }
 
