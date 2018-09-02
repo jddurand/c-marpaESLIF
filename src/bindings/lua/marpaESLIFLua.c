@@ -137,8 +137,8 @@ static int marpaESLIFLua_marpaESLIF_newp(lua_State *L)
       lua_pop(L, 3);                                                  /* stack: [loggerp,] MARPAESLIF_GLOBAL_TABLE_NAME */
       break;
     }
-    lua_pop(L, 2);                                                    /* stack: [loggerp,] MARPAESLIF_GLOBAL_TABLE_NAME, marpaESLIFp */
-  }                                                                   /* stack: [loggerp,] MARPAESLIF_GLOBAL_TABLE_NAME */
+    lua_pop(L, 2);                                                    /* stack: [loggerp,] MARPAESLIF_GLOBAL_TABLE_NAME */
+  }
 
   if (marpaESLIFp == NULL) {
     if (loggerb) {
@@ -174,8 +174,8 @@ static int marpaESLIFLua_marpaESLIF_newp(lua_State *L)
     marpaESLIFOption.genericLoggerp = genericLoggerp;
     marpaESLIFp = marpaESLIF_newp(&marpaESLIFOption);
     if (marpaESLIFp == NULL) {
-      luaL_unref(L, LUA_REGISTRYINDEX, L_r);
-      luaL_unref(L, LUA_REGISTRYINDEX, logger_r);
+      luaL_unref(L, LUA_REGISTRYINDEX, L_r); /* No effect if it is LUA_NOREF */
+      luaL_unref(L, LUA_REGISTRYINDEX, logger_r); /* No effect if it is LUA_NOREF */
       free(genericLoggerContextp);
       return luaL_error(L, "marpaESLIF_newp failure, %s\n", strerror(errno));
     }
@@ -235,9 +235,11 @@ static void genericLoggerCallback(void *userDatavp, genericLoggerLevel_t logLeve
 
   if (funcs != NULL) {
     lua_rawgeti(L, LUA_REGISTRYINDEX, logger_r); /* stack: logger */
-    lua_getfield(L, -1, funcs);                  /* stack: logger, logger[funcs] */
-    lua_pushstring(L, msgs);                     /* stack: logger, logger[funcs], msgs */
-    lua_call(L, 1, LUA_MULTRET);                 /* stack: logger, logger[funcs], ?? */
+    if (lua_istable(L, -1)) {
+      lua_getfield(L, -1, funcs);                  /* stack: logger, logger[funcs] */
+      lua_pushstring(L, msgs);                     /* stack: logger, logger[funcs], msgs */
+      lua_call(L, 1, LUA_MULTRET);                 /* stack: logger, logger[funcs], ?? */
+    }
     lua_settop(L, 0);                            /* stack: */
   }
 }
@@ -253,27 +255,30 @@ static int marpaESLIFLua_marpaESLIF_freev(lua_State *L)
   genericLogger_t        *genericLoggerp        = NULL;
   marpaESLIFOption_t     *marpaESLIFOptionp;
 
-  if (lua_gettop(L) == 1) {
-    if (lua_islightuserdata(L, 1)) {                           /* stack: marpaESLIFp? */
-      marpaESLIFp = (marpaESLIF_t *) lua_touserdata(L, 1);
-      /* Is that in the registry ? */
-      if (lua_getglobal(L, MARPAESLIF_GLOBAL_TABLE_NAME) == LUA_TTABLE) { /* stack: marpaESLIFp, MARPAESLIF_GLOBAL_TABLE_NAME? */
-        lua_pushnil(L);                                                   /* stack: marpaESLIFp, MARPAESLIF_GLOBAL_TABLE_NAME, nil */
-        while (lua_next(L, -2) != 0) {                                    /* stack: marpaESLIFp, MARPAESLIF_GLOBAL_TABLE_NAME, marpaESLIFp, r */
-          if (lua_touserdata(L, -2) == marpaESLIFp) {
-            logger_r = lua_tointeger(L, -1);
-            /* Remove the entry from MARPAESLIF_GLOBAL_TABLE_NAME */
-            lua_pop(L, 2);                                                /* stack: marpaESLIFp, MARPAESLIF_GLOBAL_TABLE_NAME */
-            lua_pushnil(L);                                               /* stack: marpaESLIFp, MARPAESLIF_GLOBAL_TABLE_NAME, nil */
-            lua_rawsetp(L, -2, marpaESLIFp);                              /* stack: marpaESLIFp, MARPAESLIF_GLOBAL_TABLE_NAME */
-            break;
-          }
-          lua_pop(L, 1);                                                  /* stack: marpaESLIFp, MARPAESLIF_GLOBAL_TABLE_NAME, marpaESLIFp */
-        }                                                                 /* stack: marpaESLIFp, MARPAESLIF_GLOBAL_TABLE_NAME */
-      }
-      lua_pop(L, 1);                                                      /* stack: marpaESLIFp */
-    }
+  if (lua_gettop(L) != 1) {
+    return luaL_error(L, "Usage: marpaESLIF_freev(marpaESLIFp");
   }
+  if (! lua_islightuserdata(L, 1)) {
+    return luaL_error(L, "Usage: marpaESLIFp is not a light user data");
+  }
+
+  marpaESLIFp = (marpaESLIF_t *) lua_touserdata(L, 1);
+  /* Is that in the registry ? */
+  if (lua_getglobal(L, MARPAESLIF_GLOBAL_TABLE_NAME) == LUA_TTABLE) { /* stack: marpaESLIFp, MARPAESLIF_GLOBAL_TABLE_NAME? */
+    lua_pushnil(L);                                                   /* stack: marpaESLIFp, MARPAESLIF_GLOBAL_TABLE_NAME, nil */
+    while (lua_next(L, -2) != 0) {                                    /* stack: marpaESLIFp, MARPAESLIF_GLOBAL_TABLE_NAME, marpaESLIFp, r */
+      if (lua_touserdata(L, -2) == marpaESLIFp) {
+        logger_r = lua_tointeger(L, -1);
+        /* Remove the entry from MARPAESLIF_GLOBAL_TABLE_NAME */
+        lua_pop(L, 2);                                                /* stack: marpaESLIFp, MARPAESLIF_GLOBAL_TABLE_NAME */
+        lua_pushnil(L);                                               /* stack: marpaESLIFp, MARPAESLIF_GLOBAL_TABLE_NAME, nil */
+        lua_rawsetp(L, -2, marpaESLIFp);                              /* stack: marpaESLIFp, MARPAESLIF_GLOBAL_TABLE_NAME */
+        break;
+      }
+      lua_pop(L, 1);                                                  /* stack: marpaESLIFp, MARPAESLIF_GLOBAL_TABLE_NAME, marpaESLIFp */
+    }                                                                 /* stack: marpaESLIFp, MARPAESLIF_GLOBAL_TABLE_NAME */
+  }
+  lua_pop(L, 1);                                                      /* stack: marpaESLIFp */
 
   if (logger_r != LUA_NOREF) {
 
@@ -283,7 +288,7 @@ static int marpaESLIFLua_marpaESLIF_freev(lua_State *L)
       if (genericLoggerp != NULL) {
         genericLoggerContextp = (genericLoggerContext_t *) genericLogger_userDatavp_getp(genericLoggerp);
         luaL_unref(L, LUA_REGISTRYINDEX, genericLoggerContextp->L_r);
-        luaL_unref(L, LUA_REGISTRYINDEX, genericLoggerContextp->logger_r);
+        luaL_unref(L, LUA_REGISTRYINDEX, genericLoggerContextp->logger_r); /* By construction genericLoggerContextp->logger_r == logger_r */
       }
     }
 
