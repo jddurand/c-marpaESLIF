@@ -88,6 +88,10 @@ IF (${CMAKE_COMPILER_IS_GNUCC})
   #
   GET_PROPERTY(_test_path GLOBAL PROPERTY MYPACKAGE_TEST_PATH)
   GET_FILENAME_COMPONENT(_absolute_library_output_path ${LIBRARY_OUTPUT_PATH} ABSOLUTE)
+  GET_PROPERTY(_marpaESLIFJava_jar_path TARGET marpaESLIFJava_jar PROPERTY JAR_FILE)
+  GET_FILENAME_COMPONENT(_absolute_marpaESLIFJava_jar_path ${_marpaESLIFJava_jar_path} ABSOLUTE)
+  GET_PROPERTY(_marpaESLIFJavaTest_jar_path TARGET marpaESLIFJavaTest_jar PROPERTY JAR_FILE)
+  GET_FILENAME_COMPONENT(_absolute_marpaESLIFJavaTest_jar_path ${_marpaESLIFJavaTest_jar_path} ABSOLUTE)
     IF ("${CMAKE_HOST_SYSTEM}" MATCHES ".*Windows.*")
       SET (SEP "\\;")
     ELSE ()
@@ -95,7 +99,7 @@ IF (${CMAKE_COMPILER_IS_GNUCC})
     ENDIF ()
   ADD_TEST (
     NAME marpaESLIFJavaTest
-    COMMAND ${CMAKE_COMMAND} -E env "PATH=.${SEP}:${_test_path}" "${Java_JAVA_EXECUTABLE}" -Djava.library.path=. -jar marpaESLIFJavaTest.jar org.parser.marpa.AppParse
+    COMMAND ${CMAKE_COMMAND} -E env ${Java_JAVA_EXECUTABLE} "-Djava.library.path=." "-cp" "${_absolute_marpaESLIFJava_jar_path}${SEP}${_absolute_marpaESLIFJavaTest_jar_path}" "org.parser.marpa.AppParse"
     WORKING_DIRECTORY ${_absolute_library_output_path})
   ADD_DEPENDENCIES(check marpaESLIFJavaTest_jar)
 ENDIF ()
