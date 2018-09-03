@@ -63,17 +63,20 @@ logger = {
 }
 
 
-local marpaESLIF = setmetatable(
-   {
-      marpaESLIFp = marpaESLIFLua.marpaESLIF_newp(logger)
-   },
-   {
-      __gc = function(self) marpaESLIFLua.marpaESLIF_freev(self.marpaESLIFp) end
-   }
-)
-
 marpaESLIFp = marpaESLIFLua.marpaESLIF_newp(logger)
-marpaESLIFGrammarp = marpaESLIFLua.marpaESLIFGrammar_newp(marpaESLIFp, "X ::= 'x'")
-collectgarbage();
+collectgarbage()
+marpaESLIFp = marpaESLIFLua.marpaESLIF_newp()
+collectgarbage()
+marpaESLIFp = nil
+collectgarbage()
+marpaESLIFp = marpaESLIFLua.marpaESLIF_newp(logger)
+marpaESLIFp = nil
+collectgarbage()
+marpaESLIFp = marpaESLIFLua.marpaESLIF_newp()
+collectgarbage()
+-- marpaESLIFGrammarp = marpaESLIFLua.marpaESLIFGrammar_newp(marpaESLIFp, "X ::= 'x'")
 
+print(tableDump(__marpaESLIFGlobal))
+__marpaESLIFGlobal = {}
+collectgarbage()
 print(tableDump(__marpaESLIFGlobal))
