@@ -30,6 +30,7 @@ static int marpaESLIFLua_marpaESLIF_versions(lua_State *L);
 static int marpaESLIFLua_marpaESLIF_newp(lua_State *L);
 static int marpaESLIFLua_marpaESLIFMultiton_freev(lua_State *L);
 static int marpaESLIFLua_marpaESLIFGrammar_newp(lua_State *L);
+static int marpaESLIFLua_marpaESLIFGrammar_freev(lua_State *L);
 
 /****************************************************************************/
 int luaopen_marpaESLIFLua(lua_State* L)
@@ -350,9 +351,40 @@ static int marpaESLIFLua_marpaESLIFGrammar_newp(lua_State *L)
     return luaL_error(L, "marpaESLIFGrammarp failure, %s", strerror(errno));
   }
 
-  lua_pushlightuserdata(L, marpaESLIFGrammarp);
+  GENERICLOGGER_NOTICEF(NULL, "marpaESLIFLua_marpaESLIFGrammar_newp(L=%p) marpaESLIFGrammarp=%p", marpaESLIFGrammarp);
+
+  /* We return a table of weak values { "marpaESLIFGrammarp" => marpaESLIFGrammarp } with an associated __gc */
+  lua_newtable(L);                                                  /* stack: {} */
+  lua_pushlightuserdata(L, marpaESLIFGrammarp);                     /* stack: {}, marpaESLIFGrammarp */
+  lua_setfield(L, -2, "marpaESLIFGrammarp");                        /* stack: {"marpaESLIFGrammarp" = marpaESLIFGrammarp} */
+  lua_newtable(L);                                                  /* stack: {"marpaESLIFGrammarp" = marpaESLIFGrammarp}, {} */
+  lua_pushstring(L, "v");                                           /* stack: {"marpaESLIFGrammarp" = marpaESLIFGrammarp}, {}, "v" */
+  lua_setfield(L, -2, "__mode");                                    /* stack: {"marpaESLIFGrammarp" = marpaESLIFGrammarp}, {__mode = "v"} */
+  lua_pushcfunction(L, marpaESLIFLua_marpaESLIFGrammar_freev);      /* stack: {"marpaESLIFGrammarp" = marpaESLIFGrammarp}, {__mode = "v"}, marpaESLIFLua_marpaESLIFGrammar_freev */
+  lua_setfield(L, -2, "__gc");                                      /* stack: {"marpaESLIFGrammarp" = marpaESLIFGrammarp}, {__mode = "v"__gc = marpaESLIFLua_marpaESLIFGrammar_freev} */
+  lua_setmetatable(L, -2);                                          /* stack: {"marpaESLIFGrammarp" = marpaESLIFGrammarp} meta={__mode = "v", __gc = marpaESLIFLua_marpaESLIFGrammar_freev} */
+
   GENERICLOGGER_NOTICEF(NULL, "marpaESLIFLua_marpaESLIFGrammar_newp(L=%p) return 1", L);
   return 1;
+}
+
+/****************************************************************************/
+static int marpaESLIFLua_marpaESLIFGrammar_freev(lua_State *L)
+/****************************************************************************/
+{
+  marpaESLIFGrammar_t *marpaESLIFGrammarp;
+
+  GENERICLOGGER_NOTICEF(NULL, "marpaESLIFLua_marpaESLIFGrammar_freev(L=%p)", L);
+
+  lua_getfield(L, -1, "marpaESLIFGrammarp"); /* stack: {"marpaESLIFGrammarp" = marpaESLIFGrammarp}, marpaESLIFGrammarp */
+  marpaESLIFGrammarp = (marpaESLIFGrammar_t *) lua_touserdata(L, -1);
+
+  GENERICLOGGER_NOTICEF(NULL, "marpaESLIFLua_marpaESLIFGrammar_freev(L=%p) marpaESLIFGrammarp=%p", L, marpaESLIFGrammarp);
+  marpaESLIFGrammar_freev(marpaESLIFGrammarp);
+
+  lua_pop(L, 2); /* stack: {"marpaESLIFGrammarp" = marpaESLIFGrammarp} */
+
+  return 0;
 }
 
 /****************************************************************************/

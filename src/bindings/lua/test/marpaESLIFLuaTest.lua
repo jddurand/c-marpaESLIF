@@ -74,7 +74,8 @@ marpaESLIFp = nil
 collectgarbage()
 marpaESLIFp = marpaESLIFLua.marpaESLIF_newp()
 collectgarbage()
--- marpaESLIFGrammarp = marpaESLIFLua.marpaESLIFGrammar_newp(marpaESLIFp, "X ::= 'x'")
+marpaESLIFGrammarp = marpaESLIFLua.marpaESLIFGrammar_newp(marpaESLIFp, "X ::= 'x'")
+print(tableDump(marpaESLIFGrammarp))
 
 print(tableDump(__marpaESLIFGlobal))
 __marpaESLIFGlobal = {}
