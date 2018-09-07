@@ -24,7 +24,7 @@ typedef struct genericLoggerContext {
   int L_r;      /* State reference */
 } genericLoggerContext_t;
 static void marpaESLIFLua_genericLoggerCallback(void *userDatavp, genericLoggerLevel_t logLeveli, const char *msgs);
-
+static int marpaESLIFLua_create_refi(lua_State *L, short weakb, lua_CFunction gcp);
 static int marpaESLIFLua_install(lua_State *L);
 static int marpaESLIFLua_marpaESLIF_versions(lua_State *L);
 static int marpaESLIFLua_marpaESLIF_newp(lua_State *L);
@@ -41,6 +41,45 @@ int luaopen_marpaESLIFLua(lua_State* L)
 
   GENERICLOGGER_NOTICEF(NULL, "luaopen_marpaESLIFLua(L=%p) return 1", L);
   return 1;
+}
+
+/****************************************************************************/
+static int marpaESLIFLua_create_refi(lua_State *L, short weakb, lua_CFunction gcp)
+/****************************************************************************/
+/* C.f. https://stackoverflow.com/questions/19340662/lua-c-api-weak-references-with-lual-ref */
+/****************************************************************************/
+{
+  static const char *weak_refs   = "weak_ref";
+  static const char *strong_refs = "strong_ref";
+  int          rci;
+
+  lua_newtable(L);                      /* stack: value, new_table={} */
+
+  if (weakb) {
+    lua_newtable(L);                    /* stack: value, new_table={}, metatable={} */
+
+    lua_pushliteral(L, "__mode");       /* stack: value, new_table={}, metatable={}, key="__mode" */
+    lua_pushliteral(L, "v");            /* stack: value, new_table={}, metatable={}, key="__mode", value="v" */
+    lua_rawset(L, -3);                  /* stack: value, new_table={}, metatable={"__mode" = "v"} */
+
+    lua_setmetatable(L, -2);            /* stack: value, new_table={} with metatable={"__mode" = "v"} */
+    lua_pushstring(L, weak_refs);       /* stack: value, new_table={} with metatable={"__mode" = "v"}, "weak_refs" */
+    lua_pushvalue(L, -3);               /* stack: value, new_table={} with metatable={"__mode" = "v"}, "weak_refs", value */
+    lua_rawset(L, -3);                  /* stack: value, new_table={"weak_refs" = value} with metatable={"__mode" = "v"} */
+  } else {
+    lua_pushstring(L, strong_refs);     /* stack: value, new_table={}, "strong_ref" */
+    lua_pushvalue(L, -3);               /* stack: value, new_table={}, "strong_ref", value */
+    lua_rawset(L, -3);                  /* stack: value, new_table={"strong_ref" = value} */
+  }
+
+  if (gcp != NULL) {
+    lua_pushcfunction(L, gcp);          /* stack: value, new_table={ref_type = value}, gcp */
+    lua_setfield(L, -2, "__gc");        /* stack: value, new_table={ref_type = value, "__gc" = gcp} */
+  }
+
+  rci = luaL_ref(L, LUA_REGISTRYINDEX); /* stack: value */
+
+  return rci;                           /* returns a reference to new_table */
 }
 
 /****************************************************************************/
