@@ -42,6 +42,7 @@ static int  marpaESLIFLua_marpaESLIFGrammar_ruleIdsByLeveli(lua_State *L);
 static int  marpaESLIFLua_marpaESLIFGrammar_currentSymbolIdsi(lua_State *L);
 static int  marpaESLIFLua_marpaESLIFGrammar_symbolIdsByLeveli(lua_State *L);
 static int  marpaESLIFLua_marpaESLIFGrammar_currentPropertiesi(lua_State *L);
+static int  marpaESLIFLua_marpaESLIFGrammar_propertiesByLeveli(lua_State *L);
 
 #define MARPAESLIFLUA_STORE_STRING(L, t, key, stringp) do {             \
     if (stringp != NULL) {                                              \
@@ -174,6 +175,7 @@ static int marpaESLIFLua_installi(lua_State *L)
     {"marpaESLIFGrammar_currentSymbolIds", marpaESLIFLua_marpaESLIFGrammar_currentSymbolIdsi},
     {"marpaESLIFGrammar_symbolIdsByLevel", marpaESLIFLua_marpaESLIFGrammar_symbolIdsByLeveli},
     {"marpaESLIFGrammar_currentProperties", marpaESLIFLua_marpaESLIFGrammar_currentPropertiesi},
+    {"marpaESLIFGrammar_propertiesByLevel", marpaESLIFLua_marpaESLIFGrammar_propertiesByLeveli},
     {NULL, NULL}
   };
 
@@ -869,6 +871,51 @@ static int  marpaESLIFLua_marpaESLIFGrammar_currentPropertiesi(lua_State *L)
 
   if (! marpaESLIFGrammar_grammarproperty_currentb(marpaESLIFGrammarp, &grammarProperty)) {
     return luaL_error(L, "marpaESLIFGrammar_grammarproperty_currentb failure");
+  }
+
+  lua_createtable(L, 11, 0);                                                 /* stack; {} */
+  MARPAESLIFLUA_STORE_INTEGER      (L, 1, "level",               grammarProperty.leveli);
+  MARPAESLIFLUA_STORE_INTEGER      (L, 1, "maxlevel",            grammarProperty.maxLeveli);
+  MARPAESLIFLUA_STORE_STRING       (L, 1, "description",         grammarProperty.descp);
+  MARPAESLIFLUA_STORE_BOOLEAN      (L, 1, "latm",                grammarProperty.latmb);
+  MARPAESLIFLUA_STORE_ACTION       (L, 1, "defaultSymbolAction", grammarProperty.defaultSymbolActionp);
+  MARPAESLIFLUA_STORE_ACTION       (L, 1, "defaultRuleAction",   grammarProperty.defaultRuleActionp);
+  MARPAESLIFLUA_STORE_ACTION       (L, 1, "defaultFreeAction",   grammarProperty.defaultFreeActionp);
+  MARPAESLIFLUA_STORE_INTEGER      (L, 1, "startId",             grammarProperty.starti);
+  MARPAESLIFLUA_STORE_INTEGER      (L, 1, "discardId",           grammarProperty.discardi);
+  MARPAESLIFLUA_STORE_INTEGER_ARRAY(L, 1, "symbolIds",           grammarProperty.nsymboll, grammarProperty.symbolip);
+  MARPAESLIFLUA_STORE_INTEGER_ARRAY(L, 1, "ruleIds",             grammarProperty.nrulel, grammarProperty.ruleip);
+
+  GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 at %s:%d", funcs, L, FILENAMES, __LINE__);
+  return 1;
+}
+
+/****************************************************************************/
+static int  marpaESLIFLua_marpaESLIFGrammar_propertiesByLeveli(lua_State *L)
+/****************************************************************************/
+{
+  static const char           *funcs = "marpaESLIFLua_marpaESLIFGrammar_propertiesByLeveli";
+  marpaESLIFGrammar_t         *marpaESLIFGrammarp;
+  lua_Integer                  leveli;
+  marpaESLIFGrammarProperty_t  grammarProperty;
+
+  GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__);
+
+  if (lua_gettop(L) != 2) {
+    return luaL_error(L, "Usage: marpaESLIFGrammar_symbolIdsByLevel(marpaESLIFGrammarp, leveli)");
+  }
+  
+  if (lua_type(L, 1) != LUA_TTABLE) {
+    return luaL_error(L, "marpaESLIFGrammarp must be a table");
+  }
+
+  lua_getfield(L, 1, "marpaESLIFGrammarp");      /* stack: marpaESLIFGrammarTable, leveli, marpaESLIFGrammarp */
+  marpaESLIFGrammarp = lua_touserdata(L, -1);    /* stack: marpaESLIFGrammarTable, leveli, marpaESLIFGrammarp */
+  leveli = luaL_checkinteger(L, 2);
+  lua_pop(L, 3);                                 /* stack: */
+
+  if (! marpaESLIFGrammar_grammarproperty_by_levelb(marpaESLIFGrammarp, &grammarProperty, (int) leveli, NULL /* descp */)) {
+    return luaL_error(L, "marpaESLIFGrammar_grammarproperty_by_levelb failure");
   }
 
   lua_createtable(L, 11, 0);                                                 /* stack; {} */

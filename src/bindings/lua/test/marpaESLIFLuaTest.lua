@@ -83,15 +83,18 @@ local ngrammar = marpaESLIFLua.marpaESLIFGrammar_ngrammar(marpaESLIFGrammarp)
 print('... Number of grammars : '..ngrammar)
 print('... Current level      : '..marpaESLIFLua.marpaESLIFGrammar_currentLevel(marpaESLIFGrammarp))
 print('... Current description: '..marpaESLIFLua.marpaESLIFGrammar_currentDescription(marpaESLIFGrammarp))
-for leveli = 0,ngrammar-1 do
-   print('... Description level '..leveli..': '..marpaESLIFLua.marpaESLIFGrammar_descriptionByLevel(marpaESLIFGrammarp, leveli))
+for level = 0,ngrammar-1 do
+   print('... Description level '..level..': '..marpaESLIFLua.marpaESLIFGrammar_descriptionByLevel(marpaESLIFGrammarp, level))
 end
 print('... Current rule Ids   : '..tableDump(marpaESLIFLua.marpaESLIFGrammar_currentRuleIds(marpaESLIFGrammarp)))
-for leveli = 0,ngrammar-1 do
-   print('... Rule Ids level '..leveli..': '..tableDump(marpaESLIFLua.marpaESLIFGrammar_ruleIdsByLevel(marpaESLIFGrammarp, leveli)))
+for level = 0,ngrammar-1 do
+   print('... Rule Ids level '..level..': '..tableDump(marpaESLIFLua.marpaESLIFGrammar_ruleIdsByLevel(marpaESLIFGrammarp, level)))
 end
 print('... Current symbol Ids : '..tableDump(marpaESLIFLua.marpaESLIFGrammar_currentSymbolIds(marpaESLIFGrammarp)))
-for leveli = 0,ngrammar-1 do
-   print('... Symbol Ids level '..leveli..': '..tableDump(marpaESLIFLua.marpaESLIFGrammar_symbolIdsByLevel(marpaESLIFGrammarp, leveli)))
+for level = 0,ngrammar-1 do
+   print('... Symbol Ids level '..level..': '..tableDump(marpaESLIFLua.marpaESLIFGrammar_symbolIdsByLevel(marpaESLIFGrammarp, level)))
 end
 print('... Current properties: '..tableDump(marpaESLIFLua.marpaESLIFGrammar_currentProperties(marpaESLIFGrammarp)))
+for level = 0,ngrammar-1 do
+   print('... Properties level '..level..': '..tableDump(marpaESLIFLua.marpaESLIFGrammar_propertiesByLevel(marpaESLIFGrammarp, level)))
+end
