@@ -45,6 +45,8 @@ static int  marpaESLIFLua_marpaESLIFGrammar_currentPropertiesi(lua_State *L);
 static int  marpaESLIFLua_marpaESLIFGrammar_propertiesByLeveli(lua_State *L);
 static int  marpaESLIFLua_marpaESLIFGrammar_currentRulePropertiesi(lua_State *L);
 static int  marpaESLIFLua_marpaESLIFGrammar_rulePropertiesByLeveli(lua_State *L);
+static int  marpaESLIFLua_marpaESLIFGrammar_currentSymbolPropertiesi(lua_State *L);
+static int  marpaESLIFLua_marpaESLIFGrammar_symbolPropertiesByLeveli(lua_State *L);
 
 #define MARPAESLIFLUA_STORE_STRING(L, t, key, stringp) do {             \
     if (stringp != NULL) {                                              \
@@ -180,6 +182,8 @@ static int marpaESLIFLua_installi(lua_State *L)
     {"marpaESLIFGrammar_propertiesByLevel", marpaESLIFLua_marpaESLIFGrammar_propertiesByLeveli},
     {"marpaESLIFGrammar_currentRuleProperties", marpaESLIFLua_marpaESLIFGrammar_currentRulePropertiesi},
     {"marpaESLIFGrammar_rulePropertiesByLevel", marpaESLIFLua_marpaESLIFGrammar_rulePropertiesByLeveli},
+    {"marpaESLIFGrammar_currentSymbolProperties", marpaESLIFLua_marpaESLIFGrammar_currentSymbolPropertiesi},
+    {"marpaESLIFGrammar_symbolPropertiesByLevel", marpaESLIFLua_marpaESLIFGrammar_symbolPropertiesByLeveli},
     {NULL, NULL}
   };
 
@@ -967,7 +971,7 @@ static int  marpaESLIFLua_marpaESLIFGrammar_currentRulePropertiesi(lua_State *L)
     return luaL_error(L, "marpaESLIFGrammar_ruleproperty_currentb failure");
   }
 
-  lua_createtable(L, 11, 0);                                                 /* stack; {} */
+  lua_createtable(L, 18, 0);                                                 /* stack; {} */
   MARPAESLIFLUA_STORE_INTEGER      (L, 1, "id",                       ruleProperty.idi);
   MARPAESLIFLUA_STORE_STRING       (L, 1, "description",              ruleProperty.descp);
   MARPAESLIFLUA_STORE_ASCIISTRING  (L, 1, "show",                     ruleProperty.asciishows);
@@ -1021,7 +1025,7 @@ static int  marpaESLIFLua_marpaESLIFGrammar_rulePropertiesByLeveli(lua_State *L)
     return luaL_error(L, "marpaESLIFGrammar_ruleproperty_by_levelb failure");
   }
 
-  lua_createtable(L, 11, 0);                                                 /* stack; {} */
+  lua_createtable(L, 18, 0);                                                 /* stack; {} */
   MARPAESLIFLUA_STORE_INTEGER      (L, 1, "id",                       ruleProperty.idi);
   MARPAESLIFLUA_STORE_STRING       (L, 1, "description",              ruleProperty.descp);
   MARPAESLIFLUA_STORE_ASCIISTRING  (L, 1, "show",                     ruleProperty.asciishows);
@@ -1040,6 +1044,124 @@ static int  marpaESLIFLua_marpaESLIFGrammar_rulePropertiesByLeveli(lua_State *L)
   MARPAESLIFLUA_STORE_BOOLEAN      (L, 1, "internal",                 ruleProperty.internalb);
   MARPAESLIFLUA_STORE_INTEGER      (L, 1, "propertyBitSet",           ruleProperty.propertyBitSet);
   MARPAESLIFLUA_STORE_BOOLEAN      (L, 1, "hideseparator",            ruleProperty.hideseparatorb);
+
+  GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 at %s:%d", funcs, L, FILENAMES, __LINE__);
+  return 1;
+}
+
+/****************************************************************************/
+static int  marpaESLIFLua_marpaESLIFGrammar_currentSymbolPropertiesi(lua_State *L)
+/****************************************************************************/
+{
+  static const char           *funcs = "marpaESLIFLua_marpaESLIFGrammar_currentSymbolPropertiesi";
+  marpaESLIFGrammar_t         *marpaESLIFGrammarp;
+  lua_Integer                  symboli;
+  marpaESLIFSymbolProperty_t   symbolProperty;
+
+  GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__);
+
+  if (lua_gettop(L) != 2) {
+    return luaL_error(L, "Usage: marpaESLIFGrammar_currentSymbolProperties(marpaESLIFGrammarp, symboli)");
+  }
+  
+  if (lua_type(L, 1) != LUA_TTABLE) {
+    return luaL_error(L, "marpaESLIFGrammarp must be a table");
+  }
+
+  lua_getfield(L, 1, "marpaESLIFGrammarp");      /* stack: marpaESLIFGrammarTable, leveli, marpaESLIFGrammarp */
+  marpaESLIFGrammarp = lua_touserdata(L, -1);    /* stack: marpaESLIFGrammarTable, leveli, marpaESLIFGrammarp */
+  symboli = luaL_checkinteger(L, 2);
+  lua_pop(L, 3);                                 /* stack: */
+
+  if (! marpaESLIFGrammar_symbolproperty_currentb(marpaESLIFGrammarp, (int) symboli, &symbolProperty)) {
+    return luaL_error(L, "marpaESLIFGrammar_symbolproperty_currentb failure");
+  }
+
+  lua_createtable(L, 24, 0);                                                 /* stack; {} */
+  MARPAESLIFLUA_STORE_INTEGER      (L, 1, "type",                       symbolProperty.type);
+  MARPAESLIFLUA_STORE_BOOLEAN      (L, 1, "start",                      symbolProperty.startb);
+  MARPAESLIFLUA_STORE_BOOLEAN      (L, 1, "discard",                    symbolProperty.discardb);
+  MARPAESLIFLUA_STORE_BOOLEAN      (L, 1, "discardRhs",                 symbolProperty.discardRhsb);
+  MARPAESLIFLUA_STORE_BOOLEAN      (L, 1, "lhs",                        symbolProperty.lhsb);
+  MARPAESLIFLUA_STORE_BOOLEAN      (L, 1, "top",                        symbolProperty.topb);
+  MARPAESLIFLUA_STORE_INTEGER      (L, 1, "id",                         symbolProperty.idi);
+  MARPAESLIFLUA_STORE_STRING       (L, 1, "description",                symbolProperty.descp);
+  MARPAESLIFLUA_STORE_ASCIISTRING  (L, 1, "eventBefore",                symbolProperty.eventBefores);
+  MARPAESLIFLUA_STORE_BOOLEAN      (L, 1, "eventBeforeInitialState",    symbolProperty.eventBeforeb);
+  MARPAESLIFLUA_STORE_ASCIISTRING  (L, 1, "eventAfter",                 symbolProperty.eventAfters);
+  MARPAESLIFLUA_STORE_BOOLEAN      (L, 1, "eventAfterInitialState",     symbolProperty.eventAfterb);
+  MARPAESLIFLUA_STORE_ASCIISTRING  (L, 1, "eventPredicted",             symbolProperty.eventPredicteds);
+  MARPAESLIFLUA_STORE_BOOLEAN      (L, 1, "eventPredictedInitialState", symbolProperty.eventPredictedb);
+  MARPAESLIFLUA_STORE_ASCIISTRING  (L, 1, "eventNulled",                symbolProperty.eventNulleds);
+  MARPAESLIFLUA_STORE_BOOLEAN      (L, 1, "eventNulledInitialState",    symbolProperty.eventNulledb);
+  MARPAESLIFLUA_STORE_ASCIISTRING  (L, 1, "eventCompleted",             symbolProperty.eventCompleteds);
+  MARPAESLIFLUA_STORE_BOOLEAN      (L, 1, "eventCompletedInitialState", symbolProperty.eventCompletedb);
+  MARPAESLIFLUA_STORE_ASCIISTRING  (L, 1, "discardEvent",               symbolProperty.discardEvents);
+  MARPAESLIFLUA_STORE_BOOLEAN      (L, 1, "discardEventInitialState",   symbolProperty.discardEventb);
+  MARPAESLIFLUA_STORE_INTEGER      (L, 1, "lookupResolvedLeveli",       symbolProperty.lookupResolvedLeveli);
+  MARPAESLIFLUA_STORE_INTEGER      (L, 1, "priority",                   symbolProperty.priorityi);
+  MARPAESLIFLUA_STORE_ACTION       (L, 1, "nullableAction",             symbolProperty.nullableActionp);
+  MARPAESLIFLUA_STORE_INTEGER      (L, 1, "propertyBitSet",             symbolProperty.propertyBitSet);
+
+  GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 at %s:%d", funcs, L, FILENAMES, __LINE__);
+  return 1;
+}
+
+/****************************************************************************/
+static int  marpaESLIFLua_marpaESLIFGrammar_symbolPropertiesByLeveli(lua_State *L)
+/****************************************************************************/
+{
+  static const char           *funcs = "marpaESLIFLua_marpaESLIFGrammar_symbolPropertiesByLeveli";
+  marpaESLIFGrammar_t         *marpaESLIFGrammarp;
+  lua_Integer                  leveli;
+  lua_Integer                  symboli;
+  marpaESLIFSymbolProperty_t     symbolProperty;
+
+  GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__);
+
+  if (lua_gettop(L) != 3) {
+    return luaL_error(L, "Usage: marpaESLIFGrammar_symbolPropertiesByLevel(marpaESLIFGrammarp, leveli, symboli)");
+  }
+  
+  if (lua_type(L, 1) != LUA_TTABLE) {
+    return luaL_error(L, "marpaESLIFGrammarp must be a table");
+  }
+
+  lua_getfield(L, 1, "marpaESLIFGrammarp");      /* stack: marpaESLIFGrammarTable, leveli, symboli, marpaESLIFGrammarp */
+  marpaESLIFGrammarp = lua_touserdata(L, -1);    /* stack: marpaESLIFGrammarTable, leveli, symboli, marpaESLIFGrammarp */
+  leveli = luaL_checkinteger(L, 2);
+  symboli = luaL_checkinteger(L, 3);
+  lua_pop(L, 4);                                 /* stack: */
+
+  if (! marpaESLIFGrammar_symbolproperty_by_levelb(marpaESLIFGrammarp, (int) symboli, &symbolProperty, (int) leveli, NULL /* descp */)) {
+    return luaL_error(L, "marpaESLIFGrammar_symbolproperty_by_levelb failure");
+  }
+
+  lua_createtable(L, 24, 0);                                                 /* stack; {} */
+  MARPAESLIFLUA_STORE_INTEGER      (L, 1, "type",                       symbolProperty.type);
+  MARPAESLIFLUA_STORE_BOOLEAN      (L, 1, "start",                      symbolProperty.startb);
+  MARPAESLIFLUA_STORE_BOOLEAN      (L, 1, "discard",                    symbolProperty.discardb);
+  MARPAESLIFLUA_STORE_BOOLEAN      (L, 1, "discardRhs",                 symbolProperty.discardRhsb);
+  MARPAESLIFLUA_STORE_BOOLEAN      (L, 1, "lhs",                        symbolProperty.lhsb);
+  MARPAESLIFLUA_STORE_BOOLEAN      (L, 1, "top",                        symbolProperty.topb);
+  MARPAESLIFLUA_STORE_INTEGER      (L, 1, "id",                         symbolProperty.idi);
+  MARPAESLIFLUA_STORE_STRING       (L, 1, "description",                symbolProperty.descp);
+  MARPAESLIFLUA_STORE_ASCIISTRING  (L, 1, "eventBefore",                symbolProperty.eventBefores);
+  MARPAESLIFLUA_STORE_BOOLEAN      (L, 1, "eventBeforeInitialState",    symbolProperty.eventBeforeb);
+  MARPAESLIFLUA_STORE_ASCIISTRING  (L, 1, "eventAfter",                 symbolProperty.eventAfters);
+  MARPAESLIFLUA_STORE_BOOLEAN      (L, 1, "eventAfterInitialState",     symbolProperty.eventAfterb);
+  MARPAESLIFLUA_STORE_ASCIISTRING  (L, 1, "eventPredicted",             symbolProperty.eventPredicteds);
+  MARPAESLIFLUA_STORE_BOOLEAN      (L, 1, "eventPredictedInitialState", symbolProperty.eventPredictedb);
+  MARPAESLIFLUA_STORE_ASCIISTRING  (L, 1, "eventNulled",                symbolProperty.eventNulleds);
+  MARPAESLIFLUA_STORE_BOOLEAN      (L, 1, "eventNulledInitialState",    symbolProperty.eventNulledb);
+  MARPAESLIFLUA_STORE_ASCIISTRING  (L, 1, "eventCompleted",             symbolProperty.eventCompleteds);
+  MARPAESLIFLUA_STORE_BOOLEAN      (L, 1, "eventCompletedInitialState", symbolProperty.eventCompletedb);
+  MARPAESLIFLUA_STORE_ASCIISTRING  (L, 1, "discardEvent",               symbolProperty.discardEvents);
+  MARPAESLIFLUA_STORE_BOOLEAN      (L, 1, "discardEventInitialState",   symbolProperty.discardEventb);
+  MARPAESLIFLUA_STORE_INTEGER      (L, 1, "lookupResolvedLeveli",       symbolProperty.lookupResolvedLeveli);
+  MARPAESLIFLUA_STORE_INTEGER      (L, 1, "priority",                   symbolProperty.priorityi);
+  MARPAESLIFLUA_STORE_ACTION       (L, 1, "nullableAction",             symbolProperty.nullableActionp);
+  MARPAESLIFLUA_STORE_INTEGER      (L, 1, "propertyBitSet",             symbolProperty.propertyBitSet);
 
   GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 at %s:%d", funcs, L, FILENAMES, __LINE__);
   return 1;
