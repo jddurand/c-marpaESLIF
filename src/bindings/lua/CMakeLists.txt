@@ -18,7 +18,7 @@ INCLUDE_DIRECTORIES (${LUA_INCLUDE_DIR})
 ###########
 MYPACKAGELIBRARY(
   ${CMAKE_CURRENT_SOURCE_DIR}/include/config.h.in
-  ${INCLUDE_OUTPUT_PATH}/marpaESLIF/internal/config.h
+  ${INCLUDE_OUTPUT_PATH}/marpaESLIFLua/internal/config.h
   src/marpaESLIFLua.c)
 
 #
