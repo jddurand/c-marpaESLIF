@@ -72,6 +72,9 @@ FOREACH (_target marpaESLIF marpaESLIF_static)
   ADD_DEPENDENCIES           (${_target} pcre2)
   TARGET_INCLUDE_DIRECTORIES (${_target} PRIVATE ${PCRE2_INCLUDE_DIRS})
   TARGET_COMPILE_DEFINITIONS (${_target} PRIVATE -DMARPAESLIF_BUFSIZ=${MARPAESLIF_BUFSIZ} -DPCRE2_CODE_UNIT_WIDTH=8)
+  IF (_WIN32)
+    TARGET_COMPILE_DEFINITIONS (${_target} PRIVATE -DPCRE2_STATIC=1)
+  ENDIF ()
   TARGET_LINK_LIBRARIES      (${_target} PRIVATE ${PCRE2_LIBRARIES})
 ENDFOREACH ()
 
@@ -148,6 +151,7 @@ ELSE ()
   MESSAGE(STATUS "PERL Packaging cannot be done without perl -;")
 ENDIF ()
 
+# Lua bindings is in development phase
 INCLUDE(FindLua)
 IF (LUA_FOUND)
   ADD_SUBDIRECTORY(src/bindings/lua EXCLUDE_FROM_ALL)
