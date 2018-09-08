@@ -31,6 +31,7 @@ static int  marpaESLIFLua_marpaESLIF_newpi(lua_State *L);
 static int  marpaESLIFLua_marpaESLIFMultiton_freevi(lua_State *L);
 static int  marpaESLIFLua_marpaESLIFGrammar_newpi(lua_State *L);
 static int  marpaESLIFLua_marpaESLIFGrammar_freevi(lua_State *L);
+static int  marpaESLIFLua_marpaESLIFGrammar_ngrammaribi(lua_State *L);
 
 /****************************************************************************/
 int luaopen_marpaESLIFLua(lua_State* L)
@@ -90,6 +91,7 @@ static int marpaESLIFLua_installi(lua_State *L)
       {"marpaESLIF_versions", marpaESLIFLua_marpaESLIF_versionsi},
       {"marpaESLIF_newp", marpaESLIFLua_marpaESLIF_newpi},
       {"marpaESLIFGrammar_newp", marpaESLIFLua_marpaESLIFGrammar_newpi},
+      {"marpaESLIFGrammar_ngrammari", marpaESLIFLua_marpaESLIFGrammar_ngrammaribi},
       {NULL, NULL}
    };
 
@@ -147,11 +149,11 @@ static int marpaESLIFLua_marpaESLIF_newpi(lua_State *L)
     } else {
       /* Verify that the logger can do all wanted methods */
       if (lua_type(L, 1) != LUA_TTABLE) {
-        return luaL_error(L, "Usage: logger must be a table");
+        return luaL_error(L, "logger must be a table");
       }
       for (i = 0; i < sizeof(loggerFunctions)/sizeof(loggerFunctions[0]); i++) {
         if (lua_getfield(L, -1, loggerFunctions[i]) != LUA_TFUNCTION) {
-          return luaL_error(L, "Usage: logger table must have a field named '%s' that is a function", loggerFunctions[i]);
+          return luaL_error(L, "logger table must have a field named '%s' that is a function", loggerFunctions[i]);
         } else {
           lua_pop(L, 1);
         }
@@ -475,4 +477,34 @@ static void stackdump_g(lua_State* L)
     }
   }
   fflush(stdout);
+}
+
+/****************************************************************************/
+static int  marpaESLIFLua_marpaESLIFGrammar_ngrammaribi(lua_State *L)
+/****************************************************************************/
+{
+  marpaESLIFGrammar_t *marpaESLIFGrammarp;
+  int                  ngrammari;
+
+  GENERICLOGGER_NOTICEF(NULL, "marpaESLIFLua_marpaESLIFGrammar_newpi(L=%p)", L);
+
+  if (lua_gettop(L) != 1) {
+    return luaL_error(L, "Usage: marpaESLIFGrammar_newpi(marpaESLIFGrammarp)");
+  }
+  
+  if (lua_type(L, 1) != LUA_TTABLE) {
+    return luaL_error(L, "marpaESLIFGrammarp must be a table");
+  }
+
+  lua_getfield(L, -1, "marpaESLIFGrammarp");     /* stack: marpaESLIFGrammarTable, marpaESLIFGrammarp */
+  marpaESLIFGrammarp = lua_touserdata(L, -1);    /* stack: marpaESLIFGrammarTable, marpaESLIFGrammarp */
+  lua_pop(L, 2);                                 /* stack: */
+
+  if (! marpaESLIFGrammar_ngrammarib(marpaESLIFGrammarp, &ngrammari)) {
+    luaL_error(L, "marpaESLIFGrammar_ngrammarib failure");
+  }
+  lua_pushinteger(L, (lua_Integer) ngrammari);   /* stack: ngrammari */
+
+  GENERICLOGGER_NOTICEF(NULL, "marpaESLIFLua_marpaESLIFGrammar_newpi(L=%p) return 1", L);
+  return 1;
 }

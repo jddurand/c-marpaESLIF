@@ -76,8 +76,8 @@ marpaESLIFp = marpaESLIFLua.marpaESLIF_newp(logger)
 collectgarbage()
 marpaESLIFGrammarp = marpaESLIFLua.marpaESLIFGrammar_newp(marpaESLIFp, "X ::= 'x'")
 print(tableDump(marpaESLIFGrammarp))
-
-print(tableDump(__marpaESLIFGlobal))
-__marpaESLIFGlobal = {}
+print('Number of grammars: '..marpaESLIFLua.marpaESLIFGrammar_ngrammari(marpaESLIFGrammarp))
+print(tableDump(__marpaESLIFMultiton))
+__marpaESLIFMultiton = {}
 collectgarbage()
-print(tableDump(__marpaESLIFGlobal))
+print(tableDump(__marpaESLIFMultiton))
