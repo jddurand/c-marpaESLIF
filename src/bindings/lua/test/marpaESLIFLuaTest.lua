@@ -1,6 +1,20 @@
+local function pairsByKeys(t, f)
+   local a = {}
+   for n in pairs(t) do table.insert(a, n) end
+   table.sort(a, f)
+   local i = 0      -- iterator variable
+   local iter = function ()   -- iterator function
+      i = i + 1
+      if a[i] == nil then return nil
+      else return a[i], t[a[i]]
+      end
+   end
+   return iter
+end
+
 local function _table2str(lua_table, raw_table, table_map, n, fold, indent)
     indent = indent or 1
-    for k, v in pairs(lua_table) do
+    for k, v in pairsByKeys(lua_table) do
         if type(k) == 'string' then
             k = string.format('%q', k)
         else
@@ -62,23 +76,22 @@ logger = {
    ['emergency'] = function(msgs) print('LUA_EMERGENCY '..msgs) end
 }
 
-print('marpaESLIF version: '..marpaESLIFLua.marpaESLIF_versions())
-
-marpaESLIFp = marpaESLIFLua.marpaESLIF_newp(logger)
-collectgarbage()
-marpaESLIFp = marpaESLIFLua.marpaESLIF_newp()
-collectgarbage()
-marpaESLIFp = nil
-collectgarbage()
-marpaESLIFp = marpaESLIFLua.marpaESLIF_newp(logger)
-marpaESLIFp = nil
-collectgarbage()
-marpaESLIFp = marpaESLIFLua.marpaESLIF_newp(logger)
-collectgarbage()
-marpaESLIFGrammarp = marpaESLIFLua.marpaESLIFGrammar_newp(marpaESLIFp, "X ::= x\nx ~ 'x'")
-print(tableDump(marpaESLIFGrammarp))
-print('Number of grammars: '..marpaESLIFLua.marpaESLIFGrammar_ngrammari(marpaESLIFGrammarp))
-print(tableDump(__marpaESLIFMultiton))
-__marpaESLIFMultiton = {}
-collectgarbage()
-print(tableDump(__marpaESLIFMultiton))
+print('marpaESLIF version: '..marpaESLIFLua.marpaESLIF_version())
+local marpaESLIFp = marpaESLIFLua.marpaESLIF_new(logger)
+local marpaESLIFGrammarp = marpaESLIFLua.marpaESLIFGrammar_new(marpaESLIFp, "X ::= x\nx ~ 'x'")
+local ngrammar = marpaESLIFLua.marpaESLIFGrammar_ngrammar(marpaESLIFGrammarp)
+print('... Number of grammars : '..ngrammar)
+print('... Current level      : '..marpaESLIFLua.marpaESLIFGrammar_currentLevel(marpaESLIFGrammarp))
+print('... Current description: '..marpaESLIFLua.marpaESLIFGrammar_currentDescription(marpaESLIFGrammarp))
+for leveli = 0,ngrammar-1 do
+   print('... Description level '..leveli..': '..marpaESLIFLua.marpaESLIFGrammar_descriptionByLevel(marpaESLIFGrammarp, leveli))
+end
+print('... Current rule Ids   : '..tableDump(marpaESLIFLua.marpaESLIFGrammar_currentRuleIds(marpaESLIFGrammarp)))
+for leveli = 0,ngrammar-1 do
+   print('... Rule Ids level '..leveli..': '..tableDump(marpaESLIFLua.marpaESLIFGrammar_ruleIdsByLevel(marpaESLIFGrammarp, leveli)))
+end
+print('... Current symbol Ids : '..tableDump(marpaESLIFLua.marpaESLIFGrammar_currentSymbolIds(marpaESLIFGrammarp)))
+for leveli = 0,ngrammar-1 do
+   print('... Symbol Ids level '..leveli..': '..tableDump(marpaESLIFLua.marpaESLIFGrammar_symbolIdsByLevel(marpaESLIFGrammarp, leveli)))
+end
+print('... Current properties: '..tableDump(marpaESLIFLua.marpaESLIFGrammar_currentProperties(marpaESLIFGrammarp)))
