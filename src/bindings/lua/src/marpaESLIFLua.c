@@ -260,7 +260,6 @@ static void marpaESLIFLua_genericLoggerCallbackv(void *userDatavp, genericLogger
   const char             *funcs;
   int                     n;
 
-  GENERICLOGGER_NOTICEF(NULL, "marpaESLIFLua_genericLoggerCallbackv(userDatavp=%p, logLeveli=%d, msgs=%s)", userDatavp, logLeveli, msgs);
   switch (logLeveli) {
   case GENERICLOGGER_LOGLEVEL_TRACE:
     funcs = "trace";
@@ -303,7 +302,6 @@ static void marpaESLIFLua_genericLoggerCallbackv(void *userDatavp, genericLogger
     }
     lua_settop(L, 0);                            /* stack: */
   }
-  GENERICLOGGER_NOTICEF(NULL, "marpaESLIFLua_genericLoggerCallbackv(userDatavp=%p, logLeveli=%d, msgs=%s) return", userDatavp, logLeveli, msgs);
 }
 
 /****************************************************************************/
