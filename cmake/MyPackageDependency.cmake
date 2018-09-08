@@ -63,6 +63,14 @@ MACRO (MYPACKAGEDEPENDENCY packageDepend packageDependSourceDir)
     MESSAGE (STATUS "[${PROJECT_NAME}-DEPEND-DEBUG] ${packageDepend} dependency scopes are: ALL=${_ALL} TEST=${_TESTS} LIBS=${_LIBS} EXES=${_EXES}")
   ENDIF ()
   #
+  # Set dependency scope: PUBLIC or PRIVATE depending on _STATIC
+  #
+  IF (_STATIC)
+    SET (_package_dependency_scope "PRIVATE")
+  ELSE ()
+    SET (_package_dependency_scope "PUBLIC")
+  ENDIF ()
+  #
   # Check if inclusion was already done - via us or another mechanism... guessed with TARGET check
   #
   GET_PROPERTY(_packageDepend_set GLOBAL PROPERTY MYPACKAGE_DEPENDENCY_${packageDepend} SET)
@@ -162,7 +170,7 @@ MACRO (MYPACKAGEDEPENDENCY packageDepend packageDependSourceDir)
         IF (MYPACKAGE_DEBUG)
           MESSAGE (STATUS "[${PROJECT_NAME}-DEPEND-DEBUG] Adding -D${packageDepend}_STATIC compile definition to target ${_target}")
         ENDIF ()
-        TARGET_COMPILE_DEFINITIONS(${_target} PUBLIC -D${packageDepend}_STATIC)
+        TARGET_COMPILE_DEFINITIONS(${_target} ${_package_dependency_scope} -D${packageDepend}_STATIC)
         IF (MYPACKAGE_DEBUG)
           MESSAGE (STATUS "[${PROJECT_NAME}-DEPEND-DEBUG] ${packageDepend} dependency becomes ${packageDepend}_static for target ${_target}")
         ENDIF ()
@@ -178,7 +186,7 @@ MACRO (MYPACKAGEDEPENDENCY packageDepend packageDependSourceDir)
           IF (MYPACKAGE_DEBUG)
             MESSAGE (STATUS "[${PROJECT_NAME}-DEPEND-DEBUG] Adding target ${realPackageDepend} dependency to target ${_target}")
           ENDIF ()
-          TARGET_LINK_LIBRARIES(${_target} PUBLIC ${realPackageDepend})
+          TARGET_LINK_LIBRARIES(${_target} ${_package_dependency_scope} ${realPackageDepend})
           IF (_TESTS)
             #
             # A bit painful but the target locations are not known at this time.
@@ -229,7 +237,7 @@ MACRO (MYPACKAGEDEPENDENCY packageDepend packageDependSourceDir)
             IF (MYPACKAGE_DEBUG)
               MESSAGE (STATUS "[${PROJECT_NAME}-DEPEND-DEBUG] Adding ${_include_directory} directory to ${_target}'s include directories")
             ENDIF ()
-            TARGET_INCLUDE_DIRECTORIES(${_target} PUBLIC ${_include_directory})
+            TARGET_INCLUDE_DIRECTORIES(${_target} ${_package_dependency_scope} ${_include_directory})
             #
             # Add eventually this to our project's default include directories
             #
@@ -252,7 +260,7 @@ MACRO (MYPACKAGEDEPENDENCY packageDepend packageDependSourceDir)
           IF (MYPACKAGE_DEBUG)
             MESSAGE (STATUS "[${PROJECT_NAME}-DEPEND-DEBUG] Adding ${_include_directory} directory to ${_target}'s include directories")
           ENDIF ()
-          TARGET_INCLUDE_DIRECTORIES(${_target} PUBLIC ${_include_directory})
+          TARGET_INCLUDE_DIRECTORIES(${_target} ${_package_dependency_scope} ${_include_directory})
         ENDFOREACH ()
         #
         # Library dependency
@@ -262,7 +270,7 @@ MACRO (MYPACKAGEDEPENDENCY packageDepend packageDependSourceDir)
           IF (MYPACKAGE_DEBUG)
             MESSAGE (STATUS "[${PROJECT_NAME}-DEPEND-DEBUG] Adding ${_library} library to ${_target}")
           ENDIF ()
-          TARGET_LINK_LIBRARIES(${_target} PUBLIC ${_library})
+          TARGET_LINK_LIBRARIES(${_target} ${_package_dependency_scope} ${_library})
         ENDFOREACH ()
         #
         # Compile definitions
@@ -272,7 +280,7 @@ MACRO (MYPACKAGEDEPENDENCY packageDepend packageDependSourceDir)
           IF (MYPACKAGE_DEBUG)
             MESSAGE (STATUS "[${PROJECT_NAME}-DEPEND-DEBUG] Adding ${_flag} compile flag to ${_target}")
           ENDIF ()
-          TARGET_COMPILE_DEFINITIONS(${_target} PUBLIC ${_library})
+          TARGET_COMPILE_DEFINITIONS(${_target} ${_package_dependency_scope} ${_library})
         ENDFOREACH ()
         #
         # Link flags
