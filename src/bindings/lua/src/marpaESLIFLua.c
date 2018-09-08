@@ -43,6 +43,8 @@ static int  marpaESLIFLua_marpaESLIFGrammar_currentSymbolIdsi(lua_State *L);
 static int  marpaESLIFLua_marpaESLIFGrammar_symbolIdsByLeveli(lua_State *L);
 static int  marpaESLIFLua_marpaESLIFGrammar_currentPropertiesi(lua_State *L);
 static int  marpaESLIFLua_marpaESLIFGrammar_propertiesByLeveli(lua_State *L);
+static int  marpaESLIFLua_marpaESLIFGrammar_currentRulePropertiesi(lua_State *L);
+static int  marpaESLIFLua_marpaESLIFGrammar_rulePropertiesByLeveli(lua_State *L);
 
 #define MARPAESLIFLUA_STORE_STRING(L, t, key, stringp) do {             \
     if (stringp != NULL) {                                              \
@@ -176,6 +178,8 @@ static int marpaESLIFLua_installi(lua_State *L)
     {"marpaESLIFGrammar_symbolIdsByLevel", marpaESLIFLua_marpaESLIFGrammar_symbolIdsByLeveli},
     {"marpaESLIFGrammar_currentProperties", marpaESLIFLua_marpaESLIFGrammar_currentPropertiesi},
     {"marpaESLIFGrammar_propertiesByLevel", marpaESLIFLua_marpaESLIFGrammar_propertiesByLeveli},
+    {"marpaESLIFGrammar_currentRuleProperties", marpaESLIFLua_marpaESLIFGrammar_currentRulePropertiesi},
+    {"marpaESLIFGrammar_rulePropertiesByLevel", marpaESLIFLua_marpaESLIFGrammar_rulePropertiesByLeveli},
     {NULL, NULL}
   };
 
@@ -935,3 +939,108 @@ static int  marpaESLIFLua_marpaESLIFGrammar_propertiesByLeveli(lua_State *L)
   return 1;
 }
 
+/****************************************************************************/
+static int  marpaESLIFLua_marpaESLIFGrammar_currentRulePropertiesi(lua_State *L)
+/****************************************************************************/
+{
+  static const char           *funcs = "marpaESLIFLua_marpaESLIFGrammar_currentRulePropertiesi";
+  marpaESLIFGrammar_t         *marpaESLIFGrammarp;
+  lua_Integer                  rulei;
+  marpaESLIFRuleProperty_t     ruleProperty;
+
+  GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__);
+
+  if (lua_gettop(L) != 2) {
+    return luaL_error(L, "Usage: marpaESLIFGrammar_currentRuleProperties(marpaESLIFGrammarp, rulei)");
+  }
+  
+  if (lua_type(L, 1) != LUA_TTABLE) {
+    return luaL_error(L, "marpaESLIFGrammarp must be a table");
+  }
+
+  lua_getfield(L, 1, "marpaESLIFGrammarp");      /* stack: marpaESLIFGrammarTable, leveli, marpaESLIFGrammarp */
+  marpaESLIFGrammarp = lua_touserdata(L, -1);    /* stack: marpaESLIFGrammarTable, leveli, marpaESLIFGrammarp */
+  rulei = luaL_checkinteger(L, 2);
+  lua_pop(L, 3);                                 /* stack: */
+
+  if (! marpaESLIFGrammar_ruleproperty_currentb(marpaESLIFGrammarp, (int) rulei, &ruleProperty)) {
+    return luaL_error(L, "marpaESLIFGrammar_ruleproperty_currentb failure");
+  }
+
+  lua_createtable(L, 11, 0);                                                 /* stack; {} */
+  MARPAESLIFLUA_STORE_INTEGER      (L, 1, "id",                       ruleProperty.idi);
+  MARPAESLIFLUA_STORE_STRING       (L, 1, "description",              ruleProperty.descp);
+  MARPAESLIFLUA_STORE_ASCIISTRING  (L, 1, "show",                     ruleProperty.asciishows);
+  MARPAESLIFLUA_STORE_INTEGER      (L, 1, "lhsId",                    ruleProperty.lhsi);
+  MARPAESLIFLUA_STORE_INTEGER      (L, 1, "separatorId",              ruleProperty.separatori);
+  MARPAESLIFLUA_STORE_INTEGER_ARRAY(L, 1, "rhsIds",                   ruleProperty.nrhsl, ruleProperty.rhsip);
+  MARPAESLIFLUA_STORE_INTEGER      (L, 1, "exceptionId",              ruleProperty.exceptioni);
+  MARPAESLIFLUA_STORE_ACTION       (L, 1, "action",                   ruleProperty.actionp);
+  MARPAESLIFLUA_STORE_ASCIISTRING  (L, 1, "discardEvent",             ruleProperty.discardEvents);
+  MARPAESLIFLUA_STORE_BOOLEAN      (L, 1, "discardEventInitialState", ruleProperty.discardEventb);
+  MARPAESLIFLUA_STORE_INTEGER      (L, 1, "rank",                     ruleProperty.ranki);
+  MARPAESLIFLUA_STORE_BOOLEAN      (L, 1, "nullRanksHigh",            ruleProperty.nullRanksHighb);
+  MARPAESLIFLUA_STORE_BOOLEAN      (L, 1, "sequence",                 ruleProperty.sequenceb);
+  MARPAESLIFLUA_STORE_BOOLEAN      (L, 1, "proper",                   ruleProperty.properb);
+  MARPAESLIFLUA_STORE_INTEGER      (L, 1, "minimum",                  ruleProperty.minimumi);
+  MARPAESLIFLUA_STORE_BOOLEAN      (L, 1, "internal",                 ruleProperty.internalb);
+  MARPAESLIFLUA_STORE_INTEGER      (L, 1, "propertyBitSet",           ruleProperty.propertyBitSet);
+  MARPAESLIFLUA_STORE_BOOLEAN      (L, 1, "hideseparator",            ruleProperty.hideseparatorb);
+
+  GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 at %s:%d", funcs, L, FILENAMES, __LINE__);
+  return 1;
+}
+
+/****************************************************************************/
+static int  marpaESLIFLua_marpaESLIFGrammar_rulePropertiesByLeveli(lua_State *L)
+/****************************************************************************/
+{
+  static const char           *funcs = "marpaESLIFLua_marpaESLIFGrammar_rulePropertiesByLeveli";
+  marpaESLIFGrammar_t         *marpaESLIFGrammarp;
+  lua_Integer                  leveli;
+  lua_Integer                  rulei;
+  marpaESLIFRuleProperty_t     ruleProperty;
+
+  GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__);
+
+  if (lua_gettop(L) != 3) {
+    return luaL_error(L, "Usage: marpaESLIFGrammar_rulePropertiesByLevel(marpaESLIFGrammarp, leveli, rulei)");
+  }
+  
+  if (lua_type(L, 1) != LUA_TTABLE) {
+    return luaL_error(L, "marpaESLIFGrammarp must be a table");
+  }
+
+  lua_getfield(L, 1, "marpaESLIFGrammarp");      /* stack: marpaESLIFGrammarTable, leveli, rulei, marpaESLIFGrammarp */
+  marpaESLIFGrammarp = lua_touserdata(L, -1);    /* stack: marpaESLIFGrammarTable, leveli, rulei, marpaESLIFGrammarp */
+  leveli = luaL_checkinteger(L, 2);
+  rulei = luaL_checkinteger(L, 3);
+  lua_pop(L, 4);                                 /* stack: */
+
+  if (! marpaESLIFGrammar_ruleproperty_by_levelb(marpaESLIFGrammarp, (int) rulei, &ruleProperty, (int) leveli, NULL /* descp */)) {
+    return luaL_error(L, "marpaESLIFGrammar_ruleproperty_by_levelb failure");
+  }
+
+  lua_createtable(L, 11, 0);                                                 /* stack; {} */
+  MARPAESLIFLUA_STORE_INTEGER      (L, 1, "id",                       ruleProperty.idi);
+  MARPAESLIFLUA_STORE_STRING       (L, 1, "description",              ruleProperty.descp);
+  MARPAESLIFLUA_STORE_ASCIISTRING  (L, 1, "show",                     ruleProperty.asciishows);
+  MARPAESLIFLUA_STORE_INTEGER      (L, 1, "lhsId",                    ruleProperty.lhsi);
+  MARPAESLIFLUA_STORE_INTEGER      (L, 1, "separatorId",              ruleProperty.separatori);
+  MARPAESLIFLUA_STORE_INTEGER_ARRAY(L, 1, "rhsIds",                   ruleProperty.nrhsl, ruleProperty.rhsip);
+  MARPAESLIFLUA_STORE_INTEGER      (L, 1, "exceptionId",              ruleProperty.exceptioni);
+  MARPAESLIFLUA_STORE_ACTION       (L, 1, "action",                   ruleProperty.actionp);
+  MARPAESLIFLUA_STORE_ASCIISTRING  (L, 1, "discardEvent",             ruleProperty.discardEvents);
+  MARPAESLIFLUA_STORE_BOOLEAN      (L, 1, "discardEventInitialState", ruleProperty.discardEventb);
+  MARPAESLIFLUA_STORE_INTEGER      (L, 1, "rank",                     ruleProperty.ranki);
+  MARPAESLIFLUA_STORE_BOOLEAN      (L, 1, "nullRanksHigh",            ruleProperty.nullRanksHighb);
+  MARPAESLIFLUA_STORE_BOOLEAN      (L, 1, "sequence",                 ruleProperty.sequenceb);
+  MARPAESLIFLUA_STORE_BOOLEAN      (L, 1, "proper",                   ruleProperty.properb);
+  MARPAESLIFLUA_STORE_INTEGER      (L, 1, "minimum",                  ruleProperty.minimumi);
+  MARPAESLIFLUA_STORE_BOOLEAN      (L, 1, "internal",                 ruleProperty.internalb);
+  MARPAESLIFLUA_STORE_INTEGER      (L, 1, "propertyBitSet",           ruleProperty.propertyBitSet);
+  MARPAESLIFLUA_STORE_BOOLEAN      (L, 1, "hideseparator",            ruleProperty.hideseparatorb);
+
+  GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 at %s:%d", funcs, L, FILENAMES, __LINE__);
+  return 1;
+}

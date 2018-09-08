@@ -78,7 +78,7 @@ logger = {
 
 print('marpaESLIF version: '..marpaESLIFLua.marpaESLIF_version())
 local marpaESLIFp = marpaESLIFLua.marpaESLIF_new(logger)
-local marpaESLIFGrammarp = marpaESLIFLua.marpaESLIFGrammar_new(marpaESLIFp, "X ::= x\nx ~ 'x'")
+local marpaESLIFGrammarp = marpaESLIFLua.marpaESLIFGrammar_new(marpaESLIFp, "X ::= x\nx ~ 'lexeme'")
 local ngrammar = marpaESLIFLua.marpaESLIFGrammar_ngrammar(marpaESLIFGrammarp)
 print('... Number of grammars : '..ngrammar)
 print('... Current level      : '..marpaESLIFLua.marpaESLIFGrammar_currentLevel(marpaESLIFGrammarp))
@@ -86,7 +86,8 @@ print('... Current description: '..marpaESLIFLua.marpaESLIFGrammar_currentDescri
 for level = 0,ngrammar-1 do
    print('... Description level '..level..': '..marpaESLIFLua.marpaESLIFGrammar_descriptionByLevel(marpaESLIFGrammarp, level))
 end
-print('... Current rule Ids   : '..tableDump(marpaESLIFLua.marpaESLIFGrammar_currentRuleIds(marpaESLIFGrammarp)))
+local ruleIds = marpaESLIFLua.marpaESLIFGrammar_currentRuleIds(marpaESLIFGrammarp)
+print('... Current rule Ids   : '..tableDump(ruleIds))
 for level = 0,ngrammar-1 do
    print('... Rule Ids level '..level..': '..tableDump(marpaESLIFLua.marpaESLIFGrammar_ruleIdsByLevel(marpaESLIFGrammarp, level)))
 end
@@ -98,3 +99,13 @@ print('... Current properties: '..tableDump(marpaESLIFLua.marpaESLIFGrammar_curr
 for level = 0,ngrammar-1 do
    print('... Properties level '..level..': '..tableDump(marpaESLIFLua.marpaESLIFGrammar_propertiesByLevel(marpaESLIFGrammarp, level)))
 end
+for k, ruleId in pairsByKeys(ruleIds) do
+   print('... Current rule No '..ruleId..': '..tableDump(marpaESLIFLua.marpaESLIFGrammar_currentRuleProperties(marpaESLIFGrammarp, ruleId)))
+end
+for level = 0,ngrammar-1 do
+   local ruleIdsByLevel = marpaESLIFLua.marpaESLIFGrammar_ruleIdsByLevel(marpaESLIFGrammarp, level)
+   for k, ruleId in pairsByKeys(ruleIdsByLevel) do
+      print('... Level '..level..' rule No '..ruleId..': '..tableDump(marpaESLIFLua.marpaESLIFGrammar_rulePropertiesByLevel(marpaESLIFGrammarp, level, ruleId)))
+   end
+end
+   
