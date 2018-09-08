@@ -52,14 +52,14 @@ end
 
 local marpaESLIFLua = require 'marpaESLIFLua'
 logger = {
-   ['trace']     = function(msgs) print('TRACE '..msgs) end,
-   ['debug']     = function(msgs) print('DEBUG '..msgs) end,
-   ['info']      = function(msgs) print('INFO '..msgs) end,
-   ['notice']    = function(msgs) print('NOTICE '..msgs) end,
-   ['warning']   = function(msgs) print('WARNING '..msgs) end,
-   ['error']     = function(msgs) print('ERROR '..msgs) end,
-   ['critical']  = function(msgs) print('CRITICAL '..msgs) end,
-   ['emergency'] = function(msgs) print('EMERGENCY '..msgs) end
+   ['trace']     = function(msgs) print('LUA_TRACE '..msgs) end,
+   ['debug']     = function(msgs) print('LUA_DEBUG '..msgs) end,
+   ['info']      = function(msgs) print('LUA_INFO '..msgs) end,
+   ['notice']    = function(msgs) print('LUA_NOTICE '..msgs) end,
+   ['warning']   = function(msgs) print('LUA_WARNING '..msgs) end,
+   ['error']     = function(msgs) print('LUA_ERROR '..msgs) end,
+   ['critical']  = function(msgs) print('LUA_CRITICAL '..msgs) end,
+   ['emergency'] = function(msgs) print('LUA_EMERGENCY '..msgs) end
 }
 
 
@@ -72,7 +72,7 @@ collectgarbage()
 marpaESLIFp = marpaESLIFLua.marpaESLIF_newp(logger)
 marpaESLIFp = nil
 collectgarbage()
-marpaESLIFp = marpaESLIFLua.marpaESLIF_newp()
+marpaESLIFp = marpaESLIFLua.marpaESLIF_newp(logger)
 collectgarbage()
 marpaESLIFGrammarp = marpaESLIFLua.marpaESLIFGrammar_newp(marpaESLIFp, "X ::= 'x'")
 print(tableDump(marpaESLIFGrammarp))
