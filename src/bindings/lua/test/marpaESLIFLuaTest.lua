@@ -62,6 +62,7 @@ logger = {
    ['emergency'] = function(msgs) print('LUA_EMERGENCY '..msgs) end
 }
 
+print('marpaESLIF version: '..marpaESLIFLua.marpaESLIF_versions())
 
 marpaESLIFp = marpaESLIFLua.marpaESLIF_newp(logger)
 collectgarbage()
@@ -74,7 +75,7 @@ marpaESLIFp = nil
 collectgarbage()
 marpaESLIFp = marpaESLIFLua.marpaESLIF_newp(logger)
 collectgarbage()
-marpaESLIFGrammarp = marpaESLIFLua.marpaESLIFGrammar_newp(marpaESLIFp, "X ::= 'x'")
+marpaESLIFGrammarp = marpaESLIFLua.marpaESLIFGrammar_newp(marpaESLIFp, "X ::= x\nx ~ 'x'")
 print(tableDump(marpaESLIFGrammarp))
 print('Number of grammars: '..marpaESLIFLua.marpaESLIFGrammar_ngrammari(marpaESLIFGrammarp))
 print(tableDump(__marpaESLIFMultiton))
