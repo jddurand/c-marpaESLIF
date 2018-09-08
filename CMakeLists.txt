@@ -29,9 +29,9 @@ MYPACKAGELIBRARY(
 # Because of Marpa, the cmake framework does not know about it
 #
 FOREACH (_target ${PROJECT_NAME} ${PROJECT_NAME}_static)
-  TARGET_INCLUDE_DIRECTORIES(${_target} PUBLIC ${MARPA__R2_DIR}/cpan/engine/read_only)
+  TARGET_INCLUDE_DIRECTORIES(${_target} PRIVATE ${MARPA__R2_DIR}/cpan/engine/read_only)
   FOREACH (_type MAJOR MICRO MINOR)
-    TARGET_COMPILE_DEFINITIONS(${_target} PUBLIC -DMARPA_LIB_${_type}_VERSION=MARPA_${_type}_VERSION)
+    TARGET_COMPILE_DEFINITIONS(${_target} PRIVATE -DMARPA_LIB_${_type}_VERSION=MARPA_${_type}_VERSION)
   ENDFOREACH ()
 ENDFOREACH ()
 
@@ -46,10 +46,10 @@ MYPACKAGETESTEXECUTABLE(marpaWrapperAsfAmbiguousTester test/marpaWrapperAsfAmbig
 ################
 # Dependencies #
 ################
-MYPACKAGEDEPENDENCY (genericStack       "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/genericStack" LIBS TESTS)
-MYPACKAGEDEPENDENCY (genericLogger      "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/genericLogger" LIBS TESTS)
-MYPACKAGEDEPENDENCY (genericHash        "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/genericHash" LIBS)
-MYPACKAGEDEPENDENCY (genericSparseArray "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/genericSparseArray" LIBS)
+MYPACKAGEDEPENDENCY (genericStack       "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/genericStack" LIBS)              # present in public API
+MYPACKAGEDEPENDENCY (genericLogger      "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/genericLogger" LIBS)             # present in public API
+MYPACKAGEDEPENDENCY (genericHash        "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/genericHash" LIBS STATIC)        # not present in public API
+MYPACKAGEDEPENDENCY (genericSparseArray "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/genericSparseArray" LIBS STATIC) # not present in public API
 
 #########
 # Tests #
