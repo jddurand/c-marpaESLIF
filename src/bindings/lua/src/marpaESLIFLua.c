@@ -47,6 +47,29 @@ static int  marpaESLIFLua_marpaESLIFGrammar_currentRulePropertiesi(lua_State *L)
 static int  marpaESLIFLua_marpaESLIFGrammar_rulePropertiesByLeveli(lua_State *L);
 static int  marpaESLIFLua_marpaESLIFGrammar_currentSymbolPropertiesi(lua_State *L);
 static int  marpaESLIFLua_marpaESLIFGrammar_symbolPropertiesByLeveli(lua_State *L);
+static int  marpaESLIFLua_marpaESLIFGrammar_ruleDisplayi(lua_State *L);
+static int  marpaESLIFLua_marpaESLIFGrammar_symbolDisplayi(lua_State *L);
+static int  marpaESLIFLua_marpaESLIFGrammar_ruleShowi(lua_State *L);
+static int  marpaESLIFLua_marpaESLIFGrammar_ruleDisplayByLeveli(lua_State *L);
+static int  marpaESLIFLua_marpaESLIFGrammar_symbolDisplayByLeveli(lua_State *L);
+static int  marpaESLIFLua_marpaESLIFGrammar_ruleShowByLeveli(lua_State *L);
+static int  marpaESLIFLua_marpaESLIFGrammar_showi(lua_State *L);
+static int  marpaESLIFLua_marpaESLIFGrammar_showByLeveli(lua_State *L);
+
+#define MARPAESLIFLUA_GETORCREATEGLOBAL(L, name, gcp) do {              \
+    if (lua_getglobal(L, name) != LUA_TTABLE) {                         \
+      lua_pop(L, 1);                                                    \
+      lua_newtable(L);                                                  \
+      if (gcp != NULL) {                                                \
+        lua_newtable(L);                                                \
+        lua_pushcfunction(L, gcp);                                      \
+        lua_setfield(L, -2, "__gc");                                    \
+        lua_setmetatable(L, -2);                                        \
+        lua_setglobal(L, name);                                         \
+        lua_getglobal(L, name);                                         \
+      }                                                                 \
+    }                                                                   \
+  } while (0)
 
 #define MARPAESLIFLUA_STORE_STRING(L, t, key, stringp) do {             \
     if (stringp != NULL) {                                              \
@@ -184,6 +207,14 @@ static int marpaESLIFLua_installi(lua_State *L)
     {"marpaESLIFGrammar_rulePropertiesByLevel", marpaESLIFLua_marpaESLIFGrammar_rulePropertiesByLeveli},
     {"marpaESLIFGrammar_currentSymbolProperties", marpaESLIFLua_marpaESLIFGrammar_currentSymbolPropertiesi},
     {"marpaESLIFGrammar_symbolPropertiesByLevel", marpaESLIFLua_marpaESLIFGrammar_symbolPropertiesByLeveli},
+    {"marpaESLIFGrammar_ruleDisplay", marpaESLIFLua_marpaESLIFGrammar_ruleDisplayi},
+    {"marpaESLIFGrammar_symbolDisplay", marpaESLIFLua_marpaESLIFGrammar_symbolDisplayi},
+    {"marpaESLIFGrammar_ruleShow", marpaESLIFLua_marpaESLIFGrammar_ruleShowi},
+    {"marpaESLIFGrammar_ruleDisplayByLevel", marpaESLIFLua_marpaESLIFGrammar_ruleDisplayByLeveli},
+    {"marpaESLIFGrammar_symbolDisplayByLevel", marpaESLIFLua_marpaESLIFGrammar_symbolDisplayByLeveli},
+    {"marpaESLIFGrammar_ruleShowByLevel", marpaESLIFLua_marpaESLIFGrammar_ruleShowByLeveli},
+    {"marpaESLIFGrammar_show", marpaESLIFLua_marpaESLIFGrammar_showi},
+    {"marpaESLIFGrammar_showByLevel", marpaESLIFLua_marpaESLIFGrammar_showByLeveli},
     {NULL, NULL}
   };
 
@@ -262,17 +293,7 @@ static int marpaESLIFLua_marpaESLIF_newi(lua_State *L)
     return luaL_error(L, "Usage: marpaESLIF_new([logger]");
   }
 
-  if (lua_getglobal(L, MARPAESLIFMULTITONS) != LUA_TTABLE) {         /* stack: [loggerp,] MARPAESLIFMULTITONS? */
-      lua_pop(L, 1);                                                 /* stack: [loggerp,] */
-      /* Install MARPAESLIFMULTITONS */
-      lua_newtable(L);                                               /* stack: [loggerp,] {} */
-      lua_newtable(L);                                               /* stack: [loggerp,] {}, {} */
-      lua_pushcfunction(L, marpaESLIFLua_marpaESLIFMultiton_freevi);  /* stack: [loggerp,] {}, {}, marpaESLIFLua_marpaESLIFMultiton_freevi */
-      lua_setfield(L, -2, "__gc");                                   /* stack: [loggerp,] {}, {__gc = marpaESLIFLua_marpaESLIFMultiton_freevi} */
-      lua_setmetatable(L, -2);                                       /* stack: [loggerp,] {} meta={__gc = marpaESLIFLua_marpaESLIFMultiton_freevi} */
-      lua_setglobal(L, MARPAESLIFMULTITONS);                         /* stack: [loggerp,] */
-      lua_getglobal(L, MARPAESLIFMULTITONS);                         /* stack: [loggerp,] MARPAESLIFMULTITONS */
-  }
+  MARPAESLIFLUA_GETORCREATEGLOBAL(L, MARPAESLIFMULTITONS, marpaESLIFLua_marpaESLIFMultiton_freevi);
 
   /* Look if MARPAESLIFMULTITONS already contains a reference to logger */
   lua_pushnil(L);                                                     /* stack: [loggerp,] MARPAESLIFMULTITONS, nil */
@@ -1166,3 +1187,278 @@ static int  marpaESLIFLua_marpaESLIFGrammar_symbolPropertiesByLeveli(lua_State *
   GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 at %s:%d", funcs, L, FILENAMES, __LINE__);
   return 1;
 }
+
+/****************************************************************************/
+static int  marpaESLIFLua_marpaESLIFGrammar_ruleDisplayi(lua_State *L)
+/****************************************************************************/
+{
+  static const char   *funcs = "marpaESLIFLua_marpaESLIFGrammar_ruleDisplayi";
+  marpaESLIFGrammar_t *marpaESLIFGrammarp;
+  lua_Integer          rulei;
+  char                 *ruleDisplays;
+
+  GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__);
+
+  if (lua_gettop(L) != 2) {
+    return luaL_error(L, "Usage: marpaESLIFGrammar_ruleDisplay(marpaESLIFGrammarp, rulei)");
+  }
+  
+  if (lua_type(L, 1) != LUA_TTABLE) {
+    return luaL_error(L, "marpaESLIFGrammarp must be a table");
+  }
+
+  lua_getfield(L, 1, "marpaESLIFGrammarp");      /* stack: marpaESLIFGrammarTable, rulei, marpaESLIFGrammarp */
+  marpaESLIFGrammarp = lua_touserdata(L, -1);    /* stack: marpaESLIFGrammarTable, rulei, marpaESLIFGrammarp */
+  rulei = luaL_checkinteger(L, 2);
+  lua_pop(L, 3);                                 /* stack: */
+
+  if (! marpaESLIFGrammar_ruledisplayform_currentb(marpaESLIFGrammarp, (int) rulei, &ruleDisplays)) {
+    return luaL_error(L, "marpaESLIFGrammar_ruledisplayform_currentb failure");
+  }
+
+  lua_pushstring(L, (const char *) ruleDisplays);
+
+  GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 at %s:%d", funcs, L, FILENAMES, __LINE__);
+  return 1;
+}
+
+/****************************************************************************/
+static int  marpaESLIFLua_marpaESLIFGrammar_symbolDisplayi(lua_State *L)
+/****************************************************************************/
+{
+  static const char   *funcs = "marpaESLIFLua_marpaESLIFGrammar_symbolDisplayi";
+  marpaESLIFGrammar_t *marpaESLIFGrammarp;
+  lua_Integer          symboli;
+  char                 *symbolDisplays;
+
+  GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__);
+
+  if (lua_gettop(L) != 2) {
+    return luaL_error(L, "Usage: marpaESLIFGrammar_symbolDisplay(marpaESLIFGrammarp, symboli)");
+  }
+  
+  if (lua_type(L, 1) != LUA_TTABLE) {
+    return luaL_error(L, "marpaESLIFGrammarp must be a table");
+  }
+
+  lua_getfield(L, 1, "marpaESLIFGrammarp");      /* stack: marpaESLIFGrammarTable, symboli, marpaESLIFGrammarp */
+  marpaESLIFGrammarp = lua_touserdata(L, -1);    /* stack: marpaESLIFGrammarTable, symboli, marpaESLIFGrammarp */
+  symboli = luaL_checkinteger(L, 2);
+  lua_pop(L, 3);                                 /* stack: */
+
+  if (! marpaESLIFGrammar_symboldisplayform_currentb(marpaESLIFGrammarp, (int) symboli, &symbolDisplays)) {
+    return luaL_error(L, "marpaESLIFGrammar_symboldisplayform_currentb failure");
+  }
+
+  lua_pushstring(L, (const char *) symbolDisplays);
+
+  GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 at %s:%d", funcs, L, FILENAMES, __LINE__);
+  return 1;
+}
+
+/****************************************************************************/
+static int  marpaESLIFLua_marpaESLIFGrammar_ruleShowi(lua_State *L)
+/****************************************************************************/
+{
+  static const char   *funcs = "marpaESLIFLua_marpaESLIFGrammar_ruleShowi";
+  marpaESLIFGrammar_t *marpaESLIFGrammarp;
+  lua_Integer          rulei;
+  char                 *ruleShows;
+
+  GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__);
+
+  if (lua_gettop(L) != 2) {
+    return luaL_error(L, "Usage: marpaESLIFGrammar_ruleShow(marpaESLIFGrammarp, rulei)");
+  }
+  
+  if (lua_type(L, 1) != LUA_TTABLE) {
+    return luaL_error(L, "marpaESLIFGrammarp must be a table");
+  }
+
+  lua_getfield(L, 1, "marpaESLIFGrammarp");      /* stack: marpaESLIFGrammarTable, rulei, marpaESLIFGrammarp */
+  marpaESLIFGrammarp = lua_touserdata(L, -1);    /* stack: marpaESLIFGrammarTable, rulei, marpaESLIFGrammarp */
+  rulei = luaL_checkinteger(L, 2);
+  lua_pop(L, 3);                                 /* stack: */
+
+  if (! marpaESLIFGrammar_ruleshowform_currentb(marpaESLIFGrammarp, (int) rulei, &ruleShows)) {
+    return luaL_error(L, "marpaESLIFGrammar_ruleshowform_currentb failure");
+  }
+
+  lua_pushstring(L, (const char *) ruleShows);
+
+  GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 at %s:%d", funcs, L, FILENAMES, __LINE__);
+  return 1;
+}
+
+/****************************************************************************/
+static int  marpaESLIFLua_marpaESLIFGrammar_ruleDisplayByLeveli(lua_State *L)
+/****************************************************************************/
+{
+  static const char   *funcs = "marpaESLIFLua_marpaESLIFGrammar_ruleDisplayByLeveli";
+  marpaESLIFGrammar_t *marpaESLIFGrammarp;
+  lua_Integer          leveli;
+  lua_Integer          rulei;
+  char                 *ruleDisplays;
+
+  GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__);
+
+  if (lua_gettop(L) != 3) {
+    return luaL_error(L, "Usage: marpaESLIFGrammar_ruleShow(marpaESLIFGrammarp, rulei)");
+  }
+  
+  if (lua_type(L, 1) != LUA_TTABLE) {
+    return luaL_error(L, "marpaESLIFGrammarp must be a table");
+  }
+
+  lua_getfield(L, 1, "marpaESLIFGrammarp");      /* stack: marpaESLIFGrammarTable, leveli, rulei, marpaESLIFGrammarp */
+  marpaESLIFGrammarp = lua_touserdata(L, -1);    /* stack: marpaESLIFGrammarTable, leveli, rulei, marpaESLIFGrammarp */
+  leveli = luaL_checkinteger(L, 2);
+  rulei = luaL_checkinteger(L, 3);
+  lua_pop(L, 4);                                 /* stack: */
+
+  if (! marpaESLIFGrammar_ruledisplayform_by_levelb(marpaESLIFGrammarp, (int) rulei, &ruleDisplays, (int) leveli, NULL)) {
+    return luaL_error(L, "marpaESLIFGrammar_ruledisplayform_by_levelb");
+  }
+
+  lua_pushstring(L, (const char *) ruleDisplays);
+
+  GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 at %s:%d", funcs, L, FILENAMES, __LINE__);
+  return 1;
+}
+
+/****************************************************************************/
+static int  marpaESLIFLua_marpaESLIFGrammar_symbolDisplayByLeveli(lua_State *L)
+/****************************************************************************/
+{
+  static const char   *funcs = "marpaESLIFLua_marpaESLIFGrammar_symbolDisplayByLeveli";
+  marpaESLIFGrammar_t *marpaESLIFGrammarp;
+  lua_Integer          leveli;
+  lua_Integer          symboli;
+  char                 *symbolDisplays;
+
+  GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__);
+
+  if (lua_gettop(L) != 3) {
+    return luaL_error(L, "Usage: marpaESLIFGrammar_symbolShow(marpaESLIFGrammarp, symboli)");
+  }
+  
+  if (lua_type(L, 1) != LUA_TTABLE) {
+    return luaL_error(L, "marpaESLIFGrammarp must be a table");
+  }
+
+  lua_getfield(L, 1, "marpaESLIFGrammarp");      /* stack: marpaESLIFGrammarTable, leveli, symboli, marpaESLIFGrammarp */
+  marpaESLIFGrammarp = lua_touserdata(L, -1);    /* stack: marpaESLIFGrammarTable, leveli, symboli, marpaESLIFGrammarp */
+  leveli = luaL_checkinteger(L, 2);
+  symboli = luaL_checkinteger(L, 3);
+  lua_pop(L, 4);                                 /* stack: */
+
+  if (! marpaESLIFGrammar_symboldisplayform_by_levelb(marpaESLIFGrammarp, (int) symboli, &symbolDisplays, (int) leveli, NULL)) {
+    return luaL_error(L, "marpaESLIFGrammar_symboldisplayform_by_levelb");
+  }
+
+  lua_pushstring(L, (const char *) symbolDisplays);
+
+  GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 at %s:%d", funcs, L, FILENAMES, __LINE__);
+  return 1;
+}
+
+/****************************************************************************/
+static int  marpaESLIFLua_marpaESLIFGrammar_ruleShowByLeveli(lua_State *L)
+/****************************************************************************/
+{
+  static const char   *funcs = "marpaESLIFLua_marpaESLIFGrammar_ruleShowByLeveli";
+  marpaESLIFGrammar_t *marpaESLIFGrammarp;
+  lua_Integer          leveli;
+  lua_Integer          rulei;
+  char                 *ruleShows;
+
+  GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__);
+
+  if (lua_gettop(L) != 3) {
+    return luaL_error(L, "Usage: marpaESLIFGrammar_ruleShow(marpaESLIFGrammarp, rulei)");
+  }
+  
+  if (lua_type(L, 1) != LUA_TTABLE) {
+    return luaL_error(L, "marpaESLIFGrammarp must be a table");
+  }
+
+  lua_getfield(L, 1, "marpaESLIFGrammarp");      /* stack: marpaESLIFGrammarTable, leveli, rulei, marpaESLIFGrammarp */
+  marpaESLIFGrammarp = lua_touserdata(L, -1);    /* stack: marpaESLIFGrammarTable, leveli, rulei, marpaESLIFGrammarp */
+  leveli = luaL_checkinteger(L, 2);
+  rulei = luaL_checkinteger(L, 3);
+  lua_pop(L, 4);                                 /* stack: */
+
+  if (! marpaESLIFGrammar_ruleshowform_by_levelb(marpaESLIFGrammarp, (int) rulei, &ruleShows, (int) leveli, NULL)) {
+    return luaL_error(L, "marpaESLIFGrammar_ruleshowform_by_levelb");
+  }
+
+  lua_pushstring(L, (const char *) ruleShows);
+
+  GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 at %s:%d", funcs, L, FILENAMES, __LINE__);
+  return 1;
+}
+
+/****************************************************************************/
+static int  marpaESLIFLua_marpaESLIFGrammar_showi(lua_State *L)
+/****************************************************************************/
+{
+  static const char   *funcs = "marpaESLIFLua_marpaESLIFGrammar_show";
+  marpaESLIFGrammar_t *marpaESLIFGrammarp;
+  char                *shows;
+
+  GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__);
+
+  if (lua_gettop(L) != 1) {
+    return luaL_error(L, "Usage: marpaESLIFGrammar_show(marpaESLIFGrammarp)");
+  }
+  
+  if (lua_type(L, 1) != LUA_TTABLE) {
+    return luaL_error(L, "marpaESLIFGrammarp must be a table");
+  }
+
+  lua_getfield(L, 1, "marpaESLIFGrammarp");      /* stack: marpaESLIFGrammarTable, marpaESLIFGrammarp */
+  marpaESLIFGrammarp = lua_touserdata(L, -1);    /* stack: marpaESLIFGrammarTable, marpaESLIFGrammarp */
+  lua_pop(L, 2);                                 /* stack: */
+
+  if (! marpaESLIFGrammar_grammarshowform_currentb(marpaESLIFGrammarp, &shows)) {
+    return luaL_error(L, "marpaESLIFGrammar_grammarshowform_currentb failure");
+  }
+  lua_pushstring(L, (const char *) shows);
+
+  GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 (shows=%p) at %s:%d", funcs, L, shows);
+  return 1;
+}
+
+/****************************************************************************/
+static int  marpaESLIFLua_marpaESLIFGrammar_showByLeveli(lua_State *L)
+/****************************************************************************/
+{
+  static const char   *funcs = "marpaESLIFLua_marpaESLIFGrammar_showByLevel";
+  marpaESLIFGrammar_t *marpaESLIFGrammarp;
+  lua_Integer          leveli;
+  char                *shows;
+
+  GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__);
+
+  if (lua_gettop(L) != 2) {
+    return luaL_error(L, "Usage: marpaESLIFGrammar_showByLevel(marpaESLIFGrammarp, leveli)");
+  }
+  
+  if (lua_type(L, 1) != LUA_TTABLE) {
+    return luaL_error(L, "marpaESLIFGrammarp must be a table");
+  }
+
+  lua_getfield(L, 1, "marpaESLIFGrammarp");      /* stack: marpaESLIFGrammarTable, leveli, marpaESLIFGrammarp */
+  marpaESLIFGrammarp = lua_touserdata(L, -1);    /* stack: marpaESLIFGrammarTable, leveli, marpaESLIFGrammarp */
+  leveli = luaL_checkinteger(L, 2);              /* stack: marpaESLIFGrammarTable, leveli, marpaESLIFGrammarp */
+  lua_pop(L, 3);                                 /* stack: */
+
+  if (! marpaESLIFGrammar_grammarshowform_by_levelb(marpaESLIFGrammarp, &shows, (int) leveli, NULL)) {
+    return luaL_error(L, "marpaESLIFGrammar_grammarshowform_by_levelb failure");
+  }
+  lua_pushstring(L, (const char *) shows);
+
+  GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 (shows=%p) at %s:%d", funcs, L, shows);
+  return 1;
+}
+

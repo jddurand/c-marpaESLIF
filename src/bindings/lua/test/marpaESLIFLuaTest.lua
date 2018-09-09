@@ -118,3 +118,34 @@ for level = 0,ngrammar-1 do
       print('... Level '..level..' symbol No '..symbolId..': '..tableDump(marpaESLIFLua.marpaESLIFGrammar_symbolPropertiesByLevel(marpaESLIFGrammarp, level, symbolId)))
    end
 end
+for k, ruleId in pairsByKeys(ruleIds) do
+   print('... Rule No '..ruleId..' display: '..marpaESLIFLua.marpaESLIFGrammar_ruleDisplay(marpaESLIFGrammarp, ruleId))
+end
+for k, symbolId in pairsByKeys(symbolIds) do
+   print('... Symbol No '..symbolId..' display: '..marpaESLIFLua.marpaESLIFGrammar_symbolDisplay(marpaESLIFGrammarp, symbolId))
+end
+for k, ruleId in pairsByKeys(ruleIds) do
+   print('... Rule No '..ruleId..' show: '..marpaESLIFLua.marpaESLIFGrammar_ruleShow(marpaESLIFGrammarp, ruleId))
+end
+for level = 0,ngrammar-1 do
+   local ruleIdsByLevel = marpaESLIFLua.marpaESLIFGrammar_ruleIdsByLevel(marpaESLIFGrammarp, level)
+   for k, ruleId in pairsByKeys(ruleIdsByLevel) do
+      print('... Level '..level..' rule No '..ruleId..' display: '..marpaESLIFLua.marpaESLIFGrammar_ruleDisplayByLevel(marpaESLIFGrammarp, level, ruleId))
+   end
+end
+for level = 0,ngrammar-1 do
+   local symbolIdsByLevel = marpaESLIFLua.marpaESLIFGrammar_symbolIdsByLevel(marpaESLIFGrammarp, level)
+   for k, symbolId in pairsByKeys(symbolIdsByLevel) do
+      print('... Level '..level..' symbol No '..symbolId..' display: '..marpaESLIFLua.marpaESLIFGrammar_symbolDisplayByLevel(marpaESLIFGrammarp, level, symbolId))
+   end
+end
+for level = 0,ngrammar-1 do
+   local ruleIdsByLevel = marpaESLIFLua.marpaESLIFGrammar_ruleIdsByLevel(marpaESLIFGrammarp, level)
+   for k, ruleId in pairsByKeys(ruleIdsByLevel) do
+      print('... Level '..level..' rule No '..ruleId..' show: '..marpaESLIFLua.marpaESLIFGrammar_ruleShowByLevel(marpaESLIFGrammarp, level, ruleId))
+   end
+end
+print('... Grammar show: '..marpaESLIFLua.marpaESLIFGrammar_show(marpaESLIFGrammarp))
+for level = 0,ngrammar-1 do
+   print('... Level '..level..' grammar show: '..marpaESLIFLua.marpaESLIFGrammar_showByLevel(marpaESLIFGrammarp, level))
+end
