@@ -82,7 +82,7 @@ print('marpaESLIF version: '..marpaESLIFLua.version())
 local marpaESLIFp = marpaESLIFLua.marpaESLIF_new(logger)
 print('marpaESLIFp meta dump:'..tableDump(getmetatable(marpaESLIFp)))
 ------------------------------------------------------------------------------
-local marpaESLIFGrammarp = marpaESLIFLua.marpaESLIFGrammar_new(marpaESLIFp, "X ::= x\nx ~ 'lexeme'")
+local marpaESLIFGrammarp = marpaESLIFp:marpaESLIFGrammar_new("X ::= x\nx ~ 'lexeme'")
 print('marpaESLIFGrammarp      dump:'..tableDump(marpaESLIFGrammarp))
 print('marpaESLIFGrammarp meta dump:'..tableDump(getmetatable(marpaESLIFGrammarp)))
 ------------------------------------------------------------------------------
