@@ -21,9 +21,8 @@ static void stackdump_g(lua_State* L);
 
 /* Logger proxy: context and callback function */
 typedef struct genericLoggerContext {
-  lua_State *L; /* Logger has its own state */
+  lua_State *L; /* Lua state */
   int logger_r; /* Logger reference */
-  int L_r;      /* State reference */
 } genericLoggerContext_t;
 static void marpaESLIFLua_genericLoggerCallbackv(void *userDatavp, genericLoggerLevel_t logLeveli, const char *msgs);
 static int  marpaESLIFLua_create_refi(lua_State *L, short weakb, lua_CFunction gcp);
@@ -279,7 +278,6 @@ static int marpaESLIFLua_marpaESLIF_newi(lua_State *L)
   genericLogger_t        *genericLoggerp;
   marpaESLIFOption_t      marpaESLIFOption;
   lua_Integer             logger_r;
-  lua_Integer             L_r;
 
   static const char *loggerFunctions[] = {
     "trace",
@@ -349,30 +347,26 @@ static int marpaESLIFLua_marpaESLIF_newi(lua_State *L)
         return luaL_error(L, "malloc failure, %s\n", strerror(errno));
       }
 
+      genericLoggerContextp->L = NULL;
+      genericLoggerContextp->logger_r =  LUA_NOREF;
+
       /* Get logger reference */
       lua_pushnil(L);                                                 /* stack:  loggerp,  MARPAESLIFMULTITONS, nil */
       lua_copy(L, 1, -1);                                             /* stack:  loggerp,  MARPAESLIFMULTITONS, loggerp */
       logger_r = luaL_ref(L, LUA_REGISTRYINDEX);                      /* stack:  loggerp,  MARPAESLIFMULTITONS */
       GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) got logger_r=%d from registry at %s:%d", funcs, L, (int) logger_r, FILENAMES, __LINE__);
 
-      /* Create a dedicated lua state and get its reference */
-      genericLoggerContextp->L = lua_newthread(L);                    /* stack:  loggerp,  MARPAESLIFMULTITONS, L */
-      L_r = luaL_ref(L, LUA_REGISTRYINDEX);                           /* stack:  loggerp,  MARPAESLIFMULTITONS */
-      GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) got L_r=%d from registry at %s:%d", funcs, L, (int) L_r, FILENAMES, __LINE__);
-
-      genericLoggerContextp->L_r = L_r;
+      /* Fill genericLogger context */
+      genericLoggerContextp->L = L;
       genericLoggerContextp->logger_r = logger_r;
       genericLoggerp = genericLogger_newp(marpaESLIFLua_genericLoggerCallbackv, genericLoggerContextp, GENERICLOGGER_LOGLEVEL_TRACE);
       if (genericLoggerp == NULL) {
-        GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) freeing L_r=%d from registry at %s:%d", funcs, L, (int) L_r, FILENAMES, __LINE__);
-        luaL_unref(L, LUA_REGISTRYINDEX, (int) L_r);
         GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) freeing logger_r=%d from registry at %s:%d", funcs, L, (int) logger_r, FILENAMES, __LINE__);
         luaL_unref(L, LUA_REGISTRYINDEX, (int) logger_r);
         free(genericLoggerContextp);
         return luaL_error(L, "genericLogger_newp failure, %s\n", strerror(errno));
       }
     } else {
-      L_r = LUA_NOREF;
       logger_r = LUA_NOREF;
       genericLoggerp = NULL;
     }
@@ -380,8 +374,6 @@ static int marpaESLIFLua_marpaESLIF_newi(lua_State *L)
     marpaESLIFOption.genericLoggerp = genericLoggerp;
     marpaESLIFp = marpaESLIF_newp(&marpaESLIFOption);
     if (marpaESLIFp == NULL) {
-      GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) freeing L_r=%d from registry at %s:%d", funcs, L, (int) L_r, FILENAMES, __LINE__);
-      luaL_unref(L, LUA_REGISTRYINDEX, (int) L_r); /* No effect if it is LUA_NOREF */
       GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) freeing logger_r=%d from registry at %s:%d", funcs, L, (int) logger_r, FILENAMES, __LINE__);
       luaL_unref(L, LUA_REGISTRYINDEX, (int) logger_r); /* No effect if it is LUA_NOREF */
       free(genericLoggerContextp);
@@ -420,6 +412,7 @@ static void marpaESLIFLua_genericLoggerCallbackv(void *userDatavp, genericLogger
   lua_State              *L                    = genericLoggerContext->L;
   const char             *funcs;
   int                     n;
+  int                     topi;
 
   switch (logLeveli) {
   case GENERICLOGGER_LOGLEVEL_TRACE:
@@ -455,13 +448,12 @@ static void marpaESLIFLua_genericLoggerCallbackv(void *userDatavp, genericLogger
   }
 
   if (funcs != NULL) {
-    lua_rawgeti(L, LUA_REGISTRYINDEX, logger_r); /* stack: logger */
-    if (lua_istable(L, -1)) {
-      lua_getfield(L, -1, funcs);                  /* stack: logger, logger[funcs] */
-      lua_pushstring(L, msgs);                     /* stack: logger, logger[funcs], msgs */
-      lua_call(L, 1, LUA_MULTRET);                 /* stack: logger, logger[funcs], ?? */
-    }
-    lua_settop(L, 0);                            /* stack: */
+    topi = lua_gettop(L);                          /* stack: xxx */
+    lua_rawgeti(L, LUA_REGISTRYINDEX, logger_r);   /* stack: xxx, logger */
+    lua_getfield(L, -1, funcs);                    /* stack: xxx, logger, logger[funcs] */
+    lua_pushstring(L, msgs);                       /* stack: xxx, logger, logger[funcs], msgs */
+    lua_call(L, 1, LUA_MULTRET);                   /* stack: xxx, logger, logger[funcs], ?? */
+    lua_settop(L, topi);                           /* stack: xxx */
   }
 }
 
@@ -473,7 +465,6 @@ static int marpaESLIFLua_marpaESLIFMultiton_freevi(lua_State *L)
   marpaESLIF_t           *marpaESLIFp           = NULL;
   genericLoggerContext_t *genericLoggerContextp = NULL;
   lua_Integer             logger_r              = LUA_NOREF;
-  lua_Integer             L_r                   = LUA_NOREF;
   genericLogger_t        *genericLoggerp        = NULL;
   marpaESLIFOption_t     *marpaESLIFOptionp;
 
@@ -492,8 +483,6 @@ static int marpaESLIFLua_marpaESLIFMultiton_freevi(lua_State *L)
         genericLoggerp = marpaESLIFOptionp->genericLoggerp;
         if (genericLoggerp != NULL) {
           genericLoggerContextp = (genericLoggerContext_t *) genericLogger_userDatavp_getp(genericLoggerp);
-          GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) freeing L_r=%d from registry at %s:%d", funcs, L, (int) genericLoggerContextp->L_r, FILENAMES, __LINE__);
-          luaL_unref(L, LUA_REGISTRYINDEX, (int) genericLoggerContextp->L_r);
           GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) freeing logger_r=%d from registry at %s:%d", funcs, L, (int) genericLoggerContextp->logger_r, FILENAMES, __LINE__);
           luaL_unref(L, LUA_REGISTRYINDEX, (int) genericLoggerContextp->logger_r); /* By construction genericLoggerContextp->logger_r == logger_r */
         }
