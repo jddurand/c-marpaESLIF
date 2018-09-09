@@ -28,7 +28,7 @@ typedef struct genericLoggerContext {
 static void marpaESLIFLua_genericLoggerCallbackv(void *userDatavp, genericLoggerLevel_t logLeveli, const char *msgs);
 static int  marpaESLIFLua_create_refi(lua_State *L, short weakb, lua_CFunction gcp);
 static int  marpaESLIFLua_installi(lua_State *L);
-static int  marpaESLIFLua_marpaESLIF_versioni(lua_State *L);
+static int  marpaESLIFLua_versioni(lua_State *L);
 static int  marpaESLIFLua_marpaESLIF_newi(lua_State *L);
 static int  marpaESLIFLua_marpaESLIFMultiton_freevi(lua_State *L);
 static int  marpaESLIFLua_marpaESLIFGrammar_newi(lua_State *L);
@@ -71,27 +71,40 @@ static int  marpaESLIFLua_marpaESLIFGrammar_showByLeveli(lua_State *L);
     }                                                                   \
   } while (0)
 
-#define MARPAESLIFLUA_STORE_STRING(L, t, key, stringp) do {             \
+/* Destination table is assumed to be at the top of the stack */
+#define MARPAESLIFLUA_STORE_FUNCTION(L, key, functionp) do {            \
+    if (functionp != NULL) {                                            \
+      lua_pushcfunction(L, functionp);                                  \
+    } else {                                                            \
+      lua_pushnil(L);                                                   \
+    }                                                                   \
+    lua_setfield(L, -2, key);                                           \
+  } while (0)
+
+/* Destination table is assumed to be at the top of the stack */
+#define MARPAESLIFLUA_STORE_STRING(L, key, stringp) do {                \
     if (stringp != NULL) {                                              \
       lua_pushlstring(L, (const char *) stringp->bytep, stringp->bytel); \
     } else {                                                            \
       lua_pushnil(L);                                                   \
     }                                                                   \
-    lua_setfield(L, t, key);                                            \
+    lua_setfield(L, -2, key);                                           \
   } while (0)
 
-#define MARPAESLIFLUA_STORE_ASCIISTRING(L, t, key, asciis) do {         \
+/* Destination table is assumed to be at the top of the stack */
+#define MARPAESLIFLUA_STORE_ASCIISTRING(L, key, asciis) do {            \
     if (asciis != NULL) {                                               \
       lua_pushstring(L, asciis);                                        \
     } else {                                                            \
       lua_pushnil(L);                                                   \
     }                                                                   \
-    lua_setfield(L, t, key);                                            \
+    lua_setfield(L, -2, key);                                           \
   } while (0)
 
-#define MARPAESLIFLUA_STORE_INTEGER(L, t, key, i) do {                  \
+/* Destination table is assumed to be at the top of the stack */
+#define MARPAESLIFLUA_STORE_INTEGER(L, key, i) do {                     \
     lua_pushinteger(L, (lua_Integer) i);                                \
-    lua_setfield(L, t, key);                                            \
+    lua_setfield(L, -2, key);                                           \
   } while (0)
 
 #define MARPAESLIFLUA_PUSH_INTEGER_ARRAY(L, integerl, integerp) do {  \
@@ -104,17 +117,20 @@ static int  marpaESLIFLua_marpaESLIFGrammar_showByLeveli(lua_State *L);
     }                                                                   \
   } while (0)
 
-#define MARPAESLIFLUA_STORE_INTEGER_ARRAY(L, t, key, integerl, integerp) do { \
+/* Destination table is assumed to be at the top of the stack */
+#define MARPAESLIFLUA_STORE_INTEGER_ARRAY(L, key, integerl, integerp) do { \
     MARPAESLIFLUA_PUSH_INTEGER_ARRAY(L, integerl, integerp);            \
-    lua_setfield(L, t, key);                                            \
+    lua_setfield(L, -2, key);                                           \
   } while (0)
 
-#define MARPAESLIFLUA_STORE_BOOLEAN(L, t, key, b) do {                  \
+/* Destination table is assumed to be at the top of the stack */
+#define MARPAESLIFLUA_STORE_BOOLEAN(L, key, b) do {                     \
     lua_pushboolean(L, (int) b);                                        \
-    lua_setfield(L, t, key);                                            \
+    lua_setfield(L, -2, key);                                           \
   } while (0)
 
-#define MARPAESLIFLUA_STORE_ACTION(L, t, key, actionp) do {             \
+/* Destination table is assumed to be at the top of the stack */
+#define MARPAESLIFLUA_STORE_ACTION(L, key, actionp) do {                \
     if (actionp != NULL) {                                              \
       switch (actionp->type) {                                          \
       case MARPAESLIF_ACTION_TYPE_NAME:                                 \
@@ -129,7 +145,7 @@ static int  marpaESLIFLua_marpaESLIFGrammar_showByLeveli(lua_State *L);
     } else {                                                            \
       lua_pushnil(L);                                                   \
     }                                                                   \
-    lua_setfield(L, t, key);                                            \
+    lua_setfield(L, -2, key);                                           \
   } while (0)
 
 /****************************************************************************/
@@ -174,10 +190,7 @@ static int marpaESLIFLua_create_refi(lua_State *L, short weakb, lua_CFunction gc
     lua_rawset(L, -3);                  /* stack: value, new_table={"strong_ref" = value} */
   }
 
-  if (gcp != NULL) {
-    lua_pushcfunction(L, gcp);          /* stack: value, new_table={ref_type = value}, gcp */
-    lua_setfield(L, -2, "__gc");        /* stack: value, new_table={ref_type = value, "__gc" = gcp} */
-  }
+  MARPAESLIFLUA_STORE_FUNCTION(L, "__gc", gcp);
 
   rci = luaL_ref(L, LUA_REGISTRYINDEX); /* stack: value */
 
@@ -190,7 +203,7 @@ static int marpaESLIFLua_installi(lua_State *L)
 {
   static const char *funcs = "marpaESLIFLua_installi";
   static const luaL_Reg marpaESLIFLuaTable[] = {
-    {"marpaESLIF_version", marpaESLIFLua_marpaESLIF_versioni},
+    {"version", marpaESLIFLua_versioni},
     {"marpaESLIF_new", marpaESLIFLua_marpaESLIF_newi},
     {"marpaESLIFGrammar_new", marpaESLIFLua_marpaESLIFGrammar_newi},
     {"marpaESLIFGrammar_ngrammar", marpaESLIFLua_marpaESLIFGrammar_ngrammari},
@@ -226,10 +239,10 @@ static int marpaESLIFLua_installi(lua_State *L)
 }
 
 /****************************************************************************/
-static int marpaESLIFLua_marpaESLIF_versioni(lua_State *L)
+static int marpaESLIFLua_versioni(lua_State *L)
 /****************************************************************************/
 {
-  static const char *funcs = "marpaESLIFLua_marpaESLIF_versioni";
+  static const char *funcs = "marpaESLIFLua_versioni";
   const char        *versions;
 
   GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__);
@@ -364,6 +377,14 @@ static int marpaESLIFLua_marpaESLIF_newi(lua_State *L)
   }
 
   lua_pushlightuserdata(L, marpaESLIFp);                              /* stack: [loggerp], marpaESLIFp */
+
+  /* Create a metable */
+  lua_newtable(L);
+  lua_newtable(L);                                                    /* ... Associate methods */
+  MARPAESLIFLUA_STORE_FUNCTION(L, "marpaESLIFGrammar_new", marpaESLIFLua_marpaESLIFGrammar_newi);
+  lua_setfield(L, -2, "__index");
+
+  lua_setmetatable(L, -2);                                            /* stack: [loggerp], marpaESLIFp meta={...} */
 
   GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 (marpaESLIFp=%p) at %s:%d", funcs, L, marpaESLIFp, FILENAMES, __LINE__);
   return 1;
@@ -525,12 +546,37 @@ static int marpaESLIFLua_marpaESLIFGrammar_newi(lua_State *L)
   lua_setfield(L, -2, "marpaESLIFGrammarp");                                   /* stack: {"marpaESLIFGrammarp" = marpaESLIFGrammarp} */
   lua_pushinteger(L, (lua_Integer) multiton_refi);                             /* stack: {"marpaESLIFGrammarp" = marpaESLIFGrammarp}, multiton_refi */
   lua_setfield(L, -2, "multiton_refi");                                        /* stack: {"marpaESLIFGrammarp" = marpaESLIFGrammarp, "multiton_refi" = multiton_refi */
-  lua_newtable(L);                                                             /* stack: {"marpaESLIFGrammarp" = marpaESLIFGrammarp, "multiton_refi" = multiton_refi}, {} */
-  lua_pushstring(L, "v");                                                      /* stack: {"marpaESLIFGrammarp" = marpaESLIFGrammarp, "multiton_refi" = multiton_refi}, {}, "v" */
-  lua_setfield(L, -2, "__mode");                                               /* stack: {"marpaESLIFGrammarp" = marpaESLIFGrammarp, "multiton_refi" = multiton_refi}, {__mode = "v"} */
-  lua_pushcfunction(L, marpaESLIFLua_marpaESLIFGrammar_freei);                /* stack: {"marpaESLIFGrammarp" = marpaESLIFGrammarp, "multiton_refi" = multiton_refi}, {__mode = "v"}, marpaESLIFLua_marpaESLIFGrammar_freei */
-  lua_setfield(L, -2, "__gc");                                                 /* stack: {"marpaESLIFGrammarp" = marpaESLIFGrammarp, "multiton_refi" = multiton_refi}, {__mode = "v", __gc = marpaESLIFLua_marpaESLIFGrammar_freei} */
-  lua_setmetatable(L, -2);                                                     /* stack: {"marpaESLIFGrammarp" = marpaESLIFGrammarp, "multiton_refi" = multiton_refi} meta={__mode = "v", __gc = marpaESLIFLua_marpaESLIFGrammar_freei} */
+
+  /* Create a metable */
+  lua_newtable(L);
+  MARPAESLIFLUA_STORE_ASCIISTRING(L, "__mode", "v");                              /* ... Say the values are weak */
+  MARPAESLIFLUA_STORE_FUNCTION(L, "__gc", marpaESLIFLua_marpaESLIFGrammar_freei); /* ... Associate a garbage collector */
+  lua_newtable(L);                                                                /* ... Associate methods */
+  MARPAESLIFLUA_STORE_FUNCTION(L, "ngrammar", marpaESLIFLua_marpaESLIFGrammar_ngrammari);
+  MARPAESLIFLUA_STORE_FUNCTION(L, "currentLevel", marpaESLIFLua_marpaESLIFGrammar_currentLeveli);
+  MARPAESLIFLUA_STORE_FUNCTION(L, "currentDescription", marpaESLIFLua_marpaESLIFGrammar_currentDescriptioni);
+  MARPAESLIFLUA_STORE_FUNCTION(L, "descriptionByLevel", marpaESLIFLua_marpaESLIFGrammar_descriptionByLeveli);
+  MARPAESLIFLUA_STORE_FUNCTION(L, "currentRuleIds", marpaESLIFLua_marpaESLIFGrammar_currentRuleIdsi);
+  MARPAESLIFLUA_STORE_FUNCTION(L, "ruleIdsByLevel", marpaESLIFLua_marpaESLIFGrammar_ruleIdsByLeveli);
+  MARPAESLIFLUA_STORE_FUNCTION(L, "currentSymbolIds", marpaESLIFLua_marpaESLIFGrammar_currentSymbolIdsi);
+  MARPAESLIFLUA_STORE_FUNCTION(L, "symbolIdsByLevel", marpaESLIFLua_marpaESLIFGrammar_symbolIdsByLeveli);
+  MARPAESLIFLUA_STORE_FUNCTION(L, "currentProperties", marpaESLIFLua_marpaESLIFGrammar_currentPropertiesi);
+  MARPAESLIFLUA_STORE_FUNCTION(L, "propertiesByLevel", marpaESLIFLua_marpaESLIFGrammar_propertiesByLeveli);
+  MARPAESLIFLUA_STORE_FUNCTION(L, "currentRuleProperties", marpaESLIFLua_marpaESLIFGrammar_currentRulePropertiesi);
+  MARPAESLIFLUA_STORE_FUNCTION(L, "rulePropertiesByLevel", marpaESLIFLua_marpaESLIFGrammar_rulePropertiesByLeveli);
+  MARPAESLIFLUA_STORE_FUNCTION(L, "currentSymbolProperties", marpaESLIFLua_marpaESLIFGrammar_currentSymbolPropertiesi);
+  MARPAESLIFLUA_STORE_FUNCTION(L, "symbolPropertiesByLevel", marpaESLIFLua_marpaESLIFGrammar_symbolPropertiesByLeveli);
+  MARPAESLIFLUA_STORE_FUNCTION(L, "ruleDisplay", marpaESLIFLua_marpaESLIFGrammar_ruleDisplayi);
+  MARPAESLIFLUA_STORE_FUNCTION(L, "symbolDisplay", marpaESLIFLua_marpaESLIFGrammar_symbolDisplayi);
+  MARPAESLIFLUA_STORE_FUNCTION(L, "ruleShow", marpaESLIFLua_marpaESLIFGrammar_ruleShowi);
+  MARPAESLIFLUA_STORE_FUNCTION(L, "ruleDisplayByLevel", marpaESLIFLua_marpaESLIFGrammar_ruleDisplayByLeveli);
+  MARPAESLIFLUA_STORE_FUNCTION(L, "symbolDisplayByLevel", marpaESLIFLua_marpaESLIFGrammar_symbolDisplayByLeveli);
+  MARPAESLIFLUA_STORE_FUNCTION(L, "ruleShowByLevel", marpaESLIFLua_marpaESLIFGrammar_ruleShowByLeveli);
+  MARPAESLIFLUA_STORE_FUNCTION(L, "show", marpaESLIFLua_marpaESLIFGrammar_showi);
+  MARPAESLIFLUA_STORE_FUNCTION(L, "showByLevel", marpaESLIFLua_marpaESLIFGrammar_showByLeveli);
+  lua_setfield(L, -2, "__index");
+
+  lua_setmetatable(L, -2);                                                     /* stack: {"marpaESLIFGrammarp" = marpaESLIFGrammarp, "multiton_refi" = multiton_refi} meta={...} */
 
   GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 ({marpaESLIFGrammarp=%p, multiton_refi=%d}) at %s:%d", funcs, L, marpaESLIFGrammarp, multiton_refi, FILENAMES, __LINE__);
   return 1;
@@ -903,17 +949,17 @@ static int  marpaESLIFLua_marpaESLIFGrammar_currentPropertiesi(lua_State *L)
   }
 
   lua_createtable(L, 11, 0);                                                 /* stack; {} */
-  MARPAESLIFLUA_STORE_INTEGER      (L, 1, "level",               grammarProperty.leveli);
-  MARPAESLIFLUA_STORE_INTEGER      (L, 1, "maxlevel",            grammarProperty.maxLeveli);
-  MARPAESLIFLUA_STORE_STRING       (L, 1, "description",         grammarProperty.descp);
-  MARPAESLIFLUA_STORE_BOOLEAN      (L, 1, "latm",                grammarProperty.latmb);
-  MARPAESLIFLUA_STORE_ACTION       (L, 1, "defaultSymbolAction", grammarProperty.defaultSymbolActionp);
-  MARPAESLIFLUA_STORE_ACTION       (L, 1, "defaultRuleAction",   grammarProperty.defaultRuleActionp);
-  MARPAESLIFLUA_STORE_ACTION       (L, 1, "defaultFreeAction",   grammarProperty.defaultFreeActionp);
-  MARPAESLIFLUA_STORE_INTEGER      (L, 1, "startId",             grammarProperty.starti);
-  MARPAESLIFLUA_STORE_INTEGER      (L, 1, "discardId",           grammarProperty.discardi);
-  MARPAESLIFLUA_STORE_INTEGER_ARRAY(L, 1, "symbolIds",           grammarProperty.nsymboll, grammarProperty.symbolip);
-  MARPAESLIFLUA_STORE_INTEGER_ARRAY(L, 1, "ruleIds",             grammarProperty.nrulel, grammarProperty.ruleip);
+  MARPAESLIFLUA_STORE_INTEGER      (L, "level",               grammarProperty.leveli);
+  MARPAESLIFLUA_STORE_INTEGER      (L, "maxlevel",            grammarProperty.maxLeveli);
+  MARPAESLIFLUA_STORE_STRING       (L, "description",         grammarProperty.descp);
+  MARPAESLIFLUA_STORE_BOOLEAN      (L, "latm",                grammarProperty.latmb);
+  MARPAESLIFLUA_STORE_ACTION       (L, "defaultSymbolAction", grammarProperty.defaultSymbolActionp);
+  MARPAESLIFLUA_STORE_ACTION       (L, "defaultRuleAction",   grammarProperty.defaultRuleActionp);
+  MARPAESLIFLUA_STORE_ACTION       (L, "defaultFreeAction",   grammarProperty.defaultFreeActionp);
+  MARPAESLIFLUA_STORE_INTEGER      (L, "startId",             grammarProperty.starti);
+  MARPAESLIFLUA_STORE_INTEGER      (L, "discardId",           grammarProperty.discardi);
+  MARPAESLIFLUA_STORE_INTEGER_ARRAY(L, "symbolIds",           grammarProperty.nsymboll, grammarProperty.symbolip);
+  MARPAESLIFLUA_STORE_INTEGER_ARRAY(L, "ruleIds",             grammarProperty.nrulel, grammarProperty.ruleip);
 
   GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 at %s:%d", funcs, L, FILENAMES, __LINE__);
   return 1;
@@ -948,17 +994,17 @@ static int  marpaESLIFLua_marpaESLIFGrammar_propertiesByLeveli(lua_State *L)
   }
 
   lua_createtable(L, 11, 0);                                                 /* stack; {} */
-  MARPAESLIFLUA_STORE_INTEGER      (L, 1, "level",               grammarProperty.leveli);
-  MARPAESLIFLUA_STORE_INTEGER      (L, 1, "maxlevel",            grammarProperty.maxLeveli);
-  MARPAESLIFLUA_STORE_STRING       (L, 1, "description",         grammarProperty.descp);
-  MARPAESLIFLUA_STORE_BOOLEAN      (L, 1, "latm",                grammarProperty.latmb);
-  MARPAESLIFLUA_STORE_ACTION       (L, 1, "defaultSymbolAction", grammarProperty.defaultSymbolActionp);
-  MARPAESLIFLUA_STORE_ACTION       (L, 1, "defaultRuleAction",   grammarProperty.defaultRuleActionp);
-  MARPAESLIFLUA_STORE_ACTION       (L, 1, "defaultFreeAction",   grammarProperty.defaultFreeActionp);
-  MARPAESLIFLUA_STORE_INTEGER      (L, 1, "startId",             grammarProperty.starti);
-  MARPAESLIFLUA_STORE_INTEGER      (L, 1, "discardId",           grammarProperty.discardi);
-  MARPAESLIFLUA_STORE_INTEGER_ARRAY(L, 1, "symbolIds",           grammarProperty.nsymboll, grammarProperty.symbolip);
-  MARPAESLIFLUA_STORE_INTEGER_ARRAY(L, 1, "ruleIds",             grammarProperty.nrulel, grammarProperty.ruleip);
+  MARPAESLIFLUA_STORE_INTEGER      (L, "level",               grammarProperty.leveli);
+  MARPAESLIFLUA_STORE_INTEGER      (L, "maxlevel",            grammarProperty.maxLeveli);
+  MARPAESLIFLUA_STORE_STRING       (L, "description",         grammarProperty.descp);
+  MARPAESLIFLUA_STORE_BOOLEAN      (L, "latm",                grammarProperty.latmb);
+  MARPAESLIFLUA_STORE_ACTION       (L, "defaultSymbolAction", grammarProperty.defaultSymbolActionp);
+  MARPAESLIFLUA_STORE_ACTION       (L, "defaultRuleAction",   grammarProperty.defaultRuleActionp);
+  MARPAESLIFLUA_STORE_ACTION       (L, "defaultFreeAction",   grammarProperty.defaultFreeActionp);
+  MARPAESLIFLUA_STORE_INTEGER      (L, "startId",             grammarProperty.starti);
+  MARPAESLIFLUA_STORE_INTEGER      (L, "discardId",           grammarProperty.discardi);
+  MARPAESLIFLUA_STORE_INTEGER_ARRAY(L, "symbolIds",           grammarProperty.nsymboll, grammarProperty.symbolip);
+  MARPAESLIFLUA_STORE_INTEGER_ARRAY(L, "ruleIds",             grammarProperty.nrulel, grammarProperty.ruleip);
 
   GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 at %s:%d", funcs, L, FILENAMES, __LINE__);
   return 1;
@@ -993,24 +1039,24 @@ static int  marpaESLIFLua_marpaESLIFGrammar_currentRulePropertiesi(lua_State *L)
   }
 
   lua_createtable(L, 18, 0);                                                 /* stack; {} */
-  MARPAESLIFLUA_STORE_INTEGER      (L, 1, "id",                       ruleProperty.idi);
-  MARPAESLIFLUA_STORE_STRING       (L, 1, "description",              ruleProperty.descp);
-  MARPAESLIFLUA_STORE_ASCIISTRING  (L, 1, "show",                     ruleProperty.asciishows);
-  MARPAESLIFLUA_STORE_INTEGER      (L, 1, "lhsId",                    ruleProperty.lhsi);
-  MARPAESLIFLUA_STORE_INTEGER      (L, 1, "separatorId",              ruleProperty.separatori);
-  MARPAESLIFLUA_STORE_INTEGER_ARRAY(L, 1, "rhsIds",                   ruleProperty.nrhsl, ruleProperty.rhsip);
-  MARPAESLIFLUA_STORE_INTEGER      (L, 1, "exceptionId",              ruleProperty.exceptioni);
-  MARPAESLIFLUA_STORE_ACTION       (L, 1, "action",                   ruleProperty.actionp);
-  MARPAESLIFLUA_STORE_ASCIISTRING  (L, 1, "discardEvent",             ruleProperty.discardEvents);
-  MARPAESLIFLUA_STORE_BOOLEAN      (L, 1, "discardEventInitialState", ruleProperty.discardEventb);
-  MARPAESLIFLUA_STORE_INTEGER      (L, 1, "rank",                     ruleProperty.ranki);
-  MARPAESLIFLUA_STORE_BOOLEAN      (L, 1, "nullRanksHigh",            ruleProperty.nullRanksHighb);
-  MARPAESLIFLUA_STORE_BOOLEAN      (L, 1, "sequence",                 ruleProperty.sequenceb);
-  MARPAESLIFLUA_STORE_BOOLEAN      (L, 1, "proper",                   ruleProperty.properb);
-  MARPAESLIFLUA_STORE_INTEGER      (L, 1, "minimum",                  ruleProperty.minimumi);
-  MARPAESLIFLUA_STORE_BOOLEAN      (L, 1, "internal",                 ruleProperty.internalb);
-  MARPAESLIFLUA_STORE_INTEGER      (L, 1, "propertyBitSet",           ruleProperty.propertyBitSet);
-  MARPAESLIFLUA_STORE_BOOLEAN      (L, 1, "hideseparator",            ruleProperty.hideseparatorb);
+  MARPAESLIFLUA_STORE_INTEGER      (L, "id",                       ruleProperty.idi);
+  MARPAESLIFLUA_STORE_STRING       (L, "description",              ruleProperty.descp);
+  MARPAESLIFLUA_STORE_ASCIISTRING  (L, "show",                     ruleProperty.asciishows);
+  MARPAESLIFLUA_STORE_INTEGER      (L, "lhsId",                    ruleProperty.lhsi);
+  MARPAESLIFLUA_STORE_INTEGER      (L, "separatorId",              ruleProperty.separatori);
+  MARPAESLIFLUA_STORE_INTEGER_ARRAY(L, "rhsIds",                   ruleProperty.nrhsl, ruleProperty.rhsip);
+  MARPAESLIFLUA_STORE_INTEGER      (L, "exceptionId",              ruleProperty.exceptioni);
+  MARPAESLIFLUA_STORE_ACTION       (L, "action",                   ruleProperty.actionp);
+  MARPAESLIFLUA_STORE_ASCIISTRING  (L, "discardEvent",             ruleProperty.discardEvents);
+  MARPAESLIFLUA_STORE_BOOLEAN      (L, "discardEventInitialState", ruleProperty.discardEventb);
+  MARPAESLIFLUA_STORE_INTEGER      (L, "rank",                     ruleProperty.ranki);
+  MARPAESLIFLUA_STORE_BOOLEAN      (L, "nullRanksHigh",            ruleProperty.nullRanksHighb);
+  MARPAESLIFLUA_STORE_BOOLEAN      (L, "sequence",                 ruleProperty.sequenceb);
+  MARPAESLIFLUA_STORE_BOOLEAN      (L, "proper",                   ruleProperty.properb);
+  MARPAESLIFLUA_STORE_INTEGER      (L, "minimum",                  ruleProperty.minimumi);
+  MARPAESLIFLUA_STORE_BOOLEAN      (L, "internal",                 ruleProperty.internalb);
+  MARPAESLIFLUA_STORE_INTEGER      (L, "propertyBitSet",           ruleProperty.propertyBitSet);
+  MARPAESLIFLUA_STORE_BOOLEAN      (L, "hideseparator",            ruleProperty.hideseparatorb);
 
   GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 at %s:%d", funcs, L, FILENAMES, __LINE__);
   return 1;
@@ -1047,24 +1093,24 @@ static int  marpaESLIFLua_marpaESLIFGrammar_rulePropertiesByLeveli(lua_State *L)
   }
 
   lua_createtable(L, 18, 0);                                                 /* stack; {} */
-  MARPAESLIFLUA_STORE_INTEGER      (L, 1, "id",                       ruleProperty.idi);
-  MARPAESLIFLUA_STORE_STRING       (L, 1, "description",              ruleProperty.descp);
-  MARPAESLIFLUA_STORE_ASCIISTRING  (L, 1, "show",                     ruleProperty.asciishows);
-  MARPAESLIFLUA_STORE_INTEGER      (L, 1, "lhsId",                    ruleProperty.lhsi);
-  MARPAESLIFLUA_STORE_INTEGER      (L, 1, "separatorId",              ruleProperty.separatori);
-  MARPAESLIFLUA_STORE_INTEGER_ARRAY(L, 1, "rhsIds",                   ruleProperty.nrhsl, ruleProperty.rhsip);
-  MARPAESLIFLUA_STORE_INTEGER      (L, 1, "exceptionId",              ruleProperty.exceptioni);
-  MARPAESLIFLUA_STORE_ACTION       (L, 1, "action",                   ruleProperty.actionp);
-  MARPAESLIFLUA_STORE_ASCIISTRING  (L, 1, "discardEvent",             ruleProperty.discardEvents);
-  MARPAESLIFLUA_STORE_BOOLEAN      (L, 1, "discardEventInitialState", ruleProperty.discardEventb);
-  MARPAESLIFLUA_STORE_INTEGER      (L, 1, "rank",                     ruleProperty.ranki);
-  MARPAESLIFLUA_STORE_BOOLEAN      (L, 1, "nullRanksHigh",            ruleProperty.nullRanksHighb);
-  MARPAESLIFLUA_STORE_BOOLEAN      (L, 1, "sequence",                 ruleProperty.sequenceb);
-  MARPAESLIFLUA_STORE_BOOLEAN      (L, 1, "proper",                   ruleProperty.properb);
-  MARPAESLIFLUA_STORE_INTEGER      (L, 1, "minimum",                  ruleProperty.minimumi);
-  MARPAESLIFLUA_STORE_BOOLEAN      (L, 1, "internal",                 ruleProperty.internalb);
-  MARPAESLIFLUA_STORE_INTEGER      (L, 1, "propertyBitSet",           ruleProperty.propertyBitSet);
-  MARPAESLIFLUA_STORE_BOOLEAN      (L, 1, "hideseparator",            ruleProperty.hideseparatorb);
+  MARPAESLIFLUA_STORE_INTEGER      (L, "id",                       ruleProperty.idi);
+  MARPAESLIFLUA_STORE_STRING       (L, "description",              ruleProperty.descp);
+  MARPAESLIFLUA_STORE_ASCIISTRING  (L, "show",                     ruleProperty.asciishows);
+  MARPAESLIFLUA_STORE_INTEGER      (L, "lhsId",                    ruleProperty.lhsi);
+  MARPAESLIFLUA_STORE_INTEGER      (L, "separatorId",              ruleProperty.separatori);
+  MARPAESLIFLUA_STORE_INTEGER_ARRAY(L, "rhsIds",                   ruleProperty.nrhsl, ruleProperty.rhsip);
+  MARPAESLIFLUA_STORE_INTEGER      (L, "exceptionId",              ruleProperty.exceptioni);
+  MARPAESLIFLUA_STORE_ACTION       (L, "action",                   ruleProperty.actionp);
+  MARPAESLIFLUA_STORE_ASCIISTRING  (L, "discardEvent",             ruleProperty.discardEvents);
+  MARPAESLIFLUA_STORE_BOOLEAN      (L, "discardEventInitialState", ruleProperty.discardEventb);
+  MARPAESLIFLUA_STORE_INTEGER      (L, "rank",                     ruleProperty.ranki);
+  MARPAESLIFLUA_STORE_BOOLEAN      (L, "nullRanksHigh",            ruleProperty.nullRanksHighb);
+  MARPAESLIFLUA_STORE_BOOLEAN      (L, "sequence",                 ruleProperty.sequenceb);
+  MARPAESLIFLUA_STORE_BOOLEAN      (L, "proper",                   ruleProperty.properb);
+  MARPAESLIFLUA_STORE_INTEGER      (L, "minimum",                  ruleProperty.minimumi);
+  MARPAESLIFLUA_STORE_BOOLEAN      (L, "internal",                 ruleProperty.internalb);
+  MARPAESLIFLUA_STORE_INTEGER      (L, "propertyBitSet",           ruleProperty.propertyBitSet);
+  MARPAESLIFLUA_STORE_BOOLEAN      (L, "hideseparator",            ruleProperty.hideseparatorb);
 
   GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 at %s:%d", funcs, L, FILENAMES, __LINE__);
   return 1;
@@ -1099,30 +1145,30 @@ static int  marpaESLIFLua_marpaESLIFGrammar_currentSymbolPropertiesi(lua_State *
   }
 
   lua_createtable(L, 24, 0);                                                 /* stack; {} */
-  MARPAESLIFLUA_STORE_INTEGER      (L, 1, "type",                       symbolProperty.type);
-  MARPAESLIFLUA_STORE_BOOLEAN      (L, 1, "start",                      symbolProperty.startb);
-  MARPAESLIFLUA_STORE_BOOLEAN      (L, 1, "discard",                    symbolProperty.discardb);
-  MARPAESLIFLUA_STORE_BOOLEAN      (L, 1, "discardRhs",                 symbolProperty.discardRhsb);
-  MARPAESLIFLUA_STORE_BOOLEAN      (L, 1, "lhs",                        symbolProperty.lhsb);
-  MARPAESLIFLUA_STORE_BOOLEAN      (L, 1, "top",                        symbolProperty.topb);
-  MARPAESLIFLUA_STORE_INTEGER      (L, 1, "id",                         symbolProperty.idi);
-  MARPAESLIFLUA_STORE_STRING       (L, 1, "description",                symbolProperty.descp);
-  MARPAESLIFLUA_STORE_ASCIISTRING  (L, 1, "eventBefore",                symbolProperty.eventBefores);
-  MARPAESLIFLUA_STORE_BOOLEAN      (L, 1, "eventBeforeInitialState",    symbolProperty.eventBeforeb);
-  MARPAESLIFLUA_STORE_ASCIISTRING  (L, 1, "eventAfter",                 symbolProperty.eventAfters);
-  MARPAESLIFLUA_STORE_BOOLEAN      (L, 1, "eventAfterInitialState",     symbolProperty.eventAfterb);
-  MARPAESLIFLUA_STORE_ASCIISTRING  (L, 1, "eventPredicted",             symbolProperty.eventPredicteds);
-  MARPAESLIFLUA_STORE_BOOLEAN      (L, 1, "eventPredictedInitialState", symbolProperty.eventPredictedb);
-  MARPAESLIFLUA_STORE_ASCIISTRING  (L, 1, "eventNulled",                symbolProperty.eventNulleds);
-  MARPAESLIFLUA_STORE_BOOLEAN      (L, 1, "eventNulledInitialState",    symbolProperty.eventNulledb);
-  MARPAESLIFLUA_STORE_ASCIISTRING  (L, 1, "eventCompleted",             symbolProperty.eventCompleteds);
-  MARPAESLIFLUA_STORE_BOOLEAN      (L, 1, "eventCompletedInitialState", symbolProperty.eventCompletedb);
-  MARPAESLIFLUA_STORE_ASCIISTRING  (L, 1, "discardEvent",               symbolProperty.discardEvents);
-  MARPAESLIFLUA_STORE_BOOLEAN      (L, 1, "discardEventInitialState",   symbolProperty.discardEventb);
-  MARPAESLIFLUA_STORE_INTEGER      (L, 1, "lookupResolvedLeveli",       symbolProperty.lookupResolvedLeveli);
-  MARPAESLIFLUA_STORE_INTEGER      (L, 1, "priority",                   symbolProperty.priorityi);
-  MARPAESLIFLUA_STORE_ACTION       (L, 1, "nullableAction",             symbolProperty.nullableActionp);
-  MARPAESLIFLUA_STORE_INTEGER      (L, 1, "propertyBitSet",             symbolProperty.propertyBitSet);
+  MARPAESLIFLUA_STORE_INTEGER      (L, "type",                       symbolProperty.type);
+  MARPAESLIFLUA_STORE_BOOLEAN      (L, "start",                      symbolProperty.startb);
+  MARPAESLIFLUA_STORE_BOOLEAN      (L, "discard",                    symbolProperty.discardb);
+  MARPAESLIFLUA_STORE_BOOLEAN      (L, "discardRhs",                 symbolProperty.discardRhsb);
+  MARPAESLIFLUA_STORE_BOOLEAN      (L, "lhs",                        symbolProperty.lhsb);
+  MARPAESLIFLUA_STORE_BOOLEAN      (L, "top",                        symbolProperty.topb);
+  MARPAESLIFLUA_STORE_INTEGER      (L, "id",                         symbolProperty.idi);
+  MARPAESLIFLUA_STORE_STRING       (L, "description",                symbolProperty.descp);
+  MARPAESLIFLUA_STORE_ASCIISTRING  (L, "eventBefore",                symbolProperty.eventBefores);
+  MARPAESLIFLUA_STORE_BOOLEAN      (L, "eventBeforeInitialState",    symbolProperty.eventBeforeb);
+  MARPAESLIFLUA_STORE_ASCIISTRING  (L, "eventAfter",                 symbolProperty.eventAfters);
+  MARPAESLIFLUA_STORE_BOOLEAN      (L, "eventAfterInitialState",     symbolProperty.eventAfterb);
+  MARPAESLIFLUA_STORE_ASCIISTRING  (L, "eventPredicted",             symbolProperty.eventPredicteds);
+  MARPAESLIFLUA_STORE_BOOLEAN      (L, "eventPredictedInitialState", symbolProperty.eventPredictedb);
+  MARPAESLIFLUA_STORE_ASCIISTRING  (L, "eventNulled",                symbolProperty.eventNulleds);
+  MARPAESLIFLUA_STORE_BOOLEAN      (L, "eventNulledInitialState",    symbolProperty.eventNulledb);
+  MARPAESLIFLUA_STORE_ASCIISTRING  (L, "eventCompleted",             symbolProperty.eventCompleteds);
+  MARPAESLIFLUA_STORE_BOOLEAN      (L, "eventCompletedInitialState", symbolProperty.eventCompletedb);
+  MARPAESLIFLUA_STORE_ASCIISTRING  (L, "discardEvent",               symbolProperty.discardEvents);
+  MARPAESLIFLUA_STORE_BOOLEAN      (L, "discardEventInitialState",   symbolProperty.discardEventb);
+  MARPAESLIFLUA_STORE_INTEGER      (L, "lookupResolvedLeveli",       symbolProperty.lookupResolvedLeveli);
+  MARPAESLIFLUA_STORE_INTEGER      (L, "priority",                   symbolProperty.priorityi);
+  MARPAESLIFLUA_STORE_ACTION       (L, "nullableAction",             symbolProperty.nullableActionp);
+  MARPAESLIFLUA_STORE_INTEGER      (L, "propertyBitSet",             symbolProperty.propertyBitSet);
 
   GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 at %s:%d", funcs, L, FILENAMES, __LINE__);
   return 1;
@@ -1159,30 +1205,30 @@ static int  marpaESLIFLua_marpaESLIFGrammar_symbolPropertiesByLeveli(lua_State *
   }
 
   lua_createtable(L, 24, 0);                                                 /* stack; {} */
-  MARPAESLIFLUA_STORE_INTEGER      (L, 1, "type",                       symbolProperty.type);
-  MARPAESLIFLUA_STORE_BOOLEAN      (L, 1, "start",                      symbolProperty.startb);
-  MARPAESLIFLUA_STORE_BOOLEAN      (L, 1, "discard",                    symbolProperty.discardb);
-  MARPAESLIFLUA_STORE_BOOLEAN      (L, 1, "discardRhs",                 symbolProperty.discardRhsb);
-  MARPAESLIFLUA_STORE_BOOLEAN      (L, 1, "lhs",                        symbolProperty.lhsb);
-  MARPAESLIFLUA_STORE_BOOLEAN      (L, 1, "top",                        symbolProperty.topb);
-  MARPAESLIFLUA_STORE_INTEGER      (L, 1, "id",                         symbolProperty.idi);
-  MARPAESLIFLUA_STORE_STRING       (L, 1, "description",                symbolProperty.descp);
-  MARPAESLIFLUA_STORE_ASCIISTRING  (L, 1, "eventBefore",                symbolProperty.eventBefores);
-  MARPAESLIFLUA_STORE_BOOLEAN      (L, 1, "eventBeforeInitialState",    symbolProperty.eventBeforeb);
-  MARPAESLIFLUA_STORE_ASCIISTRING  (L, 1, "eventAfter",                 symbolProperty.eventAfters);
-  MARPAESLIFLUA_STORE_BOOLEAN      (L, 1, "eventAfterInitialState",     symbolProperty.eventAfterb);
-  MARPAESLIFLUA_STORE_ASCIISTRING  (L, 1, "eventPredicted",             symbolProperty.eventPredicteds);
-  MARPAESLIFLUA_STORE_BOOLEAN      (L, 1, "eventPredictedInitialState", symbolProperty.eventPredictedb);
-  MARPAESLIFLUA_STORE_ASCIISTRING  (L, 1, "eventNulled",                symbolProperty.eventNulleds);
-  MARPAESLIFLUA_STORE_BOOLEAN      (L, 1, "eventNulledInitialState",    symbolProperty.eventNulledb);
-  MARPAESLIFLUA_STORE_ASCIISTRING  (L, 1, "eventCompleted",             symbolProperty.eventCompleteds);
-  MARPAESLIFLUA_STORE_BOOLEAN      (L, 1, "eventCompletedInitialState", symbolProperty.eventCompletedb);
-  MARPAESLIFLUA_STORE_ASCIISTRING  (L, 1, "discardEvent",               symbolProperty.discardEvents);
-  MARPAESLIFLUA_STORE_BOOLEAN      (L, 1, "discardEventInitialState",   symbolProperty.discardEventb);
-  MARPAESLIFLUA_STORE_INTEGER      (L, 1, "lookupResolvedLeveli",       symbolProperty.lookupResolvedLeveli);
-  MARPAESLIFLUA_STORE_INTEGER      (L, 1, "priority",                   symbolProperty.priorityi);
-  MARPAESLIFLUA_STORE_ACTION       (L, 1, "nullableAction",             symbolProperty.nullableActionp);
-  MARPAESLIFLUA_STORE_INTEGER      (L, 1, "propertyBitSet",             symbolProperty.propertyBitSet);
+  MARPAESLIFLUA_STORE_INTEGER      (L, "type",                       symbolProperty.type);
+  MARPAESLIFLUA_STORE_BOOLEAN      (L, "start",                      symbolProperty.startb);
+  MARPAESLIFLUA_STORE_BOOLEAN      (L, "discard",                    symbolProperty.discardb);
+  MARPAESLIFLUA_STORE_BOOLEAN      (L, "discardRhs",                 symbolProperty.discardRhsb);
+  MARPAESLIFLUA_STORE_BOOLEAN      (L, "lhs",                        symbolProperty.lhsb);
+  MARPAESLIFLUA_STORE_BOOLEAN      (L, "top",                        symbolProperty.topb);
+  MARPAESLIFLUA_STORE_INTEGER      (L, "id",                         symbolProperty.idi);
+  MARPAESLIFLUA_STORE_STRING       (L, "description",                symbolProperty.descp);
+  MARPAESLIFLUA_STORE_ASCIISTRING  (L, "eventBefore",                symbolProperty.eventBefores);
+  MARPAESLIFLUA_STORE_BOOLEAN      (L, "eventBeforeInitialState",    symbolProperty.eventBeforeb);
+  MARPAESLIFLUA_STORE_ASCIISTRING  (L, "eventAfter",                 symbolProperty.eventAfters);
+  MARPAESLIFLUA_STORE_BOOLEAN      (L, "eventAfterInitialState",     symbolProperty.eventAfterb);
+  MARPAESLIFLUA_STORE_ASCIISTRING  (L, "eventPredicted",             symbolProperty.eventPredicteds);
+  MARPAESLIFLUA_STORE_BOOLEAN      (L, "eventPredictedInitialState", symbolProperty.eventPredictedb);
+  MARPAESLIFLUA_STORE_ASCIISTRING  (L, "eventNulled",                symbolProperty.eventNulleds);
+  MARPAESLIFLUA_STORE_BOOLEAN      (L, "eventNulledInitialState",    symbolProperty.eventNulledb);
+  MARPAESLIFLUA_STORE_ASCIISTRING  (L, "eventCompleted",             symbolProperty.eventCompleteds);
+  MARPAESLIFLUA_STORE_BOOLEAN      (L, "eventCompletedInitialState", symbolProperty.eventCompletedb);
+  MARPAESLIFLUA_STORE_ASCIISTRING  (L, "discardEvent",               symbolProperty.discardEvents);
+  MARPAESLIFLUA_STORE_BOOLEAN      (L, "discardEventInitialState",   symbolProperty.discardEventb);
+  MARPAESLIFLUA_STORE_INTEGER      (L, "lookupResolvedLeveli",       symbolProperty.lookupResolvedLeveli);
+  MARPAESLIFLUA_STORE_INTEGER      (L, "priority",                   symbolProperty.priorityi);
+  MARPAESLIFLUA_STORE_ACTION       (L, "nullableAction",             symbolProperty.nullableActionp);
+  MARPAESLIFLUA_STORE_INTEGER      (L, "propertyBitSet",             symbolProperty.propertyBitSet);
 
   GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 at %s:%d", funcs, L, FILENAMES, __LINE__);
   return 1;
