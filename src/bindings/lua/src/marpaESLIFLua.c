@@ -288,6 +288,7 @@ static int marpaESLIFLua_marpaESLIF_newi(lua_State *L)
     break;
   case 1:
     loggerb = marpaESLIFLua_paramIsLoggerInterfaceOrNilb(L, 1);
+    lua_pop(L, 1);
     break;
   default:
     return luaL_error(L, "Usage: marpaESLIF_new([logger]");
@@ -296,22 +297,22 @@ static int marpaESLIFLua_marpaESLIF_newi(lua_State *L)
   MARPAESLIFLUA_GETORCREATEGLOBAL(L, MARPAESLIFMULTITONS, marpaESLIFLua_marpaESLIFMultiton_freevi);
 
   /* Look if MARPAESLIFMULTITONS already contains a reference to logger */
-  lua_pushnil(L);                                                     /* stack: [loggerp,] MARPAESLIFMULTITONS, nil */
-  while (lua_next(L, -2) != 0) {                                      /* stack: [loggerp,] MARPAESLIFMULTITONS, marpaESLIFp, r */
+  lua_pushnil(L);                                                     /* stack: MARPAESLIFMULTITONS, nil */
+  while (lua_next(L, -2) != 0) {                                      /* stack: MARPAESLIFMULTITONS, marpaESLIFp, r */
     logger_r = lua_tointeger(L, -1);
     if (logger_r == LUA_NOREF) {
-      lua_pushnil(L);                                                 /* stack: [loggerp,] MARPAESLIFMULTITONS, marpaESLIFp, r, nil */
+      lua_pushnil(L);                                                 /* stack: MARPAESLIFMULTITONS, marpaESLIFp, r, nil */
     } else {
-      lua_rawgeti(L, LUA_REGISTRYINDEX, logger_r);                    /* stack: [loggerp,] MARPAESLIFMULTITONS, marpaESLIFp, r, loggerp_from_registry */
+      lua_rawgeti(L, LUA_REGISTRYINDEX, logger_r);                    /* stack: MARPAESLIFMULTITONS, marpaESLIFp, r, loggerp_from_registry */
     }
     if (((! loggerb) && lua_isnil(L, -1))
         ||
         ((  loggerb) && lua_compare(L, 1, -1, LUA_OPEQ))) {
       marpaESLIFp = (marpaESLIF_t *) lua_touserdata(L, -3);
-      lua_pop(L, 3);                                                  /* stack: [loggerp,] MARPAESLIFMULTITONS */
+      lua_pop(L, 3);                                                  /* stack: MARPAESLIFMULTITONS */
       break;
     }
-    lua_pop(L, 2);                                                    /* stack: [loggerp,] MARPAESLIFMULTITONS, marpaESLIFp */
+    lua_pop(L, 2);                                                    /* stack: MARPAESLIFMULTITONS, marpaESLIFp */
   }
 
   if (marpaESLIFp == NULL) {
@@ -355,15 +356,15 @@ static int marpaESLIFLua_marpaESLIF_newi(lua_State *L)
     }
 
     /* Link marpaESLIFp to logger_r */
-    lua_pushinteger(L, (lua_Integer) logger_r);                       /* stack: [loggerp,] MARPAESLIFMULTITONS, logger_r */
-    lua_rawsetp(L, -2, (const void *) marpaESLIFp);                   /* stack: [loggerp,] MARPAESLIFMULTITONS */
-    lua_pop(L, 1);                                                    /* stack: [loggerp ] */
+    lua_pushinteger(L, (lua_Integer) logger_r);                       /* stack: MARPAESLIFMULTITONS, logger_r */
+    lua_rawsetp(L, -2, (const void *) marpaESLIFp);                   /* stack: MARPAESLIFMULTITONS */
+    lua_pop(L, 1);                                                    /* stack: */
     GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) marpaESLIFp=%p at %s:%d", funcs, L, marpaESLIFp, FILENAMES, __LINE__);
   } else {
     GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) marpaESLIFp=%p (reuse) at %s:%d", funcs, L, marpaESLIFp, FILENAMES, __LINE__);
   }
 
-  lua_pushlightuserdata(L, marpaESLIFp);                              /* stack: [loggerp], marpaESLIFp */
+  lua_pushlightuserdata(L, marpaESLIFp);                              /* stack: marpaESLIFp */
 
   /* Create a metable */
   lua_newtable(L);
@@ -371,7 +372,7 @@ static int marpaESLIFLua_marpaESLIF_newi(lua_State *L)
   MARPAESLIFLUA_STORE_FUNCTION(L, "marpaESLIFGrammar_new", marpaESLIFLua_marpaESLIFGrammar_newi);
   lua_setfield(L, -2, "__index");
 
-  lua_setmetatable(L, -2);                                            /* stack: [loggerp], marpaESLIFp meta={...} */
+  lua_setmetatable(L, -2);                                            /* stack: marpaESLIFp meta={...} */
 
   GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 (marpaESLIFp=%p) at %s:%d", funcs, L, marpaESLIFp, FILENAMES, __LINE__);
   return 1;
