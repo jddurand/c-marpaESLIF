@@ -278,7 +278,7 @@ static int marpaESLIFLua_marpaESLIF_newi(lua_State *L)
   genericLoggerContext_t *genericLoggerContextp;
   genericLogger_t        *genericLoggerp;
   marpaESLIFOption_t      marpaESLIFOption;
-  lua_Integer             logger_r;
+  int                     logger_r;
 
   GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__);
 
@@ -299,7 +299,7 @@ static int marpaESLIFLua_marpaESLIF_newi(lua_State *L)
   /* Look if MARPAESLIFMULTITONS already contains a reference to logger */
   lua_pushnil(L);                                                     /* stack: MARPAESLIFMULTITONS, nil */
   while (lua_next(L, -2) != 0) {                                      /* stack: MARPAESLIFMULTITONS, marpaESLIFp, r */
-    logger_r = lua_tointeger(L, -1);
+    logger_r = (int) lua_tointeger(L, -1);
     if (logger_r == LUA_NOREF) {
       lua_pushnil(L);                                                 /* stack: MARPAESLIFMULTITONS, marpaESLIFp, r, nil */
     } else {
@@ -424,7 +424,6 @@ static void marpaESLIFLua_genericLoggerCallbackv(void *userDatavp, genericLogger
   int                     logger_r             = genericLoggerContext->logger_r;
   lua_State              *L                    = genericLoggerContext->L;
   const char             *funcs;
-  int                     n;
   int                     topi;
 
   switch (logLeveli) {
@@ -810,7 +809,6 @@ static int  marpaESLIFLua_marpaESLIFGrammar_currentRuleIdsi(lua_State *L)
   marpaESLIFGrammar_t *marpaESLIFGrammarp;
   int                 *ruleip;
   size_t               rulel;
-  size_t               iteratorl;
 
   GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__);
 
@@ -848,7 +846,6 @@ static int  marpaESLIFLua_marpaESLIFGrammar_ruleIdsByLeveli(lua_State *L)
   lua_Integer          leveli;
   int                 *ruleip;
   size_t               rulel;
-  size_t               iteratorl;
 
   GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__);
 
@@ -886,7 +883,6 @@ static int  marpaESLIFLua_marpaESLIFGrammar_currentSymbolIdsi(lua_State *L)
   marpaESLIFGrammar_t *marpaESLIFGrammarp;
   int                 *symbolip;
   size_t               symboll;
-  size_t               iteratorl;
 
   GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__);
 
@@ -924,7 +920,6 @@ static int  marpaESLIFLua_marpaESLIFGrammar_symbolIdsByLeveli(lua_State *L)
   lua_Integer          leveli;
   int                 *symbolip;
   size_t               symboll;
-  size_t               iteratorl;
 
   GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__);
 
