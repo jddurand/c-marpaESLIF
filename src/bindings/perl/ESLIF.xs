@@ -248,7 +248,7 @@ static void                            marpaESLIF_recognizerContextInitv(pTHX_ S
 static void                            marpaESLIF_valueContextInitv(pTHX_ SV *Perl_MarpaX_ESLIF_Recognizerp, SV *Perl_MarpaX_ESLIF_Grammarp, SV *Perl_valueInterfacep, MarpaX_ESLIF_Value_t *Perl_MarpaX_ESLIF_Valuep);
 static void                            marpaESLIF_paramIsGrammarv(pTHX_ SV *sv);
 static void                            marpaESLIF_paramIsEncodingv(pTHX_ SV *sv);
-static short                           marpaESLIF_paramIsLoggerInterfaceOrUndefv(pTHX_ SV *sv);
+static short                           marpaESLIF_paramIsLoggerInterfaceOrUndefb(pTHX_ SV *sv);
 static void                            marpaESLIF_paramIsRecognizerInterfacev(pTHX_ SV *sv);
 static void                            marpaESLIF_paramIsValueInterfacev(pTHX_ SV *sv);
 static short                           marpaESLIF_representationb(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp, char **inputcpp, size_t *inputlp);
@@ -1249,10 +1249,10 @@ static void marpaESLIF_paramIsEncodingv(pTHX_ SV *sv)
 }
 
 /*****************************************************************************/
-static short marpaESLIF_paramIsLoggerInterfaceOrUndefv(pTHX_ SV *sv)
+static short marpaESLIF_paramIsLoggerInterfaceOrUndefb(pTHX_ SV *sv)
 /*****************************************************************************/
 {
-  static const char *funcs = "marpaESLIF_paramIsLoggerInterfaceOrUndefv";
+  static const char *funcs = "marpaESLIF_paramIsLoggerInterfaceOrUndefb";
   int                type  = marpaESLIF_getTypei(aTHX_ sv);
 
   if ((type & UNDEF) == UNDEF) {
@@ -1595,7 +1595,7 @@ CODE:
   marpaESLIFOption_t  marpaESLIFOption;
 
   if(items > 1) {
-    loggerInterfaceIsObjectb = marpaESLIF_paramIsLoggerInterfaceOrUndefv(aTHX_ Perl_loggerInterfacep = ST(1));
+    loggerInterfaceIsObjectb = marpaESLIF_paramIsLoggerInterfaceOrUndefb(aTHX_ Perl_loggerInterfacep = ST(1));
   }
 
   Newx(Perl_MarpaX_ESLIF_Enginep, 1, MarpaX_ESLIF_Engine_t);
