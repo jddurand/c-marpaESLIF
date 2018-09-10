@@ -24,36 +24,37 @@ typedef struct genericLoggerContext {
   lua_State *L; /* Lua state */
   int logger_r; /* Logger reference */
 } genericLoggerContext_t;
-static void marpaESLIFLua_genericLoggerCallbackv(void *userDatavp, genericLoggerLevel_t logLeveli, const char *msgs);
-static int  marpaESLIFLua_create_refi(lua_State *L, short weakb, lua_CFunction gcp);
-static int  marpaESLIFLua_installi(lua_State *L);
-static int  marpaESLIFLua_versioni(lua_State *L);
-static int  marpaESLIFLua_marpaESLIF_newi(lua_State *L);
-static int  marpaESLIFLua_marpaESLIFMultiton_freevi(lua_State *L);
-static int  marpaESLIFLua_marpaESLIFGrammar_newi(lua_State *L);
-static int  marpaESLIFLua_marpaESLIFGrammar_freei(lua_State *L);
-static int  marpaESLIFLua_marpaESLIFGrammar_ngrammari(lua_State *L);
-static int  marpaESLIFLua_marpaESLIFGrammar_currentLeveli(lua_State *L);
-static int  marpaESLIFLua_marpaESLIFGrammar_currentDescriptioni(lua_State *L);
-static int  marpaESLIFLua_marpaESLIFGrammar_descriptionByLeveli(lua_State *L);
-static int  marpaESLIFLua_marpaESLIFGrammar_currentRuleIdsi(lua_State *L);
-static int  marpaESLIFLua_marpaESLIFGrammar_ruleIdsByLeveli(lua_State *L);
-static int  marpaESLIFLua_marpaESLIFGrammar_currentSymbolIdsi(lua_State *L);
-static int  marpaESLIFLua_marpaESLIFGrammar_symbolIdsByLeveli(lua_State *L);
-static int  marpaESLIFLua_marpaESLIFGrammar_currentPropertiesi(lua_State *L);
-static int  marpaESLIFLua_marpaESLIFGrammar_propertiesByLeveli(lua_State *L);
-static int  marpaESLIFLua_marpaESLIFGrammar_currentRulePropertiesi(lua_State *L);
-static int  marpaESLIFLua_marpaESLIFGrammar_rulePropertiesByLeveli(lua_State *L);
-static int  marpaESLIFLua_marpaESLIFGrammar_currentSymbolPropertiesi(lua_State *L);
-static int  marpaESLIFLua_marpaESLIFGrammar_symbolPropertiesByLeveli(lua_State *L);
-static int  marpaESLIFLua_marpaESLIFGrammar_ruleDisplayi(lua_State *L);
-static int  marpaESLIFLua_marpaESLIFGrammar_symbolDisplayi(lua_State *L);
-static int  marpaESLIFLua_marpaESLIFGrammar_ruleShowi(lua_State *L);
-static int  marpaESLIFLua_marpaESLIFGrammar_ruleDisplayByLeveli(lua_State *L);
-static int  marpaESLIFLua_marpaESLIFGrammar_symbolDisplayByLeveli(lua_State *L);
-static int  marpaESLIFLua_marpaESLIFGrammar_ruleShowByLeveli(lua_State *L);
-static int  marpaESLIFLua_marpaESLIFGrammar_showi(lua_State *L);
-static int  marpaESLIFLua_marpaESLIFGrammar_showByLeveli(lua_State *L);
+static short marpaESLIFLua_paramIsLoggerInterfaceOrNilb(lua_State *L, int stacki);
+static void  marpaESLIFLua_genericLoggerCallbackv(void *userDatavp, genericLoggerLevel_t logLeveli, const char *msgs);
+static int   marpaESLIFLua_create_refi(lua_State *L, short weakb, lua_CFunction gcp);
+static int   marpaESLIFLua_installi(lua_State *L);
+static int   marpaESLIFLua_versioni(lua_State *L);
+static int   marpaESLIFLua_marpaESLIF_newi(lua_State *L);
+static int   marpaESLIFLua_marpaESLIFMultiton_freevi(lua_State *L);
+static int   marpaESLIFLua_marpaESLIFGrammar_newi(lua_State *L);
+static int   marpaESLIFLua_marpaESLIFGrammar_freei(lua_State *L);
+static int   marpaESLIFLua_marpaESLIFGrammar_ngrammari(lua_State *L);
+static int   marpaESLIFLua_marpaESLIFGrammar_currentLeveli(lua_State *L);
+static int   marpaESLIFLua_marpaESLIFGrammar_currentDescriptioni(lua_State *L);
+static int   marpaESLIFLua_marpaESLIFGrammar_descriptionByLeveli(lua_State *L);
+static int   marpaESLIFLua_marpaESLIFGrammar_currentRuleIdsi(lua_State *L);
+static int   marpaESLIFLua_marpaESLIFGrammar_ruleIdsByLeveli(lua_State *L);
+static int   marpaESLIFLua_marpaESLIFGrammar_currentSymbolIdsi(lua_State *L);
+static int   marpaESLIFLua_marpaESLIFGrammar_symbolIdsByLeveli(lua_State *L);
+static int   marpaESLIFLua_marpaESLIFGrammar_currentPropertiesi(lua_State *L);
+static int   marpaESLIFLua_marpaESLIFGrammar_propertiesByLeveli(lua_State *L);
+static int   marpaESLIFLua_marpaESLIFGrammar_currentRulePropertiesi(lua_State *L);
+static int   marpaESLIFLua_marpaESLIFGrammar_rulePropertiesByLeveli(lua_State *L);
+static int   marpaESLIFLua_marpaESLIFGrammar_currentSymbolPropertiesi(lua_State *L);
+static int   marpaESLIFLua_marpaESLIFGrammar_symbolPropertiesByLeveli(lua_State *L);
+static int   marpaESLIFLua_marpaESLIFGrammar_ruleDisplayi(lua_State *L);
+static int   marpaESLIFLua_marpaESLIFGrammar_symbolDisplayi(lua_State *L);
+static int   marpaESLIFLua_marpaESLIFGrammar_ruleShowi(lua_State *L);
+static int   marpaESLIFLua_marpaESLIFGrammar_ruleDisplayByLeveli(lua_State *L);
+static int   marpaESLIFLua_marpaESLIFGrammar_symbolDisplayByLeveli(lua_State *L);
+static int   marpaESLIFLua_marpaESLIFGrammar_ruleShowByLeveli(lua_State *L);
+static int   marpaESLIFLua_marpaESLIFGrammar_showi(lua_State *L);
+static int   marpaESLIFLua_marpaESLIFGrammar_showByLeveli(lua_State *L);
 
 #define MARPAESLIFLUA_GETORCREATEGLOBAL(L, name, gcp) do {              \
     if (lua_getglobal(L, name) != LUA_TTABLE) {                         \
@@ -279,18 +280,6 @@ static int marpaESLIFLua_marpaESLIF_newi(lua_State *L)
   marpaESLIFOption_t      marpaESLIFOption;
   lua_Integer             logger_r;
 
-  static const char *loggerFunctions[] = {
-    "trace",
-    "debug",
-    "info",
-    "notice",
-    "warning",
-    "error",
-    "critical",
-    "emergency"
-  };
-  int i;
-
   GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__);
 
   switch (lua_gettop(L)) {
@@ -298,22 +287,7 @@ static int marpaESLIFLua_marpaESLIF_newi(lua_State *L)
     loggerb = 0;
     break;
   case 1:
-    if (lua_type(L, 1) == LUA_TNIL) {
-      loggerb = 0;
-    } else {
-      /* Verify that the logger can do all wanted methods */
-      if (lua_type(L, 1) != LUA_TTABLE) {
-        return luaL_error(L, "logger must be a table");
-      }
-      for (i = 0; i < sizeof(loggerFunctions)/sizeof(loggerFunctions[0]); i++) {
-        if (lua_getfield(L, -1, loggerFunctions[i]) != LUA_TFUNCTION) {
-          return luaL_error(L, "logger table must have a field named '%s' that is a function", loggerFunctions[i]);
-        } else {
-          lua_pop(L, 1);
-        }
-      }
-      loggerb = 1;
-    }
+    loggerb = marpaESLIFLua_paramIsLoggerInterfaceOrNilb(L, 1);
     break;
   default:
     return luaL_error(L, "Usage: marpaESLIF_new([logger]");
@@ -401,6 +375,44 @@ static int marpaESLIFLua_marpaESLIF_newi(lua_State *L)
 
   GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 (marpaESLIFp=%p) at %s:%d", funcs, L, marpaESLIFp, FILENAMES, __LINE__);
   return 1;
+}
+
+/****************************************************************************/
+static short marpaESLIFLua_paramIsLoggerInterfaceOrNilb(lua_State *L, int stacki)
+/****************************************************************************/
+{
+  static const char *funcs = "marpaESLIFLua_paramIsLoggerInterfaceOrNilb";
+  static const char *loggerFunctions[] = {
+    "trace",
+    "debug",
+    "info",
+    "notice",
+    "warning",
+    "error",
+    "critical",
+    "emergency"
+  };
+  int                i;
+  short              loggerb;
+
+  if (lua_type(L, 1) == LUA_TNIL) {
+    loggerb = 0;
+  } else {
+    /* Verify that the logger can do all wanted methods */
+    if (lua_type(L, 1) != LUA_TTABLE) {
+      return luaL_error(L, "logger must be a table");
+    }
+    for (i = 0; i < sizeof(loggerFunctions)/sizeof(loggerFunctions[0]); i++) {
+      if (lua_getfield(L, -1, loggerFunctions[i]) != LUA_TFUNCTION) {
+        return luaL_error(L, "logger table must have a field named '%s' that is a function", loggerFunctions[i]);
+      } else {
+        lua_pop(L, 1);
+      }
+    }
+    loggerb = 1;
+  }
+
+  return loggerb;
 }
 
 /****************************************************************************/
