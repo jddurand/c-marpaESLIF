@@ -57,7 +57,8 @@ static int   marpaESLIFLua_marpaESLIFGrammar_showi(lua_State *L);
 static int   marpaESLIFLua_marpaESLIFGrammar_showByLeveli(lua_State *L);
 
 #define MARPAESLIFLUA_GETORCREATEGLOBAL(L, name, gcp) do {              \
-    if (lua_getglobal(L, name) != LUA_TTABLE) {                         \
+  lua_getglobal(L, name);                                               \
+  if (lua_type(L, -1) != LUA_TTABLE) {                                  \
       lua_pop(L, 1);                                                    \
       lua_newtable(L);                                                  \
       if (gcp != NULL) {                                                \
@@ -396,15 +397,17 @@ static short marpaESLIFLua_paramIsLoggerInterfaceOrNilb(lua_State *L, int stacki
   int                i;
   short              loggerb;
 
-  if (lua_type(L, 1) == LUA_TNIL) {
+  if (lua_type(L, -1) == LUA_TNIL) {
     loggerb = 0;
   } else {
     /* Verify that the logger can do all wanted methods */
-    if (lua_type(L, 1) != LUA_TTABLE) {
+    if (lua_type(L, -1) != LUA_TTABLE) {
       return luaL_error(L, "logger must be a table");
     }
     for (i = 0; i < sizeof(loggerFunctions)/sizeof(loggerFunctions[0]); i++) {
-      if (lua_getfield(L, -1, loggerFunctions[i]) != LUA_TFUNCTION) {
+      lua_getfield(L, -1, loggerFunctions[i]);
+      if (lua_type(L, -1) != LUA_TFUNCTION) {
+        lua_pop(L, 1);
         return luaL_error(L, "logger table must have a field named '%s' that is a function", loggerFunctions[i]);
       } else {
         lua_pop(L, 1);
