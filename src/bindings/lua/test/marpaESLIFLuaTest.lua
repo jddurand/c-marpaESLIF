@@ -65,15 +65,15 @@ local function tableDump(lua_table, fold)
 end
 
 local marpaESLIFLua = require 'marpaESLIFLua'
-logger = {
-   ['trace']     = function(msgs) print('LUA_TRACE '..msgs) end,
-   ['debug']     = function(msgs) print('LUA_DEBUG '..msgs) end,
-   ['info']      = function(msgs) print('LUA_INFO '..msgs) end,
-   ['notice']    = function(msgs) print('LUA_NOTICE '..msgs) end,
-   ['warning']   = function(msgs) print('LUA_WARNING '..msgs) end,
-   ['error']     = function(msgs) print('LUA_ERROR '..msgs) end,
-   ['critical']  = function(msgs) print('LUA_CRITICAL '..msgs) end,
-   ['emergency'] = function(msgs) print('LUA_EMERGENCY '..msgs) end
+local logger = {
+   ["trace"]     = function(self, msgs) print('LUA_TRACE '..msgs) end,
+   ["debug"]     = function(self, msgs) print('LUA_DEBUG '..msgs) end,
+   ["info"]      = function(self, msgs) print('LUA_INFO '..msgs) end,
+   ["notice"]    = function(self, msgs) print('LUA_NOTICE '..msgs) end,
+   ["warning"]   = function(self, msgs) print('LUA_WARNING '..msgs) end,
+   ["error"]     = function(self, msgs) print('LUA_ERROR '..msgs) end,
+   ["critical"]  = function(self, msgs) print('LUA_CRITICAL '..msgs) end,
+   ["emergency"] = function(self, msgs) print('LUA_EMERGENCY '..msgs) end
 }
 
 ------------------------------------------------------------------------------
@@ -82,7 +82,39 @@ print('marpaESLIF version: '..marpaESLIFLua.version())
 local marpaESLIFp = marpaESLIFLua.marpaESLIF_new(logger)
 print('marpaESLIFp meta dump:'..tableDump(getmetatable(marpaESLIFp)))
 ------------------------------------------------------------------------------
-local marpaESLIFGrammarp = marpaESLIFp:marpaESLIFGrammar_new("X ::= x\nx ~ 'lexeme'")
+print('logger.error:'..tostring(logger.error))
+local marpaESLIFGrammarp = marpaESLIFp:marpaESLIFGrammar_new(
+   [[
+:start   ::= Expression
+:default ::=             action        => do_op
+                         symbol-action => do_symbol
+                         free-action   => do_free
+:discard ::= whitespaces event  => discard_whitespaces$
+:discard ::= comment     event  => discard_comment$
+
+event ^Number = predicted Number
+event Number$ = completed Number
+Number   ::= NUMBER   action => ::shift
+
+event Expression$ = completed Expression
+event ^Expression = predicted Expression
+Expression ::=
+    Number                                           action => do_int            name => 'Expression is Number'
+    | '(' Expression ')'              assoc => group action => ::copy[1]         name => 'Expression is ()'
+   ||     Expression '**' Expression  assoc => right                             name => 'Expression is **'
+   ||     Expression  '*' Expression                                             name => 'Expression is *'
+    |     Expression  '/' Expression                                             name => 'Expression is /'
+   ||     Expression  '+' Expression                                             name => 'Expression is +'
+    |     Expression  '-' Expression                                             name => 'Expression is -'
+
+:lexeme ::= NUMBER pause => before event => ^NUMBER
+:lexeme ::= NUMBER pause => after  event => NUMBER$
+NUMBER     ~ /[\d]+/
+whitespaces ::= WHITESPACES
+WHITESPACES ~ [\s]+
+comment ::= /(?:(?:(?:\/\/)(?:[^\n]*)(?:\n|\z))|(?:(?:\/\*)(?:(?:[^\*]+|\*(?!\/))*)(?:\*\/)))/u
+]]
+)
 print('marpaESLIFGrammarp      dump:'..tableDump(marpaESLIFGrammarp))
 print('marpaESLIFGrammarp meta dump:'..tableDump(getmetatable(marpaESLIFGrammarp)))
 ------------------------------------------------------------------------------
@@ -195,3 +227,70 @@ for level = 0,ngrammar-1 do
    print('... Level '..level..' grammar show: '..showByLevel)
 end
 ------------------------------------------------------------------------------
+local strings = {
+   "(((3 * 4) + 2 * 7) / 2 - 1)/* This is a\n comment \n */** 3",
+   "5 / (2 * 3)",
+   "5 / 2 * 3",
+   "(5 ** 2) ** 3",
+   "5 * (2 * 3)",
+   "5 ** (2 ** 3)",
+   "5 ** (2 / 3)",
+   "1 + ( 2 + ( 3 + ( 4 + 5) )",
+   "1 + ( 2 + ( 3 + ( 4 + 50) ) )   /* comment after */",
+   " 100"
+}
+
+--
+-- C.f. https://stackoverflow.com/questions/19326368/iterate-over-lines-including-blank-lines
+--
+local function magiclines( str )
+   local pos = 1;
+    return function()
+        if not pos then return nil end
+        local  p1, p2 = string.find( str, "\r?\n", pos )
+        local line
+        if p1 then
+            line = str:sub( pos, p1 - 1 )
+            pos = p2 + 1
+        else
+            line = str:sub( pos )
+            pos = nil
+        end
+        return line
+    end
+end
+
+--
+-- Test the parse interface
+--
+for _, localstring in pairs(strings) do
+   print('Testing parse on '..localstring)
+   local magiclinesFunction = magiclines(localstring)
+   local recognizerInterface = {
+      ["read"]  = function(self)
+         self._data = magiclinesFunction()
+         self._isEof = self.data == nil
+         return true
+      end,
+      ["isEof"]                  = function(self) return self._isEof end,
+      ["isCharacterStream"]      = function(self) return true end,
+      ["encoding"]               = function(self) return nil end,
+      ["data"]                   = function(self) return self._data end,
+      ["isWithDisableThreshold"] = function(self) return false end,
+      ["isWithExhaustion"]       = function(self) return false end,
+      ["isWithNewline"]          = function(self) return true end,
+      ["isWithTrack"]            = function(self) return true end
+   }
+   local valueInterface = {
+      ["isWithHighRankOnly"]     = function(self) return true end,
+      ["isWithOrderByRank"]      = function(self) return true end,
+      ["isWithAmbiguous"]        = function(self) return false end,
+      ["isWithNull"]             = function(self) return false end,
+      ["maxParses"]              = function(self) return 0 end,
+      ["getResult"]              = function(self) return self._result end,
+      ["setResult"]              = function(self, result) self._result = result end
+   }
+
+   local parseb = marpaESLIFGrammarp:parse(recognizerInterface, valueInterface);
+   print('... Grammar parse status: '..parseb)
+end
