@@ -66,23 +66,33 @@ end
 
 local marpaESLIFLua = require 'marpaESLIFLua'
 local logger = {
-   ["trace"]     = function(self, msgs) print('LUA_TRACE '..msgs) end,
-   ["debug"]     = function(self, msgs) print('LUA_DEBUG '..msgs) end,
-   ["info"]      = function(self, msgs) print('LUA_INFO '..msgs) end,
-   ["notice"]    = function(self, msgs) print('LUA_NOTICE '..msgs) end,
-   ["warning"]   = function(self, msgs) print('LUA_WARNING '..msgs) end,
-   ["error"]     = function(self, msgs) print('LUA_ERROR '..msgs) end,
-   ["critical"]  = function(self, msgs) print('LUA_CRITICAL '..msgs) end,
-   ["emergency"] = function(self, msgs) print('LUA_EMERGENCY '..msgs) end
+   ["trace"]     = function(self, msgs) self:tracef("%s", msgs) end,
+   ["debug"]     = function(self, msgs) self:debugf("%s", msgs) end,
+   ["info"]      = function(self, msgs) self:infof("%s", msgs) end,
+   ["notice"]    = function(self, msgs) self:noticef("%s", msgs) end,
+   ["warning"]   = function(self, msgs) self:warningf("%s", msgs) end,
+   ["error"]     = function(self, msgs) self:errorf("%s", msgs) end,
+   ["critical"]  = function(self, msgs) self:criticalf("%s", msgs) end,
+   ["emergency"] = function(self, msgs) self:emergencyf("%s", msgs) end,
+   --
+   -- Used by us
+   --
+   ["tracef"]     = function(self, fmts, ...) print('LUA_TRACE '..string.format(fmts,...)) end,
+   ["debugf"]     = function(self, fmts, ...) print('LUA_DEBUG '..string.format(fmts,...)) end,
+   ["infof"]      = function(self, fmts, ...) print('LUA_INFO '..string.format(fmts,...)) end,
+   ["noticef"]    = function(self, fmts, ...) print('LUA_NOTICE '..string.format(fmts,...)) end,
+   ["warning"]    = function(self, fmts, ...) print('LUA_WARNING '..string.format(fmts,...)) end,
+   ["errorf"]     = function(self, fmts, ...) print('LUA_ERROR '..string.format(fmts,...)) end,
+   ["criticalf"]  = function(self, fmts, ...) print('LUA_CRITICAL '..string.format(fmts,...)) end,
+   ["emergencyf"] = function(self, fmts, ...) print('LUA_EMERGENCY '..string.format(fmts,...)) end
 }
 
 ------------------------------------------------------------------------------
-print('marpaESLIF version: '..marpaESLIFLua.version())
+logger:noticef('marpaESLIF version: %s', marpaESLIFLua.version())
 ------------------------------------------------------------------------------
 local marpaESLIFp = marpaESLIFLua.marpaESLIF_new(logger)
-print('marpaESLIFp meta dump:'..tableDump(getmetatable(marpaESLIFp)))
+logger:noticef('marpaESLIFp meta dump: %s', tableDump(getmetatable(marpaESLIFp)))
 ------------------------------------------------------------------------------
-print('logger.error:'..tostring(logger.error))
 local marpaESLIFGrammarp = marpaESLIFp:marpaESLIFGrammar_new(
    [[
 :start   ::= Expression
@@ -115,91 +125,92 @@ WHITESPACES ~ [\s]+
 comment ::= /(?:(?:(?:\/\/)(?:[^\n]*)(?:\n|\z))|(?:(?:\/\*)(?:(?:[^\*]+|\*(?!\/))*)(?:\*\/)))/u
 ]]
 )
-print('marpaESLIFGrammarp      dump:'..tableDump(marpaESLIFGrammarp))
-print('marpaESLIFGrammarp meta dump:'..tableDump(getmetatable(marpaESLIFGrammarp)))
+
+logger:noticef('marpaESLIFGrammarp      dump: %s', tableDump(marpaESLIFGrammarp))
+logger:noticef('marpaESLIFGrammarp meta dump: %s', tableDump(getmetatable(marpaESLIFGrammarp)))
 ------------------------------------------------------------------------------
 local ngrammar = marpaESLIFGrammarp:ngrammar()
-print('... Number of grammars : '..ngrammar)
+logger:noticef('... Number of grammars : %d', ngrammar)
 ------------------------------------------------------------------------------
 local currentLevel = marpaESLIFGrammarp:currentLevel()
-print('... Current level      : '..currentLevel)
+logger:noticef('... Current level      : %d', currentLevel)
 ------------------------------------------------------------------------------
 local currentDescription = marpaESLIFGrammarp:currentDescription()
-print('... Current description: '..currentDescription)
+logger:noticef('... Current description: %s', currentDescription)
 ------------------------------------------------------------------------------
 for level = 0,ngrammar-1 do
    local descriptionByLevel = marpaESLIFGrammarp:descriptionByLevel(level)
-   print('... Description level '..level..': '..descriptionByLevel)
+   logger:noticef('... Description level %d: %s', level, descriptionByLevel)
 end
 ------------------------------------------------------------------------------
 local ruleIds = marpaESLIFGrammarp:currentRuleIds()
-print('... Current rule Ids   : '..tableDump(ruleIds))
+logger:noticef('... Current rule Ids   : %s', tableDump(ruleIds))
 for level = 0,ngrammar-1 do
    local ruleIdsByLevel = marpaESLIFGrammarp:ruleIdsByLevel(level)
-   print('... Rule Ids level '..level..': '..tableDump(ruleIdsByLevel))
+   logger:noticef('... Rule Ids level %d: %s', level, tableDump(ruleIdsByLevel))
 end
 ------------------------------------------------------------------------------
 local symbolIds = marpaESLIFLua.marpaESLIFGrammar_currentSymbolIds(marpaESLIFGrammarp)
-print('... Current symbol Ids : '..tableDump(symbolIds))
+logger:noticef('... Current symbol Ids : %s', tableDump(symbolIds))
 for level = 0,ngrammar-1 do
    local symbolIdsByLevel = marpaESLIFGrammarp:symbolIdsByLevel(level)
-   print('... Symbol Ids level '..level..': '..tableDump(symbolIdsByLevel))
+   logger:noticef('... Symbol Ids level %d: %s', level, tableDump(symbolIdsByLevel))
 end
 ------------------------------------------------------------------------------
 local currentProperties = marpaESLIFGrammarp:currentProperties()
-print('... Current properties: '..tableDump(currentProperties))
+logger:noticef('... Current properties: %s', tableDump(currentProperties))
 ------------------------------------------------------------------------------
 for level = 0,ngrammar-1 do
    local propertiesByLevel = marpaESLIFGrammarp:propertiesByLevel(level)
-   print('... Properties level '..level..': '..tableDump(propertiesByLevel))
+   logger:noticef('... Properties level %d: %s', level, tableDump(propertiesByLevel))
 end
 ------------------------------------------------------------------------------
 for k, ruleId in pairsByKeys(ruleIds) do
    local currentRuleProperties = marpaESLIFGrammarp:currentRuleProperties(ruleId)
-   print('... Current rule No '..ruleId..': '..tableDump(currentRuleProperties))
+   logger:noticef('... Current rule No %d: %s', ruleId, tableDump(currentRuleProperties))
 end
 ------------------------------------------------------------------------------
 for level = 0,ngrammar-1 do
    local ruleIdsByLevel = marpaESLIFGrammarp:ruleIdsByLevel(level)
    for k, ruleId in pairsByKeys(ruleIdsByLevel) do
       local rulePropertiesByLevel = marpaESLIFGrammarp:rulePropertiesByLevel(level, ruleId)
-      print('... Level '..level..' rule No '..ruleId..': '..tableDump(rulePropertiesByLevel))
+      logger:noticef('... Level %d rule No %d: %s', level, ruleId, tableDump(rulePropertiesByLevel))
    end
 end
 ------------------------------------------------------------------------------
 for k, symbolId in pairsByKeys(symbolIds) do
    local currentSymbolProperties = marpaESLIFGrammarp:currentSymbolProperties(symbolId)
-   print('... Current symbol No '..symbolId..': '..tableDump(currentSymbolProperties))
+   logger:noticef('... Current symbol No %d: %s', symbolId, tableDump(currentSymbolProperties))
 end
 ------------------------------------------------------------------------------
 for level = 0,ngrammar-1 do
    local symbolIdsByLevel = marpaESLIFGrammarp:symbolIdsByLevel(level)
    for k, symbolId in pairsByKeys(symbolIdsByLevel) do
       local symbolPropertiesByLevel = marpaESLIFGrammarp:symbolPropertiesByLevel(level, symbolId)
-      print('... Level '..level..' symbol No '..symbolId..': '..tableDump(symbolPropertiesByLevel))
+      logger:noticef('... Level %d symbol No %d: %s', level, symbolId, tableDump(symbolPropertiesByLevel))
    end
 end
 ------------------------------------------------------------------------------
 for k, ruleId in pairsByKeys(ruleIds) do
    local ruleDisplay = marpaESLIFGrammarp:ruleDisplay(ruleId)
-   print('... Rule No '..ruleId..' display: '..ruleDisplay)
+   logger:noticef('... Rule No %d display: %s', ruleId, ruleDisplay)
 end
 ------------------------------------------------------------------------------
 for k, symbolId in pairsByKeys(symbolIds) do
    local symbolDisplay = marpaESLIFGrammarp:symbolDisplay(symbolId)
-   print('... Symbol No '..symbolId..' display: '..symbolDisplay)
+   logger:noticef('... Symbol No %d display: %s', symbolId, symbolDisplay)
 end
 ------------------------------------------------------------------------------
 for k, ruleId in pairsByKeys(ruleIds) do
    local ruleShow = marpaESLIFGrammarp:ruleShow(ruleId)
-   print('... Rule No '..ruleId..' show: '..ruleShow)
+   logger:noticef('... Rule No %d show: %s', ruleId, ruleShow)
 end
 ------------------------------------------------------------------------------
 for level = 0,ngrammar-1 do
    local ruleIdsByLevel = marpaESLIFGrammarp:ruleIdsByLevel(level)
    for k, ruleId in pairsByKeys(ruleIdsByLevel) do
       local ruleDisplayByLevel = marpaESLIFGrammarp:ruleDisplayByLevel(level, ruleId)
-      print('... Level '..level..' rule No '..ruleId..' display: '..ruleDisplayByLevel)
+      logger:noticef('... Level %d rule No %d display: %s', level, ruleId, ruleDisplayByLevel)
    end
 end
 ------------------------------------------------------------------------------
@@ -207,7 +218,7 @@ for level = 0,ngrammar-1 do
    local symbolIdsByLevel = marpaESLIFGrammarp:symbolIdsByLevel(level)
    for k, symbolId in pairsByKeys(symbolIdsByLevel) do
       local symbolDisplayByLevel = marpaESLIFGrammarp:symbolDisplayByLevel(level, symbolId)
-      print('... Level '..level..' symbol No '..symbolId..' display: '..symbolDisplayByLevel)
+      logger:noticef('... Level %d symbol No %d display: %s', level, symbolId, symbolDisplayByLevel)
    end
 end
 ------------------------------------------------------------------------------
@@ -215,16 +226,16 @@ for level = 0,ngrammar-1 do
    local ruleIdsByLevel = marpaESLIFGrammarp:ruleIdsByLevel(level)
    for k, ruleId in pairsByKeys(ruleIdsByLevel) do
       local ruleShowByLevel = marpaESLIFGrammarp:ruleShowByLevel(level, ruleId)
-      print('... Level '..level..' rule No '..ruleId..' show: '..ruleShowByLevel)
+      logger:noticef('... Level %d rule No %d show: %s', level, ruleId, ruleShowByLevel)
    end
 end
 ------------------------------------------------------------------------------
 local show = marpaESLIFGrammarp:show()
-print('... Grammar show: '..show)
+logger:noticef('... Grammar show: %s', show)
 ------------------------------------------------------------------------------
 for level = 0,ngrammar-1 do
    local showByLevel = marpaESLIFGrammarp:showByLevel(level)
-   print('... Level '..level..' grammar show: '..showByLevel)
+   logger:noticef('... Level %d grammar show: %s', level, showByLevel)
 end
 ------------------------------------------------------------------------------
 local strings = {
@@ -264,12 +275,12 @@ end
 -- Test the parse interface
 --
 for _, localstring in pairs(strings) do
-   print('Testing parse on '..localstring)
+   logger:noticef('Testing parse on %s', localstring)
    local magiclinesFunction = magiclines(localstring)
    local recognizerInterface = {
       ["read"]  = function(self)
          self._data = magiclinesFunction()
-         self._isEof = self.data == nil
+         self._isEof = (self._data == nil)
          return true
       end,
       ["isEof"]                  = function(self) return self._isEof end,
@@ -288,9 +299,55 @@ for _, localstring in pairs(strings) do
       ["isWithNull"]             = function(self) return false end,
       ["maxParses"]              = function(self) return 0 end,
       ["getResult"]              = function(self) return self._result end,
-      ["setResult"]              = function(self, result) self._result = result end
+      ["setResult"]              = function(self, result) self._result = result end,
+      --
+      -- Grammar actions
+      --
+      ["do_symbol"]              = function(self, symbol)
+         logger:tracef("do_symbol('%s')", symbol)
+         local do_symbol = symbol
+         logger:tracef("do_symbol('%s') => %s", symbol, do_symbol)
+         -- $self->trace_local_variables('do_symbol');
+         return do_symbol
+      end,
+      ["do_int"]                 = function(self, number)
+         logger:tracef("do_int('%s')", number)
+         local do_int = tonumber(number)
+         logger:tracef("do_int('%s') => %s", number, do_int)
+         -- $self->trace_local_variables('do_symbol');
+         return do_int
+      end,
+      ["do_free"]                = function(self, result)
+         logger:tracef("do_free(%s) called and this should never happen", result)
+         error("do_free() called and this should never happen")
+      end,
+      ["do_op"]                  = function(self, left, op, right)
+         logger:tracef("do_op(%s, %s, %s)", left, op, right);
+         local result
+         if (op == '**') then
+            result = math.pow(left, right)
+         elseif (op == '*') then
+            result = left * right
+         elseif (op == '/') then
+            result = left / right
+         elseif (op == '+') then
+            result = left + right
+         elseif (op == '-') then
+            result = left - right
+         else
+            error(string.format("Unsupported op %s", op))
+         end
+         logger:tracef("do_op(%s, %s, %s) => %s", left, op, right, result);
+         -- $self->trace_local_variables('do_op');
+         -- $self->trace_rule_property('do_op');
+         return result
+       end
    }
 
    local parseb = marpaESLIFGrammarp:parse(recognizerInterface, valueInterface);
-   print('... Grammar parse status: '..parseb)
+   logger:noticef('... Grammar parse status: %s', tostring(parseb))
+   if (parseb) then
+      local result = valueInterface:getResult()
+      logger:noticef('... Grammar parse result: %s', tostring(result))
+   end
 end
