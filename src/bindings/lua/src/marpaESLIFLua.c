@@ -11,7 +11,7 @@
 #include <genericStack.h>
 
 /* To ease me debugging -; */
-static void stackdump_g(lua_State* L, int forcelookupi);
+static void marpaESLIFLua_stackdumpv(lua_State* L, int forcelookupi);
 #undef  FILENAMES
 #define FILENAMES "marpaESLIFLua.c"
 
@@ -1147,7 +1147,7 @@ static int marpaESLIFLua_marpaESLIFGrammar_freei(lua_State *L)
 }
 
 /****************************************************************************/
-static void stackdump_g(lua_State* L, int forcelookupi)
+static void marpaESLIFLua_stackdumpv(lua_State* L, int forcelookupi)
 /****************************************************************************/
 /* Reference: https://groups.google.com/forum/#!topic/lua5/gc3Ghjo6ipg      */
 /****************************************************************************/
@@ -2064,6 +2064,7 @@ static int  marpaESLIFLua_marpaESLIFGrammar_parsei(lua_State *L)
   marpaESLIFRecognizerOption_t  marpaESLIFRecognizerOption;
   marpaESLIFValueOption_t       marpaESLIFValueOption;
   int                           rci;
+  int                           resultstacki;
 
   GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__);
 
@@ -2109,7 +2110,10 @@ static int  marpaESLIFLua_marpaESLIFGrammar_parsei(lua_State *L)
   MARPAESLIFLUA_CALLBACKI(L, valueContext.value_r, "maxParses",          0 /* nargs */, MARPAESLIFLUA_NOOP, &(marpaESLIFValueOption.maxParsesi));
 
   if ((rci = marpaESLIFGrammar_parseb(marpaESLIFGrammarp, &marpaESLIFRecognizerOption, &marpaESLIFValueOption, NULL)) != 0) {
-    MARPAESLIFLUA_CALLBACKV(L, valueContext.value_r, "setResult", 1 /* nargs */, lua_rawgeti(valueContext.L, LUA_REGISTRYINDEX, valueContext.result_r););
+    resultstacki = lua_gettop(L);
+    /* marpaESLIFGrammar_parseb called the transformers that pushed the final value to the stack */
+    MARPAESLIFLUA_CALLBACKV(L, valueContext.value_r, "setResult", 1 /* nargs */, lua_pushnil(L); lua_copy(L, resultstacki, -1););
+    lua_pop(L, 1);
   }
 
   marpaESLIFLua_valueContextFreev(&valueContext, 1 /* onStackb */);
@@ -2255,7 +2259,7 @@ static short marpaESLIFLua_valueRuleCallbackb(void *userDatavp, marpaESLIFValue_
   }
 
   MARPAESLIFLUA_SET_VALUE(valueContextp, marpaESLIFValuep, resulti, marpaESLIFLua_representationb);
-  lua_pop(L, 1);                                \
+  lua_pop(L, 1);
 
   GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) (arg0i=%d, argni=%d, resulti=%d, nullableb=%s) return 1 at %s:%d", funcs, L, arg0i, argni, resulti, nullableb ? "true" : "false", FILENAMES, __LINE__);
 
@@ -2433,7 +2437,7 @@ static short marpaESLIFLua_transformPtrb(void *userDatavp, int contexti, void *p
   GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) (contexti=%d, p=%p) at %s:%d", funcs, L, contexti, p, FILENAMES, __LINE__);
 
   if (contexti == ESLIF_LUA_CONTEXT) {
-    /* This is a pointer to an integer value that is a refernce to the real value */
+    /* This is a pointer to an integer value that is a global reference to the real value */
     GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) (contexti=%d, p=%p) pushing value with global reference %d at %s:%d", funcs, L, contexti, p, * (int *) p, FILENAMES, __LINE__);
     lua_rawgeti(L, LUA_REGISTRYINDEX, * (int *) p);
   } else {
