@@ -65,7 +65,6 @@ static void                            marpaESLIFLua_recognizerContextFreev(reco
 static void                            marpaESLIFLua_valueContextCleanupv(valueContext_t *valueContextp);
 static void                            marpaESLIFLua_valueContextFreev(valueContext_t *valueContextp, short onStackb);
 static void                            marpaESLIFLua_genericLoggerCallbackv(void *userDatavp, genericLoggerLevel_t logLeveli, const char *msgs);
-static int                             marpaESLIFLua_create_refi(lua_State *L, short weakb, lua_CFunction gcp);
 static int                             marpaESLIFLua_installi(lua_State *L);
 static int                             marpaESLIFLua_versioni(lua_State *L);
 static int                             marpaESLIFLua_marpaESLIF_newi(lua_State *L);
@@ -148,51 +147,26 @@ static marpaESLIFValueResultTransform_t marpaESLIFValueResultTransformDefault = 
     }                                                                   \
   } while (0)
 
-/* Destination table is assumed to be at the top of the stack */
-#define MARPAESLIFLUA_STORE_FUNCTION(L, key, functionp) do {            \
-    if (functionp != NULL) {                                            \
-      lua_pushcfunction(L, functionp);                                  \
-    } else {                                                            \
-      lua_pushnil(L);                                                   \
-    }                                                                   \
+/* For every MARPAESLIFLUA_STORE_xxx macro, destination table is assumed to be at the top of the stack */
+#define MARPAESLIFLUA_STORE_BY_KEY(L, key, valueproducer) do {          \
+    valueproducer                                                       \
     lua_setfield(L, -2, key);                                           \
   } while (0)
 
-/* Destination table is assumed to be at the top of the stack */
-#define MARPAESLIFLUA_STORE_USERDATA(L, key, p) do {                    \
-    if (p != NULL) {                                                    \
-      lua_pushlightuserdata(L, p);                                      \
-    } else {                                                            \
-      lua_pushnil(L);                                                   \
-    }                                                                   \
-    lua_setfield(L, -2, key);                                           \
-  } while (0)
+#define MARPAESLIFLUA_STORE_FUNCTION(L, key, functionp)                 \
+  MARPAESLIFLUA_STORE_BY_KEY(L, key, if (functionp == NULL) { lua_pushnil(L); } else { lua_pushcfunction(L, functionp); })
 
-/* Destination table is assumed to be at the top of the stack */
-#define MARPAESLIFLUA_STORE_STRING(L, key, stringp) do {                \
-    if (stringp != NULL) {                                              \
-      lua_pushlstring(L, (const char *) stringp->bytep, stringp->bytel); \
-    } else {                                                            \
-      lua_pushnil(L);                                                   \
-    }                                                                   \
-    lua_setfield(L, -2, key);                                           \
-  } while (0)
+#define MARPAESLIFLUA_STORE_USERDATA(L, key, p)                         \
+  MARPAESLIFLUA_STORE_BY_KEY(L, key, if (p == NULL)         { lua_pushnil(L); } else { lua_pushlightuserdata(L, p); })
 
-/* Destination table is assumed to be at the top of the stack */
-#define MARPAESLIFLUA_STORE_ASCIISTRING(L, key, asciis) do {            \
-    if (asciis != NULL) {                                               \
-      lua_pushstring(L, asciis);                                        \
-    } else {                                                            \
-      lua_pushnil(L);                                                   \
-    }                                                                   \
-    lua_setfield(L, -2, key);                                           \
-  } while (0)
+#define MARPAESLIFLUA_STORE_STRING(L, key, stringp)                     \
+  MARPAESLIFLUA_STORE_BY_KEY(L, key, if (stringp == NULL)   { lua_pushnil(L); } else { lua_pushlstring(L, (const char *) stringp->bytep, stringp->bytel); })
 
-/* Destination table is assumed to be at the top of the stack */
-#define MARPAESLIFLUA_STORE_INTEGER(L, key, i) do {                     \
-    lua_pushinteger(L, (lua_Integer) i);                                \
-    lua_setfield(L, -2, key);                                           \
-  } while (0)
+#define MARPAESLIFLUA_STORE_ASCIISTRING(L, key, asciis)                 \
+  MARPAESLIFLUA_STORE_BY_KEY(L, key, if (asciis == NULL)    { lua_pushnil(L); } else { lua_pushstring(L, asciis); })
+
+#define MARPAESLIFLUA_STORE_INTEGER(L, key, i)                          \
+  MARPAESLIFLUA_STORE_BY_KEY(L, key, lua_pushinteger(L, (lua_Integer) i);)
 
 #define MARPAESLIFLUA_PUSH_INTEGER_ARRAY(L, integerl, integerp) do {    \
     size_t _iteratorl;                                                  \
@@ -204,36 +178,29 @@ static marpaESLIFValueResultTransform_t marpaESLIFValueResultTransformDefault = 
     }                                                                   \
   } while (0)
 
-/* Destination table is assumed to be at the top of the stack */
-#define MARPAESLIFLUA_STORE_INTEGER_ARRAY(L, key, integerl, integerp) do { \
-    MARPAESLIFLUA_PUSH_INTEGER_ARRAY(L, integerl, integerp);            \
-    lua_setfield(L, -2, key);                                           \
-  } while (0)
+#define MARPAESLIFLUA_STORE_INTEGER_ARRAY(L, key, integerl, integerp)   \
+  MARPAESLIFLUA_STORE_BY_KEY(L, key, MARPAESLIFLUA_PUSH_INTEGER_ARRAY(L, integerl, integerp);)
 
-/* Destination table is assumed to be at the top of the stack */
-#define MARPAESLIFLUA_STORE_BOOLEAN(L, key, b) do {                     \
-    lua_pushboolean(L, (int) b);                                        \
-    lua_setfield(L, -2, key);                                           \
-  } while (0)
+#define MARPAESLIFLUA_STORE_BOOLEAN(L, key, b)                          \
+  MARPAESLIFLUA_STORE_BY_KEY(L, key, lua_pushboolean(L, (int) b);)
 
-/* Destination table is assumed to be at the top of the stack */
-#define MARPAESLIFLUA_STORE_ACTION(L, key, actionp) do {                \
-    if (actionp != NULL) {                                              \
-      switch (actionp->type) {                                          \
-      case MARPAESLIF_ACTION_TYPE_NAME:                                 \
-        lua_pushstring(L, actionp->u.names);                            \
-        break;                                                          \
-      case MARPAESLIF_ACTION_TYPE_STRING:                               \
-        lua_pushlstring(L, (const char *) actionp->u.stringp->bytep, actionp->u.stringp->bytel); \
-        break;                                                          \
-      default:                                                          \
-        return luaL_error(L, "Unsupported action type %d", actionp->type); \
-      }                                                                 \
-    } else {                                                            \
-      lua_pushnil(L);                                                   \
-    }                                                                   \
-    lua_setfield(L, -2, key);                                           \
-  } while (0)
+#define MARPAESLIFLUA_STORE_ACTION(L, key, actionp)                     \
+  MARPAESLIFLUA_STORE_BY_KEY(L, key,                                    \
+                             if (actionp != NULL) {                     \
+                               switch (actionp->type) {                 \
+                               case MARPAESLIF_ACTION_TYPE_NAME:        \
+                                 lua_pushstring(L, actionp->u.names);   \
+                                 break;                                 \
+                               case MARPAESLIF_ACTION_TYPE_STRING:      \
+                                 lua_pushlstring(L, (const char *) actionp->u.stringp->bytep, actionp->u.stringp->bytel); \
+                                 break;                                 \
+                               default:                                 \
+                                 return luaL_error(L, "Unsupported action type %d", actionp->type); \
+                               }                                        \
+                             } else {                                   \
+                               lua_pushnil(L);                          \
+                             }                                          \
+                             )
 
 /* This is vicious, but here it is: we assume that EVERY callback function refers to an object */
 /* i.e. a function that has "self" as the first parameter. So nargs is always nargs+1 in reality */
@@ -282,7 +249,7 @@ static marpaESLIFValueResultTransform_t marpaESLIFValueResultTransformDefault = 
 } while (0)
 
 /* Value is at the top of the stack and is popped by this macro */
-/* We store at indice a pointer to an integer that contains a reference to the value */
+/* We store at "indice" a pointer to an integer that contains a reference to the value */
 #define MARPAESLIFLUA_SET_VALUE(valueContextp, marpaESLIFValuep, indicei, stringificationp) do { \
     marpaESLIFValueResult_t _marpaESLIFValueResult;                     \
     int *_p;                                                            \
@@ -388,47 +355,6 @@ int luaopen_marpaESLIFLua(lua_State* L)
 
   GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 at %s:%d", funcs, L, FILENAMES, __LINE__);
   return 1;
-}
-
-/****************************************************************************/
-static int marpaESLIFLua_create_refi(lua_State *L, short weakb, lua_CFunction gcp)
-/****************************************************************************/
-/* C.f. https://stackoverflow.com/questions/19340662/lua-c-api-weak-references-with-lual-ref */
-/****************************************************************************/
-{
-  static const char *funcs = "marpaESLIFLua_create_refi";
-  static const char *weak_refs   = "weak_ref";
-  static const char *strong_refs = "strong_ref";
-  int          rci;
-
-  GENERICLOGGER_NOTICEF(NULL, "%s(L=%p, weakb=%d, gcp=%p) at %s:%d", funcs, L, (int) weakb, gcp, FILENAMES, __LINE__);
-
-  lua_newtable(L);                      /* stack: value, new_table={} */
-
-  if (weakb) {
-    lua_newtable(L);                    /* stack: value, new_table={}, metatable={} */
-
-    lua_pushliteral(L, "__mode");       /* stack: value, new_table={}, metatable={}, key="__mode" */
-    lua_pushliteral(L, "v");            /* stack: value, new_table={}, metatable={}, key="__mode", value="v" */
-    lua_rawset(L, -3);                  /* stack: value, new_table={}, metatable={"__mode" = "v"} */
-
-    lua_setmetatable(L, -2);            /* stack: value, new_table={} with metatable={"__mode" = "v"} */
-    lua_pushstring(L, weak_refs);       /* stack: value, new_table={} with metatable={"__mode" = "v"}, "weak_refs" */
-    lua_pushvalue(L, -3);               /* stack: value, new_table={} with metatable={"__mode" = "v"}, "weak_refs", value */
-    lua_rawset(L, -3);                  /* stack: value, new_table={"weak_refs" = value} with metatable={"__mode" = "v"} */
-  } else {
-    lua_pushstring(L, strong_refs);     /* stack: value, new_table={}, "strong_ref" */
-    lua_pushvalue(L, -3);               /* stack: value, new_table={}, "strong_ref", value */
-    lua_rawset(L, -3);                  /* stack: value, new_table={"strong_ref" = value} */
-  }
-
-  MARPAESLIFLUA_STORE_FUNCTION(L, "__gc", gcp);
-
-  rci = luaL_ref(L, LUA_REGISTRYINDEX); /* stack: value */
-
-  GENERICLOGGER_NOTICEF(NULL, "%s(L=%p, weakb=%d, gcp=%p) return %d at %s:%d", funcs, L, (int) weakb, gcp, rci, FILENAMES, __LINE__);
-
-  return rci;                           /* returns a reference to new_table */
 }
 
 /****************************************************************************/
@@ -1017,7 +943,6 @@ static int marpaESLIFLua_marpaESLIFGrammar_newi(lua_State *L)
 /****************************************************************************/
 {
   static const char          *funcs = "marpaESLIFLua_marpaESLIFGrammar_newi";
-  int                         multiton_refi;
   marpaESLIF_t               *marpaESLIFp;
   marpaESLIFGrammar_t        *marpaESLIFGrammarp;
   int                         ngrammari;
@@ -1070,15 +995,10 @@ static int marpaESLIFLua_marpaESLIFGrammar_newi(lua_State *L)
     }
   }
 
-  /* Get a strong reference to multiton table */
-  lua_getglobal(L, MARPAESLIFMULTITONS);                                       /* stack: MARPAESLIFMULTITONS */
-  multiton_refi = marpaESLIFLua_create_refi(L, 0 /* weakb */, NULL /* gcp */); /* stack: MARPAESLIFMULTITONS */
-  lua_pop(L, 1);                                                               /* stack: */
-
-  /* We return a table of weak values { "marpaESLIFGrammarp" => marpaESLIFGrammarp } with an associated __gc */
-  lua_newtable(L);                                                             /* stack: {} */
-  MARPAESLIFLUA_STORE_USERDATA(L, "marpaESLIFGrammarp", marpaESLIFGrammarp);
-  MARPAESLIFLUA_STORE_INTEGER(L, "multiton_refi", multiton_refi);
+  /* We will return a table */
+  lua_newtable(L);                                                                            /* stack: {} */
+  MARPAESLIFLUA_STORE_BY_KEY(L, MARPAESLIFMULTITONS, lua_getglobal(L, MARPAESLIFMULTITONS);); /* stack: {["MARPAESLIFMULTITONS"] => MARPAESLIFMULTITONS} */
+  MARPAESLIFLUA_STORE_USERDATA(L, "marpaESLIFGrammarp", marpaESLIFGrammarp);                  /* stack: {["marpaESLIFGrammarp"] =>marpaESLIFGrammarp, ["MARPAESLIFMULTITONS"] => MARPAESLIFMULTITONS} */
 
   /* Create a metable */
   lua_newtable(L);
@@ -1110,9 +1030,9 @@ static int marpaESLIFLua_marpaESLIFGrammar_newi(lua_State *L)
   MARPAESLIFLUA_STORE_FUNCTION(L, "parse", marpaESLIFLua_marpaESLIFGrammar_parsei);
   lua_setfield(L, -2, "__index");
 
-  lua_setmetatable(L, -2);                                                     /* stack: {"marpaESLIFGrammarp" = marpaESLIFGrammarp, "multiton_refi" = multiton_refi} meta={...} */
+  lua_setmetatable(L, -2);                                                                    /* stack: {["marpaESLIFGrammarp"] =>marpaESLIFGrammarp, ["MARPAESLIFMULTITONS"] => MARPAESLIFMULTITONS} meta=>{...} */
 
-  GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 ({marpaESLIFGrammarp=%p, multiton_refi=%d}) at %s:%d", funcs, L, marpaESLIFGrammarp, multiton_refi, FILENAMES, __LINE__);
+  GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 ({marpaESLIFGrammarp=%p}) at %s:%d", funcs, L, marpaESLIFGrammarp, FILENAMES, __LINE__);
   return 1;
 }
 
@@ -1122,20 +1042,12 @@ static int marpaESLIFLua_marpaESLIFGrammar_freei(lua_State *L)
 {
   static const char   *funcs = "marpaESLIFLua_marpaESLIFGrammar_freei";
   marpaESLIFGrammar_t *marpaESLIFGrammarp;
-  lua_Integer          multiton_refi;
 
   GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__);
 
-  lua_getfield(L, -1, "marpaESLIFGrammarp"); /* stack: {"marpaESLIFGrammarp" = marpaESLIFGrammarp, "multiton_refi" = multiton_refi}, marpaESLIFGrammarp */
+  lua_getfield(L, -1, "marpaESLIFGrammarp"); /* stack: {...}, marpaESLIFGrammarp */
   marpaESLIFGrammarp = (marpaESLIFGrammar_t *) lua_touserdata(L, -1);
-  lua_pop(L, 1);                             /* stack: {"marpaESLIFGrammarp" = marpaESLIFGrammarp, "multiton_refi" = multiton_refi} */
-
-  lua_getfield(L, -1, "multiton_refi");      /* stack: {"marpaESLIFGrammarp" = marpaESLIFGrammarp, "multiton_refi" = multiton_refi}, multiton_refi */
-  multiton_refi = lua_tointeger(L, -1);
-  lua_pop(L, 1);                             /* stack: {"marpaESLIFGrammarp" = marpaESLIFGrammarp, "multiton_refi" = multiton_refi} */
-
-  GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) freeing multiton_refi=%d from registry at %s:%d", funcs, L, multiton_refi, FILENAMES, __LINE__);
-  luaL_unref(L, LUA_REGISTRYINDEX, (int) multiton_refi);
+  lua_pop(L, 1);                             /* stack: {...} */
 
   GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) freeing marpaESLIFGrammarp=%p at %s:%d", funcs, L, marpaESLIFGrammarp, FILENAMES, __LINE__);
   marpaESLIFGrammar_freev(marpaESLIFGrammarp);
