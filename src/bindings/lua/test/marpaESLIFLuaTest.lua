@@ -306,7 +306,7 @@ for _, localstring in pairs(strings) do
       ["do_symbol"]              = function(self, symbol)
          logger:tracef("do_symbol('%s')", symbol)
          local do_symbol = symbol
-         logger:tracef("do_symbol('%s') => %s", symbol, do_symbol)
+         logger:tracef("do_symbol('%s') => '%s'", symbol, do_symbol)
          -- $self->trace_local_variables('do_symbol');
          return do_symbol
       end,
