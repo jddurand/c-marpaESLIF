@@ -382,3 +382,4 @@ marpaESLIFRecognizerp:share(marpaESLIFRecognizerFromp);
 marpaESLIFRecognizerp:share(marpaESLIFRecognizerFromp);
 ------------------------------------------------------------------------------
 logger:noticef('marpaESLIFRecognizer::isCancontinue: %s', tostring(marpaESLIFRecognizerp:isCanContinue()))
+logger:noticef('marpaESLIFRecognizer::isExhausted: %s', tostring(marpaESLIFRecognizerp:isExhausted()))
