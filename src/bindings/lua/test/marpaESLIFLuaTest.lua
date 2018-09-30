@@ -377,3 +377,8 @@ marpaESLIFRecognizerp:set_exhausted_flag(false);
 local marpaESLIFRecognizerFromp = marpaESLIFRecognizerp:newFrom(marpaESLIFGrammarp);
 logger:noticef('marpaESLIFRecognizerFromp dump: %s', tableDump(marpaESLIFRecognizerFromp))
 logger:noticef('marpaESLIFRecognizerFromp meta dump: %s', tableDump(getmetatable(marpaESLIFRecognizerFromp)))
+------------------------------------------------------------------------------
+marpaESLIFRecognizerp:share(marpaESLIFRecognizerFromp);
+marpaESLIFRecognizerp:share(marpaESLIFRecognizerFromp);
+------------------------------------------------------------------------------
+logger:noticef('marpaESLIFRecognizer::isCancontinue: %s', tostring(marpaESLIFRecognizerp:isCanContinue()))
