@@ -2974,32 +2974,35 @@ static int marpaESLIFLua_marpaESLIFRecognizer_scani(lua_State *L)
 {
   static const char            *funcs = "marpaESLIFLua_marpaESLIFRecognizer_scani";
   recognizerContext_t          *recognizerContextp;
-  short                         exhaustedb;
+  short                         initialEventsb = 0;
  
   GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__);
 
-  if (lua_gettop(L) != 1) {
-    return luaL_error(L, "Usage: marpaESLIFRecognizer_scan(marpaESLIFRecognizerp[, initialEvents])");
+  switch (lua_gettop(L)) {
+  case 2:
+    if (lua_type(L, 1) != LUA_TBOOLEAN) {
+      return luaL_error(L, "Usage: marpaESLIFRecognizer_scan(marpaESLIFRecognizerp, initialEvents)");
+    }
+    initialEventsb = lua_toboolean(L, 2) ? 1 : 0;
+    /* Intentionnaly no break here */
+  case 1:
+    if (lua_type(L, 1) != LUA_TTABLE) {
+      return luaL_error(L, "marpaESLIFRecognizerp must be a table");
+    }
+    lua_getfield(L, 1, "recognizerContextp");   /* stack: marpaESLIFRecognizerTable, initialEventsb?, recognizerContextFromp */
+    recognizerContextp = lua_touserdata(L, -1); /* stack: marpaESLIFRecognizerTable, initialEventsb?, recognizerContextFromp */
+    lua_pop(L, 1);                              /* stack: marpaESLIFRecognizerTable, initialEventsb? */
+    break;
+  default:
+    return luaL_error(L, "Usage: marpaESLIFRecognizer_scan(marpaESLIFRecognizerp, initialEvents)");
   }
-  
-  if (lua_type(L, 1) != LUA_TTABLE) {
-    return luaL_error(L, "marpaESLIFRecognizerp must be a table");
-  }
-
-  lua_getfield(L, 1, "recognizerContextp");   /* stack: marpaESLIFRecognizerTable, marpaESLIFRecognizerSharedTable, recognizerContextFromp */
-  recognizerContextp = lua_touserdata(L, -1); /* stack: marpaESLIFRecognizerTable, marpaESLIFRecognizerSharedTable, recognizerContextFromp */
-  lua_pop(L, 1);                              /* stack: marpaESLIFRecognizerTable, marpaESLIFRecognizerSharedTable */
 
   /* Clear the stack */
   lua_settop(L, 0);
 
-  if (! marpaESLIFRecognizer_isExhaustedb(recognizerContextp->marpaESLIFRecognizerp, &exhaustedb)) {
-    return luaL_error(L, "marpaESLIFRecognizer_isExhaustedb failure, %s", strerror(errno));
-  }
+  lua_pushboolean(L, marpaESLIFRecognizer_scanb(recognizerContextp->marpaESLIFRecognizerp, initialEventsb, &(recognizerContextp->canContinueb), NULL));
 
-  lua_pushboolean(L, exhaustedb);
-
-  GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 (exhaustedb=%s) at %s:%d", funcs, L, exhaustedb ? "true" : "false", FILENAMES, __LINE__);
+  GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 at %s:%d", funcs, L, FILENAMES, __LINE__);
   return 1;
 }
 

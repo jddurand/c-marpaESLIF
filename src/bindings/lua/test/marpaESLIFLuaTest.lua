@@ -352,10 +352,13 @@ for _, localstring in pairs(strings) do
    end
 end
 
+------------------------------------------------------------------------------
+local magiclinesFunction = magiclines("10")
 local recognizerInterface = {
    ["read"]  = function(self)
       self._data = magiclinesFunction()
       self._isEof = (self._data == nil)
+      logger:noticef('... read =>  %s', tostring(self._data))
       return true
    end,
    ["isEof"]                  = function(self) return self._isEof end,
@@ -383,3 +386,4 @@ marpaESLIFRecognizerp:share(marpaESLIFRecognizerFromp);
 ------------------------------------------------------------------------------
 logger:noticef('marpaESLIFRecognizer::isCancontinue: %s', tostring(marpaESLIFRecognizerp:isCanContinue()))
 logger:noticef('marpaESLIFRecognizer::isExhausted: %s', tostring(marpaESLIFRecognizerp:isExhausted()))
+logger:noticef('marpaESLIFRecognizer::scan: %s', tostring(marpaESLIFRecognizerp:scan()))
