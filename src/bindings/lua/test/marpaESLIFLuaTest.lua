@@ -351,3 +351,29 @@ for _, localstring in pairs(strings) do
       logger:noticef('... Grammar parse result: %s', tostring(result))
    end
 end
+
+local recognizerInterface = {
+   ["read"]  = function(self)
+      self._data = magiclinesFunction()
+      self._isEof = (self._data == nil)
+      return true
+   end,
+   ["isEof"]                  = function(self) return self._isEof end,
+   ["isCharacterStream"]      = function(self) return true end,
+   ["encoding"]               = function(self) return nil end,
+   ["data"]                   = function(self) return self._data end,
+   ["isWithDisableThreshold"] = function(self) return false end,
+   ["isWithExhaustion"]       = function(self) return false end,
+   ["isWithNewline"]          = function(self) return true end,
+   ["isWithTrack"]            = function(self) return true end
+}
+------------------------------------------------------------------------------
+local marpaESLIFRecognizerp = marpaESLIFGrammarp:marpaESLIFRecognizer_new(recognizerInterface);
+logger:noticef('marpaESLIFRecognizerp dump: %s', tableDump(marpaESLIFRecognizerp))
+logger:noticef('marpaESLIFRecognizerp meta dump: %s', tableDump(getmetatable(marpaESLIFRecognizerp)))
+marpaESLIFRecognizerp:set_exhausted_flag(true);
+marpaESLIFRecognizerp:set_exhausted_flag(false);
+------------------------------------------------------------------------------
+local marpaESLIFRecognizerFromp = marpaESLIFRecognizerp:newFrom(marpaESLIFGrammarp);
+logger:noticef('marpaESLIFRecognizerFromp dump: %s', tableDump(marpaESLIFRecognizerFromp))
+logger:noticef('marpaESLIFRecognizerFromp meta dump: %s', tableDump(getmetatable(marpaESLIFRecognizerFromp)))
