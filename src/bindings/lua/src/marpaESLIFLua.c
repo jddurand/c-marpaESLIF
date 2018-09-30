@@ -135,6 +135,7 @@ static int                             marpaESLIFLua_marpaESLIFRecognizer_set_ex
 static int                             marpaESLIFLua_marpaESLIFRecognizer_sharei(lua_State *L);
 static int                             marpaESLIFLua_marpaESLIFRecognizer_isCanContinuei(lua_State *L);
 static int                             marpaESLIFLua_marpaESLIFRecognizer_isExhaustedi(lua_State *L);
+static int                             marpaESLIFLua_marpaESLIFRecognizer_scani(lua_State *L);
 
 /* Transformers */
 static marpaESLIFValueResultTransform_t marpaESLIFValueResultTransformDefault = {
@@ -495,6 +496,7 @@ static int marpaESLIFLua_installi(lua_State *L)
     {"marpaESLIFRecognizer_sharei", marpaESLIFLua_marpaESLIFRecognizer_sharei},
     {"marpaESLIFRecognizer_isCanContinue", marpaESLIFLua_marpaESLIFRecognizer_isCanContinuei},
     {"marpaESLIFRecognizer_isExhausted", marpaESLIFLua_marpaESLIFRecognizer_isExhaustedi},
+    {"marpaESLIFRecognizer_scan", marpaESLIFLua_marpaESLIFRecognizer_scani},
     {NULL, NULL}
   };
 
@@ -2696,6 +2698,7 @@ static int marpaESLIFLua_marpaESLIFRecognizer_newi(lua_State *L)
   MARPAESLIFLUA_STORE_FUNCTION(L, "share", marpaESLIFLua_marpaESLIFRecognizer_sharei);
   MARPAESLIFLUA_STORE_FUNCTION(L, "isCanContinue", marpaESLIFLua_marpaESLIFRecognizer_isCanContinuei);
   MARPAESLIFLUA_STORE_FUNCTION(L, "isExhausted", marpaESLIFLua_marpaESLIFRecognizer_isExhaustedi);
+  MARPAESLIFLUA_STORE_FUNCTION(L, "scan", marpaESLIFLua_marpaESLIFRecognizer_scani);
   lua_setfield(L, -2, "__index");
 
   lua_setmetatable(L, -2);                                                           /* stack: {["recognizerContextp"] =>recognizerContextp, meta=>{...} */
@@ -2796,6 +2799,7 @@ static int marpaESLIFLua_marpaESLIFRecognizer_newFromi(lua_State *L)
   MARPAESLIFLUA_STORE_FUNCTION(L, "share", marpaESLIFLua_marpaESLIFRecognizer_sharei);
   MARPAESLIFLUA_STORE_FUNCTION(L, "isCanContinue", marpaESLIFLua_marpaESLIFRecognizer_isCanContinuei);
   MARPAESLIFLUA_STORE_FUNCTION(L, "isExhausted", marpaESLIFLua_marpaESLIFRecognizer_isExhaustedi);
+  MARPAESLIFLUA_STORE_FUNCTION(L, "scan", marpaESLIFLua_marpaESLIFRecognizer_scani);
   lua_setfield(L, -2, "__index");
 
   lua_setmetatable(L, -2);                                                           /* stack: {["recognizerContextp"] =>recognizerContextp, meta=>{...} */
@@ -2940,7 +2944,42 @@ static int marpaESLIFLua_marpaESLIFRecognizer_isExhaustedi(lua_State *L)
   GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__);
 
   if (lua_gettop(L) != 1) {
-    return luaL_error(L, "Usage: marpaESLIFRecognizer_isexhausted(marpaESLIFRecognizerp, marpaESLIFRecognizerSharedp)");
+    return luaL_error(L, "Usage: marpaESLIFRecognizer_isexhausted(marpaESLIFRecognizerp)");
+  }
+  
+  if (lua_type(L, 1) != LUA_TTABLE) {
+    return luaL_error(L, "marpaESLIFRecognizerp must be a table");
+  }
+
+  lua_getfield(L, 1, "recognizerContextp");   /* stack: marpaESLIFRecognizerTable, marpaESLIFRecognizerSharedTable, recognizerContextFromp */
+  recognizerContextp = lua_touserdata(L, -1); /* stack: marpaESLIFRecognizerTable, marpaESLIFRecognizerSharedTable, recognizerContextFromp */
+  lua_pop(L, 1);                              /* stack: marpaESLIFRecognizerTable, marpaESLIFRecognizerSharedTable */
+
+  /* Clear the stack */
+  lua_settop(L, 0);
+
+  if (! marpaESLIFRecognizer_isExhaustedb(recognizerContextp->marpaESLIFRecognizerp, &exhaustedb)) {
+    return luaL_error(L, "marpaESLIFRecognizer_isExhaustedb failure, %s", strerror(errno));
+  }
+
+  lua_pushboolean(L, exhaustedb);
+
+  GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 (exhaustedb=%s) at %s:%d", funcs, L, exhaustedb ? "true" : "false", FILENAMES, __LINE__);
+  return 1;
+}
+
+/*****************************************************************************/
+static int marpaESLIFLua_marpaESLIFRecognizer_scani(lua_State *L)
+/*****************************************************************************/
+{
+  static const char            *funcs = "marpaESLIFLua_marpaESLIFRecognizer_scani";
+  recognizerContext_t          *recognizerContextp;
+  short                         exhaustedb;
+ 
+  GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__);
+
+  if (lua_gettop(L) != 1) {
+    return luaL_error(L, "Usage: marpaESLIFRecognizer_scan(marpaESLIFRecognizerp[, initialEvents])");
   }
   
   if (lua_type(L, 1) != LUA_TTABLE) {
