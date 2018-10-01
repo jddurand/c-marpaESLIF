@@ -137,6 +137,7 @@ static int                             marpaESLIFLua_marpaESLIFRecognizer_isCanC
 static int                             marpaESLIFLua_marpaESLIFRecognizer_isExhaustedi(lua_State *L);
 static int                             marpaESLIFLua_marpaESLIFRecognizer_scani(lua_State *L);
 static int                             marpaESLIFLua_marpaESLIFRecognizer_resumei(lua_State *L);
+static int                             marpaESLIFLua_marpaESLIFRecognizer_eventsi(lua_State *L);
 
 /* Transformers */
 static marpaESLIFValueResultTransform_t marpaESLIFValueResultTransformDefault = {
@@ -499,6 +500,7 @@ static int marpaESLIFLua_installi(lua_State *L)
     {"marpaESLIFRecognizer_isExhausted", marpaESLIFLua_marpaESLIFRecognizer_isExhaustedi},
     {"marpaESLIFRecognizer_scan", marpaESLIFLua_marpaESLIFRecognizer_scani},
     {"marpaESLIFRecognizer_resume", marpaESLIFLua_marpaESLIFRecognizer_resumei},
+    {"marpaESLIFRecognizer_events", marpaESLIFLua_marpaESLIFRecognizer_eventsi},
     {NULL, NULL}
   };
 
@@ -2702,6 +2704,7 @@ static int marpaESLIFLua_marpaESLIFRecognizer_newi(lua_State *L)
   MARPAESLIFLUA_STORE_FUNCTION(L, "isExhausted", marpaESLIFLua_marpaESLIFRecognizer_isExhaustedi);
   MARPAESLIFLUA_STORE_FUNCTION(L, "scan", marpaESLIFLua_marpaESLIFRecognizer_scani);
   MARPAESLIFLUA_STORE_FUNCTION(L, "resume", marpaESLIFLua_marpaESLIFRecognizer_resumei);
+  MARPAESLIFLUA_STORE_FUNCTION(L, "events", marpaESLIFLua_marpaESLIFRecognizer_eventsi);
   lua_setfield(L, -2, "__index");
 
   lua_setmetatable(L, -2);                                                           /* stack: {["recognizerContextp"] =>recognizerContextp, meta=>{...} */
@@ -2804,6 +2807,7 @@ static int marpaESLIFLua_marpaESLIFRecognizer_newFromi(lua_State *L)
   MARPAESLIFLUA_STORE_FUNCTION(L, "isExhausted", marpaESLIFLua_marpaESLIFRecognizer_isExhaustedi);
   MARPAESLIFLUA_STORE_FUNCTION(L, "scan", marpaESLIFLua_marpaESLIFRecognizer_scani);
   MARPAESLIFLUA_STORE_FUNCTION(L, "resume", marpaESLIFLua_marpaESLIFRecognizer_resumei);
+  MARPAESLIFLUA_STORE_FUNCTION(L, "events", marpaESLIFLua_marpaESLIFRecognizer_eventsi);
   lua_setfield(L, -2, "__index");
 
   lua_setmetatable(L, -2);                                                           /* stack: {["recognizerContextp"] =>recognizerContextp, meta=>{...} */
@@ -3050,6 +3054,46 @@ static int marpaESLIFLua_marpaESLIFRecognizer_resumei(lua_State *L)
   lua_settop(L, 0);
 
   lua_pushboolean(L, marpaESLIFRecognizer_resumeb(recognizerContextp->marpaESLIFRecognizerp, (size_t) deltaLengthi, &(recognizerContextp->canContinueb), NULL));
+
+  GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 at %s:%d", funcs, L, FILENAMES, __LINE__);
+  return 1;
+}
+
+/*****************************************************************************/
+static int marpaESLIFLua_marpaESLIFRecognizer_eventsi(lua_State *L)
+/*****************************************************************************/
+{
+  static const char            *funcs = "marpaESLIFLua_marpaESLIFRecognizer_eventsi";
+  recognizerContext_t          *recognizerContextp;
+  size_t                        i;
+  size_t                        eventArrayl;
+  marpaESLIFEvent_t            *eventArrayp;
+ 
+  GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__);
+
+  if (lua_gettop(L) != 1) {
+    return luaL_error(L, "Usage: marpaESLIFRecognizer_events(marpaESLIFRecognizerp)");
+  }
+
+  lua_getfield(L, 1, "recognizerContextp");   /* stack: marpaESLIFRecognizerTable, initialEventsb?, recognizerContextFromp */
+  recognizerContextp = lua_touserdata(L, -1); /* stack: marpaESLIFRecognizerTable, initialEventsb?, recognizerContextFromp */
+  lua_pop(L, 1);                              /* stack: marpaESLIFRecognizerTable, initialEventsb? */
+
+  /* Clear the stack */
+  lua_settop(L, 0);
+
+  if (! marpaESLIFRecognizer_eventb(recognizerContextp->marpaESLIFRecognizerp, &eventArrayl, &eventArrayp)) {
+    return luaL_error(L, "marpaESLIFRecognizer_eventb failure, %s", strerror(errno));
+  }
+
+  lua_newtable(L);                                                        /* stack: {} */
+  for (i = 0; i < eventArrayl; i++) {
+    lua_newtable(L);                                                      /* stack: {}, {} */
+    MARPAESLIFLUA_STORE_INTEGER(L, "type", eventArrayp[i].type);          /* stack: {}, {"type" => type} */
+    MARPAESLIFLUA_STORE_ASCIISTRING(L, "symbol", eventArrayp[i].symbols); /* stack: {}, {"type" => type, "symbol" => symbol} */
+    MARPAESLIFLUA_STORE_ASCIISTRING(L, "event", eventArrayp[i].events);   /* stack: {}, {"type" => type, "symbol" => symbol, "event" => event} */
+    lua_rawseti(L, 1, (int) i);                                           /* stack: {i => {"type" => type, "symbol" => symbol, "event" => event}} */
+  }
 
   GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 at %s:%d", funcs, L, FILENAMES, __LINE__);
   return 1;
