@@ -389,3 +389,4 @@ logger:noticef('marpaESLIFRecognizer::isExhausted: %s', tostring(marpaESLIFRecog
 logger:noticef('marpaESLIFRecognizer::scan: %s', tostring(marpaESLIFRecognizerp:scan(true)))
 logger:noticef('marpaESLIFRecognizer::events: %s', tableDump(marpaESLIFRecognizerp:events()))
 logger:noticef('marpaESLIFRecognizer::resume: %s', tostring(marpaESLIFRecognizerp:resume()))
+marpaESLIFRecognizerp:eventOnOff('x', { 0, 1 }, false)
