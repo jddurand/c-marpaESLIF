@@ -877,8 +877,6 @@ static void  marpaESLIFLua_valueContextFreev(valueContext_t *valueContextp, shor
 {
   static const char *funcs = "marpaESLIFLua_valueContextFreev";
   lua_State         *L;
-  int                i;
-  int                refi;
 
   if (valueContextp != NULL) {
     L = valueContextp->L;
@@ -2319,7 +2317,6 @@ static short marpaESLIFLua_valueSymbolCallbackb(void *userDatavp, marpaESLIFValu
   lua_State                *L             = valueContextp->L;
   int                       topi;
   int                       newtopi;
-  int                       i;
 
   GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) (bytep=%p, bytel=%ld, resulti=%d) at %s:%d", funcs, L, bytep, (unsigned long) bytel, resulti, FILENAMES, __LINE__);
 
@@ -3030,7 +3027,7 @@ static int marpaESLIFLua_marpaESLIFRecognizer_resumei(lua_State *L)
     if (lua_type(L, 2) != LUA_TNUMBER) {
       return luaL_error(L, "Usage: marpaESLIFRecognizer_scan(marpaESLIFRecognizerp, deltaLength)");
     }
-    deltaLengthi = lua_tointegerx(L, 2, &isNumi);
+    deltaLengthi = (int) lua_tointegerx(L, 2, &isNumi);
     if (! isNumi) {
       return luaL_error(L, "Failed to convert deltaLength argument to a number");
     }

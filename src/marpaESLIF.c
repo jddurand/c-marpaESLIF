@@ -8648,7 +8648,6 @@ static inline short _marpaESLIFGrammar_parseb(marpaESLIFGrammar_t *marpaESLIFGra
   marpaESLIFRecognizer_t *marpaESLIFRecognizerp = NULL;
   marpaESLIFValueOption_t marpaESLIFValueOption = (marpaESLIFValueOptionp != NULL) ? *marpaESLIFValueOptionp : marpaESLIFValueOption_default_template;
   marpaESLIFValue_t      *marpaESLIFValuep      = NULL;
-  marpaESLIFValueResult_t marpaESLIFValueResult;
   short                   isExhaustedb;
   short                   canContinueb;
   short                   rcb;
@@ -11989,7 +11988,6 @@ short marpaESLIFValue_stack_get_transformb(marpaESLIFValue_t *marpaESLIFValuep, 
 /*****************************************************************************/
 {
   static const char *funcs = "marpaESLIFValue_stack_get_transformb";
-  short              rcb;
 
   /* Generic transformation helper of a value at stack indice number indicei */
   if (marpaESLIFValuep == NULL) {
@@ -12157,7 +12155,6 @@ short marpaESLIFValue_transformb(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF
 /*****************************************************************************/
 {
   static const char *funcs = "marpaESLIFValueResult_transformb";
-  short              rcb;
 
   /* Generic transformation helper of a marpaESLIFValueResult during valuation */
   if (marpaESLIFValuep == NULL) {
