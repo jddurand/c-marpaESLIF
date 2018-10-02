@@ -146,6 +146,7 @@ static int                             marpaESLIFLua_marpaESLIFRecognizer_lexeme
 static int                             marpaESLIFLua_marpaESLIFRecognizer_discardTryi(lua_State *L);
 static int                             marpaESLIFLua_marpaESLIFRecognizer_lexemeExpectedi(lua_State *L);
 static int                             marpaESLIFLua_marpaESLIFRecognizer_lexemeLastPausei(lua_State *L);
+static int                             marpaESLIFLua_marpaESLIFRecognizer_lexemeLastTryi(lua_State *L);
 
 /* Transformers */
 static marpaESLIFValueResultTransform_t marpaESLIFValueResultTransformDefault = {
@@ -532,6 +533,7 @@ static int marpaESLIFLua_installi(lua_State *L)
     {"marpaESLIFRecognizer_discardTry", marpaESLIFLua_marpaESLIFRecognizer_discardTryi},
     {"marpaESLIFRecognizer_lexemeExpected", marpaESLIFLua_marpaESLIFRecognizer_lexemeExpectedi},
     {"marpaESLIFRecognizer_lexemeLastPause", marpaESLIFLua_marpaESLIFRecognizer_lexemeLastPausei},
+    {"marpaESLIFRecognizer_lexemeLastTry", marpaESLIFLua_marpaESLIFRecognizer_lexemeLastTryi},
     {NULL, NULL}
   };
 
@@ -2778,6 +2780,7 @@ static int marpaESLIFLua_marpaESLIFRecognizer_newi(lua_State *L)
   MARPAESLIFLUA_STORE_FUNCTION(L, "discardTry", marpaESLIFLua_marpaESLIFRecognizer_discardTryi);
   MARPAESLIFLUA_STORE_FUNCTION(L, "lexemeExpected", marpaESLIFLua_marpaESLIFRecognizer_lexemeExpectedi);
   MARPAESLIFLUA_STORE_FUNCTION(L, "lexemeLastPause", marpaESLIFLua_marpaESLIFRecognizer_lexemeLastPausei);
+  MARPAESLIFLUA_STORE_FUNCTION(L, "lexemeLastTry", marpaESLIFLua_marpaESLIFRecognizer_lexemeLastTryi);
   lua_setfield(L, -2, "__index");
 
   lua_setmetatable(L, -2);                                                           /* stack: {["recognizerContextp"] =>recognizerContextp, meta=>{...} */
@@ -2889,6 +2892,7 @@ static int marpaESLIFLua_marpaESLIFRecognizer_newFromi(lua_State *L)
   MARPAESLIFLUA_STORE_FUNCTION(L, "discardTry", marpaESLIFLua_marpaESLIFRecognizer_discardTryi);
   MARPAESLIFLUA_STORE_FUNCTION(L, "lexemeExpected", marpaESLIFLua_marpaESLIFRecognizer_lexemeExpectedi);
   MARPAESLIFLUA_STORE_FUNCTION(L, "lexemeLastPause", marpaESLIFLua_marpaESLIFRecognizer_lexemeLastPausei);
+  MARPAESLIFLUA_STORE_FUNCTION(L, "lexemeLastTry", marpaESLIFLua_marpaESLIFRecognizer_lexemeLastTryi);
   lua_setfield(L, -2, "__index");
 
   lua_setmetatable(L, -2);                                                           /* stack: {["recognizerContextp"] =>recognizerContextp, meta=>{...} */
@@ -3608,6 +3612,52 @@ static int marpaESLIFLua_marpaESLIFRecognizer_lexemeLastPausei(lua_State *L)
   
   if ((pauses != NULL) && (pausel > 0)) {
     lua_pushlstring(L, (const char *) pauses, pausel);
+  } else {
+    lua_pushnil(L);
+  }
+
+  GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 at %s:%d", funcs, L, FILENAMES, __LINE__);
+  return 1;
+}
+
+/*****************************************************************************/
+static int marpaESLIFLua_marpaESLIFRecognizer_lexemeLastTryi(lua_State *L)
+/*****************************************************************************/
+{
+  static const char       *funcs = "marpaESLIFLua_marpaESLIFRecognizer_lexemeLastTryi";
+  recognizerContext_t     *recognizerContextp;
+  const char              *names;
+  char                    *trys;
+  size_t                   tryl;
+  short                    rcb;
+
+  GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__);
+
+  if (lua_gettop(L) != 2) {
+    return luaL_error(L, "Usage: marpaESLIFRecognizer_lexemeLastTry(marpaESLIFRecognizerp, name)");
+  }
+  
+  if (lua_type(L, 1) != LUA_TTABLE) {
+    return luaL_error(L, "marpaESLIFRecognizerp must be a table");
+  }
+  lua_getfield(L, 1, "recognizerContextp");
+  recognizerContextp = lua_touserdata(L, -1);
+  lua_pop(L, 1);
+
+  if (lua_type(L, 2) != LUA_TSTRING) {
+    return luaL_error(L, "name must be a string");
+  }
+  names = lua_tostring(L, 2);
+
+  /* Clear the stack */
+  lua_settop(L, 0);
+
+  if (! marpaESLIFRecognizer_lexeme_last_tryb(recognizerContextp->marpaESLIFRecognizerp, (char *) names, &trys, &tryl)) {
+    return luaL_error(L, "marpaESLIFRecognizer_lexeme_last_tryb failure, %s", strerror(errno));
+  }
+  
+  if ((trys != NULL) && (tryl > 0)) {
+    lua_pushlstring(L, (const char *) trys, tryl);
   } else {
     lua_pushnil(L);
   }
