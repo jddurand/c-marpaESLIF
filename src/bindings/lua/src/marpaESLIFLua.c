@@ -144,6 +144,7 @@ static int                             marpaESLIFLua_marpaESLIFRecognizer_lexeme
 static int                             marpaESLIFLua_marpaESLIFRecognizer_lexemeReadi(lua_State *L);
 static int                             marpaESLIFLua_marpaESLIFRecognizer_lexemeTryi(lua_State *L);
 static int                             marpaESLIFLua_marpaESLIFRecognizer_discardTryi(lua_State *L);
+static int                             marpaESLIFLua_marpaESLIFRecognizer_lexemeExpectedi(lua_State *L);
 
 /* Transformers */
 static marpaESLIFValueResultTransform_t marpaESLIFValueResultTransformDefault = {
@@ -289,6 +290,16 @@ static marpaESLIFValueResultTransform_t marpaESLIFValueResultTransformDefault = 
     lua_createtable(L, (int) integerl, 0);                              \
     for (_iteratorl = 0; _iteratorl < integerl; _iteratorl++) {         \
       lua_pushinteger(L, (lua_Integer) integerp[_iteratorl]);           \
+      lua_rawseti(L, -2, (lua_Integer) _iteratorl);                     \
+    }                                                                   \
+  } while (0)
+
+#define MARPAESLIFLUA_PUSH_ASCIISTRING_ARRAY(L, stringl, stringp) do {  \
+    size_t _iteratorl;                                                  \
+                                                                        \
+    lua_createtable(L, (int) stringl, 0);                               \
+    for (_iteratorl = 0; _iteratorl < stringl; _iteratorl++) {          \
+      lua_pushstring(L, stringp[_iteratorl]);                           \
       lua_rawseti(L, -2, (lua_Integer) _iteratorl);                     \
     }                                                                   \
   } while (0)
@@ -518,6 +529,7 @@ static int marpaESLIFLua_installi(lua_State *L)
     {"marpaESLIFRecognizer_lexemeRead", marpaESLIFLua_marpaESLIFRecognizer_lexemeReadi},
     {"marpaESLIFRecognizer_lexemeTry", marpaESLIFLua_marpaESLIFRecognizer_lexemeTryi},
     {"marpaESLIFRecognizer_discardTry", marpaESLIFLua_marpaESLIFRecognizer_discardTryi},
+    {"marpaESLIFRecognizer_lexemeExpected", marpaESLIFLua_marpaESLIFRecognizer_lexemeExpectedi},
     {NULL, NULL}
   };
 
@@ -2762,6 +2774,7 @@ static int marpaESLIFLua_marpaESLIFRecognizer_newi(lua_State *L)
   MARPAESLIFLUA_STORE_FUNCTION(L, "lexemeRead", marpaESLIFLua_marpaESLIFRecognizer_lexemeReadi);
   MARPAESLIFLUA_STORE_FUNCTION(L, "lexemeTry", marpaESLIFLua_marpaESLIFRecognizer_lexemeTryi);
   MARPAESLIFLUA_STORE_FUNCTION(L, "discardTry", marpaESLIFLua_marpaESLIFRecognizer_discardTryi);
+  MARPAESLIFLUA_STORE_FUNCTION(L, "lexemeExpected", marpaESLIFLua_marpaESLIFRecognizer_lexemeExpectedi);
   lua_setfield(L, -2, "__index");
 
   lua_setmetatable(L, -2);                                                           /* stack: {["recognizerContextp"] =>recognizerContextp, meta=>{...} */
@@ -2870,6 +2883,7 @@ static int marpaESLIFLua_marpaESLIFRecognizer_newFromi(lua_State *L)
   MARPAESLIFLUA_STORE_FUNCTION(L, "lexemeComplete", marpaESLIFLua_marpaESLIFRecognizer_lexemeCompletei);
   MARPAESLIFLUA_STORE_FUNCTION(L, "lexemeRead", marpaESLIFLua_marpaESLIFRecognizer_lexemeReadi);
   MARPAESLIFLUA_STORE_FUNCTION(L, "lexemeTry", marpaESLIFLua_marpaESLIFRecognizer_lexemeTryi);
+  MARPAESLIFLUA_STORE_FUNCTION(L, "lexemeExpected", marpaESLIFLua_marpaESLIFRecognizer_lexemeExpectedi);
   MARPAESLIFLUA_STORE_FUNCTION(L, "discardTry", marpaESLIFLua_marpaESLIFRecognizer_discardTryi);
   lua_setfield(L, -2, "__index");
 
@@ -3514,3 +3528,41 @@ static int marpaESLIFLua_marpaESLIFRecognizer_discardTryi(lua_State *L)
   GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 at %s:%d", funcs, L, FILENAMES, __LINE__);
   return 1;
 }
+
+/*****************************************************************************/
+static int marpaESLIFLua_marpaESLIFRecognizer_lexemeExpectedi(lua_State *L)
+/*****************************************************************************/
+{
+  static const char    *funcs = "marpaESLIFLua_marpaESLIFRecognizer_lexemeExpectedi";
+  recognizerContext_t  *recognizerContextp;
+  size_t                nLexeme;
+  size_t                i;
+  char                **lexemesArrayp;
+  short                 rcb;
+
+  GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__);
+
+  if (lua_gettop(L) != 1) {
+    return luaL_error(L, "Usage: marpaESLIFRecognizer_lexemeExpected(marpaESLIFRecognizerp)");
+  }
+  
+  if (lua_type(L, 1) != LUA_TTABLE) {
+    return luaL_error(L, "marpaESLIFRecognizerp must be a table");
+  }
+  lua_getfield(L, 1, "recognizerContextp");
+  recognizerContextp = lua_touserdata(L, -1);
+  lua_pop(L, 1);
+
+  /* Clear the stack */
+  lua_settop(L, 0);
+
+  if (! marpaESLIFRecognizer_lexeme_expectedb(recognizerContextp->marpaESLIFRecognizerp, &nLexeme, &lexemesArrayp)) {
+    return luaL_error(L, "marpaESLIFRecognizer_lexeme_expectedb failure, %s", strerror(errno));
+  }
+  
+  MARPAESLIFLUA_PUSH_ASCIISTRING_ARRAY(L, nLexeme, lexemesArrayp);
+
+  GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 at %s:%d", funcs, L, FILENAMES, __LINE__);
+  return 1;
+}
+

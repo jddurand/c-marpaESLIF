@@ -384,6 +384,7 @@ logger:noticef('marpaESLIFRecognizerFromp meta dump: %s', tableDump(getmetatable
 marpaESLIFRecognizerp:share(marpaESLIFRecognizerFromp);
 marpaESLIFRecognizerp:share(marpaESLIFRecognizerFromp);
 ------------------------------------------------------------------------------
+logger:noticef('marpaESLIFRecognizer::lexemeExpected: %s', tableDump(marpaESLIFRecognizerp:lexemeExpected()))
 logger:noticef('marpaESLIFRecognizer::isCancontinue: %s', tostring(marpaESLIFRecognizerp:isCanContinue()))
 logger:noticef('marpaESLIFRecognizer::isExhausted: %s', tostring(marpaESLIFRecognizerp:isExhausted()))
 logger:noticef('marpaESLIFRecognizer::scan: %s', tostring(marpaESLIFRecognizerp:scan(true)))
