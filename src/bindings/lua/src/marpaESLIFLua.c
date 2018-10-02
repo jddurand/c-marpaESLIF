@@ -149,6 +149,7 @@ static int                             marpaESLIFLua_marpaESLIFRecognizer_lexeme
 static int                             marpaESLIFLua_marpaESLIFRecognizer_lexemeLastTryi(lua_State *L);
 static int                             marpaESLIFLua_marpaESLIFRecognizer_discardLastTryi(lua_State *L);
 static int                             marpaESLIFLua_marpaESLIFRecognizer_isEofi(lua_State *L);
+static int                             marpaESLIFLua_marpaESLIFRecognizer_readi(lua_State *L);
 
 /* Transformers */
 static marpaESLIFValueResultTransform_t marpaESLIFValueResultTransformDefault = {
@@ -538,6 +539,7 @@ static int marpaESLIFLua_installi(lua_State *L)
     {"marpaESLIFRecognizer_lexemeLastTry", marpaESLIFLua_marpaESLIFRecognizer_lexemeLastTryi},
     {"marpaESLIFRecognizer_discardLastTry", marpaESLIFLua_marpaESLIFRecognizer_discardLastTryi},
     {"marpaESLIFRecognizer_isEof", marpaESLIFLua_marpaESLIFRecognizer_isEofi},
+    {"marpaESLIFRecognizer_read", marpaESLIFLua_marpaESLIFRecognizer_readi},
     {NULL, NULL}
   };
 
@@ -2787,6 +2789,7 @@ static int marpaESLIFLua_marpaESLIFRecognizer_newi(lua_State *L)
   MARPAESLIFLUA_STORE_FUNCTION(L, "lexemeLastTry", marpaESLIFLua_marpaESLIFRecognizer_lexemeLastTryi);
   MARPAESLIFLUA_STORE_FUNCTION(L, "discardLastTry", marpaESLIFLua_marpaESLIFRecognizer_discardLastTryi);
   MARPAESLIFLUA_STORE_FUNCTION(L, "isEof", marpaESLIFLua_marpaESLIFRecognizer_isEofi);
+  MARPAESLIFLUA_STORE_FUNCTION(L, "read", marpaESLIFLua_marpaESLIFRecognizer_readi);
   lua_setfield(L, -2, "__index");
 
   lua_setmetatable(L, -2);                                                           /* stack: {["recognizerContextp"] =>recognizerContextp, meta=>{...} */
@@ -2901,6 +2904,7 @@ static int marpaESLIFLua_marpaESLIFRecognizer_newFromi(lua_State *L)
   MARPAESLIFLUA_STORE_FUNCTION(L, "lexemeLastTry", marpaESLIFLua_marpaESLIFRecognizer_lexemeLastTryi);
   MARPAESLIFLUA_STORE_FUNCTION(L, "discardLastTry", marpaESLIFLua_marpaESLIFRecognizer_discardLastTryi);
   MARPAESLIFLUA_STORE_FUNCTION(L, "isEof", marpaESLIFLua_marpaESLIFRecognizer_isEofi);
+  MARPAESLIFLUA_STORE_FUNCTION(L, "read", marpaESLIFLua_marpaESLIFRecognizer_readi);
   lua_setfield(L, -2, "__index");
 
   lua_setmetatable(L, -2);                                                           /* stack: {["recognizerContextp"] =>recognizerContextp, meta=>{...} */
@@ -3743,6 +3747,36 @@ static int marpaESLIFLua_marpaESLIFRecognizer_isEofi(lua_State *L)
   }
   
   lua_pushboolean(L, eofb ? 1 : 0);
+  
+  GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 at %s:%d", funcs, L, FILENAMES, __LINE__);
+  return 1;
+}
+
+/*****************************************************************************/
+static int marpaESLIFLua_marpaESLIFRecognizer_readi(lua_State *L)
+/*****************************************************************************/
+{
+  static const char       *funcs = "marpaESLIFLua_marpaESLIFRecognizer_readi";
+  recognizerContext_t     *recognizerContextp;
+  short                    eofb;
+
+  GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__);
+
+  if (lua_gettop(L) != 1) {
+    return luaL_error(L, "Usage: marpaESLIFRecognizer_read(marpaESLIFRecognizerp)");
+  }
+  
+  if (lua_type(L, 1) != LUA_TTABLE) {
+    return luaL_error(L, "marpaESLIFRecognizerp must be a table");
+  }
+  lua_getfield(L, 1, "recognizerContextp");
+  recognizerContextp = lua_touserdata(L, -1);
+  lua_pop(L, 1);
+
+  /* Clear the stack */
+  lua_settop(L, 0);
+
+  lua_pushboolean(L, marpaESLIFRecognizer_readb(recognizerContextp->marpaESLIFRecognizerp, NULL, NULL) ? 1 : 0);
   
   GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 at %s:%d", funcs, L, FILENAMES, __LINE__);
   return 1;
