@@ -384,11 +384,12 @@ logger:noticef('marpaESLIFRecognizerFromp meta dump: %s', tableDump(getmetatable
 marpaESLIFRecognizerp:share(marpaESLIFRecognizerFromp);
 marpaESLIFRecognizerp:share(marpaESLIFRecognizerFromp);
 ------------------------------------------------------------------------------
-logger:noticef('marpaESLIFRecognizer::lexemeExpected: %s', tableDump(marpaESLIFRecognizerp:lexemeExpected()))
 logger:noticef('marpaESLIFRecognizer::isCancontinue: %s', tostring(marpaESLIFRecognizerp:isCanContinue()))
 logger:noticef('marpaESLIFRecognizer::isExhausted: %s', tostring(marpaESLIFRecognizerp:isExhausted()))
 logger:noticef('marpaESLIFRecognizer::scan: %s', tostring(marpaESLIFRecognizerp:scan(true)))
 logger:noticef('marpaESLIFRecognizer::events: %s', tableDump(marpaESLIFRecognizerp:events()))
+logger:noticef('marpaESLIFRecognizer::lexemeExpected: %s', tableDump(marpaESLIFRecognizerp:lexemeExpected()))
+logger:noticef('marpaESLIFRecognizer::lexemeLastPause: %s', tableDump(marpaESLIFRecognizerp:lexemeLastPause('NUMBER')))
 logger:noticef('marpaESLIFRecognizer::resume: %s', tostring(marpaESLIFRecognizerp:resume()))
 marpaESLIFRecognizerp:eventOnOff('Number', { MARPAESLIF_EVENTTYPE_NONE, MARPAESLIF_EVENTTYPE_DISCARD }, false)
 marpaESLIFRecognizerp:lexemeAlternative('NUMBER', 'my value')
