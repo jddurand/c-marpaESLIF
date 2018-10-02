@@ -141,6 +141,7 @@ static int                             marpaESLIFLua_marpaESLIFRecognizer_events
 static int                             marpaESLIFLua_marpaESLIFRecognizer_eventOnOffi(lua_State *L);
 static int                             marpaESLIFLua_marpaESLIFRecognizer_lexemeAlternativei(lua_State *L);
 static int                             marpaESLIFLua_marpaESLIFRecognizer_lexemeCompletei(lua_State *L);
+static int                             marpaESLIFLua_marpaESLIFRecognizer_lexemeReadi(lua_State *L);
 
 /* Transformers */
 static marpaESLIFValueResultTransform_t marpaESLIFValueResultTransformDefault = {
@@ -512,6 +513,7 @@ static int marpaESLIFLua_installi(lua_State *L)
     {"marpaESLIFRecognizer_eventOnOff", marpaESLIFLua_marpaESLIFRecognizer_eventOnOffi},
     {"marpaESLIFRecognizer_lexemeAlternative", marpaESLIFLua_marpaESLIFRecognizer_lexemeAlternativei},
     {"marpaESLIFRecognizer_lexemeComplete", marpaESLIFLua_marpaESLIFRecognizer_lexemeCompletei},
+    {"marpaESLIFRecognizer_lexemeRead", marpaESLIFLua_marpaESLIFRecognizer_lexemeReadi},
     {NULL, NULL}
   };
 
@@ -2753,6 +2755,7 @@ static int marpaESLIFLua_marpaESLIFRecognizer_newi(lua_State *L)
   MARPAESLIFLUA_STORE_FUNCTION(L, "eventOnOff", marpaESLIFLua_marpaESLIFRecognizer_eventOnOffi);
   MARPAESLIFLUA_STORE_FUNCTION(L, "lexemeAlternative", marpaESLIFLua_marpaESLIFRecognizer_lexemeAlternativei);
   MARPAESLIFLUA_STORE_FUNCTION(L, "lexemeComplete", marpaESLIFLua_marpaESLIFRecognizer_lexemeCompletei);
+  MARPAESLIFLUA_STORE_FUNCTION(L, "lexemeRead", marpaESLIFLua_marpaESLIFRecognizer_lexemeReadi);
   lua_setfield(L, -2, "__index");
 
   lua_setmetatable(L, -2);                                                           /* stack: {["recognizerContextp"] =>recognizerContextp, meta=>{...} */
@@ -2859,6 +2862,7 @@ static int marpaESLIFLua_marpaESLIFRecognizer_newFromi(lua_State *L)
   MARPAESLIFLUA_STORE_FUNCTION(L, "eventOnOff", marpaESLIFLua_marpaESLIFRecognizer_eventOnOffi);
   MARPAESLIFLUA_STORE_FUNCTION(L, "lexemeAlternative", marpaESLIFLua_marpaESLIFRecognizer_lexemeAlternativei);
   MARPAESLIFLUA_STORE_FUNCTION(L, "lexemeComplete", marpaESLIFLua_marpaESLIFRecognizer_lexemeCompletei);
+  MARPAESLIFLUA_STORE_FUNCTION(L, "lexemeRead", marpaESLIFLua_marpaESLIFRecognizer_lexemeReadi);
   lua_setfield(L, -2, "__index");
 
   lua_setmetatable(L, -2);                                                           /* stack: {["recognizerContextp"] =>recognizerContextp, meta=>{...} */
@@ -3337,6 +3341,93 @@ static int marpaESLIFLua_marpaESLIFRecognizer_lexemeCompletei(lua_State *L)
   lua_settop(L, 0);
 
   lua_pushboolean(L, marpaESLIFRecognizer_lexeme_completeb(recognizerContextp->marpaESLIFRecognizerp, lengthl));
+
+  GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 at %s:%d", funcs, L, FILENAMES, __LINE__);
+  return 0;
+}
+
+/*****************************************************************************/
+static int marpaESLIFLua_marpaESLIFRecognizer_lexemeReadi(lua_State *L)
+/*****************************************************************************/
+{
+  static const char       *funcs          = "marpaESLIFLua_marpaESLIFRecognizer_lexemeReadi";
+  size_t                   grammarLengthl = 1;
+  size_t                   lengthl;
+  recognizerContext_t     *recognizerContextp;
+  const char              *names;
+  int                      isNumi;
+  int                      refi;
+  marpaESLIFAlternative_t  marpaESLIFAlternative;
+  int                     *p;
+
+  GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__);
+
+  switch (lua_gettop(L)) {
+  case 5:
+    if (lua_type(L, 5) != LUA_TNUMBER) {
+      return luaL_error(L, "grammarLength must be a number");
+    }
+    grammarLengthl = (size_t) lua_tonumberx(L, 5, &isNumi);
+    if (! isNumi) {
+      return luaL_error(L, "Failed to convert grammarLength %s to a number", lua_tostring(L, 5));
+    }
+    /* Intentionnaly no break */
+  case 4:
+    if (lua_type(L, 1) != LUA_TTABLE) {
+      return luaL_error(L, "marpaESLIFRecognizerp must be a table");
+    }
+    lua_getfield(L, 1, "recognizerContextp");
+    recognizerContextp = lua_touserdata(L, -1);
+    lua_pop(L, 1);
+
+    if (lua_type(L, 2) != LUA_TSTRING) {
+      return luaL_error(L, "name must be a string");
+    }
+    names = lua_tostring(L, 2);
+
+    /* We make a reference to the value and remember that in an (int *) pointer */
+    /* in order to re-use the marpaESLIFLua_representationb method */
+    lua_pushnil(L);
+    lua_copy(L, 3, -1);
+    MARPAESLIFLUA_REF(L, refi);
+    
+    p = malloc(sizeof(int));
+    if (p == NULL) {
+      return luaL_error(L, "malloc failure, %s", strerror(errno));
+    }
+    *p = refi;
+
+    /* And remember that reference */
+    GENERICSTACK_PUSH_INT(recognizerContextp->lexemeStackp, refi);
+    if (GENERICSTACK_ERROR(recognizerContextp->lexemeStackp)) {
+      return luaL_error(L, "lexemeStackp push failure, %s", strerror(errno));
+    }
+
+    if (lua_type(L, 4) != LUA_TNUMBER) {
+      return luaL_error(L, "length must be a number");
+    }
+    lengthl = (size_t) lua_tonumberx(L, 4, &isNumi);
+    if (! isNumi) {
+      return luaL_error(L, "Failed to convert length %s to a number", lua_tostring(L, 4));
+    }
+    break;
+  default:
+    return luaL_error(L, "Usage: marpaESLIFRecognizer_lexemeRead(marpaESLIFRecognizerp, name, value, length[, grammarLength])");
+  }
+
+  marpaESLIFAlternative.lexemes               = (char *) names;
+  marpaESLIFAlternative.value.type            = MARPAESLIF_VALUE_TYPE_PTR;
+  marpaESLIFAlternative.value.u.p             = p;
+  marpaESLIFAlternative.value.contexti        = ESLIF_LUA_CONTEXT;
+  marpaESLIFAlternative.value.sizel           = 0; /* Not used */
+  marpaESLIFAlternative.value.representationp = marpaESLIFLua_representationb;
+  marpaESLIFAlternative.value.shallowb        = 0; /* C.f. marpaESLIF_valueFreeCallbackv */
+  marpaESLIFAlternative.grammarLengthl        = grammarLengthl;
+
+  /* Clear the stack */
+  lua_settop(L, 0);
+
+  lua_pushboolean(L, marpaESLIFRecognizer_lexeme_readb(recognizerContextp->marpaESLIFRecognizerp, &marpaESLIFAlternative, lengthl));
 
   GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 at %s:%d", funcs, L, FILENAMES, __LINE__);
   return 0;

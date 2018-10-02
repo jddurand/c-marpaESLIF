@@ -392,3 +392,4 @@ logger:noticef('marpaESLIFRecognizer::resume: %s', tostring(marpaESLIFRecognizer
 marpaESLIFRecognizerp:eventOnOff('Number', { MARPAESLIF_EVENTTYPE_NONE, MARPAESLIF_EVENTTYPE_DISCARD }, false)
 marpaESLIFRecognizerp:lexemeAlternative('NUMBER', 'my value')
 marpaESLIFRecognizerp:lexemeComplete(2)
+marpaESLIFRecognizerp:lexemeRead('WHITESPACES', '/* ... */', 2)
