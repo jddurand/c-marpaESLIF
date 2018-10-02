@@ -390,4 +390,5 @@ logger:noticef('marpaESLIFRecognizer::scan: %s', tostring(marpaESLIFRecognizerp:
 logger:noticef('marpaESLIFRecognizer::events: %s', tableDump(marpaESLIFRecognizerp:events()))
 logger:noticef('marpaESLIFRecognizer::resume: %s', tostring(marpaESLIFRecognizerp:resume()))
 marpaESLIFRecognizerp:eventOnOff('Number', { MARPAESLIF_EVENTTYPE_NONE, MARPAESLIF_EVENTTYPE_DISCARD }, false)
-marpaESLIFRecognizerp:lexemeAlternative('X', 'my value')
+marpaESLIFRecognizerp:lexemeAlternative('NUMBER', 'my value')
+marpaESLIFRecognizerp:lexemeComplete(2)
