@@ -353,7 +353,7 @@ for _, localstring in pairs(strings) do
 end
 
 ------------------------------------------------------------------------------
-local magiclinesFunction = magiclines("10")
+local magiclinesFunction = magiclines("10 /* ... */")
 local recognizerInterface = {
    ["read"]  = function(self)
       self._data = magiclinesFunction()
@@ -398,4 +398,5 @@ logger:noticef('marpaESLIFRecognizer::resume: %s', tostring(marpaESLIFRecognizer
 marpaESLIFRecognizerp:eventOnOff('Number', { MARPAESLIF_EVENTTYPE_NONE, MARPAESLIF_EVENTTYPE_DISCARD }, false)
 marpaESLIFRecognizerp:lexemeAlternative('NUMBER', 'my value')
 marpaESLIFRecognizerp:lexemeComplete(2)
-marpaESLIFRecognizerp:lexemeRead('WHITESPACES', '/* ... */', 2)
+marpaESLIFRecognizerp:lexemeRead('WHITESPACES', '/* TEST */', 1)
+logger:noticef('marpaESLIFRecognizer::isEof: %s', tostring(marpaESLIFRecognizerp:isEof()))
