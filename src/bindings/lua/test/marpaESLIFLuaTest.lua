@@ -394,6 +394,7 @@ logger:noticef('marpaESLIFRecognizer::lexemeTry: %s', tostring(marpaESLIFRecogni
 logger:noticef('marpaESLIFRecognizer::discardTry: %s', tostring(marpaESLIFRecognizerp:discardTry()))
 logger:noticef('marpaESLIFRecognizer::lexemeLastTry: %s', tostring(marpaESLIFRecognizerp:lexemeLastTry('NUMBER')))
 logger:noticef('marpaESLIFRecognizer::discardLastTry: %s', tostring(marpaESLIFRecognizerp:discardLastTry()))
+marpaESLIFRecognizerp:progressLog(0, -1, GENERICLOGGER_LOGLEVEL_TRACE)
 logger:noticef('marpaESLIFRecognizer::resume: %s', tostring(marpaESLIFRecognizerp:resume()))
 marpaESLIFRecognizerp:eventOnOff('Number', { MARPAESLIF_EVENTTYPE_NONE, MARPAESLIF_EVENTTYPE_DISCARD }, false)
 marpaESLIFRecognizerp:lexemeAlternative('NUMBER', 'my value')

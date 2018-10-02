@@ -151,6 +151,7 @@ static int                             marpaESLIFLua_marpaESLIFRecognizer_discar
 static int                             marpaESLIFLua_marpaESLIFRecognizer_isEofi(lua_State *L);
 static int                             marpaESLIFLua_marpaESLIFRecognizer_readi(lua_State *L);
 static int                             marpaESLIFLua_marpaESLIFRecognizer_inputi(lua_State *L);
+static int                             marpaESLIFLua_marpaESLIFRecognizer_progressLogi(lua_State *L);
 
 /* Transformers */
 static marpaESLIFValueResultTransform_t marpaESLIFValueResultTransformDefault = {
@@ -542,6 +543,7 @@ static int marpaESLIFLua_installi(lua_State *L)
     {"marpaESLIFRecognizer_isEof", marpaESLIFLua_marpaESLIFRecognizer_isEofi},
     {"marpaESLIFRecognizer_read", marpaESLIFLua_marpaESLIFRecognizer_readi},
     {"marpaESLIFRecognizer_input", marpaESLIFLua_marpaESLIFRecognizer_inputi},
+    {"marpaESLIFRecognizer_progressLog", marpaESLIFLua_marpaESLIFRecognizer_progressLogi},
     {NULL, NULL}
   };
 
@@ -584,6 +586,16 @@ static int marpaESLIFLua_installi(lua_State *L)
   
   MARPAESLIFLUA_CREATEINTEGERCONSTANT(L, MARPAESLIF_SYMBOLTYPE_TERMINAL);
   MARPAESLIFLUA_CREATEINTEGERCONSTANT(L, MARPAESLIF_SYMBOLTYPE_META);
+
+  MARPAESLIFLUA_CREATEINTEGERCONSTANT(L, GENERICLOGGER_LOGLEVEL_TRACE);
+  MARPAESLIFLUA_CREATEINTEGERCONSTANT(L, GENERICLOGGER_LOGLEVEL_DEBUG);
+  MARPAESLIFLUA_CREATEINTEGERCONSTANT(L, GENERICLOGGER_LOGLEVEL_INFO);
+  MARPAESLIFLUA_CREATEINTEGERCONSTANT(L, GENERICLOGGER_LOGLEVEL_NOTICE);
+  MARPAESLIFLUA_CREATEINTEGERCONSTANT(L, GENERICLOGGER_LOGLEVEL_WARNING);
+  MARPAESLIFLUA_CREATEINTEGERCONSTANT(L, GENERICLOGGER_LOGLEVEL_ERROR);
+  MARPAESLIFLUA_CREATEINTEGERCONSTANT(L, GENERICLOGGER_LOGLEVEL_CRITICAL);
+  MARPAESLIFLUA_CREATEINTEGERCONSTANT(L, GENERICLOGGER_LOGLEVEL_ALERT);
+  MARPAESLIFLUA_CREATEINTEGERCONSTANT(L, GENERICLOGGER_LOGLEVEL_EMERGENCY);
 
   GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 at %s:%d", funcs, L, FILENAMES, __LINE__);
   return 1;
@@ -2793,6 +2805,7 @@ static int marpaESLIFLua_marpaESLIFRecognizer_newi(lua_State *L)
   MARPAESLIFLUA_STORE_FUNCTION(L, "isEof", marpaESLIFLua_marpaESLIFRecognizer_isEofi);
   MARPAESLIFLUA_STORE_FUNCTION(L, "read", marpaESLIFLua_marpaESLIFRecognizer_readi);
   MARPAESLIFLUA_STORE_FUNCTION(L, "input", marpaESLIFLua_marpaESLIFRecognizer_inputi);
+  MARPAESLIFLUA_STORE_FUNCTION(L, "progressLog", marpaESLIFLua_marpaESLIFRecognizer_progressLogi);
   lua_setfield(L, -2, "__index");
 
   lua_setmetatable(L, -2);                                                           /* stack: {["recognizerContextp"] =>recognizerContextp, meta=>{...} */
@@ -2909,6 +2922,7 @@ static int marpaESLIFLua_marpaESLIFRecognizer_newFromi(lua_State *L)
   MARPAESLIFLUA_STORE_FUNCTION(L, "isEof", marpaESLIFLua_marpaESLIFRecognizer_isEofi);
   MARPAESLIFLUA_STORE_FUNCTION(L, "read", marpaESLIFLua_marpaESLIFRecognizer_readi);
   MARPAESLIFLUA_STORE_FUNCTION(L, "input", marpaESLIFLua_marpaESLIFRecognizer_inputi);
+  MARPAESLIFLUA_STORE_FUNCTION(L, "progressLog", marpaESLIFLua_marpaESLIFRecognizer_progressLogi);
   lua_setfield(L, -2, "__index");
 
   lua_setmetatable(L, -2);                                                           /* stack: {["recognizerContextp"] =>recognizerContextp, meta=>{...} */
@@ -3822,5 +3836,80 @@ static int marpaESLIFLua_marpaESLIFRecognizer_inputi(lua_State *L)
   
   GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 at %s:%d", funcs, L, FILENAMES, __LINE__);
   return 1;
+}
+
+/*****************************************************************************/
+static int marpaESLIFLua_marpaESLIFRecognizer_progressLogi(lua_State *L)
+/*****************************************************************************/
+{
+  static const char   *funcs = "marpaESLIFLua_marpaESLIFRecognizer_progressLogi";
+  recognizerContext_t *recognizerContextp;
+  int                  starti;
+  int                  endi;
+  int                  leveli;
+  int                  isNumi;
+
+  GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__);
+
+  if (lua_gettop(L) != 4) {
+    return luaL_error(L, "Usage: marpaESLIFRecognizer_read(marpaESLIFRecognizerp, start, end, level)");
+  }
+  
+  if (lua_type(L, 1) != LUA_TTABLE) {
+    return luaL_error(L, "marpaESLIFRecognizerp must be a table");
+  }
+  lua_getfield(L, 1, "recognizerContextp");
+  recognizerContextp = lua_touserdata(L, -1);
+  lua_pop(L, 1);
+
+  if (lua_type(L, 2) != LUA_TNUMBER) {
+    return luaL_error(L, "start must be a number");
+  }
+  starti = (int) lua_tointegerx(L, 2, &isNumi);
+  if (! isNumi) {
+    return luaL_error(L, "Failed to convert start %s to a number", lua_tostring(L, 2));
+  }
+
+  if (lua_type(L, 3) != LUA_TNUMBER) {
+    return luaL_error(L, "end must be a number");
+  }
+  endi = (int) lua_tointegerx(L, 2, &isNumi);
+  if (! isNumi) {
+    return luaL_error(L, "Failed to convert end %s to a number", lua_tostring(L, 3));
+  }
+
+  if (lua_type(L, 4) != LUA_TNUMBER) {
+    return luaL_error(L, "level must be a number");
+  }
+  leveli = (int) lua_tointegerx(L, 4, &isNumi);
+  if (! isNumi) {
+    return luaL_error(L, "Failed to convert level %s to a number", lua_tostring(L, 4));
+  }
+
+  /* Clear the stack */
+  lua_settop(L, 0);
+
+  switch (leveli) {
+  case GENERICLOGGER_LOGLEVEL_TRACE:
+  case GENERICLOGGER_LOGLEVEL_DEBUG:
+  case GENERICLOGGER_LOGLEVEL_INFO:
+  case GENERICLOGGER_LOGLEVEL_NOTICE:
+  case GENERICLOGGER_LOGLEVEL_WARNING:
+  case GENERICLOGGER_LOGLEVEL_ERROR:
+  case GENERICLOGGER_LOGLEVEL_CRITICAL:
+  case GENERICLOGGER_LOGLEVEL_ALERT:
+  case GENERICLOGGER_LOGLEVEL_EMERGENCY:
+    break;
+  default:
+    return luaL_error(L, "Unknown logger level %d", leveli);
+    break;
+  }
+
+  if (! marpaESLIFRecognizer_progressLogb(recognizerContextp->marpaESLIFRecognizerp, starti, endi, leveli)) {
+    return luaL_error(L, "marpaESLIFRecognizer_progressLogb failure, %s", strerror(errno));
+  }
+  
+  GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 0 at %s:%d", funcs, L, FILENAMES, __LINE__);
+  return 0;
 }
 
