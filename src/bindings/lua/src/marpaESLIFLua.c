@@ -3586,9 +3586,7 @@ static int marpaESLIFLua_marpaESLIFRecognizer_lexemeExpectedi(lua_State *L)
   static const char    *funcs = "marpaESLIFLua_marpaESLIFRecognizer_lexemeExpectedi";
   recognizerContext_t  *recognizerContextp;
   size_t                nLexeme;
-  size_t                i;
   char                **lexemesArrayp;
-  short                 rcb;
 
   GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__);
 
@@ -3625,7 +3623,6 @@ static int marpaESLIFLua_marpaESLIFRecognizer_lexemeLastPausei(lua_State *L)
   const char              *names;
   char                    *pauses;
   size_t                   pausel;
-  short                    rcb;
 
   GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__);
 
@@ -3671,7 +3668,6 @@ static int marpaESLIFLua_marpaESLIFRecognizer_lexemeLastTryi(lua_State *L)
   const char              *names;
   char                    *trys;
   size_t                   tryl;
-  short                    rcb;
 
   GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__);
 
@@ -3716,7 +3712,6 @@ static int marpaESLIFLua_marpaESLIFRecognizer_discardLastTryi(lua_State *L)
   recognizerContext_t     *recognizerContextp;
   char                    *trys;
   size_t                   tryl;
-  short                    rcb;
 
   GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__);
 
