@@ -1670,22 +1670,6 @@ Hook the recognizer to enable or disable the use of C<:discard> if it exists. De
 
 Returns a true value on success, a false value on failure.
 
-=over
-
-=item linelp
-
-If not C<NULL>, will contain the current absolute line number.
-
-=item columnlp
-
-If not C<NULL>, will contain the current absolute column number.
-
-=back
-
-Please note that this is in effect only if the recognizer option have a true value for C<newlineb>, and for character chunks.
-
-Returns a true value on success, a false value on failure.
-
 =head3 C<marpaESLIFRecognizer_freev>
 
   void marpaESLIFRecognizer_freev(marpaESLIFRecognizer_t *marpaESLIFRecognizerp);
