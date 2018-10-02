@@ -393,3 +393,5 @@ marpaESLIFRecognizerp:eventOnOff('Number', { MARPAESLIF_EVENTTYPE_NONE, MARPAESL
 marpaESLIFRecognizerp:lexemeAlternative('NUMBER', 'my value')
 marpaESLIFRecognizerp:lexemeComplete(2)
 marpaESLIFRecognizerp:lexemeRead('WHITESPACES', '/* ... */', 2)
+logger:noticef('marpaESLIFRecognizer::lexemeTry: %s', tostring(marpaESLIFRecognizerp:lexemeTry('NUMBER')))
+logger:noticef('marpaESLIFRecognizer::discardTry: %s', tostring(marpaESLIFRecognizerp:discardTry()))
