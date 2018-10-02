@@ -79,7 +79,7 @@ static void                            marpaESLIFLua_genericLoggerCallbackv(void
 static int                             marpaESLIFLua_installi(lua_State *L);
 static int                             marpaESLIFLua_versioni(lua_State *L);
 static int                             marpaESLIFLua_marpaESLIF_newi(lua_State *L);
-static int                             marpaESLIFLua_marpaeslifmultitonstable_freevi(lua_State *L);
+static int                             marpaESLIFLua_marpaESLIFMultitonsTable_freevi(lua_State *L);
 #ifdef MARPAESLIFLUA_USE_INTERNALREGISTRYINDEX
 static int                             marpaESLIFLua_marpaESLIFRegistryindex_freevi(lua_State *L);
 #endif
@@ -641,7 +641,7 @@ static int marpaESLIFLua_marpaESLIF_newi(lua_State *L)
     return luaL_error(L, "Usage: marpaESLIF_new([logger]");
   }
 
-  MARPAESLIFLUA_GETORCREATEGLOBAL(L, MARPAESLIFMULTITONSTABLE, marpaESLIFLua_marpaeslifmultitonstable_freevi); /* stack: logger?, MARPAESLIFMULTITONSTABLE */
+  MARPAESLIFLUA_GETORCREATEGLOBAL(L, MARPAESLIFMULTITONSTABLE, marpaESLIFLua_marpaESLIFMultitonsTable_freevi); /* stack: logger?, MARPAESLIFMULTITONSTABLE */
 
   /* Look if MARPAESLIFMULTITONSTABLE already contains a reference to logger */
   lua_pushnil(L);                                                                                   /* stack: logger?, MARPAESLIFMULTITONSTABLE, nil */
@@ -1090,10 +1090,10 @@ static void marpaESLIFLua_genericLoggerCallbackv(void *userDatavp, genericLogger
 }
 
 /****************************************************************************/
-static int marpaESLIFLua_marpaeslifmultitonstable_freevi(lua_State *L)
+static int marpaESLIFLua_marpaESLIFMultitonsTable_freevi(lua_State *L)
 /****************************************************************************/
 {
-  static const char      *funcs = "marpaESLIFLua_marpaeslifmultitonstable_freevi";
+  static const char      *funcs = "marpaESLIFLua_marpaESLIFMultitonsTable_freevi";
   marpaESLIF_t           *marpaESLIFp           = NULL;
   genericLoggerContext_t *genericLoggerContextp = NULL;
   lua_Integer             logger_r              = LUA_NOREF;
