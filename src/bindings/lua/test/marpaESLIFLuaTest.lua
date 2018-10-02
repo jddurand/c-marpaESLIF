@@ -393,6 +393,7 @@ logger:noticef('marpaESLIFRecognizer::lexemeLastPause: %s', tableDump(marpaESLIF
 logger:noticef('marpaESLIFRecognizer::lexemeTry: %s', tostring(marpaESLIFRecognizerp:lexemeTry('NUMBER')))
 logger:noticef('marpaESLIFRecognizer::discardTry: %s', tostring(marpaESLIFRecognizerp:discardTry()))
 logger:noticef('marpaESLIFRecognizer::lexemeLastTry: %s', tostring(marpaESLIFRecognizerp:lexemeLastTry('NUMBER')))
+logger:noticef('marpaESLIFRecognizer::discardLastTry: %s', tostring(marpaESLIFRecognizerp:discardLastTry()))
 logger:noticef('marpaESLIFRecognizer::resume: %s', tostring(marpaESLIFRecognizerp:resume()))
 marpaESLIFRecognizerp:eventOnOff('Number', { MARPAESLIF_EVENTTYPE_NONE, MARPAESLIF_EVENTTYPE_DISCARD }, false)
 marpaESLIFRecognizerp:lexemeAlternative('NUMBER', 'my value')
