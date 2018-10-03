@@ -47,7 +47,6 @@ typedef struct recognizerContext {
   char                   *previousEncodings;      /* Because we want to maintain lifetime of encodings lua string outside of stack */
   genericStack_t         *lexemeStackp;
   marpaESLIFRecognizer_t *marpaESLIFRecognizerp;
-  short                   canContinueb;
 } recognizerContext_t;
 
 /* Value proxy context */
@@ -879,7 +878,6 @@ static void  marpaESLIFLua_recognizerContextInitv(lua_State *L, int grammarStack
   recognizerContextp->previousEncodings     = NULL;
   recognizerContextp->lexemeStackp          = NULL;
   recognizerContextp->marpaESLIFRecognizerp = NULL;
-  recognizerContextp->canContinueb          = 0;
 }
 
 /****************************************************************************/
@@ -3135,7 +3133,7 @@ static int marpaESLIFLua_marpaESLIFRecognizer_scani(lua_State *L)
   /* Clear the stack */
   lua_settop(L, 0);
 
-  lua_pushboolean(L, marpaESLIFRecognizer_scanb(recognizerContextp->marpaESLIFRecognizerp, initialEventsb, &(recognizerContextp->canContinueb), NULL));
+  lua_pushboolean(L, marpaESLIFRecognizer_scanb(recognizerContextp->marpaESLIFRecognizerp, initialEventsb, NULL /* continuebp */, NULL /* exhaustedbp */));
 
   GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 at %s:%d", funcs, L, FILENAMES, __LINE__);
   return 1;
@@ -3180,7 +3178,7 @@ static int marpaESLIFLua_marpaESLIFRecognizer_resumei(lua_State *L)
   /* Clear the stack */
   lua_settop(L, 0);
 
-  lua_pushboolean(L, marpaESLIFRecognizer_resumeb(recognizerContextp->marpaESLIFRecognizerp, (size_t) deltaLengthi, &(recognizerContextp->canContinueb), NULL));
+  lua_pushboolean(L, marpaESLIFRecognizer_resumeb(recognizerContextp->marpaESLIFRecognizerp, (size_t) deltaLengthi, NULL /* continuebp */, NULL /* exhaustedbp */));
 
   GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 at %s:%d", funcs, L, FILENAMES, __LINE__);
   return 1;
