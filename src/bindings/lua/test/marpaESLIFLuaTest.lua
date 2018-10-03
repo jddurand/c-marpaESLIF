@@ -409,3 +409,4 @@ logger:noticef('marpaESLIFRecognizer::read: %s', tostring(marpaESLIFRecognizerp:
 logger:noticef('marpaESLIFRecognizer::isEof: %s', tostring(marpaESLIFRecognizerp:isEof()))
 logger:noticef('marpaESLIFRecognizer::line: %s', tostring(marpaESLIFRecognizerp:line()))
 logger:noticef('marpaESLIFRecognizer::column: %s', tostring(marpaESLIFRecognizerp:column()))
+logger:noticef('marpaESLIFRecognizer::location: %s', tableDump(marpaESLIFRecognizerp:location()))
