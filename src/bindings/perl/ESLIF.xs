@@ -184,7 +184,6 @@ typedef struct MarpaX_ESLIF_Recognizer {
   SV                     *previous_Perl_encodingp;
   genericStack_t         *lexemeStackp;
   marpaESLIFRecognizer_t *marpaESLIFRecognizerp;
-  short                   canContinueb;
 #ifdef PERL_IMPLICIT_CONTEXT
   tTHX                    PerlInterpreterp;
 #endif
@@ -1190,7 +1189,6 @@ static void marpaESLIF_recognizerContextInitv(pTHX_ SV *Perl_MarpaX_ESLIF_Gramma
   Perl_MarpaX_ESLIF_Recognizerp->previous_Perl_encodingp            = NULL;
   Perl_MarpaX_ESLIF_Recognizerp->lexemeStackp                       = NULL;
   Perl_MarpaX_ESLIF_Recognizerp->marpaESLIFRecognizerp              = NULL;
-  Perl_MarpaX_ESLIF_Recognizerp->canContinueb                       = 0;
 #ifdef PERL_IMPLICIT_CONTEXT
   Perl_MarpaX_ESLIF_Recognizerp->PerlInterpreterp                   = aTHX;
 #endif
@@ -2759,7 +2757,7 @@ CODE:
     initialEventsb = 0;
   }
 
-  RETVAL = (bool) marpaESLIFRecognizer_scanb(Perl_MarpaX_ESLIF_Recognizer->marpaESLIFRecognizerp, initialEventsb, &(Perl_MarpaX_ESLIF_Recognizer->canContinueb), NULL);
+  RETVAL = (bool) marpaESLIFRecognizer_scanb(Perl_MarpaX_ESLIF_Recognizer->marpaESLIFRecognizerp, initialEventsb, NULL /* continuebp */, NULL /* exhaustedbp */);
 OUTPUT:
   RETVAL
 
@@ -2790,7 +2788,7 @@ CODE:
   if (deltaLength < 0) {
     MARPAESLIF_CROAK("Resume delta length cannot be negative");
   }
-  RETVAL = (bool) marpaESLIFRecognizer_resumeb(Perl_MarpaX_ESLIF_Recognizer->marpaESLIFRecognizerp, (size_t) deltaLength, &(Perl_MarpaX_ESLIF_Recognizer->canContinueb), NULL);
+  RETVAL = (bool) marpaESLIFRecognizer_resumeb(Perl_MarpaX_ESLIF_Recognizer->marpaESLIFRecognizerp, (size_t) deltaLength, NULL /* continuebp */, NULL /* exhaustedbp */);
 OUTPUT:
   RETVAL
 
