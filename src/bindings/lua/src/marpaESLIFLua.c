@@ -157,6 +157,7 @@ static int                             marpaESLIFLua_marpaESLIFRecognizer_lastCo
 static int                             marpaESLIFLua_marpaESLIFRecognizer_linei(lua_State *L);
 static int                             marpaESLIFLua_marpaESLIFRecognizer_columni(lua_State *L);
 static int                             marpaESLIFLua_marpaESLIFRecognizer_locationi(lua_State *L);
+static int                             marpaESLIFLua_marpaESLIFRecognizer_hookDiscardi(lua_State *L);
 
 /* Transformers */
 static marpaESLIFValueResultTransform_t marpaESLIFValueResultTransformDefault = {
@@ -555,6 +556,7 @@ static int marpaESLIFLua_installi(lua_State *L)
     {"marpaESLIFRecognizer_line", marpaESLIFLua_marpaESLIFRecognizer_linei},
     {"marpaESLIFRecognizer_column", marpaESLIFLua_marpaESLIFRecognizer_columni},
     {"marpaESLIFRecognizer_location", marpaESLIFLua_marpaESLIFRecognizer_locationi},
+    {"marpaESLIFRecognizer_hookDiscard", marpaESLIFLua_marpaESLIFRecognizer_hookDiscardi},
     {NULL, NULL}
   };
 
@@ -2822,6 +2824,7 @@ static int marpaESLIFLua_marpaESLIFRecognizer_newi(lua_State *L)
   MARPAESLIFLUA_STORE_FUNCTION(L, "line", marpaESLIFLua_marpaESLIFRecognizer_linei);
   MARPAESLIFLUA_STORE_FUNCTION(L, "column", marpaESLIFLua_marpaESLIFRecognizer_columni);
   MARPAESLIFLUA_STORE_FUNCTION(L, "location", marpaESLIFLua_marpaESLIFRecognizer_locationi);
+  MARPAESLIFLUA_STORE_FUNCTION(L, "hookDiscard", marpaESLIFLua_marpaESLIFRecognizer_hookDiscardi);
   lua_setfield(L, -2, "__index");
 
   lua_setmetatable(L, -2);                                                           /* stack: {["recognizerContextp"] =>recognizerContextp, meta=>{...} */
@@ -2945,6 +2948,7 @@ static int marpaESLIFLua_marpaESLIFRecognizer_newFromi(lua_State *L)
   MARPAESLIFLUA_STORE_FUNCTION(L, "line", marpaESLIFLua_marpaESLIFRecognizer_linei);
   MARPAESLIFLUA_STORE_FUNCTION(L, "column", marpaESLIFLua_marpaESLIFRecognizer_columni);
   MARPAESLIFLUA_STORE_FUNCTION(L, "location", marpaESLIFLua_marpaESLIFRecognizer_locationi);
+  MARPAESLIFLUA_STORE_FUNCTION(L, "hookDiscard", marpaESLIFLua_marpaESLIFRecognizer_hookDiscardi);
   lua_setfield(L, -2, "__index");
 
   lua_setmetatable(L, -2);                                                           /* stack: {["recognizerContextp"] =>recognizerContextp, meta=>{...} */
@@ -4159,5 +4163,42 @@ static int marpaESLIFLua_marpaESLIFRecognizer_locationi(lua_State *L)
 
   GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 at %s:%d", funcs, L, FILENAMES, __LINE__);
   return 1;
+}
+
+/*****************************************************************************/
+static int marpaESLIFLua_marpaESLIFRecognizer_hookDiscardi(lua_State *L)
+/*****************************************************************************/
+{
+  static const char       *funcs = "marpaESLIFLua_marpaESLIFRecognizer_hookDiscardi";
+  recognizerContext_t     *recognizerContextp;
+  short                    discardOnOffb;
+
+  GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__);
+
+  if (lua_gettop(L) != 2) {
+    return luaL_error(L, "Usage: marpaESLIFRecognizer_hookDiscard(marpaESLIFRecognizerp, discardOnOff)");
+  }
+
+  if (lua_type(L, 1) != LUA_TTABLE) {
+    return luaL_error(L, "marpaESLIFRecognizerp must be a table");
+  }
+  lua_getfield(L, 1, "recognizerContextp");
+  recognizerContextp = lua_touserdata(L, -1);
+  lua_pop(L, 1);
+
+  if (lua_type(L, 2) != LUA_TBOOLEAN) {
+    return luaL_error(L, "discardOnOff must be a boolean");
+  }
+  discardOnOffb = lua_toboolean(L, 2) ? 1 : 0;
+
+  /* Clear the stack */
+  lua_settop(L, 0);
+
+  if (! marpaESLIFRecognizer_hook_discardb(recognizerContextp->marpaESLIFRecognizerp, discardOnOffb)) {
+    return luaL_error(L, "marpaESLIFRecognizer_hook_discardb failure, %s", strerror(errno));
+  }
+
+  GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 0 at %s:%d", funcs, L, FILENAMES, __LINE__);
+  return 0;
 }
 
