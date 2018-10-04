@@ -3524,8 +3524,6 @@ PREINIT:
 CODE:
   short                    valueb;
   SV                      *svp;
-  char                    *bytep;
-  size_t                   bytel;
 
   valueb = marpaESLIFValue_valueb(Perl_MarpaX_ESLIF_Valuep->marpaESLIFValuep);
   if (valueb < 0) {
