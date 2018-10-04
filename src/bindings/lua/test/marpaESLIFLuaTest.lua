@@ -326,41 +326,13 @@ local valueInterface = {
       return result
    end
 }
-
-for _, localstring in pairs(strings) do
-   logger:noticef('Testing parse on %s', localstring)
-   local magiclinesFunction = magiclines(localstring)
-   local recognizerInterface = {
-      ["read"]  = function(self)
-         self._data = magiclinesFunction()
-         self._isEof = (self._data == nil)
-         return true
-      end,
-      ["isEof"]                  = function(self) return self._isEof end,
-      ["isCharacterStream"]      = function(self) return true end,
-      ["encoding"]               = function(self) return nil end,
-      ["data"]                   = function(self) return self._data end,
-      ["isWithDisableThreshold"] = function(self) return false end,
-      ["isWithExhaustion"]       = function(self) return false end,
-      ["isWithNewline"]          = function(self) return true end,
-      ["isWithTrack"]            = function(self) return true end
-   }
-
-   local parseb = marpaESLIFGrammarp:parse(recognizerInterface, valueInterface);
-   logger:noticef('... Grammar parse status: %s', tostring(parseb))
-   if (parseb) then
-      local result = valueInterface:getResult()
-      logger:noticef('... Grammar parse result: %s', tostring(result))
-   end
-end
-
-------------------------------------------------------------------------------
-local magiclinesFunction = magiclines("10 /* ... */")
 local recognizerInterface = {
-   ["read"]  = function(self)
-      self._data = magiclinesFunction()
+   ["init"] = function(self, input)
+      self._magiclinesFunction = magiclines(input)
+   end,
+   ["read"] = function(self)
+      self._data = self._magiclinesFunction()
       self._isEof = (self._data == nil)
-      logger:noticef('... read =>  %s', tostring(self._data))
       return true
    end,
    ["isEof"]                  = function(self) return self._isEof end,
@@ -372,7 +344,20 @@ local recognizerInterface = {
    ["isWithNewline"]          = function(self) return true end,
    ["isWithTrack"]            = function(self) return true end
 }
+
+for _, localstring in pairs(strings) do
+   logger:noticef('Testing parse on %s', localstring)
+   recognizerInterface:init(localstring)
+   local parseb = marpaESLIFGrammarp:parse(recognizerInterface, valueInterface);
+   logger:noticef('... Grammar parse status: %s', tostring(parseb))
+   if (parseb) then
+      local result = valueInterface:getResult()
+      logger:noticef('... Grammar parse result: %s', tostring(result))
+   end
+end
+
 ------------------------------------------------------------------------------
+recognizerInterface:init("10 /* ... */")
 local marpaESLIFRecognizerp = marpaESLIFGrammarp:marpaESLIFRecognizer_new(recognizerInterface);
 logger:noticef('marpaESLIFRecognizerp dump: %s', tableDump(marpaESLIFRecognizerp))
 logger:noticef('marpaESLIFRecognizerp meta dump: %s', tableDump(getmetatable(marpaESLIFRecognizerp)))
