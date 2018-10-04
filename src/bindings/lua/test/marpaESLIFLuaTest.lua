@@ -274,6 +274,59 @@ end
 --
 -- Test the parse interface
 --
+------------------------------------------------------------------------------
+local valueInterface = {
+   ["isWithHighRankOnly"]     = function(self) return true end,
+   ["isWithOrderByRank"]      = function(self) return true end,
+   ["isWithAmbiguous"]        = function(self) return false end,
+   ["isWithNull"]             = function(self) return false end,
+   ["maxParses"]              = function(self) return 0 end,
+   ["getResult"]              = function(self) return self._result end,
+   ["setResult"]              = function(self, result) logger:tracef("setResult('%s')", tostring(result)); self._result = result end,
+   --
+   -- Grammar actions
+   --
+   ["do_symbol"]              = function(self, symbol)
+      logger:tracef("do_symbol('%s')", symbol)
+      local do_symbol = symbol
+      logger:tracef("do_symbol('%s') => '%s'", symbol, do_symbol)
+      -- $self->trace_local_variables('do_symbol');
+      return do_symbol
+   end,
+   ["do_int"]                 = function(self, number)
+      logger:tracef("do_int('%s')", number)
+      local do_int = tonumber(number)
+      logger:tracef("do_int('%s') => %s", number, do_int)
+      -- $self->trace_local_variables('do_symbol');
+      return do_int
+   end,
+   ["do_free"]                = function(self, result)
+      logger:tracef("do_free(%s) called and this should never happen", result)
+      error("do_free() called and this should never happen")
+   end,
+   ["do_op"]                  = function(self, left, op, right)
+      logger:tracef("do_op(%s, %s, %s)", left, op, right);
+      local result
+      if (op == '**') then
+         result = math.pow(left, right)
+      elseif (op == '*') then
+         result = left * right
+      elseif (op == '/') then
+         result = left / right
+      elseif (op == '+') then
+         result = left + right
+      elseif (op == '-') then
+         result = left - right
+      else
+         error(string.format("Unsupported op %s", op))
+      end
+      logger:tracef("do_op(%s, %s, %s) => %s", left, op, right, result);
+      -- $self->trace_local_variables('do_op');
+      -- $self->trace_rule_property('do_op');
+      return result
+   end
+}
+
 for _, localstring in pairs(strings) do
    logger:noticef('Testing parse on %s', localstring)
    local magiclinesFunction = magiclines(localstring)
@@ -291,57 +344,6 @@ for _, localstring in pairs(strings) do
       ["isWithExhaustion"]       = function(self) return false end,
       ["isWithNewline"]          = function(self) return true end,
       ["isWithTrack"]            = function(self) return true end
-   }
-   local valueInterface = {
-      ["isWithHighRankOnly"]     = function(self) return true end,
-      ["isWithOrderByRank"]      = function(self) return true end,
-      ["isWithAmbiguous"]        = function(self) return false end,
-      ["isWithNull"]             = function(self) return false end,
-      ["maxParses"]              = function(self) return 0 end,
-      ["getResult"]              = function(self) return self._result end,
-      ["setResult"]              = function(self, result) self._result = result end,
-      --
-      -- Grammar actions
-      --
-      ["do_symbol"]              = function(self, symbol)
-         logger:tracef("do_symbol('%s')", symbol)
-         local do_symbol = symbol
-         logger:tracef("do_symbol('%s') => '%s'", symbol, do_symbol)
-         -- $self->trace_local_variables('do_symbol');
-         return do_symbol
-      end,
-      ["do_int"]                 = function(self, number)
-         logger:tracef("do_int('%s')", number)
-         local do_int = tonumber(number)
-         logger:tracef("do_int('%s') => %s", number, do_int)
-         -- $self->trace_local_variables('do_symbol');
-         return do_int
-      end,
-      ["do_free"]                = function(self, result)
-         logger:tracef("do_free(%s) called and this should never happen", result)
-         error("do_free() called and this should never happen")
-      end,
-      ["do_op"]                  = function(self, left, op, right)
-         logger:tracef("do_op(%s, %s, %s)", left, op, right);
-         local result
-         if (op == '**') then
-            result = math.pow(left, right)
-         elseif (op == '*') then
-            result = left * right
-         elseif (op == '/') then
-            result = left / right
-         elseif (op == '+') then
-            result = left + right
-         elseif (op == '-') then
-            result = left - right
-         else
-            error(string.format("Unsupported op %s", op))
-         end
-         logger:tracef("do_op(%s, %s, %s) => %s", left, op, right, result);
-         -- $self->trace_local_variables('do_op');
-         -- $self->trace_rule_property('do_op');
-         return result
-       end
    }
 
    local parseb = marpaESLIFGrammarp:parse(recognizerInterface, valueInterface);
@@ -410,5 +412,15 @@ logger:noticef('marpaESLIFRecognizer::isEof: %s', tostring(marpaESLIFRecognizerp
 logger:noticef('marpaESLIFRecognizer::line: %s', tostring(marpaESLIFRecognizerp:line()))
 logger:noticef('marpaESLIFRecognizer::column: %s', tostring(marpaESLIFRecognizerp:column()))
 logger:noticef('marpaESLIFRecognizer::location: %s', tableDump(marpaESLIFRecognizerp:location()))
-marpaESLIFRecognizerp:hookDiscard(true)
 marpaESLIFRecognizerp:hookDiscard(false)
+marpaESLIFRecognizerp:hookDiscard(true)
+------------------------------------------------------------------------------
+local marpaESLIFValuep = marpaESLIFRecognizerp:marpaESLIFValue_new(valueInterface);
+logger:noticef('marpaESLIFValuep dump: %s', tableDump(marpaESLIFValuep))
+logger:noticef('marpaESLIFValuep meta dump: %s', tableDump(getmetatable(marpaESLIFValuep)))
+valueState = marpaESLIFValuep:value(valueInterface)
+logger:noticef('marpaESLIFValuep:value: %s', valueState)
+if (valueState) then
+   local result = valueInterface:getResult()
+   logger:noticef('... Value parse result: %s', tostring(result))
+end
