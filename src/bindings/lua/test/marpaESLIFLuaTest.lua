@@ -64,6 +64,10 @@ local function tableDump(lua_table, fold)
     end
 end
 
+local logTimeStamp = function()
+   return os.date("%Y/%m/%d %H:%M:%S")
+end
+
 local marpaESLIFLua = require 'marpaESLIFLua'
 local logger = {
    ["trace"]     = function(self, msgs) self:tracef("%s", msgs) end,
@@ -77,14 +81,14 @@ local logger = {
    --
    -- Used by us
    --
-   ["tracef"]     = function(self, fmts, ...) print('LUA_TRACE '..string.format(fmts,...)) end,
-   ["debugf"]     = function(self, fmts, ...) print('LUA_DEBUG '..string.format(fmts,...)) end,
-   ["infof"]      = function(self, fmts, ...) print('LUA_INFO '..string.format(fmts,...)) end,
-   ["noticef"]    = function(self, fmts, ...) print('LUA_NOTICE '..string.format(fmts,...)) end,
-   ["warningf"]   = function(self, fmts, ...) print('LUA_WARNING '..string.format(fmts,...)) end,
-   ["errorf"]     = function(self, fmts, ...) print('LUA_ERROR '..string.format(fmts,...)) end,
-   ["criticalf"]  = function(self, fmts, ...) print('LUA_CRITICAL '..string.format(fmts,...)) end,
-   ["emergencyf"] = function(self, fmts, ...) print('LUA_EMERGENCY '..string.format(fmts,...)) end
+   ["tracef"]     = function(self, fmts, ...) print(string.format("%s %-6s"..fmts, logTimeStamp(), 'TRACE', ...)) end,
+   ["debugf"]     = function(self, fmts, ...) print(string.format("%s %-6s"..fmts, logTimeStamp(), 'DEBUG', ...)) end,
+   ["infof"]      = function(self, fmts, ...) print(string.format("%s %-6s"..fmts, logTimeStamp(), 'INFO', ...)) end,
+   ["noticef"]    = function(self, fmts, ...) print(string.format("%s %-6s"..fmts, logTimeStamp(), 'NOTICE', ...)) end,
+   ["warningf"]   = function(self, fmts, ...) print(string.format("%s %-6s"..fmts, logTimeStamp(), 'WARN', ...)) end,
+   ["errorf"]     = function(self, fmts, ...) print(string.format("%s %-6s"..fmts, logTimeStamp(), 'ERROR', ...)) end,
+   ["criticalf"]  = function(self, fmts, ...) print(string.format("%s %-6s"..fmts, logTimeStamp(), 'CRITICAL', ...)) end,
+   ["emergencyf"] = function(self, fmts, ...) print(string.format("%s %-6s"..fmts, logTimeStamp(), 'EMERGENCY', ...)) end
 }
 
 ------------------------------------------------------------------------------
@@ -365,7 +369,7 @@ end
 
 local showRecognizerInput = function(context, eslifRecognizer)
    local input = eslifRecognizer:input()
-   logger:debugf("[%s] Recognizer buffer: %s", context, input)
+   logger:debugf("[%s] Recognizer buffer:\n%s", context, input)
 end
 
 local showLexemeExpected = function(context, eslifRecognizer)
@@ -505,9 +509,9 @@ local showLastCompletion = function(context, eslifRecognizer, symbol, origin)
    }
 end
 
-local changeEventState = function(context, eslifRecognizer, symbol, type, state)
-   logger:debugf("[%s] Changing event state %s of symbol %s to %s", context, type, symbol, state)
-   eslifRecognizer:eventOnOff(symbol, type, state)
+local changeEventState = function(context, eslifRecognizer, eventType, symbol, eventTypes, state)
+   logger:debugf("[%s] Changing event state %d of symbol %s to %s", context, eventType, symbol, state)
+   eslifRecognizer:eventOnOff(symbol, eventTypes, state)
 end
 
 local i = 0
@@ -556,9 +560,9 @@ for _, localstring in pairs(strings) do
             end
          end
          if (j == 0) then
-            changeEventState(string.format("Loop No %d", j), eslifRecognizer, "Expression", { MARPAESLIF_EVENTTYPE_PREDICTED }, false);
-            changeEventState(string.format("Loop No %d", j), eslifRecognizer, "whitespaces", { MARPAESLIF_EVENTTYPE_DISCARD }, false);
-            changeEventState(string.format("Loop No %d", j), eslifRecognizer, "NUMBER", { MARPAESLIF_EVENTTYPE_AFTER }, false);
+            changeEventState(string.format("Loop No %d", j), eslifRecognizer, MARPAESLIF_EVENTTYPE_PREDICTED, "Expression", { MARPAESLIF_EVENTTYPE_PREDICTED }, false);
+            changeEventState(string.format("Loop No %d", j), eslifRecognizer, MARPAESLIF_EVENTTYPE_DISCARD, "whitespaces", { MARPAESLIF_EVENTTYPE_DISCARD }, false);
+            changeEventState(string.format("Loop No %d", j), eslifRecognizer, MARPAESLIF_EVENTTYPE_AFTER, "NUMBER", { MARPAESLIF_EVENTTYPE_AFTER }, false);
          end
          showLastCompletion(string.format("Loop No %d", j), eslifRecognizer, "Expression", localstring);
          showLastCompletion(string.format("Loop No %d", j), eslifRecognizer, "Number", localstring);
