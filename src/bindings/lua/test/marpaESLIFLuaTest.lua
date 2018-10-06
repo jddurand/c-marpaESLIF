@@ -333,17 +333,53 @@ local recognizerInterface = {
    end,
    ["read"] = function(self)
       self._data = self._magiclinesFunction()
-      self._isEof = (self._data == nil)
+      if (self._data == nil) then
+         logger:errorf("read failure")
+      else
+         logger:tracef("read => %s", self._data)
+      end
       return true
    end,
-   ["isEof"]                  = function(self) return self._isEof end,
-   ["isCharacterStream"]      = function(self) return true end,
-   ["encoding"]               = function(self) return nil end,
-   ["data"]                   = function(self) return self._data end,
-   ["isWithDisableThreshold"] = function(self) return false end,
-   ["isWithExhaustion"]       = function(self) return false end,
-   ["isWithNewline"]          = function(self) return true end,
-   ["isWithTrack"]            = function(self) return true end
+   ["isEof"]                  = function(self)
+      local isEof = (self._data == nil)
+      logger:tracef("isEof => %s", tostring(isEof))
+      return isEof
+   end,
+   ["isCharacterStream"]      = function(self)
+      local isCharacterStream = true
+      logger:tracef("isCharacterStream => %s", tostring(isCharacterStream))
+      return isCharacterStream
+   end,
+   ["encoding"]               = function(self)
+      local encoding = nil
+      logger:tracef("encoding => %s", tostring(encoding))
+      return nil
+   end,
+   ["data"]                   = function(self)
+      local data = self._data
+      logger:tracef("data => %s", tostring(data))
+      return self._data
+   end,
+   ["isWithDisableThreshold"] = function(self)
+      local isWithDisableThreshold = false
+      logger:tracef("isWithDisableThreshold => %s", tostring(isWithDisableThreshold))
+      return isWithDisableThreshold
+   end,
+   ["isWithExhaustion"]       = function(self)
+      local isWithExhaustion = false
+      logger:tracef("isWithExhaustion => %s", tostring(isWithExhaustion))
+      return isWithExhaustion
+   end,
+   ["isWithNewline"]          = function(self)
+      local isWithNewline = true
+      logger:tracef("isWithNewline => %s", tostring(isWithNewline))
+      return isWithNewline
+   end,
+   ["isWithTrack"]            = function(self)
+      local isWithTrack = true
+      logger:tracef("isWithTrack => %s", tostring(isWithTrack))
+      return isWithTrack
+   end
 }
 
 --
@@ -352,7 +388,7 @@ local recognizerInterface = {
 for _, localstring in pairs(strings) do
    logger:noticef('Testing parse on %s', localstring)
    recognizerInterface:init(localstring)
-   local parseb = marpaESLIFGrammarp:parse(recognizerInterface, valueInterface);
+   local parseb = marpaESLIFGrammarp:parse(recognizerInterface, valueInterface)
    logger:noticef('... Grammar parse status: %s', tostring(parseb))
    if (parseb) then
       local result = valueInterface:getResult()
@@ -389,11 +425,11 @@ end
 local doScan = function(eslifRecognizer, initialEvents)
    logger:debugf(" =============> scan(initialEvents=%s)", tostring(initialEvents))
     if (not eslifRecognizer:scan(initialEvents)) then
-       return 0;
+       return false
     end
     local context = "after scan"
     showRecognizerInput(context, eslifRecognizer)
-    showEvents(context, eslifRecognizer);
+    showEvents(context, eslifRecognizer)
     showLexemeExpected(context, eslifRecognizer)
 		
     return true
@@ -560,12 +596,12 @@ for _, localstring in pairs(strings) do
             end
          end
          if (j == 0) then
-            changeEventState(string.format("Loop No %d", j), eslifRecognizer, MARPAESLIF_EVENTTYPE_PREDICTED, "Expression", { MARPAESLIF_EVENTTYPE_PREDICTED }, false);
-            changeEventState(string.format("Loop No %d", j), eslifRecognizer, MARPAESLIF_EVENTTYPE_DISCARD, "whitespaces", { MARPAESLIF_EVENTTYPE_DISCARD }, false);
-            changeEventState(string.format("Loop No %d", j), eslifRecognizer, MARPAESLIF_EVENTTYPE_AFTER, "NUMBER", { MARPAESLIF_EVENTTYPE_AFTER }, false);
+            changeEventState(string.format("Loop No %d", j), eslifRecognizer, MARPAESLIF_EVENTTYPE_PREDICTED, "Expression", { MARPAESLIF_EVENTTYPE_PREDICTED }, false)
+            changeEventState(string.format("Loop No %d", j), eslifRecognizer, MARPAESLIF_EVENTTYPE_DISCARD, "whitespaces", { MARPAESLIF_EVENTTYPE_DISCARD }, false)
+            changeEventState(string.format("Loop No %d", j), eslifRecognizer, MARPAESLIF_EVENTTYPE_AFTER, "NUMBER", { MARPAESLIF_EVENTTYPE_AFTER }, false)
          end
-         showLastCompletion(string.format("Loop No %d", j), eslifRecognizer, "Expression", localstring);
-         showLastCompletion(string.format("Loop No %d", j), eslifRecognizer, "Number", localstring);
+         showLastCompletion(string.format("Loop No %d", j), eslifRecognizer, "Expression", localstring)
+         showLastCompletion(string.format("Loop No %d", j), eslifRecognizer, "Number", localstring)
          j = j + 1
       end
       try {
