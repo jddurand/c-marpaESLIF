@@ -265,7 +265,7 @@ local function magiclines( str )
         local  p1, p2 = string.find( str, "\r?\n", pos )
         local line
         if p1 then
-            line = str:sub( pos, p1 - 1 )
+            line = str:sub( pos, p2 )
             pos = p2 + 1
         else
             line = str:sub( pos )
