@@ -277,13 +277,39 @@ end
 
 ------------------------------------------------------------------------------
 local valueInterface = {
-   ["isWithHighRankOnly"]     = function(self) return true end,
-   ["isWithOrderByRank"]      = function(self) return true end,
-   ["isWithAmbiguous"]        = function(self) return false end,
-   ["isWithNull"]             = function(self) return false end,
-   ["maxParses"]              = function(self) return 0 end,
-   ["getResult"]              = function(self) return self._result end,
-   ["setResult"]              = function(self, result) logger:tracef("setResult('%s')", tostring(result)); self._result = result end,
+   ["isWithHighRankOnly"]     = function(self)
+      local isWithHighRankOnly = true
+      logger:tracef("isWithHighRankOnly => %s", tostring(isWithHighRankOnly))
+      return isWithHighRankOnly
+   end,
+   ["isWithOrderByRank"]      = function(self)
+      local isWithOrderByRank = true
+      logger:tracef("isWithOrderByRank => %s", tostring(isWithOrderByRank))
+      return isWithOrderByRank
+   end,
+   ["isWithAmbiguous"]        = function(self)
+      local isWithAmbiguous = false
+      logger:tracef("isWithAmbiguous => %s", tostring(isWithAmbiguous))
+      return isWithAmbiguous
+   end,
+   ["isWithNull"]             = function(self)
+      local isWithNull = false
+      logger:tracef("isWithNull => %s", tostring(isWithNull))
+      return isWithNull
+   end,
+   ["maxParses"]              = function(self)
+      local maxParses = 0
+      logger:tracef("maxParses => %s", tostring(maxParses))
+      return maxParses
+   end,
+   ["getResult"]              = function(self)
+      logger:tracef("getResult => %s", tostring(self._result))
+      return self._result
+   end,
+   ["setResult"]              = function(self, result)
+      logger:tracef("setResult('%s')", tostring(result))
+      self._result = result
+   end,
    --
    -- Grammar actions
    --
@@ -528,13 +554,18 @@ end
 local showLastCompletion = function(context, eslifRecognizer, symbol, origin)
    try {
       function()
+         --
+         -- Take care, offsets returned by marpaESLIFLua are 0 based
+         --
          local lastExpressionOffset = eslifRecognizer:lastCompletedOffset(symbol)
          local lastExpressionLength = eslifRecognizer:lastCompletedLength(symbol)
          local lastExpressionLocation = eslifRecognizer:lastCompletedLocation(symbol)
          if ((lastExpressionOffset ~= lastExpressionLocation.offset) or (lastExpressionLength ~= lastExpressionLocation.length)) then
             error("eslifRecognizer:lastCompletedLocation() is not equivalent to (eslifRecognizer:lastCompletedOffset, eslifRecognizer:lastCompletedLength)")
          end
-         local matchedString = string.sub(origin, lastExpressionOffset+1, lastExpressionLength)
+         local lastExpressionStart = lastExpressionOffset + 1
+         local lastExpressionEnd = lastExpressionStart + lastExpressionLength
+         local matchedString = string.sub(origin, lastExpressionStart, lastExpressionEnd)
          logger:debugf("[%s] Last %s completion is %s", context, symbol, matchedString)
       end,
       catch {
