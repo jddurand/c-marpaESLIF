@@ -81,7 +81,7 @@ local logger = {
    ["debugf"]     = function(self, fmts, ...) print('LUA_DEBUG '..string.format(fmts,...)) end,
    ["infof"]      = function(self, fmts, ...) print('LUA_INFO '..string.format(fmts,...)) end,
    ["noticef"]    = function(self, fmts, ...) print('LUA_NOTICE '..string.format(fmts,...)) end,
-   ["warning"]    = function(self, fmts, ...) print('LUA_WARNING '..string.format(fmts,...)) end,
+   ["warningf"]   = function(self, fmts, ...) print('LUA_WARNING '..string.format(fmts,...)) end,
    ["errorf"]     = function(self, fmts, ...) print('LUA_ERROR '..string.format(fmts,...)) end,
    ["criticalf"]  = function(self, fmts, ...) print('LUA_CRITICAL '..string.format(fmts,...)) end,
    ["emergencyf"] = function(self, fmts, ...) print('LUA_EMERGENCY '..string.format(fmts,...)) end
@@ -271,9 +271,6 @@ local function magiclines( str )
     end
 end
 
---
--- Test the parse interface
---
 ------------------------------------------------------------------------------
 local valueInterface = {
    ["isWithHighRankOnly"]     = function(self) return true end,
@@ -345,6 +342,9 @@ local recognizerInterface = {
    ["isWithTrack"]            = function(self) return true end
 }
 
+--
+-- Test the parse interface
+--
 for _, localstring in pairs(strings) do
    logger:noticef('Testing parse on %s', localstring)
    recognizerInterface:init(localstring)
@@ -356,56 +356,228 @@ for _, localstring in pairs(strings) do
    end
 end
 
-------------------------------------------------------------------------------
-recognizerInterface:init("10 /* ... */")
-local marpaESLIFRecognizerp = marpaESLIFGrammarp:marpaESLIFRecognizer_new(recognizerInterface);
-logger:noticef('marpaESLIFRecognizerp dump: %s', tableDump(marpaESLIFRecognizerp))
-logger:noticef('marpaESLIFRecognizerp meta dump: %s', tableDump(getmetatable(marpaESLIFRecognizerp)))
-marpaESLIFRecognizerp:set_exhausted_flag(true);
-marpaESLIFRecognizerp:set_exhausted_flag(false);
-------------------------------------------------------------------------------
-local marpaESLIFRecognizerFromp = marpaESLIFRecognizerp:newFrom(marpaESLIFGrammarp);
-logger:noticef('marpaESLIFRecognizerFromp dump: %s', tableDump(marpaESLIFRecognizerFromp))
-logger:noticef('marpaESLIFRecognizerFromp meta dump: %s', tableDump(getmetatable(marpaESLIFRecognizerFromp)))
-------------------------------------------------------------------------------
-marpaESLIFRecognizerp:share(marpaESLIFRecognizerFromp);
-marpaESLIFRecognizerp:share(marpaESLIFRecognizerFromp);
-------------------------------------------------------------------------------
-logger:noticef('marpaESLIFRecognizer::isCancontinue: %s', tostring(marpaESLIFRecognizerp:isCanContinue()))
-logger:noticef('marpaESLIFRecognizer::isExhausted: %s', tostring(marpaESLIFRecognizerp:isExhausted()))
-logger:noticef('marpaESLIFRecognizer::scan: %s', tostring(marpaESLIFRecognizerp:scan(true)))
-logger:noticef('marpaESLIFRecognizer::events: %s', tableDump(marpaESLIFRecognizerp:events()))
-logger:noticef('marpaESLIFRecognizer::lexemeExpected: %s', tableDump(marpaESLIFRecognizerp:lexemeExpected()))
-logger:noticef('marpaESLIFRecognizer::lexemeLastPause: %s', tableDump(marpaESLIFRecognizerp:lexemeLastPause('NUMBER')))
-logger:noticef('marpaESLIFRecognizer::lexemeTry: %s', tostring(marpaESLIFRecognizerp:lexemeTry('NUMBER')))
-logger:noticef('marpaESLIFRecognizer::discardTry: %s', tostring(marpaESLIFRecognizerp:discardTry()))
-logger:noticef('marpaESLIFRecognizer::lexemeLastTry: %s', tostring(marpaESLIFRecognizerp:lexemeLastTry('NUMBER')))
-logger:noticef('marpaESLIFRecognizer::discardLastTry: %s', tostring(marpaESLIFRecognizerp:discardLastTry()))
-marpaESLIFRecognizerp:progressLog(0, -1, GENERICLOGGER_LOGLEVEL_TRACE)
-logger:noticef('marpaESLIFRecognizer::resume: %s', tostring(marpaESLIFRecognizerp:resume()))
-marpaESLIFRecognizerp:eventOnOff('Number', { MARPAESLIF_EVENTTYPE_NONE, MARPAESLIF_EVENTTYPE_DISCARD }, false)
-marpaESLIFRecognizerp:lexemeAlternative('NUMBER', 'my value')
-marpaESLIFRecognizerp:lexemeComplete(2)
-logger:noticef('marpaESLIFRecognizer::lastCompletedOffset: %s', tostring(marpaESLIFRecognizerp:lastCompletedOffset('Number')))
-logger:noticef('marpaESLIFRecognizer::lastCompletedLength: %s', tostring(marpaESLIFRecognizerp:lastCompletedLength('Number')))
-logger:noticef('marpaESLIFRecognizer::lastCompletedLocation: %s', tableDump(marpaESLIFRecognizerp:lastCompletedLocation('Number')))
-marpaESLIFRecognizerp:lexemeRead('WHITESPACES', '/* TEST */', 1)
-logger:noticef('marpaESLIFRecognizer::isEof: %s', tostring(marpaESLIFRecognizerp:isEof()))
-logger:noticef('marpaESLIFRecognizer::input: %s', tostring(marpaESLIFRecognizerp:input()))
-logger:noticef('marpaESLIFRecognizer::read: %s', tostring(marpaESLIFRecognizerp:read()))
-logger:noticef('marpaESLIFRecognizer::isEof: %s', tostring(marpaESLIFRecognizerp:isEof()))
-logger:noticef('marpaESLIFRecognizer::line: %s', tostring(marpaESLIFRecognizerp:line()))
-logger:noticef('marpaESLIFRecognizer::column: %s', tostring(marpaESLIFRecognizerp:column()))
-logger:noticef('marpaESLIFRecognizer::location: %s', tableDump(marpaESLIFRecognizerp:location()))
-marpaESLIFRecognizerp:hookDiscard(false)
-marpaESLIFRecognizerp:hookDiscard(true)
-------------------------------------------------------------------------------
-local marpaESLIFValuep = marpaESLIFRecognizerp:marpaESLIFValue_new(valueInterface);
-logger:noticef('marpaESLIFValuep dump: %s', tableDump(marpaESLIFValuep))
-logger:noticef('marpaESLIFValuep meta dump: %s', tableDump(getmetatable(marpaESLIFValuep)))
-valueState = marpaESLIFValuep:value(valueInterface)
-logger:noticef('marpaESLIFValuep:value: %s', valueState)
-if (valueState) then
-   local result = valueInterface:getResult()
-   logger:noticef('... Value parse result: %s', tostring(result))
+--
+-- Test the scan/resume interface
+--
+local showEvents = function(context, eslifRecognizer)
+   logger:debugf("[%s] Events: %s", context, tableDump(eslifRecognizer:events()))
+end
+
+local showRecognizerInput = function(context, eslifRecognizer)
+   local input = eslifRecognizer:input()
+   logger:debugf("[%s] Recognizer buffer: %s", context, input)
+end
+
+local showLexemeExpected = function(context, eslifRecognizer)
+   logger:debugf("[%s] Expected lexemes: %s", context, tableDump(eslifRecognizer:lexemeExpected()))
+end
+
+local showLocation = function(context, eslifRecognizer)
+   local line = eslifRecognizer:line()
+   local column = eslifRecognizer:column()
+   local location = eslifRecognizer:location()
+   if ((line ~= location.line) or (column ~= location.column)) then
+      error(string.format("eslifRecognizer->location() is not equivalent to (eslifRecognizer:line(), eslifRecognizer:column())"))
+   end
+   logger:debugf("[%s] Location is %d:%d", context, line, column)
+end
+
+local doScan = function(eslifRecognizer, initialEvents)
+   logger:debugf(" =============> scan(initialEvents=%s)", tostring(initialEvents))
+    if (not eslifRecognizer:scan(initialEvents)) then
+       return 0;
+    end
+    local context = "after scan"
+    showRecognizerInput(context, eslifRecognizer)
+    showEvents(context, eslifRecognizer);
+    showLexemeExpected(context, eslifRecognizer)
+		
+    return true
+end
+
+local doResume = function(eslifRecognizer, deltaLength)
+   local context
+		
+   logger:debugf(" =============> resume(deltaLength=%d)", deltaLength)
+   if (not eslifRecognizer:resume(deltaLength)) then
+      return false
+   end
+
+   context = "after resume"
+   showRecognizerInput(context, eslifRecognizer)
+   showEvents(context, eslifRecognizer)
+   showLexemeExpected(context, eslifRecognizer)
+		
+   return true
+end
+
+local doLexemeRead = function(eslifRecognizer, symbol, value, pause)
+   --
+   -- "pause" is a "lua string", i.e. nothing else but a sequence of bytes
+   -- returned by marpaESLIF, guaranteed to be in UTF-8 encoding
+   --
+   -- Remember that lua's length() returns the number of BYTES indeed.
+   --
+   local length = #pause
+   local context
+   logger:debugf("... Forcing Integer %s spanned on %d bytes instead of \"%s\"", tostring(value), length, tostring(pause))
+   if (not eslifRecognizer:lexemeRead(symbol, value, length, 1)) then
+      return false
+   end
+
+   context = "after lexemeRead"
+   showRecognizerInput(context, eslifRecognizer)
+   showEvents(context, eslifRecognizer)
+   showLexemeExpected(context, eslifRecognizer)
+
+   return true
+end
+
+function catch(what)
+   return what[1]
+end
+
+function try(what)
+   status, result = pcall(what[1])
+   if not status then
+      what[2](result)
+   end
+   return result
+end
+
+local doDiscardTry = function(eslifRecognizer)
+
+   local test
+   try {
+      function()
+         test = eslifRecognizer:discardTry()
+         logger:debugf("... Testing discard at current position returns %s", tostring(test))
+         if (test) then
+            local lastTry = eslifRecognizer:discardLastTry()
+            logger:debugf("... Testing discard at current position gave \"%s\"", lastTry)
+         end
+      end,
+      catch {
+         function(message)
+            logger:debug(message)
+         end
+      }
+   }
+end
+
+local doLexemeTry = function(eslifRecognizer, symbol)
+
+   local test
+   try {
+      function()
+         test = eslifRecognizer:lexemeTry(symbol)
+         logger:debugf("... Testing %s lexeme at current position returns %s", symbol, tostring(test))
+         if (test) then
+            local lastTry = eslifRecognizer:lexemeLastTry()
+            logger:debugf("... Testing symbol %s at current position gave \"%s\"", symbol, lastTry)
+         end
+      end,
+      catch {
+         function(message)
+            logger:debug(message)
+         end
+      }
+   }
+end
+
+local showLastCompletion = function(context, eslifRecognizer, symbol, origin)
+   try {
+      function()
+         local lastExpressionOffset = eslifRecognizer:lastCompletedOffset(symbol)
+         local lastExpressionLength = eslifRecognizer:lastCompletedLength(symbol)
+         local lastExpressionLocation = eslifRecognizer:lastCompletedLocation(symbol)
+         if ((lastExpressionOffset ~= lastExpressionLocation.offset) or (lastExpressionLength ~= lastExpressionLocation.length)) then
+            error("eslifRecognizer:lastCompletedLocation() is not equivalent to (eslifRecognizer:lastCompletedOffset, eslifRecognizer:lastCompletedLength)")
+         end
+         local matchedString = string.sub(origin, lastExpressionOffset+1, lastExpressionLength)
+         logger:debugf("[%s] Last %s completion is %s", context, symbol, matchedString)
+      end,
+      catch {
+         function(message)
+            logger:warningf("[%s] Last %s completion raised an exception, %s", context, symbol, message)
+         end
+      }
+   }
+end
+
+local changeEventState = function(context, eslifRecognizer, symbol, type, state)
+   logger:debugf("[%s] Changing event state %s of symbol %s to %s", context, type, symbol, state)
+   eslifRecognizer:eventOnOff(symbol, type, state)
+end
+
+local i = 0
+for _, localstring in pairs(strings) do
+   logger:noticef('Testing scan/resume on %s', localstring)
+   local eslifRecognizer = marpaESLIFGrammarp:marpaESLIFRecognizer_new(recognizerInterface)
+   recognizerInterface:init(localstring)
+   if (doScan(eslifRecognizer, true)) then
+      showLocation("After doScan", eslifRecognizer)
+      if (not eslifRecognizer:isEof()) then
+         if (not eslifRecognizer:read()) then
+            break
+         end
+         showRecognizerInput(context, eslifRecognizer)
+      end
+      if (i == 0) then
+         eslifRecognizer:progressLog(-1, -1, GENERICLOGGER_LOGLEVEL_NOTICE)
+      end
+      local j = 0
+      while (eslifRecognizer:isCanContinue()) do
+         if (not doResume(eslifRecognizer, 0)) then
+            break
+         end
+         showLocation(string.format("Loop No %d", j), eslifRecognizer)
+         local events = eslifRecognizer:events()
+         for k, v in pairsByKeys(events) do
+            if (v.event == "^NUMBER") then
+               --
+               -- Take opportunity of this event to test the hooks
+               --
+               eslifRecognizer:hookDiscard(false)
+               eslifRecognizer:hookDiscard(true)
+               --
+               -- Recognizer will wait forever if we do not feed the number
+               --
+               local pause = eslifRecognizer:lexemeLastPause("NUMBER")
+               if (pause == nil) then
+                  error("Pause before on NUMBER but no pause information!")
+               end
+               if (not doLexemeRead(eslifRecognizer, "NUMBER", j, pause)) then
+                  error("NUMBER expected but reading such lexeme fails!")
+               end
+               doDiscardTry(eslifRecognizer)
+               doLexemeTry(eslifRecognizer, "WHITESPACES")
+               doLexemeTry(eslifRecognizer, "whitespaces")
+            end
+         end
+         if (j == 0) then
+            changeEventState(string.format("Loop No %d", j), eslifRecognizer, "Expression", { MARPAESLIF_EVENTTYPE_PREDICTED }, false);
+            changeEventState(string.format("Loop No %d", j), eslifRecognizer, "whitespaces", { MARPAESLIF_EVENTTYPE_DISCARD }, false);
+            changeEventState(string.format("Loop No %d", j), eslifRecognizer, "NUMBER", { MARPAESLIF_EVENTTYPE_AFTER }, false);
+         end
+         showLastCompletion(string.format("Loop No %d", j), eslifRecognizer, "Expression", localstring);
+         showLastCompletion(string.format("Loop No %d", j), eslifRecognizer, "Number", localstring);
+         j = j + 1
+      end
+      try {
+         function()
+            logger:infof("Testing value() on %s", localstring)
+            local value = eslifRecognizer:marpaESLIFValue_new(valueInterface)
+            while (value:value()) do
+               logger:infof("Result: %s", valueInterface:getResult())
+            end
+         end,
+         catch {
+            function(message)
+               logger:errorf("Cannot value the input: %s", message)
+            end
+         }
+      }
+   end
+   i = i + 1
 end
