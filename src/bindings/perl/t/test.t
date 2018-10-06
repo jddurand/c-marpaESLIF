@@ -178,7 +178,7 @@ sub do_op {
 sub isWithHighRankOnly {
     my ($self) = @_;
     my $isWithHighRankOnly = 1;
-    $self->{log}->tracef("isWithHighRankOnly => %s");
+    $self->{log}->tracef("isWithHighRankOnly => %s", $isWithHighRankOnly);
     return $isWithHighRankOnly;
 }
 
