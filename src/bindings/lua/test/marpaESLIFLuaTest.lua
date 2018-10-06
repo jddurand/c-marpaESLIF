@@ -81,14 +81,14 @@ local logger = {
    --
    -- Used by us
    --
-   ["tracef"]     = function(self, fmts, ...) print(string.format("%s %-6s"..fmts, logTimeStamp(), 'TRACE', ...)) end,
-   ["debugf"]     = function(self, fmts, ...) print(string.format("%s %-6s"..fmts, logTimeStamp(), 'DEBUG', ...)) end,
-   ["infof"]      = function(self, fmts, ...) print(string.format("%s %-6s"..fmts, logTimeStamp(), 'INFO', ...)) end,
-   ["noticef"]    = function(self, fmts, ...) print(string.format("%s %-6s"..fmts, logTimeStamp(), 'NOTICE', ...)) end,
-   ["warningf"]   = function(self, fmts, ...) print(string.format("%s %-6s"..fmts, logTimeStamp(), 'WARN', ...)) end,
-   ["errorf"]     = function(self, fmts, ...) print(string.format("%s %-6s"..fmts, logTimeStamp(), 'ERROR', ...)) end,
-   ["criticalf"]  = function(self, fmts, ...) print(string.format("%s %-6s"..fmts, logTimeStamp(), 'CRITICAL', ...)) end,
-   ["emergencyf"] = function(self, fmts, ...) print(string.format("%s %-6s"..fmts, logTimeStamp(), 'EMERGENCY', ...)) end
+   ["tracef"]     = function(self, fmts, ...) print(string.format("%s %-9s "..fmts, logTimeStamp(), 'TRACE', ...)) end,
+   ["debugf"]     = function(self, fmts, ...) print(string.format("%s %-9s "..fmts, logTimeStamp(), 'DEBUG', ...)) end,
+   ["infof"]      = function(self, fmts, ...) print(string.format("%s %-9s "..fmts, logTimeStamp(), 'INFO', ...)) end,
+   ["noticef"]    = function(self, fmts, ...) print(string.format("%s %-9s "..fmts, logTimeStamp(), 'NOTICE', ...)) end,
+   ["warningf"]   = function(self, fmts, ...) print(string.format("%s %-9s "..fmts, logTimeStamp(), 'WARN', ...)) end,
+   ["errorf"]     = function(self, fmts, ...) print(string.format("%s %-9s "..fmts, logTimeStamp(), 'ERROR', ...)) end,
+   ["criticalf"]  = function(self, fmts, ...) print(string.format("%s %-9s "..fmts, logTimeStamp(), 'CRITICAL', ...)) end,
+   ["emergencyf"] = function(self, fmts, ...) print(string.format("%s %-9s "..fmts, logTimeStamp(), 'EMERGENCY', ...)) end
 }
 
 ------------------------------------------------------------------------------
