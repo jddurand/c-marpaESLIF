@@ -1624,7 +1624,6 @@ sub doDiscardTry {
             $log->debugf("... Testing discard at current position gave \"%s\"", $discard);
         }
     } catch {
-        # Because we test with a symbol that is not a lexeme, and that raises an exception
         $log->debugf($_);
     }
 }
