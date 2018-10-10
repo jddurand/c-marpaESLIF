@@ -3981,6 +3981,7 @@ static int MARPAESLIFLUA_METHOD(marpaESLIFRecognizer_lastCompletedOffseti)(lua_S
   marpaESLIFLuaRecognizerContext_t *marpaESLIFLuaRecognizerContextp;
   const char                       *names;
   char                             *offsetp;
+  size_t                            offsetl;
 
   /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__); */
 
@@ -4006,8 +4007,9 @@ static int MARPAESLIFLUA_METHOD(marpaESLIFRecognizer_lastCompletedOffseti)(lua_S
   if (! marpaESLIFRecognizer_last_completedb(marpaESLIFLuaRecognizerContextp->marpaESLIFRecognizerp, (char *) names, &offsetp, NULL /* lengthlp */)) {
     return luaL_error(L, "marpaESLIFRecognizer_last_completedb failure, %s", strerror(errno));
   }
-  
-  lua_pushinteger(L, (lua_Integer) offsetp);
+
+  offsetl = (size_t) offsetp;
+  lua_pushinteger(L, (lua_Integer) offsetl);
 
   /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 at %s:%d", funcs, L, FILENAMES, __LINE__); */
   return 1;
@@ -4062,6 +4064,7 @@ static int MARPAESLIFLUA_METHOD(marpaESLIFRecognizer_lastCompletedLocationi)(lua
   const char                       *names;
   char                             *offsetp;
   size_t                            lengthl;
+  size_t                            offsetl;
 
   /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__); */
 
@@ -4089,8 +4092,9 @@ static int MARPAESLIFLUA_METHOD(marpaESLIFRecognizer_lastCompletedLocationi)(lua
   }
 
   lua_newtable(L);
-  MARPAESLIFLUA_STORE_INTEGER(L, "offset", offsetp);
-  MARPAESLIFLUA_STORE_INTEGER(L, "length", lengthl);
+  offsetl = (size_t) offsetp;
+  MARPAESLIFLUA_STORE_INTEGER(L, "offset", (lua_Integer) offsetl);
+  MARPAESLIFLUA_STORE_INTEGER(L, "length", (lua_Integer) lengthl);
 
   /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 at %s:%d", funcs, L, FILENAMES, __LINE__); */
   return 1;
