@@ -14,7 +14,24 @@ extern "C" {
 }
 #endif
 #else
-/* When embedded the method luaopen_marpaESLIFLua(L) must be called explicitly by the code */
+/* ------------------------------------------------------------------------------ */
+/* When MARPAESLIFLUA_EMBEDDED is on, the source file marpaESLIFLua.c should be   */
+/* included as-is, no symbol is exported. The file that includes marpaESLIFLua.c  */
+/* is expected to:                                                                */
+/*                                                                                */
+/* - Register marpaESLIFLua programmatically:                                     */
+/*   ----------------------------------------                                     */
+/*   luaL_requiref(L, "marpaESLIFLua", luaopen_marpaESLIFLua, 1);                 */
+/*                                                                                */
+/* - marpaESLIF, marpaESLIFGrammar, marpaESLIFRecognizer marpaESLIFValue          */
+/*   all have explicit methods to inject unmanaged values (from L point of view): */
+/*   ---------------------------------------------------------------------------- */
+/*                                                                                */
+/*   marpaESLIFLua_marpaESLIF_new_unmanagedi(L, marpaESLIFp);                     */
+/*   marpaESLIFLua_marpaESLIFGrammar_new_unmanagedi(L, marpaESLIFGrammarp);       */
+/*   marpaESLIFLua_marpaESLIFRecognizer_new_unmanagedi(L, marpaESLIFRecognizerp); */
+/*   marpaESLIFLua_marpaESLIFValue_new_unmanagedi(L, marpaESLIFValuep);           */
+/* ------------------------------------------------------------------------------ */
 #endif /* MARPAESLIFLUA_EMBEDDED */
 
 #endif /* MARPAESLIFLUA_H*/

@@ -90,7 +90,7 @@ static void                            MARPAESLIFLUA_METHOD(genericLoggerCallbac
 static int                             MARPAESLIFLUA_METHOD(installi)(lua_State *L);
 static int                             MARPAESLIFLUA_METHOD(versioni)(lua_State *L);
 static int                             MARPAESLIFLUA_METHOD(marpaESLIF_newi)(lua_State *L);
-static int                             MARPAESLIFLUA_METHOD(marpaESLIFLua_newi)(lua_State *L, marpaESLIF_t *marpaESLIFp);
+static int                             MARPAESLIFLUA_METHOD(marpaESLIF_new_unmanagedi)(lua_State *L, marpaESLIF_t *marpaESLIFp);
 static int                             MARPAESLIFLUA_METHOD(marpaESLIFMultitonsTable_freevi)(lua_State *L);
 #ifdef MARPAESLIFLUA_USE_INTERNALREGISTRYINDEX
 static int                             MARPAESLIFLUA_METHOD(marpaESLIFRegistryindex_freevi)(lua_State *L);
@@ -659,17 +659,17 @@ static int MARPAESLIFLUA_METHOD(marpaESLIF_newi)(lua_State *L)
 
   /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__); */
 
-  rci = MARPAESLIFLUA_METHOD(marpaESLIFLua_newi)(L, NULL /* marpaESLIFp */);
+  rci = MARPAESLIFLUA_METHOD(marpaESLIF_new_unmanagedi)(L, NULL /* marpaESLIFp */);
 
   /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return %d (marpaESLIFLuaContextp=%p) at %s:%d", funcs, L, rci, marpaESLIFLuaContextp, FILENAMES, __LINE__); */
   return rci;
 }
 
 /****************************************************************************/
-static int MARPAESLIFLUA_METHOD(marpaESLIFLua_newi)(lua_State *L, marpaESLIF_t *marpaESLIFp)
+static int MARPAESLIFLUA_METHOD(marpaESLIF_new_unmanagedi)(lua_State *L, marpaESLIF_t *marpaESLIFp)
 /****************************************************************************/
 {
-  static const char                   *funcs = MARPAESLIFLUA_METHODNAME(marpaESLIFLua_newi);
+  static const char                   *funcs = MARPAESLIFLUA_METHODNAME(marpaESLIF_new_unmanagedi);
   marpaESLIFLuaContext_t              *marpaESLIFLuaContextp = NULL;
   short                                loggerb;
   marpaESLIFLuaGenericLoggerContext_t *marpaESLIFLuaGenericLoggerContextp;
