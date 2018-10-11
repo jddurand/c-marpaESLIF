@@ -2,7 +2,7 @@
 #define MARPAESLIF_INTERNAL_LUA_H
 
 #include <marpaESLIF.h>
-#include <lua/luaunpanic.h>
+#include <luaunpanic.h>
 
 typedef enum marpaESLIFValue_lua_context {
   MARPAESLIFVALUE_LUA_CONTEXT = -1000

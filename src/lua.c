@@ -5,6 +5,8 @@
 #include <errno.h>
 #include <limits.h>
 
+#include "../src/bindings/lua/src/marpaESLIFLua.c"
+
 /* Note that a lua integer is:
  * - an int  if LUA_INT_TYPE = LUA_INT_INT
  * - a  long if LUA_INT_TYPE = LUA_INT_LONG
@@ -324,6 +326,14 @@ static const char *LUATYPE_TUNKNOWN_STRING = "UNKNOWN";
     }                                                                 \
   } while (0)
 
+#define LUAL_REQUIREF(containerp, modname, openf, glb) do {	      \
+    if (luaunpanicL_requiref(containerp->L, modname, openf, glb)) {   \
+      LOG_PANIC_STRING(containerp, lual_requiref);		      \
+      errno = ENOSYS;                                                 \
+      goto err;                                                       \
+    }                                                                 \
+  } while (0)
+
 #define LUA_POP(containerp, n) do {                             \
     if (luaunpanic_pop(containerp->L, n)) {                     \
       LOG_PANIC_STRING(containerp, lua_pop);                    \
@@ -388,6 +398,10 @@ static short _marpaESLIF_lua_newb(marpaESLIFValue_t *marpaESLIFValuep)
 
   /* Check Lua version */
   LUAL_CHECKVERSION(marpaESLIFValuep);
+
+  /* Load the marpaESLIFLua library built-in */
+  LUAL_REQUIREF(marpaESLIFValuep, "marpaESLIFLua", MARPAESLIFLUA_METHOD(installi), 1);
+  LUA_POP(marpaESLIFValuep, 1);
 
   /* We load byte code generated during grammar validation */
   if ((marpaESLIFGrammarp->luabytep != NULL) && (marpaESLIFGrammarp->luabytel > 0)) {
@@ -888,6 +902,10 @@ static short _marpaESLIFGrammar_lua_precompileb(marpaESLIFGrammar_t *marpaESLIFG
 
     /* Check Lua version */
     LUAL_CHECKVERSION(marpaESLIFGrammarp);
+
+    /* Load the marpaESLIFLua library built-in */
+    LUAL_REQUIREF(marpaESLIFGrammarp, "marpaESLIFLua", MARPAESLIFLUA_METHOD(installi), 1);
+    LUA_POP(marpaESLIFGrammarp, 1);
 
     /* Execute lua script present in the grammar */
     LUAL_LOADBUFFER(marpaESLIFGrammarp, luabytep, luabytel, "=(luascript)");

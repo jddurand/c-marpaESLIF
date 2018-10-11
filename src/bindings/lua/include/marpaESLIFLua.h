@@ -21,7 +21,9 @@ extern "C" {
 /*                                                                                */
 /* - Register marpaESLIFLua programmatically:                                     */
 /*   ----------------------------------------                                     */
-/*   luaL_requiref(L, "marpaESLIFLua", luaopen_marpaESLIFLua, 1);                 */
+/*   luaopen_marpaESLIFLua(L)... OR:                                              */
+/*   luaL_requiref(L, "marpaESLIFLua", MARPAESLIFLUA_METHOD(installi), 1);        */
+/*   lua_pop(1);                                                                  */
 /*                                                                                */
 /* - marpaESLIF, marpaESLIFGrammar, marpaESLIFRecognizer marpaESLIFValue          */
 /*   all have explicit methods to inject unmanaged values (from L point of view): */

@@ -90,7 +90,7 @@ static void                            MARPAESLIFLUA_METHOD(genericLoggerCallbac
 static int                             MARPAESLIFLUA_METHOD(installi)(lua_State *L);
 static int                             MARPAESLIFLUA_METHOD(versioni)(lua_State *L);
 static int                             MARPAESLIFLUA_METHOD(marpaESLIF_newi)(lua_State *L);
-static int                             MARPAESLIFLUA_METHOD(marpaESLIF_new_unmanagedi)(lua_State *L, marpaESLIF_t *marpaESLIFp);
+static int                             MARPAESLIFLUA_METHOD(marpaESLIF_createi)(lua_State *L, marpaESLIF_t *marpaESLIFUnmanagedp);
 static int                             MARPAESLIFLUA_METHOD(marpaESLIFMultitonsTable_freevi)(lua_State *L);
 #ifdef MARPAESLIFLUA_USE_INTERNALREGISTRYINDEX
 static int                             MARPAESLIFLUA_METHOD(marpaESLIFRegistryindex_freevi)(lua_State *L);
@@ -659,17 +659,17 @@ static int MARPAESLIFLUA_METHOD(marpaESLIF_newi)(lua_State *L)
 
   /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__); */
 
-  rci = MARPAESLIFLUA_METHOD(marpaESLIF_new_unmanagedi)(L, NULL /* marpaESLIFp */);
+  rci = MARPAESLIFLUA_METHOD(marpaESLIF_createi)(L, NULL /* marpaESLIFp */);
 
   /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return %d (marpaESLIFLuaContextp=%p) at %s:%d", funcs, L, rci, marpaESLIFLuaContextp, FILENAMES, __LINE__); */
   return rci;
 }
 
 /****************************************************************************/
-static int MARPAESLIFLUA_METHOD(marpaESLIF_new_unmanagedi)(lua_State *L, marpaESLIF_t *marpaESLIFp)
+static int MARPAESLIFLUA_METHOD(marpaESLIF_createi)(lua_State *L, marpaESLIF_t *marpaESLIFUnmanagedp)
 /****************************************************************************/
 {
-  static const char                   *funcs = MARPAESLIFLUA_METHODNAME(marpaESLIF_new_unmanagedi);
+  static const char                   *funcs = MARPAESLIFLUA_METHODNAME(marpaESLIF_createi);
   marpaESLIFLuaContext_t              *marpaESLIFLuaContextp = NULL;
   short                                loggerb;
   marpaESLIFLuaGenericLoggerContext_t *marpaESLIFLuaGenericLoggerContextp;
@@ -677,7 +677,7 @@ static int MARPAESLIFLUA_METHOD(marpaESLIF_new_unmanagedi)(lua_State *L, marpaES
   marpaESLIFOption_t                   marpaESLIFOption;
   int                                  logger_r;
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) marpaESLIFp=%p at %s:%d", funcs, L, marpaESLIFp, FILENAMES, __LINE__); */
+  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) marpaESLIFUnmanagedp=%p at %s:%d", funcs, L, marpaESLIFUnmanagedp, FILENAMES, __LINE__); */
 
   switch (lua_gettop(L)) {
   case 0:
@@ -752,12 +752,12 @@ static int MARPAESLIFLUA_METHOD(marpaESLIF_new_unmanagedi)(lua_State *L, marpaES
     /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) marpaESLIFLuaContextp=%p at %s:%d", funcs, L, marpaESLIFLuaContextp, FILENAMES, __LINE__); */
     marpaESLIFLuaContextp->L           = L;
     marpaESLIFLuaContextp->marpaESLIFp = NULL;
-    if (marpaESLIFp == NULL) {
+    if (marpaESLIFUnmanagedp == NULL) {
       marpaESLIFLuaContextp->managedb = 1;
       marpaESLIFLuaContextp->marpaESLIFp = marpaESLIF_newp(&marpaESLIFOption);
     } else {
       marpaESLIFLuaContextp->managedb = 0;
-      marpaESLIFLuaContextp->marpaESLIFp = marpaESLIFp;
+      marpaESLIFLuaContextp->marpaESLIFp = marpaESLIFUnmanagedp;
     }
 
     if (marpaESLIFLuaContextp->marpaESLIFp == NULL) {
