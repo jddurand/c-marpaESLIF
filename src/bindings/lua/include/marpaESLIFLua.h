@@ -29,10 +29,17 @@ extern "C" {
 /*   all have explicit methods to inject unmanaged values (from L point of view): */
 /*   ---------------------------------------------------------------------------- */
 /*                                                                                */
-/*   marpaESLIFLua_marpaESLIF_new_unmanagedi(L, marpaESLIFp);                     */
-/*   marpaESLIFLua_marpaESLIFGrammar_new_unmanagedi(L, marpaESLIFGrammarp);       */
-/*   marpaESLIFLua_marpaESLIFRecognizer_new_unmanagedi(L, marpaESLIFRecognizerp); */
-/*   marpaESLIFLua_marpaESLIFValue_new_unmanagedi(L, marpaESLIFValuep);           */
+/*   marpaESLIFLua_marpaESLIF_createi(L, marpaESLIFp);                            */
+/*   marpaESLIFLua_marpaESLIFGrammar_createi(L, marpaESLIFGrammarp);              */
+/*   marpaESLIFLua_marpaESLIFRecognizer_createi(L, marpaESLIFRecognizerp);        */
+/*   marpaESLIFLua_marpaESLIFValue_createi(L, marpaESLIFValuep);                  */
+/*                                                                                */
+/* All those methods will return a value != 0 in case of failure. If the          */
+/* argument is not NULL, then it will be injected in lua interpreter as           */
+/* an unmanaged pointer, expecting no argument on the lua stack. If the           */
+/* argument is NULL, the "createi" methods behave like the "new" methods.         */
+/*                                                                                */
+/* In case of success, they leave the created lua object on the stack.            */
 /* ------------------------------------------------------------------------------ */
 #endif /* MARPAESLIFLUA_EMBEDDED */
 
