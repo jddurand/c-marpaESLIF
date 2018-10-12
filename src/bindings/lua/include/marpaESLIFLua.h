@@ -35,11 +35,12 @@ extern "C" {
 /*   marpaESLIFLua_marpaESLIFValue_createi(L, marpaESLIFValuep);                  */
 /*                                                                                */
 /* All those methods will return a value != 0 in case of failure. If the          */
-/* argument is not NULL, then it will be injected in lua interpreter as           */
-/* an unmanaged pointer, expecting no argument on the lua stack. If the           */
-/* argument is NULL, the "createi" methods behave like the "new" methods.         */
+/* argument is not NULL, then it will be injected in lua interpreter.             */
+/* an unmanaged pointer. If the argument is NULL, the "createi" methods behave    */
+/* like the "new" methods, else all those methods expects NO argument on the lua  */
+/* stack.                                                                         */
 /*                                                                                */
-/* In case of success, they leave the created lua object on the stack.            */
+/* In case of success, they leave on the lua stack the result.                    */
 /* ------------------------------------------------------------------------------ */
 #endif /* MARPAESLIFLUA_EMBEDDED */
 
