@@ -400,7 +400,7 @@ static short _marpaESLIF_lua_newb(marpaESLIFValue_t *marpaESLIFValuep)
   LUAL_CHECKVERSION(marpaESLIFValuep);
 
   /* Load the marpaESLIFLua library built-in */
-  LUAL_REQUIREF(marpaESLIFValuep, "marpaESLIFLua", MARPAESLIFLUA_METHOD(installi), 1);
+  LUAL_REQUIREF(marpaESLIFValuep, "marpaESLIFLua", marpaESLIFLua_installi, 1);
   LUA_POP(marpaESLIFValuep, 1);
 
   /* We load byte code generated during grammar validation */
@@ -904,7 +904,7 @@ static short _marpaESLIFGrammar_lua_precompileb(marpaESLIFGrammar_t *marpaESLIFG
     LUAL_CHECKVERSION(marpaESLIFGrammarp);
 
     /* Load the marpaESLIFLua library built-in */
-    LUAL_REQUIREF(marpaESLIFGrammarp, "marpaESLIFLua", MARPAESLIFLUA_METHOD(installi), 1);
+    LUAL_REQUIREF(marpaESLIFGrammarp, "marpaESLIFLua", marpaESLIFLua_installi, 1);
     LUA_POP(marpaESLIFGrammarp, 1);
 
     /* Execute lua script present in the grammar */

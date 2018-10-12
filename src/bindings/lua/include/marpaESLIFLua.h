@@ -22,7 +22,7 @@ extern "C" {
 /* - Register marpaESLIFLua programmatically:                                     */
 /*   ----------------------------------------                                     */
 /*   luaopen_marpaESLIFLua(L)... OR:                                              */
-/*   luaL_requiref(L, "marpaESLIFLua", MARPAESLIFLUA_METHOD(installi), 1);        */
+/*   luaL_requiref(L, "marpaESLIFLua", marpaESLIFLua_installi, 1);                */
 /*   lua_pop(1);                                                                  */
 /*                                                                                */
 /* - marpaESLIF, marpaESLIFGrammar, marpaESLIFRecognizer marpaESLIFValue          */
