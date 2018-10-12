@@ -87,13 +87,13 @@ static void                            marpaESLIFLua_genericLoggerCallbackv(void
 static int                             marpaESLIFLua_installi(lua_State *L);
 static int                             marpaESLIFLua_versioni(lua_State *L);
 static int                             marpaESLIFLua_marpaESLIF_newi(lua_State *L);
-static int                             marpaESLIFLua_marpaESLIF_createi(lua_State *L, marpaESLIF_t *marpaESLIFUnmanagedp);
+static int                             _marpaESLIFLua_marpaESLIF_newi(lua_State *L, marpaESLIF_t *marpaESLIFUnmanagedp);
 static int                             marpaESLIFLua_marpaESLIFMultitonsTable_freevi(lua_State *L);
 #ifdef MARPAESLIFLUA_USE_INTERNALREGISTRYINDEX
 static int                             marpaESLIFLua_marpaESLIFRegistryindex_freevi(lua_State *L);
 #endif
 static int                             marpaESLIFLua_marpaESLIFGrammar_newi(lua_State *L);
-static int                             marpaESLIFLua_marpaESLIFGrammar_createi(lua_State *L, marpaESLIFGrammar_t *marpaESLIFGrammarUnmanagedbp);
+static int                             _marpaESLIFLua_marpaESLIFGrammar_newi(lua_State *L, marpaESLIFGrammar_t *marpaESLIFGrammarUnmanagedbp);
 static int                             marpaESLIFLua_marpaESLIFGrammar_freei(lua_State *L);
 static int                             marpaESLIFLua_marpaESLIFGrammar_ngrammari(lua_State *L);
 static int                             marpaESLIFLua_marpaESLIFGrammar_currentLeveli(lua_State *L);
@@ -657,14 +657,14 @@ static int marpaESLIFLua_marpaESLIF_newi(lua_State *L)
 
   /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__); */
 
-  rci = marpaESLIFLua_marpaESLIF_createi(L, NULL /* marpaESLIFUnmanagedp */);
+  rci = _marpaESLIFLua_marpaESLIF_newi(L, NULL /* marpaESLIFUnmanagedp */);
 
   /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return %d at %s:%d", funcs, L, rci, FILENAMES, __LINE__); */
   return rci;
 }
 
 /****************************************************************************/
-static int marpaESLIFLua_marpaESLIF_createi(lua_State *L, marpaESLIF_t *marpaESLIFUnmanagedp)
+static int _marpaESLIFLua_marpaESLIF_newi(lua_State *L, marpaESLIF_t *marpaESLIFUnmanagedp)
 /****************************************************************************/
 {
   static const char                   *funcs = "marpaESLIFLua_marpaESLIF_createi";
@@ -680,11 +680,10 @@ static int marpaESLIFLua_marpaESLIF_createi(lua_State *L, marpaESLIF_t *marpaESL
 
   if (marpaESLIFUnmanagedp != NULL) {
     /* We are injecting a marpaESLIF: we expect no argument on the stack */
-    if (lua_gettop(L) == 0) {
-      loggerb = 0;
-    } else {
+    if (lua_gettop(L) != 0) {
       return luaL_error(L, "In %s, injection of unmanaged marpaESLIF expects no argument on Lua stack", funcs);
     }
+    loggerb = 0;
   } else {
     switch (lua_gettop(L)) {
     case 0:
@@ -1257,14 +1256,14 @@ static int marpaESLIFLua_marpaESLIFGrammar_newi(lua_State *L)
 
   /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__); */
 
-  rci = marpaESLIFLua_marpaESLIFGrammar_createi(L, NULL /* marpaESLIFGrammarUnmanagedp */);
+  rci = _marpaESLIFLua_marpaESLIFGrammar_newi(L, NULL /* marpaESLIFGrammarUnmanagedp */);
 
   /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return %d at %s:%d", funcs, L, rci, FILENAMES, __LINE__); */
   return rci;
 }
 
 /****************************************************************************/
-static int marpaESLIFLua_marpaESLIFGrammar_createi(lua_State *L, marpaESLIFGrammar_t *marpaESLIFGrammarUnmanagedp)
+static int _marpaESLIFLua_marpaESLIFGrammar_newi(lua_State *L, marpaESLIFGrammar_t *marpaESLIFGrammarUnmanagedp)
 /****************************************************************************/
 {
   static const char          *funcs = "marpaESLIFLua_marpaESLIFGrammar_createi";
@@ -1309,11 +1308,11 @@ static int marpaESLIFLua_marpaESLIFGrammar_createi(lua_State *L, marpaESLIFGramm
     }
 
     marpaESLIFGrammarp = marpaESLIFGrammar_newp(marpaESLIFLuaContextp->marpaESLIFp, &marpaESLIFGrammarOption);
+    if (marpaESLIFGrammarp == NULL) {
+      return luaL_error(L, "marpaESLIFGrammar_newp failure, %s", strerror(errno));
+    }
   }
 
-  if (marpaESLIFGrammarp == NULL) {
-    return luaL_error(L, "marpaESLIFGrammarp failure, %s", strerror(errno));
-  }
 
   /* We want to take control over the free default action, and put something that is illegal via normal parse */
   if (! marpaESLIFGrammar_ngrammarib(marpaESLIFGrammarp, &ngrammari)) {
@@ -1342,7 +1341,9 @@ static int marpaESLIFLua_marpaESLIFGrammar_createi(lua_State *L, marpaESLIFGramm
   /* Create a metable */
   lua_newtable(L);
   MARPAESLIFLUA_STORE_ASCIISTRING(L, "__mode", "v");                              /* ... Say the values are weak */
-  MARPAESLIFLUA_STORE_FUNCTION(L, "__gc", marpaESLIFLua_marpaESLIFGrammar_freei); /* ... Associate a garbage collector */
+  if (marpaESLIFGrammarUnmanagedp == NULL) {
+    MARPAESLIFLUA_STORE_FUNCTION(L, "__gc", marpaESLIFLua_marpaESLIFGrammar_freei); /* ... Associate a garbage collector */
+  }
   lua_newtable(L);                                                                /* ... Associate methods */
   MARPAESLIFLUA_STORE_FUNCTION(L, "ngrammar", marpaESLIFLua_marpaESLIFGrammar_ngrammari);
   MARPAESLIFLUA_STORE_FUNCTION(L, "currentLevel", marpaESLIFLua_marpaESLIFGrammar_currentLeveli);

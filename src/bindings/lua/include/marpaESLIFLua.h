@@ -29,18 +29,24 @@ extern "C" {
 /*   all have explicit methods to inject unmanaged values (from L point of view): */
 /*   ---------------------------------------------------------------------------- */
 /*                                                                                */
-/*   marpaESLIFLua_marpaESLIF_createi(L, marpaESLIFp);                            */
-/*   marpaESLIFLua_marpaESLIFGrammar_createi(L, marpaESLIFGrammarp);              */
-/*   marpaESLIFLua_marpaESLIFRecognizer_createi(L, marpaESLIFRecognizerp);        */
-/*   marpaESLIFLua_marpaESLIFValue_createi(L, marpaESLIFValuep);                  */
+/*   _marpaESLIFLua_marpaESLIF_newi(L, marpaESLIFp);                              */
+/*   _marpaESLIFLua_marpaESLIFGrammar_newi(L, marpaESLIFGrammarp);                */
+/*   _marpaESLIFLua_marpaESLIFRecognizer_newi(L, marpaESLIFRecognizerp);          */
+/*   _marpaESLIFLua_marpaESLIFValue_newi(L, marpaESLIFValuep);                    */
 /*                                                                                */
 /* All those methods will return a value != 0 in case of failure. If the          */
-/* argument is not NULL, then it will be injected in lua interpreter.             */
-/* an unmanaged pointer. If the argument is NULL, the "createi" methods behave    */
-/* like the "new" methods, else all those methods expects NO argument on the lua  */
-/* stack.                                                                         */
+/* argument is not NULL, then:                                                    */
+/* - no argument on the lua stack is allowed                                      */
+/* - pointer will be injected in lua interpreter as if lua created it             */
+/* - Result is put on lua stack as if lua created it                              */
+/* else:                                                                          */
+/* - all those methods reacts like their "new" equivalents, e.g.:                 */
+/*   _marpaESLIFLua_marpaESLIF_newi(L, NULL)                                      */
+/*   is equivalent to                                                             */
+/*   marpaESLIFLua_marpaESLIF_newi(L)                                             */
+/*   expecting arguments on the lua stack exactly like when it is called by the   */
+/*   interpreter.                                                                 */
 /*                                                                                */
-/* In case of success, they leave on the lua stack the result.                    */
 /* ------------------------------------------------------------------------------ */
 #endif /* MARPAESLIFLUA_EMBEDDED */
 
