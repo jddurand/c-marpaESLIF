@@ -21,7 +21,11 @@ extern "C" {
 /*                                                                                */
 /* - Register marpaESLIFLua programmatically:                                     */
 /*   ----------------------------------------                                     */
-/*   luaopen_marpaESLIFLua(L)... OR:                                              */
+/*   luaopen_marpaESLIFLua(L);                                                    */
+/*   lua_pop(1);                                                                  */
+/*                                                                                */
+/*   OR                                                                           */
+/*                                                                                */
 /*   luaL_requiref(L, "marpaESLIFLua", marpaESLIFLua_installi, 1);                */
 /*   lua_pop(1);                                                                  */
 /*                                                                                */
@@ -34,19 +38,15 @@ extern "C" {
 /*   _marpaESLIFLua_marpaESLIFRecognizer_newi(L, marpaESLIFRecognizerp);          */
 /*   _marpaESLIFLua_marpaESLIFValue_newi(L, marpaESLIFValuep);                    */
 /*                                                                                */
-/* All those methods will return a value != 0 in case of failure. If the          */
-/* argument is not NULL, then:                                                    */
-/* - no argument on the lua stack is allowed                                      */
-/* - pointer will be injected in lua interpreter as if lua created it             */
-/* - Result is put on lua stack as if lua created it                              */
-/* else:                                                                          */
-/* - all those methods reacts like their "new" equivalents, e.g.:                 */
-/*   _marpaESLIFLua_marpaESLIF_newi(L, NULL)                                      */
-/*   is equivalent to                                                             */
-/*   marpaESLIFLua_marpaESLIF_newi(L)                                             */
-/*   expecting arguments on the lua stack exactly like when it is called by the   */
-/*   interpreter.                                                                 */
+/* All those methods behave EXACTLY like as if they were called by the Lua        */
+/* interpreter:                                                                   */
+/* - same expectations on the lua stack in input                                  */
+/* - same output                                                                  */
+/* - exception in case of error                                                   */
+/* - the only difference is: lua will not call marpaESLIF to create the pointer   */
 /*                                                                                */
+/* If called with a NULL pointer, these methods behave like the version with no   */
+/* underscore. They are unknown to Lua.                                           */
 /* ------------------------------------------------------------------------------ */
 #endif /* MARPAESLIFLUA_EMBEDDED */
 
