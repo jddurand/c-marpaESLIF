@@ -274,8 +274,11 @@ typedef struct marpaESLIFSymbolProperty {
 #ifdef __cplusplus
 extern "C" {
 #endif
-  marpaESLIF_EXPORT const char                   *marpaESLIF_versions(void);
   marpaESLIF_EXPORT marpaESLIF_t                 *marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptionp);
+  marpaESLIF_EXPORT short                         marpaESLIF_versionb(marpaESLIF_t *marpaESLIFp, char **versionsp);
+  marpaESLIF_EXPORT short                         marpaESLIF_versionMajorb(marpaESLIF_t *marpaESLIFp, int *versionMajorip);
+  marpaESLIF_EXPORT short                         marpaESLIF_versionMinorb(marpaESLIF_t *marpaESLIFp, int *versionMinorip);
+  marpaESLIF_EXPORT short                         marpaESLIF_versionPatchb(marpaESLIF_t *marpaESLIFp, int *versionPatchip);
   marpaESLIF_EXPORT short                         marpaESLIF_extend_builtin_actionb(marpaESLIF_t *marpaESLIFp, char **actionsArrayp, size_t actionsArrayl);
   marpaESLIF_EXPORT marpaESLIFOption_t           *marpaESLIF_optionp(marpaESLIF_t *marpaESLIFp);
   marpaESLIF_EXPORT marpaESLIFGrammar_t          *marpaESLIF_grammarp(marpaESLIF_t *marpaESLIFp);

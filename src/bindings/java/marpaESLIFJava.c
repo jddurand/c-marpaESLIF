@@ -18,7 +18,14 @@ JNIEXPORT jint         JNICALL JNI_OnLoad                                       
 JNIEXPORT void         JNICALL JNI_OnUnLoad                                                    (JavaVM *vmp, void* reservedp);
 
 JNIEXPORT void         JNICALL Java_org_parser_marpa_ESLIF_jniNew                              (JNIEnv *envp, jobject eslifp, jint indice);
+JNIEXPORT jstring      JNICALL Java_org_parser_marpa_ESLIF_jniJavaVersion                      (JNIEnv *envp, jclass classp);
+JNIEXPORT jint         JNICALL Java_org_parser_marpa_ESLIF_jniJavaVersionMajor                 (JNIEnv *envp, jclass classp);
+JNIEXPORT jint         JNICALL Java_org_parser_marpa_ESLIF_jniJavaVersionMinor                 (JNIEnv *envp, jclass classp);
+JNIEXPORT jint         JNICALL Java_org_parser_marpa_ESLIF_jniJavaVersionPatch                 (JNIEnv *envp, jclass classp);
 JNIEXPORT jstring      JNICALL Java_org_parser_marpa_ESLIF_jniVersion                          (JNIEnv *envp, jobject eslifp);
+JNIEXPORT jint         JNICALL Java_org_parser_marpa_ESLIF_jniVersionMajor                     (JNIEnv *envp, jobject eslifp);
+JNIEXPORT jint         JNICALL Java_org_parser_marpa_ESLIF_jniVersionMinor                     (JNIEnv *envp, jobject eslifp);
+JNIEXPORT jint         JNICALL Java_org_parser_marpa_ESLIF_jniVersionPatch                     (JNIEnv *envp, jobject eslifp);
 /* JNIEXPORT void         JNICALL Java_org_parser_marpa_ESLIF_jniFree                             (JNIEnv *envp, jobject eslifp); */
 JNIEXPORT void         JNICALL Java_org_parser_marpa_ESLIFGrammar_jniNew                       (JNIEnv *envp, jobject eslifGrammarp, jbyteArray utf8byteArrayp);
 JNIEXPORT jint         JNICALL Java_org_parser_marpa_ESLIFGrammar_jniNgrammar                  (JNIEnv *envp, jobject eslifGrammarp);
@@ -987,14 +994,124 @@ JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIF_jniNew(JNIEnv *envp, jobject 
 JNIEXPORT jstring JNICALL Java_org_parser_marpa_ESLIF_jniVersion(JNIEnv *envp, jobject eslifp)
 /*****************************************************************************/
 {
-  /* Always update genericLogger context */
+  static const char *funcs = "Java_org_parser_marpa_ESLIF_jniVersion";
+  marpaESLIF_t      *marpaESLIFp;
+  char              *versions;
+
   if (ESLIF_contextb(envp, eslifp, eslifp, MARPAESLIF_ESLIF_CLASS_getLoggerInterfacep_METHODP,
                        NULL /* genericLoggerpp */,
-                       NULL /* marpaESLIFpp */)) {
-    return (*envp)->NewStringUTF(envp, marpaESLIF_versions());
+                       &marpaESLIFp)) {
+    if (! marpaESLIF_versionb(marpaESLIFp, &versions)) {
+      RAISEEXCEPTIONF(envp, "marpaESLIF_versionb failure, %s", strerror(errno));
+    }
+
+    return (*envp)->NewStringUTF(envp, versions);
   }
 
+ err:
   return NULL;
+}
+
+/*****************************************************************************/
+JNIEXPORT jint JNICALL Java_org_parser_marpa_ESLIF_jniVersionMajor(JNIEnv *envp, jobject eslifp)
+/*****************************************************************************/
+{
+  static const char *funcs = "Java_org_parser_marpa_ESLIF_jniVersionMajor";
+  marpaESLIF_t      *marpaESLIFp;
+  int               majori;
+
+  if (ESLIF_contextb(envp, eslifp, eslifp, MARPAESLIF_ESLIF_CLASS_getLoggerInterfacep_METHODP,
+                       NULL /* genericLoggerpp */,
+                       &marpaESLIFp)) {
+    if (! marpaESLIF_versionMajorb(marpaESLIFp, &majori)) {
+      RAISEEXCEPTIONF(envp, "marpaESLIF_versionMajorb failure, %s", strerror(errno));
+    }
+
+    return (jint) majori;
+  }
+
+ err:
+  return 0;
+}
+
+/*****************************************************************************/
+JNIEXPORT jint JNICALL Java_org_parser_marpa_ESLIF_jniVersionMinor(JNIEnv *envp, jobject eslifp)
+/*****************************************************************************/
+{
+  static const char *funcs = "Java_org_parser_marpa_ESLIF_jniVersionMinor";
+  marpaESLIF_t      *marpaESLIFp;
+  int               minori;
+
+  if (ESLIF_contextb(envp, eslifp, eslifp, MARPAESLIF_ESLIF_CLASS_getLoggerInterfacep_METHODP,
+                       NULL /* genericLoggerpp */,
+                       &marpaESLIFp)) {
+    if (! marpaESLIF_versionMinorb(marpaESLIFp, &minori)) {
+      RAISEEXCEPTIONF(envp, "marpaESLIF_versionMinorb failure, %s", strerror(errno));
+    }
+
+    return (jint) minori;
+  }
+
+ err:
+  return 0;
+}
+
+/*****************************************************************************/
+JNIEXPORT jint JNICALL Java_org_parser_marpa_ESLIF_jniVersionPatch(JNIEnv *envp, jobject eslifp)
+/*****************************************************************************/
+{
+  static const char *funcs = "Java_org_parser_marpa_ESLIF_jniVersionPatch";
+  marpaESLIF_t      *marpaESLIFp;
+  int               patchi;
+
+  if (ESLIF_contextb(envp, eslifp, eslifp, MARPAESLIF_ESLIF_CLASS_getLoggerInterfacep_METHODP,
+                       NULL /* genericLoggerpp */,
+                       &marpaESLIFp)) {
+    if (! marpaESLIF_versionPatchb(marpaESLIFp, &patchi)) {
+      RAISEEXCEPTIONF(envp, "marpaESLIF_versionPatchb failure, %s", strerror(errno));
+    }
+
+    return (jint) patchi;
+  }
+
+ err:
+  return 0;
+}
+
+/*****************************************************************************/
+JNIEXPORT jstring JNICALL Java_org_parser_marpa_ESLIF_jniJavaVersion(JNIEnv *envp, jclass classp)
+/*****************************************************************************/
+{
+  static const char *funcs = "Java_org_parser_marpa_ESLIF_jniJavaVersion";
+
+  return (*envp)->NewStringUTF(envp, MARPAESLIFJAVA_VERSION);
+}
+
+/*****************************************************************************/
+JNIEXPORT jint JNICALL Java_org_parser_marpa_ESLIF_jniJavaVersionMajor(JNIEnv *envp, jclass classp)
+/*****************************************************************************/
+{
+  static const char *funcs = "Java_org_parser_marpa_ESLIF_jniJavaVersionMajor";
+
+  return (jint) MARPAESLIFJAVA_VERSION_MAJOR;
+}
+
+/*****************************************************************************/
+JNIEXPORT jint JNICALL Java_org_parser_marpa_ESLIF_jniJavaVersionMinor(JNIEnv *envp, jclass classp)
+/*****************************************************************************/
+{
+  static const char *funcs = "Java_org_parser_marpa_ESLIF_jniJavaVersionMinor";
+
+  return (jint) MARPAESLIFJAVA_VERSION_MINOR;
+}
+
+/*****************************************************************************/
+JNIEXPORT jint JNICALL Java_org_parser_marpa_ESLIF_jniJavaVersionPatch(JNIEnv *envp, jclass classp)
+/*****************************************************************************/
+{
+  static const char *funcs = "Java_org_parser_marpa_ESLIF_jniJavaVersionPatch";
+
+  return (jint) MARPAESLIFJAVA_VERSION_PATCH;
 }
 
 /*

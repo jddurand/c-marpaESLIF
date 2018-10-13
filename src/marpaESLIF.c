@@ -8,6 +8,11 @@
 #include "marpaESLIF/internal/bootstrap.h"
 #include "marpaESLIF/internal/lua.h"
 
+static const char *MARPAESLIF_VERSION_STATIC       = MARPAESLIF_VERSION;
+static const int   MARPAESLIF_VERSION_MAJOR_STATIC = MARPAESLIF_VERSION_MAJOR;
+static const int   MARPAESLIF_VERSION_MINOR_STATIC = MARPAESLIF_VERSION_MINOR;
+static const int   MARPAESLIF_VERSION_PATCH_STATIC = MARPAESLIF_VERSION_PATCH;
+
 #ifndef MARPAESLIF_INITIAL_REPLACEMENT_LENGTH
 #define MARPAESLIF_INITIAL_REPLACEMENT_LENGTH 8096  /* Subjective number */
 #endif
@@ -3346,12 +3351,103 @@ static inline void _marpaESLIF_terminal_freev(marpaESLIF_terminal_t *terminalp)
 }
 
 /*****************************************************************************/
-const char *marpaESLIF_versions(void)
+short marpaESLIF_versionb(marpaESLIF_t *marpaESLIFp, char **versionsp)
 /*****************************************************************************/
 {
-  static const char *versions = MARPAESLIF_VERSION;
+  short rcb;
+  
+  if (marpaESLIFp == NULL) {
+    errno = EINVAL;
+    goto err;
+  }
 
-  return versions;
+  if (versionsp != NULL) {
+    *versionsp = marpaESLIFp->versions;
+  }
+
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  return rcb;
+}
+
+/*****************************************************************************/
+short marpaESLIF_versionMajorb(marpaESLIF_t *marpaESLIFp, int *versionMajorip)
+/*****************************************************************************/
+{
+  short rcb;
+  
+  if (marpaESLIFp == NULL) {
+    errno = EINVAL;
+    goto err;
+  }
+
+  if (versionMajorip != NULL) {
+    *versionMajorip = marpaESLIFp->versionMajori;
+  }
+
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  return rcb;
+}
+
+/*****************************************************************************/
+short marpaESLIF_versionMinorb(marpaESLIF_t *marpaESLIFp, int *versionMinorip)
+/*****************************************************************************/
+{
+  short rcb;
+  
+  if (marpaESLIFp == NULL) {
+    errno = EINVAL;
+    goto err;
+  }
+
+  if (versionMinorip != NULL) {
+    *versionMinorip = marpaESLIFp->versionMinori;
+  }
+
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  return rcb;
+}
+
+/*****************************************************************************/
+short marpaESLIF_versionPatchb(marpaESLIF_t *marpaESLIFp, int *versionPatchip)
+/*****************************************************************************/
+{
+  short rcb;
+  
+  if (marpaESLIFp == NULL) {
+    errno = EINVAL;
+    goto err;
+  }
+
+  if (versionPatchip != NULL) {
+    *versionPatchip = marpaESLIFp->versionPatchi;
+  }
+
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  return rcb;
 }
 
 /*****************************************************************************/
@@ -3403,6 +3499,10 @@ static inline marpaESLIF_t *_marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptio
   marpaESLIFp->regexModifiersp          = NULL;
   marpaESLIFp->traceLoggerp             = NULL;
   marpaESLIFp->NULLisZeroBytesb         = 0;
+  marpaESLIFp->versions                 = (char *) MARPAESLIF_VERSION_STATIC;
+  marpaESLIFp->versionMajori            = (int) MARPAESLIF_VERSION_MAJOR_STATIC;
+  marpaESLIFp->versionMinori            = (int) MARPAESLIF_VERSION_MINOR_STATIC;
+  marpaESLIFp->versionPatchi            = (int) MARPAESLIF_VERSION_PATCH_STATIC;
 
   /* Check if zero bytes (.i.e calloc'ed memory) is the same thing as NULL */
   p = calloc(1, sizeof(void *));

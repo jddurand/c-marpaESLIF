@@ -212,6 +212,14 @@ static const char *LUATYPE_TUNKNOWN_STRING = "UNKNOWN";
     }                                                                   \
   } while (0)
 
+#define LUA_GETFIELDI(rcp, containerp, idx, k) do {                     \
+    if (luaunpanic_getfield(rcp, containerp->L, idx, k)) {              \
+      LOG_PANIC_STRING(containerp, lua_getfield);                       \
+      errno = ENOSYS;                                                   \
+      goto err;                                                         \
+    }                                                                   \
+  } while (0)
+
 #define LUA_RAWSETI(containerp, idx, n) do {                            \
     if (luaunpanic_rawseti(containerp->L, idx, n)) {                    \
       LOG_PANIC_STRING(containerp, lua_rawseti);                        \
@@ -372,6 +380,7 @@ static short _marpaESLIF_lua_newb(marpaESLIFValue_t *marpaESLIFValuep)
 {
   marpaESLIFGrammar_t *marpaESLIFGrammarp;
   short                rcb;
+  int                  typei;
 
   if (marpaESLIFValuep->L != NULL) {
     /* Already done */
@@ -403,9 +412,21 @@ static short _marpaESLIF_lua_newb(marpaESLIFValue_t *marpaESLIFValuep)
   LUAL_REQUIREF(marpaESLIFValuep, "marpaESLIFLua", marpaESLIFLua_installi, 1);
   LUA_POP(marpaESLIFValuep, 1);
 
+  /* Load the marpaESLIFLua library built-in and injects "marpaESLIF" global variable */
+  LUAL_REQUIREF(marpaESLIFValuep, "marpaESLIFLua", marpaESLIFLua_installi, 1); /* stack: marpaESLIFLua */
+  LUA_GETFIELDI(&typei, marpaESLIFValuep, -1, "marpaESLIF_newFromUnmanaged");  /* stack: marpaESLIFLua, marpaESLIF_newFromUnmanaged */
+  if (typei != LUA_TFUNCTION) {
+    MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "%s is not a function", "marpaESLIF_newFromUnmanaged");
+    goto err;
+  }
+  LUA_PUSHLIGHTUSERDATA(marpaESLIFValuep, marpaESLIFValuep->marpaESLIFp);      /* stack: marpaESLIFLua, marpaESLIF_newFromUnmanaged, marpaESLIFp */
+  LUA_PCALL(marpaESLIFValuep, 1, LUA_MULTRET, 0);                              /* stack: marpaESLIFLua, marpaESLIF */
+  LUA_SETGLOBAL(marpaESLIFValuep, "marpaESLIF");                               /* stack: marpaESLIFLua */
+  LUA_POP(marpaESLIFValuep, 1);                                                /* stack: */
+
   /* We load byte code generated during grammar validation */
   if ((marpaESLIFGrammarp->luabytep != NULL) && (marpaESLIFGrammarp->luabytel > 0)) {
-    LUAL_LOADBUFFER(marpaESLIFValuep, marpaESLIFGrammarp->luaprecompiledp, marpaESLIFGrammarp->luaprecompiledl, "=(luascript)");
+    LUAL_LOADBUFFER(marpaESLIFValuep, marpaESLIFGrammarp->luaprecompiledp, marpaESLIFGrammarp->luaprecompiledl, "=<luaScript/>");
     LUA_PCALL(marpaESLIFValuep, 0, LUA_MULTRET, 0);
     /* Clear the stack */
     LUA_SETTOP(marpaESLIFValuep, 0);
@@ -903,12 +924,8 @@ static short _marpaESLIFGrammar_lua_precompileb(marpaESLIFGrammar_t *marpaESLIFG
     /* Check Lua version */
     LUAL_CHECKVERSION(marpaESLIFGrammarp);
 
-    /* Load the marpaESLIFLua library built-in */
-    LUAL_REQUIREF(marpaESLIFGrammarp, "marpaESLIFLua", marpaESLIFLua_installi, 1);
-    LUA_POP(marpaESLIFGrammarp, 1);
-
     /* Execute lua script present in the grammar */
-    LUAL_LOADBUFFER(marpaESLIFGrammarp, luabytep, luabytel, "=(luascript)");
+    LUAL_LOADBUFFER(marpaESLIFGrammarp, luabytep, luabytel, "=<luaScript/>");
     /* Result is a "function" at the top of the stack - we now have to dump it */
     LUA_DUMP(marpaESLIFGrammarp, _marpaESLIF_lua_grammarWriteri, marpaESLIFGrammarp, 0 /* strip */);
     /* Clear the stack */

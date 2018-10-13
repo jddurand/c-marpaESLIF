@@ -14,40 +14,32 @@ extern "C" {
 }
 #endif
 #else
-/* ------------------------------------------------------------------------------ */
-/* When MARPAESLIFLUA_EMBEDDED is on, the source file marpaESLIFLua.c should be   */
-/* included as-is, no symbol is exported. The file that includes marpaESLIFLua.c  */
-/* is expected to:                                                                */
-/*                                                                                */
-/* - Register marpaESLIFLua programmatically:                                     */
-/*   ----------------------------------------                                     */
-/*   luaopen_marpaESLIFLua(L);                                                    */
-/*   lua_pop(1);                                                                  */
-/*                                                                                */
-/*   OR                                                                           */
-/*                                                                                */
-/*   luaL_requiref(L, "marpaESLIFLua", marpaESLIFLua_installi, 1);                */
-/*   lua_pop(1);                                                                  */
-/*                                                                                */
-/* - marpaESLIF, marpaESLIFGrammar, marpaESLIFRecognizer marpaESLIFValue          */
-/*   all have explicit methods to inject unmanaged values (from L point of view): */
-/*   ---------------------------------------------------------------------------- */
-/*                                                                                */
-/*   _marpaESLIFLua_marpaESLIF_newi(L, marpaESLIFp);                              */
-/*   _marpaESLIFLua_marpaESLIFGrammar_newi(L, marpaESLIFGrammarp);                */
-/*   _marpaESLIFLua_marpaESLIFRecognizer_newi(L, marpaESLIFRecognizerp);          */
-/*   _marpaESLIFLua_marpaESLIFValue_newi(L, marpaESLIFValuep);                    */
-/*                                                                                */
-/* All those methods behave EXACTLY like as if they were called by the Lua        */
-/* interpreter:                                                                   */
-/* - same expectations on the lua stack in input                                  */
-/* - same output                                                                  */
-/* - exception in case of error                                                   */
-/* - the only difference is: lua will not call marpaESLIF to create the pointer   */
-/*                                                                                */
-/* If called with a NULL pointer, these methods behave like the version with no   */
-/* underscore. They are unknown to Lua.                                           */
-/* ------------------------------------------------------------------------------ */
+/* ------------------------------------------------------------------------------------------------- */
+/* When MARPAESLIFLUA_EMBEDDED is on, the source file marpaESLIFLua.c should be included as-is, no   */
+/* symbol is exported. The file that includes marpaESLIFLua.c is expected to:                        */
+/*                                                                                                   */
+/* - Register marpaESLIFLua programmatically:                                                        */
+/*   ----------------------------------------                                                        */
+/*   luaopen_marpaESLIFLua(L);                                                                       */
+/*   lua_pop(1);                                                                                     */
+/*                                                                                                   */
+/*   OR                                                                                              */
+/*                                                                                                   */
+/*   luaL_requiref(L, "marpaESLIFLua", marpaESLIFLua_installi, 1);                                   */
+/*   lua_pop(1);                                                                                     */
+/*                                                                                                   */
+/* - marpaESLIF, marpaESLIFGrammar, marpaESLIFRecognizer marpaESLIFValue                             */
+/*   all have explicit methods to inject unmanaged values:                                           */
+/*                                                                                                   */
+/*   marpaESLIFp           = marpaESLIFLua.marpaESLIF_newFromUnmanaged(lightuserdata)                */
+/*   marpaESLIFGrammarp    = marpaESLIFp:marpaESLIFGrammar_newFromUnmanaged(lightuserdata)           */
+/*   marpaESLIFRecognizerp = marpaESLIFGrammarp:marpaESLIFRecognizer_newFromUnmanaged(lightuserdata) */
+/*   marpaESLIFValuep      = marpaESLIFRecognizerp:marpaESLIFValue_newFromUnmanaged(lightuserdata)   */
+/*                                                                                                   */
+/* All those methods:                                                                                */
+/* - requires one argument on the stack that is a non-null light userdata                            */
+/* - push on lua stack the same lua object as their "new" counterparts                               */
+/* ------------------------------------------------------------------------------------------------- */
 #endif /* MARPAESLIFLUA_EMBEDDED */
 
 #endif /* MARPAESLIFLUA_H*/

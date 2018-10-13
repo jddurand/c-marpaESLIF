@@ -49,6 +49,13 @@ public class ESLIF {
 	private native void          jniNew(int loggerInterfaceIndice) throws ESLIFException;
 	// private native void          jniFree() throws ESLIFException;
 	private native String        jniVersion();
+	private native int           jniVersionMajor();
+	private native int           jniVersionMinor();
+	private native int           jniVersionPatch();
+	private static native String jniJavaVersion();
+	private static native int    jniJavaVersionMajor();
+	private static native int    jniJavaVersionMinor();
+	private static native int    jniJavaVersionPatch();
     private static final ConcurrentMap<ESLIFLoggerInterface, Future<ESLIF>> multitons = new ConcurrentHashMap<ESLIFLoggerInterface, Future<ESLIF>>();
     /* Because a null key is not possible with a ConcurrentHashMap */
     private static final ESLIFLoggerInterface nullLoggerInterface = new ESLIFMultitonNullLogger();
@@ -56,12 +63,7 @@ public class ESLIF {
     private static final CopyOnWriteArraySet<ESLIFLoggerInterface> loggerInterfaceArraySet = new CopyOnWriteArraySet<ESLIFLoggerInterface>();
 	
 	static {
-		try {
-			System.loadLibrary(getMarpaeslifjavaLibraryName());
-		} catch (Exception e) {
-			System.err.println("Failed to load " + getMarpaeslifjavaLibraryName() + ", " + e);
-			System.exit(1);
-		}
+		System.loadLibrary(getMarpaeslifjavaLibraryName());
 	}
 	
     /**
@@ -148,6 +150,42 @@ public class ESLIF {
 	*/
 	
 	/**
+	 * Version of the Java wrapper.
+	 * 
+	 * @return a string describing the Java wrapper version, never null
+	 */
+    public static String Version() {
+		return jniJavaVersion();
+    }
+
+	/**
+	 * Major version of the Java wrapper.
+	 * 
+	 * @return an int describing the Java wrapper major version
+	 */
+	public static int VersionMajor() {
+		return jniJavaVersionMajor();
+	}
+
+	/**
+	 * Minor version of the Java wrapper.
+	 * 
+	 * @return an int describing the Java wrapper minor version
+	 */
+	public static int VersionMinor() {
+		return jniJavaVersionMinor();
+	}
+
+	/**
+	 * Patch version of the Java wrapper.
+	 * 
+	 * @return an int describing the Java wrapper patch version
+	 */
+	public static int VersionPatch() {
+		return jniJavaVersionPatch();
+	}
+
+    /**
 	 * Version of the ESLIF.
 	 * 
 	 * @return a string describing the ESLIF version, never null
@@ -155,6 +193,34 @@ public class ESLIF {
 	public String version() {
 		return jniVersion();
 	}
+
+	/**
+	 * Major version of the ESLIF.
+	 * 
+	 * @return an int describing the ESLIF major version
+	 */
+	public int versionMajor() {
+		return jniVersionMajor();
+	}
+
+	/**
+	 * Minor version of the ESLIF.
+	 * 
+	 * @return an int describing the ESLIF minor version
+	 */
+	public int versionMinor() {
+		return jniVersionMinor();
+	}
+
+	/**
+	 * Patch version of the ESLIF.
+	 * 
+	 * @return an int describing the ESLIF patch version
+	 */
+	public int versionPatch() {
+		return jniVersionPatch();
+	}
+
 	/*
 	 * *******************************************
 	 * Private/protected methods - used by the JNI

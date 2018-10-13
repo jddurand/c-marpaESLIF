@@ -92,9 +92,17 @@ local logger = {
 }
 
 ------------------------------------------------------------------------------
-logger:noticef('marpaESLIF version: %s', marpaESLIFLua.version())
+logger:noticef('marpaESLIFLua version: %s', tostring(marpaESLIFLua.version()))
+logger:noticef('marpaESLIFLua version major: %s', tostring(marpaESLIFLua.versionMajor()))
+logger:noticef('marpaESLIFLua version minor: %s', tostring(marpaESLIFLua.versionMinor()))
+logger:noticef('marpaESLIFLua version patch: %s', tostring(marpaESLIFLua.versionPatch()))
 ------------------------------------------------------------------------------
 local marpaESLIFp = marpaESLIFLua.marpaESLIF_new(logger)
+logger:noticef('marpaESLIF version: %s', tostring(marpaESLIFp:version()))
+logger:noticef('marpaESLIF version major: %s', tostring(marpaESLIFp:versionMajor()))
+logger:noticef('marpaESLIF version minor: %s', tostring(marpaESLIFp:versionMinor()))
+logger:noticef('marpaESLIF version patch: %s', tostring(marpaESLIFp:versionPatch()))
+logger:noticef('marpaESLIF compatibility check: %s', tostring(marpaESLIFp:versionCheck()))
 logger:noticef('marpaESLIFp meta dump: %s', tableDump(getmetatable(marpaESLIFp)))
 ------------------------------------------------------------------------------
 local marpaESLIFGrammarp = marpaESLIFp:marpaESLIFGrammar_new(
@@ -154,7 +162,7 @@ for level = 0,ngrammar-1 do
    logger:noticef('... Rule Ids level %d: %s', level, tableDump(ruleIdsByLevel))
 end
 ------------------------------------------------------------------------------
-local symbolIds = marpaESLIFLua.marpaESLIFGrammar_currentSymbolIds(marpaESLIFGrammarp)
+local symbolIds = marpaESLIFGrammarp:currentSymbolIds()
 logger:noticef('... Current symbol Ids : %s', tableDump(symbolIds))
 for level = 0,ngrammar-1 do
    local symbolIdsByLevel = marpaESLIFGrammarp:symbolIdsByLevel(level)

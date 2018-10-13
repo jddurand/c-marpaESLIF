@@ -565,6 +565,20 @@ Sequence rules can have a I<separator symbol>, and it is hiden by L<Marpa::R2|ht
 
 =back
 
+=head1 VERSIONING
+
+marpaESLIF follows the L<Semantic Versioning 2.0.0|https://semver.org/spec/v2.0.0.html>, i:e:
+
+=over
+
+=item MAJOR for incompatible API changes
+
+=item MINOR for added functionality in a backwards-compatible manner
+
+=item PATCH for backwards-compatible bug fixes
+
+=back
+
 =head1 SEE ALSO
 
 L<marpaESLIF_BNF|https://github.com/jddurand/c-marpaESLIF/tree/master/doc/BNF>, L<marpaESLIF_API|https://github.com/jddurand/c-marpaESLIF/tree/master/doc/API>, L<marpaESLIF_Tutorial|https://github.com/jddurand/c-marpaESLIF/tree/master/doc/Tutorial>, L<genericLogger|https://github.com/jddurand/c-genericLogger>, L<PCRE2|http://www.pcre.org/>, L<jpcre2|https://github.com/jpcre2/jpcre2>, L<Perl language|http://www.perl.org>, L<Java language|http://www.java.com>.

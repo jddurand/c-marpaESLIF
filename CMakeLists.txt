@@ -7,7 +7,7 @@ ENDIF ()
 # when we do make marpaESLIFPerlRelease
 #
 # SET (MYPACKAGE_DEBUG TRUE)
-MYPACKAGESTART (marpaESLIF 2 0 45)
+MYPACKAGESTART (marpaESLIF 3 0 1)
 
 ###########
 # Library #
@@ -40,6 +40,19 @@ MYPACKAGELIBRARY(
   ${CMAKE_CURRENT_SOURCE_DIR}/include/config.h.in
   ${INCLUDE_OUTPUT_PATH}/marpaESLIF/internal/config.h
   src/marpaESLIF.c)
+
+#
+# Since we embed marpaESLIFLua with a #include directive, we have to propagate the
+# emebeded lua binding version, that are #define's usually generated with MYPACKAGELIBRARY()
+#
+FOREACH (_target ${PROJECT_NAME} ${PROJECT_NAME}_static)
+  TARGET_COMPILE_DEFINITIONS(${_target}
+    PRIVATE -DMARPAESLIFLUA_VERSION_MAJOR=${${PROJECT_NAME}_VERSION_MAJOR}
+    PRIVATE -DMARPAESLIFLUA_VERSION_MINOR=${${PROJECT_NAME}_VERSION_MINOR}
+    PRIVATE -DMARPAESLIFLUA_VERSION_PATCH=${${PROJECT_NAME}_VERSION_PATCH}
+    PRIVATE -DMARPAESLIFLUA_VERSION="${${PROJECT_NAME}_VERSION}"
+    )
+ENDFOREACH ()
 
 ###############
 # Executables #

@@ -22,8 +22,15 @@ public class AppThread implements Runnable {
 		try {
 			ESLIF eslif = ESLIF.getInstance(eslifLogger);
 
+			eslifLogger.info("marpaESLIFJava version is " + eslif.version());
+			eslifLogger.info("marpaESLIFJava major version is " + eslif.versionMajor());
+			eslifLogger.info("marpaESLIFJava minor version is " + eslif.versionMinor());
+			eslifLogger.info("marpaESLIFJava patch version is " + eslif.versionPatch());
 			eslifLogger.info("ESLIF object is " + eslif);
 			eslifLogger.info("marpaESLIF version is " + eslif.version());
+			eslifLogger.info("marpaESLIF major version is " + eslif.versionMajor());
+			eslifLogger.info("marpaESLIF minor version is " + eslif.versionMinor());
+			eslifLogger.info("marpaESLIF patch version is " + eslif.versionPatch());
 	
 			final String grammar = 
 					    ":start   ::= Object2\n"
