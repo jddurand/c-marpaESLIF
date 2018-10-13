@@ -102,7 +102,6 @@ logger:noticef('marpaESLIF version: %s', tostring(marpaESLIFp:version()))
 logger:noticef('marpaESLIF version major: %s', tostring(marpaESLIFp:versionMajor()))
 logger:noticef('marpaESLIF version minor: %s', tostring(marpaESLIFp:versionMinor()))
 logger:noticef('marpaESLIF version patch: %s', tostring(marpaESLIFp:versionPatch()))
-logger:noticef('marpaESLIF compatibility check: %s', tostring(marpaESLIFp:versionCheck()))
 logger:noticef('marpaESLIFp meta dump: %s', tableDump(getmetatable(marpaESLIFp)))
 ------------------------------------------------------------------------------
 local marpaESLIFGrammarp = marpaESLIFp:marpaESLIFGrammar_new(

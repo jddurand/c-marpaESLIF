@@ -94,7 +94,6 @@ static int                             marpaESLIFLua_marpaESLIF_versioni(lua_Sta
 static int                             marpaESLIFLua_marpaESLIF_versionMajori(lua_State *L);
 static int                             marpaESLIFLua_marpaESLIF_versionMinori(lua_State *L);
 static int                             marpaESLIFLua_marpaESLIF_versionPatchi(lua_State *L);
-static int                             marpaESLIFLua_marpaESLIF_versionChecki(lua_State *L);
 static int                             marpaESLIFLua_marpaESLIF_newFromUnmanagedi(lua_State *L);
 static int                             marpaESLIFLua_marpaESLIFMultitonsTable_freevi(lua_State *L);
 #ifdef MARPAESLIFLUA_USE_INTERNALREGISTRYINDEX
@@ -515,7 +514,6 @@ static marpaESLIFValueResultTransform_t marpaESLIFValueResultTransformDefault = 
     MARPAESLIFLUA_STORE_FUNCTION(L, "versionMajor", marpaESLIFLua_marpaESLIF_versionMajori); \
     MARPAESLIFLUA_STORE_FUNCTION(L, "versionMinor", marpaESLIFLua_marpaESLIF_versionMinori); \
     MARPAESLIFLUA_STORE_FUNCTION(L, "versionPatch", marpaESLIFLua_marpaESLIF_versionPatchi); \
-    MARPAESLIFLUA_STORE_FUNCTION(L, "versionCheck", marpaESLIFLua_marpaESLIF_versionChecki); \
     MARPAESLIFLUA_STORE_FUNCTION(L, "marpaESLIFGrammar_new", marpaESLIFLua_marpaESLIFGrammar_newi); \
     lua_setfield(L, -2, "__index");                                     \
     lua_setmetatable(L, -2);                                            \
