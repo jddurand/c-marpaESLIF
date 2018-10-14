@@ -28,6 +28,8 @@ extern "C" {
 /*   luaL_requiref(L, "marpaESLIFLua", marpaESLIFLua_installi, 1);                                   */
 /*   lua_pop(1);                                                                                     */
 /*                                                                                                   */
+/* - Inject external contexts programmatically if required:                                          */
+/*   ------------------------------------------------------                                          */
 /* - marpaESLIF, marpaESLIFGrammar, marpaESLIFRecognizer marpaESLIFValue                             */
 /*   all have explicit methods to inject unmanaged values:                                           */
 /*                                                                                                   */
