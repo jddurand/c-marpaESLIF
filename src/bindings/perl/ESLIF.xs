@@ -1648,21 +1648,6 @@ CODE:
   marpaESLIF_ContextFreev(aTHX_ (MarpaX_ESLIF_Engine) Perl_MarpaX_ESLIF_Enginep);
 
 =for comment
-  /* ----------------------------------------------------------------------- */
-  /* MarpaX::ESLIF::Engine::version                                          */
-  /* ----------------------------------------------------------------------- */
-=cut
-
-const char *
-version()
-PREINIT:
-  static const char  *funcs = "MarpaX::ESLIF::Engine::version";
-CODE:
-  RETVAL = marpaESLIF_versions();
-OUTPUT:
-  RETVAL
-
-=for comment
   /* ======================================================================= */
   /* MarpaX::ESLIF                                                           */
   /* ======================================================================= */

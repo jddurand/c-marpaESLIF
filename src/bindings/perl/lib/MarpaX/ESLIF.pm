@@ -130,10 +130,6 @@ sub getInstance {
     goto &new
 }
 
-sub version {
-    return MarpaX::ESLIF::Engine::version
-}
-
 sub _getInstance {
     return $_[0]->[0]
 }
