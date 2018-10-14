@@ -106,15 +106,28 @@ MACRO (MYPACKAGESTART packageName versionMajor versionMinor versionPatch)
 	    ADD_DEFINITIONS("-D${_definition}")
       ENDIF ()
     ENDFOREACH ()
-    GET_DIRECTORY_PROPERTY (_DirDefs DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} COMPILE_DEFINITIONS)
-    IF (MYPACKAGE_DEBUG)
-      MESSAGE (STATUS "[${PROJECT_NAME}-START-STATUS] New COMPILE_DEFINITIONS is: ${_DirDefs}")
-    ENDIF ()
   ELSE ()
     IF (MYPACKAGE_DEBUG)
       MESSAGE (STATUS "[${PROJECT_NAME}-START-STATUS] CMAKE_C_COMPILER_ID does not match MSVC: ${CMAKE_C_COMPILER_ID}")
     ENDIF ()
   ENDIF ()
+  #
+  # Regardless of compiler, we always set the following historical macros
+  #
+  GET_DIRECTORY_PROPERTY (_DirDefs DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} COMPILE_DEFINITIONS)
+  FOREACH (_definition _REENTRANT _THREAD_SAFE)
+    LIST (FIND _DirDefs ${_definition} _index)
+    IF (${_index} GREATER -1)
+      IF (MYPACKAGE_DEBUG)
+        MESSAGE (STATUS "[${PROJECT_NAME}-START-STATUS] Compile definition ${_definition} already set")
+      ENDIF ()
+    ELSE ()
+      IF (MYPACKAGE_DEBUG)
+        MESSAGE (STATUS "[${PROJECT_NAME}-START-STATUS] Adding compile definition ${_definition}")
+      ENDIF ()
+      ADD_DEFINITIONS("-D${_definition}")
+    ENDIF ()
+  ENDFOREACH ()
   #
   # Prepare output directories
   #
