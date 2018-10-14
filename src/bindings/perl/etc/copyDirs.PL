@@ -97,6 +97,11 @@ $dst = File::Spec->catfile('src', 'CMakeLists.txt');
 print "... Copying file $src to $dst\n";
 copy($src, $dst)|| die "$!";
 
+$src = File::Spec->catdir(($updir) x 3, 'src', 'bindings', 'lua');
+$dst = File::Spec->catdir('src', 'src', 'bindings', 'lua');
+print "... Copying directory $src to $dst\n",
+_dircopy($src, $dst);
+
 foreach (qw/bootstrap.c lua.c marpaESLIF.c/) {
   $src = File::Spec->catfile(($updir) x 3, 'src', $_);
   $dst = File::Spec->catfile('src', 'src', $_);
@@ -176,8 +181,14 @@ sub _dircopy {
         die "$srcdir is not a directory";
     }
     if (! -d $dstdir) {
-        print "... Creating directory $dstdir\n",
-        die "Failed to create $dstdir directory, $!" unless mkdir $dstdir;
+        print "... Creating directory $dstdir\n";
+        my ($volume, $directories, $file) = File::Spec->splitpath($dstdir, 1);
+        my $newdir = undef;
+        foreach (File::Spec->splitdir($directories)) {
+          $newdir = $newdir ? File::Spec->catdir($newdir, $_) : $_;
+          next if -d $newdir;
+          die "Failed to create $newdir directory, $!" unless mkdir $newdir;
+        }
     }
 
     my $workdir = cwd;
@@ -192,6 +203,8 @@ sub _dircopy {
         #
         # Do not copy known garbage
         #
+        next if $_ eq 'latest';
+        next if $_ eq '.build';
         next if $_ eq 'cmake_install.cmake';
         next if $_ eq 'Makefile';
         next if $_ eq 'CMakeFiles';
@@ -234,6 +247,7 @@ sub _dircopy {
         next if $_ =~ /\.dir$/;
         next if $_ =~ /\.psess$/;
         next if $_ =~ /\.vsp$/;
+        next if $_ =~ /^MarpaX\-ESLIF/;
         next if $_ eq 'Testing';
         next if $_ eq 'Win32';
         next if $_ eq 'ipch';
