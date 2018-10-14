@@ -1664,6 +1664,31 @@ OUTPUT:
 
 =for comment
   /* ======================================================================= */
+  /* MarpaX::ESLIF                                                           */
+  /* ======================================================================= */
+=cut
+
+MODULE = MarpaX::ESLIF            PACKAGE = MarpaX::ESLIF
+
+PROTOTYPES: ENABLE
+
+char *
+version(Perl_MarpaX_ESLIF_Enginep)
+  void *Perl_MarpaX_ESLIF_Enginep;
+PREINIT:
+  static const char *funcs = "MarpaX::ESLIF::version";
+CODE:
+  char              *versions;
+
+  if (! marpaESLIF_versionb(((MarpaX_ESLIF_Engine) Perl_MarpaX_ESLIF_Enginep)->marpaESLIFp, &versions)) {
+    MARPAESLIF_CROAKF("marpaESLIF_versionb failure, %s", strerror(errno));
+  }
+  RETVAL = versions;
+OUTPUT:
+  RETVAL
+
+=for comment
+  /* ======================================================================= */
   /* MarpaX::ESLIF::Grammar                                                  */
   /* ======================================================================= */
 =cut
