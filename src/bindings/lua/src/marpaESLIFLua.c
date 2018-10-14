@@ -916,38 +916,6 @@ static int marpaESLIFLua_marpaESLIF_versionPatchi(lua_State *L)
 }
 
 /****************************************************************************/
-static int marpaESLIFLua_marpaESLIF_versionChecki(lua_State *L)
-/****************************************************************************/
-{
-  static const char      *funcs = "marpaESLIFLua_marpaESLIF_versionChecki";
-  marpaESLIFLuaContext_t *marpaESLIFLuaContextp;
-  int                     majori;
-  int                     patchi;
-
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__); */
-
-  if (lua_gettop(L) != 1) {
-    return luaL_error(L, "Usage: version(marpaESLIFp)");
-  }
-
-  marpaESLIFLuaContextp = lua_touserdata(L, 1);
-
-  if (marpaESLIFLuaContextp == NULL) {
-    return luaL_error(L, "marpaESLIFLuaContextp is NULL");
-  }
-
-  /* marpaESLIF guarantees that marpaESLIF_versionMajorb() implementation will never change */
-  if (! marpaESLIF_versionMajorb(marpaESLIFLuaContextp->marpaESLIFp, &majori)) {
-    return luaL_error(L, "marpaESLIF_versionMajorb failure, %s", strerror(errno));
-  }
-
-  lua_pushboolean(L, (majori == MARPAESLIFLUA_VERSION_MAJOR) ? 1 : 0);
-
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 0 at %s:%d", funcs, L, FILENAMES, __LINE__); */
-  return 1;
-}
-
-/****************************************************************************/
 static int  marpaESLIFLua_marpaESLIF_newFromUnmanagedi(lua_State *L)
 /****************************************************************************/
 {
