@@ -5,6 +5,8 @@
 #include <genericLogger.h>
 #include <marpaESLIF.h>
 
+static char context;
+
 static short                         inputReaderb(void *userDatavp, char **inputsp, size_t *inputlp, short *eofbp, short *characterStreambp, char **encodingsp, size_t *encodinglp);
 static short                         doparseb(genericLogger_t *genericLoggerp, marpaESLIFRecognizer_t *marpaESLIFRecognizerParentp, marpaESLIFGrammar_t *marpaESLIFGrammarObjectp, char *inputs, int recursionleveli);
 
@@ -337,7 +339,7 @@ static short doparseb(genericLogger_t *genericLoggerp, marpaESLIFRecognizer_t *m
         marpaESLIFAlternative.lexemes               = "LCURLY";
         marpaESLIFAlternative.value.type            = MARPAESLIF_VALUE_TYPE_CHAR;
         marpaESLIFAlternative.value.u.c             = '{';
-        marpaESLIFAlternative.value.contexti        =  1; /* Must be > 0 */
+        marpaESLIFAlternative.value.contextp        =  &context; /* Must be != NULL */
         marpaESLIFAlternative.value.sizel           =  0; /* Not used */
         marpaESLIFAlternative.value.representationp = NULL; /* Default representation is ok */
         marpaESLIFAlternative.grammarLengthl        = 1;
@@ -363,7 +365,7 @@ static short doparseb(genericLogger_t *genericLoggerp, marpaESLIFRecognizer_t *m
         marpaESLIFAlternative.lexemes               = "RCURLY";
         marpaESLIFAlternative.value.type            = MARPAESLIF_VALUE_TYPE_CHAR;
         marpaESLIFAlternative.value.u.c             = '{';
-        marpaESLIFAlternative.value.contexti        =  1; /* Must be > 0 */
+        marpaESLIFAlternative.value.contextp        =  &context; /* Must be != NULL */
         marpaESLIFAlternative.value.sizel           =  0; /* Not used */
         marpaESLIFAlternative.value.representationp = NULL; /* Default representation is ok */
         marpaESLIFAlternative.grammarLengthl        = 1;

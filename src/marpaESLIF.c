@@ -188,7 +188,7 @@ void *MARPAESLIF_LEXEME_IS_STRING_ACTION_VOIDP = (void *) &MARPAESLIF_LEXEME_IS_
 
 /* For reset of values in the stack, it is okay to not care about the union -; */
 static const marpaESLIFValueResult_t marpaESLIFValueResultUndef = {
-  0,                          /* contexti */
+  NULL,                       /* contextp */
   0,                          /* sizel */
   NULL,                       /* representationp */
   0,                          /* shallowb */
@@ -198,7 +198,7 @@ static const marpaESLIFValueResult_t marpaESLIFValueResultUndef = {
 
 /* Prefilled value in lexeme-only mode, to gain few instructions that are always the same -; */
 static const marpaESLIFValueResult_t marpaESLIFValueResultLexeme = {
-  0,                          /* contexti */
+  NULL,                       /* contextp */
   0,                          /* sizel */
   NULL,                       /* representationp */
   0,                          /* shallowb */
@@ -378,8 +378,8 @@ static        short                  _marpaESLIF_lexeme_transferb(void *userData
 static        short                  _marpaESLIF_symbol_literal_transferb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *bytep, size_t bytel, int resulti);
 static        short                  _marpaESLIF_rule_literal_transferb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short                  _marpaESLIF_lexeme_concatb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
-static        void                   _marpaESLIF_lexeme_freeCallbackv(void *userDatavp, int contexti, void *p, size_t sizel);
-static        void                   _marpaESLIF_rule_freeCallbackv(void *userDatavp, int contexti, void *p, size_t sizel);
+static        void                   _marpaESLIF_lexeme_freeCallbackv(void *userDatavp, void *contextp, void *p, size_t sizel);
+static        void                   _marpaESLIF_rule_freeCallbackv(void *userDatavp, void *contextp, void *p, size_t sizel);
 static inline marpaESLIFValue_t     *_marpaESLIFValue_newp(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueOption_t *marpaESLIFValueOptionp, short silentb, short fakeb);
 static inline short                  _marpaESLIFValue_stack_newb(marpaESLIFValue_t *marpaESLIFValuep);
 static inline short                  _marpaESLIFValue_stack_freeb(marpaESLIFValue_t *marpaESLIFValuep);
@@ -6772,9 +6772,9 @@ short marpaESLIFRecognizer_lexeme_alternativeb(marpaESLIFRecognizer_t *marpaESLI
     goto err;
   }
 
-  if (marpaESLIFAlternativep->value.contexti <= 0) {
-    /* Context from the external world must be > 0 */
-    MARPAESLIF_ERRORF(marpaESLIFp, "%s must be called with a context > 0", funcs);
+  if (marpaESLIFAlternativep->value.contextp == NULL) {
+    /* Context from the external world must be set */
+    MARPAESLIF_ERRORF(marpaESLIFp, "%s must be called with a context != NULL", funcs);
     goto err;
   }
 
@@ -12130,7 +12130,7 @@ static inline short _marpaESLIFValue_transformb(marpaESLIFValue_t *marpaESLIFVal
       errno = EINVAL;
       goto err;
     }
-    if (! transformerp->undefTransformerp(userDatavp, marpaESLIFValueResultp->contexti)) {
+    if (! transformerp->undefTransformerp(userDatavp, marpaESLIFValueResultp->contextp)) {
       goto err;
     }
     break;
@@ -12140,7 +12140,7 @@ static inline short _marpaESLIFValue_transformb(marpaESLIFValue_t *marpaESLIFVal
       errno = EINVAL;
       goto err;
     }
-    if (! transformerp->charTransformerp(userDatavp, marpaESLIFValueResultp->contexti, marpaESLIFValueResultp->u.c)) {
+    if (! transformerp->charTransformerp(userDatavp, marpaESLIFValueResultp->contextp, marpaESLIFValueResultp->u.c)) {
       goto err;
     }
     break;
@@ -12150,7 +12150,7 @@ static inline short _marpaESLIFValue_transformb(marpaESLIFValue_t *marpaESLIFVal
       errno = EINVAL;
       goto err;
     }
-    if (! transformerp->shortTransformerp(userDatavp, marpaESLIFValueResultp->contexti, marpaESLIFValueResultp->u.b)) {
+    if (! transformerp->shortTransformerp(userDatavp, marpaESLIFValueResultp->contextp, marpaESLIFValueResultp->u.b)) {
       goto err;
     }
     break;
@@ -12160,7 +12160,7 @@ static inline short _marpaESLIFValue_transformb(marpaESLIFValue_t *marpaESLIFVal
       errno = EINVAL;
       goto err;
     }
-    if (! transformerp->intTransformerp(userDatavp, marpaESLIFValueResultp->contexti, marpaESLIFValueResultp->u.i)) {
+    if (! transformerp->intTransformerp(userDatavp, marpaESLIFValueResultp->contextp, marpaESLIFValueResultp->u.i)) {
       goto err;
     }
     break;
@@ -12170,7 +12170,7 @@ static inline short _marpaESLIFValue_transformb(marpaESLIFValue_t *marpaESLIFVal
       errno = EINVAL;
       goto err;
     }
-    if (! transformerp->longTransformerp(userDatavp, marpaESLIFValueResultp->contexti, marpaESLIFValueResultp->u.l)) {
+    if (! transformerp->longTransformerp(userDatavp, marpaESLIFValueResultp->contextp, marpaESLIFValueResultp->u.l)) {
       goto err;
     }
     break;
@@ -12180,7 +12180,7 @@ static inline short _marpaESLIFValue_transformb(marpaESLIFValue_t *marpaESLIFVal
       errno = EINVAL;
       goto err;
     }
-    if (! transformerp->floatTransformerp(userDatavp, marpaESLIFValueResultp->contexti, marpaESLIFValueResultp->u.f)) {
+    if (! transformerp->floatTransformerp(userDatavp, marpaESLIFValueResultp->contextp, marpaESLIFValueResultp->u.f)) {
       goto err;
     }
     break;
@@ -12190,7 +12190,7 @@ static inline short _marpaESLIFValue_transformb(marpaESLIFValue_t *marpaESLIFVal
       errno = EINVAL;
       goto err;
     }
-    if (! transformerp->doubleTransformerp(userDatavp, marpaESLIFValueResultp->contexti, marpaESLIFValueResultp->u.d)) {
+    if (! transformerp->doubleTransformerp(userDatavp, marpaESLIFValueResultp->contextp, marpaESLIFValueResultp->u.d)) {
       goto err;
     }
     break;
@@ -12200,7 +12200,7 @@ static inline short _marpaESLIFValue_transformb(marpaESLIFValue_t *marpaESLIFVal
       errno = EINVAL;
       goto err;
     }
-    if (! transformerp->ptrTransformerp(userDatavp, marpaESLIFValueResultp->contexti, marpaESLIFValueResultp->u.p)) {
+    if (! transformerp->ptrTransformerp(userDatavp, marpaESLIFValueResultp->contextp, marpaESLIFValueResultp->u.p)) {
       goto err;
     }
     break;
@@ -12218,7 +12218,7 @@ static inline short _marpaESLIFValue_transformb(marpaESLIFValue_t *marpaESLIFVal
         errno = EINVAL;
         goto err;
       }
-      if (! transformerp->arrayTransformerp(userDatavp, marpaESLIFValueResultp->contexti, marpaESLIFValueResultp->u.p, marpaESLIFValueResultp->sizel)) {
+      if (! transformerp->arrayTransformerp(userDatavp, marpaESLIFValueResultp->contextp, marpaESLIFValueResultp->u.p, marpaESLIFValueResultp->sizel)) {
         goto err;
       }
     }
@@ -12229,7 +12229,7 @@ static inline short _marpaESLIFValue_transformb(marpaESLIFValue_t *marpaESLIFVal
       errno = EINVAL;
       goto err;
     }
-    if (! transformerp->boolTransformerp(userDatavp, marpaESLIFValueResultp->contexti, marpaESLIFValueResultp->u.b)) {
+    if (! transformerp->boolTransformerp(userDatavp, marpaESLIFValueResultp->contextp, marpaESLIFValueResultp->u.b)) {
       goto err;
     }
     break;
@@ -12371,7 +12371,7 @@ static inline short _marpaESLIFValue_stack_i_resetb(marpaESLIFValue_t *marpaESLI
   short                               shallowb;
   void                               *origp;
   void                               *newp;
-  int                                 origcontexti;
+  void                               *origcontextp;
   size_t                              origsizel;
 
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
@@ -12456,31 +12456,67 @@ static inline short _marpaESLIFValue_stack_i_resetb(marpaESLIFValue_t *marpaESLI
     }
     /* We must not free this memory if the caller say to definitely forget about it */
     if (freeb && (! forgetb)) {
-      origcontexti = marpaESLIFValueResultOrig.contexti;
+      origcontextp = marpaESLIFValueResultOrig.contextp;
       origsizel    = marpaESLIFValueResultOrig.sizel;
       if (marpaESLIFRecognizerp->parentRecognizerp != NULL) {
         freeCallbackp = _marpaESLIF_lexeme_freeCallbackv;
         userDatavp    = marpaESLIFRecognizerp; /* Our internal free callback on lexemes requires that userDatavp is the recognizer */
       } else {
         /* ==================================================================================== */
-        /* Remember the context that cannot be <== 0 from outside ? If this is the case         */
+        /* Remember the context that cannot be NULL from outside ? If this is the case          */
         /* then per def, it is the result of an internal operation.                             */
         /* Reserved values/ranges are:                                                          */
-        /*               0 : action forced to _marpaESLIF_rule_freeCallbackv                    */
+        /*            NULL : action forced to _marpaESLIF_rule_freeCallbackv                    */
         /*                   context forced to marpaESLIFValuep                                 */
-        /*     -1 to  -999 : action forced to _marpaESLIF_bootstrap_freeDefaultActionv          */
+        /*       bootstrap : action forced to _marpaESLIF_bootstrap_freeDefaultActionv          */
         /*                   context forced to marpaESLIFValuep                                 */
-        /*  -1000 to -1999 : action forced to _marpaESLIF_lua_freeDefaultActionv                */
+        /*             lua  : action forced to _marpaESLIF_lua_freeDefaultActionv               */
         /*                   context forced to marpaESLIFValuep                                 */
-        /*       other < 0 : yet unassigned : normal external case applies                      */
+        /*            other : yet unassigned : normal external case applies                     */
         /* ==================================================================================== */
-        if (origcontexti == 0) {
+        if (origcontextp == NULL) {
+          /* Internal callbacks */
           freeCallbackp = _marpaESLIF_rule_freeCallbackv;
           userDatavp    = marpaESLIFValuep;
-        } else if ((origcontexti >= MARPAESLIF_RESERVED_CONTEXT_BOOTSTRAP_START) && (origcontexti <= MARPAESLIF_RESERVED_CONTEXT_BOOTSTRAP_END)) {
+        } else if ((origcontextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_NA) ||
+                   (origcontextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_OP_DECLARE) ||
+                   (origcontextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_SYMBOL_NAME) ||
+                   (origcontextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_RHS_PRIMARY) ||
+                   (origcontextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_RHS) ||
+                   (origcontextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_ACTION) ||
+                   (origcontextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_LEFT_ASSOCIATION) ||
+                   (origcontextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_RIGHT_ASSOCIATION) ||
+                   (origcontextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_GROUP_ASSOCIATION) ||
+                   (origcontextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_SEPARATOR) ||
+                   (origcontextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_PROPER) ||
+                   (origcontextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_HIDESEPARATOR) ||
+                   (origcontextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_RANK) ||
+                   (origcontextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_NULL_RANKING) ||
+                   (origcontextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_PRIORITY) ||
+                   (origcontextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_PAUSE) ||
+                   (origcontextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_LATM) ||
+                   (origcontextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_NAMING) ||
+                   (origcontextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_SYMBOLACTION) ||
+                   (origcontextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_FREEACTION) ||
+                   (origcontextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_EVENT_INITIALIZATION) ||
+                   (origcontextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_LIST_ITEMS) ||
+                   (origcontextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ALTERNATIVE) ||
+                   (origcontextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ALTERNATIVES) ||
+                   (origcontextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_PRIORITIES) ||
+                   (origcontextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_SINGLE_SYMBOL) ||
+                   (origcontextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_GRAMMAR_REFERENCE) ||
+                   (origcontextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_INACESSIBLE_TREATMENT) ||
+                   (origcontextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ON_OR_OFF) ||
+                   (origcontextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_QUANTIFIER) ||
+                   (origcontextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_EVENT_INITIALIZER) ||
+                   (origcontextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_EVENT_INITIALIZATION) ||
+                   (origcontextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ALTERNATIVE_NAME) ||
+                   (origcontextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ARRAY) ||
+                   (origcontextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_STRING)) {
+          /* Bootstrap callbacks: they are for marpaESLIF grammar itself and are totally independant */
           freeCallbackp = _marpaESLIF_bootstrap_freeDefaultActionv;
           userDatavp = marpaESLIFValuep;
-        } else if ((origcontexti >= MARPAESLIF_RESERVED_CONTEXT_LUA_START) && (origcontexti <= MARPAESLIF_RESERVED_CONTEXT_LUA_END)) {
+        } else if (origcontextp == MARPAESLIF_EMBEDDED_CONTEXT_LUA) {
           freeCallbackp = _marpaESLIF_lua_freeDefaultActionv;
           userDatavp = marpaESLIFValuep;
         } else {
@@ -12506,7 +12542,7 @@ static inline short _marpaESLIFValue_stack_i_resetb(marpaESLIFValue_t *marpaESLI
         }
       }
       /* No test on freeCallbackp here because the upper code guarantees it cannot be NULL */
-      freeCallbackp(userDatavp, origcontexti, origp, origsizel);
+      freeCallbackp(userDatavp, origcontextp, origp, origsizel);
     }
   }
 
@@ -12816,7 +12852,7 @@ static short _marpaESLIF_lexeme_concatb(void *userDatavp, marpaESLIFValue_t *mar
 }
 
 /*****************************************************************************/
-static void _marpaESLIF_lexeme_freeCallbackv(void *userDatavp, int contexti, void *p, size_t sizel)
+static void _marpaESLIF_lexeme_freeCallbackv(void *userDatavp, void *contextp, void *p, size_t sizel)
 /*****************************************************************************/
 {
   static const char       *funcs                 = "_marpaESLIF_lexeme_freeCallbackv";
@@ -12834,7 +12870,7 @@ static void _marpaESLIF_lexeme_freeCallbackv(void *userDatavp, int contexti, voi
 }
 
 /*****************************************************************************/
-static void _marpaESLIF_rule_freeCallbackv(void *userDatavp, int contexti, void *p, size_t sizel)
+static void _marpaESLIF_rule_freeCallbackv(void *userDatavp, void *contextp, void *p, size_t sizel)
 /*****************************************************************************/
 {
   static const char       *funcs                 = "_marpaESLIF_rule_freeCallbackv";
@@ -12842,7 +12878,7 @@ static void _marpaESLIF_rule_freeCallbackv(void *userDatavp, int contexti, void 
   marpaESLIFRecognizer_t  *marpaESLIFRecognizerp = marpaESLIFValuep->marpaESLIFRecognizerp;
   
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
-  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "start(contexti=%d, p=%p, sizel=%ld)", contexti, p, (unsigned long) sizel);
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "start(contextp=%p, p=%p, sizel=%ld)", contextp, p, (unsigned long) sizel);
 
   /* This is our internal free for items in the output stack that come from an internal operation */
   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Freeing {%p,%ld}", p, (unsigned long) sizel);
@@ -12988,8 +13024,8 @@ short marpaESLIFValue_stack_setb(marpaESLIFValue_t *marpaESLIFValuep, int indice
     MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "marpaESLIFValueResultp is NULL");
     return 0;
   }
-  if (marpaESLIFValueResultp->contexti <= 0) {
-    MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "%s must be called with a context > 0", funcs);
+  if (marpaESLIFValueResultp->contextp == NULL) {
+    MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "%s must be called with a context != NULL", funcs);
     return 0;
   }
   if (! marpaESLIFValuep->inValuationb) {
@@ -13179,14 +13215,14 @@ static inline short _marpaESLIF_generic_action___concatb(void *userDatavp, marpa
         marpaESLIF_stringGenerator.s = NULL;
 
         if (ptrb) {
-          marpaESLIFValueResult.contexti        = 0;
+          marpaESLIFValueResult.contextp        = NULL;
           marpaESLIFValueResult.sizel           = 0;
           marpaESLIFValueResult.representationp = NULL;
           marpaESLIFValueResult.shallowb        = 0;
           marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_PTR;
           marpaESLIFValueResult.u.p             = converteds;
         } else {
-          marpaESLIFValueResult.contexti        = 0;
+          marpaESLIFValueResult.contextp        = NULL;
           marpaESLIFValueResult.sizel           = convertedl;
           marpaESLIFValueResult.representationp = NULL;
           marpaESLIFValueResult.shallowb        = 0;
@@ -13201,7 +13237,7 @@ static inline short _marpaESLIF_generic_action___concatb(void *userDatavp, marpa
         /* converteds is now in the stack */
         converteds = NULL;
       } else {
-        marpaESLIFValueResult.contexti        = 0;
+        marpaESLIFValueResult.contextp        = NULL;
         marpaESLIFValueResult.sizel           = marpaESLIF_stringGenerator.l - 1;
         marpaESLIFValueResult.representationp = NULL;
         marpaESLIFValueResult.shallowb        = 0;

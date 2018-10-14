@@ -47,16 +47,16 @@ static const char *_marpaESLIF_lua_types(int typei);
 static int         _marpaESLIF_lua_grammarWriteri(lua_State *L, const void* p, size_t sz, void* ud);
 
 /* Value result transformer helper */
-short _marpaESLIF_lua_transformUndefb(void *userDatavp, int contexti);
-short _marpaESLIF_lua_transformCharb(void *userDatavp, int contexti, char c);
-short _marpaESLIF_lua_transformShortb(void *userDatavp, int contexti, short b);
-short _marpaESLIF_lua_transformIntb(void *userDatavp, int contexti, int i);
-short _marpaESLIF_lua_transformLongb(void *userDatavp, int contexti, long l);
-short _marpaESLIF_lua_transformFloatb(void *userDatavp, int contexti, float f);
-short _marpaESLIF_lua_transformDoubleb(void *userDatavp, int contexti, double d);
-short _marpaESLIF_lua_transformPtrb(void *userDatavp, int contexti, void *p);
-short _marpaESLIF_lua_transformArrayb(void *userDatavp, int contexti, void *p, size_t sizel);
-short _marpaESLIF_lua_transformBoolb(void *userDatavp, int contexti, short b);
+short _marpaESLIF_lua_transformUndefb(void *userDatavp, void *contextp);
+short _marpaESLIF_lua_transformCharb(void *userDatavp, void *contextp, char c);
+short _marpaESLIF_lua_transformShortb(void *userDatavp, void *contextp, short b);
+short _marpaESLIF_lua_transformIntb(void *userDatavp, void *contextp, int i);
+short _marpaESLIF_lua_transformLongb(void *userDatavp, void *contextp, long l);
+short _marpaESLIF_lua_transformFloatb(void *userDatavp, void *contextp, float f);
+short _marpaESLIF_lua_transformDoubleb(void *userDatavp, void *contextp, double d);
+short _marpaESLIF_lua_transformPtrb(void *userDatavp, void *contextp, void *p);
+short _marpaESLIF_lua_transformArrayb(void *userDatavp, void *contextp, void *p, size_t sizel);
+short _marpaESLIF_lua_transformBoolb(void *userDatavp, void *contextp, short b);
 static const marpaESLIFValueResultTransform_t marpaESLIF_lua_transform = {
   _marpaESLIF_lua_transformUndefb,
   _marpaESLIF_lua_transformCharb,
@@ -613,9 +613,9 @@ static short _marpaESLIF_lua_push_argb(marpaESLIFValue_t *marpaESLIFValuep, int 
   }
 
   /* Special values that comes from lua and have a meaning only for lua have the */
-  /* context MARPAESLIFVALUE_LUA_CONTEXT. Then per def, this is a PTR that hosts */
+  /* context MARPAESLIF_EMBEDDED_CONTEXT_LUA. Then per def, this is a PTR that hosts */
   /* a malloced integer. This integer is the indice in an internal lua table. */
-  if (marpaESLIFValueResultp->contexti == MARPAESLIFVALUE_LUA_CONTEXT) {
+  if (marpaESLIFValueResultp->contextp == MARPAESLIF_EMBEDDED_CONTEXT_LUA) {
     LUA_GETGLOBAL(&typei, marpaESLIFValuep, MARPAESLIF_LUA_TABLE);                                    /* stack: ..., table */
     if (typei != LUA_TTABLE) {
       MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "%s is not a table", MARPAESLIF_LUA_TABLE);
@@ -659,7 +659,7 @@ static short _marpaESLIF_lua_pop_argb(marpaESLIFValue_t *marpaESLIFValuep, int r
 
   switch (typei) {
   case LUA_TNIL:
-    marpaESLIFValueResult.contexti        = 0;
+    marpaESLIFValueResult.contextp        = MARPAESLIF_EMBEDDED_CONTEXT_LUA;
     marpaESLIFValueResult.sizel           = 0;
     marpaESLIFValueResult.representationp = NULL;
     marpaESLIFValueResult.shallowb        = 0;
@@ -670,7 +670,7 @@ static short _marpaESLIF_lua_pop_argb(marpaESLIFValue_t *marpaESLIFValuep, int r
   break;
   case LUA_TNUMBER:
     /* The native type of a number in lua depends on LUA_FLOAT_TYPE */
-    marpaESLIFValueResult.contexti        = 0;
+    marpaESLIFValueResult.contextp        = MARPAESLIF_EMBEDDED_CONTEXT_LUA;
     marpaESLIFValueResult.sizel           = 0;
     marpaESLIFValueResult.representationp = NULL;
     marpaESLIFValueResult.shallowb        = 0;
@@ -689,7 +689,7 @@ static short _marpaESLIF_lua_pop_argb(marpaESLIFValue_t *marpaESLIFValuep, int r
   case LUA_TBOOLEAN:
     /* A boolean in lua maps to an int */
     LUA_TOBOOLEAN(marpaESLIFValuep, &booli, -1);
-    marpaESLIFValueResult.contexti        = 0;
+    marpaESLIFValueResult.contextp        = MARPAESLIF_EMBEDDED_CONTEXT_LUA;
     marpaESLIFValueResult.sizel           = 0;
     marpaESLIFValueResult.representationp = NULL;
     marpaESLIFValueResult.shallowb        = 0;
@@ -705,7 +705,7 @@ static short _marpaESLIF_lua_pop_argb(marpaESLIFValue_t *marpaESLIFValuep, int r
     LUA_TOLSTRING(marpaESLIFValuep, &bytep, -1, &bytel);
     if ((bytep == NULL) || (bytel <= 0)) {
       /* In reality this is a null string */
-      marpaESLIFValueResult.contexti        = 0;
+      marpaESLIFValueResult.contextp        = MARPAESLIF_EMBEDDED_CONTEXT_LUA;
       marpaESLIFValueResult.sizel           = 0;
       marpaESLIFValueResult.representationp = NULL;
       marpaESLIFValueResult.shallowb        = 0;
@@ -717,7 +717,7 @@ static short _marpaESLIF_lua_pop_argb(marpaESLIFValue_t *marpaESLIFValuep, int r
         MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "malloc failure, %s", strerror(errno));
         goto err;
       }
-      marpaESLIFValueResult.contexti        = 0;
+      marpaESLIFValueResult.contextp        = MARPAESLIF_EMBEDDED_CONTEXT_LUA;
       marpaESLIFValueResult.sizel           = bytel;
       marpaESLIFValueResult.representationp = NULL;
       marpaESLIFValueResult.shallowb        = 0;
@@ -741,7 +741,7 @@ static short _marpaESLIF_lua_pop_argb(marpaESLIFValue_t *marpaESLIFValuep, int r
       goto err;
     }
     *resultip = resulti;
-    marpaESLIFValueResult.contexti        = MARPAESLIFVALUE_LUA_CONTEXT;
+    marpaESLIFValueResult.contextp        = MARPAESLIF_EMBEDDED_CONTEXT_LUA;
     marpaESLIFValueResult.sizel           = 0;
     marpaESLIFValueResult.representationp = NULL;
     marpaESLIFValueResult.shallowb        = 0;
@@ -752,7 +752,7 @@ static short _marpaESLIF_lua_pop_argb(marpaESLIFValue_t *marpaESLIFValuep, int r
     break;
   case LUA_TLIGHTUSERDATA:
     /* External pointer */
-    marpaESLIFValueResult.contexti        = 0;
+    marpaESLIFValueResult.contextp        = MARPAESLIF_EMBEDDED_CONTEXT_LUA;
     marpaESLIFValueResult.sizel           = 0;
     marpaESLIFValueResult.representationp = NULL;
     marpaESLIFValueResult.shallowb        = 0;
@@ -785,7 +785,7 @@ static short _marpaESLIF_lua_pop_argb(marpaESLIFValue_t *marpaESLIFValuep, int r
 }
 
 /*****************************************************************************/
-static void _marpaESLIF_lua_freeDefaultActionv(void *userDatavp, int contexti, void *p, size_t sizel)
+static void _marpaESLIF_lua_freeDefaultActionv(void *userDatavp, void *contextp, void *p, size_t sizel)
 /*****************************************************************************/
 {
   static const char       *funcs                 = "_marpaESLIF_lua_freeDefaultActionv";
@@ -988,7 +988,7 @@ static int _marpaESLIF_lua_grammarWriteri(lua_State *L, const void* p, size_t sz
 }
 
 /*****************************************************************************/
-short _marpaESLIF_lua_transformUndefb(void *userDatavp, int contexti)
+short _marpaESLIF_lua_transformUndefb(void *userDatavp, void *contextp)
 /*****************************************************************************/
 {
   static const char *funcs = "_marpaESLIF_lua_transformUndefb";
@@ -1010,7 +1010,7 @@ short _marpaESLIF_lua_transformUndefb(void *userDatavp, int contexti)
 }
 
 /*****************************************************************************/
-short _marpaESLIF_lua_transformCharb(void *userDatavp, int contexti, char c)
+short _marpaESLIF_lua_transformCharb(void *userDatavp, void *contextp, char c)
 /*****************************************************************************/
 {
   static const char *funcs = "_marpaESLIF_lua_transformCharb";
@@ -1032,7 +1032,7 @@ short _marpaESLIF_lua_transformCharb(void *userDatavp, int contexti, char c)
 }
 
 /*****************************************************************************/
-short _marpaESLIF_lua_transformShortb(void *userDatavp, int contexti, short b)
+short _marpaESLIF_lua_transformShortb(void *userDatavp, void *contextp, short b)
 /*****************************************************************************/
 {
   static const char *funcs = "_marpaESLIF_lua_transformShortb";
@@ -1054,7 +1054,7 @@ short _marpaESLIF_lua_transformShortb(void *userDatavp, int contexti, short b)
 }
 
 /*****************************************************************************/
-short _marpaESLIF_lua_transformIntb(void *userDatavp, int contexti, int i)
+short _marpaESLIF_lua_transformIntb(void *userDatavp, void *contextp, int i)
 /*****************************************************************************/
 {
   static const char *funcs = "_marpaESLIF_lua_transformUndefb";
@@ -1076,7 +1076,7 @@ short _marpaESLIF_lua_transformIntb(void *userDatavp, int contexti, int i)
 }
 
 /*****************************************************************************/
-short _marpaESLIF_lua_transformLongb(void *userDatavp, int contexti, long l)
+short _marpaESLIF_lua_transformLongb(void *userDatavp, void *contextp, long l)
 /*****************************************************************************/
 {
   static const char *funcs = "_marpaESLIF_lua_transformUndefb";
@@ -1098,7 +1098,7 @@ short _marpaESLIF_lua_transformLongb(void *userDatavp, int contexti, long l)
 }
 
 /*****************************************************************************/
-short _marpaESLIF_lua_transformFloatb(void *userDatavp, int contexti, float f)
+short _marpaESLIF_lua_transformFloatb(void *userDatavp, void *contextp, float f)
 /*****************************************************************************/
 {
   static const char *funcs = "_marpaESLIF_lua_transformUndefb";
@@ -1120,7 +1120,7 @@ short _marpaESLIF_lua_transformFloatb(void *userDatavp, int contexti, float f)
 }
 
 /*****************************************************************************/
-short _marpaESLIF_lua_transformDoubleb(void *userDatavp, int contexti, double d)
+short _marpaESLIF_lua_transformDoubleb(void *userDatavp, void *contextp, double d)
 /*****************************************************************************/
 {
   static const char *funcs = "_marpaESLIF_lua_transformUndefb";
@@ -1142,7 +1142,7 @@ short _marpaESLIF_lua_transformDoubleb(void *userDatavp, int contexti, double d)
 }
 
 /*****************************************************************************/
-short _marpaESLIF_lua_transformPtrb(void *userDatavp, int contexti, void *p)
+short _marpaESLIF_lua_transformPtrb(void *userDatavp, void *contextp, void *p)
 /*****************************************************************************/
 {
   static const char *funcs = "_marpaESLIF_lua_transformUndefb";
@@ -1164,7 +1164,7 @@ short _marpaESLIF_lua_transformPtrb(void *userDatavp, int contexti, void *p)
 }
 
 /*****************************************************************************/
-short _marpaESLIF_lua_transformArrayb(void *userDatavp, int contexti, void *p, size_t sizel)
+short _marpaESLIF_lua_transformArrayb(void *userDatavp, void *contextp, void *p, size_t sizel)
 /*****************************************************************************/
 {
   static const char *funcs = "_marpaESLIF_lua_transformUndefb";
@@ -1186,7 +1186,7 @@ short _marpaESLIF_lua_transformArrayb(void *userDatavp, int contexti, void *p, s
 }
 
 /*****************************************************************************/
-short _marpaESLIF_lua_transformBoolb(void *userDatavp, int contexti, short b)
+short _marpaESLIF_lua_transformBoolb(void *userDatavp, void *contextp, short b)
 /*****************************************************************************/
 {
   static const char *funcs = "_marpaESLIF_lua_transformBoolb";

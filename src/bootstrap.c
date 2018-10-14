@@ -233,7 +233,7 @@ static        short _marpaESLIF_bootstrap_G1_action_luascript_statementb(void *u
     rcb = (_marpaESLIFValueResultp->type == MARPAESLIF_VALUE_TYPE_INT); \
   } while (0)
 
-#define MARPAESLIF_GET_CONTEXT(marpaESLIFValuep, indicei, _contexti) do { \
+#define MARPAESLIF_GET_CONTEXT(marpaESLIFValuep, indicei, _contextp) do { \
     marpaESLIFValueResult_t *_marpaESLIFValueResultp;                   \
                                                                         \
     _marpaESLIFValueResultp = _marpaESLIFValue_stack_getp(marpaESLIFValuep, indicei); \
@@ -241,7 +241,7 @@ static        short _marpaESLIF_bootstrap_G1_action_luascript_statementb(void *u
       goto err;                                                         \
     }                                                                   \
                                                                         \
-    _contexti = _marpaESLIFValueResultp->contexti;                      \
+    _contextp = _marpaESLIFValueResultp->contextp;                      \
   } while (0)
 
 #define MARPAESLIF_GET_BOOL(marpaESLIFValuep, indicei, _b) do {         \
@@ -280,10 +280,10 @@ static        short _marpaESLIF_bootstrap_G1_action_luascript_statementb(void *u
 /* because we are inside marpaESLIF and know what we are doing -; */
 /* The _marpaESLIFValue_stack_setb() is equivalent to marpaESLIFValue_stack_setb(), but with no check on the arguments */
 
-#define MARPAESLIF_SET_PTR(marpaESLIFValuep, indicei, _contexti, _p) do { \
+#define MARPAESLIF_SET_PTR(marpaESLIFValuep, indicei, _contextp, _p) do { \
     marpaESLIFValueResult_t _marpaESLIFValueResult;                     \
                                                                         \
-    _marpaESLIFValueResult.contexti        = _contexti;                 \
+    _marpaESLIFValueResult.contextp        = _contextp;                 \
     _marpaESLIFValueResult.sizel           = 0;                         \
     _marpaESLIFValueResult.representationp = NULL;                      \
     _marpaESLIFValueResult.shallowb        = 0;                         \
@@ -296,10 +296,10 @@ static        short _marpaESLIF_bootstrap_G1_action_luascript_statementb(void *u
                                                                         \
   } while (0)
 
-#define MARPAESLIF_SET_ARRAY(marpaESLIFValuep, indicei, _contexti, _p, _l) do { \
+#define MARPAESLIF_SET_ARRAY(marpaESLIFValuep, indicei, _contextp, _p, _l) do { \
     marpaESLIFValueResult_t _marpaESLIFValueResult;                     \
                                                                         \
-    _marpaESLIFValueResult.contexti        = _contexti;                 \
+    _marpaESLIFValueResult.contextp        = _contextp;                 \
     _marpaESLIFValueResult.sizel           = _l;                        \
     _marpaESLIFValueResult.representationp = NULL;                      \
     _marpaESLIFValueResult.shallowb        = 0;                         \
@@ -312,10 +312,10 @@ static        short _marpaESLIF_bootstrap_G1_action_luascript_statementb(void *u
                                                                         \
   } while (0)
 
-#define MARPAESLIF_SET_UNDEF(marpaESLIFValuep, indicei, _contexti) do { \
+#define MARPAESLIF_SET_UNDEF(marpaESLIFValuep, indicei, _contextp) do { \
     marpaESLIFValueResult_t _marpaESLIFValueResult;                     \
                                                                         \
-    _marpaESLIFValueResult.contexti        = _contexti;                 \
+    _marpaESLIFValueResult.contextp        = _contextp;                 \
     _marpaESLIFValueResult.sizel           = 0;                         \
     _marpaESLIFValueResult.representationp = NULL;                      \
     _marpaESLIFValueResult.shallowb        = 0;                         \
@@ -327,10 +327,10 @@ static        short _marpaESLIF_bootstrap_G1_action_luascript_statementb(void *u
                                                                         \
   } while (0)
 
-#define MARPAESLIF_SET_INT(marpaESLIFValuep, indicei, _contexti, _i) do { \
+#define MARPAESLIF_SET_INT(marpaESLIFValuep, indicei, _contextp, _i) do { \
     marpaESLIFValueResult_t _marpaESLIFValueResult;                     \
                                                                         \
-    _marpaESLIFValueResult.contexti        = _contexti;                 \
+    _marpaESLIFValueResult.contextp        = _contextp;                 \
     _marpaESLIFValueResult.sizel           = 0;                         \
     _marpaESLIFValueResult.representationp = NULL;                      \
     _marpaESLIFValueResult.shallowb        = 0;                         \
@@ -343,10 +343,10 @@ static        short _marpaESLIF_bootstrap_G1_action_luascript_statementb(void *u
                                                                         \
   } while (0)
 
-#define MARPAESLIF_SET_BOOL(marpaESLIFValuep, indicei, _contexti, _b) do { \
+#define MARPAESLIF_SET_BOOL(marpaESLIFValuep, indicei, _contextp, _b) do { \
     marpaESLIFValueResult_t _marpaESLIFValueResult;                     \
                                                                         \
-    _marpaESLIFValueResult.contexti        = _contexti;                 \
+    _marpaESLIFValueResult.contextp        = _contextp;                 \
     _marpaESLIFValueResult.sizel           = 0;                         \
     _marpaESLIFValueResult.representationp = NULL;                      \
     _marpaESLIFValueResult.shallowb        = 0;                         \
@@ -1242,7 +1242,7 @@ static inline void _marpaESLIF_bootstrap_adverb_list_item_freev(marpaESLIF_boots
 }
 
 /*****************************************************************************/
-static void _marpaESLIF_bootstrap_freeDefaultActionv(void *userDatavp, int contexti, void *p, size_t sizel)
+static void _marpaESLIF_bootstrap_freeDefaultActionv(void *userDatavp, void *contextp, void *p, size_t sizel)
 /*****************************************************************************/
 {
   static const char       *funcs                 = "_marpaESLIF_bootstrap_freeDefaultActionv";
@@ -1250,99 +1250,43 @@ static void _marpaESLIF_bootstrap_freeDefaultActionv(void *userDatavp, int conte
   marpaESLIFRecognizer_t  *marpaESLIFRecognizerp = marpaESLIFValuep->marpaESLIFRecognizerp;
 
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
-  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "start(contexti=%d, p=%p, sizel=%ld)", contexti, p, (unsigned long) sizel);
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "start(contextp=%p, p=%p, sizel=%ld)", contextp, p, (unsigned long) sizel);
 
-  switch (contexti) {
-  case MARPAESLIF_BOOTSTRAP_STACK_TYPE_OP_DECLARE:
-    break;
-  case MARPAESLIF_BOOTSTRAP_STACK_TYPE_SYMBOL_NAME:
-    free(p);
-    break;
-  case MARPAESLIF_BOOTSTRAP_STACK_TYPE_RHS_PRIMARY:
-    _marpaESLIF_bootstrap_rhs_primary_freev((marpaESLIF_bootstrap_rhs_primary_t *) p);
-    break;
-  case MARPAESLIF_BOOTSTRAP_STACK_TYPE_RHS:
-    _marpaESLIF_bootstrap_rhs_freev((genericStack_t *) p);
-    break;
-  case MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_ACTION:
-    free(p);
-    break;
-  case MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_LEFT_ASSOCIATION:
-    break;
-  case MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_RIGHT_ASSOCIATION:
-    break;
-  case MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_GROUP_ASSOCIATION:
-    break;
-  case MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_SEPARATOR:
-    _marpaESLIF_bootstrap_single_symbol_freev((marpaESLIF_bootstrap_single_symbol_t *) p);
-    break;
-  case MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_PROPER:
-    break;
-  case MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_HIDESEPARATOR:
-    break;
-  case MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_RANK:
-    break;
-  case MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_NULL_RANKING:
-    break;
-  case MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_PRIORITY:
-    break;
-  case MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_PAUSE:
-    break;
-  case MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_LATM:
-    break;
-  case MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_NAMING:
-    _marpaESLIF_bootstrap_utf_string_freev((marpaESLIF_bootstrap_utf_string_t *) p);
-    break;
-  case MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_SYMBOLACTION:
-    free(p);
-    break;
-  case MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_FREEACTION:
-    free(p);
-    break;
-  case MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_EVENT_INITIALIZATION:
-    _marpaESLIF_bootstrap_event_initialization_freev((marpaESLIF_bootstrap_event_initialization_t *) p);
-    break;
-  case MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_LIST_ITEMS:
-    _marpaESLIF_bootstrap_adverb_list_items_freev((genericStack_t *) p);
-    break;
-  case MARPAESLIF_BOOTSTRAP_STACK_TYPE_ALTERNATIVE:
-    _marpaESLIF_bootstrap_alternative_freev((marpaESLIF_bootstrap_alternative_t *) p);
-    break;
-  case MARPAESLIF_BOOTSTRAP_STACK_TYPE_ALTERNATIVES:
-    _marpaESLIF_bootstrap_alternatives_freev((genericStack_t *) p);
-    break;
-  case MARPAESLIF_BOOTSTRAP_STACK_TYPE_PRIORITIES:
-    _marpaESLIF_bootstrap_priorities_freev((genericStack_t *) p);
-    break;
-  case MARPAESLIF_BOOTSTRAP_STACK_TYPE_SINGLE_SYMBOL:
-    _marpaESLIF_bootstrap_single_symbol_freev((marpaESLIF_bootstrap_single_symbol_t *) p);
-    break;
-  case MARPAESLIF_BOOTSTRAP_STACK_TYPE_GRAMMAR_REFERENCE:
-    _marpaESLIF_bootstrap_grammar_reference_freev((marpaESLIF_bootstrap_grammar_reference_t *) p);
-    break;
-  case MARPAESLIF_BOOTSTRAP_STACK_TYPE_INACESSIBLE_TREATMENT:
-    break;
-  case MARPAESLIF_BOOTSTRAP_STACK_TYPE_ON_OR_OFF:
-    break;
-  case MARPAESLIF_BOOTSTRAP_STACK_TYPE_QUANTIFIER:
-    break;
-  case MARPAESLIF_BOOTSTRAP_STACK_TYPE_EVENT_INITIALIZER:
-    break;
-  case MARPAESLIF_BOOTSTRAP_STACK_TYPE_EVENT_INITIALIZATION:
-    _marpaESLIF_bootstrap_event_initialization_freev((marpaESLIF_bootstrap_event_initialization_t *) p);
-    break;
-  case MARPAESLIF_BOOTSTRAP_STACK_TYPE_ALTERNATIVE_NAME:
-    free(p);
-    break;
-  case MARPAESLIF_BOOTSTRAP_STACK_TYPE_ARRAY:
-    free(p);
-    break;
-  case MARPAESLIF_BOOTSTRAP_STACK_TYPE_STRING:
-    _marpaESLIF_string_freev((marpaESLIF_string_t *) p);
-    break;
-  default:
-    break;
-  }
+  if      (contextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_OP_DECLARE                      ) { }
+  else if (contextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_SYMBOL_NAME                     ) { }
+  else if (contextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_RHS_PRIMARY                     ) { _marpaESLIF_bootstrap_rhs_primary_freev((marpaESLIF_bootstrap_rhs_primary_t *) p); }
+  else if (contextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_RHS                             ) { _marpaESLIF_bootstrap_rhs_freev((genericStack_t *) p); }
+  else if (contextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_ACTION              ) { free(p); }
+  else if (contextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_LEFT_ASSOCIATION    ) { }
+  else if (contextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_RIGHT_ASSOCIATION   ) { }
+  else if (contextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_GROUP_ASSOCIATION   ) { }
+  else if (contextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_SEPARATOR           ) { _marpaESLIF_bootstrap_single_symbol_freev((marpaESLIF_bootstrap_single_symbol_t *) p); }
+  else if (contextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_PROPER              ) { }
+  else if (contextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_HIDESEPARATOR       ) { }
+  else if (contextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_RANK                ) { }
+  else if (contextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_NULL_RANKING        ) { }
+  else if (contextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_PRIORITY            ) { }
+  else if (contextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_PAUSE               ) { }
+  else if (contextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_LATM                ) { }
+  else if (contextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_NAMING              ) { _marpaESLIF_bootstrap_utf_string_freev((marpaESLIF_bootstrap_utf_string_t *) p); }
+  else if (contextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_SYMBOLACTION        ) { free(p); }
+  else if (contextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_FREEACTION          ) { free(p); }
+  else if (contextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_EVENT_INITIALIZATION) { _marpaESLIF_bootstrap_event_initialization_freev((marpaESLIF_bootstrap_event_initialization_t *) p); }
+  else if (contextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_LIST_ITEMS               ) { _marpaESLIF_bootstrap_adverb_list_items_freev((genericStack_t *) p); }
+  else if (contextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ALTERNATIVE                     ) { _marpaESLIF_bootstrap_alternative_freev((marpaESLIF_bootstrap_alternative_t *) p); }
+  else if (contextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ALTERNATIVES                    ) { _marpaESLIF_bootstrap_alternatives_freev((genericStack_t *) p); }
+  else if (contextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_PRIORITIES                      ) { _marpaESLIF_bootstrap_priorities_freev((genericStack_t *) p); }
+  else if (contextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_SINGLE_SYMBOL                   ) { _marpaESLIF_bootstrap_single_symbol_freev((marpaESLIF_bootstrap_single_symbol_t *) p); }
+  else if (contextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_GRAMMAR_REFERENCE               ) { _marpaESLIF_bootstrap_grammar_reference_freev((marpaESLIF_bootstrap_grammar_reference_t *) p); }
+  else if (contextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_INACESSIBLE_TREATMENT           ) { }
+  else if (contextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ON_OR_OFF                       ) { }
+  else if (contextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_QUANTIFIER                      ) { }
+  else if (contextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_EVENT_INITIALIZER               ) { }
+  else if (contextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_EVENT_INITIALIZATION            ) { _marpaESLIF_bootstrap_event_initialization_freev((marpaESLIF_bootstrap_event_initialization_t *) p); }
+  else if (contextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ALTERNATIVE_NAME                ) { free(p); }
+  else if (contextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ARRAY                           ) { free(p); }
+  else if (contextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_STRING                          ) { _marpaESLIF_string_freev((marpaESLIF_string_t *) p); }
+  else                                                                                   { }
 
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "return");
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC;
@@ -1668,7 +1612,7 @@ static short _marpaESLIF_bootstrap_G1_action_adverb_list_itemsb(void *userDatavp
   marpaESLIF_action_t                         *symbolactionp          = NULL;
   marpaESLIF_action_t                         *freeactionp            = NULL;
   marpaESLIF_bootstrap_event_initialization_t *eventInitializationp   = NULL;
-  int                                          contexti;
+  void                                        *contextp;
   int                                          i;
   short                                        rcb;
   short                                        undefb;
@@ -1689,7 +1633,7 @@ static short _marpaESLIF_bootstrap_G1_action_adverb_list_itemsb(void *userDatavp
         continue;
       }
 
-      MARPAESLIF_GET_CONTEXT(marpaESLIFValuep, i, contexti);
+      MARPAESLIF_GET_CONTEXT(marpaESLIFValuep, i, contextp);
 
       adverbListItemp = (marpaESLIF_bootstrap_adverb_list_item_t *) malloc(sizeof(marpaESLIF_bootstrap_adverb_list_item_t));
       if (adverbListItemp == NULL) {
@@ -1698,8 +1642,7 @@ static short _marpaESLIF_bootstrap_G1_action_adverb_list_itemsb(void *userDatavp
       }
       adverbListItemp->type = MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_NA;
 
-      switch (contexti) {
-      case MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_ACTION:
+      if (contextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_ACTION) {
         MARPAESLIF_GETANDFORGET_PTR(marpaESLIFValuep, i, actionp);
         if (actionp == NULL) { /* Not possible */
           MARPAESLIF_ERROR(marpaESLIFp, "Adverb list item action is NULL");
@@ -1708,23 +1651,19 @@ static short _marpaESLIF_bootstrap_G1_action_adverb_list_itemsb(void *userDatavp
         adverbListItemp->type      = MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_ACTION;
         adverbListItemp->u.actionp = actionp;
         actionp = NULL; /* actionp is now in adverbListItemp */
-        break;
-      case MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_LEFT_ASSOCIATION:
+      } else if (contextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_LEFT_ASSOCIATION) {
         MARPAESLIF_GET_BOOL(marpaESLIFValuep, i, left_associationb);
         adverbListItemp->type                = MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_LEFT_ASSOCIATION;
         adverbListItemp->u.left_associationb = left_associationb;
-        break;
-      case MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_RIGHT_ASSOCIATION:
+      } else if (contextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_RIGHT_ASSOCIATION) {
         MARPAESLIF_GET_BOOL(marpaESLIFValuep, i, right_associationb);
         adverbListItemp->type                = MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_RIGHT_ASSOCIATION;
         adverbListItemp->u.right_associationb = right_associationb;
-        break;
-      case MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_GROUP_ASSOCIATION:
+      } else if (contextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_GROUP_ASSOCIATION) {
         MARPAESLIF_GET_BOOL(marpaESLIFValuep, i, group_associationb);
         adverbListItemp->type                = MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_GROUP_ASSOCIATION;
         adverbListItemp->u.group_associationb = group_associationb;
-        break;
-      case MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_SEPARATOR:
+      } else if (contextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_SEPARATOR) {
         MARPAESLIF_GETANDFORGET_PTR(marpaESLIFValuep, i, separatorSingleSymbolp);
         if (separatorSingleSymbolp == NULL) { /* Not possible */
           MARPAESLIF_ERROR(marpaESLIFp, "Adverb list item separator is NULL");
@@ -1733,43 +1672,35 @@ static short _marpaESLIF_bootstrap_G1_action_adverb_list_itemsb(void *userDatavp
         adverbListItemp->type                     = MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_SEPARATOR;
         adverbListItemp->u.separatorSingleSymbolp = separatorSingleSymbolp;
         separatorSingleSymbolp = NULL; /* separatorSingleSymbolp is now in adverbListItemp */
-        break;
-      case MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_PROPER:
+      } else if (contextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_PROPER) {
         MARPAESLIF_GET_BOOL(marpaESLIFValuep, i, properb);
         adverbListItemp->type      = MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_PROPER;
         adverbListItemp->u.properb = properb;
-        break;
-      case MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_HIDESEPARATOR:
+      } else if (contextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_HIDESEPARATOR) {
         MARPAESLIF_GET_BOOL(marpaESLIFValuep, i, hideseparatorb);
         adverbListItemp->type      = MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_HIDESEPARATOR;
         adverbListItemp->u.properb = hideseparatorb;
-        break;
-      case MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_RANK:
+      } else if (contextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_RANK) {
         MARPAESLIF_GET_INT(marpaESLIFValuep, i, ranki);
         adverbListItemp->type    = MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_RANK;
         adverbListItemp->u.ranki = ranki;
-        break;
-      case MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_NULL_RANKING:
+      } else if (contextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_NULL_RANKING) {
         MARPAESLIF_GET_BOOL(marpaESLIFValuep, i, nullRanksHighb);
         adverbListItemp->type             = MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_NULL_RANKING;
         adverbListItemp->u.nullRanksHighb = nullRanksHighb;
-        break;
-      case MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_PRIORITY:
+      } else if (contextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_PRIORITY) {
         MARPAESLIF_GET_INT(marpaESLIFValuep, i, priorityi);
         adverbListItemp->type        = MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_PRIORITY;
         adverbListItemp->u.priorityi = priorityi;
-        break;
-      case MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_PAUSE:
+      } else if (contextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_PAUSE) {
         MARPAESLIF_GET_INT(marpaESLIFValuep, i, pausei);
         adverbListItemp->type     = MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_PAUSE;
         adverbListItemp->u.pausei = pausei;
-        break;
-      case MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_LATM:
+      } else if (contextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_LATM) {
         MARPAESLIF_GET_BOOL(marpaESLIFValuep, i, latmb);
         adverbListItemp->type    = MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_LATM;
         adverbListItemp->u.latmb = latmb;
-        break;
-      case MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_NAMING:
+      } else if (contextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_NAMING) {
         MARPAESLIF_GETANDFORGET_PTR(marpaESLIFValuep, i, namingp);
         if (namingp == NULL) { /* Not possible */
           MARPAESLIF_ERROR(marpaESLIFp, "Adverb list item name is NULL");
@@ -1778,8 +1709,7 @@ static short _marpaESLIF_bootstrap_G1_action_adverb_list_itemsb(void *userDatavp
         adverbListItemp->type      = MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_NAMING;
         adverbListItemp->u.namingp = namingp;
         namingp = NULL; /* separatorSingleSymbolp is now in adverbListItemp */
-        break;
-      case MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_SYMBOLACTION:
+      } else if (contextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_SYMBOLACTION) {
         MARPAESLIF_GETANDFORGET_PTR(marpaESLIFValuep, i, symbolactionp);
         if (symbolactionp == NULL) { /* Not possible */
           MARPAESLIF_ERROR(marpaESLIFp, "Adverb list item symbol-action is NULL");
@@ -1788,8 +1718,7 @@ static short _marpaESLIF_bootstrap_G1_action_adverb_list_itemsb(void *userDatavp
         adverbListItemp->type           = MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_SYMBOLACTION;
         adverbListItemp->u.symbolactionp = symbolactionp;
         symbolactionp = NULL; /* symbolactionp is now in adverbListItemp */
-        break;
-      case MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_FREEACTION:
+      } else if (contextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_FREEACTION) {
         MARPAESLIF_GETANDFORGET_PTR(marpaESLIFValuep, i, freeactionp);
         if (freeactionp == NULL) { /* Not possible */
           MARPAESLIF_ERROR(marpaESLIFp, "Adverb list item free-action is NULL");
@@ -1798,8 +1727,7 @@ static short _marpaESLIF_bootstrap_G1_action_adverb_list_itemsb(void *userDatavp
         adverbListItemp->type           = MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_FREEACTION;
         adverbListItemp->u.freeactionp = freeactionp;
         freeactionp = NULL; /* freeactionp is now in adverbListItemp */
-        break;
-      case MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_EVENT_INITIALIZATION:
+      } else if (contextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_EVENT_INITIALIZATION) {
         MARPAESLIF_GETANDFORGET_PTR(marpaESLIFValuep, i, eventInitializationp);
         if (eventInitializationp == NULL) { /* Not possible */
           MARPAESLIF_ERROR(marpaESLIFp, "Adverb list item event is NULL");
@@ -1808,9 +1736,9 @@ static short _marpaESLIF_bootstrap_G1_action_adverb_list_itemsb(void *userDatavp
         adverbListItemp->type                   = MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_EVENT_INITIALIZATION;
         adverbListItemp->u.eventInitializationp = eventInitializationp;
         eventInitializationp = NULL; /* eventInitializationp is now in adverbListItemp */
-        break;
-      default:
-        MARPAESLIF_ERRORF(marpaESLIFp, "Unsupported adverb list item type %d", contexti);
+      } else {
+        /* bootstrap managed marpaESLIF grammar itself, that is independant */
+        MARPAESLIF_ERRORF(marpaESLIFp, "Unsupported adverb list item type %p", contextp);
         goto err;
       }
 

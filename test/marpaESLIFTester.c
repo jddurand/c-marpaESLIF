@@ -13,7 +13,7 @@ static short                           inputReaderb(void *userDatavp, char **inp
 static short                           eventManagerb(int *eventCountip, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, genericLogger_t *genericLoggerp);
 static void                            genericLoggerCallback(void *userDatavp, genericLoggerLevel_t logLeveli, const char *msgs);
 static short                           alternativeRepresentation(void *userDatavp, marpaESLIFValueResult_t *valueResultp, char **inputcpp, size_t *inputlp, short *characterStreambp, char **encodingsp, size_t *encodinglp);
-static short                           arrayTransformer(void *userDatavp, int contexti, void *p, size_t sizel);
+static short                           arrayTransformer(void *userDatavp, void *contextp, void *p, size_t sizel);
 
 static marpaESLIFValueResultTransform_t transformer = {
   NULL, /* undefTransformerp */
@@ -617,7 +617,7 @@ static short eventManagerb(int *eventCountip, marpaESLIFRecognizer_t *marpaESLIF
         marpaESLIFAlternative.lexemes               = eventArrayp[eventArrayIteratorl].symbols;
         marpaESLIFAlternative.value.type            = MARPAESLIF_VALUE_TYPE_CHAR;
         marpaESLIFAlternative.value.u.c             = *inputs;
-        marpaESLIFAlternative.value.contexti        =  0; /* Not used */
+        marpaESLIFAlternative.value.contextp        =  NULL; /* Not used */
         marpaESLIFAlternative.value.sizel           =  0; /* Not used */
         /* We push a MARPAESLIF_VALUE_TYPE_CHAR : default representation is ok */
         marpaESLIFAlternative.value.representationp = NULL;
@@ -718,7 +718,7 @@ static short alternativeRepresentation(void *userDatavp, marpaESLIFValueResult_t
 }
 
 /*****************************************************************************/
-static short arrayTransformer(void *userDatavp, int contexti, void *p, size_t sizel)
+static short arrayTransformer(void *userDatavp, void *contextp, void *p, size_t sizel)
 /*****************************************************************************/
 {
   marpaESLIFTester_context_t *marpaESLIFTester_contextp = (marpaESLIFTester_context_t *) userDatavp;
