@@ -12468,45 +12468,12 @@ static inline short _marpaESLIFValue_stack_i_resetb(marpaESLIFValue_t *marpaESLI
           /* Internal callbacks */
           freeCallbackp = _marpaESLIF_rule_freeCallbackv;
           userDatavp    = marpaESLIFValuep;
-        } else if ((origcontextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_NA) ||
-                   (origcontextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_OP_DECLARE) ||
-                   (origcontextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_SYMBOL_NAME) ||
-                   (origcontextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_RHS_PRIMARY) ||
-                   (origcontextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_RHS) ||
-                   (origcontextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_ACTION) ||
-                   (origcontextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_LEFT_ASSOCIATION) ||
-                   (origcontextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_RIGHT_ASSOCIATION) ||
-                   (origcontextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_GROUP_ASSOCIATION) ||
-                   (origcontextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_SEPARATOR) ||
-                   (origcontextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_PROPER) ||
-                   (origcontextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_HIDESEPARATOR) ||
-                   (origcontextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_RANK) ||
-                   (origcontextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_NULL_RANKING) ||
-                   (origcontextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_PRIORITY) ||
-                   (origcontextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_PAUSE) ||
-                   (origcontextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_LATM) ||
-                   (origcontextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_NAMING) ||
-                   (origcontextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_SYMBOLACTION) ||
-                   (origcontextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_FREEACTION) ||
-                   (origcontextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_EVENT_INITIALIZATION) ||
-                   (origcontextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_LIST_ITEMS) ||
-                   (origcontextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ALTERNATIVE) ||
-                   (origcontextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ALTERNATIVES) ||
-                   (origcontextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_PRIORITIES) ||
-                   (origcontextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_SINGLE_SYMBOL) ||
-                   (origcontextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_GRAMMAR_REFERENCE) ||
-                   (origcontextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_INACESSIBLE_TREATMENT) ||
-                   (origcontextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ON_OR_OFF) ||
-                   (origcontextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_QUANTIFIER) ||
-                   (origcontextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_EVENT_INITIALIZER) ||
-                   (origcontextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_EVENT_INITIALIZATION) ||
-                   (origcontextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ALTERNATIVE_NAME) ||
-                   (origcontextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ARRAY) ||
-                   (origcontextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_STRING)) {
-          /* Bootstrap callbacks: they are for marpaESLIF grammar itself and are totally independant */
+        } else if ((origcontextp >= (void *) MARPAESLIF_BOOTSTRAP_STACK_TYPE_START) && (origcontextp <= (void *) MARPAESLIF_BOOTSTRAP_STACK_TYPE_END)) {
+          /* ESLIF grammar itself bootstrapped */
           freeCallbackp = _marpaESLIF_bootstrap_freeDefaultActionv;
           userDatavp = marpaESLIFValuep;
-        } else if (origcontextp == MARPAESLIF_EMBEDDED_CONTEXT_LUA) {
+        } else if (origcontextp == (void *) MARPAESLIF_EMBEDDED_CONTEXT_LUA) {
+          /* Lua VM embedded */
           freeCallbackp = _marpaESLIF_lua_freeDefaultActionv;
           userDatavp = marpaESLIFValuep;
         } else {
