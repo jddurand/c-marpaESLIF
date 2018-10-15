@@ -13,10 +13,6 @@ static const int   MARPAESLIF_VERSION_MAJOR_STATIC = MARPAESLIF_VERSION_MAJOR;
 static const int   MARPAESLIF_VERSION_MINOR_STATIC = MARPAESLIF_VERSION_MINOR;
 static const int   MARPAESLIF_VERSION_PATCH_STATIC = MARPAESLIF_VERSION_PATCH;
 
-#ifndef MARPAESLIF_INITIAL_REPLACEMENT_LENGTH
-#define MARPAESLIF_INITIAL_REPLACEMENT_LENGTH 8096  /* Subjective number */
-#endif
-
 #ifndef MARPAESLIF_VALUEERRORPROGRESSREPORT
 #define MARPAESLIF_VALUEERRORPROGRESSREPORT 0 /* Left in the code, although not needed IMHO */
 #endif
@@ -24,12 +20,6 @@ static const int   MARPAESLIF_VERSION_PATCH_STATIC = MARPAESLIF_VERSION_PATCH;
 #ifndef MARPAESLIF_HASH_SIZE
 #define MARPAESLIF_HASH_SIZE 128 /* Subjective number */
 #endif
-
-#define MARPAESLIF_RESERVED_CONTEXT_BOOTSTRAP_START -999
-#define MARPAESLIF_RESERVED_CONTEXT_BOOTSTRAP_END     -1
-
-#define MARPAESLIF_RESERVED_CONTEXT_LUA_START      -1999
-#define MARPAESLIF_RESERVED_CONTEXT_LUA_END        -1000
 
 /* -------------------------------------------------------------------------------------------- */
 /* Check if a marpaESLIFValueResult is a well-formed lexeme                                     */
