@@ -98,6 +98,8 @@ logger:noticef('marpaESLIFLua version minor: %s', tostring(marpaESLIFLua.version
 logger:noticef('marpaESLIFLua version patch: %s', tostring(marpaESLIFLua.versionPatch()))
 ------------------------------------------------------------------------------
 local marpaESLIFp = marpaESLIFLua.marpaESLIF_new(logger)
+logger:noticef('marpaESLIFp dump: %s', tableDump(marpaESLIFp))
+logger:noticef('marpaESLIFp meta dump: %s', tableDump(getmetatable(marpaESLIFp)))
 logger:noticef('marpaESLIF version: %s', tostring(marpaESLIFp:version()))
 logger:noticef('marpaESLIF version major: %s', tostring(marpaESLIFp:versionMajor()))
 logger:noticef('marpaESLIF version minor: %s', tostring(marpaESLIFp:versionMinor()))

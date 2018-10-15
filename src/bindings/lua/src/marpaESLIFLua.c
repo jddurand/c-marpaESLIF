@@ -37,6 +37,10 @@ typedef struct marpaESLIFLuaContext {
   lua_State    *L;           /* Lua state */
   marpaESLIF_t *marpaESLIFp;
   short         managedb;    /* True if we own marpaESLIFp */
+  /* Note: In fact managedb is not used, but left here for */
+  /* coherency with the other context structures: */
+  /* - either we own it, then it is in the multitons table */
+  /* - else, we do not free it neither */
 } marpaESLIFLuaContext_t;
 
 /* Logger proxy context */
@@ -87,6 +91,7 @@ static short                           marpaESLIFLua_paramIsLoggerInterfaceOrNil
 static short                           marpaESLIFLua_paramIsRecognizerInterfacev(lua_State *L, int stacki);
 static short                           marpaESLIFLua_paramIsValueInterfacev(lua_State *L, int stacki);
 static void                            marpaESLIFLua_contextInitv(lua_State *L, marpaESLIFLuaContext_t *marpaESLIFLuaContextp);
+static void                            marpaESLIFLua_contextFreev(marpaESLIFLuaContext_t *marpaESLIFLuaContextp, short onStackb);
 static void                            marpaESLIFLua_grammarContextInitv(lua_State *L, int eslifStacki, marpaESLIFLuaGrammarContext_t *marpaESLIFLuaGrammarContextp);
 static void                            marpaESLIFLua_recognizerContextInitv(lua_State *L, int grammarStacki, int recognizerInterfaceStacki, int recognizerOrigStacki, marpaESLIFLuaRecognizerContext_t *marpaESLIFLuaRecognizerContextp);
 static void                            marpaESLIFLua_valueContextInitv(lua_State *L, int grammarStacki, int recognizerStacki, int valueInterfaceStacki, marpaESLIFLuaValueContext_t *marpaESLIFLuaValueContextp);
@@ -102,6 +107,7 @@ static int                             marpaESLIFLua_versionMajori(lua_State *L)
 static int                             marpaESLIFLua_versionMinori(lua_State *L);
 static int                             marpaESLIFLua_versionPatchi(lua_State *L);
 static int                             marpaESLIFLua_marpaESLIF_newi(lua_State *L);
+static int                             marpaESLIFLua_marpaESLIF_freei(lua_State *L);
 static int                             marpaESLIFLua_marpaESLIF_versioni(lua_State *L);
 static int                             marpaESLIFLua_marpaESLIF_versionMajori(lua_State *L);
 static int                             marpaESLIFLua_marpaESLIF_versionMinori(lua_State *L);
@@ -530,8 +536,11 @@ static marpaESLIFValueResultTransform_t marpaESLIFValueResultTransformDefault = 
 /* Push of ESLIF object */
 /* -------------------- */
 #define MARPAESLIFLUA_PUSH_MARPAESLIF_OBJECT(L, marpaESLIFLuaContextp) do { \
-    lua_pushlightuserdata(L, marpaESLIFLuaContextp);                    \
     lua_newtable(L);                                                    \
+    MARPAESLIFLUA_STORE_USERDATA(L, "marpaESLIFLuaContextp", marpaESLIFLuaContextp); \
+    lua_newtable(L);                                                    \
+    MARPAESLIFLUA_STORE_ASCIISTRING(L, "__mode", "v");                  \
+    MARPAESLIFLUA_STORE_FUNCTION(L, "__gc",                  marpaESLIFLua_marpaESLIF_freei); \
     lua_newtable(L);                                                    \
     MARPAESLIFLUA_STORE_FUNCTION(L, "version",               marpaESLIFLua_marpaESLIF_versioni); \
     MARPAESLIFLUA_STORE_FUNCTION(L, "versionMajor",          marpaESLIFLua_marpaESLIF_versionMajori); \
@@ -899,6 +908,28 @@ static int marpaESLIFLua_marpaESLIF_newi(lua_State *L)
 }
 
 /****************************************************************************/
+static int marpaESLIFLua_marpaESLIF_freei(lua_State *L)
+/****************************************************************************/
+{
+  static const char      *funcs = "marpaESLIFLua_marpaESLIF_freei";
+  marpaESLIFLuaContext_t *marpaESLIFLuaContextp;
+
+  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__); */
+
+  lua_getfield(L, -1, "marpaESLIFLuaContextp"); /* stack: {...}, marpaESLIFLuaContextp */
+  marpaESLIFLuaContextp = (marpaESLIFLuaContext_t *) lua_touserdata(L, -1);
+  lua_pop(L, 1);                                /* stack: {...} */
+
+  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) freeing marpaESLIFLuaGrammarContextp=%p at %s:%d", funcs, L, marpaESLIFLuaGrammarContextp, FILENAMES, __LINE__); */
+  marpaESLIFLua_contextFreev(marpaESLIFLuaContextp, 0 /* onStackb */);
+
+  lua_pop(L, 1);                             /* stack: */
+
+  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 0 at %s:%d", funcs, L, FILENAMES, __LINE__); */
+  return 0;
+}
+
+/****************************************************************************/
 static int marpaESLIFLua_marpaESLIF_versioni(lua_State *L)
 /****************************************************************************/
 {
@@ -912,11 +943,13 @@ static int marpaESLIFLua_marpaESLIF_versioni(lua_State *L)
     return luaL_error(L, "Usage: version(marpaESLIFp)");
   }
 
-  marpaESLIFLuaContextp = lua_touserdata(L, 1);
-
-  if (marpaESLIFLuaContextp == NULL) {
-    return luaL_error(L, "marpaESLIFLuaContextp is NULL");
+  if (lua_type(L, 1) != LUA_TTABLE) {
+    return luaL_error(L, "marpaESLIFp must be a table");
   }
+
+  lua_getfield(L, 1, "marpaESLIFLuaContextp");   /* stack: marpaESLIFTable, marpaESLIFLuaContextp */
+  marpaESLIFLuaContextp = lua_touserdata(L, -1); /* stack: marpaESLIFTable, marpaESLIFLuaContextp */
+  lua_pop(L, 2);                                 /* stack: */
 
   if (! marpaESLIF_versionb(marpaESLIFLuaContextp->marpaESLIFp, &versions)) {
     return luaL_error(L, "marpaESLIF_versionb failure, %s", strerror(errno));
@@ -942,11 +975,13 @@ static int marpaESLIFLua_marpaESLIF_versionMajori(lua_State *L)
     return luaL_error(L, "Usage: version(marpaESLIFp)");
   }
 
-  marpaESLIFLuaContextp = lua_touserdata(L, 1);
-
-  if (marpaESLIFLuaContextp == NULL) {
-    return luaL_error(L, "marpaESLIFLuaContextp is NULL");
+  if (lua_type(L, 1) != LUA_TTABLE) {
+    return luaL_error(L, "marpaESLIFp must be a table");
   }
+
+  lua_getfield(L, 1, "marpaESLIFLuaContextp");   /* stack: marpaESLIFTable, marpaESLIFLuaContextp */
+  marpaESLIFLuaContextp = lua_touserdata(L, -1); /* stack: marpaESLIFTable, marpaESLIFLuaContextp */
+  lua_pop(L, 2);                                 /* stack: */
 
   if (! marpaESLIF_versionMajorb(marpaESLIFLuaContextp->marpaESLIFp, &majori)) {
     return luaL_error(L, "marpaESLIF_versionMajorb failure, %s", strerror(errno));
@@ -972,11 +1007,13 @@ static int marpaESLIFLua_marpaESLIF_versionMinori(lua_State *L)
     return luaL_error(L, "Usage: version(marpaESLIFp)");
   }
 
-  marpaESLIFLuaContextp = lua_touserdata(L, 1);
-
-  if (marpaESLIFLuaContextp == NULL) {
-    return luaL_error(L, "marpaESLIFLuaContextp is NULL");
+  if (lua_type(L, 1) != LUA_TTABLE) {
+    return luaL_error(L, "marpaESLIFp must be a table");
   }
+
+  lua_getfield(L, 1, "marpaESLIFLuaContextp");   /* stack: marpaESLIFTable, marpaESLIFLuaContextp */
+  marpaESLIFLuaContextp = lua_touserdata(L, -1); /* stack: marpaESLIFTable, marpaESLIFLuaContextp */
+  lua_pop(L, 2);                                 /* stack: */
 
   if (! marpaESLIF_versionMinorb(marpaESLIFLuaContextp->marpaESLIFp, &minori)) {
     return luaL_error(L, "marpaESLIF_versionMinorb failure, %s", strerror(errno));
@@ -1002,11 +1039,13 @@ static int marpaESLIFLua_marpaESLIF_versionPatchi(lua_State *L)
     return luaL_error(L, "Usage: version(marpaESLIFp)");
   }
 
-  marpaESLIFLuaContextp = lua_touserdata(L, 1);
-
-  if (marpaESLIFLuaContextp == NULL) {
-    return luaL_error(L, "marpaESLIFLuaContextp is NULL");
+  if (lua_type(L, 1) != LUA_TTABLE) {
+    return luaL_error(L, "marpaESLIFp must be a table");
   }
+
+  lua_getfield(L, 1, "marpaESLIFLuaContextp");   /* stack: marpaESLIFTable, marpaESLIFLuaContextp */
+  marpaESLIFLuaContextp = lua_touserdata(L, -1); /* stack: marpaESLIFTable, marpaESLIFLuaContextp */
+  lua_pop(L, 2);                                 /* stack: */
 
   if (! marpaESLIF_versionPatchb(marpaESLIFLuaContextp->marpaESLIFp, &patchi)) {
     return luaL_error(L, "marpaESLIF_versionPatchb failure, %s", strerror(errno));
@@ -1164,6 +1203,20 @@ static void marpaESLIFLua_contextInitv(lua_State *L, marpaESLIFLuaContext_t *mar
   marpaESLIFLuaContextp->L           = L;
   marpaESLIFLuaContextp->marpaESLIFp = NULL;
   marpaESLIFLuaContextp->managedb    = 0;
+}
+
+/****************************************************************************/
+static void marpaESLIFLua_contextFreev(marpaESLIFLuaContext_t *marpaESLIFLuaContextp, short onStackb)
+/****************************************************************************/
+{
+  static const char *funcs = "marpaESLIFLua_contextFreev";
+
+  if (marpaESLIFLuaContextp != NULL) {
+    /* marpaESLIFp remains in the MARPAESLIFMULTITONSTABLE table up to the end of the VM */
+    if (! onStackb) {
+      free(marpaESLIFLuaContextp);
+    }
+  }
 }
 
 /****************************************************************************/
@@ -1567,11 +1620,14 @@ static int marpaESLIFLua_marpaESLIFGrammar_newi(lua_State *L)
     /* Intentionnaly no break */
   case 2:
     marpaESLIFGrammarOption.bytep = (char *) luaL_checklstring(L, 2, &(marpaESLIFGrammarOption.bytel));
-    /* Verify that the 1st argument is a light user data */
-    if (lua_type(L, 1) != LUA_TLIGHTUSERDATA) {
-      return luaL_error(L, "Usage: marpaESLIFp must be a light user data)");
+
+    if (lua_type(L, 1) != LUA_TTABLE) {
+      return luaL_error(L, "marpaESLIFp must be a table");
     }
-    marpaESLIFLuaContextp = lua_touserdata(L, 1);
+
+    lua_getfield(L, 1, "marpaESLIFLuaContextp");   /* stack: ..., marpaESLIFLuaContextp */
+    marpaESLIFLuaContextp = lua_touserdata(L, -1); /* stack: ..., marpaESLIFLuaContextp */
+    lua_pop(L, 1);                                 /* stack: ... */
     break;
   default:
     return luaL_error(L, "Usage: marpaESLIFGrammar_new(marpaESLIFp, string[, encoding])");
