@@ -15,7 +15,7 @@ extern "C" {
 #endif
 #else
 /* ------------------------------------------------------------------------------------------------- */
-/* When MARPAESLIFLUA_EMBEDDED is on, the source file marpaESLIFLua.c should be included as-is, no   */
+/* When MARPAESLIFLUA_EMBEDDED is on, the source file marpaESLIFLua.c should be included as-is, NO   */
 /* symbol is exported. The file that includes marpaESLIFLua.c is expected to:                        */
 /*                                                                                                   */
 /* - Register marpaESLIFLua programmatically:                                                        */
@@ -33,15 +33,15 @@ extern "C" {
 /* - marpaESLIF, marpaESLIFGrammar, marpaESLIFRecognizer marpaESLIFValue                             */
 /*   all have explicit methods to inject unmanaged values:                                           */
 /*                                                                                                   */
-/*   marpaESLIFp           = marpaESLIF_newFromUnmanaged(lightuserdata)                              */
-/*   marpaESLIFGrammarp    = marpaESLIFGrammar_newFromUnmanaged(lightuserdata)                       */
-/*   marpaESLIFRecognizerp = marpaESLIFRecognizer_newFromUnmanaged(lightuserdata)                    */
-/*   marpaESLIFValuep      = marpaESLIFValue_newFromUnmanaged(lightuserdata)                         */
+/*   marpaESLIF_newFromUnmanaged(L, marpaESLIFp)                                                     */
+/*   marpaESLIFGrammar_newFromUnmanaged(L, marpaESLIFGrammarp)                                       */
+/*   marpaESLIFRecognizer_newFromUnmanaged(L, marpaESLIFRecognizerp)                                 */
+/*   marpaESLIFValue_newFromUnmanaged(L, marpaESLIFValuep)                                           */
 /*                                                                                                   */
-/* All those methods:                                                                                */
-/* - requires one argument on the stack that is a non-null light userdata                            */
-/* - push on lua stack the same lua object as their "new" counterparts but with NO reference thus    */
-/*   no guaranteed lifetime.                                                                         */
+/* All those functions:                                                                              */
+/* - are available only programmatically                                                             */
+/* - pushes on lua stack the same lua object as their "new" counterparts but with NO reference thus  */
+/*   no guaranteed lifetime                                                                          */
 /*                                                                                                   */
 /* The caller is responsible to manage these objects lifetime buy storing these objects. The easiest */
 /* way to do that is to store them as global variables.                                              */
