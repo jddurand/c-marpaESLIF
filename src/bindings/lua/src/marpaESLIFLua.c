@@ -787,7 +787,6 @@ static int marpaESLIFLua_marpaESLIF_newi(lua_State *L)
 {
   static const char                   *funcs                 = "marpaESLIFLua_marpaESLIF_newi";
   marpaESLIFLuaContext_t              *marpaESLIFLuaContextp = NULL;
-  marpaESLIFLuaContext_t              *marpaESLIFLuaContextTmpp;
   short                                loggerb;
   marpaESLIFLuaGenericLoggerContext_t *marpaESLIFLuaGenericLoggerContextp;
   genericLogger_t                     *genericLoggerp;
@@ -1235,7 +1234,6 @@ static void marpaESLIFLua_grammarContextFreev(marpaESLIFLuaGrammarContext_t *mar
 {
   static const char *funcs = "marpaESLIFLua_grammarContextFreev";
   lua_State         *L;
-  int                refi;
 
   if (marpaESLIFLuaGrammarContextp != NULL) {
     L = marpaESLIFLuaGrammarContextp->L;

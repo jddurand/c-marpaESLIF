@@ -380,7 +380,6 @@ static short _marpaESLIF_lua_newb(marpaESLIFValue_t *marpaESLIFValuep)
 {
   marpaESLIFGrammar_t *marpaESLIFGrammarp;
   short                rcb;
-  int                  typei;
 
   if (marpaESLIFValuep->L != NULL) {
     /* Already done */
