@@ -29,8 +29,8 @@ static void marpaESLIFLua_stackdumpv(lua_State* L, int forcelookupi);
 #define MARPAESLIFLUAREGISTRYINDEX "__marpaESLIFLuaRegistryindex"
 #endif
 
-static char _ESLIF_LUA_CONTEXT;
-#define ESLIF_LUA_CONTEXT &_ESLIF_LUA_CONTEXT
+static char _MARPAESLIFLUA_CONTEXT;
+#define MARPAESLIFLUA_CONTEXT &_MARPAESLIFLUA_CONTEXT
 
 /* ESLIF proxy context */
 typedef struct marpaESLIFLuaContext {
@@ -446,7 +446,7 @@ static marpaESLIFValueResultTransform_t marpaESLIFValueResultTransformDefault = 
                                                                         \
     /* GENERICLOGGER_NOTICEF(NULL, "... Storing pointer %p to global reference %d to stack indice %d at %s:%d", _p, *_p, indicei, FILENAMES, __LINE__); */  \
                                                                         \
-    _marpaESLIFValueResult.contextp        = ESLIF_LUA_CONTEXT;         \
+    _marpaESLIFValueResult.contextp        = MARPAESLIFLUA_CONTEXT;     \
     _marpaESLIFValueResult.sizel           = sizeof(int);               \
     _marpaESLIFValueResult.representationp = stringificationp;          \
     _marpaESLIFValueResult.shallowb        = 0;                         \
@@ -2843,7 +2843,7 @@ static void marpaESLIFLua_valueFreeCallbackv(void *userDatavp, void *contextp, v
 
   /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) (contextp=%p, p=%p, sizel=%ld) at %s:%d", funcs, L, contextp, p, (unsigned long) sizel, FILENAMES, __LINE__); */
 
-  if (contextp == ESLIF_LUA_CONTEXT) {
+  if (contextp == MARPAESLIFLUA_CONTEXT) {
     /* This is a pointer to an integer that contains a global reference to the value */
     /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) (contextp=%p, p=%p, sizel=%ld) releasing global reference %d at %s:%d", funcs, L, contextp, p, (unsigned long) sizel, * (int *) p, FILENAMES, __LINE__); */
     MARPAESLIFLUA_UNREF(L, * (int *) p);
@@ -2966,7 +2966,7 @@ static short marpaESLIFLua_transformPtrb(void *userDatavp, void *contextp, void 
 
   /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) (contextp=%p, p=%p) at %s:%d", funcs, L, contextp, p, FILENAMES, __LINE__); */
 
-  if (contextp == ESLIF_LUA_CONTEXT) {
+  if (contextp == MARPAESLIFLUA_CONTEXT) {
     /* This is a pointer to an integer value that is a global reference to the real value */
     /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) (contextp=%p, p=%p) pushing value with global reference %d at %s:%d", funcs, L, contextp, p, * (int *) p, FILENAMES, __LINE__); */
     MARPAESLIFLUA_DEREF(L, * (int *) p);
@@ -3021,7 +3021,7 @@ static void marpaESLIFLua_pushValuev(marpaESLIFLuaValueContext_t *marpaESLIFLuaV
   if (bytep != NULL) {
     /* Fake a marpaESLIFValueResult */
     marpaESLIFValueResult.type     = MARPAESLIF_VALUE_TYPE_ARRAY;
-    marpaESLIFValueResult.contextp = ESLIF_LUA_CONTEXT;
+    marpaESLIFValueResult.contextp = MARPAESLIFLUA_CONTEXT;
     marpaESLIFValueResult.sizel    = bytel;
     marpaESLIFValueResult.u.p      = bytep;
     marpaESLIFValueResultp         = &marpaESLIFValueResult;
@@ -3035,10 +3035,10 @@ static void marpaESLIFLua_pushValuev(marpaESLIFLuaValueContext_t *marpaESLIFLuaV
   /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) (stackindice=%d) marpaESLIFValueResultp is of type %d at %s:%d", funcs, L, stackindicei, marpaESLIFValueResultp->type, FILENAMES, __LINE__); */
   /*
   if (marpaESLIFValueResultp->type == MARPAESLIF_VALUE_TYPE_INT) {
-    if (marpaESLIFValueResultp->contextp == ESLIF_LUA_CONTEXT) {
-      GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) (stackindice=%d) marpaESLIFValueResultp is an INT with context == ESLIF_LUA_CONTEXT, value is %d at %s:%d", funcs, L, stackindicei, marpaESLIFValueResultp->u.i, FILENAMES, __LINE__);
+    if (marpaESLIFValueResultp->contextp == MARPAESLIFLUA_CONTEXT) {
+      GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) (stackindice=%d) marpaESLIFValueResultp is an INT with context == MARPAESLIFLUA_CONTEXT, value is %d at %s:%d", funcs, L, stackindicei, marpaESLIFValueResultp->u.i, FILENAMES, __LINE__);
     } else {
-      GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) (stackindice=%d) marpaESLIFValueResultp is an INT with context != ESLIF_LUA_CONTEXT, value is %d at %s:%d", funcs, L, stackindicei, marpaESLIFValueResultp->u.i, FILENAMES, __LINE__);
+      GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) (stackindice=%d) marpaESLIFValueResultp is an INT with context != MARPAESLIFLUA_CONTEXT, value is %d at %s:%d", funcs, L, stackindicei, marpaESLIFValueResultp->u.i, FILENAMES, __LINE__);
     }
   }
   */
@@ -3071,8 +3071,8 @@ static short marpaESLIFLua_representationb(void *userDatavp, marpaESLIFValueResu
   if (marpaESLIFValueResultp->type != MARPAESLIF_VALUE_TYPE_PTR) {
     return luaL_error(L, "User-defined value type is not MARPAESLIF_VALUE_TYPE_PTR but %d", marpaESLIFValueResultp->type);
   }
-  /* Our context is always ESLIF_LUA_CONTEXT */
-  if (marpaESLIFValueResultp->contextp != ESLIF_LUA_CONTEXT) {
+  /* Our context is always MARPAESLIFLUA_CONTEXT */
+  if (marpaESLIFValueResultp->contextp != MARPAESLIFLUA_CONTEXT) {
     return luaL_error(L, "User-defined value context is not ESLIF_PERL_CONTEXT but %d", marpaESLIFValueResultp->contextp);
   }
 
@@ -3793,7 +3793,7 @@ static int marpaESLIFLua_marpaESLIFRecognizer_lexemeAlternativei(lua_State *L)
   marpaESLIFAlternative.lexemes               = (char *) names;
   marpaESLIFAlternative.value.type            = MARPAESLIF_VALUE_TYPE_PTR;
   marpaESLIFAlternative.value.u.p             = p;
-  marpaESLIFAlternative.value.contextp        = ESLIF_LUA_CONTEXT;
+  marpaESLIFAlternative.value.contextp        = MARPAESLIFLUA_CONTEXT;
   marpaESLIFAlternative.value.sizel           = 0; /* Not used */
   marpaESLIFAlternative.value.representationp = marpaESLIFLua_representationb;
   marpaESLIFAlternative.value.shallowb        = 0; /* C.f. marpaESLIF_valueFreeCallbackv */
@@ -3921,7 +3921,7 @@ static int marpaESLIFLua_marpaESLIFRecognizer_lexemeReadi(lua_State *L)
   marpaESLIFAlternative.lexemes               = (char *) names;
   marpaESLIFAlternative.value.type            = MARPAESLIF_VALUE_TYPE_PTR;
   marpaESLIFAlternative.value.u.p             = p;
-  marpaESLIFAlternative.value.contextp        = ESLIF_LUA_CONTEXT;
+  marpaESLIFAlternative.value.contextp        = MARPAESLIFLUA_CONTEXT;
   marpaESLIFAlternative.value.sizel           = 0; /* Not used */
   marpaESLIFAlternative.value.representationp = marpaESLIFLua_representationb;
   marpaESLIFAlternative.value.shallowb        = 0; /* C.f. marpaESLIFLua_valueFreeCallbackv */
