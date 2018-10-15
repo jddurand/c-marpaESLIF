@@ -41,10 +41,11 @@ typedef enum _marpaESLIFBootstrapStackTypeEnum {
   marpaESLIFBootstrapStackTypeEnum_EVENT_INITIALIZATION,
   marpaESLIFBootstrapStackTypeEnum_ALTERNATIVE_NAME,
   marpaESLIFBootstrapStackTypeEnum_ARRAY,
-  marpaESLIFBootstrapStackTypeEnum_STRING
+  marpaESLIFBootstrapStackTypeEnum_STRING,
+  _marpaESLIFBootstrapStackTypeEnum_LAST
 } marpaESLIFBootstrapStackTypeEnum_t;
 
-static char _MARPAESLIF_BOOTSTRAP_STACK_TYPE[marpaESLIFBootstrapStackTypeEnum_STRING];
+static char _MARPAESLIF_BOOTSTRAP_STACK_TYPE[_marpaESLIFBootstrapStackTypeEnum_LAST];
 
 #define MARPAESLIF_BOOTSTRAP_STACK_TYPE_NA                               &(_MARPAESLIF_BOOTSTRAP_STACK_TYPE[marpaESLIFBootstrapStackTypeEnum_NA])
 #define MARPAESLIF_BOOTSTRAP_STACK_TYPE_OP_DECLARE                       &(_MARPAESLIF_BOOTSTRAP_STACK_TYPE[marpaESLIFBootstrapStackTypeEnum_OP_DECLARE])
