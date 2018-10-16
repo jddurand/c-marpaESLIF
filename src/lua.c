@@ -546,11 +546,13 @@ static short _marpaESLIFValue_lua_symbolb(void *userDatavp, marpaESLIFValue_t *m
 static void _marpaESLIF_lua_freeDefaultActionv(void *userDatavp, void *contextp, void *p, size_t sizel)
 /*****************************************************************************/
 {
-  static const char           *funcs            = "_marpaESLIF_lua_freeDefaultActionv";
-  /* This callback is reached only when called internally, then userDatavp is forced to marpaESLIFValuep. */
-  marpaESLIFValue_t           *marpaESLIFValuep = (marpaESLIFValue_t *) userDatavp;
-  marpaESLIFLuaValueContext_t *marpaESLIFLuaValueContextp;
-  int                          typei;
+  static const char                *funcs            = "_marpaESLIF_lua_freeDefaultActionv";
+  marpaESLIFValue_t                *marpaESLIFValuep = (marpaESLIFValue_t *) userDatavp;
+  marpaESLIFLuaValueContext_t      *marpaESLIFLuaValueContextp;
+  marpaESLIFValueFreeCallback_t     freeCallbackp;
+  void                             *userDataBackupvp;
+  marpaESLIFValueResultTransform_t *transformerBackupp;
+  int                               typei;
 
   /* We should never be called outside of a valuation, thus a lua_State must already exist */
   if (marpaESLIFValuep->L == NULL) {
@@ -572,8 +574,22 @@ static void _marpaESLIF_lua_freeDefaultActionv(void *userDatavp, void *contextp,
   LUA_TOUSERDATA(marpaESLIFValuep, &marpaESLIFLuaValueContextp, -1);
   LUA_POP(marpaESLIFValuep, 2);                                                  /* stack: ... */
 
-  /* Proxy to the lua bindings free action */
-  marpaESLIFLua_valueFreeCallbackv((void *) marpaESLIFLuaValueContextp /* userDatavp */, contextp, p, sizel);
+  freeCallbackp = marpaESLIFLua_valueFreeActionResolver((void *) marpaESLIFLuaValueContextp /* userDatavp */, marpaESLIFValuep, ":defaultFreeActions" /* marpaESLIFValuep->actions */);
+  if (freeCallbackp == NULL) {
+    MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "Lua bindings returned no free callback");
+    goto err; /* Lua will shutdown anyway */
+  }
+  /* Take care about transformers that are specific to lua */
+  transformerBackupp = marpaESLIFValuep->marpaESLIFValueOption.transformerp;
+  marpaESLIFValuep->marpaESLIFValueOption.transformerp = &marpaESLIFLuaValueResultTransformDefault;
+  /* And about userDatavp that is marpaESLIFLuaValueContextp in lua bindings */
+  userDataBackupvp = marpaESLIFValuep->marpaESLIFValueOption.userDatavp;
+  marpaESLIFValuep->marpaESLIFValueOption.userDatavp = marpaESLIFLuaValueContextp;
+
+  freeCallbackp((void *) marpaESLIFLuaValueContextp /* userDatavp */, contextp, p, sizel);
+
+  marpaESLIFValuep->marpaESLIFValueOption.transformerp = transformerBackupp;
+  marpaESLIFValuep->marpaESLIFValueOption.userDatavp = userDataBackupvp;
 
  err:
   return;
