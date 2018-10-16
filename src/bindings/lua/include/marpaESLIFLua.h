@@ -38,6 +38,8 @@ extern "C" {
 /*   marpaESLIFRecognizer_newFromUnmanaged(L, marpaESLIFRecognizerp)                                 */
 /*   marpaESLIFValue_newFromUnmanaged(L, marpaESLIFValuep)                                           */
 /*                                                                                                   */
+/*   If the caller defines MARPAESLIFLUA_CONTEXT then it is taken as-is.                             */
+/*                                                                                                   */
 /* All those functions:                                                                              */
 /* - are available only programmatically                                                             */
 /* - pushes on lua stack the same lua object as their "new" counterparts but with NO reference thus  */

@@ -254,8 +254,7 @@ struct marpaESLIFGrammar {
   char                      *luaprecompiledp;   /* Lua script source precompiled */
   size_t                     luaprecompiledl;   /* Lua script source precompiled length in byte */
   marpaESLIF_string_t       *luadescp;          /* Delayed until show is requested */
-  lua_State                 *L;                 /* Temporary lua_State used to precompiled lua script */
-
+  lua_State                 *L;                 /* Temporary lua_State used to precompiled lua script - totally managed inside src/lua.c */
 };
 
 struct marpaESLIF_meta {

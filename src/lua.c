@@ -5,6 +5,9 @@
 #include <errno.h>
 #include <limits.h>
 
+/* Revisit lua context */
+#undef MARPAESLIFLUA_CONTEXT
+#define MARPAESLIFLUA_CONTEXT MARPAESLIF_EMBEDDED_CONTEXT_LUA
 #include "../src/bindings/lua/src/marpaESLIFLua.c"
 
 /* Note that a lua integer is:
@@ -21,65 +24,9 @@
 #undef  FILENAMES
 #define FILENAMES "lua.c" /* For logging */
 
-/* Internal initialization */
-static const char *MARPAESLIF_LUA_WRAPPER = "__marpaESLIFLuaWrapper";
-static const char *MARPAESLIF_LUA_TABLE = "__marpaESLIFLuaTable";
-static const char *MARPAESLIF_LUA_INIT =
-  "--------------------------------------------------------\n"
-  "-- Internal table used to communicate with outside world\n"
-  "--------------------------------------------------------\n"
-  "__marpaESLIFLuaTable = {}\n"
-  "\n"
-  "--------------------------------------------------------\n"
-  "-- Function call wrapper\n"
-  "--------------------------------------------------------\n"
-  "function __marpaESLIFLuaWrapper(indice, funcname, ...)\n"
-  "  local value = funcname(...)\n"
-  "  __marpaESLIFLuaTable[indice + 1] = value\n"
-  "  return value\n"
-  "end\n";
 
-static short       _marpaESLIF_lua_newb(marpaESLIFValue_t *marpaESLIFValuep);
-static short       _marpaESLIF_lua_push_argb(marpaESLIFValue_t *marpaESLIFValuep, int i);
-static short       _marpaESLIF_lua_pop_argb(marpaESLIFValue_t *marpaESLIFValuep, int resulti);
-static void        _marpaESLIF_lua_freeInternalActionv(void *userDatavp, int resulti);
-static const char *_marpaESLIF_lua_types(int typei);
-static int         _marpaESLIF_lua_grammarWriteri(lua_State *L, const void* p, size_t sz, void* ud);
-
-/* Value result transformer helper */
-short _marpaESLIF_lua_transformUndefb(void *userDatavp, void *contextp);
-short _marpaESLIF_lua_transformCharb(void *userDatavp, void *contextp, char c);
-short _marpaESLIF_lua_transformShortb(void *userDatavp, void *contextp, short b);
-short _marpaESLIF_lua_transformIntb(void *userDatavp, void *contextp, int i);
-short _marpaESLIF_lua_transformLongb(void *userDatavp, void *contextp, long l);
-short _marpaESLIF_lua_transformFloatb(void *userDatavp, void *contextp, float f);
-short _marpaESLIF_lua_transformDoubleb(void *userDatavp, void *contextp, double d);
-short _marpaESLIF_lua_transformPtrb(void *userDatavp, void *contextp, void *p);
-short _marpaESLIF_lua_transformArrayb(void *userDatavp, void *contextp, void *p, size_t sizel);
-short _marpaESLIF_lua_transformBoolb(void *userDatavp, void *contextp, short b);
-static const marpaESLIFValueResultTransform_t marpaESLIF_lua_transform = {
-  _marpaESLIF_lua_transformUndefb,
-  _marpaESLIF_lua_transformCharb,
-  _marpaESLIF_lua_transformShortb,
-  _marpaESLIF_lua_transformIntb,
-  _marpaESLIF_lua_transformLongb,
-  _marpaESLIF_lua_transformFloatb,
-  _marpaESLIF_lua_transformDoubleb,
-  _marpaESLIF_lua_transformPtrb,
-  _marpaESLIF_lua_transformArrayb,
-  _marpaESLIF_lua_transformBoolb
-};
-
-static const char *LUATYPE_TNIL_STRING = "LUA_TNIL";
-static const char *LUATYPE_TNUMBER_STRING = "LUA_TNUMBER";
-static const char *LUATYPE_TBOOLEAN_STRING = "LUA_TBOOLEAN";
-static const char *LUATYPE_TSTRING_STRING = "LUA_TSTRING";
-static const char *LUATYPE_TTABLE_STRING = "LUA_TTABLE";
-static const char *LUATYPE_TFUNCTION_STRING = "LUA_TFUNCTION";
-static const char *LUATYPE_TUSERDATA_STRING = "LUA_TUSERDATA";
-static const char *LUATYPE_TTHREAD_STRING = "LUA_TTHREAD";
-static const char *LUATYPE_TLIGHTUSERDATA_STRING = "LUA_TLIGHTUSERDATA";
-static const char *LUATYPE_TUNKNOWN_STRING = "UNKNOWN";
+static short _marpaESLIF_lua_newb(marpaESLIFValue_t *marpaESLIFValuep);
+static int   _marpaESLIF_lua_grammarWriteri(lua_State *L, const void* p, size_t sz, void* ud);
 
 #define LOG_PANIC_STRING(containerp, f) do {                            \
     char *panicstring;							\
@@ -276,7 +223,15 @@ static const char *LUATYPE_TUNKNOWN_STRING = "UNKNOWN";
 
 #define LUA_SETTOP(containerp, idx) do {                             \
     if (luaunpanic_settop(containerp->L, idx)) {                     \
-      LOG_PANIC_STRING(containerp, lua_SETTOP);                      \
+      LOG_PANIC_STRING(containerp, lua_settop);                      \
+      errno = ENOSYS;                                                \
+      goto err;                                                      \
+    }                                                                \
+  } while (0)
+
+#define LUA_GETTOP(rcp, containerp) do {			     \
+    if (luaunpanic_settop(rcp, containerp->L)) {		     \
+      LOG_PANIC_STRING(containerp, lua_gettop);                      \
       errno = ENOSYS;                                                \
       goto err;                                                      \
     }                                                                \
@@ -462,27 +417,17 @@ static void _marpaESLIFValue_lua_freev(marpaESLIFValue_t *marpaESLIFValuep)
 }
 
 /*****************************************************************************/
-static void  _marpaESLIFGrammar_lua_freev(marpaESLIFGrammar_t *marpaESLIFGrammarp)
-/*****************************************************************************/
-{
-  if (marpaESLIFGrammarp->L != NULL) {
-    if (luaunpanic_close(marpaESLIFGrammarp->L)) {
-      LOG_PANIC_STRING(marpaESLIFGrammarp, luaunpanic_close);
-    }
-    marpaESLIFGrammarp->L = NULL;
-  }
-}
-
-/*****************************************************************************/
 static short _marpaESLIFValue_lua_actionb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
 /*****************************************************************************/
 {
-  static const char      *funcs                 = "_marpaESLIFValue_lua_actionb";
-  marpaESLIFRecognizer_t *marpaESLIFRecognizerp = marpaESLIFValuep->marpaESLIFRecognizerp;
-  int                     i;
-  short                   rcb;
-  int                     nargi;
-  int                     typei;
+  static const char                *funcs                 = "_marpaESLIFValue_lua_actionb";
+  marpaESLIFRecognizer_t           *marpaESLIFRecognizerp = marpaESLIFValuep->marpaESLIFRecognizerp;
+  marpaESLIFLuaValueContext_t      *marpaESLIFLuaValueContextp;
+  marpaESLIFValueRuleCallback_t     ruleCallbackp;
+  void                             *userDataBackupvp;
+  marpaESLIFValueResultTransform_t *transformerBackupp;
+  int                               typei;
+  short                             rcb;
 
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
 
@@ -491,46 +436,39 @@ static short _marpaESLIFValue_lua_actionb(void *userDatavp, marpaESLIFValue_t *m
     goto err;
   }
 
-  /* We going through our function wrapper __marpaESLIFLuaWrapper(indice, funcname, ...) */
-  /* 1: __marpaESLIFLuaWrapper */
-  LUA_GETGLOBAL(&typei, marpaESLIFValuep, MARPAESLIF_LUA_WRAPPER);
-  if (typei != LUA_TFUNCTION) {
-    MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "%s is not a function", MARPAESLIF_LUA_WRAPPER);
-    goto err;
+  /* Remember that we pushed the "marpaESLIFValue" global ? */
+  LUA_GETGLOBAL(&typei, marpaESLIFValuep, "marpaESLIFValue");                    /* stack: ..., marpaESLIFValueTable */
+  if (typei != LUA_TTABLE) {
+    MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "Lua marpaESLIFValue global is not a table");
+    goto err; /* Lua will shutdown anyway */
   }
-  /* 2: indice */
-  LUA_PUSHNUMBER(marpaESLIFValuep, (lua_Number) resulti);
-  /* 3: user action */
-  LUA_GETGLOBAL(&typei, marpaESLIFValuep, marpaESLIFValuep->actions);
-  if (typei != LUA_TFUNCTION) {
-    MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "Lua action %s is not a function", marpaESLIFValuep->actions);
-    goto err;
+  /* And this marpaESLIFValue is a table with a key "marpaESLIFValueContext" */
+  LUA_GETFIELDI(&typei, marpaESLIFValuep, -1, "marpaESLIFLuaValueContextp");     /* stack: ..., marpaESLIFValueTable, marpaESLIFLuaValueContextp */
+  if (typei != LUA_TLIGHTUSERDATA) {
+    MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "Lua marpaESLIFLuaValueContextp is not a light userdata");
+    goto err; /* Lua will shutdown anyway */
   }
-  /* 4...: user context */
-  LUA_PUSHLIGHTUSERDATA(marpaESLIFValuep, userDatavp);
-  /* 5...: arguments */
-  if (! nullableb) {
-    nargi = argni - arg0i + 1;
-    for (i = arg0i; i <= argni; i++) {
-      if (! _marpaESLIF_lua_push_argb(marpaESLIFValuep, i)) {
-        goto err;
-      }
-    }
-  } else {
-    nargi = 0;
-  }
+  LUA_TOUSERDATA(marpaESLIFValuep, &marpaESLIFLuaValueContextp, -1);
+  LUA_POP(marpaESLIFValuep, 2);                                                  /* stack: ... */
 
-  /* Lua will make sure there is a room for at least one argument on the stack at return */
-  LUA_CALL(marpaESLIFValuep, nargi + 3 /* +3 is for (indice, function, userDatavp) */, 1);
-
-  if (! _marpaESLIF_lua_pop_argb(marpaESLIFValuep, resulti)) {
-    goto err;
+  /* Proxy to the lua bindings rule callback action - then userDatavp has to be marpaESLIFLuaValueContextp */
+  ruleCallbackp = marpaESLIFLua_valueRuleActionResolver((void *) marpaESLIFLuaValueContextp /* userDatavp */, marpaESLIFValuep, marpaESLIFValuep->actions);
+  if (ruleCallbackp == NULL) {
+    MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "Lua bindings returned no rule callback");
+    goto err; /* Lua will shutdown anyway */
   }
+  /* Take care about transformers that are specific to lua */
+  transformerBackupp = marpaESLIFValuep->marpaESLIFValueOption.transformerp;
+  marpaESLIFValuep->marpaESLIFValueOption.transformerp = &marpaESLIFLuaValueResultTransformDefault;
+  /* And about userDatavp that is marpaESLIFLuaValueContextp in lua bindings */
+  userDataBackupvp = marpaESLIFValuep->marpaESLIFValueOption.userDatavp;
+  marpaESLIFValuep->marpaESLIFValueOption.userDatavp = marpaESLIFLuaValueContextp;
 
-  /* Clear the stack */
-  LUA_SETTOP(marpaESLIFValuep, 0);
-  
-  rcb = 1;
+  rcb = ruleCallbackp((void *) marpaESLIFLuaValueContextp /* userDatavp */, marpaESLIFValuep, arg0i, argni, resulti, nullableb);
+
+  marpaESLIFValuep->marpaESLIFValueOption.transformerp = transformerBackupp;
+  marpaESLIFValuep->marpaESLIFValueOption.userDatavp = userDataBackupvp;
+
   goto done;
 
  err:
@@ -545,10 +483,14 @@ static short _marpaESLIFValue_lua_actionb(void *userDatavp, marpaESLIFValue_t *m
 static short _marpaESLIFValue_lua_symbolb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *bytep, size_t bytel, int resulti)
 /*****************************************************************************/
 {
-  static const char      *funcs                 = "_marpaESLIFValue_lua_symbolb";
-  marpaESLIFRecognizer_t *marpaESLIFRecognizerp = marpaESLIFValuep->marpaESLIFRecognizerp;
-  short                   rcb;
-  int                     typei;
+  static const char                *funcs                 = "_marpaESLIFValue_lua_symbolb";
+  marpaESLIFRecognizer_t           *marpaESLIFRecognizerp = marpaESLIFValuep->marpaESLIFRecognizerp;
+  marpaESLIFLuaValueContext_t      *marpaESLIFLuaValueContextp;
+  marpaESLIFValueSymbolCallback_t   symbolCallbackp;
+  void                             *userDataBackupvp;
+  marpaESLIFValueResultTransform_t *transformerBackupp;
+  int                               typei;
+  short                             rcb;
 
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
 
@@ -557,37 +499,39 @@ static short _marpaESLIFValue_lua_symbolb(void *userDatavp, marpaESLIFValue_t *m
     goto err;
   }
 
-  /* We going through our function wrapper __marpaESLIFLuaWrapper(indice, funcname, ...) */
-  /* 1: __marpaESLIFLuaWrapper */
-  LUA_GETGLOBAL(&typei, marpaESLIFValuep, MARPAESLIF_LUA_WRAPPER);
-  if (typei != LUA_TFUNCTION) {
-    MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "%s is not a function", MARPAESLIF_LUA_WRAPPER);
-    goto err;
+  /* Remember that we pushed the "marpaESLIFValue" global ? */
+  LUA_GETGLOBAL(&typei, marpaESLIFValuep, "marpaESLIFValue");                    /* stack: ..., marpaESLIFValueTable */
+  if (typei != LUA_TTABLE) {
+    MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "Lua marpaESLIFValue global is not a table");
+    goto err; /* Lua will shutdown anyway */
   }
-  /* 2: indice */
-  LUA_PUSHNUMBER(marpaESLIFValuep, (lua_Number) resulti);
-  /* 3: user action */
-  LUA_GETGLOBAL(&typei, marpaESLIFValuep, marpaESLIFValuep->actions);
-  if (typei != LUA_TFUNCTION) {
-    MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "Lua action %s is not a function", marpaESLIFValuep->actions);
-    goto err;
+  /* And this marpaESLIFValue is a table with a key "marpaESLIFValueContext" */
+  LUA_GETFIELDI(&typei, marpaESLIFValuep, -1, "marpaESLIFLuaValueContextp");     /* stack: ..., marpaESLIFValueTable, marpaESLIFLuaValueContextp */
+  if (typei != LUA_TLIGHTUSERDATA) {
+    MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "Lua marpaESLIFLuaValueContextp is not a light userdata");
+    goto err; /* Lua will shutdown anyway */
   }
-  /* 4: context */
-  LUA_PUSHLIGHTUSERDATA(marpaESLIFValuep, userDatavp);
-  /* 5: lexeme */
-  LUA_PUSHLSTRING(marpaESLIFValuep, bytep, bytel);
+  LUA_TOUSERDATA(marpaESLIFValuep, &marpaESLIFLuaValueContextp, -1);
+  LUA_POP(marpaESLIFValuep, 2);                                                  /* stack: ... */
 
-  /* Lua will make sure there is a room for at least one argument on the stack at return */
-  LUA_CALL(marpaESLIFValuep, 4 /* (indice, funcname, context, lexeme) */, 1);
-
-  if (! _marpaESLIF_lua_pop_argb(marpaESLIFValuep, resulti)) {
-    goto err;
+  /* Proxy to the lua bindings rule callback action - then userDatavp has to be marpaESLIFLuaValueContextp */
+  symbolCallbackp = marpaESLIFLua_valueSymbolActionResolver((void *) marpaESLIFLuaValueContextp /* userDatavp */, marpaESLIFValuep, marpaESLIFValuep->actions);
+  if (symbolCallbackp == NULL) {
+    MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "Lua bindings returned no symbol callback");
+    goto err; /* Lua will shutdown anyway */
   }
+  /* Take care about transformers that are specific to lua */
+  transformerBackupp = marpaESLIFValuep->marpaESLIFValueOption.transformerp;
+  marpaESLIFValuep->marpaESLIFValueOption.transformerp = &marpaESLIFLuaValueResultTransformDefault;
+  /* And about userDatavp that is marpaESLIFLuaValueContextp in lua bindings */
+  userDataBackupvp = marpaESLIFValuep->marpaESLIFValueOption.userDatavp;
+  marpaESLIFValuep->marpaESLIFValueOption.userDatavp = marpaESLIFLuaValueContextp;
 
-  /* Clear the stack */
-  LUA_SETTOP(marpaESLIFValuep, 0);
-  
-  rcb = 1;
+  rcb = symbolCallbackp((void *) marpaESLIFLuaValueContextp /* userDatavp */, marpaESLIFValuep, bytep, bytel, resulti);
+
+  marpaESLIFValuep->marpaESLIFValueOption.transformerp = transformerBackupp;
+  marpaESLIFValuep->marpaESLIFValueOption.userDatavp = userDataBackupvp;
+
   goto done;
 
  err:
@@ -595,193 +539,6 @@ static short _marpaESLIFValue_lua_symbolb(void *userDatavp, marpaESLIFValue_t *m
 
  done:
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC;
-  return rcb;
-}
-
-/*****************************************************************************/
-static short _marpaESLIF_lua_push_argb(marpaESLIFValue_t *marpaESLIFValuep, int i)
-/*****************************************************************************/
-{
-  static const char       *funcs = "_marpaESLIF_lua_push_argb";
-  short                    rcb;
-  marpaESLIFValueResult_t *marpaESLIFValueResultp;
-  int                      typei;
-  int                     *indiceip;
-
-  marpaESLIFValueResultp = _marpaESLIFValue_stack_getp(marpaESLIFValuep, i);
-  if (marpaESLIFValueResultp == NULL) {
-    goto err;
-  }
-
-  /* Special values that comes from lua and have a meaning only for lua have the */
-  /* context MARPAESLIF_EMBEDDED_CONTEXT_LUA. Then per def, this is a PTR that hosts */
-  /* a malloced integer. This integer is the indice in an internal lua table. */
-  if (marpaESLIFValueResultp->contextp == MARPAESLIF_EMBEDDED_CONTEXT_LUA) {
-    LUA_GETGLOBAL(&typei, marpaESLIFValuep, MARPAESLIF_LUA_TABLE);                                    /* stack: ..., table */
-    if (typei != LUA_TTABLE) {
-      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "%s is not a table", MARPAESLIF_LUA_TABLE);
-      goto err;
-    }
-    indiceip = (int *) marpaESLIFValueResultp->u.p;
-    MARPAESLIF_TRACEF(marpaESLIFValuep->marpaESLIFp, funcs, "Pushing %s[%d+1]", MARPAESLIF_LUA_TABLE, *indiceip);
-    LUA_RAWGETI(NULL, marpaESLIFValuep, -1, (lua_Integer) (*indiceip + 1));                           /* stack: ..., table, table[(*indiceip)+1] */
-    LUA_REMOVE(marpaESLIFValuep, -2);                                                                 /* stack: ..., table[(*indiceip)+1] */
-  } else {
-    /* We have the control here, and we know our lua transformers needs a marpaESLIFValue as user context */
-    if (! _marpaESLIFValue_transformb(marpaESLIFValuep, marpaESLIFValueResultp, NULL /* marpaESLIFValueResultResolvedp */, marpaESLIFValuep, (marpaESLIFValueResultTransform_t *) &marpaESLIF_lua_transform)) {
-      goto err;
-    }
-  }
-
-  rcb = 1;
-  goto done;
-
- err:
-  rcb = 0;
-
- done:
-  return rcb;
-}
-
-/*****************************************************************************/
-static short _marpaESLIF_lua_pop_argb(marpaESLIFValue_t *marpaESLIFValuep, int resulti)
-/*****************************************************************************/
-{
-  static const char       *funcs    = "_marpaESLIF_lua_pop_argb";
-  int                     *resultip = NULL;
-  int                      typei;
-  marpaESLIFValueResult_t  marpaESLIFValueResult;
-  short                    rcb;
-  const char              *bytep;
-  size_t                   bytel;
-  int                      booli;
-
-  LUA_TYPE(marpaESLIFValuep, &typei, -1);
-
-  switch (typei) {
-  case LUA_TNIL:
-    marpaESLIFValueResult.contextp        = MARPAESLIF_EMBEDDED_CONTEXT_LUA;
-    marpaESLIFValueResult.sizel           = 0;
-    marpaESLIFValueResult.representationp = NULL;
-    marpaESLIFValueResult.shallowb        = 0;
-    marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_UNDEF;
-    /* No need to keep that in our internal lua table */
-    _marpaESLIF_lua_freeInternalActionv(marpaESLIFValuep /* userDatavp */, resulti);
-    MARPAESLIF_TRACE(marpaESLIFValuep->marpaESLIFp, funcs, "LUA_TNIL => MARPAESLIF_VALUE_TYPE_UNDEF");
-  break;
-  case LUA_TNUMBER:
-    /* The native type of a number in lua depends on LUA_FLOAT_TYPE */
-    marpaESLIFValueResult.contextp        = MARPAESLIF_EMBEDDED_CONTEXT_LUA;
-    marpaESLIFValueResult.sizel           = 0;
-    marpaESLIFValueResult.representationp = NULL;
-    marpaESLIFValueResult.shallowb        = 0;
-#if LUA_FLOAT_TYPE == LUA_FLOAT_FLOAT
-    marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_FLOAT;
-    MARPAESLIF_TRACEF(marpaESLIFValuep->marpaESLIFp, funcs, "LUA_TNUMBER => MARPAESLIF_VALUE_TYPE_FLOAT %f", (double) marpaESLIFValueResult.u.f);
-    LUA_TONUMBER(marpaESLIFValuep, &(marpaESLIFValueResult.u.f), -1);
-#else
-    marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_DOUBLE;
-    LUA_TONUMBER(marpaESLIFValuep, &(marpaESLIFValueResult.u.d), -1);
-    MARPAESLIF_TRACEF(marpaESLIFValuep->marpaESLIFp, funcs, "LUA_TNUMBER => MARPAESLIF_VALUE_TYPE_DOUBLE %f", marpaESLIFValueResult.u.d);
-#endif
-    /* No need to keep that in our internal lua table */
-    _marpaESLIF_lua_freeInternalActionv(marpaESLIFValuep /* userDatavp */, resulti);
-    break;
-  case LUA_TBOOLEAN:
-    /* A boolean in lua maps to an int */
-    LUA_TOBOOLEAN(marpaESLIFValuep, &booli, -1);
-    marpaESLIFValueResult.contextp        = MARPAESLIF_EMBEDDED_CONTEXT_LUA;
-    marpaESLIFValueResult.sizel           = 0;
-    marpaESLIFValueResult.representationp = NULL;
-    marpaESLIFValueResult.shallowb        = 0;
-    marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_BOOL;
-    marpaESLIFValueResult.u.b             = (booli != 0) ? 1 : 0;
-    /* No need to keep that in our internal lua table */
-    MARPAESLIF_TRACEF(marpaESLIFValuep->marpaESLIFp, funcs, "LUA_TBOOLEAN => MARPAESLIF_VALUE_TYPE_BOOL %d", (int) marpaESLIFValueResult.u.b);
-    _marpaESLIF_lua_freeInternalActionv(marpaESLIFValuep /* userDatavp */, resulti);
-    break;
-  case LUA_TSTRING:
-    /* A lua string is a sequence of 8-bits chars - so it can contain anything, and may not represent a valid string whatever the encoding */
-    /* This first well with our ARRAY notion */
-    LUA_TOLSTRING(marpaESLIFValuep, &bytep, -1, &bytel);
-    if ((bytep == NULL) || (bytel <= 0)) {
-      /* In reality this is a null string */
-      marpaESLIFValueResult.contextp        = MARPAESLIF_EMBEDDED_CONTEXT_LUA;
-      marpaESLIFValueResult.sizel           = 0;
-      marpaESLIFValueResult.representationp = NULL;
-      marpaESLIFValueResult.shallowb        = 0;
-      marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_UNDEF;
-      MARPAESLIF_TRACE(marpaESLIFValuep->marpaESLIFp, funcs, "LUA_TSTRING empty => MARPAESLIF_VALUE_TYPE_UNDEF");
-    } else {
-      marpaESLIFValueResult.u.p = (char *) malloc(bytel);
-      if (marpaESLIFValueResult.u.p == NULL) {
-        MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "malloc failure, %s", strerror(errno));
-        goto err;
-      }
-      marpaESLIFValueResult.contextp        = MARPAESLIF_EMBEDDED_CONTEXT_LUA;
-      marpaESLIFValueResult.sizel           = bytel;
-      marpaESLIFValueResult.representationp = NULL;
-      marpaESLIFValueResult.shallowb        = 0;
-      marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_ARRAY;
-      memcpy(marpaESLIFValueResult.u.p, bytep, bytel);
-      MARPAESLIF_TRACEF(marpaESLIFValuep->marpaESLIFp, funcs, "LUA_TSTRING => MARPAESLIF_VALUE_TYPE_ARRAY at %p of size %ld", bytep, (unsigned long) bytel);
-    }
-    /* No need to keep that in our internal lua table */
-    _marpaESLIF_lua_freeInternalActionv(marpaESLIFValuep /* userDatavp */, resulti);
-    break;
-    /* The following four cases are meaningul to lua only, and cannot be exported outside */
-    /* We store the indice in our internal lua table - in order to trigger the free we */
-    /* must allocate something - we allocate an int and store resulti in it. */
-  case LUA_TTABLE:
-  case LUA_TFUNCTION:
-  case LUA_TUSERDATA:
-  case LUA_TTHREAD:
-    resultip = (int *) malloc(sizeof(int));
-    if (resultip == NULL) {
-      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "malloc failure, %s", strerror(errno));
-      goto err;
-    }
-    *resultip = resulti;
-    marpaESLIFValueResult.contextp        = MARPAESLIF_EMBEDDED_CONTEXT_LUA;
-    marpaESLIFValueResult.sizel           = 0;
-    marpaESLIFValueResult.representationp = NULL;
-    marpaESLIFValueResult.shallowb        = 0;
-    marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_PTR;
-    marpaESLIFValueResult.u.p             = (void *) resultip;
-    MARPAESLIF_TRACEF(marpaESLIFValuep->marpaESLIFp, funcs, "Keeping lua type %s (%d) in internal table at indice %d", (char *) _marpaESLIF_lua_types(typei), typei, resulti);
-    MARPAESLIF_TRACEF(marpaESLIFValuep->marpaESLIFp, funcs, "%s => MARPAESLIF_VALUE_TYPE_PTR at %p (pointer to integer, *p: %d)", _marpaESLIF_lua_types(typei), resultip, resulti);
-    break;
-  case LUA_TLIGHTUSERDATA:
-    /* External pointer */
-    marpaESLIFValueResult.contextp        = MARPAESLIF_EMBEDDED_CONTEXT_LUA;
-    marpaESLIFValueResult.sizel           = 0;
-    marpaESLIFValueResult.representationp = NULL;
-    marpaESLIFValueResult.shallowb        = 0;
-    marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_PTR;
-    LUA_TOUSERDATA(marpaESLIFValuep, &(marpaESLIFValueResult.u.p), -1);
-    /* No need to keep that in our internal lua table */
-    _marpaESLIF_lua_freeInternalActionv(marpaESLIFValuep /* userDatavp */, resulti);
-    MARPAESLIF_TRACEF(marpaESLIFValuep->marpaESLIFp, funcs, "LUA_TLIGHTUSERDATA => MARPAESLIF_VALUE_TYPE_PTR at %p", marpaESLIFValueResult.u.p);
-    break;
-  default:
-    MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "Unsupported lua type %d", typei);
-    goto err;
-  }
-
-  if (! _marpaESLIFValue_stack_setb(marpaESLIFValuep, resulti, &marpaESLIFValueResult)) {
-    goto err;
-  }
-
-  rcb = 1;
-  goto done;
-
- err:
-  if (resultip != NULL) {
-    free(resultip);
-  }
-  rcb = 0;
-
- done:
   return rcb;
 }
 
@@ -789,123 +546,46 @@ static short _marpaESLIF_lua_pop_argb(marpaESLIFValue_t *marpaESLIFValuep, int r
 static void _marpaESLIF_lua_freeDefaultActionv(void *userDatavp, void *contextp, void *p, size_t sizel)
 /*****************************************************************************/
 {
-  static const char       *funcs                 = "_marpaESLIF_lua_freeDefaultActionv";
-  marpaESLIFValue_t       *marpaESLIFValuep      = (marpaESLIFValue_t *) userDatavp;
-  marpaESLIFRecognizer_t  *marpaESLIFRecognizerp = marpaESLIFValuep->marpaESLIFRecognizerp;
-  int                      typei;
-  int                     *indiceip;
+  static const char           *funcs            = "_marpaESLIF_lua_freeDefaultActionv";
+  /* This callback is reached only when called internally, then userDatavp is forced to marpaESLIFValuep. */
+  marpaESLIFValue_t           *marpaESLIFValuep = (marpaESLIFValue_t *) userDatavp;
+  marpaESLIFLuaValueContext_t *marpaESLIFLuaValueContextp;
+  int                          typei;
 
-  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
-
-  /* When called with no pointer, this is an internal call done by the pop of values */
-  if (p != NULL) {
-    indiceip = (int *) p;
-
-    /* The value is always in  MARPAESLIF_LUA_TABLE */
-    LUA_GETGLOBAL(&typei, marpaESLIFValuep, MARPAESLIF_LUA_TABLE);                                      /* stack: table */
-    if (typei != LUA_TTABLE) {
-      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "%s is not a table", MARPAESLIF_LUA_TABLE);
-    } else {
-      LUA_PUSHNIL(marpaESLIFValuep);                                                                    /* stack: table, nil */
-      MARPAESLIF_TRACEF(marpaESLIFValuep->marpaESLIFp, funcs, "Resetting %s[%d+1]", MARPAESLIF_LUA_TABLE, *indiceip);
-      LUA_RAWSETI(marpaESLIFValuep, -2, (lua_Integer) (*indiceip + 1));                                 /* stack: table */
-    }
-
-    /* Remove table from the stack */
-    LUA_POP(marpaESLIFValuep, -1);
-
-    /* Free this malloced integer */
-    MARPAESLIF_TRACEF(marpaESLIFValuep->marpaESLIFp, funcs, "Freeing %p that was hosting internal indice %d", p, *indiceip);
-    free(p);
+  /* We should never be called outside of a valuation, thus a lua_State must already exist */
+  if (marpaESLIFValuep->L == NULL) {
+    goto err;
   }
 
-  /* This function returns void, though we need the err label */
- err:
-  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC;
-}
-
-/*****************************************************************************/
-static void _marpaESLIF_lua_freeInternalActionv(void *userDatavp, int resulti)
-/*****************************************************************************/
-{
-  static const char       *funcs                 = "_marpaESLIF_lua_freeInternalActionv";
-  marpaESLIFValue_t       *marpaESLIFValuep      = (marpaESLIFValue_t *) userDatavp;
-  marpaESLIFRecognizer_t  *marpaESLIFRecognizerp = marpaESLIFValuep->marpaESLIFRecognizerp;
-  int                      typei;
-
-  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
-
-  /* The value is always in  MARPAESLIF_LUA_TABLE */
-  LUA_GETGLOBAL(&typei, marpaESLIFValuep, MARPAESLIF_LUA_TABLE);                                    /* stack: table */
+  /* Remember that we pushed the "marpaESLIFValue" global ? */
+  LUA_GETGLOBAL(&typei, marpaESLIFValuep, "marpaESLIFValue");                    /* stack: ..., marpaESLIFValueTable */
   if (typei != LUA_TTABLE) {
-    MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "%s is not a table", MARPAESLIF_LUA_TABLE);
-  } else {
-    LUA_PUSHNIL(marpaESLIFValuep);                                                                  /* stack: table, nil */
-    LUA_RAWSETI(marpaESLIFValuep, -2, (lua_Integer) (resulti + 1));                                 /* stack: table */
+    MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "Lua marpaESLIFValue global is not a table");
+    goto err; /* Lua will shutdown anyway */
   }
+  /* And this marpaESLIFValue is a table with a key "marpaESLIFValueContext" */
+  LUA_GETFIELDI(&typei, marpaESLIFValuep, -1, "marpaESLIFLuaValueContextp");     /* stack: ..., marpaESLIFValueTable, marpaESLIFLuaValueContextp */
+  if (typei != LUA_TLIGHTUSERDATA) {
+    MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "Lua marpaESLIFLuaValueContextp is not a light userdata");
+    goto err; /* Lua will shutdown anyway */
+  }
+  LUA_TOUSERDATA(marpaESLIFValuep, &marpaESLIFLuaValueContextp, -1);
+  LUA_POP(marpaESLIFValuep, 2);                                                  /* stack: ... */
 
-  /* Remove table from the stack */
-  LUA_POP(marpaESLIFValuep, -1);
+  /* Proxy to the lua bindings free action */
+  marpaESLIFLua_valueFreeCallbackv((void *) marpaESLIFLuaValueContextp /* userDatavp */, contextp, p, sizel);
 
-  /* This function returns void, though we need the err label */
  err:
-  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC;
-}
-
-/*****************************************************************************/
-static const char *_marpaESLIF_lua_types(int typei)
-/*****************************************************************************/
-{
-  switch (typei) {
-  case LUA_TNIL:
-    return LUATYPE_TNIL_STRING;
-  case LUA_TNUMBER:
-    return LUATYPE_TNUMBER_STRING;
-  case LUA_TBOOLEAN:
-    return LUATYPE_TBOOLEAN_STRING;
-  case LUA_TSTRING:
-    return LUATYPE_TSTRING_STRING;
-  case LUA_TTABLE:
-    return LUATYPE_TTABLE_STRING;
-  case LUA_TFUNCTION:
-    return LUATYPE_TFUNCTION_STRING;
-  case LUA_TUSERDATA:
-    return LUATYPE_TUSERDATA_STRING;
-  case LUA_TTHREAD:
-    return LUATYPE_TTHREAD_STRING;
-  case LUA_TLIGHTUSERDATA:
-    return LUATYPE_TLIGHTUSERDATA_STRING;
-  default:
-    return LUATYPE_TUNKNOWN_STRING;
-  }   
+  return;
 }
 
 /*****************************************************************************/
 static short _marpaESLIFGrammar_lua_precompileb(marpaESLIFGrammar_t *marpaESLIFGrammarp)
 /*****************************************************************************/
 {
-  char      *luabytep             = NULL;
-  size_t     marpaeslif_lua_initl = strlen(MARPAESLIF_LUA_INIT);
-  char      *p;
-  size_t     luabytel = 0;
   short      rcb;
 
   if ((marpaESLIFGrammarp->luabytep != NULL) && (marpaESLIFGrammarp->luabytel > 0)) {
-    /* We append our own string to user script */
-    luabytel = marpaESLIFGrammarp->luabytel + 1 /* \n */ + marpaeslif_lua_initl;
-    luabytep = (char *) malloc(luabytel + 1); /* +1 for hiden NUL byte */
-    if (luabytep == NULL) {
-      MARPAESLIF_ERRORF(marpaESLIFGrammarp->marpaESLIFp, "malloc failure, %s", strerror(errno));
-      goto err;
-    }
-
-    p = luabytep;
-    memcpy(luabytep, marpaESLIFGrammarp->luabytep, marpaESLIFGrammarp->luabytel);
-    p += marpaESLIFGrammarp->luabytel;
-    *p++ = '\n';
-    memcpy(p, MARPAESLIF_LUA_INIT, marpaeslif_lua_initl);
-    p += marpaeslif_lua_initl;
-    *p = '\0';
 
     /* Create Lua state */
     if (luaunpanicL_newstate(&(marpaESLIFGrammarp->L))) {
@@ -923,7 +603,7 @@ static short _marpaESLIFGrammar_lua_precompileb(marpaESLIFGrammar_t *marpaESLIFG
     LUAL_CHECKVERSION(marpaESLIFGrammarp);
 
     /* Compiles lua script present in the grammar */
-    LUAL_LOADBUFFER(marpaESLIFGrammarp, luabytep, luabytel, "=<luaScript/>");
+    LUAL_LOADBUFFER(marpaESLIFGrammarp, marpaESLIFGrammarp->luabytep, marpaESLIFGrammarp->luabytel, "=<luaScript/>");
 
     /* Result is a "function" at the top of the stack - we now have to dump it so that lua knows about it  */
     LUA_DUMP(marpaESLIFGrammarp, _marpaESLIF_lua_grammarWriteri, marpaESLIFGrammarp, 0 /* strip */);
@@ -940,10 +620,13 @@ static short _marpaESLIFGrammar_lua_precompileb(marpaESLIFGrammar_t *marpaESLIFG
 
  done:
   /* In any case, free the lua_State, that we temporary created */
-  _marpaESLIFGrammar_lua_freev(marpaESLIFGrammarp);
-  if (luabytep != NULL) {
-    free(luabytep);
+  if (marpaESLIFGrammarp->L != NULL) {
+    if (luaunpanic_close(marpaESLIFGrammarp->L)) {
+      LOG_PANIC_STRING(marpaESLIFGrammarp, luaunpanic_close);
+    }
+    marpaESLIFGrammarp->L = NULL;
   }
+
   return rcb;
 }
 
@@ -986,224 +669,3 @@ static int _marpaESLIF_lua_grammarWriteri(lua_State *L, const void* p, size_t sz
  end:
   return rci;
 }
-
-/*****************************************************************************/
-short _marpaESLIF_lua_transformUndefb(void *userDatavp, void *contextp)
-/*****************************************************************************/
-{
-  static const char *funcs = "_marpaESLIF_lua_transformUndefb";
-  /* userDatavp is forced to be marpaESLIFValuep */
-  marpaESLIFValue_t *marpaESLIFValuep = (marpaESLIFValue_t *) userDatavp;
-  short              rcb;
-
-  MARPAESLIF_TRACE(marpaESLIFValuep->marpaESLIFp, funcs, "Pushing nil");
-  LUA_PUSHNIL(marpaESLIFValuep);
-
-  rcb = 1;
-  goto done;
-
- err:
-  rcb = 0;
-
- done:
-  return rcb;
-}
-
-/*****************************************************************************/
-short _marpaESLIF_lua_transformCharb(void *userDatavp, void *contextp, char c)
-/*****************************************************************************/
-{
-  static const char *funcs = "_marpaESLIF_lua_transformCharb";
-  /* userDatavp is forced to be marpaESLIFValuep */
-  marpaESLIFValue_t *marpaESLIFValuep = (marpaESLIFValue_t *) userDatavp;
-  short              rcb;
-
-  MARPAESLIF_TRACEF(marpaESLIFValuep->marpaESLIFp, funcs, "Pushing string \"%c\" (0x%2x) of length 1", ((c >= 128) || (! isprint(c & 0xFF))) ? ' ' : c, (int) c);
-  LUA_PUSHLSTRING(marpaESLIFValuep, &c, 1);
-
-  rcb = 1;
-  goto done;
-
- err:
-  rcb = 0;
-
- done:
-  return rcb;
-}
-
-/*****************************************************************************/
-short _marpaESLIF_lua_transformShortb(void *userDatavp, void *contextp, short b)
-/*****************************************************************************/
-{
-  static const char *funcs = "_marpaESLIF_lua_transformShortb";
-  /* userDatavp is forced to be marpaESLIFValuep */
-  marpaESLIFValue_t *marpaESLIFValuep = (marpaESLIFValue_t *) userDatavp;
-  short              rcb;
-
-  MARPAESLIF_TRACEF(marpaESLIFValuep->marpaESLIFp, funcs, "Pushing integer %d", (int) b);
-  LUA_PUSHINTEGER(marpaESLIFValuep, (lua_Integer) b);
-
-  rcb = 1;
-  goto done;
-
- err:
-  rcb = 0;
-
- done:
-  return rcb;
-}
-
-/*****************************************************************************/
-short _marpaESLIF_lua_transformIntb(void *userDatavp, void *contextp, int i)
-/*****************************************************************************/
-{
-  static const char *funcs = "_marpaESLIF_lua_transformUndefb";
-  /* userDatavp is forced to be marpaESLIFValuep */
-  marpaESLIFValue_t *marpaESLIFValuep = (marpaESLIFValue_t *) userDatavp;
-  short              rcb;
-
-  MARPAESLIF_TRACEF(marpaESLIFValuep->marpaESLIFp, funcs, "Pushing integer %d", i);
-  LUA_PUSHINTEGER(marpaESLIFValuep, (lua_Integer) i);
-
-  rcb = 1;
-  goto done;
-
- err:
-  rcb = 0;
-
- done:
-  return rcb;
-}
-
-/*****************************************************************************/
-short _marpaESLIF_lua_transformLongb(void *userDatavp, void *contextp, long l)
-/*****************************************************************************/
-{
-  static const char *funcs = "_marpaESLIF_lua_transformUndefb";
-  /* userDatavp is forced to be marpaESLIFValuep */
-  marpaESLIFValue_t *marpaESLIFValuep = (marpaESLIFValue_t *) userDatavp;
-  short              rcb;
-
-  MARPAESLIF_TRACEF(marpaESLIFValuep->marpaESLIFp, funcs, "Pushing integer %ld", l);
-  LUA_PUSHINTEGER(marpaESLIFValuep, (lua_Integer) l);
-
-  rcb = 1;
-  goto done;
-
- err:
-  rcb = 0;
-
- done:
-  return rcb;
-}
-
-/*****************************************************************************/
-short _marpaESLIF_lua_transformFloatb(void *userDatavp, void *contextp, float f)
-/*****************************************************************************/
-{
-  static const char *funcs = "_marpaESLIF_lua_transformUndefb";
-  /* userDatavp is forced to be marpaESLIFValuep */
-  marpaESLIFValue_t *marpaESLIFValuep = (marpaESLIFValue_t *) userDatavp;
-  short              rcb;
-
-  MARPAESLIF_TRACEF(marpaESLIFValuep->marpaESLIFp, funcs, "Pushing number %f", (double) f);
-  LUA_PUSHNUMBER(marpaESLIFValuep, (lua_Number) f);
-
-  rcb = 1;
-  goto done;
-
- err:
-  rcb = 0;
-
- done:
-  return rcb;
-}
-
-/*****************************************************************************/
-short _marpaESLIF_lua_transformDoubleb(void *userDatavp, void *contextp, double d)
-/*****************************************************************************/
-{
-  static const char *funcs = "_marpaESLIF_lua_transformUndefb";
-  /* userDatavp is forced to be marpaESLIFValuep */
-  marpaESLIFValue_t *marpaESLIFValuep = (marpaESLIFValue_t *) userDatavp;
-  short              rcb;
-
-  MARPAESLIF_TRACEF(marpaESLIFValuep->marpaESLIFp, funcs, "Pushing number %f", d);
-  LUA_PUSHNUMBER(marpaESLIFValuep, (lua_Number) d);
-
-  rcb = 1;
-  goto done;
-
- err:
-  rcb = 0;
-
- done:
-  return rcb;
-}
-
-/*****************************************************************************/
-short _marpaESLIF_lua_transformPtrb(void *userDatavp, void *contextp, void *p)
-/*****************************************************************************/
-{
-  static const char *funcs = "_marpaESLIF_lua_transformUndefb";
-  /* userDatavp is forced to be marpaESLIFValuep */
-  marpaESLIFValue_t *marpaESLIFValuep = (marpaESLIFValue_t *) userDatavp;
-  short              rcb;
-
-  MARPAESLIF_TRACEF(marpaESLIFValuep->marpaESLIFp, funcs, "Pushing light userdata %p", p);
-  LUA_PUSHLIGHTUSERDATA(marpaESLIFValuep, p);
-
-  rcb = 1;
-  goto done;
-
- err:
-  rcb = 0;
-
- done:
-  return rcb;
-}
-
-/*****************************************************************************/
-short _marpaESLIF_lua_transformArrayb(void *userDatavp, void *contextp, void *p, size_t sizel)
-/*****************************************************************************/
-{
-  static const char *funcs = "_marpaESLIF_lua_transformUndefb";
-  /* userDatavp is forced to be marpaESLIFValuep */
-  marpaESLIFValue_t *marpaESLIFValuep = (marpaESLIFValue_t *) userDatavp;
-  short              rcb;
-
-  MARPAESLIF_TRACEF(marpaESLIFValuep->marpaESLIFp, funcs, "Pushing string {p=%p,sizel=%ld}", p, (unsigned long) sizel);
-  LUA_PUSHLSTRING(marpaESLIFValuep, p, sizel);
-
-  rcb = 1;
-  goto done;
-
- err:
-  rcb = 0;
-
- done:
-  return rcb;
-}
-
-/*****************************************************************************/
-short _marpaESLIF_lua_transformBoolb(void *userDatavp, void *contextp, short b)
-/*****************************************************************************/
-{
-  static const char *funcs = "_marpaESLIF_lua_transformBoolb";
-  /* userDatavp is forced to be marpaESLIFValuep */
-  marpaESLIFValue_t *marpaESLIFValuep = (marpaESLIFValue_t *) userDatavp;
-  short              rcb;
-
-  MARPAESLIF_TRACEF(marpaESLIFValuep->marpaESLIFp, funcs, "Pushing boolean %s", b ? "true" : "false");
-  LUA_PUSHBOOLEAN(marpaESLIFValuep, (int) b);
-
-  rcb = 1;
-  goto done;
-
- err:
-  rcb = 0;
-
- done:
-  return rcb;
-}
-
