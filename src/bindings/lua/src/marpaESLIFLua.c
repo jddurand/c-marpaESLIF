@@ -3159,11 +3159,15 @@ static short marpaESLIFLua_representationb(void *userDatavp, marpaESLIFValueResu
   MARPAESLIFLUA_DEREF(L, * (int *) marpaESLIFValueResultp->u.p);
   s = lua_tolstring(L, -1, &l);
   if ((s != NULL) && (l > 0)) {
+    /* No guarantee this will survive the lua call, so we keep an explicitly copy */
+    /* until marpaESLIF also takes a copy. */
     *inputcpp = (char *) malloc(l);
     if (*inputcpp == NULL) {
       return luaL_error(L, "malloc failure, %s", strerror(errno));
     }
+    memcpy(*inputcpp, s, l);
     *inputlp = l;
+    marpaESLIFLuaValueContextp->previous_strings = (void *) *inputcpp;
   }
   lua_pop(L, 1);
 
