@@ -564,32 +564,32 @@ static marpaESLIFValueResultTransform_t marpaESLIFValueResultTransformDefault = 
     MARPAESLIFLUA_STORE_USERDATA(L, "marpaESLIFLuaGrammarContextp", marpaESLIFLuaGrammarContextp); \
     lua_newtable(L);                                                    \
     MARPAESLIFLUA_STORE_ASCIISTRING(L, "__mode", "v");                  \
-    MARPAESLIFLUA_STORE_FUNCTION(L, "__gc",                     marpaESLIFLua_marpaESLIFGrammar_freei); \
+    MARPAESLIFLUA_STORE_FUNCTION(L, "__gc",                         marpaESLIFLua_marpaESLIFGrammar_freei); \
     lua_newtable(L);                                                    \
-    MARPAESLIFLUA_STORE_FUNCTION(L, "ngrammar",                 marpaESLIFLua_marpaESLIFGrammar_ngrammari); \
-    MARPAESLIFLUA_STORE_FUNCTION(L, "currentLevel",             marpaESLIFLua_marpaESLIFGrammar_currentLeveli); \
-    MARPAESLIFLUA_STORE_FUNCTION(L, "currentDescription",       marpaESLIFLua_marpaESLIFGrammar_currentDescriptioni); \
-    MARPAESLIFLUA_STORE_FUNCTION(L, "descriptionByLevel",       marpaESLIFLua_marpaESLIFGrammar_descriptionByLeveli); \
-    MARPAESLIFLUA_STORE_FUNCTION(L, "currentRuleIds",           marpaESLIFLua_marpaESLIFGrammar_currentRuleIdsi); \
-    MARPAESLIFLUA_STORE_FUNCTION(L, "ruleIdsByLevel",           marpaESLIFLua_marpaESLIFGrammar_ruleIdsByLeveli); \
-    MARPAESLIFLUA_STORE_FUNCTION(L, "currentSymbolIds",         marpaESLIFLua_marpaESLIFGrammar_currentSymbolIdsi); \
-    MARPAESLIFLUA_STORE_FUNCTION(L, "symbolIdsByLevel",         marpaESLIFLua_marpaESLIFGrammar_symbolIdsByLeveli); \
-    MARPAESLIFLUA_STORE_FUNCTION(L, "currentProperties",        marpaESLIFLua_marpaESLIFGrammar_currentPropertiesi); \
-    MARPAESLIFLUA_STORE_FUNCTION(L, "propertiesByLevel",        marpaESLIFLua_marpaESLIFGrammar_propertiesByLeveli); \
-    MARPAESLIFLUA_STORE_FUNCTION(L, "currentRuleProperties",    marpaESLIFLua_marpaESLIFGrammar_currentRulePropertiesi); \
-    MARPAESLIFLUA_STORE_FUNCTION(L, "rulePropertiesByLevel",    marpaESLIFLua_marpaESLIFGrammar_rulePropertiesByLeveli); \
-    MARPAESLIFLUA_STORE_FUNCTION(L, "currentSymbolProperties",  marpaESLIFLua_marpaESLIFGrammar_currentSymbolPropertiesi); \
-    MARPAESLIFLUA_STORE_FUNCTION(L, "symbolPropertiesByLevel",  marpaESLIFLua_marpaESLIFGrammar_symbolPropertiesByLeveli); \
-    MARPAESLIFLUA_STORE_FUNCTION(L, "ruleDisplay",              marpaESLIFLua_marpaESLIFGrammar_ruleDisplayi); \
-    MARPAESLIFLUA_STORE_FUNCTION(L, "symbolDisplay",            marpaESLIFLua_marpaESLIFGrammar_symbolDisplayi); \
-    MARPAESLIFLUA_STORE_FUNCTION(L, "ruleShow",                 marpaESLIFLua_marpaESLIFGrammar_ruleShowi); \
-    MARPAESLIFLUA_STORE_FUNCTION(L, "ruleDisplayByLevel",       marpaESLIFLua_marpaESLIFGrammar_ruleDisplayByLeveli); \
-    MARPAESLIFLUA_STORE_FUNCTION(L, "symbolDisplayByLevel",     marpaESLIFLua_marpaESLIFGrammar_symbolDisplayByLeveli); \
-    MARPAESLIFLUA_STORE_FUNCTION(L, "ruleShowByLevel",          marpaESLIFLua_marpaESLIFGrammar_ruleShowByLeveli); \
-    MARPAESLIFLUA_STORE_FUNCTION(L, "show",                     marpaESLIFLua_marpaESLIFGrammar_showi); \
-    MARPAESLIFLUA_STORE_FUNCTION(L, "showByLevel",              marpaESLIFLua_marpaESLIFGrammar_showByLeveli); \
-    MARPAESLIFLUA_STORE_FUNCTION(L, "parse",                    marpaESLIFLua_marpaESLIFGrammar_parsei); \
-    MARPAESLIFLUA_STORE_FUNCTION(L, "marpaESLIFRecognizer_new", marpaESLIFLua_marpaESLIFRecognizer_newi); \
+    MARPAESLIFLUA_STORE_FUNCTION(L, "ngrammar",                     marpaESLIFLua_marpaESLIFGrammar_ngrammari); \
+    MARPAESLIFLUA_STORE_FUNCTION(L, "currentLevel",                 marpaESLIFLua_marpaESLIFGrammar_currentLeveli); \
+    MARPAESLIFLUA_STORE_FUNCTION(L, "currentDescription",           marpaESLIFLua_marpaESLIFGrammar_currentDescriptioni); \
+    MARPAESLIFLUA_STORE_FUNCTION(L, "descriptionByLevel",           marpaESLIFLua_marpaESLIFGrammar_descriptionByLeveli); \
+    MARPAESLIFLUA_STORE_FUNCTION(L, "currentRuleIds",               marpaESLIFLua_marpaESLIFGrammar_currentRuleIdsi); \
+    MARPAESLIFLUA_STORE_FUNCTION(L, "ruleIdsByLevel",               marpaESLIFLua_marpaESLIFGrammar_ruleIdsByLeveli); \
+    MARPAESLIFLUA_STORE_FUNCTION(L, "currentSymbolIds",             marpaESLIFLua_marpaESLIFGrammar_currentSymbolIdsi); \
+    MARPAESLIFLUA_STORE_FUNCTION(L, "symbolIdsByLevel",             marpaESLIFLua_marpaESLIFGrammar_symbolIdsByLeveli); \
+    MARPAESLIFLUA_STORE_FUNCTION(L, "currentProperties",            marpaESLIFLua_marpaESLIFGrammar_currentPropertiesi); \
+    MARPAESLIFLUA_STORE_FUNCTION(L, "propertiesByLevel",            marpaESLIFLua_marpaESLIFGrammar_propertiesByLeveli); \
+    MARPAESLIFLUA_STORE_FUNCTION(L, "currentRuleProperties",        marpaESLIFLua_marpaESLIFGrammar_currentRulePropertiesi); \
+    MARPAESLIFLUA_STORE_FUNCTION(L, "rulePropertiesByLevel",        marpaESLIFLua_marpaESLIFGrammar_rulePropertiesByLeveli); \
+    MARPAESLIFLUA_STORE_FUNCTION(L, "currentSymbolProperties",      marpaESLIFLua_marpaESLIFGrammar_currentSymbolPropertiesi); \
+    MARPAESLIFLUA_STORE_FUNCTION(L, "symbolPropertiesByLevel",      marpaESLIFLua_marpaESLIFGrammar_symbolPropertiesByLeveli); \
+    MARPAESLIFLUA_STORE_FUNCTION(L, "ruleDisplay",                  marpaESLIFLua_marpaESLIFGrammar_ruleDisplayi); \
+    MARPAESLIFLUA_STORE_FUNCTION(L, "symbolDisplay",                marpaESLIFLua_marpaESLIFGrammar_symbolDisplayi); \
+    MARPAESLIFLUA_STORE_FUNCTION(L, "ruleShow",                     marpaESLIFLua_marpaESLIFGrammar_ruleShowi); \
+    MARPAESLIFLUA_STORE_FUNCTION(L, "ruleDisplayByLevel",           marpaESLIFLua_marpaESLIFGrammar_ruleDisplayByLeveli); \
+    MARPAESLIFLUA_STORE_FUNCTION(L, "symbolDisplayByLevel",         marpaESLIFLua_marpaESLIFGrammar_symbolDisplayByLeveli); \
+    MARPAESLIFLUA_STORE_FUNCTION(L, "ruleShowByLevel",              marpaESLIFLua_marpaESLIFGrammar_ruleShowByLeveli); \
+    MARPAESLIFLUA_STORE_FUNCTION(L, "show",                         marpaESLIFLua_marpaESLIFGrammar_showi); \
+    MARPAESLIFLUA_STORE_FUNCTION(L, "showByLevel",                  marpaESLIFLua_marpaESLIFGrammar_showByLeveli); \
+    MARPAESLIFLUA_STORE_FUNCTION(L, "parse",                        marpaESLIFLua_marpaESLIFGrammar_parsei); \
+    MARPAESLIFLUA_STORE_FUNCTION(L, "marpaESLIFRecognizer_new",     marpaESLIFLua_marpaESLIFRecognizer_newi); \
     lua_setfield(L, -2, "__index");                                     \
     lua_setmetatable(L, -2);                                            \
   } while (0)
@@ -602,40 +602,55 @@ static marpaESLIFValueResultTransform_t marpaESLIFValueResultTransformDefault = 
   MARPAESLIFLUA_STORE_USERDATA(L, "marpaESLIFLuaRecognizerContextp", marpaESLIFLuaRecognizerContextp); \
   lua_newtable(L);                                                      \
   MARPAESLIFLUA_STORE_ASCIISTRING(L, "__mode", "v");                    \
-  MARPAESLIFLUA_STORE_FUNCTION(L, "__gc", marpaESLIFLua_marpaESLIFRecognizer_freei); \
+  MARPAESLIFLUA_STORE_FUNCTION(L, "__gc",                            marpaESLIFLua_marpaESLIFRecognizer_freei); \
   lua_newtable(L);                                                      \
-  MARPAESLIFLUA_STORE_FUNCTION(L, "newFrom",               marpaESLIFLua_marpaESLIFRecognizer_newFromi); \
-  MARPAESLIFLUA_STORE_FUNCTION(L, "set_exhausted_flag",    marpaESLIFLua_marpaESLIFRecognizer_set_exhausted_flagi); \
-  MARPAESLIFLUA_STORE_FUNCTION(L, "share",                 marpaESLIFLua_marpaESLIFRecognizer_sharei); \
-  MARPAESLIFLUA_STORE_FUNCTION(L, "isCanContinue",         marpaESLIFLua_marpaESLIFRecognizer_isCanContinuei); \
-  MARPAESLIFLUA_STORE_FUNCTION(L, "isExhausted",           marpaESLIFLua_marpaESLIFRecognizer_isExhaustedi); \
-  MARPAESLIFLUA_STORE_FUNCTION(L, "scan",                  marpaESLIFLua_marpaESLIFRecognizer_scani); \
-  MARPAESLIFLUA_STORE_FUNCTION(L, "resume",                marpaESLIFLua_marpaESLIFRecognizer_resumei); \
-  MARPAESLIFLUA_STORE_FUNCTION(L, "events",                marpaESLIFLua_marpaESLIFRecognizer_eventsi); \
-  MARPAESLIFLUA_STORE_FUNCTION(L, "eventOnOff",            marpaESLIFLua_marpaESLIFRecognizer_eventOnOffi); \
-  MARPAESLIFLUA_STORE_FUNCTION(L, "lexemeAlternative",     marpaESLIFLua_marpaESLIFRecognizer_lexemeAlternativei); \
-  MARPAESLIFLUA_STORE_FUNCTION(L, "lexemeComplete",        marpaESLIFLua_marpaESLIFRecognizer_lexemeCompletei); \
-  MARPAESLIFLUA_STORE_FUNCTION(L, "lexemeRead",            marpaESLIFLua_marpaESLIFRecognizer_lexemeReadi); \
-  MARPAESLIFLUA_STORE_FUNCTION(L, "lexemeTry",             marpaESLIFLua_marpaESLIFRecognizer_lexemeTryi); \
-  MARPAESLIFLUA_STORE_FUNCTION(L, "discardTry",            marpaESLIFLua_marpaESLIFRecognizer_discardTryi); \
-  MARPAESLIFLUA_STORE_FUNCTION(L, "lexemeExpected",        marpaESLIFLua_marpaESLIFRecognizer_lexemeExpectedi); \
-  MARPAESLIFLUA_STORE_FUNCTION(L, "lexemeLastPause",       marpaESLIFLua_marpaESLIFRecognizer_lexemeLastPausei); \
-  MARPAESLIFLUA_STORE_FUNCTION(L, "lexemeLastTry",         marpaESLIFLua_marpaESLIFRecognizer_lexemeLastTryi); \
-  MARPAESLIFLUA_STORE_FUNCTION(L, "discardLastTry",        marpaESLIFLua_marpaESLIFRecognizer_discardLastTryi); \
-  MARPAESLIFLUA_STORE_FUNCTION(L, "isEof",                 marpaESLIFLua_marpaESLIFRecognizer_isEofi); \
-  MARPAESLIFLUA_STORE_FUNCTION(L, "read",                  marpaESLIFLua_marpaESLIFRecognizer_readi); \
-  MARPAESLIFLUA_STORE_FUNCTION(L, "input",                 marpaESLIFLua_marpaESLIFRecognizer_inputi); \
-  MARPAESLIFLUA_STORE_FUNCTION(L, "progressLog",           marpaESLIFLua_marpaESLIFRecognizer_progressLogi); \
-  MARPAESLIFLUA_STORE_FUNCTION(L, "lastCompletedOffset",   marpaESLIFLua_marpaESLIFRecognizer_lastCompletedOffseti); \
-  MARPAESLIFLUA_STORE_FUNCTION(L, "lastCompletedLength",   marpaESLIFLua_marpaESLIFRecognizer_lastCompletedLenghti); \
-  MARPAESLIFLUA_STORE_FUNCTION(L, "lastCompletedLocation", marpaESLIFLua_marpaESLIFRecognizer_lastCompletedLocationi); \
-  MARPAESLIFLUA_STORE_FUNCTION(L, "line",                  marpaESLIFLua_marpaESLIFRecognizer_linei); \
-  MARPAESLIFLUA_STORE_FUNCTION(L, "column",                marpaESLIFLua_marpaESLIFRecognizer_columni); \
-  MARPAESLIFLUA_STORE_FUNCTION(L, "location",              marpaESLIFLua_marpaESLIFRecognizer_locationi); \
-  MARPAESLIFLUA_STORE_FUNCTION(L, "hookDiscard",           marpaESLIFLua_marpaESLIFRecognizer_hookDiscardi); \
-  MARPAESLIFLUA_STORE_FUNCTION(L, "marpaESLIFValue_new",   marpaESLIFLua_marpaESLIFValue_newi); \
+  MARPAESLIFLUA_STORE_FUNCTION(L, "newFrom",                         marpaESLIFLua_marpaESLIFRecognizer_newFromi); \
+  MARPAESLIFLUA_STORE_FUNCTION(L, "set_exhausted_flag",              marpaESLIFLua_marpaESLIFRecognizer_set_exhausted_flagi); \
+  MARPAESLIFLUA_STORE_FUNCTION(L, "share",                           marpaESLIFLua_marpaESLIFRecognizer_sharei); \
+  MARPAESLIFLUA_STORE_FUNCTION(L, "isCanContinue",                   marpaESLIFLua_marpaESLIFRecognizer_isCanContinuei); \
+  MARPAESLIFLUA_STORE_FUNCTION(L, "isExhausted",                     marpaESLIFLua_marpaESLIFRecognizer_isExhaustedi); \
+  MARPAESLIFLUA_STORE_FUNCTION(L, "scan",                            marpaESLIFLua_marpaESLIFRecognizer_scani); \
+  MARPAESLIFLUA_STORE_FUNCTION(L, "resume",                          marpaESLIFLua_marpaESLIFRecognizer_resumei); \
+  MARPAESLIFLUA_STORE_FUNCTION(L, "events",                          marpaESLIFLua_marpaESLIFRecognizer_eventsi); \
+  MARPAESLIFLUA_STORE_FUNCTION(L, "eventOnOff",                      marpaESLIFLua_marpaESLIFRecognizer_eventOnOffi); \
+  MARPAESLIFLUA_STORE_FUNCTION(L, "lexemeAlternative",               marpaESLIFLua_marpaESLIFRecognizer_lexemeAlternativei); \
+  MARPAESLIFLUA_STORE_FUNCTION(L, "lexemeComplete",                  marpaESLIFLua_marpaESLIFRecognizer_lexemeCompletei); \
+  MARPAESLIFLUA_STORE_FUNCTION(L, "lexemeRead",                      marpaESLIFLua_marpaESLIFRecognizer_lexemeReadi); \
+  MARPAESLIFLUA_STORE_FUNCTION(L, "lexemeTry",                       marpaESLIFLua_marpaESLIFRecognizer_lexemeTryi); \
+  MARPAESLIFLUA_STORE_FUNCTION(L, "discardTry",                      marpaESLIFLua_marpaESLIFRecognizer_discardTryi); \
+  MARPAESLIFLUA_STORE_FUNCTION(L, "lexemeExpected",                  marpaESLIFLua_marpaESLIFRecognizer_lexemeExpectedi); \
+  MARPAESLIFLUA_STORE_FUNCTION(L, "lexemeLastPause",                 marpaESLIFLua_marpaESLIFRecognizer_lexemeLastPausei); \
+  MARPAESLIFLUA_STORE_FUNCTION(L, "lexemeLastTry",                   marpaESLIFLua_marpaESLIFRecognizer_lexemeLastTryi); \
+  MARPAESLIFLUA_STORE_FUNCTION(L, "discardLastTry",                  marpaESLIFLua_marpaESLIFRecognizer_discardLastTryi); \
+  MARPAESLIFLUA_STORE_FUNCTION(L, "isEof",                           marpaESLIFLua_marpaESLIFRecognizer_isEofi); \
+  MARPAESLIFLUA_STORE_FUNCTION(L, "read",                            marpaESLIFLua_marpaESLIFRecognizer_readi); \
+  MARPAESLIFLUA_STORE_FUNCTION(L, "input",                           marpaESLIFLua_marpaESLIFRecognizer_inputi); \
+  MARPAESLIFLUA_STORE_FUNCTION(L, "progressLog",                     marpaESLIFLua_marpaESLIFRecognizer_progressLogi); \
+  MARPAESLIFLUA_STORE_FUNCTION(L, "lastCompletedOffset",             marpaESLIFLua_marpaESLIFRecognizer_lastCompletedOffseti); \
+  MARPAESLIFLUA_STORE_FUNCTION(L, "lastCompletedLength",             marpaESLIFLua_marpaESLIFRecognizer_lastCompletedLenghti); \
+  MARPAESLIFLUA_STORE_FUNCTION(L, "lastCompletedLocation",           marpaESLIFLua_marpaESLIFRecognizer_lastCompletedLocationi); \
+  MARPAESLIFLUA_STORE_FUNCTION(L, "line",                            marpaESLIFLua_marpaESLIFRecognizer_linei); \
+  MARPAESLIFLUA_STORE_FUNCTION(L, "column",                          marpaESLIFLua_marpaESLIFRecognizer_columni); \
+  MARPAESLIFLUA_STORE_FUNCTION(L, "location",                        marpaESLIFLua_marpaESLIFRecognizer_locationi); \
+  MARPAESLIFLUA_STORE_FUNCTION(L, "hookDiscard",                     marpaESLIFLua_marpaESLIFRecognizer_hookDiscardi); \
+  MARPAESLIFLUA_STORE_FUNCTION(L, "marpaESLIFValue_new",             marpaESLIFLua_marpaESLIFValue_newi); \
   lua_setfield(L, -2, "__index");                                       \
   lua_setmetatable(L, -2);                                              \
+  } while (0)
+
+/* ---------------------------- */
+/* Push of ESLIF value object */
+/* ---------------------------- */
+#define MARPAESLIFLUA_PUSH_MARPAESLIFVALUE_OBJECT(L, marpaESLIFLuaValueContextp) do { \
+    lua_newtable(L);                                                    \
+    MARPAESLIFLUA_STORE_USERDATA(L, "marpaESLIFLuaValueContextp", marpaESLIFLuaValueContextp); \
+    lua_newtable(L);                                                    \
+    MARPAESLIFLUA_STORE_ASCIISTRING(L, "__mode", "v");                  \
+    MARPAESLIFLUA_STORE_FUNCTION(L, "__gc",                       marpaESLIFLua_marpaESLIFValue_freei); \
+    lua_newtable(L);                                                    \
+    MARPAESLIFLUA_STORE_FUNCTION(L, "value",                      marpaESLIFLua_marpaESLIFValue_valuei); \
+    lua_setfield(L, -2, "__index");                                     \
+    lua_setmetatable(L, -2);                                            \
   } while (0)
 
 #ifdef MARPAESLIFLUA_EMBEDDED
@@ -1443,8 +1458,13 @@ static void  marpaESLIFLua_valueContextFreev(marpaESLIFLuaValueContext_t *marpaE
       MARPAESLIFLUA_UNREF(L, marpaESLIFLuaValueContextp->grammar_r);
     }
 
-    if (marpaESLIFLuaValueContextp->marpaESLIFValuep != NULL) {
-      marpaESLIFValue_freev(marpaESLIFLuaValueContextp->marpaESLIFValuep);
+    if (marpaESLIFLuaValueContextp->managedb) {
+      if (marpaESLIFLuaValueContextp->marpaESLIFValuep != NULL) {
+        marpaESLIFValue_freev(marpaESLIFLuaValueContextp->marpaESLIFValuep);
+        marpaESLIFLuaValueContextp->marpaESLIFValuep = NULL;
+      }
+      marpaESLIFLuaValueContextp->managedb = 0;
+    } else {
       marpaESLIFLuaValueContextp->marpaESLIFValuep = NULL;
     }
 
@@ -1468,7 +1488,7 @@ static void  marpaESLIFLua_valueContextInitv(lua_State *L, int grammarStacki, in
     MARPAESLIFLUA_REF(L, marpaESLIFLuaValueContextp->value_r);                   /* stack: xxx */
     /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) got value_r=%d from registry at %s:%d", funcs, L, marpaESLIFLuaValueContextp->value_r, FILENAMES, __LINE__); */
   } else {
-    luaL_error(L, "valueInterfaceStacki must be != 0");
+    marpaESLIFLuaValueContextp->value_r = LUA_NOREF;
   }
   /* Get recognizer reference - optional */
   if (recognizerStacki != 0) {
@@ -1696,14 +1716,14 @@ static int marpaESLIFLua_marpaESLIFGrammar_newFromUnmanagedi(lua_State *L, marpa
 {
   static const char             *funcs = "marpaESLIFLua_marpaESLIFGrammar_newFromUnmanagedi";
   marpaESLIFLuaGrammarContext_t *marpaESLIFLuaGrammarContextp;
- 
+
   /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__); */
 
   marpaESLIFLuaGrammarContextp = malloc(sizeof(marpaESLIFLuaGrammarContext_t));
   if (marpaESLIFLuaGrammarContextp == NULL) {
     return luaL_error(L, "malloc failure, %s", strerror(errno));
   }
-  
+
   marpaESLIFLua_grammarContextInitv(L, 0 /* eslifStacki */, marpaESLIFLuaGrammarContextp);
   marpaESLIFLuaGrammarContextp->marpaESLIFGrammarp = marpaESLIFGrammarUnmanagedp;
   marpaESLIFLuaGrammarContextp->managedb           = 0;
@@ -4664,32 +4684,40 @@ static int marpaESLIFLua_marpaESLIFValue_newi(lua_State *L)
     return luaL_error(L, "marpaESLIFValue_newp failure, %s", strerror(save_errno));
   }
 
+  marpaESLIFLuaValueContextp->managedb = 1;
+
   /* Clear the stack */
   lua_settop(L, 0);
 
-  /* We will return a table */
-  lua_newtable(L);                                                                   /* stack: {} */
-  MARPAESLIFLUA_STORE_USERDATA(L, "marpaESLIFLuaValueContextp", marpaESLIFLuaValueContextp);                   /* stack: {["marpaESLIFLuaValueContextp"] =>marpaESLIFLuaValueContextp */
-
-  /* Create a metable */
-  lua_newtable(L);
-  MARPAESLIFLUA_STORE_ASCIISTRING(L, "__mode", "v");                                 /* ... Say the values are weak */
-  MARPAESLIFLUA_STORE_FUNCTION(L, "__gc", marpaESLIFLua_marpaESLIFValue_freei);      /* ... Associate a garbage collector */
-  lua_newtable(L);                                                                   /* ... Associate methods */
-  MARPAESLIFLUA_STORE_FUNCTION(L, "value", marpaESLIFLua_marpaESLIFValue_valuei);
-  lua_setfield(L, -2, "__index");
-
-  lua_setmetatable(L, -2);                                                           /* stack: {["marpaESLIFLuaRecognizerContextp"] =>marpaESLIFLuaRecognizerContextp, meta=>{...} */
+  MARPAESLIFLUA_PUSH_MARPAESLIFVALUE_OBJECT(L, marpaESLIFLuaValueContextp);
 
   /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 ({marpaESLIFLuaRecognizerContextp->marpaESLIFRecognizerp=%p}) at %s:%d", funcs, L, marpaESLIFLuaRecognizerContextp->marpaESLIFRecognizerp, FILENAMES, __LINE__); */
   return 1;
 }
 
 #ifdef MARPAESLIFLUA_EMBEDDED
-static int marpaESLIFLua_marpaESLIFValue_newFromUnmanagedi(lua_State *L, marpaESLIFValue_t *marpaESLIFValueUnmanagedp){
-  static const char *funcs = "marpaESLIFLua_marpaESLIFValue_newFromUnmanagedi";
+/****************************************************************************/
+static int marpaESLIFLua_marpaESLIFValue_newFromUnmanagedi(lua_State *L, marpaESLIFValue_t *marpaESLIFValueUnmanagedp)
+/****************************************************************************/
+{
+  static const char             *funcs = "marpaESLIFLua_marpaESLIFValue_newFromUnmanagedi";
+  marpaESLIFLuaValueContext_t *marpaESLIFLuaValueContextp;
 
-  return 0;
+  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__); */
+
+  marpaESLIFLuaValueContextp = malloc(sizeof(marpaESLIFLuaValueContext_t));
+  if (marpaESLIFLuaValueContextp == NULL) {
+    return luaL_error(L, "malloc failure, %s", strerror(errno));
+  }
+
+  marpaESLIFLua_valueContextInitv(L, 0 /* grammarStacki */, 0 /* recognizerStacki */, 0 /* valueInterfaceStacki */, marpaESLIFLuaValueContextp);
+  marpaESLIFLuaValueContextp->marpaESLIFValuep = marpaESLIFValueUnmanagedp;
+  marpaESLIFLuaValueContextp->managedb           = 0;
+
+  MARPAESLIFLUA_PUSH_MARPAESLIFVALUE_OBJECT(L, marpaESLIFLuaValueContextp);
+
+  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 ({marpaESLIFLuaValueContextp=%p}) at %s:%d", funcs, L, marpaESLIFLuaValueContextp, FILENAMES, __LINE__); */
+  return 1;
 }
 #endif /* MARPAESLIFLUA_EMBEDDED */
 

@@ -420,6 +420,9 @@ static short _marpaESLIF_lua_newb(marpaESLIFValue_t *marpaESLIFValuep)
   marpaESLIFLua_marpaESLIFRecognizer_newFromUnmanagedi(marpaESLIFValuep->L, marpaESLIFValuep->marpaESLIFRecognizerp);                  /* stack: marpaESLIFLua, marpaESLIFRecognizer */
   LUA_SETGLOBAL(marpaESLIFValuep, "marpaESLIFRecognizer");                                                                             /* stack: marpaESLIFLua */
 
+  marpaESLIFLua_marpaESLIFValue_newFromUnmanagedi(marpaESLIFValuep->L, marpaESLIFValuep);                                              /* stack: marpaESLIFLua, marpaESLIFValue */
+  LUA_SETGLOBAL(marpaESLIFValuep, "marpaESLIFValue");                                                                                  /* stack: marpaESLIFLua */
+
   LUA_POP(marpaESLIFValuep, 1);                                                                                                        /* stack: */
 
   /* We load byte code generated during grammar validation */
