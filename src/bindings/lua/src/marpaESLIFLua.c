@@ -412,6 +412,9 @@ static marpaESLIFValueResultTransform_t marpaESLIFLuaValueResultTransformDefault
     lua_call(L, nargs + 1, LUA_MULTRET);				\
   } else {								\
     lua_getglobal(L, funcs);						\
+    if (lua_type(L, -1) != LUA_TFUNCTION) {                             \
+      luaL_error(L, "No such function %s", funcs);                      \
+    }                                                                   \
     parameters                                                          \
     lua_call(L, nargs, LUA_MULTRET);					\
   }									\
