@@ -3101,7 +3101,7 @@ static void marpaESLIFLua_pushValuev(marpaESLIFLuaValueContext_t *marpaESLIFLuaV
   if (bytep != NULL) {
     /* Fake a marpaESLIFValueResult */
     marpaESLIFValueResult.type     = MARPAESLIF_VALUE_TYPE_ARRAY;
-    marpaESLIFValueResult.contextp = MARPAESLIFLUA_CONTEXT;
+    marpaESLIFValueResult.contextp = NULL;
     marpaESLIFValueResult.sizel    = bytel;
     marpaESLIFValueResult.u.p      = bytep;
     marpaESLIFValueResultp         = &marpaESLIFValueResult;
