@@ -1076,10 +1076,8 @@ static void marpaESLIF_valueContextFreev(pTHX_ MarpaX_ESLIF_Value_t *Perl_MarpaX
     SV *Perl_MarpaX_ESLIF_Grammarp    = Perl_MarpaX_ESLIF_Valuep->Perl_MarpaX_ESLIF_Grammarp;
     SV *Perl_valueInterfacep          = Perl_MarpaX_ESLIF_Valuep->Perl_valueInterfacep;
 
-    if (Perl_MarpaX_ESLIF_Valuep->previous_strings != NULL) {
-      Safefree(Perl_MarpaX_ESLIF_Valuep->previous_strings);
-      Perl_MarpaX_ESLIF_Valuep->previous_strings = NULL;
-    }
+    marpaESLIF_valueContextCleanupv(aTHX_ Perl_MarpaX_ESLIF_Valuep);
+
     if (Perl_MarpaX_ESLIF_Valuep->marpaESLIFValuep != NULL) {
       marpaESLIFValue_freev(Perl_MarpaX_ESLIF_Valuep->marpaESLIFValuep);
     }
@@ -1122,6 +1120,7 @@ static void marpaESLIF_recognizerContextFreev(pTHX_ MarpaX_ESLIF_Recognizer_t *P
     SV *Perl_MarpaX_ESLIF_Recognizer_origp = Perl_MarpaX_ESLIF_Recognizerp->Perl_MarpaX_ESLIF_Recognizer_origp;
 
     marpaESLIF_recognizerContextCleanupv(aTHX_ Perl_MarpaX_ESLIF_Recognizerp);
+
     lexemeStackp = Perl_MarpaX_ESLIF_Recognizerp->lexemeStackp;
     if (lexemeStackp != NULL) {
       /* It is important to delete references in the reverse order of their creation */
