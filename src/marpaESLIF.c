@@ -3640,7 +3640,6 @@ static inline marpaESLIF_t *_marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptio
   marpaESLIFp->marpaESLIFGrammarp->luaprecompiledp         = NULL;
   marpaESLIFp->marpaESLIFGrammarp->luaprecompiledl         = 0;
   marpaESLIFp->marpaESLIFGrammarp->luadescp                = NULL;
-  marpaESLIFp->marpaESLIFGrammarp->L                       = NULL;
 
   marpaESLIFp->marpaESLIFGrammarp->grammarStackp = &(marpaESLIFp->marpaESLIFGrammarp->_grammarStack);
   GENERICSTACK_INIT(marpaESLIFp->marpaESLIFGrammarp->grammarStackp);
@@ -4861,7 +4860,6 @@ static inline marpaESLIFGrammar_t *_marpaESLIFGrammar_newp(marpaESLIF_t *marpaES
     marpaESLIFGrammarp->luaprecompiledp         = NULL;
     marpaESLIFGrammarp->luaprecompiledl         = 0;
     marpaESLIFGrammarp->luadescp                = NULL;
-    marpaESLIFGrammarp->L                       = NULL;
   } else {
     marpaESLIFGrammarp = marpaESLIfGrammarPreviousp;
   }
