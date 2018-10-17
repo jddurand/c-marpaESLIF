@@ -282,7 +282,7 @@ static int   _marpaESLIF_lua_grammarWriteri(lua_State *L, const void* p, size_t 
   } while (0)
 
 #define LUA_TOUSERDATA(containerp, rcpp, idx) do {                    \
-    if (luaunpanic_touserdata(rcpp, containerp->L, idx)) {            \
+    if (luaunpanic_touserdata((void **) rcpp, containerp->L, idx)) {  \
       LOG_PANIC_STRING(containerp, lua_touserdata);                   \
       errno = ENOSYS;                                                 \
       goto err;                                                       \
