@@ -21,7 +21,7 @@
           call;                                                         \
           rc = 0;                                                       \
         }                                                               \
-        ETRY;                                                           \
+        ETRY(LW);							\
       } else {                                                          \
         call;                                                           \
         rc = 0;                                                         \
@@ -54,7 +54,7 @@
           }                                                             \
           rc = 0;                                                       \
         }                                                               \
-        ETRY;                                                           \
+        ETRY(LW);							\
       } else {                                                          \
         type luarc;							\
         luarc = call;							\
@@ -93,7 +93,7 @@
           }                                                             \
           rc = 0;                                                       \
         }                                                               \
-        ETRY;                                                           \
+        ETRY(LW);							\
       } else {                                                          \
         type luarc;							\
         luarc = call;							\
@@ -133,7 +133,7 @@
           }                                                             \
           rc = 0;                                                       \
         }                                                               \
-        ETRY;                                                           \
+        ETRY(LW);							\
       } else {                                                          \
         type luarc;							\
         luarc = call;							\

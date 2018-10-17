@@ -13,7 +13,7 @@
 
 typedef struct luaunpanic_userdata {
   char *panicstring;
-  jmp_buf env;
+  jmp_buf *envp;
 } luaunpanic_userdata_t;
 
 static char *LUAUNPANIC_DEFAULT_PANICSTRING = "";
@@ -133,18 +133,20 @@ short luaunpanic_close(lua_State *L)
   } else {
     LW = lua_getuserdata(L);
     if (LW != NULL) {
+      /* Take care, the macros are using LW so we have to manage it as well */
       TRY(LW) {
         lua_close(L);
         rc = 0;
-      } FINALLY {
+      } FINALLY(LW) {
         if (LW->panicstring != NULL) {
           if ((LW->panicstring != LUAUNPANIC_DEFAULT_PANICSTRING) && (LW->panicstring != LUAUNPANIC_UNKNOWN_PANICSTRING)) {
             free(LW->panicstring);
           }
         }
         free(LW);
+	LW = NULL;
       }
-      ETRY;
+      ETRY(LW);
     } else {
       /* L is not coming from luaunpanic ? You're on your own. */
       lua_close(L);
@@ -177,7 +179,7 @@ static short _luaunpanic_newthread(lua_State **LNp, lua_State *L)
 	}
 	rc = 0;
       }
-      ETRY;
+      ETRY(LW);
     } else {
       lua_State *LN = lua_newthread(L);
       if (LNp != NULL) {
@@ -435,7 +437,7 @@ short luaunpanic_tounsignedx(lua_Unsigned *rcp, lua_State *L, int idx, int *isnu
 {
   lua_Integer luarc;
 
-  if (lua_tointegerx(&luarc, L,i,is)) {
+  if (luaunpanic_tointegerx(&luarc, L, idx, isnum)) {
     return 1;
   }
   if (rcp != NULL) {

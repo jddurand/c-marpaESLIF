@@ -22,6 +22,7 @@
 #ifndef _TRY_THROW_CATCH_H_
 #define _TRY_THROW_CATCH_H_
 
+#include <stdlib.h>
 #include <stdio.h>
 #include <setjmp.h>
 
@@ -31,25 +32,25 @@
 
 #undef TRY
 #if defined(LUA_USE_POSIX)
-#  define TRY(L) do { switch( _setjmp((L)->env) ) { case 0: while(1) {
+#  define TRY(LW) do { jmp_buf env; (LW)->envp = &env; switch( _setjmp(env) ) { case 0: while(1) {
 #else
-#  define TRY(L) do { switch( setjmp((L)->env) ) { case 0: while(1) {
+#  define TRY(LW) do { jmp_buf env; (LW)->envp = &env; switch( setjmp(env) ) { case 0: while(1) {
 #endif
 
 #undef CATCH
-#define CATCH(x) break; case x:
+#define CATCH(LW, x) break; case x:
 
 #undef FINALLY
-#define FINALLY break; } default: {
+#define FINALLY(LW) break; } default: {
 
 #undef ETRY
-#define ETRY break; } } }while(0)
+#define ETRY(LW) break; } } if ((LW) != NULL) (LW)->envp = NULL; } while(0)
 
 #undef THROW
 #if defined(LUA_USE_POSIX)
-#  define THROW(L, x) _longjmp((L)->env, x)
+#  define THROW(LW, x) if (((LW) != NULL) && ((LW)->envp != NULL)) _longjmp(*((LW)->envp), x)
 #else
-#  define THROW(L, x) longjmp((L)->env, x)
+#  define THROW(LW, x) if (((LW) != NULL) && ((LW)->envp != NULL)) longjmp(*((LW)->envp), x)
 #endif
 
 #endif /*!_TRY_THROW_CATCH_H_*/
