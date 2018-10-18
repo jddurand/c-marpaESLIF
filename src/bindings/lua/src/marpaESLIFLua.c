@@ -12,8 +12,6 @@
 
 /* To ease me debugging -; */
 static void marpaESLIFLua_stackdumpv(lua_State* L, int forcelookupi);
-#undef  FILENAMES
-#define FILENAMES "marpaESLIFLua.c"
 
 /* Global table for the multiton pattern */
 #define MARPAESLIFMULTITONSTABLE "__marpaESLIFLuaMultitonsTable"
@@ -235,11 +233,9 @@ static marpaESLIFValueResultTransform_t marpaESLIFLuaValueResultTransformDefault
   } while (0)
 
 #define MARPAESLIFLUA_GETORCREATEGLOBAL(L, name, gcp) do {              \
-    /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) getting global table name=%s gcp=%p at %s:%d", funcs, L, name, gcp, FILENAMES, __LINE__); */  \
     lua_getglobal(L, name);                                             \
     if (lua_type(L, -1) != LUA_TTABLE) {                                \
       lua_pop(L, 1);                                                    \
-      /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) creating global table name=%s gcp=%p at %s:%d", funcs, L, name, gcp, FILENAMES, __LINE__); */  \
       lua_newtable(L);                                                  \
       if (gcp != NULL) {                                                \
         lua_newtable(L);                                                \
@@ -252,59 +248,22 @@ static marpaESLIFValueResultTransform_t marpaESLIFLuaValueResultTransformDefault
     }                                                                   \
 } while (0)
 
-#define MARPAESLIFLUA_TRAVERSE_TABLE(L, name, t) do {                   \
-    int _t = lua_absindex(L, t);                                        \
-    GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) TABLE_DUMP of %s at indice %d at %s:%d", funcs, L, name, _t, FILENAMES, __LINE__); \
-    lua_pushnil(L);                                                     \
-    while (lua_next(L, _t) != 0) {                                      \
-      switch (lua_type(L, -2)) {                                        \
-      case LUA_TNIL:                                                    \
-        GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) TABLE_DUMP of %s: nil - %s at %s:%d", funcs, L, name, lua_typename(L, lua_type(L, -1)), FILENAMES, __LINE__); \
-        break;                                                          \
-      case LUA_TNUMBER:                                                 \
-        GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) TABLE_DUMP of %s: number %g - %s at %s:%d", funcs, L, name, lua_tonumber(L, -2), lua_typename(L, lua_type(L, -1)), FILENAMES, __LINE__); \
-        break;                                                          \
-      case LUA_TBOOLEAN:                                                \
-        GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) TABLE_DUMP of %s: boolean %s - %s at %s:%d", funcs, L, name, lua_toboolean(L, -2) ? "true" : "false", lua_typename(L, lua_type(L, -1)), FILENAMES, __LINE__); \
-        break;                                                          \
-      case LUA_TUSERDATA:                                               \
-        GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) TABLE_DUMP of %s: userdata %p - %s at %s:%d", funcs, L, name, lua_touserdata(L, -2), lua_typename(L, lua_type(L, -1)), FILENAMES, __LINE__); \
-        break;                                                          \
-      case LUA_TLIGHTUSERDATA:                                          \
-        GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) TABLE_DUMP of %s: light userdata %p - %s at %s:%d", funcs, L, name, lua_touserdata(L, -2), lua_typename(L, lua_type(L, -1)), FILENAMES, __LINE__); \
-        break;                                                          \
-      case LUA_TSTRING:                                                 \
-        GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) TABLE_DUMP of %s: string %s - %s at %s:%d", funcs, L, name, lua_tostring(L, -2), lua_typename(L, lua_type(L, -1)), FILENAMES, __LINE__); \
-        break;                                                          \
-      default:                                                          \
-        GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) TABLE_DUMP of %s: %s - %s at %s:%d", funcs, L, name, lua_typename(L, lua_type(L, -2)), lua_typename(L, lua_type(L, -1)), FILENAMES, __LINE__); \
-        break;                                                          \
-      }                                                                 \
-      lua_pop(L, 1);                                                    \
-    }                                                                   \
-  } while (0)
-
 #ifdef MARPAESLIFLUA_USE_INTERNALREGISTRYINDEX
 #define MARPAESLIFLUA_REF(L, refi) do {                                 \
     MARPAESLIFLUA_GETORCREATEGLOBAL(L, MARPAESLIFLUAREGISTRYINDEX, marpaESLIFLua_marpaESLIFRegistryindex_freei); \
     lua_insert(L, -2);                                                  \
     refi = luaL_ref(L, -2);                                             \
-    /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) set global reference refi=%d%s at %s:%d", funcs, L, refi, (refi == LUA_NOREF) ? " (LUA_NOREF)" : (refi == LUA_REFNIL) ? " (LUA_REFNIL)" : "", FILENAMES, __LINE__); */  \
-    /* MARPAESLIFLUA_TRAVERSE_TABLE(L, MARPAESLIFLUAREGISTRYINDEX, -1); */ \
     lua_pop(L, 1);                                                      \
   } while (0);
 
 #define MARPAESLIFLUA_UNREF(L, refi) do {                               \
     MARPAESLIFLUA_GETORCREATEGLOBAL(L, MARPAESLIFLUAREGISTRYINDEX, marpaESLIFLua_marpaESLIFRegistryindex_freei); \
-    /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) del global reference refi=%d%s at %s:%d", funcs, L, refi, (refi == LUA_NOREF) ? " (LUA_NOREF)" : (refi == LUA_REFNIL) ? " (LUA_REFNIL)" : "", FILENAMES, __LINE__); */  \
     luaL_unref(L, -1, refi);                                            \
-    /* MARPAESLIFLUA_TRAVERSE_TABLE(L, MARPAESLIFLUAREGISTRYINDEX, -1); */ \
     lua_pop(L, 1);                                                      \
   } while (0);
 
 #define MARPAESLIFLUA_DEREF(L, refi) do {                               \
     MARPAESLIFLUA_GETORCREATEGLOBAL(L, MARPAESLIFLUAREGISTRYINDEX, marpaESLIFLua_marpaESLIFRegistryindex_freei); \
-    /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) use global reference refi=%d%s at %s:%d", funcs, L, refi, (refi == LUA_NOREF) ? " (LUA_NOREF)" : (refi == LUA_REFNIL) ? " (LUA_REFNIL)" : "", FILENAMES, __LINE__); */  \
     lua_rawgeti(L, -1, refi);                                           \
     lua_remove(L, -2);                                                  \
   } while (0);
@@ -313,18 +272,13 @@ static marpaESLIFValueResultTransform_t marpaESLIFLuaValueResultTransformDefault
 
 #define MARPAESLIFLUA_REF(L, refi) do {                                 \
     refi = luaL_ref(L, LUA_REGISTRYINDEX);                              \
-    /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) set global reference refi=%d%s at %s:%d", funcs, L, refi, (refi == LUA_NOREF) ? " (LUA_NOREF)" : (refi == LUA_REFNIL) ? " (LUA_REFNIL)" : "", FILENAMES, __LINE__); */  \
-    /* MARPAESLIFLUA_TRAVERSE_TABLE(L, "LUA_REGISTRYINDEX", LUA_REGISTRYINDEX); */  \
   } while (0);
 
 #define MARPAESLIFLUA_UNREF(L, refi) do {                               \
-    /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) del global reference refi=%d%s at %s:%d", funcs, L, refi, (refi == LUA_NOREF) ? " (LUA_NOREF)" : (refi == LUA_REFNIL) ? " (LUA_REFNIL)" : "", FILENAMES, __LINE__); */  \
     luaL_unref(L, LUA_REGISTRYINDEX, refi);                             \
-    /* MARPAESLIFLUA_TRAVERSE_TABLE(L, "LUA_REGISTRYINDEX", LUA_REGISTRYINDEX); */  \
   } while (0);
 
 #define MARPAESLIFLUA_DEREF(L, refi) do {                               \
-    /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) use global reference refi=%d%s at %s:%d", funcs, L, refi, (refi == LUA_NOREF) ? " (LUA_NOREF)" : (refi == LUA_REFNIL) ? " (LUA_REFNIL)" : "", FILENAMES, __LINE__); */ \
     lua_rawgeti(L, LUA_REGISTRYINDEX, refi);                            \
   } while (0);
 
@@ -466,8 +420,6 @@ static marpaESLIFValueResultTransform_t marpaESLIFLuaValueResultTransformDefault
     lua_pushnil(marpaESLIFLuaValueContextp->L);                         \
     lua_copy(marpaESLIFLuaValueContextp->L, -2, -1);                    \
     MARPAESLIFLUA_REF(marpaESLIFLuaValueContextp->L, *_p);              \
-                                                                        \
-    /* GENERICLOGGER_NOTICEF(NULL, "... Storing pointer %p to global reference %d to stack indice %d at %s:%d", _p, *_p, indicei, FILENAMES, __LINE__); */  \
                                                                         \
     _marpaESLIFValueResult.contextp        = MARPAESLIFLUA_CONTEXT;     \
     _marpaESLIFValueResult.sizel           = sizeof(int);               \
@@ -676,10 +628,8 @@ int luaopen_marpaESLIFLua(lua_State* L)
 {
   static const char *funcs = "luaopen_marpaESLIFLua";
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__); */
   luaL_requiref(L, "marpaESLIFLua", marpaESLIFLua_installi, 1 /* global */);
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 at %s:%d", funcs, L, FILENAMES, __LINE__); */
   return 1;
 }
 
@@ -697,7 +647,6 @@ static int marpaESLIFLua_installi(lua_State *L)
     {NULL, NULL}
   };
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__); */
   luaL_newlib(L, marpaESLIFLua_installTable);
 
   /* Create constants */
@@ -747,7 +696,6 @@ static int marpaESLIFLua_installi(lua_State *L)
   MARPAESLIFLUA_CREATEINTEGERCONSTANT(L, GENERICLOGGER_LOGLEVEL_ALERT);
   MARPAESLIFLUA_CREATEINTEGERCONSTANT(L, GENERICLOGGER_LOGLEVEL_EMERGENCY);
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 at %s:%d", funcs, L, FILENAMES, __LINE__); */
   return 1;
 }
 
@@ -757,15 +705,12 @@ static int marpaESLIFLua_versioni(lua_State *L)
 {
   static const char      *funcs = "marpaESLIFLua_versioni";
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__); */
-
   if (lua_gettop(L) != 0) {
     return luaL_error(L, "Usage: version()");
   }
 
   lua_pushstring(L, MARPAESLIFLUA_VERSION);
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 at %s:%d", funcs, L, FILENAMES, __LINE__); */
   return 1;
 }
 
@@ -775,15 +720,12 @@ static int marpaESLIFLua_versionMajori(lua_State *L)
 {
   static const char      *funcs = "marpaESLIFLua_versionMajori";
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__); */
-
   if (lua_gettop(L) != 0) {
     return luaL_error(L, "Usage: versionMajor()");
   }
 
   lua_pushinteger(L, (lua_Integer) MARPAESLIFLUA_VERSION_MAJOR);
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 at %s:%d", funcs, L, FILENAMES, __LINE__); */
   return 1;
 }
 
@@ -793,15 +735,12 @@ static int marpaESLIFLua_versionMinori(lua_State *L)
 {
   static const char      *funcs = "marpaESLIFLua_versionMinori";
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__); */
-
   if (lua_gettop(L) != 0) {
     return luaL_error(L, "Usage: versionMinor()");
   }
 
   lua_pushinteger(L, (lua_Integer) MARPAESLIFLUA_VERSION_MINOR);
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 at %s:%d", funcs, L, FILENAMES, __LINE__); */
   return 1;
 }
 
@@ -811,15 +750,12 @@ static int marpaESLIFLua_versionPatchi(lua_State *L)
 {
   static const char      *funcs = "marpaESLIFLua_versionPatchi";
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__); */
-
   if (lua_gettop(L) != 0) {
     return luaL_error(L, "Usage: versionPatch()");
   }
 
   lua_pushinteger(L, (lua_Integer) MARPAESLIFLUA_VERSION_PATCH);
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 at %s:%d", funcs, L, FILENAMES, __LINE__); */
   return 1;
 }
 
@@ -834,8 +770,6 @@ static int marpaESLIFLua_marpaESLIF_newi(lua_State *L)
   genericLogger_t                     *genericLoggerp;
   marpaESLIFOption_t                   marpaESLIFOption;
   int                                  logger_r;
-
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__); */
 
   switch (lua_gettop(L)) {
   case 0:
@@ -883,14 +817,12 @@ static int marpaESLIFLua_marpaESLIF_newi(lua_State *L)
       lua_pushnil(L);                                                                               /* stack: logger, MARPAESLIFMULTITONSTABLE, nil */
       lua_copy(L, 1, -1);                                                                           /* stack: logger, MARPAESLIFMULTITONSTABLE, logger */
       MARPAESLIFLUA_REF(L, logger_r);                                                               /* stack: logger, MARPAESLIFMULTITONSTABLE */
-      /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) got logger_r=%d from registry at %s:%d", funcs, L, logger_r, FILENAMES, __LINE__); */
 
       /* Fill genericLogger context */
       marpaESLIFLuaGenericLoggerContextp->L = L;
       marpaESLIFLuaGenericLoggerContextp->logger_r = logger_r;
       genericLoggerp = genericLogger_newp(marpaESLIFLua_genericLoggerCallbackv, marpaESLIFLuaGenericLoggerContextp, GENERICLOGGER_LOGLEVEL_TRACE);
       if (genericLoggerp == NULL) {
-        /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) freeing logger_r=%d from registry at %s:%d", funcs, L, logger_r, FILENAMES, __LINE__); */
         MARPAESLIFLUA_UNREF(L, logger_r);
         free(marpaESLIFLuaGenericLoggerContextp);
         return luaL_error(L, "genericLogger_newp failure, %s\n", strerror(errno));
@@ -906,20 +838,16 @@ static int marpaESLIFLua_marpaESLIF_newi(lua_State *L)
       free(marpaESLIFLuaGenericLoggerContextp);
       return luaL_error(L, "malloc failure, %s\n", strerror(errno));
     }
-    /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) marpaESLIFLuaContextp=%p at %s:%d", funcs, L, marpaESLIFLuaContextp, FILENAMES, __LINE__); */
     marpaESLIFLua_contextInitv(L, marpaESLIFLuaContextp, 0 /* unmanagedb */);
 
     marpaESLIFOption.genericLoggerp    = genericLoggerp;
     marpaESLIFLuaContextp->marpaESLIFp = marpaESLIF_newp(&marpaESLIFOption);
     if (marpaESLIFLuaContextp->marpaESLIFp == NULL) {
-      /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) freeing logger_r=%d from registry at %s:%d", funcs, L, logger_r, FILENAMES, __LINE__); */
       MARPAESLIFLUA_UNREF(L, logger_r); /* No effect if it is LUA_NOREF */
       free(marpaESLIFLuaContextp);
       free(marpaESLIFLuaGenericLoggerContextp);
       return luaL_error(L, "marpaESLIF_newp failure, %s\n", strerror(errno));
     }
-
-    /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) marpaESLIFLuaContextp->marpaESLIFp=%p at %s:%d", funcs, L, marpaESLIFLuaContextp->marpaESLIFp, FILENAMES, __LINE__); */
 
     /* Link marpaESLIFp to logger_r */
     lua_pushinteger(L, (lua_Integer) logger_r);                                                     /* stack: logger?, MARPAESLIFMULTITONSTABLE, logger_r */
@@ -927,9 +855,6 @@ static int marpaESLIFLua_marpaESLIF_newi(lua_State *L)
 
     /* Remember it is in the multiton table */
     marpaESLIFLuaContextp->multitonb = 1;
-  } else {
-    /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) marpaESLIFLuaContextp=%p (reuse) at %s:%d", funcs, L, marpaESLIFLuaContextp, FILENAMES, __LINE__); */
-    /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) marpaESLIFLuaContextp->marpaESLIFp=%p (reuse) at %s:%d", funcs, L, marpaESLIFLuaContextp->marpaESLIFp, FILENAMES, __LINE__); */
   }
 
   /* Clear the stack */
@@ -938,7 +863,6 @@ static int marpaESLIFLua_marpaESLIF_newi(lua_State *L)
   /* Push marpaESLIF object */
   MARPAESLIFLUA_PUSH_MARPAESLIF_OBJECT(L, marpaESLIFLuaContextp);
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 (marpaESLIFLuaContextp=%p) at %s:%d", funcs, L, marpaESLIFLuaContextp, FILENAMES, __LINE__); */
   return 1;
 }
 
@@ -949,8 +873,6 @@ static int marpaESLIFLua_marpaESLIF_freei(lua_State *L)
   static const char      *funcs = "marpaESLIFLua_marpaESLIF_freei";
   marpaESLIFLuaContext_t *marpaESLIFLuaContextp;
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__); */
-
   lua_getfield(L, -1, "marpaESLIFLuaContextp"); /* stack: {...}, marpaESLIFLuaContextp */
   marpaESLIFLuaContextp = (marpaESLIFLuaContext_t *) lua_touserdata(L, -1);
   lua_pop(L, 1);                                /* stack: {...} */
@@ -959,7 +881,6 @@ static int marpaESLIFLua_marpaESLIF_freei(lua_State *L)
 
   lua_pop(L, 1);                             /* stack: */
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 0 at %s:%d", funcs, L, FILENAMES, __LINE__); */
   return 0;
 }
 
@@ -970,8 +891,6 @@ static int marpaESLIFLua_marpaESLIF_versioni(lua_State *L)
   static const char      *funcs = "marpaESLIFLua_marpaESLIF_versioni";
   marpaESLIFLuaContext_t *marpaESLIFLuaContextp;
   char                   *versions;
-
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__); */
 
   if (lua_gettop(L) != 1) {
     return luaL_error(L, "Usage: version(marpaESLIFp)");
@@ -991,7 +910,6 @@ static int marpaESLIFLua_marpaESLIF_versioni(lua_State *L)
 
   lua_pushstring(L, versions);
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 (marpaESLIFLuaContextp=%p) at %s:%d", funcs, L, marpaESLIFLuaContextp, FILENAMES, __LINE__); */
   return 1;
 }
 
@@ -1002,8 +920,6 @@ static int marpaESLIFLua_marpaESLIF_versionMajori(lua_State *L)
   static const char      *funcs = "marpaESLIFLua_marpaESLIF_versionMajori";
   marpaESLIFLuaContext_t *marpaESLIFLuaContextp;
   int                     majori;
-
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__); */
 
   if (lua_gettop(L) != 1) {
     return luaL_error(L, "Usage: version(marpaESLIFp)");
@@ -1023,7 +939,6 @@ static int marpaESLIFLua_marpaESLIF_versionMajori(lua_State *L)
 
   lua_pushinteger(L, (lua_Integer) majori);
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 (marpaESLIFLuaContextp=%p) at %s:%d", funcs, L, marpaESLIFLuaContextp, FILENAMES, __LINE__); */
   return 1;
 }
 
@@ -1034,8 +949,6 @@ static int marpaESLIFLua_marpaESLIF_versionMinori(lua_State *L)
   static const char      *funcs = "marpaESLIFLua_marpaESLIF_versionMinori";
   marpaESLIFLuaContext_t *marpaESLIFLuaContextp;
   int                     minori;
-
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__); */
 
   if (lua_gettop(L) != 1) {
     return luaL_error(L, "Usage: version(marpaESLIFp)");
@@ -1055,7 +968,6 @@ static int marpaESLIFLua_marpaESLIF_versionMinori(lua_State *L)
 
   lua_pushinteger(L, (lua_Integer) minori);
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 (marpaESLIFLuaContextp=%p) at %s:%d", funcs, L, marpaESLIFLuaContextp, FILENAMES, __LINE__); */
   return 1;
 }
 
@@ -1066,8 +978,6 @@ static int marpaESLIFLua_marpaESLIF_versionPatchi(lua_State *L)
   static const char      *funcs = "marpaESLIFLua_marpaESLIF_versionPatchi";
   marpaESLIFLuaContext_t *marpaESLIFLuaContextp;
   int                     patchi;
-
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__); */
 
   if (lua_gettop(L) != 1) {
     return luaL_error(L, "Usage: version(marpaESLIFp)");
@@ -1087,7 +997,6 @@ static int marpaESLIFLua_marpaESLIF_versionPatchi(lua_State *L)
 
   lua_pushinteger(L, (lua_Integer) patchi);
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 (marpaESLIFLuaContextp=%p) at %s:%d", funcs, L, marpaESLIFLuaContextp, FILENAMES, __LINE__); */
   return 1;
 }
 
@@ -1099,8 +1008,6 @@ static int  marpaESLIFLua_marpaESLIF_newFromUnmanagedi(lua_State *L, marpaESLIF_
   static const char      *funcs                  = "marpaESLIFLua_marpaESLIF_newFromUnmanagedi";
   marpaESLIFLuaContext_t  *marpaESLIFLuaContextp = NULL;
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__); */
-
   marpaESLIFLuaContextp = malloc(sizeof(marpaESLIFLuaContext_t));
   if (marpaESLIFLuaContextp == NULL) {
     return luaL_error(L, "malloc failure, %s\n", strerror(errno));
@@ -1108,13 +1015,11 @@ static int  marpaESLIFLua_marpaESLIF_newFromUnmanagedi(lua_State *L, marpaESLIF_
 
   marpaESLIFLua_contextInitv(L, marpaESLIFLuaContextp, 1 /* unmanagedb */);
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) marpaESLIFLuaContextp=%p at %s:%d", funcs, L, marpaESLIFLuaContextp, FILENAMES, __LINE__); */
   marpaESLIFLuaContextp->marpaESLIFp = marpaESLIFUnmanagedp;
 
   /* Push marpaESLIF object */
   MARPAESLIFLUA_PUSH_MARPAESLIF_OBJECT(L, marpaESLIFLuaContextp);
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 (marpaESLIFLuaContextp=%p) at %s:%d", funcs, L, marpaESLIFLuaContextp, FILENAMES, __LINE__); */
   return 1;
 }
 #endif /* MARPAESLIFLUA_EMBEDDED */
@@ -1248,7 +1153,6 @@ static void marpaESLIFLua_contextFreev(marpaESLIFLuaContext_t *marpaESLIFLuaCont
     if (multitonDestroyModeb) {
       /* We own everything - no need for checks */
       if (marpaESLIFLuaContextp->marpaESLIFp != NULL) {
-        /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) freeing marpaESLIFLuaContextp->marpaESLIFp=%p at %s:%d", funcs, L, marpaESLIFLuaContextp->marpaESLIFp, FILENAMES, __LINE__); */
 	marpaESLIF_freev(marpaESLIFLuaContextp->marpaESLIFp);
       }
       free(marpaESLIFLuaContextp);
@@ -1273,7 +1177,6 @@ static void marpaESLIFLua_grammarContextInitv(lua_State *L, int eslifStacki, mar
     lua_pushnil(L);                                                   /* stack: xxx, nil */
     lua_copy(L, eslifStacki, -1);                                     /* stack: xxx, eslif */
     MARPAESLIFLUA_REF(L, marpaESLIFLuaGrammarContextp->eslif_r);      /* stack: xxx */
-    /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) got eslif_r=%d from registry at %s:%d", funcs, L, marpaESLIFLuaGrammarContextp->eslif_r, FILENAMES, __LINE__); */
   } else {
     if (unmanagedb) {
       marpaESLIFLuaGrammarContextp->eslif_r = LUA_NOREF;
@@ -1298,7 +1201,6 @@ static void  marpaESLIFLua_recognizerContextInitv(lua_State *L, int grammarStack
     lua_pushnil(L);                                                   /* stack: xxx, nil */
     lua_copy(L, grammarStacki, -1);                                   /* stack: xxx, grammarTable */
     MARPAESLIFLUA_REF(L, marpaESLIFLuaRecognizerContextp->grammar_r); /* stack: xxx */
-    /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) got grammar_r=%d from registry at %s:%d", funcs, L, marpaESLIFLuaRecognizerContextp->grammar_r, FILENAMES, __LINE__); */
   } else {
     if (unmanagedb) {
       marpaESLIFLuaRecognizerContextp->grammar_r = LUA_NOREF;
@@ -1311,7 +1213,6 @@ static void  marpaESLIFLua_recognizerContextInitv(lua_State *L, int grammarStack
     lua_pushnil(L);                                                    /* stack: xxx, nil */
     lua_copy(L, recognizerInterfaceStacki, -1);                        /* stack: xxx, recognizerInterface */
     MARPAESLIFLUA_REF(L, marpaESLIFLuaRecognizerContextp->recognizerInterface_r);            /* stack: xxx */
-    /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) got recognizerInterface_r=%d from registry at %s:%d", funcs, L, marpaESLIFLuaRecognizerContextp->recognizerInterface_r, FILENAMES, __LINE__); */
   } else {
     marpaESLIFLuaRecognizerContextp->recognizerInterface_r = LUA_NOREF;
   }
@@ -1320,7 +1221,6 @@ static void  marpaESLIFLua_recognizerContextInitv(lua_State *L, int grammarStack
     lua_pushnil(L);                                                           /* stack: xxx, nil */
     lua_copy(L, recognizerOrigStacki, -1);                                    /* stack: xxx, recognizerOrigInterface */
     MARPAESLIFLUA_REF(L, marpaESLIFLuaRecognizerContextp->recognizer_orig_r); /* stack: xxx */
-    /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) got recognizer_orig_r=%d from registry at %s:%d", funcs, L, marpaESLIFLuaRecognizerContextp->recognizer_orig_r, FILENAMES, __LINE__); */
   } else {
     marpaESLIFLuaRecognizerContextp->recognizer_orig_r = LUA_NOREF;
   }
@@ -1342,7 +1242,6 @@ static void marpaESLIFLua_grammarContextFreev(marpaESLIFLuaGrammarContext_t *mar
     L = marpaESLIFLuaGrammarContextp->L;
 
     if (marpaESLIFLuaGrammarContextp->eslif_r != LUA_NOREF) {
-      /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) freeing eslif_r=%d from registry at %s:%d", funcs, L, marpaESLIFLuaGrammarContextp->eslif_r, FILENAMES, __LINE__); */
       MARPAESLIFLUA_UNREF(L, marpaESLIFLuaGrammarContextp->eslif_r);
     }
 
@@ -1394,17 +1293,14 @@ static void  marpaESLIFLua_recognizerContextFreev(marpaESLIFLuaRecognizerContext
     marpaESLIFLua_recognizerContextCleanupv(marpaESLIFLuaRecognizerContextp);
 
     if (marpaESLIFLuaRecognizerContextp->grammar_r != LUA_NOREF) {
-      /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) freeing grammar_r=%d from registry at %s:%d", funcs, L, marpaESLIFLuaRecognizerContextp->grammar_r, FILENAMES, __LINE__); */
       MARPAESLIFLUA_UNREF(L, marpaESLIFLuaRecognizerContextp->grammar_r);
     }
 
     if (marpaESLIFLuaRecognizerContextp->recognizerInterface_r != LUA_NOREF) {
-      /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) freeing recognizerInterface_r=%d from registry at %s:%d", funcs, L, marpaESLIFLuaRecognizerContextp->recognizerInterface_r, FILENAMES, __LINE__); */
       MARPAESLIFLUA_UNREF(L, marpaESLIFLuaRecognizerContextp->recognizerInterface_r);
     }
 
     if (marpaESLIFLuaRecognizerContextp->recognizer_orig_r != LUA_NOREF) {
-      /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) freeing recognizer_orig_r=%d from registry at %s:%d", funcs, L, marpaESLIFLuaRecognizerContextp->recognizer_orig_r, FILENAMES, __LINE__); */
       MARPAESLIFLUA_UNREF(L, marpaESLIFLuaRecognizerContextp->recognizer_orig_r);
     }
 
@@ -1417,7 +1313,6 @@ static void  marpaESLIFLua_recognizerContextFreev(marpaESLIFLuaRecognizerContext
         /* ... is cleared ... */
         if (GENERICSTACK_IS_INT(lexemeStackp, i)) {
           refi = GENERICSTACK_GET_INT(lexemeStackp, i);
-          /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) freeing lexeme reference=%d from registry at %s:%d", funcs, L, refi, FILENAMES, __LINE__); */
           MARPAESLIFLUA_UNREF(L, refi);
         }
         /* ... and becomes current used size */
@@ -1467,15 +1362,12 @@ static void  marpaESLIFLua_valueContextFreev(marpaESLIFLuaValueContext_t *marpaE
 
     /* Decrement dependencies */
     if (marpaESLIFLuaValueContextp->valueInterface_r != LUA_NOREF) {
-      /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) freeing valueInterface_r=%d from registry at %s:%d", funcs, L, marpaESLIFLuaValueContextp->valueInterface_r, FILENAMES, __LINE__); */
       MARPAESLIFLUA_UNREF(L, marpaESLIFLuaValueContextp->valueInterface_r);
     }
     if (marpaESLIFLuaValueContextp->recognizerInterface_r != LUA_NOREF) {
-      /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) freeing recognizerInterface_r=%d from registry at %s:%d", funcs, L, marpaESLIFLuaValueContextp->recognizerInterface_r, FILENAMES, __LINE__); */
       MARPAESLIFLUA_UNREF(L, marpaESLIFLuaValueContextp->recognizerInterface_r);
     }
     if (marpaESLIFLuaValueContextp->grammar_r != LUA_NOREF) {
-      /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) freeing grammar_r=%d from registry at %s:%d", funcs, L, marpaESLIFLuaValueContextp->grammar_r, FILENAMES, __LINE__); */
       MARPAESLIFLUA_UNREF(L, marpaESLIFLuaValueContextp->grammar_r);
     }
 
@@ -1507,7 +1399,6 @@ static void  marpaESLIFLua_valueContextInitv(lua_State *L, int grammarStacki, in
     lua_pushnil(L);                                                 /* stack: xxx, nil */
     lua_copy(L, valueInterfaceStacki, -1);                          /* stack: xxx, valueInterface */
     MARPAESLIFLUA_REF(L, marpaESLIFLuaValueContextp->valueInterface_r);                   /* stack: xxx */
-    /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) got valueInterface_r=%d from registry at %s:%d", funcs, L, marpaESLIFLuaValueContextp->valueInterface_r, FILENAMES, __LINE__); */
   } else {
     if (unmanagedb) {
       marpaESLIFLuaValueContextp->valueInterface_r = LUA_NOREF;
@@ -1520,7 +1411,6 @@ static void  marpaESLIFLua_valueContextInitv(lua_State *L, int grammarStacki, in
     lua_pushnil(L);                                                 /* stack: xxx, nil */
     lua_copy(L, recognizerStacki, -1);                              /* stack: xxx, recognizer */
     MARPAESLIFLUA_REF(L, marpaESLIFLuaValueContextp->recognizerInterface_r);              /* stack: xxx */
-    /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) got recognizerInterface_r=%d from registry at %s:%d", funcs, L, marpaESLIFLuaValueContextp->recognizerInterface_r, FILENAMES, __LINE__); */
   } else {
     /* Allowed to be unset when we come from parse */
     marpaESLIFLuaValueContextp->recognizerInterface_r = LUA_NOREF;
@@ -1530,7 +1420,6 @@ static void  marpaESLIFLua_valueContextInitv(lua_State *L, int grammarStacki, in
     lua_pushnil(L);                                                 /* stack: xxx, nil */
     lua_copy(L, grammarStacki, -1);                                 /* stack: xxx, grammar */
     MARPAESLIFLUA_REF(L, marpaESLIFLuaValueContextp->grammar_r);                 /* stack: xxx */
-    /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) got grammar_r=%d from registry at %s:%d", funcs, L, marpaESLIFLuaValueContextp->grammar_r, FILENAMES, __LINE__); */
   } else {
     if (unmanagedb) {
       marpaESLIFLuaValueContextp->grammar_r = LUA_NOREF;
@@ -1608,8 +1497,6 @@ static int marpaESLIFLua_marpaESLIFMultitonsTable_freei(lua_State *L)
   genericLogger_t                     *genericLoggerp        = NULL;
   marpaESLIFOption_t                  *marpaESLIFOptionp;
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__); */
-
   /* Loop on MARPAESLIFMULTITONSTABLE */
   lua_pushnil(L);                                                     /* stack: MARPAESLIFMULTITONSTABLE, nil */
   while (lua_next(L, -2) != 0) {                                      /* stack: MARPAESLIFMULTITONSTABLE, marpaESLIFLuaContextp, r */
@@ -1624,7 +1511,6 @@ static int marpaESLIFLua_marpaESLIFMultitonsTable_freei(lua_State *L)
         if (genericLoggerp != NULL) {
           marpaESLIFLuaGenericLoggerContextp = (marpaESLIFLuaGenericLoggerContext_t *) genericLogger_userDatavp_getp(genericLoggerp);
 	  if (marpaESLIFLuaGenericLoggerContextp != NULL) {
-	    /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) freeing logger_r=%d from registry at %s:%d", funcs, L, marpaESLIFLuaGenericLoggerContextp->logger_r, FILENAMES, __LINE__); */
 	    MARPAESLIFLUA_UNREF(L, marpaESLIFLuaGenericLoggerContextp->logger_r); /* By construction marpaESLIFLuaGenericLoggerContextp->logger_r == logger_r */
 	    free(marpaESLIFLuaGenericLoggerContextp);
 	  }
@@ -1638,7 +1524,6 @@ static int marpaESLIFLua_marpaESLIFMultitonsTable_freei(lua_State *L)
     lua_pop(L, 1);                                                    /* stack: MARPAESLIFMULTITONSTABLE, marpaESLIFLuaContextp */
   }
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 0 at %s:%d", funcs, L, FILENAMES, __LINE__); */
   return 0;
 }
 
@@ -1649,7 +1534,6 @@ static int marpaESLIFLua_marpaESLIFRegistryindex_freei(lua_State *L)
 {
   static const char      *funcs = "marpaESLIFLua_marpaESLIFRegistryindex_freei";
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 0 at %s:%d", funcs, L, FILENAMES, __LINE__); */
   return 0;
 }
 #endif /* MARPAESLIFLUA_USE_INTERNALREGISTRYINDEX */
@@ -1672,8 +1556,6 @@ static int marpaESLIFLua_marpaESLIFGrammar_newi(lua_State *L)
     0     /* encodingl */
   };
  
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__); */
-
   switch (lua_gettop(L)) {
   case 3:
     marpaESLIFGrammarOption.encodings = (char *) luaL_checklstring(L, 3, &(marpaESLIFGrammarOption.encodingl));
@@ -1735,7 +1617,6 @@ static int marpaESLIFLua_marpaESLIFGrammar_newi(lua_State *L)
 
   MARPAESLIFLUA_PUSH_MARPAESLIFGRAMMAR_OBJECT(L, marpaESLIFLuaGrammarContextp);
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 ({marpaESLIFGrammarp=%p}) at %s:%d", funcs, L, marpaESLIFGrammarp, FILENAMES, __LINE__); */
   return 1;
 }
 
@@ -1746,8 +1627,6 @@ static int marpaESLIFLua_marpaESLIFGrammar_newFromUnmanagedi(lua_State *L, marpa
 {
   static const char             *funcs = "marpaESLIFLua_marpaESLIFGrammar_newFromUnmanagedi";
   marpaESLIFLuaGrammarContext_t *marpaESLIFLuaGrammarContextp;
-
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__); */
 
   marpaESLIFLuaGrammarContextp = malloc(sizeof(marpaESLIFLuaGrammarContext_t));
   if (marpaESLIFLuaGrammarContextp == NULL) {
@@ -1760,7 +1639,6 @@ static int marpaESLIFLua_marpaESLIFGrammar_newFromUnmanagedi(lua_State *L, marpa
 
   MARPAESLIFLUA_PUSH_MARPAESLIFGRAMMAR_OBJECT(L, marpaESLIFLuaGrammarContextp);
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 ({marpaESLIFLuaGrammarContextp=%p}) at %s:%d", funcs, L, marpaESLIFLuaGrammarContextp, FILENAMES, __LINE__); */
   return 1;
 }
 #endif /* MARPAESLIFLUA_EMBEDDED */
@@ -1772,18 +1650,14 @@ static int marpaESLIFLua_marpaESLIFGrammar_freei(lua_State *L)
   static const char             *funcs = "marpaESLIFLua_marpaESLIFGrammar_freei";
   marpaESLIFLuaGrammarContext_t *marpaESLIFLuaGrammarContextp;
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__); */
-
   lua_getfield(L, -1, "marpaESLIFLuaGrammarContextp"); /* stack: {...}, marpaESLIFLuaGrammarContextp */
   marpaESLIFLuaGrammarContextp = (marpaESLIFLuaGrammarContext_t *) lua_touserdata(L, -1);
   lua_pop(L, 1);                             /* stack: {...} */
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) freeing marpaESLIFLuaGrammarContextp=%p at %s:%d", funcs, L, marpaESLIFLuaGrammarContextp, FILENAMES, __LINE__); */
   marpaESLIFLua_grammarContextFreev(marpaESLIFLuaGrammarContextp, 0 /* onStackb */);
 
   lua_pop(L, 1);                             /* stack: */
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 0 at %s:%d", funcs, L, FILENAMES, __LINE__); */
   return 0;
 }
 
@@ -1841,8 +1715,6 @@ static int  marpaESLIFLua_marpaESLIFGrammar_ngrammari(lua_State *L)
   marpaESLIFLuaGrammarContext_t *marpaESLIFLuaGrammarContextp;
   int                            ngrammari;
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__); */
-
   if (lua_gettop(L) != 1) {
     return luaL_error(L, "Usage: marpaESLIFGrammar_ngrammar(marpaESLIFGrammarp)");
   }
@@ -1861,7 +1733,6 @@ static int  marpaESLIFLua_marpaESLIFGrammar_ngrammari(lua_State *L)
 
   lua_pushinteger(L, (lua_Integer) ngrammari);   /* stack: ngrammari */
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 (ngrammari=%d) at %s:%d", funcs, L, ngrammari, FILENAMES, __LINE__); */
   return 1;
 }
 
@@ -1872,8 +1743,6 @@ static int  marpaESLIFLua_marpaESLIFGrammar_currentLeveli(lua_State *L)
   static const char             *funcs = "marpaESLIFLua_marpaESLIFGrammar_currentLeveli";
   marpaESLIFLuaGrammarContext_t *marpaESLIFLuaGrammarContextp;
   int                            leveli;
-
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__); */
 
   if (lua_gettop(L) != 1) {
     return luaL_error(L, "Usage: marpaESLIFGrammar_currentLevel(marpaESLIFGrammarp)");
@@ -1892,7 +1761,6 @@ static int  marpaESLIFLua_marpaESLIFGrammar_currentLeveli(lua_State *L)
   }
   lua_pushinteger(L, (lua_Integer) leveli);   /* stack: ngrammari */
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 (leveli=%d) at %s:%d", funcs, L, leveli, FILENAMES, __LINE__); */
   return 1;
 }
 
@@ -1903,8 +1771,6 @@ static int  marpaESLIFLua_marpaESLIFGrammar_currentDescriptioni(lua_State *L)
   static const char             *funcs = "marpaESLIFLua_marpaESLIFGrammar_currentDescriptioni";
   marpaESLIFLuaGrammarContext_t *marpaESLIFLuaGrammarContextp;
   marpaESLIFString_t            *descp;
-
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__); */
 
   if (lua_gettop(L) != 1) {
     return luaL_error(L, "Usage: marpaESLIFGrammar_currentDescription(marpaESLIFGrammarp)");
@@ -1923,7 +1789,6 @@ static int  marpaESLIFLua_marpaESLIFGrammar_currentDescriptioni(lua_State *L)
   }
   lua_pushlstring(L, (const char *) descp->bytep, descp->bytel);
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 (bytep=%p, bytel=%ld) at %s:%d", funcs, L, descp->bytep, (unsigned long) descp->bytel, FILENAMES, __LINE__); */
   return 1;
 }
 
@@ -1935,8 +1800,6 @@ static int  marpaESLIFLua_marpaESLIFGrammar_descriptionByLeveli(lua_State *L)
   lua_Integer                    leveli;
   marpaESLIFLuaGrammarContext_t *marpaESLIFLuaGrammarContextp;
   marpaESLIFString_t            *descp;
-
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__); */
 
   if (lua_gettop(L) != 2) {
     return luaL_error(L, "Usage: marpaESLIFGrammar_descriptionByLevel(marpaESLIFGrammarp, leveli)");
@@ -1957,7 +1820,6 @@ static int  marpaESLIFLua_marpaESLIFGrammar_descriptionByLeveli(lua_State *L)
   }
   lua_pushlstring(L, (const char *) descp->bytep, descp->bytel);
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 (bytep=%p, bytel=%ld) at %s:%d", funcs, L, descp->bytep, (unsigned long) descp->bytel, FILENAMES, __LINE__); */
   return 1;
 }
 
@@ -1969,8 +1831,6 @@ static int  marpaESLIFLua_marpaESLIFGrammar_currentRuleIdsi(lua_State *L)
   marpaESLIFLuaGrammarContext_t *marpaESLIFLuaGrammarContextp;
   int                           *ruleip;
   size_t                         rulel;
-
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__); */
 
   if (lua_gettop(L) != 1) {
     return luaL_error(L, "Usage: marpaESLIFGrammar_currentRuleIds(marpaESLIFGrammarp)");
@@ -1993,7 +1853,6 @@ static int  marpaESLIFLua_marpaESLIFGrammar_currentRuleIdsi(lua_State *L)
 
   MARPAESLIFLUA_PUSH_INTEGER_ARRAY(L, rulel, ruleip);
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 (ruleip=%p, rulel=%ld) at %s:%d", funcs, L, ruleip, (unsigned long) rulel, FILENAMES, __LINE__); */
   return 1;
 }
 
@@ -2006,8 +1865,6 @@ static int  marpaESLIFLua_marpaESLIFGrammar_ruleIdsByLeveli(lua_State *L)
   lua_Integer                    leveli;
   int                           *ruleip;
   size_t                         rulel;
-
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__); */
 
   if (lua_gettop(L) != 2) {
     return luaL_error(L, "Usage: marpaESLIFGrammar_ruleIdsByLevel(marpaESLIFGrammarp, leveli)");
@@ -2031,7 +1888,6 @@ static int  marpaESLIFLua_marpaESLIFGrammar_ruleIdsByLeveli(lua_State *L)
 
   MARPAESLIFLUA_PUSH_INTEGER_ARRAY(L, rulel, ruleip);
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 (ruleip=%p, rulel=%ld) at %s:%d", funcs, L, ruleip, (unsigned long) rulel, FILENAMES, __LINE__); */
   return 1;
 }
 
@@ -2043,8 +1899,6 @@ static int  marpaESLIFLua_marpaESLIFGrammar_currentSymbolIdsi(lua_State *L)
   marpaESLIFLuaGrammarContext_t *marpaESLIFLuaGrammarContextp;
   int                           *symbolip;
   size_t                         symboll;
-
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__); */
 
   if (lua_gettop(L) != 1) {
     return luaL_error(L, "Usage: marpaESLIFGrammar_currentSymbolIds(marpaESLIFGrammarp)");
@@ -2067,7 +1921,6 @@ static int  marpaESLIFLua_marpaESLIFGrammar_currentSymbolIdsi(lua_State *L)
 
   MARPAESLIFLUA_PUSH_INTEGER_ARRAY(L, symboll, symbolip);
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 (symbolip=%p, symboll=%ld) at %s:%d", funcs, L, symbolip, (unsigned long) symboll, FILENAMES, __LINE__); */
   return 1;
 }
 
@@ -2080,8 +1933,6 @@ static int  marpaESLIFLua_marpaESLIFGrammar_symbolIdsByLeveli(lua_State *L)
   lua_Integer                    leveli;
   int                           *symbolip;
   size_t                         symboll;
-
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__); */
 
   if (lua_gettop(L) != 2) {
     return luaL_error(L, "Usage: marpaESLIFGrammar_symbolIdsByLevel(marpaESLIFGrammarp, leveli)");
@@ -2105,7 +1956,6 @@ static int  marpaESLIFLua_marpaESLIFGrammar_symbolIdsByLeveli(lua_State *L)
 
   MARPAESLIFLUA_PUSH_INTEGER_ARRAY(L, symboll, symbolip);
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 (symbolip=%p, symboll=%ld) at %s:%d", funcs, L, symbolip, (unsigned long) symboll, FILENAMES, __LINE__); */
   return 1;
 }
 
@@ -2116,8 +1966,6 @@ static int  marpaESLIFLua_marpaESLIFGrammar_currentPropertiesi(lua_State *L)
   static const char             *funcs = "marpaESLIFLua_marpaESLIFGrammar_currentPropertiesi";
   marpaESLIFLuaGrammarContext_t *marpaESLIFLuaGrammarContextp;
   marpaESLIFGrammarProperty_t    grammarProperty;
-
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__); */
 
   if (lua_gettop(L) != 1) {
     return luaL_error(L, "Usage: marpaESLIFGrammar_currentProperties(marpaESLIFGrammarp)");
@@ -2148,7 +1996,6 @@ static int  marpaESLIFLua_marpaESLIFGrammar_currentPropertiesi(lua_State *L)
   MARPAESLIFLUA_STORE_INTEGER_ARRAY(L, "symbolIds",           grammarProperty.nsymboll, grammarProperty.symbolip);
   MARPAESLIFLUA_STORE_INTEGER_ARRAY(L, "ruleIds",             grammarProperty.nrulel, grammarProperty.ruleip);
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 at %s:%d", funcs, L, FILENAMES, __LINE__); */
   return 1;
 }
 
@@ -2160,8 +2007,6 @@ static int  marpaESLIFLua_marpaESLIFGrammar_propertiesByLeveli(lua_State *L)
   marpaESLIFLuaGrammarContext_t *marpaESLIFLuaGrammarContextp;
   lua_Integer                    leveli;
   marpaESLIFGrammarProperty_t    grammarProperty;
-
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__); */
 
   if (lua_gettop(L) != 2) {
     return luaL_error(L, "Usage: marpaESLIFGrammar_symbolIdsByLevel(marpaESLIFGrammarp, leveli)");
@@ -2193,7 +2038,6 @@ static int  marpaESLIFLua_marpaESLIFGrammar_propertiesByLeveli(lua_State *L)
   MARPAESLIFLUA_STORE_INTEGER_ARRAY(L, "symbolIds",           grammarProperty.nsymboll, grammarProperty.symbolip);
   MARPAESLIFLUA_STORE_INTEGER_ARRAY(L, "ruleIds",             grammarProperty.nrulel, grammarProperty.ruleip);
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 at %s:%d", funcs, L, FILENAMES, __LINE__); */
   return 1;
 }
 
@@ -2205,8 +2049,6 @@ static int  marpaESLIFLua_marpaESLIFGrammar_currentRulePropertiesi(lua_State *L)
   marpaESLIFLuaGrammarContext_t *marpaESLIFLuaGrammarContextp;
   lua_Integer                    rulei;
   marpaESLIFRuleProperty_t       ruleProperty;
-
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__); */
 
   if (lua_gettop(L) != 2) {
     return luaL_error(L, "Usage: marpaESLIFGrammar_currentRuleProperties(marpaESLIFGrammarp, rulei)");
@@ -2245,7 +2087,6 @@ static int  marpaESLIFLua_marpaESLIFGrammar_currentRulePropertiesi(lua_State *L)
   MARPAESLIFLUA_STORE_INTEGER      (L, "propertyBitSet",           ruleProperty.propertyBitSet);
   MARPAESLIFLUA_STORE_BOOLEAN      (L, "hideseparator",            ruleProperty.hideseparatorb);
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 at %s:%d", funcs, L, FILENAMES, __LINE__); */
   return 1;
 }
 
@@ -2258,8 +2099,6 @@ static int  marpaESLIFLua_marpaESLIFGrammar_rulePropertiesByLeveli(lua_State *L)
   lua_Integer                    leveli;
   lua_Integer                    rulei;
   marpaESLIFRuleProperty_t       ruleProperty;
-
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__); */
 
   if (lua_gettop(L) != 3) {
     return luaL_error(L, "Usage: marpaESLIFGrammar_rulePropertiesByLevel(marpaESLIFGrammarp, leveli, rulei)");
@@ -2299,7 +2138,6 @@ static int  marpaESLIFLua_marpaESLIFGrammar_rulePropertiesByLeveli(lua_State *L)
   MARPAESLIFLUA_STORE_INTEGER      (L, "propertyBitSet",           ruleProperty.propertyBitSet);
   MARPAESLIFLUA_STORE_BOOLEAN      (L, "hideseparator",            ruleProperty.hideseparatorb);
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 at %s:%d", funcs, L, FILENAMES, __LINE__); */
   return 1;
 }
 
@@ -2311,8 +2149,6 @@ static int  marpaESLIFLua_marpaESLIFGrammar_currentSymbolPropertiesi(lua_State *
   marpaESLIFLuaGrammarContext_t *marpaESLIFLuaGrammarContextp;
   lua_Integer                    symboli;
   marpaESLIFSymbolProperty_t     symbolProperty;
-
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__); */
 
   if (lua_gettop(L) != 2) {
     return luaL_error(L, "Usage: marpaESLIFGrammar_currentSymbolProperties(marpaESLIFGrammarp, symboli)");
@@ -2357,7 +2193,6 @@ static int  marpaESLIFLua_marpaESLIFGrammar_currentSymbolPropertiesi(lua_State *
   MARPAESLIFLUA_STORE_ACTION       (L, "nullableAction",             symbolProperty.nullableActionp);
   MARPAESLIFLUA_STORE_INTEGER      (L, "propertyBitSet",             symbolProperty.propertyBitSet);
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 at %s:%d", funcs, L, FILENAMES, __LINE__); */
   return 1;
 }
 
@@ -2370,8 +2205,6 @@ static int  marpaESLIFLua_marpaESLIFGrammar_symbolPropertiesByLeveli(lua_State *
   lua_Integer                    leveli;
   lua_Integer                    symboli;
   marpaESLIFSymbolProperty_t     symbolProperty;
-
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__); */
 
   if (lua_gettop(L) != 3) {
     return luaL_error(L, "Usage: marpaESLIFGrammar_symbolPropertiesByLevel(marpaESLIFGrammarp, leveli, symboli)");
@@ -2417,7 +2250,6 @@ static int  marpaESLIFLua_marpaESLIFGrammar_symbolPropertiesByLeveli(lua_State *
   MARPAESLIFLUA_STORE_ACTION       (L, "nullableAction",             symbolProperty.nullableActionp);
   MARPAESLIFLUA_STORE_INTEGER      (L, "propertyBitSet",             symbolProperty.propertyBitSet);
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 at %s:%d", funcs, L, FILENAMES, __LINE__); */
   return 1;
 }
 
@@ -2429,8 +2261,6 @@ static int  marpaESLIFLua_marpaESLIFGrammar_ruleDisplayi(lua_State *L)
   marpaESLIFLuaGrammarContext_t *marpaESLIFLuaGrammarContextp;
   lua_Integer                    rulei;
   char                          *ruleDisplays;
-
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__); */
 
   if (lua_gettop(L) != 2) {
     return luaL_error(L, "Usage: marpaESLIFGrammar_ruleDisplay(marpaESLIFGrammarp, rulei)");
@@ -2451,7 +2281,6 @@ static int  marpaESLIFLua_marpaESLIFGrammar_ruleDisplayi(lua_State *L)
 
   lua_pushstring(L, (const char *) ruleDisplays);
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 at %s:%d", funcs, L, FILENAMES, __LINE__); */
   return 1;
 }
 
@@ -2463,8 +2292,6 @@ static int  marpaESLIFLua_marpaESLIFGrammar_symbolDisplayi(lua_State *L)
   marpaESLIFLuaGrammarContext_t *marpaESLIFLuaGrammarContextp;
   lua_Integer                    symboli;
   char                          *symbolDisplays;
-
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__); */
 
   if (lua_gettop(L) != 2) {
     return luaL_error(L, "Usage: marpaESLIFGrammar_symbolDisplay(marpaESLIFGrammarp, symboli)");
@@ -2485,7 +2312,6 @@ static int  marpaESLIFLua_marpaESLIFGrammar_symbolDisplayi(lua_State *L)
 
   lua_pushstring(L, (const char *) symbolDisplays);
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 at %s:%d", funcs, L, FILENAMES, __LINE__); */
   return 1;
 }
 
@@ -2497,8 +2323,6 @@ static int  marpaESLIFLua_marpaESLIFGrammar_ruleShowi(lua_State *L)
   marpaESLIFLuaGrammarContext_t *marpaESLIFLuaGrammarContextp;
   lua_Integer                    rulei;
   char                          *ruleShows;
-
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__); */
 
   if (lua_gettop(L) != 2) {
     return luaL_error(L, "Usage: marpaESLIFGrammar_ruleShow(marpaESLIFGrammarp, rulei)");
@@ -2519,7 +2343,6 @@ static int  marpaESLIFLua_marpaESLIFGrammar_ruleShowi(lua_State *L)
 
   lua_pushstring(L, (const char *) ruleShows);
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 at %s:%d", funcs, L, FILENAMES, __LINE__); */
   return 1;
 }
 
@@ -2532,8 +2355,6 @@ static int  marpaESLIFLua_marpaESLIFGrammar_ruleDisplayByLeveli(lua_State *L)
   lua_Integer                    leveli;
   lua_Integer                    rulei;
   char                           *ruleDisplays;
-
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__); */
 
   if (lua_gettop(L) != 3) {
     return luaL_error(L, "Usage: marpaESLIFGrammar_ruleShow(marpaESLIFGrammarp, rulei)");
@@ -2555,7 +2376,6 @@ static int  marpaESLIFLua_marpaESLIFGrammar_ruleDisplayByLeveli(lua_State *L)
 
   lua_pushstring(L, (const char *) ruleDisplays);
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 at %s:%d", funcs, L, FILENAMES, __LINE__); */
   return 1;
 }
 
@@ -2568,8 +2388,6 @@ static int  marpaESLIFLua_marpaESLIFGrammar_symbolDisplayByLeveli(lua_State *L)
   lua_Integer                    leveli;
   lua_Integer                    symboli;
   char                          *symbolDisplays;
-
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__); */
 
   if (lua_gettop(L) != 3) {
     return luaL_error(L, "Usage: marpaESLIFGrammar_symbolShow(marpaESLIFGrammarp, symboli)");
@@ -2591,7 +2409,6 @@ static int  marpaESLIFLua_marpaESLIFGrammar_symbolDisplayByLeveli(lua_State *L)
 
   lua_pushstring(L, (const char *) symbolDisplays);
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 at %s:%d", funcs, L, FILENAMES, __LINE__); */
   return 1;
 }
 
@@ -2604,8 +2421,6 @@ static int  marpaESLIFLua_marpaESLIFGrammar_ruleShowByLeveli(lua_State *L)
   lua_Integer                    leveli;
   lua_Integer                    rulei;
   char                          *ruleShows;
-
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__); */
 
   if (lua_gettop(L) != 3) {
     return luaL_error(L, "Usage: marpaESLIFGrammar_ruleShow(marpaESLIFGrammarp, rulei)");
@@ -2627,7 +2442,6 @@ static int  marpaESLIFLua_marpaESLIFGrammar_ruleShowByLeveli(lua_State *L)
 
   lua_pushstring(L, (const char *) ruleShows);
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 at %s:%d", funcs, L, FILENAMES, __LINE__); */
   return 1;
 }
 
@@ -2638,8 +2452,6 @@ static int  marpaESLIFLua_marpaESLIFGrammar_showi(lua_State *L)
   static const char             *funcs = "marpaESLIFLua_marpaESLIFGrammar_showi";
   marpaESLIFLuaGrammarContext_t *marpaESLIFLuaGrammarContextp;
   char                          *shows;
-
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__); */
 
   if (lua_gettop(L) != 1) {
     return luaL_error(L, "Usage: marpaESLIFGrammar_show(marpaESLIFGrammarp)");
@@ -2658,7 +2470,6 @@ static int  marpaESLIFLua_marpaESLIFGrammar_showi(lua_State *L)
   }
   lua_pushstring(L, (const char *) shows);
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 (shows=%p) at %s:%d", funcs, L, shows, FILENAMES, __LINE__); */
   return 1;
 }
 
@@ -2670,8 +2481,6 @@ static int  marpaESLIFLua_marpaESLIFGrammar_showByLeveli(lua_State *L)
   marpaESLIFLuaGrammarContext_t *marpaESLIFLuaGrammarContextp;
   lua_Integer                    leveli;
   char                          *shows;
-
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__); */
 
   if (lua_gettop(L) != 2) {
     return luaL_error(L, "Usage: marpaESLIFGrammar_showByLevel(marpaESLIFGrammarp, leveli)");
@@ -2691,7 +2500,6 @@ static int  marpaESLIFLua_marpaESLIFGrammar_showByLeveli(lua_State *L)
   }
   lua_pushstring(L, (const char *) shows);
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 (shows=%p) at %s:%d", funcs, L, shows, FILENAMES, __LINE__); */
   return 1;
 }
 
@@ -2707,8 +2515,6 @@ static int  marpaESLIFLua_marpaESLIFGrammar_parsei(lua_State *L)
   marpaESLIFValueOption_t           marpaESLIFValueOption;
   int                               rci;
   int                               resultStacki;
-
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__); */
 
   if (lua_gettop(L) != 3) {
     return luaL_error(L, "Usage: marpaESLIFGrammar_parse(marpaESLIFGrammarp, recognizerInterface, valueInterface)");
@@ -2763,7 +2569,6 @@ static int  marpaESLIFLua_marpaESLIFGrammar_parsei(lua_State *L)
 
   lua_pushboolean(L, rci);
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 at %s:%d", funcs, L, FILENAMES, __LINE__); */
   return 1;
 }
 
@@ -2780,8 +2585,6 @@ static short marpaESLIFLua_readerCallbackb(void *userDatavp, char **inputcpp, si
   size_t                            inputl;
   size_t                            encodingl;
   short                             callbackb;
-
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__); */
 
   marpaESLIFLua_recognizerContextCleanupv(marpaESLIFLuaRecognizerContextp);
 
@@ -2807,8 +2610,6 @@ static short marpaESLIFLua_readerCallbackb(void *userDatavp, char **inputcpp, si
   marpaESLIFLuaRecognizerContextp->previousInputs    = (char *) inputs;
   marpaESLIFLuaRecognizerContextp->previousEncodings = (char *) encodings;
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 (*inputcpp=%p, *inputlp=%ld, *eofbp=%d, *characterStreambp=%d, *encodingsp=%p, *encodinglp=%ld) at %s:%d", funcs, L, *inputcpp, (unsigned long) *inputlp, (int) *eofbp, (int) *characterStreambp, *encodingsp, (unsigned long) *encodinglp, FILENAMES, __LINE__); */
-
   return 1;
 }
 
@@ -2819,8 +2620,6 @@ static marpaESLIFValueRuleCallback_t marpaESLIFLua_valueRuleActionResolver(void 
   static const char           *funcs                      = "marpaESLIFLua_valueRuleActionResolver";
   marpaESLIFLuaValueContext_t *marpaESLIFLuaValueContextp = (marpaESLIFLuaValueContext_t *) userDatavp;
   lua_State                   *L                          = marpaESLIFLuaValueContextp->L;
-
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) (actions=%s) at %s:%d", funcs, L, actions, FILENAMES, __LINE__); */
 
   /* Just remember the action name - lua will croak if calling this method fails */
   marpaESLIFLuaValueContextp->actions = actions;
@@ -2836,8 +2635,6 @@ static marpaESLIFValueSymbolCallback_t marpaESLIFLua_valueSymbolActionResolver(v
   marpaESLIFLuaValueContext_t *marpaESLIFLuaValueContextp = (marpaESLIFLuaValueContext_t *) userDatavp;
   lua_State                   *L                          = marpaESLIFLuaValueContextp->L;
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) (actions=%s) at %s:%d", funcs, L, actions, FILENAMES, __LINE__); */
-
   /* Just remember the action name - lua will croak if calling this method fails */
   marpaESLIFLuaValueContextp->actions = actions;
 
@@ -2851,8 +2648,6 @@ static marpaESLIFValueFreeCallback_t marpaESLIFLua_valueFreeActionResolver(void 
   static const char           *funcs                      = "marpaESLIFLua_valueFreeActionResolver";
   marpaESLIFLuaValueContext_t *marpaESLIFLuaValueContextp = (marpaESLIFLuaValueContext_t *) userDatavp;
   lua_State                   *L                          = marpaESLIFLuaValueContextp->L;
-
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) (actions=%s) at %s:%d", funcs, L, actions, FILENAMES, __LINE__); */
 
   /* It HAS to be ":defaultFreeActions" */
   if (strcmp(actions, ":defaultFreeActions") != 0) {
@@ -2876,8 +2671,6 @@ static short marpaESLIFLua_valueRuleCallbackb(void *userDatavp, marpaESLIFValue_
   int                          newtopi;
   int                          i;
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) (arg0i=%d, argni=%d, resulti=%d, nullableb=%s) at %s:%d", funcs, L, arg0i, argni, resulti, nullableb ? "true" : "false", FILENAMES, __LINE__); */
-
   /* Get value context */
   if (! marpaESLIFValue_contextb(marpaESLIFValuep, &(marpaESLIFLuaValueContextp->symbols), &(marpaESLIFLuaValueContextp->symboli), &(marpaESLIFLuaValueContextp->rules), &(marpaESLIFLuaValueContextp->rulei))) {
     return luaL_error(L, "marpaESLIFValue_contextb failure, %s", strerror(errno));
@@ -2887,7 +2680,6 @@ static short marpaESLIFLua_valueRuleCallbackb(void *userDatavp, marpaESLIFValue_
   MARPAESLIFLUA_CALLBACK(L, marpaESLIFLuaValueContextp->valueInterface_r, marpaESLIFLuaValueContextp->actions, nullableb ? 0 : (argni - arg0i + 1) /* nargs */, 
                          if (! nullableb) {
                            for (i = arg0i; i <= argni; i++) {
-                             /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) (arg0i=%d, argni=%d, resulti=%d, nullableb=%s) i=%d at %s:%d", funcs, L, arg0i, argni, resulti, nullableb ? "true" : "false", i, FILENAMES, __LINE__); */
                              marpaESLIFLua_pushValuev(marpaESLIFLuaValueContextp, marpaESLIFValuep, i, NULL /* bytep */, 0 /* bytel */);
                            }
                          }
@@ -2904,7 +2696,6 @@ static short marpaESLIFLua_valueRuleCallbackb(void *userDatavp, marpaESLIFValue_
   MARPAESLIFLUA_SET_VALUE(marpaESLIFLuaValueContextp, marpaESLIFValuep, resulti, marpaESLIFLua_representationb);
   lua_pop(L, 1);
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) (arg0i=%d, argni=%d, resulti=%d, nullableb=%s) return 1 at %s:%d", funcs, L, arg0i, argni, resulti, nullableb ? "true" : "false", FILENAMES, __LINE__); */
   return 1;
 }
 
@@ -2917,8 +2708,6 @@ static short marpaESLIFLua_valueSymbolCallbackb(void *userDatavp, marpaESLIFValu
   lua_State                   *L                          = marpaESLIFLuaValueContextp->L;
   int                          topi;
   int                          newtopi;
-
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) (bytep=%p, bytel=%ld, resulti=%d) at %s:%d", funcs, L, bytep, (unsigned long) bytel, resulti, FILENAMES, __LINE__); */
 
   /* Get value context */
   if (! marpaESLIFValue_contextb(marpaESLIFValuep, &(marpaESLIFLuaValueContextp->symbols), &(marpaESLIFLuaValueContextp->symboli), &(marpaESLIFLuaValueContextp->rules), &(marpaESLIFLuaValueContextp->rulei))) {
@@ -2939,7 +2728,6 @@ static short marpaESLIFLua_valueSymbolCallbackb(void *userDatavp, marpaESLIFValu
   MARPAESLIFLUA_SET_VALUE(marpaESLIFLuaValueContextp, marpaESLIFValuep, resulti, marpaESLIFLua_representationb);
   lua_pop(L, 1);                                \
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) (bytep=%p, bytel=%ld, resulti=%d) return 1 at %s:%d", funcs, L, bytep, (unsigned long) bytel, resulti, FILENAMES, __LINE__); */
   return 1;
 }
 
@@ -2951,11 +2739,8 @@ static void marpaESLIFLua_valueFreeCallbackv(void *userDatavp, void *contextp, v
   marpaESLIFLuaValueContext_t *marpaESLIFLuaValueContextp = (marpaESLIFLuaValueContext_t *) userDatavp;
   lua_State                   *L                          = marpaESLIFLuaValueContextp->L;
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) (contextp=%p, p=%p, sizel=%ld) at %s:%d", funcs, L, contextp, p, (unsigned long) sizel, FILENAMES, __LINE__); */
-
   if (contextp == MARPAESLIFLUA_CONTEXT) {
     /* This is a pointer to an integer that contains a global reference to the value */
-    /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) (contextp=%p, p=%p, sizel=%ld) releasing global reference %d at %s:%d", funcs, L, contextp, p, (unsigned long) sizel, * (int *) p, FILENAMES, __LINE__); */
     MARPAESLIFLUA_UNREF(L, * (int *) p);
     free(p);
   }
@@ -2968,8 +2753,6 @@ static short marpaESLIFLua_transformUndefb(void *userDatavp, void *contextp)
   static const char           *funcs                      = "marpaESLIFLua_transformUndefb";
   marpaESLIFLuaValueContext_t *marpaESLIFLuaValueContextp = (marpaESLIFLuaValueContext_t *) userDatavp;
   lua_State                   *L                          = marpaESLIFLuaValueContextp->L;
-
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) (contextp=%p) at %s:%d", funcs, L, contextp, FILENAMES, __LINE__); */
 
   lua_pushnil(marpaESLIFLuaValueContextp->L);
 
@@ -2984,8 +2767,6 @@ static short marpaESLIFLua_transformCharb(void *userDatavp, void *contextp, char
   marpaESLIFLuaValueContext_t *marpaESLIFLuaValueContextp = (marpaESLIFLuaValueContext_t *) userDatavp;
   lua_State                   *L                          = marpaESLIFLuaValueContextp->L;
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) (contextp=%p, c=%c) at %s:%d", funcs, L, contextp, c, FILENAMES, __LINE__); */
-
   lua_pushlstring(marpaESLIFLuaValueContextp->L, &c, 1);
 
   return 1;
@@ -2998,8 +2779,6 @@ static short marpaESLIFLua_transformShortb(void *userDatavp, void *contextp, sho
   static const char           *funcs                      = "marpaESLIFLua_transformShortb";
   marpaESLIFLuaValueContext_t *marpaESLIFLuaValueContextp = (marpaESLIFLuaValueContext_t *) userDatavp;
   lua_State                   *L                          = marpaESLIFLuaValueContextp->L;
-
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) (contextp=%p, b=%d) at %s:%d", funcs, L, contextp, (int) b, FILENAMES, __LINE__); */
 
   lua_pushinteger(marpaESLIFLuaValueContextp->L, (lua_Integer) b);
 
@@ -3014,8 +2793,6 @@ static short marpaESLIFLua_transformIntb(void *userDatavp, void *contextp, int i
   marpaESLIFLuaValueContext_t *marpaESLIFLuaValueContextp = (marpaESLIFLuaValueContext_t *) userDatavp;
   lua_State                   *L                          = marpaESLIFLuaValueContextp->L;
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) (contextp=%p, i=%d) at %s:%d", funcs, L, contextp, i, FILENAMES, __LINE__); */
-
   lua_pushinteger(marpaESLIFLuaValueContextp->L, (lua_Integer) i);
 
   return 1;
@@ -3028,8 +2805,6 @@ static short marpaESLIFLua_transformLongb(void *userDatavp, void *contextp, long
   static const char           *funcs                      = "marpaESLIFLua_transformLongb";
   marpaESLIFLuaValueContext_t *marpaESLIFLuaValueContextp = (marpaESLIFLuaValueContext_t *) userDatavp;
   lua_State                   *L                          = marpaESLIFLuaValueContextp->L;
-
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) (contextp=%p, l=%ld) at %s:%d", funcs, L, contextp, l, FILENAMES, __LINE__); */
 
   lua_pushinteger(marpaESLIFLuaValueContextp->L, (lua_Integer) l);
 
@@ -3044,8 +2819,6 @@ static short marpaESLIFLua_transformFloatb(void *userDatavp, void *contextp, flo
   marpaESLIFLuaValueContext_t *marpaESLIFLuaValueContextp = (marpaESLIFLuaValueContext_t *) userDatavp;
   lua_State                   *L                          = marpaESLIFLuaValueContextp->L;
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) (contextp=%p, f=%f) at %s:%d", funcs, L, contextp, (double) f, FILENAMES, __LINE__); */
-
   lua_pushnumber(marpaESLIFLuaValueContextp->L, (lua_Number) f);
 
   return 1;
@@ -3058,8 +2831,6 @@ static short marpaESLIFLua_transformDoubleb(void *userDatavp, void *contextp, do
   static const char           *funcs                      = "marpaESLIFLua_transformDoubleb";
   marpaESLIFLuaValueContext_t *marpaESLIFLuaValueContextp = (marpaESLIFLuaValueContext_t *) userDatavp;
   lua_State                   *L                          = marpaESLIFLuaValueContextp->L;
-
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) (contextp=%p, d=%f) at %s:%d", funcs, L, contextp, d, FILENAMES, __LINE__); */
 
   lua_pushnumber(marpaESLIFLuaValueContextp->L, (lua_Number) d);
 
@@ -3074,11 +2845,8 @@ static short marpaESLIFLua_transformPtrb(void *userDatavp, void *contextp, void 
   marpaESLIFLuaValueContext_t *marpaESLIFLuaValueContextp = (marpaESLIFLuaValueContext_t *) userDatavp;
   lua_State                   *L                          = marpaESLIFLuaValueContextp->L;
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) (contextp=%p, p=%p) at %s:%d", funcs, L, contextp, p, FILENAMES, __LINE__); */
-
   if (contextp == MARPAESLIFLUA_CONTEXT) {
     /* This is a pointer to an integer value that is a global reference to the real value */
-    /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) (contextp=%p, p=%p) pushing value with global reference %d at %s:%d", funcs, L, contextp, p, * (int *) p, FILENAMES, __LINE__); */
     MARPAESLIFLUA_DEREF(L, * (int *) p);
   } else {
     lua_pushlightuserdata(marpaESLIFLuaValueContextp->L, p);
@@ -3095,8 +2863,6 @@ static short marpaESLIFLua_transformArrayb(void *userDatavp, void *contextp, voi
   marpaESLIFLuaValueContext_t *marpaESLIFLuaValueContextp = (marpaESLIFLuaValueContext_t *) userDatavp;
   lua_State                   *L                          = marpaESLIFLuaValueContextp->L;
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) (contextp=%p, p=%p, sizel=%ld) at %s:%d", funcs, L, contextp, p, (unsigned long) sizel, FILENAMES, __LINE__); */
-
   lua_pushlstring(marpaESLIFLuaValueContextp->L, p, sizel);
 
   return 1;
@@ -3109,8 +2875,6 @@ static short marpaESLIFLua_transformBoolb(void *userDatavp, void *contextp, shor
   static const char           *funcs                      = "marpaESLIFLua_transformBoolb";
   marpaESLIFLuaValueContext_t *marpaESLIFLuaValueContextp = (marpaESLIFLuaValueContext_t *) userDatavp;
   lua_State                   *L                          = marpaESLIFLuaValueContextp->L;
-
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) (contextp=%p, b=%s) at %s:%d", funcs, L, contextp, b ? "true" : "false", FILENAMES, __LINE__); */
 
   lua_pushboolean(marpaESLIFLuaValueContextp->L, (int) b);
 
@@ -3126,8 +2890,6 @@ static void marpaESLIFLua_pushValuev(marpaESLIFLuaValueContext_t *marpaESLIFLuaV
   marpaESLIFValueResult_t *marpaESLIFValueResultp;
   marpaESLIFValueResult_t  marpaESLIFValueResult;
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) (stackindice=%d) at %s:%d", funcs, L, stackindicei, FILENAMES, __LINE__); */
-
   if (bytep != NULL) {
     /* Fake a marpaESLIFValueResult */
     marpaESLIFValueResult.type     = MARPAESLIF_VALUE_TYPE_ARRAY;
@@ -3142,16 +2904,6 @@ static void marpaESLIFLua_pushValuev(marpaESLIFLuaValueContext_t *marpaESLIFLuaV
     }
   }
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) (stackindice=%d) marpaESLIFValueResultp is of type %d at %s:%d", funcs, L, stackindicei, marpaESLIFValueResultp->type, FILENAMES, __LINE__); */
-  /*
-  if (marpaESLIFValueResultp->type == MARPAESLIF_VALUE_TYPE_INT) {
-    if (marpaESLIFValueResultp->contextp == MARPAESLIFLUA_CONTEXT) {
-      GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) (stackindice=%d) marpaESLIFValueResultp is an INT with context == MARPAESLIFLUA_CONTEXT, value is %d at %s:%d", funcs, L, stackindicei, marpaESLIFValueResultp->u.i, FILENAMES, __LINE__);
-    } else {
-      GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) (stackindice=%d) marpaESLIFValueResultp is an INT with context != MARPAESLIFLUA_CONTEXT, value is %d at %s:%d", funcs, L, stackindicei, marpaESLIFValueResultp->u.i, FILENAMES, __LINE__);
-    }
-  }
-  */
   if (! marpaESLIFValue_transformb(marpaESLIFValuep, marpaESLIFValueResultp, NULL /* marpaESLIFValueResultResolvedp */)) {
     luaL_error(L, "marpaESLIFValue_transformb failure, %s", strerror(errno));
   }
@@ -3172,8 +2924,6 @@ static short marpaESLIFLua_representationb(void *userDatavp, marpaESLIFValueResu
   lua_State                   *L                          = marpaESLIFLuaValueContextp->L;
   const char                  *s;
   size_t                       l;
-
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__); */
 
   marpaESLIFLua_valueContextCleanupv(marpaESLIFLuaValueContextp);
 
@@ -3201,7 +2951,6 @@ static short marpaESLIFLua_representationb(void *userDatavp, marpaESLIFValueResu
   }
   lua_pop(L, 1);
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) *inputcpp=\"%s\" at %s:%d", funcs, L, (*inputcpp != NULL) ? *inputcpp : "<undef>", FILENAMES, __LINE__); */
   /* Always return a true value, else ::concat will abort */
   return 1;
 }
@@ -3250,8 +2999,6 @@ static int marpaESLIFLua_marpaESLIFRecognizer_newi(lua_State *L)
   marpaESLIFRecognizerOption_t      marpaESLIFRecognizerOption;
   marpaESLIFLuaRecognizerContext_t *marpaESLIFLuaRecognizerContextp;
  
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__); */
-
   if (lua_gettop(L) != 2) {
     return luaL_error(L, "Usage: marpaESLIFRecognizer_new(marpaESLIFGrammarp, recognizerInterface)");
   }
@@ -3305,7 +3052,6 @@ static int marpaESLIFLua_marpaESLIFRecognizer_newi(lua_State *L)
 
   MARPAESLIFLUA_PUSH_MARPAESLIFRECOGNIZER_OBJECT(L, marpaESLIFLuaRecognizerContextp);
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 ({marpaESLIFLuaRecognizerContextp->marpaESLIFRecognizerp=%p}) at %s:%d", funcs, L, marpaESLIFLuaRecognizerContextp->marpaESLIFRecognizerp, FILENAMES, __LINE__); */
   return 1;
 }
 
@@ -3316,8 +3062,6 @@ static int marpaESLIFLua_marpaESLIFRecognizer_newFromUnmanagedi(lua_State *L, ma
 {
   static const char                *funcs = "marpaESLIFLua_marpaESLIFRecognizer_newFromUnmanagedi";
   marpaESLIFLuaRecognizerContext_t *marpaESLIFLuaRecognizerContextp;
-
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__); */
 
   marpaESLIFLuaRecognizerContextp = (marpaESLIFLuaRecognizerContext_t *) malloc(sizeof(marpaESLIFLuaRecognizerContext_t));
   if (marpaESLIFLuaRecognizerContextp == NULL) {
@@ -3330,7 +3074,6 @@ static int marpaESLIFLua_marpaESLIFRecognizer_newFromUnmanagedi(lua_State *L, ma
 
   MARPAESLIFLUA_PUSH_MARPAESLIFRECOGNIZER_OBJECT(L, marpaESLIFLuaRecognizerContextp);
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 ({marpaESLIFLuaRecognizerContextp=%p}) at %s:%d", funcs, L, marpaESLIFLuaRecognizerContextp, FILENAMES, __LINE__); */
   return 1;
 }
 #endif /* MARPAESLIFLUA_EMBEDDED */
@@ -3342,18 +3085,14 @@ static int marpaESLIFLua_marpaESLIFRecognizer_freei(lua_State *L)
   static const char                *funcs = "marpaESLIFLua_marpaESLIFRecognizer_freei";
   marpaESLIFLuaRecognizerContext_t *marpaESLIFLuaRecognizerContextp;
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__); */
-
   lua_getfield(L, -1, "marpaESLIFLuaRecognizerContextp"); /* stack: {...}, marpaESLIFLuaRecognizerContextp */
   marpaESLIFLuaRecognizerContextp = (marpaESLIFLuaRecognizerContext_t *) lua_touserdata(L, -1);
   lua_pop(L, 1);                             /* stack: {...} */
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) freeing marpaESLIFLuaRecognizerContext=%p at %s:%d", funcs, L, marpaESLIFLuaRecognizerContextp, FILENAMES, __LINE__); */
   marpaESLIFLua_recognizerContextFreev(marpaESLIFLuaRecognizerContextp, 0 /* onStackb */);
 
   lua_pop(L, 1);                             /* stack: */
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 0 at %s:%d", funcs, L, FILENAMES, __LINE__); */
   return 0;
 }
 
@@ -3366,8 +3105,6 @@ static int marpaESLIFLua_marpaESLIFRecognizer_newFromi(lua_State *L)
   marpaESLIFLuaRecognizerContext_t *marpaESLIFLuaRecognizerContextp;
   marpaESLIFLuaGrammarContext_t    *marpaESLIFLuaGrammarContextp;
  
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__); */
-
   if (lua_gettop(L) != 2) {
     return luaL_error(L, "Usage: marpaESLIFRecognizer_newFrom(marpaESLIFRecognizerp, marpaESLIFGrammarp)");
   }
@@ -3417,7 +3154,6 @@ static int marpaESLIFLua_marpaESLIFRecognizer_newFromi(lua_State *L)
 
   MARPAESLIFLUA_PUSH_MARPAESLIFRECOGNIZER_OBJECT(L, marpaESLIFLuaRecognizerContextp);
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 ({marpaESLIFLuaRecognizerContextp->marpaESLIFRecognizerp=%p}) at %s:%d", funcs, L, marpaESLIFLuaRecognizerContextp->marpaESLIFRecognizerp, FILENAMES, __LINE__); */
   return 1;
 }
 
@@ -3428,8 +3164,6 @@ static int marpaESLIFLua_marpaESLIFRecognizer_set_exhausted_flagi(lua_State *L)
   static const char                *funcs = "marpaESLIFLua_marpaESLIFRecognizer_set_exhausted_flagi";
   marpaESLIFLuaRecognizerContext_t *marpaESLIFLuaRecognizerContextp;
  
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__); */
-
   if (lua_gettop(L) != 2) {
     return luaL_error(L, "Usage: marpaESLIFRecognizer_set_exhausted_flag(marpaESLIFRecognizerp, flag)");
   }
@@ -3453,7 +3187,6 @@ static int marpaESLIFLua_marpaESLIFRecognizer_set_exhausted_flagi(lua_State *L)
   /* Clear the stack */
   lua_settop(L, 0);
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 0 at %s:%d", funcs, L, FILENAMES, __LINE__); */
   return 0;
 }
 
@@ -3465,8 +3198,6 @@ static int marpaESLIFLua_marpaESLIFRecognizer_sharei(lua_State *L)
   marpaESLIFLuaRecognizerContext_t *marpaESLIFLuaRecognizerContextp;
   marpaESLIFLuaRecognizerContext_t *marpaESLIFLuaRecognizerContextSharedp;
  
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__); */
-
   if (lua_gettop(L) != 2) {
     return luaL_error(L, "Usage: marpaESLIFRecognizer_sharei(marpaESLIFRecognizerp, marpaESLIFRecognizerSharedp)");
   }
@@ -3491,14 +3222,12 @@ static int marpaESLIFLua_marpaESLIFRecognizer_sharei(lua_State *L)
    * The eventual previous reference on another shared recognizer has its refcount decreased.
    */
   if (marpaESLIFLuaRecognizerContextp->recognizer_orig_r != LUA_NOREF) {
-    /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) freeing recognizer_orig_r=%d from registry at %s:%d", funcs, L, marpaESLIFLuaRecognizerContextp->recognizer_orig_r, FILENAMES, __LINE__); */
     MARPAESLIFLUA_UNREF(L, marpaESLIFLuaRecognizerContextp->recognizer_orig_r);
   }
 
   lua_pushnil(L);                                              /* stack: marpaESLIFRecognizerTable, marpaESLIFRecognizerSharedTable, nil */
   lua_copy(L, 2, -1);                                          /* stack: marpaESLIFRecognizerTable, marpaESLIFRecognizerSharedTable, marpaESLIFRecognizerSharedTable */
   MARPAESLIFLUA_REF(L, marpaESLIFLuaRecognizerContextp->recognizer_orig_r); /* stack: marpaESLIFRecognizerTable, marpaESLIFRecognizerSharedTable */
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) got recognizer_orig_r=%d from registry at %s:%d", funcs, L, marpaESLIFLuaRecognizerContextp->recognizer_orig_r, FILENAMES, __LINE__); */
 
   if (! marpaESLIFRecognizer_shareb(marpaESLIFLuaRecognizerContextp->marpaESLIFRecognizerp, marpaESLIFLuaRecognizerContextSharedp->marpaESLIFRecognizerp)) {
     return luaL_error(L, "marpaESLIFRecognizer_shareb failure, %s", strerror(errno));
@@ -3507,7 +3236,6 @@ static int marpaESLIFLua_marpaESLIFRecognizer_sharei(lua_State *L)
   /* Clear the stack */
   lua_settop(L, 0);
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 0 at %s:%d", funcs, L, FILENAMES, __LINE__); */
   return 0;
 }
 
@@ -3519,8 +3247,6 @@ static int marpaESLIFLua_marpaESLIFRecognizer_isCanContinuei(lua_State *L)
   marpaESLIFLuaRecognizerContext_t *marpaESLIFLuaRecognizerContextp;
   short                             isCanContinueb;
  
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__); */
-
   if (lua_gettop(L) != 1) {
     return luaL_error(L, "Usage: marpaESLIFRecognizer_isCanContinue(marpaESLIFRecognizerp, marpaESLIFRecognizerSharedp)");
   }
@@ -3542,7 +3268,6 @@ static int marpaESLIFLua_marpaESLIFRecognizer_isCanContinuei(lua_State *L)
 
   lua_pushboolean(L, isCanContinueb);
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 (isCanContinueb=%s) at %s:%d", funcs, L, isCanContinueb ? "true" : "false", FILENAMES, __LINE__); */
   return 1;
 }
 
@@ -3554,8 +3279,6 @@ static int marpaESLIFLua_marpaESLIFRecognizer_isExhaustedi(lua_State *L)
   marpaESLIFLuaRecognizerContext_t *marpaESLIFLuaRecognizerContextp;
   short                             exhaustedb;
  
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__); */
-
   if (lua_gettop(L) != 1) {
     return luaL_error(L, "Usage: marpaESLIFRecognizer_isexhausted(marpaESLIFRecognizerp)");
   }
@@ -3577,7 +3300,6 @@ static int marpaESLIFLua_marpaESLIFRecognizer_isExhaustedi(lua_State *L)
 
   lua_pushboolean(L, exhaustedb);
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 (exhaustedb=%s) at %s:%d", funcs, L, exhaustedb ? "true" : "false", FILENAMES, __LINE__); */
   return 1;
 }
 
@@ -3589,8 +3311,6 @@ static int marpaESLIFLua_marpaESLIFRecognizer_scani(lua_State *L)
   marpaESLIFLuaRecognizerContext_t *marpaESLIFLuaRecognizerContextp;
   short                             initialEventsb = 0;
  
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__); */
-
   switch (lua_gettop(L)) {
   case 2:
     if (lua_type(L, 2) != LUA_TBOOLEAN) {
@@ -3615,7 +3335,6 @@ static int marpaESLIFLua_marpaESLIFRecognizer_scani(lua_State *L)
 
   lua_pushboolean(L, marpaESLIFRecognizer_scanb(marpaESLIFLuaRecognizerContextp->marpaESLIFRecognizerp, initialEventsb, NULL /* continuebp */, NULL /* exhaustedbp */));
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 at %s:%d", funcs, L, FILENAMES, __LINE__); */
   return 1;
 }
 
@@ -3628,8 +3347,6 @@ static int marpaESLIFLua_marpaESLIFRecognizer_resumei(lua_State *L)
   int                               isNumi;
   int                               deltaLengthi = 0;
  
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__); */
-
   switch (lua_gettop(L)) {
   case 2:
     if (lua_type(L, 2) != LUA_TNUMBER) {
@@ -3660,7 +3377,6 @@ static int marpaESLIFLua_marpaESLIFRecognizer_resumei(lua_State *L)
 
   lua_pushboolean(L, marpaESLIFRecognizer_resumeb(marpaESLIFLuaRecognizerContextp->marpaESLIFRecognizerp, (size_t) deltaLengthi, NULL /* continuebp */, NULL /* exhaustedbp */));
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 at %s:%d", funcs, L, FILENAMES, __LINE__); */
   return 1;
 }
 
@@ -3674,8 +3390,6 @@ static int marpaESLIFLua_marpaESLIFRecognizer_eventsi(lua_State *L)
   size_t                            eventArrayl;
   marpaESLIFEvent_t                *eventArrayp;
  
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__); */
-
   if (lua_gettop(L) != 1) {
     return luaL_error(L, "Usage: marpaESLIFRecognizer_events(marpaESLIFRecognizerp)");
   }
@@ -3703,7 +3417,6 @@ static int marpaESLIFLua_marpaESLIFRecognizer_eventsi(lua_State *L)
     lua_rawseti(L, 1, (int) i);                                           /* stack: {i => {"type" => type, "symbol" => symbol, "event" => event}} */
   }
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 at %s:%d", funcs, L, FILENAMES, __LINE__); */
   return 1;
 }
 
@@ -3717,8 +3430,6 @@ static int marpaESLIFLua_marpaESLIFRecognizer_eventOnOffi(lua_State *L)
   const char                       *symbols;
   int                               isNumi;
   int                               codei;
-
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__); */
 
   if (lua_gettop(L) != 4) {
     return luaL_error(L, "Usage: marpaESLIFRecognizer_eventOnOff(marpaESLIFRecognizerp, symbol, eventTypes, onOff)");
@@ -3775,7 +3486,6 @@ static int marpaESLIFLua_marpaESLIFRecognizer_eventOnOffi(lua_State *L)
   }
 
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 0 at %s:%d", funcs, L, FILENAMES, __LINE__); */
   return 0;
 }
 
@@ -3791,8 +3501,6 @@ static int marpaESLIFLua_marpaESLIFRecognizer_lexemeAlternativei(lua_State *L)
   int                               refi;
   marpaESLIFAlternative_t           marpaESLIFAlternative;
   int                              *p;
-
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__); */
 
   switch (lua_gettop(L)) {
   case 4:
@@ -3853,7 +3561,6 @@ static int marpaESLIFLua_marpaESLIFRecognizer_lexemeAlternativei(lua_State *L)
 
   lua_pushboolean(L, marpaESLIFRecognizer_lexeme_alternativeb(marpaESLIFLuaRecognizerContextp->marpaESLIFRecognizerp, &marpaESLIFAlternative));
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 at %s:%d", funcs, L, FILENAMES, __LINE__); */
   return 1;
 }
 
@@ -3865,8 +3572,6 @@ static int marpaESLIFLua_marpaESLIFRecognizer_lexemeCompletei(lua_State *L)
   marpaESLIFLuaRecognizerContext_t *marpaESLIFLuaRecognizerContextp;
   size_t                            lengthl;
   int                               isNumi;
-
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__); */
 
   if (lua_gettop(L) != 2) {
     return luaL_error(L, "Usage: marpaESLIFRecognizer_lexemeComplete(marpaESLIFRecognizerp, length)");
@@ -3892,7 +3597,6 @@ static int marpaESLIFLua_marpaESLIFRecognizer_lexemeCompletei(lua_State *L)
 
   lua_pushboolean(L, marpaESLIFRecognizer_lexeme_completeb(marpaESLIFLuaRecognizerContextp->marpaESLIFRecognizerp, lengthl));
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 at %s:%d", funcs, L, FILENAMES, __LINE__); */
   return 1;
 }
 
@@ -3909,8 +3613,6 @@ static int marpaESLIFLua_marpaESLIFRecognizer_lexemeReadi(lua_State *L)
   int                               refi;
   marpaESLIFAlternative_t           marpaESLIFAlternative;
   int                              *p;
-
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__); */
 
   switch (lua_gettop(L)) {
   case 5:
@@ -3965,8 +3667,6 @@ static int marpaESLIFLua_marpaESLIFRecognizer_lexemeReadi(lua_State *L)
     return luaL_error(L, "Usage: marpaESLIFRecognizer_lexemeRead(marpaESLIFRecognizerp, name, value, length[, grammarLength])");
   }
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) setting p=%p that points to refi=%d at %s:%d", funcs, L, p, refi, FILENAMES, __LINE__); */
-
   marpaESLIFAlternative.lexemes               = (char *) names;
   marpaESLIFAlternative.value.type            = MARPAESLIF_VALUE_TYPE_PTR;
   marpaESLIFAlternative.value.u.p             = p;
@@ -3981,7 +3681,6 @@ static int marpaESLIFLua_marpaESLIFRecognizer_lexemeReadi(lua_State *L)
 
   lua_pushboolean(L, marpaESLIFRecognizer_lexeme_readb(marpaESLIFLuaRecognizerContextp->marpaESLIFRecognizerp, &marpaESLIFAlternative, lengthl));
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 at %s:%d", funcs, L, FILENAMES, __LINE__); */
   return 1;
 }
 
@@ -3993,8 +3692,6 @@ static int marpaESLIFLua_marpaESLIFRecognizer_lexemeTryi(lua_State *L)
   marpaESLIFLuaRecognizerContext_t *marpaESLIFLuaRecognizerContextp;
   const char                       *names;
   short                            rcb;
-
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__); */
 
   if (lua_gettop(L) != 2) {
     return luaL_error(L, "Usage: marpaESLIFRecognizer_lexemeTry(marpaESLIFRecognizerp, name)");
@@ -4021,7 +3718,6 @@ static int marpaESLIFLua_marpaESLIFRecognizer_lexemeTryi(lua_State *L)
   
   lua_pushboolean(L, rcb);
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 at %s:%d", funcs, L, FILENAMES, __LINE__); */
   return 1;
 }
 
@@ -4032,8 +3728,6 @@ static int marpaESLIFLua_marpaESLIFRecognizer_discardTryi(lua_State *L)
   static const char                *funcs = "marpaESLIFLua_marpaESLIFRecognizer_discardTryi";
   marpaESLIFLuaRecognizerContext_t *marpaESLIFLuaRecognizerContextp;
   short                             rcb;
-
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__); */
 
   if (lua_gettop(L) != 1) {
     return luaL_error(L, "Usage: marpaESLIFRecognizer_discardTry(marpaESLIFRecognizerp)");
@@ -4055,7 +3749,6 @@ static int marpaESLIFLua_marpaESLIFRecognizer_discardTryi(lua_State *L)
   
   lua_pushboolean(L, rcb);
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 at %s:%d", funcs, L, FILENAMES, __LINE__); */
   return 1;
 }
 
@@ -4067,8 +3760,6 @@ static int marpaESLIFLua_marpaESLIFRecognizer_lexemeExpectedi(lua_State *L)
   marpaESLIFLuaRecognizerContext_t  *marpaESLIFLuaRecognizerContextp;
   size_t                             nLexeme;
   char                             **lexemesArrayp;
-
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__); */
 
   if (lua_gettop(L) != 1) {
     return luaL_error(L, "Usage: marpaESLIFRecognizer_lexemeExpected(marpaESLIFRecognizerp)");
@@ -4090,7 +3781,6 @@ static int marpaESLIFLua_marpaESLIFRecognizer_lexemeExpectedi(lua_State *L)
   
   MARPAESLIFLUA_PUSH_ASCIISTRING_ARRAY(L, nLexeme, lexemesArrayp);
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 at %s:%d", funcs, L, FILENAMES, __LINE__); */
   return 1;
 }
 
@@ -4103,8 +3793,6 @@ static int marpaESLIFLua_marpaESLIFRecognizer_lexemeLastPausei(lua_State *L)
   const char                       *names;
   char                             *pauses;
   size_t                            pausel;
-
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__); */
 
   if (lua_gettop(L) != 2) {
     return luaL_error(L, "Usage: marpaESLIFRecognizer_lexemeLastPause(marpaESLIFRecognizerp, name)");
@@ -4135,7 +3823,6 @@ static int marpaESLIFLua_marpaESLIFRecognizer_lexemeLastPausei(lua_State *L)
     lua_pushnil(L);
   }
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 at %s:%d", funcs, L, FILENAMES, __LINE__); */
   return 1;
 }
 
@@ -4148,8 +3835,6 @@ static int marpaESLIFLua_marpaESLIFRecognizer_lexemeLastTryi(lua_State *L)
   const char                       *names;
   char                             *trys;
   size_t                            tryl;
-
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__); */
 
   if (lua_gettop(L) != 2) {
     return luaL_error(L, "Usage: marpaESLIFRecognizer_lexemeLastTry(marpaESLIFRecognizerp, name)");
@@ -4180,7 +3865,6 @@ static int marpaESLIFLua_marpaESLIFRecognizer_lexemeLastTryi(lua_State *L)
     lua_pushnil(L);
   }
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 at %s:%d", funcs, L, FILENAMES, __LINE__); */
   return 1;
 }
 
@@ -4192,8 +3876,6 @@ static int marpaESLIFLua_marpaESLIFRecognizer_discardLastTryi(lua_State *L)
   marpaESLIFLuaRecognizerContext_t *marpaESLIFLuaRecognizerContextp;
   char                             *trys;
   size_t                            tryl;
-
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__); */
 
   if (lua_gettop(L) != 1) {
     return luaL_error(L, "Usage: marpaESLIFRecognizer_discardLastTry(marpaESLIFRecognizerp)");
@@ -4219,7 +3901,6 @@ static int marpaESLIFLua_marpaESLIFRecognizer_discardLastTryi(lua_State *L)
     lua_pushnil(L);
   }
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 at %s:%d", funcs, L, FILENAMES, __LINE__); */
   return 1;
 }
 
@@ -4230,8 +3911,6 @@ static int marpaESLIFLua_marpaESLIFRecognizer_isEofi(lua_State *L)
   static const char                *funcs = "marpaESLIFLua_marpaESLIFRecognizer_isEofi";
   marpaESLIFLuaRecognizerContext_t *marpaESLIFLuaRecognizerContextp;
   short                             eofb;
-
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__); */
 
   if (lua_gettop(L) != 1) {
     return luaL_error(L, "Usage: marpaESLIFRecognizer_isEof(marpaESLIFRecognizerp)");
@@ -4253,7 +3932,6 @@ static int marpaESLIFLua_marpaESLIFRecognizer_isEofi(lua_State *L)
   
   lua_pushboolean(L, eofb ? 1 : 0);
   
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 at %s:%d", funcs, L, FILENAMES, __LINE__); */
   return 1;
 }
 
@@ -4263,8 +3941,6 @@ static int marpaESLIFLua_marpaESLIFRecognizer_readi(lua_State *L)
 {
   static const char                *funcs = "marpaESLIFLua_marpaESLIFRecognizer_readi";
   marpaESLIFLuaRecognizerContext_t *marpaESLIFLuaRecognizerContextp;
-
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__); */
 
   if (lua_gettop(L) != 1) {
     return luaL_error(L, "Usage: marpaESLIFRecognizer_read(marpaESLIFRecognizerp)");
@@ -4282,7 +3958,6 @@ static int marpaESLIFLua_marpaESLIFRecognizer_readi(lua_State *L)
 
   lua_pushboolean(L, marpaESLIFRecognizer_readb(marpaESLIFLuaRecognizerContextp->marpaESLIFRecognizerp, NULL, NULL) ? 1 : 0);
   
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 at %s:%d", funcs, L, FILENAMES, __LINE__); */
   return 1;
 }
 
@@ -4294,8 +3969,6 @@ static int marpaESLIFLua_marpaESLIFRecognizer_inputi(lua_State *L)
   marpaESLIFLuaRecognizerContext_t *marpaESLIFLuaRecognizerContextp;
   char                             *inputs;
   size_t                            inputl;
-
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__); */
 
   if (lua_gettop(L) != 1) {
     return luaL_error(L, "Usage: marpaESLIFRecognizer_read(marpaESLIFRecognizerp)");
@@ -4321,7 +3994,6 @@ static int marpaESLIFLua_marpaESLIFRecognizer_inputi(lua_State *L)
     lua_pushnil(L);
   }
   
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 at %s:%d", funcs, L, FILENAMES, __LINE__); */
   return 1;
 }
 
@@ -4335,8 +4007,6 @@ static int marpaESLIFLua_marpaESLIFRecognizer_progressLogi(lua_State *L)
   int                               endi;
   int                               leveli;
   int                               isNumi;
-
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__); */
 
   if (lua_gettop(L) != 4) {
     return luaL_error(L, "Usage: marpaESLIFRecognizer_read(marpaESLIFRecognizerp, start, end, level)");
@@ -4396,7 +4066,6 @@ static int marpaESLIFLua_marpaESLIFRecognizer_progressLogi(lua_State *L)
     return luaL_error(L, "marpaESLIFRecognizer_progressLogb failure, %s", strerror(errno));
   }
   
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 0 at %s:%d", funcs, L, FILENAMES, __LINE__); */
   return 0;
 }
 
@@ -4409,8 +4078,6 @@ static int marpaESLIFLua_marpaESLIFRecognizer_lastCompletedOffseti(lua_State *L)
   const char                       *names;
   char                             *offsetp;
   size_t                            offsetl;
-
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__); */
 
   if (lua_gettop(L) != 2) {
     return luaL_error(L, "Usage: marpaESLIFRecognizer_lastCompletedOffset(marpaESLIFRecognizerp, name)");
@@ -4438,7 +4105,6 @@ static int marpaESLIFLua_marpaESLIFRecognizer_lastCompletedOffseti(lua_State *L)
   offsetl = (size_t) offsetp;
   lua_pushinteger(L, (lua_Integer) offsetl);
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 at %s:%d", funcs, L, FILENAMES, __LINE__); */
   return 1;
 }
 
@@ -4450,8 +4116,6 @@ static int marpaESLIFLua_marpaESLIFRecognizer_lastCompletedLenghti(lua_State *L)
   marpaESLIFLuaRecognizerContext_t *marpaESLIFLuaRecognizerContextp;
   const char                       *names;
   size_t                            lengthl;
-
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__); */
 
   if (lua_gettop(L) != 2) {
     return luaL_error(L, "Usage: marpaESLIFRecognizer_lastCompletedLength(marpaESLIFRecognizerp, name)");
@@ -4478,7 +4142,6 @@ static int marpaESLIFLua_marpaESLIFRecognizer_lastCompletedLenghti(lua_State *L)
   
   lua_pushinteger(L, (lua_Integer) lengthl);
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 at %s:%d", funcs, L, FILENAMES, __LINE__); */
   return 1;
 }
 
@@ -4492,8 +4155,6 @@ static int marpaESLIFLua_marpaESLIFRecognizer_lastCompletedLocationi(lua_State *
   char                             *offsetp;
   size_t                            lengthl;
   size_t                            offsetl;
-
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__); */
 
   if (lua_gettop(L) != 2) {
     return luaL_error(L, "Usage: marpaESLIFRecognizer_lastCompletedLocation(marpaESLIFRecognizerp, name)");
@@ -4523,7 +4184,6 @@ static int marpaESLIFLua_marpaESLIFRecognizer_lastCompletedLocationi(lua_State *
   MARPAESLIFLUA_STORE_INTEGER(L, "offset", (lua_Integer) offsetl);
   MARPAESLIFLUA_STORE_INTEGER(L, "length", (lua_Integer) lengthl);
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 at %s:%d", funcs, L, FILENAMES, __LINE__); */
   return 1;
 }
 
@@ -4534,8 +4194,6 @@ static int marpaESLIFLua_marpaESLIFRecognizer_linei(lua_State *L)
   static const char                *funcs = "marpaESLIFLua_marpaESLIFRecognizer_linei";
   marpaESLIFLuaRecognizerContext_t *marpaESLIFLuaRecognizerContextp;
   size_t                            linel;
-
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__); */
 
   if (lua_gettop(L) != 1) {
     return luaL_error(L, "Usage: marpaESLIFRecognizer_line(marpaESLIFRecognizerp)");
@@ -4557,7 +4215,6 @@ static int marpaESLIFLua_marpaESLIFRecognizer_linei(lua_State *L)
 
   lua_pushinteger(L, (lua_Integer) linel);
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 at %s:%d", funcs, L, FILENAMES, __LINE__); */
   return 1;
 }
 
@@ -4568,8 +4225,6 @@ static int marpaESLIFLua_marpaESLIFRecognizer_columni(lua_State *L)
   static const char                *funcs = "marpaESLIFLua_marpaESLIFRecognizer_columni";
   marpaESLIFLuaRecognizerContext_t *marpaESLIFLuaRecognizerContextp;
   size_t                            columnl;
-
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__); */
 
   if (lua_gettop(L) != 1) {
     return luaL_error(L, "Usage: marpaESLIFRecognizer_column(marpaESLIFRecognizerp)");
@@ -4591,7 +4246,6 @@ static int marpaESLIFLua_marpaESLIFRecognizer_columni(lua_State *L)
 
   lua_pushinteger(L, (lua_Integer) columnl);
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 at %s:%d", funcs, L, FILENAMES, __LINE__); */
   return 1;
 }
 
@@ -4603,8 +4257,6 @@ static int marpaESLIFLua_marpaESLIFRecognizer_locationi(lua_State *L)
   marpaESLIFLuaRecognizerContext_t *marpaESLIFLuaRecognizerContextp;
   size_t                            linel;
   size_t                            columnl;
-
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__); */
 
   if (lua_gettop(L) != 1) {
     return luaL_error(L, "Usage: marpaESLIFRecognizer_location(marpaESLIFRecognizerp)");
@@ -4628,7 +4280,6 @@ static int marpaESLIFLua_marpaESLIFRecognizer_locationi(lua_State *L)
   MARPAESLIFLUA_STORE_INTEGER(L, "line",   linel);
   MARPAESLIFLUA_STORE_INTEGER(L, "column", columnl);
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 at %s:%d", funcs, L, FILENAMES, __LINE__); */
   return 1;
 }
 
@@ -4639,8 +4290,6 @@ static int marpaESLIFLua_marpaESLIFRecognizer_hookDiscardi(lua_State *L)
   static const char                *funcs = "marpaESLIFLua_marpaESLIFRecognizer_hookDiscardi";
   marpaESLIFLuaRecognizerContext_t *marpaESLIFLuaRecognizerContextp;
   short                             discardOnOffb;
-
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__); */
 
   if (lua_gettop(L) != 2) {
     return luaL_error(L, "Usage: marpaESLIFRecognizer_hookDiscard(marpaESLIFRecognizerp, discardOnOff)");
@@ -4665,7 +4314,6 @@ static int marpaESLIFLua_marpaESLIFRecognizer_hookDiscardi(lua_State *L)
     return luaL_error(L, "marpaESLIFRecognizer_hook_discardb failure, %s", strerror(errno));
   }
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 0 at %s:%d", funcs, L, FILENAMES, __LINE__); */
   return 0;
 }
 
@@ -4677,8 +4325,6 @@ static int marpaESLIFLua_marpaESLIFValue_newi(lua_State *L)
   marpaESLIFValueOption_t           marpaESLIFValueOption;
   marpaESLIFLuaRecognizerContext_t *marpaESLIFLuaRecognizerContextp;
   marpaESLIFLuaValueContext_t      *marpaESLIFLuaValueContextp;
-
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__); */
 
   if (lua_gettop(L) != 2) {
     return luaL_error(L, "Usage: marpaESLIFValue_new(marpaESLIFRecognizerp, valueInterface)");
@@ -4725,7 +4371,6 @@ static int marpaESLIFLua_marpaESLIFValue_newi(lua_State *L)
 
   MARPAESLIFLUA_PUSH_MARPAESLIFVALUE_OBJECT(L, marpaESLIFLuaValueContextp);
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 ({marpaESLIFLuaRecognizerContextp->marpaESLIFRecognizerp=%p}) at %s:%d", funcs, L, marpaESLIFLuaRecognizerContextp->marpaESLIFRecognizerp, FILENAMES, __LINE__); */
   return 1;
 }
 
@@ -4736,8 +4381,6 @@ static int marpaESLIFLua_marpaESLIFValue_newFromUnmanagedi(lua_State *L, marpaES
 {
   static const char             *funcs = "marpaESLIFLua_marpaESLIFValue_newFromUnmanagedi";
   marpaESLIFLuaValueContext_t *marpaESLIFLuaValueContextp;
-
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__); */
 
   marpaESLIFLuaValueContextp = malloc(sizeof(marpaESLIFLuaValueContext_t));
   if (marpaESLIFLuaValueContextp == NULL) {
@@ -4750,7 +4393,6 @@ static int marpaESLIFLua_marpaESLIFValue_newFromUnmanagedi(lua_State *L, marpaES
 
   MARPAESLIFLUA_PUSH_MARPAESLIFVALUE_OBJECT(L, marpaESLIFLuaValueContextp);
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 ({marpaESLIFLuaValueContextp=%p}) at %s:%d", funcs, L, marpaESLIFLuaValueContextp, FILENAMES, __LINE__); */
   return 1;
 }
 #endif /* MARPAESLIFLUA_EMBEDDED */
@@ -4762,18 +4404,14 @@ static int marpaESLIFLua_marpaESLIFValue_freei(lua_State *L)
   static const char           *funcs = "marpaESLIFLua_marpaESLIFValue_freei";
   marpaESLIFLuaValueContext_t *marpaESLIFLuaValueContextp;
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__); */
-
   lua_getfield(L, -1, "marpaESLIFLuaValueContextp"); /* stack: {...}, marpaESLIFLuaValueContextp */
   marpaESLIFLuaValueContextp = (marpaESLIFLuaValueContext_t *) lua_touserdata(L, -1);
   lua_pop(L, 1);                             /* stack: {...} */
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) freeing marpaESLIFLuaValueContext=%p at %s:%d", funcs, L, marpaESLIFLuaValueContextp, FILENAMES, __LINE__); */
   marpaESLIFLua_valueContextFreev(marpaESLIFLuaValueContextp, 0 /* onStackb */);
 
   lua_pop(L, 1);                             /* stack: */
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 0 at %s:%d", funcs, L, FILENAMES, __LINE__); */
   return 0;
 }
 
@@ -4786,8 +4424,6 @@ static int marpaESLIFLua_marpaESLIFValue_valuei(lua_State *L)
   short                        valueb;
   int                          rci;
   int                          resultStacki;
-
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) at %s:%d", funcs, L, FILENAMES, __LINE__); */
 
   lua_getfield(L, 1, "marpaESLIFLuaValueContextp"); /* stack: {...}, marpaESLIFLuaValueContextp */
   marpaESLIFLuaValueContextp = (marpaESLIFLuaValueContext_t *) lua_touserdata(L, -1);
@@ -4814,7 +4450,6 @@ static int marpaESLIFLua_marpaESLIFValue_valuei(lua_State *L)
 
   lua_pushboolean(L, rci);
 
-  /* GENERICLOGGER_NOTICEF(NULL, "%s(L=%p) return 1 at %s:%d", funcs, L, FILENAMES, __LINE__); */
   return 1;
 }
 
