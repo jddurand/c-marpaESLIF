@@ -61,16 +61,14 @@ static int   _marpaESLIF_lua_grammarWriteri(lua_State *L, const void* p, size_t 
     }                                                                   \
   } while (0)
 
-#define LOG_ERROR_THIS_STRING(containerp, s) do {                       \
+#define LOG_LATEST_ERROR(containerp) do {                               \
     const char *errorstring;                                            \
     if (luaunpanic_tostring(&errorstring, containerp->L, -1)) {         \
       LOG_PANIC_STRING(containerp, luaunpanic_tostring);                \
-      MARPAESLIF_ERRORF(containerp->marpaESLIFp, "%s failure", ((s) != NULL) ? (s) : ""); \
+      MARPAESLIF_ERRORF(containerp->marpaESLIFp, "%s failure", "luaunpanic_tostring"); \
     } else {                                                            \
-      if (errorstring == NULL) {                                        \
-        MARPAESLIF_ERRORF(containerp->marpaESLIFp, "%s failure",  ((s) != NULL) ? (s) : "");   \
-      } else {								\
-        MARPAESLIF_ERRORF(containerp->marpaESLIFp, "%s failure: %s",  ((s) != NULL) ? (s) : "", errorstring); \
+      if (errorstring != NULL) {                                        \
+        MARPAESLIF_ERROR(containerp->marpaESLIFp, errorstring);         \
       }									\
     }                                                                   \
   } while (0)
@@ -497,7 +495,7 @@ static short _marpaESLIFValue_lua_actionb(void *userDatavp, marpaESLIFValue_t *m
   goto done;
 
  err:
-  LOG_ERROR_THIS_STRING(marpaESLIFValuep, marpaESLIFValuep->actions);
+  LOG_LATEST_ERROR(marpaESLIFValuep);
   rcb = 0;
 
  done:
@@ -562,7 +560,7 @@ static short _marpaESLIFValue_lua_symbolb(void *userDatavp, marpaESLIFValue_t *m
   goto done;
 
  err:
-  LOG_ERROR_THIS_STRING(marpaESLIFValuep, marpaESLIFValuep->actions);
+  LOG_LATEST_ERROR(marpaESLIFValuep);
   rcb = 0;
 
  done:
