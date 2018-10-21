@@ -404,7 +404,8 @@ static short marpaESLIFLua_luaL_requiref(lua_State *L, const char *modname, lua_
       if (! marpaESLIFLua_lua_getfield(NULL, L, -1, funcs)) goto err;   \
       if (! marpaESLIFLua_lua_type(&_typei, L, -1)) goto err;           \
       if (_typei != LUA_TFUNCTION) {                                    \
-        marpaESLIFLua_luaL_errorf(L, "No such function %s", funcs);      \
+        marpaESLIFLua_luaL_errorf(L, "No such function %s", funcs);     \
+        goto err;                                                       \
       }                                                                 \
       if (! marpaESLIFLua_lua_insert(L, -2)) goto err;                  \
       parameters                                                        \
@@ -413,7 +414,8 @@ static short marpaESLIFLua_luaL_requiref(lua_State *L, const char *modname, lua_
       if (! marpaESLIFLua_lua_getglobal(NULL, L, funcs)) goto err;      \
       if (! marpaESLIFLua_lua_type(&_typei, L, -1)) goto err;           \
       if (_typei != LUA_TFUNCTION) {                                    \
-        marpaESLIFLua_luaL_errorf(L, "No such function %s", funcs);      \
+        marpaESLIFLua_luaL_errorf(L, "No such function %s", funcs);     \
+        goto err;                                                       \
       }                                                                 \
       parameters                                                        \
       if (! marpaESLIFLua_lua_call(L, nargs, LUA_MULTRET)) goto err;    \
