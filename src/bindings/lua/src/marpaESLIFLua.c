@@ -1160,7 +1160,7 @@ static int marpaESLIFLua_marpaESLIF_versionPatchi(lua_State *L)
   rci = 0;
 
  done:
-  return 0;
+  return rci;
 }
 
 #ifdef MARPAESLIFLUA_EMBEDDED
