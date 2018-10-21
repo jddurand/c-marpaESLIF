@@ -9,9 +9,13 @@
 #undef MARPAESLIFLUA_CONTEXT
 #define MARPAESLIFLUA_CONTEXT MARPAESLIF_EMBEDDED_CONTEXT_LUA
 #undef marpaESLIFLua_luaL_error
-#define marpaESLIFLua_luaL_error(L, string) ! luaunpanicL_error(NULL, L, string)
+#define marpaESLIFLua_luaL_error(L, string) do {        \
+    luaunpanicL_error(NULL, L, string);                 \
+  } while (0)
 #undef marpaESLIFLua_luaL_errorf
-#define marpaESLIFLua_luaL_errorf(L, formatstring, ...) ! luaunpanicL_error(NULL, L, formatstring, __VA_ARGS__)
+#define marpaESLIFLua_luaL_errorf(L, formatstring, ...) do {    \
+    luaunpanicL_error(NULL, L, formatstring, __VA_ARGS__);      \
+  } while (0)
 #undef marpaESLIFLua_luaL_newlib
 #define marpaESLIFLua_luaL_newlib(L, l) ! luaunpanicL_newlib(L, l)
 #include "../src/bindings/lua/src/marpaESLIFLua.c"
@@ -53,6 +57,20 @@ static int   _marpaESLIF_lua_grammarWriteri(lua_State *L, const void* p, size_t 
         MARPAESLIF_ERRORF(containerp->marpaESLIFp, "%s failure", #f);   \
       } else {								\
         MARPAESLIF_ERRORF(containerp->marpaESLIFp, "%s failure: %s", #f, errorstring); \
+      }									\
+    }                                                                   \
+  } while (0)
+
+#define LOG_ERROR_THIS_STRING(containerp, s) do {                       \
+    const char *errorstring;                                            \
+    if (luaunpanic_tostring(&errorstring, containerp->L, -1)) {         \
+      LOG_PANIC_STRING(containerp, luaunpanic_tostring);                \
+      MARPAESLIF_ERRORF(containerp->marpaESLIFp, "%s failure", ((s) != NULL) ? (s) : ""); \
+    } else {                                                            \
+      if (errorstring == NULL) {                                        \
+        MARPAESLIF_ERRORF(containerp->marpaESLIFp, "%s failure",  ((s) != NULL) ? (s) : "");   \
+      } else {								\
+        MARPAESLIF_ERRORF(containerp->marpaESLIFp, "%s failure: %s",  ((s) != NULL) ? (s) : "", errorstring); \
       }									\
     }                                                                   \
   } while (0)
@@ -471,6 +489,7 @@ static short _marpaESLIFValue_lua_actionb(void *userDatavp, marpaESLIFValue_t *m
   marpaESLIFValuep->marpaESLIFValueOption.userDatavp = marpaESLIFLuaValueContextp;
 
   rcb = ruleCallbackp((void *) marpaESLIFLuaValueContextp /* userDatavp */, marpaESLIFValuep, arg0i, argni, resulti, nullableb);
+  if (! rcb) goto err;
 
   marpaESLIFValuep->marpaESLIFValueOption.transformerp = transformerBackupp;
   marpaESLIFValuep->marpaESLIFValueOption.userDatavp = userDataBackupvp;
@@ -478,6 +497,7 @@ static short _marpaESLIFValue_lua_actionb(void *userDatavp, marpaESLIFValue_t *m
   goto done;
 
  err:
+  LOG_ERROR_THIS_STRING(marpaESLIFValuep, marpaESLIFValuep->actions);
   rcb = 0;
 
  done:
@@ -534,6 +554,7 @@ static short _marpaESLIFValue_lua_symbolb(void *userDatavp, marpaESLIFValue_t *m
   marpaESLIFValuep->marpaESLIFValueOption.userDatavp = marpaESLIFLuaValueContextp;
 
   rcb = symbolCallbackp((void *) marpaESLIFLuaValueContextp /* userDatavp */, marpaESLIFValuep, bytep, bytel, resulti);
+  if (! rcb) goto err;
 
   marpaESLIFValuep->marpaESLIFValueOption.transformerp = transformerBackupp;
   marpaESLIFValuep->marpaESLIFValueOption.userDatavp = userDataBackupvp;
@@ -541,6 +562,7 @@ static short _marpaESLIFValue_lua_symbolb(void *userDatavp, marpaESLIFValue_t *m
   goto done;
 
  err:
+  LOG_ERROR_THIS_STRING(marpaESLIFValuep, marpaESLIFValuep->actions);
   rcb = 0;
 
  done:
