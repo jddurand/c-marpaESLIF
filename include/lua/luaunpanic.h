@@ -225,8 +225,7 @@ extern "C" {
   lua_EXPORT short luaunpanicL_testudata(void **rcp, lua_State *L, int ud, const char *tname);
   lua_EXPORT short luaunpanicL_checkudata(void **rcp, lua_State *L, int ud, const char *tname);
   lua_EXPORT short luaunpanicL_where(lua_State *L, int lvl);
-  lua_EXPORT short luaunpanicL_error(int *rcp,lua_State *L, const char *fmt, ...);
-  lua_EXPORT short luaunpanicL_error (int *rcp, lua_State *L, const char *fmt, ...);
+  lua_EXPORT short luaunpanicL_error(int *rcp, lua_State *L, const char *fmt, ...);
   lua_EXPORT short luaunpanicL_checkoption(int *rcp, lua_State *L, int arg, const char *def, const char *const lst[]);
   lua_EXPORT short luaunpanicL_fileresult(int *rcp, lua_State *L, int stat, const char *fname);
   lua_EXPORT short luaunpanicL_execresult(int *rcp, lua_State *L, int stat);
