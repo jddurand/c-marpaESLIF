@@ -303,8 +303,13 @@ int main() {
       goto err;
     }
     /* genericLogger_logLevel_seti(genericLoggerp, GENERICLOGGER_LOGLEVEL_TRACE); */
-    if (! marpaESLIFValue_valueb(marpaESLIFValuep)) {
-      goto err;
+    while (1) {
+      short rcValueb = marpaESLIFValue_valueb(marpaESLIFValuep);
+      if (rcValueb < 0) {
+	goto err;
+      } else if (rcValueb == 0) {
+	break;
+      }
     }
   }
 
