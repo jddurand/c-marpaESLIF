@@ -304,7 +304,7 @@ static inline short                  _marpaESLIFRecognizer_set_tryb(marpaESLIFRe
 static inline short                  _marpaESLIFRecognizer_push_grammar_eventsb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp);
 static inline void                   _marpaESLIFRecognizer_clear_grammar_eventsb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp);
 static        short                  _marpaESLIFRecognizer_value_validb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *marpaESLIFValueResultp, void *userDatavp, _marpaESLIFRecognizer_valueResultCallback_t callbackp);
-static        short                  _marpaESLIFRecognizer_concat_valueResultCallback(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
+static        short                  _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
 
 static inline void                   _marpaESLIFRecognizer_sort_eventsb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp);
 static inline short                  _marpaESLIF_stream_initb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, size_t bufsizl, int buftriggerperci, short eofb, short utfb);
@@ -13037,21 +13037,32 @@ static short _marpaESLIF_rule_action___shiftb(void *userDatavp, marpaESLIFValue_
 }
 
 /*****************************************************************************/
-static short _marpaESLIFRecognizer_concat_valueResultCallback(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp)
+static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp)
 /*****************************************************************************/
 {
-  static const char                      *funcs                       = "_marpaESLIFRecognizer_concat_valueResultCallback";
+  static const char                      *funcs                       = "_marpaESLIFRecognizer_concat_valueResultCallbackb";
   marpaESLIF_concat_valueResultContext_t *contextp                    = (marpaESLIF_concat_valueResultContext_t *) userDatavp;
   marpaESLIFValue_t                      *marpaESLIFValuep            = contextp->marpaESLIFValuep;
   marpaESLIF_stringGenerator_t           *marpaESLIF_stringGeneratorp = contextp->marpaESLIF_stringGeneratorp;
   marpaESLIFRecognizer_t                 *marpaESLIFRecognizerp       = marpaESLIFValuep->marpaESLIFRecognizerp;
-  marpaESLIFRepresentation_t              representationp             = marpaESLIFValueResultp->representationp;
+  marpaESLIFRepresentation_t              representationp;
+  void                                   *representationUserDatavp;
   char                                   *srcs;
   size_t                                  srcl;
   short                                   rcb;
 
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
+
+  if (marpaESLIFValueResultp->contextp == (void *) MARPAESLIF_EMBEDDED_CONTEXT_LUA) {
+    /* Specific to lua embedded: we use our proxy, then userDatavp is forced to be marpaELIFValuep */
+    representationp = _marpaESLIF_lua_representationb;
+    representationUserDatavp = marpaESLIFValuep;
+  } else {
+    /* Origin representation, userDatavp is the one from original context */
+    representationp = marpaESLIFValueResultp->representationp;
+    representationUserDatavp = contextp->userDatavp;
+  }
 
   if (representationp == NULL) {
     /* Default representation */
@@ -13064,7 +13075,7 @@ static short _marpaESLIFRecognizer_concat_valueResultCallback(void *userDatavp, 
     srcs                = NULL;
     srcl                = 0;
 
-    if (! representationp(contextp->userDatavp, marpaESLIFValueResultp, &srcs, &srcl)) {
+    if (! representationp(representationUserDatavp, marpaESLIFValueResultp, &srcs, &srcl)) {
       goto err;
     }
 
@@ -13131,7 +13142,7 @@ static inline short _marpaESLIF_generic_action___concatb(void *userDatavp, marpa
       marpaESLIFValueResult       = marpaESLIFValueResultLexeme;
       marpaESLIFValueResult.u.p   = bytep;
       marpaESLIFValueResult.sizel = bytel;
-      if (! _marpaESLIFRecognizer_value_validb(marpaESLIFRecognizerp, &marpaESLIFValueResult, &context, _marpaESLIFRecognizer_concat_valueResultCallback)) {
+      if (! _marpaESLIFRecognizer_value_validb(marpaESLIFRecognizerp, &marpaESLIFValueResult, &context, _marpaESLIFRecognizer_concat_valueResultCallbackb)) {
         goto err;
       }
     } else {
@@ -13141,7 +13152,7 @@ static inline short _marpaESLIF_generic_action___concatb(void *userDatavp, marpa
         if (marpaESLIFValueResultp == NULL) {
           goto err;
         }
-        if (! _marpaESLIFRecognizer_value_validb(marpaESLIFRecognizerp, marpaESLIFValueResultp, &context, _marpaESLIFRecognizer_concat_valueResultCallback)) {
+        if (! _marpaESLIFRecognizer_value_validb(marpaESLIFRecognizerp, marpaESLIFValueResultp, &context, _marpaESLIFRecognizer_concat_valueResultCallbackb)) {
           goto err;
         }
       }

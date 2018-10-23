@@ -926,3 +926,57 @@ static short marpaESLIFLua_luaL_requiref(lua_State *L, const char *modname, lua_
 {
   return ! luaunpanicL_requiref(L, modname, openf, glb);
 }
+
+/****************************************************************************/
+static short _marpaESLIF_lua_representationb(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp, char **inputcpp, size_t *inputlp)
+/****************************************************************************/
+{
+  static const char                *funcs = "_marpaESLIF_lua_representationb";
+  /* Internal function: we force userDatavp to be marpaESLIFValuep */
+  marpaESLIFValue_t                *marpaESLIFValuep = (marpaESLIFValue_t *) userDatavp;
+  marpaESLIFRecognizer_t           *marpaESLIFRecognizerp = marpaESLIFValuep->marpaESLIFRecognizerp;
+  marpaESLIFLuaValueContext_t      *marpaESLIFLuaValueContextp;
+  marpaESLIFRepresentation_t        representationCallbackp;
+  void                             *userDataBackupvp;
+  int                               typei;
+  short                             rcb;
+
+  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
+
+  /* Create the lua state if needed */
+  if (! _marpaESLIF_lua_newb(marpaESLIFValuep)) {
+    goto err;
+  }
+
+  /* Remember that we pushed the "marpaESLIFValue" global ? */
+  LUA_GETGLOBAL(&typei, marpaESLIFValuep, "marpaESLIFValue");                    /* stack: ..., marpaESLIFValueTable */
+  if (typei != LUA_TTABLE) {
+    MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "Lua marpaESLIFValue global is not a table");
+    goto err; /* Lua will shutdown anyway */
+  }
+  /* And this marpaESLIFValue is a table with a key "marpaESLIFValueContext" */
+  LUA_GETFIELDI(&typei, marpaESLIFValuep, -1, "marpaESLIFLuaValueContextp");     /* stack: ..., marpaESLIFValueTable, marpaESLIFLuaValueContextp */
+  if (typei != LUA_TLIGHTUSERDATA) {
+    MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "Lua marpaESLIFLuaValueContextp is not a light userdata");
+    goto err; /* Lua will shutdown anyway */
+  }
+  LUA_TOUSERDATA(marpaESLIFValuep, &marpaESLIFLuaValueContextp, -1);
+  LUA_POP(marpaESLIFValuep, 2);                                                  /* stack: ... */
+
+  /* Proxy to the lua representation callback action - then userDatavp has to be marpaESLIFLuaValueContextp */
+  representationCallbackp = marpaESLIFLua_representationb;
+
+  rcb = representationCallbackp((void *) marpaESLIFLuaValueContextp /* userDatavp */, marpaESLIFValueResultp, inputcpp, inputlp);
+  if (! rcb) goto err;
+
+  goto done;
+
+ err:
+  LOG_LATEST_ERROR(marpaESLIFValuep);
+  rcb = 0;
+
+ done:
+  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC;
+  return rcb;
+}
+
