@@ -606,7 +606,7 @@ static marpaESLIFValueFreeCallback_t   marpaESLIFValueFreeActionResolver(void *u
 static short marpaESLIFValueContextInject(JNIEnv *envp, marpaESLIFValue_t *marpaESLIFValuep, jobject eslifValueInterfacep, marpaESLIFValueContext_t *marpaESLIFValueContextp);
 static short marpaESLIFValueRuleCallback(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static short marpaESLIFValueSymbolCallback(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *bytep, size_t bytel, int resulti);
-static void  marpaESLIFValueFreeCallback(void *userDatavp, void *contextp, void *p, size_t sizel);
+static void  marpaESLIFValueFreeCallback(void *userDatavp, void *contextp, marpaESLIFValueType_t type, void *p, size_t sizel);
 static jmethodID marpaESLIFValueActionResolver(JNIEnv *envp, marpaESLIFValueContext_t *marpaESLIFValueContextp, char *methods, char *signatures);
 static void marpaESLIFValueContextFree(JNIEnv *envp, marpaESLIFValueContext_t *marpaESLIFValueContextp, short onStackb);
 static void marpaESLIFRecognizerContextFree(JNIEnv *envp, marpaESLIFRecognizerContext_t *marpaESLIFRecognizerContextp, short onStackb);
@@ -4183,7 +4183,7 @@ static short marpaESLIFValueSymbolCallback(void *userDatavp, marpaESLIFValue_t *
 }
 
 /*****************************************************************************/
-static void marpaESLIFValueFreeCallback(void *userDatavp, void *contextp, void *p, size_t sizel)
+static void marpaESLIFValueFreeCallback(void *userDatavp, void *contextp, marpaESLIFValueType_t type, void *p, size_t sizel)
 /*****************************************************************************/
 {
   /* We are called when valuation is doing to withdraw an item in the stack that is a PTR or an ARRAY that we own */
@@ -4192,13 +4192,12 @@ static void marpaESLIFValueFreeCallback(void *userDatavp, void *contextp, void *
   marpaESLIFValueContext_t *marpaESLIFValueContextp = (marpaESLIFValueContext_t *) userDatavp;
   JNIEnv                   *envp                    = marpaESLIFValueContextp->envp;
 
-  /* In theory we should never be called with something else but MARPAESLIF_JNI_CONTEXT for the context */
-  if (contextp == MARPAESLIF_JNI_CONTEXT) {
-    /* ----------------------- */
-    /* Remove global reference */
-    /* ----------------------- */
-    (*envp)->DeleteGlobalRef(envp, (jobject) p);
-  }
+  /* We always inject a PTR so no need to check the context */
+
+  /* ----------------------- */
+  /* Remove global reference */
+  /* ----------------------- */
+  (*envp)->DeleteGlobalRef(envp, (jobject) p);
 
  err:
   return;

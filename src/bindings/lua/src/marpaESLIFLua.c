@@ -156,7 +156,7 @@ static marpaESLIFValueSymbolCallback_t marpaESLIFLua_valueSymbolActionResolver(v
 static marpaESLIFValueFreeCallback_t   marpaESLIFLua_valueFreeActionResolver(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions);
 static short                           marpaESLIFLua_valueRuleCallbackb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static short                           marpaESLIFLua_valueSymbolCallbackb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *bytep, size_t bytel, int resulti);
-static void                            marpaESLIFLua_valueFreeCallbackv(void *userDatavp, void *contextp, void *p, size_t sizel);
+static void                            marpaESLIFLua_valueFreeCallbackv(void *userDatavp, void *contextp, marpaESLIFValueType_t type, void *p, size_t sizel);
 static short                           marpaESLIFLua_transformUndefb(void *userDatavp, void *contextp);
 static short                           marpaESLIFLua_transformCharb(void *userDatavp, void *contextp, char c);
 static short                           marpaESLIFLua_transformShortb(void *userDatavp, void *contextp, short b);
@@ -258,13 +258,13 @@ static short marpaESLIFLua_luaL_unref(lua_State *L, int t, int ref);
 #ifndef marpaESLIFLua_luaL_error
 #define marpaESLIFLua_luaL_error(L, fmt, ...) luaL_error(L, fmt)
 #endif
-#ifndef marpaESLIFLua_luaL_error
+#ifndef marpaESLIFLua_luaL_errorf
 #define marpaESLIFLua_luaL_errorf(L, fmt, ...) luaL_error(L, fmt, __VA_ARGS__)
 #endif
 static short marpaESLIFLua_luaL_requiref(lua_State *L, const char *modname, lua_CFunction openf, int glb);
 /* Grrr lua defines that with a macro */
 #ifndef marpaESLIFLua_luaL_newlib
-#define marpaESLIFLua_luaL_newlib(L, l) (! luaL_newlib(L, l))
+#define marpaESLIFLua_luaL_newlib(L, l) (luaL_newlib(L, l), 0)
 #endif
 
 #define MARPAESLIFLUA_CREATEINTEGERCONSTANT(L, i) do {                  \
@@ -3249,18 +3249,16 @@ static short marpaESLIFLua_valueSymbolCallbackb(void *userDatavp, marpaESLIFValu
 }
 
 /*****************************************************************************/
-static void marpaESLIFLua_valueFreeCallbackv(void *userDatavp, void *contextp, void *p, size_t sizel)
+static void marpaESLIFLua_valueFreeCallbackv(void *userDatavp, void *contextp, marpaESLIFValueType_t type, void *p, size_t sizel)
 /*****************************************************************************/
 {
   static const char           *funcs                      = "marpaESLIFLua_valueFreeCallbackv";
   marpaESLIFLuaValueContext_t *marpaESLIFLuaValueContextp = (marpaESLIFLuaValueContext_t *) userDatavp;
   lua_State                   *L                          = marpaESLIFLuaValueContextp->L;
 
-  if (contextp == MARPAESLIFLUA_CONTEXT) {
-    /* This is a pointer to an integer that contains a global reference to the value */
-    MARPAESLIFLUA_UNREF(L, * (int *) p);
-    free(p);
-  }
+  /* we always and only push a PTR, so no need to check the context */
+  MARPAESLIFLUA_UNREF(L, * (int *) p);
+  free(p);
 
  err:
   return;

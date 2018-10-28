@@ -156,7 +156,7 @@ static        short _marpaESLIF_bootstrap_G1_action_luascript_statementb(void *u
     }                                                                   \
                                                                         \
     if (_marpaESLIFValueResultp->type != MARPAESLIF_VALUE_TYPE_ARRAY) { \
-      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "marpaESLIFValueResultp->type is not ARRAY (got %d, %s)", _marpaESLIFValueResultp->type, _marpaESLIF_stack_types(_marpaESLIFValueResultp->type)); \
+      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "marpaESLIFValueResultp->type is not ARRAY (got %d, %s)", _marpaESLIFValueResultp->type, _marpaESLIF_value_types(_marpaESLIFValueResultp->type)); \
       goto err;                                                         \
     }                                                                   \
                                                                         \
@@ -173,7 +173,7 @@ static        short _marpaESLIF_bootstrap_G1_action_luascript_statementb(void *u
     }                                                                   \
                                                                         \
     if (_marpaESLIFValueResultp->type != MARPAESLIF_VALUE_TYPE_PTR) {   \
-      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "marpaESLIFValueResultp->type is not PTR (got %d, %s)", _marpaESLIFValueResultp->type, _marpaESLIF_stack_types(_marpaESLIFValueResultp->type)); \
+      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "marpaESLIFValueResultp->type is not PTR (got %d, %s)", _marpaESLIFValueResultp->type, _marpaESLIF_value_types(_marpaESLIFValueResultp->type)); \
       goto err;                                                         \
     }                                                                   \
                                                                         \
@@ -188,7 +188,7 @@ static        short _marpaESLIF_bootstrap_G1_action_luascript_statementb(void *u
     }                                                                   \
                                                                         \
     if (_marpaESLIFValueResult.type != MARPAESLIF_VALUE_TYPE_PTR) {     \
-      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "marpaESLIFValueResult.type is not PTR (got %d, %s)", _marpaESLIFValueResult.type, _marpaESLIF_stack_types(_marpaESLIFValueResult.type)); \
+      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "marpaESLIFValueResult.type is not PTR (got %d, %s)", _marpaESLIFValueResult.type, _marpaESLIF_value_types(_marpaESLIFValueResult.type)); \
       goto err;                                                         \
     }                                                                   \
                                                                         \
@@ -203,7 +203,7 @@ static        short _marpaESLIF_bootstrap_G1_action_luascript_statementb(void *u
     }                                                                   \
                                                                         \
     if (_marpaESLIFValueResult.type != MARPAESLIF_VALUE_TYPE_ARRAY) {   \
-      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "marpaESLIFValueResult.type is not ARRAY (got %d, %s)", _marpaESLIFValueResult.type, _marpaESLIF_stack_types(_marpaESLIFValueResult.type)); \
+      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "marpaESLIFValueResult.type is not ARRAY (got %d, %s)", _marpaESLIFValueResult.type, _marpaESLIF_value_types(_marpaESLIFValueResult.type)); \
       goto err;                                                         \
     }                                                                   \
                                                                         \
@@ -253,7 +253,7 @@ static        short _marpaESLIF_bootstrap_G1_action_luascript_statementb(void *u
     }                                                                   \
                                                                         \
     if (_marpaESLIFValueResultp->type != MARPAESLIF_VALUE_TYPE_BOOL) { \
-      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "marpaESLIFValueResultp->type is not BOOL (got %d, %s)", _marpaESLIFValueResultp->type, _marpaESLIF_stack_types(_marpaESLIFValueResultp->type)); \
+      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "marpaESLIFValueResultp->type is not BOOL (got %d, %s)", _marpaESLIFValueResultp->type, _marpaESLIF_value_types(_marpaESLIFValueResultp->type)); \
       goto err;                                                         \
     }                                                                   \
                                                                         \
@@ -269,7 +269,7 @@ static        short _marpaESLIF_bootstrap_G1_action_luascript_statementb(void *u
     }                                                                   \
                                                                         \
     if (_marpaESLIFValueResultp->type != MARPAESLIF_VALUE_TYPE_INT) { \
-      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "marpaESLIFValueResultp->type is not INT (got %d, %s)", _marpaESLIFValueResultp->type, _marpaESLIF_stack_types(_marpaESLIFValueResultp->type)); \
+      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "marpaESLIFValueResultp->type is not INT (got %d, %s)", _marpaESLIFValueResultp->type, _marpaESLIF_value_types(_marpaESLIFValueResultp->type)); \
       goto err;                                                         \
     }                                                                   \
                                                                         \
@@ -1242,7 +1242,7 @@ static inline void _marpaESLIF_bootstrap_adverb_list_item_freev(marpaESLIF_boots
 }
 
 /*****************************************************************************/
-static void _marpaESLIF_bootstrap_freeDefaultActionv(void *userDatavp, void *contextp, void *p, size_t sizel)
+static void _marpaESLIF_bootstrap_freeDefaultActionv(void *userDatavp, void *contextp, marpaESLIFValueType_t type, void *p, size_t sizel)
 /*****************************************************************************/
 {
   static const char       *funcs                 = "_marpaESLIF_bootstrap_freeDefaultActionv";

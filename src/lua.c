@@ -569,7 +569,7 @@ static short _marpaESLIFValue_lua_symbolb(void *userDatavp, marpaESLIFValue_t *m
 }
 
 /*****************************************************************************/
-static void _marpaESLIF_lua_freeDefaultActionv(void *userDatavp, void *contextp, void *p, size_t sizel)
+static void _marpaESLIF_lua_freeDefaultActionv(void *userDatavp, void *contextp, marpaESLIFValueType_t type, void *p, size_t sizel)
 /*****************************************************************************/
 {
   static const char                *funcs            = "_marpaESLIF_lua_freeDefaultActionv";
@@ -612,7 +612,7 @@ static void _marpaESLIF_lua_freeDefaultActionv(void *userDatavp, void *contextp,
   userDataBackupvp = marpaESLIFValuep->marpaESLIFValueOption.userDatavp;
   marpaESLIFValuep->marpaESLIFValueOption.userDatavp = marpaESLIFLuaValueContextp;
 
-  freeCallbackp((void *) marpaESLIFLuaValueContextp /* userDatavp */, contextp, p, sizel);
+  freeCallbackp((void *) marpaESLIFLuaValueContextp /* userDatavp */, contextp, type, p, sizel);
 
   marpaESLIFValuep->marpaESLIFValueOption.transformerp = transformerBackupp;
   marpaESLIFValuep->marpaESLIFValueOption.userDatavp = userDataBackupvp;
