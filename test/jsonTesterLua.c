@@ -6,6 +6,29 @@
 #include <marpaESLIF.h>
 
 static short inputReaderb(void *userDatavp, char **inputsp, size_t *inputlp, short *eofbp, short *characterStreambp, char **encodingsp, size_t *encodinglp);
+static short transformUndefb(void *userDatavp, void *contextp);
+static short transformCharb(void *userDatavp, void *contextp, char c);
+static short transformShortb(void *userDatavp, void *contextp, short b);
+static short transformIntb(void *userDatavp, void *contextp, int i);
+static short transformLongb(void *userDatavp, void *contextp, long l);
+static short transformFloatb(void *userDatavp, void *contextp, float f);
+static short transformDoubleb(void *userDatavp, void *contextp, double d);
+static short transformPtrb(void *userDatavp, void *contextp, void *p);
+static short transformArrayb(void *userDatavp, void *contextp, void *p, size_t sizel);
+static short transformBoolb(void *userDatavp, void *contextp, short b);
+
+static marpaESLIFValueResultTransform_t transformDefault = {
+  transformUndefb,
+  transformCharb,
+  transformShortb,
+  transformIntb,
+  transformLongb,
+  transformFloatb,
+  transformDoubleb,
+  transformPtrb,
+  transformArrayb,
+  transformBoolb
+};
 
 typedef struct marpaESLIFTester_context {
   genericLogger_t *genericLoggerp;
@@ -258,6 +281,11 @@ const static char *dsl = "\n"
   "</luascript>\n"
   ;
 
+
+typedef struct valueContext {
+  genericLogger_t *genericLoggerp;
+} valueContext_t;
+
 int main() {
   marpaESLIF_t                *marpaESLIFp        = NULL;
   marpaESLIFGrammar_t         *marpaESLIFGrammarp = NULL;
@@ -280,6 +308,7 @@ int main() {
   size_t                       columnl;
   marpaESLIFValue_t           *marpaESLIFValuep = NULL;
   marpaESLIFValueOption_t      marpaESLIFValueOption;
+  valueContext_t               valueContext;
 
   const static char           *inputs[] = {
     "[\"\\uD801\\udc37\"]",
@@ -372,6 +401,8 @@ int main() {
     goto err;
   }
 
+  valueContext.genericLoggerp = genericLoggerp;
+
   marpaESLIFOption.genericLoggerp = genericLoggerp;
   marpaESLIFp = marpaESLIF_newp(&marpaESLIFOption);
   if (marpaESLIFp == NULL) {
@@ -456,11 +487,11 @@ int main() {
     }
 
     /* Call for valuation, letting marpaESLIF free the result */
-    marpaESLIFValueOption.userDatavp            = NULL; /* User specific context */
+    marpaESLIFValueOption.userDatavp            = &valueContext; /* User specific context */
     marpaESLIFValueOption.ruleActionResolverp   = NULL; /* Will return the function doing the wanted rule action */
     marpaESLIFValueOption.symbolActionResolverp = NULL; /* Will return the function doing the wanted symbol action */
     marpaESLIFValueOption.freeActionResolverp   = NULL; /* Will return the function doing the free */
-    marpaESLIFValueOption.transformerp          = NULL; /* We do not mind about final value */
+    marpaESLIFValueOption.transformerp          = &transformDefault;
     marpaESLIFValueOption.highRankOnlyb         = 1;    /* Default: 1 */
     marpaESLIFValueOption.orderByRankb          = 1;    /* Default: 1 */
     marpaESLIFValueOption.ambiguousb            = 0;    /* Default: 0 */
@@ -509,6 +540,116 @@ static short inputReaderb(void *userDatavp, char **inputsp, size_t *inputlp, sho
   *characterStreambp    = 1; /* We say this is a stream of characters */
   *encodingsp           = NULL;
   *encodinglp           = 0;
+
+  return 1;
+}
+
+/*****************************************************************************/
+static short transformUndefb(void *userDatavp, void *contextp)
+/*****************************************************************************/
+{
+  valueContext_t *valueContextp = (valueContext_t *) userDatavp;
+
+  GENERICLOGGER_NOTICE(valueContextp->genericLoggerp, "Result type is undef");
+
+  return 1;
+}
+
+/*****************************************************************************/
+static short transformCharb(void *userDatavp, void *contextp, char c)
+/*****************************************************************************/
+{
+  valueContext_t *valueContextp = (valueContext_t *) userDatavp;
+
+  GENERICLOGGER_NOTICE(valueContextp->genericLoggerp, "Result type is char");
+
+  return 1;
+}
+
+/*****************************************************************************/
+static short transformShortb(void *userDatavp, void *contextp, short b)
+/*****************************************************************************/
+{
+  valueContext_t *valueContextp = (valueContext_t *) userDatavp;
+
+  GENERICLOGGER_NOTICE(valueContextp->genericLoggerp, "Result type is short");
+
+  return 1;
+}
+
+/*****************************************************************************/
+static short transformIntb(void *userDatavp, void *contextp, int i)
+/*****************************************************************************/
+{
+  valueContext_t *valueContextp = (valueContext_t *) userDatavp;
+
+  GENERICLOGGER_NOTICE(valueContextp->genericLoggerp, "Result type is int");
+
+  return 1;
+}
+
+/*****************************************************************************/
+static short transformLongb(void *userDatavp, void *contextp, long l)
+/*****************************************************************************/
+{
+  valueContext_t *valueContextp = (valueContext_t *) userDatavp;
+
+  GENERICLOGGER_NOTICE(valueContextp->genericLoggerp, "Result type is long");
+
+  return 1;
+}
+
+/*****************************************************************************/
+static short transformFloatb(void *userDatavp, void *contextp, float f)
+/*****************************************************************************/
+{
+  valueContext_t *valueContextp = (valueContext_t *) userDatavp;
+
+  GENERICLOGGER_NOTICE(valueContextp->genericLoggerp, "Result type is float");
+
+  return 1;
+}
+
+/*****************************************************************************/
+static short transformDoubleb(void *userDatavp, void *contextp, double d)
+/*****************************************************************************/
+{
+  valueContext_t *valueContextp = (valueContext_t *) userDatavp;
+
+  GENERICLOGGER_NOTICE(valueContextp->genericLoggerp, "Result type is double");
+
+  return 1;
+}
+
+/*****************************************************************************/
+static short transformPtrb(void *userDatavp, void *contextp, void *p)
+/*****************************************************************************/
+{
+  valueContext_t *valueContextp = (valueContext_t *) userDatavp;
+
+  GENERICLOGGER_NOTICE(valueContextp->genericLoggerp, "Result type is ptr");
+
+  return 1;
+}
+
+/*****************************************************************************/
+static short transformArrayb(void *userDatavp, void *contextp, void *p, size_t sizel)
+/*****************************************************************************/
+{
+  valueContext_t *valueContextp = (valueContext_t *) userDatavp;
+
+  GENERICLOGGER_NOTICE(valueContextp->genericLoggerp, "Result type is array");
+
+  return 1;
+}
+
+/*****************************************************************************/
+static short transformBoolb(void *userDatavp, void *contextp, short b)
+/*****************************************************************************/
+{
+  valueContext_t *valueContextp = (valueContext_t *) userDatavp;
+
+  GENERICLOGGER_NOTICE(valueContextp->genericLoggerp, "Result type is bool");
 
   return 1;
 }
