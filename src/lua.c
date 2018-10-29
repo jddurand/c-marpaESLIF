@@ -937,7 +937,6 @@ static short _marpaESLIF_lua_representationb(void *userDatavp, marpaESLIFValueRe
   marpaESLIFRecognizer_t           *marpaESLIFRecognizerp = marpaESLIFValuep->marpaESLIFRecognizerp;
   marpaESLIFLuaValueContext_t      *marpaESLIFLuaValueContextp;
   marpaESLIFRepresentation_t        representationCallbackp;
-  void                             *userDataBackupvp;
   int                               typei;
   short                             rcb;
 

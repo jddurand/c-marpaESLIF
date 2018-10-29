@@ -1466,7 +1466,7 @@ static void marpaESLIFLua_grammarContextFreev(marpaESLIFLuaGrammarContext_t *mar
     }
   }
 
- err:
+ err: /* Because of MARPAESLIFLUA_UNREF */
   return;
 }
 
@@ -1484,9 +1484,6 @@ static void  marpaESLIFLua_recognizerContextCleanupv(marpaESLIFLuaRecognizerCont
       marpaESLIFLuaRecognizerContextp->previousEncodings = NULL;
     }
   }
-
- err:
-  return;
 }
 
 /****************************************************************************/
@@ -1547,7 +1544,7 @@ static void  marpaESLIFLua_recognizerContextFreev(marpaESLIFLuaRecognizerContext
     }
   }
 
- err:
+ err: /* Because of MARPAESLIFLUA_UNREF */
   return;
 }
 
@@ -1601,7 +1598,7 @@ static void  marpaESLIFLua_valueContextFreev(marpaESLIFLuaValueContext_t *marpaE
     }
   }
 
- err:
+ err: /* Because of MARPAESLIFLUA_UNREF */
   return;
 }
 
