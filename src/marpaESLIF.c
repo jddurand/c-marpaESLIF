@@ -413,40 +413,53 @@ static inline void                    _marpaESLIF_action_freev(marpaESLIF_action
 /*****************************************************************************/
 static inline marpaESLIF_string_t *_marpaESLIF_string_newp(marpaESLIF_t *marpaESLIFp, char *encodingasciis, char *bytep, size_t bytel, short asciib)
 /*****************************************************************************/
+/* Caller is responsible to set coherent values of bytes and bytel.          */
+/* In particular an empty string must be set with bytep = NULL and bytel = 0 */
+/*****************************************************************************/
 {
   static const char   *funcs = "_marpaESLIF_string_newp";
   marpaESLIF_string_t *stringp = NULL;
   char                *dstbytep;
-  char                *dstasciis;
-
-  if ((bytep == NULL) || (bytel <= 0)) {
-    errno = EINVAL;
-    MARPAESLIF_ERROR(marpaESLIFp, "Invalid input");
-    goto err;
-  }
 
   stringp = (marpaESLIF_string_t *) malloc(sizeof(marpaESLIF_string_t));
   if (stringp == NULL) {
     MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
     goto err;
   }
-  stringp->bytep          = NULL;
-  stringp->bytel          = bytel;
+
   stringp->encodingasciis = NULL;
   stringp->asciis         = NULL;
 
-  if ((stringp->bytep = dstbytep = (char *) malloc(bytel + 1)) == NULL) {
-    /* We always add a NUL byte for convenience - this is also why we are ok with bytep == NULL */
-    MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
-    goto err;
+  if (bytel > 0) {
+    /* bytel + 1 for the hiden NUL byte */
+    if ((stringp->bytep = dstbytep = (char *) calloc(1, bytel + 1)) == NULL) {
+      /* We always add a NUL byte for convenience */
+      MARPAESLIF_ERRORF(marpaESLIFp, "calloc failure, %s", strerror(errno));
+      goto err;
+    }
+    memcpy(dstbytep, bytep, bytel);
+    stringp->bytel = bytel;
+  } else {
+    stringp->bytep = (char *) MARPAESLIF_EMPTY_STRING;
+    stringp->bytel = 0;
   }
-  memcpy(dstbytep, bytep, bytel); /* If bytel is zero, memcpy is ok as per C standard */
-  dstbytep[bytel] = '\0';  /* Developers fighting with debuggers will understand why -; */
 
   if (asciib) {
-    /* This will fill stringp->encodingasciis */
-    if ((stringp->asciis = dstasciis = _marpaESLIF_charconvb(marpaESLIFp, "ASCII//TRANSLIT//IGNORE", encodingasciis, bytep, bytel, NULL, &(stringp->encodingasciis), NULL /* tconvpp */, 1 /* eofb */, NULL /* byteleftsp */, NULL /* byteleftlp */, NULL /* byteleftalloclp */)) == NULL) {
-      goto err;
+    if (bytel > 0) {
+      /* This will fill stringp->encodingasciis if not already set */
+      if ((stringp->asciis = _marpaESLIF_charconvb(marpaESLIFp, "ASCII//TRANSLIT//IGNORE", encodingasciis, bytep, bytel, NULL, &(stringp->encodingasciis), NULL /* tconvpp */, 1 /* eofb */, NULL /* byteleftsp */, NULL /* byteleftlp */, NULL /* byteleftalloclp */)) == NULL) {
+        goto err;
+      }
+    } else {
+      /* ASCII version is an empty string */
+      stringp->asciis = (char *) MARPAESLIF_EMPTY_STRING;
+      /* Copy encodingasciis if any */
+      if (encodingasciis != NULL) {
+        if ((stringp->encodingasciis = strdup(encodingasciis)) == NULL) {
+          MARPAESLIF_ERRORF(marpaESLIFp, "strdup failure, %s", strerror(errno));
+          goto err;
+        }
+      }
     }
   } else {
     /* Copy encodingasciis if any */
@@ -487,23 +500,29 @@ static inline marpaESLIF_string_t *_marpaESLIF_string_clonep(marpaESLIF_t *marpa
     MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
     goto err;
   }
-  rcp->bytep          = NULL;
-  rcp->bytel          = 0;
+
   rcp->encodingasciis = NULL;
   rcp->asciis         = NULL;
 
-  bytep = rcp->bytep = (char *) malloc((rcp->bytel = bytel = stringp->bytel) + 1); /* We always add a NUL byte for convenience */
-  if (bytep == NULL) {
-    MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
-    goto err;
+  if ((rcp->bytel = stringp->bytel) > 0) {
+    bytep = rcp->bytep = (char *) calloc(1, (bytel = stringp->bytel) + 1); /* We always add a NUL byte for convenience */
+    if (bytep == NULL) {
+      MARPAESLIF_ERRORF(marpaESLIFp, "calloc failure, %s", strerror(errno));
+      goto err;
+    }
+    memcpy(bytep, stringp->bytep, bytel);
+  } else {
+    rcp->bytep = (char *) MARPAESLIF_EMPTY_STRING;
   }
-  memcpy(bytep, stringp->bytep, bytel);
-  bytep[bytel] = '\0';
 
   if (stringp->asciis != NULL) {
-    rcp->asciis = asciis = strdup(stringp->asciis);
-    if (asciis == NULL) {
-      goto err;
+    if (stringp->asciis == MARPAESLIF_EMPTY_STRING) {
+      rcp->asciis = (char *) MARPAESLIF_EMPTY_STRING;
+    } else {
+      rcp->asciis = asciis = strdup(stringp->asciis);
+      if (asciis == NULL) {
+        goto err;
+      }
     }
   }
 
@@ -529,13 +548,13 @@ static inline void _marpaESLIF_string_freev(marpaESLIF_string_t *stringp)
 /*****************************************************************************/
 {
   if (stringp != NULL) {
-    if (stringp->bytep != NULL) {
+    if ((stringp->bytep != NULL) && (stringp->bytep != MARPAESLIF_EMPTY_STRING)) {
       free(stringp->bytep);
     }
     if (stringp->encodingasciis != NULL) {
       free(stringp->encodingasciis);
     }
-    if (stringp->asciis != NULL) {
+    if ((stringp->asciis != NULL) && (stringp->asciis != MARPAESLIF_EMPTY_STRING)) {
       free(stringp->asciis);
     }
     free(stringp);
