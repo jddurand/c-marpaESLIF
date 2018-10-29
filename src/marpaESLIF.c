@@ -1632,44 +1632,44 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_grammarp(marpaESLIFGra
 static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIFGrammarp)
 /*****************************************************************************/
 {
-  static const char     *funcs                            = "_marpaESLIFGrammar_validateb";
-  marpaESLIF_t          *marpaESLIFp                      = marpaESLIFGrammarp->marpaESLIFp;
-  genericStack_t        *grammarStackp                    = marpaESLIFGrammarp->grammarStackp;
-  marpaWrapperGrammar_t *marpaWrapperGrammarClonep        = NULL;
-  marpaESLIF_meta_t     *metap;
-  genericStack_t        *symbolStackp;
-  genericStack_t        *ruleStackp;
-  genericStack_t        *lhsRuleStackp;
-  int                    grammari;
-  int                    grammarj;
-  marpaESLIF_symbol_t   *symbolp;
-  marpaESLIF_symbol_t   *subSymbolp;
-  int                    symboli;
-  marpaESLIF_rule_t     *rulep;
-  marpaESLIF_rule_t     *ruletmpp;
-  int                    rulei;
-  int                    rulej;
-  marpaESLIF_grammar_t  *grammarp;
-  marpaESLIF_grammar_t  *subgrammarp;
-  short                  lhsb;
-  marpaESLIF_symbol_t   *lhsp;
-  marpaESLIF_symbol_t   *startp;
-  marpaESLIF_symbol_t   *discardp;
-  marpaESLIF_symbol_t   *exceptionp;
-  short                  rcb;
-  int                    rhsi;
-  size_t                 asciishowl;
-  short                  haveLexemeb;
-  marpaESLIF_cloneContext_t marpaESLIF_cloneContext = {
-    marpaESLIFp,
-    NULL  /* grammarp */
-  };
-  marpaWrapperGrammarCloneOption_t marpaWrapperGrammarCloneOption = {
-    (void *) &marpaESLIF_cloneContext,
-    NULL, /* grammarOptionSetterp - changed at run-time see below */
-    NULL, /* symbolOptionSetterp - changed at run-time see below */
-    NULL /* ruleOptionSetterp - always NULL */
-  };
+  static const char                *funcs                     = "_marpaESLIFGrammar_validateb";
+  marpaESLIF_t                     *marpaESLIFp               = marpaESLIFGrammarp->marpaESLIFp;
+  genericStack_t                   *grammarStackp             = marpaESLIFGrammarp->grammarStackp;
+  marpaWrapperGrammar_t            *marpaWrapperGrammarClonep = NULL;
+  marpaESLIF_meta_t                *metap;
+  genericStack_t                   *symbolStackp;
+  genericStack_t                   *ruleStackp;
+  genericStack_t                   *lhsRuleStackp;
+  int                               grammari;
+  int                               grammarj;
+  marpaESLIF_symbol_t              *symbolp;
+  marpaESLIF_symbol_t              *subSymbolp;
+  int                               symboli;
+  marpaESLIF_rule_t                *rulep;
+  marpaESLIF_rule_t                *ruletmpp;
+  int                               rulei;
+  int                               rulej;
+  marpaESLIF_grammar_t             *grammarp;
+  marpaESLIF_grammar_t             *subgrammarp;
+  short                             lhsb;
+  marpaESLIF_symbol_t              *lhsp;
+  marpaESLIF_symbol_t              *startp;
+  marpaESLIF_symbol_t              *discardp;
+  marpaESLIF_symbol_t              *exceptionp;
+  short                             rcb;
+  int                               rhsi;
+  size_t                            asciishowl;
+  short                             haveLexemeb;
+  marpaESLIF_cloneContext_t         marpaESLIF_cloneContext;
+  marpaWrapperGrammarCloneOption_t  marpaWrapperGrammarCloneOption;
+
+  marpaESLIF_cloneContext.marpaESLIFp = marpaESLIFp;
+  marpaESLIF_cloneContext.grammarp = NULL;
+
+  marpaWrapperGrammarCloneOption.userDatavp = (void *) &marpaESLIF_cloneContext;
+  marpaWrapperGrammarCloneOption.grammarOptionSetterp = NULL; /* Changed at run-time see below */
+  marpaWrapperGrammarCloneOption.symbolOptionSetterp = NULL; /* Changed at run-time see below */
+  marpaWrapperGrammarCloneOption.ruleOptionSetterp = NULL; /* Always NULL */
 
   /* MARPAESLIF_TRACE(marpaESLIFp, funcs, "Validating ESLIF grammar"); */
 
@@ -2946,7 +2946,7 @@ static inline short _marpaESLIFRecognizer_lexemeStack_i_setb(marpaESLIFRecognize
 {
   static const char              *funcs = "_marpaESLIFRecognizer_lexemeStack_i_setb";
   GENERICSTACKITEMTYPE2TYPE_ARRAY array;
-  int                             rcb;
+  short                           rcb;
 
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
@@ -4230,7 +4230,9 @@ static inline short _marpaESLIFRecognizer_meta_matcherb(marpaESLIFRecognizer_t *
 {
   /* All in all, this routine is the core of this module, and the cause of recursion -; */
   static const char              *funcs                      = "_marpaESLIFRecognizer_meta_matcherb";
+#ifndef MARPAESLIF_NTRACE
   marpaESLIFGrammar_t            *marpaESLIFGrammarp         = marpaESLIFRecognizerp->marpaESLIFGrammarp;
+#endif
   marpaESLIFRecognizerOption_t    marpaESLIFRecognizerOption = marpaESLIFRecognizerp->marpaESLIFRecognizerOption; /* This is an internal recognizer */
   marpaESLIFValueOption_t         marpaESLIFValueOption      = marpaESLIFValueOption_default_template;
   short                           rcb;
@@ -7570,7 +7572,9 @@ static short _marpaESLIFReader_grammarReader(void *userDatavp, char **inputsp, s
 {
   static const char          *funcs                     = "marpaESLIFReader_grammarReader";
   marpaESLIF_readerContext_t *marpaESLIF_readerContextp = (marpaESLIF_readerContext_t *) userDatavp;
+#ifndef MARPAESLIF_NTRACE
   marpaESLIF_t               *marpaESLIFp               = marpaESLIF_readerContextp->marpaESLIFp;
+#endif
 
   *inputsp              = (char *) marpaESLIF_readerContextp->marpaESLIFGrammarOptionp->bytep;
   *inputlp              = marpaESLIF_readerContextp->marpaESLIFGrammarOptionp->bytel;
@@ -7579,7 +7583,10 @@ static short _marpaESLIFReader_grammarReader(void *userDatavp, char **inputsp, s
   *encodingsp           = marpaESLIF_readerContextp->marpaESLIFGrammarOptionp->encodings;
   *encodinglp           = marpaESLIF_readerContextp->marpaESLIFGrammarOptionp->encodingl;
 
+#ifndef MARPAESLIF_NTRACE
   MARPAESLIF_TRACEF(marpaESLIFp, funcs, "return 1 (*inputsp=%p, *inputlp=%ld, *eofbp=%d, *characterStreambp=%d)", *inputsp, (unsigned long) *inputlp, (int) *eofbp, (int) *characterStreambp);
+#endif
+
   return 1;
 }
 
@@ -8756,7 +8763,9 @@ static inline short _marpaESLIFGrammar_parseb(marpaESLIFGrammar_t *marpaESLIFGra
 /*****************************************************************************/
 {
   static const char      *funcs                 = "_marpaESLIFGrammar_parseb";
+#ifndef MARPAESLIF_NTRACE
   marpaESLIF_t           *marpaESLIFp           = marpaESLIFGrammarp->marpaESLIFp;
+#endif
   marpaESLIFRecognizer_t *marpaESLIFRecognizerp = NULL;
   marpaESLIFValueOption_t marpaESLIFValueOption = (marpaESLIFValueOptionp != NULL) ? *marpaESLIFValueOptionp : marpaESLIFValueOption_default_template;
   marpaESLIFValue_t      *marpaESLIFValuep      = NULL;
