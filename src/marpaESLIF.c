@@ -435,18 +435,26 @@ static inline marpaESLIF_string_t *_marpaESLIF_string_newp(marpaESLIF_t *marpaES
   stringp->encodingasciis = NULL;
   stringp->asciis         = NULL;
 
-  stringp->bytep = dstbytep = (char *) malloc(bytel + 1); /* We always add a NUL byte for convenience */
-  if (dstbytep == NULL) {
+  if ((stringp->bytep = dstbytep = (char *) malloc(bytel + 1)) == NULL) {
+    /* We always add a NUL byte for convenience - this is also why we are ok with bytep == NULL */
     MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
     goto err;
   }
-  memcpy(dstbytep, bytep, bytel);
+  memcpy(dstbytep, bytep, bytel); /* If bytel is zero, memcpy is ok as per C standard */
   dstbytep[bytel] = '\0';  /* Developers fighting with debuggers will understand why -; */
 
   if (asciib) {
-    stringp->asciis = dstasciis = _marpaESLIF_charconvb(marpaESLIFp, "ASCII//TRANSLIT//IGNORE", encodingasciis, bytep, bytel, NULL, &(stringp->encodingasciis), NULL /* tconvpp */, 1 /* eofb */, NULL /* byteleftsp */, NULL /* byteleftlp */, NULL /* byteleftalloclp */);
-    if (dstasciis == NULL) {
+    /* This will fill stringp->encodingasciis */
+    if ((stringp->asciis = dstasciis = _marpaESLIF_charconvb(marpaESLIFp, "ASCII//TRANSLIT//IGNORE", encodingasciis, bytep, bytel, NULL, &(stringp->encodingasciis), NULL /* tconvpp */, 1 /* eofb */, NULL /* byteleftsp */, NULL /* byteleftlp */, NULL /* byteleftalloclp */)) == NULL) {
       goto err;
+    }
+  } else {
+    /* Copy encodingasciis if any */
+    if (encodingasciis != NULL) {
+      if ((stringp->encodingasciis = strdup(encodingasciis)) == NULL) {
+        MARPAESLIF_ERRORF(marpaESLIFp, "strdup failure, %s", strerror(errno));
+        goto err;
+      }
     }
   }
 
@@ -4630,15 +4638,13 @@ static inline char *_marpaESLIF_charconvb(marpaESLIF_t *marpaESLIFp, char *toEnc
 
   if (fromEncodingsp != NULL) {
     if (fromEncodings != NULL) {
-      *fromEncodingsp = strdup(fromEncodings);
-      if (*fromEncodingsp == NULL) {
+      if ((*fromEncodingsp = strdup(fromEncodings)) == NULL) {
 	MARPAESLIF_ERRORF(marpaESLIFp, "strdup failure, %s", strerror(errno));
 	goto err;
       }
     } else {
       /* Get the guess from tconv */
-      *fromEncodingsp = tconv_fromcode(tconvp);
-      if (*fromEncodingsp == NULL) {
+      if ((*fromEncodingsp = tconv_fromcode(tconvp)) == NULL) {
         /* Should never happen */
 	MARPAESLIF_ERROR(marpaESLIFp, "tconv returned a NULL origin encoding");
         errno = EINVAL;
@@ -4646,8 +4652,7 @@ static inline char *_marpaESLIF_charconvb(marpaESLIF_t *marpaESLIFp, char *toEnc
       }
       MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Encoding guessed to %s", *fromEncodingsp);
       /* We do not mind if we loose the original - it is inside tconv that will be freed */
-      *fromEncodingsp = strdup(*fromEncodingsp);
-      if (*fromEncodingsp == NULL) {
+      if ((*fromEncodingsp = strdup(*fromEncodingsp)) == NULL) {
 	MARPAESLIF_ERRORF(marpaESLIFp, "strdup failure, %s", strerror(errno));
 	goto err;
       }
