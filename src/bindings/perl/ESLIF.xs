@@ -336,12 +336,11 @@ SV *boot_MarpaX__ESLIF__Grammar__Symbol__Properties_svp;
 #define MARPAESLIF_SET_PTR(marpaESLIFValuep, indicei, _representationp, _p) do { \
     marpaESLIFValueResult_t _marpaESLIFValueResult;                     \
                                                                         \
-    _marpaESLIFValueResult.contextp        = ESLIF_PERL_CONTEXT;        \
-    _marpaESLIFValueResult.sizel           = 0;                         \
-    _marpaESLIFValueResult.representationp = _representationp;          \
-    _marpaESLIFValueResult.shallowb        = 0;                         \
     _marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_PTR; \
-    _marpaESLIFValueResult.u.p             = _p;                        \
+    _marpaESLIFValueResult.contextp        = ESLIF_PERL_CONTEXT;        \
+    _marpaESLIFValueResult.representationp = _representationp;          \
+    _marpaESLIFValueResult.u.p.p           = _p;                        \
+    _marpaESLIFValueResult.u.p.shallowb    = 0;                         \
                                                                         \
     if (! marpaESLIFValue_stack_setb(marpaESLIFValuep, indicei, &_marpaESLIFValueResult)) { \
       MARPAESLIF_CROAKF("marpaESLIFValue_stack_setb failure, %s", strerror(errno)); \
@@ -910,11 +909,14 @@ static void marpaESLIF_getSvp(pTHX_ MarpaX_ESLIF_Value_t *Perl_MarpaX_ESLIF_Valu
   /* fprintf(stderr, "In %s for indice %d, bytep %p, bytel %ld\n", funcs, i, bytep, (unsigned long) bytel); */
   if (bytep != NULL) {
     /* Fake a marpaESLIFValueResult */
-    marpaESLIFValueResult.type     = MARPAESLIF_VALUE_TYPE_ARRAY;
-    marpaESLIFValueResult.contextp = NULL;
-    marpaESLIFValueResult.sizel    = bytel;
-    marpaESLIFValueResult.u.p      = bytep;
-    marpaESLIFValueResultp         = &marpaESLIFValueResult;
+    marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_ARRAY;
+    marpaESLIFValueResult.contextp        = NULL;
+    marpaESLIFValueResult.representationp = NULL;
+    marpaESLIFValueResult.u.a.p           = bytep;
+    marpaESLIFValueResult.u.a.sizel       = bytel;
+    marpaESLIFValueResult.u.a.shallowb    = 1;
+
+    marpaESLIFValueResultp = &marpaESLIFValueResult;
   } else {
     marpaESLIFValueResultp = marpaESLIFValue_stack_getp(marpaESLIFValuep, stackindicei);
     if (marpaESLIFValueResultp == NULL) {
@@ -1332,7 +1334,7 @@ static short marpaESLIF_representationb(void *userDatavp, marpaESLIFValueResult_
   if (marpaESLIFValueResultp->contextp != ESLIF_PERL_CONTEXT) {
     MARPAESLIF_CROAKF("User-defined value context is not ESLIF_PERL_CONTEXT but %p", marpaESLIFValueResultp->contextp);
   }
-  Perl_MarpaX_ESLIF_Valuep->previous_strings = marpaESLIF_sv2byte(aTHX_ (SV *) marpaESLIFValueResultp->u.p, inputcpp, inputlp, 0 /* encodingInformationb */, NULL /* characterStreambp */, NULL /* encodingsp */, NULL /* encodinglp */, 0 /* warnIsFatalb */);
+  Perl_MarpaX_ESLIF_Valuep->previous_strings = marpaESLIF_sv2byte(aTHX_ (SV *) marpaESLIFValueResultp->u.p.p, inputcpp, inputlp, 0 /* encodingInformationb */, NULL /* characterStreambp */, NULL /* encodingsp */, NULL /* encodinglp */, 0 /* warnIsFatalb */);
 
   /* Always return a true value, else ::concat will abort */
   return 1;
@@ -2950,11 +2952,10 @@ CODE:
 
   marpaESLIFAlternative.lexemes               = (char *) name;
   marpaESLIFAlternative.value.type            = MARPAESLIF_VALUE_TYPE_PTR;
-  marpaESLIFAlternative.value.u.p             = sv;
   marpaESLIFAlternative.value.contextp        = ESLIF_PERL_CONTEXT;
-  marpaESLIFAlternative.value.sizel           = 0; /* Not used */
   marpaESLIFAlternative.value.representationp = marpaESLIF_representationb;
-  marpaESLIFAlternative.value.shallowb        = 0; /* C.f. marpaESLIF_valueFreeCallbackv */
+  marpaESLIFAlternative.value.u.p.p           = sv;
+  marpaESLIFAlternative.value.u.p.shallowb    = 0; /* C.f. marpaESLIF_valueFreeCallbackv */
   marpaESLIFAlternative.grammarLengthl        = (size_t) grammarLength;
 
   RETVAL = (bool) marpaESLIFRecognizer_lexeme_alternativeb(Perl_MarpaX_ESLIF_Recognizer->marpaESLIFRecognizerp, &marpaESLIFAlternative);
@@ -3021,11 +3022,10 @@ CODE:
 
   marpaESLIFAlternative.lexemes               = (char *) name;
   marpaESLIFAlternative.value.type            = MARPAESLIF_VALUE_TYPE_PTR;
-  marpaESLIFAlternative.value.u.p             = sv;
   marpaESLIFAlternative.value.contextp        = ESLIF_PERL_CONTEXT;
-  marpaESLIFAlternative.value.sizel           = 0; /* Not used */
   marpaESLIFAlternative.value.representationp = marpaESLIF_representationb;
-  marpaESLIFAlternative.value.shallowb        = 0; /* C.f. marpaESLIF_valueFreeCallbackv */
+  marpaESLIFAlternative.value.u.p.p           = sv;
+  marpaESLIFAlternative.value.u.p.shallowb    = 0; /* C.f. marpaESLIF_valueFreeCallbackv */
   marpaESLIFAlternative.grammarLengthl        = (size_t) grammarLength;
 
   RETVAL = (bool) marpaESLIFRecognizer_lexeme_readb(Perl_MarpaX_ESLIF_Recognizer->marpaESLIFRecognizerp, &marpaESLIFAlternative, (size_t) length);
