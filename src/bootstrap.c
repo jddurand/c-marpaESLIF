@@ -244,7 +244,7 @@ static        short _marpaESLIF_bootstrap_G1_action_luascript_statementb(void *u
     _contextp = _marpaESLIFValueResultp->contextp;                      \
   } while (0)
 
-#define MARPAESLIF_GET_BOOL(marpaESLIFValuep, indicei, _b) do {         \
+#define MARPAESLIF_GET_BOOL(marpaESLIFValuep, indicei, _y) do {         \
     marpaESLIFValueResult_t *_marpaESLIFValueResultp;                   \
                                                                         \
     _marpaESLIFValueResultp = _marpaESLIFValue_stack_getp(marpaESLIFValuep, indicei); \
@@ -257,7 +257,7 @@ static        short _marpaESLIF_bootstrap_G1_action_luascript_statementb(void *u
       goto err;                                                         \
     }                                                                   \
                                                                         \
-    _b = _marpaESLIFValueResultp->u.b;                                  \
+    _y = _marpaESLIFValueResultp->u.y;                                  \
   } while (0)
 
 #define MARPAESLIF_GET_INT(marpaESLIFValuep, indicei, _i) do {          \
@@ -343,7 +343,7 @@ static        short _marpaESLIF_bootstrap_G1_action_luascript_statementb(void *u
                                                                         \
   } while (0)
 
-#define MARPAESLIF_SET_BOOL(marpaESLIFValuep, indicei, _contextp, _b) do { \
+#define MARPAESLIF_SET_BOOL(marpaESLIFValuep, indicei, _contextp, _y) do { \
     marpaESLIFValueResult_t _marpaESLIFValueResult;                     \
                                                                         \
     _marpaESLIFValueResult.contextp        = _contextp;                 \
@@ -351,7 +351,7 @@ static        short _marpaESLIF_bootstrap_G1_action_luascript_statementb(void *u
     _marpaESLIFValueResult.representationp = NULL;                      \
     _marpaESLIFValueResult.shallowb        = 0;                         \
     _marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_BOOL; \
-    _marpaESLIFValueResult.u.b             = _b;                        \
+    _marpaESLIFValueResult.u.y             = _y;                        \
                                                                         \
     if (! _marpaESLIFValue_stack_setb(marpaESLIFValuep, indicei, &_marpaESLIFValueResult)) { \
       goto err;                                                         \

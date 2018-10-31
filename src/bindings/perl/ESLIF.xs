@@ -1551,14 +1551,14 @@ static short marpaESLIF_TransformArrayb(void *userDatavp, void *contextp, void *
 }
 
 /*****************************************************************************/
-static short marpaESLIF_TransformBoolb(void *userDatavp, void *contextp, short b)
+static short marpaESLIF_TransformBoolb(void *userDatavp, void *contextp, short y)
 /*****************************************************************************/
 {
   static const char    *funcs                    = "marpaESLIF_TransformBoolb";
   MarpaX_ESLIF_Value_t *Perl_MarpaX_ESLIF_Valuep = (MarpaX_ESLIF_Value_t *) userDatavp;
   dMYTHX(Perl_MarpaX_ESLIF_Valuep);
 
-  Perl_MarpaX_ESLIF_Valuep->svp = b ? &PL_sv_yes : &PL_sv_no;
+  Perl_MarpaX_ESLIF_Valuep->svp = y ? &PL_sv_yes : &PL_sv_no;
 
   return 1;
 }

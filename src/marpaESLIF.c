@@ -12254,7 +12254,7 @@ static inline short _marpaESLIFValue_transformb(marpaESLIFValue_t *marpaESLIFVal
       errno = EINVAL;
       goto err;
     }
-    if (! transformerp->boolTransformerp(userDatavp, marpaESLIFValueResultp->contextp, marpaESLIFValueResultp->u.b)) {
+    if (! transformerp->boolTransformerp(userDatavp, marpaESLIFValueResultp->contextp, marpaESLIFValueResultp->u.y)) {
       goto err;
     }
     break;

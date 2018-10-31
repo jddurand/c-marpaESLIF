@@ -107,6 +107,7 @@ struct marpaESLIFValueResult {
     float               f;                      /* Value is a float */
     double              d;                      /* Value is a double */
     void               *p;                      /* Value is a pointer */
+    short               y;                      /* Value is a boolean */
     marpaESLIFString_t  s;                      /* Value is a string */
   } u;
 };

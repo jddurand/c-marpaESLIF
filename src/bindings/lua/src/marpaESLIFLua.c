@@ -3396,14 +3396,14 @@ static short marpaESLIFLua_transformArrayb(void *userDatavp, void *contextp, voi
 }
 
 /*****************************************************************************/
-static short marpaESLIFLua_transformBoolb(void *userDatavp, void *contextp, short b)
+static short marpaESLIFLua_transformBoolb(void *userDatavp, void *contextp, short y)
 /*****************************************************************************/
 {
   static const char           *funcs                      = "marpaESLIFLua_transformBoolb";
   marpaESLIFLuaValueContext_t *marpaESLIFLuaValueContextp = (marpaESLIFLuaValueContext_t *) userDatavp;
   lua_State                   *L                          = marpaESLIFLuaValueContextp->L;
 
-  if (! marpaESLIFLua_lua_pushboolean(marpaESLIFLuaValueContextp->L, (int) b)) goto err;
+  if (! marpaESLIFLua_lua_pushboolean(marpaESLIFLuaValueContextp->L, (int) y)) goto err;
 
   return 1;
 

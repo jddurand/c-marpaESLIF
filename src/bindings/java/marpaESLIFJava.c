@@ -627,7 +627,7 @@ static short                           marpaESLIF_TransformFloat(void *userDatav
 static short                           marpaESLIF_TransformDouble(void *userDatavp, void *contextp, double d);
 static short                           marpaESLIF_TransformPtr(void *userDatavp, void *contextp, void *p);
 static short                           marpaESLIF_TransformArray(void *userDatavp, void *contextp, void *p, size_t sizel);
-static short                           marpaESLIF_TransformBool(void *userDatavp, void *contextp, short b);
+static short                           marpaESLIF_TransformBool(void *userDatavp, void *contextp, short y);
 
 /* Transformers */
 static marpaESLIFValueResultTransform_t marpaESLIFValueResultTransformDefault = {
@@ -5339,14 +5339,14 @@ static short marpaESLIF_TransformArray(void *userDatavp, void *contextp, void *p
 }
 
 /*****************************************************************************/
-static short marpaESLIF_TransformBool(void *userDatavp, void *contextp, short b)
+static short marpaESLIF_TransformBool(void *userDatavp, void *contextp, short y)
 /*****************************************************************************/
 {
   static const char        *funcs                   = "marpaESLIF_TransformBool";
   marpaESLIFValueContext_t *marpaESLIFValueContextp = (marpaESLIFValueContext_t *) userDatavp;
   JNIEnv                   *envp                    = marpaESLIFValueContextp->envp;
   short                     rcb;
-  jboolean                  jb = b ? JNI_TRUE : JNI_FALSE;
+  jboolean                  jb = y ? JNI_TRUE : JNI_FALSE;
   jobject                   objectp;
 
   if (JAVA_LANG_BOOLEAN_CLASS_valueOf_METHODP != NULL) {
