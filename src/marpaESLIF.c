@@ -485,8 +485,6 @@ static inline marpaESLIF_string_t *_marpaESLIF_string_clonep(marpaESLIF_t *marpa
   marpaESLIF_string_t *rcp = NULL;
   char                *bytep;
   size_t               bytel;
-  char                *asciis;
-  char                *encodingasciis;
   
   if (stringp == NULL) {
     goto err;
@@ -516,8 +514,8 @@ static inline marpaESLIF_string_t *_marpaESLIF_string_clonep(marpaESLIF_t *marpa
     if (stringp->asciis == MARPAESLIF_EMPTY_STRING) {
       rcp->asciis = (char *) MARPAESLIF_EMPTY_STRING;
     } else {
-      rcp->asciis = asciis = strdup(stringp->asciis);
-      if (asciis == NULL) {
+      if ((rcp->asciis = strdup(stringp->asciis)) == NULL) {
+        MARPAESLIF_ERRORF(marpaESLIFp, "strdup failure, %s", strerror(errno));
         goto err;
       }
     }
@@ -528,8 +526,8 @@ static inline marpaESLIF_string_t *_marpaESLIF_string_clonep(marpaESLIF_t *marpa
       /* Internal variable used to avoid unnecesary strdup() call */
       rcp->encodingasciis = (char *) MARPAESLIF_UTF8_STRING;
     } else {
-      rcp->encodingasciis = encodingasciis = strdup(stringp->encodingasciis);
-      if (encodingasciis == NULL) {
+      if ((rcp->encodingasciis = strdup(stringp->encodingasciis)) == NULL) {
+        MARPAESLIF_ERRORF(marpaESLIFp, "strdup failure, %s", strerror(errno));
         goto err;
       }
     }
