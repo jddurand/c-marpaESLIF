@@ -1956,7 +1956,7 @@ static short _marpaESLIF_bootstrap_G1_action_string_literalb(void *userDatavp, m
   }
   *p = '\0'; /* For convenience */
 
-  stringp = _marpaESLIF_string_newp(marpaESLIFp, "UTF-8", charp, charl, 1 /* asciib */);
+  stringp = _marpaESLIF_string_newp(marpaESLIFp, "UTF-8", charp, charl);
   if (stringp == NULL) {
     goto err;
   }
@@ -4311,7 +4311,7 @@ static short _marpaESLIF_bootstrap_G1_action_desc_ruleb(void *userDatavp, marpaE
   /* Why hardcoded to UTF-8 ? Because a quote string is implemented as a regexp in unicode mode. */
   /* Therefore it is guaranteed that the match was done on UTF-8 bytes; regardless of the encoding */
   /* of the original input. */
-  grammarp->descp = _marpaESLIF_string_newp(marpaESLIFp, "UTF-8", newbytep, newbytel, 1 /* asciib */);
+  grammarp->descp = _marpaESLIF_string_newp(marpaESLIFp, "UTF-8", newbytep, newbytel);
   if (grammarp->descp == NULL) {
     goto err;
   }

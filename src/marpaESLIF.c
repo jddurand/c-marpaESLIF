@@ -212,7 +212,7 @@ static const char *MARPAESLIF_UNKNOWN_STRING = "???";
 /* Please note that EVERY _marpaESLIFRecognizer_xxx() method is logging at start and at return */
 
 static inline marpaESLIF_t          *_marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptionp, short validateb);
-static inline marpaESLIF_string_t   *_marpaESLIF_string_newp(marpaESLIF_t *marpaESLIFp, char *encodingasciis, char *bytep, size_t bytel, short asciib);
+static inline marpaESLIF_string_t   *_marpaESLIF_string_newp(marpaESLIF_t *marpaESLIFp, char *encodingasciis, char *bytep, size_t bytel);
 static inline marpaESLIF_string_t   *_marpaESLIF_string_clonep(marpaESLIF_t *marpaESLIFp, marpaESLIF_string_t *stringp);
 static inline void                   _marpaESLIF_string_freev(marpaESLIF_string_t *stringp);
 static inline short                  _marpaESLIF_string_eqb(marpaESLIF_string_t *string1p, marpaESLIF_string_t *string2p);
@@ -412,7 +412,7 @@ static inline marpaESLIF_action_t    *_marpaESLIF_action_clonep(marpaESLIF_t *ma
 static inline void                    _marpaESLIF_action_freev(marpaESLIF_action_t *actionp);
 
 /*****************************************************************************/
-static inline marpaESLIF_string_t *_marpaESLIF_string_newp(marpaESLIF_t *marpaESLIFp, char *encodingasciis, char *bytep, size_t bytel, short asciib)
+static inline marpaESLIF_string_t *_marpaESLIF_string_newp(marpaESLIF_t *marpaESLIFp, char *encodingasciis, char *bytep, size_t bytel)
 /*****************************************************************************/
 /* Caller is responsible to set coherent values of bytes and bytel.          */
 /* In particular an empty string must be set with bytep = NULL and bytel = 0 */
@@ -445,24 +445,14 @@ static inline marpaESLIF_string_t *_marpaESLIF_string_newp(marpaESLIF_t *marpaES
     stringp->bytel = 0;
   }
 
-  if (asciib) {
-    if (bytel > 0) {
-      /* This will fill stringp->encodingasciis if not already set */
-      if ((stringp->asciis = _marpaESLIF_charconvb(marpaESLIFp, "ASCII//TRANSLIT//IGNORE", encodingasciis, bytep, bytel, NULL, &(stringp->encodingasciis), NULL /* tconvpp */, 1 /* eofb */, NULL /* byteleftsp */, NULL /* byteleftlp */, NULL /* byteleftalloclp */)) == NULL) {
-        goto err;
-      }
-    } else {
-      /* ASCII version is an empty string */
-      stringp->asciis = (char *) MARPAESLIF_EMPTY_STRING;
-      /* Copy encodingasciis if any */
-      if (encodingasciis != NULL) {
-        if ((stringp->encodingasciis = strdup(encodingasciis)) == NULL) {
-          MARPAESLIF_ERRORF(marpaESLIFp, "strdup failure, %s", strerror(errno));
-          goto err;
-        }
-      }
+  if (bytel > 0) {
+    /* This will fill stringp->encodingasciis if not already set */
+    if ((stringp->asciis = _marpaESLIF_charconvb(marpaESLIFp, "ASCII//TRANSLIT//IGNORE", encodingasciis, bytep, bytel, NULL, &(stringp->encodingasciis), NULL /* tconvpp */, 1 /* eofb */, NULL /* byteleftsp */, NULL /* byteleftlp */, NULL /* byteleftalloclp */)) == NULL) {
+      goto err;
     }
   } else {
+    /* ASCII version is an empty string */
+    stringp->asciis = (char *) MARPAESLIF_EMPTY_STRING;
     /* Copy encodingasciis if any */
     if (encodingasciis != NULL) {
       if ((stringp->encodingasciis = strdup(encodingasciis)) == NULL) {
@@ -681,7 +671,7 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
   /* ----------- Terminal Description ------------ */
   if (descs == NULL) {
     /* Get an ASCII version of the content */
-    content2descp = _marpaESLIF_string_newp(marpaESLIFp, "UTF-8", utf8s, utf8l, 1);
+    content2descp = _marpaESLIF_string_newp(marpaESLIFp, "UTF-8", utf8s, utf8l);
     if (content2descp == NULL) {
       goto err;
     }
@@ -723,9 +713,9 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
         strcat(generatedasciis, modifiers);
       }
     }
-    terminalp->descp = _marpaESLIF_string_newp(marpaESLIFp, "ASCII", generatedasciis, strlen(generatedasciis), 1);
+    terminalp->descp = _marpaESLIF_string_newp(marpaESLIFp, "ASCII", generatedasciis, strlen(generatedasciis));
   } else {
-    terminalp->descp = _marpaESLIF_string_newp(marpaESLIFp, descEncodings, descs, descl, 1);
+    terminalp->descp = _marpaESLIF_string_newp(marpaESLIFp, descEncodings, descs, descl);
   }
   if (terminalp->descp == NULL) {
     goto err;
@@ -1339,9 +1329,9 @@ static inline marpaESLIF_meta_t *_marpaESLIF_meta_newp(marpaESLIF_t *marpaESLIFp
 
   /* -------- Meta Description - default to meta name -------- */
   if ((descs == NULL) || (descl <= 0)) {
-    metap->descp = _marpaESLIF_string_newp(marpaESLIFp, "ASCII", asciinames, strlen(asciinames), 1 /* asciib */);
+    metap->descp = _marpaESLIF_string_newp(marpaESLIFp, "ASCII", asciinames, strlen(asciinames));
   } else {
-    metap->descp = _marpaESLIF_string_newp(marpaESLIFp, descEncodings, descs, descl, 1 /* asciib */);
+    metap->descp = _marpaESLIF_string_newp(marpaESLIFp, descEncodings, descs, descl);
   }
   if (metap->descp == NULL) {
     goto err;
@@ -2658,11 +2648,11 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_grammar_newp(marpaESLIFGrammar_t
     if (! marpaESLIF_stringGenerator.okb) {
       goto err;
     }
-    grammarp->descp = _marpaESLIF_string_newp(marpaESLIFp, "ASCII" /* We KNOW we generated an ASCII stringy */, marpaESLIF_stringGenerator.s, strlen(marpaESLIF_stringGenerator.s), 1 /* asciib */);
+    grammarp->descp = _marpaESLIF_string_newp(marpaESLIFp, "ASCII" /* We KNOW we generated an ASCII stringy */, marpaESLIF_stringGenerator.s, strlen(marpaESLIF_stringGenerator.s));
     free(marpaESLIF_stringGenerator.s);
     grammarp->descautob = 1;
   } else {
-    grammarp->descp = _marpaESLIF_string_newp(marpaESLIFp, descEncodings, descs, descl, 1 /* asciib */);
+    grammarp->descp = _marpaESLIF_string_newp(marpaESLIFp, descEncodings, descs, descl);
     grammarp->descautob = 0;
   }
   if (grammarp->descp == NULL) {
@@ -3164,11 +3154,11 @@ static inline marpaESLIF_rule_t *_marpaESLIF_rule_newp(marpaESLIF_t *marpaESLIFp
     if (! marpaESLIF_stringGenerator.okb) {
       goto err;
     }
-    rulep->descp = _marpaESLIF_string_newp(marpaESLIFp, "ASCII" /* We KNOW we generated an ASCII stringy */, marpaESLIF_stringGenerator.s, strlen(marpaESLIF_stringGenerator.s), 1 /* asciib */);
+    rulep->descp = _marpaESLIF_string_newp(marpaESLIFp, "ASCII" /* We KNOW we generated an ASCII stringy */, marpaESLIF_stringGenerator.s, strlen(marpaESLIF_stringGenerator.s));
     rulep->descautob = 1;
     free(marpaESLIF_stringGenerator.s);
   } else {
-    rulep->descp = _marpaESLIF_string_newp(marpaESLIFp, descEncodings, descs, descl, 1 /* asciib */);
+    rulep->descp = _marpaESLIF_string_newp(marpaESLIFp, descEncodings, descs, descl);
     rulep->descautob = 0;
   }
   if (rulep->descp == NULL) {
@@ -5443,7 +5433,7 @@ short marpaESLIFGrammar_grammarshowscripb(marpaESLIFGrammar_t *marpaESLIFGrammar
   }
   
   if ((marpaESLIFGrammarp->luadescp == NULL) && (marpaESLIFGrammarp->luabytep != NULL) && (marpaESLIFGrammarp->luabytel > 0)) {
-    marpaESLIFGrammarp->luadescp = _marpaESLIF_string_newp(marpaESLIFGrammarp->marpaESLIFp, "UTF-8" /* Came from the grammar, we know it is UTF-8 */, marpaESLIFGrammarp->luabytep, marpaESLIFGrammarp->luabytel, 1 /* asciib */);
+    marpaESLIFGrammarp->luadescp = _marpaESLIF_string_newp(marpaESLIFGrammarp->marpaESLIFp, "UTF-8" /* Came from the grammar, we know it is UTF-8 */, marpaESLIFGrammarp->luabytep, marpaESLIFGrammarp->luabytel);
     if (marpaESLIFGrammarp->luadescp == NULL) {
       goto err;
     }
