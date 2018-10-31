@@ -191,12 +191,11 @@ static char _MARPAESLIF_JNI_CONTEXT;
 #define MARPAESLIF_SET_PTR(marpaESLIFValuep, indicei, _representationp, _p) do { \
     marpaESLIFValueResult_t _marpaESLIFValueResult;                     \
                                                                         \
-    _marpaESLIFValueResult.contextp        = MARPAESLIF_JNI_CONTEXT;    \
-    _marpaESLIFValueResult.sizel           = 0;                         \
-    _marpaESLIFValueResult.representationp = _representationp;          \
-    _marpaESLIFValueResult.shallowb        = 0;                         \
     _marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_PTR; \
-    _marpaESLIFValueResult.u.p             = _p;                        \
+    _marpaESLIFValueResult.contextp        = MARPAESLIF_JNI_CONTEXT;    \
+    _marpaESLIFValueResult.representationp = _representationp;          \
+    _marpaESLIFValueResult.u.p.p           = _p;                        \
+    _marpaESLIFValueResult.u.p.shallowb    = 0;                         \
                                                                         \
     if (! marpaESLIFValue_stack_setb(marpaESLIFValuep, indicei, &_marpaESLIFValueResult)) { \
       RAISEEXCEPTION(envp, "marpaESLIFValue_stack_setb failure");       \
@@ -2562,11 +2561,10 @@ JNIEXPORT jboolean JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniLexemeAltern
   
   marpaESLIFAlternative.lexemes               = (char *) names;
   marpaESLIFAlternative.value.type            = MARPAESLIF_VALUE_TYPE_PTR;
-  marpaESLIFAlternative.value.u.p             = globalObjectp;
   marpaESLIFAlternative.value.contextp        = MARPAESLIF_JNI_CONTEXT;
-  marpaESLIFAlternative.value.sizel           = 0; /* Not used */
   marpaESLIFAlternative.value.representationp = marpaESLIFRepresentationCallback;
-  marpaESLIFAlternative.value.shallowb        = 0; /* C.f. marpaESLIFValueFreeCallback */
+  marpaESLIFAlternative.value.u.p.p           = globalObjectp;
+  marpaESLIFAlternative.value.u.p.shallowb    = 0; /* C.f. marpaESLIFValueFreeCallback */
   marpaESLIFAlternative.grammarLengthl        = (size_t) grammarLengthi;
 
   if (!  marpaESLIFRecognizer_lexeme_alternativeb(marpaESLIFRecognizerp, &marpaESLIFAlternative)) {
@@ -2681,11 +2679,10 @@ JNIEXPORT jboolean JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniLexemeRead(J
 
   marpaESLIFAlternative.lexemes               = (char *) names;
   marpaESLIFAlternative.value.type            = MARPAESLIF_VALUE_TYPE_PTR;
-  marpaESLIFAlternative.value.u.p             = globalObjectp;
   marpaESLIFAlternative.value.contextp        = MARPAESLIF_JNI_CONTEXT;
-  marpaESLIFAlternative.value.sizel           = 0; /* Not used */
   marpaESLIFAlternative.value.representationp = marpaESLIFRepresentationCallback;
-  marpaESLIFAlternative.value.shallowb        = 0; /* C.f. marpaESLIFValueFreeCallback */
+  marpaESLIFAlternative.value.u.p.p           = globalObjectp;
+  marpaESLIFAlternative.value.u.p.shallowb    = 0; /* C.f. marpaESLIFValueFreeCallback */
   marpaESLIFAlternative.grammarLengthl        = (size_t) grammarLengthi;
 
   if (! marpaESLIFRecognizer_lexeme_readb(marpaESLIFRecognizerp, &marpaESLIFAlternative, (size_t) lengthi)) {
@@ -4485,7 +4482,7 @@ static short marpaESLIFRepresentationCallback(void *userDatavp, marpaESLIFValueR
   if (marpaESLIFValueResultp->type != MARPAESLIF_VALUE_TYPE_PTR) {
     RAISEEXCEPTIONF(envp, "User-defined value type is not MARPAESLIF_VALUE_TYPE_PTR but %d", marpaESLIFValueResultp->type);
   }
-  objectp = (jobject) marpaESLIFValueResultp->u.p;
+  objectp = (jobject) marpaESLIFValueResultp->u.p.p;
 
   /* We need to resolve the "toString" method - that every object have in Java */
   classp = (*envp)->GetObjectClass(envp, objectp);
@@ -5048,11 +5045,14 @@ static short marpaESLIFGetObjectp(marpaESLIFValueContext_t *marpaESLIFValueConte
 
   if (bytep != NULL) {
     /* Fake a marpaESLIFValueResult */
-    marpaESLIFValueResult.type     = MARPAESLIF_VALUE_TYPE_ARRAY;
-    marpaESLIFValueResult.contextp = NULL;
-    marpaESLIFValueResult.sizel    = bytel;
-    marpaESLIFValueResult.u.p      = bytep;
-    marpaESLIFValueResultp         = &marpaESLIFValueResult;
+    marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_ARRAY;
+    marpaESLIFValueResult.contextp        = NULL;
+    marpaESLIFValueResult.representationp = NULL;
+    marpaESLIFValueResult.u.a.p           = bytep;
+    marpaESLIFValueResult.u.a.sizel       = bytel;
+    marpaESLIFValueResult.u.a.shallowb    = 1;
+
+    marpaESLIFValueResultp = &marpaESLIFValueResult;
   }
 
   if (marpaESLIFValueResultp == NULL) {
