@@ -93,11 +93,11 @@ typedef marpaESLIFValueFreeCallback_t   (*marpaESLIFValueFreeActionResolver_t)(v
 /* The representation returns a sequence of bytes and is appended AS-IS */
 /* It is legal to return NULL in *inputcpp or 0 in *inputlp: representation will be ignored */
 typedef short (*marpaESLIFRepresentation_t)(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp, char **inputcpp, size_t *inputlp);
+typedef struct marpaESLIFPtr   { void *p; short shallowb; } marpaESLIFPtr_t;
+typedef struct marpaESLIFArray { void *p; short shallowb; size_t sizel; } marpaESLIFArray_t;
 struct marpaESLIFValueResult {
   void                      *contextp;          /* Free value meaningful only to the user */
-  size_t                     sizel;             /* Length of data in case value is an ARRAY - always 0 otherwise */
   marpaESLIFRepresentation_t representationp;   /* How a user-land alternative is represented if it was in the input */
-  short                      shallowb;          /* In case of PTR or ARRAY, indicate if this is a shallow pointer */
   marpaESLIFValueType_t      type;              /* Type for tagging the following union */
   union {
     char                c;                      /* Value is a char */
@@ -106,7 +106,8 @@ struct marpaESLIFValueResult {
     long                l;                      /* Value is a long */
     float               f;                      /* Value is a float */
     double              d;                      /* Value is a double */
-    void               *p;                      /* Value is a pointer */
+    marpaESLIFPtr_t     p;                      /* Value is a pointer */
+    marpaESLIFArray_t   a;                      /* Value is an array */
     short               y;                      /* Value is a boolean */
     marpaESLIFString_t  s;                      /* Value is a string */
   } u;

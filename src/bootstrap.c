@@ -160,8 +160,8 @@ static        short _marpaESLIF_bootstrap_G1_action_luascript_statementb(void *u
       goto err;                                                         \
     }                                                                   \
                                                                         \
-    _p = _marpaESLIFValueResultp->u.p;                                  \
-    _l = _marpaESLIFValueResultp->sizel;                                \
+    _p = _marpaESLIFValueResultp->u.a.p;                                \
+    _l = _marpaESLIFValueResultp->u.a.sizel;                            \
   } while (0)
 
 #define MARPAESLIF_GET_PTR(marpaESLIFValuep, indicei, _p) do {          \
@@ -177,7 +177,7 @@ static        short _marpaESLIF_bootstrap_G1_action_luascript_statementb(void *u
       goto err;                                                         \
     }                                                                   \
                                                                         \
-    _p = _marpaESLIFValueResultp->u.p;                                  \
+    _p = _marpaESLIFValueResultp->u.p.p;                                \
   } while (0)
 
 #define MARPAESLIF_GETANDFORGET_PTR(marpaESLIFValuep, indicei, _p) do { \
@@ -192,7 +192,7 @@ static        short _marpaESLIF_bootstrap_G1_action_luascript_statementb(void *u
       goto err;                                                         \
     }                                                                   \
                                                                         \
-    _p = _marpaESLIFValueResult.u.p;                                    \
+    _p = _marpaESLIFValueResult.u.p.p;                                  \
   } while (0)
 
 #define MARPAESLIF_GETANDFORGET_ARRAY(marpaESLIFValuep, indicei, _p, _l) do { \
@@ -207,8 +207,8 @@ static        short _marpaESLIF_bootstrap_G1_action_luascript_statementb(void *u
       goto err;                                                         \
     }                                                                   \
                                                                         \
-    _p = _marpaESLIFValueResult.u.p;                                    \
-    _l = _marpaESLIFValueResult.sizel;                                  \
+    _p = _marpaESLIFValueResult.u.a.p;                                  \
+    _l = _marpaESLIFValueResult.u.a.sizel;                              \
   } while (0)
 
 #define MARPAESLIF_IS_UNDEF(marpaESLIFValuep, indicei, rcb) do {        \
@@ -284,11 +284,10 @@ static        short _marpaESLIF_bootstrap_G1_action_luascript_statementb(void *u
     marpaESLIFValueResult_t _marpaESLIFValueResult;                     \
                                                                         \
     _marpaESLIFValueResult.contextp        = _contextp;                 \
-    _marpaESLIFValueResult.sizel           = 0;                         \
     _marpaESLIFValueResult.representationp = NULL;                      \
-    _marpaESLIFValueResult.shallowb        = 0;                         \
     _marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_PTR; \
-    _marpaESLIFValueResult.u.p             = _p;                        \
+    _marpaESLIFValueResult.u.p.p           = _p;                        \
+    _marpaESLIFValueResult.u.p.shallowb    = 0;                         \
                                                                         \
     if (! _marpaESLIFValue_stack_setb(marpaESLIFValuep, indicei, &_marpaESLIFValueResult)) { \
       goto err;                                                         \
@@ -300,11 +299,11 @@ static        short _marpaESLIF_bootstrap_G1_action_luascript_statementb(void *u
     marpaESLIFValueResult_t _marpaESLIFValueResult;                     \
                                                                         \
     _marpaESLIFValueResult.contextp        = _contextp;                 \
-    _marpaESLIFValueResult.sizel           = _l;                        \
     _marpaESLIFValueResult.representationp = NULL;                      \
-    _marpaESLIFValueResult.shallowb        = 0;                         \
     _marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_ARRAY; \
-    _marpaESLIFValueResult.u.p             = _p;                        \
+    _marpaESLIFValueResult.u.a.p           = _p;                        \
+    _marpaESLIFValueResult.u.a.shallowb    = 0;                         \
+    _marpaESLIFValueResult.u.a.sizel       = _l;                        \
                                                                         \
     if (! _marpaESLIFValue_stack_setb(marpaESLIFValuep, indicei, &_marpaESLIFValueResult)) { \
       goto err;                                                         \
@@ -316,9 +315,7 @@ static        short _marpaESLIF_bootstrap_G1_action_luascript_statementb(void *u
     marpaESLIFValueResult_t _marpaESLIFValueResult;                     \
                                                                         \
     _marpaESLIFValueResult.contextp        = _contextp;                 \
-    _marpaESLIFValueResult.sizel           = 0;                         \
     _marpaESLIFValueResult.representationp = NULL;                      \
-    _marpaESLIFValueResult.shallowb        = 0;                         \
     _marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_UNDEF; \
                                                                         \
     if (! _marpaESLIFValue_stack_setb(marpaESLIFValuep, indicei, &_marpaESLIFValueResult)) { \
@@ -331,9 +328,7 @@ static        short _marpaESLIF_bootstrap_G1_action_luascript_statementb(void *u
     marpaESLIFValueResult_t _marpaESLIFValueResult;                     \
                                                                         \
     _marpaESLIFValueResult.contextp        = _contextp;                 \
-    _marpaESLIFValueResult.sizel           = 0;                         \
     _marpaESLIFValueResult.representationp = NULL;                      \
-    _marpaESLIFValueResult.shallowb        = 0;                         \
     _marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_INT; \
     _marpaESLIFValueResult.u.i             = _i;                        \
                                                                         \
@@ -347,9 +342,7 @@ static        short _marpaESLIF_bootstrap_G1_action_luascript_statementb(void *u
     marpaESLIFValueResult_t _marpaESLIFValueResult;                     \
                                                                         \
     _marpaESLIFValueResult.contextp        = _contextp;                 \
-    _marpaESLIFValueResult.sizel           = 0;                         \
     _marpaESLIFValueResult.representationp = NULL;                      \
-    _marpaESLIFValueResult.shallowb        = 0;                         \
     _marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_BOOL; \
     _marpaESLIFValueResult.u.y             = _y;                        \
                                                                         \
@@ -3601,6 +3594,7 @@ static short _marpaESLIF_bootstrap_G1_action_single_symbol_4b(void *userDatavp, 
   char                                 *modifiers             = NULL;
   marpaESLIFGrammar_t                   marpaESLIFGrammar; /* Fake grammar for the same reason */
   marpaESLIFValueResult_t               marpaESLIFValueResult;
+  size_t                                sizel;
   marpaESLIF_matcher_value_t            rci;
   void                                 *bytep = NULL;
   size_t                                bytel;
@@ -3642,19 +3636,20 @@ static short _marpaESLIF_bootstrap_G1_action_single_symbol_4b(void *userDatavp, 
     /* Got modifiers. Per def this is an sequence of ASCII characters. */
     /* For a character class it is something like ":xxxxx" */
     /* We made sure that terminal_matcherb() always returns in marpaESLIFValueResult */
-    /* an area already malloc, ending with a hiden NUL byte. So we can take this */
+    /* an array already malloced, ending with a hiden NUL byte. So we can take this */
     /* memory as-is. */
 #ifndef MARPAESLIF_NTRACE
     /* Paranoid test */
-    if (marpaESLIFValueResult.sizel <= 0) {
+    if (marpaESLIFValueResult.u.a.sizel <= 0) {
       MARPAESLIF_ERROR(marpaESLIFp, "Match of character class modifiers returned empty size");
       goto err;
     }
 #endif
-    modifiers = (char *) marpaESLIFValueResult.u.p;
+    modifiers = (char *) marpaESLIFValueResult.u.a.p;
+    sizel = marpaESLIFValueResult.u.a.sizel;
   } else {
     /* Because we use this value just below */
-    marpaESLIFValueResult.sizel = 0;
+    sizel = 0;
   }
 
   /* We leave the quotes because terminal_newp(), in case of a STRING, removes the surrounding characters. */
@@ -3679,8 +3674,8 @@ static short _marpaESLIF_bootstrap_G1_action_single_symbol_4b(void *userDatavp, 
   singleSymbolp->u.quotedStringp->bytel     = bytel;
   modifiers = NULL; /* modifiers is in singleSymbolp */
   bytep = NULL; /* bytep is in singleSymbolp */
-  if (marpaESLIFValueResult.sizel > 0) {
-    singleSymbolp->u.quotedStringp->bytel -= (marpaESLIFValueResult.sizel + 1);  /* ":xxxx" */
+  if (sizel > 0) {
+    singleSymbolp->u.quotedStringp->bytel -= (sizel + 1);  /* ":xxxx" */
   }
 
   MARPAESLIF_SET_PTR(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_SINGLE_SYMBOL, singleSymbolp);
@@ -5733,6 +5728,7 @@ static inline marpaESLIF_bootstrap_utf_string_t *_marpaESLIF_bootstrap_regex_to_
   marpaESLIFRecognizer_t            *marpaESLIFRecognizerp = NULL; /* Fake recognizer to use the internal regex */
   marpaESLIFGrammar_t                marpaESLIFGrammar; /* Fake grammar for the same reason */
   marpaESLIFValueResult_t            marpaESLIFValueResult;
+  size_t                             sizel;
   marpaESLIF_matcher_value_t         rci;
 
   /* It is a non-sense to have a null lexeme */
@@ -5774,15 +5770,16 @@ static inline marpaESLIF_bootstrap_utf_string_t *_marpaESLIF_bootstrap_regex_to_
     /* memory as-is. */
 #ifndef MARPAESLIF_NTRACE
     /* Paranoid mode */
-    if (marpaESLIFValueResult.sizel <= 0) {
+    if (marpaESLIFValueResult.u.a.sizel <= 0) {
       MARPAESLIF_ERROR(marpaESLIFp, "Match of character class modifiers returned empty size");
       goto err;
     }
 #endif
-    modifiers = (char *) marpaESLIFValueResult.u.p;
+    modifiers = (char *) marpaESLIFValueResult.u.a.p;
+    sizel = marpaESLIFValueResult.u.a.sizel;
   } else {
     /* Because we use this value just below */
-    marpaESLIFValueResult.sizel = 0;
+    sizel = 0;
   }
 
   stringp = (marpaESLIF_bootstrap_utf_string_t *) malloc(sizeof(marpaESLIF_bootstrap_utf_string_t));
@@ -5793,15 +5790,15 @@ static inline marpaESLIF_bootstrap_utf_string_t *_marpaESLIF_bootstrap_regex_to_
   /* By definition a regular expression is a lexeme in this form: /xxxx/modifiers */
   /* we have already catched the modifiers. But we have to shift the UTF-8 buffer: */
   /* - We know per def that it is starting with the "/" ASCII character (one byte) */
-  /* - We know per def that it is endiing with "/modifiers", all of them being ASCII characters (one byte each) */
+  /* - We know per def that it is ending with "/modifiers", all of them being ASCII characters (one byte each) */
   newbytel = bytel - 2; /* First "/" and last "/" */
   if (newbytel <= 0) {
     /* Empty regex !? */
     MARPAESLIF_ERROR(marpaESLIFp, "Empty regex");
     goto err;
   }
-  if (marpaESLIFValueResult.sizel > 0) {
-    newbytel -= marpaESLIFValueResult.sizel;  /* "xxxx" */
+  if (sizel > 0) {
+    newbytel -= sizel;  /* "xxxx" */
   }
   if (newbytel <= 0) {
     /* Still Empty regex !? */
@@ -5846,6 +5843,7 @@ static inline marpaESLIF_bootstrap_utf_string_t *_marpaESLIF_bootstrap_character
   marpaESLIFRecognizer_t            *marpaESLIFRecognizerp = NULL; /* Fake recognizer to use the internal regex */
   marpaESLIFGrammar_t                marpaESLIFGrammar; /* Fake grammar for the same reason */
   marpaESLIFValueResult_t            marpaESLIFValueResult;
+  size_t                             sizel;
   marpaESLIF_matcher_value_t         rci;
 
   /* It is a non-sense to have a null lexeme */
@@ -5854,7 +5852,7 @@ static inline marpaESLIF_bootstrap_utf_string_t *_marpaESLIF_bootstrap_character
     goto err;
   }
 
-  /* Extract opti from it */
+  /* Extract options from it */
   /* Thre are several methods...: */
   /* - Re-execute the sub-grammar as if it was a top grammar */
   /* - apply a regexp to extract the modifiers. */
@@ -5887,15 +5885,16 @@ static inline marpaESLIF_bootstrap_utf_string_t *_marpaESLIF_bootstrap_character
     /* memory as-is. */
 #ifndef MARPAESLIF_NTRACE
     /* Paranoid mode */
-    if (marpaESLIFValueResult.sizel <= 0) {
+    if (marpaESLIFValueResult.u.a.sizel <= 0) {
       MARPAESLIF_ERROR(marpaESLIFp, "Match of character class modifiers returned empty size");
       goto err;
     }
 #endif
-    modifiers = (char *) marpaESLIFValueResult.u.p;
+    modifiers = (char *) marpaESLIFValueResult.u.a.p;
+    sizel = marpaESLIFValueResult.u.a.sizel;
   } else {
     /* Because we use this value just below */
-    marpaESLIFValueResult.sizel = 0;
+    sizel = 0;
   }
 
   stringp = (marpaESLIF_bootstrap_utf_string_t *) malloc(sizeof(marpaESLIF_bootstrap_utf_string_t));
@@ -5907,8 +5906,8 @@ static inline marpaESLIF_bootstrap_utf_string_t *_marpaESLIF_bootstrap_character
   stringp->bytep     = bytep;
   stringp->bytel     = bytel;
   modifiers = NULL; /* modifiers is in singleSymbolp */
-  if (marpaESLIFValueResult.sizel > 0) {
-    stringp->bytel -= (marpaESLIFValueResult.sizel + 1);  /* ":xxxx" */
+  if (sizel > 0) {
+    stringp->bytel -= (sizel + 1);  /* ":xxxx" */
   }
 
   goto done;

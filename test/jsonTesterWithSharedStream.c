@@ -337,11 +337,10 @@ static short doparseb(genericLogger_t *genericLoggerp, marpaESLIFRecognizer_t *m
   
         /* Force read of the LCURLY lexeme */
         marpaESLIFAlternative.lexemes               = "LCURLY";
+        marpaESLIFAlternative.value.contextp        =  &context; /* Must be != NULL */
+        marpaESLIFAlternative.value.representationp = NULL; /* Default representation is ok */
         marpaESLIFAlternative.value.type            = MARPAESLIF_VALUE_TYPE_CHAR;
         marpaESLIFAlternative.value.u.c             = '{';
-        marpaESLIFAlternative.value.contextp        =  &context; /* Must be != NULL */
-        marpaESLIFAlternative.value.sizel           =  0; /* Not used */
-        marpaESLIFAlternative.value.representationp = NULL; /* Default representation is ok */
         marpaESLIFAlternative.grammarLengthl        = 1;
         if (! marpaESLIFRecognizer_lexeme_readb(marpaESLIFRecognizerObjectp, &marpaESLIFAlternative, 1 /* Length in the real input */)) {
           goto err;
@@ -364,10 +363,9 @@ static short doparseb(genericLogger_t *genericLoggerp, marpaESLIFRecognizer_t *m
         /* Force read of the RCURLY lexeme */
         marpaESLIFAlternative.lexemes               = "RCURLY";
         marpaESLIFAlternative.value.type            = MARPAESLIF_VALUE_TYPE_CHAR;
-        marpaESLIFAlternative.value.u.c             = '{';
         marpaESLIFAlternative.value.contextp        =  &context; /* Must be != NULL */
-        marpaESLIFAlternative.value.sizel           =  0; /* Not used */
         marpaESLIFAlternative.value.representationp = NULL; /* Default representation is ok */
+        marpaESLIFAlternative.value.u.c             = '{';
         marpaESLIFAlternative.grammarLengthl        = 1;
         if (! marpaESLIFRecognizer_lexeme_readb(marpaESLIFRecognizerp, &marpaESLIFAlternative, 1 /* Length in the real input */)) {
           goto err;

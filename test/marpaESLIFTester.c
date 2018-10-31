@@ -618,7 +618,6 @@ static short eventManagerb(int *eventCountip, marpaESLIFRecognizer_t *marpaESLIF
         marpaESLIFAlternative.value.type            = MARPAESLIF_VALUE_TYPE_CHAR;
         marpaESLIFAlternative.value.u.c             = *inputs;
         marpaESLIFAlternative.value.contextp        =  NULL; /* Not used */
-        marpaESLIFAlternative.value.sizel           =  0; /* Not used */
         /* We push a MARPAESLIF_VALUE_TYPE_CHAR : default representation is ok */
         marpaESLIFAlternative.value.representationp = NULL;
         /* marpaESLIFAlternative.value.representationp = alternativeRepresentation; */

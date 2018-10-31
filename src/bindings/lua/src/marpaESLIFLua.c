@@ -474,11 +474,10 @@ static short marpaESLIFLua_luaL_requiref(lua_State *L, const char *modname, lua_
     MARPAESLIFLUA_REF(marpaESLIFLuaValueContextp->L, *_p);              \
                                                                         \
     _marpaESLIFValueResult.contextp        = MARPAESLIFLUA_CONTEXT;     \
-    _marpaESLIFValueResult.sizel           = sizeof(int);               \
     _marpaESLIFValueResult.representationp = stringificationp;          \
-    _marpaESLIFValueResult.shallowb        = 0;                         \
     _marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_PTR; \
-    _marpaESLIFValueResult.u.p             = _p;                        \
+    _marpaESLIFValueResult.u.p.p           = _p;                        \
+    _marpaESLIFValueResult.u.p.shallowb    = 0;                         \
                                                                         \
     if (! marpaESLIFValue_stack_setb(marpaESLIFValuep, indicei, &_marpaESLIFValueResult)) { \
       marpaESLIFLua_luaL_errorf(L, "marpaESLIFValue_stack_setb failure, %s", strerror(errno)); \
@@ -3422,11 +3421,12 @@ static short marpaESLIFLua_pushValueb(marpaESLIFLuaValueContext_t *marpaESLIFLua
 
   if (bytep != NULL) {
     /* Fake a marpaESLIFValueResult */
-    marpaESLIFValueResult.type     = MARPAESLIF_VALUE_TYPE_ARRAY;
-    marpaESLIFValueResult.contextp = NULL;
-    marpaESLIFValueResult.sizel    = bytel;
-    marpaESLIFValueResult.u.p      = bytep;
-    marpaESLIFValueResultp         = &marpaESLIFValueResult;
+    marpaESLIFValueResult.type         = MARPAESLIF_VALUE_TYPE_ARRAY;
+    marpaESLIFValueResult.contextp     = NULL;
+    marpaESLIFValueResult.u.a.p        = bytep;
+    marpaESLIFValueResult.u.a.shallowb = 1;
+    marpaESLIFValueResult.u.a.sizel    = bytel;
+    marpaESLIFValueResultp             = &marpaESLIFValueResult;
   } else {
     marpaESLIFValueResultp = marpaESLIFValue_stack_getp(marpaESLIFValuep, stackindicei);
     if (marpaESLIFValueResultp == NULL) {
@@ -3475,7 +3475,7 @@ static short marpaESLIFLua_representationb(void *userDatavp, marpaESLIFValueResu
     goto err;
   }
 
-  MARPAESLIFLUA_DEREF(L, * (int *) marpaESLIFValueResultp->u.p);
+  MARPAESLIFLUA_DEREF(L, * (int *) marpaESLIFValueResultp->u.p.p);
   s = lua_tolstring(L, -1, &l);
   if ((s != NULL) && (l > 0)) {
     /* No guarantee this will survive the lua call, so we keep an explicitly copy */
@@ -4217,12 +4217,11 @@ static int marpaESLIFLua_marpaESLIFRecognizer_lexemeAlternativei(lua_State *L)
   }
 
   marpaESLIFAlternative.lexemes               = (char *) names;
-  marpaESLIFAlternative.value.type            = MARPAESLIF_VALUE_TYPE_PTR;
-  marpaESLIFAlternative.value.u.p             = p;
   marpaESLIFAlternative.value.contextp        = MARPAESLIFLUA_CONTEXT;
-  marpaESLIFAlternative.value.sizel           = 0; /* Not used */
   marpaESLIFAlternative.value.representationp = marpaESLIFLua_representationb;
-  marpaESLIFAlternative.value.shallowb        = 0; /* C.f. marpaESLIF_valueFreeCallbackv */
+  marpaESLIFAlternative.value.type            = MARPAESLIF_VALUE_TYPE_PTR;
+  marpaESLIFAlternative.value.u.p.p           = p;
+  marpaESLIFAlternative.value.u.p.shallowb    = 0; /* C.f. marpaESLIF_valueFreeCallbackv */
   marpaESLIFAlternative.grammarLengthl        = grammarLengthl;
 
   /* Clear the stack */
@@ -4364,12 +4363,11 @@ static int marpaESLIFLua_marpaESLIFRecognizer_lexemeReadi(lua_State *L)
   }
 
   marpaESLIFAlternative.lexemes               = (char *) names;
-  marpaESLIFAlternative.value.type            = MARPAESLIF_VALUE_TYPE_PTR;
-  marpaESLIFAlternative.value.u.p             = p;
   marpaESLIFAlternative.value.contextp        = MARPAESLIFLUA_CONTEXT;
-  marpaESLIFAlternative.value.sizel           = 0; /* Not used */
   marpaESLIFAlternative.value.representationp = marpaESLIFLua_representationb;
-  marpaESLIFAlternative.value.shallowb        = 0; /* C.f. marpaESLIFLua_valueFreeCallbackv */
+  marpaESLIFAlternative.value.type            = MARPAESLIF_VALUE_TYPE_PTR;
+  marpaESLIFAlternative.value.u.p.p           = p;
+  marpaESLIFAlternative.value.u.p.shallowb    = 0; /* C.f. marpaESLIFLua_valueFreeCallbackv */
   marpaESLIFAlternative.grammarLengthl        = grammarLengthl;
 
   /* Clear the stack */
