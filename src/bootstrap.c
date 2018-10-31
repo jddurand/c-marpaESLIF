@@ -1956,7 +1956,7 @@ static short _marpaESLIF_bootstrap_G1_action_string_literalb(void *userDatavp, m
   }
   *p = '\0'; /* For convenience */
 
-  stringp = _marpaESLIF_string_newp(marpaESLIFp, "UTF-8", charp, charl);
+  stringp = _marpaESLIF_string_newp(marpaESLIFp, (char *) MARPAESLIF_UTF8_STRING, charp, charl);
   if (stringp == NULL) {
     goto err;
   }
@@ -3350,7 +3350,7 @@ static inline short _marpaESLIF_bootstrap_G1_action_priority_flat_ruleb(marpaESL
       /* If naming is not NULL, it is guaranteed to be an UTF-8 thingy */
       rulep = _marpaESLIF_rule_newp(marpaESLIFp,
                                     grammarp,
-                                    (namingp != NULL) ? "UTF-8" : NULL, /* descEncodings */
+                                    (namingp != NULL) ? (char *) MARPAESLIF_UTF8_STRING : NULL, /* descEncodings */
                                     (namingp != NULL) ? namingp->bytep : NULL, /* descs */
                                     (namingp != NULL) ? namingp->bytel : 0, /* descl */
                                     (alternativep->forcedLhsp != NULL) ? alternativep->forcedLhsp->idi : lhsp->idi,
@@ -4182,7 +4182,7 @@ static short _marpaESLIF_bootstrap_G1_action_quantified_ruleb(void *userDatavp, 
   /* If naming is not NULL, it is guaranteed to be an UTF-8 thingy */
   rulep = _marpaESLIF_rule_newp(marpaESLIFp,
                                 grammarp,
-                                (namingp != NULL) ? "UTF-8" : NULL, /* descEncodings */
+                                (namingp != NULL) ? (char *) MARPAESLIF_UTF8_STRING : NULL, /* descEncodings */
                                 (namingp != NULL) ? namingp->bytep : NULL, /* descs */
                                 (namingp != NULL) ? namingp->bytel : 0, /* descl */
                                 lhsp->idi,
@@ -4311,7 +4311,7 @@ static short _marpaESLIF_bootstrap_G1_action_desc_ruleb(void *userDatavp, marpaE
   /* Why hardcoded to UTF-8 ? Because a quote string is implemented as a regexp in unicode mode. */
   /* Therefore it is guaranteed that the match was done on UTF-8 bytes; regardless of the encoding */
   /* of the original input. */
-  grammarp->descp = _marpaESLIF_string_newp(marpaESLIFp, "UTF-8", newbytep, newbytel);
+  grammarp->descp = _marpaESLIF_string_newp(marpaESLIFp, (char *) MARPAESLIF_UTF8_STRING, newbytep, newbytel);
   if (grammarp->descp == NULL) {
     goto err;
   }
@@ -4411,7 +4411,7 @@ static short _marpaESLIF_bootstrap_G1_action_empty_ruleb(void *userDatavp, marpa
   MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Creating empty rule %s at grammar level %d", lhsp->descp->asciis, grammarp->leveli);
   rulep = _marpaESLIF_rule_newp(marpaESLIFp,
                                 grammarp,
-                                (namingp != NULL) ? "UTF-8" : NULL, /* descEncodings */
+                                (namingp != NULL) ? (char *) MARPAESLIF_UTF8_STRING : NULL, /* descEncodings */
                                 (namingp != NULL) ? namingp->bytep : NULL, /* descs */
                                 (namingp != NULL) ? namingp->bytel : 0, /* descl */
                                 lhsp->idi,
@@ -5684,7 +5684,7 @@ static short _marpaESLIF_bootstrap_G1_action_exception_statementb(void *userData
   /* If naming is not NULL, it is guaranteed to be an UTF-8 thingy */
   rulep = _marpaESLIF_rule_newp(marpaESLIFp,
                                 grammarp,
-                                (namingp != NULL) ? "UTF-8" : NULL, /* descEncodings */
+                                (namingp != NULL) ? (char *) MARPAESLIF_UTF8_STRING : NULL, /* descEncodings */
                                 (namingp != NULL) ? namingp->bytep : NULL, /* descs */
                                 (namingp != NULL) ? namingp->bytel : 0, /* descl */
                                 lhsp->idi,

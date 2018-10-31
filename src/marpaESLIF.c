@@ -207,6 +207,7 @@ static const marpaESLIF_stringGenerator_t  marpaESLIF_stringGeneratorTemplate = 
 };
 
 static const char *MARPAESLIF_EMPTY_STRING = "";
+static const char *MARPAESLIF_UTF8_STRING = "UTF-8";
 static const char *MARPAESLIF_UNKNOWN_STRING = "???";
 
 /* Please note that EVERY _marpaESLIFRecognizer_xxx() method is logging at start and at return */
@@ -455,9 +456,14 @@ static inline marpaESLIF_string_t *_marpaESLIF_string_newp(marpaESLIF_t *marpaES
     stringp->asciis = (char *) MARPAESLIF_EMPTY_STRING;
     /* Copy encodingasciis if any */
     if (encodingasciis != NULL) {
-      if ((stringp->encodingasciis = strdup(encodingasciis)) == NULL) {
-        MARPAESLIF_ERRORF(marpaESLIFp, "strdup failure, %s", strerror(errno));
-        goto err;
+      if (encodingasciis == MARPAESLIF_UTF8_STRING) {
+        /* Internal variable used to avoid unnecessary strdup() call */
+        stringp->encodingasciis = (char *) MARPAESLIF_UTF8_STRING;
+      } else {
+        if ((stringp->encodingasciis = strdup(encodingasciis)) == NULL) {
+          MARPAESLIF_ERRORF(marpaESLIFp, "strdup failure, %s", strerror(errno));
+          goto err;
+        }
       }
     }
   }
@@ -518,9 +524,14 @@ static inline marpaESLIF_string_t *_marpaESLIF_string_clonep(marpaESLIF_t *marpa
   }
 
   if (stringp->encodingasciis != NULL) {
-    rcp->encodingasciis = encodingasciis = strdup(stringp->encodingasciis);
-    if (encodingasciis == NULL) {
-      goto err;
+    if (stringp->encodingasciis == MARPAESLIF_UTF8_STRING) {
+      /* Internal variable used to avoid unnecesary strdup() call */
+      rcp->encodingasciis = (char *) MARPAESLIF_UTF8_STRING;
+    } else {
+      rcp->encodingasciis = encodingasciis = strdup(stringp->encodingasciis);
+      if (encodingasciis == NULL) {
+        goto err;
+      }
     }
   }
 
@@ -542,7 +553,7 @@ static inline void _marpaESLIF_string_freev(marpaESLIF_string_t *stringp)
     if ((stringp->bytep != NULL) && (stringp->bytep != MARPAESLIF_EMPTY_STRING)) {
       free(stringp->bytep);
     }
-    if (stringp->encodingasciis != NULL) {
+    if ((stringp->encodingasciis != NULL) && (stringp->encodingasciis != MARPAESLIF_UTF8_STRING)) {
       free(stringp->encodingasciis);
     }
     if ((stringp->asciis != NULL) && (stringp->asciis != MARPAESLIF_EMPTY_STRING)) {
@@ -671,7 +682,7 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
   /* ----------- Terminal Description ------------ */
   if (descs == NULL) {
     /* Get an ASCII version of the content */
-    content2descp = _marpaESLIF_string_newp(marpaESLIFp, "UTF-8", utf8s, utf8l);
+    content2descp = _marpaESLIF_string_newp(marpaESLIFp, (char *) MARPAESLIF_UTF8_STRING, utf8s, utf8l);
     if (content2descp == NULL) {
       goto err;
     }
@@ -4433,7 +4444,7 @@ static inline char *_marpaESLIF_utf82printableascii_newp(marpaESLIF_t *marpaESLI
   char                   *asciis;
   unsigned char           c;
 
-  asciis = _marpaESLIF_charconvb(marpaESLIFp, "ASCII//TRANSLIT//IGNORE", "UTF-8", descs, descl, &asciil, NULL /* fromEncodingsp */, NULL /* tconvpp */, 1 /* eofb */, NULL /* byteleftsp */, NULL /* byteleftlp */, NULL /* byteleftalloclp */);
+  asciis = _marpaESLIF_charconvb(marpaESLIFp, "ASCII//TRANSLIT//IGNORE", (char *) MARPAESLIF_UTF8_STRING, descs, descl, &asciil, NULL /* fromEncodingsp */, NULL /* tconvpp */, 1 /* eofb */, NULL /* byteleftsp */, NULL /* byteleftlp */, NULL /* byteleftalloclp */);
   if (asciis == NULL) {
     asciis = (char *) _marpaESLIF_utf82printableascii_defaultp;
     asciil = strlen(asciis);
@@ -4650,9 +4661,14 @@ static inline char *_marpaESLIF_charconvb(marpaESLIF_t *marpaESLIFp, char *toEnc
 
   if (fromEncodingsp != NULL) {
     if (fromEncodings != NULL) {
-      if ((*fromEncodingsp = strdup(fromEncodings)) == NULL) {
-	MARPAESLIF_ERRORF(marpaESLIFp, "strdup failure, %s", strerror(errno));
-	goto err;
+      if (fromEncodings == MARPAESLIF_UTF8_STRING) {
+        /* Internal constant used to avoid unnecessary strdup() call */
+        *fromEncodingsp = (char *) MARPAESLIF_UTF8_STRING;
+      } else {
+        if ((*fromEncodingsp = strdup(fromEncodings)) == NULL) {
+          MARPAESLIF_ERRORF(marpaESLIFp, "strdup failure, %s", strerror(errno));
+          goto err;
+        }
       }
     } else {
       /* Get the guess from tconv */
@@ -5433,7 +5449,7 @@ short marpaESLIFGrammar_grammarshowscripb(marpaESLIFGrammar_t *marpaESLIFGrammar
   }
   
   if ((marpaESLIFGrammarp->luadescp == NULL) && (marpaESLIFGrammarp->luabytep != NULL) && (marpaESLIFGrammarp->luabytel > 0)) {
-    marpaESLIFGrammarp->luadescp = _marpaESLIF_string_newp(marpaESLIFGrammarp->marpaESLIFp, "UTF-8" /* Came from the grammar, we know it is UTF-8 */, marpaESLIFGrammarp->luabytep, marpaESLIFGrammarp->luabytel);
+    marpaESLIFGrammarp->luadescp = _marpaESLIF_string_newp(marpaESLIFGrammarp->marpaESLIFp, (char *) MARPAESLIF_UTF8_STRING /* Came from the grammar, we know it is UTF-8 */, marpaESLIFGrammarp->luabytep, marpaESLIFGrammarp->luabytel);
     if (marpaESLIFGrammarp->luadescp == NULL) {
       goto err;
     }
@@ -9834,7 +9850,7 @@ static inline short _marpaESLIFRecognizer_readb(marpaESLIFRecognizer_t *marpaESL
             /*     - If encodings and marpaESLIF_streamp->encodings are the same, current conversion engine continue.                                            */
             /* ************************************************************************************************************************************************* */
             /* Continue with current conversion engine */
-            utf8s = _marpaESLIF_charconvb(marpaESLIFp, "UTF-8", marpaESLIF_streamp->encodings, inputs, inputl, &utf8l, NULL /* encodingsp */, &(marpaESLIF_streamp->tconvp), eofb, &(marpaESLIF_streamp->bytelefts), &(marpaESLIF_streamp->byteleftl), &(marpaESLIF_streamp->byteleftallocl));
+            utf8s = _marpaESLIF_charconvb(marpaESLIFp, (char *) MARPAESLIF_UTF8_STRING, marpaESLIF_streamp->encodings, inputs, inputl, &utf8l, NULL /* encodingsp */, &(marpaESLIF_streamp->tconvp), eofb, &(marpaESLIF_streamp->bytelefts), &(marpaESLIF_streamp->byteleftl), &(marpaESLIF_streamp->byteleftallocl));
             if (utf8s == NULL) {
               goto err;
             }
@@ -9847,7 +9863,7 @@ static inline short _marpaESLIFRecognizer_readb(marpaESLIFRecognizer_t *marpaESL
           /*   - user gave NO encoding (encodings == NULL)                                                                                                     */
           /* ************************************************************************************************************************************************* */
           /* Continue with current conversion engine */
-          utf8s = _marpaESLIF_charconvb(marpaESLIFp, "UTF-8", marpaESLIF_streamp->encodings, inputs, inputl, &utf8l, NULL /* encodingsp */, &(marpaESLIF_streamp->tconvp), eofb, &(marpaESLIF_streamp->bytelefts), &(marpaESLIF_streamp->byteleftl), &(marpaESLIF_streamp->byteleftallocl));
+          utf8s = _marpaESLIF_charconvb(marpaESLIFp, (char *) MARPAESLIF_UTF8_STRING, marpaESLIF_streamp->encodings, inputs, inputl, &utf8l, NULL /* encodingsp */, &(marpaESLIF_streamp->tconvp), eofb, &(marpaESLIF_streamp->bytelefts), &(marpaESLIF_streamp->byteleftl), &(marpaESLIF_streamp->byteleftallocl));
           if (utf8s == NULL) {
             goto err;
           }
@@ -11327,7 +11343,7 @@ static inline short _marpaESLIFRecognizer_encoding_eqb(marpaESLIFRecognizer_t *m
   }
 
   /* First we want to make sure that inputs is in UTF-8, input encoding is free though ASCII is recommended as per the documentation */
-  utf8s = _marpaESLIF_charconvb(marpaESLIFRecognizerParentp->marpaESLIFp, "UTF-8", NULL /* fromEncodings */, inputs, inputl, &utf8l, NULL /* fromEncodingsp */, NULL /* tconvpp */, 1 /* eofb */, NULL /* byteleftsp */, NULL /* byteleftlp */, NULL /* byteleftalloclp */);
+  utf8s = _marpaESLIF_charconvb(marpaESLIFRecognizerParentp->marpaESLIFp, (char *) MARPAESLIF_UTF8_STRING, NULL /* fromEncodings */, inputs, inputl, &utf8l, NULL /* fromEncodingsp */, NULL /* tconvpp */, 1 /* eofb */, NULL /* byteleftsp */, NULL /* byteleftlp */, NULL /* byteleftalloclp */);
   if (utf8s == NULL) {
     goto err;
   }
@@ -11411,7 +11427,7 @@ static inline short _marpaESLIFRecognizer_flush_charconvb(marpaESLIFRecognizer_t
     goto err;
   }
 
-  utf8s = _marpaESLIF_charconvb(marpaESLIFp, NULL /* toEncodings, was "UTF-8" */, NULL /* fromEncodings */, NULL /* srcs */, 0 /* srcl */, &utf8l /* dstlp */, NULL /* fromEncodingsp */, &(marpaESLIF_streamp->tconvp), 1 /* eofb */, &(marpaESLIF_streamp->bytelefts), &(marpaESLIF_streamp->byteleftl), &(marpaESLIF_streamp->byteleftallocl));
+  utf8s = _marpaESLIF_charconvb(marpaESLIFp, NULL /* toEncodings, was MARPAESLIF_UTF8_STRING */, NULL /* fromEncodings */, NULL /* srcs */, 0 /* srcl */, &utf8l /* dstlp */, NULL /* fromEncodingsp */, &(marpaESLIF_streamp->tconvp), 1 /* eofb */, &(marpaESLIF_streamp->bytelefts), &(marpaESLIF_streamp->byteleftl), &(marpaESLIF_streamp->byteleftallocl));
   if (utf8s == NULL) {
     goto err;
   }
@@ -11501,7 +11517,7 @@ static inline short _marpaESLIFRecognizer_start_charconvb(marpaESLIFRecognizer_t
   }
 
   /* Convert input */
-  utf8s = _marpaESLIF_charconvb(marpaESLIFp, "UTF-8", encodingasciis, srcs, srcl, &utf8l, &(marpaESLIF_streamp->encodings), &(marpaESLIF_streamp->tconvp), eofb, &(marpaESLIF_streamp->bytelefts), &(marpaESLIF_streamp->byteleftl), &(marpaESLIF_streamp->byteleftallocl));
+  utf8s = _marpaESLIF_charconvb(marpaESLIFp, (char *) MARPAESLIF_UTF8_STRING, encodingasciis, srcs, srcl, &utf8l, &(marpaESLIF_streamp->encodings), &(marpaESLIF_streamp->tconvp), eofb, &(marpaESLIF_streamp->bytelefts), &(marpaESLIF_streamp->byteleftl), &(marpaESLIF_streamp->byteleftallocl));
   if (utf8s == NULL) {
     goto err;
   }
@@ -11520,7 +11536,7 @@ static inline short _marpaESLIFRecognizer_start_charconvb(marpaESLIFRecognizer_t
   marpaESLIF_streamp->utfb = 1;
 
   /* Get an UTF-8 version of encoding - always set at this stage in marpaESLIF_streamp->encodings */
-  encodingutf8s = _marpaESLIF_charconvb(marpaESLIFp, "UTF-8", "ASCII", marpaESLIF_streamp->encodings, strlen(marpaESLIF_streamp->encodings), &encodingutf8l, NULL /* fromEncodingsp */, NULL /* tconvpp */, 1 /* eofb */, NULL /* byteleftsp */, NULL /* byteleftlp */, NULL /* byteleftalloclp */);
+  encodingutf8s = _marpaESLIF_charconvb(marpaESLIFp, (char *) MARPAESLIF_UTF8_STRING, "ASCII", marpaESLIF_streamp->encodings, strlen(marpaESLIF_streamp->encodings), &encodingutf8l, NULL /* fromEncodingsp */, NULL /* tconvpp */, 1 /* eofb */, NULL /* byteleftsp */, NULL /* byteleftlp */, NULL /* byteleftalloclp */);
   if (encodingutf8s == NULL) {
     goto err;
   }
