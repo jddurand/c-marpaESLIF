@@ -77,7 +77,8 @@ typedef enum marpaESLIFValueType {
   MARPAESLIF_VALUE_TYPE_DOUBLE,
   MARPAESLIF_VALUE_TYPE_PTR,
   MARPAESLIF_VALUE_TYPE_ARRAY,
-  MARPAESLIF_VALUE_TYPE_BOOL
+  MARPAESLIF_VALUE_TYPE_BOOL,
+  MARPAESLIF_VALUE_TYPE_STRING
 } marpaESLIFValueType_t;
 
 typedef short (*marpaESLIFValueRuleCallback_t)(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
@@ -99,13 +100,14 @@ struct marpaESLIFValueResult {
   short                      shallowb;          /* In case of PTR or ARRAY, indicate if this is a shallow pointer */
   marpaESLIFValueType_t      type;              /* Type for tagging the following union */
   union {
-    char    c;                                  /* Value is a char */
-    short   b;                                  /* Value is a short */
-    int     i;                                  /* Value is an int */
-    long    l;                                  /* Value is a long */
-    float   f;                                  /* Value is a float */
-    double  d;                                  /* Value is a double */
-    void   *p;                                  /* Value is a pointer */
+    char                c;                      /* Value is a char */
+    short               b;                      /* Value is a short */
+    int                 i;                      /* Value is an int */
+    long                l;                      /* Value is a long */
+    float               f;                      /* Value is a float */
+    double              d;                      /* Value is a double */
+    void               *p;                      /* Value is a pointer */
+    marpaESLIFString_t  s;                      /* Value is a string */
   } u;
 };
 
@@ -127,6 +129,7 @@ typedef short (*marpaESLIFValueResultTransformDouble_t)(void *userDatavp, void *
 typedef short (*marpaESLIFValueResultTransformPtr_t)(void *userDatavp, void *contextp, void *p);
 typedef short (*marpaESLIFValueResultTransformArray_t)(void *userDatavp, void *contextp, void *p, size_t sizel);
 typedef short (*marpaESLIFValueResultTransformBool_t)(void *userDatavp, void *contextp, short b);
+typedef short (*marpaESLIFValueResultTransformString_t)(void *userDatavp, void *contextp, unsigned char *p, size_t sizel);
 typedef struct marpaESLIFValueResultTransform {
   marpaESLIFValueResultTransformUndef_t undefTransformerp;
   marpaESLIFValueResultTransformChar_t charTransformerp;
@@ -138,6 +141,7 @@ typedef struct marpaESLIFValueResultTransform {
   marpaESLIFValueResultTransformPtr_t ptrTransformerp;
   marpaESLIFValueResultTransformArray_t arrayTransformerp;
   marpaESLIFValueResultTransformBool_t boolTransformerp;
+  marpaESLIFValueResultTransformString_t stringTransformerp;
 } marpaESLIFValueResultTransform_t;
 
 typedef struct marpaESLIFValueOption {
