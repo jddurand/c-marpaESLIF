@@ -1649,20 +1649,17 @@ CODE:
   marpaESLIF_ContextFreev(aTHX_ (MarpaX_ESLIF_Engine) Perl_MarpaX_ESLIF_Enginep);
 
 =for comment
-  /* ======================================================================= */
-  /* MarpaX::ESLIF                                                           */
-  /* ======================================================================= */
+  /* ----------------------------------------------------------------------- */
+  /* MarpaX::ESLIF::Engine::version                                          */
+  /* ----------------------------------------------------------------------- */
 =cut
 
-MODULE = MarpaX::ESLIF            PACKAGE = MarpaX::ESLIF
-
-PROTOTYPES: ENABLE
-
 char *
-version(Perl_MarpaX_ESLIF_Enginep)
+version(Perl_packagep, Perl_MarpaX_ESLIF_Enginep)
+  SV *Perl_packagep;
   void *Perl_MarpaX_ESLIF_Enginep;
 PREINIT:
-  static const char *funcs = "MarpaX::ESLIF::version";
+  static const char *funcs = "MarpaX::ESLIF::Engine::version";
 CODE:
   char              *versions;
 

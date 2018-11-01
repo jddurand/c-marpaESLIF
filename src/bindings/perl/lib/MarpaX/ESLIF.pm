@@ -138,6 +138,10 @@ sub _getLoggerInterface {
     return $_[0]->[1]
 }
 
+sub version {
+    MarpaX::ESLIF::Engine->version($_[0]->[0])
+}
+
 sub CLONE {
     #
     # One perl thread <-> one perl interpreter
