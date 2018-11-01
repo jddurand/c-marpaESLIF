@@ -17,7 +17,7 @@
     luaunpanicL_error(NULL, L, formatstring, __VA_ARGS__);      \
   } while (0)
 #undef marpaESLIFLua_luaL_newlib
-#define marpaESLIFLua_luaL_newlib(L, l) ! luaunpanicL_newlib(L, l)
+#define marpaESLIFLua_luaL_newlib(L, l) (! luaunpanicL_newlib(L, l))
 #include "../src/bindings/lua/src/marpaESLIFLua.c"
 
 /* Note that a lua integer is:
