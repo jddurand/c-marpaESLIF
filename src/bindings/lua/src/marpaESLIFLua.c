@@ -97,7 +97,7 @@ static short                           marpaESLIFLua_contextInitb(lua_State *L, 
 static void                            marpaESLIFLua_contextFreev(marpaESLIFLuaContext_t *marpaESLIFLuaContextp, short multitonDestroyModeb);
 static short                           marpaESLIFLua_grammarContextInitb(lua_State *L, int eslifStacki, marpaESLIFLuaGrammarContext_t *marpaESLIFLuaGrammarContextp, short unmanagedb);
 static short                           marpaESLIFLua_recognizerContextInitb(lua_State *L, int grammarStacki, int recognizerInterfaceStacki, int recognizerOrigStacki, marpaESLIFLuaRecognizerContext_t *marpaESLIFLuaRecognizerContextp, short unmanagedb);
-static short                           marpaESLIFLua_valueContextInitb(lua_State *L, int grammarStacki, int recognizerStacki, int valueInterfaceStacki, marpaESLIFLuaValueContext_t *marpaESLIFLuaValueContextp, short unmanagedb);
+static short                           marpaESLIFLua_valueContextInitb(lua_State *L, int grammarStacki, int recognizerStacki, int valueInterfaceStacki, marpaESLIFLuaValueContext_t *marpaESLIFLuaValueContextp, short unmanagedb, short grammarStackiCanBeZerob);
 static void                            marpaESLIFLua_grammarContextFreev(marpaESLIFLuaGrammarContext_t *marpaESLIFLuaGrammarContextp, short onStackb);
 static void                            marpaESLIFLua_recognizerContextCleanupv(marpaESLIFLuaRecognizerContext_t *marpaESLIFLuaRecognizerContextp);
 static void                            marpaESLIFLua_recognizerContextFreev(marpaESLIFLuaRecognizerContext_t *marpaESLIFLuaRecognizerContextp, short onStackb);
@@ -198,7 +198,7 @@ static int                             marpaESLIFLua_marpaESLIFRecognizer_readi(
 static int                             marpaESLIFLua_marpaESLIFRecognizer_inputi(lua_State *L);
 static int                             marpaESLIFLua_marpaESLIFRecognizer_progressLogi(lua_State *L);
 static int                             marpaESLIFLua_marpaESLIFRecognizer_lastCompletedOffseti(lua_State *L);
-static int                             marpaESLIFLua_marpaESLIFRecognizer_lastCompletedLenghti(lua_State *L);
+static int                             marpaESLIFLua_marpaESLIFRecognizer_lastCompletedLengthi(lua_State *L);
 static int                             marpaESLIFLua_marpaESLIFRecognizer_lastCompletedLocationi(lua_State *L);
 static int                             marpaESLIFLua_marpaESLIFRecognizer_linei(lua_State *L);
 static int                             marpaESLIFLua_marpaESLIFRecognizer_columni(lua_State *L);
@@ -264,7 +264,7 @@ static short marpaESLIFLua_luaL_unref(lua_State *L, int t, int ref);
 static short marpaESLIFLua_luaL_requiref(lua_State *L, const char *modname, lua_CFunction openf, int glb);
 /* Grrr lua defines that with a macro */
 #ifndef marpaESLIFLua_luaL_newlib
-#define marpaESLIFLua_luaL_newlib(L, l) (luaL_newlib(L, l), 0)
+#define marpaESLIFLua_luaL_newlib(L, l) (luaL_newlib(L, l), 1)
 #endif
 
 #define MARPAESLIFLUA_CREATEINTEGERCONSTANT(L, i) do {                  \
@@ -651,7 +651,7 @@ static short marpaESLIFLua_luaL_requiref(lua_State *L, const char *modname, lua_
   MARPAESLIFLUA_STORE_FUNCTION(L, "input",                           marpaESLIFLua_marpaESLIFRecognizer_inputi); \
   MARPAESLIFLUA_STORE_FUNCTION(L, "progressLog",                     marpaESLIFLua_marpaESLIFRecognizer_progressLogi); \
   MARPAESLIFLUA_STORE_FUNCTION(L, "lastCompletedOffset",             marpaESLIFLua_marpaESLIFRecognizer_lastCompletedOffseti); \
-  MARPAESLIFLUA_STORE_FUNCTION(L, "lastCompletedLength",             marpaESLIFLua_marpaESLIFRecognizer_lastCompletedLenghti); \
+  MARPAESLIFLUA_STORE_FUNCTION(L, "lastCompletedLength",             marpaESLIFLua_marpaESLIFRecognizer_lastCompletedLengthi); \
   MARPAESLIFLUA_STORE_FUNCTION(L, "lastCompletedLocation",           marpaESLIFLua_marpaESLIFRecognizer_lastCompletedLocationi); \
   MARPAESLIFLUA_STORE_FUNCTION(L, "line",                            marpaESLIFLua_marpaESLIFRecognizer_linei); \
   MARPAESLIFLUA_STORE_FUNCTION(L, "column",                          marpaESLIFLua_marpaESLIFRecognizer_columni); \
@@ -1602,7 +1602,7 @@ static void  marpaESLIFLua_valueContextFreev(marpaESLIFLuaValueContext_t *marpaE
 }
 
 /****************************************************************************/
-static short  marpaESLIFLua_valueContextInitb(lua_State *L, int grammarStacki, int recognizerStacki, int valueInterfaceStacki, marpaESLIFLuaValueContext_t *marpaESLIFLuaValueContextp, short unmanagedb)
+static short  marpaESLIFLua_valueContextInitb(lua_State *L, int grammarStacki, int recognizerStacki, int valueInterfaceStacki, marpaESLIFLuaValueContext_t *marpaESLIFLuaValueContextp, short unmanagedb, short grammarStackiCanBeZerob)
 /****************************************************************************/
 {
   static const char *funcs = "marpaESLIFLua_valueContextInitb";
@@ -1625,7 +1625,7 @@ static short  marpaESLIFLua_valueContextInitb(lua_State *L, int grammarStacki, i
   if (recognizerStacki != 0) {
     if (! marpaESLIFLua_lua_pushnil(L)) goto err;                                                 /* stack: xxx, nil */
     if (! marpaESLIFLua_lua_copy(L, recognizerStacki, -1)) goto err;                              /* stack: xxx, recognizer */
-    MARPAESLIFLUA_REF(L, marpaESLIFLuaValueContextp->recognizerInterface_r);              /* stack: xxx */
+    MARPAESLIFLUA_REF(L, marpaESLIFLuaValueContextp->recognizerInterface_r);                      /* stack: xxx */
   } else {
     /* Allowed to be unset when we come from parse */
     marpaESLIFLuaValueContextp->recognizerInterface_r = LUA_NOREF;
@@ -1634,9 +1634,9 @@ static short  marpaESLIFLua_valueContextInitb(lua_State *L, int grammarStacki, i
   if (grammarStacki != 0) {
     if (! marpaESLIFLua_lua_pushnil(L)) goto err;                                                 /* stack: xxx, nil */
     if (! marpaESLIFLua_lua_copy(L, grammarStacki, -1)) goto err;                                 /* stack: xxx, grammar */
-    MARPAESLIFLUA_REF(L, marpaESLIFLuaValueContextp->grammar_r);                 /* stack: xxx */
+    MARPAESLIFLUA_REF(L, marpaESLIFLuaValueContextp->grammar_r);                                  /* stack: xxx */
   } else {
-    if (unmanagedb) {
+    if (unmanagedb || grammarStackiCanBeZerob) { /* When we come for grammar parse(), it is legal to have grammarStacki == 0 */
       marpaESLIFLuaValueContextp->grammar_r = LUA_NOREF;
     } else {
       marpaESLIFLua_luaL_error(L, "grammarStacki must be != 0");
@@ -3028,7 +3028,7 @@ static int  marpaESLIFLua_marpaESLIFGrammar_parsei(lua_State *L)
   marpaESLIFLua_paramIsValueInterfacev(L, 3);
 
   if (! marpaESLIFLua_recognizerContextInitb(L, 1 /* grammarStacki */, 2 /* recognizerInterfaceStacki */, 0 /* recognizerOrigStacki */, &marpaESLIFLuaRecognizerContext, 0 /* unmanagedb */)) goto err;
-  if (! marpaESLIFLua_valueContextInitb(L, 1 /* grammarStacki */, 0 /* recognizerStacki */, 3 /* valueInterfaceStacki */, &marpaESLIFLuaValueContext, 0 /* unmanagedb */)) goto err;
+  if (! marpaESLIFLua_valueContextInitb(L, 1 /* grammarStacki */, 0 /* recognizerStacki */, 3 /* valueInterfaceStacki */, &marpaESLIFLuaValueContext, 0 /* unmanagedb */, 0 /* grammarStackiCanBeZerob */)) goto err;
   
   if (! marpaESLIFLua_lua_pop(L, 3)) goto err;
 
@@ -3969,9 +3969,9 @@ static int marpaESLIFLua_marpaESLIFRecognizer_resumei(lua_State *L)
  
   switch (lua_gettop(L)) {
   case 2:
-    if (! marpaESLIFLua_lua_type(&typei, L, 1)) goto err;
+    if (! marpaESLIFLua_lua_type(&typei, L, 2)) goto err;
     if (typei != LUA_TNUMBER) {
-      marpaESLIFLua_luaL_error(L, "Usage: marpaESLIFRecognizer_scan(marpaESLIFRecognizerp, deltaLength)");
+      marpaESLIFLua_luaL_error(L, "Usage: marpaESLIFRecognizer_resume(marpaESLIFRecognizerp, deltaLength) (got typei=%d != %d)");
       goto err;
     }
     deltaLengthi = (int) lua_tointegerx(L, 2, &isNumi);
@@ -4917,7 +4917,7 @@ static int marpaESLIFLua_marpaESLIFRecognizer_lastCompletedOffseti(lua_State *L)
 }
 
 /*****************************************************************************/
-static int marpaESLIFLua_marpaESLIFRecognizer_lastCompletedLenghti(lua_State *L)
+static int marpaESLIFLua_marpaESLIFRecognizer_lastCompletedLengthi(lua_State *L)
 /*****************************************************************************/
 {
   static const char                *funcs = "marpaESLIFLua_marpaESLIFRecognizer_lastCompletedLenghti";
@@ -4965,7 +4965,7 @@ static int marpaESLIFLua_marpaESLIFRecognizer_lastCompletedLenghti(lua_State *L)
   rci = 0;
 
  done:
-  return 0;
+  return rci;
 }
 
 /*****************************************************************************/
@@ -5183,7 +5183,7 @@ static int marpaESLIFLua_marpaESLIFRecognizer_hookDiscardi(lua_State *L)
   marpaESLIFLuaRecognizerContextp = lua_touserdata(L, -1);
   if (! marpaESLIFLua_lua_pop(L, 1)) goto err;
 
-  if (! marpaESLIFLua_lua_type(&typei, L, 1)) goto err;
+  if (! marpaESLIFLua_lua_type(&typei, L, 2)) goto err;
   if (typei != LUA_TBOOLEAN) {
     marpaESLIFLua_luaL_error(L, "discardOnOff must be a boolean");
     goto err;
@@ -5236,7 +5236,7 @@ static int marpaESLIFLua_marpaESLIFValue_newi(lua_State *L)
     goto err;
   }
 
-  if (! marpaESLIFLua_valueContextInitb(L, 0 /* grammarStacki */, 1 /* recognizerStacki */, 2 /* valueInterfaceStacki */, marpaESLIFLuaValueContextp, 0 /* unmanagedb */)) goto err;
+  if (! marpaESLIFLua_valueContextInitb(L, 0 /* grammarStacki */, 1 /* recognizerStacki */, 2 /* valueInterfaceStacki */, marpaESLIFLuaValueContextp, 0 /* unmanagedb */, 1 /* grammarStackiCanBeZerob */)) goto err;
 
   marpaESLIFValueOption.userDatavp             = marpaESLIFLuaValueContextp;
   marpaESLIFValueOption.ruleActionResolverp    = marpaESLIFLua_valueRuleActionResolver;
@@ -5284,7 +5284,7 @@ static int marpaESLIFLua_marpaESLIFValue_newFromUnmanagedi(lua_State *L, marpaES
     goto err;
   }
 
-  if (! marpaESLIFLua_valueContextInitb(L, 0 /* grammarStacki */, 0 /* recognizerStacki */, 0 /* valueInterfaceStacki */, marpaESLIFLuaValueContextp, 1 /* unmanagedb */)) goto err;
+  if (! marpaESLIFLua_valueContextInitb(L, 0 /* grammarStacki */, 0 /* recognizerStacki */, 0 /* valueInterfaceStacki */, marpaESLIFLuaValueContextp, 1 /* unmanagedb */, 1 /* grammarStackiCanBeZerob */)) goto err;
   marpaESLIFLuaValueContextp->marpaESLIFValuep = marpaESLIFValueUnmanagedp;
   marpaESLIFLuaValueContextp->managedb           = 0;
 
