@@ -2,7 +2,7 @@
 # Copied from: https://raw.githubusercontent.com/siffiejoe/lua-travis/master/install.sh
 #
 # target directory for Lua/LuaRocks/...
-D="$HOME/programs"
+D="$HOME/programs/lua"
 
 
 # function for logging commands (set +v is too verbose)
@@ -83,3 +83,5 @@ fi
 export PATH="$D/bin:$PATH"
 [ -z "$LUAROCKS" ] || eval "`luarocks path`"
 
+# CMake sometimes have trouble - set explicitly the good LUA environment variables
+export LUA_DIR="$D"
