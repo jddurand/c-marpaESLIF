@@ -1,5 +1,6 @@
 language: c
 compiler: clang
+dist: trusty
 addons:
     apt:
         sources:
