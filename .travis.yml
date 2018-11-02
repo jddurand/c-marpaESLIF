@@ -12,10 +12,9 @@ install:
       brew install cmake
     fi
 env:
-  - LUA=5.3.2 PATH=${HOME}/programs/cmake/bin:${PATH}
+  - PATH=${HOME}/programs/cmake/bin:${PATH}
 before_script:
   - cmake --version
-  - bash ./install-lua.sh
   - sudo apt-get update -qq --allow-unauthenticated
   - sudo apt-get install cpanminus nsis
 # Standard Dist::Zilla, this will install a bunch of prereqs, speeding up the upgrade
@@ -36,6 +35,7 @@ before_script:
   - sh ./install-c-genericSparseArray.sh
   - sh ./install-c-marpaWrapper.sh
   - sh ./install-c-tconv.sh
+  - sh ./install-c-lua534.sh
 script:
 # We want to try perl standalone first
   - cmake --version
