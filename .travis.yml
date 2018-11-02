@@ -4,7 +4,9 @@ install:
   - |
     if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then
       CMAKE_URL="http://www.cmake.org/files/v3.12/cmake-3.12.3-Linux-x86_64.tar.gz"
+      pushd /tmp
       mkdir cmake && travis_retry wget --quiet -O - ${CMAKE_URL} | tar --strip-components=1 -xz -C cmake
+      popd
       export PATH=${DEPS_DIR}/cmake/bin:${PATH}
     else
       brew install cmake
