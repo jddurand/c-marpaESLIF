@@ -12,8 +12,7 @@ install:
       brew install cmake
     fi
 env:
-  - PATH=~/deps/cmake/bin:${PATH}
-  - LUA=5.3.2
+  - LUA=5.3.2 PATH=~/deps/cmake/bin:${PATH}
 before_script:
   - cmake --version
   - sudo apt-get update -qq --allow-unauthenticated
