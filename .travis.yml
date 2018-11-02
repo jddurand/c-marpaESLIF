@@ -8,14 +8,15 @@ install:
       pushd deps
       mkdir cmake && travis_retry wget -O - ${CMAKE_URL} | tar --strip-components=1 -xz -C cmake
       popd
-      export PATH=${HOME}/deps/cmake/bin:${PATH}
     else
       brew install cmake
     fi
+env:
+  - PATH=${HOME}/deps/cmake/bin:${PATH}
 before_script:
   - cmake --version
   - sudo apt-get update -qq --allow-unauthenticated
-  - sudo apt-get install lua5.3-dev cpanminus nsis
+  - sudo apt-get install liblua5.3-dev cpanminus nsis
 # Standard Dist::Zilla, this will install a bunch of prereqs, speeding up the upgrade
   - sudo apt-get install libdist-zilla-perl
 # Upgrade Dist::Zilla, Path::Tiny (I dislike its github issue 144 -;)
