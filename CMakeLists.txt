@@ -76,7 +76,7 @@ MYPACKAGEDEPENDENCY (genericStack  "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/
 MYPACKAGEDEPENDENCY (genericHash   "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/genericHash"   LIBS)
 MYPACKAGEDEPENDENCY (marpaWrapper  "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/marpaWrapper"  LIBS)
 MYPACKAGEDEPENDENCY (tconv         "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/tconv"         LIBS)
-MYPACKAGEDEPENDENCY (lua           "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/lua534"        LIBS STATIC) # built-in lua
+MYPACKAGEDEPENDENCY (lua534        "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/lua534"        LIBS STATIC) # built-in lua
 #
 # pcre2 is built as an external project: we have to explicitly give the include path.
 # In addition, using pcre2 requires setting PCRE2_CODE_UNIT_WIDTH.
