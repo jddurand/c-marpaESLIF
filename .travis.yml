@@ -15,6 +15,7 @@ env:
   - LUA=5.3.2 PATH=~/deps/cmake/bin:${PATH}
 before_script:
   - cmake --version
+  - bash ./install-lua.sh
   - sudo apt-get update -qq --allow-unauthenticated
   - sudo apt-get install cpanminus nsis
 # Standard Dist::Zilla, this will install a bunch of prereqs, speeding up the upgrade
@@ -29,7 +30,6 @@ before_script:
   - sudo cpanm --notest Dist::Zilla::PluginBundle::RJBS
   - pushd src/bindings/perl && dzil authordeps --missing | xargs sudo cpanm --notest && popd
 # Dependencies
-  - sh ./install-lua.sh
   - sh ./install-c-genericLogger.sh
   - sh ./install-c-genericStack.sh
   - sh ./install-c-genericHash.sh
