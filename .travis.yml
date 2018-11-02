@@ -1,4 +1,11 @@
 language: c
+compiler: clang
+addons:
+    apt:
+        sources:
+            - kalakris-cmake
+        packages:
+            - cmake
 sudo: required
 before_script:
   - sudo apt-get update -qq --allow-unauthenticated
