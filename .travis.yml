@@ -4,19 +4,20 @@ install:
   - |
     if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then
       CMAKE_URL="http://www.cmake.org/files/v3.12/cmake-3.12.3-Linux-x86_64.tar.gz"
-      mkdir deps
-      pushd deps
+      mkdir ~/deps
+      pushd ~/deps
       mkdir cmake && travis_retry wget -O - ${CMAKE_URL} | tar --strip-components=1 -xz -C cmake
       popd
     else
       brew install cmake
     fi
 env:
-  - PATH=${HOME}/deps/cmake/bin:${PATH}
+  - PATH=~/deps/cmake/bin:${PATH}
+  - LUA=5.3.2
 before_script:
   - cmake --version
   - sudo apt-get update -qq --allow-unauthenticated
-  - sudo apt-get install liblua5.3-dev cpanminus nsis
+  - sudo apt-get install cpanminus nsis
 # Standard Dist::Zilla, this will install a bunch of prereqs, speeding up the upgrade
   - sudo apt-get install libdist-zilla-perl
 # Upgrade Dist::Zilla, Path::Tiny (I dislike its github issue 144 -;)
@@ -29,6 +30,7 @@ before_script:
   - sudo cpanm --notest Dist::Zilla::PluginBundle::RJBS
   - pushd src/bindings/perl && dzil authordeps --missing | xargs sudo cpanm --notest && popd
 # Dependencies
+  - sh ./install-lua.sh
   - sh ./install-c-genericLogger.sh
   - sh ./install-c-genericStack.sh
   - sh ./install-c-genericHash.sh
