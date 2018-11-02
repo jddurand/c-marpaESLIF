@@ -1,6 +1,6 @@
 language: c
 compiler: clang
-dist: trusty
+dist: precise
 addons:
     apt:
         sources:
