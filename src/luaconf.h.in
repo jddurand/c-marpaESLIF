@@ -10,7 +10,7 @@
 
 #include <limits.h>
 #include <stddef.h>
-#include <lua/export.h>
+#include <lua534/export.h>
 
 /*
 ** ===================================================================
@@ -232,7 +232,7 @@
 ** the libraries, you may want to use the following definition (define
 ** LUA_BUILD_AS_DLL to get it).
 */
-#define LUA_API lua_EXPORT
+#define LUA_API lua534_EXPORT
 
 /* more often than not the libs go together with the core */
 #define LUALIB_API	LUA_API
@@ -253,7 +253,7 @@
 ** give a warning about it. To avoid these warnings, change to the
 ** default definition.
 */
-#define LUAI_FUNC lua_EXPORT extern
+#define LUAI_FUNC lua534_EXPORT extern
 
 #define LUAI_DDEC	LUAI_FUNC
 #define LUAI_DDEF	/* empty */

@@ -2,7 +2,7 @@ CMAKE_MINIMUM_REQUIRED (VERSION 3.0.0 FATAL_ERROR)
 IF (NOT MYPACKAGEBOOTSTRAP_DONE)
   INCLUDE ("3rdparty/github/cmake-utils/cmake/MyPackageBootstrap.cmake")
 ENDIF ()
-MYPACKAGESTART (lua 5 3 4)
+MYPACKAGESTART (lua534 5 3 4)
 
 OPTION (LUA_32BITS "Use 32-bit integers and 32-bit floats" ON)
 OPTION (LUA_USE_C89 "Avoid the use of few C99 feature" ON)
@@ -10,7 +10,7 @@ OPTION (LUA_USE_C89 "Avoid the use of few C99 feature" ON)
 ###########
 # Library #
 ###########
-SET (liblua_src
+SET (liblua534_src
   src/lapi.c
   src/lauxlib.c
   src/lbaselib.c
@@ -65,7 +65,7 @@ ENDIF ()
 MYPACKAGELIBRARY(
   ${CMAKE_CURRENT_SOURCE_DIR}/src/luaconf.h.in
   ${INCLUDE_OUTPUT_PATH}/lua/luaconf.h
-  ${liblua_src})
+  ${liblua534_src})
 #
 # Add lua/luaconf.h to installed files
 #
@@ -75,7 +75,7 @@ INSTALL(FILES ${INCLUDE_OUTPUT_PATH}/lua/luaconf.h DESTINATION include/lua COMPO
 #
 IF (   (NOT ("${CMAKE_DL_LIBS}" STREQUAL ""))
     OR (NOT ("${CMAKE_MATH_LIBS}" STREQUAL "")))
-  FOREACH (_target lua lua_static)
+  FOREACH (_target lua534 lua534_static)
     TARGET_LINK_LIBRARIES(${_target} PUBLIC ${CMAKE_DL_LIBS} ${CMAKE_MATH_LIBS})
   ENDFOREACH ()
 ENDIF ()
@@ -92,7 +92,7 @@ ENDIF ()
 
 LIST(LENGTH LUA_PUBLIC_CFLAGS LUA_PUBLIC_CFLAGS_LENGTH)
 IF (LUA_PUBLIC_CFLAGS_LENGTH GREATER 0)
-  FOREACH (_target lua lua_static)
+  FOREACH (_target lua534 lua534_static)
     TARGET_COMPILE_DEFINITIONS(${_target} PUBLIC ${LUA_PUBLIC_CFLAGS})
   ENDFOREACH ()
 ENDIF ()
@@ -100,39 +100,39 @@ ENDIF ()
 ###############
 # Executables #
 ###############
-MYPACKAGEEXECUTABLE(luaExe src/lua.c)
-MYPACKAGEADDEXECUTABLESTOTESTS(luaExe)
-FOREACH (_target luaExe luaExe_static)
-  IF (${_target} STREQUAL "luaExe")
-    SET_TARGET_PROPERTIES(${_target} PROPERTIES OUTPUT_NAME lua)
+MYPACKAGEEXECUTABLE(lua534Exe src/lua.c)
+MYPACKAGEADDEXECUTABLESTOTESTS(lua534Exe)
+FOREACH (_target lua534Exe lua534Exe_static)
+  IF (${_target} STREQUAL "lua534Exe")
+    SET_TARGET_PROPERTIES(${_target} PROPERTIES OUTPUT_NAME lua534)
   ELSE ()
-    SET_TARGET_PROPERTIES(${_target} PROPERTIES OUTPUT_NAME lua_static)
+    SET_TARGET_PROPERTIES(${_target} PROPERTIES OUTPUT_NAME lua534_static)
   ENDIF ()
 ENDFOREACH ()
 
-MYPACKAGEEXECUTABLE(luaCompilerExe src/luac.c)
-MYPACKAGEADDEXECUTABLESTOTESTS(luaCompilerExe)
-FOREACH (_target luaCompilerExe luaCompilerExe_static)
-  IF (${_target} STREQUAL "luaCompilerExe")
-    SET_TARGET_PROPERTIES(${_target} PROPERTIES OUTPUT_NAME luac)
+MYPACKAGEEXECUTABLE(lua534CompilerExe src/luac.c)
+MYPACKAGEADDEXECUTABLESTOTESTS(lua534CompilerExe)
+FOREACH (_target lua534CompilerExe lua534CompilerExe_static)
+  IF (${_target} STREQUAL "lua534CompilerExe")
+    SET_TARGET_PROPERTIES(${_target} PROPERTIES OUTPUT_NAME lua534c)
   ELSE ()
-    SET_TARGET_PROPERTIES(${_target} PROPERTIES OUTPUT_NAME luac_static)
+    SET_TARGET_PROPERTIES(${_target} PROPERTIES OUTPUT_NAME lua534c_static)
   ENDIF ()
 ENDFOREACH ()
 
-MYPACKAGETESTEXECUTABLE(luawrapperTester test/luawrapperTester.c)
-MYPACKAGETESTEXECUTABLE(luawrapperTester2 test/luawrapperTester2.c)
+MYPACKAGETESTEXECUTABLE(lua534wrapperTester test/luawrapperTester.c)
+MYPACKAGETESTEXECUTABLE(lua534wrapperTester2 test/luawrapperTester2.c)
 
 #########
 # Tests #
 #########
-MYPACKAGECHECK(luawrapperTester ${CMAKE_CURRENT_SOURCE_DIR}/test/luawrapperTester.lua)
-MYPACKAGECHECK(luawrapperTester2 ${CMAKE_CURRENT_SOURCE_DIR}/test/luawrapperTester2.lua)
+MYPACKAGECHECK(lua534wrapperTester ${CMAKE_CURRENT_SOURCE_DIR}/test/luawrapperTester.lua)
+MYPACKAGECHECK(lua534wrapperTester2 ${CMAKE_CURRENT_SOURCE_DIR}/test/luawrapperTester2.lua)
 
 #############
 # Packaging #
 #############
-MYPACKAGEPACK ("" "Lua 5.3.4")
+MYPACKAGEPACK ("" "Lua 5.3.4 with unpanic support")
 
 #########
 # Setup #
