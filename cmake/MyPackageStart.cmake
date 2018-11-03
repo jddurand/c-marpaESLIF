@@ -143,7 +143,7 @@ MACRO (MYPACKAGESTART packageName versionMajor versionMinor versionPatch)
   # We consider that every .h file in the include directory is to be installed
   # unless it is starting with an '_'.
   #
-  FILE (GLOB_RECURSE _include include/*.h)
+  FILE (GLOB_RECURSE _include include/*.h include/*.hpp)
   FOREACH (_file ${_include} )
     GET_FILENAME_COMPONENT(_basename ${_file} NAME)
     STRING (REGEX MATCH "^_" _hiden ${_basename})
