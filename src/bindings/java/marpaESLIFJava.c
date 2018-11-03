@@ -151,32 +151,32 @@ static char _MARPAESLIF_JNI_CONTEXT;
 #define MARPAESLIF_JNI_VERSION                    JNI_VERSION_1_4 /* Because of NIO Support */
 #define MARPAESLIF_FILENAMES                      "marpaESLIFJava.c"
 #define MARPAESLIF_ESLIFEXCEPTION_CLASS           "org/parser/marpa/ESLIFException"
-#define MARPAESLIF_ESLIF_CLASS                    "org/parser/marpa/ESLIF"
-#define MARPAESLIF_ESLIFLOGGERINTERFACE_CLASS     "org/parser/marpa/ESLIFLoggerInterface"
-#define MARPAESLIF_ESLIFGRAMMAR_CLASS             "org/parser/marpa/ESLIFGrammar"
-#define MARPAESLIF_ESLIFRECOGNIZER_CLASS          "org/parser/marpa/ESLIFRecognizer"
-#define MARPAESLIF_ESLIFRECOGNIZERINTERFACE_CLASS "org/parser/marpa/ESLIFRecognizerInterface"
-#define MARPAESLIF_ESLIFVALUE_CLASS               "org/parser/marpa/ESLIFValue"
-#define MARPAESLIF_ESLIFVALUEINTERFACE_CLASS      "org/parser/marpa/ESLIFValueInterface"
-#define MARPAESLIF_OBJECT_CLASS                   "java/lang/Object"
-#define MARPAESLIF_CLASS_CLASS                    "java/lang/Class"
-#define MARPAESLIF_ESLIFEVENTTYPE_CLASS           "org/parser/marpa/ESLIFEventType"
-#define MARPAESLIF_ESLIFEVENT_CLASS               "org/parser/marpa/ESLIFEvent"
-#define MARPAESLIF_STRING_CLASS                   "java/lang/String"
-#define MARPAESLIF_ESLIFLOGGERLEVEL_CLASS         "org/parser/marpa/ESLIFLoggerLevel"
-#define MARPAESLIF_ESLIFGRAMMARPROPERTIES_CLASS   "org/parser/marpa/ESLIFGrammarProperties"
-#define MARPAESLIF_ESLIFGRAMMARRULEPROPERTIES_CLASS "org/parser/marpa/ESLIFGrammarRuleProperties"
+#define MARPAESLIF_ESLIF_CLASS                        "org/parser/marpa/ESLIF"
+#define MARPAESLIF_ESLIFLOGGERINTERFACE_CLASS         "org/parser/marpa/ESLIFLoggerInterface"
+#define MARPAESLIF_ESLIFGRAMMAR_CLASS                 "org/parser/marpa/ESLIFGrammar"
+#define MARPAESLIF_ESLIFRECOGNIZER_CLASS              "org/parser/marpa/ESLIFRecognizer"
+#define MARPAESLIF_ESLIFRECOGNIZERINTERFACE_CLASS     "org/parser/marpa/ESLIFRecognizerInterface"
+#define MARPAESLIF_ESLIFVALUE_CLASS                   "org/parser/marpa/ESLIFValue"
+#define MARPAESLIF_ESLIFVALUEINTERFACE_CLASS          "org/parser/marpa/ESLIFValueInterface"
+#define MARPAESLIF_ESLIFEVENTTYPE_CLASS               "org/parser/marpa/ESLIFEventType"
+#define MARPAESLIF_ESLIFEVENT_CLASS                   "org/parser/marpa/ESLIFEvent"
+#define MARPAESLIF_ESLIFLOGGERLEVEL_CLASS             "org/parser/marpa/ESLIFLoggerLevel"
+#define MARPAESLIF_ESLIFGRAMMARPROPERTIES_CLASS       "org/parser/marpa/ESLIFGrammarProperties"
+#define MARPAESLIF_ESLIFGRAMMARRULEPROPERTIES_CLASS   "org/parser/marpa/ESLIFGrammarRuleProperties"
 #define MARPAESLIF_ESLIFGRAMMARSYMBOLPROPERTIES_CLASS "org/parser/marpa/ESLIFGrammarSymbolProperties"
-#define MARPAESLIF_ESLIFRULEPROPERTYBITSET_CLASS  "org/parser/marpa/ESLIFRulePropertyBitSet"
-#define MARPAESLIF_ESLIFSYMBOLPROPERTYBITSET_CLASS  "org/parser/marpa/ESLIFSymbolPropertyBitSet"
-#define MARPAESLIF_ESLIFSYMBOLTYPE_CLASS          "org/parser/marpa/ESLIFSymbolType"
-#define JAVA_LANG_CHARACTER_CLASS                 "java/lang/Character"
-#define JAVA_LANG_SHORT_CLASS                     "java/lang/Short"
-#define JAVA_LANG_INTEGER_CLASS                   "java/lang/Integer"
-#define JAVA_LANG_LONG_CLASS                      "java/lang/Long"
-#define JAVA_LANG_FLOAT_CLASS                     "java/lang/Float"
-#define JAVA_LANG_DOUBLE_CLASS                    "java/lang/Double"
-#define JAVA_LANG_BOOLEAN_CLASS                   "java/lang/Boolean"
+#define MARPAESLIF_ESLIFRULEPROPERTYBITSET_CLASS      "org/parser/marpa/ESLIFRulePropertyBitSet"
+#define MARPAESLIF_ESLIFSYMBOLPROPERTYBITSET_CLASS    "org/parser/marpa/ESLIFSymbolPropertyBitSet"
+#define MARPAESLIF_ESLIFSYMBOLTYPE_CLASS              "org/parser/marpa/ESLIFSymbolType"
+#define JAVA_LANG_OBJECT_CLASS                        "java/lang/Object"
+#define JAVA_LANG_CLASS_CLASS                         "java/lang/Class"
+#define JAVA_LANG_STRING_CLASS                        "java/lang/String"
+#define JAVA_LANG_CHARACTER_CLASS                     "java/lang/Character"
+#define JAVA_LANG_SHORT_CLASS                         "java/lang/Short"
+#define JAVA_LANG_INTEGER_CLASS                       "java/lang/Integer"
+#define JAVA_LANG_LONG_CLASS                          "java/lang/Long"
+#define JAVA_LANG_FLOAT_CLASS                         "java/lang/Float"
+#define JAVA_LANG_DOUBLE_CLASS                        "java/lang/Double"
+#define JAVA_LANG_BOOLEAN_CLASS                       "java/lang/Boolean"
 
 #define MARPAESLIF_ESLIFVALUEINTERFACE_SYMBOLACTION_SIGNATURE "(Ljava/nio/ByteBuffer;)Ljava/lang/Object;"
 #define MARPAESLIF_ESLIFVALUEINTERFACE_RULEACTION_SIGNATURE   "([Ljava/lang/Object;)Ljava/lang/Object;"
@@ -242,13 +242,13 @@ static marpaESLIFClassCache_t marpaESLIFClassCacheArrayp[] = {
   #define MARPAESLIF_ESLIFVALUEINTERFACE_CLASSP          marpaESLIFClassCacheArrayp[7].classp
   {       MARPAESLIF_ESLIFVALUEINTERFACE_CLASS,          NULL, 1 /* requiredb */ },
 
-  #define MARPAESLIF_OBJECT_CLASSCACHE                   marpaESLIFClassCacheArrayp[8]
-  #define MARPAESLIF_OBJECT_CLASSP                       marpaESLIFClassCacheArrayp[8].classp
-  {       MARPAESLIF_OBJECT_CLASS,                       NULL, 1 /* requiredb */ },
+  #define JAVA_LANG_OBJECT_CLASSCACHE                    marpaESLIFClassCacheArrayp[8]
+  #define JAVA_LANG_OBJECT_CLASSP                        marpaESLIFClassCacheArrayp[8].classp
+  {       JAVA_LANG_OBJECT_CLASS,                        NULL, 1 /* requiredb */ },
 
-  #define MARPAESLIF_CLASS_CLASSCACHE                    marpaESLIFClassCacheArrayp[9]
-  #define MARPAESLIF_CLASS_CLASSP                        marpaESLIFClassCacheArrayp[9].classp
-  {       MARPAESLIF_CLASS_CLASS,                        NULL, 1 /* requiredb */ },
+  #define JAVA_LANG_CLASS_CLASSCACHE                     marpaESLIFClassCacheArrayp[9]
+  #define JAVA_LANG_CLASS_CLASSP                         marpaESLIFClassCacheArrayp[9].classp
+  {       JAVA_LANG_CLASS_CLASS,                         NULL, 1 /* requiredb */ },
 
   #define MARPAESLIF_ESLIFEVENTTYPE_CLASSCACHE           marpaESLIFClassCacheArrayp[10]
   #define MARPAESLIF_ESLIFEVENTTYPE_CLASSP               marpaESLIFClassCacheArrayp[10].classp
@@ -258,9 +258,9 @@ static marpaESLIFClassCache_t marpaESLIFClassCacheArrayp[] = {
   #define MARPAESLIF_ESLIFEVENT_CLASSP                   marpaESLIFClassCacheArrayp[11].classp
   {       MARPAESLIF_ESLIFEVENT_CLASS,                   NULL, 1 /* requiredb */ },
 
-  #define MARPAESLIF_STRING_CLASSCACHE                   marpaESLIFClassCacheArrayp[12]
-  #define MARPAESLIF_STRING_CLASSP                       marpaESLIFClassCacheArrayp[12].classp
-  {       MARPAESLIF_STRING_CLASS,                       NULL, 1 /* requiredb */ },
+  #define JAVA_LANG_STRING_CLASSCACHE                    marpaESLIFClassCacheArrayp[12]
+  #define JAVA_LANG_STRING_CLASSP                        marpaESLIFClassCacheArrayp[12].classp
+  {       JAVA_LANG_STRING_CLASS,                        NULL, 1 /* requiredb */ },
 
   #define MARPAESLIF_ESLIFLOGGERLEVEL_CLASSCACHE         marpaESLIFClassCacheArrayp[13]
   #define MARPAESLIF_ESLIFLOGGERLEVEL_CLASSP             marpaESLIFClassCacheArrayp[13].classp
@@ -487,11 +487,11 @@ static marpaESLIFMethodCache_t marpaESLIFMethodCacheArrayp[] = {
   #define MARPAESLIF_ESLIFVALUEINTERFACE_CLASS_setGrammar_METHODP                   marpaESLIFMethodCacheArrayp[54].methodp
   {      &MARPAESLIF_ESLIFVALUEINTERFACE_CLASSCACHE, "setGrammar",                  "(Lorg/parser/marpa/ESLIFGrammar;)V", 0, NULL, 1 /* requiredb */ },
 
-  #define MARPAESLIF_OBJECT_CLASS_getClass_METHODP                                  marpaESLIFMethodCacheArrayp[55].methodp
-  {      &MARPAESLIF_OBJECT_CLASSCACHE, "getClass",                                 "()Ljava/lang/Class;", 0, NULL, 1 /* requiredb */ },
+  #define JAVA_LANG_OBJECT_CLASS_getClass_METHODP                                   marpaESLIFMethodCacheArrayp[55].methodp
+  {      &JAVA_LANG_OBJECT_CLASSCACHE, "getClass",                                  "()Ljava/lang/Class;", 0, NULL, 1 /* requiredb */ },
 
-  #define MARPAESLIF_CLASS_CLASS_getName_METHODP                                    marpaESLIFMethodCacheArrayp[56].methodp
-  {      &MARPAESLIF_CLASS_CLASSCACHE, "getName",                                   "()Ljava/lang/String;", 0, NULL, 1 /* requiredb */ },
+  #define JAVA_LANG_CLASS_CLASS_getName_METHODP                                     marpaESLIFMethodCacheArrayp[56].methodp
+  {      &JAVA_LANG_CLASS_CLASSCACHE, "getName",                                    "()Ljava/lang/String;", 0, NULL, 1 /* requiredb */ },
 
   #define MARPAESLIF_ESLIFEVENTTYPE_CLASS_get_METHODP                               marpaESLIFMethodCacheArrayp[57].methodp
   {      &MARPAESLIF_ESLIFEVENTTYPE_CLASSCACHE, "get",                              "(I)Lorg/parser/marpa/ESLIFEventType;", 1 /* static */, NULL, 1 /* requiredb */ },
@@ -505,8 +505,8 @@ static marpaESLIFMethodCache_t marpaESLIFMethodCacheArrayp[] = {
   #define MARPAESLIF_ESLIFLOGGERLEVEL_CLASS_getCode_METHODP                         marpaESLIFMethodCacheArrayp[60].methodp
   {      &MARPAESLIF_ESLIFLOGGERLEVEL_CLASSCACHE, "getCode",                        "()I", 0, NULL, 1 /* requiredb */ },
 
-  #define MARPAESLIF_STRING_CLASS_getBytes_String_METHODP                           marpaESLIFMethodCacheArrayp[61].methodp
-  {      &MARPAESLIF_STRING_CLASSCACHE, "getBytes",                                 "(Ljava/lang/String;)[B", 0, NULL, 1 /* requiredb */ },
+  #define JAVA_LANG_STRING_CLASS_getBytes_String_METHODP                            marpaESLIFMethodCacheArrayp[61].methodp
+  {      &JAVA_LANG_STRING_CLASSCACHE, "getBytes",                                  "(Ljava/lang/String;)[B", 0, NULL, 1 /* requiredb */ },
 
   #define MARPAESLIF_ESLIFGRAMMARPROPERTIES_CLASS_init_METHODP                      marpaESLIFMethodCacheArrayp[62].methodp
   {      &MARPAESLIF_ESLIFGRAMMARPROPERTIES_CLASSCACHE, "<init>",                   "(IILjava/lang/String;ZLjava/lang/String;Ljava/lang/String;Ljava/lang/String;II[I[I)V", 0, NULL, 1 /* requiredb */ },
@@ -564,6 +564,12 @@ static marpaESLIFMethodCache_t marpaESLIFMethodCacheArrayp[] = {
 
   #define JAVA_LANG_BOOLEAN_CLASS_valueOf_METHODP                                   marpaESLIFMethodCacheArrayp[79].methodp
   {      &JAVA_LANG_BOOLEAN_CLASSCACHE, "valueOf",                                  "(Z)Ljava/lang/Boolean;", 0, NULL, 0 /* requiredb */ },
+
+  #define JAVA_LANG_STRING_CLASS_init_byteArray_METHODP                             marpaESLIFMethodCacheArrayp[80].methodp
+  {      &JAVA_LANG_STRING_CLASSCACHE, "<init>",                                    "([B)V", 0, NULL, 0 /* requiredb */ },
+
+  #define JAVA_LANG_STRING_CLASS_init_byteArray_String_METHODP                      marpaESLIFMethodCacheArrayp[81].methodp
+  {      &JAVA_LANG_STRING_CLASSCACHE, "<init>",                                    "([BLjava/lang/String;)V", 0, NULL, 0 /* requiredb */ },
 
   { NULL }
 };
@@ -627,6 +633,9 @@ static short                           marpaESLIF_TransformDouble(void *userData
 static short                           marpaESLIF_TransformPtr(void *userDatavp, void *contextp, void *p);
 static short                           marpaESLIF_TransformArray(void *userDatavp, void *contextp, void *p, size_t sizel);
 static short                           marpaESLIF_TransformBool(void *userDatavp, void *contextp, short y);
+static jstring                         marpaESLIF_marpaESLIFStringToJavap(JNIEnv *envp, marpaESLIFString_t *marpaESLIFStringp);
+static jstring                         marpaESLIF_marpaESLIFASCIIToJavap(JNIEnv *envp, char *asciis);
+static jstring                         marpaESLIF_marpaESLIFActionToJavap(JNIEnv *envp, marpaESLIFAction_t *actionp);
 
 /* Transformers */
 static marpaESLIFValueResultTransform_t marpaESLIFValueResultTransformDefault = {
@@ -741,11 +750,7 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *JavaVMp, void* reservedp)
   }
 
   /* Idem for marpaESLIF_UTF8p */
-  stringp = (*envp)->NewStringUTF(envp, "UTF-8");
-  if (stringp == NULL) {
-    /* We want OUR exception to be raised */
-    RAISEEXCEPTION(envp, "NewStringUTF(\"UTF-8\") failure");
-  }
+  stringp = marpaESLIF_marpaESLIFASCIIToJavap(envp, "UTF-8");
   marpaESLIF_UTF8p = (jstring *) (*envp)->NewGlobalRef(envp, (jobject) stringp);
   if (marpaESLIF_UTF8p == NULL) {
     /* We want OUR exception to be raised */
@@ -997,6 +1002,7 @@ JNIEXPORT jstring JNICALL Java_org_parser_marpa_ESLIF_jniVersion(JNIEnv *envp, j
   static const char *funcs = "Java_org_parser_marpa_ESLIF_jniVersion";
   marpaESLIF_t      *marpaESLIFp;
   char              *versions;
+  marpaESLIFString_t string;
 
   if (ESLIF_contextb(envp, eslifp, eslifp, MARPAESLIF_ESLIF_CLASS_getLoggerInterfacep_METHODP,
                        NULL /* genericLoggerpp */,
@@ -1005,7 +1011,7 @@ JNIEXPORT jstring JNICALL Java_org_parser_marpa_ESLIF_jniVersion(JNIEnv *envp, j
       RAISEEXCEPTIONF(envp, "marpaESLIF_versionb failure, %s", strerror(errno));
     }
 
-    return (*envp)->NewStringUTF(envp, versions);
+    return marpaESLIF_marpaESLIFASCIIToJavap(envp, versions);
   }
 
  err:
@@ -1084,7 +1090,7 @@ JNIEXPORT jstring JNICALL Java_org_parser_marpa_ESLIF_jniJavaVersion(JNIEnv *env
 {
   static const char *funcs = "Java_org_parser_marpa_ESLIF_jniJavaVersion";
 
-  return (*envp)->NewStringUTF(envp, MARPAESLIFJAVA_VERSION);
+  return marpaESLIF_marpaESLIFASCIIToJavap(envp, MARPAESLIFJAVA_VERSION);
 }
 
 /*****************************************************************************/
@@ -1302,8 +1308,7 @@ JNIEXPORT jstring JNICALL Java_org_parser_marpa_ESLIFGrammar_jniCurrentDescripti
     RAISEEXCEPTION(envp, "marpaESLIFGrammar_grammar_currentb failure");
   }
 
-  /* We enforced UTF-8 when parsing the grammar, so description is also in UTF-8 */
-  stringp = (*envp)->NewStringUTF(envp, descp->bytep);
+  stringp = marpaESLIF_marpaESLIFStringToJavap(envp, descp);
   goto done;
 
  err:
@@ -1333,9 +1338,7 @@ JNIEXPORT jstring JNICALL Java_org_parser_marpa_ESLIFGrammar_jniDescriptionByLev
     RAISEEXCEPTIONF(envp, "marpaESLIFGrammar_grammar_by_levelb failure for level %d", leveli);
   }
 
-  /* We enforced UTF-8 when parsing the grammar, so description is also in UTF-8 */
-  /* If it fails the exception will be seen by the Java layer */
-  return (*envp)->NewStringUTF(envp, descp->bytep);
+  return marpaESLIF_marpaESLIFStringToJavap(envp, descp);
 
  err:
   return NULL;
@@ -1583,8 +1586,7 @@ JNIEXPORT jintArray JNICALL Java_org_parser_marpa_ESLIFGrammar_jniRuleDisplay(JN
     RAISEEXCEPTIONF(envp, "marpaESLIFGrammar_ruledisplayform_currentb failure for rule %d", rulei);
   }
 
-  /* If it fails the exception will be seen by the Java layer */
-  return (*envp)->NewStringUTF(envp, ruledisplays);
+  return marpaESLIF_marpaESLIFASCIIToJavap(envp, ruledisplays);
 
  err:
   return NULL;
@@ -1610,8 +1612,7 @@ JNIEXPORT jintArray JNICALL Java_org_parser_marpa_ESLIFGrammar_jniSymbolDisplay(
     RAISEEXCEPTIONF(envp, "marpaESLIFGrammar_symboldisplayform_currentb failure for symbol %d", symboli);
   }
 
-  /* If it fails the exception will be seen by the Java layer */
-  return (*envp)->NewStringUTF(envp, symboldisplays);
+  return marpaESLIF_marpaESLIFASCIIToJavap(envp, symboldisplays);
 
  err:
   return NULL;
@@ -1637,8 +1638,7 @@ JNIEXPORT jintArray JNICALL Java_org_parser_marpa_ESLIFGrammar_jniRuleShow(JNIEn
     RAISEEXCEPTIONF(envp, "marpaESLIFGrammar_ruleshowform_currentb failure for rule %d", rulei);
   }
 
-  /* If it fails the exception will be seen by the Java layer */
-  return (*envp)->NewStringUTF(envp, ruleshows);
+  return marpaESLIF_marpaESLIFASCIIToJavap(envp, ruleshows);
 
  err:
   return NULL;
@@ -1665,8 +1665,7 @@ JNIEXPORT jintArray JNICALL Java_org_parser_marpa_ESLIFGrammar_jniRuleDisplayByL
     RAISEEXCEPTIONF(envp, "marpaESLIFGrammar_ruledisplayform_currentb failure for rule %d and level %d", rulei, leveli);
   }
 
-  /* If it fails the exception will be seen by the Java layer */
-  return (*envp)->NewStringUTF(envp, ruledisplays);
+  return marpaESLIF_marpaESLIFASCIIToJavap(envp, ruledisplays);
 
  err:
   return NULL;
@@ -1693,8 +1692,7 @@ JNIEXPORT jintArray JNICALL Java_org_parser_marpa_ESLIFGrammar_jniSymbolDisplayB
     RAISEEXCEPTIONF(envp, "marpaESLIFGrammar_symboldisplayform_currentb failure for symbol %d and level %d", symboli, leveli);
   }
 
-  /* If it fails the exception will be seen by the Java layer */
-  return (*envp)->NewStringUTF(envp, symboldisplays);
+  return marpaESLIF_marpaESLIFASCIIToJavap(envp, symboldisplays);
 
  err:
   return NULL;
@@ -1721,8 +1719,7 @@ JNIEXPORT jintArray JNICALL Java_org_parser_marpa_ESLIFGrammar_jniRuleShowByLeve
     RAISEEXCEPTIONF(envp, "marpaESLIFGrammar_ruleshowform_by_levelb failure for rule %d and level %d", rulei, leveli);
   }
 
-  /* If it fails the exception will be seen by the Java layer */
-  return (*envp)->NewStringUTF(envp, ruleshows);
+  return marpaESLIF_marpaESLIFASCIIToJavap(envp, ruleshows);
 
  err:
   return NULL;
@@ -1747,8 +1744,7 @@ JNIEXPORT jstring JNICALL Java_org_parser_marpa_ESLIFGrammar_jniShow(JNIEnv *env
     RAISEEXCEPTION(envp, "marpaESLIFGrammar_grammarshowform_currentb failure");
   }
 
-  /* If it fails the exception will be seen by the Java layer */
-  return (*envp)->NewStringUTF(envp, shows);
+  return marpaESLIF_marpaESLIFASCIIToJavap(envp, shows);
 
  err:
   return NULL;
@@ -1774,8 +1770,7 @@ JNIEXPORT jstring JNICALL Java_org_parser_marpa_ESLIFGrammar_jniShowByLevel(JNIE
     RAISEEXCEPTIONF(envp, "marpaESLIFGrammar_grammarshowform_by_levelb for level %d", leveli);
   }
 
-  /* If it fails the exception will be seen by the Java layer */
-  return (*envp)->NewStringUTF(envp, shows);
+  return marpaESLIF_marpaESLIFASCIIToJavap(envp, shows);
 
  err:
   return NULL;
@@ -2134,8 +2129,7 @@ static void genericLoggerCallbackv(void *userDatavp, genericLoggerLevel_t logLev
   }
 
   if (methodp != NULL) {
-    /* marpaESLIF is never logging with characters outside of 7-bits ASCII */
-    stringp = (*envp)->NewStringUTF(envp, msgs);
+    stringp = marpaESLIF_marpaESLIFASCIIToJavap(envp, (char *) msgs);
     if (stringp != NULL) {
       (*envp)->CallVoidMethod(envp, loggerInterfacep, methodp, stringp);
       (*envp)->DeleteLocalRef(envp, stringp);
@@ -2814,15 +2808,12 @@ JNIEXPORT jobjectArray JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniLexemeEx
   }
 
   if (nLexeme > 0) {
-    objectArray = (*envp)->NewObjectArray(envp, nLexeme, MARPAESLIF_STRING_CLASSP, NULL /* initialElement */);
+    objectArray = (*envp)->NewObjectArray(envp, nLexeme, JAVA_LANG_STRING_CLASSP, NULL /* initialElement */);
     if (objectArray == NULL) {
       RAISEEXCEPTION(envp, "NewObjectArray failure");
     }
     for (i = 0; i < nLexeme; i++) {
-      string = (*envp)->NewStringUTF(envp, (lexemesArrayp[i] != NULL) ? lexemesArrayp[i] : "");
-      if (string == NULL) {
-        RAISEEXCEPTION(envp, "NewStringUTF failure");
-      }
+      string = marpaESLIF_marpaESLIFASCIIToJavap(envp, lexemesArrayp[i]);
       (*envp)->SetObjectArrayElement(envp, objectArray, i, string);
       if (HAVEEXCEPTION(envp)) {
         goto err;
@@ -3382,15 +3373,8 @@ JNIEXPORT jobjectArray JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniEvent(JN
       RAISEEXCEPTION(envp, "CallStaticObjectMethod failure");
     }
 
-    symbol = (*envp)->NewStringUTF(envp, (eventArrayp[i].symbols != NULL) ? eventArrayp[i].symbols : "");
-    if (symbol == NULL) {
-      RAISEEXCEPTION(envp, "NewStringUTF failure");
-    }
-
-    event = (*envp)->NewStringUTF(envp, (eventArrayp[i].events != NULL) ? eventArrayp[i].events : "");
-    if (event == NULL) {
-      RAISEEXCEPTION(envp, "NewStringUTF failure");
-    }
+    symbol = marpaESLIF_marpaESLIFASCIIToJavap(envp, eventArrayp[i].symbols);
+    event = marpaESLIF_marpaESLIFASCIIToJavap(envp, eventArrayp[i].events);
 
     object = (*envp)->NewObject(envp, MARPAESLIF_ESLIFEVENT_CLASSP, MARPAESLIF_ESLIFEVENT_CLASS_init_METHODP, eventType, symbol, event);
     if (object == NULL) {
@@ -3997,10 +3981,7 @@ static short marpaESLIFValueContextInject(JNIEnv *envp, marpaESLIFValue_t *marpa
 
   /* Symbol name */
   if (symbols != NULL) {
-    symbolp = (*envp)->NewStringUTF(envp, symbols);
-    if (symbolp == NULL) {
-      RAISEEXCEPTION(envp, "NewStringUTF failure");
-    }
+    symbolp = marpaESLIF_marpaESLIFASCIIToJavap(envp, symbols);
   }
   (*envp)->CallVoidMethod(envp, eslifValueInterfacep, MARPAESLIF_ESLIFVALUEINTERFACE_CLASS_setSymbolName_METHODP, symbolp /* Can be NULL */);
   if (HAVEEXCEPTION(envp)) {
@@ -4015,10 +3996,7 @@ static short marpaESLIFValueContextInject(JNIEnv *envp, marpaESLIFValue_t *marpa
 
   /* Rule name */
   if (rules != NULL) {
-    rulep = (*envp)->NewStringUTF(envp, rules);
-    if (rulep == NULL) {
-      RAISEEXCEPTION(envp, "NewStringUTF failure");
-    }
+    rulep = marpaESLIF_marpaESLIFASCIIToJavap(envp, rules);
   }
   (*envp)->CallVoidMethod(envp, eslifValueInterfacep, MARPAESLIF_ESLIFVALUEINTERFACE_CLASS_setRuleName_METHODP, rulep /* Can be NULL */);
   if (HAVEEXCEPTION(envp)) {
@@ -4081,7 +4059,7 @@ static short marpaESLIFValueRuleCallback(void *userDatavp, marpaESLIFValue_t *ma
     }
   
     /* Make the list */
-    list = (*envp)->NewObjectArray(envp, argni - arg0i + 1, MARPAESLIF_OBJECT_CLASSP, NULL /* initialElement */);
+    list = (*envp)->NewObjectArray(envp, argni - arg0i + 1, JAVA_LANG_OBJECT_CLASSP, NULL /* initialElement */);
     if (list == NULL) {
       RAISEEXCEPTION(envp, "NewObjectArray failure");
     }
@@ -4404,7 +4382,7 @@ static short marpaESLIFValueContextInit(JNIEnv *envp, jobject eslifValueInterfac
     RAISEEXCEPTION(envp, "GetObjectClass failure");
   }
 
-  stringp = (*envp)->CallObjectMethod(envp, classp, MARPAESLIF_CLASS_CLASS_getName_METHODP);
+  stringp = (*envp)->CallObjectMethod(envp, classp, JAVA_LANG_CLASS_CLASS_getName_METHODP);
   if (stringp == NULL) {
     /* An exception was (must have been) raised */
     RAISEEXCEPTION(envp, "CallObjectMethod failure");
@@ -4511,7 +4489,7 @@ static short marpaESLIFRepresentationCallback(void *userDatavp, marpaESLIFValueR
     /* If zero character, we do nothing - nothing will be appended by default */
     if (UTF16NbCodeUnit > 0) {
       /* Convert to UTF-8: a string in java is ALWAYS in native charset */
-      UTF8ByteArray = (jbyteArray) (*envp)->CallObjectMethod(envp, stringp, MARPAESLIF_STRING_CLASS_getBytes_String_METHODP, marpaESLIF_UTF8p);
+      UTF8ByteArray = (jbyteArray) (*envp)->CallObjectMethod(envp, stringp, JAVA_LANG_STRING_CLASS_getBytes_String_METHODP, marpaESLIF_UTF8p);
       if (UTF8ByteArray == NULL) {
         RAISEEXCEPTIONF(envp, "String.getBytes(..., \"%s\")", "UTF-8");
       }
@@ -4572,82 +4550,15 @@ static jobject marpaESLIFGrammarProperties(JNIEnv *envp, marpaESLIFGrammarProper
   jint                         *ruleIdsIntp = NULL;
   size_t                        i;
 
-  level     = (jint) grammarPropertyp->leveli;
-  maxLevel  = (jint) grammarPropertyp->maxLeveli;
-  description = (*envp)->NewStringUTF(envp, grammarPropertyp->descp->bytep);
-  if (description == NULL) {
-    /* We want OUR exception to be raised */
-    RAISEEXCEPTION(envp, "NewStringUTF() failure");
-  }
-  latm      = grammarPropertyp->latmb ? JNI_TRUE : JNI_FALSE;
-  if (grammarPropertyp->defaultSymbolActionp == NULL) {
-    defaultSymbolAction = NULL;
-  } else {
-    switch (grammarPropertyp->defaultSymbolActionp->type) {
-    case MARPAESLIF_ACTION_TYPE_NAME:
-      defaultSymbolAction = (*envp)->NewStringUTF(envp, grammarPropertyp->defaultSymbolActionp->u.names);
-      if (defaultSymbolAction == NULL) {
-        /* We want OUR exception to be raised */
-        RAISEEXCEPTION(envp, "NewStringUTF() failure");
-      }
-      break;
-    case MARPAESLIF_ACTION_TYPE_STRING:
-      defaultSymbolAction = (*envp)->NewStringUTF(envp, grammarPropertyp->defaultSymbolActionp->u.stringp->bytep);
-      if (defaultSymbolAction == NULL) {
-        /* We want OUR exception to be raised */
-        RAISEEXCEPTION(envp, "NewStringUTF() failure");
-      }
-      break;
-    default:
-      RAISEEXCEPTIONF(envp, "Unsuported action type %d", grammarPropertyp->defaultSymbolActionp->type);
-    }
-  }
-  if (grammarPropertyp->defaultRuleActionp == NULL) {
-    defaultRuleAction = NULL;
-  } else {
-    switch (grammarPropertyp->defaultRuleActionp->type) {
-    case MARPAESLIF_ACTION_TYPE_NAME:
-      defaultRuleAction = (*envp)->NewStringUTF(envp, grammarPropertyp->defaultRuleActionp->u.names);
-      if (defaultRuleAction == NULL) {
-        /* We want OUR exception to be raised */
-        RAISEEXCEPTION(envp, "NewStringUTF() failure");
-      }
-      break;
-    case MARPAESLIF_ACTION_TYPE_STRING:
-      defaultRuleAction = (*envp)->NewStringUTF(envp, grammarPropertyp->defaultRuleActionp->u.stringp->bytep);
-      if (defaultRuleAction == NULL) {
-        /* We want OUR exception to be raised */
-        RAISEEXCEPTION(envp, "NewStringUTF() failure");
-      }
-      break;
-    default:
-      RAISEEXCEPTIONF(envp, "Unsuported action type %d", grammarPropertyp->defaultRuleActionp->type);
-    }
-  }
-  if (grammarPropertyp->defaultFreeActionp == NULL) {
-    defaultFreeAction = NULL;
-  } else {
-    switch (grammarPropertyp->defaultFreeActionp->type) {
-    case MARPAESLIF_ACTION_TYPE_NAME:
-      defaultFreeAction = (*envp)->NewStringUTF(envp, grammarPropertyp->defaultFreeActionp->u.names);
-      if (defaultFreeAction == NULL) {
-        /* We want OUR exception to be raised */
-        RAISEEXCEPTION(envp, "NewStringUTF() failure");
-      }
-      break;
-    case MARPAESLIF_ACTION_TYPE_STRING:
-      defaultFreeAction = (*envp)->NewStringUTF(envp, grammarPropertyp->defaultFreeActionp->u.stringp->bytep);
-      if (defaultFreeAction == NULL) {
-        /* We want OUR exception to be raised */
-        RAISEEXCEPTION(envp, "NewStringUTF() failure");
-      }
-      break;
-    default:
-      RAISEEXCEPTIONF(envp, "Unsuported action type %d", grammarPropertyp->defaultFreeActionp->type);
-    }
-  }
-  startId   = (jint) grammarPropertyp->starti;
-  discardId = (jint) grammarPropertyp->discardi;
+  level               = (jint) grammarPropertyp->leveli;
+  maxLevel            = (jint) grammarPropertyp->maxLeveli;
+  description         = marpaESLIF_marpaESLIFStringToJavap(envp, grammarPropertyp->descp);
+  latm                = grammarPropertyp->latmb ? JNI_TRUE : JNI_FALSE;
+  defaultSymbolAction = marpaESLIF_marpaESLIFActionToJavap(envp, grammarPropertyp->defaultSymbolActionp);
+  defaultRuleAction   = marpaESLIF_marpaESLIFActionToJavap(envp, grammarPropertyp->defaultRuleActionp);
+  defaultFreeAction   = marpaESLIF_marpaESLIFActionToJavap(envp, grammarPropertyp->defaultFreeActionp);
+  startId             = (jint) grammarPropertyp->starti;
+  discardId           = (jint) grammarPropertyp->discardi;
 
   if (grammarPropertyp->nsymboll <= 0) {
     RAISEEXCEPTION(envp, "marpaESLIFGrammar_grammarproperty_currentb returned no symbol");
@@ -4745,18 +4656,10 @@ static jobject marpaESLIFRuleProperties(JNIEnv *envp, marpaESLIFRuleProperty_t *
   jint                        *rhsIdsIntp = NULL;
   size_t                       i;
 
-  id        = (jint) rulePropertyp->idi;
-  description = (*envp)->NewStringUTF(envp, rulePropertyp->descp->bytep);
-  if (description == NULL) {
-    /* We want OUR exception to be raised */
-    RAISEEXCEPTION(envp, "NewStringUTF() failure");
-  }
-  show = (*envp)->NewStringUTF(envp, rulePropertyp->asciishows);
-  if (show == NULL) {
-    /* We want OUR exception to be raised */
-    RAISEEXCEPTION(envp, "NewStringUTF() failure");
-  }
-  lhsId = (jint) rulePropertyp->lhsi;
+  id          = (jint) rulePropertyp->idi;
+  description = marpaESLIF_marpaESLIFStringToJavap(envp, rulePropertyp->descp);
+  show        = marpaESLIF_marpaESLIFASCIIToJavap(envp, rulePropertyp->asciishows);
+  lhsId       = (jint) rulePropertyp->lhsi;
   separatorId = (jint) rulePropertyp->separatori;
 
   if (rulePropertyp->nrhsl > 0) {
@@ -4782,38 +4685,12 @@ static jobject marpaESLIFRuleProperties(JNIEnv *envp, marpaESLIFRuleProperty_t *
   }
 
   exceptionId = (jint) rulePropertyp->exceptioni;
-
-  if (rulePropertyp->actionp == NULL) {
-    action = NULL;
-  } else {
-    switch (rulePropertyp->actionp->type) {
-    case MARPAESLIF_ACTION_TYPE_NAME:
-      action = (*envp)->NewStringUTF(envp, rulePropertyp->actionp->u.names);
-      if (action == NULL) {
-        /* We want OUR exception to be raised */
-        RAISEEXCEPTION(envp, "NewStringUTF() failure");
-      }
-      break;
-    case MARPAESLIF_ACTION_TYPE_STRING:
-      action = (*envp)->NewStringUTF(envp, rulePropertyp->actionp->u.stringp->bytep);
-      if (action == NULL) {
-        /* We want OUR exception to be raised */
-        RAISEEXCEPTION(envp, "NewStringUTF() failure");
-      }
-      break;
-    default:
-      RAISEEXCEPTIONF(envp, "Unsuported action type %d", rulePropertyp->actionp->type);
-    }
-  }
+  action      = marpaESLIF_marpaESLIFActionToJavap(envp, rulePropertyp->actionp);
 
   if (rulePropertyp->discardEvents == NULL) {
     discardEvent = NULL;
   } else {
-    discardEvent = (*envp)->NewStringUTF(envp, rulePropertyp->discardEvents);
-    if (discardEvent == NULL) {
-      /* We want OUR exception to be raised */
-      RAISEEXCEPTION(envp, "NewStringUTF() failure");
-    }
+    discardEvent = marpaESLIF_marpaESLIFASCIIToJavap(envp, rulePropertyp->discardEvents);
   }
 
   discardEventInitialState = rulePropertyp->discardEventb ? JNI_TRUE : JNI_FALSE;
@@ -4895,111 +4772,29 @@ static jobject marpaESLIFSymbolProperties(JNIEnv *envp, marpaESLIFSymbolProperty
   }
 
 
-  start       = symbolPropertyp->startb ? JNI_TRUE : JNI_FALSE;
-  discard     = symbolPropertyp->discardb ? JNI_TRUE : JNI_FALSE;
-  discardRhs  = symbolPropertyp->discardRhsb ? JNI_TRUE : JNI_FALSE;
-  lhs         = symbolPropertyp->lhsb ? JNI_TRUE : JNI_FALSE;
-  top         = symbolPropertyp->topb ? JNI_TRUE : JNI_FALSE;
-  id          = (jint) symbolPropertyp->idi;
-  description = (*envp)->NewStringUTF(envp, symbolPropertyp->descp->bytep);
-  if (description == NULL) {
-    /* We want OUR exception to be raised */
-    RAISEEXCEPTION(envp, "NewStringUTF() failure");
-  }
-
-  if (symbolPropertyp->eventBefores == NULL) {
-    eventBefore = NULL;
-  } else {
-    eventBefore = (*envp)->NewStringUTF(envp, symbolPropertyp->eventBefores);
-    if (eventBefore == NULL) {
-      /* We want OUR exception to be raised */
-      RAISEEXCEPTION(envp, "NewStringUTF() failure");
-    }
-  }
-  eventBeforeInitialState = symbolPropertyp->eventBeforeb ? JNI_TRUE : JNI_FALSE;
-
-  if (symbolPropertyp->eventAfters == NULL) {
-    eventAfter = NULL;
-  } else {
-    eventAfter = (*envp)->NewStringUTF(envp, symbolPropertyp->eventAfters);
-    if (eventAfter == NULL) {
-      /* We want OUR exception to be raised */
-      RAISEEXCEPTION(envp, "NewStringUTF() failure");
-    }
-  }
-  eventAfterInitialState = symbolPropertyp->eventAfterb ? JNI_TRUE : JNI_FALSE;
-
-  if (symbolPropertyp->eventPredicteds == NULL) {
-    eventPredicted = NULL;
-  } else {
-    eventPredicted = (*envp)->NewStringUTF(envp, symbolPropertyp->eventPredicteds);
-    if (eventPredicted == NULL) {
-      /* We want OUR exception to be raised */
-      RAISEEXCEPTION(envp, "NewStringUTF() failure");
-    }
-  }
+  start                      = symbolPropertyp->startb ? JNI_TRUE : JNI_FALSE;
+  discard                    = symbolPropertyp->discardb ? JNI_TRUE : JNI_FALSE;
+  discardRhs                 = symbolPropertyp->discardRhsb ? JNI_TRUE : JNI_FALSE;
+  lhs                        = symbolPropertyp->lhsb ? JNI_TRUE : JNI_FALSE;
+  top                        = symbolPropertyp->topb ? JNI_TRUE : JNI_FALSE;
+  id                         = (jint) symbolPropertyp->idi;
+  description                = marpaESLIF_marpaESLIFStringToJavap(envp, symbolPropertyp->descp);
+  eventBefore                = marpaESLIF_marpaESLIFASCIIToJavap(envp, symbolPropertyp->eventBefores);
+  eventBeforeInitialState    = symbolPropertyp->eventBeforeb ? JNI_TRUE : JNI_FALSE;
+  eventAfter                 = marpaESLIF_marpaESLIFASCIIToJavap(envp, symbolPropertyp->eventAfters);
+  eventAfterInitialState     = symbolPropertyp->eventAfterb ? JNI_TRUE : JNI_FALSE;
+  eventPredicted             = marpaESLIF_marpaESLIFASCIIToJavap(envp, symbolPropertyp->eventPredicteds);
   eventPredictedInitialState = symbolPropertyp->eventPredictedb ? JNI_TRUE : JNI_FALSE;
-
-  if (symbolPropertyp->eventNulleds == NULL) {
-    eventNulled = NULL;
-  } else {
-    eventNulled = (*envp)->NewStringUTF(envp, symbolPropertyp->eventNulleds);
-    if (eventNulled == NULL) {
-      /* We want OUR exception to be raised */
-      RAISEEXCEPTION(envp, "NewStringUTF() failure");
-    }
-  }
-  eventNulledInitialState = symbolPropertyp->eventNulledb ? JNI_TRUE : JNI_FALSE;
-
-  if (symbolPropertyp->eventCompleteds == NULL) {
-    eventCompleted = NULL;
-  } else {
-    eventCompleted = (*envp)->NewStringUTF(envp, symbolPropertyp->eventCompleteds);
-    if (eventCompleted == NULL) {
-      /* We want OUR exception to be raised */
-      RAISEEXCEPTION(envp, "NewStringUTF() failure");
-    }
-  }
+  eventNulled                = marpaESLIF_marpaESLIFASCIIToJavap(envp, symbolPropertyp->eventNulleds);
+  eventNulledInitialState    = symbolPropertyp->eventNulledb ? JNI_TRUE : JNI_FALSE;
+  eventCompleted             = marpaESLIF_marpaESLIFASCIIToJavap(envp, symbolPropertyp->eventCompleteds);
   eventCompletedInitialState = symbolPropertyp->eventCompletedb ? JNI_TRUE : JNI_FALSE;
-
-  if (symbolPropertyp->discardEvents == NULL) {
-    discardEvent = NULL;
-  } else {
-    discardEvent = (*envp)->NewStringUTF(envp, symbolPropertyp->discardEvents);
-    if (discardEvent == NULL) {
-      /* We want OUR exception to be raised */
-      RAISEEXCEPTION(envp, "NewStringUTF() failure");
-    }
-  }
-  discardEventInitialState = symbolPropertyp->discardEventb ? JNI_TRUE : JNI_FALSE;
-
-  lookupResolvedLeveli = (jint) symbolPropertyp->lookupResolvedLeveli;
-  priority             = (jint) symbolPropertyp->priorityi;
-
-  if (symbolPropertyp->nullableActionp == NULL) {
-    nullableAction = NULL;
-  } else {
-    switch (symbolPropertyp->nullableActionp->type) {
-    case MARPAESLIF_ACTION_TYPE_NAME:
-      nullableAction = (*envp)->NewStringUTF(envp, symbolPropertyp->nullableActionp->u.names);
-      if (nullableAction == NULL) {
-        /* We want OUR exception to be raised */
-        RAISEEXCEPTION(envp, "NewStringUTF() failure");
-      }
-      break;
-    case MARPAESLIF_ACTION_TYPE_STRING:
-      nullableAction = (*envp)->NewStringUTF(envp, symbolPropertyp->nullableActionp->u.stringp->bytep);
-      if (nullableAction == NULL) {
-        /* We want OUR exception to be raised */
-        RAISEEXCEPTION(envp, "NewStringUTF() failure");
-      }
-      break;
-    default:
-      RAISEEXCEPTIONF(envp, "Unsuported action type %d", symbolPropertyp->nullableActionp->type);
-    }
-  }
-
-  propertyBitSet      = (jint) symbolPropertyp->propertyBitSet;
+  discardEvent               = marpaESLIF_marpaESLIFASCIIToJavap(envp, symbolPropertyp->discardEvents);
+  discardEventInitialState   = symbolPropertyp->discardEventb ? JNI_TRUE : JNI_FALSE;
+  lookupResolvedLeveli       = (jint) symbolPropertyp->lookupResolvedLeveli;
+  priority                   = (jint) symbolPropertyp->priorityi;
+  nullableAction             = marpaESLIF_marpaESLIFActionToJavap(envp, symbolPropertyp->nullableActionp);
+  propertyBitSet             = (jint) symbolPropertyp->propertyBitSet;
 
   propertiesp = (*envp)->NewObject(envp,
                                    MARPAESLIF_ESLIFGRAMMARSYMBOLPROPERTIES_CLASSP,
@@ -5367,4 +5162,120 @@ static short marpaESLIF_TransformBool(void *userDatavp, void *contextp, short y)
 
  done:
   return rcb;
+}
+
+/*****************************************************************************/
+static jstring marpaESLIF_marpaESLIFStringToJavap(JNIEnv *envp, marpaESLIFString_t *marpaESLIFStringp)
+/*****************************************************************************/
+{
+  static const char *funcs          = "marpaESLIF_marpaESLIFStringToJavap";
+  jstring            stringp        = NULL;
+  jstring            encodingasciip = NULL;
+  jbyteArray         byteArrayp     = NULL;
+
+  if (marpaESLIFStringp != NULL) {
+    if (marpaESLIFStringp->bytep != NULL) {
+      /* Note: ok if bytel is zero, then it is an empty string */
+      byteArrayp = (*envp)->NewByteArray(envp, (jsize) marpaESLIFStringp->bytel);
+      if (byteArrayp == NULL) {
+        goto err;
+      }
+      if (marpaESLIFStringp->bytel > 0) {
+        (*envp)->SetByteArrayRegion(envp, byteArrayp, (jsize) 0, (jsize) marpaESLIFStringp->bytel, (jbyte *) marpaESLIFStringp->bytep);
+        if (HAVEEXCEPTION(envp)) {
+          goto err;
+        }
+      }
+      if (marpaESLIFStringp->encodingasciis != NULL) {
+        /* As per IANA this is in ASCII, thus compatible with Java's modified UTF-8 */
+        encodingasciip = (*envp)->NewStringUTF(envp, "ASCII");
+        if (encodingasciip == NULL) {
+          /* We want OUR exception to be raised */
+          RAISEEXCEPTION(envp, "NewStringUTF(\"ASCII\") failure");
+        }
+        stringp = (*envp)->NewObject(envp, JAVA_LANG_STRING_CLASSP, JAVA_LANG_STRING_CLASS_init_byteArray_String_METHODP, byteArrayp, encodingasciip);
+      } else {
+        stringp = (*envp)->NewObject(envp, JAVA_LANG_STRING_CLASSP, JAVA_LANG_STRING_CLASS_init_byteArray_METHODP, byteArrayp);
+      }
+      if (stringp == NULL) {
+        RAISEEXCEPTION(envp, "NewObject failure");
+      }
+    }
+  }
+
+  goto done;
+
+ err:
+  if (envp != NULL) {
+    if (byteArrayp != NULL) {
+      (*envp)->DeleteLocalRef(envp, byteArrayp);
+    }
+    if (encodingasciip != NULL) {
+      (*envp)->DeleteLocalRef(envp, encodingasciip);
+    }
+    if (stringp != NULL) {
+      (*envp)->DeleteLocalRef(envp, stringp);
+    }
+  }
+  stringp = NULL;
+
+ done:
+  return stringp;
+}
+
+/*****************************************************************************/
+static jstring marpaESLIF_marpaESLIFASCIIToJavap(JNIEnv *envp, char *asciis)
+/*****************************************************************************/
+{
+  static const char *funcs = "marpaESLIF_marpaESLIFASCIIToJavap";
+  jstring            stringp;
+
+  if (asciis != NULL) {
+    /* Per definition an ASCII string is compatible with modified UTF-8 */
+    stringp = (*envp)->NewStringUTF(envp, asciis);
+    if (stringp == NULL) {
+      RAISEEXCEPTION(envp, "NewStringUTF(\"UTF-8\") failure");
+    }
+  } else {
+    stringp = NULL;
+  }
+
+  goto done;
+
+ err:
+  stringp = NULL;
+
+ done:
+  return stringp;
+}
+
+/*****************************************************************************/
+static jstring marpaESLIF_marpaESLIFActionToJavap(JNIEnv *envp, marpaESLIFAction_t *actionp)
+/*****************************************************************************/
+{
+  static const char *funcs = "marpaESLIF_marpaESLIFActionToJavap";
+  jstring            stringp;
+
+  if (actionp == NULL) {
+    stringp = NULL;
+  } else {
+    switch (actionp->type) {
+    case MARPAESLIF_ACTION_TYPE_NAME:
+      stringp = marpaESLIF_marpaESLIFASCIIToJavap(envp, actionp->u.names);
+      break;
+    case MARPAESLIF_ACTION_TYPE_STRING:
+      stringp = marpaESLIF_marpaESLIFStringToJavap(envp, actionp->u.stringp);
+      break;
+    default:
+      RAISEEXCEPTIONF(envp, "Unsuported action type %d", actionp->type);
+    }
+  }
+
+  goto done;
+
+ err:
+  stringp = NULL;
+
+ done:
+  return stringp;
 }
