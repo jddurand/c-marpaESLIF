@@ -162,7 +162,7 @@ push(@additional_includes, File::Spec->catdir('output', '3rdparty', 'pcre2-10.23
 # -------------------------------------------
 # marpaESLIF embeds my unpanic version of lua
 # -------------------------------------------
-push(@additional_includes, File::Spec->catdir('3rdparty', 'github', 'lua534', 'include', 'lua'));
+push(@additional_includes, File::Spec->catdir('3rdparty', 'github', 'luaunpanic', 'include', 'lua'));
 
 # ------------------------------
 # marpaESLIF embeds lua bindings
@@ -172,7 +172,7 @@ push(@additional_includes, File::Spec->catdir('src', 'bindings', 'lua', 'include
 # ----------------------------------------------------------------
 # We depend on these* stuff that can manage themselves, eventually
 # ----------------------------------------------------------------
-foreach (qw/genericLogger genericStack genericHash marpaWrapper tconv lua534/) {
+foreach (qw/genericLogger genericStack genericHash marpaWrapper tconv luaunpanic/) {
     print "... Copying $_\n";
     if (! dircopy(File::Spec->catdir('3rdparty', 'github', $_),
                   File::Spec->catdir('output', '3rdparty', $_))) {
