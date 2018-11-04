@@ -17,7 +17,7 @@ use Perl::OSType qw/is_os_type/;
 # Generation of objects using perl setup, for use in perl's XS
 # ------------------------------------------------------------
 my $version = get_version();
-print "Generating config for lua534 version $version\n";
+print "Generating config for luaunpanic version $version\n";
 
 # ------------------------
 # Write configuration file
@@ -123,7 +123,7 @@ sub get_version {
     close($fh) || warn "Failed to close CMakeLists.txt, $!";
 
     my @rc;
-    if ($content =~ /^MYPACKAGESTART\s*\(\s*lua534\s+(\d+)\s+(\d+)\s+(\d+)\s*\)/sm) {
+    if ($content =~ /^MYPACKAGESTART\s*\(\s*luaunpanic\s+(\d+)\s+(\d+)\s+(\d+)\s*\)/sm) {
         @rc = ($1, $2, $3);
     } else {
         foreach (qw/LUA_VERSION_MAJOR LUA_VERSION_MINOR LUA_VERSION_PATCH/) {
