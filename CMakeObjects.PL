@@ -22,8 +22,8 @@ print "Generating config for luaunpanic version $version\n";
 # ------------------------
 # Write configuration file
 # ------------------------
-my $config_h_in = File::Spec->catfile('src', 'luaconf.h.in');
-my $config_h    = File::Spec->catfile('output', 'include', 'lua', 'luaconf.h');
+my $config_h_in = File::Spec->catfile('include', 'luaunpanic', 'internal', 'luaconf.h.in');
+my $config_h    = File::Spec->catfile('output', 'include', 'luaunpanic', 'lua', 'luaconf.h');
 make_path(dirname($config_h));
 
 my $ac = Config::AutoConf::INI->new(logfile => 'config.log');
@@ -41,11 +41,11 @@ write_config($version, $config_h_in, $config_h);
 # -------------
 # Fake export.h
 # -------------
-my $export_h = File::Spec->catfile('output', 'include', 'lua', 'export.h');
+my $export_h = File::Spec->catfile('output', 'include', 'luaunpanic', 'export.h');
 make_path(dirname($export_h));
 open(my $fh, '>', $export_h) || die "Cannot open $export_h, $!";
-print $fh "#define lua_EXPORT\n";
-print $fh "#define LUA_NO_EXPORT\n";
+print $fh "#define luaunpanic_EXPORT\n";
+print $fh "#define LUAUNPANIC_NO_EXPORT\n";
 close($fh) || warn "Cannot close $export_h, $!";
 
 # ----------------
@@ -107,7 +107,7 @@ foreach my $source (@sources) {
 	source        => $source,
 	object_file   => $obj,
         extra_compiler_flags => $extra_compiler_flags,
-	include_dirs  => [ 'include', File::Spec->catdir('include', 'lua'), File::Spec->catdir('output', 'include') ],
+	include_dirs  => [ 'include', File::Spec->catdir('output', 'include'), File::Spec->catdir('include', 'luaunpanic', 'lua'), File::Spec->catdir('output', 'include', 'luaunpanic', 'lua') ],
 	'C++'         => $is_cplusplus
 	);
 }
@@ -150,12 +150,12 @@ sub write_config {
 
     open($fh, '>', $output) || die "Cannot open $output, $!";
     print $fh <<CONFIG;
-#ifndef LUA_CONFIG_WRAPPER_H
-#define LUA_CONFIG_WRAPPER_H
+#ifndef LUAUNPANIC_CONFIG_WRAPPER_H
+#define LUAUNPANIC_CONFIG_WRAPPER_H
 
-#include <lua/config_autoconf.h>
+#include <luaunpanic/config_autoconf.h>
 
-#define LUA_VERSION "$version"
+#define LUAUNPANIC_VERSION "$version"
    
 $source
 
