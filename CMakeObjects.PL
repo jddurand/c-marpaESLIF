@@ -162,7 +162,8 @@ push(@additional_includes, File::Spec->catdir('output', '3rdparty', 'pcre2-10.23
 # -------------------------------------------
 # marpaESLIF embeds my unpanic version of lua
 # -------------------------------------------
-push(@additional_includes, File::Spec->catdir('3rdparty', 'github', 'luaunpanic', 'include', 'lua'));
+push(@additional_includes, File::Spec->catdir('3rdparty', 'github', 'luaunpanic', 'include', 'luaunpanic', 'lua'));
+push(@additional_includes, File::Spec->catdir('output', '3rdparty', 'luaunpanic', 'output', 'include', 'luaunpanic', 'lua')); # for luaconf.h
 
 # ------------------------------
 # marpaESLIF embeds lua bindings
