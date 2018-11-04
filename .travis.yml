@@ -35,7 +35,7 @@ before_script:
   - sh ./install-c-genericSparseArray.sh
   - sh ./install-c-marpaWrapper.sh
   - sh ./install-c-tconv.sh
-  - sh ./install-c-lua534.sh
+  - sh ./install-c-luaunpanic.sh
 script:
 # We want to try perl standalone first
   - cmake --version
