@@ -143,17 +143,33 @@ MACRO (MYPACKAGESTART packageName versionMajor versionMinor versionPatch)
   # We consider that every .h file in the include directory is to be installed
   # unless it is starting with an '_'.
   #
-  FILE (GLOB_RECURSE _include include/*.h)
+  FILE (GLOB_RECURSE _include include/*.h include/*.hpp)
   FOREACH (_file ${_include} )
+    #
+    # Hiden file
+    #
     GET_FILENAME_COMPONENT(_basename ${_file} NAME)
     STRING (REGEX MATCH "^_" _hiden ${_basename})
     IF ("${_hiden}" STREQUAL "_")
       CONTINUE ()
     ENDIF ()
+    #
+    # Internal file
+    #
+    GET_FILENAME_COMPONENT(_directory ${_file} DIRECTORY)
+    STRING (REGEX MATCH "/internal/?" _internal ${_directory})
+    IF (("${_internal}" STREQUAL "/internal") OR ("${_internal}" STREQUAL "/internal/"))
+      CONTINUE ()
+    ENDIF ()
+    #
+    # Ok
+    #
     FILE (RELATIVE_PATH _relfile ${PROJECT_SOURCE_DIR} ${_file})
     GET_FILENAME_COMPONENT(_dir ${_relfile} DIRECTORY)
-    INSTALL(FILES ${_file} DESTINATION ${_dir} COMPONENT HeaderComponent)
-    SET (_HAVE_HEADERCOMPONENT TRUE CACHE INTERNAL "Have HeaderComponent" FORCE)
+    IF (${packageName}_CAN_INSTALL)
+      INSTALL(FILES ${_file} DESTINATION ${_dir} COMPONENT HeaderComponent)
+      SET (_HAVE_HEADERCOMPONENT TRUE CACHE INTERNAL "Have HeaderComponent" FORCE)
+    ENDIF ()
   ENDFOREACH()
   #
   # Make sure current project have a property associating its default directories
