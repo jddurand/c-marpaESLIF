@@ -76,11 +76,8 @@ MYPACKAGEDEPENDENCY (genericStack  "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/
 MYPACKAGEDEPENDENCY (genericHash   "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/genericHash"   LIBS STATIC)
 MYPACKAGEDEPENDENCY (marpaWrapper  "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/marpaWrapper"  LIBS STATIC)
 MYPACKAGEDEPENDENCY (tconv         "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/tconv"         LIBS STATIC)
+MYPACKAGEDEPENDENCY (luaunpanic    "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/luaunpanic"    LIBS STATIC)
 
-#
-# Until I fixe cmake-utils I have to handle that like this
-#
-ADD_SUBDIRECTORY("${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/luaunpanic")
 #
 # pcre2 is built as an external project: we have to explicitly give the include path.
 # In addition, using pcre2 requires setting PCRE2_CODE_UNIT_WIDTH.
@@ -92,7 +89,7 @@ FOREACH (_target marpaESLIF marpaESLIF_static)
   IF (MSVC)
     TARGET_COMPILE_DEFINITIONS (${_target} PRIVATE -DPCRE2_STATIC=1)
   ENDIF ()
-  TARGET_LINK_LIBRARIES      (${_target} PRIVATE ${PCRE2_LIBRARIES} luaunpanic_static)
+  TARGET_LINK_LIBRARIES      (${_target} PRIVATE ${PCRE2_LIBRARIES})
 ENDFOREACH ()
 
 #########
