@@ -13,7 +13,7 @@ MYPACKAGETESTEXECUTABLE(genericHashTester test/genericHash.c)
 # Dependencies #
 ################
 MYPACKAGEDEPENDENCY (genericStack  "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/genericStack")
-MYPACKAGEDEPENDENCY (genericLogger "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/genericLogger" TESTS)
+MYPACKAGEDEPENDENCY (genericLogger "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/genericLogger" TESTS STATIC)
 
 #########
 # Tests #
