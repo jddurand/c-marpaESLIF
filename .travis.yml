@@ -44,16 +44,16 @@ script:
 # ALL_IN_ONE
   - cmake --version
   - cmake . -DALL_IN_ONE=ON
-  - make check
-  - make pack
+  - make check VERBOSE=1
+  - make pack VERBOSE=1
   - cpack -G NSIS
-  - make install DESTDIR=/tmp
+  - make install DESTDIR=/tmp VERBOSE=1
   - rm -rf output CMakeCache.txt CMakeFiles pcre2
 # Not ALL_IN_ONE
   - cmake --version
   - cmake .
-  - make
-  - make check
-  - make pack
+  - make VERBOSE=1
+  - make check VERBOSE=1
+  - make pack VERBOSE=1
   - cpack -G NSIS
-  - sudo make install
+  - sudo make install VERBOSE=1
