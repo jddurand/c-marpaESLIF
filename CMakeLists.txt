@@ -71,12 +71,12 @@ MYPACKAGETESTEXECUTABLE(exceptionTester4           test/exceptionTester4.c)
 ################
 # Dependencies #
 ################
-MYPACKAGEDEPENDENCY (genericLogger "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/genericLogger" LIBS)
-MYPACKAGEDEPENDENCY (genericStack  "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/genericStack"  LIBS STATIC)
-MYPACKAGEDEPENDENCY (genericHash   "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/genericHash"   LIBS STATIC)
-MYPACKAGEDEPENDENCY (marpaWrapper  "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/marpaWrapper"  LIBS STATIC)
-MYPACKAGEDEPENDENCY (tconv         "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/tconv"         LIBS STATIC)
-MYPACKAGEDEPENDENCY (luaunpanic    "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/luaunpanic"    LIBS STATIC)
+MYPACKAGEDEPENDENCY (genericLogger "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/genericLogger" LIBS LOCAL)
+MYPACKAGEDEPENDENCY (genericStack  "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/genericStack"  LIBS LOCAL STATIC)
+MYPACKAGEDEPENDENCY (genericHash   "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/genericHash"   LIBS LOCAL STATIC)
+MYPACKAGEDEPENDENCY (marpaWrapper  "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/marpaWrapper"  LIBS LOCAL STATIC)
+MYPACKAGEDEPENDENCY (tconv         "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/tconv"         LIBS LOCAL STATIC)
+MYPACKAGEDEPENDENCY (luaunpanic    "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/luaunpanic"    LIBS LOCAL STATIC)
 
 #
 # pcre2 is built as an external project: we have to explicitly give the include path.
