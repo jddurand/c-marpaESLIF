@@ -32,6 +32,15 @@ int main() {
   /* With a user-level implementation */
   loggerp = GENERICLOGGER_CUSTOM(localLogger, &localStruct, GENERICLOGGER_LOGLEVEL_TRACE);
   if (loggerp != NULL) {
+    if (genericLogger_userDatavp_getp(loggerp) != &localStruct) {
+      GENERICLOGGER_ERRORF(loggerp, "genericLogger_userDatavp_getp returns userDatavp = %p != %p", genericLogger_userDatavp_getp(loggerp), &localStruct);
+    }
+    if (genericLogger_userDatavp_setp(loggerp, NULL) != &localStruct) {
+      GENERICLOGGER_ERRORF(loggerp, "genericLogger_userDatavp_setp returns userDatavp = %p != %p", genericLogger_userDatavp_getp(loggerp), &localStruct);
+    }
+    if (genericLogger_userDatavp_setp(loggerp, &localStruct) != NULL) {
+      GENERICLOGGER_ERRORF(loggerp, "genericLogger_userDatavp_setp returns userDatavp = %p != %p", genericLogger_userDatavp_getp(loggerp), NULL);
+    }
     localStruct.i = 10;
     GENERICLOGGER_TRACE (loggerp, "[no argument - custom logger] Single message");
     GENERICLOGGER_TRACEF(loggerp, "[two arguments - custom logger] Formatted message: %s %s", "argument1", "argument2");
