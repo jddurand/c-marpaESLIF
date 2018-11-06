@@ -144,16 +144,42 @@ MACRO (MYPACKAGESTART packageName versionMajor versionMinor versionPatch)
   # unless it is starting with an '_'.
   #
   FILE (GLOB_RECURSE _include include/*.h include/*.hpp)
-  FOREACH (_file ${_include} )
+  FOREACH (_file ${_include})
+    IF (MYPACKAGE_DEBUG)
+      MESSAGE (STATUS "[${PROJECT_NAME}-START-DEBUG] Checking include ${_file}")
+    ENDIF ()
+    #
+    # Hiden file
+    #
     GET_FILENAME_COMPONENT(_basename ${_file} NAME)
     STRING (REGEX MATCH "^_" _hiden ${_basename})
     IF ("${_hiden}" STREQUAL "_")
+      IF (MYPACKAGE_DEBUG)
+        MESSAGE (STATUS "[${PROJECT_NAME}-START-DEBUG] Skipping hiden include ${_file}")
+      ENDIF ()
       CONTINUE ()
     ENDIF ()
+    #
+    # Internal file
+    #
+    GET_FILENAME_COMPONENT(_directory ${_file} DIRECTORY)
+    STRING (REGEX MATCH "/internal/?" _internal ${_directory})
+    IF (("${_internal}" STREQUAL "/internal") OR ("${_internal}" STREQUAL "/internal/"))
+      IF (MYPACKAGE_DEBUG)
+        MESSAGE (STATUS "[${PROJECT_NAME}-START-DEBUG] Skipping internal include ${_file}")
+      ENDIF ()
+      CONTINUE ()
+    ENDIF ()
+    #
+    # Ok
+    #
     FILE (RELATIVE_PATH _relfile ${PROJECT_SOURCE_DIR} ${_file})
     GET_FILENAME_COMPONENT(_dir ${_relfile} DIRECTORY)
     INSTALL(FILES ${_file} DESTINATION ${_dir} COMPONENT HeaderComponent)
     SET (_HAVE_HEADERCOMPONENT TRUE CACHE INTERNAL "Have HeaderComponent" FORCE)
+    IF (MYPACKAGE_DEBUG)
+      MESSAGE (STATUS "[${PROJECT_NAME}-START-DEBUG] Adding install rule for ${_file}")
+    ENDIF ()
   ENDFOREACH()
   #
   # Make sure current project have a property associating its default directories
