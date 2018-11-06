@@ -2,7 +2,7 @@ CMAKE_MINIMUM_REQUIRED (VERSION 3.0.0 FATAL_ERROR)
 IF (NOT MYPACKAGEBOOTSTRAP_DONE)
   INCLUDE ("3rdparty/github/cmake-utils/cmake/MyPackageBootstrap.cmake")
 ENDIF ()
-MYPACKAGESTART (tconv 1 0 57)
+MYPACKAGESTART (tconv 1 0 58)
 
 ####################
 # Specific options #
@@ -278,11 +278,6 @@ FOREACH (_target tconv tconv_static)
   ENDIF ()
 ENDFOREACH ()
 
-################
-# Dependencies #
-################
-MYPACKAGEDEPENDENCY (genericLogger "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/genericLogger" LIBS)
-
 ###############
 # Executables #
 ###############
@@ -323,6 +318,11 @@ ENDFOREACH ()
 #########
 MYPACKAGECHECK(tconvExe -t UTF-16 -o tconv.tconv-UTF-16.c "${PROJECT_SOURCE_DIR}/src/tconv.c")
 MYPACKAGECHECK(tconvExample)
+
+################
+# Dependencies #
+################
+MYPACKAGEDEPENDENCY (genericLogger "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/genericLogger" LIBS STATIC LOCAL)
 
 ###########
 # Install #
