@@ -15057,5 +15057,12 @@ static inline short _marpaESLIFValue_symbolActionCallbackb(marpaESLIFValue_t *ma
   return rcb;
 }
 
+/*****************************************************************************/
+char *marpaESLIF_charconvb(marpaESLIF_t *marpaESLIFp, char *toEncodings, char *fromEncodings, char *srcs, size_t srcl, size_t *dstlp)
+/*****************************************************************************/
+{
+  return _marpaESLIF_charconvb(marpaESLIFp, toEncodings, fromEncodings, srcs, srcl, dstlp, NULL /* fromEncodingsp */, NULL /* tconvpp */, 1 /* eofb */, NULL /* byteleftsp */, NULL /* byteleftlp */, NULL /* byteleftalloclp */);
+}
+
 #include "bootstrap.c"
 #include "lua.c"
