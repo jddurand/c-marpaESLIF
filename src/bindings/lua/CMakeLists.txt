@@ -35,7 +35,7 @@ SET_TARGET_PROPERTIES (marpaESLIFLua
 # Dependencies #
 ################
 MYPACKAGEDEPENDENCY (marpaESLIF "${CMAKE_SOURCE_DIR}" LIBS)
-MYPACKAGEDEPENDENCY (genericStack "${CMAKE_SOURCE_DIR}/3rdparty/github/genericStack" LIBS)
+MYPACKAGEDEPENDENCY (genericStack "${CMAKE_SOURCE_DIR}/3rdparty/github/genericStack" LIBS LOCAL STATIC)
 FOREACH (_target marpaESLIFLua marpaESLIFLua_static)
   TARGET_LINK_LIBRARIES(${_target} PUBLIC ${LUA_LIBRARIES})
 ENDFOREACH ()
