@@ -131,7 +131,7 @@ typedef short (*marpaESLIFValueResultTransformDouble_t)(void *userDatavp, void *
 typedef short (*marpaESLIFValueResultTransformPtr_t)(void *userDatavp, void *contextp, void *p);
 typedef short (*marpaESLIFValueResultTransformArray_t)(void *userDatavp, void *contextp, void *p, size_t sizel);
 typedef short (*marpaESLIFValueResultTransformBool_t)(void *userDatavp, void *contextp, short b);
-typedef short (*marpaESLIFValueResultTransformString_t)(void *userDatavp, void *contextp, unsigned char *p, size_t sizel);
+typedef short (*marpaESLIFValueResultTransformString_t)(void *userDatavp, void *contextp, unsigned char *p, size_t sizel, char *encodings);
 typedef struct marpaESLIFValueResultTransform {
   marpaESLIFValueResultTransformUndef_t undefTransformerp;
   marpaESLIFValueResultTransformChar_t charTransformerp;

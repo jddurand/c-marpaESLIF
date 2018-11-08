@@ -13,6 +13,8 @@
 /* To ease me debugging -; */
 static void marpaESLIFLua_stackdumpv(lua_State* L, int forcelookupi);
 
+static const char *MARPAESLIFLUA_UTF8_STRING = "UTF-8";
+
 /* Global table for the multiton pattern */
 #define MARPAESLIFMULTITONSTABLE "__marpaESLIFLuaMultitonsTable"
 /* Every key   is a marpaESLIFLuaContext light userdata */
@@ -167,6 +169,7 @@ static short                           marpaESLIFLua_transformDoubleb(void *user
 static short                           marpaESLIFLua_transformPtrb(void *userDatavp, void *contextp, void *p);
 static short                           marpaESLIFLua_transformArrayb(void *userDatavp, void *contextp, void *p, size_t sizel);
 static short                           marpaESLIFLua_transformBoolb(void *userDatavp, void *contextp, short b);
+static short                           marpaESLIFLua_transformStringb(void *userDatavp, void *contextp, unsigned char *p, size_t l, char *encodings);
 static short                           marpaESLIFLua_pushValueb(marpaESLIFLuaValueContext_t *marpaESLIFLuaValueContextp, marpaESLIFValue_t *marpaESLIFValuep, int stackindicei, char *bytep, size_t bytel);
 static short                           marpaESLIFLua_representationb(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp, char **inputcpp, size_t *inputlp);
 static void                            marpaESLIFLua_iterate_and_print(lua_State *L, int index);
@@ -222,7 +225,8 @@ static marpaESLIFValueResultTransform_t marpaESLIFLuaValueResultTransformDefault
   marpaESLIFLua_transformDoubleb,
   marpaESLIFLua_transformPtrb,
   marpaESLIFLua_transformArrayb,
-  marpaESLIFLua_transformBoolb
+  marpaESLIFLua_transformBoolb,
+  marpaESLIFLua_transformStringb
 };
 
 #define MARPAESLIFLUA_NOOP
@@ -3408,6 +3412,42 @@ static short marpaESLIFLua_transformBoolb(void *userDatavp, void *contextp, shor
 
  err:
   return 0;
+}
+
+/*****************************************************************************/
+static short marpaESLIFLua_transformStringb(void *userDatavp, void *contextp, unsigned char *p, size_t l, char *encodings)
+/*****************************************************************************/
+{
+  static const char           *funcs                      = "marpaESLIFLua_transformStringb";
+  marpaESLIFLuaValueContext_t *marpaESLIFLuaValueContextp = (marpaESLIFLuaValueContext_t *) userDatavp;
+  marpaESLIFValue_t           *marpaESLIFValuep           = marpaESLIFLuaValueContextp->marpaESLIFValuep;
+  marpaESLIFRecognizer_t      *marpaESLIFRecognizerp      = marpaESLIFValue_recognizerp(marpaESLIFValuep);
+  marpaESLIFGrammar_t         *marpaESLIFGrammarp         = marpaESLIFRecognizer_grammarp(marpaESLIFRecognizerp);
+  marpaESLIF_t                *marpaESLIFp                = marpaESLIFGrammar_eslifp(marpaESLIFGrammarp);
+  lua_State                   *L                          = marpaESLIFLuaValueContextp->L;
+  char                        *utf8s                      = NULL;
+  size_t                       utf8l;
+  short                        rcb;
+
+  /* We always inject string in the UTF-8 format to lua interpreter */
+  utf8s = marpaESLIF_charconvb(marpaESLIFp, (char *) MARPAESLIFLUA_UTF8_STRING, encodings, (char *) p, l, &utf8l);
+  if (utf8s == NULL) {
+    goto err;
+  }
+
+  if (! marpaESLIFLua_lua_pushlstring(NULL, marpaESLIFLuaValueContextp->L, utf8s, utf8l)) goto err;
+
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  if (utf8s != NULL) {
+    free(utf8s);
+  }
+  return rcb;
 }
 
 /*****************************************************************************/
