@@ -55,11 +55,11 @@ static const int   MARPAESLIF_VERSION_PATCH_STATIC = MARPAESLIF_VERSION_PATCH;
         MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Match result type for %s is %d instead of ARRAY (%d)", symbolp->descp->asciis, marpaESLIFValueResult.type, MARPAESLIF_VALUE_TYPE_ARRAY); \
         goto err;                                                       \
       }                                                                 \
-      if ((marpaESLIFValueResult.u.p == NULL) || (marpaESLIFValueResult.sizel <= 0)) { \
-        MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Match result for %s is {%p,%ld}", symbolp->descp->asciis, marpaESLIFValueResult.u.p, (unsigned long) marpaESLIFValueResult.sizel); \
+      if ((marpaESLIFValueResult.u.a.p == NULL) || (marpaESLIFValueResult.u.a.sizel <= 0)) { \
+        MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Match result for %s is {%p,%ld}", symbolp->descp->asciis, marpaESLIFValueResult.u.a.p, (unsigned long) marpaESLIFValueResult.u.a.sizel); \
         goto err;                                                       \
       }                                                                 \
-      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Match result for %s is ARRAY: {%p,%ld}", symbolp->descp->asciis, marpaESLIFValueResult.u.p, (unsigned long) marpaESLIFValueResult.sizel); \
+      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Match result for %s is ARRAY: {%p,%ld}", symbolp->descp->asciis, marpaESLIFValueResult.u.a.p, (unsigned long) marpaESLIFValueResult.u.a.sizel); \
     }                                                                   \
   } while (0)
 
@@ -67,7 +67,7 @@ static const int   MARPAESLIF_VERSION_PATCH_STATIC = MARPAESLIF_VERSION_PATCH;
 #define MARPAESLIF_CHECK_MATCH_RESULT(funcs, marpaESLIFRecognizerp, inputs, symbolp, rci, marpaESLIFValueResult) do { \
     _MARPAESLIF_CHECK_MATCH_RESULT(funcs, marpaESLIFRecognizerp, symbolp, rci, marpaESLIFValueResult); \
     if (rci == MARPAESLIF_MATCH_OK) {                                   \
-      MARPAESLIF_HEXDUMPV(marpaESLIFRecognizerp, "Match dump for ", symbolp->descp->asciis, marpaESLIFValueResult.u.p, marpaESLIFValueResult.sizel, 1); \
+      MARPAESLIF_HEXDUMPV(marpaESLIFRecognizerp, "Match dump for ", symbolp->descp->asciis, marpaESLIFValueResult.u.a.p, marpaESLIFValueResult.u.a.sizel, 1); \
     }                                                                   \
   } while (0)
 #else
@@ -1205,7 +1205,6 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
     marpaESLIFGrammar.luaprecompiledp  = NULL;
     marpaESLIFGrammar.luaprecompiledl  = 0;
     marpaESLIFGrammar.luadescp         = NULL;
-    marpaESLIFGrammar.L                = NULL;
 
     /* Fake a recognizer. EOF flag will be set automatically in fake mode */
     marpaESLIFRecognizerTestp = _marpaESLIFRecognizer_newp(&marpaESLIFGrammar,
@@ -6105,13 +6104,13 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
       symbolMaxStartCompletionsi    = numberOfStartCompletionsi;
       exceptionMaxStartCompletionsi = -1;
     exception_again:
-      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Symbol match on %ld bytes using %d completions", (unsigned long) marpaESLIFValueResult.sizel, numberOfStartCompletionsi);
+      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Symbol match on %ld bytes using %d completions", (unsigned long) marpaESLIFValueResult.u.a.sizel, numberOfStartCompletionsi);
       previnputs = marpaESLIF_streamp->inputs;
       offsetl = ((char *) marpaESLIFValueResult.u.a.p) - previnputs;
       /* Take care: this may move the stream */
       rcMatcherb = _marpaESLIFRecognizer_symbol_matcherb(marpaESLIFRecognizerp, exceptionp, &exceptionRci, &exceptionMarpaESLIFValueResult, exceptionMaxStartCompletionsi, &lastSizeBeforeCompletionl, &numberOfExceptionCompletionsi);
       if ((marpaESLIFRecognizerp->parentRecognizerp == NULL) && (marpaESLIF_streamp->inputs != previnputs) && (symbolp->type == MARPAESLIF_SYMBOL_TYPE_META)) {
-        /* Stream have moved and marpaESLIFValueResult.u.p is a pointer within the stream... */
+        /* Stream have moved and marpaESLIFValueResult.u.a.p is a pointer within the stream... */
         marpaESLIFValueResult.u.a.p = marpaESLIF_streamp->inputs + offsetl;
       }
       if (rcMatcherb < 0) {
@@ -6120,12 +6119,12 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
       /* We take current marpaESLIFValueResult and look if it matches exception. */
       if (rcMatcherb) {
         if (exceptionRci == MARPAESLIF_MATCH_OK) {
-          /* In any case we do not mind about the exception value itself, just the size - and in lexeme mode exceptionMarpaESLIFValueResult.u.p is a shallow pointer */
-          /* free(exceptionMarpaESLIFValueResult.u.p); */
+          /* In any case we do not mind about the exception value itself, just the size - and in lexeme mode exceptionMarpaESLIFValueResult.u.a.p is a shallow pointer */
+          /* free(exceptionMarpaESLIFValueResult.u.a.p); */
           exceptionMarpaESLIFValueResult.u.a.p = NULL;
           if (exceptionMarpaESLIFValueResult.u.a.sizel == marpaESLIFValueResult.u.a.sizel) {
             /* The lexeme value, taken as if it was a separate input, is matching the exception */
-            MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Exception match on %ld bytes", (unsigned long) exceptionMarpaESLIFValueResult.sizel);
+            MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Exception match on %ld bytes", (unsigned long) exceptionMarpaESLIFValueResult.u.a.sizel);
             /* A lexeme value is always a shallow pointer */
             /*
             free(marpaESLIFValueResult.u.a.p);
@@ -6135,21 +6134,21 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
 
             /* We have to rollback on the number of completions until symbol size is <= lastSizeBeforeCompletionl */
             if (lastSizeBeforeCompletionl <= 0) {
-              MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Exception match on %ld bytes: no room is left for symbol match", (unsigned long) exceptionMarpaESLIFValueResult.sizel);
+              MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Exception match on %ld bytes: no room is left for symbol match", (unsigned long) exceptionMarpaESLIFValueResult.u.a.sizel);
               rci = MARPAESLIF_MATCH_FAILURE;
             } else {
-              MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Exception match on %ld bytes: asking for less symbol completions until its size is <= %ld", (unsigned long) exceptionMarpaESLIFValueResult.sizel, (unsigned long) lastSizeBeforeCompletionl);
+              MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Exception match on %ld bytes: asking for less symbol completions until its size is <= %ld", (unsigned long) exceptionMarpaESLIFValueResult.u.a.sizel, (unsigned long) lastSizeBeforeCompletionl);
 	      if (symbolMaxStartCompletionsi <= 1) {
-		MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Exception match on %ld bytes and symbol cannot match on a smaller input", (unsigned long) exceptionMarpaESLIFValueResult.sizel);
+		MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Exception match on %ld bytes and symbol cannot match on a smaller input", (unsigned long) exceptionMarpaESLIFValueResult.u.a.sizel);
 		rci = MARPAESLIF_MATCH_FAILURE;
 	      } else {
 		while (--symbolMaxStartCompletionsi > 0) {
-		  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Exception match on %ld bytes: asking for %d symbol start completions", (unsigned long) exceptionMarpaESLIFValueResult.sizel, symbolMaxStartCompletionsi);
+		  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Exception match on %ld bytes: asking for %d symbol start completions", (unsigned long) exceptionMarpaESLIFValueResult.u.a.sizel, symbolMaxStartCompletionsi);
                   previnputs = marpaESLIF_streamp->inputs;
                   offsetl = ((char *) marpaESLIFValueResult.u.a.p) - previnputs;
 		  rcMatcherb = _marpaESLIFRecognizer_symbol_matcherb(marpaESLIFRecognizerp, symbolp, &rci, &marpaESLIFValueResult, symbolMaxStartCompletionsi, NULL /* lastSizeBeforeCompletionlp */, NULL /* numberOfStartCompletionsi */);
                   if ((marpaESLIFRecognizerp->parentRecognizerp == NULL) && (marpaESLIF_streamp->inputs != previnputs) && (symbolp->type == MARPAESLIF_SYMBOL_TYPE_META)) {
-                    /* Stream have moved and marpaESLIFValueResult.u.p is a pointer within the stream... */
+                    /* Stream have moved and marpaESLIFValueResult.u.a.p is a pointer within the stream... */
                     marpaESLIFValueResult.u.a.p = marpaESLIF_streamp->inputs + offsetl;
                   }
 		  if (rcMatcherb < 0) {
@@ -6157,16 +6156,16 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
 		  }
 		  if (! rcMatcherb) {
 		    /* This should never happen since we already had completions before */
-		    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Exception match on %ld bytes: symbol match failure when asking for %d start completions !?", (unsigned long) exceptionMarpaESLIFValueResult.sizel, symbolMaxStartCompletionsi);
+		    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Exception match on %ld bytes: symbol match failure when asking for %d start completions !?", (unsigned long) exceptionMarpaESLIFValueResult.u.a.sizel, symbolMaxStartCompletionsi);
 		    break;
 		  }
 		  if (rci != MARPAESLIF_MATCH_OK) {
 		    /* Ditto */
-		    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Exception match on %ld bytes: symbol match did not return MARPAESLIF_MATCH_OK when asking for %d start completions !?", (unsigned long) exceptionMarpaESLIFValueResult.sizel, symbolMaxStartCompletionsi);
+		    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Exception match on %ld bytes: symbol match did not return MARPAESLIF_MATCH_OK when asking for %d start completions !?", (unsigned long) exceptionMarpaESLIFValueResult.u.a.sizel, symbolMaxStartCompletionsi);
 		    break;
 		  }
 		  if (marpaESLIFValueResult.u.a.sizel > lastSizeBeforeCompletionl) {
-		    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Exception match on %ld bytes: asking for %d symbol start completions ok but with size %ld > %ld", (unsigned long) exceptionMarpaESLIFValueResult.sizel, symbolMaxStartCompletionsi, (unsigned long) marpaESLIFValueResult.sizel, (unsigned long) lastSizeBeforeCompletionl);
+		    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Exception match on %ld bytes: asking for %d symbol start completions ok but with size %ld > %ld", (unsigned long) exceptionMarpaESLIFValueResult.u.a.sizel, symbolMaxStartCompletionsi, (unsigned long) marpaESLIFValueResult.u.a.sizel, (unsigned long) lastSizeBeforeCompletionl);
 		    /* A lexeme value is always a shallow pointer */
 		    /*
 		      free(marpaESLIFValueResult.u.a.p);
@@ -6174,7 +6173,7 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
 		    marpaESLIFValueResult.u.a.p = NULL;
 		    marpaESLIFValueResult.u.a.sizel = 0;
 		  } else {
-		    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Exception match on %ld bytes: asking for %d symbol start completions ok with size %ld <= %ld", (unsigned long) exceptionMarpaESLIFValueResult.sizel, symbolMaxStartCompletionsi, (unsigned long) marpaESLIFValueResult.sizel, (unsigned long) lastSizeBeforeCompletionl);
+		    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Exception match on %ld bytes: asking for %d symbol start completions ok with size %ld <= %ld", (unsigned long) exceptionMarpaESLIFValueResult.u.a.sizel, symbolMaxStartCompletionsi, (unsigned long) marpaESLIFValueResult.u.a.sizel, (unsigned long) lastSizeBeforeCompletionl);
 		    exceptionMaxStartCompletionsi = numberOfExceptionCompletionsi - 1;
 		    goto exception_again;
 		  }
@@ -6182,7 +6181,7 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
 	      }
 	    }
           } else {
-            MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Exception match on %ld bytes != symbol match on %ld bytes", (unsigned long) exceptionMarpaESLIFValueResult.sizel, (unsigned long) marpaESLIFValueResult.sizel);
+            MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Exception match on %ld bytes != symbol match on %ld bytes", (unsigned long) exceptionMarpaESLIFValueResult.u.a.sizel, (unsigned long) marpaESLIFValueResult.u.a.sizel);
           }
         }
       }
@@ -6278,7 +6277,7 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
         marpaESLIF_streamp->inputs += marpaESLIFValueResult.u.a.sizel;
         marpaESLIF_streamp->inputl -= marpaESLIFValueResult.u.a.sizel;
         /* We NEVER free because we called for parsing in lexeme mode */
-        /* free(marpaESLIFValueResult.u.p); */
+        /* free(marpaESLIFValueResult.u.a.p); */
         /* If there is an event, get out of this method */
         if ((marpaESLIFRecognizerp->discardEvents != NULL) && (marpaESLIFRecognizerp->discardSymbolp != NULL)) {
           /* Push discard event */
@@ -6442,7 +6441,7 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
         marpaESLIF_streamp->inputs += marpaESLIFValueResult.u.a.sizel;
         marpaESLIF_streamp->inputl -= marpaESLIFValueResult.u.a.sizel;
         /* We NEVER free because we called for parsing in lexeme mode */
-        /* free(marpaESLIFValueResult.u.p); */
+        /* free(marpaESLIFValueResult.u.a.p); */
         /* These lines are important so that this specific retry is clean */
         alternativeStackSymboli = 0;
         maxMatchedl = 0;
@@ -6459,11 +6458,11 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
         }
       } else {
         MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Discard match is of %ld bytes < %ld bytes (longest lexeme): ignored",
-                                    (unsigned long) marpaESLIFValueResult.sizel,
+                                    (unsigned long) marpaESLIFValueResult.u.a.sizel,
                                     (unsigned long) maxMatchedl);
         /* We NEVER free because we called for parsing in lexeme mode */
         /*
-        free(marpaESLIFValueResult.u.p);
+        free(marpaESLIFValueResult.u.a.p);
         */
       }
     }
@@ -8104,7 +8103,7 @@ static inline short _marpaESLIFRecognizer_push_grammar_eventsb(marpaESLIFRecogni
           marpaESLIF_streamp->inputs += marpaESLIFValueResult.u.a.sizel;
           marpaESLIF_streamp->inputl -= marpaESLIFValueResult.u.a.sizel;
           /* We NEVER free because we called for parsing in lexeme mode */
-          /* free(marpaESLIFValueResult.u.p); */
+          /* free(marpaESLIFValueResult.u.a.p); */
           /* If there is an event, push it */
           if ((marpaESLIFRecognizerp->discardEvents != NULL) && (marpaESLIFRecognizerp->discardSymbolp != NULL)) {
             /* Push discard event */
@@ -12913,7 +12912,7 @@ static void _marpaESLIF_rule_freeCallbackv(void *userDatavp, void *contextp, mar
     free(p);
     break;
   default:
-    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, "type is not PTR nor ARRAY (got %d, %s)", type, _marpaESLIF_value_types(type));
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "type is not PTR nor ARRAY (got %d, %s)", type, _marpaESLIF_value_types(type));
     break;
   }
 
