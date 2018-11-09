@@ -212,6 +212,7 @@ static inline marpaESLIF_t          *_marpaESLIF_newp(marpaESLIFOption_t *marpaE
 static inline marpaESLIF_string_t   *_marpaESLIF_string_newp(marpaESLIF_t *marpaESLIFp, char *encodingasciis, char *bytep, size_t bytel);
 static inline marpaESLIF_string_t   *_marpaESLIF_string_clonep(marpaESLIF_t *marpaESLIFp, marpaESLIF_string_t *stringp);
 static inline void                   _marpaESLIF_string_freev(marpaESLIF_string_t *stringp);
+static inline short                  _marpaESLIF_string_utf8_eqb(marpaESLIF_string_t *string1p, marpaESLIF_string_t *string2p);
 static inline short                  _marpaESLIF_string_eqb(marpaESLIF_string_t *string1p, marpaESLIF_string_t *string2p);
 static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, int eventSeti, char *descEncodings, char *descs, size_t descl, marpaESLIF_terminal_type_t type, char *modifiers, char *utf8s, size_t utf8l, char *testFullMatchs, char *testPartialMatchs);
 static inline void                   _marpaESLIF_terminal_freev(marpaESLIF_terminal_t *terminalp);
@@ -558,6 +559,27 @@ static inline void _marpaESLIF_string_freev(marpaESLIF_string_t *stringp)
 }
 
 /*****************************************************************************/
+static inline short _marpaESLIF_string_utf8_eqb(marpaESLIF_string_t *string1p, marpaESLIF_string_t *string2p)
+/*****************************************************************************/
+{
+  /* It is assumed the caller compare strings with the same encoding - UTF-8 in our case */
+  char  *byte1p;
+  char  *byte2p;
+  size_t bytel;
+
+  if ((string1p == NULL) || (string2p == NULL)) {
+    return 0;
+  }
+  if (((byte1p = string1p->bytep) == NULL) || ((byte2p = string2p->bytep) == NULL)) {
+    return 0;
+  }
+  if ((bytel = string1p->bytel) != string2p->bytel) {
+    return 0;
+  }
+  return (memcmp(byte1p, byte2p, bytel) == 0) ? 1 : 0;
+}
+
+/*****************************************************************************/
 static inline short _marpaESLIF_string_eqb(marpaESLIF_string_t *string1p, marpaESLIF_string_t *string2p)
 /*****************************************************************************/
 {
@@ -565,7 +587,7 @@ static inline short _marpaESLIF_string_eqb(marpaESLIF_string_t *string1p, marpaE
   char  *byte1p;
   char  *byte2p;
   size_t bytel;
-  
+
   if ((string1p == NULL) || (string2p == NULL)) {
     return 0;
   }
@@ -2003,7 +2025,7 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
       for (rulei = 0; rulei < GENERICSTACK_USED(ruleStackp); rulei++) {
         MARPAESLIF_INTERNAL_GET_RULE_FROM_STACK(marpaESLIFp, rulep, ruleStackp, rulei);
         lhsp = rulep->lhsp;
-        if (_marpaESLIF_string_eqb(lhsp->descp, symbolp->descp)) {
+        if (_marpaESLIF_string_utf8_eqb(lhsp->descp, symbolp->descp)) {
           /* Found */
           MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Grammar level %d (%s): symbol %d (%s) marked as LHS", grammari, grammarp->descp->asciis, lhsp->idi, lhsp->descp->asciis);
           lhsb = 1;
@@ -2408,7 +2430,7 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
         continue;
       }
       subgrammarp = (marpaESLIF_grammar_t *) GENERICSTACK_GET_PTR(grammarStackp, grammarj);
-      if (_marpaESLIF_string_eqb(grammarp->descp, subgrammarp->descp)) {
+      if (_marpaESLIF_string_utf8_eqb(grammarp->descp, subgrammarp->descp)) {
         MARPAESLIF_ERRORF(marpaESLIFp, "Grammars at level %d and %d have the same name (%s)", grammarp->leveli, subgrammarp->leveli, grammarp->descp->asciis);
         goto err;
       }
@@ -11870,7 +11892,7 @@ static inline marpaESLIF_symbol_t *_marpaESLIF_resolveSymbolp(marpaESLIF_t *marp
         continue;
       }
       thisGrammarp = (marpaESLIF_grammar_t *) GENERICSTACK_GET_PTR(grammarStackp, grammari);
-      if (_marpaESLIF_string_eqb(thisGrammarp->descp, lookupGrammarStringp)) {
+      if (_marpaESLIF_string_utf8_eqb(thisGrammarp->descp, lookupGrammarStringp)) {
         grammarp = thisGrammarp;
         break;
       }
@@ -14745,7 +14767,7 @@ static inline short _marpaESLIF_action_eqb(marpaESLIF_action_t *action1p, marpaE
   case MARPAESLIF_ACTION_TYPE_NAME:
     return (strcmp(action1p->u.names, action2p->u.names) == 0);
   case MARPAESLIF_ACTION_TYPE_STRING:
-    return _marpaESLIF_string_eqb(action1p->u.stringp, action2p->u.stringp);
+    return _marpaESLIF_string_utf8_eqb(action1p->u.stringp, action2p->u.stringp);
   case MARPAESLIF_ACTION_TYPE_LUA:
     return (strcmp(action1p->u.luas, action2p->u.luas) == 0);
   default:
