@@ -42,6 +42,11 @@ TARGET_COMPILE_DEFINITIONS(marpaESLIFJava
       )
 INSTALL (TARGETS marpaESLIFJava ARCHIVE DESTINATION lib LIBRARY DESTINATION lib RUNTIME DESTINATION bin COMPONENT libraries)
 
+################
+# Dependencies #
+################
+MYPACKAGEDEPENDENCY (genericStack  "${CMAKE_CURRENT_SOURCE_DIR}/../../../3rdparty/github/genericStack"  LIBS LOCAL STATIC)
+
 # ------------------------------------------
 # JAVA
 # ------------------------------------------
