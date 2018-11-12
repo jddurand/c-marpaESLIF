@@ -463,7 +463,7 @@ static short marpaESLIFLua_luaL_requiref(lua_State *L, const char *modname, lua_
 
 /* Value is at the top of the stack and is popped by this macro */
 /* We store at "indice" a pointer to an integer that contains a reference to the value */
-#define MARPAESLIFLUA_SET_VALUE(marpaESLIFLuaValueContextp, marpaESLIFValuep, indicei, stringificationp) do { \
+#define MARPAESLIFLUA_SET_PTR(marpaESLIFLuaValueContextp, marpaESLIFValuep, indicei, stringificationp) do { \
     marpaESLIFValueResult_t _marpaESLIFValueResult;                     \
     int *_p;                                                            \
                                                                         \
@@ -3202,7 +3202,7 @@ static short marpaESLIFLua_valueRuleCallbackb(void *userDatavp, marpaESLIFValue_
     }
   }
 
-  MARPAESLIFLUA_SET_VALUE(marpaESLIFLuaValueContextp, marpaESLIFValuep, resulti, marpaESLIFLua_representationb);
+  MARPAESLIFLUA_SET_PTR(marpaESLIFLuaValueContextp, marpaESLIFValuep, resulti, marpaESLIFLua_representationb);
   if (! marpaESLIFLua_lua_pop(L, 1)) goto err;
 
   return 1;
@@ -3239,7 +3239,7 @@ static short marpaESLIFLua_valueSymbolCallbackb(void *userDatavp, marpaESLIFValu
     }
   }
 
-  MARPAESLIFLUA_SET_VALUE(marpaESLIFLuaValueContextp, marpaESLIFValuep, resulti, marpaESLIFLua_representationb);
+  MARPAESLIFLUA_SET_PTR(marpaESLIFLuaValueContextp, marpaESLIFValuep, resulti, marpaESLIFLua_representationb);
   if (! marpaESLIFLua_lua_pop(L, 1)) goto err;
 
   return 1;
