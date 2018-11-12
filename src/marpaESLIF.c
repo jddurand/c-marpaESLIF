@@ -13333,6 +13333,11 @@ static inline short _marpaESLIF_generic_action___concatb(void *userDatavp, marpa
           marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_PTR;
           marpaESLIFValueResult.u.p.p           = converteds;
           marpaESLIFValueResult.u.p.shallowb    = 0;
+          if (! _marpaESLIFValue_stack_setb(marpaESLIFValuep, resulti, &marpaESLIFValueResult)) {
+            goto err;
+          }
+          /* converteds is now in the stack */
+          converteds = NULL;
         } else {
           marpaESLIFValueResult.contextp           = NULL;
           marpaESLIFValueResult.representationp    = NULL;
@@ -13341,16 +13346,14 @@ static inline short _marpaESLIF_generic_action___concatb(void *userDatavp, marpa
           marpaESLIFValueResult.u.s.sizel          = convertedl;
           marpaESLIFValueResult.u.s.encodingasciis = toEncodingDups;
           marpaESLIFValueResult.u.s.shallowb       = 0;
+          if (! _marpaESLIFValue_stack_setb(marpaESLIFValuep, resulti, &marpaESLIFValueResult)) {
+            goto err;
+          }
+          /* converteds is now in the stack */
+          converteds = NULL;
+          /* toEncodingDups as well */
+          toEncodingDups = NULL;
         }
-
-        if (! _marpaESLIFValue_stack_setb(marpaESLIFValuep, resulti, &marpaESLIFValueResult)) {
-          goto err;
-        }
-
-        /* converteds is now in the stack */
-        converteds = NULL;
-        /* toEncodingDups as well */
-        toEncodingDups = NULL;
       } else {
         marpaESLIFValueResult.contextp        = NULL;
         marpaESLIFValueResult.representationp = NULL;
