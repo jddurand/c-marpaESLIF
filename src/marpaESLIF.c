@@ -214,6 +214,7 @@ static inline marpaESLIF_string_t   *_marpaESLIF_string_clonep(marpaESLIF_t *mar
 static inline void                   _marpaESLIF_string_freev(marpaESLIF_string_t *stringp);
 static inline short                  _marpaESLIF_string_utf8_eqb(marpaESLIF_string_t *string1p, marpaESLIF_string_t *string2p);
 static inline short                  _marpaESLIF_string_eqb(marpaESLIF_string_t *string1p, marpaESLIF_string_t *string2p);
+static inline marpaESLIF_string_t   *_marpaESLIF_string2utf8p(marpaESLIF_t *marpaESLIFp, marpaESLIF_string_t *stringp);
 static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, int eventSeti, char *descEncodings, char *descs, size_t descl, marpaESLIF_terminal_type_t type, char *modifiers, char *utf8s, size_t utf8l, char *testFullMatchs, char *testPartialMatchs);
 static inline void                   _marpaESLIF_terminal_freev(marpaESLIF_terminal_t *terminalp);
 
@@ -7614,27 +7615,34 @@ static inline marpaESLIF_grammar_t *_marpaESLIFGrammar_grammar_findp(marpaESLIFG
 {
   static const char    *funcs         = "_marpaESLIFGrammar_grammar_findp";
   genericStack_t       *grammarStackp = marpaESLIFGrammarp->grammarStackp;
+  marpaESLIF_string_t  *utf8p         = NULL;
   marpaESLIF_grammar_t *rcp           = NULL;
   marpaESLIF_grammar_t *grammarp;
   int                   i;
 
   if (descp != NULL) {
     /* Search by description has precedence */
-    for (i = 0; i < GENERICSTACK_USED(grammarStackp); i++) {
-      if (! GENERICSTACK_IS_PTR(grammarStackp, i)) {
-        /* Sparse array */
-        continue;
-      }
-      grammarp = (marpaESLIF_grammar_t *) GENERICSTACK_GET_PTR(grammarStackp, i);
-      if (_marpaESLIF_string_eqb(grammarp->descp, descp)) {
-        rcp = grammarp;
-        break;
+    if ((utf8p = _marpaESLIF_string2utf8p(marpaESLIFGrammarp->marpaESLIFp, descp)) != NULL) {
+      for (i = 0; i < GENERICSTACK_USED(grammarStackp); i++) {
+        if (! GENERICSTACK_IS_PTR(grammarStackp, i)) {
+          /* Sparse array */
+          continue;
+        }
+        grammarp = (marpaESLIF_grammar_t *) GENERICSTACK_GET_PTR(grammarStackp, i);
+        if (_marpaESLIF_string_eqb(grammarp->descp, descp)) {
+          rcp = grammarp;
+          break;
+        }
       }
     }
   } else if (leveli >= 0) {
     if (GENERICSTACK_IS_PTR(grammarStackp, leveli)) {
       rcp = (marpaESLIF_grammar_t *) GENERICSTACK_GET_PTR(grammarStackp, leveli);
     }
+  }
+
+  if (utf8p != NULL) {
+    _marpaESLIF_string_freev(utf8p);
   }
 
   return rcp;
@@ -15083,6 +15091,46 @@ char *marpaESLIF_charconvb(marpaESLIF_t *marpaESLIFp, char *toEncodings, char *f
 /*****************************************************************************/
 {
   return _marpaESLIF_charconvb(marpaESLIFp, toEncodings, fromEncodings, srcs, srcl, dstlp, NULL /* fromEncodingsp */, NULL /* tconvpp */, 1 /* eofb */, NULL /* byteleftsp */, NULL /* byteleftlp */, NULL /* byteleftalloclp */);
+}
+
+/*****************************************************************************/
+static inline marpaESLIF_string_t *_marpaESLIF_string2utf8p(marpaESLIF_t *marpaESLIFp, marpaESLIF_string_t *stringp)
+/*****************************************************************************/
+{
+  marpaESLIF_string_t *rcp = NULL;
+  /* This method is used only when we receive an marpaESLIF_string_t from outside */
+
+  if ((stringp == NULL) || (stringp->bytep == NULL) || (stringp->bytel <= 0)) {
+    errno = EINVAL;
+    goto err;
+  }
+
+  rcp = (marpaESLIF_string_t *) malloc(sizeof(marpaESLIF_string_t));
+  if (rcp == NULL) {
+    MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
+    goto err;
+  }
+
+  rcp->bytep          = NULL;
+  rcp->bytel          = 0;
+  rcp->encodingasciis = NULL;
+  rcp->asciis         = NULL;
+
+  /* No need of rcp->asciis, this is why we do not use _marpaESLIF_string_newp() */
+  if ((rcp->bytep = _marpaESLIF_charconvb(marpaESLIFp, (char *) MARPAESLIF_UTF8_STRING, stringp->encodingasciis, stringp->bytep, stringp->bytel, &(rcp->bytel), &(rcp->encodingasciis), NULL /* tconvpp */, 1 /* eofb */, NULL /* byteleftsp */, NULL /* byteleftlp */, NULL /* byteleftalloclp */)) == NULL) {
+    goto err;
+  }
+
+  goto done;
+
+ err:
+  if (rcp != NULL) {
+    _marpaESLIF_string_freev(rcp);
+    rcp = NULL;
+  }
+
+ done:
+  return rcp;
 }
 
 #include "bootstrap.c"
