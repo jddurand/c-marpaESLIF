@@ -12269,7 +12269,7 @@ static inline short _marpaESLIFValue_transformb(marpaESLIFValue_t *marpaESLIFVal
       errno = EINVAL;
       goto err;
     }
-    if (! transformerp->ptrTransformerp(userDatavp, marpaESLIFValueResultp->contextp, marpaESLIFValueResultp->u.p.p)) {
+    if (! transformerp->ptrTransformerp(userDatavp, marpaESLIFValueResultp->contextp, marpaESLIFValueResultp->u.p)) {
       goto err;
     }
     break;
@@ -12287,7 +12287,7 @@ static inline short _marpaESLIFValue_transformb(marpaESLIFValue_t *marpaESLIFVal
         errno = EINVAL;
         goto err;
       }
-      if (! transformerp->arrayTransformerp(userDatavp, marpaESLIFValueResultp->contextp, marpaESLIFValueResultp->u.a.p, marpaESLIFValueResultp->u.a.sizel)) {
+      if (! transformerp->arrayTransformerp(userDatavp, marpaESLIFValueResultp->contextp, marpaESLIFValueResultp->u.a)) {
         goto err;
       }
     }
@@ -12308,7 +12308,7 @@ static inline short _marpaESLIFValue_transformb(marpaESLIFValue_t *marpaESLIFVal
       errno = EINVAL;
       goto err;
     }
-    if (! transformerp->stringTransformerp(userDatavp, marpaESLIFValueResultp->contextp, marpaESLIFValueResultp->u.s.p, marpaESLIFValueResultp->u.s.sizel, marpaESLIFValueResultp->u.s.encodingasciis)) {
+    if (! transformerp->stringTransformerp(userDatavp, marpaESLIFValueResultp->contextp, marpaESLIFValueResultp->u.s)) {
       goto err;
     }
     break;
