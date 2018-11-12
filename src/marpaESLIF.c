@@ -12502,6 +12502,10 @@ static inline short _marpaESLIFValue_stack_i_resetb(marpaESLIFValue_t *marpaESLI
     origshallowb = marpaESLIFValueResultOrig.u.a.shallowb;
     origp        = marpaESLIFValueResultOrig.u.a.p;
     break;
+  case MARPAESLIF_VALUE_TYPE_STRING:
+    origshallowb = marpaESLIFValueResultOrig.u.s.shallowb;
+    origp        = marpaESLIFValueResultOrig.u.s.p;
+    break;
   default:
     /* origshallowb = 0; */ /* Not used - no need for this instruction */
     origp = NULL;
@@ -12517,6 +12521,10 @@ static inline short _marpaESLIFValue_stack_i_resetb(marpaESLIFValue_t *marpaESLI
     case MARPAESLIF_VALUE_TYPE_ARRAY:
       shallowb = marpaESLIFValueResultp->u.a.shallowb;
       newp     = marpaESLIFValueResultp->u.a.p;
+      break;
+    case MARPAESLIF_VALUE_TYPE_STRING:
+      shallowb = marpaESLIFValueResultp->u.s.shallowb;
+      newp     = marpaESLIFValueResultp->u.s.p;
       break;
     default:
       newp = NULL;
@@ -12542,6 +12550,9 @@ static inline short _marpaESLIFValue_stack_i_resetb(marpaESLIFValue_t *marpaESLI
 	case MARPAESLIF_VALUE_TYPE_ARRAY:
 	  marpaESLIFValueResultp->u.a.shallowb = origshallowb;
 	  break;
+	case MARPAESLIF_VALUE_TYPE_STRING:
+	  marpaESLIFValueResultp->u.s.shallowb = origshallowb;
+	  break;
 	default:
 	  break;
 	}
@@ -12556,6 +12567,9 @@ static inline short _marpaESLIFValue_stack_i_resetb(marpaESLIFValue_t *marpaESLI
       switch (marpaESLIFValueResultOrig.type) {
       case MARPAESLIF_VALUE_TYPE_ARRAY:
 	  origsizel = marpaESLIFValueResultOrig.u.a.sizel;
+	  break;
+      case MARPAESLIF_VALUE_TYPE_STRING:
+	  origsizel = marpaESLIFValueResultOrig.u.s.sizel;
 	  break;
       default:
 	  origsizel = 0;
