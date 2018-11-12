@@ -8,6 +8,12 @@
 
 #define GENERICSTACK_CUSTOM marpaESLIFValueResult_t
 
+/*
+ * Removing UTF-8 BOM can be done with an expensive marpaESLIFRecognizer. Or simply
+ * by looking at the first tree bytes -;
+ */
+/* #define MARPAESLIF_DETECT_UTF8_BOM_WITH_A_RECOGNIZER */
+
 #include <marpaWrapper.h>
 #include <genericStack.h>
 #include <genericHash.h>
@@ -227,7 +233,9 @@ struct marpaESLIF {
   marpaESLIFGrammar_t   *marpaESLIFGrammarp;          /* ESLIF has its own grammar -; */
   marpaESLIFOption_t     marpaESLIFOption;
   marpaESLIF_terminal_t *anycharp;                    /* internal regex for match any character */
+#if MARPAESLIF_DETECT_UTF8_BOM_WITH_A_RECOGNIZER
   marpaESLIF_terminal_t *utf8bomp;                    /* Internal regex for match UTF-8 BOM */
+#endif
   marpaESLIF_terminal_t *newlinep;                    /* Internal regex for match newline */
   marpaESLIF_terminal_t *stringModifiersp;            /* Internal regex for match string modifiers */
   marpaESLIF_terminal_t *characterClassModifiersp;    /* Internal regex for match character class modifiers */

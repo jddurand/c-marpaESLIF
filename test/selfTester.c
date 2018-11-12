@@ -309,7 +309,7 @@ int main() {
   marpaESLIFAction_t           defaultFreeAction;
   char                        *grammarscripts;
   marpaESLIFString_t           descArray[2] = {
-    { "First Level", strlen("First Level"), "ASCII", NULL },
+    { "\xEF\xBB\xBF" "First Level", 3 + strlen("First Level"), "UTF-8", NULL },
     { "Second Level", strlen("Second Level"), "ASCII", NULL },
   };
 #define LEVEL2DESCP(leveli) ((leveli == 0) ? &(descArray[0]) : ((leveli == 1) ? &(descArray[1]) : NULL))

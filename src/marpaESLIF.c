@@ -3527,7 +3527,9 @@ static inline marpaESLIF_t *_marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptio
   marpaESLIFp->marpaESLIFOption         = *marpaESLIFOptionp;
   marpaESLIFp->marpaESLIFGrammarp       = NULL;
   marpaESLIFp->anycharp                 = NULL;
+#ifdef MARPAESLIF_DETECT_UTF8_BOM_WITH_A_RECOGNIZER
   marpaESLIFp->utf8bomp                 = NULL;
+#endif
   marpaESLIFp->newlinep                 = NULL;
   marpaESLIFp->stringModifiersp         = NULL;
   marpaESLIFp->characterClassModifiersp = NULL;
@@ -3571,6 +3573,7 @@ static inline marpaESLIF_t *_marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptio
     goto err;
   }
 
+#ifdef MARPAESLIF_DETECT_UTF8_BOM_WITH_A_RECOGNIZER
   /* Create internal utf8bom regex */
   marpaESLIFp->utf8bomp = _marpaESLIF_terminal_newp(marpaESLIFp,
                                                     NULL /* grammarp */,
@@ -3588,6 +3591,7 @@ static inline marpaESLIF_t *_marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptio
   if (marpaESLIFp->utf8bomp == NULL) {
     goto err;
   }
+#endif
 
   /* Create internal newline regex */
   /* Please note that the newline regexp does NOT require UTF-8 correctness -; */
@@ -3911,7 +3915,9 @@ void marpaESLIF_freev(marpaESLIF_t *marpaESLIFp)
   if (marpaESLIFp != NULL) {
     marpaESLIFGrammar_freev(marpaESLIFp->marpaESLIFGrammarp);
     _marpaESLIF_terminal_freev(marpaESLIFp->anycharp);
+#ifdef MARPAESLIF_DETECT_UTF8_BOM_WITH_A_RECOGNIZER
     _marpaESLIF_terminal_freev(marpaESLIFp->utf8bomp);
+#endif
     _marpaESLIF_terminal_freev(marpaESLIFp->newlinep);
     _marpaESLIF_terminal_freev(marpaESLIFp->stringModifiersp);
     _marpaESLIF_terminal_freev(marpaESLIFp->characterClassModifiersp);
@@ -11578,6 +11584,7 @@ static inline short _marpaESLIFRecognizer_start_charconvb(marpaESLIFRecognizer_t
     goto err;
   }
 
+#ifdef MARPAESLIF_DETECT_UTF8_BOM_WITH_A_RECOGNIZER
   /* Remove eventually the BOM */
   if (! _marpaESLIFRecognizer_terminal_matcherb(marpaESLIFRecognizerp, marpaESLIFp->utf8bomp, utf8s, utf8l, 1 /* eofb */, &rci, &marpaESLIFValueResult, NULL /* matchedLengthlp */)) {
     goto err;
@@ -11593,6 +11600,18 @@ static inline short _marpaESLIFRecognizer_start_charconvb(marpaESLIFRecognizer_t
     utf8withoutboms = utf8s;
     utf8withoutboml = utf8l;
   }
+#else /* MARPAESLIF_DETECT_UTF8_BOM_WITH_A_RECOGNIZER */
+  if ((utf8l >= 3)                                       &&
+      ((unsigned char) utf8s[0] == (unsigned char) 0xEF) &&
+      ((unsigned char) utf8s[1] == (unsigned char) 0xBB) &&
+      ((unsigned char) utf8s[2] == (unsigned char) 0xBF)) {
+    utf8withoutboms = utf8s + 3;
+    utf8withoutboml = utf8l - 3;
+  } else {
+    utf8withoutboms = utf8s;
+    utf8withoutboml = utf8l;
+  }
+#endif /* MARPAESLIF_DETECT_UTF8_BOM_WITH_A_RECOGNIZER */
   if (! _marpaESLIFRecognizer_appendDatab(marpaESLIFRecognizerp, utf8withoutboms, utf8withoutboml)) {
     goto err;
   }
@@ -15097,10 +15116,12 @@ char *marpaESLIF_charconvb(marpaESLIF_t *marpaESLIFp, char *toEncodings, char *f
 static inline marpaESLIF_string_t *_marpaESLIF_string2utf8p(marpaESLIF_t *marpaESLIFp, marpaESLIF_string_t *stringp)
 /*****************************************************************************/
 {
-  marpaESLIFRecognizer_t *marpaESLIFRecognizerp = NULL;
   marpaESLIF_string_t    *rcp                   = NULL;
+#ifdef MARPAESLIF_DETECT_UTF8_BOM_WITH_A_RECOGNIZER
+  marpaESLIFRecognizer_t *marpaESLIFRecognizerp = NULL;
   marpaESLIFValueResult_t marpaESLIFValueResult;
   int                     rci;
+#endif
   char                   *utf8withoutboms;
   size_t                  utf8withoutboml;
 
@@ -15133,6 +15154,7 @@ static inline marpaESLIF_string_t *_marpaESLIF_string2utf8p(marpaESLIF_t *marpaE
         goto err;
       }
 
+#ifdef MARPAESLIF_DETECT_UTF8_BOM_WITH_A_RECOGNIZER
       /* Fake a recognizer. EOF flag will be set automatically in fake mode */
       marpaESLIFRecognizerp = _marpaESLIFRecognizer_newp(marpaESLIFp->marpaESLIFGrammarp,
                                                          NULL /* marpaESLIFRecognizerOptionp */,
@@ -15157,6 +15179,15 @@ static inline marpaESLIF_string_t *_marpaESLIF_string2utf8p(marpaESLIF_t *marpaE
         memmove(rcp->bytep, rcp->bytep + marpaESLIFValueResult.u.a.sizel, rcp->bytel - marpaESLIFValueResult.u.a.sizel + 1); /* Include the hiden NUL byte */
         free(marpaESLIFValueResult.u.a.p);
       }
+#else /* MARPAESLIF_DETECT_UTF8_BOM_WITH_A_RECOGNIZER */
+      if ((rcp->bytel >= 3)                                       &&
+          ((unsigned char) rcp->bytep[0] == (unsigned char) 0xEF) &&
+          ((unsigned char) rcp->bytep[1] == (unsigned char) 0xBB) &&
+          ((unsigned char) rcp->bytep[2] == (unsigned char) 0xBF)) {
+        /* BOM - just shift these bytes */
+        memmove(rcp->bytep, rcp->bytep + 3, rcp->bytel - 3 + 1); /* Include the hiden NUL byte */
+      }
+#endif /* MARPAESLIF_DETECT_UTF8_BOM_WITH_A_RECOGNIZER */
     }
   }
 
@@ -15169,9 +15200,11 @@ static inline marpaESLIF_string_t *_marpaESLIF_string2utf8p(marpaESLIF_t *marpaE
   }
 
  done:
+#ifdef MARPAESLIF_DETECT_UTF8_BOM_WITH_A_RECOGNIZER
   if (marpaESLIFRecognizerp != NULL) {
     _marpaESLIFRecognizer_freev(marpaESLIFRecognizerp, 1 /* forceb */);
   }
+#endif
   return rcp;
 }
 
