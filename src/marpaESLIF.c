@@ -15097,28 +15097,67 @@ char *marpaESLIF_charconvb(marpaESLIF_t *marpaESLIFp, char *toEncodings, char *f
 static inline marpaESLIF_string_t *_marpaESLIF_string2utf8p(marpaESLIF_t *marpaESLIFp, marpaESLIF_string_t *stringp)
 /*****************************************************************************/
 {
-  marpaESLIF_string_t *rcp = NULL;
+  marpaESLIFRecognizer_t *marpaESLIFRecognizerp = NULL;
+  marpaESLIF_string_t    *rcp                   = NULL;
+  marpaESLIFValueResult_t marpaESLIFValueResult;
+  int                     rci;
+  char                   *utf8withoutboms;
+  size_t                  utf8withoutboml;
+
   /* This method is used only when we receive an marpaESLIF_string_t from outside */
 
-  if ((stringp == NULL) || (stringp->bytep == NULL) || (stringp->bytel <= 0)) {
+  if ((stringp == NULL) || (stringp->bytep == NULL)) {
     errno = EINVAL;
     goto err;
-  }
+  } else {
+    rcp = (marpaESLIF_string_t *) malloc(sizeof(marpaESLIF_string_t));
+    if (rcp == NULL) {
+      MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
+      goto err;
+    }
 
-  rcp = (marpaESLIF_string_t *) malloc(sizeof(marpaESLIF_string_t));
-  if (rcp == NULL) {
-    MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
-    goto err;
-  }
+    if (stringp->bytel <= 0) {
+      /* Empty string */
+      rcp->bytep          = (char *) MARPAESLIF_EMPTY_STRING;
+      rcp->bytel          = 0;
+      rcp->encodingasciis = (char *) MARPAESLIF_UTF8_STRING;
+      rcp->asciis         = (char *) MARPAESLIF_EMPTY_STRING;
+    } else {
+      rcp->bytep          = NULL;
+      rcp->bytel          = 0;
+      rcp->encodingasciis = NULL;
+      rcp->asciis         = NULL;
 
-  rcp->bytep          = NULL;
-  rcp->bytel          = 0;
-  rcp->encodingasciis = NULL;
-  rcp->asciis         = NULL;
+      /* No need of rcp->asciis, this is why we do not use _marpaESLIF_string_newp() */
+      if ((rcp->bytep = _marpaESLIF_charconvb(marpaESLIFp, (char *) MARPAESLIF_UTF8_STRING, stringp->encodingasciis, stringp->bytep, stringp->bytel, &(rcp->bytel), &(rcp->encodingasciis), NULL /* tconvpp */, 1 /* eofb */, NULL /* byteleftsp */, NULL /* byteleftlp */, NULL /* byteleftalloclp */)) == NULL) {
+        goto err;
+      }
 
-  /* No need of rcp->asciis, this is why we do not use _marpaESLIF_string_newp() */
-  if ((rcp->bytep = _marpaESLIF_charconvb(marpaESLIFp, (char *) MARPAESLIF_UTF8_STRING, stringp->encodingasciis, stringp->bytep, stringp->bytel, &(rcp->bytel), &(rcp->encodingasciis), NULL /* tconvpp */, 1 /* eofb */, NULL /* byteleftsp */, NULL /* byteleftlp */, NULL /* byteleftalloclp */)) == NULL) {
-    goto err;
+      /* Fake a recognizer. EOF flag will be set automatically in fake mode */
+      marpaESLIFRecognizerp = _marpaESLIFRecognizer_newp(marpaESLIFp->marpaESLIFGrammarp,
+                                                         NULL /* marpaESLIFRecognizerOptionp */,
+                                                         0 /* discardb - not used anyway because we are in fake mode */,
+                                                         1 /* noEventb - not used anyway because we are in fake mode */,
+                                                         0 /* silentb */,
+                                                         NULL /* marpaESLIFRecognizerParentp */,
+                                                         1, /* fakeb */
+                                                         0, /* maxStartCompletionsi */
+                                                         1, /* Here, we know input is UTF-8 valid */
+                                                         1 /* grammmarIsOnStackb */);
+      if (marpaESLIFRecognizerp == NULL) {
+        goto err;
+      }
+
+      /* Remove eventually the BOM */
+      if (! _marpaESLIFRecognizer_terminal_matcherb(marpaESLIFRecognizerp, marpaESLIFp->utf8bomp, rcp->bytep, rcp->bytel, 1 /* eofb */, &rci, &marpaESLIFValueResult, NULL /* matchedLengthlp */)) {
+        goto err;
+      }
+      if (rci == MARPAESLIF_MATCH_OK) {
+        /* BOM - just shift these bytes */
+        memmove(rcp->bytep, rcp->bytep + marpaESLIFValueResult.u.a.sizel, rcp->bytel - marpaESLIFValueResult.u.a.sizel + 1); /* Include the hiden NUL byte */
+        free(marpaESLIFValueResult.u.a.p);
+      }
+    }
   }
 
   goto done;
@@ -15130,6 +15169,9 @@ static inline marpaESLIF_string_t *_marpaESLIF_string2utf8p(marpaESLIF_t *marpaE
   }
 
  done:
+  if (marpaESLIFRecognizerp != NULL) {
+    _marpaESLIFRecognizer_freev(marpaESLIFRecognizerp, 1 /* forceb */);
+  }
   return rcp;
 }
 
