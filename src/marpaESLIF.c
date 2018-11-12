@@ -12308,7 +12308,7 @@ static inline short _marpaESLIFValue_transformb(marpaESLIFValue_t *marpaESLIFVal
       errno = EINVAL;
       goto err;
     }
-    if (! transformerp->stringTransformerp(userDatavp, marpaESLIFValueResultp->contextp, marpaESLIFValueResultp->u.s.bytep, marpaESLIFValueResultp->u.s.bytel, marpaESLIFValueResultp->u.s.encodingasciis)) {
+    if (! transformerp->stringTransformerp(userDatavp, marpaESLIFValueResultp->contextp, marpaESLIFValueResultp->u.s.p, marpaESLIFValueResultp->u.s.sizel, marpaESLIFValueResultp->u.s.encodingasciis)) {
       goto err;
     }
     break;

@@ -3420,22 +3420,10 @@ static short marpaESLIFLua_transformStringb(void *userDatavp, void *contextp, un
 {
   static const char           *funcs                      = "marpaESLIFLua_transformStringb";
   marpaESLIFLuaValueContext_t *marpaESLIFLuaValueContextp = (marpaESLIFLuaValueContext_t *) userDatavp;
-  marpaESLIFValue_t           *marpaESLIFValuep           = marpaESLIFLuaValueContextp->marpaESLIFValuep;
-  marpaESLIFRecognizer_t      *marpaESLIFRecognizerp      = marpaESLIFValue_recognizerp(marpaESLIFValuep);
-  marpaESLIFGrammar_t         *marpaESLIFGrammarp         = marpaESLIFRecognizer_grammarp(marpaESLIFRecognizerp);
-  marpaESLIF_t                *marpaESLIFp                = marpaESLIFGrammar_eslifp(marpaESLIFGrammarp);
-  lua_State                   *L                          = marpaESLIFLuaValueContextp->L;
-  char                        *utf8s                      = NULL;
-  size_t                       utf8l;
   short                        rcb;
 
-  /* We always inject string in the UTF-8 format to lua interpreter */
-  utf8s = marpaESLIF_charconvb(marpaESLIFp, (char *) MARPAESLIFLUA_UTF8_STRING, encodings, (char *) p, l, &utf8l);
-  if (utf8s == NULL) {
-    goto err;
-  }
-
-  if (! marpaESLIFLua_lua_pushlstring(NULL, marpaESLIFLuaValueContextp->L, utf8s, utf8l)) goto err;
+  /* We inject strings as a byte array to lua - end user is responsible of the string encoding knowledge */
+  if (! marpaESLIFLua_lua_pushlstring(NULL, marpaESLIFLuaValueContextp->L, p, l)) goto err;
 
   rcb = 1;
   goto done;
@@ -3444,9 +3432,6 @@ static short marpaESLIFLua_transformStringb(void *userDatavp, void *contextp, un
   rcb = 0;
 
  done:
-  if (utf8s != NULL) {
-    free(utf8s);
-  }
   return rcb;
 }
 

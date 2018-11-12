@@ -93,23 +93,24 @@ typedef marpaESLIFValueFreeCallback_t   (*marpaESLIFValueFreeActionResolver_t)(v
 /* The representation returns a sequence of bytes and is appended AS-IS */
 /* It is legal to return NULL in *inputcpp or 0 in *inputlp: representation will be ignored */
 typedef short (*marpaESLIFRepresentation_t)(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp, char **inputcpp, size_t *inputlp);
-typedef struct marpaESLIFPtr   { void *p; short shallowb; } marpaESLIFPtr_t;
-typedef struct marpaESLIFArray { void *p; short shallowb; size_t sizel; } marpaESLIFArray_t;
+typedef struct marpaESLIFValueResultPtr    { void          *p; short shallowb; } marpaESLIFValueResultPtr_t;
+typedef struct marpaESLIFValueResultArray  { char          *p; short shallowb; size_t sizel; } marpaESLIFValueResultArray_t;
+typedef struct marpaESLIFValueResultString { unsigned char *p; short shallowb; size_t sizel; char *encodingasciis; } marpaESLIFValueResultString_t;
 struct marpaESLIFValueResult {
   void                      *contextp;          /* Free value meaningful only to the user */
   marpaESLIFRepresentation_t representationp;   /* How a user-land alternative is represented if it was in the input */
   marpaESLIFValueType_t      type;              /* Type for tagging the following union */
   union {
-    char                c;                      /* Value is a char */
-    short               b;                      /* Value is a short */
-    int                 i;                      /* Value is an int */
-    long                l;                      /* Value is a long */
-    float               f;                      /* Value is a float */
-    double              d;                      /* Value is a double */
-    marpaESLIFPtr_t     p;                      /* Value is a pointer */
-    marpaESLIFArray_t   a;                      /* Value is an array */
-    short               y;                      /* Value is a boolean */
-    marpaESLIFString_t  s;                      /* Value is a string */
+    char                          c;            /* Value is a char */
+    short                         b;            /* Value is a short */
+    int                           i;            /* Value is an int */
+    long                          l;            /* Value is a long */
+    float                         f;            /* Value is a float */
+    double                        d;            /* Value is a double */
+    marpaESLIFValueResultPtr_t    p;            /* Value is a pointer */
+    marpaESLIFValueResultArray_t  a;            /* Value is an array */
+    short                         y;            /* Value is a boolean */
+    marpaESLIFValueResultString_t s;            /* Value is a string */
   } u;
 };
 
