@@ -24,6 +24,7 @@ const static char *selfs = "\n"
   "  :discard                       ::= whitespace\n"
   "  :discard                       ::= <perl comment> \n"
   "  :discard                       ::= <cplusplus comment> \n"
+  "  :desc                          ::= 'First level'\n"
   "\n"
   "  /*\n"
   "   * ***************\n"
@@ -224,6 +225,7 @@ const static char *selfs = "\n"
   "   * Lexeme rules:\n"
   "   * *************\n"
   "   */\n"
+  "  :desc                            ~ 'Second level'\n"
   "  whitespace                       ~ /[\\s]+/\n"
   "  <perl comment>                   ~ /(?:(?:#)(?:[^\\n]*)(?:\\n|\\z))/u\n"
   "  <cplusplus comment>              ~ /(?:(?:(?:\\/\\/)(?:[^\\n]*)(?:\\n|\\z))|(?:(?:\\/\\*)(?:(?:[^\\*]+|\\*(?!\\/))*)(?:\\*\\/)))/u\n"
@@ -306,6 +308,11 @@ int main() {
   marpaESLIFGrammarDefaults_t  marpaESLIFGrammarDefaults;
   marpaESLIFAction_t           defaultFreeAction;
   char                        *grammarscripts;
+  marpaESLIFString_t           descArray[2] = {
+    { "First Level", strlen("First Level"), "ASCII", NULL },
+    { "Second Level", strlen("Second Level"), "ASCII", NULL },
+  };
+#define LEVEL2DESCP(leveli) ((leveli == 0) ? &(descArray[0]) : ((leveli == 1) ? &(descArray[1]) : NULL))
 
   genericLoggerp = GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_TRACE);
 
@@ -342,7 +349,7 @@ int main() {
   /* Dump grammar */
   if (marpaESLIFGrammar_ngrammarib(marpaESLIF_grammarp(marpaESLIFp), &ngrammari)) {
     for (leveli = 0; leveli < ngrammari; leveli++) {
-      if (marpaESLIFGrammar_grammarshowform_by_levelb(marpaESLIF_grammarp(marpaESLIFp), &grammarshows, leveli, NULL)) {
+      if (marpaESLIFGrammar_grammarshowform_by_levelb(marpaESLIF_grammarp(marpaESLIFp), &grammarshows, leveli, LEVEL2DESCP(leveli))) {
         GENERICLOGGER_INFO (marpaESLIFOption.genericLoggerp, "-------------------------");
         GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "ESLIF grammar at level %d:", leveli);
         GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "-------------------------\n%s", grammarshows);
