@@ -11503,8 +11503,10 @@ static inline short _marpaESLIFRecognizer_start_charconvb(marpaESLIFRecognizer_t
   char                       *encodingutf8s      = NULL;
   char                       *utf8s              = NULL;
   char                       *utf8withoutboms;
+#ifdef MARPAESLIF_DETECT_UTF8_BOM_WITH_A_RECOGNIZER
   marpaESLIF_matcher_value_t  rci;
   marpaESLIFValueResult_t     marpaESLIFValueResult;
+#endif
   size_t                      utf8withoutboml;
   size_t                      utf8l;
   short                       rcb;
@@ -15152,8 +15154,6 @@ static inline marpaESLIF_string_t *_marpaESLIF_string2utf8p(marpaESLIF_t *marpaE
   marpaESLIFValueResult_t marpaESLIFValueResult;
   int                     rci;
 #endif
-  char                   *utf8withoutboms;
-  size_t                  utf8withoutboml;
 
   /* This method is used only when we receive an marpaESLIF_string_t from outside */
 
