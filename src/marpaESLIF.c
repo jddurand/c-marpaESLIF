@@ -409,6 +409,7 @@ static inline short                   _marpaESLIF_action_validb(marpaESLIF_t *ma
 static inline short                   _marpaESLIF_action_eqb(marpaESLIF_action_t *action1p, marpaESLIF_action_t *action2p);
 static inline marpaESLIF_action_t    *_marpaESLIF_action_clonep(marpaESLIF_t *marpaESLIFp, marpaESLIF_action_t *actionp);
 static inline void                    _marpaESLIF_action_freev(marpaESLIF_action_t *actionp);
+static short                          _marpaESLIF_string_representationb(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp, char **inputcpp, size_t *inputlp);
 
 /*****************************************************************************/
 static inline marpaESLIF_string_t *_marpaESLIF_string_newp(marpaESLIF_t *marpaESLIFp, char *encodingasciis, char *bytep, size_t bytel)
@@ -12976,8 +12977,12 @@ static void _marpaESLIF_rule_freeCallbackv(void *userDatavp, void *contextp, mar
     MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Freeing ARRAY {%p,%ld}", p, (unsigned long) sizel);
     free(p);
     break;
+  case MARPAESLIF_VALUE_TYPE_STRING:
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Freeing STRING {%p,%ld}", p, (unsigned long) sizel);
+    free(p);
+    break;
   default:
-    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "type is not PTR nor ARRAY (got %d, %s)", type, _marpaESLIF_value_types(type));
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "type is not PTR, ARRAY nor STRING (got %d, %s)", type, _marpaESLIF_value_types(type));
     break;
   }
 
@@ -15236,6 +15241,44 @@ static inline marpaESLIF_string_t *_marpaESLIF_string2utf8p(marpaESLIF_t *marpaE
   }
 #endif
   return rcp;
+}
+
+/*****************************************************************************/
+static short _marpaESLIF_string_representationb(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp, char **inputcpp, size_t *inputlp)
+/*****************************************************************************/
+{
+  /* Internal string representation always uses a marpaESLIFValuep as userDatavp */
+  marpaESLIFValue_t   *marpaESLIFValuep = (marpaESLIFValue_t *) userDatavp;
+  marpaESLIF_t        *marpaESLIFp      = marpaESLIFValuep->marpaESLIFp;
+  marpaESLIF_string_t  string;
+  marpaESLIF_string_t *utf8p;
+  short                rcb;
+
+  if (marpaESLIFValueResultp->type != MARPAESLIF_VALUE_TYPE_STRING) {
+    MARPAESLIF_ERRORF(marpaESLIFp, "type is not STRING (got %d, %s)", marpaESLIFValueResultp->type, _marpaESLIF_value_types(marpaESLIFValueResultp->type));
+    goto err;
+  }
+
+  string.bytep          = marpaESLIFValueResultp->u.s.p;
+  string.bytel          = marpaESLIFValueResultp->u.s.sizel;
+  string.encodingasciis = marpaESLIFValueResultp->u.s.encodingasciis;
+  string.asciis         = NULL;
+
+  if ((utf8p = _marpaESLIF_string2utf8p(marpaESLIFp, &string)) == NULL) {
+    goto err;
+  }
+
+  *inputcpp = utf8p->bytep;
+  *inputlp  = utf8p->bytel;
+
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  return rcb;
 }
 
 #include "bootstrap.c"
