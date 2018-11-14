@@ -59,7 +59,7 @@ BEGIN { require_ok('MarpaX::ESLIF') };
 my $base_dsl = q{
 :desc ::= '$TEST'
 :start ::= deal
-:default ::= action => ::convert[UTF-8]
+:default ::= action => ::convert[UTF-16]
              symbol-action => ::convert[UTF-8]
 
 deal ::= hands
@@ -182,8 +182,14 @@ for my $test_data (@tests) {
 
           my $valueInterface = MyValueInterface->new();
           my $status = eval { MarpaX::ESLIF::Value->new($re, $valueInterface)->value() };
+          if (! defined($status)) {
+              $log->errorf("MarpaX::ESLIF::Value->new error, %s", $@);
+          }
           my $last_hand;
           my ($handoffset, $handlength) = eval { $re->lastCompletedLocation('hand') };
+          if (! defined($handoffset) && ! defined($handlength)) {
+              $log->errorf("MarpaX::ESLIF::Value->new error, %s", $@);
+          }
           if ( $handlength ) {
               $last_hand = decode('UTF-8', my $tmp = substr($byte_input, $handoffset, $handlength), Encode::FB_CROAK);
           }
