@@ -18,6 +18,76 @@ static const int i_for_is_bigendian = 1;
 short is_bigendian;
 #define MARPAESLIF_IS_BIGENDIAN() ( (*(char*)&i_for_is_bigendian) == 0 )
 
+#define MARPAESLIF_ENCODING_IS_UTF8(encodings, encodingl)               \
+  (                                                                     \
+    /* UTF-8 */                                                         \
+    (                                                                   \
+      (encodingl == 5)                                 &&               \
+      ((encodings[0] == 'U') || (encodings[0] == 'u')) &&               \
+      ((encodings[1] == 'T') || (encodings[0] == 't')) &&               \
+      ((encodings[2] == 'F') || (encodings[0] == 'f')) &&               \
+       (encodings[3] == '-') &&                                         \
+       (encodings[4] == '8')                                            \
+    )                                                                   \
+    ||                                                                  \
+    /* UTF8 */                                                          \
+    (                                                                   \
+      (encodingl == 4)                                 &&               \
+      ((encodings[0] == 'U') || (encodings[0] == 'u')) &&               \
+      ((encodings[1] == 'T') || (encodings[0] == 't')) &&               \
+      ((encodings[2] == 'F') || (encodings[0] == 'f')) &&               \
+       (encodings[3] == '8')                                            \
+    )                                                                   \
+  )
+
+#define MARPAESLIF_ENCODING_IS_UTF16(encodings, encodingl)              \
+  (                                                                     \
+    /* UTF-16 */                                                        \
+    (                                                                   \
+      (encodingl == 6)                                 &&               \
+      ((encodings[0] == 'U') || (encodings[0] == 'u')) &&               \
+      ((encodings[1] == 'T') || (encodings[0] == 't')) &&               \
+      ((encodings[2] == 'F') || (encodings[0] == 'f')) &&               \
+       (encodings[3] == '-')                           &&               \
+       (encodings[4] == '1')                           &&               \
+       (encodings[5] == '6')                                            \
+    )                                                                   \
+    ||                                                                  \
+    /* UTF16 */                                                         \
+    (                                                                   \
+      (encodingl == 5)                                 &&               \
+      ((encodings[0] == 'U') || (encodings[0] == 'u')) &&               \
+      ((encodings[1] == 'T') || (encodings[0] == 't')) &&               \
+      ((encodings[2] == 'F') || (encodings[0] == 'f')) &&               \
+       (encodings[3] == '1')                           &&               \
+       (encodings[4] == '6')                                            \
+    )                                                                   \
+  )
+
+#define MARPAESLIF_ENCODING_IS_UTF32(encodings, encodingl)              \
+  (                                                                     \
+    /* UTF-32 */                                                        \
+    (                                                                   \
+      (encodingl == 6)                                 &&               \
+      ((encodings[0] == 'U') || (encodings[0] == 'u')) &&               \
+      ((encodings[1] == 'T') || (encodings[0] == 't')) &&               \
+      ((encodings[2] == 'F') || (encodings[0] == 'f')) &&               \
+       (encodings[3] == '-')                           &&               \
+       (encodings[4] == '3')                           &&               \
+       (encodings[5] == '2')                                            \
+    )                                                                   \
+    ||                                                                  \
+    /* UTF32 */                                                         \
+    (                                                                   \
+      (encodingl == 5)                                 &&               \
+      ((encodings[0] == 'U') || (encodings[0] == 'u')) &&               \
+      ((encodings[1] == 'T') || (encodings[0] == 't')) &&               \
+      ((encodings[2] == 'F') || (encodings[0] == 'f')) &&               \
+       (encodings[3] == '3')                           &&               \
+       (encodings[4] == '2')                                            \
+    )                                                                   \
+  )
+
 #ifndef MARPAESLIF_VALUEERRORPROGRESSREPORT
 #define MARPAESLIF_VALUEERRORPROGRESSREPORT 0 /* Left in the code, although not needed IMHO */
 #endif
@@ -13186,7 +13256,7 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
 
   if ((srcs != NULL) && (srcl > 0)) {
     if (contextp->utf8b && (marpaESLIFValueResultp->type == MARPAESLIF_VALUE_TYPE_STRING)) {
-      /* Caller is asking explicitly to UTF-8 bytes */
+      /* Caller is asking explicitly for UTF-8 bytes */
       string.bytep          = marpaESLIFValueResultp->u.s.p;
       string.bytel          = marpaESLIFValueResultp->u.s.sizel;
       string.encodingasciis = marpaESLIFValueResultp->u.s.encodingasciis;
@@ -13226,6 +13296,7 @@ static inline short _marpaESLIF_generic_action___concatb(void *userDatavp, marpa
   marpaESLIFRecognizer_t                 *marpaESLIFRecognizerp = marpaESLIFValuep->marpaESLIFRecognizerp;
   marpaESLIF_t                           *marpaESLIFp           = marpaESLIFValuep->marpaESLIFp;
   char                                   *toEncodingDups        = NULL;
+  size_t                                  toEncodingl;
   short                                   allArgumentsAreStringb;
   int                                     argi;
   marpaESLIF_stringGenerator_t            marpaESLIF_stringGenerator;
@@ -13284,34 +13355,40 @@ static inline short _marpaESLIF_generic_action___concatb(void *userDatavp, marpa
     }
 
     if (marpaESLIF_stringGenerator.l > 1) { /* Because of the implicit NULL byte */
-      if (toEncodings != NULL) {
+      if (context.utf8b) {
         /* Duplicate toEncodings immediately */
         toEncodingDups = strdup(toEncodings);
         if (toEncodingDups == NULL) {
           MARPAESLIF_ERRORF(marpaESLIFp, "strdup failure, %s", strerror(errno));
           goto err;
         }
+        toEncodingl = strlen(toEncodings);
         /* Look to _marpaESLIF_charconvb: it always allocate one byte more and already put '\0' in it, though not returning this additional byte in convertedl */
         /* This mean that converteds is guaranteed to be NUL byte terminated */
-	/* When allArgumentsAreStringb is a true value, the context.utf8b flag guarantees that whole byte buffer contains */
-	/* value UTF-8. Else, cross fingers. */
-        converteds = _marpaESLIF_charconvb(marpaESLIFp,
-                                           toEncodings,
-                                           allArgumentsAreStringb ? (char *) MARPAESLIF_UTF8_STRING : NULL,
-                                           marpaESLIF_stringGenerator.s,
-                                           marpaESLIF_stringGenerator.l - 1, /* Skip the automatic NUL byte in the source */
-                                           &convertedl,
-                                           NULL, /* fromEncodingsp */
-                                           NULL, /* tconvpp */
-                                           1, /* eofb */
-					   NULL, /* byteleftsp */
-					   NULL, /* byteleftlp */
-					   NULL  /* byteleftalloclp */);
-        if (converteds == NULL) {
-          goto err;
+	/* When allArgumentsAreStringb is a true value, then it is guaranteed that the full buffer contains only good UTF-8 characters */
+        /* so if the final toEncodings is also UTF-8, there is no need to convert again. */
+        if (allArgumentsAreStringb && MARPAESLIF_ENCODING_IS_UTF8(toEncodings, toEncodingl)) {
+          converteds = marpaESLIF_stringGenerator.s;
+          convertedl = marpaESLIF_stringGenerator.l;
+        } else {
+          converteds = _marpaESLIF_charconvb(marpaESLIFp,
+                                             toEncodings,
+                                             NULL, /* Cross-fingers... */
+                                             marpaESLIF_stringGenerator.s,
+                                             marpaESLIF_stringGenerator.l - 1, /* Skip the automatic NUL byte in the source */
+                                             &convertedl,
+                                             NULL, /* fromEncodingsp */
+                                             NULL, /* tconvpp */
+                                             1, /* eofb */
+                                             NULL, /* byteleftsp */
+                                             NULL, /* byteleftlp */
+                                             NULL  /* byteleftalloclp */);
+          if (converteds == NULL) {
+            goto err;
+          }
+          free(marpaESLIF_stringGenerator.s);
+          marpaESLIF_stringGenerator.s = NULL;
         }
-        free(marpaESLIF_stringGenerator.s);
-        marpaESLIF_stringGenerator.s = NULL;
 
         if (ptrb) {
           marpaESLIFValueResult.contextp        = NULL;
@@ -15220,12 +15297,7 @@ static inline short _marpaESLIF_string_removebomb(marpaESLIF_t *marpaESLIFp, cha
     }
 
     encodingasciil = strlen(encodingasciis);
-    if (/* UTF-8 */
-	((encodingasciil == 5) && ((encodingasciis[0] == 'U') || (encodingasciis[0] == 'u')) && ((encodingasciis[1] == 'T') || (encodingasciis[0] == 't')) && ((encodingasciis[2] == 'F') || (encodingasciis[0] == 'f')) && (encodingasciis[3] == '-') && (encodingasciis[4] == '8'))
-	||
-	/* UTF8 for lazy people */
-	((encodingasciil == 4) && ((encodingasciis[0] == 'U') || (encodingasciis[0] == 'u')) && ((encodingasciis[1] == 'T') || (encodingasciis[0] == 't')) && ((encodingasciis[2] == 'F') || (encodingasciis[0] == 'f')) && (encodingasciis[3] == '8'))
-	) {
+    if (MARPAESLIF_ENCODING_IS_UTF8(encodingasciis, encodingasciil)) {
       if ((bytel >= 3)                                       &&
           ((unsigned char) bytep[0] == (unsigned char) 0xEF) &&
           ((unsigned char) bytep[1] == (unsigned char) 0xBB) &&
@@ -15233,12 +15305,7 @@ static inline short _marpaESLIF_string_removebomb(marpaESLIF_t *marpaESLIFp, cha
 	bomsizel = 3;
       }
     }
-    else if (/* UTF-16 */
-	     ((encodingasciil == 6) && ((encodingasciis[0] == 'U') || (encodingasciis[0] == 'u')) && ((encodingasciis[1] == 'T') || (encodingasciis[0] == 't')) && ((encodingasciis[2] == 'F') || (encodingasciis[0] == 'f')) && (encodingasciis[3] == '-') && (encodingasciis[4] == '1') && (encodingasciis[5] == '6'))
-	     ||
-	     /* UTF16 for lazy people */
-	     ((encodingasciil == 5) && ((encodingasciis[0] == 'U') || (encodingasciis[0] == 'u')) && ((encodingasciis[1] == 'T') || (encodingasciis[0] == 't')) && ((encodingasciis[2] == 'F') || (encodingasciis[0] == 'f')) && (encodingasciis[3] == '1') && (encodingasciis[4] == '6'))
-	     ) {
+    else if (MARPAESLIF_ENCODING_IS_UTF16(encodingasciis, encodingasciil)) {
       if (bytel >= 2) {
 	if (MARPAESLIF_IS_BIGENDIAN()) {
 	  if (((unsigned char) bytep[0] == (unsigned char) 0xFE) &&
@@ -15253,12 +15320,7 @@ static inline short _marpaESLIF_string_removebomb(marpaESLIF_t *marpaESLIFp, cha
 	}
       }
     }
-    else if (/* UTF-32 */
-	     ((encodingasciil == 6) && ((encodingasciis[0] == 'U') || (encodingasciis[0] == 'u')) && ((encodingasciis[1] == 'T') || (encodingasciis[0] == 't')) && ((encodingasciis[2] == 'F') || (encodingasciis[0] == 'f')) && (encodingasciis[3] == '-') && (encodingasciis[4] == '3') && (encodingasciis[5] == '2'))
-	     ||
-	     /* UTF32 for lazy people */
-	     ((encodingasciil == 5) && ((encodingasciis[0] == 'U') || (encodingasciis[0] == 'u')) && ((encodingasciis[1] == 'T') || (encodingasciis[0] == 't')) && ((encodingasciis[2] == 'F') || (encodingasciis[0] == 'f')) && (encodingasciis[3] == '3') && (encodingasciis[4] == '2'))
-	     ) {
+    else if (MARPAESLIF_ENCODING_IS_UTF32(encodingasciis, encodingasciil)) {
       if (bytel >= 4) {
 	if (MARPAESLIF_IS_BIGENDIAN()) {
 	  if (((unsigned char) bytep[0] == (unsigned char) 0x00) &&
