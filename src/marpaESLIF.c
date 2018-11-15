@@ -212,7 +212,6 @@ typedef struct marpaESLIF_concat_valueResultContext {
   void                         *userDatavp;
   marpaESLIFValue_t            *marpaESLIFValuep;
   marpaESLIF_stringGenerator_t *marpaESLIF_stringGeneratorp;
-  short                         utf8b;
 } marpaESLIF_concat_valueResultContext_t;
 
 static const char *GENERICSTACKITEMTYPE_NA_STRING      = "NA";
@@ -485,7 +484,7 @@ static inline short                   _marpaESLIF_action_validb(marpaESLIF_t *ma
 static inline short                   _marpaESLIF_action_eqb(marpaESLIF_action_t *action1p, marpaESLIF_action_t *action2p);
 static inline marpaESLIF_action_t    *_marpaESLIF_action_clonep(marpaESLIF_t *marpaESLIFp, marpaESLIF_action_t *actionp);
 static inline void                    _marpaESLIF_action_freev(marpaESLIF_action_t *actionp);
-static short                          _marpaESLIF_string_representationb(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp, char **inputcpp, size_t *inputlp);
+static short                          _marpaESLIF_ascii_representationb(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp, char **inputcpp, size_t *inputlp);
 static inline short                   _marpaESLIF_string_removebomb(marpaESLIF_t *marpaESLIFp, char *bytep, size_t *bytelp, char *encodingasciis);
 
 /*****************************************************************************/
@@ -7699,7 +7698,7 @@ static inline marpaESLIF_grammar_t *_marpaESLIFGrammar_grammar_findp(marpaESLIFG
     }
   }
 
-  if (utf8p != NULL) {
+  if ((utf8p != NULL) && (utf8p != descp)) {
     _marpaESLIF_string_freev(utf8p);
   }
 
@@ -13211,18 +13210,27 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
   static const char                      *funcs                       = "_marpaESLIFRecognizer_concat_valueResultCallbackb";
   marpaESLIF_concat_valueResultContext_t *contextp                    = (marpaESLIF_concat_valueResultContext_t *) userDatavp;
   marpaESLIFValue_t                      *marpaESLIFValuep            = contextp->marpaESLIFValuep;
+  marpaESLIF_t                           *marpaESLIFp                 = marpaESLIFValuep->marpaESLIFp;
   marpaESLIF_stringGenerator_t           *marpaESLIF_stringGeneratorp = contextp->marpaESLIF_stringGeneratorp;
   marpaESLIFRecognizer_t                 *marpaESLIFRecognizerp       = marpaESLIFValuep->marpaESLIFRecognizerp;
   marpaESLIF_string_t                    *utf8p                       = NULL;
   char                                   *srcs                        = NULL;
   size_t                                  srcl                        = 0;
+  genericLogger_t                        *genericLoggerp              = NULL;
   marpaESLIF_string_t                     string;
   marpaESLIFRepresentation_t              representationp;
   void                                   *representationUserDatavp;
   short                                   rcb;
+  marpaESLIF_stringGenerator_t            marpaESLIF_stringGenerator;
 
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
+
+  marpaESLIF_stringGenerator.marpaESLIFp = marpaESLIFp;
+  marpaESLIF_stringGenerator.s           = NULL;
+  marpaESLIF_stringGenerator.l           = 0;
+  marpaESLIF_stringGenerator.okb         = 0;
+  marpaESLIF_stringGenerator.allocl      = 0;
 
   if (marpaESLIFValueResultp->contextp == (void *) MARPAESLIF_EMBEDDED_CONTEXT_LUA) {
     /* Specific to lua embedded: we use our proxy, then userDatavp is forced to be marpaELIFValuep */
@@ -13234,40 +13242,140 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
     representationUserDatavp = contextp->userDatavp;
   }
 
-  if (representationp == NULL) {
-    /* Default representation */
-    switch (marpaESLIFValueResultp->type) {
-    case MARPAESLIF_VALUE_TYPE_ARRAY:
-      srcs = marpaESLIFValueResultp->u.a.p;
-      srcl = marpaESLIFValueResultp->u.a.sizel;
-      break;
-    case MARPAESLIF_VALUE_TYPE_STRING:
-      srcs = marpaESLIFValueResultp->u.s.p;
-      srcl = marpaESLIFValueResultp->u.s.sizel;
-      break;
-    default:
-      break;
-    }
-  } else {
+  if (representationp != NULL) {
     if (! representationp(representationUserDatavp, marpaESLIFValueResultp, &srcs, &srcl)) {
       goto err;
     }
-  }
-
-  if ((srcs != NULL) && (srcl > 0)) {
-    if (contextp->utf8b && (marpaESLIFValueResultp->type == MARPAESLIF_VALUE_TYPE_STRING)) {
-      /* Caller is asking explicitly for UTF-8 bytes */
+  } else {
+    switch (marpaESLIFValueResultp->type) {
+    case MARPAESLIF_VALUE_TYPE_CHAR:
+      /* Char default representation */
+      genericLoggerp = GENERICLOGGER_CUSTOM(_marpaESLIF_generateStringWithLoggerCallback, (void *) &marpaESLIF_stringGenerator, GENERICLOGGER_LOGLEVEL_TRACE);
+      if (genericLoggerp == NULL) {
+	goto err;
+      }
+      GENERICLOGGER_TRACEF(genericLoggerp, "%c", marpaESLIFValueResultp->u.c);
+      if (! marpaESLIF_stringGenerator.okb) {
+	goto err;
+      }
+      srcs = marpaESLIF_stringGenerator.s;
+      srcl = marpaESLIF_stringGenerator.l;
+      break;
+    case MARPAESLIF_VALUE_TYPE_SHORT:
+      /* Char default representation */
+      genericLoggerp = GENERICLOGGER_CUSTOM(_marpaESLIF_generateStringWithLoggerCallback, (void *) &marpaESLIF_stringGenerator, GENERICLOGGER_LOGLEVEL_TRACE);
+      if (genericLoggerp == NULL) {
+	goto err;
+      }
+      GENERICLOGGER_TRACEF(genericLoggerp, "%d", (int) marpaESLIFValueResultp->u.b);
+      if (! marpaESLIF_stringGenerator.okb) {
+	goto err;
+      }
+      srcs = marpaESLIF_stringGenerator.s;
+      srcl = marpaESLIF_stringGenerator.l;
+      break;
+    case MARPAESLIF_VALUE_TYPE_INT:
+      /* Char default representation */
+      genericLoggerp = GENERICLOGGER_CUSTOM(_marpaESLIF_generateStringWithLoggerCallback, (void *) &marpaESLIF_stringGenerator, GENERICLOGGER_LOGLEVEL_TRACE);
+      if (genericLoggerp == NULL) {
+	goto err;
+      }
+      GENERICLOGGER_TRACEF(genericLoggerp, "%d", marpaESLIFValueResultp->u.i);
+      if (! marpaESLIF_stringGenerator.okb) {
+	goto err;
+      }
+      srcs = marpaESLIF_stringGenerator.s;
+      srcl = marpaESLIF_stringGenerator.l;
+      break;
+    case MARPAESLIF_VALUE_TYPE_LONG:
+      /* Char default representation */
+      genericLoggerp = GENERICLOGGER_CUSTOM(_marpaESLIF_generateStringWithLoggerCallback, (void *) &marpaESLIF_stringGenerator, GENERICLOGGER_LOGLEVEL_TRACE);
+      if (genericLoggerp == NULL) {
+	goto err;
+      }
+      GENERICLOGGER_TRACEF(genericLoggerp, "%ld", marpaESLIFValueResultp->u.l);
+      if (! marpaESLIF_stringGenerator.okb) {
+	goto err;
+      }
+      srcs = marpaESLIF_stringGenerator.s;
+      srcl = marpaESLIF_stringGenerator.l;
+      break;
+    case MARPAESLIF_VALUE_TYPE_FLOAT:
+      /* Char default representation */
+      genericLoggerp = GENERICLOGGER_CUSTOM(_marpaESLIF_generateStringWithLoggerCallback, (void *) &marpaESLIF_stringGenerator, GENERICLOGGER_LOGLEVEL_TRACE);
+      if (genericLoggerp == NULL) {
+	goto err;
+      }
+      GENERICLOGGER_TRACEF(genericLoggerp, "%f", (double) marpaESLIFValueResultp->u.f);
+      if (! marpaESLIF_stringGenerator.okb) {
+	goto err;
+      }
+      srcs = marpaESLIF_stringGenerator.s;
+      srcl = marpaESLIF_stringGenerator.l;
+      break;
+    case MARPAESLIF_VALUE_TYPE_DOUBLE:
+      /* Char default representation */
+      genericLoggerp = GENERICLOGGER_CUSTOM(_marpaESLIF_generateStringWithLoggerCallback, (void *) &marpaESLIF_stringGenerator, GENERICLOGGER_LOGLEVEL_TRACE);
+      if (genericLoggerp == NULL) {
+	goto err;
+      }
+      GENERICLOGGER_TRACEF(genericLoggerp, "%f", marpaESLIFValueResultp->u.d);
+      if (! marpaESLIF_stringGenerator.okb) {
+	goto err;
+      }
+      srcs = marpaESLIF_stringGenerator.s;
+      srcl = marpaESLIF_stringGenerator.l;
+      break;
+    case MARPAESLIF_VALUE_TYPE_PTR:
+      /* Char default representation */
+      genericLoggerp = GENERICLOGGER_CUSTOM(_marpaESLIF_generateStringWithLoggerCallback, (void *) &marpaESLIF_stringGenerator, GENERICLOGGER_LOGLEVEL_TRACE);
+      if (genericLoggerp == NULL) {
+	goto err;
+      }
+      GENERICLOGGER_TRACEF(genericLoggerp, "%p", marpaESLIFValueResultp->u.p.p);
+      if (! marpaESLIF_stringGenerator.okb) {
+	goto err;
+      }
+      srcs = marpaESLIF_stringGenerator.s;
+      srcl = marpaESLIF_stringGenerator.l;
+      break;
+    case MARPAESLIF_VALUE_TYPE_ARRAY:
+      /* Array default representation: bytes as-is */
+      srcs = marpaESLIFValueResultp->u.a.p;
+      srcl = marpaESLIFValueResultp->u.a.sizel;
+      break;
+    case MARPAESLIF_VALUE_TYPE_BOOL:
+      /* Char default representation */
+      genericLoggerp = GENERICLOGGER_CUSTOM(_marpaESLIF_generateStringWithLoggerCallback, (void *) &marpaESLIF_stringGenerator, GENERICLOGGER_LOGLEVEL_TRACE);
+      if (genericLoggerp == NULL) {
+	goto err;
+      }
+      GENERICLOGGER_TRACEF(genericLoggerp, "%d", (marpaESLIFValueResultp->u.y == MARPAESLIFVALUERESULTBOOL_TRUE) ? 1 : 0);
+      if (! marpaESLIF_stringGenerator.okb) {
+	goto err;
+      }
+      srcs = marpaESLIF_stringGenerator.s;
+      srcl = marpaESLIF_stringGenerator.l;
+      break;
+    case MARPAESLIF_VALUE_TYPE_STRING:
+      /* String default representation: UTF-8 bytes */
       string.bytep          = marpaESLIFValueResultp->u.s.p;
       string.bytel          = marpaESLIFValueResultp->u.s.sizel;
       string.encodingasciis = marpaESLIFValueResultp->u.s.encodingasciis;
       string.asciis         = NULL;
-      if ((utf8p = _marpaESLIF_string2utf8p(marpaESLIFValuep->marpaESLIFp, &string)) == NULL) {
+      utf8p = _marpaESLIF_string2utf8p(marpaESLIFp, &string);
+      if (utf8p == NULL) {
 	goto err;
       }
       srcs = utf8p->bytep;
       srcl = utf8p->bytel;
+      break;
     }
+    if (marpaESLIFValueResultp->type == MARPAESLIF_VALUE_TYPE_ARRAY) {
+    }
+  }
 
+  if ((srcs != NULL) && (srcl > 0)) {
     if (! _marpaESLIF_appendOpaqueDataToStringGenerator(marpaESLIF_stringGeneratorp, srcs, srcl)) {
       goto err;
     }
@@ -13280,7 +13388,13 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
   rcb = 0;
 
  done:
-  _marpaESLIF_string_freev(utf8p);
+  if (utf8p != &string) {
+    _marpaESLIF_string_freev(utf8p);
+  }
+  GENERICLOGGER_FREE(genericLoggerp);
+  if (marpaESLIF_stringGenerator.s != NULL) {
+    free(marpaESLIF_stringGenerator.s);
+  }
   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC;
   return rcb;
@@ -13297,7 +13411,6 @@ static inline short _marpaESLIF_generic_action___concatb(void *userDatavp, marpa
   marpaESLIF_t                           *marpaESLIFp           = marpaESLIFValuep->marpaESLIFp;
   char                                   *toEncodingDups        = NULL;
   size_t                                  toEncodingl;
-  short                                   allArgumentsAreStringb;
   int                                     argi;
   marpaESLIF_stringGenerator_t            marpaESLIF_stringGenerator;
   marpaESLIF_concat_valueResultContext_t  context;
@@ -13324,7 +13437,6 @@ static inline short _marpaESLIF_generic_action___concatb(void *userDatavp, marpa
     context.userDatavp                  = userDatavp;
     context.marpaESLIFValuep            = marpaESLIFValuep;
     context.marpaESLIF_stringGeneratorp = &marpaESLIF_stringGenerator;
-    context.utf8b                       = (toEncodings != NULL) ? 1 : 0;
 
     converteds = NULL;
 
@@ -13336,10 +13448,8 @@ static inline short _marpaESLIF_generic_action___concatb(void *userDatavp, marpa
       if (! _marpaESLIFRecognizer_value_validb(marpaESLIFRecognizerp, &marpaESLIFValueResult, &context, _marpaESLIFRecognizer_concat_valueResultCallbackb)) {
         goto err;
       }
-      allArgumentsAreStringb = 0;
     } else {
       /* Rule action */
-      allArgumentsAreStringb = 1;
       for (argi = arg0i; argi <= argni; argi++) {
         marpaESLIFValueResultp = _marpaESLIFValue_stack_getp(marpaESLIFValuep, argi);
         if (marpaESLIFValueResultp == NULL) {
@@ -13348,14 +13458,11 @@ static inline short _marpaESLIF_generic_action___concatb(void *userDatavp, marpa
         if (! _marpaESLIFRecognizer_value_validb(marpaESLIFRecognizerp, marpaESLIFValueResultp, &context, _marpaESLIFRecognizer_concat_valueResultCallbackb)) {
           goto err;
         }
-	if (marpaESLIFValueResultp->type != MARPAESLIF_VALUE_TYPE_STRING) {
-	  allArgumentsAreStringb = 0;
-	}
       }
     }
 
     if (marpaESLIF_stringGenerator.l > 1) { /* Because of the implicit NULL byte */
-      if (context.utf8b) {
+      if (toEncodings != NULL) {
         /* Duplicate toEncodings immediately */
         toEncodingDups = strdup(toEncodings);
         if (toEncodingDups == NULL) {
@@ -13363,36 +13470,32 @@ static inline short _marpaESLIF_generic_action___concatb(void *userDatavp, marpa
           goto err;
         }
         toEncodingl = strlen(toEncodings);
-        /* Look to _marpaESLIF_charconvb: it always allocate one byte more and already put '\0' in it, though not returning this additional byte in convertedl */
-        /* This mean that converteds is guaranteed to be NUL byte terminated */
-	/* When allArgumentsAreStringb is a true value, then it is guaranteed that the full buffer contains only good UTF-8 characters */
-        /* so if the final toEncodings is also UTF-8, there is no need to convert again. */
-        if (allArgumentsAreStringb && MARPAESLIF_ENCODING_IS_UTF8(toEncodings, toEncodingl)) {
-          converteds = marpaESLIF_stringGenerator.s;
-          convertedl = marpaESLIF_stringGenerator.l;
-        } else {
-          converteds = _marpaESLIF_charconvb(marpaESLIFp,
-                                             toEncodings,
-                                             NULL, /* Cross-fingers... */
-                                             marpaESLIF_stringGenerator.s,
-                                             marpaESLIF_stringGenerator.l - 1, /* Skip the automatic NUL byte in the source */
-                                             &convertedl,
-                                             NULL, /* fromEncodingsp */
-                                             NULL, /* tconvpp */
-                                             1, /* eofb */
-                                             NULL, /* byteleftsp */
-                                             NULL, /* byteleftlp */
-                                             NULL  /* byteleftalloclp */);
-          if (converteds == NULL) {
-            goto err;
-          }
-          free(marpaESLIF_stringGenerator.s);
-          marpaESLIF_stringGenerator.s = NULL;
-        }
+	/* Call for conversion in any case, this is a way to validate UTF-8 correctness if the destination encoding is also UTF-8 */
+	converteds = _marpaESLIF_charconvb(marpaESLIFp,
+					   toEncodings,
+					   (char *) MARPAESLIF_UTF8_STRING, /* We request that representations always produce UTF-8 strings */
+					   marpaESLIF_stringGenerator.s,
+					   marpaESLIF_stringGenerator.l - 1, /* Skip the automatic NUL byte in the source */
+					   &convertedl,
+					   NULL, /* fromEncodingsp */
+					   NULL, /* tconvpp */
+					   1, /* eofb */
+					   NULL, /* byteleftsp */
+					   NULL, /* byteleftlp */
+					   NULL  /* byteleftalloclp */);
+	if (converteds == NULL) {
+	  goto err;
+	}
+	if (! _marpaESLIF_string_removebomb(marpaESLIFp, converteds, &(convertedl), toEncodings)) {
+	  goto err;
+	}
+	free(marpaESLIF_stringGenerator.s);
+	marpaESLIF_stringGenerator.s = NULL;
 
         if (ptrb) {
+	  /* This is an internal case, that can be set by marpaESLIF only: action is "::ascii", i.e. UTF-8 compatible */
           marpaESLIFValueResult.contextp        = NULL;
-          marpaESLIFValueResult.representationp = NULL;
+          marpaESLIFValueResult.representationp = _marpaESLIF_ascii_representationb; /* Default string representation: ASCII itself (UTF-8 compatible) */
           marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_PTR;
           marpaESLIFValueResult.u.p.p           = converteds;
           marpaESLIFValueResult.u.p.shallowb    = 0;
@@ -13403,7 +13506,7 @@ static inline short _marpaESLIF_generic_action___concatb(void *userDatavp, marpa
           converteds = NULL;
         } else {
           marpaESLIFValueResult.contextp           = NULL;
-          marpaESLIFValueResult.representationp    = _marpaESLIF_string_representationb; /* Default string representation: bytes as-is */
+          marpaESLIFValueResult.representationp    = NULL;
           marpaESLIFValueResult.type               = MARPAESLIF_VALUE_TYPE_STRING;
           marpaESLIFValueResult.u.s.p              = converteds;
           marpaESLIFValueResult.u.s.sizel          = convertedl;
@@ -15208,49 +15311,54 @@ char *marpaESLIF_charconvb(marpaESLIF_t *marpaESLIFp, char *toEncodings, char *f
 /*****************************************************************************/
 static inline marpaESLIF_string_t *_marpaESLIF_string2utf8p(marpaESLIF_t *marpaESLIFp, marpaESLIF_string_t *stringp)
 /*****************************************************************************/
+/* Take care: this method can return stringp */
+/*****************************************************************************/
 {
-  marpaESLIF_string_t    *rcp                   = NULL;
-
-  /* This method is used only when we receive an marpaESLIF_string_t from outside */
+  marpaESLIF_string_t *rcp = NULL;
 
   if ((stringp == NULL) || (stringp->bytep == NULL)) {
     errno = EINVAL;
     goto err;
   } else {
-    rcp = (marpaESLIF_string_t *) malloc(sizeof(marpaESLIF_string_t));
-    if (rcp == NULL) {
-      MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
-      goto err;
-    }
-
-    if (stringp->bytel <= 0) {
-      /* Empty string */
-      rcp->bytep          = (char *) MARPAESLIF_EMPTY_STRING;
-      rcp->bytel          = 0;
-      rcp->encodingasciis = (char *) MARPAESLIF_UTF8_STRING;
-      rcp->asciis         = (char *) MARPAESLIF_EMPTY_STRING;
+    /* When stringp->encodingasciis is MARPAESLIF_UTF8_STRING this is a string that marpaESLIF generated. */
+    /* Then we know it is a valid UTF-8. No need to validate it. */
+    if (stringp->encodingasciis == (char *) MARPAESLIF_UTF8_STRING) {
+      rcp = stringp;
     } else {
-      rcp->bytep          = NULL;
-      rcp->bytel          = 0;
-      rcp->encodingasciis = NULL;
-      rcp->asciis         = NULL;
-
-      /* No need of rcp->asciis, this is why we do not use _marpaESLIF_string_newp() */
-      if ((rcp->bytep = _marpaESLIF_charconvb(marpaESLIFp, (char *) MARPAESLIF_UTF8_STRING, stringp->encodingasciis, stringp->bytep, stringp->bytel, &(rcp->bytel), &(rcp->encodingasciis), NULL /* tconvpp */, 1 /* eofb */, NULL /* byteleftsp */, NULL /* byteleftlp */, NULL /* byteleftalloclp */)) == NULL) {
-        goto err;
-      }
-
-      if (! _marpaESLIF_string_removebomb(marpaESLIFp, rcp->bytep, &(rcp->bytel), (char *) MARPAESLIF_UTF8_STRING)) {
+      rcp = (marpaESLIF_string_t *) malloc(sizeof(marpaESLIF_string_t));
+      if (rcp == NULL) {
+	MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
 	goto err;
       }
-      
+
+      if (stringp->bytel <= 0) {
+	/* Empty string */
+	rcp->bytep          = (char *) MARPAESLIF_EMPTY_STRING;
+	rcp->bytel          = 0;
+	rcp->encodingasciis = (char *) MARPAESLIF_UTF8_STRING;
+	rcp->asciis         = (char *) MARPAESLIF_EMPTY_STRING;
+      } else {
+	rcp->bytep          = NULL;
+	rcp->bytel          = 0;
+	rcp->encodingasciis = NULL;
+	rcp->asciis         = NULL;
+
+	/* No need of rcp->asciis, this is why we do not use _marpaESLIF_string_newp() */
+	if ((rcp->bytep = _marpaESLIF_charconvb(marpaESLIFp, (char *) MARPAESLIF_UTF8_STRING, stringp->encodingasciis, stringp->bytep, stringp->bytel, &(rcp->bytel), &(rcp->encodingasciis), NULL /* tconvpp */, 1 /* eofb */, NULL /* byteleftsp */, NULL /* byteleftlp */, NULL /* byteleftalloclp */)) == NULL) {
+	  goto err;
+	}
+
+	if (! _marpaESLIF_string_removebomb(marpaESLIFp, rcp->bytep, &(rcp->bytel), (char *) MARPAESLIF_UTF8_STRING)) {
+	  goto err;
+	}
+      }
     }
   }
 
   goto done;
 
  err:
-  if (rcp != NULL) {
+  if ((rcp != NULL) && (rcp != stringp)) {
     _marpaESLIF_string_freev(rcp);
     rcp = NULL;
   }
@@ -15260,15 +15368,17 @@ static inline marpaESLIF_string_t *_marpaESLIF_string2utf8p(marpaESLIF_t *marpaE
 }
 
 /*****************************************************************************/
-static short _marpaESLIF_string_representationb(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp, char **inputcpp, size_t *inputlp)
+static short _marpaESLIF_ascii_representationb(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp, char **inputcpp, size_t *inputlp)
 /*****************************************************************************/
 {
+  char *asciis;
 
-  if (marpaESLIFValueResultp->type != MARPAESLIF_VALUE_TYPE_STRING) {
+  if (marpaESLIFValueResultp->type != MARPAESLIF_VALUE_TYPE_PTR) {
     return 0;
   } else {
-    *inputcpp = marpaESLIFValueResultp->u.s.p;
-    *inputlp  = marpaESLIFValueResultp->u.s.sizel;
+    asciis = marpaESLIFValueResultp->u.p.p;
+    *inputcpp = asciis;
+    *inputlp  = strlen(asciis);
     return 1;
   }
 }
