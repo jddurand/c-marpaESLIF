@@ -13,9 +13,10 @@ static short transformIntb(void *userDatavp, void *contextp, int i);
 static short transformLongb(void *userDatavp, void *contextp, long l);
 static short transformFloatb(void *userDatavp, void *contextp, float f);
 static short transformDoubleb(void *userDatavp, void *contextp, double d);
-static short transformPtrb(void *userDatavp, void *contextp, void *p);
-static short transformArrayb(void *userDatavp, void *contextp, void *p, size_t sizel);
-static short transformBoolb(void *userDatavp, void *contextp, short b);
+static short transformPtrb(void *userDatavp, void *contextp, marpaESLIFValueResultPtr_t p);
+static short transformArrayb(void *userDatavp, void *contextp, marpaESLIFValueResultArray_t a);
+static short transformBoolb(void *userDatavp, void *contextp, marpaESLIFValueResultBool_t b);
+static short transformStringb(void *userDatavp, void *contextp, marpaESLIFValueResultString_t s);
 
 static marpaESLIFValueResultTransform_t transformDefault = {
   transformUndefb,
@@ -27,7 +28,8 @@ static marpaESLIFValueResultTransform_t transformDefault = {
   transformDoubleb,
   transformPtrb,
   transformArrayb,
-  transformBoolb
+  transformBoolb,
+  transformStringb
 };
 
 typedef struct marpaESLIFTester_context {
@@ -59,12 +61,12 @@ const static char *dsl = "\n"
   "# ----------\n"
   "# JSON value\n"
   "# ----------\n"
-  "value    ::= string                                                           # ::shift (default action)\n"
-  "           | number                                                           # ::shift (default action)\n"
-  "           | object                                                           # ::shift (default action)\n"
-  "           | array                                                            # ::shift (default action)\n"
-  "           | 'true'                               action         => ::lua->lua_true      # Returns a lua true value\n"
-  "           | 'false'                              action         => ::lua->lua_false     # Returns a lua false value\n"
+  "value    ::= string                               action => ::convert[UTF-8] ##                            # ::shift (default action)\n"
+  "           | number                               action => ::convert[UTF-8] ##                             # ::shift (default action)\n"
+  "           | object                               action => ::convert[UTF-8] ##                             # ::shift (default action)\n"
+  "           | array                                action => ::convert[UTF-8] ##                             # ::shift (default action)\n"
+  "           | 'true'                               action => ::convert[UTF-8] ## action         => ::lua->lua_true      # Returns a lua true value\n"
+  "           | 'false'                              action => ::convert[UTF-8] ## action         => ::lua->lua_false     # Returns a lua false value\n"
   "           | 'null'\n"
   "\n"
   "# -----------\n"
@@ -622,7 +624,7 @@ static short transformDoubleb(void *userDatavp, void *contextp, double d)
 }
 
 /*****************************************************************************/
-static short transformPtrb(void *userDatavp, void *contextp, void *p)
+static short transformPtrb(void *userDatavp, void *contextp, marpaESLIFValueResultPtr_t p)
 /*****************************************************************************/
 {
   valueContext_t *valueContextp = (valueContext_t *) userDatavp;
@@ -633,7 +635,7 @@ static short transformPtrb(void *userDatavp, void *contextp, void *p)
 }
 
 /*****************************************************************************/
-static short transformArrayb(void *userDatavp, void *contextp, void *p, size_t sizel)
+static short transformArrayb(void *userDatavp, void *contextp, marpaESLIFValueResultArray_t a)
 /*****************************************************************************/
 {
   valueContext_t *valueContextp = (valueContext_t *) userDatavp;
@@ -644,12 +646,23 @@ static short transformArrayb(void *userDatavp, void *contextp, void *p, size_t s
 }
 
 /*****************************************************************************/
-static short transformBoolb(void *userDatavp, void *contextp, short b)
+static short transformBoolb(void *userDatavp, void *contextp, marpaESLIFValueResultBool_t b)
 /*****************************************************************************/
 {
   valueContext_t *valueContextp = (valueContext_t *) userDatavp;
 
   GENERICLOGGER_NOTICE(valueContextp->genericLoggerp, "Result type is bool");
+
+  return 1;
+}
+
+/*****************************************************************************/
+static short transformStringb(void *userDatavp, void *contextp, marpaESLIFValueResultString_t s)
+/*****************************************************************************/
+{
+  valueContext_t *valueContextp = (valueContext_t *) userDatavp;
+
+  GENERICLOGGER_NOTICE(valueContextp->genericLoggerp, "Result type is string");
 
   return 1;
 }
