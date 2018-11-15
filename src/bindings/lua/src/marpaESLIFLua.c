@@ -82,7 +82,7 @@ typedef struct marpaESLIFLuaValueContext {
   int                recognizerInterface_r; /* Lua recognizer reference - can be LUA_NOREF */
   int                grammar_r;             /* Lua grammar reference - can be LUA_NOREF */
   char              *actions;               /* Shallow copy of last resolved name */
-  void              *previous_strings;      /* Latest stringification result */
+  char              *previous_strings;      /* Latest stringification result */
   marpaESLIFValue_t *marpaESLIFValuep;
   short              managedb;              /* True if we own marpaESLIFValuep */
   char              *symbols;
@@ -3505,14 +3505,15 @@ static short marpaESLIFLua_representationb(void *userDatavp, marpaESLIFValueResu
   if ((s != NULL) && (l > 0)) {
     /* No guarantee this will survive the lua call, so we keep an explicitly copy */
     /* until marpaESLIF also takes a copy. */
-    *inputcpp = (char *) malloc(l);
-    if (*inputcpp == NULL) {
+    marpaESLIFLuaValueContextp->previous_strings = (char *) malloc(l + 1);
+    if (marpaESLIFLuaValueContextp->previous_strings == NULL) {
       marpaESLIFLua_luaL_errorf(L, "malloc failure, %s", strerror(errno));
       goto err;
     }
-    memcpy(*inputcpp, s, l);
+    memcpy(marpaESLIFLuaValueContextp->previous_strings, s, l);
+    marpaESLIFLuaValueContextp->previous_strings[l] = '\0'; /* Hiden NUL byte */
+    *inputcpp = marpaESLIFLuaValueContextp->previous_strings;
     *inputlp = l;
-    marpaESLIFLuaValueContextp->previous_strings = (void *) *inputcpp;
   }
   if (! marpaESLIFLua_lua_pop(L, 1)) goto err;
 
