@@ -304,10 +304,6 @@ int main() {
   short                        continueb;
   short                        exhaustedb;
   int                          i;
-  char                        *pauses;
-  size_t                       pausel;
-  size_t                       linel;
-  size_t                       columnl;
   marpaESLIFValue_t           *marpaESLIFValuep = NULL;
   marpaESLIFValueOption_t      marpaESLIFValueOption;
   valueContext_t               valueContext;
@@ -394,7 +390,11 @@ int main() {
     "      \"id\" : 16010789,\n"
     "     \"verified\" : false\n"
     "  }\n"
-    "}"
+    "}",
+    "1.12",
+    "true",
+    "false",
+    "\"x\"",
   };
 
   genericLoggerp = GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_DEBUG);
@@ -473,15 +473,6 @@ int main() {
     }
 
     while (continueb) {
-      /* We have a single event, no need to ask what it is */
-      if (! marpaESLIFRecognizer_locationb(marpaESLIFRecognizerp, &linel, &columnl)) {
-        goto err;
-      }
-      if (! marpaESLIFRecognizer_lexeme_last_pauseb(marpaESLIFRecognizerp, "lstring", &pauses, &pausel)) {
-        goto err;
-      }
-      GENERICLOGGER_INFOF(genericLoggerp, "Got lstring: %s; length=%ld, current position is {line, column} = {%ld, %ld}", pauses, (unsigned long) pausel, (unsigned long) linel, (unsigned long) columnl);
-
       /* Resume */
       if (! marpaESLIFRecognizer_resumeb(marpaESLIFRecognizerp, 0, &continueb, &exhaustedb)) {
         goto err;
@@ -662,7 +653,7 @@ static short transformStringb(void *userDatavp, void *contextp, marpaESLIFValueR
 {
   valueContext_t *valueContextp = (valueContext_t *) userDatavp;
 
-  GENERICLOGGER_NOTICE(valueContextp->genericLoggerp, "Result type is string");
+  GENERICLOGGER_NOTICEF(valueContextp->genericLoggerp, "Result type is string: %s", s.p);
 
   return 1;
 }
