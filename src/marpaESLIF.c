@@ -24,8 +24,8 @@ short is_bigendian;
     (                                                                   \
       (encodingl == 5)                                 &&               \
       ((encodings[0] == 'U') || (encodings[0] == 'u')) &&               \
-      ((encodings[1] == 'T') || (encodings[0] == 't')) &&               \
-      ((encodings[2] == 'F') || (encodings[0] == 'f')) &&               \
+      ((encodings[1] == 'T') || (encodings[1] == 't')) &&               \
+      ((encodings[2] == 'F') || (encodings[2] == 'f')) &&               \
        (encodings[3] == '-') &&                                         \
        (encodings[4] == '8')                                            \
     )                                                                   \
@@ -34,8 +34,8 @@ short is_bigendian;
     (                                                                   \
       (encodingl == 4)                                 &&               \
       ((encodings[0] == 'U') || (encodings[0] == 'u')) &&               \
-      ((encodings[1] == 'T') || (encodings[0] == 't')) &&               \
-      ((encodings[2] == 'F') || (encodings[0] == 'f')) &&               \
+      ((encodings[1] == 'T') || (encodings[1] == 't')) &&               \
+      ((encodings[2] == 'F') || (encodings[2] == 'f')) &&               \
        (encodings[3] == '8')                                            \
     )                                                                   \
   )
@@ -46,8 +46,8 @@ short is_bigendian;
     (                                                                   \
       (encodingl == 6)                                 &&               \
       ((encodings[0] == 'U') || (encodings[0] == 'u')) &&               \
-      ((encodings[1] == 'T') || (encodings[0] == 't')) &&               \
-      ((encodings[2] == 'F') || (encodings[0] == 'f')) &&               \
+      ((encodings[1] == 'T') || (encodings[1] == 't')) &&               \
+      ((encodings[2] == 'F') || (encodings[2] == 'f')) &&               \
        (encodings[3] == '-')                           &&               \
        (encodings[4] == '1')                           &&               \
        (encodings[5] == '6')                                            \
@@ -57,8 +57,8 @@ short is_bigendian;
     (                                                                   \
       (encodingl == 5)                                 &&               \
       ((encodings[0] == 'U') || (encodings[0] == 'u')) &&               \
-      ((encodings[1] == 'T') || (encodings[0] == 't')) &&               \
-      ((encodings[2] == 'F') || (encodings[0] == 'f')) &&               \
+      ((encodings[1] == 'T') || (encodings[1] == 't')) &&               \
+      ((encodings[2] == 'F') || (encodings[2] == 'f')) &&               \
        (encodings[3] == '1')                           &&               \
        (encodings[4] == '6')                                            \
     )                                                                   \
@@ -70,8 +70,8 @@ short is_bigendian;
     (                                                                   \
       (encodingl == 6)                                 &&               \
       ((encodings[0] == 'U') || (encodings[0] == 'u')) &&               \
-      ((encodings[1] == 'T') || (encodings[0] == 't')) &&               \
-      ((encodings[2] == 'F') || (encodings[0] == 'f')) &&               \
+      ((encodings[1] == 'T') || (encodings[1] == 't')) &&               \
+      ((encodings[2] == 'F') || (encodings[2] == 'f')) &&               \
        (encodings[3] == '-')                           &&               \
        (encodings[4] == '3')                           &&               \
        (encodings[5] == '2')                                            \
@@ -81,8 +81,8 @@ short is_bigendian;
     (                                                                   \
       (encodingl == 5)                                 &&               \
       ((encodings[0] == 'U') || (encodings[0] == 'u')) &&               \
-      ((encodings[1] == 'T') || (encodings[0] == 't')) &&               \
-      ((encodings[2] == 'F') || (encodings[0] == 'f')) &&               \
+      ((encodings[1] == 'T') || (encodings[1] == 't')) &&               \
+      ((encodings[2] == 'F') || (encodings[2] == 'f')) &&               \
        (encodings[3] == '3')                           &&               \
        (encodings[4] == '2')                                            \
     )                                                                   \
