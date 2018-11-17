@@ -13371,8 +13371,6 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
       srcl = utf8p->bytel;
       break;
     }
-    if (marpaESLIFValueResultp->type == MARPAESLIF_VALUE_TYPE_ARRAY) {
-    }
   }
 
   if ((srcs != NULL) && (srcl > 0)) {
