@@ -124,6 +124,8 @@
 #define G1_RULE_ACTION_NAME_6                    "G1_rule_action_name_6"
 #define G1_RULE_ACTION_NAME_7                    "G1_rule_action_name_7"
 #define G1_RULE_ACTION_NAME_8                    "G1_rule_action_name_8"
+#define G1_RULE_ACTION_NAME_9                    "G1_rule_action_name_9"
+#define G1_RULE_ACTION_NAME_10                   "G1_rule_action_name_10"
 #define G1_RULE_ACTION_FREE_NAME                 "G1_rule_action_free_name"
 #define G1_RULE_SYMBOLACTION_NAME_1              "G1_rule_symbolaction_name_1"
 #define G1_RULE_SYMBOLACTION_NAME_2              "G1_rule_symbolaction_name_2"
@@ -132,6 +134,8 @@
 #define G1_RULE_SYMBOLACTION_NAME_5              "G1_rule_symbolaction_name_5"
 #define G1_RULE_SYMBOLACTION_NAME_6              "G1_rule_symbolaction_name_6"
 #define G1_RULE_SYMBOLACTION_NAME_7              "G1_rule_symbolaction_name_7"
+#define G1_RULE_SYMBOLACTION_NAME_8              "G1_rule_symbolaction_name_8"
+#define G1_RULE_SYMBOLACTION_NAME_9              "G1_rule_symbolaction_name_9"
 #define G1_RULE_QUANTIFIER_1                     "G1_rule_quantifier_1"
 #define G1_RULE_QUANTIFIER_2                     "G1_rule_quantifier_2"
 #define G1_RULE_SIGNED_INTEGER                   "G1_rule_signed_integer"
@@ -278,6 +282,8 @@
 #define G1_ACTION_ACTION_NAME_6                    "::ascii" /* <action name> ::= '::concat' */
 #define G1_ACTION_ACTION_NAME_7                    "::ascii" /* <action name> ::= /::copy\\[\\d+\\]/ */
 #define G1_ACTION_ACTION_NAME_8                    "::ascii" /* <action name> ::= <lua identifier> */
+#define G1_ACTION_ACTION_NAME_9                    "::ascii" /* <action name> ::= '::true' */
+#define G1_ACTION_ACTION_NAME_10                   "::ascii" /* <action name> ::= '::false' */
 #define G1_ACTION_FREE_NAME                        "::ascii" /* <free name> ::= <ascii graph name> */
 #define G1_ACTION_SYMBOLACTION_NAME_1              "::ascii" /* <symbol action name> ::= <ascii graph name> */
 #define G1_ACTION_SYMBOLACTION_NAME_2              "::ascii" /* <symbol action name> ::= '::transfer' */
@@ -286,6 +292,8 @@
 #define G1_ACTION_SYMBOLACTION_NAME_5              "::ascii" /* <symbol action name> ::= '::convert\\[[^\\]]+\\]/\n" */
 #define G1_ACTION_SYMBOLACTION_NAME_6              "::ascii" /* <symbol action name> ::= '::concat' */
 #define G1_ACTION_SYMBOLACTION_NAME_7              "::ascii" /* <symbol action name> ::= <lua identifier> */
+#define G1_ACTION_SYMBOLACTION_NAME_8              "::ascii" /* <symbol action name> ::= '::true' */
+#define G1_ACTION_SYMBOLACTION_NAME_9              "::ascii" /* <symbol action name> ::= '::false' */
 #define G1_ACTION_QUANTIFIER_1                     "G1_action_quantifier_1"                     /* done */
 #define G1_ACTION_QUANTIFIER_2                     "G1_action_quantifier_2"                     /* done */
 #define G1_ACTION_SIGNED_INTEGER                   "::ascii" /* <signed integer> ::= /[+-]?\d+/ */

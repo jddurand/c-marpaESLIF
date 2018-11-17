@@ -224,19 +224,21 @@ struct marpaESLIF_grammar {
 /* Definition of the opaque structures */
 /* ----------------------------------- */
 struct marpaESLIF {
-  marpaESLIFGrammar_t   *marpaESLIFGrammarp;          /* ESLIF has its own grammar -; */
-  marpaESLIFOption_t     marpaESLIFOption;
-  marpaESLIF_terminal_t *anycharp;                    /* internal regex for match any character */
-  marpaESLIF_terminal_t *newlinep;                    /* Internal regex for match newline */
-  marpaESLIF_terminal_t *stringModifiersp;            /* Internal regex for match string modifiers */
-  marpaESLIF_terminal_t *characterClassModifiersp;    /* Internal regex for match character class modifiers */
-  marpaESLIF_terminal_t *regexModifiersp;             /* Internal regex for match regex modifiers */
-  genericLogger_t       *traceLoggerp;                /* For cases where this is silent mode but compiled with TRACE */
-  short                  NULLisZeroBytesb;            /* An internal boolean to help when we can safely do calloc() */
-  char                  *versions;                    /* Version */
-  int                    versionMajori;               /* Major version */
-  int                    versionMinori;               /* Minor version */
-  int                    versionPatchi;               /* Patch version */
+  marpaESLIFGrammar_t    *marpaESLIFGrammarp;          /* ESLIF has its own grammar -; */
+  marpaESLIFOption_t      marpaESLIFOption;
+  marpaESLIF_terminal_t  *anycharp;                    /* internal regex for match any character */
+  marpaESLIF_terminal_t  *newlinep;                    /* Internal regex for match newline */
+  marpaESLIF_terminal_t  *stringModifiersp;            /* Internal regex for match string modifiers */
+  marpaESLIF_terminal_t  *characterClassModifiersp;    /* Internal regex for match character class modifiers */
+  marpaESLIF_terminal_t  *regexModifiersp;             /* Internal regex for match regex modifiers */
+  genericLogger_t        *traceLoggerp;                /* For cases where this is silent mode but compiled with TRACE */
+  short                   NULLisZeroBytesb;            /* An internal boolean to help when we can safely do calloc() */
+  char                   *versions;                    /* Version */
+  int                     versionMajori;               /* Major version */
+  int                     versionMinori;               /* Minor version */
+  int                     versionPatchi;               /* Patch version */
+  marpaESLIFValueResult_t marpaESLIFValueResultTrue;   /* Pre-filled ::true value result */
+  marpaESLIFValueResult_t marpaESLIFValueResultFalse;  /* Pre-filled ::true value result */
 };
 
 struct marpaESLIFGrammar {
