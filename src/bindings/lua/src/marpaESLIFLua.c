@@ -3406,7 +3406,7 @@ static short marpaESLIFLua_transformBoolb(void *userDatavp, void *contextp, marp
   marpaESLIFLuaValueContext_t *marpaESLIFLuaValueContextp = (marpaESLIFLuaValueContext_t *) userDatavp;
   lua_State                   *L                          = marpaESLIFLuaValueContextp->L;
 
-  if (! marpaESLIFLua_lua_pushboolean(marpaESLIFLuaValueContextp->L, (int) (y == MARPAESLIFVALUERESULTBOOL_TRUE) ? 1 : 0)) goto err;
+  if (! marpaESLIFLua_lua_pushboolean(marpaESLIFLuaValueContextp->L, (int) (y == MARPAESLIFVALUERESULTBOOL_FALSE) ? 0 : 1)) goto err;
 
   return 1;
 

@@ -1425,6 +1425,7 @@ static short marpaESLIF_TransformUndefb(void *userDatavp, void *contextp)
   MarpaX_ESLIF_Value_t *Perl_MarpaX_ESLIF_Valuep = (MarpaX_ESLIF_Value_t *) userDatavp;
   dMYTHX(Perl_MarpaX_ESLIF_Valuep);
 
+  fprintf(stderr, "=============> %s\n", funcs);
   Perl_MarpaX_ESLIF_Valuep->svp = &PL_sv_undef;
 
   return 1;
@@ -1438,6 +1439,7 @@ static short marpaESLIF_TransformCharb(void *userDatavp, void *contextp, marpaES
   MarpaX_ESLIF_Value_t *Perl_MarpaX_ESLIF_Valuep = (MarpaX_ESLIF_Value_t *) userDatavp;
   dMYTHX(Perl_MarpaX_ESLIF_Valuep);
 
+  fprintf(stderr, "=============> %s\n", funcs);
   Perl_MarpaX_ESLIF_Valuep->svp = newSVpvn(&c, 1);
   if (is_utf8_string((const U8 *) &c, (STRLEN) 1)) {
     SvUTF8_on(Perl_MarpaX_ESLIF_Valuep->svp);
@@ -1454,6 +1456,7 @@ static short marpaESLIF_TransformShortb(void *userDatavp, void *contextp, marpaE
   MarpaX_ESLIF_Value_t *Perl_MarpaX_ESLIF_Valuep = (MarpaX_ESLIF_Value_t *) userDatavp;
   dMYTHX(Perl_MarpaX_ESLIF_Valuep);
 
+  fprintf(stderr, "=============> %s\n", funcs);
   Perl_MarpaX_ESLIF_Valuep->svp = newSViv((IV) b);
 
   return 1;
@@ -1467,6 +1470,7 @@ static short marpaESLIF_TransformIntb(void *userDatavp, void *contextp, marpaESL
   MarpaX_ESLIF_Value_t *Perl_MarpaX_ESLIF_Valuep = (MarpaX_ESLIF_Value_t *) userDatavp;
   dMYTHX(Perl_MarpaX_ESLIF_Valuep);
 
+  fprintf(stderr, "=============> %s\n", funcs);
   Perl_MarpaX_ESLIF_Valuep->svp = newSViv((IV) i);
 
   return 1;
@@ -1480,6 +1484,7 @@ static short marpaESLIF_TransformLongb(void *userDatavp, void *contextp, marpaES
   MarpaX_ESLIF_Value_t *Perl_MarpaX_ESLIF_Valuep = (MarpaX_ESLIF_Value_t *) userDatavp;
   dMYTHX(Perl_MarpaX_ESLIF_Valuep);
 
+  fprintf(stderr, "=============> %s\n", funcs);
   Perl_MarpaX_ESLIF_Valuep->svp = newSViv((IV) l);
 
   return 1;
@@ -1493,6 +1498,7 @@ static short marpaESLIF_TransformFloatb(void *userDatavp, void *contextp, marpaE
   MarpaX_ESLIF_Value_t *Perl_MarpaX_ESLIF_Valuep = (MarpaX_ESLIF_Value_t *) userDatavp;
   dMYTHX(Perl_MarpaX_ESLIF_Valuep);
 
+  fprintf(stderr, "=============> %s\n", funcs);
   Perl_MarpaX_ESLIF_Valuep->svp = newSVnv((double) f);
 
   return 1;
@@ -1506,6 +1512,7 @@ static short marpaESLIF_TransformDoubleb(void *userDatavp, void *contextp, marpa
   MarpaX_ESLIF_Value_t *Perl_MarpaX_ESLIF_Valuep = (MarpaX_ESLIF_Value_t *) userDatavp;
   dMYTHX(Perl_MarpaX_ESLIF_Valuep);
 
+  fprintf(stderr, "=============> %s\n", funcs);
   Perl_MarpaX_ESLIF_Valuep->svp = newSVnv(d);
 
   return 1;
@@ -1519,6 +1526,7 @@ static short marpaESLIF_TransformPtrb(void *userDatavp, void *contextp, marpaESL
   MarpaX_ESLIF_Value_t *Perl_MarpaX_ESLIF_Valuep = (MarpaX_ESLIF_Value_t *) userDatavp;
   dMYTHX(Perl_MarpaX_ESLIF_Valuep);
 
+  fprintf(stderr, "=============> %s\n", funcs);
   if (contextp == ESLIF_PERL_CONTEXT) {
     /* This is an SV that we pushed */
     Perl_MarpaX_ESLIF_Valuep->svp = (SV *) p.p;
@@ -1540,6 +1548,7 @@ static short marpaESLIF_TransformArrayb(void *userDatavp, void *contextp, marpaE
   MarpaX_ESLIF_Value_t *Perl_MarpaX_ESLIF_Valuep = (MarpaX_ESLIF_Value_t *) userDatavp;
   dMYTHX(Perl_MarpaX_ESLIF_Valuep);
 
+  fprintf(stderr, "=============> %s\n", funcs);
   if (contextp == ESLIF_PERL_CONTEXT) {
     /* We never push an array */
     MARPAESLIF_CROAK("Got ARRAY on the stack that pretend to come from perl");
@@ -1559,7 +1568,8 @@ static short marpaESLIF_TransformBoolb(void *userDatavp, void *contextp, marpaES
   MarpaX_ESLIF_Value_t *Perl_MarpaX_ESLIF_Valuep = (MarpaX_ESLIF_Value_t *) userDatavp;
   dMYTHX(Perl_MarpaX_ESLIF_Valuep);
 
-  Perl_MarpaX_ESLIF_Valuep->svp = (y == MARPAESLIFVALUERESULTBOOL_TRUE) ? &PL_sv_yes : &PL_sv_no;
+  fprintf(stderr, "=============> %s\n", funcs);
+  Perl_MarpaX_ESLIF_Valuep->svp = (y == MARPAESLIFVALUERESULTBOOL_FALSE) ? &PL_sv_no : &PL_sv_yes;
 
   return 1;
 }
@@ -1572,6 +1582,7 @@ static short marpaESLIF_TransformStringb(void *userDatavp, void *contextp, marpa
   MarpaX_ESLIF_Value_t *Perl_MarpaX_ESLIF_Valuep = (MarpaX_ESLIF_Value_t *) userDatavp;
   dMYTHX(Perl_MarpaX_ESLIF_Valuep);
 
+  fprintf(stderr, "=============> %s\n", funcs);
   if (contextp == ESLIF_PERL_CONTEXT) {
     /* We never push an array */
     MARPAESLIF_CROAK("Got ARRAY on the stack that pretend to come from perl");

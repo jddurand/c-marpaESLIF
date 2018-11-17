@@ -5141,7 +5141,7 @@ static short marpaESLIF_TransformBool(void *userDatavp, void *contextp, marpaESL
   marpaESLIFValueContext_t *marpaESLIFValueContextp = (marpaESLIFValueContext_t *) userDatavp;
   JNIEnv                   *envp                    = marpaESLIFValueContextp->envp;
   short                     rcb;
-  jboolean                  jb = (y == MARPAESLIFVALUERESULTBOOL_TRUE) ? JNI_TRUE : JNI_FALSE;
+  jboolean                  jb = (y == MARPAESLIFVALUERESULTBOOL_FALSE) ? JNI_FALSE : JNI_TRUE;
   jobject                   objectp;
 
   if (JAVA_LANG_BOOLEAN_CLASS_valueOf_METHODP != NULL) {
