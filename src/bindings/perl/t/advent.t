@@ -59,8 +59,8 @@ BEGIN { require_ok('MarpaX::ESLIF') };
 my $base_dsl = q{
 :desc ::= '$TEST'
 :start ::= deal
-:default ::= action => ::convert[UTF-16]
-             symbol-action => ::convert[UTF-8]
+:default ::= action => ::convert[UTF-8]
+             symbol-action => ::concat
 
 deal ::= hands
 hands ::= hand | hands ';' hand
