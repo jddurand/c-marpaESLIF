@@ -26,6 +26,28 @@
 #  define MARPAESLIF_SvREFCNT_dec(svp) SvREFCNT_dec(svp)
 #endif
 
+#define MARPAESLIF_ENCODING_IS_UTF8(encodings, encodingl)               \
+  (                                                                     \
+    /* UTF-8 */                                                         \
+    (                                                                   \
+      (encodingl == 5)                                 &&               \
+      ((encodings[0] == 'U') || (encodings[0] == 'u')) &&               \
+      ((encodings[1] == 'T') || (encodings[1] == 't')) &&               \
+      ((encodings[2] == 'F') || (encodings[2] == 'f')) &&               \
+       (encodings[3] == '-') &&                                         \
+       (encodings[4] == '8')                                            \
+    )                                                                   \
+    ||                                                                  \
+    /* UTF8 */                                                          \
+    (                                                                   \
+      (encodingl == 4)                                 &&               \
+      ((encodings[0] == 'U') || (encodings[0] == 'u')) &&               \
+      ((encodings[1] == 'T') || (encodings[1] == 't')) &&               \
+      ((encodings[2] == 'F') || (encodings[2] == 'f')) &&               \
+       (encodings[3] == '8')                                            \
+    )                                                                   \
+  )
+
 #if defined(SvREFCNT_inc_simple_void_NN)
 #  define MARPAESLIF_SvREFCNT_inc(svp) SvREFCNT_inc_simple_void_NN(svp)
 #elif defined(SvREFCNT_inc_void_NN)
@@ -1425,7 +1447,6 @@ static short marpaESLIF_TransformUndefb(void *userDatavp, void *contextp)
   MarpaX_ESLIF_Value_t *Perl_MarpaX_ESLIF_Valuep = (MarpaX_ESLIF_Value_t *) userDatavp;
   dMYTHX(Perl_MarpaX_ESLIF_Valuep);
 
-  fprintf(stderr, "=============> %s\n", funcs);
   Perl_MarpaX_ESLIF_Valuep->svp = &PL_sv_undef;
 
   return 1;
@@ -1439,7 +1460,6 @@ static short marpaESLIF_TransformCharb(void *userDatavp, void *contextp, marpaES
   MarpaX_ESLIF_Value_t *Perl_MarpaX_ESLIF_Valuep = (MarpaX_ESLIF_Value_t *) userDatavp;
   dMYTHX(Perl_MarpaX_ESLIF_Valuep);
 
-  fprintf(stderr, "=============> %s\n", funcs);
   Perl_MarpaX_ESLIF_Valuep->svp = newSVpvn(&c, 1);
   if (is_utf8_string((const U8 *) &c, (STRLEN) 1)) {
     SvUTF8_on(Perl_MarpaX_ESLIF_Valuep->svp);
@@ -1456,7 +1476,6 @@ static short marpaESLIF_TransformShortb(void *userDatavp, void *contextp, marpaE
   MarpaX_ESLIF_Value_t *Perl_MarpaX_ESLIF_Valuep = (MarpaX_ESLIF_Value_t *) userDatavp;
   dMYTHX(Perl_MarpaX_ESLIF_Valuep);
 
-  fprintf(stderr, "=============> %s\n", funcs);
   Perl_MarpaX_ESLIF_Valuep->svp = newSViv((IV) b);
 
   return 1;
@@ -1470,7 +1489,6 @@ static short marpaESLIF_TransformIntb(void *userDatavp, void *contextp, marpaESL
   MarpaX_ESLIF_Value_t *Perl_MarpaX_ESLIF_Valuep = (MarpaX_ESLIF_Value_t *) userDatavp;
   dMYTHX(Perl_MarpaX_ESLIF_Valuep);
 
-  fprintf(stderr, "=============> %s\n", funcs);
   Perl_MarpaX_ESLIF_Valuep->svp = newSViv((IV) i);
 
   return 1;
@@ -1484,7 +1502,6 @@ static short marpaESLIF_TransformLongb(void *userDatavp, void *contextp, marpaES
   MarpaX_ESLIF_Value_t *Perl_MarpaX_ESLIF_Valuep = (MarpaX_ESLIF_Value_t *) userDatavp;
   dMYTHX(Perl_MarpaX_ESLIF_Valuep);
 
-  fprintf(stderr, "=============> %s\n", funcs);
   Perl_MarpaX_ESLIF_Valuep->svp = newSViv((IV) l);
 
   return 1;
@@ -1498,7 +1515,6 @@ static short marpaESLIF_TransformFloatb(void *userDatavp, void *contextp, marpaE
   MarpaX_ESLIF_Value_t *Perl_MarpaX_ESLIF_Valuep = (MarpaX_ESLIF_Value_t *) userDatavp;
   dMYTHX(Perl_MarpaX_ESLIF_Valuep);
 
-  fprintf(stderr, "=============> %s\n", funcs);
   Perl_MarpaX_ESLIF_Valuep->svp = newSVnv((double) f);
 
   return 1;
@@ -1512,7 +1528,6 @@ static short marpaESLIF_TransformDoubleb(void *userDatavp, void *contextp, marpa
   MarpaX_ESLIF_Value_t *Perl_MarpaX_ESLIF_Valuep = (MarpaX_ESLIF_Value_t *) userDatavp;
   dMYTHX(Perl_MarpaX_ESLIF_Valuep);
 
-  fprintf(stderr, "=============> %s\n", funcs);
   Perl_MarpaX_ESLIF_Valuep->svp = newSVnv(d);
 
   return 1;
@@ -1526,7 +1541,6 @@ static short marpaESLIF_TransformPtrb(void *userDatavp, void *contextp, marpaESL
   MarpaX_ESLIF_Value_t *Perl_MarpaX_ESLIF_Valuep = (MarpaX_ESLIF_Value_t *) userDatavp;
   dMYTHX(Perl_MarpaX_ESLIF_Valuep);
 
-  fprintf(stderr, "=============> %s\n", funcs);
   if (contextp == ESLIF_PERL_CONTEXT) {
     /* This is an SV that we pushed */
     Perl_MarpaX_ESLIF_Valuep->svp = (SV *) p.p;
@@ -1548,7 +1562,6 @@ static short marpaESLIF_TransformArrayb(void *userDatavp, void *contextp, marpaE
   MarpaX_ESLIF_Value_t *Perl_MarpaX_ESLIF_Valuep = (MarpaX_ESLIF_Value_t *) userDatavp;
   dMYTHX(Perl_MarpaX_ESLIF_Valuep);
 
-  fprintf(stderr, "=============> %s\n", funcs);
   if (contextp == ESLIF_PERL_CONTEXT) {
     /* We never push an array */
     MARPAESLIF_CROAK("Got ARRAY on the stack that pretend to come from perl");
@@ -1568,7 +1581,6 @@ static short marpaESLIF_TransformBoolb(void *userDatavp, void *contextp, marpaES
   MarpaX_ESLIF_Value_t *Perl_MarpaX_ESLIF_Valuep = (MarpaX_ESLIF_Value_t *) userDatavp;
   dMYTHX(Perl_MarpaX_ESLIF_Valuep);
 
-  fprintf(stderr, "=============> %s\n", funcs);
   Perl_MarpaX_ESLIF_Valuep->svp = (y == MARPAESLIFVALUERESULTBOOL_FALSE) ? &PL_sv_no : &PL_sv_yes;
 
   return 1;
@@ -1582,15 +1594,14 @@ static short marpaESLIF_TransformStringb(void *userDatavp, void *contextp, marpa
   MarpaX_ESLIF_Value_t *Perl_MarpaX_ESLIF_Valuep = (MarpaX_ESLIF_Value_t *) userDatavp;
   dMYTHX(Perl_MarpaX_ESLIF_Valuep);
 
-  fprintf(stderr, "=============> %s\n", funcs);
   if (contextp == ESLIF_PERL_CONTEXT) {
     /* We never push an array */
     MARPAESLIF_CROAK("Got ARRAY on the stack that pretend to come from perl");
   } else {
     /* Like the array transformer, except for the UTF-8 flag */
     Perl_MarpaX_ESLIF_Valuep->svp = newSVpvn(s.p, s.sizel);
-    if ((s.encodingasciis != NULL) && (strcmp(s.encodingasciis, "UTF-8") == 0) && is_utf8_string((const U8 *) s.p, (STRLEN) s.sizel)) {
-      /* Claimed to be UTF-8, so we verify and add the UTF-8 flag eventually */
+    /* Check the UTF-8 flag eventually */
+    if ((s.encodingasciis != NULL) && MARPAESLIF_ENCODING_IS_UTF8(s.encodingasciis, strlen(s.encodingasciis)) && is_utf8_string((const U8 *) s.p, (STRLEN) s.sizel)) {
       SvUTF8_on(Perl_MarpaX_ESLIF_Valuep->svp);
     }
   }
