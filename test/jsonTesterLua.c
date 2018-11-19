@@ -642,7 +642,7 @@ static short transformBoolb(void *userDatavp, void *contextp, marpaESLIFValueRes
 {
   valueContext_t *valueContextp = (valueContext_t *) userDatavp;
 
-  GENERICLOGGER_NOTICE(valueContextp->genericLoggerp, "Result type is bool");
+  GENERICLOGGER_NOTICEF(valueContextp->genericLoggerp, "Result type is bool: %d", (int) b);
 
   return 1;
 }
