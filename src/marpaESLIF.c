@@ -212,6 +212,7 @@ typedef struct marpaESLIF_concat_valueResultContext {
   void                         *userDatavp;
   marpaESLIFValue_t            *marpaESLIFValuep;
   marpaESLIF_stringGenerator_t *marpaESLIF_stringGeneratorp;
+  short                         stringb;
 } marpaESLIF_concat_valueResultContext_t;
 
 static const char *GENERICSTACKITEMTYPE_NA_STRING      = "NA";
@@ -13263,95 +13264,151 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
   } else {
     switch (marpaESLIFValueResultp->type) {
     case MARPAESLIF_VALUE_TYPE_CHAR:
-      /* Char default representation */
-      genericLoggerp = GENERICLOGGER_CUSTOM(_marpaESLIF_generateStringWithLoggerCallback, (void *) &marpaESLIF_stringGenerator, GENERICLOGGER_LOGLEVEL_TRACE);
-      if (genericLoggerp == NULL) {
-	goto err;
+      /* Char default representation:
+         - string mode: %c
+         - binary mode: content
+       */
+      if (contextp->stringb) {
+        genericLoggerp = GENERICLOGGER_CUSTOM(_marpaESLIF_generateStringWithLoggerCallback, (void *) &marpaESLIF_stringGenerator, GENERICLOGGER_LOGLEVEL_TRACE);
+        if (genericLoggerp == NULL) {
+          goto err;
+        }
+        GENERICLOGGER_TRACEF(genericLoggerp, "%c", marpaESLIFValueResultp->u.c);
+        if (! marpaESLIF_stringGenerator.okb) {
+          goto err;
+        }
+        srcs = marpaESLIF_stringGenerator.s;
+        srcl = marpaESLIF_stringGenerator.l;
+      } else {
+        srcs = &(marpaESLIFValueResultp->u.c);
+        srcl = sizeof(char);
       }
-      GENERICLOGGER_TRACEF(genericLoggerp, "%c", marpaESLIFValueResultp->u.c);
-      if (! marpaESLIF_stringGenerator.okb) {
-	goto err;
-      }
-      srcs = marpaESLIF_stringGenerator.s;
-      srcl = marpaESLIF_stringGenerator.l;
       break;
     case MARPAESLIF_VALUE_TYPE_SHORT:
-      /* Char default representation */
-      genericLoggerp = GENERICLOGGER_CUSTOM(_marpaESLIF_generateStringWithLoggerCallback, (void *) &marpaESLIF_stringGenerator, GENERICLOGGER_LOGLEVEL_TRACE);
-      if (genericLoggerp == NULL) {
-	goto err;
+      /* Char default representation:
+         - string mode: %d
+         - binary mode: content
+       */
+      if (contextp->stringb) {
+        genericLoggerp = GENERICLOGGER_CUSTOM(_marpaESLIF_generateStringWithLoggerCallback, (void *) &marpaESLIF_stringGenerator, GENERICLOGGER_LOGLEVEL_TRACE);
+        if (genericLoggerp == NULL) {
+          goto err;
+        }
+        GENERICLOGGER_TRACEF(genericLoggerp, "%d", (int) marpaESLIFValueResultp->u.b);
+        if (! marpaESLIF_stringGenerator.okb) {
+          goto err;
+        }
+        srcs = marpaESLIF_stringGenerator.s;
+        srcl = marpaESLIF_stringGenerator.l;
+      } else {
+        srcs = (char *) &(marpaESLIFValueResultp->u.b);
+        srcl = sizeof(short);
       }
-      GENERICLOGGER_TRACEF(genericLoggerp, "%d", (int) marpaESLIFValueResultp->u.b);
-      if (! marpaESLIF_stringGenerator.okb) {
-	goto err;
-      }
-      srcs = marpaESLIF_stringGenerator.s;
-      srcl = marpaESLIF_stringGenerator.l;
       break;
     case MARPAESLIF_VALUE_TYPE_INT:
-      /* Char default representation */
-      genericLoggerp = GENERICLOGGER_CUSTOM(_marpaESLIF_generateStringWithLoggerCallback, (void *) &marpaESLIF_stringGenerator, GENERICLOGGER_LOGLEVEL_TRACE);
-      if (genericLoggerp == NULL) {
-	goto err;
+      /* Char default representation:
+         - string mode: %d
+         - binary mode: content
+       */
+      if (contextp->stringb) {
+        genericLoggerp = GENERICLOGGER_CUSTOM(_marpaESLIF_generateStringWithLoggerCallback, (void *) &marpaESLIF_stringGenerator, GENERICLOGGER_LOGLEVEL_TRACE);
+        if (genericLoggerp == NULL) {
+          goto err;
+        }
+        GENERICLOGGER_TRACEF(genericLoggerp, "%d", marpaESLIFValueResultp->u.i);
+        if (! marpaESLIF_stringGenerator.okb) {
+          goto err;
+        }
+        srcs = marpaESLIF_stringGenerator.s;
+        srcl = marpaESLIF_stringGenerator.l;
+      } else {
+        srcs = (char *) &(marpaESLIFValueResultp->u.i);
+        srcl = sizeof(int);
       }
-      GENERICLOGGER_TRACEF(genericLoggerp, "%d", marpaESLIFValueResultp->u.i);
-      if (! marpaESLIF_stringGenerator.okb) {
-	goto err;
-      }
-      srcs = marpaESLIF_stringGenerator.s;
-      srcl = marpaESLIF_stringGenerator.l;
       break;
     case MARPAESLIF_VALUE_TYPE_LONG:
-      /* Char default representation */
-      genericLoggerp = GENERICLOGGER_CUSTOM(_marpaESLIF_generateStringWithLoggerCallback, (void *) &marpaESLIF_stringGenerator, GENERICLOGGER_LOGLEVEL_TRACE);
-      if (genericLoggerp == NULL) {
-	goto err;
+      /* Long default representation:
+         string mode: %ld
+         binary mode: content
+       */
+      if (contextp->stringb) {
+        genericLoggerp = GENERICLOGGER_CUSTOM(_marpaESLIF_generateStringWithLoggerCallback, (void *) &marpaESLIF_stringGenerator, GENERICLOGGER_LOGLEVEL_TRACE);
+        if (genericLoggerp == NULL) {
+          goto err;
+        }
+        GENERICLOGGER_TRACEF(genericLoggerp, "%ld", marpaESLIFValueResultp->u.l);
+        if (! marpaESLIF_stringGenerator.okb) {
+          goto err;
+        }
+        srcs = marpaESLIF_stringGenerator.s;
+        srcl = marpaESLIF_stringGenerator.l;
+      } else {
+        srcs = (char *) &(marpaESLIFValueResultp->u.l);
+        srcl = sizeof(long);
       }
-      GENERICLOGGER_TRACEF(genericLoggerp, "%ld", marpaESLIFValueResultp->u.l);
-      if (! marpaESLIF_stringGenerator.okb) {
-	goto err;
-      }
-      srcs = marpaESLIF_stringGenerator.s;
-      srcl = marpaESLIF_stringGenerator.l;
       break;
     case MARPAESLIF_VALUE_TYPE_FLOAT:
-      /* Char default representation */
-      genericLoggerp = GENERICLOGGER_CUSTOM(_marpaESLIF_generateStringWithLoggerCallback, (void *) &marpaESLIF_stringGenerator, GENERICLOGGER_LOGLEVEL_TRACE);
-      if (genericLoggerp == NULL) {
-	goto err;
+      /* Float default representation:
+         - string mode: %f
+         - binary mode: content
+       */
+      if (contextp->stringb) {
+        genericLoggerp = GENERICLOGGER_CUSTOM(_marpaESLIF_generateStringWithLoggerCallback, (void *) &marpaESLIF_stringGenerator, GENERICLOGGER_LOGLEVEL_TRACE);
+        if (genericLoggerp == NULL) {
+          goto err;
+        }
+        GENERICLOGGER_TRACEF(genericLoggerp, "%f", (double) marpaESLIFValueResultp->u.f);
+        if (! marpaESLIF_stringGenerator.okb) {
+          goto err;
+        }
+        srcs = marpaESLIF_stringGenerator.s;
+        srcl = marpaESLIF_stringGenerator.l;
+      } else {
+        srcs = (char *) &(marpaESLIFValueResultp->u.f);
+        srcl = sizeof(float);
       }
-      GENERICLOGGER_TRACEF(genericLoggerp, "%f", (double) marpaESLIFValueResultp->u.f);
-      if (! marpaESLIF_stringGenerator.okb) {
-	goto err;
-      }
-      srcs = marpaESLIF_stringGenerator.s;
-      srcl = marpaESLIF_stringGenerator.l;
       break;
     case MARPAESLIF_VALUE_TYPE_DOUBLE:
-      /* Char default representation */
-      genericLoggerp = GENERICLOGGER_CUSTOM(_marpaESLIF_generateStringWithLoggerCallback, (void *) &marpaESLIF_stringGenerator, GENERICLOGGER_LOGLEVEL_TRACE);
-      if (genericLoggerp == NULL) {
-	goto err;
+      /* Double default representation:
+         - string mode: %f
+         - binary mode: content
+       */
+      if (contextp->stringb) {
+        genericLoggerp = GENERICLOGGER_CUSTOM(_marpaESLIF_generateStringWithLoggerCallback, (void *) &marpaESLIF_stringGenerator, GENERICLOGGER_LOGLEVEL_TRACE);
+        if (genericLoggerp == NULL) {
+          goto err;
+        }
+        GENERICLOGGER_TRACEF(genericLoggerp, "%f", marpaESLIFValueResultp->u.d);
+        if (! marpaESLIF_stringGenerator.okb) {
+          goto err;
+        }
+        srcs = marpaESLIF_stringGenerator.s;
+        srcl = marpaESLIF_stringGenerator.l;
+      } else {
+        srcs = (char *) &(marpaESLIFValueResultp->u.d);
+        srcl = sizeof(double);
       }
-      GENERICLOGGER_TRACEF(genericLoggerp, "%f", marpaESLIFValueResultp->u.d);
-      if (! marpaESLIF_stringGenerator.okb) {
-	goto err;
-      }
-      srcs = marpaESLIF_stringGenerator.s;
-      srcl = marpaESLIF_stringGenerator.l;
       break;
     case MARPAESLIF_VALUE_TYPE_PTR:
-      /* Char default representation */
-      genericLoggerp = GENERICLOGGER_CUSTOM(_marpaESLIF_generateStringWithLoggerCallback, (void *) &marpaESLIF_stringGenerator, GENERICLOGGER_LOGLEVEL_TRACE);
-      if (genericLoggerp == NULL) {
-	goto err;
+      /* Ptr default representation:
+         - string mode: %p
+         - binary mode: content
+       */
+      if (contextp->stringb) {
+        genericLoggerp = GENERICLOGGER_CUSTOM(_marpaESLIF_generateStringWithLoggerCallback, (void *) &marpaESLIF_stringGenerator, GENERICLOGGER_LOGLEVEL_TRACE);
+        if (genericLoggerp == NULL) {
+          goto err;
+        }
+        GENERICLOGGER_TRACEF(genericLoggerp, "%p", marpaESLIFValueResultp->u.p.p);
+        if (! marpaESLIF_stringGenerator.okb) {
+          goto err;
+        }
+        srcs = marpaESLIF_stringGenerator.s;
+        srcl = marpaESLIF_stringGenerator.l;
+      } else {
+        srcs = (char *) &(marpaESLIFValueResultp->u.p.p);
+        srcl = sizeof(void *);
       }
-      GENERICLOGGER_TRACEF(genericLoggerp, "%p", marpaESLIFValueResultp->u.p.p);
-      if (! marpaESLIF_stringGenerator.okb) {
-	goto err;
-      }
-      srcs = marpaESLIF_stringGenerator.s;
-      srcl = marpaESLIF_stringGenerator.l;
       break;
     case MARPAESLIF_VALUE_TYPE_ARRAY:
       /* Array default representation: bytes as-is */
@@ -13359,30 +13416,48 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
       srcl = marpaESLIFValueResultp->u.a.sizel;
       break;
     case MARPAESLIF_VALUE_TYPE_BOOL:
-      /* Char default representation */
-      genericLoggerp = GENERICLOGGER_CUSTOM(_marpaESLIF_generateStringWithLoggerCallback, (void *) &marpaESLIF_stringGenerator, GENERICLOGGER_LOGLEVEL_TRACE);
-      if (genericLoggerp == NULL) {
-	goto err;
+      /* Bool default representation:
+         - string mode: %d
+         - binary mode: content
+       */
+      if (contextp->stringb) {
+        genericLoggerp = GENERICLOGGER_CUSTOM(_marpaESLIF_generateStringWithLoggerCallback, (void *) &marpaESLIF_stringGenerator, GENERICLOGGER_LOGLEVEL_TRACE);
+        if (genericLoggerp == NULL) {
+          goto err;
+        }
+        GENERICLOGGER_TRACEF(genericLoggerp, "%d", (marpaESLIFValueResultp->u.y == MARPAESLIFVALUERESULTBOOL_TRUE) ? 1 : 0);
+        if (! marpaESLIF_stringGenerator.okb) {
+          goto err;
+        }
+        srcs = marpaESLIF_stringGenerator.s;
+        srcl = marpaESLIF_stringGenerator.l;
+      } else {
+        srcs = (char *) &(marpaESLIFValueResultp->u.y);
+        srcl = sizeof(short);
       }
-      GENERICLOGGER_TRACEF(genericLoggerp, "%d", (marpaESLIFValueResultp->u.y == MARPAESLIFVALUERESULTBOOL_TRUE) ? 1 : 0);
-      if (! marpaESLIF_stringGenerator.okb) {
-	goto err;
-      }
-      srcs = marpaESLIF_stringGenerator.s;
-      srcl = marpaESLIF_stringGenerator.l;
       break;
     case MARPAESLIF_VALUE_TYPE_STRING:
-      /* String default representation: UTF-8 bytes */
-      string.bytep          = marpaESLIFValueResultp->u.s.p;
-      string.bytel          = marpaESLIFValueResultp->u.s.sizel;
-      string.encodingasciis = marpaESLIFValueResultp->u.s.encodingasciis;
-      string.asciis         = NULL;
-      utf8p = _marpaESLIF_string2utf8p(marpaESLIFp, &string);
-      if (utf8p == NULL) {
-	goto err;
+      /* String default representation:
+         - string mode: UTF-8 bytes
+         - binary mode: content
+      */
+      if (contextp->stringb) {
+        string.bytep          = marpaESLIFValueResultp->u.s.p;
+        string.bytel          = marpaESLIFValueResultp->u.s.sizel;
+        string.encodingasciis = marpaESLIFValueResultp->u.s.encodingasciis;
+        string.asciis         = NULL;
+        utf8p = _marpaESLIF_string2utf8p(marpaESLIFp, &string);
+        if (utf8p == NULL) {
+          goto err;
+        }
+        srcs = utf8p->bytep;
+        srcl = utf8p->bytel;
+      } else {
+        srcs = marpaESLIFValueResultp->u.s.p;
+        srcl = marpaESLIFValueResultp->u.s.sizel;
       }
-      srcs = utf8p->bytep;
-      srcl = utf8p->bytel;
+      break;
+    default:
       break;
     }
   }
@@ -13449,6 +13524,7 @@ static inline short _marpaESLIF_generic_action___concatb(void *userDatavp, marpa
     context.userDatavp                  = userDatavp;
     context.marpaESLIFValuep            = marpaESLIFValuep;
     context.marpaESLIF_stringGeneratorp = &marpaESLIF_stringGenerator;
+    context.stringb                     = (toEncodings != NULL) ? 1 : 0;
 
     converteds = NULL;
 
