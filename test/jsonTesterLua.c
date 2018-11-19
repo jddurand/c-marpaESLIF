@@ -13,9 +13,10 @@ static short transformIntb(void *userDatavp, void *contextp, int i);
 static short transformLongb(void *userDatavp, void *contextp, long l);
 static short transformFloatb(void *userDatavp, void *contextp, float f);
 static short transformDoubleb(void *userDatavp, void *contextp, double d);
-static short transformPtrb(void *userDatavp, void *contextp, void *p);
-static short transformArrayb(void *userDatavp, void *contextp, void *p, size_t sizel);
-static short transformBoolb(void *userDatavp, void *contextp, short b);
+static short transformPtrb(void *userDatavp, void *contextp, marpaESLIFValueResultPtr_t p);
+static short transformArrayb(void *userDatavp, void *contextp, marpaESLIFValueResultArray_t a);
+static short transformBoolb(void *userDatavp, void *contextp, marpaESLIFValueResultBool_t b);
+static short transformStringb(void *userDatavp, void *contextp, marpaESLIFValueResultString_t s);
 
 static marpaESLIFValueResultTransform_t transformDefault = {
   transformUndefb,
@@ -27,7 +28,8 @@ static marpaESLIFValueResultTransform_t transformDefault = {
   transformDoubleb,
   transformPtrb,
   transformArrayb,
-  transformBoolb
+  transformBoolb,
+  transformStringb
 };
 
 typedef struct marpaESLIFTester_context {
@@ -59,12 +61,12 @@ const static char *dsl = "\n"
   "# ----------\n"
   "# JSON value\n"
   "# ----------\n"
-  "value    ::= string                                                           # ::shift (default action)\n"
-  "           | number                                                           # ::shift (default action)\n"
-  "           | object                                                           # ::shift (default action)\n"
-  "           | array                                                            # ::shift (default action)\n"
-  "           | 'true'                               action         => ::lua->lua_true      # Returns a lua true value\n"
-  "           | 'false'                              action         => ::lua->lua_false     # Returns a lua false value\n"
+  "value    ::= string                               action => ::convert[UTF-8] ##                            # ::shift (default action)\n"
+  "           | number                               action => ::convert[UTF-8] ##                             # ::shift (default action)\n"
+  "           | object                               action => ::convert[UTF-8] ##                             # ::shift (default action)\n"
+  "           | array                                action => ::convert[UTF-8] ##                             # ::shift (default action)\n"
+  "           | 'true'                               action         => ::true      # built-in true action\n"
+  "           | 'false'                              action         => ::false     # built-in false action\n"
   "           | 'null'\n"
   "\n"
   "# -----------\n"
@@ -302,10 +304,6 @@ int main() {
   short                        continueb;
   short                        exhaustedb;
   int                          i;
-  char                        *pauses;
-  size_t                       pausel;
-  size_t                       linel;
-  size_t                       columnl;
   marpaESLIFValue_t           *marpaESLIFValuep = NULL;
   marpaESLIFValueOption_t      marpaESLIFValueOption;
   valueContext_t               valueContext;
@@ -392,7 +390,11 @@ int main() {
     "      \"id\" : 16010789,\n"
     "     \"verified\" : false\n"
     "  }\n"
-    "}"
+    "}",
+    "1.12",
+    "true",
+    "false",
+    "\"x\"",
   };
 
   genericLoggerp = GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_DEBUG);
@@ -471,15 +473,6 @@ int main() {
     }
 
     while (continueb) {
-      /* We have a single event, no need to ask what it is */
-      if (! marpaESLIFRecognizer_locationb(marpaESLIFRecognizerp, &linel, &columnl)) {
-        goto err;
-      }
-      if (! marpaESLIFRecognizer_lexeme_last_pauseb(marpaESLIFRecognizerp, "lstring", &pauses, &pausel)) {
-        goto err;
-      }
-      GENERICLOGGER_INFOF(genericLoggerp, "Got lstring: %s; length=%ld, current position is {line, column} = {%ld, %ld}", pauses, (unsigned long) pausel, (unsigned long) linel, (unsigned long) columnl);
-
       /* Resume */
       if (! marpaESLIFRecognizer_resumeb(marpaESLIFRecognizerp, 0, &continueb, &exhaustedb)) {
         goto err;
@@ -622,7 +615,7 @@ static short transformDoubleb(void *userDatavp, void *contextp, double d)
 }
 
 /*****************************************************************************/
-static short transformPtrb(void *userDatavp, void *contextp, void *p)
+static short transformPtrb(void *userDatavp, void *contextp, marpaESLIFValueResultPtr_t p)
 /*****************************************************************************/
 {
   valueContext_t *valueContextp = (valueContext_t *) userDatavp;
@@ -633,7 +626,7 @@ static short transformPtrb(void *userDatavp, void *contextp, void *p)
 }
 
 /*****************************************************************************/
-static short transformArrayb(void *userDatavp, void *contextp, void *p, size_t sizel)
+static short transformArrayb(void *userDatavp, void *contextp, marpaESLIFValueResultArray_t a)
 /*****************************************************************************/
 {
   valueContext_t *valueContextp = (valueContext_t *) userDatavp;
@@ -644,12 +637,23 @@ static short transformArrayb(void *userDatavp, void *contextp, void *p, size_t s
 }
 
 /*****************************************************************************/
-static short transformBoolb(void *userDatavp, void *contextp, short b)
+static short transformBoolb(void *userDatavp, void *contextp, marpaESLIFValueResultBool_t b)
 /*****************************************************************************/
 {
   valueContext_t *valueContextp = (valueContext_t *) userDatavp;
 
-  GENERICLOGGER_NOTICE(valueContextp->genericLoggerp, "Result type is bool");
+  GENERICLOGGER_NOTICEF(valueContextp->genericLoggerp, "Result type is bool: %d", (int) b);
+
+  return 1;
+}
+
+/*****************************************************************************/
+static short transformStringb(void *userDatavp, void *contextp, marpaESLIFValueResultString_t s)
+/*****************************************************************************/
+{
+  valueContext_t *valueContextp = (valueContext_t *) userDatavp;
+
+  GENERICLOGGER_NOTICEF(valueContextp->genericLoggerp, "Result type is string: %s", s.p);
 
   return 1;
 }

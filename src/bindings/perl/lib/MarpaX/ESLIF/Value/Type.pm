@@ -26,6 +26,7 @@ ESLIF values are mapped to constants. This module is giving access to them, alth
   $valueType = MarpaX::ESLIF::Value::Type->MARPAESLIF_VALUE_TYPE_PTR;           #  7
   $valueType = MarpaX::ESLIF::Value::Type->MARPAESLIF_VALUE_TYPE_ARRAY;         #  8
   $valueType = MarpaX::ESLIF::Value::Type->MARPAESLIF_VALUE_TYPE_BOOL;          #  9
+  $valueType = MarpaX::ESLIF::Value::Type->MARPAESLIF_VALUE_TYPE_STRING;        #  10
 
 =cut
 
@@ -74,6 +75,10 @@ I<C>'s pointer to a C<{void *, size_t}> structure.
 =head2 MARPAESLIF_VALUE_TYPE_BOOL
 
 I<C>'s C<short> where any value different than zero means a true value.
+
+=head2 MARPAESLIF_VALUE_TYPE_STRING
+
+A string in UTF-8 encoding.
 
 =cut
 
