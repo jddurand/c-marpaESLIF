@@ -13551,12 +13551,6 @@ static inline short _marpaESLIF_generic_action___concatb(void *userDatavp, marpa
 
     if (marpaESLIF_stringGenerator.l > 1) { /* Because of the implicit NULL byte */
       if (toEncodings != NULL) {
-        /* Duplicate toEncodings immediately */
-        toEncodingDups = strdup(toEncodings);
-        if (toEncodingDups == NULL) {
-          MARPAESLIF_ERRORF(marpaESLIFp, "strdup failure, %s", strerror(errno));
-          goto err;
-        }
         toEncodingl = strlen(toEncodings);
 	/* Call for conversion in any case, this is a way to validate UTF-8 correctness if the destination encoding is also UTF-8 */
 	converteds = _marpaESLIF_charconvb(marpaESLIFp,
@@ -13593,6 +13587,12 @@ static inline short _marpaESLIF_generic_action___concatb(void *userDatavp, marpa
           /* converteds is now in the stack */
           converteds = NULL;
         } else {
+          /* Duplicate toEncodings */
+          toEncodingDups = strdup(toEncodings);
+          if (toEncodingDups == NULL) {
+            MARPAESLIF_ERRORF(marpaESLIFp, "strdup failure, %s", strerror(errno));
+            goto err;
+          }
           marpaESLIFValueResult.contextp           = NULL;
           marpaESLIFValueResult.representationp    = NULL;
           marpaESLIFValueResult.type               = MARPAESLIF_VALUE_TYPE_STRING;
