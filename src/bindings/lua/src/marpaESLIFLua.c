@@ -158,7 +158,7 @@ static marpaESLIFValueSymbolCallback_t marpaESLIFLua_valueSymbolActionResolver(v
 static marpaESLIFValueFreeCallback_t   marpaESLIFLua_valueFreeActionResolver(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions);
 static short                           marpaESLIFLua_valueRuleCallbackb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static short                           marpaESLIFLua_valueSymbolCallbackb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *bytep, size_t bytel, int resulti);
-static void                            marpaESLIFLua_valueFreeCallbackv(void *userDatavp, void *contextp, marpaESLIFValueType_t type, void *p, size_t sizel);
+static void                            marpaESLIFLua_valueFreeCallbackv(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
 static short                           marpaESLIFLua_transformUndefb(void *userDatavp, void *contextp);
 static short                           marpaESLIFLua_transformCharb(void *userDatavp, void *contextp, marpaESLIFValueResultChar_t c);
 static short                           marpaESLIFLua_transformShortb(void *userDatavp, void *contextp, marpaESLIFValueResultShort_t b);
@@ -3249,7 +3249,7 @@ static short marpaESLIFLua_valueSymbolCallbackb(void *userDatavp, marpaESLIFValu
 }
 
 /*****************************************************************************/
-static void marpaESLIFLua_valueFreeCallbackv(void *userDatavp, void *contextp, marpaESLIFValueType_t type, void *p, size_t sizel)
+static void marpaESLIFLua_valueFreeCallbackv(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp)
 /*****************************************************************************/
 {
   static const char           *funcs                      = "marpaESLIFLua_valueFreeCallbackv";
@@ -3257,8 +3257,8 @@ static void marpaESLIFLua_valueFreeCallbackv(void *userDatavp, void *contextp, m
   lua_State                   *L                          = marpaESLIFLuaValueContextp->L;
 
   /* we always and only push a PTR, so no need to check the context */
-  MARPAESLIFLUA_UNREF(L, * (int *) p);
-  free(p);
+  MARPAESLIFLUA_UNREF(L, * (int *) marpaESLIFValueResultp->u.p.p);
+  free(marpaESLIFValueResultp->u.p.p);
 
  err:
   return;

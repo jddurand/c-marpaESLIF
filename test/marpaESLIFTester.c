@@ -13,7 +13,7 @@ static short                           inputReaderb(void *userDatavp, char **inp
 static short                           eventManagerb(int *eventCountip, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, genericLogger_t *genericLoggerp);
 static void                            genericLoggerCallback(void *userDatavp, genericLoggerLevel_t logLeveli, const char *msgs);
 static short                           alternativeRepresentation(void *userDatavp, marpaESLIFValueResult_t *valueResultp, char **inputcpp, size_t *inputlp, short *characterStreambp, char **encodingsp, size_t *encodinglp);
-static short                           arrayTransformer(void *userDatavp, void *contextp, void *p, size_t sizel);
+static short                           arrayTransformer(void *userDatavp, void *contextp, marpaESLIFValueResultArray_t a);
 
 static marpaESLIFValueResultTransform_t transformer = {
   NULL, /* undefTransformerp */
@@ -717,12 +717,12 @@ static short alternativeRepresentation(void *userDatavp, marpaESLIFValueResult_t
 }
 
 /*****************************************************************************/
-static short arrayTransformer(void *userDatavp, void *contextp, void *p, size_t sizel)
+static short arrayTransformer(void *userDatavp, void *contextp, marpaESLIFValueResultArray_t a)
 /*****************************************************************************/
 {
   marpaESLIFTester_context_t *marpaESLIFTester_contextp = (marpaESLIFTester_context_t *) userDatavp;
 
-  GENERICLOGGER_INFOF(marpaESLIFTester_contextp->genericLoggerp, "arrayTransformer on {p,sizel} = {%p, %ld}", p, (unsigned long) sizel);
+  GENERICLOGGER_INFOF(marpaESLIFTester_contextp->genericLoggerp, "arrayTransformer on {p,sizel} = {%p, %ld}", a.p, (unsigned long) a.sizel);
 
   /* Free eventual previous value */
   if (marpaESLIFTester_contextp->values != NULL) {
@@ -730,10 +730,10 @@ static short arrayTransformer(void *userDatavp, void *contextp, void *p, size_t 
     marpaESLIFTester_contextp->values = NULL;
   }
 
-  if (p != NULL) {
+  if (a.p != NULL) {
     /* We use the default that is ::concat, i.e. it is guaranteed to be a NUL byte terminated array */
     /* In addition we made sure out input is ASCII compliant */
-    marpaESLIFTester_contextp->values = strdup((char *) p);
+    marpaESLIFTester_contextp->values = strdup((char *) a.p);
     if (marpaESLIFTester_contextp->values == NULL) {
       GENERICLOGGER_ERRORF(marpaESLIFTester_contextp->genericLoggerp, "strdup failure, %s", strerror(errno));
       return 0;

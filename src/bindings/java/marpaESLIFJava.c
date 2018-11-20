@@ -611,7 +611,7 @@ static marpaESLIFValueFreeCallback_t   marpaESLIFValueFreeActionResolver(void *u
 static short marpaESLIFValueContextInject(JNIEnv *envp, marpaESLIFValue_t *marpaESLIFValuep, jobject eslifValueInterfacep, marpaESLIFValueContext_t *marpaESLIFValueContextp);
 static short marpaESLIFValueRuleCallback(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static short marpaESLIFValueSymbolCallback(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *bytep, size_t bytel, int resulti);
-static void  marpaESLIFValueFreeCallback(void *userDatavp, void *contextp, marpaESLIFValueType_t type, void *p, size_t sizel);
+static void  marpaESLIFValueFreeCallback(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
 static jmethodID marpaESLIFValueActionResolver(JNIEnv *envp, marpaESLIFValueContext_t *marpaESLIFValueContextp, char *methods, char *signatures);
 static void marpaESLIFValueContextFree(JNIEnv *envp, marpaESLIFValueContext_t *marpaESLIFValueContextp, short onStackb);
 static void marpaESLIFRecognizerContextFree(JNIEnv *envp, marpaESLIFRecognizerContext_t *marpaESLIFRecognizerContextp, short onStackb);
@@ -1002,7 +1002,6 @@ JNIEXPORT jstring JNICALL Java_org_parser_marpa_ESLIF_jniVersion(JNIEnv *envp, j
   static const char *funcs = "Java_org_parser_marpa_ESLIF_jniVersion";
   marpaESLIF_t      *marpaESLIFp;
   char              *versions;
-  marpaESLIFString_t string;
 
   if (ESLIF_contextb(envp, eslifp, eslifp, MARPAESLIF_ESLIF_CLASS_getLoggerInterfacep_METHODP,
                        NULL /* genericLoggerpp */,
@@ -3751,14 +3750,11 @@ JNIEXPORT jboolean JNICALL Java_org_parser_marpa_ESLIFValue_jniValue(JNIEnv *env
 /*****************************************************************************/
 {
   static const char         *funcs = "Java_org_parser_marpa_ESLIFValue_jniValue";
-  jobject                    objectp;
   marpaESLIFValue_t         *marpaESLIFValuep;
   short                      valueb;
   jboolean                   rcb;
   marpaESLIFValueContext_t  *marpaESLIFValueContextp;
   jobject                    eslifValueInterfacep;
-  marpaESLIFValueResult_t    marpaESLIFValueResult;
-  marpaESLIFValueResult_t    marpaESLIFValueResultResolved;
   
   if (! ESLIFValue_contextb(envp, eslifValuep, eslifValuep, MARPAESLIF_ESLIFVALUE_CLASS_getLoggerInterfacep_METHODP,
                             NULL /* genericLoggerpp */,
@@ -4114,7 +4110,6 @@ static short marpaESLIFValueSymbolCallback(void *userDatavp, marpaESLIFValue_t *
   JNIEnv                        *envp;
   jobject                        actionResultp;
   jobject                        globalObjectp;
-  marpaESLIFValueResult_t       *marpaESLIFValueResultp;
   short                          rcb;
 
   /* Reader callack is never running in another thread - no need to attach */
@@ -4158,7 +4153,7 @@ static short marpaESLIFValueSymbolCallback(void *userDatavp, marpaESLIFValue_t *
 }
 
 /*****************************************************************************/
-static void marpaESLIFValueFreeCallback(void *userDatavp, void *contextp, marpaESLIFValueType_t type, void *p, size_t sizel)
+static void marpaESLIFValueFreeCallback(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp)
 /*****************************************************************************/
 {
   /* We are called when valuation is doing to withdraw an item in the stack that is a PTR or an ARRAY that we own */
@@ -4172,9 +4167,8 @@ static void marpaESLIFValueFreeCallback(void *userDatavp, void *contextp, marpaE
   /* ----------------------- */
   /* Remove global reference */
   /* ----------------------- */
-  (*envp)->DeleteGlobalRef(envp, (jobject) p);
+  (*envp)->DeleteGlobalRef(envp, (jobject) marpaESLIFValueResultp->u.p.p);
 
- err:
   return;
 }
 
@@ -4835,7 +4829,6 @@ static short marpaESLIFGetObjectp(marpaESLIFValueContext_t *marpaESLIFValueConte
 {
   static const char            *funcs = "marpaESLIFGetObjectp";
   marpaESLIFValueResult_t        marpaESLIFValueResult;
-  jobject                        objectp;
   short                          rcb;
 
   if (bytep != NULL) {

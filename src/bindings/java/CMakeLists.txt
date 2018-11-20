@@ -96,7 +96,7 @@ ADD_DEPENDENCIES(marpaESLIFJavaTest_jar marpaESLIFJava_jar)
 # -----
 IF (${CMAKE_COMPILER_IS_GNUCC})
   #
-  # Work only compiles having rdynamic-path
+  # Works only when compiler support rdynamic-path, I am lazy, I assume this means GNUCC compiler family
   #
   GET_PROPERTY(_test_path GLOBAL PROPERTY MYPACKAGE_TEST_PATH)
   GET_FILENAME_COMPONENT(_absolute_library_output_path ${LIBRARY_OUTPUT_PATH} ABSOLUTE)

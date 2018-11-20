@@ -258,7 +258,7 @@ static marpaESLIFValueFreeCallback_t   marpaESLIF_valueFreeActionResolver(void *
 static void                            marpaESLIF_getSvp(pTHX_ MarpaX_ESLIF_Value_t *Perl_MarpaX_ESLIF_Valuep, marpaESLIFValue_t *marpaESLIFValuep, int stackindicei, char *bytep, size_t bytel);
 static short                           marpaESLIF_valueRuleCallbackb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static short                           marpaESLIF_valueSymbolCallbackb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *bytep, size_t bytel, int resulti);
-static void                            marpaESLIF_valueFreeCallbackv(void *userDatavp, void *contextp, marpaESLIFValueType_t type, void *p, size_t sizel);
+static void                            marpaESLIF_valueFreeCallbackv(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
 static void                            marpaESLIF_ContextFreev(pTHX_ MarpaX_ESLIF_Engine_t *Perl_MarpaX_ESLIF_Enginep);
 static void                            marpaESLIF_grammarContextFreev(pTHX_ MarpaX_ESLIF_Grammar_t *Perl_MarpaX_ESLIF_Grammarp);
 static void                            marpaESLIF_valueContextFreev(pTHX_ MarpaX_ESLIF_Value_t *Perl_MarpaX_ESLIF_Valuep, short onStackb);
@@ -1042,7 +1042,7 @@ static short marpaESLIF_valueSymbolCallbackb(void *userDatavp, marpaESLIFValue_t
 }
 
 /*****************************************************************************/
-static void marpaESLIF_valueFreeCallbackv(void *userDatavp, void *contextp, marpaESLIFValueType_t type, void *p, size_t sizel)
+static void marpaESLIF_valueFreeCallbackv(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp)
 /*****************************************************************************/
 {
   MarpaX_ESLIF_Value_t *Perl_MarpaX_ESLIF_Valuep = (MarpaX_ESLIF_Value_t *) userDatavp;
@@ -1059,7 +1059,7 @@ static void marpaESLIF_valueFreeCallbackv(void *userDatavp, void *contextp, marp
   */
 
   /* We always inject a PTR so no need to check the context */
-  MARPAESLIF_REFCNT_DEC(p);
+  MARPAESLIF_REFCNT_DEC(marpaESLIFValueResultp->u.p.p);
 }
 
 /*****************************************************************************/
