@@ -1,0 +1,36 @@
+language: perl
+perl:
+  - "5.26"
+  - "5.24"
+  - "5.24-shrplib"  # at least one perl with threading support
+  - "5.10"  # minimum supported version
+
+branches:
+  only:
+  - travis
+
+before_install:
+    - cpanm Config::AutoConf # optional dependency
+
+# install prerequisites
+install:
+  # for debugging, output available perls
+  - perlbrew list
+  # install dependencies without testing, for speed
+  - (cd cpan/ && cpanm --installdeps --quiet --notest .)
+
+# build Marpa and execute tests
+script:
+  - (cd cpan/xs/ && make)  # generate necessary files
+  - (cd cpan/ && perl Build.PL)
+  - (cd cpan/ && ./Build)
+  - (cd cpan/ && ./Build test)
+  - (cd cpan/ && ./Build distmeta)
+  - (cd cpan/ && ./Build disttest)
+  - (cd cpan/ && MARPA_USE_PERL_AUTOCONF=1 ./Build disttest)
+  - (cd cpan/ && ./Build dist)
+
+sudo: false  # faster builds using containers
+
+notifications:
+  irc: "irc.freenode.net#marpa"
