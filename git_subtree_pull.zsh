@@ -7,7 +7,7 @@ foreach this (cmake-utils genericLogger genericStack genericHash genericSparseAr
 
 git reset --hard origin/master
 git clean -ffdx
-foreach this (cmake-utils genericLogger genericStack genericHash genericSparseArray) {
+foreach this (cmake-utils genericLogger genericStack genericHash genericSparseArray Marpa--R2) {
   git subtree pull --prefix 3rdparty/github/$this $this master --squash
 }
 
