@@ -2,11 +2,23 @@
 #include <errno.h>
 #include <string.h>
 #include <ctype.h>
+#include <float.h>
 #include "marpaESLIF/internal/config.h"
 #include "marpaESLIF/internal/structures.h"
 #include "marpaESLIF/internal/logging.h"
 #include "marpaESLIF/internal/bootstrap.h"
 #include "marpaESLIF/internal/lua.h"
+
+/* Taken from od.c */
+/* The number of decimal digits of precision in a float.  */
+#ifndef FLT_DIG
+# define FLT_DIG 7
+#endif
+
+/* The number of decimal digits of precision in a double.  */
+#ifndef DBL_DIG
+# define DBL_DIG 15
+#endif
 
 static const char *MARPAESLIF_VERSION_STATIC       = MARPAESLIF_VERSION;
 static const int   MARPAESLIF_VERSION_MAJOR_STATIC = MARPAESLIF_VERSION_MAJOR;
@@ -3631,6 +3643,9 @@ static inline marpaESLIF_t *_marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptio
   marpaESLIFp->marpaESLIFValueResultFalse.representationp = NULL;
   marpaESLIFp->marpaESLIFValueResultFalse.type            = MARPAESLIF_VALUE_TYPE_BOOL;
   marpaESLIFp->marpaESLIFValueResultFalse.u.y             = MARPAESLIFVALUERESULTBOOL_FALSE;
+
+  sprintf(marpaESLIFp->float_fmts, "%%%d.%de", FLT_DIG + 8, FLT_DIG);
+  sprintf(marpaESLIFp->double_fmts, "%%%d.%de", DBL_DIG + 8, DBL_DIG);
 
   /* Check if zero bytes (.i.e calloc'ed memory) is the same thing as NULL */
   p = calloc(1, sizeof(void *));
@@ -13344,7 +13359,7 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
       break;
     case MARPAESLIF_VALUE_TYPE_FLOAT:
       /* Float default representation:
-         - string mode: %f
+         - string mode: marpaESLIFp->float_fmts
          - binary mode: content
        */
       if (contextp->stringb) {
@@ -13352,7 +13367,7 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
         if (genericLoggerp == NULL) {
           goto err;
         }
-        GENERICLOGGER_TRACEF(genericLoggerp, "%f", (double) marpaESLIFValueResultp->u.f);
+        GENERICLOGGER_TRACEF(genericLoggerp, marpaESLIFp->float_fmts, (double) marpaESLIFValueResultp->u.f);
         if (! marpaESLIF_stringGenerator.okb) {
           goto err;
         }
@@ -13365,7 +13380,7 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
       break;
     case MARPAESLIF_VALUE_TYPE_DOUBLE:
       /* Double default representation:
-         - string mode: %f
+         - string mode: marpaESLIFp->double_fmts
          - binary mode: content
        */
       if (contextp->stringb) {
@@ -13373,7 +13388,7 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
         if (genericLoggerp == NULL) {
           goto err;
         }
-        GENERICLOGGER_TRACEF(genericLoggerp, "%f", marpaESLIFValueResultp->u.d);
+        GENERICLOGGER_TRACEF(genericLoggerp, marpaESLIFp->double_fmts, marpaESLIFValueResultp->u.d);
         if (! marpaESLIF_stringGenerator.okb) {
           goto err;
         }
