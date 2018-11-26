@@ -312,6 +312,7 @@ struct marpaESLIF_stream {
   tconv_t                tconvp;               /* current converter. Always != NULL when charconvb is true. Always NULL when charconvb is false. */
   size_t                 linel;                /* Line number */
   size_t                 columnl;              /* Column number */
+  short                  bomdoneb;             /* In char mode, flag indicating if BOM was processed successfully (BOM existence or not) */
 };
 
 struct marpaESLIFRecognizer {
