@@ -25,11 +25,6 @@ static const int   MARPAESLIF_VERSION_MAJOR_STATIC = MARPAESLIF_VERSION_MAJOR;
 static const int   MARPAESLIF_VERSION_MINOR_STATIC = MARPAESLIF_VERSION_MINOR;
 static const int   MARPAESLIF_VERSION_PATCH_STATIC = MARPAESLIF_VERSION_PATCH;
 
-/* C.f. https://www.ibm.com/developerworks/aix/library/au-endianc/ */
-static const int i_for_is_bigendian = 1;
-short is_bigendian;
-#define MARPAESLIF_IS_BIGENDIAN() ( (*(char*)&i_for_is_bigendian) == 0 )
-
 #define MARPAESLIF_ENCODING_IS_UTF8(encodings, encodingl)               \
   (                                                                     \
     /* UTF-8 */                                                         \
@@ -15605,16 +15600,12 @@ static inline short _marpaESLIF_string_removebomb(marpaESLIF_t *marpaESLIFp, cha
     }
     else if (MARPAESLIF_ENCODING_IS_UTF16(encodingasciis, encodingasciil)) {
       if (bytel >= 2) {
-	if (MARPAESLIF_IS_BIGENDIAN()) {
-	  if (((unsigned char) bytep[0] == (unsigned char) 0xFE) &&
-	      ((unsigned char) bytep[1] == (unsigned char) 0xFF)) {
-	    bomsizel = 2;
-	  }
-	} else {
-	  if (((unsigned char) bytep[0] == (unsigned char) 0xFF) &&
-	      ((unsigned char) bytep[1] == (unsigned char) 0xFE)) {
-	    bomsizel = 2;
-	  }
+        if (((unsigned char) bytep[0] == (unsigned char) 0xFE) &&
+            ((unsigned char) bytep[1] == (unsigned char) 0xFF)) {
+          bomsizel = 2;
+        } else if (((unsigned char) bytep[0] == (unsigned char) 0xFF) &&
+                   ((unsigned char) bytep[1] == (unsigned char) 0xFE)) {
+          bomsizel = 2;
 	}
         rcb = 1;
       } else {
@@ -15623,21 +15614,17 @@ static inline short _marpaESLIF_string_removebomb(marpaESLIF_t *marpaESLIFp, cha
     }
     else if (MARPAESLIF_ENCODING_IS_UTF32(encodingasciis, encodingasciil)) {
       if (bytel >= 4) {
-	if (MARPAESLIF_IS_BIGENDIAN()) {
-	  if (((unsigned char) bytep[0] == (unsigned char) 0x00) &&
-	      ((unsigned char) bytep[1] == (unsigned char) 0x00) &&
-	      ((unsigned char) bytep[2] == (unsigned char) 0xFE) &&
-	      ((unsigned char) bytep[3] == (unsigned char) 0xFF)) {
-	    bomsizel = 4;
-	  }
-	} else {
-	  if (((unsigned char) bytep[0] == (unsigned char) 0xFF) &&
-	      ((unsigned char) bytep[1] == (unsigned char) 0xFE) &&
-	      ((unsigned char) bytep[2] == (unsigned char) 0x00) &&
-	      ((unsigned char) bytep[3] == (unsigned char) 0x00)) {
-	    bomsizel = 4;
-	  }
-	}
+        if (((unsigned char) bytep[0] == (unsigned char) 0x00) &&
+            ((unsigned char) bytep[1] == (unsigned char) 0x00) &&
+            ((unsigned char) bytep[2] == (unsigned char) 0xFE) &&
+            ((unsigned char) bytep[3] == (unsigned char) 0xFF)) {
+          bomsizel = 4;
+        } else if (((unsigned char) bytep[0] == (unsigned char) 0xFF) &&
+                   ((unsigned char) bytep[1] == (unsigned char) 0xFE) &&
+                   ((unsigned char) bytep[2] == (unsigned char) 0x00) &&
+                   ((unsigned char) bytep[3] == (unsigned char) 0x00)) {
+          bomsizel = 4;
+        }
         rcb = 1;
       } else {
         rcb = -1;
