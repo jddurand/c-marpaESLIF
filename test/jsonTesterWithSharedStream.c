@@ -69,7 +69,7 @@ const static char *dsl = "\n"
   ;
 
 static char *inputs[] = {
-    "{\"test\":\"1\"}",
+    "\xEF\xBB\xBF{\"test\":\"1\"}",
     "{\"test\":[1,2,3]}",
     "{\"test\":true}",
     "{\"test\":false}",
