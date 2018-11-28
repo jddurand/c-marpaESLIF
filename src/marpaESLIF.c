@@ -472,6 +472,7 @@ static        short                  _marpaESLIF_rule_action___concatb(void *use
 static        short                  _marpaESLIF_rule_action___copyb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short                  _marpaESLIF_rule_action___trueb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short                  _marpaESLIF_rule_action___falseb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
+static        short                  _marpaESLIF_rule_action___intb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short                  _marpaESLIF_symbol_action___transferb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *bytep, size_t bytel, int resulti);
 static        short                  _marpaESLIF_symbol_action___undefb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *bytep, size_t bytel, int resulti);
 static        short                  _marpaESLIF_symbol_action___asciib(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *bytep, size_t bytel, int resulti);
@@ -479,6 +480,7 @@ static        short                  _marpaESLIF_symbol_action___convertb(void *
 static        short                  _marpaESLIF_symbol_action___concatb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *bytep, size_t bytel, int resulti);
 static        short                  _marpaESLIF_symbol_action___trueb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *bytep, size_t bytel, int resulti);
 static        short                  _marpaESLIF_symbol_action___falseb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *bytep, size_t bytel, int resulti);
+static        short                  _marpaESLIF_symbol_action___intb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *bytep, size_t bytel, int resulti);
 static        int                    _marpaESLIF_event_sorti(const void *p1, const void *p2);
 static inline unsigned long          _marpaESLIF_djb2_s(unsigned char *str, int lengthi);
 int                                  _marpaESLIF_ptrhashi(void *userDatavp, genericStackItemType_t itemType, void **pp);
@@ -498,6 +500,7 @@ static inline marpaESLIF_action_t    *_marpaESLIF_action_clonep(marpaESLIF_t *ma
 static inline void                    _marpaESLIF_action_freev(marpaESLIF_action_t *actionp);
 static short                          _marpaESLIF_ascii_representationb(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp, char **inputcpp, size_t *inputlp);
 static inline short                   _marpaESLIF_string_removebomb(marpaESLIF_t *marpaESLIFp, char *bytep, size_t *bytelp, char *encodingasciis, size_t *bomsizelp);
+static inline short                   _marpaESLIFValue_strtoi(marpaESLIFValue_t *marpaESLIFValuep, char *bytep, size_t bytel, int basei, int *ip);
 
 /*****************************************************************************/
 static inline marpaESLIF_string_t *_marpaESLIF_string_newp(marpaESLIF_t *marpaESLIFp, char *encodingasciis, char *bytep, size_t bytel)
@@ -3638,6 +3641,11 @@ static inline marpaESLIF_t *_marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptio
   marpaESLIFp->marpaESLIFValueResultFalse.representationp = NULL;
   marpaESLIFp->marpaESLIFValueResultFalse.type            = MARPAESLIF_VALUE_TYPE_BOOL;
   marpaESLIFp->marpaESLIFValueResultFalse.u.y             = MARPAESLIFVALUERESULTBOOL_FALSE;
+
+  marpaESLIFp->marpaESLIFValueResultIntZero.contextp        = NULL;
+  marpaESLIFp->marpaESLIFValueResultIntZero.representationp = NULL;
+  marpaESLIFp->marpaESLIFValueResultIntZero.type            = MARPAESLIF_VALUE_TYPE_INT;
+  marpaESLIFp->marpaESLIFValueResultIntZero.u.i             = 0;
 
   sprintf(marpaESLIFp->float_fmts, "%%%d.%de", FLT_DIG + 8, FLT_DIG);
   sprintf(marpaESLIFp->double_fmts, "%%%d.%de", DBL_DIG + 8, DBL_DIG);
@@ -13848,6 +13856,143 @@ static short _marpaESLIF_rule_action___falseb(void *userDatavp, marpaESLIFValue_
 }
 
 /*****************************************************************************/
+static short _marpaESLIF_rule_action___intb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
+/*****************************************************************************/
+{
+  static const char       *funcs                 = "_marpaESLIF_rule_action___intb";
+  marpaESLIFRecognizer_t  *marpaESLIFRecognizerp = marpaESLIFValuep->marpaESLIFRecognizerp;
+  marpaESLIF_t            *marpaESLIFp           = marpaESLIFValuep->marpaESLIFp;
+  marpaESLIFString_t      *utf8p                 = NULL;
+  marpaESLIFValueResult_t *marpaESLIFValueResultp;
+  marpaESLIFValueResult_t  marpaESLIFValueResult;
+  marpaESLIFString_t       string;
+  short                    rcb;
+
+  /* This action is limited to one RHS only that has to of restricted types */
+  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
+  MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
+
+  if (nullableb) {
+    /* Nullable - default is integer 0 */
+    if (! _marpaESLIFValue_stack_setb(marpaESLIFValuep, resulti, &(marpaESLIFp->marpaESLIFValueResultIntZero))) {
+      goto err;
+    }
+  } else {
+    if (arg0i != argni) {
+      MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "::int action is limited to one RHS");
+      goto err;
+    }
+
+    marpaESLIFValueResultp = _marpaESLIFValue_stack_getp(marpaESLIFValuep, arg0i);
+    if (marpaESLIFValueResultp == NULL) {
+      goto err;
+    }
+
+    switch (marpaESLIFValueResultp->type) {
+    case MARPAESLIF_VALUE_TYPE_CHAR:
+      marpaESLIFValueResult.contextp        = NULL;
+      marpaESLIFValueResult.representationp = NULL;
+      marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_INT;
+      marpaESLIFValueResult.u.i             = (int) marpaESLIFValueResultp->u.c;
+      break;
+    case MARPAESLIF_VALUE_TYPE_SHORT:
+      marpaESLIFValueResult.contextp        = NULL;
+      marpaESLIFValueResult.representationp = NULL;
+      marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_INT;
+      marpaESLIFValueResult.u.i             = (int) marpaESLIFValueResultp->u.b;
+      break;
+    case MARPAESLIF_VALUE_TYPE_INT:
+      marpaESLIFValueResult.contextp        = NULL;
+      marpaESLIFValueResult.representationp = NULL;
+      marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_INT;
+      marpaESLIFValueResult.u.i             = marpaESLIFValueResultp->u.i;
+      break;
+    case MARPAESLIF_VALUE_TYPE_LONG:
+      if (marpaESLIFValueResultp->u.l < (long) INT_MIN || marpaESLIFValueResultp->u.l > (long) INT_MAX) {
+        errno = ERANGE;
+        goto err;
+      }
+      marpaESLIFValueResult.contextp        = NULL;
+      marpaESLIFValueResult.representationp = NULL;
+      marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_INT;
+      marpaESLIFValueResult.u.i             = (int) marpaESLIFValueResultp->u.l;
+      break;
+    case MARPAESLIF_VALUE_TYPE_FLOAT:
+      if (marpaESLIFValueResultp->u.f < (float) INT_MIN || marpaESLIFValueResultp->u.f > (float) INT_MAX) {
+        errno = ERANGE;
+        goto err;
+      }
+      marpaESLIFValueResult.contextp        = NULL;
+      marpaESLIFValueResult.representationp = NULL;
+      marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_INT;
+      marpaESLIFValueResult.u.i             = (int) marpaESLIFValueResultp->u.f;
+      break;
+    case MARPAESLIF_VALUE_TYPE_DOUBLE:
+      if (marpaESLIFValueResultp->u.d < (double) INT_MIN || marpaESLIFValueResultp->u.d > (double) INT_MAX) {
+        errno = ERANGE;
+        goto err;
+      }
+      marpaESLIFValueResult.contextp        = NULL;
+      marpaESLIFValueResult.representationp = NULL;
+      marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_INT;
+      marpaESLIFValueResult.u.i             = (int) marpaESLIFValueResultp->u.d;
+      break;
+    case MARPAESLIF_VALUE_TYPE_ARRAY:
+      marpaESLIFValueResult.contextp        = NULL;
+      marpaESLIFValueResult.representationp = NULL;
+      marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_INT;
+      if (! _marpaESLIFValue_strtoi(marpaESLIFValuep, marpaESLIFValueResultp->u.a.p, marpaESLIFValueResultp->u.a.sizel, 0 /* basei */, &(marpaESLIFValueResult.u.i))) {
+        goto err;
+      }
+      break;
+    case MARPAESLIF_VALUE_TYPE_BOOL:
+      marpaESLIFValueResult.contextp        = NULL;
+      marpaESLIFValueResult.representationp = NULL;
+      marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_INT;
+      marpaESLIFValueResult.u.i             = (int) marpaESLIFValueResultp->u.y;
+      break;
+    case MARPAESLIF_VALUE_TYPE_STRING:
+      string.bytep          = marpaESLIFValueResultp->u.s.p;
+      string.bytel          = marpaESLIFValueResultp->u.s.sizel;
+      string.encodingasciis = marpaESLIFValueResultp->u.s.encodingasciis;
+      string.asciis         = NULL;
+      utf8p = _marpaESLIF_string2utf8p(marpaESLIFp, &string);
+      if (utf8p == NULL) {
+        goto err;
+      }
+      marpaESLIFValueResult.contextp        = NULL;
+      marpaESLIFValueResult.representationp = NULL;
+      marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_INT;
+      /* By definition, everything outside of ASCII will raise an error */
+      if (! _marpaESLIFValue_strtoi(marpaESLIFValuep, utf8p->bytep, utf8p->bytel, 0 /* basei */, &(marpaESLIFValueResult.u.i))) {
+        goto err;
+      }
+      break;
+    default:
+      MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "marpaESLIFValueResultp->type is not valid (got %d, %s)", marpaESLIFValueResultp->type, _marpaESLIF_value_types(marpaESLIFValueResultp->type));
+      goto err;
+    }
+  }
+
+  if (! _marpaESLIFValue_stack_setb(marpaESLIFValuep, resulti, &marpaESLIFValueResult)) {
+    goto err;
+  }
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  if (utf8p != &string) {
+    _marpaESLIF_string_freev(utf8p, 0 /* onStackb */);
+  }
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
+  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC;
+  return rcb;
+}
+
+/*****************************************************************************/
 static short _marpaESLIF_rule_action___asciib(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
 /*****************************************************************************/
 {
@@ -13916,6 +14061,23 @@ static short _marpaESLIF_symbol_action___falseb(void *userDatavp, marpaESLIFValu
 /*****************************************************************************/
 {
   return  marpaESLIFValue_stack_setb(marpaESLIFValuep, resulti, &(marpaESLIFValuep->marpaESLIFp->marpaESLIFValueResultFalse));
+}
+
+/*****************************************************************************/
+static short _marpaESLIF_symbol_action___intb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *bytep, size_t bytel, int resulti)
+/*****************************************************************************/
+{
+  static const char       *funcs = "_marpaESLIF_symbol_action___intb";
+  marpaESLIFValueResult_t  marpaESLIFValueResult;
+
+  marpaESLIFValueResult.contextp        = NULL;
+  marpaESLIFValueResult.representationp = NULL;
+  marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_INT;
+  if (! _marpaESLIFValue_strtoi(marpaESLIFValuep, bytep, bytel, 0 /* basei */, &(marpaESLIFValueResult.u.i))) {
+    return 0;
+  }
+
+  return marpaESLIFValue_stack_setb(marpaESLIFValuep, resulti, &marpaESLIFValueResult);
 }
 
 /*****************************************************************************/
@@ -15305,6 +15467,8 @@ static inline short _marpaESLIFValue_ruleActionCallbackb(marpaESLIFValue_t *marp
           ruleCallbackp = _marpaESLIF_rule_action___trueb;
         } else if (strcmp(names, "::false") == 0) {
           ruleCallbackp = _marpaESLIF_rule_action___falseb;
+        } else if (strcmp(names, "::int") == 0) {
+          ruleCallbackp = _marpaESLIF_rule_action___intb;
         } else {
           /* Not a built-in: ask to the resolver */
           if (ruleActionResolverp == NULL) {
@@ -15426,6 +15590,8 @@ static inline short _marpaESLIFValue_symbolActionCallbackb(marpaESLIFValue_t *ma
             symbolCallbackp = _marpaESLIF_symbol_action___trueb;
           } else if (strcmp(names, "::false") == 0) {
             symbolCallbackp = _marpaESLIF_symbol_action___falseb;
+          } else if (strcmp(names, "::int") == 0) {
+            symbolCallbackp = _marpaESLIF_symbol_action___intb;
           } else {
             /* Not a built-in: ask to the resolver */
             if (symbolActionResolverp == NULL) {
@@ -15655,6 +15821,72 @@ static inline short _marpaESLIF_string_removebomb(marpaESLIF_t *marpaESLIFp, cha
  done:
   if (encodingasciitofrees != NULL) {
     free(encodingasciitofrees);
+  }
+  return rcb;
+}
+
+/*****************************************************************************/
+static inline short _marpaESLIFValue_strtoi(marpaESLIFValue_t *marpaESLIFValuep, char *bytep, size_t bytel, int basei, int *ip)
+/*****************************************************************************/
+{
+  static const char *funcs = "_marpaESLIFValue_strtoi";
+  char              *p     = NULL;
+  long               l;
+  char              *endp;
+  short              rcb;
+
+  if ((bytep == NULL) || (bytel <= 0)) {
+    goto err;
+  }
+
+  /* Whatever the input, we do not want strtol to go beyond the input */
+  p = malloc(bytel + 1);
+  if (p == NULL) {
+    goto err;
+  }
+  memcpy(p, bytep, bytel);
+  p[bytel] = '\0';
+
+  endp = NULL;
+  l = strtol((const char *) p, &endp, basei);
+  if (endp == p) {
+    /* No digit at all */
+    MARPAESLIF_HEXDUMPV(marpaESLIFValuep->marpaESLIFRecognizerp, "Dump of bytes that should represent an integer", "", bytep, bytel, 0 /* traceb */);
+    errno = EINVAL;
+    goto err;
+  }
+  if (l == LONG_MIN) {
+    /* Underflow */
+    MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "strtol underflow");
+    errno = EINVAL;
+    goto err;
+  }
+  if (l == LONG_MAX) {
+    /* Underflow */
+    MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "strtol overflow");
+    errno = EINVAL;
+    goto err;
+  }
+  if (endp != (p + bytel)) {
+    /* Not all bytes were consumed */
+    MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "strtol failure, not all bytes consumed");
+    MARPAESLIF_HEXDUMPV(marpaESLIFValuep->marpaESLIFRecognizerp, "Dump of bytes that should represent an integer", "", bytep, bytel, 0 /* traceb */);
+    errno = EINVAL;
+    goto err;
+  }
+
+  if (ip != NULL) {
+    *ip = (int) l;
+  }
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  if (p != NULL) {
+    free(p);
   }
   return rcb;
 }
