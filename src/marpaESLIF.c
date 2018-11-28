@@ -15858,12 +15858,14 @@ static inline short _marpaESLIFValue_strtoi(marpaESLIFValue_t *marpaESLIFValuep,
   if (l == LONG_MIN) {
     /* Underflow */
     MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "strtol underflow");
+    MARPAESLIF_HEXDUMPV(marpaESLIFValuep->marpaESLIFRecognizerp, "Dump of bytes that should represent an integer", "", bytep, bytel, 0 /* traceb */);
     errno = EINVAL;
     goto err;
   }
   if (l == LONG_MAX) {
     /* Underflow */
     MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "strtol overflow");
+    MARPAESLIF_HEXDUMPV(marpaESLIFValuep->marpaESLIFRecognizerp, "Dump of bytes that should represent an integer", "", bytep, bytel, 0 /* traceb */);
     errno = EINVAL;
     goto err;
   }
