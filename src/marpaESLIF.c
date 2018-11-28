@@ -15831,6 +15831,7 @@ static inline short _marpaESLIFValue_strtoi(marpaESLIFValue_t *marpaESLIFValuep,
 {
   static const char *funcs = "_marpaESLIFValue_strtoi";
   char              *p     = NULL;
+  int                errnoi;
   long               l;
   char              *endp;
   short              rcb;
@@ -15848,14 +15849,39 @@ static inline short _marpaESLIFValue_strtoi(marpaESLIFValue_t *marpaESLIFValuep,
   p[bytel] = '\0';
 
   endp = NULL;
+  errnoi = errno;
+  errno = 0;
   l = strtol((const char *) p, &endp, basei);
+
+  if ((errno == ERANGE) && (l == LONG_MIN)) {
+    /* Underflow */
+    MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "strtol failure, %s", strerror(errno));
+    MARPAESLIF_HEXDUMPV(marpaESLIFValuep->marpaESLIFRecognizerp, "Dump of bytes that should represent an integer", "", bytep, bytel, 0 /* traceb */);
+    errno = ERANGE; /* In case macros upper would overwrite errno, this should not happen */
+    goto err;
+  }
+  if ((errno == ERANGE) && (l == LONG_MAX)) {
+    /* Overflow */
+    MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "strtol failure, %s", strerror(errno));
+    MARPAESLIF_HEXDUMPV(marpaESLIFValuep->marpaESLIFRecognizerp, "Dump of bytes that should represent an integer", "", bytep, bytel, 0 /* traceb */);
+    errno = ERANGE; /* In case macros upper would overwrite errno, this should not happen */
+    goto err;
+  }
+  if ((errno != 0) && (l == 0)) {
+    /* failure */
+    errnoi = errno;
+    MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "strtol failure, %s", strerror(errno));
+    MARPAESLIF_HEXDUMPV(marpaESLIFValuep->marpaESLIFRecognizerp, "Dump of bytes that should represent an integer", "", bytep, bytel, 0 /* traceb */);
+    errno = errnoi; /* In case macros upper would overwrite errno, this should not happen */
+    goto err;
+  }
+
   if (endp == p) {
-    /* No digit at all */
+    /* No digit at all - a priori this case should have been handled by previous test */
     MARPAESLIF_HEXDUMPV(marpaESLIFValuep->marpaESLIFRecognizerp, "Dump of bytes that should represent an integer", "", bytep, bytel, 0 /* traceb */);
     errno = EINVAL;
     goto err;
   }
-
   if (endp != (p + bytel)) {
     /* Not all bytes were consumed */
     MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "strtol failure, not all bytes consumed");
@@ -15864,35 +15890,19 @@ static inline short _marpaESLIFValue_strtoi(marpaESLIFValue_t *marpaESLIFValuep,
     goto err;
   }
 
-  if (l == LONG_MIN) {
-    /* Underflow */
-    /* TO DO: accept when bytes represent exactly INT_MIN */
-    MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "strtol underflow, value <= %ld", (long) LONG_MIN);
-    MARPAESLIF_HEXDUMPV(marpaESLIFValuep->marpaESLIFRecognizerp, "Dump of bytes that should represent an integer", "", bytep, bytel, 0 /* traceb */);
-    errno = EINVAL;
-    goto err;
-  }
-  if (l == LONG_MAX) {
-    /* Overflow */
-    /* TO DO: accept when bytes represent exactly INT_MAX */
-    MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "strtol overflow, value >= %ld", (long) LONG_MAX);
-    MARPAESLIF_HEXDUMPV(marpaESLIFValuep->marpaESLIFRecognizerp, "Dump of bytes that should represent an integer", "", bytep, bytel, 0 /* traceb */);
-    errno = EINVAL;
-    goto err;
-  }
 
   if (l < INT_MIN) {
     /* Underflow by design */
     MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "strtol underflow, value < %ld", (long) INT_MIN);
     MARPAESLIF_HEXDUMPV(marpaESLIFValuep->marpaESLIFRecognizerp, "Dump of bytes that should represent an integer", "", bytep, bytel, 0 /* traceb */);
-    errno = EINVAL;
+    errno = ERANGE;
     goto err;
   }
   if (l > INT_MAX) {
     /* Overflow by design */
     MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "strtol overflow, value > %ld", (long) INT_MAX);
     MARPAESLIF_HEXDUMPV(marpaESLIFValuep->marpaESLIFRecognizerp, "Dump of bytes that should represent an integer", "", bytep, bytel, 0 /* traceb */);
-    errno = EINVAL;
+    errno = ERANGE;
     goto err;
   }
 
