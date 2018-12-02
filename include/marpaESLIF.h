@@ -239,6 +239,7 @@ typedef struct marpaESLIFRuleProperty {
   int                    separatori;                   /* Eventual separator symbol Id (-1 if none) */
   size_t                 nrhsl;                        /* Number of RHS, 0 in case of a nullable */
   int                   *rhsip;                        /* Array of RHS Ids, NULL in case of a nullable */
+  short                 *skipbp;                       /* Skip flags per RHS, first RHS is at indice 0 and so on, NULL in case of a nullable or a sequence */
   int                    exceptioni;                   /* Exception symbol Id (-1 if none) */
   marpaESLIFAction_t    *actionp;                      /* Action */
   char                  *discardEvents;                /* Discard event name - shallowed with its RHS */

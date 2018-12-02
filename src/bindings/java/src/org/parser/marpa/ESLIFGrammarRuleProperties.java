@@ -19,24 +19,25 @@ import java.util.Arrays;
  * </pre>
  */
 public class ESLIFGrammarRuleProperties {
-	  private int     id;
-	  private String  description;
-	  private String  show;
-	  private int     lhsId;
-	  private int     separatorId;
-	  private int[]   rhsIds;
-	  private int     exceptionId;
-	  private String  action;
-	  private String  discardEvent;
-	  private boolean discardEventInitialState;
-	  private int     rank;
-	  private boolean nullRanksHigh;
-	  private boolean sequence;
-	  private boolean proper;
-	  private int     minimum;
-	  private boolean internal;
-	  private int     propertyBitSet;
-	  private boolean hideseparator;
+	  private int       id;
+	  private String    description;
+	  private String    show;
+	  private int       lhsId;
+	  private int       separatorId;
+	  private int[]     rhsIds;
+	  private boolean[] skipIndices;
+	  private int       exceptionId;
+	  private String    action;
+	  private String    discardEvent;
+	  private boolean   discardEventInitialState;
+	  private int       rank;
+	  private boolean   nullRanksHigh;
+	  private boolean   sequence;
+	  private boolean   proper;
+	  private int       minimum;
+	  private boolean   internal;
+	  private int       propertyBitSet;
+	  private boolean   hideseparator;
 
 	/*
 	 * ********************************************
@@ -52,6 +53,7 @@ public class ESLIFGrammarRuleProperties {
 	 * @param lhsId LHS id
 	 * @param separatorId Separator Id
 	 * @param rhsIds Array of RHS id
+	 * @param skipIndices Array of skipped RHS indices
 	 * @param exceptionId Exception id
 	 * @param action Explicit action
 	 * @param discardEvent Discard event name when this is a :discard rule
@@ -65,13 +67,14 @@ public class ESLIFGrammarRuleProperties {
 	 * @param propertyBitSet Low-level property bit set
 	 * @param hideseparator When it is a sequence, hide separator for action arguments ?
 	 */
-	public ESLIFGrammarRuleProperties(int id, String description, String show, int lhsId, int separatorId, int[] rhsIds, int exceptionId, String  action, String  discardEvent, boolean discardEventInitialState, int rank, boolean nullRanksHigh, boolean sequence, boolean proper, int minimum, boolean internal, int propertyBitSet, boolean hideseparator) {
+	public ESLIFGrammarRuleProperties(int id, String description, String show, int lhsId, int separatorId, int[] rhsIds, boolean[] skipIndices, int exceptionId, String  action, String  discardEvent, boolean discardEventInitialState, int rank, boolean nullRanksHigh, boolean sequence, boolean proper, int minimum, boolean internal, int propertyBitSet, boolean hideseparator) {
 		  this.id = id;
 		  this.description = description;
 		  this.show = show;
 		  this.lhsId = lhsId;
 		  this.separatorId = separatorId;
 		  this.rhsIds = rhsIds;
+		  this.skipIndices = skipIndices;
 		  this.exceptionId = exceptionId;
 		  this.action = action;
 		  this.discardEvent = discardEvent;
@@ -107,7 +110,8 @@ public class ESLIFGrammarRuleProperties {
 		result = prime * result + (proper ? 1231 : 1237);
 		result = prime * result + propertyBitSet;
 		result = prime * result + rank;
-		result = prime * result + Arrays.hashCode(rhsIds);
+		result = prime * result + (rhsIds != null ? Arrays.hashCode(rhsIds) : 0);
+		result = prime * result + (skipIndices != null ? Arrays.hashCode(skipIndices) : 0);
 		result = prime * result + separatorId;
 		result = prime * result + (sequence ? 1231 : 1237);
 		result = prime * result + ((show == null) ? 0 : show.hashCode());
@@ -183,8 +187,31 @@ public class ESLIFGrammarRuleProperties {
 		if (rank != other.rank) {
 			return false;
 		}
-		if (!Arrays.equals(rhsIds, other.rhsIds)) {
-			return false;
+		if (rhsIds == null) {
+			if (other.rhsIds != null) {
+				return false;
+			}
+		} else {
+			if (other.rhsIds == null) {
+				return false;
+			} else {
+				if (!Arrays.equals(rhsIds, other.rhsIds)) {
+					return false;
+				}
+			}
+		}
+		if (skipIndices == null) {
+			if (other.skipIndices != null) {
+				return false;
+			}
+		} else {
+			if (other.skipIndices == null) {
+				return false;
+			} else {
+				if (!Arrays.equals(skipIndices, other.skipIndices)) {
+					return false;
+				}
+			}
 		}
 		if (separatorId != other.separatorId) {
 			return false;
@@ -207,12 +234,25 @@ public class ESLIFGrammarRuleProperties {
 	 */
 	@Override
 	public String toString() {
-		return "ESLIFGrammarRuleProperties [id=" + id + ", description=" + description + ", show=" + show + ", lhsId="
-				+ lhsId + ", separatorId=" + separatorId + ", rhsIds=" + Arrays.toString(rhsIds) + ", exceptionId="
-				+ exceptionId + ", action=" + action + ", discardEvent=" + discardEvent + ", discardEventInitialState="
-				+ discardEventInitialState + ", rank=" + rank + ", nullRanksHigh=" + nullRanksHigh + ", sequence="
-				+ sequence + ", proper=" + proper + ", minimum=" + minimum + ", internal=" + internal
-				+ ", propertyBitSet=" + propertyBitSet + ", hideseparator=" + hideseparator + "]";
+		return    "ESLIFGrammarRuleProperties [id=" + id
+				+ ", description=" + description
+				+ ", show=" + show
+				+ ", lhsId=" + lhsId
+				+ ", separatorId=" + separatorId
+				+ ", rhsIds=" + (rhsIds != null ? Arrays.toString(rhsIds) : "null")
+				+ ", skipIndices=" + (skipIndices != null ? Arrays.toString(skipIndices) : "null")
+				+ ", exceptionId=" + exceptionId
+				+ ", action=" + action
+				+ ", discardEvent=" + discardEvent
+				+ ", discardEventInitialState="	+ discardEventInitialState
+				+ ", rank=" + rank
+				+ ", nullRanksHigh=" + nullRanksHigh
+				+ ", sequence="	+ sequence
+				+ ", proper=" + proper
+				+ ", minimum=" + minimum
+				+ ", internal=" + internal
+				+ ", propertyBitSet=" + propertyBitSet
+				+ ", hideseparator=" + hideseparator + "]";
 	}
 
 	/**
@@ -255,6 +295,13 @@ public class ESLIFGrammarRuleProperties {
 	 */
 	public int[] getRhsIds() {
 		return rhsIds;
+	}
+
+	/**
+	 * @return Rule's RHS skip indices (none for a null rule or a sequence)
+	 */
+	public boolean[] getSkipIndices() {
+		return skipIndices;
 	}
 
 	/**

@@ -512,7 +512,7 @@ static marpaESLIFMethodCache_t marpaESLIFMethodCacheArrayp[] = {
   {      &MARPAESLIF_ESLIFGRAMMARPROPERTIES_CLASSCACHE, "<init>",                   "(IILjava/lang/String;ZLjava/lang/String;Ljava/lang/String;Ljava/lang/String;II[I[I)V", 0, NULL, 1 /* requiredb */ },
 
   #define MARPAESLIF_ESLIFGRAMMARRULEPROPERTIES_CLASS_init_METHODP                  marpaESLIFMethodCacheArrayp[63].methodp
-  {      &MARPAESLIF_ESLIFGRAMMARRULEPROPERTIES_CLASSCACHE, "<init>",               "(ILjava/lang/String;Ljava/lang/String;II[IILjava/lang/String;Ljava/lang/String;ZIZZZIZIZ)V", 0, NULL, 1 /* requiredb */ },
+  {      &MARPAESLIF_ESLIFGRAMMARRULEPROPERTIES_CLASSCACHE, "<init>",               "(ILjava/lang/String;Ljava/lang/String;II[I[ZILjava/lang/String;Ljava/lang/String;ZIZZZIZIZ)V", 0, NULL, 1 /* requiredb */ },
 
   #define MARPAESLIF_ESLIFGRAMMARSYMBOLPROPERTIES_CLASS_init_METHODP                marpaESLIFMethodCacheArrayp[64].methodp
   {      &MARPAESLIF_ESLIFGRAMMARSYMBOLPROPERTIES_CLASSCACHE, "<init>",             "(Lorg/parser/marpa/ESLIFSymbolType;ZZZZZILjava/lang/String;Ljava/lang/String;ZLjava/lang/String;ZLjava/lang/String;ZLjava/lang/String;ZLjava/lang/String;ZLjava/lang/String;ZIILjava/lang/String;I)V", 0, NULL, 1 /* requiredb */ },
@@ -633,6 +633,7 @@ static short                           marpaESLIF_TransformDouble(void *userData
 static short                           marpaESLIF_TransformPtr(void *userDatavp, void *contextp, marpaESLIFValueResultPtr_t p);
 static short                           marpaESLIF_TransformArray(void *userDatavp, void *contextp, marpaESLIFValueResultArray_t a);
 static short                           marpaESLIF_TransformBool(void *userDatavp, void *contextp, marpaESLIFValueResultBool_t y);
+static short                           marpaESLIF_TransformString(void *userDatavp, void *contextp, marpaESLIFValueResultString_t s);
 static jstring                         marpaESLIF_marpaESLIFStringToJavap(JNIEnv *envp, marpaESLIFString_t *marpaESLIFStringp);
 static jstring                         marpaESLIF_marpaESLIFASCIIToJavap(JNIEnv *envp, char *asciis);
 static jstring                         marpaESLIF_marpaESLIFActionToJavap(JNIEnv *envp, marpaESLIFAction_t *actionp);
@@ -648,7 +649,8 @@ static marpaESLIFValueResultTransform_t marpaESLIFValueResultTransformDefault = 
   marpaESLIF_TransformDouble,
   marpaESLIF_TransformPtr,
   marpaESLIF_TransformArray,
-  marpaESLIF_TransformBool
+  marpaESLIF_TransformBool,
+  marpaESLIF_TransformString
 };
 
 /* --------------- */
@@ -4627,14 +4629,17 @@ static jobject marpaESLIFGrammarProperties(JNIEnv *envp, marpaESLIFGrammarProper
 static jobject marpaESLIFRuleProperties(JNIEnv *envp, marpaESLIFRuleProperty_t *rulePropertyp)
 /*****************************************************************************/
 {
-  static const char           *funcs = "marpaESLIFRuleProperties";
-  jobject                      propertiesp = NULL;
+  static const char           *funcs             = "marpaESLIFRuleProperties";
+  jobject                      propertiesp       = NULL;
+  jintArray                    rhsIds            = NULL;
+  jbooleanArray                skipIndices       = NULL;
+  jint                        *rhsIdsIntp        = NULL;
+  jboolean                    *skipIndicesShortp = NULL;
   jint                         id;
   jstring                      description;
   jstring                      show;
   jint                         lhsId;
   jint                         separatorId;
-  jintArray                    rhsIds;
   jint                         exceptionId;
   jstring                      action;
   jstring                      discardEvent;
@@ -4647,7 +4652,6 @@ static jobject marpaESLIFRuleProperties(JNIEnv *envp, marpaESLIFRuleProperty_t *
   jboolean                     internal;
   jint                         propertyBitSet;
   jboolean                     hideseparator;
-  jint                        *rhsIdsIntp = NULL;
   size_t                       i;
 
   id          = (jint) rulePropertyp->idi;
@@ -4664,15 +4668,29 @@ static jobject marpaESLIFRuleProperties(JNIEnv *envp, marpaESLIFRuleProperty_t *
     for (i = 0; i < rulePropertyp->nrhsl; i++) {
       rhsIdsIntp[i] = (jint) rulePropertyp->rhsip[i];
     }
-  }
-
-  rhsIds = (*envp)->NewIntArray(envp, (jsize) rulePropertyp->nrhsl);
-  if (rhsIds == NULL) {
-    RAISEEXCEPTION(envp, "NewIntArray failure");
-  }
-
-  if (rulePropertyp->nrhsl > 0) {
+    rhsIds = (*envp)->NewIntArray(envp, (jsize) rulePropertyp->nrhsl);
+    if (rhsIds == NULL) {
+      RAISEEXCEPTION(envp, "NewIntArray failure");
+    }
     (*envp)->SetIntArrayRegion(envp, rhsIds, 0, (jsize) rulePropertyp->nrhsl, rhsIdsIntp);
+    if (HAVEEXCEPTION(envp)) {
+      goto err;
+    }
+  }
+
+  if (rulePropertyp->skipbp != NULL) {
+    skipIndicesShortp = (jboolean *) malloc(sizeof(jboolean) * rulePropertyp->nrhsl);
+    if (skipIndicesShortp == NULL) {
+      RAISEEXCEPTIONF(envp, "malloc failure, %s", strerror(errno));
+    }
+    for (i = 0; i < rulePropertyp->nrhsl; i++) {
+      skipIndicesShortp[i] = rulePropertyp->skipbp[i] ? JNI_TRUE : JNI_FALSE;
+    }
+    skipIndices = (*envp)->NewBooleanArray(envp, (jsize) rulePropertyp->nrhsl);
+    if (skipIndices == NULL) {
+      RAISEEXCEPTION(envp, "NewBooleanArray failure");
+    }
+    (*envp)->SetBooleanArrayRegion(envp, skipIndices, 0, (jsize) rulePropertyp->nrhsl, skipIndicesShortp);
     if (HAVEEXCEPTION(envp)) {
       goto err;
     }
@@ -4706,6 +4724,7 @@ static jobject marpaESLIFRuleProperties(JNIEnv *envp, marpaESLIFRuleProperty_t *
                                    lhsId,
                                    separatorId,
                                    rhsIds,
+                                   skipIndices,
                                    exceptionId,
                                    action,
                                    discardEvent,
@@ -4717,14 +4736,16 @@ static jobject marpaESLIFRuleProperties(JNIEnv *envp, marpaESLIFRuleProperty_t *
                                    minimum,
                                    internal,
                                    propertyBitSet,
-                                   hideseparator,
-                                   rhsIds
+                                   hideseparator
                                    );
 
  err: /* err and done share the same code */
   /* Java will immediately see the exception if there is one */
   if (rhsIdsIntp != NULL) {
     free(rhsIdsIntp);
+  }
+  if (skipIndicesShortp != NULL) {
+    free(skipIndicesShortp);
   }
   return propertiesp;
 }
@@ -5158,6 +5179,57 @@ static short marpaESLIF_TransformBool(void *userDatavp, void *contextp, marpaESL
 }
 
 /*****************************************************************************/
+static short marpaESLIF_TransformString(void *userDatavp, void *contextp, marpaESLIFValueResultString_t s)
+/*****************************************************************************/
+{
+  static const char        *funcs                   = "marpaESLIF_TransformString";
+  marpaESLIFValueContext_t *marpaESLIFValueContextp = (marpaESLIFValueContext_t *) userDatavp;
+  JNIEnv                   *envp                    = marpaESLIFValueContextp->envp;
+  jstring                   encodingasciip          = NULL;
+  jbyteArray                byteArrayp              = NULL;
+  short                     rcb;
+  jobject                   objectp;
+
+  if (s.p != NULL) {
+    /* Note: ok if bytel is zero, then it is an empty string */
+    byteArrayp = (*envp)->NewByteArray(envp, (jsize) s.sizel);
+    if (byteArrayp == NULL) {
+      goto err;
+    }
+    if (s.sizel > 0) {
+      (*envp)->SetByteArrayRegion(envp, byteArrayp, (jsize) 0, (jsize) s.sizel, (jbyte *) s.p);
+      if (HAVEEXCEPTION(envp)) {
+        goto err;
+      }
+    }
+    if (s.encodingasciis != NULL) {
+      /* As per IANA this is in ASCII, thus compatible with Java's modified UTF-8 */
+      encodingasciip = (*envp)->NewStringUTF(envp, (const char *) s.encodingasciis);
+      if (encodingasciip == NULL) {
+        /* We want OUR exception to be raised */
+        RAISEEXCEPTION(envp, "NewStringUTF(\"ASCII\") failure");
+      }
+      objectp = (*envp)->NewObject(envp, JAVA_LANG_STRING_CLASSP, JAVA_LANG_STRING_CLASS_init_byteArray_String_METHODP, byteArrayp, encodingasciip);
+    } else {
+      objectp = (*envp)->NewObject(envp, JAVA_LANG_STRING_CLASSP, JAVA_LANG_STRING_CLASS_init_byteArray_METHODP, byteArrayp);
+    }
+    if (objectp == NULL) {
+      RAISEEXCEPTION(envp, "NewObject failure");
+    }
+  }
+
+  marpaESLIFValueContextp->objectp = objectp;
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  return rcb;
+}
+
+/*****************************************************************************/
 static jstring marpaESLIF_marpaESLIFStringToJavap(JNIEnv *envp, marpaESLIFString_t *marpaESLIFStringp)
 /*****************************************************************************/
 {
@@ -5181,10 +5253,10 @@ static jstring marpaESLIF_marpaESLIFStringToJavap(JNIEnv *envp, marpaESLIFString
       }
       if (marpaESLIFStringp->encodingasciis != NULL) {
         /* As per IANA this is in ASCII, thus compatible with Java's modified UTF-8 */
-        encodingasciip = (*envp)->NewStringUTF(envp, "ASCII");
+        encodingasciip = (*envp)->NewStringUTF(envp, (const char *) marpaESLIFStringp->encodingasciis);
         if (encodingasciip == NULL) {
           /* We want OUR exception to be raised */
-          RAISEEXCEPTION(envp, "NewStringUTF(\"ASCII\") failure");
+          RAISEEXCEPTIONF(envp, "NewStringUTF(\"%s\") failure", marpaESLIFStringp->encodingasciis);
         }
         stringp = (*envp)->NewObject(envp, JAVA_LANG_STRING_CLASSP, JAVA_LANG_STRING_CLASS_init_byteArray_String_METHODP, byteArrayp, encodingasciip);
       } else {

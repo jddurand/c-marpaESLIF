@@ -287,7 +287,7 @@ static short                           marpaESLIF_TransformDoubleb(void *userDat
 static short                           marpaESLIF_TransformPtrb(void *userDatavp, void *contextp, marpaESLIFValueResultPtr_t p);
 static short                           marpaESLIF_TransformArrayb(void *userDatavp, void *contextp, marpaESLIFValueResultArray_t a);
 static short                           marpaESLIF_TransformBoolb(void *userDatavp, void *contextp, marpaESLIFValueResultBool_t y);
-static short                           marpaESLIF_TransformStringb(void *userDatavp, void *contextp, marpaESLIFValueResultString_t a);
+static short                           marpaESLIF_TransformStringb(void *userDatavp, void *contextp, marpaESLIFValueResultString_t s);
 
 /* Transformers */
 static marpaESLIFValueResultTransform_t marpaESLIFValueResultTransformDefault = {
@@ -383,6 +383,8 @@ SV *boot_MarpaX__ESLIF__Grammar__Symbol__Properties_svp;
     }                                                   \
   } while (0)
 
+#define MARPAESLIF_XV_STORE_UNDEF(xvp, key) MARPAESLIF_XV_STORE(xvp, key, newSVsv(&PL_sv_undef))
+
 #define MARPAESLIF_XV_STORE_ACTION(hvp, key, actionp) do {              \
     SV *_svp;                                                           \
                                                                         \
@@ -400,11 +402,11 @@ SV *boot_MarpaX__ESLIF__Grammar__Symbol__Properties_svp;
         break;                                                          \
       default:                                                          \
         warn("Unsupported action type %d", actionp->type);              \
-        MARPAESLIF_XV_STORE(hvp, key, newSVsv(&PL_sv_undef));           \
+        MARPAESLIF_XV_STORE_UNDEF(hvp, key);                            \
         break;                                                          \
       }                                                                 \
     } else {                                                            \
-      MARPAESLIF_XV_STORE(hvp, key, newSVsv(&PL_sv_undef));             \
+      MARPAESLIF_XV_STORE_UNDEF(hvp, key);                              \
     }                                                                   \
   } while (0)
 
@@ -418,7 +420,7 @@ SV *boot_MarpaX__ESLIF__Grammar__Symbol__Properties_svp;
       }                                                                 \
       MARPAESLIF_XV_STORE(hvp, key, _svp);                              \
     } else {                                                            \
-      MARPAESLIF_XV_STORE(hvp, key, newSVsv(&PL_sv_undef));             \
+      MARPAESLIF_XV_STORE_UNDEF(hvp, key);                              \
     }                                                                   \
   } while (0)
 
@@ -426,7 +428,7 @@ SV *boot_MarpaX__ESLIF__Grammar__Symbol__Properties_svp;
     if (asciis != NULL) {                                               \
       MARPAESLIF_XV_STORE(hvp, key, newSVpv(asciis, 0));                \
     } else {                                                            \
-      MARPAESLIF_XV_STORE(hvp, key, newSVsv(&PL_sv_undef));             \
+      MARPAESLIF_XV_STORE_UNDEF(hvp, key);                              \
     }                                                                   \
   } while (0)
 
@@ -438,13 +440,17 @@ SV *boot_MarpaX__ESLIF__Grammar__Symbol__Properties_svp;
     AV *_avp;                                                           \
     size_t _i;                                                          \
                                                                         \
-    _avp = newAV();                                                     \
     if (ivp != NULL) {                                                  \
-      for (_i = 0; _i < ivl; _i++) {                                    \
-        av_push(_avp, newSViv((IV) ivp[_i]));                           \
+      _avp = newAV();                                                   \
+      if (ivl > 0) {                                                    \
+        for (_i = 0; _i < ivl; _i++) {                                  \
+          av_push(_avp, newSViv((IV) ivp[_i]));                         \
+        }                                                               \
       }                                                                 \
+      MARPAESLIF_XV_STORE(hvp, key, newRV_inc((SV *) _avp));            \
+    } else {                                                            \
+      MARPAESLIF_XV_STORE_UNDEF(hvp, key);                              \
     }                                                                   \
-    MARPAESLIF_XV_STORE(hvp, key, newRV_inc((SV *) _avp));              \
   } while (0)
 
 /*****************************************************************************/
@@ -1595,8 +1601,8 @@ static short marpaESLIF_TransformStringb(void *userDatavp, void *contextp, marpa
   dMYTHX(Perl_MarpaX_ESLIF_Valuep);
 
   if (contextp == ESLIF_PERL_CONTEXT) {
-    /* We never push an array */
-    MARPAESLIF_CROAK("Got ARRAY on the stack that pretend to come from perl");
+    /* We never push a string */
+    MARPAESLIF_CROAK("Got STRING on the stack that pretend to come from perl");
   } else {
     /* Like the array transformer, except for the UTF-8 flag */
     Perl_MarpaX_ESLIF_Valuep->svp = newSVpvn(s.p, s.sizel);
@@ -2176,6 +2182,7 @@ CODE:
   MARPAESLIF_XV_STORE_IV         (avp, "lhsId",                    ruleProperty.lhsi);
   MARPAESLIF_XV_STORE_IV         (avp, "separatorId",              ruleProperty.separatori);
   MARPAESLIF_XV_STORE_IVARRAY    (avp, "rhsIds",                   ruleProperty.nrhsl, ruleProperty.rhsip);
+  MARPAESLIF_XV_STORE_IVARRAY    (avp, "skipIndices",              ruleProperty.nrhsl, ruleProperty.skipbp);
   MARPAESLIF_XV_STORE_IV         (avp, "exceptionId",              ruleProperty.exceptioni);
   MARPAESLIF_XV_STORE_ACTION     (avp, "action",                   ruleProperty.actionp);
   MARPAESLIF_XV_STORE_ASCIISTRING(avp, "discardEvent",             ruleProperty.discardEvents);
@@ -2222,6 +2229,7 @@ CODE:
   MARPAESLIF_XV_STORE_IV         (avp, "lhsId",                    ruleProperty.lhsi);
   MARPAESLIF_XV_STORE_IV         (avp, "separatorId",              ruleProperty.separatori);
   MARPAESLIF_XV_STORE_IVARRAY    (avp, "rhsIds",                   ruleProperty.nrhsl, ruleProperty.rhsip);
+  MARPAESLIF_XV_STORE_IVARRAY    (avp, "skipIndices",              ruleProperty.nrhsl, ruleProperty.skipbp);
   MARPAESLIF_XV_STORE_IV         (avp, "exceptionId",              ruleProperty.exceptioni);
   MARPAESLIF_XV_STORE_ACTION     (avp, "action",                   ruleProperty.actionp);
   MARPAESLIF_XV_STORE_ASCIISTRING(avp, "discardEvent",             ruleProperty.discardEvents);

@@ -214,6 +214,7 @@ struct marpaESLIF_bootstrap_symbol_name_and_reference {
 
 struct marpaESLIF_bootstrap_rhs_primary {
   marpaESLIF_bootstrap_rhs_primary_type_t type;
+  short                                   skipb;
   union {
     marpaESLIF_bootstrap_single_symbol_t             *singleSymbolp;
     marpaESLIF_bootstrap_symbol_name_and_reference_t *symbolNameAndReferencep;

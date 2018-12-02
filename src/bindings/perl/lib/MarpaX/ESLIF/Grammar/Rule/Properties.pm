@@ -77,6 +77,7 @@ sub new {
         'lhsId'                    => $args{lhsId},
         'separatorId'              => $args{separatorId},
         'rhsIds'                   => $args{rhsIds},
+        'skipIndices'              => $args{skipIndices},
         'exceptionId'              => $args{exceptionId},
         'action'                   => $args{action},
         'discardEvent'             => $args{discardEvent},
@@ -156,7 +157,7 @@ sub getSeparatorId {
 
 =head2 $self->getRhsIds
 
-Returns Rule's RHS ids (none for a null rule)
+Returns Rule's RHS ids (none for a null rule or a sequence)
 
 =cut
 
@@ -164,6 +165,18 @@ sub getRhsIds {
     my ($self) = @_;
 
     return $self->{rhsIds}
+}
+
+=head2 $self->getSkipIndices
+
+Returns Rule's RHS skip indices (none for a null rule)
+
+=cut
+
+sub getSkipIndices {
+    my ($self) = @_;
+
+    return $self->{skipIndices}
 }
 
 =head2 $self->getExceptionId

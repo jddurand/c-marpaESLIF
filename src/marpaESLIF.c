@@ -320,7 +320,7 @@ static inline short                  _marpaESLIFRecognizer_lexemeStack_i_moveb(m
 static inline const char            *_marpaESLIF_genericStack_i_types(genericStack_t *stackp, int i);
 static inline const char            *_marpaESLIF_value_types(int typei);
 
-static inline marpaESLIF_rule_t     *_marpaESLIF_rule_newp(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, char *descEncodings, char *descs, size_t descl, int lhsi, size_t nrhsl, int *rhsip, int exceptioni, int ranki, short nullRanksHighb, short sequenceb, int minimumi, int separatori, short properb, marpaESLIF_action_t *actionp, short passthroughb, short hideseparatorb);
+static inline marpaESLIF_rule_t     *_marpaESLIF_rule_newp(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, char *descEncodings, char *descs, size_t descl, int lhsi, size_t nrhsl, int *rhsip, int exceptioni, int ranki, short nullRanksHighb, short sequenceb, int minimumi, int separatori, short properb, marpaESLIF_action_t *actionp, short passthroughb, short hideseparatorb, short *skipbp);
 static inline void                   _marpaESLIF_rule_freev(marpaESLIF_rule_t *rulep);
 
 static inline marpaESLIF_symbol_t   *_marpaESLIF_symbol_newp(marpaESLIF_t *marpaESLIFp);
@@ -1709,7 +1709,8 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_grammarp(marpaESLIFGra
 				  bootstrap_grammar_rulep[i].properb,
                                   (ruleAction.u.names != NULL) ? &ruleAction : NULL,
                                   0, /* passthroughb */
-                                  bootstrap_grammar_rulep[i].hideseparatorb
+                                  bootstrap_grammar_rulep[i].hideseparatorb,
+                                  NULL /* skipbp */
 				  );
     if (rulep == NULL) {
       goto err;
@@ -3118,7 +3119,7 @@ static inline short _marpaESLIFRecognizer_lexemeStack_i_moveb(marpaESLIFRecogniz
 }
 
 /*****************************************************************************/
-static inline marpaESLIF_rule_t *_marpaESLIF_rule_newp(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, char *descEncodings, char *descs, size_t descl, int lhsi, size_t nrhsl, int *rhsip, int exceptioni, int ranki, short nullRanksHighb, short sequenceb, int minimumi, int separatori, short properb, marpaESLIF_action_t *actionp, short passthroughb, short hideseparatorb)
+static inline marpaESLIF_rule_t *_marpaESLIF_rule_newp(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, char *descEncodings, char *descs, size_t descl, int lhsi, size_t nrhsl, int *rhsip, int exceptioni, int ranki, short nullRanksHighb, short sequenceb, int minimumi, int separatori, short properb, marpaESLIF_action_t *actionp, short passthroughb, short hideseparatorb, short *skipbp)
 /*****************************************************************************/
 {
   static const char               *funcs          = "_marpaESLIF_rule_newp";
@@ -3135,6 +3136,12 @@ static inline marpaESLIF_rule_t *_marpaESLIF_rule_newp(marpaESLIF_t *marpaESLIFp
 
   /* MARPAESLIF_TRACE(marpaESLIFp, funcs, "Building rule"); */
 
+  /* It is a non-sense to provide skipbp without rhsip */
+  if ((skipbp != NULL) && (rhsip == NULL)) {
+    MARPAESLIF_ERROR(marpaESLIFp, "(skipbp != NULL) && (rhsip == NULL)");
+    goto err;
+  }
+
   rulep = (marpaESLIF_rule_t *) malloc(sizeof(marpaESLIF_rule_t));
   if (rulep == NULL) {
     MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
@@ -3149,6 +3156,7 @@ static inline marpaESLIF_rule_t *_marpaESLIF_rule_newp(marpaESLIF_t *marpaESLIFp
   rulep->separatorp     = NULL;
   rulep->rhsStackp      = NULL; /* Take care, pointer to a stack inside rule structure */
   rulep->rhsip          = NULL; /* Convenience array of RHS ids for rule introspection */
+  rulep->skipbp         = NULL; /* Convenience array of RHS ids for rule introspection and action arguments generation */
   rulep->exceptionp     = NULL;
   rulep->exceptionIdi   = -1;
   rulep->actionp        = NULL;
@@ -3220,6 +3228,12 @@ static inline marpaESLIF_rule_t *_marpaESLIF_rule_newp(marpaESLIF_t *marpaESLIFp
       goto err;
     }
     memcpy(rulep->rhsip, rhsip, sizeof(int) * nrhsl);
+
+    /* Also the eventual skip information */
+    if (skipbp != NULL) {
+      rulep->skipbp = (short *) malloc(sizeof(short) * nrhsl);
+      memcpy(rulep->skipbp, skipbp, sizeof(short) * nrhsl);
+    }
   }
   
   /* Fill exception symbol */
@@ -3308,6 +3322,9 @@ static inline void _marpaESLIF_rule_freev(marpaESLIF_rule_t *rulep)
     _marpaESLIF_action_freev(rulep->actionp);
     if (rulep->rhsip != NULL) {
       free(rulep->rhsip);
+    }
+    if (rulep->skipbp != NULL) {
+      free(rulep->skipbp);
     }
     if (rulep->discardEvents) {
       free(rulep->discardEvents);
@@ -5387,7 +5404,8 @@ short marpaESLIFGrammar_ruleproperty_by_levelb(marpaESLIFGrammar_t *marpaESLIFGr
     rulePropertyp->separatori     = (rulep->separatorp != NULL) ? rulep->separatorp->idi : -1;
     rulePropertyp->rhsip          = rulep->rhsip;
     rulePropertyp->nrhsl          = (size_t) GENERICSTACK_USED(rulep->rhsStackp); /* Can be == 0 */
-    rulePropertyp->rhsip          = rulep->rhsip;  /* Can be NULL */
+    rulePropertyp->rhsip          = rulep->rhsip;  /* Can be NULL if nullable */
+    rulePropertyp->skipbp         = rulep->skipbp;  /* Can be NULL if nullable or a sequence */
     rulePropertyp->exceptioni     = (rulep->exceptionp != NULL) ? rulep->exceptionp->idi : -1;
     rulePropertyp->actionp        = rulep->actionp; /* Can be NULL */
     rulePropertyp->discardEvents  = rulep->discardEvents; /* Can be NULL */
@@ -9220,6 +9238,7 @@ static short _marpaESLIFValue_ruleCallbackWrapperb(void *userDatavp, int rulei, 
   short                               rcb;
   int                                 i;
   int                                 j;
+  int                                 k;
   
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "start [%d] = [%d-%d]", resulti, arg0i, argni);
@@ -9326,6 +9345,23 @@ static short _marpaESLIFValue_ruleCallbackWrapperb(void *userDatavp, int rulei, 
         }
       }
       argni = j;
+    }
+    
+    /* If the rule have a skipped elements, eventually remove them */
+    if (rulep->skipbp != NULL) {
+      for (i = arg0i, k = 0; i <= argni; i++, k++) {
+        if (rulep->skipbp[k]) {
+          /* Shift remaining values - last element is naturally skipped with argni-- */
+          if (i < argni) {
+            for (j = i + 1; j <= argni; j++) {
+              if (! _marpaESLIF_generic_action_copyb(marpaESLIFValueOption.userDatavp, marpaESLIFValuep, arg0i, argni, j - 1, j, 0 /* nullable */)) {
+                goto err;
+              }
+            }
+          }
+          argni--;
+        }
+      }
     }
     
     if (! ruleCallbackp(marpaESLIFValueOption.userDatavp, marpaESLIFValuep, arg0i, argni, resulti, 0 /* nullableb */)) {
@@ -10101,6 +10137,7 @@ static inline void _marpaESLIF_rule_createshowv(marpaESLIF_t *marpaESLIFp, marpa
 {
   genericStack_t      *rhsStackp       = rulep->rhsStackp;
   marpaESLIF_symbol_t *symbolp;
+  short                skipb;
   size_t               asciishowl = 0;
   int                  rhsi;
   char                 tmps[1024];
@@ -10125,8 +10162,11 @@ static inline void _marpaESLIF_rule_createshowv(marpaESLIF_t *marpaESLIFp, marpa
     }
 #endif
     symbolp = GENERICSTACK_GET_PTR(rhsStackp, rhsi);
-
+    skipb = (rulep->skipbp != NULL) && rulep->skipbp[rhsi];
     MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " ");
+    if (skipb) {
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "(");
+    }
     switch (symbolp->type) {
     case MARPAESLIF_SYMBOL_TYPE_TERMINAL:
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->descp->asciis);
@@ -10145,6 +10185,9 @@ static inline void _marpaESLIF_rule_createshowv(marpaESLIF_t *marpaESLIFp, marpa
         sprintf(tmps, "%+d", symbolp->lookupLevelDeltai);
         MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, tmps);
       }
+    }
+    if (skipb) {
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, ")");
     }
   }
   if (rulep->sequenceb) {
@@ -10249,6 +10292,7 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIFGrammar_t *marpaESL
   marpaESLIF_stringGenerator_t  marpaESLIF_stringGenerator;
   marpaESLIF_uint32_t           pcre2Optioni = 0;
   int                           pcre2Errornumberi;
+  short                         skipb;
 
   /* Calculate the size needed to show the grammar in ASCII form */
 
@@ -10568,19 +10612,20 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIFGrammar_t *marpaESL
     genericLoggerp = GENERICLOGGER_CUSTOM(_marpaESLIF_generateStringWithLoggerCallback, (void *) &marpaESLIF_stringGenerator, GENERICLOGGER_LOGLEVEL_TRACE);
     if (genericLoggerp != NULL) {
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "\n");
-      GENERICLOGGER_TRACE (genericLoggerp, "#   Components:  LHS = RHS[]");
       if (rulep->exceptionp != NULL) {
-        GENERICLOGGER_TRACE (genericLoggerp, " - EXCEPTION");
+        GENERICLOGGER_TRACE (genericLoggerp, "#   Components:  LHS = RHS - EXCEPTION\n");
+      } else {
+        GENERICLOGGER_TRACE (genericLoggerp, "#   Components:  LHS = RHS[]\n");
       }
-      GENERICLOGGER_TRACE (genericLoggerp, "\n");
       GENERICLOGGER_TRACEF(genericLoggerp, "#               %4d", rulep->lhsp->idi);
       if (GENERICSTACK_USED(rulep->rhsStackp) > 0) {
         for (symboli = 0; symboli < GENERICSTACK_USED(rulep->rhsStackp); symboli++) {
           symbolp = (marpaESLIF_symbol_t *) GENERICSTACK_GET_PTR(rulep->rhsStackp, symboli);
+          skipb = (rulep->skipbp != NULL) && rulep->skipbp[symboli];
           if (symboli == 0) {
-            GENERICLOGGER_TRACEF(genericLoggerp, " = %d", symbolp->idi);
+            GENERICLOGGER_TRACEF(genericLoggerp, " = %s%d%s", skipb ? "(" : "", symbolp->idi, skipb ? ")" : "");
           } else {
-            GENERICLOGGER_TRACEF(genericLoggerp, " %d", symbolp->idi);
+            GENERICLOGGER_TRACEF(genericLoggerp, " %s%d%s", skipb ? "(" : "", symbolp->idi, skipb ? ")" : "");
           }
         }
       }

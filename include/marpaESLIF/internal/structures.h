@@ -175,6 +175,7 @@ struct marpaESLIF_rule {
   genericStack_t         _rhsStack;                    /* Stack of RHS symbols */
   genericStack_t        *rhsStackp;                    /* Pointer to stack of RHS symbols */
   int                   *rhsip;                        /* Convenience array of RHS ids for rule introspection */
+  short                 *skipbp;                       /* Convenience array of RHS ids for skip introspection */
   marpaESLIF_symbol_t   *exceptionp;                   /* Exception symbol */
   int                    exceptionIdi;                 /* Exception symbol Id */
   marpaESLIFAction_t    *actionp;                      /* Action */
