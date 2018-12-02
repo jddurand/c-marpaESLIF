@@ -355,9 +355,23 @@ static short marpaESLIFLua_luaL_requiref(lua_State *L, const char *modname, lua_
     size_t _iteratorl;                                                  \
                                                                         \
     if (! marpaESLIFLua_lua_createtable(L, (int) integerl, 0)) goto err; \
-    for (_iteratorl = 0; _iteratorl < integerl; _iteratorl++) {         \
-      if (! marpaESLIFLua_lua_pushinteger(L, (lua_Integer) integerp[_iteratorl])) goto err; \
-      if (! marpaESLIFLua_lua_rawseti(L, -2, (lua_Integer) _iteratorl)) goto err; \
+    if ((integerp != NULL) && (integerl > 0)) {                         \
+      for (_iteratorl = 0; _iteratorl < integerl; _iteratorl++) {       \
+        if (! marpaESLIFLua_lua_pushinteger(L, (lua_Integer) integerp[_iteratorl])) goto err; \
+        if (! marpaESLIFLua_lua_rawseti(L, -2, (lua_Integer) _iteratorl)) goto err; \
+      }                                                                 \
+    }                                                                   \
+  } while (0)
+
+#define MARPAESLIFLUA_PUSH_BOOLEAN_ARRAY(L, booleanl, booleanp) do {    \
+    size_t _iteratorl;                                                  \
+                                                                        \
+    if (! marpaESLIFLua_lua_createtable(L, (int) booleanl, 0)) goto err; \
+    if ((booleanp != NULL) && (booleanl > 0)) {                         \
+      for (_iteratorl = 0; _iteratorl < booleanl; _iteratorl++) {       \
+        if (! marpaESLIFLua_lua_pushboolean(L, (int) booleanp[_iteratorl])) goto err; \
+        if (! marpaESLIFLua_lua_rawseti(L, -2, (lua_Integer) _iteratorl)) goto err; \
+      }                                                                 \
     }                                                                   \
   } while (0)
 
@@ -365,14 +379,19 @@ static short marpaESLIFLua_luaL_requiref(lua_State *L, const char *modname, lua_
     size_t _iteratorl;                                                  \
                                                                         \
     if (! marpaESLIFLua_lua_createtable(L, (int) stringl, 0)) goto err; \
-    for (_iteratorl = 0; _iteratorl < stringl; _iteratorl++) {          \
-      if (! marpaESLIFLua_lua_pushstring(NULL, L, stringp[_iteratorl])) goto err; \
-      if (! marpaESLIFLua_lua_rawseti(L, -2, (lua_Integer) _iteratorl)) goto err; \
+    if ((stringp != NULL) && (stringl > 0)) {                           \
+      for (_iteratorl = 0; _iteratorl < stringl; _iteratorl++) {        \
+        if (! marpaESLIFLua_lua_pushstring(NULL, L, stringp[_iteratorl])) goto err; \
+        if (! marpaESLIFLua_lua_rawseti(L, -2, (lua_Integer) _iteratorl)) goto err; \
+      }                                                                 \
     }                                                                   \
   } while (0)
 
 #define MARPAESLIFLUA_STORE_INTEGER_ARRAY(L, key, integerl, integerp)   \
   MARPAESLIFLUA_STORE_BY_KEY(L, key, MARPAESLIFLUA_PUSH_INTEGER_ARRAY(L, integerl, integerp);)
+
+#define MARPAESLIFLUA_STORE_BOOLEAN_ARRAY(L, key, booleanl, booleanp)   \
+  MARPAESLIFLUA_STORE_BY_KEY(L, key, MARPAESLIFLUA_PUSH_BOOLEAN_ARRAY(L, booleanl, booleanp);)
 
 #define MARPAESLIFLUA_STORE_BOOLEAN(L, key, b)                          \
   MARPAESLIFLUA_STORE_BY_KEY(L, key, if (! marpaESLIFLua_lua_pushboolean(L, (int) b)) goto err;)
@@ -2453,13 +2472,14 @@ static int  marpaESLIFLua_marpaESLIFGrammar_currentRulePropertiesi(lua_State *L)
     goto err;
   }
 
-  if (! marpaESLIFLua_lua_createtable(L, 18, 0)) goto err;                                                 /* stack; {} */
+  if (! marpaESLIFLua_lua_createtable(L, 19, 0)) goto err;                                                 /* stack; {} */
   MARPAESLIFLUA_STORE_INTEGER      (L, "id",                       ruleProperty.idi);
   MARPAESLIFLUA_STORE_STRING       (L, "description",              ruleProperty.descp);
   MARPAESLIFLUA_STORE_ASCIISTRING  (L, "show",                     ruleProperty.asciishows);
   MARPAESLIFLUA_STORE_INTEGER      (L, "lhsId",                    ruleProperty.lhsi);
   MARPAESLIFLUA_STORE_INTEGER      (L, "separatorId",              ruleProperty.separatori);
   MARPAESLIFLUA_STORE_INTEGER_ARRAY(L, "rhsIds",                   ruleProperty.nrhsl, ruleProperty.rhsip);
+  MARPAESLIFLUA_STORE_BOOLEAN_ARRAY(L, "skipIndices",              ruleProperty.nrhsl, ruleProperty.skipbp);
   MARPAESLIFLUA_STORE_INTEGER      (L, "exceptionId",              ruleProperty.exceptioni);
   MARPAESLIFLUA_STORE_ACTION       (L, "action",                   ruleProperty.actionp);
   MARPAESLIFLUA_STORE_ASCIISTRING  (L, "discardEvent",             ruleProperty.discardEvents);
@@ -2517,13 +2537,14 @@ static int  marpaESLIFLua_marpaESLIFGrammar_rulePropertiesByLeveli(lua_State *L)
     goto err;
   }
 
-  if (! marpaESLIFLua_lua_createtable(L, 18, 0)) goto err;                                                 /* stack; {} */
+  if (! marpaESLIFLua_lua_createtable(L, 19, 0)) goto err;                                                 /* stack; {} */
   MARPAESLIFLUA_STORE_INTEGER      (L, "id",                       ruleProperty.idi);
   MARPAESLIFLUA_STORE_STRING       (L, "description",              ruleProperty.descp);
   MARPAESLIFLUA_STORE_ASCIISTRING  (L, "show",                     ruleProperty.asciishows);
   MARPAESLIFLUA_STORE_INTEGER      (L, "lhsId",                    ruleProperty.lhsi);
   MARPAESLIFLUA_STORE_INTEGER      (L, "separatorId",              ruleProperty.separatori);
   MARPAESLIFLUA_STORE_INTEGER_ARRAY(L, "rhsIds",                   ruleProperty.nrhsl, ruleProperty.rhsip);
+  MARPAESLIFLUA_STORE_BOOLEAN_ARRAY(L, "skipIndices",              ruleProperty.nrhsl, ruleProperty.skipbp);
   MARPAESLIFLUA_STORE_INTEGER      (L, "exceptionId",              ruleProperty.exceptioni);
   MARPAESLIFLUA_STORE_ACTION       (L, "action",                   ruleProperty.actionp);
   MARPAESLIFLUA_STORE_ASCIISTRING  (L, "discardEvent",             ruleProperty.discardEvents);
