@@ -383,7 +383,7 @@ SV *boot_MarpaX__ESLIF__Grammar__Symbol__Properties_svp;
     }                                                   \
   } while (0)
 
-#define MARPAESLIF_XV_STORE_UNDEF(xvp, key) MARPAESLIF_XV_STORE(xvp, key, newSVsv(&PL_sv_undef))
+#define MARPAESLIF_XV_STORE_UNDEF(xvp, key) MARPAESLIF_XV_STORE(xvp, key, &PL_sv_undef)
 
 #define MARPAESLIF_XV_STORE_ACTION(hvp, key, actionp) do {              \
     SV *_svp;                                                           \
